@@ -90,6 +90,8 @@ extern int VValidVPTEntry(struct vptab *vptp);
 #endif
 
 
+struct Volume;			/* Potentially forward definition */
+
 extern struct DiskPartition *DiskPartitionList;
 extern struct DiskPartition *VGetPartition();
 extern int VAttachPartitions(void);
@@ -102,6 +104,7 @@ extern void VResetDiskUsage_r(void);
 extern void VSetPartitionDiskUsage(register struct DiskPartition *dp);
 extern void VSetPartitionDiskUsage_r(register struct DiskPartition *dp);
 extern char *VPartitionPath(struct DiskPartition *p);
-/*extern void VAdjustDiskUsage(Error *ec, Volume *vp, afs_int32 blocks,
-			     afs_int32 checkBlocks); */
+extern void VAdjustDiskUsage(Error * ec, struct Volume *vp,
+			     afs_sfsize_t blocks, afs_sfsize_t checkBlocks);
+extern int VDiskUsage(struct Volume *vp, afs_sfsize_t blocks);
 extern void VPrintDiskStats(void);

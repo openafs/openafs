@@ -57,6 +57,16 @@ RCSID
 
 #include <dirent.h>
 
+#ifdef O_LARGEFILE
+#define afs_stat	stat64
+#define afs_fstat	fstat64
+#define afs_open	open64
+#else /* !O_LARGEFILE */
+#define afs_stat	stat
+#define afs_fstat	fstat
+#define afs_open	open
+#endif /* !O_LARGEFILE */
+
 int DumpVnodes = 0;		/* Dump everything, i.e. summary of all vnodes */
 int DumpInodeNumber = 0;	/* Dump inode numbers with vnodes */
 int DumpDate = 0;		/* Dump vnode date (server modify date) with vnode */
@@ -82,10 +92,10 @@ struct DiskPartition *FindCurrentPartition(void);
 Volume *AttachVolume(struct DiskPartition *dp, char *volname,
 		     register struct VolumeHeader *header);
 #if defined(AFS_NAMEI_ENV)
-void PrintVnode(int offset, VnodeDiskObject * vnode, int vnodeNumber,
+void PrintVnode(int offset, VnodeDiskObject * vnode, VnodeId vnodeNumber,
 		Inode ino, Volume * vp);
 #else
-void PrintVnode(int offset, VnodeDiskObject * vnode, int vnodeNumber,
+void PrintVnode(int offset, VnodeDiskObject * vnode, VnodeId vnodeNumber,
 		Inode ino);
 #endif
 void PrintVnodes(Volume * vp, VnodeClass class);
@@ -93,14 +103,15 @@ void PrintVnodes(Volume * vp, VnodeClass class);
 char *
 date(time_t date)
 {
-    static char results[8][100];
+#define MAX_DATE_RESULT	100
+    static char results[8][MAX_DATE_RESULT];
     static next;
     struct tm *tm = localtime(&date);
     char buf[32];
 
     (void)strftime(buf, 32, "%Y/%m/%d.%H:%M:%S", tm);	/* NT does not have %T */
-    sprintf(results[next = (next + 1) & 7], "%lu (%s)", (unsigned long)date,
-	    buf);
+    (void)afs_snprintf(results[next = (next + 1) & 7], MAX_DATE_RESULT,
+		       "%lu (%s)", (unsigned long)date, buf);
     return results[next];
 }
 
@@ -309,7 +320,8 @@ handleit(struct cmd_syndesc *as)
 		exit(1);
 	    }
 	}
-	sprintf(name1, VFORMAT, (unsigned long)volumeId);
+	(void)afs_snprintf(name1, sizeof name1, VFORMAT,
+			   (unsigned long)volumeId);
 	if (dsizeOnly && !saveinodes)
 	    printf
 		("Volume-Id\t  Volsize  Auxsize Inodesize  AVolsize SizeDiff                (VolName)\n");
@@ -436,7 +448,7 @@ HandleVolume(struct DiskPartition *dp, char *name)
 {
     struct VolumeHeader header;
     struct VolumeDiskHeader diskHeader;
-    struct stat status, stat;
+    struct afs_stat status, stat;
     register int fd;
     Volume *vp;
     IHandle_t *ih;
@@ -448,9 +460,10 @@ HandleVolume(struct DiskPartition *dp, char *name)
     } else {
 	afs_int32 n;
 
-	(void)sprintf(headerName, "%s/%s", VPartitionPath(dp), name);
-	if ((fd = open(headerName, O_RDONLY)) == -1
-	    || fstat(fd, &status) == -1) {
+	(void)afs_snprintf(headerName, sizeof headerName, "%s/%s",
+			   VPartitionPath(dp), name);
+	if ((fd = afs_open(headerName, O_RDONLY)) == -1
+	    || afs_fstat(fd, &status) == -1) {
 	    printf("Volinfo: Cannot read volume header %s\n", name);
 	    close(fd);
 	    exit(1);
@@ -475,7 +488,7 @@ HandleVolume(struct DiskPartition *dp, char *name)
 	    int size = 0;
 	    int code;
 
-	    if (fstat(fd, &stat) == -1) {
+	    if (afs_fstat(fd, &stat) == -1) {
 		perror("stat");
 		exit(1);
 	    }
@@ -602,8 +615,7 @@ HandleVolume(struct DiskPartition *dp, char *name)
 }
 
 
-main(argc, argv)
-     char **argv;
+main(int argc, char **argv)
 {
     register struct cmd_syndesc *ts;
     afs_int32 code;
@@ -717,8 +729,8 @@ GetFileInfo(FD_t fd, int *size, char **ctime, char **mtime, char **atime)
     *mtime = NT_date(&fi.ftLastWriteTime);
     *atime = NT_date(&fi.ftLastAccessTime);
 #else
-    struct stat status;
-    if (fstat(fd, &status) == -1) {
+    struct afs_stat status;
+    if (afs_fstat(fd, &status) == -1) {
 	printf("fstat failed %d\n", errno);
 	exit(1);
     }
@@ -786,8 +798,9 @@ PrintVnodes(Volume * vp, VnodeClass class)
 			   PrintInode(NULL, ino), errno);
 		    continue;
 		}
-		sprintf(nfile, "TmpInode.%s", PrintInode(NULL, ino));
-		ofd = open(nfile, O_CREAT | O_RDWR | O_TRUNC, 0600);
+		(void)afs_snprintf(nfile, sizeof nfile, "TmpInode.%s",
+				   PrintInode(NULL, ino));
+		ofd = afs_open(nfile, O_CREAT | O_RDWR | O_TRUNC, 0600);
 		if (ofd < 0) {
 		    printf("Can't create file %s; error %d (ignored)\n",
 			   nfile, errno);
@@ -847,11 +860,12 @@ PrintVnodes(Volume * vp, VnodeClass class)
 
 #if defined(AFS_NAMEI_ENV)
 void
-PrintVnode(int offset, VnodeDiskObject * vnode, int vnodeNumber, Inode ino,
-	   Volume * vp)
+PrintVnode(int offset, VnodeDiskObject * vnode, VnodeId vnodeNumber,
+	   Inode ino, Volume * vp)
 #else
 void
-PrintVnode(int offset, VnodeDiskObject * vnode, int vnodeNumber, Inode ino)
+PrintVnode(int offset, VnodeDiskObject * vnode, VnodeId vnodeNumber,
+	   Inode ino)
 #endif
 {
 #if defined(AFS_NAMEI_ENV)
@@ -871,7 +885,7 @@ PrintVnode(int offset, VnodeDiskObject * vnode, int vnodeNumber, Inode ino)
     if (orphaned && (fileLength == 0 || vnode->parent || !offset))
 	return;
     printf
-	("%10d Vnode %u.%u.%u cloned: %d, length: %llu linkCount: %d parent: %u",
+	("%10d Vnode %u.%u.%u cloned: %u, length: %llu linkCount: %d parent: %u",
 	 offset, vnodeNumber, vnode->uniquifier, vnode->dataVersion,
 	 vnode->cloned, (afs_uintmax_t) fileLength, vnode->linkCount,
 	 vnode->parent);

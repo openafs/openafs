@@ -95,6 +95,17 @@ RCSID
 #endif
 #include <rx/rx_globals.h>
 
+#ifdef O_LARGEFILE
+#define afs_stat	stat64
+#define afs_fstat	fstat64
+#define afs_open	open64
+#define afs_fopen	fopen64
+#else /* !O_LARGEFILE */
+#define afs_stat	stat
+#define afs_fstat	fstat
+#define afs_open	open
+#define afs_fopen	fopen
+#endif /* !O_LARGEFILE */
 
 extern int BreakVolumeCallBacks(), InitCallBack();
 extern int BreakVolumeCallBacks(), InitCallBack(), BreakLaterCallBacks();
@@ -209,11 +220,11 @@ static void
 CheckDescriptors()
 {
 #ifndef AFS_NT40_ENV
-    struct stat status;
+    struct afs_stat status;
     register int tsize = getdtablesize();
     register int i;
     for (i = 0; i < tsize; i++) {
-	if (fstat(i, &status) != -1) {
+	if (afs_fstat(i, &status) != -1) {
 	    printf("%d: dev %x, inode %u, length %u, type/mode %x\n", i,
 		   status.st_dev, status.st_ino, status.st_size,
 		   status.st_mode);
@@ -299,7 +310,7 @@ ResetCheckDescriptors(void)
 #if defined(AFS_PTHREAD_ENV)
     softsig_signal(SIGTERM, CheckDescriptors_Signal);
 #else
-    signal(SIGTERM, CheckDescriptors_Signal);
+    (void)signal(SIGTERM, CheckDescriptors_Signal);
 #endif
 #endif
 }
@@ -355,12 +366,12 @@ static void
 CheckAdminName()
 {
     int fd = 0;
-    struct stat status;
+    struct afs_stat status;
 
-    if ((stat("/AdminName", &status)) ||	/* if file does not exist */
+    if ((afs_stat("/AdminName", &status)) ||	/* if file does not exist */
 	(status.st_size <= 0) ||	/* or it is too short */
 	(status.st_size >= (MAXADMINNAME)) ||	/* or it is too long */
-	!(fd = open("/AdminName", O_RDONLY, 0))) {	/* or the open fails */
+	!(fd = afs_open("/AdminName", O_RDONLY, 0))) {	/* or the open fails */
 	strcpy(adminName, "System:Administrators");	/* use the default name */
     } else {
 	(void)read(fd, adminName, status.st_size);	/* use name from the file */
@@ -1050,17 +1061,17 @@ ParseArgs(int argc, char *argv[])
 static void
 NewParms(int initializing)
 {
-    static struct stat sbuf;
+    static struct afs_stat sbuf;
     register int i, fd;
     char *parms;
     char *argv[MAXPARMS];
     register int argc;
 
-    if (!(stat("/vice/file/parms", &sbuf))) {
+    if (!(afs_stat("/vice/file/parms", &sbuf))) {
 	parms = (char *)malloc(sbuf.st_size);
 	if (!parms)
 	    return;
-	fd = open("parms", O_RDONLY, 0666);
+	fd = afs_open("parms", O_RDONLY, 0666);
 	if (fd <= 0) {
 	    ViceLog(0, ("Open for parms failed with errno = %d\n", errno));
 	    return;
@@ -1221,15 +1232,15 @@ ReadSysIdFile()
 {
     afs_int32 fd, nentries, i;
     struct versionStamp vsn;
-    struct stat status;
+    struct afs_stat status;
     afsUUID uuid;
 
-    if ((stat(AFSDIR_SERVER_SYSID_FILEPATH, &status))
+    if ((afs_stat(AFSDIR_SERVER_SYSID_FILEPATH, &status))
 	|| (status.st_size <= 0)) {
 	ViceLog(0, ("%s: doesn't exist\n", AFSDIR_SERVER_SYSID_FILEPATH));
 	return ENOENT;
     }
-    if (!(fd = open(AFSDIR_SERVER_SYSID_FILEPATH, O_RDONLY, 0))) {
+    if (!(fd = afs_open(AFSDIR_SERVER_SYSID_FILEPATH, O_RDONLY, 0))) {
 	ViceLog(0,
 		("%s: can't open (%d)\n", AFSDIR_SERVER_SYSID_FILEPATH,
 		 errno));
@@ -1297,18 +1308,18 @@ WriteSysIdFile()
 {
     afs_int32 fd, nentries, i;
     struct versionStamp vsn;
-    struct stat status;
+    struct afs_stat status;
     afsUUID uuid;
 
-    if (!stat(AFSDIR_SERVER_SYSID_FILEPATH, &status)) {
+    if (!afs_stat(AFSDIR_SERVER_SYSID_FILEPATH, &status)) {
 	/*
 	 * File exists; keep the old one around
 	 */
 	renamefile(AFSDIR_SERVER_SYSID_FILEPATH,
 		   AFSDIR_SERVER_OLDSYSID_FILEPATH);
     }
-    fd = open(AFSDIR_SERVER_SYSID_FILEPATH, O_WRONLY | O_TRUNC | O_CREAT,
-	      0666);
+    fd = afs_open(AFSDIR_SERVER_SYSID_FILEPATH, O_WRONLY | O_TRUNC | O_CREAT,
+		  0666);
     if (fd < 1) {
 	ViceLog(0,
 		("%s: can't create (%d)\n", AFSDIR_SERVER_SYSID_FILEPATH,
@@ -1504,7 +1515,7 @@ main(int argc, char *argv[])
 	exit(2);
     }
 #ifndef AFS_QUIETFS_ENV
-    console = fopen("/dev/console", "w");
+    console = afs_fopen("/dev/console", "w");
 #endif
 
     if (ParseArgs(argc, argv)) {
@@ -1689,7 +1700,7 @@ main(int argc, char *argv[])
 
     /* Some rx debugging */
     if (rxlog || eventlog) {
-	debugFile = fopen("rx_dbg", "w");
+	debugFile = afs_fopen("rx_dbg", "w");
 	if (rxlog)
 	    rx_debugFile = debugFile;
 	if (eventlog)
@@ -1808,7 +1819,7 @@ main(int argc, char *argv[])
     } else {
 	char hoststr[16];
 	memcpy(&FS_HostAddr_NBO, he->h_addr, 4);
-	afs_inet_ntoa_r(FS_HostAddr_NBO, hoststr);
+	(void)afs_inet_ntoa_r(FS_HostAddr_NBO, hoststr);
 	FS_HostAddr_HBO = ntohl(FS_HostAddr_NBO);
 	ViceLog(0,
 		("FileServer %s has address %s (0x%x or 0x%x in host byte order)\n",
@@ -1821,7 +1832,7 @@ main(int argc, char *argv[])
 #if defined(AFS_PTHREAD_ENV) && !defined(AFS_NT40_ENV)
     softsig_signal(SIGQUIT, ShutDown_Signal);
 #else
-    signal(SIGQUIT, ShutDown_Signal);
+    (void)signal(SIGQUIT, ShutDown_Signal);
 #endif
 
     ViceLog(0,

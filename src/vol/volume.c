@@ -135,6 +135,16 @@ RCSID
 #include <unistd.h>
 #endif
 
+#ifdef O_LARGEFILE
+#define afs_stat	stat64
+#define afs_fstat	fstat64
+#define afs_open	open64
+#else /* !O_LARGEFILE */
+#define afs_stat	stat
+#define afs_fstat	fstat
+#define afs_open	open
+#endif /* !O_LARGEFILE */
+
 #ifdef AFS_PTHREAD_ENV
 pthread_mutex_t vol_glock_mutex;
 pthread_mutex_t vol_attach_mutex;
@@ -149,15 +159,17 @@ extern void *calloc(), *realloc();
 /*@printflike@*/ extern void Log(const char *format, ...);
 
 /* Forward declarations */
-static Volume *attach2();
-static void FreeVolume();
-static void VScanUpdateList();
-static void InitLRU();
-static int GetVolumeHeader();
-static void ReleaseVolumeHeader();
-static void FreeVolumeHeader();
-static void AddVolumeToHashTable();
-static void DeleteVolumeFromHashTable();
+static Volume *attach2(Error * ec, char *path,
+		       register struct VolumeHeader *header,
+		       struct DiskPartition *partp, int isbusy);
+static void FreeVolume(Volume * vp);
+static void VScanUpdateList(void);
+static void InitLRU(int howMany);
+static int GetVolumeHeader(register Volume * vp);
+static void ReleaseVolumeHeader(register struct volHeader *hd);
+static void FreeVolumeHeader(register Volume * vp);
+static void AddVolumeToHashTable(register Volume * vp, int hashid);
+static void DeleteVolumeFromHashTable(register Volume * vp);
 static int VHold(Volume * vp);
 static int VHold_r(Volume * vp);
 static void GetBitmap(Error * ec, Volume * vp, VnodeClass class);
@@ -550,7 +562,7 @@ VAttachVolumeByName_r(Error * ec, char *partition, char *name, int mode)
 {
     register Volume *vp;
     int fd, n;
-    struct stat status;
+    struct afs_stat status;
     struct VolumeDiskHeader diskHeader;
     struct VolumeHeader iheader;
     struct DiskPartition *partp;
@@ -585,8 +597,8 @@ VAttachVolumeByName_r(Error * ec, char *partition, char *name, int mode)
     strcpy(path, VPartitionPath(partp));
     strcat(path, "/");
     strcat(path, name);
-    VOL_UNLOCK if ((fd = open(path, O_RDONLY)) == -1
-		   || fstat(fd, &status) == -1) {
+    VOL_UNLOCK if ((fd = afs_open(path, O_RDONLY)) == -1
+		   || afs_fstat(fd, &status) == -1) {
 	Log("VAttachVolume: Failed to open %s (errno %d)\n", path, errno);
 	if (fd > -1)
 	    close(fd);
@@ -1488,12 +1500,12 @@ GetVolumePath(Error * ec, VolId volumeId, char **partitionp, char **namep)
 
     *ec = 0;
     name[0] = '/';
-    sprintf(&name[1], VFORMAT, volumeId);
+    (void)afs_snprintf(&name[1], (sizeof name) - 1, VFORMAT, volumeId);
     for (dp = DiskPartitionList; dp; dp = dp->next) {
-	struct stat status;
+	struct afs_stat status;
 	strcpy(path, VPartitionPath(dp));
 	strcat(path, name);
-	if (stat(path, &status) == 0) {
+	if (afs_stat(path, &status) == 0) {
 	    strcpy(partition, dp->name);
 	    found = 1;
 	    break;
@@ -1519,8 +1531,8 @@ VolumeNumber(char *name)
 char *
 VolumeExternalName(VolumeId volumeId)
 {
-    static char name[15];
-    sprintf(name, VFORMAT, volumeId);
+    static char name[VMAXPATHLEN];
+    (void)afs_snprintf(name, sizeof name, VFORMAT, volumeId);
     return name;
 }
 

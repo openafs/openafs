@@ -30,7 +30,7 @@ RCSID
 #include <sys/param.h>
 #include <sys/types.h>
 
-#if AFS_HAVE_STATVFS
+#if AFS_HAVE_STATVFS || AFS_HAVE_STATVFS64
 #include <sys/statvfs.h>
 #endif /* AFS_HAVE_STATVFS */
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
@@ -112,7 +112,6 @@ RCSID
 #endif
 #endif
 
-
 #include <rx/xdr.h>
 #include <afs/afsint.h>
 #include "nfs.h"
@@ -146,6 +145,42 @@ RCSID
 #ifdef AFS_AIX42_ENV
 #include <jfs/filsys.h>
 #endif
+
+#ifdef O_LARGEFILE
+
+#define afs_stat	stat64
+#define afs_open	open64
+#define afs_fopen	fopen64
+#ifndef AFS_NT40_ENV
+#if AFS_HAVE_STATVFS64
+# define afs_statvfs	statvfs64
+#else
+# if AFS_HAVE_STATFS64
+#  define afs_statfs	statfs64
+#else
+#  if AFS_HAVE_STATVFS
+#   define afs_statvfs	statvfs
+#  else
+#   define afs_statfs	statfs
+#  endif /* !AFS_HAVE_STATVFS */
+# endif	/* !AFS_HAVE_STATFS64 */
+#endif /* !AFS_HAVE_STATVFS64 */
+#endif /* !AFS_NT40_ENV */
+
+#else /* !O_LARGEFILE */
+
+#define afs_stat	stat
+#define afs_open	open
+#define afs_fopen	fopen
+#ifndef AFS_NT40_ENV
+#if AFS_HAVE_STATVFS
+#define afs_statvfs	statvfs
+#else /* !AFS_HAVE_STATVFS */
+#define afs_statfs	statfs
+#endif /* !AFS_HAVE_STATVFS */
+#endif /* !AFS_NT40_ENV */
+
+#endif /* !O_LARGEFILE */
 
 /*@printflike@*/ extern void Log(const char *format, ...);
 
@@ -216,7 +251,7 @@ VInitPartition_r(char *path, char *devname, Device dev)
     strcat(dp->devName, "Lock");
     mkdir(dp->devName, 0700);
     strcat(dp->devName, path);
-    close(open(dp->devName, O_RDWR | O_CREAT, 0600));
+    close(afs_open(dp->devName, O_RDWR | O_CREAT, 0600));
     dp->device = volutil_GetPartitionID(path);
 #else
     dp->devName = (char *)malloc(strlen(devname) + 1);
@@ -257,7 +292,7 @@ VOL_UNLOCK}
 int
 VCheckPartition(char *part, char *devname)
 {
-    struct stat status;
+    struct afs_stat status;
 #if !defined(AFS_LINUX20_ENV) && !defined(AFS_NT40_ENV)
     char AFSIDatPath[MAXPATHLEN];
 #endif
@@ -267,7 +302,7 @@ VCheckPartition(char *part, char *devname)
     if (strncmp(part, VICE_PARTITION_PREFIX, VICE_PREFIX_SIZE)) {
 	return 0;
     }
-    if (stat(part, &status) < 0) {
+    if (afs_stat(part, &status) < 0) {
 	Log("VInitVnodes: Couldn't find file system %s; ignored\n", part);
 	return 0;
     }
@@ -276,7 +311,7 @@ VCheckPartition(char *part, char *devname)
 	char salvpath[MAXPATHLEN];
 	strcpy(salvpath, part);
 	strcat(salvpath, "/FORCESALVAGE");
-	if (stat(salvpath, &status) == 0) {
+	if (afs_stat(salvpath, &status) == 0) {
 	    Log("VInitVnodes: Found %s; aborting\n", salvpath);
 	    return -1;
 	}
@@ -287,7 +322,7 @@ VCheckPartition(char *part, char *devname)
     strcpy(AFSIDatPath, part);
     strcat(AFSIDatPath, "/AFSIDat");
 #ifdef AFS_NAMEI_ENV
-    if (stat(AFSIDatPath, &status) < 0) {
+    if (afs_stat(AFSIDatPath, &status) < 0) {
 	DIR *dirp;
 	struct dirent *dp;
 
@@ -303,7 +338,7 @@ VCheckPartition(char *part, char *devname)
 	closedir(dirp);
     }
 #else /* AFS_NAMEI_ENV */
-    if (stat(AFSIDatPath, &status) == 0) {
+    if (afs_stat(AFSIDatPath, &status) == 0) {
 	Log("This program is compiled without AFS_NAMEI_ENV, but partition %s seems to contain volumes which use the namei-interface; aborting\n", part);
 	return -1;
     }
@@ -316,7 +351,7 @@ VCheckPartition(char *part, char *devname)
 #endif
 
 #if defined(AFS_DUX40_ENV) && !defined(AFS_NAMEI_ENV)
-    if (status.st_ino != ROOTINO) {
+    if (afs_status.st_ino != ROOTINO) {
 	Log("%s is not a mounted file system; ignored.\n", part);
 	return 0;
     }
@@ -336,7 +371,7 @@ static int
 VIsAlwaysAttach(char *part)
 {
 #ifdef AFS_NAMEI_ENV
-    struct stat st;
+    struct afs_stat st;
     char checkfile[256];
     int ret;
 
@@ -347,7 +382,7 @@ VIsAlwaysAttach(char *part)
     strcat(checkfile, "/");
     strcat(checkfile, VICE_ALWAYSATTACH_FILE);
 
-    ret = stat(checkfile, &st);
+    ret = afs_stat(checkfile, &st);
     return (ret < 0) ? 0 : 1;
 #else /* AFS_NAMEI_ENV */
     return 0;
@@ -391,7 +426,7 @@ VAttachPartitions(void)
     struct mnttab mnt;
     FILE *mntfile;
 
-    if (!(mntfile = fopen(MNTTAB, "r"))) {
+    if (!(mntfile = afs_fopen(MNTTAB, "r"))) {
 	Log("Can't open %s\n", MNTTAB);
 	perror(MNTTAB);
 	exit(-1);
@@ -706,11 +741,11 @@ VAttachPartitions(void)
 	 * doing this for us.
 	 */
 	if (programType == fileServer) {
-	    struct stat status;
+	    struct afs_stat status;
 	    char salvpath[MAXPATHLEN];
 	    strcpy(salvpath, entry.vp_dev);
 	    strcat(salvpath, "\\FORCESALVAGE");
-	    if (stat(salvpath, &status) == 0) {
+	    if (afs_stat(salvpath, &status) == 0) {
 		Log("VAttachPartitions: Found %s; aborting\n", salvpath);
 		exit(1);
 	    }
@@ -833,10 +868,10 @@ VSetPartitionDiskUsage_r(register struct DiskPartition *dp)
 {
     int fd, totalblks, free, used, availblks, bsize, code;
     int reserved;
-#if AFS_HAVE_STATVFS
-    struct statvfs statbuf;
+#ifdef afs_statvfs
+    struct afs_statvfs statbuf;
 #else
-    struct statfs statbuf;
+    struct afs_statfs statbuf;
 #endif
 
     if (dp->flags & PART_DONTUPDATE)
@@ -845,10 +880,10 @@ VSetPartitionDiskUsage_r(register struct DiskPartition *dp)
      * is syncing every 30 seconds anyway, we only have to keep the disk
      * approximately 10% from full--you just can't get the stuff in from
      * the net fast enough to worry */
-#if AFS_HAVE_STATVFS
-    code = statvfs(dp->name, &statbuf);
+#ifdef afs_statvfs
+    code = afs_statvfs(dp->name, &statbuf);
 #else
-    code = statfs(dp->name, &statbuf);
+    code = afs_statfs(dp->name, &statbuf);
 #endif
     if (code < 0) {
 	Log("statfs of %s failed in VSetPartitionDiskUsage (errno = %d)\n",
@@ -862,7 +897,7 @@ VSetPartitionDiskUsage_r(register struct DiskPartition *dp)
     totalblks = statbuf.f_blocks;
     free = statbuf.f_bfree;
     reserved = free - statbuf.f_bavail;
-#if AFS_HAVE_STATVFS
+#ifdef afs_statvfs
     bsize = statbuf.f_frsize;
 #else
     bsize = statbuf.f_bsize;
@@ -918,8 +953,8 @@ VResetDiskUsage(void)
 VOL_UNLOCK}
 
 void
-VAdjustDiskUsage_r(Error * ec, Volume * vp, afs_int32 blocks,
-		   afs_int32 checkBlocks)
+VAdjustDiskUsage_r(Error * ec, Volume * vp, afs_sfsize_t blocks,
+		   afs_sfsize_t checkBlocks)
 {
     *ec = 0;
     /* why blocks instead of checkBlocks in the check below?  Otherwise, any check
@@ -948,14 +983,14 @@ VAdjustDiskUsage_r(Error * ec, Volume * vp, afs_int32 blocks,
 }
 
 void
-VAdjustDiskUsage(Error * ec, Volume * vp, afs_int32 blocks,
-		 afs_int32 checkBlocks)
+VAdjustDiskUsage(Error * ec, Volume * vp, afs_sfsize_t blocks,
+		 afs_sfsize_t checkBlocks)
 {
     VOL_LOCK VAdjustDiskUsage_r(ec, vp, blocks, checkBlocks);
 VOL_UNLOCK}
 
 int
-VDiskUsage_r(Volume * vp, afs_int32 blocks)
+VDiskUsage_r(Volume * vp, afs_sfsize_t blocks)
 {
     if (blocks > 0) {
 #ifdef	AFS_AIX32_ENV
@@ -975,7 +1010,7 @@ VDiskUsage_r(Volume * vp, afs_int32 blocks)
 }
 
 int
-VDiskUsage(Volume * vp, afs_int32 blocks)
+VDiskUsage(Volume * vp, afs_sfsize_t blocks)
 {
     int retVal;
     VOL_LOCK retVal = VDiskUsage_r(vp, blocks);
@@ -1091,7 +1126,7 @@ VLockPartition_r(char *name)
 #endif
 
     for (retries = 25; retries; retries--) {
-	dp->lock_fd = open(partitionName, code);
+	dp->lock_fd = afs_open(partitionName, code);
 	if (dp->lock_fd != -1)
 	    break;
 	if (errno == ENOENT)

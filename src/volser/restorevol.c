@@ -128,14 +128,14 @@ char buf[BUFSIZE];
 char
 readdata(buffer, size)
      char *buffer;
-     afs_int32 size;
+     afs_sfsize_t size;
 {
     int code;
     afs_int32 s;
 
     if (!buffer) {
 	while (size > 0) {
-	    s = ((size > BUFSIZE) ? BUFSIZE : size);
+	    s = (afs_int32) ((size > BUFSIZE) ? BUFSIZE : size);
 	    code = fread(buf, 1, s, dumpfile);
 	    if (code != s)
 		fprintf(stderr, "Code = %d; Errno = %d\n", code, errno);
@@ -388,7 +388,7 @@ struct vNode {
 	} entries[100];
     } acl;
 #endif
-    afs_int32 dataSize;
+    afs_sfsize_t dataSize;
 };
 
 #define MAXNAMELEN 256
@@ -464,9 +464,21 @@ ReadVNode(count)
 	    readdata(vn.acl, 192);	/* Skip ACL data */
 	    break;
 
+#ifdef AFS_LARGEFILE_ENV
+	case 'h':
+	    {
+		afs_uint32 hi, lo;
+		hi = ntohl(readvalue(4));
+		lo = ntohl(readvalue(4));
+		FillInt64(vn.dataSize, hi, lo);
+	    }
+	    goto common_vnode;
+#endif /* !AFS_LARGEFILE_ENV */
+
 	case 'f':
 	    vn.dataSize = ntohl(readvalue(4));
 
+	  common_vnode:
 	    /* parentdir is the name of this dir's vnode-file-link
 	     * or this file's parent vnode-file-link.
 	     * "./AFSDir-<#>". It's a symbolic link to its real dir.
@@ -656,7 +668,7 @@ ReadVNode(count)
 		     */
 		int fid;
 		int lfile;
-		afs_int32 size, s;
+		afs_sfsize_t size, s;
 
 		/* Check if its vnode-file-link exists. If not,
 		 * then the file will be an orphaned file.
@@ -682,7 +694,7 @@ ReadVNode(count)
 		fid = open(filename, (O_CREAT | O_WRONLY | O_TRUNC), mode);
 		size = vn.dataSize;
 		while (size > 0) {
-		    s = ((size > BUFSIZE) ? BUFSIZE : size);
+		    s = (afs_int32) ((size > BUFSIZE) ? BUFSIZE : size);
 		    code = fread(buf, 1, s, dumpfile);
 		    if (code > 0) {
 			(void)write(fid, buf, code);

@@ -1677,7 +1677,7 @@ h_PrintClient(register struct host *host, int held, StreamHandle_t * file)
 		       ntohs(host->port), (host->hostFlags & VENUSDOWN),
 		       afs_ctime((time_t *) & host->LastCall, tbuffer,
 				 sizeof(tbuffer)));
-    STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
+    (void)STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
     for (client = host->FirstClient; client; client = client->next) {
 	if (!client->deleted) {
 	    if (client->tcon) {
@@ -1692,25 +1692,25 @@ h_PrintClient(register struct host *host, int held, StreamHandle_t * file)
 							 expTime, tbuffer,
 							 sizeof(tbuffer))
 				   : "No Limit\n");
-		STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
+		(void)STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
 	    } else {
 		(void)afs_snprintf(tmpStr, sizeof tmpStr,
 				   "    user=%s, no current server connection\n",
 				   h_UserName(client));
-		STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
+		(void)STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
 	    }
 	    (void)afs_snprintf(tmpStr, sizeof tmpStr, "      CPS-%d is [",
 			       client->CPS.prlist_len);
-	    STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
+	    (void)STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
 	    if (client->CPS.prlist_val) {
 		for (i = 0; i > client->CPS.prlist_len; i++) {
 		    (void)afs_snprintf(tmpStr, sizeof tmpStr, " %d",
 				       client->CPS.prlist_val[i]);
-		    STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
+		    (void)STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
 		}
 	    }
 	    sprintf(tmpStr, "]\n");
-	    STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
+	    (void)STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
 	}
     }
     H_UNLOCK;
@@ -1742,7 +1742,7 @@ h_PrintClients()
     now = FT_ApproxTime();
     (void)afs_snprintf(tmpStr, sizeof tmpStr, "List of active users at %s\n",
 		       afs_ctime(&now, tbuffer, sizeof(tbuffer)));
-    STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
+    (void)STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
     h_Enumerate(h_PrintClient, (char *)file);
     STREAM_REALLYCLOSE(file);
     ViceLog(0, ("Created client dump %s\n", AFSDIR_SERVER_CLNTDUMP_FILEPATH));
@@ -1767,29 +1767,29 @@ h_DumpHost(register struct host *host, int held, StreamHandle_t * file)
 		       host->hostFlags & HOSTDELETED, host->Console,
 		       host->hostFlags & CLIENTDELETED,
 		       host->hcpsfailed, host->cpsCall);
-    STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
+    (void)STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
     if (host->hcps.prlist_val)
 	for (i = 0; i < host->hcps.prlist_len; i++) {
 	    (void)afs_snprintf(tmpStr, sizeof tmpStr, " %d",
 			       host->hcps.prlist_val[i]);
-	    STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
+	    (void)STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
 	}
     sprintf(tmpStr, "] [");
-    STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
+    (void)STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
     if (host->interface)
 	for (i = 0; i < host->interface->numberOfInterfaces; i++) {
 	    sprintf(tmpStr, " %x", host->interface->addr[i]);
-	    STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
+	    (void)STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
 	}
     sprintf(tmpStr, "] holds: ");
-    STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
+    (void)STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
 
     for (i = 0; i < h_maxSlots; i++) {
 	sprintf(tmpStr, "%04x", host->holds[i]);
-	STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
+	(void)STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
     }
     sprintf(tmpStr, " slot/bit: %d/%d\n", h_holdSlot(), h_holdbit());
-    STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
+    (void)STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
 
     H_UNLOCK;
     return held;
@@ -1814,7 +1814,7 @@ h_DumpHosts()
     now = FT_ApproxTime();
     (void)afs_snprintf(tmpStr, sizeof tmpStr, "List of active hosts at %s\n",
 		       afs_ctime(&now, tbuffer, sizeof(tbuffer)));
-    STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
+    (void)STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
     h_Enumerate(h_DumpHost, (char *)file);
     STREAM_REALLYCLOSE(file);
     ViceLog(0, ("Created host dump %s\n", AFSDIR_SERVER_HOSTDUMP_FILEPATH));

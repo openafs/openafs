@@ -66,13 +66,18 @@ RCSID
 #include <strings.h>
 #endif
 
+#ifdef O_LARGEFILE
+#define afs_open	open64
+#else /* !O_LARGEFILE */
+#define afs_open	open
+#endif /* !O_LARGEFILE */
 
 /*@printflike@*/ extern void Log(const char *format, ...);
 
-void AssignVolumeName();
-void AssignVolumeName_r();
-void ClearVolumeStats();
-void ClearVolumeStats_r();
+void AssignVolumeName(register VolumeDiskData * vol, char *name, char *ext);
+void AssignVolumeName_r(register VolumeDiskData * vol, char *name, char *ext);
+void ClearVolumeStats(register VolumeDiskData * vol);
+void ClearVolumeStats_r(register VolumeDiskData * vol);
 
 
 #define nFILES	(sizeof (stuff)/sizeof(struct stuff))
@@ -155,7 +160,7 @@ VCreateVolume_r(Error * ec, char *partname, VolId volumeId, VolId parentId)
     (void)afs_snprintf(headerName, sizeof headerName, VFORMAT, vol.id);
     (void)afs_snprintf(volumePath, sizeof volumePath, "%s/%s",
 		       VPartitionPath(partition), headerName);
-    fd = open(volumePath, O_CREAT | O_EXCL | O_WRONLY, 0600);
+    fd = afs_open(volumePath, O_CREAT | O_EXCL | O_WRONLY, 0600);
     if (fd == -1) {
 	if (errno == EEXIST) {
 	    Log("VCreateVolume: Header file %s already exists!\n",

@@ -315,7 +315,7 @@ DoCloneIndex(Volume * rwvp, Volume * clvp, VnodeClass class, int reclone)
 	    if (dircloned) {
 		rwvnode->cloned = 0;
 		if (STREAM_SEEK(rwfile, offset, 0) != -1)
-		    STREAM_WRITE(rwvnode, vcp->diskSize, 1, rwfile);
+		    (void)STREAM_WRITE(rwvnode, vcp->diskSize, 1, rwfile);
 	    }
 	    ERROR_EXIT(EIO);
 	}

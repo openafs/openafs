@@ -447,13 +447,15 @@ extern int VInitVolumePackage(ProgramType pt, int nLargeVnodes,
 			      int nSmallVnodes, int connect, int volcache);
 extern void DiskToVolumeHeader(VolumeHeader_t * h, VolumeDiskHeader_t * dh);
 extern void VolumeHeaderToDisk(VolumeDiskHeader_t * dh, VolumeHeader_t * h);
+extern void VTakeOffline_r(register Volume * vp);
+extern void VTakeOffline(register Volume * vp);
 
 
 /* Naive formula relating number of file size to number of 1K blocks in file */
 /* Note:  we charge 1 block for 0 length files so the user can't store
    an inifite number of them; for most files, we give him the inode, vnode,
    and indirect block overhead, for FREE! */
-#define nBlocks(bytes) ((bytes) == 0? 1: ((bytes)+1023)/1024)
+#define nBlocks(bytes) ((afs_sfsize_t)((bytes) == 0? 1: (((afs_sfsize_t)(bytes))+1023)/1024))
 
 /* Client process id -- file server sends a Check volumes signal back to the client at this pid */
 #define CLIENTPID	"/vice/vol/clientpid"

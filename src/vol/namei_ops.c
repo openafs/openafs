@@ -45,14 +45,36 @@ RCSID
 #include "partition.h"
 #include <afs/errors.h>
 
+/*@+fcnmacros +macrofcndecl@*/
+#ifdef O_LARGEFILE
+#ifdef S_SPLINT_S
+extern off64_t afs_lseek(int FD, off64_t O, int F);
+#endif /*S_SPLINT_S */
+#define afs_lseek(FD, O, F)	lseek64(FD, (off64_t)(O), F)
+#define afs_stat		stat64
+#define afs_fstat		fstat64
+#define afs_open		open64
+#define afs_fopen		fopen64
+#else /* !O_LARGEFILE */
+#ifdef S_SPLINT_S
+extern off_t afs_lseek(int FD, off_t O, int F);
+#endif /*S_SPLINT_S */
+#define afs_lseek(FD, O, F)	lseek(FD, (off_t)(O), F)
+#define afs_stat		stat
+#define afs_fstat		fstat
+#define afs_open		open
+#define afs_fopen		fopen
+#endif /* !O_LARGEFILE */
+/*@=fcnmacros =macrofcndecl@*/
+
 /*@printflike@*/ extern void Log(const char *format, ...);
 
 extern char *volutil_PartitionName_r(int volid, char *buf, int buflen);
 
-int
-namei_iread(IHandle_t * h, int offset, char *buf, int size)
+afs_sfsize_t
+namei_iread(IHandle_t * h, afs_foff_t offset, char *buf, afs_fsize_t size)
 {
-    int nBytes;
+    afs_sfsize_t nBytes;
     FdHandle_t *fdP;
 
     fdP = IH_OPEN(h);
@@ -69,10 +91,10 @@ namei_iread(IHandle_t * h, int offset, char *buf, int size)
     return nBytes;
 }
 
-int
-namei_iwrite(IHandle_t * h, int offset, char *buf, int size)
+afs_sfsize_t
+namei_iwrite(IHandle_t * h, afs_foff_t offset, char *buf, afs_fsize_t size)
 {
-    int nBytes;
+    afs_sfsize_t nBytes;
     FdHandle_t *fdP;
 
     fdP = IH_OPEN(h);
@@ -221,7 +243,7 @@ namei_ViceREADME(char *partition)
 
     (void)afs_snprintf(filename, sizeof filename, "%s/%s/README", partition,
 		       INODEDIR);
-    fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0444);
+    fd = afs_open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0444);
     if (fd >= 0) {
 	(void)write(fd, VICE_README, strlen(VICE_README));
 	close(fd);
@@ -295,7 +317,7 @@ delTree(char *root, char *tree, int *errp)
     char *cp;
     DIR *ds;
     struct dirent *dirp;
-    struct stat st;
+    struct afs_stat st;
 
     if (*tree) {
 	/* delete the children first */
@@ -318,7 +340,7 @@ delTree(char *root, char *tree, int *errp)
 		 */
 		strcat(root, "/");
 		strcat(root, dirp->d_name);
-		if (stat(root, &st) == 0 && S_ISDIR(st.st_mode)) {
+		if (afs_stat(root, &st) == 0 && S_ISDIR(st.st_mode)) {
 		    /* delete this subtree */
 		    delTree(root, cp + 1, errp);
 		} else
@@ -441,7 +463,7 @@ SetOGM(int fd, int parm, int tag)
 
 /* GetOGM - get parm and tag from owner, group and mode bits. */
 static void
-GetOGMFromStat(struct stat *status, int *parm, int *tag)
+GetOGMFromStat(struct afs_stat *status, int *parm, int *tag)
 {
     *parm = status->st_uid | (status->st_gid << 15);
     *parm |= (status->st_mode & 0x18) << 27;
@@ -451,8 +473,8 @@ GetOGMFromStat(struct stat *status, int *parm, int *tag)
 static int
 GetOGM(int fd, int *parm, int *tag)
 {
-    struct stat status;
-    if (fstat(fd, &status) < 0)
+    struct afs_stat status;
+    if (afs_fstat(fd, &status) < 0)
 	return -1;
 
     GetOGMFromStat(&status, parm, tag);
@@ -528,12 +550,13 @@ namei_icreate(IHandle_t * lh, char *part, int p1, int p2, int p3, int p4)
     }
 
     namei_HandleToName(&name, &tmp);
-    fd = open(name.n_path, O_CREAT | O_EXCL | O_TRUNC | O_RDWR, 0);
+    fd = afs_open(name.n_path, O_CREAT | O_EXCL | O_TRUNC | O_RDWR, 0);
     if (fd < 0) {
 	if (errno == ENOTDIR || errno == ENOENT) {
 	    if (namei_CreateDataDirectories(&name, &created_dir) < 0)
 		goto bad;
-	    fd = open(name.n_path, O_CREAT | O_EXCL | O_TRUNC | O_RDWR, 0);
+	    fd = afs_open(name.n_path, O_CREAT | O_EXCL | O_TRUNC | O_RDWR,
+			  0);
 	    if (fd < 0)
 		goto bad;
 	} else {
@@ -579,7 +602,7 @@ namei_iopen(IHandle_t * h)
 
     /* Convert handle to file name. */
     namei_HandleToName(&name, h);
-    fd = open(name.n_path, O_RDWR, 0666);
+    fd = afs_open(name.n_path, O_RDWR, 0666);
     return fd;
 }
 
@@ -805,12 +828,12 @@ namei_inc(IHandle_t * h, Inode ino, int p1)
 #define LINKTABLE_SHIFT 1	/* log 2 = 1 */
 
 static void
-namei_GetLCOffsetAndIndexFromIno(Inode ino, int *offset, int *index)
+namei_GetLCOffsetAndIndexFromIno(Inode ino, afs_foff_t * offset, int *index)
 {
     int toff = (int)(ino & NAMEI_VNODEMASK);
     int tindex = (int)((ino >> NAMEI_TAGSHIFT) & NAMEI_TAGMASK);
 
-    *offset = (toff << LINKTABLE_SHIFT) + 8;	/* * 2 + sizeof stamp */
+    *offset = (afs_foff_t) ((toff << LINKTABLE_SHIFT) + 8);	/* * 2 + sizeof stamp */
     *index = (tindex << 1) + tindex;
 }
 
@@ -823,7 +846,8 @@ int
 namei_GetLinkCount(FdHandle_t * h, Inode ino, int lockit)
 {
     unsigned short row = 0;
-    int offset, index;
+    afs_foff_t offset;
+    int index;
 
     namei_GetLCOffsetAndIndexFromIno(ino, &offset, &index);
 
@@ -836,7 +860,7 @@ namei_GetLinkCount(FdHandle_t * h, Inode ino, int lockit)
 	    return -1;
     }
 
-    if (lseek(h->fd_fd, offset, SEEK_SET) == -1)
+    if (afs_lseek(h->fd_fd, offset, SEEK_SET) == -1)
 	goto bad_getLinkByte;
 
     if (read(h->fd_fd, (char *)&row, sizeof(row)) != sizeof(row)) {
@@ -860,7 +884,7 @@ static int
 GetFreeTag(IHandle_t * ih, int vno)
 {
     FdHandle_t *fdP;
-    int offset;
+    afs_foff_t offset;
     int col;
     int coldata;
     short row;
@@ -882,7 +906,7 @@ GetFreeTag(IHandle_t * ih, int vno)
     }
 
     offset = (vno << LINKTABLE_SHIFT) + 8;	/* * 2 + sizeof stamp */
-    if (lseek(fdP->fd_fd, offset, SEEK_SET) == -1) {
+    if (afs_lseek(fdP->fd_fd, offset, SEEK_SET) == -1) {
 	goto badGetFreeTag;
     }
 
@@ -905,7 +929,7 @@ GetFreeTag(IHandle_t * ih, int vno)
     coldata = 1 << (col * 3);
     row |= coldata;
 
-    if (lseek(fdP->fd_fd, offset, SEEK_SET) == -1) {
+    if (afs_lseek(fdP->fd_fd, offset, SEEK_SET) == -1) {
 	goto badGetFreeTag;
     }
     if (write(fdP->fd_fd, (char *)&row, sizeof(row)) != sizeof(row)) {
@@ -939,7 +963,8 @@ GetFreeTag(IHandle_t * ih, int vno)
 int
 namei_SetLinkCount(FdHandle_t * fdP, Inode ino, int count, int locked)
 {
-    int offset, index;
+    afs_foff_t offset;
+    int index;
     unsigned short row;
     int junk;
     int code = -1;
@@ -955,7 +980,7 @@ namei_SetLinkCount(FdHandle_t * fdP, Inode ino, int count, int locked)
 	    return -1;
 	}
     }
-    if (lseek(fdP->fd_fd, offset, SEEK_SET) == -1) {
+    if (afs_lseek(fdP->fd_fd, offset, SEEK_SET) == -1) {
 	errno = EBADF;
 	goto bad_SetLinkCount;
     }
@@ -975,7 +1000,7 @@ namei_SetLinkCount(FdHandle_t * fdP, Inode ino, int count, int locked)
     row &= (unsigned short)~junk;
     row |= (unsigned short)count;
 
-    if (lseek(fdP->fd_fd, offset, SEEK_SET) == -1) {
+    if (afs_lseek(fdP->fd_fd, offset, SEEK_SET) == -1) {
 	errno = EBADF;
 	goto bad_SetLinkCount;
     }
@@ -1035,9 +1060,9 @@ int mode_errors;		/* Number of errors found in mode bits on directories. */
 void
 VerifyDirPerms(char *path)
 {
-    struct stat status;
+    struct afs_stat status;
 
-    if (stat(path, &status) < 0) {
+    if (afs_stat(path, &status) < 0) {
 	Log("Unable to stat %s. Please manually verify mode bits for this"
 	    " directory\n", path);
     } else {
@@ -1066,10 +1091,10 @@ ListViceInodes(char *devname, char *mountedOn, char *resultFile,
 {
     FILE *fp = (FILE *) - 1;
     int ninodes;
-    struct stat status;
+    struct afs_stat status;
 
     if (resultFile) {
-	fp = fopen(resultFile, "w");
+	fp = afs_fopen(resultFile, "w");
 	if (!fp) {
 	    Log("Unable to create inode description file %s\n", resultFile);
 	    return -1;
@@ -1110,7 +1135,7 @@ ListViceInodes(char *devname, char *mountedOn, char *resultFile,
     /*
      * Paranoia:  check that the file is really the right size
      */
-    if (stat(resultFile, &status) == -1) {
+    if (afs_stat(resultFile, &status) == -1) {
 	Log("Unable to successfully stat inode file for %s\n", mountedOn);
 	return -2;
     }
@@ -1247,7 +1272,7 @@ namei_ListAFSSubDirs(IHandle_t * dirIH,
 		/* Open this handle */
 		(void)afs_snprintf(path2, sizeof path2, "%s/%s", path1,
 				   dp1->d_name);
-		linkHandle.fd_fd = open(path2, O_RDONLY, 0666);
+		linkHandle.fd_fd = afs_open(path2, O_RDONLY, 0666);
 		info.linkCount =
 		    namei_GetLinkCount(&linkHandle, (Inode) 0, 0);
 	    }
@@ -1365,19 +1390,19 @@ static int
 DecodeInode(char *dpath, char *name, struct ViceInodeInfo *info, int volid)
 {
     char fpath[512];
-    struct stat status;
+    struct afs_stat status;
     int parm, tag;
 
     (void)strcpy(fpath, dpath);
     (void)strcat(fpath, "/");
     (void)strcat(fpath, name);
 
-    if (stat(fpath, &status) < 0) {
+    if (afs_stat(fpath, &status) < 0) {
 	return -1;
     }
 
     info->byteCount = status.st_size;
-    info->inodeNumber = flipbase64_to_int64(name);
+    info->inodeNumber = (Inode) flipbase64_to_int64(name);
 
     GetOGMFromStat(&status, &parm, &tag);
     if ((info->inodeNumber & NAMEI_INODESPECIAL) == NAMEI_INODESPECIAL) {
@@ -1545,7 +1570,7 @@ namei_ConvertROtoRWvolume(IHandle_t * h, afs_uint32 vid)
     t_ih.ih_vid = h->ih_vid;
 
     (void)afs_snprintf(oldpath, sizeof oldpath, "%s/%s", dir_name, infoName);
-    fd = open(oldpath, O_RDWR, 0);
+    fd = afs_open(oldpath, O_RDWR, 0);
     if (fd < 0) {
 	Log("1 namei_ConvertROtoRWvolume: could not open RO info file: %s\n",
 	    oldpath);
@@ -1553,7 +1578,7 @@ namei_ConvertROtoRWvolume(IHandle_t * h, afs_uint32 vid)
     }
     t_ih.ih_ino = namei_MakeSpecIno(h->ih_vid, VI_VOLINFO);
     namei_HandleToName(&n, &t_ih);
-    fd2 = open(n.n_path, O_CREAT | O_EXCL | O_TRUNC | O_RDWR, 0);
+    fd2 = afs_open(n.n_path, O_CREAT | O_EXCL | O_TRUNC | O_RDWR, 0);
     if (fd2 < 0) {
 	Log("1 namei_ConvertROtoRWvolume: could not create RW info file: %s\n", n.n_path);
 	close(fd);
@@ -1572,7 +1597,7 @@ namei_ConvertROtoRWvolume(IHandle_t * h, afs_uint32 vid)
     t_ih.ih_ino = namei_MakeSpecIno(h->ih_vid, VI_SMALLINDEX);
     namei_HandleToName(&n, &t_ih);
     (void)afs_snprintf(newpath, sizeof newpath, "%s/%s", dir_name, smallName);
-    fd = open(newpath, O_RDWR, 0);
+    fd = afs_open(newpath, O_RDWR, 0);
     if (fd < 0) {
 	Log("1 namei_ConvertROtoRWvolume: could not open SmallIndex file: %s\n", newpath);
 	return -1;
@@ -1585,7 +1610,7 @@ namei_ConvertROtoRWvolume(IHandle_t * h, afs_uint32 vid)
     t_ih.ih_ino = namei_MakeSpecIno(h->ih_vid, VI_LARGEINDEX);
     namei_HandleToName(&n, &t_ih);
     (void)afs_snprintf(newpath, sizeof newpath, "%s/%s", dir_name, largeName);
-    fd = open(newpath, O_RDWR, 0);
+    fd = afs_open(newpath, O_RDWR, 0);
     if (fd < 0) {
 	Log("1 namei_ConvertROtoRWvolume: could not open LargeIndex file: %s\n", newpath);
 	return -1;

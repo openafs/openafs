@@ -16,6 +16,8 @@
 
 #define Date afs_uint32
 
+struct Volume;			/* Potentially forward definition. */
+
 typedef struct ViceLock {
     int lockCount;
     int lockTime;
@@ -198,17 +200,19 @@ typedef struct Vnode {
    vnodes */
 #define VAclSize(vnp)		(SIZEOF_LARGEDISKVNODE - SIZEOF_SMALLDISKVNODE)
 #define VAclDiskSize(v)		(SIZEOF_LARGEDISKVNODE - SIZEOF_SMALLDISKVNODE)
-extern int VolumeHashOffset();
-extern int VolumeHashOffset_r();
-extern VInitVnodes();
-extern VInitVnodes_r();
-extern Vnode *VGetVnode();
-extern Vnode *VGetVnode_r();
-extern void VPutVnode();
-extern void VPutVnode_r();
-extern VVnodeWriteToRead();
-extern VVnodeWriteToRead_r();
-extern Vnode *VAllocVnode();
-extern Vnode *VAllocVnode_r();
-extern VFreeVnode();
-extern VFreeVnode_r();
+/*extern int VolumeHashOffset(); */
+extern int VolumeHashOffset_r(void);
+extern VInitVnodes(VnodeClass class, int nVnodes);
+/*extern VInitVnodes_r();*/
+extern Vnode *VGetVnode(Error * ec, struct Volume *vp, VnodeId vnodeNumber,
+			int locktype);
+extern Vnode *VGetVnode_r(Error * ec, struct Volume *vp, VnodeId vnodeNumber,
+			  int locktype);
+extern void VPutVnode(Error * ec, register Vnode * vnp);
+extern void VPutVnode_r(Error * ec, register Vnode * vnp);
+extern VVnodeWriteToRead(Error * ec, register Vnode * vnp);
+extern VVnodeWriteToRead_r(Error * ec, register Vnode * vnp);
+extern Vnode *VAllocVnode(Error * ec, struct Volume *vp, VnodeType type);
+extern Vnode *VAllocVnode_r(Error * ec, struct Volume *vp, VnodeType type);
+/*extern VFreeVnode();*/
+extern Vnode *VGetFreeVnode_r(struct VnodeClassInfo *vcp);

@@ -66,7 +66,7 @@ ReallyRead(DirHandle * file, int block, char *data)
 	FDH_REALLYCLOSE(fdP);
 	return code;
     }
-    code = FDH_READ(fdP, data, AFS_PAGESIZE);
+    code = FDH_READ(fdP, data, (afs_fsize_t) AFS_PAGESIZE);
     if (code != AFS_PAGESIZE) {
 	if (code < 0)
 	    code = errno;
@@ -99,7 +99,7 @@ ReallyWrite(DirHandle * file, int block, char *data)
 	FDH_REALLYCLOSE(fdP);
 	return code;
     }
-    code = FDH_WRITE(fdP, data, AFS_PAGESIZE);
+    code = FDH_WRITE(fdP, data, (afs_fsize_t) AFS_PAGESIZE);
     if (code != AFS_PAGESIZE) {
 	if (code < 0)
 	    code = errno;

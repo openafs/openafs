@@ -113,10 +113,25 @@ RCSID
 #include <afs/unified_afs.h>
 #include <afs/audit.h>
 #include <afs/afsutil.h>
+#include <afs/dir.h>
+
+extern void SetDirHandle(register DirHandle * dir, register Vnode * vnode);
+extern void FidZap(DirHandle * file);
+extern void FidZero(DirHandle * file);
 
 #ifdef AFS_PTHREAD_ENV
 pthread_mutex_t fileproc_glock_mutex;
 #endif /* AFS_PTHREAD_ENV */
+
+#ifdef O_LARGEFILE
+#define afs_stat	stat64
+#define afs_fstat	fstat64
+#define afs_open	open64
+#else /* !O_LARGEFILE */
+#define afs_stat	stat
+#define afs_fstat	fstat
+#define afs_open	open
+#endif /* !O_LARGEFILE */
 
 
 /* Useful local defines used by this module */
@@ -198,22 +213,22 @@ extern int CEs, CEBlocks;
 extern int HTs, HTBlocks;
 
 afs_int32 FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
-			    register struct rx_call *Call, afs_int32 Pos,
-			    afs_int32 Len, afs_int32 Int64Mode,
+			    register struct rx_call *Call, afs_sfsize_t Pos,
+			    afs_sfsize_t Len, afs_int32 Int64Mode,
 #if FS_STATS_DETAILED
-			    afs_int32 * a_bytesToFetchP,
-			    afs_int32 * a_bytesFetchedP
+			    afs_sfsize_t * a_bytesToFetchP,
+			    afs_sfsize_t * a_bytesFetchedP
 #endif				/* FS_STATS_DETAILED */
     );
 
 afs_int32 StoreData_RXStyle(Volume * volptr, Vnode * targetptr,
 			    struct AFSFid *Fid, struct client *client,
-			    register struct rx_call *Call, afs_uint32 Pos,
-			    afs_uint32 Length, afs_uint32 FileLength,
+			    register struct rx_call *Call, afs_fsize_t Pos,
+			    afs_fsize_t Length, afs_fsize_t FileLength,
 			    int sync,
 #if FS_STATS_DETAILED
-			    afs_int32 * a_bytesToStoreP,
-			    afs_int32 * a_bytesStoredP
+			    afs_sfsize_t * a_bytesToStoreP,
+			    afs_sfsize_t * a_bytesStoredP
 #endif				/* FS_STATS_DETAILED */
     );
 
@@ -584,7 +599,7 @@ GetRights(struct client *client, struct acl_accessList *ACL,
 
     if (client->host->hcps.prlist_len && !client->host->hcps.prlist_val) {
 	ViceLog(0,
-		("CheckRights: len=%d, for host=0x%x\n",
+		("CheckRights: len=%u, for host=0x%x\n",
 		 client->host->hcps.prlist_len, client->host->host));
     } else
 	acl_CheckRights(ACL, &client->host->hcps, &hrights);
@@ -1018,7 +1033,8 @@ CopyOnWrite(Vnode * targetptr, Volume * volptr)
     Inode ino, nearInode;
     int rdlen;
     int wrlen;
-    register int size, length;
+    register afs_fsize_t size;
+    register int length;
     int ifd, ofd;
     char *buff;
     int rc;			/* return code */
@@ -1072,7 +1088,7 @@ CopyOnWrite(Vnode * targetptr, Volume * volptr)
 	    length = COPYBUFFSIZE;
 	    size -= COPYBUFFSIZE;
 	} else {
-	    length = size;
+	    length = (int)size;
 	    size = 0;
 	}
 	rdlen = FDH_READ(targFdP, buff, length);
@@ -1298,7 +1314,7 @@ Update_ParentVnodeStatus(Vnode * parentptr, Volume * volptr, DirHandle * dir,
 #endif /* FS_STATS_DETAILED */
 
     parentptr->disk.dataVersion++;
-    newlength = Length(dir);
+    newlength = (afs_fsize_t) Length(dir);
     /* 
      * This is a called on both dir removals (i.e. remove, removedir, rename) but also in dir additions
      * (create, symlink, link, makedir) so we need to check if we have enough space
@@ -1525,7 +1541,8 @@ SetCallBackStruct(afs_uint32 CallBackTime, struct AFSCallBack *CallBack)
  * enough space before consuming some.
  */
 static afs_int32
-AdjustDiskUsage(Volume * volptr, afs_int32 length, afs_int32 checkLength)
+AdjustDiskUsage(Volume * volptr, afs_sfsize_t length,
+		afs_sfsize_t checkLength)
 {
     int rc;
     int nc;
@@ -1559,7 +1576,7 @@ AdjustDiskUsage(Volume * volptr, afs_int32 length, afs_int32 checkLength)
 static afs_int32
 Alloc_NewVnode(Vnode * parentptr, DirHandle * dir, Volume * volptr,
 	       Vnode ** targetptr, char *Name, struct AFSFid *OutFid,
-	       int FileType, int BlocksPreallocatedForVnode)
+	       int FileType, afs_sfsize_t BlocksPreallocatedForVnode)
 {
     int errorCode = 0;		/* Error code returned back */
     int temp;
@@ -1570,8 +1587,8 @@ Alloc_NewVnode(Vnode * parentptr, DirHandle * dir, Volume * volptr,
 	 AdjustDiskUsage(volptr, BlocksPreallocatedForVnode,
 			 BlocksPreallocatedForVnode))) {
 	ViceLog(25,
-		("Insufficient space to allocate %d blocks\n",
-		 BlocksPreallocatedForVnode));
+		("Insufficient space to allocate %lld blocks\n",
+		 (afs_intmax_t) BlocksPreallocatedForVnode));
 	return (errorCode);
     }
 
@@ -2039,8 +2056,9 @@ GetStatus(Vnode * targetptr, AFSFetchStatus * status, afs_int32 rights,
 
 static
   afs_int32
-common_FetchData64(struct rx_call *acall, struct AFSFid *Fid, afs_int32 Pos,
-		   afs_int32 Len, struct AFSFetchStatus *OutStatus,
+common_FetchData64(struct rx_call *acall, struct AFSFid *Fid,
+		   afs_sfsize_t Pos, afs_sfsize_t Len,
+		   struct AFSFetchStatus *OutStatus,
 		   struct AFSCallBack *CallBack, struct AFSVolSync *Sync,
 		   int type)
 {
@@ -2061,8 +2079,8 @@ common_FetchData64(struct rx_call *acall, struct AFSFid *Fid, afs_int32 Pos,
     struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
     struct timeval xferStartTime, xferStopTime;	/* Start/stop times for xfer portion */
     struct timeval elapsedTime;	/* Transfer time */
-    afs_int32 bytesToXfer;	/* # bytes to xfer */
-    afs_int32 bytesXferred;	/* # bytes actually xferred */
+    afs_sfsize_t bytesToXfer;	/* # bytes to xfer */
+    afs_sfsize_t bytesXferred;	/* # bytes actually xferred */
     int readIdx;		/* Index of read stats array to bump */
     static afs_int32 tot_bytesXferred;	/* shared access protected by FS_LOCK */
 
@@ -2284,13 +2302,15 @@ SRXAFS_FetchData64(struct rx_call * acall, struct AFSFid * Fid, afs_int64 Pos,
 		   struct AFSCallBack * CallBack, struct AFSVolSync * Sync)
 {
     int code;
-    afs_int32 tPos, tLen;
+    afs_sfsize_t tPos, tLen;
 
 #ifdef AFS_64BIT_ENV
+#ifndef AFS_LARGEFILE_ENV
     if (Pos + Len > 0x7fffffff)
 	return E2BIG;
-    tPos = Pos;
-    tLen = Len;
+#endif /* !AFS_LARGEFILE_ENV */
+    tPos = (afs_sfsize_t) Pos;
+    tLen = (afs_sfsize_t) Len;
 #else /* AFS_64BIT_ENV */
     if (Pos.high || Len.high)
 	return E2BIG;
@@ -2852,8 +2872,8 @@ SRXAFS_FetchStatus(struct rx_call * acall, struct AFSFid * Fid,
 static
   afs_int32
 common_StoreData64(struct rx_call *acall, struct AFSFid *Fid,
-		   struct AFSStoreStatus *InStatus, afs_uint32 Pos,
-		   afs_uint32 Length, afs_uint32 FileLength,
+		   struct AFSStoreStatus *InStatus, afs_fsize_t Pos,
+		   afs_fsize_t Length, afs_fsize_t FileLength,
 		   struct AFSFetchStatus *OutStatus, struct AFSVolSync *Sync)
 {
     Vnode *targetptr = 0;	/* pointer to input fid */
@@ -2873,8 +2893,8 @@ common_StoreData64(struct rx_call *acall, struct AFSFid *Fid,
     struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
     struct timeval xferStartTime, xferStopTime;	/* Start/stop times for xfer portion */
     struct timeval elapsedTime;	/* Transfer time */
-    afs_int32 bytesToXfer;	/* # bytes to xfer */
-    afs_int32 bytesXferred;	/* # bytes actually xfer */
+    afs_sfsize_t bytesToXfer;	/* # bytes to xfer */
+    afs_sfsize_t bytesXferred;	/* # bytes actually xfer */
     static afs_int32 tot_bytesXferred;	/* shared access protected by FS_LOCK */
 
     /*
@@ -3092,16 +3112,18 @@ SRXAFS_StoreData64(struct rx_call * acall, struct AFSFid * Fid,
 		   struct AFSVolSync * Sync)
 {
     int code;
-    afs_int32 tPos;
-    afs_int32 tLength;
-    afs_int32 tFileLength;
+    afs_fsize_t tPos;
+    afs_fsize_t tLength;
+    afs_fsize_t tFileLength;
 
 #ifdef AFS_64BIT_ENV
+#ifndef AFS_LARGEFILE_ENV
     if (FileLength > 0x7fffffff)
 	return E2BIG;
-    tPos = Pos;
-    tLength = Length;
-    tFileLength = FileLength;
+#endif /* !AFS_LARGEFILE_ENV */
+    tPos = (afs_fsize_t) Pos;
+    tLength = (afs_fsize_t) Length;
+    tFileLength = (afs_fsize_t) FileLength;
 #else /* AFS_64BIT_ENV */
     if (FileLength.high)
 	return E2BIG;
@@ -3968,7 +3990,8 @@ SAFSS_Rename(struct rx_call *acall, struct AFSFid *OldDirFid, char *OldName,
 	if (newfileptr->disk.linkCount == 0) {	/* Link count 0 - delete */
 	    afs_fsize_t newSize;
 	    VN_GET_LEN(newSize, newfileptr);
-	    VAdjustDiskUsage(&errorCode, volptr, -nBlocks(newSize), 0);
+	    VAdjustDiskUsage((Error *) & errorCode, volptr,
+			     (afs_sfsize_t) - nBlocks(newSize), 0);
 	    if (VN_GET_INO(newfileptr)) {
 		IH_REALLYCLOSE(newfileptr->handle);
 		errorCode =
@@ -4663,7 +4686,7 @@ SAFSS_MakeDir(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
     SetDirHandle(&dir, targetptr);
     assert(!(MakeDir(&dir, OutFid, DirFid)));
     DFlush();
-    VN_SET_LEN(targetptr, Length(&dir));
+    VN_SET_LEN(targetptr, (afs_fsize_t) Length(&dir));
 
     /* set up return status */
     GetStatus(targetptr, OutFidStatus, rights, anyrights, parentptr);
@@ -6398,7 +6421,7 @@ SRXAFS_GetRootVolume(struct rx_call * acall, char **VolumeName)
     AFSCallStats.GetRootVolume++, AFSCallStats.TotalCalls++;
     FS_UNLOCK;
     temp = malloc(256);
-    fd = open(AFSDIR_SERVER_ROOTVOL_FILEPATH, O_RDONLY, 0666);
+    fd = afs_open(AFSDIR_SERVER_ROOTVOL_FILEPATH, O_RDONLY, 0666);
     if (fd <= 0)
 	strcpy(temp, DEFAULTVOLUME);
     else {
@@ -6583,10 +6606,11 @@ SRXAFS_GetTime(struct rx_call * acall, afs_uint32 * Seconds,
 
 afs_int32
 FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
-		  register struct rx_call * Call, afs_int32 Pos,
-		  afs_int32 Len, afs_int32 Int64Mode,
+		  register struct rx_call * Call, afs_sfsize_t Pos,
+		  afs_sfsize_t Len, afs_int32 Int64Mode,
 #if FS_STATS_DETAILED
-		  afs_int32 * a_bytesToFetchP, afs_int32 * a_bytesFetchedP
+		  afs_sfsize_t * a_bytesToFetchP,
+		  afs_sfsize_t * a_bytesFetchedP
 #endif				/* FS_STATS_DETAILED */
     )
 {
@@ -6601,9 +6625,9 @@ FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
     struct iovec tiov[RX_MAXIOVECS];
     int tnio;
 #endif /* AFS_NT40_ENV */
-    afs_int32 tlen;
+    afs_sfsize_t tlen;
     afs_int32 optSize;
-    struct stat tstat;
+    struct afs_stat tstat;
 #ifdef	AFS_AIX_ENV
     struct statfs tstatfs;
 #endif
@@ -6616,15 +6640,20 @@ FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
     (*a_bytesFetchedP) = 0;
 #endif /* FS_STATS_DETAILED */
 
+
+    ViceLog(25,
+	    ("FetchData_RXStyle: Pos %llu, Len %llu\n", (afs_uintmax_t) Pos,
+	     (afs_uintmax_t) Len));
+
     if (!VN_GET_INO(targetptr)) {
+	afs_int32 zero = htonl(0);
 	/*
 	 * This is used for newly created files; we simply send 0 bytes
 	 * back to make the cache manager happy...
 	 */
-	tlen = htonl(0);
 	if (Int64Mode)
-	    rx_Write(Call, (char *)&tlen, sizeof(afs_int32));	/* send 0-length  */
-	rx_Write(Call, (char *)&tlen, sizeof(afs_int32));	/* send 0-length  */
+	    rx_Write(Call, (char *)&zero, sizeof(afs_int32));	/* send 0-length  */
+	rx_Write(Call, (char *)&zero, sizeof(afs_int32));	/* send 0-length  */
 	return (0);
     }
     TM_GetTimeOfDay(&StartTime, 0);
@@ -6634,6 +6663,8 @@ FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
 	return EIO;
     optSize = sendBufSize;
     tlen = FDH_SIZE(fdP);
+    ViceLog(25,
+	    ("FetchData_RXStyle: file size %llu\n", (afs_uintmax_t) tlen));
     if (tlen < 0) {
 	FDH_CLOSE(fdP);
 	return EIO;
@@ -6642,12 +6673,17 @@ FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
     if (Pos + Len > tlen)
 	Len = tlen - Pos;	/* get length we should send */
     (void)FDH_SEEK(fdP, Pos, 0);
-    tlen = htonl(Len);
-    if (Int64Mode) {
-	afs_int32 zero = 0;
-	rx_Write(Call, (char *)&zero, sizeof(afs_int32));	/* High order bits */
+    {
+	afs_int32 high, low;
+	SplitOffsetOrSize(Len, high, low);
+	assert(Int64Mode || high == 0);
+	if (Int64Mode) {
+	    high = htonl(high);
+	    rx_Write(Call, (char *)&high, sizeof(afs_int32));	/* High order bits */
+	}
+	low = htonl(low);
+	rx_Write(Call, (char *)&low, sizeof(afs_int32));	/* send length on fetch */
     }
-    rx_Write(Call, (char *)&tlen, sizeof(afs_int32));	/* send length on fetch */
 #if FS_STATS_DETAILED
     (*a_bytesToFetchP) = Len;
 #endif /* FS_STATS_DETAILED */
@@ -6655,31 +6691,32 @@ FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
     tbuffer = AllocSendBuffer();
 #endif /* AFS_NT40_ENV */
     while (Len > 0) {
+	int wlen;
 	if (Len > optSize)
-	    tlen = optSize;
+	    wlen = optSize;
 	else
-	    tlen = Len;
+	    wlen = (int)Len;
 #ifdef AFS_NT40_ENV
-	errorCode = FDH_READ(fdP, tbuffer, tlen);
-	if (errorCode != tlen) {
+	errorCode = FDH_READ(fdP, tbuffer, wlen);
+	if (errorCode != wlen) {
 	    FDH_CLOSE(fdP);
 	    FreeSendBuffer((struct afs_buffer *)tbuffer);
 	    return EIO;
 	}
-	errorCode = rx_Write(Call, tbuffer, tlen);
+	errorCode = rx_Write(Call, tbuffer, wlen);
 #else /* AFS_NT40_ENV */
-	errorCode = rx_WritevAlloc(Call, tiov, &tnio, RX_MAXIOVECS, tlen);
+	errorCode = rx_WritevAlloc(Call, tiov, &tnio, RX_MAXIOVECS, wlen);
 	if (errorCode <= 0) {
 	    FDH_CLOSE(fdP);
 	    return EIO;
 	}
-	tlen = errorCode;
+	wlen = errorCode;
 	errorCode = FDH_READV(fdP, tiov, tnio);
-	if (errorCode != tlen) {
+	if (errorCode != wlen) {
 	    FDH_CLOSE(fdP);
 	    return EIO;
 	}
-	errorCode = rx_Writev(Call, tiov, tnio, tlen);
+	errorCode = rx_Writev(Call, tiov, tnio, wlen);
 #endif /* AFS_NT40_ENV */
 #if FS_STATS_DETAILED
 	/*
@@ -6688,14 +6725,14 @@ FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
 	 */
 	(*a_bytesFetchedP) += errorCode;
 #endif /* FS_STATS_DETAILED */
-	if (errorCode != tlen) {
+	if (errorCode != wlen) {
 	    FDH_CLOSE(fdP);
 #ifdef AFS_NT40_ENV
 	    FreeSendBuffer((struct afs_buffer *)tbuffer);
 #endif /* AFS_NT40_ENV */
 	    return -31;
 	}
-	Len -= tlen;
+	Len -= wlen;
     }
 #ifdef AFS_NT40_ENV
     FreeSendBuffer((struct afs_buffer *)tbuffer);
@@ -6730,7 +6767,8 @@ FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
 }				/*FetchData_RXStyle */
 
 static int
-GetLinkCountAndSize(Volume * vp, FdHandle_t * fdP, int *lc, int *size)
+GetLinkCountAndSize(Volume * vp, FdHandle_t * fdP, int *lc,
+		    afs_sfsize_t * size)
 {
 #ifdef AFS_NAMEI_ENV
     FdHandle_t *lhp;
@@ -6748,9 +6786,9 @@ GetLinkCountAndSize(Volume * vp, FdHandle_t * fdP, int *lc, int *size)
     *size = OS_SIZE(fdP->fd_fd);
     return (*size == -1) ? -1 : 0;
 #else
-    struct stat status;
+    struct afs_stat status;
 
-    if (fstat(fdP->fd_fd, &status) < 0) {
+    if (afs_fstat(fdP->fd_fd, &status) < 0) {
 	return -1;
     }
 
@@ -6782,14 +6820,15 @@ GetLinkCountAndSize(Volume * vp, FdHandle_t * fdP, int *lc, int *size)
 afs_int32
 StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 		  struct client * client, register struct rx_call * Call,
-		  afs_uint32 Pos, afs_uint32 Length, afs_uint32 FileLength,
+		  afs_fsize_t Pos, afs_fsize_t Length, afs_fsize_t FileLength,
 		  int sync,
 #if FS_STATS_DETAILED
-		  afs_int32 * a_bytesToStoreP, afs_int32 * a_bytesStoredP
+		  afs_sfsize_t * a_bytesToStoreP,
+		  afs_sfsize_t * a_bytesStoredP
 #endif				/* FS_STATS_DETAILED */
     )
 {
-    int bytesTransfered;	/* number of bytes actually transfered */
+    afs_sfsize_t bytesTransfered;	/* number of bytes actually transfered */
     struct timeval StartTime, StopTime;	/* Used to measure how long the store takes */
     int errorCode = 0;		/* Returned error code to caller */
 #ifdef AFS_NT40_ENV
@@ -6798,13 +6837,13 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
     struct iovec tiov[RX_MAXIOVECS];	/* no data copying with iovec */
     int tnio;			/* temp for iovec size */
 #endif /* AFS_NT40_ENV */
-    int tlen;			/* temp for xfr length */
+    afs_sfsize_t tlen;		/* temp for xfr length */
     Inode tinode;		/* inode for I/O */
     afs_int32 optSize;		/* optimal transfer size */
-    int DataLength;		/* size of inode */
-    afs_int32 TruncatedLength;	/* size after ftruncate */
-    afs_uint32 NewLength;	/* size after this store completes */
-    afs_int32 adjustSize;	/* bytes to call VAdjust... with */
+    afs_sfsize_t DataLength;	/* size of inode */
+    afs_sfsize_t TruncatedLength;	/* size after ftruncate */
+    afs_fsize_t NewLength;	/* size after this store completes */
+    afs_sfsize_t adjustSize;	/* bytes to call VAdjust... with */
     int linkCount;		/* link count on inode */
     int code;
     FdHandle_t *fdP;
@@ -6828,9 +6867,9 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 	/* the inode should have been created in Alloc_NewVnode */
 	logHostAddr.s_addr = rx_HostOf(rx_PeerOf(rx_ConnectionOf(Call)));
 	ViceLog(0,
-		("StoreData_RXStyle : Inode non-existent Fid = %u.%u.%u, inode = %llu, Pos %d Host %s\n",
+		("StoreData_RXStyle : Inode non-existent Fid = %u.%u.%u, inode = %llu, Pos %llu Host %s\n",
 		 Fid->Volume, Fid->Vnode, Fid->Unique,
-		 (afs_uintmax_t) VN_GET_INO(targetptr), Pos,
+		 (afs_uintmax_t) VN_GET_INO(targetptr), (afs_uintmax_t) Pos,
 		 inet_ntoa(logHostAddr)));
 	return ENOENT;		/* is this proper error code? */
     } else {
@@ -6921,6 +6960,10 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
     TM_GetTimeOfDay(&StartTime, 0);
 
     optSize = sendBufSize;
+    ViceLog(25,
+	    ("StoreData_RXStyle: Pos %llu, DataLength %llu, FileLength %llu, Length %llu\n",
+	     (afs_uintmax_t) Pos, (afs_uintmax_t) DataLength,
+	     (afs_uintmax_t) FileLength, (afs_uintmax_t) Length));
 
     /* truncate the file iff it needs it (ftruncate is slow even when its a noop) */
     if (FileLength < DataLength)
@@ -6952,17 +6995,20 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 	(*a_bytesToStoreP) = Length;
 #endif /* FS_STATS_DETAILED */
 	while (1) {
+	    int rlen;
 	    if (bytesTransfered >= Length) {
 		errorCode = 0;
 		break;
 	    }
 	    tlen = Length - bytesTransfered;	/* how much more to do */
 	    if (tlen > optSize)
-		tlen = optSize;	/* bound by buffer size */
+		rlen = optSize;	/* bound by buffer size */
+	    else
+		rlen = (int)tlen;
 #ifdef AFS_NT40_ENV
-	    errorCode = rx_Read(Call, tbuffer, tlen);
+	    errorCode = rx_Read(Call, tbuffer, rlen);
 #else /* AFS_NT40_ENV */
-	    errorCode = rx_Readv(Call, tiov, &tnio, RX_MAXIOVECS, tlen);
+	    errorCode = rx_Readv(Call, tiov, &tnio, RX_MAXIOVECS, rlen);
 #endif /* AFS_NT40_ENV */
 #if FS_STATS_DETAILED
 	    (*a_bytesStoredP) += errorCode;
@@ -6971,17 +7017,17 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 		errorCode = -32;
 		break;
 	    }
-	    tlen = errorCode;
+	    rlen = errorCode;
 #ifdef AFS_NT40_ENV
-	    errorCode = FDH_WRITE(fdP, tbuffer, tlen);
+	    errorCode = FDH_WRITE(fdP, tbuffer, rlen);
 #else /* AFS_NT40_ENV */
 	    errorCode = FDH_WRITEV(fdP, tiov, tnio);
 #endif /* AFS_NT40_ENV */
-	    if (errorCode != tlen) {
+	    if (errorCode != rlen) {
 		errorCode = VDISKFULL;
 		break;
 	    }
-	    bytesTransfered += tlen;
+	    bytesTransfered += rlen;
 	}
     }
   done:
@@ -6992,7 +7038,7 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 	FDH_SYNC(fdP);
     }
     if (errorCode) {
-	afs_fsize_t nfSize = FDH_SIZE(fdP);
+	afs_fsize_t nfSize = (afs_fsize_t) FDH_SIZE(fdP);
 	/* something went wrong: adjust size and return */
 	VN_SET_LEN(targetptr, nfSize);	/* set new file size. */
 	/* changed_newTime is tested in StoreData to detemine if we
@@ -7002,7 +7048,8 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 	FDH_CLOSE(fdP);
 	/* set disk usage to be correct */
 	VAdjustDiskUsage(&errorCode, volptr,
-			 (int)(nBlocks(nfSize) - nBlocks(NewLength)), 0);
+			 (afs_sfsize_t) (nBlocks(nfSize) -
+					 nBlocks(NewLength)), 0);
 	return errorCode;
     }
     FDH_CLOSE(fdP);
