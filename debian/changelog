@@ -4,7 +4,7 @@ openafs (1.2.11-2) unstable; urgency=low
   * Install upserver and upclient
   * Mark as version 1.2.11, Closes: #255883
 
- -- Sam Hartman <hartmans@debian.org>  Thu, 12 Aug 2004 14:08:02 -0400
+ -- Sam Hartman <hartmans@debian.org>  Thu, 12 Aug 2004 14:27:39 -0400
 
 openafs (1.2.11-1) unstable; urgency=high
 
