@@ -150,7 +150,11 @@ extern afs_int32 afs_showflags;
 
 afs_warn(a,b,c,d,e,f,g,h,i,j)
 char *a;
+#if defined(AFS_USE_VOID_PTR)
+void *b, *c, *d, *e, *f, *g, *h, *i, *j;
+#else
 long b,c,d,e,f,g,h,i,j;
+#endif
 {
     AFS_STATCNT(afs_warn);
     

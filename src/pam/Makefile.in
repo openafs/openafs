@@ -69,7 +69,7 @@ afs_util_krb.o: afs_util.c afs_util.h
 pam_afs.so.1: $(SHOBJS) afs_setcred.o afs_auth.o afs_util.o
 	set -x; \
 	case "$(SYS_NAME)" in \
-	hp_ux*) \
+	hp_ux* | ia64_hpux*) \
 		$(LD) $(LDFLAGS) -c mapfile.hp -o $@ afs_setcred.o afs_auth.o afs_util.o\
 			$(SHOBJS) $(LIBS) ;; \
 	sun*_5*) \
@@ -86,7 +86,7 @@ pam_afs.so.1: $(SHOBJS) afs_setcred.o afs_auth.o afs_util.o
 pam_afs.krb.so.1: $(SHOBJS) afs_setcred_krb.o afs_auth_krb.o afs_util_krb.o
 	set -x; \
 	case "$(SYS_NAME)" in \
-	hp_ux*) \
+	hp_ux* | ia64_hpux*) \
 		$(LD) $(LDFLAGS) -c mapfile.hp -o $@ \
 			afs_setcred_krb.o afs_auth_krb.o afs_util_krb.o $(SHOBJS) $(LDFLAGS) $(KLIBS) ;; \
 	sun*_5*) \
@@ -103,7 +103,7 @@ pam_afs.krb.so.1: $(SHOBJS) afs_setcred_krb.o afs_auth_krb.o afs_util_krb.o
 test_pam: test_pam.o
 	set -x; \
 	case "$(SYS_NAME)" in \
-	hp_ux*) \
+	hp_ux* | ia64_hpux*) \
 		$(CC) $(CFLAGS) -o $@ test_pam.o ${PAMLIBS};; \
 	sun*_5*) \
 		$(CC) $(CFLAGS) -o $@ test_pam.o ${PAMLIBS};; \

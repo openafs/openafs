@@ -229,10 +229,12 @@ static void ResetCheckSignal(void)
 
 #if defined(AFS_HPUX_ENV)
     signo = SIGPOLL;
-#elif defined(AFS_NT40_ENV)
+#else
+#if defined(AFS_NT40_ENV)
     signo = SIGUSR2;
 #else
     signo = SIGXCPU;
+#endif
 #endif
 
 #if defined(AFS_PTHREAD_ENV) && !defined(AFS_NT40_ENV)

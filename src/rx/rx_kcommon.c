@@ -750,7 +750,9 @@ struct osi_socket *rxk_NewSocket(short aport)
 {
     register afs_int32 code;
     struct socket *newSocket;
+#if !defined(AFS_HPUX110_ENV)
     register struct mbuf *nam;
+#endif
     struct sockaddr_in myaddr;
     int wow;
 #ifdef AFS_HPUX110_ENV
@@ -804,7 +806,9 @@ struct osi_socket *rxk_NewSocket(short aport)
     code = sobind(newSocket, bindnam, addrsize);
     if (code) {
        soclose(newSocket);
+#if !defined(AFS_HPUX110_ENV)
        m_freem(nam);
+#endif
        goto bad;
     }
 

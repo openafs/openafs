@@ -347,8 +347,14 @@ else
 		i?86-*-freebsd4.6*)
 			AFS_SYSNAME="i386_fbsd_46"
 			;;
-		hppa*-hp-hpux11*)
+		hppa*-hp-hpux11.0*)
 			AFS_SYSNAME="hp_ux110"
+			;;
+		hppa*-hp-hpux11.11)
+			 AFS_SYSNAME="hp_ux11i"
+			;;
+		ia64-hp-hpux*)
+			AFS_SYSNAME="ia64_hpux1122"
 			;;
 		hppa*-hp-hpux10*)
 			AFS_SYSNAME="hp_ux102"

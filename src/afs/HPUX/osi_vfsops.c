@@ -182,6 +182,9 @@ struct vfsops Afs_vfsops = {
 static int afs_Starting = 0;
 
 #pragma align 64
+#if defined(AFS_HPUX110_ENV)
+b_sema_t afs_global_sema = {0};
+#else
 sema_t afs_global_sema = {
    NULL, 0, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, /* sa_type */
    0, 0, 0, 0, 0, 0, 0, NULL, /* sa_link */
@@ -190,6 +193,7 @@ sema_t afs_global_sema = {
    , 0, 0, 0, NULL
 #endif
   };
+#endif
 
 void
 osi_InitGlock()
@@ -200,8 +204,12 @@ osi_InitGlock()
     if ( !afs_Starting ) {
 	afs_Starting = 1;
 	SPINUNLOCK_USAV(sched_lock, context);
+#if defined(AFS_HPUX110_ENV)
+	b_initsema(&afs_global_sema, 1,  NFS_LOCK_ORDER2, "AFS GLOCK");
+#else
 	initsema(&afs_global_sema, 1, FILESYS_SEMA_PRI, FILESYS_SEMA_ORDER);
         afsHash(64);	/* 64 buckets */
+#endif
     } else {
 	SPINUNLOCK_USAV(sched_lock, context);
     }

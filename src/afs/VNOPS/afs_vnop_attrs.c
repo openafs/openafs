@@ -33,6 +33,9 @@ RCSID("$Header$");
 extern afs_rwlock_t afs_xcbhash;
 struct afs_exporter *afs_nfsexporter;
 extern struct vcache *afs_globalVp;
+#if defined(AFS_HPUX110_ENV)
+extern struct vfs *afs_globalVFS;
+#endif
 
 /* copy out attributes from cache entry */
 afs_CopyOutAttrs(avc, attrs)
@@ -160,6 +163,11 @@ afs_CopyOutAttrs(avc, attrs)
 #else 
     attrs->va_rdev = 1;
 #endif
+
+#if defined(AFS_HPUX110_ENV)
+	if (afs_globalVFS) attrs->va_fstype = afs_globalVFS->vfs_mtype;
+#endif
+
     /*
      * Below return 0 (and not 1) blocks if the file is zero length. This conforms
      * better with the other filesystems that do return 0.	

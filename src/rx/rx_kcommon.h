@@ -47,7 +47,9 @@ typedef unsigned short                  etap_event_t;
 #include "../h/dir.h"
 #endif
 #include "../h/buf.h"
+#if !defined(AFS_HPUX110_ENV)
 #include "../h/mbuf.h"
+#endif
 #else
 #if defined(AFS_XBSD_ENV)
 #include "../h/dirent.h"

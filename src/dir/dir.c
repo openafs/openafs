@@ -76,7 +76,7 @@ RCSID("$Header$");
 #ifndef AFS_LINUX20_ENV
 #include "../netinet/in.h"
 #endif
-#if !defined(AFS_SUN5_ENV) && !defined(AFS_LINUX20_ENV)
+#if !defined(AFS_SUN5_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_HPUX110_ENV)
 #include "../h/mbuf.h"
 #endif
 #else /* !defined(UKERNEL) */

@@ -162,7 +162,8 @@ atoo(astr)
 static int
 quickStrip (iname, oname, ignored, copy_only)
 char *iname, *oname; {
-	int pid, status;
+	int pid;
+	pid_t status;
 	static char *strip[] = {
 		"strip", 0, 0,
 	};
@@ -186,7 +187,7 @@ char *iname, *oname; {
 		exit(1);
 
 	    default:			/* parent	*/
-		if (waitpid(pid, &status, 0) != pid) {
+		if (waitpid(pid, &status, 0) != pid && errno != ECHILD) {
 			perror("waitpid");
 			return -1;
 		}
@@ -232,7 +233,7 @@ char *iname, *oname; {
 		exit(1);
 
 	    default:			/* parent	*/
-		if (waitpid(pid, &status, 0) != pid) {
+		if (waitpid(pid, &status, 0) != pid && errno != ECHILD) {
 			perror("waitpid");
 			return -1;
 		}

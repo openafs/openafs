@@ -114,6 +114,8 @@ ${DEST}/etc/kdump: kdump
 	hp_ux11* ) \
 		${INSTALLex} -f kdump.sh.hp_ux11 $@; \
 		${INSTALL} -s -f $? ${DEST}/etc/kdump32;; \
+	ia64_hpux11* ) \
+		echo skipping kdump for ${SYS_NAME} ;; \
 	*) \
 		${INSTALL} -s $? $@ ;; \
 	esac
