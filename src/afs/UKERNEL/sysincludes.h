@@ -107,9 +107,9 @@
 #include  <arpa/inet.h>
 #define FREAD			0x0001
 #endif /* AFS_USR_LINUX22_ENV */
-
-/* this is necessary for client programs as well as the library itself */
-#if defined(AFS_LINUX22_ENV) || defined(AFS_USR_LINUX22_ENV)
+/*glibc 2.1 does not implement pthread_attr_setstacksize but 2.2 does*/
+#if (defined(AFS_LINUX22_ENV) || defined(AFS_USR_LINUX22_ENV)) \
+&& (__GLIBC_MINOR__ < 2)
 #define pthread_attr_setstacksize(a,b) 0
 #endif
 

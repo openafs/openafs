@@ -1,0 +1,10 @@
+openafs (1.0.snap20001103-1) unstable; urgency=low
+
+  * Initial Release.
+
+ -- unknown <hartmans@snorklewacker.mit.edu>  Fri,  3 Nov 2000 23:41:41 -0500
+
+Local variables:
+mode: debian-changelog
+add-log-mailing-address "hartmans@snorklewacker.mit.edu"
+End:

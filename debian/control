@@ -1,0 +1,17 @@
+Source: openafs
+Section: unknown
+Priority: optional
+Maintainer: unknown <hartmans@snorklewacker.mit.edu>
+Build-Depends: debhelper
+Standards-Version: 3.1.1
+
+Package: openafs
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: <insert up to 60 chars description>
+ <insert long description, indented with spaces>
+
+Package: openafs-doc
+Architecture: all
+Description: Documentation for openafs
+ <insert long description, indented with spaces>

@@ -1,0 +1,5 @@
+#!/bin/sh
+case `arch` in
+i[3456]86)
+	echo i386_linux22
+esac
