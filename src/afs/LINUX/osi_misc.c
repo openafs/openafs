@@ -302,8 +302,10 @@ void osi_linux_free_inode_pages(void)
 #else
 	    if (ip->i_nrpages) {
 #endif
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,2,15)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
 	        truncate_inode_pages(&ip->i_data, 0);
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2,2,15)
+	        truncate_inode_pages(ip, 0);
 #else
 		invalidate_inode_pages(ip);
 #endif
