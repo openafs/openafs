@@ -30,7 +30,7 @@
 #include "smb.h"
 
 #ifndef DJGPP
-#include <rxkad.h>
+#include <rx/rxkad.h>
 #include "afsrpc.h"
 #else
 #include <rx/rxkad.h>

@@ -26,7 +26,7 @@
 
 #include "smb.h"
 
-#include <rxkad.h>
+#include <rx/rxkad.h>
 
 /*
  * The motivation for this whole module is that in transmitting tokens

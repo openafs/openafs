@@ -9,12 +9,12 @@
 
 /* Security related utilities for the Windows platform */
 
-#include <param.h>
+#include <afs/param.h>
 #include <afsconfig.h>
 
 RCSID("$Header$");
 
-#include <stds.h>
+#include <afs/stds.h>
 
 #include <stddef.h>
 #include <stdlib.h>

@@ -33,8 +33,8 @@ RCSID("$Header$");
 # include <sys/time.h>
 #endif
 #include <sys/stat.h>
-#include <rx.h>
-#include <rx_globals.h>
+#include <rx/rx.h>
+#include <rx/rx_globals.h>
 #include <assert.h>
 #include <rx/rx_pthread.h>
 
