@@ -20,6 +20,10 @@
 #define _CODA_HEADER_
 struct coda_inode_info {};
 #endif
+#ifndef _LINUX_XFS_FS_I
+#define _LINUX_XFS_FS_I
+struct xfs_inode_info {};
+#endif
 #include "../h/fs.h"
 #include "../h/mm.h"
 #endif

@@ -54,7 +54,11 @@ int afs_mount(struct vfs *afsp, struct vnode *amvp, struct mounta *uap,
     return 0;
 }
 
+#if defined(AFS_SUN58_ENV)
+int afs_unmount (struct vfs *afsp, int flag, struct AFS_UCRED *credp)
+#else
 int afs_unmount (struct vfs *afsp, struct AFS_UCRED *credp)
+#endif
 {
     AFS_GLOCK();
     AFS_STATCNT(afs_unmount);
@@ -217,7 +221,10 @@ struct vfsops Afs_vfsops = {
     afs_sync,
     afs_vget,
     afs_mountroot,
-    afs_swapvp
+    afs_swapvp,
+#if defined(AFS_SUN58_ENV)
+    fs_freevfs,
+#endif
 };
 
 

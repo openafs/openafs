@@ -1164,10 +1164,34 @@ int afs_linux_readpage(struct file *fp, struct page *pp)
     return -code;
 }
 
-#ifdef NOTUSED
-/* afs_linux_writepage - is this used anywhere? swap files via nfs? */
-int afs_linux_writepage(struct inode *ip, struct page *) { return -EINVAL };
+#if defined(AFS_LINUX24_ENV)
+int afs_linux_writepage(struct file *file, struct page *page)
+{
+    struct dentry *dentry = file->f_dentry;
+    struct inode *inode = dentry->d_inode;
+    unsigned long end_index = inode->i_size >> PAGE_CACHE_SHIFT;
+    unsigned offset = PAGE_CACHE_SIZE;
+    long status;
+ 
+    /* easy case */
+    if (page->index < end_index)
+	goto do_it;
+    /* things got complicated... */
+    offset = inode->i_size & (PAGE_CACHE_SIZE-1);
+    /* OK, are we completely out? */
+    if (page->index >= end_index+1 || !offset)
+	return -EIO;
+do_it:
+    status = afs_linux_updatepage(file, page, 0, offset, 1);
+    kunmap(page);
+    if (status == offset)
+	return 0;
+    else
+	return status;
+}
+#endif
 
+#ifdef NOTUSED
 /* afs_linux_bmap - supports generic_readpage, but we roll our own. */
 int afs_linux_bmap(struct inode *ip, int) { return -EINVAL; }
 
@@ -1292,6 +1316,7 @@ struct inode_operations afs_file_iops = {
 };
 struct address_space_operations afs_file_aops = {
         readpage: afs_linux_readpage,
+        writepage: afs_linux_writepage,
         commit_write: afs_linux_commit_write,
         prepare_write: afs_linux_prepare_write,
 };

@@ -26,7 +26,7 @@
 #define AFS_GCPAGS		1       /* if nonzero, garbage collect PAGs */
 
 #define	AFS_3DISPARES		1	/* Utilize the 3 available disk inode 'spares' */
-#define	AFS_SYSCALL		101
+#define	AFS_SYSCALL		65
 
 /* File system entry (used if mount.h doesn't define MOUNT_AFS */
 #define AFS_MOUNT_AFS	 "afs"

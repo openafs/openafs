@@ -637,6 +637,7 @@ tagain:
       /* actually a serious error, probably should panic. Probably will 
        * panic soon, oh well. */
       ReleaseReadLock(&afs_xvcache);
+      afs_warnuser("afs_DoBulkStat: VLRU empty!");
       goto done;
     }
     if ((VLRU.next->prev != &VLRU) || (VLRU.prev->next != &VLRU)) {
@@ -739,12 +740,15 @@ tagain:
 	   refpanic ("Bulkstat VLRU inconsistent6");
 	ReleaseWriteLock(&afs_xvcache);
 
+	ObtainWriteLock(&afs_xcbhash, 494);
+
 	/* We need to check the flags again. We may have missed
 	 * something while we were waiting for a lock.
 	 */
 	if (!(tvcp->states & CBulkFetching) || (tvcp->m.Length != statSeqNo)) {
 	    flagIndex++;
 	    ReleaseWriteLock(&tvcp->lock);
+	    ReleaseWriteLock(&afs_xcbhash);
 	    afs_PutVCache(tvcp);
 	    continue;
 	}
@@ -760,19 +764,6 @@ tagain:
 	else if (vType(tvcp) == VLNK)
 	    tvcp->v.v_op = &afs_symlink_iops;
 #endif
-
-	ObtainWriteLock(&afs_xcbhash, 494);
-
-	/* We need to check the flags once more. We may have missed
-	 * something while we were waiting for a lock.
-	 */
-	if (!(tvcp->states & CBulkFetching) || (tvcp->m.Length != statSeqNo)) {
-	    flagIndex++;
-	    ReleaseWriteLock(&afs_xcbhash);
-	    ReleaseWriteLock(&tvcp->lock);
-	    afs_PutVCache(tvcp);
-	    continue;
-	}
 
 	/* do some accounting for bulk stats: mark this entry as
 	 * loaded, so we can tell if we use it before it gets

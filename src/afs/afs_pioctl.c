@@ -2421,6 +2421,8 @@ struct AFS_UCRED *acred;
     afs_int32 cell, volume;
 
     AFS_STATCNT(PFlushVolumeData);
+    if (!avc)
+	return EINVAL;
     if ( !afs_resourceinit_flag ) 	/* afs deamons havn't started yet */
 	return EIO;          /* Inappropriate ioctl for device */
 
