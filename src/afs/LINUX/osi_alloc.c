@@ -24,7 +24,7 @@ RCSID("$Header$");
 #include "../afs/afs_atomlist.h"
 #include "../afs/afs_lhash.h"
 
-#define MAX_KMALLOC_SIZE (131072-16) /* Max we can alloc in physmem */
+#define MAX_KMALLOC_SIZE AFS_SMALLOCSIZ /* Max we should alloc with kmalloc */
 #define MAX_BUCKET_LEN 30 /* max. no. of entries per buckets we expect to see */
 #define STAT_INTERVAL 8192 /* we collect stats once every STAT_INTERVAL allocs*/
 
@@ -79,14 +79,12 @@ static int hash_equal(const void *a, const void *b)
 static void *linux_alloc(unsigned int asize)
 {
     void *new = NULL;
-    int has_afs_glock = ISAFS_GLOCK();
-
-    /* if global lock has been held save this info and unlock it. */
-    if (has_afs_glock)
-        AFS_GUNLOCK();
+    int max_retry = 10;
 
     /*  if we can use kmalloc use it to allocate the required memory. */
-    if (asize <  MAX_KMALLOC_SIZE) {
+    while(!new && max_retry)
+    {
+        if (asize <=  MAX_KMALLOC_SIZE) {
         new = (void *)(unsigned long)kmalloc(asize, 
 #ifdef GFP_NOFS
 					     GFP_NOFS
@@ -96,29 +94,29 @@ static void *linux_alloc(unsigned int asize)
 					     );
         if (new) /* piggy back alloc type */
             (unsigned long)new |= KM_TYPE;
-    }
-    if (!new) { /* otherwise use vmalloc  */
-	int max_wait = 10;
-        while (!(new = (void *)vmalloc(asize))) {
-            if (--max_wait <=0) {
-		break;
+        } else {
+            new = (void *)vmalloc(asize);
+	    if (new) /* piggy back alloc type */
+	        (unsigned long)new |= VM_TYPE;
             }
+
+	if (!new) {
 #ifdef set_current_state
 	    set_current_state(TASK_INTERRUPTIBLE);
 #else
 	    current->state = TASK_INTERRUPTIBLE;
 #endif
 	    schedule_timeout(HZ);
+#ifdef set_current_state
+            set_current_state(TASK_RUNNING);
+#else
+            current->state = TASK_RUNNING;
+#endif
+            --max_retry;
         }
-	if (new) /* piggy back alloc type */
-	    (unsigned long)new |= VM_TYPE;
     }
     if (new)
 	memset(MEMADDR(new), 0, asize);
-
-    /* if the global lock had been held, lock it again. */
-    if (has_afs_glock)
-        AFS_GLOCK();
 
     return new;
 }
@@ -287,21 +285,21 @@ void *osi_linux_alloc(unsigned int asize)
     void *new = NULL;
     struct osi_linux_mem *lmem;
 
+    new = linux_alloc(asize); /* get a chunk of memory of size asize */
+
+    if (!new) {
+	printf("afs_osi_Alloc: Can't vmalloc %d bytes.\n", asize);
+	return new;
+    }
+
     down(&afs_linux_alloc_sem);
 
-    if (allocator_init == 0) { /* allocator hasn't been initialized yet */
+    /* allocator hasn't been initialized yet */
+    if (allocator_init == 0) {
 	if (linux_alloc_init() == 0) {
 	    goto error;
 	 }
 	allocator_init = 1; /* initialization complete */
-    }
-
-    up(&afs_linux_alloc_sem);
-    new = linux_alloc(asize); /* get a chunk of memory of size asize */
-    down(&afs_linux_alloc_sem);
-    if (!new) {
-	printf("afs_osi_Alloc: Can't vmalloc %d bytes.\n", asize);
-	goto error;
     }
     
     /* get an atom to store the pointer to the chunk */
