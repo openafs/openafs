@@ -517,7 +517,7 @@ restart:
 	repeat:
 	    next = this_parent->d_subdirs.next;
 	resume:
-	    while (next != &this_parent->d_subdirs) {
+	    while (next && next != &this_parent->d_subdirs) {
 		struct list_head *tmp = next;
 		struct dentry *dchld = list_entry(tmp, struct dentry, d_child);
 		
