@@ -174,12 +174,16 @@ char	**argv;
 #endif
 	} else {
 	    /* support help flag */
-	    printf("Usage: vlserver [-p <number of processes>] [-nojumbo] "
 #ifndef AFS_NT40_ENV
+	    printf("Usage: vlserver [-p <number of processes>] [-nojumbo] "
 		   "[-syslog[=FACILITY]] "
-#endif
-		   /*" [-enable_peer_stats] [-enable_process_stats] " */
+		   "[-enable_peer_stats] [-enable_process_stats] "
 		   "[-help]\n");
+#else
+	    printf("Usage: vlserver [-p <number of processes>] [-nojumbo] "
+		   "[-enable_peer_stats] [-enable_process_stats] "
+		   "[-help]\n");
+#endif
 	    fflush(stdout);
 	    exit(0);
 	}

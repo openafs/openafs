@@ -158,13 +158,17 @@ void main (argc, argv)
 
 		/* hack in help flag support */
 
-	    	printf ("Usage: ptserver [-database <db path>] "
 #ifndef AFS_NT40_ENV
+	    	printf ("Usage: ptserver [-database <db path>] "
 			"[-syslog[=FACILITY]] "
-#endif
 			"[-p <number of processes>] [-rebuild] "
-			/* "[-enable_peer_stats] [-enable_process_stats] " */
+			"[-enable_peer_stats] [-enable_process_stats] "
 			"[-help]\n");
+#else
+	    	printf ("Usage: ptserver [-database <db path>] "
+			"[-p <number of processes>] [-rebuild] "
+			"[-help]\n");
+#endif
 		fflush(stdout);
 
 	    PT_EXIT(1);
