@@ -857,11 +857,19 @@ ParseArgs(int argc, char *argv[])
 
     for (i = 1; i < argc; i++) {
 	if (!strcmp(argv[i], "-d")) {
+            if ((i + 1) >= argc) {
+		fprintf(stderr, "missing argument for -d\n"); 
+		return -1; 
+	    }
 	    debuglevel = atoi(argv[++i]);
 	    LogLevel = debuglevel;
 	} else if (!strcmp(argv[i], "-banner")) {
 	    printBanner = 1;
 	} else if (!strcmp(argv[i], "-implicit")) {
+            if ((i + 1) >= argc) {
+		fprintf(stderr, "missing argument for -implicit\n"); 
+		return -1; 
+	    }
 	    implicitAdminRights = ParseRights(argv[++i]);
 	    if (implicitAdminRights < 0)
 		return implicitAdminRights;
@@ -875,6 +883,10 @@ ParseArgs(int argc, char *argv[])
 	    int lwps_max =
 		max_fileserver_thread() - FILESERVER_HELPER_THREADS;
 	    Sawlwps = 1;
+            if ((i + 1) >= argc) {
+		fprintf(stderr, "missing argument for -p\n"); 
+		return -1; 
+	    }
 	    lwps = atoi(argv[++i]);
 	    if (lwps > lwps_max)
 		lwps = lwps_max;
@@ -882,41 +894,87 @@ ParseArgs(int argc, char *argv[])
 		lwps = 6;
 	} else if (!strcmp(argv[i], "-b")) {
 	    Sawbufs = 1;
+            if ((i + 1) >= argc) {
+		fprintf(stderr, "missing argument for -b\n"); 
+		return -1; 
+	    }
 	    buffs = atoi(argv[++i]);
 	} else if (!strcmp(argv[i], "-l")) {
 	    Sawlarge = 1;
+            if ((i + 1) >= argc) {
+		fprintf(stderr, "missing argument for -l\n"); 
+		return -1; 
+	    }
 	    large = atoi(argv[++i]);
 	} else if (!strcmp(argv[i], "-vc")) {
 	    SawVC = 1;
+            if ((i + 1) >= argc) {
+		fprintf(stderr, "missing argument for -vc\n"); 
+		return -1; 
+	    }
 	    volcache = atoi(argv[++i]);
 	} else if (!strcmp(argv[i], "-novbc")) {
 	    novbc = 1;
 	} else if (!strcmp(argv[i], "-rxpck")) {
 	    Sawrxpck = 1;
+            if ((i + 1) >= argc) {
+		fprintf(stderr, "missing argument for -rxpck\n"); 
+		return -1; 
+	    }
 	    rxpackets = atoi(argv[++i]);
 	} else if (!strcmp(argv[i], "-s")) {
 	    Sawsmall = 1;
+            if ((i + 1) >= argc) {
+		fprintf(stderr, "missing argument for -s\n"); 
+		return -1; 
+	    }
 	    nSmallVns = atoi(argv[++i]);
 	} else if (!strcmp(argv[i], "-abortthreshold")) {
+            if ((i + 1) >= argc) {
+		fprintf(stderr, "missing argument for -abortthreshold\n"); 
+		return -1; 
+	    }
 	    abort_threshold = atoi(argv[++i]);
-	} else if (!strcmp(argv[i], "-k"))
+	} else if (!strcmp(argv[i], "-k")) {
+            if ((i + 1) >= argc) {
+		fprintf(stderr, "missing argument for -k\n"); 
+		return -1; 
+	    }
 	    stack = atoi(argv[++i]);
+	}
 #if defined(AFS_SGI_ENV)
 	else if (!strcmp(argv[i], "-lock")) {
 	    SawLock = 1;
 	}
 #endif
 	else if (!strcmp(argv[i], "-spare")) {
+            if ((i + 1) >= argc) {
+		fprintf(stderr, "missing argument for -spare\n"); 
+		return -1; 
+	    }
 	    BlocksSpare = atoi(argv[++i]);
 	    SawSpare = 1;
 	} else if (!strcmp(argv[i], "-pctspare")) {
+            if ((i + 1) >= argc) {
+		fprintf(stderr, "missing argument for -pctspare\n"); 
+		return -1; 
+	    }
 	    PctSpare = atoi(argv[++i]);
 	    BlocksSpare = 0;	/* has non-zero default */
 	    SawPctSpare = 1;
-	} else if (!strcmp(argv[i], "-w"))
+	} else if (!strcmp(argv[i], "-w")) {
+            if ((i + 1) >= argc) {
+		fprintf(stderr, "missing argument for -w\n"); 
+		return -1; 
+	    }
 	    fiveminutes = atoi(argv[++i]);
-	else if (!strcmp(argv[i], "-hr")) {
-	    int hr = atoi(argv[++i]);
+	} else if (!strcmp(argv[i], "-hr")) {
+	    int hr;
+            if ((i + 1) >= argc) {
+		fprintf(stderr, "missing argument for -hr\n"); 
+		return -1; 
+	    }
+	    hr = atoi(argv[++i]);
 	    if ((hr < 1) || (hr > 36)) {
 		printf
 		    ("host acl refresh interval of %d hours is invalid; hours must be between 1 and 36\n\n",
@@ -930,6 +988,10 @@ ParseArgs(int argc, char *argv[])
 	    eventlog = 1;
 	else if (!strcmp(argv[i], "-cb")) {
 	    Sawcbs = 1;
+            if ((i + 1) >= argc) {
+		fprintf(stderr, "missing argument for -cb\n"); 
+		return -1; 
+	    }
 	    numberofcbs = atoi(argv[++i]);
 	    if ((numberofcbs < 10000) || (numberofcbs > 2147483647)) {
 		printf
@@ -939,6 +1001,10 @@ ParseArgs(int argc, char *argv[])
 	    }
 	} else if (!strcmp(argv[i], "-busyat")) {
 	    Sawbusy = 1;
+	    if ((i + 1) >= argc) {
+		fprintf(stderr, "missing argument for -busyat\n"); 
+		return -1; 
+	    }
 	    busy_threshold = atoi(argv[++i]);
 	    if (busy_threshold < 10) {
 		printf
@@ -951,6 +1017,10 @@ ParseArgs(int argc, char *argv[])
 #ifdef	AFS_AIX32_ENV
 	else if (!strcmp(argv[i], "-m")) {
 	    extern int aixlow_water;
+	    if ((i + 1) >= argc) {
+		fprintf(stderr, "missing argument for -m\n"); 
+		return -1; 
+	    }
 	    aixlow_water = atoi(argv[++i]);
 	    if ((aixlow_water < 0) || (aixlow_water > 30)) {
 		printf("space reserved %d% invalid; must be between 0-30%\n",
@@ -963,6 +1033,10 @@ ParseArgs(int argc, char *argv[])
 	    rxJumbograms = 0;
 	} else if (!strcmp(argv[i], "-realm")) {
 	    extern char local_realm[AFS_REALM_SZ];
+	    if ((i + 1) >= argc) {
+		fprintf(stderr, "missing argument for -realm\n"); 
+		return -1; 
+	    }
 	    if (strlen(argv[++i]) >= AFS_REALM_SZ) {
 		printf
 		    ("-realm argument must contain fewer than %d characters.\n",
