@@ -4477,7 +4477,7 @@ struct rx_packet *rxi_SendAck(call, optionalPacket, seq, serial, pflags, reason,
 }
 
 /* Send all of the packets in the list in single datagram */
-static void rxi_SendList(call, list, len, istack, moreFlag, now, retryTime)
+static void rxi_SendList(call, list, len, istack, moreFlag, now, retryTime, resending)
   struct rx_call *call;
   struct rx_packet **list;
   int len;
@@ -4485,6 +4485,7 @@ static void rxi_SendList(call, list, len, istack, moreFlag, now, retryTime)
   int moreFlag;
   struct clock *now;
   struct clock *retryTime;
+  int resending;
 {
     int i;
     int requestAck = 0;
@@ -4494,6 +4495,7 @@ static void rxi_SendList(call, list, len, istack, moreFlag, now, retryTime)
 
     MUTEX_ENTER(&peer->peer_lock);
     peer->nSent += len;
+    if (resending) peer->reSends += len;
     MUTEX_ENTER(&rx_stats_mutex);
     rx_stats.dataPacketsSent += len;
     MUTEX_EXIT(&rx_stats_mutex);
@@ -4547,6 +4549,7 @@ static void rxi_SendList(call, list, len, istack, moreFlag, now, retryTime)
 
 	MUTEX_ENTER(&peer->peer_lock);
 	peer->nSent++;
+	if (resending) peer->reSends++;
 	MUTEX_ENTER(&rx_stats_mutex);
 	rx_stats.dataPacketsSent++;
 	MUTEX_EXIT(&rx_stats_mutex);
@@ -4595,13 +4598,14 @@ static void rxi_SendList(call, list, len, istack, moreFlag, now, retryTime)
  * We always keep the last list we should have sent so we
  * can set the RX_MORE_PACKETS flags correctly.
  */
-static void rxi_SendXmitList(call, list, len, istack, now, retryTime)
+static void rxi_SendXmitList(call, list, len, istack, now, retryTime, resending)
   struct rx_call *call;
   struct rx_packet **list;
   int len;
   int istack;
   struct clock *now;
   struct clock *retryTime;
+  int resending;
 {
     int i, cnt, lastCnt = 0;
     struct rx_packet **listP, **lastP = 0;
@@ -4615,7 +4619,7 @@ static void rxi_SendXmitList(call, list, len, istack, now, retryTime)
 		|| list[i]->acked
 		|| list[i]->length > RX_JUMBOBUFFERSIZE)) {
 	    if (lastCnt > 0) {
-		rxi_SendList(call, lastP, lastCnt, istack, 1, now, retryTime);
+		rxi_SendList(call, lastP, lastCnt, istack, 1, now, retryTime, resending);
 		/* If the call enters an error state stop sending, or if
 		 * we entered congestion recovery mode, stop sending */
 		if (call->error || (call->flags & RX_CALL_FAST_RECOVER_WAIT))
@@ -4638,7 +4642,7 @@ static void rxi_SendXmitList(call, list, len, istack, now, retryTime)
 		|| list[i]->length != RX_JUMBOBUFFERSIZE) {
 		if (lastCnt > 0) {
 		    rxi_SendList(call, lastP, lastCnt, istack, 1,
-				 now, retryTime);
+				 now, retryTime, resending);
 		    /* If the call enters an error state stop sending, or if
 		     * we entered congestion recovery mode, stop sending */
 		    if (call->error || (call->flags&RX_CALL_FAST_RECOVER_WAIT))
@@ -4673,17 +4677,17 @@ static void rxi_SendXmitList(call, list, len, istack, now, retryTime)
 	}
 	if (lastCnt > 0) {
 	    rxi_SendList(call, lastP, lastCnt, istack, morePackets,
-			 now, retryTime);
+			 now, retryTime, resending);
 	    /* If the call enters an error state stop sending, or if
 	     * we entered congestion recovery mode, stop sending */
 	    if (call->error || (call->flags & RX_CALL_FAST_RECOVER_WAIT))
 	        return;
 	}
 	if (morePackets) {
-	    rxi_SendList(call, listP, cnt, istack, 0, now, retryTime);
+	    rxi_SendList(call, listP, cnt, istack, 0, now, retryTime, resending);
 	}
     } else if (lastCnt > 0) {
-	rxi_SendList(call, lastP, lastCnt, istack, 0, now, retryTime);
+	rxi_SendList(call, lastP, lastCnt, istack, 0, now, retryTime, resending);
     }
 }
 
@@ -4718,6 +4722,7 @@ void rxi_Start(event, call, istack)
     int nXmitPackets;
     int maxXmitPackets;
     struct rx_packet **xmitList;
+    int resending = 0;
 
     /* If rxi_Start is being called as a result of a resend event,
      * then make sure that the event pointer is removed from the call
@@ -4726,6 +4731,7 @@ void rxi_Start(event, call, istack)
     if (event && event == call->resendEvent) {
 	CALL_RELE(call, RX_CALL_REFCOUNT_RESEND);
 	call->resendEvent = NULL;
+	resending = 1;
 	if (queue_IsEmpty(&call->tq)) {
 	    /* Nothing to do */
 	    return;
@@ -4875,7 +4881,7 @@ void rxi_Start(event, call, istack)
 	 * ready to send. Now we loop to send the packets */
 	if (nXmitPackets > 0) {
 	    rxi_SendXmitList(call, xmitList, nXmitPackets, istack,
-			     &now, &retryTime);
+			     &now, &retryTime, resending);
 	}
 	osi_Free(xmitList, maxXmitPackets * sizeof(struct rx_packet *));
 
