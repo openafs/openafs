@@ -28,7 +28,7 @@
 /* All volumes will have a volume header name in this format */
 #define VFORMAT "V%010lu.vol"
 #define VMAXPATHLEN 64		/* Maximum length (including null) of a volume
-				   external path name */
+				 * external path name */
 
 /* Values for connect parameter to VInitVolumePackage */
 #define CONNECT_FS	1

@@ -12,31 +12,11 @@ LIBAFSAUTHENTMINOR=0
 
 # This is a pthread safe library containing ubikclient, auth, kauth.
 
-DEST=@DEST@
-TOP_INCDIR=@TOP_INCDIR@
-TOP_LIBDIR=@TOP_LIBDIR@
-prefix=@prefix@
-exec_prefix=@exec_prefix@
-bindir=@bindir@
-sbindir=@sbindir@
-libexecdir=@libexecdir@
-libdir=@libdir@
-includedir=@includedir@
-mandir=@mandir@
-afssrvbindir=@afssrvbindir@
-afssrvsbindir=@afssrvsbindir@
-afssrvlibexecdir=@afssrvlibexecdir@
-COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
-RXGEN=${TOP_SRCDIR}/rxgen/rxgen
-TOP_SRCDIR=@TOP_SRCDIR@
 srcdir=@srcdir@
-SYS_NAME=@AFS_SYSNAME@
-include ../config/Makefile.${SYS_NAME}
-
+include @TOP_OBJDIR@/src/config/Makefile.config
 
 CC=${MT_CC}
-CFLAGS=-I. -I${srcdir} ${OPTMZ} ${DBG} -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${MT_CFLAGS} ${SHLIB_CFLAGS} \
-	-I../auth -I../kauth -I../ptserver -I../sys
+CFLAGS=${COMMON_CFLAGS} ${MT_CFLAGS} ${SHLIB_CFLAGS} -I../auth -I../kauth -I../ptserver -I../sys
 CCRULE = ${CC} ${CFLAGS} -c $?
 
 AUDIT= ../audit
@@ -73,6 +53,7 @@ KAUTHOBJS = \
 	read_passwd.o
 
 UBIKOBJS = \
+	uinit.o \
 	ubikclient.o \
 	uerrors.o \
 	ubik_int.cs.o \
@@ -82,8 +63,7 @@ UTILOBJS = \
 	pthread_glock.o \
 	get_krbrlm.o \
 	dirpath.o \
-	fileutil.o \
-	casestrcpy.o
+	fileutil.o
 
 RXKADOBJS = \
 	rxkad_errs.o
@@ -195,6 +175,9 @@ read_passwd.o: ${KAUTH}/read_passwd.c
 ubikclient.o: ${UBIK}/ubikclient.c
 	${CCRULE}
 
+uinit.o: ${UBIK}/uinit.c
+	${CCRULE}
+
 uerrors.o: ${UBIK}/uerrors.c
 	${CCRULE}
 
@@ -211,9 +194,6 @@ dirpath.o: ${UTIL}/dirpath.c
 	${CCRULE}
 
 fileutil.o: ${UTIL}/fileutil.c
-	${CCRULE}
-
-casestrcpy.o: ${UTIL}/casestrcpy.c
 	${CCRULE}
 
 pthread_glock.o: ${UTIL}/pthread_glock.c

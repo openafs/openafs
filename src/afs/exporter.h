@@ -34,12 +34,12 @@
   */
 
 #if defined(AFS_SUN57_64BIT_ENV) || defined(AFS_OSF_ENV) || (defined(AFS_SGI61_ENV) && (_MIPS_SZPTR==64)) || defined(AFS_LINUX_64BIT_KERNEL)
-#define	AFS_XLATOR_MAGIC	0x8765		/* XXX */
+#define	AFS_XLATOR_MAGIC	0x8765	/* XXX */
 #else
 #define	AFS_XLATOR_MAGIC	0x87654321
 #endif
 
-#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 #define AFS_NFSXLATORREQ(cred) 0
 #else
 #ifdef	AFS_OSF_ENV
@@ -49,34 +49,34 @@
 #endif
 #endif
 
-struct	exporterops {
-    int	    (*export_reqhandler)();
-    int	    (*export_hold)();
-    int	    (*export_rele)();
-    int	    (*export_sysname)();
-    int	    (*export_garbagecollect)();
-    int	    (*export_statistics)();
+struct exporterops {
+    int (*export_reqhandler) ();
+    int (*export_hold) ();
+    int (*export_rele) ();
+    int (*export_sysname) ();
+    int (*export_garbagecollect) ();
+    int (*export_statistics) ();
 };
 
 struct exporterstats {
-    afs_int32 calls;			/* # of calls to the exporter */
-    afs_int32 rejectedcalls;		/* # of afs rejected  calls */
-    afs_int32 nopag;			/* # of unpagged remote calls */
-    afs_int32 invalidpag;		/* # of invalid pag calls */
+    afs_int32 calls;		/* # of calls to the exporter */
+    afs_int32 rejectedcalls;	/* # of afs rejected  calls */
+    afs_int32 nopag;		/* # of unpagged remote calls */
+    afs_int32 invalidpag;	/* # of invalid pag calls */
 };
 
 struct afs_exporter {
-    struct  afs_exporter   *exp_next;
-    struct  exporterops	    *exp_op;
-    afs_int32		    exp_states;
-    afs_int32		    exp_type;
-    struct  exporterstats   exp_stats;
-    char		    *exp_data;
+    struct afs_exporter *exp_next;
+    struct exporterops *exp_op;
+    afs_int32 exp_states;
+    afs_int32 exp_type;
+    struct exporterstats exp_stats;
+    char *exp_data;
 };
 
 /* exp_type values */
-#define	EXP_NULL    0	    /* Undefined */
-#define	EXP_NFS	    1	    /* Nfs/Afs translator */
+#define	EXP_NULL    0		/* Undefined */
+#define	EXP_NFS	    1		/* Nfs/Afs translator */
 
 /* exp_states values */
 #define	EXP_EXPORTED	1
@@ -93,8 +93,8 @@ struct afs_exporter {
         (*(EXP)->exp_op->export_hold)(EXP)
 #define	EXP_RELE(EXP)	\
         (*(EXP)->exp_op->export_rele)(EXP)
-#define	EXP_SYSNAME(EXP, INNAME, OUTNAME)   \
-        (*(EXP)->exp_op->export_sysname)(EXP, INNAME, OUTNAME)
+#define	EXP_SYSNAME(EXP, INNAME, OUTNAME, NUM)   \
+        (*(EXP)->exp_op->export_sysname)(EXP, INNAME, OUTNAME, NUM)
 #define	EXP_GC(EXP, param)	\
         (*(EXP)->exp_op->export_garbagecollect)(EXP, param)
 #define	EXP_STATISTICS(EXP)	\

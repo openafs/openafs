@@ -16,6 +16,10 @@
 
 #define VC_EXTRALEAN		// Exclude rarely-used stuff from Windows headers
 
+// Don't include stuff we don't need.
+#define _AFX_NO_DB_SUPPORT
+#define _AFX_NO_DAO_SUPPORT
+
 #include <afxwin.h>         // MFC core and standard components
 #include <afxext.h>         // MFC extensions
 
@@ -48,5 +52,8 @@
 
 #include <WINNT/TaLocale.h>
 
+#if defined (_DEBUG) && defined (AFS_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
 
 #endif // !defined(AFX_STDAFX_H__601A9D0D_6CD3_11D1_BAE7_00C04FD140D2__INCLUDED_)

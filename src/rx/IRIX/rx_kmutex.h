@@ -50,7 +50,7 @@ typedef kcondvar_t afs_kcondvar_t;
 #define CV_BROADCAST(_cv)	cv_broadcast(_cv)
 #define CV_DESTROY(_cv)		cv_destroy(_cv)
 #undef osirx_AssertMine
-extern void osirx_AssertMine(afs_kmutex_t *lockaddr, char *msg);
+extern void osirx_AssertMine(afs_kmutex_t * lockaddr, char *msg);
 #ifdef AFS_SGI64_ENV
 /* Add PLTWAIT for afsd's to wait so we don't rack up the load average. */
 #ifdef AFS_SGI65_ENV
@@ -164,4 +164,3 @@ extern void osirx_AssertMine(afs_kmutex_t *lockaddr, char *msg);
 #endif /* SGI62 */
 
 #endif /* _RX_KMUTEX_H_ */
-

@@ -26,12 +26,12 @@ extern "C" {
  */
 
 rwWindowData awdServices[] = {
-    { IDC_SVC_DESC,        raSizeX           },
-    { IDC_SVC_LIST,        raSizeX | raSizeY },
-    { IDC_SVC_CREATE,      raMoveX | raMoveY },
-    { IDC_SVC_DELETE,      raMoveX | raMoveY },
-    { IDC_SVC_RESTART,     raMoveX | raMoveY },
-    { idENDLIST,           0                 }
+    { IDC_SVC_DESC,        raSizeX,		0,	0 },
+    { IDC_SVC_LIST,        raSizeX | raSizeY,	0,	0 },
+    { IDC_SVC_CREATE,      raMoveX | raMoveY,	0,	0 },
+    { IDC_SVC_DELETE,      raMoveX | raMoveY,	0,	0 },
+    { IDC_SVC_RESTART,     raMoveX | raMoveY,	0,	0 },
+    { idENDLIST,           0,               	0,	0 }
  };
 
 

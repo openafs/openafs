@@ -6,32 +6,9 @@
 # directory or online at http://www.openafs.org/dl/license10.html
 # */
 
-DEST=@DEST@
-TOP_INCDIR=@TOP_INCDIR@
-TOP_LIBDIR=@TOP_LIBDIR@
-prefix=@prefix@
-exec_prefix=@exec_prefix@
-bindir=@bindir@
-sbindir=@sbindir@
-libexecdir=@libexecdir@
-libdir=@libdir@
-includedir=@includedir@
-mandir=@mandir@
-afssrvbindir=@afssrvbindir@
-afssrvsbindir=@afssrvsbindir@
-afssrvlibexecdir=@afssrvlibexecdir@
-TOP_SRCDIR=@TOP_SRCDIR@
-SYS_NAME=@AFS_SYSNAME@
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
 
-SHELL = /bin/sh
-
-include ../config/Makefile.${SYS_NAME}
-
-COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
-RXGEN=${TOP_SRCDIR}/rxgen/rxgen
-
-CFLAGS=${DBG} -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS}
-LDFLAGS = ${XLDFLAGS}
 INCLS=\
 	${TOP_INCDIR}/lock.h \
 	${TOP_INCDIR}/ubik.h \
@@ -77,10 +54,10 @@ all: ${TOP_LIBDIR}/libbudb.a ${TOP_INCDIR}/afs/budb.h ${TOP_INCDIR}/afs/budb_err
 budb_errs.o: budb_errs.c budb_client.h budb_errs.h
 
 budb_errs.c budb_client.h: budb_errs.et budb_client.p.h
-	$(RM) -f budb_client.h budb_errs.c; ${COMPILE_ET} budb_errs -h budb_client
+	$(RM) -f budb_client.h budb_errs.c; ${COMPILE_ET} -p ${srcdir} budb_errs -h budb_client
 
 budb_errs.h: budb_errs.et
-	${COMPILE_ET} budb_errs
+	${COMPILE_ET} -p ${srcdir} budb_errs
 
 database.o: database.c budb_errs.h globals.h ${INCLS}
 db_alloc.o: db_alloc.c budb_errs.h ${INCLS}
@@ -96,8 +73,21 @@ server.o: server.c budb_errs.h ${INCLS} AFS_component_version_number.c
 budb_server: $(SERVER_OBJS) ${LIBS}
 	${CC} ${LDFLAGS} -o budb_server $(SERVER_OBJS) ${LIBS} ${XLIBS}
 
-budb.xdr.c budb.cs.c budb.ss.c budb.h: budb.rg
-	${RXGEN} budb.rg
+budb.cs.c: budb.rg
+	${RXGEN} -C -o $@ ${srcdir}/budb.rg
+
+budb.ss.c: budb.rg
+	${RXGEN} -S -o $@ ${srcdir}/budb.rg
+
+budb.xdr.c: budb.rg
+	${RXGEN} -c -o $@ ${srcdir}/budb.rg
+
+budb.h: budb.rg
+	${RXGEN} -h -o $@ ${srcdir}/budb.rg
+
+budb.cs.c: budb.h
+budb.xdr.c: budb.h
+budb.ss.c: budb.h
 
 libbudb.a: budb_errs.o budb.cs.o budb.xdr.o struct_ops.o AFS_component_version_number.o
 	-$(RM) -f $@

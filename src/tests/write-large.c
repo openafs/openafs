@@ -71,26 +71,26 @@ main(int argc, char **argv)
     int buf[1024];
 
 #ifdef O_LARGEFILE
-    fd = open(fn, O_RDWR|O_CREAT|O_TRUNC|O_LARGEFILE, 0644);
+    fd = open(fn, O_RDWR | O_CREAT | O_TRUNC | O_LARGEFILE, 0644);
 #else
-    fd = open(fn, O_RDWR|O_CREAT|O_TRUNC, 0644);
+    fd = open(fn, O_RDWR | O_CREAT | O_TRUNC, 0644);
 #endif
     if (fd < 0)
 	err(1, "open1");
-    cnt=0;
+    cnt = 0;
     while (cnt < 2097151) {
-      ret = write(fd,buf,1024);
-      if (ret != 1024)
-	errx(1, "write1 %d %d", cnt, ret);
-      cnt++;
+	ret = write(fd, buf, 1024);
+	if (ret != 1024)
+	    errx(1, "write1 %d %d", cnt, ret);
+	cnt++;
     }
-    ret = write(fd,buf,1024);
+    ret = write(fd, buf, 1024);
     if (ret != 1023)
-      errx(1, "write1 last %d", ret);
+	errx(1, "write1 last %d", ret);
     if (close(fd) < 0)
 	err(1, "close1");
-    
+
     check_size(fn, 2147483647, 0);
-    
+
     return 0;
 }

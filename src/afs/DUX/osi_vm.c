@@ -8,13 +8,14 @@
  */
 
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/DUX/osi_vm.c,v 1.1.1.5 2002/05/10 23:43:40 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/afs/DUX/osi_vm.c,v 1.8 2003/07/15 23:14:19 shadow Exp $");
 
-#include "../afs/sysincludes.h"	/* Standard vendor system headers */
-#include "../afs/afsincludes.h"	/* Afs-based standard headers */
-#include "../afs/afs_stats.h"  /* statistics */
+#include "afs/sysincludes.h"	/* Standard vendor system headers */
+#include "afsincludes.h"	/* Afs-based standard headers */
+#include "afs/afs_stats.h"	/* statistics */
 #include <vm/vm_ubc.h>
 #include <values.h>
 
@@ -35,9 +36,7 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/afs/DUX/osi_vm.c,v 1.1.1.5 2002/05/10 2
  * OSF/1 Locking:  VN_LOCK has been called.
  */
 int
-osi_VM_FlushVCache(avc, slept)
-    struct vcache *avc;
-    int *slept;
+osi_VM_FlushVCache(struct vcache *avc, int *slept)
 {
     if (avc->vrefCount > 1)
 	return EBUSY;
@@ -82,18 +81,17 @@ osi_VM_FlushVCache(avc, slept)
  *
  * Called with the global lock NOT held.
  */
-void
-osi_ubc_flush_dirty_and_wait(vp, flags)
-struct vnode *vp;
-int flags; {
+static void
+osi_ubc_flush_dirty_and_wait(struct vnode *vp, int flags)
+{
     int retry;
     vm_page_t pp;
     int first;
 
     do {
-	struct vm_ubc_object* vop;
-	vop = (struct vm_ubc_object*)(vp->v_object);
-	ubc_flush_dirty(vop, flags); 
+	struct vm_ubc_object *vop;
+	vop = (struct vm_ubc_object *)(vp->v_object);
+	ubc_flush_dirty(vop, flags);
 
 	vm_object_lock(vop);
 	if (vop->vu_dirtypl)
@@ -108,14 +106,15 @@ int flags; {
 		    if (pp->pg_busy) {
 			retry = 1;
 			pp->pg_wait = 1;
-			assert_wait_mesg((vm_offset_t)pp, FALSE, "pg_wait");
+			assert_wait_mesg((vm_offset_t) pp, FALSE, "pg_wait");
 			vm_object_unlock(vop);
 			thread_block();
 			break;
 		    }
 		}
 	    }
-	    if (retry) continue;
+	    if (retry)
+		continue;
 	}
 	vm_object_unlock(vop);
     } while (retry);
@@ -127,14 +126,13 @@ int flags; {
  * re-obtained.
  */
 void
-osi_VM_StoreAllSegments(avc)
-    struct vcache *avc;
+osi_VM_StoreAllSegments(struct vcache *avc)
 {
     ReleaseWriteLock(&avc->lock);
     AFS_GUNLOCK();
     osi_ubc_flush_dirty_and_wait(AFSTOV(avc), 0);
     AFS_GLOCK();
-    ObtainWriteLock(&avc->lock,94);
+    ObtainWriteLock(&avc->lock, 94);
 }
 
 /* Try to invalidate pages, for "fs flush" or "fs flushv"; or
@@ -147,17 +145,14 @@ osi_VM_StoreAllSegments(avc)
  * be some pages around when we return, newly created by concurrent activity.
  */
 void
-osi_VM_TryToSmush(avc, acred, sync)
-    struct vcache *avc;
-    struct AFS_UCRED *acred;
-    int sync;
+osi_VM_TryToSmush(struct vcache *avc, struct AFS_UCRED *acred, int sync)
 {
     ReleaseWriteLock(&avc->lock);
     AFS_GUNLOCK();
     osi_ubc_flush_dirty_and_wait(AFSTOV(avc), 0);
     ubc_invalidate(AFSTOV(avc)->v_object, 0, 0, B_INVAL);
     AFS_GLOCK();
-    ObtainWriteLock(&avc->lock,59);
+    ObtainWriteLock(&avc->lock, 59);
 }
 
 /* Purge VM for a file when its callback is revoked.
@@ -165,9 +160,7 @@ osi_VM_TryToSmush(avc, acred, sync)
  * Locking:  No lock is held, not even the global lock.
  */
 void
-osi_VM_FlushPages(avc, credp)
-    struct vcache *avc;
-    struct AFS_UCRED *credp;
+osi_VM_FlushPages(struct vcache *avc, struct AFS_UCRED *credp)
 {
     ubc_flush_dirty(AFSTOV(avc)->v_object, 0);
     ubc_invalidate(AFSTOV(avc)->v_object, 0, 0, B_INVAL);
@@ -180,11 +173,7 @@ osi_VM_FlushPages(avc, credp)
  * it only works on Solaris.
  */
 void
-osi_VM_Truncate(avc, alen, acred)
-    struct vcache *avc;
-    int alen;
-    struct AFS_UCRED *acred;
+osi_VM_Truncate(struct vcache *avc, int alen, struct AFS_UCRED *acred)
 {
-    ubc_invalidate(AFSTOV(avc)->v_object, alen,
-                        MAXINT - alen, B_INVAL);
+    ubc_invalidate(AFSTOV(avc)->v_object, alen, MAXINT - alen, B_INVAL);
 }

@@ -7,8 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef TRANSARC_AFS_ADMIN_ERRORS_H
-#define TRANSARC_AFS_ADMIN_ERRORS_H
+#ifndef OPENAFS_ADMIN_ERRORS_H
+#define OPENAFS_ADMIN_ERRORS_H
 
 #include <afs/param.h>
 #include <afs/afs_AdminBosErrors.h>
@@ -21,4 +21,4 @@
 #include <afs/afs_AdminVosErrors.h>
 #include <afs/afs_AdminCfgErrors.h>
 
-#endif /* TRANSARC_AFS_ADMIN_ERRORS_H */
+#endif /* OPENAFS_ADMIN_ERRORS_H */

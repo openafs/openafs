@@ -94,7 +94,7 @@ void OpenCellDlg_Hook_OnOK (HWND hDlg, LPOPENCELLDLG_PARAMS lpp)
    ULONG status;
    if ((lpp->hCreds = AfsAppLib_SetCredentials (lpp->szCell, szUser, szPassword, &status)) == NULL)
       {
-      ErrorDialog (status, IDS_ERROR_BAD_CREDENTIALS);
+      ErrorDialog (status, IDS_SVR_ERROR_BAD_CREDENTIALS);
       }
    else
       {

@@ -115,10 +115,15 @@ BOOL Config_SetReportSessionStartups (BOOL fFlag, ULONG *pStatus = NULL);
 
 void Config_GetGlobalDriveList (DRIVEMAPLIST *pDriveList);
 
-BOOL Config_ReadNum (LPCTSTR pszLHS, DWORD *pdwRHS);
-BOOL Config_ReadString (LPCTSTR pszLHS, LPTSTR pszRHS, size_t cchMax);
-void Config_WriteNum (LPCTSTR pszLHS, DWORD dwRHS);
-void Config_WriteString (LPCTSTR pszLHS, LPCTSTR pszRHS);
+BOOL Config_ReadGlobalNum (LPCTSTR pszLHS, DWORD *pdwRHS);
+BOOL Config_ReadGlobalString (LPCTSTR pszLHS, LPTSTR pszRHS, size_t cchMax);
+void Config_WriteGlobalNum (LPCTSTR pszLHS, DWORD dwRHS);
+void Config_WriteGlobalString (LPCTSTR pszLHS, LPCTSTR pszRHS);
+
+BOOL Config_ReadUserNum (LPCTSTR pszLHS, DWORD *pdwRHS);
+BOOL Config_ReadUserString (LPCTSTR pszLHS, LPTSTR pszRHS, size_t cchMax);
+void Config_WriteUserNum (LPCTSTR pszLHS, DWORD dwRHS);
+void Config_WriteUserString (LPCTSTR pszLHS, LPCTSTR pszRHS);
 
 
 #endif

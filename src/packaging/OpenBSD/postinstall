@@ -1,0 +1,23 @@
+# $Id: postinstall,v 1.3 2004/03/24 22:53:19 rees Exp $
+
+umask 022
+if [ ! -d /afs ]; then
+  mkdir /afs
+fi
+
+strip -x /usr/vice/bin/*
+
+echo "Fetching CellServDB..."
+ftp -o /usr/vice/etc/CellServDB http://grand.central.org/dl/cellservdb/CellServDB
+
+echo -n 'Please enter your cell name: '
+sh -c 'read; echo $REPLY >/usr/vice/etc/ThisCell'
+
+if ! grep -q '^\. /usr/vice/etc/rc.securelevel.afs' /etc/rc.securelevel; then
+  echo 'adding rc.securelevel.afs to /etc/rc.securelevel'
+  echo '. /usr/vice/etc/rc.securelevel.afs' >>/etc/rc.securelevel
+else
+  echo 'rc.securelevel.afs is already in /etc/rc.securelevel'
+fi
+
+echo 'Reboot to start OpenAFS.'

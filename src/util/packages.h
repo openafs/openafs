@@ -28,18 +28,18 @@
 
 #define ERROROFFSET 1000
 
-#define KAMINERROR    ((  1 <<16)+ERROROFFSET) /* kerberos authentication server */
-#define PRMINERROR    ((  2 <<16)+ERROROFFSET) /* AFS protection server */
-#define VLMINERROR    ((  3 <<16)+ERROROFFSET) /* Volume Location database */
-#define VSMINERROR    ((  4 <<16)+ERROROFFSET) /* Volume Services */
-#define RXMINERROR    ((  5 <<16)+ERROROFFSET) /* Rx RPC facility */
-#define RXGENMINERROR ((  6 <<16)+ERROROFFSET) /* RxGen */
-#define LWPMINERROR   ((  7 <<16)+ERROROFFSET) /* Light Weight Process package */
-#define RXKADMINERROR ((  8 <<16)+ERROROFFSET) /* Kerberos security module for Rx */
-#define CMDMINERROR   ((  9 <<16)+ERROROFFSET) /* Command line parser utilities */
-#define UMINERROR     (( 10 <<16)+ERROROFFSET) /* Ubik replicated database */
-#define VICEMINERROR  (( 11 <<16)+ERROROFFSET) /* Vast Integrated Computing Environment */
-#define BOSMINERROR   (( 12 <<16)+ERROROFFSET) /* Bozo Operations System */
-#define ESMINERROR    (( 13 <<16)+ERROROFFSET) /* Error and Statistics logger */
+#define KAMINERROR    ((  1 <<16)+ERROROFFSET)	/* kerberos authentication server */
+#define PRMINERROR    ((  2 <<16)+ERROROFFSET)	/* AFS protection server */
+#define VLMINERROR    ((  3 <<16)+ERROROFFSET)	/* Volume Location database */
+#define VSMINERROR    ((  4 <<16)+ERROROFFSET)	/* Volume Services */
+#define RXMINERROR    ((  5 <<16)+ERROROFFSET)	/* Rx RPC facility */
+#define RXGENMINERROR ((  6 <<16)+ERROROFFSET)	/* RxGen */
+#define LWPMINERROR   ((  7 <<16)+ERROROFFSET)	/* Light Weight Process package */
+#define RXKADMINERROR ((  8 <<16)+ERROROFFSET)	/* Kerberos security module for Rx */
+#define CMDMINERROR   ((  9 <<16)+ERROROFFSET)	/* Command line parser utilities */
+#define UMINERROR     (( 10 <<16)+ERROROFFSET)	/* Ubik replicated database */
+#define VICEMINERROR  (( 11 <<16)+ERROROFFSET)	/* Vast Integrated Computing Environment */
+#define BOSMINERROR   (( 12 <<16)+ERROROFFSET)	/* Bozo Operations System */
+#define ESMINERROR    (( 13 <<16)+ERROROFFSET)	/* Error and Statistics logger */
 
 #endif

@@ -111,7 +111,7 @@ chmod  og-rx $PKGROOT/private/var/db/openafs/cache
 
 mkdir $PKGROOT/usr $PKGROOT/usr/bin $PKGROOT/usr/sbin
 
-BINLIST="fs klog klog.krb kpasswd pagsh pagsh.krb pts sys tokens tokens.krb unlog unlog.krb"
+BINLIST="fs klog klog.krb pagsh pagsh.krb pts sys tokens tokens.krb unlog unlog.krb"
 
 # Should these be linked into /usr too?
 OTHER_BINLIST="bos cmdebug rxgen translate_et udebug xstat_cm_test xstat_fs_test"
@@ -120,6 +120,7 @@ OTHER_ETCLIST="vos rxdebug"
 for f in $BINLIST; do
    ln -s ../../Library/OpenAFS/Tools/bin/$f $PKGROOT/usr/bin/$f
 done
+ln -s ../../Library/OpenAFS/Tools/bin/kpasswd $PKGROOT/usr/bin/kpasswd.afs
 
 ln -s ../../Library/OpenAFS/Tools/root.client/usr/vice/etc/afsd $PKGROOT/usr/sbin/afsd
 

@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/venus/livesys.c,v 1.1 2001/10/14 18:07:08 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/venus/livesys.c,v 1.4 2003/07/15 23:17:22 shadow Exp $");
 
 #include <afs/afs_args.h>
 #include <rx/xdr.h>
@@ -21,20 +22,27 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/venus/livesys.c,v 1.1 2001/10/14 18:07:
 #include <stdio.h>
 #include <netinet/in.h>
 #include <sys/stat.h>
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
 #include <afs/stds.h>
 #include <afs/vice.h>
 #include <afs/venus.h>
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>
 #endif
-#include <strings.h>
 
 #define	MAXSIZE	2048
 static char space[MAXSIZE];
 
-int main(argc, argv)
-    int argc;
-    char **argv;
+int
+main(argc, argv)
+     int argc;
+     char **argv;
 {
     afs_int32 code;
     struct ViceIoctl blob;

@@ -1,0 +1,418 @@
+[This transcript includes creation of a loopback mount on /vicepa
+using file full of zeros.  This is useful to know how to do because it
+allows you to test an AFS server without repartitioning.  However, for
+production cells, you should repartition and create a /vicepa
+partition.]
+
+snorklewacker:/# apt-get -q install openafs-dbserver openafs-krb5 krb5-admin-server
+Reading Package Lists...
+Building Dependency Tree...
+The following extra packages will be installed:
+  krb5-kdc krb5-user libkrb53 openafs-client openafs-fileserver openafs-ptutil 
+The following NEW packages will be installed:
+  krb5-admin-server krb5-kdc krb5-user libkrb53 openafs-client openafs-dbserver
+  openafs-fileserver openafs-krb5 openafs-ptutil 
+0 packages upgraded, 9 newly installed, 0 to remove and 22 not upgraded.
+Need to get 2264kB of archives. After unpacking 5939kB will be used.
+Do you want to continue? [Y/n] y
+Get:1 http://www.mit.edu packages/ krb5-admin-server 1.2.1-5 [174kB]
+Get:2 http://www.mit.edu packages/ krb5-kdc 1.2.1-5 [173kB]
+Get:3 http://www.mit.edu packages/ krb5-user 1.2.1-5 [154kB]
+Get:4 http://www.mit.edu packages/ libkrb53 1.2.1-5 [337kB]
+Get:5 http://www.mit.edu packages/ openafs-client 1.0.snap20001106-6 [662kB]
+Get:6 http://www.mit.edu packages/ openafs-dbserver 1.0.snap20001106-6 [211kB]
+Get:7 http://www.mit.edu packages/ openafs-fileserver 1.0.snap20001106-6 [427kB]
+Get:8 http://www.mit.edu packages/ openafs-krb5 1.3-3 [96.5kB]
+Get:9 http://www.mit.edu packages/ openafs-ptutil 0.0.snap20001123-1 [30.3kB]
+Fetched 2264kB in 8s (253kB/s)
+Preconfiguring packages ..
+Configuring Libkrb53
+--------------------
+
+
+  When users attempt to use Kerberos and specify a principal or user
+  name without specifying what administrative Kerberos realm that
+  principal belongs to, the system appends the default realm.
+  Normally default realm is the upper case version of the local DNS
+  domain.
+
+What is the default Kerberos realm? [ATHENA.MIT.EDU] SNORKLEWACKER.MIT.EDU
+
+Configuring Krb5-kdc
+--------------------
+
+By default, Kerberos4 requests are allowed from principals that do not require
+preauthentication.  This allows Kerberos4 services to exist while requiring
+most users to use Kerberos5 clients to get their initial tickets.  These
+tickets can then be converted to Kerberos4 tickets.  Alternatively, the mode
+can be set to full, allowing Kerberos4 to get initial tickets even when
+preauthentication would normally be required, or to disable, which will
+disable all Kerberos4 support. 
+
+  d. disable  f. full  n. nopreauth
+
+What Kerberos4 compatibility mode should be used? [n] 
+
+Configuring Krb5-admin-server
+-----------------------------
+
+Setting up a Kerberos Realm
+
+ This package contains the administrative tools necessary to run on
+ the Kerberos master server.  However, installing this package does
+ not automatically set up a Kerberos realm.  Doing so requires
+ entering passwords and as such is not well-suited for package
+ installation.	To create the realm, run the krb5_newrealm command.
+ You may also wish to read /usr/share/doc/krb5-kdc/README.KDC and the
+ administration guide found in the krb5-doc package.
+ .
+ Don't forget to set up DNS information so your clients can find your
+ KDC and admin servers.  Doing so is documented in the administration
+ guide.
+
+Configuring Openafs-client
+--------------------------
+
+
+  AFS filespace is organized into cells or administrative domains.
+[More] 
+  Each workstation belongs to one cell.  Usually the cell is the DNS
+  domain name of the workstation.
+
+What AFS cell does this workstation belong to? snorklewacker.mit.edu
+
+
+  AFS uses a  area of the disk to cache remote files for faster
+  access.  This cache will be mounted on /var/cache/openafs.  It is
+  important that the cache not overfill the partition it is located
+  on.  Often, people find it useful to dedicate a partition to their
+  AFS cache.
+
+How large is your AFS cache (kb)? [50000] 95000
+
+Configuring Openafs-fileserver
+------------------------------
+
+Selecting previously deselected package libkrb53.
+(Reading database ... 28342 files and directories currently installed.)
+Unpacking libkrb53 (from .../libkrb53_1.2.1-5_i386.deb) ...
+Selecting previously deselected package krb5-user.
+Unpacking krb5-user (from .../krb5-user_1.2.1-5_i386.deb) ...
+Selecting previously deselected package krb5-kdc.
+Unpacking krb5-kdc (from .../krb5-kdc_1.2.1-5_i386.deb) ...
+Selecting previously deselected package krb5-admin-server.
+Unpacking krb5-admin-server (from .../krb5-admin-server_1.2.1-5_i386.deb) ...
+Selecting previously deselected package openafs-client.
+Unpacking openafs-client (from .../openafs-client_1.0.snap20001106-6_i386.deb) ...
+Selecting previously deselected package openafs-fileserver.
+Unpacking openafs-fileserver (from .../openafs-fileserver_1.0.snap20001106-6_i386.deb) ...
+Selecting previously deselected package openafs-ptutil.
+Unpacking openafs-ptutil (from .../openafs-ptutil_0.0.snap20001123-1_i386.deb) ...
+Selecting previously deselected package openafs-dbserver.
+Unpacking openafs-dbserver (from .../openafs-dbserver_1.0.snap20001106-6_i386.deb) ...
+Selecting previously deselected package openafs-krb5.
+Unpacking openafs-krb5 (from .../openafs-krb5_1.3-3_i386.deb) ...
+Setting up openafs-client (1.0.snap20001106-6) ...
+Configuring Openafs-client
+--------------------------
+
+AFS uses the file /etc/openafs/CellServDB to hold the list of servers that
+should be contacted to find parts of a cell.  The cell you claim this
+workstation belongs to is not in that file.  Enter the host names of the
+database servers separated by spaces. IMPORTANT: If you are creating a new
+cell and this machine is to be a database server in that cell, only enter this
+machine's name; add the other servers later after they are functioning. Also,
+do not enable the AFS client to start at boot on this server until the cell is
+configured.  When you are ready you can edit /etc/openafs/afs.conf.client to
+enable the client. 
+
+What hosts are DB servers for your home cell?snorklewacker.mit.edu
+
+Should the Openafs filesystem be started and mounted at boot? Normally, most
+users who install the openafs-client package expect to run it at boot. 
+However, if you are planning on setting up a new cell or are on a laptop, you
+may not want it started at boot time. If you answer no to this question, run
+/etc/init.d/openafs-client force-start to run. 
+
+Run Openafs client at boot? [yes] n
+
+Starting AFS services: 
+Setting up openafs-fileserver (1.0.snap20001106-6) ...
+Starting AFS Server: ===================== U.S. Government Restricted Rights ======================
+If you are licensing the Software on behalf of the U.S. Government
+("Government"), the following provisions apply to you.  If the Software is
+supplied to the Department of Defense ("DoD"), it is classified as "Commercial
+Computer Software" under paragraph 252.227-7014 of the DoD Supplement to the
+Federal Acquisition Regulations ("DFARS") (or any successor regulations)
+and the Government is acquiring only the license rights granted herein (the
+license rights customarily provided to non-Government users).  If the Software
+is supplied to any unit or agency of the Government other than DoD, it is
+classified as "Restricted Computer Software" and the Government's rights in
+the Software are defined in paragraph 52.227-19 of the Federal Acquisition
+Regulations ("FAR") (or any successor regulations) or, in the case of NASA,
+in paragraph 18.52.227-86 of the NASA Supplement in the FAR (or any successor
+regulations).
+bosserver.
+
+Setting up openafs-ptutil (0.0.snap20001123-1) ...
+
+Setting up openafs-dbserver (1.0.snap20001106-6) ...
+
+Setting up libkrb53 (1.2.1-5) ...
+
+Setting up krb5-user (1.2.1-5) ...
+
+Setting up krb5-kdc (1.2.1-5) ...
+
+Setting up krb5-admin-server (1.2.1-5) ...
+
+Setting up openafs-krb5 (1.3-3) ...
+
+snorklewacker:/# krb5_newrealm
+This script should be run on the master KDC/admin server to initialize
+a Kerberos realm.  It will ask you to type in a master key password.
+This password will be used to generate a key that is stored in
+/etc/krb5kdc/stash.  You should try to remember this password, but it
+is much more important that it be a strong password than that it be
+remembered.  However, if you lose the password and /etc/krb5kdc/stash,
+you cannot decrypt your Kerberos database.
+Initializing database '/var/lib/krb5kdc/principal' for realm 'SNORKLEWACKER.MIT.EDU',
+master key name 'K/M@SNORKLEWACKER.MIT.EDU'
+You will be prompted for the database Master Password.
+It is important that you NOT FORGET this password.
+Enter KDC database master key:foo
+
+Re-enter KDC database master key to verify:foo
+
+Authenticating as principal hartmans/admin@ATHENA.MIT.EDU with password.
+Entry for principal kadmin/admin with kvno 3, encryption type Triple DES cbc mode with HMAC/sha1 added to keytab WRFILE:/etc/krb5kdc/kadm5.keytab.
+Entry for principal kadmin/admin with kvno 3, encryption type DES cbc mode with CRC-32 added to keytab WRFILE:/etc/krb5kdc/kadm5.keytab.
+Authenticating as principal hartmans/admin@ATHENA.MIT.EDU with password.
+Entry for principal kadmin/changepw with kvno 3, encryption type Triple DES cbc mode with HMAC/sha1 added to keytab WRFILE:/etc/krb5kdc/kadm5.keytab.
+Entry for principal kadmin/changepw with kvno 3, encryption type DES cbc mode with CRC-32 added to keytab WRFILE:/etc/krb5kdc/kadm5.keytab.
+Starting Kerberos KDC: krb5kdc krb524d.
+Starting Kerberos Administration Servers: kadmind.
+
+
+Now that your realm is set up you may wish to create an administrative
+principal using the addprinc subcommand of the kadmin.local program.
+Then, this principal can be added to /etc/krb5kdc/kadm5.acl so that
+you can use the kadmin program on other computers.  Kerberos admin
+principals usually belong to a single user and end in /admin.  For
+example, if jruser is a Kerberos administrator, then in addition to
+the normal jruser principal, a jruser/admin principal should be
+created.
+
+Don't forget to set up DNS information so your clients can find your
+KDC and admin servers.  Doing so is documented in the administration
+guide.
+snorklewacker:/# kadmin.local -e des-cbc-crc:v4
+Authenticating as principal hartmans/admin@ATHENA.MIT.EDU with password.
+kadmin.local:  addprinc -randkey afs
+addprinc -randkey afs
+WARNING: no policy specified for afs@SNORKLEWACKER.MIT.EDU; defaulting to no policy
+Principal "afs@SNORKLEWACKER.MIT.EDU" created.
+kadmin.local:  ktadd -k /tmp/snork.keytab afs
+ktadd -k /tmp/snork.keytab afs
+Entry for principal afs with kvno 3, encryption type DES cbc mode with CRC-32 added to keytab WRFILE:/tmp/snork.keytab.
+kadmin.local:  quit
+quit
+snorklewacker:/# kadmin.local
+kadmin.local
+Authenticating as principal hartmans/admin@ATHENA.MIT.EDU with password.
+kadmin.local:  addprinc hartmans
+addprinc hartmans
+WARNING: no policy specified for hartmans@SNORKLEWACKER.MIT.EDU; defaulting to no policy
+Enter password for principal "hartmans@SNORKLEWACKER.MIT.EDU": foo
+
+Re-enter password for principal "hartmans@SNORKLEWACKER.MIT.EDU": foo
+
+Principal "hartmans@SNORKLEWACKER.MIT.EDU" created.
+kadmin.local:  quit
+quit
+snorklewacker:/# asetkey add 3 /tmp/snork.keytab afs
+asetkey add 3 /tmp/snork.keytab afs
+snorklewacker:/# snorklewacker:/# dd if=/dev/zero of=/var/lib/openafs/vicepa bs=1024k count=32
+32+0 records in
+32+0 records out
+snorklewacker:/# mke2fs /var/lib/openafs/vicepa
+mke2fs 1.19, 13-Jul-2000 for EXT2 FS 0.5b, 95/08/09
+/var/lib/openafs/vicepa is not a block special device.
+Proceed anyway? (y,n) y
+Filesystem label=
+OS type: Linux
+Block size=1024 (log=0)
+Fragment size=1024 (log=0)
+8192 inodes, 32768 blocks
+1638 blocks (5.00%) reserved for the super user
+First data block=1
+4 block groups
+8192 blocks per group, 8192 fragments per group
+2048 inodes per group
+Superblock backups stored on blocks: 
+	8193, 24577
+
+Writing inode tables: 0/41/42/43/4done                            
+Writing superblocks and filesystem accounting information: done
+snorklewacker:/# mount -oloop /var/lib/openafs/vicepa /vicepa
+
+snorklewacker:/# afs-newcell
+			    Prerequisites
+
+In order to set up a new AFS cell, you must meet the following:
+
+1) You need a working Kerberos realm with Kerberos4 support.  You
+   should install Heimdal with Kth-kerberos compatibility or MIT
+   Kerberos5.
+
+2) You need to create the AFS key and load it into
+   /etc/openafs/server/KeyFile.  If your cell's name is the same as
+   your Kerberos realm then create a principal called afs.  Otherwise,
+   create a principal called afs/cellname in your realm.  The cell
+   name should be all lower case, unlike Kerberos realms which are all
+   upper case.  You can use asetkey from the openafs-krb5 package, or
+   if you used AFS3 salt to create the key, the bos addkey command.
+
+3) This machine should have a filesystem mounted on /vicepa.  If you
+   do not have a free partition, then create a large file by using dd
+   to extract bytes from /dev/zero.  Create a filesystem on this file
+   and mount it using -oloop.  
+
+4) You will need an administrative principal created in a Kerberos
+realm.  This principal will be added to susers and
+system:administrators and thus will be able to run administrative
+commands.  Generally the user is a root instance of some administravie
+user.  For example if jruser is an administrator then it would be
+reasonable to create jruser/root and specify jruser/root as the user
+to be added in this script.
+
+5) The AFS client must not be running on this workstation.  It will be
+at the end of this script.
+
+Do you meet these requirements? [y/n] y
+If the fileserver is not running, this may hang for 30 seconds.
+/etc/init.d/openafs-fileserver stop
+Stopping AFS Server: bosserver.
+What administrative principal should be used?hartmans
+echo \>snorklewacker.mit.edu >/etc/openafs/server/CellServDB
+/etc/init.d/openafs-fileserver start
+Starting AFS Server: ===================== U.S. Government Restricted Rights ======================
+If you are licensing the Software on behalf of the U.S. Government
+("Government"), the following provisions apply to you.  If the Software is
+supplied to the Department of Defense ("DoD"), it is classified as "Commercial
+Computer Software" under paragraph 252.227-7014 of the DoD Supplement to the
+Federal Acquisition Regulations ("DFARS") (or any successor regulations)
+and the Government is acquiring only the license rights granted herein (the
+license rights customarily provided to non-Government users).  If the Software
+is supplied to any unit or agency of the Government other than DoD, it is
+classified as "Restricted Computer Software" and the Government's rights in
+the Software are defined in paragraph 52.227-19 of the Federal Acquisition
+Regulations ("FAR") (or any successor regulations) or, in the case of NASA,
+in paragraph 18.52.227-86 of the NASA Supplement in the FAR (or any successor
+regulations).
+bosserver.
+bos addhost snorklewacker snorklewacker -localauth ||true
+bos adduser snorklewacker hartmans -localauth
+pt_util: /var/lib/openafs/db/prdb.DB0: Bad UBIK_MAGIC. Is 0 should be 354545
+Ubik Version is: 2.0
+Error while creating system:administrators: Entry for id already exists
+pt_util: Ubik Version number changed during execution.
+Old Version = 2.0, new version = 33554432.0
+bos create snorklewacker ptserver simple /usr/lib/openafs/ptserver -localauth
+bos create snorklewacker vlserver simple /usr/lib/openafs/vlserver -localauth
+bos create snorklewacker fs fs -cmd /usr/lib/openafs/fileserver -cmd /usr/lib/openafs/volserver -cmd /usr/lib/openafs/salvager -localauth
+Waiting for database elections: done.
+vos create snorklewacker a root.afs -localauth
+Volume 536870924 created on partition /vicepa of snorklewacker
+echo snorklewacker.mit.edu >/etc/openafs/ThisCell
+/etc/init.d/openafs-client force-start
+Starting AFS services: ===================== U.S. Government Restricted Rights ======================
+If you are licensing the Software on behalf of the U.S. Government
+("Government"), the following provisions apply to you.  If the Software is
+supplied to the Department of Defense ("DoD"), it is classified as "Commercial
+Computer Software" under paragraph 252.227-7014 of the DoD Supplement to the
+Federal Acquisition Regulations ("DFARS") (or any successor regulations)
+and the Government is acquiring only the license rights granted herein (the
+license rights customarily provided to non-Government users).  If the Software
+is supplied to any unit or agency of the Government other than DoD, it is
+classified as "Restricted Computer Software" and the Government's rights in
+the Software are defined in paragraph 52.227-19 of the Federal Acquisition
+Regulations ("FAR") (or any successor regulations) or, in the case of NASA,
+in paragraph 18.52.227-86 of the NASA Supplement in the FAR (or any successor
+regulations).
+afsd: All AFS daemons started.
+ afsd.
+Now, get tokens as hartmans in the snorklewacker.mit.edu cell.  Then, run
+afs-rootvol.
+snorklewacker:/# 
+snorklewacker:/# kinit hartmans
+Password for hartmans@SNORKLEWACKER.MIT.EDU: foo
+
+snorklewacker:/# aklog snorklewacker.mit.edu -k SNORKLEWACKER.MIT.EDU
+snorklewacker:/# afs-rootvol
+			    Prerequisites
+
+In order to set up the root.afs volume, you must meet the following pre-conditions:
+
+1) The cell must be configured, running a database server with a
+   volume location and protection server.
+
+2)  You must be logged into the cell with  tokens in
+    system:administrators and with a principal that is in the susers
+    file of the servers in the cell.
+
+3) You need a fileserver in the cell with partitions mounted and a root.afs volume created.
+   Presumably, it has no volumes on it, although the script will work
+   so long as nothing besides root.afs exists.
+
+4) The AFS client must be running pointed at the new cell.
+Do you meet these conditions? (Y/n) y
+You will need to select a server (hostname) and AFS
+partition on which to create the root volumes.
+What AFS Server should volumes be placed on? snorklewacker
+What partition? [a] 
+fs sa /afs system:anyuser rl
+vos create snorklewacker a root.cell -localauth
+Volume 536870927 created on partition /vicepa of snorklewacker
+fs mkm /afs/snorklewacker.mit.edu root.cell -cell snorklewacker.mit.edu 
+fs mkm /afs/andrew.cmu.edu root.cell -cell andrew.cmu.edu 
+fs mkm /afs/cs.cmu.edu root.cell -cell cs.cmu.edu 
+fs mkm /afs/ece.cmu.edu root.cell -cell ece.cmu.edu 
+fs mkm /afs/athena.mit.edu root.cell -cell athena.mit.edu 
+fs mkm /afs/dev.mit.edu root.cell -cell dev.mit.edu 
+fs mkm /afs/net.mit.edu root.cell -cell net.mit.edu 
+fs mkm /afs/sipb.mit.edu root.cell -cell sipb.mit.edu 
+fs mkm /afs/ir.stanford.edu root.cell -cell ir.stanford.edu 
+fs mkm /afs/umr.edu root.cell -cell umr.edu 
+fs mkm /afs/dementia.org root.cell -cell dementia.org 
+fs sa /afs/snorklewacker.mit.edu system:anyuser rl
+fs mkm /afs/.snorklewacker.mit.edu root.cell -cell snorklewacker.mit.edu -rw
+fs mkm /afs/.root.afs root.afs -rw
+vos create snorklewacker a user -localauth
+Volume 536870930 created on partition /vicepa of snorklewacker
+fs mkm /afs/snorklewacker.mit.edu/user user 
+fs sa /afs/snorklewacker.mit.edu/user system:anyuser rl
+vos create snorklewacker a service -localauth
+Volume 536870933 created on partition /vicepa of snorklewacker
+fs mkm /afs/snorklewacker.mit.edu/service service 
+fs sa /afs/snorklewacker.mit.edu/service system:anyuser rl
+ln -s /afs/snorklewacker.mit.edu /afs/snorklewacker
+ln -s /afs/.snorklewacker.mit.edu /afs/.snorklewacker
+vos addsite snorklewacker a root.afs -localauth
+Added replication site snorklewacker /vicepa for volume root.afs
+vos addsite snorklewacker a root.cell -localauth
+Added replication site snorklewacker /vicepa for volume root.cell
+vos release root.afs -localauth
+Released volume root.afs successfully
+vos release root.cell -localauth
+Released volume root.cell successfully
+snorklewacker:/# ls /afs
+andrew.cmu.edu	dementia.org  ir.stanford.edu  snorklewacker
+athena.mit.edu	dev.mit.edu   net.mit.edu      snorklewacker.mit.edu
+cs.cmu.edu	ece.cmu.edu   sipb.mit.edu     umr.edu
+snorklewacker:/# ls /afs/athena.mit.edu
+activity  contrib  dept  project    service   system
+astaff	  course   org	 reference  software  user
+snorklewacker:/# ls /afs/snorklewacker
+service  user
+snorklewacker:/# 

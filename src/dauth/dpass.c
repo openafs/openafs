@@ -11,20 +11,28 @@
  * dpass
  *
  * This program allows a user to discover the password generated for him
- * by the transarc migration toolkit when migrating his password information
+ * by the migration toolkit when migrating his password information
  * to the DCE.
  */
 
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/dauth/dpass.c,v 1.1.1.4 2001/07/14 22:21:27 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/dauth/dpass.c,v 1.7 2003/07/15 23:14:59 shadow Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
 #include <rx/xdr.h>
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>
+#endif
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
 #endif
 
 #include <ubik.h>
@@ -60,9 +68,9 @@ char *msg[] = {
     0
 };
 
-CommandProc (as, arock)
-  char *arock;
-  struct cmd_syndesc *as;
+CommandProc(as, arock)
+     char *arock;
+     struct cmd_syndesc *as;
 {
     int i;
     afs_int32 code;
@@ -78,7 +86,8 @@ CommandProc (as, arock)
      * about registry conversion dates, etc.
      */
     if (!getenv("DPASS_NO_MESSAGE")) {
-	for (i = 0; msg[i]; i++) printf("%s\n", msg[i]);
+	for (i = 0; msg[i]; i++)
+	    printf("%s\n", msg[i]);
     }
 
     if (as->parms[0].items) {
@@ -88,29 +97,34 @@ CommandProc (as, arock)
 	cell_p = as->parms[0].items->data;
 	cdir = afsconf_Open(AFSDIR_CLIENT_ETC_DIRPATH);
 	if (!cdir) {
-	    fprintf(stderr, "\nUnable to verify that \"%s\" is a valid cell name\nProceeding on the assumption that it is correct.\n", cell_p);
+	    fprintf(stderr,
+		    "\nUnable to verify that \"%s\" is a valid cell name\nProceeding on the assumption that it is correct.\n",
+		    cell_p);
 	    exit(1);
 	}
 	code = afsconf_GetCellInfo(cdir, cell_p, 0, &cellinfo);
 	if (code) {
-	    fprintf(stderr, "\nUnable to find information about cell \"%s\"\nProceeding on the assumption that this is a valid cell name.\n", cell_p);
+	    fprintf(stderr,
+		    "\nUnable to find information about cell \"%s\"\nProceeding on the assumption that this is a valid cell name.\n",
+		    cell_p);
 	} else {
 	    strncpy(cell, cellinfo.name, sizeof(cell) - 1);
 	    cell[sizeof(cell)] = '\0';
 	    cell_p = cell;
 	}
-     } else {
+    } else {
 	struct afsconf_dir *cdir;
-	
-	cdir = afsconf_Open(AFSDIR_CLIENT_ETC_DIRPATH);	
+
+	cdir = afsconf_Open(AFSDIR_CLIENT_ETC_DIRPATH);
 	if (!cdir) {
-	    fprintf(stderr, "\nUnable to read the AFS client configuration file to get local cell name.\nTry specifying the cell with the -cell switch.\n");
+	    fprintf(stderr,
+		    "\nUnable to read the AFS client configuration file to get local cell name.\nTry specifying the cell with the -cell switch.\n");
 	    exit(1);
 	}
 	afsconf_GetLocalCell(cdir, cell, sizeof(cell));
 	cell_p = cell;
     }
-	
+
     printf("\n");
     sprintf(prompt, "Original password for AFS cell %s: ", cell_p);
     code = ka_ReadPassword(prompt, 1, cell_p, &key);
@@ -120,14 +134,15 @@ CommandProc (as, arock)
     }
 #define k(i) (key.data[i] & 0xff)
 #define s(n) ((k(n) << 8) | k(n+1))
-    printf("\nThe new DCE password is: %0.4x-%0.4x-%0.4x-%0.4x\n",
-	   s(0), s(2), s(4), s(6));
+    printf("\nThe new DCE password is: %0.4x-%0.4x-%0.4x-%0.4x\n", s(0), s(2),
+	   s(4), s(6));
 }
 
-main (argc, argv)
-  int   argc;
-  char *argv[];
-{   struct cmd_syndesc *ts;
+main(argc, argv)
+     int argc;
+     char *argv[];
+{
+    struct cmd_syndesc *ts;
     afs_int32 code;
 #ifdef	AFS_AIX32_ENV
     /*
@@ -137,14 +152,15 @@ main (argc, argv)
      * generated which, in many cases, isn't too useful.
      */
     struct sigaction nsa;
-    
+
     sigemptyset(&nsa.sa_mask);
     nsa.sa_handler = SIG_DFL;
     nsa.sa_flags = SA_FULLDUMP;
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
-    ts = cmd_CreateSyntax((char *) 0, CommandProc, 0, "show new DCE passord");
-    cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL,"original AFS cell name");
+    ts = cmd_CreateSyntax(NULL, CommandProc, 0, "show new DCE passord");
+    cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL,
+		"original AFS cell name");
     code = cmd_Dispatch(argc, argv);
     exit(code);
 }

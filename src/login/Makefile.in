@@ -17,27 +17,8 @@
 # @(#)Makefile	5.1 (Berkeley) 10/18/88
 #
 
-DEST=@DEST@
-TOP_INCDIR=@TOP_INCDIR@
-TOP_LIBDIR=@TOP_LIBDIR@
-prefix=@prefix@
-exec_prefix=@exec_prefix@
-bindir=@bindir@
-sbindir=@sbindir@
-libexecdir=@libexecdir@
-libdir=@libdir@
-includedir=@includedir@
-mandir=@mandir@
-afssrvbindir=@afssrvbindir@
-afssrvsbindir=@afssrvsbindir@
-afssrvlibexecdir=@afssrvlibexecdir@
-COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
-RXGEN=${TOP_SRCDIR}/rxgen/rxgen
-TOP_SRCDIR=@TOP_SRCDIR@
-SYS_NAME=@AFS_SYSNAME@
-
-
-include ../config/Makefile.${SYS_NAME}
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
 
 AFSLIBS =  ${TOP_LIBDIR}/libkauth.a ${TOP_LIBDIR}/libprot.a \
 	   ${TOP_LIBDIR}/libubik.a ${TOP_LIBDIR}/libauth.a \
@@ -53,32 +34,23 @@ KAFSLIBS = ${TOP_LIBDIR}/libkauth.krb.a ${TOP_LIBDIR}/libprot.a \
 	   ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/libcmd.a \
 	   ${TOP_LIBDIR}/libcom_err.a ${TOP_LIBDIR}/util.a
 
-INCLUDES=-I${TOP_SRCDIR}/config -I${TOP_INCDIR} 
-CFLAGS=	${DBG} ${XCFLAGS} ${INCLUDES}
-LIBC=	/lib/libc.a
 SRCS=	login.c 
 OBJS=   login.o setenv.o getenv.o libutil.a
 KOBJS=  login.krb.o setenv.o getenv.o libutil.a
-LIBS=   ${AFSLIBS} 
-KLIBS=   ${KAFSLIBS}
-SLIBS=   ${AFSLIBS} ${LIBC}
-SKLIBS=   ${KAFSLIBS} ${LIBC}
 UTILOBJS = util_login.o util_logout.o util_logwtmp.o
-
-include ../config/Makefile.version
 
 all: login login.krb
 
-login:	${OBJS} ${LIBS}
+login:	${OBJS} ${AFSLIBS}
 	case ${SYS_NAME} in \
-	sun4x_5? | sunx86_5? ) ${CC} -o $@ ${CFLAGS} ${OBJS} -lc ${LIBS} ${XLIBS} -lcmd;;\
-	*) ${CC} -o $@ ${CFLAGS} ${OBJS} ${LIBS} ${XLIBS} ;;\
+	sun4x_5? | sunx86_5? ) ${CC} -g -o $@ ${CFLAGS} ${OBJS} -lc ${LIBS} ${XLIBS} -lcmd;;\
+	*) ${CC} -g -o $@ ${CFLAGS} ${OBJS} ${LIBS} ${XLIBS} ;;\
 	esac 
 
-login.krb: ${KOBJS} ${KLIBS}
+login.krb: ${KOBJS} ${KAFSLIBS}
 	case ${SYS_NAME} in \
-	sun4x_5? | sunx86_5? ) ${CC} -o $@ ${CFLAGS} ${KOBJS} -lc ${KLIBS} ${XLIBS} -lcmd;;\
-	*) ${CC} -o $@ ${CFLAGS} ${KOBJS} ${KLIBS} ${XLIBS} ;;\
+	sun4x_5? | sunx86_5? ) ${CC} -g -o $@ ${CFLAGS} ${KOBJS} -lc ${KLIBS} ${XLIBS} -lcmd;;\
+	*) ${CC} -g -o $@ ${CFLAGS} ${KOBJS} ${KLIBS} ${XLIBS} ;;\
 	esac 
 
 libutil.a : ${UTILOBJS}
@@ -87,36 +59,41 @@ libutil.a : ${UTILOBJS}
 	$(RANLIB) $@
 
 login.o: login.c AFS_component_version_number.c
-	${CC} ${CFLAGS} -c login.c
+	${CC} ${CFLAGS} -c ${srcdir}/login.c
 
 login.krb.o: login.c
-	${CC} ${CFLAGS} -DAFS_KERBEROS_ENV -c login.c
+	${CC} ${CFLAGS} -DAFS_KERBEROS_ENV -c ${srcdir}/login.c
 	mv login.o login.krb.o
 
-clean:
-	$(RM) -f *.o ${OBJS} core login AFS_component_version_number.c
-
-cleandir: clean
-	$(RM) -f ${MAN} tags .depend
-
-depend: ${SRCS}
-	mkdep -p ${CFLAGS} ${SRCS}
-
-install:  ${DESTDIR}${bindir}/login  ${DESTDIR}${bindir}/login.krb
-
-${DEST}/bin/login: login
-	${INSTALL} $? $@
+#
+# Installation targets
+#
+install: \
+	${DESTDIR}${bindir}/login \
+	${DESTDIR}${bindir}/login.krb
 
 ${DESTDIR}${bindir}/login: login
-	${INSTALL} $? $@
-
-
-${DEST}/bin/login.krb: login.krb
 	${INSTALL} $? $@
 
 ${DESTDIR}${bindir}/login.krb: login.krb
 	${INSTALL} $? $@
 
 
-dest:   ${DEST}/bin/login ${DEST}/bin/login.krb
+dest: \
+	${DEST}/bin/login \
+	${DEST}/bin/login.krb
+
+${DEST}/bin/login: login
+	${INSTALL} $? $@
+
+${DEST}/bin/login.krb: login.krb
+	${INSTALL} $? $@
+
+#
+# Misc. targets
+#
+clean:
+	$(RM) -f *.o ${OBJS} core login AFS_component_version_number.c
+
+include ../config/Makefile.version
 

@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/ubik/utst_client.c,v 1.1.1.5 2001/10/14 18:06:47 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/ubik/utst_client.c,v 1.7 2003/07/15 23:17:06 shadow Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -36,18 +37,19 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/ubik/utst_client.c,v 1.1.1.5 2001/10/14
 #include "ubik.h"
 #include "utst_int.h"
 
-extern int SAMPLE_Inc(), SAMPLE_Test(), SAMPLE_Get(),
-    SAMPLE_Trun(), SAMPLE_QGet();
+extern int SAMPLE_Inc(), SAMPLE_Test(), SAMPLE_Get(), SAMPLE_Trun(),
+SAMPLE_QGet();
 
 /* main program */
 
 #include "AFS_component_version_number.c"
 
 main(argc, argv)
-    int argc;
-    char **argv; {
+     int argc;
+     char **argv;
+{
     register afs_int32 code;
-    struct ubik_client *cstruct=0;
+    struct ubik_client *cstruct = 0;
     afs_int32 serverList[MAXSERVERS];
     struct rx_connection *serverconns[MAXSERVERS];
     struct rx_securityClass *sc;
@@ -55,12 +57,13 @@ main(argc, argv)
     afs_int32 temp;
 
     if (argc == 1) {
-	printf("uclient: usage is 'uclient -servers ... [-try] [-get] [-inc] [-minc] [-trunc]\n");
+	printf
+	    ("uclient: usage is 'uclient -servers ... [-try] [-get] [-inc] [-minc] [-trunc]\n");
 	exit(0);
     }
-#ifdef AFS_NT40_ENV 
+#ifdef AFS_NT40_ENV
     /* initialize winsock */
-     if (afs_winsockInit()<0) 
+    if (afs_winsockInit() < 0)
 	return -1;
 #endif
     /* first parse '-servers <server-1> <server-2> ... <server-n>' from command line */
@@ -70,17 +73,18 @@ main(argc, argv)
 	exit(1);
     }
     rx_Init(0);
-    sc = (struct rx_securityClass *) rxnull_NewClientSecurityObject();
-    for (i=0; i<MAXSERVERS; i++) {
-	if (serverList[i]){
-	    serverconns[i] = rx_NewConnection(serverList[i], htons(3000),
-					      USER_SERVICE_ID, sc, 0);
+    sc = rxnull_NewClientSecurityObject();
+    for (i = 0; i < MAXSERVERS; i++) {
+	if (serverList[i]) {
+	    serverconns[i] =
+		rx_NewConnection(serverList[i], htons(3000), USER_SERVICE_ID,
+				 sc, 0);
 	} else {
 	    serverconns[i] = (struct rx_connection *)0;
 	    break;
 	}
     }
-    
+
     /* next, pass list of server rx_connections (in serverconns), and
      * a place to put the returned client structure that we'll use in
      * all of our rpc calls (via ubik_Calll) */
@@ -91,76 +95,70 @@ main(argc, argv)
 	printf("ubik client init failed with code %d\n", code);
 	return;
     }
-    
+
     /* parse command line for our own operations */
-    for(i=1;i<argc;i++) {
+    for (i = 1; i < argc; i++) {
 	if (!strcmp(argv[i], "-inc")) {
 	    /* use ubik_Call to do the work, finding an up server and handling
-		the job of finding a sync site, if need be */
+	     * the job of finding a sync site, if need be */
 	    code = ubik_Call(SAMPLE_Inc, cstruct, 0);
 	    printf("return code is %d\n", code);
-	}
-	else if (!strcmp(argv[i], "-try")) {
+	} else if (!strcmp(argv[i], "-try")) {
 	    code = ubik_Call(SAMPLE_Test, cstruct, 0);
 	    printf("return code is %d\n", code);
-	}
-	else if (!strcmp(argv[i], "-qget")) {
+	} else if (!strcmp(argv[i], "-qget")) {
 	    code = ubik_Call(SAMPLE_QGet, cstruct, 0, &temp);
 	    printf("got quick value %d (code %d)\n", temp, code);
-	}
-	else if (!strcmp(argv[i], "-get")) {
+	} else if (!strcmp(argv[i], "-get")) {
 	    code = ubik_Call(SAMPLE_Get, cstruct, 0, &temp);
 	    printf("got value %d (code %d)\n", temp, code);
-	}
-	else if (!strcmp(argv[i], "-trunc")) {
+	} else if (!strcmp(argv[i], "-trunc")) {
 	    code = ubik_Call(SAMPLE_Trun, cstruct, 0);
 	    printf("return code is %d\n", code);
-	}
-       else if (!strcmp(argv[i], "-minc")) {
-	 afs_int32 temp; 
-	 struct timeval tv; 
-	 tv.tv_sec = 1; tv.tv_usec = 0;
-	 printf("ubik_client: Running minc...\n");
-	 
-	 while (1) {
-	   temp=0; 
-	   code = ubik_Call(SAMPLE_Get, cstruct, 0, &temp); 
-	   if (code != 0) {
-	     printf("SAMPLE_Inc #1 failed with code %ld\n", code);
-	   }
-	   else {
-	     printf("SAMPLE_Get #1 succeeded, got value %d\n", temp);
-	   }
+	} else if (!strcmp(argv[i], "-minc")) {
+	    afs_int32 temp;
+	    struct timeval tv;
+	    tv.tv_sec = 1;
+	    tv.tv_usec = 0;
+	    printf("ubik_client: Running minc...\n");
 
-	   temp=0; 
-	   code = ubik_Call(SAMPLE_Inc, cstruct, 0); 
-	   if (code != 0) {
-	     printf("SAMPLE_Inc #1 failed with code %ld\n", code);
-	   }
-	   else {
-	     printf("SAMPLE_Inc #1 succeeded, incremented integer\n");
-	   }
-	   temp=0; 
-	   code = ubik_Call(SAMPLE_Get, cstruct, 0, &temp); 
-	   if (code != 0) {
-	     printf("SAMPLE_Get #2 failed with code %ld\n", code);
-	   } 
-	   else {
-	     printf("SAMPLE_Get #2 succeeded, got value %d\n", temp);
-	   }
-			 
-	   temp=0; 
-	   code = ubik_Call(SAMPLE_Inc, cstruct, 0); 
-	   if (code != 0) 
-	     printf("SAMPLE_Inc #2 failed with code %ld\n", code);
-	   else printf("SAMPLE_Inc #2 succeeded, incremented integer\n");
-			 
-	   tv.tv_sec = 1; tv.tv_usec = 0; 
-	   IOMGR_Select(0, 0, 0, 0, &tv);
-	   printf("Repeating the SAMPLE operations again...\n");
-	 } 
-       }
-	else if (!strcmp(argv[i], "-mget")) {
+	    while (1) {
+		temp = 0;
+		code = ubik_Call(SAMPLE_Get, cstruct, 0, &temp);
+		if (code != 0) {
+		    printf("SAMPLE_Inc #1 failed with code %ld\n", code);
+		} else {
+		    printf("SAMPLE_Get #1 succeeded, got value %d\n", temp);
+		}
+
+		temp = 0;
+		code = ubik_Call(SAMPLE_Inc, cstruct, 0);
+		if (code != 0) {
+		    printf("SAMPLE_Inc #1 failed with code %ld\n", code);
+		} else {
+		    printf("SAMPLE_Inc #1 succeeded, incremented integer\n");
+		}
+		temp = 0;
+		code = ubik_Call(SAMPLE_Get, cstruct, 0, &temp);
+		if (code != 0) {
+		    printf("SAMPLE_Get #2 failed with code %ld\n", code);
+		} else {
+		    printf("SAMPLE_Get #2 succeeded, got value %d\n", temp);
+		}
+
+		temp = 0;
+		code = ubik_Call(SAMPLE_Inc, cstruct, 0);
+		if (code != 0)
+		    printf("SAMPLE_Inc #2 failed with code %ld\n", code);
+		else
+		    printf("SAMPLE_Inc #2 succeeded, incremented integer\n");
+
+		tv.tv_sec = 1;
+		tv.tv_usec = 0;
+		IOMGR_Select(0, 0, 0, 0, &tv);
+		printf("Repeating the SAMPLE operations again...\n");
+	    }
+	} else if (!strcmp(argv[i], "-mget")) {
 	    afs_int32 temp;
 	    struct timeval tv;
 	    tv.tv_sec = 1;
@@ -177,7 +175,7 @@ main(argc, argv)
 
 		code = ubik_Call(SAMPLE_Get, cstruct, 0, &temp);
 		printf("got value %d (code %d)\n", temp, code);
-		
+
 		tv.tv_sec = 1;
 		tv.tv_usec = 0;
 		IOMGR_Select(0, 0, 0, 0, &tv);

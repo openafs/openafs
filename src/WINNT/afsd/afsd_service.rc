@@ -15,3 +15,6 @@
 
 #include "AFS_component_version_number.h"
 #include "..\..\config\NTVersioninfo.rc"
+
+1       ICON    afsd.ico
+

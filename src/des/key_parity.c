@@ -17,13 +17,16 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/des/key_parity.c,v 1.1.1.3 2001/07/14 22:21:32 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/des/key_parity.c,v 1.5 2003/07/15 23:15:00 shadow Exp $");
 
 #include <mit-cpyright.h>
+#include <stdio.h>
 #include <des.h>
 #include "des_internal.h"
+#include "des_prototypes.h"
 
-#include "odd.h"          /* Load compile-time generated odd_parity table */
+#include "odd.h"		/* Load compile-time generated odd_parity table */
 
 /*
  * des_fixup_key_parity: Forces odd parity per byte; parity is bits
@@ -31,13 +34,12 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/des/key_parity.c,v 1.1.1.3 2001/07/14 2
  *                       vax order.
  */
 void
-des_fixup_key_parity(key)
-     register des_cblock key;
+des_fixup_key_parity(register des_cblock key)
 {
     int i;
 
-    for (i=0; i<sizeof(des_cblock); i++)
-      key[i] = odd_parity[key[i]];
+    for (i = 0; i < sizeof(des_cblock); i++)
+	key[i] = odd_parity[key[i]];
 
     return;
 }
@@ -48,14 +50,13 @@ des_fixup_key_parity(key)
  *                       correct des parity.
  */
 int
-des_check_key_parity(key)
-     register des_cblock key;
+des_check_key_parity(register des_cblock key)
 {
     int i;
 
-    for (i=0; i<sizeof(des_cblock); i++)
-      if (key[i] != odd_parity[key[i]])
-	return(0);
+    for (i = 0; i < sizeof(des_cblock); i++)
+	if (key[i] != odd_parity[key[i]])
+	    return (0);
 
-    return(1);
+    return (1);
 }

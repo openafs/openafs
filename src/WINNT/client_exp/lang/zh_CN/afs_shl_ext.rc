@@ -595,11 +595,6 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    AFX_IDS_APP_TITLE       "AFS 客户机"
-END
-
-STRINGTABLE DISCARDABLE 
-BEGIN
     IDS_MP_REMOVE_ITEM      "除去(&R)..."
     IDS_MP_MAKE_ITEM        "定制(&M)..."
     IDS_FLUSH_FILE_DIR_ITEM "清仓文件／目录(&F)"
@@ -625,6 +620,11 @@ BEGIN
     IDS_SHOW_FS_COLUMN      "文件服务器"
     IDS_REMOVE_MP           "除去安装点"
     IDS_REMOVE_MP_COLUMN    "结果"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    AFX_IDS_APP_TITLE       "AFS 客户机"
 END
 
 #endif    // Chinese (P.R.C.) resources

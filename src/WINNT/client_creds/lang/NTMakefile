@@ -10,7 +10,7 @@
 AFSDEV_AUXRCFLAGS = $(AFSDEV_AUXRCFLAGS) -I$(DESTDIR)\include -I..
 
 # include the primary makefile
-
+RELDIR=WINNT\client_creds\lang
 !INCLUDE ..\..\..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\..\..\config\NTMakefile.version
 
@@ -35,7 +35,7 @@ DLLFILE = $(DESTDIR)\root.client\usr\vice\etc\afscreds_$(LANGID).dll
 
 RCFILE = $(LANGNAME)\afscreds.rc
 
-RESFILE = afscreds_$(LANGID).res
+RESFILE = $(OUT)\afscreds_$(LANGID).res
 
 DLLOBJS = $(RESFILE)
 
@@ -48,7 +48,8 @@ $(DLLFILE) : $(DLLOBJS)
 install : $(DLLFILE)
 
 clean ::
-	$(DEL) *.res RC* RD* $(DLLFILE) $(DEL) $(DLLFILE)
+	@if exist AFS_component_version_number.h del AFS_component_version_number.h
+	$(DEL) $(OUT)\*.res RC* RD* $(DLLFILE)
 
 ############################################################################
 #
@@ -58,3 +59,6 @@ clean ::
 $(RESFILE) : $(RCFILE) AFS_component_version_number.h
 	$(RC) /fo$(RESFILE) /c$(LANGCP) $(RCFILE)
 
+
+mkdir:
+	

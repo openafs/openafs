@@ -364,10 +364,6 @@ BEGIN
     IDS_BADCREDS_DESC3_ADM  "Möchten Sie sich statt dessen als Administrator anmelden?"
     IDS_BADCREDS_DESC_DESTROYED 
                             "Ihre Token innerhalb der %1-Zelle sind nicht mehr gültig.\n\n%2\n\n%3"
-END
-
-STRINGTABLE DISCARDABLE 
-BEGIN
     IDS_ERROR_BAD_CREDENTIALS 
                             "Die von Ihnen eingegebene AFS-Identität ist unbekannt, oder das von Ihnen angegebene Kennwort ist nicht korrekt."
     IDS_BROWSE_WAITING      "Abfrage des Servers -- bitte warten..."

@@ -30,4 +30,4 @@
 #include "common.h"
 
 void
-SetupClientAdminCmd(void);
+  SetupClientAdminCmd(void);

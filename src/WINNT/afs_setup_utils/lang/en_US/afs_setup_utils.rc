@@ -50,6 +50,10 @@ BEGIN
     IDS_TITLE               "AFS® for Windows"
     IDS_CANT_DETERMINE_APP_PATH 
                             "Failed to determine the application's installation directory"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
     IDS_CLIENT_APP_NAME     "AFS Client"
     IDS_SERVER_APP_NAME     "AFS Server"
     IDS_CC_APP_NAME         "AFS Control Center"
@@ -65,6 +69,10 @@ BEGIN
     IDS_PRESERVE_SERVER_CONFIG_INFO "Do you wish to preserve the Server's configuration information?  You may want to do this if you are upgrading or reinstalling."
     IDS_RESTORE_OF_PREVIOUS_CONFIG_FAILED "Failed to restore previous configuration information"
     IDS_SAVE_OF_CONFIG_INFO_FAILED  "Failed to save the configuration information.  Proceed with the uninstall?"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
     IDS_PRESERVE_LIGHT_CLIENT_CONFIG_INFO   "Do you wish to preserve AFS Light's configuration information?  You may want to do this if you are upgrading or reinstalling."
     IDS_PRESERVE_CC_CONFIG_INFO "Do you wish to preserve the Control Center's configuration information?  You may want to do this if you are upgrading or reinstalling."
 END

@@ -357,7 +357,6 @@ void Alert_Scout_ServerStatus (LPIDENT lpi, ULONG status)
             lpoa->nAlerts ++;
             lpoa->aAlerts[ iInsert ].alert = alertTIMEOUT;
             lpoa->aAlerts[ iInsert ].aiTIMEOUT.status = status;
-            lpoa->aAlerts[ iInsert ].aiTIMEOUT.stLastAttempt;
             GetSystemTime (&lpoa->aAlerts[ iInsert ].aiTIMEOUT.stLastAttempt);
 
             fChanged = TRUE;
@@ -713,7 +712,7 @@ BOOL Alert_StartScout (ULONG *pStatus)
 {
    if (hScout == 0)  // create scout?
       {
-      heScoutWakeup = CreateEvent (NULL, FALSE, FALSE, NULL);
+      heScoutWakeup = CreateEvent (NULL, FALSE, FALSE, TEXT("AfsSvrMgr Alert Scout Wakeup"));
 
       DWORD dwThreadID;
       if ((hScout = CreateThread (NULL, 0,

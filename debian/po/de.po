@@ -16,7 +16,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2003-11-20 16:00-0500\n"
+"POT-Creation-Date: 2004-05-21 00:27-0400\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -24,11 +24,13 @@ msgstr ""
 "Content-Type: text/plain; charset=ISO-8859-15\n"
 "Content-Transfer-Encoding: 8bit\n"
 
+#. Type: string
 #. Description
 #: ../openafs-client.templates:3
 msgid "What hosts are DB servers for your home cell?"
 msgstr ""
 
+#. Type: string
 #. Description
 #: ../openafs-client.templates:3
 msgid ""
@@ -43,12 +45,14 @@ msgid ""
 "client to enable the client."
 msgstr ""
 
+#. Type: string
 #. Description
 #: ../openafs-client.templates:16
 #, fuzzy
 msgid "What AFS cell does this workstation belong to?"
 msgstr "Für welche Zelle liefert der Server Dateien?"
 
+#. Type: string
 #. Description
 #: ../openafs-client.templates:16
 msgid ""
@@ -57,11 +61,13 @@ msgid ""
 "the site."
 msgstr ""
 
+#. Type: string
 #. Description
 #: ../openafs-client.templates:24
 msgid "How large is your AFS cache (kB)?"
 msgstr ""
 
+#. Type: string
 #. Description
 #: ../openafs-client.templates:24
 msgid ""
@@ -71,11 +77,13 @@ msgid ""
 "to dedicate a partition to their AFS cache."
 msgstr ""
 
+#. Type: boolean
 #. Description
 #: ../openafs-client.templates:34
 msgid "Run Openafs client now and at boot?"
 msgstr ""
 
+#. Type: boolean
 #. Description
 #: ../openafs-client.templates:34
 msgid ""
@@ -87,11 +95,13 @@ msgid ""
 "you wish to run it."
 msgstr ""
 
+#. Type: boolean
 #. Description
 #: ../openafs-client.templates:45
 msgid "Look up AFS cells in DNS?"
 msgstr ""
 
+#. Type: boolean
 #. Description
 #: ../openafs-client.templates:45
 msgid ""
@@ -101,11 +111,13 @@ msgid ""
 "DNS to look for AFSDB records that contain the information."
 msgstr ""
 
+#. Type: boolean
 #. Description
 #: ../openafs-client.templates:55
 msgid "Encrypt authenticated traffic with AFS fileserver?"
 msgstr ""
 
+#. Type: boolean
 #. Description
 #: ../openafs-client.templates:55
 msgid ""
@@ -116,11 +128,13 @@ msgid ""
 "significantly more difficult."
 msgstr ""
 
+#. Type: boolean
 #. Description
 #: ../openafs-client.templates:65
 msgid "Dynamically generate the contents of /afs?"
 msgstr ""
 
+#. Type: boolean
 #. Description
 #: ../openafs-client.templates:65
 msgid ""
@@ -130,6 +144,7 @@ msgid ""
 "dynamically based on the contents of /etc/openafs/CellServDB and DNS."
 msgstr ""
 
+#. Type: boolean
 #. Description
 #: ../openafs-client.templates:65
 msgid ""
@@ -138,11 +153,13 @@ msgid ""
 "THIS MACHINE IS THE FIRST DATABASE SERVER IN A NEW CELL ."
 msgstr ""
 
+#. Type: boolean
 #. Description
 #: ../openafs-client.templates:78
 msgid "Use fakestat to avoid hangs when listing /afs?"
 msgstr ""
 
+#. Type: boolean
 #. Description
 #: ../openafs-client.templates:78
 msgid ""
@@ -154,11 +171,13 @@ msgid ""
 "circumstances."
 msgstr ""
 
+#. Type: string
 #. Description
 #: ../openafs-fileserver.templates:3
 msgid "What cell does this server serve files for?"
 msgstr "Für welche Zelle liefert der Server Dateien?"
 
+#. Type: string
 #. Description
 #: ../openafs-fileserver.templates:3
 msgid ""
@@ -170,11 +189,13 @@ msgstr ""
 "den Kerberos-Service der Zelle und stellen Volumes für die Zelle bereit. "
 "Normalerweise ist die Zelle identisch mit der des Clients"
 
+#. Type: boolean
 #. Description
 #: ../openafs-fileserver.templates:11
 msgid "Upgrading will move files to new locations; continue?"
 msgstr ""
 
+#. Type: boolean
 #. Description
 #: ../openafs-fileserver.templates:11
 msgid ""
@@ -186,11 +207,13 @@ msgid ""
 "your servers.  Any configuration changes made before you do so will be lost."
 msgstr ""
 
+#. Type: note
 #. Description
 #: ../openafs-fileserver.templates:22
 msgid "OpenAFS Fileserv Probably does not work!"
 msgstr ""
 
+#. Type: note
 #. Description
 #: ../openafs-fileserver.templates:22
 msgid ""

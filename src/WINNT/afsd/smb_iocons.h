@@ -82,14 +82,13 @@ typedef struct cm_cacheParms {
 #define VIOCNEWGETTOK			0x1f
 #define VIOCDELTOK			0x20
 #define VIOCDELALLTOK			0x21
-
+#define VIOC_ISSYMLINK			0x22
 #define VIOC_SYMLINK			0x23
 #define VIOC_LISTSYMLINK		0x24
 #define VIOC_DELSYMLINK			0x25
 #define VIOC_MAKESUBMOUNT		0x26
-#define VIOC_SHUTDOWN                   0x27
-
 #define VIOC_GETRXKCRYPT		0x27
 #define VIOC_SETRXKCRYPT		0x28
-
+#define VIOC_TRACEMEMDUMP               0x29
+#define VIOC_SHUTDOWN                   0x2a
 #endif /*  __SMB_IOCONS_H_ENV_ */

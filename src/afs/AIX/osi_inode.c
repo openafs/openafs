@@ -14,21 +14,22 @@
  *
  */
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/AIX/osi_inode.c,v 1.1.1.4 2001/07/14 22:19:33 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/afs/AIX/osi_inode.c,v 1.8.2.1 2004/08/25 07:16:15 shadow Exp $");
 
-#include "../afs/sysincludes.h"	/* Standard vendor system headers */
-#include "../afs/afsincludes.h"	/* Afs-based standard headers */
-#include "../afs/osi_inode.h"
-#include "../afs/afs_stats.h" /* statistics stuff */
+#include "afs/sysincludes.h"	/* Standard vendor system headers */
+#include "afsincludes.h"	/* Afs-based standard headers */
+#include "afs/osi_inode.h"
+#include "afs/afs_stats.h"	/* statistics stuff */
 #include "sys/syspest.h"
 
 #if !defined(offsetof)
-#include <stddef.h> /* for definition of offsetof() */
+#include <stddef.h>		/* for definition of offsetof() */
 #endif
 
-extern Simple_lock      jfs_icache_lock;
+extern Simple_lock jfs_icache_lock;
 #define ICACHE_LOCK()           simple_lock(&jfs_icache_lock)
 #define ICACHE_UNLOCK()         simple_unlock(&jfs_icache_lock)
 
@@ -57,11 +58,11 @@ extern Simple_lock      jfs_icache_lock;
  * is at an expected offset.
  */
 
-#if IACTIVITY == 0x0020	/* in <jfs/inode.h> on AIX 4.2.0 */
+#if IACTIVITY == 0x0020		/* in <jfs/inode.h> on AIX 4.2.0 */
 #define afs_inode_lock	i_rdwrlock
 #endif
 
-#if IACTIVITY == 0x0010	/* in <jfs/inode.h> on AIX 4.2.1 and later */
+#if IACTIVITY == 0x0010		/* in <jfs/inode.h> on AIX 4.2.1 and later */
 #define afs_inode_lock	i_nodelock
 #endif
 
@@ -115,7 +116,8 @@ struct devtovfs_args {
  * (Returning nonzero causes vfs_search() to terminate the search.)
  */
 
-static int devtovfs_func(struct vfs *vfsp, struct devtovfs_args *rock)
+static int
+devtovfs_func(struct vfs *vfsp, struct devtovfs_args *rock)
 {
     if (vfsp->vfs_mntd != NULL && vfsp->vfs_type == MNT_JFS
 	&& (vfsp->vfs_flag & VFS_DEVMOUNT)) {
@@ -141,7 +143,7 @@ devtovfs(dev_t dev)
     AFS_STATCNT(devtovfs);
 
     a.dev = dev;
-    a.ans = (struct vfs *)0;
+    a.ans = NULL;
     vfs_search(devtovfs_func, &a);
     return a.ans;
 }
@@ -156,84 +158,93 @@ int IGI_mode;
 /* get an existing inode.  Common code for iopen, iread/write, iinc/dec. */
 /* Also used by rmt_remote to support passing of inode number from venus */
 extern int iget();
+extern struct vnode *filevp;
 struct inode *
-igetinode(dev, vfsp, inode, vpp,perror)
-        struct vfs *vfsp;
-	struct vnode **vpp;  /* vnode associated with the inode */
-	dev_t dev;
-	ino_t inode;
-	int *perror;
+igetinode(dev, vfsp, inode, vpp, perror)
+     struct vfs *vfsp;
+     struct vnode **vpp;	/* vnode associated with the inode */
+     dev_t dev;
+     ino_t inode;
+     int *perror;
 {
-	struct inode *ip;
-	register was_locked;
-	struct vfs *nvfsp = NULL;
-	int code;
-	*perror = 0;
-	*vpp = NULL;
-	AFS_STATCNT(igetinode);
+    struct inode *ip;
+    register was_locked;
+    struct vfs *nvfsp = NULL;
+    int code;
+    *perror = 0;
+    *vpp = NULL;
+    AFS_STATCNT(igetinode);
 
-	/*
-	 * Double check that the inode lock is at a known offset.
-	 *
-	 * If it isn't, then we need to reexamine our code to make
-	 * sure that it is still okay.
-	 */
-	osi_Assert(offsetof(struct inode, afs_inode_lock) == 128);
+    /*
+     * Double check that the inode lock is at a known offset.
+     *
+     * If it isn't, then we need to reexamine our code to make
+     * sure that it is still okay.
+     */
+#ifdef __64BIT__
+/*      osi_Assert(offsetof(struct inode, afs_inode_lock) == 208); */
+#else
+    osi_Assert(offsetof(struct inode, afs_inode_lock) == 128);
+#endif
 
-	if (!vfsp && !(vfsp = devtovfs((dev_t)dev))) {
-	    afs_warn("Dev=%d not mounted!!; quitting\n", dev);
-	    setuerror(ENODEV);
-	    ip = 0;
-	    goto out;
-	}
-	if (vfsp->vfs_flag & VFS_DEVMOUNT)
-		nvfsp = vfsp;
+    if (!vfsp && !(vfsp = devtovfs((dev_t) dev))) {
+	afs_warn("Dev=%d not mounted!!; quitting\n", dev);
+	setuerror(ENODEV);
+	ip = 0;
+	goto out;
+    }
+    if (vfsp->vfs_flag & VFS_DEVMOUNT)
+	nvfsp = vfsp;
 
-	/* Check if inode 0. This is the mount inode for the device
-         * and will panic the aix system if removed: defect 11434.
-	 * No file should ever point to this inode.
-	 */
-	if (inode == 0) {
-	    afs_warn("Dev=%d zero inode.\n", dev);
-	    setuerror(ENOENT);
-	    ip = 0;
-	    goto out;
-	}
+    /* Check if inode 0. This is the mount inode for the device
+     * and will panic the aix system if removed: defect 11434.
+     * No file should ever point to this inode.
+     */
+    if (inode == 0) {
+	afs_warn("Dev=%d zero inode.\n", dev);
+	setuerror(ENOENT);
+	ip = 0;
+	goto out;
+    }
 
-	ICACHE_LOCK(); 
-	if ((code = iget(dev, inode, &ip, 1, nvfsp))) {
-	    IGI_error = code;
-	    IGI_inode = inode;
-	    *perror = BAD_IGET;
-	    ICACHE_UNLOCK();
- 	    setuerror(ENOENT);		/* Well... */
-	    ip = 0;
-	    goto out;
-	}
+    ICACHE_LOCK();
+#ifdef __64BIT__
+    if ((code = iget(dev, inode, &ip, (afs_size_t) 1, nvfsp))) {
+#else
+    if ((code = iget(dev, inode, &ip, 1, nvfsp))) {
+#endif
+	IGI_error = code;
+	IGI_inode = inode;
+	*perror = BAD_IGET;
 	ICACHE_UNLOCK();
-	IREAD_LOCK(ip);
-	if (ip->i_nlink == 0 || (ip->i_mode&IFMT) != IFREG) {
-	    IGI_error = 0;
-	    IGI_inode = inode;
-	    IGI_nlink = ip->i_nlink;
-	    IGI_mode = ip->i_mode;
-	    IREAD_UNLOCK(ip);
-	    ICACHE_LOCK();
-	    iput(ip, NULL);
-	    ICACHE_UNLOCK();
- 	    setuerror(ENOENT);
-	    ip = 0;
-	    goto out;
-	}
+	setuerror(ENOENT);	/* Well... */
+	ip = 0;
+	goto out;
+    }
+    ICACHE_UNLOCK();
+    IREAD_LOCK(ip);
+    if (ip->i_nlink == 0 || (ip->i_mode & IFMT) != IFREG) {
+	IGI_error = 0;
+	IGI_inode = inode;
+	IGI_nlink = ip->i_nlink;
+	IGI_mode = ip->i_mode;
 	IREAD_UNLOCK(ip);
-	if (vpp) {
-	    if (nvfsp)	
-		*vpp = ip->i_gnode.gn_vnode;
-	    else
-		setuerror(iptovp(vfsp, ip, vpp));
-	}
-out:
-	return ip;
+	ICACHE_LOCK();
+	iput(ip, NULL);
+	ICACHE_UNLOCK();
+	setuerror(ENOENT);
+	ip = 0;
+	goto out;
+    }
+    if (vpp) {
+	if (nvfsp)
+	    *vpp = ip->i_gnode.gn_vnode;
+	else
+	    setuerror(iptovp(vfsp, ip, vpp));
+    }
+    IREAD_UNLOCK(ip);
+  out:
+    return ip;
 }
 
 
@@ -243,113 +254,117 @@ out:
  * marked as journalled.  We would also like to journal inodes corresponding
  * to directory information...
  */
-#define INODESPECIAL	0xffffffff	/* ... from ../vol/viceonode.h	*/
+#define INODESPECIAL	0xffffffff	/* ... from ../vol/viceonode.h  */
 #endif
 
-SYSENT(icreate, (dev, near_inode, param1, param2, param3, param4), ) {
-	struct inode *ip, *newip, *pip;
-	register int err, rval1, rc=0;
-	struct vnode *vp = (struct vnode *)0;
-	extern struct vfs *rootvfs;
-	register struct vfs *vfsp;
-	struct vfs *nvfsp = NULL;
-	char error;
-	ino_t   ino = near_inode;
+SYSENT(icreate, (dev, near_inode, param1, param2, param3, param4),)
+{
+    struct inode *ip, *newip, *pip;
+    register int err, rval1, rc = 0;
+    struct vnode *vp = NULL;
+    extern struct vfs *rootvfs;
+    register struct vfs *vfsp;
+    struct vfs *nvfsp = NULL;
+    char error;
+    ino_t ino = near_inode;
 
-	AFS_STATCNT(afs_syscall_icreate);
-	if (!suser(&error)) {
-	    setuerror(error);
-	    return -1;
-	}
+    AFS_STATCNT(afs_syscall_icreate);
+    if (!suser(&error)) {
+	setuerror(error);
+	return -1;
+    }
 
-	if ((vfsp = devtovfs((dev_t)dev)) == 0) {
-	    afs_warn("Dev=%d not mounted!!; quitting\n", dev);
-	    setuerror(ENODEV);
-	    return -1;
-	}
-	if (vfsp->vfs_flag & VFS_DEVMOUNT)
-		nvfsp = vfsp;
-	ICACHE_LOCK();
-	rc = iget(dev, 0, &pip, 1, nvfsp);
-	if (!rc) {
-		/*
-		 * this is the mount inode, and thus we should be
-		 * safe putting it back.
-		 */
-		iput(pip, nvfsp);
-	}
-	ICACHE_UNLOCK();
+    if ((vfsp = devtovfs((dev_t) dev)) == 0) {
+	afs_warn("Dev=%d not mounted!!; quitting\n", dev);
+	setuerror(ENODEV);
+	return -1;
+    }
+    if (vfsp->vfs_flag & VFS_DEVMOUNT)
+	nvfsp = vfsp;
+    ICACHE_LOCK();
+    rc = iget(dev, 0, &pip, 1, nvfsp);
+    if (!rc) {
+	/*
+	 * this is the mount inode, and thus we should be
+	 * safe putting it back.
+	 */
+	iput(pip, nvfsp);
+    }
+    ICACHE_UNLOCK();
 
-	if (rc) {
-		setuerror(EINVAL);
-		return -1;
-	}
+    if (rc) {
+	setuerror(EINVAL);
+	return -1;
+    }
 
-	if (setuerror(dev_ialloc(pip, ino, IFREG, nvfsp, &newip)))
-		return -1;
-	newip->i_flag     |= IACC|IUPD|ICHG;
-	newip->i_gid       = -2;	/* Put special gid flag */
-	newip->i_vicemagic = VICEMAGIC;
-	newip->i_vicep1    = param1;
-	newip->i_vicep2    = param2;
-	newip->i_vicep3    = param3;
-	newip->i_vicep4    = param4;
-	IWRITE_UNLOCK(newip);
-	if (nvfsp) {
-		vp = newip->i_gnode.gn_vnode;
-	} else {
-		rc = iptovp(vfsp, newip, &vp);
-	    }
-	setuerror(rc);
+    if (setuerror(dev_ialloc(pip, ino, IFREG, nvfsp, &newip)))
+	return -1;
+    newip->i_flag |= IACC | IUPD | ICHG;
+    newip->i_gid = -2;		/* Put special gid flag */
+    newip->i_vicemagic = VICEMAGIC;
+    newip->i_vicep1 = param1;
+    newip->i_vicep2 = param2;
+    newip->i_vicep3 = param3;
+    newip->i_vicep4 = param4;
+    IWRITE_UNLOCK(newip);
+    if (nvfsp) {
+	vp = newip->i_gnode.gn_vnode;
+    } else {
+	rc = iptovp(vfsp, newip, &vp);
+    }
+    setuerror(rc);
 
-	rval1 = newip->i_number;
-	if (vp) {
-	    VNOP_RELE(vp);
-	}
-	return getuerror() ? -1 : rval1;
+    rval1 = newip->i_number;
+    if (vp) {
+	VNOP_RELE(vp);
+    }
+    return getuerror()? -1 : rval1;
 }
 
-SYSENT(iopen, (dev, inode, usrmod), ) {
-	struct file *fp;
-	register struct inode *ip;
-	struct vnode *vp = (struct vnode *)0;
-	extern struct fileops vnodefops;
-	register struct vfs *vfsp;
-	int fd;
-	char error;
-	struct ucred *credp;
-	int dummy;
+SYSENT(iopen, (dev, inode, usrmod),)
+{
+    struct file *fp;
+    register struct inode *ip;
+    struct vnode *vp = NULL;
+    extern struct fileops vnodefops;
+    register struct vfs *vfsp;
+    int fd;
+    char error;
+    struct ucred *credp;
+    int dummy;
 
-	AFS_STATCNT(afs_syscall_iopen);
-	if (!suser(&error)) {
-	    setuerror(error);
-	    return -1;
-	}
+    AFS_STATCNT(afs_syscall_iopen);
+    if (!suser(&error)) {
+	setuerror(error);
+	return -1;
+    }
 
-	if ((vfsp = devtovfs((dev_t)dev)) == 0) {
-	    afs_warn("Dev=%d not mounted!!; quitting\n", dev);
- 	    setuerror(ENODEV);
-	    return -1;
-	}
-	ip = igetinode((dev_t)dev, vfsp, (ino_t)inode, &vp,&dummy);
-	if (getuerror())
-	    return -1;
+    if ((vfsp = devtovfs((dev_t) dev)) == 0) {
+	afs_warn("Dev=%d not mounted!!; quitting\n", dev);
+	setuerror(ENODEV);
+	return -1;
+    }
+    ip = igetinode((dev_t) dev, vfsp, (ino_t) inode, &vp, &dummy);
+    if (getuerror())
+	return -1;
 
-	credp = crref();
-	if (setuerror(ufdcreate((usrmod-FOPEN)&FMASK, &vnodefops, vp
- 				, DTYPE_VNODE, &fd, credp))) {
-	    crfree(credp);
- 	    VNOP_RELE(vp);
-	    return -1;
- 	}
-
- 	if (setuerror(VNOP_OPEN(vp, (usrmod-FOPEN)&FMASK, 0, 0, credp))) {
-	    close(fd);
-	    crfree(credp);
-	    return -1;
- 	}
+    credp = crref();
+    if (setuerror
+	(ufdcreate
+	 ((usrmod - FOPEN) & FMASK, &vnodefops, vp, DTYPE_VNODE, &fd,
+	  credp))) {
 	crfree(credp);
-	return fd;
+	VNOP_RELE(vp);
+	return -1;
+    }
+
+    if (setuerror(VNOP_OPEN(vp, (usrmod - FOPEN) & FMASK, 0, 0, credp))) {
+	close(fd);
+	crfree(credp);
+	return -1;
+    }
+    crfree(credp);
+    return fd;
 }
 
 
@@ -359,55 +374,58 @@ SYSENT(iopen, (dev, inode, usrmod), ) {
  * Restricted to super user.
  * Only VICEMAGIC type inodes.
  */
-iinc(dev, inode, inode_p1) {
+iinc(dev, inode, inode_p1)
+{
 
     AFS_STATCNT(iinc);
     return iincdec(dev, inode, inode_p1, 1);
 }
 
-idec(dev, inode, inode_p1) {
+idec(dev, inode, inode_p1)
+{
 
     AFS_STATCNT(idec);
     return iincdec(dev, inode, inode_p1, -1);
 }
 
 
-SYSENT(iincdec, (dev, inode, inode_p1, amount), ) {
-	register struct inode *ip;
-	char error;
-	struct vnode *vp = (struct vnode *)0;
-	int dummy;
+SYSENT(iincdec, (dev, inode, inode_p1, amount),)
+{
+    register struct inode *ip;
+    char error;
+    struct vnode *vp = NULL;
+    int dummy;
 
-	AFS_STATCNT(afs_syscall_iincdec);
-	if (!suser(&error)) {
-	    setuerror(error);
-	    return -1;
-	}
+    AFS_STATCNT(afs_syscall_iincdec);
+    if (!suser(&error)) {
+	setuerror(error);
+	return -1;
+    }
 
-	ip = igetinode((dev_t)dev, 0, (ino_t)inode, &vp, &dummy);
-	if (getuerror()) {
-		return -1;
-	    }
-	IWRITE_LOCK(ip);
-	if (ip->i_vicemagic != VICEMAGIC)
- 	    setuerror(EPERM);
-	else if (ip->i_vicep1 != inode_p1)
- 	    setuerror(ENXIO);
-	else {
-	    ip->i_nlink += amount;
-	    if (ip->i_nlink == 0) {
-		ip->i_vicemagic = 0;
-		ip->i_cflag &= ~CMNEW;
-	    }
-	    ip->i_flag |= ICHG;
-	    commit(1, ip);	/* always commit */
+    ip = igetinode((dev_t) dev, 0, (ino_t) inode, &vp, &dummy);
+    if (getuerror()) {
+	return -1;
+    }
+    IWRITE_LOCK(ip);
+    if (ip->i_vicemagic != VICEMAGIC)
+	setuerror(EPERM);
+    else if (ip->i_vicep1 != inode_p1)
+	setuerror(ENXIO);
+    else {
+	ip->i_nlink += amount;
+	if (ip->i_nlink == 0) {
+	    ip->i_vicemagic = 0;
+	    ip->i_cflag &= ~CMNEW;
 	}
-	IWRITE_UNLOCK(ip);
-	VNOP_RELE(vp);
+	ip->i_flag |= ICHG;
+	commit(1, ip);		/* always commit */
+    }
+    IWRITE_UNLOCK(ip);
+    VNOP_RELE(vp);
 /*
 	ICACHE_LOCK();
 	iput(ip, 0);
 	ICACHE_UNLOCK();
 */
-	return getuerror() ? -1 : 0;
+    return getuerror()? -1 : 0;
 }

@@ -17,47 +17,48 @@
  */
 
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/AIX/osi_misc.c,v 1.1.1.4 2001/07/14 22:19:33 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/afs/AIX/osi_misc.c,v 1.8 2004/07/29 03:13:41 shadow Exp $");
 
-#include "../h/systm.h"
-#include "../h/types.h"
-#include "../h/errno.h"
-#include "../h/stat.h"
-#include "../h/user.h"
-#include "../h/uio.h"
-#include "../h/vattr.h"
-#include "../h/file.h"
-#include "../h/vfs.h"
-#include "../h/chownx.h"
-#include "../h/systm.h"
-#include "../h/access.h"
-#include "../rpc/types.h"
-#include "../afs/osi_vfs.h"
-#include "../netinet/in.h"
-#include "../h/mbuf.h"
-#include "../rpc/types.h"
-#include "../rpc/xdr.h"
-#include "../h/vmuser.h"
-#include "../h/syspest.h"
+#include "h/systm.h"
+#include "h/types.h"
+#include "h/errno.h"
+#include "h/stat.h"
+#include "h/user.h"
+#include "h/uio.h"
+#include "h/vattr.h"
+#include "h/file.h"
+#include "h/vfs.h"
+#include "h/chownx.h"
+#include "h/systm.h"
+#include "h/access.h"
+#include "rpc/types.h"
+#include "osi_vfs.h"
+#include "netinet/in.h"
+#include "h/mbuf.h"
+#include "rpc/types.h"
+#include "rpc/xdr.h"
+#include "h/vmuser.h"
+#include "h/syspest.h"
 
-#include "../afs/stds.h"
-#include "../afs/afs_osi.h"
+#include "afs/stds.h"
+#include "afs/afs_osi.h"
 #define RFTP_INTERNALS 1
-#include "../afs/volerrors.h"
-#include "../afsint/afsint.h"
-#include "../afsint/vldbint.h"
-#include "../afs/lock.h"
-#include "../afs/exporter.h"
-#include "../afs/afs.h"
-#include "../afs/afs_stats.h"
+#include "afs/volerrors.h"
+#include "afsint.h"
+#include "vldbint.h"
+#include "afs/lock.h"
+#include "afs/exporter.h"
+#include "afs/afs.h"
+#include "afs/afs_stats.h"
 
 /* In Aix one may specify an init routine routine which is called once during
  * initialization of all gfs; one day we might need to actual do somehing here.
  */
 Afs_init(gfsp)
-char	*gfsp;	/* this is really struct gfs *, but we do not use it */
+     char *gfsp;		/* this is really struct gfs *, but we do not use it */
 {
     extern int afs_gn_strategy();
 #define AFS_VM_BUFS 50
@@ -65,7 +66,7 @@ char	*gfsp;	/* this is really struct gfs *, but we do not use it */
     /* For now nothing special is required during AFS initialization. */
     AFS_STATCNT(afs_init);
 
-    (void) vm_mount(D_REMOTE, afs_gn_strategy, AFS_VM_BUFS);
+    (void)vm_mount(D_REMOTE, afs_gn_strategy, AFS_VM_BUFS);
     return 0;
 }
 
@@ -82,15 +83,19 @@ char	*gfsp;	/* this is really struct gfs *, but we do not use it */
  */
 int
 gop_rdwr(rw, vp, base, len, offset, segflg, unit, aresid)
-enum uio_rw	rw;
-struct vnode	*vp;
-caddr_t		base;
-off_t		*offset;
-int		len, segflg;
-int		*aresid;
-int		unit;	    /* Ignored */
+     enum uio_rw rw;
+     struct vnode *vp;
+     caddr_t base;
+#ifdef AFS_64BIT_KERNEL
+     offset_t *offset;
+#else
+     off_t *offset;
+#endif
+     int len, segflg;
+     int *aresid;
+     int unit;			/* Ignored */
 {
-    struct uio	uio_struct;
+    struct uio uio_struct;
     struct iovec uiovector;
     register int code;
 
@@ -106,8 +111,16 @@ int		unit;	    /* Ignored */
     uio_struct.uio_resid = len;
     uio_struct.uio_fmode = (rw == UIO_READ ? FREAD : FWRITE);
 
-    code = VNOP_RDWR(vp, rw, (rw == UIO_READ ? FREAD : FWRITE), &uio_struct,
-		     NULL, NULL, NULL, &afs_osi_cred);
+#ifdef AFS_64BIT_KERNEL
+    code =
+	VNOP_RDWR(vp, rw, (int32long64_t) (rw == UIO_READ ? FREAD : FWRITE),
+		  &uio_struct, (ext_t) 0, (caddr_t) 0, (struct vattr *)0,
+		  &afs_osi_cred);
+#else
+    code =
+	VNOP_RDWR(vp, rw, (rw == UIO_READ ? FREAD : FWRITE), &uio_struct,
+		  NULL, NULL, NULL, &afs_osi_cred);
+#endif
     *aresid = uio_struct.uio_resid;
     return code;
 }
@@ -124,7 +137,7 @@ int		unit;	    /* Ignored */
  * no linked list of gnodes to remove this element from.
  */
 aix_gnode_rele(vp)
-struct vnode *vp;
+     struct vnode *vp;
 {
     register struct vnode *tvp;
     register struct vfs *vfsp = vp->v_vfsp;
@@ -138,12 +151,12 @@ struct vnode *vp;
     if (vp->v_vfsprev != NULL)
 	vp->v_vfsprev->v_vfsnext = vp->v_vfsnext;
 
-    endgnode:
-      /* Free the allocated gnode that was accompanying the vcache's vnode */
-      if (vp->v_gnode) {
-	  osi_FreeSmallSpace(vp->v_gnode);
-	  vp->v_gnode = 0;
-      }
+  endgnode:
+    /* Free the allocated gnode that was accompanying the vcache's vnode */
+    if (vp->v_gnode) {
+	osi_FreeSmallSpace(vp->v_gnode);
+	vp->v_gnode = 0;
+    }
 
     return 0;
 }
@@ -154,11 +167,11 @@ struct vnode *vp;
  * Note that it must NOT set errno.
  */
 
-afs_suser() {
+afs_suser(void *credp)
+{
     register rc;
     char err;
-    
+
     rc = suser(&err);
     return rc;
 }
-

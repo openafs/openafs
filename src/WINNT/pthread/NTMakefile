@@ -5,9 +5,9 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+RELDIR=WINNT\pthread
 !INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\..\config\NTMakefile.version
-
 
 ############################################################################
 # Export header files
@@ -20,9 +20,12 @@ LIBINCLUDES = \
 
 PTHR_DLLFILE = $(DESTDIR)\lib\afspthread.dll
 
+$(OUT)\pthread.res: pthread.rc AFS_component_version_number.h
+	$(RC) /fo$*.res $(*F).rc 
+
 PTHR_DLLOBJS = \
-	pthread.obj \
-	pthread.res
+	$(OUT)\pthread.obj \
+	$(OUT)\pthread.res
 
 $(PTHR_DLLFILE): $(PTHR_DLLOBJS)
 	$(DLLCONLINK) /DEF:pthread.def
@@ -34,25 +37,25 @@ $(PTHR_DLLFILE): $(PTHR_DLLOBJS)
 PTHR95_DLLFILE = $(DESTDIR)\lib\win95\afspthread.dll
 
 PTHR95_DLLOBJS = \
-	pthread_95.obj \
-	pthread95.res
+   $(OUT)\pthread_95.obj \
+	$(OUT)\pthread95.res
 
 $(PTHR95_DLLFILE): $(PTHR95_DLLOBJS)
 	$(DLLCONLINK) /DEF:pthread.def
 	$(DLLPREP)
 
-pthread_95.obj: pthread.c
-	$(C2OBJ) pthread.c -DAFS_WIN95_ENV /Fopthread_95.obj
+$(OUT)\pthread_95.obj: pthread.c
+	$(C2OBJ) $** -DAFS_WIN95_ENV 
 
 install: $(PTHR95_DLLFILE) $(PTHR_DLLFILE) $(LIBINCLUDES)
 
 install9x: install
 
-pthread.res: pthread.rc AFS_component_version_number.h
-	$(RC) $*.rc
-
-pthread95.res: pthread95.rc AFS_component_version_number.h
-	$(RC) $*.rc
+$(OUT)\pthread95.res: pthread95.rc AFS_component_version_number.h
+	$(RC) /fo$*.res $(*F).rc 
 
 clean::
 	$(DEL) /q $(DESTDIR)\lib\win95\*.*
+
+mkdir:
+	

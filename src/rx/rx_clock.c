@@ -10,38 +10,41 @@
 /* Elapsed time package */
 /* See rx_clock.h for calling conventions */
 
+#include <afsconfig.h>
 #ifdef	KERNEL
-#include "../afs/param.h"
+#include "afs/param.h"
 #else
 #include <afs/param.h>
 #endif
-#include <afsconfig.h>
 
 #ifdef AFS_SUN59_ENV
 #include <sys/time_impl.h>
 #endif
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_clock.c,v 1.1.1.7 2002/08/02 04:36:19 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/rx/rx_clock.c,v 1.13.2.1 2005/03/20 19:40:32 shadow Exp $");
 
 #ifdef KERNEL
 #ifndef UKERNEL
-#include "../rx/rx_clock.h"
-#include "../h/types.h"
-#include "../h/time.h"
+#include "rx/rx_clock.h"
+#include "h/types.h"
+#include "h/time.h"
 #else /* !UKERNEL */
-#include "../afs/sysincludes.h"
-#include "../afs/afsincludes.h"
-#include "../rx/rx_clock.h"
+#include "afs/sysincludes.h"
+#include "afsincludes.h"
+#include "rx/rx.h"
+#include "rx/rx_clock.h"
 #endif /* !UKERNEL */
 #else /* KERNEL */
 #include <sys/time.h>
 #include <stdio.h>
 #include <errno.h>
 #include <stdlib.h>
+#include "rx.h"
 #include "rx_clock.h"
 #endif
 
-#if	!defined(AFS_USE_GETTIMEOFDAY)
+#if !defined(AFS_USE_GETTIMEOFDAY)
 /*use this package only if gettimeofday is much much costlier than getitime */
 
 #ifndef KERNEL
@@ -51,6 +54,7 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_clock.c,v 1.1.1.7 2002/08/02 04:3
 #else
 #define	STARTVALUE 100000000	/* Max number of seconds setitimer allows, for some reason */
 #endif
+static int startvalue = STARTVALUE;
 
 struct clock clock_now;		/* The last elapsed time ready by clock_GetTimer */
 
@@ -61,7 +65,9 @@ int clock_nUpdates;		/* The actual number of clock updates */
 static int clockInitialized = 0;
 
 /* Initialize the clock */
-void clock_Init(void) {
+void
+clock_Init(void)
+{
     struct itimerval itimer, otimer;
 
     if (!clockInitialized) {
@@ -73,33 +79,37 @@ void clock_Init(void) {
 	if (setitimer(ITIMER_REAL, &itimer, &otimer) != 0) {
 	    fprintf(stderr, "clock:  could not set interval timer; \
 				aborted(errno=%d)\n", errno);
-	    fflush (stderr);
+	    fflush(stderr);
 	    exit(1);
 	}
+        getitimer(ITIMER_REAL, &itimer);
+        startvalue = itimer.it_value.tv_sec;
+        if (itimer.it_value.tv_usec > 0)
+          startvalue++;
 	clockInitialized = 1;
     }
 
     clock_UpdateTime();
 }
 
-#ifndef KERNEL
 /* Make clock uninitialized. */
 int
-clock_UnInit()
+clock_UnInit(void)
 {
     clockInitialized = 0;
     return 0;
-} 
-#endif 
+}
 
 /* Compute the current time.  The timer gets the current total elapsed time since startup, expressed in seconds and microseconds.  This call is almost 200 usec on an APC RT */
-void clock_UpdateTime()
+void
+clock_UpdateTime(void)
 {
     struct itimerval itimer;
     getitimer(ITIMER_REAL, &itimer);
-    clock_now.sec = STARTVALUE - 1 - itimer.it_value.tv_sec; /* The "-1" makes up for adding 1000000 usec, on the next line */
+    clock_now.sec = startvalue - 1 - itimer.it_value.tv_sec;	/* The "-1" makes up for adding 1000000 usec, on the next line */
     clock_now.usec = 1000000 - itimer.it_value.tv_usec;
-    if (clock_now.usec == 1000000) clock_now.usec = 0, clock_now.sec++;
+    if (clock_now.usec == 1000000)
+	clock_now.usec = 0, clock_now.sec++;
     clock_haveCurrentTime = 1;
     clock_nUpdates++;
 }

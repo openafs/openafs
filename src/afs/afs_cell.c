@@ -13,12 +13,13 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_cell.c,v 1.1.1.13 2003/07/30 17:07:58 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/afs/afs_cell.c,v 1.30 2004/05/08 04:22:19 shadow Exp $");
 
 #include "afs/stds.h"
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
-#include "afs/afs_stats.h"   /* afs statistics */
+#include "afs/afs_stats.h"	/* afs statistics */
 #include "afs/afs_osi.h"
 
 /* Local variables. */
@@ -48,7 +49,8 @@ static struct {
     char **realname;
 } afsdb_req;
 
-void afs_StopAFSDB()
+void
+afs_StopAFSDB()
 {
     if (afsdb_handler_running) {
 	afs_osi_Wakeup(&afsdb_req);
@@ -58,9 +60,11 @@ void afs_StopAFSDB()
     }
 }
 
-int afs_AFSDBHandler(char *acellName, int acellNameLen, afs_int32 *kernelMsg)
+int
+afs_AFSDBHandler(char *acellName, int acellNameLen, afs_int32 * kernelMsg)
 {
-    if (afsdb_handler_shutdown) return -2;
+    if (afsdb_handler_shutdown)
+	return -2;
     afsdb_handler_running = 1;
 
     ObtainSharedLock(&afsdb_req.lock, 683);
@@ -70,14 +74,15 @@ int afs_AFSDBHandler(char *acellName, int acellNameLen, afs_int32 *kernelMsg)
 	UpgradeSToWLock(&afsdb_req.lock, 684);
 	hostCount = kernelMsg[0];
 	*afsdb_req.timeout = kernelMsg[1];
-	if (*afsdb_req.timeout) *afsdb_req.timeout += osi_Time();
+	if (*afsdb_req.timeout)
+	    *afsdb_req.timeout += osi_Time();
 	*afsdb_req.realname = afs_strdup(acellName);
 
-	for (i=0; i<MAXCELLHOSTS; i++) {
+	for (i = 0; i < MAXCELLHOSTS; i++) {
 	    if (i >= hostCount)
 		afsdb_req.cellhosts[i] = 0;
 	    else
-		afsdb_req.cellhosts[i] = kernelMsg[2+i];
+		afsdb_req.cellhosts[i] = kernelMsg[2 + i];
 	}
 
 	/* Request completed, wake up the relevant thread */
@@ -109,17 +114,19 @@ int afs_AFSDBHandler(char *acellName, int acellNameLen, afs_int32 *kernelMsg)
 	return -2;
     }
 
-    /* Return the lookup request to userspace */    
+    /* Return the lookup request to userspace */
     strncpy(acellName, afsdb_req.cellname, acellNameLen);
     ReleaseReadLock(&afsdb_req.lock);
     return 0;
 }
 
-static int afs_GetCellHostsAFSDB(char *acellName, afs_int32 *acellHosts,
-	int *timeout, char **realName)
+static int
+afs_GetCellHostsAFSDB(char *acellName, afs_int32 * acellHosts, int *timeout,
+		      char **realName)
 {
     AFS_ASSERT_GLOCK();
-    if (!afsdb_handler_running) return ENOENT;
+    if (!afsdb_handler_running)
+	return ENOENT;
 
     ObtainWriteLock(&afsdb_client_lock, 685);
     ObtainWriteLock(&afsdb_req.lock, 686);
@@ -150,23 +157,26 @@ static int afs_GetCellHostsAFSDB(char *acellName, afs_int32 *acellHosts,
 }
 #endif
 
-void afs_LookupAFSDB(char *acellName)
+void
+afs_LookupAFSDB(char *acellName)
 {
 #ifdef AFS_AFSDB_ENV
     afs_int32 cellHosts[MAXCELLHOSTS];
     char *realName = NULL;
     int code, timeout;
-    
+
     code = afs_GetCellHostsAFSDB(acellName, cellHosts, &timeout, &realName);
-    if (code) goto done;
+    if (code)
+	goto done;
     code = afs_NewCell(realName, cellHosts, CNoSUID, NULL, 0, 0, timeout);
-    if (code && code != EEXIST) goto done;
+    if (code && code != EEXIST)
+	goto done;
 
     /* If we found an alias, create it */
     if (afs_strcasecmp(acellName, realName))
 	afs_NewCellAlias(acellName, realName);
 
-done:
+  done:
     if (realName)
 	afs_osi_FreeStr(realName);
 #endif
@@ -189,14 +199,15 @@ static int afs_cellname_inode_set;
 static int afs_cellname_dirty;
 static afs_int32 afs_cellnum_next;
 
-static struct cell_name *afs_cellname_new(char *name, afs_int32 cellnum)
+static struct cell_name *
+afs_cellname_new(char *name, afs_int32 cellnum)
 {
     struct cell_name *cn;
 
     if (cellnum == 0)
 	cellnum = afs_cellnum_next;
 
-    cn = (struct cell_name *) afs_osi_Alloc(sizeof(*cn));
+    cn = (struct cell_name *)afs_osi_Alloc(sizeof(*cn));
     cn->next = afs_cellname_head;
     cn->cellnum = cellnum;
     cn->cellname = afs_strdup(name);
@@ -209,7 +220,8 @@ static struct cell_name *afs_cellname_new(char *name, afs_int32 cellnum)
     return cn;
 }
 
-static struct cell_name *afs_cellname_lookup_id(afs_int32 cellnum)
+static struct cell_name *
+afs_cellname_lookup_id(afs_int32 cellnum)
 {
     struct cell_name *cn;
 
@@ -220,7 +232,8 @@ static struct cell_name *afs_cellname_lookup_id(afs_int32 cellnum)
     return NULL;
 }
 
-static struct cell_name *afs_cellname_lookup_name(char *name)
+static struct cell_name *
+afs_cellname_lookup_name(char *name)
 {
     struct cell_name *cn;
 
@@ -231,7 +244,8 @@ static struct cell_name *afs_cellname_lookup_name(char *name)
     return NULL;
 }
 
-static void afs_cellname_ref(struct cell_name *cn)
+static void
+afs_cellname_ref(struct cell_name *cn)
 {
     if (!cn->used) {
 	cn->used = 1;
@@ -239,7 +253,8 @@ static void afs_cellname_ref(struct cell_name *cn)
     }
 }
 
-int afs_cellname_init(ino_t inode, int lookupcode)
+int
+afs_cellname_init(ino_t inode, int lookupcode)
 {
     struct osi_file *tfile;
     int cc, off = 0;
@@ -301,8 +316,8 @@ int afs_cellname_init(ino_t inode, int lookupcode)
 	off += cc;
 	cellname[clen] = '\0';
 
-	if (afs_cellname_lookup_name(cellname) ||
-	    afs_cellname_lookup_id(cellnum)) {
+	if (afs_cellname_lookup_name(cellname)
+	    || afs_cellname_lookup_id(cellnum)) {
 	    afs_osi_Free(cellname, clen + 1);
 	    break;
 	}
@@ -316,7 +331,8 @@ int afs_cellname_init(ino_t inode, int lookupcode)
     return 0;
 }
 
-int afs_cellname_write()
+int
+afs_cellname_write(void)
 {
     struct osi_file *tfile;
     struct cell_name *cn;
@@ -383,9 +399,10 @@ int afs_cellname_write()
 
 struct cell_alias *afs_cellalias_head;	/* Export for kdump */
 static afs_int32 afs_cellalias_index;
-static int afs_CellOrAliasExists_nl(char *aname);  /* Forward declaration */
+static int afs_CellOrAliasExists_nl(char *aname);	/* Forward declaration */
 
-static struct cell_alias *afs_FindCellAlias(char *alias)
+static struct cell_alias *
+afs_FindCellAlias(char *alias)
 {
     struct cell_alias *tc;
 
@@ -395,7 +412,8 @@ static struct cell_alias *afs_FindCellAlias(char *alias)
     return tc;
 }
 
-struct cell_alias *afs_GetCellAlias(int index)
+struct cell_alias *
+afs_GetCellAlias(int index)
 {
     struct cell_alias *tc;
 
@@ -408,12 +426,14 @@ struct cell_alias *afs_GetCellAlias(int index)
     return tc;
 }
 
-void afs_PutCellAlias(struct cell_alias *a)
+void
+afs_PutCellAlias(struct cell_alias *a)
 {
     return;
 }
 
-afs_int32 afs_NewCellAlias(char *alias, char *cell)
+afs_int32
+afs_NewCellAlias(char *alias, char *cell)
 {
     struct cell_alias *tc;
 
@@ -424,7 +444,7 @@ afs_int32 afs_NewCellAlias(char *alias, char *cell)
     }
 
     UpgradeSToWLock(&afs_xcell, 682);
-    tc = (struct cell_alias *) afs_osi_Alloc(sizeof(struct cell_alias));
+    tc = (struct cell_alias *)afs_osi_Alloc(sizeof(struct cell_alias));
     tc->alias = afs_strdup(alias);
     tc->cell = afs_strdup(cell);
     tc->next = afs_cellalias_head;
@@ -463,9 +483,10 @@ afs_int32 afs_NewCellAlias(char *alias, char *cell)
 
 struct afs_q CellLRU;		/* Export for kdump */
 static char *afs_thiscell;
-static afs_int32 afs_cellindex;
+afs_int32 afs_cellindex;	/* Export for kdump */
 
-static void afs_UpdateCellLRU(struct cell *c)
+static void
+afs_UpdateCellLRU(struct cell *c)
 {
     ObtainWriteLock(&afs_xcell, 100);
     QRemove(&c->lruq);
@@ -473,7 +494,8 @@ static void afs_UpdateCellLRU(struct cell *c)
     ReleaseWriteLock(&afs_xcell);
 }
 
-static void afs_RefreshCell(struct cell *ac)
+static void
+afs_RefreshCell(struct cell *ac)
 {
     if (ac->states & CNoAFSDB)
 	return;
@@ -481,22 +503,33 @@ static void afs_RefreshCell(struct cell *ac)
 	afs_LookupAFSDB(ac->cellName);
 }
 
-static void *afs_TraverseCells_nl(void *(*cb)(struct cell *, void *), void *arg)
+static void *
+afs_TraverseCells_nl(void *(*cb) (struct cell *, void *), void *arg)
 {
     struct afs_q *cq, *tq;
     struct cell *tc;
     void *ret = NULL;
 
     for (cq = CellLRU.next; cq != &CellLRU; cq = tq) {
-	tc = QTOC(cq); tq = QNext(cq);
+	tc = QTOC(cq);
+
+	/* This is assuming that a NULL return is acceptable. */
+	if (cq) {
+	    tq = QNext(cq);
+	} else {
+	    return NULL;
+	}
+
 	ret = cb(tc, arg);
-	if (ret) break;
+	if (ret)
+	    break;
     }
 
     return ret;
 }
 
-void *afs_TraverseCells(void *(*cb)(struct cell *, void *), void *arg)
+void *
+afs_TraverseCells(void *(*cb) (struct cell *, void *), void *arg)
 {
     void *ret;
 
@@ -507,32 +540,43 @@ void *afs_TraverseCells(void *(*cb)(struct cell *, void *), void *arg)
     return ret;
 }
 
-static void *afs_choose_cell_by_name(struct cell *cell, void *arg)
+static void *
+afs_choose_cell_by_name(struct cell *cell, void *arg)
 {
-    return strcmp(cell->cellName, (char *) arg) ? NULL : cell;
+    if (!arg) {
+	/* Safety net */
+	return cell;
+    } else {
+	return strcmp(cell->cellName, (char *)arg) ? NULL : cell;
+    }
 }
 
-static void *afs_choose_cell_by_num(struct cell *cell, void *arg)
+static void *
+afs_choose_cell_by_num(struct cell *cell, void *arg)
 {
     return (cell->cellNum == *((afs_int32 *) arg)) ? cell : NULL;
 }
 
-static void *afs_choose_cell_by_index(struct cell *cell, void *arg)
+static void *
+afs_choose_cell_by_index(struct cell *cell, void *arg)
 {
     return (cell->cellIndex == *((afs_int32 *) arg)) ? cell : NULL;
 }
 
-static struct cell *afs_FindCellByName_nl(char *acellName, afs_int32 locktype)
+static struct cell *
+afs_FindCellByName_nl(char *acellName, afs_int32 locktype)
 {
     return afs_TraverseCells_nl(&afs_choose_cell_by_name, acellName);
 }
 
-static struct cell *afs_FindCellByName(char *acellName, afs_int32 locktype)
+static struct cell *
+afs_FindCellByName(char *acellName, afs_int32 locktype)
 {
     return afs_TraverseCells(&afs_choose_cell_by_name, acellName);
 }
 
-struct cell *afs_GetCellByName(char *acellName, afs_int32 locktype)
+struct cell *
+afs_GetCellByName(char *acellName, afs_int32 locktype)
 {
     struct cell *tc;
 
@@ -550,7 +594,8 @@ struct cell *afs_GetCellByName(char *acellName, afs_int32 locktype)
     return tc;
 }
 
-struct cell *afs_GetCell(afs_int32 cellnum, afs_int32 locktype)
+struct cell *
+afs_GetCell(afs_int32 cellnum, afs_int32 locktype)
 {
     struct cell *tc;
     struct cell_name *cn;
@@ -568,7 +613,8 @@ struct cell *afs_GetCell(afs_int32 cellnum, afs_int32 locktype)
     return tc;
 }
 
-struct cell *afs_GetCellStale(afs_int32 cellnum, afs_int32 locktype)
+struct cell *
+afs_GetCellStale(afs_int32 cellnum, afs_int32 locktype)
 {
     struct cell *tc;
 
@@ -580,7 +626,8 @@ struct cell *afs_GetCellStale(afs_int32 cellnum, afs_int32 locktype)
     return tc;
 }
 
-struct cell *afs_GetCellByIndex(afs_int32 index, afs_int32 locktype)
+struct cell *
+afs_GetCellByIndex(afs_int32 index, afs_int32 locktype)
 {
     struct cell *tc;
 
@@ -590,17 +637,31 @@ struct cell *afs_GetCellByIndex(afs_int32 index, afs_int32 locktype)
     return tc;
 }
 
-struct cell *afs_GetPrimaryCell(afs_int32 locktype)
+struct cell *
+afs_GetPrimaryCell(afs_int32 locktype)
 {
     return afs_GetCellByName(afs_thiscell, locktype);
 }
 
-int afs_IsPrimaryCell(struct cell *cell)
+int
+afs_IsPrimaryCell(struct cell *cell)
 {
-    return strcmp(cell->cellName, afs_thiscell) ? 0 : 1;
+    /* Simple safe checking */
+    if (!cell) {
+	return 0;
+    } else if (!afs_thiscell) {
+	/* This is simply a safety net to avoid seg faults especially when
+	 * using a user-space library.  afs_SetPrimaryCell() should be set
+	 * prior to this call. */
+	afs_SetPrimaryCell(cell->cellName);
+	return 1;
+    } else {
+	return strcmp(cell->cellName, afs_thiscell) ? 0 : 1;
+    }
 }
 
-int afs_IsPrimaryCellNum(afs_int32 cellnum)
+int
+afs_IsPrimaryCellNum(afs_int32 cellnum)
 {
     struct cell *tc;
     int primary = 0;
@@ -614,7 +675,8 @@ int afs_IsPrimaryCellNum(afs_int32 cellnum)
     return primary;
 }
 
-afs_int32 afs_SetPrimaryCell(char *acellName)
+afs_int32
+afs_SetPrimaryCell(char *acellName)
 {
     ObtainWriteLock(&afs_xcell, 691);
     if (afs_thiscell)
@@ -624,11 +686,12 @@ afs_int32 afs_SetPrimaryCell(char *acellName)
     return 0;
 }
 
-afs_int32 afs_NewCell(char *acellName, afs_int32 *acellHosts, int aflags,
-	char *linkedcname, u_short fsport, u_short vlport, int timeout)
+afs_int32
+afs_NewCell(char *acellName, afs_int32 * acellHosts, int aflags,
+	    char *linkedcname, u_short fsport, u_short vlport, int timeout)
 {
-    struct cell *tc, *tcl=0;
-    afs_int32 i, newc=0, code=0;
+    struct cell *tc, *tcl = 0;
+    afs_int32 i, newc = 0, code = 0;
 
     AFS_STATCNT(afs_NewCell);
 
@@ -638,8 +701,8 @@ afs_int32 afs_NewCell(char *acellName, afs_int32 *acellHosts, int aflags,
     if (tc) {
 	aflags &= ~CNoSUID;
     } else {
-	tc = (struct cell *) afs_osi_Alloc(sizeof(struct cell));
-	memset((char *) tc, 0, sizeof(*tc));
+	tc = (struct cell *)afs_osi_Alloc(sizeof(struct cell));
+	memset((char *)tc, 0, sizeof(*tc));
 	tc->cellName = afs_strdup(acellName);
 	tc->fsport = AFS_FSPORT;
 	tc->vlport = AFS_VLPORT;
@@ -657,21 +720,24 @@ afs_int32 afs_NewCell(char *acellName, afs_int32 *acellHosts, int aflags,
      * it must get servers from AFSDB.
      */
     if (timeout && !tc->timeout && tc->cellHosts[0]) {
-	code = EEXIST;	/* This code is checked for in afs_LookupAFSDB */
+	code = EEXIST;		/* This code is checked for in afs_LookupAFSDB */
 	goto bad;
     }
 
     /* we don't want to keep pinging old vlservers which were down,
      * since they don't matter any more.  It's easier to do this than
      * to remove the server from its various hash tables. */
-    for (i=0; i<MAXCELLHOSTS; i++) {
-	if (!tc->cellHosts[i]) break;
+    for (i = 0; i < MAXCELLHOSTS; i++) {
+	if (!tc->cellHosts[i])
+	    break;
 	tc->cellHosts[i]->flags &= ~SRVR_ISDOWN;
 	tc->cellHosts[i]->flags |= SRVR_ISGONE;
     }
 
-    if (fsport) tc->fsport = fsport;
-    if (vlport) tc->vlport = vlport;
+    if (fsport)
+	tc->fsport = fsport;
+    if (vlport)
+	tc->vlport = vlport;
 
     if (aflags & CLinkedCell) {
 	if (!linkedcname) {
@@ -694,10 +760,11 @@ afs_int32 afs_NewCell(char *acellName, afs_int32 *acellHosts, int aflags,
     tc->timeout = timeout;
 
     memset((char *)tc->cellHosts, 0, sizeof(tc->cellHosts));
-    for (i=0; i<MAXCELLHOSTS; i++) {
+    for (i = 0; i < MAXCELLHOSTS; i++) {
 	struct server *ts;
 	afs_uint32 temp = acellHosts[i];
-	if (!temp) break;
+	if (!temp)
+	    break;
 	ts = afs_GetServer(&temp, 1, 0, tc->vlport, WRITE_LOCK, NULL, 0);
 	ts->cell = tc;
 	ts->flags &= ~SRVR_ISGONE;
@@ -726,7 +793,7 @@ afs_int32 afs_NewCell(char *acellName, afs_int32 *acellHosts, int aflags,
     afs_DynrootInvalidate();
     return 0;
 
-bad:
+  bad:
     if (newc) {
 	afs_osi_FreeStr(tc->cellName);
 	afs_osi_Free(tc, sizeof(struct cell));
@@ -747,7 +814,8 @@ bad:
  * afs_CellNumValid: check if a cell number is valid (also set the used flag)
  */
 
-void afs_CellInit()
+void
+afs_CellInit()
 {
     RWLOCK_INIT(&afs_xcell, "afs_xcell");
 #ifdef AFS_AFSDB_ENV
@@ -759,7 +827,8 @@ void afs_CellInit()
     afs_cellalias_index = 0;
 }
 
-void shutdown_cell()
+void
+shutdown_cell()
 {
     struct afs_q *cq, *tq;
     struct cell *tc;
@@ -767,25 +836,42 @@ void shutdown_cell()
     RWLOCK_INIT(&afs_xcell, "afs_xcell");
 
     for (cq = CellLRU.next; cq != &CellLRU; cq = tq) {
-	tc = QTOC(cq); tq = QNext(cq);
-	if (tc->cellName) afs_osi_FreeStr(tc->cellName);
+	tc = QTOC(cq);
+	tq = QNext(cq);
+	if (tc->cellName)
+	    afs_osi_FreeStr(tc->cellName);
 	afs_osi_Free(tc, sizeof(struct cell));
     }
     QInit(&CellLRU);
+
+{
+    struct cell_name *cn = afs_cellname_head;
+
+    while (cn) {
+	struct cell_name *next = cn->next;
+
+	afs_osi_FreeStr(cn->cellname);
+	afs_osi_Free(cn, sizeof(struct cell_name));
+	cn = next;
+    }
+}
 }
 
-void afs_RemoveCellEntry(struct server *srvp)
+void
+afs_RemoveCellEntry(struct server *srvp)
 {
     struct cell *tc;
     afs_int32 j, k;
 
     tc = srvp->cell;
-    if (!tc) return;
+    if (!tc)
+	return;
 
     /* Remove the server structure from the cell list - if there */
     ObtainWriteLock(&tc->lock, 200);
-    for (j=k=0; j<MAXCELLHOSTS; j++) {
-	if (!tc->cellHosts[j]) break;
+    for (j = k = 0; j < MAXCELLHOSTS; j++) {
+	if (!tc->cellHosts[j])
+	    break;
 	if (tc->cellHosts[j] != srvp) {
 	    tc->cellHosts[k++] = tc->cellHosts[j];
 	}
@@ -793,13 +879,14 @@ void afs_RemoveCellEntry(struct server *srvp)
     if (k == 0) {
 	/* What do we do if we remove the last one? */
     }
-    for (; k<MAXCELLHOSTS; k++) {
+    for (; k < MAXCELLHOSTS; k++) {
 	tc->cellHosts[k] = 0;
     }
     ReleaseWriteLock(&tc->lock);
 }
 
-static int afs_CellOrAliasExists_nl(char *aname)
+static int
+afs_CellOrAliasExists_nl(char *aname)
 {
     struct cell *c;
     struct cell_alias *ca;
@@ -819,7 +906,8 @@ static int afs_CellOrAliasExists_nl(char *aname)
     return 0;
 }
 
-int afs_CellOrAliasExists(char *aname)
+int
+afs_CellOrAliasExists(char *aname)
 {
     int ret;
 
@@ -830,7 +918,8 @@ int afs_CellOrAliasExists(char *aname)
     return ret;
 }
 
-int afs_CellNumValid(afs_int32 cellnum)
+int
+afs_CellNumValid(afs_int32 cellnum)
 {
     struct cell_name *cn;
 

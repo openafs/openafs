@@ -48,7 +48,7 @@
 #include <err.h>
 
 #ifdef RCSID
-RCSID("$Id: create-symlinks.c,v 1.1 2002/01/22 19:54:40 hartmans Exp $");
+RCSID("$Id: create-symlinks.c,v 1.2 2003/07/15 23:16:56 shadow Exp $");
 #endif
 
 #define CONTENT_STRING "kaka"
@@ -56,26 +56,26 @@ RCSID("$Id: create-symlinks.c,v 1.1 2002/01/22 19:54:40 hartmans Exp $");
 static FILE *verbose_fp = NULL;
 
 static int
-creat_symlinks (int count)
+creat_symlinks(int count)
 {
     int ret;
     int i;
-    
-    fprintf (verbose_fp, "creating:");
+
+    fprintf(verbose_fp, "creating:");
 
     for (i = 0; i < count; ++i) {
 	char num[17];
 
-	fprintf (verbose_fp, " c%d", i);
-	fflush (verbose_fp);
+	fprintf(verbose_fp, " c%d", i);
+	fflush(verbose_fp);
 
-	snprintf (num, sizeof(num), "%d", i);
-	
-	ret = symlink (CONTENT_STRING, num);
+	snprintf(num, sizeof(num), "%d", i);
+
+	ret = symlink(CONTENT_STRING, num);
 	if (ret < 0)
-	    err (1, "symlink %s", num);
+	    err(1, "symlink %s", num);
     }
-    fprintf (verbose_fp, "\n");
+    fprintf(verbose_fp, "\n");
     return 0;
 }
 
@@ -88,34 +88,34 @@ creat_symlinks (int count)
 #endif
 
 static int
-verify_contents (int count)
+verify_contents(int count)
 {
     int ret, i;
     char file[MAXPATHLEN];
     char content[MAXPATHLEN];
-    
-    fprintf (verbose_fp, "reading:");
-    for (i = 0; i < count; i++) {
-	fprintf (verbose_fp, " r%d", i); 
-	fflush (verbose_fp);
 
-	snprintf (file, sizeof(file), "%d", i);
-	ret = readlink (file, content, sizeof(content) - 1);
+    fprintf(verbose_fp, "reading:");
+    for (i = 0; i < count; i++) {
+	fprintf(verbose_fp, " r%d", i);
+	fflush(verbose_fp);
+
+	snprintf(file, sizeof(file), "%d", i);
+	ret = readlink(file, content, sizeof(content) - 1);
 	if (ret < 0)
-	    err (1, "readlink: %d", i);
+	    err(1, "readlink: %d", i);
 	content[ret] = '\0';
-	if (strcmp (CONTENT_STRING, content) != 0)
-	    errx (1, "%s != %s", content, CONTENT_STRING);
+	if (strcmp(CONTENT_STRING, content) != 0)
+	    errx(1, "%s != %s", content, CONTENT_STRING);
     }
-    fprintf (verbose_fp, "\n");
+    fprintf(verbose_fp, "\n");
     return 0;
 }
 
 static void
-usage (int ret)
+usage(int ret)
 {
-    fprintf (stderr, "%s number-of-symlinks\n", __progname);
-    exit (ret);
+    fprintf(stderr, "%s number-of-symlinks\n", __progname);
+    exit(ret);
 }
 
 int
@@ -126,19 +126,18 @@ main(int argc, char **argv)
 
 
     if (argc != 2)
-	usage (1);
+	usage(1);
 
-    verbose_fp = fdopen (4, "w");
+    verbose_fp = fdopen(4, "w");
     if (verbose_fp == NULL) {
-	verbose_fp = fopen ("/dev/null", "w");
+	verbose_fp = fopen("/dev/null", "w");
 	if (verbose_fp == NULL)
-	    err (1, "fopen");
+	    err(1, "fopen");
     }
 
-    count = strtol (argv[1], &ptr, 0);
+    count = strtol(argv[1], &ptr, 0);
     if (count == 0 && ptr == argv[1])
-	errx (1, "'%s' not a number", argv[1]);
+	errx(1, "'%s' not a number", argv[1]);
 
-    return creat_symlinks (count) ||
-	verify_contents(count);
+    return creat_symlinks(count) || verify_contents(count);
 }

@@ -1,0 +1,6 @@
+@owner root
+@group bin
+
+usr/vice
+
+@exec sh /usr/vice/etc/postinstall

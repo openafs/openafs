@@ -12,6 +12,7 @@
 
 typedef struct smb_tran2Packet {
 	osi_queue_t q;			/* queue of all packets */
+        int com;			/* Trans or Trans2 (0x25 or 0x32) */
         int totalData;			/* total # of expected data bytes */
         int totalParms;			/* total # of expected parm bytes */
 	int oldTotalParms;		/* initial estimate of parm bytes */
@@ -40,45 +41,45 @@ typedef struct smb_tran2Dispatch {
 } smb_tran2Dispatch_t;
 
 typedef struct smb_tran2QFSInfo {
-	union {
+    union {
 #pragma pack(push, 2)
-		struct {
-			long FSID;			/* file system ID */
-                        long sectorsPerAllocUnit;
-                        long totalAllocUnits;		/* on the disk */
-                        long availAllocUnits;		/* free blocks */
-                        unsigned short bytesPerSector;	/* bytes per sector */
-                } allocInfo;
+        struct {
+            long FSID;			/* file system ID */
+            long sectorsPerAllocUnit;
+            long totalAllocUnits;		/* on the disk */
+            long availAllocUnits;		/* free blocks */
+            unsigned short bytesPerSector;	/* bytes per sector */
+        } allocInfo;
 #pragma pack(pop)
-                struct {
-			long vsn;	/* volume serial number */
-                        char vnCount;	/* count of chars in label, incl null */
-                        char label[12];	/* pad out with nulls */
-                } volumeInfo;
-		struct {
-			FILETIME vct;	/* volume creation time */
-			long vsn;	/* volume serial number */
-			long vnCount;	/* length of volume label in bytes */
-			char res[2];	/* reserved */
-			char label[10];	/* volume label */
-		} FSvolumeInfo;
-		struct {
-			osi_hyper_t totalAllocUnits;	/* on the disk */
-			osi_hyper_t availAllocUnits;	/* free blocks */
-			long sectorsPerAllocUnit;
-			long bytesPerSector;		/* bytes per sector */
-		} FSsizeInfo;
-		struct {
-			long devType;	/* device type */
-			long characteristics;
-		} FSdeviceInfo;
-		struct {
-			long attributes;
-			long maxCompLength;	/* max path component length */
-			long FSnameLength;	/* length of file system name */
-			char FSname[12];
-		} FSattributeInfo;
-        } u;
+        struct {
+            long vsn;	        /* volume serial number */
+            char vnCount;	/* count of chars in label, incl null */
+            char label[12];	/* pad out with nulls */
+        } volumeInfo;
+        struct {
+            FILETIME vct;	/* volume creation time */
+            long vsn;	        /* volume serial number */
+            long vnCount;	/* length of volume label in bytes */
+            char res[2];	/* reserved */
+            char label[10];	/* volume label */
+        } FSvolumeInfo;
+        struct {
+            osi_hyper_t totalAllocUnits;	/* on the disk */
+            osi_hyper_t availAllocUnits;	/* free blocks */
+            long sectorsPerAllocUnit;
+            long bytesPerSector;		/* bytes per sector */
+        } FSsizeInfo;
+        struct {
+            long devType;	/* device type */
+            long characteristics;
+        } FSdeviceInfo;
+        struct {
+            long attributes;
+            long maxCompLength;	/* max path component length */
+            long FSnameLength;	/* length of file system name */
+            char FSname[12];
+        } FSattributeInfo;
+    } u;
 } smb_tran2QFSInfo_t;
 
 /* more than enough opcodes for today, anyway */
@@ -86,11 +87,25 @@ typedef struct smb_tran2QFSInfo {
 
 extern smb_tran2Dispatch_t smb_tran2DispatchTable[SMB_TRAN2_NOPCODES];
 
+#define SMB_RAP_NOPCODES	64
+
+extern smb_tran2Dispatch_t smb_rapDispatchTable[SMB_RAP_NOPCODES];
+
 extern long smb_ReceiveV3SessionSetupX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp);
 
 extern long smb_ReceiveV3TreeConnectX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp);
 
+extern long smb_ReceiveV3Trans(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp);
+
 extern long smb_ReceiveV3Tran2A(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp);
+
+extern long smb_ReceiveRAPNetShareEnum(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op);
+
+extern long smb_ReceiveRAPNetShareGetInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op);
+
+extern long smb_ReceiveRAPNetWkstaGetInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op);
+
+extern long smb_ReceiveRAPNetServerGetInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op);
 
 extern long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p,
 	smb_packet_t *outp);
@@ -134,7 +149,16 @@ extern long smb_ReceiveTran2FindNotifyFirst(smb_vc_t *vcp, smb_tran2Packet_t *p,
 extern long smb_ReceiveTran2FindNotifyNext(smb_vc_t *vcp, smb_tran2Packet_t *p,
 	smb_packet_t *outp);
 
-extern long smb_ReceiveTran2MKDir(smb_vc_t *vcp, smb_tran2Packet_t *p,
+extern long smb_ReceiveTran2CreateDirectory(smb_vc_t *vcp, smb_tran2Packet_t *p,
+	smb_packet_t *outp);
+
+extern long smb_ReceiveTran2SessionSetup(smb_vc_t *vcp, smb_tran2Packet_t *p,
+	smb_packet_t *outp);
+
+extern long smb_ReceiveTran2GetDFSReferral(smb_vc_t *vcp, smb_tran2Packet_t *p,
+	smb_packet_t *outp);
+
+extern long smb_ReceiveTran2ReportDFSInconsistency(smb_vc_t *vcp, smb_tran2Packet_t *p,
 	smb_packet_t *outp);
 
 extern long smb_ReceiveV3FindClose(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp);
@@ -163,10 +187,15 @@ extern void smb_NotifyChange(DWORD action, DWORD notifyFilter,
 
 extern long smb_ReceiveNTCancel(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp);
 
+extern long smb_ReceiveNTRename(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp);
+
 extern int smb_V3MatchMask(char *namep, char *maskp, int flags);
 
 extern void smb3_Init();
 extern cm_user_t *smb_FindCMUserByName(/*smb_vc_t *vcp,*/ char *usern, char *machine);
+
+/* SMB auth related functions */
+extern void smb_NegotiateExtendedSecurity(void ** secBlob, int * secBlobLength);
 
 #ifdef DJGPP
 #define DELETE (0x00010000)

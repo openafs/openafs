@@ -1,0 +1,94 @@
+Java API (Jafs): Technical Notes
+-----------------------------------------
+
+Overview
+--------
+
+The Java API (Jafs) is a Java package with a shared library
+written in C.  It is meant for use by programmers who wish to develop
+tools in Java for OpenAFS administration and use.  This document briefly
+outlines the architecture of Jafs.
+
+Shared library
+--------------
+
+The source code for the shared library resides in the src/JAVA/libjafs
+directory.  See the JAFS_README file in that directory for information
+on how to compile this package.  The code is broken up logically into
+files by the type of AFS object they relate to (i.e. cell, user, volume, 
+etc.), which closely mirrors the different classes of the Java package.
+This library is built on top of the libadmin and libuafs libraries, and
+mainly serves as a translation layer between the Java package and the
+OpenAFS code.  It is closely tied to the Java package, in that it often
+accesses the actual Java objects by calls up through JNI, in order to
+retrieve or populate member fields of those objects. Also, if an error
+occurs in this code or in another C library, a Java exception is 
+constructed with the appropriate error code, and is thrown back to the 
+Java layer to be dealt with.
+
+In order to provide user-level functions such as ACL setting and mount
+point iteration, the shared library needs to be linked with a specialized
+version of libuafs called libjuafs.a. Please view the README file in the 
+src/libuafs directory for more information regarding libjuafs and how it 
+is built. 
+
+Java package
+------------
+
+The code for the org.openafs.jafs package resides in the 
+src/JAVA/org/openafs/jafs/ directory.  It is broken into classes
+in the same way that the OpenAFS file system breaks down into logical 
+components: Cell, User, Group, Server, Partition, Volume, Process, Key,
+Token, ACL, and File.  There are also classes for file input and
+output streams, and specialized exception classes.
+
+Publicly, the developer only has access to these objects and their
+instance functions, which provide a solid, object-oriented view of
+OpenAFS administration and use.  The first thing a programmer would do to
+use this package in his or her code would be to construct a Token object by
+giving it a cell name, a user name, and a password for that user.  From 
+there, the programmer could easily construct a Cell object and then list, 
+for example, all the servers in a cell, create a new user, move a volume to 
+a different partition, etc.
+
+When one of these objects is constructed, it does not actually create
+the corresponding component in OpenAFS.  The object is supposed to
+represent the object.  If the programmer wants to actually create a 
+new user in OpenAFS, for example, he or she would construct a new User
+object with the name of the user to create, and then explicitly call
+the object's create method.  
+
+When an object first accesses information about itself from OpenAFS
+by calling down through JNI to the shared library, it saves the
+information and will return it to the application on subsequent 
+requests.  This minimizes the overhead of expensive JNI calls.  This
+saved information can be updated to reflect the most current state of
+OpenAFS by calling the objects refresh method.
+
+There are usually two ways to list something: getting an array of the
+names of the elements in the list, or getting an array of the actual
+objects themselves.  For example, the Cell object can provide the
+programmer with an array of the names of all users in the cell, or
+an array of actual User objects, with relevant member fields already set
+to the correct values. 
+
+Almost every method in the package declares AFSException in its 
+throws clause.  This is thrown from the shared library whenever an 
+error occurs, and contains an OpenAFS error code as a member.  The 
+programmer is expected to deal with these exceptions however they see fit.
+
+The native methods that act as the interface between the Java layer and
+the shared library are declared protected, so they can be used directly
+by developers who wish to subclass these classes for their applications
+and possibly implement their own versions of the Java API calls.
+
+Known Issues
+------------
+
+Some issues not yet dealt with in this API include:
+  - Alternative methods of authentication, other than Kaserver (i.e.
+    Kerberos V).  There has been some discussion about how to abstract
+    the User object to be more general, but so far it has not been 
+    implemented.
+  - Access to VLDB functionality such as listing VLDB entries and
+    zapping volumes.

@@ -1,7 +1,10 @@
 /*
- * (C) Copyright Transarc Corporation 1989
- * Licensed Materials - Property of Transarc
+ * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
  */
 
 /*------------------------------------------------------------------------
@@ -10,8 +13,6 @@
  * Description:
  *	Routines that actually do the disk updates.
  *
- * Author:
- *	Transarc Corporation & Carnegie Mellon University
  *------------------------------------------------------------------------*/
 
 #include <afs/param.h>
@@ -53,61 +54,55 @@ static FixReg();
 
 /* $$important: these will have to be fixed with an error recovery mechanism */
 
-int update(np, path)
-    CTREEPTR np;
-    char *path;
-
-{ /*update*/
+int
+update(CTREEPTR np, char *path)
+{				/*update */
 
     switch (np->type) {
 #ifndef AFS_AIX_ENV
-      case S_IFSOCK:
-          UpdateSock(np, path);
-	  break;
+    case S_IFSOCK:
+	UpdateSock(np, path);
+	break;
 #endif /* AFS_AIX_ENV */
 
 #ifdef S_IFIFO
-	case S_IFIFO:
-	  UpdatePipe(np, path);
-	  break;
+    case S_IFIFO:
+	UpdatePipe(np, path);
+	break;
 #endif /* S_IFIFO */
 
-      case S_IFCHR:
-      case S_IFBLK:
-	  UpdateDev(np, path);
-	  break;
+    case S_IFCHR:
+    case S_IFBLK:
+	UpdateDev(np, path);
+	break;
 
-      case S_IFLNK:
-	  UpdateLnk(np, path);
-	  break;
+    case S_IFLNK:
+	UpdateLnk(np, path);
+	break;
 
-      case S_IFDIR:
-	  UpdateDir(np, path);
-	  break;
+    case S_IFDIR:
+	UpdateDir(np, path);
+	break;
 
-      case S_IFREG:
-	  UpdateReg(np, path);
-	  break;
+    case S_IFREG:
+	UpdateReg(np, path);
+	break;
     }
 
-}  /*update*/
+}				/*update */
 
-static UpdateSock(np, path)
-    CTREEPTR np;
-    char *path;
+static void
+UpdateSock(CTREEPTR np, char *path)
+{				/*UpdateSock */
 
-{ /*UpdateSock*/
+    (void)dochtyp(np, path);
 
-    (void) dochtyp(np, path);
-
-} /*UpdateSock*/
+}				/*UpdateSock */
 
 
-static UpdateDev(np, path)
-    CTREEPTR np;
-    char *path;
-
-{ /*UpdateDev*/
+static void
+UpdateDev(CTREEPTR np, char *path)
+{				/*UpdateDev */
 
     register int ret;
 
@@ -126,30 +121,30 @@ static UpdateDev(np, path)
 	}
 	if (ret < 0) {
 	    char *type;
-	    
-	    switch(np->type) {
-	      case S_IFBLK:
+
+	    switch (np->type) {
+	    case S_IFBLK:
 		type = "b";
 		break;
-		
-	      case S_IFCHR:
+
+	    case S_IFCHR:
 		type = "c";
 		break;
-		
-	      default:
-		message("Unknown device type: %d\n",
-			np->type);
+
+	    default:
+		message("Unknown device type: %d\n", np->type);
 		break;
 	    }
-	    
-	    loudonly_message("mknod %s %d %d %s",
-			     type, major(np->proto.info.rdev),
+
+	    loudonly_message("mknod %s %d %d %s", type,
+			     major(np->proto.info.rdev),
 			     minor(np->proto.info.rdev), path);
 	    if (!opt_lazy) {
-		if (mknod(path, (int)np->mode | (int)np->type,
-			  (int)np->proto.info.rdev) < 0)
-		    message("mknod %s %d %d %s; %m",
-			    type, major(np->proto.info.rdev),
+		if (mknod
+		    (path, (int)np->mode | (int)np->type,
+		     (int)np->proto.info.rdev) < 0)
+		    message("mknod %s %d %d %s; %m", type,
+			    major(np->proto.info.rdev),
 			    minor(np->proto.info.rdev), path);
 		if ((ret = lstat(path, &stb)) < 0)
 		    message("lstat %s; %m", path);
@@ -161,13 +156,11 @@ static UpdateDev(np, path)
 	dochown(np, path);
     }
 
-} /*UpdateDev*/
+}				/*UpdateDev */
 
-static UpdatePipe(np, path)
-    CTREEPTR np;
-    char *path;
-
-{ /*UpdatePipe*/
+static void
+UpdatePipe(CTREEPTR np, char *path)
+{				/*UpdatePipe */
 
     register int ret;
 
@@ -176,7 +169,7 @@ static UpdatePipe(np, path)
      * saying everything is fine.
      */
     ret = -1;
-    
+
 #ifdef	KFLAG
     if (ret == 1)
 	return;
@@ -190,10 +183,11 @@ static UpdatePipe(np, path)
 	}
 	if (ret < 0) {
 	    loudonly_message("mknod p %s", path);
-	    
+
 	    if (!opt_lazy) {
-		if (mknod(path, (int)(np->mode) | (int)(np->type),
-			  (int)(np->proto.info.rdev)) < 0)
+		if (mknod
+		    (path, (int)(np->mode) | (int)(np->type),
+		     (int)(np->proto.info.rdev)) < 0)
 		    message("mknod p %s; %m", path);
 		if ((ret = lstat(path, &stb)) < 0)
 		    message("lstat %s; %m", path);
@@ -206,121 +200,115 @@ static UpdatePipe(np, path)
 	dochown(np, path);
     }
 
-} /*UpdatePipe*/
+}				/*UpdatePipe */
 
-static UpdateLnk(np, path)
-    CTREEPTR np;
-    char *path;
-
-{ /*UpdateLnk*/
+static void
+UpdateLnk(CTREEPTR np, char *path)
+{				/*UpdateLnk */
 
     register int ret;
     char temp[MAXPATHLEN], temp2[MAXPATHLEN];
-    int	cc;
+    int cc;
 
     ret = dochtyp(np, path);
 #ifdef	KFLAG
     if (ret == 1)
-      return;
+	return;
 #endif /* KFLAG */
     if ((np->flag & F_PROTO) == 0)
-      return;
-    if (np->updtspec & U_ABSPATH)
-      sprintf(temp, "%s", np->proto.info.path);	
-    else		
-      sprintf(temp, "%s%s",np->proto.info.path, path);
-    if (ret >= 0) {
-      if ((cc = readlink(path, temp2, sizeof(temp2)-1)) < 0) {
-	message("readlink %s; %m", path);
 	return;
-      }
-      temp2[cc] = 0;
-      if (strcmp(temp2, temp)) {
-	  if ((np->updtspec & U_NOOVERWRITE) == 0) {
-	      rm(path);
-	      ret = -1;
-	  } else {
-	      loudonly_message("INHIBIT %s updating", path);
-	  }
-      }
+    if (np->updtspec & U_ABSPATH)
+	sprintf(temp, "%s", np->proto.info.path);
+    else
+	sprintf(temp, "%s%s", np->proto.info.path, path);
+    if (ret >= 0) {
+	if ((cc = readlink(path, temp2, sizeof(temp2) - 1)) < 0) {
+	    message("readlink %s; %m", path);
+	    return;
+	}
+	temp2[cc] = 0;
+	if (strcmp(temp2, temp)) {
+	    if ((np->updtspec & U_NOOVERWRITE) == 0) {
+		rm(path);
+		ret = -1;
+	    } else {
+		loudonly_message("INHIBIT %s updating", path);
+	    }
+	}
     }
     if (ret < 0) {
-      loudonly_message("ln %s %s", path, temp);
-      if (!opt_lazy && symlink(temp, path) < 0)
-	message("symlink %s %s; %m", temp, path);
+	loudonly_message("ln %s %s", path, temp);
+	if (!opt_lazy && symlink(temp, path) < 0)
+	    message("symlink %s %s; %m", temp, path);
     }
 
-} /*UpdateLnk*/
+}				/*UpdateLnk */
 
 
-static UpdateDir(np, path)
-    CTREEPTR np;
-    char *path;
-
-{ /*UpdateDir*/
+static void
+UpdateDir(CTREEPTR np, char *path)
+{				/*UpdateDir */
 
     register int ret;
 
     ret = dochtyp(np, path);
 #ifdef	KFLAG
     if (ret == 1)
-      return;
+	return;
 #endif /* KFLAG */
     if (ret < 0) {
-      loudonly_message("mkdir %s", path);
-      if (!opt_lazy) {
-	if (mkdir(path, (int)np->mode & ~S_IFMT) < 0)
-	  message("mkdir %s; %m", path);
-	if ((ret = lstat(path, &stb)) < 0)
-	  message("lstat %s; %m", path);
-      }
+	loudonly_message("mkdir %s", path);
+	if (!opt_lazy) {
+	    if (mkdir(path, (int)np->mode & ~S_IFMT) < 0)
+		message("mkdir %s; %m", path);
+	    if ((ret = lstat(path, &stb)) < 0)
+		message("lstat %s; %m", path);
+	}
     }
     if (np->updtspec & U_LOSTFOUND)
-      (void)FixLostFoundDir(path);
+	(void)FixLostFoundDir(path);
     if (np->updtspec & U_RMEXTRA)
-      (void)FixDir(np, path);
+	(void)FixDir(np, path);
     if (ret >= 0) {
-      dochmod(np, path);
-      dochown(np, path);
+	dochmod(np, path);
+	dochown(np, path);
     }
 
-} /*UpdateDir*/
+}				/*UpdateDir */
 
 
-static UpdateReg(np, path)
-    CTREEPTR np;
-    char *path;
-
-{ /*UpdateReg*/
+static void
+UpdateReg(CTREEPTR np, char *path)
+{				/*UpdateReg */
 
     register int ret;
 
     ret = dochtyp(np, path);
 #ifdef	KFLAG
     if (ret == 1)
-      return;
+	return;
 #endif /* KFLAG */
     if ((np->flag & F_PROTO) != 0) {
-      if (ret < 0)
-	np->updtspec &= ~U_RENAMEOLD;
-      if (ret >= 0) {
-	if ((np->updtspec & U_NOOVERWRITE) == 0)
-	  if (np->mtime != stb.st_mtime)
-	    ret = -1;
-      }
-      if (ret < 0) {
-	if ((ret = FixReg(np, path)) >= 0)
-	  ret = lstat(path, &stb);
-	if (ret >= 0)
-	  dochtim(np, path);
-      }
+	if (ret < 0)
+	    np->updtspec &= ~U_RENAMEOLD;
+	if (ret >= 0) {
+	    if ((np->updtspec & U_NOOVERWRITE) == 0)
+		if (np->mtime != stb.st_mtime)
+		    ret = -1;
+	}
+	if (ret < 0) {
+	    if ((ret = FixReg(np, path)) >= 0)
+		ret = lstat(path, &stb);
+	    if (ret >= 0)
+		dochtim(np, path);
+	}
     }
     if (ret >= 0) {
-      dochmod(np, path);
-      dochown(np, path);
+	dochmod(np, path);
+	dochown(np, path);
     }
 
-} /*UpdateReg*/
+}				/*UpdateReg */
 
 
 /*
@@ -334,165 +322,139 @@ static UpdateReg(np, path)
  * reboot scenario is true), we return 0.
  */
 
-static dochtyp(np, path)
-    CTREEPTR np;
-    char *path;
-
-{ /*dochtyp*/
-
+static int
+dochtyp(CTREEPTR np, char *path)
+{				/*dochtyp */
     if (lstat(path, &stb) < 0)
-      return -1;
+	return -1;
 #ifdef	KFLAG
     if (opt_kflag && (stb.st_mode & 0222) == 0) {
-      loudonly_message("INHIBIT %s updating", path);
-      return 1;
+	loudonly_message("INHIBIT %s updating", path);
+	return 1;
     }
 #endif /* KFLAG */
     if ((stb.st_mode & S_IFMT) == np->type)
-      return 0;
+	return 0;
     if (!opt_reboot && (np->flag & F_UPDT) && (np->updtspec & U_REBOOT)) {
-      message("%s is out of date; please REBOOT!", path);
-      return 0;
+	message("%s is out of date; please REBOOT!", path);
+	return 0;
+    } else {
+	rm(path);
+	return -1;
     }
-    else {
-      rm(path);
-      return -1;
-    }
+}				/*dochtyp */
 
-} /*dochtyp*/
-
-static dochmod(np, path)
-    CTREEPTR np;
-    char *path;
-
-{ /*dochmod*/
-
+static void
+dochmod(CTREEPTR np, char *path)
+{				/*dochmod */
     if ((np->flag & F_MODE) == 0)
-      return;
+	return;
     if ((np->mode & ~S_IFMT) == (stb.st_mode & ~S_IFMT))
-      return;
+	return;
     loudonly_message("chmod %s %o", path, np->mode & ~S_IFMT);
     if (!opt_lazy && chmod(path, (int)np->mode & ~S_IFMT) < 0)
-      message("chmod %s; %m", path);
+	message("chmod %s; %m", path);
+}				/*dochmod */
 
-}  /*dochmod*/
-
-static dochown(np, path)
-    CTREEPTR np;
-    char *path;
-
-{ /*dochown*/
-
+static void
+dochown(CTREEPTR np, char *path)
+{				/*dochown */
     if ((np->flag & F_UID) == 0)
-      np->uid = stb.st_uid;
+	np->uid = stb.st_uid;
     if ((np->flag & F_GID) == 0)
-      np->gid = stb.st_gid;
+	np->gid = stb.st_gid;
     if (np->uid == stb.st_uid && np->gid == stb.st_gid)
-      return;
+	return;
     loudonly_message("chown %s %d %d", path, np->uid, np->gid);
     if (!opt_lazy && chown(path, np->uid, np->gid) < 0)
-      message("chown %s; %m", path);
+	message("chown %s; %m", path);
+}				/*dochown */
 
-} /*dochown*/
-
-static dochtim(np, path)
-    CTREEPTR np;
-    char *path;
-
-{ /*dochtim*/
-
+static void
+dochtim(CTREEPTR np, char *path)
+{				/*dochtim */
     struct timeval tm[2];
 
-    if (np->mtime == stb.st_mtime || (!opt_reboot && (np->updtspec & U_REBOOT)))
-      return;
+    if (np->mtime == stb.st_mtime
+	|| (!opt_reboot && (np->updtspec & U_REBOOT)))
+	return;
     tm[0].tv_sec = tm[1].tv_sec = np->mtime;
     tm[0].tv_usec = tm[1].tv_usec = 0;
     if (!opt_silent) {
-      char *date;
+	char *date;
 
-      date = ctime((time_t *)&np->mtime);
-      date[24] = 0;
-      loudonly_message("utimes %s [%s]", path, date);
+	date = ctime((time_t *) & np->mtime);
+	date[24] = 0;
+	loudonly_message("utimes %s [%s]", path, date);
     }
     if (!opt_lazy && utimes(path, tm) < 0)
-      message("utimes %s; %m", path);
+	message("utimes %s; %m", path);
+}				/*dochtim */
 
-} /*dochtim*/
-
-static int FixLostFoundDir(path)
-    char *path;
-
-{ /*FixLostFoundDir*/
-
+static int
+FixLostFoundDir(char *path)
+{				/*FixLostFoundDir */
     if (stb.st_size >= 3584)
-      return 0;
+	return 0;
     return mklostfound(path);
+}				/*FixLostFoundDir */
 
-} /*FixLostFoundDir*/
-
-static int FixDir(np, path)
-    CTREEPTR np;
-    char *path;
-
-{ /*FixDir*/
-
+static int
+FixDir(CTREEPTR np, char *path)
+{				/*FixDir */
     register DIR *dp;
     register struct dirent *de;
     register char *endp;
 
     verbose_message("cleandir %s", path);
     if ((dp = opendir(path)) == 0) {
-      message("opendir %s; %m", path);
-      return -1;
+	message("opendir %s; %m", path);
+	return -1;
     }
     endp = path + strlen(path);
     *endp++ = '/';
     while ((de = readdir(dp)) != 0) {
-      if (de->d_name[0] == '.') {
-	if (de->d_name[1] == 0)
-	  continue;
-	if (de->d_name[1] == '.' && de->d_name[2] == 0)
-	  continue;
-      }
-      if (LocateChildNode(np, de->d_name, C_LOCATE) != 0)
-	continue;
-      (void) strcpy(endp, de->d_name);
-      rm(path);
+	if (de->d_name[0] == '.') {
+	    if (de->d_name[1] == 0)
+		continue;
+	    if (de->d_name[1] == '.' && de->d_name[2] == 0)
+		continue;
+	}
+	if (LocateChildNode(np, de->d_name, C_LOCATE) != 0)
+	    continue;
+	(void)strcpy(endp, de->d_name);
+	rm(path);
     }
     *--endp = 0;
-    (void) closedir(dp);
+    (void)closedir(dp);
     return 0;
+}				/*FixDir */
 
-} /*FixDir*/
-
-static FixReg(np, path)
-    CTREEPTR np;
-    char *path;
-
-{ /*FixReg*/
-
+static int
+FixReg(CTREEPTR np, char *path)
+{				/*FixReg */
     char new[MAXPATHLEN], old[MAXPATHLEN], temp[MAXPATHLEN];
 
     if (!opt_reboot && (np->updtspec & U_REBOOT)) {
-	verbose_message("%s is a 'Q' file and -rebootfiles is set; not updated!", path);
+	verbose_message
+	    ("%s is a 'Q' file and -rebootfiles is set; not updated!", path);
 	return 0;
     }
-    (void) sprintf(new, "%s.new", path);
+    (void)sprintf(new, "%s.new", path);
     if (np->updtspec & U_ABSPATH)
-      (void)sprintf(temp, "%s", np->proto.info.path);	
-    else		
-      (void)sprintf(temp, "%s%s", np->proto.info.path, path);
+	(void)sprintf(temp, "%s", np->proto.info.path);
+    else
+	(void)sprintf(temp, "%s%s", np->proto.info.path, path);
     if (cp(temp, new))
-      return -1;
+	return -1;
     if (np->updtspec & U_RENAMEOLD) {
-      (void) sprintf(old, "%s.old", path);
-      (void) rm(old);
-      (void) ln(path, old);
+	(void)sprintf(old, "%s.old", path);
+	(void)rm(old);
+	(void)ln(path, old);
     }
     if (mv(new, path))
-      return -1;
+	return -1;
     if (np->updtspec & U_REBOOT)
-      status = status_reboot;
+	status = status_reboot;
     return 0;
-
-} /*FixReg*/
+}				/*FixReg */

@@ -31,7 +31,7 @@
  * SUCH DAMAGE.
  */
 
-/* $Id: err.h,v 1.1 2002/01/22 19:54:41 hartmans Exp $ */
+/* $Id: err.h,v 1.2 2003/07/15 23:16:59 shadow Exp $ */
 
 #ifndef __ERR_H__
 #define __ERR_H__
@@ -49,23 +49,23 @@ extern const char *__progname;
 #endif
 
 void warnerr(int doerrno, const char *fmt, va_list ap)
-     __attribute__ ((format (printf, 2, 0)));
+    __attribute__ ((format(printf, 2, 0)));
 
 void verr(int eval, const char *fmt, va_list ap)
-     __attribute__ ((noreturn, format (printf, 2, 0)));
+    __attribute__ ((noreturn, format(printf, 2, 0)));
 void err(int eval, const char *fmt, ...)
-     __attribute__ ((noreturn, format (printf, 2, 3)));
+    __attribute__ ((noreturn, format(printf, 2, 3)));
 void verrx(int eval, const char *fmt, va_list ap)
-     __attribute__ ((noreturn, format (printf, 2, 0)));
+    __attribute__ ((noreturn, format(printf, 2, 0)));
 void errx(int eval, const char *fmt, ...)
-     __attribute__ ((noreturn, format (printf, 2, 3)));
+    __attribute__ ((noreturn, format(printf, 2, 3)));
 void vwarn(const char *fmt, va_list ap)
-     __attribute__ ((format (printf, 1, 0)));
+    __attribute__ ((format(printf, 1, 0)));
 void warn(const char *fmt, ...)
-     __attribute__ ((format (printf, 1, 2)));
+    __attribute__ ((format(printf, 1, 2)));
 void vwarnx(const char *fmt, va_list ap)
-     __attribute__ ((format (printf, 1, 0)));
+    __attribute__ ((format(printf, 1, 0)));
 void warnx(const char *fmt, ...)
-     __attribute__ ((format (printf, 1, 2)));
+    __attribute__ ((format(printf, 1, 2)));
 
 #endif /* __ERR_H__ */

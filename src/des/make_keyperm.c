@@ -15,27 +15,22 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/des/make_keyperm.c,v 1.1.1.4 2001/07/14 22:21:32 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/des/make_keyperm.c,v 1.7 2003/11/29 20:23:34 jaltman Exp $");
 
 #include <mit-cpyright.h>
 #include <stdio.h>
 #include <errno.h>
+#include <des.h>
 #include "des_internal.h"
+#include "des_prototypes.h"
 
 char *progname;
-extern char *errmsg();
-extern afs_int32 swap_bit_pos_1();
-extern afs_int32 swap_bit_pos_0();
-int sflag;
-int vflag;
-int dflag;
-int pid;
-int child_status;
 
-int key_position[64+1];
-int C[28+1];
-int D[28+1];
-int C_temp, D_temp;
+static int key_position[64 + 1];
+static int C[28 + 1];
+static int D[28 + 1];
+static int C_temp, D_temp;
 
 /*
  *  CONVENTIONS for numbering the bits
@@ -49,21 +44,21 @@ int C_temp, D_temp;
 /*
  * Sequence of shifts used for the key schedule.
  */
-int const shift[16+1] = { 0,
-    1,1,2,2,2,2,2,2,1,2,2,2,2,2,2,1,
+static int const shift[16 + 1] = { 0,
+    1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1,
 };
 
-int const pc_1[64+1] = { 0,
+static int const pc_1[56 + 1] = { 0,
 
-    57,49,41,33,25,17, 9,
-     1,58,50,42,34,26,18,
-    10, 2,59,51,43,35,27,
-    19,11, 3,60,52,44,36,
+    57, 49, 41, 33, 25, 17, 9,
+    1, 58, 50, 42, 34, 26, 18,
+    10, 2, 59, 51, 43, 35, 27,
+    19, 11, 3, 60, 52, 44, 36,
 
-    63,55,47,39,31,23,15,
-     7,62,54,46,38,30,22,
-    14, 6,61,53,45,37,29,
-    21,13, 5,28,20,12, 4,
+    63, 55, 47, 39, 31, 23, 15,
+    7, 62, 54, 46, 38, 30, 22,
+    14, 6, 61, 53, 45, 37, 29,
+    21, 13, 5, 28, 20, 12, 4,
 };
 
 
@@ -71,25 +66,25 @@ int const pc_1[64+1] = { 0,
  * Permuted-choice 2, to pick out the bits from
  * the CD array that generate the key schedule.
  */
-int const pc_2[48+1] = { 0,
+static int const pc_2[48 + 1] = { 0,
 
-    14,17,11,24, 1, 5,
-     3,28,15, 6,21,10,
-    23,19,12, 4,26, 8,
-    16, 7,27,20,13, 2,
+    14, 17, 11, 24, 1, 5,
+    3, 28, 15, 6, 21, 10,
+    23, 19, 12, 4, 26, 8,
+    16, 7, 27, 20, 13, 2,
 
-    41,52,31,37,47,55,
-    30,40,51,45,33,48,
-    44,49,39,56,34,53,
-    46,42,50,36,29,32,
+    41, 52, 31, 37, 47, 55,
+    30, 40, 51, 45, 33, 48,
+    44, 49, 39, 56, 34, 53,
+    46, 42, 50, 36, 29, 32,
 };
 
-int ks_perm[16+1][48+1];
+static int ks_perm[16 + 1][48 + 1];
 
-int des_debug;
+static int des_debug;
 
-void gen(stream)
-    FILE *stream;
+void
+gen(FILE * stream)
 {
     /*  Local Declarations */
     register int i, j, iter;
@@ -101,18 +96,18 @@ void gen(stream)
      * Also adjust for the bit order within bytes.
      */
 
-    for (i=0; i<65; i++)
-        key_position[i]= swap_bit_pos_1(i);
+    for (i = 0; i < 65; i++)
+	key_position[i] = swap_bit_pos_1(i);
 
-    fprintf(stream,"static int const key_perm[16][48] = {\n");
+    fprintf(stream, "static int const key_perm[16][48] = {\n");
 
     /*
      * apply pc_1 to initial key_position to create C[0] and D[0]
      * Start at pc_1[1], not pc_1[0]
      */
-    for (i=1; i<=28; i++) {
-        C[i] = key_position[pc_1[i]];
-        D[i] = key_position[pc_1[i+28]];
+    for (i = 1; i <= 28; i++) {
+	C[i] = key_position[pc_1[i]];
+	D[i] = key_position[pc_1[i + 28]];
     }
 
     /*
@@ -120,99 +115,98 @@ void gen(stream)
      * start at iter = 1, not zero.
      */
     for (iter = 1; iter <= 16; iter++) {
-        if (des_debug) {
-            /*  for debugging */
-            printf(
-                    "/* DEBUG-- start iteration = %d  shifts = %d",
-                    iter, shift[iter]);
-            printf("\nC array");
-            for (i = 1; i <=4 ; i++) {
-                printf("\n");
-                for (j = 1; j<=7; j++)
-                    printf("%d, ",C[(i-1)*7+j]);
-            }
-            printf("\n\nD array");
-            for (i = 1; i <=4 ; i++) {
-                printf("\n");
-                for (j = 1; j<=7; j++)
-                    printf("%d, ",D[(i-1)*7+j]);
-            }
-            printf("\n */");
-            fflush(stdout);
-        }
+	if (des_debug) {
+	    /*  for debugging */
+	    printf("/* DEBUG-- start iteration = %d  shifts = %d", iter,
+		   shift[iter]);
+	    printf("\nC array");
+	    for (i = 1; i <= 4; i++) {
+		printf("\n");
+		for (j = 1; j <= 7; j++)
+		    printf("%d, ", C[(i - 1) * 7 + j]);
+	    }
+	    printf("\n\nD array");
+	    for (i = 1; i <= 4; i++) {
+		printf("\n");
+		for (j = 1; j <= 7; j++)
+		    printf("%d, ", D[(i - 1) * 7 + j]);
+	    }
+	    printf("\n */");
+	    fflush(stdout);
+	}
 
-        /* apply the appropriate left shifts */
-        for (i = 1; i <= shift[iter]; i++) {
-            C_temp = C[1];
-            D_temp = D[1];
-            for (j =1; j<=27; j++) {
-                C[j] = C[j+1];
-                D[j] = D[j+1];
-            }
-            C[j] = C_temp;
-            D[j] = D_temp;
-        }
+	/* apply the appropriate left shifts */
+	for (i = 1; i <= shift[iter]; i++) {
+	    C_temp = C[1];
+	    D_temp = D[1];
+	    for (j = 1; j <= 27; j++) {
+		C[j] = C[j + 1];
+		D[j] = D[j + 1];
+	    }
+	    C[j] = C_temp;
+	    D[j] = D_temp;
+	}
 
 
-        if (des_debug) {
-            /* for debugging */
-            printf("/* DEBUG:\n");
-            printf(" * after shifts, iteration = %d  shifts = %d",
-                    iter, shift[iter]);
-            printf("\nC array");
-            for (i = 1; i <=4 ; i++) {
-                printf("\n");
-                for (j = 1; j<=7; j++)
-                    printf("%d, ",C[(i-1)*7+j]);
-            }
-            printf("\n\nD array");
-            for (i = 1; i <=4 ; i++) {
-                printf("\n");
-                for (j = 1; j<=7; j++)
-                    printf("%d, ",D[(i-1)*7+j]);
-            }
-            printf("\n */");
-            fflush(stdout);
-        }
+	if (des_debug) {
+	    /* for debugging */
+	    printf("/* DEBUG:\n");
+	    printf(" * after shifts, iteration = %d  shifts = %d", iter,
+		   shift[iter]);
+	    printf("\nC array");
+	    for (i = 1; i <= 4; i++) {
+		printf("\n");
+		for (j = 1; j <= 7; j++)
+		    printf("%d, ", C[(i - 1) * 7 + j]);
+	    }
+	    printf("\n\nD array");
+	    for (i = 1; i <= 4; i++) {
+		printf("\n");
+		for (j = 1; j <= 7; j++)
+		    printf("%d, ", D[(i - 1) * 7 + j]);
+	    }
+	    printf("\n */");
+	    fflush(stdout);
+	}
 
-        /*
-         * apply pc_2
-         * Start at pc_2[1], not pc_2[0]
-         *
-         * Start stuffing ks_perm[1][1], not ks_perm[0][0]
-         *
-         * Adjust ks_perm for bit order if needed.
-         */
-        for (i = 1; i <= 48; i++) {
-            if (pc_2[i] <= 28)
-                ks_perm[iter][(i)] = C[pc_2[i]];
-            else
-                ks_perm[iter][(i)] = D[pc_2[i]-28];
-        }
+	/*
+	 * apply pc_2
+	 * Start at pc_2[1], not pc_2[0]
+	 *
+	 * Start stuffing ks_perm[1][1], not ks_perm[0][0]
+	 *
+	 * Adjust ks_perm for bit order if needed.
+	 */
+	for (i = 1; i <= 48; i++) {
+	    if (pc_2[i] <= 28)
+		ks_perm[iter][(i)] = C[pc_2[i]];
+	    else
+		ks_perm[iter][(i)] = D[pc_2[i] - 28];
+	}
 
-        /* now output the resulting key permutation */
-        fprintf(stream, "\n    /* ks permutation iteration = %2d */",
-                iter);
-        for (i = 1; i <= 6; i++) {
-			if ( i == 1 ) fprintf(stream, "\n    {");
-            fprintf(stream, "\n    ");
-            for (j = 1; j <= 8; j++) {
-                /*
-                 * IMPORTANT -- subtract one from value to adjust to a
-                 * zero-based subscript for key
-                 */
-                fprintf(stream, "%d", ks_perm[iter][(i-1)*8+j]-1);
-                /* omit last comma */
-                if ((j != 8) || (i != 6)) {
-                    fprintf(stream,", ");
-                }
-            }
-        }
-		if ( iter != 16) {
-			fprintf(stream, "\n    }, ");
-		} else {
-			fprintf(stream, "\n    }");
+	/* now output the resulting key permutation */
+	fprintf(stream, "\n    /* ks permutation iteration = %2d */", iter);
+	for (i = 1; i <= 6; i++) {
+	    if (i == 1)
+		fprintf(stream, "\n    {");
+	    fprintf(stream, "\n    ");
+	    for (j = 1; j <= 8; j++) {
+		/*
+		 * IMPORTANT -- subtract one from value to adjust to a
+		 * zero-based subscript for key
+		 */
+		fprintf(stream, "%d", ks_perm[iter][(i - 1) * 8 + j] - 1);
+		/* omit last comma */
+		if ((j != 8) || (i != 6)) {
+		    fprintf(stream, ", ");
 		}
+	    }
+	}
+	if (iter != 16) {
+	    fprintf(stream, "\n    }, ");
+	} else {
+	    fprintf(stream, "\n    }");
+	}
     }
-    fprintf(stream,"\n};\n");
+    fprintf(stream, "\n};\n");
 }

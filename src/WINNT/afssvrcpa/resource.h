@@ -7,8 +7,9 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
+#define IDS_ERROR_LOADING_ICON			0
+#define IDS_CPA_TITLE					1
+#define IDS_EXECUTION_ERROR				2
+#define IDS_APP_NAME					3
+
 #define IDI_AFSD                        103
-#define IDS_ERROR_LOADING_ICON			104
-#define IDS_CPA_TITLE					105
-#define IDS_EXECUTION_ERROR				106
-#define IDS_APP_NAME					107

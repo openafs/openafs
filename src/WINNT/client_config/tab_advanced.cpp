@@ -58,6 +58,9 @@ extern BOOL Logon_OnApply();
 extern BOOL CALLBACK Diag_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp);
 extern BOOL Diag_OnApply();    
 
+// From binding_misc.cpp
+extern BOOL Binding_OnApply();
+extern BOOL CALLBACK Binding_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp);
 
 /*
  * ROUTINES ___________________________________________________________________
@@ -109,6 +112,10 @@ BOOL CALLBACK AdvancedTab_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
          	    ModalDialog(IDD_MISC_CONFIG_PARMS, hDlg, (DLGPROC)Misc_DlgProc);
                 break;
                 
+            case IDC_BINDING_PARMS:
+                ModalDialog(IDD_BINDING_CONFIG_PARAMS, hDlg, (DLGPROC)Binding_DlgProc);
+                break;
+
             case IDC_LOGON_PARMS:
                 ModalDialog(IDD_LOGIN_CONFIG_PARMS, hDlg, (DLGPROC)Logon_DlgProc);
                 break;
@@ -228,6 +235,9 @@ BOOL AdvancedTab_OnApply (HWND hDlg)
    // Save the data from the advanced tab dialogs
    if (!Misc_OnApply())
       return FALSE;
+      
+   if (!Binding_OnApply())
+        return FALSE;
       
    if (!Logon_OnApply())
       return FALSE;

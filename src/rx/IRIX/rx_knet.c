@@ -8,14 +8,15 @@
  */
 
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/IRIX/rx_knet.c,v 1.1.1.6 2001/10/14 18:06:27 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/rx/IRIX/rx_knet.c,v 1.14 2003/07/15 23:16:21 shadow Exp $");
 
-#include "../rx/rx_kcommon.h"
-#include "../h/tcp-param.h"
+#include "rx/rx_kcommon.h"
+#include "h/tcp-param.h"
 /* This must be loaded after proc.h to avoid macro collision with a variable*/
-#include "../netinet/udp_var.h"
+#include "netinet/udp_var.h"
 
 
 
@@ -43,32 +44,34 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/rx/IRIX/rx_knet.c,v 1.1.1.6 2001/10/14 
 int rxk_lastSocketError = 0;
 int rxk_nSocketErrors = 0;
 int rxk_nSignalsCleared = 0;
-int osi_NetReceive(osi_socket so, struct sockaddr_in *from, 
-		   struct iovec *iov, int iovcnt, int *lengthp)
+
+int
+osi_NetReceive(osi_socket so, struct sockaddr_in *addr, struct iovec *dvec,
+	       int nvecs, int *alength)
 {
     struct uio tuio;
     int code;
     struct mbuf *maddr = NULL;
     struct sockaddr_in *taddr;
-    struct iovec tmpvec[RX_MAXWVECS+2];
+    struct iovec tmpvec[RX_MAXWVECS + 2];
 #ifdef AFS_SGI65_ENV
     bhv_desc_t bhv;
-    BHV_PDATA(&bhv) = (void*)so;
+    BHV_PDATA(&bhv) = (void *)so;
 #endif
 
     tuio.uio_iov = tmpvec;
-    tuio.uio_iovcnt = iovcnt;
+    tuio.uio_iovcnt = nvecs;
     tuio.uio_offset = 0;
     tuio.uio_segflg = AFS_UIOSYS;
     tuio.uio_fmode = 0;
-    tuio.uio_resid = *lengthp;
+    tuio.uio_resid = *alength;
     tuio.uio_pio = 0;
     tuio.uio_pbuf = 0;
 
-    if (iovcnt > RX_MAXWVECS+2) {
-	osi_Panic("Too many (%d) iovecs passed to osi_NetReceive\n", iovcnt);
+    if (nvecs > RX_MAXWVECS + 2) {
+	osi_Panic("Too many (%d) iovecs passed to osi_NetReceive\n", nvecs);
     }
-    memcpy(tmpvec, (char*)iov, (RX_MAXWVECS+1) * sizeof(struct iovec));
+    memcpy(tmpvec, (char *)dvec, (RX_MAXWVECS + 1) * sizeof(struct iovec));
 #ifdef AFS_SGI65_ENV
     code = soreceive(&bhv, &maddr, &tuio, NULL, NULL);
 #else
@@ -96,18 +99,16 @@ int osi_NetReceive(osi_socket so, struct sockaddr_in *from,
 	/* Clear the error before using the socket again. */
 	so->so_error = 0;
 	rxk_lastSocketError = code;
-	rxk_nSocketErrors ++ ;
+	rxk_nSocketErrors++;
 	if (maddr)
 	    m_freem(maddr);
-    }
-    else {
-	*lengthp = *lengthp - tuio.uio_resid;
+    } else {
+	*alength = *alength - tuio.uio_resid;
 	if (maddr) {
-	    memcpy((char*)from, (char*)mtod(maddr, struct sockaddr_in *),
-		  sizeof(struct sockaddr_in));
+	    memcpy((char *)addr, (char *)mtod(maddr, struct sockaddr_in *),
+		   sizeof(struct sockaddr_in));
 	    m_freem(maddr);
-	}
-	else {
+	} else {
 	    return -1;
 	}
     }
@@ -122,12 +123,14 @@ static struct protosw parent_proto;	/* udp proto switch */
  */
 
 #ifdef AFS_SGI64_ENV
-static void rxk_input(struct mbuf *am, struct ifnet *aif, struct ipsec * spec)
+static void
+rxk_input(struct mbuf *am, struct ifnet *aif, struct ipsec *spec)
 #else
-static void rxk_input(struct mbuf *am, struct ifnet *aif)
+static void
+rxk_input(struct mbuf *am, struct ifnet *aif)
 #endif
 {
-    void (*tproc)();
+    void (*tproc) ();
     register unsigned short *tsp;
     int hdr;
     struct udphdr *tu;
@@ -143,20 +146,21 @@ static void rxk_input(struct mbuf *am, struct ifnet *aif)
     /* make sure we have base ip and udp headers in first mbuf */
     if (am->m_off > MMAXOFF || am->m_len < 28) {
 	am = m_pullup(am, 28);
-	if (!am) return;
+	if (!am)
+	    return;
     }
 
     hdr = (mtod(am, struct ip *))->ip_hl;
     if (hdr > 5) {
 	/* pull up more, the IP hdr is bigger than usual */
-	if (am->m_len < (8 + (hdr<<2))) {
-	    am = m_pullup(am, 8+(hdr<<2));
-	    if (!am) return;
+	if (am->m_len < (8 + (hdr << 2))) {
+	    am = m_pullup(am, 8 + (hdr << 2));
+	    if (!am)
+		return;
 	}
-	ti = mtod(am, struct ip	*); /* recompute, since m_pullup allocates new mbuf */
-	tu = (struct udphdr *)(((char *)ti) + (hdr<<2)); /* skip ip hdr */
-    }
-    else {
+	ti = mtod(am, struct ip *);	/* recompute, since m_pullup allocates new mbuf */
+	tu = (struct udphdr *)(((char *)ti) + (hdr << 2));	/* skip ip hdr */
+    } else {
 	ti = mtod(am, struct ip *);
 	tu = (struct udphdr *)(((char *)ti) + 20);	/* skip basic ip hdr */
     }
@@ -164,11 +168,11 @@ static void rxk_input(struct mbuf *am, struct ifnet *aif)
     port = tu->uh_dport;
 
     if (port) {
-	for(tsp=rxk_ports, i=0; i<MAXRXPORTS;i++) {
+	for (tsp = rxk_ports, i = 0; i < MAXRXPORTS; i++) {
 	    if (*tsp++ == port) {
 		/* checksum the packet */
 		if (hdr > 5) {
-		    ip_stripoptions(am,	(struct	mbuf *)	0); /* get rid of anything we don't need */
+		    ip_stripoptions(am, (struct mbuf *)0);	/* get rid of anything we don't need */
 		    tu = (struct udphdr *)(((char *)ti) + 20);
 		}
 		/*
@@ -176,7 +180,7 @@ static void rxk_input(struct mbuf *am, struct ifnet *aif)
 		 * If not enough data to reflect UDP length, drop.
 		 */
 		tvu = (struct udpiphdr *)ti;
-		tlen = ntohs((u_short)tvu->ui_ulen);
+		tlen = ntohs((u_short) tvu->ui_ulen);
 		if ((int)ti->ip_len != tlen) {
 		    if (tlen > (int)ti->ip_len) {
 			m_free(am);
@@ -185,31 +189,31 @@ static void rxk_input(struct mbuf *am, struct ifnet *aif)
 		    m_adj(am, tlen - (int)ti->ip_len);
 		}
 		/* deliver packet to rx */
-		taddr.sin_family = AF_INET;	    /* compute source address */
+		taddr.sin_family = AF_INET;	/* compute source address */
 		taddr.sin_port = tu->uh_sport;
 		taddr.sin_addr.s_addr = ti->ip_src.s_addr;
 		/* handle the checksum.  Note that this code damages the actual ip
-		   header (replacing it with the virtual one, which is the same size),
-		   so we must ensure we get everything out we need, first */
-		if ( tu->uh_sum != 0) {
-			/* if the checksum is there, always check it. It's crazy not
-			 * to, unless you can really be sure that your
-			 * underlying network (and interfaces and drivers and
-			 * DMA hardware, etc!) is error-free. First, fill
-			 * in entire virtual ip header. */
-			tvu->ui_next = 0;
-			tvu->ui_prev = 0;
-			tvu->ui_x1 = 0;
-			tvu->ui_len = tvu->ui_ulen;
-			tlen = ntohs((unsigned short)(tvu->ui_ulen));
-                if ((!(am->m_flags & M_CKSUMMED)) &&
-                        in_cksum(am, sizeof(struct ip) + tlen)){
-			    /* checksum, including cksum field, doesn't come out 0, so
-			       this packet is bad */
-			    m_freem(am);
-			    return;
-			}
-		      }
+		 * header (replacing it with the virtual one, which is the same size),
+		 * so we must ensure we get everything out we need, first */
+		if (tu->uh_sum != 0) {
+		    /* if the checksum is there, always check it. It's crazy not
+		     * to, unless you can really be sure that your
+		     * underlying network (and interfaces and drivers and
+		     * DMA hardware, etc!) is error-free. First, fill
+		     * in entire virtual ip header. */
+		    tvu->ui_next = 0;
+		    tvu->ui_prev = 0;
+		    tvu->ui_x1 = 0;
+		    tvu->ui_len = tvu->ui_ulen;
+		    tlen = ntohs((unsigned short)(tvu->ui_ulen));
+		    if ((!(am->m_flags & M_CKSUMMED))
+			&& in_cksum(am, sizeof(struct ip) + tlen)) {
+			/* checksum, including cksum field, doesn't come out 0, so
+			 * this packet is bad */
+			m_freem(am);
+			return;
+		    }
+		}
 
 		/*
 		 * 28 is IP (20) + UDP (8) header.  ulen includes
@@ -218,23 +222,24 @@ static void rxk_input(struct mbuf *am, struct ifnet *aif)
 		 */
 		data_len = ntohs(tu->uh_ulen);
 		data_len -= 8;
-		if (!(*rxk_GetPacketProc)(&phandle, data_len)) {
-		  if (rx_mb_to_packet(am, m_freem, 28, data_len, phandle)) {
-		    /* XXX should just increment counter here.. */
-		    printf("rx: truncated UDP packet\n");
-		    rxi_FreePacket(phandle);
-		  }
-		  else 
-		    (*rxk_PacketArrivalProc)(phandle, &taddr,
-					     rxk_portRocks[i], data_len);
-		}else m_freem(am);
+		if (!(*rxk_GetPacketProc) (&phandle, data_len)) {
+		    if (rx_mb_to_packet(am, m_freem, 28, data_len, phandle)) {
+			/* XXX should just increment counter here.. */
+			printf("rx: truncated UDP packet\n");
+			rxi_FreePacket(phandle);
+		    } else
+			(*rxk_PacketArrivalProc) (phandle, &taddr,
+						  rxk_portRocks[i], data_len);
+		} else
+		    m_freem(am);
 		return;
-		}
 	    }
 	}
+    }
 
     /* if we get here, try to deliver packet to udp */
-    if (tproc = parent_proto.pr_input) (*tproc)(am, aif);
+    if (tproc = parent_proto.pr_input)
+	(*tproc) (am, aif);
     return;
 }
 
@@ -243,21 +248,26 @@ static void rxk_input(struct mbuf *am, struct ifnet *aif)
  * Called about 5 times per second (at unknown priority?).  Must go to
  * splnet or obtain global lock before touching anything significant.
  */
-static void rxk_fasttimo (void)
+static void
+rxk_fasttimo(void)
 {
-    int (*tproc)();
+    int (*tproc) ();
     struct clock temp;
 
     /* do rx fasttimo processing here */
     rxevent_RaiseEvents(&temp);
-    if (tproc = parent_proto.pr_fasttimo) (*tproc)();
+    if (tproc = parent_proto.pr_fasttimo)
+	(*tproc) ();
 }
 
 
 /* start intercepting basic calls */
-void rxk_init(void) {
+void
+rxk_init(void)
+{
     register struct protosw *tpro, *last;
-    if (rxk_initDone) return;
+    if (rxk_initDone)
+	return;
 
     last = inetdomain.dom_protoswNPROTOSW;
     for (tpro = inetdomain.dom_protosw; tpro < last; tpro++) {
@@ -286,94 +296,97 @@ static int numMyNetAddrs = 0;
  * we don't yet use them anyway. Fix this when rxi_InitPeerParams is changed
  * to find a true maximum.
  */
-static int rxi_MatchIfnet(struct hashbucket *h, caddr_t key, caddr_t arg1,
-	      caddr_t arg2)
+static int
+rxi_MatchIfnet(struct hashbucket *h, caddr_t key, caddr_t arg1, caddr_t arg2)
 {
-    afs_uint32 ppaddr = *(afs_uint32*)key;
-    int match_value = *(int*)arg1;
-    struct in_ifaddr *ifa = (struct in_ifaddr*)h;
+    afs_uint32 ppaddr = *(afs_uint32 *) key;
+    int match_value = *(int *)arg1;
+    struct in_ifaddr *ifa = (struct in_ifaddr *)h;
     struct sockaddr_in *sin;
 
     if ((ppaddr & ifa->ia_netmask) == ifa->ia_net) {
 	if ((ppaddr & ifa->ia_subnetmask) == ifa->ia_subnet) {
-	    sin=IA_SIN(ifa);
-	    if ( sin->sin_addr.s_addr == ppaddr) {   /* ie, ME!!!  */
+	    sin = IA_SIN(ifa);
+	    if (sin->sin_addr.s_addr == ppaddr) {	/* ie, ME!!!  */
 		match_value = 4;
-		*(struct in_ifaddr**)arg2 = ifa;
+		*(struct in_ifaddr **)arg2 = ifa;
 	    }
 	    if (match_value < 3) {
-		*(struct in_ifaddr**)arg2 = ifa;
+		*(struct in_ifaddr **)arg2 = ifa;
 		match_value = 3;
 	    }
-	}
-	else {
+	} else {
 	    if (match_value < 2) {
-		*(struct in_ifaddr**)arg2 = ifa;
+		*(struct in_ifaddr **)arg2 = ifa;
 		match_value = 2;
 	    }
 	}
     }
-    *(int*)arg1 = match_value;
+    *(int *)arg1 = match_value;
     return 0;
 }
 
-    
-struct ifnet * rxi_FindIfnet(addr, pifad) 
-     afs_uint32 addr;
-     struct in_ifaddr **pifad;
+
+struct ifnet *
+rxi_FindIfnet(afs_uint32 addr, afs_uint32 * maskp)
 {
-  afs_uint32 ppaddr;
-  int match_value = 0;
+    afs_uint32 ppaddr;
+    int match_value = 0;
+    struct in_ifaddr *ifad;
 
-  if (numMyNetAddrs == 0)
-    (void) rxi_GetIFInfo();
+    if (numMyNetAddrs == 0)
+	(void)rxi_GetIFInfo();
 
-  ppaddr = ntohl(addr);
-  *pifad = (struct in_ifaddr*)&hashinfo_inaddr;
+    ppaddr = ntohl(addr);
+    ifad = (struct in_ifaddr *)&hashinfo_inaddr;
 
-  (void) hash_enum(&hashinfo_inaddr, rxi_MatchIfnet, HTF_INET,
-		   (caddr_t)&ppaddr, (caddr_t)&match_value, (caddr_t)pifad);
-   
-  if (match_value)
-      return (*pifad)->ia_ifp;
-  else
-      return NULL;
+    (void)hash_enum(&hashinfo_inaddr, rxi_MatchIfnet, HTF_INET,
+		    (caddr_t) & ppaddr, (caddr_t) & match_value,
+		    (caddr_t) & ifad);
+
+    if (match_value) {
+	if (maskp)
+	    *maskp = ifad->ia_subnetmask;
+	return ifad->ia_ifp;
+    } else
+	return NULL;
 }
 
-static int rxi_EnumGetIfInfo(struct hashbucket *h, caddr_t key, caddr_t arg1,
+static int
+rxi_EnumGetIfInfo(struct hashbucket *h, caddr_t key, caddr_t arg1,
 		  caddr_t arg2)
 {
-    int different = *(int*)arg1;
-    int i = *(int*)arg2;
-    struct in_ifaddr *iap = (struct in_ifaddr*)h;
+    int different = *(int *)arg1;
+    int i = *(int *)arg2;
+    struct in_ifaddr *iap = (struct in_ifaddr *)h;
     struct ifnet *ifnp;
     afs_uint32 ifinaddr;
     afs_uint32 rxmtu;
 
-    if (i>=ADDRSPERSITE)
+    if (i >= ADDRSPERSITE)
 	return 0;
-    
+
     ifnp = iap->ia_ifp;
     rxmtu = (ifnp->if_mtu - RX_IPUDP_SIZE);
     ifinaddr = ntohl(iap->ia_addr.sin_addr.s_addr);
-    if (myNetAddrs[i] != ifinaddr) { 
+    if (myNetAddrs[i] != ifinaddr) {
 	myNetAddrs[i] = ifinaddr;
 	myNetMTUs[i] = rxmtu;
 	different++;
-	*(int*)arg1 = different;
+	*(int *)arg1 = different;
     }
     rxmtu = rxmtu * rxi_nRecvFrags + ((rxi_nRecvFrags - 1) * UDP_HDR_SIZE);
-    if ( ( ifinaddr != 0x7f000001 ) &&
-	(rxmtu > rx_maxReceiveSize) ) {
-	rx_maxReceiveSize = MIN( RX_MAX_PACKET_SIZE, rxmtu);
-	rx_maxReceiveSize = MIN( rx_maxReceiveSize, rx_maxReceiveSizeUser);
+    if ((ifinaddr != 0x7f000001) && (rxmtu > rx_maxReceiveSize)) {
+	rx_maxReceiveSize = MIN(RX_MAX_PACKET_SIZE, rxmtu);
+	rx_maxReceiveSize = MIN(rx_maxReceiveSize, rx_maxReceiveSizeUser);
     }
 
-    *(int*)arg2 = i + 1;
+    *(int *)arg2 = i + 1;
     return 0;
 }
 
-int rxi_GetIFInfo()
+int
+rxi_GetIFInfo()
 {
     int i = 0;
     int different = 0;
@@ -382,12 +395,12 @@ int rxi_GetIFInfo()
      * of addresses (if_addrlist). So it's more efficient to run the
      * in_ifaddr list and use the back pointers to the ifnet struct's.
      */
-    (void) hash_enum(&hashinfo_inaddr, rxi_EnumGetIfInfo, HTF_INET,
-		     NULL, (caddr_t)&different, (caddr_t)&i);
+    (void)hash_enum(&hashinfo_inaddr, rxi_EnumGetIfInfo, HTF_INET, NULL,
+		    (caddr_t) & different, (caddr_t) & i);
 
-    rx_maxJumboRecvSize = RX_HEADER_SIZE
-			  + rxi_nDgramPackets * RX_JUMBOBUFFERSIZE
-			  + (rxi_nDgramPackets-1) * RX_JUMBOHEADERSIZE;
+    rx_maxJumboRecvSize =
+	RX_HEADER_SIZE + rxi_nDgramPackets * RX_JUMBOBUFFERSIZE +
+	(rxi_nDgramPackets - 1) * RX_JUMBOHEADERSIZE;
     rx_maxJumboRecvSize = MAX(rx_maxJumboRecvSize, rx_maxReceiveSize);
 
     return different;
@@ -411,17 +424,17 @@ osi_NetSend(asocket, addr, dvec, nvec, asize, istack)
      int istack;
 {
     int code;
-    struct iovec tvecs[RX_MAXWVECS+1];
+    struct iovec tvecs[RX_MAXWVECS + 1];
     struct iovec *iovp;
     struct uio tuio;
     struct mbuf *to;
     int i;
     bhv_desc_t bhv;
 
-    if (nvec > RX_MAXWVECS+1) {
+    if (nvec > RX_MAXWVECS + 1) {
 	osi_Panic("osi_NetSend: %d: Too many iovecs.\n", nvec);
     }
-    memcpy((char*)tvecs, (char*)dvec, nvec * sizeof(struct iovec));
+    memcpy((char *)tvecs, (char *)dvec, nvec * sizeof(struct iovec));
 
     tuio.uio_iov = tvecs;
     tuio.uio_iovcnt = nvec;
@@ -432,15 +445,15 @@ osi_NetSend(asocket, addr, dvec, nvec, asize, istack)
     tuio.uio_pbuf = 0;
 
     tuio.uio_resid = 0;
-    for (i=0, iovp = tvecs; i<nvec; i++, iovp++)
+    for (i = 0, iovp = tvecs; i < nvec; i++, iovp++)
 	tuio.uio_resid += iovp->iov_len;
 
 
     to = m_get(M_WAIT, MT_SONAME);
     to->m_len = sizeof(struct sockaddr_in);
-    memcpy(mtod(to, caddr_t), (char*)addr, to->m_len);
+    memcpy(mtod(to, caddr_t), (char *)addr, to->m_len);
 
-    BHV_PDATA(&bhv) = (void*)asocket;
+    BHV_PDATA(&bhv) = (void *)asocket;
     code = sosend(&bhv, to, &tuio, 0, NULL);
 
     m_freem(to);
@@ -448,19 +461,24 @@ osi_NetSend(asocket, addr, dvec, nvec, asize, istack)
 }
 #else /* AFS_SGI65_ENV */
 
-int dummy_sblock(struct sockbuf *a, int b,  struct socket *c, int *d, int e)
+int
+dummy_sblock(struct sockbuf *a, int b, struct socket *c, int *d, int e)
 {
-    afs_warn("sblock was called before it was installed. Install proper afsd.\n");
-}
-void dummy_sbunlock(struct sockbuf *a, int b,  struct socket *c, int d)
-{
-    afs_warn("sbunlock was called before it was installed. Install proper afsd.\n");
+    afs_warn
+	("sblock was called before it was installed. Install proper afsd.\n");
 }
 
-int (*afs_sblockp)(struct sockbuf*, int, struct socket*, int*, int) =
-     dummy_sblock;
-void (*afs_sbunlockp)(struct sockbuf*, int, struct socket*, int) =
-     dummy_sbunlock;
+void
+dummy_sbunlock(struct sockbuf *a, int b, struct socket *c, int d)
+{
+    afs_warn
+	("sbunlock was called before it was installed. Install proper afsd.\n");
+}
+
+int (*afs_sblockp) (struct sockbuf *, int, struct socket *, int *, int) =
+    dummy_sblock;
+void (*afs_sbunlockp) (struct sockbuf *, int, struct socket *, int) =
+    dummy_sbunlock;
 #define AFS_SBUNLOCK(SB, EV, SO, O) (*afs_sbunlockp)(SB, EV, SO, O)
 
 /* osi_NetSend - send asize bytes at adata from asocket to host at addr.
@@ -478,7 +496,7 @@ void (*afs_sbunlockp)(struct sockbuf*, int, struct socket*, int) =
 /* XXX In the brave new world, steal the data bufs out of the rx_packet iovec,
  * and just queue those.  XXX
  */
-int 
+int
 osi_NetSend(asocket, addr, dvec, nvec, asize, istack)
      register struct socket *asocket;
      struct iovec *dvec;
@@ -495,12 +513,12 @@ osi_NetSend(asocket, addr, dvec, nvec, asize, istack)
     int len;
     char *tdata;
     caddr_t tpa;
-    int i,tl,rlen;
+    int i, tl, rlen;
 
     NETSPL_DECL(s1)
-    AFS_STATCNT(osi_NetSend);
+	AFS_STATCNT(osi_NetSend);
 
-    (*afs_sblockp)(&asocket->so_snd, NETEVENT_SODOWN, asocket, &s1, istack);
+    (*afs_sblockp) (&asocket->so_snd, NETEVENT_SODOWN, asocket, &s1, istack);
 
     s = splnet();
     mp = &top;
@@ -509,7 +527,8 @@ osi_NetSend(asocket, addr, dvec, nvec, asize, istack)
     tl = dvec[i].iov_len;
     while (1) {
 	if ((m = m_vget(M_DONTWAIT, MIN(asize, VCL_MAX), MT_DATA)) == NULL) {
-	    if (top) m_freem(top);
+	    if (top)
+		m_freem(top);
 	    splx(s);
 	    AFS_SBUNLOCK(&asocket->so_snd, NETEVENT_SODOWN, asocket, s1);
 	    return 1;
@@ -518,40 +537,41 @@ osi_NetSend(asocket, addr, dvec, nvec, asize, istack)
 	m->m_len = 0;
 	tpa = mtod(m, caddr_t);
 	while (len) {
-	  rlen = MIN(len, tl);
-	  memcpy(tpa, tdata, rlen);
-	  asize -= rlen;
-	  len -= rlen;
-	  tpa += rlen;
-	  m->m_len += rlen;
-	  tdata += rlen;
-	  tl -= rlen;
-	  if (tl <= 0) {
-	    i++;
-	    if (i > nvec) {
-	      /* shouldn't come here! */
-	      asize = 0;   /* so we make progress toward completion */
-	      break;
+	    rlen = MIN(len, tl);
+	    memcpy(tpa, tdata, rlen);
+	    asize -= rlen;
+	    len -= rlen;
+	    tpa += rlen;
+	    m->m_len += rlen;
+	    tdata += rlen;
+	    tl -= rlen;
+	    if (tl <= 0) {
+		i++;
+		if (i > nvec) {
+		    /* shouldn't come here! */
+		    asize = 0;	/* so we make progress toward completion */
+		    break;
+		}
+		tdata = dvec[i].iov_base;
+		tl = dvec[i].iov_len;
 	    }
-	    tdata = dvec[i].iov_base;
-	    tl = dvec[i].iov_len;
-	  }
 	}
 	*mp = m;
 	mp = &m->m_next;
 	if (asize <= 0)
-	  break;
+	    break;
     }
     tm = top;
 
-    tm->m_act = (struct mbuf *) 0;
+    tm->m_act = NULL;
 
     /* setup mbuf corresponding to destination address */
     um = m_get(M_DONTWAIT, MT_SONAME);
     if (!um) {
-	if (top) m_freem(top);	/* free mbuf chain */
+	if (top)
+	    m_freem(top);	/* free mbuf chain */
 	/* if this were vfs40, we'd do sbunlock(asocket, &asocket->so_snd), but
-	   we don't do the locking at all for vfs40 systems */
+	 * we don't do the locking at all for vfs40 systems */
 	splx(s);
 	AFS_SBUNLOCK(&asocket->so_snd, NETEVENT_SODOWN, asocket, s1);
 	return 1;
@@ -560,7 +580,7 @@ osi_NetSend(asocket, addr, dvec, nvec, asize, istack)
     um->m_len = sizeof(*addr);
     /* note that udp_usrreq frees funny mbuf.  We hold onto data, but mbuf
      * around it is gone.  we free address ourselves.  */
-    code = (*asocket->so_proto->pr_usrreq)(asocket, PRU_SEND, tm, um, 0);
+    code = (*asocket->so_proto->pr_usrreq) (asocket, PRU_SEND, tm, um, 0);
     splx(s);
     m_free(um);
     AFS_SBUNLOCK(&asocket->so_snd, NETEVENT_SODOWN, asocket, s1);
@@ -568,4 +588,3 @@ osi_NetSend(asocket, addr, dvec, nvec, asize, istack)
     return code;
 }
 #endif /* AFS_SGI65_ENV */
-

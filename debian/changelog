@@ -1,3 +1,99 @@
+openafs (1.3.80-1) UNRELEASED; urgency=low
+
+  *  New upstream version, Closes: #297781
+  * I think this works on sparc better and definitely works on 2.6.10, Closes: #283488
+  * Make thiscell a high debconf value, Closes: #302939
+  * New upstream version (1.3.79)
+        - Works with 2.6.10, Closes: #296835
+  * Use amd64 not x86_64 for sysname script, Closes: #296855
+  * Patches from kcr
+      - Loosen dependencies for client and modules
+      - Enable debugging
+      - Some callbacks later stuff and fix short bitfield
+      - Fix permissions on /etc/openafs/server-local, Closes: #271460
+  
+  * Versions 1.3.79 an newer work on amd64, Closes: #262382
+
+ -- Sam Hartman <hartmans@debian.org>  Mon,  4 Apr 2005 00:32:42 -0400
+
+openafs (1.3.77-1) unstable; urgency=low
+
+  * New upstream version
+  * Target for unstable not experimental
+  * New CellServDB
+  * OpenAFS seems not to have a changelog available, so stop shipping it.
+  * Build openafs.ko not libafs.ko so the right name appears in lsmod
+
+ -- Sam Hartman <hartmans@debian.org>  Sat,  8 Jan 2005 20:02:23 -0500
+
+openafs (1.3.74-1) experimental; urgency=low
+
+  * New upstream version
+
+ -- Sam Hartman <hartmans@mit.edu>  Mon, 15 Nov 2004 16:58:02 -0500
+
+openafs (1.3.73-1) experimental; urgency=low
+
+  * New upstream version
+    -  Works with 2.6.8 and 2.6.9, Closes: #277521
+  * Remove call to dh_suidregister
+  * Update sysname to prefer 2.4 on more arches for largefile issues
+  * Patch from pnelson@ANDREW.CMU.EDU to add x86_64 support to sysname scripts
+  * debian/sysname: Use installation architecture 
+
+ -- Sam Hartman <hartmans@debian.org>  Wed, 27 Oct 2004 20:42:12 -0400
+
+openafs (1.3.71-1) experimental; urgency=low
+
+  * New upstream version
+
+ -- Sam Hartman <hartmans@mit.edu>  Tue, 31 Aug 2004 09:45:59 -0400
+
+openafs (1.3.70-1) experimental; urgency=low
+
+  * New upstream version
+  * debian/kern-sysname: 2.6* not 2.6
+  * Enable supergroups and largefile-fileserver
+
+ -- Sam Hartman <hartmans@debian.org>  Sun, 15 Aug 2004 18:56:48 -0400
+
+openafs (1.3.65-1) experimental; urgency=low
+
+  * New upstream Version, Closes: #256580
+
+ -- Sam Hartman <hartmans@debian.org>  Mon, 28 Jun 2004 19:40:30 -0400
+
+openafs (1.3.64-2) experimental; urgency=low
+
+  * Allow loading of a .ko file not just .o
+
+ -- Sam Hartman <hartmans@debian.org>  Mon, 31 May 2004 13:46:05 -0400
+
+openafs (1.3.64-1) experimental; urgency=low
+
+  * New upstream version
+  * Add 2.6 to kern-sysname for i386
+  * Apply patch from
+    /afs/cs.cmu.edu/user/jhutz/junk/openafs-patches/openafs-build-on-linux26  which correctly generates 2.6 modules, Closes: #234284
+  * use make only_libafs not dest_only_libafs
+    - AS a result, build times are much faster, Closes: #144781
+  * Correct module build scripts to install module package from new location
+  * Fix afslocaldir to be /etc/openafs/server-local, Closes: #237154
+
+ -- Sam Hartman <hartmans@debian.org>  Sun, 30 May 2004 18:12:54 -0400
+
+openafs (1.2.12-1) unstable; urgency=medium
+
+  * New upstream version
+  * Medium urgency because this version fixes a significant server crash
+    bug.  Windows clients, particularly greater than version 1.3.70 tend
+    to crash openafs servers.
+  * Cause openafs-kpasswd to conflict  with kerberos4kth-clients, Closes:
+    #277844 
+  * Conflict between libopenafs-dev and arla-dev, Closes: #274788
+
+ -- Sam Hartman <hartmans@debian.org>  Fri, 22 Oct 2004 16:21:29 -0400
+
 openafs (1.2.11-3) unstable; urgency=high
 
   * Now that libopenafs-dev contains binaries, it should have shared
@@ -164,9 +260,6 @@ openafs (1.2.7-1) unstable; urgency=low
   * New upstream version
 
  -- Sam Hartman <hartmans@debian.org>  Thu, 26 Sep 2002 16:11:25 -0400
-
-New upstream version
- --
 
 openafs (1.2.6-1) unstable; urgency=low
 

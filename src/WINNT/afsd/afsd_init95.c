@@ -581,11 +581,11 @@ int afsd_InitCM(char **reasonP, struct cmd_syndesc *as, char *arock)
 	/* setup early variables */
 	/* These both used to be configurable. */
 	smb_UseV3 = 1;
-        buf_bufferSize = CM_CONFIGDEFAULT_BLOCKSIZE;
+        buf_blockSize = CM_CONFIGDEFAULT_BLOCKSIZE;
 
 	/* turn from 1024 byte units into memory blocks */
-        cacheBlocks = (cacheSize * 1024) / buf_bufferSize;
-        afs_diskCacheChunks = (diskCacheSize * 1024) / buf_bufferSize;
+        cacheBlocks = (cacheSize * 1024) / buf_blockSize;
+        afs_diskCacheChunks = (diskCacheSize * 1024) / buf_blockSize;
         /*printf("afs_diskCacheChunks=%d\n", afs_diskCacheChunks);*/
 
         /*

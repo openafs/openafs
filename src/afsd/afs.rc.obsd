@@ -1,0 +1,9 @@
+# install this file as /usr/vice/etc/rc.securelevel.afs
+# add the following line (without leading '# ') to /etc/rc.securelevel for OpenBSD
+# . /usr/vice/etc/rc.securelevel.afs
+
+rm -f /usr/vice/etc/openbsd_afs
+/sbin/modload -o /usr/vice/etc/openbsd_afs /usr/vice/etc/libafs.o 
+
+/usr/vice/etc/afsd -nosettime
+/usr/vice/bin/fs setcrypt on

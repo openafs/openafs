@@ -21,23 +21,24 @@
  * at the appropriate times to change the pointers to these servers.
  */
 typedef struct cm_server {
-	struct cm_server *allNextp;		/* locked by cm_serverLock */
-        struct sockaddr_in addr;		/* by mx */
-        int type;				/* by mx */
-	struct cm_conn *connsp;			/* locked by cm_connLock */
-        long flags;				/* by mx */
-        struct cm_cell *cellp;			/* cell containing this server */
-	int refCount;				/* locked by cm_serverLock */
-        osi_mutex_t mx;
-	unsigned short ipRank;			/* server priority */
+    struct cm_server *allNextp;		/* locked by cm_serverLock */
+    struct sockaddr_in addr;		/* by mx */
+    int type;				/* by mx */
+    struct cm_conn *connsp;			/* locked by cm_connLock */
+    long flags;				/* by mx */
+    struct cm_cell *cellp;			/* cell containing this server */
+    unsigned long refCount;				/* locked by cm_serverLock */
+    osi_mutex_t mx;
+    unsigned short ipRank;			/* server priority */
 } cm_server_t;
 
 enum repstate {not_busy, busy, offline};
 
 typedef struct cm_serverRef {
-	struct cm_serverRef *next;
-	struct cm_server *server;
-	enum repstate status;
+    struct cm_serverRef *next;      /* locked by cm_serverLock */
+    struct cm_server *server;       /* locked by cm_serverLock */
+    enum repstate status;           /* locked by cm_serverLock */
+    unsigned long refCount;                   /* locked by cm_serverLock */
 } cm_serverRef_t;
 
 /* types */
@@ -60,11 +61,6 @@ typedef struct cm_serverRef {
 /* the maximum number of network interfaces that this client has */ 
 
 #define CM_MAXINTERFACE_ADDR          16
-extern int cm_noIPAddr;		/* number of client network interfaces */
-extern int cm_IPAddr[CM_MAXINTERFACE_ADDR];    /* client's IP address */
-extern int cm_SubnetMask[CM_MAXINTERFACE_ADDR];/* client's subnet mask*/ 
-extern int cm_NetMtu[CM_MAXINTERFACE_ADDR];    /* client's MTU sizes */
-extern int cm_NetFlags[CM_MAXINTERFACE_ADDR];  /* network flags */
 
 extern cm_server_t *cm_NewServer(struct sockaddr_in *addrp, int type,
 	struct cm_cell *cellp);
@@ -73,7 +69,13 @@ extern cm_serverRef_t *cm_NewServerRef(struct cm_server *serverp);
 
 extern long cm_ChecksumServerList(cm_serverRef_t *serversp);
 
+extern void cm_GetServer(cm_server_t *);
+
+extern void cm_GetServerNoLock(cm_server_t *);
+
 extern void cm_PutServer(cm_server_t *);
+
+extern void cm_PutServerNoLock(cm_server_t *);
 
 extern cm_server_t *cm_FindServer(struct sockaddr_in *addrp, int type);
 
@@ -92,5 +94,9 @@ extern void cm_InsertServerList(cm_serverRef_t** list,cm_serverRef_t* element);
 extern long cm_ChangeRankServer(cm_serverRef_t** list, cm_server_t* server); 
 
 extern void cm_RandomizeServer(cm_serverRef_t** list); 
+
+extern void cm_FreeServer(cm_server_t* server);
+
+extern void cm_FreeServerList(cm_serverRef_t** list);
 
 #endif /*  __CM_SERVER_H_ENV__ */

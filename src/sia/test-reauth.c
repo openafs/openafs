@@ -12,7 +12,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/sia/test-reauth.c,v 1.1.1.4 2001/07/14 22:23:58 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/sia/test-reauth.c,v 1.5 2003/07/15 23:16:52 shadow Exp $");
 
 #include <afs/stds.h>
 #include <stdio.h>
@@ -34,11 +35,12 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/sia/test-reauth.c,v 1.1.1.4 2001/07/14 
 #include <siad.h>
 
 
-char *sia_code_string(int code)
+char *
+sia_code_string(int code)
 {
     static char err_string[64];
 
-    switch(code) {
+    switch (code) {
     case SIADSUCCESS:
 	return "SIADSUCCESS";
     case SIAFAIL:
@@ -46,7 +48,7 @@ char *sia_code_string(int code)
     case SIASTOP:
 	return "SIASTOP";
     default:
-	(void) sprintf(err_string, "Unknown error %d\n", code);
+	(void)sprintf(err_string, "Unknown error %d\n", code);
 	return err_string;
     }
 }
@@ -54,8 +56,8 @@ char *sia_code_string(int code)
 main(int ac, char **av)
 {
     char *username;
-    SIAENTITY *entity=NULL;
-    int (*sia_collect)() = sia_collect_trm;
+    SIAENTITY *entity = NULL;
+    int (*sia_collect) () = sia_collect_trm;
     int code;
 
 
@@ -74,14 +76,16 @@ main(int ac, char **av)
 
     code = sia_ses_reauthent(sia_collect, entity);
     if (code != SIASUCCESS) {
-	printf("sia_ses_reauthent failed with code %s\n", sia_code_string(code));
+	printf("sia_ses_reauthent failed with code %s\n",
+	       sia_code_string(code));
 	sia_ses_release(&entity);
 	exit(1);
     }
-    
+
     code = sia_ses_release(&entity);
     if (code != SIASUCCESS) {
-	printf("sia_ses_release failed with code %s\n", sia_code_string(code));
+	printf("sia_ses_release failed with code %s\n",
+	       sia_code_string(code));
 	exit(1);
     }
 
@@ -90,4 +94,3 @@ main(int ac, char **av)
     exit(0);
 
 }
-    

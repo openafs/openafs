@@ -1,5 +1,5 @@
 #!/bin/sh
-case `arch` in
+case `dpkg --print-installation-architecture` in
     alpha)
 	echo alpha_linux_22
 	;;
@@ -12,15 +12,18 @@ i[3456]86)
     parisc*)
 	echo parisc_linux24
 	;;
-    ppc)
-	echo ppc_linux22
+    powerpc)
+	echo ppc_linux24
 	;;
     sparc|sparc64)
-	echo sparc_linux22
+	echo sparc_linux24
 	;;
     s390)
-    echo s390_linux22
+    echo s390_linux24
     ;;
+    amd64)
+	echo amd64_linux24
+	;;
 	*)
 	echo ERROr:  sysname not yet known
 	exit 1

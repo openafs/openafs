@@ -1,9 +1,10 @@
 /* 
- * Copyright (C) 1998, 1989 Transarc Corporation - All rights reserved
- *
- * (C) COPYRIGHT IBM CORPORATION 1987, 1988
- * LICENSED MATERIALS - PROPERTY OF IBM
- *
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
  */
 
 /* Copyright (C) 1994 Cazamar Systems, Inc. */
@@ -34,7 +35,7 @@ typedef struct osi_sleepInfo {
 	unsigned short states;	/* states bits */
 	unsigned short idx;	/* sleep hash table we're in, if in hash */
         unsigned short waitFor;	/* what are we waiting for; used for bulk wakeups */
-	unsigned short refCount;/* reference count from FDs */
+	unsigned long refCount;/* reference count from FDs */
 } osi_sleepInfo_t;
 
 /* first guy is the most recently added process */

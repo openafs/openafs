@@ -1,9 +1,10 @@
 /* 
- * Copyright (C) 1998, 1989 Transarc Corporation - All rights reserved
- *
- * (C) COPYRIGHT IBM CORPORATION 1987, 1988
- * LICENSED MATERIALS - PROPERTY OF IBM
- *
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
  */
 
 /* Copyright (C) 1994 Cazamar Systems, Inc. */
@@ -13,7 +14,7 @@
 
 #include "osibasel.h"
 #if !defined(_MSC_VER) || (_MSC_VER < 1300)
-#include <largeint.h>
+#include "largeint.h"
 #endif
 #include "osiqueue.h"
 
@@ -55,8 +56,8 @@ typedef struct osi_qiStat {
  */
 typedef struct osi_mutexStat {
 	osi_queue_t q;		/* queue of all mutexes */
-	osi_turnstile_t turn;		/* the real turnstile */
-	short refCount;			/* so we can iterate cleanly */
+	osi_turnstile_t turn;  	/* the real turnstile */
+	unsigned long refCount;	/* so we can iterate cleanly */
 	short states;
 
 	/* track # of lock calls and blocks */
@@ -78,7 +79,7 @@ typedef struct osi_mutexStat {
 typedef struct osi_rwlockStat {
 	osi_queue_t q;			/* queue of all mutexes */
 	osi_turnstile_t turn;		/* the real turnstile */
-	short refCount;			/* so we can iterate cleanly */
+	unsigned long refCount;		/* so we can iterate cleanly */
 	short states;
 
 	/* statistics */

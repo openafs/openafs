@@ -1,6 +1,9 @@
 typedef union {
-	char *dynstr;
+
+char *dynstr;
+ 
 } YYSTYPE;
+
 #define	ERROR_TABLE	258
 #define	ERROR_CODE_ENTRY	259
 #define	END	260
@@ -9,3 +12,4 @@ typedef union {
 
 
 extern YYSTYPE yylval;
+

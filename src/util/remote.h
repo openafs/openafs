@@ -13,7 +13,7 @@
  */
 
 #define RT_VERSION	3	/* Version number, should be incremented
-				   before incompatible changes are released */
+				 * before incompatible changes are released */
 /*
  *      Version 1 - April 4/84.
  * 	Version 2 - May 4/84.
@@ -32,37 +32,37 @@ extern struct user u;
 #define RT_MAXDATASIZE		(MAXPATHLEN*2)
 
 /* The format of the message passed between Venus and the kernel */
-struct	intercept_message {
-    u_short	im_type;	/* Message type */
-    u_short     im_dsize;	/* Number of bytes in im_data */
-    int		im_client;	/* The process id of the client side of the
-    				   transaction */
-    short	im_uid;		/* The effective user id of the client */
-    short	im_gid;		/* The effective group id of the client */
-    int		im_seq;		/* The sequence number of this transaction.
-				   Never 0 */
-    afs_int32	im_wdfid[3];	/* Current directory on the remote file system
-    				   Vice II only. */
-    int		im_error;	/* u.u_error copied from this */
-    char	im_follow1;	/* 1=>follow last component of first pathname
-				   if symbolic link; 0=>don't */
-    char	im_follow2;	/* ditto for second pathname */
-    afs_int32	im_pag;		/* process authentication group */
+struct intercept_message {
+    u_short im_type;		/* Message type */
+    u_short im_dsize;		/* Number of bytes in im_data */
+    int im_client;		/* The process id of the client side of the
+				 * transaction */
+    short im_uid;		/* The effective user id of the client */
+    short im_gid;		/* The effective group id of the client */
+    int im_seq;			/* The sequence number of this transaction.
+				 * Never 0 */
+    afs_int32 im_wdfid[3];	/* Current directory on the remote file system
+				 * Vice II only. */
+    int im_error;		/* u.u_error copied from this */
+    char im_follow1;		/* 1=>follow last component of first pathname
+				 * if symbolic link; 0=>don't */
+    char im_follow2;		/* ditto for second pathname */
+    afs_int32 im_pag;		/* process authentication group */
     /* im_arg contains a representation of the arguments to the intercepted
-       system call, when transmitted from the kernel to Venus.
-       Returned values are passed back from Venus to the kernel the same way */
+     * system call, when transmitted from the kernel to Venus.
+     * Returned values are passed back from Venus to the kernel the same way */
     struct im_arg {
-	int	im_aval; 	/* Value of the argument
-				   OR index of argument in im_data */
-	int	im_asize;	/* If im_aval is the index of an argument in
-				   im_data, then this is its size in bytes.
-				   Otherwise this is 0. */
+	int im_aval;		/* Value of the argument
+				 * OR index of argument in im_data */
+	int im_asize;		/* If im_aval is the index of an argument in
+				 * im_data, then this is its size in bytes.
+				 * Otherwise this is 0. */
     } im_arg[RT_MAX_ARGS];
-    char	im_data[RT_MAXDATASIZE];
-				/* Variable length field containing string
-				   or structure arguments */
+    char im_data[RT_MAXDATASIZE];
+    /* Variable length field containing string
+     * or structure arguments */
     /* No fields should be added here, the record may be truncated on
-       transmission in either direction to an appropriate size */
+     * transmission in either direction to an appropriate size */
 };
 
 
@@ -82,8 +82,8 @@ struct	intercept_message {
 #endif
 
 /* Sleep priorities */
-#define RMT_NOINT_PRI	(PINOD+1)/* Sleep with signal handling enabled */
-#define RMT_INTOK_PRI	(PSLEP-1)/* Disallow aborts due to signal handling */
+#define RMT_NOINT_PRI	(PINOD+1)	/* Sleep with signal handling enabled */
+#define RMT_INTOK_PRI	(PSLEP-1)	/* Disallow aborts due to signal handling */
 
 /* Private data used by the remote intercept routines in the kernel */
 /* Note:  this was originally designed for only a single remote device.
@@ -91,18 +91,18 @@ struct	intercept_message {
    by turning this into an array (1 entry per device) and using a macro
    in the code to reference the appropriate entry. */
 struct remote {
-    int		rt_flags;	/* for flag values, see below */
-    int		rt_seq;		/* sequence number generator */
-    char	rt_open;	/* 1 if the device is open */  /* XXX UNALIGNED */
-    struct proc	*rt_selproc;	/* process waiting for select */
-    char	rt_attach;	/* wait channel for process waiting to attach
-    				   this structure */
-    char	rt_read;	/* wait channel for a venus waiting for an
-    				   intercept */
-    char	rt_reply;	/* wait channel for a client process waiting
-    				   for a reply */
-    struct	intercept_message rt_imr;	/* buffer for agent reads */
-    struct	intercept_message rt_imw;	/* buffer for agent writes */
+    int rt_flags;		/* for flag values, see below */
+    int rt_seq;			/* sequence number generator */
+    char rt_open;		/* 1 if the device is open *//* XXX UNALIGNED */
+    struct proc *rt_selproc;	/* process waiting for select */
+    char rt_attach;		/* wait channel for process waiting to attach
+				 * this structure */
+    char rt_read;		/* wait channel for a venus waiting for an
+				 * intercept */
+    char rt_reply;		/* wait channel for a client process waiting
+				 * for a reply */
+    struct intercept_message rt_imr;	/* buffer for agent reads */
+    struct intercept_message rt_imw;	/* buffer for agent writes */
 #include "rfs.h"
 } remote[NRFS];
 #undef NRFS
@@ -117,16 +117,16 @@ struct remote {
 #define RT_SENDING	4	/* sending the structure to the venus */
 #define RT_REPLY	8	/* reply from venus to client */
 #define RT_SIGNAL	16	/* signal occured, want to send message to
-				   venus at next opportunity */
+				 * venus at next opportunity */
 
 /* This bogus stuff is used for rename/link */
 struct Name {
-    int func;        /* This used to be a function in BSD 4.2... */
+    int func;			/* This used to be a function in BSD 4.2... */
     int follow;
     struct buf *buf;
     char *name;
     dev_t dev;
-    enum {havePath, isLocal, haveDev, isRemote} state;
+    enum { havePath, isLocal, haveDev, isRemote } state;
 };
 
 extern struct inode *RemoteNamei();
@@ -420,22 +420,22 @@ extern int RemoteMaybe();
  * from the open.
  */
 
-#define	RTE_BADARG 1    /* The size of a structure or string argument returned
-			   by the venus to the kernel is bogus.
-			   (the im_size field is not zero, or part of the
-			   argument is outside the message buffer, or the
-			   argument is too large) */
+#define	RTE_BADARG 1		/* The size of a structure or string argument returned
+				 * by the venus to the kernel is bogus.
+				 * (the im_size field is not zero, or part of the
+				 * argument is outside the message buffer, or the
+				 * argument is too large) */
 
-#define RTE_NOFILE 2	/* The file name (or inode, in VICE II) returned to
-			   the kernel, to open or exec in lieu of the original
-			   name supplied by the process cannot be opened or
-			   exec'd */
+#define RTE_NOFILE 2		/* The file name (or inode, in VICE II) returned to
+				 * the kernel, to open or exec in lieu of the original
+				 * name supplied by the process cannot be opened or
+				 * exec'd */
 
-#define RTE_NOTREG 3    /* The file (or inode, in VICE II) returned to the
-			   kernel, to open or exec in lieu of the original
-			   name supplied by the process, is not a IF_REG
-			   type file, i.e. it is a device, socket, or
-			   directory */
+#define RTE_NOTREG 3		/* The file (or inode, in VICE II) returned to the
+				 * kernel, to open or exec in lieu of the original
+				 * name supplied by the process, is not a IF_REG
+				 * type file, i.e. it is a device, socket, or
+				 * directory */
 
 
 /* The following error codes are set by Venus when a pathname argument supplied
@@ -445,7 +445,7 @@ extern int RemoteMaybe();
  * The kernel never passes this error on to the original issuer of the system
  * call.
  */
-#define EABSPATH1 126	/* The first pathname, or only pathname, of a system
-			   call resolved to an absolute pathname */
-#define EABSPATH2 127	/* The second pathname of the rename or link system
-			   call resolved to an absolute pathname */
+#define EABSPATH1 126		/* The first pathname, or only pathname, of a system
+				 * call resolved to an absolute pathname */
+#define EABSPATH2 127		/* The second pathname of the rename or link system
+				 * call resolved to an absolute pathname */

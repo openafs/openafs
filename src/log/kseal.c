@@ -10,13 +10,23 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/log/kseal.c,v 1.1.1.5 2001/09/11 14:33:31 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/log/kseal.c,v 1.7 2003/07/15 23:15:40 shadow Exp $");
 
 #include <sys/types.h>
 #include <netinet/in.h>
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>
 #endif
+
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+
 #include <afs/cellconfig.h>
 #include <afs/afsutil.h>
 #include <afs/auth.h>
@@ -28,8 +38,9 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/log/kseal.c,v 1.1.1.5 2001/09/11 14:33:
 #include "AFS_component_version_number.c"
 
 main(argc, argv)
-int argc;
-char **argv; {
+     int argc;
+     char **argv;
+{
     struct ktc_token token;
     struct ktc_principal sname;
     register afs_int32 code;
@@ -47,7 +58,7 @@ char **argv; {
      * generated which, in many cases, isn't too useful.
      */
     struct sigaction nsa;
-    
+
     sigemptyset(&nsa.sa_mask);
     nsa.sa_handler = SIG_DFL;
     nsa.sa_flags = SA_FULLDUMP;
@@ -61,7 +72,8 @@ char **argv; {
     /* lookup configuration info */
     dir = afsconf_Open(AFSDIR_CLIENT_ETC_DIRPATH);
     if (!dir) {
-	printf("kseal: can't open config dir (%s)\n", AFSDIR_CLIENT_ETC_DIRPATH);
+	printf("kseal: can't open config dir (%s)\n",
+	       AFSDIR_CLIENT_ETC_DIRPATH);
 	exit(1);
     }
     code = afsconf_GetLocalCell(dir, cellName, sizeof(cellName));
@@ -75,14 +87,16 @@ char **argv; {
 
     now = time(0);
     memcpy(session, &now, 4);	/* but this is only a test pgm */
-    memcpy(session+4, &now, 4);
-    code = tkt_MakeTicket(token.ticket, &token.ticketLen, skey, argv[1], "", cellName,
-	now-300, now+25*3600, session, /* host */ 0, "afs", "");
+    memcpy(session + 4, &now, 4);
+    code =
+	tkt_MakeTicket(token.ticket, &token.ticketLen, skey, argv[1], "",
+		       cellName, now - 300, now + 25 * 3600, session,
+		       /* host */ 0, "afs", "");
     if (code) {
 	printf("kseal: could not seal ticket, code %d!\n", code);
 	exit(1);
     }
-    
+
     /* now send the ticket to the ticket cache */
     strcpy(sname.name, "afs");
     strcpy(sname.instance, "");
@@ -91,9 +105,10 @@ char **argv; {
     token.endTime = 0x7fffffff;
     memcpy(&token.sessionKey, session, 8);
     token.kvno = 0;
-    code = ktc_SetToken (&sname, &token, (char *) 0, 0);
+    code = ktc_SetToken(&sname, &token, NULL, 0);
     if (code) {
-	printf("kseal: could not install newly-sealed ticket, code %d\n", code);
+	printf("kseal: could not install newly-sealed ticket, code %d\n",
+	       code);
 	exit(1);
     }
 

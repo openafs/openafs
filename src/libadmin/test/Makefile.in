@@ -5,28 +5,11 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-DEST=@DEST@
-TOP_INCDIR=@TOP_INCDIR@
-TOP_LIBDIR=@TOP_LIBDIR@
-prefix=@prefix@
-exec_prefix=@exec_prefix@
-bindir=@bindir@
-sbindir=@sbindir@
-libexecdir=@libexecdir@
-libdir=@libdir@
-includedir=@includedir@
-mandir=@mandir@
-afssrvbindir=@afssrvbindir@
-afssrvsbindir=@afssrvsbindir@
-afssrvlibexecdir=@afssrvlibexecdir@
-TOP_SRCDIR=@TOP_SRCDIR@
-SYS_NAME=@AFS_SYSNAME@
-
-include ../../config/Makefile.${SYS_NAME}
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
 
 CC = ${MT_CC}
-CFLAGS = ${OPTMZ} ${DBG} -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${MT_CFLAGS}
-
+CFLAGS = ${COMMON_CFLAGS} ${MT_CFLAGS}
 
 ########################################################################
 # build tests
@@ -40,7 +23,8 @@ AFSCPLIBS =\
 	$(TOP_LIBDIR)/libptsadmin.a \
 	$(TOP_LIBDIR)/libafsauthent.a \
 	$(TOP_LIBDIR)/libafsrpc.a \
-	$(TOP_LIBDIR)/libcmd.a  # static library
+	$(TOP_LIBDIR)/libcmd.a \
+	$(TOP_LIBDIR)/libafsutil.a
 
 AFSCPOBJS =\
 	bos.o \
@@ -52,7 +36,7 @@ AFSCPOBJS =\
 
 afscp: afscp.o $(AFSCPOBJS) $(AFSCPLIBS)
 	$(CC) $(CFLAGS) -o afscp afscp.o $(AFSCPOBJS) \
-	-L${TOP_LIBDIR} $(AFSCPLIBS) ${MTLIBS} $(XLIBS)
+	-L${TOP_LIBDIR} $(AFSCPLIBS) ${MT_LIBS} $(XLIBS)
 
 #######################################################################
 all test tests: afscp

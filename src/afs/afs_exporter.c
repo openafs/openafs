@@ -8,24 +8,25 @@
  */
 
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_exporter.c,v 1.1.1.5 2001/09/11 14:24:40 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/afs/afs_exporter.c,v 1.8 2003/07/15 23:14:12 shadow Exp $");
 
-#include "../afs/sysincludes.h"	/* Standard vendor system headers */
-#include "../afs/afsincludes.h"	/* Afs-based standard headers */
-#include "../afs/afs_stats.h"   /* statistics gathering code */
+#include "afs/sysincludes.h"	/* Standard vendor system headers */
+#include "afsincludes.h"	/* Afs-based standard headers */
+#include "afs/afs_stats.h"	/* statistics gathering code */
 
-struct afs_exporter	*root_exported=0;   /* Head of "exporters" link list */
-afs_lock_t		afs_xexp;
+struct afs_exporter *root_exported = 0;	/* Head of "exporters" link list */
+afs_lock_t afs_xexp;
 
 
 /* Add a new "afs exporter" entry to the table of exporters. The default initial values of the entry are passed in as parameters. */
 static afs_int32 init_xexported = 0;
-struct afs_exporter *exporter_add(size, ops, state, type, data)
-afs_int32 size, state, type;
-struct exporterops *ops;
-char *data;
+
+struct afs_exporter *
+exporter_add(afs_int32 size, struct exporterops *ops, afs_int32 state,
+	     afs_int32 type, char *data)
 {
     struct afs_exporter *ex, *op;
     afs_int32 length;
@@ -36,14 +37,14 @@ char *data;
 	LOCK_INIT(&afs_xexp, "afs_xexp");
     }
     length = (size ? size : sizeof(struct afs_exporter));
-    ex = (struct afs_exporter *) afs_osi_Alloc(length);
+    ex = (struct afs_exporter *)afs_osi_Alloc(length);
     memset((char *)ex, 0, length);
-    MObtainWriteLock(&afs_xexp,308);
+    MObtainWriteLock(&afs_xexp, 308);
     for (op = root_exported; op; op = op->exp_next) {
 	if (!op->exp_next)
 	    break;
     }
-    if (op) 
+    if (op)
 	op->exp_next = ex;
     else
 	root_exported = ex;
@@ -58,8 +59,8 @@ char *data;
 
 
 /* Returns the "afs exporter" structure of type, "type". NULL is returned if not found */
-struct afs_exporter *exporter_find(type)
-int type;
+struct afs_exporter *
+exporter_find(int type)
 {
     struct afs_exporter *op;
 
@@ -76,7 +77,8 @@ int type;
 }
 
 
-shutdown_exporter() 
+void
+shutdown_exporter(void)
 {
     struct afs_exporter *ex, *op;
 

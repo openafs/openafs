@@ -21,17 +21,17 @@
 
 #include <sys/lock.h>
 #include <sys/time.h>
-/* #include <kern/sched_prim.h> */
-/* #include <sys/unix_defs.h> */
+#if defined(AFS_FBSD50_ENV)
+#include <sys/mutex.h>
+#endif
 
-#define getpid()		curproc
 extern struct simplelock afs_rxglobal_lock;
 
 /* 
  * Time related macros
  */
-#define osi_Time() time_second
-#define	afs_hz	    hz
+#define osi_Time()	time_second
+#define	afs_hz		hz
 
 #define PAGESIZE 8192
 
@@ -39,19 +39,57 @@ extern struct simplelock afs_rxglobal_lock;
 #define	AFS_PROC	struct proc
 
 #define afs_bufferpages bufpages
+#ifndef iodone
+#define iodone biodone
+#endif
 
-#define osi_vnhold(avc,r) do { VN_HOLD((struct vnode *)(avc)); } while (0)
+#define osi_vnhold(avc,r)	vref(AFSTOV(avc))
+#undef vSetVfsp
+#define vSetVfsp(vc, vfsp)	AFSTOV(vc)->v_mount = (vfsp)
+#undef vSetType
+#define vSetType(vc, type)	AFSTOV(vc)->v_type = (type)
+#undef vType
+#define	vType(vc)		AFSTOV(vc)->v_type
 
-#define	gop_rdwr(rw,gp,base,len,offset,segflg,unit,cred,aresid) \
-  vn_rdwr((rw),(gp),(base),(len),(offset),(segflg),(unit),(cred),(aresid), curproc)
 #undef gop_lookupname
 #define gop_lookupname osi_lookupname
 
 #undef afs_suser
 
+#define afs_strcat(s1, s2)	strcat((s1), (s2))
+
 #ifdef KERNEL
-extern struct proc * afs_global_owner;
+
+#undef afs_osi_Alloc_NoSleep
+#define afs_osi_Alloc_NoSleep(size) osi_fbsd_alloc((size), 0)
+
+#define VN_RELE(vp)		vrele(vp)
+#define VN_HOLD(vp)		VREF(vp)
+
+#if defined(AFS_FBSD50_ENV)
+#define VT_AFS		"afs"
+#define VROOT		VV_ROOT
+#define v_flag		v_vflag
+#define osi_curcred()	(curthread->td_ucred)
+#define afs_suser(x)	(!suser(curthread))
+#define simple_lock(x)	mtx_lock(x)
+#define simple_unlock(x) mtx_unlock(x)
+#define        gop_rdwr(rw,gp,base,len,offset,segflg,unit,cred,aresid) \
+  vn_rdwr((rw),(gp),(base),(len),(offset),(segflg),(unit),(cred),(cred),(aresid), curthread)
+extern struct mtx afs_global_mtx;
+#define AFS_GLOCK() mtx_lock(&afs_global_mtx)
+#define AFS_GUNLOCK() mtx_unlock(&afs_global_mtx)
+#define ISAFS_GLOCK() (mtx_owned(&afs_global_mtx))
+
+#else /* FBSD50 */
 extern struct lock afs_global_lock;
+
+#define osi_curcred()	(curproc->p_cred->pc_ucred)
+#define afs_suser(x)	(!suser(curproc))
+#define getpid()	curproc
+#define        gop_rdwr(rw,gp,base,len,offset,segflg,unit,cred,aresid) \
+  vn_rdwr((rw),(gp),(base),(len),(offset),(segflg),(unit),(cred),(aresid), curproc)
+extern struct proc *afs_global_owner;
 #define AFS_GLOCK() \
     do { \
         osi_Assert(curproc); \
@@ -67,6 +105,8 @@ extern struct lock afs_global_lock;
         lockmgr(&afs_global_lock, LK_RELEASE, 0, curproc); \
     } while(0)
 #define ISAFS_GLOCK() (afs_global_owner == curproc && curproc)
+#endif /* FBSD50 */
+
 #define AFS_RXGLOCK()
 #define AFS_RXGUNLOCK()
 #define ISAFS_RXGLOCK() 1

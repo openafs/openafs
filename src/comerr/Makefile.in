@@ -4,42 +4,18 @@
 # Copyright 1987, 1989 MIT Student Information Processing Board
 # For copyright info, see mit-sipb-cr.h.
 
-DEST=@DEST@
-TOP_INCDIR=@TOP_INCDIR@
-TOP_LIBDIR=@TOP_LIBDIR@
-prefix=@prefix@
-exec_prefix=@exec_prefix@
-bindir=@bindir@
-sbindir=@sbindir@
-libexecdir=@libexecdir@
-libdir=@libdir@
-includedir=@includedir@
-mandir=@mandir@
-afssrvbindir=@afssrvbindir@
-afssrvsbindir=@afssrvsbindir@
-afssrvlibexecdir=@afssrvlibexecdir@
-COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
-RXGEN=${TOP_SRCDIR}/rxgen/rxgen
-TOP_SRCDIR=@TOP_SRCDIR@
-SYS_NAME=@AFS_SYSNAME@
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
 
-SHELL = /bin/sh
-
-include ../config/Makefile.${SYS_NAME}
-
-UKERNELDIR=../libuafs
-
-CFLAGS=${OPTMZ} -I${TOP_INCDIR} -I${TOP_SRCDIR}/config ${XCFLAGS}
-
-all: ukinstall compile_et ${TOP_INCDIR}/afs/com_err.h ${TOP_INCDIR}/afs/error_table.h ${TOP_INCDIR}/afs/mit-sipb-cr.h ${TOP_LIBDIR}/libcom_err.a
+all: compile_et ${TOP_INCDIR}/afs/com_err.h ${TOP_INCDIR}/afs/error_table.h ${TOP_INCDIR}/afs/mit-sipb-cr.h ${TOP_LIBDIR}/libcom_err.a
 
 et_lex.lex.c: et_lex.lex.l
 	$(RM) -f et_lex.lex.c
-	$(LEX) -t et_lex.lex.l > et_lex.lex.c
+	$(LEX) -t $(srcdir)/et_lex.lex.l > et_lex.lex.c
 
 compile_et:	compile_et.o error_table.o
 	case $(SYS_NAME) in \
-	*_linux* ) \
+	*_linux* | *_umlinux* ) \
 	${CC} ${CFLAGS} -o compile_et compile_et.o error_table.o -L${TOP_LIBDIR} -lafsutil;; \
 	* ) \
 	${CC} ${CFLAGS} -o compile_et compile_et.o error_table.o -L${TOP_LIBDIR} -lafsutil -ll;; \
@@ -63,41 +39,7 @@ libcom_err.a: error_msg.o et_name.o com_err.o AFS_component_version_number.o $(P
 #
 # Installation targets
 #
-ukinstall: \
-	${UKERNELDIR}/afs \
-	${UKERNELDIR}/afs/com_err.c \
-	${UKERNELDIR}/afs/com_err.h \
-	${UKERNELDIR}/afs/error_msg.c \
-	${UKERNELDIR}/afs/error_table.h \
-	${UKERNELDIR}/afs/mit-sipb-cr.h \
-	${UKERNELDIR}/afs/internal.h \
-	${UKERNELDIR}/afs/et_name.c
-
 install:  ${DESTDIR}${bindir}/compile_et ${DESTDIR}${includedir}/afs/com_err.h ${DESTDIR}${includedir}/afs/error_table.h ${DESTDIR}${includedir}/afs/mit-sipb-cr.h ${DESTDIR}${libdir}/afs/libcom_err.a
-
-${UKERNELDIR}/afs:
-	mkdir -p $@
-
-${UKERNELDIR}/afs/com_err.c: com_err.c
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afs/com_err.h: com_err.h
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afs/error_msg.c: error_msg.c
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afs/error_table.h: error_table.h
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afs/mit-sipb-cr.h: mit-sipb-cr.h
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afs/internal.h: internal.h
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afs/et_name.c: et_name.c
-	${INSTALL} $? $@
 
 ${DEST}/bin/compile_et: compile_et
 	${INSTALL} $? $@

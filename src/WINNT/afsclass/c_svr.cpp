@@ -89,6 +89,7 @@ SERVER::SERVER (LPCELL lpCellParent, LPTSTR pszName)
    m_fDelete = FALSE;
    m_lastStatus = 0;
 
+   m_fVLDBOutOfDate = FALSE; /* FIXME: added because it was missing */
    m_fStatusOutOfDate = TRUE;
    memset (&m_ss, 0x00, sizeof(SERVERSTATUS));
 }

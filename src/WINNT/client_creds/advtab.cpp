@@ -10,10 +10,14 @@
 extern "C" {
 #include <afs/param.h>
 #include <afs/stds.h>
+#include <afs/afskfw.h>
 }
+#include <WINNT\afsreg.h>
 
 #include "afscreds.h"
-
+#ifdef USE_KFW
+#include "afskrb5.h"
+#endif
 
 /*
  * PROTOTYPES _________________________________________________________________
@@ -177,44 +181,73 @@ void Advanced_OnChangeService (HWND hDlg, WORD wCmd)
 {
    BOOL fSuccess = FALSE;
    ULONG error = 0;
-
-   SC_HANDLE hManager;
-   if ((hManager = OpenSCManager (NULL, NULL, SC_MANAGER_ALL_ACCESS)) != NULL)
-      {
-      SC_HANDLE hService;
-      if ((hService = OpenService (hManager, TEXT("TransarcAFSDaemon"), SERVICE_ALL_ACCESS)) != NULL)
-         {
-         switch (wCmd)
+   SC_HANDLE hManager, hService;
+   
+    switch (wCmd)
+    {
+    case IDC_SERVICE_AUTO:
+        DWORD StartType;
+        if ((hManager = OpenSCManager (NULL, NULL, SC_MANAGER_CONNECT |
+                                        SC_MANAGER_ENUMERATE_SERVICE |
+                                        SC_MANAGER_QUERY_LOCK_STATUS)) != NULL)
+        {
+            if ((hService = OpenService (hManager, TEXT("TransarcAFSDaemon"), 
+                                         SERVICE_CHANGE_CONFIG | SERVICE_QUERY_CONFIG | 
+                                         SERVICE_QUERY_STATUS)) != NULL)
             {
-            case IDC_SERVICE_AUTO:
-               DWORD StartType;
-               StartType = (IsDlgButtonChecked (hDlg, wCmd)) ? SERVICE_AUTO_START : SERVICE_DEMAND_START;
-
-               if (ChangeServiceConfig (hService, SERVICE_NO_CHANGE, StartType, SERVICE_NO_CHANGE, 0, 0, 0, 0, 0, 0, 0))
-                  fSuccess = TRUE;
-               break;
-
-            case IDC_SERVICE_START:
-               if (StartService (hService, 0, 0))
-			   {
-				  TestAndDoMapShare(SERVICE_START_PENDING);
-                  fSuccess = TRUE;
-			   }
-               break;
-
-            case IDC_SERVICE_STOP:
-               SERVICE_STATUS Status;
-			   TestAndDoUnMapShare();
-               ControlService (hService, SERVICE_CONTROL_STOP, &Status);
-               fSuccess = TRUE;
-               break;
+                StartType = (IsDlgButtonChecked (hDlg, wCmd)) ? SERVICE_AUTO_START : SERVICE_DEMAND_START;
+                if (ChangeServiceConfig (hService, SERVICE_NO_CHANGE, StartType, 
+                                         SERVICE_NO_CHANGE, 0, 0, 0, 0, 0, 0, 0))
+                    fSuccess = TRUE;
+                CloseServiceHandle (hService);
             }
+            CloseServiceHandle (hManager);
+        }
+        break;
 
-         CloseServiceHandle (hService);
-         }
+    case IDC_SERVICE_START:
+        if ((hManager = OpenSCManager (NULL, NULL, SC_MANAGER_CONNECT |
+                                        SC_MANAGER_ENUMERATE_SERVICE |
+                                        SC_MANAGER_QUERY_LOCK_STATUS )) != NULL)
+        {
+            if ((hService = OpenService (hManager, TEXT("TransarcAFSDaemon"), 
+                                         SERVICE_QUERY_STATUS | SERVICE_START)) != NULL)
+            {
+                if (StartService (hService, 0, 0))
+                {
+                    TestAndDoMapShare(SERVICE_START_PENDING);
+                    if ( KFW_is_available() && KFW_AFS_wait_for_service_start() ) {
+#ifdef USE_MS2MIT
+                        KFW_import_windows_lsa();
+#endif /* USE_MS2MIT */
+                        KFW_AFS_renew_tokens_for_all_cells();
+                    }
+                    fSuccess = TRUE;
+                }
+                CloseServiceHandle (hService);
+            }
+            CloseServiceHandle (hManager);
+        }
+        break;
 
-      CloseServiceHandle (hManager);
-      }
+    case IDC_SERVICE_STOP:
+        if ((hManager = OpenSCManager (NULL, NULL, SC_MANAGER_CONNECT |
+                                        SC_MANAGER_ENUMERATE_SERVICE |
+                                        SC_MANAGER_QUERY_LOCK_STATUS )) != NULL)
+        {            
+            if ((hService = OpenService (hManager, TEXT("TransarcAFSDaemon"), 
+                                         SERVICE_QUERY_STATUS | SERVICE_STOP)) != NULL)
+            {
+                SERVICE_STATUS Status;
+                TestAndDoUnMapShare();
+                ControlService (hService, SERVICE_CONTROL_STOP, &Status);
+                fSuccess = TRUE;
+            }
+            CloseServiceHandle (hService);
+        }
+        CloseServiceHandle (hManager);
+        break;
+    }
 
    if (fSuccess)
       {
@@ -222,6 +255,10 @@ void Advanced_OnChangeService (HWND hDlg, WORD wCmd)
          SetWindowLong (hDlg, DWL_USER, TRUE);
       Advanced_OnServiceTimer (hDlg);
       Advanced_StartTimer (hDlg);
+#ifdef USE_KFW
+      if ( wCmd == IDC_SERVICE_START && KRB5_is_available() && KRB5_wait_for_service_start() )
+          KRB5_AFS_renew_tokens_for_all_cells();
+#endif /* USE_KFW */
       }
    else
       {
@@ -258,7 +295,7 @@ void Advanced_OnStartup (HWND hDlg)
    g.fStartup = IsDlgButtonChecked (hDlg, IDC_STARTUP);
 
    HKEY hk;
-   if (RegCreateKey (HKEY_LOCAL_MACHINE, TEXT("System\\CurrentControlSet\\Services\\TransarcAFSDaemon\\Parameters"), &hk) == 0)
+   if (RegCreateKey (HKEY_LOCAL_MACHINE, TEXT(AFSREG_CLT_SVC_PARAM_SUBKEY), &hk) == 0)
       {
       DWORD dwSize = sizeof(g.fStartup);
       DWORD dwType = REG_DWORD;

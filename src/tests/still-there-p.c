@@ -57,13 +57,13 @@ main(int argc, char **argv)
     char otherbuf[TEST_BUFFER_SZ];
     char buf[TEST_BUFFER_SZ];
     int fd;
-	
 
-    fd = open (file, O_RDWR|O_TRUNC|O_CREAT, 0644);
+
+    fd = open(file, O_RDWR | O_TRUNC | O_CREAT, 0644);
     if (fd < 0)
 	err(1, "open(%s)", file);
 
-    if (write (fd, buf, sizeof(buf)) != sizeof(buf))
+    if (write(fd, buf, sizeof(buf)) != sizeof(buf))
 	errx(1, "write");
 
     while (1) {
@@ -76,12 +76,12 @@ main(int argc, char **argv)
 	    if (fstat(fd, &sb) < 0)
 		err(1, "fstat");
 	    printf("size: %d\n", (int)sb.st_size);
-	    printf ("lseek(SEEK_CUR): %d\n", (int)lseek(fd, 0, SEEK_CUR));
+	    printf("lseek(SEEK_CUR): %d\n", (int)lseek(fd, 0, SEEK_CUR));
 	    errx(1, "read");
 	}
 
 	if (memcmp(buf, otherbuf, sizeof(buf)) != 0)
-	    errx (1, "buf != otherbuf");
+	    errx(1, "buf != otherbuf");
     }
     close(fd);
 

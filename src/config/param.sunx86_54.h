@@ -1,3 +1,6 @@
+#ifndef UKERNEL
+/* This section for kernel libafs compiles only */
+
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
@@ -24,6 +27,8 @@
 #define	AFS_SUN53_ENV		1
 #define	AFS_SUN54_ENV		1
 #define	AFS_X86_ENV		1
+
+#define AFS_HAVE_FLOCK_SYSID    1
 
 #include <afs/afs_sysnames.h>
 
@@ -65,7 +70,7 @@
 #define	AFS_KFREE	kmem_free
 #define	VATTR_NULL	vattr_null
 #endif /* KERNEL */
-#define	AFS_DIRENT	
+#define	AFS_DIRENT
 #ifndef CMSERVERPREF
 #define CMSERVERPREF
 #endif
@@ -73,3 +78,10 @@
 
 
 #endif /* AFS_PARAM_H */
+
+#else /* !defined(UKERNEL) */
+
+/* This section for user space compiles only */
+
+
+#endif /* !defined(UKERNEL) */

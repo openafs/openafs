@@ -18,7 +18,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/inetd/getenv.c,v 1.1.1.3 2001/07/14 22:22:06 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/inetd/getenv.c,v 1.4 2003/07/15 23:15:14 shadow Exp $");
 
 #include <stdio.h>
 
@@ -33,19 +34,19 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/inetd/getenv.c,v 1.1.1.3 2001/07/14 22:
  */
 char *
 _findenv(name, offset)
-	register char *name;
-	int *offset;
+     register char *name;
+     int *offset;
 {
-	extern char **environ;
-	register int len;
-	register char **P, *C;
+    extern char **environ;
+    register int len;
+    register char **P, *C;
 
-	for (C = name, len = 0; *C && *C != '='; ++C, ++len);
-	for (P = environ; *P; ++P)
-		if (!strncmp(*P, name, len))
-			if (*(C = *P + len) == '=') {
-				*offset = P - environ;
-				return(++C);
-			}
-	return(NULL);
+    for (C = name, len = 0; *C && *C != '='; ++C, ++len);
+    for (P = environ; *P; ++P)
+	if (!strncmp(*P, name, len))
+	    if (*(C = *P + len) == '=') {
+		*offset = P - environ;
+		return (++C);
+	    }
+    return (NULL);
 }

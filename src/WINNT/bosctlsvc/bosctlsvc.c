@@ -30,7 +30,7 @@
 #include <afs/procmgmt.h>
 #include <afs/dirpath.h>
 #include <afs/bnode.h>
-
+#include <afs/afsicf.h>
 
 /* Define globals */
 
@@ -233,14 +233,14 @@ BosCtlMain(DWORD argc, LPTSTR *argv)
     if ((bosCtlEvent[BOS_STOP_EVENT] = CreateEvent(NULL,
 						   FALSE /* manual reset */,
 						   FALSE /* initial state */,
-						   NULL)) == NULL) {
+						   TEXT("BosCtlSvc Stop Event"))) == NULL) {
 	status = GetLastError();
     }
 
     if ((bosCtlEvent[BOS_EXIT_EVENT] = CreateEvent(NULL,
 						   FALSE /* manual reset */,
 						   FALSE /* initial state */,
-						   NULL)) == NULL) {
+						   TEXT("BosCtlSvc Exit Event"))) == NULL) {
 	status = GetLastError();
     }
 
@@ -272,6 +272,9 @@ BosCtlMain(DWORD argc, LPTSTR *argv)
 	(void) BosCtlStatusUpdate(SERVICE_STOPPED, status, TRUE);
 	return;
     }
+
+    /* For XP SP2 and above, open required ports */
+    icf_CheckAndAddAFSPorts(AFS_PORTSET_SERVER);
 
     /* Initialize the dirpath package so can access local bosserver binary */
     if (!(initAFSDirPath() & AFSDIR_SERVER_PATHS_OK)) {
@@ -452,7 +455,7 @@ BosserverRun(DWORD argc,
     char **spawn_argv;
 
     /* Display bosserver startup (legal) message; first start only */
-    BosserverStartupMsgDisplay();
+    /* BosserverStartupMsgDisplay(); */
 
     /* Set env variable forcing process mgmt lib to spawn processes detached */
     (void)putenv(PMGT_SPAWN_DETACHED_ENV_NAME "=1");

@@ -14,7 +14,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/cfg/cfghost.c,v 1.1.1.4 2001/07/14 22:22:27 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/libadmin/cfg/cfghost.c,v 1.6 2004/04/02 06:54:05 jaltman Exp $");
 
 #include <afs/stds.h>
 
@@ -63,10 +64,10 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/cfg/cfghost.c,v 1.1.1.4 2001/0
 /* Local declarations and definitions */
 
 static int
-KasKeyIsZero(kas_encryptionKey_t *kasKey);
+  KasKeyIsZero(kas_encryptionKey_t * kasKey);
 
 static int
-KasKeyEmbeddedInString(const char *keyString, kas_encryptionKey_t *kasKey);
+  KasKeyEmbeddedInString(const char *keyString, kas_encryptionKey_t * kasKey);
 
 
 
@@ -89,11 +90,11 @@ KasKeyEmbeddedInString(const char *keyString, kas_encryptionKey_t *kasKey);
  *     internal consistency of configuration files may not be verified.
  */
 int ADMINAPI
-cfg_HostQueryStatus(const char *hostName,    /* name of host */
-		    afs_status_p configStP,  /* server config status */
-		    char **cellNameP,        /* server's cell */
-		    afs_status_p st)         /* completion status */
-{
+cfg_HostQueryStatus(const char *hostName,	/* name of host */
+		    afs_status_p configStP,	/* server config status */
+		    char **cellNameP,	/* server's cell */
+		    afs_status_p st)
+{				/* completion status */
     int rc = 1;
     afs_status_t tst2, tst = 0;
     afs_status_t serverSt = 0;
@@ -139,7 +140,7 @@ cfg_HostQueryStatus(const char *hostName,    /* name of host */
 	    if ((fd = open(cfgfile[i], O_RDONLY)) < 0) {
 		break;
 	    }
-	    (void) close(fd);
+	    (void)close(fd);
 	}
 
 	if (i < 4) {
@@ -165,16 +166,14 @@ cfg_HostQueryStatus(const char *hostName,    /* name of host */
 	    if (confdir->cellName == NULL || *confdir->cellName == '\0') {
 		/* no cell set for server */
 		serverSt = ADMCFGSERVERNOTINCELL;
-	    } else if (confdir->keystr == NULL ||
-		       confdir->keystr->nkeys == 0) {
+	    } else if (confdir->keystr == NULL || confdir->keystr->nkeys == 0) {
 		/* no server keys */
 		serverSt = ADMCFGSERVERNOKEYS;
 	    } else {
-		for (cellentry = confdir->entries;
-		     cellentry != NULL;
+		for (cellentry = confdir->entries; cellentry != NULL;
 		     cellentry = cellentry->next) {
-		    if (!strcasecmp(confdir->cellName,
-				    cellentry->cellInfo.name)) {
+		    if (!strcasecmp
+			(confdir->cellName, cellentry->cellInfo.name)) {
 			break;
 		    }
 		}
@@ -189,7 +188,7 @@ cfg_HostQueryStatus(const char *hostName,    /* name of host */
 	    if (tst == 0 && serverSt == 0) {
 		/* everything looks good; malloc cell name buffer to return */
 		serverCellName =
-		    (char *) malloc(strlen(cellentry->cellInfo.name) + 1);
+		    (char *)malloc(strlen(cellentry->cellInfo.name) + 1);
 		if (serverCellName == NULL) {
 		    tst = ADMNOMEM;
 		} else {
@@ -230,11 +229,11 @@ cfg_HostQueryStatus(const char *hostName,    /* name of host */
  * cfg_HostOpen() -- Obtain host configuration handle.
  */
 int ADMINAPI
-cfg_HostOpen(void *cellHandle,       /* cell handle */
-	     const char *hostName,   /* name of host to configure */
-	     void **hostHandleP,     /* host config handle */
-	     afs_status_p st)        /* completion status */
-{
+cfg_HostOpen(void *cellHandle,	/* cell handle */
+	     const char *hostName,	/* name of host to configure */
+	     void **hostHandleP,	/* host config handle */
+	     afs_status_p st)
+{				/* completion status */
     int rc = 1;
     afs_status_t tst2, tst = 0;
     cfg_host_p cfg_host;
@@ -271,10 +270,10 @@ cfg_HostOpen(void *cellHandle,       /* cell handle */
     if (tst == 0) {
 	char *localHostName;
 
-	if ((cfg_host = (cfg_host_p)malloc(sizeof(cfg_host_t))) == NULL) {
+	if ((cfg_host = (cfg_host_p) malloc(sizeof(cfg_host_t))) == NULL) {
 	    tst = ADMNOMEM;
-	} else if ((localHostName =
-		    (char *)malloc(strlen(fullHostName) + 1)) == NULL) {
+	} else if ((localHostName = (char *)malloc(strlen(fullHostName) + 1))
+		   == NULL) {
 	    free(cfg_host);
 	    tst = ADMNOMEM;
 	} else {
@@ -282,15 +281,15 @@ cfg_HostOpen(void *cellHandle,       /* cell handle */
 	    cfg_host->begin_magic = BEGIN_MAGIC;
 	    cfg_host->is_valid = 1;
 	    cfg_host->hostName = localHostName;
-	    cfg_host->is_local = 1;  /* not yet supporting remote config */
+	    cfg_host->is_local = 1;	/* not yet supporting remote config */
 	    cfg_host->cellHandle = cellHandle;
 	    cfg_host->bosHandle = NULL;
 	    cfg_host->end_magic = END_MAGIC;
 
 	    strcpy(localHostName, fullHostName);
 
-	    if (!afsclient_CellNameGet(cfg_host->cellHandle,
-				       &cfg_host->cellName, &tst2)) {
+	    if (!afsclient_CellNameGet
+		(cfg_host->cellHandle, &cfg_host->cellName, &tst2)) {
 		tst = tst2;
 	    } else if (pthread_mutex_init(&cfg_host->mutex, NULL)) {
 		tst = ADMMUTEXINIT;
@@ -322,12 +321,12 @@ cfg_HostOpen(void *cellHandle,       /* cell handle */
  * cfg_HostClose() -- Release host configuration handle.
  */
 int ADMINAPI
-cfg_HostClose(void *hostHandle,   /* host config handle */
-	      afs_status_p st)    /* completion status */
-{
+cfg_HostClose(void *hostHandle,	/* host config handle */
+	      afs_status_p st)
+{				/* completion status */
     int rc = 1;
     afs_status_t tst2, tst = 0;
-    cfg_host_p cfg_host = (cfg_host_p)hostHandle;
+    cfg_host_p cfg_host = (cfg_host_p) hostHandle;
 
     /* validate parameters */
 
@@ -375,14 +374,14 @@ cfg_HostClose(void *hostHandle,   /* host config handle */
  *           is highly recommended.
  */
 int ADMINAPI
-cfg_HostSetCell(void *hostHandle,        /* host config handle */
-		const char *cellName,    /* cell name */
-		const char *cellDbHosts, /* cell database hosts */
-		afs_status_p st)         /* completion status */
-{
+cfg_HostSetCell(void *hostHandle,	/* host config handle */
+		const char *cellName,	/* cell name */
+		const char *cellDbHosts,	/* cell database hosts */
+		afs_status_p st)
+{				/* completion status */
     int rc = 1;
     afs_status_t tst2, tst = 0;
-    cfg_host_p cfg_host = (cfg_host_p)hostHandle;
+    cfg_host_p cfg_host = (cfg_host_p) hostHandle;
 
     /* validate parameters */
 
@@ -433,16 +432,16 @@ cfg_HostSetCell(void *hostHandle,        /* host config handle */
 	if (tst == 0) {
 	    /* create server ThisCell/CellServDB dir if it does not exist */
 #ifdef AFS_NT40_ENV
-	    (void) mkdir(AFSDIR_USR_DIRPATH);
-	    (void) mkdir(AFSDIR_SERVER_AFS_DIRPATH);
-	    (void) mkdir(AFSDIR_SERVER_ETC_DIRPATH);
+	    (void)mkdir(AFSDIR_USR_DIRPATH);
+	    (void)mkdir(AFSDIR_SERVER_AFS_DIRPATH);
+	    (void)mkdir(AFSDIR_SERVER_ETC_DIRPATH);
 #else
-	    (void) mkdir(AFSDIR_USR_DIRPATH, 0755);
-	    (void) mkdir(AFSDIR_SERVER_AFS_DIRPATH, 0755);
-	    (void) mkdir(AFSDIR_SERVER_ETC_DIRPATH, 0755);
+	    (void)mkdir(AFSDIR_USR_DIRPATH, 0755);
+	    (void)mkdir(AFSDIR_SERVER_AFS_DIRPATH, 0755);
+	    (void)mkdir(AFSDIR_SERVER_ETC_DIRPATH, 0755);
 #endif
-	    if (afsconf_SetCellInfo(NULL,
-				    AFSDIR_SERVER_ETC_DIRPATH, &hostCell)) {
+	    if (afsconf_SetCellInfo
+		(NULL, AFSDIR_SERVER_ETC_DIRPATH, &hostCell)) {
 		/* failed; most likely cause is bad host name */
 		tst = ADMCFGSERVERSETCELLFAILED;
 	    }
@@ -480,21 +479,21 @@ cfg_HostSetCell(void *hostHandle,        /* host config handle */
  *     cell then Authentication server must be started as well.
  */
 int ADMINAPI
-cfg_HostSetAfsPrincipal(void *hostHandle,    /* host config handle */
-			short isFirst,       /* first server in cell flag */
-			const char *passwd,  /* afs initial password */
-			afs_status_p st)     /* completion status */
-{
+cfg_HostSetAfsPrincipal(void *hostHandle,	/* host config handle */
+			short isFirst,	/* first server in cell flag */
+			const char *passwd,	/* afs initial password */
+			afs_status_p st)
+{				/* completion status */
     int rc = 1;
     afs_status_t tst2, tst = 0;
-    cfg_host_p cfg_host = (cfg_host_p)hostHandle;
+    cfg_host_p cfg_host = (cfg_host_p) hostHandle;
 
     /* validate parameters */
 
     if (!cfgutil_HostHandleValidate(cfg_host, &tst2)) {
 	tst = tst2;
-    } else if ((isFirst && passwd == NULL) ||
-	       (passwd != NULL && *passwd == '\0')) {
+    } else if ((isFirst && passwd == NULL)
+	       || (passwd != NULL && *passwd == '\0')) {
 	tst = ADMCFGPASSWDNULL;
     }
 
@@ -510,12 +509,9 @@ cfg_HostSetAfsPrincipal(void *hostHandle,    /* host config handle */
 
 	if (isFirst) {
 	    /* create afs principal */
-	    if (!kas_PrincipalCreate(cfg_host->cellHandle,
-				     NULL,
-				     &afsIdentity,
-				     passwd,
-				     &tst2) &&
-		tst2 != KAEXIST) {
+	    if (!kas_PrincipalCreate
+		(cfg_host->cellHandle, NULL, &afsIdentity, passwd, &tst2)
+		&& tst2 != KAEXIST) {
 		/* failed to create principal (and not because existed) */
 		tst = tst2;
 	    }
@@ -525,11 +521,9 @@ cfg_HostSetAfsPrincipal(void *hostHandle,    /* host config handle */
 	    /* retrive afs principal information to verify or obtain key */
 	    kas_principalEntry_t afsEntry;
 
-	    if (!kas_PrincipalGet(cfg_host->cellHandle,
-				  NULL,
-				  &afsIdentity,
-				  &afsEntry,
-				  &tst2)) {
+	    if (!kas_PrincipalGet
+		(cfg_host->cellHandle, NULL, &afsIdentity, &afsEntry,
+		 &tst2)) {
 		tst = tst2;
 	    } else {
 		if (passwd != NULL) {
@@ -537,12 +531,10 @@ cfg_HostSetAfsPrincipal(void *hostHandle,    /* host config handle */
 		    kas_encryptionKey_t passwdKey;
 		    unsigned int passwdKeyCksum;
 
-		    if (!kas_StringToKey(cfg_host->cellName,
-					 passwd,
-					 &passwdKey,
-					 &tst2) ||
-
-			!kas_KeyCheckSum(&passwdKey, &passwdKeyCksum, &tst2)) {
+		    if (!kas_StringToKey
+			(cfg_host->cellName, passwd, &passwdKey, &tst2)
+			|| !kas_KeyCheckSum(&passwdKey, &passwdKeyCksum,
+					    &tst2)) {
 			/* failed to form key or key checksum */
 			tst = tst2;
 
@@ -552,11 +544,10 @@ cfg_HostSetAfsPrincipal(void *hostHandle,    /* host config handle */
 			 */
 			if (KasKeyEmbeddedInString(passwd, &passwdKey)) {
 			    /* passwd string embeds kas key */
-			    if (!kas_KeyCheckSum(&passwdKey,
-						 &passwdKeyCksum, &tst2)) {
+			    if (!kas_KeyCheckSum
+				(&passwdKey, &passwdKeyCksum, &tst2)) {
 				tst = tst2;
-			    } else if (passwdKeyCksum !=
-				       afsEntry.keyCheckSum) {
+			    } else if (passwdKeyCksum != afsEntry.keyCheckSum) {
 				/* passwd string does not embed valid key */
 				tst = ADMCFGAFSPASSWDINVALID;
 			    }
@@ -595,12 +586,12 @@ cfg_HostSetAfsPrincipal(void *hostHandle,    /* host config handle */
 	    if (!afsclient_NullCellOpen(&cellHandle, &tst2)) {
 		tst = tst2;
 	    } else {
-		if (!bos_ServerOpen(cellHandle,
-				    cfg_host->hostName, &bosHandle, &tst2)) {
+		if (!bos_ServerOpen
+		    (cellHandle, cfg_host->hostName, &bosHandle, &tst2)) {
 		    tst = tst2;
 		} else {
-		    if (!bos_KeyCreate(bosHandle, afsKvno, &afsKey, &tst2) &&
-			tst2 != BZKEYINUSE) {
+		    if (!bos_KeyCreate(bosHandle, afsKvno, &afsKey, &tst2)
+			&& tst2 != BZKEYINUSE) {
 			/* failed to add key (and not because existed) */
 			tst = tst2;
 		    }
@@ -642,16 +633,16 @@ cfg_HostSetAfsPrincipal(void *hostHandle,    /* host config handle */
  *     cell then Authentication and Protection servers must be started as well.
  */
 int ADMINAPI
-cfg_HostSetAdminPrincipal(void *hostHandle,    /* host config handle */
-			  short isFirst,       /* first server in cell flag */
-			  const char *admin,   /* admin principal name */
-			  const char *passwd,  /* admin initial password */
-			  unsigned int afsUid, /* admin AFS UID */
-			  afs_status_p st)     /* completion status */
-{
+cfg_HostSetAdminPrincipal(void *hostHandle,	/* host config handle */
+			  short isFirst,	/* first server in cell flag */
+			  const char *admin,	/* admin principal name */
+			  const char *passwd,	/* admin initial password */
+			  unsigned int afsUid,	/* admin AFS UID */
+			  afs_status_p st)
+{				/* completion status */
     int rc = 1;
     afs_status_t tst2, tst = 0;
-    cfg_host_p cfg_host = (cfg_host_p)hostHandle;
+    cfg_host_p cfg_host = (cfg_host_p) hostHandle;
 
     /* validate parameters and prepare host handle for bos functions */
 
@@ -679,38 +670,31 @@ cfg_HostSetAdminPrincipal(void *hostHandle,    /* host config handle */
 	    strcpy(adminIdentity.principal, admin);
 	    adminIdentity.instance[0] = '\0';
 
-	    if (!kas_PrincipalCreate(cfg_host->cellHandle,
-				     NULL,
-				     &adminIdentity,
-				     passwd,
-				     &tst2) &&
-		tst2 != KAEXIST) {
+	    if (!kas_PrincipalCreate
+		(cfg_host->cellHandle, NULL, &adminIdentity, passwd, &tst2)
+		&& tst2 != KAEXIST) {
 		/* failed to create principal (and not because existed) */
 		tst = tst2;
 
-	    } else if (!kas_PrincipalFieldsSet(cfg_host->cellHandle,
-					       NULL,
-					       &adminIdentity,
-					       &adminFlag,
-					       NULL, NULL, NULL, NULL,
-					       NULL, NULL, NULL, NULL, NULL,
-					       &tst2)) {
+	    } else
+		if (!kas_PrincipalFieldsSet
+		    (cfg_host->cellHandle, NULL, &adminIdentity, &adminFlag,
+		     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+		     &tst2)) {
 		/* failed to set admin attributes */
 		tst = tst2;
 
-	    } else if (!pts_UserCreate(cfg_host->cellHandle,
-				       admin,
-				       &adminUid,
-				       &tst2) &&
-		       tst2 != PREXIST) {
+	    } else
+		if (!pts_UserCreate
+		    (cfg_host->cellHandle, admin, &adminUid, &tst2)
+		    && tst2 != PREXIST) {
 		/* failed to create user (and not because existed) */
 		tst = tst2;
 
-	    } else if (!pts_GroupMemberAdd(cfg_host->cellHandle,
-					   admin,
-					   "system:administrators",
-					   &tst2) &&
-		       tst2 != PRIDEXIST) {
+	    } else
+		if (!pts_GroupMemberAdd
+		    (cfg_host->cellHandle, admin, "system:administrators",
+		     &tst2) && tst2 != PRIDEXIST) {
 		/* failed to add to group (not because already there) */
 		tst = tst2;
 	    }
@@ -718,8 +702,8 @@ cfg_HostSetAdminPrincipal(void *hostHandle,    /* host config handle */
 
 	if (tst == 0) {
 	    /* add admin to host's UserList */
-	    if (!bos_AdminCreate(cfg_host->bosHandle, admin, &tst2) &&
-		tst2 != EEXIST) {
+	    if (!bos_AdminCreate(cfg_host->bosHandle, admin, &tst2)
+		&& tst2 != EEXIST) {
 		/* failed to add admin (and not because existed) */
 		/* DANGER: platform-specific errno values being returned */
 		tst = tst2;
@@ -743,12 +727,12 @@ cfg_HostSetAdminPrincipal(void *hostHandle,    /* host config handle */
  *     Server configuration invalidated only if BOS server is not running.
  */
 int ADMINAPI
-cfg_HostInvalidate(void *hostHandle,   /* host config handle */
-		   afs_status_p st)    /* completion status */
-{
+cfg_HostInvalidate(void *hostHandle,	/* host config handle */
+		   afs_status_p st)
+{				/* completion status */
     int rc = 1;
     afs_status_t tst2, tst = 0;
-    cfg_host_p cfg_host = (cfg_host_p)hostHandle;
+    cfg_host_p cfg_host = (cfg_host_p) hostHandle;
 
     /* validate parameters */
 
@@ -771,9 +755,8 @@ cfg_HostInvalidate(void *hostHandle,   /* host config handle */
     if (tst == 0) {
 	DWORD svcState;
 
-	if (!cfgutil_WindowsServiceQuery(AFSREG_SVR_SVC_NAME,
-					 &svcState,
-					 &tst2)) {
+	if (!cfgutil_WindowsServiceQuery
+	    (AFSREG_SVR_SVC_NAME, &svcState, &tst2)) {
 	    tst = tst2;
 	} else if (svcState != SERVICE_STOPPED) {
 	    tst = ADMCFGBOSSERVERACTIVE;
@@ -857,14 +840,14 @@ cfg_HostInvalidate(void *hostHandle,   /* host config handle */
  *     entry may have been added or removed since the fileserver last started.
  */
 int ADMINAPI
-cfg_HostPartitionTableEnumerate(void *hostHandle,   /* host config handle */
-				cfg_partitionEntry_t **tablePP, /* table */
-				int *nEntriesP,      /* table entry count */
-				afs_status_p st)     /* completion status */
-{
+cfg_HostPartitionTableEnumerate(void *hostHandle,	/* host config handle */
+				cfg_partitionEntry_t ** tablePP,	/* table */
+				int *nEntriesP,	/* table entry count */
+				afs_status_p st)
+{				/* completion status */
     int rc = 1;
     afs_status_t tst2, tst = 0;
-    cfg_host_p cfg_host = (cfg_host_p)hostHandle;
+    cfg_host_p cfg_host = (cfg_host_p) hostHandle;
 
     /* validate parameters */
 
@@ -936,7 +919,7 @@ cfg_HostPartitionTableEnumerate(void *hostHandle,   /* host config handle */
 		    struct vptab *vptPart;
 		    int vpentryCount = 0;
 
-		    cpePart = (cfg_partitionEntry_t *)metaTablep;
+		    cpePart = (cfg_partitionEntry_t *) metaTablep;
 		    vptPart = (struct vptab *)(&cpePart[vpentryCountMax]);
 
 		    for (i = 0; i < vpentryCountMax; i++) {
@@ -972,25 +955,24 @@ cfg_HostPartitionTableEnumerate(void *hostHandle,   /* host config handle */
 			*nEntriesP = vpentryCount;
 
 			if (vpentryCount != 0) {
-			    *tablePP = (cfg_partitionEntry_t *)metaTablep;
+			    *tablePP = (cfg_partitionEntry_t *) metaTablep;
 			} else {
 			    *tablePP = NULL;
 			    free(metaTablep);
 			}
 		    } else {
-			free(metaTablep);
+				free(metaTablep);
 		    }
 		}
 	    }
 	}
     }
-
 #else
     /* function not yet implemented for Unix */
     if (tst == 0) {
 	tst = ADMCFGNOTSUPPORTED;
     }
-#endif  /* AFS_NT40_ENV */
+#endif /* AFS_NT40_ENV */
 
     if (tst != 0) {
 	rc = 0;
@@ -1006,14 +988,14 @@ cfg_HostPartitionTableEnumerate(void *hostHandle,   /* host config handle */
  * cfg_HostPartitionTableAddEntry() -- Add or update AFS partition table entry.
  */
 int ADMINAPI
-cfg_HostPartitionTableAddEntry(void *hostHandle,      /* host config handle */
-			       const char *partName,  /* partition name */
-			       const char *devName,   /* device name */
-			       afs_status_p st)       /* completion status */
-{
+cfg_HostPartitionTableAddEntry(void *hostHandle,	/* host config handle */
+			       const char *partName,	/* partition name */
+			       const char *devName,	/* device name */
+			       afs_status_p st)
+{				/* completion status */
     int rc = 1;
     afs_status_t tst2, tst = 0;
-    cfg_host_p cfg_host = (cfg_host_p)hostHandle;
+    cfg_host_p cfg_host = (cfg_host_p) hostHandle;
 
 #ifdef AFS_NT40_ENV
     /* validate parameters */
@@ -1057,7 +1039,6 @@ cfg_HostPartitionTableAddEntry(void *hostHandle,      /* host config handle */
 	    }
 	}
     }
-
 #else
     /* function not yet implemented for unix */
     if (tst == 0) {
@@ -1079,13 +1060,13 @@ cfg_HostPartitionTableAddEntry(void *hostHandle,      /* host config handle */
  * cfg_HostPartitionTableRemoveEntry() -- Remove AFS partition table entry.
  */
 int ADMINAPI
-cfg_HostPartitionTableRemoveEntry(void *hostHandle,  /* host config handle */
-				  const char *partName, /* partition name */
-				  afs_status_p st)   /* completion status */
-{
+cfg_HostPartitionTableRemoveEntry(void *hostHandle,	/* host config handle */
+				  const char *partName,	/* partition name */
+				  afs_status_p st)
+{				/* completion status */
     int rc = 1;
     afs_status_t tst2, tst = 0;
-    cfg_host_p cfg_host = (cfg_host_p)hostHandle;
+    cfg_host_p cfg_host = (cfg_host_p) hostHandle;
 
 #ifdef AFS_NT40_ENV
     /* validate parameters */
@@ -1123,7 +1104,6 @@ cfg_HostPartitionTableRemoveEntry(void *hostHandle,  /* host config handle */
 	    }
 	}
     }
-
 #else
     /* function not yet implemented for unix */
     if (tst == 0) {
@@ -1145,10 +1125,10 @@ cfg_HostPartitionTableRemoveEntry(void *hostHandle,  /* host config handle */
  * cfg_HostPartitionNameValid() -- check partition name syntax.
  */
 int ADMINAPI
-cfg_HostPartitionNameValid(const char *partName, /* partition name */
-			   short *isValidP,      /* syntax is valid */
-			   afs_status_p st)      /* completion status */
-{
+cfg_HostPartitionNameValid(const char *partName,	/* partition name */
+			   short *isValidP,	/* syntax is valid */
+			   afs_status_p st)
+{				/* completion status */
     int rc = 1;
     afs_status_t tst = 0;
 
@@ -1188,10 +1168,10 @@ cfg_HostPartitionNameValid(const char *partName, /* partition name */
  * cfg_HostDeviceNameValid() -- check device name syntax.
  */
 int ADMINAPI
-cfg_HostDeviceNameValid(const char *devName,  /* device name */
-			short *isValidP,      /* syntax is valid */
-			afs_status_p st)      /* completion status */
-{
+cfg_HostDeviceNameValid(const char *devName,	/* device name */
+			short *isValidP,	/* syntax is valid */
+			afs_status_p st)
+{				/* completion status */
     int rc = 1;
     afs_status_t tst = 0;
 
@@ -1234,9 +1214,9 @@ cfg_HostDeviceNameValid(const char *devName,  /* device name */
  * cfg_StringDeallocate() -- Deallocate (multi)string returned by library.
  */
 int ADMINAPI
-cfg_StringDeallocate(char *stringDataP,   /* (multi)string to deallocate */
-		     afs_status_p st)     /* completion status */
-{
+cfg_StringDeallocate(char *stringDataP,	/* (multi)string to deallocate */
+		     afs_status_p st)
+{				/* completion status */
     free((void *)stringDataP);
     if (st != NULL) {
 	*st = 0;
@@ -1250,7 +1230,7 @@ cfg_StringDeallocate(char *stringDataP,   /* (multi)string to deallocate */
  *     returned by library.
  */
 int ADMINAPI
-cfg_PartitionListDeallocate(cfg_partitionEntry_t *partitionListDataP,
+cfg_PartitionListDeallocate(cfg_partitionEntry_t * partitionListDataP,
 			    afs_status_p st)
 {
     free((void *)partitionListDataP);
@@ -1272,7 +1252,7 @@ cfg_PartitionListDeallocate(cfg_partitionEntry_t *partitionListDataP,
  * RETURN CODES: 1 if zero, 0 otherwise
  */
 static int
-KasKeyIsZero(kas_encryptionKey_t *kasKey)
+KasKeyIsZero(kas_encryptionKey_t * kasKey)
 {
     char *keyp = (char *)kasKey;
     int i;
@@ -1293,13 +1273,12 @@ KasKeyIsZero(kas_encryptionKey_t *kasKey)
  * RETURN CODES: 1 if embedded key found, 0 otherwise
  */
 static int
-KasKeyEmbeddedInString(const char *keyString, kas_encryptionKey_t *kasKey)
+KasKeyEmbeddedInString(const char *keyString, kas_encryptionKey_t * kasKey)
 {
     char *octalDigits = "01234567";
 
     /* keyString format is exactly 24 octal digits if embeds kas key */
-    if (strlen(keyString) == 24 &&
-	strspn(keyString, octalDigits) == 24) {
+    if (strlen(keyString) == 24 && strspn(keyString, octalDigits) == 24) {
 	/* kas key is embedded in keyString; extract it */
 	int i;
 

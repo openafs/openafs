@@ -119,13 +119,13 @@ DWORD Client34Eradicate(BOOL keepConfig)
 	}
     }
 
-    sprintf(filePath, "%s\\%s", winPath, "afsd.log");
+    sprintf(filePath, "%s\\%s", winPath, "temp\\afsd.log");
     status = FileForceRemove(filePath);
     if (status != ERROR_SUCCESS && status != ERROR_FILE_NOT_FOUND) {
 	rc = status;
     }
 
-    sprintf(filePath, "%s\\%s", winPath, "afsd_init.log");
+    sprintf(filePath, "%s\\%s", winPath, "temp\\afsd_init.log");
     status = FileForceRemove(filePath);
     if (status != ERROR_SUCCESS && status != ERROR_FILE_NOT_FOUND) {
 	rc = status;
@@ -144,19 +144,19 @@ DWORD Client34Eradicate(BOOL keepConfig)
     }
 
     if (!keepConfig) {
-	sprintf(filePath, "%s\\%s", winPath, "afsdcell.ini");
+	sprintf(filePath, "%s\\%s", installPath, "Client\\afsdcell.ini");
 	status = FileForceRemove(filePath);
 	if (status != ERROR_SUCCESS && status != ERROR_FILE_NOT_FOUND) {
 	    rc = status;
 	}
 
-	sprintf(filePath, "%s\\%s", winPath, "afsdsbmt.ini");
+	sprintf(filePath, "%s\\%s", installPath, "Client\\afsdsbmt.ini");
 	status = FileForceRemove(filePath);
 	if (status != ERROR_SUCCESS && status != ERROR_FILE_NOT_FOUND) {
 	    rc = status;
 	}
 
-	sprintf(filePath, "%s\\%s", winPath, "afsd.ini");
+	sprintf(filePath, "%s\\%s", installPath, "Client\\afsd.ini");
 	status = FileForceRemove(filePath);
 	if (status != ERROR_SUCCESS && status != ERROR_FILE_NOT_FOUND) {
 	    rc = status;

@@ -420,5 +420,4 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* !AP_COMPAT_H */
+#endif				/* !AP_COMPAT_H */

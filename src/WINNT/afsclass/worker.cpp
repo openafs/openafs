@@ -373,12 +373,8 @@ static lpUtilDatabaseServerGetDone_t lpUtilDatabaseServerGetDone = NULL;
  *
  */
 
-BOOL Worker_StartOneThread (BOOL fActivate, ULONG *pStatus = NULL);
-
 BOOL Worker_LoadLibraries (ULONG *pStatus);
 void Worker_FreeLibraries (void);
-
-DWORD _stdcall Worker_ThreadProc (LPARAM lp);
 
 DWORD Worker_PerformTask (WORKERTASK wtask, LPWORKERPACKET lpwp);
 

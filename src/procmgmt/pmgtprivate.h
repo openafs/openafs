@@ -7,8 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef TRANSARC_PMGTPRIVATE_H
-#define TRANSARC_PMGTPRIVATE_H
+#ifndef OPENAFS_PMGTPRIVATE_H
+#define OPENAFS_PMGTPRIVATE_H
 
 /* Private process management definitions and declarations that we don't
  * want to export in the public procmgmt.h.
@@ -36,4 +36,4 @@ extern int pmgt_RedirectNativeSignals(void);
 
 #endif /* AFS_NT40_ENV */
 
-#endif /* TRANSARC_PMGTPRIVATE_H */
+#endif /* OPENAFS_PMGTPRIVATE_H */

@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/adminutil/afs_utilAdmin.c,v 1.1.1.7 2001/10/14 18:05:28 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/libadmin/adminutil/afs_utilAdmin.c,v 1.7.2.1 2004/08/25 07:09:38 shadow Exp $");
 
 #include <afs/stds.h>
 #include <afs/afs_Admin.h>
@@ -57,7 +58,9 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/adminutil/afs_utilAdmin.c,v 1.
 static pthread_once_t error_init_once = PTHREAD_ONCE_INIT;
 static int error_init_done;
 
-static void init_once(void) {
+static void
+init_once(void)
+{
 
     initialize_KA_error_table();
     initialize_RXK_error_table();
@@ -81,35 +84,33 @@ static void init_once(void) {
     error_init_done = 1;
 }
 
-int ADMINAPI util_AdminErrorCodeTranslate(
- afs_status_t errorCode,
- int langId,
- const char **errorTextP,
- afs_status_p st)
+int ADMINAPI
+util_AdminErrorCodeTranslate(afs_status_t errorCode, int langId,
+			     const char **errorTextP, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_int32 code;
 
     if (errorTextP == NULL) {
-       tst = ADMUTILERRORTEXTPNULL;
-       goto fail_util_AdminErrorCodeTranslate;
+	tst = ADMUTILERRORTEXTPNULL;
+	goto fail_util_AdminErrorCodeTranslate;
     }
 
     /*
      * Translate the error
      */
 
-    if ( !error_init_done )
-		pthread_once(&error_init_once, init_once);
+    if (!error_init_done)
+	pthread_once(&error_init_once, init_once);
     code = (afs_int32) errorCode;
     *errorTextP = error_message(code);
     rc = 1;
-     
-fail_util_AdminErrorCodeTranslate:
+
+  fail_util_AdminErrorCodeTranslate:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -126,70 +127,65 @@ typedef struct database_server_get {
     util_databaseServerEntry_t server[CACHED_ITEMS];
 } database_server_get_t, *database_server_get_p;
 
-static int GetDatabaseServerRPC(
-  void *rpc_specific,
-  int slot,
-  int *last_item,
-  int *last_item_contains_data,
-  afs_status_p st)
+static int
+GetDatabaseServerRPC(void *rpc_specific, int slot, int *last_item,
+		     int *last_item_contains_data, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     database_server_get_p serv = (database_server_get_p) rpc_specific;
- 
-    serv->server[slot].serverAddress = ntohl(serv->cell.hostAddr[serv->index].sin_addr.s_addr);
-	 strcpy(serv->server[slot].serverName, serv->cell.hostName[serv->index]);
+
+    serv->server[slot].serverAddress =
+	ntohl(serv->cell.hostAddr[serv->index].sin_addr.s_addr);
+    strcpy(serv->server[slot].serverName, serv->cell.hostName[serv->index]);
     serv->index++;
 
     /*
      * See if we've processed all the entries
      */
- 
+
     if (serv->index == serv->total) {
-        *last_item = 1;
-        *last_item_contains_data = 1;
+	*last_item = 1;
+	*last_item_contains_data = 1;
     }
     rc = 1;
- 
+
     if (st != NULL) {
-        *st = tst;
-    }
-    return rc;
-}
- 
-static int GetDatabaseServerFromCache(
-  void *rpc_specific,
-  int slot,
-  void *dest,
-  afs_status_p st)
-{
-    int rc = 0;
-    afs_status_t tst = 0;
-    database_server_get_p serv = (database_server_get_p) rpc_specific;
- 
-    memcpy(dest, (const void *) &serv->server[slot],
-           sizeof(util_databaseServerEntry_t));
- 
-    rc = 1;
-    if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
 
-static int DestroyDatabaseServer(
-    void *rpc_specific,
-    afs_status_p st)
+static int
+GetDatabaseServerFromCache(void *rpc_specific, int slot, void *dest,
+			   afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     database_server_get_p serv = (database_server_get_p) rpc_specific;
-    
+
+    memcpy(dest, (const void *)&serv->server[slot],
+	   sizeof(util_databaseServerEntry_t));
+
+    rc = 1;
+    if (st != NULL) {
+	*st = tst;
+    }
+    return rc;
+}
+
+static int
+DestroyDatabaseServer(void *rpc_specific, afs_status_p st)
+{
+    int rc = 0;
+    afs_status_t tst = 0;
+    database_server_get_p serv = (database_server_get_p) rpc_specific;
+
     afsconf_Close(serv->conf);
     rc = 1;
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -218,17 +214,18 @@ static int DestroyDatabaseServer(
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI util_DatabaseServerGetBegin(
-  const char *cellName,
-  void **iterationIdP,
-  afs_status_p st)
+int ADMINAPI
+util_DatabaseServerGetBegin(const char *cellName, void **iterationIdP,
+			    afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
-    afs_admin_iterator_p iter = (afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
-    database_server_get_p serv = (database_server_get_p) calloc(1, sizeof(database_server_get_t));
+    afs_admin_iterator_p iter =
+	(afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
+    database_server_get_p serv =
+	(database_server_get_p) calloc(1, sizeof(database_server_get_t));
     char copyCell[MAXCELLCHARS];
- 
+
     /*
      * Validate arguments
      */
@@ -243,7 +240,7 @@ int ADMINAPI util_DatabaseServerGetBegin(
     }
 
     if ((iter == NULL) || (serv == NULL)) {
-        tst = ADMNOMEM;
+	tst = ADMNOMEM;
 	goto fail_util_DatabaseServerGetBegin;
     }
 
@@ -262,23 +259,24 @@ int ADMINAPI util_DatabaseServerGetBegin(
      * actually writes over the cell name it is passed.
      */
     strncpy(copyCell, cellName, MAXCELLCHARS - 1);
-    tst = afsconf_GetCellInfo(serv->conf, copyCell, AFSCONF_KAUTHSERVICE,
-			      &serv->cell);
+    tst =
+	afsconf_GetCellInfo(serv->conf, copyCell, AFSCONF_KAUTHSERVICE,
+			    &serv->cell);
     if (tst != 0) {
 	goto fail_util_DatabaseServerGetBegin;
     }
 
     serv->total = serv->cell.numServers;
-    if (IteratorInit(iter, (void *) serv, GetDatabaseServerRPC,
-		     GetDatabaseServerFromCache, NULL, DestroyDatabaseServer,
-                      &tst)) {
-	*iterationIdP = (void *) iter;
+    if (IteratorInit
+	(iter, (void *)serv, GetDatabaseServerRPC, GetDatabaseServerFromCache,
+	 NULL, DestroyDatabaseServer, &tst)) {
+	*iterationIdP = (void *)iter;
     } else {
 	goto fail_util_DatabaseServerGetBegin;
     }
     rc = 1;
 
-fail_util_DatabaseServerGetBegin:
+  fail_util_DatabaseServerGetBegin:
 
     if (rc == 0) {
 	if (iter != NULL) {
@@ -290,7 +288,7 @@ fail_util_DatabaseServerGetBegin:
     }
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -319,15 +317,15 @@ fail_util_DatabaseServerGetBegin:
  */
 
 
-int ADMINAPI util_DatabaseServerGetNext(
-  const void *iterationId,
-  util_databaseServerEntry_p serverP,
-  afs_status_p st)
+int ADMINAPI
+util_DatabaseServerGetNext(const void *iterationId,
+			   util_databaseServerEntry_p serverP,
+			   afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_admin_iterator_p iter = (afs_admin_iterator_p) iterationId;
- 
+
     if (iter == NULL) {
 	tst = ADMITERATORNULL;
 	goto fail_util_DatabaseServerGetNext;
@@ -338,12 +336,12 @@ int ADMINAPI util_DatabaseServerGetNext(
 	goto fail_util_DatabaseServerGetNext;
     }
 
-    rc = IteratorNext(iter, (void *) serverP, &tst);
+    rc = IteratorNext(iter, (void *)serverP, &tst);
 
-fail_util_DatabaseServerGetNext:
+  fail_util_DatabaseServerGetNext:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -369,14 +367,13 @@ fail_util_DatabaseServerGetNext:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI util_DatabaseServerGetDone(
-  const void *iterationId,
-  afs_status_p st)
+int ADMINAPI
+util_DatabaseServerGetDone(const void *iterationId, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_admin_iterator_p iter = (afs_admin_iterator_p) iterationId;
- 
+
     /*
      * Validate parameters
      */
@@ -388,10 +385,10 @@ int ADMINAPI util_DatabaseServerGetDone(
 
     rc = IteratorDone(iter, &tst);
 
-fail_util_DatabaseServerGetDone:
+  fail_util_DatabaseServerGetDone:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -424,10 +421,9 @@ fail_util_DatabaseServerGetDone:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI util_AdminServerAddressGetFromName(
-  const char *serverName,
-  int *serverAddress,
-  afs_status_p st)
+int ADMINAPI
+util_AdminServerAddressGetFromName(const char *serverName, int *serverAddress,
+				   afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -445,25 +441,27 @@ int ADMINAPI util_AdminServerAddressGetFromName(
 	goto fail_util_AdminServerAddressGetFromName;
     }
 
-    num_converted = sscanf(serverName, "%d.%d.%d.%d", &part1, &part2, &part3, &part4);
+    num_converted =
+	sscanf(serverName, "%d.%d.%d.%d", &part1, &part2, &part3, &part4);
     if (num_converted == 4) {
-	*serverAddress = (part1<<24) | (part2<<16) | (part3<<8) | part4;
+	*serverAddress = (part1 << 24) | (part2 << 16) | (part3 << 8) | part4;
     } else {
-	LOCK_GLOBAL_MUTEX
+	LOCK_GLOBAL_MUTEX;
 	server = gethostbyname(serverName);
 	if (server != NULL) {
-	    memcpy((void *) serverAddress, (const void *) server->h_addr, sizeof(serverAddress));
+	    memcpy((void *)serverAddress, (const void *)server->h_addr,
+		   sizeof(serverAddress));
 	    *serverAddress = ntohl(*serverAddress);
 	} else {
 	    tst = ADMUTILCANTGETSERVERNAME;
 	    UNLOCK_GLOBAL_MUTEX;
 	    goto fail_util_AdminServerAddressGetFromName;
 	}
-	UNLOCK_GLOBAL_MUTEX
+	UNLOCK_GLOBAL_MUTEX;
     }
     rc = 1;
 
-fail_util_AdminServerAddressGetFromName:
+  fail_util_AdminServerAddressGetFromName:
 
     if (st != NULL) {
 	*st = tst;
@@ -533,22 +531,21 @@ fail_util_AdminServerAddressGetFromName:
  * Returns != 0 upon successful completion.
  */
 
-static int IteratorDelete(
-  afs_admin_iterator_p iter,
-  afs_status_p st)
+static int
+IteratorDelete(afs_admin_iterator_p iter, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
 
-    if(pthread_mutex_destroy(&iter->mutex)) {
+    if (pthread_mutex_destroy(&iter->mutex)) {
 	tst = ADMMUTEXDESTROY;
 	goto fail_IteratorDelete;
     }
-    if(pthread_cond_destroy(&iter->add_item)) {
+    if (pthread_cond_destroy(&iter->add_item)) {
 	tst = ADMCONDDESTROY;
 	goto fail_IteratorDelete;
     }
-    if(pthread_cond_destroy(&iter->remove_item)) {
+    if (pthread_cond_destroy(&iter->remove_item)) {
 	tst = ADMCONDDESTROY;
 	goto fail_IteratorDelete;
     }
@@ -560,10 +557,10 @@ static int IteratorDelete(
     free(iter);
     rc = 1;
 
-fail_IteratorDelete:
- 
+  fail_IteratorDelete:
+
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -588,8 +585,9 @@ fail_IteratorDelete:
  *
  * Returns != 0 upon successful completion.
  */
- 
-static void *DataGet(void *arg)
+
+static void *
+DataGet(void *arg)
 {
     afs_admin_iterator_p iter = (afs_admin_iterator_p) arg;
     void *rc = 0;
@@ -597,84 +595,84 @@ static void *DataGet(void *arg)
     int mutex_locked = 0;
     int last_item = 0;
     int last_item_contains_data = 0;
- 
+
     if (pthread_mutex_lock(&iter->mutex)) {
-        iter->st = ADMMUTEXLOCK;
-        goto fail_DataGet;
+	iter->st = ADMMUTEXLOCK;
+	goto fail_DataGet;
     }
- 
+
     mutex_locked = 1;
- 
+
     while (1) {
- 
-        /*
-         * Check to see if there's room for this datum.  If not, wait
-         * on the consumer to free up another slot.
-         */
- 
-        while (iter->cache_slots_used == CACHED_ITEMS) {
-            if (pthread_cond_wait(&iter->remove_item, &iter->mutex)) {
-                iter->st = ADMCONDWAIT;
-                goto fail_DataGet;
-            }
-        }
- 
-        /*
-         * Check to see if someone called Done and terminated the request.
-         * We could have gone to sleep above when the buffer was full and
-         * instead of being awoken because another slot is open, we were
-         * awoken because the request was terminated.
-         */
- 
-        if (iter->request_terminated) {
-            goto fail_DataGet;
-        }
- 
-        if (pthread_mutex_unlock(&iter->mutex)) {
-            iter->st = ADMMUTEXUNLOCK;
-            goto fail_DataGet;
-        }
- 
-        mutex_locked = 0;
- 
-        /*
-         * Make an rpc without holding the iter mutex
-         * We reference an item in the principal cache here without
-         * holding the mutex.  This is safe because:
-         * 1. The iter structure is ref counted and won't be deleted
-         *    from underneath us.
-         * 2. cache_queue_tail is always one item ahead of the consumer
-         *    thread so we are the only thread accessing this member.
-         */
- 
-        iter->make_rpc(iter->rpc_specific, iter->cache_queue_tail,
-                       &last_item, &last_item_contains_data, &tst);
- 
-        if (pthread_mutex_lock(&iter->mutex)) {
-            iter->st = ADMMUTEXLOCK;
-            goto fail_DataGet;
-        }
- 
-        mutex_locked = 1;
- 
-        /*
-         * Check to see if someone called Done and terminated the request
-         */
- 
-        if (iter->request_terminated) {
-            goto fail_DataGet;
-        }
- 
-        /*
-         * Check the rc of the rpc, and see if there are no more items
-         * to be retrieved.
-         */
- 
-        if (tst != 0) {
-            iter->st = tst;
-            goto fail_DataGet;
-        }
- 
+
+	/*
+	 * Check to see if there's room for this datum.  If not, wait
+	 * on the consumer to free up another slot.
+	 */
+
+	while (iter->cache_slots_used == CACHED_ITEMS) {
+	    if (pthread_cond_wait(&iter->remove_item, &iter->mutex)) {
+		iter->st = ADMCONDWAIT;
+		goto fail_DataGet;
+	    }
+	}
+
+	/*
+	 * Check to see if someone called Done and terminated the request.
+	 * We could have gone to sleep above when the buffer was full and
+	 * instead of being awoken because another slot is open, we were
+	 * awoken because the request was terminated.
+	 */
+
+	if (iter->request_terminated) {
+	    goto fail_DataGet;
+	}
+
+	if (pthread_mutex_unlock(&iter->mutex)) {
+	    iter->st = ADMMUTEXUNLOCK;
+	    goto fail_DataGet;
+	}
+
+	mutex_locked = 0;
+
+	/*
+	 * Make an rpc without holding the iter mutex
+	 * We reference an item in the principal cache here without
+	 * holding the mutex.  This is safe because:
+	 * 1. The iter structure is ref counted and won't be deleted
+	 *    from underneath us.
+	 * 2. cache_queue_tail is always one item ahead of the consumer
+	 *    thread so we are the only thread accessing this member.
+	 */
+
+	iter->make_rpc(iter->rpc_specific, iter->cache_queue_tail, &last_item,
+		       &last_item_contains_data, &tst);
+
+	if (pthread_mutex_lock(&iter->mutex)) {
+	    iter->st = ADMMUTEXLOCK;
+	    goto fail_DataGet;
+	}
+
+	mutex_locked = 1;
+
+	/*
+	 * Check to see if someone called Done and terminated the request
+	 */
+
+	if (iter->request_terminated) {
+	    goto fail_DataGet;
+	}
+
+	/*
+	 * Check the rc of the rpc, and see if there are no more items
+	 * to be retrieved.
+	 */
+
+	if (tst != 0) {
+	    iter->st = tst;
+	    goto fail_DataGet;
+	}
+
 	/*
 	 * Check to see if this is the last item produced by the rpc.
 	 * If it isn't, add the item to the cache and proceed.
@@ -683,41 +681,41 @@ static void *DataGet(void *arg)
 	 *     If it doesn't, we mark the iterator as complete.
 	 */
 
-        if ((!last_item) || ((last_item) && (last_item_contains_data))) {
-	    iter->cache_queue_tail = (iter->cache_queue_tail + 1) %
-				     CACHED_ITEMS;
+	if ((!last_item) || ((last_item) && (last_item_contains_data))) {
+	    iter->cache_queue_tail =
+		(iter->cache_queue_tail + 1) % CACHED_ITEMS;
 	    iter->cache_slots_used++;
-        }
-	if (last_item) {
-            iter->st = ADMITERATORDONE;
-            iter->done_iterating = 1;
-            /*
-             * There's a small chance that the consumer emptied the
-             * cache queue while we were making the last rpc and has
-             * since gone to sleep waiting for more data.  In this case
-             * there will never be more data so we signal him here.
-             */
-            pthread_cond_signal(&iter->add_item);
-            goto fail_DataGet;
 	}
- 
- 
-        /*
-         * If the cache was empty and we just added another item, signal
-         * the consumer
-         */
- 
-        if (iter->cache_slots_used == 1) {
-            if (pthread_cond_signal(&iter->add_item)) {
-                iter->st = ADMCONDSIGNAL;
-                goto fail_DataGet;
-            }
-        }
+	if (last_item) {
+	    iter->st = ADMITERATORDONE;
+	    iter->done_iterating = 1;
+	    /*
+	     * There's a small chance that the consumer emptied the
+	     * cache queue while we were making the last rpc and has
+	     * since gone to sleep waiting for more data.  In this case
+	     * there will never be more data so we signal him here.
+	     */
+	    pthread_cond_signal(&iter->add_item);
+	    goto fail_DataGet;
+	}
+
+
+	/*
+	 * If the cache was empty and we just added another item, signal
+	 * the consumer
+	 */
+
+	if (iter->cache_slots_used == 1) {
+	    if (pthread_cond_signal(&iter->add_item)) {
+		iter->st = ADMCONDSIGNAL;
+		goto fail_DataGet;
+	    }
+	}
     }
- 
- 
-fail_DataGet:
- 
+
+
+  fail_DataGet:
+
     /*
      * If we are exiting with an error, signal the consumer in the event
      * they were waiting for us to produce more data
@@ -730,7 +728,7 @@ fail_DataGet:
     if (mutex_locked) {
 	pthread_mutex_unlock(&iter->mutex);
     }
- 
+
     return rc;
 }
 
@@ -750,9 +748,8 @@ fail_DataGet:
  * Returns != 0 upon successful completion.
  */
 
-static int IsValidIterator(
-  const afs_admin_iterator_p iterator,
-  afs_status_p st)
+static int
+IsValidIterator(const afs_admin_iterator_p iterator, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -760,38 +757,38 @@ static int IsValidIterator(
     /*
      * Validate input parameters
      */
- 
+
     if (iterator == NULL) {
-        tst = ADMITERATORNULL;
-        goto fail_IsValidIterator;
+	tst = ADMITERATORNULL;
+	goto fail_IsValidIterator;
     }
- 
-    if ((iterator->begin_magic != BEGIN_MAGIC) ||
-        (iterator->end_magic != END_MAGIC)) {
-        tst = ADMITERATORBADMAGICNULL;
-        goto fail_IsValidIterator;
+
+    if ((iterator->begin_magic != BEGIN_MAGIC)
+	|| (iterator->end_magic != END_MAGIC)) {
+	tst = ADMITERATORBADMAGICNULL;
+	goto fail_IsValidIterator;
     }
- 
+
     if (iterator->is_valid == 0) {
-        tst = ADMITERATORINVALID;
-        goto fail_IsValidIterator;
+	tst = ADMITERATORINVALID;
+	goto fail_IsValidIterator;
     }
- 
+
     /*
      * Call the iterator specific validation function
      */
- 
+
     if (iterator->validate_specific != NULL) {
-        if (!iterator->validate_specific(iterator->rpc_specific, &tst)) {
-            goto fail_IsValidIterator;
-        }
+	if (!iterator->validate_specific(iterator->rpc_specific, &tst)) {
+	    goto fail_IsValidIterator;
+	}
     }
     rc = 1;
 
-fail_IsValidIterator:
- 
+  fail_IsValidIterator:
+
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -815,10 +812,8 @@ fail_IsValidIterator:
  * Returns != 0 upon successful completion.
  */
 
-int IteratorNext(
-  afs_admin_iterator_p iter,
-  void *dest,
-  afs_status_p st)
+int
+IteratorNext(afs_admin_iterator_p iter, void *dest, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -827,98 +822,97 @@ int IteratorNext(
     /*
      * We have to lock the iterator before we validate it
      */
- 
+
     if (pthread_mutex_lock(&iter->mutex)) {
-        tst = ADMMUTEXLOCK;
-        goto fail_IteratorNext;
+	tst = ADMMUTEXLOCK;
+	goto fail_IteratorNext;
     }
- 
+
     locked_iter = 1;
- 
+
     if (!IsValidIterator(iter, &tst)) {
-        goto fail_IteratorNext;
+	goto fail_IteratorNext;
     }
- 
+
     if (iter->request_terminated == 1) {
-        tst = ADMITERATORTERMINATED;
-        goto fail_IteratorNext;
+	tst = ADMITERATORTERMINATED;
+	goto fail_IteratorNext;
     }
- 
+
     if ((iter->st != AFS_STATUS_OK) && (iter->st != ADMITERATORDONE)) {
-        tst = iter->st;
-        goto fail_IteratorNext;
+	tst = iter->st;
+	goto fail_IteratorNext;
     }
- 
+
     /*
      * Check to see if there are any queue'd items.  If not, wait here
      * until signalled by the producer.
      */
- 
+
     while (iter->cache_slots_used == 0) {
- 
-        /*
-         * Maybe the producer experienced an rpc failure.
-         */
- 
-        if ((!iter->done_iterating) && (iter->st != 0)) {
-            tst = iter->st;
-            goto fail_IteratorNext;
-        }
- 
-        /*
-         * Maybe there are no queue'd items because the producer is done
-         */
- 
-        if (iter->done_iterating) {
-            tst = iter->st;
-            goto fail_IteratorNext;
-        }
- 
-        if (pthread_cond_wait(&iter->add_item, &iter->mutex)) {
-            tst = ADMCONDWAIT;
-            goto fail_IteratorNext;
-        }
+
+	/*
+	 * Maybe the producer experienced an rpc failure.
+	 */
+
+	if ((!iter->done_iterating) && (iter->st != 0)) {
+	    tst = iter->st;
+	    goto fail_IteratorNext;
+	}
+
+	/*
+	 * Maybe there are no queue'd items because the producer is done
+	 */
+
+	if (iter->done_iterating) {
+	    tst = iter->st;
+	    goto fail_IteratorNext;
+	}
+
+	if (pthread_cond_wait(&iter->add_item, &iter->mutex)) {
+	    tst = ADMCONDWAIT;
+	    goto fail_IteratorNext;
+	}
     }
- 
+
     /*
      * Copy the next cached item and update the cached item count
      * and the index into the cache array
      */
- 
-    if (!iter->get_cached_data(iter->rpc_specific, 
-			       iter->cache_queue_head,
-			       dest,
-			       &tst)) {
+
+    if (!iter->
+	get_cached_data(iter->rpc_specific, iter->cache_queue_head, dest,
+			&tst)) {
 	goto fail_IteratorNext;
     }
-    
+
     iter->cache_queue_head = (iter->cache_queue_head + 1) % CACHED_ITEMS;
     iter->cache_slots_used--;
- 
+
     /*
      * If the cache was full before we removed the item above, the
      * producer may have been waiting for us to remove an item.
      * Signal the producer letting him know that we've opened a slot
      * in the cache
      */
- 
+
     if (iter->cache_slots_used == (CACHED_ITEMS - 1)) {
-        if (pthread_cond_signal(&iter->remove_item)) {
-            tst = ADMCONDSIGNAL;
-            goto fail_IteratorNext;
-        }
+	if (pthread_cond_signal(&iter->remove_item)) {
+	    tst = ADMCONDSIGNAL;
+	    goto fail_IteratorNext;
+	}
     }
     rc = 1;
 
 
-fail_IteratorNext:
- 
+  fail_IteratorNext:
+
     if (locked_iter == 1) {
 	pthread_mutex_unlock(&iter->mutex);
     }
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -940,27 +934,26 @@ fail_IteratorNext:
  * Returns != 0 upon successful completion.
  */
 
-int IteratorDone(
-  afs_admin_iterator_p iter,
-  afs_status_p st)
+int
+IteratorDone(afs_admin_iterator_p iter, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     int mutex_locked = 1;
 
     if (pthread_mutex_lock(&iter->mutex)) {
-        tst = ADMMUTEXLOCK;
-        goto fail_IteratorDone;
+	tst = ADMMUTEXLOCK;
+	goto fail_IteratorDone;
     }
- 
+
     mutex_locked = 1;
- 
- 
+
+
     if (!IsValidIterator(iter, &tst)) {
-        goto fail_IteratorDone;
+	goto fail_IteratorDone;
     }
- 
- 
+
+
     /*
      * Depending upon the status of the background worker thread,
      * we can either join with him immediately (if we know he has
@@ -985,7 +978,7 @@ int IteratorDone(
     }
 
     if (iter->make_rpc != NULL) {
-	if (pthread_join(iter->bg_worker, (void **) 0)) {
+	if (pthread_join(iter->bg_worker, (void **)0)) {
 	    tst = ADMTHREADJOIN;
 	    goto fail_IteratorDone;
 	}
@@ -999,14 +992,14 @@ int IteratorDone(
     rc = IteratorDelete(iter, &tst);
     mutex_locked = 0;
 
-fail_IteratorDone:
- 
+  fail_IteratorDone:
+
     if (mutex_locked) {
-        pthread_mutex_unlock(&iter->mutex);
+	pthread_mutex_unlock(&iter->mutex);
     }
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1027,14 +1020,12 @@ fail_IteratorDone:
  * Returns != 0 upon successful completion.
  */
 
-int IteratorInit(
-  afs_admin_iterator_p iter,
-  void *rpc_specific,
-  make_rpc_func make_rpc,
-  get_cached_data_func get_cached_data,
-  validate_specific_data_func validate_specific_data,
-  destroy_specific_data_func destroy_specific_data,
-  afs_status_p st)
+int
+IteratorInit(afs_admin_iterator_p iter, void *rpc_specific,
+	     make_rpc_func make_rpc, get_cached_data_func get_cached_data,
+	     validate_specific_data_func validate_specific_data,
+	     destroy_specific_data_func destroy_specific_data,
+	     afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -1043,15 +1034,15 @@ int IteratorInit(
     int remove_item_cond_inited = 0;
 
     if (iter == NULL) {
-        tst = ADMITERATORNULL;
-        goto fail_IteratorInit;
+	tst = ADMITERATORNULL;
+	goto fail_IteratorInit;
     }
- 
+
     if (rpc_specific == NULL) {
-        tst = ADMITERATORRPCSPECIFICNULL;
-        goto fail_IteratorInit;
+	tst = ADMITERATORRPCSPECIFICNULL;
+	goto fail_IteratorInit;
     }
- 
+
     /*
      * Initialize the iterator structure
      */
@@ -1071,21 +1062,21 @@ int IteratorInit(
     iter->validate_specific = validate_specific_data;
     iter->destroy_specific = destroy_specific_data;
 
-    if (pthread_mutex_init(&iter->mutex, (const pthread_mutexattr_t *) 0)) {
+    if (pthread_mutex_init(&iter->mutex, (const pthread_mutexattr_t *)0)) {
 	tst = ADMMUTEXINIT;
 	goto fail_IteratorInit;
     } else {
 	mutex_inited = 1;
     }
 
-    if (pthread_cond_init(&iter->add_item, (const pthread_condattr_t *) 0)) {
+    if (pthread_cond_init(&iter->add_item, (const pthread_condattr_t *)0)) {
 	tst = ADMCONDINIT;
 	goto fail_IteratorInit;
     } else {
 	add_item_cond_inited = 1;
     }
 
-    if (pthread_cond_init(&iter->remove_item, (const pthread_condattr_t *) 0)) {
+    if (pthread_cond_init(&iter->remove_item, (const pthread_condattr_t *)0)) {
 	tst = ADMCONDINIT;
 	goto fail_IteratorInit;
     } else {
@@ -1110,16 +1101,15 @@ int IteratorInit(
 	    goto fail_IteratorInit;
 	}
 
-	if (pthread_create(&iter->bg_worker, &tattr,
-			   DataGet, (void *) iter)) {
+	if (pthread_create(&iter->bg_worker, &tattr, DataGet, (void *)iter)) {
 	    tst = ADMTHREADCREATE;
 	    goto fail_IteratorInit;
 	}
     }
     rc = 1;
 
-fail_IteratorInit:
- 
+  fail_IteratorInit:
+
     if (rc == 0) {
 	if (mutex_inited) {
 	    pthread_mutex_destroy(&iter->mutex);
@@ -1133,44 +1123,43 @@ fail_IteratorInit:
     }
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
 
-int ADMINAPI CellHandleIsValid(
-  const void *cellHandle,
-  afs_status_p st)
+int ADMINAPI
+CellHandleIsValid(const void *cellHandle, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
- 
+
     /*
      * Validate input parameters
      */
- 
+
     if (c_handle == NULL) {
-        tst = ADMCLIENTCELLHANDLENULL;
-        goto fail_CellHandleIsValid;
+	tst = ADMCLIENTCELLHANDLENULL;
+	goto fail_CellHandleIsValid;
     }
- 
-    if ((c_handle->begin_magic != BEGIN_MAGIC) ||
-        (c_handle->end_magic != END_MAGIC)) {
-        tst = ADMCLIENTCELLHANDLEBADMAGIC;
-        goto fail_CellHandleIsValid;
+
+    if ((c_handle->begin_magic != BEGIN_MAGIC)
+	|| (c_handle->end_magic != END_MAGIC)) {
+	tst = ADMCLIENTCELLHANDLEBADMAGIC;
+	goto fail_CellHandleIsValid;
     }
- 
+
     if (c_handle->is_valid == 0) {
-        tst = ADMCLIENTCELLINVALID;
-        goto fail_CellHandleIsValid;
+	tst = ADMCLIENTCELLINVALID;
+	goto fail_CellHandleIsValid;
     }
     rc = 1;
- 
-fail_CellHandleIsValid:
- 
+
+  fail_CellHandleIsValid:
+
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1180,21 +1169,20 @@ fail_CellHandleIsValid:
  */
 
 typedef struct rpc_stat_get {
-  afs_uint32 clock_sec;
-  afs_uint32 clock_usec;
-  afs_uint32 index;
-  afs_uint32 total;
-  afs_uint32 clientVersion;
-  afs_uint32 serverVersion;
-  struct rpcStats stat_list;
-  afs_RPCStats_t stats[CACHED_ITEMS];
-  afs_uint32 *pointer;
+    afs_uint32 clock_sec;
+    afs_uint32 clock_usec;
+    afs_uint32 index;
+    afs_uint32 total;
+    afs_uint32 clientVersion;
+    afs_uint32 serverVersion;
+    struct rpcStats stat_list;
+    afs_RPCStats_t stats[CACHED_ITEMS];
+    afs_uint32 *pointer;
 } rpc_stat_get_t, *rpc_stat_get_p;
 
-static void UnmarshallRPCStats(
-    afs_uint32 serverVersion,
-    afs_uint32 **ptrP,
-    afs_RPCUnion_p s)
+static void
+UnmarshallRPCStats(afs_uint32 serverVersion, afs_uint32 ** ptrP,
+		   afs_RPCUnion_p s)
 {
     afs_uint32 *ptr;
     unsigned int hi, lo;
@@ -1237,12 +1225,9 @@ static void UnmarshallRPCStats(
     *ptrP = ptr;
 }
 
-static int GetRPCStatsRPC(
-  void *rpc_specific,
-  int slot,
-  int *last_item,
-  int *last_item_contains_data,
-  afs_status_p st)
+static int
+GetRPCStatsRPC(void *rpc_specific, int slot, int *last_item,
+	       int *last_item_contains_data, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -1258,9 +1243,7 @@ static int GetRPCStatsRPC(
      * format
      */
 
-    UnmarshallRPCStats(t->serverVersion,
-		       &t->pointer,
-		       &t->stats[slot].s);
+    UnmarshallRPCStats(t->serverVersion, &t->pointer, &t->stats[slot].s);
 
     t->index++;
 
@@ -1269,52 +1252,48 @@ static int GetRPCStatsRPC(
      */
 
     if (t->index == t->total) {
-        *last_item = 1;
-        *last_item_contains_data = 1;
+	*last_item = 1;
+	*last_item_contains_data = 1;
     }
     rc = 1;
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
 
-static int GetRPCStatsFromCache(
-  void *rpc_specific,
-  int slot,
-  void *dest,
-  afs_status_p st)
+static int
+GetRPCStatsFromCache(void *rpc_specific, int slot, void *dest,
+		     afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     rpc_stat_get_p stat = (rpc_stat_get_p) rpc_specific;
 
-    memcpy(dest, (const void *) &stat->stats[slot],
-           sizeof(afs_RPCStats_t));
+    memcpy(dest, (const void *)&stat->stats[slot], sizeof(afs_RPCStats_t));
 
     rc = 1;
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
 
-static int DestroyRPCStats(
-  void *rpc_specific,
-  afs_status_p st)
+static int
+DestroyRPCStats(void *rpc_specific, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     rpc_stat_get_p stat = (rpc_stat_get_p) rpc_specific;
 
     if (stat->stat_list.rpcStats_val != NULL) {
-        free(stat->stat_list.rpcStats_val);
+	free(stat->stat_list.rpcStats_val);
     }
     rc = 1;
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1341,35 +1320,34 @@ static int DestroyRPCStats(
  *
  */
 
-int ADMINAPI util_RPCStatsGetBegin(
-  struct rx_connection *conn,
-  int (*rpc)(),
-  void **iterationIdP,
-  afs_status_p st)
+int ADMINAPI
+util_RPCStatsGetBegin(struct rx_connection *conn, int (*rpc) (),
+		      void **iterationIdP, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
-    afs_admin_iterator_p iter = (afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
+    afs_admin_iterator_p iter =
+	(afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
     rpc_stat_get_p stat = (rpc_stat_get_p) malloc(sizeof(rpc_stat_get_t));
 
     if (conn == NULL) {
-        tst = ADMRXCONNNULL;
-        goto fail_util_RPCStatsGetBegin;
+	tst = ADMRXCONNNULL;
+	goto fail_util_RPCStatsGetBegin;
     }
 
     if (rpc == NULL) {
-        tst = ADMRPCPTRNULL;
-        goto fail_util_RPCStatsGetBegin;
+	tst = ADMRPCPTRNULL;
+	goto fail_util_RPCStatsGetBegin;
     }
 
     if (iterationIdP == NULL) {
-        tst = ADMITERATIONIDPNULL;
-        goto fail_util_RPCStatsGetBegin;
+	tst = ADMITERATIONIDPNULL;
+	goto fail_util_RPCStatsGetBegin;
     }
 
     if ((iter == NULL) || (stat == NULL)) {
-        tst = ADMNOMEM;
-        goto fail_util_RPCStatsGetBegin;
+	tst = ADMNOMEM;
+	goto fail_util_RPCStatsGetBegin;
     }
 
     stat->stat_list.rpcStats_len = 0;
@@ -1377,16 +1355,13 @@ int ADMINAPI util_RPCStatsGetBegin(
     stat->index = 0;
     stat->clientVersion = RX_STATS_RETRIEVAL_VERSION;
 
-    tst = (*rpc)(conn,
-               stat->clientVersion,
-               &stat->serverVersion,
-	       &stat->clock_sec,
-	       &stat->clock_usec,
-	       &stat->total,
-               &stat->stat_list);
+    tst =
+	(*rpc) (conn, stat->clientVersion, &stat->serverVersion,
+		&stat->clock_sec, &stat->clock_usec, &stat->total,
+		&stat->stat_list);
 
     if (tst != 0) {
-        goto fail_util_RPCStatsGetBegin;
+	goto fail_util_RPCStatsGetBegin;
     }
 
     /*
@@ -1396,45 +1371,35 @@ int ADMINAPI util_RPCStatsGetBegin(
 
     if (stat->stat_list.rpcStats_len == 0) {
 	stat->pointer = NULL;
-        if (!IteratorInit(iter,
-                         (void *) stat,
-                         NULL,
-                         NULL,
-                         NULL,
-                         NULL,
-                         &tst)) {
-            goto fail_util_RPCStatsGetBegin;
-        }
-        iter->done_iterating = 1;
-        iter->st = ADMITERATORDONE;
+	if (!IteratorInit(iter, (void *)stat, NULL, NULL, NULL, NULL, &tst)) {
+	    goto fail_util_RPCStatsGetBegin;
+	}
+	iter->done_iterating = 1;
+	iter->st = ADMITERATORDONE;
     } else {
 	stat->pointer = stat->stat_list.rpcStats_val;
-        if (!IteratorInit(iter,
-                         (void *) stat,
-                         GetRPCStatsRPC,
-                         GetRPCStatsFromCache,
-                         NULL,
-                         DestroyRPCStats,
-                         &tst)) {
-            goto fail_util_RPCStatsGetBegin;
-        }
+	if (!IteratorInit
+	    (iter, (void *)stat, GetRPCStatsRPC, GetRPCStatsFromCache, NULL,
+	     DestroyRPCStats, &tst)) {
+	    goto fail_util_RPCStatsGetBegin;
+	}
     }
-    *iterationIdP = (void *) iter;
+    *iterationIdP = (void *)iter;
     rc = 1;
 
-fail_util_RPCStatsGetBegin:
+  fail_util_RPCStatsGetBegin:
 
     if (rc == 0) {
-        if (iter != NULL) {
-            free(iter);
-        }
-        if (stat != NULL) {
-            free(stat);
-        }
+	if (iter != NULL) {
+	    free(iter);
+	}
+	if (stat != NULL) {
+	    free(stat);
+	}
     }
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1460,31 +1425,30 @@ fail_util_RPCStatsGetBegin:
  *
  */
 
-int ADMINAPI util_RPCStatsGetNext(
-  const void *iterationId,
-  afs_RPCStats_p stats,
-  afs_status_p st)
+int ADMINAPI
+util_RPCStatsGetNext(const void *iterationId, afs_RPCStats_p stats,
+		     afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_admin_iterator_p iter = (afs_admin_iterator_p) iterationId;
 
     if (iterationId == NULL) {
-        tst = ADMITERATIONIDPNULL;
-        goto fail_util_RPCStatsGetNext;
+	tst = ADMITERATIONIDPNULL;
+	goto fail_util_RPCStatsGetNext;
     }
 
     if (stats == NULL) {
-        tst = ADMUTILRPCSTATSNULL;
-        goto fail_util_RPCStatsGetNext;
+	tst = ADMUTILRPCSTATSNULL;
+	goto fail_util_RPCStatsGetNext;
     }
 
-    rc = IteratorNext(iter, (void *) stats, &tst);
+    rc = IteratorNext(iter, (void *)stats, &tst);
 
-fail_util_RPCStatsGetNext:
+  fail_util_RPCStatsGetNext:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1507,25 +1471,24 @@ fail_util_RPCStatsGetNext:
  *
  */
 
-int ADMINAPI util_RPCStatsGetDone(
-  const void *iterationId,
-  afs_status_p st)
+int ADMINAPI
+util_RPCStatsGetDone(const void *iterationId, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_admin_iterator_p iter = (afs_admin_iterator_p) iterationId;
 
     if (iterationId == NULL) {
-        tst = ADMITERATIONIDPNULL;
-        goto fail_util_RPCStatsGetDone;
+	tst = ADMITERATIONIDPNULL;
+	goto fail_util_RPCStatsGetDone;
     }
 
     rc = IteratorDone(iter, &tst);
 
-fail_util_RPCStatsGetDone:
+  fail_util_RPCStatsGetDone:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1551,40 +1514,38 @@ fail_util_RPCStatsGetDone:
  *
  */
 
-int ADMINAPI util_RPCStatsStateGet(
-  struct rx_connection *conn,
-  int (*rpc)(),
-  afs_RPCStatsState_p state,
-  afs_status_p st)
+int ADMINAPI
+util_RPCStatsStateGet(struct rx_connection *conn, int (*rpc) (),
+		      afs_RPCStatsState_p state, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
 
     if (conn == NULL) {
-        tst = ADMRXCONNNULL;
-        goto fail_util_RPCStatsStateGet;
+	tst = ADMRXCONNNULL;
+	goto fail_util_RPCStatsStateGet;
     }
 
     if (rpc == NULL) {
-        tst = ADMRPCPTRNULL;
-        goto fail_util_RPCStatsStateGet;
+	tst = ADMRPCPTRNULL;
+	goto fail_util_RPCStatsStateGet;
     }
 
     if (state == NULL) {
-        tst = ADMRPCSTATENULL;
-        goto fail_util_RPCStatsStateGet;
+	tst = ADMRPCSTATENULL;
+	goto fail_util_RPCStatsStateGet;
     }
 
-    tst = (*rpc)(conn, state);
+    tst = (*rpc) (conn, state);
 
     if (!tst) {
 	rc = 1;
     }
 
-fail_util_RPCStatsStateGet:
+  fail_util_RPCStatsStateGet:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1609,34 +1570,33 @@ fail_util_RPCStatsStateGet:
  *
  */
 
-int ADMINAPI util_RPCStatsStateEnable(
-  struct rx_connection *conn,
-  int (*rpc)(),
-  afs_status_p st)
+int ADMINAPI
+util_RPCStatsStateEnable(struct rx_connection *conn, int (*rpc) (),
+			 afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
 
     if (conn == NULL) {
-        tst = ADMRXCONNNULL;
-        goto fail_util_RPCStatsStateEnable;
+	tst = ADMRXCONNNULL;
+	goto fail_util_RPCStatsStateEnable;
     }
 
     if (rpc == NULL) {
-        tst = ADMRPCPTRNULL;
-        goto fail_util_RPCStatsStateEnable;
+	tst = ADMRPCPTRNULL;
+	goto fail_util_RPCStatsStateEnable;
     }
 
-    tst = (*rpc)(conn);
+    tst = (*rpc) (conn);
 
     if (!tst) {
 	rc = 1;
     }
 
-fail_util_RPCStatsStateEnable:
+  fail_util_RPCStatsStateEnable:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1661,34 +1621,33 @@ fail_util_RPCStatsStateEnable:
  *
  */
 
-int ADMINAPI util_RPCStatsStateDisable(
-  struct rx_connection *conn,
-  int (*rpc)(),
-  afs_status_p st)
+int ADMINAPI
+util_RPCStatsStateDisable(struct rx_connection *conn, int (*rpc) (),
+			  afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
 
     if (conn == NULL) {
-        tst = ADMRXCONNNULL;
-        goto fail_util_RPCStatsStateDisable;
+	tst = ADMRXCONNNULL;
+	goto fail_util_RPCStatsStateDisable;
     }
 
     if (rpc == NULL) {
-        tst = ADMRPCPTRNULL;
-        goto fail_util_RPCStatsStateDisable;
+	tst = ADMRPCPTRNULL;
+	goto fail_util_RPCStatsStateDisable;
     }
 
-    tst = (*rpc)(conn);
+    tst = (*rpc) (conn);
 
     if (!tst) {
 	rc = 1;
     }
 
-fail_util_RPCStatsStateDisable:
+  fail_util_RPCStatsStateDisable:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1716,35 +1675,33 @@ fail_util_RPCStatsStateDisable:
  *
  */
 
-int ADMINAPI util_RPCStatsClear(
-  struct rx_connection *conn,
-  int (*rpc)(),
-  afs_RPCStatsClearFlag_t flag,
-  afs_status_p st)
+int ADMINAPI
+util_RPCStatsClear(struct rx_connection *conn, int (*rpc) (),
+		   afs_RPCStatsClearFlag_t flag, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
 
     if (conn == NULL) {
-        tst = ADMRXCONNNULL;
-        goto fail_util_RPCStatsClear;
+	tst = ADMRXCONNNULL;
+	goto fail_util_RPCStatsClear;
     }
 
     if (rpc == NULL) {
-        tst = ADMRPCPTRNULL;
-        goto fail_util_RPCStatsClear;
+	tst = ADMRPCPTRNULL;
+	goto fail_util_RPCStatsClear;
     }
 
-    tst = (*rpc)(conn, flag);
+    tst = (*rpc) (conn, flag);
 
     if (!tst) {
 	rc = 1;
     }
 
-fail_util_RPCStatsClear:
+  fail_util_RPCStatsClear:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1768,22 +1725,21 @@ fail_util_RPCStatsClear:
  *
  */
 
-int ADMINAPI util_RPCStatsVersionGet(
-  struct rx_connection *conn,
-  afs_RPCStatsVersion_p version,
-  afs_status_p st)
+int ADMINAPI
+util_RPCStatsVersionGet(struct rx_connection *conn,
+			afs_RPCStatsVersion_p version, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
 
     if (conn == NULL) {
-        tst = ADMRXCONNNULL;
-        goto fail_util_RPCStatsVersionGet;
+	tst = ADMRXCONNNULL;
+	goto fail_util_RPCStatsVersionGet;
     }
 
     if (version == NULL) {
-        tst = ADMRPCVERSIONNULL;
-        goto fail_util_RPCStatsVersionGet;
+	tst = ADMRPCVERSIONNULL;
+	goto fail_util_RPCStatsVersionGet;
     }
 
     tst = RXSTATS_QueryRPCStatsVersion(conn, version);
@@ -1792,10 +1748,10 @@ int ADMINAPI util_RPCStatsVersionGet(
 	rc = 1;
     }
 
-fail_util_RPCStatsVersionGet:
+  fail_util_RPCStatsVersionGet:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1805,17 +1761,14 @@ fail_util_RPCStatsVersionGet:
  */
 
 typedef struct cm_srvr_pref_get {
-  struct rx_connection *conn;
-  afs_int32 index;
-  afs_CMServerPref_t srvrPrefs[CACHED_ITEMS];
+    struct rx_connection *conn;
+    afs_int32 index;
+    afs_CMServerPref_t srvrPrefs[CACHED_ITEMS];
 } cm_srvr_pref_get_t, *cm_srvr_pref_get_p;
 
-static int GetServerPrefsRPC(
-  void *rpc_specific,
-  int slot,
-  int *last_item,
-  int *last_item_contains_data,
-  afs_status_p st)
+static int
+GetServerPrefsRPC(void *rpc_specific, int slot, int *last_item,
+		  int *last_item_contains_data, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -1824,9 +1777,9 @@ static int GetServerPrefsRPC(
     /*
      * Get the next entry in the list of server preferences.
      */
-    tst = RXAFSCB_GetServerPrefs(t->conn, t->index,
-				 &t->srvrPrefs[slot].ipAddr,
-				 &t->srvrPrefs[slot].ipRank);
+    tst =
+	RXAFSCB_GetServerPrefs(t->conn, t->index, &t->srvrPrefs[slot].ipAddr,
+			       &t->srvrPrefs[slot].ipRank);
     if (tst) {
 	goto fail_GetServerPrefsRPC;
     }
@@ -1835,37 +1788,35 @@ static int GetServerPrefsRPC(
      * See if we've processed all the entries
      */
     if (t->srvrPrefs[slot].ipAddr == 0xffffffff) {
-        *last_item = 1;
-        *last_item_contains_data = 0;
+	*last_item = 1;
+	*last_item_contains_data = 0;
     } else {
 	t->index += 1;
     }
     rc = 1;
 
-fail_GetServerPrefsRPC:
+  fail_GetServerPrefsRPC:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
 
-static int GetServerPrefsFromCache(
-  void *rpc_specific,
-  int slot,
-  void *dest,
-  afs_status_p st)
+static int
+GetServerPrefsFromCache(void *rpc_specific, int slot, void *dest,
+			afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     cm_srvr_pref_get_p prefs = (cm_srvr_pref_get_p) rpc_specific;
 
-    memcpy(dest, (const void *) &prefs->srvrPrefs[slot],
-           sizeof(afs_CMServerPref_t));
+    memcpy(dest, (const void *)&prefs->srvrPrefs[slot],
+	   sizeof(afs_CMServerPref_t));
 
     rc = 1;
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1890,10 +1841,9 @@ static int GetServerPrefsFromCache(
  *
  */
 
-int ADMINAPI util_CMGetServerPrefsBegin(
-  struct rx_connection *conn,
-  void **iterationIdP,
-  afs_status_p st)
+int ADMINAPI
+util_CMGetServerPrefsBegin(struct rx_connection *conn, void **iterationIdP,
+			   afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -1901,8 +1851,8 @@ int ADMINAPI util_CMGetServerPrefsBegin(
     cm_srvr_pref_get_p pref;
 
     if (conn == NULL) {
-        tst = ADMRXCONNNULL;
-        goto fail_util_CMGetServerPrefsBegin;
+	tst = ADMRXCONNNULL;
+	goto fail_util_CMGetServerPrefsBegin;
     }
 
     iter = (afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
@@ -1914,25 +1864,26 @@ int ADMINAPI util_CMGetServerPrefsBegin(
     pref = (cm_srvr_pref_get_p) malloc(sizeof(cm_srvr_pref_get_t));
     if (pref == NULL) {
 	free(iter);
-        tst = ADMNOMEM;
-        goto fail_util_CMGetServerPrefsBegin;
+	tst = ADMNOMEM;
+	goto fail_util_CMGetServerPrefsBegin;
     }
 
     pref->conn = conn;
     pref->index = 0;
-    if (!IteratorInit(iter, (void *) pref, GetServerPrefsRPC,
-		      GetServerPrefsFromCache, NULL, NULL, &tst)) {
+    if (!IteratorInit
+	(iter, (void *)pref, GetServerPrefsRPC, GetServerPrefsFromCache, NULL,
+	 NULL, &tst)) {
 	free(iter);
 	free(pref);
 	goto fail_util_CMGetServerPrefsBegin;
     }
-    *iterationIdP = (void *) iter;
+    *iterationIdP = (void *)iter;
     rc = 1;
 
-fail_util_CMGetServerPrefsBegin:
+  fail_util_CMGetServerPrefsBegin:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1957,10 +1908,9 @@ fail_util_CMGetServerPrefsBegin:
  *
  */
 
-int ADMINAPI util_CMGetServerPrefsNext(
-  const void *iterationId,
-  afs_CMServerPref_p prefs,
-  afs_status_p st)
+int ADMINAPI
+util_CMGetServerPrefsNext(const void *iterationId, afs_CMServerPref_p prefs,
+			  afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -1971,12 +1921,12 @@ int ADMINAPI util_CMGetServerPrefsNext(
 	goto fail_util_CMGetServerPrefsNext;
     }
 
-    rc = IteratorNext(iter, (void *) prefs, &tst);
+    rc = IteratorNext(iter, (void *)prefs, &tst);
 
-fail_util_CMGetServerPrefsNext:
+  fail_util_CMGetServerPrefsNext:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1999,9 +1949,8 @@ fail_util_CMGetServerPrefsNext:
  *
  */
 
-int ADMINAPI util_CMGetServerPrefsDone(
-  const void *iterationId,
-  afs_status_p st)
+int ADMINAPI
+util_CMGetServerPrefsDone(const void *iterationId, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -2015,10 +1964,10 @@ int ADMINAPI util_CMGetServerPrefsDone(
     rc = IteratorDone(iter, &tst);
 
 
-fail_util_CMGetServerPrefsDone:
+  fail_util_CMGetServerPrefsDone:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -2028,17 +1977,14 @@ fail_util_CMGetServerPrefsDone:
  */
 
 typedef struct cm_list_cell_get {
-  struct rx_connection *conn;
-  afs_int32 index;
-  afs_CMListCell_t cell[CACHED_ITEMS];
+    struct rx_connection *conn;
+    afs_int32 index;
+    afs_CMListCell_t cell[CACHED_ITEMS];
 } cm_list_cell_get_t, *cm_list_cell_get_p;
 
-static int ListCellsRPC(
-  void *rpc_specific,
-  int slot,
-  int *last_item,
-  int *last_item_contains_data,
-  afs_status_p st)
+static int
+ListCellsRPC(void *rpc_specific, int slot, int *last_item,
+	     int *last_item_contains_data, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -2049,8 +1995,9 @@ static int ListCellsRPC(
      * Get the next entry in the CellServDB.
      */
     name = t->cell[slot].cellname;
-    tst = RXAFSCB_GetCellServDB(t->conn, t->index, &name,
-				t->cell[slot].serverAddr);
+    tst =
+	RXAFSCB_GetCellServDB(t->conn, t->index, &name,
+			      t->cell[slot].serverAddr);
     if (tst) {
 	goto fail_ListCellsRPC;
     }
@@ -2060,37 +2007,33 @@ static int ListCellsRPC(
      * See if we've processed all the entries
      */
     if (strlen(t->cell[slot].cellname) == 0) {
-        *last_item = 1;
-        *last_item_contains_data = 0;
+	*last_item = 1;
+	*last_item_contains_data = 0;
     } else {
 	t->index += 1;
     }
     rc = 1;
 
-fail_ListCellsRPC:
+  fail_ListCellsRPC:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
 
-static int ListCellsFromCache(
-  void *rpc_specific,
-  int slot,
-  void *dest,
-  afs_status_p st)
+static int
+ListCellsFromCache(void *rpc_specific, int slot, void *dest, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     cm_list_cell_get_p cell = (cm_list_cell_get_p) rpc_specific;
 
-    memcpy(dest, (const void *) &cell->cell[slot],
-           sizeof(afs_CMListCell_t));
+    memcpy(dest, (const void *)&cell->cell[slot], sizeof(afs_CMListCell_t));
 
     rc = 1;
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -2115,10 +2058,9 @@ static int ListCellsFromCache(
  *
  */
 
-int ADMINAPI util_CMListCellsBegin(
-  struct rx_connection *conn,
-  void **iterationIdP,
-  afs_status_p st)
+int ADMINAPI
+util_CMListCellsBegin(struct rx_connection *conn, void **iterationIdP,
+		      afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -2126,8 +2068,8 @@ int ADMINAPI util_CMListCellsBegin(
     cm_list_cell_get_p cell;
 
     if (conn == NULL) {
-        tst = ADMRXCONNNULL;
-        goto fail_util_CMListCellsBegin;
+	tst = ADMRXCONNNULL;
+	goto fail_util_CMListCellsBegin;
     }
 
     iter = (afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
@@ -2139,25 +2081,26 @@ int ADMINAPI util_CMListCellsBegin(
     cell = (cm_list_cell_get_p) malloc(sizeof(cm_list_cell_get_t));
     if (cell == NULL) {
 	free(iter);
-        tst = ADMNOMEM;
-        goto fail_util_CMListCellsBegin;
+	tst = ADMNOMEM;
+	goto fail_util_CMListCellsBegin;
     }
 
     cell->conn = conn;
     cell->index = 0;
-    if (!IteratorInit(iter, (void *) cell, ListCellsRPC,
-		      ListCellsFromCache, NULL, NULL, &tst)) {
+    if (!IteratorInit
+	(iter, (void *)cell, ListCellsRPC, ListCellsFromCache, NULL, NULL,
+	 &tst)) {
 	free(iter);
 	free(cell);
 	goto fail_util_CMListCellsBegin;
     }
-    *iterationIdP = (void *) iter;
+    *iterationIdP = (void *)iter;
     rc = 1;
 
-fail_util_CMListCellsBegin:
+  fail_util_CMListCellsBegin:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -2181,10 +2124,9 @@ fail_util_CMListCellsBegin:
  *
  */
 
-int ADMINAPI util_CMListCellsNext(
-  const void *iterationId,
-  afs_CMListCell_p cell,
-  afs_status_p st)
+int ADMINAPI
+util_CMListCellsNext(const void *iterationId, afs_CMListCell_p cell,
+		     afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -2195,12 +2137,12 @@ int ADMINAPI util_CMListCellsNext(
 	goto fail_util_CMListCellsNext;
     }
 
-    rc = IteratorNext(iter, (void *) cell, &tst);
+    rc = IteratorNext(iter, (void *)cell, &tst);
 
-fail_util_CMListCellsNext:
+  fail_util_CMListCellsNext:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -2222,9 +2164,8 @@ fail_util_CMListCellsNext:
  *
  */
 
-int ADMINAPI util_CMListCellsDone(
-  const void *iterationId,
-  afs_status_p st)
+int ADMINAPI
+util_CMListCellsDone(const void *iterationId, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -2238,10 +2179,10 @@ int ADMINAPI util_CMListCellsDone(
     rc = IteratorDone(iter, &tst);
 
 
-fail_util_CMListCellsDone:
+  fail_util_CMListCellsDone:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -2265,23 +2206,22 @@ fail_util_CMListCellsDone:
  *
  */
 
-int ADMINAPI util_CMLocalCell(
-  struct rx_connection *conn,
-  afs_CMCellName_p cellName,
-  afs_status_p st)
+int ADMINAPI
+util_CMLocalCell(struct rx_connection *conn, afs_CMCellName_p cellName,
+		 afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_CMCellName_p name;
 
     if (conn == NULL) {
-        tst = ADMRXCONNNULL;
-        goto fail_util_CMLocalCell;
+	tst = ADMRXCONNNULL;
+	goto fail_util_CMLocalCell;
     }
 
     if (cellName == NULL) {
-        tst = ADMCLIENTCMCELLNAMENULL;
-        goto fail_util_CMLocalCell;
+	tst = ADMCLIENTCMCELLNAMENULL;
+	goto fail_util_CMLocalCell;
     }
 
     name = cellName;
@@ -2291,18 +2231,17 @@ int ADMINAPI util_CMLocalCell(
 	rc = 1;
     }
 
-fail_util_CMLocalCell:
+  fail_util_CMLocalCell:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
 
-static void UnmarshallCMClientConfig(
-    afs_uint32 serverVersion,
-    afs_uint32 *ptr,
-    afs_ClientConfigUnion_p config)
+static void
+UnmarshallCMClientConfig(afs_uint32 serverVersion, afs_uint32 * ptr,
+			 afs_ClientConfigUnion_p config)
 {
     /*
      * We currently only support version 1.
@@ -2337,10 +2276,9 @@ static void UnmarshallCMClientConfig(
  *
  */
 
-int ADMINAPI util_CMClientConfig(
-  struct rx_connection *conn,
-  afs_ClientConfig_p config,
-  afs_status_p st)
+int ADMINAPI
+util_CMClientConfig(struct rx_connection *conn, afs_ClientConfig_p config,
+		    afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -2348,38 +2286,35 @@ int ADMINAPI util_CMClientConfig(
     struct cacheConfig tconfig;
 
     if (conn == NULL) {
-        tst = ADMRXCONNNULL;
-        goto fail_util_CMClientConfig;
+	tst = ADMRXCONNNULL;
+	goto fail_util_CMClientConfig;
     }
 
     if (config == NULL) {
-        tst = ADMCLIENTCMCELLNAMENULL;
-        goto fail_util_CMClientConfig;
+	tst = ADMCLIENTCMCELLNAMENULL;
+	goto fail_util_CMClientConfig;
     }
 
     config->clientVersion = AFS_CLIENT_RETRIEVAL_VERSION;
     tconfig.cacheConfig_val = NULL;
     tconfig.cacheConfig_len = 0;
-    tst = RXAFSCB_GetCacheConfig(conn,
-				 config->clientVersion,
-				 &config->serverVersion,
-				 &allocbytes,
-				 &tconfig);
+    tst =
+	RXAFSCB_GetCacheConfig(conn, config->clientVersion,
+			       &config->serverVersion, &allocbytes, &tconfig);
 
     if (tst) {
 	goto fail_util_CMClientConfig;
     }
 
-    UnmarshallCMClientConfig(config->serverVersion,
-			     tconfig.cacheConfig_val,
+    UnmarshallCMClientConfig(config->serverVersion, tconfig.cacheConfig_val,
 			     &config->c);
     rc = 1;
     free(tconfig.cacheConfig_val);
 
-fail_util_CMClientConfig:
+  fail_util_CMClientConfig:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -2403,41 +2338,38 @@ fail_util_CMClientConfig:
  *
  */
 
-int ADMINAPI util_RXDebugVersion(
-  rxdebugHandle_p handle,
-  rxdebugVersion_p version,
-  afs_status_p st)
+int ADMINAPI
+util_RXDebugVersion(rxdebugHandle_p handle, rxdebugVersion_p version,
+		    afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     int code;
 
     if (handle == NULL) {
-        tst = ADMRXDEBUGHANDLENULL;
-        goto fail_util_RXDebugVersion;
+	tst = ADMRXDEBUGHANDLENULL;
+	goto fail_util_RXDebugVersion;
     }
 
     if (version == NULL) {
-        tst = ADMRXDEBUGVERSIONNULL;
-        goto fail_util_RXDebugVersion;
+	tst = ADMRXDEBUGVERSIONNULL;
+	goto fail_util_RXDebugVersion;
     }
 
-    code = rx_GetServerVersion(handle->sock,
-			       handle->ipAddr,
-			       handle->udpPort,
-			       UTIL_MAX_RXDEBUG_VERSION_LEN,
-			       version);
+    code =
+	rx_GetServerVersion(handle->sock, handle->ipAddr, handle->udpPort,
+			    UTIL_MAX_RXDEBUG_VERSION_LEN, version);
     if (code < 0) {
 	tst = ADMCLIENTRXDEBUGTIMEOUT;
-        goto fail_util_RXDebugVersion;
+	goto fail_util_RXDebugVersion;
     }
 
     rc = 1;
 
-fail_util_RXDebugVersion:
+  fail_util_RXDebugVersion:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -2462,10 +2394,9 @@ fail_util_RXDebugVersion:
  *
  */
 
-int ADMINAPI util_RXDebugSupportedStats(
-  rxdebugHandle_p handle,
-  afs_uint32 *supportedStats,
-  afs_status_p st)
+int ADMINAPI
+util_RXDebugSupportedStats(rxdebugHandle_p handle,
+			   afs_uint32 * supportedStats, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -2491,10 +2422,10 @@ int ADMINAPI util_RXDebugSupportedStats(
     *supportedStats = handle->supportedStats;
     rc = 1;
 
-fail_util_RXDebugSupportedStats:
+  fail_util_RXDebugSupportedStats:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -2519,42 +2450,39 @@ fail_util_RXDebugSupportedStats:
  *
  */
 
-int ADMINAPI util_RXDebugBasicStats(
-  rxdebugHandle_p handle,
-  struct rx_debugStats *stats,
-  afs_status_p st)
+int ADMINAPI
+util_RXDebugBasicStats(rxdebugHandle_p handle, struct rx_debugStats *stats,
+		       afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     int code;
 
     if (handle == NULL) {
-        tst = ADMRXDEBUGHANDLENULL;
-        goto fail_util_RXDebugBasicStats;
+	tst = ADMRXDEBUGHANDLENULL;
+	goto fail_util_RXDebugBasicStats;
     }
 
     if (stats == NULL) {
-        tst = ADMRXDEBUGSTATSNULL;
-        goto fail_util_RXDebugBasicStats;
+	tst = ADMRXDEBUGSTATSNULL;
+	goto fail_util_RXDebugBasicStats;
     }
 
-    code = rx_GetServerDebug(handle->sock,
-			     handle->ipAddr,
-			     handle->udpPort,
-			     stats,
-			     &handle->supportedStats);
+    code =
+	rx_GetServerDebug(handle->sock, handle->ipAddr, handle->udpPort,
+			  stats, &handle->supportedStats);
     if (code < 0) {
 	tst = ADMCLIENTRXDEBUGTIMEOUT;
-        goto fail_util_RXDebugBasicStats;
+	goto fail_util_RXDebugBasicStats;
     }
 
     handle->firstFlag = 0;
     rc = 1;
 
-fail_util_RXDebugBasicStats:
+  fail_util_RXDebugBasicStats:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -2579,11 +2507,9 @@ fail_util_RXDebugBasicStats:
  *
  */
 
-int ADMINAPI util_RXDebugRxStats(
-  rxdebugHandle_p handle,
-  struct rx_stats *stats,
-  afs_uint32 *supportedValues,
-  afs_status_p st)
+int ADMINAPI
+util_RXDebugRxStats(rxdebugHandle_p handle, struct rx_stats *stats,
+		    afs_uint32 * supportedValues, afs_status_p st)
 {
     int rc = 0;
     int trc;
@@ -2608,7 +2534,7 @@ int ADMINAPI util_RXDebugRxStats(
 
     if (handle->firstFlag) {
 	trc = util_RXDebugSupportedStats(handle, &tsupported, &tst);
-	if(!trc) {
+	if (!trc) {
 	    rc = trc;
 	    goto fail_util_RXDebugRxStats;
 	}
@@ -2619,11 +2545,9 @@ int ADMINAPI util_RXDebugRxStats(
 	goto fail_util_RXDebugRxStats;
     }
 
-    code = rx_GetServerStats(handle->sock,
-			     handle->ipAddr,
-			     handle->udpPort,
-			     stats,
-			     &handle->supportedStats);
+    code =
+	rx_GetServerStats(handle->sock, handle->ipAddr, handle->udpPort,
+			  stats, &handle->supportedStats);
     if (code < 0) {
 	tst = ADMCLIENTRXDEBUGTIMEOUT;
 	goto fail_util_RXDebugRxStats;
@@ -2631,7 +2555,7 @@ int ADMINAPI util_RXDebugRxStats(
 
     rc = 1;
 
-fail_util_RXDebugRxStats:
+  fail_util_RXDebugRxStats:
 
     if (st != NULL) {
 	*st = tst;
@@ -2644,23 +2568,20 @@ fail_util_RXDebugRxStats:
  */
 
 typedef struct rxdebug_conn_item {
-  struct rx_debugConn conn;
-  afs_uint32 supportedValues;
+    struct rx_debugConn conn;
+    afs_uint32 supportedValues;
 } rxdebug_conn_item_t, *rxdebug_conn_item_p;
 
 typedef struct rxdebug_conn_get {
-  int allconns;
-  rxdebugHandle_p handle;
-  afs_int32 index;
-  rxdebug_conn_item_t items[CACHED_ITEMS];
+    int allconns;
+    rxdebugHandle_p handle;
+    afs_int32 index;
+    rxdebug_conn_item_t items[CACHED_ITEMS];
 } rxdebug_conn_get_t, *rxdebug_conn_get_p;
 
-static int RXDebugConnsFromServer(
-  void *rpc_specific,
-  int slot,
-  int *last_item,
-  int *last_item_contains_data,
-  afs_status_p st)
+static int
+RXDebugConnsFromServer(void *rpc_specific, int slot, int *last_item,
+		       int *last_item_contains_data, afs_status_p st)
 {
     int rc = 0;
     int code;
@@ -2670,14 +2591,12 @@ static int RXDebugConnsFromServer(
     /*
      * Get the next entry the list of connections
      */
-    code = rx_GetServerConnections(t->handle->sock,
-				   t->handle->ipAddr,
-				   t->handle->udpPort,
-				   &t->index,
-				   t->allconns,
-				   t->handle->supportedStats,
-				   &t->items[slot].conn,
-				   &t->items[slot].supportedValues);
+    code =
+	rx_GetServerConnections(t->handle->sock, t->handle->ipAddr,
+				t->handle->udpPort, &t->index, t->allconns,
+				t->handle->supportedStats,
+				&t->items[slot].conn,
+				&t->items[slot].supportedValues);
     if (code < 0) {
 	tst = ADMCLIENTRXDEBUGTIMEOUT;
 	goto fail_ListCellsRPC;
@@ -2687,35 +2606,32 @@ static int RXDebugConnsFromServer(
      * See if we've processed all the entries
      */
     if (t->items[slot].conn.cid == 0xffffffff) {
-        *last_item = 1;
-        *last_item_contains_data = 0;
+	*last_item = 1;
+	*last_item_contains_data = 0;
     }
     rc = 1;
 
-fail_ListCellsRPC:
+  fail_ListCellsRPC:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
 
-static int RXDebugConnsFromCache(
-  void *rpc_specific,
-  int slot,
-  void *dest,
-  afs_status_p st)
+static int
+RXDebugConnsFromCache(void *rpc_specific, int slot, void *dest,
+		      afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
-    rxdebug_conn_get_p t = (rxdebug_conn_get_p)rpc_specific;
+    rxdebug_conn_get_p t = (rxdebug_conn_get_p) rpc_specific;
 
-    memcpy(dest, (const void *)&t->items[slot],
-           sizeof(rxdebug_conn_item_t));
+    memcpy(dest, (const void *)&t->items[slot], sizeof(rxdebug_conn_item_t));
 
     rc = 1;
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -2744,11 +2660,9 @@ static int RXDebugConnsFromCache(
  *
  */
 
-int ADMINAPI util_RXDebugConnectionsBegin(
-  rxdebugHandle_p handle,
-  int allconns,
-  void **iterationIdP,
-  afs_status_p st)
+int ADMINAPI
+util_RXDebugConnectionsBegin(rxdebugHandle_p handle, int allconns,
+			     void **iterationIdP, afs_status_p st)
 {
     int rc = 0;
     int trc;
@@ -2758,8 +2672,8 @@ int ADMINAPI util_RXDebugConnectionsBegin(
     rxdebug_conn_get_p t;
 
     if (handle == NULL) {
-        tst = ADMRXDEBUGHANDLENULL;
-        goto fail_util_RXDebugConnectionsBegin;
+	tst = ADMRXDEBUGHANDLENULL;
+	goto fail_util_RXDebugConnectionsBegin;
     }
 
     iter = (afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
@@ -2770,14 +2684,13 @@ int ADMINAPI util_RXDebugConnectionsBegin(
 
     if (handle->firstFlag) {
 	trc = util_RXDebugSupportedStats(handle, &tsupported, &tst);
-	if(!trc) {
+	if (!trc) {
 	    rc = trc;
 	    goto fail_util_RXDebugConnectionsBegin;
 	}
     }
 
-    if (allconns &&
-	!(handle->supportedStats & RX_SERVER_DEBUG_ALL_CONN)) {
+    if (allconns && !(handle->supportedStats & RX_SERVER_DEBUG_ALL_CONN)) {
 	tst = ADMCLIENTRXDEBUGNOTSUPPORTED;
 	goto fail_util_RXDebugConnectionsBegin;
     }
@@ -2785,24 +2698,25 @@ int ADMINAPI util_RXDebugConnectionsBegin(
     t = (rxdebug_conn_get_p) malloc(sizeof(rxdebug_conn_get_t));
     if (t == NULL) {
 	free(iter);
-        tst = ADMNOMEM;
-        goto fail_util_RXDebugConnectionsBegin;
+	tst = ADMNOMEM;
+	goto fail_util_RXDebugConnectionsBegin;
     }
 
     t->allconns = allconns;
     t->handle = handle;
     t->index = 0;
-    if (!IteratorInit(iter, (void *)t, RXDebugConnsFromServer,
-		      RXDebugConnsFromCache, NULL, NULL, &tst)) {
+    if (!IteratorInit
+	(iter, (void *)t, RXDebugConnsFromServer, RXDebugConnsFromCache, NULL,
+	 NULL, &tst)) {
 	goto fail_util_RXDebugConnectionsBegin;
     }
-    *iterationIdP = (void *) iter;
+    *iterationIdP = (void *)iter;
     rc = 1;
 
-fail_util_RXDebugConnectionsBegin:
+  fail_util_RXDebugConnectionsBegin:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -2830,16 +2744,15 @@ fail_util_RXDebugConnectionsBegin:
  *
  */
 
-int ADMINAPI util_RXDebugConnectionsNext(
-  const void *iterationId,
-  struct rx_debugConn *conn,
-  afs_uint32 *supportedValues,
-  afs_status_p st)
+int ADMINAPI
+util_RXDebugConnectionsNext(const void *iterationId,
+			    struct rx_debugConn *conn,
+			    afs_uint32 * supportedValues, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     rxdebug_conn_item_t item;
-    afs_admin_iterator_p iter = (afs_admin_iterator_p)iterationId;
+    afs_admin_iterator_p iter = (afs_admin_iterator_p) iterationId;
 
     if (iterationId == NULL) {
 	tst = ADMITERATIONIDPNULL;
@@ -2847,12 +2760,12 @@ int ADMINAPI util_RXDebugConnectionsNext(
     }
 
     if (conn == NULL) {
-        tst = ADMRXDEBUGHANDLENULL;
+	tst = ADMRXDEBUGHANDLENULL;
 	goto fail_util_RXDebugConnectionsNext;
     }
 
     if (supportedValues == NULL) {
-        tst = ADMRXDEBUGHANDLENULL;
+	tst = ADMRXDEBUGHANDLENULL;
 	goto fail_util_RXDebugConnectionsNext;
     }
 
@@ -2864,10 +2777,10 @@ int ADMINAPI util_RXDebugConnectionsNext(
     *conn = item.conn;
     *supportedValues = item.supportedValues;
 
-fail_util_RXDebugConnectionsNext:
+  fail_util_RXDebugConnectionsNext:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -2890,9 +2803,8 @@ fail_util_RXDebugConnectionsNext:
  *
  */
 
-int ADMINAPI util_RXDebugConnectionsDone(
-  const void *iterationId,
-  afs_status_p st)
+int ADMINAPI
+util_RXDebugConnectionsDone(const void *iterationId, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -2909,7 +2821,7 @@ int ADMINAPI util_RXDebugConnectionsDone(
 
     rc = IteratorDone(iter, &tst);
 
-fail_util_RXDebugConnectionsDone:
+  fail_util_RXDebugConnectionsDone:
 
     if (st != NULL) {
 	*st = tst;
@@ -2923,22 +2835,19 @@ fail_util_RXDebugConnectionsDone:
  */
 
 typedef struct rxdebug_peer_item {
-  struct rx_debugPeer peer;
-  afs_uint32 supportedValues;
+    struct rx_debugPeer peer;
+    afs_uint32 supportedValues;
 } rxdebug_peer_item_t, *rxdebug_peer_item_p;
 
 typedef struct rxdebug_peer_get {
-  rxdebugHandle_p handle;
-  afs_int32 index;
-  rxdebug_peer_item_t items[CACHED_ITEMS];
+    rxdebugHandle_p handle;
+    afs_int32 index;
+    rxdebug_peer_item_t items[CACHED_ITEMS];
 } rxdebug_peer_get_t, *rxdebug_peer_get_p;
 
-static int RXDebugPeersFromServer(
-  void *rpc_specific,
-  int slot,
-  int *last_item,
-  int *last_item_contains_data,
-  afs_status_p st)
+static int
+RXDebugPeersFromServer(void *rpc_specific, int slot, int *last_item,
+		       int *last_item_contains_data, afs_status_p st)
 {
     int rc = 0;
     int code;
@@ -2948,13 +2857,11 @@ static int RXDebugPeersFromServer(
     /*
      * Get the next entry the list of peers
      */
-    code = rx_GetServerPeers(t->handle->sock,
-			     t->handle->ipAddr,
-			     t->handle->udpPort,
-			     &t->index,
-			     t->handle->supportedStats,
-			     &t->items[slot].peer,
-			     &t->items[slot].supportedValues);
+    code =
+	rx_GetServerPeers(t->handle->sock, t->handle->ipAddr,
+			  t->handle->udpPort, &t->index,
+			  t->handle->supportedStats, &t->items[slot].peer,
+			  &t->items[slot].supportedValues);
     if (code < 0) {
 	tst = ADMCLIENTRXDEBUGTIMEOUT;
 	goto fail_ListCellsRPC;
@@ -2964,35 +2871,32 @@ static int RXDebugPeersFromServer(
      * See if we've processed all the entries
      */
     if (t->items[slot].peer.host == 0xffffffff) {
-        *last_item = 1;
-        *last_item_contains_data = 0;
+	*last_item = 1;
+	*last_item_contains_data = 0;
     }
     rc = 1;
 
-fail_ListCellsRPC:
+  fail_ListCellsRPC:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
 
-static int RXDebugPeersFromCache(
-  void *rpc_specific,
-  int slot,
-  void *dest,
-  afs_status_p st)
+static int
+RXDebugPeersFromCache(void *rpc_specific, int slot, void *dest,
+		      afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
-    rxdebug_peer_get_p t = (rxdebug_peer_get_p)rpc_specific;
+    rxdebug_peer_get_p t = (rxdebug_peer_get_p) rpc_specific;
 
-    memcpy(dest, (const void *)&t->items[slot],
-           sizeof(rxdebug_peer_item_t));
+    memcpy(dest, (const void *)&t->items[slot], sizeof(rxdebug_peer_item_t));
 
     rc = 1;
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -3019,10 +2923,9 @@ static int RXDebugPeersFromCache(
  *
  */
 
-int ADMINAPI util_RXDebugPeersBegin(
-  rxdebugHandle_p handle,
-  void **iterationIdP,
-  afs_status_p st)
+int ADMINAPI
+util_RXDebugPeersBegin(rxdebugHandle_p handle, void **iterationIdP,
+		       afs_status_p st)
 {
     int rc = 0;
     int trc;
@@ -3032,8 +2935,8 @@ int ADMINAPI util_RXDebugPeersBegin(
     rxdebug_peer_get_p t;
 
     if (handle == NULL) {
-        tst = ADMRXDEBUGHANDLENULL;
-        goto fail_util_RXDebugPeersBegin;
+	tst = ADMRXDEBUGHANDLENULL;
+	goto fail_util_RXDebugPeersBegin;
     }
 
     iter = (afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
@@ -3044,13 +2947,13 @@ int ADMINAPI util_RXDebugPeersBegin(
 
     if (handle->firstFlag) {
 	trc = util_RXDebugSupportedStats(handle, &tsupported, &tst);
-	if(!trc) {
+	if (!trc) {
 	    rc = trc;
 	    goto fail_util_RXDebugPeersBegin;
 	}
     }
 
-    if(!(handle->supportedStats & RX_SERVER_DEBUG_ALL_PEER)) {
+    if (!(handle->supportedStats & RX_SERVER_DEBUG_ALL_PEER)) {
 	tst = ADMCLIENTRXDEBUGNOTSUPPORTED;
 	goto fail_util_RXDebugPeersBegin;
     }
@@ -3058,23 +2961,24 @@ int ADMINAPI util_RXDebugPeersBegin(
     t = (rxdebug_peer_get_p) malloc(sizeof(rxdebug_peer_get_t));
     if (t == NULL) {
 	free(iter);
-        tst = ADMNOMEM;
-        goto fail_util_RXDebugPeersBegin;
+	tst = ADMNOMEM;
+	goto fail_util_RXDebugPeersBegin;
     }
 
     t->handle = handle;
     t->index = 0;
-    if (!IteratorInit(iter, (void *)t, RXDebugPeersFromServer,
-		      RXDebugPeersFromCache, NULL, NULL, &tst)) {
+    if (!IteratorInit
+	(iter, (void *)t, RXDebugPeersFromServer, RXDebugPeersFromCache, NULL,
+	 NULL, &tst)) {
 	goto fail_util_RXDebugPeersBegin;
     }
-    *iterationIdP = (void *) iter;
+    *iterationIdP = (void *)iter;
     rc = 1;
 
-fail_util_RXDebugPeersBegin:
+  fail_util_RXDebugPeersBegin:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -3099,16 +3003,14 @@ fail_util_RXDebugPeersBegin:
  * Returns != 0 upon successful completion.
  *
  */
-int ADMINAPI util_RXDebugPeersNext(
-  const void *iterationId,
-  struct rx_debugPeer *peer,
-  afs_uint32 *supportedValues,
-  afs_status_p st)
+int ADMINAPI
+util_RXDebugPeersNext(const void *iterationId, struct rx_debugPeer *peer,
+		      afs_uint32 * supportedValues, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     rxdebug_peer_item_t item;
-    afs_admin_iterator_p iter = (afs_admin_iterator_p)iterationId;
+    afs_admin_iterator_p iter = (afs_admin_iterator_p) iterationId;
 
     if (iterationId == NULL) {
 	tst = ADMITERATIONIDPNULL;
@@ -3116,12 +3018,12 @@ int ADMINAPI util_RXDebugPeersNext(
     }
 
     if (peer == NULL) {
-        tst = ADMRXDEBUGHANDLENULL;
+	tst = ADMRXDEBUGHANDLENULL;
 	goto fail_util_RXDebugPeersNext;
     }
 
     if (supportedValues == NULL) {
-        tst = ADMRXDEBUGHANDLENULL;
+	tst = ADMRXDEBUGHANDLENULL;
 	goto fail_util_RXDebugPeersNext;
     }
 
@@ -3133,10 +3035,10 @@ int ADMINAPI util_RXDebugPeersNext(
     *peer = item.peer;
     *supportedValues = item.supportedValues;
 
-fail_util_RXDebugPeersNext:
+  fail_util_RXDebugPeersNext:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -3158,9 +3060,8 @@ fail_util_RXDebugPeersNext:
  *
  */
 
-int ADMINAPI util_RXDebugPeersDone(
-  const void *iterationId,
-  afs_status_p st)
+int ADMINAPI
+util_RXDebugPeersDone(const void *iterationId, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -3177,7 +3078,7 @@ int ADMINAPI util_RXDebugPeersDone(
 
     rc = IteratorDone(iter, &tst);
 
-fail_util_RXDebugPeersDone:
+  fail_util_RXDebugPeersDone:
 
     if (st != NULL) {
 	*st = tst;

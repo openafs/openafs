@@ -25,7 +25,7 @@
 #if	defined(AFS_AIX41_ENV) && defined(KERNEL)
 #define PIN(a, b) pin(a, b);
 #define UNPIN(a, b) unpin(a, b);
-#else 
+#else
 #define PIN(a, b) ;
 #define UNPIN(a, b) ;
 #endif

@@ -162,6 +162,7 @@ struct budb_volumeEntry { /* describes a fragment of a volume */
 /* procedure interface */
 
 package BUDB_
+prefix S
 statindex 17
 
 /* All these procedures take a connection parameter since they may contact the
@@ -388,7 +389,7 @@ UseTape
 /* text file management calls - alphabetic */
 
 GetText
- (  IN  afs_int32 lockHandle,
+ (  IN  afs_uint32 lockHandle,
     IN  afs_int32 textType,			/* which type of text */
     IN  afs_int32 maxLength,
     IN 	afs_int32 offset,
@@ -397,10 +398,10 @@ GetText
 
 GetTextVersion
  (  IN afs_int32 textType,
-   OUT afs_int32 *tversion);
+   OUT afs_uint32 *tversion);
 
 SaveText
- (  IN  afs_int32 lockHandle,		/* which type of text */
+ (  IN  afs_uint32 lockHandle,		/* which type of text */
     IN  afs_int32 textType,			/* which type of text */
     IN	afs_int32 offset,			/* offset into text block */
     IN  afs_int32 flags,

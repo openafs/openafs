@@ -31,4 +31,4 @@
 #include "common.h"
 
 void
-SetupKasAdminCmd(void);
+  SetupKasAdminCmd(void);

@@ -47,13 +47,13 @@ extern afs_int32 uss_kauth_AddUser();
      *    Register the given user with the Authentication Server.
      *
      * Args:
-     *	  char *a_user   : Name of the user to register.
-     *	  char *a_passwd : User's (cleartext) password.
+     *    char *a_user   : Name of the user to register.
+     *    char *a_passwd : User's (cleartext) password.
      *
      * Returns:
-     *	  0 if everything went well,
-     *	  1 if there was a problem encountered in this function, or
-     *	  Code returned from a lower-level call.
+     *    0 if everything went well,
+     *    1 if there was a problem encountered in this function, or
+     *    Code returned from a lower-level call.
      */
 
 extern afs_int32 uss_kauth_DelUser();
@@ -62,12 +62,12 @@ extern afs_int32 uss_kauth_DelUser();
      *    Delete the given user from the Authentication Database.
      *
      * Args:
-     *	  char *a_user : Name of the user to delete.
+     *    char *a_user : Name of the user to delete.
      *
      * Returns:
-     *	  0 if everything went well,
-     *	  1 if there was a problem encountered in this function, or
-     *	  Code returned from a lower-level call.
+     *    0 if everything went well,
+     *    1 if there was a problem encountered in this function, or
+     *    Code returned from a lower-level call.
      */
 
 extern afs_int32 uss_kauth_CheckUserName();
@@ -76,11 +76,11 @@ extern afs_int32 uss_kauth_CheckUserName();
      *    Make sure the parsed user name is a legal one.
      *
      * Args:
-     *	  None.
+     *    None.
      *
      * Returns:
-     *	  0 if everything went well,
-     *	  1 if the user name is not legal.
+     *    0 if everything went well,
+     *    1 if the user name is not legal.
      */
 
 #endif /* _USS_KAUTH_H_ */

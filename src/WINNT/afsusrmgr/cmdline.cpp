@@ -38,10 +38,10 @@ static struct {
    BOOL fPresent;
    TCHAR szValue[ cchRESOURCE ];
 } aSWITCHES[] = {
-   { TEXT("cell"),      TRUE  },
-   { TEXT("remote"),    TRUE  },
-   { TEXT("user"),      TRUE  },
-   { TEXT("password"),  TRUE  }
+   { TEXT("cell"),      TRUE,	FALSE,	TEXT("") },
+   { TEXT("remote"),    TRUE,	FALSE,	TEXT("") },
+   { TEXT("user"),      TRUE,	FALSE,	TEXT("") },
+   { TEXT("password"),  TRUE,	FALSE,	TEXT("") }
 };
 
 #define nSWITCHES (sizeof(aSWITCHES) / sizeof(aSWITCHES[0]))

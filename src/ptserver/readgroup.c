@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/readgroup.c,v 1.1.1.7 2001/10/14 18:06:13 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/ptserver/readgroup.c,v 1.10 2004/06/23 14:27:42 shadow Exp $");
 
 #include <stdio.h>
 #ifdef AFS_NT40_ENV
@@ -35,35 +36,34 @@ int verbose = 0;
 void skip();
 
 void
-report_error (code, name, gname)
-  afs_int32 code;
-  char *name;
-  char *gname;
+report_error(afs_int32 code, char *name, char *gname)
 {
     if (code == 0) {
-	if (verbose) printf("  added %s to %s.\n",name,gname);
+	if (verbose)
+	    printf("  added %s to %s.\n", name, gname);
     } else if (code == PRIDEXIST) {
-	if (verbose) printf ("  user %s already on group %s\n", name, gname);
+	if (verbose)
+	    printf("  user %s already on group %s\n", name, gname);
     } else {
-	fprintf(stderr,"Couldn't add %s to %s!\n",name,gname);
-	fprintf(stderr,"%s (%d).\n",pr_ErrorMsg(code),code);
+	fprintf(stderr, "Couldn't add %s to %s!\n", name, gname);
+	fprintf(stderr, "%s (%d).\n", pr_ErrorMsg(code), code);
     }
 }
 
-int osi_audit()
+int
+osi_audit()
 {
 /* OK, this REALLY sucks bigtime, but I can't tell who is calling
  * afsconf_CheckAuth easily, and only *SERVERS* should be calling osi_audit
  * anyway.  It's gonna give somebody fits to debug, I know, I know.
  */
-return 0;
+    return 0;
 }
 
 #include "AFS_component_version_number.c"
 
-main(argc,argv)
-afs_int32 argc;
-char **argv;
+int
+main(int argc, char **argv)
 {
     register afs_int32 code;
     char name[PR_MAXNAMELEN];
@@ -80,119 +80,131 @@ char **argv;
     afs_int32 fail = 0;
 
     if (argc < 2) {
-	fprintf(stderr,"Usage: readgroup [-v] [-c cellname] groupfile.\n");
+	fprintf(stderr, "Usage: readgroup [-v] [-c cellname] groupfile.\n");
 	exit(0);
     }
     cellname = 0;
-    for (i = 1;i<argc;i++) {
-	if (!strcmp(argv[i],"-v"))
+    for (i = 1; i < argc; i++) {
+	if (!strcmp(argv[i], "-v"))
 	    verbose = 1;
 	else {
-	    if (!strcmp(argv[i],"-c")) {
+	    if (!strcmp(argv[i], "-c")) {
 		cellname = (char *)malloc(100);
-		strncpy(cellname,argv[++i],100);
-	    }
-	    else
-		strncpy(buf,argv[i],150);
+		strncpy(cellname, argv[++i], 100);
+	    } else
+		strncpy(buf, argv[i], 150);
 	}
     }
     code = pr_Initialize(2, AFSDIR_CLIENT_ETC_DIRPATH, cellname);
+    free(cellname);
     if (code) {
-	fprintf(stderr,"pr_Initialize failed .. exiting.\n");
-	fprintf(stderr,"%s (%d).\n",pr_ErrorMsg(code),code);
-	exit(1);
-    }
-    
-    if ((fp = fopen(buf,"r")) == NULL) {
-	fprintf(stderr,"Couldn't open %s.\n",argv[1]);
+	fprintf(stderr, "pr_Initialize failed .. exiting.\n");
+	fprintf(stderr, "%s (%d).\n", pr_ErrorMsg(code), code);
 	exit(1);
     }
 
-    while ((tmp = fgets(buf,3000,fp)) != NULL) {
+    if ((fp = fopen(buf, "r")) == NULL) {
+	fprintf(stderr, "Couldn't open %s.\n", argv[1]);
+	exit(1);
+    }
+
+    while ((tmp = fgets(buf, 3000, fp)) != NULL) {
 	/* group file lines must either have the name of a group or a tab or blank space at beginning */
-	if (buf[0] == '\n') break;
+	if (buf[0] == '\n')
+	    break;
 	if (buf[0] != ' ' && buf[0] != '\t') {
 	    /* grab the group name */
 	    memset(gname, 0, PR_MAXNAMELEN);
 	    memset(owner, 0, PR_MAXNAMELEN);
-	    sscanf(buf,"%s %d",gname,&id);
+	    sscanf(buf, "%s %d", gname, &id);
 	    tmp = buf;
 	    skip(&tmp);
 	    skip(&tmp);
 	    stolower(gname);
 	    ptr = strchr(gname, ':');
-	    strncpy(owner,gname,ptr-gname);
-	    if (strcmp(owner,"system") == 0)
-		strncpy(owner,"system:administrators",PR_MAXNAMELEN);
+	    strncpy(owner, gname, ptr - gname);
+	    if (strcmp(owner, "system") == 0)
+		strncpy(owner, "system:administrators", PR_MAXNAMELEN);
 	    fail = 0;
 	    if (verbose)
-		printf("Group is %s, owner is %s, id is %d.\n",gname,owner,id);
-	    code = pr_CreateGroup(gname,owner,&id);
+		printf("Group is %s, owner is %s, id is %d.\n", gname, owner,
+		       id);
+	    code = pr_CreateGroup(gname, owner, &id);
 	    if (code != 0) {
-		if (code != PRIDEXIST) { /* already exists */
-		    fprintf(stderr,"Failed to create group %s with id %d!\n",gname,id);
-		    fprintf(stderr,"%s (%d).\n",pr_ErrorMsg(code),code);
+		if (code != PRIDEXIST) {	/* already exists */
+		    fprintf(stderr, "Failed to create group %s with id %d!\n",
+			    gname, id);
+		    fprintf(stderr, "%s (%d).\n", pr_ErrorMsg(code), code);
 		}
-		if (code != PREXIST && code != PRIDEXIST) {  /* we won't add users if it's not there */
+		if (code != PREXIST && code != PRIDEXIST) {	/* we won't add users if it's not there */
 		    fail = 1;
 		}
 	    }
 	    if (!fail) {
 		/* read members out of buf and add to the group */
 		memset(name, 0, PR_MAXNAMELEN);
-		while (sscanf(tmp,"%s",name) != EOF) {
-		    if (strchr(name,':') == NULL) {
+		while (sscanf(tmp, "%s", name) != EOF) {
+		    if (strchr(name, ':') == NULL) {
 			/* then it's not a group */
-			code = pr_AddToGroup(name,gname);
-			report_error (code, name, gname);
-		    }
-		    else {
+			code = pr_AddToGroup(name, gname);
+			report_error(code, name, gname);
+		    } else {
 			/* add the members of a group to the group */
 			if (verbose)
-			    printf("Adding %s to %s.\n",lnames.namelist_val[i],gname);
-			code = pr_ListMembers(name,&lnames);
+			    printf("Adding %s to %s.\n",
+				   lnames.namelist_val[i], gname);
+			code = pr_ListMembers(name, &lnames);
 			if (code) {
-			    fprintf(stderr,"Couldn't get the members for %s to add to %s.\n",name,gname);
-			    fprintf(stderr,"%s (%d).\n",pr_ErrorMsg(code),code);
+			    fprintf(stderr,
+				    "Couldn't get the members for %s to add to %s.\n",
+				    name, gname);
+			    fprintf(stderr, "%s (%d).\n", pr_ErrorMsg(code),
+				    code);
 			}
-			for (i=0;i<lnames.namelist_len;i++) {
-			    code = pr_AddToGroup(lnames.namelist_val[i],gname);
-			    report_error (code, lnames.namelist_val[i], gname);
+			for (i = 0; i < lnames.namelist_len; i++) {
+			    code =
+				pr_AddToGroup(lnames.namelist_val[i], gname);
+			    report_error(code, lnames.namelist_val[i], gname);
 			}
-			if (lnames.namelist_val) free(lnames.namelist_val);
+			if (lnames.namelist_val)
+			    free(lnames.namelist_val);
 		    }
 		    memset(name, 0, PR_MAXNAMELEN);
 		    skip(&tmp);
 		}
 	    }
-	}
-	else {  /* must have more names to add */
+	} else {		/* must have more names to add */
 	    /* if we couldn't create the group, and it wasn't already there, don't try to add more users */
-	    if (fail) continue;
+	    if (fail)
+		continue;
 	    /* read members out of buf and add to the group */
 	    memset(name, 0, PR_MAXNAMELEN);
 	    tmp = buf;
 	    tmp++;
-	    while (sscanf(tmp,"%s",name) != EOF) {
-		if (strchr(name,':') == NULL) {
+	    while (sscanf(tmp, "%s", name) != EOF) {
+		if (strchr(name, ':') == NULL) {
 		    /* then it's not a group */
-		    code = pr_AddToGroup(name,gname);
-		    report_error (code, name, gname);
-		}
-		else {
+		    code = pr_AddToGroup(name, gname);
+		    report_error(code, name, gname);
+		} else {
 		    /* add the members of a group to the group */
-		    code = pr_ListMembers(name,&lnames);
+		    code = pr_ListMembers(name, &lnames);
 		    if (code) {
-			fprintf(stderr,"Couldn't get the members for %s to add to %s.\n",name,gname);
-			fprintf(stderr,"%s (%d).\n",pr_ErrorMsg(code),code);
+			fprintf(stderr,
+				"Couldn't get the members for %s to add to %s.\n",
+				name, gname);
+			fprintf(stderr, "%s (%d).\n", pr_ErrorMsg(code),
+				code);
 		    }
-		    for (i=0;i<lnames.namelist_len;i++) {
+		    for (i = 0; i < lnames.namelist_len; i++) {
 			if (verbose)
-			    printf("Adding %s to %s.\n",lnames.namelist_val[i],gname);
-			code = pr_AddToGroup(lnames.namelist_val[i],gname);
-			report_error (code, lnames.namelist_val[i], gname);
+			    printf("Adding %s to %s.\n",
+				   lnames.namelist_val[i], gname);
+			code = pr_AddToGroup(lnames.namelist_val[i], gname);
+			report_error(code, lnames.namelist_val[i], gname);
 		    }
-		    if (lnames.namelist_val) free(lnames.namelist_val);
+		    if (lnames.namelist_val)
+			free(lnames.namelist_val);
 		}
 		memset(name, 0, PR_MAXNAMELEN);
 		skip(&tmp);
@@ -202,9 +214,10 @@ char **argv;
 }
 
 void
-skip(s)
-char **s;
+skip(char **s)
 {
-    while (**s != ' ' && **s != '\t' && **s != '\0') (*s)++;
-    while (**s == ' ' || **s == '\t') (*s)++;
+    while (**s != ' ' && **s != '\t' && **s != '\0')
+	(*s)++;
+    while (**s == ' ' || **s == '\t')
+	(*s)++;
 }

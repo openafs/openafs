@@ -1,0 +1,12 @@
+-badflag
+-weak
++unix-lib
++char-index
++relax-quals
+-pred-bool-int
+-pred-bool-ptr
++ptr-negate
+-fixed-formal-array
++match-any-integral
++ignore-equals
+-name-checks

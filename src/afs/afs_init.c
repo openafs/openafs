@@ -14,113 +14,36 @@
  */
 
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_init.c,v 1.1.1.10 2003/04/13 19:02:36 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/afs/afs_init.c,v 1.28.2.2 2005/03/11 06:50:31 shadow Exp $");
 
-#include "../afs/stds.h"
-#include "../afs/sysincludes.h"	/* Standard vendor system headers */
-#include "../afs/afsincludes.h"	/* Afs-based standard headers */
-#include "../afs/afs_stats.h"   /* afs statistics */
-
-
-/* Imported variables */
-extern afs_int32 afs_waitForever;
-extern short afs_waitForeverCount;
-extern afs_int32 afs_FVIndex;
-extern struct server *afs_setTimeHost;
-extern struct server *afs_servers[NSERVERS];
-extern struct unixuser *afs_users[NUSERS];
-extern struct volume *afs_freeVolList;
-extern struct volume *afs_volumes[NVOLS];
-extern afs_int32 afs_volCounter;
-
-extern afs_rwlock_t afs_xaxs;
-extern afs_rwlock_t afs_xvolume;
-extern afs_rwlock_t afs_xuser;
-extern afs_rwlock_t afs_xserver;
-extern afs_rwlock_t afs_xsrvAddr;
-#ifndef AFS_AIX41_ENV
-extern afs_lock_t osi_fsplock;
-#endif
-extern afs_lock_t osi_flplock;
-extern afs_int32 fvTable[NFENTRIES];
-
-/* afs_cell.c */
-extern afs_rwlock_t afs_xcell;
-extern struct afs_q CellLRU;
-extern afs_int32 afs_cellindex;
-extern afs_int32 afs_nextCellNum;
-
-/* afs_conn.c */
-extern afs_rwlock_t afs_xconn;
-extern afs_rwlock_t afs_xinterface;
-
-/* afs_mariner.c */
-extern struct rx_service *afs_server;
-
-
-/* afs_mariner.c */
-extern afs_int32 afs_mariner;
-extern afs_int32 afs_marinerHost;
-
-/* afs_volume.c */
-extern ino_t volumeInode;
-
-/* afs_osi_pag.c */
-extern afs_uint32 pag_epoch;
-
-/* afs_dcache.c */
-extern afs_rwlock_t afs_xdcache;
-extern int cacheDiskType;
-extern afs_int32 afs_fsfragsize;
-extern ino_t cacheInode;
-extern struct osi_file *afs_cacheInodep;
-extern afs_int32 afs_freeDCList;		/*Free list for disk cache entries*/
-
-
-/* afs_vcache.c */
-extern afs_rwlock_t afs_xvcache;
-extern afs_rwlock_t afs_xvcb;
-
-/* VNOPS/afs_vnop_read.c */
-extern afs_int32 maxIHint;
-extern afs_int32 nihints;                   /* # of above actually in-use */
-extern afs_int32 usedihint;
-
-/* afs_server.c */
-extern afs_int32 afs_setTime;
-extern afs_rwlock_t afs_xsrvAddr;
-
-/* Imported functions. */
-extern struct rx_securityClass *rxnull_NewServerSecurityObject();
-extern int RXAFSCB_ExecuteRequest();
-extern int RXSTATS_ExecuteRequest();
-
-
-/* afs_osi.c */
-extern afs_lock_t afs_ftf;
+#include "afs/stds.h"
+#include "afs/sysincludes.h"	/* Standard vendor system headers */
+#include "afsincludes.h"	/* Afs-based standard headers */
+#include "afs/afs_stats.h"	/* afs statistics */
 
 /* Exported variables */
-struct osi_dev cacheDev;           /*Cache device*/
-afs_int32 cacheInfoModTime;			/*Last time cache info modified*/
+struct osi_dev cacheDev;	/*Cache device */
+afs_int32 cacheInfoModTime;	/*Last time cache info modified */
 #if defined(AFS_OSF_ENV) || defined(AFS_DEC_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
-struct mount *afs_cacheVfsp=0;
+struct mount *afs_cacheVfsp = 0;
 #elif defined(AFS_LINUX20_ENV)
 struct super_block *afs_cacheSBp = 0;
 #else
-struct vfs *afs_cacheVfsp=0;
+struct vfs *afs_cacheVfsp = 0;
 #endif
-afs_rwlock_t afs_puttofileLock; /* not used */
-char *afs_sysname = 0;			/* So that superuser may change the
-					 * local value of @sys */
+afs_rwlock_t afs_puttofileLock;	/* not used */
+char *afs_sysname = 0;		/* So that superuser may change the
+				 * local value of @sys */
 char *afs_sysnamelist[MAXNUMSYSNAMES];	/* For support of a list of sysname */
 int afs_sysnamecount = 0;
 struct volume *Initialafs_freeVolList;
 int afs_memvolumes = 0;
-
-/* Local variables */
-
+#if defined(AFS_XBSD_ENV)
+static struct vnode *volumeVnode;
+#endif
 
 /*
  * Initialization order is important.  Must first call afs_CacheInit,
@@ -156,17 +79,12 @@ int afs_memvolumes = 0;
 struct cm_initparams cm_initParams;
 static int afs_cacheinit_flag = 0;
 int
-afs_CacheInit(astatSize, afiles, ablocks, aDentries, aVolumes, achunk, aflags,
-	      ninodes, nusers)
-    afs_int32 afiles;
-    afs_int32 astatSize, ablocks; 
-    afs_int32 achunk, aflags, ninodes, nusers;
-    afs_int32 aDentries;
-{ /*afs_CacheInit*/
-    extern int afs_memvolumes;
-    register afs_int32 i, preallocs;
+afs_CacheInit(afs_int32 astatSize, afs_int32 afiles, afs_int32 ablocks,
+	      afs_int32 aDentries, afs_int32 aVolumes, afs_int32 achunk,
+	      afs_int32 aflags, afs_int32 ninodes, afs_int32 nusers)
+{
+    register afs_int32 i;
     register struct volume *tv;
-    long code;
 
     AFS_STATCNT(afs_CacheInit);
     /*
@@ -195,29 +113,36 @@ afs_CacheInit(astatSize, afiles, ablocks, aDentries, aVolumes, achunk, aflags,
 
 
 #if	defined(AFS_AIX32_ENV) || defined(AFS_HPUX_ENV)
-    /*
-     * We want to also reserve space for the gnode struct which is associated
-     * with each vnode (vcache) one; we want to use the pinned pool for them   
-     * since they're referenced at interrupt level.
-     */
-    if (afs_stats_cmperf.SmallBlocksAlloced + astatSize < 3600)
-      preallocs = astatSize;
-    else {
-      preallocs = 3600 - afs_stats_cmperf.SmallBlocksAlloced;
-      if (preallocs <= 0) preallocs = 10;
+    {
+	afs_int32 preallocs;
+
+	/*
+	 * We want to also reserve space for the gnode struct which is associated
+	 * with each vnode (vcache) one; we want to use the pinned pool for them   
+	 * since they're referenced at interrupt level.
+	 */
+	if (afs_stats_cmperf.SmallBlocksAlloced + astatSize < 3600)
+	    preallocs = astatSize;
+	else {
+	    preallocs = 3600 - afs_stats_cmperf.SmallBlocksAlloced;
+	    if (preallocs <= 0)
+		preallocs = 10;
+	}
+	osi_AllocMoreSSpace(preallocs);
     }
-    osi_AllocMoreSSpace(preallocs);
 #endif
     /* 
      * create volume list structure 
      */
-    if ( aVolumes < 50 )     aVolumes = 50;  
-    if (aVolumes > 3000) aVolumes = 3000;
+    if (aVolumes < 50)
+	aVolumes = 50;
+    else if (aVolumes > 3000)
+	aVolumes = 3000;
 
-    tv = (struct volume *) afs_osi_Alloc(aVolumes * sizeof(struct volume));
-    for (i=0;i<aVolumes-1;i++)
-	tv[i].next = &tv[i+1];
-    tv[aVolumes-1].next = (struct volume *) 0;
+    tv = (struct volume *)afs_osi_Alloc(aVolumes * sizeof(struct volume));
+    for (i = 0; i < aVolumes - 1; i++)
+	tv[i].next = &tv[i + 1];
+    tv[aVolumes - 1].next = NULL;
     afs_freeVolList = Initialafs_freeVolList = tv;
     afs_memvolumes = aVolumes;
 
@@ -225,8 +150,13 @@ afs_CacheInit(astatSize, afiles, ablocks, aDentries, aVolumes, achunk, aflags,
     afs_cacheStats = astatSize;
     afs_vcacheInit(astatSize);
     afs_dcacheInit(afiles, ablocks, aDentries, achunk, aflags);
+#ifdef AFS_64BIT_CLIENT
+#ifdef AFS_VM_RDWR_ENV
+    afs_vmMappingEnd = AFS_CHUNKBASE(0x7fffffff);
+#endif /* AFS_VM_RDWR_ENV */
+#endif /* AFS_64BIT_CLIENT */
 
-#if defined(AFS_AIX_ENV)
+#if defined(AFS_AIX_ENV) && !defined(AFS_AIX51_ENV)
     {
 	static void afs_procsize_init(void);
 
@@ -242,13 +172,13 @@ afs_CacheInit(astatSize, afiles, ablocks, aDentries, aVolumes, achunk, aflags,
     cm_initParams.cmi_nVolumeCaches = aVolumes;
     cm_initParams.cmi_firstChunkSize = AFS_FIRSTCSIZE;
     cm_initParams.cmi_otherChunkSize = AFS_OTHERCSIZE;
-    cm_initParams.cmi_cacheSize = ablocks;
+    cm_initParams.cmi_cacheSize = afs_cacheBlocks;
     cm_initParams.cmi_setTime = afs_setTime;
     cm_initParams.cmi_memCache = (aflags & AFSCALL_INIT_MEMCACHE) ? 1 : 0;
 
     return 0;
 
-} /*afs_CacheInit*/
+}				/*afs_CacheInit */
 
 
 /*
@@ -262,17 +192,15 @@ afs_CacheInit(astatSize, afiles, ablocks, aDentries, aVolumes, achunk, aflags,
   */
 
 void
-afs_ComputeCacheParms()
-
-{ /*afs_ComputeCacheParms*/
-
+afs_ComputeCacheParms(void)
+{
     register afs_int32 i;
     afs_int32 afs_maxCacheDirty;
 
     /*
      * Don't allow more than 2/3 of the files in the cache to be dirty.
      */
-    afs_maxCacheDirty = (2*afs_cacheFiles) / 3;
+    afs_maxCacheDirty = (2 * afs_cacheFiles) / 3;
 
     /*
      * Also, don't allow more than 2/3 of the total space get filled
@@ -283,18 +211,66 @@ afs_ComputeCacheParms()
      */
     if (afs_cacheBlocks & 0xffe00000) {
 	i = afs_cacheBlocks / (AFS_FIRSTCSIZE >> 10);
-    }
-    else {
+    } else {
 	i = (afs_cacheBlocks << 10) / AFS_FIRSTCSIZE;
     }
-    i = (2*i) / 3;
+    i = (2 * i) / 3;
     if (afs_maxCacheDirty > i)
 	afs_maxCacheDirty = i;
     if (afs_maxCacheDirty < 1)
 	afs_maxCacheDirty = 1;
     afs_stats_cmperf.cacheMaxDirtyChunks = afs_maxCacheDirty;
-} /*afs_ComputeCacheParms*/
+}				/*afs_ComputeCacheParms */
 
+
+/*
+ * LookupInodeByPath
+ *
+ * Look up inode given a file name.
+ * Optionally return the vnode too.
+ * If the vnode is not returned, we rele it.
+ */
+static int
+LookupInodeByPath(char *filename, ino_t * inode, struct vnode **fvpp)
+{
+    afs_int32 code;
+
+#ifdef AFS_LINUX22_ENV
+    struct dentry *dp;
+    code = gop_lookupname(filename, AFS_UIOSYS, 0, &dp);
+    if (code)
+	return code;
+    *inode = dp->d_inode->i_ino;
+    dput(dp);
+#else
+    struct vnode *filevp;
+    code = gop_lookupname(filename, AFS_UIOSYS, 0, &filevp);
+    if (code)
+	return code;
+    *inode = afs_vnodeToInumber(filevp);
+    if (fvpp)
+	*fvpp = filevp;
+    else {
+#if defined(AFS_DEC_ENV)
+	grele(filevp);
+#else
+	AFS_RELE(filevp);
+#endif
+    }
+#endif /* AFS_LINUX22_ENV */
+
+    return 0;
+}
+
+int
+afs_InitCellInfo(char *afile)
+{
+    ino_t inode;
+    int code;
+
+    code = LookupInodeByPath(afile, &inode, NULL);
+    return afs_cellname_init(inode, code);
+}
 
 /*
  * afs_InitVolumeInfo
@@ -312,55 +288,38 @@ afs_ComputeCacheParms()
  *	WARNING: Data will be written to this file over time by AFS.
  */
 
-static int LookupInodeByPath(char *filename, ino_t *inode)
-{
-    afs_int32 code;
-  
-#ifdef AFS_LINUX22_ENV
-    struct dentry *dp;
-    code = gop_lookupname(filename, AFS_UIOSYS, 0, NULL, &dp);
-    if (code) return code;
-    *inode = dp->d_inode->i_ino;
-    dput(dp);
-#else
-    struct vnode *filevp;
-    code = gop_lookupname(filename, AFS_UIOSYS, 0, NULL, &filevp);
-    if (code) return code;
-    *inode = afs_vnodeToInumber(filevp);
-#ifdef AFS_DEC_ENV
-    grele(filevp);
-#else
-    AFS_RELE((struct vnode *)filevp);
-#endif
-#endif /* AFS_LINUX22_ENV */
- 
-    return 0;
- }
- 
-int afs_InitCellInfo(char *afile)
-{
-    ino_t inode;
-    int code;
-    
-    code = LookupInodeByPath(afile, &inode);
-    return afs_cellname_init(inode, code);
-}
- 
-int afs_InitVolumeInfo(char *afile)
+int
+afs_InitVolumeInfo(char *afile)
 {
     int code;
     struct osi_file *tfile;
-    struct vnode *filevp;
-    
+
     AFS_STATCNT(afs_InitVolumeInfo);
-    code = LookupInodeByPath(afile, &volumeInode);
-    if (code) return code;
+#if defined(AFS_XBSD_ENV)
+    /*
+     * On Open/Free/NetBSD, we can get into big trouble if we don't hold the volume file
+     * vnode.  SetupVolume holds afs_xvolume lock exclusive.
+     * SetupVolume->GetVolSlot->UFSGetVolSlot->{GetVolCache or WriteVolCache}
+     * ->osi_UFSOpen->VFS_VGET()->ffs_vget->getnewvnode->vgone on some vnode.
+     * If it's AFS, then ->vclean->afs_nbsd_reclaim->FlushVCache->QueueVCB->
+     * GetVolume->FindVolume-> waits on afs_xvolume lock !
+     *
+     * In general, anything that's called with afs_xvolume locked must not
+     * end up calling getnewvnode().  The only cases I've found so far
+     * are things which try to get the volumeInode, and since we keep
+     * it in the cache...
+     */
+    code = LookupInodeByPath(afile, &volumeInode, &volumeVnode);
+#else
+    code = LookupInodeByPath(afile, &volumeInode, NULL);
+#endif
+    if (code)
+	return code;
     tfile = afs_CFileOpen(volumeInode);
     afs_CFileTruncate(tfile, 0);
     afs_CFileClose(tfile);
     return 0;
-
-} /*afs_InitVolumeInfo*/
+}
 
 /*
  * afs_InitCacheInfo
@@ -385,99 +344,93 @@ int afs_InitVolumeInfo(char *afile)
  * code.
  *
  */
-afs_InitCacheInfo(afile)
-    register char *afile;
-
-{ /*afs_InitCacheInfo*/
-
+int
+afs_InitCacheInfo(register char *afile)
+{
     register afs_int32 code;
     struct osi_stat tstat;
     register struct osi_file *tfile;
     struct afs_fheader theader;
+#ifndef AFS_LINUX22_ENV
     struct vnode *filevp;
+#endif
     int goodFile;
 
     AFS_STATCNT(afs_InitCacheInfo);
-    if(cacheDiskType != AFS_FCACHE_TYPE_UFS)
+    if (cacheDiskType != AFS_FCACHE_TYPE_UFS)
 	osi_Panic("afs_InitCacheInfo --- called for non-ufs cache!");
 #ifdef AFS_LINUX22_ENV
     code = osi_InitCacheInfo(afile);
-    if (code) return code;
+    if (code)
+	return code;
 #else
-    code = gop_lookupname(afile, AFS_UIOSYS, 0, (struct vnode **) 0, &filevp);
-    if (code || !filevp) return ENOENT;
+    code = gop_lookupname(afile, AFS_UIOSYS, 0, &filevp);
+    if (code || !filevp)
+	return ENOENT;
     {
 #if	defined(AFS_SUN56_ENV)
-      struct statvfs64 st;
+	struct statvfs64 st;
+#elif	defined(AFS_HPUX102_ENV)
+	struct k_statvfs st;
+#elif	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) ||defined(AFS_HPUX100_ENV)
+	struct statvfs st;
+#elif defined(AFS_DUX40_ENV)
+	struct nstatfs st;
 #else
-#if	defined(AFS_HPUX102_ENV)
-      struct k_statvfs st;
-#else
-#if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) ||defined(AFS_HPUX100_ENV)
-      struct statvfs st;
-#else 
-#if defined(AFS_DUX40_ENV)
-      struct nstatfs st;
-#else
-      struct statfs st;
-#endif /* DUX40 */
-#endif /* SUN5 SGI */
-#endif /* HP 10.20 */
+	struct statfs st;
 #endif /* SUN56 */
 
 #if	defined(AFS_SGI_ENV)
 #ifdef AFS_SGI65_ENV
-      VFS_STATVFS(filevp->v_vfsp, &st, (struct vnode *)0, code);
-      if (!code) 
+	VFS_STATVFS(filevp->v_vfsp, &st, NULL, code);
+	if (!code)
 #else
-      if (!VFS_STATFS(filevp->v_vfsp, &st, (struct vnode *)0))
+	if (!VFS_STATFS(filevp->v_vfsp, &st, NULL))
 #endif /* AFS_SGI65_ENV */
-#else /* AFS_SGI_ENV */
-#if	defined(AFS_SUN5_ENV) || defined(AFS_HPUX100_ENV)
-      if (!VFS_STATVFS(filevp->v_vfsp, &st)) 
-#else
-#ifdef	AFS_OSF_ENV
-      
-      VFS_STATFS(filevp->v_vfsp, code);
-      /* struct copy */
-      st = filevp->v_vfsp->m_stat;
-      if (code == 0)
-#else	/* AFS_OSF_ENV */
-#ifdef AFS_AIX41_ENV
-      if (!VFS_STATFS(filevp->v_vfsp, &st, &afs_osi_cred))
-#else
-#ifdef AFS_LINUX20_ENV
-	  {
-	      KERNEL_SPACE_DECL;
-	      TO_USER_SPACE();
+#elif	defined(AFS_SUN5_ENV) || defined(AFS_HPUX100_ENV)
+	if (!VFS_STATVFS(filevp->v_vfsp, &st))
+#elif defined(AFS_OSF_ENV)
 
-	      VFS_STATFS(filevp->v_vfsp, &st);
-	      TO_KERNEL_SPACE();
-	  }
+	VFS_STATFS(filevp->v_vfsp, code);
+	/* struct copy */
+	st = filevp->v_vfsp->m_stat;
+	if (code == 0)
+#elif defined(AFS_AIX41_ENV)
+	if (!VFS_STATFS(filevp->v_vfsp, &st, &afs_osi_cred))
+#elif defined(AFS_LINUX20_ENV)
+	{
+	    KERNEL_SPACE_DECL;
+	    TO_USER_SPACE();
+
+	    VFS_STATFS(filevp->v_vfsp, &st);
+	    TO_KERNEL_SPACE();
+	}
+#elif defined(AFS_DARWIN_ENV)
+	if (!VFS_STATFS(filevp->v_mount, &st, current_proc()))
+#elif defined(AFS_FBSD50_ENV)
+	if (!VFS_STATFS(filevp->v_mount, &st, curthread))
+#elif defined(AFS_XBSD_ENV)
+	if (!VFS_STATFS(filevp->v_mount, &st, curproc))
 #else
-#if defined(AFS_DARWIN_ENV)
-        if (!VFS_STATFS(filevp->v_mount, &st, current_proc()))
-#else 
-#if defined(AFS_FBSD_ENV)
-        if (!VFS_STATFS(filevp->v_mount, &st, curproc))
-#else 
-	if (!VFS_STATFS(filevp->v_vfsp, &st))  
-#endif /* AFS_FBSD_ENV */
-#endif /* AFS_DARWIN_ENV */
-#endif /* AFS_LINUX20_ENV */
-#endif /* AIX41 */
-#endif /* OSF */
-#endif /* SUN5 HP10 */
-#endif /* SGI */
+	if (!VFS_STATFS(filevp->v_vfsp, &st))
+#endif /* SGI... */
 #if	defined(AFS_SUN5_ENV) || defined(AFS_HPUX100_ENV)
-	afs_fsfragsize = st.f_frsize - 1; 
+	    afs_fsfragsize = st.f_frsize - 1;
 #else
-	afs_fsfragsize = st.f_bsize - 1; 
+	    afs_fsfragsize = st.f_bsize - 1;
 #endif
     }
-#ifdef AFS_LINUX20_ENV
+#if defined(AFS_LINUX20_ENV)
     cacheInode = filevp->i_ino;
     afs_cacheSBp = filevp->i_sb;
+#elif defined(AFS_XBSD_ENV)
+    cacheInode = VTOI(filevp)->i_number;
+    cacheDev.mp = filevp->v_mount;
+    cacheDev.held_vnode = filevp;
+    vref(filevp);		/* Make sure mount point stays busy. XXX */
+#if !defined(AFS_OBSD_ENV)
+    afs_cacheVfsp = filevp->v_vfsp;
+#endif
 #else
 #if defined(AFS_SGI62_ENV) || defined(AFS_HAVE_VXFS) || defined(AFS_DARWIN_ENV)
     afs_InitDualFSCacheOps(filevp);
@@ -486,7 +439,7 @@ afs_InitCacheInfo(afile)
     cacheDev.dev = afs_vnodeToDev(filevp);
     afs_cacheVfsp = filevp->v_vfsp;
 #endif /* AFS_LINUX20_ENV */
-    AFS_RELE((struct vnode *)filevp);
+    AFS_RELE(filevp);
 #endif /* AFS_LINUX22_ENV */
     tfile = osi_UFSOpen(cacheInode);
     afs_osi_Stat(tfile, &tstat);
@@ -495,11 +448,10 @@ afs_InitCacheInfo(afile)
     goodFile = 0;
     if (code == sizeof(theader)) {
 	/* read the header correctly */
-	if (theader.magic == AFS_FHMAGIC &&
-	    theader.firstCSize == AFS_FIRSTCSIZE &&
-	    theader.otherCSize == AFS_OTHERCSIZE &&
-	    theader.version == AFS_CI_VERSION
-	)
+	if (theader.magic == AFS_FHMAGIC
+	    && theader.firstCSize == AFS_FIRSTCSIZE
+	    && theader.otherCSize == AFS_OTHERCSIZE
+	    && theader.version == AFS_CI_VERSION)
 	    goodFile = 1;
     }
     if (!goodFile) {
@@ -522,12 +474,11 @@ afs_InitCacheInfo(afile)
      */
     afs_cacheInodep = (struct osi_file *)tfile;
     return 0;
-
-} /*afs_InitCacheInfo*/
+}
 
 int afs_resourceinit_flag = 0;
-afs_ResourceInit(preallocs)
-  int preallocs;
+int
+afs_ResourceInit(int preallocs)
 {
     register afs_int32 i;
     static struct rx_securityClass *secobj;
@@ -540,35 +491,37 @@ afs_ResourceInit(preallocs)
     RWLOCK_INIT(&afs_icl_lock, "afs_icl_lock");
     RWLOCK_INIT(&afs_xinterface, "afs_xinterface");
     LOCK_INIT(&afs_puttofileLock, "afs_puttofileLock");
+#ifndef AFS_FBSD_ENV
 #ifndef	AFS_AIX32_ENV
     LOCK_INIT(&osi_fsplock, "osi_fsplock");
 #endif
     LOCK_INIT(&osi_flplock, "osi_flplock");
+#endif
     RWLOCK_INIT(&afs_xconn, "afs_xconn");
 
     afs_CellInit();
-    afs_InitCBQueue(1);  /* initialize callback queues */
+    afs_InitCBQueue(1);		/* initialize callback queues */
 
     if (afs_resourceinit_flag == 0) {
 	afs_resourceinit_flag = 1;
-	for (i=0;i<NFENTRIES;i++)
+	for (i = 0; i < NFENTRIES; i++)
 	    fvTable[i] = 0;
-	for(i=0;i<MAXNUMSYSNAMES;i++)
-	  afs_sysnamelist[i] = afs_osi_Alloc(MAXSYSNAME);
+	for (i = 0; i < MAXNUMSYSNAMES; i++)
+	    afs_sysnamelist[i] = afs_osi_Alloc(MAXSYSNAME);
 	afs_sysname = afs_sysnamelist[0];
 	strcpy(afs_sysname, SYS_NAME);
 	afs_sysnamecount = 1;
 #if	defined(AFS_AIX32_ENV) || defined(AFS_HPUX_ENV)
-    {  extern afs_int32 afs_preallocs;
+	{
 
-       if ((preallocs > 256) && (preallocs < 3600))
-	   afs_preallocs = preallocs;
-       osi_AllocMoreSSpace(afs_preallocs);
-       osi_AllocMoreMSpace(100); 
-    }
+	    if ((preallocs > 256) && (preallocs < 3600))
+		afs_preallocs = preallocs;
+	    osi_AllocMoreSSpace(afs_preallocs);
+	    osi_AllocMoreMSpace(100);
+	}
 #endif
     }
-    
+
     secobj = rxnull_NewServerSecurityObject();
     afs_server =
 	rx_NewService(0, 1, "afs", &secobj, 1, RXAFSCB_ExecuteRequest);
@@ -579,9 +532,9 @@ afs_ResourceInit(preallocs)
     afs_osi_Wakeup(&afs_server);	/* wakeup anyone waiting for it */
     return 0;
 
-} /*afs_ResourceInit*/
+}				/*afs_ResourceInit */
 
-#if defined(AFS_AIX_ENV)
+#if defined(AFS_AIX_ENV) && !defined(AFS_AIX51_ENV)
 
 /*
  * AIX dynamic sizeof(struct proc)
@@ -626,8 +579,11 @@ afs_ResourceInit(preallocs)
 static void
 afs_procsize_init(void)
 {
-    struct proc *p0;	/* pointer to process 0 */
-    struct proc *pN;	/* pointer to process 0's first child */
+    struct proc *p0;		/* pointer to process 0 */
+    struct proc *pN;		/* pointer to process 0's first child */
+#ifdef AFS_AIX51_ENV
+    struct pvproc *pV;
+#endif
     int pN_index;
     ptrdiff_t pN_offset;
     int procsize;
@@ -637,8 +593,17 @@ afs_procsize_init(void)
 	afs_gcpags = AFS_GCPAGS_EPROC0;
 	return;
     }
-
+#ifdef AFS_AIX51_ENV
+    pN = (struct proc *)0;
+    pV = p0->p_pvprocp;
+    if (pV) {
+	pV = pV->pv_child;
+	if (pV)
+	    pN = pV->pv_procp;
+    }
+#else
     pN = p0->p_child;
+#endif
     if (!pN) {
 	afs_gcpags = AFS_GCPAGS_EPROCN;
 	return;
@@ -675,7 +640,6 @@ afs_procsize_init(void)
 
     afs_gcpags_procsize = procsize;
 }
-
 #endif
 
 /*
@@ -691,184 +655,181 @@ afs_procsize_init(void)
  *	Nothing interesting.
  */
 void
-shutdown_cache()
-
-{ /*shutdown_cache*/
-    register struct afs_cbr *tsp, *nsp;
-    extern int afs_cold_shutdown;
-    extern int pagCounter;
-    int i;
-
-  AFS_STATCNT(shutdown_cache);
-  afs_WriteThroughDSlots();
-  if (afs_cold_shutdown) {
-    afs_cacheinit_flag = 0;
-    shutdown_dcache();
-    shutdown_vcache();
-
-    afs_cacheStats = 0;
-    afs_cacheFiles = afs_cacheBlocks = 0;
-    pag_epoch = maxIHint = nihints = usedihint = 0;
-    pagCounter = 0;
-    cacheInode = volumeInode = (ino_t)0;
-
-
-    cacheInfoModTime = 0;
-
-    afs_fsfragsize = 1023;
-    memset((char *)&afs_stats_cmperf, 0, sizeof(afs_stats_cmperf));
-    memset((char *)&cacheDev, 0, sizeof(struct osi_dev));
-    osi_dnlc_shutdown();
-  }
-} /*shutdown_cache*/
-
-
-void shutdown_vnodeops()
+shutdown_cache(void)
 {
-    extern int afs_cold_shutdown;
-#ifndef AFS_LINUX20_ENV
-    extern int afs_rd_stash_i;
+    AFS_STATCNT(shutdown_cache);
+    afs_WriteThroughDSlots();
+    if (afs_cold_shutdown) {
+	afs_cacheinit_flag = 0;
+	shutdown_dcache();
+	shutdown_vcache();
+
+	afs_cacheStats = 0;
+	afs_cacheFiles = afs_cacheBlocks = 0;
+	pag_epoch = maxIHint = nihints = usedihint = 0;
+	pagCounter = 0;
+#if defined(AFS_XBSD_ENV)
+	vrele(volumeVnode);	/* let it go, finally. */
+	volumeVnode = NULL;
+	if (cacheDev.held_vnode) {
+	    vrele(cacheDev.held_vnode);
+	    cacheDev.held_vnode = NULL;
+	}
 #endif
-#ifndef AFS_SUN5_ENV
-    extern int lastWarnTime;
-#endif
+	cacheInode = volumeInode = (ino_t) 0;
+
+	cacheInfoModTime = 0;
+
+	afs_fsfragsize = 1023;
+	memset((char *)&afs_stats_cmperf, 0, sizeof(afs_stats_cmperf));
+	memset((char *)&cacheDev, 0, sizeof(struct osi_dev));
+	osi_dnlc_shutdown();
+    }
+}				/*shutdown_cache */
+
+
+void
+shutdown_vnodeops(void)
+{
 #if !defined(AFS_SGI_ENV) && !defined(AFS_SUN_ENV) && !defined(AFS_SUN5_ENV)
     struct buf *afs_bread_freebp = 0;
 #endif
-    
+
 
     AFS_STATCNT(shutdown_vnodeops);
     if (afs_cold_shutdown) {
-#ifndef	AFS_SUN5_ENV	/* XXX */
-      lastWarnTime = 0;
+#ifndef	AFS_SUN5_ENV		/* XXX */
+	lastWarnTime = 0;
 #endif
 #ifndef AFS_LINUX20_ENV
-      afs_rd_stash_i = 0;      
+	afs_rd_stash_i = 0;
 #endif
 #if !defined(AFS_SGI_ENV) && !defined(AFS_SUN_ENV) && !defined(AFS_SUN5_ENV)
-      afs_bread_freebp = 0;
+	afs_bread_freebp = 0;
 #endif
-      shutdown_mariner();
-  }
+	shutdown_mariner();
+    }
 }
 
 
-void shutdown_AFS()
-
+void
+shutdown_AFS(void)
 {
     int i;
     register struct srvAddr *sa;
-    extern int afs_cold_shutdown;
 
     AFS_STATCNT(shutdown_AFS);
     if (afs_cold_shutdown) {
-      afs_resourceinit_flag = 0; 
-      /* 
-       * Free Volumes table allocations 
-       */
-      { 
-	struct volume *tv;
-	for (i = 0; i < NVOLS; i++) {
-	    for (tv = afs_volumes[i]; tv; tv = tv->next) {
-		if (tv->name) {
-		    afs_osi_Free(tv->name, strlen(tv->name)+1);
-		    tv->name = 0;
-		}
-	    }
-	    afs_volumes[i] = 0;
-	}
-      }
-
-      /* 
-       * Free FreeVolList allocations 
-       */
-      afs_osi_Free(Initialafs_freeVolList, afs_memvolumes * sizeof(struct volume));
-      afs_freeVolList = Initialafs_freeVolList = 0;
-
-      /* XXX HACK fort MEM systems XXX 
-       *
-       * For -memcache cache managers when we run out of free in memory volumes
-       * we simply malloc more; we won't be able to free those additional volumes.
-       */
-
-      
-
-      /* 
-       * Free Users table allocation 
-       */
-      { 
-	struct unixuser *tu, *ntu;
-	for (i=0; i < NUSERS; i++) {
-	    for (tu=afs_users[i]; tu; tu = ntu) {
-		ntu = tu->next;
-		if (tu->stp)
-		    afs_osi_Free(tu->stp, tu->stLen);
-		if (tu->exporter)
-		    EXP_RELE(tu->exporter);
-		afs_osi_Free(tu, sizeof(struct unixuser));
-	    }
-	    afs_users[i] = 0;
-	}
-      }
-
-      /* 
-       * Free Servers table allocation 
-       */
-      { 
-	struct server *ts, *nts;
-	struct conn *tc, *ntc;
-	register struct afs_cbr *tcbrp, *tbrp;
-	struct afs_cbr **lcbrpp;
-
-	for (i=0; i < NSERVERS; i++) {
-	    for (ts = afs_servers[i]; ts; ts = nts) {
-		nts = ts->next;
-		for (sa = ts->addr; sa; sa = sa->next_sa) {	
-		    if (sa->conns) {
-			/*
-			 * Free all server's connection structs
-			 */
-			tc = sa->conns;
-			while (tc) {
-			    ntc = tc->next;
-			    AFS_GUNLOCK();
-			    rx_DestroyConnection(tc->id);
-			    AFS_GLOCK();
-			    afs_osi_Free(tc, sizeof(struct conn));
-			    tc = ntc;
-			}
+	afs_resourceinit_flag = 0;
+	/* 
+	 * Free Volumes table allocations 
+	 */
+	{
+	    struct volume *tv;
+	    for (i = 0; i < NVOLS; i++) {
+		for (tv = afs_volumes[i]; tv; tv = tv->next) {
+		    if (tv->name) {
+			afs_osi_Free(tv->name, strlen(tv->name) + 1);
+			tv->name = 0;
 		    }
 		}
-		for (tcbrp = ts->cbrs; tcbrp;  tcbrp = tbrp) {
-		    /*
-		     * Free all server's callback structs
-		     */
-		    tbrp = tcbrp->next;
-		    afs_FreeCBR(tcbrp);
-		}
-		afs_osi_Free(ts, sizeof(struct server));
+		afs_volumes[i] = 0;
 	    }
-	    afs_servers[i] = 0;
 	}
-      }
-      for (i=0; i<NFENTRIES; i++)
-	fvTable[i] = 0;
-      /* Reinitialize local globals to defaults */
-      for(i=0; i<MAXNUMSYSNAMES; i++)
-	afs_osi_Free(afs_sysnamelist[i], MAXSYSNAME);
-      afs_sysname = 0;
-      afs_sysnamecount = 0;
-      afs_marinerHost = 0;
-      afs_setTimeHost = (struct server *)0;
-      afs_volCounter = 1;
-      afs_waitForever = afs_waitForeverCount = 0;
-      afs_FVIndex = -1;
-      afs_server = (struct rx_service *)0;
-      RWLOCK_INIT(&afs_xconn, "afs_xconn");
-      memset((char *)&afs_rootFid, 0, sizeof(struct VenusFid));
-      RWLOCK_INIT(&afs_xuser, "afs_xuser");
-      RWLOCK_INIT(&afs_xvolume, "afs_xvolume"), RWLOCK_INIT(&afs_xcell, "afs_xcell");
-      shutdown_cell();
+
+	/* 
+	 * Free FreeVolList allocations 
+	 */
+	afs_osi_Free(Initialafs_freeVolList,
+		     afs_memvolumes * sizeof(struct volume));
+	afs_freeVolList = Initialafs_freeVolList = 0;
+
+	/* XXX HACK fort MEM systems XXX 
+	 *
+	 * For -memcache cache managers when we run out of free in memory volumes
+	 * we simply malloc more; we won't be able to free those additional volumes.
+	 */
+
+
+
+	/* 
+	 * Free Users table allocation 
+	 */
+	{
+	    struct unixuser *tu, *ntu;
+	    for (i = 0; i < NUSERS; i++) {
+		for (tu = afs_users[i]; tu; tu = ntu) {
+		    ntu = tu->next;
+		    if (tu->stp)
+			afs_osi_Free(tu->stp, tu->stLen);
+		    if (tu->exporter)
+			EXP_RELE(tu->exporter);
+		    afs_osi_Free(tu, sizeof(struct unixuser));
+		}
+		afs_users[i] = 0;
+	    }
+	}
+
+	/* 
+	 * Free Servers table allocation 
+	 */
+	{
+	    struct server *ts, *nts;
+	    struct conn *tc, *ntc;
+	    register struct afs_cbr *tcbrp, *tbrp;
+
+	    for (i = 0; i < NSERVERS; i++) {
+		for (ts = afs_servers[i]; ts; ts = nts) {
+		    nts = ts->next;
+		    for (sa = ts->addr; sa; sa = sa->next_sa) {
+			if (sa->conns) {
+			    /*
+			     * Free all server's connection structs
+			     */
+			    tc = sa->conns;
+			    while (tc) {
+				ntc = tc->next;
+				AFS_GUNLOCK();
+				rx_DestroyConnection(tc->id);
+				AFS_GLOCK();
+				afs_osi_Free(tc, sizeof(struct conn));
+				tc = ntc;
+			    }
+			}
+		    }
+		    for (tcbrp = ts->cbrs; tcbrp; tcbrp = tbrp) {
+			/*
+			 * Free all server's callback structs
+			 */
+			tbrp = tcbrp->next;
+			afs_FreeCBR(tcbrp);
+		    }
+		    afs_osi_Free(ts, sizeof(struct server));
+		}
+		afs_servers[i] = 0;
+	    }
+	}
+	for (i = 0; i < NFENTRIES; i++)
+	    fvTable[i] = 0;
+	/* Reinitialize local globals to defaults */
+	for (i = 0; i < MAXNUMSYSNAMES; i++)
+	    afs_osi_Free(afs_sysnamelist[i], MAXSYSNAME);
+	afs_sysname = 0;
+	afs_sysnamecount = 0;
+	afs_marinerHost = 0;
+	afs_setTimeHost = NULL;
+	afs_volCounter = 1;
+	afs_waitForever = afs_waitForeverCount = 0;
+	afs_FVIndex = -1;
+	afs_server = (struct rx_service *)0;
+	RWLOCK_INIT(&afs_xconn, "afs_xconn");
+	memset((char *)&afs_rootFid, 0, sizeof(struct VenusFid));
+	RWLOCK_INIT(&afs_xuser, "afs_xuser");
+	RWLOCK_INIT(&afs_xvolume, "afs_xvolume");
+	RWLOCK_INIT(&afs_xserver, "afs_xserver");
+	LOCK_INIT(&afs_puttofileLock, "afs_puttofileLock");
+
+	shutdown_cell();
+	shutdown_server();
     }
-    
-} /*shutdown_AFS*/
+}

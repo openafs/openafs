@@ -15,6 +15,7 @@ AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -DIGNORE_STDS_H
 
 # include the primary makefile
 
+RELDIR=WINNT\afsadmsvr
 !INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\..\config\NTMakefile.version
 
@@ -41,35 +42,40 @@ IDLFILES = \
 	iTaAfsAdmSvrTypes.h
 
 LIBOBJS = \
-	TaAfsAdmSvrClient.obj \
-	TaAfsAdmSvrClientBind.obj \
-	TaAfsAdmSvrClientCache.obj \
-	TaAfsAdmSvrClientCell.obj \
-	TaAfsAdmSvrClientGroup.obj \
-	TaAfsAdmSvrClientInternal.obj \
-	TaAfsAdmSvrClientNotify.obj \
-	TaAfsAdmSvrClientPing.obj \
-	TaAfsAdmSvrClientUser.obj \
-	TaAfsAdmSvrCommon.obj \
-	iTaAfsAdmSvr_c.obj
+	$(OUT)\TaAfsAdmSvrClient.obj \
+	$(OUT)\TaAfsAdmSvrClientBind.obj \
+	$(OUT)\TaAfsAdmSvrClientCache.obj \
+	$(OUT)\TaAfsAdmSvrClientCell.obj \
+	$(OUT)\TaAfsAdmSvrClientGroup.obj \
+	$(OUT)\TaAfsAdmSvrClientInternal.obj \
+	$(OUT)\TaAfsAdmSvrClientNotify.obj \
+	$(OUT)\TaAfsAdmSvrClientPing.obj \
+	$(OUT)\TaAfsAdmSvrClientUser.obj \
+	$(OUT)\TaAfsAdmSvrCommon.obj \
+	$(OUT)\iTaAfsAdmSvr_c.obj
+
+EXERES = $(OUT)\AfsAdmSvr.res
+
+
+$(EXERES):$$(@B).rc
+	$(RC) $**
 
 EXEOBJS = \
-	AfsAdmSvr.res \
-	TaAfsAdmSvr.obj \
-	TaAfsAdmSvrCallback.obj \
-	TaAfsAdmSvrCell.obj \
-	TaAfsAdmSvrCommon.obj \
-	TaAfsAdmSvrDebug.obj \
-	TaAfsAdmSvrGeneral.obj \
-	TaAfsAdmSvrGroup.obj \
-	TaAfsAdmSvrMain.obj \
-	TaAfsAdmSvrProperties.obj \
-	TaAfsAdmSvrSearch.obj \
-	TaAfsAdmSvrUser.obj \
-	iTaAfsAdmSvr_s.obj
+	$(OUT)\TaAfsAdmSvr.obj \
+	$(OUT)\TaAfsAdmSvrCallback.obj \
+	$(OUT)\TaAfsAdmSvrCell.obj \
+	$(OUT)\TaAfsAdmSvrCommon.obj \
+	$(OUT)\TaAfsAdmSvrDebug.obj \
+	$(OUT)\TaAfsAdmSvrGeneral.obj \
+	$(OUT)\TaAfsAdmSvrGroup.obj \
+	$(OUT)\TaAfsAdmSvrMain.obj \
+	$(OUT)\TaAfsAdmSvrProperties.obj \
+	$(OUT)\TaAfsAdmSvrSearch.obj \
+	$(OUT)\TaAfsAdmSvrUser.obj \
+	$(OUT)\iTaAfsAdmSvr_s.obj
 
 VCLIBS =\
- 	gdi32.lib \
+	gdi32.lib \
 	user32.lib \
 	rpcns4.lib \
 	rpcrt4.lib \
@@ -84,7 +90,7 @@ EXELIBS = \
 	$(DESTDIR)\lib\afs\AfsVosAdmin.lib \
 	$(DESTDIR)\lib\afs\AfsBosAdmin.lib \
 	$(DESTDIR)\lib\afs\AfsAdminUtil.lib \
-	$(DESTDIR)\lib\afs\AfsClientAdmin.lib
+	$(DESTDIR)\lib\afs\AfsClientAdmin.lib \
 
 ############################################################################
 #
@@ -101,12 +107,14 @@ MIDL_FLAGS=/ms_ext \
            /pack 8 \
            /W3 \
            /WX \
+	   /no_robust \
            /nologo
 
 .SUFFIXES: .h .idl
 
 .idl.h:
-	midl $(MIDL_FLAGS) $<
+	echo [$<]
+	midl $(MIDL_FLAGS) $(AFSDEV_AUXMIDLFLAGS) $<
 
 ############################################################################
 
@@ -161,5 +169,14 @@ clean:: afsclass_clean afsapplib_clean
 # Dependencies
 #
 
-AfsAdmSvr.res : AfsAdmSvr.rc AFS_component_version_number.h
+$(OUT)\AfsAdmSvr.res : AFS_component_version_number.h
 
+mkdir:
+	-mkdir $(OUT)\..\afsapplib
+	cd ..\afsapplib
+	nmake /nologo /f ntmakefile mkdir
+	cd ..\afsadmsvr
+	-mkdir $(OUT)\..\afsclass
+	cd ..\afsclass
+	nmake /nologo /f ntmakefile mkdir
+	cd ..\afsadmsvr

@@ -20,7 +20,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/vol/partition.c,v 1.14 2004/01/10 21:12:32 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/vol/partition.c,v 1.30.2.1 2004/08/25 07:14:19 shadow Exp $");
 
 #include <ctype.h>
 #ifdef AFS_NT40_ENV
@@ -30,8 +31,8 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/vol/partition.c,v 1.14 2004/01/10 21:12
 #else
 #include <sys/param.h>
 #include <sys/types.h>
- 
-#if AFS_HAVE_STATVFS
+
+#if AFS_HAVE_STATVFS || AFS_HAVE_STATVFS64
 #include <sys/statvfs.h>
 #endif /* AFS_HAVE_STATVFS */
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
@@ -42,7 +43,7 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/vol/partition.c,v 1.14 2004/01/10 21:12
 #ifdef	AFS_OSF_ENV
 #include <sys/mount.h>
 #include <ufs/fs.h>
-#else	/* AFS_OSF_ENV */
+#else /* AFS_OSF_ENV */
 #ifdef AFS_VFSINCL_ENV
 #define VFS
 #ifdef	AFS_SUN5_ENV
@@ -60,7 +61,7 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/vol/partition.c,v 1.14 2004/01/10 21:12
 #include <sys/fs.h>
 #endif
 #endif /* AFS_VFSINCL_ENV */
-#endif	/* AFS_OSF_ENV */
+#endif /* AFS_OSF_ENV */
 #include <errno.h>
 #include <sys/stat.h>
 #include <stdio.h>
@@ -95,7 +96,7 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/vol/partition.c,v 1.14 2004/01/10 21:12
 #endif
 #endif
 #endif
-#endif	/* AFS_SGI_ENV */
+#endif /* AFS_SGI_ENV */
 #endif /* AFS_NT40_ENV */
 #if defined(AFS_SGI_ENV)
 #include <sys/errno.h>
@@ -103,6 +104,14 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/vol/partition.c,v 1.14 2004/01/10 21:12
 #include <stdio.h>
 #include <sys/file.h>
 #include <mntent.h>
+#endif
+
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
 #endif
 
 #include <rx/xdr.h>
@@ -118,11 +127,7 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/vol/partition.c,v 1.14 2004/01/10 21:12
 #include "ntops.h"
 #else
 #include "namei_ops.h"
-#if defined(AFS_SGI_ENV)
-#include <sys/dir.h>
-#else
 #include <dirent.h>
-#endif /* AFS_SGI_ENV */
 #endif /* AFS_NT40_ENV */
 #endif /* AFS_NAMEI_ENV */
 #include "vnode.h"
@@ -143,7 +148,45 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/vol/partition.c,v 1.14 2004/01/10 21:12
 #include <jfs/filsys.h>
 #endif
 
-int aixlow_water = 8;	/* default 8% */
+#ifdef O_LARGEFILE
+
+#define afs_stat	stat64
+#define afs_open	open64
+#define afs_fopen	fopen64
+#ifndef AFS_NT40_ENV
+#if AFS_HAVE_STATVFS64
+# define afs_statvfs	statvfs64
+#else
+# if AFS_HAVE_STATFS64
+#  define afs_statfs	statfs64
+#else
+#  if AFS_HAVE_STATVFS
+#   define afs_statvfs	statvfs
+#  else
+#   define afs_statfs	statfs
+#  endif /* !AFS_HAVE_STATVFS */
+# endif	/* !AFS_HAVE_STATFS64 */
+#endif /* !AFS_HAVE_STATVFS64 */
+#endif /* !AFS_NT40_ENV */
+
+#else /* !O_LARGEFILE */
+
+#define afs_stat	stat
+#define afs_open	open
+#define afs_fopen	fopen
+#ifndef AFS_NT40_ENV
+#if AFS_HAVE_STATVFS
+#define afs_statvfs	statvfs
+#else /* !AFS_HAVE_STATVFS */
+#define afs_statfs	statfs
+#endif /* !AFS_HAVE_STATVFS */
+#endif /* !AFS_NT40_ENV */
+
+#endif /* !O_LARGEFILE */
+
+/*@printflike@*/ extern void Log(const char *format, ...);
+
+int aixlow_water = 8;		/* default 8% */
 struct DiskPartition *DiskPartitionList;
 
 #ifdef AFS_SGI_XFS_IOPS_ENV
@@ -153,7 +196,8 @@ struct DiskPartition *DiskPartitionList;
  * the XFS inode.
  */
 #include <afs/xfsattrs.h>
-static int VerifyXFSInodeSize(char *part, char *fstype)
+static int
+VerifyXFSInodeSize(char *part, char *fstype)
 {
     afs_xfs_attr_t junk;
     int length = SIZEOF_XFS_ATTR_T;
@@ -165,30 +209,30 @@ static int VerifyXFSInodeSize(char *part, char *fstype)
 	return 0;
 
     if (attr_set(part, AFS_XFS_ATTR, &junk, length, ATTR_ROOT) == 0) {
-	if (((fd=open(part, O_RDONLY, 0)) != -1)
+	if (((fd = open(part, O_RDONLY, 0)) != -1)
 	    && (fcntl(fd, F_FSGETXATTRA, &fsx) == 0)) {
-	
+
 	    if (fsx.fsx_nextents) {
 		Log("Partition %s: XFS inodes too small, exiting.\n", part);
 		Log("Run xfs_size_check utility and remake partitions.\n");
-	    }
-	    else
+	    } else
 		code = 0;
 	}
 
 	if (fd > 0)
 	    close(fd);
-	(void) attr_remove(part, AFS_XFS_ATTR, ATTR_ROOT);
+	(void)attr_remove(part, AFS_XFS_ATTR, ATTR_ROOT);
     }
     return code;
 }
 #endif
 
 
-static void VInitPartition_r(char *path, char *devname, Device dev)
+static void
+VInitPartition_r(char *path, char *devname, Device dev)
 {
     struct DiskPartition *dp, *op;
-    dp = (struct DiskPartition *) malloc(sizeof (struct DiskPartition));
+    dp = (struct DiskPartition *)malloc(sizeof(struct DiskPartition));
     /* Add it to the end, to preserve order when we print statistics */
     for (op = DiskPartitionList; op; op = op->next) {
 	if (!op->next)
@@ -209,7 +253,7 @@ static void VInitPartition_r(char *path, char *devname, Device dev)
     strcat(dp->devName, "Lock");
     mkdir(dp->devName, 0700);
     strcat(dp->devName, path);
-    close(open(dp->devName, O_RDWR | O_CREAT, 0600));
+    close(afs_open(dp->devName, O_RDWR | O_CREAT, 0600));
     dp->device = volutil_GetPartitionID(path);
 #else
     dp->devName = (char *)malloc(strlen(devname) + 1);
@@ -218,19 +262,20 @@ static void VInitPartition_r(char *path, char *devname, Device dev)
 #endif
     dp->lock_fd = -1;
     dp->flags = 0;
-    dp->f_files = 1;	/* just a default value */
+    dp->f_files = 1;		/* just a default value */
 #if defined(AFS_NAMEI_ENV) && !defined(AFS_NT40_ENV)
     if (programType == fileServer)
-	(void) namei_ViceREADME(VPartitionPath(dp));
+	(void)namei_ViceREADME(VPartitionPath(dp));
 #endif
     VSetPartitionDiskUsage_r(dp);
 }
 
-static void VInitPartition(char *path, char *devname, Device dev)
+static void
+VInitPartition(char *path, char *devname, Device dev)
 {
-    VOL_LOCK
+    VOL_LOCK;
     VInitPartition_r(path, devname, dev);
-    VOL_UNLOCK
+    VOL_UNLOCK;
 }
 
 #ifndef AFS_NT40_ENV
@@ -248,11 +293,10 @@ static void VInitPartition(char *path, char *devname, Device dev)
  *
  * Use partition name as devname.
  */
-int VCheckPartition(part, devname)
-     char *part;
-     char *devname;
+int
+VCheckPartition(char *part, char *devname)
 {
-    struct stat status;
+    struct afs_stat status;
 #if !defined(AFS_LINUX20_ENV) && !defined(AFS_NT40_ENV)
     char AFSIDatPath[MAXPATHLEN];
 #endif
@@ -262,17 +306,16 @@ int VCheckPartition(part, devname)
     if (strncmp(part, VICE_PARTITION_PREFIX, VICE_PREFIX_SIZE)) {
 	return 0;
     }
-    if (stat(part, &status) < 0) {
+    if (afs_stat(part, &status) < 0) {
 	Log("VInitVnodes: Couldn't find file system %s; ignored\n", part);
 	return 0;
     }
-    
 #ifndef AFS_AIX32_ENV
     if (programType == fileServer) {
 	char salvpath[MAXPATHLEN];
 	strcpy(salvpath, part);
 	strcat(salvpath, "/FORCESALVAGE");
-	if (stat(salvpath, &status) == 0) {
+	if (afs_stat(salvpath, &status) == 0) {
 	    Log("VInitVnodes: Found %s; aborting\n", salvpath);
 	    return -1;
 	}
@@ -283,7 +326,7 @@ int VCheckPartition(part, devname)
     strcpy(AFSIDatPath, part);
     strcat(AFSIDatPath, "/AFSIDat");
 #ifdef AFS_NAMEI_ENV
-    if (stat(AFSIDatPath, &status) < 0) {
+    if (afs_stat(AFSIDatPath, &status) < 0) {
 	DIR *dirp;
 	struct dirent *dp;
 
@@ -293,13 +336,13 @@ int VCheckPartition(part, devname)
 	    if (dp->d_name[0] == 'V') {
 		Log("This program is compiled with AFS_NAMEI_ENV, but partition %s seems to contain volumes which don't use the namei-interface; aborting\n", part);
 		closedir(dirp);
-	        return -1;
+		return -1;
 	    }
 	}
 	closedir(dirp);
     }
 #else /* AFS_NAMEI_ENV */
-    if (stat(AFSIDatPath, &status) == 0) {
+    if (afs_stat(AFSIDatPath, &status) == 0) {
 	Log("This program is compiled without AFS_NAMEI_ENV, but partition %s seems to contain volumes which use the namei-interface; aborting\n", part);
 	return -1;
     }
@@ -328,11 +371,11 @@ int VCheckPartition(part, devname)
  * mounted partition (return value 0).  For non-NAMEI environments, it
  * always returns 0.
  */
-static int VIsAlwaysAttach(part)
-    char *part;
+static int
+VIsAlwaysAttach(char *part)
 {
 #ifdef AFS_NAMEI_ENV
-    struct stat st;
+    struct afs_stat st;
     char checkfile[256];
     int ret;
 
@@ -343,9 +386,9 @@ static int VIsAlwaysAttach(part)
     strcat(checkfile, "/");
     strcat(checkfile, VICE_ALWAYSATTACH_FILE);
 
-    ret = stat(checkfile, &st);
+    ret = afs_stat(checkfile, &st);
     return (ret < 0) ? 0 : 1;
-#else  /* AFS_NAMEI_ENV */
+#else /* AFS_NAMEI_ENV */
     return 0;
 #endif /* AFS_NAMEI_ENV */
 }
@@ -355,20 +398,22 @@ static int VIsAlwaysAttach(part)
  * used to attach /vicepX directories which aren't on dedicated
  * partitions, in the NAMEI fileserver.
  */
-void VAttachPartitions2() {
+void
+VAttachPartitions2()
+{
 #ifdef AFS_NAMEI_ENV
     DIR *dirp;
     struct dirent *de;
     char pname[32];
 
     dirp = opendir("/");
-    while (de = readdir(dirp)) {
+    while ((de = readdir(dirp))) {
 	strcpy(pname, "/");
 	strncat(pname, de->d_name, 20);
-	pname[sizeof(pname)-1] = '\0';
+	pname[sizeof(pname) - 1] = '\0';
 
 	/* Only keep track of "/vicepx" partitions since automounter
-	   may hose us */
+	 * may hose us */
 	if (VIsAlwaysAttach(pname))
 	    VCheckPartition(pname, "");
     }
@@ -378,60 +423,63 @@ void VAttachPartitions2() {
 #endif /* AFS_NT40_ENV */
 
 #ifdef AFS_SUN5_ENV
-int VAttachPartitions(void)
+int
+VAttachPartitions(void)
 {
     int errors = 0;
     struct mnttab mnt;
     FILE *mntfile;
 
-    if (!(mntfile = fopen(MNTTAB, "r"))) {
+    if (!(mntfile = afs_fopen(MNTTAB, "r"))) {
 	Log("Can't open %s\n", MNTTAB);
 	perror(MNTTAB);
 	exit(-1);
     }
     while (!getmntent(mntfile, &mnt)) {
 	/* Ignore non ufs or non read/write partitions */
-	if ((strcmp(mnt.mnt_fstype, "ufs") !=0) ||
-	    (strncmp(mnt.mnt_mntopts, "ro,ignore",9) ==0)) 
-	    continue; 
+	if ((strcmp(mnt.mnt_fstype, "ufs") != 0)
+	    || (strncmp(mnt.mnt_mntopts, "ro,ignore", 9) == 0))
+	    continue;
 
 	/* If we're going to always attach this partition, do it later. */
 	if (VIsAlwaysAttach(mnt.mnt_mountp))
 	    continue;
 
-	if (VCheckPartition(mnt.mnt_mountp, mnt.mnt_special) < 0 )
-	    errors ++;
+	if (VCheckPartition(mnt.mnt_mountp, mnt.mnt_special) < 0)
+	    errors++;
     }
 
-    (void) fclose(mntfile);
+    (void)fclose(mntfile);
 
     /* Process the always-attach partitions, if any. */
     VAttachPartitions2();
 
-    return errors ;
+    return errors;
 }
 
 #endif /* AFS_SUN5_ENV */
 #if defined(AFS_SGI_ENV) || (defined(AFS_SUN_ENV) && !defined(AFS_SUN5_ENV)) || defined(AFS_HPUX_ENV)
-int VAttachPartitions(void)
+int
+VAttachPartitions(void)
 {
     int errors = 0;
     FILE *mfd;
     struct mntent *mntent;
-    
+
     if ((mfd = setmntent(MOUNTED, "r")) == NULL) {
 	Log("Problems in getting mount entries(setmntent)\n");
 	exit(-1);
     }
     while (mntent = getmntent(mfd)) {
-	if (!hasmntopt(mntent, MNTOPT_RW)) continue;
-	
+	if (!hasmntopt(mntent, MNTOPT_RW))
+	    continue;
+
 	/* If we're going to always attach this partition, do it later. */
 	if (VIsAlwaysAttach(mntent->mnt_dir))
 	    continue;
 
-	if (VCheckPartition(mntent->mnt_dir, mntent->mnt_fsname) < 0 )
-	    errors ++;
+	if (VCheckPartition(mntent->mnt_dir, mntent->mnt_fsname) < 0)
+	    errors++;
     }
 
     endmntent(mfd);
@@ -439,7 +487,7 @@ int VAttachPartitions(void)
     /* Process the always-attach partitions, if any. */
     VAttachPartitions2();
 
-    return errors ;
+    return errors;
 }
 #endif
 #ifdef AFS_AIX_ENV
@@ -447,65 +495,66 @@ int VAttachPartitions(void)
  * (This function was grabbed from df.c)
  */
 int
-getmount(vmountpp)
-register struct vmount	**vmountpp;	/* place to tell where buffer is */
+getmount(register struct vmount **vmountpp)
 {
-	int			size;
-	register struct vmount	*vm;
-	int			nmounts;
+    int size;
+    register struct vmount *vm;
+    int nmounts;
 
-	/* set initial size of mntctl buffer to a MAGIC NUMBER */
-	size = BUFSIZ;
+    /* set initial size of mntctl buffer to a MAGIC NUMBER */
+    size = BUFSIZ;
 
-	/* try the operation until ok or a fatal error */
-	while (1) {
-		if ((vm = (struct vmount *)malloc(size)) == NULL) {
-			/* failed getting memory for mount status buf */
-			perror("FATAL ERROR: get_stat malloc failed\n");
-			exit(-1);
-		}
-
-		/*
-		 * perform the QUERY mntctl - if it returns > 0, that is the
-		 * number of vmount structures in the buffer.  If it returns
-		 * -1, an error occured.  If it returned 0, then look in
-		 * first word of buffer for needed size.
-		 */
-		if ((nmounts = mntctl(MCTL_QUERY, size, (caddr_t)vm)) > 0) {
-			/* OK, got it, now return */
-			*vmountpp = vm;
-			return(nmounts);
-
-		} else if (nmounts == 0) {
-			/* the buffer wasn't big enough .... */
-			/* .... get required buffer size */
-			size = *(int *)vm;
-			free(vm);
-
-		} else {
-			/* some other kind of error occurred */
-			free(vm);
-			return(-1);
-		}
+    /* try the operation until ok or a fatal error */
+    while (1) {
+	if ((vm = (struct vmount *)malloc(size)) == NULL) {
+	    /* failed getting memory for mount status buf */
+	    perror("FATAL ERROR: get_stat malloc failed\n");
+	    exit(-1);
 	}
+
+	/*
+	 * perform the QUERY mntctl - if it returns > 0, that is the
+	 * number of vmount structures in the buffer.  If it returns
+	 * -1, an error occured.  If it returned 0, then look in
+	 * first word of buffer for needed size.
+	 */
+	if ((nmounts = mntctl(MCTL_QUERY, size, (caddr_t) vm)) > 0) {
+	    /* OK, got it, now return */
+	    *vmountpp = vm;
+	    return (nmounts);
+
+	} else if (nmounts == 0) {
+	    /* the buffer wasn't big enough .... */
+	    /* .... get required buffer size */
+	    size = *(int *)vm;
+	    free(vm);
+
+	} else {
+	    /* some other kind of error occurred */
+	    free(vm);
+	    return (-1);
+	}
+    }
 }
 
-int VAttachPartitions(void)
+int
+VAttachPartitions(void)
 {
     int errors = 0;
     int nmounts;
     struct vmount *vmountp;
 
-    if ((nmounts = getmount(&vmountp)) <= 0)	{   
+    if ((nmounts = getmount(&vmountp)) <= 0) {
 	Log("Problems in getting # of mount entries(getmount)\n");
 	exit(-1);
     }
-    for (; nmounts; nmounts--,
-	 vmountp = (struct vmount *)((int)vmountp + vmountp->vmt_length)) {
+    for (; nmounts;
+	 nmounts--, vmountp =
+	 (struct vmount *)((int)vmountp + vmountp->vmt_length)) {
 	char *part = vmt2dataptr(vmountp, VMT_STUB);
 
-	if (vmountp->vmt_flags & (MNT_READONLY|MNT_REMOVABLE|MNT_REMOTE))
-	    continue; /* Ignore any "special" partitions */
+	if (vmountp->vmt_flags & (MNT_READONLY | MNT_REMOVABLE | MNT_REMOTE))
+	    continue;		/* Ignore any "special" partitions */
 
 #ifdef AFS_AIX42_ENV
 #ifndef AFS_NAMEI_ENV
@@ -514,7 +563,7 @@ int VAttachPartitions(void)
 	    /* The Log statements are non-sequiters in the SalvageLog and don't
 	     * even appear in the VolserLog, so restrict them to the FileLog.
 	     */
-	    if (ReadSuper(&fs, vmt2dataptr(vmountp, VMT_OBJECT))<0) {
+	    if (ReadSuper(&fs, vmt2dataptr(vmountp, VMT_OBJECT)) < 0) {
 		if (programType == fileServer)
 		    Log("Can't read superblock for %s, ignoring it.\n", part);
 		continue;
@@ -532,18 +581,19 @@ int VAttachPartitions(void)
 	if (VIsAlwaysAttach(part))
 	    continue;
 
-	if (VCheckPartition(part, vmt2dataptr(vmountp, VMT_OBJECT)) < 0 )
-	    errors ++;
+	if (VCheckPartition(part, vmt2dataptr(vmountp, VMT_OBJECT)) < 0)
+	    errors++;
     }
 
     /* Process the always-attach partitions, if any. */
     VAttachPartitions2();
 
-    return errors ;
+    return errors;
 }
 #endif
 #if defined(AFS_DUX40_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-int VAttachPartitions(void)
+int
+VAttachPartitions(void)
 {
     int errors = 0;
     struct fstab *fsent;
@@ -554,21 +604,22 @@ int VAttachPartitions(void)
     }
 
     while (fsent = getfsent()) {
-	if (strcmp(fsent->fs_type, "rw") != 0) continue;
+	if (strcmp(fsent->fs_type, "rw") != 0)
+	    continue;
 
 	/* If we're going to always attach this partition, do it later. */
 	if (VIsAlwaysAttach(fsent->fs_file))
 	    continue;
 
-	if (VCheckPartition(fsent->fs_file, fsent->fs_spec) < 0 )
-	    errors ++;
+	if (VCheckPartition(fsent->fs_file, fsent->fs_spec) < 0)
+	    errors++;
     }
     endfsent();
-    
+
     /* Process the always-attach partitions, if any. */
     VAttachPartitions2();
 
-    return errors ;
+    return errors;
 }
 #endif
 
@@ -584,17 +635,18 @@ int VAttachPartitions(void)
  * 0 invalid entry
  */
 
-int VValidVPTEntry(struct vptab *vpe)
+int
+VValidVPTEntry(struct vptab *vpe)
 {
     int len = strlen(vpe->vp_name);
     int i;
 
-    if (len < VICE_PREFIX_SIZE+1 || len > VICE_PREFIX_SIZE + 2)
+    if (len < VICE_PREFIX_SIZE + 1 || len > VICE_PREFIX_SIZE + 2)
 	return 0;
     if (strncmp(vpe->vp_name, VICE_PARTITION_PREFIX, VICE_PREFIX_SIZE))
 	return 0;
-    
-    for (i=VICE_PREFIX_SIZE; i<len; i++) {
+
+    for (i = VICE_PREFIX_SIZE; i < len; i++) {
 	if (vpe->vp_name[i] < 'a' || vpe->vp_name[i] > 'z') {
 	    Log("Invalid partition name %s in registry, ignoring it.\n",
 		vpe->vp_name);
@@ -602,9 +654,9 @@ int VValidVPTEntry(struct vptab *vpe)
 	}
     }
     if (len == VICE_PREFIX_SIZE + 2) {
-	i = (int)(vpe->vp_name[VICE_PREFIX_SIZE]-'a') * 26 +
-	    (int)(vpe->vp_name[VICE_PREFIX_SIZE+1]-'a') ;
-	if (i>255) {
+	i = (int)(vpe->vp_name[VICE_PREFIX_SIZE] - 'a') * 26 +
+	    (int)(vpe->vp_name[VICE_PREFIX_SIZE + 1] - 'a');
+	if (i > 255) {
 	    Log("Invalid partition name %s in registry, ignoring it.\n",
 		vpe->vp_name);
 	    return 0;
@@ -612,8 +664,8 @@ int VValidVPTEntry(struct vptab *vpe)
     }
 
     len = strlen(vpe->vp_dev);
-    if (len != 2 || vpe->vp_dev[1] != ':'  || vpe->vp_dev[0] < 'A' ||
-	vpe->vp_dev[0] > 'Z') {
+    if (len != 2 || vpe->vp_dev[1] != ':' || vpe->vp_dev[0] < 'A'
+	|| vpe->vp_dev[0] > 'Z') {
 	Log("Invalid device name %s in registry, ignoring it.\n",
 	    vpe->vp_dev);
 	return 0;
@@ -622,7 +674,8 @@ int VValidVPTEntry(struct vptab *vpe)
     return 1;
 }
 
-int VCheckPartition(char *partName)
+int
+VCheckPartition(char *partName)
 {
     char volRoot[4];
     char volFsType[64];
@@ -630,19 +683,18 @@ int VCheckPartition(char *partName)
     int err;
 
     /* partName is presumed to be of the form "X:" */
-    (void) sprintf(volRoot, "%c:\\", *partName);
+    (void)sprintf(volRoot, "%c:\\", *partName);
 
-    if (!GetVolumeInformation(volRoot,    /* volume root directory */
-			      NULL,       /* volume name buffer */
-			      0,          /* volume name size */
-			      NULL,       /* volume serial number */
-			      &dwDummy,   /* max component length */
-			      &dwDummy,   /* file system flags */
-			      volFsType,  /* file system name */
+    if (!GetVolumeInformation(volRoot,	/* volume root directory */
+			      NULL,	/* volume name buffer */
+			      0,	/* volume name size */
+			      NULL,	/* volume serial number */
+			      &dwDummy,	/* max component length */
+			      &dwDummy,	/* file system flags */
+			      volFsType,	/* file system name */
 			      sizeof(volFsType))) {
 	err = GetLastError();
-	Log("VCheckPartition: Failed to get partition information for %s, ignoring it.\n",
-	    partName);
+	Log("VCheckPartition: Failed to get partition information for %s, ignoring it.\n", partName);
 	return -1;
     }
 
@@ -655,18 +707,19 @@ int VCheckPartition(char *partName)
 }
 
 
-int VAttachPartitions(void)
+int
+VAttachPartitions(void)
 {
     struct DiskPartition *partP, *prevP, *nextP;
     struct vpt_iter iter;
     struct vptab entry;
 
-    if (vpt_Start(&iter)<0) {
+    if (vpt_Start(&iter) < 0) {
 	Log("No partitions to attach.\n");
 	return 0;
     }
 
-    while (0==vpt_NextEntry(&iter, &entry)) {
+    while (0 == vpt_NextEntry(&iter, &entry)) {
 	if (!VValidVPTEntry(&entry)) {
 	    continue;
 	}
@@ -679,23 +732,24 @@ int VAttachPartitions(void)
 	    if (*partP->devName == *entry.vp_dev) {
 		Log("Same drive (%s) used for both partition %s and partition %s, ignoring both.\n", entry.vp_dev, partP->name, entry.vp_name);
 		partP->flags = PART_DUPLICATE;
-		break; /* Only one entry will ever be in this list. */
+		break;		/* Only one entry will ever be in this list. */
 	    }
 	}
-	if (partP) continue; /* found a duplicate */
+	if (partP)
+	    continue;		/* found a duplicate */
 
-	if (VCheckPartition(entry.vp_dev)<0)
+	if (VCheckPartition(entry.vp_dev) < 0)
 	    continue;
 	/* This test allows for manually inserting the FORCESALVAGE flag
 	 * and thereby invoking the salvager. scandisk obviously won't be
 	 * doing this for us.
 	 */
 	if (programType == fileServer) {
-	    struct stat status;
+	    struct afs_stat status;
 	    char salvpath[MAXPATHLEN];
 	    strcpy(salvpath, entry.vp_dev);
 	    strcat(salvpath, "\\FORCESALVAGE");
-	    if (stat(salvpath, &status) == 0) {
+	    if (afs_stat(salvpath, &status) == 0) {
 		Log("VAttachPartitions: Found %s; aborting\n", salvpath);
 		exit(1);
 	    }
@@ -714,8 +768,7 @@ int VAttachPartitions(void)
 	    else
 		DiskPartitionList = partP->next;
 	    free(partP);
-	}
-	else
+	} else
 	    prevP = partP;
     }
 
@@ -724,49 +777,52 @@ int VAttachPartitions(void)
 #endif
 
 #ifdef AFS_LINUX22_ENV
-int VAttachPartitions(void)
+int
+VAttachPartitions(void)
 {
     int errors = 0;
     FILE *mfd;
     struct mntent *mntent;
-    
+
     if ((mfd = setmntent("/proc/mounts", "r")) == NULL) {
 	if ((mfd = setmntent("/etc/mtab", "r")) == NULL) {
 	    Log("Problems in getting mount entries(setmntent)\n");
 	    exit(-1);
 	}
     }
-    while (mntent = getmntent(mfd)) {
+    while ((mntent = getmntent(mfd))) {
 	/* If we're going to always attach this partition, do it later. */
 	if (VIsAlwaysAttach(mntent->mnt_dir))
 	    continue;
 
-	if (VCheckPartition(mntent->mnt_dir, mntent->mnt_fsname) < 0 )
-	    errors ++;
+	if (VCheckPartition(mntent->mnt_dir, mntent->mnt_fsname) < 0)
+	    errors++;
     }
     endmntent(mfd);
 
     /* Process the always-attach partitions, if any. */
     VAttachPartitions2();
 
-    return errors ;
+    return errors;
 }
 #endif /* AFS_LINUX22_ENV */
 
 /* This routine is to be called whenever the actual name of the partition
  * is required. The canonical name is still in part->name.
  */
-char * VPartitionPath(struct DiskPartition *part)
+char *
+VPartitionPath(struct DiskPartition *part)
 {
 #ifdef AFS_NT40_ENV
     return part->devName;
 #else
     return part->name;
-#endif    
+#endif
 }
 
 /* get partition structure, abortp tells us if we should abort on failure */
-struct DiskPartition *VGetPartition_r(char *name, int abortp)
+struct DiskPartition *
+VGetPartition_r(char *name, int abortp)
 {
     register struct DiskPartition *dp;
     for (dp = DiskPartitionList; dp; dp = dp->next) {
@@ -778,111 +834,116 @@ struct DiskPartition *VGetPartition_r(char *name, int abortp)
     return dp;
 }
 
-struct DiskPartition *VGetPartition(char *name, int abortp)
+struct DiskPartition *
+VGetPartition(char *name, int abortp)
 {
     struct DiskPartition *retVal;
-    VOL_LOCK
+    VOL_LOCK;
     retVal = VGetPartition_r(name, abortp);
-    VOL_UNLOCK
+    VOL_UNLOCK;
     return retVal;
 }
 
 #ifdef AFS_NT40_ENV
-void VSetPartitionDiskUsage_r(register struct DiskPartition *dp)
+void
+VSetPartitionDiskUsage_r(register struct DiskPartition *dp)
 {
     ULARGE_INTEGER free_user, total, free_total;
     int ufree, tot, tfree;
-    
-    if (!GetDiskFreeSpaceEx(VPartitionPath(dp), &free_user, &total,
-			    &free_total)) {
-	printf("Failed to get disk space info for %s, error = %d\n",
-	       dp->name, GetLastError());
+
+    if (!GetDiskFreeSpaceEx
+	(VPartitionPath(dp), &free_user, &total, &free_total)) {
+	printf("Failed to get disk space info for %s, error = %d\n", dp->name,
+	       GetLastError());
 	return;
     }
 
     /* Convert to 1K units. */
-    ufree = (int) Int64ShraMod32(free_user.QuadPart, 10);
-    tot = (int) Int64ShraMod32(total.QuadPart, 10);
-    tfree = (int) Int64ShraMod32(free_total.QuadPart, 10);
+    ufree = (int)Int64ShraMod32(free_user.QuadPart, 10);
+    tot = (int)Int64ShraMod32(total.QuadPart, 10);
+    tfree = (int)Int64ShraMod32(free_total.QuadPart, 10);
 
-    dp->minFree = tfree - ufree; /* only used in VPrintDiskStats_r */
+    dp->minFree = tfree - ufree;	/* only used in VPrintDiskStats_r */
     dp->totalUsable = tot;
     dp->free = tfree;
 }
 
 #else
-void VSetPartitionDiskUsage_r(register struct DiskPartition *dp)
+void
+VSetPartitionDiskUsage_r(register struct DiskPartition *dp)
 {
     int fd, totalblks, free, used, availblks, bsize, code;
     int reserved;
-#if AFS_HAVE_STATVFS
-    struct statvfs statbuf;
+#ifdef afs_statvfs
+    struct afs_statvfs statbuf;
 #else
-    struct statfs statbuf;
+    struct afs_statfs statbuf;
 #endif
 
     if (dp->flags & PART_DONTUPDATE)
 	return;
     /* Note:  we don't bother syncing because it's only an estimate, update
-       is syncing every 30 seconds anyway, we only have to keep the disk
-       approximately 10% from full--you just can't get the stuff in from
-       the net fast enough to worry */
-#if AFS_HAVE_STATVFS
-    code = statvfs(dp->name, &statbuf);
+     * is syncing every 30 seconds anyway, we only have to keep the disk
+     * approximately 10% from full--you just can't get the stuff in from
+     * the net fast enough to worry */
+#ifdef afs_statvfs
+    code = afs_statvfs(dp->name, &statbuf);
 #else
-    code = statfs(dp->name, &statbuf);
+    code = afs_statfs(dp->name, &statbuf);
 #endif
     if (code < 0) {
-	Log("statfs of %s failed in VSetPartitionDiskUsage (errno = %d)\n", dp->name, errno);
+	Log("statfs of %s failed in VSetPartitionDiskUsage (errno = %d)\n",
+	    dp->name, errno);
 	return;
     }
-    if (statbuf.f_blocks == -1)	{   /* Undefined; skip stats.. */   
+    if (statbuf.f_blocks == -1) {	/* Undefined; skip stats.. */
 	Log("statfs of %s failed in VSetPartitionDiskUsage\n", dp->name);
 	return;
     }
     totalblks = statbuf.f_blocks;
     free = statbuf.f_bfree;
     reserved = free - statbuf.f_bavail;
-#if AFS_HAVE_STATVFS
+#ifdef afs_statvfs
     bsize = statbuf.f_frsize;
 #else
     bsize = statbuf.f_bsize;
 #endif
     availblks = totalblks - reserved;
-    dp->f_files = statbuf.f_files;      /* max # of files in partition */
+    dp->f_files = statbuf.f_files;	/* max # of files in partition */
 
     /* Now free and totalblks are in fragment units, but we want them in
      * 1K units.
      */
     if (bsize >= 1024) {
-	free *= (bsize/1024);
+	free *= (bsize / 1024);
 	totalblks *= (bsize / 1024);
-	availblks *= (bsize / 1024 );
-	reserved *= (bsize / 1024 );
-    }
-    else {
-	free /= (1024/bsize);
-	totalblks /= (1024/bsize);
-	availblks /= (1024/bsize);
-	reserved /= (1024/bsize);
+	availblks *= (bsize / 1024);
+	reserved *= (bsize / 1024);
+    } else {
+	free /= (1024 / bsize);
+	totalblks /= (1024 / bsize);
+	availblks /= (1024 / bsize);
+	reserved /= (1024 / bsize);
     }
     /* now compute remaining figures */
     used = totalblks - free;
 
-    dp->minFree = reserved; /* only used in VPrintDiskStats_r */
+    dp->minFree = reserved;	/* only used in VPrintDiskStats_r */
     dp->totalUsable = availblks;
-    dp->free = availblks - used; /* this is exactly f_bavail */
+    dp->free = availblks - used;	/* this is exactly f_bavail */
 }
 #endif /* AFS_NT40_ENV */
 
-void VSetPartitionDiskUsage(register struct DiskPartition *dp)
+void
+VSetPartitionDiskUsage(register struct DiskPartition *dp)
 {
-    VOL_LOCK
+    VOL_LOCK;
     VSetPartitionDiskUsage_r(dp);
-    VOL_UNLOCK
+    VOL_UNLOCK;
 }
 
-void VResetDiskUsage_r(void)
+void
+VResetDiskUsage_r(void)
 {
     struct DiskPartition *dp;
     for (dp = DiskPartitionList; dp; dp = dp->next) {
@@ -893,76 +954,90 @@ void VResetDiskUsage_r(void)
     }
 }
 
-void VResetDiskUsage(void)
+void
+VResetDiskUsage(void)
 {
-    VOL_LOCK
+    VOL_LOCK;
     VResetDiskUsage_r();
-    VOL_UNLOCK
+    VOL_UNLOCK;
 }
 
-void VAdjustDiskUsage_r(Error *ec, Volume *vp, afs_int32 blocks, afs_int32 checkBlocks)
+void
+VAdjustDiskUsage_r(Error * ec, Volume * vp, afs_sfsize_t blocks,
+		   afs_sfsize_t checkBlocks)
 {
     *ec = 0;
     /* why blocks instead of checkBlocks in the check below?  Otherwise, any check
-       for less than BlocksSpare would skip the error-checking path, and we
-       could grow existing files forever, not just for another BlocksSpare
-       blocks. */
+     * for less than BlocksSpare would skip the error-checking path, and we
+     * could grow existing files forever, not just for another BlocksSpare
+     * blocks. */
     if (blocks > 0) {
 #ifdef	AFS_AIX32_ENV
-        afs_int32 rem, minavail;
+	afs_int32 rem, minavail;
 
-	if ((rem = vp->partition->free - checkBlocks) < 
-	    (minavail = (vp->partition->totalUsable * aixlow_water) / 100))
+	if ((rem = vp->partition->free - checkBlocks) < (minavail =
+							 (vp->partition->
+							  totalUsable *
+							  aixlow_water) /
+							 100))
 #else
 	if (vp->partition->free - checkBlocks < 0)
 #endif
 	    *ec = VDISKFULL;
-	else if (V_maxquota(vp) && V_diskused(vp) + checkBlocks > V_maxquota(vp))
+	else if (V_maxquota(vp)
+		 && V_diskused(vp) + checkBlocks > V_maxquota(vp))
 	    *ec = VOVERQUOTA;
-    }    
+    }
     vp->partition->free -= blocks;
     V_diskused(vp) += blocks;
 }
 
-void VAdjustDiskUsage(Error *ec, Volume *vp, afs_int32 blocks, afs_int32 checkBlocks)
+void
+VAdjustDiskUsage(Error * ec, Volume * vp, afs_sfsize_t blocks,
+		 afs_sfsize_t checkBlocks)
 {
-    VOL_LOCK
+    VOL_LOCK;
     VAdjustDiskUsage_r(ec, vp, blocks, checkBlocks);
-    VOL_UNLOCK
+    VOL_UNLOCK;
 }
 
-int VDiskUsage_r(Volume *vp, afs_int32 blocks)
+int
+VDiskUsage_r(Volume * vp, afs_sfsize_t blocks)
 {
     if (blocks > 0) {
 #ifdef	AFS_AIX32_ENV
-        afs_int32 rem, minavail;
+	afs_int32 rem, minavail;
 
-	if ((rem = vp->partition->free - blocks) < 
-	    (minavail = (vp->partition->totalUsable * aixlow_water) / 100))
+	if ((rem = vp->partition->free - blocks) < (minavail =
+						    (vp->partition->
+						     totalUsable *
+						     aixlow_water) / 100))
 #else
 	if (vp->partition->free - blocks < 0)
 #endif
-	    return(VDISKFULL);
-    }    
+	    return (VDISKFULL);
+    }
     vp->partition->free -= blocks;
     return 0;
 }
 
-int VDiskUsage(Volume *vp, afs_int32 blocks)
+int
+VDiskUsage(Volume * vp, afs_sfsize_t blocks)
 {
     int retVal;
-    VOL_LOCK
+    VOL_LOCK;
     retVal = VDiskUsage_r(vp, blocks);
-    VOL_UNLOCK
+    VOL_UNLOCK;
     return retVal;
 }
 
-void VPrintDiskStats_r(void)
+void
+VPrintDiskStats_r(void)
 {
     struct DiskPartition *dp;
     for (dp = DiskPartitionList; dp; dp = dp->next) {
-	Log("Partition %s: %d available 1K blocks (minfree=%d), ",
-	    dp->name, dp->totalUsable, dp->minFree);
+	Log("Partition %s: %d available 1K blocks (minfree=%d), ", dp->name,
+	    dp->totalUsable, dp->minFree);
 	if (dp->free < 0)
 	    Log("overallocated by %d blocks\n", -dp->free);
 	else
@@ -970,48 +1045,54 @@ void VPrintDiskStats_r(void)
     }
 }
 
-void VPrintDiskStats(void)
+void
+VPrintDiskStats(void)
 {
-    VOL_LOCK
+    VOL_LOCK;
     VPrintDiskStats_r();
-    VOL_UNLOCK
+    VOL_UNLOCK;
 }
 
 #ifdef AFS_NT40_ENV
 /* Need a separate lock file on NT, since NT only has mandatory file locks. */
 #define LOCKFILE "LOCKFILE"
-void VLockPartition_r(char *name)
+void
+VLockPartition_r(char *name)
 {
     struct DiskPartition *dp = VGetPartition_r(name, 0);
     OVERLAPPED lap;
-    
-    if (!dp) return;
+
+    if (!dp)
+	return;
     if (dp->lock_fd == -1) {
 	char path[64];
 	int rc;
-	(void) sprintf(path, "%s\\%s", VPartitionPath(dp), LOCKFILE);
-	dp->lock_fd = (int)CreateFile(path, GENERIC_WRITE,
-				 FILE_SHARE_READ|FILE_SHARE_WRITE, NULL,
-				 CREATE_ALWAYS, FILE_ATTRIBUTE_HIDDEN, NULL);
-	assert (dp->lock_fd != (int)INVALID_HANDLE_VALUE);
+	(void)sprintf(path, "%s\\%s", VPartitionPath(dp), LOCKFILE);
+	dp->lock_fd =
+	    (int)CreateFile(path, GENERIC_WRITE,
+			    FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
+			    CREATE_ALWAYS, FILE_ATTRIBUTE_HIDDEN, NULL);
+	assert(dp->lock_fd != (int)INVALID_HANDLE_VALUE);
 
-	memset((char*)&lap, 0, sizeof(lap));
-	rc = LockFileEx((HANDLE)dp->lock_fd, LOCKFILE_EXCLUSIVE_LOCK,
-			0, 1, 0, &lap);
+	memset((char *)&lap, 0, sizeof(lap));
+	rc = LockFileEx((HANDLE) dp->lock_fd, LOCKFILE_EXCLUSIVE_LOCK, 0, 1,
+			0, &lap);
 	assert(rc);
     }
 }
 
-void VUnlockPartition_r(char *name)
+void
+VUnlockPartition_r(char *name)
 {
     register struct DiskPartition *dp = VGetPartition_r(name, 0);
     OVERLAPPED lap;
 
-    if (!dp) return;	/* no partition, will fail later */
-    memset((char*)&lap, 0, sizeof(lap));
+    if (!dp)
+	return;			/* no partition, will fail later */
+    memset((char *)&lap, 0, sizeof(lap));
 
-    UnlockFileEx((HANDLE)dp->lock_fd, 0, 1, 0, &lap);
-    CloseHandle((HANDLE)dp->lock_fd);
+    UnlockFileEx((HANDLE) dp->lock_fd, 0, 1, 0, &lap);
+    CloseHandle((HANDLE) dp->lock_fd);
     dp->lock_fd = -1;
 }
 #else /* AFS_NT40_ENV */
@@ -1023,27 +1104,40 @@ void VUnlockPartition_r(char *name)
 #define LOCKRDONLY_OFFSET	((PRIV_LOCKRDONLY - 1) / BITS(int))
 #endif /* defined(AFS_HPUX_ENV) */
 
-void VLockPartition_r(char *name)
+void
+VLockPartition_r(char *name)
 {
     register struct DiskPartition *dp = VGetPartition_r(name, 0);
     char *partitionName;
     int retries, code;
     struct timeval pausing;
 #if defined(AFS_HPUX_ENV)
-    int			lockfRtn;
-    struct privgrp_map	privGrpList[PRIV_MAXGRPS];
-    unsigned int	*globalMask;
-    int			globalMaskIndex;
+    int lockfRtn;
+    struct privgrp_map privGrpList[PRIV_MAXGRPS];
+    unsigned int *globalMask;
+    int globalMaskIndex;
 #endif /* defined(AFS_HPUX_ENV) */
 #if defined(AFS_DARWIN_ENV)
     char lockfile[MAXPATHLEN];
 #endif /* defined(AFS_DARWIN_ENV) */
-    
-    if (!dp) return;	/* no partition, will fail later */
-    if (dp->lock_fd != -1) return;
+#ifdef AFS_NAMEI_ENV
+#ifdef AFS_AIX42_ENV
+    char LockFileName[MAXPATHLEN + 1];
+
+    sprintf((char *)&LockFileName, "%s/AFSINODE_FSLock", name);
+    partitionName = (char *)&LockFileName;
+#endif
+#endif
+
+    if (!dp)
+	return;			/* no partition, will fail later */
+    if (dp->lock_fd != -1)
+	return;
 
 #if    defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV)
+#if !defined(AFS_AIX42_ENV) || !defined(AFS_NAMEI_ENV)
     partitionName = dp->devName;
+#endif
     code = O_RDWR;
 #elif defined(AFS_DARWIN_ENV)
     strlcpy((partitionName = lockfile), dp->name, sizeof(lockfile));
@@ -1054,87 +1148,89 @@ void VLockPartition_r(char *name)
     code = O_RDONLY;
 #endif
 
-    for (retries=25; retries; retries--) {
-#if defined(AFS_DARWIN_ENV)
-        dp->lock_fd = open(partitionName, code, 0600);
-#else /* ! defined(AFS_DARWIN_ENV) */
-        dp->lock_fd = open(partitionName, code);
-#endif /* defined(AFS_DARWIN_ENV) */
-        if (dp->lock_fd != -1) break;
-        pausing.tv_sec = 0;
-        pausing.tv_usec = 500000;
-        select(0, NULL, NULL, NULL, &pausing);
+    for (retries = 25; retries; retries--) {
+	dp->lock_fd = afs_open(partitionName, code);
+	if (dp->lock_fd != -1)
+	    break;
+	if (errno == ENOENT)
+	    code |= O_CREAT;
+	pausing.tv_sec = 0;
+	pausing.tv_usec = 500000;
+	select(0, NULL, NULL, NULL, &pausing);
     }
     assert(retries != 0);
 
 #if defined (AFS_HPUX_ENV)
 
-	assert(getprivgrp(privGrpList) == 0);
+    assert(getprivgrp(privGrpList) == 0);
 
-	/*
-	 * In general, it will difficult and time-consuming ,if not impossible,
-	 * to try to find the privgroup to which this process belongs that has the
-	 * smallest membership, to minimise the security hole.  So, we use the privgrp
-	 * to which everybody belongs.
-	 */
-	/* first, we have to find the global mask */
-	for (globalMaskIndex = 0; globalMaskIndex < PRIV_MAXGRPS;
-	     globalMaskIndex++) {
-	  if (privGrpList[globalMaskIndex].priv_groupno == PRIV_GLOBAL) {
-	    globalMask = &(privGrpList[globalMaskIndex].
-			   priv_mask[LOCKRDONLY_OFFSET]);
+    /*
+     * In general, it will difficult and time-consuming ,if not impossible,
+     * to try to find the privgroup to which this process belongs that has the
+     * smallest membership, to minimise the security hole.  So, we use the privgrp
+     * to which everybody belongs.
+     */
+    /* first, we have to find the global mask */
+    for (globalMaskIndex = 0; globalMaskIndex < PRIV_MAXGRPS;
+	 globalMaskIndex++) {
+	if (privGrpList[globalMaskIndex].priv_groupno == PRIV_GLOBAL) {
+	    globalMask =
+		&(privGrpList[globalMaskIndex].priv_mask[LOCKRDONLY_OFFSET]);
 	    break;
-	  }
 	}
+    }
 
-	if (((*globalMask) & privmask(PRIV_LOCKRDONLY)) == 0) {
-	  /* allow everybody to set a lock on a read-only file descriptor */
-	  (*globalMask) |= privmask(PRIV_LOCKRDONLY);
-	  assert(setprivgrp(PRIV_GLOBAL,
-			    privGrpList[globalMaskIndex].priv_mask) == 0);
+    if (((*globalMask) & privmask(PRIV_LOCKRDONLY)) == 0) {
+	/* allow everybody to set a lock on a read-only file descriptor */
+	(*globalMask) |= privmask(PRIV_LOCKRDONLY);
+	assert(setprivgrp(PRIV_GLOBAL, privGrpList[globalMaskIndex].priv_mask)
+	       == 0);
 
-	  lockfRtn = lockf(dp->lock_fd, F_LOCK, 0);
+	lockfRtn = lockf(dp->lock_fd, F_LOCK, 0);
 
-	  /* remove the privilege granted to everybody to lock a read-only fd */
-	  (*globalMask) &= ~(privmask(PRIV_LOCKRDONLY));
-	  assert(setprivgrp(PRIV_GLOBAL,
-			    privGrpList[globalMaskIndex].priv_mask) == 0);
-	}
-	else {
-	  /* in this case, we should be able to do this with impunity, anyway */
-	  lockfRtn = lockf(dp->lock_fd, F_LOCK, 0);
-	}
-	
-	assert (lockfRtn != -1); 
+	/* remove the privilege granted to everybody to lock a read-only fd */
+	(*globalMask) &= ~(privmask(PRIV_LOCKRDONLY));
+	assert(setprivgrp(PRIV_GLOBAL, privGrpList[globalMaskIndex].priv_mask)
+	       == 0);
+    } else {
+	/* in this case, we should be able to do this with impunity, anyway */
+	lockfRtn = lockf(dp->lock_fd, F_LOCK, 0);
+    }
+
+    assert(lockfRtn != -1);
 #else
 #if defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV)
-	assert (lockf(dp->lock_fd, F_LOCK, 0) != -1); 
+    assert(lockf(dp->lock_fd, F_LOCK, 0) != -1);
 #else
-	assert (flock(dp->lock_fd, LOCK_EX) == 0);
-#endif	/* defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) */
+    assert(flock(dp->lock_fd, LOCK_EX) == 0);
+#endif /* defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) */
 #endif
 }
 
-void VUnlockPartition_r(char *name)
+void
+VUnlockPartition_r(char *name)
 {
     register struct DiskPartition *dp = VGetPartition_r(name, 0);
-    if (!dp) return;	/* no partition, will fail later */
+    if (!dp)
+	return;			/* no partition, will fail later */
     close(dp->lock_fd);
     dp->lock_fd = -1;
 }
 
 #endif /* AFS_NT40_ENV */
 
-void VLockPartition(char *name)
+void
+VLockPartition(char *name)
 {
-    VOL_LOCK
+    VOL_LOCK;
     VLockPartition_r(name);
-    VOL_UNLOCK
+    VOL_UNLOCK;
 }
 
-void VUnlockPartition(char *name)
+void
+VUnlockPartition(char *name)
 {
-    VOL_LOCK
+    VOL_LOCK;
     VUnlockPartition_r(name);
-    VOL_UNLOCK
+    VOL_UNLOCK;
 }

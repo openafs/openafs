@@ -50,21 +50,21 @@ main(int argc, char **argv)
     struct stat sb;
 
 
-    fd = open ("deps", O_WRONLY|O_CREAT|O_TRUNC, 0666);
+    fd = open("deps", O_WRONLY | O_CREAT | O_TRUNC, 0666);
     if (fd < 0)
-	err (1, "open");
-    ret = fstat (fd, &sb);
+	err(1, "open");
+    ret = fstat(fd, &sb);
     if (ret < 0)
-	err (1, "fstat");
-    ret = write (fd, "# DO NOT DELETE\n", 16);
+	err(1, "fstat");
+    ret = write(fd, "# DO NOT DELETE\n", 16);
     if (ret != 16)
-	err (1, "write");
-    ret = fchmod (fd, 0100644);
+	err(1, "write");
+    ret = fchmod(fd, 0100644);
     if (ret < 0)
-	errx (1, "fchmod");
-    ret = close (fd);
+	errx(1, "fchmod");
+    ret = close(fd);
     if (ret < 0)
-	errx (1, "close");
+	errx(1, "close");
 
     unlink("deps");
     return 0;

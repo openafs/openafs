@@ -5,9 +5,9 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+RELDIR=vol\test
 !INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\..\config\NTMakefile.version
-
 
 ############################################################################
 # External libraries
@@ -24,15 +24,18 @@ EXEC_LIBS = \
 
 ############################################################################
 # build inode lister
-ILIST = ilist.exe
+ILIST = $(OUT)\ilist.exe
 
-$(ILIST): ilist_nt.obj $(EXEC_LIBS)
+$(ILIST): $(OUT)\ilist_nt.obj $(EXEC_LIBS)
 	$(EXECONLINK)
 
 
 ############################################################################
 # build link table lister
-LTLIST = ltlist.exe
+LTLIST = $(OUT)\ltlist.exe
 
-$(LTLIST): ltlist.obj $(EXEC_LIBS)
+$(LTLIST): $(OUT)\ltlist.obj $(EXEC_LIBS)
 	$(EXECONLINK)
+
+mkdir:
+	

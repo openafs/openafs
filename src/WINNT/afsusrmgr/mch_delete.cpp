@@ -30,7 +30,6 @@ extern "C" {
 BOOL CALLBACK Machine_Delete_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp);
 void Machine_Delete_OnInitDialog (HWND hDlg);
 void Machine_Delete_OnDestroy (HWND hDlg);
-void Machine_Delete_OnCheck (HWND hDlg);
 void Machine_Delete_OnOK (HWND hDlg);
 
 

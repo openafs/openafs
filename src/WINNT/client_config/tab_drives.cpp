@@ -10,11 +10,12 @@
 extern "C" {
 #include <afs/param.h>
 #include <afs/stds.h>
+#include <afs/fs_utils.h>
 }
 
 #include "afs_config.h"
 #include "tab_drives.h"
-
+#include <lanahelper.h>
 
 /*
  * PROTOTYPES _________________________________________________________________
@@ -154,6 +155,9 @@ void DrivesTab_OnCheck (HWND hDlg)
             Message (MB_OK | MB_ICONHAND, IDS_ERROR_UNMAP, IDS_ERROR_UNMAP_DESC, TEXT("%08lX"), dwStatus);
          DrivesTab_FillList (hDlg);
          }
+      WriteActiveMap(g.Configuration.NetDrives.aDriveMap[ iDriveSel ].chDrive, fChecked && 
+                     g.Configuration.NetDrives.aDriveMap[ iDriveSel ].fPersistent );
+
       }
 }
 
@@ -198,6 +202,7 @@ void DrivesTab_OnRemove (HWND hDlg)
 
          DrivesTab_FillList (hDlg);
          }
+      WriteActiveMap(g.Configuration.NetDrives.aDriveMap[ iDriveSel ].chDrive, FALSE );
       }
 }
 
@@ -350,6 +355,13 @@ void DrivesTab_EditMapping (HWND hDlg, int iDrive)
          lstrcpy (g.Configuration.NetDrives.aDriveMap[ DriveMap.chDrive-chDRIVE_A ].szMapping, szAfsPathNew);
          WriteDriveMappings (&g.Configuration.NetDrives);
 
+         if (iDrive == -1) {
+             WriteActiveMap(DriveMap.chDrive, DriveMap.fPersistent);
+         } else if ( (chDRIVE_A + iDrive) != DriveMap.chDrive ) {
+             WriteActiveMap(chDRIVE_A+iDrive, FALSE);
+             WriteActiveMap(DriveMap.chDrive, DriveMap.fPersistent);
+         }
+
          DrivesTab_FillList (hDlg);
          }
       }
@@ -393,7 +405,6 @@ BOOL CALLBACK DriveEdit_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
    return FALSE;
 }
 
-
 void DriveEdit_OnInitDialog (HWND hDlg)
 {
    PDRIVEMAP pMap = (PDRIVEMAP)GetWindowLong (hDlg, DWL_USER);
@@ -433,7 +444,14 @@ void DriveEdit_OnInitDialog (HWND hDlg)
    SendMessage (hCombo, CB_SETCURSEL, iItemSel, 0);
 
    TCHAR szMapping[ MAX_PATH ];
-   AdjustAfsPath (szMapping, ((pMap->szMapping[0]) ? pMap->szMapping : TEXT("/afs")), TRUE, FALSE);
+   AdjustAfsPath (szMapping, ((pMap->szMapping[0]) ? pMap->szMapping : cm_slash_mount_root), TRUE, FALSE);
+   
+   CHAR msg[256], msgf[256];
+   if (GetDlgItemText(hDlg,IDC_STATICSUBMOUNT,(LPSTR)msg,sizeof(msg)-1)>0)
+   {
+       wsprintf(msgf,msg,cm_back_slash_mount_root,cm_back_slash_mount_root);
+       SetDlgItemText (hDlg, IDC_STATICSUBMOUNT, msgf);
+   }
    SetDlgItemText (hDlg, IDC_PATH, szMapping);
    SetDlgItemText (hDlg, IDC_DESC, pMap->szSubmount);
 
@@ -461,9 +479,9 @@ void DriveEdit_OnOK (HWND hDlg)
       return;
       }
 
-   if ( (lstrncmpi (pMap->szMapping, TEXT("/afs"), lstrlen(TEXT("/afs")))) &&
-        (lstrncmpi (pMap->szMapping, TEXT("\\afs"), lstrlen(TEXT("\\afs")))) )
-      {
+    if ( (lstrncmpi (pMap->szMapping, cm_slash_mount_root, lstrlen(cm_slash_mount_root))) &&
+         (lstrncmpi (pMap->szMapping, cm_back_slash_mount_root, lstrlen(cm_back_slash_mount_root))) )
+    {
       Message (MB_ICONHAND, GetErrorTitle(), IDS_BADMAP_DESC);
       return;
       }
@@ -704,37 +722,57 @@ void Submounts_OnRemove (HWND hDlg)
 // Action - On Add or On Edit a submount item
 void Submounts_EditSubmount (HWND hDlg, PSUBMOUNT pSubmount)
 {
-   HWND hList = GetDlgItem (hDlg, IDC_LIST);
+    TCHAR szOrigSubmount[MAX_PATH];
+    _tcscpy(szOrigSubmount, pSubmount->szSubmount);
 
-   if (ModalDialogParam (IDD_SUBMOUNT_EDIT, GetParent(hDlg), (DLGPROC)SubEdit_DlgProc, (LPARAM)pSubmount) == IDOK)
-      {
-      TCHAR szMapping[ MAX_PATH ];
-      AdjustAfsPath (szMapping, pSubmount->szMapping, TRUE, FALSE);
+    HWND hList = GetDlgItem (hDlg, IDC_LIST);
 
-      HLISTITEM hItem;
-      for (hItem = FastList_FindFirst (hList); hItem; hItem = FastList_FindNext (hList, hItem))
-         {
-         LPCTSTR pszSubmount;
-         if ((pszSubmount = FastList_GetItemText (hList, hItem, 0)) == NULL)
-            continue;
+    if (ModalDialogParam (IDD_SUBMOUNT_EDIT, GetParent(hDlg), (DLGPROC)SubEdit_DlgProc, (LPARAM)pSubmount) == IDOK)
+    {
+        TCHAR szMapping[ MAX_PATH ];
+        BOOL bNameChange = (szOrigSubmount[0] && _tcsicmp(szOrigSubmount, pSubmount->szSubmount));
 
-         if (!lstrcmpi (pszSubmount, pSubmount->szSubmount))
-            break;
-         }
+        AdjustAfsPath (szMapping, pSubmount->szMapping, TRUE, FALSE);
 
-      if (!hItem)
-         {
-         FASTLISTADDITEM ai;
-         memset (&ai, 0x00, sizeof(FASTLISTADDITEM));
-         ai.iFirstImage = IMAGE_NOIMAGE;
-         ai.iSecondImage = IMAGE_NOIMAGE;
-         ai.pszText = pSubmount->szSubmount;
-         ai.lParam = 0;
-         hItem = FastList_AddItem (hList, &ai);
-         }
+        HLISTITEM hItem;
 
-      FastList_SetItemText (hList, hItem, 1, szMapping);
-      }
+        if ( bNameChange ) {
+            for (hItem = FastList_FindFirst (hList); hItem; hItem = FastList_FindNext (hList, hItem))
+            {
+                LPCTSTR pszSubmount;
+                if ((pszSubmount = FastList_GetItemText (hList, hItem, 0)) == NULL)
+                    continue;
+
+                if (!_tcsicmp(szOrigSubmount, pszSubmount) ) {
+                    FastList_RemoveItem (hList, hItem);
+                    break;
+                }
+            }
+        }
+
+        for (hItem = FastList_FindFirst (hList); hItem; hItem = FastList_FindNext (hList, hItem))
+        {
+            LPCTSTR pszSubmount;
+            if ((pszSubmount = FastList_GetItemText (hList, hItem, 0)) == NULL)
+                continue;
+
+            if (!_tcsicmp(pszSubmount, pSubmount->szSubmount))
+                break;
+        }
+
+        if (!hItem)
+        {
+            FASTLISTADDITEM ai;
+            memset (&ai, 0x00, sizeof(FASTLISTADDITEM));
+            ai.iFirstImage = IMAGE_NOIMAGE;
+            ai.iSecondImage = IMAGE_NOIMAGE;
+            ai.pszText = pSubmount->szSubmount;
+            ai.lParam = 0;
+            hItem = FastList_AddItem (hList, &ai);
+        }
+
+        FastList_SetItemText (hList, hItem, 1, szMapping);
+    }
 }
 
 
@@ -781,9 +819,16 @@ BOOL CALLBACK SubEdit_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 
 void SubEdit_OnInitDialog (HWND hDlg)
 {
-   PSUBMOUNT pSubmount = (PSUBMOUNT)GetWindowLong (hDlg, DWL_USER);
+    CHAR msg[256], msgf[256];
+    PSUBMOUNT pSubmount = (PSUBMOUNT)GetWindowLong (hDlg, DWL_USER);
+    if (GetDlgItemText(hDlg,IDC_STATICSUBMOUNT,(LPSTR)msg,sizeof(msg)-1)>0)
+    {
+		wsprintf(msgf,msg,cm_back_slash_mount_root,cm_back_slash_mount_root);
+		SetDlgItemText (hDlg, IDC_STATICSUBMOUNT, msgf);
+   }
 
    SetDlgItemText (hDlg, IDC_SUBMOUNT, pSubmount->szSubmount);
+   
    SetDlgItemText (hDlg, IDC_MAPPING, pSubmount->szMapping);
 }
 

@@ -32,23 +32,28 @@ A. Creating the proper directory structure.
 
       alpha_dux40
       alpha_dux50 (only tested on 5.0A, does not work with 5.1)
-      i386_fbsd42, i386_fbsd43, i386_fbsd44, i386_fbsd45,
-	      i386_fbsd46 (gmake is required to build for FreeBSD)
+      i386_fbsd_42, i386_fbsd_43, i386_fbsd_44, i386_fbsd_45,
+	      i386_fbsd_46, i386_fbsd_47, i386_fbsd_50, i386_fbsd_51,
+	      i386_fbsd_52, i386_fbsd_53
       i386_linux22
-      i386_linux24 
+      i386_linux24
+      i386_linux26
       i386_umlinux22
-      i386_umlinux24 
+      i386_umlinux24
+      i386_obsd31, i386_obsd32, i386_obsd33, i386_obsd34, i386_obsd35,
+	      i386_obsd36
       rs_aix42
       sgi_65 (file server not tested)
       sun4_413 (No client support, no fileserver support, db servers only)
       sun4x_56, sun4x_57, sun4x_58, sun4x_59 (logging UFS not supported 
 	      for mixed-use partitions containing client cache)
-      ppc_darwin_13, ppc_darwin_14, ppc_darwin_60 (file server not tested)
+      ppc_darwin_70
       ppc_linux22
       ppc_linux24
       alpha_linux22 
       alpha_linux24 
       ia64_linux24
+      ia64_linux26
       sparc_linux22
       sparc_linux24
       sparc64_linux22
@@ -115,22 +120,12 @@ B  Building
       e.g. sun4x_57/dest or i386_linux22/dest 
 
    2. As appropriate you can clean up or, if you're using Linux, build for
-      another kernel version:
-      a. To clean up:
+      another kernel version.
+      To clean up:
          % make clean
 
-      b. To build for another Linux kernel version:
-         the system type defined in step A1.
-         % ./configure --with-afs-sysname=i386_linux22 --with-linux-kernel-headers=/usr/src/linux-2.2.19-i686
-         % make 
-
-         Your dest tree will now include an additional kernel module for your
-         additional kernel headers. Be aware that if the kernel version string
-         which UTS_RELEASE is defined to in include/linux/version.h matches
-         the last kernel you built for, the previous kernel module will be 
-         overwritten.
-
 C  Problems
+
    If you have a problem building this source, you may want to visit
    http://www.openafs.org/ to see if any problems have been reported 
    or to find out how to get more help.
@@ -138,7 +133,21 @@ C  Problems
    Mailing lists have been set up to help; More details can be found
    on the openafs.org site.
 
-D Notes
+D  Linux Notes
+
+   To build for another Linux kernel version:
+   the system type defined in step A1.
+      % ./configure --with-afs-sysname=i386_linux22 --with-linux-kernel-headers=/usr/src/linux-2.2.19-i686
+      % make 
+
+   Your dest tree will now include an additional kernel module for your
+   additional kernel headers. Be aware that if the kernel version string
+   which UTS_RELEASE is defined to in include/linux/version.h matches the
+   last kernel you built for, the previous kernel module will be
+   overwritten.
+
+E  HP-UX 11.0 Notes
+
    HP-UX 11.0 requires a header called vfs_vm.h which HP has provided on their
    web site: http://h21007.www2.hp.com/dspp/tech/tech_TechSoftwareDetailPage_IDX/1,1703,687,00.html
    To navigate down from the top level of the portal, one would do
@@ -146,3 +155,47 @@ D Notes
         www.hp.com/dspp -> i want to... -> download software -> operating systems
 
    to get to the same page. 
+
+F  OpenBSD Notes
+
+   You need kernel source installed to build OpenAFS.  Use the
+   --with-bsd-kernel-headers= configure option if your kernel source is not
+   in /usr/src/sys.
+
+   There is a package builder in src/packaging/OpenBSD.  "sh buildpkg.sh"
+   should make a package for the client.  Use pkg_add to install.  The
+   package will install using transarc-paths, regardless of how you
+   configured.  The package builder does not work on OpenBSD 3.5 and later
+   due to the incompatible re-write of pkg_create.
+
+   There is no server package, but I am told that "make install" will put
+   server binaries in /usr/afs.
+
+   Your kernel may panic when you try to shutdown after running the OpenAFS
+   client.  To prevent this, change the "dangling vnode" panic in
+   sys/kern/vfs_syscalls.c to a printf and build a new kernel.
+
+   You can't run arla and OpenAFS at the same time.
+
+G  FreeBSD Notes
+
+   The FreeBSD client is very new and untested.  Do not trust it for
+   production work.
+
+   You need kernel source installed to build OpenAFS.  Use the
+   --with-bsd-kernel-headers= configure option if your kernel source is not
+   in /usr/src/sys.
+
+   You also need access to your kernel build directory for the opt_global.h
+   include file.  Use the --with-bsd-kernel-build= configure option if your
+   kernel build is not GENERIC in the standard place.
+
+   There is a package builder in src/packaging/OpenBSD.  "sh buildpkg.sh"
+   should make a package for the client.  Use pkg_add to install.  The
+   package will install using transarc-paths, regardless of how you
+   configured.  The builder uses an old version of the /usr/vice/etc/rc file
+   that probably won't work.  You might be able to replace it with something
+   like "kldload libafs.ko; /usr/vice/etc/afsd".
+
+   There is no server package, but I am told that "make install" will put
+   server binaries in /usr/afs.

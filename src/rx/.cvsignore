@@ -3,3 +3,4 @@ Makefile
 RX_component_version_number.c
 rxdebug
 rxdumptrace
+rxperf

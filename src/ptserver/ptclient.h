@@ -8,10 +8,10 @@
  */
 
 #if defined(UKERNEL)
-#include "../afs/lock.h"
-#include "../afs/ubik.h"
-#include "../afsint/ptint.h"
-#include "../afs/ptserver.h"
+#include "afs/lock.h"
+#include "ubik.h"
+#include "afs/ptint.h"
+#include "afs/ptserver.h"
 #else /* defined(UKERNEL) */
 #include <lock.h>
 #include <ubik.h>
@@ -42,5 +42,8 @@ extern int PR_ListOwned();
 extern int PR_GetCPS2();
 extern int PR_GetHostCPS();
 extern int PR_UpdateEntry();
+#if defined(SUPERGROUPS)
+extern int PR_ListSuperGroups();
+#endif
 
 #define pr_ErrorMsg error_message

@@ -13,22 +13,23 @@
 
 #include <afsconfig.h>
 #ifdef KERNEL
-#include "../afs/param.h"
+#include "afs/param.h"
 #else
 #include <afs/param.h>
 #endif
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rxkad/domestic/crypt_conn.c,v 1.1.1.6 2001/09/11 14:34:45 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/rxkad/domestic/crypt_conn.c,v 1.11.2.1 2004/08/25 07:17:01 shadow Exp $");
 
 #ifdef KERNEL
-#include "../afs/stds.h"
+#include "afs/stds.h"
 #ifndef UKERNEL
-#include "../h/types.h"
-#include "../rx/rx.h"
-#include "../netinet/in.h"
+#include "h/types.h"
+#include "rx/rx.h"
+#include "netinet/in.h"
 #else /* !UKERNEL */
-#include "../afs/sysincludes.h"
-#include "../rx/rx.h"
+#include "afs/sysincludes.h"
+#include "rx/rx.h"
 #endif /* !UKERNEL */
 #else /* !KERNEL */
 #include <afs/stds.h>
@@ -44,77 +45,76 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/rxkad/domestic/crypt_conn.c,v 1.1.1.6 2
 #include "private_data.h"
 #define XPRT_RXKAD_CRYPT
 
-afs_int32 rxkad_DecryptPacket (conn, schedule, ivec, len, packet)
-  IN struct rx_connection *conn;
-  IN fc_KeySchedule *schedule;
-  IN fc_InitializationVector *ivec;
-  IN int len;
-  INOUT struct rx_packet *packet;
+afs_int32
+rxkad_DecryptPacket(const struct rx_connection *conn,
+		    const fc_KeySchedule * schedule,
+		    const fc_InitializationVector * ivec, const int inlen,
+		    struct rx_packet *packet)
 {
     afs_uint32 xor[2];
     struct rx_securityClass *obj;
-    struct rxkad_cprivate *tp;		/* s & c have type at same offset */
-    char * data;
-    int i,tlen;
+    struct rxkad_cprivate *tp;	/* s & c have type at same offset */
+    char *data;
+    int i, tlen, len;
+
+    len = inlen;
 
     obj = rx_SecurityObjectOf(conn);
     tp = (struct rxkad_cprivate *)obj->privateData;
-    LOCK_RXKAD_STATS
+    LOCK_RXKAD_STATS;
     rxkad_stats.bytesDecrypted[rxkad_TypeIndex(tp->type)] += len;
-    UNLOCK_RXKAD_STATS
-
+    UNLOCK_RXKAD_STATS;
     memcpy((void *)xor, (void *)ivec, sizeof(xor));
-    for (i = 0; len ; i++) {
-      data = rx_data(packet, i, tlen);
-      if (!data || !tlen)
-	break;
-      tlen = MIN(len, tlen);
-      fc_cbc_encrypt (data, data, tlen, schedule, xor, DECRYPT);
-      len -= tlen;
+    for (i = 0; len; i++) {
+	data = rx_data(packet, i, tlen);
+	if (!data || !tlen)
+	    break;
+	tlen = MIN(len, tlen);
+	fc_cbc_encrypt(data, data, tlen, schedule, xor, DECRYPT);
+	len -= tlen;
     }
     /* Do this if packet checksums are ever enabled (below), but
      * current version just passes zero
-    afs_int32 cksum;
-    cksum = ntohl(rx_GetInt32(packet, 1));
-    */
+     afs_int32 cksum;
+     cksum = ntohl(rx_GetInt32(packet, 1));
+     */
     return 0;
 }
 
-afs_int32 rxkad_EncryptPacket (conn, schedule, ivec, len, packet)
-  IN struct rx_connection *conn;
-  IN fc_KeySchedule *schedule;
-  IN fc_InitializationVector *ivec;
-  IN int len;
-  INOUT struct rx_packet *packet;
+afs_int32
+rxkad_EncryptPacket(const struct rx_connection * conn,
+		    const fc_KeySchedule * schedule,
+		    const fc_InitializationVector * ivec, const int inlen,
+		    struct rx_packet * packet)
 {
     afs_uint32 xor[2];
     struct rx_securityClass *obj;
-    struct rxkad_cprivate *tp;		/* s & c have type at same offset */
+    struct rxkad_cprivate *tp;	/* s & c have type at same offset */
     char *data;
-    int i,tlen;
+    int i, tlen, len;
+
+    len = inlen;
 
     obj = rx_SecurityObjectOf(conn);
     tp = (struct rxkad_cprivate *)obj->privateData;
-    LOCK_RXKAD_STATS
+    LOCK_RXKAD_STATS;
     rxkad_stats.bytesEncrypted[rxkad_TypeIndex(tp->type)] += len;
-    UNLOCK_RXKAD_STATS
-
+    UNLOCK_RXKAD_STATS;
     /*
-    afs_int32 cksum;
-    cksum = htonl(0);		
-    * Future option to add cksum here, but for now we just put 0
-    */
-    rx_PutInt32(packet, 1*sizeof(afs_int32), 0); 
+     * afs_int32 cksum;
+     * cksum = htonl(0);                
+     * * Future option to add cksum here, but for now we just put 0
+     */
+    rx_PutInt32(packet, 1 * sizeof(afs_int32), 0);
 
     memcpy((void *)xor, (void *)ivec, sizeof(xor));
-    for (i = 0; len ; i++) {
-      data = rx_data(packet, i, tlen);
-      if (!data || !tlen)
-	break;
-      tlen = MIN(len, tlen);
-      fc_cbc_encrypt (data, data, tlen, schedule, xor, ENCRYPT);
-      len -= tlen;
+    for (i = 0; len; i++) {
+	data = rx_data(packet, i, tlen);
+	if (!data || !tlen)
+	    break;
+	tlen = MIN(len, tlen);
+	fc_cbc_encrypt(data, data, tlen, schedule, xor, ENCRYPT);
+	len -= tlen;
     }
     return 0;
 }
-

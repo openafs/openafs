@@ -33,7 +33,7 @@
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
-RCSID("$Id: errx.c,v 1.1 2002/01/22 19:54:41 hartmans Exp $");
+RCSID("$Id: errx.c,v 1.2 2003/07/15 23:16:59 shadow Exp $");
 #endif
 
 #include "err.h"
@@ -41,8 +41,8 @@ RCSID("$Id: errx.c,v 1.1 2002/01/22 19:54:41 hartmans Exp $");
 void
 errx(int eval, const char *fmt, ...)
 {
-  va_list ap;
-  va_start(ap, fmt);
-  verrx(eval, fmt, ap);
-  va_end(ap);
+    va_list ap;
+    va_start(ap, fmt);
+    verrx(eval, fmt, ap);
+    va_end(ap);
 }

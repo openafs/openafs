@@ -10,33 +10,38 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/cmd/test/dtest.c,v 1.1.1.4 2001/07/14 22:21:12 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/cmd/test/dtest.c,v 1.6 2003/07/15 23:14:52 shadow Exp $");
 
 #include "cmd.h"
 #include <stdio.h>
 
-static cproc (as, arock)
-char *arock;
-struct cmd_syndesc *as; {
+static
+cproc(as, arock)
+     char *arock;
+     struct cmd_syndesc *as;
+{
     register struct cmd_item *ti;
     printf("in the pear command\n");
     printf("number is %s\n", as->parms[0].items->data);
-    if (as->parms[1].items) printf("running unauthenticated\n");
-    for(ti=as->parms[2].items; ti; ti=ti->next) {
+    if (as->parms[1].items)
+	printf("running unauthenticated\n");
+    for (ti = as->parms[2].items; ti; ti = ti->next) {
 	printf("spotspos %s\n", ti->data);
     }
     return 0;
 }
 
 main(argc, argv)
-int argc;
-char **argv; {
+     int argc;
+     char **argv;
+{
     register struct cmd_syndesc *ts;
-    
-    ts = cmd_CreateSyntax((char *) 0, cproc, (char *) 0, "describe pear");
+
+    ts = cmd_CreateSyntax(NULL, cproc, NULL, "describe pear");
     cmd_AddParm(ts, "-num", CMD_SINGLE, 0, "number of pears");
     cmd_AddParm(ts, "-noauth", CMD_FLAG, CMD_OPTIONAL, "don't authenticate");
     cmd_AddParm(ts, "-spotpos", CMD_LIST, CMD_OPTIONAL, 0);
-    
+
     return cmd_Dispatch(argc, argv);
 }

@@ -26,7 +26,7 @@ extern int errno;
 struct serverParms {
     char *whoami;
     u_int threads;
-    int authentication;			/* minimum level  of auth to permit */
+    int authentication;		/* minimum level  of auth to permit */
     char *keyfile;
 };
 
@@ -34,22 +34,22 @@ struct clientParms {
     char *whoami;
     u_int threads;
     char server[32];
-    u_long sendLen;			/* parameters for call to Copious */
+    u_long sendLen;		/* parameters for call to Copious */
     u_long recvLen;
-    u_long fastCalls;			/* number of calls to perform */
+    u_long fastCalls;		/* number of calls to perform */
     u_long slowCalls;
     u_long copiousCalls;
-    int noExit;				/* don't exit after successful end */
-    int printStats;			/* print rx statistics before exit */
-    int printTiming;			/* print timings for calls */
-    int callTest;			/* check call number preservation */
-    int hijackTest;			/* check hijack prevention measures */
-    int stopServer;			/* send stop server RPC */
-    int authentication;			/* type of authentication to use */
-    int useTokens;			/* use user's existing tokens */
-    char *cell;                         /* test cell name */
-    u_long repeatInterval;		/* secs between load test activity */
-    u_long repeatCount;			/* times load test activity repeated */
+    int noExit;			/* don't exit after successful end */
+    int printStats;		/* print rx statistics before exit */
+    int printTiming;		/* print timings for calls */
+    int callTest;		/* check call number preservation */
+    int hijackTest;		/* check hijack prevention measures */
+    int stopServer;		/* send stop server RPC */
+    int authentication;		/* type of authentication to use */
+    int useTokens;		/* use user's existing tokens */
+    char *cell;			/* test cell name */
+    u_long repeatInterval;	/* secs between load test activity */
+    u_long repeatCount;		/* times load test activity repeated */
 };
 
 long rxkst_StartClient(INOUT struct clientParms *parms);

@@ -8,25 +8,25 @@
  */
 
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/HPUX/osi_sleep.c,v 1.1.1.5 2003/07/30 17:08:07 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/afs/HPUX/osi_sleep.c,v 1.12 2003/07/15 23:14:21 shadow Exp $");
 
-#include "../afs/sysincludes.h"	/* Standard vendor system headers */
-#include "../afs/afsincludes.h"	/* Afs-based standard headers */
-#include "../afs/afs_stats.h"   /* afs statistics */
-
-
+#include "afs/sysincludes.h"	/* Standard vendor system headers */
+#include "afsincludes.h"	/* Afs-based standard headers */
+#include "afs/afs_stats.h"	/* afs statistics */
 
 #if !defined(AFS_HPUX110_ENV)
 static char waitV;
 #endif
 
 /* call procedure aproc with arock as an argument, in ams milliseconds */
-static int afs_osi_CallProc(aproc, arock, ams)
-    register void (*aproc)();
-    register char *arock;
-    afs_int32 ams;
+static int
+afs_osi_CallProc(aproc, arock, ams)
+     register void (*aproc) ();
+     register char *arock;
+     afs_int32 ams;
 {
     int code;
 
@@ -35,7 +35,7 @@ static int afs_osi_CallProc(aproc, arock, ams)
     AFS_GUNLOCK();
 #endif
     /* hz is in cycles/second, and timeout's 3rd parm is in cycles */
-    code = timeout(aproc, arock, (ams * afs_hz)/1000 + 1);
+    code = timeout(aproc, arock, (ams * afs_hz) / 1000 + 1);
 #if !defined(AFS_HPUX110_ENV)
     AFS_GLOCK();
 #endif
@@ -43,9 +43,10 @@ static int afs_osi_CallProc(aproc, arock, ams)
 }
 
 /* cancel a timeout, whether or not it has already occurred */
-static int afs_osi_CancelProc(aproc, arock)
-    register void (*aproc)();
-    register char *arock; 
+static int
+afs_osi_CancelProc(aproc, arock)
+     register void (*aproc) ();
+     register char *arock;
 {
     int code = 0;
     AFS_STATCNT(osi_CancelProc);
@@ -61,9 +62,10 @@ static int afs_osi_CancelProc(aproc, arock)
 }
 
 #if defined(AFS_HPUX110_ENV)
-static void AfsWaitHack(char * event)
+static void
+AfsWaitHack(char *event)
 {
-    lock_t * sleep_lock;
+    lock_t *sleep_lock;
 
     AFS_STATCNT(WaitHack);
     sleep_lock = get_sleep_lock(event);
@@ -72,50 +74,56 @@ static void AfsWaitHack(char * event)
 }
 #else
 
-static void AfsWaitHack()
+static void
+AfsWaitHack()
 {
     AFS_STATCNT(WaitHack);
     wakeup(&waitV);
 }
 #endif
 
-void afs_osi_InitWaitHandle(struct afs_osi_WaitHandle *achandle)
+void
+afs_osi_InitWaitHandle(struct afs_osi_WaitHandle *achandle)
 {
     AFS_STATCNT(osi_InitWaitHandle);
     achandle->proc = (caddr_t) 0;
 }
 
 /* cancel osi_Wait */
-void afs_osi_CancelWait(struct afs_osi_WaitHandle *achandle)
+void
+afs_osi_CancelWait(struct afs_osi_WaitHandle *achandle)
 {
     caddr_t proc;
 
     AFS_STATCNT(osi_CancelWait);
     proc = achandle->proc;
-    if (proc == 0) return;
-    achandle->proc = (caddr_t) 0;   /* so dude can figure out he was signalled */
+    if (proc == 0)
+	return;
+    achandle->proc = (caddr_t) 0;	/* so dude can figure out he was signalled */
 #if defined(AFS_HPUX110_ENV)
-   afs_osi_Wakeup((char *)achandle);
+    afs_osi_Wakeup((char *)achandle);
 #else
     afs_osi_Wakeup(&waitV);
 #endif
+
 }
 
 /* afs_osi_Wait
  * Waits for data on ahandle, or ams ms later.  ahandle may be null.
  * Returns 0 if timeout and EINTR if signalled.
  */
-int afs_osi_Wait(afs_int32 ams, struct afs_osi_WaitHandle *ahandle, int aintok)
+int
+afs_osi_Wait(afs_int32 ams, struct afs_osi_WaitHandle *ahandle, int aintok)
 {
     int code;
     afs_int32 endTime, tid;
 #if defined(AFS_HPUX110_ENV)
-   char localwait;
-   char * event;
+    char localwait;
+    char *event;
 #endif
 
     AFS_STATCNT(osi_Wait);
-    endTime = osi_Time() + (ams/1000);
+    endTime = osi_Time() + (ams / 1000);
     if (ahandle)
 	ahandle->proc = (caddr_t) u.u_procp;
     do {
@@ -123,22 +131,22 @@ int afs_osi_Wait(afs_int32 ams, struct afs_osi_WaitHandle *ahandle, int aintok)
 	code = 0;
 	/* do not do anything for solaris, digital, AIX, and SGI MP */
 #if defined(AFS_HPUX110_ENV)
-   if (ahandle) {
-       event = (char *) ahandle;
-    }
-   else {
-       event = &localwait;
-    }
-   afs_osi_CallProc(AfsWaitHack, event, ams);
-   afs_osi_Sleep(event);
-   afs_osi_CancelProc(AfsWaitHack, event);
+	if (ahandle) {
+	    event = (char *)ahandle;
+	} else {
+	    event = &localwait;
+	}
+	afs_osi_CallProc(AfsWaitHack, event, ams);
+	afs_osi_Sleep(event);
+	afs_osi_CancelProc(AfsWaitHack, event);
 #else
-	afs_osi_CallProc(AfsWaitHack, (char *) u.u_procp, ams);
-	afs_osi_Sleep(&waitV); /* for HP 10.0 */
+	afs_osi_CallProc(AfsWaitHack, (char *)u.u_procp, ams);
+	afs_osi_Sleep(&waitV);	/* for HP 10.0 */
 
 	/* do not do anything for solaris, digital, and SGI MP */
-	afs_osi_CancelProc(AfsWaitHack,  (char *) u.u_procp); 
-	if (code) break;	/* if something happened, quit now */
+	afs_osi_CancelProc(AfsWaitHack, (char *)u.u_procp);
+	if (code)
+	    break;		/* if something happened, quit now */
 #endif
 	/* if we we're cancelled, quit now */
 	if (ahandle && (ahandle->proc == (caddr_t) 0)) {
@@ -149,26 +157,41 @@ int afs_osi_Wait(afs_int32 ams, struct afs_osi_WaitHandle *ahandle, int aintok)
     return code;
 }
 
-#if defined(AFS_HPUX110_ENV)
-void afs_osi_Sleep(void *event)
+int
+afs_osi_SleepSig(void *event)
 {
-   lock_t * sleep_lock;
-   
-   AFS_ASSERT_GLOCK();
-   get_sleep_lock(event);
-   AFS_GUNLOCK();
-   sleep((caddr_t) event, PZERO-2);
-   AFS_GLOCK();
+    afs_osi_Sleep(event);
+    return 0;
 }
 
-int afs_osi_Wakeup(void *event)
+#if defined(AFS_HPUX110_ENV)
+void
+afs_osi_Sleep(void *event)
 {
-    lock_t * sleep_lock;
+    lock_t *sleep_lock;
 
-   sleep_lock = get_sleep_lock(event);
-   wakeup((caddr_t) event);
-   spinunlock(sleep_lock);
-   return 0;
+    AFS_ASSERT_GLOCK();
+    get_sleep_lock(event);
+    AFS_GUNLOCK();
+    sleep((caddr_t) event, PZERO - 2);
+    AFS_GLOCK();
+}
+
+int
+afs_osi_Wakeup(void *event)
+{
+    lock_t *sleep_lock;
+
+    sleep_lock = get_sleep_lock(event);
+    wakeup((caddr_t) event);
+    spinunlock(sleep_lock);
+    return 0;
+}
+#else
+int
+afs_osi_Wakeup(void *event)
+{
+    wakeup((caddr_t) event);
+    return 0;
 }
 #endif
-

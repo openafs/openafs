@@ -14,7 +14,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/knfs.c,v 1.1.1.5 2001/09/11 14:33:00 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/kauth/knfs.c,v 1.8 2003/07/15 23:15:16 shadow Exp $");
 
 #include <stdio.h>
 #include <afs/stds.h>
@@ -52,18 +53,19 @@ Modifications:
  * otherwise irrelevant, or worse.
  */
 struct ClearToken {
-	afs_int32 AuthHandle;
-	char HandShakeKey[8];
-	afs_int32 ViceId;
-	afs_int32 BeginTimestamp;
-	afs_int32 EndTimestamp;
+    afs_int32 AuthHandle;
+    char HandShakeKey[8];
+    afs_int32 ViceId;
+    afs_int32 BeginTimestamp;
+    afs_int32 EndTimestamp;
 };
 
 
-static SetSysname(ahost, auid, sysname)
-afs_int32 ahost;
-afs_int32 auid;
-char *sysname;
+static
+SetSysname(ahost, auid, sysname)
+     afs_int32 ahost;
+     afs_int32 auid;
+     char *sysname;
 {
     afs_int32 code;
     afs_int32 pheader[6];
@@ -74,11 +76,11 @@ char *sysname;
     /* otherwise we've got the token, now prepare to build the pioctl args */
     pheader[0] = ahost;
     pheader[1] = auid;
-    pheader[2] = 0;			/* group low */
-    pheader[3] = 0;			/* group high */
-    pheader[4] = 38/*VIOC_AFS_SYSNAME*/;/* sysname pioctl index */
-    pheader[5] = 1;			/* NFS protocol exporter # */
-	
+    pheader[2] = 0;		/* group low */
+    pheader[3] = 0;		/* group high */
+    pheader[4] = 38 /*VIOC_AFS_SYSNAME */ ;	/* sysname pioctl index */
+    pheader[5] = 1;		/* NFS protocol exporter # */
+
     /* copy stuff in */
     memcpy(space, pheader, sizeof(pheader));
     tp = space + sizeof(pheader);
@@ -87,14 +89,14 @@ char *sysname;
     blob.in_size = sizeof(pheader);
     blob.in = space;
     blob.out_size = 0;
-    blob.out = (char *) 0;
+    blob.out = NULL;
     memcpy(tp, &setp, sizeof(afs_int32));
     tp += sizeof(afs_int32);
     strcpy(tp, sysname);
     blob.in_size += sizeof(afs_int32) + strlen(sysname) + 1;
     tp += strlen(sysname);
     *(tp++) = '\0';
-    code = pioctl((char *) 0, _VICEIOCTL(99), &blob, 0);
+    code = pioctl(NULL, _VICEIOCTL(99), &blob, 0);
     if (code) {
 	code = errno;
     }
@@ -102,21 +104,22 @@ char *sysname;
 }
 
 
-static GetTokens(ahost, auid)
-    afs_int32 ahost;
-    afs_int32 auid;
+static
+GetTokens(ahost, auid)
+     afs_int32 ahost;
+     afs_int32 auid;
 {
     struct ViceIoctl iob;
     afs_int32 pheader[6];
     char tbuffer[1024];
     register afs_int32 code;
     int index, newIndex;
-    char *stp;	    /* secret token ptr */
+    char *stp;			/* secret token ptr */
     struct ClearToken ct;
     register char *tp;
     afs_int32 temp, gotit = 0;
-    int	maxLen;	/* biggest ticket we can copy */
-    int	tktLen;	/* server ticket length */
+    int maxLen;			/* biggest ticket we can copy */
+    int tktLen;			/* server ticket length */
     time_t tokenExpireTime;
     char UserName[16];
     struct ktc_token token;
@@ -129,12 +132,12 @@ static GetTokens(ahost, auid)
     /* otherwise we've got the token, now prepare to build the pioctl args */
     pheader[0] = ahost;
     pheader[1] = auid;
-    pheader[2] = 0;			/* group low */
-    pheader[3] = 0;			/* group high */
-    pheader[4] = 8;			/* gettoken pioctl index */
-    pheader[5] = 1;			/* NFS protocol exporter # */
+    pheader[2] = 0;		/* group low */
+    pheader[3] = 0;		/* group high */
+    pheader[4] = 8;		/* gettoken pioctl index */
+    pheader[5] = 1;		/* NFS protocol exporter # */
 
-    for (index=0; index<200; index++) {	/* sanity check in case pioctl fails */
+    for (index = 0; index < 200; index++) {	/* sanity check in case pioctl fails */
 	code = ktc_ListTokens(index, &newIndex, &clientName);
 	if (code) {
 	    if (code == KTC_NOENT) {
@@ -143,9 +146,10 @@ static GetTokens(ahost, auid)
 		    printf("knfs: there are no tokens here.\n");
 		code = 0;
 	    }
-	    break;	/* done, but failed */
+	    break;		/* done, but failed */
 	}
-	if (strcmp(clientName.name, "afs") != 0) continue;	/* wrong ticket service */
+	if (strcmp(clientName.name, "afs") != 0)
+	    continue;		/* wrong ticket service */
 
 	/* copy stuff in */
 	memcpy(tbuffer, pheader, sizeof(pheader));
@@ -156,37 +160,44 @@ static GetTokens(ahost, auid)
 	iob.in_size = sizeof(afs_int32) + sizeof(pheader);
 	iob.out = tbuffer;
 	iob.out_size = sizeof(tbuffer);
-	code = pioctl((char *)0, _VICEIOCTL(99), &iob, 0);
-	if (code < 0 && errno == EDOM) return KTC_NOENT;
+	code = pioctl(NULL, _VICEIOCTL(99), &iob, 0);
+	if (code < 0 && errno == EDOM)
+	    return KTC_NOENT;
 	else if (code == 0) {
 	    /* check to see if this is the right cell/realm */
 	    tp = tbuffer;
-	    memcpy(&temp, tp, sizeof(afs_int32)); /* get size of secret token */
-	    tktLen = temp;  /* remember size of ticket */
+	    memcpy(&temp, tp, sizeof(afs_int32));	/* get size of secret token */
+	    tktLen = temp;	/* remember size of ticket */
 	    tp += sizeof(afs_int32);
-	    stp	= tp;	    /* remember where ticket is, for later */
-	    tp += temp;	/* skip ticket for now */
-	    memcpy(&temp, tp, sizeof(afs_int32)); /* get size of clear token */
-	    if (temp != sizeof(struct ClearToken)) return KTC_ERROR;
-	    tp += sizeof(afs_int32);	    /* skip length */
-	    memcpy(&ct, tp, temp);   /* copy token for later use */
-	    tp += temp;		    /* skip clear token itself */
-	    tp += sizeof(afs_int32);	    /* skip primary flag */
+	    stp = tp;		/* remember where ticket is, for later */
+	    tp += temp;		/* skip ticket for now */
+	    memcpy(&temp, tp, sizeof(afs_int32));	/* get size of clear token */
+	    if (temp != sizeof(struct ClearToken))
+		return KTC_ERROR;
+	    tp += sizeof(afs_int32);	/* skip length */
+	    memcpy(&ct, tp, temp);	/* copy token for later use */
+	    tp += temp;		/* skip clear token itself */
+	    tp += sizeof(afs_int32);	/* skip primary flag */
 	    /* tp now points to the cell name */
 	    if (strcmp(tp, clientName.cell) == 0) {
 		/* closing in now, we've got the right cell */
 		gotit = 1;
-		maxLen = sizeof(token) - sizeof(struct ktc_token) + MAXKTCTICKETLEN;
-		if (maxLen < tktLen) return KTC_TOOBIG;
+		maxLen =
+		    sizeof(token) - sizeof(struct ktc_token) +
+		    MAXKTCTICKETLEN;
+		if (maxLen < tktLen)
+		    return KTC_TOOBIG;
 		memcpy(token.ticket, stp, tktLen);
 		token.startTime = ct.BeginTimestamp;
 		token.endTime = ct.EndTimestamp;
-		if (ct.AuthHandle == -1) ct.AuthHandle = 999;
+		if (ct.AuthHandle == -1)
+		    ct.AuthHandle = 999;
 		token.kvno = ct.AuthHandle;
-		memcpy(&token.sessionKey, ct.HandShakeKey, sizeof(struct ktc_encryptionKey));
+		memcpy(&token.sessionKey, ct.HandShakeKey,
+		       sizeof(struct ktc_encryptionKey));
 		token.ticketLen = tktLen;
-		if ((token.kvno == 999) || /* old style bcrypt ticket */
-		    (ct.BeginTimestamp &&    /* new w/ prserver lookup */
+		if ((token.kvno == 999) ||	/* old style bcrypt ticket */
+		    (ct.BeginTimestamp &&	/* new w/ prserver lookup */
 		     (((ct.EndTimestamp - ct.BeginTimestamp) & 1) == 1))) {
 		    sprintf(clientName.name, "AFS ID %d", ct.ViceId);
 		    clientName.instance[0] = 0;
@@ -206,21 +217,18 @@ static GetTokens(ahost, auid)
 		    printf("Tokens");
 		else if (strncmp(UserName, "AFS ID", 6) == 0) {
 		    printf("User's (%s) tokens", UserName);
-		}
-		else if (strncmp(UserName, "Unix UID", 8) == 0) {
+		} else if (strncmp(UserName, "Unix UID", 8) == 0) {
 		    printf("Tokens");
 		} else
 		    printf("User %s's tokens", UserName);
-		printf(" for %s%s%s@%s ",
-		       clientName.name,
-		       clientName.instance[0] ? "." : "",
-		       clientName.instance,
+		printf(" for %s%s%s@%s ", clientName.name,
+		       clientName.instance[0] ? "." : "", clientName.instance,
 		       clientName.cell);
 		if (tokenExpireTime <= current_time)
 		    printf("[>> Expired <<]\n");
 		else {
 		    expireString = ctime(&tokenExpireTime);
-		    expireString += 4; /*Move past the day of week*/
+		    expireString += 4;	/*Move past the day of week */
 		    expireString[12] = '\0';
 		    printf("[Expires %s]\n", expireString);
 		}
@@ -232,9 +240,11 @@ static GetTokens(ahost, auid)
 }
 
 
-static NFSUnlog(ahost, auid)
-afs_int32 ahost;
-afs_int32 auid; {
+static
+NFSUnlog(ahost, auid)
+     afs_int32 ahost;
+     afs_int32 auid;
+{
     afs_int32 code;
     afs_int32 pheader[6];
     char space[1200];
@@ -247,7 +257,7 @@ afs_int32 auid; {
     pheader[3] = 0;		/* group high */
     pheader[4] = 9;		/* unlog pioctl index */
     pheader[5] = 1;		/* NFS protocol exporter # */
-	
+
     /* copy stuff in */
     memcpy(space, pheader, sizeof(pheader));
 
@@ -255,8 +265,8 @@ afs_int32 auid; {
     blob.in_size = sizeof(pheader);
     blob.in = space;
     blob.out_size = 0;
-    blob.out = (char *) 0;
-    code = pioctl((char *) 0, _VICEIOCTL(99), &blob, 0);
+    blob.out = NULL;
+    code = pioctl(NULL, _VICEIOCTL(99), &blob, 0);
     if (code) {
 	code = errno;
     }
@@ -264,9 +274,11 @@ afs_int32 auid; {
 }
 
 /* Copy the AFS service token into the kernel for a particular host and user */
-static NFSCopyToken(ahost, auid)
-afs_int32 ahost;
-afs_int32 auid; {
+static
+NFSCopyToken(ahost, auid)
+     afs_int32 ahost;
+     afs_int32 auid;
+{
     struct ktc_principal client, server;
     struct ktc_token theTicket;
     afs_int32 code;
@@ -274,23 +286,25 @@ afs_int32 auid; {
     char space[1200];
     struct ClearToken ct;
     afs_int32 index, newIndex;
-    afs_int32 temp;	/* for bcopy */
+    afs_int32 temp;		/* for bcopy */
     char *tp;
     struct ViceIoctl blob;
 
-    for(index = 0;; index = newIndex) {
+    for (index = 0;; index = newIndex) {
 	code = ktc_ListTokens(index, &newIndex, &server);
 	if (code) {
 	    if (code == KTC_NOENT) {
 		/* all done */
 		code = 0;
 	    }
-	    break;	/* done, but failed */
+	    break;		/* done, but failed */
 	}
-	if (strcmp(server.name, "afs") != 0) continue;	/* wrong ticket service */
+	if (strcmp(server.name, "afs") != 0)
+	    continue;		/* wrong ticket service */
 	code = ktc_GetToken(&server, &theTicket, sizeof(theTicket), &client);
-	if (code) return code;
-	
+	if (code)
+	    return code;
+
 	/* otherwise we've got the token, now prepare to build the pioctl args */
 	pheader[0] = ahost;
 	pheader[1] = auid;
@@ -298,7 +312,7 @@ afs_int32 auid; {
 	pheader[3] = 0;		/* group high */
 	pheader[4] = 3;		/* set token pioctl index */
 	pheader[5] = 1;		/* NFS protocol exporter # */
-	
+
 	/* copy in the header */
 	memcpy(space, pheader, sizeof(pheader));
 	tp = space + sizeof(pheader);
@@ -314,7 +328,8 @@ afs_int32 auid; {
 	tp += sizeof(afs_int32);
 	/* create the clear token and copy *it* in */
 	ct.AuthHandle = theTicket.kvno;	/* where we hide the key version # */
-	memcpy(ct.HandShakeKey, &theTicket.sessionKey, sizeof(ct.HandShakeKey));
+	memcpy(ct.HandShakeKey, &theTicket.sessionKey,
+	       sizeof(ct.HandShakeKey));
 
 	ct.ViceId = auid;
 	ct.BeginTimestamp = theTicket.startTime;
@@ -327,14 +342,14 @@ afs_int32 auid; {
 	tp += sizeof(afs_int32);
 	/* copy in cell name, null terminated */
 	strcpy(tp, server.cell);
-	tp += strlen(server.cell)+1;
+	tp += strlen(server.cell) + 1;
 
 	/* finally setup the pioctl call's parameters */
-	blob.in_size = tp-space;
+	blob.in_size = tp - space;
 	blob.in = space;
 	blob.out_size = 0;
-	blob.out = (char *) 0;
-	code = pioctl((char *) 0, _VICEIOCTL(99), &blob, 0);
+	blob.out = NULL;
+	code = pioctl(NULL, _VICEIOCTL(99), &blob, 0);
 	if (code) {
 	    code = errno;
 	    break;
@@ -343,9 +358,11 @@ afs_int32 auid; {
     return code;
 }
 
-static cmdproc(as, arock)
-register struct cmd_syndesc *as;
-afs_int32 arock; {
+static
+cmdproc(as, arock)
+     register struct cmd_syndesc *as;
+     afs_int32 arock;
+{
     register struct hostent *the;
     char *tp, *sysname = 0;
     afs_int32 uid, addr;
@@ -365,8 +382,8 @@ afs_int32 arock; {
 	    printf("knfs: can't parse '%s' as a number (UID)\n", tp);
 	    return code;
 	}
-    }
-    else uid = -1;	/* means wildcard: match any user on this host */
+    } else
+	uid = -1;		/* means wildcard: match any user on this host */
 
     /*
      * If not "-id" is passed then we use the getuid() id, unless it's root
@@ -387,9 +404,11 @@ afs_int32 arock; {
 	code = GetTokens(addr, uid);
 	if (code) {
 	    if (code == ENOEXEC)
-		printf("knfs: Translator in 'passwd sync' mode; remote uid must be the same as local uid\n");
+		printf
+		    ("knfs: Translator in 'passwd sync' mode; remote uid must be the same as local uid\n");
 	    else
-		printf("knfs: failed to get tokens for uid %d (code %d)\n", uid, code);
+		printf("knfs: failed to get tokens for uid %d (code %d)\n",
+		       uid, code);
 	}
 	return code;
     }
@@ -400,23 +419,25 @@ afs_int32 arock; {
 	code = NFSUnlog(addr, uid);
 	if (code) {
 	    if (code == ENOEXEC)
-		printf("knfs: Translator in 'passwd sync' mode; remote uid must be the same as local uid\n");
+		printf
+		    ("knfs: Translator in 'passwd sync' mode; remote uid must be the same as local uid\n");
 	    else
 		printf("knfs: failed to unlog (code %d)\n", code);
 	}
-    }
-    else {
+    } else {
 	code = NFSCopyToken(addr, uid);
 	if (code) {
 	    if (code == ENOEXEC)
-		printf("knfs: Translator in 'passwd sync' mode; remote uid must be the same as local uid\n");
+		printf
+		    ("knfs: Translator in 'passwd sync' mode; remote uid must be the same as local uid\n");
 	    else
 		printf("knfs: failed to copy tokens (code %d)\n", code);
 	}
 	if (sysname) {
 	    code = SetSysname(addr, uid, sysname);
 	    if (code) {
-		printf("knfs: failed to set client's @sys to %s (code %d)\n", sysname, code);
+		printf("knfs: failed to set client's @sys to %s (code %d)\n",
+		       sysname, code);
 	    }
 	}
     }
@@ -426,8 +447,9 @@ afs_int32 arock; {
 #include "AFS_component_version_number.c"
 
 main(argc, argv)
-int argc;
-char **argv; {
+     int argc;
+     char **argv;
+{
     register struct cmd_syndesc *ts;
     register afs_int32 code;
 
@@ -439,7 +461,7 @@ char **argv; {
      * generated which, in many cases, isn't too useful.
      */
     struct sigaction nsa;
-    
+
     sigemptyset(&nsa.sa_mask);
     nsa.sa_handler = SIG_DFL;
     nsa.sa_flags = SA_FULLDUMP;
@@ -447,12 +469,14 @@ char **argv; {
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
 
-    ts = cmd_CreateSyntax((char *) 0, cmdproc, 0, "copy tickets for NFS");
+    ts = cmd_CreateSyntax(NULL, cmdproc, 0, "copy tickets for NFS");
     cmd_AddParm(ts, "-host", CMD_SINGLE, CMD_REQUIRED, "host name");
     cmd_AddParm(ts, "-id", CMD_SINGLE, CMD_OPTIONAL, "user ID (decimal)");
-    cmd_AddParm(ts, "-sysname", CMD_SINGLE, CMD_OPTIONAL, "host's '@sys' value");
+    cmd_AddParm(ts, "-sysname", CMD_SINGLE, CMD_OPTIONAL,
+		"host's '@sys' value");
     cmd_AddParm(ts, "-unlog", CMD_FLAG, CMD_OPTIONAL, "unlog remote user");
-    cmd_AddParm(ts, "-tokens", CMD_FLAG, CMD_OPTIONAL, "display all tokens for remote [host,id]");
+    cmd_AddParm(ts, "-tokens", CMD_FLAG, CMD_OPTIONAL,
+		"display all tokens for remote [host,id]");
 
     code = cmd_Dispatch(argc, argv);
     return code;

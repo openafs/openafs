@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/volser/physio.c,v 1.1.1.5 2001/09/11 14:35:54 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/volser/physio.c,v 1.11 2003/12/09 23:07:57 shadow Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -19,6 +20,13 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/volser/physio.c,v 1.1.1.5 2001/09/11 14
 #include <sys/file.h>
 #include <netinet/in.h>
 #include <unistd.h>
+#endif
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
 #endif
 #ifdef	AFS_SUN5_ENV
 #include <sys/fcntl.h>
@@ -35,10 +43,8 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/volser/physio.c,v 1.1.1.5 2001/09/11 14
 #include "vol.h"
 
 /* returns 0 on success, errno on failure */
-int ReallyRead (file, block, data)
-DirHandle     *	file;
-int 		block;
-char	      *	data;
+int
+ReallyRead(DirHandle * file, int block, char *data)
 {
     FdHandle_t *fdP;
     int code;
@@ -48,7 +54,7 @@ char	      *	data;
 	code = errno;
 	return code;
     }
-    if (FDH_SEEK(fdP, block*AFS_PAGESIZE, SEEK_SET) < 0) {
+    if (FDH_SEEK(fdP, block * AFS_PAGESIZE, SEEK_SET) < 0) {
 	code = errno;
 	FDH_REALLYCLOSE(fdP);
 	return code;
@@ -57,7 +63,7 @@ char	      *	data;
     if (code != AFS_PAGESIZE) {
 	if (code < 0)
 	    code = errno;
-	else 
+	else
 	    code = EIO;
 	FDH_REALLYCLOSE(fdP);
 	return code;
@@ -67,10 +73,8 @@ char	      *	data;
 }
 
 /* returns 0 on success, errno on failure */
-int ReallyWrite (file, block, data)
-DirHandle     *	file;
-int 		block;
-char	      *	data;
+int
+ReallyWrite(DirHandle * file, int block, char *data)
 {
     FdHandle_t *fdP;
     extern int VolumeChanged;
@@ -83,7 +87,7 @@ char	      *	data;
 	code = errno;
 	return code;
     }
-    if (FDH_SEEK(fdP, block*AFS_PAGESIZE, SEEK_SET) < 0) {
+    if (FDH_SEEK(fdP, block * AFS_PAGESIZE, SEEK_SET) < 0) {
 	code = errno;
 	FDH_REALLYCLOSE(fdP);
 	return code;
@@ -92,7 +96,7 @@ char	      *	data;
     if (code != AFS_PAGESIZE) {
 	if (code < 0)
 	    code = errno;
-	else 
+	else
 	    code = EIO;
 	FDH_REALLYCLOSE(fdP);
 	return code;
@@ -106,11 +110,9 @@ char	      *	data;
  * Create a handle to a directory entry and reference it (IH_INIT).
  * The handle needs to be dereferenced with the FidZap() routine.
  */
-SetSalvageDirHandle(dir, volume, device, inode)
-DirHandle *dir;
-afs_int32 volume;
-Inode inode;
-afs_int32 device;
+void
+SetSalvageDirHandle(DirHandle * dir, afs_int32 volume, afs_int32 device,
+                    Inode inode)
 {
     private SalvageCacheCheck = 1;
     memset(dir, 0, sizeof(DirHandle));
@@ -121,58 +123,54 @@ afs_int32 device;
     IH_INIT(dir->dirh_handle, device, volume, inode);
 
     /* Always re-read for a new dirhandle */
-    dir->dirh_cacheCheck = SalvageCacheCheck++;	
+    dir->dirh_cacheCheck = SalvageCacheCheck++;
 }
 
-FidZap (file)
-DirHandle     *	file;
-
+void
+FidZap(DirHandle * file)
 {
     IH_RELEASE(file->dirh_handle);
     memset(file, 0, sizeof(DirHandle));
 }
 
-FidZero (file)
-DirHandle     *	file;
-
+void
+FidZero(DirHandle * file)
 {
     memset(file, 0, sizeof(DirHandle));
 }
 
-FidEq (afile, bfile)
-DirHandle      * afile;
-DirHandle      * bfile;
-
+int
+FidEq(DirHandle * afile, DirHandle * bfile)
 {
-    if (afile->dirh_volume != bfile->dirh_volume) return 0;
-    if (afile->dirh_device != bfile->dirh_device) return 0;
-    if (afile->dirh_cacheCheck != bfile->dirh_cacheCheck) return 0;
-    if (afile->dirh_inode != bfile->dirh_inode) return 0;
+    if (afile->dirh_volume != bfile->dirh_volume)
+	return 0;
+    if (afile->dirh_device != bfile->dirh_device)
+	return 0;
+    if (afile->dirh_cacheCheck != bfile->dirh_cacheCheck)
+	return 0;
+    if (afile->dirh_inode != bfile->dirh_inode)
+	return 0;
     return 1;
 }
 
-FidVolEq (afile, vid)
-DirHandle      * afile;
-afs_int32            vid;
-
+int
+FidVolEq(DirHandle * afile, afs_int32 vid)
 {
-    if (afile->dirh_volume != vid) return 0;
+    if (afile->dirh_volume != vid)
+	return 0;
     return 1;
 }
 
-FidCpy (tofile, fromfile)
-DirHandle      * tofile;
-DirHandle      * fromfile;
-
+void
+FidCpy(DirHandle * tofile, DirHandle * fromfile)
 {
     *tofile = *fromfile;
     IH_COPY(tofile->dirh_handle, fromfile->dirh_handle);
 }
 
-Die (msg)
-char  * msg;
-
+void
+Die(char *msg)
 {
-    printf("%s\n",msg);
-    assert(1==2);
+    printf("%s\n", msg);
+    assert(1 == 2);
 }

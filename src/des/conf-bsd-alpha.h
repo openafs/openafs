@@ -17,4 +17,3 @@
 #define BIG
 #define LSBFIRST
 #define BSDUNIX
-

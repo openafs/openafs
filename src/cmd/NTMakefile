@@ -5,9 +5,9 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+RELDIR=cmd
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\config\NTMakefile.version
-
 
 # install include files 
 INCFILEDIR = $(DESTDIR)\include\afs 
@@ -20,26 +20,33 @@ INCFILES =\
 LIBFILE = $(DESTDIR)\lib\afs\afscmd.lib
 
 LIBOBJS =\
-	cmd_errors.obj \
-	cmd.obj \
-	AFS_component_version_number.obj
+	$(OUT)\cmd_errors.obj \
+	$(OUT)\cmd.obj \
+	$(OUT)\AFS_component_version_number.obj
+	
+$(LIBOBJS): $$(@B).c
+    $(C2OBJ) $**
 
-$(LIBFILE): $(LIBOBJS) 
+$(LIBFILE): $(LIBOBJS)
 	$(LIBARCH) 
 
+$(INCFILES):$$(@F)
+	 $(COPY)  $** $(INCFILEDIR)\.
 
 cmd_errors.c cmd.h: cmd_errors.et cmd.p.h
 	$(DEL) cmd_errors.c cmd.h
-	$(COMPILE_ET) cmd_errors -h cmd
+	$(COMPILE_ET) cmd_errors.et -h cmd
 
-
-install: $(LIBFILE) $(INCFILES)
+install: cmd.h $(LIBFILE) $(INCFILES)
 
 install9x: install
 
 clean::
-	$(DEL) cmd_errors.c cmd.h
+	$(DEL) cmd_errors.c cmd.h $(INCFILES)
 	$(DEL) $(LIBFILE)
+	$(DEL) *.PDB
 
 test tests:
+
+mkdir:
 	

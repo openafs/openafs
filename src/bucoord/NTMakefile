@@ -5,9 +5,10 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+RELDIR=bucoord
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -DNOGDI -DWIN32_LEAN_AND_MEAN
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\config\NTMakefile.version
-
 
 #########################################################################
 # install local include file
@@ -19,13 +20,13 @@ INCFILES = bc.h
 LIBFILE = $(DESTDIR)\lib\afs\afsbxdb.lib
 
 LIBOBJS =\
-	dsstub.obj \
-	ubik_db_if.obj \
-	status.obj \
-	dlq.obj \
-	bucoord_errs.obj \
-	volstub.obj \
-	AFS_component_version_number.obj
+	$(OUT)/dsstub.obj \
+	$(OUT)/ubik_db_if.obj \
+	$(OUT)/status.obj \
+	$(OUT)/dlq.obj \
+	$(OUT)/bucoord_errs.obj \
+	$(OUT)/volstub.obj \
+	$(OUT)/AFS_component_version_number.obj
 
 $(LIBFILE): $(LIBOBJS)
 	$(LIBARCH)
@@ -37,25 +38,31 @@ $(LIBFILE): $(LIBOBJS)
 EXEFILE = $(DESTDIR)\etc\backup.exe
 
 EXEOBJS =\
-	main.obj \
-	config.obj \
-	dsstub.obj \
-	volstub.obj \
-	commands.obj \
-	regex.obj \
-	server.obj \
-	dsvs.obj \
-	dump.obj \
-	restore.obj \
-	ubik_db_if.obj \
-	dump_sched.obj \
-	vol_sets.obj \
-	tape_hosts.obj \
-	bucoord_errs.obj \
-	bc_status.obj \
-	status.obj \
-	dlq.obj \
-	backup.res
+	$(OUT)\main.obj \
+	$(OUT)\config.obj \
+	$(OUT)\dsstub.obj \
+	$(OUT)\volstub.obj \
+	$(OUT)\commands.obj \
+	$(OUT)\regex.obj \
+	$(OUT)\server.obj \
+	$(OUT)\dsvs.obj \
+	$(OUT)\dump.obj \
+	$(OUT)\restore.obj \
+	$(OUT)\ubik_db_if.obj \
+	$(OUT)\dump_sched.obj \
+	$(OUT)\vol_sets.obj \
+	$(OUT)\tape_hosts.obj \
+	$(OUT)\bucoord_errs.obj \
+	$(OUT)\bc_status.obj \
+	$(OUT)\status.obj \
+	$(OUT)\dlq.obj \
+
+
+$(OUT)/backup.res:AFS_component_version_number.h
+	$(RC) backup.rc
+
+$(EXEOBJS):$$(@B).c
+	$(C2OBJ) $**
 
 EXELIBS =\
 	$(DESTDIR)\lib\afs\afsbudb.lib \
@@ -84,7 +91,7 @@ EXELIBS =\
 	
 
 $(EXEFILE): $(EXEOBJS) $(EXELIBS)
-	$(EXECONLINK)
+	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
 	$(EXEPREP)
 
 
@@ -98,8 +105,7 @@ bucoord_errs.c bc.h:    bucoord_errs.et bc.p.h
 ############################################################################
 # Definitions for generating versioninfo resources
 
-backup.res: backup.rc AFS_component_version_number.h
-	$(RC) $*.rc
+$(OUT)/backup.res: AFS_component_version_number.h
 
 ############################################################################
 # Install 
@@ -112,4 +118,7 @@ install: $(INCFILES) $(LIBFILE) $(EXEFILE)
 
 clean::
 	$(DEL) bc.h bucoord_errs.c
+
+
+mkdir:
 

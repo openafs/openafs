@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/sgistuff/sgi_auth.c,v 1.1.1.4 2001/07/14 22:23:58 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/sgistuff/sgi_auth.c,v 1.6 2003/07/15 23:16:49 shadow Exp $");
 
 #if defined(AFS_SGI_ENV)
 
@@ -31,50 +32,46 @@ extern char *ktc_tkt_string();
  *	0 if authenticated via AFS correctly
  */
 int
-afs_verify(
-	char *uname,	/* user name trying to log in */
-	char *pword,	/* password */
-	afs_int32 *exp,	/* expiration time */
-	int quite)	/* no printing */
-{
-	auto char *reason;
+afs_verify(char *uname,		/* user name trying to log in */
+	   char *pword,		/* password */
+	   afs_int32 * exp,	/* expiration time */
+	   int quite)
+{				/* no printing */
+    auto char *reason;
 
-	ka_Init(0);
-	/*
-	 * The basic model for logging in now, is that *if* there
-	 * is a kerberos record for this individual user we will
-	 * trust kerberos (provided the user really has an account
-	 * locally.)  If there is no kerberos record (or the password
-	 * were typed incorrectly.) we would attempt to authenticate
-	 * against the local password file entry.  Naturally, if
-	 * both fail we use existing failure code.
-	 */
-	if (ka_UserAuthenticateGeneral(
-			KA_USERAUTH_VERSION + KA_USERAUTH_DOSETPAG,
-			uname, /* kerberos name */
-			(char *)0, /* instance */
-			(char *)0, /* realm */
-			pword, /* password */
-			0, /* default lifetime */
-			exp, /* spare 1/expiration */
-			0, /* spare 2 */
-			&reason /* error string */
-			)) {
-		if (!quite) {
-			printf("Unable to authenticate to AFS because %s\n",
-			       reason);
-			printf("proceeding with local authentication...\n");
-		}
-		return 1;
+    ka_Init(0);
+    /*
+     * The basic model for logging in now, is that *if* there
+     * is a kerberos record for this individual user we will
+     * trust kerberos (provided the user really has an account
+     * locally.)  If there is no kerberos record (or the password
+     * were typed incorrectly.) we would attempt to authenticate
+     * against the local password file entry.  Naturally, if
+     * both fail we use existing failure code.
+     */
+    if (ka_UserAuthenticateGeneral(KA_USERAUTH_VERSION + KA_USERAUTH_DOSETPAG, uname,	/* kerberos name */
+				   NULL,	/* instance */
+				   NULL,	/* realm */
+				   pword,	/* password */
+				   0,	/* default lifetime */
+				   exp,	/* spare 1/expiration */
+				   0,	/* spare 2 */
+				   &reason	/* error string */
+	)) {
+	if (!quite) {
+	    printf("Unable to authenticate to AFS because %s\n", reason);
+	    printf("proceeding with local authentication...\n");
 	}
-	/* authenticated successfully */
-	return 0;
+	return 1;
+    }
+    /* authenticated successfully */
+    return 0;
 }
 
 char *
 afs_gettktstring(void)
 {
-	return ktc_tkt_string();
+    return ktc_tkt_string();
 }
 
 #endif

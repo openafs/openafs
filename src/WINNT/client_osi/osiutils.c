@@ -1,9 +1,10 @@
 /* 
- * Copyright (C) 1998, 1989 Transarc Corporation - All rights reserved
- *
- * (C) COPYRIGHT IBM CORPORATION 1987, 1988
- * LICENSED MATERIALS - PROPERTY OF IBM
- *
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
  */
 
 /* Copyright (C) 1994 Cazamar Systems, Inc. */
@@ -103,7 +104,9 @@ LARGE_INTEGER ExtendedLargeIntegerDivide(LARGE_INTEGER a, unsigned long b, unsig
     if (b == 0) { return result; }
     if (b == 1) { *remainder = 0; return a; }
 
-	a1=(a.HighPart << 32) | a.LowPart;
+    a1 = a.HighPart;
+    a1 <<= 32;
+    a1 |= a.LowPart;
 	q1=a1/b;
 	r1=a1-(q1*b);
 	if (r1 > ULONG_MAX) /*XXX */;
@@ -126,8 +129,12 @@ LARGE_INTEGER LargeIntegerDivide(LARGE_INTEGER a, LARGE_INTEGER b, LARGE_INTEGER
 		return a; 
 	}
 
-	a1=(a.HighPart << 32) | a.LowPart;
-	b1=(b.HighPart << 32) | a.LowPart;
+    a1 = a.HighPart;
+    a1 <<= 32;
+    a1 |= a.LowPart;
+    b1 = b.HighPart;
+    b1 <<= 32;
+    b1 |= b.LowPart;
 	q1=a1/b1;
 	r1=a1-(q1*b1);
 	result.HighPart=q1 >> 32;

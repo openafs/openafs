@@ -11,6 +11,7 @@
 #AFSD_INC_SDK9X = /I $(HOMEDRIVE)\tol\sdk95\Include
 #AFSD_INC_MFC9X = /I $(HOMEDRIVE)\PROGRA~1\MICROS~2\VC98\INCLUDE /I $(HOMEDRIVE)\PROGRA~1\MICROS~2\VC98\MFC\INCLUDE /I $(HOMEDRIVE)\PROGRA~1\MICROS~2\VC98\ATL\INCLUDE 
 
+RELDIR=WINNT\win9xpanel
 !INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
 OUTDIR = $(DESTDIR)\WinInstall
 OUTDIRHLP = $(OUTDIR)
@@ -53,7 +54,7 @@ prep :
 
 !IF  "$(AFSDEV_BUILDTYPE)" == "FREE"
 
-INTDIR=.
+INTDIR=$(OUT)\
 HLP=hcrtf.exe
 HLP_PROJ = /x
 # Begin Custom Macros
@@ -74,7 +75,7 @@ CLEAN ::
 CPP_PROJ=/nologo /MD /W3 /GX /O2 \
 	$(CPP_INCLUDE) /P \
 	/I "$(DESTDIR)\include\\" /I "$(DESTDIR)\include\rx" /I "$(DESTDIR)\include\afs" \
-	/D "NDEBUG" /D "_MFC" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_WINNT" /D "_AFXDLL" /D "ENCRIPT" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+	/D "NDEBUG" /D "_MFC" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_WINNT" /D "_AFXDLL" /D "ENCRIPT" /Fo"$(OUT)\\\" /Fd"$(INTDIR)\\" /FD /c 
 
 MTL_PROJ=/nologo /D "NDEBUG" /mktyplib203 /win32 
 RSC_PROJ=/l 0x409 /fo"$(INTDIR)\WinAfsLoad.res" $(AFSD_INC_MFC) /d "AFSPRODUCT_VERSION=\"$(AFSPRODUCT_VERSION)\"" /d "NDEBUG" /d "_AFXDLL" 
@@ -112,7 +113,7 @@ LINK32_OBJS= \
 
 !ELSEIF  "$(AFSDEV_BUILDTYPE)" == "CHECKED"
 
-INTDIR=.
+INTDIR=$(OUT)\
 HLP=hcrtf.exe
 HLP_PROJ = /x
 # Begin Custom Macros
@@ -186,27 +187,27 @@ $(DS_POSTBUILD_DEP) : "$(OUTDIR)\WinAfsLoad.exe"
 
 !ENDIF 
 
-.c{$(INTDIR)}.obj::
+.c.${$(OUT)\}obj::
    $(CPP) @<<
    $(CPP_PROJ) $< 
 <<
 
-.cxx{$(INTDIR)}.obj::
+.cxx.obj::
    $(CPP) @<<
    $(CPP_PROJ) $< 
 <<
 
-.c{$(INTDIR)}.sbr::
+.c.$(OUT)\sbr::
    $(CPP) @<<
    $(CPP_PROJ) $< 
 <<
 
-.cpp{$(INTDIR)}.sbr::
+.cpp$.$(OUT)\sbr::
    $(CPP) @<<
    $(CPP_PROJ) $< 
 <<
 
-.cxx{$(INTDIR)}.sbr::
+.cxx.$(OUT)\sbr::
    $(CPP) @<<
    $(CPP_PROJ) $< 
 <<
@@ -333,4 +334,7 @@ SOURCE=.\WinAfsLoadDlg.cpp
 !ENDIF 
 
 install9x: install
+
+mkdir:
+
 

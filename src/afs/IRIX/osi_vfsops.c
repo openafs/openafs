@@ -11,13 +11,14 @@
  * osi_vfsops.c for IRIX
  */
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/IRIX/osi_vfsops.c,v 1.1.1.7 2003/04/13 19:02:45 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/afs/IRIX/osi_vfsops.c,v 1.13.2.1 2004/08/25 07:09:34 shadow Exp $");
 
-#include "../afs/sysincludes.h"	/* Standard vendor system headers */
-#include "../afs/afsincludes.h"	/* Afs-based standard headers */
-#include "../afs/afs_stats.h"   /* statistics stuff */
+#include "afs/sysincludes.h"	/* Standard vendor system headers */
+#include "afsincludes.h"	/* Afs-based standard headers */
+#include "afs/afs_stats.h"	/* statistics stuff */
 #include "sys/syssgi.h"
 
 
@@ -33,7 +34,7 @@ mutex_t afs_init_kern_lock;
 
 #define SYS_setgroups SGI_SETGROUPS
 
-int (*nfs_rfsdisptab_v2)() = NULL;
+int (*nfs_rfsdisptab_v2) () = NULL;
 
 int afs_fstype;
 lock_t afs_rxlock;
@@ -41,7 +42,7 @@ lock_t afs_rxlock;
 #include "sys/mload.h"
 char *Afs_mversion = M_VERSION;
 
-extern int (*setgroupsp)(int, gid_t *);
+extern int (*setgroupsp) (int, gid_t *);
 extern struct afs_lock afs_xvcache;
 extern int idbg_afsuser();
 extern void afs_mpservice(void *);
@@ -55,14 +56,14 @@ extern void afs_mpservice(void *);
 	syscallsw[ABI_IRIX5].sc_sysent[(n)-1000].sy_flags = 0;
 extern struct vfsops Afs_vfsops, *afs_vfsopsp;
 extern struct vnodeops Afs_vnodeops, *afs_vnodeopsp;
-extern void (*afsidestroyp)(struct inode *);
-extern void (*afsdptoipp)(struct efs_dinode *, struct inode *);
-extern void (*afsiptodpp)(struct inode *, struct efs_dinode *);
+extern void (*afsidestroyp) (struct inode *);
+extern void (*afsdptoipp) (struct efs_dinode *, struct inode *);
+extern void (*afsiptodpp) (struct inode *, struct efs_dinode *);
 extern void afsidestroy(struct inode *);
 extern void afsdptoip(struct efs_dinode *, struct inode *);
 extern void afsiptodp(struct inode *, struct efs_dinode *);
-extern int (*idbg_prafsnodep)(vnode_t *);
-extern int (*idbg_afsvfslistp)(void);
+extern int (*idbg_prafsnodep) (vnode_t *);
+extern int (*idbg_afsvfslistp) (void);
 extern int idbg_prafsnode(vnode_t *);
 extern int idbg_afsvfslist(void);
 
@@ -96,18 +97,18 @@ Afs_init(struct vfssw *vswp, int fstype)
     afsdptoipp = afsdptoip;
     idbg_prafsnodep = idbg_prafsnode;
     idbg_afsvfslistp = idbg_afsvfslist;
-    NewSystemCall (AFS_SYSCALL, Afs_syscall, 6);
-    NewSystemCall (AFS_PIOCTL, afs_pioctl, 4);
-    NewSystemCall (AFS_SETPAG, afs_setpag, 0);
-    NewSystemCall (AFS_IOPEN, iopen, 3);
-    NewSystemCall (AFS_ICREATE, icreate, 6);
-    NewSystemCall (AFS_IINC, iinc, 3);
-    NewSystemCall (AFS_IDEC, idec, 3);
+    NewSystemCall(AFS_SYSCALL, Afs_syscall, 6);
+    NewSystemCall(AFS_PIOCTL, afs_pioctl, 4);
+    NewSystemCall(AFS_SETPAG, afs_setpag, 0);
+    NewSystemCall(AFS_IOPEN, iopen, 3);
+    NewSystemCall(AFS_ICREATE, icreate, 6);
+    NewSystemCall(AFS_IINC, iinc, 3);
+    NewSystemCall(AFS_IDEC, idec, 3);
 #ifdef AFS_SGI_XFS_IOPS_ENV
-    NewSystemCall (AFS_IOPEN64, iopen64, 4);
+    NewSystemCall(AFS_IOPEN64, iopen64, 4);
 #else
-    NewSystemCall (AFS_IREAD, iread, 6);
-    NewSystemCall (AFS_IWRITE, iwrite, 6);
+    NewSystemCall(AFS_IREAD, iread, 6);
+    NewSystemCall(AFS_IWRITE, iwrite, 6);
 #endif
 
     /* last replace these */
@@ -124,7 +125,7 @@ extern int afs_sync(OSI_VFS_DECL(afsp), int flags, struct cred *cr);
 #else
 extern int afs_sync(OSI_VFS_DECL(afsp), short flags, struct cred *cr);
 #endif
-extern int afs_vget(OSI_VFS_DECL(afsp), vnode_t **vpp, struct fid *afidp);
+extern int afs_vget(OSI_VFS_DECL(afsp), vnode_t ** vpp, struct fid *afidp);
 #ifdef MP
 struct vfsops afs_lockedvfsops =
 #else
@@ -140,8 +141,8 @@ struct vfsops Afs_vfsops =
 #endif
     afs_mount,
 #ifdef AFS_SGI64_ENV
-    fs_nosys, /* rootinit */
-    fs_nosys, /* mntupdate */
+    fs_nosys,			/* rootinit */
+    fs_nosys,			/* mntupdate */
     fs_dounmount,
 #endif
     afs_unmount,
@@ -149,25 +150,25 @@ struct vfsops Afs_vfsops =
     afs_statfs,
     afs_sync,
     afs_vget,
-    fs_nosys, /* mountroot */
+    fs_nosys,			/* mountroot */
 #ifdef AFS_SGI65_ENV
-    fs_nosys,	/* realvfsops */
-    fs_import,	/* import */
-    fs_nosys,	/* quotactl */
+    fs_nosys,			/* realvfsops */
+    fs_import,			/* import */
+    fs_nosys,			/* quotactl */
 #else
-    fs_nosys, /* swapvp */
+    fs_nosys,			/* swapvp */
 #endif
 };
-extern struct afs_q VLRU;			/*vcache LRU*/
+extern struct afs_q VLRU;	/*vcache LRU */
 
 #ifdef AFS_SGI64_ENV
 static bhv_desc_t afs_vfs_bhv;
 #endif
-afs_mount(struct vfs *afsp, vnode_t *mvp, struct mounta *uap,
+afs_mount(struct vfs *afsp, vnode_t * mvp, struct mounta *uap,
 #ifdef AFS_SGI65_ENV
 	  char *attrs,
 #endif
-	  cred_t *cr)
+	  cred_t * cr)
 {
     AFS_STATCNT(afs_mount);
 
@@ -177,21 +178,21 @@ afs_mount(struct vfs *afsp, vnode_t *mvp, struct mounta *uap,
     if (mvp->v_type != VDIR)
 	return ENOTDIR;
 
-    if (afs_globalVFS) { /* Don't allow remounts. */
+    if (afs_globalVFS) {	/* Don't allow remounts. */
 	return EBUSY;
     }
 
     afs_globalVFS = afsp;
     afsp->vfs_bsize = 8192;
-    afsp->vfs_fsid.val[0] = AFS_VFSMAGIC; /* magic */
-    afsp->vfs_fsid.val[1] = afs_fstype; 
+    afsp->vfs_fsid.val[0] = AFS_VFSMAGIC;	/* magic */
+    afsp->vfs_fsid.val[1] = afs_fstype;
 #ifdef AFS_SGI64_ENV
     vfs_insertbhv(afsp, &afs_vfs_bhv, &Afs_vfsops, &afs_vfs_bhv);
 #else
     afsp->vfs_data = NULL;
 #endif
     afsp->vfs_fstype = afs_fstype;
-    afsp->vfs_dev = 0xbabebabe; /* XXX this should be unique */
+    afsp->vfs_dev = 0xbabebabe;	/* XXX this should be unique */
 
 #ifndef	AFS_NONFSTRANS
     if (nfs_rfsdisptab_v2)
@@ -202,9 +203,9 @@ afs_mount(struct vfs *afsp, vnode_t *mvp, struct mounta *uap,
 }
 
 afs_unmount(OSI_VFS_ARG(afsp), flags, cr)
-OSI_VFS_DECL(afsp);
-int flags;
-cred_t *cr;
+    OSI_VFS_DECL(afsp);
+     int flags;
+     cred_t *cr;
 {
     extern int afs_afs_cold_shutdown;
     struct vcache *tvc;
@@ -212,7 +213,7 @@ cred_t *cr;
     register struct afs_q *tq;
     struct afs_q *uq;
     int error, fv_slept;
-    OSI_VFS_CONVERT(afsp)
+    OSI_VFS_CONVERT(afsp);
 
     AFS_STATCNT(afs_unmount);
 
@@ -223,19 +224,19 @@ cred_t *cr;
      * flush all pages from inactive vnodes - return
      * EBUSY if any still in use
      */
-    ObtainWriteLock(&afs_xvcache,172);
+    ObtainWriteLock(&afs_xvcache, 172);
     for (tq = VLRU.prev; tq != &VLRU; tq = uq) {
 	tvc = QTOV(tq);
 	uq = QPrev(tq);
-	vp = (vnode_t *)tvc;
+	vp = (vnode_t *) tvc;
 	if (error = afs_FlushVCache(tvc, &fv_slept))
-		if (vp->v_flag & VROOT) {
-			rootvp = vp;
-			continue;
-		} else {
-		        ReleaseWriteLock(&afs_xvcache);
-			return error;
-		}
+	    if (vp->v_flag & VROOT) {
+		rootvp = vp;
+		continue;
+	    } else {
+		ReleaseWriteLock(&afs_xvcache);
+		return error;
+	    }
     }
 
     /*
@@ -243,14 +244,14 @@ cred_t *cr;
      */
     if (rootvp) {
 	tvc = VTOAFS(rootvp);
-        if (tvc->opens || CheckLock(&tvc->lock) || LockWaiters(&tvc->lock)) {
+	if (tvc->opens || CheckLock(&tvc->lock) || LockWaiters(&tvc->lock)) {
 	    ReleaseWriteLock(&afs_xvcache);
 	    return EBUSY;
 	}
-        ReleaseWriteLock(&afs_xvcache);
+	ReleaseWriteLock(&afs_xvcache);
 	rootvp->v_count = 1;
 	AFS_RELE(rootvp);
-        ObtainWriteLock(&afs_xvcache,173);
+	ObtainWriteLock(&afs_xvcache, 173);
 	afs_FlushVCache(tvc, &fv_slept);
     }
     ReleaseWriteLock(&afs_xvcache);
@@ -264,23 +265,27 @@ cred_t *cr;
 
 
 
-afs_root (OSI_VFS_ARG(afsp), avpp)
+afs_root(OSI_VFS_ARG(afsp), avpp)
     OSI_VFS_DECL(afsp);
-    struct vnode **avpp;
+     struct vnode **avpp;
 {
     register afs_int32 code = 0;
     struct vrequest treq;
-    register struct vcache *tvp=0;
-    OSI_VFS_CONVERT(afsp)
+    register struct vcache *tvp = 0;
+    OSI_VFS_CONVERT(afsp);
 
     AFS_STATCNT(afs_root);
     if (afs_globalVp && (afs_globalVp->states & CStatd)) {
 	tvp = afs_globalVp;
     } else {
-	if (!(code = afs_InitReq(&treq, OSI_GET_CURRENT_CRED())) &&
-	    !(code = afs_CheckInit())) {
-	    tvp = afs_GetVCache(&afs_rootFid, &treq, (afs_int32 *)0,
-				(struct vcache*)0, WRITE_LOCK);
+	if (afs_globalVp) {
+	    afs_PutVCache(afs_globalVp);
+	    afs_globalVp = NULL;
+	}
+
+	if (!(code = afs_InitReq(&treq, OSI_GET_CURRENT_CRED()))
+	    && !(code = afs_CheckInit())) {
+	    tvp = afs_GetVCache(&afs_rootFid, &treq, NULL, NULL);
 	    /* we really want this to stay around */
 	    if (tvp) {
 		afs_globalVp = tvp;
@@ -292,7 +297,7 @@ afs_root (OSI_VFS_ARG(afsp), avpp)
 	int s;
 	VN_HOLD(AFSTOV(tvp));
 	s = VN_LOCK(AFSTOV(tvp));
-	AFSTOV(tvp)->v_flag |= VROOT;	
+	AFSTOV(tvp)->v_flag |= VROOT;
 	VN_UNLOCK(AFSTOV(tvp), s);
 
 	afs_globalVFS = afsp;
@@ -305,27 +310,27 @@ afs_root (OSI_VFS_ARG(afsp), avpp)
 }
 
 afs_statfs(OSI_VFS_ARG(afsp), abp, avp)
-OSI_VFS_DECL(afsp);
-struct statvfs *abp;
-struct vnode *avp; /* unused */
+    OSI_VFS_DECL(afsp);
+     struct statvfs *abp;
+     struct vnode *avp;		/* unused */
 {
-    OSI_VFS_CONVERT(afsp)
+    OSI_VFS_CONVERT(afsp);
 
-	AFS_STATCNT(afs_statfs);
-	abp->f_bsize = afsp->vfs_bsize;
-	abp->f_frsize = afsp->vfs_bsize;
-	/* Fake a high number below to satisfy programs that use the statfs
-	 * call to make sure that there's enough space in the device partition
-	 * before storing something there.
-	 */
-	abp->f_blocks = abp->f_bfree = abp->f_bavail = abp->f_files =
-	    abp->f_ffree  = abp->f_favail = 900000;
+    AFS_STATCNT(afs_statfs);
+    abp->f_bsize = afsp->vfs_bsize;
+    abp->f_frsize = afsp->vfs_bsize;
+    /* Fake a high number below to satisfy programs that use the statfs
+     * call to make sure that there's enough space in the device partition
+     * before storing something there.
+     */
+    abp->f_blocks = abp->f_bfree = abp->f_bavail = abp->f_files =
+	abp->f_ffree = abp->f_favail = 900000;
 
-	abp->f_fsid = AFS_VFSMAGIC; /* magic */
-	strcpy(abp->f_basetype, AFS_MOUNT_AFS);
-	abp->f_flag = 0;
-	abp->f_namemax = 256;
-	return 0;
+    abp->f_fsid = AFS_VFSMAGIC;	/* magic */
+    strcpy(abp->f_basetype, AFS_MOUNT_AFS);
+    abp->f_flag = 0;
+    abp->f_namemax = 256;
+    return 0;
 }
 
 
@@ -367,154 +372,151 @@ afs_sync(OSI_VFS_DECL(afsp),
 	 struct cred *cr)
 {
     /* Why enable the vfs sync operation?? */
-	int error, lasterr, preempt;
-	struct vcache *tvc;
-	struct vnode *vp;
-	afs_uint32 lvcachegen;
-	register struct afs_q *tq;
-	struct afs_q *uq;
-	int s;
-        OSI_VFS_CONVERT(afsp)
+    int error, lasterr, preempt;
+    struct vcache *tvc;
+    struct vnode *vp;
+    afs_uint32 lvcachegen;
+    register struct afs_q *tq;
+    struct afs_q *uq;
+    int s;
+    OSI_VFS_CONVERT(afsp);
 
-	error = lasterr = 0;
+    error = lasterr = 0;
+    /*
+     * if not interested in vnodes, skip all this
+     */
+#ifdef AFS_SGI61_ENV
+    if ((flags & (SYNC_CLOSE | SYNC_DELWRI | SYNC_PDFLUSH)) == 0)
+	goto end;
+#else /* AFS_SGI61_ENV */
+    if ((flags & (SYNC_CLOSE | SYNC_DELWRI | SYNC_ATTR)) == 0)
+	goto end;
+#endif /* AFS_SGI61_ENV */
+  loop:
+    ObtainReadLock(&afs_xvcache);
+    for (tq = VLRU.prev; tq != &VLRU; tq = uq) {
+	tvc = QTOV(tq);
+	uq = QPrev(tq);
+	vp = (vnode_t *) tvc;
 	/*
-	 * if not interested in vnodes, skip all this
+	 * Since we push all dirty pages on last close/VOP_INACTIVE
+	 * we are only concerned with vnodes with
+	 * active reference counts.
 	 */
-#ifdef AFS_SGI61_ENV
-	if ((flags & (SYNC_CLOSE|SYNC_DELWRI|SYNC_PDFLUSH)) == 0)
-		goto end;
-#else /* AFS_SGI61_ENV */
-	if ((flags & (SYNC_CLOSE|SYNC_DELWRI|SYNC_ATTR)) == 0)
-		goto end;
-#endif /* AFS_SGI61_ENV */
-loop:
-	ObtainReadLock(&afs_xvcache);
-	for (tq = VLRU.prev; tq != &VLRU; tq = uq) {
-		tvc = QTOV(tq);
-		uq = QPrev(tq);
-		vp = (vnode_t *)tvc;
-		/*
-		 * Since we push all dirty pages on last close/VOP_INACTIVE
-		 * we are only concerned with vnodes with
-		 * active reference counts.
-		 */
-		s = VN_LOCK(vp);
-		if (vp->v_count == 0) {
-			VN_UNLOCK(vp, s);
-			continue;
-		}
-		if ((flags & SYNC_CLOSE) == 0 && !AFS_VN_DIRTY(vp)) {
-			VN_UNLOCK(vp, s);
-			continue;
-		}
-		
-		/*
-		 * ignore vnodes which need no flushing
-		 */
-		if (flags & SYNC_DELWRI) {
-		    if (!AFS_VN_DIRTY(vp)) {
-			VN_UNLOCK(vp, s);
-			continue;
-		    }
-		}
-#ifdef AFS_SGI61_ENV
-		else if (flags & SYNC_PDFLUSH) {
-		    if (!VN_GET_DPAGES(vp)) {
-			VN_UNLOCK(vp, s);
-			continue;
-		    }
-		}
-#endif /* AFS_SGI61_ENV */
+	s = VN_LOCK(vp);
+	if (vp->v_count == 0) {
+	    VN_UNLOCK(vp, s);
+	    continue;
+	}
+	if ((flags & SYNC_CLOSE) == 0 && !AFS_VN_DIRTY(vp)) {
+	    VN_UNLOCK(vp, s);
+	    continue;
+	}
 
-		vp->v_count++;
+	/*
+	 * ignore vnodes which need no flushing
+	 */
+	if (flags & SYNC_DELWRI) {
+	    if (!AFS_VN_DIRTY(vp)) {
 		VN_UNLOCK(vp, s);
-		lvcachegen = vcachegen;
-		ReleaseReadLock(&afs_xvcache);
-
-		/*
-		 * Try to lock rwlock without sleeping.  If we can't, we must
-		 * sleep for rwlock.
-		 */
-		if (afs_rwlock_nowait(vp, 1) == 0) {
+		continue;
+	    }
+	}
 #ifdef AFS_SGI61_ENV
-			if (flags & (SYNC_BDFLUSH | SYNC_PDFLUSH))
+	else if (flags & SYNC_PDFLUSH) {
+	    if (!VN_GET_DPAGES(vp)) {
+		VN_UNLOCK(vp, s);
+		continue;
+	    }
+	}
+#endif /* AFS_SGI61_ENV */
+
+	vp->v_count++;
+	VN_UNLOCK(vp, s);
+	lvcachegen = vcachegen;
+	ReleaseReadLock(&afs_xvcache);
+
+	/*
+	 * Try to lock rwlock without sleeping.  If we can't, we must
+	 * sleep for rwlock.
+	 */
+	if (afs_rwlock_nowait(vp, 1) == 0) {
+#ifdef AFS_SGI61_ENV
+	    if (flags & (SYNC_BDFLUSH | SYNC_PDFLUSH))
 #else /* AFS_SGI61_ENV */
-			if (flags & SYNC_BDFLUSH)
+	    if (flags & SYNC_BDFLUSH)
 #endif /* AFS_SGI61_ENV */
-			    {
-				AFS_RELE(vp);
-				ObtainReadLock(&afs_xvcache);
-				if (vcachegen != lvcachegen) {
-					ReleaseReadLock(&afs_xvcache);
-					goto loop;
-				}
-				continue;
-			    }
-			AFS_RWLOCK(vp, VRWLOCK_WRITE);
-		}
-
-		AFS_GUNLOCK();
-		if (flags & SYNC_CLOSE) {
-		    PFLUSHINVALVP(vp, (off_t)0, (off_t)tvc->m.Length);
-		}
-#ifdef AFS_SGI61_ENV
-		else if (flags & SYNC_PDFLUSH) {
-			if (VN_GET_DPAGES(vp)) {
-				pdflush(vp, B_ASYNC);
-			}
-		}
-#endif /* AFS_SGI61_ENV */
-
-
-		if ((flags & SYNC_DELWRI) && AFS_VN_DIRTY(vp)) {
-#ifdef AFS_SGI61_ENV
-			PFLUSHVP(vp, (off_t)tvc->m.Length,
-				 (flags & SYNC_WAIT) ? 0 : B_ASYNC, error);
-#else /* AFS_SGI61_ENV */
-			if (flags & SYNC_WAIT)
-			    /* push all and wait */
-			    PFLUSHVP(vp, (off_t)tvc->m.Length,
-				     (off_t)0, error);
-			else if (flags & SYNC_BDFLUSH) {
-			    /* push oldest */
-			    error = pdflush(vp, B_ASYNC);
-			}
-			else {
-			    /* push all but don't wait */
-			    PFLUSHVP(vp, (off_t)tvc->m.Length,
-				     (off_t)B_ASYNC, error);
-			}
-#endif /* AFS_SGI61_ENV */
-		}
-
-		/*
-		 * Release vp, check error and whether to preempt, and if
-		 * we let go of xvcache lock and someone has changed the
-		 * VLRU, restart the loop
-		 */
-		AFS_GLOCK();
-		AFS_RWUNLOCK(vp, VRWLOCK_WRITE);
+	    {
 		AFS_RELE(vp);
-		if (error)
-			lasterr = error;
-		if ((++preempt & PREEMPT_MASK) == 0) {
-			AFS_GUNLOCK();
-			PREEMPT();
-			AFS_GLOCK();
-		}
 		ObtainReadLock(&afs_xvcache);
 		if (vcachegen != lvcachegen) {
-			ReleaseReadLock(&afs_xvcache);
-			goto loop;
+		    ReleaseReadLock(&afs_xvcache);
+		    goto loop;
 		}
+		continue;
+	    }
+	    AFS_RWLOCK(vp, VRWLOCK_WRITE);
 	}
-	ReleaseReadLock(&afs_xvcache);
-end:
-	return lasterr;
+
+	AFS_GUNLOCK();
+	if (flags & SYNC_CLOSE) {
+	    PFLUSHINVALVP(vp, (off_t) 0, (off_t) tvc->m.Length);
+	}
+#ifdef AFS_SGI61_ENV
+	else if (flags & SYNC_PDFLUSH) {
+	    if (VN_GET_DPAGES(vp)) {
+		pdflush(vp, B_ASYNC);
+	    }
+	}
+#endif /* AFS_SGI61_ENV */
+
+
+	if ((flags & SYNC_DELWRI) && AFS_VN_DIRTY(vp)) {
+#ifdef AFS_SGI61_ENV
+	    PFLUSHVP(vp, (off_t) tvc->m.Length,
+		     (flags & SYNC_WAIT) ? 0 : B_ASYNC, error);
+#else /* AFS_SGI61_ENV */
+	    if (flags & SYNC_WAIT)
+		/* push all and wait */
+		PFLUSHVP(vp, (off_t) tvc->m.Length, (off_t) 0, error);
+	    else if (flags & SYNC_BDFLUSH) {
+		/* push oldest */
+		error = pdflush(vp, B_ASYNC);
+	    } else {
+		/* push all but don't wait */
+		PFLUSHVP(vp, (off_t) tvc->m.Length, (off_t) B_ASYNC, error);
+	    }
+#endif /* AFS_SGI61_ENV */
+	}
+
+	/*
+	 * Release vp, check error and whether to preempt, and if
+	 * we let go of xvcache lock and someone has changed the
+	 * VLRU, restart the loop
+	 */
+	AFS_GLOCK();
+	AFS_RWUNLOCK(vp, VRWLOCK_WRITE);
+	AFS_RELE(vp);
+	if (error)
+	    lasterr = error;
+	if ((++preempt & PREEMPT_MASK) == 0) {
+	    AFS_GUNLOCK();
+	    PREEMPT();
+	    AFS_GLOCK();
+	}
+	ObtainReadLock(&afs_xvcache);
+	if (vcachegen != lvcachegen) {
+	    ReleaseReadLock(&afs_xvcache);
+	    goto loop;
+	}
+    }
+    ReleaseReadLock(&afs_xvcache);
+  end:
+    return lasterr;
 }
 
 
-afs_vget(OSI_VFS_DECL(afsp), vnode_t **avcp, struct fid *fidp)
+afs_vget(OSI_VFS_DECL(afsp), vnode_t ** avcp, struct fid * fidp)
 {
     struct VenusFid vfid;
     struct vrequest treq;
@@ -524,16 +526,16 @@ afs_vget(OSI_VFS_DECL(afsp), vnode_t **avcp, struct fid *fidp)
 
 #if defined(AFS_SGI64_ENV) && defined(CKPT) && !defined(_R5000_CVT_WAR)
     afs_fid2_t *afid2;
-#endif    
+#endif
 
-    OSI_VFS_CONVERT(afsp)
+    OSI_VFS_CONVERT(afsp);
 
     AFS_STATCNT(afs_vget);
 
     *avcp = NULL;
 
 #if defined(AFS_SGI64_ENV) && defined(CKPT) && !defined(_R5000_CVT_WAR)
-    afid2 = (afs_fid2_t*)fidp;
+    afid2 = (afs_fid2_t *) fidp;
     if (afid2->af_len == sizeof(afs_fid2_t) - sizeof(afid2->af_len)) {
 	/* It's a checkpoint restart fid. */
 	tcell = afs_GetCellByIndex(afid2->af_cell, READ_LOCK);
@@ -549,19 +551,20 @@ afs_vget(OSI_VFS_DECL(afsp), vnode_t **avcp, struct fid *fidp)
 
 	if (code = afs_InitReq(&treq, OSI_GET_CURRENT_CRED()))
 	    goto out;
-	*avcp = (vnode_t*) afs_GetVCache(&vfid, &treq, (afs_int32 *)0,
-					 (struct vcache*)0, 0);
-	if (! *avcp) {
+	*avcp =
+	    (vnode_t *) afs_GetVCache(&vfid, &treq, NULL, (struct vcache *)0);
+	if (!*avcp) {
 	    code = ENOENT;
 	}
 	goto out;
     }
 #endif
 
-    if (code = afs_InitReq(&treq, OSI_GET_CURRENT_CRED())) goto out;
-    code = afs_osi_vget((struct vcache**)avcp, fidp, &treq);
+    if (code = afs_InitReq(&treq, OSI_GET_CURRENT_CRED()))
+	goto out;
+    code = afs_osi_vget((struct vcache **)avcp, fidp, &treq);
 
- out:
+  out:
     afs_Trace3(afs_iclSetp, CM_TRACE_VGET, ICL_TYPE_POINTER, *avcp,
 	       ICL_TYPE_INT32, treq.uid, ICL_TYPE_FID, &vfid);
     code = afs_CheckCode(code, &treq, 42);
@@ -569,7 +572,7 @@ afs_vget(OSI_VFS_DECL(afsp), vnode_t **avcp, struct fid *fidp)
 }
 
 
-#ifdef MP /* locked versions of vfs operations. */
+#ifdef MP			/* locked versions of vfs operations. */
 
 /* wrappers for vfs calls */
 #ifdef AFS_SGI64_ENV
@@ -578,70 +581,78 @@ afs_vget(OSI_VFS_DECL(afsp), vnode_t **avcp, struct fid *fidp)
 #define AFS_MP_VFS_ARG(A) struct vfs A
 #endif
 
-int mp_afs_mount(struct vfs *a, struct vnode *b, struct mounta *c,
+int
+mp_afs_mount(struct vfs *a, struct vnode *b, struct mounta *c,
 #ifdef AFS_SGI65_ENV
-		 char *d,
+	     char *d,
 #endif
-		 struct cred *e)
+	     struct cred *e)
 {
-	int rv;
-	AFS_GLOCK();
-	rv = afs_lockedvfsops.vfs_mount(a, b, c, d
+    int rv;
+    AFS_GLOCK();
+    rv = afs_lockedvfsops.vfs_mount(a, b, c, d
 #ifdef AFS_SGI65_ENV
-					, e
+				    , e
 #endif
-					);
-	AFS_GUNLOCK();
-	return rv;
+	);
+    AFS_GUNLOCK();
+    return rv;
 }
 
-int mp_afs_unmount(AFS_MP_VFS_ARG(*a), int b, struct cred *c)
+int
+mp_afs_unmount(AFS_MP_VFS_ARG(*a), int b, struct cred *c)
 {
-	int rv;
-	AFS_GLOCK();
-	rv = afs_lockedvfsops.vfs_unmount(a, b, c);
-	AFS_GUNLOCK();
-	return rv;
+    int rv;
+    AFS_GLOCK();
+    rv = afs_lockedvfsops.vfs_unmount(a, b, c);
+    AFS_GUNLOCK();
+    return rv;
 }
 
-int mp_afs_root(AFS_MP_VFS_ARG(*a), struct vnode **b)
+int
+mp_afs_root(AFS_MP_VFS_ARG(*a), struct vnode **b)
 {
-	int rv;
-	AFS_GLOCK();
-	rv = afs_lockedvfsops.vfs_root(a, b);
-	AFS_GUNLOCK();
-	return rv;
+    int rv;
+    AFS_GLOCK();
+    rv = afs_lockedvfsops.vfs_root(a, b);
+    AFS_GUNLOCK();
+    return rv;
 }
 
-int mp_afs_statvfs(AFS_MP_VFS_ARG(*a), struct statvfs *b, struct vnode *c)
+int
+mp_afs_statvfs(AFS_MP_VFS_ARG(*a), struct statvfs *b, struct vnode *c)
 {
-	int rv;
-	AFS_GLOCK();
-	rv = afs_lockedvfsops.vfs_statvfs(a, b, c);
-	AFS_GUNLOCK();
-	return rv;
+    int rv;
+    AFS_GLOCK();
+    rv = afs_lockedvfsops.vfs_statvfs(a, b, c);
+    AFS_GUNLOCK();
+    return rv;
 }
-int mp_afs_sync(AFS_MP_VFS_ARG(*a),
+
+int
+mp_afs_sync(AFS_MP_VFS_ARG(*a),
 #ifdef AFS_SGI65_ENV
-		int b,
+	    int b,
 #else
-		short b,
+	    short b,
 #endif
-		struct cred *c)
+	    struct cred *c)
 {
-	int rv;
-	AFS_GLOCK();
-	rv = afs_lockedvfsops.vfs_sync(a, b, c);
-	AFS_GUNLOCK();
-	return rv;
+    int rv;
+    AFS_GLOCK();
+    rv = afs_lockedvfsops.vfs_sync(a, b, c);
+    AFS_GUNLOCK();
+    return rv;
 }
-int mp_afs_vget(AFS_MP_VFS_ARG(*a), struct vnode **b, struct fid *c)
+
+int
+mp_afs_vget(AFS_MP_VFS_ARG(*a), struct vnode **b, struct fid *c)
 {
-	int rv;
-	AFS_GLOCK();
-	rv = afs_lockedvfsops.vfs_vget(a, b, c);
-	AFS_GUNLOCK();
-	return rv;
+    int rv;
+    AFS_GLOCK();
+    rv = afs_lockedvfsops.vfs_vget(a, b, c);
+    AFS_GUNLOCK();
+    return rv;
 }
 
 struct vfsops Afs_vfsops = {
@@ -654,8 +665,8 @@ struct vfsops Afs_vfsops = {
 #endif
     mp_afs_mount,
 #ifdef AFS_SGI64_ENV
-    fs_nosys, /* rootinit */
-    fs_nosys, /* mntupdate */
+    fs_nosys,			/* rootinit */
+    fs_nosys,			/* mntupdate */
     fs_dounmount,
 #endif
     mp_afs_unmount,
@@ -663,13 +674,13 @@ struct vfsops Afs_vfsops = {
     mp_afs_statvfs,
     mp_afs_sync,
     mp_afs_vget,
-    fs_nosys, /* mountroot */
+    fs_nosys,			/* mountroot */
 #ifdef AFS_SGI65_ENV
-    fs_nosys,	/* realvfsops */
-    fs_import,	/* import */
-    fs_nosys,	/* quotactl */
+    fs_nosys,			/* realvfsops */
+    fs_import,			/* import */
+    fs_nosys,			/* quotactl */
 #else
-    fs_nosys, /* swapvp */
+    fs_nosys,			/* swapvp */
 #endif
 };
 

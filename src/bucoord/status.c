@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/bucoord/status.c,v 1.1.1.5 2001/09/11 14:31:37 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/bucoord/status.c,v 1.7 2003/11/23 04:53:30 jaltman Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -30,9 +31,9 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/bucoord/status.c,v 1.1.1.5 2001/09/11 1
 #include "error_macros.h"
 
 
-extern dlqlinkT statusHead;		/* chain of status blocks */
+extern dlqlinkT statusHead;	/* chain of status blocks */
 extern struct Lock statusQueueLock;	/* access control for status chain */
-extern struct Lock cmdLineLock;	        /* lock on the cmdLine */
+extern struct Lock cmdLineLock;	/* lock on the cmdLine */
 
 /* task status management
  *
@@ -70,25 +71,25 @@ unlock_cmdLine()
 
 /* general */
 
+void
 clearStatus(taskId, flags)
      afs_uint32 taskId;
      afs_uint32 flags;
 {
-     statusP ptr;
+    statusP ptr;
 
-     extern statusP findStatus();
+    extern statusP findStatus();
 
-     ObtainWriteLock(&statusQueueLock);
-     ptr = findStatus(taskId);
-     if ( ptr == 0 )
-     {
-	 ReleaseWriteLock(&statusQueueLock);
-         return;
-     }
+    ObtainWriteLock(&statusQueueLock);
+    ptr = findStatus(taskId);
+    if (ptr == 0) {
+	ReleaseWriteLock(&statusQueueLock);
+	return;
+    }
 
-     ptr->flags &= ~flags;
-     ReleaseWriteLock(&statusQueueLock);
- }
+    ptr->flags &= ~flags;
+    ReleaseWriteLock(&statusQueueLock);
+}
 
 statusP
 createStatusNode()
@@ -96,9 +97,8 @@ createStatusNode()
     statusP ptr;
 
     ptr = (statusP) malloc(sizeof(*ptr));
-    if ( ptr == 0 )
-    {
-	return(0);
+    if (ptr == 0) {
+	return (0);
     }
     memset(ptr, 0, sizeof(*ptr));
 
@@ -108,17 +108,17 @@ createStatusNode()
     ptr->flags = STARTING;
     ReleaseWriteLock(&statusQueueLock);
 
-    return(ptr);
+    return (ptr);
 }
 
 deleteStatusNode(ptr)
      statusP ptr;
 {
     ObtainWriteLock(&statusQueueLock);
-    dlqUnlink( (dlqlinkP) ptr);
+    dlqUnlink((dlqlinkP) ptr);
 
     if (ptr->cmdLine)
-        free(ptr->cmdLine);
+	free(ptr->cmdLine);
     free(ptr);
     ReleaseWriteLock(&statusQueueLock);
 }
@@ -131,34 +131,31 @@ findStatus(taskId)
     dlqlinkP dlqPtr;
 
     dlqPtr = statusHead.dlq_next;
-    while ( dlqPtr != &statusHead )
-    {
-        if ( ((statusP) dlqPtr)->taskId == taskId )
-        {
-            ptr = (statusP) dlqPtr;
-            break;
-        }
-        dlqPtr = dlqPtr->dlq_next;
+    while (dlqPtr != &statusHead) {
+	if (((statusP) dlqPtr)->taskId == taskId) {
+	    ptr = (statusP) dlqPtr;
+	    break;
+	}
+	dlqPtr = dlqPtr->dlq_next;
     }
 
-    return(ptr);
+    return (ptr);
 }
 
+void
 setStatus(taskId, flags)
      afs_uint32 taskId;
      afs_uint32 flags;
 {
-     statusP ptr;
+    statusP ptr;
 
-     ObtainWriteLock(&statusQueueLock);
-     ptr = findStatus(taskId);
-     if ( ptr == 0 )
-     {
-	 ReleaseWriteLock(&statusQueueLock);
-         return;
-     }
+    ObtainWriteLock(&statusQueueLock);
+    ptr = findStatus(taskId);
+    if (ptr == 0) {
+	ReleaseWriteLock(&statusQueueLock);
+	return;
+    }
 
-     ptr->flags |= flags;
-     ReleaseWriteLock(&statusQueueLock);
+    ptr->flags |= flags;
+    ReleaseWriteLock(&statusQueueLock);
 }
-

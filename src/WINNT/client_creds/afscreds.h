@@ -17,12 +17,24 @@
  */
 
 #include <WINNT/TaLocale.h>
+#undef REALLOC /* RT ticket 2120; So we can redefine it later */
 #include <windows.h>
 #include <commctrl.h>
 #include <regstr.h>
 #include <time.h>
 #include <shellapi.h>
 #include <WINNT/al_wizard.h>
+#include <WINNT\afsreg.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
+#include <osithrdnt.h>
+#include <osisleep.h>
+#include <osibasel.h>
+#include <rxkad.h>
+#ifdef __cplusplus
+}
+#endif
 #include "resource.h"
 #include "checklist.h"
 #include "window.h"
@@ -42,10 +54,6 @@
  *
  */
 
-#define REGSTR_BASE          HKEY_LOCAL_MACHINE
-#define REGSTR_PATH_AFS      TEXT("Software\\TransarcCorporation\\AFS Client\\CurrentVersion")
-#define REGSTR_PATH_AFSCREDS TEXT("Software\\TransarcCorporation\\AFS Client\\AfsCreds")
-
 #define REGVAL_AFS_TITLE     TEXT("Title")
 #define REGVAL_AFS_VERSION   TEXT("VersionString")
 #define REGVAL_AFS_PATCH     TEXT("PatchLevel")
@@ -53,6 +61,7 @@
 
 #define cszSHORTCUT_NAME     TEXT("AFS Credentials.lnk")
 
+#define AFSCREDS_SHORTCUT_OPTIONS  TEXT("-A -M -N -Q")
 
 /*
  * VARIABLES __________________________________________________________________
@@ -78,6 +87,9 @@ typedef struct
    BOOL fStartup;
    BOOL fIsWinNT;
    TCHAR szHelpFile[ MAX_PATH ];
+   osi_mutex_t expirationCheckLock;
+   osi_mutex_t credsLock;
+   TCHAR SmbName[ MAXRANDOMNAMELEN ];
    } GLOBALS;
 
 extern GLOBALS g;
@@ -88,8 +100,10 @@ extern GLOBALS g;
  *
  */
 
-#define cminREMIND_TEST      3    // test every minute for expired creds
+#define cminREMIND_TEST      1    // test every minute for expired creds
 #define cminREMIND_WARN      15   // warn if creds expire in 15 minutes
+#define cminRENEW            20   // renew creds when there are 20 minutes remaining
+#define cminMINLIFE          30   // minimum life of Kerberos creds
 
 #define cmsecMOUSEOVER       1000 // retest freq when mouse is over tray icon
 #define cmsecSERVICE         2000 // retest freq when starting/stopping service

@@ -1,7 +1,10 @@
 /*
- * (C) Copyright Transarc Corporation 1989
- * Licensed Materials - Property of Transarc
+ * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
  */
 
 /*------------------------------------------------------------------------
@@ -11,8 +14,6 @@
  *	Check out the parsing of specification files for package,
  *	the AFS workstation configuration tool.
  *
- * Author:
- *	Transarc Corporation & Carnegie Mellon University
  *------------------------------------------------------------------------*/
 
 #include <afs/param.h>
@@ -30,38 +31,35 @@
 #include "package.h"
 #include "systype.h"
 
-extern int test_linecounter;	/*Line number currently being parsed*/
+extern int test_linecounter;	/*Line number currently being parsed */
 extern FILE *yyin;
 
 char *emalloc();
 
-CTREEPTR config_root;	/*Top of the config tree*/
+CTREEPTR config_root;		/*Top of the config tree */
 
-int opt_silent  = 0;	/*Silent operation?*/
-int opt_verbose = 1;	/*Verbose operation?*/
-int opt_debug   = 1;	/*Debugging output enabled?*/
+int opt_silent = 0;		/*Silent operation? */
+int opt_verbose = 1;		/*Verbose operation? */
+int opt_debug = 1;		/*Debugging output enabled? */
 
 #include "AFS_component_version_number.c"
 
-main(argc, argv)
-    int argc;
-    char **argv;
-
-{ /*main*/
-
-    int code;	/*Return code*/
+int 
+main(int argc, char **argv)
+{				/*main */
+    int code;			/*Return code */
 
     if (argc > 1)
-      yyin = efopen(argv[1], "r");
+	yyin = efopen(argv[1], "r");
     else
-      yyin = stdin;
+	yyin = stdin;
     code = yyparse();
     if (code)
-      printf("** Lexical error in config file, line %d\n", test_linecounter);
+	printf("** Lexical error in config file, line %d\n",
+	       test_linecounter);
     if (yyin != stdin)
-      fclose(yyin);
-
-} /*main*/
+	fclose(yyin);
+}				/*main */
 
 /*------------------------------------------------------------------------
  * AddRegEntry
@@ -88,24 +86,18 @@ main(argc, argv)
  *	None.
  *------------------------------------------------------------------------*/
 
-int AddRegEntry(f, p, o, m, u)
-    char *f;
-    PROTOTYPE p;
-    OWNER o;
-    MODE m;
-    u_short u;
+int
+AddRegEntry(char *f, PROTOTYPE p, OWNER o, MODE m, u_short u)
 
-{ /*AddRegEntry*/
-
+{				/*AddRegEntry */
     printf("F");
     echo_updateoptions(u);
     printf("%s", f);
     echo_prototypeinfo(p);
     echo_ownerinfo(o);
     echo_modeinfo(m);
-    return(0);
-
-} /*AddRegEntry*/
+    return (0);
+}				/*AddRegEntry */
 
 /*------------------------------------------------------------------------
  * AddDirEntry
@@ -132,14 +124,9 @@ int AddRegEntry(f, p, o, m, u)
  *	None.
  *------------------------------------------------------------------------*/
 
-int AddDirEntry(f, p, o, m, u)
-    char *f;
-    PROTOTYPE p;
-    OWNER o;
-    MODE m;
-    u_short u;
-
-{ /*AddDirEntry*/
+int
+AddDirEntry(char *f, PROTOTYPE p, OWNER o, MODE m, u_short u)
+{				/*AddDirEntry */
 
     printf("D");
     echo_updateoptions(u);
@@ -147,9 +134,9 @@ int AddDirEntry(f, p, o, m, u)
     echo_prototypeinfo(p);
     echo_ownerinfo(o);
     echo_modeinfo(m);
-    return(0);
+    return (0);
 
-} /*AddDirEntry*/
+}				/*AddDirEntry */
 
 /*------------------------------------------------------------------------
  * AddLnkEntry
@@ -176,24 +163,17 @@ int AddDirEntry(f, p, o, m, u)
  *	None.
  *------------------------------------------------------------------------*/
 
-int AddLnkEntry(f, p, o, m, u)
-    char *f;
-    PROTOTYPE p;
-    OWNER o;
-    MODE m;
-    u_short u;
-
-{ /*AddLnkEntry*/
-
+int
+AddLnkEntry(char *f, PROTOTYPE p, OWNER o, MODE m, u_short u)
+{				/*AddLnkEntry */
     printf("L");
     echo_updateoptions(u);
     printf("%s", f);
     echo_prototypeinfo(p);
     echo_ownerinfo(o);
     echo_modeinfo(m);
-    return(0);
-
-} /*AddLnkEntry*/
+    return (0);
+}				/*AddLnkEntry */
 
 /*------------------------------------------------------------------------
  * AddBlkEntry
@@ -220,24 +200,17 @@ int AddLnkEntry(f, p, o, m, u)
  *	None.
  *------------------------------------------------------------------------*/
 
-int AddBlkEntry(f, p, o, m, u)
-    char *f;
-    PROTOTYPE p;
-    OWNER o;
-    MODE m;
-    u_short u;
-
-{ /*AddBlkEntry*/
-
+int
+AddBlkEntry(char *f, PROTOTYPE p, OWNER o, MODE m, u_short u)
+{				/*AddBlkEntry */
     printf("B");
     echo_updateoptions(u);
     printf("%s", f);
     echo_prototypeinfo(p);
     echo_ownerinfo(o);
     echo_modeinfo(m);
-    return(0);
-
-} /*AddBlkEntry*/
+    return (0);
+}				/*AddBlkEntry */
 
 /*------------------------------------------------------------------------
  * AddChrEntry
@@ -264,24 +237,17 @@ int AddBlkEntry(f, p, o, m, u)
  *	None.
  *------------------------------------------------------------------------*/
 
-int AddChrEntry(f, p, o, m, u)
-    char *f;
-    PROTOTYPE p;
-    OWNER o;
-    MODE m;
-    u_short u;
-
-{ /*AddChrEntry*/
-
+int
+AddChrEntry(char *f, PROTOTYPE p, OWNER o, MODE m, u_short u)
+{				/*AddChrEntry */
     printf("C");
     echo_updateoptions(u);
     printf("%s", f);
     echo_prototypeinfo(p);
     echo_ownerinfo(o);
     echo_modeinfo(m);
-    return(0);
-
-}  /*AddChrEntry*/
+    return (0);
+}				/*AddChrEntry */
 
 /*------------------------------------------------------------------------
  * AddSktEntry
@@ -304,15 +270,14 @@ int AddChrEntry(f, p, o, m, u)
  *	None.
  *------------------------------------------------------------------------*/
 
-int AddSktEntry(f)
-    char *f;
-
-{ /*AddSktEntry*/
+int
+AddSktEntry(char *f)
+{				/*AddSktEntry */
 
     printf("S");
     printf("\t%s\n", f);
 
-} /*AddSktEntry*/
+}				/*AddSktEntry */
 
 /*------------------------------------------------------------------------
  * AddPipeEntry
@@ -339,24 +304,17 @@ int AddSktEntry(f)
  *	None.
  *------------------------------------------------------------------------*/
 
-int AddPipeEntry(f, p, o, m, u)
-    char *f;
-    PROTOTYPE p;
-    OWNER o;
-    MODE m;
-    u_short u;
-
-{ /*AddPipeEntry*/
-
+int
+AddPipeEntry(char *f, PROTOTYPE p, OWNER o, MODE m, u_short u)
+{				/*AddPipeEntry */
     printf("P");
     echo_updateoptions(u);
     printf("\t%s\n", f);
     echo_prototypeinfo(p);
     echo_ownerinfo(o);
     echo_modeinfo(m);
-    return(0);
-
-} /*AddPipeEntry*/
+    return (0);
+}				/*AddPipeEntry */
 
 /*------------------------------------------------------------------------
  * echo_updateoptions
@@ -378,21 +336,24 @@ int AddPipeEntry(f, p, o, m, u)
  *	None.
  *------------------------------------------------------------------------*/
 
-int echo_updateoptions(u)
-    u_short u;
-
-{ /*echo_updateoptions*/
-
-    if (u & U_LOSTFOUND)	printf("X");
-    if (u & U_RMEXTRA)		printf("R");
-    if (u & U_NOOVERWRITE)	printf("I");
-    if (u & U_RENAMEOLD)	printf("O");
-    if (u & U_ABSPATH)		printf("A");
-    if (u & U_REBOOT)		printf("Q");
+int
+echo_updateoptions(u_short u)
+{				/*echo_updateoptions */
+    if (u & U_LOSTFOUND)
+	printf("X");
+    if (u & U_RMEXTRA)
+	printf("R");
+    if (u & U_NOOVERWRITE)
+	printf("I");
+    if (u & U_RENAMEOLD)
+	printf("O");
+    if (u & U_ABSPATH)
+	printf("A");
+    if (u & U_REBOOT)
+	printf("Q");
     printf("\t");
-    return(0);
-
-} /*echo_updateoptions*/
+    return (0);
+}				/*echo_updateoptions */
 
 /*------------------------------------------------------------------------
  * echo_prototypeinfo
@@ -414,31 +375,28 @@ int echo_updateoptions(u)
  *	None.
  *------------------------------------------------------------------------*/
 
-int echo_prototypeinfo(p)
-    PROTOTYPE p;
+int
+echo_prototypeinfo(PROTOTYPE p)
+{				/*echo_prototypeinfo */
+    switch (p.flag) {
+    case P_FILE:
+	printf("\t%s", p.info.path);
+	break;
 
-{ /*echo_prototypeinfo*/
-
-    switch(p.flag) {
-	case P_FILE:
-	    printf("\t%s", p.info.path);
-	    break;
-
-	case P_DEV:
+    case P_DEV:
 /*	    printf("\t%d\t%d", major(p.info.devno), minor(p.info.devno));*/
 
 #ifndef	AFS_SGI_ENV
-	    printf("\t%d\t%d", major(p.info.rdev), minor(p.info.rdev));
+	printf("\t%d\t%d", major(p.info.rdev), minor(p.info.rdev));
 #endif
 
-	    break;
+	break;
 
-	default:
-	    printf("\t[Neither file nor device]");
-	    break;
+    default:
+	printf("\t[Neither file nor device]");
+	break;
     }
-
-} /*echo_prototypeinfo*/
+}				/*echo_prototypeinfo */
 
 /*------------------------------------------------------------------------
  * echo_ownerinfo
@@ -460,21 +418,18 @@ int echo_prototypeinfo(p)
  *	None.
  *------------------------------------------------------------------------*/
 
-int echo_ownerinfo(o)
-    OWNER o;
-
-{ /*echo_ownerinfo*/
-
+int
+echo_ownerinfo(OWNER o)
+{				/*echo_ownerinfo */
     if (o.username != NULL)
-      printf("\t%s", o.username);
+	printf("\t%s", o.username);
     else
-      printf("\t[No owner info]");
+	printf("\t[No owner info]");
     if (o.groupname != NULL)
 	printf("\t%s", o.groupname);
     else
-      printf("\t[No group info]");
-
-} /*echo_ownerinfo*/
+	printf("\t[No group info]");
+}				/*echo_ownerinfo */
 
 /*------------------------------------------------------------------------
  * echo_modeinfo
@@ -496,18 +451,15 @@ int echo_ownerinfo(o)
  *	None.
  *------------------------------------------------------------------------*/
 
-int echo_modeinfo(m)
-    MODE m;
-
-{ /*echo_modeinfo*/
-
+int
+echo_modeinfo(MODE m)
+{				/*echo_modeinfo */
     if (m.inherit_flag != TRUE)
-      printf("\t%o", m.modeval);
+	printf("\t%o", m.modeval);
     else
-      printf("\t[Inherited mode]");
+	printf("\t[Inherited mode]");
     printf("\n");
-
-} /*echo_modeinfo*/
+}				/*echo_modeinfo */
 
 /*------------------------------------------------------------------------
  * testAddEntry
@@ -538,53 +490,45 @@ int echo_modeinfo(m)
  *	None.
  *------------------------------------------------------------------------*/
 
-int testAddEntry(a_ftype, a_updspecs, a_filename, a_proto, a_owner, a_mode)
-    u_short a_ftype;
-    u_short a_updspecs;
-    char *a_filename;
-    PROTOTYPE a_proto;
-    OWNER a_owner;
-    MODE a_mode;
+int
+testAddEntry(u_short a_ftype, u_short a_updspecs, char *a_filename, PROTOTYPE a_proto, OWNER a_owner, MODE a_mode)
+{				/*testAddEntry */
+    switch (a_ftype) {
+    case S_IFREG:		/*Regular file */
+	AddRegEntry(a_filename, a_proto, a_owner, a_mode, a_updspecs);
+	break;
 
-{ /*testAddEntry*/
+    case S_IFDIR:		/*Directory */
+	AddDirEntry(a_filename, a_proto, a_owner, a_mode, a_updspecs);
+	break;
 
-    switch(a_ftype) {
-    case S_IFREG: /*Regular file*/
-      AddRegEntry(a_filename, a_proto, a_owner, a_mode, a_updspecs);
-      break;
-
-    case S_IFDIR: /*Directory*/
-      AddDirEntry(a_filename, a_proto, a_owner, a_mode, a_updspecs);
-      break;
-
-    case S_IFLNK: /*Symbolic link*/
-      AddLnkEntry(a_filename, a_proto, a_owner, a_mode, a_updspecs);
-      break;
+    case S_IFLNK:		/*Symbolic link */
+	AddLnkEntry(a_filename, a_proto, a_owner, a_mode, a_updspecs);
+	break;
 
 #ifndef AFS_AIX_ENV
-    case S_IFSOCK: /*Socket*/
-      AddSktEntry(a_filename);
-      break;
+    case S_IFSOCK:		/*Socket */
+	AddSktEntry(a_filename);
+	break;
 #endif /* AFS_AIX_ENV */
 
-    case S_IFBLK: /*Block device*/
-      AddBlkEntry(a_filename, a_proto, a_owner, a_mode, a_updspecs);
-      break;
+    case S_IFBLK:		/*Block device */
+	AddBlkEntry(a_filename, a_proto, a_owner, a_mode, a_updspecs);
+	break;
 
-    case S_IFCHR: /*Character device*/
-      AddChrEntry(a_filename, a_proto, a_owner, a_mode, a_updspecs);
-      break;
+    case S_IFCHR:		/*Character device */
+	AddChrEntry(a_filename, a_proto, a_owner, a_mode, a_updspecs);
+	break;
 
 #ifdef S_IFIFO
-    case S_IFIFO: /*Named pipe*/
-      AddPipeEntry(a_filename, a_proto, a_owner, a_mode, a_updspecs);
-      break;
+    case S_IFIFO:		/*Named pipe */
+	AddPipeEntry(a_filename, a_proto, a_owner, a_mode, a_updspecs);
+	break;
 #endif /* S_IFIFO */
 
     default:
-      printf("Unknown file type parsed: %d\n", a_ftype);
-      break;
+	printf("Unknown file type parsed: %d\n", a_ftype);
+	break;
 
-    } /*switch a_ftype*/
-
-} /*testAddEntry*/
+    }				/*switch a_ftype */
+}				/*testAddEntry */

@@ -26,66 +26,31 @@
 #include "../adminutil/afs_AdminInternal.h"
 #include "vosutils.h"
 
-extern void Lp_SetRWValue (
-  afs_cell_handle_p cellHandle,
-  struct nvldbentry *entry,
-  afs_int32 oserver,
-  afs_int32 opart,
-  afs_int32 nserver,
-  afs_int32 npart
-);
+extern void Lp_SetRWValue(afs_cell_handle_p cellHandle,
+			  struct nvldbentry *entry, afs_int32 oserver,
+			  afs_int32 opart, afs_int32 nserver,
+			  afs_int32 npart);
 
-extern void Lp_SetROValue(
-  afs_cell_handle_p cellHandle,
-  struct nvldbentry *entry,
-  afs_int32 oserver,
-  afs_int32 opart,
-  afs_int32 nserver,
-  afs_int32 npart
-);
+extern void Lp_SetROValue(afs_cell_handle_p cellHandle,
+			  struct nvldbentry *entry, afs_int32 oserver,
+			  afs_int32 opart, afs_int32 nserver,
+			  afs_int32 npart);
 
-extern int Lp_Match(
-  afs_cell_handle_p cellHandle,
-  struct nvldbentry *entry,
-  afs_int32 server,
-  afs_int32 part,
-  afs_status_p st
-);
+extern int Lp_Match(afs_cell_handle_p cellHandle, struct nvldbentry *entry,
+		    afs_int32 server, afs_int32 part, afs_status_p st);
 
-extern int Lp_ROMatch(
-  afs_cell_handle_p cellHandle,
-  struct nvldbentry *entry,
-  afs_int32 server,
-  afs_int32 part,
-  afs_status_p st
-);
+extern int Lp_ROMatch(afs_cell_handle_p cellHandle, struct nvldbentry *entry,
+		      afs_int32 server, afs_int32 part, afs_status_p st);
 
-extern int Lp_GetRwIndex(
-  afs_cell_handle_p cellHandle,
-  struct nvldbentry *entry,
-  afs_status_p st
-);
+extern int Lp_GetRwIndex(afs_cell_handle_p cellHandle,
+			 struct nvldbentry *entry, afs_status_p st);
 
-extern void Lp_QInit(
-  struct qHead *ahead
-);
+extern void Lp_QInit(struct qHead *ahead);
 
-extern void Lp_QAdd(
-  struct qHead *ahead,
-  struct aqueue *elem
-);
+extern void Lp_QAdd(struct qHead *ahead, struct aqueue *elem);
 
-extern int Lp_QScan(
-  struct qHead *ahead,
-  afs_int32 id,
-  int *success,
-  struct aqueue **elem,
-  afs_status_p st
-);
+extern int Lp_QScan(struct qHead *ahead, afs_int32 id, int *success,
+		    struct aqueue **elem, afs_status_p st);
 
-extern void Lp_QEnumerate(
-  struct qHead *ahead,
-  int *success,
-  struct aqueue *elem,
-  afs_status_p st
-);
+extern void Lp_QEnumerate(struct qHead *ahead, int *success,
+			  struct aqueue *elem, afs_status_p st);

@@ -32,10 +32,10 @@ extern "C" {
  */
 
 rwWindowData awdSalvageResults[] = {
-    { IDC_SALVAGE_TITLE,        raSizeX | raRepaint },
-    { IDC_SALVAGE_DETAILS,      raSizeX | raSizeY | raRepaint, MAKELONG(cxMIN_SALVAGE_R,cyMIN_SALVAGE_R) },
-    { IDOK,                     raMoveX | raMoveY },
-    { idENDLIST, 0 }
+    { IDC_SALVAGE_TITLE,        raSizeX | raRepaint,		0,	0 },
+    { IDC_SALVAGE_DETAILS,      raSizeX | raSizeY | raRepaint, 	MAKELONG(cxMIN_SALVAGE_R,cyMIN_SALVAGE_R), 0 },
+    { IDOK,                     raMoveX | raMoveY,		0,	0 },
+    { idENDLIST, 0,						0,	0 }
  };
 
 

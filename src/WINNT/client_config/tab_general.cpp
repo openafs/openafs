@@ -11,6 +11,7 @@ extern "C" {
 #include <afs/param.h>
 #include <afs/stds.h>
 #include <rx/rxkad.h>
+#include <afs/cm_config.h>
 }
 
 #include "afs_config.h"
@@ -657,15 +658,27 @@ BOOL GeneralTab_AskIfStopped (HWND hDlg)
 BOOL fIsCellInCellServDB (LPCTSTR pszCell)
 {
    BOOL fFound = FALSE;
-
    CELLSERVDB CellServDB;
-   if (CSDB_ReadFile (&CellServDB, NULL))
-      {
-      if (CSDB_FindCell (&CellServDB, pszCell))
-         fFound = TRUE;
-      CSDB_FreeFile (&CellServDB);
-      }
 
+   if (CSDB_ReadFile (&CellServDB, NULL))
+   {
+       if (CSDB_FindCell (&CellServDB, pszCell))
+           fFound = TRUE;
+       CSDB_FreeFile (&CellServDB);
+   }
+#ifdef AFS_AFSDB_ENV
+    if ( fFound == FALSE ) {
+        int ttl;
+        char cellname[128], i;
+
+        /* we pray for all ascii cellnames */
+        for ( i=0 ; pszCell[i] && i < (sizeof(cellname)-1) ; i++ )
+            cellname[i] = pszCell[i];
+        cellname[i] = '\0';
+
+        fFound = !cm_SearchCellByDNS(cellname, NULL, &ttl, NULL, NULL);
+    }
+#endif
    return fFound;
 }
 

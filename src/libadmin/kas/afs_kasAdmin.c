@@ -10,9 +10,19 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/kas/afs_kasAdmin.c,v 1.1.1.5 2001/07/14 22:22:32 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/libadmin/kas/afs_kasAdmin.c,v 1.9.2.2 2004/12/13 19:39:18 shadow Exp $");
 
 #include <stdio.h>
+
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+
 #include <afs/stds.h>
 #include "afs_kasAdmin.h"
 #include "../adminutil/afs_AdminInternal.h"
@@ -26,8 +36,6 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/kas/afs_kasAdmin.c,v 1.1.1.5 2
 #undef ENCRYPT
 
 extern int ubik_Call();
-extern int ubik_Call_New();
-extern int ubik_CallIter();
 
 typedef struct {
     int begin_magic;
@@ -52,10 +60,9 @@ typedef struct {
  *
  * Returns != 0 upon successful completion.
  */
- 
-static int IsValidServerHandle(
-  const kas_server_p serverHandle,
-  afs_status_p st)
+
+static int
+IsValidServerHandle(const kas_server_p serverHandle, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -69,8 +76,8 @@ static int IsValidServerHandle(
 	goto fail_IsValidServerHandle;
     }
 
-    if ((serverHandle->begin_magic != BEGIN_MAGIC) || 
-	(serverHandle->end_magic != END_MAGIC)) {
+    if ((serverHandle->begin_magic != BEGIN_MAGIC)
+	|| (serverHandle->end_magic != END_MAGIC)) {
 	tst = ADMKASSERVERHANDLEBADMAGIC;
 	goto fail_IsValidServerHandle;
     }
@@ -86,10 +93,10 @@ static int IsValidServerHandle(
     }
     rc = 1;
 
-fail_IsValidServerHandle:
+  fail_IsValidServerHandle:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -110,10 +117,9 @@ fail_IsValidServerHandle:
  *
  * Returns != 0 upon successful completion.
  */
- 
-static int IsValidCellHandle(
-  const afs_cell_handle_p cellHandle,
-  afs_status_p st)
+
+static int
+IsValidCellHandle(const afs_cell_handle_p cellHandle, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -122,7 +128,7 @@ static int IsValidCellHandle(
      * Validate input parameters
      */
 
-    if (!CellHandleIsValid((void *) cellHandle, &tst)) {
+    if (!CellHandleIsValid((void *)cellHandle, &tst)) {
 	goto fail_IsValidCellHandle;
     }
 
@@ -137,10 +143,10 @@ static int IsValidCellHandle(
     }
     rc = 1;
 
-fail_IsValidCellHandle:
+  fail_IsValidCellHandle:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -172,12 +178,11 @@ fail_IsValidCellHandle:
  *
  * Returns != 0 upon successful completion.
  */
- 
-static int ChooseValidServer(
-  const afs_cell_handle_p cellHandle,
-  const kas_server_p serverHandle,
-  kas_server_p kasHandle,
-  afs_status_p st)
+
+static int
+ChooseValidServer(const afs_cell_handle_p cellHandle,
+		  const kas_server_p serverHandle, kas_server_p kasHandle,
+		  afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -230,19 +235,18 @@ static int ChooseValidServer(
     kasHandle->is_valid = 1;
     rc = 1;
 
-fail_ChooseValidServer:
+  fail_ChooseValidServer:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
 
 
-static int kaentryinfo_to_kas_principalEntry_t(
-  struct kaentryinfo *from,
-  kas_principalEntry_p to,
-  afs_status_p st)
+static int
+kaentryinfo_to_kas_principalEntry_t(struct kaentryinfo *from,
+				    kas_principalEntry_p to, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -283,7 +287,7 @@ static int kaentryinfo_to_kas_principalEntry_t(
 	to->cpwSetting = CHANGE_PASSWORD;
     }
 
-    reuse = (short) from->reserved3;
+    reuse = (short)from->reserved3;
     if (!reuse) {
 	to->rpwSetting = REUSE_PASSWORD;
     } else {
@@ -296,7 +300,7 @@ static int kaentryinfo_to_kas_principalEntry_t(
     } else {
 	to->userExpiration = from->user_expiration;
     }
-    
+
     to->lastModTime = from->modification_time;
     strcpy(to->lastModPrincipal.principal, from->modification_user.name);
     strcpy(to->lastModPrincipal.instance, from->modification_user.instance);
@@ -312,10 +316,10 @@ static int kaentryinfo_to_kas_principalEntry_t(
     to->lockTime = misc_stuff[3] << 9;
     rc = 1;
 
-fail_kaentryinfo_to_kas_principalEntry_t:
+  fail_kaentryinfo_to_kas_principalEntry_t:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -358,19 +362,17 @@ fail_kaentryinfo_to_kas_principalEntry_t:
  * cell assumption can cause things to fail (the ka_StringToKey function in
  * UserCreate).
  */
- 
-int ADMINAPI kas_ServerOpen(
-  const void *cellHandle,
-  const char **serverList,
-  void **serverHandleP,
-  afs_status_p st)
+
+int ADMINAPI
+kas_ServerOpen(const void *cellHandle, const char **serverList,
+	       void **serverHandleP, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
-    int server_count=0, server_addr;
+    int server_count = 0, server_addr;
     struct afsconf_cell server_info;
-    kas_server_p k_handle = (kas_server_p) malloc (sizeof(kas_server_t));
+    kas_server_p k_handle = (kas_server_p) malloc(sizeof(kas_server_t));
 
     /*
      * Validate input parameters
@@ -410,14 +412,17 @@ int ADMINAPI kas_ServerOpen(
      * Convert serverList to numeric addresses
      */
 
-    for(server_count=0; serverList[server_count] != NULL; server_count++) {
+    for (server_count = 0; serverList[server_count] != NULL; server_count++) {
 	if (server_count >= MAXHOSTSPERCELL) {
 	    tst = ADMKASSERVERLISTTOOLONG;
 	    goto fail_kas_ServerOpen;
 	}
-	if (util_AdminServerAddressGetFromName(serverList[server_count],&server_addr,&tst)) {
-	    server_info.hostAddr[server_count].sin_addr.s_addr = htonl(server_addr);
-	    server_info.hostAddr[server_count].sin_port = htons(AFSCONF_KAUTHPORT);
+	if (util_AdminServerAddressGetFromName
+	    (serverList[server_count], &server_addr, &tst)) {
+	    server_info.hostAddr[server_count].sin_addr.s_addr =
+		htonl(server_addr);
+	    server_info.hostAddr[server_count].sin_port =
+		htons(AFSCONF_KAUTHPORT);
 	} else {
 	    goto fail_kas_ServerOpen;
 	}
@@ -432,27 +437,31 @@ int ADMINAPI kas_ServerOpen(
      * Get a ubik_client handle for the specified servers
      */
     server_info.numServers = server_count;
-    if (!(tst = ka_AuthSpecificServersConn(KA_MAINTENANCE_SERVICE, &c_handle->tokens->kas_token, &server_info, &k_handle->servers))) {
+    if (!
+	(tst =
+	 ka_AuthSpecificServersConn(KA_MAINTENANCE_SERVICE,
+				    &c_handle->tokens->kas_token,
+				    &server_info, &k_handle->servers))) {
 	k_handle->is_valid = 1;
 	k_handle->cell = c_handle->working_cell;
-	*serverHandleP = (void *) k_handle;
+	*serverHandleP = (void *)k_handle;
     } else {
 	goto fail_kas_ServerOpen;
     }
     rc = 1;
 
-fail_kas_ServerOpen:
+  fail_kas_ServerOpen:
 
     if ((rc == 0) && (k_handle != NULL)) {
 	free(k_handle);
     }
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
- 
+
 /*
  * kas_ServerClose - close a serverHandle.
  *
@@ -468,15 +477,14 @@ fail_kas_ServerOpen:
  *
  * Returns != 0 upon successful completion.
  */
- 
-int ADMINAPI kas_ServerClose(
-  const void *serverHandle,
-  afs_status_p st)
+
+int ADMINAPI
+kas_ServerClose(const void *serverHandle, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     kas_server_p k_handle = (kas_server_p) serverHandle;
- 
+
     if (!IsValidServerHandle(k_handle, &tst)) {
 	goto fail_kas_ServerClose;
     }
@@ -490,10 +498,10 @@ int ADMINAPI kas_ServerClose(
     free(k_handle);
     rc = 1;
 
-fail_kas_ServerClose:
+  fail_kas_ServerClose:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -520,13 +528,11 @@ fail_kas_ServerClose:
  *
  * Returns != 0 upon successful completion.
  */
- 
-int ADMINAPI kas_PrincipalCreate(
-  const void *cellHandle,
-  const void *serverHandle,
-  const kas_identity_p who,
-  const char *password,
-  afs_status_p st)
+
+int ADMINAPI
+kas_PrincipalCreate(const void *cellHandle, const void *serverHandle,
+		    const kas_identity_p who, const char *password,
+		    afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -534,7 +540,7 @@ int ADMINAPI kas_PrincipalCreate(
     kas_server_p k_handle = (kas_server_p) serverHandle;
     kas_server_t kaserver;
     struct kas_encryptionKey key;
- 
+
     /*
      * Validate input arguments and make rpc.
      */
@@ -557,18 +563,19 @@ int ADMINAPI kas_PrincipalCreate(
 	goto fail_kas_PrincipalCreate;
     }
 
-    tst = ubik_Call(KAM_CreateUser, kaserver.servers, 0,
-		    who->principal, who->instance, key);
+    tst =
+	ubik_Call(KAM_CreateUser, kaserver.servers, 0, who->principal,
+		  who->instance, key);
     if (tst) {
 	goto fail_kas_PrincipalCreate;
     }
     rc = 1;
 
 
-fail_kas_PrincipalCreate:
+  fail_kas_PrincipalCreate:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -593,19 +600,17 @@ fail_kas_PrincipalCreate:
  *
  * Returns != 0 upon successful completion.
  */
- 
-int ADMINAPI kas_PrincipalDelete(
-  const void *cellHandle,
-  const void *serverHandle,
-  const kas_identity_p who,
-  afs_status_p st)
+
+int ADMINAPI
+kas_PrincipalDelete(const void *cellHandle, const void *serverHandle,
+		    const kas_identity_p who, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
     kas_server_p k_handle = (kas_server_p) serverHandle;
     kas_server_t kaserver;
- 
+
     /*
      * Validate input arguments and make rpc.
      */
@@ -618,17 +623,18 @@ int ADMINAPI kas_PrincipalDelete(
     if (!ChooseValidServer(c_handle, k_handle, &kaserver, &tst)) {
 	goto fail_kas_PrincipalDelete;
     }
-    tst = ubik_Call(KAM_DeleteUser, kaserver.servers, 0,
-		    who->principal, who->instance);
+    tst =
+	ubik_Call(KAM_DeleteUser, kaserver.servers, 0, who->principal,
+		  who->instance);
     if (tst) {
 	goto fail_kas_PrincipalDelete;
     }
     rc = 1;
 
-fail_kas_PrincipalDelete:
+  fail_kas_PrincipalDelete:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -654,19 +660,17 @@ fail_kas_PrincipalDelete:
  *
  * Returns != 0 upon successful completion.
  */
- 
-static int GetPrincipalLockStatus(
-  const kas_server_p kaserver,
-  const kas_identity_p who,
-  unsigned int *lockedUntil,
-  afs_status_p st)
+
+static int
+GetPrincipalLockStatus(const kas_server_p kaserver, const kas_identity_p who,
+		       unsigned int *lockedUntil, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     unsigned int locked;
-    int count=0;
+    int count = 0;
     int once = 0;
- 
+
     /*
      * Validate input arguments and make rpc.
      */
@@ -710,9 +714,10 @@ static int GetPrincipalLockStatus(
     *lockedUntil = 0;
     do {
 	locked = 0;
-	tst = ubik_CallIter(KAM_LockStatus, kaserver->servers, UPUBIKONLY,
-			    &count, who->principal, who->instance,
-			    &locked, 0, 0, 0, 0);
+	tst =
+	    ubik_CallIter(KAM_LockStatus, kaserver->servers, UPUBIKONLY,
+			  &count, who->principal, who->instance, &locked, 0,
+			  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 	if (tst == 0) {
 	    if (locked) {
 		if ((locked < *lockedUntil) || !once) {
@@ -734,10 +739,10 @@ static int GetPrincipalLockStatus(
 	rc = 1;
     }
 
-fail_GetPrincipalLockStatus:
+  fail_GetPrincipalLockStatus:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -765,13 +770,11 @@ fail_GetPrincipalLockStatus:
  *
  * Returns != 0 upon successful completion.
  */
- 
-int ADMINAPI kas_PrincipalGet(
-  const void *cellHandle,
-  const void *serverHandle,
-  const kas_identity_p who,
-  kas_principalEntry_p principal,
-  afs_status_p st)
+
+int ADMINAPI
+kas_PrincipalGet(const void *cellHandle, const void *serverHandle,
+		 const kas_identity_p who, kas_principalEntry_p principal,
+		 afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -779,7 +782,7 @@ int ADMINAPI kas_PrincipalGet(
     kas_server_p k_handle = (kas_server_p) serverHandle;
     kas_server_t kaserver;
     struct kaentryinfo entry;
- 
+
     /*
      * Validate input arguments and make rpc.
      */
@@ -798,8 +801,9 @@ int ADMINAPI kas_PrincipalGet(
 	goto fail_kas_PrincipalGet;
     }
 
-    tst = ubik_Call(KAM_GetEntry, kaserver.servers, 0,
-		    who->principal, who->instance, KAMAJORVERSION, &entry);
+    tst =
+	ubik_Call(KAM_GetEntry, kaserver.servers, 0, who->principal,
+		  who->instance, KAMAJORVERSION, &entry);
     if (tst) {
 	goto fail_kas_PrincipalGet;
     }
@@ -813,10 +817,10 @@ int ADMINAPI kas_PrincipalGet(
     }
     rc = 1;
 
-fail_kas_PrincipalGet:
+  fail_kas_PrincipalGet:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -829,9 +833,8 @@ typedef struct principal_get {
     kas_identity_t principal[CACHED_ITEMS];
 } principal_get_t, *principal_get_p;
 
-static int DeletePrincipalSpecificData(
-    void *rpc_specific,
-    afs_status_p st)
+static int
+DeletePrincipalSpecificData(void *rpc_specific, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -841,25 +844,22 @@ static int DeletePrincipalSpecificData(
     rc = 1;
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
 
-static int GetPrincipalRPC(
-    void *rpc_specific,
-    int slot,
-    int *last_item,
-    int *last_item_contains_data,
-    afs_status_p st)
+static int
+GetPrincipalRPC(void *rpc_specific, int slot, int *last_item,
+		int *last_item_contains_data, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     principal_get_p prin = (principal_get_p) rpc_specific;
 
-    tst = ubik_Call(KAM_ListEntry, prin->kaserver.servers, 0,
-		    prin->current, &prin->next, &prin->count,
-		    &prin->principal[slot]);
+    tst =
+	ubik_Call(KAM_ListEntry, prin->kaserver.servers, 0, prin->current,
+		  &prin->next, &prin->count, &prin->principal[slot]);
     if (tst == 0) {
 	prin->current = prin->next;
 	if (prin->next == 0) {
@@ -870,16 +870,14 @@ static int GetPrincipalRPC(
     }
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
 
-static int GetPrincipalFromCache(
-    void *rpc_specific,
-    int slot,
-    void *dest,
-    afs_status_p st)
+static int
+GetPrincipalFromCache(void *rpc_specific, int slot, void *dest,
+		      afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -889,7 +887,7 @@ static int GetPrincipalFromCache(
     rc = 1;
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -917,20 +915,20 @@ static int GetPrincipalFromCache(
  *
  * ASSUMPTIONS
  */
- 
-int ADMINAPI kas_PrincipalGetBegin(
-  const void *cellHandle,
-  const void *serverHandle,
-  void **iterationIdP,
-  afs_status_p st)
+
+int ADMINAPI
+kas_PrincipalGetBegin(const void *cellHandle, const void *serverHandle,
+		      void **iterationIdP, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
     kas_server_p k_handle = (kas_server_p) serverHandle;
-    afs_admin_iterator_p iter = (afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
-    principal_get_p principal = (principal_get_p) malloc(sizeof(principal_get_t));
- 
+    afs_admin_iterator_p iter =
+	(afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
+    principal_get_p principal =
+	(principal_get_p) malloc(sizeof(principal_get_t));
+
     /*
      * Validate arguments
      */
@@ -961,14 +959,14 @@ int ADMINAPI kas_PrincipalGetBegin(
     principal->current = 0;
     principal->next = 0;
     principal->count = 0;
-    if (IteratorInit(iter, (void *) principal, GetPrincipalRPC,
-		     GetPrincipalFromCache, NULL,
-		     DeletePrincipalSpecificData, &tst)) {
-	*iterationIdP = (void *) iter;
+    if (IteratorInit
+	(iter, (void *)principal, GetPrincipalRPC, GetPrincipalFromCache,
+	 NULL, DeletePrincipalSpecificData, &tst)) {
+	*iterationIdP = (void *)iter;
 	rc = 1;
     }
 
-fail_kas_PrincipalGetBegin:
+  fail_kas_PrincipalGetBegin:
 
     if (rc == 0) {
 	if (iter != NULL) {
@@ -980,7 +978,7 @@ fail_kas_PrincipalGetBegin:
     }
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1004,16 +1002,15 @@ fail_kas_PrincipalGetBegin:
  * Returns != 0 upon successful completion.
  * Returns 0 and st == ADMITERATORDONE when the last entry is returned.
  */
- 
-int ADMINAPI kas_PrincipalGetNext(
-  const void *iterationId,
-  kas_identity_p who,
-  afs_status_p st)
+
+int ADMINAPI
+kas_PrincipalGetNext(const void *iterationId, kas_identity_p who,
+		     afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_admin_iterator_p iter = (afs_admin_iterator_p) iterationId;
- 
+
     /*
      * Validate arguments
      */
@@ -1028,12 +1025,12 @@ int ADMINAPI kas_PrincipalGetNext(
 	goto fail_kas_PrincipalGetNext;
     }
 
-    rc = IteratorNext(iter, (void *) who, &tst);
+    rc = IteratorNext(iter, (void *)who, &tst);
 
-fail_kas_PrincipalGetNext:
+  fail_kas_PrincipalGetNext:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1058,15 +1055,14 @@ fail_kas_PrincipalGetNext:
  * It is the user's responsibility to make sure kas_PrincipalGetDone
  * is called only once for each iterator.
  */
- 
-int ADMINAPI kas_PrincipalGetDone(
-  const void *iterationIdP,
-  afs_status_p st)
+
+int ADMINAPI
+kas_PrincipalGetDone(const void *iterationIdP, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_admin_iterator_p iter = (afs_admin_iterator_p) iterationIdP;
- 
+
     /*
      * Validate argument
      */
@@ -1078,10 +1074,10 @@ int ADMINAPI kas_PrincipalGetDone(
 
     rc = IteratorDone(iter, &tst);
 
-fail_kas_PrincipalGetDone:
- 
+  fail_kas_PrincipalGetDone:
+
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1109,21 +1105,18 @@ fail_kas_PrincipalGetDone:
  *
  * Returns != 0 upon successful completion.
  */
- 
-int ADMINAPI kas_PrincipalKeySet(
-  const void *cellHandle,
-  const void *serverHandle,
-  const kas_identity_p who,
-  int keyVersion,
-  const kas_encryptionKey_p key,
-  afs_status_p st)
+
+int ADMINAPI
+kas_PrincipalKeySet(const void *cellHandle, const void *serverHandle,
+		    const kas_identity_p who, int keyVersion,
+		    const kas_encryptionKey_p key, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
     kas_server_p k_handle = (kas_server_p) serverHandle;
     kas_server_t kaserver;
- 
+
     /*
      * Validate input arguments and make rpc.
      */
@@ -1142,19 +1135,20 @@ int ADMINAPI kas_PrincipalKeySet(
 	goto fail_kas_PrincipalKeySet;
     }
 
-    tst = ubik_Call(KAM_SetPassword, kaserver.servers, 0,
-		    who->principal, who->instance, keyVersion, *key);
+    tst =
+	ubik_Call(KAM_SetPassword, kaserver.servers, 0, who->principal,
+		  who->instance, keyVersion, *key);
     if (tst) {
 	goto fail_kas_PrincipalKeySet;
     }
 
     /* If we failed to fail we must have succeeded */
     rc = 1;
- 
-fail_kas_PrincipalKeySet:
+
+  fail_kas_PrincipalKeySet:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1186,13 +1180,11 @@ fail_kas_PrincipalKeySet:
  * See the comments in GetPrincipalLockStatus regarding how the locking data
  * is kept INconsistently between servers.
  */
- 
-int ADMINAPI kas_PrincipalLockStatusGet(
-  const void *cellHandle,
-  const void *serverHandle,
-  const kas_identity_p who,
-  unsigned int *lock_end_timeP,
-  afs_status_p st)
+
+int ADMINAPI
+kas_PrincipalLockStatusGet(const void *cellHandle, const void *serverHandle,
+			   const kas_identity_p who,
+			   unsigned int *lock_end_timeP, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -1219,11 +1211,11 @@ int ADMINAPI kas_PrincipalLockStatusGet(
     }
 
     rc = GetPrincipalLockStatus(&kaserver, who, lock_end_timeP, &tst);
- 
-fail_kas_PrincipalLockStatusGet:
+
+  fail_kas_PrincipalLockStatusGet:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1252,12 +1244,10 @@ fail_kas_PrincipalLockStatusGet:
  * See the comments in GetPrincipalLockStatus regarding how the locking data
  * is kept INconsistently between servers.
  */
- 
-int ADMINAPI kas_PrincipalUnlock(
-  const void *cellHandle,
-  const void *serverHandle,
-  const kas_identity_p who,
-  afs_status_p st)
+
+int ADMINAPI
+kas_PrincipalUnlock(const void *cellHandle, const void *serverHandle,
+		    const kas_identity_p who, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -1270,7 +1260,7 @@ int ADMINAPI kas_PrincipalUnlock(
     /*
      * Validate input arguments and make rpc.
      */
- 
+
     if (who == NULL) {
 	tst = ADMKASWHONULL;
 	goto fail_kas_PrincipalUnlock;
@@ -1281,34 +1271,33 @@ int ADMINAPI kas_PrincipalUnlock(
     }
 
     do {
-	  tst = ubik_CallIter(KAM_Unlock, kaserver.servers, 0,
-			    &count, who->principal, who->instance,
-			    0, 0, 0, 0);
+	tst =
+	    ubik_CallIter(KAM_Unlock, kaserver.servers, 0, &count,
+			  who->principal, who->instance, 0, 0, 0, 0, 0, 0,
+			  0, 0, 0, 0, 0, 0, 0, 0);
 	if (tst && (tst != UNOSERVERS)) {
 	    if (save_tst == 0) {
-		save_tst = tst; /* save the first failure */
+		save_tst = tst;	/* save the first failure */
 	    }
 	}
     } while (tst != UNOSERVERS);
 
-    if ((tst == 0) || (tst == UNOSERVERS)){
+    if ((tst == 0) || (tst == UNOSERVERS)) {
 	rc = 1;
     }
 
-fail_kas_PrincipalUnlock:
+  fail_kas_PrincipalUnlock:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
- 
-static int getPrincipalFlags(
-  const void *cellHandle,
-  const void *serverHandle,
-  const kas_identity_p who,
-  afs_int32 *cur_flags,
-  afs_status_p st)
+
+static int
+getPrincipalFlags(const void *cellHandle, const void *serverHandle,
+		  const kas_identity_p who, afs_int32 * cur_flags,
+		  afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -1321,17 +1310,18 @@ static int getPrincipalFlags(
 	goto fail_getPrincipalFlags;
     }
 
-    tst = ubik_Call(KAM_GetEntry, kaserver.servers, 0, who->principal,
-		    who->instance, KAMAJORVERSION, &tentry);
+    tst =
+	ubik_Call(KAM_GetEntry, kaserver.servers, 0, who->principal,
+		  who->instance, KAMAJORVERSION, &tentry);
     if (tst == 0) {
 	*cur_flags = tentry.flags;
 	rc = 1;
     }
 
-fail_getPrincipalFlags:
+  fail_getPrincipalFlags:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1387,22 +1377,20 @@ fail_getPrincipalFlags:
  * See the comments in GetPrincipalLockStatus regarding how the locking data
  * is kept INconsistently between servers.
  */
- 
-int ADMINAPI kas_PrincipalFieldsSet(
-  const void *cellHandle,
-  const void *serverHandle,
-  const kas_identity_p who,
-  const kas_admin_p isAdmin,
-  const kas_tgs_p grantTickets,
-  const kas_enc_p canEncrypt,
-  const kas_cpw_p canChangePassword,
-  const unsigned int *expirationDate,
-  const unsigned int *maxTicketLifetime,
-  const unsigned int *passwordExpires,
-  const kas_rpw_p passwordReuse,
-  const unsigned int *failedPasswordAttempts,
-  const unsigned int *failedPasswordLockTime,
-  afs_status_p st)
+
+int ADMINAPI
+kas_PrincipalFieldsSet(const void *cellHandle, const void *serverHandle,
+		       const kas_identity_p who, const kas_admin_p isAdmin,
+		       const kas_tgs_p grantTickets,
+		       const kas_enc_p canEncrypt,
+		       const kas_cpw_p canChangePassword,
+		       const unsigned int *expirationDate,
+		       const unsigned int *maxTicketLifetime,
+		       const unsigned int *passwordExpires,
+		       const kas_rpw_p passwordReuse,
+		       const unsigned int *failedPasswordAttempts,
+		       const unsigned int *failedPasswordLockTime,
+		       afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -1413,7 +1401,7 @@ int ADMINAPI kas_PrincipalFieldsSet(
     Date expiration = 0;
     afs_int32 lifetime = 0;
     int was_spare;
-    char spare_bytes[4] = {0,0,0,0};
+    char spare_bytes[4] = { 0, 0, 0, 0 };
     int somethings_changing = 0;
 
     /*
@@ -1432,10 +1420,9 @@ int ADMINAPI kas_PrincipalFieldsSet(
      * the flags first and then make the changes
      */
 
-    if ((isAdmin != NULL) || (grantTickets != NULL) ||
-	(canEncrypt != NULL) || (canChangePassword != NULL)) {
-	if (!getPrincipalFlags(cellHandle, serverHandle, who, &flags,
-			       &tst)) {
+    if ((isAdmin != NULL) || (grantTickets != NULL) || (canEncrypt != NULL)
+	|| (canChangePassword != NULL)) {
+	if (!getPrincipalFlags(cellHandle, serverHandle, who, &flags, &tst)) {
 	    goto fail_kas_PrincipalFieldsSet;
 	}
     }
@@ -1516,7 +1503,7 @@ int ADMINAPI kas_PrincipalFieldsSet(
     }
 
     if (failedPasswordLockTime != NULL) {
-	if (*failedPasswordLockTime > 36*60*60) {
+	if (*failedPasswordLockTime > 36 * 60 * 60) {
 	    tst = ADMKASFAILEDPASSWORDLOCKTIME;
 	    goto fail_kas_PrincipalFieldsSet;
 	}
@@ -1530,20 +1517,21 @@ int ADMINAPI kas_PrincipalFieldsSet(
 	if (!ChooseValidServer(c_handle, k_handle, &kaserver, &tst)) {
 	    goto fail_kas_PrincipalFieldsSet;
 	}
-	tst = ubik_Call(KAM_SetFields, kaserver.servers, 0, who->principal,
-			who->instance, flags, expiration, lifetime,
-			-1, was_spare, 0);
+	tst =
+	    ubik_Call(KAM_SetFields, kaserver.servers, 0, who->principal,
+		      who->instance, flags, expiration, lifetime, -1,
+		      was_spare, 0);
 	if (tst == 0) {
 	    rc = 1;
 	}
     } else {
 	tst = ADMKASPRINCIPALFIELDSNOCHANGE;
     }
- 
-fail_kas_PrincipalFieldsSet:
+
+  fail_kas_PrincipalFieldsSet:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1567,12 +1555,10 @@ fail_kas_PrincipalFieldsSet:
  *
  * Returns != 0 upon successful completion.
  */
- 
-int ADMINAPI kas_ServerStatsGet(
-  const void *cellHandle,
-  const void *serverHandle,
-  kas_serverStats_p stats,
-  afs_status_p st)
+
+int ADMINAPI
+kas_ServerStatsGet(const void *cellHandle, const void *serverHandle,
+		   kas_serverStats_p stats, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -1597,8 +1583,9 @@ int ADMINAPI kas_ServerStatsGet(
 	goto fail_kas_ServerStatsGet;
     }
 
-    tst = ubik_Call(KAM_GetStats, kaserver.servers, 0, KAMAJORVERSION, &admins, 
-		    &statics, &dynamics);
+    tst =
+	ubik_Call(KAM_GetStats, kaserver.servers, 0, KAMAJORVERSION, &admins,
+		  &statics, &dynamics);
     if (tst) {
 	goto fail_kas_ServerStatsGet;
     }
@@ -1633,10 +1620,10 @@ int ADMINAPI kas_ServerStatsGet(
     stats->stringChecks = dynamics.string_checks;
     rc = 1;
 
-fail_kas_ServerStatsGet:
+  fail_kas_ServerStatsGet:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1660,12 +1647,10 @@ fail_kas_ServerStatsGet:
  *
  * Returns != 0 upon successful completion.
  */
- 
-int ADMINAPI kas_ServerDebugGet(
-  const void *cellHandle,
-  const void *serverHandle,
-  kas_serverDebugInfo_p debug,
-  afs_status_p st)
+
+int ADMINAPI
+kas_ServerDebugGet(const void *cellHandle, const void *serverHandle,
+		   kas_serverDebugInfo_p debug, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -1674,7 +1659,7 @@ int ADMINAPI kas_ServerDebugGet(
     kas_server_t kaserver;
     struct ka_debugInfo info;
     int i;
- 
+
     /*
      * Validate input arguments and make rpc.
      */
@@ -1717,19 +1702,19 @@ int ADMINAPI kas_ServerDebugGet(
     debug->keyCacheVersion = info.kcVersion;
     debug->keyCacheSize = info.kcSize;
     debug->keyCacheUsed = info.kcUsed;
-    for(i=0;i<info.kcUsed;i++) {
+    for (i = 0; i < info.kcUsed; i++) {
 	debug->keyCache[i].lastUsed = info.kcInfo[i].used;
 	debug->keyCache[i].keyVersionNumber = info.kcInfo[i].kvno;
 	debug->keyCache[i].primary = info.kcInfo[i].primary;
 	debug->keyCache[i].keyCheckSum = info.kcInfo[i].keycksum;
-	strcpy(debug->keyCache[i].principal,info.kcInfo[i].principal);
+	strcpy(debug->keyCache[i].principal, info.kcInfo[i].principal);
     }
     rc = 1;
 
-fail_kas_ServerDebugGet:
+  fail_kas_ServerDebugGet:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1753,19 +1738,17 @@ fail_kas_ServerDebugGet:
  *
  * Returns != 0 upon successful completion.
  */
- 
-int ADMINAPI kas_ServerRandomKeyGet(
-  const void *cellHandle,
-  const void *serverHandle,
-  kas_encryptionKey_p key,
-  afs_status_p st)
+
+int ADMINAPI
+kas_ServerRandomKeyGet(const void *cellHandle, const void *serverHandle,
+		       kas_encryptionKey_p key, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
     kas_server_p k_handle = (kas_server_p) serverHandle;
     kas_server_t kaserver;
- 
+
     /*
      * Validate input arguments and make rpc.
      */
@@ -1785,10 +1768,10 @@ int ADMINAPI kas_ServerRandomKeyGet(
     }
     rc = 1;
 
-fail_kas_ServerRandomKeyGet:
+  fail_kas_ServerRandomKeyGet:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1812,21 +1795,19 @@ fail_kas_ServerRandomKeyGet:
  *
  * Returns != 0 upon successful completion.
  */
- 
-int ADMINAPI kas_StringToKey(
-  const char *cellName,
-  const char *string,
-  kas_encryptionKey_p key,
-  afs_status_p st)
+
+int ADMINAPI
+kas_StringToKey(const char *cellName, const char *string,
+		kas_encryptionKey_p key, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
- 
-    ka_StringToKey(string, cellName, (struct ktc_encryptionKey *) key);
+
+    ka_StringToKey(string, cellName, (struct ktc_encryptionKey *)key);
     rc = 1;
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1849,23 +1830,22 @@ int ADMINAPI kas_StringToKey(
  *
  * Returns != 0 upon successful completion.
  */
- 
-int ADMINAPI kas_KeyCheckSum(
-  const kas_encryptionKey_p key,
-  unsigned int *cksumP,
-  afs_status_p st
-) {
+
+int ADMINAPI
+kas_KeyCheckSum(const kas_encryptionKey_p key, unsigned int *cksumP,
+		afs_status_p st)
+{
     int rc = 0;
     afs_status_t tst = 0;
     afs_uint32 cksum32;
- 
+
     if ((tst = ka_KeyCheckSum((char *)key, &cksum32)) == 0) {
 	*cksumP = cksum32;
 	rc = 1;
     }
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }

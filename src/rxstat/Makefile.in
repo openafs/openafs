@@ -5,44 +5,34 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-DEST=@DEST@
-TOP_INCDIR=@TOP_INCDIR@
-TOP_LIBDIR=@TOP_LIBDIR@
-prefix=@prefix@
-exec_prefix=@exec_prefix@
-bindir=@bindir@
-sbindir=@sbindir@
-libexecdir=@libexecdir@
-libdir=@libdir@
-includedir=@includedir@
-mandir=@mandir@
-afssrvbindir=@afssrvbindir@
-afssrvsbindir=@afssrvsbindir@
-afssrvlibexecdir=@afssrvlibexecdir@
-COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
-TOP_SRCDIR=@TOP_SRCDIR@
-SYS_NAME=@AFS_SYSNAME@
-
-SHELL = /bin/sh
-include ../config/Makefile.${SYS_NAME}
-
-KERNELDIR = ../libafs
-UKERNELDIR = ../libuafs
-RXGEN=${TOP_SRCDIR}/rxgen/rxgen
-
-KSRCS=rxstat.c rxstat.h Krxstat.ss.c Krxstat.xdr.c
-
-CFLAGS=-I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS}
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
 
 LIBOBJS = rxstat.cs.o rxstat.ss.o rxstat.xdr.o rxstat.o
 
-all: kinstall ukinstall ${TOP_INCDIR}/rx/rxstat.h ${TOP_LIBDIR}/librxstat.a
+all: depinstall ${TOP_LIBDIR}/librxstat.a 
+
+depinstall: \
+	${TOP_INCDIR}/rx/rxstat.h Krxstat.cs.c Krxstat.ss.c Krxstat.xdr.c
 
 #
 # Build targets
 #
-rxstat.cs.c rxstat.ss.c rxstat.xdr.c rxstat.h: rxstat.xg
-	${RXGEN} -x rxstat.xg
+rxstat.cs.c: rxstat.xg
+	${RXGEN} -x -C -o $@ ${srcdir}/rxstat.xg
+
+rxstat.ss.c: rxstat.xg
+	${RXGEN} -x -S -o $@ ${srcdir}/rxstat.xg
+
+rxstat.xdr.c: rxstat.xg
+	${RXGEN} -x -c -o $@ ${srcdir}/rxstat.xg
+
+rxstat.h: rxstat.xg
+	${RXGEN} -x -h -o $@ ${srcdir}/rxstat.xg
+
+rxstat.xdr.c: rxstat.h
+rxstat.cs.c: rxstat.h
+rxstat.ss.c: rxstat.h
 
 librxstat.a: ${LIBOBJS} AFS_component_version_number.o
 	-$(RM) -f $@
@@ -50,13 +40,13 @@ librxstat.a: ${LIBOBJS} AFS_component_version_number.o
 	$(RANLIB) $@
 
 Krxstat.cs.c: rxstat.xg
-	${RXGEN} -x -k -C -o $@ rxstat.xg
+	${RXGEN} -x -k -C -o $@ ${srcdir}/rxstat.xg
 
 Krxstat.ss.c: rxstat.xg
-	${RXGEN} -x -k -S -o $@ rxstat.xg
+	${RXGEN} -x -k -S -o $@ ${srcdir}/rxstat.xg
 
 Krxstat.xdr.c: rxstat.xg
-	${RXGEN} -x -k -c -o $@ rxstat.xg
+	${RXGEN} -x -k -c -o $@ ${srcdir}/rxstat.xg
 
 #
 # Install targets
@@ -67,48 +57,6 @@ ${DEST}/lib/librxstat.a: librxstat.a
 	${INSTALL} $? $@
 
 ${DEST}/include/rx/rxstat.h: rxstat.h
-	${INSTALL} $? $@
-
-kinstall: ${KERNELDIR}/afsint \
-	${KERNELDIR}/afsint/rxstat.c \
-	${KERNELDIR}/afsint/rxstat.h \
-	${KERNELDIR}/afsint/Krxstat.ss.c \
-	${KERNELDIR}/afsint/Krxstat.xdr.c 
-
-${KERNELDIR}/afsint:
-	mkdir -p $?
-
-${KERNELDIR}/afsint/rxstat.c: rxstat.c
-	${INSTALL} $? $@
-
-${KERNELDIR}/afsint/rxstat.h: rxstat.h
-	${INSTALL} $? $@
-
-${KERNELDIR}/afsint/Krxstat.ss.c: Krxstat.ss.c
-	${INSTALL} $? $@
-
-${KERNELDIR}/afsint/Krxstat.xdr.c: Krxstat.xdr.c
-	${INSTALL} $? $@
-
-ukinstall: ${UKERNELDIR}/afsint \
-	${UKERNELDIR}/afsint/rxstat.c \
-	${UKERNELDIR}/afsint/rxstat.h \
-	${UKERNELDIR}/afsint/Krxstat.ss.c \
-	${UKERNELDIR}/afsint/Krxstat.xdr.c
-
-${UKERNELDIR}/afsint:
-	mkdir -p $?
-
-${UKERNELDIR}/afsint/rxstat.c: rxstat.c
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afsint/rxstat.h: rxstat.h
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afsint/Krxstat.ss.c: Krxstat.ss.c
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afsint/Krxstat.xdr.c: Krxstat.xdr.c
 	${INSTALL} $? $@
 
 #

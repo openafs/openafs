@@ -65,10 +65,10 @@
 extern "C" {
 #endif
 
-typedef struct {
-    const char *name;
-    unsigned short default_port;
-} schemes_t;
+    typedef struct {
+	const char *name;
+	unsigned short default_port;
+    } schemes_t;
 
 #define	DEFAULT_FTP_DATA_PORT	20
 #define	DEFAULT_FTP_PORT	21
@@ -87,42 +87,49 @@ typedef struct {
 #define UNP_OMITPATHINFO	(1U<<4)	/* Show "scheme://user@site:port" only */
 #define UNP_OMITQUERY	        (1U<<5)	/* Omit the "?queryarg" from the path */
 
-typedef struct {
-    char *scheme;		/* scheme ("http"/"ftp"/...) */
-    char *hostinfo;             /* combined [user[:password]@]host[:port] */
-    char *user;			/* user name, as in http://user:passwd@host:port/ */
-    char *password;		/* password, as in http://user:passwd@host:port/ */
-    char *hostname;		/* hostname from URI (or from Host: header) */
-    char *port_str;		/* port string (integer representation is in "port") */
-    char *path;			/* the request path (or "/" if only scheme://host was given) */
-    char *query;		/* Everything after a '?' in the path, if present */
-    char *fragment;		/* Trailing "#fragment" string, if present */
+    typedef struct {
+	char *scheme;		/* scheme ("http"/"ftp"/...) */
+	char *hostinfo;		/* combined [user[:password]@]host[:port] */
+	char *user;		/* user name, as in http://user:passwd@host:port/ */
+	char *password;		/* password, as in http://user:passwd@host:port/ */
+	char *hostname;		/* hostname from URI (or from Host: header) */
+	char *port_str;		/* port string (integer representation is in "port") */
+	char *path;		/* the request path (or "/" if only scheme://host was given) */
+	char *query;		/* Everything after a '?' in the path, if present */
+	char *fragment;		/* Trailing "#fragment" string, if present */
 
-    struct hostent *hostent;
+	struct hostent *hostent;
 
-    unsigned short port;	/* The port number, numeric, valid only if port_str != NULL */
-    
-    unsigned is_initialized:1;
+	unsigned short port;	/* The port number, numeric, valid only if port_str != NULL */
 
-    unsigned dns_looked_up:1;
-    unsigned dns_resolved:1;
+	unsigned is_initialized:1;
 
-} uri_components;
+	unsigned dns_looked_up:1;
+	unsigned dns_resolved:1;
+
+    } uri_components;
 
 /* util_uri.c */
-API_EXPORT(unsigned short) ap_default_port_for_scheme(const char *scheme_str);
-API_EXPORT(unsigned short) ap_default_port_for_request(const request_rec *r);
-API_EXPORT(struct hostent *) ap_pduphostent(pool *p, const struct hostent *hp);
-API_EXPORT(struct hostent *) ap_pgethostbyname(pool *p, const char *hostname);
-API_EXPORT(char *) ap_unparse_uri_components(pool *p, const uri_components *uptr,
-    unsigned flags);
-API_EXPORT(int) ap_parse_uri_components(pool *p, const char *uri, uri_components *uptr);
-API_EXPORT(int) ap_parse_hostinfo_components(pool *p, const char *hostinfo, uri_components *uptr);
+      API_EXPORT(unsigned short) ap_default_port_for_scheme(const char
+							    *scheme_str);
+      API_EXPORT(unsigned short) ap_default_port_for_request(const request_rec
+							     * r);
+      API_EXPORT(struct hostent *) ap_pduphostent(pool * p,
+						  const struct hostent *hp);
+      API_EXPORT(struct hostent *) ap_pgethostbyname(pool * p,
+						     const char *hostname);
+      API_EXPORT(char *) ap_unparse_uri_components(pool * p,
+						   const uri_components *
+						   uptr, unsigned flags);
+      API_EXPORT(int) ap_parse_uri_components(pool * p, const char *uri,
+					      uri_components * uptr);
+      API_EXPORT(int) ap_parse_hostinfo_components(pool * p,
+						   const char *hostinfo,
+						   uri_components * uptr);
 /* called by the core in main() */
-extern void ap_util_uri_init(void);
+    extern void ap_util_uri_init(void);
 
 #ifdef __cplusplus
 }
 #endif
-
-#endif /*UTIL_URI_H*/
+#endif				/*UTIL_URI_H */

@@ -87,7 +87,9 @@ typedef unsigned NATIVE_INT64 u_int64;
 
 #else /* !NATIVE_INT64 */
 /** We have to provide our own 64-bit integers **/
-typedef struct { afs_uint32 hi, lo; } u_int64;
+typedef struct {
+    afs_uint32 hi, lo;
+} u_int64;
 
 /* construct/extract/assign */
 #define mk64(X,H,L) ((X).hi = (H), (X).lo = (L))

@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/finale/translate_et_nt.c,v 1.1.1.4 2001/07/14 22:21:54 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/finale/translate_et_nt.c,v 1.5 2003/07/15 23:15:07 shadow Exp $");
 
 #include <afs/stds.h>
 #include <stdio.h>
@@ -20,7 +21,8 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/finale/translate_et_nt.c,v 1.1.1.4 2001
 #include <afs/afs_clientAdmin.h>
 
 
-int main (int argc, char **argv)
+int
+main(int argc, char **argv)
 {
     int i;
     afs_status_t status;
@@ -33,7 +35,7 @@ int main (int argc, char **argv)
      * generated which, in many cases, isn't too useful.
      */
     struct sigaction nsa;
-    
+
     sigemptyset(&nsa.sa_mask);
     nsa.sa_handler = SIG_DFL;
     nsa.sa_flags = SA_FULLDUMP;
@@ -41,7 +43,7 @@ int main (int argc, char **argv)
 #endif
 
     if (argc < 2) {
-	fprintf (stderr, "Usage is: %s [<code>]+\n", argv[0]);
+	fprintf(stderr, "Usage is: %s [<code>]+\n", argv[0]);
 	exit(1);
     }
 
@@ -50,14 +52,13 @@ int main (int argc, char **argv)
 	exit(1);
     }
 
-    for (i=1; i<argc; i++) {
+    for (i = 1; i < argc; i++) {
 	const char *errText;
 	afs_status_t errStatus;
 
-	status  = (afs_status_t) atoi(argv[i]);
+	status = (afs_status_t) atoi(argv[i]);
 	util_AdminErrorCodeTranslate(status, 0, &errText, &errStatus);
-	printf ("%d = %s\n", status, errText); 
+	printf("%d = %s\n", status, errText);
     }
     return 0;
 }
-

@@ -9,26 +9,27 @@
 
 #include <afsconfig.h>
 #ifdef KERNEL
-#include "../afs/param.h"
+#include "afs/param.h"
 #else
 #include <afs/param.h>
 #endif
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/fsint/afsaux.c,v 1.1.1.7 2002/09/26 19:06:03 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/fsint/afsaux.c,v 1.12 2003/07/15 23:15:07 shadow Exp $");
 
 #ifdef KERNEL
 #if defined(UKERNEL)
-#include "../afs/sysincludes.h"
-#include "../afs/afsincludes.h"
-#include "../rx/xdr.h"
+#include "afs/sysincludes.h"
+#include "afsincludes.h"
+#include "rx/xdr.h"
 #else /* defined(UKERNEL) */
 #if defined(AFS_ALPHA_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
-#include "../afs/sysincludes.h"
-#include "../afs/afsincludes.h"
+#include "afs/sysincludes.h"
+#include "afsincludes.h"
 #else
-#include "../h/types.h"
-#include "../rpc/types.h"
-#include "../rx/xdr.h"
+#include "h/types.h"
+#include "rpc/types.h"
+#include "rx/xdr.h"
 #endif
 #if !defined(AFS_ALPHA_ENV)
 #ifndef	XDR_GETINT32
@@ -39,19 +40,18 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/fsint/afsaux.c,v 1.1.1.7 2002/09/26 19:
 #endif
 #endif
 #endif /* defined(UKERNEL) */
-#include "../afsint/afsint.h"
+#include "afsint.h"
 #else /* KERNEL */
 # include <rx/xdr.h>
 # include "afsint.h"
 #endif /* KERNEL */
 
-#define MAXBS	2048		/* try to avoid horrible allocs */
-static afs_int32 bslosers = 0;
-
 #ifdef KERNEL
 #define	NVALLOC(a)	osi_Alloc(a)
 #define	NVFREE(a,b)	osi_Free(a,b)
 #else /* KERNEL */
+#define MAXBS	2048		/* try to avoid horrible allocs */
+static afs_int32 bslosers = 0;
 #define	NVALLOC(a)	malloc(a)
 #define	NVFREE(a,b)	free(a)
 #endif /* KERNEL */
@@ -65,37 +65,35 @@ static afs_int32 bslosers = 0;
 #endif
 #if (defined(AFS_AIX_ENV) && !defined(AUTH_DES)) || (!defined(AFS_SUN_ENV)) && !defined(AFS_SGI_ENV) && !defined(AFS_ALPHA_ENV) && !defined(AFS_SUN5_ENV)
 #ifndef	AFS_AIX32_ENV
-#if !defined(AFS_HPUX110_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
+#if !defined(AFS_HPUX110_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_XBSD_ENV)
 /*
  * XDR chars; from user mode xdr package.
  */
 bool_t
-xdr_char(xdrs, sp)
-	register XDR *xdrs;
-	char *sp;
+xdr_char(register XDR * xdrs, char *sp)
 {
-	afs_int32 l;
+    afs_int32 l;
 
-	switch (xdrs->x_op) {
+    switch (xdrs->x_op) {
 
-	case XDR_ENCODE:
-		l = (afs_int32) *sp;
-		return (XDR_PUTINT32(xdrs, &l));
+    case XDR_ENCODE:
+	l = (afs_int32) * sp;
+	return (XDR_PUTINT32(xdrs, &l));
 
-	case XDR_DECODE:
-		if (!XDR_GETINT32(xdrs, &l)) {
-			return (FALSE);
-		}
-		*sp = (char) l;
-		return (TRUE);
-
-	case XDR_FREE:
-		return (TRUE);
+    case XDR_DECODE:
+	if (!XDR_GETINT32(xdrs, &l)) {
+	    return (FALSE);
 	}
-	return (FALSE);
+	*sp = (char)l;
+	return (TRUE);
+
+    case XDR_FREE:
+	return (TRUE);
+    }
+    return (FALSE);
 }
 #endif /* AFS_HPUX110_ENV && AFS_LINUX20_ENV */
-#endif 
+#endif
 #endif /* defined(AFS_AIX_ENV) && !defined(AUTH_DES) */
 
 
@@ -106,14 +104,12 @@ xdr_char(xdrs, sp)
 #ifndef	AFS_SUN5_ENV
 #ifndef AFS_HPUX110_ENV
 bool_t
-xdr_wrapstring(xdrs, cpp)
-	XDR *xdrs;
-	char **cpp;
+xdr_wrapstring(XDR * xdrs, char **cpp)
 {
-	if (xdr_string(xdrs, cpp, 1024)) {
-		return(TRUE);
-	}
-	return(FALSE);
+    if (xdr_string(xdrs, cpp, 1024)) {
+	return (TRUE);
+    }
+    return (FALSE);
 }
 #endif /* AFS_HPUX110_ENV */
 #endif /* AFS_SUN5_ENV */
@@ -129,35 +125,31 @@ xdr_wrapstring(xdrs, cpp)
  * > xdr_elem: routine to XDR each element
  */
 bool_t
-xdr_vector(xdrs, basep, nelem, elemsize, xdr_elem)
-	register XDR *xdrs;
-	register char *basep;
-	register u_int nelem;
-	register u_int elemsize;
-	register xdrproc_t xdr_elem;	
+xdr_vector(register XDR * xdrs, register char *basep, register u_int nelem,
+	   register u_int elemsize, register xdrproc_t xdr_elem)
 {
-	register u_int i;
-	register char *elptr;
+    register u_int i;
+    register char *elptr;
 
-	elptr = basep;
-	for (i = 0; i < nelem; i++) {
-		if (! (*xdr_elem)(xdrs, elptr, (u_int) (~0))) {
-			return(FALSE);
-		}
-		elptr += elemsize;
+    elptr = basep;
+    for (i = 0; i < nelem; i++) {
+	if (!(*xdr_elem) (xdrs, elptr, (u_int) (~0))) {
+	    return (FALSE);
 	}
-	return(TRUE);	
+	elptr += elemsize;
+    }
+    return (TRUE);
 }
 #endif
 #endif /* KERNEL */
 
 #ifndef KERNEL
-xdr_CBS(x, abbs)
-    XDR *x;
-    struct CBS *abbs; {
+bool_t
+xdr_CBS(XDR * x, struct CBS * abbs)
+{
     afs_int32 len;
     if (x->x_op == XDR_FREE) {
-	NVFREE(abbs->SeqBody,abbs->SeqLen);
+	NVFREE(abbs->SeqBody, abbs->SeqLen);
 	return TRUE;
     }
 
@@ -165,20 +157,23 @@ xdr_CBS(x, abbs)
 	xdr_afs_int32(x, &abbs->SeqLen);
 	xdr_opaque(x, abbs->SeqBody, abbs->SeqLen);
 	return TRUE;
-    }
-    else {
+    } else {
 	xdr_afs_int32(x, &len);
-	if (len < 0 || len > MAXBS) {bslosers++; return FALSE;}
-	if (!abbs->SeqBody) abbs->SeqBody = (char *) NVALLOC(len);
+	if (len < 0 || len > MAXBS) {
+	    bslosers++;
+	    return FALSE;
+	}
+	if (!abbs->SeqBody)
+	    abbs->SeqBody = (char *)NVALLOC(len);
 	abbs->SeqLen = len;
 	xdr_opaque(x, abbs->SeqBody, len);
 	return TRUE;
     }
 }
 
-xdr_BBS(x, abbs)
-    XDR *x;
-    struct BBS *abbs; {
+bool_t
+xdr_BBS(XDR * x, struct BBS * abbs)
+{
     afs_int32 maxLen, len;
     if (x->x_op == XDR_FREE) {
 	NVFREE(abbs->SeqBody, abbs->MaxSeqLen);
@@ -190,12 +185,15 @@ xdr_BBS(x, abbs)
 	xdr_afs_int32(x, &abbs->SeqLen);
 	xdr_opaque(x, abbs->SeqBody, abbs->SeqLen);
 	return TRUE;
-    }
-    else {
+    } else {
 	xdr_afs_int32(x, &maxLen);
 	xdr_afs_int32(x, &len);
-	if (len < 0 || len > MAXBS || len > maxLen) {bslosers++; return FALSE;}
-	if (!abbs->SeqBody) abbs->SeqBody = (char *) NVALLOC(maxLen);
+	if (len < 0 || len > MAXBS || len > maxLen) {
+	    bslosers++;
+	    return FALSE;
+	}
+	if (!abbs->SeqBody)
+	    abbs->SeqBody = (char *)NVALLOC(maxLen);
 	abbs->MaxSeqLen = maxLen;
 	abbs->SeqLen = len;
 	xdr_opaque(x, abbs->SeqBody, len);
@@ -203,9 +201,9 @@ xdr_BBS(x, abbs)
     }
 }
 
-xdr_AFSAccessList(x, abbs)
-    XDR *x;
-    struct BBS *abbs; {
+bool_t
+xdr_AFSAccessList(XDR * x, AFSAccessList * abbs)
+{
     afs_int32 maxLen, len;
     if (x->x_op == XDR_FREE) {
 	NVFREE(abbs->SeqBody, abbs->MaxSeqLen);
@@ -217,12 +215,15 @@ xdr_AFSAccessList(x, abbs)
 	xdr_afs_int32(x, &abbs->SeqLen);
 	xdr_opaque(x, abbs->SeqBody, abbs->SeqLen);
 	return TRUE;
-    }
-    else {
+    } else {
 	xdr_afs_int32(x, &maxLen);
 	xdr_afs_int32(x, &len);
-	if (len < 0 || len > MAXBS || len > maxLen) {bslosers++; return FALSE;}
-	if (!abbs->SeqBody) abbs->SeqBody = (char *) NVALLOC(maxLen);
+	if (len < 0 || len > MAXBS || len > maxLen) {
+	    bslosers++;
+	    return FALSE;
+	}
+	if (!abbs->SeqBody)
+	    abbs->SeqBody = (char *)NVALLOC(maxLen);
 	abbs->MaxSeqLen = maxLen;
 	abbs->SeqLen = len;
 	xdr_opaque(x, abbs->SeqBody, len);

@@ -5,51 +5,28 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-DEST=@DEST@
-TOP_INCDIR=@TOP_INCDIR@
-TOP_LIBDIR=@TOP_LIBDIR@
-prefix=@prefix@
-exec_prefix=@exec_prefix@
-bindir=@bindir@
-sbindir=@sbindir@
-libexecdir=@libexecdir@
-libdir=@libdir@
-includedir=@includedir@
-mandir=@mandir@
-afssrvbindir=@afssrvbindir@
-afssrvsbindir=@afssrvsbindir@
-afssrvlibexecdir=@afssrvlibexecdir@
-COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
-RXGEN=${TOP_SRCDIR}/rxgen/rxgen
-TOP_SRCDIR=@TOP_SRCDIR@
-SYS_NAME=@AFS_SYSNAME@
-
-SHELL    =/bin/sh
-
-include ../config/Makefile.${SYS_NAME}
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
 
 BUTMOBJS    =file_tm.o
 BUTMLIBS    =libbutm.a
 BUTMINCLS   =${TOP_INCDIR}/afs/com_err.h ${TOP_INCDIR}/afs/butm.h
-BUTMINCLUDE =-I${TOP_INCDIR}
 
 CC      = ${MT_CC}
-CFLAGS  = ${DBG} -w -I${TOP_SRCDIR}/config ${MT_CFLAGS} @XBSA_CFLAGS@ ${BUTMINCLUDE}
+CFLAGS  = ${COMMON_CFLAGS} -I${TOP_SRCDIR}/volser ${MT_CFLAGS} @XBSA_CFLAGS@ -I${BUCOORD} -I${VOLSER} -I../bucoord -I../volser
 
-LDFLAGS = ${DBG} ${XLDFLAGS}
+LWP     = ${srcdir}/../lwp
+BUTM    = ${srcdir}/../butm
+BUTC    = ${srcdir}/../butc
+BUCOORD = ${srcdir}/../bucoord
+VOLSER  = ${srcdir}/../volser
 
-LWP     =../lwp
-BUTM    =../butm
-BUTC    =../butc
-BUCOORD = ../bucoord
-VOLSER  = ../volser
+BUCOORDOBJS=ubik_db_if.o ../bucoord/volstub.o ../bucoord/dlq.o \
+	    status.o ../bucoord/bucoord_errs.o
 
-BUCOORDOBJS=ubik_db_if.o ${BUCOORD}/volstub.o ${BUCOORD}/dlq.o \
-	    status.o ${BUCOORD}/bucoord_errs.o
-
-VOLSERLIBOBJ=${VOLSER}/volint.cs.o  vsprocs.o              ${VOLSER}/vsutils.o \
-            ${VOLSER}/lockprocs.o  ${VOLSER}/volint.xdr.o ${VOLSER}/volerr.o \
-            ${VOLSER}/volint.ss.o  AFS_component_version_number.o 
+VOLSERLIBOBJ=../volser/volint.cs.o  vsprocs.o ../volser/vsutils.o \
+            ../volser/lockprocs.o ../volser/volint.xdr.o ../volser/volerr.o \
+            ../volser/volint.ss.o  AFS_component_version_number.o 
 VOLSERLIBS  =libvolser.a
 
 LWPOBJS     =lock.o
@@ -93,7 +70,7 @@ BUTCLIBS=${TOP_LIBDIR}/libbudb.a \
 all: butc
 
 butc: ${BUTCOBJS} ${BUTCLIBS}
-	${CC} ${CFLAGS} ${BUTCOBJS} ${BUTCLIBS} ${MTLIBS} ${XLIBS} -o butc
+	${CC} ${CFLAGS} ${BUTCOBJS} ${BUTCLIBS} ${MT_LIBS} ${XLIBS} -o butc
 
 libvolser.a: vsprocs.o ${VOLSERLIBOBJ}
 	-$(RM) -f $@

@@ -1,0 +1,16 @@
+MountPoint /afs
+ConfDir /usr/afswsp/etc
+CacheDir /usr/afswsp/cache
+LogFile /usr/afswsp/log/libjafs.log
+CacheBlocks 40000
+CacheFiles 3000
+CacheStatEntries 3000
+DCacheSize 100
+VCacheSize 1000
+ChunkSize 0
+CloseSynch 0
+Debug 0
+NDaemons 3
+CacheFlags -1
+
+

@@ -16,14 +16,14 @@ Abstract:	Contains miscellaneous general-purpose macros.
 #define MAXSELECT	20	/* Max no. of file desc. to be checked in select() calls */
 
 /*------------------------------------------------------------*/
-#define	IN	/* Input parameter */
-#define OUT	/* Output parameter */
-#define INOUT	/* Obvious */
+#define	IN			/* Input parameter */
+#define OUT			/* Output parameter */
+#define INOUT			/* Obvious */
 /*------------------------------------------------------------*/
 
 
 /* Ha, ha!! I did not realize C has a builtin XOR operator! */
-#define XOR(a,b)  (unsigned char) (((a&~b)|(~a&b)) & 0377) /* NOTE: a and b should be unsigned char */
+#define XOR(a,b)  (unsigned char) (((a&~b)|(~a&b)) & 0377)	/* NOTE: a and b should be unsigned char */
 
 
 /* Conditional debugging output macros */

@@ -1,0 +1,200 @@
+Copyright 2000, International Business Machines Corporation and others.
+All Rights Reserved.
+
+This software has been released under the terms of the IBM Public
+License.  For details, see the LICENSE file in the top-level source
+directory or online at http://www.openafs.org/dl/license10.html
+
+NOTE: As of the OpenAFS 1.3 release series, Windows 9x platforms are no
+longer officially supported.  It is not clear whether or not the source
+tree will build successfully or not.  As far as we know, no one has tried
+in a very long time.
+
+Building Open AFS on Win 95
+---------------------------
+
+The Windows 95 Open AFS client consists of two main components: the client
+program afsd.exe, which is compiled with the DJGPP compiler and runs in a
+DOS virtual machine; and the utility programs, which are built on Windows
+NT or 9x using the Microsoft Visual C++ compiler V6.0.
+
+afsd.exe
+--------
+
+afsd.exe is built using the DJGPP cross-compiler, executed from Linux.
+It should also be possible to build it using the native DOS DJGPP compiler,
+but we did not try this.  You will need to install the following packages
+from DJGPP and the Coda project.
+
+ftp://ftp.coda.cs.cmu.edu/pub/tools/djgpp-2.01_0.93_glibc-1.i386.rpm
+ftp://ftp.coda.cs.cmu.edu/pub/tools/djgpp-win95ext-2.01_0.93_glibc-1.i386.rpm
+ftp://ftp.coda.cs.cmu.edu/pub/tools/gdb-djgpp-4.16-2.i386.rpm
+
+You will also need the MMAP.VXD and SOCK.VXD from the Coda project.  Source
+is available here:
+ftp://ftp.coda.cs.cmu.edu/pub/coda/src/win95-coda-5.2.0.zip
+
+Follow the Coda instructions to build these VXD's, which you can read here:
+http://www.coda.cs.cmu.edu/doc/html/coda-howto-6.html#ss6.4
+
+Once you have the necessary tools installed, set the following environment
+variables:
+SYS_NAME: set to i386_djgpp
+LINUX_SYS: set to the sysname of the Linux version you are using, e.g.,
+           i386_linux22
+
+The makefile expects to build into a platform directory with symlinks
+into the source directory.  The Perl script "mkdest.pl" in this dir. will
+set this up for you.  To use it, create a directory under the top-level
+dir. (the directory above src) called "i386_djgpp".  Then cd to that
+directory and type "../src/mkdest.pl <absolute path of your src dir.>"
+
+Then execute "make -f Makefile.djgpp" from the top-level directory.
+(You can create a symlink to src/Makefile.djgpp from this dir.)
+The afsd.exe will be built into i386_djgpp/dest/bin.
+
+Build notes:
+
+  The Makefile.djgpp actually builds Linux versions of the utilities
+  rxgen, install, compile_et, and util.a.  It uses the Linux version
+  of param.h which it copies to the afs subdirectory of the above
+  components.  You will need to set SYS_NAME to your Linux system name
+  manually if you want to build these utilities separately.
+
+Utilities and GUI programs
+--------------------------
+
+The rest of the support programs are built as Win32 executables from a
+Windows 9x or NT system.  You will need to set the following environment
+variables:
+
+set SYS_NAME=i386_win95
+set AFSDEV_BUILDTYPE=CHECKED (or FREE if you want to skip debugging info.)
+set AFSDEV_INCLUDE=<path of your Visual C include files>
+set AFSDEV_LIB=<path of your Visual C libs>
+set AFSDEV_BIN=.
+set AFSROOT=<PATH to base of development directory> 
+	e.g. AFSROOT\SRC is source directory of the build tree
+SET _WIN32_IE=0x400
+set OBJ=src or obj, see below
+set MSSDK=<path to sdk header files>, see below
+
+If you are building on a Unix directory exported to Windows through Samba
+or AFS, you can create a platform directory named "i386_win95" using the
+"mkdest.pl" script as described above (run from a Unix system).  This will
+only work on a file system that supports symbolic links.  If you are using
+a platform directory, set the OBJ environment var. to "obj" and create
+a symlink "obj" in the top-level dir. that points to "i386_win95/obj".
+Otherwise, set OBJ to "src" to build the objects with the sources.
+
+The environment variable AFSROOT points to the parent of the AFS src
+directory.  Executables will be built by default in AFSROOT\dest.
+
+Copy the file src\NTMake9x to the parent of the src directory.  You only
+need to do this once.  If you are building on a local drive, copy
+AFSROOT\src\symlink.bat to AFSROOT\.
+
+Follow the NT build instructions in file "README-NT" to perform the build.
+You will be using "NTMake9x" as the top-level makefile, instead of
+"NTMakefile".  Most of the instructions in "README-NT" apply to the Win9x
+build as well.
+
+Build Notes:
+
+1) If you are building the Windows 9x AFS Client Control Panel
+   (win9xpanel), it requires shlwapi.h.  This file can be found in the
+   header files associated with the Windows SDK (95/98 NT or W2000).
+
+2) You can build the Windows 9x client from a Windows NT or W2000 system.
+   This requires you to edit AFSROOT\config\NTMakefile.i386_win95.
+   Change line: DEL = $(AFSROOT)\src\rmbat
+		 to:  DEL = -del  /q /f
+
+3) If you build the W2000 client, then switch to building the Windows 95
+   client (or vice versa), you should clean the previous build by either:
+	nmake -f ntmakefile clean 
+or 	nmake -f ntmake9x clean
+
+4) When building the "comerr" component, the makefile now uses the
+   existing error_table_nt.c file (and touches it so it will be up to date
+   by default.)  If you make changes to the lex or yacc source files and want
+   to rebuild error_table_nt.c, you can simply delete it and rerun make,
+   which will cause the file to be built using lex and yacc.  Make sure
+   you have these utilities on your system.
+
+5) Required DLL's for redistribution
+
+   The AFS Control Panel for Win95/98 requires Microsoft DLL's that can
+   be installed using:
+      VC6RedistSetup_enu.exe
+   This is located at:
+      http://support.microsoft.com/support/kb/articles/Q259/4/03.ASP
+	Two Microsoft DLL's must be included at DEST\WinInstall\Config\.
+	   SHLWAPI.DLL
+	   WININET.DLL  
+	These DLL's will not be left on the target machine, there are only
+	used for installation and removed after installation is complete.
+
+6) Required changes to configuration file .\src\config\NTMakefile.i386_win95
+
+AFSPRODUCT_VERSION  - Product version
+CELLNAME_DEFAULT - The default AFS cell name
+CELLSERVDB_INSTALL - The default name for the CellServDB included in the install script
+CELLSERVDB_WEB  - The default web address to obtain CellServDB
+		  
+For Example:
+
+ .\src\config\NTMakefile.i386_win95  
+   AFSPRODUCT_VERSION=1.1.1a
+   CELLNAME_DEFAULT=openafs.org
+   CELLSERVDB_INSTALL=CellServDB.GrandCentral
+   CELLSERVDB_WEB=http://grand.central.org/dl/cellservdb/CellServDB
+
+Version level may be specified in different formats, for example the following
+forms all have the same version level; however will be displayed differently:
+
+AFSPRODUCT_VERSION=1.1.1a
+AFSPRODUCT_VERSION=1.1.1 a
+AFSPRODUCT_VERSION=1.1.1.1
+AFSPRODUCT_VERSION=1.1.101
+
+6) Installation
+
+   First, execute "nmake /f ntmake9x media" to copy all the client
+   executables and other files to DEST\WinInstall.
+
+   You can then install the client onto a target Windows 9x machine by
+   executing:
+     install.bat <source> <drive> <install dir.> <home cell> <cache size in 1K blocks>
+   For example,
+     install.bat DEST\WinInstall\ c: \afscli almaden.ibm.com 40000
+
+   If you do not wish to use the batch file, you can install the client
+   manually by performing the following steps.
+
+   1. On the target machine, copy all the files from DEST\WinInstall to the
+      install location (usually c:\afscli).
+   2. Add entries to the target's AUTOEXEC.BAT file as follows:
+       set AFSCONF=c:\afscli (replace with your install dir.)
+       path %path%;c:\afscli
+   3. Copy the template.reg file to afscli.reg.  Replace any references
+      to c: and afscli with your install location.  Double click on the
+      afscli.reg file to add the registry entries to the target system.
+   4. Create the following AFS configuration files in the install dir.:
+      - ThisCell:
+        containing the name of your home cell
+      - cache.info:
+        containing your cache configuration.  For example,
+        to configure a cache of 40,000 1KB blocks with a disk cache
+        location of c:\afscache, you would enter in this file:
+            /afs:c:\afscache;40000
+        (The cache location has no effect unless you have enabled
+        the experimental disk cache support.)
+      - CellServDB:
+        the cell server database.  You can get the latest version from AFS:
+        /afs/transarc.com/service/etc/CellServDB.export
+   5. Reboot the target machine.
+   6. You can now start the client by executing the program WinAfsLoad.exe
+      from the install directory.
+
+

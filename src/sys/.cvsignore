@@ -7,3 +7,5 @@ rmtsys.h
 rmtsys.ss.c
 rmtsys.xdr.c
 rmtsysd
+afs.exp
+afsl.exp

@@ -1,4 +1,4 @@
-AC_DEFUN(SOLARIS_UFSVFS_HAS_DQRWLOCK, [
+AC_DEFUN([SOLARIS_UFSVFS_HAS_DQRWLOCK], [
 AC_MSG_CHECKING(for vfs_dqrwlock in struct ufsvfs)
 AC_CACHE_VAL(ac_cv_solaris_ufsvfs_has_dqrwlock,
 [

@@ -45,26 +45,26 @@
 #include <err.h>
 
 static void
-doit (const char *filename)
+doit(const char *filename)
 {
     int fd;
     struct stat sb;
 
-    fd = open (filename, O_RDWR | O_TRUNC | O_CREAT, 0666);
+    fd = open(filename, O_RDWR | O_TRUNC | O_CREAT, 0666);
     if (fd < 0)
-	err (1, "open %s", filename);
-    if (lseek (fd, (off_t)(1024*1024), SEEK_SET) != 1024*1024)
-	err (1, "lseek %s", filename);
-    if (write (fd, "hej", 3) != 3)
-	err (1, "write to %s", filename);
-    if (close (fd) < 0)
-	err (1, "close %s", filename);
-    if (stat (filename, &sb) < 0)
-	err (1, "stat %s", filename);
-    if (unlink (filename) < 0)
-	err (1, "unlink %s", filename);
+	err(1, "open %s", filename);
+    if (lseek(fd, (off_t) (1024 * 1024), SEEK_SET) != 1024 * 1024)
+	err(1, "lseek %s", filename);
+    if (write(fd, "hej", 3) != 3)
+	err(1, "write to %s", filename);
+    if (close(fd) < 0)
+	err(1, "close %s", filename);
+    if (stat(filename, &sb) < 0)
+	err(1, "stat %s", filename);
+    if (unlink(filename) < 0)
+	err(1, "unlink %s", filename);
     if (sb.st_blocks == 0)
-	errx (1, "st_blocks == 0");
+	errx(1, "st_blocks == 0");
 }
 
 int
@@ -72,10 +72,10 @@ main(int argc, char **argv)
 {
 
     if (argc == 1)
-	doit ("foo");
+	doit("foo");
     else if (argc == 2)
-	doit (argv[1]);
+	doit(argv[1]);
     else
-	errx (1, "usage: %s [filename]", argv[0]);
+	errx(1, "usage: %s [filename]", argv[0]);
     return 0;
 }

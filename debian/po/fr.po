@@ -14,21 +14,24 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: openafs 1.2.9-2\n"
-"POT-Creation-Date: 2003-11-20 16:00-0500\n"
-"PO-Revision-Date: 2004-03-09 18:34+0100\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2004-05-21 00:27-0400\n"
+"PO-Revision-Date: 2003-10-16 23:34+0100\n"
 "Last-Translator: Christian Perrier <bubulle@debian.org>\n"
 "Language-Team: French <debian-l10n-french@lists.debian.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=iso-8859-15\n"
 "Content-Transfer-Encoding: 8bit\n"
 
+#. Type: string
 #. Description
 #: ../openafs-client.templates:3
 msgid "What hosts are DB servers for your home cell?"
 msgstr ""
-"Hôtes serveurs de bases de données pour votre cellule locale (« home "
-"cell ») :"
+"Quels hôtes sont serveurs de bases de données pour votre cellule locale "
+"(« home cell ») ?"
 
+#. Type: string
 #. Description
 #: ../openafs-client.templates:3
 msgid ""
@@ -54,11 +57,13 @@ msgstr ""
 "configurée. Quand vous serez prêt, vous pourrez modifier /etc/openafs/afs."
 "conf.client pour mettre en service le client."
 
+#. Type: string
 #. Description
 #: ../openafs-client.templates:16
 msgid "What AFS cell does this workstation belong to?"
-msgstr "Cellule AFS à laquelle ce poste de travail appartient :"
+msgstr "À quelle cellule AFS ce poste de travail appartient-elle ?"
 
+#. Type: string
 #. Description
 #: ../openafs-client.templates:16
 msgid ""
@@ -70,13 +75,17 @@ msgstr ""
 "administratifs. Chaque poste de travail appartient à une cellule. "
 "Habituellement, la cellule est le nom de domaine du site."
 
+#. Type: string
 #. Description
 #: ../openafs-client.templates:24
+#, fuzzy
 msgid "How large is your AFS cache (kB)?"
-msgstr "Taille de votre cache pour AFS (en kilo-octets) :"
+msgstr "Quelle est la taille de votre cache pour AFS (en kilo-octets) ?"
 
+#. Type: string
 #. Description
 #: ../openafs-client.templates:24
+#, fuzzy
 msgid ""
 "AFS uses an  area of the disk to cache remote files for faster access.  This "
 "cache will be mounted on /var/cache/openafs.  It is important that the cache "
@@ -89,12 +98,14 @@ msgstr ""
 "situé. De nombreux utilisateurs choisissent de dédier une partition pour le "
 "cache d'AFS."
 
+#. Type: boolean
 #. Description
 #: ../openafs-client.templates:34
 msgid "Run Openafs client now and at boot?"
 msgstr ""
 "Faut-il lancer le client AFS maintenant, puis au démarrage de la machine ?"
 
+#. Type: boolean
 #. Description
 #: ../openafs-client.templates:34
 msgid ""
@@ -114,11 +125,13 @@ msgstr ""
 "utilisez la commande « /etc/init.d/openafs-client force-start » pour le "
 "lancer quand vous en aurez besoin."
 
+#. Type: boolean
 #. Description
 #: ../openafs-client.templates:45
 msgid "Look up AFS cells in DNS?"
 msgstr "Faut-il chercher les cellules AFS dans le DNS ?"
 
+#. Type: boolean
 #. Description
 #: ../openafs-client.templates:45
 msgid ""
@@ -133,12 +146,14 @@ msgstr ""
 "dans ce fichier, il peut utiliser le DNS pour rechercher des enregistrements "
 "AFSDB qui fourniront cette information."
 
+#. Type: boolean
 #. Description
 #: ../openafs-client.templates:55
 msgid "Encrypt authenticated traffic with AFS fileserver?"
 msgstr ""
 "Faut-il chiffrer le trafic authentifié avec le serveur de fichiers AFS ?"
 
+#. Type: boolean
 #. Description
 #: ../openafs-client.templates:55
 msgid ""
@@ -154,11 +169,13 @@ msgstr ""
 "confidentielles, il fournit une certaine forme de confidentialité et peut "
 "rendre une attaque non préparée nettement plus difficile."
 
+#. Type: boolean
 #. Description
 #: ../openafs-client.templates:65
 msgid "Dynamically generate the contents of /afs?"
 msgstr "Faut-il gérer le contenu de /afs dynamiquement ?"
 
+#. Type: boolean
 #. Description
 #: ../openafs-client.templates:65
 msgid ""
@@ -173,8 +190,10 @@ msgstr ""
 "dynamiquement le contenu de /afs en se servant de /etc/openafs/CellServDB et "
 "du DNS."
 
+#. Type: boolean
 #. Description
 #: ../openafs-client.templates:65
+#, fuzzy
 msgid ""
 "If you generate /afs dynamically, you may need to create /etc/openafs/"
 "CellAlias to include aliases for common cells. DO NOT SELECT THIS OPTION IF "
@@ -185,6 +204,7 @@ msgstr ""
 "CHOISISSEZ PAS CETTE OPTION si cette machine est le premier serveur de bases "
 "de données d'une nouvelle cellule."
 
+#. Type: boolean
 #. Description
 #: ../openafs-client.templates:78
 msgid "Use fakestat to avoid hangs when listing /afs?"
@@ -192,6 +212,7 @@ msgstr ""
 "Faut-il utiliser fakestat pour éviter les erreurs lors de l'affichage du "
 "contenu de /afs ?"
 
+#. Type: boolean
 #. Description
 #: ../openafs-client.templates:78
 msgid ""
@@ -209,11 +230,13 @@ msgstr ""
 "comporte une option permettant de simuler les réponses à ces requêtes pour "
 "éviter ces plantages. Cette option est utile dans la plupart des cas."
 
+#. Type: string
 #. Description
 #: ../openafs-fileserver.templates:3
 msgid "What cell does this server serve files for?"
 msgstr "Pour quelle cellule ce serveur est-il un serveur de fichiers ?"
 
+#. Type: string
 #. Description
 #: ../openafs-fileserver.templates:3
 msgid ""
@@ -226,11 +249,13 @@ msgstr ""
 "volumes. Normalement, cette cellule est la même que celle à laquelle "
 "appartient le client."
 
+#. Type: boolean
 #. Description
 #: ../openafs-fileserver.templates:11
 msgid "Upgrading will move files to new locations; continue?"
 msgstr "La mise à jour va déplacer des fichiers. Faut-il continuer ?"
 
+#. Type: boolean
 #. Description
 #: ../openafs-fileserver.templates:11
 msgid ""
@@ -250,11 +275,13 @@ msgstr ""
 "modifications de configuration que vous ferez avant d'avoir effectué ces "
 "opérations seront perdues."
 
+#. Type: note
 #. Description
 #: ../openafs-fileserver.templates:22
 msgid "OpenAFS Fileserv Probably does not work!"
 msgstr "Le serveur OpenAFS ne fonctionne probablement pas !"
 
+#. Type: note
 #. Description
 #: ../openafs-fileserver.templates:22
 msgid ""

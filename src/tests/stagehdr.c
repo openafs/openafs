@@ -38,13 +38,15 @@
 #include "xf_errs.h"
 #include "stagehdr.h"
 
-static afs_uint32 hdr_checksum(char *buf, int size)
+static afs_uint32
+hdr_checksum(char *buf, int size)
 {
-  afs_uint32 sum = 0, n = size / sizeof(afs_uint32), *words = (afs_uint32 *)buf;
+    afs_uint32 sum = 0, n = size / sizeof(afs_uint32), *words =
+	(afs_uint32 *) buf;
 
-  while (--n)
-    sum += ntohl(*words++);
-  return sum;
+    while (--n)
+	sum += ntohl(*words++);
+    return sum;
 }
 
 
@@ -56,95 +58,107 @@ static afs_uint32 hdr_checksum(char *buf, int size)
  * Iff there is no header, returns DSERR_MAGIC and leaves us
  * positioned where we started.
  */
-afs_uint32 ParseStageHdr(XFILE *X, unsigned char *tag, backup_system_header *hdr)
+afs_uint32
+ParseStageHdr(XFILE * X, unsigned char *tag, backup_system_header * hdr)
 {
-  char buf[STAGE_HDRLEN];
-  struct stage_header *bckhdr = (struct stage_header *)buf;
-  u_int64 where;
-  afs_uint32 r;
+    char buf[STAGE_HDRLEN];
+    struct stage_header *bckhdr = (struct stage_header *)buf;
+    u_int64 where;
+    afs_uint32 r;
 
-  if (r = xftell(X, &where)) return r;
-  if (hdr) memset(hdr, 0, sizeof(*hdr));
-  if (tag) {
-    if (*tag != STAGE_VERSMIN) return DSERR_MAGIC;
-    buf[0] = *tag;
-    r = xfread(X, buf + 1, STAGE_HDRLEN - 1);
-  } else {
-    r = xfread(X, buf, STAGE_HDRLEN);
-  }
-
-  if (r == ERROR_XFILE_EOF) {
-    r = xfseek(X, &where);
-    return r ? r : DSERR_MAGIC;
-  } else if (r) return r;
-
-  if (bckhdr->c_vers < STAGE_VERSMIN
-  ||  ntohl(bckhdr->c_magic) != STAGE_MAGIC
-  ||  hdr_checksum(buf, STAGE_HDRLEN) != STAGE_CHECKSUM) {
-    r = xfseek(X, &where);
-    return r ? r : DSERR_MAGIC;
-  }
-
-  if (hdr) {
-    hdr->version   = bckhdr->c_vers;
-    hdr->from_date = ntohl(bckhdr->c_fdate);
-    hdr->to_date   = ntohl(bckhdr->c_tdate);
-    hdr->dump_date = ntohl(bckhdr->c_time);
-    hdr->filenum   = ntohl(bckhdr->c_filenum);
-    hdr->volid     = ntohl(bckhdr->c_id);
-    hdr->dumplen   = ntohl(bckhdr->c_length);
-    hdr->level     = ntohl(bckhdr->c_level);
-    hdr->magic     = ntohl(bckhdr->c_magic);
-    hdr->cksum     = ntohl(bckhdr->c_checksum);
-    hdr->flags     = ntohl(bckhdr->c_flags);
-    hdr->server    = malloc(strlen(bckhdr->c_host) + 1);
-    hdr->part      = malloc(strlen(bckhdr->c_disk) + 1);
-    hdr->volname   = malloc(strlen(bckhdr->c_name) + 1);
-
-    if (!hdr->server || !hdr->part || !hdr->volname) {
-      if (hdr->server)  free(hdr->server);
-      if (hdr->part)    free(hdr->part);
-      if (hdr->volname) free(hdr->volname);
-      return ENOMEM;
+    if (r = xftell(X, &where))
+	return r;
+    if (hdr)
+	memset(hdr, 0, sizeof(*hdr));
+    if (tag) {
+	if (*tag != STAGE_VERSMIN)
+	    return DSERR_MAGIC;
+	buf[0] = *tag;
+	r = xfread(X, buf + 1, STAGE_HDRLEN - 1);
+    } else {
+	r = xfread(X, buf, STAGE_HDRLEN);
     }
-    strcpy(hdr->server,  bckhdr->c_host);
-    strcpy(hdr->part,    bckhdr->c_disk);
-    strcpy(hdr->volname, bckhdr->c_name);
-  }
 
-  if (tag) return ReadByte(X, tag);
-  else return 0;
+    if (r == ERROR_XFILE_EOF) {
+	r = xfseek(X, &where);
+	return r ? r : DSERR_MAGIC;
+    } else if (r)
+	return r;
+
+    if (bckhdr->c_vers < STAGE_VERSMIN
+	|| ntohl(bckhdr->c_magic) != STAGE_MAGIC
+	|| hdr_checksum(buf, STAGE_HDRLEN) != STAGE_CHECKSUM) {
+	r = xfseek(X, &where);
+	return r ? r : DSERR_MAGIC;
+    }
+
+    if (hdr) {
+	hdr->version = bckhdr->c_vers;
+	hdr->from_date = ntohl(bckhdr->c_fdate);
+	hdr->to_date = ntohl(bckhdr->c_tdate);
+	hdr->dump_date = ntohl(bckhdr->c_time);
+	hdr->filenum = ntohl(bckhdr->c_filenum);
+	hdr->volid = ntohl(bckhdr->c_id);
+	hdr->dumplen = ntohl(bckhdr->c_length);
+	hdr->level = ntohl(bckhdr->c_level);
+	hdr->magic = ntohl(bckhdr->c_magic);
+	hdr->cksum = ntohl(bckhdr->c_checksum);
+	hdr->flags = ntohl(bckhdr->c_flags);
+	hdr->server = malloc(strlen(bckhdr->c_host) + 1);
+	hdr->part = malloc(strlen(bckhdr->c_disk) + 1);
+	hdr->volname = malloc(strlen(bckhdr->c_name) + 1);
+
+	if (!hdr->server || !hdr->part || !hdr->volname) {
+	    if (hdr->server)
+		free(hdr->server);
+	    if (hdr->part)
+		free(hdr->part);
+	    if (hdr->volname)
+		free(hdr->volname);
+	    return ENOMEM;
+	}
+	strcpy(hdr->server, bckhdr->c_host);
+	strcpy(hdr->part, bckhdr->c_disk);
+	strcpy(hdr->volname, bckhdr->c_name);
+    }
+
+    if (tag)
+	return ReadByte(X, tag);
+    else
+	return 0;
 }
 
 
 /* Dump a stage backup header */
-afs_uint32 DumpStageHdr(XFILE *OX, backup_system_header *hdr)
+afs_uint32
+DumpStageHdr(XFILE * OX, backup_system_header * hdr)
 {
-  char buf[STAGE_HDRLEN];
-  struct stage_header *bckhdr = (struct stage_header *)buf;
-  afs_uint32 checksum;
-  afs_uint32 r;
+    char buf[STAGE_HDRLEN];
+    struct stage_header *bckhdr = (struct stage_header *)buf;
+    afs_uint32 checksum;
+    afs_uint32 r;
 
-  memset(buf, 0, STAGE_HDRLEN);
-  bckhdr->c_vers     = hdr->version;
-  bckhdr->c_fdate    = htonl(hdr->from_date);
-  bckhdr->c_tdate    = htonl(hdr->to_date);
-  bckhdr->c_filenum  = htonl(hdr->filenum);
-  bckhdr->c_time     = htonl(hdr->dump_date);
-  bckhdr->c_id       = htonl(hdr->volid);
-  bckhdr->c_length   = htonl(hdr->dumplen);
-  bckhdr->c_level    = htonl(hdr->level);
-  bckhdr->c_magic    = htonl(STAGE_MAGIC);
-  bckhdr->c_flags    = htonl(hdr->flags);
+    memset(buf, 0, STAGE_HDRLEN);
+    bckhdr->c_vers = hdr->version;
+    bckhdr->c_fdate = htonl(hdr->from_date);
+    bckhdr->c_tdate = htonl(hdr->to_date);
+    bckhdr->c_filenum = htonl(hdr->filenum);
+    bckhdr->c_time = htonl(hdr->dump_date);
+    bckhdr->c_id = htonl(hdr->volid);
+    bckhdr->c_length = htonl(hdr->dumplen);
+    bckhdr->c_level = htonl(hdr->level);
+    bckhdr->c_magic = htonl(STAGE_MAGIC);
+    bckhdr->c_flags = htonl(hdr->flags);
 
-  strcpy(bckhdr->c_host, hdr->server);
-  strcpy(bckhdr->c_disk, hdr->part);
-  strcpy(bckhdr->c_name, hdr->volname);
+    strcpy(bckhdr->c_host, hdr->server);
+    strcpy(bckhdr->c_disk, hdr->part);
+    strcpy(bckhdr->c_name, hdr->volname);
 
-  /* Now, compute the checksum */
-  checksum = hdr_checksum(buf, STAGE_HDRLEN);
-  bckhdr->c_checksum = htonl(STAGE_CHECKSUM - checksum);
+    /* Now, compute the checksum */
+    checksum = hdr_checksum(buf, STAGE_HDRLEN);
+    bckhdr->c_checksum = htonl(STAGE_CHECKSUM - checksum);
 
-  if (r = xfwrite(OX, buf, STAGE_HDRLEN)) return r;
-  return 0;
+    if (r = xfwrite(OX, buf, STAGE_HDRLEN))
+	return r;
+    return 0;
 }

@@ -1,4 +1,4 @@
-# $Id: Makefile.am.common,v 1.1 2001/07/05 00:54:58 hartmans Exp $
+# $Id: Makefile.am.common,v 1.1 2001/06/05 20:17:46 shadow Exp $
 
 INCLUDES+=-I$(top_builddir)/include 
 

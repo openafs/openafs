@@ -168,6 +168,7 @@ void WIZARD::SetDialogTemplate (int iddTemplate, int idcLeftPane, int idcRightPa
 void WIZARD::SetGraphic (int idbGraphic16, int idbGraphic256)
 {
    LPRGBQUAD pargb = NULL;
+   RGBQUAD argb[256];
 
    m_idbGraphic16 = idbGraphic16;
    m_idbGraphic256 = idbGraphic256;
@@ -202,7 +203,6 @@ void WIZARD::SetGraphic (int idbGraphic16, int idbGraphic256)
          HDC hdc = CreateCompatibleDC (NULL);
          HBITMAP bmpOld = (HBITMAP)SelectObject (hdc, m_bmpGraphic256);
 
-         RGBQUAD argb[256];
          GetDIBColorTable (hdc, 0, 256, argb);
          pargb = argb;
 

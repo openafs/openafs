@@ -47,7 +47,7 @@
 #include <err.h>
 
 #ifdef RCSID
-RCSID("$Id: mmap-and-read.c,v 1.1 2002/01/22 19:54:42 hartmans Exp $");
+RCSID("$Id: mmap-and-read.c,v 1.2 2003/07/15 23:17:01 shadow Exp $");
 #endif
 
 #ifndef MAP_FAILED
@@ -55,10 +55,8 @@ RCSID("$Id: mmap-and-read.c,v 1.1 2002/01/22 19:54:42 hartmans Exp $");
 #endif
 
 static char *
-generate_random_file (const char *filename,
-		      unsigned npages,
-		      unsigned pagesize,
-		      int writep)
+generate_random_file(const char *filename, unsigned npages, unsigned pagesize,
+		     int writep)
 {
     int fd;
     char *buf, *fbuf;
@@ -67,99 +65,99 @@ generate_random_file (const char *filename,
     int flags;
     size_t sz = npages * pagesize;
 
-    buf = malloc (sz);
+    buf = malloc(sz);
     if (buf == NULL)
-	err (1, "malloc %u", (unsigned)sz);
+	err(1, "malloc %u", (unsigned)sz);
 
     for (i = 0; i < npages; ++i)
-	memset (buf + pagesize * i, '0' + i, pagesize);
+	memset(buf + pagesize * i, '0' + i, pagesize);
 
-    fd = open (filename, O_RDWR | O_CREAT | O_TRUNC, 0666);
+    fd = open(filename, O_RDWR | O_CREAT | O_TRUNC, 0666);
     if (fd < 0)
-	err (1, "open %s", filename);
+	err(1, "open %s", filename);
 
-    if (ftruncate (fd, sz) < 0)
-	err (1, "ftruncate");
+    if (ftruncate(fd, sz) < 0)
+	err(1, "ftruncate");
 
     prot = PROT_READ | PROT_WRITE;
     flags = MAP_SHARED;
 
-    fbuf = mmap (0, sz, prot, flags, fd, 0);
+    fbuf = mmap(0, sz, prot, flags, fd, 0);
     if (fbuf == (void *)MAP_FAILED)
-	err (1, "mmap");
+	err(1, "mmap");
 
     if (writep) {
-	if(write(fd, "hej\n", 4) != 4)
+	if (write(fd, "hej\n", 4) != 4)
 	    err(1, "write");
     }
 
-    memcpy (fbuf, buf, sz);
+    memcpy(fbuf, buf, sz);
 
 #if 0
-    if (msync (fbuf, sz, MS_SYNC))
+    if (msync(fbuf, sz, MS_SYNC))
 	err(1, "msync");
 #endif
 
-    if (munmap (fbuf, sz) != 0)
-	err (1, "munmap");
+    if (munmap(fbuf, sz) != 0)
+	err(1, "munmap");
 
-    if (close (fd))
-	err (1, "close");
+    if (close(fd))
+	err(1, "close");
     return buf;
 }
 
 static char *
-read_file (int fd, size_t sz)
+read_file(int fd, size_t sz)
 {
     char *buf;
     ssize_t ret;
 
-    buf = malloc (sz);
+    buf = malloc(sz);
     if (buf == NULL)
-	err (1, "malloc %u", (unsigned)sz);
-    ret = read (fd, buf, sz);
+	err(1, "malloc %u", (unsigned)sz);
+    ret = read(fd, buf, sz);
     if (ret < 0)
-        err (1, "read");
+	err(1, "read");
     if (ret != sz)
-        errx(1, "short read %d < %u", (int)ret, (unsigned)sz);
+	errx(1, "short read %d < %u", (int)ret, (unsigned)sz);
     return buf;
 }
 
 static int
-test (const char *file, int writep)
+test(const char *file, int writep)
 {
-    const size_t sz  = 4 * getpagesize();
+    const size_t sz = 4 * getpagesize();
     char *buf;
     char *malloc_buf;
     int fd;
     int ret;
 
-    buf = generate_random_file (file, 4, getpagesize(), writep);
+    buf = generate_random_file(file, 4, getpagesize(), writep);
 
-    fd = open (file, O_RDONLY, 0);
+    fd = open(file, O_RDONLY, 0);
     if (fd < 0)
-	err (1, "open %s", file);
+	err(1, "open %s", file);
 
-    malloc_buf = read_file (fd, sz);
-    close (fd);
-    ret = memcmp (buf, malloc_buf, sz);
-    free (buf);
-    
+    malloc_buf = read_file(fd, sz);
+    close(fd);
+    ret = memcmp(buf, malloc_buf, sz);
+    free(buf);
+
     return ret;
 }
 
 
 int
-main (int argc, char **argv)
+main(int argc, char **argv)
 {
 
 
-    srand (time(NULL));
+    srand(time(NULL));
 
-    if (test ("foo", 1) != 0)
-	errx (1, "test(1)");
-    if (test ("bar", 0) != 0)
-	errx (1, "test(2)");
+    if (test("foo", 1) != 0)
+	errx(1, "test(1)");
+    if (test("bar", 0) != 0)
+	errx(1, "test(2)");
 
     return 0;
 }

@@ -1,7 +1,10 @@
 /*
- * (C) Copyright Transarc Corporation 1989
- * Licensed Materials - Property of Transarc
+ * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
  */
 
 /*------------------------------------------------------------------------
@@ -10,30 +13,28 @@
  * Description:
  *	AFS workstation configuration tool.
  *
- * Author:
- *	Transarc Corporation & Carnegie Mellon University
  *------------------------------------------------------------------------*/
 #include <afs/param.h>
-#include <stdio.h>		/*I/O stuff*/
+#include <stdio.h>		/*I/O stuff */
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>
 #endif
-#include <sys/types.h>		/*Low-level type definitions*/
-#include <sys/stat.h>		/*Stat buffer defs*/
-#include <sys/param.h>		/*Machine-type dependent params*/
+#include <sys/types.h>		/*Low-level type definitions */
+#include <sys/stat.h>		/*Stat buffer defs */
+#include <sys/param.h>		/*Machine-type dependent params */
 #if	defined(AFS_SUN_ENV)
-#include <sys/ioccom.h>         /* for _IOW macro */
+#include <sys/ioccom.h>		/* for _IOW macro */
 #endif
-#include <afs/com_err.h>	/*Error compiler package*/
-#include <afs/cmd.h>		/*Command interpretation library*/
+#include <afs/com_err.h>	/*Error compiler package */
+#include <afs/cmd.h>		/*Command interpretation library */
 
 #include <netinet/in.h>
 #include <afs/vice.h>
 #include <afs/venus.h>
 
-#include "globals.h"		/*Our own set of global defs*/
-#include "package.h"		/*Generally-used definitions*/
-#include "systype.h"		/*Systype string*/
+#include "globals.h"		/*Our own set of global defs */
+#include "package.h"		/*Generally-used definitions */
+#include "systype.h"		/*Systype string */
 
 /*
  * Command line parameter indices.
@@ -47,7 +48,7 @@
 #define P_REBOOTFILES	6
 #define P_DEBUG		7
 
-extern int test_linecounter;	/*Line number currently being parsed*/
+extern int test_linecounter;	/*Line number currently being parsed */
 char *emalloc();
 int check();
 int update();
@@ -57,22 +58,22 @@ int update();
  * level, handle files causing reboot, don't overwrite protected files,
  * and turn debugging output off.
  */
-int	status = status_noerror;	/*Start off with no errors*/
+int status = status_noerror;	/*Start off with no errors */
 
-int	opt_lazy     = FALSE;	/*Perform all actions*/
-int	opt_silent   = FALSE;	/*Don't be overly silent*/
-int	opt_verbose  = FALSE;	/*Don't be overly verbose*/
-int	opt_stdin    = FALSE;	/*Read configuration from stdin*/
-int	opt_reboot   = TRUE;	/*Update boot-critical files (e.g., vmunix)*/
+int opt_lazy = FALSE;		/*Perform all actions */
+int opt_silent = FALSE;		/*Don't be overly silent */
+int opt_verbose = FALSE;	/*Don't be overly verbose */
+int opt_stdin = FALSE;		/*Read configuration from stdin */
+int opt_reboot = TRUE;		/*Update boot-critical files (e.g., vmunix) */
 #ifdef KFLAG
-int	opt_kflag = TRUE;	/*Why was this KFLAG stuff ifdefed?*/
+int opt_kflag = TRUE;		/*Why was this KFLAG stuff ifdefed? */
 #endif /* KFLAG */
-int	opt_debug = FALSE;	/*Turn off debugging output*/
+int opt_debug = FALSE;		/*Turn off debugging output */
 
-CTREEPTR config_root;		/*Top of the config tree*/
+CTREEPTR config_root;		/*Top of the config tree */
 
-char *conffile = "/etc/package";	/*Base configuration file*/
-char filename[MAXPATHLEN];		/*Chosen configuration file name*/
+char *conffile = "/etc/package";	/*Base configuration file */
+char filename[MAXPATHLEN];	/*Chosen configuration file name */
 
 /*------------------------------------------------------------------------
  * PRIVATE packageExecute
@@ -95,13 +96,13 @@ char filename[MAXPATHLEN];		/*Chosen configuration file name*/
  *	As described.
  *------------------------------------------------------------------------*/
 
-static void packageExecute()
+static void
+packageExecute()
+{				/*packageExecute */
 
-{ /*packageExecute*/
-
-    FILE *fp;			/*Descriptor for configuration filename*/
-    int code;			/*Return value from functions*/
-    static char parse_err[80];	/*Parsing error string*/
+    FILE *fp;			/*Descriptor for configuration filename */
+    int code;			/*Return value from functions */
+    static char parse_err[80];	/*Parsing error string */
 
     /*
      * If we're getting our configuration info from stdin, go straight
@@ -116,8 +117,7 @@ static void packageExecute()
 		    test_linecounter);
 	    fatal(parse_err);
 	}
-    }
-    else {
+    } else {
 	verbose_message("Loading configuration file '%s'", filename);
 	fp = efopen(filename, "r");
 	verbose_message("Building configuration tree");
@@ -128,7 +128,7 @@ static void packageExecute()
 		    test_linecounter);
 	    fatal(parse_err);
 	}
-	(void) fclose(fp);
+	(void)fclose(fp);
     }
 
     /*
@@ -156,28 +156,29 @@ static void packageExecute()
      */
     verbose_message("Done");
 
-} /*packageExecute*/
+}				/*packageExecute */
 
 #define MAXSIZE 2048
 struct output {
-  afs_int32 found;
-  char  name[MAXSIZE];
+    afs_int32 found;
+    char name[MAXSIZE];
 } sysoutput;
 
-char *getsystype()
+char *
+getsystype()
 {
-  afs_int32            code;
-  struct ViceIoctl data;
-  
-  data.in       = (char *)&sysoutput;
-  data.out      = (char *)&sysoutput;
-  data.out_size = MAXSIZE;
-  data.in_size  = sizeof(afs_int32);
+    afs_int32 code;
+    struct ViceIoctl data;
 
-  code = pioctl(0, VIOC_AFS_SYSNAME, &data, 1);
-  if (!code && sysoutput.found) 
-      return(sysoutput.name);
-  return(SYS_NAME);
+    data.in = (char *)&sysoutput;
+    data.out = (char *)&sysoutput;
+    data.out_size = MAXSIZE;
+    data.in_size = sizeof(afs_int32);
+
+    code = pioctl(0, VIOC_AFS_SYSNAME, &data, 1);
+    if (!code && sysoutput.found)
+	return (sysoutput.name);
+    return (SYS_NAME);
 }
 
 /*------------------------------------------------------------------------
@@ -202,12 +203,9 @@ char *getsystype()
  *	Initializes this program.
  *------------------------------------------------------------------------*/
 
-static int packageInit(as, arock)
-    struct cmd_syndesc *as;
-    char *arock;
-
-{ /*packageInit*/
-
+static int
+packageInit(struct cmd_syndesc *as, char *arock)
+{				/*packageInit */
     systype = getsystype();
 
     /*
@@ -224,7 +222,7 @@ static int packageInit(as, arock)
 	/*
 	 * Pull out the configuration file name, tack on the sysname.
 	 */
-	sprintf(filename,"%s.%s", as->parms[P_CONFIG].items->data, systype);
+	sprintf(filename, "%s.%s", as->parms[P_CONFIG].items->data, systype);
     }
 
     if (as->parms[P_FULLCONFIG].items != 0) {
@@ -232,11 +230,13 @@ static int packageInit(as, arock)
 	 * Make sure we use only one of -config and -fullconfig.
 	 */
 	if (as->parms[P_CONFIG].items != 0) {
-	    message("Can't use the -config and -fullconfig switches together");
+	    message
+		("Can't use the -config and -fullconfig switches together");
 	    status = -1;
 	    exit(status);
-	} /*Switch conflict*/
+	}
 
+	/*Switch conflict */
 	/*
 	 * If ``stdin'' is the configuration file to use, make sure we
 	 * remember that fact.
@@ -244,11 +244,10 @@ static int packageInit(as, arock)
 	if (strcmp(as->parms[P_FULLCONFIG].items->data, "stdin") == 0) {
 	    opt_stdin = TRUE;
 	    filename[0] = '\0';
-	}
-	else
+	} else
 	    sprintf(filename, "%s", as->parms[P_FULLCONFIG].items->data);
-    } /*Full config file name given*/
-
+    }
+    /*Full config file name given */
     if (as->parms[P_OVERWRITE].items != 0)
 	opt_kflag = FALSE;
     else
@@ -265,8 +264,7 @@ static int packageInit(as, arock)
 	    message("Can't use the -silent and -verbose flags together");
 	    status = -1;
 	    exit(status);
-	}
-	else
+	} else
 	    opt_silent = TRUE;
     }
 
@@ -281,18 +279,16 @@ static int packageInit(as, arock)
     packageExecute();
     exit(status);
 
-} /*packageInit*/
+}				/*packageInit */
 
 #include "AFS_component_version_number.c"
 
-main(argc, argv)
-    int argc;
-    char **argv;
+int
+main(int argc, char **argv)
+{				/*main */
 
-{ /*main*/
-
-    register afs_int32 code;			/*Return code*/
-    register struct cmd_syndesc	*ts;	/*Ptr to cmd line syntax descriptor*/
+    register afs_int32 code;	/*Return code */
+    register struct cmd_syndesc *ts;	/*Ptr to cmd line syntax descriptor */
 
 #ifdef	AFS_AIX32_ENV
     /*
@@ -302,15 +298,15 @@ main(argc, argv)
      * generated which, in many cases, isn't too useful.
      */
     struct sigaction nsa;
-    
+
     sigemptyset(&nsa.sa_mask);
     nsa.sa_handler = SIG_DFL;
     nsa.sa_flags = SA_FULLDUMP;
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
     /*
-      * Set file mode creation mask.
-      */
+     * Set file mode creation mask.
+     */
     (void)umask(0);
 
     /*
@@ -328,8 +324,7 @@ main(argc, argv)
 		"show what would be done, but don't do it");
     cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL,
 		"give more details about what's happening");
-    cmd_AddParm(ts, "-silent", CMD_FLAG, CMD_OPTIONAL,
-		"supress all output");
+    cmd_AddParm(ts, "-silent", CMD_FLAG, CMD_OPTIONAL, "supress all output");
     cmd_AddParm(ts, "-rebootfiles", CMD_FLAG, CMD_OPTIONAL,
 		"don't handle boot-critical files");
     cmd_AddParm(ts, "-debug", CMD_FLAG, CMD_OPTIONAL,
@@ -346,8 +341,8 @@ main(argc, argv)
      */
     code = cmd_Dispatch(argc, argv);
     if (code) {
-      com_err(argv[0], code, "while dispatching command line");
-      exit(-1);
+	com_err(argv[0], code, "while dispatching command line");
+	exit(-1);
     }
 
-} /*main*/
+}				/*main */

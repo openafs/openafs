@@ -14,17 +14,18 @@
  *
  */
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/SOLARIS/osi_inode.c,v 1.1.1.8 2002/05/10 23:44:12 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/afs/SOLARIS/osi_inode.c,v 1.15 2004/06/24 17:38:24 shadow Exp $");
 
-#include "../afs/sysincludes.h"	/* Standard vendor system headers */
-#include "../afs/afsincludes.h"	/* Afs-based standard headers */
-#include "../afs/osi_inode.h"
-#include "../afs/afs_stats.h" /* statistics stuff */
+#include "afs/sysincludes.h"	/* Standard vendor system headers */
+#include "afsincludes.h"	/* Afs-based standard headers */
+#include "afs/osi_inode.h"
+#include "afs/afs_stats.h"	/* statistics stuff */
 
-extern int (*ufs_iallocp)(), (*ufs_iupdatp)(), (*ufs_igetp)(),
-           (*ufs_itimes_nolockp)();
+extern int (*ufs_iallocp) (), (*ufs_iupdatp) (), (*ufs_igetp) (),
+    (*ufs_itimes_nolockp) ();
 
 #define AFS_ITIMES(ip) { \
         mutex_enter(&(ip)->i_tlock); \
@@ -35,7 +36,7 @@ extern int (*ufs_iallocp)(), (*ufs_iupdatp)(), (*ufs_igetp)(),
 #define AFS_ITIMES_NOLOCK(ip) \
 	(*ufs_itimes_nolockp)(ip);
 
-getinode(vfsp, dev, inode, ipp, credp,perror)
+getinode(vfsp, dev, inode, ipp, credp, perror)
      struct vfs *vfsp;
      struct AFS_UCRED *credp;
      struct inode **ipp;
@@ -49,16 +50,16 @@ getinode(vfsp, dev, inode, ipp, credp,perror)
     struct fs *fs;
     struct inode *pip;
     struct ufsvfs *ufsvfsp;
-    
+
     AFS_STATCNT(getinode);
-    
+
     *perror = 0;
-    
-    if (!vfsp 
+
+    if (!vfsp
 #if !defined(AFS_SUN58_ENV)
 	&& !(vfsp = vfs_devsearch(dev))
 #else
-        && !(vfsp = vfs_dev2vfsp(dev))
+	&& !(vfsp = vfs_dev2vfsp(dev))
 #endif
 	) {
 	return (ENODEV);
@@ -68,7 +69,7 @@ getinode(vfsp, dev, inode, ipp, credp,perror)
 #ifdef HAVE_VFS_DQRWLOCK
     rw_enter(&ufsvfsp->vfs_dqrwlock, RW_READER);
 #endif
-    code = (*ufs_igetp)(vfsp, inode, &ip, credp);
+    code = (*ufs_igetp) (vfsp, inode, &ip, credp);
 #ifdef HAVE_VFS_DQRWLOCK
     rw_exit(&ufsvfsp->vfs_dqrwlock);
 #endif
@@ -82,7 +83,7 @@ getinode(vfsp, dev, inode, ipp, credp,perror)
 }
 
 /* get an existing inode.  Common code for iopen, iread/write, iinc/dec. */
-igetinode(vfsp, dev, inode, ipp, credp,perror)
+igetinode(vfsp, dev, inode, ipp, credp, perror)
      struct AFS_UCRED *credp;
      struct inode **ipp;
      struct vfs *vfsp;
@@ -93,44 +94,48 @@ igetinode(vfsp, dev, inode, ipp, credp,perror)
     struct inode *pip, *ip;
     extern struct osi_dev cacheDev;
     register int code = 0;
-    
+
     *perror = 0;
-    
+
     AFS_STATCNT(igetinode);
-    
-    code = getinode(vfsp, dev, inode, &ip, credp,perror);
-    if (code) 
+
+    code = getinode(vfsp, dev, inode, &ip, credp, perror);
+    if (code)
 	return code;
-    
+
     rw_enter(&ip->i_contents, RW_READER);
-    
+
     if (ip->i_mode == 0) {
 	/* Not an allocated inode */
 	rw_exit(&ip->i_contents);
 	VN_RELE(ITOV(ip));
 	return (ENOENT);
     }
-    
-    if (ip->i_nlink == 0 || (ip->i_mode&IFMT) != IFREG) {
+
+    if (ip->i_nlink == 0 || (ip->i_mode & IFMT) != IFREG) {
 	AFS_ITIMES(ip);
 	rw_exit(&ip->i_contents);
 	VN_RELE(ITOV(ip));
 	return (ENOENT);
     }
-    
+
     /* On VFS40 systems, iput does major synchronous write action, but only
-       when the reference count on the vnode goes to 0.  Normally, Sun users
-       don't notice this because the DNLC keep references for them, but we
-       notice 'cause we don't.  So, we make a fake dnlc entry which gets
-       cleaned up by iget when it needs the space. */
+     * when the reference count on the vnode goes to 0.  Normally, Sun users
+     * don't notice this because the DNLC keep references for them, but we
+     * notice 'cause we don't.  So, we make a fake dnlc entry which gets
+     * cleaned up by iget when it needs the space. */
     if (dev != cacheDev.dev) {
 	/* 
 	 * Don't call dnlc for the cm inodes since it's a big performance 
 	 * penalty there!
 	 */
-	dnlc_enter(ITOV(ip), "a", ITOV(ip), (struct AFS_UCRED *) 0);
+#ifdef AFS_SUN510_ENV
+	dnlc_enter(ITOV(ip), "a", ITOV(ip));
+#else
+	dnlc_enter(ITOV(ip), "a", ITOV(ip), (struct AFS_UCRED *)0);
+#endif
     }
-    
+
     *ipp = ip;
     rw_exit(&ip->i_contents);
     return (code);
@@ -138,34 +143,35 @@ igetinode(vfsp, dev, inode, ipp, credp,perror)
 
 int CrSync = 1;
 
-afs_syscall_icreate(dev, near_inode, param1, param2, param3, param4, rvp, credp)
+afs_syscall_icreate(dev, near_inode, param1, param2, param3, param4, rvp,
+		    credp)
      rval_t *rvp;
      struct AFS_UCRED *credp;
      long near_inode, param1, param2, param3, param4;
      dev_t dev;
 {
-    int dummy, err=0;
+    int dummy, err = 0;
     struct inode *ip, *newip;
     register int code;
     dev_t newdev;
     struct ufsvfs *ufsvfsp;
 
     AFS_STATCNT(afs_syscall_icreate);
-    
+
     if (!afs_suser(credp))
 	return (EPERM);
-    
+
     /** Code to convert a 32 bit dev_t into a 64 bit dev_t
       * This conversion is needed only for the 64 bit OS.
       */
-    
+
 #ifdef AFS_SUN57_64BIT_ENV
-    newdev = expldev( (dev32_t) dev);
+    newdev = expldev((dev32_t) dev);
 #else
     newdev = dev;
 #endif
 
-    code = getinode(0, (dev_t)newdev, 2, &ip, credp,&dummy);
+    code = getinode(0, (dev_t) newdev, 2, &ip, credp, &dummy);
     if (code) {
 	return (code);
     }
@@ -176,7 +182,7 @@ afs_syscall_icreate(dev, near_inode, param1, param2, param3, param4, rvp, credp)
     rw_enter(&ufsvfsp->vfs_dqrwlock, RW_READER);
 #endif
     rw_enter(&ip->i_contents, RW_WRITER);
-    code = (*ufs_iallocp)(ip, near_inode, 0, &newip, credp);
+    code = (*ufs_iallocp) (ip, near_inode, 0, &newip, credp);
     AFS_ITIMES_NOLOCK(ip);
     rw_exit(&ip->i_contents);
 #ifdef HAVE_VFS_DQRWLOCK
@@ -189,7 +195,7 @@ afs_syscall_icreate(dev, near_inode, param1, param2, param3, param4, rvp, credp)
 	return (code);
     }
     rw_enter(&newip->i_contents, RW_WRITER);
-    newip->i_flag |= IACC|IUPD|ICHG;
+    newip->i_flag |= IACC | IUPD | ICHG;
 
 #if	defined(AFS_SUN56_ENV)
     newip->i_vicemagic = VICEMAGIC;
@@ -199,16 +205,20 @@ afs_syscall_icreate(dev, near_inode, param1, param2, param3, param4, rvp, credp)
 #endif
     newip->i_nlink = 1;
     newip->i_mode = IFREG;
+#ifdef AFS_SUN510_ENV
+    newip->i_vnode->v_type = VREG;
+#else
     newip->i_vnode.v_type = VREG;
-    
+#endif
+
     newip->i_vicep1 = param1;
-    if (param2 == 0x1fffffff/*INODESPECIAL*/)	{
+    if (param2 == 0x1fffffff /*INODESPECIAL*/) {
 	newip->i_vicep2 = ((0x1fffffff << 3) + (param4 & 0x3));
 	newip->i_vicep3 = param3;
     } else {
-	newip->i_vicep2 = (((param2 >> 16) & 0x1f) << 27) +
-	    (((param4 >> 16) & 0x1f) << 22) + 
-		(param3 & 0x3fffff);	    
+	newip->i_vicep2 =
+	    (((param2 >> 16) & 0x1f) << 27) +
+	    (((param4 >> 16) & 0x1f) << 22) + (param3 & 0x3fffff);
 	newip->i_vicep3 = ((param4 << 16) + (param2 & 0xffff));
     }
 #ifdef AFS_SUN57_64BIT_ENV
@@ -216,12 +226,12 @@ afs_syscall_icreate(dev, near_inode, param1, param2, param3, param4, rvp, credp)
 #else
     rvp->r_val1 = newip->i_number;
 #endif
-    
+
     /* 
      * We're being conservative and sync to the disk
      */
     if (CrSync)
-	(*ufs_iupdatp)(newip, 1);
+	(*ufs_iupdatp) (newip, 1);
     AFS_ITIMES_NOLOCK(newip);
     rw_exit(&newip->i_contents);
     VN_RELE(ITOV(newip));
@@ -231,12 +241,12 @@ afs_syscall_icreate(dev, near_inode, param1, param2, param3, param4, rvp, credp)
 afs_syscall_iopen(dev, inode, usrmod, rvp, credp)
      rval_t *rvp;
      struct AFS_UCRED *credp;
-     int  inode, usrmod;
+     int inode, usrmod;
      dev_t dev;
 {
     struct file *fp;
     struct inode *ip;
-    struct vnode *vp = (struct vnode *)0;
+    struct vnode *vp = NULL;
     int dummy;
     int fd;
     register int code;
@@ -250,18 +260,18 @@ afs_syscall_iopen(dev, inode, usrmod, rvp, credp)
     /** Code to convert a 32 bit dev_t into a 64 bit dev_t
       * This conversion is needed only for the 64 bit OS.
       */
-    
+
 #ifdef AFS_SUN57_64BIT_ENV
-    newdev = expldev( (dev32_t) dev);
+    newdev = expldev((dev32_t) dev);
 #else
     newdev = dev;
 #endif
 
-    code = igetinode(0, (dev_t)newdev, (ino_t)inode, &ip, credp,&dummy);
+    code = igetinode(0, (dev_t) newdev, (ino_t) inode, &ip, credp, &dummy);
     if (code) {
 	return (code);
     }
-    code = falloc((struct vnode *)NULL, FWRITE|FREAD, &fp, &fd);
+    code = falloc((struct vnode *)NULL, FWRITE | FREAD, &fp, &fd);
     if (code) {
 	rw_enter(&ip->i_contents, RW_READER);
 	AFS_ITIMES(ip);
@@ -269,14 +279,14 @@ afs_syscall_iopen(dev, inode, usrmod, rvp, credp)
 	VN_RELE(ITOV(ip));
 	return (code);
     }
-    
+
     /* fp->f_count, f_audit_data are set by falloc */
     fp->f_vnode = ITOV(ip);
-    
-    fp->f_flag = (usrmod+1) & (FMASK);
-    
+
+    fp->f_flag = (usrmod + 1) & (FMASK);
+
     /* fp->f_count, f_msgcount are set by falloc */
-    
+
     /* fp->f_offset zeroed by falloc */
     /* f_cred set by falloc */
     /*
@@ -312,17 +322,17 @@ afs_syscall_iincdec(dev, inode, inode_p1, amount, rvp, credp)
     if (!afs_suser(credp))
 	return (EPERM);
 
-        /** Code to convert a 32 bit dev_t into a 64 bit dev_t
+	/** Code to convert a 32 bit dev_t into a 64 bit dev_t
       * This conversion is needed only for the 64 bit OS.
       */
-    
+
 #ifdef AFS_SUN57_64BIT_ENV
-    newdev = expldev( (dev32_t) dev);
+    newdev = expldev((dev32_t) dev);
 #else
     newdev = dev;
 #endif
 
-    code = igetinode(0, (dev_t)newdev, (ino_t)inode, &ip, credp,&dummy);
+    code = igetinode(0, (dev_t) newdev, (ino_t) inode, &ip, credp, &dummy);
     if (code) {
 	return (code);
     }
@@ -343,11 +353,10 @@ afs_syscall_iincdec(dev, inode, inode_p1, amount, rvp, credp)
 	ip->i_flag |= ICHG;
 	/* We may want to force the inode to the disk in case of crashes, other references, etc. */
 	if (IncSync)
-	    (*ufs_iupdatp)(ip, 1);
+	    (*ufs_iupdatp) (ip, 1);
 	AFS_ITIMES_NOLOCK(ip);
 	rw_exit(&ip->i_contents);
 	VN_RELE(ITOV(ip));
     }
     return (code);
 }
-

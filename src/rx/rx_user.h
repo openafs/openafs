@@ -8,37 +8,30 @@
  */
 
 #ifdef	VALIDATE
-error-foo error-foo error-foo
+error - foo error - foo error - foo
 #endif /* VALIDATE */
 #ifndef RX_USER_INCLUDE
 #define RX_USER_INCLUDE
-
 /* rx_user.h:  definitions specific to the user-level implementation of Rx */
-
 #include <afs/param.h>
 #include <stdio.h>
-#include <stdlib.h>	/* for malloc() */
+#include <stdlib.h>		/* for malloc() */
 #include <lwp.h>
-
 /* These routines are no-ops in the user level implementation */
 #define SPLVAR
 #define NETPRI
 #define USERPRI
-
 #define AFS_GLOCK()
 #define AFS_GUNLOCK()
-#define ISAFS_GLOCK()
 #define AFS_ASSERT_GLOCK()
-
 #define AFS_RXGLOCK()
 #define AFS_RXGUNLOCK()
+#ifndef UKERNEL
+/* Defined in rx/UKERNEL/rx_kmutex.h */
+#define ISAFS_GLOCK()
 #define ISAFS_RXGLOCK()
+#endif
 #define AFS_ASSERT_RXGLOCK()
-
-extern void rxi_StartListener();
-extern void rxi_StartServerProc();
-extern void rxi_ReScheduleEvents();
-
 /* Some "operating-system independent" stuff, for the user mode implementation */
 #ifdef UAFS_CLIENT
 typedef void *osi_socket;
@@ -69,8 +62,6 @@ typedef afs_int32 osi_socket;
 #define	osi_QuickFree(ptr, size)    osi_Free(ptr, size)
 #define	osi_QuickAlloc(size)	    osi_Alloc(size)
 
-extern void osi_Panic();
-extern void osi_AssertFailU(const char *expr, const char *file, int line);
 #define osi_Assert(e) (void)((e) || (osi_AssertFailU(#e, __FILE__, __LINE__), 0))
 
 #define	osi_Msg			    fprintf)(stderr,

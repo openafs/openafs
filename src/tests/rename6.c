@@ -57,16 +57,16 @@ main(int argc, char **argv)
     int fd;
     struct stat old_sb, new_sb, dot_sb;
 
-    fd = open("foo", O_RDWR|O_CREAT|O_TRUNC, 0644);
+    fd = open("foo", O_RDWR | O_CREAT | O_TRUNC, 0644);
     if (fd < 0)
-	err (1, "open1");
-    ret = close (fd);
+	err(1, "open1");
+    ret = close(fd);
     if (ret < 0)
-	err (1, "close1");
+	err(1, "close1");
 
     ret = rename("foo", "../../service/foo");
     if (ret == 0)
-	err (1, "rename didn't fail");
+	err(1, "rename didn't fail");
 
     unlink("foo");
     return 0;

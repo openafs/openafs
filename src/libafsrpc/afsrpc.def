@@ -198,4 +198,19 @@ EXPORTS
 	rx_enable_hot_thread			@203 DATA
 	xdr_int64				@204
 	xdr_uint64				@205
-	osi_AssertFailU				@206
+	rx_SetMaxMTU				@206
+	rx_GetConnection			@207
+        RXAFSCB_GetCE64                         @208
+        RXAFSCB_GetCellByNum                    @209
+        RXAFSCB_TellMeAboutYourself             @210
+        EndRXAFS_FetchData64                    @211
+        EndRXAFS_StoreData64                    @212
+        RXAFS_CallBackRxConnAddr                @213
+        RXAFS_GetCapabilities                   @214
+        RXAFS_GiveUpAllCallBacks                @215
+        RXAFS_InlineBulkStatus                  @216
+        RXAFS_ResidencyCmd                      @217
+        StartRXAFS_FetchData64                  @218
+        StartRXAFS_StoreData64                  @219
+
+
