@@ -499,7 +499,6 @@ afs_CheckServers(int adown, struct cell *acellp)
     afs_int32 i, j;
     afs_int32 code;
     afs_int32 start, end = 0, delta;
-    afs_int32 m_error;
     osi_timeval_t tv;
     struct unixuser *tu;
     char tbuffer[CVBS];
@@ -508,7 +507,7 @@ afs_CheckServers(int adown, struct cell *acellp)
     struct conn **conns;
     int nconns;
     struct rx_connection **rxconns;      
-    afs_int32 *conntimer, *deltas;
+    afs_int32 *conntimer, *deltas, *results;
 
     AFS_STATCNT(afs_CheckServers);
 
@@ -546,6 +545,7 @@ afs_CheckServers(int adown, struct cell *acellp)
     rxconns = (struct rx_connection **)afs_osi_Alloc(j * sizeof(struct rx_connection *));
     conntimer = (afs_int32 *)afs_osi_Alloc(j * sizeof (afs_int32));
     deltas = (afs_int32 *)afs_osi_Alloc(j * sizeof (afs_int32));
+    results = (afs_int32 *)afs_osi_Alloc(j * sizeof (afs_int32));
 
     for (i = 0; i < j; i++) {
 	deltas[i] = 0;
@@ -606,7 +606,7 @@ afs_CheckServers(int adown, struct cell *acellp)
 	if (conntimer[multi_i] == 0)
 	  rx_SetConnDeadTime(tc->id, afs_rx_deadtime);
 	end = osi_Time();
-	m_error=multi_error;
+	results[multi_i]=multi_error;
 	if ((start == end) && !multi_error)
 	  deltas[multi_i] = end - tv.tv_sec;
 	
@@ -617,7 +617,7 @@ afs_CheckServers(int adown, struct cell *acellp)
       tc = conns[i];
       sa = tc->srvr;
       
-      if (( m_error >= 0 ) && (sa->sa_flags & SRVADDR_ISDOWN) && (tc->srvr == sa)) {
+      if (( results[i] >= 0 ) && (sa->sa_flags & SRVADDR_ISDOWN) && (tc->srvr == sa)) {
 	/* server back up */
 	print_internet_address("afs: file server ", sa, " is back up", 2);
 	
@@ -631,7 +631,7 @@ afs_CheckServers(int adown, struct cell *acellp)
 	  afs_osi_Wakeup(&afs_waitForever);
 	}
       } else {
-	if (m_error < 0) {
+	if (results[i] < 0) {
 	  /* server crashed */
 	  afs_ServerDown(sa);
 	  ForceNewConnections(sa);  /* multi homed clients */
@@ -713,6 +713,7 @@ afs_CheckServers(int adown, struct cell *acellp)
     afs_osi_Free(rxconns, j * sizeof(struct rx_connection *));
     afs_osi_Free(conntimer, j * sizeof(afs_int32));
     afs_osi_Free(deltas, j * sizeof(afs_int32));
+    afs_osi_Free(results, j * sizeof(afs_int32));
     
 } /*afs_CheckServers*/
 
