@@ -22,6 +22,8 @@
 #define AFS_NAMEI_ENV     1   /* User space interface to file system */
 
 #if defined(__KERNEL__) && !defined(KDUMP_KERNEL)
+#include <linux/threads.h>
+
 #include <linux/config.h>
 #ifdef CONFIG_SMP
 #undef CONFIG_SMP
@@ -32,7 +34,7 @@
 #ifdef AFS_SMP
 #define CONFIG_SMP 1
 #ifndef CONFIG_X86_LOCAL_APIC
-#define CONFIG_X86_LOCAL_APIC
+#define CONFIG_X86_LOCAL_APIC 1
 #endif
 #ifndef __SMP__
 #define __SMP__
