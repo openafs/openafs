@@ -78,6 +78,11 @@ afs_root (OSI_VFS_ARG(afsp), avpp)
     if (afs_globalVp && (afs_globalVp->states & CStatd)) {
 	tvp = afs_globalVp;
     } else {
+	if (afs_globalVp) {
+	    afs_PutVCache(afs_globalVp);
+	    afs_globalVp = NULL;
+	}
+
 	if (!(code = afs_InitReq(&treq, u.u_cred)) &&
 	    !(code = afs_CheckInit())) {
 	    tvp = afs_GetVCache(&afs_rootFid, &treq, NULL, NULL);

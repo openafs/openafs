@@ -110,6 +110,10 @@ static int afs_root_nolock (struct vfs *afsp, struct vnode **avpp)
 	tvp = afs_globalVp;
     } else {
 	struct ucred *credp;
+	if (afs_globalVp) {
+	    afs_PutVCache(afs_globalVp);
+	    afs_globalVp = NULL;
+	}
 	credp = crref();
 	if (!(code = afs_InitReq(&treq, credp)) &&
 	    !(code = afs_CheckInit())) {

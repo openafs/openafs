@@ -123,7 +123,11 @@ afs_root(struct mount *mp,
 	tvp = afs_globalVp;
         error=0;
     } else {
-	
+	if (afs_globalVp) {
+	    afs_PutVCache(afs_globalVp);
+	    afs_globalVp = NULL;
+	}
+
 	if (!(error = afs_InitReq(&treq, &cr)) &&
 	    !(error = afs_CheckInit())) {
 	    tvp = afs_GetVCache(&afs_rootFid, &treq, NULL, NULL);
