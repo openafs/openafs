@@ -61,13 +61,13 @@
                     <File Id="fileafsptsadmin_PDB" Name="afsptsad.pdb" LongName="afsptsadmin.pdb" DiskId="1" src="$(var.ServerDir)\afsptsadmin.pdb"/>
                     <File Id="fileafsvosadmin_PDB" Name="afsvosad.pdb" LongName="afsvosadmin.pdb" DiskId="1" src="$(var.ServerDir)\afsvosadmin.pdb"/>
                     <File Id="fileafsadminutil_PDB" Name="afsadmut.pdb" LongName="afsadminutil.pdb" DiskId="1" src="$(var.ServerDir)\afsadminutil.pdb"/>
-                    <File Id="fileTaAfsAppLib_PDB" Name="TaAfsApL.pdb" LongName="TaAfsAppLib.pdb" DiskId="1" src="$(var.ServerDir)\TaAfsAppLib.pdb"/>
-                    <File Id="fileafsprocmgmt_PDB" Name="afsprcmg.pdb" LongName="afsprocmgmt.pdb" DiskId="1" src="$(var.ServerDir)\afsprocmgmt.pdb"/>
                 </Component>
                 <Component Id="cmp_CommonCommonDebug" Guid="7F47902F-B92D-42A3-BDEF-AFFC79C66F0C">
                     <File Id="fileafsrpc_PDB" Name="afsrpc.pdb" LongName="afsrpc.pdb" KeyPath="yes" DiskId="1" src="$(var.LibDir)\afsrpc.pdb"/>
                     <File Id="fileafsauthent_PDB" Name="afsauth.pdb" LongName="afsauthent.pdb" DiskId="1" src="$(var.LibDir)\afsauthent.pdb"/>
                     <File Id="fileafspthread_PDB" Name="afspthrd.pdb" LongName="afspthread.pdb" DiskId="1" src="$(var.LibDir)\afspthread.pdb"/>
+                    <File Id="fileTaAfsAppLib_PDB" Name="TaAfsApL.pdb" LongName="TaAfsAppLib.pdb" DiskId="1" src="$(var.ServerDir)\TaAfsAppLib.pdb"/>
+                    <File Id="fileafsprocmgmt_PDB" Name="afsprcmg.pdb" LongName="afsprocmgmt.pdb" DiskId="1" src="$(var.ServerDir)\afsprocmgmt.pdb"/>
                 </Component>
                 <Component Id="cmp_ClientCommonDebug" Guid="BFA4097D-3013-46AD-86EB-2160376FB55C">
                     <File Id="fileafs_config_PDB" Name="afs_cfg.pdb" LongName="afs_config.pdb" KeyPath="yes" DiskId="1" src="$(var.ClientDir)\afs_config.pdb"/>

@@ -752,11 +752,17 @@
         <Control Id="CellEdit" Type="Edit" X="150" Y="73" Width="115" Height="18" Property="AFSCELLNAME" Text="{120}" />
         <Control Id="LogonOptionsLabel" Type="Text" X="45" Y="93" Width="100" Height="15" Text="Integrated logon options" />
         <Control Id="LogonOptionSel" Type="RadioButtonGroup" X="45" Y="108" Width="220" Height="60" Property="LOGONOPTIONS" />
-        <Control Id="FreelanceLabel" Type="Text" X="45" Y="168" Width="100" Height="15" Text="Freelance mode" />
-        <Control Id="FreelanceSel" Type="RadioButtonGroup" X="150" Y="168" Width="120" Height="20" Property="FREELANCEMODE" />
-        <Control Id="DNSLabel" Type="Text" X="45" Y="188" Width="100" Height="15" Text="Lookup cells in DNS" />
-        <Control Id="DNSSel" Type="RadioButtonGroup" X="150" Y="188" Width="120" Height="20" Property="USEDNS" />
+        <Control Id="SecurityLevelLabel" Type="Text" X="45" Y="168" Width="100" Height="15" Text="AFS crypt security" />
+        <Control Id="SecurityLevelSel" Type="RadioButtonGroup" X="150" Y="168" Width="120" Height="20" Property="SECURITYLEVEL" />
+        <Control Id="FreelanceLabel" Type="Text" X="45" Y="188" Width="100" Height="15" Text="Freelance mode" />
+        <Control Id="FreelanceSel" Type="RadioButtonGroup" X="150" Y="188" Width="120" Height="20" Property="FREELANCEMODE" />
+        <Control Id="DNSLabel" Type="Text" X="45" Y="208" Width="100" Height="15" Text="Lookup cells in DNS" />
+        <Control Id="DNSSel" Type="RadioButtonGroup" X="150" Y="208" Width="120" Height="20" Property="USEDNS" />
       </Dialog>
+      <RadioGroup Property="SECURITYLEVEL">
+		<RadioButton X="5" Y="0" Width="55" Height="15" Text="Disable">0</RadioButton>
+		<RadioButton X="65" Y="0" Width="55" Height="15" Text="Enable">1</RadioButton>
+      </RadioGroup>
       <RadioGroup Property="FREELANCEMODE">
 		<RadioButton X="5" Y="0" Width="55" Height="15" Text="Disable">0</RadioButton>
 		<RadioButton X="65" Y="0" Width="55" Height="15" Text="Enable">1</RadioButton>
