@@ -477,8 +477,8 @@ long cm_InitLocalMountPoints() {
             rootCellName[0] = '.';
             code = cm_GetRootCellName(&rootCellName[1]);
             if (code == 0) {
-                cm_FreelanceAddMount(&rootCellName[1], &rootCellName[1], "root.cell", 0, NULL);
-                cm_FreelanceAddMount(rootCellName, &rootCellName[1], "root.cell", 1, NULL);
+                cm_FreelanceAddMount(&rootCellName[1], &rootCellName[1], "root.cell.", 0, NULL);
+                cm_FreelanceAddMount(rootCellName, &rootCellName[1], "root.cell.", 1, NULL);
                 dwMountPoints = 2;
             }
         }
@@ -660,8 +660,8 @@ long cm_InitLocalMountPoints() {
         rootCellName[0] = '.';
       	code = cm_GetRootCellName(&rootCellName[1]);
         if (code == 0) {
-            cm_FreelanceAddMount(&rootCellName[1], &rootCellName[1], "root.cell", 0, NULL);
-            cm_FreelanceAddMount(rootCellName, &rootCellName[1], "root.cell", 1, NULL);
+            cm_FreelanceAddMount(&rootCellName[1], &rootCellName[1], "root.cell.", 0, NULL);
+            cm_FreelanceAddMount(rootCellName, &rootCellName[1], "root.cell.", 1, NULL);
         }
         return 0;
     }
