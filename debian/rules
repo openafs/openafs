@@ -50,7 +50,7 @@ build: configure-stamp build-stamp
 build-stamp:
 	dh_testdir
 
-	$(MAKE) dest 
+	$(MAKE) dest_nolibafs
 	-rm $(SYS_NAME)/dest/include/crypt.h
 	touch build-stamp
 
