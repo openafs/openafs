@@ -1241,7 +1241,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
 	}
 #ifdef AFS_LINUX22_ENV
 	if (tvc->mvstat == 2) {	/* we don't trust the dnlc for root vcaches */
-	    AFS_RELE(tvc);
+	    AFS_RELE(AFSTOV(tvc));
 	    *avcp = 0;
 	} else {
 	    code = 0;
