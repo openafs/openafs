@@ -53,7 +53,7 @@ process.o	: process.s process.c
 		${AS} process.ss -o process.o ;  \
 		$(RM) -f process.S ;;\
 	i386_*bsd* ) \
-		/usr/bin/cpp -P ${srcdir}/process.i386.s > process.ss; \
+		/usr/bin/cpp -P -I${TOP_INCDIR} ${srcdir}/process.i386.s > process.ss; \
 		${AS} -o process.o process.ss; \
 		$(RM) process.ss ;; \
 	ncrx86_* | sunx86_*) \

@@ -84,6 +84,7 @@ extern struct timeval time;
 #define afs_strcasecmp(s1, s2)	strncasecmp((s1), (s2), 65535)
 #ifdef AFS_OBSD34_ENV
 #define strcpy(s1, s2)		afs_strcpy((s1), (s2))
+#define strcat(s1, s2)		afs_strcat((s1), (s2))
 #else
 #define afs_strcat(s1, s2)	strcat((s1), (s2))
 #endif
