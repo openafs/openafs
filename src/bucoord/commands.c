@@ -3040,7 +3040,7 @@ dumpInfo(dumpid, detailFlag)
 	    else
 	    {
 	        compactDateString(&volumeLinkPtr->volumeEntry.clone, ds, 50),
-		printf("%4d %s %9d %16s\n",
+		printf("%4d %s %10u %16s\n",
 		       volumeLinkPtr->volumeEntry.position,
 		       ds,
 		       volumeLinkPtr->volumeEntry.nBytes,
