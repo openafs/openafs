@@ -215,6 +215,7 @@ typedef	struct adaptive_mutex2	adaptive_mutex2_t;
 #else
 #ifdef AFS_SPARC64_LINUX20_ENV
 #define _SPARC64_STATFS_H
+#define _SPARC_STATFS_H
 #else
 #ifdef AFS_SPARC_LINUX20_ENV
 #define _SPARC_STATFS_H
