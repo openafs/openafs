@@ -1,3 +1,205 @@
+2001-09-20 05:10  shadow
+
+	* configure-libafs.in, configure.in, doc/txt/RELNOTES-1.2.1,
+	src/afs/LINUX/osi_vnodeops.c, src/afs/VNOPS/afs_vnop_write.c: DELTA
+	undo-linux-call-afs-dopartialwrite-20010920 AUTHOR
+	shadow@dementia.org
+	
+	scrap this approach
+
+2001-09-20 04:02  shadow
+
+	* doc/txt/RELNOTES-1.2.1: DELTA openafs-relnotes-1_2_1-20010920
+	AUTHOR shadow@dementia.org
+	
+	add release notes for 1.2.1
+
+2001-09-20 04:02  shadow
+
+	* doc/txt/RELNOTES-1.2.1: file RELNOTES-1.2.1 was initially added
+	on branch openafs-stable-1_2_x.
+
+2001-09-20 03:58  shadow
+
+	* src/ubik/vote.c: DELTA ubik-fix-typo-20010919 AUTHOR
+	shadow@dementia.org
+	
+	somehow this crept in
+
+2001-09-20 03:02  shadow
+
+	* src/vfsck/setup.c: DELTA
+	dux-vfsck-check-for-mounted-filesystem-20010919 AUTHOR
+	mattiasa@e.kth.se
+	
+	modified by shadow@dementia.org for dux 4.0a (ifndef UID_NO_CHANGE
+	case)
+
+2001-09-19 23:19  shadow
+
+	* src/WINNT/afssvrcfg/afscfg.cpp: DELTA
+	winnt-dont-do-unneeded-version-check-20010918 AUTHOR
+	jimpeter@us.ibm.com
+	
+	make afs config wizard not complain about version < 3.5
+
+2001-09-19 23:16  shadow
+
+	* NEWS: DELTA news-include-windows-updates-20010918 AUTHOR
+	luan@almaden.ibm.com
+	
+	list windows client user-visible changes
+
+2001-09-19 22:59  shadow
+
+	* src/: config/param.i386_obsd29.h, config/param.i386_obsd29_usr.h,
+	des/conf-i386-obsd.h, libafs/MakefileProto.OBSD.in: DELTA
+	OpenBSD-initial-commit-20010913 AUTHOR rees@umich.edu
+	
+	openbsd config files, from devel branch
+
+2001-09-19 22:47  shadow
+
+	* README.CVS: DELTA automake-comment-20010918 AUTHOR rees@umich.edu
+	
+	reflect need for automake
+
+2001-09-19 22:46  shadow
+
+	* Makefile.in, src/config/Makefile.i386_obsd29.in: DELTA
+	openbsd-nits-20010919 AUTHOR rees@umich.edu
+	
+	arrange for "make" to complete on openbsd (from devel branch)
+
+2001-09-19 22:40  shadow
+
+	* src/: WINNT/afs_setup_utils/afsrm.c, WINNT/afsd/cm_utils.h,
+	WINNT/afsreg/test/regman.c, afs/afs_analyze.c, afs/afs_trace.et,
+	afs/afs_volume.c, auth/acfg_errors.et, auth/ktc_errors.et,
+	bozo/bos.c, bozo/boserr.et, bubasics/butc_errs.et,
+	bubasics/butm_errs.et, bubasics/butx_errs.et,
+	bucoord/bucoord_errs.et, bucoord/main.c, budb/budb_errs.et,
+	budb/server.c, butc/tcmain.c, butm/butm_test.c, butm/test_ftm.c,
+	cmd/cmd_errors.et, cmd/test/itest.c, comerr/compile_et.c,
+	comerr/error_table.y, comerr/error_table_nt.c, comerr/test/test.c,
+	comerr/test/test1.et, comerr/test/test2.et, dauth/dlog.c,
+	finale/translate_et.c, kauth/client.c, kauth/decode_ticket.c,
+	kauth/kaerrors.et, kauth/kas.c, kauth/kautils.p.h,
+	kauth/test/test_getticket.c, kauth/test/test_interim_ktc.c,
+	kauth/test/test_rxkad_free.c,
+	libadmin/adminutil/afs_AdminBosErrors.et,
+	libadmin/adminutil/afs_AdminCfgErrors.et,
+	libadmin/adminutil/afs_AdminClientErrors.et,
+	libadmin/adminutil/afs_AdminCommonErrors.et,
+	libadmin/adminutil/afs_AdminKasErrors.et,
+	libadmin/adminutil/afs_AdminMiscErrors.et,
+	libadmin/adminutil/afs_AdminPtsErrors.et,
+	libadmin/adminutil/afs_AdminUtilErrors.et,
+	libadmin/adminutil/afs_AdminVosErrors.et,
+	libadmin/adminutil/afs_utilAdmin.c, package/package.c,
+	ptserver/Makefile.in, ptserver/NTMakefile, ptserver/db_verify.c,
+	ptserver/pt_util.c, ptserver/ptclient.c, ptserver/pterror.et,
+	ptserver/ptuser.c, ptserver/testpt.c, rx/test/generator.c,
+	rxkad/rxkad_errs.et, rxkad/test/stress.c,
+	rxkad/test/stress_errs.et, ubik/ubik.c, ubik/ubikclient.c,
+	ubik/uerrors.et, uss/uss.c, vlserver/vl_errors.et, volser/common.c,
+	volser/volerr.et, volser/vsprocs.c: DELTA
+	comerr-behave-like-the-rest-of-the-world-20010918 AUTHOR
+	shadow@dementia.org
+	
+	make afs's comerr implementation behave like every other one (don't
+	monkey with the case of table names as provided)
+	
+	change all source to work properly in light of these changes
+
+2001-09-19 22:36  shadow
+
+	* src/: WINNT/afsd/cm_config.c, auth/authcon.c, auth/cellconfig.c,
+	auth/userok.c, bozo/bos.c, bozo/bosoprocs.c, bozo/bosserver.c,
+	bozo/cronbnodeops.c, bozo/fsbnodeops.c, cmd/cmd.c, dir/buffer.c,
+	dir/salvage.c, kauth/admin_tools.c, kauth/authclient.c,
+	kauth/kaauxdb.c, kauth/kaprocs.c, kauth/krb_udp.c, kauth/rebuild.c,
+	kauth/token.c, libacl/aclprocs.c, ptserver/db_verify.c,
+	ptserver/display.c, ptserver/ptprocs.c, ptserver/ptserver.c,
+	ptserver/readgroup.c, ptserver/utils.c, rx/rx_pthread.c,
+	rxgen/rpc_main.c, rxgen/rpc_parse.c, rxkad/rxkad_server.c,
+	sys/pioctl_nt.c, ubik/beacon.c, ubik/disk.c, ubik/lock.c,
+	ubik/remote.c, ubik/vote.c, vlserver/vlclient.c,
+	vlserver/vldb_check.c, vlserver/vlprocs.c, vlserver/vlutils.c,
+	vol/clone.c, vol/partition.c, vol/vnode.c, vol/vol-salvage.c,
+	vol/vutil.c, volser/common.c, volser/dumpstuff.c,
+	volser/lockprocs.c, volser/volprocs.c, volser/vos.c,
+	volser/vsprocs.c, volser/vsutils.c: DELTA
+	misc-build-cleanup-20010917 AUTHOR wcw@cmu.edu
+	
+	get rid of build warnings from unused variables, especially for
+	winnt
+
+2001-09-19 22:32  shadow
+
+	* src/: WINNT/afsadmsvr/NTMakefile, WINNT/license/lang/NTMakefile,
+	auth/NTMakefile, bozo/NTMakefile, bucoord/NTMakefile,
+	budb/NTMakefile, cmd/NTMakefile, des/NTMakefile, kauth/NTMakefile,
+	rxstat/NTMakefile, tbutc/NTMakefile, ubik/NTMakefile,
+	update/NTMakefile, volser/NTMakefile: DELTA
+	nt-makefile-clean-targets-20010917 AUTHOR wcw@cmu.edu
+	
+	provide more useful "make clean" support for winnt
+
+2001-09-19 22:30  shadow
+
+	* README.CVS: DELTA readme-cvs-update-with-instructions-20010917
+	AUTHOR wcw@cmu.edu
+	
+	more verbose readme for cvs users
+
+2001-09-19 22:29  shadow
+
+	* src/config/Makefile.ppc_linux22.in: DELTA
+	ppc-linux-needs-install-path-20010917 AUTHOR hartmans@mit.edu
+	
+	specify path to install like all the other makefile fragments
+
+2001-09-19 22:25  shadow
+
+	* Makefile.in, configure-libafs.in, configure.in,
+	src/afs/sysincludes.h, src/afsd/afsd.c, src/des/andrew-conf.h,
+	src/des/read_pssword.c, src/kauth/kaserver.c, src/kauth/klogin.c,
+	src/kauth/user.c, src/lwp/Makefile.in, src/lwp/preempt.c,
+	src/lwp/process.s, src/lwp/waitkey.c, src/pinstall/install.c,
+	src/rx/rx_getaddr.c, src/rx/rx_kcommon.c, src/rx/rx_kcommon.h,
+	src/rx/rx_packet.h, src/rx/rx_rdwr.c, src/rxgen/rpc_main.c,
+	src/sys/Makefile.in, src/ubik/Makefile.in, src/usd/usd_file.c,
+	src/viced/afsfileprocs.c, src/vol/devname.c, src/vol/listinodes.c,
+	src/vol/partition.c, src/vol/vol-salvage.c, src/vol/volume.c: DELTA
+	OpenBSD-initial-commit-20010913 AUTHOR rees@umich.edu
+	
+	pull into stable branch base openbsd support
+
+2001-09-19 22:18  shadow
+
+	* src/afs/VNOPS/afs_vnop_write.c: DELTA
+	
+	fix erroneous ifdef to not change fakeopen codepath
+	linux-call-afs-dopartialwrite-from-afs-memwrite-and-afs-ufswrite-no
+	t-afs-linux-write-20010919 AUTHOR shadow@dementia.org
+
+2001-09-19 17:59  rees
+
+	* src/config/Makefile.i386_obsd29.in: DELTA openbsd-nits-20010919
+	AUTHOR rees@umich.edu
+	
+	With these small changes, "make" on OpenBSD actually completes!
+
+2001-09-13 23:19  rees
+
+	* src/: config/Makefile.i386_obsd29.in, config/param.i386_obsd29.h,
+	config/param.i386_obsd29_usr.h, des/conf-i386-obsd.h,
+	libafs/MakefileProto.OBSD.in: Initial OpenBSD support. Most of user
+	space builds. No kernel module yet.
+	
+	DELTA OpenBSD-initial-commit-20010913 AUTHOR rees@umich.edu
+
 2001-09-11 15:28  shadow
 
 	* openafs/src/afs/afs_callback.c (1.7): DELTA
