@@ -126,7 +126,7 @@ int uvote_ShouldIRun() {
     
     now = FT_ApproxTime();
     if (BIGTIME + ubik_lastYesTime < now) return 1;    /* no valid guy even trying */
-    if (lastYesState && lastYerHost != ubik_host[0]) return 0; /* other guy is sync site, leave him alone */
+    if (lastYesState && lastYesHost != ubik_host[0]) return 0; /* other guy is sync site, leave him alone */
     if (ntohl((afs_uint32) lastYesHost) < ntohl((afs_uint32) ubik_host[0]))
 	return 0;    /* if someone is valid and better than us, don't run */
     /* otherwise we should run */
