@@ -1,3 +1,10 @@
+openafs (1.0.snap20001106-10) unstable; urgency=low
+
+  * Release (Closes: BUG#69336)
+  * Fix typo and afs-rootvol and test from CLI
+
+ -- Sam Hartman <hartmans@mit.edu>  Sat,  2 Dec 2000 00:44:37 -0500
+
 openafs (1.0.snap20001106-9) unstable; urgency=medium
 
   * Fix openafs-fileserver restart to do a bos restart

@@ -112,13 +112,16 @@ open(CELLSERVDB, "/etc/openafs/CellServDB")
 while(<CELLSERVDB>) {
     chomp;
     if (/^>\s*([a-z0-9_\-.]+)/ ) {
-	run("fs mkm /afs/$1 root.cell -cell $1  -fastch");
+	run("fs mkm /afs/$1 root.cell -cell $1  -fast");
+	unwind ("fs rmm /afs/$1");
     }
 }
 
 run("fs sa /afs/$cell system:anyuser rl");
 run ("fs mkm /afs/.$cell root.cell -cell $cell -rw");
+unwind ("fs rmm /afs/.$cell");
 run("fs mkm /afs/.root.afs root.afs -rw");
+unwind ("fs rmm /afs/.root.afs");
 
 mkvol( "user", "/afs/$cell/user" );
 mkvol( "service", "/afs/$cell/service" );
@@ -126,7 +129,9 @@ mkvol( "service", "/afs/$cell/service" );
 $cell =~ /^([^.]*)/;
 my $cellpart = $1;
 run("ln -s /afs/$cell /afs/$cellpart");
+unwind ("rm /afs/$cellpart");
 run( "ln -s /afs/.$cell /afs/.$cellpart" );
+unwind ("rm /afs/.$cellpart");
 
 run( "vos addsite $server $part root.afs -localauth" );
 run( "vos addsite $server $part root.cell -localauth" );
