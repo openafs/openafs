@@ -31,22 +31,28 @@ A. Creating the proper directory structure.
       into with this name when you build.
 
       alpha_dux40
-      alpha_dux50 (only tested on 5.0A)
+      alpha_dux50 (only tested on 5.0A, does not work with 5.1)
+      i386_fbsd42, i386_fbsd43, i386_fbsd44, i386_fbsd45,
+	      i386_fbsd46 (gmake is required to build for FreeBSD)
       i386_linux22
-      i386_linux24 (only tested with 2.4.0 kernel)
+      i386_linux24 
       rs_aix42
       sgi_65 (file server not tested)
-      sun4x_56
-      sun4x_57
-      sun4x_58
-      sun4x_59
-      ppc_darwin_13
+      sun4_413 (No client support, no fileserver support, db servers only)
+      sun4x_56, sun4x_57, sun4x_58, sun4x_59 (logging UFS not supported 
+	      for mixed-use partitions containing client cache)
+      ppc_darwin_13, ppc_darwin_14, ppc_darwin_60 (file server not tested)
       ppc_linux22
       ppc_linux24
-      alpha_linux22 (DES does not work, will require one more change to
-				compile)
-      hp_ux110 (No client support, but db servers and utilities work)
-      hp_ux102 (No client support, but db servers and utilities work)
+      alpha_linux22 
+      alpha_linux24 
+      ia64_linux24
+      sparc_linux22
+      sparc_linux24
+      sparc64_linux22
+      sparc64_linux24
+      hp_ux110 
+      hp_ux102 (Client port possible, but db servers and utilities work)
 
    2. Using configure in the top level directory, configure for your
       AFS system type, providing the necessary flags:
