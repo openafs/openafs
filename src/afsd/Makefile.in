@@ -119,7 +119,7 @@ dest: ${DEST}/root.client/usr/vice/etc/afsd ${DEST}/etc/vsys
 			${INSTALL} -f afs.conf.linux ${DEST}/root.client/usr/vice/etc/afs.conf ;; \
 		ppc_darwin*) \
 			mkdir -p ${DEST}/root.client/usr/vice/etc/afs.kext/Contents/MacOS ;\
-			${INSTALL} -f afs.ppc_darwin.plist ${DEST}/root.client/usr/vice/etc/afs.kext/Contents/Info.plist ; \
+			${INSTALL} -f afs.${SYS_NAME}.plist ${DEST}/root.client/usr/vice/etc/afs.kext/Contents/Info.plist ; \
 			${INSTALLex} -f afs.rc.darwin ${DEST}/root.client/usr/vice/etc/afs.rc ; \
 			${INSTALL} -f afs.rc.darwin.plist ${DEST}/root.client/usr/vice/etc/StartupParameters.plist ;; \
 		*fbsd*) \

@@ -206,9 +206,15 @@ else
 			;;
 		powerpc-apple-darwin1.2*)
 			AFS_SYSNAME="ppc_darwin_12"
+			DARWIN_PLIST=src/afsd/afs.${AFS_SYSNAME}.plist
 			;;
 		powerpc-apple-darwin1.3*)
 			AFS_SYSNAME="ppc_darwin_13"
+			DARWIN_PLIST=src/afsd/afs.${AFS_SYSNAME}.plist
+			;;
+		powerpc-apple-darwin1.4*)
+			AFS_SYSNAME="ppc_darwin_14"
+			DARWIN_PLIST=src/afsd/afs.${AFS_SYSNAME}.plist
 			;;
 		sparc-sun-solaris2.5*)
 			AFS_SYSNAME="sun4x_55"
@@ -456,7 +462,7 @@ AC_OUTPUT(             \
 Makefile               \
 src/afs/Makefile \
 src/afsd/Makefile \
-src/afsd/afs.ppc_darwin.plist \
+${DARWIN_PLIST} \
 src/afsmonitor/Makefile \
 src/afsweb/Makefile \
 src/audit/Makefile \
