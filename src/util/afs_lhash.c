@@ -20,6 +20,10 @@ RCSID("$Header$");
 #define CHECK_INVARIANTS
 #endif /* !KERNEL */
 
+#ifndef NULL
+#define NULL 0
+#endif
+
 /* max hash table load factor */
 enum { LOAD_FACTOR = 5 };
 
