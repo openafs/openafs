@@ -1424,7 +1424,7 @@ int OnlyOneVolume(inodeinfo, singleVolumeNumber)
 int GetInodeSummary(char *path, VolumeId singleVolumeNumber)
 {
     struct stat status;
-    int summaryFd, forceSal, err;
+    int forceSal, err;
     struct ViceInodeInfo *ip;
     struct InodeSummary summary;
     char summaryFileName[50];
@@ -2920,7 +2920,6 @@ void DistilVnodeEssence(VolumeId rwVId, VnodeClass class, Inode ino,
     struct VnodeClassInfo *vcp = &VnodeClassInfo[class];
     char buf[SIZEOF_LARGEDISKVNODE];
     struct VnodeDiskObject *vnode = (struct VnodeDiskObject *) buf;
-    int code;
     int size;
     StreamHandle_t *file;
     int vnodeIndex;
@@ -3444,7 +3443,7 @@ int CopyInode(Device device, Inode inode1, Inode inode2, int rwvolume)
     char buf[4096];
     IHandle_t *srcH, *destH;
     FdHandle_t *srcFdP, *destFdP;
-    register int n;
+    register int n = 0;
 
     IH_INIT(srcH, device, rwvolume, inode1);
     srcFdP = IH_OPEN(srcH);

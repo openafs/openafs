@@ -100,7 +100,6 @@ int fiveminutes=300;
 
 static FiveMinuteCheckLWP()
 {
-    	struct timeval time;
 
 	printf("start 5 min check lwp\n");
 
@@ -554,7 +553,7 @@ fail:
     return code;
 }
  
-static err_packet (ksoc, pkt, code, reason)
+static int err_packet (ksoc, pkt, code, reason)
   int ksoc;
   struct packet *pkt;
   afs_int32  code;
@@ -576,7 +575,7 @@ static err_packet (ksoc, pkt, code, reason)
 	3/* nulls */ + (2 * sizeof(afs_int32)) + strlen (buf) + 1;
     if (ans.len > sizeof(ans.data)) {
 	printf ("Answer packet too long\n");
-	return;
+	return -1;
     }
 
     *answer++ = (unsigned char) KRB_PROT_VERSION;
@@ -601,8 +600,10 @@ static err_packet (ksoc, pkt, code, reason)
 		    code, ans.len);
 	else perror ("err_packet: sendto");
     }
+    return 0;
 }
 
+int
 process_udp_auth (ksoc, pkt)
   int ksoc;
   struct packet *pkt;
@@ -632,7 +633,7 @@ process_udp_auth (ksoc, pkt)
     if ((strlen(realm) > 0) && (strcmp (realm, lrealm) != 0)) {
 	err_packet (ksoc, pkt, KERB_ERR_NONNULL_REALM,
 		    "null realm name not allowed");
-	return;
+	return -1;
     }
     memcpy(&startTime, packet, sizeof(startTime));
     packet += sizeof(startTime);
@@ -644,13 +645,13 @@ process_udp_auth (ksoc, pkt)
     if (code < 0) {
 	err_packet (ksoc, pkt, KERB_ERR_BAD_LIFETIME,
 		    "requested ticket lifetime invalid");
-	return;
+	return -1;
     }
     getstr (sname);
     getstr (sinst);
     if ((packet - pkt->data) != pkt->len) {
 	err_packet (ksoc, pkt, KERB_ERR_PKT_LENGTH, "packet length inconsistent");
-	return;
+	return -1;
     }
     pkt->rest = packet;
     code = UDP_Authenticate (ksoc, &pkt->from, name, inst,
@@ -665,9 +666,10 @@ process_udp_auth (ksoc, pkt)
 	} else 
 	    err_packet (ksoc, pkt, code, (char *)error_message (code));
     }
-    return;
+    return 0;
 }
 
+int
 process_udp_appl (ksoc, pkt)
   int ksoc;
   struct packet *pkt;
@@ -689,13 +691,13 @@ process_udp_appl (ksoc, pkt)
     authLen = *(unsigned char *)packet++;
     if (ticketLen > sizeof(ticket)) {
 	err_packet (ksoc, pkt, KERB_ERR_TEXT_LENGTH, "ticket too long");
-	return;
+	return -1;
     }
     memcpy(ticket, packet, ticketLen);
     packet += ticketLen;
     if (authLen > sizeof(auth)) {
 	err_packet (ksoc, pkt, KERB_ERR_TEXT_LENGTH, "authenticator too long");
-	return;
+	return -1;
     }
     memcpy(auth, packet, authLen);
     pkt->rest = packet + authLen;
@@ -703,10 +705,12 @@ process_udp_appl (ksoc, pkt)
     if (code) {
 	if (code == KANOENT) code = KERB_ERR_PRINCIPAL_UNKNOWN;
 	err_packet (ksoc, pkt, code, (char*)error_message (code));
-	return;
+	return -1;
     }
+    return 0;
 }
 
+void
 process_udp_request (ksoc, pkt)
   int ksoc;
   struct packet *pkt;

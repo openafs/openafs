@@ -1194,7 +1194,7 @@ afs_int32 listEntries(call, flag, startindex, bulkentries, nextstartindex)
   afs_int32 code;
   struct ubik_trans *tt;
   afs_int32 cid;
-  afs_int32 temp, i, eof, pos, maxentries, f;
+  afs_int32 i, eof, pos, maxentries, f;
   struct prentry tentry;
   afs_int32 pollcount=0;
 

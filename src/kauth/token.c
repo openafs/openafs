@@ -320,8 +320,6 @@ afs_int32 ka_VerifyUserToken(
     afs_int32	        now = time(0);
     struct ktc_token	token;
     char		cellname[MAXKTCREALMLEN];
-    char		realm[MAXKTCREALMLEN];
-    struct ktc_principal client, server;
     afs_int32 pwexpires;
 
     LOCK_GLOBAL_MUTEX

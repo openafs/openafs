@@ -387,6 +387,7 @@ register struct cmd_syndesc *as; {
 	    printf("\n");
 	}
     }
+    return 0;
 }
 
 static UnInstall(as)

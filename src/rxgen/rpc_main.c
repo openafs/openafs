@@ -334,9 +334,7 @@ open_input(infile, define)
 	char *infile;
 	char *define;
 {
-        char *exec_args[MAXCPPARGS+10];
 	int nargs = 0;
-	char **args;
 	char cpp_cmdline[MAXCMDLINE];
 
 	int i;

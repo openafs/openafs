@@ -120,6 +120,7 @@ register struct cronbnode *abnode; {
 	if (temp < 1) temp = 1;	/* temp is when to start dude */
 	bnode_SetTimeout(abnode, temp);
     }
+    return 0;
 }
 
 static int cron_restartp (abnode)

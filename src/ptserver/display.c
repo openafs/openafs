@@ -32,7 +32,6 @@ static char *pr_TimeToString (time_t clock)
 {   struct tm *tm;
     static char buffer[32];
     static int this_year = 0;
-    char year[6];
 
     if (clock == 0) return "time-not-set  ";
     if (!this_year) {

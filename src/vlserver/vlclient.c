@@ -51,6 +51,16 @@ RCSID("$Header$");
 #include "vlserver.h"
 #include "vlclient.h"
 
+void fill_listattributes_entry();
+void display_listattributes_entry();
+void display_entry();
+void display_entryN();
+void display_update_entry();
+void dump_stats();
+void GetArgs();
+void print_usage();
+void fill_entry();
+void fill_update_entry();
 
 extern int VL_GetAddrsU(), VL_RegisterAddrs();
 #define	VL_NUMBER_OPCODESX	34
@@ -253,7 +263,7 @@ static handleit(as)
 {
     register struct cmd_item *ti;
     register afs_int32 code, server = 0, sawserver=0;
-    afs_int32 i, id, voltype;
+    afs_int32 id, voltype;
     struct vldbentry entry;    
     char *cmd = 0, *cellp=0;
     struct VldbUpdateEntry updateentry;
@@ -395,7 +405,6 @@ static handleit(as)
 	    } else if (!strcmp(oper,"checkhash")) {
 		 int index, count, num=0, num1=0, num2 = 0, num3=0, num31=0, num4=0, num41=0, next_index;
 		 struct vldbentry tentry;    
-		 struct Vlent *vl1;    
 
 		 VL = SVL = (struct Vlent *) malloc(ALLOCNT * sizeof(struct Vlent));
 		 if (VL == NULL) {
@@ -448,7 +457,6 @@ static handleit(as)
 	    } else if (!strcmp(oper,"fixhash")) {
 		 int index, count, num=0, num1=0, num2 = 0, next_index, x=0;
 		 struct vldbentry tentry;    
-		 struct Vlent *vl1;    
 
 		 VL = SVL = (struct Vlent *) malloc(ALLOCNT * sizeof(struct Vlent));
 		 if (VL == NULL) {
@@ -700,7 +708,6 @@ static handleit(as)
 		int nentries, i;
 		afs_uint32 *addrp;
 		bulkaddrs addrs;
-		struct vldbentry *entry;
 		struct VLCallBack vlcb;
 
 		addrs.bulkaddrs_val = 0;
@@ -775,7 +782,6 @@ static handleit(as)
 	       int nentries1, nentries2, i, j, x, y, unique, found;
 	       afs_uint32 *addrp1, *addrp2;
 	       bulkaddrs addrs1, addrs2;
-	       struct vldbentry *entry;
 	       struct VLCallBack vlcb;
 	       ListAddrByAttributes attrs;
 	       afsUUID uuid;
@@ -870,7 +876,6 @@ static handleit(as)
 		int i;
 		afs_uint32 *addrp, tad;
 		bulkaddrs addrs;
-		struct vldbentry *entry;
 		afsUUID uuid;
 
 		memset(&uuid, 0, sizeof(uuid));
@@ -899,7 +904,6 @@ static handleit(as)
 	       extern struct hostent *hostutil_GetHostByName();
 	       struct hostent *h1, *h2;
 	       afs_uint32 a1, a2;
-	       unsigned char n1[80], n2[80];
 
 	       printf("changing %s", *argp);
 	       h1 = hostutil_GetHostByName(&(*argp)[0]);
@@ -926,7 +930,6 @@ static handleit(as)
 	       }
 	     } else if (!strcmp(oper,"caid")) {
 	       afs_uint32 a1, a2;
-	       unsigned char n1[80], n2[80];
 
 	       sscanf(&(*argp)[0], "%d", &a1);
 	       printf("changing %d (0x%x)", a1, a1);
@@ -972,6 +975,7 @@ main(argc, argv)
 }
 
 
+void
 fill_entry(entry, argp, nargs)
 struct vldbentry *entry;
 char **argp;
@@ -1008,7 +1012,7 @@ int nargs;
     sscanf(&(*argp)[0], "%d", &entry->cloneId);
 }
 
-
+void
 fill_update_entry(entry, argp, nargs)
 struct VldbUpdateEntry *entry;
 char **argp;
@@ -1076,7 +1080,7 @@ int nargs;
     }
  }
 
-
+void
 fill_listattributes_entry(entry, argp, nargs)
     struct VldbListByAttributes *entry;
     char **argp;
@@ -1109,6 +1113,7 @@ fill_listattributes_entry(entry, argp, nargs)
 	entry->Mask |= VLLIST_FLAG;
  }
 
+void
 display_listattributes_entry(entry, error)
 struct VldbListByAttributes *entry;
 int			    error;
@@ -1130,6 +1135,7 @@ int			    error;
 
 #define	volumetype_string(type) (type == RWVOL? "read/write":type == ROVOL? "readonly":type == BACKVOL? "backup":"unknown")
 
+void
 display_entry(entry, error)
 struct vldbentry    *entry;
 int		    error;
@@ -1145,6 +1151,7 @@ int		    error;
 	printf("%12u\t%10d\t%10x\n", entry->serverNumber[i], entry->serverPartition[i], entry->serverFlags[i]);
 }
 
+void
 display_entryN(entry, error)
     struct nvldbentry *entry;
     int		      error;
@@ -1172,7 +1179,7 @@ display_entryN(entry, error)
      }
 }
 
-
+void
 display_update_entry(entry, error)
 struct VldbUpdateEntry	*entry;
 int			error;
@@ -1212,6 +1219,7 @@ int			error;
     }
 }
 
+void
 dump_stats(stats, vital_header)
 vldstats	*stats;
 vital_vlheader	*vital_header;
@@ -1230,6 +1238,7 @@ vital_vlheader	*vital_header;
 	printf("total %s entries=%d\n", volumetype_string(i), ntohl(vital_header->totalEntries[i]));
 }
 
+void
 GetArgs(line,args, nargs)
     register char *line;
     register char **args;
@@ -1250,6 +1259,7 @@ GetArgs(line,args, nargs)
     }
 }
 
+void
 print_usage()
 {
     printf("Valid Commands:\n");

@@ -180,7 +180,6 @@ rxs_return_t rxkad_GetChallenge (aobj, aconn, apacket)
   IN struct rx_packet *apacket;
   IN struct rx_connection *aconn;
 {   struct rxkad_sconn *sconn;
-    afs_int32 temp;
     char *challenge;
     int challengeSize;
     struct rxkad_v2Challenge  c_v2;   /* version 2 */

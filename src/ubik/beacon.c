@@ -447,7 +447,7 @@ static verifyInterfaceAddress(ame, info, aservers)
     afs_uint32 aservers[]; 	/* list of all possible server addresses */
 {
     afs_uint32	myAddr[UBIK_MAX_INTERFACE_ADDR], *servList, tmpAddr;
-    int 	count, index, found, i, j, totalServers, start, end;
+    int 	count, found, i, j, totalServers, start, end;
 
     if (info)
         totalServers = info->numServers;
@@ -574,7 +574,7 @@ int
 updateUbikNetworkAddress(ubik_host)
 afs_uint32 ubik_host[UBIK_MAX_INTERFACE_ADDR];
 {
-    int			j, count, found, index, code = 0;
+    int			j, count, code = 0;
     UbikInterfaceAddr   inAddr, outAddr;
     struct rx_connection *conns[MAXSERVERS];
     struct ubik_server 	*ts, *server[MAXSERVERS];

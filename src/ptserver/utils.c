@@ -402,7 +402,6 @@ register struct ubik_trans *at;
 char aname[PR_MAXNAMELEN];
 afs_int32 *aid;
 {
-    register afs_int32 code;
     afs_int32 temp;
     struct prentry tentry;
 

@@ -87,7 +87,6 @@ static long GetIoctlHandle(char *fileNamep, HANDLE *handlep)
 	HKEY parmKey;
 	DWORD dummyLen;
 	long code;
-        int hostsize;
 
         if (fileNamep) {
 	      drivep = strchr(fileNamep, ':');
@@ -116,11 +115,14 @@ nogateway:
 #ifndef AFS_WIN95_ENV
 		gethostname(hostName, sizeof(hostName));
 #else
+		{
+		  int hostsize;
                 /* DJGPP version of gethostname gets the NetBIOS
                    name of the machine, so that is what we are using for
                    the AFS server name instead of the DNS name. */
                 hostsize = sizeof(hostName);
                 GetComputerName(hostName, &hostsize);
+		}
 #endif /* AFS_WIN95_ENV */
 
 havehost:

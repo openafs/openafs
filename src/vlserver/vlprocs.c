@@ -298,8 +298,7 @@ VL_ChangeAddr(rxcall, ip1, ip2)
   struct rx_call	*rxcall;
   afs_int32 ip1, ip2;
 {   struct ubik_trans	*trans;
-    afs_int32		errorcode, blockindex;
-    struct nvlentry	tentry;
+    afs_int32		errorcode;
 
     COUNT_REQ (VLCHANGEADDR);
     if (!afsconf_SuperUser(vldb_confdir, rxcall, (char *)0)) {
@@ -1040,8 +1039,7 @@ bulkentries		    *vldbentries;
     VldbentryLast = VldbentryFirst + allocCount;
     /* Handle the attribute by volume id totally separate of the rest (thus additional Mask values are ignored if VLLIST_VOLUMEID is set!) */
     if (attributes->Mask & VLLIST_VOLUMEID) {
-	afs_int32	blockindex, chain;
-	struct nvlentry tempentry;
+	afs_int32	blockindex;
 
 	blockindex = FindByID(trans, attributes->volumeid, -1, &tentry, &errorcode);
 	if (blockindex == 0) {
@@ -1148,8 +1146,7 @@ nbulkentries		    *vldbentries;
     VldbentryLast = VldbentryFirst + allocCount;
     /* Handle the attribute by volume id totally separate of the rest (thus additional Mask values are ignored if VLLIST_VOLUMEID is set!) */
     if (attributes->Mask & VLLIST_VOLUMEID) {
-	afs_int32	blockindex, chain;
-	struct nvlentry tempentry;
+	afs_int32	blockindex;
 
 	blockindex = FindByID(trans, attributes->volumeid, -1, &tentry, &errorcode);
 	if (blockindex == 0) {
@@ -1247,7 +1244,7 @@ VL_ListAttributesN2(rxcall, attributes, name, startindex, nentries, vldbentries,
   int			errorcode=0, maxCount=VLDBALLOCCOUNT;
   struct ubik_trans	*trans;
   struct nvlentry	tentry;
-  struct nvldbentry	*Vldbentry=0, *VldbentryFirst=0, *VldbentryLast=0, tVldbentry;
+  struct nvldbentry	*Vldbentry=0, *VldbentryFirst=0, *VldbentryLast=0;
   afs_int32	                blockindex=0, count=0, k, match, matchindex;
   int                   serverindex=-1; /* no server found */
   int                   findserver=0, findpartition=0, findflag=0, findname=0;
@@ -1760,11 +1757,11 @@ VL_RegisterAddrs(rxcall, uuidp, spare1, addrsp)
 {
   afs_int32 code;
   struct ubik_trans *trans;
-  int cnt, h, i, j, k, m, hostslot, base, index;
+  int cnt, h, i, j, k, m, base, index;
   struct extentaddr *exp = 0, *tex;
   afsUUID tuuid;
   afs_uint32 addrs[VL_MAXIPADDRS_PERMH];
-  afs_int32 fbase, findex;
+  afs_int32 fbase;
   int count, willChangeEntry, foundUuidEntry, willReplaceCnt;
   int WillReplaceEntry, WillChange[MAXSERVERID+1], FoundUuid, ReplaceEntry;
   int srvidx, mhidx;
@@ -2102,9 +2099,9 @@ struct ListAddrByAttributes *attributes;
 afsUUID *uuidpo;
 afs_int32  *uniquifier, *nentries;
 bulkaddrs		    *addrsp;
-{   register afs_int32   errorcode, index=-1, op, offset;
+{   register afs_int32   errorcode, index=-1, offset;
     struct ubik_trans	*trans;
-    int nservers, i, j, k, base=0;
+    int nservers, i, j, base=0;
     struct extentaddr *exp=0;
     afsUUID tuuid;
     afs_uint32 *taddrp, taddr;
@@ -2794,7 +2791,7 @@ register afs_uint32	ipaddr1, ipaddr2;
     int base, index, mhidx;
     afsUUID tuuid;
     afs_int32 blockindex, count;
-    int   pollcount;
+    int   pollcount = 0;
     struct nvlentry tentry;
 
     if (!atrans)

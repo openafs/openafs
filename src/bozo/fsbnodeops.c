@@ -397,6 +397,7 @@ struct fsbnode *abnode; {
         }
     }
     SetNeedsClock(abnode);
+    return 0;
 }
 
 static int fs_getstat(abnode, astatus)

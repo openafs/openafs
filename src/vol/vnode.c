@@ -60,6 +60,8 @@ RCSID("$Header$");
 struct VnodeClassInfo VnodeClassInfo[nVNODECLASSES];
 
 private int moveHash();
+void StickOnLruChain_r();
+void VPutVnode_r();
 
 #define BAD_IGET	-1000
 
@@ -183,7 +185,7 @@ VInitVnodes(class,nVnodes)
     }
 
     if (nVnodes == 0)
-	    return;
+	    return 0;
 
     va = (byte *) calloc(nVnodes,vcp->residentSize);
     assert (va != NULL);
@@ -214,6 +216,7 @@ VInitVnodes(class,nVnodes)
 	}
 	va += vcp->residentSize;
     }
+    return 0;
 }
 
 
@@ -360,7 +363,7 @@ Vnode *VAllocVnode_r(ec,vp,type)
 	LWP_CurrentProcess(&vnp->writer);
 #endif /* AFS_PTHREAD_ENV */
 	/* Sanity check:  is this vnode really not in use? */
-        { int n;
+        { 
 	  int size;
 	  IHandle_t *ihP = vp->vnodeIndex[class].handle;
 	  FdHandle_t *fdP;
@@ -653,7 +656,7 @@ Vnode *VGetVnode_r(ec,vp,vnodeNumber,locktype)
 int  TrustVnodeCacheEntry = 1;
 /* This variable is bogus--when it's set to 0, the hash chains fill
    up with multiple versions of the same vnode.  Should fix this!! */
-
+void
 VPutVnode(ec,vnp)
     Error *ec;
     register Vnode *vnp;
@@ -663,6 +666,7 @@ VPutVnode(ec,vnp)
     VOL_UNLOCK
 }
 
+void
 VPutVnode_r(ec,vnp)
     Error *ec;
     register Vnode *vnp;
@@ -911,8 +915,10 @@ static int moveHash(vnp, newHash)
     vnp->hashNext = VnodeHashTable[newHash];
     VnodeHashTable[newHash] = vnp;
     vnp->hashIndex = newHash;
+    return 0;
 }
 
+void
 StickOnLruChain_r(vnp,vcp)
     register Vnode *vnp;
     register struct VnodeClassInfo *vcp;
