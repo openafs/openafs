@@ -1451,11 +1451,6 @@ ss_ProcProto_setup(defp, somefrees)
 definition *defp;
 int *somefrees;
 {
-    proc1_list *plist, *plist1;
-    list *listp;
-    definition *defp1;
-    int preserve_flag = 0;
-
 	f_print(fout, "#ifndef KERNEL\n");
 	f_print(fout, "\tafs_int32 %s%s%s%s();\n", prefix, ServerPrefix, 
 		PackagePrefix[PackageIndex], defp->pc.proc_name);

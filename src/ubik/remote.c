@@ -28,6 +28,7 @@ RCSID("$Header$");
 #include "ubik_int.h"
 int (*ubik_CheckRXSecurityProc)();
 char *ubik_CheckRXSecurityRock;
+void printServerInfo();
 
 /* routines for handling requests remotely-submitted by the sync site.  These are
     only write transactions (we don't propagate read trans), and there is at most one
@@ -453,7 +454,7 @@ SDISK_SendFile(rxcall, file, length, avers)
     register afs_int32 code;
     register struct ubik_dbase *dbase;
     char tbuffer[256];
-    afs_int32 offset, t;
+    afs_int32 offset;
     struct ubik_version tversion;
     register int tlen;
     struct rx_peer *tpeer;
@@ -614,6 +615,7 @@ UbikInterfaceAddr	*inAddr, *outAddr;
     return 0;
 }
 
+void
 printServerInfo()
 {
     struct ubik_server *ts;

@@ -147,7 +147,6 @@ BOZO_GetDates(acall, aname, atime, abakTime, aoldTime)
 struct rx_call *acall;
 char *aname;
 afs_int32 *atime, *abakTime, *aoldTime; {
-    register afs_int32 code;
     struct stat tstat;
     char *strp;
     char tbuffer[AFSDIR_PATH_MAX];
@@ -1191,6 +1190,7 @@ int initBosEntryStats()
   bozo_bosEntryStats[7].path = AFSDIR_SERVER_KEY_FILEPATH;
   bozo_bosEntryStats[8].path = AFSDIR_SERVER_ULIST_FILEPATH;
 
+  return 0;
 }
 /* StatEachEntry - If it's not there, it is okay.  If anything else goes wrong
  * complain.  Otherwise check permissions: shouldn't allow write or (usually)

@@ -81,7 +81,6 @@ void main (argc, argv)
 #endif
     struct afsconf_cell info;
     int kerberosKeys;			/* set if found some keys */
-    afs_int32 i,j;
     int lwps = 3;
     char clones[MAXHOSTSPERCELL];
 
@@ -157,8 +156,6 @@ void main (argc, argv)
 	}
 #endif
 	else if (*arg == '-') {
-	  usage:
-
 		/* hack in help flag support */
 
 #ifndef AFS_NT40_ENV

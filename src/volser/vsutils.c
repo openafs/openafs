@@ -105,7 +105,7 @@ VLDB_CreateEntry(entryp)
     struct nvldbentry *entryp;
 {
     struct vldbentry oentry;
-    register int code, (*nproc)();
+    register int code;
 
     if (newvlserver == 1) {
 tryold:
@@ -132,7 +132,7 @@ VLDB_GetEntryByID(volid, voltype, entryp)
     struct nvldbentry *entryp;
 {
     struct vldbentry oentry;
-    register int code, (*nproc)();
+    register int code;
 
     if (newvlserver == 1) {
 tryold:
@@ -158,7 +158,7 @@ VLDB_GetEntryByName(namep, entryp)
     struct nvldbentry *entryp;
 {
     struct vldbentry oentry;
-    register int code, (*nproc)();
+    register int code;
 
     if (newvlserver == 1) {
 tryold:
@@ -184,7 +184,7 @@ VLDB_ReplaceEntry(volid, voltype, entryp, releasetype)
     struct nvldbentry *entryp;
 {
     struct vldbentry oentry;
-    register int code, (*nproc)();
+    register int code;
 
     if (newvlserver == 1) {
 tryold:
@@ -270,8 +270,7 @@ extern int VL_GetAddrsU();
 VLDB_IsSameAddrs(serv1, serv2, errorp)
     afs_int32 serv1, serv2, *errorp;
 {
-    struct vldbentry oentry;
-    register int code, (*nproc)();
+    register int code;
     ListAddrByAttributes attrs;
     bulkaddrs addrs;
     afs_uint32 *addrp, nentries,  unique, i, j, f1, f2;
@@ -536,7 +535,7 @@ char *astring; {
     char *str,*ptr, volname[VOLSER_OLDMAXVOLNAME+1];
     int tryname, curval;
     struct nvldbentry entry;
-    afs_int32 vcode;
+    afs_int32 vcode = 0;
     int total;
 
     *errp = 0;

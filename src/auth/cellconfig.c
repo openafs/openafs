@@ -191,10 +191,15 @@ register struct afsconf_dir *adir; {
 static afsconf_Touch(adir)
 register struct afsconf_dir *adir; {
     char tbuffer[256];
+#ifndef AFS_NT40_ENV
     struct timeval tvp[2];
+#endif
+
+    adir->timeRead = 0;	/* just in case */
 
 #ifdef AFS_NT40_ENV
     /* NT client CellServDB has different file name than NT server or Unix */
+
     if (IsClientConfigDirectory(adir->name)) {
 	strcompose(tbuffer, 256,
 		   adir->name, "/", AFSDIR_CELLSERVDB_FILE_NTCLIENT, NULL);
@@ -202,14 +207,11 @@ register struct afsconf_dir *adir; {
 	strcompose(tbuffer, 256,
 		   adir->name, "/", AFSDIR_CELLSERVDB_FILE, NULL);
     }
+
+    return _utime(tbuffer, NULL);
+
 #else
     strcompose(tbuffer, 256, adir->name, "/", AFSDIR_CELLSERVDB_FILE, NULL);
-#endif /* AFS_NT40_ENV */
-
-    adir->timeRead = 0;	/* just in case */
-#ifdef AFS_NT40_ENV
-    return _utime(tbuffer, NULL);
-#else
     gettimeofday(&tvp[0], NULL);
     tvp[1] = tvp[0];
     return utimes(tbuffer, tvp);
@@ -238,7 +240,7 @@ register char *adir; {
 	    /* The "AFSCONF" environment (or contents of "/.AFSCONF") will be typically set to something like "/afs/<cell>/common/etc" where, by convention, the default files for "ThisCell" and "CellServDB" will reside; note that a major drawback is that a given afs client on that cell may NOT contain the same contents... */
 	    char *home_dir;
 	    FILE *fp;
-	    int len;
+	    size_t len;
 
 	    if (!(home_dir = getenv("HOME"))) {
 		/* Our last chance is the "/.AFSCONF" file */
@@ -557,7 +559,8 @@ afsconf_GetAfsdbInfo(acellName, aservice, acellInfo)
     struct afsconf_cell *acellInfo;
 {
     afs_int32 code;
-    int tservice, len, i;
+    int tservice, i;
+    size_t len;
     unsigned char answer[1024];
     unsigned char *p;
     char host[256];
@@ -654,7 +657,8 @@ struct afsconf_cell *acellInfo; {
     register afs_int32 i;
     int tservice;
     char *tcell;
-    int cnLen, ambig;
+    size_t cnLen;
+    int ambig;
     char tbuffer[64];
 
     LOCK_GLOBAL_MUTEX

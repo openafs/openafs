@@ -36,6 +36,7 @@ char *s;
     abort();
 }
 
+void
 InitErrTabs()
 {
     initialize_ka_error_table();

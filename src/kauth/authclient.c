@@ -637,7 +637,6 @@ afs_int32 ka_GetToken (
     des_key_schedule schedule;
     int   version;
     afs_int32  pwexpires;
-    char bob[KA_TIMESTR_LEN];
 
     LOCK_GLOBAL_MUTEX
     aticket.SeqLen = auth_token->ticketLen;

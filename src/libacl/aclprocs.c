@@ -222,7 +222,6 @@ struct acl_accessList **acl;
     register char *nextc;
     register afs_int32 code;
     int p,n;
-    char tbuf[PR_MAXNAMELEN+1];
     namelist lnames;
     idlist lids;
 
@@ -377,6 +376,7 @@ char *version;
 #ifdef AFS_PTHREAD_ENV
     assert(pthread_mutex_init(&acl_list_mutex, NULL) == 0);
 #endif /* AFS_PTHREAD_ENV */
+    return 0;
 }
 
 int acl_IsAMember(aid,cps)

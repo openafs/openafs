@@ -393,7 +393,7 @@ int DirSalvage (fromFile, toFile, vn, vu, pvn, pvu)
     afs_int32 dot[3], dotdot[3], lfid[3], code, usedPages;
     char tname[256];
     register int i;
-    register char *tp, tc;
+    register char *tp;
     struct DirHeader *dhp;
     struct DirEntry *ep;
     int entry;

@@ -113,8 +113,8 @@ long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
         int foundCell;
         long code;
 	int tracking = 1, partial = 0;
-        long ip_addr;
 #if defined(DJGPP) || defined(AFS_WIN95_ENV)
+	long ip_addr;
         int c1, c2, c3, c4;
         char aname[256];
 #endif

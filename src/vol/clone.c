@@ -76,6 +76,9 @@ struct clone_head {
     struct clone_items *last;
 };
 
+void CloneVolume();
+void CloneVolume_r();
+
 static ci_AddItem(ah, aino)
 Inode aino;
 struct clone_head *ah; {
@@ -349,6 +352,7 @@ afs_int32 DoCloneIndex(rwvp, clvp, class, reclone)
    return error;
 }
 
+void
 CloneVolume(error, original, new, old)
     Error *error;
     Volume *original, *new, *old;
@@ -358,6 +362,7 @@ CloneVolume(error, original, new, old)
     VOL_UNLOCK
 }
 
+void
 CloneVolume_r(rerror, original, new, old)
     Error *rerror;
     Volume *original, *new, *old;

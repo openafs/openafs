@@ -1449,9 +1449,10 @@ static ForgetTicket (
   char *arock)
 {
     afs_int32 code;
-    struct ktc_principal server;
 
 #ifdef notdef
+    struct ktc_principal server;
+
     if (as->parms[0].items) {
 	char *name = as->parms[0].items->data;
 	code = ka_ParseLoginName

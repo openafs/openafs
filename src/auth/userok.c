@@ -231,7 +231,6 @@ register char *auser; {
     char tbuffer[256];
     register bufio_p bp;
     char tname[64];
-    register char *tp;
     register int flag;
     register afs_int32 code;
     int rc;

@@ -222,7 +222,6 @@ int PrintEntryError (misc, ea, e, indent)
   struct prentry *e;
   int indent;
 {
-    int i;
 
     pr_PrintEntry (stderr, /*net order*/0, ea, e, indent);
     return 0;
@@ -1045,9 +1044,6 @@ WorkerBee (as, arock)
     char *recreateFile;
     struct misc_data misc;		/* info & statistics */
 
-    int   a;
-    char  arg[100];
-
     initialize_pt_error_table();
     initialize_u_error_table();
     
@@ -1099,7 +1095,6 @@ main (argc, argv)
   char *argv[];
 {
   struct cmd_syndesc *ts;
-  struct cmd_item    *ti;
 
   setlinebuf(stdout);
 

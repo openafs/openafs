@@ -71,6 +71,7 @@ int FindIndex(entry, server, part, type)
 }
 
 /* Changes the rw site only */
+void
 SetAValue (entry, oserver, opart, nserver, npart, type)
      struct nvldbentry *entry;
      afs_int32             oserver, opart, nserver, npart, type;

@@ -165,7 +165,6 @@ int kaux_islocked(
     unsigned int nfailures, myshare;
     afs_uint32 lasttime;
     struct ubik_debug beaconinfo;
-    afs_uint32 now;
 
     /* if attempts is 0, that means there's no limit, so the id
     * can't ever be locked...

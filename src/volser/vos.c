@@ -3153,7 +3153,7 @@ static ListVLDB(as)
        if (vcode == RXGEN_OPCODE) {
 	  /* Vlserver not running with ListAttributesN2. Fall back */
 	  vcode = VLDB_ListAttributes(&attributes, &centries, &arrayEntries);
-	  nextindex == -1;
+	  nextindex = -1;
        }
        if (vcode) {
 	  fprintf(STDERR,"Could not access the VLDB for attributes\n");

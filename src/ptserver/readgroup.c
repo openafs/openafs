@@ -27,7 +27,9 @@ RCSID("$Header$");
 #include "pterror.h"
 
 int verbose = 0;
+void skip();
 
+void
 report_error (code, name, gname)
   afs_int32 code;
   char *name;
@@ -66,7 +68,6 @@ char **argv;
     char buf[3000];
     FILE *fp;
     char *ptr;
-    char *aptr;
     char *tmp;
     char *cellname;
     namelist lnames;
@@ -195,6 +196,7 @@ char **argv;
     }
 }
 
+void
 skip(s)
 char **s;
 {

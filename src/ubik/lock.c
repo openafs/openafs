@@ -62,7 +62,6 @@ ulock_getLock(atrans, atype, await)
   struct ubik_trans *atrans;
   int               atype, await;
 {
-  struct ubik_trans *tt;
   struct ubik_dbase *dbase=atrans->dbase;
 
   /* On first pass, initialize the lock */
@@ -118,6 +117,7 @@ ulock_getLock(atrans, atype, await)
 }
 
 /* Release the transaction lock */
+int
 ulock_relLock(atrans)
   struct ubik_trans *atrans;
 {

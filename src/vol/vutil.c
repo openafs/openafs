@@ -64,6 +64,11 @@ RCSID("$Header$");
 #include <strings.h>
 #endif
 
+void AssignVolumeName();
+void AssignVolumeName_r();
+void ClearVolumeStats();
+void ClearVolumeStats_r();
+
 
 #define nFILES	(sizeof (stuff)/sizeof(struct stuff))
 
@@ -110,18 +115,14 @@ Volume *VCreateVolume_r(ec, partname, volumeId, parentId)
     			   no parent */
 {
     VolumeDiskData vol;
-    int fd, fd1, i;
+    int fd, i;
     char headerName[32], volumePath[64];
-    struct stat status;
     Device device;
     struct DiskPartition *partition;
     struct VolumeDiskHeader diskHeader;
-    int code;
     IHandle_t *handle;
     FdHandle_t *fdP;
     Inode nearInode=0; 
-
-    
 
     *ec = 0;
     memset(&vol, 0, sizeof (vol));
@@ -279,6 +280,7 @@ Volume *VCreateVolume_r(ec, partname, volumeId, parentId)
 }
 
 
+void
 AssignVolumeName(vol, name, ext)
     register VolumeDiskData *vol;
     char *name,*ext;
@@ -288,6 +290,7 @@ AssignVolumeName(vol, name, ext)
     VOL_UNLOCK
 }
 
+void
 AssignVolumeName_r(vol, name, ext)
     register VolumeDiskData *vol;
     char *name,*ext;
@@ -338,6 +341,7 @@ afs_int32 CopyVolumeHeader(from, to)
     return(code);
 }
 
+void
 ClearVolumeStats(vol)
     register VolumeDiskData *vol;
 {
@@ -346,6 +350,7 @@ ClearVolumeStats(vol)
     VOL_UNLOCK
 }
 
+void
 ClearVolumeStats_r(vol)
     register VolumeDiskData *vol;
 {
