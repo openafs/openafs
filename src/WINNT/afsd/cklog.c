@@ -19,7 +19,7 @@
 
 #define AFS_KERBEROS_ENV
 
-#define KABADARGUMENT 1
+#define BAD_ARGUMENT 1
 #define KLOGEXIT(code) exit(code)
 
 int CommandProc();
@@ -226,7 +226,7 @@ CommandProc (as, arock)
 	if (size <= 0 || size >= sizeof(name)) {
 	    size = sizeof(name) - 1;
 	    if (!GetUserName(name, &size)) {
-		KLOGEXIT( KABADARGUMENT );
+		KLOGEXIT( BAD_ARGUMENT );
 	    }
 	}
     }
@@ -251,7 +251,7 @@ CommandProc (as, arock)
 bad_lifetime:
 	    if (!Silent) fprintf (stderr, "%s: translating '%s' to lifetime failed\n",
 			       rn, life);
-	    return KABADARGUMENT;
+	    return BAD_ARGUMENT;
 	}
 	if (*sp == ':') {
 	    life = sp+1;		/* skip the colon */
@@ -269,7 +269,7 @@ bad_lifetime:
 		fprintf (stderr,
 		"%s: a lifetime of %.2f hours is too long, must be less than %d.\n",
 		rn, (double)lifetime/3600.0, MAXKTCTICKETLIFETIME/3600);
-	    KLOGEXIT( KABADARGUMENT );
+	    KLOGEXIT( BAD_ARGUMENT );
 	}
     } else lifetime = 0;
 
@@ -289,7 +289,7 @@ bad_lifetime:
 		reason = NULL;
 	    if (reason) {
 		fprintf (stderr, "Unable to login because %s.\n", reason);
-		KLOGEXIT( KABADARGUMENT );
+		KLOGEXIT( BAD_ARGUMENT );
 	    }
 	}
     }
