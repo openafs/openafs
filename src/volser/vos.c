@@ -4651,6 +4651,8 @@ PartitionInfo(as)
     struct diskPartition partition;
     struct partList dummyPartList;
     int i, cnt;
+    int printSummary=0, sumPartitions=0;
+    long long sumFree=0, sumStorage=0;
 
     apart = -1;
     aserver = GetServer(as->parms[0].items->data);
@@ -4669,6 +4671,9 @@ PartitionInfo(as)
 	dummyPartList.partId[0] = apart;
 	dummyPartList.partFlags[0] = PARTVALID;
 	cnt = 1;
+    }
+    if (as->parms[2].items) {
+        printSummary = 1;
     }
     if (apart != -1) {
 	if (!IsPartValid(apart, aserver, &code)) {	/*check for validity of the partition */
@@ -4700,7 +4705,15 @@ PartitionInfo(as)
 	    fprintf(STDOUT,
 		    "Free space on partition %s: %d K blocks out of total %d\n",
 		    pname, partition.free, partition.minFree);
+	    sumPartitions++;
+	    sumFree += partition.free;
+	    sumStorage += partition.minFree;
 	}
+    }
+    if (printSummary) {
+        fprintf(STDOUT,
+		"Summary: %lld K blocks free out of %lld K blocks on %d partitions\n",
+		sumFree, sumStorage, sumPartitions);
     }
     return 0;
 }
@@ -5613,6 +5626,8 @@ main(argc, argv)
 			  "list partition information");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-partition", CMD_SINGLE, CMD_OPTIONAL, "partition name");
+    cmd_AddParm(ts, "-summary", CMD_FLAG, CMD_OPTIONAL,
+		"print storage summary");
     COMMONPARMS;
 
     ts = cmd_CreateSyntax("unlockvldb", UnlockVLDB, 0,
