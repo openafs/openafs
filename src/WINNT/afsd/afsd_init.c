@@ -127,7 +127,7 @@ static int afsi_log_useTimestamp = 1;
 void
 afsi_log(char *pattern, ...)
 {
-	char s[100], t[100], d[100], u[100];
+	char s[100], t[100], d[100], u[300];
 	int zilch;
 	va_list ap;
 	va_start(ap, pattern);
