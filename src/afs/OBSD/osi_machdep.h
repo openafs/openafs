@@ -45,9 +45,7 @@ extern struct timeval time;
 
 #define afs_bufferpages bufpages
 
-#define osi_vnhold(avc,r)  do { \
-       if ((avc)->vrefCount) { VN_HOLD((struct vnode *)(avc)); } \
-       else osi_Panic("refcnt==0");  } while(0)
+#define osi_vnhold(avc, r) afs_vget(AFSTOV(avc), 0)
 
 #define	gop_rdwr(rw,gp,base,len,offset,segflg,unit,cred,aresid) \
   vn_rdwr((rw),(gp),(base),(len),(offset),(segflg),(unit),(cred),(aresid), curproc)
@@ -60,6 +58,7 @@ extern int (**afs_vnodeop_p)();
 
 #define AFS_HOLD(vp) afs_nbsd_ref(vp)
 #define AFS_RELE(vp) afs_nbsd_rele(vp)
+extern int afs_vget();
 extern void afs_nbsd_ref(struct vnode *);
 extern void afs_nbsd_rele(struct vnode *);
 

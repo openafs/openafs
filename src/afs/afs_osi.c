@@ -53,20 +53,18 @@ void osi_Init(void)
 #elif defined(AFS_OSF_ENV)
     usimple_lock_init(&afs_global_lock);
     afs_global_owner = (thread_t)0;
-#elif defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     lockinit(&afs_global_lock, PLOCK, "afs global lock", 0, 0);
     afs_global_owner = 0;
 #elif defined(AFS_AIX41_ENV)
     lock_alloc((void*)&afs_global_lock, LOCK_ALLOC_PIN, 1, 1);
     simple_lock_init((void *)&afs_global_lock);
-#else
-#ifndef AFS_LINUX22_ENV
+#elif !defined(AFS_LINUX22_ENV)
      /* Linux initialization in osi directory. Should move the others. */
     mutex_init(&afs_global_lock, "afs_global_lock", MUTEX_DEFAULT, NULL);
 #endif
-#endif
     /* afs_rxglobal_lock is initialized in rx_Init. */
-#endif
+#endif 	/* AFS_GLOBAL_SUNLOCK */
 #endif 	/* AFS_HPUX_ENV */
 
     if ( !afs_osicred_initialized ) {
@@ -82,19 +80,15 @@ void osi_Init(void)
 int osi_Active(register struct vcache *avc)
 {
     AFS_STATCNT(osi_Active);
-#if defined(AFS_SUN_ENV) || defined(AFS_AIX_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SUN5_ENV) || (AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_SUN_ENV) || defined(AFS_AIX_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SUN5_ENV) || (AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     if ((avc->opens > 0) || (avc->states & CMAPPED))	return 1;   /* XXX: Warning, verify this XXX  */
-#else
-#if	defined(AFS_MACH_ENV)
+#elif	defined(AFS_MACH_ENV)
     if (avc->opens > 0 || ((avc->v.v_flag & VTEXT) && !inode_uncache_try(avc))) return 1;
-#else
-#if defined(AFS_SGI_ENV)
+#elif defined(AFS_SGI_ENV)
     if ((avc->opens > 0) || AFS_VN_MAPPED(AFSTOV(avc)))
         return 1;
 #else
     if (avc->opens > 0 || (AFSTOV(avc)->v_flag & VTEXT)) return(1);
-#endif
-#endif /* AFS_MACH_ENV */
 #endif
     return 0;
 }
@@ -304,26 +298,20 @@ void afs_osi_Invisible(void)
 {
 #ifdef AFS_LINUX22_ENV
     afs_osi_MaskSignals();
-#endif
-#ifdef AFS_DEC_ENV
+#elif defined(AFS_DEC_ENV)
     u.u_procp->p_type |= SSYS;
-#endif
-#if AFS_SUN5_ENV
+#elif defined(AFS_SUN5_ENV)
     curproc->p_flag |= SSYS;
-#endif
-#if AFS_HPUX101_ENV
+#elif defined(AFS_HPUX101_ENV)
     set_system_proc(u.u_procp);
-#endif
-#if defined(AFS_DARWIN_ENV)
+#elif defined(AFS_DARWIN_ENV)
     /* maybe call init_process instead? */
     current_proc()->p_flag |= P_SYSTEM;
-#endif
-#if defined(AFS_FBSD_ENV)
+#elif defined(AFS_XBSD_ENV)
     curproc->p_flag |= P_SYSTEM;
-#endif
-#if defined(AFS_SGI_ENV)
+#elif defined(AFS_SGI_ENV)
     vrelvm();
-#endif /* AFS_SGI_ENV */
+#endif
 
     AFS_STATCNT(osi_Invisible);
 }
