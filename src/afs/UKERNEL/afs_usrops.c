@@ -1418,7 +1418,7 @@ ConfigCell(register struct afsconf_cell *aci, char *arock,
 {
     register int isHomeCell;
     register int i;
-    afs_int32 cellFlags;
+    afs_int32 cellFlags = 0;
     afs_int32 hosts[MAXHOSTSPERCELL];
 
     /* figure out if this is the home cell */
@@ -1448,7 +1448,8 @@ ConfigCellAlias(aca, arock, adir)
 	char *arock;
 	struct afsconf_dir *adir;
 {
-	call_syscall(AFSOP_ADDCELLALIAS, aca->aliasName, aca->realName, 0, 0, 0);
+	call_syscall(AFSOP_ADDCELLALIAS, (long)aca->aliasName, 
+		     (long)aca->realName, 0, 0, 0);
 	return 0;
 }
 
@@ -1684,7 +1685,7 @@ uafs_Init(char *rn, char *mountDirParam, char *confDirParam,
      */
     if (afsd_debug)
 	printf("%s: Calling AFSOP_RXLISTENER_DAEMON\n", rn);
-    fork_syscall(AFSCALL_CALL, AFSOP_RXLISTENER_DAEMON, FALSE);
+    fork_syscall(AFSCALL_CALL, AFSOP_RXLISTENER_DAEMON, FALSE, FALSE, FALSE);
 
     /*
      * Start the RX event handler.
@@ -1786,7 +1787,8 @@ uafs_Init(char *rn, char *mountDirParam, char *confDirParam,
 	call_syscall(AFSCALL_CALL, AFSOP_CACHEINFO, (long)fullpn_DCacheFile,
 		     0, 0, 0);
 
-    call_syscall(AFSCALL_CALL, AFSOP_CELLINFO, fullpn_CellInfoFile, 0, 0, 0);
+    call_syscall(AFSCALL_CALL, AFSOP_CELLINFO, (long)fullpn_CellInfoFile, 0,
+		 0, 0);
 
     /*
      * Pass the kernel the name of the workstation cache file holding the
@@ -1809,6 +1811,12 @@ uafs_Init(char *rn, char *mountDirParam, char *confDirParam,
 	call_syscall(AFSCALL_CALL, AFSOP_AFSLOG, (long)fullpn_AFSLogFile, 0,
 		     0, 0);
 
+    /*
+     * Tell the kernel about each cell in the configuration.
+     */
+    afsconf_CellApply(afs_cdir, ConfigCell, NULL);
+    afsconf_CellAliasApply(afs_cdir, ConfigCellAlias, NULL);
+
     if (afsd_verbose)
 	printf("%s: Forking AFS daemon.\n", rn);
     fork_syscall(AFSCALL_CALL, AFSOP_START_AFS);
@@ -1822,14 +1830,6 @@ uafs_Init(char *rn, char *mountDirParam, char *confDirParam,
     for (i = 0; i < nDaemons; i++) {
 	fork_syscall(AFSCALL_CALL, AFSOP_START_BKG);
     }
-
-    /*
-     * Tell the kernel about each cell in the configuration.
-     */
-    afsconf_CellApply(afs_cdir, ConfigCell, NULL);
-    afsconf_CellAliasApply(afs_cdir, ConfigCellAlias, NULL);
-
-    fork_syscall(AFSCALL_CALL, AFSOP_SET_THISCELL, afs_LclCellName);
 
     if (afsd_verbose)
 	printf("%s: Calling AFSOP_ROOTVOLUME with '%s'\n", rn, rootVolume);
