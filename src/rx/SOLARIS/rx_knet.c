@@ -281,8 +281,10 @@ int osi_FreeSocket(asocket)
     vnode_t *vp = SOTOV(so);
 
     AFS_STATCNT(osi_FreeSocket);
-    if (rxk_ListenerPid)
+    if (rxk_ListenerPid) {
 	kill(rxk_ListenerPid, SIGUSR1);
+	afs_osi_Sleep(&rxk_ListenerPid);
+    }
     return 0;
 }
 
@@ -512,8 +514,10 @@ int osi_FreeSocket(asocket)
     TIUSER *udp_tiptr = (TIUSER *) asocket;    
     AFS_STATCNT(osi_FreeSocket);
 
-    if (rxk_ListenerPid)
+    if (rxk_ListenerPid) {
 	kill(rxk_ListenerPid, SIGUSR1);
+	afs_osi_Sleep(&rxk_ListenerPid);
+    }
     return 0;
 }
 
