@@ -68,6 +68,9 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, long flags)
 	int ttl;
 	char fullname[200]="";
 
+	if (!strcmp(namep,SMB_IOCTL_FILENAME_NOSLASH))
+		return NULL;
+
 	lock_ObtainWrite(&cm_cellLock);
 	for (cp = cm_allCellsp; cp; cp=cp->nextp) {
 		if (strcmp(namep, cp->namep) == 0) {
