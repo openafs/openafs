@@ -179,6 +179,11 @@ extern afs_int32 afs_FirstCSize;
 extern afs_int32 afs_OtherCSize;
 extern afs_int32 afs_LogChunk;
 
+/* afs_cell.c */
+extern struct cell *afs_GetRealCellByIndex(register afs_int32 cellindex,
+					   afs_int32 locktype,
+					   afs_int32 refresh);
+
 /* afs_conn.c */
 extern afs_int32 cryptall;
 extern afs_rwlock_t afs_xinterface;
