@@ -433,19 +433,21 @@ void cm_FreeServer(cm_server_t* server)
 void cm_FreeServerList(cm_serverRef_t** list)
 {
     cm_serverRef_t  **current = list;
-    cm_serverRef_t  **next = 0;
+    cm_serverRef_t  **nextp = 0;
+	cm_serverRef_t  * next = 0;
 
     lock_ObtainWrite(&cm_serverLock);
 
     while (*current)
     {
-        next = &(*current)->next;
+        nextp = &(*current)->next;
         if (--((*current)->refCount) == 0) {
+			next = *nextp;
             cm_FreeServer((*current)->server);
             free(*current);
-            *current = *next;
+            *current = next;
         } else {
-           current = next;
+           current = nextp;
         }
     }
   
