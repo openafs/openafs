@@ -14,7 +14,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_kcommon.c,v 1.1.1.9 2001/10/14 18:06:21 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_kcommon.c,v 1.1.1.10 2002/01/28 00:30:24 hartmans Exp $");
 
 #include "../rx/rx_kcommon.h"
 
@@ -1059,7 +1059,7 @@ void rxk_Listener(void)
 	afs_osi_Wakeup(&afs_termState);
     }
     rxk_ListenerPid = 0;
-#ifdef AFS_LINUX24_ENV
+#if defined(AFS_LINUX22_ENV) || defined(AFS_SUN5_ENV)
     afs_osi_Wakeup(&rxk_ListenerPid);
 #endif
 #ifdef AFS_SUN5_ENV
