@@ -782,15 +782,30 @@ Section "AFS Control Center" SecControl
 !IFDEF CL1310
   File "${AFS_WININSTALL_DIR}\msvcr71d.dll"
   File "${AFS_WININSTALL_DIR}\msvcr71d.pdb"
+  File "${AFS_WININSTALL_DIR}\msvcrtd.dll"
+  File "${AFS_WININSTALL_DIR}\msvcrtd.pdb"
+!ELSE
+!IFDEF CL1300
+  File "${AFS_WININSTALL_DIR}\msvcr70d.dll"
+  File "${AFS_WININSTALL_DIR}\msvcr70d.pdb"
+  File "${AFS_WININSTALL_DIR}\msvcrtd.dll"
+  File "${AFS_WININSTALL_DIR}\msvcrtd.pdb"
 !ELSE
   File "${AFS_WININSTALL_DIR}\msvcrtd.dll"
   File "${AFS_WININSTALL_DIR}\msvcrtd.pdb"
 !ENDIF
+!ENDIF
 !ELSE
 !IFDEF CL1310
   File "${AFS_WININSTALL_DIR}\msvcr71.dll"
+  File "${AFS_WININSTALL_DIR}\msvcrt.dll"
+!ELSE
+!IFDEF CL1300
+  File "${AFS_WININSTALL_DIR}\msvcr70.dll"
+  File "${AFS_WININSTALL_DIR}\msvcrt.dll"
 !ELSE
   File "${AFS_WININSTALL_DIR}\msvcrt.dll"
+!ENDIF
 !ENDIF
 !ENDIF
    
