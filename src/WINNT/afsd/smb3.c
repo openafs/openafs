@@ -583,7 +583,7 @@ long smb_AuthenticateUserLM(smb_vc_t *vcp, char * accountName, char * primaryDom
                         &quotaLimits,
                         &ntsEx);
 
-    if (nts != STATUS_SUCCESS)
+    if (nts != STATUS_SUCCESS || ntsEx != STATUS_SUCCESS)
         osi_Log2(smb_logp,"LsaLogonUser failure: nts %u ntsEx %u",
                   nts, ntsEx);
 
