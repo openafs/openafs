@@ -240,6 +240,30 @@ Variable: rx_mtu
   In order to enable OpenAFS to operate across the Cisco IPSec VPN
   client, this value must be set to 1264 or smaller.
 
+Value	: ConnDeadTimeout
+Type	: DWORD
+Default : 60 (seconds)
+Variable: ConnDeadtimeout
+
+  The Connection Dead Time is enforced to be at a minimum 15 seconds 
+  longer than the minimum SMB timeout as specified by 
+
+  HKLM\SYSTEM\CurrentControlSet\Services\lanmanworkstation\parameters
+    SessTimeout
+
+  If the minimum SMB timeout is not specified the value is 45 seconds.
+  See http://support.microsoft.com:80/support/kb/articles/Q102/0/67.asp
+
+
+Value	: HardDeadTimeout
+Type	: DWORD
+Default : 120 (seconds)
+Variable: HardDeadtimeout
+
+  The Hard Dead Time is enforced to be at least double the ConnDeadTimeout.
+  The provides an opportunity for at least one retry.
+
+
 Value   : AllSubmount
 Type    : DWORD {0, 1}
 Default : 1

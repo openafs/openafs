@@ -1,3 +1,102 @@
+Since 1.3.64:
+   * The timeout logic in the AFS Client Service has been wrong
+     for sometime.  It is based on two different assumptions.
+     First, the SMB client timeout is a fix value as was the case
+     with OS/2 Lan Manager.  This assumption is incorrect.  The
+     SMB timeout in Windows is a dynamic value computed based upon
+     a fixed minimum timeout to which is added time based upon the
+     size of the request and the performance characteristics of
+     the connection.  Second, it is the responsibility of the 
+     SMB Server to enforce the timeout requirements of the client.
+     This is untrue.  The SMB Server cannot be expected to know
+     the requirements of the client.  More importantly, if the 
+     SMB server uses the SMB client timeout as a value to restrict
+     its behavior as an RX client, the performance characteristics
+     of the local SMB session would be used to prematurely terminate
+     WAN connections with significantly different performance 
+     characteristics.
+
+     The timeout logic has therefore been modified in the following
+     manner:
+      . the Lan Manager Workstation (SMB) Session Timeout is used only
+        as a basis for configuring the Connection Dead Timeout 
+        and Hard Dead Timeout values.  The Connection Dead Timeout
+        must be at least 15 seconds longer than the SMB Timeout
+        and the Hard Dead Timeout must be at least double the 
+        Connection Dead Timeout.
+      . New registry entries have been added to allow the Connection
+        Dead Timeout and Hard Dead Timeout values independent of the
+        Lan Manager Workstation Session Timeout
+      . The test to enforce the SMB Client Timeout has been removed.
+        
+     One of the side-effects of removing the enforcement of the SMB 
+     Client Timeout is that regardless of whether or not the SMB client
+     is available to receive the response (and how would the SMB server
+     know) the RX protocol response can be used to update the AFS 
+     Client Service state for ready access by future SMB client 
+     requests.
+
+     This should be the end of the "Server paused or restarting messages"
+   
+   * Fix "fs mkmount" command to work with UNC paths and when
+     started from non-AFS drives
+
+   * Add support for arbitrary UNC paths to the pioctl() support.
+     This enables the fs commands as well as the AFS Shell Extension
+     to work correctly when UNC paths are being used.
+
+   * Fix afscreds.exe (by updating afskfw.lib) to search for cells via
+     DNS if the cell configuration cannot be determined via CellServDB
+
+   * Add debug info to test whether CM_BUF_WAITING or CM_SCACHE_WAITING
+     are ever set more than once at a time
+ 
+   * Fix the management of lists of cm_cell_t structures when using 
+     DNS to lookup cell information.  The previous code would fail to
+     reuse the same cellID for a cell if DNS was used more than once
+     for a given cell name.  When the ttl expired, a single cm_cell_t
+     could be inserted into the cm_allCellsp list more than once 
+     producing a loop.  In addition, the vlServerp list belonging to
+     the cell was not freed resulting in improper refCounting of the
+     servers.
+
+   * Add DNS support to cm_IoctlNewCell() which previous only examined
+     the CellServDB file
+
+   * Add cm_FreeServer() function and call it from cm_FreeServerList()
+     to properly garbage collect cm_server_t objects 
+     
+   * Add numVCs variable to smb.c to track the number of smb_vc_t 
+     objects created and use it to initialize the vcID field which 
+     previously was set to 0 in all objects resulting in FindByID 
+     collisions.
+
+   * Fixed DNS lookups to work consistently throughout the OpenAFS
+     product instead of just from within the afsd_service.exe
+
+   * Added a runtime check to ensure that AFS Client Service SMB
+     Server is accepting connections before attempting to mount
+     global drives.
+
+   * Read IP addresses for volume servers out of the CellServDB
+     file if gethostbyname() on the hostname fails.
+
+   * Fix getcellconfig() to populate both the Hostnames as well
+     as IP addresses when loading cell data via DNS
+
+   * Increase the Connection Dead Time to 50 from 20 seconds
+     Increase the Hard Dead Time to 120 from 40 seconds
+     (matches the Unix values)
+
+   * Fixed an assertion validating the number of allocated NCBs
+
+   * Fixed the build environment to consistently build for 
+     Windows 2000 and above.  (APPVER = 5.0)
+
+   * Fixed rx_debug to properly validate the receipt in incoming
+     data with select() and recvfrom().  Do not copy data out of
+     the socket buffer unless success is indicated.
+
 Since 1.3.63:
    * afsd_service.exe will now display a message box to the 
      desktop when it terminates due to an IP Address Change.
