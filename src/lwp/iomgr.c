@@ -292,7 +292,7 @@ static int FDSetCmp(int nfds, fd_set *fd_set1, fd_set *fd_set2)
  */
 static void FDSetSet(int nfds, fd_set *fd_set1, fd_set *fd_set2)
 {
-    unsigned int i;
+    unsigned int i, n;
 
     if (fd_set1 == (fd_set*)0 || fd_set2 == (fd_set*)0)
 	return;
@@ -307,7 +307,7 @@ static void FDSetSet(int nfds, fd_set *fd_set1, fd_set *fd_set2)
     if (nfds == 0)
 	return;
 
-    for (i=0,n = INTS_PER_FDS(nfds); i<n; i++) {
+    for (i = 0, n = INTS_PER_FDS(nfds); i < n; i++) {
 	fd_set1->FDS_BITS[i] |= fd_set2->FDS_BITS[i];
     }
 #endif

@@ -1348,8 +1348,8 @@ MyBeforeProc(struct cmd_syndesc *as, char *arock)
 	    }
 #else
 	    /* No explicit name provided: use Unix uid. */
-	    struct passwd pw = getpwuid(getuid());
-	    if (pw == 0) {
+	    struct passwd *pw = getpwuid(getuid());
+	    if (pw == NULL) {
 		printf("Can't figure out your name from your user id.\n");
 		return KABADCMD;
 	    }

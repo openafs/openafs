@@ -975,9 +975,10 @@ WorkerBee(as, arock)
     if (centralLogFile) {
 	struct stat sbuf;
 	afs_int32 statcode;
-#ifdef AFS_NT40_ENV
+#ifndef AFS_NT40_ENV
 	char path[AFSDIR_PATH_MAX];
 #endif
+
 	statcode = stat(centralLogFile, &sbuf);
 	centralLogIO = fopen(centralLogFile, "a");
 	if (!centralLogIO) {
