@@ -27,6 +27,7 @@ A. Creating the proper directory structure.
       sun4x_56/
       sun4x_57/
       sun4x_58/
+      ppc_darwin_13/
       alpha_linux_2216_22/ (DES does not work, will require one more change to
 				compile)
 

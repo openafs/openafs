@@ -12,7 +12,6 @@ include ../config/Makefile.${SYS_NAME}
 
 KERNELDIR = ../libafs/
 UKERNELDIR = ../libuafs/
-INSTALL = ${SRCDIR}bin/install
 COMPILE_ET = ${SRCDIR}bin/compile_et
 OBJS= cellconfig.o ktc.o userok.o writeconfig.o authcon.o \
     acfg_errors.o ktc_errors.o # comktc.o comvice.o comauth.o 
@@ -48,8 +47,7 @@ setkey.o: setkey.c ${INCLS} AFS_component_version_number.o
 #comauth.o: comauth.c ${INCLS} ${SRCDIR}include/afs/vice.h
 
 ktc.krb.o: ktc.c ${INCLS} ${SRCDIR}include/afs/vice.h
-	${CC} ${CFLAGS} -DMAYBE_NO_KTC -DAFS_KERBEROS_ENV -c ktc.c
-	mv ktc.o ktc.krb.o
+	${CC} ${CFLAGS} -DMAYBE_NO_KTC -DAFS_KERBEROS_ENV -c ktc.c -o ktc.krb.o
 
 ktc.o: ktc.c ${INCLS} ${SRCDIR}include/afs/vice.h
 	${CC} ${CFLAGS} -DMAYBE_NO_KTC -c ktc.c

@@ -1,4 +1,4 @@
-/*
+ /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
  * 
@@ -10,6 +10,9 @@
 #ifdef	KERNEL
 #include "../afs/param.h"
 #ifndef UKERNEL
+#ifdef AFS_DARWIN_ENV
+#include "../afs/sysincludes.h"
+#else
 #include "../h/types.h"
 #include "../h/time.h"
 #include "../h/stat.h"
@@ -23,6 +26,7 @@
 #if defined(AFS_SGI_ENV)
 #include "../afs/sysincludes.h"
 #endif
+#endif
 #include "../afs/afs_args.h"
 #include "../afs/afs_osi.h"
 #if	(defined(AFS_AUX_ENV) || defined(AFS_AIX_ENV))
@@ -34,7 +38,6 @@
 #ifdef RXDEBUG
 #undef RXDEBUG	    /* turn off debugging */
 #endif /* RXDEBUG */
-#include "../afsint/afsint.h"
 
 #include "../rx/rx_kmutex.h"
 #include "../rx/rx_kernel.h"

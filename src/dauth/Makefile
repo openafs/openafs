@@ -9,7 +9,6 @@ SHELL = 	/bin/sh
 COMPONENT=	dauth
 include ../config/Makefile.${SYS_NAME}
 
-INSTALL=	${SRCDIR}bin/install
 COMPILE_ET = 	${SRCDIR}bin/compile_et
 OPTMZ=	-g
 
@@ -17,11 +16,11 @@ CFLAGS = 	${OPTMZ} -I${SRCDIR}include ${XCFLAGS}
 LDFLAGS =	${OPTMZ} ${XLDFLAGS}
 
 INCLS=		${SRCDIR}include/ubik.h \
-            	${SRCDIR}include/lwp.h \
-             	${SRCDIR}include/lock.h  \
-             	${SRCDIR}include/rx/rx.h \
-             	${SRCDIR}include/rx/xdr.h \
-	     	${SRCDIR}include/afs/com_err.h
+	       	${SRCDIR}include/lwp.h \
+	       	${SRCDIR}include/lock.h  \
+	       	${SRCDIR}include/rx/rx.h \
+	       	${SRCDIR}include/rx/xdr.h \
+		${SRCDIR}include/afs/com_err.h
 
 VERSION =	AFS_component_version_number.o
 OBJS =		adkint.cs.o adkint.xdr.o
@@ -71,7 +70,7 @@ dpass:		dpass.o $(VERSION) $(LIBS)
 dlog_test:	dlog.c $(OBJS) $(LIBS)
 		$(CC) $(LDFLAGS) -DDLOG_TEST -o dlog_test dlog.c $(OBJS) \
 			$(LIBS) ${XLIBS}
-	
+
 system: 	install
 
 ${DESTDIR}bin/dlog: dlog

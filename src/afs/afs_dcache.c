@@ -1237,7 +1237,7 @@ static int afs_UFSCacheStoreProc(acall, afile, alen, avc, shouldWake,
 	tlen = (alen > AFS_LRALLOCSIZ ? AFS_LRALLOCSIZ : alen);
 	got = afs_osi_Read(afile, -1, tbuffer, tlen);
 	if ((got < 0) 
-#if	!defined(AFS_SUN5_ENV) && !defined(AFS_OSF_ENV) && !defined(AFS_SGI64_ENV) && !defined(AFS_LINUX20_ENV)
+#if	!defined(AFS_SUN5_ENV) && !defined(AFS_OSF_ENV) && !defined(AFS_SGI64_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV)
 	    || (got != tlen && getuerror())
 #endif
 	    ) {
@@ -1718,6 +1718,7 @@ struct dcache *afs_GetDCache(avc, abyte, areq, aoffset, alen, aflags)
 	updateV2DC(setLocks,avc,tdc,567);
 	return tdc;	/* check if we're done */
     }
+    osi_Assert(setLocks || WriteLocked(&avc->lock));
 
     if (setLocks) ObtainReadLock(&avc->lock);
     if (!hsame(avc->m.DataVersion, tdc->f.versionNo)) {
@@ -2299,7 +2300,7 @@ struct dcache *afs_UFSGetDSlot(aslot, tmpdc)
 	tdc->f.chunk = -1;
 	hones(tdc->f.versionNo);
 	tdc->flags |= DFEntryMod;
-#if !defined(AFS_SUN5_ENV) && !defined(AFS_OSF_ENV) && !defined(AFS_SGI64_ENV) && !defined(AFS_LINUX20_ENV)
+#if !defined(AFS_SUN5_ENV) && !defined(AFS_OSF_ENV) && !defined(AFS_SGI64_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV)
 	last_error = getuerror();
 #endif
 	lasterrtime = osi_Time();

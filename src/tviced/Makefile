@@ -10,7 +10,6 @@ COMPONENT=tviced
 include ../config/Makefile.${SYS_NAME}
 
 CC=${MT_CC}
-INSTALL=${SRCDIR}bin/install
 INCLUDES=-I. -I.. -I${SRCDIR}include -I${SRCDIR}include/afs
 CFLAGS=${DBG} ${OPTMZ} -DNINTERFACE ${INCLUDES} ${MT_CFLAGS} -DRXDEBUG
 LDFLAGS=${DBG} ${XLDFLAGS}

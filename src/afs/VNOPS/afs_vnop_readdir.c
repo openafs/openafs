@@ -136,6 +136,12 @@ struct irix5_min_dirent {     /* miniature dirent structure */
 #else
 struct min_direct {	/* miniature direct structure */
 			/* If struct direct changes, this must too */
+#ifdef AFS_DARWIN_ENV
+    afs_uint32  d_fileno;
+    u_short     d_reclen;
+    u_char      d_type;
+    u_char      d_namlen;
+#else   
 #ifdef	AFS_SUN5_ENV
     afs_uint32	d_fileno;
     afs_int32	d_off;
@@ -150,6 +156,7 @@ struct min_direct {	/* miniature direct structure */
     afs_uint32	d_fileno;
     u_short	d_reclen;
     u_short	d_namlen;
+#endif
 #endif
 };
 #endif /* AFS_SGI_ENV */
@@ -337,6 +344,9 @@ int			off;
 #if defined(AFS_SUN_ENV) || defined(AFS_AIX32_ENV) || defined(AFS_SGI_ENV)
     sdirEntry.d_off = off;
 #endif
+#if defined(AFS_DARWIN_ENV)
+    sdirEntry.d_type=DT_UNKNOWN;
+#endif
 
 #if defined(AFS_SGI_ENV)
     AFS_UIOMOVE(&sdirEntry, DIRENTBASESIZE, UIO_READ, auio, code);
@@ -409,7 +419,7 @@ void afs_bulkstat_send( avc, req )
  * It has to do with 'offset' (seek locations).
 */
 
-#if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) || defined(AFS_OSF_ENV)
+#if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) || defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV)
 afs_readdir(OSI_VC_ARG(avc), auio, acred, eofp)
     int *eofp;
 #else
@@ -466,7 +476,7 @@ afs_readdir(OSI_VC_ARG(avc), auio, acred)
 #endif /* AFS_SGI61_ENV */
 #endif /* defined(AFS_SGI53_ENV) */
 
-#if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) || defined(AFS_OSF_ENV)
+#if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) || defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV)
     /* Not really used by the callee so we ignore it for now */
     if (eofp) *eofp = 0;
 #endif

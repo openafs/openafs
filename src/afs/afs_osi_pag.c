@@ -100,7 +100,7 @@ afs_uint32 getpag(void) {
 int
 #if	defined(AFS_SUN5_ENV)
 afs_setpag (struct AFS_UCRED **credpp)
-#elif	defined(AFS_OSF_ENV)
+#elif  defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV)
 afs_setpag (struct proc *p, void *args, int *retval)
 #else
 afs_setpag (void) 
@@ -159,12 +159,18 @@ afs_setpag (void)
 	code = AddPag(genpag(), &credp);
 	crfree(credp);
     }
+#elif defined(AFS_DARWIN_ENV) 
+    {
+       struct ucred *credp=crdup(p->p_cred->pc_ucred);
+       code=AddPag(p, genpag(), &credp);
+       crfree(credp);
+    }
 #else
     code = AddPag(genpag(), &u.u_cred);
 #endif
 
     afs_Trace1(afs_iclSetp, CM_TRACE_SETPAG, ICL_TYPE_INT32, code);
-#if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) || defined(AFS_OSF_ENV) || defined(AFS_LINUX20_ENV)
+#if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) || defined(AFS_OSF_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV)
 #if defined(AFS_SGI53_ENV) && defined(MP)
     AFS_GUNLOCK();
 #endif /* defined(AFS_SGI53_ENV) && defined(MP) */    
@@ -176,7 +182,7 @@ afs_setpag (void)
 #endif
 }
 
-#ifdef	AFS_OSF_ENV
+#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV)
 int AddPag(struct proc *p, afs_int32 aval, struct AFS_UCRED **credpp)
 #else	/* AFS_OSF_ENV */
 int AddPag(afs_int32 aval, struct AFS_UCRED **credpp)
@@ -184,12 +190,12 @@ int AddPag(afs_int32 aval, struct AFS_UCRED **credpp)
 {
     afs_int32 newpag, code;
     AFS_STATCNT(AddPag);
-#ifdef	AFS_OSF_ENV
+#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV)
     if (code = setpag(p, credpp, aval, &newpag, 0))
 #else	/* AFS_OSF_ENV */
     if (code = setpag(credpp, aval, &newpag, 0))
 #endif
-#if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) || defined(AFS_OSF_ENV) || defined(AFS_LINUX20_ENV)
+#if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) || defined(AFS_OSF_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV)
 	return (code);
 #else
 	return (setuerror(code), code);
@@ -211,7 +217,12 @@ afs_InitReq(av, acred)
 	 * think it's ok to use the real uid to make setuid
          * programs (without setpag) to work properly.
          */
+#ifdef AFS_DARWIN_ENV
+        av->uid = acred->cr_uid;    /* default when no pag is set */
+                                    /* bsd creds don't have ruid */
+#else
 	av->uid	= acred->cr_ruid;    /* default when no pag is set */
+#endif
     }
     av->initd = 0;
     return 0;
@@ -268,6 +279,15 @@ afs_int32 PagInCred(const struct AFS_UCRED *cred)
     if (cred == NULL) {
 	return NOPAG;
     }
+#ifdef AFS_DARWIN_ENV
+    if (cred == NOCRED || cred == FSCRED) {
+        return NOPAG;
+    }
+    if (cred->cr_ngroups < 3) return NOPAG;
+    /* gid is stored in cr_groups[0] */
+    g0 = cred->cr_groups[1];
+    g1 = cred->cr_groups[2];
+#else
 #ifdef	AFS_AIX_ENV
     if (cred->cr_ngrps < 2) {
 	return NOPAG;
@@ -275,6 +295,7 @@ afs_int32 PagInCred(const struct AFS_UCRED *cred)
 #else
 #if defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_DUX40_ENV) || defined(AFS_LINUX_ENV)
     if (cred->cr_ngroups < 2) return NOPAG;
+#endif
 #endif
 #endif
     g0 = cred->cr_groups[0];

@@ -26,7 +26,6 @@ SHELL = /bin/sh
 include ../config/Makefile.${SYS_NAME}
 
 UKERNELDIR=../libuafs/
-INSTALL=${SRCDIR}bin/install
 SRC	=.
 MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
 

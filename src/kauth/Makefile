@@ -13,7 +13,6 @@ COMPONENT=kauth
 include ../config/Makefile.${SYS_NAME}
 
 UKERNELDIR = ../libuafs/
-INSTALL=${SRCDIR}bin/install
 COMPILE_ET = ${SRCDIR}bin/compile_et
 MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
 
@@ -190,8 +189,7 @@ kpwvalid: kpwvalid.o $(LIBS)
 	${CC} ${LDFLAGS} -o kpwvalid kpwvalid.o ${LIBS} ${XLIBS}
 
 user.krb.o: user.c ${INCLS} ${SRCDIR}include/afs/vice.h
-	${CC} ${CFLAGS} -DAFS_KERBEROS_ENV -c user.c
-	mv user.o user.krb.o
+	${CC} ${CFLAGS} -DAFS_KERBEROS_ENV -c user.c -o user.krb.o
 
 user.o: user.c ${INCLS} ${SRCDIR}include/afs/vice.h
 	${CC} ${CFLAGS} -c user.c

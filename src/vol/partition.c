@@ -28,6 +28,9 @@
 #if AFS_HAVE_STATVFS
 #include <sys/statvfs.h>
 #endif /* AFS_HAVE_STATVFS */
+#ifdef AFS_DARWIN_ENV
+#include <sys/mount.h>
+#endif
 
 #if !defined(AFS_SGI_ENV)
 #ifdef	AFS_OSF_ENV
@@ -39,10 +42,15 @@
 #ifdef	AFS_SUN5_ENV
 #include <sys/fs/ufs_fs.h>
 #else
+#ifdef AFS_DARWIN_ENV
+#include <ufs/ufs/dinode.h>
+#include <ufs/ffs/fs.h>
+#else
 #include <ufs/fs.h>
 #endif
+#endif
 #else /* AFS_VFSINCL_ENV */
-#if !defined(AFS_AIX_ENV) && !defined(AFS_LINUX22_ENV)
+#if !defined(AFS_AIX_ENV) && !defined(AFS_LINUX22_ENV) && !defined(AFS_DARWIN_ENV)
 #include <sys/fs.h>
 #endif
 #endif /* AFS_VFSINCL_ENV */
@@ -409,7 +417,7 @@ int VAttachPartitions(void)
 
 }
 #endif
-#ifdef AFS_DUX40_ENV
+#if defined(AFS_DUX40_ENV) || defined(AFS_DARWIN_ENV)
 int VAttachPartitions(void)
 {
     int errors = 0;

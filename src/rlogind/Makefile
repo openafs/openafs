@@ -25,7 +25,6 @@ LIBC=	/lib/libc.a
 SRCS=	rlogind.c ../rsh/rcmd.c ../rsh/herror.c ../inetd/ta-rauth.c
 OBJS=	rlogind.o ../rsh/rcmd.o ../rsh/herror.o ../inetd/ta-rauth.o
 MAN=
-INSTALL = ${DESTDIR}bin/install
 LIBDIR = ${DESTDIR}lib/
 AFSLIBS =  ${LIBDIR}afs/libkauth.a ${LIBDIR}afs/libprot.a ${LIBDIR}libubik.a\
 		   ${LIBDIR}afs/libauth.a ${DESTDIR}lib/librxkad.a ${LIBDIR}afs/libsys.a \

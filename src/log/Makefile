@@ -15,9 +15,6 @@ CFLAGS = ${OPTMZ} ${INCDIRS} ${XCFLAGS} ${DBUG}
 
 PROGRAMS=	unlog tokens tokens.krb kseal
 
-INSTALL = ${SRCDIR}bin/install
-INSTALLro = ${SRCDIR}bin/install -m 644
-
 INCLS=${SRCDIR}include/afs/auth.h ${SRCDIR}include/rx/rx.h \
 ${SRCDIR}include/rx/xdr.h ${SRCDIR}include/des.h ${SRCDIR}include/rx/rxkad.h \
 ${SRCDIR}include/afs/cellconfig.h

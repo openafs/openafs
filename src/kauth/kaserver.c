@@ -63,7 +63,7 @@ int MinHours = 0;
 int npwSums = KA_NPWSUMS;               /* needs to be variable sometime */
 
 #include <stdarg.h>
-#if !defined(AFS_NT40_ENV) && !defined(AFS_LINUX20_ENV)
+#if !defined(AFS_NT40_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV)
 #undef vfprintf
 #define vfprintf(stream,fmt,args) _doprnt(fmt,args,stream)
 #endif

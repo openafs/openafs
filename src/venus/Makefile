@@ -10,8 +10,7 @@ COMPONENT=venus
 LINUX_VERS=dummy
 include ../config/Makefile.${SYS_NAME}
 
-INSTALL = ${DESTDIR}bin/install
-INSTALLex = ${DESTDIR}bin/install -m 755
+INSTALLex = ${INSTALL} -m 755
 CCXPG2= /usr/xpg2bin/cc
 
 CFLAGS = ${OPTMZ} -I${DESTDIR}include -I${SRCDIR}include ${XCFLAGS}

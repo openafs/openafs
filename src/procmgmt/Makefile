@@ -8,7 +8,6 @@
 include ../config/Makefile.${SYS_NAME}
 include ../config/Makefile.version
 
-INSTALL=${SRCDIR}bin/install
 CFLAGS = $(DBUG) -I${SRCDIR}include ${XCFLAGS}
 
 ########################################################################

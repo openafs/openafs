@@ -39,13 +39,13 @@ XLIBS=
 AR=ar
 AS=as
 CP=cp
-INSTALL=${SRCDIR}bin/install
 LD=ld   
 MT_CC=cc
 MV=mv
 RANLIB=ranlib
 RM=rm
-WASHTOOL=${SRCDIR}bin/washtool
+WASHTOOL=${DESTDIR}bin/washtool
+INSTALL=${DESTDIR}bin/install
 #
 # Other OS specific requirements
 #

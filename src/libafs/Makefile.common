@@ -10,7 +10,6 @@
 SHELL=/bin/sh
 DESTDIR = DEST/
 SRCDIR = DEST/
-INSTALL = $(DESTDIR)bin/install
 INCLUDE= -I.  -I/usr/include
 Aobj=COMMON
 Dobj=DYNEL

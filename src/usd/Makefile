@@ -9,7 +9,6 @@ SHELL = /bin/sh
 COMPONENT=ptserver
 include ../config/Makefile.${SYS_NAME}
 
-INSTALL=${SRCDIR}bin/install
 RXGEN=${SRCDIR}bin/rxgen
 COMPILE_ET = ${SRCDIR}bin/compile_et
 

@@ -754,8 +754,13 @@ int gator_cursesgwin_getdimensions(gwp, aparms)
     struct gator_cursesgwin *cwp;	/*Curses-specific data*/
 
     cwp = (struct gator_cursesgwin *)(gwp->w_data);
+#ifdef AFS_DARWIN_ENV
+    aparms->maxx = cwp->wp->maxx;
+    aparms->maxy = cwp->wp->maxy;
+#else
     aparms->maxx = cwp->wp->_maxx;
     aparms->maxy = cwp->wp->_maxy;
+#endif
 
     return(0);
 

@@ -12,8 +12,6 @@ SHELL = /bin/sh
 COMPONENT=fsprobe
 include ../config/Makefile.${SYS_NAME}
 
-INSTALL=${SRCDIR}bin/install
-
 CFLAGS=-g -I. \
 	-I${SRCDIR}include \
 	-I${SRCDIR}include/afs \

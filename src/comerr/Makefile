@@ -17,7 +17,6 @@ LINTFILES= error_msg.c et_name.c com_err.c
 LIBOBJS= error_msg.o et_name.o com_err.o
 
 UKERNELDIR=../libuafs/
-INSTALL=${SRCDIR}bin/install
 
 CFLAGS= ${OPTMZ} -I${DESTDIR}include ${XCFLAGS}
 FILES=	Makefile et_name.c error_msg.c compile_et.c \

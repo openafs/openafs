@@ -9,8 +9,6 @@ SHELL=/bin/sh
 COMPONENT=volser
 include ../config/Makefile.${SYS_NAME}
 
-INSTALL=${SRCDIR}bin/install
-
 COMPILE_ET=${SRCDIR}bin/compile_et
 CFLAGS=${DBG} ${OPTMZ} -I${SRCDIR}include ${XCFLAGS} ${DBG_DEFS}
 LDFLAGS=${DBG} ${OPTMZ} ${XLDFLAGS}

@@ -11,12 +11,11 @@ include ../config/Makefile.${SYS_NAME}
 
 CFLAGS = ${OPTMZ} -I$(SRCDIR)include ${XCFLAGS}
 LDFLAGS = ${OPTMZ} ${XLDFLAGS}
-INSTALL = ${SRCDIR}bin/install
 
 objects = assert.o base64.o casestrcpy.o ktime.o volparse.o hostparse.o \
 	 hputil.o kreltime.o isathing.o get_krbrlm.o uuid.o serverLog.o \
 	 dirpath.o fileutil.o netutils.o flipbase64.o \
-	 afs_atomlist.o afs_lhash.o snprintf.o
+	 afs_atomlist.o afs_lhash.o snprintf.o ${REGEX_OBJ}
 
 headers = assert.h potpourri.h itc.h errors.h afsutil.h pthread_glock.h \
 	  dirpath.h afs_atomlist.h afs_lhash.h
@@ -61,10 +60,10 @@ ukinstall webinstall: install0
 
 ${DESTDIR}include/afs/dirpath.h: dirpath.h
 	${INSTALL} dirpath.h  ${DESTDIR}include/afs
-	
+
 ${DESTDIR}include/afs/pthread_nosigs.h: pthread_nosigs.h
 	${INSTALL} pthread_nosigs.h  ${DESTDIR}include/afs
-	
+
 doc:
 	echo no documents in this directory
 

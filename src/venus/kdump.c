@@ -195,6 +195,13 @@ typedef	struct adaptive_mutex2	adaptive_mutex2_t;
 #include <vfs/vnode.h>
 #include <sys/inode.h>
 #else /* AFS_MACH_ENV */
+#ifdef  AFS_DARWIN_ENV
+#include <sys/vnode.h>
+#include <sys/mount.h>
+#include <ufs/ufs/quota.h> 
+#include <ufs/ufs/inode.h>
+#include <ufs/ffs/fs.h> 
+#else
 #include "sys/vfs.h"
 #ifdef AFS_LINUX20_ENV
 #define UIO_MAXIOV 1 /* don't care */
@@ -276,6 +283,7 @@ typedef enum _spustate {        /* FROM /etc/conf/h/_types.h */
 #else
 #ifndef AFS_LINUX20_ENV
 #include "ufs/inode.h"
+#endif
 #endif
 #endif
 #endif
@@ -930,6 +938,7 @@ int cnt, size;
 #endif /*AFS_KDUMP_LIB */
 #endif
 
+#ifndef AFS_DARWIN_ENV
 int
 findsym( char *sname, off_t *offset )
 {
@@ -994,12 +1003,16 @@ findsym( char *sname, off_t *offset )
 	}
 #endif	/* defined(AFS_SUN5_ENV) */
 }
+#endif
 
 #define CBHTSIZE 128
 
 kdump()
 {
     int cell, cnt, cnt1;
+#ifdef AFS_DARWIN_ENV
+   printf("Kdump not supported\n");
+#else
 #ifndef AFS_KDUMP_LIB
 
     kmem = opencore(core);
@@ -1129,9 +1142,11 @@ kdump()
     if (Dgcpags || Dall) {
 	print_gcpags(1);
     }
+#endif
     return 0;
 }
 
+#ifndef AFS_DARWIN_ENV
 int Sum_cellnames=0, Sum_userstp=0, Sum_volnames=0, Sum_exps=0, Sum_nfssysnames=0;
 int Sum_vcachemvids=0, Sum_vcachelinkData=0, Sum_vcacheacc=0, Sum_vcachelocks=0;
 
@@ -4016,6 +4031,7 @@ void print_cmstats(cmp)
 #endif
 }
 
+#endif
 #if 0
 #define OffsetOf(s,mem)	((long)(&(((s *)0)->mem)))
 #define SizeOf(s,mem)	((long)sizeof(((s *)0)->mem))

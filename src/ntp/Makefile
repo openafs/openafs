@@ -9,7 +9,6 @@ SHELL = /bin/sh
 COMPONENT=ntp
 include ../config/Makefile.${SYS_NAME}
 
-INSTALL=${SRCDIR}bin/install
 INCPATH= -I${DESTDIR}include
 BINDIR=/usr/local/etc
 LINKDIR=/etc

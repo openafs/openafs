@@ -20,7 +20,6 @@ MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
 
 UKERNELDIR = ../libuafs/
 LOCALDIR = ${DESTDIR}root.server/usr/afs/local/
-INSTALL = ${SRCDIR}bin/install
 
 audobjs = audit.o
 

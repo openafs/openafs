@@ -9,8 +9,6 @@ SHELL = /bin/sh
 COMPONENT=butc
 include ../config/Makefile.${SYS_NAME}
 
-INSTALL=${SRCDIR}bin/install
-
 CFLAGS=-g -w ${INCDIRS} ${XCFLAGS}
 
 INCDIRS= -I${SRCDIR}include/afs -I${SRCDIR}include/rx -I${SRCDIR}include

@@ -10,7 +10,6 @@
 SHELL = /bin/sh
 COMPONENT=xstat
 include ../config/Makefile.${SYS_NAME}
-INSTALL=${SRCDIR}bin/install
 
 CFLAGS= ${DBUG} -I. \
 	-I${SRCDIR}include \

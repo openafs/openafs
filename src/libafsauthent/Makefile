@@ -12,7 +12,6 @@ COMPONENT=libafsauthent
 include ../config/Makefile.${SYS_NAME}
 
 CC=${MT_CC}
-INSTALL = ${SRCDIR}bin/install
 CFLAGS = ${OPTMZ} ${DBG} -I${SRCDIR}include ${MT_CFLAGS} 
 CCRULE = ${CC} ${CFLAGS} -c $?
 

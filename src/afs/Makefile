@@ -6,7 +6,6 @@
 # directory or online at http://www.openafs.org/dl/license10.html
 
 SHELL=/bin/sh
-INSTALL = ${SRCDIR}bin/install
 KERNELDIR = ../libafs/
 UKERNELDIR = ../libuafs/
 
@@ -34,11 +33,13 @@ kinstall: AFS_component_version_number.c
 			gencat -m afszcm.cat afs_trace.msf ;; \
 		*_linux* ) \
 			gencat --new afszcm.cat afs_trace.msf ;; \
+		ppc_darwin*) \
+			echo No gencat for ${SYS_NAME} ;; \
 		* ) \
 			gencat afszcm.cat afs_trace.msf ;; \
 	esac
-	
-	
+
+
 
 ukinstall webinstall: AFS_component_version_number.c
 	set ${UKERNELDIR}afs; $(MKDIR_IF_NEEDED)
@@ -58,7 +59,7 @@ install install.noversion: kinstall ukinstall
 			${INSTALL} longc_procs.h ${DESTDIR}include/afs ;; \
 	esac
 	case ${SYS_NAME} in \
-		next_mach30 | vax_ul43) \
+		next_mach30 | vax_ul43 | ppc_darwin* ) \
 			echo skipping afszcm.cat install for ${SYS_NAME} ;; \
 		* ) \
 			${INSTALL} afszcm.cat ${DESTDIR}root.client/usr/vice/etc/C ;; \

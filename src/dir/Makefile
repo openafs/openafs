@@ -11,7 +11,6 @@ include ../config/Makefile.${SYS_NAME}
 
 KERNELDIR = ../libafs/
 UKERNELDIR = ../libuafs/
-INSTALL = ${SRCDIR}bin/install
 MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
 
 INCDIRS= -I${DESTDIR}include ${XINCLS}

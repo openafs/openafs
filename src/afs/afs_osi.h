@@ -109,11 +109,17 @@ extern void  osi_FreeLargeSpace(void *x);
 /*
  * Vnode related macros
  */
+#ifdef AFS_DARWIN_ENV
+extern int (**afs_vnodeop_p)();
+#define IsAfsVnode(vc)      ((vc)->v_op == afs_vnodeop_p)
+#define SetAfsVnode(vc)     (vc)->v_op = afs_vnodeop_p
+#else
 extern struct vnodeops *afs_ops;
-#define	vType(vc)	    (vc)->v.v_type
-#define	vSetType(vc,type)   (vc)->v.v_type = (type)
 #define	IsAfsVnode(vc)	    ((vc)->v_op == afs_ops)
 #define	SetAfsVnode(vc)	    (vc)->v_op = afs_ops
+#endif
+#define	vType(vc)	    (vc)->v.v_type
+#define	vSetType(vc,type)   (vc)->v.v_type = (type)
 #define	vSetVfsp(vc,vfsp)   (vc)->v.v_vfsp = (vfsp)
 
 #ifdef AFS_SGI65_ENV
@@ -230,7 +236,13 @@ typedef struct timeval osi_timeval_t;
  * (Also, of course, the vnode is assumed to be one of ours.  Can't use this
  * macro for V-file vnodes.)
  */
+#ifdef AFS_DARWIN_ENV
+/* Bare refcount manipulation would probably work on this platform, but just
+   calling VREF does not */
+#define AFS_FAST_HOLD(vp) osi_vnhold((vp),0)
+#else
 #define AFS_FAST_HOLD(vp) VN_HOLD(&(vp)->v)
+#endif
 #define AFS_FAST_RELE(vp) AFS_RELE(&(vp)->v)
 
 /*
@@ -270,7 +282,7 @@ typedef struct timeval osi_timeval_t;
 		AFS_GLOCK();					\
 	} while(0)
 
-#ifdef AFS_OSF_ENV
+#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV)
 #define AFS_UIOMOVE(SRC,LEN,RW,UIO,CODE)			\
 	do {							\
 	    int haveGlock = ISAFS_GLOCK();			\
@@ -310,7 +322,7 @@ typedef struct timeval osi_timeval_t;
 	    CODE = copyout((SRC),(DST),(LEN));			\
 	} while(0)
 
-#ifdef AFS_OSF_ENV
+#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV)
 #define AFS_UIOMOVE(SRC,LEN,RW,UIO,CODE)			\
 	do {							\
 	    (UIO)->uio_rw = (RW);				\

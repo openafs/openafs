@@ -12,7 +12,6 @@ SHELL = /bin/sh
 COMPONENT=budb
 include ../config/Makefile.${SYS_NAME}
 
-INSTALL=${SRCDIR}bin/install
 COMPILE_ET = ${SRCDIR}bin/compile_et
 RXGEN=${SRCDIR}bin/rxgen
 

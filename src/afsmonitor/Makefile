@@ -13,8 +13,6 @@ SRCDIR=DEST/
 COMPONENT=afsmonitor
 include ../config/Makefile.${SYS_NAME}
 
-INSTALL=${SRCDIR}bin/install
-
 CFLAGS=-g -I. \
 	-I${SRCDIR}include \
 	-I${SRCDIR}include/afs \

@@ -12,7 +12,6 @@ MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
 
 CFLAGS=${OPTMZ} -I./ -I${SRCDIR}include ${XCFLAGS}
 UKERNELDIR=../libuafs/
-INSTALL=${SRCDIR}bin/install
 LIBOBJS=disk.o  remote.o beacon.o recovery.o ubik.o  vote.o lock.o phys.o \
 	ubik_int.cs.o ubik_int.ss.o ubik_int.xdr.o ubikcmd.o \
 	ubikclient.o uerrors.o

@@ -10,7 +10,6 @@
 SHELL = /bin/sh
 SRCDIR=DEST/
 DESTDIR=DEST/
-INSTALL=${SRCDIR}bin/install
 
 CFLAGS = -g -w -I${SRCDIR}include ${XCFLAGS}
 LDFLAGS = -g ${XLDFLAGS}

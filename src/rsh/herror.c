@@ -20,6 +20,7 @@ static char sccsid[] = "@(#)herror.c	6.4 (Berkeley) 10/30/88";
 #endif /* LIBC_SCCS and not lint */
 
 #include <afs/param.h>
+#ifndef AFS_DARWIN_ENV
 #include <sys/types.h>
 #include <sys/uio.h>
 
@@ -64,3 +65,4 @@ herror(s)
 	v->iov_len = 1;
 	writev(2, iov, (v - iov) + 1);
 }
+#endif

@@ -11,7 +11,6 @@ include ../config/Makefile.${SYS_NAME}
 include ../config/Makefile.version
 
 INCDIRS= -I. -I${DESTDIR}include ${FSINCLUDES}
-INSTALL = ${SRCDIR}bin/install
 LDFLAGS = ${OPTMZ} ${PROF} ${LDIRS} ${XLDFLAGS}
 
 LIBS= ${DESTDIR}lib/afs/libcmd.a vlib.a ${SRCDIR}lib/afs/util.a \

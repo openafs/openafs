@@ -11,7 +11,9 @@
 #define __AFS_SYSINCLUDESH__ 1
 
 #include  <stdio.h>
+#ifndef AFS_USR_DARWIN_ENV /* must be included after KERNEL undef'd */
 #include  <errno.h>
+#endif
 #include  <stdlib.h>
 #include  <string.h>
 #include  <unistd.h>
@@ -112,6 +114,29 @@
 #define FREAD			0x0001
 #endif /* AFS_USR_LINUX22_ENV */
 
+#ifdef AFS_USR_DARWIN_ENV
+#ifdef KERNEL
+#undef KERNEL
+#define AFS_USR_UNDEF_KERNEL_ENV 1
+#endif
+#include  <errno.h>
+#include  <sys/param.h>
+#include  <sys/types.h>
+#include  <sys/socket.h>
+#include  <net/if.h>
+#include  <sys/file.h>
+#include  <sys/ioctl.h>
+#include  <sys/stat.h>
+#include  <sys/fcntl.h>
+#include  <sys/uio.h>
+#include  <netinet/in.h>
+#include  <netdb.h>
+#include  <arpa/inet.h>
+#ifndef O_SYNC
+#define O_SYNC O_FSYNC
+#endif
+#endif /* AFS_USR_DARWIN_ENV */
+
 /* glibc 2.2 has pthread_attr_setstacksize */
 #if defined(AFS_LINUX22_ENV) || defined(AFS_USR_LINUX22_ENV) && (__GLIBC_MINOR__ < 2)
 #define pthread_attr_setstacksize(a,b) 0
@@ -157,6 +182,11 @@
 #ifdef AFS_USR_SGI_ENV
 #undef socket
 #endif /* AFS_USR_SGI_ENV */
+
+#ifdef AFS_USR_DARWIN_ENV
+#undef if_mtu
+#undef if_metric
+#endif
 
 #define mount			usr_mount
 #define fs			usr_fs

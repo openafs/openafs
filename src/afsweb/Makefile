@@ -11,7 +11,6 @@ COMPONENT=nsafs
 include ../config/Makefile.${SYS_NAME}
 
 UKERNELDIR=../libuafs/
-INSTALL=${SRCDIR}bin/install
 COMPILE_ET=${SRCDIR}bin/compile_et
 
 MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
@@ -160,7 +159,7 @@ INCLS=${SRCDIR}include/ubik.h \
              ${SRCDIR}include/rx/xdr.h \
              ${SRCDIR}include/rx/rxkad.h \
              ${SRCDIR}include/afs/com_err.h \
-    	    weblog_errors.h $(DCE_DLOG_INCLUDES)
+	     weblog_errors.h $(DCE_DLOG_INCLUDES)
 deslib=${SRCDIR}lib/libdes.a
 rxkadlib=${SRCDIR}lib/librxkad.a
 authlib=${SRCDIR}lib/afs/libauth.a

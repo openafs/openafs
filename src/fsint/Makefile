@@ -10,7 +10,6 @@ include ../config/Makefile.${SYS_NAME}
 SHELL = /bin/sh
 KERNELDIR = ../libafs/
 UKERNELDIR = ../libuafs/
-INSTALL = ${SRCDIR}bin/install
 MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
 
 OBJS=afsaux.o afscbint.cs.o afscbint.ss.o afscbint.xdr.o afsint.cs.o afsint.ss.o afsint.xdr.o

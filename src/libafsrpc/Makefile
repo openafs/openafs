@@ -11,7 +11,6 @@ SHELL = /bin/sh
 COMPONENT=libafsrpc
 include ../config/Makefile.${SYS_NAME}
 
-INSTALL = ${SRCDIR}bin/install
 CC=${MT_CC}
 INCLUDES = -I${SRCDIR}include -I.. -I../rx
 CFLAGS = ${OPTMZ} ${DBG} ${INCLUDES} -DRXDEBUG ${MT_CFLAGS}
@@ -321,7 +320,7 @@ syscall.o: ${SYS}/syscall.s
 		/usr/ccs/lib/cpp  ${SFLAGS} ${SYS}/syscall.s syscall.ss; \
 		as -o syscall.o syscall.ss;		\
 		rm syscall.ss;;				\
-	 sgi_* ) \
+	 sgi_* | ppc_darwin* ) \
                 ${CC} ${CFLAGS} -c ${SYS}/syscall.s;;          \
 	 alpha_dux?? ) \
 		${AS} -P ${CFLAGS} -D_NO_PROTO -DMACH -DOSF -nostdinc -traditional -DASSEMBLER ${SYS}/syscall.s; \

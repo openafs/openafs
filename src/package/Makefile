@@ -15,7 +15,6 @@ CFLAGS   = ${DBUG} -DKFLAG -DANDREW -DVICE $(DBGFLAG) $(INCLUDES) $(XCFLAGS)
 YFLAGS   = -vd
 #LFLAGS  = -ll
 LINT     = lint -hp
-INSTALL  = ${SRCDIR}bin/install
 
 HFILES = package.h \
 	 validupdates.h \
