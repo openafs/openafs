@@ -130,7 +130,7 @@ AC_PROG_LEX
 AC_DECL_YYTEXT])
 
 dnl
-dnl $Id: aclocal.m4,v 1.7 2001/09/11 21:41:01 hartmans Exp $
+dnl $Id: aclocal.m4,v 1.8 2001/09/20 07:14:30 hartmans Exp $
 dnl
 
 dnl check if this computer is little or big-endian

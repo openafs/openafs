@@ -27,6 +27,8 @@ Debian kernel packages store a copy of their kernel configuration in
 make-kpkg configure
 make-kpkg modules_image
 
+You may need to use the --apend_version switch to add version suffixes
+like 686 if your modules install into /lib/modules/version-686.
 Ignore any errors about genchanges.sh failing.  An openafs-modules deb
 should be created.  Use dpkg -i to install this version.
 

@@ -1,3 +1,11 @@
+openafs (1.2.1-1) unstable; urgency=low
+
+  * New upstream version.
+  * Document that you may need to append a version for newer kernels,
+    closes: #112246 
+
+ -- Sam Hartman <hartmans@debian.org>  Thu, 20 Sep 2001 03:10:54 -0400
+
 openafs (1.2.0-3) unstable; urgency=high
 
   * High until we get this into testing.
