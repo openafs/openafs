@@ -1,0 +1,24 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# Keep macros within each section in sorted order for clean diff displays.
+# AFS_OSTYPE used to indicate suffixes and os specific subdirectories.
+AFS_OSTYPE = NCR
+
+# compilation and link editor flags
+#
+# libraries
+
+XLIBS=@LIB_AFSDB@
+#
+# programs
+AR = /usr/ccs/bin/ar
+LD = /usr/ccs/bin/ld
+LORDER = /usr/ccs/bin/lorder
+STRIP= /usr/ccs/bin/strip
+WASHTOOL=${DESTDIR}bin/washtool
+INSTALL=${DESTDIR}bin/install

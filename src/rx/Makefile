@@ -169,4 +169,4 @@ ukinstall webinstall: includes
 	-$(INSTALL) UKERNEL/*.[ch] $(UKERNELDIR)rx
 
 clean:
-	rm -f *.o *.a core *_component_version_number.c
+	rm -f *.o *.a core *_component_version_number.c rxdumptrace rxdebug

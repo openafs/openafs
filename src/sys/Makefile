@@ -183,7 +183,7 @@ xfsinode: xfsinode.c  AFS_component_version_number.c
 clean:
 	rm -f *.o libsys.a xfsinode iinc idec icreate iopen istat core \
 	rmtsysc rmtsyss *.o rmtsys.ss.c rmtsys.cs.c rmtsys.xdr.c rmtsys.h \
-	rmtsysd AFS_component_version_number.c
+	rmtsysd AFS_component_version_number.c pagsh pagsh.krb
 
 beancount:
 	wc -l *.c *.s

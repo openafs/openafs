@@ -252,7 +252,7 @@ kdump64 : kdump64.o
 	esac
 
 clean:
-	rm -f *.o *.a up fs core cmdebug AFS_component_version_number.c
+	rm -f *.o *.a up fs core cmdebug AFS_component_version_number.c fstrace gcpags
 
 beancount:
 	wc -l *.c *.h

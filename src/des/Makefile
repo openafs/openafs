@@ -187,7 +187,7 @@ install install.noversion: all ukinstall ${DESTDIR}lib/libdes.a
 	${INSTALL} odd.h ${DESTDIR}include/des_odd.h
 
 clean:
-	rm -f ${OBJECTS} ${DEP_LIBS} ${PROGS} ${GPROGS} ${GFILES} AFS_component_version_number.c
+	rm -f ${OBJECTS} ${DEP_LIBS} ${PROGS} ${GPROGS} ${GFILES} AFS_component_version_number.c misco.c
 	rm -f *.s *.o *.b core *~ *.com *.ld
 	rm -f tags TAGS ${LLIB}
 

@@ -25,7 +25,7 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #endif
-#ifdev HAVE_UNISTD_H
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
 #include <signal.h>

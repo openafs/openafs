@@ -42,7 +42,7 @@ ukinstlibs:
 ukinstall: ukinsthdrs UAFS/$(LIBUAFS) linktest ukinstlibs
 
 linktest: UAFS/$(LIBUAFS) des/libdes.a
-	$(CC) $(TEST_CFLAGS) $(TEST_LDFLAGS) -o linktest linktest.c -I${DESTDIR}include -I${DESTDIR}include/rx -I${DESTDIR}root.perf/include UAFS/$(LIBUAFS) des/libdes.a $(TEST_LIBS)
+	$(CC) $(TEST_CFLAGS) $(TEST_LDFLAGS) -o linktest linktest.c -I${DESTDIR}include -I${DESTDIR}include/rx -I${DESTDIR}root.perf/include UAFS/$(LIBUAFS) des/libdes.a $(TEST_LIBS) $(XLIBS)
 
 CRULE1=	$(CC) $(OPTF) -DKERNEL $(CFLAGS) -c $?
 CRULE2=	$(CC) $(OPTF) $(WEBOPTS) -DKERNEL $(CFLAGS) -c $?
@@ -889,6 +889,6 @@ $(WEBOBJ)/Krxstat.xdr.o: $(AFSINT)/Krxstat.xdr.c
 	$(CRULE2);
 
 clean:
-	-rm -rf UAFS* AFSWEB*
-	-rm -f  h net netinet rpc ufs machine inet nfs sys
+	-rm -rf UAFS* AFSWEB* nsapi des
+	-rm -f  h net netinet rpc ufs machine inet nfs sys des linktest afs afsint config rx
 

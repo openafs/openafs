@@ -124,7 +124,7 @@ xfs_size_check: xfs_size_check.c
 
 clean:
 	rm -f *.o *.a AFS_component_version_number.c
-	rm -f ${SCMPROGS} ${STAGEPROGS} core
+	rm -f ${SCMPROGS} ${STAGEPROGS} core salvager volinfo
 
 beancount:
 	wc -l *.c *.h

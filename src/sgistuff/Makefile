@@ -46,6 +46,9 @@ afsauthlib.so: sgi_auth.o ${AFSLIBS} ${AUTHFILES}
 afskauthlib.so: sgi_auth.o ${KAFSLIBS} ${AUTHFILES}
 	$(LD) ${LDFLAGS} -shared -all -o afskauthlib.so sgi_auth.o $(KAFSLIBS) ${AUTHFILES}
 
+../inetd/ta-rauth.o: ../inetd/ta-rauth.c
+	(cd ../inetd ; $(MAKE) ta-rauth.o )
+
 ../rsh/rcmd.o: ../rsh/rcmd.c
 	(cd ../rsh ; $(MAKE) rcmd.o )
 

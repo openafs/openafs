@@ -5,10 +5,10 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-# MakefileProto for Solaris systems
+# MakefileProto for HP-UX systems
 #
 
-include $(DESTDIR)../obj/config/Makefile.${SYS_NAME}
+include ../config/Makefile.${SYS_NAME}
 
 MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
 

@@ -1,0 +1,58 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# Keep macros within each section in sorted order for clean diff displays.
+#
+# AFS_OSTYPE used to indicate suffixes and os specific subdirectories.
+AFS_OSTYPE = SOLARIS
+#
+# compilation and link editor flags
+XCFLAGS=-dy -Bdynamic
+MT_CFLAGS=-mt -DAFS_PTHREAD_ENV ${XCFLAGS}
+PAM_CFLAGS = -KPIC
+PAMLIBS= -lc -lpam -lsocket -lnsl -lm
+SHARE_LDFLAGS = -G -Bsymbolic
+LWP_OPTMZ=-g
+OPTMZ=-O
+DBG=-g
+
+## Compilation flags for 64 bit Solaris
+XCFLAGS64 = ${XCFLAGS} -xarch=v9
+
+#
+# libraries
+XLIBS=@LIB_AFSDB@ -lsocket -lnsl -lintl -ldl
+TXLIBS=-lcurses
+MTLIBS=-lpthread -lsocket
+XLIBELFA=-lelf
+XLIBKVM=-lkvm
+#
+SHLIB_SUFFIX=so
+SHLIB_CFLAGS=-KPIC
+#
+# programs
+AR=/usr/ccs/bin/ar
+AS=as
+CC=/opt/SUNWspro/bin/cc
+MT_CC=/opt/SUNWspro/bin/cc
+CP=/bin/cp
+LEX=lex
+LD= /usr/ccs/bin/ld
+LORDER = /usr/ccs/bin/lorder
+MV=mv
+RANLIB=/bin/true
+RM=rm
+STRIP= /usr/ccs/bin/strip
+WASHTOOL=${DESTDIR}bin/washtool
+INSTALL=${DESTDIR}bin/install
+#
+# this is for the vol package
+FS_CONV_SOL26= $(DESTDIR)root.server/usr/afs/bin/fs_conv_sol26
+#
+# This is the XBSA make flag and pathname to XBSA header files (xbsa.h)
+XBSA_FLAGS=-Dxbsa
+XBSADIR=/opt/tivoli/tsm/client/api/bin/xopen

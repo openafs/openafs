@@ -56,7 +56,7 @@ include ../config/Makefile.version
 clean:
 	$(RM) -f *.o ptserver ptint.cs.c ptint.ss.c ptclient ptint.xdr.c ptint.h \
 	libprot.a  pts readgroup readpwd db_verify testpt pt_util pterror.h pterror.c \
-	 core  AFS_component_version_number.c
+	 core  AFS_component_version_number.c Kptint.cs.c Kptint.h Kptint.xdr.c
 
 ptserver: ptserver.o ptutils.o ptprocs.o ptint.ss.o ptint.xdr.o utils.o $(LIBS) ${auditlib}
 	$(CC) ${CFLAGS} -o ptserver ptserver.o ptutils.o ptprocs.o  ptint.ss.o ptint.xdr.o utils.o $(LIBS) ${XLIBS} ${auditlib}

@@ -1,0 +1,224 @@
+AC_INIT(src/config/stds.h)
+AM_INIT_AUTOMAKE(openafs,devel)
+AC_CANONICAL_HOST
+AC_CONFIG_HEADER(src/config/afsconfig.h)
+
+#BOZO_SAVE_CORES BOS_RESTRICTED_MODE BOS_NEW_CONFIG pam sia  BITMAP_LATER FAST_RESTART
+AC_ARG_WITH(afs-sysname,
+[  --with-afs-sysname=sys    use sys for the afs sysname]
+)
+AC_ARG_ENABLE( obsolete,
+[  --enable-obsolete 			enable obsolete portions of AFS (mpp, ntp and package)],, enable_obsolete="no")
+AC_ARG_ENABLE( insecure,
+[  --enable-insecure 			enable insecure portions of AFS (ftpd, inetd, rcp, rlogind and rsh)],, enable_insecure="no")
+AC_ARG_ENABLE( afsdb,
+[  --disable-afsdb 			disable AFSDB RR support],, enable_afsdb="yes")
+AC_ARG_ENABLE( bos-restricted-mode,
+[  --enable-bos-restricted-mode 	enable bosserver restricted mode which disables certain bosserver functionality],, enable_bos_restricted_mode="no")
+AC_ARG_ENABLE( namei-fileserver,
+[  --enable-namei-fileserver 		force compilation of namei fileserver in preference to inode fileserver],, enable_namei_fileserver="no")
+AC_ARG_WITH(linux-kernel-headers,
+[  --with-linux-kernel-headers=path    	use the kernel headers found at path(optional, defaults to /usr/src/linux)]
+)
+
+AC_PROG_CC
+
+dnl weird ass systems
+AC_AIX
+AC_ISC_POSIX
+AC_MINIX
+
+dnl Various compiler setup.
+AC_C_INLINE
+AC_C_CONST
+AC_TYPE_PID_T
+AC_TYPE_SIZE_T
+AC_TYPE_SIGNAL
+
+dnl Checks for programs.
+AC_PROG_INSTALL
+AC_PROG_LN_S
+AC_PROG_RANLIB
+AC_PROG_YACC
+AM_PROG_LEX
+
+OPENAFS_CHECK_BIGENDIAN
+
+AC_MSG_CHECKING(your OS)
+system=$host
+case $system in
+        *-linux*)
+		MKAFS_OSTYPE=LINUX
+		if test "x$with_linux_kernel_headers" != "x"; then
+			LINUX_KERNEL_PATH="$with_linux_kernel_headers"
+		else
+			LINUX_KERNEL_PATH="/usr/src/linux"
+		fi
+		if test -f "$with_linux_kernel_headers/include/linux/version.h"; then
+		 linux_kvers=`fgrep UTS_RELEASE $with_linux_kernel_headers/include/linux/version.h |awk 'BEGIN { FS="\"" } { print $2 }'`
+		 if test "x$linux_kvers" = "x"; then
+		  AC_MSG_ERROR(Linux headers lack version definition)
+		  exit 1
+		 else
+		  LINUX_VERSION="$linux_kvers"
+		 fi
+		else
+		 AC_MSG_ERROR(No linux headers found at $with_linux_kernel_headers)
+		 exit 1
+		fi
+                AC_MSG_RESULT(linux)
+		LINUX_FS_STRUCT_INODE_HAS_I_BYTES
+		LINUX_INODE_SETATTR_RETURN_TYPE
+                ;;
+        *-solaris*)
+		MKAFS_OSTYPE=SOLARIS
+                AC_MSG_RESULT(sun4)
+                ;;
+        *-hpux*)
+		MKAFS_OSTYPE=HPUX
+                AC_MSG_RESULT(hp_ux)
+                ;;
+        *-irix*)
+		MKAFS_OSTYPE=IRIX
+                AC_MSG_RESULT(sgi)
+                ;;
+        *-aix*)
+		MKAFS_OSTYPE=AIX
+                AC_MSG_RESULT(rs_aix)
+                ;;
+        *-osf*)
+		MKAFS_OSTYPE=DUX
+                AC_MSG_RESULT(alpha_dux)
+                ;;
+        *-darwin*)
+		MKAFS_OSTYPE=DARWIN
+                AC_MSG_RESULT(ppc_darwin)
+                ;;
+        *)
+                AC_MSG_RESULT($system)
+                ;;
+esac
+
+if test "x${MKAFS_OSTYPE}" = "xIRIX"; then
+        echo Skipping library tests because they confuse Irix.
+else
+  AC_CHECK_FUNCS(socket)
+
+  if test "$ac_cv_func_socket" = no; then
+    for lib in socket inet; do
+        if test "$HAVE_SOCKET" != 1; then
+                AC_CHECK_LIB($lib, socket,LIBS="$LIBS -l$lib";HAVE_SOCKET=1;AC_DEFINE(HAVE_SOCKET))
+        fi
+    done
+  fi
+  
+  AC_CHECK_FUNCS(connect)       
+
+  if test "$ac_cv_func_connect" = no; then
+    for lib in nsl; do
+        if test "$HAVE_CONNECT" != 1; then
+                AC_CHECK_LIB($lib, connect,LIBS="$LIBS -l$lib";HAVE_CONNECT=1;AC_DEFINE(HAVE_CONNECT))
+        fi
+    done
+  fi
+
+  AC_CHECK_FUNCS(gethostbyname)
+  if test "$ac_cv_func_gethostbyname" = no; then
+        for lib in dns nsl resolv; do
+          if test "$HAVE_GETHOSTBYNAME" != 1; then
+            AC_CHECK_LIB($lib, gethostbyname, LIBS="$LIBS -l$lib";HAVE_GETHOSTBYNAME=1;AC_DEFINE(HAVE_GETHOSTBYNAME))
+          fi
+        done    
+  fi    
+
+  AC_CHECK_FUNCS(res_search)
+  if test "$ac_cv_func_res_search" = no; then
+        for lib in dns nsl resolv; do
+          if test "$HAVE_RES_SEARCH" != 1; then
+            AC_CHECK_LIB($lib, res_search, LIBS="$LIBS -l$lib";HAVE_RES_SEARCH=1;AC_DEFINE(HAVE_RES_SEARCH))
+          fi
+        done    
+	if test "$HAVE_RES_SEARCH" = 1; then
+	  LIB_res_search="-l$lib"	
+	fi
+  fi    
+fi
+
+PTHREAD_LIBS=error
+AC_CHECK_LIB(pthread, pthread_attr_init,
+             PTHREAD_LIBS="-lpthread")
+if test "x$PTHREAD_LIBS" = xerror; then
+        AC_CHECK_LIB(pthreads, pthread_attr_init,
+                PTHREAD_LIBS="-lpthreads")
+fi
+if test "x$PTHREAD_LIBS" = xerror; then
+        AC_CHECK_LIB(c_r, pthread_attr_init,
+                PTHREAD_LIBS="-lc_r")
+fi
+if test "x$PTHREAD_LIBS" = xerror; then
+        AC_CHECK_FUNC(pthread_attr_init, PTHREAD_LIBS="")
+fi
+if test "x$PTHREAD_LIBS" = xerror; then
+        AC_MSG_ERROR(*** Unable to locate working posix thread library ***)
+fi
+AC_SUBST(PTHREAD_LIBS)
+
+if test "$enable_obsolete" = "yes"; then
+	WITH_OBSOLETE=YES
+fi
+
+if test "$enable_insecure" = "yes"; then
+	WITH_INSECURE=YES
+fi
+
+# Should autocompute a default
+if test "x$with_afs_sysname" != "x"; then
+	AFS_SYSNAME="$with_afs_sysname"
+else
+	AC_MSG_ERROR(An AFS sysname is required)
+	exit 1
+fi
+
+if test "$enable_bos_restricted_mode" = "yes"; then
+	AC_DEFINE(BOS_RESTRICTED_MODE)
+fi
+
+if test "$enable_namei_fileserver" = "yes"; then
+	AC_DEFINE(AFS_NAMEI_ENV)
+fi
+
+if test "$enable_afsdb" = "yes"; then
+	LIB_AFSDB="$LIB_res_search"
+	AC_DEFINE(AFS_AFSDB_ENV)
+fi
+
+SRCDIR_PARENT=`pwd`
+TOP_SRCDIR="${SRCDIR_PARENT}/src"
+
+dnl checks for header files.
+AC_HEADER_STDC
+AC_HEADER_SYS_WAIT
+AC_HEADER_DIRENT
+AC_CHECK_HEADERS(stdlib.h string.h unistd.h fcntl.h sys/time.h sys/file.h)
+AC_CHECK_HEADERS(netinet/in.h netdb.h sys/fcntl.h sys/mnttab.h sys/mntent.h)
+AC_CHECK_HEADERS(mntent.h sys/vfs.h sys/param.h sys/fs_types.h)
+AC_CHECK_HEADERS(sys/mount.h strings.h termios.h signal.h)
+AC_CHECK_HEADERS(windows.h malloc.h winsock2.h direct.h io.h)
+AC_CHECK_HEADERS(security/pam_modules.h siad.h usersec.h)
+
+AC_CHECK_FUNCS(utimes random srandom getdtablesize snprintf re_comp re_exec)
+
+AC_SUBST(AFS_SYSNAME)
+AC_SUBST(LIB_AFSDB)
+AC_SUBST(LINUX_KERNEL_PATH)
+AC_SUBST(LINUX_VERSION)
+AC_SUBST(MKAFS_OSTYPE)
+AC_SUBST(TOP_SRCDIR)
+AC_SUBST(WITH_OBSOLETE)
+AC_SUBST(WITH_INSECURE)
+
+AC_OUTPUT(             \
+Makefile               \
+src/config/Makefile.${AFS_SYSNAME} \
+src/libafs/MakefileProto.${MKAFS_OSTYPE} \
+)

@@ -91,7 +91,7 @@ test_pam: test_pam.o
 	esac
 
 clean:
-	/bin/rm -f $(TARGETS) $(OBJS) afs_setcred.o afs_setcred_krb.o core *~
+	/bin/rm -f $(TARGETS) $(OBJS) afs_setcred.o afs_setcred_krb.o core *~ AFS_component_version_number.c
 
 install:	all
 	${INSTALL} -s pam_afs.so.1 ${DESTDIR}lib/pam_afs.so.1

@@ -92,7 +92,7 @@ install: all
 	${INSTALL} bnode.h ${DESTDIR}include/afs/bnode.h
 
 clean:
-	rm -f  *.a *.o bos bosserver testproc bosint.cs.c bosint.ss.c bosint.xdr.c bosint.h core\
+	rm -f  *.a *.o bos bosserver testproc bosint.cs.c bosint.ss.c bosint.xdr.c bosint.h core boserr.c bnode.h\
 	AFS_component_version_number.c
 
 test: 

@@ -28,7 +28,20 @@
 #define AFS_64BIT_IOPS_ENV  1
 #define AFS_NAMEI_ENV     1   /* User space interface to file system */
 
+/* Machine / Operating system information */
+#define SYS_NAME	"i386_linux22"
+#define SYS_NAME_ID	SYS_NAME_ID_i386_linux22
+#define AFSLITTLE_ENDIAN    1
+#define AFS_HAVE_FFS        1       /* Use system's ffs. */
+#define AFS_HAVE_STATVFS    0	/* System doesn't support statvfs */
+#define AFS_VM_RDWR_ENV	    1	/* read/write implemented via VM */
+
 #if defined(__KERNEL__) && !defined(KDUMP_KERNEL)
+#if defined(MODULE) && defined(CONFIG_MODVERSIONS)
+#define MODVERSIONS
+#include <linux/modversions.h>
+#endif
+
 #include <linux/config.h>
 #ifdef CONFIG_SMP
 #undef CONFIG_SMP
@@ -45,11 +58,6 @@
 #define __SMP__
 #endif
 #define AFS_GLOBAL_SUNLOCK
-#endif
-
-#if defined(MODULE) && defined(CONFIG_MODVERSIONS)
-#define MODVERSIONS
-#include <linux/modversions.h>
 #endif
 
 #endif /* __KERNEL__  && !DUMP_KERNEL*/

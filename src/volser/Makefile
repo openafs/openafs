@@ -131,7 +131,7 @@ install: all $(TARGETS)
 
 clean:
 	rm -f volserver *.o volint.ss.c volint.cs.c *.a  volint.h \
-	volint.xdr.c vos core volser.h volerr.c AFS_component_version_number.c
+	volint.xdr.c vos core volser.h volerr.c AFS_component_version_number.c restorevol
 
 lint:	vos.c vsprocs.c volmain.c volprocs.c lockprocs.c
 	lint -hb ${INCDIRS} ${INCLIBS} vos.c

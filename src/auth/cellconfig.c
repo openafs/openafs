@@ -8,6 +8,7 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
 #include <afs/stds.h>
 #include <afs/pthread_glock.h>
 #ifdef UKERNEL

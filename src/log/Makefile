@@ -51,7 +51,7 @@ lint:	log.c passwd.c unlog.c testlog.c
 	lint  ${INCDIRS} passwd.c
 
 clean:	
-	rm -f *.o log passwd unlog tokens kseal core AFS_component_version_number.c
+	rm -f *.o log passwd unlog tokens kseal core AFS_component_version_number.c tokens.krb
 
 beancount:
 	wc -l log.c passwd.c unlog.c 

@@ -114,7 +114,7 @@ install: all  ${DESTDIR}root.server/usr/afs/bin/fileserver
 system: install
 
 clean:
-	rm -f *.o llib-lvice.ln fileserver core AFS_component_version_number.c
+	rm -f *.o llib-lvice.ln fileserver core AFS_component_version_number.c cbd check_sysid fsprobe
 
 beancount:
 	wc -l *.c *.h

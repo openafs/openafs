@@ -8,13 +8,11 @@
 # MakefileProto for Solaris systems
 #
 
-include $(DESTDIR)../obj/config/Makefile.${SYS_NAME}
+include ../config/Makefile.${SYS_NAME}
 
 MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
 
 # System specific build commands and flags
-# Redundant
-# CC = /opt/SUNWspro/bin/cc
 DEFINES= -D_REENTRANT -DAFSDEBUG -DKERNEL -DUKERNEL -DAFS -DVICE
 CFLAGS=-I. -I.. -I${TOP_SRCDIR}/config ${FSINCLUDES} $(DEFINES) $(KOPTS) ${DBUG}
 OPTF=-O

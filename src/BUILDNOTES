@@ -6,11 +6,21 @@ Redhat 7.0 (i386_linux22):
 	be able to use kgcc to compile all of AFS. Just add CC=kgcc 
 	to your make arguments.
 
-	When building for kernels other than the stock kernel you
-	may need to create symlinks in /usr/src named for your 
-	configuration, e.g. linux-2.2.16-22smp pointing to your
-	source tree (linux-2.2.16-22); Redhat provides a unified 
-	source tree with a switch in include/linux/version.h.
+	When building for multiple kernels in one dest tree,
+	if the kernel version string which UTS_RELEASE is defined to in 
+	include/linux/version.h matches the last kernel you built for, 
+        the previous kernel module will be overwritten.
+
+Redhat 7.1 (i386_linux24): 
+	src/venus/kdump.c may fail to compile.
+
+	You will need pam-devel installed to compile the included
+	PAM module.
+
+	When building for multiple kernels in one dest tree,
+	if the kernel version string which UTS_RELEASE is defined to in 
+	include/linux/version.h matches the last kernel you built for, 
+        the previous kernel module will be overwritten.
 
 HPUX 11.0 (hp_ux110):
 	Does not currently build libafs, which means no afs client support,

@@ -1,0 +1,37 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+AFS_OSTYPE = HPUX
+CC=/opt/ansic/bin/cc -Ae
+MT_CC=/opt/ansic/bin/cc -Ae
+XCFLAGS0=-ldld -lc -Wp,-H200000 -Wl,-a,archive -DAUTH_DBM_LOG +z -Wl,+k -D_LARGEFILE64_SOURCE
+XCFLAGS=${XCFLAGS0} +DA1.0
+XCFLAGS64=${XCFLAGS0} +DA2.0W
+MT_CFLAGS=-D_POSIX_C_SOURCE=199506L -DAFS_PTHREAD_ENV ${XCFLAGS}
+XLIBS=@LIB_AFSDB@
+XLIBELFA=
+TXLIBS=/usr/lib/libHcurses.a
+MTLIBS=-L/opt/dce/lib -ldce
+SHLIB_SUFFIX=sl
+LWP_OPTMZ=-O
+OPTMZ=-O
+DBG=-g
+RANLIB=ranlib
+WASHTOOL=${DESTDIR}bin/washtool
+INSTALL=${DESTDIR}bin/install
+RM=/bin/rm
+CP=/bin/cp
+AR=/bin/ar
+AS=/usr/ccs/bin/as
+MV=/bin/mv
+LD=/bin/ld   
+LEX=/opt/langtools/bin/lex
+DBM=/lib/libndbm.a
+PAM_CFLAGS=+DA1.0 +z -Wl,+k
+SHARE_LDFLAGS=-b -Bsymbolic
+PAMLIBS=/usr/lib/libpam.1
+YACC=/opt/langtools/bin/yacc

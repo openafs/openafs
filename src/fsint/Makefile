@@ -103,4 +103,4 @@ install:  all  kinstall ukinstall
 	${INSTALL} afscbint.h ${DESTDIR}include/afs
 
 clean:
-	rm -f *.o *.cs.c *.ss.c *.er.c afsint.h afsint.xdr.c libafsint.a $(KDSRCS) core AFS_component_version_number.c
+	rm -f *.o *.cs.c *.ss.c *.er.c afsint.h afsint.xdr.c libafsint.a $(KDSRCS) core AFS_component_version_number.c afscbint.xdr.c

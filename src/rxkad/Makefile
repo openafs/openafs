@@ -39,7 +39,7 @@ all: librxkad.a
 system: install
 
 clean: 
-	rm -f *.o tcrypt core *.a rxkad_errs.c rxkad.h AFS_component_version_number.c
+	rm -f *.o tcrypt core *.a rxkad_errs.c rxkad.h AFS_component_version_number.c crypt_conn.c fcrypt.c fcrypt.h sboxes.h
 
 librxkad.a: $(OBJS) ${REGOBJS} AFS_component_version_number.o
 	-rm -f librxkad.a
