@@ -608,8 +608,9 @@ HandleVolume(struct DiskPartition *dp, char *name)
 	if (saveinodes)
 	    printf
 		("Volume-Id\t  Volsize  Auxsize Inodesize  AVolsize SizeDiff                (VolName)\n");
-	printf("%u\t%9d%9d%10d%10d%9d\t%24s\n", V_id(vp), Vdiskused, Vauxsize_k,
-	       Vvnodesize_k, totvolsize, totvolsize - Vdiskused, V_name(vp));
+	printf("%u\t%9d%9d%10d%10d%9d\t%24s\n", V_id(vp), Vdiskused,
+	       Vauxsize_k, Vvnodesize_k, totvolsize, totvolsize - Vdiskused,
+	       V_name(vp));
     }
 }
 

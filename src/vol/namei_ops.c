@@ -696,14 +696,14 @@ namei_dec(IHandle_t * ih, Inode ino, int p1)
 	if (count == 0) {
 	    IHandle_t *th;
 	    IH_INIT(th, ih->ih_dev, ih->ih_vid, ino);
-#if 0 
+#if 0
 	    /* This triggers in the fileserver on the volume index vnodes */
-            if (th->ih_refcnt > 1) 
-                Log("Warning: Leaked ref on ihandle dev %d vid %d ino %lld\n",
+	    if (th->ih_refcnt > 1)
+		Log("Warning: Leaked ref on ihandle dev %d vid %d ino %lld\n",
 		    th->ih_dev, th->ih_vid, (int64_t) th->ih_ino);
 #endif
-            namei_HandleToName(&name, th);
-            IH_RELEASE(th);
+	    namei_HandleToName(&name, th);
+	    IH_RELEASE(th);
 	    code = unlink(name.n_path);
 	}
 	FDH_CLOSE(fdP);

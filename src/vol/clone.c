@@ -403,8 +403,10 @@ DoCloneIndex(Volume * rwvp, Volume * clvp, VnodeClass class, int reclone)
 void
 CloneVolume(Error * error, Volume * original, Volume * new, Volume * old)
 {
-    VOL_LOCK CloneVolume_r(error, original, new, old);
-VOL_UNLOCK}
+    VOL_LOCK;
+    CloneVolume_r(error, original, new, old);
+    VOL_UNLOCK;
+}
 
 void
 CloneVolume_r(Error * rerror, Volume * original, Volume * new, Volume * old)
