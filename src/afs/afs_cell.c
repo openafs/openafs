@@ -479,7 +479,7 @@ afs_int32 afs_NewCell(char *acellName, register afs_int32 *acellHosts, int aflag
 	tc->vlport = (vlport ? vlport : AFS_VLPORT);
 	afs_stats_cmperf.numCellsVisible++;
 	newc++;
-	if (!aflags & CAlias) {
+	if (!(aflags & CAlias)) {
 	    tc->realcellIndex = afs_realcellindex++;
 	} else {
 	    tc->realcellIndex = -1;
@@ -513,7 +513,7 @@ afs_int32 afs_NewCell(char *acellName, register afs_int32 *acellHosts, int aflag
     tc->timeout = timeout;
 
     /* Allow converting an alias into a real cell */
-    if (!(aflags & CAlias)) {
+    if ((!(aflags & CAlias)) && (tc->states & CAlias)) {
 	tc->states &= ~CAlias;
 	tc->realcellIndex = afs_realcellindex++;
     }
