@@ -1,3 +1,19 @@
+Since 1.3.76:
+
+  * A bug affecting new installations of 1.3.75/76 would result in
+    the creating of incorrect mountpoints in the freelance root.afs 
+    volume for the default cell.
+
+    If "fs \\afs\all\<cellname>" lists a volume name of "root" instead
+    of "root.cell", you have been affected by the bug.  To correct the
+    problem, execute the following commands:
+
+          fs rmmount \\afs\all\<cellname>
+          fs rmmount \\afs\all\.<cellname>
+        
+          fs mkmount \\afs\all\<cellname> root.cell <cellname>
+          fs mkmount \\afs\all\.<cellname> root.cell <cellname> -rw
+
 Since 1.3.75:
 
   * A bug has been fixed in the auto-generation of Freelance root.afs
