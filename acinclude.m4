@@ -157,6 +157,12 @@ case $system in
                  SUBARCH=default
 		fi
 		AC_MSG_RESULT(linux)
+                if test "x$enable_kernel_module" = "xyes"; then
+                 AFS_SYSKVERS=`echo $LINUX_VERSION | awk -F\. '{print $[]1 $[]2}'`
+                 if test "x${AFS_SYSKVERS}" = "x"; then
+                  AC_MSG_ERROR(Couldn't guess your Linux version [2])
+                 fi
+                fi
                 ;;
         *-solaris*)
 		MKAFS_OSTYPE=SOLARIS
@@ -494,9 +500,6 @@ else
 	esac
 	case $AFS_SYSNAME in
 		*_linux* | *_umlinux*)
-			if test "x$enable_kernel_module" = "xyes"; then
-			 AFS_SYSKVERS=`echo $LINUX_VERSION | awk -F\. '{print $[]1 $[]2}'`
-			fi
 			if test "x${AFS_SYSKVERS}" = "x"; then
 			 AC_MSG_ERROR(Couldn't guess your Linux version. Please use the --with-afs-sysname option to configure an AFS sysname.)
 			fi
