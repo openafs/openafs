@@ -111,35 +111,35 @@ ${DEST}/etc/kdump64: kdump64
 up.o: up.c AFS_component_version_number.c
 
 up: up.o
-	${CC} ${CFLAGS} -g -o up up.o ${LIBS} ${XLIBS}
+	${CC} ${CFLAGS} $(DBG) -o up up.o ${LIBS} ${XLIBS}
 
 fs.o: fs.c ${INCLS} AFS_component_version_number.c
 
 fs: fs.o $(LIBS)
-	${CC} ${CFLAGS} -g -o fs fs.o ${TOP_LIBDIR}/libprot.a $(LIBS) ${XLIBS}
+	${CC} ${CFLAGS} $(DBG) -o fs fs.o ${TOP_LIBDIR}/libprot.a $(LIBS) ${XLIBS}
 
 livesys.o: livesys.c ${INCLS} AFS_component_version_number.c
 
 livesys: livesys.c $(LIBS)
-	${CC} -g -o livesys $(CFLAGS) ${srcdir}/livesys.c $(LIBS) ${XLIBS}
+	${CC} $(DBG) -o livesys $(CFLAGS) ${srcdir}/livesys.c $(LIBS) ${XLIBS}
 
 twiddle: twiddle.c $(LIBS)
-	${CC} -g -o twiddle $(CFLAGS) twiddle.c $(LIBS) ${XLIBS}
+	${CC} $(DBG) -o twiddle $(CFLAGS) twiddle.c $(LIBS) ${XLIBS}
 
 gcpags: gcpags.c $(LIBS)
-	${CC} -g -o gcpags $(CFLAGS) gcpags.c $(LIBS) ${XLIBS}
+	${CC} $(DBG) -o gcpags $(CFLAGS) gcpags.c $(LIBS) ${XLIBS}
 
 whatfid.o: whatfid.c ${INCLS} AFS_component_version_number.c
 
 whatfid: whatfid.o ${LIBS}
-	${CC} ${CFLAGS} -g -o whatfid whatfid.o ${LIBS} ${XLIBS}
+	${CC} ${CFLAGS} $(DBG) -o whatfid whatfid.o ${LIBS} ${XLIBS}
 
 fstrace.o: fstrace.c AFS_component_version_number.c
 	case ${SYS_NAME} in \
 		sun4_411 | sun4c_411 | sun4m_412 ) \
-			${CCXPG2} -g -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} -I${TOP_INCDIR} -c ${srcdir}/fstrace.c ;; \
+			${CCXPG2} $(DBG) -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} -I${TOP_INCDIR} -c ${srcdir}/fstrace.c ;; \
 		* ) \
-			${CC} ${CFLAGS} -g -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} -I${TOP_INCDIR} -c ${srcdir}/fstrace.c ;; \
+			${CC} ${CFLAGS} $(DBG) -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} -I${TOP_INCDIR} -c ${srcdir}/fstrace.c ;; \
 	esac
 
 fstrace: fstrace.o
@@ -147,7 +147,7 @@ fstrace: fstrace.o
 		pmax_ul43 | pmax_ul43a ) \
 			${CC} ${CFLAGS} -o fstrace fstrace.o ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/util.a /usr/lib/libi.a ;; \
 		sun4_411 | sun4c_411 | sun4m_412 ) \
-			${CCXPG2} ${CFLAGS} -g -o fstrace fstrace.o ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/util.a ;; \
+			${CCXPG2} ${CFLAGS} $(DBG) -o fstrace fstrace.o ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/util.a ;; \
 		hp700_ux100 | hp800_ux100 | hp?00_ux10? | hp_ux10? | hp_ux11?) \
 			${CC} -I${TOP_OBJDIR}/src/config  -o fstrace fstrace.o ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/util.a ;; \
 		* ) \
@@ -163,11 +163,11 @@ kdump.o: kdump.c ${INCLS} AFS_component_version_number.c
 	-set -x; \
 	case ${SYS_NAME} in \
 		alpha_linux* ) \
-			${CC} -g -I${LINUX_KERNEL_PATH}/include -I${TOP_INCDIR}/afs -I${TOP_OBJDIR}/src/config -I${TOP_OBJDIR}/src/libafs/afs -I${TOP_INCDIR} ${XCFLAGS} -mno-fp-regs -ffixed-8 -o kdump-${LINUX_VERSION}.o -c ${srcdir}/kdump.c ;; \
+			${CC} $(DBG) -I${LINUX_KERNEL_PATH}/include -I${TOP_INCDIR}/afs -I${TOP_OBJDIR}/src/config -I${TOP_OBJDIR}/src/libafs/afs -I${TOP_INCDIR} ${XCFLAGS} -mno-fp-regs -ffixed-8 -o kdump-${LINUX_VERSION}.o -c ${srcdir}/kdump.c ;; \
 		*linux* ) \
-			${CC} -g -I${LINUX_KERNEL_PATH}/include -I${TOP_INCDIR}/afs -I${TOP_OBJDIR}/src/config -I${TOP_OBJDIR}/src/libafs/afs -I${TOP_INCDIR} ${XCFLAGS} -o kdump-${LINUX_VERSION}.o -c ${srcdir}/kdump.c ;; \
+			${CC} $(DBG) -I${LINUX_KERNEL_PATH}/include -I${TOP_INCDIR}/afs -I${TOP_OBJDIR}/src/config -I${TOP_OBJDIR}/src/libafs/afs -I${TOP_INCDIR} ${XCFLAGS} -o kdump-${LINUX_VERSION}.o -c ${srcdir}/kdump.c ;; \
 		alpha_osf1 | alpha_osf20 |  alpha_osf30 | alpha_osf32 | alpha_osf32c| alpha_dux?? ) \
-			${CC} -g ${CFLAGS} -I/usr/sys/include -I/usr/sys/BINARY -I/usr/sys/AFS -DDEBUGGER -c ${srcdir}/kdump.c ;;\
+			${CC} $(DBG) ${CFLAGS} -I/usr/sys/include -I/usr/sys/BINARY -I/usr/sys/AFS -DDEBUGGER -c ${srcdir}/kdump.c ;;\
 		sgi_6? ) \
 			for f in ../libafs/STATIC.IP*/CPU_KDEFS; \
 			do	IP=`expr "$$f" : '../libafs/STATIC.\(IP..\)'`; \
@@ -176,14 +176,14 @@ kdump.o: kdump.c ${INCLS} AFS_component_version_number.c
 				echo CPU_KDEFS = $$CPU_KDEFS; \
 				case $$CPU_KDEFS in \
 				*-64*)	${CC} -D_KMEMUSER -woff 1178 \
-						-g -I${TOP_INCDIR} \
+						$(DBG) -I${TOP_INCDIR} \
 						-I${TOP_OBJDIR}/src/config \
 						$$CPU_KDEFS \
 						${XCFLAGS64} \
 						-c ${srcdir}/kdump.c -o kdump.$$IP.o \
 					;; \
 				*)	${CC} -D_KMEMUSER -woff 1178 \
-						-g -I${TOP_INCDIR} \
+						$(DBG) -I${TOP_INCDIR} \
 						-I${TOP_OBJDIR}/src/config \
 						$$CPU_KDEFS \
 						${XCFLAGS} -DAFS_32BIT_KERNEL_ENV \
@@ -195,23 +195,23 @@ kdump.o: kdump.c ${INCLS} AFS_component_version_number.c
 		*nbsd*) \
 			touch kdump.o ;; \
 		*) \
-			${CC} -g -I${TOP_INCDIR}/afs -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS} -c ${srcdir}/kdump.c ;; \
+			${CC} $(DBG) -I${TOP_INCDIR}/afs -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS} -c ${srcdir}/kdump.c ;; \
 	esac ;
 
 kdump64.o : kdump.c ${INCLS} AFS_component_version_number.c
 	-set -x; \
 	case ${SYS_NAME} in \
 	sun4x_5[789] | hp_ux11* |sunx86_5[789] ) \
-		${CC} -g -I${TOP_INCDIR}/afs -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS64} -o kdump64.o -c ${srcdir}/kdump.c ;; \
+		${CC} $(DBG) -I${TOP_INCDIR}/afs -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS64} -o kdump64.o -c ${srcdir}/kdump.c ;; \
 	esac
 
 kdump:  kdump.o
 	-set -x; \
 	case ${SYS_NAME} in \
 	sun4c_51 | sun4c_52 | sun4m_51 | sun4m_52 | sun4c_53 | sun4m_53 | sun4_53 | sun4_54 | sun4c_54 | sun4m_54 | sunx86_5? ) \
-		${CC} -g -o kdump kdump.o ${TOP_LIBDIR}/libcmd.a  ${TOP_LIBDIR}/util.a /usr/lib/libkvm.a -lelf ${XLIBS} ;; \
+		${CC} $(DBG) -o kdump kdump.o ${TOP_LIBDIR}/libcmd.a  ${TOP_LIBDIR}/util.a /usr/lib/libkvm.a -lelf ${XLIBS} ;; \
 	sun4x_5? |sunx86_5? ) \
-		${CC} -g -o kdump kdump.o ${TOP_LIBDIR}/libcmd.a  ${TOP_LIBDIR}/util.a  ${XLIBELFA} ${XLIBKVM} ${XLIBS} ;; \
+		${CC} $(DBG) -o kdump kdump.o ${TOP_LIBDIR}/libcmd.a  ${TOP_LIBDIR}/util.a  ${XLIBELFA} ${XLIBKVM} ${XLIBS} ;; \
 	sgi_6? ) \
 		for f in ../libafs/STATIC.IP*/CPU_KDEFS; \
 		do	IP=`expr "$$f" : '../libafs/STATIC.\(IP..\)'`; \
@@ -219,12 +219,12 @@ kdump:  kdump.o
 			echo IP = $$IP; \
 			echo CPU_KDEFS = $$CPU_KDEFS; \
 			case $$CPU_KDEFS in \
-			*-64*)	${CC} ${XCFLAGS64} -g \
+			*-64*)	${CC} ${XCFLAGS64} $(DBG) \
 					$$CPU_KDEFS \
 					-o kdump.$$IP kdump.$$IP.o \
 					${TOP_LIBDIR}/libcmd64.a -lelf \
 				;; \
-			*) 	${CC} ${XCFLAGS} -g \
+			*) 	${CC} ${XCFLAGS} $(DBG) \
 					$$CPU_KDEFS \
 					-o kdump.$$IP kdump.$$IP.o \
 					${TOP_LIBDIR}/libcmd.a -lelf \
@@ -232,12 +232,12 @@ kdump:  kdump.o
 			esac || exit $$? ; \
 		done ;; \
 	*linux* ) \
-		${CC} -g -o kdump-${LINUX_VERSION} kdump-${LINUX_VERSION}.o ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/util.a ${XLIBS} ;; \
+		${CC} $(DBG) -o kdump-${LINUX_VERSION} kdump-${LINUX_VERSION}.o ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/util.a ${XLIBS} ;; \
 	alpha_osf1 | alpha_osf20 |  alpha_osf30 | alpha_osf32 | alpha_osf32c | alpha_dux??) \
-		${CC} -g -o kdump kdump.o ${TOP_LIBDIR}/libcmd.a  ${TOP_LIBDIR}/util.a ${XLIBS} -ll -lmld;; \
-	ncrx86_* ) ${CC} -g -o kdump kdump.o ${TOP_LIBDIR}/libcmd.a  ${TOP_LIBDIR}/util.a -lelf ${XLIBS} ;; \
+		${CC} $(DBG) -o kdump kdump.o ${TOP_LIBDIR}/libcmd.a  ${TOP_LIBDIR}/util.a ${XLIBS} -ll -lmld;; \
+	ncrx86_* ) ${CC} $(DBG) -o kdump kdump.o ${TOP_LIBDIR}/libcmd.a  ${TOP_LIBDIR}/util.a -lelf ${XLIBS} ;; \
 	*nbsd*) touch kdump ;; \
-	* )     ${CC} -g -o kdump kdump.o ${TOP_LIBDIR}/libcmd.a  ${TOP_LIBDIR}/util.a ${XLIBS} ;; \
+	* )     ${CC} $(DBG) -o kdump kdump.o ${TOP_LIBDIR}/libcmd.a  ${TOP_LIBDIR}/util.a ${XLIBS} ;; \
 	esac
 
 ## kdump to read from 64 bit kernel dumps
@@ -246,7 +246,7 @@ kdump64 : kdump64.o
 	-set -x; \
 	case ${SYS_NAME} in \
 	sun4x_5[789] | hp_ux11* |sunx86_5[789] )  \
-		${CC} -g ${XCFLAGS64} -o kdump64 kdump64.o ${TOP_LIBDIR}/libcmd64.a ${XLIBELFA} ${XLIBKVM} ${XLIBS} ;; \
+		${CC} $(DBG) ${XCFLAGS64} -o kdump64 kdump64.o ${TOP_LIBDIR}/libcmd64.a ${XLIBELFA} ${XLIBKVM} ${XLIBS} ;; \
 	esac
 
 #

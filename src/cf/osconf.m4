@@ -24,6 +24,7 @@ AC_CHECK_PROGS(LORDER, lorder, [${am_missing_run}lorder])
 case $AFS_SYSNAME in
 	alpha_dux40)
 		CSTATIC="-non_shared"
+		DBG="-g3"
 		LWP_OPTMZ="-O2"
 		MT_CFLAGS='-D_REENTRANT=1 -pthread -DAFS_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-pthread -lpthread -lmach -lexc -lc"
@@ -33,6 +34,7 @@ case $AFS_SYSNAME in
 
 	alpha_dux50)
 		LEX="flex -l"
+		DBG="-g3"
 		CSTATIC="-non_shared"
 		LWP_OPTMZ="-O2"
 		MT_CFLAGS='-D_REENTRANT=1 -pthread -DAFS_PTHREAD_ENV ${XCFLAGS}'

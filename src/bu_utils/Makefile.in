@@ -9,7 +9,7 @@ srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
 
-CFLAGS=-g -w -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} -I${TOP_INCDIR}/afs ${XCFLAGS}
+CFLAGS=$(DBG) -w -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} -I${TOP_INCDIR}/afs ${XCFLAGS}
 LDFLAGS = ${XLDFLAGS}
 
 all: fms

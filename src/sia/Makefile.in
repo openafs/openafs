@@ -37,21 +37,21 @@ ${DEST}/lib/afs/libafssiad.krb.so: libafssiad.krb.so
 	${INSTALL} $? $@
 
 siad.o: siad.c
-	$(CC) $(CFLAGS) -c -g siad.c -o siad.o
+	$(CC) $(CFLAGS) -c $(DBG) siad.c -o siad.o
 
 siad_krb.o: siad.c
-	$(CC) $(CFLAGS) -DAFS_KERBEROS_ENV -c -g siad.c -o siad_krb.o
+	$(CC) $(CFLAGS) -DAFS_KERBEROS_ENV -c $(DBG) siad.c -o siad_krb.o
 
 libafssiad.so: siad.o
-	$(LD) $(LDFLAGS) -g -shared -no_archive -o libafssiad.so \
+	$(LD) $(LDFLAGS) $(DBG) -shared -no_archive -o libafssiad.so \
 		 ${UNRESOLVED} siad.o ${LIBS} -none -lc
 
 libafssiad.krb.so: siad_krb.o
-	$(LD) $(LDFLAGS) -g -shared -no_archive -o libafssiad.krb.so \
+	$(LD) $(LDFLAGS) $(DBG) -shared -no_archive -o libafssiad.krb.so \
 		 ${UNRESOLVED} siad_krb.o ${KLIBS} ${LIBS} -none -lc
 
 test-reauth: test-reauth.o
-	$(CC) $(CFLAGS) -g -o test-reauth test-reauth.o -lc
+	$(CC) $(CFLAGS) $(DBG) -o test-reauth test-reauth.o -lc
 
 install: ${DESTDIR}${libdir}/afs/libafssiad.so ${DESTDIR}${libdir}/afs/libafssiad.krb.so
 

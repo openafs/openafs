@@ -10,7 +10,7 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 
 
 LIBS= ${XLIBS}
-CFLAGS=${OPTMZ} -g -I. -I${TOP_INCDIR} -I../config ${XCFLAGS}
+CFLAGS=${OPTMZ} $(DBG) -I. -I${TOP_INCDIR} -I../config ${XCFLAGS}
 
 all: pinstall
 

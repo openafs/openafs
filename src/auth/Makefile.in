@@ -13,7 +13,7 @@ OBJS= cellconfig.o ktc.o userok.o writeconfig.o authcon.o \
 KOBJS= cellconfig.o ktc.krb.o userok.o writeconfig.o authcon.o \
     acfg_errors.o ktc_errors.o
 
-CFLAGS=-g -I. -I${srcdir} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS}
+CFLAGS=$(DBG) -I. -I${srcdir} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS}
 LIBS=libauth.a ${TOP_LIBDIR}/libsys.a \
       ${TOP_LIBDIR}/librxkad.a ${TOP_LIBDIR}/libdes.a \
       ${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/libsys.a \

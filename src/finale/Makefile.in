@@ -8,8 +8,8 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
-CFLAGS=-g -I. -I${srcdir} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS}
-LDFLAGS = -g ${XLDFLAGS}
+CFLAGS=$(DBG) -I. -I${srcdir} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS}
+LDFLAGS = $(DBG) ${XLDFLAGS}
 INCLS=${TOP_INCDIR}/ubik.h \
 	${TOP_INCDIR}/lwp.h \
 	${TOP_INCDIR}/lock.h  \

@@ -10,8 +10,8 @@ srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
 
-CFLAGS=-g -I. -I${srcdir} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS}
-LDFLAGS = -g ${XLDFLAGS}
+CFLAGS=$(DBG) -I. -I${srcdir} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS}
+LDFLAGS = ${XLDFLAGS}
 
 INSTALLex = ${INSTALL} -m 755
 
@@ -29,15 +29,15 @@ AFSLIBS=${TOP_LIBDIR}/libauth.a ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/libsys.a ${
 afsd: afsd.o $(AFSLIBS)
 	case ${SYS_NAME} in \
 	sgi_61 | sgi_62 | sgi_63) \
-		${CC} ${CFLAGS} -g -o afsd afsd.o $(NON_SHARED) $(LDFLAGS) $(AFSLIBS) ${XLIBS} /usr/lib/libdwarf.a /usr/lib/libelf.a ;; \
+		${CC} ${CFLAGS} $(DBG) -o afsd afsd.o $(NON_SHARED) $(LDFLAGS) $(AFSLIBS) ${XLIBS} /usr/lib/libdwarf.a /usr/lib/libelf.a ;; \
 	sgi_64 | sgi_65 ) \
-		${CC} ${CFLAGS} -g -o afsd afsd.o $(NON_SHARED) $(LDFLAGS) $(AFSLIBS) ${XLIBS} /usr/lib32/libdwarf.a /usr/lib32/libelf.a ;; \
+		${CC} ${CFLAGS} $(DBG) -o afsd afsd.o $(NON_SHARED) $(LDFLAGS) $(AFSLIBS) ${XLIBS} /usr/lib32/libdwarf.a /usr/lib32/libelf.a ;; \
 	* ) \
-		${CC} ${CFLAGS} -g -o afsd afsd.o $(NON_SHARED) $(LDFLAGS) $(AFSLIBS) ${XLIBS} ;; \
+		${CC} ${CFLAGS} $(DBG) -o afsd afsd.o $(NON_SHARED) $(LDFLAGS) $(AFSLIBS) ${XLIBS} ;; \
 	esac
 
 vsys: vsys.o
-	$(CC) -g -o vsys vsys.o ${TOP_LIBDIR}/libsys.a $(LDFLAGS) ${XLIBS}
+	$(CC) $(DBG) -o vsys vsys.o ${TOP_LIBDIR}/libsys.a $(LDFLAGS) ${XLIBS}
 
 #
 # Objects

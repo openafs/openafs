@@ -46,14 +46,14 @@ all: login login.krb
 
 login:	${OBJS} ${AFSLIBS}
 	case ${SYS_NAME} in \
-	sun4x_5?|sunx86_5? ) ${CC} -g -o $@ ${CFLAGS} ${OBJS} -lc ${AFSLIBS} ${XLIBS} -lcmd;;\
-	*) ${CC} -g -o $@ ${CFLAGS} ${OBJS} ${AFSLIBS} ${XLIBS} ;;\
+	sun4x_5?|sunx86_5? ) ${CC} $(DBG) -o $@ ${CFLAGS} ${OBJS} -lc ${AFSLIBS} ${XLIBS} -lcmd;;\
+	*) ${CC} $(DBG) -o $@ ${CFLAGS} ${OBJS} ${AFSLIBS} ${XLIBS} ;;\
 	esac 
 
 login.krb: ${KOBJS} ${KAFSLIBS}
 	case ${SYS_NAME} in \
-	sun4x_5?|sunx86_5? ) ${CC} -g -o $@ ${CFLAGS} ${KOBJS} -lc ${KAFSLIBS} ${XLIBS} -lcmd;;\
-	*) ${CC} -g -o $@ ${CFLAGS} ${KOBJS} ${KAFSLIBS} ${XLIBS} ;;\
+	sun4x_5?|sunx86_5? ) ${CC} $(DBG) -o $@ ${CFLAGS} ${KOBJS} -lc ${KAFSLIBS} ${XLIBS} -lcmd;;\
+	*) ${CC} $(DBG) -o $@ ${CFLAGS} ${KOBJS} ${KAFSLIBS} ${XLIBS} ;;\
 	esac 
 
 libutil.a : ${UTILOBJS}
