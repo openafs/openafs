@@ -106,7 +106,7 @@ ConstructLocalLogPath(const char *cpath,
 #define AFSDIR_CORES_DIR "cores"
 #define AFSDIR_DB_DIR    "db"
 #define AFSDIR_LOGS_DIR  "logs"
-#define AFSDIR_LOCAL_DIR "local"
+#define AFSDIR_LOCAL_DIR "server-local"
 #define AFSDIR_BACKUP_DIR "backup"
 
 /* file names */ 
