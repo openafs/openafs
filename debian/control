@@ -1,7 +1,6 @@
 Source: openafs
 Section: non-us/main
 Priority: optional
-Architecture: powerpc i386 sparc
 Maintainer: Sam Hartman <hartmans@debian.org>
 Build-Depends: debhelper (>= 2.2.20), libncurses5-dev, libpam0g-dev, bison, docbook-to-man
 Standards-Version: 3.5.0

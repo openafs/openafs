@@ -1,3 +1,12 @@
+openafs (1.0.2-3) unstable; urgency=low
+
+  * Apply patch from  Stefan Kluth  <skluth@mppmu.mpg.de> for ppc_linux22
+  * Back out architecture change from last version; no good way to
+    actually solve that problem apparently. 
+
+
+ -- Sam Hartman <hartmans@debian.org>  Sat, 17 Feb 2001 23:45:06 -0500
+
 openafs (1.0.2-2) unstable; urgency=low
 
   * Provide openafs-ptutil in hope that apt will deal better with upgrade,
