@@ -97,7 +97,7 @@ preempt.o	: preempt.c lwp.h preempt.h
 lwp.o		: lwp.c lwp.h
 			case "$(SYS_NAME)" in \
 				rs_aix*) \
-					$(CC) -I${SRCDIR}include -c lwp.c;; \
+					$(CC) -I${TOP_SRCDIR}/config -I${SRCDIR}include -c lwp.c;; \
 				*)  \
 					$(CC) ${CFLAGS} -c lwp.c;; \
 			esac
