@@ -88,7 +88,7 @@ typedef unsigned char bool;
 #define TRUE	1
 
 #ifndef MIN
-#define MIN(a,b) ((a)>(b)) ? b : a
+#define MIN(a,b) (((a)>(b)) ? (b) : (a))
 #endif
 
 #ifndef NSIG

@@ -320,8 +320,8 @@ struct rx_packet {
 /* copy data from an RX packet */
 #define rx_packetread(p, off, len, out)               \
   ( (off) + (len) > (p)->wirevec[1].iov_len ?         \
-    rx_SlowReadPacket(p, off, len, (char*)out) :             \
-    ((memcpy((char *)(out), (char*)((p)->wirevec[1].iov_base)+(off), len)),0))
+    rx_SlowReadPacket(p, off, len, (char*)(out)) :             \
+    ((memcpy((char *)(out), (char*)((p)->wirevec[1].iov_base)+(off), (len))),0))
 
 #define rx_computelen(p,l) { register int i; \
    for (l=0, i=1; i < p->niovecs; i++ ) l += p->wirevec[i].iov_len; }

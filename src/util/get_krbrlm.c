@@ -24,12 +24,12 @@ RCSID
  *
  */
 #define	KSUCCESS	0
-#define	KFAILURE	-1
+#define	KFAILURE	(-1)
 
 int
 afs_krb_get_lrealm(char *r, int n)
 {
-    FILE *cnffile, *fopen();
+    FILE *cnffile/*, *fopen()*/;
 
     if (n > 1)
 	return (KFAILURE);	/* Temporary restriction */

@@ -1054,7 +1054,7 @@ nt_ListAFSFiles(char *dev,
 
     if (singleVolumeNumber) {
 	h.ih_vid = singleVolumeNumber;
-	if (nt_HandleToVolDir(name, &h) < 0)
+	if (!nt_HandleToVolDir(name, &h))
 	    return -1;
 	ninodes =
 	    nt_ListAFSSubDirs(&h, writeFun, fp, judgeFun, singleVolumeNumber);

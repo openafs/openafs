@@ -522,6 +522,7 @@ xdr_string(register XDR * xdrs, char **cpp, u_int maxsize)
     u_int size;
     u_int nodesize;
 
+    /* FIXME: this does not look correct: MSVC 6 computes -2 here */
     if (maxsize > ((~0) >> 1) - 1)
 	maxsize = ((~0) >> 1) - 1;
 

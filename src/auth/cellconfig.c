@@ -306,8 +306,6 @@ afsconf_Open(register const char *adir)
 			free(tdir);
 			UNLOCK_GLOBAL_MUTEX return (struct afsconf_dir *)0;
 		    }
-		    fgets(afs_confdir, 128, fp);
-		    fclose(fp);
 		}
 		fgets(afs_confdir, 128, fp);
 		fclose(fp);
@@ -345,6 +343,7 @@ GetCellUnix(struct afsconf_dir *adir)
     strcompose(tbuffer, 256, adir->name, "/", AFSDIR_THISCELL_FILE, NULL);
     tf = fopen(tbuffer, "r");
     if (tf) {
+	/* FIXME: buffer overflow waiting to happen */
 	rc = fscanf(tf, "%s", tbuffer);
 	if (rc == 1) {
 	    adir->cellName = (char *)malloc(strlen(tbuffer) + 1);
@@ -454,6 +453,7 @@ afsconf_OpenInternal(register struct afsconf_dir *adir, char *cell,
 	    if (code) {
 		afsconf_CloseInternal(adir);
 		fclose(tf);
+		free(curEntry);
 		return -1;
 	    }
 	    if (linkedcell[0] != '\0') {
@@ -571,10 +571,12 @@ ParseHostLine(char *aline, register struct sockaddr_in *addr, char *aname,
     if (*aline == '[') {
 	if (aclone)
 	    *aclone = 1;
+	/* FIXME: length of aname unknown here */
 	code = sscanf(aline, "[%d.%d.%d.%d] #%s", &c1, &c2, &c3, &c4, aname);
     } else {
 	if (aclone)
 	    *aclone = 0;
+	/* FIXME: length of aname unknown here */
 	code = sscanf(aline, "%d.%d.%d.%d #%s", &c1, &c2, &c3, &c4, aname);
     }
     if (code != 5)
@@ -601,6 +603,7 @@ ParseCellLine(register char *aline, register char *aname,
 	      register char *alname)
 {
     register int code;
+    /* FIXME: length of aname, alname unknown here */
     code = sscanf(aline, ">%s %s", aname, alname);
     if (code == 1)
 	*alname = '\0';

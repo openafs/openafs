@@ -86,6 +86,7 @@ xdr_array(register XDR * xdrs, caddr_t * addrp, u_int * sizep, u_int maxsize,
     register bool_t stat = TRUE;
     register u_int nodesize;
 
+    /* FIXME: this does not look correct: MSVC 6 computes -1 / elsize here */
     i = ((~0) >> 1) / elsize;
     if (maxsize > i)
 	maxsize = i;

@@ -205,7 +205,7 @@ main(int argc, char **argv)
 
     if (cml_prefix) {
 	cml_string =
-	    malloc(strlen("char ") + strlen(cml_prefix) + strlen(CML_STRING) +
+	    (char *)malloc(strlen("char ") + strlen(cml_prefix) + strlen(CML_STRING) +
 		   1);
 	if (!cml_string) {
 	    printf("No space to use prefix in cml string, ignoring it.\n");

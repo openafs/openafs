@@ -139,7 +139,7 @@ re_comp(register char *sp)
     } else
 	circf = 0;
     for (;;) {
-	if (ep >= &expbuf[ESIZE])
+	if (ep >= &expbuf[ESIZE - 10 /* fudge factor */])
 	    comperr(retoolong);
 	if ((c = *sp++) == '\0') {
 	    if (bracketp != bracket)
@@ -189,13 +189,13 @@ re_comp(register char *sp)
 			*ep = ep[-1] + 1;
 			ep++;
 			cclcnt++;
-			if (ep >= &expbuf[ESIZE])
+			if (ep >= &expbuf[ESIZE - 10 /* fudge factor */])
 			    comperr(retoolong);
 		    }
 		}
 		*ep++ = c;
 		cclcnt++;
-		if (ep >= &expbuf[ESIZE])
+		if (ep >= &expbuf[ESIZE - 10 /* fudge factor */])
 		    comperr(retoolong);
 	    } while ((c = *sp++) != ']');
 	    lastep[1] = cclcnt;

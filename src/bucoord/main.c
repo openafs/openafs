@@ -286,7 +286,7 @@ backupInit()
     rx_SetRxDeadTime(60);
 
     /* VLDB initialization */
-    vldbClientInit(0, localauth, tcell, &cstruct, &ttoken);
+    code = vldbClientInit(0, localauth, tcell, &cstruct, &ttoken);
     if (code)
 	return (code);
 

@@ -594,6 +594,7 @@ InsertInitOpcode(int *aargc, char **aargv)
     pinitopcode = (char *)malloc(sizeof(initcmd_opcode));
     if (!pinitopcode) {
 	fprintf(stderr, "%s: Can't malloc initial opcode space\n", aargv[0]);
+	free(newargv);
 	return (NULL);
     }
     strcpy(pinitopcode, initcmd_opcode);

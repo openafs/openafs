@@ -785,7 +785,7 @@ parseargs(int argc, char *argv[], struct commandline *cmd)
     int i;
     int j;
     char c;
-    char flag[(1 << 8 * sizeof(char))];
+    char flag[(1 << (8 * sizeof(char)))];
     int nflags;
 
     cmdname = argv[0];

@@ -426,7 +426,7 @@ main(int argc, char *argv[])
 	    break;
 	case 3:		//1.0.401 or 1.0.40a are the same; 
 	    if ((isdigit(*ptr) == 0)	// first 2 must be digit
-		|| (isdigit(*(ptr + 1) == 0))
+		|| (isdigit(*(ptr + 1)) == 0)
 		|| (*(ptr + 1) != '0' && isdigit(*(ptr + 2)) == 0)	// disallow 1.0.4b0  or 1.0.41a 
 		)
 		usuage();
@@ -452,6 +452,7 @@ main(int argc, char *argv[])
 		if (isdigit(*ptr) == 0 || isdigit(*(ptr + 1)) == 0)
 		    usuage();
 		pat2 = atoi(ptr);
+		break;
 	    default:
 		usuage();
 	    }
@@ -460,7 +461,8 @@ main(int argc, char *argv[])
 	if (file == NULL)
 	    usuage();
 	len = filelength(_fileno(file));
-	buf = (char *)malloc(len + 1);
+	save = (char *)malloc(len + 1);
+	buf = save;
 	len = fread(buf, sizeof(char), len, file);
 	buf[len] = 0;		//set eof
 	fclose(file);
@@ -505,6 +507,7 @@ main(int argc, char *argv[])
 	    buf = ptr + 1;
 	}
 	fclose(file);
+	free(save);
 	return 0;
     }
     if (strcmp(argv[1], "~") == 0) {	//check for file presence
@@ -624,7 +627,8 @@ main(int argc, char *argv[])
 	if (file == NULL)
 	    exit(0xc000);
 	len = filelength(_fileno(file));
-	ch = (char *)malloc(len + 2);
+	save = (char *)malloc(len + 2);
+	ch = save;
 	*ch++ = 0;		/* a small hack to allow matching /r/n if /n is first character */
 	len = fread(ch, sizeof(char), len, file);
 	file = freopen(fname, "wb", file);
@@ -636,6 +640,7 @@ main(int argc, char *argv[])
 	    ch++;
 	}
 	fclose(file);
+	free(save);
 	return 0;
     }
     if (strcmp(argv[1], "-") == 0) {
@@ -644,7 +649,8 @@ main(int argc, char *argv[])
 	if (file == NULL)
 	    exit(0xc000);
 	len = filelength(_fileno(file));
-	ch = (char *)malloc(len + 1);
+	save = (char *)malloc(len + 1);
+	ch = save;
 	len = fread(ch, sizeof(char), len, file);
 	file = freopen(fname, "wb", file);
 	while (len-- > 0) {
@@ -653,6 +659,7 @@ main(int argc, char *argv[])
 	    ch++;
 	}
 	fclose(file);
+	free(save);
 	return 0;
     }
     if (strstr(fname, ".et") == NULL)
@@ -661,7 +668,8 @@ main(int argc, char *argv[])
     if (file == NULL)
 	exit(0xc000);
     len = filelength(_fileno(file));
-    ch = (char *)malloc(len + 1);
+    save = (char *)malloc(len + 1);
+    ch = save;
     len = fread(ch, sizeof(char), len, file);
     file = freopen(fname, "wb", file);
     while (len-- > 0) {
@@ -675,9 +683,9 @@ main(int argc, char *argv[])
 	pvar[i] = argv[i + 1];
     pvar[argc - 1] = NULL;
     pvar[0] = argv[1];
-    l = _spawnvp(_P_WAIT, argv[1], pvar);
-    if (ch)
-	free(ch);
+    (void)_spawnvp(_P_WAIT, argv[1], pvar);
+    if (save)
+	free(save);
     if (pvar)
 	free(pvar);
     return 0;

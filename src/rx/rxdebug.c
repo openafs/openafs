@@ -335,7 +335,7 @@ MainCommand(as, arock)
 		printf("getconn call failed with code %d\n", code);
 		break;
 	    }
-	    if (tconn.cid == 0xffffffff) {
+	    if (tconn.cid == (afs_int32)0xffffffff) {
 		printf("Done.\n");
 		break;
 	    }

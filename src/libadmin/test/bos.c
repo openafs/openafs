@@ -632,6 +632,7 @@ static void
 Print_bos_ProcessState_p(bos_ProcessState_p state, const char *prefix)
 {
     printf("%sProcess state:\n", prefix);
+    /* FIXME: BOS_PROCESS_OK is 0, so this test is not right */
     if (*state & BOS_PROCESS_OK) {
 	printf("%s\tBOS_PROCESS_OK:\n", prefix);
     }

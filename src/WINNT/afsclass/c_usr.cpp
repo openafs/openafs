@@ -39,6 +39,7 @@ USER::USER (LPCELL lpCellParent, LPTSTR pszPrincipal, LPTSTR pszInstance)
    m_fStatusOutOfDate = TRUE;
    m_mszOwnerOf = NULL;
    m_mszMemberOf = NULL;
+   memset(&m_us, 0, sizeof(m_us));
 }
 
 
@@ -190,7 +191,7 @@ BOOL USER::RefreshStatus (BOOL fNotify, ULONG *pStatus)
                CopyAnsiToString (szLastModPrincipal, wpGetKas.wpKasPrincipalGet.Data.lastModPrincipal.principal);
                CopyAnsiToString (szLastModInstance, wpGetKas.wpKasPrincipalGet.Data.lastModPrincipal.instance);
 
-               m_us.KASINFO.fIsAdmin = (wpGetKas.wpKasPrincipalGet.Data.adminSetting == ADMIN) ? TRUE : FALSE;
+               m_us.KASINFO.fIsAdmin = (wpGetKas.wpKasPrincipalGet.Data.adminSetting == KAS_ADMIN) ? TRUE : FALSE;
                m_us.KASINFO.fCanGetTickets = (wpGetKas.wpKasPrincipalGet.Data.tgsSetting == TGS) ? TRUE : FALSE;
                m_us.KASINFO.fEncrypt = (wpGetKas.wpKasPrincipalGet.Data.encSetting == ENCRYPT) ? TRUE : FALSE;
                m_us.KASINFO.fCanChangePassword = (wpGetKas.wpKasPrincipalGet.Data.cpwSetting == CHANGE_PASSWORD) ? TRUE : FALSE;

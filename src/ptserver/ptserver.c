@@ -157,14 +157,13 @@ struct afsconf_dir *prdir;
 extern afs_int32 depthsg;
 #endif
 
-extern afs_int32 ubik_lastYesTime;
-extern afs_int32 ubik_nBuffers;
-
 extern int afsconf_ServerAuth();
 extern int afsconf_CheckAuth();
 
 int pr_realmNameLen;
 char *pr_realmName;
+
+static struct afsconf_cell info;
 
 #include "AFS_component_version_number.c"
 
@@ -190,7 +189,6 @@ main(int argc, char **argv)
 #if 0
     struct ktc_encryptionKey tkey;
 #endif
-    struct afsconf_cell info;
     int kerberosKeys;		/* set if found some keys */
     int lwps = 3;
     char clones[MAXHOSTSPERCELL];

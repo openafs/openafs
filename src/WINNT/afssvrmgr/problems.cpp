@@ -210,6 +210,8 @@ void Problems_OnRefresh (HWND hDlg, LPIDENT lpi)
             GetString (szText, IDS_AGGREGATE_NO_PROBLEMS);
          else if (lpi->fIsFileset())
             GetString (szText, IDS_FILESET_NO_PROBLEMS);
+	 else
+	     wsprintf (szText, TEXT("UNEXPECTED CONDITION in problems.cpp"));
 
          SetDlgItemText (hDlg, IDC_PROBLEM_TEXT, szText);
          break;

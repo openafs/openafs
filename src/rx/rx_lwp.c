@@ -179,7 +179,7 @@ rxi_ListenerProc(fd_set * rfds, int *tnop, struct rx_call **newcallp)
     }
     rx_listenerPid = pid;
     if (swapNameProgram)
-	(*swapNameProgram) (pid, "listener", &name);
+	(*swapNameProgram) (pid, "listener", &name[0]);
 
     for (;;) {
 	/* Grab a new packet only if necessary (otherwise re-use the old one) */

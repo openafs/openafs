@@ -66,10 +66,10 @@ threadname(void)
 #else /* AFS_PTHREAD_ENV */
     me = (PROCESS) LWP_ThreadId();
 #endif /* AFS_PTHREAD_ENV */
-    ptr = (char *)&MainThread;
+    ptr = &MainThread[0];
     for (i = 0; i < nThreads; i++) {
 	if (ThreadId[i] == me) {
-	    ptr = (char *)&ThreadName[i];
+	    ptr = &ThreadName[i][0];
 	    break;
 	}
     }

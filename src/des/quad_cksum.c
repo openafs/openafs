@@ -85,8 +85,8 @@ RCSID
 /* Definitions for byte swapping */
 
 #ifdef LSBFIRST
-#define vaxtohl(x) *((afs_uint32 *)(x))
-#define vaxtohs(x) *((unsigned short *)(x))
+#define vaxtohl(x) (*((afs_uint32 *)(x)))
+#define vaxtohs(x) (*((unsigned short *)(x)))
 #else
 static afs_uint32 four_bytes_vax_to_nets();
 #define vaxtohl(x) four_bytes_vax_to_nets((char *)(x))

@@ -961,6 +961,7 @@ verifyEntryChains(ut)
 
     static afs_int32(*checkEntry[NBLOCKTYPES]) ()
 	= {
+	/* FIXME: this list does not match typeName[] and may be incorrect */
 	0,			/* free block */
 	    verifyVolFragEntry, verifyVolInfoEntry, verifyTapeEntry, verifyDumpEntry, 0	/* text block */
     };

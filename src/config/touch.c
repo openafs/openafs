@@ -37,7 +37,8 @@ main(int argc, char *argv[])
 	if ((finfo.attrib & ~_A_ARCH) != _A_NORMAL)
 	    continue;
 	fh = _open(finfo.name, _S_IWRITE | _O_BINARY | _S_IREAD | _O_RDWR);
-	pos = _lseek(fh, 0l, SEEK_END);
+	pos = _lseek(fh, 0L, SEEK_END);
+	buffer[0] = 0;
 	_write(fh, buffer, 1);
 	_chsize(fh, pos);
 	_close(fh);

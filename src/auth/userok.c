@@ -113,7 +113,7 @@ afsconf_DeleteUser(adir, auser)
     register FILE *tf;
     register FILE *nf;
     register int flag;
-    char tname[64];
+    char tname[64 + 1];
     char *tp;
     int found;
     struct stat tstat;
@@ -198,7 +198,7 @@ afsconf_GetNthUser(adir, an, abuffer, abufferLen)
 {
     char tbuffer[256];
     register FILE *tf;
-    char tname[64];
+    char tname[64 + 1];
     register char *tp;
     register int flag;
     register afs_int32 code;
@@ -228,14 +228,14 @@ afsconf_GetNthUser(adir, an, abuffer, abufferLen)
 }
 
 /* returns true iff user is in the UserList file */
-static
+static int
 FindUser(adir, auser)
      struct afsconf_dir *adir;
      register char *auser;
 {
     char tbuffer[256];
     register bufio_p bp;
-    char tname[64];
+    char tname[64 + 1];
     register int flag;
     register afs_int32 code;
     int rc;

@@ -357,7 +357,6 @@ void Alert_Scout_ServerStatus (LPIDENT lpi, ULONG status)
             lpoa->nAlerts ++;
             lpoa->aAlerts[ iInsert ].alert = alertTIMEOUT;
             lpoa->aAlerts[ iInsert ].aiTIMEOUT.status = status;
-            lpoa->aAlerts[ iInsert ].aiTIMEOUT.stLastAttempt;
             GetSystemTime (&lpoa->aAlerts[ iInsert ].aiTIMEOUT.stLastAttempt);
 
             fChanged = TRUE;

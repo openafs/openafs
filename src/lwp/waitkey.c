@@ -113,7 +113,7 @@ int
 LWP_GetLine(char *linebuf, int len)
 {
     int cnt = 0;
-    char ch = '\0';
+    int ch = 0;
 
     fflush(stdin);
     /* loop until a new line has been entered */
