@@ -210,8 +210,8 @@ int afsd_InitCM(char **reasonP)
 	if (code == ERROR_SUCCESS)
 		afsi_log("LAN adapter number %d", LANadapter);
 	else {
-		LANadapter = 0;
-		afsi_log("Default LAN adapter number 0");
+		LANadapter = -1;
+		afsi_log("Default LAN adapter number");
 	}
 
 	dummyLen = sizeof(cacheSize);

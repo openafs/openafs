@@ -114,6 +114,7 @@ DESTDIR = $(AFSROOT)\DEST
 # Command macros.
 COPY = copy
 DEL = -del
+#DEL = $(DESTDIR)\BIN\rmbat 	   # win 98 must use batch file
 MKDIR = mkdir
 REN = ren
 ECHO = echo

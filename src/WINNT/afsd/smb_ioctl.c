@@ -27,7 +27,8 @@
 
 smb_ioctlProc_t *smb_ioctlProcsp[SMB_IOCTL_MAXPROCS];
 
-extern unsigned char smb_LANadapter;
+/*extern unsigned char smb_LANadapter;*/
+extern LANA_ENUM lana_list;
 
 void smb_InitIoctl(void)
 {
@@ -86,6 +87,7 @@ void smb_SetupIoctlFid(smb_fid_t *fidp, cm_space_t *prefix)
 		iop = malloc(sizeof(*iop));
                 memset(iop, 0, sizeof(*iop));
                 fidp->ioctlp = iop;
+				iop->fidp = fidp;
         }
 	if (prefix) {
 		copyPrefix = cm_GetSpace();
@@ -183,11 +185,6 @@ long smb_IoctlRead(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp,
 		return code;
         }
 
-	if (iop->flags & SMB_IOCTLFLAG_LOGON) {
-		vcp->logonDLLUser = userp;
-		userp->flags |= CM_USERFLAG_WASLOGON;
-	}
-
 	leftToCopy = (iop->outDatap - iop->outAllocp) - iop->outCopied;
         if (count > leftToCopy) count = leftToCopy;
         
@@ -278,9 +275,13 @@ long smb_IoctlV3Read(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp, smb_pack
 		smb_user_t *uidp;
 
 		uidp = smb_FindUID(vcp, ((smb_t *)inp)->uid, 0);
-		osi_Log3(afsd_logp, "Ioctl uid %d user %x name %s",
-			 uidp->userID, userp,
-			 osi_LogSaveString(afsd_logp, uidp->name));
+		if (uidp && uidp->unp)
+		    osi_Log3(afsd_logp, "Ioctl uid %d user %x name %s",
+			     uidp->userID, userp,
+			     osi_LogSaveString(afsd_logp, uidp->unp->name));
+		else
+		    osi_Log2(afsd_logp, "Ioctl uid %d user %x no name",
+			     uidp->userID, userp);
 		smb_ReleaseUID(uidp);
 	}
 
@@ -292,11 +293,6 @@ long smb_IoctlV3Read(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp, smb_pack
                 smb_ReleaseFID(fidp);
 		return code;
         }
-
-	if (iop->flags & SMB_IOCTLFLAG_LOGON) {
-		vcp->logonDLLUser = userp;
-		userp->flags |= CM_USERFLAG_WASLOGON;
-	}
 
 	leftToCopy = (iop->outDatap - iop->outAllocp) - iop->outCopied;
         if (count > leftToCopy) count = leftToCopy;
@@ -370,9 +366,13 @@ long smb_IoctlReadRaw(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp,
 		smb_user_t *uidp;
 
 		uidp = smb_FindUID(vcp, ((smb_t *)inp)->uid, 0);
-		osi_Log3(afsd_logp, "Ioctl uid %d user %x name %s",
-			 uidp->userID, userp,
-			 osi_LogSaveString(afsd_logp, uidp->name));
+		if (uidp && uidp->unp)
+		    osi_Log3(afsd_logp, "Ioctl uid %d user %x name %s",
+			     uidp->userID, userp,
+			     osi_LogSaveString(afsd_logp, uidp->unp->name));
+		else
+		    osi_Log2(afsd_logp, "Ioctl uid %d user %x no name",
+			     uidp->userID, userp);
 		smb_ReleaseUID(uidp);
 	}
 
@@ -385,11 +385,6 @@ long smb_IoctlReadRaw(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp,
 		return code;
 	}
 
-	if (iop->flags & SMB_IOCTLFLAG_LOGON) {
-		vcp->logonDLLUser = userp;
-		userp->flags |= CM_USERFLAG_WASLOGON;
-	}
-
 	leftToCopy = (iop->outDatap - iop->outAllocp) - iop->outCopied;
 
 	ncbp = outp->ncbp;
@@ -398,7 +393,8 @@ long smb_IoctlReadRaw(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp,
 	ncbp->ncb_length = (unsigned short) leftToCopy;
 	ncbp->ncb_lsn = (unsigned char) vcp->lsn;
 	ncbp->ncb_command = NCBSEND;
-        ncbp->ncb_lana_num = smb_LANadapter;
+    /*ncbp->ncb_lana_num = smb_LANadapter;*/
+	ncbp->ncb_lana_num = vcp->lana;
 
 #ifndef DJGPP
 	ncbp->ncb_buffer = iop->outCopied + iop->outAllocp;

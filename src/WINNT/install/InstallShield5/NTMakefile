@@ -23,8 +23,15 @@ prep: $(CELLSERVDB) AFS_component_version_number.txt
 
 build:
     BuildSetup.bat
-    xcopy/s/e "Media\Transarc AFS\Disk Images\disk1\*.*" $(DESTDIR)\WinInstall
+    xcopy/s/e/y "Media\Transarc AFS\Disk Images\disk1\*.*" $(DESTDIR)\WinInstall
     copy AFS_component_version_number.txt $(DESTDIR)\WinInstall\Version.txt
-    del /q "Media\Transarc AFS\Disk Images\disk1\*.*"
+    $(DEL) /q "Media\Transarc AFS\Disk Images\disk1\*.*"
+!IF ((EXIST("$(ISWEB)")) &&("$(ISWEB)"!=""))
+!	IF (!EXIST($(DESTDIR)\Wininstall\PackageWeb))
+		$(MKDIR) $(DESTDIR)\Wininstall\PackageWeb
+!	ENDIF
+	$(DEL) /q $(DESTDIR)\Wininstall\PackageWeb\*.*
+	$(ISWEB)\Pftwwiz.exe $(AFSROOT)\src\winnt\install\InstallShield5\PackageWeb.pfw -s -a 
+!ENDIF
 
 install: prep build

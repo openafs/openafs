@@ -8,9 +8,9 @@
  */
 
 #define	IGNORE_STDS_H	1
-#ifndef AFS_DJGPP_ENV
+/*#ifndef AFS_DJGPP_ENV*/
 #include <afs/param.h>
-#endif /* AFS_DJGPP_ENV */
+/*#endif /* AFS_DJGPP_ENV */
 
 #if defined(RIOS)
 
@@ -1187,14 +1187,23 @@ LEAF(returnto,1)
 	.set	newsp,16
 
 
+#ifdef AFS_DJGPP_ENV
+.globl	_PRE_Block
+.globl	_savecontext
+_savecontext:
+#else
 .globl	PRE_Block
 .globl	savecontext
-
 savecontext:
+#endif /* AFS_DJGPP_ENV */
 	pushl	%ebp			/* New Frame! */
 	movl	%esp,%ebp
 	pusha				/* Push all registers */
+#ifdef AFS_DJGPP_ENV
+	movl	$1,_PRE_Block		/* Pre-emption code */
+#else
 	movl	$1,PRE_Block		/* Pre-emption code */
+#endif /* AFS_DJGPP_ENV */
 	movl	area1(%ebp),%eax	/* eax = base of savearea */
 	movl	%esp,(%eax)		/* area->topstack = esp */
 	movl	newsp(%ebp),%eax	/* get new sp into eax */
@@ -1206,7 +1215,11 @@ L1:
 
 /* Shouldnt be here....*/
 
+#ifdef AFS_DJGPP_ENV
+	call	_abort
+#else
 	call	abort
+#endif /* AFS_DJGPP_ENV */
 
 /*
  * returnto(area2)
@@ -1216,21 +1229,33 @@ L1:
 /* stack offset */
 	.set	area2,8
 
+#ifdef AFS_DJGPP_ENV
+.globl	_returnto
+_returnto:
+#else
 .globl	returnto
-
 returnto:
+#endif /* AFS_DJGPP_ENV */
 	pushl	%ebp
 	movl	%esp, %ebp		/* New frame, to get correct pointer */
 	movl	area2(%ebp),%eax	/* eax = area2 */
 	movl	(%eax),%esp		/* restore esp */
 	popa 
+#ifdef AFS_DJGPP_ENV
+	movl	$0,_PRE_Block		/* clear it up... */
+#else
 	movl	$0,PRE_Block		/* clear it up... */
+#endif /* AFS_DJGPP_ENV */
 	popl	%ebp
 	ret
 
 /* I see, said the blind man, as he picked up his hammer and saw! */
 	pushl	$1234
+#ifdef AFS_DJGPP_ENV
+	call	_abort
+#else
 	call	abort
+#endif /* AFS_DJGPP_ENV */
 
 
 #endif /* AFS_NCR_ENV */

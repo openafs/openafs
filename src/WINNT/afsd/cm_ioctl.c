@@ -1393,6 +1393,11 @@ long cm_IoctlSetToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
 	} else
 		cellp = cm_rootCellp;
 
+	if (flags & PIOCTL_LOGON) {
+          userp = smb_FindCMUserByName(/*ioctlp->fidp->vcp,*/ uname,
+                                                              ioctlp->fidp->vcp->rname);
+	}
+	
 	/* store the token */
 	lock_ObtainMutex(&userp->mx);
 	ucellp = cm_GetUCell(userp, cellp);

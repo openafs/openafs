@@ -13,8 +13,8 @@ DESTDIR=DEST/
 SRCDIR=DEST/
 
 # compilation and link editor flags
-DBG=-g
-#OPTMZ=-O2
+#DBG=-g
+OPTMZ=-O2
 #PAM_CFLAGS = -O2 -Dlinux -DLINUX_PAM -fPIC
 # Put -O2 here to _ensure_ all Makefiles pick it up.
 XCFLAGS= ${DBG} -Dfds_bits=fd_bits

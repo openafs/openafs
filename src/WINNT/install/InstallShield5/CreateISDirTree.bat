@@ -19,13 +19,42 @@ if not exist "Registry Entries" mkdir "Registry Entries"
 if not exist "Script Files" mkdir "Script Files"
 if not exist "Setup Files" mkdir "Setup Files"
 
-if not exist "Setup Files\Uncompressed Files" mkdir "Setup Files\Uncompressed Files"
-if not exist "Setup Files\Uncompressed Files\Language Independent" mkdir "Setup Files\Uncompressed Files\Language Independent"
-if not exist "Setup Files\Uncompressed Files\Language Independent\OS Independent" mkdir "Setup Files\Uncompressed Files\Language Independent\OS Independent"
-if not exist "Setup Files\Compressed Files" mkdir "Setup Files\Compressed Files"
-if not exist "Setup Files\Compressed Files\Language Independent" mkdir "Setup Files\Compressed Files\Language Independent"
-if not exist "Setup Files\Compressed Files\Language Independent\OS Independent" mkdir "Setup Files\Compressed Files\Language Independent\OS Independent"
+set sub1=Uncompressed Files
+call :gencomp
+set sub1=Compressed Files
+call :gencomp
+goto shell
 
+:gencomp
+if not exist "Setup Files\%sub1%" mkdir "Setup Files\%sub1%"
+set sub2=Language Independent
+call :gencomp2
+set sub2=0009-English
+call :gencomp2
+set sub2=0007-German
+call :gencomp2
+set sub2=0011-Japanese
+call :gencomp2
+set sub2=0012-Korean
+call :gencomp2
+set sub2=0416-Portuguese (Brazilian)
+call :gencomp2
+set sub2=0404-Chinese (Taiwan)
+call :gencomp2
+set sub2=000a-Spanish
+call :gencomp2
+set sub2=0804-Chinese (PRC)
+call :gencomp2
+goto :eof
+
+:gencomp2
+rem echo ]%sub1%] ]%sub2%]
+if not exist "Setup Files\%sub1%\%sub2%" mkdir "Setup Files\%sub1%\%sub2%"
+if not exist "Setup Files\%sub1%\%sub2%\OS Independent" mkdir "Setup Files\%sub1%\%sub2%\OS Independent"
+if not exist "Setup Files\%sub1%\%sub2%\Intel 32" mkdir "Setup Files\%sub1%\%sub2%\Intel 32"
+goto :eof
+
+:shell
 if not exist "Shell Objects" mkdir "Shell Objects"
 if not exist "String Tables" mkdir "String Tables"
 if not exist "String Tables\0009-English" mkdir "String Tables\0009-English"
@@ -38,4 +67,4 @@ if not exist "String Tables\0416-Portuguese (Brazilian)" mkdir "String Tables\04
 if not exist "String Tables\000a-Spanish" mkdir "String Tables\000a-Spanish"
 if not exist "Text Substitutions" mkdir "Text Substitutions"
 
-
+:eof

@@ -23,7 +23,7 @@ NTMAKELANG = nmake /nologo /f ntmakefile en_install
 NTMAKE_HEADERS = nmake /nologo /f ntmakefile install_headers
 NTMAKE_LIBUTILS = nmake /nologo /f ntmakefile install_libutils
 MKDIR = mkdir
-OBJ = src
+#OBJ = src
 
 # Standard install directory.
 !IFDEF AFSDEV_DESTDIR

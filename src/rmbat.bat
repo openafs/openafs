@@ -11,6 +11,6 @@ if [%1]==[-f] shift
 if [%1]==[/f] shift
 if [%1]==[-F] shift
 if [%1]==[/F] shift
-if not [%1]==[] del %1 <%AFSROOT%\src\rmbat.rsp
+if not [%1]==[] del %1 <%AFSROOT%\DEST\BIN\rmbat.rsp
 if not [%1]==[] shift
-if not [%1]==[] %AFSROOT%\src\rmbat %1 %2 %3 %4 %5 %6 %7 %8 
+if not [%1]==[] %AFSROOT%\DEST\BIN\rmbat %1 %2 %3 %4 %5 %6 %7 %8 

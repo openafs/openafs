@@ -37,11 +37,11 @@ XMIT_H = rx_xmit_nt.h
 
 XDROBJS_djgpp = xdr.o xdr_rec.o xdr_stdio.o \
 	xdr_float.o  xdr_refernce.o  xdr_update.o \
-	xdr_array.o xdr_mem.o 
+	xdr_array.o xdr_mem.o xdr_rx.o xdr_afsuuid.o
 
 RXOBJS_djgpp = rx_clock.o rx_event.o rx_user.o rx_lwp.o rx.o rx_null.o rx_globals.o \
 		rx_getaddr.o rx_misc.o rx_packet.o rx_rdwr.o  rx_trace.o rx_conncache.o \
-		$(XMIT)
+		xdr_int64.o $(XMIT)
 
 BASICINCLS = ${SRCDIR}include/lwp.h ${SRCDIR}include/lock.h \
 	     rx_clock.h rx_queue.h rx_event.h
