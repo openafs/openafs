@@ -284,6 +284,22 @@ AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_security)
 CPPFLAGS="$save_CPPFLAGS"])
 
 
+AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_I_SB_LIST], [
+AC_MSG_CHECKING(for i_sb_list in struct inode)
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+AC_CACHE_VAL(ac_cv_linux_fs_struct_inode_has_i_sb_list, 
+[
+AC_TRY_COMPILE(
+[#include <linux/fs.h>],
+[struct inode _inode;
+printf("%d\n", _inode.i_sb_list);], 
+ac_cv_linux_fs_struct_inode_has_i_sb_list=yes,
+ac_cv_linux_fs_struct_inode_has_i_sb_list=no)])
+AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_sb_list)
+CPPFLAGS="$save_CPPFLAGS"])
+
+
 AC_DEFUN([LINUX_RECALC_SIGPENDING_ARG_TYPE],[
 AC_MSG_CHECKING(for recalc_sigpending arg type)
 save_CPPFLAGS="$CPPFLAGS"
