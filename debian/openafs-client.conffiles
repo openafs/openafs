@@ -1,3 +1,2 @@
-etc/openafs/CellServDB
-etc/openafs/afs.conf
-etc/init.d/openafs-client
+/etc/openafs/afs.conf
+/etc/init.d/openafs-client
