@@ -5,7 +5,7 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-AFSDEV_AUXCDEFINES = -DRXDEBUG
+AFSDEV_AUXCDEFINES = -DRXDEBUG -DAFS_PTHREAD_ENV
 
 RELDIR=rx\test
 !INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
@@ -20,16 +20,27 @@ LIBS = \
 
 RXTESTOBJS = $(OUT)\testclient.obj $(OUT)\testserver.obj
 
-
 tests: $(OUT)\testclient.exe $(OUT)\testserver.exe $(OUT)\tableGen.exe $(OUT)\generator.exe
 
-testclient.exe: $(OUT)\testclient.obj $(LIBS)
+$(OUT)\testclient.exe: $(OUT)\testclient.obj $(LIBS)
 	$(EXECONLINK)
 
-testserver.exe: $(OUT)\testserver.obj $(LIBS)
+$(OUT)\testserver.exe: $(OUT)\testserver.obj $(LIBS)
+	$(EXECONLINK)
+
+$(OUT)\tableGen.exe: $(OUT)\tableGen.obj $(LIBS)
+	$(EXECONLINK)
+
+$(OUT)\generator.exe: $(OUT)\generator.obj $(LIBS)
 	$(EXECONLINK)
 
 $(RXTESTOBJS): ..\rx_clock.h ..\rx_queue.h ..\rx_event.h ..\rx.h
 
 mkdir:
 	
+install: tests
+
+install9x: tests
+
+clean::
+    $(DEL) $(TESTS)

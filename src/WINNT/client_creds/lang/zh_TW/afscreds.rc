@@ -482,7 +482,7 @@ BEGIN
     MENUITEM "顯示記號(&S)...",             M_ACTIVATE
     MENUITEM "過期前先警告(&W)",            M_REMIND, CHECKED
     MENUITEM SEPARATOR
-    MENUITEM "移除圖示(&R)",                M_TERMINATE
+    MENUITEM "移除圖示(&R)...",                M_TERMINATE
 END
 
 

@@ -17,7 +17,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/DUX/osi_inode.c,v 1.12 2003/07/15 23:14:18 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/DUX/osi_inode.c,v 1.13 2004/07/29 03:13:44 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -185,7 +185,7 @@ afs_syscall_icreate(dev, near_inode, param1, param2, param3, param4, retval)
 
     AFS_STATCNT(afs_syscall_icreate);
 
-    if (!afs_suser())
+    if (!afs_suser(NULL))
 	return (EPERM);
 
     code = getinode(0, (dev_t) dev, 2, &ip, &dummy);
@@ -262,7 +262,7 @@ afs_syscall_iopen(dev, inode, usrmod, retval)
 
     AFS_STATCNT(afs_syscall_iopen);
 
-    if (!afs_suser())
+    if (!afs_suser(NULL))
 	return (EPERM);
 
     code = igetinode(0, (dev_t) dev, (ino_t) inode, &ip, &dummy);
@@ -312,7 +312,7 @@ afs_syscall_iincdec(dev, inode, inode_p1, amount)
     struct inode *ip;
     register int code;
 
-    if (!afs_suser())
+    if (!afs_suser(NULL))
 	return (EPERM);
 
     code = igetinode(0, (dev_t) dev, (ino_t) inode, &ip, &dummy);

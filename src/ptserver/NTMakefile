@@ -73,7 +73,7 @@ PTSERVER_EXELIBS =$(PTSERVER_EXELIBS) $(DESTDIR)\lib\afs\afsprocmgmt.lib
 !ENDIF
 
 $(PTSERVER): $(PTSERVER_EXEOBJS) $(RXKADOBJS) $(PTSERVER_EXELIBS)
-	$(EXECONLINK) dnsapi.lib
+	$(EXECONLINK) dnsapi.lib mpr.lib
 	$(EXEPREP) 
 
 
@@ -104,7 +104,7 @@ PTS_EXELIBS =\
 	$(DESTDIR)\lib\cm_dns.obj
 
 $(PTS): $(PTS_EXEOBJS) $(PTS_EXELIBS) 
-	$(EXECONLINK) dnsapi.lib
+	$(EXECONLINK) dnsapi.lib mpr.lib
 	$(EXEPREP) 
 
 
@@ -180,16 +180,16 @@ clean::
 TEST_LIBS = $(PTS_EXELIBS)
 
 $(OUT)\readgroup.exe: $(OUT)\readgroup.obj $(LIBFILE) $(TEST_LIBS)
-	$(EXECONLINK) dnsapi.lib
+	$(EXECONLINK) dnsapi.lib mpr.lib
 
 $(OUT)\readpwd.exe: $(OUT)\readpwd.obj $(LIBFILE) $(TEST_LIBS)
-	$(EXECONLINK) dnsapi.lib
+	$(EXECONLINK) dnsapi.lib mpr.lib 
 
 $(OUT)\testpt.exe: $(OUT)\testpt.obj $(LIBFILE) $(TEST_LIBS)
-	$(EXECONLINK) dnsapi.lib
+	$(EXECONLINK) dnsapi.lib mpr.lib 
 
 $(OUT)\db_verify.exe: $(OUT)\db_verify.obj $(OUT)\pterror.obj $(OUT)\display.obj $(LIBFILE) $(TEST_LIBS)
-	$(EXECONLINK) dnsapi.lib
+	$(EXECONLINK) dnsapi.lib mpr.lib 
 
 mkdir:
 	

@@ -71,7 +71,7 @@ extern struct simplelock afs_rxglobal_lock;
 #define VROOT		VV_ROOT
 #define v_flag		v_vflag
 #define osi_curcred()	(curthread->td_ucred)
-#define afs_suser()	(!suser(curthread))
+#define afs_suser(x)	(!suser(curthread))
 #define simple_lock(x)	mtx_lock(x)
 #define simple_unlock(x) mtx_unlock(x)
 #define        gop_rdwr(rw,gp,base,len,offset,segflg,unit,cred,aresid) \
@@ -85,7 +85,7 @@ extern struct mtx afs_global_mtx;
 extern struct lock afs_global_lock;
 
 #define osi_curcred()	(curproc->p_cred->pc_ucred)
-#define afs_suser()	(!suser(curproc))
+#define afs_suser(x)	(!suser(curproc))
 #define getpid()	curproc
 #define        gop_rdwr(rw,gp,base,len,offset,segflg,unit,cred,aresid) \
   vn_rdwr((rw),(gp),(base),(len),(offset),(segflg),(unit),(cred),(aresid), curproc)

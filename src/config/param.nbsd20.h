@@ -11,6 +11,7 @@
 
 #define AFS_XBSD_ENV 1		/* {Free,Open,Net}BSD */
 
+#define AFS_64BIT_ENV  1
 #define AFS_NAMEI_ENV     1	/* User space interface to file system */
 #define AFS_64BIT_IOPS_ENV 1	/* Needed for NAMEI */
 #define AFS_NBSD_ENV 1
@@ -52,7 +53,7 @@
 #endif
 
 #define AFS_HAVE_FFS            1	/* Use system's ffs. */
-#define AFS_HAVE_STATVFS	1	/* System supports statvfs */
+#define AFS_HAVE_STATVFS	0	/* System supports statvfs */
 
 #define AFS_GCPAGS	        0	/* if nonzero, garbage collect PAGs */
 #define AFS_USE_GETTIMEOFDAY    1	/* use gettimeofday to implement rx clock */

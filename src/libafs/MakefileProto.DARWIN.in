@@ -4,7 +4,7 @@
 # This software has been released under the terms of the IBM Public
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
-# $Header: /cvs/openafs/src/libafs/MakefileProto.DARWIN.in,v 1.20 2003/10/24 06:26:11 shadow Exp $
+# $Header: /cvs/openafs/src/libafs/MakefileProto.DARWIN.in,v 1.21 2004/08/08 23:12:57 shadow Exp $
 # 
 # MakefileProto for Digital Unix systems
 #
@@ -98,7 +98,7 @@ dest_libafs: $(LIBAFSNONFS) ;
 
 
 ${LIBAFS}: $(AFSAOBJS) $(AFSNFSOBJS)
-	$(LD) -r -o ${LIBAFS} ${AFSAOBJS} ${AFSNFSOBJS}
+	$(LD) -r -o ${LIBAFS} ${AFSAOBJS} ${AFSNFSOBJS} -lcc_kext
 
 ${LIBAFSNONFS}:  $(AFSAOBJS) $(AFSNONFSOBJS)
-	$(LD) -r -o ${LIBAFSNONFS} ${AFSAOBJS} ${AFSNONFSOBJS}
+	$(LD) -r -o ${LIBAFSNONFS} ${AFSAOBJS} ${AFSNONFSOBJS} -lcc_kext

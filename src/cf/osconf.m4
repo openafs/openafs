@@ -748,6 +748,27 @@ case $AFS_SYSNAME in
 		SHLIB_LINKER="${CC} -G -dy -Wl,-M\$(srcdir)/mapfile -Bsymbolic -z text"
 		;;
 
+	sunx86_59)
+		CC="/opt/SUNWspro/bin/cc"
+		CCOBJ="/opt/SUNWspro/bin/cc"
+		LEX="lex"
+		LD="/usr/ccs/bin/ld"
+		MT_CC="/opt/SUNWspro/bin/cc"
+		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_LIBS="-lpthread -lsocket"
+		PAM_CFLAGS="-KPIC"
+		PAM_LIBS="-lc -lpam -lsocket -lnsl -lm"
+		SHLIB_CFLAGS="-KPIC"
+		SHLIB_LDFLAGS="-G -Bsymbolic"
+		TXLIBS="-lcurses"
+		XCFLAGS64='${XCFLAGS} -xarch=v9'
+		XCFLAGS="-dy -Bdynamic"
+		XLIBELFA="-lelf"
+		XLIBKVM="-lkvm"
+		XLIBS="${LIB_AFSDB} -lsocket -lnsl -lintl -ldl"
+		SHLIB_LINKER="${CC} -G -dy -Wl,-M\$(srcdir)/mapfile -Bsymbolic -z text"
+		;;
+
 	sunx86_510)
 		CC="/opt/SUNWspro/bin/cc"
 		CCOBJ="/opt/SUNWspro/bin/cc"

@@ -231,7 +231,7 @@ void WizStarting_OnInitDialog (HWND hDlg)
                                        SERVICE_QUERY_STATUS | SERVICE_START)) != NULL)
          {
          if (StartService (hService, 0, 0))
-			TestAndDoMapShare(SERVICE_START_PENDING);
+             TestAndDoMapShare(SERVICE_START_PENDING);
 
          CloseServiceHandle (hService);
          }
@@ -345,7 +345,6 @@ void WizCreds_OnInitDialog (HWND hDlg)
    HKEY hk;
 
    TCHAR szCell[ cchRESOURCE ] = TEXT("");
-   (void)GetDefaultCell (szCell);
    SetDlgItemText (hDlg, IDC_NEWCREDS_CELL, szCell);
 
    TCHAR szUser[ cchRESOURCE ] = TEXT("");

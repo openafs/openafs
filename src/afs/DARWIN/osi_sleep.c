@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/DARWIN/osi_sleep.c,v 1.9 2003/07/15 23:14:18 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/DARWIN/osi_sleep.c,v 1.10 2004/07/29 03:33:00 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -148,6 +148,34 @@ afs_osi_Sleep(void *event)
 	AFS_GLOCK();
     }
     relevent(evp);
+}
+
+void 
+afs_osi_fullSigMask()
+{
+    struct uthread *user_thread = (struct uthread *)get_bsdthread_info(current_act());
+       
+    /* Protect original sigmask */
+    if (!user_thread->uu_oldmask) {
+	/* Back up current sigmask */
+	user_thread->uu_oldmask = user_thread->uu_sigmask;
+	/* Mask all signals */
+	user_thread->uu_sigmask = ~(sigset_t)0;
+    }
+}
+
+void 
+afs_osi_fullSigRestore()
+{
+    struct uthread *user_thread = (struct uthread *)get_bsdthread_info(current_act());
+       
+    /* Protect original sigmask */
+    if (user_thread->uu_oldmask) {
+	/* Restore original sigmask */
+	user_thread->uu_sigmask = user_thread->uu_oldmask;
+	/* Clear the oldmask */
+	user_thread->uu_oldmask = (sigset_t)0;
+    }
 }
 
 int

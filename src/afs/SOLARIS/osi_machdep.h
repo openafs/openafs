@@ -60,7 +60,7 @@ extern void *afs_osi_Alloc_NoSleep(size_t size);
 #define gop_rdwr(rw,gp,base,len,offset,segflg,ioflag,ulimit,cr,aresid) \
   vn_rdwr((rw),(gp),(base),(len),(offset),(segflg),(ioflag),(ulimit),(cr),(aresid))
 
-#define	afs_suser	    suser
+#define	afs_suser(x)	    suser(x)
 
 
 #ifdef KERNEL

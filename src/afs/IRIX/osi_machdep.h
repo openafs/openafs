@@ -205,11 +205,9 @@ extern long afs_global_owner;
 
 #ifdef AFS_SGI64_ENV
 #undef suser
-#define suser() cap_able(CAP_DEVICE_MGT)
-#define afs_suser()	suser()
-#else
-#define	afs_suser	    suser
+#define suser()		cap_able(CAP_DEVICE_MGT)
 #endif
+#define afs_suser(x)	suser()
 
 #define afs_hz HZ
 

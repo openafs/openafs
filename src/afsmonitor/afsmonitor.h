@@ -78,8 +78,8 @@ other. Hence we should update only the one that completed. */
 
 /* Data is categorized into sections and groups to enable to user to choose
 what he wants displayed. */
-#define FS_NUM_DATA_CATEGORIES 8	/* # of fs categories */
-#define CM_NUM_DATA_CATEGORIES 14	/* # of cm categories */
+#define FS_NUM_DATA_CATEGORIES 9	/* # of fs categories */
+#define CM_NUM_DATA_CATEGORIES 16	/* # of cm categories */
 
 /* Set this  enable detailed debugging with the -debug switch */
 #define DETAILED_DEBUG 0

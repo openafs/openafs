@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/util/dirpath.c,v 1.14 2003/07/15 23:17:16 shadow Exp $");
+    ("$Header: /cvs/openafs/src/util/dirpath.c,v 1.15 2004/07/14 03:28:45 jaltman Exp $");
 
 #include <stddef.h>
 #include <stdlib.h>
@@ -135,12 +135,19 @@ initDirPathArray(void)
     FilepathNormalize(ntServerInstallDirShort);
 
     /* get the afs client configuration directory (/usr/vice/etc equivalent) */
-    status = GetWindowsDirectory(ntClientConfigDirLong, AFSDIR_PATH_MAX);
-    if (status == 0 || status > AFSDIR_PATH_MAX) {
-	/* failed to get canonical Windows directory; use temp directory */
-	strcpy(ntClientConfigDirLong, gettmpdir());
+    if (afssw_GetClientInstallDir(&buf)) {
+        /* failed */
+        status = GetWindowsDirectory(ntClientConfigDirLong, AFSDIR_PATH_MAX);
+        if (status == 0 || status > AFSDIR_PATH_MAX) {
+            /* failed to get canonical Windows directory; use temp directory */
+            strcpy(ntClientConfigDirLong, gettmpdir());
+        } else {
+            initStatus |= AFSDIR_CLIENT_PATHS_OK;
+        }
     } else {
-	initStatus |= AFSDIR_CLIENT_PATHS_OK;
+        strcpy(ntClientConfigDirLong, buf);
+        free(buf);
+        initStatus |= AFSDIR_CLIENT_PATHS_OK;
     }
     FilepathNormalize(ntClientConfigDirLong);
 
@@ -187,7 +194,6 @@ initDirPathArray(void)
     /* now initialize various dir and file paths exported by dirpath module */
 
     /* server dir paths */
-
     strcpy(dirPathArray[AFSDIR_SERVER_AFS_DIRPATH_ID], afsSrvDirPath);
 
     pathp = dirPathArray[AFSDIR_SERVER_ETC_DIRPATH_ID];
@@ -218,7 +224,6 @@ initDirPathArray(void)
     AFSDIR_SERVER_DIRPATH(pathp, AFSDIR_BIN_FILE_DIR);
 
     /* client dir path */
-
 #ifdef AFS_NT40_ENV
     strcpy(dirPathArray[AFSDIR_CLIENT_VICE_DIRPATH_ID],
 	   "/NoUsrViceDirectoryOnWindows");
@@ -237,7 +242,6 @@ initDirPathArray(void)
 #endif /* AFS_NT40_ENV */
 
     /* server file paths */
-
     pathp = dirPathArray[AFSDIR_SERVER_THISCELL_FILEPATH_ID];
     AFSDIR_SERVER_FILEPATH(pathp, AFSDIR_SERVER_ETC_DIR,
 			   AFSDIR_THISCELL_FILE);
@@ -363,7 +367,6 @@ initDirPathArray(void)
 
 
     /* client file paths */
-
 #ifdef AFS_NT40_ENV
     strcpy(dirPathArray[AFSDIR_CLIENT_THISCELL_FILEPATH_ID],
 	   "/NoUsrViceEtcThisCellFileOnWindows");

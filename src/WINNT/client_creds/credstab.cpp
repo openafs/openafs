@@ -329,19 +329,20 @@ void NewCreds_OnInitDialog (HWND hDlg)
 
 void NewCreds_OnEnable (HWND hDlg)
 {
-   BOOL fEnable = TRUE;
+    BOOL fEnable = TRUE;
 
-   TCHAR szUser[ cchRESOURCE ];
-   GetDlgItemText (hDlg, IDC_NEWCREDS_USER, szUser, cchRESOURCE);
-   if (!szUser[0])
-      fEnable = FALSE;
+    TCHAR szUser[ cchRESOURCE ];
+    GetDlgItemText (hDlg, IDC_NEWCREDS_USER, szUser, cchRESOURCE);
+    if (!szUser[0])
+        fEnable = FALSE;
 
-   TCHAR szPassword[ cchRESOURCE ];
-   GetDlgItemText (hDlg, IDC_NEWCREDS_PASSWORD, szPassword, cchRESOURCE);
-   if (!szPassword[0])
-      fEnable = FALSE;
-
-   EnableWindow (GetDlgItem (hDlg, IDOK), fEnable);
+    if ( !strchr(szUser, '@') ) {
+        TCHAR szPassword[ cchRESOURCE ];
+        GetDlgItemText (hDlg, IDC_NEWCREDS_PASSWORD, szPassword, cchRESOURCE);
+        if (!szPassword[0])
+            fEnable = FALSE;
+    }
+    EnableWindow (GetDlgItem (hDlg, IDOK), fEnable);
 }
 
 

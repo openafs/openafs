@@ -479,7 +479,7 @@ BEGIN
     MENUITEM "Token an&zeigen...",          M_ACTIVATE
     MENUITEM "Vor Ablauf &warnen",          M_REMIND, CHECKED
     MENUITEM SEPARATOR
-    MENUITEM "Symbol entfe&rnen",           M_TERMINATE
+    MENUITEM "Symbol entfe&rnen...",           M_TERMINATE
 END
 
 

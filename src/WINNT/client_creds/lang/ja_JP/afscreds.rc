@@ -489,7 +489,7 @@ BEGIN
     MENUITEM "トークンの表示(&S)...",       M_ACTIVATE
     MENUITEM "期限切れ前に警告(&W)",        M_REMIND, CHECKED
     MENUITEM SEPARATOR
-    MENUITEM "アイコンの削除(&R)",          M_TERMINATE
+    MENUITEM "アイコンの削除(&R)...",          M_TERMINATE
 END
 
 

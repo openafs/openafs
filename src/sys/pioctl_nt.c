@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/sys/pioctl_nt.c,v 1.14 2004/06/04 06:00:38 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/sys/pioctl_nt.c,v 1.18 2004/08/05 16:28:10 jaltman Exp $");
 
 #include <afs/stds.h>
 #include <windows.h>
@@ -122,7 +122,7 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
                 if ( tbuffer[i++] == '\\' )
                     count++;
             }
-            if (tbuffer[i] == 0)
+            if (fileNamep[i] == 0)
                 tbuffer[i++] = '\\';
             tbuffer[i] = 0;
             strcat(tbuffer, SMB_IOCTL_FILENAME);
@@ -147,7 +147,7 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
                 if (tbuffer[i] == 0)
                     tbuffer[i++] = '\\';
                 tbuffer[i] = 0;
-                strcat(tbuffer, SMB_IOCTL_FILENAME);
+                strcat(tbuffer, SMB_IOCTL_FILENAME_NOSLASH);
             }
         }
 	}
@@ -163,8 +163,45 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
 		    FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
 		    FILE_FLAG_WRITE_THROUGH, NULL);
     fflush(stdout);
-    if (fh == INVALID_HANDLE_VALUE)
-	return -1;
+	if (fh == INVALID_HANDLE_VALUE) {
+        HKEY hk;
+        char szUser[64] = "";
+        char szClient[MAX_PATH] = "";
+        char szPath[MAX_PATH] = "";
+        NETRESOURCE nr;
+        DWORD res;
+
+        if (GetLastError() != ERROR_DOWNGRADE_DETECTED)
+            return -1;
+
+        lana_GetNetbiosName(szClient, LANA_NETBIOS_NAME_FULL);
+        sprintf(szPath, "\\\\%s", szClient);
+
+        /* We should probably be using GetUserNameEx() for this */
+        if (RegOpenKey (HKEY_CURRENT_USER, 
+                        TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer"), &hk) == 0)
+        {
+            DWORD dwSize = sizeof(szUser);
+            DWORD dwType = REG_SZ;
+            RegQueryValueEx (hk, TEXT("Logon User Name"), NULL, &dwType, (PBYTE)szUser, &dwSize);
+            RegCloseKey (hk);
+        }
+
+        memset (&nr, 0x00, sizeof(NETRESOURCE));
+        nr.dwType=RESOURCETYPE_DISK;
+        nr.lpLocalName=0;
+        nr.lpRemoteName=szPath;
+        res = WNetAddConnection2(&nr,NULL,szUser,0);
+        if (res)
+            return -1;
+
+        fh = CreateFile(tbuffer, GENERIC_READ | GENERIC_WRITE,
+                         FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
+                         FILE_FLAG_WRITE_THROUGH, NULL);
+        fflush(stdout);
+        if (fh == INVALID_HANDLE_VALUE)
+            return -1;
+	}
 
     /* return fh and success code */
     *handlep = fh;
@@ -267,10 +304,24 @@ fs_GetFullPath(char *pathp, char *outPathp, long outSize)
 	pathHasDrive = 0;
     }
 
-    if (*firstp == '\\' || *firstp == '/') {
-	/* already an absolute pathname, just copy it back */
-	strcpy(outPathp, firstp);
-	return 0;
+    if ( firstp[0] == '\\' && firstp[1] == '\\') {
+        /* UNC path - strip off the server and sharename */
+        int i, count;
+        for ( i=2,count=2; count < 4 && firstp[i]; i++ ) {
+            if ( firstp[i] == '\\' || firstp[i] == '/' ) {
+                count++;
+            }
+        }
+        if ( firstp[i] == 0 ) {
+            strcpy(outPathp,"\\");
+        } else {
+            strcpy(outPathp,&firstp[--i]);
+        }
+        return 0;
+    } else if (firstp[0] == '\\' || firstp[0] == '/') {
+        /* already an absolute pathname, just copy it back */
+        strcpy(outPathp, firstp);
+        return 0;
     }
 
     GetCurrentDirectory(sizeof(origPath), origPath);
@@ -295,8 +346,24 @@ fs_GetFullPath(char *pathp, char *outPathp, long outSize)
     GetCurrentDirectory(sizeof(tpath), tpath);
 	if (tpath[1] == ':')
 	    strcpy(outPathp, tpath + 2);	/* skip drive letter */
-	else
-		strcpy(outPathp, tpath);		/* copy entire UNC path */
+	else if ( tpath[0] == '\\' && tpath[1] == '\\') {
+        /* UNC path - strip off the server and sharename */
+        int i, count;
+        for ( i=2,count=2; count < 4 && tpath[i]; i++ ) {
+            if ( tpath[i] == '\\' || tpath[i] == '/' ) {
+                count++;
+            }
+        }
+        if ( tpath[i] == 0 ) {
+            strcpy(outPathp,"\\");
+        } else {
+            strcpy(outPathp,&tpath[--i]);
+        }
+    } else {
+        /* this should never happen */
+        strcpy(outPathp, tpath);
+    }
+
     /* if there is a non-null name after the drive, append it */
     if (*firstp != 0) {
 		int len = strlen(outPathp);

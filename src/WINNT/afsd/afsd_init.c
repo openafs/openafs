@@ -17,7 +17,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <winsock2.h>
-#include <strsafe.h>
 
 #include <osi.h>
 #include "afsd.h"
@@ -29,6 +28,8 @@
 #include "smb.h"
 #include "cm_rpc.h"
 #include "lanahelper.h"
+#include <strsafe.h>
+#include "afsicf.h"
 
 extern int RXAFSCB_ExecuteRequest(struct rx_call *z_call);
 extern int RXSTATS_ExecuteRequest(struct rx_call *z_call);
@@ -68,7 +69,7 @@ int logReady = 0;
 char cm_HostName[200];
 long cm_HostAddr;
 
-char cm_NetbiosName[MAX_NB_NAME_LENGTH];
+char cm_NetbiosName[MAX_NB_NAME_LENGTH] = "";
 
 char cm_CachePath[200];
 DWORD cm_CachePathLen;
@@ -82,6 +83,8 @@ cm_initparams_v1 cm_initParams;
 char *cm_sysName = 0;
 int   cm_sysNameCount = 0;
 char *cm_sysNameList[MAXNUMSYSNAMES];
+
+DWORD TraceOption = 0;
 
 /*
  * AFSD Initialization Log
@@ -97,8 +100,6 @@ HANDLE afsi_file;
 int cm_dnsEnabled = 1;
 #endif
 
-char cm_NetBiosName[32];
-
 extern initUpperCaseTable();
 void afsd_initUpperCaseTable() 
 {
@@ -112,6 +113,10 @@ afsi_start()
 	char t[100], u[100], *p, *path;
 	int zilch;
 	int code;
+    DWORD dwLow, dwHigh;
+	HKEY parmKey;
+	DWORD dummyLen;
+    DWORD maxLogSize = 100 * 1024;
 
 	afsi_file = INVALID_HANDLE_VALUE;
     if (getenv("TEMP"))
@@ -127,6 +132,25 @@ afsi_start()
 	GetTimeFormat(LOCALE_SYSTEM_DEFAULT, 0, NULL, NULL, t, sizeof(t));
 	afsi_file = CreateFile(wd, GENERIC_WRITE, FILE_SHARE_READ, NULL,
                            OPEN_ALWAYS, FILE_FLAG_WRITE_THROUGH, NULL);
+
+    code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSConfigKeyName,
+                         0, KEY_QUERY_VALUE, &parmKey);
+	if (code == ERROR_SUCCESS) {
+        dummyLen = sizeof(maxLogSize);
+        code = RegQueryValueEx(parmKey, "MaxLogSize", NULL, NULL,
+                                (BYTE *) &maxLogSize, &dummyLen);
+        RegCloseKey (parmKey);
+	}
+
+    if (maxLogSize) {
+        dwLow = GetFileSize( afsi_file, &dwHigh );
+        if ( dwHigh > 0 || dwLow >= maxLogSize ) {
+            CloseHandle(afsi_file);
+            afsi_file = CreateFile( wd, GENERIC_WRITE, FILE_SHARE_READ, NULL,
+                                    CREATE_ALWAYS, FILE_FLAG_WRITE_THROUGH, NULL);
+        }
+    }
+
     SetFilePointer(afsi_file, 0, NULL, FILE_END);
 	GetTimeFormat(LOCALE_SYSTEM_DEFAULT, 0, NULL, NULL, u, sizeof(u));
 	StringCbCatA(t, sizeof(t), ": Create log file\n");
@@ -193,6 +217,141 @@ void afsd_ForceTrace(BOOL flush)
 	CloseHandle(handle);
 }
 
+static void
+configureBackConnectionHostNames(void)
+{
+    /* On Windows XP SP2, Windows 2003 SP1, and all future Windows operating systems
+     * there is a restriction on the use of SMB authentication on loopback connections.
+     * There are two work arounds available:
+     * 
+     *   (1) We can disable the check for matching host names.  This does not
+     *   require a reboot:
+     *   [HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Lsa]
+     *     "DisableLoopbackCheck"=dword:00000001
+     *
+     *   (2) We can add the AFS SMB/CIFS service name to an approved list.  This
+     *   does require a reboot:
+     *   [HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Lsa\MSV1_0]
+     *     "BackConnectionHostNames"=multi-sz
+     *
+     * The algorithm will be:
+     *   (1) Check to see if cm_NetbiosName exists in the BackConnectionHostNames list
+     *   (2a) If not, add it to the list.  (This will not take effect until the next reboot.)
+     *   (2b1)    and check to see if DisableLoopbackCheck is set.
+     *   (2b2)    If not set, set the DisableLoopbackCheck value to 0x1 
+     *   (2b3)                and create HKLM\SOFTWARE\OpenAFS\Client  UnsetDisableLoopbackCheck
+     *   (2c) else If cm_NetbiosName exists in the BackConnectionHostNames list,
+     *             check for the UnsetDisableLoopbackCheck value.  
+     *             If set, set the DisableLoopbackCheck flag to 0x0 
+     *             and delete the UnsetDisableLoopbackCheck value
+     */
+    HKEY hkLsa;
+    HKEY hkMSV10;
+    HKEY hkClient;
+    DWORD dwType;
+    DWORD dwSize;
+    DWORD dwValue;
+    PBYTE pHostNames = NULL, pName;
+    BOOL  bNameFound = FALSE;   
+
+    if ( RegOpenKeyEx( HKEY_LOCAL_MACHINE, 
+                       "SYSTEM\\CurrentControlSet\\Control\\Lsa\\MSV1_0",
+                       0,
+                       KEY_READ|KEY_WRITE,
+                       &hkMSV10) == ERROR_SUCCESS )
+    {
+        if (RegQueryValueEx( hkMSV10, "BackConnectionHostNames", 0, &dwType, NULL, &dwSize) == ERROR_SUCCESS) {
+            pHostNames = malloc(dwSize + strlen(cm_NetbiosName) + 1);
+            RegQueryValueEx( hkMSV10, "BackConnectionHostNames", 0, &dwType, pHostNames, &dwSize);
+
+            for (pName = pHostNames; *pName ; pName += strlen(pName) + 1)
+            {
+                if ( !stricmp(pName, cm_NetbiosName) ) {
+                    bNameFound = TRUE;
+                    break;
+                }   
+            }
+        }
+             
+        if ( !bNameFound ) {
+            if ( !pHostNames ) {
+                pName = pHostNames = malloc(strlen(cm_NetbiosName) + 2);
+                dwSize = 1;
+            }
+            strcpy(pName, cm_NetbiosName);
+            pName += strlen(cm_NetbiosName) + 1;
+            *pName = '\0';  /* add a second nul terminator */
+
+            dwType = REG_MULTI_SZ;
+            dwSize += strlen(cm_NetbiosName) + 1;
+            RegSetValueEx( hkMSV10, "BackConnectionHostNames", 0, dwType, pHostNames, dwSize);
+
+            if ( RegOpenKeyEx( HKEY_LOCAL_MACHINE, 
+                               "SYSTEM\\CurrentControlSet\\Control\\Lsa",
+                               0,
+                               KEY_READ|KEY_WRITE,
+                               &hkLsa) == ERROR_SUCCESS )
+            {
+                dwSize = sizeof(DWORD);
+                if ( RegQueryValueEx( hkLsa, "DisableLoopbackCheck", 0, &dwType, &dwValue, &dwSize) != ERROR_SUCCESS ||
+                     dwValue == 0 ) {
+                    dwType = REG_DWORD;
+                    dwSize = sizeof(DWORD);
+                    dwValue = 1;
+                    RegSetValueEx( hkLsa, "DisableLoopbackCheck", 0, dwType, &dwValue, dwSize);
+
+                    if (RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
+                                        "SOFTWARE\\OpenAFS\\Client",
+                                        0,
+                                        NULL,
+                                        REG_OPTION_NON_VOLATILE,
+                                        KEY_READ|KEY_WRITE,
+                                        NULL,
+                                        &hkClient,
+                                        NULL) == ERROR_SUCCESS) {
+
+                        dwType = REG_DWORD;
+                        dwSize = sizeof(DWORD);
+                        dwValue = 1;
+                        RegSetValueEx( hkClient, "RemoveDisableLoopbackCheck", 0, dwType, &dwValue, dwSize);
+                        RegCloseKey(hkClient);
+                    }
+                    RegCloseKey(hkLsa);
+                }
+            }
+        } else {
+            if (RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
+                                "SOFTWARE\\OpenAFS\\Client",
+                                0,
+                                NULL,
+                                REG_OPTION_NON_VOLATILE,
+                                KEY_READ|KEY_WRITE,
+                                NULL,
+                                &hkClient,
+                                NULL) == ERROR_SUCCESS) {
+
+                dwSize = sizeof(DWORD);
+                if ( RegQueryValueEx( hkClient, "RemoveDisableLoopbackCheck", 0, &dwType, &dwValue, &dwSize) == ERROR_SUCCESS &&
+                     dwValue == 1 ) {
+                    if ( RegOpenKeyEx( HKEY_LOCAL_MACHINE, 
+                                       "SYSTEM\\CurrentControlSet\\Control\\Lsa",
+                                       0,
+                                       KEY_READ|KEY_WRITE,
+                                       &hkLsa) == ERROR_SUCCESS )
+                    {
+                        RegDeleteValue(hkLsa, "DisableLoopbackCheck");
+                        RegCloseKey(hkLsa);
+                    }
+                }
+                RegDeleteValue(hkClient, "RemoveDisableLoopbackCheck");
+                RegCloseKey(hkClient);
+            }
+        }
+        RegCloseKey(hkMSV10);
+    }
+}
+
+
 /*
  * AFSD Initialization
  */
@@ -205,8 +364,10 @@ int afsd_InitCM(char **reasonP)
 	long logChunkSize;
 	long stats;
 	long traceBufSize;
+    long maxcpus;
 	long ltt, ltto;
     long rx_mtu, rx_nojumbo;
+    long virtualCache;
 	char rootCellName[256];
 	struct rx_service *serverp;
 	static struct rx_securityClass *nullServerSecurityClassp;
@@ -215,6 +376,7 @@ int afsd_InitCM(char **reasonP)
 	char buf[200];
 	HKEY parmKey;
 	DWORD dummyLen;
+    DWORD regType;
 	long code;
 	/*int freelanceEnabled;*/
 	WSADATA WSAjunk;
@@ -257,6 +419,47 @@ int afsd_InitCM(char **reasonP)
 			msgBuf);
 		osi_panic(buf, __FILE__, __LINE__);
 	}
+
+    dummyLen = sizeof(maxcpus);
+	code = RegQueryValueEx(parmKey, "MaxCPUs", NULL, NULL,
+				(BYTE *) &maxcpus, &dummyLen);
+	if (code == ERROR_SUCCESS) {
+        HANDLE hProcess;
+        DWORD_PTR processAffinityMask, systemAffinityMask;
+
+        hProcess = OpenProcess(PROCESS_QUERY_INFORMATION|PROCESS_SET_INFORMATION,
+                               FALSE, GetCurrentProcessId());
+        if ( hProcess != NULL &&
+             GetProcessAffinityMask(hProcess, &processAffinityMask, &systemAffinityMask) )
+        {
+            int i, n, bits;
+            DWORD_PTR mask, newAffinityMask;
+
+#if defined(_WIN64)
+            bits = 64;
+#else
+            bits = 32;
+#endif
+            for ( i=0, n=0, mask=1, newAffinityMask=0; i<bits && n<maxcpus; i++ ) {
+                if ( processAffinityMask & mask ) {
+                    newAffinityMask |= mask;
+                    n++;
+                }
+                mask *= 2;
+            }
+
+            SetProcessAffinityMask(hProcess, newAffinityMask);
+            CloseHandle(hProcess);
+            afsi_log("CPU Restrictions set to %d cpu(s); %d cpu(s) available", maxcpus, n);
+        } else {
+            afsi_log("CPU Restrictions set to %d cpu(s); unable to access process information", maxcpus);
+        }
+    }
+
+	dummyLen = sizeof(TraceOption);
+	code = RegQueryValueEx(parmKey, "TraceOption", NULL, NULL,
+				(BYTE *) &TraceOption, &dummyLen);
+    afsi_log("Event Log Tracing = %lX", TraceOption);
 
 	dummyLen = sizeof(traceBufSize);
 	code = RegQueryValueEx(parmKey, "TraceBufferSize", NULL, NULL,
@@ -343,6 +546,7 @@ int afsd_InitCM(char **reasonP)
 		afsi_log("Logoff token transfer on by default");
 	}
     smb_LogoffTokenTransfer = ltt;
+    afsi_log("Logoff token transfer is currently ignored");
 
 	if (ltt) {
 		dummyLen = sizeof(ltto);
@@ -359,6 +563,7 @@ int afsd_InitCM(char **reasonP)
         ltto = 0;
     }
     smb_LogoffTransferTimeout = ltto;
+    afsi_log("Default logoff token is currently ignored");
 
 	dummyLen = sizeof(cm_rootVolumeName);
 	code = RegQueryValueEx(parmKey, "RootVolume", NULL, NULL,
@@ -371,7 +576,7 @@ int afsd_InitCM(char **reasonP)
 	}
 
 	cm_mountRootLen = sizeof(cm_mountRoot);
-	code = RegQueryValueEx(parmKey, "Mountroot", NULL, NULL,
+	code = RegQueryValueEx(parmKey, "MountRoot", NULL, NULL,
 				cm_mountRoot, &cm_mountRootLen);
 	if (code == ERROR_SUCCESS) {
 		afsi_log("Mount root %s", cm_mountRoot);
@@ -382,17 +587,36 @@ int afsd_InitCM(char **reasonP)
 		/* Don't log */
 	}
 
-	dummyLen = sizeof(cm_CachePath);
-	code = RegQueryValueEx(parmKey, "CachePath", NULL, NULL,
-				cm_CachePath, &dummyLen);
-	if (code == ERROR_SUCCESS)
+	dummyLen = sizeof(buf);
+	code = RegQueryValueEx(parmKey, "CachePath", NULL, &regType,
+				buf, &dummyLen);
+    if (code == ERROR_SUCCESS && buf[0]) {
+        if(regType == REG_EXPAND_SZ) {
+            dummyLen = ExpandEnvironmentStrings(buf, cm_CachePath, sizeof(cm_CachePath));
+            if(dummyLen > sizeof(cm_CachePath)) {
+                afsi_log("Cache path [%s] longer than %d after expanding env strings", buf, sizeof(cm_CachePath));
+                osi_panic("CachePath too long", __FILE__, __LINE__);
+            }
+        } else {
+            StringCbCopyA(cm_CachePath, sizeof(cm_CachePath), buf);
+        }
 		afsi_log("Cache path %s", cm_CachePath);
-	else {
+    } else {
 		GetWindowsDirectory(cm_CachePath, sizeof(cm_CachePath));
 		cm_CachePath[2] = 0;	/* get drive letter only */
 		StringCbCatA(cm_CachePath, sizeof(cm_CachePath), "\\AFSCache");
 		afsi_log("Default cache path %s", cm_CachePath);
 	}
+
+    dummyLen = sizeof(virtualCache);
+    code = RegQueryValueEx(parmKey, "NonPersistentCaching", NULL, NULL,
+        &virtualCache, &dummyLen);
+    if (code == ERROR_SUCCESS && virtualCache) {
+        buf_cacheType = CM_BUF_CACHETYPE_VIRTUAL;
+    } else {
+        buf_cacheType = CM_BUF_CACHETYPE_FILE;
+    }
+    afsi_log("Cache type is %s", ((buf_cacheType == CM_BUF_CACHETYPE_FILE)?"FILE":"VIRTUAL"));
 
 	dummyLen = sizeof(traceOnPanic);
 	code = RegQueryValueEx(parmKey, "TrapOnPanic", NULL, NULL,
@@ -472,21 +696,24 @@ int afsd_InitCM(char **reasonP)
 	}
 #endif /* AFS_FREELANCE_CLIENT */
 
+#ifdef COMMENT
+    /* The netbios name is looked up in lana_GetUNCServerNameEx */
     dummyLen = sizeof(buf);
     code = RegQueryValueEx(parmKey, "NetbiosName", NULL, NULL,
                            (BYTE *) &buf, &dummyLen);
     if (code == ERROR_SUCCESS) {
-        DWORD len = ExpandEnvironmentStrings(buf, cm_NetBiosName, MAX_NB_NAME_LENGTH);
+        DWORD len = ExpandEnvironmentStrings(buf, cm_NetbiosName, MAX_NB_NAME_LENGTH);
         if ( len > 0 && len <= MAX_NB_NAME_LENGTH ) {
-            afsi_log("Explicit NetBios name is used %s", cm_NetBiosName);
+            afsi_log("Explicit NetBios name is used %s", cm_NetbiosName);
         } else {
             afsi_log("Unable to Expand Explicit NetBios name: %s", buf);
-            cm_NetBiosName[0] = 0;  /* turn it off */
+            cm_NetbiosName[0] = 0;  /* turn it off */
         }
     }
     else {
-        cm_NetBiosName[0] = 0;   /* default off */
+        cm_NetbiosName[0] = 0;   /* default off */
     }
+#endif
 
     dummyLen = sizeof(smb_hideDotFiles);
     code = RegQueryValueEx(parmKey, "HideDotFiles", NULL, NULL,
@@ -512,6 +739,16 @@ int afsd_InitCM(char **reasonP)
         smb_maxVCPerServer = 100;
     }
     afsi_log("Maximum number of VCs per server is %d", smb_maxVCPerServer);
+
+	dummyLen = sizeof(smb_authType);
+	code = RegQueryValueEx(parmKey, "SMBAuthType", NULL, NULL,
+		(BYTE *) &smb_authType, &dummyLen);
+
+	if (code != ERROR_SUCCESS || 
+        (smb_authType != SMB_AUTH_EXTENDED && smb_authType != SMB_AUTH_NTLM && smb_authType != SMB_AUTH_NONE)) {
+		smb_authType = SMB_AUTH_EXTENDED; /* default is to use extended authentication */
+	}
+	afsi_log("SMB authentication type is %s", ((smb_authType == SMB_AUTH_NONE)?"NONE":((smb_authType == SMB_AUTH_EXTENDED)?"EXTENDED":"NTLM")));
 
     dummyLen = sizeof(rx_nojumbo);
     code = RegQueryValueEx(parmKey, "RxNoJumbo", NULL, NULL,
@@ -607,25 +844,10 @@ int afsd_InitCM(char **reasonP)
     }
 
     /* Open Microsoft Firewall to allow in port 7001 */
-    {
-        HKEY hk;
-        DWORD dwDisp;
-        TCHAR* value = TEXT("7001:UDP:*:Enabled:AFS Cache Manager Callback");
-        if (RegCreateKeyEx (HKEY_LOCAL_MACHINE, 
-                            "SYSTEM\\CurrentControlSet\\Services\\SharedAccess\\Parameters\\FirewallPolicy\\DomainProfile\\GloballyOpenP", 
-                            0, TEXT("container"), 0, KEY_SET_VALUE, NULL, &hk, &dwDisp) == ERROR_SUCCESS)
-        {
-            RegSetValueEx (hk, TEXT("7001:UDP"), 0, REG_SZ, (PBYTE)value, sizeof(TCHAR) * (1+lstrlen(value)));
-            RegCloseKey (hk);
-        }
-        if (RegCreateKeyEx (HKEY_LOCAL_MACHINE, 
-                            "SYSTEM\\CurrentControlSet\\Services\\SharedAccess\\Parameters\\FirewallPolicy\\StandardProfile\\GloballyOpenP", 
-                            0, TEXT("container"), 0, KEY_SET_VALUE, NULL, &hk, &dwDisp) == ERROR_SUCCESS)
-        {
-            RegSetValueEx (hk, TEXT("7001:UDP"), 0, REG_SZ, (PBYTE)value, sizeof(TCHAR) * (1+lstrlen(value)));
-            RegCloseKey (hk);
-        }
-    }
+    icf_CheckAndAddAFSPorts(AFS_PORTSET_CLIENT);
+
+    /* Ensure the AFS Netbios Name is registered to allow loopback access */
+    configureBackConnectionHostNames();
 
 	/* initialize RX, and tell it to listen to port 7001, which is used for
      * callback RPC messages.

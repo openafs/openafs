@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/DARWIN/osi_misc.c,v 1.5 2003/07/15 23:14:17 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/DARWIN/osi_misc.c,v 1.6 2004/07/29 03:13:44 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
@@ -49,7 +49,7 @@ osi_lookupname(char *aname, enum uio_seg seg, int followlink,
  * Note that it must NOT set errno.
  */
 
-afs_suser()
+afs_suser(void *credp)
 {
     int error;
     struct proc *p = current_proc();

@@ -22,22 +22,23 @@
  */
 typedef struct cm_server {
 	struct cm_server *allNextp;		/* locked by cm_serverLock */
-        struct sockaddr_in addr;		/* by mx */
-        int type;				/* by mx */
+    struct sockaddr_in addr;		/* by mx */
+    int type;				/* by mx */
 	struct cm_conn *connsp;			/* locked by cm_connLock */
-        long flags;				/* by mx */
-        struct cm_cell *cellp;			/* cell containing this server */
+    long flags;				/* by mx */
+    struct cm_cell *cellp;			/* cell containing this server */
 	int refCount;				/* locked by cm_serverLock */
-        osi_mutex_t mx;
+    osi_mutex_t mx;
 	unsigned short ipRank;			/* server priority */
 } cm_server_t;
 
 enum repstate {not_busy, busy, offline};
 
 typedef struct cm_serverRef {
-	struct cm_serverRef *next;
-	struct cm_server *server;
-	enum repstate status;
+	struct cm_serverRef *next;      /* locked by cm_serverLock */
+	struct cm_server *server;       /* locked by cm_serverLock */
+	enum repstate status;           /* locked by cm_serverLock */
+    int refCount;                   /* locked by cm_serverLock */
 } cm_serverRef_t;
 
 /* types */
@@ -74,6 +75,8 @@ extern cm_serverRef_t *cm_NewServerRef(struct cm_server *serverp);
 extern long cm_ChecksumServerList(cm_serverRef_t *serversp);
 
 extern void cm_PutServer(cm_server_t *);
+
+extern void cm_PutServerNoLock(cm_server_t *);
 
 extern cm_server_t *cm_FindServer(struct sockaddr_in *addrp, int type);
 

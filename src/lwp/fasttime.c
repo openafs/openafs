@@ -27,7 +27,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/lwp/fasttime.c,v 1.8 2003/12/07 22:49:33 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/lwp/fasttime.c,v 1.9 2004/07/19 15:25:16 shadow Exp $");
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -118,6 +118,12 @@ FT_AGetTimeOfDay(struct timeval *tv, struct timezone *tz)
     return FT_GetTimeOfDay(tv, tz);
 }
 
+#ifdef AFS_PTHREAD_ENV
+unsigned int FT_ApproxTime(void)
+{
+    return time(0);
+}
+#else
 unsigned int
 FT_ApproxTime(void)
 {
@@ -126,3 +132,4 @@ FT_ApproxTime(void)
     }
     return FT_LastTime.tv_sec;
 }
+#endif

@@ -63,7 +63,10 @@
 		<?define HideDotFiles="1"?>
     <?endif?>
     <?ifndef SecurityLevel?>
-		<?define SecurityLevel="0"?>
+		<?define SecurityLevel="1"?>
+    <?endif?>
+    <?ifndef SMBAuthType?>
+		<?define SMBAuthType="2"?>
     <?endif?>
 
     <?define InstallTimestamp="[Date] [Time]"?>

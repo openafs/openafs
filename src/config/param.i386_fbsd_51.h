@@ -13,6 +13,7 @@
 
 #define AFS_NAMEI_ENV     1	/* User space interface to file system */
 #define AFS_64BIT_ENV 1
+#define AFS_64BIT_CLIENT	1
 #define AFS_64BIT_IOPS_ENV 1	/* Needed for NAMEI */
 #define AFS_FBSD_ENV 1
 #define AFS_FBSD40_ENV 1

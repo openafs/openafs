@@ -346,14 +346,14 @@ static void MountGlobalDrives()
  
 		    sprintf(szAfsPath,"\\\\%s\\%s",cm_NetbiosName,szSubMount);
 		    
-		    nr.dwScope = RESOURCE_GLOBALNET;
+		    nr.dwScope = RESOURCE_GLOBALNET;              /* ignored parameter */
 		    nr.dwType=RESOURCETYPE_DISK;
 		    nr.lpLocalName=szDriveToMapTo;
 		    nr.lpRemoteName=szAfsPath;
-		    nr.dwDisplayType = RESOURCEDISPLAYTYPE_SHARE;
-		    nr.dwUsage = RESOURCEUSAGE_CONNECTABLE;
+		    nr.dwDisplayType = RESOURCEDISPLAYTYPE_SHARE; /* ignored parameter */
+		    nr.dwUsage = RESOURCEUSAGE_CONNECTABLE;       /* ignored parameter */
 
-		    dwResult = WNetAddConnection2(&nr,NULL,NULL,FALSE);
+		    dwResult = WNetAddConnection2(&nr,NULL,NULL,0);
             afsi_log("GlobalAutoMap of %s to %s %s (%d)", szDriveToMapTo, szSubMount, 
                      (dwResult == NO_ERROR) ? "succeeded" : "failed", dwResult);
             if (dwResult == NO_ERROR) {
@@ -361,6 +361,9 @@ static void MountGlobalDrives()
             }
             /* wait for smb server to come up */
             Sleep((DWORD)1000 /* miliseconds */);		
+
+            /* Disconnect any previous mappings */
+            dwResult = WNetCancelConnection2(szDriveToMapTo, 0, TRUE);
         }
     }        
 
@@ -400,6 +403,7 @@ static void DismountGlobalDrives()
 
         sprintf(szAfsPath,"\\\\%s\\%s",cm_NetbiosName,szSubMount);
 		    
+        dwResult = WNetCancelConnection2(szDriveToMapTo, 0, TRUE);
         dwResult = WNetCancelConnection(szAfsPath, TRUE);
         
         afsi_log("Disconnect from GlobalAutoMap of %s to %s %s", szDriveToMapTo, szSubMount, dwResult ? "succeeded" : "failed");

@@ -879,6 +879,14 @@ TYPEDEF_FUNC(
 TYPEDEF_FUNC(
     krb5_error_code,
     KRB5_CALLCONV,
+    krb5_free_default_realm,
+    (krb5_context,
+     const char * )
+    );
+
+TYPEDEF_FUNC(
+    krb5_error_code,
+    KRB5_CALLCONV,
     krb5_sname_to_principal,
     (krb5_context,
      const char *,

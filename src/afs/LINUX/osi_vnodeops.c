@@ -22,7 +22,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vnodeops.c,v 1.78 2004/06/24 17:28:03 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vnodeops.c,v 1.81 2004/07/21 22:23:38 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
@@ -270,10 +270,10 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
     cred_t *credp = crref();
     struct afs_fakestat_state fakestat;
 
-    AFS_GLOCK();
 #if defined(AFS_LINUX26_ENV)
     lock_kernel();
 #endif
+    AFS_GLOCK();
     AFS_STATCNT(afs_readdir);
 
     code = afs_InitReq(&treq, credp);
@@ -407,10 +407,10 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
 out:
     afs_PutFakeStat(&fakestat);
 out1:
+    AFS_GUNLOCK();
 #if defined(AFS_LINUX26_ENV)
     unlock_kernel();
 #endif
-    AFS_GUNLOCK();
     return code;
 }
 
@@ -567,15 +567,15 @@ afs_linux_open(struct inode *ip, struct file *fp)
     int code;
     cred_t *credp = crref();
 
-    AFS_GLOCK();
 #ifdef AFS_LINUX24_ENV
     lock_kernel();
 #endif
+    AFS_GLOCK();
     code = afs_open((struct vcache **)&ip, fp->f_flags, credp);
+    AFS_GUNLOCK();
 #ifdef AFS_LINUX24_ENV
     unlock_kernel();
 #endif
-    AFS_GUNLOCK();
 
     crfree(credp);
     return -code;
@@ -595,19 +595,19 @@ afs_linux_release(struct inode *ip, struct file *fp)
     cred_t *credp = crref();
     struct vcache *vcp = ITOAFS(ip);
 
-    AFS_GLOCK();
 #ifdef AFS_LINUX24_ENV
     lock_kernel();
 #endif
+    AFS_GLOCK();
     if (vcp->flushcnt) {
 	vcp->flushcnt--;	/* protected by AFS global lock. */
     } else {
 	code = afs_close(vcp, fp->f_flags, credp);
     }
+    AFS_GUNLOCK();
 #ifdef AFS_LINUX24_ENV
     unlock_kernel();
 #endif
-    AFS_GUNLOCK();
 
     crfree(credp);
     return -code;
@@ -625,15 +625,15 @@ afs_linux_fsync(struct file *fp, struct dentry *dp)
     struct inode *ip = FILE_INODE(fp);
     cred_t *credp = crref();
 
-    AFS_GLOCK();
 #ifdef AFS_LINUX24_ENV
     lock_kernel();
 #endif
+    AFS_GLOCK();
     code = afs_fsync(ITOAFS(ip), credp);
+    AFS_GUNLOCK();
 #ifdef AFS_LINUX24_ENV
     unlock_kernel();
 #endif
-    AFS_GUNLOCK();
     crfree(credp);
     return -code;
 
@@ -777,6 +777,9 @@ afs_linux_revalidate(struct dentry *dp)
     struct vcache *vcp = ITOAFS(dp->d_inode);
     struct vcache *rootvp = NULL;
 
+#ifdef AFS_LINUX24_ENV
+    lock_kernel();
+#endif
     AFS_GLOCK();
 
     if (afs_fakestat_enable && vcp->mvstat == 1 && vcp->mvid
@@ -785,9 +788,6 @@ afs_linux_revalidate(struct dentry *dp)
 	rootvp = afs_FindVCache(vcp->mvid, 0, 0);
 	ReleaseSharedLock(&afs_xvcache);
     }
-#ifdef AFS_LINUX24_ENV
-    lock_kernel();
-#endif
 
     /* Make this a fast path (no crref), since it's called so often. */
     if (vcp->states & CStatd) {
@@ -797,12 +797,12 @@ afs_linux_revalidate(struct dentry *dp)
 	    vcache2fakeinode(rootvp, vcp);
 	else
 	    vcache2inode(vcp);
-#ifdef AFS_LINUX24_ENV
-	unlock_kernel();
-#endif
 	if (rootvp)
 	    afs_PutVCache(rootvp);
 	AFS_GUNLOCK();
+#ifdef AFS_LINUX24_ENV
+	unlock_kernel();
+#endif
 	return 0;
     }
 
@@ -811,10 +811,10 @@ afs_linux_revalidate(struct dentry *dp)
     if (!code)
 	code = afs_VerifyVCache(vcp, &treq);
 
+    AFS_GUNLOCK();
 #ifdef AFS_LINUX24_ENV
     unlock_kernel();
 #endif
-    AFS_GUNLOCK();
     crfree(credp);
 
     return -code;
@@ -856,8 +856,10 @@ afs_linux_dentry_revalidate(struct dentry *dp)
 
     sysState.allocked = 0;
 
-    AFS_GLOCK();
+#ifdef AFS_LINUX24_ENV
     lock_kernel();
+#endif
+    AFS_GLOCK();
 
     vcp = ITOAFS(dp->d_inode);
     parentvcp = ITOAFS(dp->d_parent->d_inode);
@@ -911,13 +913,16 @@ afs_linux_dentry_revalidate(struct dentry *dp)
     if (sysState.allocked)
 	osi_FreeLargeSpace(name);
 
+    AFS_GUNLOCK();
+
     if (bad_dentry) {
 	shrink_dcache_parent(dp);
 	d_drop(dp);
     }
 
+#ifdef AFS_LINUX24_ENV
     unlock_kernel();
-    AFS_GUNLOCK();
+#endif
     crfree(credp);
 
     return !bad_dentry;
@@ -928,12 +933,15 @@ afs_linux_dentry_revalidate(struct dentry *dp)
 static void
 afs_dentry_iput(struct dentry *dp, struct inode *ip)
 {
+    int isglock;
+
     if (ICL_SETACTIVE(afs_iclSetp)) {
-	AFS_GLOCK();
+	isglock = ISAFS_GLOCK();
+	if (!isglock) AFS_GLOCK();
 	afs_Trace3(afs_iclSetp, CM_TRACE_DENTRYIPUT, ICL_TYPE_POINTER, ip,
 		   ICL_TYPE_STRING, dp->d_parent->d_name.name,
 		   ICL_TYPE_STRING, dp->d_name.name);
-	AFS_GUNLOCK();
+	if (!isglock) AFS_GUNLOCK();
     }
 
     osi_iput(ip);
@@ -943,12 +951,14 @@ afs_dentry_iput(struct dentry *dp, struct inode *ip)
 static int
 afs_dentry_delete(struct dentry *dp)
 {
+    int isglock;
     if (ICL_SETACTIVE(afs_iclSetp)) {
-	AFS_GLOCK();
+	isglock = ISAFS_GLOCK();
+	if (!isglock) AFS_GLOCK();
 	afs_Trace3(afs_iclSetp, CM_TRACE_DENTRYDELETE, ICL_TYPE_POINTER,
 		   dp->d_inode, ICL_TYPE_STRING, dp->d_parent->d_name.name,
 		   ICL_TYPE_STRING, dp->d_name.name);
-	AFS_GUNLOCK();
+	if (!isglock) AFS_GUNLOCK();
     }
 
     if (dp->d_inode && (ITOAFS(dp->d_inode)->states & CUnlinked))
@@ -990,10 +1000,10 @@ afs_linux_create(struct inode *dip, struct dentry *dp, int mode)
     VATTR_NULL(&vattr);
     vattr.va_mode = mode;
 
-    AFS_GLOCK();
 #if defined(AFS_LINUX26_ENV)
     lock_kernel();
 #endif
+    AFS_GLOCK();
     code =
 	afs_create(ITOAFS(dip), name, &vattr, NONEXCL, mode,
 		   (struct vcache **)&ip, credp);
@@ -1027,10 +1037,10 @@ afs_linux_create(struct inode *dip, struct dentry *dp, int mode)
 	d_instantiate(dp, ip);
     }
 
+    AFS_GUNLOCK();
 #if defined(AFS_LINUX26_ENV)
     unlock_kernel();
 #endif
-    AFS_GUNLOCK();
     crfree(credp);
     return -code;
 }
@@ -1049,11 +1059,12 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
     struct vcache *vcp = NULL;
     const char *comp = dp->d_name.name;
 
-    AFS_GLOCK();
 #if defined(AFS_LINUX26_ENV)
     lock_kernel();
 #endif
+    AFS_GLOCK();
     code = afs_lookup(ITOAFS(dip), comp, &vcp, credp);
+    AFS_GUNLOCK();
     
     if (vcp) {
 	struct inode *ip = AFSTOI(vcp);
@@ -1088,7 +1099,6 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
 #if defined(AFS_LINUX26_ENV)
     unlock_kernel();
 #endif
-    AFS_GUNLOCK();
     crfree(credp);
 
     /* It's ok for the file to not be found. That's noted by the caller by
@@ -1134,17 +1144,17 @@ afs_linux_unlink(struct inode *dip, struct dentry *dp)
     cred_t *credp = crref();
     const char *name = dp->d_name.name;
 
-    AFS_GLOCK();
 #if defined(AFS_LINUX26_ENV)
     lock_kernel();
 #endif
+    AFS_GLOCK();
     code = afs_remove(ITOAFS(dip), name, credp);
+    AFS_GUNLOCK();
     if (!code)
 	d_drop(dp);
 #if defined(AFS_LINUX26_ENV)
     unlock_kernel();
 #endif
-    AFS_GUNLOCK();
     crfree(credp);
     return -code;
 }
@@ -1180,14 +1190,15 @@ afs_linux_mkdir(struct inode *dip, struct dentry *dp, int mode)
     struct vattr vattr;
     const char *name = dp->d_name.name;
 
-    AFS_GLOCK();
 #if defined(AFS_LINUX26_ENV)
     lock_kernel();
 #endif
+    AFS_GLOCK();
     VATTR_NULL(&vattr);
     vattr.va_mask = ATTR_MODE;
     vattr.va_mode = mode;
     code = afs_mkdir(ITOAFS(dip), name, &vattr, &tvcp, credp);
+    AFS_GUNLOCK();
 
     if (tvcp) {
 	tvcp->v.v_op = &afs_dir_iops;
@@ -1202,7 +1213,6 @@ afs_linux_mkdir(struct inode *dip, struct dentry *dp, int mode)
 #if defined(AFS_LINUX26_ENV)
     unlock_kernel();
 #endif
-    AFS_GUNLOCK();
     crfree(credp);
     return -code;
 }
@@ -1214,11 +1224,12 @@ afs_linux_rmdir(struct inode *dip, struct dentry *dp)
     cred_t *credp = crref();
     const char *name = dp->d_name.name;
 
-    AFS_GLOCK();
 #if defined(AFS_LINUX26_ENV)
     lock_kernel();
 #endif
+    AFS_GLOCK();
     code = afs_rmdir(ITOAFS(dip), name, credp);
+    AFS_GUNLOCK();
 
     /* Linux likes to see ENOTEMPTY returned from an rmdir() syscall
      * that failed because a directory is not empty. So, we map
@@ -1235,7 +1246,6 @@ afs_linux_rmdir(struct inode *dip, struct dentry *dp)
 #if defined(AFS_LINUX26_ENV)
     unlock_kernel();
 #endif
-    AFS_GUNLOCK();
     crfree(credp);
     return -code;
 }
@@ -1251,7 +1261,6 @@ afs_linux_rename(struct inode *oldip, struct dentry *olddp,
     const char *oldname = olddp->d_name.name;
     const char *newname = newdp->d_name.name;
 
-    AFS_GLOCK();
 #if defined(AFS_LINUX26_ENV)
     lock_kernel();
 #endif
@@ -1271,7 +1280,9 @@ afs_linux_rename(struct inode *oldip, struct dentry *olddp,
     if (!list_empty(&newdp->d_hash))
 	d_drop(newdp);
 #endif
+    AFS_GLOCK();
     code = afs_rename(ITOAFS(oldip), oldname, ITOAFS(newip), newname, credp);
+    AFS_GUNLOCK();
 
     if (!code) {
 	/* update time so it doesn't expire immediately */
@@ -1282,7 +1293,6 @@ afs_linux_rename(struct inode *oldip, struct dentry *olddp,
 #if defined(AFS_LINUX26_ENV)
     unlock_kernel();
 #endif
-    AFS_GUNLOCK();
 
     crfree(credp);
     return -code;
@@ -1387,13 +1397,10 @@ afs_linux_readpage(struct file *fp, struct page *pp)
     int cnt = page_count(pp);
     struct vcache *avc = ITOAFS(ip);
 
-    AFS_GLOCK();
-    afs_Trace4(afs_iclSetp, CM_TRACE_READPAGE, ICL_TYPE_POINTER, ip, ICL_TYPE_POINTER, pp, ICL_TYPE_INT32, cnt, ICL_TYPE_INT32, 99999);	/* not a possible code value */
+
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
     address = kmap(pp);
     ClearPageError(pp);
-
-    lock_kernel();
 #else
     atomic_add(1, &pp->count);
     set_bit(PG_locked, &pp->flags);	/* other bits? See mm.h */
@@ -1402,8 +1409,17 @@ afs_linux_readpage(struct file *fp, struct page *pp)
 
     setup_uio(&tuio, &iovec, (char *)address, offset, PAGESIZE, UIO_READ,
 	      AFS_UIOSYS);
+#ifdef AFS_LINUX24_ENV
+    lock_kernel();
+#endif
+    AFS_GLOCK();
+    afs_Trace4(afs_iclSetp, CM_TRACE_READPAGE, ICL_TYPE_POINTER, ip, ICL_TYPE_POINTER, pp, ICL_TYPE_INT32, cnt, ICL_TYPE_INT32, 99999);	/* not a possible code value */
     code = afs_rdwr(avc, &tuio, UIO_READ, 0, credp);
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
+    afs_Trace4(afs_iclSetp, CM_TRACE_READPAGE, ICL_TYPE_POINTER, ip,
+	       ICL_TYPE_POINTER, pp, ICL_TYPE_INT32, cnt, ICL_TYPE_INT32,
+	       code);
+    AFS_GUNLOCK();
+#ifdef AFS_LINUX24_ENV
     unlock_kernel();
 #endif
 
@@ -1418,6 +1434,7 @@ afs_linux_readpage(struct file *fp, struct page *pp)
 	set_bit(PG_uptodate, &pp->flags);
 #endif
     }
+
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
     kunmap(pp);
     UnlockPage(pp);
@@ -1431,6 +1448,7 @@ afs_linux_readpage(struct file *fp, struct page *pp)
 	struct dcache *tdc;
 	struct vrequest treq;
 
+	AFS_GLOCK();
 	code = afs_InitReq(&treq, credp);
 	if (!code && !NBObtainWriteLock(&avc->lock, 534)) {
 	    tdc = afs_FindDCache(avc, offset);
@@ -1441,13 +1459,10 @@ afs_linux_readpage(struct file *fp, struct page *pp)
 	    }
 	    ReleaseWriteLock(&avc->lock);
 	}
+	AFS_GUNLOCK();
     }
 
     crfree(credp);
-    afs_Trace4(afs_iclSetp, CM_TRACE_READPAGE, ICL_TYPE_POINTER, ip,
-	       ICL_TYPE_POINTER, pp, ICL_TYPE_INT32, cnt, ICL_TYPE_INT32,
-	       code);
-    AFS_GUNLOCK();
     return -code;
 }
 
@@ -1620,11 +1635,11 @@ afs_linux_commit_write(struct file *file, struct page *page, unsigned offset,
 {
     int code;
 
-    AFS_GLOCK();
     lock_kernel();
+    AFS_GLOCK();
     code = afs_linux_updatepage(file, page, offset, to - offset);
-    unlock_kernel();
     AFS_GUNLOCK();
+    unlock_kernel();
     kunmap(page);
 
     return code;
@@ -1705,15 +1720,15 @@ afs_symlink_filler(struct file *file, struct page *page)
     char *p = (char *)kmap(page);
     int code;
 
-    AFS_GLOCK();
     lock_kernel();
+    AFS_GLOCK();
     code = afs_linux_ireadlink(ip, p, PAGE_SIZE, AFS_UIOSYS);
+    AFS_GUNLOCK();
 
     if (code < 0)
 	goto fail;
     p[code] = '\0';		/* null terminate? */
     unlock_kernel();
-    AFS_GUNLOCK();
 
     SetPageUptodate(page);
     kunmap(page);
@@ -1722,7 +1737,6 @@ afs_symlink_filler(struct file *file, struct page *page)
 
   fail:
     unlock_kernel();
-    AFS_GUNLOCK();
 
     SetPageError(page);
     kunmap(page);

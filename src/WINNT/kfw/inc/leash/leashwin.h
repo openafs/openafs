@@ -42,7 +42,8 @@ typedef struct {
     } out;
 } LSH_DLGINFO_EX, FAR *LPLSH_DLGINFO_EX;
 
-#define LSH_DLGINFO_EX_V1_SZ (sizeof(DWORD) + 3 * sizeof(LPSTR) * 8 * sizeof(int))
+#define LSH_DLGINFO_EX_V1_SZ (sizeof(DWORD) + 3 * sizeof(LPSTR) + 8 * sizeof(int))
+#define LSH_DLGINFO_EX_V2_SZ (sizeof(DWORD) + 3 * sizeof(LPSTR) + 8 * sizeof(int) + max(LEASH_USERNAME_SZ,LEASH_REALM_SZ))
 
 typedef struct {                                                
     char    principal[MAX_K_NAME_SZ]; /* Principal name/instance/realm */
@@ -129,5 +130,11 @@ DWORD Leash_reset_lock_file_locations();
 DWORD Leash_get_default_uppercaserealm();
 DWORD Leash_set_default_uppercaserealm(DWORD onoff);
 DWORD Leash_reset_default_uppercaserealm();
+DWORD Leash_get_default_mslsa_import();
+DWORD Leash_set_default_mslsa_import(DWORD onoffmatch);
+DWORD Leash_reset_default_mslsa_import();
+DWORD Leash_get_default_preserve_kinit_settings();
+DWORD Leash_set_default_preserve_kinit_settings(DWORD onoff);
+DWORD Leash_reset_default_preserve_kinit_settings();
 
 #endif /* LEASHWIN */

@@ -179,6 +179,7 @@ typedef struct cm_initparams_v1 {
 #define PROC_FSDIRNAME "openafs"
 #define PROC_SYSCALL_NAME "afs_ioctl"
 #define PROC_SYSCALL_FNAME "/proc/fs/openafs/afs_ioctl"
+#define PROC_SYSCALL_ARLA_FNAME "/proc/fs/nnpfs/afs_ioctl"
 #define VIOC_SYSCALL_TYPE 'C' 
 #define VIOC_SYSCALL _IOW(VIOC_SYSCALL_TYPE,1,void *)
  

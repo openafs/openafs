@@ -16,7 +16,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/DUX/osi_misc.c,v 1.6 2003/07/15 23:14:19 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/DUX/osi_misc.c,v 1.7 2004/07/29 03:13:44 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -27,7 +27,7 @@ RCSID
  * Note that it must NOT set errno.
  */
 
-afs_suser()
+afs_suser(void *credp)
 {
     int error;
 

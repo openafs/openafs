@@ -23,7 +23,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_readdir.c,v 1.23 2003/11/27 01:17:40 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_readdir.c,v 1.24 2004/08/09 00:54:05 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -172,12 +172,11 @@ struct min_direct {		/* miniature direct structure */
 #else
 #if defined(AFS_SUN_ENV) || defined(AFS_AIX32_ENV)
     afs_int32 d_off;
-    afs_uint32 d_fileno;
 #endif
 #if     defined(AFS_HPUX100_ENV)
     unsigned long long d_off;
-    afs_uint32 d_fileno;
 #endif
+    afs_uint32 d_fileno;
     u_short d_reclen;
     u_short d_namlen;
 #endif

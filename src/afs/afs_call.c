@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_call.c,v 1.69 2004/06/24 17:38:22 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_call.c,v 1.74 2004/07/29 03:32:56 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -46,6 +46,7 @@ char afs_zeros[AFS_ZEROS];
 char afs_rootVolumeName[64] = "";
 struct afs_icl_set *afs_iclSetp = (struct afs_icl_set *)0;
 struct afs_icl_set *afs_iclLongTermSetp = (struct afs_icl_set *)0;
+afs_uint32 rx_bindhost;
 
 #if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
 kmutex_t afs_global_lock;
@@ -128,7 +129,7 @@ afs_InitSetup(int preallocs)
 
     /* start RX */
     rx_extraPackets = AFS_NRXPACKETS;	/* smaller # of packets */
-    code = rx_Init(htons(7001));
+    code = rx_InitHost(rx_bindhost, htons(7001));
     if (code) {
 	printf("AFS: RX failed to initialize %d).\n", code);
 	return code;
@@ -354,7 +355,7 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 	/* only root can run this code */
 	return (EACCES);
 #else
-    if (!afs_suser() && (parm != AFSOP_GETMTU)
+    if (!afs_suser(NULL) && (parm != AFSOP_GETMTU)
 	&& (parm != AFSOP_GETMASK)) {
 	/* only root can run this code */
 #if defined(KERNEL_HAVE_UERROR)
@@ -700,6 +701,7 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 		cacheNumEntries : 1));
     } else if (parm == AFSOP_ADVISEADDR) {
 	/* pass in the host address to the rx package */
+	int rxbind = 0;
 	afs_int32 count = parm2;
 	afs_int32 *buffer =
 	    afs_osi_Alloc(sizeof(afs_int32) * AFS_MAX_INTERFACE_ADDR);
@@ -708,6 +710,13 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 	afs_int32 *mtubuffer =
 	    afs_osi_Alloc(sizeof(afs_int32) * AFS_MAX_INTERFACE_ADDR);
 	int i;
+
+	/* Bind, but only if there's only one address configured */ 
+	if ( count & 0x80000000) {
+	    count &= ~0x80000000;
+	    if (count == 1)
+		rxbind=1;
+	}
 
 	if (count > AFS_MAX_INTERFACE_ADDR) {
 	    code = ENOMEM;
@@ -743,6 +752,11 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 	}
 	afs_uuid_create(&afs_cb_interface.uuid);
 	rxi_setaddr(buffer[0]);
+	if (rxbind)
+	    rx_bindhost = buffer[0];
+	else
+	    rx_bindhost = htonl(INADDR_ANY);
+
 	afs_osi_Free(buffer, sizeof(afs_int32) * AFS_MAX_INTERFACE_ADDR);
 	afs_osi_Free(maskbuffer, sizeof(afs_int32) * AFS_MAX_INTERFACE_ADDR);
 	afs_osi_Free(mtubuffer, sizeof(afs_int32) * AFS_MAX_INTERFACE_ADDR);
@@ -775,7 +789,7 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 #endif /* AFS_SGI53_ENV */
     else if (parm == AFSOP_SHUTDOWN) {
 	afs_cold_shutdown = 0;
-	if (parm == 1)
+	if (parm2 == 1)
 	    afs_cold_shutdown = 1;
 #ifndef AFS_DARWIN_ENV
 	if (afs_globalVFS != 0) {
@@ -861,7 +875,7 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 	char *cellname = afs_osi_Alloc(cellLen);
 
 #ifndef UKERNEL
-	afs_osi_MaskSignals();
+	afs_osi_MaskUserLoop();
 #endif
 	AFS_COPYIN((afs_int32 *) parm2, cellname, cellLen, code);
 	AFS_COPYIN((afs_int32 *) parm3, kmsg, kmsgLen, code);
@@ -1496,6 +1510,11 @@ afs_shutdown(void)
     extern struct osi_file *afs_cacheInodep;
 
     AFS_STATCNT(afs_shutdown);
+    if (afs_initState == 0) {
+        afs_warn("AFS not initialized - not shutting down\n");
+      return;
+    }
+
     if (afs_shuttingdown)
 	return;
     afs_shuttingdown = 1;
@@ -1680,7 +1699,7 @@ Afscall_icl(long opcode, long p1, long p2, long p3, long p4, long *retval)
 	return (EACCES);
     }
 #else
-    if (!afs_suser()) {		/* only root can run this code */
+    if (!afs_suser(NULL)) {	/* only root can run this code */
 #if defined(KERNEL_HAVE_UERROR)
 	setuerror(EACCES);
 	return EACCES;

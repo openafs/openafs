@@ -40,6 +40,8 @@
 #define AFS_MOUNT_AFS "afs"	/* The name of the filesystem type. */
 #define AFS_SYSCALL 210
 #define AFS_NAMEI_ENV         1	/* User space interface to file system */
+#define AFS_64BIT_ENV         1
+#define AFS_64BIT_CLIENT      1
 #define AFS_64BIT_IOPS_ENV    1	/* Needed for NAMEI */
 #include <afs/afs_sysnames.h>
 

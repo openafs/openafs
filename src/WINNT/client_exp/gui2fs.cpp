@@ -1478,7 +1478,7 @@ BOOL GetTokenInfo(CStringArray& tokenInfo)
 	int cellNum;
 	int rc;
 	int current_time;
-	long tokenExpireTime;
+	time_t tokenExpireTime;
 	char *expireString;
 	char userName[100];
 //	char s[100];

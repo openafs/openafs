@@ -153,19 +153,27 @@ long cm_BufWrite(void *vfidp, osi_hyper_t *offsetp, long length, long flags,
                 /* write out wbytes of data from bufferp */
                 temp = rx_Write(callp, bufferp, wbytes);
                 if (temp != wbytes) {
+                    osi_Log2(afsd_logp, "rx_Write failed %d != %d",temp,wbytes);
                     code = -1;
 					break;
-				}
+				} else {
+                    osi_Log1(afsd_logp, "rx_Write succeeded %d",temp);
+                }
                 nbytes -= wbytes;
             }	/* while more bytes to write */
 		}		/* if RPC started successfully */
-
-		if (code == 0)
+        else {
+            osi_Log1(afsd_logp, "StartRXAFS_StoreData failed (%lX)",code);
+        }
+		if (code == 0) {
 			code = EndRXAFS_StoreData(callp, &outStatus, &volSync);
+            if (code)
+                osi_Log1(afsd_logp, "EndRXAFS_StoreData failed (%lX)",code);
+        }
         code = rx_EndCall(callp, code);
         osi_Log0(afsd_logp, "CALL StoreData DONE");
                 
-	} while (cm_Analyze(connp, userp, reqp, &scp->fid, &volSync, NULL, code));
+	} while (cm_Analyze(connp, userp, reqp, &scp->fid, &volSync, NULL, NULL, code));
     code = cm_MapRPCError(code, reqp);
         
     /* now, clean up our state */
@@ -258,7 +266,7 @@ long cm_StoreMini(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
 		if (code == 0)
 			code = EndRXAFS_StoreData(callp, &outStatus, &volSync);
         code = rx_EndCall(callp, code);
-	} while (cm_Analyze(connp, userp, reqp, &scp->fid, &volSync, NULL, code));
+	} while (cm_Analyze(connp, userp, reqp, &scp->fid, &volSync, NULL, NULL, code));
     code = cm_MapRPCError(code, reqp);
         
     /* now, clean up our state */
@@ -1178,8 +1186,8 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *up,
 		afsStatus.ParentVnode = 0x1;
 		afsStatus.ParentUnique = 0x1;
 		afsStatus.ResidencyMask = 0;
-		afsStatus.ClientModTime = 0x3b49f6e2;
-		afsStatus.ServerModTime = 0x3b49f6e2;
+		afsStatus.ClientModTime = FakeFreelanceModTime;
+		afsStatus.ServerModTime = FakeFreelanceModTime;
 		afsStatus.Group = 0;
 		afsStatus.SyncCounter = 0;
 		afsStatus.dataVersionHigh = 0;
@@ -1337,7 +1345,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *up,
             osi_Log0(afsd_logp, "CALL EndCall returns RXKADUNKNOWNKEY");
         osi_Log0(afsd_logp, "CALL FetchData DONE");
 
-	} while (cm_Analyze(connp, up, reqp, &scp->fid, &volSync, NULL, code));
+	} while (cm_Analyze(connp, up, reqp, &scp->fid, &volSync, NULL, NULL, code));
 
   fetchingcompleted:
     code = cm_MapRPCError(code, reqp);

@@ -45,12 +45,15 @@ long cm_AddCellProc(void *rockp, struct sockaddr_in *addrp, char *namep)
 			tsp->cellp = cellp;
 	}
 	else
-        	tsp = cm_NewServer(addrp, CM_SERVER_VLDB, cellp);
+        tsp = cm_NewServer(addrp, CM_SERVER_VLDB, cellp);
 
 	/* Insert the vlserver into a sorted list, sorted by server rank */
 	tsrp = cm_NewServerRef(tsp);
 	cm_InsertServerList(&cellp->vlServersp, tsrp);
-
+    /* drop the allocation reference */
+    lock_ObtainWrite(&cm_serverLock);
+    tsrp->refCount--;
+    lock_ReleaseWrite(&cm_serverLock);
 	return 0;
 }
 
@@ -67,6 +70,9 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, long flags)
     static cellCounter = 1;		/* locked by cm_cellLock */
 	int ttl;
 	char fullname[200]="";
+
+	if (!strcmp(namep,SMB_IOCTL_FILENAME_NOSLASH))
+		return NULL;
 
 	lock_ObtainWrite(&cm_cellLock);
 	for (cp = cm_allCellsp; cp; cp=cp->nextp) {
@@ -85,14 +91,16 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, long flags)
 	  ) {
         int dns_expired = 0;
 		if (!cp) {
-            cp = malloc(sizeof(*cp));
-            memset(cp, 0, sizeof(*cp));
+            cp = malloc(sizeof(cm_cell_t));
+            memset(cp, 0, sizeof(cm_cell_t));
         } 
         else {
             dns_expired = 1;
             /* must empty cp->vlServersp */
+            lock_ObtainWrite(&cp->mx);
             cm_FreeServerList(&cp->vlServersp);
             cp->vlServersp = NULL;
+            lock_ReleaseWrite(&cp->mx);
         }
 
         code = cm_SearchCellFile(namep, fullname, cm_AddCellProc, cp);
@@ -109,6 +117,7 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, long flags)
                     if (dns_expired) {
                         cp->flags |= CM_CELLFLAG_VLSERVER_INVALID;
                         cp = NULL;  /* set cp to NULL to indicate error */
+                        goto done;
                     } 
                 }
                 else {   /* got cell from DNS */
@@ -126,7 +135,7 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, long flags)
 		}
 
 		/* randomise among those vlservers having the same rank*/ 
-		cm_RandomizeServer(&cp->vlServersp);
+        cm_RandomizeServer(&cp->vlServersp);
 
 #ifdef AFS_AFSDB_ENV
         if (dns_expired) {

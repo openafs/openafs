@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/DUX/rx_knet.c,v 1.10 2003/07/15 23:16:15 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/DUX/rx_knet.c,v 1.11 2004/08/09 00:58:50 shadow Exp $");
 
 #ifdef AFS_DUX40_ENV
 #include "rx/rx_kcommon.h"
@@ -22,11 +22,12 @@ static void rxk_input(struct mbuf *am, int iphlen);
 static void rxk_fasttimo(void);
 
 /* start intercepting basic calls */
+void
 rxk_init()
 {
     register struct protosw *tpro, *last;
     if (rxk_initDone)
-	return 0;
+	return;
 
     last = inetdomain.dom_protoswNPROTOSW;
     for (tpro = inetdomain.dom_protosw; tpro < last; tpro++)
@@ -42,7 +43,7 @@ rxk_init()
 	     * until we have something to do
 	     */
 	    rxk_initDone = 1;
-	    return 0;
+	    return;
 	}
     osi_Panic("inet:no udp");
 }

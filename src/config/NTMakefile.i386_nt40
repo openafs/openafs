@@ -79,7 +79,7 @@ LIB = $(AFSDEV_LIB)
 #define used in WinNT/2000 installation and program version display
 AFSPRODUCT_VER_MAJOR=1
 AFSPRODUCT_VER_MINOR=3
-AFSPRODUCT_VER_PATCH=6500
+AFSPRODUCT_VER_PATCH=7000
 AFSPRODUCT_VER_BUILD=0
 AFSPRODUCT_VERSION=$(AFSPRODUCT_VER_MAJOR).$(AFSPRODUCT_VER_MINOR).$(AFSPRODUCT_VER_PATCH)
 AFSPRODUCT_FILE_VERSION=$(AFSPRODUCT_VER_MAJOR),$(AFSPRODUCT_VER_MINOR),$(AFSPRODUCT_VER_PATCH),$(AFSPRODUCT_VER_BUILD)
@@ -234,11 +234,19 @@ afscflags =\
 	/GF \
 	/Gd \
 	/Gy \
-	/GX \
 	/Os
 
+!IF ("$(AFSVER_CL)"=="1400")
+afscflags = $(afscflags) /EHsc /wd4996
+!ELSE
+afscflags = $(afscflags) /GX
+!ENDIF
+
 !IF ("$(AFSVER_CL)"!="1200")
-afscdefs = $(afscdefs) /G7 /GT /GS
+afscdefs = $(afscdefs) /GT /GS
+!IF ("$(AFSVER_CL)"!="1400")
+afscdefs = $(afscdefs) /G7
+!ENDIF
 !ENDIF
 
 !IF ("$(AFSDEV_BUILDTYPE)" == "FREE")

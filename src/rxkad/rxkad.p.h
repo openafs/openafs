@@ -22,8 +22,10 @@
 #define KTC_TIME_UNCERTAINTY (15*60)	/* max skew bet. machines' clocks */
 
 #define MAXRANDOMNAMELEN 16	/* length of random generated 
-				 * usernames used by afslog for high 
-				 * security must be < MAXKTCNAMELEN */
+                             * usernames used by afslog for high 
+                             * security must be < MAXKTCNAMELEN && < MAXSMBNAMELEN */
+#define MAXSMBNAMELEN    256 /* max length of an SMB name */
+
 #define LOGON_OPTION_INTEGRATED 1
 #define LOGON_OPTION_HIGHSECURITY 2
 
@@ -56,7 +58,7 @@ struct ktc_principal {
     char instance[MAXKTCNAMELEN];
     char cell[MAXKTCREALMLEN];
 #ifdef AFS_NT40_ENV
-    char smbname[MAXRANDOMNAMELEN];
+    char smbname[MAXSMBNAMELEN];
 #endif
 };
 

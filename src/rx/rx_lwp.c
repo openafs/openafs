@@ -9,11 +9,20 @@
 
 /* rx_user.c contains routines specific to the user space UNIX implementation of rx */
 
+/* This controls the size of an fd_set; it must be defined early before
+ * the system headers define that type and the macros that operate on it.
+ * Its value should be as large as the maximum file descriptor limit we
+ * are likely to run into on any platform.  Right now, that is 65536
+ * which is the default hard fd limit on Solaris 9 */
+#ifndef _WIN32
+#define FD_SETSIZE 65536
+#endif
+
 #include <afsconfig.h>
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_lwp.c,v 1.15 2003/11/29 22:08:16 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_lwp.c,v 1.17 2004/07/19 14:39:42 jaltman Exp $");
 
 # include <sys/types.h>		/* fd_set on older platforms */
 # include <errno.h>

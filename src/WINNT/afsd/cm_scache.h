@@ -136,10 +136,10 @@ typedef struct cm_scache {
 #define CM_SCACHETYPE_MOUNTPOINT	4	/* a mount point */
 
 /* flag bits */
-#define CM_SCACHEFLAG_STATD		1	/* status info is valid */
-#define CM_SCACHEFLAG_DELETED		2	/* file has been deleted */
-#define CM_SCACHEFLAG_CALLBACK		4	/* have a valid callback */
-#define CM_SCACHEFLAG_STORING		8	/* status being stored back */
+#define CM_SCACHEFLAG_STATD                 0x01        /* status info is valid */
+#define CM_SCACHEFLAG_DELETED           0x02    /* file has been deleted */
+#define CM_SCACHEFLAG_CALLBACK          0x04    /* have a valid callback */
+#define CM_SCACHEFLAG_STORING           0x08    /* status being stored back */
 #define CM_SCACHEFLAG_FETCHING		0x10	/* status being fetched */
 #define CM_SCACHEFLAG_SIZESTORING	0x20	/* status being stored that
 						 * changes the data; typically,
@@ -171,10 +171,10 @@ typedef struct cm_scache {
  * These flags correspond to individual RPCs that we may be making, and at most
  * one can be set in any one call to SyncOp.
  */
-#define CM_SCACHESYNC_FETCHSTATUS	1	/* fetching status info */
-#define CM_SCACHESYNC_STORESTATUS	2	/* storing status info */
-#define CM_SCACHESYNC_FETCHDATA		4	/* fetch data */
-#define CM_SCACHESYNC_STOREDATA		8	/* store data */
+#define CM_SCACHESYNC_FETCHSTATUS           0x01        /* fetching status info */
+#define CM_SCACHESYNC_STORESTATUS           0x02        /* storing status info */
+#define CM_SCACHESYNC_FETCHDATA             0x04        /* fetch data */
+#define CM_SCACHESYNC_STOREDATA             0x08        /* store data */
 #define CM_SCACHESYNC_STORESIZE		0x10	/* store new file size */
 #define CM_SCACHESYNC_GETCALLBACK	0x20	/* fetching a callback */
 #define CM_SCACHESYNC_STOREDATA_EXCL	0x40	/* store data */

@@ -345,6 +345,42 @@ TYPEDEF_FUNC(
     (void)
     );
 TYPEDEF_FUNC(
+    DWORD,
+    CALLCONV_C,
+    Leash_get_default_mslsa_import,
+    (void)
+    );
+TYPEDEF_FUNC(
+    DWORD,
+    CALLCONV_C,
+    Leash_set_default_mslsa_import,
+    (DWORD)
+    );
+TYPEDEF_FUNC(
+    DWORD,
+    CALLCONV_C,
+    Leash_reset_default_mslsa_import,
+    (void)
+    );
+TYPEDEF_FUNC(
+    DWORD,
+    CALLCONV_C,
+    Leash_get_default_preserve_kinit_settings,
+    (void)
+    );
+TYPEDEF_FUNC(
+    DWORD,
+    CALLCONV_C,
+    Leash_set_default_preserve_kinit_settings,
+    (DWORD)
+    );
+TYPEDEF_FUNC(
+    DWORD,
+    CALLCONV_C,
+    Leash_reset_default_preserve_kinit_settings,
+    (void)
+    );
+TYPEDEF_FUNC(
     BOOL,
     CALLCONV_C,
     Leash_import,

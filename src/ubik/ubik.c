@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/ubik/ubik.c,v 1.14 2003/07/15 23:17:05 shadow Exp $");
+    ("$Header: /cvs/openafs/src/ubik/ubik.c,v 1.15 2004/08/08 23:57:23 shadow Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -186,31 +186,6 @@ ContactQuorum(aproc, atrans, aflags, aparm0, aparm1, aparm2, aparm3, aparm4,
 */
 
 int
-ubik_ServerInitByInfo(afs_int32 myHost, short myPort,
-		      struct afsconf_cell *info, char clones[],
-		      char *pathName, struct ubik_dbase **dbase)
-{
-    afs_int32 code;
-
-    code =
-	ubik_ServerInitCommon(myHost, myPort, info, clones, 0, pathName,
-			      dbase);
-    return code;
-}
-
-int
-ubik_ServerInit(afs_int32 myHost, short myPort, afs_int32 serverList[],
-		char *pathName, struct ubik_dbase **dbase)
-{
-    afs_int32 code;
-
-    code =
-	ubik_ServerInitCommon(myHost, myPort, (struct afsconf_cell *)0, 0,
-			      serverList, pathName, dbase);
-    return code;
-}
-
-int
 ubik_ServerInitCommon(afs_int32 myHost, short myPort,
 		      struct afsconf_cell *info, char clones[],
 		      afs_int32 serverList[], char *pathName,
@@ -318,6 +293,31 @@ ubik_ServerInitCommon(afs_int32 myHost, short myPort,
     code = LWP_CreateProcess(urecovery_Interact, 16384 /*8192 */ ,
 			     LWP_MAX_PRIORITY - 1, (void *)0, "recovery",
 			     &junk);
+    return code;
+}
+
+int
+ubik_ServerInitByInfo(afs_int32 myHost, short myPort,
+		      struct afsconf_cell *info, char clones[],
+		      char *pathName, struct ubik_dbase **dbase)
+{
+    afs_int32 code;
+
+    code =
+	ubik_ServerInitCommon(myHost, myPort, info, clones, 0, pathName,
+			      dbase);
+    return code;
+}
+
+int
+ubik_ServerInit(afs_int32 myHost, short myPort, afs_int32 serverList[],
+		char *pathName, struct ubik_dbase **dbase)
+{
+    afs_int32 code;
+
+    code =
+	ubik_ServerInitCommon(myHost, myPort, (struct afsconf_cell *)0, 0,
+			      serverList, pathName, dbase);
     return code;
 }
 

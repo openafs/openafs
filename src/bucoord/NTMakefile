@@ -6,6 +6,7 @@
 # directory or online at http://www.openafs.org/dl/license10.html
 
 RELDIR=bucoord
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -DNOGDI -DWIN32_LEAN_AND_MEAN
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\config\NTMakefile.version
 
@@ -90,7 +91,7 @@ EXELIBS =\
 	
 
 $(EXEFILE): $(EXEOBJS) $(EXELIBS)
-	$(EXECONLINK) dnsapi.lib
+	$(EXECONLINK) dnsapi.lib mpr.lib
 	$(EXEPREP)
 
 

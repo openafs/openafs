@@ -452,4 +452,7 @@ int krb_save_credentials(char *service, char *instance, char *realm,
 
 int krb_in_tkt(char *pname, char *pinst, char *prealm);
 
+/* lifetime.c */
+int krb_life_to_time(int start, int life);
+int krb_time_to_life(int start, int end);
 #endif  /* KRB_DEFS */
