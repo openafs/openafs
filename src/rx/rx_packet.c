@@ -272,7 +272,7 @@ static struct rx_packet * allocCBuf(int class)
   queue_Remove(c);
   if (!(c->flags & RX_PKTFLAG_FREE))
     osi_Panic("rxi_AllocPacket: packet not free\n");
-  c->flags &= ~RX_PKTFLAG_FREE;
+  c->flags = 0;		/* clear RX_PKTFLAG_FREE, initialize the rest */
   c->header.flags = 0;
   
 #ifdef KERNEL
@@ -631,7 +631,7 @@ struct rx_packet *rxi_AllocPacketNoLock(class)
   dpf(("Alloc %x, class %d\n", p, class));
   
   queue_Remove(p);
-  p->flags &= ~RX_PKTFLAG_FREE;
+  p->flags = 0;		/* clear RX_PKTFLAG_FREE, initialize the rest */
   p->header.flags = 0;
   
   /* have to do this here because rx_FlushWrite fiddles with the iovs in
@@ -788,8 +788,8 @@ int rxi_ReadPacket(socket, p, host, port)
     * our problems caused by the lack of a length field in the rx header.
     * Use the extra buffer that follows the localdata in each packet
     * structure. */
-    savelen = p->wirevec[p->niovecs].iov_len;
-    p->wirevec[p->niovecs].iov_len += RX_EXTRABUFFERSIZE;
+    savelen = p->wirevec[p->niovecs-1].iov_len;
+    p->wirevec[p->niovecs-1].iov_len += RX_EXTRABUFFERSIZE;
 
     memset((char *)&msg, 0, sizeof(msg));
     msg.msg_name = (char *) &from;
@@ -799,7 +799,7 @@ int rxi_ReadPacket(socket, p, host, port)
     nbytes = rxi_Recvmsg(socket, &msg, 0);
 
    /* restore the vec to its correct state */
-    p->wirevec[p->niovecs].iov_len = savelen;
+    p->wirevec[p->niovecs-1].iov_len = savelen;
 
     p->length = (nbytes - RX_HEADER_SIZE);
     if ((nbytes > tlen) || (p->length  & 0x8000)) {  /* Bogus packet */
