@@ -187,9 +187,9 @@ kdist:  build-modules
 
 
 
-dist_config: configure
+kdist_config: configure
 
-dist_clean: clean
+kdist_clean: clean
 
 ############################ source stuff #################################
 binary-source:

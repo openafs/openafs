@@ -164,7 +164,6 @@ libafs.mp: $(DEST_LIBAFS_MP)
 	echo MP Build Complete
 
 $(DEST_LIBAFS): $(LIBAFS)
-	${INSTALL} -d $(@D)
 	${INSTALL} $? $@
 
 $(DEST_LIBAFS_MP): $(LIBAFS_MP)

@@ -100,7 +100,7 @@ install: all
 			${INSTALL} afs.rc.hpux10 ${DESTDIR}root.client/usr/vice/etc/dkload/afs.rc ;;\
 		*linux* ) \
 			${INSTALLex}  -f afs.rc.linux ${DESTDIR}root.client/usr/vice/etc/afs.rc; \
-			${INSTALL}  afs.conf.linux ${DESTDIR}root.client/usr/vice/etc/afs.conf ;; \
+			${INSTALL}  -f afs.conf.linux ${DESTDIR}root.client/usr/vice/etc/afs.conf ;; \
 		ppc_darwin*) \
 			mkdir -p ${DESTDIR}root.client/usr/vice/etc/afs.kext/Contents/MacOS ;\
 			${INSTALL} -f afs.ppc_darwin.plist ${DESTDIR}root.client/usr/vice/etc/afs.kext/Contents/Info.plist ; \
