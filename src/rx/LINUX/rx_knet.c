@@ -15,7 +15,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/LINUX/rx_knet.c,v 1.1.1.8 2002/01/28 00:30:30 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/LINUX/rx_knet.c,v 1.1.1.9 2002/05/18 19:47:41 hartmans Exp $");
 
 #ifdef AFS_LINUX22_ENV
 #include "../rx/rx_kcommon.h"
@@ -179,7 +179,7 @@ void osi_StopListener(void)
     extern int rxk_ListenerPid;
 
     while (rxk_ListenerPid) {
-	(void) (*sys_killp)(rxk_ListenerPid, 9);
+	(void) (*sys_killp)(rxk_ListenerPid, SIGKILL);
 	afs_osi_Sleep(&rxk_ListenerPid); 
     }
     sock_release(rx_socket);
