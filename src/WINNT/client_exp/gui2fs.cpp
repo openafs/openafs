@@ -368,7 +368,7 @@ int foldcmp (register char *a, register char *b)
     }
 }
 
-void ZapList(struct AclEntry *alist)
+extern "C" void ZapList(struct AclEntry *alist)
 {
     register struct AclEntry *tp, *np;
 
@@ -378,14 +378,14 @@ void ZapList(struct AclEntry *alist)
     }
 }
 
-void ZapAcl (struct Acl *acl)
+extern "C" void ZapAcl (struct Acl *acl)
 {
     ZapList(acl->pluslist);
     ZapList(acl->minuslist);
     free(acl);
 }
 
-int PruneList (struct AclEntry **ae, int dfs)
+extern "C" int PruneList (struct AclEntry **ae, int dfs)
 {
     struct AclEntry **lp = ae;
     struct AclEntry *te, *ne;
@@ -554,7 +554,7 @@ struct Acl *ParseAcl(char *astr)
 
 /* clean up an access control list of its bad entries; return 1 if we made
    any changes to the list, and 0 otherwise */
-int CleanAcl(struct Acl *aa)
+extern "C" int CleanAcl(struct Acl *aa)
 {
     register struct AclEntry *te, **le, *ne;
     int changes;

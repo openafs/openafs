@@ -32,12 +32,12 @@ static struct
  *
  */
 
-void __RPC_FAR * __RPC_USER MIDL_user_allocate (size_t cbAllocate)
+extern "C" void __RPC_FAR * __RPC_USER MIDL_user_allocate (size_t cbAllocate)
 {
    return (void __RPC_FAR *)Allocate (cbAllocate);
 }
 
-void __RPC_USER MIDL_user_free (void __RPC_FAR *pData)
+extern "C" void __RPC_USER MIDL_user_free (void __RPC_FAR *pData)
 {
    Free (pData);
 }
@@ -883,7 +883,7 @@ BOOL ADMINAPI asc_ActionListenClear (DWORD idClient, HWND hNotify, ULONG *pStatu
       //    this routine is used to notify the client whenever an action is
       //    initiated or completed.
       //
-void AfsAdmSvrCallback_Action (LPASACTION pAction, BOOL fFinished)
+extern "C" void AfsAdmSvrCallback_Action (LPASACTION pAction, BOOL fFinished)
 {
    NotifyActionListeners (pAction, fFinished);
 }

@@ -53,7 +53,7 @@ BOOL IsServerInstalled (void);
  *
  */
 
-int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrev, LPSTR pCmdLine, int nCmdShow)
+extern "C" int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrev, LPSTR pCmdLine, int nCmdShow)
 {
    Shortcut_Init();
    TaLocale_LoadCorrespondingModule (hInst);

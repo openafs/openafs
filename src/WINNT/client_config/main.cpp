@@ -34,21 +34,12 @@ extern "C" {
 
 GLOBALS g;
 
-
-/*
- * PROTOTYPES _________________________________________________________________
- *
- */
-
-void Quit (void);
-
-
 /*
  * ROUTINES ___________________________________________________________________
  *
  */
 
-int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrev, LPSTR pCmdLine, int nCmdShow)
+extern "C" int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrev, LPSTR pCmdLine, int nCmdShow)
 {
    TaLocale_LoadCorrespondingModule (hInst);
 

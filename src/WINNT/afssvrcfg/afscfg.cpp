@@ -121,7 +121,7 @@ LOGFILE g_LogFile;
  * EXPORTED FUNCTIONS _________________________________________________________________
  *
  */
-int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrev, LPSTR pszCmdLineA, int nCmdShow)
+extern "C" int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrev, LPSTR pszCmdLineA, int nCmdShow)
 {
 	afs_status_t nStatus;
 

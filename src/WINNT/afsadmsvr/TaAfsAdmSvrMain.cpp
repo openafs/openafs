@@ -184,13 +184,13 @@ int cdecl main (int argc, char **argv)
 }
 
 
-void __RPC_FAR * __RPC_USER MIDL_user_allocate (size_t cbAllocate)
+extern "C" void __RPC_FAR * __RPC_USER MIDL_user_allocate (size_t cbAllocate)
 {
    return (void __RPC_FAR *)Allocate (cbAllocate);
 }
 
 
-void __RPC_USER MIDL_user_free (void __RPC_FAR *pData)
+extern "C" void __RPC_USER MIDL_user_free (void __RPC_FAR *pData)
 {
    Free (pData);
 }
