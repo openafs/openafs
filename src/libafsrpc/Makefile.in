@@ -57,6 +57,8 @@ COMERROBJS =\
 	com_err.o
 
 XDROBJS =\
+	xdr.o \
+	xdr_array.o \
 	xdr_arrayn.o \
 	xdr_rx.o \
 	xdr_int64.o \
