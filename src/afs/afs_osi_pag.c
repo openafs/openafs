@@ -151,8 +151,10 @@ afs_setpag (void)
 #endif /* defined(AFS_SGI53_ENV) && defined(MP) */    
 
     AFS_STATCNT(afs_setpag);
-#ifdef AFS_SUN5_ENV
+#if	defined(AFS_SUN5_ENV)
     if (!afs_suser(*credpp))
+#elif  defined(AFS_OBSD_ENV)
+    if (!afs_osi_suser(p->p_cred->pc_ucred))
 #else
     if (!afs_suser())
 #endif

@@ -371,6 +371,8 @@ typedef struct timeval osi_timeval_t;
  */
 extern struct AFS_UCRED afs_osi_cred;
 
+#ifndef osi_curcred
+#define osi_curcred() (u.u_cred)
+#endif
+
 #endif /* _AFS_OSI_ */
-
-

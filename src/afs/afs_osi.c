@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -69,14 +69,13 @@ void osi_Init(void)
 #endif
 #endif 	/* AFS_HPUX_ENV */
 
-	if ( !afs_osicred_initialized )
-	{
-		memset((char *)&afs_osi_cred, 0, sizeof(struct AFS_UCRED));
-		crhold(&afs_osi_cred);      /* don't let it evaporate */
-		afs_osicred_initialized = 1;
-	}
+    if ( !afs_osicred_initialized ) {
+	memset((char *)&afs_osi_cred, 0, sizeof(struct AFS_UCRED));
+	crhold(&afs_osi_cred);	/* don't let it evaporate */
+	afs_osicred_initialized = 1;
+    }
 #ifdef AFS_SGI64_ENV
-     osi_flid.fl_pid = osi_flid.fl_sysid = 0;
+    osi_flid.fl_pid = osi_flid.fl_sysid = 0;
 #endif
 }
 
@@ -116,7 +115,7 @@ void osi_FlushPages(register struct vcache *avc, struct AFS_UCRED *credp)
     /* If we've already purged this version, or if we're the ones
        writing this version, don't flush it (could lose the
        data we're writing). */
-    if ((hcmp((avc->m.DataVersion), (avc->mapDV)) <= 0) || 
+    if ((hcmp((avc->m.DataVersion), (avc->mapDV)) <= 0) ||
 	((avc->execsOrWriters > 0) && afs_DirtyPages(avc))) {
 	ReleaseReadLock(&avc->lock);
 	return;
@@ -124,7 +123,7 @@ void osi_FlushPages(register struct vcache *avc, struct AFS_UCRED *credp)
     ReleaseReadLock(&avc->lock);
     ObtainWriteLock(&avc->lock,10);
     /* Check again */
-    if ((hcmp((avc->m.DataVersion), (avc->mapDV)) <= 0) || 
+    if ((hcmp((avc->m.DataVersion), (avc->mapDV)) <= 0) ||
 	((avc->execsOrWriters > 0) && afs_DirtyPages(avc))) {
 	ReleaseWriteLock(&avc->lock);
 	return;
@@ -171,7 +170,7 @@ void osi_FlushText_really(register struct vcache *vp)
     /* see if we've already flushed this data version */
     if (hcmp(vp->m.DataVersion, vp->flushDV) <= 0) return;
 
-#ifdef AFS_DEC_ENV 
+#ifdef AFS_DEC_ENV
     {
       void afs_gfs_FlushText();
       afs_gfs_FlushText(vp);
@@ -182,11 +181,11 @@ void osi_FlushText_really(register struct vcache *vp)
     MObtainWriteLock(&afs_ftf,317);
     hset(fdv, vp->m.DataVersion);
 
-    /* why this disgusting code below?  
-     *    xuntext, called by xrele, doesn't notice when it is called 
+    /* why this disgusting code below?
+     *    xuntext, called by xrele, doesn't notice when it is called
      * with a freed text object.  Sun continually calls xrele or xuntext
      * without any locking, as long as VTEXT is set on the
-     * corresponding vnode.  
+     * corresponding vnode.
      *    But, if the text object is locked when you check the VTEXT
      * flag, several processes can wait in xuntext, waiting for the
      * text lock; when the second one finally enters xuntext's
@@ -205,7 +204,7 @@ void osi_FlushText_really(register struct vcache *vp)
 
 #if defined (AFS_HPUX_ENV)
     if (vp->v.v_flag & VTEXT) {
-	xrele(vp);  
+	xrele(vp);
 
 	if (vp->v.v_flag & VTEXT) {	/* still has a text object? */
 	    MReleaseWriteLock(&afs_ftf);
@@ -233,7 +232,7 @@ void osi_FlushText_really(register struct vcache *vp)
  */
 static void afs_gfs_FlushText(register struct vcache *vp)
 {
-    afs_hyper_t fdv;	/* version before which we'll flush */
+    afs_hyper_t fdv;		/* version before which we'll flush */
     register struct text *xp;
     struct gnode * gp;
 
@@ -242,25 +241,25 @@ static void afs_gfs_FlushText(register struct vcache *vp)
     gp = afs_vntogn(vp);
 
     if (!gp) {
-      /* this happens frequently after cores are created. */
-      MReleaseWriteLock(&afs_ftf);
-      return;
+	/* this happens frequently after cores are created. */
+	MReleaseWriteLock(&afs_ftf);
+	return;
     }
 
     if (gp->g_flag & GTEXT) {
 	if (gp->g_textp) {
-	  xp = (struct text *) gp->g_textp ;
-	  /* if text object is locked, give up */
-	  if (xp && (xp->x_flag & XLOCK)) {
-	    MReleaseWriteLock(&afs_ftf);
-	    return;
-	  }
+	    xp = (struct text *) gp->g_textp ;
+	    /* if text object is locked, give up */
+	    if (xp && (xp->x_flag & XLOCK)) {
+		MReleaseWriteLock(&afs_ftf);
+		return;
+	    }
 	}
 	else xp = NULL;
 
-	if (gp->g_flag & GTEXT)	{/* still has a text object? */
-	  xinval(gp);
-	  }
+	if (gp->g_flag & GTEXT)	{ /* still has a text object? */
+	    xinval(gp);
+	}
     }
 
     /* next do the stuff that need not check for deadlock problems */
@@ -283,7 +282,7 @@ void afs_osi_MaskSignals(void)
     osi_linux_mask();
 #endif
 }
-    
+
 /* unmask signals in rxk listener */
 void afs_osi_UnmaskRxkSignals(void)
 {
@@ -291,7 +290,7 @@ void afs_osi_UnmaskRxkSignals(void)
     osi_linux_unmask();
 #endif
 }
-    
+
 /* register rxk listener proc info */
 void afs_osi_RxkRegister(void)
 {
@@ -305,10 +304,10 @@ void afs_osi_Invisible(void)
 {
 #ifdef AFS_LINUX22_ENV
     afs_osi_MaskSignals();
-#endif 
+#endif
 #ifdef AFS_DEC_ENV
     u.u_procp->p_type |= SSYS;
-#endif 
+#endif
 #if AFS_SUN5_ENV
     curproc->p_flag |= SSYS;
 #endif
@@ -493,13 +492,13 @@ void afs_osi_FreeStr(char *x)
     afs_osi_Free(x, strlen(x) + 1);
 }
 
-/* ? is it moderately likely that there are dirty VM pages associated with 
+/* ? is it moderately likely that there are dirty VM pages associated with
  * this vnode?
  *
  *  Prereqs:  avc must be write-locked
  *
- *  System Dependencies:  - *must* support each type of system for which 
- *                          memory mapped files are supported, even if all 
+ *  System Dependencies:  - *must* support each type of system for which
+ *                          memory mapped files are supported, even if all
  *                          it does is return TRUE;
  *
  * NB:  this routine should err on the side of caution for ProcessFS to work
@@ -512,20 +511,20 @@ int osi_VMDirty_p(struct vcache *avc)
 
     if (avc->execsOrWriters <= 0)
 	return 0;         /* can't be many dirty pages here, I guess */
-    
-#if defined (AFS_AIX32_ENV) 
+
+#if defined (AFS_AIX32_ENV)
 #ifdef	notdef
     /* because of the level of hardware involvment with VM and all the
      * warnings about "This routine must be called at VMM interrupt
      * level", I thought it would be safest to disable interrupts while
      * looking at the software page fault table.  */
 
-    /* convert vm handle into index into array:  I think that stoinio is 
+    /* convert vm handle into index into array:  I think that stoinio is
      * always zero...  Look into this XXX  */
 #define VMHASH(handle) ( \
 			( ((handle) & ~vmker.stoinio)  \
 			 ^ ((((handle) & ~vmker.stoinio) & vmker.stoimask) << vmker.stoihash) \
-			 ) & 0x000fffff) 
+			 ) & 0x000fffff)
 
     if (avc->vmh) {
 	unsigned int pagef, pri, index, next;
@@ -558,7 +557,7 @@ int osi_VMDirty_p(struct vcache *avc)
 	}
     }
 #endif
-return 0;
+    return 0;
 }
 #endif /* notdef */
 
@@ -597,18 +596,20 @@ void shutdown_osi(void)
 {
     AFS_STATCNT(shutdown_osi);
     if (afs_cold_shutdown) {
-	LOCK_INIT(&afs_ftf, "afs_ftf");	
-      }
+	LOCK_INIT(&afs_ftf, "afs_ftf");
+    }
 }
 
-int afs_osi_suser(void *credp) 
+#ifndef AFS_OBSD_ENV
+int afs_osi_suser(void *credp)
 {
-#ifdef AFS_SUN5_ENV
-  return afs_suser(credp);
+#if defined(AFS_SUN5_ENV)
+    return afs_suser(credp);
 #else
-  return afs_suser();
+    return afs_suser();
 #endif
 }
+#endif
 
 #if AFS_GCPAGS
 
@@ -685,12 +686,12 @@ static int SGI_ProcScanFunc(void *p, void *arg, int mode)
     return 0;
 }
 #else	/* AFS_SGI65_ENV */
-static int SGI_ProcScanFunc(proc_t *p, void *arg, int mode) 
+static int SGI_ProcScanFunc(proc_t *p, void *arg, int mode)
 {
     afs_int32 (*perproc_func)(struct proc *) = arg;
     int code=0;
     /* we pass in the function pointer for arg,
-     * mode ==0 for startup call, ==1 for each valid proc, 
+     * mode ==0 for startup call, ==1 for each valid proc,
      * and ==2 for terminate call.
      */
     if(mode == 1) {
@@ -788,7 +789,7 @@ void afs_osi_TraverseProcTable(void)
 
 #if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 void afs_osi_TraverseProcTable(void)
-{   
+{
     struct proc *p;
     LIST_FOREACH(p, &allproc, p_list) {
         if (p->p_stat == SIDL)
@@ -799,12 +800,12 @@ void afs_osi_TraverseProcTable(void)
             continue;
           afs_GCPAGs_perproc_func(p);
     }
-}   
+}
 #endif
 
 #if defined(AFS_LINUX22_ENV)
 void afs_osi_TraverseProcTable()
-{   
+{
     struct task_struct *p;
 
 #ifdef EXPORTED_TASKLIST_LOCK
@@ -818,7 +819,7 @@ void afs_osi_TraverseProcTable()
 #ifdef EXPORTED_TASKLIST_LOCK
     read_unlock(&tasklist_lock);
 #endif
-}   
+}
 #endif
 
 /* return a pointer (sometimes a static copy ) to the cred for a
@@ -985,21 +986,21 @@ const struct AFS_UCRED *afs_osi_proc2cred(AFS_PROC *pr)
 
     if((pr->p_stat == SSLEEP) ||
        (pr->p_stat == SRUN) ||
-       (pr->p_stat == SSTOP)) 
+       (pr->p_stat == SSTOP))
        rv = pr->p_rcred;
 
     return rv;
 }
 #elif defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 const struct AFS_UCRED *afs_osi_proc2cred(AFS_PROC *pr)
-{   
+{
     struct AFS_UCRED *rv=NULL;
     static struct AFS_UCRED cr;
 
     if(pr == NULL) {
        return NULL;
     }
-   
+
     if((pr->p_stat == SSLEEP) ||
        (pr->p_stat == SRUN) ||
        (pr->p_stat == SSTOP)) {
@@ -1012,19 +1013,19 @@ const struct AFS_UCRED *afs_osi_proc2cred(AFS_PROC *pr)
        pcred_unlock(pr);
        rv = &cr;
     }
-    
+
     return rv;
-}  
+}
 #elif defined(AFS_LINUX22_ENV)
 const struct AFS_UCRED *afs_osi_proc2cred(AFS_PROC *pr)
-{   
+{
     struct AFS_UCRED *rv=NULL;
     static struct AFS_UCRED cr;
 
     if(pr == NULL) {
        return NULL;
     }
-   
+
     if ((pr->state == TASK_RUNNING) ||
 	(pr->state == TASK_INTERRUPTIBLE) ||
 	(pr->state == TASK_UNINTERRUPTIBLE) ||
@@ -1035,9 +1036,9 @@ const struct AFS_UCRED *afs_osi_proc2cred(AFS_PROC *pr)
 	memcpy(cr.cr_groups, pr->groups, NGROUPS * sizeof(gid_t));
 	rv = &cr;
     }
-    
+
     return rv;
-}  
+}
 #else
 const struct AFS_UCRED *afs_osi_proc2cred(AFS_PROC *pr)
 {
@@ -1046,7 +1047,7 @@ const struct AFS_UCRED *afs_osi_proc2cred(AFS_PROC *pr)
     if(pr == NULL) {
        return NULL;
     }
-    rv = pr->p_cred;          
+    rv = pr->p_cred;
 
     return rv;
 }

@@ -774,7 +774,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 #endif
 #endif
     char *path;
-    unsigned int	com;
+    unsigned int com;
     caddr_t cmarg;
     int	follow;
 {
@@ -789,7 +789,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
     struct ucred *credp = crref(); /* don't free until done! */
 #endif
 #ifdef AFS_LINUX22_ENV
-    cred_t *credp = crref(); /* don't free until done! */
+    cred_t *credp = crref();	/* don't free until done! */
     struct dentry *dp;
 
 #endif
@@ -802,51 +802,37 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 	setuerror(code);
 #endif
 	return (code);
-  }
+    }
     if ((com & 0xff) == PSetClientContext) {
 #if defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
-	return EINVAL; /* Not handling these yet. */
-#else
-#if	defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV) || defined(AFS_LINUX22_ENV)
+	return EINVAL;		/* Not handling these yet. */
+#elif	defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV) || defined(AFS_LINUX22_ENV)
 	code = HandleClientContext(&data, &com, &foreigncreds, credp);
 #else
-#if	defined(AFS_HPUX101_ENV)
-	code=HandleClientContext(&data, &com, &foreigncreds, p_cred(u.u_procp));
-#else
-#ifdef AFS_SGI_ENV
-	code = HandleClientContext(&data, &com, &foreigncreds, OSI_GET_CURRENT_CRED());
-#else
-#ifdef AFS_OBSD_ENV
 	code = HandleClientContext(&data, &com, &foreigncreds, osi_curcred());
-#else
-	code = HandleClientContext(&data, &com, &foreigncreds, u.u_cred);
-#endif /* AFS_SGI_ENV */
 #endif
-#endif
-#endif
-#endif
-      if (code) {
-	  if (foreigncreds) {
-	      crfree(foreigncreds);
-	  }
-	  PIOCTL_FREE_CRED();
+	if (code) {
+	    if (foreigncreds) {
+		crfree(foreigncreds);
+	    }
+	    PIOCTL_FREE_CRED();
 #if defined(KERNEL_HAVE_UERROR)
-	  return (setuerror(code), code);
+	    return (setuerror(code), code);
 #else
-	  return (code);
+	    return (code);
 #endif
-      }
+	}
     } 
 #if !defined(AFS_LINUX22_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
     if (foreigncreds) {
-      /*
-       * We could have done without temporary setting the u.u_cred below
-       * (foreigncreds could be passed as param the pioctl modules)
-       * but calls such as afs_osi_suser() doesn't allow that since it
-       * references u.u_cred directly.  We could, of course, do something
-       * like afs_osi_suser(cred) which, I think, is better since it
-       * generalizes and supports multi cred environments...
-       */
+	/*
+	 * We could have done without temporary setting the u.u_cred below
+	 * (foreigncreds could be passed as param the pioctl modules)
+	 * but calls such as afs_osi_suser() doesn't allow that since it
+	 * references u.u_cred directly.  We could, of course, do something
+	 * like afs_osi_suser(cred) which, I think, is better since it
+	 * generalizes and supports multi cred environments...
+	 */
 #ifdef	AFS_SUN5_ENV
 	tmpcred = credp;
 	credp = foreigncreds;
@@ -877,25 +863,13 @@ afs_syscall_pioctl(path, com, cmarg, follow)
     }
 #endif
     if ((com & 0xff) == 15) {
-      /* special case prefetch so entire pathname eval occurs in helper process.
-	 otherwise, the pioctl call is essentially useless */
+	/* special case prefetch so entire pathname eval occurs in helper process.
+	   otherwise, the pioctl call is essentially useless */
 #if	defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 	code =  Prefetch(path, &data, follow,
 			 foreigncreds ? foreigncreds : credp);
 #else
-#if	defined(AFS_HPUX101_ENV)
-	code =  Prefetch(path, &data, follow, p_cred(u.u_procp));
-#else
-#ifdef AFS_SGI_ENV 
-	code =  Prefetch(path, &data, follow, OSI_GET_CURRENT_CRED());
-#else
-#ifdef AFS_OBSD_ENV
 	code =  Prefetch(path, &data, follow, osi_curcred());
-#else
-	code =  Prefetch(path, &data, follow, u.u_cred);
-#endif /* AFS_SGI64_ENV */
-#endif /* AFS_HPUX101_ENV */
-#endif
 #endif
 #if !defined(AFS_LINUX22_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
 	if (foreigncreds) {
@@ -903,13 +877,13 @@ afs_syscall_pioctl(path, com, cmarg, follow)
  	    crset(tmpcred);	/* restore original credentials */
 #else
 #if	defined(AFS_HPUX101_ENV)
-	set_p_cred(u.u_procp, tmpcred); /* restore original credentials */
+	    set_p_cred(u.u_procp, tmpcred); /* restore original credentials */
 #else
 #ifndef	AFS_SUN5_ENV
 #ifdef AFS_SGI_ENV
-	    OSI_SET_CURRENT_CRED(tmpcred);	    /* restore original credentials */
+	    OSI_SET_CURRENT_CRED(tmpcred); /* restore original credentials */
 #else
-	    u.u_cred = tmpcred;	    /* restore original credentials */
+	    u.u_cred = tmpcred;	/* restore original credentials */
 #endif
 #endif
 #endif /* AFS_HPUX101_ENV */
@@ -928,7 +902,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 	AFS_GUNLOCK();
 #ifdef	AFS_AIX41_ENV
 	code = lookupname(path, USR, follow, NULL, &vp,
-			foreigncreds ? foreigncreds : credp);
+			  foreigncreds ? foreigncreds : credp);
 #else
 #ifdef AFS_LINUX22_ENV
 	code = gop_lookupname(path, AFS_UIOUSER, follow,  NULL, &dp);
@@ -946,13 +920,13 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 		crset(tmpcred);	/* restore original credentials */
 #else
 #if	defined(AFS_HPUX101_ENV)
-	set_p_cred(u.u_procp, tmpcred); /* restore original credentials */
+		set_p_cred(u.u_procp, tmpcred); /* restore original credentials */
 #else
 #if	!defined(AFS_SUN5_ENV)
 #ifdef AFS_SGI_ENV
-		OSI_SET_CURRENT_CRED(tmpcred);	    /* restore original credentials */
+		OSI_SET_CURRENT_CRED(tmpcred); /* restore original credentials */
 #else
-		u.u_cred = tmpcred;	    /* restore original credentials */
+		u.u_cred = tmpcred; /* restore original credentials */
 #endif /* AFS_SGI64_ENV */
 #endif
 #endif /* AFS_HPUX101_ENV */
@@ -973,53 +947,53 @@ afs_syscall_pioctl(path, com, cmarg, follow)
     /* now make the call if we were passed no file, or were passed an AFS file */
     if (!vp || IsAfsVnode(vp)) {
 #ifdef AFS_DEC_ENV
-      /* Ultrix 4.0: can't get vcache entry unless we've got an AFS gnode.
-       * So, we must test in this part of the code.  Also, must arrange to
-       * GRELE the original gnode pointer when we're done, since in Ultrix 4.0,
-       * we hold gnodes, whose references hold our vcache entries.
-       */
-      if (vp) {
-	gp = vp;	/* remember for "put" */
-	vp = (struct vnode *) afs_gntovn(vp);	/* get vcache from gp */
-      }
-      else gp = NULL;
+	/* Ultrix 4.0: can't get vcache entry unless we've got an AFS gnode.
+	 * So, we must test in this part of the code.  Also, must arrange to
+	 * GRELE the original gnode pointer when we're done, since in Ultrix 4.0,
+	 * we hold gnodes, whose references hold our vcache entries.
+	 */
+	if (vp) {
+	    gp = vp;		/* remember for "put" */
+	    vp = (struct vnode *) afs_gntovn(vp); /* get vcache from gp */
+	}
+	else gp = NULL;
 #endif 
 #ifdef	AFS_SUN5_ENV
-      code = afs_HandlePioctl(vp, com, &data, follow, &credp);
+	code = afs_HandlePioctl(vp, com, &data, follow, &credp);
 #else
 #ifdef	AFS_AIX41_ENV
-      {
-	  struct ucred *cred1, *cred2;
+    {
+	struct ucred *cred1, *cred2;
  
-	  if (foreigncreds) {
-	      cred1 = cred2 = foreigncreds;
-	  } else {
-	      cred1 = cred2 = credp;
-	  }
-	  code = afs_HandlePioctl(vp, com, &data, follow, &cred1);
-	  if (cred1 != cred2) { 
-	      /* something changed the creds */
-	      crset(cred1);
-	  }
-      }
+	if (foreigncreds) {
+	    cred1 = cred2 = foreigncreds;
+	} else {
+	    cred1 = cred2 = credp;
+	}
+	code = afs_HandlePioctl(vp, com, &data, follow, &cred1);
+	if (cred1 != cred2) { 
+	    /* something changed the creds */
+	    crset(cred1);
+	}
+    }
 #else
 #if	defined(AFS_HPUX101_ENV)
-      {
-	  struct ucred *cred = p_cred(u.u_procp);
-	  code = afs_HandlePioctl(vp, com, &data, follow, &cred);
-      }
+    {
+	struct ucred *cred = p_cred(u.u_procp);
+	code = afs_HandlePioctl(vp, com, &data, follow, &cred);
+    }
 #else
 #ifdef AFS_SGI_ENV
-      {
-      struct cred *credp;
-      credp = OSI_GET_CURRENT_CRED();
-      code = afs_HandlePioctl(vp, com, &data, follow, &credp);
-      }
+    {
+	struct cred *credp;
+	credp = OSI_GET_CURRENT_CRED();
+	code = afs_HandlePioctl(vp, com, &data, follow, &credp);
+    }
 #else
 #if defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
-      code = afs_HandlePioctl(vp, com, &data, follow, &credp);
+	code = afs_HandlePioctl(vp, com, &data, follow, &credp);
 #else
-      code = afs_HandlePioctl(vp, com, &data, follow, &u.u_cred);
+	code = afs_HandlePioctl(vp, com, &data, follow, &u.u_cred);
 #endif
 #endif /* AFS_SGI_ENV */
 #endif /* AFS_HPUX101_ENV */
@@ -1029,7 +1003,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 #if defined(KERNEL_HAVE_UERROR)
 	setuerror(EINVAL);
 #else
-	code = EINVAL;	/* not in /afs */
+	code = EINVAL;		/* not in /afs */
 #endif
 #ifdef AFS_DEC_ENV
 	if (vp) {
@@ -1049,9 +1023,9 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 #else
 #ifndef	AFS_SUN5_ENV
 #ifdef AFS_SGI_ENV
-	OSI_SET_CURRENT_CRED(tmpcred);	    /* restore original credentials */
+	OSI_SET_CURRENT_CRED(tmpcred); /* restore original credentials */
 #else
-	u.u_cred = tmpcred;	    /* restore original credentials */
+	u.u_cred = tmpcred;	/* restore original credentials */
 #endif /* ASF_SGI64_ENV */
 #endif
 #endif /* AFS_HPUX101_ENV */
@@ -1063,7 +1037,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 #ifdef AFS_LINUX22_ENV
 	dput(dp);
 #else
-	AFS_RELE(vp);	/* put vnode back */
+	AFS_RELE(vp);		/* put vnode back */
 #endif
     }
     PIOCTL_FREE_CRED();

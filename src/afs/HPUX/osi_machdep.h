@@ -38,6 +38,8 @@ extern struct timeval time;
 
 #undef	afs_suser
 
+#define osi_curcred()		(p_cred(u.u_procp))
+
 #define getpid()                (afs_uint32)p_pid(u.u_procp)
 
 #define getppid()               (afs_uint32)p_ppid(u.u_procp)

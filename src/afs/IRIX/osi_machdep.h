@@ -285,6 +285,8 @@ extern long afs_global_owner;
 #define OSI_GET_CURRENT_CRED() get_current_cred()
 #endif /* AFS_SGI64_ENV */
 
+#define osi_curcred()		OSI_GET_CURRENT_CRED()
+
 /*
  * OSI_SET_CURRENT_CRED
  */
