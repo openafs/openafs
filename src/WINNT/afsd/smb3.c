@@ -1345,8 +1345,8 @@ long smb_ReceiveTran2QFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 		*((LARGE_INTEGER *)op) = scp->length; op += 8;	/* EOF */
 		*((u_long *)op) = scp->linkCount; op += 4;
 		*op++ = ((fidp->flags & SMB_FID_DELONCLOSE) ? 1 : 0);
-		*op++ = 0;
 		*op++ = (scp->fileType == CM_SCACHETYPE_DIRECTORY ? 1 : 0);
+		*op++ = 0;
 		*op++ = 0;
 	}
 	else if (infoLevel == 0x103) {
