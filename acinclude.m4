@@ -217,18 +217,15 @@ else
 			;;
 		powerpc-apple-darwin1.2*)
 			AFS_SYSNAME="ppc_darwin_12"
-			DARWIN_PLIST=src/libafs/afs.${AFS_SYSNAME}.plist
-			DARWIN_INFOFILE=afs.${AFS_SYSNAME}.plist
 			;;
 		powerpc-apple-darwin1.3*)
 			AFS_SYSNAME="ppc_darwin_13"
-			DARWIN_PLIST=src/libafs/afs.${AFS_SYSNAME}.plist
-			DARWIN_INFOFILE=afs.${AFS_SYSNAME}.plist
 			;;
 		powerpc-apple-darwin1.4*)
 			AFS_SYSNAME="ppc_darwin_14"
-			DARWIN_PLIST=src/libafs/afs.${AFS_SYSNAME}.plist
-			DARWIN_INFOFILE=afs.${AFS_SYSNAME}.plist
+			;;
+		powerpc-apple-darwin5.1*)
+			AFS_SYSNAME="ppc_darwin_51"
 			;;
 		sparc-sun-solaris2.5*)
 			AFS_SYSNAME="sun4x_55"
@@ -302,6 +299,12 @@ else
         AC_MSG_RESULT($AFS_SYSNAME)
 fi
 
+case $AFS_SYSNAME in
+	*_darwin*)
+		DARWIN_PLIST=src/libafs/afs.${AFS_SYSNAME}.plist
+		DARWIN_INFOFILE=afs.${AFS_SYSNAME}.plist
+		;;
+esac
 
 if test "x${MKAFS_OSTYPE}" = "xIRIX"; then
         echo Skipping library tests because they confuse Irix.
