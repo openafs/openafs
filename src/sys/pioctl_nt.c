@@ -343,6 +343,8 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
                 }
                 return -1;
             }
+        } else {
+            return -1;
         }
     }
 
