@@ -2,8 +2,19 @@ openafs (1.2.9-3) unstable; urgency=low
 
   * Add support for kernel headers, thanks to Patrick Sodre, 
     Closes: #173137 
+  * Add patch to support the Debian 2.4.21 Kernel sources, thanks to amu,
+    Closes: #198774
+  * Add chronyd to list of programs we assume set the clock, thanks RISKO
+    Gergely, Closes: #201725
+  * Fix template formatting (extra leading spaces), Closes: #198477
+  * New French translations, thanks Christian Perrier, Closes: #198719
+  * Fix PAM problem on hppa, Closes: #179679
+  * Don't translate defaults: Closes: #198384
+  * Fix movefiles error handling and errors exposed by this change.  The
+    contents of libopenafs-dev  were somewhat wrong because of this.
+  * Make /usr/src/modules root.src 775, Closes: #201733
 
- --
+ -- Sam Hartman <hartmans@debian.org>  Sat, 26 Jul 2003 18:03:31 -0400
 
 openafs (1.2.9-2) unstable; urgency=low
 
