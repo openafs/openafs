@@ -314,8 +314,11 @@ again:
 						  mode, atime, time);
 		    if (errcode == 1) /* this file failed, but keep trying */
 		      goto fail_dirbuf;  
-		    if (errcode == -1) /* time to quit */
+		    if (errcode == -1) /* time to quit */ {
+		      fclose(stream);
+		      unlink(dirbuf);
 		      return -1;
+		    }
 		}
 
 	    }
