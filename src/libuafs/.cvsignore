@@ -1,4 +1,5 @@
 Makefile
+Makefile.common
 MakefileProto.HPUX
 MakefileProto.LINUX
 MakefileProto.SOLARIS
