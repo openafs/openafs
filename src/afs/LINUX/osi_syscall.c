@@ -49,7 +49,7 @@ RCSID
 #define SYSCALL2POINTER (void *)
 #endif
 
-#if defined(AFS_S390X_LINUX24_ENV)
+#if defined(AFS_S390X_LINUX24_ENV) && !defined(AFS_LINUX26_ENV)
 #define _S(x) ((x)<<1)
 #elif defined(AFS_IA64_LINUX20_ENV)
 #define _S(x) ((x)-1024)
@@ -123,9 +123,12 @@ asmlinkage int
 afs_syscall32(long syscall, long parm1, long parm2, long parm3, long parm4,
 	      long parm5)
 {
-    __asm__ __volatile__("srl %o4, 0, %o4\n\t" "mov %o7, %i7\n\t"
-			 "call afs_syscall\n\t" "srl %o5, 0, %o5\n\t"
-			 "ret\n\t" "nop");
+    __asm__ __volatile__("srl %o4, 0, %o4\n\t"
+                         "mov %o7, %i7\n\t"
+			 "call afs_syscall\n\t"
+                         "srl %o5, 0, %o5\n\t"
+			 "ret\n\t"
+                         "nop");
 }
 #endif /* AFS_SPARC64_LINUX20_ENV */
 
@@ -136,21 +139,69 @@ afs_syscall32(long syscall, long parm1, long parm2, long parm3, long parm4,
 asmlinkage long
 afs_syscall_stub(int r0, int r1, long r2, long r3, long r4, long gp)
 {
-    __asm__ __volatile__("alloc r42 = ar.pfs, 8, 3, 6, 0\n\t" "mov r41 = b0\n\t"	/* save rp */
-			 "mov out0 = in0\n\t" "mov out1 = in1\n\t" "mov out2 = in2\n\t" "mov out3 = in3\n\t" "mov out4 = in4\n\t" "mov out5 = gp\n\t"	/* save gp */
-			 ";;\n" ".L1:\n\t" "mov r3 = ip\n\t" ";;\n\t" "addl r15=.fptr_afs_syscall-.L1,r3\n\t" ";;\n\t" "ld8 r15=[r15]\n\t" ";;\n\t" "ld8 r16=[r15],8\n\t" ";;\n\t" "ld8 gp=[r15]\n\t" "mov b6=r16\n\t" "br.call.sptk.many b0 = b6\n\t" ";;\n\t" "mov ar.pfs = r42\n\t" "mov b0 = r41\n\t" "mov gp = r48\n\t"	/* restore gp */
-			 "br.ret.sptk.many b0\n" ".fptr_afs_syscall:\n\t"
-			 "data8 @fptr(afs_syscall)\n\t" ".skip 8");
+    __asm__ __volatile__("alloc r42 = ar.pfs, 8, 3, 6, 0\n\t"
+                         "mov r41 = b0\n\t"	/* save rp */
+                         "mov out0 = in0\n\t"
+                         "mov out1 = in1\n\t"
+                         "mov out2 = in2\n\t"
+                         "mov out3 = in3\n\t"
+                         "mov out4 = in4\n\t"
+                         "mov out5 = gp\n\t"	/* save gp */
+                         ";;\n"
+                         ".L1:\n\t"
+                         "mov r3 = ip\n\t"
+                         ";;\n\t"
+                         "addl r15=.fptr_afs_syscall-.L1,r3\n\t"
+                         ";;\n\t"
+                         "ld8 r15=[r15]\n\t"
+                         ";;\n\t"
+                         "ld8 r16=[r15],8\n\t"
+                         ";;\n\t"
+                         "ld8 gp=[r15]\n\t"
+                         "mov b6=r16\n\t"
+                         "br.call.sptk.many b0 = b6\n\t"
+                         ";;\n\t"
+                         "mov ar.pfs = r42\n\t"
+                         "mov b0 = r41\n\t"
+                         "mov gp = r48\n\t"	/* restore gp */
+                         "br.ret.sptk.many b0\n"
+                         ".fptr_afs_syscall:\n\t"
+                         "data8 @fptr(afs_syscall)\n\t"
+                         ".skip 8");
 }
 
 asmlinkage long
 afs_xsetgroups_stub(int r0, int r1, long r2, long r3, long r4, long gp)
 {
-    __asm__ __volatile__("alloc r42 = ar.pfs, 8, 3, 6, 0\n\t" "mov r41 = b0\n\t"	/* save rp */
-			 "mov out0 = in0\n\t" "mov out1 = in1\n\t" "mov out2 = in2\n\t" "mov out3 = in3\n\t" "mov out4 = in4\n\t" "mov out5 = gp\n\t"	/* save gp */
-			 ";;\n" ".L2:\n\t" "mov r3 = ip\n\t" ";;\n\t" "addl r15=.fptr_afs_xsetgroups - .L2,r3\n\t" ";;\n\t" "ld8 r15=[r15]\n\t" ";;\n\t" "ld8 r16=[r15],8\n\t" ";;\n\t" "ld8 gp=[r15]\n\t" "mov b6=r16\n\t" "br.call.sptk.many b0 = b6\n\t" ";;\n\t" "mov ar.pfs = r42\n\t" "mov b0 = r41\n\t" "mov gp = r48\n\t"	/* restore gp */
-			 "br.ret.sptk.many b0\n" ".fptr_afs_xsetgroups:\n\t"
-			 "data8 @fptr(afs_xsetgroups)\n\t" ".skip 8");
+    __asm__ __volatile__("alloc r42 = ar.pfs, 8, 3, 6, 0\n\t"
+                         "mov r41 = b0\n\t"	/* save rp */
+			 "mov out0 = in0\n\t"
+                         "mov out1 = in1\n\t"
+                         "mov out2 = in2\n\t"
+                         "mov out3 = in3\n\t"
+                         "mov out4 = in4\n\t"
+                         "mov out5 = gp\n\t"	/* save gp */
+			 ";;\n"
+                         ".L2:\n\t"
+                         "mov r3 = ip\n\t"
+                         ";;\n\t"
+                         "addl r15=.fptr_afs_xsetgroups - .L2,r3\n\t"
+                         ";;\n\t"
+                         "ld8 r15=[r15]\n\t"
+                         ";;\n\t"
+                         "ld8 r16=[r15],8\n\t"
+                         ";;\n\t"
+                         "ld8 gp=[r15]\n\t"
+                         "mov b6=r16\n\t"
+                         "br.call.sptk.many b0 = b6\n\t"
+                         ";;\n\t"
+                         "mov ar.pfs = r42\n\t"
+                         "mov b0 = r41\n\t"
+                         "mov gp = r48\n\t"	/* restore gp */
+			 "br.ret.sptk.many b0\n"
+                         ".fptr_afs_xsetgroups:\n\t"
+			 "data8 @fptr(afs_xsetgroups)\n\t"
+                         ".skip 8");
 }
 
 struct fptr {
@@ -204,7 +255,7 @@ int osi_syscall_init(void)
 	    SYSCALL2POINTER afs_sys_call_table[_S(__NR_setgroups)];
 	((struct fptr *)sys_setgroupsp)->gp = kernel_gp;
 
-	afs_sys_call_table[__S(_NR_setgroups)] =
+	afs_sys_call_table[_S(_NR_setgroups)] =
 	    POINTER2SYSCALL((struct fptr *)afs_xsetgroups_stub)->ip;
     }
 

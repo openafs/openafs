@@ -134,14 +134,51 @@ afs_ioctl(struct inode *inode, struct file *file, unsigned int cmd,
 {
 
     struct afsprocdata sysargs;
+    struct afsprocdata32 sysargs32;
 
     if (cmd != VIOC_SYSCALL) return -EINVAL;
 
-    if (copy_from_user(&sysargs, (void *)arg, sizeof(struct afsprocdata)))
-	return -EFAULT;
+#if defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV)
+#ifdef AFS_SPARC64_LINUX24_ENV
+    if (current->thread.flags & SPARC_FLAG_32BIT)
+#elif defined(AFS_SPARC64_LINUX20_ENV)
+    if (current->tss.flags & SPARC_FLAG_32BIT)
+#elif defined(AFS_AMD64_LINUX20_ENV)
+#ifdef AFS_LINUX26_ENV
+    if (test_thread_flag(TIF_IA32))
+#else
+    if (current->thread.flags & THREAD_IA32)
+#endif
+#elif defined(AFS_PPC64_LINUX20_ENV)
+#ifdef AFS_PPC64_LINUX26_ENV
+    if (current->thread_info->flags & _TIF_32BIT)
+#else /*Linux 2.6 */
+    if (current->thread.flags & PPC_FLAG_32BIT)
+#endif
+#elif defined(AFS_S390X_LINUX20_ENV)
+    if (current->thread.flags & S390_FLAG_31BIT)
+#else
+#error Not done for this linux type
+#endif
+    {
+	if (copy_from_user(&sysargs32, (void *)arg,
+			   sizeof(struct afsprocdata32)))
+	    return -EFAULT;
 
-    return afs_syscall(sysargs.syscall, sysargs.param1,
-		       sysargs.param2, sysargs.param3, sysargs.param4);
+	return afs_syscall((unsigned long)sysargs32.syscall,
+			   (unsigned long)sysargs32.param1,
+			   (unsigned long)sysargs32.param2,
+			   (unsigned long)sysargs32.param3,
+			   (unsigned long)sysargs32.param4);
+    } else
+#endif
+    {
+	if (copy_from_user(&sysargs, (void *)arg, sizeof(struct afsprocdata)))
+	    return -EFAULT;
+
+	return afs_syscall(sysargs.syscall, sysargs.param1,
+			   sysargs.param2, sysargs.param3, sysargs.param4);
+    }
 }
 
 
