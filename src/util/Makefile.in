@@ -125,7 +125,7 @@ afs_lhash.o: ${srcdir}/afs_lhash.c ${includes}
 
 unified_afs.c unified_afs.h: unified_afs.et
 	$(RM) -f unified_afs.c unified_afs.h
-	${COMPILE_ET} unified_afs
+	${COMPILE_ET} -p ${srcdir} unified_afs -h uae
 
 #
 # Install targets
