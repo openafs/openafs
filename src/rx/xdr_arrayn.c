@@ -29,7 +29,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-<<<<<<< local
 RCSID
     ("$Header: /cvs/openafs/src/rx/xdr_arrayn.c,v 1.8 2003/07/15 23:16:12 shadow Exp $");
 
