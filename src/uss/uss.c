@@ -1416,7 +1416,7 @@ HandleBulk(a_as, a_rock)
 	 */
 	uss_common_Reset();
 
-	sprintf(tbuf, "%s", buf);
+	strncpy(tbuf, buf, USS_BULK_BUF_CHARS-1);
 
 	/*
 	 * First line of file = line 1.

@@ -607,7 +607,7 @@ uss_kauth_SetFields(username, expirestring, reuse, failures, lockout)
     afs_int32 was_spare = 0;
     char instance = '\0';
     int pwexpiry;
-    int nfailures, locktime;
+    int nfailures, locktime, hrs, mins;
 
     if (strlen(username) > uss_UserLen) {
 	fprintf(stderr,
@@ -631,18 +631,16 @@ uss_kauth_SetFields(username, expirestring, reuse, failures, lockout)
 	fprintf(stderr,
 		"Continuing with default lifetime == 0 for user %s.\n",
 		username);
-    } else {
-	misc_auth_bytes[0] = pwexpiry + 1;
+	pwexpiry = 0;
     }
+    misc_auth_bytes[0] = pwexpiry + 1;
 
-    if (!strcmp(reuse, "reuse")) {
-	misc_auth_bytes[1] = KA_REUSEPW;
-    } else if (!strcmp(reuse, "noreuse")) {
+    if (!strcmp(reuse, "noreuse")) {
 	misc_auth_bytes[1] = KA_NOREUSEPW;
     } else {
 	misc_auth_bytes[1] = KA_REUSEPW;
-	fprintf(stderr,
-		"must specify \"reuse\" or \"noreuse\": \"reuse\" assumed\n");
+	if (strcmp(reuse, "reuse"))
+	  fprintf(stderr, "must specify \"reuse\" or \"noreuse\": \"reuse\" assumed\n");
     }
 
     nfailures = atoi(failures);
@@ -655,14 +653,25 @@ uss_kauth_SetFields(username, expirestring, reuse, failures, lockout)
     } else
 	misc_auth_bytes[2] = nfailures + 1;
 
-    locktime = ktime_Str2int32(lockout);
-    if (locktime < 0 || locktime > 36 * 60) {
+    hrs = 0;
+    if (strchr(lockout, ':'))
+	sscanf(lockout, "%d:%d", &hrs, &mins);
+    else
+	sscanf(lockout, "%d", &mins);
+
+    locktime = hrs*60 + mins;
+    if (hrs < 0 || hrs > 36 || mins < 0) {
+	fprintf(stderr,"Lockout times must be either minutes or hh:mm.\n");
+	fprintf(stderr,"Lockout times must be less than 36 hours.\n");
+	return KABADCMD;
+    } else if (locktime > 36*60) {
 	fprintf(stderr, "Lockout times must be either minutes or hh:mm.\n");
 	fprintf(stderr, "Lockout times must be less than 36 hours.\n");
 	fprintf(stderr, "Continuing with lock time == forever for user %s.\n",
 		username);
+	misc_auth_bytes[3] = 1;
     } else {
-	locktime = (locktime * 60) >> 9;
+	locktime = (locktime * 60 + 511) >> 9;  /* ceil(l*60/512) */
 	misc_auth_bytes[3] = locktime + 1;
     }
 
