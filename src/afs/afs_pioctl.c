@@ -671,7 +671,7 @@ int afs_xioctl (void)
 #ifdef AFS_LINUX22_ENV
       return -code;
 #else
-#if defined(KERNEL_HAVE_SETUERROR)
+#if defined(KERNEL_HAVE_UERROR)
       if (!getuerror())
 	  setuerror(code);
 #if	defined(AFS_AIX32_ENV) && !defined(AFS_AIX41_ENV)
@@ -798,7 +798,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
     code = copyin_afs_ioctl(cmarg, &data);
     if (code) {
 	PIOCTL_FREE_CRED();
-#if defined(KERNEL_HAVE_SETUERROR)
+#if defined(KERNEL_HAVE_UERROR)
 	setuerror(code);
 #endif
 	return (code);
@@ -830,7 +830,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 	      crfree(foreigncreds);
 	  }
 	  PIOCTL_FREE_CRED();
-#if defined(KERNEL_HAVE_SETUERROR)
+#if defined(KERNEL_HAVE_UERROR)
 	  return (setuerror(code), code);
 #else
 	  return (code);
@@ -918,7 +918,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 	}
 #endif /* AFS_LINUX22_ENV */
 	PIOCTL_FREE_CRED();
-#if defined(KERNEL_HAVE_SETUERROR)
+#if defined(KERNEL_HAVE_UERROR)
 	return (setuerror(code), code);
 #else
 	return (code);
@@ -961,7 +961,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 	    }
 #endif /* AFS_LINUX22_ENV */
 	    PIOCTL_FREE_CRED();
-#if defined(KERNEL_HAVE_SETUERROR)
+#if defined(KERNEL_HAVE_UERROR)
 	    return(setuerror(code), code);
 #else
 	    return (code);
@@ -1026,7 +1026,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 #endif /* AFS_AIX41_ENV */
 #endif /* AFS_SUN5_ENV */
     } else {
-#if defined(KERNEL_HAVE_SETUERROR)
+#if defined(KERNEL_HAVE_UERROR)
 	setuerror(EINVAL);
 #else
 	code = EINVAL;	/* not in /afs */
@@ -1067,7 +1067,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 #endif
     }
     PIOCTL_FREE_CRED();
-#if defined(KERNEL_HAVE_SETUERROR)
+#if defined(KERNEL_HAVE_UERROR)
     if (!getuerror()) 	
  	setuerror(code);
     return (getuerror());
@@ -2606,7 +2606,7 @@ DECL_PIOCTL(PSetSysName)
     AFS_STATCNT(PSetSysName);
     if (!afs_globalVFS) {
       /* Afsd is NOT running; disable it */
-#if defined(KERNEL_HAVE_SETUERROR)
+#if defined(KERNEL_HAVE_UERROR)
 	return (setuerror(EINVAL), EINVAL);
 #else
 	return (EINVAL);

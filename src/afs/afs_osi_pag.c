@@ -207,16 +207,14 @@ afs_setpag (void)
 #endif
 
     afs_Trace1(afs_iclSetp, CM_TRACE_SETPAG, ICL_TYPE_INT32, code);
-#if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) || defined(AFS_OSF_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(KERNEL_HAVE_UERROR)
+    if (!getuerror())
+	setuerror(code);
+#endif
 #if defined(AFS_SGI53_ENV) && defined(MP)
     AFS_GUNLOCK();
-#endif /* defined(AFS_SGI53_ENV) && defined(MP) */    
+#endif /* defined(AFS_SGI53_ENV) && defined(MP) */
     return (code);
-#else
-    if (!getuerror())
- 	setuerror(code);
-    return (code);
-#endif
 }
 
 #if defined(UKERNEL) && defined(AFS_WEB_ENHANCEMENTS)
@@ -300,16 +298,14 @@ afs_setpag_val (int pagval)
 #endif
 
     afs_Trace1(afs_iclSetp, CM_TRACE_SETPAG, ICL_TYPE_INT32, code);
-#if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) || defined(AFS_OSF_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(KERNEL_HAVE_UERROR)
+    if (!getuerror())
+	setuerror(code);
+#endif
 #if defined(AFS_SGI53_ENV) && defined(MP)
     AFS_GUNLOCK();
 #endif /* defined(AFS_SGI53_ENV) && defined(MP) */    
     return (code);
-#else
-    if (!getuerror())
- 	setuerror(code);
-    return (code);
-#endif
 }
 #endif /* UKERNEL && AFS_WEB_ENHANCEMENTS */
 

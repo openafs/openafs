@@ -1258,7 +1258,7 @@ static int afs_UFSCacheStoreProc(register struct rx_call *acall,
 	tlen = (alen > AFS_LRALLOCSIZ ? AFS_LRALLOCSIZ : alen);
 	got = afs_osi_Read(afile, -1, tbuffer, tlen);
 	if ((got < 0) 
-#if	!defined(AFS_SUN5_ENV) && !defined(AFS_OSF_ENV) && !defined(AFS_SGI64_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
+#if defined(KERNEL_HAVE_UERROR)
 	    || (got != tlen && getuerror())
 #endif
 	    ) {
@@ -2768,7 +2768,7 @@ struct dcache *afs_UFSGetDSlot(register afs_int32 aslot, register struct dcache 
 	tdc->f.chunk = -1;
 	hones(tdc->f.versionNo);
 	tdc->dflags |= DFEntryMod;
-#if !defined(AFS_SUN5_ENV) && !defined(AFS_OSF_ENV) && !defined(AFS_SGI64_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
+#if defined(KERNEL_HAVE_UERROR)
 	last_error = getuerror();
 #endif
 	lasterrtime = osi_Time();

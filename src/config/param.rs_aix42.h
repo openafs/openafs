@@ -48,7 +48,7 @@
 #define COMPAT_43
 #endif
 
-#define KERNEL_HAVE_SETUERROR 1
+#define KERNEL_HAVE_UERROR 1
 #define KERNEL_HAVE_PIN 1
 
 /* Extra kernel definitions (from kdefs file) */

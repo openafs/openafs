@@ -35,7 +35,7 @@
 #define AFS_HAVE_STATVFS 0
 #define AFS_VM_RDWR_ENV	1	/* read/write implemented via VM */
 
-#define KERNEL_HAVE_SETUERROR 1
+#define KERNEL_HAVE_UERROR 1
 
 /* Extra kernel definitions (from kdefs file) */
 #ifdef KERNEL

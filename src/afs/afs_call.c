@@ -323,7 +323,7 @@ long parm, parm2, parm3, parm4, parm5, parm6;
     if (!afs_suser() && (parm != AFSOP_GETMTU)
 	&& (parm != AFSOP_GETMASK)) {
       /* only root can run this code */
-#if defined(KERNEL_HAVE_SETUERROR)
+#if defined(KERNEL_HAVE_UERROR)
 	setuerror(EACCES);
 	return(EACCES);
 #else
@@ -558,7 +558,7 @@ long parm, parm2, parm3, parm4, parm5, parm6;
 
 	AFS_COPYIN((char *)parm2, (caddr_t) &cparms, sizeof(cparms), code);
 	if (code) {
-#if defined(KERNEL_HAVE_SETUERROR)
+#if defined(KERNEL_HAVE_UERROR)
 	    setuerror(code);
 	    code = -1;
 #endif
@@ -741,7 +741,7 @@ long parm, parm2, parm3, parm4, parm5, parm6;
 #ifdef	AFS_HPUX_ENV
 	vfsmount(parm2, parm3, parm4, parm5);
 #else /* defined(AFS_HPUX_ENV) */
-#if defined(KERNEL_HAVE_SETUERROR)
+#if defined(KERNEL_HAVE_UERROR)
       setuerror(EINVAL);
 #else
       code = EINVAL;
@@ -1316,7 +1316,7 @@ Afs_syscall ()
 
 	code = copyin_iparam((char *)uap->parm3, &iparams);
 	if (code) {
-#if defined(KERNEL_HAVE_SETUERROR)
+#if defined(KERNEL_HAVE_UERROR)
 	    setuerror(code);
 #endif
 	} else
@@ -1364,13 +1364,13 @@ Afs_syscall ()
 	}
 #else
         if (code) {
-#if defined(KERNEL_HAVE_SETUERROR)
+#if defined(KERNEL_HAVE_UERROR)
 	    setuerror(code);
 #endif
         }
 #endif /* !AFS_LINUX20_ENV */
     } else {
-#if defined(KERNEL_HAVE_SETUERROR)
+#if defined(KERNEL_HAVE_UERROR)
         setuerror(EINVAL);
 #else
 	code = EINVAL;
@@ -1592,7 +1592,7 @@ Afscall_icl(long opcode, long p1, long p2, long p3, long p4, long *retval)
     }
 #else
     if (!afs_suser()) {	/* only root can run this code */
-#if defined(KERNEL_HAVE_SETUERROR)
+#if defined(KERNEL_HAVE_UERROR)
 	setuerror(EACCES);
 	return EACCES;
 #else
