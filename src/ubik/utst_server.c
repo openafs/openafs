@@ -275,8 +275,6 @@ main(argc, argv)
     afs_int32 myHost;
     struct rx_service	    *tservice;
     struct rx_securityClass *sc[2];
-    extern struct rx_securityClass *rxnull_NewServerSecurityObject();
-    extern struct rx_securityClass *rxvab_NewServerSecurityObject();
     extern int		    SAMPLE_ExecuteRequest();
     char dbfileName[128];
 

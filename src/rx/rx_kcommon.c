@@ -38,9 +38,6 @@ int (*rxk_GetPacketProc)(char **ahandle, int asize);
 
 extern  struct interfaceAddr afs_cb_interface;
 
-#define MAXRXPORTS  20
-typedef unsigned short rxk_ports_t[MAXRXPORTS];
-typedef char *rxk_portRocks_t[MAXRXPORTS];
 rxk_ports_t rxk_ports;
 rxk_portRocks_t rxk_portRocks;
 

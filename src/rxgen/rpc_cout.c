@@ -124,10 +124,14 @@ static void print_header(definition *def)
 	f_print(fout, "bool_t\n");
 	f_print(fout, "xdr_%s(XDR *xdrs, ", def->def_name);
 	f_print(fout, "%s ", def->def_name);
+#if 0
 	if (def->def_kind != DEF_TYPEDEF ||
 	    !isvectordef(def->def.ty.old_type, def->def.ty.rel)) {
 		f_print(fout, "*");
 	}
+#else
+	f_print(fout, "*");
+#endif
 	f_print(fout, "objp)\n");
 	f_print(fout, "{\n");
 }
@@ -362,7 +366,7 @@ static void print_hout(declaration *dec)
 		    break;
 	}
 	f_print(fout, ";\n");
-	f_print(fout, "bool_t xdr_%s();\n", dec->name);
+	f_print(fout, "bool_t xdr_%s(XDR *xdrs, %s *objp);\n", dec->name, dec->name);
     }
 }
 
@@ -372,9 +376,7 @@ static void print_cout(declaration *dec)
     if (cflag) {
 	space();
 	f_print(fout, "bool_t\n");
-	f_print(fout, "xdr_%s(xdrs, objp)\n", dec->name);
-	f_print(fout, "\tXDR *xdrs;\n");
-	f_print(fout, "\t%s *objp;\n", dec->name);
+	f_print(fout, "xdr_%s(XDR *xdrs, %s *objp)\n", dec->name, dec->name);
 	f_print(fout, "{\n");
 	print_ifstat(1, dec->prefix, dec->type, dec->rel, dec->array_max, "objp", dec->name);
 	print_trailer();

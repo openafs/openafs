@@ -1208,7 +1208,7 @@ Print_bos_KeyInfo_p(
 
     printf("%sKey: \n", prefix);
     for(i=0;i<KAS_ENCRYPTION_KEY_LEN;i++) {
-	printf("%s\t%d ", key->key.key[i]);
+	printf("%s\t%d ", prefix, key->key.key[i]);
     }
     printf("\n");
 }

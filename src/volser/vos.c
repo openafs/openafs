@@ -78,7 +78,6 @@ afs_int32 tserver;
 extern struct ubik_client *cstruct;
 const char *confdir;
 extern struct rx_connection *UV_Bind();
-extern  struct rx_securityClass *rxnull_NewClientSecurityObject();
 extern int UV_SetSecurity();
 extern int UV_SetVolumeInfo();
 extern int vsu_SetCrypt();

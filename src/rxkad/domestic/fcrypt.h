@@ -16,10 +16,16 @@
 #ifndef TRANSARC_RXKAD_FCRYPT_H
 #define TRANSARC_RXKAD_FCRYPT_H
 
+#ifdef ENCRYPTIONBLOCKSIZE
+#undef ENCRYPTIONBLOCKSIZE
+#endif
 #define ENCRYPTIONBLOCKSIZE 8
 
 typedef afs_int32 fc_InitializationVector[ENCRYPTIONBLOCKSIZE/4];
 
+#ifdef MAXROUNDS
+#undef MAXROUNDS
+#endif
 #define MAXROUNDS 16
 typedef afs_int32 fc_KeySchedule[MAXROUNDS];
 

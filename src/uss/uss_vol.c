@@ -40,7 +40,6 @@ RCSID("$Header$");
 
 extern int errno;
 extern struct rx_connection *UV_Bind();
-extern  struct rx_securityClass *rxnull_NewClientSecurityObject();
 extern int line;
 extern int VL_GetEntryByID();
 extern char *hostutil_GetNameByINet();

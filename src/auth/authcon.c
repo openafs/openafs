@@ -48,18 +48,12 @@ RCSID("$Header$");
 #include "auth.h"
 #endif /* defined(UKERNEL) */
 
-
-extern afs_int32 afsconf_Authenticate();
-extern int afsconf_GetKey();
-extern struct rx_securityClass *rxkad_NewServerSecurityObject();
-extern struct rx_securityClass *rxkad_NewClientSecurityObject();
-
 /* return a null security object if nothing else can be done */
 static afs_int32 QuickAuth(astr, aindex)
 struct rx_securityClass **astr;
 afs_int32 *aindex; {
     register struct rx_securityClass *tc;
-    tc = (struct rx_securityClass *) rxnull_NewClientSecurityObject();
+    tc = rxnull_NewClientSecurityObject();
     *astr = tc;
     *aindex = 0;
     return 0;

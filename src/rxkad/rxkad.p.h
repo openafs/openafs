@@ -61,9 +61,6 @@ struct ktc_principal {
 #define NEVERDATE 0xffffffff
 #endif
 
-extern struct rx_securityClass *rxkad_NewServerSecurityObject();
-extern struct rx_securityClass *rxkad_NewClientSecurityObject();
-
 /* this function round a length to the correct encryption block size */
 #define round_up_to_ebs(v) (((v) + 7) & (~7))
 
@@ -135,5 +132,11 @@ extern pthread_mutex_t rxkad_stats_mutex;
 #define rxkad_stats_serverObjects (rxkad_stats.spares[1])
 
 extern int rxkad_EpochWasSet;		/* TRUE => we called rx_SetEpoch */
+
+#ifdef  KERNEL
+#include "../afs/rxkad_prototypes.h"
+#else
+#include "rxkad_prototypes.h"
+#endif
 
 #endif /* TRANSARC_RXKAD_RXKAD_H */

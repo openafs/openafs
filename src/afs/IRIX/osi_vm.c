@@ -33,10 +33,7 @@ extern struct vnodeops Afs_vnodeops;
  * is not dropped and re-acquired for any platform.  It may be that *slept is
  * therefore obsolescent.
  */
-int
-osi_VM_FlushVCache(avc, slept)
-    struct vcache *avc;
-    int *slept;
+int osi_VM_FlushVCache(struct vcache *avc, int *slept)
 {
     int s, code;
     vnode_t *vp = &avc->v;
@@ -144,11 +141,7 @@ osi_VM_FlushVCache(avc, slept)
  * Since we drop and re-obtain the lock, we can't guarantee that there won't
  * be some pages around when we return, newly created by concurrent activity.
  */
-void
-osi_VM_TryToSmush(avc, acred, sync)
-    struct vcache *avc;
-    struct AFS_UCRED *acred;
-    int sync;
+void osi_VM_TryToSmush(struct vcache *avc, struct AFS_UCRED *acred, int sync)
 {
     ReleaseWriteLock(&avc->lock);
     AFS_GUNLOCK();
@@ -165,9 +158,7 @@ osi_VM_TryToSmush(avc, acred, sync)
  *
  * Locking:  only the global lock is held.
  */
-void
-osi_VM_FSyncInval(avc)
-    struct vcache *avc;
+void osi_VM_FSyncInval(struct vcache *avc)
 {
     AFS_GUNLOCK();
     PFLUSHINVALVP((vnode_t *)avc, (off_t)0, (off_t)avc->m.Length);
@@ -179,9 +170,7 @@ osi_VM_FSyncInval(avc)
  * Locking:  the vcache entry's lock is held.  It will usually be dropped and
  * re-obtained.
  */
-void
-osi_VM_StoreAllSegments(avc)
-    struct vcache *avc;
+void osi_VM_StoreAllSegments(struct vcache *avc)
 {
     int error;
     osi_Assert(valusema(&avc->vc_rwlock) <= 0);
@@ -221,10 +210,7 @@ osi_VM_StoreAllSegments(avc)
  *
  * Locking:  No lock is held, not even the global lock.
  */
-void
-osi_VM_FlushPages(avc, credp)
-    struct vcache *avc;
-    struct AFS_UCRED *credp;
+void osi_VM_FlushPages(struct vcache *avc, struct AFS_UCRED *credp)
 {
     vnode_t *vp = (vnode_t *)avc;
 
@@ -248,11 +234,7 @@ osi_VM_FlushPages(avc, credp)
  * activeV is raised.  This is supposed to block pageins, but at present
  * it only works on Solaris.
  */
-void
-osi_VM_Truncate(avc, alen, acred)
-    struct vcache *avc;
-    int alen;
-    struct AFS_UCRED *acred;
+void osi_VM_Truncate(struct vcache *avc, int alen, struct AFS_UCRED *acred)
 {
     PTOSSVP(&avc->v, (off_t)alen, (off_t)MAXLONG);
 }

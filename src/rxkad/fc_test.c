@@ -72,8 +72,7 @@ const char ciph2[] = {
 #define rxkad_EncryptPacket _afs_bpwQbdoghO
 #endif
 
-int
-main()
+int main(void)
 {
   int32 sched[ROUNDS];
   char ciph[100], clear[100];

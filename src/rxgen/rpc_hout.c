@@ -100,7 +100,7 @@ void print_datadef(definition *def)
 		break;
 	}
 	if (def->def_kind != DEF_PROGRAM && def->def_kind != DEF_CONST && (!IsRxgenDefinition(def))) {
-		f_print(fout, "bool_t xdr_%s();\n", def->def_name);
+		f_print(fout, "bool_t xdr_%s(XDR *xdrs, %s *objp);\n", def->def_name, def->def_name);
 	}
 	if (def->def_kind != DEF_CONST && (!IsRxgenDefinition(def))) {
 		f_print(fout, "\n");

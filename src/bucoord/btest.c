@@ -16,8 +16,6 @@
 #include <afs/bubasics.h>
 #include "bc.h"
 
-extern struct rx_securityClass *rxnull_NewClientSecurityObject();
-
 #include "AFS_component_version_number.c"
 
 main(argc, argv)

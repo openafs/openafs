@@ -47,13 +47,13 @@ RCSID("$Header$");
 #include "rxkad.h"
 #endif /* defined(UKERNEL) */
 
-
-extern afs_int32 ktohl();
-extern afs_uint32 life_to_time();
-extern unsigned char time_to_life();
-
-static int decode_athena_ticket();
-static int assemble_athena_ticket();
+/* static prototypes */
+static int decode_athena_ticket (char *ticket, int ticketLen, char *name, 
+        char *inst, char *realm, afs_int32 *host, struct ktc_encryptionKey *sessionKey, 
+        afs_uint32 *start, afs_uint32 *end);
+static int assemble_athena_ticket (char *ticket, int *ticketLen, char *name, 
+        char *inst, char *realm, afs_int32 host, struct ktc_encryptionKey *sessionKey, 
+        afs_uint32 start, afs_uint32 end, char *sname, char *sinst);
 
 #define ANDREWFLAGSVALUE (0x80)
 #define TICKET_LABEL "TicketEnd"
@@ -65,18 +65,9 @@ static int assemble_athena_ticket();
    interpreting the ticket and the values of the output parameters are
    undefined. */
 
-int tkt_DecodeTicket (asecret, ticketLen, key,
-		      name, inst, cell, sessionKey, host, start, end)
-  char		*asecret;
-  afs_int32		 ticketLen;
-  struct ktc_encryptionKey *key;
-  char		*name;
-  char		*inst;
-  char		*cell;
-  char		*sessionKey;
-  afs_int32		*host;
-  afs_int32		*start;
-  afs_int32		*end;
+int tkt_DecodeTicket (char *asecret, afs_int32 ticketLen, 
+	struct ktc_encryptionKey *key, char *name, char *inst, char *cell, 
+	char *sessionKey, afs_int32 *host, afs_int32 *start, afs_int32 *end)
 {   char	   clear_ticket[MAXKTCTICKETLEN];
     char	  *ticket;
     Key_schedule   schedule;
@@ -126,20 +117,24 @@ int tkt_DecodeTicket (asecret, ticketLen, key,
 }
 
 /* This makes a Kerberos ticket */
-
-int tkt_MakeTicket (ticket, ticketLen, key, name, inst, cell,
-		    start, end, sessionKey, host, sname, sinst)
-  char		*ticket;		/* ticket is constructed here */
-  int		*ticketLen;		/* output length of finished ticket */
-  struct ktc_encryptionKey *key;	/* key ticket should be sealed with */
-  char		*name;			/* user of this ticket */
+/*
+  char		*ticket;		* ticket is constructed here *
+  int		*ticketLen;		* output length of finished ticket *
+  struct ktc_encryptionKey *key;	* key ticket should be sealed with *
+  char		*name;			* user of this ticket *
   char		*inst;
-  char		*cell;			/* cell of authentication */
-  afs_uint32	 start,end;		/* life of ticket */
-  struct ktc_encryptionKey *sessionKey;	/* session key invented for ticket */
-  afs_uint32	 host;			/* caller's host address */
-  char		*sname;			/* server */
+  char		*cell;			* cell of authentication *
+  afs_uint32	 start,end;		* life of ticket *
+  struct ktc_encryptionKey *sessionKey;	* session key invented for ticket *
+  afs_uint32	 host;			* caller's host address *
+  char		*sname;			* server *
   char		*sinst;
+*/
+
+int tkt_MakeTicket (char *ticket, int *ticketLen, 
+	struct ktc_encryptionKey *key, char *name, char *inst, char *cell,
+	afs_uint32 start, afs_uint32 end, struct ktc_encryptionKey *sessionKey, 
+	afs_uint32 host, char *sname, char *sinst)
 {   int		 code;
     Key_schedule schedule;
 
@@ -164,17 +159,9 @@ int tkt_MakeTicket (ticket, ticketLen, key, name, inst, cell,
     strcpy (name, ticket); \
     ticket += slen+1
 
-static int decode_athena_ticket (ticket, ticketLen, name, inst, realm,
-				  host, sessionKey, start, end)
-  char *ticket;
-  int   ticketLen;
-  char *name;
-  char *inst;
-  char *realm;
-  afs_int32 *host;
-  struct ktc_encryptionKey *sessionKey;
-  afs_uint32 *start;
-  afs_uint32 *end;
+static int decode_athena_ticket (char *ticket, int ticketLen, char *name, 
+	char *inst, char *realm, afs_int32 *host, struct ktc_encryptionKey *sessionKey, 
+	afs_uint32 *start, afs_uint32 *end)
 {   char *ticketBeg = ticket;
     char  flags;
     int	  slen;
@@ -218,19 +205,9 @@ static int decode_athena_ticket (ticket, ticketLen, name, inst, realm,
 		    memcpy(ticket, &num, sizeof(num));\
 		    ticket += sizeof(num)
 
-static int assemble_athena_ticket (ticket, ticketLen, name, inst, realm,
-				    host, sessionKey, start, end, sname, sinst)
-  char *ticket;
-  int  *ticketLen;
-  char *name;
-  char *inst;
-  char *realm;
-  afs_int32  host;
-  struct ktc_encryptionKey *sessionKey;
-  afs_uint32 start;
-  afs_uint32 end;
-  char *sname;
-  char *sinst;
+static int assemble_athena_ticket (char *ticket, int *ticketLen, char *name, 
+	char *inst, char *realm, afs_int32 host, struct ktc_encryptionKey *sessionKey, 
+	afs_uint32 start, afs_uint32 end, char *sname, char *sinst)
 {   char *ticketBeg = ticket;
     int	  slen;
     unsigned char  life;
@@ -266,10 +243,7 @@ static int assemble_athena_ticket (ticket, ticketLen, name, inst, realm,
 	    and the lifetime is within the legal limit.
  */
 
-int tkt_CheckTimes (start, end, now)
-  afs_uint32 start;
-  afs_uint32 end;
-  afs_uint32 now;
+int tkt_CheckTimes (afs_uint32 start, afs_uint32 end, afs_uint32 now)
 {   int active;
 
     if (start >= end) return -2;	/* zero or negative lifetime */
@@ -290,9 +264,7 @@ int tkt_CheckTimes (start, end, now)
     return active*2;			/* ticket valid */
 }
 
-afs_int32 ktohl (flags, l)
-  char flags;
-  afs_int32 l;
+afs_int32 ktohl (char flags, afs_int32 l)
 {
     if (flags & 1) {
 	unsigned char *lp = (unsigned char *)&l;
@@ -314,9 +286,7 @@ afs_int32 ktohl (flags, l)
  * table to extract the lifetime in seconds, which is added to start to produce
  * the end time. */
 
-afs_uint32 life_to_time (start, life)
-  afs_uint32 start;
-  unsigned char life;
+afs_uint32 life_to_time (afs_uint32 start, unsigned char life)
 {   int realLife;
 
     if (life == TKTLIFENOEXPIRE) return NEVERDATE;
@@ -337,9 +307,7 @@ afs_uint32 life_to_time (start, life)
  * entry.  The actual code is prepared to handle the case where the table is
  * unordered but that it an unnecessary frill. */
 
-unsigned char time_to_life (start, end)
-  afs_uint32 start;
-  afs_uint32 end;
+unsigned char time_to_life (afs_uint32 start, afs_uint32 end)
 {   int lifetime = end-start;
     int best, best_i;
     int i;

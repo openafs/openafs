@@ -1215,7 +1215,7 @@ int SweepAFSCache(int *vFilesFound)
 
     if (cacheFlags & AFSCALL_INIT_MEMCACHE) {
 	if (afsd_debug)
-	    printf("%s: Memory Cache, no cache sweep done\n");
+	    printf("%s: Memory Cache, no cache sweep done\n", rn);
 	*vFilesFound = 0;
 	return 0;
     }
@@ -1601,7 +1601,7 @@ void uafs_Init(
     memset(pathname_for_V, 0, (cacheFiles * sizeof(char *)));
     if (afsd_debug)
 	printf("%s: %d pathname_for_V entries at 0x%x, %d bytes\n",
-	       rn, cacheFiles, (cacheFiles * sizeof(AFSD_INO_T)));
+	       rn, cacheFiles, pathname_for_V, (cacheFiles * sizeof(AFSD_INO_T)));
 
     /*
      * Set up all the pathnames we'll need for later.

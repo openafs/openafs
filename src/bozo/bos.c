@@ -207,7 +207,7 @@ struct cmd_syndesc *as; {
     }
     sname.instance[0] = 0;
     strcpy(sname.name, "afs");
-    sc[0] = (struct rx_securityClass *) rxnull_NewClientSecurityObject();
+    sc[0] = rxnull_NewClientSecurityObject();
     sc[1] = 0;
     sc[2] = 0;
     scIndex = 0;

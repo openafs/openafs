@@ -4449,7 +4449,7 @@ static TryLocalVLServer(avolid, avolinfo)
     register afs_int32 code;
 
     if (!vlConn) {
-	vlSec = (struct rx_securityClass *) rxnull_NewClientSecurityObject();
+	vlSec = rxnull_NewClientSecurityObject();
 	vlConn = rx_NewConnection(htonl(0x7f000001), htons(7003), 52, vlSec, 0);
 	rx_SetConnDeadTime(vlConn, 15);	/* don't wait long */
     }

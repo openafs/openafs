@@ -16,6 +16,8 @@
 #include <afs/param.h>
 #endif
 
+#define INCLUDE_RXKAD_PRIVATE_DECLS
+
 RCSID("$Header$");
 
 #ifdef KERNEL
@@ -75,12 +77,16 @@ char *rxi_Alloc();
 #endif
 struct rxkad_stats rxkad_stats;
 
+/* static prototypes */
+static afs_int32 ComputeSum(struct rx_packet *apacket,
+        fc_KeySchedule *aschedule, afs_int32 *aivec);
+static afs_int32 FreeObject(struct rx_securityClass *aobj);
+
 /* this call sets up an endpoint structure, leaving it in *network* byte
  * order so that it can be used quickly for encryption.
  */
-rxkad_SetupEndpoint(aconnp, aendpointp)
-  IN struct rx_connection *aconnp;
-  OUT struct rxkad_endpoint *aendpointp;
+int rxkad_SetupEndpoint(struct rx_connection *aconnp, 
+	struct rxkad_endpoint *aendpointp)
 {
     register afs_int32 i;
 
@@ -93,11 +99,8 @@ rxkad_SetupEndpoint(aconnp, aendpointp)
 }
 
 /* setup xor information based on session key */
-rxkad_DeriveXORInfo(aconnp, aschedule, aivec, aresult)
-  IN struct rx_connection *aconnp;
-  IN fc_KeySchedule *aschedule;
-  IN char *aivec;
-  OUT char *aresult;
+int rxkad_DeriveXORInfo(struct rx_connection *aconnp, 
+	fc_KeySchedule *aschedule, char *aivec, char *aresult)
 {
     struct rxkad_endpoint tendpoint;
     afs_uint32 xor[2];
@@ -115,8 +118,7 @@ rxkad_DeriveXORInfo(aconnp, aschedule, aivec, aresult)
  * The endpoint.cksum field is omitted and treated as zero.  The cksum is
  * returned in network order. */
 
-afs_uint32 rxkad_CksumChallengeResponse (v2r)
-  IN struct rxkad_v2ChallengeResponse *v2r;
+afs_uint32 rxkad_CksumChallengeResponse(struct rxkad_v2ChallengeResponse *v2r)
 {
     int i;
     afs_uint32 cksum;
@@ -134,9 +136,7 @@ afs_uint32 rxkad_CksumChallengeResponse (v2r)
     return htonl(cksum);
 }
 
-void rxkad_SetLevel(conn, level)
-  struct rx_connection *conn;
-  rxkad_level	        level;
+void rxkad_SetLevel(struct rx_connection *conn, rxkad_level level)
 {
     if (level == rxkad_auth) {
 	rx_SetSecurityHeaderSize (conn, 4);
@@ -152,10 +152,9 @@ void rxkad_SetLevel(conn, level)
 /* returns a short integer in host byte order representing a good checksum of
  * the packet header.
  */
-static afs_int32 ComputeSum(apacket, aschedule, aivec)
-struct rx_packet *apacket;
-afs_int32 *aivec;
-fc_KeySchedule *aschedule; {
+static afs_int32 ComputeSum(struct rx_packet *apacket, 
+	fc_KeySchedule *aschedule, afs_int32 *aivec)
+{
     afs_uint32 word[2];
     register afs_uint32 t;
 
@@ -177,8 +176,7 @@ fc_KeySchedule *aschedule; {
 }
 
 
-static afs_int32 FreeObject (aobj)
-  IN struct rx_securityClass *aobj;
+static afs_int32 FreeObject(struct rx_securityClass *aobj)
 {   struct rxkad_cprivate *tcp;		/* both structs start w/ type field */
 
     if (aobj->refCount > 0) return 0;	/* still in use */
@@ -200,7 +198,7 @@ static afs_int32 FreeObject (aobj)
 /* rxkad_Close - called by rx with the security class object as a parameter
  * when a security object is to be discarded */
 
-rxs_return_t rxkad_Close (IN struct rx_securityClass *aobj)
+int rxkad_Close(struct rx_securityClass *aobj)
 {
     afs_int32 code;
     aobj->refCount--;
@@ -210,7 +208,8 @@ rxs_return_t rxkad_Close (IN struct rx_securityClass *aobj)
 
 /* either: called to (re)create a new connection. */
 
-rxs_return_t rxkad_NewConnection (struct rx_securityClass *aobj, struct rx_connection *aconn)
+int rxkad_NewConnection(struct rx_securityClass *aobj,
+    struct rx_connection *aconn)
 {
     if (aconn->securityData)
 	return RXKADINCONSISTENCY;	/* already allocated??? */
@@ -243,9 +242,8 @@ rxs_return_t rxkad_NewConnection (struct rx_securityClass *aobj, struct rx_conne
 
 /* either: called to destroy a connection. */
 
-rxs_return_t rxkad_DestroyConnection (aobj, aconn)
-  struct rx_securityClass *aobj;
-  struct rx_connection	  *aconn;
+int rxkad_DestroyConnection(struct rx_securityClass *aobj, 
+	struct rx_connection *aconn)
 {
     if (rx_IsServerConn(aconn)) {
 	struct rxkad_sconn *sconn;
@@ -293,8 +291,8 @@ rxs_return_t rxkad_DestroyConnection (aobj, aconn)
 
 /* either: decode packet */
 
-rxs_return_t rxkad_CheckPacket (struct rx_securityClass *aobj, 
-	struct rx_call *acall, struct rx_packet *apacket)
+int rxkad_CheckPacket(struct rx_securityClass *aobj,
+    struct rx_call *acall, struct rx_packet *apacket)
 {   struct rx_connection  *tconn;
     rxkad_level	           level;
     fc_KeySchedule *schedule;
@@ -386,10 +384,8 @@ rxs_return_t rxkad_CheckPacket (struct rx_securityClass *aobj,
 
 /* either: encode packet */
 
-rxs_return_t rxkad_PreparePacket (aobj, acall, apacket)
-  struct rx_securityClass *aobj;
-  struct rx_call *acall;
-  struct rx_packet *apacket;
+int rxkad_PreparePacket(struct rx_securityClass *aobj, 
+	struct rx_call *acall, struct rx_packet *apacket)
 {
     struct rx_connection *tconn;
     rxkad_level	        level;
@@ -478,10 +474,8 @@ rxs_return_t rxkad_PreparePacket (aobj, acall, apacket)
 
 /* either: return connection stats */
 
-rxs_return_t rxkad_GetStats (aobj, aconn, astats)
-  IN struct rx_securityClass *aobj;
-  IN struct rx_connection *aconn;
-  OUT struct rx_securityObjectStats *astats;
+int rxkad_GetStats(struct rx_securityClass *aobj, 
+	struct rx_connection *aconn, struct rx_securityObjectStats *astats)
 {
     astats->type = 3;
     astats->level = ((struct rxkad_cprivate *)aobj->privateData)->level;

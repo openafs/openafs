@@ -825,14 +825,14 @@ static int afs_linux_dentry_revalidate(struct dentry *dp)
     if (!vcp || !parentvcp)
         goto done;
 
-    if (code = afs_InitReq(&treq, credp))
+    if ((code = afs_InitReq(&treq, credp)))
         goto done;
 
     Check_AtSys(parentvcp, dp->d_name.name, &sysState, &treq);
     name = sysState.name;
 
     /* First try looking up the DNLC */
-    if (lookupvcp = osi_dnlc_lookup(parentvcp, name, WRITE_LOCK)) {
+    if ((lookupvcp = osi_dnlc_lookup(parentvcp, name, WRITE_LOCK))) {
         /* Verify that the dentry does not point to an old inode */
         if (vcp != lookupvcp)
             goto done;

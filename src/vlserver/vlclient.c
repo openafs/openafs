@@ -205,12 +205,12 @@ char *confDir, *cellp;
     }
     switch (scIndex) {
       case 0 :
-	  sc = (struct rx_securityClass *) rxnull_NewClientSecurityObject();
+	  sc = rxnull_NewClientSecurityObject();
 	  break;
 	case 1 :
 	    return -1;
 	case 2:
-	  sc = (struct rx_securityClass *) rxkad_NewClientSecurityObject (rxkad_clear,
+	  sc = rxkad_NewClientSecurityObject (rxkad_clear,
 	       &ttoken.sessionKey, ttoken.kvno, ttoken.ticketLen, ttoken.ticket);
       }
     if (!server) {
@@ -908,7 +908,7 @@ static handleit(as)
 	       printf("changing %s", *argp);
 	       h1 = hostutil_GetHostByName(&(*argp)[0]);
 	       if (!h1) {
-		 printf("cmdebug: can't resolve address for host %s");
+		 printf("cmdebug: can't resolve address for host %s", *argp);
 		 continue;
 	       }
 	       memcpy(&a1, (afs_int32 *)h1->h_addr, sizeof(afs_uint32));

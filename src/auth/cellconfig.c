@@ -61,12 +61,6 @@ RCSID("$Header$");
 #include "cellconfig.h"
 #include "keys.h"
 
-static ParseHostLine();
-static ParseCellLine();
-static afsconf_OpenInternal();
-static afsconf_CloseInternal();
-static afsconf_Reopen();
-
 static struct afsconf_servPair serviceTable [] = {
     { "afs",       7000, },
     { "afscb",     7001, },
@@ -83,6 +77,27 @@ static struct afsconf_servPair serviceTable [] = {
     { 0, 0 }		     /* insert new services before this spot */
 };
 
+/* Prototypes */
+static afs_int32 afsconf_FindService(register const char *aname);
+static int TrimLine(char *abuffer);
+#ifdef AFS_NT40_ENV
+static int IsClientConfigDirectory(const char *path);
+static int GetCellNT(struct afsconf_dir *adir);
+#endif
+static int afsconf_Check(register struct afsconf_dir *adir);
+static int afsconf_Touch(register struct afsconf_dir *adir);
+static int GetCellUnix(struct afsconf_dir *adir);
+static int afsconf_OpenInternal(register struct afsconf_dir *adir,
+        char *cell, char clones[]);
+static int ParseHostLine(char *aline, register struct sockaddr_in *addr,
+        char *aname, char *aclone);
+static int ParseCellLine(register char *aline, register char *aname,
+        register char *alname);
+static int afsconf_CloseInternal(register struct afsconf_dir *adir);
+static int afsconf_Reopen(register struct afsconf_dir *adir);
+static int SaveKeys(struct afsconf_dir *adir);
+
+
 /*
  * Basic Rule: we touch "<AFSCONF_DIR>/CellServDB" every time we change anything, so
  * our code can tell if there is new info in the key files, the cell server db
@@ -91,8 +106,8 @@ static struct afsconf_servPair serviceTable [] = {
  */
 
 /* return port number in network byte order in the low 16 bits of a long; return -1 if not found */
-static afs_int32 afsconf_FindService(aname)
-register char *aname; {
+static afs_int32 afsconf_FindService(register const char *aname)
+{
     /* lookup a service name */
     struct servent *ts;
     register struct afsconf_servPair *tsp;
@@ -114,8 +129,8 @@ register char *aname; {
     }
 }
 
-static int TrimLine(abuffer)
-char *abuffer; {
+static int TrimLine(char *abuffer)
+{
     char tbuffer[256];
     register char *tp;
     register int tc;
@@ -171,8 +186,8 @@ static int IsClientConfigDirectory(const char *path)
 #endif /* AFS_NT40_ENV */
 
 
-static int afsconf_Check(adir)
-register struct afsconf_dir *adir; {
+static int afsconf_Check(register struct afsconf_dir *adir)
+{
     char tbuffer[256];
     struct stat tstat;
     register afs_int32 code;
@@ -203,8 +218,8 @@ register struct afsconf_dir *adir; {
 }
 
 /* set modtime on file */
-static afsconf_Touch(adir)
-register struct afsconf_dir *adir; {
+static int afsconf_Touch(register struct afsconf_dir *adir)
+{
     char tbuffer[256];
 #ifndef AFS_NT40_ENV
     struct timeval tvp[2];
@@ -233,8 +248,8 @@ register struct afsconf_dir *adir; {
 #endif  /* AFS_NT40_ENV */
 }
 
-struct afsconf_dir *afsconf_Open(adir)
-register char *adir; {
+struct afsconf_dir *afsconf_Open(register const char *adir)
+{
     register struct afsconf_dir *tdir;
     register afs_int32 code;
 
@@ -247,7 +262,7 @@ register char *adir; {
 
     code = afsconf_OpenInternal(tdir, 0, 0);
     if (code) {
-	char *afsconf_path, *getenv(), afs_confdir[128];
+	char *afsconf_path, afs_confdir[128];
 
 	free(tdir->name);
 	/* Check global place only when local Open failed for whatever reason */
@@ -349,10 +364,8 @@ static int GetCellNT(struct afsconf_dir *adir)
 #endif /* AFS_NT40_ENV */
 
 
-static int afsconf_OpenInternal(adir, cell, clones)
-register struct afsconf_dir *adir; 
-char *cell;
-char clones[];
+static int afsconf_OpenInternal(register struct afsconf_dir *adir, 
+	char *cell, char clones[])
 {
     FILE *tf;
     register char *tp, *bp;
@@ -444,9 +457,9 @@ char clones[];
 	    }
 	    i = curEntry->cellInfo.numServers;
            if (cell && !strcmp(cell, curEntry->cellInfo.name)) 
-                code = ParseHostLine(tbuffer, (char *) &curEntry->cellInfo.hostAddr[i], curEntry->cellInfo.hostName[i], &clones[i]);
+                code = ParseHostLine(tbuffer, &curEntry->cellInfo.hostAddr[i], curEntry->cellInfo.hostName[i], &clones[i]);
            else
-                code = ParseHostLine(tbuffer, (char *) &curEntry->cellInfo.hostAddr[i], curEntry->cellInfo.hostName[i], 0);
+                code = ParseHostLine(tbuffer, &curEntry->cellInfo.hostAddr[i], curEntry->cellInfo.hostName[i], 0);
 	    if (code) {
 		if (code == AFSCONF_SYNTAX) {
 		    for (bp=tbuffer; *bp != '\n'; bp++) {	/* Take out the <cr> from the buffer */
@@ -520,10 +533,8 @@ char clones[];
  *"[128.2.1.3]  #hostname" for clones
  * into the appropriate pieces.  
  */
-static ParseHostLine(aline, addr, aname, aclone)
-    char *aclone;
-    register struct sockaddr_in *addr;
-    char *aline, *aname; 
+static int ParseHostLine(char *aline, register struct sockaddr_in *addr, 
+	char *aname, char *aclone)
 {
     int c1, c2, c3, c4;
     register afs_int32 code;
@@ -554,8 +565,9 @@ static ParseHostLine(aline, addr, aname, aclone)
  * ">cellname [linkedcellname] [#comments]"
  * into the appropriate pieces.
  */
-static ParseCellLine(aline, aname, alname)
-register char *aline, *aname, *alname; {
+static int ParseCellLine(register char *aline, register char *aname, 
+	register char *alname)
+{
     register int code;
     code = sscanf(aline, ">%s %s", aname, alname);
     if (code == 1) *alname = '\0';
@@ -568,10 +580,8 @@ register char *aline, *aname, *alname; {
 }
 
 /* call aproc(entry, arock, adir) for all cells.  Proc must return 0, or we'll stop early and return the code it returns */
-afsconf_CellApply(adir, aproc, arock)
-struct afsconf_dir *adir;
-int (*aproc)();
-char *arock; {
+int afsconf_CellApply(struct afsconf_dir *adir, int (*aproc)(), char *arock)
+{
     register struct afsconf_entry *tde;
     register afs_int32 code;
     LOCK_GLOBAL_MUTEX
@@ -589,10 +599,7 @@ char *arock; {
 /* call aproc(entry, arock, adir) for all cell aliases.
  * Proc must return 0, or we'll stop early and return the code it returns
  */
-afsconf_CellAliasApply(adir, aproc, arock)
-    struct afsconf_dir *adir;
-    int (*aproc)();
-    char *arock;
+int afsconf_CellAliasApply(struct afsconf_dir *adir, int (*aproc)(), char *arock)
 {
     register struct afsconf_aliasentry *tde;
     register afs_int32 code;
@@ -610,12 +617,9 @@ afsconf_CellAliasApply(adir, aproc, arock)
 
 afs_int32 afsconf_SawCell = 0;
 
-afsconf_GetExtendedCellInfo(adir, acellName, aservice, acellInfo, clones)
-    struct afsconf_dir *adir;
-    char *aservice;
-    char *acellName;
-    struct afsconf_cell *acellInfo; 
-    char clones[];
+int afsconf_GetExtendedCellInfo(struct afsconf_dir *adir, 
+	char *acellName, char *aservice, struct afsconf_cell *acellInfo, 
+	char clones[])
 {
     afs_int32 code;
     char *cell;
@@ -635,10 +639,8 @@ afsconf_GetExtendedCellInfo(adir, acellName, aservice, acellInfo, clones)
 
 #ifdef AFS_AFSDB_ENV
 #if !defined(AFS_NT40_ENV)
-afsconf_GetAfsdbInfo(acellName, aservice, acellInfo)
-    char *acellName;
-    char *aservice;
-    struct afsconf_cell *acellInfo;
+int afsconf_GetAfsdbInfo(char *acellName, char *aservice, 
+	struct afsconf_cell *acellInfo)
 {
     afs_int32 code;
     int tservice, i;
@@ -743,10 +745,8 @@ afsconf_GetAfsdbInfo(acellName, aservice, acellInfo)
     return 0;
 }
 #else  /* windows */
-int afsconf_GetAfsdbInfo(acellName, aservice, acellInfo)
-  char *aservice;
-  char *acellName;
-  struct afsconf_cell *acellInfo;
+int afsconf_GetAfsdbInfo(char *acellName, char *aservice, 
+        struct afsconf_cell *acellInfo)
 {
     register afs_int32 i;
     int tservice;
@@ -796,11 +796,9 @@ int afsconf_GetAfsdbInfo(acellName, aservice, acellInfo)
 #endif /* windows */
 #endif /* AFS_AFSDB_ENV */
 
-afsconf_GetCellInfo(adir, acellName, aservice, acellInfo)
-struct afsconf_dir *adir;
-char *aservice;
-char *acellName;
-struct afsconf_cell *acellInfo; {
+int afsconf_GetCellInfo(struct afsconf_dir *adir, char *acellName, 
+	char *aservice, struct afsconf_cell *acellInfo)
+{
     register struct afsconf_entry *tce;
     struct afsconf_aliasentry *tcae;
     struct afsconf_entry *bestce;
@@ -882,13 +880,11 @@ struct afsconf_cell *acellInfo; {
     }
 }
 
-afsconf_GetLocalCell(adir, aname, alen)
-register struct afsconf_dir *adir;
-char *aname;
-afs_int32 alen; {
+int afsconf_GetLocalCell(register struct afsconf_dir *adir, 
+	char *aname, afs_int32 alen)
+{
     static int  afsconf_showcell = 0;
     char        *afscell_path;
-    char        *getenv();
     afs_int32        code = 0;
 
    LOCK_GLOBAL_MUTEX
@@ -916,8 +912,8 @@ afs_int32 alen; {
     return(code);
 }
 
-afsconf_Close(adir)
-struct afsconf_dir *adir; {
+int afsconf_Close(struct afsconf_dir *adir)
+{
     LOCK_GLOBAL_MUTEX
     afsconf_CloseInternal(adir);
     if (adir->name) free(adir->name);
@@ -926,8 +922,8 @@ struct afsconf_dir *adir; {
     return 0;
 }
 
-static int afsconf_CloseInternal(adir)
-register struct afsconf_dir *adir; {
+static int afsconf_CloseInternal(register struct afsconf_dir *adir)
+{
     register struct afsconf_entry *td, *nd;
     register char *tname;
 
@@ -949,8 +945,8 @@ register struct afsconf_dir *adir; {
     return 0;
 }
 
-static int afsconf_Reopen(adir)
-register struct afsconf_dir *adir; {
+static int afsconf_Reopen(register struct afsconf_dir *adir)
+{
     register afs_int32 code;
     code = afsconf_CloseInternal(adir);
     if (code) return code;
@@ -959,8 +955,7 @@ register struct afsconf_dir *adir; {
 }
 
 /* called during opening of config file */
-afsconf_IntGetKeys(adir)
-struct afsconf_dir *adir;
+int afsconf_IntGetKeys(struct afsconf_dir *adir)
 {
     char tbuffer[256];
     register int fd;
@@ -1011,9 +1006,7 @@ struct afsconf_dir *adir;
 }
 
 /* get keys structure */
-afsconf_GetKeys(adir, astr)
-struct afsconf_dir *adir;
-struct afsconf_keys *astr;
+int afsconf_GetKeys(struct afsconf_dir *adir, struct afsconf_keys *astr)
 {
     register afs_int32 code;
 
@@ -1027,10 +1020,8 @@ struct afsconf_keys *astr;
 }
 
 /* get latest key */
-afs_int32 afsconf_GetLatestKey(adir, avno, akey)
-  IN struct afsconf_dir *adir;
-  OUT afs_int32 *avno;
-  OUT char *akey;
+afs_int32 afsconf_GetLatestKey(struct afsconf_dir *adir, 
+	afs_int32 *avno, char *akey)
 {
     register int i;
     int maxa;
@@ -1065,10 +1056,8 @@ afs_int32 afsconf_GetLatestKey(adir, avno, akey)
 }
 
 /* get a particular key */
-afsconf_GetKey(adir, avno, akey)
-struct afsconf_dir *adir;
-afs_int32 avno;
-char *akey;
+int afsconf_GetKey(struct afsconf_dir *adir, afs_int32 avno, 
+	char *akey)
 {
     register int i, maxa;
     register struct afsconf_key *tk;
@@ -1093,8 +1082,7 @@ char *akey;
 }
 
 /* save the key structure in the appropriate file */
-static SaveKeys(adir)
-struct afsconf_dir *adir;
+static int SaveKeys(struct afsconf_dir *adir)
 {
     struct afsconf_keys tkeys;
     register int fd;
@@ -1121,10 +1109,8 @@ struct afsconf_dir *adir;
     return 0;
 }
 
-afsconf_AddKey(adir, akvno, akey, overwrite)
-struct afsconf_dir *adir;
-afs_int32 akvno, overwrite;
-char akey[8];
+int afsconf_AddKey(struct afsconf_dir *adir, afs_int32 akvno, 
+	char akey[8], afs_int32 overwrite)
 {
     register struct afsconf_keys *tk;
     register struct afsconf_key *tkey;
@@ -1169,9 +1155,7 @@ char akey[8];
 /* this proc works by sliding the other guys down, rather than using a funny
     kvno value, so that callers can count on getting a good key in key[0].
 */
-afsconf_DeleteKey(adir, akvno)
-struct afsconf_dir *adir;
-afs_int32 akvno;
+int afsconf_DeleteKey(struct afsconf_dir *adir, afs_int32 akvno)
 {
     register struct afsconf_keys *tk;
     register struct afsconf_key *tkey;

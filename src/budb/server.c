@@ -310,7 +310,6 @@ main(argc, argv)
     extern int afsconf_CheckAuth();
 
     extern int rx_stackSize;
-    extern struct rx_securityClass *rxnull_NewServerSecurityObject();
     extern int BUDB_ExecuteRequest();
     
 #ifdef AFS_NT40_ENV

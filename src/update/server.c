@@ -175,7 +175,6 @@ int main (argc, argv)
 {
     struct rx_securityClass *securityObjects[3];
     struct rx_service *service;
-    extern struct rx_securityClass *rxnull_NewServerSecurityObject();
 
     int a = 0;
     rxkad_level level;

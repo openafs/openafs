@@ -1740,7 +1740,7 @@ int a_LcolNum;		/* starting (leftmost) column number */
    }
    
    if (fsIdx >= numFS) {	/* whoops! screwed up */
-	sprintf(errMsg,"[ %s ] Programming error 1\n");
+	sprintf(errMsg,"[ %s ] Programming error 1\n", rn);
 	afsmon_Exit(325);
    }
 

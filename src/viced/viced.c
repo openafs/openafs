@@ -93,7 +93,6 @@ static void     ResetCheckDescriptors(void), ResetCheckSignal(void);
 static int	CheckSignal();
 static int	FiveMinuteCheckLWP(), HostCheckLWP();
 extern	int     GetKeysFromToken();
-extern struct rx_securityClass *rxnull_NewServerSecurityObject();
 extern int RXAFS_ExecuteRequest();
 extern int RXSTATS_ExecuteRequest();
 
@@ -1268,12 +1267,13 @@ static void NewParms(initializing)
 	i = read(fd, parms, sbuf.st_size);
 	close(fd);
 	if(i != sbuf.st_size) {
-	    if (i < 0 )
+	    if (i < 0 ) {
 		ViceLog(0, ("Read on parms failed with errno = %d\n", errno));
-	    else
+	    } else {
 		ViceLog(0,
 			("Read on parms failed; expected %d bytes but read %d\n",
 			sbuf.st_size, i));
+	    }
 	    free(parms);
 	    return;
 	}
@@ -1293,10 +1293,11 @@ static void NewParms(initializing)
 		    i++;
 	    }
 	}
-	if(ParseArgs(argc, argv) == 0)
+	if(ParseArgs(argc, argv) == 0) {
 	    ViceLog(0, ("Change parameters to:"));
-	else
+	} else {
 	    ViceLog(0, ("Invalid parameter in:"));
+	}
 	for(i = 0; i < argc; i++) {
 	    ViceLog(0, (" %s", argv[i]));
 	}
@@ -1578,7 +1579,7 @@ InitVL() {
     if (code) {
        /* Need to create the file */
        ViceLog(0, ("Creating new SysID file\n")); 
-       if (code = afs_uuid_create(&FS_HostUUID)) {
+       if ((code = afs_uuid_create(&FS_HostUUID))) {
 	  ViceLog(0, ("Failed to create new uuid: %d\n", code)); 
 	  exit(1);
        }

@@ -604,7 +604,7 @@ struct host *h_Alloc_r(r_con)
        makes a request that causes a break call back.  It shouldn't. */
     {
 	if (!sc)
-	    sc = (struct rx_securityClass *) rxnull_NewClientSecurityObject();
+	    sc = rxnull_NewClientSecurityObject();
 	host->callback_rxcon = rx_NewConnection (host->host, host->port,
 						 1, sc, 0);
 	rx_SetConnDeadTime(host->callback_rxcon, 50);
@@ -734,7 +734,7 @@ h_TossStuff_r(host)
 	return;
 
     /* ASSUMPTION: r_FreeConnection() does not yield */
-    for (cp = &host->FirstClient; client = *cp; ) {
+    for (cp = &host->FirstClient; (client = *cp); ) {
 	if ((host->hostFlags & HOSTDELETED) || client->deleted) {
 	    if ((client->ViceId != ANONYMOUSID) && client->CPS.prlist_val) {
 		free(client->CPS.prlist_val);
@@ -760,7 +760,7 @@ h_TossStuff_r(host)
 	int i;
 
 	if (host->Console & 1) Console--;
-	if (rxconn = host->callback_rxcon) {
+	if ((rxconn = host->callback_rxcon)) {
 	    host->callback_rxcon = (struct rx_connection *)0;
 	    /*
 	     * If rx_DestroyConnection calls h_FreeConnection we will
@@ -785,7 +785,7 @@ h_TossStuff_r(host)
 	if ( !(host->interface) )
 	{
 		for (hp = &hostHashTable[h_HashIndex(host->host)];
-			th = *hp; hp = &th->next) 
+			(th = *hp); hp = &th->next) 
 		{
 	    		assert(th->hostPtr);
 			if (th->hostPtr == host) 
@@ -802,7 +802,7 @@ h_TossStuff_r(host)
 	    /* delete all hash entries for the UUID */
 	    uuidp = &host->interface->uuid;
 	    for (hp = &hostUuidHashTable[h_UuidHashIndex(uuidp)];
-		 th = *hp; hp = &th->next) {
+		 (th = *hp); hp = &th->next) {
 		assert(th->hostPtr);
 		if (th->hostPtr == host)
 		{
@@ -817,7 +817,7 @@ h_TossStuff_r(host)
 	    {
 		hostAddr = host->interface->addr[i];
 		for (hp = &hostHashTable[h_HashIndex(hostAddr)];
-	     		th = *hp; hp = &th->next) 
+	     		(th = *hp); hp = &th->next) 
 		{
 	    		assert(th->hostPtr);
 	    		if (th->hostPtr == host) 
@@ -1428,7 +1428,7 @@ ticket name length != 64
      * required).  So, before setting the RPC's rock, we should disconnect
      * the RPC from the other client structure's rock.
      */
-    if (oldClient = (struct client *) rx_GetSpecific(tcon, rxcon_client_key)) {
+    if ((oldClient = (struct client *) rx_GetSpecific(tcon, rxcon_client_key))) {
 	oldClient->tcon = (struct rx_connection *) 0;
 	/* rx_SetSpecific will be done immediately below */
     }
@@ -2221,7 +2221,7 @@ struct host* host;
 	int index;
 	register struct h_hashChain **hp, *th;
 
-        for (hp = &hostHashTable[h_HashIndex(addr)]; th = *hp; )
+        for (hp = &hostHashTable[h_HashIndex(addr)]; (th = *hp); )
         {
         	assert(th->hostPtr);
         	if (th->hostPtr == host && th->addr == addr)

@@ -336,7 +336,7 @@ void osi_clear_inode(struct inode *ip)
 #else
     if (ip->i_count > 1)
 #endif
-        printf("afs_put_inode: ino %d (0x%x) has count %d\n", ip->i_ino, ip);
+        printf("afs_put_inode: ino %d (0x%x) has count %d\n", ip->i_ino, ip, ip->i_count);
 
     ObtainWriteLock(&vc->lock, 504);
     afs_InactiveVCache(vc, credp);

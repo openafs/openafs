@@ -105,6 +105,12 @@ struct coda_inode_info {};
 #include "../afs/afsincludes.h"
 #endif
 
+#define        MAXRXPORTS  20
+typedef unsigned short rxk_ports_t[MAXRXPORTS];
+typedef char *rxk_portRocks_t[MAXRXPORTS];
+extern rxk_ports_t rxk_ports;
+extern rxk_portRocks_t rxk_portRocks;
+
 #if defined(AFS_XBSD_ENV)
 extern struct domain inetdomain;
 #endif /* AFS_XBSD_ENV */

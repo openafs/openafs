@@ -9,8 +9,8 @@
 
 /* Declarations of data structures associated with rxkad security objects. */
 
-#ifndef TRANSARC_RXKAD_PRIVATE_DATA_H
-#define TRANSARC_RXKAD_PRIVATE_DATA_H
+#ifndef RXKAD_PRIVATE_DATA_H
+#define RXKAD_PRIVATE_DATA_H
 
 #include "rxkad.h"
 
@@ -144,20 +144,4 @@ struct rxkad_v2ChallengeResponse {
     The above structure requires that (RX_MAXCALLS == 4).
 #endif
 
-/* This should be afs_int32, but the RXS ops are defined as int returning  */
-#define rxs_return_t int
-extern rxs_return_t
-    rxkad_Close(),
-    rxkad_NewConnection(),
-    rxkad_CheckAuthentication(),
-    rxkad_CreateChallenge(),
-    rxkad_GetChallenge(),
-    rxkad_GetResponse(),
-    rxkad_CheckPacket(),
-    rxkad_PreparePacket(),
-    rxkad_CheckResponse(),
-    rxkad_DestroyConnection(),
-    rxkad_AllocCID(),
-    rxkad_GetStats();
-
-#endif /* TRANSARC_RXKAD_PRIVATE_DATA_H */
+#endif /* RXKAD_PRIVATE_DATA_H */

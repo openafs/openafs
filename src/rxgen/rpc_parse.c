@@ -1687,8 +1687,8 @@ static void er_ProcMainBody_setup(void)
 
 static void er_HeadofOldStyleProc_setup(void)
 {
-    f_print(fout, "\nint %s%sExecuteRequest (z_call)\n", prefix, (combinepackages ? MasterPrefix : PackagePrefix[PackageIndex]));
-    f_print(fout, "\tregister struct rx_call *z_call;\n");
+    f_print(fout, "\nint %s%sExecuteRequest (register struct rx_call *z_call)\n", 
+		prefix, (combinepackages ? MasterPrefix : PackagePrefix[PackageIndex]));
     f_print(fout, "{\n");
     f_print(fout, "\tint op;\n");
     f_print(fout, "\tXDR z_xdrs;\n");
@@ -1720,18 +1720,16 @@ static void er_BodyofOldStyleProc_setup(void)
 static void proc_er_case(definition *defp)
 {
     if (opcodesnotallowed[PackageIndex]) {
-	f_print(fout, "\t\tcase %d: {\n", defp->pc.proc_opcodenum);
+	f_print(fout, "\t\tcase %d:\n", defp->pc.proc_opcodenum);
     } else {
-	f_print(fout, "\t\tcase %s: {\n", defp->pc.proc_opcodename);
+	f_print(fout, "\t\tcase %s:\n", defp->pc.proc_opcodename);
     }
     if (defp->pc.proc_serverstub) {
-	f_print(fout, "\t\t\t" "afs_int32 %s();\n", defp->pc.proc_serverstub);
 	f_print(fout, "\t\t\tz_result = %s(z_call, &z_xdrs);\n", defp->pc.proc_serverstub);
     } else {
-	f_print(fout, "\t\t\t" "afs_int32 _%s%s%s();\n", prefix, defp->pc.proc_prefix, defp->pc.proc_name);
 	f_print(fout, "\t\t\tz_result = _%s%s%s(z_call, &z_xdrs);\n", prefix, defp->pc.proc_prefix, defp->pc.proc_name);
     }
-    f_print(fout, "\t\t\tbreak;\n\t\t}\n");	
+    f_print(fout, "\t\t\tbreak;\n");	
 }
 
 

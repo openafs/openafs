@@ -477,10 +477,10 @@ afs_int32 vsu_ClientInit(noAuthFlag, confDir, cellName, sauth, uclientp, secproc
 
         switch (scIndex) {
           case 0 :
-            sc = (struct rx_securityClass *) rxnull_NewClientSecurityObject();
+            sc = rxnull_NewClientSecurityObject();
             break;
           case 2:
-            sc = (struct rx_securityClass *)rxkad_NewClientSecurityObject(
+            sc = rxkad_NewClientSecurityObject(
                  vsu_rxkad_level, &ttoken.sessionKey, ttoken.kvno,
                  ttoken.ticketLen, ttoken.ticket);
             break;

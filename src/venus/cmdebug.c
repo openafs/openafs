@@ -27,7 +27,6 @@ RCSID("$Header$");
 #include <lock.h>
 #include <afs/afs_args.h>
 
-extern struct rx_securityClass *rxnull_NewServerSecurityObject();
 extern struct hostent *hostutil_GetHostByName();
 
 static PrintCacheConfig(aconn)

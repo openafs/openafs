@@ -72,8 +72,6 @@ extern int (*VolWriteProc)();
 extern int (*VolFlushProc)();
 extern void AFSVolExecuteRequest();
 extern void RXSTATS_ExecuteRequest();
-extern struct rx_securityClass *rxnull_NewServerSecurityObject();
-extern struct rx_service *rx_NewService();
 extern Log();
 struct afsconf_dir *tdir;
 static afs_int32 runningCalls=0;
@@ -359,9 +357,9 @@ usage:
 	VS_EXIT(1);
     }
     afsconf_GetKey(tdir, 999, &tkey);
-    securityObjects[0] = (struct rx_securityClass *) rxnull_NewServerSecurityObject();
+    securityObjects[0] = rxnull_NewServerSecurityObject();
     securityObjects[1] = (struct rx_securityClass *) 0;	/* don't bother with rxvab */
-    securityObjects[2] = (struct rx_securityClass *) rxkad_NewServerSecurityObject(0, tdir, afsconf_GetKey, (char *) 0);
+    securityObjects[2] = rxkad_NewServerSecurityObject(0, tdir, afsconf_GetKey, (char *) 0);
     if (securityObjects[0] == (struct rx_securityClass *) 0) Abort("rxnull_NewServerSecurityObject");
     service = rx_NewService(0, VOLSERVICE_ID, "VOLSER", securityObjects, 3, AFSVolExecuteRequest);
     if (service == (struct rx_service *) 0) Abort("rx_NewService");

@@ -1035,7 +1035,7 @@ char *arock; {
      * security on connections made to this server 
      */
 
-    securityObjects[0] = (struct rx_securityClass *) rxnull_NewServerSecurityObject();
+    securityObjects[0] = rxnull_NewServerSecurityObject();
     securityObjects[1] = (struct rx_securityClass *) 0;	/* don't bother with rxvab */
     if ( !securityObjects[0] ) 
     {

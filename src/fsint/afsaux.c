@@ -155,9 +155,8 @@ xdr_vector(xdrs, basep, nelem, elemsize, xdr_elem)
 #endif /* KERNEL */
 
 #ifndef KERNEL
-xdr_CBS(x, abbs)
-    XDR *x;
-    struct CBS *abbs; {
+xdr_CBS(XDR *x, struct CBS *abbs)
+{
     afs_int32 len;
     if (x->x_op == XDR_FREE) {
 	NVFREE(abbs->SeqBody,abbs->SeqLen);
@@ -206,9 +205,8 @@ xdr_BBS(x, abbs)
     }
 }
 
-xdr_AFSAccessList(x, abbs)
-    XDR *x;
-    struct BBS *abbs; {
+xdr_AFSAccessList(XDR *x, AFSAccessList *abbs)
+{
     afs_int32 maxLen, len;
     if (x->x_op == XDR_FREE) {
 	NVFREE(abbs->SeqBody, abbs->MaxSeqLen);

@@ -1044,9 +1044,7 @@ static int Stack_Used(stackptr, stacksize)
 }
 
 
-LWP_NewRock(Tag, Value)
-    int Tag;		/* IN */
-    char *Value;	/* IN */
+int LWP_NewRock(int Tag, char *Value)
     /* Finds a free rock and sets its value to Value.
 	Return codes:
 		LWP_SUCCESS	Rock did not exist and a new one was used
@@ -1078,10 +1076,7 @@ LWP_NewRock(Tag, Value)
     }
 
 
-LWP_GetRock(Tag,  Value)
-    int Tag;		/* IN */
-    char **Value;	/* OUT */
-    
+int LWP_GetRock(int Tag, char **Value)
     /* Obtains the pointer Value associated with the rock Tag of this LWP.
        Returns:
 	    LWP_SUCCESS		if specified rock exists and Value has been filled
@@ -1104,9 +1099,7 @@ LWP_GetRock(Tag,  Value)
 
 
 #ifdef	AFS_AIX32_ENV
-setlim(limcon, hard, limit)
-    int limcon;
-    uchar_t hard;
+int setlim(int limcon, uchar_t hard, int limit)
 {
     struct rlimit rlim;
 
@@ -1143,10 +1136,7 @@ setlim(limcon, hard, limit)
 /*
  * Print the specific limit out
  */
-plim(name, lc, hard)
-    char *name;
-    afs_int32 lc;
-    uchar_t hard;
+int plim(char *name, afs_int32 lc, uchar_t hard)
 {
     struct rlimit rlim;
     int lim;
@@ -1163,14 +1153,12 @@ plim(name, lc, hard)
 #endif
 
 #ifdef	AFS_SUN5_ENV
-int LWP_NoYieldSignal(event)
-  char *event;
+int LWP_NoYieldSignal(char *event)
 {
     return (LWP_INTERNALSIGNAL(event, 0));
 }
 
-int LWP_SignalProcess(event)
-  char *event;
+int LWP_SignalProcess(char *event)
 {
     return (LWP_INTERNALSIGNAL(event, 1));
 }
@@ -1208,7 +1196,8 @@ event_t *hashtable[HASHSIZE];/* Hash table for events */
 #define hash(event)	((unsigned long) (event) % HASHSIZE);
 
 #if CMA_DEBUG || DEBUGF
-char *lwp_process_string() {
+char *lwp_process_string(void)
+{
     static char id[200];
     PROCESS p;
     LWP_CurrentProcess(&p);
@@ -1217,27 +1206,25 @@ char *lwp_process_string() {
 }
 #endif
 
-void lwp_unimplemented(interface)
-  char *interface;
+void lwp_unimplemented(char *interface)
 {
     fprintf(stderr, "cmalwp: %s is not currently implemented: program aborted\n",
 	    interface);
     exit(1);
 }
 
-static lwpabort(interface)
-  char *interface;
+static void lwpabort(char *interface)
 {
     fprintf(stderr, "cmalwp: %s failed unexpectedly\n", interface);
     abort();
 }
   
-int LWP_QWait()
+int LWP_QWait(void)
 {
     lwp_unimplemented("LWP_QWait");
 }
 
-int LWP_QSignal(pid)
+int LWP_QSignal(int pid)
 {  
     lwp_unimplemented("LWP_QSignal");
 }
@@ -1245,10 +1232,8 @@ int LWP_QSignal(pid)
 /* Allocate and initialize an LWP process handle. The associated pthread handle
  * must be added by the caller, and the structure threaded onto the LWP active
  * process list by lwp_thread_process */
-static PROCESS lwp_alloc_process(name, ep, arg)
-  char *name;
-  pthread_startroutine_t ep;
-  pthread_addr_t arg;
+static PROCESS lwp_alloc_process(char *name, 
+	pthread_startroutine_t ep, pthread_addr_t arg)
 {
     PROCESS lp;
     assert(lp = (PROCESS) malloc(sizeof (*lp)));
@@ -1269,8 +1254,7 @@ static PROCESS lwp_alloc_process(name, ep, arg)
 /* Thread the LWP process descriptor *lp onto the lwp active process list
  * and associate a back pointer to the process descriptor from the associated
  * thread */
-static lwp_thread_process(lp)
-  PROCESS lp;
+static lwp_thread_process(PROCESS lp)
 {
     lp->next = lwp_process_list;
     lwp_process_list = lp;
@@ -1280,8 +1264,7 @@ static lwp_thread_process(lp)
 /* The top-level routine used as entry point to explicitly created LWP
  * processes. This completes a few details of process creation left
  * out by LWP_CreateProcess and calls the user-specified entry point */
-static int lwp_top_level(argp)
-  pthread_addr_t argp;
+static int lwp_top_level(pthread_addr_t argp)
 {
     PROCESS lp = (PROCESS) argp;
 
@@ -1292,12 +1275,8 @@ static int lwp_top_level(argp)
     /* Should cleanup state */
 }
 
-int LWP_CreateProcess(ep, stacksize, priority, parm, name, pid)
-   int   (*ep)();
-   int   stacksize, priority;
-   char  *parm;
-   char  *name;
-   PROCESS *pid;
+int LWP_CreateProcess(pthread_startroutine_t ep, int stacksize, int priority, 
+	char *parm, char *name, PROCESS *pid)
 {
     int status;
     pthread_attr_t attr;
@@ -1338,26 +1317,25 @@ int LWP_CreateProcess(ep, stacksize, priority, parm, name, pid)
     return LWP_SUCCESS;
 }
 
-PROCESS LWP_ActiveProcess() {	/* returns pid of current process */
+PROCESS LWP_ActiveProcess(void)
+{	/* returns pid of current process */
     PROCESS pid;
     assert(!pthread_getspecific(lwp_process_key, (pthread_addr_t *) &pid));
     return pid;
 }
 
-int LWP_CurrentProcess(pid)	/* get pid of current process */
-    PROCESS *pid;
+int LWP_CurrentProcess(PROCESS *pid)	/* get pid of current process */
 {
     assert(!pthread_getspecific(lwp_process_key, (pthread_addr_t *) pid));
     return LWP_SUCCESS;
 }
 
-int LWP_DestroyProcess(pid)	/* destroy a lightweight process */
-    PROCESS pid;
+int LWP_DestroyProcess(PROCESS pid)	/* destroy a lightweight process */
 {
     lwp_unimplemented("LWP_DestroyProcess");
 }
 
-int LWP_DispatchProcess()	/* explicit voluntary preemption */
+int LWP_DispatchProcess(void)	/* explicit voluntary preemption */
 {
     assert(!pthread_mutex_unlock(&lwp_mutex));
     pthread_yield();
@@ -1365,11 +1343,11 @@ int LWP_DispatchProcess()	/* explicit voluntary preemption */
     return LWP_SUCCESS;
 }
 
-static int lwp_process_key_destructor() {}
+static int lwp_process_key_destructor(void)
+{
+}
 
-int LWP_InitializeProcessSupport(priority, pid)
-    int priority;
-    PROCESS *pid;
+int LWP_InitializeProcessSupport(int priority, PROCESS *pid)
 {
     static int initialized = 0;
     int status;
@@ -1408,14 +1386,13 @@ int LWP_InitializeProcessSupport(priority, pid)
     return LWP_SUCCESS;
 }
 
-int LWP_TerminateProcessSupport()	/* terminate all LWP support */
+int LWP_TerminateProcessSupport(void)	/* terminate all LWP support */
 {
     lwp_unimplemented("LWP_TerminateProcessSupport");
 }
 
 /* Get and initialize event structure corresponding to lwp event (i.e. address) */
-static event_t *getevent(event)
-  char *event;
+static event_t *getevent(char *event)
 {
     event_t *evp, *newp;
     int hashcode;
@@ -1448,8 +1425,7 @@ static event_t *getevent(event)
 /* Release the specified event */
 #define relevent(evp) ((evp)->refcount--)
 
-int LWP_WaitProcess(event)		/* wait on a single event */
-    char *event;
+int LWP_WaitProcess(char *event)		/* wait on a single event */
 {
     struct event *ev;
     int seq;
@@ -1465,15 +1441,12 @@ int LWP_WaitProcess(event)		/* wait on a single event */
     return LWP_SUCCESS;
 }
 
-int LWP_MwaitProcess(wcount, evlist)	/* wait on m of n events */
-    int wcount;
-    char *evlist[];
+int LWP_MwaitProcess(int wcount, char *evlist[])	/* wait on m of n events */
 {
     lwp_unimplemented("LWP_MWaitProcess");
 }
 
-int LWP_NoYieldSignal(event)
-  char *event;
+int LWP_NoYieldSignal(char *event)
 {
     struct event *ev;
     debugf(("%s: no yield signal (%x)\n", lwp_process_string(), event));
@@ -1487,8 +1460,7 @@ int LWP_NoYieldSignal(event)
     return LWP_SUCCESS;
 }
 
-int LWP_SignalProcess(event)
-  char *event;
+int LWP_SignalProcess(char *event)
 {
     struct event *ev;
     debugf(("%s: signal process (%x)\n", lwp_process_string(), event));
@@ -1505,30 +1477,22 @@ int LWP_SignalProcess(event)
     return LWP_SUCCESS;
 }
 
-int LWP_StackUsed(pid, maxa, used)
-    PROCESS pid;
-    int *maxa, *used;
+int LWP_StackUsed(PROCESS pid, int *maxa, int *used)
 {
     lwp_unimplemented("LWP_StackUsed");
 }
 
-LWP_NewRock(Tag, Value)
-    int Tag;		/* IN */
-    char *Value;	/* IN */
+int LWP_NewRock(int Tag, char *Value)
 {
     lwp_unimplemented("LWP_NewRock");
 }
 
-LWP_GetRock(Tag,  Value)
-    int Tag;		/* IN */
-    char **Value;	/* OUT */
+int LWP_GetRock(int Tag,  char **Value)
 {
     lwp_unimplemented("LWP_GetRock");
 }    
 
-int LWP_GetProcessPriority(pid, priority)	/* returns process priority */
-    PROCESS pid;
-    int *priority;
+int LWP_GetProcessPriority(PROCESS pid, int *priority)	/* returns process priority */
 {
     lwp_unimplemented("LWP_GetProcessPriority");
 }

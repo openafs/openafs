@@ -583,7 +583,7 @@ int fsprobe_Init(a_numServers, a_socketArray, a_ProbeFreqInSecs, a_ProbeHandler,
      * Create a null Rx server security object, to be used by the
      * Callback listener.
      */
-    CBsecobj = (struct rx_securityClass *) rxnull_NewServerSecurityObject();
+    CBsecobj = rxnull_NewServerSecurityObject();
     if (CBsecobj == (struct rx_securityClass *)0) {
       fprintf(stderr,
 	      "[%s] Can't create null security object for the callback listener.\n",
@@ -598,7 +598,7 @@ int fsprobe_Init(a_numServers, a_socketArray, a_ProbeFreqInSecs, a_ProbeHandler,
      * Create a null Rx client security object, to be used by the
      * probe LWP.
      */
-    secobj = (struct rx_securityClass *) rxnull_NewClientSecurityObject();
+    secobj = rxnull_NewClientSecurityObject();
     if (secobj == (struct rx_securityClass *)0) {
       fprintf(stderr,
 	      "[%s] Can't create client security object for probe LWP.\n",

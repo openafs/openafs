@@ -905,9 +905,9 @@ char **envp;
 
     afsconf_SetNoAuthFlag(tdir, noAuth);
 
-    bozo_rxsc[0] = (struct rx_securityClass *) rxnull_NewServerSecurityObject();
+    bozo_rxsc[0] = rxnull_NewServerSecurityObject();
     bozo_rxsc[1] = (struct rx_securityClass *) 0;
-    bozo_rxsc[2] = (struct rx_securityClass *) rxkad_NewServerSecurityObject(
+    bozo_rxsc[2] = rxkad_NewServerSecurityObject(
 					 0, tdir, afsconf_GetKey, (char *) 0);
 
     /* Disable jumbograms */

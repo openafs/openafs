@@ -703,7 +703,7 @@ CheckIpAddrs(header)
 
 	   if (memcmp(&e->ex_hostuuid, &nulluuid, sizeof(afsUUID)) == 0) {
 	      if (ipindex != -1) {
-		 printf("Server Addrs index %d references null MH block %d, index %d\n", i, j);
+		 printf("Server Addrs index %d references null MH block %d, index %d\n", ipindex, i, j);
 		 serveraddrs[ipindex] = 0;     /* avoids printing 2nd error below */
 	      }
 	      continue;

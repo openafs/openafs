@@ -238,7 +238,7 @@ char *arock; {
     if (code)
 	printf("Warning: could not initialize network communication.\n");
 
-    junk=(struct rx_securityClass *)rxnull_NewClientSecurityObject();
+    junk=rxnull_NewClientSecurityObject();
     tdir=afsconf_Open(confdir);
     if(!tdir)
 	printf("Warning: could not get cell configuration.\n");

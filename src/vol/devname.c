@@ -142,11 +142,11 @@ dev_t adev; {
 	return (char *)0;
     }
 #endif
-    while (mntent = getmntent(mfd)) {
+    while ((mntent = getmntent(mfd))) {
 	char *part = mntent->mnt_dir;
 #else
     setfsent();
-    while (fsent = getfsent()) {
+    while ((fsent = getfsent())) {
 	char *part = fsent->fs_file;
 #endif
 #endif /* AFS_SGI_ENV */

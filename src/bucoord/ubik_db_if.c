@@ -900,7 +900,7 @@ vldbClientInit(noAuthFlag, localauth, cellName, cstruct, ttoken)
 	switch (scIndex) 
 	{
 	    case 0:
-	      sc = (struct rx_securityClass *) rxnull_NewClientSecurityObject();
+	      sc = rxnull_NewClientSecurityObject();
 	      break;
 	    case 2:
 	      sc = (struct rx_securityClass *) 
@@ -1052,7 +1052,7 @@ udbClientInit(noAuthFlag, localauth, cellName)
 	switch (udbHandle.uh_scIndex)
 	{
 	    case 0:
-	      udbHandle.uh_secobj = (struct rx_securityClass *) rxnull_NewClientSecurityObject();
+	      udbHandle.uh_secobj = rxnull_NewClientSecurityObject();
 	      break;
 	
 	    case 2:

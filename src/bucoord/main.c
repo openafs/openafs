@@ -89,8 +89,6 @@ extern PrintError();
  */
 struct bc_config *bc_globalConfig;		/*Ptr to global BC configuration info*/
 
-extern struct rx_securityClass *rxnull_NewServerSecurityObject();
-
 struct ubik_client *cstruct;		/* Ptr to Ubik client structure*/
 struct ktc_token   ttoken;              /* The token */
 

@@ -66,15 +66,14 @@ static LocalFreeTokens(alist)
 }
 #endif
 
-static space(x)
-int x; {
+static int space(int x)
+{
     if (x == 0 || x == ' ' || x == '\t' || x== '\n') return 1;
     else return 0;
 }
 
-static LocalParseLine(aline, alist)
-    char *aline;
-    struct token **alist; {
+static int LocalParseLine(char *aline, struct token **alist)
+{
     char tbuffer[256];
     register char *tptr = NULL;
     int inToken;
@@ -155,8 +154,8 @@ static struct ptemp {
  *	return value - ptr to time in text form. Ptr is to a static string.
  */
 
-char *ktime_DateOf(atime)
-afs_int32 atime; {
+char *ktime_DateOf(afs_int32 atime)
+{
     static char tbuffer[30];
     register char *tp;
     tp=ctime((time_t *)&atime);
@@ -169,8 +168,7 @@ afs_int32 atime; {
     return tbuffer;
 }
 
-afs_int32 ktime_Str2int32(astr) 
-register char *astr;
+afs_int32 ktime_Str2int32(register char *astr) 
 {
 struct ktime tk;
 
@@ -191,9 +189,8 @@ return ((tk.hour*60 + tk.min)*60 + tk.sec);
  *	-1 - error in format
  */
 
-static ParseTime(ak, astr)
-register char *astr;
-register struct ktime *ak; {
+static int ParseTime(register struct ktime *ak, register char *astr)
+{
     int field;
     afs_int32 temp;
     register char *tp;
@@ -241,9 +238,8 @@ register struct ktime *ak; {
  */
 
 /* -1 means error, 0 means now, otherwise returns time of next event */
-int ktime_ParsePeriodic(adate, ak)
-register struct ktime *ak;
-char *adate; {
+int ktime_ParsePeriodic(char *adate, register struct ktime *ak)
+{
     struct token *tt;
     register afs_int32 code;
     struct ptemp *tp;
@@ -309,9 +305,8 @@ char *adate; {
  * exit:
  *	0 - astring contains ktime string.
  */
-ktime_DisplayString(aparm, astring)
-register char *astring;
-struct ktime *aparm; {
+int ktime_DisplayString(struct ktime *aparm, register char *astring)
+{
     char tempString[50];
 
     if (aparm->mask & KTIME_NEVER) {
@@ -356,9 +351,8 @@ struct ktime *aparm; {
 }
 
 /* get next time that matches ktime structure after time afrom */
-afs_int32 ktime_next(aktime, afrom)
-afs_int32 afrom;
-struct ktime *aktime; {
+afs_int32 ktime_next(struct ktime *aktime, afs_int32 afrom)
+{
     /* try by guessing from now */
     struct tm *tsp;
     time_t start;	/* time to start looking */
@@ -401,9 +395,8 @@ struct ktime *aktime; {
 
 /* compare date in both formats, and return as in strcmp */
 #ifdef undef
-static KTimeCmp(aktime, atm)
-register struct ktime *aktime;
-register struct tm *atm; {
+static int KTimeCmp(register struct ktime *aktime, register struct tm *atm)
+{
     register afs_int32 tmask;
 
     /* don't compare day of the week, since we can't tell the
@@ -427,9 +420,8 @@ register struct tm *atm; {
 #endif
 
 /* compare date in both formats, and return as in strcmp */
-static KDateCmp(akdate, atm)
-register struct ktime_date *akdate;
-register struct tm *atm; {
+static int KDateCmp(register struct ktime_date *akdate, register struct tm *atm)
+{
     if (akdate->year > atm->tm_year) return 1;
     if (akdate->year < atm->tm_year) return -1;
     if (akdate->month > atm->tm_mon) return 1;
@@ -460,9 +452,8 @@ register struct tm *atm; {
  *	0 - aint32 contains converted date.
  */
 
-afs_int32 ktime_DateToInt32(adate, aint32)
-afs_int32 *aint32;
-char *adate; {
+afs_int32 ktime_DateToInt32(char *adate, afs_int32 *aint32)
+{
     struct ktime_date tdate;
     register afs_int32 code;
 
@@ -485,9 +476,8 @@ char *adate; {
  *	-1 - parsing failure
  */
 
-static afs_int32 ktime_ParseDate(adate, akdate)
-char *adate;
-struct ktime_date *akdate; {
+static afs_int32 ktime_ParseDate(char *adate, struct ktime_date *akdate)
+{
     int code;
     afs_int32 month, day, year, hour, min, sec;
     char never[7];
@@ -542,7 +532,8 @@ struct ktime_date *akdate; {
 }
 
 /* get useful error message to print about date input format */
-char *ktime_GetDateUsage() {
+char *ktime_GetDateUsage(void)
+{
     return "date format is 'mm/dd/yy [hh:mm]', using a 24 hour clock";
 }
 

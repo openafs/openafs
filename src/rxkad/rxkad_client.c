@@ -111,9 +111,7 @@ static afs_int32 Cuid[2];			/* set once and shared by all */
 int rxkad_EpochWasSet = 0;		/* TRUE => we called rx_SetEpoch */
 
 /* allocate a new connetion ID in place */
-rxkad_AllocCID(aobj, aconn)
-  struct rx_securityClass *aobj;
-  struct rx_connection *aconn;
+int rxkad_AllocCID(struct rx_securityClass *aobj, struct rx_connection *aconn)
 {
     struct rxkad_cprivate *tcp;
     struct rxkad_cidgen tgen;
@@ -167,13 +165,9 @@ rxkad_AllocCID(aobj, aconn)
  * the session key and the ticket for the other side obtained from the
  * AuthServer.  Refers to export control to determine level. */
 
-struct rx_securityClass *
-rxkad_NewClientSecurityObject(level, sessionkey, kvno, ticketLen, ticket)
-  rxkad_level      level;
-  struct ktc_encryptionKey *sessionkey;
-  afs_int32		   kvno;
-  int		   ticketLen;
-  char		  *ticket;
+struct rx_securityClass *rxkad_NewClientSecurityObject(
+	rxkad_level level, struct ktc_encryptionKey *sessionkey,
+	afs_int32 kvno, int ticketLen, char *ticket)
 {   struct rx_securityClass *tsc;
     struct rxkad_cprivate   *tcp;
     int			     code;
@@ -206,10 +200,8 @@ rxkad_NewClientSecurityObject(level, sessionkey, kvno, ticketLen, ticket)
 
 /* client: respond to a challenge packet */
 
-rxs_return_t rxkad_GetResponse (aobj, aconn, apacket)
-  IN struct rx_securityClass *aobj;
-  IN struct rx_packet *apacket;
-  IN struct rx_connection *aconn;
+int rxkad_GetResponse(struct rx_securityClass *aobj, 
+	struct rx_connection *aconn, struct rx_packet *apacket)
 {   struct rxkad_cprivate *tcp;
     char *tp;
     int   v2;				/* whether server is old style or v2 */
@@ -297,7 +289,6 @@ rxs_return_t rxkad_GetResponse (aobj, aconn, apacket)
     rx_SetDataSize (apacket, responseSize + tcp->ticketLen);
     return 0;
 }
-
 
 void rxkad_ResetState(void)
 {

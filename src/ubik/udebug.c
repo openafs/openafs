@@ -139,7 +139,7 @@ struct cmd_syndesc *as; {
     }
 
     rx_Init(0);
-    sc = (struct rx_securityClass *) rxnull_NewClientSecurityObject();
+    sc = rxnull_NewClientSecurityObject();
     tconn = rx_NewConnection(hostAddr, port, VOTE_SERVICE_ID, sc, 0);
     
     /* now do the main call */

@@ -30,4 +30,10 @@ extern struct usr_in_ifaddr *usr_in_ifaddr;
 extern struct usr_domain inetdomain;
 extern struct usr_protosw udp_protosw;
 
+#define        MAXRXPORTS  20
+typedef unsigned short rxk_ports_t[MAXRXPORTS];
+typedef char *rxk_portRocks_t[MAXRXPORTS];
+extern rxk_ports_t rxk_ports;
+extern rxk_portRocks_t rxk_portRocks;
+
 #endif /* _RX_KCOMMON_H_ */

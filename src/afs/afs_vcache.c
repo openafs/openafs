@@ -318,7 +318,7 @@ afs_int32 afs_FlushVCBs (afs_int32 lockit)
     int safety1, safety2, safety3;
     XSTATS_DECLS
 
-    if (code = afs_InitReq(&treq, &afs_osi_cred)) return code;
+    if ((code = afs_InitReq(&treq, &afs_osi_cred))) return code;
     treq.flags |= O_NONBLOCK;
 
     if (lockit) MObtainWriteLock(&afs_xvcb,273);

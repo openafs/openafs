@@ -172,14 +172,14 @@ afs_int32 pr_Initialize (secLevel, confDir, cell)
 			 ttoken.kvno);
 		scIndex = 2;
 	    }
-	    sc[2] = (struct rx_securityClass *) rxkad_NewClientSecurityObject
+	    sc[2] = rxkad_NewClientSecurityObject
 		(rxkad_clear, &ttoken.sessionKey, ttoken.kvno,
 		 ttoken.ticketLen, ttoken.ticket);
 	}
     }
     if (scIndex == 1) return PRBADARG;
     if ((scIndex == 0) && (sc[0] == 0))
-	sc[0] = (struct rx_securityClass *) rxnull_NewClientSecurityObject();
+	sc[0] = rxnull_NewClientSecurityObject();
     if ((scIndex == 0) && (secLevel != 0))
 	com_err (whoami, code,
 		 "Could not get afs tokens, running unauthenticated.");

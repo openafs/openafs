@@ -2443,7 +2443,7 @@ static VLDBInit(noAuthFlag, info)
     else scIndex = 0;	    /* don't authenticate */
     switch (scIndex) {
     case 0:
-	sc = (struct rx_securityClass *) rxnull_NewClientSecurityObject();
+	sc = rxnull_NewClientSecurityObject();
 	break;
 
     case 1:

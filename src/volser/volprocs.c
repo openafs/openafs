@@ -55,9 +55,6 @@ RCSID("$Header$");
 #include "volint.h"
 extern int DoLogging;
 extern struct volser_trans *FindTrans(), *NewTrans(),*TransList();
-extern struct rx_securityClass *rxnull_NewServerSecurityObject();
-extern struct rx_service *rx_NewService();
-extern struct rx_securityClass *rxnull_NewClientSecurityObject();
 extern struct afsconf_dir *tdir;
 extern char *volutil_PartitionName();
 

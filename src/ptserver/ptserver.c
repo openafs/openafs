@@ -79,8 +79,6 @@ void main (argc, argv)
     char hostname[64];
     struct rx_service *tservice;
     struct rx_securityClass *sc[3];
-    extern struct rx_securityClass *rxnull_NewServerSecurityObject();
-    extern struct rx_securityClass *rxkad_NewServerSecurityObject();
     extern int RXSTATS_ExecuteRequest();
     extern int PR_ExecuteRequest();
 #if 0

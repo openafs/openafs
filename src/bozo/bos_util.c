@@ -86,7 +86,7 @@ main(int argc, char **argv)
 	    exit(1);
 	}
 	ka_StringToKey(buf,tcell,&tkey);
-	code = afsconf_AddKey(tdir, kvno, &tkey);
+	code = afsconf_AddKey(tdir, kvno, &tkey, 0);
 	if (code) {
 	    printf("bos_util: failed to set key, code %d.\n", code);
 	    exit(1);
@@ -122,7 +122,7 @@ main(int argc, char **argv)
 	    exit(1);
 	}
 	des_string_to_key(buf,&tkey);
-	code = afsconf_AddKey(tdir, kvno, &tkey);
+	code = afsconf_AddKey(tdir, kvno, &tkey, 0);
 	if (code) {
 	    printf("bos_util: failed to set key, code %d.\n", code);
 	    exit(1);
@@ -148,7 +148,7 @@ main(int argc, char **argv)
 		printf("Can't find key in %s\n", argv[3]);
 		exit(1);
 	}
-	code = afsconf_AddKey(tdir, kvno, tkey);
+	code = afsconf_AddKey(tdir, kvno, tkey, 0);
 	if (code) {
 	    printf("bos_util: failed to set key, code %d.\n", code);
 	    exit(1);
@@ -194,7 +194,7 @@ main(int argc, char **argv)
 	printf("All done.\n");
     }
     else {
-	printf("bos_util: unknown operation '%s', type 'bos_util' for assistance\n");
+	printf("bos_util: unknown operation '%s', type 'bos_util' for assistance\n", argv[1]);
 	exit(1);
     }
     exit(0);

@@ -115,7 +115,6 @@ char	**argv;
     afs_int32		    myHost;
     struct rx_service	    *tservice;
     struct rx_securityClass *sc[3];
-    extern struct rx_securityClass *rxnull_NewServerSecurityObject();
     extern int		    VL_ExecuteRequest();
     extern int		    RXSTATS_ExecuteRequest();
     struct afsconf_dir *tdir;
@@ -271,7 +270,7 @@ char	**argv;
 
     sc[0] = rxnull_NewServerSecurityObject();
     sc[1] = (struct rx_securityClass *) 0;
-    sc[2] = (struct rx_securityClass *) rxkad_NewServerSecurityObject(0, tdir, afsconf_GetKey, (char *) 0);
+    sc[2] = rxkad_NewServerSecurityObject(0, tdir, afsconf_GetKey, (char *) 0);
     tservice = rx_NewService(0, USER_SERVICE_ID, "Vldb server", sc, 3, VL_ExecuteRequest);
     if (tservice == (struct rx_service *)0) {
 	printf("vlserver: Could not create VLDB_SERVICE rx service\n");

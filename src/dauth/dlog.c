@@ -160,7 +160,7 @@ int store_afs_token(unix_id, realm_p, tkt_type, ticket_p, ticket_len,
     token.kvno = tkt_type;
     token.ticketLen = ticket_len;
     if (ticket_len > MAXKTCTICKETLEN) {
-	fprintf(stderr, "dlog: DCE ticket is too long (length %d). Maximum length accepted by AFS cache manager is %d\n", MAXKTCTICKETLEN);
+	fprintf(stderr, "dlog: DCE ticket is too long (length %d). Maximum length accepted by AFS cache manager is %d\n", ticket_len, MAXKTCTICKETLEN);
 	exit(1);
     }
     memcpy((char *) token.ticket, (char *) ticket_p, ticket_len);

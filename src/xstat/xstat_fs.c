@@ -590,7 +590,7 @@ int xstat_fs_Init(a_numServers, a_socketArray, a_ProbeFreqInSecs, a_ProbeHandler
      * Create a null Rx client security object, to be used by the
      * probe LWP.
      */
-    secobj = (struct rx_securityClass *) rxnull_NewClientSecurityObject();
+    secobj = rxnull_NewClientSecurityObject();
     if (secobj == (struct rx_securityClass *)0) {
 	fprintf(stderr,
 		"[%s] Can't create probe LWP client security object.\n",

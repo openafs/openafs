@@ -53,12 +53,6 @@ RCSID("$Header$");
 #include <afs/afsutil.h>
 #include <afs/cmd.h>
 
-#ifdef	AFS_OSF_ENV
-void *malloc();
-#else
-char *malloc();
-#endif
-
 #undef VIRTUE
 #undef VICE
 

@@ -471,8 +471,26 @@ extern int afs_osi_MapStrategy(int (*aproc)(), register struct buf *bp);
 extern void shutdown_osifile(void);
 
 
+/* ARCH/osi_vm.c */
+extern int osi_VM_FlushVCache(struct vcache *avc, int *slept);
+extern void osi_VM_StoreAllSegments(struct vcache *avc);
+extern void osi_VM_TryToSmush(struct vcache *avc, struct AFS_UCRED *acred, 
+        int sync);
+extern void osi_VM_FlushPages(struct vcache *avc, struct AFS_UCRED *credp);
+extern void osi_VM_Truncate(struct vcache *avc, int alen, struct AFS_UCRED *acred);
+extern void osi_VM_TryReclaim(struct vcache *avc, int *slept);
+extern void osi_VM_NukePages(struct vnode *vp, off_t offset, off_t size);
+extern int osi_VM_Setup(struct vcache *avc);
+
+#ifdef AFS_SUN5_ENV
+extern int osi_VM_GetDownD(struct vcache *avc, struct dcache *adc);
+extern void osi_VM_PreTruncate(struct vcache *avc, int alen, struct AFS_UCRED *acred);
+#endif
+
+
 /* ARCH/osi_vnodeops.c */
 extern struct vnodeops Afs_vnodeops;
+
 
 /* afs_osifile.c */
 #ifdef AFS_SGI62_ENV
@@ -818,9 +836,6 @@ extern u_short afs_uuid_hash (afsUUID *uuid);
 
 /* MISC PROTOTYPES - THESE SHOULD NOT BE HERE */
 /* MOVE THEM TO APPROPRIATE LOCATIONS */
-extern struct rx_securityClass *rxnull_NewClientSecurityObject(void);
-extern struct rx_securityClass *rxnull_NewServerSecurityObject(void);
-
 extern int RXAFSCB_ExecuteRequest();
 extern int RXSTATS_ExecuteRequest();
 

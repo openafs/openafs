@@ -169,7 +169,6 @@ main (argc, argv)
     extern int afsconf_CheckAuth();
 
     extern int rx_stackSize;
-    extern struct rx_securityClass *rxnull_NewServerSecurityObject();
     extern int KAA_ExecuteRequest();
     extern int KAT_ExecuteRequest();
     extern int KAM_ExecuteRequest();
