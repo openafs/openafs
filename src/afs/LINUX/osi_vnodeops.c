@@ -619,22 +619,13 @@ static int afs_linux_revalidate(struct dentry *dp)
     lock_kernel();
 #endif
 
-    /* If it's a negative dentry, then there's nothing to do. */
-    if (!vcp) {
+    /* Drop the dentry if the callback is broken */
+    if (!(vcp->states & CStatd)) {
+        d_drop(dp);
 #ifdef AFS_LINUX24_ENV
         unlock_kernel();
 #endif
 	AFS_GUNLOCK();
-	return 0;
-    }
-
-    /* Drop the dentry if the callback is broken */
-    if (!(vcp->states & CStatd)) {
-        d_drop(dp); 
-#ifdef AFS_LINUX24_ENV
-	unlock_kernel();
-#endif
-        AFS_GUNLOCK();
         return 0;
     }
 
@@ -682,44 +673,19 @@ static int afs_linux_dentry_revalidate(struct dentry *dp)
     struct vrequest treq;
     struct vcache *vcp = (struct vcache*)dp->d_inode;
 
-    AFS_GLOCK();
-#ifdef AFS_LINUX24_ENV
-    lock_kernel();
-#endif
-
     /* If it's a negative dentry, then there's nothing to do. */
-    if (!vcp) {
-#ifdef AFS_LINUX24_ENV
-	unlock_kernel();
-#endif
-	AFS_GUNLOCK();
-	return 0;
-    }
+    if (!vcp)
+	goto out_valid;
 
-    /* Make this a fast path (no crref), since it's called so often. */
-    if (vcp->states & CStatd) {
-        if (*dp->d_name.name != '/' && vcp->mvstat == 2) /* root vnode */
-	    check_bad_parent(dp); /* check and correct mvid */
-	vcache2inode(vcp);
-#ifdef AFS_LINUX24_ENV
-	unlock_kernel();
-#endif
-	AFS_GUNLOCK();
-	return 0;
-    }
+    if (afs_linux_revalidate(dp) == 0)
+	goto out_valid;
 
-    credp = crref();
-    code = afs_InitReq(&treq, credp);
-    if (!code)
-	code = afs_VerifyVCache(vcp, &treq);
+out_bad:
+    return 0;
 
-#ifdef AFS_LINUX24_ENV
-    unlock_kernel();
-#endif
-    AFS_GUNLOCK();
-    crfree(credp);
-
+out_valid:
     return 1;
+
 }
 
 /* afs_dentry_iput */
