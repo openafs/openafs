@@ -656,6 +656,10 @@ skipremove:
   WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "UseDNS" 1
   WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "NetbiosName" "AFS"
   WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "MountRoot" "/afs"
+  WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "RxMaxMTU" 1200
+!IFDEF DEBUG
+  WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "NoFindLanaByName" 1
+!ENDIF
   SetRebootFlag true
   
   WriteUninstaller "$INSTDIR\Uninstall.exe"
