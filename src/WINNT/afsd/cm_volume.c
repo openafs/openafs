@@ -63,11 +63,12 @@ void cm_InitVolume(void)
  *    first, and fall back to successively older versions if you get
  *    RXGEN_OPCODE.
  */
+#define MULTIHOMED 1
 long cm_UpdateVolume(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *reqp,
 	cm_volume_t *volp)
 {
     cm_conn_t *connp;
-    int i;
+    int i, j, k;
     cm_serverRef_t *tsrp;
     cm_server_t *tsp;
     struct sockaddr_in tsockAddr;
@@ -95,6 +96,7 @@ long cm_UpdateVolume(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *reqp,
         osi_Log1(afsd_logp, "CALL VL_GetEntryByName{UNO} name %s", volp->namep);
 #ifdef MULTIHOMED
         code = VL_GetEntryByNameU(connp->callp, volp->namep, &uvldbEntry);
+		type = 2;
         if ( code == RXGEN_OPCODE ) 
 #endif
         {
@@ -147,17 +149,47 @@ long cm_UpdateVolume(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *reqp,
             rwID = uvldbEntry.volumeId[0];
             roID = uvldbEntry.volumeId[1];
             bkID = uvldbEntry.volumeId[2];
-            for ( i=0; i<nServers; i++ ) {
-                serverFlags[i] = uvldbEntry.serverFlags[i];
-                if ( !(flags & VLSERVER_FLAG_UUID) )
-                    serverNumber[i] = uvldbEntry.serverNumber[i].time_low;
-                else {
-                    /* see afs/afs_volume.c InstallUVolumeEntry().  We need to 
-                     * implement an equivalent to afs_FindServer() and afs_GetServer()
-                     * which support multiple addresses.
-                     */
+            for ( i=0, j=0; i<nServers && j<NMAXNSERVERS; i++ ) {
+                if ( !(uvldbEntry.serverFlags[i] & VLSERVER_FLAG_UUID) ) {
+                    serverFlags[j] = uvldbEntry.serverFlags[i];
+                    serverNumber[j] = uvldbEntry.serverNumber[i].time_low;
+					j++;
+                } else {
+                    afs_uint32 * addrp, nentries, code, unique;
+                    bulkaddrs  addrs;
+                    ListAddrByAttributes attrs;
+                    afsUUID uuid;
+
+                    memset((char *)&attrs, 0, sizeof(attrs));
+                    attrs.Mask = VLADDR_UUID;
+                    attrs.uuid = uvldbEntry.serverNumber[i];
+                    memset((char *)&uuid, 0, sizeof(uuid));
+                    memset((char *)&addrs, 0, sizeof(addrs));
+
+                    do {
+                        code = cm_ConnByMServers(cellp->vlServersp, userp, reqp, &connp);
+                        if (code) 
+                            continue;
+                   
+                        code = VL_GetAddrsU(connp->callp, &attrs, &uuid, &unique, &nentries, &addrs);
+
+                        if (code == 0 && nentries == 0)
+                            code = VL_NOENT;
+                    } while (cm_Analyze(connp, userp, reqp, NULL, NULL, cellp->vlServersp, NULL, code));
+                    code = cm_MapVLRPCError(code, reqp);
+                    if (code)
+                        return code;
+
+                    addrp = addrs.bulkaddrs_val;
+                    for (k = 0; k < nentries && j < NMAXNSERVERS; j++, k++) {
+                        serverFlags[j] = uvldbEntry.serverFlags[i];
+                        serverNumber[j] = addrp[k];
+                    }
+
+                    free(addrs.bulkaddrs_val);  /* This is wrong */
                 }
             }
+			nServers = j;					/* update the server count */
             break;
 #endif
         }

@@ -1021,12 +1021,13 @@ long cm_LookupInternal(cm_scache_t *dscp, char *namep, long flags, cm_user_t *us
                         code = cm_FreelanceAddMount(namep, &fullname[1], "root.cell.", 1, &rock.fid);
                 }
             } else {
-                if (cm_GetCell_Gen(namep, fullname, CM_FLAG_CREATE))
+                if (cm_GetCell_Gen(namep, fullname, CM_FLAG_CREATE)) {
                     found = 1;
-                if ( stricmp(namep, fullname) )
-                    code = cm_FreelanceAddSymlink(namep, fullname, &rock.fid);
-                else
-                    code = cm_FreelanceAddMount(namep, fullname, "root.cell.", 0, &rock.fid);
+                    if ( stricmp(namep, fullname) )
+                        code = cm_FreelanceAddSymlink(namep, fullname, &rock.fid);
+                    else
+                        code = cm_FreelanceAddMount(namep, fullname, "root.cell.", 0, &rock.fid);
+                }
             }
             if (!found || code < 0) {   /* add mount point failed, so give up */
                 if (flags & CM_FLAG_CHECKPATH)
