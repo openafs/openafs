@@ -17,6 +17,11 @@ extern int afs_Analyze(struct conn *aconn, afs_int32 acode, struct VenusFid *afi
 			register struct vrequest *areq, int op, afs_int32 locktype,
 			struct cell *cellp);
 
+/* afs_cell.c */
+extern struct cell *afs_GetRealCellByIndex(register afs_int32 cellindex,
+					   afs_int32 locktype,
+					   afs_int32 refresh);
+
 /* afs_conn.c */
 extern struct conn *afs_ConnBySA(struct srvAddr *sap, unsigned short aport,
 			  afs_int32 acell, struct unixuser *tu,
