@@ -1956,6 +1956,16 @@ call_syscall(param1, param2, param3, param4, param5, param6, param7)
 long param1, param2, param3, param4, param5, param6, param7;
 {
     int error;
+#ifdef AFS_LINUX20_ENV
+    long eparm[4];
+
+    eparm[0] = param4;
+    eparm[1] = param5;
+    eparm[2] = param6;
+    eparm[3] = param7;
+
+    param4 = eparm;
+#endif
 
     error = syscall(AFS_SYSCALL, AFSCALL_CALL, param1, param2, param3, param4, param5, param6, param7);
     if (afsd_verbose) printf("SScall(%d, %d)=%d ", AFS_SYSCALL, AFSCALL_CALL, error);

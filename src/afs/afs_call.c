@@ -943,6 +943,7 @@ asmlinkage int afs_syscall(long syscall, long parm1, long parm2, long parm3,
     long linux_ret=0;
     long *retval = &linux_ret;
     long eparm[4]; /* matches AFSCALL_ICL in fstrace.c */
+    /* eparm is also used by AFSCALL_CALL in afsd.c */
 #else
 #if defined(UKERNEL)
 Afs_syscall ()
@@ -1003,7 +1004,7 @@ Afs_syscall ()
     uap->parm1 = parm1;
     uap->parm2 = parm2;
     uap->parm3 = parm3;
-    if (syscall == AFSCALL_ICL) {
+    if (syscall == AFSCALL_ICL || syscall == AFSCALL_CALL) {
 	AFS_COPYIN((char*)parm4, (char*)eparm, sizeof(eparm), code);
 	uap->parm4 = eparm[0];
 	uap->parm5 = eparm[1];
