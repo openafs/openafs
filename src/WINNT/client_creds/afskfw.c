@@ -901,8 +901,10 @@ KFW_import_windows_lsa(void)
     if (!pkrb5_init_context)
         return;
 
+#ifdef COMMENT
     if ( !MSLSA_IsKerberosLogon() )
         return;
+#endif
 
     code = pkrb5_init_context(&ctx);
     if (code) goto cleanup;

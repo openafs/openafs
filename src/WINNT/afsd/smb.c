@@ -1269,17 +1269,24 @@ int smb_FindShare(smb_vc_t *vcp, smb_packet_t *inp, char *shareName,
     } 
     else /* create  \\<netbiosName>\<cellname>  */
     {
+        char * p = shareName; 
+        int rw = 0;
+
+        if ( *p == '.' ) {
+            p++;
+            rw = 1;
+        }
         /* Get the full name for this cell */
-        code = cm_SearchCellFile(shareName, temp, 0, 0);
+        code = cm_SearchCellFile(p, temp, 0, 0);
 #ifdef AFS_AFSDB_ENV
 		if (code && cm_dnsEnabled) {
             int ttl;
-            code = cm_SearchCellByDNS(shareName, temp, &ttl, 0, 0);
+            code = cm_SearchCellByDNS(p, temp, &ttl, 0, 0);
         }
 #endif
         /* construct the path */
-        if (code == 0) {
-            sprintf(pathName,"/%s/",temp);
+        if (code == 0) {     
+            sprintf(pathName,rw ? "/.%s/" : "/%s/",temp);
             *pathNamep = strdup(strlwr(pathName));
             return 1;
         }
@@ -1858,7 +1865,7 @@ void smb_SendPacket(smb_vc_t *vcp, smb_packet_t *inp)
 {
 	NCB *ncbp;
 	int extra;
-	long code;
+	long code = 0;
 	unsigned char *tp;
 	int localNCB = 0;
 #ifdef DJGPP
@@ -2196,7 +2203,7 @@ long smb_ReceiveCoreReadRaw(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp
 	long count, minCount, finalCount;
 	unsigned short fd;
 	smb_fid_t *fidp;
-	long code;
+	long code = 0;
 	cm_user_t *userp = NULL;
     NCB *ncbp;
     int rc;
@@ -2519,7 +2526,7 @@ void smb_WaitingLocksDaemon()
 	smb_vc_t *vcp;
 	smb_packet_t *inp, *outp;
 	NCB *ncbp;
-	long code;
+	long code = 0;
 
 	while(1) {
 		lock_ObtainWrite(&smb_globalLock);
@@ -2839,7 +2846,7 @@ long smb_ReceiveCoreSearchVolume(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t 
 long smb_ApplyDirListPatches(smb_dirListPatch_t **dirPatchespp,
 	cm_user_t *userp, cm_req_t *reqp)
 {
-	long code;
+	long code = 0;
 	cm_scache_t *scp;
 	char *dptr;
 	long dosTime;
@@ -2905,7 +2912,7 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
 	int attribute;
 	long nextCookie;
 	char *tp;
-	long code;
+	long code = 0;
 	char *pathp;
 	cm_dirEntry_t *dep;
 	int maxCount;
@@ -3388,7 +3395,7 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
 long smb_ReceiveCoreCheckPath(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
 	char *pathp;
-	long code;
+	long code = 0;
 	cm_scache_t *rootScp;
 	cm_scache_t *newScp;
 	cm_user_t *userp;
@@ -3450,7 +3457,7 @@ long smb_ReceiveCoreCheckPath(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
 long smb_ReceiveCoreSetFileAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
 	char *pathp;
-	long code;
+	long code = 0;
 	cm_scache_t *rootScp;
 	unsigned short attribute;
 	cm_attr_t attr;
@@ -3547,7 +3554,7 @@ long smb_ReceiveCoreSetFileAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_pack
 long smb_ReceiveCoreGetFileAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
 	char *pathp;
-	long code;
+	long code = 0;
 	cm_scache_t *rootScp;
 	cm_scache_t *newScp, *dscp;
 	long dosTime;
@@ -3705,7 +3712,7 @@ long smb_ReceiveCoreOpen(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 	char *lastNamep;
     int share;
     int attribute;
-	long code;
+	long code = 0;
     cm_user_t *userp;
     cm_scache_t *scp;
     long dosTime;
@@ -3833,7 +3840,7 @@ typedef struct smb_unlinkRock {
 
 int smb_UnlinkProc(cm_scache_t *dscp, cm_dirEntry_t *dep, void *vrockp, osi_hyper_t *offp)
 {
-	long code;
+	long code = 0;
 	smb_unlinkRock_t *rockp;
 	int caseFold;
 	int match;
@@ -3875,7 +3882,7 @@ int smb_UnlinkProc(cm_scache_t *dscp, cm_dirEntry_t *dep, void *vrockp, osi_hype
 long smb_ReceiveCoreUnlink(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
 	int attribute;
-	long code;
+	long code = 0;
 	char *pathp;
 	char *tp;
 	cm_space_t *spacep;
@@ -3954,7 +3961,7 @@ typedef struct smb_renameRock {
 
 int smb_RenameProc(cm_scache_t *dscp, cm_dirEntry_t *dep, void *vrockp, osi_hyper_t *offp)
 {
-	long code;
+	long code = 0;
 	smb_renameRock_t *rockp;
 	int caseFold;
 	int match;
@@ -3991,7 +3998,7 @@ int smb_RenameProc(cm_scache_t *dscp, cm_dirEntry_t *dep, void *vrockp, osi_hype
 
 long smb_ReceiveCoreRename(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
-	long code;
+	long code = 0;
 	char *oldPathp;
 	char *newPathp;
 	char *tp;
@@ -4143,7 +4150,7 @@ typedef struct smb_rmdirRock {
 
 int smb_RmdirProc(cm_scache_t *dscp, cm_dirEntry_t *dep, void *vrockp, osi_hyper_t *offp)
 {
-	long code;
+	long code = 0;
 	smb_rmdirRock_t *rockp;
 	int match;
 	char shortName[13];
@@ -4178,7 +4185,7 @@ int smb_RmdirProc(cm_scache_t *dscp, cm_dirEntry_t *dep, void *vrockp, osi_hyper
 
 long smb_ReceiveCoreRemoveDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
-	long code;
+	long code = 0;
 	char *pathp;
 	char *tp;
 	cm_space_t *spacep;
@@ -4243,7 +4250,7 @@ long smb_ReceiveCoreFlush(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 	unsigned short fid;
     smb_fid_t *fidp;
     cm_user_t *userp;
-    long code;
+    long code = 0;
     cm_req_t req;
 
 	cm_InitReq(&req);
@@ -4311,7 +4318,7 @@ void smb_FullName(cm_scache_t *dscp, cm_scache_t *scp, char *pathp,
 	char **newPathp, cm_user_t *userp, cm_req_t *reqp)
 {
 	struct smb_FullNameRock rock;
-	long code;
+	long code = 0;
 
 	rock.name = pathp;
 	rock.vnode = scp;
@@ -4330,7 +4337,7 @@ long smb_ReceiveCoreClose(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     smb_fid_t *fidp;
     cm_user_t *userp;
 	long dosTime;
-    long code;
+    long code = 0;
 	cm_req_t req;
 
 	cm_InitReq(&req);
@@ -4423,7 +4430,7 @@ long smb_ReadData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count, char *op,
 #endif /* !DJGPP */
 {
 	osi_hyper_t offset;
-	long code;
+	long code = 0;
 	cm_scache_t *scp;
 	cm_buf_t *bufferp;
 	osi_hyper_t fileLength;
@@ -4577,7 +4584,7 @@ long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count, char *op,
 #endif /* !DJGPP */
 {
 	osi_hyper_t offset;
-	long code;
+	long code = 0;
 	long written = 0;
 	cm_scache_t *scp;
 	osi_hyper_t fileLength;	/* file's length at start of write */
@@ -4807,7 +4814,7 @@ long smb_ReceiveCoreWrite(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     long count, written = 0;
     unsigned short fd;
     smb_fid_t *fidp;
-    long code;
+    long code = 0;
     cm_user_t *userp;
     cm_attr_t truncAttr;	/* attribute struct used for truncating file */
     char *op;
@@ -4901,7 +4908,7 @@ void smb_CompleteWriteRaw(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
 	dos_ptr rawBuf;
 #endif /* !DJGPP */
 	long written = 0;
-	long code;
+	long code = 0;
 
 	fd = smb_GetSMBParm(inp, 0);
 	fidp = smb_FindFID(vcp, fd, 0);
@@ -4967,7 +4974,7 @@ long smb_ReceiveCoreWriteRaw(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
 	long totalCount;
     unsigned short fd;
     smb_fid_t *fidp;
-    long code;
+    long code = 0;
     cm_user_t *userp;
     char *op;
 	unsigned short writeMode;
@@ -5083,7 +5090,7 @@ long smb_ReceiveCoreRead(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     long count, finalCount;
     unsigned short fd;
     smb_fid_t *fidp;
-    long code;
+    long code = 0;
     cm_user_t *userp;
     char *op;
         
@@ -5148,7 +5155,7 @@ long smb_ReceiveCoreRead(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 long smb_ReceiveCoreMakeDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
 	char *pathp;
-    long code;
+    long code = 0;
 	cm_space_t *spacep;
     char *tp;
     cm_user_t *userp;
@@ -5249,7 +5256,7 @@ BOOL smb_IsLegalFilename(char *filename)
 long smb_ReceiveCoreCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
 	char *pathp;
-    long code;
+    long code = 0;
 	cm_space_t *spacep;
     char *tp;
     int excl;
@@ -5408,7 +5415,7 @@ long smb_ReceiveCoreCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
 long smb_ReceiveCoreSeek(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
-    long code;
+    long code = 0;
     long offset;
     int whence;
     unsigned short fd;
@@ -5467,7 +5474,7 @@ void smb_DispatchPacket(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
     static showErrors = 0;
     smb_dispatch_t *dp;
     smb_t *smbp;
-    unsigned long code;
+    unsigned long code = 0;
     unsigned char *outWctp;
     int nparms;			/* # of bytes of parameters */
     char tbuffer[200];
@@ -6328,7 +6335,7 @@ void InitNCBslot(int idx)
 void smb_Listener(void *parmp)
 {
 	NCB *ncbp;
-    long code;
+    long code = 0;
     long len;
 	long i, j;
     smb_vc_t *vcp;
@@ -6994,7 +7001,7 @@ void smb_Shutdown(void)
 #ifdef DJGPP
     dos_ptr dos_ncb;
 #endif
-    long code;
+    long code = 0;
     int i;
 
     /*fprintf(stderr, "Entering smb_Shutdown\n");*/

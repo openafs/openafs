@@ -540,7 +540,8 @@ void afsd_Main(DWORD argc, LPTSTR *argv)
 
 DWORD __stdcall afsdMain_thread(void* notUsed)
 {
-	afsd_Main(0, (LPTSTR*)NULL);
+    char * argv[2] = {AFS_DAEMON_SERVICE_NAME, NULL};
+    afsd_Main(1, (LPTSTR*)argv);
     return(0);
 }
 

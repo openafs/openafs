@@ -52,6 +52,7 @@ extern int errno;
 #define AFS_CELLSERVDB AFS_CELLSERVDB_NT
 #endif /* DJGPP || WIN95 */
 
+#ifdef DEBUG
 DWORD TraceOption=1;
 
 #define TRACE_OPTION_EVENT 1
@@ -84,6 +85,7 @@ void DebugEvent_local(char *a,char *b,...)
 	DeregisterEventSource(h);
 	va_end(marker);
 }
+#endif /* DEBUG */
 
 static long cm_ParsePair(char *lineBufferp, char *leftp, char *rightp)
 {
@@ -213,7 +215,9 @@ long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
 
 	bestp = fopen(wdir, "r");
     
+#ifdef DEBUG
     DebugEvent_local("AFS- cm_searchfile fopen", "Handle[%x], wdir[%s]", bestp, wdir);
+#endif
 
 	/* have we seen the cell line for the guy we're looking for? */
 	inRightCell = 0;
@@ -269,8 +273,10 @@ long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
 					strcpy(newCellNamep, lineBuffer+1);
                 inRightCell = 1;
 				tracking = 0;
+#ifdef DEBUG
                 DebugEvent_local("AFS- cm_searchfile is cell", "inRightCell[%x], linebuffer[%s]", 
                                  inRightCell, lineBuffer);
+#endif
 			}
 			else if (strnicmp(lineBuffer+1, cellNamep,
                                strlen(cellNamep)) == 0) {
@@ -310,13 +316,14 @@ long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
 				/* add the server to the VLDB list */
                 WSASetLastError(0);
                 thp = gethostbyname(valuep);
+#ifdef DEBUG
                 {
-                    int iErr = 0;
-                    iErr = WSAGetLastError();
+                    int iErr = WSAGetLastError();
                     DebugEvent_local("AFS- cm_searchfile inRightCell", 
                                      "thp[%x], valuep[%s], WSAGetLastError[%d]", 
                                      thp, valuep, iErr);
                 }
+#endif
                 if (thp) {
 					memcpy(&vlSockAddr.sin_addr.s_addr, thp->h_addr,
                             sizeof(long));
@@ -363,7 +370,9 @@ long cm_SearchCellByDNS(char *cellNamep, char *newCellNamep, int *ttl,
     int i;
     struct sockaddr_in vlSockAddr;
 
+#ifdef DEBUG
     DebugEvent_local("AFS SearchCellDNS-","Doing search for [%s]", cellNamep);
+#endif
     rc = getAFSServer(cellNamep, cellHosts, &numServers, ttl);
     if (rc == 0 && numServers > 0) {     /* found the cell */
         for (i = 0; i < numServers; i++) {
@@ -391,7 +400,9 @@ long cm_SearchCellByDNS(char *cellNamep, char *newCellNamep, int *ttl,
 
 	success = FALSE;
 
+#ifdef DEBUG
     DebugEvent_local("AFS SearchCellDNS-","Doing search for [%s]", cellNamep);
+#endif 
 
     /* query the AFSDB records of cell */
 	if(DnsQuery_A(cellNamep, DNS_TYPE_AFSDB, DNS_QUERY_STANDARD, NULL, &pDnsCell, NULL) == ERROR_SUCCESS) {

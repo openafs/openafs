@@ -163,11 +163,12 @@ void afsd_ForceTrace(BOOL flush)
 {
 	HANDLE handle;
 	int len;
-	char buf[100];
+	char buf[256];
 
-	if (!logReady) return;
+	if (!logReady) 
+        return;
 
-	len = GetTempPath(99, buf);
+	len = GetTempPath(sizeof(buf)-10, buf);
 	strcpy(&buf[len], "/afsd.log");
 	handle = CreateFile(buf, GENERIC_WRITE, FILE_SHARE_READ,
 			    NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -214,7 +215,8 @@ int afsd_InitCM(char **reasonP)
 	osi_LongToUID(1000, &debugID);
 	code = osi_InitDebug(&debugID);
 	afsi_log("osi_InitDebug code %d", code);
-//	osi_LockTypeSetDefault("stat");	/* comment this out for speed *
+
+    //	osi_LockTypeSetDefault("stat");	/* comment this out for speed *
 	if (code != 0) {
 		*reasonP = "unknown error";
 		return -1;
@@ -241,6 +243,24 @@ int afsd_InitCM(char **reasonP)
 			msgBuf);
 		osi_panic(buf, __FILE__, __LINE__);
 	}
+
+	dummyLen = sizeof(traceBufSize);
+	code = RegQueryValueEx(parmKey, "TraceBufferSize", NULL, NULL,
+				(BYTE *) &traceBufSize, &dummyLen);
+	if (code == ERROR_SUCCESS)
+		afsi_log("Trace Buffer size %d", traceBufSize);
+	else {
+		traceBufSize = CM_CONFIGDEFAULT_TRACEBUFSIZE;
+		afsi_log("Default trace buffer size %d", traceBufSize);
+	}
+
+	/* setup and enable debug log */
+	afsd_logp = osi_LogCreate("afsd", traceBufSize);
+	afsi_log("osi_LogCreate log addr %x", (int)afsd_logp);
+    osi_LogEnable(afsd_logp);
+	logReady = 1;
+
+    osi_Log0(afsd_logp, "Log init");
 
 	dummyLen = sizeof(cacheSize);
 	code = RegQueryValueEx(parmKey, "CacheSize", NULL, NULL,
@@ -380,16 +400,6 @@ int afsd_InitCM(char **reasonP)
 		/* Don't log */
 	}
 
-	dummyLen = sizeof(traceBufSize);
-	code = RegQueryValueEx(parmKey, "TraceBufferSize", NULL, NULL,
-				(BYTE *) &traceBufSize, &dummyLen);
-	if (code == ERROR_SUCCESS)
-		afsi_log("Trace Buffer size %d", traceBufSize);
-	else {
-		traceBufSize = CM_CONFIGDEFAULT_TRACEBUFSIZE;
-		afsi_log("Default trace buffer size %d", traceBufSize);
-	}
-
 	dummyLen = sizeof(cm_sysName);
 	code = RegQueryValueEx(parmKey, "SysName", NULL, NULL,
 				cm_sysName, &dummyLen);
@@ -527,14 +537,6 @@ int afsd_InitCM(char **reasonP)
 	/* turn from 1024 byte units into memory blocks */
     cacheBlocks = (cacheSize * 1024) / buf_bufferSize;
         
-	/* setup and enable debug log */
-	afsd_logp = osi_LogCreate("afsd", traceBufSize);
-	afsi_log("osi_LogCreate log addr %x", (int)afsd_logp);
-    osi_LogEnable(afsd_logp);
-	logReady = 1;
-
-    osi_Log0(afsd_logp, "Log init");
-
 	/* get network related info */
 	cm_noIPAddr = CM_MAXINTERFACE_ADDR;
 	code = syscfg_GetIFInfo(&cm_noIPAddr,

@@ -506,7 +506,7 @@ long smb_ReceiveV3Tran2A(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     int parmCount;
     int dataCount;
     int firstPacket;
-    long code;
+    long code = 0;
 
 	/* We sometimes see 0 word count.  What to do? */
 	if (*inp->wctp == 0) {
@@ -629,7 +629,7 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
 {
 	char *pathp;
     smb_tran2Packet_t *outp;
-    long code;
+    long code = 0;
 	cm_space_t *spacep;
     int excl;
     cm_user_t *userp;
@@ -1066,7 +1066,7 @@ long cm_GetShortName(char *pathp, cm_user_t *userp, cm_req_t *reqp,
 	cm_space_t *spacep;
 	cm_scache_t *dscp;
 	int caseFold = CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD;
-	long code;
+	long code = 0;
 	osi_hyper_t thyper;
 
 	spacep = cm_GetSpace();
@@ -1112,7 +1112,7 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     cm_user_t *userp;
 	cm_space_t *spacep;
     cm_scache_t *scp, *dscp;
-    long code;
+    long code = 0;
     char *op;
 	char *tidPathp;
 	char *lastComp;
@@ -1321,7 +1321,7 @@ long smb_ReceiveTran2QFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     smb_fid_t *fidp;
 	cm_scache_t *scp;
 	char *op;
-	long code;
+	long code = 0;
 	cm_req_t req;
 
 	cm_InitReq(&req);
@@ -1423,7 +1423,7 @@ long smb_ReceiveTran2QFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 
 long smb_ReceiveTran2SetFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
 {
-	long code;
+	long code = 0;
 	unsigned short fid;
 	smb_fid_t *fidp;
 	unsigned short infoLevel;
@@ -1595,7 +1595,7 @@ long smb_ApplyV3DirListPatches(cm_scache_t *dscp,
 	smb_dirListPatch_t **dirPatchespp, int infoLevel, cm_user_t *userp,
 	cm_req_t *reqp)
 {
-	long code;
+	long code = 0;
     cm_scache_t *scp;
     cm_scache_t *targetScp;			/* target if scp is a symlink */
     char *dptr;
@@ -1880,7 +1880,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 	int attribute;
     long nextCookie;
     char *tp;
-    long code;
+    long code = 0;
     char *pathp;
     cm_dirEntry_t *dep;
     int maxCount;
@@ -2492,7 +2492,7 @@ long smb_ReceiveV3FindNotifyClose(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t
 long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
 	char *pathp;
-    long code;
+    long code = 0;
 	cm_space_t *spacep;
     int excl;
     cm_user_t *userp;
@@ -2768,7 +2768,7 @@ long smb_ReceiveV3LockingX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 	LARGE_INTEGER LOffset, LLength;
 	smb_waitingLock_t *waitingLock;
 	void *lockp;
-	long code;
+	long code = 0;
 	int i;
 
 	cm_InitReq(&req);
@@ -2889,7 +2889,7 @@ long smb_ReceiveV3GetAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
 	unsigned short fid;
     smb_fid_t *fidp;
     cm_scache_t *scp;
-    long code;
+    long code = 0;
     long searchTime;
     cm_user_t *userp;
 	cm_req_t req;
@@ -2951,7 +2951,7 @@ long smb_ReceiveV3SetAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
 	unsigned short fid;
     smb_fid_t *fidp;
     cm_scache_t *scp;
-    long code;
+    long code = 0;
 	long searchTime;
     long unixTime;
     cm_user_t *userp;
@@ -3005,7 +3005,7 @@ long smb_ReceiveV3ReadX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     long count, finalCount;
     unsigned short fd;
     smb_fid_t *fidp;
-    long code;
+    long code = 0;
     cm_user_t *userp;
     char *op;
         
@@ -3086,7 +3086,7 @@ long smb_ReceiveV3ReadX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
 	char *pathp, *realPathp;
-	long code;
+	long code = 0;
 	cm_space_t *spacep;
 	cm_user_t *userp;
 	cm_scache_t *dscp;		/* parent dir */
@@ -3575,7 +3575,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
 	char *pathp, *realPathp;
-	long code;
+	long code = 0;
 	cm_space_t *spacep;
 	cm_user_t *userp;
 	cm_scache_t *dscp;		/* parent dir */
