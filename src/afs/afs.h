@@ -201,6 +201,7 @@ struct cell {
     u_short vlport;			    /* volume server port */
     short states;			    /* state flags */
     short cellIndex;			    /* relative index number per cell */
+    short realcellIndex;		    /* as above but ignoring aliases */
     time_t timeout;			    /* data expire time, if non-zero */
     char *realName;			    /* who this cell is an alias for */
 };
