@@ -62,7 +62,7 @@
 #endif
 
 static inline afs_uint32
-cshift (afs_uint32 x, unsigned int n)
+cshift(afs_uint32 x, unsigned int n)
 {
     x = CRAYFIX(x);
     return CRAYFIX((x << n) | (x >> (32 - n)));

@@ -87,19 +87,25 @@ extern struct rx_securityClass *rxkad_NewServerSecurityObject(rxkad_level
 							      level, char
 							      *get_key_rock,
 							      int (*get_key)
-							        (char
-								 *get_key_rock,
-								 int kvno,
-								 struct
-								 ktc_encryptionKey
-								 * serverKey),
+
+
+							       
+							      (char
+							       *get_key_rock,
+							       int kvno,
+							       struct
+							       ktc_encryptionKey
+							       * serverKey),
 							      int (*user_ok)
-							        (char *name,
-								 char
-								 *instance,
-								 char *cell,
-								 afs_int32
-								 kvno));
+
+
+							       
+							      (char *name,
+							       char
+							       *instance,
+							       char *cell,
+							       afs_int32
+							       kvno));
 extern int rxkad_CheckAuthentication(struct rx_securityClass *aobj,
 				     struct rx_connection *aconn);
 extern int rxkad_CreateChallenge(struct rx_securityClass *aobj,

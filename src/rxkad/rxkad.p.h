@@ -16,15 +16,15 @@
 		/* no ticket good for longer than 30 days */
 #define MAXKTCTICKETLIFETIME (30*24*3600)
 #define MINKTCTICKETLEN	      32
-#define	MAXKTCTICKETLEN	      12000 /* was 344 */
+#define	MAXKTCTICKETLEN	      12000	/* was 344 */
 #define	MAXKTCNAMELEN	      64	/* name & inst should be 256 */
 #define MAXKTCREALMLEN	      64	/* should be 256 */
 #define KTC_TIME_UNCERTAINTY (15*60)	/* max skew bet. machines' clocks */
 
 #define MAXRANDOMNAMELEN 16	/* length of random generated 
-                             * usernames used by afslog for high 
-                             * security must be < MAXKTCNAMELEN && < MAXSMBNAMELEN */
-#define MAXSMBNAMELEN    256 /* max length of an SMB name */
+				 * usernames used by afslog for high 
+				 * security must be < MAXKTCNAMELEN && < MAXSMBNAMELEN */
+#define MAXSMBNAMELEN    256	/* max length of an SMB name */
 
 #define LOGON_OPTION_INTEGRATED 1
 #define LOGON_OPTION_HIGHSECURITY 2
@@ -124,8 +124,8 @@ RXKAD_STATS_DECLSPEC struct rxkad_stats rxkad_stats;
 #include <pthread.h>
 #include <assert.h>
 extern pthread_mutex_t rxkad_stats_mutex;
-#define LOCK_RXKAD_STATS assert(pthread_mutex_lock(&rxkad_stats_mutex)==0);
-#define UNLOCK_RXKAD_STATS assert(pthread_mutex_unlock(&rxkad_stats_mutex)==0);
+#define LOCK_RXKAD_STATS assert(pthread_mutex_lock(&rxkad_stats_mutex)==0)
+#define UNLOCK_RXKAD_STATS assert(pthread_mutex_unlock(&rxkad_stats_mutex)==0)
 #else
 #define LOCK_RXKAD_STATS
 #define UNLOCK_RXKAD_STATS

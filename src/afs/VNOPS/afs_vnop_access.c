@@ -189,9 +189,9 @@ afs_access(OSI_VC_DECL(avc), register afs_int32 amode,
     register afs_int32 code;
     struct vrequest treq;
     struct afs_fakestat_state fakestate;
-    OSI_VC_CONVERT(avc)
+    OSI_VC_CONVERT(avc);
 
-	AFS_STATCNT(afs_access);
+    AFS_STATCNT(afs_access);
     afs_Trace3(afs_iclSetp, CM_TRACE_ACCESS, ICL_TYPE_POINTER, avc,
 	       ICL_TYPE_INT32, amode, ICL_TYPE_OFFSET,
 	       ICL_HANDLE_OFFSET(avc->m.Length));
@@ -314,9 +314,9 @@ afs_getRights(OSI_VC_DECL(avc), register afs_int32 arights,
 {
     register afs_int32 code;
     struct vrequest treq;
-    OSI_VC_CONVERT(avc)
+    OSI_VC_CONVERT(avc);
 
-	if (code = afs_InitReq(&treq, acred))
+    if (code = afs_InitReq(&treq, acred))
 	return code;
 
     code = afs_VerifyVCache(avc, &treq);

@@ -1956,7 +1956,8 @@ afsclient_AFSServerGetBegin(const void *cellHandle, void **iterationIdP,
      * Iterate over the list and fill in the hostname of each of the servers
      */
 
-    LOCK_GLOBAL_MUTEX for (iserv = 0; iserv < serv->total; iserv++) {
+    LOCK_GLOBAL_MUTEX;
+    for (iserv = 0; iserv < serv->total; iserv++) {
 	int addr = htonl(serv->server[iserv].serverAddress[0]);
 	host = gethostbyaddr((const char *)&addr, sizeof(int), AF_INET);
 	if (host != NULL) {
@@ -1964,8 +1965,8 @@ afsclient_AFSServerGetBegin(const void *cellHandle, void **iterationIdP,
 		    AFS_MAX_SERVER_NAME_LEN);
 	}
     }
-    UNLOCK_GLOBAL_MUTEX
-	if (IteratorInit
+    UNLOCK_GLOBAL_MUTEX;
+    if (IteratorInit
 	    (iter, (void *)serv, GetServerRPC, GetServerFromCache, NULL, NULL,
 	     &tst)) {
 	*iterationIdP = (void *)iter;

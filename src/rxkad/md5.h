@@ -42,13 +42,13 @@
 #endif
 
 struct md5 {
-  unsigned int sz[2];
-  afs_uint32 counter[4];
-  unsigned char save[64];
+    unsigned int sz[2];
+    afs_uint32 counter[4];
+    unsigned char save[64];
 };
 
 typedef struct md5 MD5_CTX;
 
-void MD5_Init (struct md5 *m);
-void MD5_Update (struct md5 *m, const void *p, size_t len);
-void MD5_Final (void *res, struct md5 *m); /* afs_uint32 res[4] */
+void MD5_Init(struct md5 *m);
+void MD5_Update(struct md5 *m, const void *p, size_t len);
+void MD5_Final(void *res, struct md5 *m);	/* afs_uint32 res[4] */

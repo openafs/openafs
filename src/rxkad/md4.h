@@ -42,13 +42,13 @@
 #endif
 
 struct md4 {
-  unsigned int sz[2];
-  afs_uint32 counter[4];
-  unsigned char save[64];
+    unsigned int sz[2];
+    afs_uint32 counter[4];
+    unsigned char save[64];
 };
 
 typedef struct md4 MD4_CTX;
 
-void MD4_Init (struct md4 *m);
-void MD4_Update (struct md4 *m, const void *p, size_t len);
-void MD4_Final (void *res, struct md4 *m);
+void MD4_Init(struct md4 *m);
+void MD4_Update(struct md4 *m, const void *p, size_t len);
+void MD4_Final(void *res, struct md4 *m);

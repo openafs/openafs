@@ -23,7 +23,7 @@ RCSID
 #include <winbase.h>
 #include "rx_clock.h"
 
-void clock_UpdateTime(void);    /* forward reference */
+void clock_UpdateTime(void);	/* forward reference */
 
 struct clock clock_now;		/* The last elapsed time ready by clock_GetTimer */
 
@@ -63,7 +63,7 @@ int
 clock_UnInit(void)
 {
     clockInitialized = 0;
-	return 0;
+    return 0;
 }
 #endif
 

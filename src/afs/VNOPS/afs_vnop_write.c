@@ -824,7 +824,7 @@ afs_close(OSI_VC_ARG(avc), aflags, count, acred)
 #else
 afs_close(OSI_VC_ARG(avc), aflags, acred)
 #endif
-OSI_VC_DECL(avc);
+     OSI_VC_DECL(avc);
      afs_int32 aflags;
      struct AFS_UCRED *acred;
 {
@@ -835,9 +835,9 @@ OSI_VC_DECL(avc);
     struct flid flid;
 #endif
     struct afs_fakestat_state fakestat;
-    OSI_VC_CONVERT(avc)
+    OSI_VC_CONVERT(avc);
 
-	AFS_STATCNT(afs_close);
+    AFS_STATCNT(afs_close);
     afs_Trace2(afs_iclSetp, CM_TRACE_CLOSE, ICL_TYPE_POINTER, avc,
 	       ICL_TYPE_INT32, aflags);
     code = afs_InitReq(&treq, acred);
@@ -1018,9 +1018,9 @@ OSI_VC_DECL(avc);
 {
     register afs_int32 code;
     struct vrequest treq;
-    OSI_VC_CONVERT(avc)
+    OSI_VC_CONVERT(avc);
 
-	if (avc->vc_error)
+    if (avc->vc_error)
 	return avc->vc_error;
 
 #if defined(AFS_SUN5_ENV)

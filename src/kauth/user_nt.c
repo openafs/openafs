@@ -797,7 +797,7 @@ send_recv(pkt, rpkt, f, _to)
 	(void)fflush(stdout);
     }
     FD_ZERO(&readfds);
-    FD_SET(f,&readfds);
+    FD_SET(f, &readfds);
     errno = 0;
     /* select - either recv is ready, or timeout */
     /* see if timeout or error or wrong descriptor */
