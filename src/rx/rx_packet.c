@@ -76,7 +76,6 @@ RCSID("$Header$");
 #include "rx_packet.h"
 #include "rx_globals.h"
 #include <lwp.h>
-#include "rx_internal.h"
 #ifdef HAVE_STRING_H
 #include <string.h>
 #else
@@ -156,7 +155,7 @@ afs_int32 rx_SlowPutInt32(struct rx_packet *packet, size_t offset, afs_int32 dat
  *         all buffers are contiguously arrayed in the iovec from 0..niovecs-1
  */ 
 afs_int32 rx_SlowReadPacket(struct rx_packet *packet, unsigned int offset,
-			int resid, char *out)
+	int resid, char *out)
 {
   unsigned int i, j, l, r;
   for (l=0, i=1; i< packet->niovecs ; i++ ) {
@@ -189,7 +188,7 @@ afs_int32 rx_SlowReadPacket(struct rx_packet *packet, unsigned int offset,
  *        offset is an integral multiple of the word size.
  */ 
 afs_int32 rx_SlowWritePacket(struct rx_packet *packet, int offset, int resid,
-			 char *in)
+	char *in)
 {
   int i, j, l, r;
   char * b;
@@ -222,7 +221,7 @@ afs_int32 rx_SlowWritePacket(struct rx_packet *packet, int offset, int resid,
   return (resid ? (r - resid) : r);
 }
 
-static struct rx_packet * allocCBuf(int class)
+static struct rx_packet *allocCBuf(int class)
 {
   struct rx_packet *c;
   SPLVAR;
@@ -308,9 +307,7 @@ void rxi_freeCBuf(struct rx_packet *c)
  * This isn't terribly general, because it knows that the packets are only
  * rounded up to the EBS (userdata + security header).
  */
-int rxi_RoundUpPacket(p, nb)
-     struct rx_packet * p;
-     unsigned int nb;
+int rxi_RoundUpPacket(struct rx_packet *p, unsigned int nb)
 {
   int i;
   i = p->niovecs - 1;
@@ -748,11 +745,7 @@ static int CountFDs(register int amax)
  * (host,port) of the sender are stored in the supplied variables, and
  * the data length of the packet is stored in the packet structure.
  * The header is decoded. */
-int rxi_ReadPacket(socket, p, host, port)
-     int socket;
-     register struct rx_packet *p;
-     afs_uint32 *host;
-     u_short *port;
+int rxi_ReadPacket(osi_socket socket, register struct rx_packet *p, afs_uint32 *host, u_short *port)
 {
     struct sockaddr_in from;
     int nbytes;
@@ -861,11 +854,8 @@ int rxi_ReadPacket(socket, p, host, port)
  * HACK: We store the length of the first n-1 packets in the
  * last two pad bytes. */
 
-struct rx_packet *rxi_SplitJumboPacket(p, host, port, first)
-     register struct rx_packet *p;
-     afs_int32 host;
-     short port;
-     int first;
+struct rx_packet *rxi_SplitJumboPacket(register struct rx_packet *p, afs_int32 host, 
+	short port, int first)
 {
     struct rx_packet *np;
     struct rx_jumboHeader *jp;
@@ -926,13 +916,8 @@ struct rx_packet *rxi_SplitJumboPacket(p, host, port, first)
 
 #ifndef KERNEL
 /* Send a udp datagram */
-int osi_NetSend(socket, addr, dvec, nvecs, length, istack)
-    osi_socket socket;
-    char * addr;
-    struct iovec *dvec;
-    int nvecs;
-    int length;
-    int istack;
+int osi_NetSend(osi_socket socket, char *addr, struct iovec *dvec, int nvecs, 
+	int length, int istack)
 {
     struct msghdr msg;
 
@@ -959,10 +944,7 @@ int osi_NetSend(socket, addr, dvec, nvecs, length, istack)
  * Returns the number of bytes not transferred.
  * The message is NOT changed.
  */
-static int cpytoc(mp, off, len, cp)
-    mblk_t *mp;
-    register int off, len;
-    register char * cp;
+static int cpytoc(mblk_t *mp, register int off, register int len, register char *cp)
 {
     register int n;
 
@@ -983,10 +965,7 @@ static int cpytoc(mp, off, len, cp)
  * but it doesn't really.  
  * This sucks, anyway, do it like m_cpy.... below 
  */
-static int cpytoiovec(mp, off, len, iovs, niovs)
-    mblk_t *mp;
-    int off, len, niovs;
-    register struct iovec *iovs;
+static int cpytoiovec(mblk_t *mp, int off, int len, register struct iovec *iovs, int niovs)
 {
     register int m,n,o,t,i;
 
@@ -1016,10 +995,7 @@ static int cpytoiovec(mp, off, len, iovs, niovs)
 #define m_cpytoiovec(a, b, c, d, e) cpytoiovec(a, b, c, d, e)
 #else
 #if !defined(AFS_LINUX20_ENV)
-static int m_cpytoiovec(m, off, len, iovs, niovs)
-     struct mbuf *m;
-     int off, len, niovs;
-     struct iovec iovs[];
+static int m_cpytoiovec(struct mbuf *m, int off, int len, struct iovec iovs[], int niovs)
 {
   caddr_t p1, p2;
   unsigned int l1, l2, i, t;
@@ -1095,12 +1071,8 @@ int hdr_len, data_len;
 
 /* send a response to a debug packet */
 
-struct rx_packet *rxi_ReceiveDebugPacket(ap, asocket, ahost, aport, istack)
-  osi_socket asocket;
-  afs_int32 ahost;
-  short aport;
-  register struct rx_packet *ap;
-  int istack;
+struct rx_packet *rxi_ReceiveDebugPacket(register struct rx_packet *ap, 
+	osi_socket asocket, afs_int32 ahost, short aport, int istack)
 {
     struct rx_debugIn tin;
     afs_int32 tl;
@@ -1382,12 +1354,8 @@ struct rx_packet *rxi_ReceiveDebugPacket(ap, asocket, ahost, aport, istack)
     return ap;
 }
 
-struct rx_packet *rxi_ReceiveVersionPacket(ap, asocket, ahost, aport, istack)
-  osi_socket asocket;
-  afs_int32 ahost;
-  short aport;
-  register struct rx_packet *ap;
-  int istack;
+struct rx_packet *rxi_ReceiveVersionPacket(register struct rx_packet *ap, 
+	osi_socket asocket, afs_int32 ahost, short aport, int istack)
 {
     afs_int32 tl;
 
@@ -1574,10 +1542,8 @@ void rxi_SendPacket(struct rx_connection * conn, struct rx_packet *p,
 /* Send a list of packets to appropriate destination for the specified
  * connection.  The headers are first encoded and placed in the packets.
  */
-void rxi_SendPacketList(struct rx_connection * conn,
-			struct rx_packet **list,
-			int len,
-			int istack)
+void rxi_SendPacketList(struct rx_connection * conn, struct rx_packet **list,
+	int len, int istack)
 {
 #if     defined(AFS_SUN5_ENV) && defined(KERNEL)
     int waslocked;
@@ -1869,10 +1835,8 @@ void rxi_DecodePacketHeader(register struct rx_packet *p)
     /* Note: top 16 bits of this last word are the security checksum */
 }
 
-void rxi_PrepareSendPacket(call, p, last)
-    register struct rx_call *call;
-    register struct rx_packet *p;
-    register int last;
+void rxi_PrepareSendPacket(register struct rx_call *call, register struct rx_packet *p, 
+	register int last)
 {
     register struct rx_connection *conn = call->conn;
     int i, j;

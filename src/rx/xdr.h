@@ -285,6 +285,7 @@ struct xdr_discrim {
 /*
  * These are the "generic" xdr routines.
  */
+#if 0
 extern bool_t	xdr_void();
 extern bool_t	xdr_int();
 extern bool_t	xdr_u_int();
@@ -319,6 +320,7 @@ extern void   xdrrec_create();		/* XDR pseudo records for tcp */
 extern bool_t xdrrec_endofrecord();	/* make end of xdr record */
 extern bool_t xdrrec_skiprecord();	/* move to begining of next record */
 extern bool_t xdrrec_eof();		/* true iff no more input */
+#endif
 
 /*
  * If you change the definitions of xdr_afs_int32 and xdr_afs_uint32, be sure
@@ -338,5 +340,7 @@ extern bool_t xdrrec_eof();		/* true iff no more input */
 #ifndef xdr_afs_uint64
 #define xdr_afs_uint64 xdr_uint64
 #endif
+
+#include "xdr_prototypes.h"
 
 #endif /* __XDR_INCLUDE__ */

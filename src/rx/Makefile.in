@@ -46,7 +46,7 @@ KSRCS = rx.c rx.h rx_clock.c rx_clock.h rx_event.c rx_event.h \
 	rx_null.c rx_null.h rx_queue.h rx_getaddr.c rx_packet.c rx_packet.h \
 	rx_multi.h rx_kcommon.h rx_kcommon.c rx_prototypes.h \
 	xdr.c xdr.h xdr_array.c xdr_arrayn.c xdr_rx.c rx_misc.c rx_rdwr.c \
-	xdr_afsuuid.c rx_trace.h xdr_int64.c
+	xdr_afsuuid.c rx_trace.h xdr_int64.c xdr_prototypes.h
 UKSRCS = $(KSRCS) rx_conncache.c
 
 all: \
@@ -63,33 +63,33 @@ RX_component_version_number.c: AFS_component_version_number.c
 
 RX_component_version_number.o: RX_component_version_number.c
 
-${RXOBJS}: ${BASICINCLS} rx.h rx_user.h rx_globals.h
+${RXOBJS}: ${BASICINCLS} rx.h rx_user.h rx_globals.h rx_prototypes.h
 
-${MULTIOBJS}: rx.h rx_multi.h
+${MULTIOBJS}: rx.h rx_multi.h rx_prototypes.h
 
-${XDROBJS}: xdr.h
+${XDROBJS}: xdr.h xdr_prototypes.h
 
-rxperf.o: rx.h rx_null.h rx_globals.h
+rxperf.o: rx.h rx_null.h rx_globals.h rx_prototypes.h
 
-rx_user.o: rx.h rx_user.h
+rx_user.o: rx.h rx_user.h rx_prototypes.h
 
 rx_packet.o: rx_packet.c rx_packet.h
 
-rx_rdwr.o: rx_rdwr.c rx.h
+rx_rdwr.o: rx_rdwr.c rx.h rx_prototypes.h
 
-rx.o: rx.h rx_user.h
+rx.o: rx.h rx_user.h rx_prototypes.h
 
-rx_conncache.o: rx.h
+rx_conncache.o: rx.h rx_prototypes.h
 
 rx_trace.o: rx_trace.h 
 
-rx_getaddr.o: rx.h rx_getaddr.c
+rx_getaddr.o: rx.h rx_getaddr.c rx_prototypes.h
 
-rx_globals.o: rx.h rx_user.h rx_globals.h
+rx_globals.o: rx.h rx_user.h rx_globals.h rx_prototypes.h
 
-xdr_rx.o: xdr.h rx.h
+xdr_rx.o: xdr.h rx.h xdr_prototypes.h rx_prototypes.h
 
-xdr_refernce.o: xdr_refernce.c xdr.h
+xdr_refernce.o: xdr_refernce.c xdr.h xdr_prototypes.h
 
 rxperf: rxperf.o librx.a
 	${CC} -o $@ rxperf.o ${LIBS}
@@ -122,7 +122,8 @@ includes: \
 	${TOP_INCDIR}/rx/rx_lwp.h \
 	${TOP_INCDIR}/rx/rx_misc.h \
 	${TOP_INCDIR}/rx/rx_null.h \
-	${TOP_INCDIR}/rx/xdr.h
+	${TOP_INCDIR}/rx/xdr.h \
+	${TOP_INCDIR}/rx/xdr_prototypes.h
 
 ${TOP_LIBDIR}/librx.a: librx.a
 	${INSTALL} $? $@
@@ -173,6 +174,9 @@ ${TOP_INCDIR}/rx/rx_null.h: rx_null.h
 ${TOP_INCDIR}/rx/xdr.h: xdr.h
 	${INSTALL} $? $@
 
+${TOP_INCDIR}/rx/xdr_prototypes.h: xdr_prototypes.h
+	${INSTALL} $? $@
+
 ${TOP_INCDIR}/rx/rx_xmit_nt.h: rx_xmit_nt.h 
 	${INSTALL} $? $@
 
@@ -209,6 +213,7 @@ kinstall: \
 	${KERNELDIR}/rx/xdr_arrayn.c \
 	${KERNELDIR}/rx/xdr.c \
 	${KERNELDIR}/rx/xdr.h \
+	${KERNELDIR}/rx/xdr_prototypes.h \
 	${KERNELDIR}/rx/xdr_int64.c	 \
 	${KERNELDIR}/rx/xdr_rx.c
 
@@ -246,6 +251,7 @@ ukinstall: \
 	${UKERNELDIR}/rx/xdr_arrayn.c \
 	${UKERNELDIR}/rx/xdr.c \
 	${UKERNELDIR}/rx/xdr.h \
+	${UKERNELDIR}/rx/xdr_prototypes.h \
 	${UKERNELDIR}/rx/xdr_int64.c \
 	${UKERNELDIR}/rx/xdr_rx.c
 
@@ -347,6 +353,9 @@ ${KERNELDIR}/rx/xdr.c: xdr.c
 	${INSTALL} $? $@
 
 ${KERNELDIR}/rx/xdr.h: xdr.h
+	${INSTALL} $? $@
+
+${KERNELDIR}/rx/xdr_prototypes.h: xdr_prototypes.h
 	${INSTALL} $? $@
 
 ${KERNELDIR}/rx/xdr_int64.c: xdr_int64.c
@@ -451,6 +460,9 @@ ${UKERNELDIR}/rx/xdr.c: xdr.c
 ${UKERNELDIR}/rx/xdr.h: xdr.h
 	${INSTALL} $? $@
 
+${UKERNELDIR}/rx/xdr_prototypes.h: xdr_prototypes.h
+	${INSTALL} $? $@
+
 ${UKERNELDIR}/rx/xdr_int64.c: xdr_int64.c
 	${INSTALL} $? $@
 
@@ -472,7 +484,8 @@ install: \
 	${DESTDIR}${includedir}/rx/rx_lwp.h \
 	${DESTDIR}${includedir}/rx/rx_misc.h \
 	${DESTDIR}${includedir}/rx/rx_null.h \
-	${DESTDIR}${includedir}/rx/xdr.h
+	${DESTDIR}${includedir}/rx/xdr.h \
+	${DESTDIR}${includedir}/rx/xdr_prototypes.h
 
 ${DESTDIR}${libdir}/librx.a: librx.a
 	${INSTALL} $? $@
@@ -516,7 +529,7 @@ ${DESTDIR}${includedir}/rx/rx_misc.h: rx_misc.h
 ${DESTDIR}${includedir}/rx/rx_null.h: rx_null.h
 	${INSTALL} $? $@
 
-${DESTDIR}${includedir}/rx/xdr.h: xdr.h
+${DESTDIR}${includedir}/rx/xdr_prototypes.h: xdr_prototypes.h
 	${INSTALL} $? $@
 
 
@@ -534,7 +547,8 @@ dest: ${DEST}/lib/librx.a \
 	${DEST}/include/rx/rx_lwp.h \
 	${DEST}/include/rx/rx_misc.h \
 	${DEST}/include/rx/rx_null.h \
-	${DEST}/include/rx/xdr.h
+	${DEST}/include/rx/xdr.h \
+	${DEST}/include/rx/xdr_prototypes.h
 
 ${DEST}/lib/librx.a: librx.a
 	${INSTALL} $? $@
@@ -579,6 +593,9 @@ ${DEST}/include/rx/rx_null.h: rx_null.h
 	${INSTALL} $? $@
 
 ${DEST}/include/rx/xdr.h: xdr.h
+	${INSTALL} $? $@
+
+${DEST}/include/rx/xdr_prototypes.h: xdr_prototypes.h
 	${INSTALL} $? $@
 
 #

@@ -91,8 +91,7 @@ void rxk_shutdownPorts(void)
     }
 }
 
-osi_socket rxi_GetUDPSocket(port)
-    u_short port;
+osi_socket rxi_GetUDPSocket(u_short port)
 {
     struct osi_socket *sockp;
     sockp = (struct osi_socket *) rxk_NewSocket(port);
@@ -197,8 +196,7 @@ osi_utoa(char *buf, size_t len, unsigned long val)
  * argument to the native panic(), we construct a single string and hand
  * that to osi_Panic().
  */
-void
-osi_AssertFailK(const char *expr, const char *file, int line)
+void osi_AssertFailK(const char *expr, const char *file, int line)
 {
 	static const char msg0[] = "assertion failed: ";
 	static const char msg1[] = ", file: ";

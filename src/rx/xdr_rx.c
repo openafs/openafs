@@ -127,11 +127,7 @@ static struct xdr_ops	xdrrx_ops = {
  * Initialize an rx xdr handle, for a given rx call.  op must be XDR_ENCODE or XDR_DECODE.
  * Call must have been returned by rx_MakeCall or rx_GetCall.  Stream should be a pointer to a local rx_stream structure.
  */
-void
-xdrrx_create(xdrs, call, op)
-	register XDR *xdrs;
-	register struct rx_call *call;
-	register enum xdr_op op;
+void xdrrx_create(register XDR *xdrs, register struct rx_call *call, register enum xdr_op op)
 {
 	xdrs->x_op = op;
 	xdrs->x_ops = &xdrrx_ops;

@@ -101,12 +101,14 @@ extern afs_int32 afs_termState;
 # include "rx_queue.h"
 # include "rx_globals.h"
 # include "rx_trace.h"
-# include "rx_internal.h"
 # include <afs/rxgen_consts.h>
 #endif /* KERNEL */
 
 int (*registerProgram)() = 0;
 int (*swapNameProgram)() = 0;
+
+/* Local static routines */
+static void rxi_DestroyConnectionNoLock(register struct rx_connection *conn);
 
 #ifdef	AFS_GLOBAL_RXLOCK_KERNEL
 struct rx_tq_debug {
@@ -300,7 +302,6 @@ void osirx_AssertMine(afs_kmutex_t *lockaddr, char *msg);
 #define SET_CALL_QUEUE_LOCK(C, L)
 #define CLEAR_CALL_QUEUE_LOCK(C)
 #endif /* RX_ENABLE_LOCKS */
-static void rxi_DestroyConnectionNoLock();
 struct rx_serverQueueEntry *rx_waitForPacket = 0;
 
 /* ------------Exported Interfaces------------- */
@@ -5033,10 +5034,10 @@ void rxi_Start(struct rxevent *event, register struct rx_call *call,
 	    CALL_HOLD(call, RX_CALL_REFCOUNT_RESEND);
 	    call->resendEvent = rxevent_Post(&retryTime,
 					     rxi_StartUnlocked,
-					     (char *)call, istack);
+					     (void *)call, (void *)istack);
 #else /* RX_ENABLE_LOCKS */
 	    call->resendEvent = rxevent_Post(&retryTime, rxi_Start,
-					     (char *)call, (void*)(long)istack);
+					     (void *)call, (void *)istack);
 #endif /* RX_ENABLE_LOCKS */
 	  }
 	}
@@ -5991,7 +5992,7 @@ void rx_PrintPeerStats(FILE *file, struct rx_peer *peer)
 #define UNLOCK_RX_DEBUG
 #endif /* AFS_PTHREAD_ENV */
 
-static int MakeDebugCall(int socket, afs_uint32 remoteAddr, 
+static int MakeDebugCall(osi_socket socket, afs_uint32 remoteAddr, 
 	afs_uint16 remotePort, u_char type, void *inputData, size_t inputLength,
 	void *outputData, size_t outputLength)
 {
@@ -6058,7 +6059,7 @@ static int MakeDebugCall(int socket, afs_uint32 remoteAddr,
     return code;
 }
 
-afs_int32 rx_GetServerDebug(int socket, afs_uint32 remoteAddr, 
+afs_int32 rx_GetServerDebug(osi_socket socket, afs_uint32 remoteAddr, 
 	afs_uint16 remotePort, struct rx_debugStats *stat, afs_uint32 *supportedValues)
 {
     struct rx_debugIn in;
@@ -6116,7 +6117,7 @@ afs_int32 rx_GetServerDebug(int socket, afs_uint32 remoteAddr,
     return rc;
 }
 
-afs_int32 rx_GetServerStats(int socket, afs_uint32 remoteAddr,
+afs_int32 rx_GetServerStats(osi_socket socket, afs_uint32 remoteAddr,
 	afs_uint16 remotePort, struct rx_stats *stat, afs_uint32 *supportedValues)
 {
     struct rx_debugIn in;
@@ -6157,7 +6158,7 @@ afs_int32 rx_GetServerStats(int socket, afs_uint32 remoteAddr,
     return rc;
 }
 
-afs_int32 rx_GetServerVersion(int socket, afs_uint32 remoteAddr,
+afs_int32 rx_GetServerVersion(osi_socket socket, afs_uint32 remoteAddr,
 	afs_uint16 remotePort, size_t version_length, char *version)
 {
     char a[1] = {0};
@@ -6171,7 +6172,7 @@ afs_int32 rx_GetServerVersion(int socket, afs_uint32 remoteAddr,
 			 version_length);
 }
 
-afs_int32 rx_GetServerConnections(int socket, afs_uint32 remoteAddr,
+afs_int32 rx_GetServerConnections(osi_socket socket, afs_uint32 remoteAddr,
 	afs_uint16 remotePort, afs_int32 *nextConnection, int allConnections,
 	afs_uint32 debugSupportedValues, struct rx_debugConn *conn, afs_uint32 *supportedValues)
 {
@@ -6257,7 +6258,7 @@ afs_int32 rx_GetServerConnections(int socket, afs_uint32 remoteAddr,
     return rc;
 }
 
-afs_int32 rx_GetServerPeers(int socket, afs_uint32 remoteAddr, afs_uint16 remotePort,
+afs_int32 rx_GetServerPeers(osi_socket socket, afs_uint32 remoteAddr, afs_uint16 remotePort,
 	afs_int32 *nextPeer, afs_uint32 debugSupportedValues, struct rx_debugPeer *peer,
 	afs_uint32 *supportedValues)
 {

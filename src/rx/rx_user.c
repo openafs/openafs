@@ -211,8 +211,7 @@ void osi_AssertFailU(const char *expr, const char *file, int line)
 #ifdef	AFS_AIX32_ENV
 #ifndef osi_Alloc
 static const char memZero;
-char * osi_Alloc(x)
-    afs_int32 x; 
+char *osi_Alloc(afs_int32 x)
 {
     /* 
      * 0-length allocs may return NULL ptr from osi_kalloc, so we special-case
@@ -222,9 +221,7 @@ char * osi_Alloc(x)
     return ((char *) malloc(x));
 }
 
-osi_Free(x, size)
-    char *x;
-    afs_int32 size; 
+osi_Free(char *x, afs_int32 size)
 {
     if (x == &memZero) return;
     free((char *)x);

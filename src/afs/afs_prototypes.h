@@ -246,7 +246,8 @@ extern void *afs_osi_Alloc_NoSleep(size_t x);
 /* afs_osi_pag.c */
 extern afs_uint32 genpag(void);
 extern afs_uint32 getpag(void);
-extern afs_uint32 afs_get_pag_from_groups(gid_t g0, gid_t g1);
+extern int afs_InitReq(register struct vrequest *av, struct AFS_UCRED *acred);
+extern afs_uint32 afs_get_pag_from_groups(gid_t g0a, gid_t g1a);
 extern void afs_get_groups_from_pag(afs_uint32 pag, gid_t *g0p, gid_t *g1p);
 extern afs_int32 PagInCred(const struct AFS_UCRED *cred);
 

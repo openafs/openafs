@@ -15,6 +15,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <afsconfig.h>
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
+
 #define TOK_DONTUSE 1 /* Don't copy if match and this flag is set. */
 struct token {
     struct token *next;
@@ -23,8 +28,8 @@ struct token {
 };
 
 /* free token list returned by parseLine */
-static int FreeTokens(alist)
-    register struct token *alist; {
+static int FreeTokens(register struct token *alist)
+{
     register struct token *nlist;
     for(; alist; alist = nlist) {
 	nlist = alist->next;
@@ -35,9 +40,8 @@ static int FreeTokens(alist)
 }
 
 #define	space(x)    ((x) == ' ' || (x) == '\t' || (x) == '<' || (x) == '>')
-static int ParseLine(aline, alist)
-    char *aline;
-    struct token **alist; {
+static int ParseLine(char *aline, struct token **alist)
+{
     char tbuffer[MAXTOKLEN+1];
     register char *tptr = NULL;
     int inToken;
@@ -101,10 +105,8 @@ static int ParseLine(aline, alist)
 }
 /* read a line into a buffer, putting in null termination and stopping on appropriate
     end of line char.  Returns 0 at eof, > 0 at normal line end, and < 0 on error */
-static int GetLine(afile, abuffer, amax)
-    FILE *afile;
-    int amax;
-    register char *abuffer; {
+static int GetLine(FILE *afile, register char *abuffer, int amax)
+{
     register int tc;
     int first;
 
@@ -125,10 +127,8 @@ static int GetLine(afile, abuffer, amax)
     }
 }
 
-int mc_copy(ain, aout, alist)
-    register FILE *ain;
-    register FILE *aout;
-    char *alist[]; {
+int mc_copy(register FILE *ain, register FILE *aout, char *alist[])
+{
     char tbuffer[MAXLINELEN];
     struct token *tokens;
     register char **tp;

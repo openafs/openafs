@@ -71,14 +71,16 @@ char *osi_alloc();
  * elsize is the size (in bytes) of each element, and elproc is the
  * xdr procedure to call to handle each element of the array.
  */
-bool_t
-xdr_array(xdrs, addrp, sizep, maxsize, elsize, elproc)
-	register XDR *xdrs;
-	caddr_t *addrp;		/* array pointer */
-	u_int *sizep;		/* number of elements */
-	u_int maxsize;		/* max numberof elements */
-	u_int elsize;		/* size in bytes of each element */
-	xdrproc_t elproc;	/* xdr routine to handle each element */
+/* 
+	caddr_t *addrp;		* array pointer *
+	u_int *sizep;		* number of elements *
+	u_int maxsize;		* max numberof elements *
+	u_int elsize;		* size in bytes of each element *
+	xdrproc_t elproc;	* xdr routine to handle each element *
+*/
+
+bool_t xdr_array(register XDR *xdrs, caddr_t *addrp, u_int *sizep, 
+	u_int maxsize, u_int elsize, xdrproc_t elproc)
 {
 	register u_int i;
 	register caddr_t target = *addrp;

@@ -200,8 +200,7 @@ static afs_int32 FreeObject (aobj)
 /* rxkad_Close - called by rx with the security class object as a parameter
  * when a security object is to be discarded */
 
-rxs_return_t rxkad_Close (aobj)
-  IN struct rx_securityClass *aobj;
+rxs_return_t rxkad_Close (IN struct rx_securityClass *aobj)
 {
     afs_int32 code;
     aobj->refCount--;
@@ -211,9 +210,7 @@ rxs_return_t rxkad_Close (aobj)
 
 /* either: called to (re)create a new connection. */
 
-rxs_return_t rxkad_NewConnection (aobj, aconn)
-  struct rx_securityClass *aobj;
-  struct rx_connection	  *aconn;
+rxs_return_t rxkad_NewConnection (struct rx_securityClass *aobj, struct rx_connection *aconn)
 {
     if (aconn->securityData)
 	return RXKADINCONSISTENCY;	/* already allocated??? */
@@ -296,10 +293,8 @@ rxs_return_t rxkad_DestroyConnection (aobj, aconn)
 
 /* either: decode packet */
 
-rxs_return_t rxkad_CheckPacket (aobj, acall, apacket)
-  struct rx_securityClass *aobj;
-  struct rx_call	  *acall;
-  struct rx_packet	  *apacket;
+rxs_return_t rxkad_CheckPacket (struct rx_securityClass *aobj, 
+	struct rx_call *acall, struct rx_packet *apacket)
 {   struct rx_connection  *tconn;
     rxkad_level	           level;
     fc_KeySchedule *schedule;

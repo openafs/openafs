@@ -287,7 +287,7 @@ rxs_return_t rxkad_GetResponse (aobj, aconn, apacket)
     rx_computelen(apacket, missing);
     missing = responseSize + tcp->ticketLen - missing;
     if (missing > 0) 
-       if (rxi_AllocDataBuf(apacket, missing) > 0)
+       if (rxi_AllocDataBuf(apacket, missing, RX_PACKET_CLASS_SEND) > 0) 
 	  return RXKADPACKETSHORT;	/* not enough space */
 
     /* copy response and ticket into packet */

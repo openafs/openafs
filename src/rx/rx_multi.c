@@ -18,7 +18,6 @@ RCSID("$Header$");
 #else /* KERNEL */
 # include "rx_user.h"
 # include "rx_multi.h"
-# include "rx_internal.h"
 #endif /* KERNEL */
 
 /* multi.c and multi.h, together with some rxgen hooks, provide a way of making multiple, but similar, rx calls to multiple hosts simultaneously */

@@ -57,6 +57,7 @@
 # include "rx_null.h"
 #ifndef AFS_NT40_ENV
 # include <netinet/in.h>
+# include <sys/socket.h>
 #endif
 #endif /* KERNEL */
 
@@ -190,64 +191,6 @@ returned with an error code of RX_CALL_DEAD ( transient error ) */
 #define rx_EnableHotThread()		(rx_enable_hot_thread = 1)
 #define rx_DisableHotThread()		(rx_enable_hot_thread = 0)
 
-struct rx_securityObjectStats {
-    char type;				/* 0:unk 1:null,2:vab 3:kad */
-    char level;
-    char sparec[10];			/* force correct alignment */
-    afs_int32 flags;				/* 1=>unalloc, 2=>auth, 4=>expired */
-    afs_uint32 expires;
-    afs_uint32 packetsReceived;
-    afs_uint32 packetsSent;
-    afs_uint32 bytesReceived;
-    afs_uint32 bytesSent;
-    short spares[4];
-    afs_int32 sparel[8];
-};
-
-/* XXXX (rewrite this description) A security class object contains a set of
- * procedures and some private data to implement a security model for rx
- * connections.  These routines are called by rx as appropriate.  Rx knows
- * nothing about the internal details of any particular security model, or
- * about security state.  Rx does maintain state per connection on behalf of
- * the security class.  Each security class implementation is also expected to
- * provide routines to create these objects.  Rx provides a basic routine to
- * allocate one of these objects; this routine must be called by the class. */
-struct rx_securityClass {
-    struct rx_securityOps {
-	int (*op_Close)(/* obj */);
-	int (*op_NewConnection)(/* obj, conn */);
-	int (*op_PreparePacket)(/* obj, call, packet */);
-	int (*op_SendPacket)(/*obj, call, packet */);
-	int (*op_CheckAuthentication)(/*obj,conn*/);
-	int (*op_CreateChallenge)(/*obj,conn*/);
-	int (*op_GetChallenge)(/*obj,conn,packet*/);
-	int (*op_GetResponse)(/*obj,conn,packet*/);
-	int (*op_CheckResponse)(/*obj,conn,packet*/);
-	int (*op_CheckPacket) (/*obj,call,packet*/);
-	int (*op_DestroyConnection)(/*obj, conn*/);
-	int (*op_GetStats)(/*obj, conn, stats*/);
-	int (*op_Spare1)();
-	int (*op_Spare2)();
-	int (*op_Spare3)();
-    } *ops;
-    VOID *privateData;
-    int refCount;
-};
-
-#define RXS_OP(obj,op,args) ((obj && (obj->ops->op_ ## op)) ? (*(obj)->ops->op_ ## op)args : 0)
-
-#define RXS_Close(obj) RXS_OP(obj,Close,(obj))
-#define RXS_NewConnection(obj,conn) RXS_OP(obj,NewConnection,(obj,conn))
-#define RXS_PreparePacket(obj,call,packet) RXS_OP(obj,PreparePacket,(obj,call,packet))
-#define RXS_SendPacket(obj,call,packet) RXS_OP(obj,SendPacket,(obj,call,packet))
-#define RXS_CheckAuthentication(obj,conn) RXS_OP(obj,CheckAuthentication,(obj,conn))
-#define RXS_CreateChallenge(obj,conn) RXS_OP(obj,CreateChallenge,(obj,conn))
-#define RXS_GetChallenge(obj,conn,packet) RXS_OP(obj,GetChallenge,(obj,conn,packet))
-#define RXS_GetResponse(obj,conn,packet) RXS_OP(obj,GetResponse,(obj,conn,packet))
-#define RXS_CheckResponse(obj,conn,packet) RXS_OP(obj,CheckResponse,(obj,conn,packet))
-#define RXS_CheckPacket(obj,call,packet) RXS_OP(obj,CheckPacket,(obj,call,packet))
-#define RXS_DestroyConnection(obj,conn) RXS_OP(obj,DestroyConnection,(obj,conn))
-#define RXS_GetStats(obj,conn,stats) RXS_OP(obj,GetStats,(obj,conn,stats))
 
 /* A service is installed by rx_NewService, and specifies a service type that
  * is exported by this process.  Incoming calls are stamped with the service
@@ -717,6 +660,67 @@ struct rx_ackPacket {
 /* this shud be equal to VRESTARTING ( util/errors.h ) for old clients to work */
 #define RX_RESTARTING		    (-100) 
 
+struct rx_securityObjectStats {
+    char type;				/* 0:unk 1:null,2:vab 3:kad */
+    char level;
+    char sparec[10];			/* force correct alignment */
+    afs_int32 flags;				/* 1=>unalloc, 2=>auth, 4=>expired */
+    afs_uint32 expires;
+    afs_uint32 packetsReceived;
+    afs_uint32 packetsSent;
+    afs_uint32 bytesReceived;
+    afs_uint32 bytesSent;
+    short spares[4];
+    afs_int32 sparel[8];
+};
+
+/* XXXX (rewrite this description) A security class object contains a set of
+ * procedures and some private data to implement a security model for rx
+ * connections.  These routines are called by rx as appropriate.  Rx knows
+ * nothing about the internal details of any particular security model, or
+ * about security state.  Rx does maintain state per connection on behalf of
+ * the security class.  Each security class implementation is also expected to
+ * provide routines to create these objects.  Rx provides a basic routine to
+ * allocate one of these objects; this routine must be called by the class. */
+struct rx_securityClass {
+    struct rx_securityOps {
+	int (*op_Close)(struct rx_securityClass *aobj);
+	int (*op_NewConnection)(struct rx_securityClass *aobj, struct rx_connection *aconn);
+	int (*op_PreparePacket)(struct rx_securityClass *aobj, struct rx_call *acall, struct rx_packet *apacket);
+	int (*op_SendPacket)(struct rx_securityClass *aobj, struct rx_call *acall, struct rx_packet *apacket);
+	int (*op_CheckAuthentication)(struct rx_securityClass *aobj, struct rx_connection *aconn);
+	int (*op_CreateChallenge)(struct rx_securityClass *aobj, struct rx_connection *aconn);
+	int (*op_GetChallenge)(struct rx_securityClass *aobj, struct rx_connection *aconn, struct rx_packet *apacket);
+	int (*op_GetResponse)(struct rx_securityClass *aobj, struct rx_connection *aconn, struct rx_packet *apacket);
+	int (*op_CheckResponse)(struct rx_securityClass *aobj, struct rx_connection *aconn, struct rx_packet *apacket);
+	int (*op_CheckPacket) (struct rx_securityClass *aobj, struct rx_call *acall, struct rx_packet *apacket);
+	int (*op_DestroyConnection)(struct rx_securityClass *aobj, struct rx_connection *aconn);
+	int (*op_GetStats)(struct rx_securityClass *aobj, struct rx_connection *aconn, struct rx_securityObjectStats *astats);
+	int (*op_Spare1)(void);
+	int (*op_Spare2)(void);
+	int (*op_Spare3)(void);
+    } *ops;
+    VOID *privateData;
+    int refCount;
+};
+
+#define RXS_OP(obj,op,args) ((obj && (obj->ops->op_ ## op)) ? (*(obj)->ops->op_ ## op)args : 0)
+
+#define RXS_Close(obj) RXS_OP(obj,Close,(obj))
+#define RXS_NewConnection(obj,conn) RXS_OP(obj,NewConnection,(obj,conn))
+#define RXS_PreparePacket(obj,call,packet) RXS_OP(obj,PreparePacket,(obj,call,packet))
+#define RXS_SendPacket(obj,call,packet) RXS_OP(obj,SendPacket,(obj,call,packet))
+#define RXS_CheckAuthentication(obj,conn) RXS_OP(obj,CheckAuthentication,(obj,conn))
+#define RXS_CreateChallenge(obj,conn) RXS_OP(obj,CreateChallenge,(obj,conn))
+#define RXS_GetChallenge(obj,conn,packet) RXS_OP(obj,GetChallenge,(obj,conn,packet))
+#define RXS_GetResponse(obj,conn,packet) RXS_OP(obj,GetResponse,(obj,conn,packet))
+#define RXS_CheckResponse(obj,conn,packet) RXS_OP(obj,CheckResponse,(obj,conn,packet))
+#define RXS_CheckPacket(obj,call,packet) RXS_OP(obj,CheckPacket,(obj,call,packet))
+#define RXS_DestroyConnection(obj,conn) RXS_OP(obj,DestroyConnection,(obj,conn))
+#define RXS_GetStats(obj,conn,stats) RXS_OP(obj,GetStats,(obj,conn,stats))
+
+
+
 /* Structure for keeping rx statistics.  Note that this structure is returned
  * by rxdebug, so, for compatibility reasons, new fields should be appended (or
  * spares used), the rxdebug protocol checked, if necessary, and the PrintStats
@@ -987,6 +991,8 @@ typedef struct rx_interface_stat {
 } rx_interface_stat_t, *rx_interface_stat_p;
 
 #define RX_STATS_SERVICE_ID 409
+
+
 
 #endif /* _RX_	 End of rx.h */
 

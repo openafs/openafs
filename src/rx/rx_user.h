@@ -35,10 +35,6 @@ error-foo error-foo error-foo
 #define ISAFS_RXGLOCK()
 #define AFS_ASSERT_RXGLOCK()
 
-extern void rxi_StartListener();
-extern void rxi_StartServerProc();
-extern void rxi_ReScheduleEvents();
-
 /* Some "operating-system independent" stuff, for the user mode implementation */
 #ifdef UAFS_CLIENT
 typedef void *osi_socket;
@@ -69,8 +65,6 @@ typedef afs_int32 osi_socket;
 #define	osi_QuickFree(ptr, size)    osi_Free(ptr, size)
 #define	osi_QuickAlloc(size)	    osi_Alloc(size)
 
-extern void osi_Panic();
-extern void osi_AssertFailU(const char *expr, const char *file, int line);
 #define osi_Assert(e) (void)((e) || (osi_AssertFailU(#e, __FILE__, __LINE__), 0))
 
 #if  !defined(_ANSI_C_SOURCE) || defined(AFS_SUN_ENV)

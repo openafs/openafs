@@ -52,12 +52,11 @@ RCSID("$Header$");
  * in the system libraries.
  */
 
-#ifdef AFS_NT40_ENV
-bool_t 
-xdr_float(xdrs, fp)
-	register XDR *xdrs;
-	register float *fp;
+bool_t xdr_float(register XDR *xdrs, register float *fp)
 {
+#ifdef AFS_NT40_ENV
+	return(FALSE);
+#else
 	switch (xdrs->x_op) {
 
 	case XDR_ENCODE:
@@ -70,13 +69,14 @@ xdr_float(xdrs, fp)
 		return (TRUE);
 	}
 	return (FALSE);
+#endif
 }
 
-bool_t           
-xdr_double(xdrs, dp)
-	register XDR *xdrs;
-	double *dp;
+bool_t xdr_double(register XDR *xdrs, double *dp)
 {
+#ifdef AFS_NT40_ENV
+	return(FALSE);
+#else
 	afs_int32 *ip;
 	switch (xdrs->x_op) {
 
@@ -92,25 +92,7 @@ xdr_double(xdrs, dp)
 		return (TRUE);
 	}
 	return (FALSE);
+#endif
 }
-
-#else /* AFS_NT40_ENV */
-
-bool_t           
-xdr_float(xdrs, fp)
-	register XDR *xdrs;
-	float *fp;
-{
-	return(FALSE);
-}
-
-bool_t           
-xdr_double(xdrs, dp)
-	register XDR *xdrs;
-	double *dp;
-{
-	return(FALSE);
-}
-#endif /* AFS_NT40_ENV */
 
 #endif /* NeXT */
