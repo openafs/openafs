@@ -84,21 +84,21 @@ int afs_cv_wait(afs_kcondvar_t *cv, afs_kmutex_t *l, int sigok)
     MUTEX_EXIT(l);
 
     if (!sigok) {
-	spin_lock_irq(&current->sigmask_lock);
+	SIG_LOCK(current);
 	saved_set = current->blocked;
 	sigfillset(&current->blocked);
-	recalc_sigpending(current);
-	spin_unlock_irq(&current->sigmask_lock);
+	RECALC_SIGPENDING(current);
+	SIG_UNLOCK(current);
     }
 
     schedule();
     remove_wait_queue(cv, &wait);
 
     if (!sigok) {
-	spin_lock_irq(&current->sigmask_lock);
+	SIG_LOCK(current);
 	current->blocked = saved_set;
-	recalc_sigpending(current);
-	spin_unlock_irq(&current->sigmask_lock);
+	RECALC_SIGPENDING(current);
+	SIG_UNLOCK(current);
     }
 
     if (isAFSGlocked) AFS_GLOCK();

@@ -24,7 +24,32 @@
 #undef getuerror
 
 #define getpid() current->pid
+#ifdef STRUCT_TASK_STRUCT_HAS_REAL_PARENT
+#define getppid() current->real_parent->pid
+#else
 #define getppid() current->p_opptr->pid
+#endif
+
+#ifdef RECALC_SIGPENDING_TAKES_VOID
+#define PENDING(p,b) has_pending_signals(&(p)->signal, (b))
+static inline void _recalc_sigpending_tsk(struct task_struct *t)
+{
+    t->sigpending = PENDING(&t->pending, &t->blocked) ||
+        PENDING(&t->sig->shared_pending, &t->blocked);
+}
+
+#define RECALC_SIGPENDING(X) _recalc_sigpending_tsk(X)
+#else
+#define RECALC_SIGPENDING(X) recalc_sigpending(X)
+#endif
+ 
+#ifdef STRUCT_TASK_STRUCT_HAS_SIGMASK_LOCK
+#define SIG_LOCK(X) spin_lock_irq(&X->sigmask_lock)
+#define SIG_UNLOCK(X) spin_unlock_irq(&X->sigmask_lock)
+#else
+#define SIG_LOCK(X) spin_lock_irq(&X->sig->siglock)
+#define SIG_UNLOCK(X) spin_unlock_irq(&X->sig->siglock)
+#endif
 
 
 #define afs_hz HZ
@@ -146,6 +171,7 @@ extern unsigned long afs_linux_page_offset;
 #define afs_linux_page_address(page) (afs_linux_page_offset + PAGE_SIZE * (page - mem_map))
 
 #if defined(__KERNEL__) && defined(CONFIG_SMP)
+#include "../h/sched.h"
 #include "linux/wait.h"
 
 extern struct semaphore afs_global_lock;

@@ -26,6 +26,7 @@ RCSID("$Header$");
 #include <sys/file.h>
 #include <stdio.h>
 #include <rx/xdr.h>
+#include <errno.h>
 #include <signal.h>
 #ifdef HAVE_STRING_H
 #include <string.h>

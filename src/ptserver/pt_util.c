@@ -16,6 +16,7 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
+#include <errno.h>
 #include <sys/file.h>
 
 #include <afsconfig.h>
