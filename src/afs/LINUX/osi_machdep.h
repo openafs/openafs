@@ -141,11 +141,7 @@ extern struct vnodeops afs_file_iops, afs_dir_iops, afs_symlink_iops;
 
 /* cred struct */
 typedef struct cred {		/* maps to task field: */
-#if (CPU == sparc64)
-    long cr_ref;
-#else
     int cr_ref;
-#endif
     uid_t cr_uid;		/* euid */
     uid_t cr_ruid;		/* uid */
     gid_t cr_gid;		/* egid */
@@ -156,6 +152,7 @@ typedef struct cred {		/* maps to task field: */
     gid_t cr_groups[NGROUPS];	/* 32 groups - empty set to NOGROUP */
     int cr_ngroups;
 #endif
+    struct cred *cr_next;
 } cred_t;
 #define AFS_UCRED cred
 #define AFS_PROC struct task_struct
