@@ -12,7 +12,7 @@ i[3456]86)
     parisc*)
 	echo parisc_linux24
 	;;
-    ppc)
+    powerpc)
 	echo ppc_linux24
 	;;
     sparc|sparc64)
