@@ -46,24 +46,38 @@ RCSID("$Header$");
 #include <strings.h>
 #endif
 #endif
-#include "rpc_util.h"
+#include "rpc_scan.h"
 #include "rpc_parse.h"
+#include "rpc_util.h"
 
-static print_header();
-static print_trailer();
-static space();
-static emit_enum();
-static emit_union();
-static emit_struct();
-static emit_typedef();
-static print_stat();
+/* Static prototypes */
+static int findtype(definition *def, char *type);
+static int undefined(char *type);
+static void print_header(definition *def);
+static void print_trailer(void);
+static void print_ifopen(int indent, char *name);
+static void print_ifarg(char *arg);
+static void print_ifsizeof(char *prefix, char *type);
+static void print_ifclose(int indent);
+static void space(void);
+static void print_ifstat(int indent, char *prefix, char *type,
+	relation rel, char *amax, char *objname, char *name);
+static void emit_enum(definition *def);
+static void emit_union(definition *def);
+static void emit_struct(definition *def);
+static void emit_typedef(definition *def);
+static void print_stat(declaration *dec);
+static void print_hout(declaration *dec);
+static void print_cout(declaration *dec);
+static void print_rxifopen(char *typename);
+static void print_rxifarg(char *amp, char *arg, int costant);
+static void print_rxifsizeof(char *prefix, char *type);
+
 
 /*
  * Emit the C-routine for the given definition 
  */
-void
-emit(def)
-	definition *def;
+void emit(definition *def)
 {
 	if (def->def_kind == DEF_PROGRAM || def->def_kind == DEF_CONST) {
 		return;
@@ -86,10 +100,7 @@ emit(def)
 	print_trailer();
 }
 
-static
-findtype(def, type)
-	definition *def;
-	char *type;
+static int findtype(definition *def, char *type)
 {
 	if (def->def_kind == DEF_PROGRAM || def->def_kind == DEF_CONST) {
 		return (0);
@@ -98,9 +109,7 @@ findtype(def, type)
 	}
 }
 
-static
-undefined(type)
-	char *type;
+static int undefined(char *type)
 {
 	definition *def;
 
@@ -109,9 +118,7 @@ undefined(type)
 }
 
 
-static
-print_header(def)
-	definition *def;
+static void print_header(definition *def)
 {
 	space();
 	f_print(fout, "bool_t\n");
@@ -125,8 +132,7 @@ print_header(def)
 	f_print(fout, "{\n");
 }
 
-static
-print_trailer()
+static void print_trailer(void)
 {
 	f_print(fout, "\treturn (TRUE);\n");
 	f_print(fout, "}\n");
@@ -134,28 +140,20 @@ print_trailer()
 }
 
 
-static
-print_ifopen(indent, name)
-	int indent;
-	char *name;
+static void print_ifopen(int indent, char *name)
 {
 	tabify(fout, indent);
 	f_print(fout, "if (!xdr_%s(xdrs", name);
 }
 
 
-static
-print_ifarg(arg)
-	char *arg;
+static void print_ifarg(char *arg)
 {
 	f_print(fout, ", %s", arg);
 }
 
 
-static
-print_ifsizeof(prefix, type)
-	char *prefix;
-	char *type;
+static void print_ifsizeof(char *prefix, char *type)
 {
 	if (streq(type, "bool")) {
 		f_print(fout, ", sizeof(bool_t), xdr_bool");
@@ -168,9 +166,7 @@ print_ifsizeof(prefix, type)
 	}
 }
 
-static
-print_ifclose(indent)
-	int indent;
+static void print_ifclose(int indent)
 {
 	f_print(fout, ")) {\n");
 	tabify(fout, indent);
@@ -179,21 +175,13 @@ print_ifclose(indent)
 	f_print(fout, "}\n");
 }
 
-static
-space()
+static void space(void)
 {
 	f_print(fout, "\n\n");
 }
 
-static
-print_ifstat(indent, prefix, type, rel, amax, objname, name)
-	int indent;
-	char *prefix;
-	char *type;
-	relation rel;
-	char *amax;
-	char *objname;
-	char *name;
+static void print_ifstat(int indent, char *prefix, char *type, 
+	relation rel, char *amax, char *objname, char *name)
 {
 	char *alt = NULL;
 
@@ -261,10 +249,7 @@ print_ifstat(indent, prefix, type, rel, amax, objname, name)
 }
 
 
-/* ARGSUSED */
-static
-emit_enum(def)
-	definition *def;
+static void emit_enum(definition *def)
 {
 	print_ifopen(1, "enum");
 	print_ifarg("(enum_t *)objp");
@@ -272,9 +257,7 @@ emit_enum(def)
 }
 
 
-static
-emit_union(def)
-	definition *def;
+static void emit_union(definition *def)
 {
 	declaration *dflt;
 	case_list *cl;
@@ -318,9 +301,7 @@ emit_union(def)
 
 
 
-static
-emit_struct(def)
-	definition *def;
+static void emit_struct(definition *def)
 {
 	decl_list *dl;
 
@@ -332,9 +313,7 @@ emit_struct(def)
 
 
 
-static
-emit_typedef(def)
-	definition *def;
+static void emit_typedef(definition *def)
 {
 	char *prefix = def->def.ty.old_prefix;
 	char *type = def->def.ty.old_type;
@@ -348,9 +327,7 @@ emit_typedef(def)
 
 
 
-static
-print_stat(dec)
-	declaration *dec;
+static void print_stat(declaration *dec)
 {
 	char *prefix = dec->prefix;
 	char *type = dec->type;
@@ -366,12 +343,7 @@ print_stat(dec)
 	print_ifstat(1, prefix, type, rel, amax, name, dec->name);
 }
 
-extern proc1_list *Proc_list;
-extern int PerProcCounter;
-
-static
-print_hout(dec)
-declaration *dec;
+static void print_hout(declaration *dec)
 {
     char prefix[8];
 
@@ -395,11 +367,8 @@ declaration *dec;
 }
 
 
-static
-print_cout(dec)
-declaration *dec;
+static void print_cout(declaration *dec)
 {
-
     if (cflag) {
 	space();
 	f_print(fout, "bool_t\n");
@@ -413,20 +382,14 @@ declaration *dec;
 }
 
 
-static
-print_rxifopen(typename)
-char *typename;
+static void print_rxifopen(char *typename)
 {
     sprintf(Proc_list->code, "xdr_%s(&z_xdrs", typename);
     sprintf(Proc_list->scode, "xdr_%s(z_xdrs", typename);
 }
 
 
-static
-print_rxifarg(amp, arg, costant)
-char *amp;
-char *arg;
-int costant;
+static void print_rxifarg(char *amp, char *arg, int costant)
 {
     char code[100], scode[100];
 
@@ -440,9 +403,7 @@ int costant;
 }
 
 
-static
-print_rxifsizeof(prefix, type)
-char *prefix, *type;
+static void print_rxifsizeof(char *prefix, char *type)
 {
     char name[256];
 
@@ -464,8 +425,7 @@ char *prefix, *type;
 }
 
 
-print_param(dec)
-declaration *dec;
+void print_param(declaration *dec)
 {
 	char *prefix = dec->prefix;
 	char *type = dec->type;

@@ -77,8 +77,8 @@ char *afs_strcat(register char *s1, register char *s2)
 }
 
 
-char *afs_index(a, c)
-    register char *a, c; {
+char *afs_index(register char *a, register char c)
+{
     register char tc;
     AFS_STATCNT(afs_index);
     while (tc = *a) {
@@ -97,11 +97,8 @@ char *afs_index(a, c)
  *
  * NOTE: this function returns a held volume structure in *volpp if it returns 0!
  */
-EvalMountPoint(avc, advc, avolpp, areq)
-    register struct vcache *avc;
-    struct volume **avolpp;
-    struct vcache *advc;	    /* the containing dir */
-    register struct vrequest *areq;
+int EvalMountPoint(register struct vcache *avc, struct vcache *advc, 
+	struct volume **avolpp, register struct vrequest *areq)
 {
     afs_int32  code;
     struct volume *tvp = 0;
@@ -246,9 +243,7 @@ EvalMountPoint(avc, advc, avolpp, areq)
  * function is called.
  */
 
-void
-afs_InitFakeStat(state)
-    struct afs_fakestat_state *state;
+void afs_InitFakeStat(struct afs_fakestat_state *state)
 {
     state->valid = 1;
     state->did_eval = 0;
@@ -269,11 +264,8 @@ afs_InitFakeStat(state)
  * that should be used for the real vnode operation.  Returns non-zero if
  * something goes wrong and the error code should be returned to the user.
  */
-int
-afs_EvalFakeStat(avcp, state, areq)
-    struct vcache **avcp;
-    struct afs_fakestat_state *state;
-    struct vrequest *areq;
+int afs_EvalFakeStat(struct vcache **avcp, struct afs_fakestat_state *state, 
+	struct vrequest *areq)
 {
     struct vcache *tvc, *root_vp;
     struct volume *tvolp = NULL;
@@ -359,11 +351,8 @@ done:
  * Returns 0 if everything succeeds and *avcp points to a valid
  * vcache entry (possibly evaluated).
  */
-int
-afs_TryEvalFakeStat(avcp, state, areq)
-    struct vcache **avcp;
-    struct afs_fakestat_state *state;
-    struct vrequest *areq;
+int afs_TryEvalFakeStat(struct vcache **avcp, struct afs_fakestat_state *state, 
+	struct vrequest *areq)
 {
     state->nonblock = 1;
     return afs_EvalFakeStat(avcp, state, areq);
@@ -375,9 +364,7 @@ afs_TryEvalFakeStat(avcp, state, areq)
  * Perform any necessary cleanup at the end of a vnode op, given that
  * afs_InitFakeStat was previously called with this state.
  */
-void
-afs_PutFakeStat(state)
-    struct afs_fakestat_state *state;
+void afs_PutFakeStat(struct afs_fakestat_state *state)
 {
     osi_Assert(state->valid == 1);
     if (state->need_release)

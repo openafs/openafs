@@ -144,16 +144,6 @@ extern unsigned long afs_linux_page_offset;
 
 #define afs_linux_page_address(page) (afs_linux_page_offset + PAGE_SIZE * (page - mem_map))
 
-#if defined(__KERNEL__)
-extern int nneul_kernel_is_defined;
-#endif
-#if defined(CONFIG_SMP)
-extern int nneul_config_smp_is_defined;
-#endif
-#if defined(AFS_SMP)
-extern int nneul_afs_smp_is_defined;
-#endif
-
 #if defined(__KERNEL__) && defined(CONFIG_SMP)
 #include "linux/wait.h"
 
@@ -181,9 +171,6 @@ do { \
 
 
 #else
-
-extern int nneul_shouldnt_see_this;
-
 #define AFS_GLOCK()
 #define AFS_GUNLOCK()
 #define ISAFS_GLOCK() 1

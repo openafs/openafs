@@ -23,9 +23,6 @@ RCSID("$Header$");
 #include "../afs/afs_stats.h"	/*Cache Manager stats*/
 #include "../afs/afs_args.h"
 
-extern struct volume *afs_volumes[NVOLS];   /* volume hash table */
-extern void afs_DequeueCallback();
-extern void afs_ComputePAGStats();
 afs_int32 afs_allCBs	= 0;		/*Break callbacks on all objects */
 afs_int32 afs_oddCBs	= 0;		/*Break callbacks on dirs*/
 afs_int32 afs_evenCBs = 0;		/*Break callbacks received on files*/
@@ -33,17 +30,6 @@ afs_int32 afs_allZaps = 0;		/*Objects entries deleted */
 afs_int32 afs_oddZaps = 0;		/*Dir cache entries deleted*/
 afs_int32 afs_evenZaps = 0;		/*File cache entries deleted*/
 afs_int32 afs_connectBacks = 0;
-extern struct rx_service *afs_server;
-
-extern afs_lock_t afs_xvcb, afs_xbrs, afs_xdcache;
-extern afs_rwlock_t afs_xvcache, afs_xserver,  afs_xcell,  afs_xuser;
-extern afs_rwlock_t afs_xvolume, afs_puttofileLock, afs_ftf, afs_xinterface;
-extern afs_rwlock_t afs_xconn;
-extern struct afs_lock afs_xaxs;
-extern afs_lock_t afs_xcbhash;
-extern struct srvAddr *afs_srvAddrs[NSERVERS];
-extern struct afs_q CellLRU;
-extern struct cm_initparams cm_initParams;
 
 /*
  * Some debugging aids.
@@ -52,20 +38,20 @@ static struct ltable {
     char *name;
     char *addr;
 } ltable []= {
-    "afs_xvcache", (char *)&afs_xvcache,
-    "afs_xdcache", (char *)&afs_xdcache,
-    "afs_xserver", (char *)&afs_xserver,
-    "afs_xvcb",    (char *)&afs_xvcb,
-    "afs_xbrs",    (char *)&afs_xbrs,
-    "afs_xcell",   (char *)&afs_xcell,
-    "afs_xconn",   (char *)&afs_xconn,
-    "afs_xuser",   (char *)&afs_xuser,
-    "afs_xvolume", (char *)&afs_xvolume,
-    "puttofile",   (char *)&afs_puttofileLock,
-    "afs_ftf",     (char *)&afs_ftf,
-    "afs_xcbhash", (char *)&afs_xcbhash,
-    "afs_xaxs",    (char *)&afs_xaxs,
-    "afs_xinterface", (char *)&afs_xinterface,
+    {"afs_xvcache", (char *)&afs_xvcache},
+    {"afs_xdcache", (char *)&afs_xdcache},
+    {"afs_xserver", (char *)&afs_xserver},
+    {"afs_xvcb",    (char *)&afs_xvcb},
+    {"afs_xbrs",    (char *)&afs_xbrs},
+    {"afs_xcell",   (char *)&afs_xcell},
+    {"afs_xconn",   (char *)&afs_xconn},
+    {"afs_xuser",   (char *)&afs_xuser},
+    {"afs_xvolume", (char *)&afs_xvolume},
+    {"puttofile",   (char *)&afs_puttofileLock},
+    {"afs_ftf",     (char *)&afs_ftf},
+    {"afs_xcbhash", (char *)&afs_xcbhash},
+    {"afs_xaxs",    (char *)&afs_xaxs},
+    {"afs_xinterface", (char *)&afs_xinterface}
 };
 unsigned long  lastCallBack_vnode;
 unsigned int   lastCallBack_dv;
@@ -504,7 +490,7 @@ int SRXAFSCB_CallBack(struct rx_call *a_call, register struct AFSCBFids *a_fids,
     XSTATS_START_CMTIME(AFS_STATS_CM_RPCIDX_CALLBACK);
 
     AFS_STATCNT(SRXAFSCB_CallBack);
-    if (!(tconn = rx_ConnectionOf(a_call))) return;
+    if (!(tconn = rx_ConnectionOf(a_call))) return(0);
     tfid = (struct AFSFid *) a_fids->AFSCBFids_val;
     
     /*
@@ -590,7 +576,6 @@ int SRXAFSCB_InitCallBackState(struct rx_call *a_call)
     register struct rx_peer *peer;
     struct server *ts;
     int code = 0;
-    extern int osi_dnlc_purge();
     XSTATS_DECLS;
 
     RX_AFS_GLOCK();
@@ -883,8 +868,6 @@ int afs_RXCallBackServer(void)
 
 int shutdown_CB(void) 
 {
-  extern int afs_cold_shutdown;
-
   AFS_STATCNT(shutdown_CB);
 
   if (afs_cold_shutdown) {
@@ -1130,7 +1113,6 @@ int SRXAFSCB_GetCellServDB(struct rx_call *a_call, afs_int32 a_index,
 {
     afs_int32 i, j;
     struct cell *tcell;
-    struct afs_q *cq, *tq;
     char *t_name, *p_name = NULL;
 
     RX_AFS_GLOCK();

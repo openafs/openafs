@@ -47,9 +47,9 @@ RCSID("$Header$");
 #include <strings.h>
 #endif
 #endif
-#include "rpc_util.h"
 #include "rpc_scan.h"
 #include "rpc_parse.h"
+#include "rpc_util.h"
 
 list *proc_defined[MAX_PACKAGES], *special_defined, *typedef_defined, *uniondef_defined;
 char *SplitStart = NULL;
@@ -85,63 +85,68 @@ char function_list[MAX_PACKAGES]
 		  [MAX_FUNCTION_NAME_LEN];
 int function_list_index;
 
-extern int pushed, scan_print;
+/* static prototypes */
+static void isdefined(definition *defp);
+static void def_struct(definition *defp);
+static void def_program(definition *defp);
+static void def_enum(definition *defp);
+static void def_const(definition *defp);
+static void def_union(definition *defp);
+static void def_typedef(definition *defp);
+static void get_declaration(declaration *dec, defkind dkind);
+static void get_type(char **prefixp, char **typep, defkind dkind);
+static void unsigned_dec(char **typep);
+static void def_package(definition *defp);
+static void def_prefix(definition *defp);
+static void def_statindex(definition *defp);
+static void def_startingopcode(definition *defp);
+static void def_split(definition *defp);
+static void customize_struct(definition *defp);
+static char *structname(char *name);
+static void def_special(declaration *dec, definition *defp);
+static void check_proc(definition *defp, token *tokp, int noname);
+static int InvalidConstant(char *name);
+static int opcodenum_is_defined(int opcode_num);
+static void analyze_ProcParams(definition *defp, token *tokp);
+static void generate_code(definition *defp, int proc_split_flag, int multi_flag);
+static void handle_split_proc(definition *defp, int multi_flag);
+static void do_split(definition *defp, int direction, int *numofparams, defkind param_kind, int restore_flag);
+static void hdle_param_tok(definition *defp, declaration *dec, token *tokp, defkind par_kind);
+static void get1_param_type(definition *defp, declaration *dec, char **param_type);
+static void get_param_type(definition *defp, declaration *dec, char **param_type, char **typename);
+#ifdef undef
+static void hndle_param_tail(definition *defp, declaration *dec, token *tokp, char *typename);
+#endif
+static void cs_Proc_CodeGeneration(definition *defp, int split_flag, char *procheader);
+static void cs_ProcName_setup(definition *defp, char *procheader, int split_flag);
+static void cs_ProcParams_setup(definition *defp, int split_flag);
+static void cs_ProcMarshallInParams_setup(definition *defp, int split_flag);
+static void cs_ProcSendPacket_setup(definition *defp, int split_flag);
+static void cs_ProcUnmarshallOutParams_setup(definition *defp);
+static void cs_ProcTail_setup(definition *defp, int split_flag);
+static void ss_Proc_CodeGeneration(definition *defp);
+static void ss_ProcName_setup(definition *defp);
+static void ss_ProcParams_setup(definition *defp, int *somefrees);
+static void ss_ProcSpecial_setup(definition *defp, int *somefrees);
+static void ss_ProcUnmarshallInParams_setup(definition *defp);
+static void ss_ProcCallRealProc_setup(definition *defp);
+static void ss_ProcMarshallOutParams_setup(definition *defp);
+static void ss_ProcTail_setup(definition *defp, int somefrees);
+static int opcode_holes_exist(void);
+static void er_ProcDeclExterns_setup(void);
+static void er_ProcProcsArray_setup(void);
+static void er_ProcMainBody_setup(void);
+static void er_HeadofOldStyleProc_setup(void);
+static void er_BodyofOldStyleProc_setup(void);
+static void proc_er_case(definition *defp);
+static void er_TailofOldStyleProc_setup(void);
 
-static isdefined();
-static def_struct();
-static def_program();
-static def_enum();
-static def_const();
-static def_union();
-static def_typedef();
-static get_declaration();
-static get_type();
-static unsigned_dec();
-static def_package();
-static def_prefix();
-static def_startingopcode();
-static def_statindex();
-static def_split();
-static customize_struct();
-static def_special();
-static check_proc();
-static int InvalidConstant();
-static opcodenum_is_defined();
-static analyze_ProcParams();
-static generate_code();
-static handle_split_proc();
-static do_split();
-static hdle_param_tok();
-static get1_param_type();
-static get_param_type();
-static cs_Proc_CodeGeneration();
-static cs_ProcName_setup();
-static cs_ProcParams_setup();
-static cs_ProcMarshallInParams_setup();
-static cs_ProcSendPacket_setup();
-static cs_ProcUnmarshallOutParams_setup();
-static cs_ProcTail_setup();
-static ss_Proc_CodeGeneration();
-static ss_ProcName_setup();
-static ss_ProcParams_setup();
-static ss_ProcSpecial_setup();
-static ss_ProcUnmarshallInParams_setup();
-static ss_ProcCallRealProc_setup();
-static ss_ProcMarshallOutParams_setup();
-static ss_ProcTail_setup();
-static er_ProcDeclExterns_setup();
-static er_ProcProcsArray_setup();
-static er_ProcMainBody_setup();
-static er_HeadofOldStyleProc_setup();
-static er_BodyofOldStyleProc_setup();
-static proc_er_case();
-static er_TailofOldStyleProc_setup();
+
 
 /*
  * return the next definition you see
  */
-definition *
-get_definition()
+definition *get_definition(void)
 {
 	definition *defp;
 	token tok;
@@ -224,17 +229,13 @@ get_definition()
 	return (defp);
 }
 
-static
-isdefined(defp)
-	definition *defp;
+static void isdefined(definition *defp)
 {
 	STOREVAL(&defined, defp);
 }
 
 
-static
-def_struct(defp)
-	definition *defp;
+static void def_struct(definition *defp)
 {
 	token tok;
 	declaration dec;
@@ -260,9 +261,7 @@ def_struct(defp)
 	*tailp = NULL;
 }
 
-static
-def_program(defp)
-	definition *defp;
+static void def_program(definition *defp)
 {
 	token tok;
 	version_list *vlist;
@@ -319,9 +318,7 @@ def_program(defp)
 	*vtailp = NULL;
 }
 
-static
-def_enum(defp)
-	definition *defp;
+static void def_enum(definition *defp)
 {
 	token tok;
 	enumval_list *elist;
@@ -349,9 +346,7 @@ def_enum(defp)
 	*tailp = NULL;
 }
 
-static
-def_const(defp)
-	definition *defp;
+static void def_const(definition *defp)
 {
 	token tok;
 
@@ -363,9 +358,7 @@ def_const(defp)
 	defp->def.co = tok.str;
 }
 
-static
-def_union(defp)
-	definition *defp;
+static void def_union(definition *defp)
 {
 	token tok;
 	declaration dec;
@@ -409,9 +402,7 @@ def_union(defp)
 }
 
 
-static
-def_typedef(defp)
-	definition *defp;
+static void def_typedef(definition *defp)
 {
 	declaration dec;
 
@@ -425,10 +416,7 @@ def_typedef(defp)
 }
 
 
-static
-get_declaration(dec, dkind)
-	declaration *dec;
-	defkind dkind;
+static void get_declaration(declaration *dec, defkind dkind)
 {
 	token tok;
 
@@ -476,11 +464,7 @@ get_declaration(dec, dkind)
 }
 
 
-static
-get_type(prefixp, typep, dkind)
-	char **prefixp;
-	char **typep;
-	defkind dkind;
+static void get_type(char **prefixp, char **typep, defkind dkind)
 {
 	token tok;
 
@@ -530,9 +514,7 @@ get_type(prefixp, typep, dkind)
 }
 
 
-static
-unsigned_dec(typep)
-	char **typep;
+static void unsigned_dec(char **typep)
 {
 	token tok;
 
@@ -563,9 +545,7 @@ unsigned_dec(typep)
 }
 
 
-static
-def_package(defp)
-definition *defp;
+static void def_package(definition *defp)
 {
     token tok;
 
@@ -585,9 +565,7 @@ definition *defp;
     PackageStatIndex[PackageIndex] = NULL;
 }
 
-static
-def_prefix(defp)
-definition *defp;
+static void def_prefix(definition *defp)
 {
     token tok;
 
@@ -597,9 +575,7 @@ definition *defp;
     ServerPrefix = tok.str;
 }
 
-static
-def_statindex(defp)
-definition *defp;
+static void def_statindex(definition *defp)
 {
     token tok;
     char *name;
@@ -620,9 +596,7 @@ definition *defp;
     PackageStatIndex[PackageIndex] = name;
 }
 
-static
-def_startingopcode(defp)
-definition *defp;
+static void def_startingopcode(definition *defp)
 {
     token tok;
 
@@ -638,9 +612,7 @@ definition *defp;
     opcodesnotallowed[PackageIndex]=1;
 }
 
-static
-def_split(defp)
-definition *defp;
+static void def_split(definition *defp)
 {
     token tok;
 
@@ -669,9 +641,7 @@ definition *defp;
 }
 
 
-static
-customize_struct(defp)
-definition *defp;
+static void customize_struct(definition *defp)
 {
     decl_list *listp;
     declaration *dec;
@@ -695,10 +665,7 @@ definition *defp;
     STOREVAL(&special_defined, defp1);
 }
 
-static
-char *
-structname(name)
-char *name;
+static char *structname(char *name)
 {
     char namecontents[150], *pnt, *pnt1;
 
@@ -713,10 +680,7 @@ char *name;
 }
 
 
-static
-def_special(dec, defp)
-declaration *dec;
-definition *defp;
+static void def_special(declaration *dec, definition *defp)
 {
     char *typename;
     spec_list *specs, **tailp;
@@ -745,11 +709,7 @@ definition *defp;
  
 proc1_list *Proc_list, **Proc_listp;
 
-static
-check_proc(defp, tokp, noname)
-definition *defp;
-token *tokp;
-int noname;
+static void check_proc(definition *defp, token *tokp, int noname)
 {
     token tok;
     int proc_split = 0;
@@ -844,9 +804,7 @@ int noname;
 
 
 #define LEGALNUMS "0123456789"
-static int
-InvalidConstant(name)
-char *name;
+static int InvalidConstant(char *name)
 {
     char *map;
     int slen;
@@ -856,9 +814,7 @@ char *name;
     return(slen != strspn(name, map));
 }
 
-static
-opcodenum_is_defined(opcode_num)
-int opcode_num;
+static int opcodenum_is_defined(int opcode_num)
 {
     list *listp;
     definition *defp;
@@ -872,10 +828,7 @@ int opcode_num;
 }
 
 
-static
-analyze_ProcParams(defp, tokp)
-definition *defp;
-token *tokp;
+static void analyze_ProcParams(definition *defp, token *tokp)
 {
     declaration dec;
     decl_list *decls, **tailp;
@@ -916,11 +869,7 @@ token *tokp;
 }
 
 
-static
-generate_code(defp, proc_split_flag, multi_flag)
-definition *defp;
-int proc_split_flag;
-int multi_flag;
+static void generate_code(definition *defp, int proc_split_flag, int multi_flag)
 {
     if (proc_split_flag)
 	handle_split_proc(defp, multi_flag);
@@ -936,10 +885,7 @@ int multi_flag;
 }
 
 
-static
-handle_split_proc(defp, multi_flag)
-definition *defp;
-int multi_flag;
+static void handle_split_proc(definition *defp, int multi_flag)
 {
     char *startname = SplitStart, *endname = SplitEnd;
     int numofparams;
@@ -967,11 +913,7 @@ int multi_flag;
 }
 
 
-static
-do_split(defp, direction, numofparams, param_kind, restore_flag)
-definition *defp;
-int direction, *numofparams, restore_flag;
-defkind param_kind;
+static void do_split(definition *defp, int direction, int *numofparams, defkind param_kind, int restore_flag)
 {
     proc1_list *plist;
 
@@ -992,12 +934,7 @@ defkind param_kind;
 }
 
 
-static
-hdle_param_tok(defp, dec, tokp, par_kind)
-definition *defp;
-declaration *dec;
-token *tokp;
-defkind par_kind;
+static void hdle_param_tok(definition *defp, declaration *dec, token *tokp, defkind par_kind)
 {
     static defkind last_param_kind = DEF_NULL;
     
@@ -1020,11 +957,7 @@ defkind par_kind;
 }
 
 
-static
-get1_param_type(defp, dec, param_type)
-definition *defp;
-declaration *dec;
-char **param_type;
+static void get1_param_type(definition *defp, declaration *dec, char **param_type)
 {
     char typecontents[100];
 
@@ -1047,11 +980,7 @@ char **param_type;
 }
 
 
-static
-get_param_type(defp, dec, param_type, typename)
-definition *defp;
-declaration *dec;
-char **param_type, **typename;
+static void get_param_type(definition *defp, declaration *dec, char **param_type, char **typename)
 {
     char typecontents[100];
 
@@ -1077,12 +1006,8 @@ char **param_type, **typename;
 }
 
 
-static
-hndle_param_tail(defp, dec, tokp, typename)
-definition *defp;
-declaration *dec;
-token *tokp;
-char *typename;
+#ifdef undef
+static void hndle_param_tail(definition *defp, declaration *dec, token *tokp, char *typename)
 {
     char *amp;
 
@@ -1100,13 +1025,10 @@ char *typename;
     if (tokp->kind == TOK_COMMA)
 	peek(tokp);
 }
+#endif
 
 
-static
-cs_Proc_CodeGeneration(defp, split_flag, procheader)
-definition *defp;
-int split_flag;
-char *procheader;
+static void cs_Proc_CodeGeneration(definition *defp, int split_flag, char *procheader)
 {
     defp->can_fail = 0;
     cs_ProcName_setup(defp, procheader, split_flag);
@@ -1122,11 +1044,7 @@ char *procheader;
 }
 
 
-static
-cs_ProcName_setup(defp, procheader, split_flag)
-definition *defp;
-char *procheader;
-int split_flag;
+static void cs_ProcName_setup(definition *defp, char *procheader, int split_flag)
 {
     proc1_list *plist;
 
@@ -1152,10 +1070,7 @@ int split_flag;
 }
 
 
-static
-cs_ProcParams_setup(defp, split_flag)
-definition *defp;
-int split_flag;
+static void cs_ProcParams_setup(definition *defp, int split_flag)
 {
     proc1_list *plist, *plist1;
 
@@ -1191,10 +1106,7 @@ int split_flag;
 }
 
 
-static
-cs_ProcMarshallInParams_setup(defp, split_flag)
-definition *defp;
-int split_flag;
+static void cs_ProcMarshallInParams_setup(definition *defp, int split_flag)
 {
     int noofparams, i=0;
     proc1_list *plist;
@@ -1245,10 +1157,7 @@ int split_flag;
 }
 
 
-static
-cs_ProcSendPacket_setup(defp, split_flag)
-definition *defp;
-int split_flag;
+static void cs_ProcSendPacket_setup(definition *defp, int split_flag)
 {
     int noofoutparams = defp->pc.paramtypes[INOUT] + defp->pc.paramtypes[OUT];
 
@@ -1263,9 +1172,7 @@ int split_flag;
 }
 
 
-static
-cs_ProcUnmarshallOutParams_setup(defp)
-definition *defp;
+static void cs_ProcUnmarshallOutParams_setup(definition *defp)
 {
     int noofparams, i;
     proc1_list *plist;
@@ -1289,10 +1196,7 @@ definition *defp;
 }
 
 
-static
-cs_ProcTail_setup(defp, split_flag)
-definition *defp;
-int split_flag;
+static void cs_ProcTail_setup(definition *defp, int split_flag)
 {
     f_print(fout, "\tz_result = RXGEN_SUCCESS;\n");
     if (defp->can_fail) {
@@ -1342,9 +1246,7 @@ int split_flag;
 }
 
 
-static
-ss_Proc_CodeGeneration(defp)
-definition *defp;
+static void ss_Proc_CodeGeneration(definition *defp)
 {
     int somefrees=0;
 
@@ -1361,9 +1263,7 @@ definition *defp;
 }
 
 
-static
-ss_ProcName_setup(defp)
-definition *defp;
+static void ss_ProcName_setup(definition *defp)
 {
     proc1_list *plist;
 
@@ -1388,20 +1288,16 @@ definition *defp;
 }
 
 
-static
-ss_ProcParams_setup(defp, somefrees)
-definition *defp;
-int *somefrees;
+static void ss_ProcParams_setup(definition *defp, int *somefrees)
 {
     proc1_list *plist, *plist1;
     list *listp;
     definition *defp1;
-    int preserve_flag = 0;
 
     for (plist = defp->pc.plists; plist; plist = plist->next) {
 	if ((plist->component_kind == DEF_PARAM) && !(plist->pl.param_flag & PROCESSED_PARAM)) {
 	    if (plist->pl.param_flag & INDIRECT_PARAM) {
-		    char pres, *pntr = strchr(plist->pl.param_type, '*');
+		    char pres='\0', *pntr = strchr(plist->pl.param_type, '*');
 		    if (pntr){ --pntr; pres = *pntr; *pntr = (char)0; }
 		    f_print(fout, "\t%s %s", plist->pl.param_type, plist->pl.param_name);
 		    *pntr = pres;
@@ -1448,10 +1344,7 @@ int *somefrees;
 }
 
 
-static
-ss_ProcSpecial_setup(defp, somefrees)
-definition *defp;
-int *somefrees;
+static void ss_ProcSpecial_setup(definition *defp, int *somefrees)
 {
     proc1_list *plist;
     definition *defp1;
@@ -1502,9 +1395,7 @@ int *somefrees;
 }
 
 
-static
-ss_ProcUnmarshallInParams_setup(defp)
-definition *defp;
+static void ss_ProcUnmarshallInParams_setup(definition *defp)
 {
     int noofparams, noofoutparams, i;
     proc1_list *plist;
@@ -1532,9 +1423,7 @@ definition *defp;
 }
 
 
-static
-ss_ProcCallRealProc_setup(defp)
-definition *defp;
+static void ss_ProcCallRealProc_setup(definition *defp)
 {
     extern char zflag;
     proc1_list *plist;
@@ -1560,9 +1449,7 @@ definition *defp;
 }
 
 
-static
-ss_ProcMarshallOutParams_setup(defp)
-definition *defp;
+static void ss_ProcMarshallOutParams_setup(definition *defp)
 {
     proc1_list *plist;
     int noofparams, i;
@@ -1587,10 +1474,7 @@ definition *defp;
 }
 
 
-static
-ss_ProcTail_setup(defp, somefrees)
-definition *defp;
-int somefrees;
+static void ss_ProcTail_setup(definition *defp, int somefrees)
 {
     proc1_list *plist;
     definition *defp1;
@@ -1707,8 +1591,7 @@ int somefrees;
 }
 
 
-static
-opcode_holes_exist()
+static int opcode_holes_exist(void)
 {
     int i;
     
@@ -1720,8 +1603,7 @@ opcode_holes_exist()
 }
 
 	
-int
-er_Proc_CodeGeneration()
+void er_Proc_CodeGeneration(void)
 {
     int temp;
 
@@ -1743,8 +1625,7 @@ er_Proc_CodeGeneration()
 }
 
 
-static
-er_ProcDeclExterns_setup()
+static void er_ProcDeclExterns_setup(void)
 {
     list *listp;
     definition *defp;
@@ -1759,18 +1640,22 @@ er_ProcDeclExterns_setup()
 }
 
 
-static
-er_ProcProcsArray_setup()
+static void er_ProcProcsArray_setup(void)
 {
     list *listp;
     definition *defp;
 
-    if (listp = proc_defined[PackageIndex]) {
+    if ((listp = proc_defined[PackageIndex])) {
 	defp = (definition *)listp->val;
 	if (defp->pc.proc_serverstub){
-	    f_print(fout, "\nstatic afs_int32 (*StubProcsArray%d[])() = {%s", PackageIndex, defp->pc.proc_serverstub);
+	    f_print(fout, "\nstatic afs_int32 (*StubProcsArray%d[])() = {%s", 
+		PackageIndex, defp->pc.proc_serverstub);
 	} else {
-	    f_print(fout, "\nstatic afs_int32 (*StubProcsArray%d[])(struct rx_call *z_call, XDR *z_xdrs) = {_%s%s%s", PackageIndex, prefix, defp->pc.proc_prefix, (defp = (definition *)listp->val)->pc.proc_name);
+	    f_print(fout, 
+		"\nstatic afs_int32 (*StubProcsArray%d[])(struct rx_call *z_call, XDR *z_xdrs) = {_%s%s%s", 
+		PackageIndex, prefix, defp->pc.proc_prefix, 
+		((definition *)listp->val)->pc.proc_name);
+	    defp = (definition *)listp->val;
 	}
 	listp = listp->next;
     }
@@ -1786,8 +1671,7 @@ er_ProcProcsArray_setup()
 }
 
 
-static
-er_ProcMainBody_setup()
+static void er_ProcMainBody_setup(void)
 {
     f_print(fout, "int %s%sExecuteRequest(register struct rx_call *z_call)\n", prefix,  PackagePrefix[PackageIndex]);
     f_print(fout, "{\n\tint op;\n");
@@ -1801,8 +1685,7 @@ er_ProcMainBody_setup()
 }
 
 
-static
-er_HeadofOldStyleProc_setup()
+static void er_HeadofOldStyleProc_setup(void)
 {
     f_print(fout, "\nint %s%sExecuteRequest (z_call)\n", prefix, (combinepackages ? MasterPrefix : PackagePrefix[PackageIndex]));
     f_print(fout, "\tregister struct rx_call *z_call;\n");
@@ -1816,8 +1699,7 @@ er_HeadofOldStyleProc_setup()
     f_print(fout, "\tswitch (op) {\n");
 }
 
-static
-er_BodyofOldStyleProc_setup()
+static void er_BodyofOldStyleProc_setup(void)
 {
     list *listp;
 
@@ -1835,9 +1717,7 @@ er_BodyofOldStyleProc_setup()
 }
 
 
-static
-proc_er_case(defp)
-definition *defp;
+static void proc_er_case(definition *defp)
 {
     if (opcodesnotallowed[PackageIndex]) {
 	f_print(fout, "\t\tcase %d: {\n", defp->pc.proc_opcodenum);
@@ -1855,8 +1735,7 @@ definition *defp;
 }
 
 
-static
-er_TailofOldStyleProc_setup()
+static void er_TailofOldStyleProc_setup(void)
 {
     f_print(fout, "\t\tdefault:\n");
     f_print(fout, "\t\t\tz_result = RXGEN_OPCODE;\n");
@@ -1866,7 +1745,7 @@ er_TailofOldStyleProc_setup()
 }
 
 
-int h_opcode_stats()
+void h_opcode_stats(void)
 {
     if (combinepackages) {
 	f_print(fout, "\n/* Opcode-related useful stats for Master package: %s */\n", MasterPrefix);
@@ -1895,8 +1774,7 @@ int h_opcode_stats()
 }
 
 
-int generate_multi_macros(defp)
-definition *defp;
+void generate_multi_macros(definition *defp)
 {
     char *startname = SplitStart, *endname = SplitEnd;
     proc1_list *plist;
@@ -1941,9 +1819,7 @@ definition *defp;
 }
 
 
-int
-IsRxgenToken(tokp)
-token *tokp;
+int IsRxgenToken(token *tokp)
 {
     if (tokp->kind == TOK_PACKAGE || tokp->kind == TOK_PREFIX ||
 	 tokp->kind == TOK_SPECIAL || tokp->kind == TOK_STARTINGOPCODE ||
@@ -1953,9 +1829,7 @@ token *tokp;
     return 0;
 }
 
-int
-IsRxgenDefinition(def)
-definition *def;
+int IsRxgenDefinition(definition *def)
 {
     if (def->def_kind == DEF_PACKAGE || def->def_kind == DEF_PREFIX || def->def_kind == DEF_SPECIAL || def->def_kind == DEF_STARTINGOPCODE || def->def_kind == DEF_SPLITPREFIX || def->def_kind == DEF_PROC)
 	return 1;

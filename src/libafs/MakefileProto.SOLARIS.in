@@ -116,9 +116,6 @@ solaris_destdirs_libafs: dest_libafs
 LIBAFS = libafs.o
 LIBAFSNONFS = libafs.nonfs.o
 
-# Without this line, gmake tries to build libafs.o
-.PHONY: libafs
-
 <all -sun4x_57 -sun4x_58 -sun4x_59>
 INST_LIBAFS = ${DESTDIR}${afskerneldir}/${LIBAFS}
 INST_LIBAFSNONFS = ${DESTDIR}${afskerneldir}/${LIBAFSNONFS}

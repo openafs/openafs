@@ -90,11 +90,8 @@ struct bucket {
   struct afs_q head;
   /*  struct afs_lock lock;  only if you want lots of locks... */
 };
-struct bucket cbHashT[CBHTSIZE];
+static struct bucket cbHashT[CBHTSIZE];
 struct afs_lock afs_xcbhash;
-extern afs_int32 afs_cacheStats;
-extern struct volume * afs_FindVolume();
-extern unsigned int afs_paniconwarn;
 
 /* afs_QueueCallback
  * Takes a write-locked vcache pointer and a callback expiration time
@@ -186,7 +183,6 @@ void afs_DequeueCallback(struct vcache *avc)
 
 /* Sanity check on the callback queue. Allow for slop in the computation. */
 #ifdef AFS_OSF_ENV
-extern afs_int32 afs_maxvcount;
 #define CBQ_LIMIT (afs_maxvcount + 10)
 #else
 #define CBQ_LIMIT (afs_cacheStats + afs_stats_cmperf.vcacheXAllocs + 10)

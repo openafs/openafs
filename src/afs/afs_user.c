@@ -495,8 +495,7 @@ struct unixuser *afs_GetUser(register afs_int32 auid,
 } /*afs_GetUser*/
 
 
-void
-afs_PutUser(register struct unixuser *au, afs_int32 locktype)
+void afs_PutUser(register struct unixuser *au, afs_int32 locktype)
 {
     AFS_STATCNT(afs_PutUser);
     --au->refCount;

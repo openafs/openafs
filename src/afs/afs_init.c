@@ -41,9 +41,6 @@ int afs_sysnamecount = 0;
 struct volume *Initialafs_freeVolList;
 int afs_memvolumes = 0;
 
-extern int RXAFSCB_ExecuteRequest();
-extern int RXSTATS_ExecuteRequest();
-
 /*
  * Initialization order is important.  Must first call afs_CacheInit,
  * then cache file and volume file initialization routines.  Next, the

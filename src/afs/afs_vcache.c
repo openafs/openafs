@@ -1453,14 +1453,9 @@ int afs_WriteVCache(register struct vcache *avc,
  *       been modified.  This is less than ideal.  I haven't thought about
  *       it sufficiently to be certain that it is adequate.
  */
-void
-afs_ProcessFS(avc, astat, areq)
-    register struct vcache *avc;
-    struct vrequest *areq;
-    register struct AFSFetchStatus *astat;
-
-{ /*afs_ProcessFS*/
-
+void afs_ProcessFS(register struct vcache *avc, register struct AFSFetchStatus *astat, 
+	struct vrequest *areq)
+{
     register int i;
     afs_size_t length;
     AFS_STATCNT(afs_ProcessFS);

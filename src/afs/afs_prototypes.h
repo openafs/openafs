@@ -16,6 +16,7 @@ extern void afs_FinalizeReq(struct vrequest *areq);
 extern int afs_Analyze(register struct conn *aconn, afs_int32 acode,
     struct VenusFid *afid, register struct vrequest *areq, int op,
     afs_int32 locktype, struct cell *cellp);
+extern int afs_CheckCode(afs_int32 acode, struct vrequest *areq, int where);
 
 /* afs_axscache.c */
 extern afs_rwlock_t afs_xaxs;
@@ -91,12 +92,57 @@ extern int afs_icl_AppendRecord(register struct afs_icl_log *logp, afs_int32 op,
 	afs_int32 types, long p1, long p2, long p3, long p4);
 
 /* afs_callback.c */
+extern afs_int32 afs_allCBs;
+extern afs_int32 afs_oddCBs;
+extern afs_int32 afs_evenCBs;
+extern afs_int32 afs_allZaps;
+extern afs_int32 afs_oddZaps;
+extern afs_int32 afs_evenZaps;
+extern afs_int32 afs_connectBacks;
+extern unsigned long lastCallBack_vnode;
+extern unsigned int lastCallBack_dv;
+extern osi_timeval_t lastCallBack_time;
 extern struct interfaceAddr afs_cb_interface;
+
 extern int afs_RXCallBackServer(void);
+extern int SRXAFSCB_GetCE(struct rx_call *a_call, afs_int32 a_index, struct AFSDBCacheEntry *a_result);
+extern int SRXAFSCB_GetCE64(struct rx_call *a_call, afs_int32 a_index, struct AFSDBCacheEntry64 *a_result);
+extern int SRXAFSCB_GetLock (struct rx_call *a_call, afs_int32 a_index, struct AFSDBLock *a_result);
+extern int SRXAFSCB_CallBack(struct rx_call *a_call, register struct AFSCBFids *a_fids, struct AFSCBs *a_callbacks);
+extern int SRXAFSCB_Probe(struct rx_call *a_call);
+extern int SRXAFSCB_InitCallBackState(struct rx_call *a_call);
+extern int SRXAFSCB_XStatsVersion(struct rx_call *a_call, afs_int32 *a_versionP);
+extern int SRXAFSCB_GetXStats(struct rx_call *a_call, afs_int32 a_clientVersionNum,
+        afs_int32 a_collectionNumber, afs_int32 *a_srvVersionNumP,
+        afs_int32 *a_timeP, AFSCB_CollData *a_dataP);
+extern int afs_RXCallBackServer(void);
+extern int shutdown_CB(void) ;
+extern int SRXAFSCB_InitCallBackState2(struct rx_call *a_call, struct interfaceAddr *addr);
+extern int SRXAFSCB_WhoAreYou(struct rx_call *a_call, struct interfaceAddr *addr);
+extern int SRXAFSCB_InitCallBackState3(struct rx_call *a_call, afsUUID *a_uuid);
+extern int SRXAFSCB_ProbeUuid(struct rx_call *a_call, afsUUID *a_uuid);
+extern int SRXAFSCB_GetServerPrefs(struct rx_call *a_call, afs_int32 a_index,
+        afs_int32 *a_srvr_addr, afs_int32 *a_srvr_rank);
+extern int SRXAFSCB_GetCellServDB(struct rx_call *a_call, afs_int32 a_index,
+    char **a_name, afs_int32 *a_hosts);
+extern int SRXAFSCB_GetLocalCell(struct rx_call *a_call, char **a_name);
+extern int SRXAFSCB_GetCacheConfig(struct rx_call *a_call, afs_uint32 callerVersion,
+        afs_uint32 *serverVersion, afs_uint32 *configCount, cacheConfig *config);
+extern int SRXAFSCB_FetchData(struct rx_call *rxcall, struct AFSFid *Fid, afs_int32 Fd,
+        afs_int64 Position, afs_int64 Length, afs_int64 *TotalLength);
+extern int SRXAFSCB_StoreData(struct rx_call *rxcall, struct AFSFid *Fid, afs_int32 Fd,
+        afs_int64 Position, afs_int64 Length, afs_int64 *TotalLength);
+
 
 /* afs_cbqueue.c */
 extern afs_rwlock_t afs_xcbhash;
+extern void afs_QueueCallback(struct vcache *avc, unsigned int atime, struct volume *avp);
+extern void afs_CheckCallbacks(unsigned int secs);
+extern void afs_FlushCBs(void);
+extern void afs_FlushServerCBs(struct server *srvp);
+extern int afs_BumpBase(void);
 extern void afs_InitCBQueue(int doLockInit);
+extern void afs_DequeueCallback(struct vcache *avc);
 
 /* afs_cell.c */
 extern struct afs_q CellLRU;
@@ -134,7 +180,16 @@ extern struct conn *afs_ConnByHost(struct server *aserver, unsigned short aport,
         afs_int32 acell, struct vrequest *areq, int aforce, afs_int32 locktype);
 
 /* afs_daemons.c */
+extern afs_lock_t afs_xbrs;
+extern short afs_brsWaiters;
+extern short afs_brsDaemons;
+extern struct brequest afs_brs[NBRS];
+extern struct afs_osi_WaitHandle AFS_WaitHandler, AFS_CSWaitHandler;
+extern afs_int32 afs_gcpags;
+extern afs_int32 afs_gcpags_procsize;
+extern afs_int32 afs_CheckServerDaemonStarted;
 extern afs_int32 PROBE_INTERVAL;
+
 extern void afs_Daemon(void);
 extern struct brequest *afs_BQueue(register short aopcode, register struct vcache *avc, 
         afs_int32 dontwait, afs_int32 ause, struct AFS_UCRED *acred, 
@@ -156,6 +211,7 @@ extern ino_t cacheInode;
 extern struct osi_file *afs_cacheInodep;
 extern void afs_dcacheInit(int afiles, int ablocks, int aDentries, int achunk,
 			   int aflags);
+extern int afs_PutDCache(register struct dcache *adc);
 extern void afs_FlushDCache(register struct dcache *adc);
 extern void shutdown_dcache(void);
 extern void afs_CacheTruncateDaemon(void);
@@ -173,6 +229,7 @@ extern struct afs_exporter *exporter_find(int type);
 /* afs_init.c */
 extern struct cm_initparams cm_initParams;
 extern int afs_resourceinit_flag;
+extern afs_rwlock_t afs_puttofileLock;
 extern char *afs_sysname;
 extern char *afs_sysnamelist[MAXNUMSYSNAMES];
 extern int afs_sysnamecount;
@@ -269,6 +326,9 @@ extern void osi_FreeLargeSpace(void *adata);
 extern void osi_FreeMediumSpace(void *adata);
 extern void osi_FreeSmallSpace(void *adata);
 
+/* ARCH/osi_misc.c */
+extern void osi_iput(struct inode *ip);
+
 /* ARCH/osi_sleep.c */
 extern void afs_osi_InitWaitHandle(struct afs_osi_WaitHandle *achandle);
 extern void afs_osi_CancelWait(struct afs_osi_WaitHandle *achandle);
@@ -300,6 +360,7 @@ extern afs_uint32 pagCounter;
 /* OS/osi_vfsops.c */
 extern struct vfs *afs_globalVFS;
 extern struct vcache *afs_globalVp;
+extern void vcache2inode(struct vcache *avc);
 
 /* afs_pioctl.c */
 extern struct VenusFid afs_rootFid;
@@ -350,6 +411,7 @@ extern afs_int32 afs_GCPAGs(afs_int32 *ReleasedCount);
 extern void afs_GCPAGs_perproc_func(AFS_PROC *pproc);
 #endif /* AFS_GCPAGS */
 extern void afs_ComputePAGStats(void);
+extern void afs_PutUser(register struct unixuser *au, afs_int32 locktype);
 
 /* afs_util.c */
 extern char *afs_cv2string(char *ttp, afs_uint32 aval);
@@ -369,9 +431,20 @@ extern void afs_CheckLocks(void);
 
 
 /* afs_vcache.c */
-extern afs_lock_t afs_xvcb;
+extern afs_int32 afs_maxvcount;
+extern afs_int32 afs_vcount;
+extern int afsvnumbers;
 extern afs_rwlock_t afs_xvcache;
+extern afs_lock_t afs_xvcb;
+extern struct vcache *freeVCList;
+extern struct vcache *Initial_freeVCList;
+extern struct afs_q VLRU;
+extern afs_int32 vcachegen;
+extern unsigned int afs_paniconwarn;
+extern struct vcache *afs_vhashT[VCSIZE];
+extern afs_int32 afs_bulkStatsLost;
 extern int afs_norefpanic;
+
 void afs_vcacheInit(int astatSize);
 extern struct vcache *afs_FindVCache(struct VenusFid *afid, afs_int32 lockit,
 				     afs_int32 locktype, afs_int32 *retry, afs_int32 flag);
@@ -396,6 +469,8 @@ extern int afs_VerifyVCache2(struct vcache *avc, struct vrequest *areq);
 extern struct vcache *afs_GetVCache(register struct VenusFid *afid, struct vrequest *areq, 
         afs_int32 *cached, struct vcache *avc, afs_int32 locktype);
 extern void afs_PutVCache(register struct vcache *avc, afs_int32 locktype);
+extern void afs_ProcessFS(register struct vcache *avc, register struct AFSFetchStatus *astat, 
+        struct vrequest *areq);
 
 /* VNOPS/afs_vnop_access.c */
 extern afs_int32 afs_GetAccessBits(register struct vcache *avc, register afs_int32 arights, 
@@ -441,7 +516,19 @@ extern int afs_LocalHero(register struct vcache *avc, register struct dcache *ad
 
 
 /* VNOPS/afs_vnop_lookup.c */
+extern char *afs_strcat(register char *s1, register char *s2);
+extern char *afs_index(register char *a, register char c);
+extern int EvalMountPoint(register struct vcache *avc, struct vcache *advc,
+        struct volume **avolpp, register struct vrequest *areq);
+extern void afs_InitFakeStat(struct afs_fakestat_state *state);
+extern int afs_EvalFakeStat(struct vcache **avcp, struct afs_fakestat_state *state, 
+        struct vrequest *areq);
+extern int afs_TryEvalFakeStat(struct vcache **avcp, struct afs_fakestat_state *state, 
+        struct vrequest *areq);
+extern void afs_PutFakeStat(struct afs_fakestat_state *state);
 extern int afs_ENameOK(register char *aname);
+
+
 
 /* VNOPS/afs_vnop_read.c */
 extern afs_int32 maxIHint;
@@ -488,20 +575,24 @@ extern struct volume *afs_GetVolume(struct VenusFid *afid, struct vrequest *areq
 extern struct volume *afs_GetVolumeByName(register char *aname, afs_int32 acell, 
         int agood, struct vrequest *areq, afs_int32 locktype);
 
+
+
+
+
+
 /* MISC PROTOTYPES - THESE SHOULD NOT BE HERE */
 /* MOVE THEM TO APPROPRIATE LOCATIONS */
 extern struct rx_securityClass *rxnull_NewClientSecurityObject(void);
 extern struct rx_securityClass *rxnull_NewServerSecurityObject(void);
-#ifndef osi_alloc
-extern char *osi_alloc(afs_int32 x);
-extern int osi_free(char *x, afs_int32 size);
-#endif
+
+extern int RXAFSCB_ExecuteRequest();
+extern int RXSTATS_ExecuteRequest();
+
 
 
 #if defined(AFS_SUN5_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_AIX_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 #include "../afs/osi_prototypes.h"
 #endif
-
 
 #endif /* _AFS_PROTOTYPES_H_ */
 
