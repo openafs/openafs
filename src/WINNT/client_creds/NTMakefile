@@ -93,19 +93,19 @@ AFSAPPLIB=..\afsapplib
 CLIENT= ..\client_config
 
 $(CLIENTOBJS): $(CLIENT)\$$(@B).cpp
-	$(C2OBJ) -I$*(*D) $**
+	$(C2OBJ) -I$(*D) $**
 
 $(AFSAPPLIBOBJS): $(AFSAPPLIB)\$$(@B).cpp
-	$(C2OBJ) -I$*(*D) $**
+	$(C2OBJ) -I$(*D) $**
 
 $(AFSDOBJS): $(AFSD)\$$(@B).c
-	$(C2OBJ) -I$*(*D) $**
+	$(C2OBJ) -I$(*D) $**
 
 $(EXEOBJS): $$(@B).cpp
-	$(C2OBJ) -I$*(*D) -I$(AFSAPPLIB) $**
+	$(C2OBJ) -I$(*D) -I$(AFSAPPLIB) $**
 
 $(EXECOBJS): $$(@B).c
-	$(C2OBJ) -I$*(*D) -I$(AFSAPPLIB) $**
+	$(C2OBJ) -I$(*D) -I$(AFSAPPLIB) $**
 
 ############################################################################
 
