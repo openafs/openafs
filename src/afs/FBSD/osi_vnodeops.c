@@ -1103,7 +1103,6 @@ afs_vop_mkdir(ap)
     error = afs_mkdir(VTOAFS(dvp), name, vap, &vcp, cnp->cn_cred);
     AFS_GUNLOCK();
     if (error) {
-	vput(dvp);
 	DROPNAME();
 	return (error);
     }
