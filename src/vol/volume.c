@@ -388,6 +388,11 @@ static void ReadHeader(Error *ec, IHandle_t *h, char *to, int size,
     FdHandle_t *fdP;
 
     *ec = 0;
+    if (h == NULL) {
+	*ec = VSALVAGE;
+	return;
+    }
+
     fdP = IH_OPEN(h);
     if (fdP == NULL) {
 	*ec = VSALVAGE;
