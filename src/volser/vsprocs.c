@@ -3810,7 +3810,7 @@ static afs_int32 CheckVolume(volumeinfo, aserver, apart, modentry, maxvolid)
 	       if (entry.serverFlags[j] & ITSROVOL) {
 		  /* Verify this volume exists and print message we are orphaning it */
 		  if (pass == 1) {
-		     MapPartIdIntoName(apart, entry.serverPartition[j]);
+		     MapPartIdIntoName(apart, pname);
 		     fprintf(STDERR,"*** Warning: Orphaned RO volume %u exists on %s %s\n",
 			     entry.volumeId[ROVOL],
 			     hostutil_GetNameByINet(entry.serverNumber[j]), pname);
