@@ -523,7 +523,7 @@ SRXAFS_FetchData (tcon, Fid, Pos, Len, OutStatus, CallBack, Sync)
 
     /* Check whether the caller has permission access to fetch the data */
     if (errorCode = Check_PermissionRights(targetptr, client, rights,
-					   CHK_FETCHDATA, 0))
+					   CHK_FETCHDATA, 0)) 
 	goto Bad_FetchData;
 
     /*
@@ -783,8 +783,8 @@ Bad_FetchACL:
  * This routine is called exclusively by SRXAFS_FetchStatus(), and should be
  * merged into it when possible.
  */
-SAFSS_FetchStatus (tcon, Fid, OutStatus, CallBack, Sync)
-    struct rx_connection *tcon;		/* Rx connection handle */
+SAFSS_FetchStatus (tcall, Fid, OutStatus, CallBack, Sync)
+    struct rx_call *tcall;
     struct AFSFid *Fid;			/* Fid of target file */
     struct AFSFetchStatus *OutStatus;	/* Returned status for the fid */
     struct AFSCallBack *CallBack;	/* if r/w, callback promise for Fid */
@@ -799,6 +799,7 @@ SAFSS_FetchStatus (tcon, Fid, OutStatus, CallBack, Sync)
     afs_int32 rights, anyrights;		/* rights for this and any user */
     struct client *t_client;            /* tmp ptr to client data */
     struct in_addr logHostAddr;		/* host ip holder for inet_ntoa */
+    struct rx_connection *tcon = rx_ConnectionOf(tcall);
 
     /* Get ptr to client data for user Id for logging */
     t_client = (struct client *)  rx_GetSpecific(tcon, rxcon_client_key);
@@ -824,8 +825,11 @@ SAFSS_FetchStatus (tcon, Fid, OutStatus, CallBack, Sync)
     /* Are we allowed to fetch Fid's status? */
     if (targetptr->disk.type != vDirectory) {
       if (errorCode = Check_PermissionRights(targetptr, client, rights,
-					     CHK_FETCHSTATUS, 0))
-	goto Bad_FetchStatus;
+					     CHK_FETCHSTATUS, 0)) {
+	  if (rx_GetCallAbortCode(tcall) == errorCode) 
+	      rx_SetCallAbortCode(tcall, 0);
+	  goto Bad_FetchStatus;
+      }
     }
 
     /* set OutStatus From the Fid  */
@@ -924,9 +928,12 @@ SRXAFS_BulkStatus(tcon, Fids, OutStats, CallBacks, Sync)
 
 	/* Are we allowed to fetch Fid's status? */
 	if (targetptr->disk.type != vDirectory) {
-	  if (errorCode = Check_PermissionRights(targetptr, client, rights,
-					       CHK_FETCHSTATUS, 0))
-	     	goto Bad_BulkStatus;
+	    if (errorCode = Check_PermissionRights(targetptr, client, rights,
+						   CHK_FETCHSTATUS, 0)) {
+		if (rx_GetCallAbortCode(tcall) == errorCode) 
+		    rx_SetCallAbortCode(tcall, 0);
+		goto Bad_BulkStatus;
+	    }
 	}
 
 	/* set OutStatus From the Fid  */
@@ -1014,7 +1021,7 @@ SRXAFS_FetchStatus (tcon, Fid, OutStatus, CallBack, Sync)
     if (code = CallPreamble((struct rx_call **) &tcon, ACTIVECALL))
 	goto Bad_FetchStatus;
 
-    code = SAFSS_FetchStatus (tcon, Fid, OutStatus, CallBack, Sync);
+    code = SAFSS_FetchStatus (tcall, Fid, OutStatus, CallBack, Sync);
 
 Bad_FetchStatus:    
     CallPostamble(tcon);
