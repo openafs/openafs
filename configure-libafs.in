@@ -1,7 +1,7 @@
 AC_INIT(Makefile.common)
 AM_INIT_AUTOMAKE(openafs-libafs,devel)
 AC_CANONICAL_HOST
-AC_CONFIG_HEADER(src/config/afsconfig.h)
+AC_CONFIG_HEADER(config/afsconfig.h)
 
 #BOZO_SAVE_CORES BOS_RESTRICTED_MODE BOS_NEW_CONFIG pam sia
 AC_ARG_WITH(afs-sysname,
@@ -210,15 +210,18 @@ else
 			;;
 		powerpc-apple-darwin1.2*)
 			AFS_SYSNAME="ppc_darwin_12"
-			DARWIN_PLIST=src/afsd/afs.${AFS_SYSNAME}.plist
+			DARWIN_PLIST=afs.${AFS_SYSNAME}.plist
+			DARWIN_INFOFILE=afs.${AFS_SYSNAME}.plist
 			;;
 		powerpc-apple-darwin1.3*)
 			AFS_SYSNAME="ppc_darwin_13"
-			DARWIN_PLIST=src/afsd/afs.${AFS_SYSNAME}.plist
+			DARWIN_PLIST=afs.${AFS_SYSNAME}.plist
+			DARWIN_INFOFILE=afs.${AFS_SYSNAME}.plist
 			;;
 		powerpc-apple-darwin1.4*)
 			AFS_SYSNAME="ppc_darwin_14"
-			DARWIN_PLIST=src/afsd/afs.${AFS_SYSNAME}.plist
+			DARWIN_PLIST=afs.${AFS_SYSNAME}.plist
+			DARWIN_INFOFILE=afs.${AFS_SYSNAME}.plist
 			;;
 		sparc-sun-solaris2.5*)
 			AFS_SYSNAME="sun4x_55"
@@ -461,6 +464,7 @@ AC_SUBST(TOP_LIBDIR)
 AC_SUBST(DEST)
 AC_SUBST(WITH_OBSOLETE)
 AC_SUBST(WITH_INSECURE)
+AC_SUBST(DARWIN_INFOFILE)
 
 AC_OUTPUT(             \
 Makefile               \
