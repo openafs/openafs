@@ -1,0 +1,10 @@
+AFS_component_version_number.c
+Makefile
+bnode.h
+bos
+boserr.c
+bosint.cs.c
+bosint.h
+bosint.ss.c
+bosint.xdr.c
+bosserver

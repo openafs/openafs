@@ -1,0 +1,15 @@
+Makefile
+aclocal.m4
+config.log
+config.status
+configure
+configure-libafs
+hp_ux102
+hp_ux110
+i386_linux22
+i386_linux24
+include
+lib
+sgi_65
+sun4x_56
+sun4x_57

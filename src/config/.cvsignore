@@ -1,0 +1,9 @@
+AFS_component_version_number.c
+Makefile
+Makefile.i386_linux24
+Makefile.version
+Makefile.version-NOCML
+afsconfig.h
+afsconfig.h.in
+config
+mkvers
