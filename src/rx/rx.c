@@ -2291,7 +2291,8 @@ rxi_FindConnection(socket, host, port, serviceId, cid,
 	    break;
 	if (type == RX_CLIENT_CONNECTION && pp->port == port)
 	    break;
-	if (type == RX_CLIENT_CONNECTION && (conn->epoch & 0x80000000))
+	/* So what happens when it's a callback connection? */
+	if (/*type == RX_CLIENT_CONNECTION &&*/ (conn->epoch & 0x80000000))
 	    break;
       }
       if ( !flag )
