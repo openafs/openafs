@@ -235,11 +235,6 @@ afscflags =\
 	/GX \
 	/Os
 
-cdebug = $(cdebug:-Z7=-Zi)  # avoid annoying override warning (D4025)
-!IF ("APPSVER"=="1300")
-cdebug = $(cdebug) -Zi
-!ENDIF
-
 !IF ("$(AFSDEV_BUILDTYPE)" == "FREE")
 
 afscflags = $(afscflags) /Ox
@@ -248,6 +243,7 @@ cvarsdll = $(cvarsdll:-MDd=-MD)
 NODEBUG=1
 
 !ELSE		# CHECKED BUILD
+cdebug = $(cdebug:-Z7=-Zi)  # avoid annoying override warning (D4025)
 
 !IF ("$(AFSVER_CL)"=="1200")
 afscdefs = $(afscdefs) -DDEBUG
