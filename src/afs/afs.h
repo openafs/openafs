@@ -937,7 +937,6 @@ struct dcache {
     char mflags;		/* Meta flags */
     struct fcache f;		/* disk image */
     afs_int32 stamp;		/* used with vtodc struct for hints */
-    afs_hyper_t atime;         /* access time */
 
     /*
      * Locking rules:
