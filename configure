@@ -309,7 +309,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO SET_MAKE CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT build build_cpu build_vendor build_os host host_cpu host_vendor host_os CPP EGREP LN_S RANLIB ac_ct_RANLIB YACC LEX LEXLIB LEX_OUTPUT_ROOT HEADER_RT P5PLUS_KOPTS LINUX_GCC_KOPTS RHCONFIG_SP RHCONFIG_MP MPS PTHREAD_LIBS XBSA_CFLAGS HAVE_PAM BUILD_LOGIN afsconfdir viceetcdir afskerneldir afssrvbindir afssrvsbindir afssrvlibexecdir afsdbdir afslogsdir afslocaldir afsbackupdir afsbosconfigdir AFS_SYSNAME AFS_PARAM_COMMON ENABLE_KERNEL_MODULE LIB_AFSDB LINUX_KERNEL_PATH BSD_KERNEL_PATH BSD_KERNEL_BUILD LINUX_VERSION MKAFS_OSTYPE TOP_OBJDIR TOP_SRCDIR TOP_INCDIR TOP_LIBDIR DEST WITH_OBSOLETE WITH_INSECURE DARWIN_INFOFILE IRIX_BUILD_IP35 AS AR MV RM LD CP STRIP LORDER XFS_SIZE_CHECK install_XFS_SIZE_CHECK dest_XFS_SIZE_CHECK FS_CONV_SOL26 install_FS_CONV_SOL26 dest_FS_CONV_SOL26 FS_CONV_OSF40D install_FS_CONV_OSF40D dest_FS_CONV_OSF40D CCXPG2 CCOBJ AFSD_LIBS AFSD_LDFLAGS AIX64 DBG FSINCLUDES KERN_DBG KERN_OPTMZ LWP_DBG LWP_OPTMZ MT_CC MT_CFLAGS MT_LIBS OPTMZ PAM_CFLAGS PAM_LIBS PINSTALL_LIBS REGEX_OBJ SHLIB_CFLAGS SHLIB_LDFLAGS SHLIB_LINKER SHLIB_SUFFIX TXLIBS VFSCK_CFLAGS XCFLAGS XCFLAGS64 XLDFLAGS XLDFLAGS64 XLIBELFA XLIBKVM XLIBS HELPER_SPLINT HELPER_SPLINTCFG LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO SET_MAKE CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT build build_cpu build_vendor build_os host host_cpu host_vendor host_os CPP EGREP LN_S RANLIB ac_ct_RANLIB YACC LEX LEXLIB LEX_OUTPUT_ROOT HEADER_RT P5PLUS_KOPTS LINUX_GCC_KOPTS RHCONFIG_SP RHCONFIG_MP MPS PTHREAD_LIBS XBSA_CFLAGS HAVE_PAM BUILD_LOGIN afsconfdir viceetcdir afskerneldir afssrvbindir afssrvsbindir afssrvlibexecdir afsdbdir afslogsdir afslocaldir afsbackupdir afsbosconfigdir AFS_SYSNAME AFS_PARAM_COMMON ENABLE_KERNEL_MODULE LIB_AFSDB LINUX_KERNEL_PATH BSD_KERNEL_PATH BSD_KERNEL_BUILD LINUX_VERSION MKAFS_OSTYPE TOP_OBJDIR TOP_SRCDIR TOP_INCDIR TOP_LIBDIR DEST WITH_OBSOLETE DARWIN_INFOFILE IRIX_BUILD_IP35 AS AR MV RM LD CP STRIP LORDER XFS_SIZE_CHECK install_XFS_SIZE_CHECK dest_XFS_SIZE_CHECK FS_CONV_SOL26 install_FS_CONV_SOL26 dest_FS_CONV_SOL26 FS_CONV_OSF40D install_FS_CONV_OSF40D dest_FS_CONV_OSF40D CCXPG2 CCOBJ AFSD_LIBS AFSD_LDFLAGS AIX64 DBG FSINCLUDES KERN_DBG KERN_OPTMZ LWP_DBG LWP_OPTMZ MT_CC MT_CFLAGS MT_LIBS OPTMZ PAM_CFLAGS PAM_LIBS PINSTALL_LIBS REGEX_OBJ SHLIB_CFLAGS SHLIB_LDFLAGS SHLIB_LINKER SHLIB_SUFFIX TXLIBS VFSCK_CFLAGS XCFLAGS XCFLAGS64 XLDFLAGS XLDFLAGS64 XLIBELFA XLIBKVM XLIBS HELPER_SPLINT HELPER_SPLINTCFG LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -849,8 +849,7 @@ if test -n "$ac_init_help"; then
 Optional Features:
   --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
-  --enable-obsolete 			enable obsolete portions of AFS (mpp, ntp and package)
-  --enable-insecure 			enable insecure portions of AFS (ftpd, inetd, rcp, rlogind and rsh)
+  --enable-obsolete 			enable obsolete portions of AFS (mpp and package)
   --disable-afsdb 			disable AFSDB RR support
   --disable-pam 			disable PAM support
   --enable-bos-restricted-mode 	enable bosserver restricted mode which disables certain bosserver functionality
@@ -3111,13 +3110,6 @@ if test "${enable_obsolete+set}" = set; then
 
 else
   enable_obsolete="no"
-fi;
-# Check whether --enable-insecure or --disable-insecure was given.
-if test "${enable_insecure+set}" = set; then
-  enableval="$enable_insecure"
-
-else
-  enable_insecure="no"
 fi;
 # Check whether --enable-afsdb or --disable-afsdb was given.
 if test "${enable_afsdb+set}" = set; then
@@ -13652,7 +13644,7 @@ HELPER_SPLINTCFG="${TOP_SRCDIR}/splint.cfg"
 
 
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      ac_config_files="$ac_config_files Makefile src/afs/Makefile src/afsd/Makefile src/afsmonitor/Makefile src/afsweb/Makefile src/audit/Makefile src/auth/test/Makefile src/auth/Makefile src/bozo/test/Makefile src/bozo/Makefile src/bu_utils/Makefile src/bubasics/Makefile src/bucoord/Makefile src/budb/Makefile src/butc/Makefile src/butm/Makefile src/cmd/test/Makefile src/cmd/Makefile src/comerr/test/Makefile src/comerr/Makefile src/config/Makefile src/config/Makefile.config src/config/Makefile.version-NOCML src/dauth/Makefile src/des/test/Makefile src/des/Makefile src/des_stub/Makefile src/dir/test/Makefile src/dir/Makefile src/export/Makefile src/finale/Makefile src/fsint/Makefile src/fsprobe/Makefile src/ftpd43+/Makefile src/gtx/Makefile src/inetd/Makefile src/JAVA/libjafs/Makefile src/kauth/test/Makefile src/kauth/Makefile src/libacl/test/Makefile src/libacl/Makefile src/libadmin/adminutil/Makefile src/libadmin/Makefile src/libadmin/bos/Makefile src/libadmin/cfg/test/Makefile src/libadmin/cfg/Makefile src/libadmin/client/Makefile src/libadmin/kas/Makefile src/libadmin/pts/Makefile src/libadmin/samples/Makefile src/libadmin/test/Makefile src/libadmin/vos/Makefile src/libafs/Makefile.common src/libafs/MakefileProto.${MKAFS_OSTYPE} ${DARWIN_PLIST} src/libafsauthent/Makefile src/libafsrpc/Makefile src/libuafs/Makefile.common src/libuafs/MakefileProto.${MKAFS_OSTYPE} src/log/test/Makefile src/log/Makefile src/login/Makefile src/lwp/test/Makefile src/lwp/Makefile src/mpp/Makefile src/ntp/Makefile src/null/Makefile src/package/Makefile src/pam/Makefile src/pinstall/test/Makefile src/pinstall/Makefile src/procmgmt/Makefile src/procmgmt/test/Makefile src/ptserver/Makefile src/rcp/Makefile src/rlogind/Makefile src/rsh/Makefile src/rx/Makefile src/rx/bulk.example/Makefile src/rx/bulktest/Makefile src/rx/multi.example/Makefile src/rx/simple.example/Makefile src/rx/test/Makefile src/rxdebug/Makefile src/rxgen/Makefile src/rxkad/Makefile src/rxkad/test/Makefile src/rxstat/Makefile src/scout/Makefile src/sgistuff/Makefile src/shlibafsauthent/Makefile src/shlibafsrpc/Makefile src/sia/Makefile src/sys/Makefile src/tbutc/Makefile src/tests/Makefile src/tests/run-tests src/tests/OpenAFS/Dirpath.pm src/tsm41/Makefile src/tviced/Makefile src/tvolser/Makefile src/ubik/Makefile src/update/Makefile src/usd/test/Makefile src/usd/Makefile src/uss/Makefile src/util/Makefile src/util/test/Makefile src/venus/test/Makefile src/venus/Makefile src/vfsck/Makefile src/viced/Makefile src/vlserver/Makefile src/vol/Makefile src/vol/test/Makefile src/volser/Makefile src/wsadmin.src/Makefile src/xstat/Makefile src/helper-splint.sh"
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          ac_config_files="$ac_config_files Makefile src/afs/Makefile src/afsd/Makefile src/afsmonitor/Makefile src/afsweb/Makefile src/audit/Makefile src/auth/test/Makefile src/auth/Makefile src/bozo/test/Makefile src/bozo/Makefile src/bu_utils/Makefile src/bubasics/Makefile src/bucoord/Makefile src/budb/Makefile src/butc/Makefile src/butm/Makefile src/cmd/test/Makefile src/cmd/Makefile src/comerr/test/Makefile src/comerr/Makefile src/config/Makefile src/config/Makefile.config src/config/Makefile.version-NOCML src/dauth/Makefile src/des/test/Makefile src/des/Makefile src/des_stub/Makefile src/dir/test/Makefile src/dir/Makefile src/export/Makefile src/finale/Makefile src/fsint/Makefile src/fsprobe/Makefile src/gtx/Makefile src/JAVA/libjafs/Makefile src/kauth/test/Makefile src/kauth/Makefile src/libacl/test/Makefile src/libacl/Makefile src/libadmin/adminutil/Makefile src/libadmin/Makefile src/libadmin/bos/Makefile src/libadmin/cfg/test/Makefile src/libadmin/cfg/Makefile src/libadmin/client/Makefile src/libadmin/kas/Makefile src/libadmin/pts/Makefile src/libadmin/samples/Makefile src/libadmin/test/Makefile src/libadmin/vos/Makefile src/libafs/Makefile.common src/libafs/MakefileProto.${MKAFS_OSTYPE} ${DARWIN_PLIST} src/libafsauthent/Makefile src/libafsrpc/Makefile src/libuafs/Makefile.common src/libuafs/MakefileProto.${MKAFS_OSTYPE} src/log/test/Makefile src/log/Makefile src/login/Makefile src/lwp/test/Makefile src/lwp/Makefile src/mpp/Makefile src/null/Makefile src/package/Makefile src/pam/Makefile src/pinstall/test/Makefile src/pinstall/Makefile src/procmgmt/Makefile src/procmgmt/test/Makefile src/ptserver/Makefile src/rx/Makefile src/rx/bulk.example/Makefile src/rx/bulktest/Makefile src/rx/multi.example/Makefile src/rx/simple.example/Makefile src/rx/test/Makefile src/rxdebug/Makefile src/rxgen/Makefile src/rxkad/Makefile src/rxkad/test/Makefile src/rxstat/Makefile src/scout/Makefile src/sgistuff/Makefile src/shlibafsauthent/Makefile src/shlibafsrpc/Makefile src/sia/Makefile src/sys/Makefile src/tbutc/Makefile src/tests/Makefile src/tests/run-tests src/tests/OpenAFS/Dirpath.pm src/tsm41/Makefile src/tviced/Makefile src/tvolser/Makefile src/ubik/Makefile src/update/Makefile src/usd/test/Makefile src/usd/Makefile src/uss/Makefile src/util/Makefile src/util/test/Makefile src/venus/test/Makefile src/venus/Makefile src/vfsck/Makefile src/viced/Makefile src/vlserver/Makefile src/vol/Makefile src/vol/test/Makefile src/volser/Makefile src/wsadmin.src/Makefile src/xstat/Makefile src/helper-splint.sh"
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
 # tests run on this system so they can be shared between configure
@@ -14211,9 +14203,7 @@ do
   "src/finale/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/finale/Makefile" ;;
   "src/fsint/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/fsint/Makefile" ;;
   "src/fsprobe/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/fsprobe/Makefile" ;;
-  "src/ftpd43+/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/ftpd43+/Makefile" ;;
   "src/gtx/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/gtx/Makefile" ;;
-  "src/inetd/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/inetd/Makefile" ;;
   "src/JAVA/libjafs/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/JAVA/libjafs/Makefile" ;;
   "src/kauth/test/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/kauth/test/Makefile" ;;
   "src/kauth/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/kauth/Makefile" ;;
@@ -14243,7 +14233,6 @@ do
   "src/lwp/test/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/lwp/test/Makefile" ;;
   "src/lwp/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/lwp/Makefile" ;;
   "src/mpp/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/mpp/Makefile" ;;
-  "src/ntp/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/ntp/Makefile" ;;
   "src/null/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/null/Makefile" ;;
   "src/package/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/package/Makefile" ;;
   "src/pam/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/pam/Makefile" ;;
@@ -14252,9 +14241,6 @@ do
   "src/procmgmt/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/procmgmt/Makefile" ;;
   "src/procmgmt/test/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/procmgmt/test/Makefile" ;;
   "src/ptserver/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/ptserver/Makefile" ;;
-  "src/rcp/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/rcp/Makefile" ;;
-  "src/rlogind/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/rlogind/Makefile" ;;
-  "src/rsh/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/rsh/Makefile" ;;
   "src/rx/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/rx/Makefile" ;;
   "src/rx/bulk.example/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/rx/bulk.example/Makefile" ;;
   "src/rx/bulktest/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/rx/bulktest/Makefile" ;;
@@ -14453,7 +14439,6 @@ s,@TOP_INCDIR@,$TOP_INCDIR,;t t
 s,@TOP_LIBDIR@,$TOP_LIBDIR,;t t
 s,@DEST@,$DEST,;t t
 s,@WITH_OBSOLETE@,$WITH_OBSOLETE,;t t
-s,@WITH_INSECURE@,$WITH_INSECURE,;t t
 s,@DARWIN_INFOFILE@,$DARWIN_INFOFILE,;t t
 s,@IRIX_BUILD_IP35@,$IRIX_BUILD_IP35,;t t
 s,@AS@,$AS,;t t

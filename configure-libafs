@@ -309,7 +309,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO SET_MAKE CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT build build_cpu build_vendor build_os host host_cpu host_vendor host_os CPP EGREP LN_S RANLIB ac_ct_RANLIB YACC LEX LEXLIB LEX_OUTPUT_ROOT HEADER_RT P5PLUS_KOPTS LINUX_GCC_KOPTS RHCONFIG_SP RHCONFIG_MP MPS PTHREAD_LIBS XBSA_CFLAGS HAVE_PAM BUILD_LOGIN afsconfdir viceetcdir afskerneldir afssrvbindir afssrvsbindir afssrvlibexecdir afsdbdir afslogsdir afslocaldir afsbackupdir afsbosconfigdir AFS_SYSNAME AFS_PARAM_COMMON ENABLE_KERNEL_MODULE LIB_AFSDB LINUX_KERNEL_PATH BSD_KERNEL_PATH BSD_KERNEL_BUILD LINUX_VERSION MKAFS_OSTYPE TOP_OBJDIR TOP_SRCDIR TOP_INCDIR TOP_LIBDIR DEST WITH_OBSOLETE WITH_INSECURE DARWIN_INFOFILE IRIX_BUILD_IP35 AS AR MV RM LD CP STRIP LORDER XFS_SIZE_CHECK install_XFS_SIZE_CHECK dest_XFS_SIZE_CHECK FS_CONV_SOL26 install_FS_CONV_SOL26 dest_FS_CONV_SOL26 FS_CONV_OSF40D install_FS_CONV_OSF40D dest_FS_CONV_OSF40D CCXPG2 CCOBJ AFSD_LIBS AFSD_LDFLAGS AIX64 DBG FSINCLUDES KERN_DBG KERN_OPTMZ LWP_DBG LWP_OPTMZ MT_CC MT_CFLAGS MT_LIBS OPTMZ PAM_CFLAGS PAM_LIBS PINSTALL_LIBS REGEX_OBJ SHLIB_CFLAGS SHLIB_LDFLAGS SHLIB_LINKER SHLIB_SUFFIX TXLIBS VFSCK_CFLAGS XCFLAGS XCFLAGS64 XLDFLAGS XLDFLAGS64 XLIBELFA XLIBKVM XLIBS HELPER_SPLINT HELPER_SPLINTCFG LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO SET_MAKE CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT build build_cpu build_vendor build_os host host_cpu host_vendor host_os CPP EGREP LN_S RANLIB ac_ct_RANLIB YACC LEX LEXLIB LEX_OUTPUT_ROOT HEADER_RT P5PLUS_KOPTS LINUX_GCC_KOPTS RHCONFIG_SP RHCONFIG_MP MPS PTHREAD_LIBS XBSA_CFLAGS HAVE_PAM BUILD_LOGIN afsconfdir viceetcdir afskerneldir afssrvbindir afssrvsbindir afssrvlibexecdir afsdbdir afslogsdir afslocaldir afsbackupdir afsbosconfigdir AFS_SYSNAME AFS_PARAM_COMMON ENABLE_KERNEL_MODULE LIB_AFSDB LINUX_KERNEL_PATH BSD_KERNEL_PATH BSD_KERNEL_BUILD LINUX_VERSION MKAFS_OSTYPE TOP_OBJDIR TOP_SRCDIR TOP_INCDIR TOP_LIBDIR DEST WITH_OBSOLETE DARWIN_INFOFILE IRIX_BUILD_IP35 AS AR MV RM LD CP STRIP LORDER XFS_SIZE_CHECK install_XFS_SIZE_CHECK dest_XFS_SIZE_CHECK FS_CONV_SOL26 install_FS_CONV_SOL26 dest_FS_CONV_SOL26 FS_CONV_OSF40D install_FS_CONV_OSF40D dest_FS_CONV_OSF40D CCXPG2 CCOBJ AFSD_LIBS AFSD_LDFLAGS AIX64 DBG FSINCLUDES KERN_DBG KERN_OPTMZ LWP_DBG LWP_OPTMZ MT_CC MT_CFLAGS MT_LIBS OPTMZ PAM_CFLAGS PAM_LIBS PINSTALL_LIBS REGEX_OBJ SHLIB_CFLAGS SHLIB_LDFLAGS SHLIB_LINKER SHLIB_SUFFIX TXLIBS VFSCK_CFLAGS XCFLAGS XCFLAGS64 XLDFLAGS XLDFLAGS64 XLIBELFA XLIBKVM XLIBS HELPER_SPLINT HELPER_SPLINTCFG LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -849,8 +849,7 @@ if test -n "$ac_init_help"; then
 Optional Features:
   --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
-  --enable-obsolete 			enable obsolete portions of AFS (mpp, ntp and package)
-  --enable-insecure 			enable insecure portions of AFS (ftpd, inetd, rcp, rlogind and rsh)
+  --enable-obsolete 			enable obsolete portions of AFS (mpp and package)
   --disable-afsdb 			disable AFSDB RR support
   --disable-pam 			disable PAM support
   --enable-bos-restricted-mode 	enable bosserver restricted mode which disables certain bosserver functionality
@@ -3112,13 +3111,6 @@ if test "${enable_obsolete+set}" = set; then
 
 else
   enable_obsolete="no"
-fi;
-# Check whether --enable-insecure or --disable-insecure was given.
-if test "${enable_insecure+set}" = set; then
-  enableval="$enable_insecure"
-
-else
-  enable_insecure="no"
 fi;
 # Check whether --enable-afsdb or --disable-afsdb was given.
 if test "${enable_afsdb+set}" = set; then
@@ -14338,7 +14330,6 @@ s,@TOP_INCDIR@,$TOP_INCDIR,;t t
 s,@TOP_LIBDIR@,$TOP_LIBDIR,;t t
 s,@DEST@,$DEST,;t t
 s,@WITH_OBSOLETE@,$WITH_OBSOLETE,;t t
-s,@WITH_INSECURE@,$WITH_INSECURE,;t t
 s,@DARWIN_INFOFILE@,$DARWIN_INFOFILE,;t t
 s,@IRIX_BUILD_IP35@,$IRIX_BUILD_IP35,;t t
 s,@AS@,$AS,;t t
