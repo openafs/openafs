@@ -173,6 +173,7 @@ struct vop_lookup_args /* {
 	return (error);
     }
     vp = AFSTOV(vcp);  /* always get a node if no error */
+    vp->v_vfsp = dvp->v_vfsp;
 
     /* The parent directory comes in locked.  We unlock it on return
        unless the caller wants it left locked.
@@ -237,6 +238,7 @@ afs_vop_create(ap)
 
     if (vcp) {
 	*ap->a_vpp = AFSTOV(vcp);
+	(*ap->a_vpp)->v_vfsp = dvp->v_vfsp;
 	vn_lock(*ap->a_vpp, LK_EXCLUSIVE| LK_RETRY, p);
         if (UBCINFOMISSING(*ap->a_vpp) ||
             UBCINFORECLAIMED(*ap->a_vpp))
@@ -810,11 +812,6 @@ afs_vop_link(ap)
 
     GETNAME();
     p=cnp->cn_proc;
-    if (dvp->v_mount != vp->v_mount) {
-	VOP_ABORTOP(vp, cnp);
-	error = EXDEV;
-	goto out;
-    }
     if (vp->v_type == VDIR) {
 	VOP_ABORTOP(vp, cnp);
 	error = EISDIR;
@@ -859,25 +856,6 @@ afs_vop_rename(ap)
     struct proc *p=fcnp->cn_proc;
 
     /*
-     * Check for cross-device rename.
-     */
-    if ((fvp->v_mount != tdvp->v_mount) ||
-	(tvp && (fvp->v_mount != tvp->v_mount))) {
-	error = EXDEV;
-abortit:
-	VOP_ABORTOP(tdvp, tcnp); /* XXX, why not in NFS? */
-	if (tdvp == tvp)
-	    vrele(tdvp);
-	else
-	    vput(tdvp);
-	if (tvp)
-	    vput(tvp);
-	VOP_ABORTOP(fdvp, fcnp); /* XXX, why not in NFS? */
-	vrele(fdvp);
-	vrele(fvp);
-	return (error);
-    }
-    /*
      * if fvp == tvp, we're just removing one name of a pair of
      * directory entries for the same element.  convert call into rename.
      ( (pinched from NetBSD 1.0's ufs_rename())
@@ -885,7 +863,18 @@ abortit:
     if (fvp == tvp) {
 	if (fvp->v_type == VDIR) {
 	    error = EINVAL;
-	    goto abortit;
+	abortit:
+	    VOP_ABORTOP(tdvp, tcnp); /* XXX, why not in NFS? */
+	    if (tdvp == tvp)
+		vrele(tdvp);
+	    else
+		vput(tdvp);
+	    if (tvp)
+		vput(tvp);
+	    VOP_ABORTOP(fdvp, fcnp); /* XXX, why not in NFS? */
+	    vrele(fdvp);
+	    vrele(fvp);
+	    return (error);
 	}
 
 	/* Release destination completely. */
@@ -968,6 +957,7 @@ afs_vop_mkdir(ap)
     }
     if (vcp) {
 	*ap->a_vpp = AFSTOV(vcp);
+	(*ap->a_vpp)->v_vfsp = dvp->v_vfsp;
 	vn_lock(*ap->a_vpp, LK_EXCLUSIVE|LK_RETRY, p);
     } else
 	*ap->a_vpp = 0;

@@ -731,8 +731,10 @@ long parm, parm2, parm3, parm4, parm5, parm6;
 #endif
 	afs_cold_shutdown = 0;
 	if (parm == 1) afs_cold_shutdown = 1;
+#ifndef AFS_DARWIN_ENV
 	if (afs_globalVFS != 0) 
 	    afs_warn("AFS isn't unmounted yet!\n");
+#endif
 
 	afs_shutdown();
     }
