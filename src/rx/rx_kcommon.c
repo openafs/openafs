@@ -969,6 +969,9 @@ void rxk_Listener(void)
 	afs_osi_Wakeup(&afs_termState);
     }
     rxk_ListenerPid = 0;
+#ifdef AFS_LINUX24_ENV
+    afs_osi_Wakeup(&rxk_ListenerPid);
+#endif
 #ifdef AFS_SUN5_ENV
     AFS_GUNLOCK();
 #endif /* AFS_SUN5_ENV */
