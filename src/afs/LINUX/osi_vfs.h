@@ -54,6 +54,9 @@ typedef struct vnode {
         unsigned short          i_bytes;
 #endif
 	struct semaphore	i_sem;
+#ifdef STRUCT_INODE_HAS_I_TRUNCATE_SEM
+        struct rw_semaphore     i_truncate_sem;
+#endif
 #if defined(AFS_LINUX24_ENV)
         struct semaphore        i_zombie;
 #else

@@ -112,6 +112,7 @@ case $system in
 	         LINUX_FS_STRUCT_INODE_HAS_I_BYTES
 	         LINUX_FS_STRUCT_ADDRESS_SPACE_HAS_PAGE_LOCK
 		 LINUX_FS_STRUCT_INODE_HAS_I_CDEV
+		 LINUX_FS_STRUCT_INODE_HAS_I_TRUNCATE_SEM
 	  	 LINUX_INODE_SETATTR_RETURN_TYPE
 		 LINUX_NEED_RHCONFIG
 		 LINUX_WHICH_MODULES
@@ -120,6 +121,9 @@ case $system in
 		 fi
 		 if test "x$ac_cv_linux_fs_struct_inode_has_i_cdev" = "xyes"; then 
 		  AC_DEFINE(STRUCT_INODE_HAS_I_CDEV)
+		 fi
+		 if test "x$ac_cv_linux_fs_struct_inode_has_i_truncate_sem" = "xyes"; then 
+		  AC_DEFINE(STRUCT_INODE_HAS_I_TRUNCATE_SEM)
 		 fi
 		 if test "x$ac_cv_linux_fs_struct_inode_has_i_bytes" = "xyes"; then 
 		  AC_DEFINE(STRUCT_INODE_HAS_I_BYTES)
