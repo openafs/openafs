@@ -46,7 +46,8 @@ versions are supported:
     Microsoft Visual .NET 
     Microsoft Visual .NET 2003 (recommended)
 
-    Any version of the Microsoft SDK and Tools released August 2001 or later.
+    Microsoft Platform SDK for Windows XP SP2
+      [Core and Data Access SDKs are required]
 
 The NSIS installer requires about 14 MB of storage. The following 
 version is supported.

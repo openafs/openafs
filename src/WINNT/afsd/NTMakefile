@@ -64,7 +64,8 @@ INCFILES =\
 	$(INCFILEDIR)\cm_freelance.h \
     $(INCFILEDIR)\afsd_eventlog.h \
     $(INCFILEDIR)\afsd_eventmessages.h \
-    $(INCFILEDIR)\afskfw.h
+    $(INCFILEDIR)\afskfw.h \
+    $(INCFILEDIR)\afsicf.h
 
 IDLFILES =\
 	afsrpc.h $(OUT)\afsrpc_c.obj
@@ -116,7 +117,8 @@ AFSDOBJS=\
 !ENDIF
     $(OUT)\cm_freelance.obj \
     $(OUT)\afsd_eventlog.obj \
-    $(OUT)\afsd_flushvol.obj
+    $(OUT)\afsd_flushvol.obj \
+    $(OUT)\afsicf.obj
 
 $(AFSDOBJS):
 
@@ -245,9 +247,10 @@ $(LOG95_DLLFILE): $(LOG95_DLLOBJS) $(LOG95_DLLLIBS)
 ############################################################################
 # Install target; primary makefile target
 
-install_objs: $(OUT)\cm_dns.obj $(OUT)\cm_config.obj $(LANAHELPERLIB)
+install_objs: $(OUT)\cm_dns.obj $(OUT)\cm_config.obj $(LANAHELPERLIB) $(OUT)\afsicf.obj
      $(COPY) $(OUT)\cm_dns.obj $(DESTDIR)\lib
      $(COPY) $(OUT)\cm_config.obj $(DESTDIR)\lib
+     $(COPY) $(OUT)\afsicf.obj $(DESTDIR)\lib
 
 install_headers: $(IDLFILES) $(INCFILES)
 
@@ -328,7 +331,9 @@ AFSD_SDKLIBS =\
     Dbghelp.lib \
     strsafe.lib \
     mpr.lib \
-    secur32.lib
+    secur32.lib \
+    ole32.lib \
+    oleaut32.lib
 
 AFSD_EXELIBS =\
 	$(DESTDIR)\lib\libosi.lib \

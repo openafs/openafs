@@ -29,6 +29,7 @@
 #include "smb.h"
 #include "cm_rpc.h"
 #include "lanahelper.h"
+#include "afsicf.h"
 
 extern int RXAFSCB_ExecuteRequest(struct rx_call *z_call);
 extern int RXSTATS_ExecuteRequest(struct rx_call *z_call);
@@ -789,26 +790,9 @@ int afsd_InitCM(char **reasonP)
     }
 
     /* Open Microsoft Firewall to allow in port 7001 */
-    {
-        HKEY hk;
-        DWORD dwDisp;
-        TCHAR* value = TEXT("7001:UDP:*:Enabled:AFS Cache Manager Callback");
-        if (RegCreateKeyEx (HKEY_LOCAL_MACHINE, 
-                            "SYSTEM\\CurrentControlSet\\Services\\SharedAccess\\Parameters\\FirewallPolicy\\DomainProfile\\GloballyOpenP", 
-                            0, TEXT("container"), 0, KEY_SET_VALUE, NULL, &hk, &dwDisp) == ERROR_SUCCESS)
-        {
-            RegSetValueEx (hk, TEXT("7001:UDP"), 0, REG_SZ, (PBYTE)value, sizeof(TCHAR) * (1+lstrlen(value)));
-            RegCloseKey (hk);
-        }
-        if (RegCreateKeyEx (HKEY_LOCAL_MACHINE, 
-                            "SYSTEM\\CurrentControlSet\\Services\\SharedAccess\\Parameters\\FirewallPolicy\\StandardProfile\\GloballyOpenP", 
-                            0, TEXT("container"), 0, KEY_SET_VALUE, NULL, &hk, &dwDisp) == ERROR_SUCCESS)
-        {
-            RegSetValueEx (hk, TEXT("7001:UDP"), 0, REG_SZ, (PBYTE)value, sizeof(TCHAR) * (1+lstrlen(value)));
-            RegCloseKey (hk);
-        }
-    }
+    icf_CheckAndAddAFSPorts(AFS_PORTSET_CLIENT);
 
+    /* Ensure the AFS Netbios Name is registered to allow loopback access */
     configureBackConnectionHostNames();
 
 	/* initialize RX, and tell it to listen to port 7001, which is used for

@@ -22,10 +22,15 @@ EXELIBS =\
 	$(DESTDIR)\lib\afs\afsutil.lib \
 	$(DESTDIR)\lib\afs\afseventlog.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib \
-	$(DESTDIR)\lib\afs\afsprocmgmt.lib
+	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
+    $(DESTDIR)\lib\afsicf.obj
+
+EXESDKLIBS=\
+    ole32.lib \
+    oleaut32.lib
 
 $(EXEFILE): $(EXEOBJS) $(EXELIBS)
-	$(EXECONLINK)
+	$(EXECONLINK) $(EXESDKLIBS)
 	$(EXEPREP)
 
 ############################################################################
