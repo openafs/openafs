@@ -74,7 +74,7 @@ ${DESTDIR}bin/cmdebug: cmdebug
 	${INSTALL} -s $? $@
 
 ${DESTDIR}etc/kdump: kdump
-	set -x; \
+	-set -x; \
 	case ${SYS_NAME} in \
 	sgi_6? ) \
 		${INSTALLex} -f kdump.sh.sgi_ipnos $@; \
@@ -99,7 +99,7 @@ ${DESTDIR}etc/kdump: kdump
 	esac
 
 ${DESTDIR}etc/kdump64: kdump64
-	set -x; \
+	-set -x; \
 	case ${SYS_NAME} in \
 	sun4x_57 | hp_ux11* ) \
 		${INSTALL} -s $? $@ ;;\
@@ -161,7 +161,7 @@ cmdebug: cmdebug.o ${CMLIBS}
 	$(CC) -o cmdebug cmdebug.o ${CFLAGS} ${CMLIBS} ${XLIBS}
 
 kdump.o: kdump.c ${INCLS} AFS_component_version_number.c
-	set -x; \
+	-set -x; \
 	case ${SYS_NAME} in \
 		alpha_linux* ) \
 			for lv in ${LINUX_VERS}; do \
@@ -200,14 +200,14 @@ kdump.o: kdump.c ${INCLS} AFS_component_version_number.c
 	esac ;
 
 kdump64.o : kdump.c ${INCLS} AFS_component_version_number.c
-	set -x; \
+	-set -x; \
 	case ${SYS_NAME} in \
 	sun4x_57 | hp_ux11* ) \
 		${CC} -g -I${DESTDIR}include -I${SRCDIR}include ${XCFLAGS64} -o kdump64.o -c kdump.c ;; \
 	esac
 
 kdump:  kdump.o
-	set -x; \
+	-set -x; \
 	case ${SYS_NAME} in \
 	sun4c_51 | sun4c_52 | sun4m_51 | sun4m_52 | sun4c_53 | sun4m_53 | sun4_53 | sun4_54 | sun4c_54 | sun4m_54 | sunx86_54) \
 		${CC} -g -o kdump kdump.o ${DESTDIR}lib/afs/libcmd.a  ${DESTDIR}lib/afs/util.a /usr/lib/libkvm.a -lelf ${XLIBS} ;; \
@@ -245,7 +245,7 @@ kdump:  kdump.o
 ## kdump to read from 64 bit kernel dumps
 
 kdump64 : kdump64.o
-	set -x; \
+	-set -x; \
 	case ${SYS_NAME} in \
 	sun4x_57 | hp_ux11* )  \
 		${CC} -g ${XCFLAGS64} -o kdump64 kdump64.o ${DESTDIR}lib/afs/libcmd64.a ${XLIBELFA}  ${XLIBKVM} ${XLIBS} ;; \
