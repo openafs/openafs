@@ -1,3 +1,11 @@
+openafs (1.3.81-1) unstable; urgency=low
+
+  * New Upstream version
+  * Use Linux 2.4 as the claimed userspace OS for alpha; hopefully this
+    resolves the  largefile issue and allows us to build again, Closes: #271923
+
+ -- Sam Hartman <hartmans@debian.org>  Wed,  6 Apr 2005 08:08:29 -0400
+
 openafs (1.3.80-1) UNRELEASED; urgency=low
 
   *  New upstream version, Closes: #297781
