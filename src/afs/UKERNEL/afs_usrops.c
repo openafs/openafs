@@ -2751,6 +2751,10 @@ uafs_open_r(char *path, int flags, int mode)
     if (flags & (O_WRONLY | O_RDWR)) {
 	openFlags |= FWRITE;
     }
+    if ((openFlags & (FREAD | FWRITE)) == 0) {
+	/* O_RDONLY is 0, so ... */
+	openFlags |= FREAD;
+    }
 
     /*
      * Truncate if necessary
@@ -3064,7 +3068,6 @@ uafs_fstat_r(int fd, struct stat *buf)
 	return -1;
     }
     code = uafs_GetAttr(vp, buf);
-    VN_RELE(vp);
     if (code) {
 	errno = code;
 	return -1;
