@@ -667,7 +667,8 @@ static void customize_struct(definition *defp)
 
 static char *structname(char *name)
 {
-    char namecontents[150], *pnt, *pnt1;
+    static char namecontents[150];
+    char *pnt, *pnt1;
 
     strcpy(namecontents, name);
     pnt = namecontents;
