@@ -1341,10 +1341,14 @@ DoLoop:
    SectionSetFlags ${secLoopback} $0
    
 SkipLoop:
-   ; Never install debug symbols unless explicitly selected
-	!IFDEF DEBUG
+   ; Never install debug symbols unless explicitly selected, except in DEBUG mode
+	!IFNDEF DEBUG
    SectionGetFlags ${secDebug} $0
 	IntOp $0 $0 & ${SECTION_OFF}
+	SectionSetFlags ${secDebug} $0
+   !ELSE
+   SectionGetFlags ${secDebug} $0
+	IntOp $0 $0 | ${SF_SELECTED}
 	SectionSetFlags ${secDebug} $0
    !ENDIF
    ; Our logic should be like this.
