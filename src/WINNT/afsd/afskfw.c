@@ -359,8 +359,6 @@ static HINSTANCE hKrb524 = 0;
 static HINSTANCE hSecur32 = 0;
 #endif /* USE_MS2MIT */
 static HINSTANCE hAdvApi32 = 0;
-static HINSTANCE hAfsTokens = 0;
-static HINSTANCE hAfsConf = 0;
 static HINSTANCE hComErr = 0;
 static HINSTANCE hService = 0;
 static HINSTANCE hProfile = 0;
@@ -427,10 +425,6 @@ KFW_cleanup(void)
         FreeLibrary(hKrb4);
     if (hProfile)
         FreeLibrary(hProfile);
-    if (hAfsTokens)
-        FreeLibrary(hAfsTokens);
-    if (hAfsConf)
-        FreeLibrary(hAfsConf);
     if (hComErr)
         FreeLibrary(hComErr);
     if (hService)
@@ -480,7 +474,7 @@ KFW_is_available(void)
          hSecur32 && 
 #endif /* USE_MS2MIT */
          hKrb524 &&
-         hProfile && hAfsTokens && hAfsConf && hLeash && hCCAPI )
+         hProfile && hLeash && hCCAPI )
         return TRUE;
     return FALSE;
 }
@@ -2400,7 +2394,6 @@ KFW_AFS_klog(
     krb5_creds * k5creds = 0;
     krb5_error_code code;
     krb5_principal client_principal = 0;
-    char * cname = 0, *sname = 0;
     int i, retry = 0;
 
     CurrentState = 0;
@@ -2519,6 +2512,7 @@ KFW_AFS_klog(
 
 
         if ( IsDebuggerPresent() ) {
+            char * cname, *sname;
             pkrb5_unparse_name(ctx, increds.client, &cname);
             pkrb5_unparse_name(ctx, increds.server, &sname);
             OutputDebugString("Getting tickets for \"");
@@ -2526,7 +2520,8 @@ KFW_AFS_klog(
             OutputDebugString("\" and service \"");
             OutputDebugString(sname);
             OutputDebugString("\"\n");
-            cname = sname = 0;
+            pkrb5_free_unparsed_name(ctx,cname);
+            pkrb5_free_unparsed_name(ctx,sname);
         }
 
         code = pkrb5_get_credentials(ctx, 0, cc, &increds, &k5creds);
@@ -2554,7 +2549,6 @@ KFW_AFS_klog(
                 OutputDebugString("\"\n");
                 pkrb5_free_unparsed_name(ctx,cname);
                 pkrb5_free_unparsed_name(ctx,sname);
-                cname = sname = 0;
             }
 
             if (!code)
@@ -2588,7 +2582,6 @@ KFW_AFS_klog(
                 OutputDebugString("\"\n");
                 pkrb5_free_unparsed_name(ctx,cname);
                 pkrb5_free_unparsed_name(ctx,sname);
-                cname = sname = 0;
             }
 
             if (!code)
@@ -2619,7 +2612,6 @@ KFW_AFS_klog(
                     OutputDebugString("\"\n");
                     pkrb5_free_unparsed_name(ctx,cname);
                     pkrb5_free_unparsed_name(ctx,sname);
-                    cname = sname = 0;
                 }
 
                 if (!code)
@@ -2839,10 +2831,6 @@ KFW_AFS_klog(
     }
 
   cleanup:
-    if (cname)
-        pkrb5_free_unparsed_name(ctx,cname);
-    if (sname)
-        pkrb5_free_unparsed_name(ctx,sname);
     if (client_principal)
         pkrb5_free_principal(ctx,client_principal);
     /* increds.client == client_principal */

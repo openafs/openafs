@@ -390,9 +390,9 @@ void cm_RandomizeServer(cm_serverRef_t** list)
     lock_ReleaseWrite(&cm_serverLock);
 }
 
+/* call cm_FreeServer while holding a write lock on cm_serverLock */
 void cm_FreeServer(cm_server_t* server)
 {
-    lock_ObtainWrite(&cm_serverLock);
     if (--(server->refCount) == 0)
     {
         /* we need to check to ensure that all of the connections
@@ -415,8 +415,7 @@ void cm_FreeServer(cm_server_t* server)
             }
         }
     }
-    lock_ReleaseWrite(&cm_serverLock);
-}
+ }
 
 void cm_FreeServerList(cm_serverRef_t** list)
 {
