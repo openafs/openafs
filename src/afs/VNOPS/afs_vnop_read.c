@@ -330,7 +330,7 @@ tagain:
      */
     if (tdc) {
 	ReleaseReadLock(&tdc->lock);
-#ifndef	AFS_VM_RDWR_ENV
+#if !defined(AFS_VM_RDWR_ENV) || defined(AFS_LINUX22_ENV)
 	/* try to queue prefetch, if needed */
 	if (!noLock) {
 	    afs_PrefetchChunk(avc, tdc, acred, &treq);
@@ -559,7 +559,7 @@ afs_UFSReadFast(avc, auio, acred, albn, abpp, noLock)
 
 	    if (!noLock) {
 		ReleaseReadLock(&avc->lock);
-#ifndef	AFS_VM_RDWR_ENV
+#if !defined(AFS_VM_RDWR_ENV) || defined(AFS_LINUX22_ENV)
 		if (!(code = afs_InitReq(&treq, acred))) {
 		    if (!(tdc->mflags & DFNextStarted))
 			afs_PrefetchChunk(avc, tdc, acred, &treq);
@@ -982,7 +982,7 @@ tagain:
      */
     if (tdc) {
 	ReleaseReadLock(&tdc->lock);
-#ifndef	AFS_VM_RDWR_ENV
+#if !defined(AFS_VM_RDWR_ENV) || defined(AFS_LINUX22_ENV)
 	/* try to queue prefetch, if needed */
 	if (!noLock) {
 	    if (!(tdc->mflags & DFNextStarted))

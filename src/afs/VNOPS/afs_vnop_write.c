@@ -297,7 +297,9 @@ afs_MemWrite(avc, auio, aio, acred, noLock)
 	    avc->m.Length = filePos;
 	}
 #endif
-#ifndef AFS_VM_RDWR_ENV
+	ReleaseWriteLock(&tdc->lock);
+	afs_PutDCache(tdc);
+#if !defined(AFS_VM_RDWR_ENV) || defined(AFS_LINUX22_ENV)
 	/*
 	 * If write is implemented via VM, afs_DoPartialWrite() is called from
 	 * the high-level write op.
@@ -306,14 +308,10 @@ afs_MemWrite(avc, auio, aio, acred, noLock)
 	    code = afs_DoPartialWrite(avc, &treq);
 	    if (code) {
 		error = code;
-		ReleaseWriteLock(&tdc->lock);
-		afs_PutDCache(tdc);
 		break;
 	    }
 	}
 #endif
-	ReleaseWriteLock(&tdc->lock);
-	afs_PutDCache(tdc);
     }
 #ifndef	AFS_VM_RDWR_ENV
     afs_FakeClose(avc, acred);
@@ -618,7 +616,9 @@ afs_UFSWrite(avc, auio, aio, acred, noLock)
 	}
 #endif
 	osi_UFSClose(tfile);
-#ifndef	AFS_VM_RDWR_ENV
+	ReleaseWriteLock(&tdc->lock);
+	afs_PutDCache(tdc);
+#if !defined(AFS_VM_RDWR_ENV) || defined(AFS_LINUX22_ENV)
 	/*
 	 * If write is implemented via VM, afs_DoPartialWrite() is called from
 	 * the high-level write op.
@@ -627,14 +627,10 @@ afs_UFSWrite(avc, auio, aio, acred, noLock)
 	    code = afs_DoPartialWrite(avc, &treq);
 	    if (code) {
 		error = code;
-		ReleaseWriteLock(&tdc->lock);
-		afs_PutDCache(tdc);
 		break;
 	    }
 	}
 #endif
-	ReleaseWriteLock(&tdc->lock);
-	afs_PutDCache(tdc);
     }
 #ifndef	AFS_VM_RDWR_ENV
     afs_FakeClose(avc, acred);
