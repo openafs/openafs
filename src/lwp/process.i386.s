@@ -56,7 +56,7 @@
 .globl	PRE_Block
 .globl	savecontext
 
-	savecontext:
+savecontext:
 	pushl	%ebp			/* New Frame! */
 	movl	%esp,%ebp
 	pusha				/* Push all registers */
