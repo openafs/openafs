@@ -26,7 +26,11 @@ static char dns_addr[30];
 #ifdef DJGPP
 extern char cm_confDir[];
 #endif
+#if !defined(_WIN32_WINNT) || _WIN32_WINNT < 0x500
 int cm_dnsEnabled = -1;
+#else
+int cm_dnsEnabled = 1;  /* assume on */
+#endif
 
 void DNSlowerCase(char *str)
 {
