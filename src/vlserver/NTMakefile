@@ -1,0 +1,145 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+#
+
+# Override default definitions in NTMakefile.$(SYS_NAME) before including.
+
+!INCLUDE ..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\config\NTMakefile.version
+
+
+############################################################################
+# Definitions for installing header files
+
+INCFILEDIR = $(DESTDIR)\include 
+
+INCFILES = \
+	$(INCFILEDIR)\afs\vl_opcodes.h \
+	$(INCFILEDIR)\afs\vlserver.h \
+	$(INCFILEDIR)\afs\vldbint.h
+
+############################################################################
+# build afsvldb.lib
+
+LIBFILE = $(DESTDIR)\lib\afs\afsvldb.lib
+
+LIBOBJS =\
+	vl_errors.obj \
+	vldbint.cs.obj \
+	vldbint.xdr.obj \
+	AFS_component_version_number.obj
+
+
+$(LIBFILE): $(LIBOBJS)  
+	$(LIBARCH) 
+
+############################################################################
+# build mtafsvldb.lib
+
+MT_LIBFILE = $(DESTDIR)\lib\afs\mtafsvldb.lib
+
+MT_LIBOBJS =\
+	vl_errors_mt.obj \
+	vldbint.cs_mt.obj \
+	vldbint.xdr_mt.obj \
+	AFS_component_version_number.obj
+
+vl_errors_mt.obj:vl_errors.c
+	$(C2OBJ) vl_errors.c -DAFS_PTHREAD_ENV /Fovl_errors_mt.obj
+
+vldbint.cs_mt.obj:vldbint.cs.c
+	$(C2OBJ) vldbint.cs.c -DAFS_PTHREAD_ENV /Fovldbint.cs_mt.obj
+
+vldbint.xdr_mt.obj:vldbint.xdr.c
+	$(C2OBJ) vldbint.xdr.c -DAFS_PTHREAD_ENV /Fovldbint.xdr_mt.obj
+
+$(MT_LIBFILE): $(MT_LIBOBJS)  
+	$(LIBARCH) 
+
+############################################################################
+# build vlserver.exe
+
+VLSERVER = $(DESTDIR)\root.server\usr\afs\bin\vlserver.exe
+
+VLSERVER_EXEOBJS =\
+	vldbint.ss.obj \
+	vldbint.xdr.obj \
+	vlprocs.obj \
+	vlserver.obj \
+	vlutils.obj \
+	vlserver.res
+
+VLSERVER_EXECLIBS = \
+	$(DESTDIR)\lib\afsubik.lib \
+	$(DESTDIR)\lib\afs\afsauth.lib \
+	$(DESTDIR)\lib\afsrxkad.lib \
+	$(DESTDIR)\lib\afsrxstat.lib \
+	$(DESTDIR)\lib\afsrx.lib \
+	$(DESTDIR)\lib\afslwp.lib \
+	$(DESTDIR)\lib\afsdes.lib \
+	$(DESTDIR)\lib\afs\afscom_err.lib \
+	$(DESTDIR)\lib\afs\afsutil.lib \
+	$(DESTDIR)\lib\afs\afsaudit.lib \
+	$(DESTDIR)\lib\afs\afseventlog.lib \
+	$(DESTDIR)\lib\afs\afsreg.lib \
+	$(DESTDIR)\lib\afs\afsprocmgmt.lib
+
+	
+$(VLSERVER): $(VLSERVER_EXEOBJS) $(LIBFILE) $(VLSERVER_EXECLIBS)
+	$(EXECONLINK)
+	$(EXEPREP) 
+
+############################################################################
+# generate versioninfo resources
+vlserver.res: vlserver.rc AFS_component_version_number.h
+	$(RC) $*.rc
+
+############################################################################
+# rxgen on vldbint.xg
+
+vldbint.ss.c vldbint.cs.c vldbint.xdr.c $(DESTDIR)\include\afs\vldbint.h: vldbint.xg
+	$(RXGEN) -x $**
+	$(COPY) vldbint.h $(DESTDIR)\include\afs\vldbint.h
+
+############################################################################
+# Definitions for generating files via COMPILE_ET
+# Need an explicit copy here, since we've fussed with the general rule.
+
+$(INCFILEDIR)\afs\vlserver.h vl_errors.c: vl_errors.et vlserver.p.h
+	$(DEL) vlserver.h vl_errors.c
+	$(COMPILE_ET) vl_errors  -h vlserver
+	$(COPY) vlserver.h $(INCFILEDIR)\afs\vlserver.h
+
+############################################################################
+# build local vldb_check
+
+VLDB_CHECK_LIBS =\
+	$(DESTDIR)\lib\afs\afsutil.lib 	\
+	$(DESTDIR)\lib\afs\afsreg.lib \
+	$(DESTDIR)\lib\afs\afseventlog.lib \
+	$(DESTDIR)\lib\afs\afscmd.lib
+
+vldb_check.exe: vldb_check.obj $(VLDB_CHECK_LIBS)
+	$(EXECONLINK)
+
+############################################################################
+# build local vlclient
+VLCLIENT_LIBS = \
+	$(DESTDIR)\lib\afs\afscmd.lib \
+	$(DESTDIR)\lib\afs\afspioctl.lib
+
+vlclient.exe: vlclient.obj  $(LIBFILE) $(VLSERVER_EXECLIBS) $(VLCLIENT_LIBS)
+	$(EXECONLINK)
+
+
+############################################################################
+# install vlserver components
+
+install: $(INCFILES) $(LIBFILE) $(VLSERVER) vldb_check.exe vlclient.exe \
+	 $(MT_LIBFILE)
+
+############################################################################
+# clean up
+
+clean::
+	$(DEL) vldbint.cs.c vldbint.ss.c vldbint.xdr.c vldbint.h
+	$(DEL) vlserver.h vl_errors.c

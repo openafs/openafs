@@ -1,0 +1,93 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRBK_DBVERIFY" HREF="auarf002.htm#ToC_80">backup dbverify</A></H2>
+<A NAME="IDX4264"></A>
+<A NAME="IDX4265"></A>
+<A NAME="IDX4266"></A>
+<P><STRONG>目的</STRONG>
+<P>バックアップ・データベースの整合性を検査します。
+<P><STRONG>構文</STRONG>
+<PRE><B>backup dbverify</B> [<B>-detail</B>]  [<B>-localauth</B>]  [<B>-cell</B> &lt;<VAR>cell name</VAR>>]  [<B>-help</B>]
+  
+<B>backup db</B> [<B>-d</B>]  [<B>-l</B>]  [<B>-c</B> &lt;<VAR>cell name</VAR>>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>backup dbverify</B> コマンドは、バックアップ・データベースの整合性を検査します。コマンド出力には、バックアップ・データベースが損傷を受けているかどうか (データが破壊されされているかどうか) が示されます。バックアップ・データベースが損傷を受けていなければ、引き続き使用することができます。損傷を受けている場合には、修正されるまでバックアップ操作を中断してください。
+<P><STRONG>注意</STRONG>
+<P>このコマンドを実行している間は、このコマンドが完了するまで、ほかのバックアップ操作はバックアップ・データベースにアクセスできません。他のバックアップ操作が実行されている場合には、このコマンドを発行しないようにしてください。
+<B>backup savedb</B> コマンドは、いくつかのタイプの破損を修復します。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B>-detail
+</B><DD>検出されたオーファン・ブロックの数、矛盾、およびデータベースのコピーを検査しているバックアップ・サーバーを実行中のサーバー・マシンの名前を報告します。
+<P><DT><B>-localauth
+</B><DD>ローカルの <B>/usr/afs/etc/KeyFile</B> ファイルのキーを使用して、サーバー・チケットを構成します。相互認証の間、
+<B>backup</B> コマンド・インタープリターは、バックアップ・サーバー、ボリューム・サーバーおよび VL サーバーにこのチケットを提供します。このフラグは、<B>-cell</B> 引き数と一緒に使用してはなりません。詳細については、<B>backup</B> の解説ページを参照してください。
+<P><DT><B>-cell
+</B><DD>コマンドを実行するセルを指定します。この引き数は、
+<B>-localauth</B> フラグと一緒に使用してはなりません。詳細については、<B>backup</B> の解説ページを参照してください。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>出力</STRONG>
+<P>このコマンドは、次のいずれかのメッセージを表示します。
+<DL>
+<P><DT><B><TT>データベースに問題はありません (Database OK)</TT>
+</B><DD>データベースは損傷を受けていません。使用可能です。
+<P><DT><B><TT>データベースが損傷しています (Database not OK)</TT>
+</B><DD>データベースは損傷を受けています。
+<B>backup savedb</B> コマンドを使用すると、バックアップ・コピーを作成してくれるので、多くのタイプの破損を修復することができます。詳細については、<I>AFS 管理の手引き</I> のバックアップ操作に関する章を参照してください。
+</DL>
+<P><B>-detail</B> フラグによって、次のような追加情報が提供されます。
+<UL>
+<LI>検出された<I>オーファン・ブロック</I>の数。これらは、バックアップ・サーバーがデータベース内に事前割り振りをしたが、使用することができないメモリーの範囲です。オーファン・ブロックがあってもデータベースへのアクセスに影響は及ぼしませんが、むだなディスク・スペースが生じます。使用不能なスペースを解放する場合には、<B>backup savedb</B> コマンドでデータベースのダンプを磁気テープに生成し、
+<B>backup restoredb</B> コマンドでデータベースを復元してください。
+</LI><LI>テープ・コーディネーターの無効なホスト名などのデータベース内の矛盾。
+</LI><LI><TT>データベース・チェッカー</TT>に指定された、バックアップ・データベースを検査したデータベース・サーバー・マシンの名前。検証操作の詳細なトレースについては、指定されたマシンの <B>/usr/afs/logs/BackupLog</B> ファイルを参照してください。
+<B>bos getlog</B> コマンドを使用すると、このファイルを表示することができます。
+</LI></UL>
+<P><STRONG>例</STRONG>
+<P>次のコマンドでは、バックアップ・データベースが損傷を受けていないことが分かります。
+<PRE>   % <B>backup dbverify</B>
+   Database OK
+   
+</PRE>
+<P>次のコマンドでは、バックアップ・データベースに損傷はあるが、オーファン・ブロックまたは無効なテープ・コーディネーター項目はないことが分かります。また、マシン <B>db1.abc.com</B> で実行されているバックアップ・サーバーがデータベースのコピーを検査したことが分かります。
+<PRE>   % <B>backup dbverify -detail</B>
+   Database OK
+   Orphan blocks 0
+   Database checker was db1.abc.com
+   
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>コマンドの発行者は、バックアップ・サーバーが実行されているすべてのマシン上の <B>/usr/afs/etc/UserList</B> ファイルにリストされていなければなりません。また、<B>-localauth</B> フラグを使用する場合は、ローカル・スーパーユーザー <B>root</B> としてサーバー・マシンにログオンする必要があります。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf014.htm#HDRBACKUPLOG">BackupLog</A>
+<P><A HREF="auarf102.htm#HDRBOS_GETLOG">bos getlog</A>
+<P><A HREF="auarf060.htm#HDRBK_INTRO">backup</A>
+<P><A HREF="auarf085.htm#HDRBK_RESTOREDB">backup restoredb</A>
+<P><A HREF="auarf086.htm#HDRBK_SAVEDB">backup savedb</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf065.htm">前ページ</A> &#124; <A HREF="auarf067.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

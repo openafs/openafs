@@ -1,0 +1,71 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRFSTRACE_INTRO" HREF="auarf002.htm#ToC_183">fstrace</A></H2>
+<P><STRONG>目的</STRONG>
+<A NAME="IDX5021"></A>
+<A NAME="IDX5022"></A>
+<A NAME="IDX5023"></A>
+<A NAME="IDX5024"></A>
+<A NAME="IDX5025"></A>
+<A NAME="IDX5026"></A>
+<P><B>fstrace</B> コマンド・セットの概要
+<P><STRONG>構文</STRONG>
+<P><B>fstrace</B> コマンド・セットのコマンドは、システム管理者がデバッグ目的のためにトレース・キャッシュ・マネージャー・オペレーションを使用するインターフェースです。キャッシュ・マネージャー・オペレーションの例は、ファイル・データか、
+UNIX <B>ls</B> コマンドのための出力を生成するために使用された状況情報が取り出されます。
+<P><B>fstrace</B> コマンド・インタープリターは、
+<B>cm</B> <I> イベント設定</I> のようなキャッシュ・マネージャー・オペレーションの広範囲な設定を定義します。イベント設定が活動開始された時、キャッシュ・マネージャーは、定義されたオペレーションの 1 つを実行する時のカーネル・メモリーにある
+<B>cmfx</B> <I>trace log</I> へメッセージを書き込みます。ログは定義されたサイズ(デフォルトでは、60 KB) にまでだけ拡張されます。その後順番に上書きされます(新しい追跡メッセージが古いものを上書きする)。特別な権利のオペレーションが発生する場合、管理者は標準出力にログを後から表示できる、または後の調査のためのファイルへ後から書き込めます。特定な手順の命令の詳細については、<I>AFS 管理の手引き</I> を参照してください。
+<P><B>fstrace</B> コマンド・セットには、いくつかの種類があります。
+<UL>
+<LI>トレース・ログについての情報を管理または表示するコマンド:
+<P>
+<P><B>fstrace clear</B>、<B>fstrace lslog</B>、
+<B>fstrace setlog</B>
+</LI><LI>イベント設定の状況を設定または表示するコマンド:
+<P>
+<P><B>fstrace lsset</B> および <B>fstrace setset</B>
+</LI><LI>トレース・ログの内容を表示するコマンド: <B>fstrace dump</B>
+</LI><LI>ヘルプを呼び出すコマンド: <B>fstrace apropos</B> および <B>fstrace help</B>
+</LI></UL>
+<P><STRONG>オプション </STRONG>
+<P>すべての <B>fstrace</B> コマンドは、以下のオプション・フラグを受信します。これは、コマンドの説明でリストされ、ここで詳細に評価されます。
+<A NAME="IDX5027"></A>
+<DL>
+<P><DT><B>-help
+</B><DD>標準出力ストリームにコマンドのオンライン・ヘルプ・メッセージを出力します。このフラグは、コマンドの他のオプションと一緒に使用してはなりません。このフラグを使用すると、コマンド・インタープリターは、他のすべての引き数およびフラグを無視し、ヘルプ・メッセージの出力だけを行います。
+</DL>
+<P><STRONG>必要となる特権</STRONG>
+<P><B>fstrace</B> コマンドのほとんどを発行するには、トレース・ログを生成するマシンにローカル・スーパーユーザー <B>root</B> としてログオンされていなければなりません。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf170.htm#HDRFSTRACE_APROPOS">fstrace apropos</A>
+<P><A HREF="auarf171.htm#HDRFSTRACE_CLEAR">fstrace clear</A>
+<P><A HREF="auarf172.htm#HDRFSTRACE_DUMP">fstrace dump</A>
+<P><A HREF="auarf173.htm#HDRFSTRACE_HELP">fstrace help</A>
+<P><A HREF="auarf174.htm#HDRFSTRACE_LSLOG">fstrace lslog</A>
+<P><A HREF="auarf175.htm#HDRFSTRACE_LSSET">fstrace lsset</A>
+<P><A HREF="auarf176.htm#HDRFSTRACE_SETLOG">fstrace setlog</A>
+<P><A HREF="auarf177.htm#HDRFSTRACE_SETSET">fstrace setset</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf168.htm">前ページ</A> &#124; <A HREF="auarf170.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

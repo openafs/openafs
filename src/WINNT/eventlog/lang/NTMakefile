@@ -1,0 +1,65 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+#
+
+!INCLUDE ..\..\..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\..\..\config\NTMakefile.version
+
+############################################################################
+#
+# LANGUAGE
+#
+# To select which language to build, run the ntlang.bat batch file
+# before performing a build.
+#
+
+!IF ("$(LANGID)" == "") || ("$(LANGNAME)" == "") || ("$(LANGCP)" == "")
+!ERROR Must select language before building (run NTLANG.BAT)
+!ENDIF
+
+############################################################################
+INCFILEDIR = $(DESTDIR)\include\WINNT
+
+INCFILES =\
+	$(INCFILEDIR)\afsevent.h
+
+############################################################################
+DLLFILE = $(DESTDIR)\root.server\usr\afs\bin\afseventmsg_$(LANGID).dll
+
+DLLRESFILE = afseventmsg_$(LANGID).res
+
+DLLRCFILE = afseventmsg.rc
+
+EVENTRCFILE = $(LANGNAME)\event.rc
+
+EVENTRESFILE = $(LANGNAME)\event.res
+
+DLLOBJS = $(DLLRESFILE)
+
+$(DLLFILE): $(DLLOBJS)
+	$(DLLCONLINK)
+	$(DLLPREP)
+
+############################################################################
+# Generate versioninfo resources
+
+$(DLLRESFILE): $(DLLRCFILE) $(EVENTRCFILE) AFS_component_version_number.h
+	$(RC) /fo$(DLLRESFILE) /c$(LANGCP) /I$(LANGNAME) /I.. $(DLLRCFILE)
+
+############################################################################
+
+$(INCFILEDIR)\afsevent.h: $(LANGNAME)\afsevent.h
+	$(COPY) $(LANGNAME)\afsevent.h $@
+
+$(LANGNAME)\afsevent.h: ..\logevent.h $(LANGNAME)\event.h
+	$(DEL) $(LANGNAME)\afsevent.h
+	$(COPY) ..\logevent.h + $(LANGNAME)\event.h $(LANGNAME)\afsevent.h
+
+$(LANGNAME)\event.h $(LANGNAME)\event.rc: $(LANGNAME)\event.mc
+	$(CD) $(LANGNAME)
+	$(MC) event.mc
+	$(CD) ..
+
+############################################################################
+install: $(INCFILES) $(DLLFILE)
+
+clean::

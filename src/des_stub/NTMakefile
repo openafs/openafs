@@ -1,0 +1,52 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+#
+
+!INCLUDE ..\config\NTMakefile.$(SYS_NAME)
+
+
+# Relative location of DESLIB link depends on how we got to current directory
+
+!IF (EXIST(..\..\DESLIB))
+DESPAR = ..\..\DESLIB\dest
+!ELSE IF (EXIST(..\..\..\DESLIB))
+DESPAR = ..\..\..\DESLIB\dest
+!ELSE
+!ERROR Must create DESLIB link in the same directory as PARENT link.
+!ENDIF
+
+DESINC = $(DESPAR)\include
+
+
+INCFILEDIR = $(DESTDIR)\include
+INCFILES =\
+	$(INCFILEDIR)\des.h \
+	$(INCFILEDIR)\des_conf.h \
+	$(INCFILEDIR)\des_odd.h \
+	$(INCFILEDIR)\mit-cpyright.h \
+	$(INCFILEDIR)\crypt.h
+
+$(INCFILEDIR)\des.h: $(DESINC)\des.h
+	$(COPY) $? $@
+
+$(INCFILEDIR)\des_conf.h: $(DESINC)\des_conf.h
+	$(COPY) $? $@
+
+$(INCFILEDIR)\des_odd.h: $(DESINC)\des_odd.h
+	$(COPY) $? $@
+
+$(INCFILEDIR)\mit-cpyright.h: $(DESINC)\mit-cpyright.h
+	$(COPY) $? $@
+
+$(INCFILEDIR)\crypt.h: $(DESINC)\crypt.h
+	$(COPY) $? $@
+
+
+LIBFILES =\
+	$(DESTDIR)\lib\afsdes.lib
+
+$(DESTDIR)\lib\afsdes.lib: $(DESPAR)\lib\afsdes.lib
+	$(COPY) $? $@
+
+install: $(LIBFILES) $(INCFILES)
+
+clean::

@@ -1,0 +1,90 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+#
+
+!INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\..\config\NTMakefile.version
+
+
+EXELIBS = \
+	$(DESTDIR)\afslwp.lib \
+	$(DESTDIR)\lib\afsdes.lib \
+	$(DESTDIR)\lib\afsrxkad.lib \
+	$(DESTDIR)\afs\afsauth.lib \
+	$(DESTDIR)\afs\afscmd.lib \
+	$(DESTDIR)\afsubik.lib \
+	$(DESTDIR)\afs\afsprot.lib \
+	$(DESTDIR)\afsrx.lib \
+	$(DESTDIR)\afs\afscom_err.lib \
+	$(DESTDIR)\afs\afskauth.lib
+
+
+multiklog.exe: multiklog.obj
+	$(EXECONLINK) $(EXELIBS)
+
+
+test_date.exe: test_date.obj
+	$(EXECONLINK) $(EXELIBS)
+
+test_badtix.exe: test_badtix.obj
+	$(EXECONLINK) $(EXELIBS)
+
+decode_ticket.exe: decode_ticket.obj
+	$(EXECONLINK) $(EXELIBS)
+
+test_interim_ktc.exe: test_interim_ktc.obj
+	$(EXECONLINK) $(EXELIBS)
+
+test_rxkad_free: test_rxkad_free.o 
+	$(EXECONLINK) $(EXELIBS)
+
+test_getticket.exe: test_getticket.obj
+	$(EXECONLINK) $(EXELIBS)
+
+background.exe: background.obj
+	$(EXECONLINK) $(EXELIBS)
+
+
+test tests all: multiklog.exe test_date.exe test_badtix.exe decode_ticket.exe \
+		test_interim_ktc.exe test_getticket.exe background.exe
+
+
+# test_interim_ktc depends on normally running ka & pr servers.  Also on
+# the current user having write access to the working directory.  Also
+# on the user "tester" being defined with ViceId=1031.  The password
+# must be specified on the make line the others can be overridden by
+# specifying a value for TESTERVALUES.  To test remote authentication, a
+# test account in another cell must be available.  The default is the
+# cell "cellname" and the user tester with Vice Id 510, and the
+# same password as in the local cell.  These can be over-ridden by
+# specifying a difference value for REMOTETESTER.  An empty value for
+# REMOTETESTER will disable testing of remote authentication.
+
+TESTERNAME=xxx
+TESTERPASSWORD=xxx
+#TESTERVALUES=-tester tester -testId 1031
+TESTERVALUES=
+REMOTEPASSWORD=${TESTERPASSWORD}
+REMOTETESTER=-remoteTester $(TESTERNAME) -remoteTestPassword ${REMOTEPASSWORD} -remoteTestId 510 -remoteCell cellname
+
+# test_kaserver starts a server in the background and tests it.
+
+# test_rxkad_free checks for rxkad object/connection usage and checks for
+#   core leaks.  Normally it makes 100 calls to the kaserver, doing a GetEntry
+#   call.  This requests an admin ticket 100 times and creates a ubik
+#   connection 100 times.  With the -doauth switch specified it calls
+#   ka_UserAuthenticate instead, which uses rxnull connections, but also
+#   exercises the ptserver code, particularly, pr_Initialize, 100 times.
+
+runtest: background multiklog test_badtix test_interim_ktc test_rxkad_free
+	test_interim_ktc ${TESTERVALUES} -testPassword ${TESTERPASSWORD} ${REMOTETESTER}
+	test_kaserver
+	test_rxkad_free -waitforreap -a $(TESTERNAME) -p $(TESTERPASSWORD)
+	test_rxkad_free -doauth -waitforreap -a $(TESTERNAME) -p $(TESTERPASSWORD)
+
+
+############################################################################
+# Local clean target; augments predefined clean target
+
+clean::
+
+

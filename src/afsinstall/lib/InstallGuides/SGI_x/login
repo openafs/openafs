@@ -1,0 +1,11 @@
+#
+# login
+#
+# An InstallGuide for installing the AFS integrated login
+# For SGI systems running IRIX
+#
+
+sub login {
+&Copy ("root.client/usr/vice/etc/afsauthlib.so",  "/usr/vice/etc");
+&Copy ("root.client/usr/vice/etc/afskauthlib.so", "/usr/vice/etc");
+}

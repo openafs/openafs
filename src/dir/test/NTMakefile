@@ -1,0 +1,9 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+#
+
+!INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
+
+tests: dtest.exe
+
+dtest.exe: dtest.obj DEST\lib\afs\afsdir.lib
+	$(EXECONLINK)

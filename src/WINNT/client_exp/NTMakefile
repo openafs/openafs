@@ -1,0 +1,82 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+#
+
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -I..\afsd  /D"_WINDOWS" /D"_WINDLL" /D"_AFXDLL" /D"_USRDLL"
+
+!INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\..\config\NTMakefile.version
+
+
+############################################################################
+# afs_shl_ext.dll
+
+DLLFILE = $(DESTDIR)\root.client\usr\vice\etc\afs_shl_ext.dll
+
+DLLOBJS =\
+	add_acl_entry_dlg.obj \
+	add_submount_dlg.obj \
+	afs_shl_ext.obj \
+	afs_shl_ext_stub.res \
+	auth_dlg.obj \
+	clear_acl_dlg.obj \
+	copy_acl_dlg.obj \
+	down_servers_dlg.obj \
+	fs_utils.obj \
+	gui2fs.obj \
+	help.obj \
+	klog_dlg.obj \
+	make_mount_point_dlg.obj \
+	mount_points_dlg.obj \
+	msgs.obj \
+	partition_info_dlg.obj \
+	results_dlg.obj \
+	server_status_dlg.obj \
+	set_afs_acl.obj \
+	shell_ext.obj \
+	stdafx.obj \
+	submount_info.obj \
+	submounts_dlg.obj \
+	unlog_dlg.obj \
+	volumeinfo.obj \
+	AFS_component_version_number.obj
+
+AFSD = ..\afsd
+
+fs_utils.obj: $(AFSD)\fs_utils.c
+	$(C2OBJ) $**
+
+DLLLIBS =\
+	mpr.lib \
+	$(DESTDIR)\lib\afsrpc.lib \
+	$(DESTDIR)\lib\afsauthent.lib \
+	$(DESTDIR)\lib\libafsconf.lib \
+	$(DESTDIR)\lib\afs\TaLocale.lib
+
+$(DLLFILE): $(DLLOBJS)
+	$(DLLMFCLINK) /def:afs_shl_ext.def $(DLLLIBS)
+	$(DLLPREP)
+
+############################################################################
+# Definitions for generating versioninfo resources
+
+afs_shl_ext_stub.res: afs_shl_ext_stub.rc AFS_component_version_number.h
+
+############################################################################
+# Install target; primary makefile target
+
+install: $(DLLFILE) lang
+
+
+############################################################################
+# Language target
+
+lang ::
+	$(CD) lang
+	for /f %l in ('dir /B ??_??') do @$(NTLANG) %l $(MAKECMD) /nologo /f NTMakefile install
+	$(CD) ..
+
+
+############################################################################
+# Local clean target; augments predefined clean target
+
+clean::

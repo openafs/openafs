@@ -1,0 +1,122 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRDLOG" HREF="auarf002.htm#ToC_141">dlog</A></H2>
+<A NAME="IDX4697"></A>
+<A NAME="IDX4698"></A>
+<P><STRONG>目的</STRONG>
+<P>DCE セキュリティー・サービスへの認証をします。
+<P><STRONG>構文</STRONG>
+<PRE><B>dlog</B> [<B>-principal</B> &lt;<VAR>user name</VAR>>]  [<B>-cell</B> &lt;<VAR>cell name</VAR>>]
+     [<B>-password</B> &lt;<VAR>user's password</VAR>>]  [<B>-servers</B> &lt;<VAR>explicit list of servers</VAR>><SUP>+</SUP>]
+     [<B>-lifetime</B> &lt;<VAR>ticket lifetime in hh[:mm[:ss]]</VAR>>]  
+     [<B>-setpag</B>]  [<B>-pipe</B>]  [<B>-help</B>]
+    
+<B>dlog</B> [<B>-pr</B> &lt;<VAR>user name</VAR>>]  [<B>-c</B> &lt;<VAR>cell name</VAR>>]  [<B>-pw</B> &lt;<VAR>user's password</VAR>>] 
+     [<B>-ser</B> &lt;<VAR>explicit list of servers</VAR>><SUP>+</SUP>]  
+     [<B>-l</B> &lt;<VAR>ticket lifetime in hh[:mm[:ss]]</VAR>>]  [<B>-set</B>]  [<B>-pi</B>]  [<B>-h</B>]
+  
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>dlog</B> コマンドは、発行者用の DCE 信用証明書を <B>-cell</B> 引き数によって指定されたセル内の DCE セキュリティー・サービスから取得し、ユーザーがこのコマンドを発行する AFS クライアント・マシンでそれらを保管します。DCE セルのマシンで実行している AFS/DFS Migration Toolkit Protocol Translator 処理で信用証明書を受け取ります。この証明書で、ユーザーは DCE セルのファイル・スペースに AFS クライアントからアクセスすることができます。ローカル・ファイル・システムでのユーザーの ID は未変更です。
+<P>発行者が <B>-principal</B> 引き数を指定しない場合、<B>dlog</B> コマンド・インタープリターは、発行者がローカル・ファイル・システムにログインする時のユーザー名を使用します。適当なユーザー名のために DCE パスワードを与えます。
+<B>klog</B> コマンドと同様、パスワードは (発行者がリモート・マシンから AFS クライアントへログインされない限り) 暗号化されていないテキストではネットワークを転送されません。
+<P>信用証明書は、以下のもののなかで一番短いものと同じ期間だけ有効ですが、最後のものは DCE セルのセキュリティー・サーバーによって定義されています。
+<UL>
+<LI>発行者の DCE アカウントの最大証明書存続時間
+</LI><LI><B>afs</B> 基本 DCE アカウントの最大証明書存続時間
+</LI><LI>レジストリー幅最大証明書存続時間
+</LI><LI>レジストリー幅デフォルト証明書存続時間
+</LI><LI><B>-lifetime</B> 引き数を使用して要求された有効期間
+</LI></UL>
+<P>直前の最大信用証明書存続時間値が、<B>default-policy</B> で設定されている場合、最大使用可能チケット存続時間はデフォルト信用証明書存続時間で定義されます。これらの値を設定する前に詳しくは DCE ベンダーの管理ガイドを参照してください。
+<P>AFS キャッシュ・マネージャーはチケットを、発行者 (または <B>-principal</B> 引き数によって指定されたユーザー) の名前に関連付けられている信用証明書構造体に保管します。ユーザーにすでに DCE セルのチケットがある場合、このコマンドの結果としてのチケットを信用証明書構造体に再配置します。
+<P>AFS <B>tokens</B> コマンドは、実際に許可されるプリンシパルに関係なく、サーバー・プリンシパルである <B>afs</B> の <B>dlog</B> コマンドで獲得したチケットを表示します。
+<B>tokens</B> コマンドは、DFS<SUP>TM</SUP> ファイル・サーバーのためのチケットと、AFS ファイル・サーバーのためのチケットを区別しないことに注意してください。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B>-principal
+</B><DD>DCE 信用証明書を得るための DCE ユーザー名を指定します。このオプションが省略された場合、<B>dlog</B> コマンド・インタープリターは、発行者がログインしたローカル・ファイル・システム下のユーザー名を使用します。
+<P><DT><B>-cell
+</B><DD>認証するための DCE セルを指定します。所定のマシンでの単一ログイン・セッションの間は、ユーザーは複数のセルで同時に認証されるようになります。ただしユーザーは各セルに 1 回 1 つのチケットのみ持つことができます (すなわち、
+1 つのマシンの 1 つのセルごとに 1 つの ID でのみ認証できます)。セル名をローカル・クライアント・マシンの <B>/usr/vice/etc/CellServDB</B> ファイルにリストされている他のセルから区別する最短形に省略することは許されています。
+<P>
+<P>発行者が <B>-cell</B> 引き数を指定しない場合、<B>dlog</B> コマンドは、以下で定義されたセルの DCE セキュリティー・サーバーで認証を行います。
+<P>
+<OL TYPE=1>
+<LI>ローカル AFS クライアント・マシンにある環境変数 AFSCELL の値が定義された場合。発行者は、AFSCELL 環境変数を望んだ名前の DCE セルへ設定できます。
+</LI><LI>ローカル の AFS クライアント・マシンの <B>/usr/vice/etc/ThisCell</B> ファイルにあるセル名。マシンの管理者は、ファイルに望んだセルの名前を置けます。
+</LI></OL>
+<P><DT><B>-password
+</B><DD>発行者 (または、<B>-principal</B> 引き数で指定されたユーザー) のためのパスワードを指定します。この引き数を使用するとコマンド行にパスワードが表示してしまうので、推奨しません。この引き数が省略された場合、パスワードのためのコマンド・プロンプトは表示するように応答しません。
+<P><DT><B>-servers
+</B><DD>認証の試行が可能な AFS クライアント・マシンを通して変換プログラム・サーバーを実行する DFS データベース・サーバー・マシンのリストを指定します。ホスト名、省略されたマシン名、または IP アドレスで各サーバーを指定します。この引き数が省略された場合、<B>dlog</B> コマンド・インタープリターは、<B>-cell</B> 引き数で指定された DCE セルの <B>/usr/vice/etc/CellServDB</B> ファイルにある DFS ファイル・セット・ロケーション (FL) サーバーのリストからマシンを無作為で選択します。この引き数は、いくつかのサーバー・マシンでの認証が失敗したように見える場合のテストのために役立ちます。
+<P><DT><B>-lifetime
+</B><DD><VAR>hh</VAR><B>:</B><VAR>mm</VAR>[<B>:</B><VAR>ss</VAR>] (時間、分、およびオプションの 00 および 59 の間の秒数) 形式を使用してチケット存続時間を要求します。たとえば、値 <B>168:30</B> は 7 日 と 30 分のチケット存続時間を、<B>96:00</B> は 4 日 のチケット存続時間を要求します。値の許容範囲は、<B>00:05</B> (5 分) から <B>720:00</B> (30 日) までです。この引き数が与えられず、他のチケット存続時間の決定要素がデフォルトから変更されていない場合、チケット存続時間は 10 時間になります。
+<P>
+<P>要求された存続時間は、チケット存続時間のための DCE セルの決定要素より小さくしなければなりません。前の「<B>説明</B>」セクションにある解説を参照してください。
+<P><DT><B>-setpag
+</B><DD>新たに作成されたチケットが配置された個所で処理認証グループ
+(PAG) を作成します。このフラグが省略された場合、チケットは発行者のローカル・ユーザー ID (UID) に関連した代わりになります。
+<P><DT><B>-pipe
+</B><DD>コマンド・インタープリターが別の方法で生成する発行者のパスワードのためのプロンプトを組み込んだプロンプトが出されるのを抑止します。代わりに、コマンド・インタープリターは標準入力ストリームを経由してパスワードを受け入れます。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>出力</STRONG>
+<P><B>dlog</B> コマンド・インタープリターが、変換プログラム・サーバーに接続できない場合、以下のようなメッセージを生成します。
+<PRE>   dlog: server or network not responding -- failed to contact
+   authentication service
+   
+</PRE>
+<P><STRONG>例</STRONG>
+<P>以下のコマンドは、発行者を <B>dce.abc.com</B> セルの <B>cell_admin</B> として認証します。
+<PRE>   % <B>dlog -principal cell_admin -cell dce.abc.com</B>
+   Password: <VAR>cell_admin's password</VAR>
+    
+</PRE>
+<P>以下の例では、発行者は <B>cell_admin</B> として <B>dce.abc.com</B> セルを認証して、100 時間のチケット存続時間を要求しています。
+<B>tokens</B> コマンドは、ユーザーがユーザー <B>cell_admin</B> として DCE 証明書を獲得したことを確認します。
+AFS ID は、<B>dce.abc.com</B> セルの DCE レジストリーで
+<B>cell_admin</B> に割り当てられた UNIX ID <B>1</B> と同じです。
+<PRE>   % <B>dlog -principal cell_admin -cell dce.abc.com -lifetime 100</B>
+   Password: <VAR>cell_admin's password</VAR>
+   
+   % <B>tokens</B>
+   Tokens held by the Cache Manager:
+   
+   User's (AFS ID 1) tokens for afs@dce.abc.com [Expires Jul 6 14:12]
+   User's (AFS ID 4758) tokens for afs@abc.com [Expires Jul 2 13:14]
+      --End of list--
+   
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>なし。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf128.htm#HDRDPASS">dpass</A>
+<P><A HREF="auarf200.htm#HDRKLOG">klog</A>
+<P><A HREF="auarf235.htm#HDRTOKENS">tokens</A>
+<P><A HREF="auarf238.htm#HDRUNLOG">unlog</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf126.htm">前ページ</A> &#124; <A HREF="auarf128.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

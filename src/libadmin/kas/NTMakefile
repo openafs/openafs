@@ -1,0 +1,55 @@
+#
+# Copyright (C) 1998 Transarc Corporation - All rights reserved
+#
+
+AFSDEV_AUXCDEFINES = -DAFS_PTHREAD_ENV
+
+!include ..\..\config\NTMakefile.$(SYS_NAME)
+!include ..\..\config\NTMakefile.version
+
+KAUTH = ..\..\kauth\
+
+KAUTHOBJS = \
+	kauth.cs.obj kauth.xdr.obj kaaux.obj
+
+ADMINOBJS = \
+	afs_kasAdmin.obj \
+	afskasadmin.res
+
+DLLOBJS = $(ADMINOBJS) $(KAUTHOBJS)
+
+LIBINCLUDES = \
+	$(DESTDIR)\include\afs\afs_kasAdmin.h
+
+DLLFILE = $(DESTDIR)\root.server\usr\afs\bin\afskasadmin.dll
+ILIBDIR = $(DESTDIR)\lib\afs
+
+DLLLIBS =\
+	$(DESTDIR)\lib\afs\afsadminutil.lib \
+	$(DESTDIR)\lib\afsauthent.lib \
+	$(DESTDIR)\lib\afsrpc.lib \
+	$(DESTDIR)\lib\pthread.lib
+
+$(DLLFILE): $(DLLOBJS) $(DLLLIBS)
+	$(DLLCONLINK) /DEF:kasadmin.def
+	$(DLLPREP)
+	$(COPY) $*.lib $(ILIBDIR)
+	$(DEL) $*.lib $*.exp
+
+
+install: $(DLLFILE) $(LIBINCLUDES)
+
+
+
+kauth.cs.obj: $(KAUTH)\kauth.cs.c
+	$(C2OBJ) $(KAUTH)\kauth.cs.c
+
+kauth.xdr.obj: $(KAUTH)\kauth.xdr.c
+	$(C2OBJ) $(KAUTH)\kauth.xdr.c
+
+kaaux.obj: $(KAUTH)\kaaux.c
+	$(C2OBJ) $(KAUTH)\kaaux.c
+
+# Definitions for generating versioninfo resources
+afskasadmin.res: afskasadmin.rc AFS_component_version_number.h
+	$(RC) $*.rc

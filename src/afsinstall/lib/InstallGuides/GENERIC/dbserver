@@ -1,0 +1,20 @@
+#
+# dbserver
+#
+# An InstallGuide for database server processes
+#
+
+sub dbserver {
+&CreateDir ("/usr/afs/db", "/usr/afs/etc", "/usr/afs/local", "/usr/afs/logs");
+&ErrorsAreFatal(1);
+&CreateDir ("/usr/afs/bin");
+&ErrorsAreFatal(0);
+&Copy ("root.server/usr/afs/bin/bosserver", "/usr/afs/bin");
+&Copy ("root.server/usr/afs/bin/kaserver",  "/usr/afs/bin");
+&Copy ("root.server/usr/afs/bin/vlserver",  "/usr/afs/bin");
+&Copy ("root.server/usr/afs/bin/ptserver",  "/usr/afs/bin");
+&Chmod(0744, "/usr/afs/bin/bosserver");
+&Chmod(0744, "/usr/afs/bin/kaserver");
+&Chmod(0744, "/usr/afs/bin/vlserver");
+&Chmod(0744, "/usr/afs/bin/ptserver");
+}

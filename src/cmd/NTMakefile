@@ -1,0 +1,39 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+#
+
+!INCLUDE ..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\config\NTMakefile.version
+
+
+# install include files 
+INCFILEDIR = $(DESTDIR)\include\afs 
+
+INCFILES =\
+	$(INCFILEDIR)\cmd.h
+
+
+# build afscmd.lib
+LIBFILE = $(DESTDIR)\lib\afs\afscmd.lib
+
+LIBOBJS =\
+	cmd_errors.obj \
+	cmd.obj \
+	AFS_component_version_number.obj
+
+$(LIBFILE): $(LIBOBJS) 
+	$(LIBARCH) 
+
+
+cmd_errors.c cmd.h: cmd_errors.et cmd.p.h
+	$(DEL) cmd_errors.c cmd.h
+	$(COMPILE_ET) cmd_errors -h cmd
+
+
+install: $(LIBFILE) $(INCFILES)
+
+
+clean::
+	$(DEL) cmd_errors.c
+
+test tests:
+	

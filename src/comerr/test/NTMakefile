@@ -1,0 +1,36 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+#
+
+
+!INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\..\config\NTMakefile.version
+
+
+EXEFILE = comerr_test.exe
+
+EXEOBJS =\
+	test1.obj \
+	test2.obj \
+	test.obj
+
+EXELIBS =\
+	$(DESTDIR)\lib\afs\afsutil.lib \
+	$(DESTDIR)\lib\afs\afscom_err.lib
+
+$(EXEFILE): $(EXEOBJS)  # dependents built from predefined inference rules
+	$(EXECONLINK) $(EXELIBS) 
+	$(EXEPREP) 
+
+test1.c test1.h: test1.et 
+	$(DEL) test1.c test1.h
+	$(COMPILE_ET) test1
+
+test2.c test2.h: test2.et 
+	$(DEL) test2.c test2.h
+	$(COMPILE_ET) test2 
+
+tests: $(EXEFILE)
+
+clean::
+	$(DEL) test1.c test1.h test2.c test2.h
+

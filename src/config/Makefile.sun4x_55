@@ -1,0 +1,39 @@
+# Keep macros within each section in sorted order for clean diff displays.
+#
+# AFS_OSTYPE used to indicate suffixes and os specific subdirectories.
+AFS_OSTYPE = SOLARIS
+
+# compilation and link editor flags
+XCFLAGS=-dy -Bdynamic
+MT_CFLAGS=-mt -DAFS_PTHREAD_ENV ${XCFLAGS}
+LWP_OPTMZ=-g
+OPTMZ=-O
+DBG=-g
+#
+# libraries
+XLIBS=-lsocket -lnsl -lintl -ldl
+TXLIBS=-lcurses
+MTLIBS=-lpthread -lsocket
+XLIBELFA=-lelf
+XLIBKVM=-lkvm
+SHLIB_SUFFIX=so
+SHLIB_CFLAGS=-KPIC
+#
+# programs
+AR=/usr/ccs/bin/ar
+AS=as
+CC=/opt/SUNWspro/bin/cc
+MT_CC=/opt/SUNWspro/bin/cc
+CP=/bin/cp
+INSTALL=${SRCDIR}bin/install
+LEX=lex
+LD= /usr/ccs/bin/ld
+LORDER = /usr/ccs/bin/lorder
+MV=mv
+RANLIB=/bin/true
+RM=rm
+STRIP= /usr/ccs/bin/strip
+WASHTOOL=${SRCDIR}bin/washtool
+#
+# this is for the vol package
+FS_CONV_SOL26= $(DESTDIR)root.server/usr/afs/bin/fs_conv_sol26

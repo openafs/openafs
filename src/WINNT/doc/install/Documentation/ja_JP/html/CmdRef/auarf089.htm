@@ -1,0 +1,109 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRBK_STATUS" HREF="auarf002.htm#ToC_103">backup status</A></H2>
+<A NAME="IDX4412"></A>
+<A NAME="IDX4413"></A>
+<A NAME="IDX4414"></A>
+<A NAME="IDX4415"></A>
+<P><STRONG>目的</STRONG>
+<P>テープ・コーディネーターの状況を表示します。
+<P><STRONG>構文</STRONG>
+<PRE><B>backup status</B> [<B>-portoffset</B> &lt;<VAR>TC port offset</VAR>>]
+              [<B>-localauth</B>]  [<B>-cell</B> &lt;<VAR>cell name</VAR>>]  [<B>-help</B>]
+  
+<B>backup st</B> [<B>-p</B> &lt;<VAR>TC port offset</VAR>>]  [<B>-l</B>]  [<B>-c</B> &lt;<VAR>cell name</VAR>>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>backup status</B> コマンドは、テープ・コーディネーターが現在実行中の操作を表示します。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B>-portoffset
+</B><DD>状況を表示するテープ・コーディネーターのポート・オフセット番号を指定します。
+<P><DT><B>-localauth
+</B><DD>ローカルの <B>/usr/afs/etc/KeyFile</B> ファイルのキーを使用して、サーバー・チケットを構成します。相互認証の間、
+<B>backup</B> コマンド・インタープリターは、バックアップ・サーバー、ボリューム・サーバーおよび VL サーバーにこのチケットを提供します。このフラグは、<B>-cell</B> 引き数と一緒に使用してはなりません。詳細については、<B>backup</B> の解説ページを参照してください。
+<P><DT><B>-cell
+</B><DD>コマンドを実行するセルを指定します。この引き数は、
+<B>-localauth</B> フラグと一緒に使用してはなりません。詳細については、<B>backup</B> の解説ページを参照してください。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>出力</STRONG>
+<P>次のメッセージは、テープ・コーディネーターが現在操作を行っていないことを示しています。
+<PRE>   テープ・コーディネーターは活動停止中です
+</PRE>
+<P>そうでない場合は、実行中あるいは保留中の操作ごとに、以下の形式のメッセージが出力されます。
+<PRE>   Task <VAR>task_ID</VAR>:  <VAR>operation</VAR>:   <VAR>status</VAR>
+</PRE>
+<P>ここで、
+<DL>
+<P><DT><B><VAR>task_ID</VAR>
+</B><DD>は、テープ・コーディネーターが割り当てたタスク ID 番号です。テープ・コーディネーターのポート・オフセット番号で始まります。
+<P><DT><B><VAR>operation</VAR>
+</B><DD>次のような指定されたコマンドで開始する、テープ・コーディネーターが実行中の操作を識別します。
+<UL>
+<LI><TT>Dump</TT> (<B>backup dump</B> コマンド)
+</LI><LI><TT>Restore</TT> (<B>backup diskrestore</B>、
+<B>backup volrestore</B>、または <B>backup volsetrestore</B> コマンド)
+</LI><LI><TT>Labeltape</TT> (<B>backup labeltape</B> コマンド)
+</LI><LI><TT>Scantape</TT> (<B>backup scantape</B> コマンド)
+</LI><LI><TT>SaveDb</TT> (<B>backup savedb</B> コマンド)
+</LI><LI><TT>RestoreDb</TT> (<B>backup restoredb</B> コマンド)
+</LI></UL>
+<P><DT><B><VAR>status</VAR>
+</B><DD>ジョブの現在の状況を示します。次のいずれかのメッセージが表示されます。
+<P>
+<DL>
+<P><DT><B><VAR>number</VAR> <TT>KB が転送されました。ボリューム</TT> <VAR>volume_name</VAR>
+</B><DD>ダンプ操作が実行中の場合に表示されます。磁気テープまたはバックアップ・データ・ファイルにコピーされた KB 数と現在ダンプされているボリュームが表示されます。
+<P><DT><B><VAR>number</VAR> <TT>Kbytes, restore.volume</TT>
+</B><DD>復元操作が実行中の場合に表示されます。磁気テープまたはバックアップ・データ・ファイルから AFS にコピーされた KB 数が表示されます。
+<P><DT><B><TT>[abort requested]</TT>
+</B><DD><B>(backup) kill</B> コマンドが発行されましたが、テープ・コーディネーターが終了信号を受信していません。
+<P><DT><B><TT>[abort sent]</TT>
+</B><DD><B>(backup) kill</B> コマンドによって、操作が取り消されました。バックアップ・システムが一度操作を待ち行列から除去したり、実行を停止すると、その操作は、今後、コマンドからの出力には表示されなくなります。
+<P><DT><B><TT>[butc contact lost]</TT>
+</B><DD><B>backup</B> コマンド・インタープリターがテープ・コーディネーターに接続できません。このメッセージが表示された場合、操作を処理しているテープ・コーディネーターが、操作の実行中に終了したか、失敗した可能性があります。また、テープ・コーディネーターへの接続がタイムアウトになった可能性もあります。
+<P><DT><B><TT>[done]</TT>
+</B><DD>テープ・コーディネーターは操作を完了しています。
+<P><DT><B><TT>[drive wait]</TT>
+</B><DD>この操作は、指定された磁気テープ装置が解放されるのを待っています。
+<P><DT><B><TT>[operator wait]</TT>
+</B><DD>テープ・コーディネーターは、バックアップ操作員がドライブに磁気テープを挿入するのを待っています。
+</DL>
+</DL>
+<P><STRONG>例</STRONG>
+<P>次の例は、ポート・オフセット 4 のテープ・コーディネーターが現在のダンプ操作で約 1.5 MB のデータをダンプし、現在 <B>user.pat.backup</B> という名前のボリュームをダンプしていることを示しています。
+<PRE>   % <B>backup status -portoffset 4</B>
+   Task 4001:  Dump:   1520 Kbytes transferred,  volume user.pat.backup
+   
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>コマンドの発行者は、バックアップ・サーバーが実行されているすべてのマシン上の <B>/usr/afs/etc/UserList</B> ファイルにリストされていなければなりません。また、<B>-localauth</B> フラグを使用する場合は、ローカル・スーパーユーザー <B>root</B> としてサーバー・マシンにログオンする必要があります。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf060.htm#HDRBK_INTRO">backup</A>
+<P><A HREF="auarf126.htm#HDRBUTC">butc</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf088.htm">前ページ</A> &#124; <A HREF="auarf090.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

@@ -1,0 +1,20 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+#
+
+AFSDEV_AUXCDEFINES = -DAFS_PTHREAD_ENV
+
+!INCLUDE ..\..\..\config\NTMakefile.$(SYS_NAME)
+
+
+test tests: cfgtest.exe
+
+CFGTEST_EXELIBS =\
+	$(DESTDIR)\lib\pthread.lib \
+	$(DESTDIR)\lib\afs\afsadminutil.lib \
+	$(DESTDIR)\lib\afs\afsclientadmin.lib \
+	$(DESTDIR)\lib\afs\afscfgadmin.lib \
+	$(DESTDIR)\lib\afsrpc.lib \
+	$(DESTDIR)\lib\afs\afscmd.lib  # static library
+
+cfgtest.exe: cfgtest.obj $(CFGTEST_EXELIBS)
+	$(EXECONLINK)

@@ -1,0 +1,27 @@
+#!/unix
+*
+* $Locker$
+*
+*
+* Exports for the AFS kernel extension for AIX 3.1
+*
+icreate		syscall
+syscall		syscall
+iopen		syscall
+iinc		syscall
+idec		syscall
+* iread		syscall
+* iwrite		syscall
+lsetpag		syscall
+lpioctl		syscall
+
+*
+* Exported variables (useful for debugging)
+*
+* afs_debug
+
+*
+* We replace the following system calls
+*
+setgroups	syscall
+kioctl		syscall

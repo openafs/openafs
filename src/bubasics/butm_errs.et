@@ -1,0 +1,30 @@
+#/*
+# * (C) COPYRIGHT IBM CORPORATION 1989
+# * LICENSED MATERIALS - PROPERTY OF IBM
+# */
+
+# Backup Tape Module error table
+
+error_table butm
+	ec BUTM_OLDINTERFACE, "interface incompatible"
+	ec BUTM_NOMOUNT, "there is not an opened tape"
+	ec BUTM_PARALLELMOUNTS, "multiple simultaneous opens not permitted"
+	ec BUTM_MOUNTFAIL, "can't open tape"
+	ec BUTM_DISMOUNTFAIL, "error during tape close"
+	ec BUTM_IO, "tape I/O error"
+	ec BUTM_READONLY, "write operation on read-only tape"
+	ec BUTM_BADOP, "operation inappropriate in this context"
+	ec BUTM_SHORTREAD, "read file ended before all data read"
+	ec BUTM_SHORTWRITE, "write a zero length file"
+	ec BUTM_EOT, "end of tape"
+	ec BUTM_BADCONFIG, "problem reading configuration"
+	ec BUTM_BADARGUMENT, "argument too long or out of range"
+	ec BUTM_ENDVOLUME, "unexpected end of volume data"
+	ec BUTM_LABEL, "appended tape label"
+	ec BUTM_EOD, "end of dump"
+	ec BUTM_IOCTL, "tape device error"
+	ec BUTM_EOF, "end-of-file marker"
+	ec BUTM_BADBLOCK, "unexpected tape datablock"
+	ec BUTM_NOLABEL, "no label on tape"
+        ec BUTM_POSITION, "cannot position within the file"
+end

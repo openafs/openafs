@@ -1,0 +1,13 @@
+#
+# rc
+#
+# An InstallGuide for installing the initialization script
+# For SGI systems running IRIX
+#
+
+sub rc {
+&Copy("root.client/usr/vice/etc/sgiload/afs.rc", "/etc/init.d/afs");
+&Chmod (0555, "/etc/init.d/afs");
+&Symlink("../init.d/afs", "/etc/rc0.d/K35afs");
+&Symlink("../init.d/afs", "/etc/rc2.d/S35afs");
+}

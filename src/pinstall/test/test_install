@@ -1,0 +1,26 @@
+#!/bin/csh -fe
+alias pi ./pinstall
+alias ex 'if ( ! (-f \!:*) ) exit ( { echo \!:* failed } )'
+rm -rf testdir
+
+pi Makefile testdir
+ex testdir/Makefile
+pi Makefile testdir
+ex testdir/Makefile
+rm -rf testdir
+
+pi Makefile testdir/Makefile
+ex testdir/Makefile
+pi Makefile testdir/Makefile
+ex testdir/Makefile
+rm -rf testdir
+
+pi -f Makefile testdir/install
+ex testdir/install
+rm -rf testdir
+
+pi install.c testdir/foo.c
+ex testdir/foo.c
+pi install.c testdir/c
+ex testdir/c/install.c
+rm -rf testdir

@@ -1,0 +1,27 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+#
+
+!INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
+
+INCFILES = \
+	$(DESTDIR)\include\WINNT\afsreg.h \
+	$(DESTDIR)\include\WINNT\syscfg.h \
+	$(DESTDIR)\include\WINNT\afssw.h \
+	$(DESTDIR)\include\WINNT\vptab.h
+
+LIBFILE = $(DESTDIR)\lib\afs\afsreg.lib
+
+LIBOBJS = \
+	afsreg.obj \
+	syscfg.obj \
+	afssw.obj \
+	vptab.obj
+
+$(LIBFILE): $(LIBOBJS)
+	$(LIBARCH)
+
+install_headers: $(INCFILES)
+
+install: install_headers $(LIBFILE)
+
+clean::

@@ -1,0 +1,139 @@
+/*
+ * Copyright (C) 1989 Transarc Corporation - All rights reserved
+ *
+ * (C) COPYRIGHT IBM CORPORATION 1987, 1988
+ * LICENSED MATERIALS - PROPERTY OF IBM
+ *
+ *  common.xg:
+ *	Common values and structures used in the AFS File Server
+ *	and Cache Manager interfaces.
+ */
+
+%#ifndef FSINT_COMMON_XG
+
+struct AFSFid {
+    afs_uint32 Volume;
+    afs_uint32 Vnode;
+    afs_uint32 Unique;
+};
+
+struct AFSCallBack {
+    afs_uint32 CallBackVersion;
+    afs_uint32 ExpirationTime;
+    afs_uint32 CallBackType;
+};
+
+struct AFSDBLockDesc {
+    char waitStates;
+    char exclLocked;
+    short readersReading;
+    short numWaiting;
+    short spare;
+    int pid_last_reader;
+    int pid_writer;
+    int src_indicator;
+};
+
+struct AFSDBCacheEntry {
+    afs_int32 addr;
+    afs_int32 cell;				/*Cell part of the fid*/
+    AFSFid netFid;			/*Network part of the fid*/
+    afs_int32 Length;
+    afs_int32 DataVersion;
+    struct AFSDBLockDesc lock;
+    afs_int32 callback;
+    afs_int32 cbExpires;
+    short refCount;
+    short opens;
+    short writers;
+    char mvstat;
+    char states;
+};
+
+struct AFSDBLock {
+    char name[16];
+    struct AFSDBLockDesc lock;
+};
+
+/*
+ * Callback types.
+ */
+const CB_EXCLUSIVE = 1;
+const CB_SHARED    = 2;
+const CB_DROPPED   = 3;
+
+const AFSNAMEMAX =  256;	/*Max size for name*/
+const AFSPATHMAX = 1024;	/*Max size for pathname*/
+
+/*
+ * Define the maximum opaque structure to be passed.
+ */
+const AFSOPAQUEMAX = 1024;
+typedef opaque AFSOpaque <AFSOPAQUEMAX>;
+
+/*
+ * Define the maximum arrays for passing callback fids and callbacks
+ * themselves around.
+ */
+const AFSCBMAX = 50;
+typedef AFSFid AFSCBFids<AFSCBMAX>;
+typedef	AFSCallBack AFSCBs<AFSCBMAX>;
+
+/*
+ * Define the version of Cache Manager and File Server extended statistics
+ * being implemented.
+ */
+const AFSCB_XSTAT_VERSION = 2;
+const AFS_XSTAT_VERSION = 2;
+
+/*
+ * Define the maximum arrays for passing extended statistics information
+ * for the Cache Manager and File Server back to our caller.
+ */
+const AFSCB_MAX_XSTAT_LONGS = 2048;
+const AFS_MAX_XSTAT_LONGS = 1024;
+
+typedef afs_int32 AFSCB_CollData<AFSCB_MAX_XSTAT_LONGS>;
+typedef afs_int32 AFS_CollData<AFS_MAX_XSTAT_LONGS>;
+
+/*
+ * Define the identifiers for the accessible extended stats data
+ * collections.
+ */
+const AFSCB_XSTATSCOLL_CALL_INFO = 0;	 /*CM call counting & info*/
+const AFSCB_XSTATSCOLL_PERF_INFO = 1;	 /*CM performance info*/
+const AFSCB_XSTATSCOLL_FULL_PERF_INFO = 2;	 /*CM performance info*/
+
+const AFS_XSTATSCOLL_CALL_INFO = 0;	 /*FS call counting & info*/
+const AFS_XSTATSCOLL_PERF_INFO = 1;	 /*FS performance info*/
+const AFS_XSTATSCOLL_FULL_PERF_INFO = 2; /*Full FS performance info*/
+
+typedef afs_uint32 VolumeId;
+typedef afs_uint32 VolId;
+typedef afs_uint32 VnodeId;
+typedef afs_uint32 Unique;
+typedef afs_uint32 UserId;
+typedef afs_uint32 FileVersion;
+typedef afs_int32	      ErrorCode;
+typedef afs_int32	      Rights;
+
+const AFS_DISKNAMESIZE = 32;
+typedef opaque DiskName[AFS_DISKNAMESIZE];
+
+const CALLBACK_VERSION = 1;
+
+const AFS_MAX_INTERFACE_ADDR  =  32;
+struct interfaceAddr {		/* for multihomed clients */
+    int 	numberOfInterfaces;
+    afsUUID	uuid;
+    afs_int32	addr_in[AFS_MAX_INTERFACE_ADDR]; /* interface addresses */
+    afs_int32       subnetmask[AFS_MAX_INTERFACE_ADDR]; /* subnet masks in net ord */
+    afs_int32       mtu[AFS_MAX_INTERFACE_ADDR]; /* MTU */
+};
+
+const AFSMAXCELLHOSTS = 8;	/*Max VLDB servers per cell*/
+typedef afs_int32 serverList[AFSMAXCELLHOSTS];
+
+typedef afs_uint32 cacheConfig<>;
+
+%#endif /* FSINT_COMMON_XG */

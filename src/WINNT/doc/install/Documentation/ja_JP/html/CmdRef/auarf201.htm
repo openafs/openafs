@@ -1,0 +1,140 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRKNFS" HREF="auarf002.htm#ToC_215">knfs</A></H2>
+<A NAME="IDX5183"></A>
+<A NAME="IDX5184"></A>
+<A NAME="IDX5185"></A>
+<A NAME="IDX5186"></A>
+<P><STRONG>目的</STRONG>
+<P>NFS/AFS 変換プログラムを使用して、非サポート NFS クライアントから AFS への認証アクセスの、基盤を確立します。
+<P><STRONG>構文</STRONG>
+<PRE><B>knfs -host</B> &lt;<VAR>host name</VAR>>  [<B>-id</B> &lt;<VAR>user ID (decimal)</VAR>>]
+     [<B>-sysname</B> &lt;<VAR>host's '@sys' value</VAR>>]  [<B>-unlog</B>]  [<B>-tokens</B>]  [<B>-help</B>]
+    
+<B>knfs -ho</B> &lt;<VAR>host name</VAR>>  [<B>-i</B> &lt;<VAR>user ID (decimal)</VAR>>]  
+     [<B>-s</B> &lt;<VAR>host's '@sys' value</VAR>>]  [<B>-u</B>]  [<B>-t</B>]  [<B>-he</B>]
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>knfs</B> コマンドは、ローカル・マシン上に AFS 信用証明書構造体を作成し、プロセス認証グループ (PAG) 番号によってそれを識別します。この番号は、
+<B>-hostname</B> 引き数が指定する NFS クライアント・マシン、およびデフォルトでは、ローカル・マシン上にある発行者のローカル UID と一致する、
+NFS クライアント・マシン上のローカル UID に対応付けられます。また、発行者が以前に取得した AFS トークンを、
+(AFS 修正ログイン・ユーティリティーがインストールされている場合は、ローカル・マシンにログオンすることによって、あるいは <B>klog</B> コマンドを発行することによって、あるいはその両方によって) 信用証明書構造体に配置します。信用証明書構造体を、発行者のローカル UID と一致しない NFS UID と対応付けるには、
+<B>-id</B> 引き数を使用してください。
+<P>このコマンドは、認証アクセスが要求されるセルごとに、変換プログラム・マシン上で AFS トークンを取得した後、
+NFS クライアント・マシンの働きをしている NFS<SUP>(R)</SUP>/AFS 変換プログラム・マシン上でのみ、発行するようにしてください。変換プログラム・マシンのキャッシュ・マネージャーは、トークンを使用して、
+NFS クライアント・マシンで作業する指定ユーザーのために、認証 AFS アクセスを取得します。このコマンドは、NFS クライアント・マシンで発行された場合は無効です。
+<P>NFS クライアント・マシン上のユーザーが AFS コマンドを発行できるようにするためには、
+<B>-sysname</B> 引き数を使用して、
+NFS クライアント・マシンのシステム・タイプを指定します。このシステム・タイプは、変換プログラム・マシンのシステム・タイプとは、異なる場合があります。
+NFS クライアント・マシンのシステム・タイプは、
+AFS をサポートするものでなければなりません。
+<P><B>-unlog</B> フラグを使用すると、信用証明書構造体のトークンは破棄されますが、信用証明書構造体そのものは破棄されません。変換プログラム・マシン上のキャッシュ・マネージャーは、次のリブートまで信用証明書構造体を保存し、発行者が変換プログラム・マシンを介して AFS にアクセスするたびに、これを使用します。ユーザーが NFS クライアント・マシンにログインするたびに、変換プログラム・マシンで <B>knfs</B> コマンドを再発行する場合、信用証明書構造体は、トークンのみを保持します。
+<P>NFS クライアント・マシン上の指定ユーザーと関連したトークンを表示するには、
+<B>-tokens</B> フラグを組み込んでください。
+<P>AFS バイナリーが使用可能な (および、セルがライセンスを獲得した) システム・タイプの、
+NFS クライアント・マシンで作業しているユーザーは、
+<B>knfs</B> コマンドではなく、
+<B>klog</B> コマンドを使用してください。
+<P><STRONG>注意</STRONG>
+<P>変換プログラム・マシンの管理者が、
+<B>fs exportafs</B> コマンドに、
+<B>-uidcheck on</B> 引き数を付けて発行することによって、
+UID 検査を使用可能にした場合は、<B>-id</B> 引き数を使用して、発行者のローカル UID とは異なる NFS UID に、トークンを割り当てることはできません。この場合は、<B>-id</B> 引き数を組み込んでも意味がありません。唯一の許容値 (発行者のローカル UID) が、
+<B>-id</B> 引き数が省略されるときに使用される値だからです。
+UID の一致要求は、ユーザーが変換プログラム・マシン上で、
+NFS クライアント・マシン上と同じローカル UID を所有している場合にのみ、有効です。その場合は、この要求により、ユーザーが、ユーザー自身の NFS セッションにのみトークンを割り当てることが保証されます。
+<P>このコマンドを使用しても、非サポートのシステム・タイプ上で作業しているユーザーは、
+AFS コマンドを発行することはできません。これは、AFS が使用可能なシステム・タイプの NFS クライアントでのみ可能です。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B>-host
+</B><DD>発行者が作業することになる NFS クライアント・マシンを指定します。完全修飾ホスト名を提供するのが最も望ましいのですが、コマンド発行時のセルのネーム・サーバーの状態によっては、省略形式が許容される場合もあります。
+<P><DT><B>-id
+</B><DD>トークンが割り当てられる NFS クライアント上の ローカル UID を指定します。
+NFS クライアントは、NFS UID によってファイル要求を識別します。したがって、アソシエーションを作成することにより、変換プログラム・マシン上のキャッシュ・マネージャーが、要求を満たす際に適切なトークンを使用することができるようになります。この引き数を省略すると、コマンド・インタープリターは、変換プログラム・マシン上の、発行者のローカル UID (<B>getuid</B> 機能が戻します) に一致する、
+NFS UID を使用します。
+<P><DT><B>-sysname
+</B><DD>NFS クライアント・マシン (サポートされるシステム・タイプでなければなりません) で発行される、
+AFS コマンドを実行する際に、ローカル (変換プログラム) マシンのリモート実行プログラム・デーモンが、パス名の <B>@sys</B> 変数の代わりに使用する値を指定します。
+NFS ユーザーの PATH 環境変数が、
+(推奨されるように) AFS バイナリーを含むディレクトリーのパス名で、
+<B>@sys</B> 変数を使用する場合は、この引き数を設定することにより、たとえ、NFS クライアント・マシンのシステム・タイプが、変換プログラム・マシンのシステム・タイプと異なっていたとしても、
+NFS クライアント・マシンに適切な AFS バイナリーにアクセスするよう、リモート実行プログラム・デーモンを導くことによって、
+NFS ユーザーが、AFS コマンドを発行することができるようになります。
+<P><DT><B>-unlog
+</B><DD><B>-host</B> 引き数および、オプションで <B>-id</B> 引き数に関連した PAG が識別する、信用証明書構造体に保管されているトークンを破棄します。
+<P><DT><B>-tokens
+</B><DD>指示した NFS クライアント・マシン上で、指定ユーザーに割り当てられる AFS トークンを表示します。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>出力</STRONG>
+<P>次のエラー・メッセージは、変換プログラム・マシン上で UID 検査が使用可能であること、および、
+<B>-id</B> 引き数に提供される値が、発行者のローカル UID と異なっていることを示しています。
+<PRE>   
+knfs: 'passwd sync' モードの変換プログラム。
+リモート uid はローカル uid と同じでなければなりません。
+</PRE>
+<P><STRONG>例</STRONG>
+<P>以下の例は、このコマンドの一般的な使用例を表しています。発行者 <B>smith</B> は、マシン <B>nfscli1.abc.com</B> で作業し、そのマシン上で、ユーザー ID <B>1020</B> を割り振られています。変換プログラム・マシン <B>tx4.abc.com</B> は、
+AFS 修正ログイン・ユーティリティーを使用します。したがって、<B>smith</B> は、
+<B>telnet</B> プログラム経由のログインで、
+ABC Corporation セルのトークンを自動的に取得します。次に発行者は <B>klog</B> コマンドを発行して、
+ABC Corporation のテスト・セル <B> test.abc.com</B> で、
+<B>admin</B> としてトークンを取得し、さらに <B>knfs</B> コマンドを発行して、この両方のトークンを、マシンの名前 <B>nfs-cli1</B> と、ユーザー ID <B>1020</B> が識別する、信用証明書構造体と対応付けます。発行者は <B>tx4</B> への接続を切断し、
+<B>nfscli1</B> 上で作業を行います。
+<PRE>   % <B>telnet tx4.abc.com</B>
+   . . .
+   login: <B>smith</B>
+   Password:
+   AFS(R) login
+   
+   % <B>klog admin -cell test.abc.com</B>
+   Password:
+   
+   % <B>knfs nfscli1.abc.com 1020</B>
+   
+   % <B>exit</B>
+   
+</PRE>
+<P>次の例は、ユーザー <B>smith</B> が、
+<B>telnet</B> プログラム経由で、再びマシン <B>tx4</B> に接続し、トークンを破棄したことを示しています。
+<PRE>   % <B>telnet translator4.abc.com</B>
+   . . .
+   login: <B>smith</B>
+   Password:
+   AFS(R) login
+   
+   % <B>knfs nfscli1.abc.com 1020 -unlog</B>
+ 
+   % <B>exit</B>
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>なし。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf200.htm#HDRKLOG">klog</A>
+<P><A HREF="auarf208.htm#HDRPAGSH">pagsh</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf200.htm">前ページ</A> &#124; <A HREF="auarf202.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

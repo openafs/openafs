@@ -1,0 +1,52 @@
+#
+# Sample template for use with the uss, the AFS user account facility.
+#
+#
+# Transarc Corporation
+# (C) Copyright 1990 Transarc Corporation
+# All rights reserved
+#
+# By convention:
+#	$USER   = User's login name
+#	$UID    = User's uid
+#	$MTPT   = User's home dir
+#	$AUTO   = Pick the directory with minimum number of entries
+#	$SERVER = User volume's file server
+#	$PART   = User volume's file server partition
+#	$NAME   = User's real name
+#       $PWEXPIRES = number of days that password is valid
+#	$1 - $9 = Optional, but must correspond to argument
+#
+# Format:
+#
+#	G dir-name-or-path (ref. $AUTO)
+#	V volume-name server partition quota mount-point owner accesslist
+#	D directory  mode owner accesslist
+#	F file-path mode owner prototype
+#	E file-path mode owner file-content
+#	S Symbolic-link mode target
+#	L file1 file2
+#	A username password-lifetime reuse/noreuse failures locktime
+#	X command-string
+###########################################################
+
+V	user.$USER $SERVER $PART 5000 /afs/cellname/usr/smith/$USER $UID $USER all system:anyuser rl
+
+#
+A	$USER 254 noreuse 4 45
+#
+D 	$MTPT/private	0755 $UID $USER all system:anyuser none
+D	$MTPT/public 	0755 $UID $USER all system:anyuser rl
+D	$MTPT/bin	0755 $UID $USER all system:anyuser rl
+#
+F	$MTPT/.cshrc		0644 $UID /afs/cellname/admin/user/proto/
+F	$MTPT/.login		0644 $UID /afs/cellname/admin/user/proto
+F	$MTPT/.logout		0644 $UID  /afs/cellname/admin/user/proto
+F 	$MTPT/preferences  	0644 $UID  /afs/cellname/admin/user/proto
+#
+E	/afs/.cellname/common/etc/newaccts/passwd_$USER 0644 root "$USER:X:$UID:11:$NAME:$MTPT:/bin/csh"
+E	$MTPT/echoWithSpaces 0644 $UID "This has spaces"
+X	"ls /afs/cellname/usr/smith2"
+E	$MTPT/echoWithNewlines 0644 $UID "This
+has
+newlines"

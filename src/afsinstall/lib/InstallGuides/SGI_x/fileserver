@@ -1,0 +1,19 @@
+#
+# fileserver
+#
+# An InstallGuide for fileserver processes
+# For SGI systems running IRIX
+#
+
+
+sub IRIXfileserver {
+&ReadInstallGuide("$InstallGuideDir/GENERIC/fileserver");
+&fileserver;
+system("/etc/chkconfig -f afsserver on");
+}
+
+
+
+sub fileserver {
+goto &IRIXfileserver;
+}

@@ -1,0 +1,8 @@
+#!/bin/sh
+#
+# kdump: front end script for AFS kdump.IPxx on SGI Irix platforms
+#
+
+IPNO=`uname -m`
+
+exec kdump.$IPNO ${1+"$@"}

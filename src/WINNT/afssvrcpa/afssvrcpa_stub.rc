@@ -1,0 +1,7 @@
+#include "resource.h"
+
+#define  AFS_VERINFO_FILE_DESCRIPTION "AFS Server Configuration application"
+#include "AFS_component_version_number.h"
+#include "..\..\config\NTVersioninfo.rc"
+
+IDI_AFSD                ICON    DISCARDABLE     "afssvrcpa.ico"

@@ -1,0 +1,86 @@
+#
+# Copyright (C) 1998 Transarc Corporation - All rights reserved
+#
+
+AFSDEV_AUXCDEFINES = -DAFS_PTHREAD_ENV
+
+!include ..\..\config\NTMakefile.$(SYS_NAME)
+!include ..\..\config\NTMakefile.version
+
+VLSERVER = ..\..\vlserver\
+
+VOLSER = ..\..\volser\
+
+FSINT = ..\..\fsint\
+
+ADMINOBJS = \
+	afs_vosAdmin.obj \
+	vosutils.obj \
+	vsprocs.obj \
+	lockprocs.obj
+
+VLSERVEROBJS = \
+	vldbint.cs.obj \
+	vldbint.xdr.obj
+
+VOLSEROBJS = \
+	volint.cs.obj \
+	volint.xdr.obj
+
+FSINTOBJS =\
+	afsint.xdr.obj \
+	afscbint.xdr.obj
+
+DLLOBJS =\
+	$(ADMINOBJS) \
+	$(VLSERVEROBJS) \
+	$(VOLSEROBJS) \
+	$(FSINTOBJS) \
+	afsvosadmin.res
+
+LIBINCLUDES = \
+	$(DESTDIR)\include\afs\afs_vosAdmin.h
+
+
+
+DLLFILE = $(DESTDIR)\root.server\usr\afs\bin\afsvosadmin.dll
+ILIBDIR = $(DESTDIR)\lib\afs
+
+DLLLIBS =\
+	$(DESTDIR)\lib\pthread.lib \
+	$(DESTDIR)\lib\afs\afsadminutil.lib \
+	$(DESTDIR)\lib\afsauthent.lib \
+	$(DESTDIR)\lib\afsrpc.lib
+
+$(DLLFILE): $(DLLOBJS) $(DLLLIBS)
+	$(DLLCONLINK) /DEF:vosadmin.def
+	$(DLLPREP)
+	$(COPY) $*.lib $(ILIBDIR)
+	$(DEL) $*.lib $*.exp
+
+
+
+
+install: $(DLLFILE) $(LIBINCLUDES)
+
+vldbint.cs.obj: $(VLSERVER)\vldbint.cs.c
+	$(C2OBJ) $(VLSERVER)\vldbint.cs.c
+
+vldbint.xdr.obj: $(VLSERVER)\vldbint.xdr.c
+	$(C2OBJ) $(VLSERVER)\vldbint.xdr.c
+
+volint.cs.obj: $(VOLSER)\volint.cs.c
+	$(C2OBJ) $(VOLSER)\volint.cs.c
+
+volint.xdr.obj: $(VOLSER)\volint.xdr.c
+	$(C2OBJ) $(VOLSER)\volint.xdr.c
+
+afsint.xdr.obj: $(FSINT)\afsint.xdr.c
+	$(C2OBJ) $(FSINT)\afsint.xdr.c
+
+afscbint.xdr.obj: $(FSINT)\afscbint.xdr.c
+	$(C2OBJ) $(FSINT)\afscbint.xdr.c
+
+# Definitions for generating versioninfo resources
+afsvosadmin.res: afsvosadmin.rc AFS_component_version_number.h
+	$(RC) $*.rc

@@ -1,0 +1,118 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+#
+
+!INCLUDE ..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\config\NTMakefile.version
+
+
+############################################################################
+# Install header files
+
+INCFILEDIR = $(DESTDIR)\include 
+
+INCFILES =\
+	$(INCFILEDIR)\ubik.h \
+	$(INCFILEDIR)\ubik_int.h 
+
+
+
+############################################################################
+# install afsubik.lib
+
+LIBFILE = $(DESTDIR)\lib\afsubik.lib
+
+LIBOBJS =\
+	disk.obj \
+	remote.obj \
+	beacon.obj \
+	recovery.obj \
+	ubik.obj \
+	vote.obj \
+	lock.obj \
+	phys.obj \
+	ubik_int.cs.obj \
+	ubik_int.ss.obj \
+	ubik_int.xdr.obj \
+	ubikcmd.obj \
+	ubikclient.obj \
+	uerrors.obj	\
+	AFS_component_version_number.obj
+
+
+$(LIBFILE): $(LIBOBJS) 
+	$(LIBARCH) 
+
+############################################################################
+# Definitions for building a EXE.
+
+RS_UDBG_EXEFILE = $(DESTDIR)\root.server\usr\afs\bin\udebug.exe
+CL_UDBG_EXEFILE = $(DESTDIR)\bin\udebug.exe
+
+UDBG_EXEOBJS =\
+	udebug.obj \
+	udebug.res
+
+UDBG_EXELIBS =\
+	$(DESTDIR)\lib\afsubik.lib \
+	$(DESTDIR)\lib\afsrx.lib \
+	$(DESTDIR)\lib\afs\afsreg.lib \
+	$(DESTDIR)\lib\afslwp.lib \
+     	$(DESTDIR)\lib\afs\afscom_err.lib \
+	$(DESTDIR)\lib\afs\afscmd.lib \
+     	$(DESTDIR)\lib\afs\afsutil.lib
+
+
+$(RS_UDBG_EXEFILE): $(UDBG_EXEOBJS) $(UDBG_EXELIBS)  
+	$(EXECONLINK)
+	$(EXEPREP)  
+
+$(CL_UDBG_EXEFILE): $(RS_UDBG_EXEFILE)
+	$(COPY) $** $@
+
+############################################################################
+# generate versioninfo resources
+
+udebug.res: udebug.rc AFS_component_version_number.h
+	$(RC) $*.rc
+
+############################################################################
+# rxgen on ubik_int.xg
+
+ubik_int.ss.c ubik_int.cs.c ubik_int.xdr.c $(INCFILEDIR)\ubik_int.h: ubik_int.xg
+	$(RXGEN) -x $**
+	$(COPY) ubik_int.h $(INCFILEDIR)\ubik_int.h
+
+############################################################################
+# compile_et on uerrors.et
+
+uerrors.c $(INCFILEDIR)\ubik.h: uerrors.et ubik.p.h
+	$(DEL)  ubik.h uerrors.c
+	$(COMPILE_ET) uerrors -h ubik
+	$(COPY) ubik.h $(INCFILEDIR)\ubik.h
+
+############################################################################
+# Install target; primary makefile target
+
+install: $(INCFILES) $(LIBFILE)  $(CL_UDBG_EXEFILE)
+
+
+clean::
+	$(DEL) ubik_int.ss.c ubik_int.cs.c ubik_int.xdr.c 
+	$(DEL) $(INCFILEDIR)\ubik_int.h	uerrors.c $(INCFILEDIR)\ubik.h
+
+############################################################################
+# test ubik
+
+test tests: utst_server utst_client $(EXEFILE) 
+
+utst_server: utst_server.obj utst_int.ss.obj utst_int.xdr.obj  $(EXELIBS)
+	$(EXECONLINK) 
+	
+utst_client: utst_client.obj utst_int.cs.obj utst_int.xdr.obj $(EXELIBS)
+	$(EXECONLINK) 
+	
+# rxgen on utst_int.xg
+utst_int.ss.c utst_int.cs.c utst_int.xdr.c utst_int.h: utst_int.xg
+	$(RXGEN)  utst_int.xg
+
+utst_server.obj utst_client.obj : utst_int.h 

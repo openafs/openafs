@@ -1,0 +1,57 @@
+
+#/* Copyright (C) 1990, 1989 Transarc Corporation - All rights reserved */
+#/*
+# * (C) COPYRIGHT IBM CORPORATION 1989
+# * LICENSED MATERIALS - PROPERTY OF IBM
+# */
+
+# Kerberos Authentication Server error table
+
+# NOTE: KANOAUTH value is hardcoded in audit/audit.h, so if you make
+# changes here, make sure that audit/audit.h is kept up to date.
+
+error_table ka
+	ec KADATABASEINCONSISTENT, "AuthServer database is inconsistent"
+	ec KAEXIST, "user already exists"
+	ec KAIO, "Ubik I/O error"
+	ec KACREATEFAIL, "couldn't allocate entry"
+	ec KANOENT, "user doesn't exist"
+	ec KAEMPTY, "database empty or corrupted"
+	ec KABADNAME, "name or instance is too long or contains illegal characters"
+	ec KABADINDEX, "bad index used internally"
+	ec KANOAUTH, "caller not authorized"
+	ec KAANSWERTOOLONG, "answer packet too short for result"
+	ec KABADREQUEST, "request packet in error"
+	ec KAOLDINTERFACE, "interface incompatible"
+	ec KABADARGUMENT, "argument out of range"
+	ec KABADCMD, "administrative command called incorrectly"
+	ec KANOKEYS, "can't create session key"
+	ec KAREADPW, "can't read password from terminal"
+	ec KABADKEY, "illegal key: bad parity or weak"
+	ec KAUBIKINIT, "Ubik ClientInit failed"
+	ec KAUBIKCALL, "Ubik Call failed"
+	ec KABADPROTOCOL, "AuthServer returned incorrect response"
+	ec KANOCELLS, "error reading cell database"
+	ec KANOCELL, "cell name not found"
+	ec KATOOMANYUBIKS, "too many Ubik security objects outstanding"
+	ec KATOOMANYKEYS, "too many keys were passed to the server's security object"
+	ec KABADTICKET, "authentication server was passed a bad ticket"
+	ec KAUNKNOWNKEY, "unknown key version number"
+	ec KAKEYCACHEINVALID, "key cache invalidated by some key change"
+	ec KABADSERVER, "may not issue ticket for server"
+	ec KABADUSER, "may not authenticate as this user"
+	ec KABADCPW, "may not change your key"
+	ec KABADCREATE, "not allowed to create associate"
+	ec KANOTICKET, "can't find suitable ticket"
+	ec KAASSOCUSER, "operation not allowed for associate user"
+	ec KANOTSPECIAL, "not a special AuthServer principal"
+	ec KACLOCKSKEW, "server and client clocks are badly skewed"
+	ec KANORECURSE, "not allowed to recursively call set_password from get_time"
+	ec KARXFAIL, "Rx failed for some reason"
+	ec KANULLPASSWORD, "zero length password is illegal"
+	ec KAINTERNALERROR, "internal error encountered in kaserver"
+	ec KAPWEXPIRED, "password has expired (KAPWEXPIRED)"
+	ec KAREUSED, "it seems like a reused password (KAREUSED)"
+	ec KATOOSOON, "you changed it too recently; see your systems administrator (KATOOSOON)"
+	ec KALOCKED, "ID is locked - see your system admin (KALOCKED)"
+end

@@ -1,0 +1,55 @@
+#
+# Copyright (C) 1998 Transarc Corporation - All rights reserved
+#
+
+AFSDEV_AUXCDEFINES = -DAFS_PTHREAD_ENV
+
+!include ..\..\config\NTMakefile.$(SYS_NAME)
+!include ..\..\config\NTMakefile.version
+
+PTSERVER = ..\..\ptserver\
+
+PTSERVEROBJS = \
+	ptint.xdr.obj ptint.cs.obj
+
+ADMINOBJS = \
+	afs_ptsAdmin.obj
+
+DLLOBJS =\
+	$(ADMINOBJS) \
+	$(PTSERVEROBJS) \
+	afsptsadmin.res
+
+LIBINCLUDES = \
+	$(DESTDIR)\include\afs\afs_ptsAdmin.h
+
+DLLFILE = $(DESTDIR)\root.server\usr\afs\bin\afsptsadmin.dll
+ILIBDIR = $(DESTDIR)\lib\afs
+
+DLLLIBS =\
+	$(DESTDIR)\lib\afs\afsadminutil.lib \
+	$(DESTDIR)\lib\afsauthent.lib \
+	$(DESTDIR)\lib\afsrpc.lib \
+	$(DESTDIR)\lib\pthread.lib
+
+$(DLLFILE): $(DLLOBJS) $(DLLLIBS)
+	$(DLLCONLINK) /DEF:ptsadmin.def
+	$(DLLPREP)
+	$(COPY) $*.lib $(ILIBDIR)
+	$(DEL) $*.lib $*.exp
+
+
+
+install: $(DLLFILE) $(LIBINCLUDES)
+
+
+
+ptint.xdr.obj: $(PTSERVER)\ptint.xdr.c
+	$(C2OBJ) $(PTSERVER)\ptint.xdr.c
+
+ptint.cs.obj: $(PTSERVER)\ptint.cs.c
+	$(C2OBJ) $(PTSERVER)\ptint.cs.c
+
+# Definitions for generating versioninfo resources
+afsptsadmin.res: afsptsadmin.rc AFS_component_version_number.h
+	$(RC) $*.rc

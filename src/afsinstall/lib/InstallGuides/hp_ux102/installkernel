@@ -1,0 +1,11 @@
+#
+# installkernel
+#
+# An InstallGuide for installing a new kernel
+# For HP 9000 systems running HPUX 10.20
+#
+
+
+sub installkernel {
+&VersionCopyFile("/stand/build/vmunix_test", "/stand/vmunix");
+}

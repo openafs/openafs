@@ -1,0 +1,16 @@
+#
+# Copyright (C) 1998 Transarc Corporation - All rights reserved
+#
+ 
+!include ..\config\NTMakefile.$(SYS_NAME)
+
+!include ..\config\NTMakefile.version
+
+INCFILEDIR = $(DESTDIR)\include\afs
+
+INCFILES = \
+	$(INCFILEDIR)\afs_Admin.h
+
+
+install: $(INCFILES)
+

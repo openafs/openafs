@@ -1,0 +1,70 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+#
+
+
+AFSDEV_AUXCDEFINES = -DPMGTEXPORT=__declspec(dllexport)
+
+!INCLUDE ..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\config\NTMakefile.version
+
+############################################################################
+
+INCFILES =\
+	$(DESTDIR)\include\afs\procmgmt.h
+
+############################################################################
+# Build afsprocmgmt.dll
+
+DLLFILE = $(DESTDIR)\root.server\usr\afs\bin\afsprocmgmt.dll
+ILIBDIR = $(DESTDIR)\lib\afs
+
+DLLOBJS =\
+	procmgmt_nt.obj \
+	redirect_nt.obj \
+	afsprocmgmt.res
+
+DLLLIBS =\
+	$(DESTDIR)\lib\pthread.lib \
+	$(DESTDIR)\lib\afs\afsutil.lib
+
+$(DLLFILE): $(DLLOBJS) $(DLLLIBS)
+	$(DLLCONLINK) /DEF:afsprocmgmt.def
+	$(DLLPREP)
+	$(COPY) $*.lib $(ILIBDIR)
+	$(DEL) $*.lib $*.exp
+
+############################################################################
+# Build afskill.exe
+
+RS_KILL_EXEFILE = $(DESTDIR)\root.server\usr\afs\bin\afskill.exe
+CL_KILL_EXEFILE = $(DESTDIR)\etc\afskill.exe
+
+KILL_EXEOBJS =\
+	afskill.obj \
+	afskill.res
+
+KILL_EXELIBS =\
+	$(DESTDIR)\lib\afs\afsprocmgmt.lib
+
+$(RS_KILL_EXEFILE): $(KILL_EXEOBJS) $(KILL_EXELIBS)
+	$(EXECONLINK)
+	$(EXEPREP)
+
+$(CL_KILL_EXEFILE): $(RS_KILL_EXEFILE)
+	$(COPY) $** $@
+
+############################################################################
+# Definitions for generating versioninfo resources
+
+afsprocmgmt.res: afsprocmgmt.rc AFS_component_version_number.h
+	$(RC) $*.rc
+
+afskill.res: afskill.rc AFS_component_version_number.h
+	$(RC) $*.rc
+
+
+install_headers: $(INCFILES)
+
+install: install_headers $(DLLFILE) $(CL_KILL_EXEFILE)
+
+clean::

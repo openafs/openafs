@@ -1,0 +1,38 @@
+# Keep macros within each section in sorted order for clean diff displays.
+#
+# AFS_OSTYPE used to indicate suffixes and os specific subdirectories.
+AFS_OSTYPE = IRIX
+
+# compilation and link editor flags
+DBG=-g
+FSINCLUDES=-I/usr/include/sys/fs -I../sgiefs
+LWP_OPTMZ=-O
+OPTMZ=-O
+XCFLAGS=-o32
+# The -mips3 for XCFLAGS64 allows code to run on R4000 as well as R8000+.
+XCFLAGS64 =-64 -mips3
+MT_CFLAGS=-D_SGI_MP_SOURCE -DAFS_PTHREAD_ENV ${XCFLAGS}
+XLDFLAGS=-o32
+XLDFLAGS64=-64
+#
+# libraries
+TXLIBS= -lcurses
+XLIBS=
+MTLIBS=-lpthread
+SHLIB_SUFFIX=so
+#
+# programs
+AR=ar
+AS=as
+CP=cp
+MT_CC=cc
+INSTALL=${SRCDIR}bin/install
+LD=ld   
+LEX=lex
+MV=mv
+RANLIB=/bin/true
+RM=rm
+WASHTOOL=${SRCDIR}bin/washtool
+#
+# This is for the vol package
+XFS_SIZE_CHECK = $(DESTDIR)root.server/usr/afs/bin/xfs_size_check

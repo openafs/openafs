@@ -1,0 +1,12 @@
+#
+# vfsck
+#
+# An InstallGuide for installing the AFS integrated fsck
+#
+
+sub vfsck {
+&Print("Replaces the vendor fsck program with an identical program");
+&Print("which is aware of the changes to inodes made in vice");
+&Print("partitions on fileservers. This should be installed on all");
+&Print("AFS fileservers.");
+}

@@ -1,0 +1,67 @@
+#
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+#
+#
+
+{
+    global:
+	cfg_kaserverBosName;
+	cfg_ptserverBosName;
+	cfg_vlserverBosName;
+	cfg_buserverBosName;
+	cfg_fileserverBosName;
+	cfg_upserverBosName;
+	cfg_upclientBosNamePrefix;
+	cfg_upclientSysBosSuffix;
+	cfg_upclientBinBosSuffix;
+	cfg_HostOpen;
+	cfg_HostClose;
+	cfg_HostQueryStatus;
+	cfg_HostSetCell;
+	cfg_HostSetAfsPrincipal;
+	cfg_HostSetAdminPrincipal;
+	cfg_HostInvalidate;
+	cfg_HostPartitionTableEnumerate;
+	cfg_HostPartitionTableAddEntry;
+	cfg_HostPartitionTableRemoveEntry;
+	cfg_ClientQueryStatus;
+	cfg_ClientSetCell;
+	cfg_ClientCellServDbAdd;
+	cfg_ClientCellServDbRemove;
+	cfg_ClientStart;
+	cfg_CellServDbAddHost;
+	cfg_CellServDbRemoveHost;
+	cfg_CellServDbEnumerate;
+	cfg_BosServerStart;
+	cfg_BosServerStop;
+	cfg_BosServerQueryStatus;
+	cfg_AuthServerStart;
+	cfg_DbServersStart;
+	cfg_DbServersStop;
+	cfg_DbServersQueryStatus;
+	cfg_DbServersRestartAll;
+	cfg_DbServersWaitForQuorum;
+	cfg_DbServersStopAllBackup;
+	cfg_FileServerStart;
+	cfg_FileServerStop;
+	cfg_FileServerQueryStatus;
+	cfg_UpdateServerStart;
+	cfg_UpdateServerStop;
+	cfg_UpdateServerQueryStatus;
+	cfg_SysBinServerStart;
+	cfg_UpdateClientStart;
+	cfg_UpdateClientStop;
+	cfg_UpdateClientStopAll;
+	cfg_UpdateClientQueryStatus;
+	cfg_SysControlClientStart;
+	cfg_BinDistClientStart;
+	cfg_StringDeallocate;
+	cfg_PartitionListDeallocate;
+	cfg_CellServDbStatusDeallocate;
+	cfg_HostPartitionNameValid;
+	cfg_HostDeviceNameValid;
+	cfg_ClientStop;
+
+    local:
+	*;
+};

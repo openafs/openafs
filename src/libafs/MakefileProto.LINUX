@@ -1,0 +1,156 @@
+# Copyright (C) 1995, 1989 Transarc Corporation - All rights reserved 
+# 
+# MakefileProto for Linux i386 systems
+#
+
+DESTDIR=DEST/
+include ../config/Makefile.${SYS_NAME}
+
+# OS specific object files:
+AFS_OS_OBJS = \
+	osi_alloc.o \
+	osi_cred.o \
+	osi_groups.o \
+	osi_inode.o \
+	osi_file.o \
+	osi_misc.o \
+	osi_module.o \
+	osi_sleep.o \
+	osi_vfsops.o \
+	osi_vm.o \
+	osi_vnodeops.o \
+	xdr.o \
+	xdr_array.o
+
+AFS_OS_NFSOBJS =
+
+AFS_OS_NONFSOBJS =
+
+
+# System specific build commands and flags
+CC = gcc
+LD = ld
+# -Wall
+CCFLAGS =   -O2 -fomit-frame-pointer \
+	-fno-strength-reduce -pipe -m486 -malign-loops=2 -malign-jumps=2 \
+	-malign-functions=2
+DEFINES = -D__KERNEL__  -DCPU=586 -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF}
+INCLUDES = -I. -I../
+
+CFLAGS = $(CCFLAGS) $(DEFINES) $(INCLUDES)
+
+# Name of directory to hold object files and libraries.
+KOBJ = MODLOAD
+MPS = MP SP
+
+# COMPDIRS is called in Makefile.common to do the actual builds.
+COMPDIRS=linux_compdirs
+
+
+include Makefile.common
+
+setup:
+	-rm -f h net netinet sys rpc
+	-ln -s rx rpc
+	for v in ${LINUX_VERS} ; do \
+		for m in ${MPS} ; do \
+			KDIR=$(KOBJ)-$$v-$$m; \
+			mkdir -p $${KDIR}; \
+			ln -fs ../Makefile $${KDIR}/Makefile ; \
+			ln -fs ../Makefile.common $${KDIR}/Makefile.common; \
+		done \
+	done
+	
+# Compile SP and MP clients as requested
+
+LINUX_INCDIR=include/linux
+
+${COMPDIRS}:
+	for v in ${LINUX_VERS} ; do \
+		IDIR=${LINUX_SRCDIR}$$v/${LINUX_INCDIR}; \
+		rm -f h; \
+		ln -s $${IDIR} h; \
+		rm -f linux; \
+		ln -s $${IDIR} linux; \
+		rm -f net; \
+		ln -s $${IDIR} net; \
+		rm -f netinet; \
+		ln -s $${IDIR} netinet; \
+		rm -f sys; \
+		ln -s $${IDIR} sys; \
+		rm -f asm; \
+		ln -s ${LINUX_SRCDIR}$$v/include/asm-i386 asm ; \
+		for m in ${MPS} ; do \
+			KDIR=${KOBJ}-$$v-$$m ; \
+			echo Building in directory: $${KDIR} ; \
+			if [ "$$m" = "MP" ] ; then \
+				SMP_DEF="-DAFS_SMP" ; \
+				TARG="libafs.mp" ; \
+			else  \
+				SMP_DEF="" ; \
+				TARG=libafs ; \
+			fi ; \
+			cd $${KDIR} ; \
+			$(MAKE) DESTDIR=${DESTDIR} SMP_DEF=$${SMP_DEF} $${TARG} CLIENT=$$v || exit $$?; \
+			cd ../ ; \
+		done \
+	done
+
+
+# Below this line are targets when in the COMMON directory:
+# For Linux there is no kernel NFS server.
+LIBAFS = libafs-${CLIENT}.o
+LIBAFS_MP = libafs-${CLIENT}.mp.o
+
+DEST_LIBAFS = ${DESTDIR}/root.client/usr/vice/etc/modload/${LIBAFS}
+DEST_LIBAFS_MP = ${DESTDIR}/root.client/usr/vice/etc/modload/${LIBAFS_MP}
+
+
+libafs:	$(DEST_LIBAFS) 
+	echo SP Build Complete
+
+libafs.mp: $(DEST_LIBAFS_MP)
+	echo MP Build Complete
+
+$(DEST_LIBAFS): $(LIBAFS)
+	${INSTALL} -f $? $@
+
+$(DEST_LIBAFS_MP): $(LIBAFS_MP)
+	${INSTALL} -f $? $@
+
+${LIBAFS}: $(AFSAOBJS) $(AFSNONFSOBJS)
+	$(RM) -f $@
+	$(LD) -r -o $@ $(AFSAOBJS) $(AFSNONFSOBJS)
+
+${LIBAFS_MP}: $(AFSAOBJS) $(AFSNONFSOBJS)
+	$(RM) -f $@
+	$(LD) -r -o $@ $(AFSAOBJS) $(AFSNONFSOBJS)
+
+
+# Linux specific objects
+osi_alloc.o: $(AFS)/osi_alloc.c
+	$(CRULE1);
+osi_cred.o: $(AFS)/osi_cred.c
+	$(CRULE1);
+osi_groups.o: $(AFS)/osi_groups.c
+	$(CRULE1);
+osi_file.o: $(AFS)/osi_file.c
+	$(CRULE1);
+osi_inode.o: $(AFS)/osi_inode.c
+	$(CRULE1);
+osi_misc.o: $(AFS)/osi_misc.c
+	$(CRULE1);
+osi_module.o: $(AFS)/osi_module.c
+	$(CRULE1);
+osi_sleep.o: $(AFS)/osi_sleep.c
+	$(CRULE1);
+osi_vfsops.o: $(AFS)/osi_vfsops.c
+	$(CRULE1);
+osi_vm.o: $(AFS)/osi_vm.c
+	$(CRULE1);
+osi_vnodeops.o: $(AFS)/osi_vnodeops.c
+	$(CRULE1);
+xdr.o: $(RX)/xdr.c
+	$(CRULE1);
+xdr_array.o: $(RX)/xdr_array.c
+	$(CRULE1);

@@ -1,0 +1,41 @@
+
+#/* Copyright (C) 1990 Transarc Corporation - All rights reserved */
+#/*
+#****************************************************************************
+#*        Copyright IBM Corporation 1988, 1989 - All Rights Reserved        *
+#*                                                                          *
+#* Permission to use, copy, modify, and distribute this software and its    *
+#* documentation for any purpose and without fee is hereby granted,         *
+#* provided that the above copyright notice appear in all copies and        *
+#* that both that copyright notice and this permission notice appear in     *
+#* supporting documentation, and that the name of IBM not be used in        *
+#* advertising or publicity pertaining to distribution of the software      *
+#* without specific, written prior permission.                              *
+#*                                                                          *
+#* IBM DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING ALL *
+#* IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL IBM *
+#* BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY      *
+#* DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER  *
+#* IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING   *
+#* OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.    *
+#****************************************************************************
+#*/
+
+# NOTE: RXKADNOAUTH value is hardcoded in audit/audit.h, so if you make
+# changes here, make sure that audit/audit.h is kept up to date.
+
+error_table rxk
+  ec RXKADINCONSISTENCY, "Security module structure inconsistent"
+  ec RXKADPACKETSHORT, "Packet too short for security challenge"
+  ec RXKADLEVELFAIL, "Security level negotiation failed"
+  ec RXKADTICKETLEN, "Ticket length too long or too short"
+  ec RXKADOUTOFSEQUENCE, "packet had bad sequence number"
+  ec RXKADNOAUTH, "caller not authorized"
+  ec RXKADBADKEY, "illegal key: bad parity or weak"
+  ec RXKADBADTICKET, "security object was passed a bad ticket"
+  ec RXKADUNKNOWNKEY, "ticket contained unknown key version number"
+  ec RXKADEXPIRED, "authentication expired"
+  ec RXKADSEALEDINCON, "sealed data inconsistent"
+  ec RXKADDATALEN, "user data too long"
+  ec RXKADILLEGALLEVEL, "caller not authorized to use encrypted connections"
+end

@@ -1,0 +1,75 @@
+#!/bin/sh
+#
+# linux-version
+#
+# Verify that this build machine has the required header files for the
+# kernel versions specified in LINUX_VERS.
+#
+# The following critical variables are passed in from ./Makefile:
+#
+#   LINUX_SRCDIR="/usr/src/linux-"
+#   LINUX_VERS="2.2.5-15 2.2.10 2.2.12 2.2.12-20 2.2.13 2.2.14"
+#
+# To add support for a new Linux kernel rev, msut therefore add it to 
+# $LINUX_VERS in ./Makefile and create $LINUX_SRCDIR$VERS, populating
+# the latter with header files including a version of the include file
+# $LINUX_SRCDIR$VERS/include/linux/version.h  containing the appropriate
+# UTS_RELEASE definition.
+#
+
+# The following two tests are done so that "make install" can be executed
+# directly from the config directory.
+if [ -z "$LINUX_VERS" ]; then
+	echo LINUX_VERS is not set. Not testing header links for kernel build.
+	exit 0
+fi
+
+if [ -z "$LINUX_SRCDIR" ]; then
+	echo "LINUX_SRCDIR is not set. Not testing header links for kernel build."
+	exit 0
+fi
+
+errors="false"
+found_one="false"
+CAN_BUILD=""
+
+for VERS in $LINUX_VERS ; do
+	dir=$LINUX_SRCDIR$VERS
+	if [ ! -d $dir ] ; then
+		echo "ERROR: Cannot build for Linux kernel $VERS: $dir does not exist."
+		errors=true
+		continue
+	fi
+	header=$LINUX_SRCDIR$VERS/include/linux/version.h
+	if [ ! -f $header ] ; then
+	    echo "ERROR: Cannot build for Linux kernel $VERS: $header does not exist."
+	    errors=true
+	    continue
+	fi
+
+	vers=`fgrep UTS_RELEASE $LINUX_SRCDIR$VERS/include/linux/version.h |
+		awk 'BEGIN { FS="\"" } { print $2 }'`
+	if [ "x$vers" = "x" ] ; then
+	    echo "ERROR: Cannot build for Linux kernel $VERS:"
+	    echo "       No UTS_RELEASE string found in $header."
+	    continue
+	elif [ "$VERS" != "$vers" ] ; then
+	    echo "ERROR: Cannot build $VERS. Wrong version '('$vers')' in $header."
+	    errors=true
+	    continue
+	fi
+	CAN_BUILD="$CAN_BUILD $VERS"
+        found_one="true"
+done
+
+if [ "x$errors" = "xtrue" ] ; then
+    echo "ERROR: Should be able to build at least one of $LINUX_VERS."
+    if [ "x$found_one" = "xtrue" ] ; then
+	echo "       Cannot build all kernels. Only set up for $CAN_BUILD."
+    else
+        echo "       Valid headers not present for any Linux kernel."
+        exit -1
+    fi
+fi
+
+exit 0

@@ -1,0 +1,414 @@
+/*
+ * (C) COPYRIGHT IBM CORPORATION 1987, 1988
+ * LICENSED MATERIALS - PROPERTY OF IBM
+ */
+
+package	VL_
+statindex 15
+
+#include	"vl_opcodes.h"
+%#include	"vl_opcodes.h"	/* directly to other places */
+
+%#ifdef KERNEL
+%#define	xdr_array(a,b,c,d,e,f)	xdr_arrayN(a,b,c,d,e,f)
+%#include "../afs/longc_procs.h"
+%#endif
+
+/* Current limitations on parameters that affect other packages (i.e. volume) */
+const	VLDBVERSION_4	=	4;
+const	VLDBVERSION	=	3;
+const	OVLDBVERSION	=	2;
+const	VL_MAXNAMELEN	=	65;
+const	OMAXNSERVERS	=	8;
+const	NMAXNSERVERS	=	13;
+const	MAXTYPES	=	3;
+
+/* Structure used by the VLUpdateEntry routine; multiple entries can be updated at once by setting the appropriate Mask bits. */
+struct VldbUpdateEntry {
+	afs_uint32	Mask;
+	char	name[VL_MAXNAMELEN];
+	afs_int32	spares3;
+	afs_int32	flags;
+	afs_uint32	ReadOnlyId;
+	afs_uint32	BackupId;
+	afs_int32	cloneId;
+	afs_int32	nModifiedRepsites;
+	afs_uint32	RepsitesMask[OMAXNSERVERS];
+	afs_int32	RepsitesTargetServer[OMAXNSERVERS];
+	afs_int32	RepsitesTargetPart[OMAXNSERVERS];
+	afs_int32	RepsitesNewServer[OMAXNSERVERS];
+	afs_int32	RepsitesNewPart[OMAXNSERVERS];
+	afs_int32	RepsitesNewFlags[OMAXNSERVERS];
+};
+
+/* struct VldbUpdateEntry Mask bit values */
+const	VLUPDATE_VOLUMENAME	=	0x0001;
+/*const	VLUPDATE_VOLUMETYPE	=	0x0002;*/
+const	VLUPDATE_FLAGS		=	0x0004;
+const	VLUPDATE_READONLYID	=	0x0008;
+const	VLUPDATE_BACKUPID		=	0x0010;
+const	VLUPDATE_REPSITES		=	0x0020;
+const	VLUPDATE_CLONEID		=	0x0080;
+const	VLUPDATE_VOLNAMEHASH	=	0x0100;
+const	VLUPDATE_RWID		=	0x0200;
+
+/* struct VldbUpdateEntry RepsitesMask[i] bit values */
+const	VLUPDATE_REPS_DELETE	=	0x0100;
+const	VLUPDATE_REPS_ADD		=	0x0200;
+const	VLUPDATE_REPS_MODSERV	=	0x0400;
+const	VLUPDATE_REPS_MODPART	=	0x0800;
+const	VLUPDATE_REPS_MODFLAG	=	0x1000;
+
+const	VLSERVER_FLAG_UUID	= 	0x0010;
+
+/*typedef	string volumename<VL_MAXNAMELEN>;*/
+
+const	DEFAULTBULK	=	10000;
+typedef	opaque bulk<DEFAULTBULK>;
+
+/*  Structure used by the VLListAttributes routine */
+struct VldbListByAttributes {
+	afs_uint32	Mask;
+	afs_int32	server;
+	afs_int32	partition;
+	afs_int32	spares3;
+	afs_int32	volumeid;
+	afs_int32	flag;
+};
+
+/* struct VldbListByAttributes Mask bit values */
+const	VLLIST_SERVER	=	0x1;
+const	VLLIST_PARTITION=	0x2;
+/*const	VLLIST_VOLUMETYPE=	0x4;*/
+const	VLLIST_VOLUMEID=		0x8;
+const	VLLIST_FLAG=		0x10;
+
+/* External (visible) representation of an individual vldb entry */
+struct vldbentry   {
+	char	name[VL_MAXNAMELEN];		/* Volume name */
+	afs_int32	spares3;
+	afs_int32	nServers;			/* Number of servers that have this volume */
+	afs_int32	serverNumber[OMAXNSERVERS];	/* Server # for each server that holds volume */
+	afs_int32	serverPartition[OMAXNSERVERS];	/* Server Partition number */
+	afs_int32	serverFlags[OMAXNSERVERS];	/* Server flags */
+	afs_uint32	volumeId[MAXTYPES];		/* Corresponding volume of each type */
+	afs_int32	cloneId;				/* Used during cloning */
+	afs_int32	flags;				/* General flags */
+};
+
+struct nvldbentry   {
+	char	name[VL_MAXNAMELEN];		/* Volume name */
+	afs_int32	nServers;			/* Number of servers that have this volume */
+	afs_int32	serverNumber[NMAXNSERVERS];	/* Server # for each server that holds volume */
+	afs_int32	serverPartition[NMAXNSERVERS];	/* Server Partition number */
+	afs_int32	serverFlags[NMAXNSERVERS];	/* Server flags */
+	afs_uint32	volumeId[MAXTYPES];		/* Corresponding volume of each type */
+	afs_int32	cloneId;			/* Used during cloning */
+	afs_int32	flags;				/* General flags */
+	afs_int32	matchindex;
+	afs_int32	spares2;
+	afs_int32	spares3;
+	afs_int32	spares4;
+	afs_int32	spares5;
+	afs_int32	spares6;
+	afs_int32	spares7;
+	afs_int32	spares8;
+	afs_int32	spares9;
+};
+
+
+struct ListAddrByAttributes {
+	afs_int32 	Mask;
+	afs_uint32	ipaddr;
+	afs_int32	index;
+	afs_int32	spare1;
+	afsUUID	uuid;
+};
+const	VLADDR_IPADDR	=	0x1;
+const	VLADDR_INDEX	=	0x2;
+const	VLADDR_UUID	=	0x4;
+
+struct uvldbentry   {
+	char	name[VL_MAXNAMELEN];		/* Volume name */
+	afs_int32	nServers;			/* Number of servers that have this volume */
+	afsUUID	serverNumber[NMAXNSERVERS];	/* Server # for each server that holds volume */
+	afs_int32	serverUnique[NMAXNSERVERS];	/* Server unique address */
+	afs_int32	serverPartition[NMAXNSERVERS];	/* Server Partition number */
+	afs_int32	serverFlags[NMAXNSERVERS];	/* Server flags */
+	afs_uint32	volumeId[MAXTYPES];		/* Corresponding volume of each type */
+	afs_int32	cloneId;			/* Used during cloning */
+	afs_int32	flags;				/* General flags */
+	afs_int32	spares1;			/* The server index we matched */
+	afs_int32	spares2;
+	afs_int32	spares3;
+	afs_int32	spares4;
+	afs_int32	spares5;
+	afs_int32	spares6;
+	afs_int32	spares7;
+	afs_int32	spares8;
+	afs_int32	spares9;
+};
+
+
+/* Leading section of the vldb header (vlheader); contains frequently used globals and general statistics information */
+struct vital_vlheader {
+    afs_int32    vldbversion;		    /* vldb version number--must be 1st */
+    afs_int32    headersize;		    /* total bytes in header */
+    afs_int32    freePtr;			    /* first (if any) free enry in freelist */
+    afs_int32    eofPtr;			    /* first free byte in file */
+    afs_int32    allocs;			    /* total calls to AllocBlock */
+    afs_int32    frees;			    /* total calls to FreeBlock */
+    afs_int32    MaxVolumeId;		    /* Global volume id holder */
+    afs_int32    totalEntries[MAXTYPES];	    /* Total entries by voltype in vldb */
+};
+
+/* General stats on opcode hit frequency */
+const	MAX_NUMBER_OPCODES	= 50;
+struct vldstats {
+    afs_uint32 start_time;			/* Time statistics were last cleared */
+    afs_int32 requests[MAX_NUMBER_OPCODES];	/* requests of each type */
+    afs_int32 aborts[MAX_NUMBER_OPCODES];		/* aborts of each type */
+    afs_int32 reserved[5];				/* for future usage */
+};
+
+
+/* defines for convenience of vl users */
+%#define	VLF_RWEXISTS	    0x1000  /* flags for whole vldb entry */
+%#define	VLF_ROEXISTS	    0x2000
+%#define	VLF_BACKEXISTS	    0x4000
+%#define	VLF_DFSFILESET	    0x8000  /* Volume is really DFS fileset */
+%#define	VLSF_NEWREPSITE	    0x01    /* flags for indiv. server entry */
+%#define	VLSF_ROVOL	    0x02
+%#define	VLSF_RWVOL	    0x04
+%#define	VLSF_BACKVOL	    0x08
+%#define	VLSF_DONTUSE	    0x20    /* no conflict with VLSERVER_FLAG_UUID */
+
+typedef	vldbentry bulkentries<>;
+typedef	nvldbentry nbulkentries<>;
+typedef	uvldbentry ubulkentries<>;
+typedef afs_uint32 bulkaddrs<>;
+
+struct VLCallBack {
+    afs_uint32 CallBackVersion;
+    afs_uint32 ExpirationTime;
+    afs_uint32 CallBackType;
+    afs_uint32 Handle;
+};
+
+/* vldb interface calls */
+
+/*
+ * The kernel needs to be able to use a subset of these.
+ *
+ * Rather than try to make sure the all the kernels have
+ * all the necessary xdr routines for *all* the interfaces,
+ * we arrange that only the ones necessary for the kernel
+ * get compiled in the kernel.
+ */
+
+/*
+ * VL_Probe was renamed to VL_ProbeServer to avoid namespace collisions
+ * with DFS clients.
+ */
+
+ProbeServer(
+) = VLPROBE;
+
+/*
+ * VL_GetEntryByName was renamed to VL_GetEntryByNameO to avoid
+ * namespace collisions with DFS clients.
+ */
+
+GetEntryByNameO(
+  IN string volumename<VL_MAXNAMELEN>,
+  OUT vldbentry *entry
+) = VLGETENTRYBYNAME;
+
+GetEntryByNameN(
+  IN string volumename<VL_MAXNAMELEN>,
+  OUT nvldbentry *entry
+) = VLGETENTRYBYNAMEN;
+
+GetEntryByNameU(
+  IN string volumename<VL_MAXNAMELEN>,
+  OUT uvldbentry *entry
+) = VLGETENTRYBYNAMEU;
+
+GetAddrsU(
+  IN ListAddrByAttributes *inaddr,
+  OUT afsUUID *uuidp1,
+  OUT afs_int32 *uniquifier,
+  OUT afs_int32 *nentries,
+  OUT bulkaddrs *blkaddrs
+) = VLGETADDRSU;
+
+/*
+ * The rest of the interfaces are not needed in the kernel
+ */
+
+%#if !defined(KERNEL)
+
+typedef struct single_vldbentry  *vldblist;
+
+struct single_vldbentry {
+	vldbentry VldbEntry;
+	vldblist next_vldb;
+};
+
+struct vldb_list {
+vldblist node;
+};
+
+typedef struct single_nvldbentry  *nvldblist;
+
+struct single_nvldbentry {
+	nvldbentry VldbEntry;
+	nvldblist next_vldb;
+};
+
+struct nvldb_list {
+nvldblist node;
+};
+
+CreateEntry(
+  IN vldbentry *newentry
+) = VLCREATEENTRY;
+
+DeleteEntry(
+  IN afs_int32 Volid,
+  afs_int32 voltype
+) = VLDELETEENTRY;
+
+GetEntryByID(
+  IN afs_int32 Volid,
+  afs_int32 voltype,
+  OUT vldbentry *entry
+) = VLGETENTRYBYID;
+
+GetNewVolumeId(
+  IN afs_int32 bumpcount,
+  OUT afs_int32 *newvolumid
+) = VLGETNEWVOLUMEID;
+
+ReplaceEntry(
+  IN afs_int32 Volid,
+  afs_int32 voltype,
+  vldbentry *newentry,
+  afs_int32 ReleaseType
+) = VLREPLACEENTRY;
+
+UpdateEntry(
+  IN afs_int32 Volid,
+  afs_int32 voltype,
+  VldbUpdateEntry *UpdateEntry,
+  afs_int32 ReleaseType
+) = VLUPDATEENTRY;
+
+SetLock(
+  IN afs_int32 Volid,
+  afs_int32 voltype,
+  afs_int32 voloper
+) = VLSETLOCK;
+
+ReleaseLock(
+  IN afs_int32 Volid,
+  afs_int32 voltype,
+  afs_int32 ReleaseType
+) = VLRELEASELOCK;
+
+ListEntry(
+  IN afs_int32 previous_index,
+  OUT afs_int32 *count,
+  afs_int32 *next_index,
+  vldbentry *entry
+) = VLLISTENTRY;
+
+ListAttributes(
+  IN VldbListByAttributes *attributes,
+  OUT afs_int32 *nentries,
+  OUT bulkentries *blkentries
+) = VLLISTATTRIBUTES;
+
+LinkedList(
+  IN VldbListByAttributes *attributes,
+  OUT afs_int32 *nentries,
+  OUT vldb_list *linkedentries
+) = VLLINKEDLIST;
+
+GetStats(
+  OUT vldstats *stats,
+  vital_vlheader *vital_header
+) = VLGETSTATS;
+
+GetAddrs(
+  IN afs_int32 Handle,
+  afs_int32 spare2,
+  OUT VLCallBack *spare3,
+  OUT afs_int32 *nentries,
+  OUT bulkaddrs *blkaddrs
+) = VLGETADDRS;
+
+ChangeAddr(
+  IN afs_int32 ip1,
+  afs_int32 ip2
+) = VLCHANGEADDR;
+
+
+CreateEntryN(
+  IN nvldbentry *newentry
+) = VLCREATEENTRYN;
+
+GetEntryByIDN(
+  IN afs_int32 Volid,
+  afs_int32 voltype,
+  OUT nvldbentry *entry
+) = VLGETENTRYBYIDN;
+
+ReplaceEntryN(
+  IN afs_int32 Volid,
+  afs_int32 voltype,
+  nvldbentry *newentry,
+  afs_int32 ReleaseType
+) = VLREPLACEENTRYN;
+
+ListEntryN(
+  IN afs_int32 previous_index,
+  OUT afs_int32 *count,
+  afs_int32 *next_index,
+  nvldbentry *entry
+) = VLLISTENTRYN;
+
+ListAttributesN(
+  IN VldbListByAttributes *attributes,
+  OUT afs_int32 *nentries,
+  OUT nbulkentries *blkentries
+) = VLLISTATTRIBUTESN;
+
+LinkedListN(
+  IN VldbListByAttributes *attributes,
+  OUT afs_int32 *nentries,
+  OUT nvldb_list *linkedentries
+) = VLLINKEDLISTN;
+
+UpdateEntryByName(
+  IN string volumename<VL_MAXNAMELEN>,
+  VldbUpdateEntry *UpdateEntry,
+  afs_int32 ReleaseType
+) = VLUPDATEENTRYBYNAME;
+
+RegisterAddrs(
+  IN afsUUID *uuidp,
+  IN afs_int32 spare1,
+  IN bulkaddrs *ipaddr
+) = VLREGADDR;
+
+ListAttributesN2(
+  IN VldbListByAttributes *attributes,
+  IN string volumename<VL_MAXNAMELEN>,
+  IN  afs_int32 startindex,
+  OUT afs_int32 *nentries,
+  OUT nbulkentries *blkentries,
+  OUT afs_int32 *nextstartindex
+) = VLLISTATTRIBUTESN2;
+
+%#endif /* !defined(KERNEL) */

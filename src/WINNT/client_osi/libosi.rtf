@@ -1,0 +1,1059 @@
+{\rtf1\ansi
+
+{\fonttbl
+\f0\froman Times New Roman;
+\f1\fdecor Courier New;}
+
+{\colortbl
+\red0\green0\blue0;
+\red255\green0\blue0;
+\red0\green0\blue255;
+\red255\green255\blue0;}
+
+\deff0
+
+\sb200
+
+#{\footnote contents}
+${\footnote Contents}
+\fs40
+{\uldb Introduction}{\v intro}
+\par
+{\uldb Initialization}{\v init}
+\par
+{\uldb Mutexes}{\v mutexes}
+\par
+{\uldb ReadWrite Locks}{\v rwlocks}
+\par
+{\uldb Condition Variables}{\v conds}
+\par
+{\uldb Locking Hierarchies}{\v hierarchies}
+\par
+{\uldb Debugging}{\v debug}
+\par
+\fs25
+\page
+
+#{\footnote intro}
+${\footnote Introduction}
++{\footnote intro:01}
+
+The OSI package provides very efficient locking and synchronization 
+primitives for the Win32 environment.
+\par
+
+These primitives include both {\uldb mutexes}{\v mutexes}, representing 
+resources that must always be allocated exclusively to one entity 
+(thread) at a time, as well as {\uldb read/write locks}{\v rwlocks}, 
+representing resources that may have N readers or one writer at any 
+given time.
+\par
+
+In addition to the basic primitives sketched above, the OSI package 
+provides a {\uldb condition variable}{\v conds} mechanism that allows a 
+thread holding a mutex or a read/write lock to wait for an interesting 
+event to occur.  These condition variable operations allow a thread 
+holding a resource to atomically suspend itself (sleep) and 
+simultaneously release the lock or mutex it holds on the resource.  The 
+atomicity of these operations is critical to avoiding race conditions.  
+A function is also provided to wakeup a thread waiting at a condition
+variable. 
+\par
+
+Some support is also provided for aiding programs in initializing 
+themselves safely in a multi-threaded environment.
+\par
+
+Finally, an optional remote debugging and statistics gathering interface 
+is provided.  If desired, the locks and mutexes provided by the OSI 
+package can keep track of statistics on lock contention, and these 
+statistics are available to remote users to examine, using the osidebug
+program. 
+\par
+
+\page
+
+#{\footnote init}
+${\footnote Initialization}
++{\footnote init:01}
+
+There are two sets of routines describe herein, one used for 
+initializing the 
+OSI package itself, and one for initializing your application. 
+\par
+The function {\uldb osi_Init}{\vosiInit} must be called before any other 
+functions in the OSI library, except for the other initialization 
+functions described in this section (osi_Init, osi_InitDebug, osi_Once 
+and osi_TestOnce).
+\par
+
+The function {\uldb osi_InitDebug} must be called before remote 
+debugging information and statistic can be retrieved via RPC by the 
+osidebug program.  This function need not be ever called, however, if 
+you do not need to be able to retrieve locking information from a 
+separate process. 
+\par
+
+The function {\uldb osi_Once}{\v osiOnce} can be used by the application 
+programmer to ensure that the application program executes its 
+initialization code exactly once.  This function takes one parameter, 
+intended to be allocated as a static variable, which will be initialized 
+by the system at load time to zero.  The {\uldb osi_Once}{\v osiOnce} 
+function is called with a pointer to this variable, and returns TRUE if 
+the program should execute its initialization code now, or FALSE if 
+osi_Once has already been executed once in this application already. 
+\par
+
+The function {\uldb osi_EndOnce}{\v osiEndOnce} must be called before 
+other calls to {\uldb osi_Once}{\v osiOnce} will complete; the section 
+of code bounded by osi_Once and osi_EndOnce is executed atomically with 
+respect to other calls to osi_Once. 
+\par
+
+The function {\uldb osi_TestOnce}{\v osiTestOnce} may be used as a hint 
+to see if {\uldb osi_Once}{\v osiOnce} might need to be called.  It 
+returns the same values as osi_Once, but doesn't change the state of the 
+state variable to indicate that {\uldb osi_Once}{\v osiOnce} has been 
+called.  Of course, its result can only be used as a hint, but if {\uldb 
+osi_TestOnce}{\v osiTestOnce} returns false, the caller knows that the 
+initialization work for this code has already run.  If it returns true, 
+the programmer may still need to call osi_Once, or it may be called by 
+some other thread first.
+\par
+
+\page
+
+#{\footnote osiInit}
+${\footnote osi_Init}
+K{\footnote osi_Init}
++{\footnote init:02}
+
+\fs40
+void \cf2 osi_Init\cf0 (void)
+\fs25
+\par
+
+This function initializes the OSI library.  It must be called before any 
+other functions in the OSI library except the other initialization 
+calls: osi_InitDebug, osi_Once, osi_EndOnce and osi_TestOnce.
+\par
+
+Failure to call this function will result in traps in your application 
+program.
+\par
+
+\page
+
+#{\footnote osiInitDebug}
+${\footnote osi_InitDebug}
+K{\footnote osi_InitDebug}
++{\footnote init:03}
+
+\fs40
+long \cf2 osi_InitDebug \cf0 (char *rpcName)
+\fs25
+\par
+
+This function initializes the RDC debugging interface in your 
+application.  The parameter rpcName is an RPC NSI name into which your 
+RPC binding information will be exported.  It must start with the string 
+"/.:/"  For example, a database server for your payroll database might 
+export its binding information into "/.:/payroll"
+\par
+
+The function returns 0 if it succeeds, otherwise it returns an RPC error 
+code. 
+\par
+
+\page
+
+#{\footnote osiOnce}
+${\footnote osi_Once}
+K{\footnote osi_Once}
++{\footnote init:04}
+
+\fs40
+int \cf2 osi_Once \cf0 (osi_once_t *parm)
+\fs25
+\par
+
+This function can be used by application programs in a multi-threaded 
+environment to ensure that they execute their initialization code 
+exactly once, no matter how many threads try to execute the code.
+\par
+\f1
+int foo_Init(void) \line
+\{ \line
+    static osi_once_t once; \line
+    if (osi_Once(&once)) \{ \line
+        YourInitializationHere = 1; \line
+        osi_EndOnce(&once); \line
+    \} \line
+    return SUCCESS; \line
+\} \line
+\f0
+\par
+
+In the above function, the assignment into YourInitializationHere will 
+occur exactly once, no matter how many times foo_Init is called, in any 
+number of threads, all calling foo_Init concurrently.
+
+\page
+
+#{\footnote osiEndOnce}
+${\footnote osi_EndOnce}
+K{\footnote osi_EndOnce}
++{\footnote init:05}
+
+\fs40
+void \cf2 osi_EndOnce \cf0 (osi_once_t *parm)
+\fs25
+\par
+
+This function ends the initialization block started by osi_Once.  This 
+function must be called exactly once for each call to osi_Once that 
+returns true.
+\par
+An example of the use of this function can be found in the description 
+of {\uldb osi_Once}{\v osiOnce}.
+
+\page
+
+#{\footnote osiTestOnce}
+${\footnote osi_TestOnce}
+K{\footnote osi_TestOnce}
++{\footnote init:06}
+
+\fs40
+int \cf2 osi_TestOnce \cf0 (osi_once_t *parm)
+\fs25
+\par
+
+This function returns true if osi_Once would have returned true, and 
+false otherwise.
+\par
+
+Unlike osi_Once, this function does not mark the initialization block 
+described by *parm as initialized; this is only an advisory function.  
+For this reason, the function {\uldb osi_EndOnce}{\v osiEndOnce} should 
+not be called if osi_TestOnce returns true. 
+
+\page
+
+#{\footnote mutexes}
+${\footnote Mutual Exclusion Objects}
++{\footnote mutexes:01}
+
+Mutual exclusion objects are used to prevent two threads from accesing 
+the same object at the same time.  Typically, some collection of data 
+is associated with an object of osi_mutex_t, and any thread, before 
+accessing the object, first obtains the mutex by calling {\uldb
+lock_ObtainMutex}{\v lockObtainMutex}.  When it is done processing the 
+object, the thread calls {\uldb lock_ReleaseMutex}{\v lockReleaseMutex}. 
+\par
+
+Typically, a thread will release a mutex once for each time that it  
+obtains the mutex, using {\uldb osi_SleepM}{\v osiSleepM} or 
+{\uldb lock_ReleaseMutex}{\v lockReleaseMutex}. 
+\par
+
+These mutex objects are not recursive mutexes: a thread may not 
+re-obtain the mutex while still holding it.
+\par
+
+Before using a mutex, the mutex \cf1 must \cf0 be initialized by calling 
+{\uldb lock_InitializeMutex}{\v lockInitializeMutex}.
+\par
+
+If the mutex is allocated from dynamically allocated memory (rather than 
+being statically allocated), then the mutex must be finalized before 
+the memory is freed.  The function 
+{\uldb lock_FinalizeMutex}{\v lockFinalizeMutex} should be used for this 
+purpose.
+\par
+
+An object of type osi_mutex_t uses about 8 bytes of storage.
+\par
+
+\page
+
+#{\footnote lockInitializeMutex}
+${\footnote lock_InitializeMutex}
+K{\footnote lock_InitializeMutex}
++{\footnote mutexes:02}
+
+\fs40
+void \cf2 lock_InitializeMutex \cf0 (osi_mutex_t *mutex)
+\fs25
+\par
+
+This function is called with a pointer to a mutex, to initialize the storage 
+so that the mutex can be obtained and released by this or other threads. 
+This function should only be called at an initialization point where the 
+programmer knows that no other threads are accessing the mutex variable.
+\par
+
+\page
+
+#{\footnote lockObtainMutex}
+${\footnote lock_ObtainMutex}
+K{\footnote lock_ObtainMutex}
++{\footnote mutexes:03}
+
+\fs40
+void \cf2 lock_ObtainMutex \cf0 (osi_mutex_t *mutex)
+\fs25
+\par
+
+This function is called with a pointer to a mutex, 
+and waits until no other thread is using the mutex.  It then 
+obtains the mutex for the calling thread and returns.
+\par
+
+Mutexes are not recursively obtainable by a thread: if a thread tries 
+to obtain a mutex a second time, it will deadlock (wait forever). 
+\par
+
+The mutex can be released {\uldb lock_ReleaseMutex}{\v lockReleaseMutex} 
+or by {\uldb osi_SleepM}{\v osiSleepM}.
+\par
+
+\page
+
+#{\footnote lockReleaseMutex}
+${\footnote lock_ReleaseMutex}
+K{\footnote lock_ReleaseMutex}
++{\footnote mutexes:04}
+
+\fs40
+void \cf2 lock_ReleaseMutex \cf0 (osi_mutex_t *mutex)
+\fs25
+\par
+
+This function relinquishes the caller's use of the resource; if any other threads 
+are waiting for the mutex, they are woken at this point, and one of the other 
+threads is given the mutex.
+\par
+
+It is an error to release a mutex twice.  However, a mutex can be released by a different 
+thread than that which obtained it, as long as this is the programmer's intention.
+\par
+
+\page
+
+#{\footnote lockFinalizeMutex}
+${\footnote lock_FinalizeMutex}
+K{\footnote lock_FinalizeMutex}
++{\footnote mutexes:05}
+
+\fs40
+void \cf2 lock_FinalizeMutex \cf0 (osi_mutex_t *mutex)
+\fs25
+\par
+
+This function is used to free up any auxiliary storage and control structures 
+associated with a mutex.  In the current implementation, this function does nothing 
+except when running with the statistics gathering implementation of mutexes, but 
+this is not guaranteed to stay true in later releases of the OSI library.  Furthermore, 
+anyone can enable statistics gathering.
+\par
+
+Locks and mutexes need not be finalized if the process is about to terminate, since any 
+resources allocated are allocated on behalf of the process, and will be freed when 
+the process exits.
+
+\page
+
+#{\footnote lockTryMutex}
+${\footnote lock_TryMutex}
+K{\footnote lock_TryMutex}
++{\footnote mutexes:06}
+
+\fs40
+int \cf2 lock_TryMutex \cf0 (osi_mutex_t *mutexp)
+\fs25
+\par
+
+This function is a non-blocking version of {\uldb lock_ObtainMutex}{\v lockObtainMutex}.  
+It tries to obtain the specified mutex, and if it succeeds, it returns 1.  Otherwise, 
+instead of blocking and waiting until the mutex is available, it returns 0 and leaves 
+the mutex unchanged.
+\par
+
+This function is typically used when the programmer needs to obtain locks in an order 
+incompatible with their locking hierarchy.  See the section on {\uldb locking hierarchies} 
+{\v hierarchies} for an example of its use for this purpose.
+\par
+
+The caller must be careful to release the mutex if and only if the function returns 1.
+\par
+
+\page
+
+#{\footnote rwlocks}
+${\footnote Read/Write Locks}
++{\footnote rwlocks:01}
+
+Read/write locks are similar in use to mutexes.  They are used to mediate access to 
+data structures that are accessed by multiple threads.
+\par
+
+Unlike {\uldb mutexes}{\v mutexes}, however, read/write locks mediate two forms of access 
+to the structures: read accesses, of which several can be executing concurrently, and write 
+accesses, only one of which can be executing at any given time.
+\par
+
+Like mutexes, read/write locks \cf1 must \cf0 be initialized before they can be used, and need 
+to be finalized when their storage is going to be freed.  The procedures
+{\uldb lock_InitializeRWLock}{\v lockInitializeRWLock} and 
+{\uldb lock_FinalizeRWLock}{\v lockFinalizeRWLock} perform these functions.
+
+\page
+
+#{\footnote lockInitializeRWLock}
+${\footnote lock_InitializeRWLock}
+K{\footnote lock_InitializeRWLock}
++{\footnote rwlocks:02}
+
+\fs40
+void \cf2 lock_InitializeRWLock \cf0 (osi_rwlock_t *lockp)
+\fs25
+\par
+
+This function initializes the storage used by a read/write lock.  The structure 
+\cf1 must \cf0 be initialized before it is obtained or released by the functions 
+described in this section.
+\par
+
+\page
+
+#{\footnote lockObtainRead}
+${\footnote lock_ObtainRead}
+K{\footnote lock_ObtainRead}
++{\footnote rwlocks:03}
+
+\fs40
+void \cf2 lock_ObtainRead \cf0 (osi_rwlock_t *lockp)
+\fs25
+\par
+
+This function obtains a read/write lock for reading.  The lock must have been
+previously initialized with {\uldb lock_InitializeRWLock}{\v lockInitializeRWLock}.  
+\par
+
+When done with the lock, the programmer must ensure that the function 
+{\uldb lock_ReleaseRead}{\v lockReleaseRead} or 
+{\uldb osi_SleepR}{\v osiSleepR} is called to release the lock. 
+
+\page
+
+#{\footnote lockObtainWrite}
+${\footnote lock_ObtainWrite}
+K{\footnote lock_ObtainWrite}
++{\footnote rwlocks:04}
+
+\fs40
+void \cf2 lock_ObtainWrite \cf0 (osi_rwlock_t *lockp)
+\fs25
+\par
+
+This function obtains a read/write lock for writing.  The lock must have been 
+previously initialized with {\uldb lock_InitializeRWLock}{\v lockInitializeRWLock}.
+\par
+
+At most one thread can have a read/write lock held for writing at any time, and 
+no thread can simultaneously have a read/write lock held for reading at that time.
+\par
+
+When done with the lock, the programmer must ensure that the function 
+{\uldb lock_ReleaseWrite}{\v lockReleaseWrite} or 
+{\uldb osi_SleepW}{\v osiSleepW} is called to release the lock.
+
+\page
+
+#{\footnote lockReleaseRead}
+${\footnote lock_ReleaseRead}
+K{\footnote lock_ReleaseRead}
++{\footnote rwlocks:05}
+
+\fs40
+void \cf2 lock_ReadRead\cf0 (osi_rwlock_t *lockp)
+\fs25
+\par
+
+This function releases a lock held in read mode.  If the number of readers 
+drops to zero, a writer may obtain the lock, otherwise only readers may 
+obtain the lock.  If any writers are waiting for this lock, they are woken 
+up and may proceed at this time.
+\par
+
+The application program must have obtained this lock in read mode before calling 
+this function; it is an error to release a read lock more often than it was 
+obtained.
+\par
+
+\page
+
+#{\footnote lockReleaseWrite}
+${\footnote lock_ReleaseWrite}
+K{\footnote lock_ReleaseWrite}
++{\footnote rwlocks:06}
+
+\fs40
+void \cf2 lock_ReleaseWrite\cf0 (osi_rwlock_t *lockp)
+\fs25
+\par
+
+This function releases a lock held in write mode.  After this call, 
+anyone waiting for a read lock or a write lock is woken up and may 
+proceed.
+\par
+
+The application program must have obtained this lock in read mode before calling 
+this function; it is an error to release a read lock more often than it was 
+obtained.
+\par
+
+\page
+
+#{\footnote lockFinalizeRWLock}
+${\footnote lock_FinalizeRWLock}
+K{\footnote lock_FinalizeRWLock}
++{\footnote rwlocks:07}
+
+\fs40
+void \cf2 lock_FinalizeRWLock \cf0 (osi_rwlock_t *lockp)
+\fs25
+\par
+
+This function is called to free up any auxiliary data structures associated with 
+the read/write lock.  This function \cf1 must \cf0 be called before freeing any 
+storage containing a read/write lock.  This function must be called at a time when 
+there are no threads holding or waiting for the lock concerned.
+\par
+
+Locks allocated from static storage need never be finalized.
+\par
+
+\page
+
+#{\footnote lockTryRead}
+${\footnote lock_TryRead}
+K{\footnote lock_TryRead}
++{\footnote rwlocks:08}
+
+\fs40
+int \cf2 lock_TryRead\cf0 (osi_rwlock_t *rwlockp)
+\fs25
+\par
+
+This function is a non-blocking version of {\uldb lock_ObtainRead}{\v
+lockObtainRead}.   It tries to obtain the specified read/write lock in 
+read mode, and if it succeeds, it returns 1.  Otherwise,  instead of 
+blocking and waiting until the lock is available, it returns 0 and 
+leaves the lock unchanged. 
+\par
+
+This function is typically used when the programmer needs to obtain locks in an order 
+incompatible with their locking hierarchy.  See the section on {\uldb locking hierarchies} 
+{\v hierarchies} for an example of its use for this purpose.
+\par
+
+The caller must be careful to release the read lock if and only if the function returns 1.
+\par
+
+\page
+
+#{\footnote lockTryWrite}
+${\footnote lock_TryWrite}
+K{\footnote lock_TryWrite}
++{\footnote rwlocks:09}
+
+\fs40
+int \cf2 lock_TryWrite\cf0 (osi_rwlock_t *rwlockp)
+\fs25
+\par
+
+This function is a non-blocking version of {\uldb lock_ObtainWrite}{\v
+lockObtainWrite}.   It tries to obtain the specified read/write lock in 
+write mode, and if it succeeds, it returns 1.  Otherwise,  instead of 
+blocking and waiting until the lock is available, it returns 0 and 
+leaves the lock unchanged. 
+\par
+
+This function is typically used when the programmer needs to obtain locks in an order 
+incompatible with their locking hierarchy.  See the section on {\uldb locking hierarchies} 
+{\v hierarchies} for an example of its use for this purpose.
+\par
+
+The caller must be careful to release the write lock if and only if the function returns 1.
+\par
+
+\page
+
+#{\footnote conds}
+${\footnote Condition Variables}
++{\footnote conds:01}
+
+Condition variables are used to allow a threaded program to wait for an interesting 
+event.
+\par
+
+Condition variables are represented as long integers.  By convention, these long 
+integers are cast from addresses of mnemonic structures (so that, when waiting for a 
+particular structure, foo, to change state, you might sleep on "(long)&foo"), but 
+the sleep functions do not change any storage at the address named by the condition variable, 
+and indeed, condition variable integers can really be any numbers you desire.
+\par
+
+The basic idea is that a thread that wants to wait for a particular event 
+waits for a condition variable by calling \f1 osi_Sleep \f0 with the condition variable 
+as a parameter, which blocks the calling thread.  When the interesting event occurs, 
+the thread that notices the event calls \f1 osi_Wakeup \f0, waking up \cf1 all\cf0 
+threads sleeping on that condition variable.
+\par
+
+Unfortunately, condition variables as described so far are unusable in most cases, due to 
+a race condition that occurs in their typical uses.  Here's an example: assume that there 
+is a structure that represents a buffer of data.  Some threads read from the buffer, waiting 
+until there is data available, and others add data to the buffer, waiting until there is 
+space available.  The structure, read and write calls might be coded like this:
+
+\par
+
+\f1
+#define BSIZE	100	/* buffer size */\line
+\line
+typedef struct buffer \{\line
+    char data[BSIZE];   /* buffer */\line
+    int nbytes;         /* bytes used in the buffer */\line
+    osi_mutex_t mutex;	/* mutex for synchronizing access */\line
+    BOOL readWaiting;   /* true if someone is waiting for data */\line
+    BOOL writeWaiting;  /* true if someone is waiting for space */\line
+\} buffer_t;\line
+\par
+
+int Read(buffer_t *bp, char *data)\line
+\{\line
+    long bytesRead; \line
+    \line
+    while(1) \{ \line
+        lock_ObtainMutex(&bp->mutex);\line
+        if (nbytes == 0) \{ /* no data available */\line
+            readWaiting = 1;\line
+            /* wait for something interesting */\line
+            lock_ReleaseMutex(&bp->mutex);      /*BUG*/\line
+            osi_Sleep((long) &bp->readWaiting); /*BUG*/\line
+            continue; \line
+        \} \line
+        \line
+        memcpy(bp->data, data, bp->nbytes);\line
+        nbytes = bp->nbytes; /* remember for later */ \line
+        bp->nbytes = 0; \line
+        \line
+        /* now wakeup anyone waiting for space */ \line
+        if (bp->writeWaiting) \{ \line
+            bp->writeWaiting = 0; \line
+            osi_Wakeup((long) &bp->writeWaiting); \line
+        \} \line
+        \line
+        /* and we're done, so return # of bytes read */ \line
+        lock_ReleaseMutex(&bp->mutex);\line
+        return nbytes;\line
+    \}\line
+\}\line
+\par
+
+void Write(buffer_t *bp, char *data, int len) \line
+\{ \line
+    while(1) \{ \line
+        lock_ObtainMutex(&bp->mutex); \line
+        if (len > BSIZE-bp->nbytes) \{ \line
+            /* no space available */\line
+            writeWaiting = 1;\line
+            /* wait for something interesting */\line
+            lock_ReleaseMutex(&bp->mutex);       /*BUG*/ \line
+            osi_Sleep((long) &bp->writeWaiting); /*BUG*/ \line
+            continue; \line
+        \} \line
+        \line
+        memcpy(data, bp->data+bp->nbytes, len);\line
+        bp->nbytes += len; \line
+        \line
+        /* now wakeup anyone waiting for data */ \line
+        if (bp->readWaiting) \{ \line
+            bp->readWaiting = 0; \line
+            osi_Wakeup((long) &bp->readWaiting); \line
+        \} \line
+        \line
+        /* and we're done, so return # of bytes read */ \line
+        lock_ReleaseMutex(&bp->mutex);\line
+        return ;\line
+    \}\line
+\} \line
+\par
+\f0
+
+There are a number of things to note in the above example.  First, note our use of 
+memory addresses as condition variables.  The calls to {\uldb osi_Sleep}{\v osiSleep} and 
+{\uldb osi_Wakeup}{\v osiWakeup} do not change the data at bp->readWaiting or bp->writeWaiting, 
+but the call \f1 osi_Wakeup((long) &bp->readWaiting)\f0 only wakes up the thread sleeping 
+in the call \f1 osi_Sleep((long) &bp->readWaiting)\f0, not 
+\f1 osi_Sleep((long) &bp->writeWaiting) \f0.
+\par
+
+Please also note that accesses by multiple threads to this buffer structure are mediated 
+by a mutex structure stored in the buffer itself.  Whenever either \f1 Read\f0 or \f1 Write\f0 
+block waiting for the other to supply/remove data, they of course must release the mutex 
+so that the other thread can access the structure to supply/remove the data.
+\par
+
+Unfortunately, there is also a bug in the above code: consider the case 
+where the \f1 Read\f0 call is interrupted due to a clock interrupt 
+between the time that a thread releases the mutex and  the time that 
+the thread then calls \f1 osi_Sleep\f0.  Assume that the OS does a context switch 
+to a new thread, that calls \f1 Write\f0, and runs through completely, doing the call 
+to \f1 osi_Wakeup\f0.  The OS then switches back to the thread doing the read, 
+and the thread proceeds and calls \f1 osi_Sleep\f0, even though there is data now waiting.  
+Unfortunately, no one is going to wake us up to notice that there is data available now.
+\par
+
+This problem would be solved if it were impossible for a wakeup call to execute between 
+the time that the mutex was released and the time that the thread blocked in \f1 osi_Sleep\f0.  
+This combination of releasing a lock or a mutex and sleeping on a condition variable is provided 
+by three functions, {\uldb osi_SleepM}{\v osiSleepM}, {\uldb osi_SleepR}{\v osiSleepR} and 
+{\uldb osi_SleepW}{\v osiSleepW}, which atomically sleep and release a mutex, read lock and 
+write lock, respectively.
+\par
+
+Thus, the two pairs of lines in the example source above that are labelled with 
+\f1 /*BUG*/\f0 should 
+be replaced by \f1 osi_SleepM((long) &bp->readWaiting, &bp->mutex) \f0 and 
+\f1 osi_SleepM((long) &bp->writeWaiting, &bp->mutex)\f0 , respectively.
+
+Indeed, almost every use of \f1 osi_Sleep\f0 instead of one of the combination routines described 
+above is incorrect, and has a race condition between the last release of a lock or mutex, and 
+the call to \f1 osi_Sleep\f0.  So, please be careful when using \f1 osi_Sleep\f0 to be sure 
+to check for this condition.
+\par
+
+\page
+
+#{\footnote osiSleepM}
+${\footnote osi_SleepM}
+K{\footnote osi_SleepM}
++{\footnote conds:02}
+
+\f1
+\fs40
+void \cf2 osi_SleepM\cf0 (long sleepValue, osi_mutex_t *mutex)
+\fs25
+\f0
+\par
+
+This function atomically sleeps at \f1 sleepValue\f0 and releases the mutex at 
+\f1 mutex\f0.  Atomically in this case means that no \f1 osi_Wakeup\f0 calls will 
+be executed from 
+before the lock is released until after the thread is asleep.
+\par
+
+The programmer must \cf1 always\cf0  be prepared for rare, spontaneous wakeups from 
+any of the \f1 osi_Sleep\f0 family of functions.  Thus, any use of \f1 osi_SleepM\f0 
+should be contained within a \f1 while \f0 loop that rechecks the appropriate condition 
+that the thread is waiting for, and tries sleeping again if the wakeup was a spurious one.
+\par
+
+\page
+
+#{\footnote osiSleepR}
+${\footnote osi_SleepR}
+K{\footnote osi_SleepR}
++{\footnote conds:03}
+
+\f1
+\fs40
+void \cf2 osi_SleepR\cf0 (long sleepValue, osi_rwlock_t *lockp)
+\fs25
+\f0
+\par
+
+This function atomically sleeps at \f1 sleepValue\f0 and releases the read lock at 
+\f1 lockp\f0.  Atomically in this case means that no \f1 osi_Wakeup\f0 calls will 
+be executed from 
+before the lock is released until after the thread is asleep.
+\par
+
+The programmer must \cf1 always\cf0  be prepared for rare, spontaneous wakeups from 
+any of the \f1 osi_Sleep\f0 family of functions.  Thus, any use of \f1 osi_SleepR\f0 
+should be contained within a \f1 while \f0 loop that rechecks the appropriate condition 
+that the thread is waiting for, and tries sleeping again if the wakeup was a spurious one.
+\par
+
+\page
+
+#{\footnote osiSleepW}
+${\footnote osi_SleepW}
+K{\footnote osi_SleepW}
++{\footnote conds:04}
+
+\f1
+\fs40
+void \cf2 osi_SleepW\cf0 (long sleepValue, osi_rwlock_t *lockp)
+\fs25
+\f0
+\par
+
+This function atomically sleeps at \f1 sleepValue\f0 and releases the write lock at 
+\f1 lockp\f0.  Atomically in this case means that no \f1 osi_Wakeup\f0 calls will 
+be executed from 
+before the lock is released until after the thread is asleep.
+\par
+
+The programmer must \cf1 always\cf0  be prepared for rare, spontaneous wakeups from 
+any of the \f1 osi_Sleep\f0 family of functions.  Thus, any use of \f1 osi_SleepW\f0 
+should be contained within a \f1 while \f0 loop that rechecks the appropriate condition 
+that the thread is waiting for, and tries sleeping again if the wakeup was a spurious one.
+\par
+
+\page
+
+#{\footnote osiSleep}
+${\footnote osi_Sleep}
+K{\footnote osi_Sleep}
++{\footnote conds:05}
+
+\f1
+\fs40
+void \cf2 osi_Sleep\cf0 (long sleepValue)
+\fs25
+\f0
+\par
+
+This function sleeps at \f1 sleepValue\f0.  The thread will not resume execution until 
+after another thread later executes a call to \f1 osi_Wakeup\f0 with the same value 
+for \f1 sleepValue\f0.
+\par
+
+The programmer must \cf1 always\cf0  be prepared for rare, spontaneous wakeups from 
+any of the \f1 osi_Sleep\f0 family of functions.  Thus, any use of \f1 osi_Sleep\f0 
+should be contained within a \f1 while \f0 loop that rechecks the appropriate condition 
+that the thread is waiting for, and tries sleeping again if the wakeup was a spurious one.
+\par
+
+Also remember that almost every use of this function when waiting for a change in data protected 
+by a mutex or read/write lock is incorrect, and you probably should be using one of 
+{\uldb osi_SleepM}{\v osiSleepM}, 
+{\uldb osi_SleepR}{\v osiSleepR}, 
+or {\uldb osi_SleepW}{\v osiSleepW} to simultaneously release the data protection lock and 
+sleep atomically.
+
+\page
+
+#{\footnote osiWakeup}
+${\footnote osi_Wakeup}
+K{\footnote osi_Wakeup}
++{\footnote conds:06}
+
+\f1
+\fs40
+void \cf2 osi_Wakeup\cf0 (long sleepValue)
+\f0
+\fs25
+\par
+
+This function wakes up all threads already sleeping at \f1 sleepValue\f0.  Threads sleep
+by calling {\uldb osi_Sleep}{\v osiSleep}, 
+{\uldb osi_SleepM}{\v osiSleepM}, 
+{\uldb osi_SleepR}{\v osiSleepR}, 
+or {\uldb osi_SleepW}{\v osiSleepW}.
+\par
+
+This call will synchronize appropriately with 
+{\uldb osi_SleepM}{\v osiSleepM}, 
+{\uldb osi_SleepR}{\v osiSleepR}, 
+and {\uldb osi_SleepW}{\v osiSleepW}, so that if it is called while the corresponding lock 
+or mutex is held, the \f1 osi_Wakeup\f0  function won't execute until after the thread sleeping 
+on the condition variable is blocked.  This avoid race conditions of the form described in 
+the section on {\uldb condition variables}{\v conds}.
+\par
+
+\page
+
+#{\footnote hierarchies}
+${\footnote Locking Hierarchies}
++{\footnote hier:01}
+
+Whenever a thread obtains more than one lock at a time, there is a 
+possibility of deadlock if the locks are obtained in the wrong order.  
+For example, imagine a situation where there are two threads, numbered 
+1 and 2, and two locks, named A and B.  If thread 1 tries to obtain 
+lock A first and then lock B, while thread 2 tries to lock B and then 
+lock A, these two threads will, on occasion, deadlock.
+\par
+
+Specifically, what can happen is that thread 1 can obtain lock A, and 
+then lose the processor to thread 2, which then goes on to obtain lock 
+B.  Thread 2, after obtaining lock B, tries to obtain lock A, and 
+blocks, since thread 1 already holds this lock.  Eventually, thread 1 
+runs again, and tries to obtain lock B, but this lock is held (by 
+thread 2), and so thread 1 blocks, still holding lock A.  This is a 
+classical case of a deadlock, or deadly embrace.
+\par
+
+The heart of the problem is that two locks are obtained at the same
+time, but in different orders by different threads.  And so, this
+problem can be solved in several different ways, some of which will be
+discussed here.
+
+The easiest way to solve this problem is to have a global locking order, 
+and have all threads lock their locks in this ordering.  It is of course 
+imperative to come up with a reasonable locking hierarchy (ordering) to 
+make this as easy as possible.  This solution is particularly good to 
+use when dealing with several locks in the same module or package, since 
+all of the locks can be understood by one programmer.  Among locks held 
+by separate modules, as long as there is a standard ordering in which modules 
+call one another, so that for example module foo always calls module bar, while 
+module bar never calls module foo, the locking hierarchy within the individual 
+modules will naturally extend to the set of all modules.
+\par
+
+Sometimes getting a simple locking hierarchy is difficult to do, 
+however.  When establishing a good locking hierarchy is difficult or 
+impossible, another possibility is releasing one lock when obtaining 
+another lock.  In the example above, thread 1 might grab lock A, do some 
+work, drop lock A and obtain lock B, do more work, and then drop lock B 
+and grab lock A.  Since it never holds two locks at once, it avoids the 
+deadlock.  However, when it grabs lock A for a second time, it must be 
+prepared to see changes made to the structures protected by lock A, 
+since for a time lock A was not held.  Furthermore, if lock A was a 
+write lock or a mutex, we also must examine all other threads that might 
+have seen the data structure protected by lock A in the state after we 
+released the lock A the first time.  We must ensure that they view the 
+state they might see as a consistent state, and are prepared to deal 
+with the structures in that state. 
+\par
+
+Finally, another choice we have is to use the \f1 lock_TryRead\f0 and similar functions.  
+Since the trylock functions don't block, we can use them safely to 
+obtain the second through Nth locks in a series.  For example, the sequence:
+\par
+
+\f1
+    lock_ObtainWrite(&lockB); \line
+    lock_ObtainWrite(&lockA); \line
+\f0
+\par
+
+can be replaced by this:
+\par
+
+\f1
+    while (1) \{ \line
+        lock_ObtainWrite(&lockB); \line
+        if (lock_TryWrite(&lockA)) break; \line
+        \line
+        /* otherwise we failed to get lock A, so camp on it \line
+         * safely. \line
+         */ \line
+        lock_ReleaseWrite(&lockB); \line
+        lock_ObtainWrite(&lockA); \line
+        \line
+        /* once we get here, we've gotten lock A.  Hopefully \line
+         * lock B is now available, too.  Let's quickly drop \line
+         * this guy and try again. \line
+         */ \line
+        lock_ReleaseWrite(&lockA); \line
+    \} \line
+    \line
+    /* when we get here, we have locked B and then A without having \line
+     * released B while obtaining A (in the last iteration). \line
+     */\line
+\f0
+\par
+
+Clearly the second piece of code is considerably more complex, but it does give 
+the programmer the ability to lock locks out of order, and do computations based on 
+the information seen under those locks.  All modifications, of course, must be delayed 
+until all of the locks have been obtained at the exit of the big while loop, but that is 
+usually not a significant restriction.
+\par
+
+\page
+
+#{\footnote debug}
+${\footnote Debugging and Profiling}
++{\footnote debug:01}
+
+The state of any instance of the OSI package can be examined remotely by the 
+osidebug program, if the programmer so chooses.  In order to export the basic information, 
+which consists of information on the thread IDs and sleep values for threads blocked in 
+one of the \f1 osi_Sleep\f0  functions, or blocked waiting for a lock.  The sleep value 
+of a thread waiting for a lock is the address of the lock.
+\par
+
+Furthermore, if lock statistics gathering has been enabled by calling 
+{\uldb osi_LockTypeSetDefault}{\v osiLockTypeSetDefault} before initializing some locks, 
+then statistics are gathered on those locks, and the osidebug program will report those 
+statistics, too.
+\par
+
+To access any information remotely, the function 
+{\uldb osi_InitDebug}{\v osiInitDebug} must be called.  If this is not done, then 
+the osidebug program will simply fail to bind to the application program.
+\par
+
+If the system deadlocks, enough information may be available from osidebug's output to 
+enable the programmer to figure out what is wrong with the application program without 
+resorting to a debugger on the target machine; this is especially convenient when debugging 
+problems from a remote machine.
+\par
+
+More detailed information on osidebug can be obtained from that program's help menu.
+\par
+
+\page
+
+#{\footnote osilocktypesetdefault}
+${\footnote osi_LockTypeSetDefault}
+K{\footnote osi_LockTypeSetDefault}
++{\footnote debug:02}
+
+\f1
+\fs40
+int \cf2 osi_LockTypeSetDefault\cf0 (char *name)
+\fs25
+\f0
+\par
+
+This function takes a name of a lock type and sets a global state variable controlling 
+the type of lock initialized by \f1 lock_InitializeMutex\f0  and \f1 lock_InitializeRWLock\f0 .  
+Normally, when a lock initialization function is called, it creates a lock of a specific 
+type, currently, a regular lock or mutex, or a statistics-gathering lock or mutex.  Which 
+type is created is determined by this global variable.
+\par
+
+If the name is "stat", then statistics gathering locks and mutexes will be created.  If the 
+type name is passed in as a NULL pointer, regular, non-statistics gathering lock and mutexes 
+will be created.
+\par
+
+Since this is a global variable, it controls the type of lock and mutex created by all threads 
+henceforth in this process.
+\par
+
+Note that it does not matter what the state of default lock type is when you are gathering 
+statistics.  
+\cf1 All that matter is the type of default lock at the time the locks are initialized. \cf0
+\par
+
+The system initializes itself creating regular locks and mutexes; this function must be 
+used to enable statistics gathering, and it must be called \cf1 before\cf0  the 
+calls to \f1 lock_InitializeMutex\f0  and \f1 lock_InitializeRWLock\f0  are done that 
+initialize the locks whose statistics are to be gathered.  After the locks have been 
+initialized, this variable may even be reset, and the initialized locks will continue 
+to gather statistics.
+\par
+
+\page
+
+}

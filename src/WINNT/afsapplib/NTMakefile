@@ -1,0 +1,137 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+
+############################################################################
+
+# make compiler warnings fatal
+
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -WX
+
+# indicate that the functions in this library should be exported
+
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -DEXPORT_AFSAPPLIB -DEXPORTED=_declspec(dllexport)
+
+# include the primary makefile
+
+!INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\..\config\NTMakefile.version
+
+############################################################################
+
+INCFILEDIR = $(DESTDIR)\include\WINNT
+
+ILIBDIR = $(DESTDIR)\lib\afs
+
+INCFILES = \
+	$(INCFILEDIR)\afsapplib.h \
+	$(INCFILEDIR)\al_admsvr.h \
+	$(INCFILEDIR)\al_dynlink.h \
+	$(INCFILEDIR)\al_messages.h \
+	$(INCFILEDIR)\al_progress.h \
+	$(INCFILEDIR)\al_resource.h \
+	$(INCFILEDIR)\al_wizard.h \
+	$(INCFILEDIR)\checklist.h \
+	$(INCFILEDIR)\ctl_date.h \
+	$(INCFILEDIR)\ctl_elapsed.h \
+	$(INCFILEDIR)\ctl_sockaddr.h \
+	$(INCFILEDIR)\ctl_spinner.h \
+	$(INCFILEDIR)\ctl_time.h \
+	$(INCFILEDIR)\dialog.h \
+	$(INCFILEDIR)\fastlist.h \
+	$(INCFILEDIR)\hashlist.h \
+	$(INCFILEDIR)\regexp.h \
+	$(INCFILEDIR)\resize.h \
+	$(INCFILEDIR)\settings.h \
+	$(INCFILEDIR)\subclass.h
+
+DLLOBJS = \
+	afsapplib_stub.res \
+	afsapplib.obj \
+	al_admsvr.obj \
+	al_browse.obj \
+	al_browseset.obj \
+	al_cover.obj \
+	al_creds.obj \
+	al_dynlink.obj \
+	al_error.obj \
+	al_help.obj \
+	al_misc.obj \
+	al_progress.obj \
+	al_pump.obj \
+	al_task.obj \
+	al_wizard.obj \
+	checklist.obj \
+	ctl_date.obj \
+	ctl_elapsed.obj \
+	ctl_sockaddr.obj \
+	ctl_spinner.obj \
+	ctl_time.obj \
+	dialog.obj \
+	fastlist.obj \
+	hashlist.obj \
+	regexp.obj \
+	resize.obj \
+	settings.obj \
+	subclass.obj
+
+VCLIBS =\
+	comctl32.lib \
+	rpcrt4.lib \
+	rpcns4.lib \
+
+DLLLIBS = \
+	$(DESTDIR)\lib\afs\TaAfsAdmSvrClient.lib \
+	$(DESTDIR)\lib\afs\TaLocale.lib
+
+DLLFILE = $(DESTDIR)\root.server\usr\afs\bin\TaAfsAppLib.dll
+
+
+# Since AfsAppLib links with TaAfsAdmSvrClient.lib--and both need stuff
+# like the HashList code--we'll get lots of unnecessary 4049 warnings from
+# the linker. Disable that complaint.
+
+LOCALLINKFLAGS = -IGNORE:4049
+
+# AfsAppLib needs to use an explicit .DEF file to get its entry points public
+
+LOCALLINKFLAGS = $(LOCALLINKFLAGS) /DEF:TaAfsAppLib.def
+
+# Also, AfsAppLib has a specific DLL entry-point which should be used
+
+LOCALLINKFLAGS = $(LOCALLINKFLAGS) -entry:DllEntryPoint
+
+############################################################################
+
+install :
+	@echo TaAfsAppLib.DLL is built automatically when building AfsAdmSvr
+	@echo (the two are related--AfsAppLib uses the AfsAdmSvr client library,
+	@echo and the AfsAdmSvr server executable uses the AfsAppLib DLL--
+	@echo and they must therefore be built in a specific order).
+	@echo.
+	@echo You do not need to build in the AfsAppLib directory explicitly.
+	@echo.
+
+headers : $(INCFILES)
+
+lang ::
+	$(CD) lang
+	for /f %l in ('dir /B ??_??') do @$(NTLANG) %l $(MAKECMD) /nologo /f NTMakefile install
+	$(CD) ..
+
+primary : headers $(DLLFILE) lang
+
+$(DLLFILE) : $(DLLOBJS) $(DLLLIBS)
+	$(DLLGUILINK) $(LOCALLINKFLAGS) $(VCLIBS)
+	$(DLLPREP)
+	$(COPY) $*.lib $(ILIBDIR)
+	$(DEL) $*.lib $*.exp
+
+clean::
+
+
+############################################################################
+#
+# Dependencies
+#
+
+AfsAppLib_stub.res : AfsAppLib_stub.rc AFS_component_version_number.h
+

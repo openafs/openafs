@@ -1,0 +1,339 @@
+#/* Copyright (C) 1995, 1989 Transarc Corporation - All rights reserved */
+# 
+# Common elements for Makefiles for all system types.
+#
+SHELL=/bin/sh
+DESTDIR = DEST/
+SRCDIR = DEST/
+INSTALL = $(DESTDIR)bin/install
+INCLUDE= -I.  -I/usr/include
+Aobj=COMMON
+Dobj=DYNEL
+Cobj=CLIENT
+Sobj=SERVER
+Nobj=COMMON_NONFS
+Xobj=COMMON_NFS11
+NDobj=DYNEL_NONFS
+AFS	=../afs
+ADIR	=../dir
+RX	=../rx
+AFSINT	=../afsint
+DKLOAD	=../dkload
+
+
+# Build rules - CC and CFLAGS are defined in system specific MakefileProtos.
+.c.i:
+	$(CC) $(CFLAGS) -P -c $<
+
+.c.o:
+	$(CC) $(CFLAGS) -c $<
+CRULE1=	$(CC) $(CFLAGS) -c $?
+CRULE2=	$(CC) $(OPTF) $(CFLAGS) -c $?
+CRULE3=	$(CC) $(OPTF2) $(CFLAGS) -c $?
+CRULE4=	$(CC) $(DBG) $(CFLAGS) -c $?
+
+system:	install
+
+kinstall:	install
+install:	all 
+
+all:	setup $(COMPDIRS)
+
+single_compdir:
+	cd $(KOBJ) ; \
+	echo $(MAKE) DESTDIR=${DESTDIR} libafs; \
+	$(MAKE) DESTDIR=${DESTDIR}  libafs;
+
+AFSAOBJS = \
+	afs_atomlist.o \
+	afs_lhash.o \
+	afs_analyze.o \
+	afs_axscache.o  \
+	afs_buffer.o	\
+	afs_callback.o	\
+	afs_cbqueue.o    \
+	afs_cell.o \
+	afs_chunk.o		\
+	afs_conn.o \
+	afs_daemons.o	\
+	afs_dcache.o \
+	afs_dir.o		\
+	afs_init.o \
+	afs_lock.o	\
+	afs_mariner.o \
+	afs_memcache.o	\
+	afs_osi.o		\
+	afs_osidnlc.o	\
+	afs_osi_alloc.o	\
+	afs_osi_pag.o \
+	afs_osi_uio.o \
+	afs_osi_vget.o \
+	afs_segments.o \
+	afs_server.o \
+	afs_stat.o \
+	afs_user.o \
+	afs_util.o \
+	afs_vcache.o \
+	afs_vnop_access.o \
+	afs_vnop_attrs.o \
+	afs_vnop_create.o \
+	afs_vnop_dirops.o \
+	afs_vnop_fid.o \
+	afs_vnop_flock.o \
+	afs_vnop_link.o \
+	afs_vnop_lookup.o \
+	afs_vnop_open.o \
+	afs_vnop_read.o \
+	afs_vnop_readdir.o \
+	afs_vnop_remove.o \
+	afs_vnop_rename.o \
+	afs_vnop_strategy.o \
+	afs_vnop_symlink.o \
+	afs_vnop_write.o \
+	afs_volume.o \
+	afsaux.o		\
+	Kvice.xdr.o	\
+	xdr_arrayn.o	\
+	Kvice.cs.o	\
+	fcrypt.o		\
+	rx.o		\
+	rx_rdwr.o	\
+	rx_clock.o	\
+	rx_event.o	\
+	rx_globals.o	\
+	rx_knet.o	\
+	rx_kcommon.o	\
+	rx_misc.o	\
+	rx_null.o	\
+	rx_getaddr.o	\
+	rx_packet.o	\
+	xdr_rx.o	\
+	Kvldbint.cs.o	\
+	Kvldbint.xdr.o	\
+	Kcallback.ss.o	\
+	Krxstat.ss.o	\
+	Krxstat.xdr.o	\
+	rxstat.o	\
+	crypt_conn.o	\
+	AFS_component_version_number.o\
+	afs_exporter.o	\
+	rxkad_client.o	\
+	rxkad_common.o	\
+	xdr_afsuuid.o	\
+	afs_uuid.o $(AFS_OS_OBJS)
+
+# These next two allow nfs and nonfs builds to occur in the same directory.
+AFSNFSOBJS = \
+	afs_nfsclnt.o	\
+	afs_nfsdisp.o	\
+	afs_nfsdisp_v3.o \
+	afs_call_nfs.o \
+	afs_pioctl_nfs.o \
+	$(AFS_OS_NFSOBJS)
+
+AFSNONFSOBJS = \
+	afs_call.o \
+	afs_pioctl.o \
+	$(AFS_OS_NONFSOBJS)
+
+
+# Compilation rules
+# These files are to be optimized
+afs_atomlist.o: $(AFS)/afs_atomlist.c
+	$(CRULE2);
+afs_lhash.o: $(AFS)/afs_lhash.c
+	$(CRULE2);
+afs_analyze.o: $(AFS)/afs_analyze.c
+	$(CRULE2);
+afs_axscache.o: $(AFS)/afs_axscache.c
+	$(CRULE2);
+afs_buffer.o: $(AFS)/afs_buffer.c
+	$(CRULE2);
+afs_cell.o: $(AFS)/afs_cell.c
+	$(CRULE2);
+afs_conn.o: $(AFS)/afs_conn.c
+	$(CRULE2);
+afs_dcache.o: $(AFS)/afs_dcache.c
+	$(CRULE2);
+afs_init.o: $(AFS)/afs_init.c
+	$(CRULE2);
+afs_mariner.o: $(AFS)/afs_mariner.c
+	$(CRULE2);
+afs_osidnlc.o: $(AFS)/afs_osidnlc.c
+	$(CRULE2);
+afs_osi.o: 	$(AFS)/afs_osi.c
+	$(CRULE2);
+afs_osi_alloc.o: $(AFS)/afs_osi_alloc.c
+	$(CRULE2);
+afs_osi_pag.o: $(AFS)/afs_osi_pag.c
+	$(CRULE2);
+afs_osi_sleep.o: $(AFS)/afs_osi_sleep.c
+	$(CRULE2);
+afs_osi_vnhold.o: $(AFS)/afs_osi_vnhold.c
+	$(CRULE2);
+afs_osi_uio.o: $(AFS)/afs_osi_uio.c
+	$(CRULE2);
+afs_osi_vget.o: $(AFS)/afs_osi_vget.c
+	$(CRULE1)
+afs_segments.o: $(AFS)/afs_segments.c
+	$(CRULE2);
+afs_server.o: $(AFS)/afs_server.c
+	$(CRULE2);
+afs_user.o: $(AFS)/afs_user.c
+	$(CRULE2);
+afs_util.o: $(AFS)/afs_util.c
+	$(CRULE2);
+afs_vcache.o: $(AFS)/afs_vcache.c
+	$(CRULE2);
+afs_vnop_access.o: $(AFS)/afs_vnop_access.c
+	$(CRULE1);
+afs_vnop_attrs.o: $(AFS)/afs_vnop_attrs.c
+	$(CRULE1);
+afs_vnop_create.o: $(AFS)/afs_vnop_create.c
+	$(CRULE1);
+afs_vnop_dirops.o: $(AFS)/afs_vnop_dirops.c
+	$(CRULE1);
+afs_vnop_fid.o: $(AFS)/afs_vnop_fid.c
+	$(CRULE1);
+afs_vnop_flock.o: $(AFS)/afs_vnop_flock.c
+	$(CRULE1);
+afs_vnop_link.o: $(AFS)/afs_vnop_link.c
+	$(CRULE1);
+afs_vnop_lookup.o: $(AFS)/afs_vnop_lookup.c
+	$(CRULE1);
+afs_vnop_open.o: $(AFS)/afs_vnop_open.c
+	$(CRULE1);
+afs_vnop_read.o: $(AFS)/afs_vnop_read.c
+	$(CRULE1);
+afs_vnop_readdir.o: $(AFS)/afs_vnop_readdir.c
+	$(CRULE1);
+afs_vnop_remove.o: $(AFS)/afs_vnop_remove.c
+	$(CRULE1);
+afs_vnop_rename.o: $(AFS)/afs_vnop_rename.c
+	$(CRULE1);
+afs_vnop_strategy.o: $(AFS)/afs_vnop_strategy.c
+	$(CRULE1);
+afs_vnop_symlink.o: $(AFS)/afs_vnop_symlink.c
+	$(CRULE1);
+afs_vnop_write.o: $(AFS)/afs_vnop_write.c
+	$(CRULE1);
+afs_volume.o: $(AFS)/afs_volume.c
+	$(CRULE2);
+rx_rdwr.o: $(RX)/rx_rdwr.c
+	$(CRULE2);
+afs_uuid.o: $(AFS)/afs_uuid.c
+	$(CRULE2);
+xdr_afsuuid.o: $(RX)/xdr_afsuuid.c
+	$(CRULE2);
+
+# these files are not to be optimized - subject to change.
+afs_cbqueue.o: $(AFS)/afs_cbqueue.c
+	$(CRULE1);
+afs_callback.o: $(AFS)/afs_callback.c
+	$(CRULE1);
+afs_chunk.o: $(AFS)/afs_chunk.c
+	$(CRULE1);
+afs_daemons.o: $(AFS)/afs_daemons.c
+	$(CRULE1);
+afs_dir.o: 	$(AFS)/afs_dir.c
+	$(CRULE1);
+AFS_component_version_number.o: $(AFS)/AFS_component_version_number.c
+	$(CRULE1);
+afs_lock.o: $(AFS)/afs_lock.c
+	$(CRULE1);
+afs_memcache.o: $(AFS)/afs_memcache.c
+	$(CRULE1);
+afs_stat.o: $(AFS)/afs_stat.c
+	$(CRULE1);
+fcrypt.o: 	$(AFS)/fcrypt.c
+	$(CRULE1);
+crypt_conn.o: $(AFS)/crypt_conn.c
+	$(CRULE1);
+rxkad_client.o: $(AFS)/rxkad_client.c
+	$(CRULE1);
+rxkad_common.o: $(AFS)/rxkad_common.c
+	$(CRULE1);
+afs_exporter.o: $(AFS)/afs_exporter.c
+	$(CRULE1);
+afs_nfsclnt.o: $(AFS)/afs_nfsclnt.c
+	$(CRULE1);
+afs_nfsdisp.o: $(AFS)/afs_nfsdisp.c
+	$(CRULE1);
+afs_nfsdisp_v3.o: $(AFS)/afs_nfsdisp_v3.c
+	$(CRULE1);
+rx.o: $(RX)/rx.c
+	$(CRULE1);
+rx_clock.o: $(RX)/rx_clock.c
+	$(CRULE1);
+rx_event.o: $(RX)/rx_event.c
+	$(CRULE1);
+rx_globals.o: $(RX)/rx_globals.c
+	$(CRULE1);
+rx_misc.o: $(RX)/rx_misc.c
+	$(CRULE1);
+rx_null.o: $(RX)/rx_null.c
+	$(CRULE1);
+rx_getaddr.o: $(RX)/rx_getaddr.c
+	$(CRULE1);
+rx_packet.o: $(RX)/rx_packet.c
+	$(CRULE1);
+xdr_rx.o: $(RX)/xdr_rx.c
+	$(CRULE1);
+afs_ncrops.o: $(AFS)/afs_ncrops.c
+	$(CRULE1);
+afs_aixops.o: $(AFS)/afs_aixops.c
+	$(CRULE1);
+afs_aix_subr.o: $(AFS)/afs_aix_subr.c
+	$(CRULE1);
+afs_hp_subr.o: $(AFS)/afs_hp_subr.c
+	$(CRULE1);
+afs_gfsops.o: $(AFS)/afs_gfsops.c
+	$(CRULE1);
+afs_gfs_subr.o: $(AFS)/afs_gfs_subr.c
+	$(CRULE1);
+Kcallback.ss.o: $(AFSINT)/Kcallback.ss.c
+	$(CRULE1);
+rxstat.o: $(AFSINT)/rxstat.c
+	$(CRULE1);
+Krxstat.ss.o: $(AFSINT)/Krxstat.ss.c
+	$(CRULE1);
+Krxstat.xdr.o: $(AFSINT)/Krxstat.xdr.c
+	$(CRULE1);
+Kvice.xdr.o: $(AFSINT)/Kvice.xdr.c
+	$(CRULE1);
+Kvice.cs.o: $(AFSINT)/Kvice.cs.c
+	$(CRULE1);
+afsaux.o: $(AFSINT)/afsaux.c
+	$(CRULE1);
+xdr_arrayn.o: $(RX)/xdr_arrayn.c
+	$(CRULE1);
+Kvldbint.cs.o: $(AFSINT)/Kvldbint.cs.c
+	$(CRULE1);
+Kvldbint.xdr.o: $(AFSINT)/Kvldbint.xdr.c
+	$(CRULE1) -DAFS_UUID_XG;
+afs_main.o: $(AFS)/afs_main.c
+	$(CRULE1);
+rx_knet.o: $(RX)/rx_knet.c
+	$(CRULE1);
+rx_kcommon.o: $(RX)/rx_kcommon.c
+	$(CRULE1);
+
+# Files which do not contain NFS translator code.
+afs_call.o: $(AFS)/afs_call.c
+	$(CRULE1) -DAFS_NONFSTRANS;
+afs_pioctl.o: $(AFS)/afs_pioctl.c
+	$(CRULE1) -DAFS_NONFSTRANS;
+
+# NFS Translator versions of the above code.
+afs_call_nfs.o:	$(AFS)/afs_call.c
+	$(CRULE1) -o afs_call_nfs.o;
+afs_pioctl_nfs.o:	$(AFS)/afs_pioctl.c
+	$(CRULE1) -o afs_pioctl_nfs.o;
+
+
+
+clean:
+	-rm -rf STATIC* MODLOAD*
+	-rm -f  h net netinet rpc ufs machine inet nfs sys
+
+

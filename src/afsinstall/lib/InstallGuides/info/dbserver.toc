@@ -1,0 +1,13 @@
+#
+# dbserver
+#
+# An InstallGuide for database server processes
+#
+
+sub dbserver {
+&Print("Installs the following into /usr/afs/bin:");
+&Print("  root.server/usr/afs/bin/bosserver");
+&Print("  root.server/usr/afs/bin/kaserver");
+&Print("  root.server/usr/afs/bin/vlserver");
+&Print("  root.server/usr/afs/bin/ptserver");
+}

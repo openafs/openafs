@@ -1,0 +1,164 @@
+#/* Copyright (C) 1995, 1989 Transarc Corporation - All rights reserved */
+# 
+# MakefileProto for HP systems
+#
+
+DESTDIR=DEST/
+include $(DESTDIR)../obj/config/Makefile.${SYS_NAME}
+
+# OS specific object files:
+AFS_OS_OBJS = \
+	osi_debug.o \
+	osi_groups.o \
+	osi_inode.o \
+	osi_file.o \
+	osi_misc.o \
+	osi_sleep.o \
+	osi_vnodeops.o \
+	osi_vm.o 
+
+AFS_OS_NFSOBJS = \
+	osi_vfsops_nfs.o
+
+AFS_OS_NONFSOBJS = \
+	osi_vfsops.o
+
+
+# System specific build commands and flags
+#
+# Note: the online document
+#
+#	Developing Dynamically Loadable Kernel Modules
+#	Issue 1.0
+#	HP-UX 11.0
+#	October 12, 1998
+#
+# mentioned on http://docs.hp.com/hpux/os/index.html
+# with URL     http://docs.hp.com/hpux/content/dlkm_v1.2.pdf
+#
+# recommends the undocumented +ES1.Xindirect_calls option for both
+# 32-bit and 64-bit kernel code, but it appears to be absolutely vital
+# for compiling 64-bit kernel code.  In 64-bit mode, the ANSI C compiler
+# has the +Z (PIC) option on by default, and there is no documented way
+# to turn it off.  However, kernel code does not work properly when
+# compiled with +Z (i.e. calling a function through a function pointer
+# seems to hang).  When the compiler sees the +ES1.Xindirect_calls
+# option, however, it issues a warning and turns off +Z.
+#
+KDEFS= +ES1.Xindirect_calls +XixdU +Hx0 +ESlit +ESsfc +ESssf -Wp,-H300000 -D_KERNEL -D_KERNEL_BUILD -D_UNSUPPORTED \
+	-DMP +R500 -Wl,+k $(CPU_KDEFS)
+KDEFS_32 = +DA1.0 +DS1.0
+# add +M2 to $(KDEFS_64) for 64-bit migration warnings
+# warning 478: "+Z" and "+ES1.Xindirect_calls" are mutually exclusive. "+Z" ignored.
+# warning 530: LP64 migration: Casting from loose to strict alignment: Resulting pointer may be misaligned.
+KDEFS_64 = +DA2.0W +DS2.0 +M2 +W 478,530
+DEFINES= -DAFSDEBUG -DKERNEL -DAFS -DVICE -DNFS -DUFS -DINET -DQUOTA -DGETMOUNT -DHPONCPLUS
+OPTF=${OPT} 
+OPTF2=${OPT2} 
+CFLAGS=-I. -I.. -I../h -I../nfs ${FSINCLUDES} $(DEFINES) $(KDEFS) $(KOPTS) ${DBUG}
+
+# Name of directory to hold object files and libraries.
+KOBJ=STATIC
+
+# This tells Makefile.common to use its single directory build target.
+#COMPDIRS = single_compdir
+# This is the hpux multiple directory target.
+COMPDIRS = hpux_compdirs
+
+include Makefile.common
+
+BITS = 64 32
+
+setup:
+	-rm -f  h net dux machine netinet nfs rpc s200 ufs sys
+	ln -s /usr/include/sys h
+	ln -s /etc/conf/net net
+	ln -s /etc/conf/dux dux
+	ln -s /etc/conf/machine machine
+	ln -s /etc/conf/netinet netinet
+	ln -s /etc/conf/nfs nfs
+	ln -s /usr/include/rpc rpc
+	ln -s /etc/conf/machine s200
+	ln -s /etc/conf/ufs ufs
+	ln -s /usr/include/sys sys
+	for b in $(BITS); do \
+	    for t in $(KOBJ); do \
+		dir=$$t.$$b; \
+		echo Making directory: $$dir; \
+		mkdir -p $$dir; \
+		rm -f $$dir/Makefile $$dir/Makefile.common; \
+		ln -s ../Makefile $$dir/Makefile; \
+		ln -s ../Makefile.common $$dir/Makefile.common; \
+	    done; \
+	done
+	echo Setup complete.
+
+# Compile the clients.
+${COMPDIRS}:
+	for b in $(BITS); do \
+	    for t in $(KOBJ); do \
+		dir=$$t.$$b; \
+		echo Building directory: $$dir; \
+		case $$b in \
+		32)	bopts="$(KDEFS_32)"; bsuff="";; \
+		64)	bopts="$(KDEFS_64)"; bsuff="64";; \
+		esac; \
+		cd $$dir; \
+		$(MAKE) BITSUFFIX=$$bsuff CPU_KDEFS="$$bopts" DESTDIR=../${DESTDIR} libafs || exit $$?; \
+		cd ..; \
+	    done; \
+	done
+
+
+# Below this line are targets when in the static directory:
+LIBAFS = libafs$(BITSUFFIX).a
+LIBAFSNONFS = libafs$(BITSUFFIX).nonfs.a
+
+
+DEST_LIBAFS = ${DESTDIR}root.client/bin/${LIBAFS}
+DEST_LIBAFSNONFS = ${DESTDIR}root.client/bin/${LIBAFSNONFS}
+
+
+# libafs: ${DEST_LIBAFS} ${DEST_LIBAFSNONFS}
+libafs: ${DEST_LIBAFSNONFS}
+
+$(DEST_LIBAFS): $(LIBAFS)
+	${INSTALL} -f $? $@
+
+$(DEST_LIBAFSNONFS): $(LIBAFSNONFS)
+	${INSTALL} -f $? $@
+
+${LIBAFS}: $(AFSAOBJS) $(AFSNFSOBJS)
+	$(AR) cru $@ $?
+	$(RANLIB) $@
+
+${LIBAFSNONFS}:  $(AFSAOBJS) $(AFSNONFSOBJS)
+	$(AR) cru $@ $?
+	$(RANLIB) $@
+
+
+# HP specific objects
+osi_groups.o: $(AFS)/osi_groups.c
+	$(CRULE1)
+osi_inode.o: $(AFS)/osi_inode.c
+	$(CRULE1)
+osi_file.o: $(AFS)/osi_file.c
+	$(CRULE1)
+osi_misc.o: $(AFS)/osi_misc.c
+	$(CRULE1)
+osi_sleep.o: $(AFS)/osi_sleep.c
+	$(CRULE1)
+osi_vfsops_nfs.o: $(AFS)/osi_vfsops.c
+	$(CRULE1) -o osi_vfsops_nfs.o
+osi_vfsops.o: $(AFS)/osi_vfsops.c
+	$(CRULE1) -DAFS_NONFSTRANS
+osi_vm.o: $(AFS)/osi_vm.c
+	$(CRULE1)
+osi_vnodeops.o: $(AFS)/osi_vnodeops.c
+	$(CRULE1)
+
+# This is a list of header files compiled with the -g option. It allows
+# examination of AFS structures in a dump.
+osi_debug.o: $(AFS)/osi_debug.c
+	$(CRULE4)
+

@@ -1,0 +1,5 @@
+# for systems with quite a few (5-10) simultaneous users, 32MB RAM, 
+# ~100 MB cache.  
+/usr/vice/etc/afsd -stat 2800 -dcache 2400 -daemons 5 -volumes 128 $*
+
+

@@ -1,0 +1,12 @@
+#include "windows.h"
+#include "afsdicon.h"
+
+AFSDMenu MENU
+BEGIN
+	POPUP	 "&Help"
+	BEGIN
+		MENUITEM "&Contents", IDM_HELP
+	END
+END
+
+AFSDIcon	ICON	afsd.ico

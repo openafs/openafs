@@ -1,0 +1,60 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+
+############################################################################
+
+# make compiler warnings fatal
+
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -WX
+
+# include the primary makefile
+
+!INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
+
+############################################################################
+
+LIBOBJS = \
+	c_debug.obj  \
+	c_ident.obj  \
+	c_identlist.obj  \
+	c_cell.obj   \
+	c_svr.obj    \
+	c_svc.obj    \
+	c_agg.obj    \
+	c_set.obj    \
+	c_usr.obj    \
+	c_grp.obj    \
+	c_notify.obj \
+	afsclassfn.obj \
+	internal.obj \
+	worker.obj
+
+LIBINCLUDES = \
+	$(DESTDIR)\include\winnt\afsclass.h \
+	$(DESTDIR)\include\winnt\afsclassfn.h \
+	$(DESTDIR)\include\winnt\c_cell.h \
+	$(DESTDIR)\include\winnt\c_svr.h \
+	$(DESTDIR)\include\winnt\c_agg.h \
+	$(DESTDIR)\include\winnt\c_svc.h \
+	$(DESTDIR)\include\winnt\c_set.h \
+	$(DESTDIR)\include\winnt\c_grp.h \
+	$(DESTDIR)\include\winnt\c_usr.h \
+	$(DESTDIR)\include\winnt\c_notify.h \
+	$(DESTDIR)\include\winnt\c_ident.h \
+	$(DESTDIR)\include\winnt\c_identlist.h \
+	$(DESTDIR)\include\winnt\c_debug.h
+
+LIBFILE = $(DESTDIR)\lib\afs\afsclass.lib
+
+############################################################################
+
+install :
+	@echo AfsClass.LIB is built automatically when building AfsAdmSvr.
+	@echo.
+	@echo You do not need to build in the AfsClass directory explicitly.
+	@echo.
+
+primary: $(LIBINCLUDES) $(LIBFILE)
+
+$(LIBFILE): $(LIBOBJS)
+	$(LIBARCH)
+

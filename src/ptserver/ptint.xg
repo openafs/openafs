@@ -1,0 +1,226 @@
+
+
+/*
+ * (C) COPYRIGHT IBM CORPORATION 1988, 1989
+ * LICENSED MATERIALS - PROPERTY OF IBM
+ */
+
+package PR_
+statindex 8
+
+#include "ptopcodes.h"
+
+const PRSUCCESS=0;
+
+const PR_MAXNAMELEN=64;
+const PR_MAXGROUPS=5000;
+const PR_MAXLIST=5000;
+const PRSIZE=10;
+const COSIZE=39;
+
+struct prdebugentry {
+	afs_int32 flags;
+	afs_int32 id;
+	afs_int32 cellid;
+	afs_int32 next;
+	afs_int32 reserved[5];
+	afs_int32 entries[PRSIZE];
+	afs_int32 nextID;
+	afs_int32 nextname;
+	afs_int32 owner;
+	afs_int32 creator;
+	afs_int32 ngroups;
+	afs_int32 nusers;
+	afs_int32 count;
+	afs_int32 instance;
+	afs_int32 owned;
+	afs_int32 nextOwned;
+	afs_int32 parent;
+	afs_int32 sibling;
+	afs_int32 child;
+	char name[PR_MAXNAMELEN];
+};
+
+struct prcheckentry {
+        afs_int32 flags;
+	afs_int32 id;
+	afs_int32 owner;
+	afs_int32 creator;
+	afs_int32 ngroups;
+	afs_int32 nusers;
+	afs_int32 count;
+	afs_int32 reserved[5];
+	char name[PR_MAXNAMELEN];
+};	
+
+struct prlistentries {
+        afs_int32 flags;
+	afs_int32 id;
+	afs_int32 owner;
+	afs_int32 creator;
+	afs_int32 ngroups;
+	afs_int32 nusers;
+	afs_int32 count;
+	afs_int32 reserved[5];
+	char name[PR_MAXNAMELEN];
+};	
+
+struct PrUpdateEntry {
+	afs_uint32 Mask;
+        afs_int32 flags;
+	afs_int32 id;
+	afs_int32 owner;
+	afs_int32 creator;
+	afs_int32 ngroups;
+	afs_int32 nusers;
+	afs_int32 count;
+	afs_int32 reserved[5];
+	char name[PR_MAXNAMELEN];
+};	
+
+/* struct VldbUpdateEntry Mask bit values */
+const	PRUPDATE_NAME	=	0x0001;
+const	PRUPDATE_ID	=	0x0002;
+const	PRUPDATE_FLAGS	=	0x0004;
+const	PRUPDATE_NAMEHASH=	0x0008;
+const	PRUPDATE_IDHASH =	0x0010;
+
+/* These bits are used when calling SetFieldsEntry. */
+%#define PR_SF_ALLBITS   0xff		/* set all access bits */
+%#define PR_SF_NGROUPS (1<<31)		/* set field limiting group creation */
+%#define PR_SF_NUSERS  (1<<30)		/*  "  "  foreign users  "  */
+
+typedef char prname[PR_MAXNAMELEN];
+typedef prname namelist<>;
+typedef afs_int32 idlist<>;
+typedef afs_int32 prlist<>;
+typedef prlistentries prentries<>;
+
+INewEntry(
+  IN string name<PR_MAXNAMELEN>,
+  IN afs_int32 id,
+  IN afs_int32 oid
+) = PRINEWUSER;
+
+WhereIsIt(
+  IN afs_int32 id,
+  OUT afs_int32 *ps
+) = PRWHEREISIT;
+
+DumpEntry(
+  IN afs_int32 pos,
+  OUT struct prdebugentry *entry
+) = PRDUMPENTRY;
+
+AddToGroup(
+  IN afs_int32 uid,
+  IN afs_int32 gid
+)=PRADDTOGROUP;
+
+NameToID(
+  IN namelist *nlist,
+  OUT idlist *ilist
+)=PRNAMETOID;
+
+IDToName(
+  IN idlist *ilist,
+  OUT namelist *nlist
+) =PRIDTONAME;
+
+Delete(
+  IN afs_int32 id
+)=PRDELETE;
+
+RemoveFromGroup(
+  IN afs_int32 id,
+  IN afs_int32 gid
+)=PRREMOVEFROMGROUP;
+
+GetCPS(
+  IN afs_int32 id,
+  OUT prlist *elist,
+  OUT afs_int32 *over
+)=PRGETCPS;
+
+NewEntry(
+  IN string name<PR_MAXNAMELEN>,
+  afs_int32 flag,
+  afs_int32 oid,
+  OUT afs_int32 *id
+)=PRNEWENTRY;
+
+ListMax(
+  OUT afs_int32 *uid,
+  afs_int32 *gid
+)=PRLISTMAX;
+
+SetMax(
+  IN afs_int32 id,
+  afs_int32 gflag
+)=PRSETMAX;
+
+ListEntry(
+  IN afs_int32 id,
+  OUT struct prcheckentry *entry
+) = PRLISTENTRY;
+
+ChangeEntry(
+  IN afs_int32 id,
+  IN string name<PR_MAXNAMELEN>,
+  IN afs_int32 oid,
+  IN afs_int32 newid
+) = PRCHANGEENTRY;
+
+ListElements(
+  IN afs_int32 id,
+  OUT prlist *elist,
+  OUT afs_int32 *over
+)=PRLISTELEMENTS;
+
+IsAMemberOf(
+  IN afs_int32 uid,
+  IN afs_int32 gid,
+  OUT afs_int32 *flag
+)=PRISAMEMBEROF;
+
+SetFieldsEntry(
+  IN afs_int32 id,
+  IN afs_int32 mask,
+  IN afs_int32 flags,
+  IN afs_int32 ngroups,
+  IN afs_int32 nusers,
+  IN afs_int32 spare1,
+  IN afs_int32 spare2
+) = PRSETFIELDSENTRY;
+
+ListOwned(
+  IN afs_int32 id,
+  OUT prlist *elist,
+  INOUT afs_int32 *lastp
+) = PRLISTOWNED;
+
+GetCPS2(
+  IN afs_int32 id,
+  IN afs_int32 host,
+  OUT prlist *elist,
+  OUT afs_int32 *over
+)=PRGETCPS2;
+
+GetHostCPS(
+  IN afs_int32 host,
+  OUT prlist *elist,
+  OUT afs_int32 *over
+)=PRGETHOSTCPS;
+
+UpdateEntry(
+  IN afs_int32 id,
+  IN string name<PR_MAXNAMELEN>,
+  IN PrUpdateEntry *uentry
+) = PRUPDATEENTRY;
+
+ListEntries(
+  IN afs_int32      flags,
+  IN afs_int32      startindex,
+  OUT prentries *bulkentries,
+  OUT afs_int32     *nextstartindex
+) = PRLISTENTRIES;

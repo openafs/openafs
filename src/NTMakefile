@@ -1,0 +1,419 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+#
+# Top level nmake NTMakefile driver for building AFS.
+#
+# This file simply imposes a reasonable total ordering on the set of
+# directories to build; this ordering is of course more strict than the
+# partial ordering established by the actual directory dependencies.
+#
+# When porting a new directory, simply add the directory into the
+# dependence chain at the earliest point possible, updating its successor
+# appropriately; if the new directory is the last in the chain, then
+# update the 'finale' dependency to be the new directory.
+
+
+CD = cd
+NTMAKE = nmake /nologo /f ntmakefile install
+NTMAKE_HEADERS = nmake /nologo /f ntmakefile install_headers
+MKDIR = mkdir
+
+# Standard install directory.
+!IFDEF AFSDEV_DESTDIR
+DESTDIR = $(AFSDEV_DESTDIR)
+!ELSE
+DESTDIR = $(AFSROOT)\DEST
+!ENDIF
+
+
+start:
+!	IF (!EXIST(src))
+!	ERROR Execute nmake from directory above src, e.g., afs\3.5.
+!	ENDIF
+!	IF (!EXIST($(DESTDIR)))
+    $(MKDIR) $(DESTDIR)
+!	ENDIF
+
+config:
+	$(CD) src\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+procmgmt_headers: config
+	$(CD) src\procmgmt
+	$(NTMAKE_HEADERS)
+	$(CD) ..\..
+
+afsreg_headers: config
+	$(CD) src\WINNT\afsreg
+	$(NTMAKE_HEADERS)
+	$(CD) ..\..\..
+
+util: procmgmt_headers afsreg_headers
+	$(CD) src\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+comerr: util
+	$(CD) src\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+cmd: comerr
+	$(CD) src\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+afsreg: cmd
+	$(CD) src\WINNT\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+eventlog: afsreg
+	$(CD) src\WINNT\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+lwp: eventlog
+	$(CD) src\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+rxgen: lwp
+	$(CD) src\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+des: rxgen
+!	IF (EXIST(src\des\NTMakefile))
+		$(CD) src\des
+		$(NTMAKE)
+		$(CD) ..\..
+!	ELSE
+		$(CD) src\des_stub
+		$(NTMAKE)
+		$(CD) ..\..
+!	ENDIF
+
+rx: des
+	$(CD) src\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+rxstat: rx
+	$(CD) src\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+rxkad: rxstat
+	$(CD) src\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+pthread: rxkad
+	$(CD) src\WINNT\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+procmgmt: pthread
+	$(CD) src\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+fsint: procmgmt
+	$(CD) src\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+audit: fsint
+	$(CD) src\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+osi_headers: audit
+	$(CD) src\WINNT\client_osi
+	$(NTMAKE_HEADERS)
+	$(CD) ..\..\..
+
+libacl_headers: osi_headers
+	$(CD) src\libacl
+	$(NTMAKE_HEADERS)
+	$(CD) ..\..
+
+cm_headers: libacl_headers
+	$(CD) src\WINNT\afsd
+	$(NTMAKE_HEADERS)
+	$(CD) ..\..\..
+
+sys: cm_headers
+	$(CD) src\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+auth: sys
+	$(CD) src\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+ubik: auth
+	$(CD) src\$@
+	$(NTMAKE)
+	$(CD) ..\..	
+
+ptserver: ubik
+	$(CD) src\$@
+	$(NTMAKE)
+	$(CD) ..\..	
+
+libacl: ptserver
+	$(CD) src\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+kauth: libacl
+	$(CD) src\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+vlserver: kauth
+	$(CD) src\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+usd: vlserver
+	$(CD) src\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+bubasics: usd
+	$(CD) src\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+budb:	bubasics
+	$(CD) src\$@
+	$(NTMAKE)
+	$(CD) ..\..
+butm:  budb
+        $(CD) src\$@
+        $(NTMAKE)
+        $(CD) ..\..
+
+dir: butm
+	$(CD) src\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+vol: dir
+	$(CD) src\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+volser: vol
+	$(CD) src\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+viced: volser
+	$(CD) src\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+update: viced
+	$(CD) src\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+bucoord: update
+        $(CD) src\$@
+        $(NTMAKE)
+        $(CD) ..\..
+
+butc:   bucoord
+        $(CD) src\$@
+        $(NTMAKE)
+        $(CD) ..\..
+
+bozo: butc
+	$(CD) src\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+bosctlsvc: bozo
+	$(CD) src\WINNT\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+bu_utils: bosctlsvc
+	$(CD) src\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+libafsrpc: bu_utils
+	$(CD) src\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+libafsauthent: libafsrpc
+	$(CD) src\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+tviced: libafsauthent
+	$(CD) src\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+tbutc:  tviced
+        $(CD) src\$@
+        $(NTMAKE)
+        $(CD) ..\..
+
+libadmin: tbutc
+	$(CD) src\$@
+	$(NTMAKE)
+	$(CD) ..\..
+	
+adminutil: libadmin
+	$(CD) src\libadmin\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+	
+vos: adminutil
+	$(CD) src\libadmin\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+	
+client: vos
+	$(CD) src\libadmin\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+	
+kas: client
+	$(CD) src\libadmin\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+	
+pts: kas
+	$(CD) src\libadmin\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+	
+bos: pts
+	$(CD) src\libadmin\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+cfg: bos
+	$(CD) src\libadmin\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+admintest: cfg
+	$(CD) src\libadmin\test
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+talocale: admintest
+	$(CD) src\WINNT\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+license: talocale
+	$(CD) src\WINNT\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+afsadmsvr: license
+	$(CD) src\WINNT\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+afsusrmgr: afsadmsvr
+	$(CD) src\WINNT\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+afssvrmgr: afsusrmgr
+	$(CD) src\WINNT\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+afssvrcfg: afssvrmgr
+	$(CD) src\WINNT\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+afssvrcpa: afssvrcfg
+	$(CD) src\WINNT\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+afs_setup_utils: afssvrcpa
+	$(CD) src\WINNT\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+client_talocale: afs_setup_utils
+	$(CD) src\WINNT\talocale
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+client_osi: client_talocale
+	$(CD) src\WINNT\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+afsd: client_osi
+	$(CD) src\WINNT\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+client_cpa: afsd
+	$(CD) src\WINNT\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+client_config: client_cpa
+	$(CD) src\WINNT\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+client_exp: client_config
+	$(CD) src\WINNT\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+client_creds: client_exp
+	$(CD) src\WINNT\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+finale: client_creds
+	$(CD) src\$@
+	$(NTMAKE)
+	$(CD) ..\..	
+
+install: start finale
+
+# InstallShield dependencies
+
+InstallShield5: install
+	$(CD) src\WINNT\install\$@
+	$(NTMAKE)
+	$(CD) ..\..\..\..
+
+media: InstallShield5
+
+
+
+# Clean target for src tree
+clean: start
+        nmake /nologo /f ntmakefile "NTMAKE = nmake /nologo /f ntmakefile clean" "NTMAKE_HEADERS = nmake /nologo /f ntmakefile clean" install
+	$(CD) src\config
+	nmake /nologo /f ntmakefile clean_version
+	$(CD) ..\..
+
+
+# Language-only build target
+lang:
+        nmake /nologo /f ntmakefile "NTMAKE = nmake /nologo /f ntmakefile lang" "NTMAKE_HEADERS = nmake /nologo /f ntmakefile lang" install

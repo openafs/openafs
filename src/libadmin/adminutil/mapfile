@@ -1,0 +1,46 @@
+#
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+#
+#
+
+{
+    global:
+	util_AdminErrorCodeTranslate;
+	util_DatabaseServerGetBegin;
+	util_DatabaseServerGetNext;
+	util_DatabaseServerGetDone;
+	util_AdminServerAddressGetFromName;
+	IteratorInit;
+	IteratorNext;
+	IteratorDone;
+	CellHandleIsValid;
+	util_RPCStatsGetBegin;
+	util_RPCStatsGetNext;
+	util_RPCStatsGetDone;
+	util_RPCStatsStateGet;
+	util_RPCStatsStateEnable;
+	util_RPCStatsStateDisable;
+	util_RPCStatsClear;
+	util_RPCStatsVersionGet;
+	util_CMGetServerPrefsBegin;
+	util_CMGetServerPrefsNext;
+	util_CMGetServerPrefsDone;
+	util_CMListCellsBegin;
+	util_CMListCellsNext;
+	util_CMListCellsDone;
+	util_CMLocalCell;
+	util_CMClientConfig;
+	util_RXDebugVersionString;
+	util_RXDebugSupportedStats;
+	util_RXDebugBasicStats;
+	util_RXDebugRxStats;
+	util_RXDebugConnectionsBegin;
+	util_RXDebugConnectionsNext;
+	util_RXDebugConnectionsDone;
+	util_RXDebugPeersBegin;
+	util_RXDebugPeersNext;
+	util_RXDebugPeersDone;
+
+    local:
+	*;
+};

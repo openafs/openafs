@@ -1,0 +1,303 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+#
+
+!INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\..\config\NTMakefile.version
+
+EXEDIR = $(DESTDIR)\root.client\usr\vice\etc
+
+############################################################################
+# Definitions for installing header files
+
+INCFILEDIR = $(DESTDIR)\include\afs  # header file install directory
+
+INCFILES =\
+	$(INCFILEDIR)\afsd.h \
+	$(INCFILEDIR)\cm.h \
+	$(INCFILEDIR)\cm_buf.h \
+	$(INCFILEDIR)\cm_cell.h \
+	$(INCFILEDIR)\cm_config.h \
+	$(INCFILEDIR)\cm_conn.h \
+	$(INCFILEDIR)\cm_ioctl.h \
+	$(INCFILEDIR)\cm_scache.h \
+	$(INCFILEDIR)\cm_server.h \
+	$(INCFILEDIR)\cm_user.h \
+	$(INCFILEDIR)\cm_utils.h \
+	$(INCFILEDIR)\fs_utils.h \
+	$(INCFILEDIR)\krb.h \
+	$(INCFILEDIR)\krb_prot.h \
+	$(INCFILEDIR)\smb.h \
+	$(INCFILEDIR)\smb3.h \
+	$(INCFILEDIR)\smb_iocons.h \
+	$(INCFILEDIR)\smb_ioctl.h \
+	$(INCFILEDIR)\afsrpc.h
+
+IDLFILES =\
+	afsrpc.h afsrpc_c.obj
+
+CONFOBJS=cm_config.obj
+
+AFSDOBJS=\
+	afsd_init.obj \
+	cm_cell.obj \
+	cm_server.obj \
+	cm_volume.obj \
+	cm_conn.obj \
+	cm_user.obj \
+	cm_buf.obj \
+	cm_scache.obj \
+	cm_dcache.obj \
+	cm_access.obj \
+	cm_callback.obj \
+	cm_vnodeops.obj \
+	cm_dir.obj \
+	cm_utils.obj \
+	smb.obj \
+	smb3.obj \
+	smb_ioctl.obj \
+	cm_ioctl.obj \
+	cm_daemon.obj \
+	cm_aclent.obj \
+	cm_dnlc.obj \
+	cm_rpc.obj \
+	afsrpc_s.obj
+
+cm_conn.obj: cm_conn.c
+	$(C2OBJ) -DAFS_PTHREAD_ENV $**
+
+FSOBJS=fs.obj fs_utils.obj
+
+SLOBJS=symlink.obj fs_utils.obj
+
+ILIBDIR = $(DESTDIR)\lib
+
+############################################################################
+#
+# Flags for linking LOGON DLL'S
+#
+
+LOGONLINKFLAGS = -entry:DllEntryPoint
+
+############################################################################
+#
+# IDL COMPILATION
+#
+
+MIDL_FLAGS=/app_config \
+	   /Zp4 \
+	   /cpp_cmd $(cc) \
+	   /cpp_opt "-E" \
+           /nologo
+
+.SUFFIXES: .h .idl
+
+.idl.h:
+	midl $(MIDL_FLAGS) $<
+
+############################################################################
+# libafsconf.dll
+
+CONF_DLLFILE = $(DESTDIR)\root.client\usr\vice\etc\libafsconf.dll
+
+
+$(CONF_DLLFILE): $(CONFOBJS) libafsconf.res
+	$(DLLGUILINK) -def:libafsconf.def
+	$(DLLPREP)
+	$(COPY) $*.lib $(ILIBDIR)
+	$(DEL) $*.lib $*.exp
+
+############################################################################
+# afslogon.dll
+
+LOGON_DLLFILE = $(DESTDIR)\root.client\usr\vice\etc\afslogon.dll
+
+LOGON_DLLOBJS =\
+	afslogon.obj \
+	afslogon.res
+
+LOGON_DLLLIBS =\
+	$(DESTDIR)\lib\afsauthent.lib \
+	$(DESTDIR)\lib\libafsconf.lib
+
+$(LOGON_DLLFILE): $(LOGON_DLLOBJS)
+	$(DLLGUILINK) $(LOGONLINKFLAGS) -def:afslogon.def $(LOGON_DLLLIBS)
+	$(DLLPREP)
+	$(COPY) $*.lib $(DESTDIR)\lib
+	$(DEL) $*.lib $*.exp
+
+############################################################################
+# afslog95.dll
+
+LOG95_DLLFILE = $(DESTDIR)\root.client\usr\vice\etc\afslog95.dll
+
+LOG95_DLLOBJS =\
+	afslog95.obj \
+	afslog95.res
+
+LOG95_DLLLIBS =\
+	$(DESTDIR)\lib\afsauthent.lib \
+	$(DESTDIR)\lib\libafsconf.lib
+
+$(LOG95_DLLFILE): $(LOG95_DLLOBJS)
+	$(DLLGUILINK) $(LOGONLINKFLAGS) -def:afslog95.def $(LOG95_DLLLIBS)
+	$(DLLPREP)
+	$(COPY) $*.lib $(DESTDIR)\lib
+	$(DEL) $*.lib $*.exp
+
+############################################################################
+# Install target; primary makefile target
+
+install_headers: $(IDLFILES) $(INCFILES)
+
+install: install_headers $(CONF_DLLFILE) \
+	$(EXEDIR)\klog.exe \
+	$(EXEDIR)\tokens.exe \
+	$(EXEDIR)\unlog.exe $(EXEDIR)\afsd.exe $(EXEDIR)\afsd_service.exe \
+	$(EXEDIR)\fs.exe $(EXEDIR)\symlink.exe \
+	$(LOGON_DLLFILE) $(LOG95_DLLFILE) \
+	$(EXEDIR)\afsshare.exe \
+	$(DESTDIR)\bin\kpasswd.exe
+
+############################################################################
+# Local clean target; augments predefined clean target
+
+clean::
+	$(DEL) *.res
+
+############################################################################
+# assorted exe's
+
+EXELIBS = \
+	$(DESTDIR)\lib\afs\afsauth.lib \
+	$(DESTDIR)\lib\afs\afskauth.lib \
+	$(DESTDIR)\lib\afs\afsprot.lib \
+	$(DESTDIR)\lib\afs\afspioctl.lib \
+	$(DESTDIR)\lib\afs\afsaudit.lib \
+	$(DESTDIR)\lib\afs\afsutil.lib \
+	$(DESTDIR)\lib\afs\afscom_err.lib \
+	$(DESTDIR)\lib\afs\afsreg.lib \
+	$(DESTDIR)\lib\afs\afscmd.lib \
+	$(DESTDIR)\lib\afsubik.lib \
+	$(DESTDIR)\lib\afsrxkad.lib \
+	$(DESTDIR)\lib\afsdes.lib \
+	$(DESTDIR)\lib\afsrx.lib \
+	$(DESTDIR)\lib\afslwp.lib \
+	$(DESTDIR)\lib\libosi.lib \
+	$(DESTDIR)\lib\libafsconf.lib
+
+
+# klog.exe
+$(EXEDIR)\klog.exe: cklog.obj klog.res
+	$(EXECONLINK) $(EXELIBS)
+	$(EXEPREP)
+
+# tokens.exe
+$(EXEDIR)\tokens.exe: ctokens.obj tokens.res
+	$(EXECONLINK) $(EXELIBS)
+	$(EXEPREP)
+
+# unlog.exe
+$(EXEDIR)\unlog.exe: cunlog.obj unlog.res
+	$(EXECONLINK) $(EXELIBS)
+	$(EXEPREP)
+
+# afsd.exe
+AFSD_EXEFILE = $(EXEDIR)\afsd.exe
+
+AFSD_EXELIBS =\
+	largeint.lib \
+	netapi32.lib \
+        mpr.lib \
+	$(DESTDIR)\lib\libosi.lib \
+	$(DESTDIR)\lib\afsrpc.lib \
+	$(DESTDIR)\lib\afsauthent.lib \
+	$(DESTDIR)\lib\afs\mtafsvldb.lib \
+	$(DESTDIR)\lib\afs\mtafsint.lib \
+	$(DESTDIR)\lib\libafsconf.lib \
+	$(DESTDIR)\lib\afs\afsreg.lib \
+	rpcrt4.lib \
+	user32.lib
+
+$(AFSD_EXEFILE): afsd.obj $(AFSDOBJS) afsd.res
+	$(EXEGUILINK) $(AFSD_EXELIBS)
+	$(EXEPREP)
+
+# afsd_service.exe
+$(EXEDIR)\afsd_service.exe: afsd_service.obj $(AFSDOBJS) afsd_service.res
+	$(EXECONLINK) $(AFSD_EXELIBS)
+	$(EXEPREP)
+
+# fs.exe
+$(EXEDIR)\fs.exe: $(FSOBJS) fs.res
+	$(EXECONLINK) $(EXELIBS)
+	$(EXEPREP)
+
+# symlink.exe
+$(EXEDIR)\symlink.exe: $(SLOBJS) symlink.res
+	$(EXECONLINK) $(EXELIBS)
+	$(EXEPREP)
+
+# afsshare.exe
+$(EXEDIR)\afsshare.exe: afsshare.obj afsshare.res
+	$(EXECONLINK)
+	$(EXEPREP)
+
+# kpasswd.exe - built in kauth, but rebuild here to make pthread-based,
+#    which is required for Windows 95.  At some point it would be nice
+#    for all commands to be pthread based, in which case they should
+#    be built in a separate directory (perhaps tbin ala tviced) or
+#    libafsauthent should be built earlier so that each command can
+#    be built in its native directory.
+
+KAUTH = ..\..\kauth
+
+KPASSWD_OBJS =\
+	kpasswd.obj \
+	kkids.obj \
+	kautils.obj \
+	$(KAUTH)\kpasswd.res
+
+KPASSWD_LIBS =\
+	$(DESTDIR)\lib\afsauthent.lib \
+	$(DESTDIR)\lib\afsrpc.lib \
+	$(DESTDIR)\lib\afs\afscmd.lib \
+	$(DESTDIR)\lib\afsdes.lib \
+	$(DESTDIR)\lib\afs\afsutil.lib
+
+kpasswd.obj: $(KAUTH)/kpasswd.c
+	$(C2OBJ) -DAFS_PTHREAD_ENV $**
+
+kkids.obj: $(KAUTH)/kkids.c
+	$(C2OBJ) -DAFS_PTHREAD_ENV $**
+
+kautils.obj: $(KAUTH)/kautils.c
+	$(C2OBJ) -DAFS_PTHREAD_ENV $**
+
+$(DESTDIR)\bin\kpasswd.exe: $(KPASSWD_OBJS) $(KPASSWD_LIBS)
+	$(DEL) $(DESTDIR)\bin\kpasswd.exe
+	$(EXECONLINK)
+	$(EXEPREP)
+
+	
+############################################################################
+# generate versioninfo resources
+
+afsshare.res: afsshare.rc AFS_component_version_number.h
+
+fs.res: fs.rc AFS_component_version_number.h
+
+symlink.res: symlink.rc AFS_component_version_number.h
+
+klog.res: klog.rc AFS_component_version_number.h
+
+tokens.res: tokens.rc AFS_component_version_number.h
+
+unlog.res: unlog.rc AFS_component_version_number.h
+
+afsd_service.res: afsd_service.rc AFS_component_version_number.h
+
+afslogon.res: afslogon.rc AFS_component_version_number.h
+
+afslog95.res: afslog95.rc AFS_component_version_number.h
+
+libafsconf.res: libafsconf.rc AFS_component_version_number.h

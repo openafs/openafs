@@ -1,0 +1,23 @@
+#!/unix
+*
+* $Locker$
+* This file contains all the exported symbols/functions from AIX extension that
+* are used by AFS. Since for some extensions (i.e. nfs) AIX doesn't provide an 
+* nfs.exp file we make a quick one here.
+*
+* for NFS iauth
+*
+nfs_iauth_register
+nfs_iauth_unregister
+*
+* General kernel symbols
+*
+iftovt_tab
+* do NOT add proc here; use (struct proc *)v.vb_proc
+* do NOT add thread here; use (struct thread *)v.vb_thread
+*
+* pathname lookup
+*
+* This is needed for AIX 4.2.0, but later versions of the OS provide this
+* in /lib/kernex.exp
+lookupname

@@ -1,0 +1,25 @@
+# Copyright (C) 1998  Transarc Corporation.  All rights reserved.
+#
+
+# This makefile creates the AFS_component_version_number.c header file
+# for binaries. It is invoked from the NTMakefile in the binary's tree. Hence
+# the paths are correct for those trees.
+
+!IFNDEF VERSFILE
+VERSFILE=AFS_component_version_number
+!ENDIF
+
+!IFDEF CML_PREFIX
+CML_ARG=-c $(CML_PREFIX)
+!ENDIF
+
+# Since we don't really know the ../ path, we need to check timestamps in
+# in mkvers. 
+$(VERSFILE).c:
+	$(DESTDIR)\bin\mkvers -o $(VERSFILE).c $(CML_ARG)
+
+$(VERSFILE).h:
+	$(DESTDIR)\bin\mkvers -o $(VERSFILE).h -v
+
+$(VERSFILE).txt:
+	$(DESTDIR)\bin\mkvers -o $(VERSFILE).txt -t

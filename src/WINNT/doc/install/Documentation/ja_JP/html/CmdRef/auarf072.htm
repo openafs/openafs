@@ -1,0 +1,158 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRBK_DISKRESTORE" HREF="auarf002.htm#ToC_86">backup diskrestore</A></H2>
+<A NAME="IDX4296"></A>
+<A NAME="IDX4297"></A>
+<A NAME="IDX4298"></A>
+<A NAME="IDX4299"></A>
+<A NAME="IDX4300"></A>
+<A NAME="IDX4301"></A>
+<P><STRONG>目的</STRONG>
+<P>区画のすべての内容を復元します。
+<P><STRONG>構文</STRONG>
+<PRE><B>backup diskrestore -server</B> &lt;<VAR>machine to restore</VAR>> 
+                   <B>-partition</B> &lt;<VAR>partition to restore</VAR>>
+                   [<B>-portoffset</B> &lt;<VAR>TC port offset</VAR>><SUP>+</SUP>]  
+                   [-<B>newserver</B> &lt;<VAR>destination machine</VAR>>]
+                   [<B>-newpartition</B> &lt;<VAR>destination partition</VAR>>]
+                   [<B>-extension</B> &lt;<VAR>new volume name extension</VAR>>]
+                   [<B>-n</B>]  [<B>-localauth</B>]  [<B>-cell</B> &lt;<VAR>cell name</VAR>>]  [<B>-help</B>]
+   
+<B>backup di -s</B> &lt;<VAR>machine to restore</VAR>> <B>-pa</B> &lt;<VAR>partition to restore</VAR>>
+          [<B>-po</B> &lt;<VAR>TC port offset</VAR>><SUP>+</SUP>]  [<B>-news</B> &lt;<VAR>destination machine</VAR>>]
+          [<B>-newp</B> &lt;<VAR>destination partition</VAR>>]  [<B>-e</B> &lt;<VAR>new volume name extension</VAR>>]
+          [<B>-n</B>]  [<B>-l</B>]  [<B>-c</B> &lt;<VAR>cell name</VAR>>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>backup diskrestore</B> コマンドは、ボリューム・ロケーション・データベース (VLDB) が <B>-server</B> および <B>-partition</B> 引き数で指定された区画上に、その読み取り / 書き込みサイトをリストする、すべてのボリュームを復元します。このコマンドは、区画全体のデータがディスクまたはマシン障害によって破壊された場合に役に立ちます。
+(区画上に常駐していた読み取り専用またはバックアップ・ボリュームを復元するには、読み取り / 書き込みバージョンを復元した後で、それぞれ、<B>vos release</B> と <B>vos backup</B> コマンドを使用します。)
+<P>選択したボリュームだけを単一サイトに復元する場合には、
+<B>backup volrestore</B> コマンドのほうが有効です。複数のボリュームを異なるサイトに復元する場合には、
+<B>backup volsetrestore</B> コマンドを使用してください。
+<P>(指定されたポート・オフセットのテープ・コーディネーター・マシンの <B>/usr/afs/backup/CFG_</B><VAR>device_name</VAR> ファイルに、
+<B>FILE YES</B> 命令があると、バックアップ・システムは、磁気テープからではなく、テープ・コーディネーターの <B>/usr/afs/backup/tapeconfig</B> ファイルにあるバックアップ・データ・ファイルからデータを復元します。説明を分かりやすくするために、以下では磁気テープ装置の場合について説明しますが、バックアップ・データ・ファイルの取り扱いは磁気テープ装置の場合とほとんど同じです。)
+<P>バックアップ・システムは、どちらの各ボリュームの読み取り / 書き込みまたはバックアップ・バージョンが後でダンプされたかを判別し、最新のフル・ダンプから開始して、そのバージョンのダンプを復元します。復元されたボリュームの作成日のタイム・スタンプは、ボリュームの復元が開始した日付と時刻にリセットされます (この作成タイム・スタンプは、
+<B>vos examine</B> および <B>vos listvol</B> コマンドの出力の <TT>Creation</TT> フィールドに表示されます)。
+<P>関連するすべてのボリュームの、すべてのフル・ダンプおよびインクリメンタル・ダンプのうち、互換性のある磁気テープ装置に書き込まれていないものがある場合には、
+<B>-portoffset</B> 引き数を使用すると、磁気テープが必要とされる順序で複数のポート・オフセット番号を表示することができます。
+(最初に、フル・ダンプのポート・オフセット番号、次に、レベル 1 のインクリメンタル・ダンプのポート・オフセット番号、というように表示されます)。これは、関連するボリュームすべてのフル・ダンプが、最初にテープ・コーディネーターが読み取れる磁気テープに書かれていることを意味しています。複数の互換性のないタイプの磁気テープにダンプが作成されている場合には、
+<B>backup volrestore</B> コマンドを使用して個々のボリュームを復元するか、ダンプが作成されているボリューム・グループを互換性のある磁気テープ・タイプに定義してから <B>backup volsetrestore</B> コマンドを使用することができます。詳細については、<I>AFS 管理の手引き</I> を参照してください。
+<P>デフォルトでは、バックアップ・システムは、指定された区画の内容を同じ区画に復元します。区画の内容を別のサイトに復元する場合には、次のようにオプションを組み合わせて使用してください。バックアップ・システムは、まだオリジナルのサイトにあるボリュームを削除し、サイトに加えられた変更を VLDB に記録します。
+<UL>
+<LI>同じファイル・サーバー・マシン上の別の区画に復元する場合には、
+<B>-newpartition</B> 引き数を指定してください。
+</LI><LI>別のファイル・サーバー・マシン上にある同じ名前の区画に復元する場合には、
+<B>-newserver</B> 引き数を指定してください。
+</LI><LI>まったく異なるサイトに復元する場合には、
+<B>-newserver</B> 引き数と <B>-newpartition</B> 引き数の両方を指定してください。
+</LI></UL>
+<P>デフォルトでは、バックアップ・システムは、既存のボリュームの内容を、復元したデータで上書きします。復元したデータを保存するために新規のボリュームを作成するには、
+<B>-extension</B> 引き数を使用します。バックアップ・システムは、新規のボリュームを、
+<B>-newserver</B> および <B>-newpartition</B> 引き数で示されるサイトが使用されている場合はそこに、そうでない場合は <B>-server</B> と <B>-partition</B> 引き数で示されるサイトに作成します。また、VLDB にリストされた読み取り / 書き込みベース名に拡張子を追加することによって、ボリューム名を導き出し、新規 VLDB 項目を作成します。このコマンドが、既存のボリュームに影響を与えることは全くありません。ただし、指定された拡張子がすでに存在する場合は、このコマンドはそれを上書きします。
+<P>必要なダンプが含まれている磁気テープのリストを、実際に回復作業を実行しないでプリントするには、
+<B>-n</B> フラグと、実際のコマンドで使用されるそれ以外のオプションを指定します。
+<P>このコマンドを実行すると、デフォルトでは、テープ・コーディネーターは、ローカルの <B>CFG_</B><VAR>device_name</VAR> ファイルの <B>MOUNT</B> 命令を呼び出して、最初に必要な磁気テープにアクセスします。<B>MOUNT</B> 命令がない場合には、磁気テープの挿入をバックアップ操作員に要求します。ただし、<B> CFG_</B><VAR>device_name</VAR> ファイルに <B>AUTOQUERY NO</B> 命令があるか、あるいは <B>butc</B> コマンドが <B>-noautoquery</B> フラグ付きで発行されている場合には、テープ・コーディネーターは、磁気テープがすでに装置に挿入されているとみなします。そうでない場合、あるいは間違った磁気テープが挿入されている場合には、テープ・コーディネーターは <B>MOUNT</B> 命令を呼び出すか、操作員にプロンプトを出します。また、復元操作で別の磁気テープが必要になった場合も、
+<B>MOUNT</B> 命令を呼び出すか、バックアップ操作員にプロンプトを出します。この場合、操作員は、必要な磁気テープを挿入しなければなりません。
+<P><STRONG>注意</STRONG>
+<P>このコマンドを発行して、ディスクの破損や他の損傷を受けたデータを復元する場合には、最初に <B>vos syncserv</B> コマンドを発行してはなりません。これを行うと、区画にあるボリュームの VLDB レコードが破壊されます。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B>-server
+</B><DD>修復が必要なボリュームのサイトとして VLDB がリストしているファイル・サーバー・マシンを指定します。
+<P><DT><B>-partition
+</B><DD>修復が必要なボリュームのサイトとして VLDB がリストしている区画を指定します。
+<P><DT><B>-portoffset
+</B><DD>1 つまたは複数のポート・オフセット番号 (最大 128 まで) を指定します。これらは、それぞれ操作で使用するテープ・コーディネーターに対応します。複数の値がある場合は、バックアップ・システムは、各ボリュームのフル・ダンプを回復する場合には最初の値、各ボリュームのレベル 1 のインクリメンタル・ダンプを回復する場合には 2 番目の値、というように指定値を使用します。バックアップ・システムは、ダンプ階層の対応する深さにあるダンプと、それよりも下位のすべてのレベルにあるダンプを回復するときにリスト内の最後の値を使用します。
+<P>
+<P>すべてのダンプにデフォルトの 0 (ゼロ) が必要でない限り、この引き数を指定してください。
+<B>0</B> がリスト内の値の 1 つにすぎない場合は、正しい順序で明示的に指定してください。
+<P><DT><B>-newserver
+</B><DD>ボリュームを復元する代替ファイル・サーバー・マシンの名前を指定します。この引き数を省略すると、ボリュームは <B>-server</B> 引き数で指定されたファイル・サーバー・マシンに復元されます。
+<P><DT><B>-newpartition
+</B><DD>データを復元する代替区画の名前を指定します。この引き数を省略すると、ボリュームは、
+<B>-partition</B> 引き数で指定された区画に復元されます。
+<P><DT><B>-extension
+</B><DD>回復されるボリュームごとに新規のボリュームを作成し、そこに回復データを保存します。バックアップ・システムは、VLDB にリストされた読み取り / 書き込みベース名に、指定された文字列を追加することによって、新規ボリュームの名前を導き出し、新規ボリューム項目を作成します。バックアップ・システムは、ボリュームの内容がその区画に存在する場合は、それをその区画に保存します。
+<B>.readonly</B> または <B>.backup</B> 以外の文字列も使用できますが、ベース名と拡張子の組み合わせは、22 文字よりも長くすることはできません。ピリオドを名前と拡張子の区切り文字に使用するときは、それを文字列の最初の文字に指定します (たとえば、
+<B>.rst</B>)。
+<P><DT><B>-n
+</B><DD>要求された復元に必要な磁気テープのリストを表示します。実際の操作は行いません。
+<P><DT><B>-localauth
+</B><DD>ローカルの <B>/usr/afs/etc/KeyFile</B> ファイルのキーを使用して、サーバー・チケットを構成します。相互認証の間、
+<B>backup</B> コマンド・インタープリターは、バックアップ・サーバー、ボリューム・サーバーおよび VL サーバーにこのチケットを提供します。このフラグは、<B>-cell</B> 引き数と一緒に使用してはなりません。詳細については、<B>backup</B> の解説ページを参照してください。
+<P><DT><B>-cell
+</B><DD>コマンドを実行するセルを指定します。この引き数は、
+<B>-localauth</B> フラグと一緒に使用してはなりません。詳細については、<B>backup</B> の解説ページを参照してください。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>出力</STRONG>
+<P>復元捜査中に磁気テープ・エラーが起きると、テープ・コーディネーターは次のメッセージを表示します。
+<PRE>   磁気テープ・エラーのため、ボリューム<VAR>名前</VAR>の復元操作が失敗しました。
+   続けますか (y/n)?
+   
+</PRE>
+<P><VAR>名前</VAR> は、復元中に磁気テープ・エラーが発生したボリュームの名前です。指定されたボリュームを復元しないで操作を継続するには、値 <B>y</B> を入力します。操作を終了する場合は、値 <B>n</B> を入力します。後者の場合、操作員は磁気テープ・エラーの原因を判別することができます。
+<P>このコマンドが <B>-n</B> フラグ付きで発行されると、まず次の文字列が表示され、次に復元操作に必要な磁気テープのリストが表示されます。
+<PRE>   Tapes needed:
+   
+</PRE>
+<P><STRONG>例</STRONG>
+<P>次のコマンドは、VLDB が読み取り / 書き込みサイトをリストするボリュームを復元します。このサイトは、マシン <B>fs5.abc.com</B> の <B>/vicepd</B> 区画上にあります。ポート・オフセット 3 のテープ・コーディネーターが復元操作を行います。
+<PRE>   % <B>backup diskrestore -server fs5.abc.com -partition /vicepd -portoffset 3</B>
+   
+</PRE>
+<P>次のコマンドは、
+VLDB が読み取り / 書き込みサイト (マシン <B>fs1.abc.com</B> の <B>/vicepb</B> 区画上) をリストするボリュームを、新規サイト (マシン <B>fs3.abc.com</B> の <B>/vicepa</B> 区画上) に復元します。ポート・オフセット 0 のテープ・コーディネーターが復元操作を行います。
+(印刷の都合上、ここではコマンドを 2 行で表示します。)
+<PRE>   % <B>backup diskrestore  -server fs1.abc.com -partition /vicepb </B>   \
+                         <B>-newserver fs3.abc.com -newpartition /vicepa</B>
+   
+</PRE>
+<P>次のコマンドは、VLDB が読み取り / 書き込みサイトをリストするボリュームの復元に必要な磁気テープをリストします。このサイトは、マシン <B>fs4.abc.com</B> の <B>/vicepm</B> 区画上にあります。
+<PRE>   % <B>backup diskrestore -server fs4.abc.com -partition /vicepm -n</B>
+   Tapes needed:
+   user.sunday1.1
+   user.sunday1.2
+   user.monday1.1
+   user.tuesday1.1
+   user.wednesday1.1
+   
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>コマンドの発行者は、バックアップ・サーバーまたはボリューム・ロケーション (VL) サーバーが実行されている各マシン上、および関連するボリュームのあるすべてのファイル・サーバー・マシン上の <B>/usr/afs/etc/UserList</B> ファイルにリストされていなければなりません。
+<B>-localauth</B> フラグを使用する場合には、コマンドの発行者が、ローカル・スーパーユーザー <B>root</B> として、サーバー・マシンにログオンする必要があります。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf060.htm#HDRBK_INTRO">backup</A>
+<P><A HREF="auarf073.htm#HDRBK_DUMP">backup dump</A>
+<P><A HREF="auarf091.htm#HDRBK_VOLRESTORE">backup volrestore</A>
+<P><A HREF="auarf092.htm#HDRBK_VOLSETRESTORE">backup volsetrestore</A>
+<P><A HREF="auarf126.htm#HDRBUTC">butc</A>
+<P><A HREF="auarf255.htm#HDRVOS_BACKUP">vos backup</A>
+<P><A HREF="auarf261.htm#HDRVOS_EXAMINE">vos examine</A>
+<P><A HREF="auarf266.htm#HDRVOS_LISTVOL">vos listvol</A>
+<P><A HREF="auarf270.htm#HDRVOS_RELEASE">vos release</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf071.htm">前ページ</A> &#124; <A HREF="auarf073.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

@@ -1,0 +1,37 @@
+#
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+#
+#
+
+{
+    global:
+	afsclient_TokenGetExisting;
+	afsclient_TokenGetNew;
+	afsclient_TokenQuery;
+	afsclient_CellOpen;
+	afsclient_CellClose;
+	afsclient_TokenClose;
+	afsclient_LocalCellGet;
+	afsclient_MountPointCreate;
+	afsclient_ACLEntryAdd;
+	afsclient_Init;
+	afsclient_NullCellOpen;
+	afsclient_CellNameGet;
+	afsclient_AFSServerGet;
+	afsclient_AFSServerGetBegin;
+	afsclient_AFSServerGetNext;
+	afsclient_AFSServerGetDone;
+	afsclient_TokenSet;
+	afsclient_RPCStatOpen;
+	afsclient_RPCStatOpenPort;
+	afsclient_RPCStatClose;
+	afsclient_CMStatOpen;
+	afsclient_CMStatOpenPort;
+	afsclient_CMStatClose;
+	afsclient_RXDebugOpen;
+	afsclient_RXDebugOpenPort;
+	afsclient_RXDebugClose;
+
+    local:
+	*;
+};

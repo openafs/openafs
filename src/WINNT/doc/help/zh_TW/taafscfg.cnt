@@ -1,0 +1,33 @@
+:Base TAAFSCFG.HLP
+:Title IBM AFS 伺服器架構
+1 AFS 伺服器架構說明
+2 關於 AFS 和 AFS 伺服器以及 AFS 控制中心=About_AFS_and_the_AFS_Server_and_AFS_Control_Center
+2 架構 AFS 伺服器
+3 概觀=Configuring_the_AFS_Server
+3 AFS 伺服器架構精靈=The_AFS_Server_Configuration_Wizard
+3 將AFS 伺服器架構到現有的資料格中=Configuring_the_AFS_Server_into_an_Existing_Cell
+3 將 AFS 伺服器架構為資料格中的第一個 AFS 伺服器=Configuring_the_AFS_Server_as_the_First_AFS_Server_in_a_Cell
+3 存取 AFS 資料=Accessing_AFS_Data
+2 AFS 伺服器架構對話方塊
+3 概觀=The_AFS_Server_Configuration_Dialog_Box
+3 存取 AFS 伺服器架構對話方塊=To_Access_the_AFS_Server_Configuration_Dialog_Box
+3 分割區標籤
+4 概觀=IDH_PARTITIONS_PAGE
+4 設置 AFS 分割區
+5 概觀=Setting_Up_AFS_Partitions
+5 建立 AFS 分割區=To_Create_an_AFS_Partion
+4 管理 AFS 分割區
+5 概觀=Administering_AFS_Partitions
+5 援救 AFS 分割區
+6 概觀=Salvaging_an_AFS_Partition
+6 援救 AFS 分割區=To_Salvage_an_AFS_Partition
+5 移除 AFS 分割區
+6 概觀=Removing_AFS_Partitions
+6 移除 AFS 分割區=To_Remove_an_AFS_Partition
+3 服務標籤
+4 概觀=IDH_SERVICES_PAGE
+4 AFS 伺服器的角色=AFS_Server_Roles
+4 AFS 服務=AFS_Services
+4 架構並啟動 AFS 服務=To_Configure_and_Start_an_AFS_Service
+4 停止並取消架構 AFS 服務=To_Stop_and_Unconfigure_an_AFS_Service
+

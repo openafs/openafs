@@ -1,0 +1,2 @@
+#!/bin/sh
+echo "'ranlib $1' ignored"

@@ -1,0 +1,25 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+#
+
+
+!INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\..\config\NTMakefile.version
+
+LIBS =  DEST\lib\afslwp.lib \
+	DEST\lib\afs\afsutil.lib
+
+
+# build testkey.exe
+TESTKEY = testkey.exe
+testkey.exe: test_key.obj $(LIBS)
+	$(EXECONLINK)
+
+
+# test targets
+test testkey: $(TESTKEY)
+
+############################################################################
+# Local clean target; augments predefined clean target
+
+clean::
+

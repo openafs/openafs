@@ -1,0 +1,45 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+#
+
+############################################################################
+
+
+!INCLUDE ..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\config\NTMakefile.version
+
+
+############################################################################
+# Build translate_et.exe
+
+TRANSLATE_ET_EXEFILE = $(DESTDIR)\bin\translate_et.exe
+
+TRANSLATE_ET_EXEOBJS =\
+	translate_et_nt.obj \
+	translate_et.res
+
+TRANSLATE_ET_EXELIBS =\
+	$(DESTDIR)\lib\afs\afsadminutil.lib \
+	$(DESTDIR)\lib\afs\afsclientadmin.lib
+
+
+$(TRANSLATE_ET_EXEFILE): $(TRANSLATE_ET_EXEOBJS) $(TRANSLATE_ET_EXELIBS)
+	$(EXECONLINK)
+	$(EXEPREP)
+
+
+############################################################################
+# Definitions for generating versioninfo resources
+
+translate_et.res: translate_et.rc AFS_component_version_number.h
+	$(RC) $*.rc
+
+############################################################################
+# Install target; primary makefile target
+
+install: $(TRANSLATE_ET_EXEFILE)
+
+
+############################################################################
+# Local clean target; augments predefined clean target
+
+clean::

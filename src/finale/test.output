@@ -1,0 +1,10 @@
+Usage is: ./translate_et [<code>]+
+55 ().55 = No buffer space available
+110 ().110 = volume temporarily busy
+255 ().255 = Unknown code 255 (255)
+256 (a).0 = Unknown code a 0 (256)
+-1 (____).255 = server or network not responding
+-451 (___9).61 = RPC interface mismatch (-451)
+1613147 (ahc).91 = Unknown code ahc 91 (1613147)
+19270407 (rxk).7 = security object was passed a bad ticket
+180511 (ka).31 = can't find suitable ticket

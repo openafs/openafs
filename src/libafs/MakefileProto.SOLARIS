@@ -1,0 +1,152 @@
+#/* Copyright (C) 1995, 1989 Transarc Corporation - All rights reserved */
+# 
+# MakefileProto for Solaris systems
+#
+
+include $(DESTDIR)../obj/config/Makefile.${SYS_NAME}
+
+
+# OS specific object files:
+AFS_OS_OBJS = \
+	osi_groups.o \
+	osi_inode.o \
+	osi_file.o \
+	osi_sleep.o \
+	osi_vm.o \
+	osi_vnodeops.o 
+
+AFS_OS_NFSOBJS = \
+	osi_vfsops_nfs.o
+
+AFS_OS_NONFSOBJS = \
+	osi_vfsops.o
+
+# System specific build commands and flags
+DEFINES= -DAFSDEBUG -DKERNEL -DAFS -DVICE -DNFS -DUFS -DINET -DQUOTA -DGETMOUNT
+LD = /usr/ccs/bin/ld
+LORDER = /usr/ccs/bin/lorder
+CC = /opt/SUNWspro/bin/cc
+KDEFS= -Dsun4c -DSUN4C_60 -DNFSCLIENT -DSYSACCT -DOLDSCSI -DVDDRV -D_KERNEL \
+	-DSYSV -dn ${ARCH_DEFS}
+
+<sun4x_57>
+KDEFS_32 = 
+KDEFS_64 = -xarch=v9
+
+<all>
+CFLAGS=-I. -I.. ${FSINCLUDES} $(DEFINES) $(KDEFS) $(KOPTS) ${DBUG}
+
+# Name of directory to hold object files and libraries.
+<all -sun4x_57>
+KOBJ = MODLOAD
+<sun4x_57>
+KOBJ = MODLOAD32 MODLOAD64
+
+
+# This tells Makefile.common to use it's single directory build target.
+<all -sun4x_57>
+COMPDIRS = single_compdir
+
+<sun4x_57>
+COMPDIRS = solaris_compdirs
+
+<all>
+include Makefile.common
+
+
+setup:
+	-rm -f  h net netinet rpc ufs nfs  machine sys inet
+	-ln -s /usr/include/sys h
+	-ln -s /usr/include/net net
+	-ln -s /usr/include/netinet netinet
+	-ln -s /usr/include/rpc rpc
+	-ln -s /usr/include/sys sys
+	-ln -s /usr/include/nfs nfs
+	-ln -s /usr/include/inet inet
+	-ln -s /usr/include/ufs ufs
+	for t in ${KOBJ} ; do \
+		echo Making directory: $$t; \
+		mkdir -p $$t; \
+		rm -f $$t/Makefile.common $$t/Makefile ; \
+		ln -s ../Makefile.common $$t/Makefile.common ; \
+		ln -s ../Makefile $$t/Makefile ;\
+	done
+
+
+## This is the target for a Solaris 7. Here we build both the 32 bit and
+## the 64 bit libafs in MODLOAD32 and MODLOAD64 directories respectively
+
+<sun4x_57>
+${COMPDIRS}:
+	for t in ${KOBJ} ; do \
+		echo Building directory: $$t ; \
+		case $$t in \
+			MODLOAD32) \
+			 ARCH_DEFS="${KDEFS_32}" ; \
+			 BITS="" ;; \
+			MODLOAD64) \
+			 ARCH_DEFS="${KDEFS_64}" ; \
+			 BITS="64" ;; \
+		esac ; \
+		export ARCH_DEFS ; \
+		export BITS ; \
+		cd $$t  ; \
+		$(MAKE) DESTDIR=${DESTDIR}  libafs ; \
+		cd ../ ;\
+	done
+
+<all>
+
+# Below this line are targets when in the COMMON directory:
+LIBAFS = libafs.o
+LIBAFSNONFS = libafs.nonfs.o
+
+<all -sun4x_57>
+DEST_LIBAFS = ${DESTDIR}/root.client/usr/vice/etc/modload/${LIBAFS}
+DEST_LIBAFSNONFS = ${DESTDIR}/root.client/usr/vice/etc/modload/${LIBAFSNONFS}
+
+
+# libafs:	$(DEST_LIBAFS) $(DEST_LIBAFSNONFS)
+libafs:	$(DEST_LIBAFSNONFS)
+
+
+$(DEST_LIBAFS): $(LIBAFS)
+	${INSTALL} -f $? $@
+
+$(DEST_LIBAFSNONFS): $(LIBAFSNONFS)
+	${INSTALL} -f $? $@
+
+<all>
+${LIBAFS}: $(AFSAOBJS) $(AFSNFSOBJS)
+	$(RM) -f $@
+	$(LD) -r -o $@ $(AFSAOBJS) ${AFSNFSOBJS}
+
+${LIBAFSNONFS}:  $(AFSAOBJS) $(AFSNONFSOBJS)
+	$(RM) -f $@
+	$(LD) -r -o $@  $(AFSAOBJS) ${AFSNONFSOBJS}
+
+<sun4x_57>
+MODLOADDIR = ${DESTDIR}root.client/usr/vice/etc/modload
+
+libafs: ${LIBAFSNONFS}
+	${INSTALL} -f ${LIBAFSNONFS} ${MODLOADDIR}/libafs${BITS}.nonfs.o
+
+<all>
+
+# Solaris specific objects
+osi_groups.o: $(AFS)/osi_groups.c
+	$(CRULE1);
+osi_inode.o: $(AFS)/osi_inode.c
+	$(CRULE1);
+osi_file.o: $(AFS)/osi_file.c
+	$(CRULE1);
+osi_sleep.o: $(AFS)/osi_sleep.c
+	$(CRULE1);
+osi_vfsops_nfs.o: $(AFS)/osi_vfsops.c
+	$(CRULE1) -o osi_vfsops_nfs.o;
+osi_vfsops.o: $(AFS)/osi_vfsops.c
+	$(CRULE1) -DAFS_NONFSTRANS;
+osi_vm.o: $(AFS)/osi_vm.c
+	$(CRULE1);
+osi_vnodeops.o: $(AFS)/osi_vnodeops.c
+	$(CRULE1);

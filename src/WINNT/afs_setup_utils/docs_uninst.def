@@ -1,0 +1,10 @@
+LIBRARY      DocsUninst.dll
+
+CODE         PRELOAD MOVEABLE DISCARDABLE
+DATA	     PRELOAD SINGLE
+
+EXPORTS
+	DllEntryPoint
+	UninstInitialize
+	UninstUnInitialize
+

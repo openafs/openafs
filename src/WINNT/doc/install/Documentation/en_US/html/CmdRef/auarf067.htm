@@ -1,0 +1,82 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3190/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 5 Nov 1999 at 13:58:29                -->
+<META HTTP-EQUIV="updated" CONTENT="Fri, 05 Nov 1999 13:58:29">
+<META HTTP-EQUIV="review" CONTENT="Sun, 05 Nov 2000 13:58:29">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 05 Nov 2001 13:58:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf066.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf068.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRBK_DELDUMP" HREF="auarf002.htm#ToC_81">backup deldump</A></H2>
+<A NAME="IDX4267"></A>
+<A NAME="IDX4268"></A>
+<A NAME="IDX4269"></A>
+<A NAME="IDX4270"></A>
+<A NAME="IDX4271"></A>
+<A NAME="IDX4272"></A>
+<A NAME="IDX4273"></A>
+<A NAME="IDX4274"></A>
+<P><STRONG>Purpose</STRONG>
+<P>Deletes a dump level from the Backup Database
+<P><STRONG>Synopsis</STRONG>
+<PRE><B>backup deldump -dump</B> &lt;<VAR>dump&nbsp;level&nbsp;name</VAR>>  [<B>-localauth</B>]  
+               [<B>-cell</B> &lt;<VAR>cell name</VAR>>]  [<B>-help</B>]
+   
+<B>backup deld -d</B> &lt;<VAR>dump&nbsp;level&nbsp;name</VAR>>  [<B>-l</B>]  [<B>-c</B> &lt;<VAR>cell&nbsp;name</VAR>>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>Description</STRONG>
+<P>The <B>backup deldump</B> command deletes the indicated dump level and
+all of its child dump levels from the dump hierarchy in the Backup
+Database. Use the <B>backup listdumps</B> command to display the
+dump hierarchy.
+<P><STRONG>Options</STRONG>
+<DL>
+<P><DT><B>-dump
+</B><DD>Specifies the complete pathname of the dump level to delete.
+<P><DT><B>-localauth
+</B><DD>Constructs a server ticket using a key from the local
+<B>/usr/afs/etc/KeyFile</B> file. The <B>backup</B> command
+interpreter presents it to the Backup Server, Volume Server and VL Server
+during mutual authentication. Do not combine this flag with the
+<B>-cell</B> argument. For more details, see the introductory
+<B>backup</B> reference page.
+<P><DT><B>-cell
+</B><DD>Names the cell in which to run the command. Do not combine this
+argument with the <B>-localauth</B> flag. For more details, see the
+introductory <B>backup</B> reference page.
+<P><DT><B>-help
+</B><DD>Prints the online help for this command. All other valid options
+are ignored.
+</DL>
+<P><STRONG>Examples</STRONG>
+<P>The following command deletes the dump level <B>/sunday1/monday1</B>
+from the dump hierarchy, along with any of its child dump levels.
+<PRE>   % <B>backup deldump /sunday1/monday1</B>
+   
+</PRE>
+<P><STRONG>Privilege Required</STRONG>
+<P>The issuer must be listed in the <B>/usr/afs/etc/UserList</B> file on
+every machine where the Backup Server is running, or must be logged onto a
+server machine as the local superuser <B>root</B> if the
+<B>-localauth</B> flag is included.
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf060.htm#HDRBK_INTRO">backup</A>
+<P><A HREF="auarf061.htm#HDRBK_ADDDUMP">backup adddump</A>
+<P><A HREF="auarf080.htm#HDRBK_LISTDUMPS">backup listdumps</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf066.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf068.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

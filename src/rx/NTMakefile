@@ -1,0 +1,84 @@
+#
+# COPYRIGHT (C) TRANSARC CORPORATION 1998
+#
+
+!include ..\config\NTMakefile.$(SYS_NAME)
+!include ..\config\NTMakefile.version
+
+# RX has different strings for it's version number.
+VERSFILE=RX_component_version_number
+CML_PREFIX=rx_
+!include ..\config\NTMakefile.version
+
+# Additional debugging flag for RX.
+AFSDEV_AUXCDEFINES = -DRXDEBUG
+
+LIBFILE = $(DESTDIR)\lib\afsrx.lib
+
+# Object files by category.
+XDROBJS = xdr.obj xdr_array.obj xdr_arrayn.obj xdr_float.obj xdr_mem.obj \
+	xdr_rec.obj  xdr_refernce.obj xdr_rx.obj xdr_update.obj xdr_afsuuid.obj
+
+RXOBJS = rx_clock_nt.obj rx_event.obj rx_user.obj rx_lwp.obj rx.obj \
+	rx_null.obj rx_globals.obj rx_getaddr.obj rx_misc.obj rx_packet.obj \
+	rx_rdwr.obj rx_trace.obj rx_xmit_nt.obj rx_conncache.obj
+
+MULTIOBJS = rx_multi.obj
+
+LIBOBJS = $(RXOBJS) $(MULTIOBJS) $(XDROBJS)
+
+INCFILEDIR = $(DESTDIR)\include\rx
+
+INCFILES  = \
+	$(INCFILEDIR)\rx.h \
+	$(INCFILEDIR)\rx_packet.h \
+	$(INCFILEDIR)\rx_user.h \
+	$(INCFILEDIR)\rx_event.h \
+	$(INCFILEDIR)\rx_queue.h \
+	$(INCFILEDIR)\rx_globals.h \
+	$(INCFILEDIR)\rx_clock.h \
+	$(INCFILEDIR)\rx_misc.h \
+	$(INCFILEDIR)\rx_multi.h \
+	$(INCFILEDIR)\rx_null.h \
+	$(INCFILEDIR)\rx_lwp.h \
+	$(INCFILEDIR)\rx_pthread.h \
+	$(INCFILEDIR)\rx_xmit_nt.h \
+	$(INCFILEDIR)\xdr.h
+
+LOCAL_HEADERS = \
+	rx_internal.h
+
+$(LIBOBJS): $(INCFILES) $(LOCAL_HEADERS)
+
+$(MULTIOBJS):  rx_multi.h
+
+$(XDROBJS): xdr.h
+
+$(LIBFILE): $(LIBOBJS)
+	$(LIBARCH)
+
+# Not yet
+#rxdumptrace.exe: rx_trace.c
+
+
+# build rxdebug.
+RXDEBUG = $(DESTDIR)\etc\rxdebug.exe
+RXDOBJS = rxdebug.obj \
+	  rxdebug.res
+
+LIBDIR  = $(DESTDIR)\lib
+RXDLIBS = $(LIBDIR)\afs\afscmd.lib \
+	  $(LIBDIR)\afsrx.lib \
+	  $(LIBDIR)\afslwp.lib \
+	  $(LIBDIR)\afs\afsutil.lib \
+          $(LIBDIR)\afs\afsreg.lib
+
+rxdebug.res: rxdebug.rc AFS_component_version_number.h
+	$(RC) $*.rc
+
+$(RXDEBUG): $(RXDOBJS) $(RXDLIBS)
+	$(EXECONLINK)
+	$(EXEPREP)
+
+
+install: $(LIBFILE) $(INCFILES) $(RXDEBUG)

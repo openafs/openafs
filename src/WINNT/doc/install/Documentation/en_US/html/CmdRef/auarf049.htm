@@ -1,0 +1,66 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3190/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 5 Nov 1999 at 13:58:29                -->
+<META HTTP-EQUIV="updated" CONTENT="Fri, 05 Nov 1999 13:58:29">
+<META HTTP-EQUIV="review" CONTENT="Sun, 05 Nov 2000 13:58:29">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 05 Nov 2001 13:58:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf048.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf050.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRSYSID" HREF="auarf002.htm#ToC_47">sysid</A></H2>
+<P><STRONG>Purpose</STRONG>
+<A NAME="IDX4023"></A>
+<A NAME="IDX4024"></A>
+<A NAME="IDX4025"></A>
+<A NAME="IDX4026"></A>
+<P>Lists file server machine interface addresses registered in VLDB
+<P><STRONG>Description</STRONG>
+<P>The <B>sysid</B> file records the network interface addresses that the
+File Server (<B>fileserver</B> process) registers in the Volume Location
+Database (VLDB) for the local file server machine.
+<P>Each time the File Server restarts, it builds a list of interfaces on the
+local machine by reading the <B>/usr/afs/local/NetInfo</B> file, if it
+exists. If the file does not exist, the File Server uses the list of
+network interfaces configured with the operating system. It then
+removes from the list any addresses that appear in the
+<B>/usr/afs/local/NetRestrict</B> file, if it exists. The File
+Server records the resulting list in the binary-format <B>sysid</B> file
+and registers the interfaces in the VLDB.
+<P>When the Cache Manager requests volume location information, the Volume
+Location (VL) Server provides all of the interfaces registered for each server
+machine that houses the volume. This enables the Cache Manager to make
+use of multiple addresses when accessing AFS data stored on a multihomed file
+server machine.
+<P><STRONG>Cautions</STRONG>
+<P>The <B>sysid</B> file is unique to each file server machine, and must
+not be copied from one machine to another. If it is a common practice
+in the cell to copy the contents of the <B>/usr/afs/local</B> directory
+from an existing file server machine to a newly installed one, be sure to
+remove the <B>sysid</B> file from the new machine before starting the
+<B>fs</B> trio of processes, which includes the <B>fileserver</B>
+process.
+<P>Some versions of AFS limit how many of a file server machine&#39;s
+interface addresses that can be registered. Consult the <I>AFS
+Release Notes</I>.
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf025.htm#HDRSV_NETINFO">NetInfo (server version)</A>
+<P><A HREF="auarf027.htm#HDRSV_NETRESTRICT">NetRestrict (server version)</A>
+<P><A HREF="auarf051.htm#HDRVLDBDB">vldb.DB0 and vldb.DBSYS1</A>
+<P><A HREF="auarf129.htm#HDRFILESERVER">fileserver</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf048.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf050.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

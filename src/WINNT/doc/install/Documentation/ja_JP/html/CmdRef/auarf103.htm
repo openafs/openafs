@@ -1,0 +1,103 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRBOS_GETRESTART" HREF="auarf002.htm#ToC_117">bos getrestart</A></H2>
+<A NAME="IDX4536"></A>
+<A NAME="IDX4537"></A>
+<A NAME="IDX4538"></A>
+<A NAME="IDX4539"></A>
+<A NAME="IDX4540"></A>
+<A NAME="IDX4541"></A>
+<A NAME="IDX4542"></A>
+<A NAME="IDX4543"></A>
+<A NAME="IDX4544"></A>
+<P><STRONG>目的</STRONG>
+<P>サーバー・プロセスの自動再起動時刻を表示します。
+<P><STRONG>構文</STRONG>
+<PRE><B>bos getrestart -server</B> &lt;<VAR>machine name</VAR>>  [<B>-cell</B> &lt;<VAR>cell name</VAR>>]
+               [<B>-noauth</B>]  [<B>-localauth</B>]  [<B>-help</B>]
+   
+<B>bos getr -s</B> &lt;<VAR>machine name</VAR>>  [<B>-c</B> &lt;<VAR>cell name</VAR>>]  [<B>-n</B>]  [<B>-l</B>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>bos getrestart</B> コマンドは、<B>-server</B> 引き数に指定されたサーバー・マシンにある <B>/usr/afs/local/BosConfig</B> ファイルから次の 2 つの再起動時刻を表示します。
+<UL>
+<LI><I>一般の再起動</I>時刻。この時刻になると、BOS サーバー・プロセスは自分自身を再始動し、<B>BosConfig</B> ファイルで <TT>Run</TT> 状態とマークされているプロセスをすべて再起動します。デフォルトでは、日曜日の午前 4 時 00 分になっています。
+</LI><LI><I>バイナリー・ファイルの再起動</I>時刻。この時刻になると、BOS サーバーは、
+<B>/usr/afs/bin</B> ディレクトリーにあるバイナリー・ファイルのタイム・スタンプがそのプロセスが最後に再起動した時刻よりも後のプロセスをすべて自動的に再起動します。デフォルトは午前 5 時 00 分です。バイナリー・ファイルのタイム・スタンプを表示する場合には、<B>bos getdate</B> コマンドを使用してください。プロセスの最新の再起動時刻を調べる場合には、<B>bos status</B> コマンドで <B>-long</B> フラグを削除してください。
+</LI></UL>
+<P>再起動時刻を設定する場合には、<B>bos setrestart</B> コマンドを使用してください。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B><B>-server</B>
+</B><DD>再起動時刻を表示するサーバー・マシンを指定します。
+IP アドレスまたはホスト名 (完全修飾名または省略形) によってマシンを識別します。詳細については、<B>bos</B> コマンド・セットの概要の解説ページを参照してください。
+<P><DT><B><B>-cell</B>
+</B><DD>コマンドを実行するセルを指定します。この引き数は、
+<B>-localauth</B> フラグと一緒に使用してはなりません。詳細については、<B>bos</B> の解説ページを参照してください。
+<P><DT><B><B>-noauth</B>
+</B><DD>コマンドの発行側に非特権 ID <B>anonymous</B> を割り当てます。このフラグは <B>-localauth</B> フラグと一緒に使用してはなりません。詳細については、<B>bos</B> の解説ページを参照してください。
+<P><DT><B><B>-localauth</B>
+</B><DD>ローカルの <B>/usr/afs/etc/KeyFile</B> ファイルのキーを使用して、サーバー・チケットを構成します。
+<B>bos</B> コマンド・インタープリターは、相互認証中に、このチケットを BOS サーバーに渡します。このフラグは、<B>-cell</B> 引き数または <B>-noauth</B> フラグと一緒に使用してはなりません。詳細については、<B>bos</B> の解説ページを参照してください。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>出力</STRONG>
+<P>次の 2 行が出力されます。
+<PRE>   Server <VAR>machine_name</VAR> restarts at <VAR>time</VAR>
+   Server <VAR>machine_name</VAR> restarts for new binaries at <VAR>time</VAR>
+   
+</PRE>
+<P><I>time</I> には、次の値が指定できます。
+<UL>
+<LI><TT>never</TT>。BOS サーバーはそのタイプの再始動を実行しません。
+</LI><LI><TT>now</TT>。BOS サーバーは再始動したときだけ、毎回そのタイプの再始動を実行します。
+</LI><LI>指定された日時。BOS サーバーは、週に 1 度そのタイプの再起動を実行します。例: <TT>sun 4:00 am</TT>.
+</LI><LI>指定された時刻。BOS サーバーは、1 日に 1 度そのタイプの再起動を実行します。例: <TT>11:00 pm</TT>, <TT>3:00 am</TT>.
+</LI></UL>
+<P><STRONG>例</STRONG>
+<P>次の例は、マシン <B>db2.abc.com</B> の再起動時刻を表示しています。
+<PRE>   % <B>bos getrestart db2.abc.com</B>
+   Server db2.abc.com restarts at sun 4:00 am
+   Server db2.abc.com restarts for new binaries at 2:15 am
+   
+</PRE>
+<P>次の例では、マシン名 <B>fs1.abc.com</B> を <B>fs1</B>に省略し、セルのネーム・サーバーを使用して名前を解決しています。出力には、省略された形式が表示されます。
+<PRE>   % <B>bos getrestart fs1</B>
+   Server fs1 restarts at sat 5:00 am
+   Server fs1 restarts for new binaries at 11:30 pm
+   
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>なし。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf016.htm#HDRBOSCONFIG">BosConfig</A>
+<P><A HREF="auarf023.htm#HDRKEYFILE">KeyFile</A>
+<P><A HREF="auarf093.htm#HDRBOS_INTRO">bos</A>
+<P><A HREF="auarf101.htm#HDRBOS_GETDATE">bos getdate</A>
+<P><A HREF="auarf117.htm#HDRBOS_SETRESTART">bos setrestart</A>
+<P><A HREF="auarf121.htm#HDRBOS_STATUS">bos status</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf102.htm">前ページ</A> &#124; <A HREF="auarf104.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

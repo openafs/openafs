@@ -1,0 +1,81 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+#
+
+!INCLUDE ..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\config\NTMakefile.version
+
+# Definitions for installing header files
+
+INCFILEDIR = $(DESTDIR)\include\afs
+
+INCFILES =\
+	$(INCFILEDIR)\afsint.h \
+	$(INCFILEDIR)\afscbint.h
+
+# afsint.lib
+
+LIBFILE = $(DESTDIR)\lib\afs\afsint.lib
+
+LIBOBJS =\
+	afscbint.cs.obj \
+	afscbint.ss.obj \
+	afscbint.xdr.obj \
+	afsint.cs.obj 	\
+	afsint.ss.obj 	\
+	afsint.xdr.obj 	\
+	afsaux.obj      \
+	AFS_component_version_number.obj
+
+$(LIBFILE): $(LIBOBJS)  
+	$(LIBARCH)  
+
+
+# use rxgen on afscbint.xg and afsint.xg
+afscbint.cs.c afscbint.ss.c afscbint.xdr.c afscbint.h : afscbint.xg common.xg
+	$(RXGEN) -x -y afscbint.xg
+
+afsint.cs.c afsint.ss.c afsint.xdr.c afsint.h: afsint.xg common.xg
+	$(RXGEN) -x afsint.xg
+
+# mtafsint.lib
+
+MT_LIBFILE = $(DESTDIR)\lib\afs\mtafsint.lib
+
+MT_LIBOBJS =\
+	afscbint.cs_mt.obj \
+	afscbint.ss_mt.obj \
+	afscbint.xdr_mt.obj \
+	afsint.cs_mt.obj 	\
+	afsint.ss_mt.obj 	\
+	afsint.xdr_mt.obj 	\
+	afsaux_mt.obj      \
+	AFS_component_version_number.obj
+
+afscbint.cs_mt.obj:afscbint.cs.c
+	$(C2OBJ) afscbint.cs.c -DAFS_PTHREAD_ENV /Foafscbint.cs_mt.obj
+
+afscbint.ss_mt.obj:afscbint.ss.c
+	$(C2OBJ) afscbint.ss.c -DAFS_PTHREAD_ENV /Foafscbint.ss_mt.obj
+
+afscbint.xdr_mt.obj:afscbint.xdr.c
+	$(C2OBJ) afscbint.xdr.c -DAFS_PTHREAD_ENV /Foafscbint.xdr_mt.obj
+
+afsint.cs_mt.obj:afsint.cs.c
+	$(C2OBJ) afsint.cs.c -DAFS_PTHREAD_ENV /Foafsint.cs_mt.obj
+
+afsint.ss_mt.obj:afsint.ss.c
+	$(C2OBJ) afsint.ss.c -DAFS_PTHREAD_ENV /Foafsint.ss_mt.obj
+
+afsint.xdr_mt.obj:afsint.xdr.c
+	$(C2OBJ) afsint.xdr.c -DAFS_PTHREAD_ENV /Foafsint.xdr_mt.obj
+
+afsaux_mt.obj:afsaux.c
+	$(C2OBJ) afsaux.c -DAFS_PTHREAD_ENV /Foafsaux_mt.obj
+
+$(MT_LIBFILE): $(MT_LIBOBJS)  
+	$(LIBARCH)  
+
+install: $(LIBFILE) $(INCFILES) $(MT_LIBFILE)
+
+clean::
+	$(DEL) *.cs.c *.ss.c *.xdr.c afsint.h afscbint.h

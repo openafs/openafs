@@ -1,0 +1,330 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理の手引き</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- E:\IDWB\TEMP\idwt2118\AUAGD000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 12:07:32            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 12:07:30">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 12:07:30">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 12:07:30">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理の手引き</H1>
+<HR><H1><A NAME="HDRWQ797" HREF="auagd002.htm#ToC_651">管理権限の管理</A></H1>
+<P>この章では、管理者およびオペレーターが、特権 AFS オペレーションを実行する方法について説明しています。
+<HR><H2><A NAME="HDRWQ798" HREF="auagd002.htm#ToC_652">説明の要約</A></H2>
+<P>本章では、指示されたコマンドを使用した以下のタスクの実行方法を説明します。
+<BR>
+<TABLE WIDTH="100%">
+<TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%"><B>system:administrators</B> グループのメンバーを表示する
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>pts membership</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">ユーザーを <B>system:administrators</B> に追加する
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>pts adduser</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">ユーザーを <B>system:administrators</B> から削除する
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>pts removeuser</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">認証データベース項目内の <TT>ADMIN</TT> フラグを表示
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>kas examine</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">認証データベース項目内に <TT>ADMIN</TT> フラグを設定または削除する
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>kas setfields</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%"><B>UserList</B> ファイルのユーザーを表示する
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>bos listusers</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%"><B>UserList</B> ファイルにユーザーを追加する
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>bos adduser</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%"><B>UserList</B> ファイルからユーザーを削除する
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>bos removeuser</B>
+</TD></TR></TABLE>
+<HR><H2><A NAME="HDRWQ807" HREF="auagd002.htm#ToC_653">管理権限の概要</A></H2>
+<A NAME="IDX8098"></A>
+<A NAME="IDX8099"></A>
+<P>完全な特権を持つ AFS システム管理者は、以下の特性を持ちます。
+<UL>
+<LI>セルの <B>system:administrators</B> グループのメンバーシップ。
+<A HREF="#HDRWQ809">system:administrators グループの管理</A> を参照してください。
+</LI><LI>セルの認証データベース内の項目の <TT>ADMIN</TT> フラグ。
+<A HREF="#HDRWQ812">kas コマンドに対する特権付与:  ADMIN フラグ</A> を参照してください。
+</LI><LI>セルの各 AFS サーバー・マシンのローカル・ディスク上のファイル <B>/usr/afs/etc/UserList</B> へ組み込まれる。<A HREF="#HDRWQ815">UserList ファイルの管理</A> を参照してください。
+</LI></UL>
+<P>この機能グループでは、3 つの特権の詳細と複数の特権が必要な理由を説明します。
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>注:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">サーバーの障害により相互に認証することが不可能な場合でも、ユーザー <B>anonymous</B> に対して、管理権限を絶対に許可しないでください。このような権限を付与した場合、セルのマシンにアクセスできるユーザーは誰でも特権コマンドを発行できるようになってしまいます。代わりに、これを解決するには、影響するサーバー・マシンを非認証モードにして、多くのコマンドで使用できる <B>-noauth</B> フラグにより、相互に認証し合うのを防ぎます。詳しくは、<A HREF="auagd008.htm#HDRWQ158">認証と許可の要件の管理</A> を参照してください。
+</TD></TR></TABLE>
+<P><H3><A NAME="HDRWQ808" HREF="auagd002.htm#ToC_654">個別の特権を持つ理由</A></H3>
+<P>セルの管理者は、管理者のジョブを効果的に行うために、頻繁に全管理権限を要求します。しかし、特権の 3 つのタイプを分離すると、その特権を与えられた管理者が作業を実行するために必要な最小限の特権セットのみを許可することができます。
+<P><B>system:administrators</B> 特権は、通常オペレーション中 (全サーバーが通常に実行中) 最も基本的で使用頻度の高い特権です。マシンまたはサーバーの停止によって、保護データベースが使用できない場合、このタイプの特権を必要とするコマンドの発行はできません。
+<P><TT>ADMIN</TT> フラグ特権は、分離されています。これは、認証データベース、特に <B>afs</B> 項目内のサーバー暗号化かぎの情報が極めて機密性が高いためです。マシンまたはサーバーの停止によって、認証データベースが使用できない場合、このタイプの特権を必要とするコマンドの発行はできません。
+<P>特権コマンド <B>bos</B> および <B>vos</B> を発行できる権限は、データベースではなく AFS サーバー・マシンのローカル・ディスク上の <B>/usr/afs/etc/UserList</B> ファイルに記録されているので、ネットワークまたはサーバーに重大な問題が生じた場合、管理者は、サーバー・マシンにログオンして、問題を解決する間これらのコマンドを使用することができます。
+<HR><H2><A NAME="HDRWQ809" HREF="auagd002.htm#ToC_655">system:administrators グループの管理</A></H2>
+<A NAME="IDX8100"></A>
+<A NAME="IDX8101"></A>
+<A NAME="IDX8102"></A>
+<A NAME="IDX8103"></A>
+<A NAME="IDX8104"></A>
+<A NAME="IDX8105"></A>
+<A NAME="IDX8106"></A>
+<P>AFS 管理権限の第 1 タイプの特権は、メンバーシップです。保護データベースの <B>system:administrators</B> グループのメンバーは、以下の特権を持ちます。
+<UL>
+<LI>全 <B>pts</B> コマンドを発行するアクセス権。これは、保護データベースの管理に使用されます。
+<A HREF="auagd019.htm#HDRWQ722">保護データベースの管理</A> を参照してください。
+</LI><LI><B>fs setvol</B> および <B>fs setquota</B> コマンドを発行する権限。これによって、ボリューム上にスペース割り当て量を設定できます (<A HREF="auagd010.htm#HDRWQ320">ボリューム割り当て量および現行サイズの設定および表示</A> を参照)。
+</LI><LI>セルの AFS ファイル・スペースにあるすべてのディレクトリー上のアクセス制御リスト (ACL) に暗黙的に付与されている <B>a</B> (<B>管理</B>) およびデフォルトの <B>l</B> (<B>ルックアップ</B>) アクセス権。グループのメンバーは、<B>fs setacl</B> コマンドを使用し、各自が必要な他のアクセス権を自分に付与できます (<A HREF="auagd020.htm#HDRWQ789">ACL 項目の設定</A> を参照)。
+<P>
+<P>ACL アクセス権を変更して、特定のファイル・サーバー・マシン上のファイル・サーバーが、
+<B> system:administrators</B> グループのメンバーに、保管するボリューム内のデータに対する権限を暗黙的に付与できます。<B>bos create</B> コマンドを使用して、マシン上に <B>fs</B> プロセスを作成および開始する場合、<B>-implicit</B> 引き数を <B>fileserver</B> 初期化コマンドに組み込みます。構文の詳細については、<I>AFS Administration Reference</I> の<B>fileserver</B> の参照ページを参照してください。追加アクセス権の付与または<B> l</B> アクセス権の削除が可能です。しかし、ファイル・サーバーは、いつでも暗黙的に <B>a</B> アクセス権をグループのメンバーに付与します。たとえ、<B>-implicit</B> 引き数の値を<B> none</B> に設定した場合でも同様です。
+</LI></UL>
+<A NAME="IDX8107"></A>
+<A NAME="IDX8108"></A>
+<A NAME="IDX8109"></A>
+<A NAME="IDX8110"></A>
+<P><H3><A NAME="HDRWQ810" HREF="auagd002.htm#ToC_656">system:administrators グループのメンバーの表示</A></H3>
+<OL TYPE=1>
+<LI><B>system:administrators</B> グループのメンバーのリストを表示するには、<B>pts membership</B> コマンドを発行します。
+<B>system:administrators</B> グループの保護データベース項目が、デフォルト値の英小文字 <TT>S</TT> から変更されない限り、任意のユーザーがこのコマンドを発行することができます。
+<P>
+<PRE>   % <B>pts membership system:administrators</B>
+</PRE>
+<P>
+<P>ここで、<B>m</B> は、<B>membership</B> の最も短い受け入れ可能な省略形です。
+</LI></OL>
+<P><H3><A NAME="Header_657" HREF="auagd002.htm#ToC_657">system:administrators グループにユーザーを追加する</A></H3>
+<A NAME="IDX8111"></A>
+<A NAME="IDX8112"></A>
+<A NAME="IDX8113"></A>
+<A NAME="IDX8114"></A>
+<OL TYPE=1>
+<LI><B>system:administrators</B> グループに属することを確認します。必要な場合には、<B>pts membership</B> コマンドを発行してください。このコマンドの詳細は、<A HREF="#HDRWQ810">system:administrators グループのメンバーの表示</A> を参照してください。
+<P>
+<PRE>   % <B>pts membership system:administrators</B>
+   
+</PRE>
+</LI><LI>グループに <B>pts adduser</B> コマンドを発行して、1 つまたは複数のユーザーを追加します。
+<P>
+<PRE>   % <B>pts adduser -user</B> &lt;<VAR>user name</VAR>><SUP>+</SUP> <B>-group system:administrators</B>
+</PRE>
+<P>
+<P>ここで、
+<P>
+<DL>
+<P><DT><B>ad
+</B><DD>は、<B>adduser</B> の最も短い受け入れ可能な省略形です。
+<P><DT><B>-user
+</B><DD><B>system:administrators</B> グループに追加する各ユーザーを指定します。
+</DL>
+</LI></OL>
+<P><H3><A NAME="HDRWQ811" HREF="auagd002.htm#ToC_658">system:administrators グループからユーザーを削除する</A></H3>
+<A NAME="IDX8115"></A>
+<A NAME="IDX8116"></A>
+<A NAME="IDX8117"></A>
+<A NAME="IDX8118"></A>
+<OL TYPE=1>
+<LI><B>system:administrators</B> グループに属することを確認します。必要な場合には、<B>pts membership</B> コマンドを発行してください。このコマンドの詳細は、<A HREF="#HDRWQ810">system:administrators グループのメンバーの表示</A> を参照してください。
+<P>
+<PRE>   % <B>pts membership system:administrators</B>
+   
+</PRE>
+</LI><LI><B>pts removeuser</B> コマンドを発行して、1 つまたは複数のユーザーを削除します。
+<P>
+<PRE>   % <B>pts removeuser -user</B> &lt;<VAR>user name</VAR>><SUP>+</SUP> <B>-group system:administrators</B>
+</PRE>
+<P>
+<P>ここで、
+<P>
+<DL>
+<P><DT><B><B>rem</B>
+</B><DD><B>removeuser</B> の最も短い受け入れ可能な省略形です。
+<P><DT><B>-user
+</B><DD><B>system:administrators</B> グループから削除する各ユーザーを指定します。
+</DL>
+</LI></OL>
+<HR><H2><A NAME="HDRWQ812" HREF="auagd002.htm#ToC_659">kas コマンドに対する特権付与:  ADMIN フラグ</A></H2>
+<A NAME="IDX8119"></A>
+<P>管理データベース項目に <TT>ADMIN</TT> フラグを持つ管理者は、全 <B>kas</B> コマンドを発行することができ、これによって認証データベースを管理することができます。
+<A NAME="IDX8120"></A>
+<A NAME="IDX8121"></A>
+<A NAME="IDX8122"></A>
+<P><H3><A NAME="HDRWQ813" HREF="auagd002.htm#ToC_660">ADMIN フラグがオンになっていることを確認する</A></H3>
+<A NAME="IDX8123"></A>
+<A NAME="IDX8124"></A>
+<A NAME="IDX8125"></A>
+<A NAME="IDX8126"></A>
+<OL TYPE=1>
+<LI><A NAME="LIWQ814"></A><B>kas examine</B> コマンドを発行して、認証データベースの項目を表示します。
+<P>
+<P>認証サーバーは、既存の AFS トークンを受け入れるのではなく、独自の認証を実行します。デフォルトでは、認証サーバーは、ユーザーのローカル (UFS) ID を認証します。この ID は AFS 特権管理者に対応しません。<B>-admin_username</B> 引き数 (ここでは、<B>-admin</B> に省略) を組み込み、認証データベース項目の <TT>ADMIN</TT> フラグを持つユーザー ID を指定します。
+<P>
+<PRE>   % <B>kas examine</B> &lt;<VAR>name of user</VAR>>   \
+                     <B>-admin</B> &lt;<VAR>admin principal to use for authentication</VAR>>
+   Administrator's (<VAR>admin_user</VAR>) password: <VAR>admin_password</VAR>
+</PRE>
+<P>
+<P>ここで、
+<P>
+<DL>
+<P><DT><B>e
+</B><DD><B>examine</B> の最も短い受け入れ可能な省略形です。
+<P><DT><B><VAR>name of user</VAR>
+</B><DD>表示する項目を指定します。
+<P><DT><B>-admin
+</B><DD><B>admin</B> などの認証データベース項目に <TT>ADMIN</TT> フラグを含む管理者のアカウントを指定します。
+password プロンプトはアカウントを <VAR>admin_user</VAR> として表示します。適切なパスワードを、<VAR>admin_password</VAR> として入力します。
+</DL>
+</LI></OL>
+<P>この例では、<TT>ADMIN</TT> フラグがオンになっていると、フラグは出力の第 1 行目に表示されます。
+<PRE>   % <B>kas e terry -admin admin</B>
+   Administrator's (admin) password: <VAR>admin_password</VAR>
+   User data for terry (ADMIN)
+     key version is 0, <VAR>etc...</VAR>
+</PRE>
+<A NAME="IDX8127"></A>
+<A NAME="IDX8128"></A>
+<A NAME="IDX8129"></A>
+<A NAME="IDX8130"></A>
+<A NAME="IDX8131"></A>
+<A NAME="IDX8132"></A>
+<P><H3><A NAME="Header_661" HREF="auagd002.htm#ToC_661">ADMIN フラグの設定または削除</A></H3>
+<OL TYPE=1>
+<LI><B>kas setfields</B> コマンドを発行して、認証データベース項目の<TT>ADMIN</TT> フラグをオンにします
+<P>
+<P>認証サーバーは、既存の AFS トークンを受け入れるのではなく、独自の認証を実行します。デフォルトでは、認証サーバーは、管理者のローカル (UNIX) 識別を認証します。この識別は AFS 特権管理者に対応しません。
+<B>-admin</B> 引き数を組み込み、認証データベース項目に <TT>ADMIN</TT> フラグを持つ識別を指定します。項目にフラグがあることを確認するには、<A HREF="#HDRWQ813">ADMIN フラグがオンになっていることを確認する</A>で説明するように、<B>kas  examine</B> コマンドを発行します。
+<P>
+<P>以下のコマンドは、見やすくするために 2 行で表示されています。
+<P>
+<PRE>    % <B>kas setfields</B> &lt;<VAR>name of user</VAR>>  {<B>ADMIN</B> |  <B>NOADMIN</B>} \
+                     <B>-admin</B> &lt;<VAR>admin principal to use for authentication</VAR>>  
+    Administrator's (<VAR>admin_user</VAR>) password: <VAR>admin_password</VAR>
+</PRE>
+<P>
+<P>ここで、
+<P>
+<DL>
+<P><DT><B>sf
+</B><DD>は、<B>setfields</B> の受け入れ可能な別名です
+(<B>setf</B> は受け入れ可能な最も短い省略形です)。
+<P><DT><B><VAR>name of user</VAR>
+</B><DD><TT>ADMIN</TT> フラグを設定または削除する項目を指定します。
+<P><DT><B>ADMIN | NOADMIN
+</B><DD>それぞれ <TT>ADMIN</TT> フラグを設定または削除します。
+<P><DT><B>-admin
+</B><DD><B>admin</B> などの認証データベース項目に <TT>ADMIN</TT> フラグを含む管理者のアカウントを指定します。
+password プロンプトはアカウントを <VAR>admin_user</VAR> として表示します。適切なパスワードを、<VAR>admin_password</VAR> として入力します。
+</DL>
+</LI></OL>
+<HR><H2><A NAME="HDRWQ815" HREF="auagd002.htm#ToC_662">UserList ファイルの管理</A></H2>
+<A NAME="IDX8133"></A>
+<P>指示した組を各 AFS サーバー・マシンのローカル・ディスク上のファイル <B>/usr/afs/etc/UserList</B> に組み込むことにより、管理者はその組からコマンドを発行できます。
+<UL>
+<LI>管理者は、<B>bos</B> コマンドを使用して、サーバー・プロセスを管理し、セルのデータベース・サーバー・マシン、サーバー暗号化かぎおよび特権ユーザーを定義するサーバー構成ファイルを管理することができます。<A HREF="auagd008.htm#HDRWQ96">サーバー・マシンの管理</A> および <A HREF="auagd009.htm#HDRWQ177">サーバー・プロセスの監視および制御</A>を参照してください。
+</LI><LI>管理者は、<B>vos</B> コマンドを使用して、ボリュームおよびボリューム・ロケーション・データベース (VLDB) の管理を行うことができます。<A HREF="auagd010.htm#HDRWQ229">ボリュームの管理</A> を参照してください。
+</LI><LI>管理者は、<B>backup</B> コマンドを使用して、AFS Backup システムを使用し、データを永久媒体にコピーすることができます。<A HREF="auagd011.htm#HDRWQ334">AFS バックアップ・システムの構成</A> および <A HREF="auagd012.htm#HDRWQ383">AFS データのバックアップと復元</A>を参照してください。
+</LI></UL>
+<A NAME="IDX8134"></A>
+<A NAME="IDX8135"></A>
+<A NAME="IDX8136"></A>
+<A NAME="IDX8137"></A>
+<A NAME="IDX8138"></A>
+<A NAME="IDX8139"></A>
+<A NAME="IDX8140"></A>
+<A NAME="IDX8141"></A>
+<A NAME="IDX8142"></A>
+<A NAME="IDX8143"></A>
+<P>各 AFS サーバー・マシンは、そのローカル・ディスク上でファイルの個々のコピーを保守しますが、すべてのコピーを同じように保存すると便利です。特権があるマシンと特権がないマシンがあると、管理者が混乱することがあります。
+<A NAME="IDX8144"></A>
+<P>所属するセルが米国版の AFS を実行し、更新サーバーを使用して、システム制御マシンの <B>/usr/afs/etc</B> ディレクトリーの内容を配布する場合は、システム制御マシンに保管される<B>UserList</B> ファイルのコピーのみを編集します。どのマシンがシステム制御マシンであるかわからなくなった場合は、
+<A HREF="auagd008.htm#HDRWQ125">ファイル・サーバー・マシンの 4 つの役割</A>の節を参照してください。
+<P>所属するセルが AFS の国際版を実行する場合、またはシステム制御マシンを使用しない場合は、それぞれのサーバー・マシンに対して <B>UserList</B> ファイルを個別に編集する必要があります。
+<P>パフォーマンスの問題を生じる可能性のあるフォーマット・エラーが起きるのを防ぐためには、絶対に <B>UserList</B> ファイルを直接編集しないでください。代わりに、この機能グループで説明する <B>bos adduser</B> または <B>bos removeuser</B> コマンドを使用してください。
+<A NAME="IDX8145"></A>
+<A NAME="IDX8146"></A>
+<A NAME="IDX8147"></A>
+<A NAME="IDX8148"></A>
+<P><H3><A NAME="HDRWQ816" HREF="auagd002.htm#ToC_663">UserList ファイルのユーザーの表示</A></H3>
+<OL TYPE=1>
+<LI><B>bos listusers</B> コマンドを発行して、<B>/usr/afs/etc/UserList</B> ファイルの内容を表示します。
+<P>
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE>
+<P>
+<P>ここで、
+<P>
+<DL>
+<P><DT><B>listu
+</B><DD>は、<B>listusers</B> の最も短い受け入れ可能な省略形です。
+<P><DT><B><VAR>machine name</VAR>
+</B><DD>AFS サーバー・マシンを指定します。通常は、すべてのマシンのファイルは同一であるため、任意のマシンを指定することができます。
+</DL>
+</LI></OL>
+<P><H3><A NAME="HDRWQ817" HREF="auagd002.htm#ToC_664">UserList ファイルにユーザーを追加する</A></H3>
+<A NAME="IDX8149"></A>
+<A NAME="IDX8150"></A>
+<A NAME="IDX8151"></A>
+<A NAME="IDX8152"></A>
+<OL TYPE=1>
+<LI>ユーザーが、<B>/usr/afs/etc/UserList</B> ファイルにリストされていることを確認します。リストされていなければ、自ら項目を追加する前に、資格のある管理者にリストに追加してもらう必要があります。必要な場合には、<B>bos listusers</B> コマンドを発行します。このコマンドについては、<A HREF="#HDRWQ816">UserList ファイルのユーザーの表示</A>で詳しく説明しています。
+<P>
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE>
+</LI><LI><B>bos adduser</B> コマンドを発行して、<B>UserList</B> ファイルに追加します。
+<P>
+<PRE>   % <B>bos adduser</B> &lt;<VAR>machine name</VAR>> &lt;<VAR>user names</VAR>><SUP>+</SUP>
+</PRE>
+<P>
+<P>ここで、
+<P>
+<DL>
+<P><DT><B>addu
+</B><DD>は、<B>adduser</B> の最も短い受け入れ可能な省略形です。
+<P><DT><B><VAR>machine name</VAR>
+</B><DD>更新サーバーを使用して <B>/usr/afs/etc</B> ディレクトリーの内容を配布する場合 (米国版の AFS を実行するセルでのみ可能)、システム制御マシンを指定します。デフォルトでは、更新サーバーが変更を配布するのに、最大 5 分かかるので、新規に追加されたユーザーは、特権コマンドの発行を試行するまで、その時間待たなければなりません。
+<P>
+<P>AFS の国際版を実行する場合、またはシステム制御マシンを使用しない場合は、<VAR>machine name</VAR> を順番にそれぞれのサーバー・マシンの名前に置き換えて、コマンドを繰り返します。
+<P><DT><B><VAR>user names</VAR>
+</B><DD><B>UserList</B> ファイルに指定する各管理者のユーザー名を指定します。
+</DL>
+</LI></OL>
+<P><H3><A NAME="Header_665" HREF="auagd002.htm#ToC_665">UserList ファイルからユーザーを削除する</A></H3>
+<A NAME="IDX8153"></A>
+<A NAME="IDX8154"></A>
+<A NAME="IDX8155"></A>
+<A NAME="IDX8156"></A>
+<OL TYPE=1>
+<LI>ユーザーが、<B>/usr/afs/etc/UserList</B> ファイルにリストされていることを確認します。リストされていなければ、自ら項目を削除する前に、資格のある管理者にリストに追加してもらう必要があります。必要な場合には、<B>bos listusers</B> コマンドを発行します。このコマンドについては、<A HREF="#HDRWQ816">UserList ファイルのユーザーの表示</A>で詳しく説明しています。
+<P>
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE>
+</LI><LI><B>bos removeuser</B> コマンドを発行して、<B>UserList</B> ファイルから1 つまたは複数のユーザーを削除します。
+<P>
+<PRE>   % <B>bos removeuser</B> &lt;<VAR>machine name</VAR>> &lt;<VAR>user names</VAR>><SUP>+</SUP>
+</PRE>
+<P>
+<P>ここで、
+<P>
+<DL>
+<P><DT><B>removeu
+</B><DD><B>removeuser</B> の最も短い受け入れ可能な省略形です。
+<P><DT><B><VAR>machine name</VAR>
+</B><DD>更新サーバーを使用して <B>/usr/afs/etc</B> ディレクトリーの内容を配布する場合 (米国版の AFS を実行するセルでのみ可能)、システム制御マシンを指定します。デフォルトでは、更新サーバーが変更を配布するのに、最大 5 分かかるので、新規に削除されたユーザーは、その時間、特権コマンドの発行を続けることができます。
+<P>
+<P>AFS の国際版を実行する場合、またはシステム制御マシンを使用しない場合は、<VAR>machine name</VAR> を順番にそれぞれのサーバー・マシンの名前に置き換えて、コマンドを繰り返します。
+<P><DT><B><VAR>user names</VAR>
+</B><DD><B>UserList</B> ファイルに指定する各管理者のユーザー名を指定します。
+</DL>
+</LI></OL>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auagd020.htm">前ページ</A> &#124; <A HREF="auagd022.htm">次ページ</A> &#124; <A HREF="auagd002.htm#ToC">目次</A> &#124; <A HREF="auagd026.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved<!-- 991224 --> 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

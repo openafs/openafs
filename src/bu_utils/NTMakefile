@@ -1,0 +1,44 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+#
+
+!INCLUDE ..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\config\NTMakefile.version
+
+
+############################################################################
+# build fms.exe
+
+EXEFILE = $(DESTDIR)\etc\fms.exe
+
+EXEOBJS =\
+	fms.obj \
+	fms.res
+
+EXELIBS =\
+	$(DESTDIR)\lib\afs\afscmd.lib \
+	$(DESTDIR)\lib\afs\afsusd.lib \
+	$(DESTDIR)\lib\afs\afsutil.lib \
+	$(DESTDIR)\lib\afs\afsprocmgmt.lib
+	
+
+$(EXEFILE): $(EXEOBJS) $(EXELIBS)
+	$(EXECONLINK)
+	$(EXEPREP)
+
+############################################################################
+# Definitions for generating versioninfo resources
+
+fms.res: fms.rc AFS_component_version_number.h
+	$(RC) $*.rc
+
+############################################################################
+# Install target; primary makefile target
+
+install: $(LIBFILE) $(DLLFILE) $(EXEFILE) $(INCFILES)
+
+
+############################################################################
+# Local clean target; augments predefined clean target
+
+clean::
+

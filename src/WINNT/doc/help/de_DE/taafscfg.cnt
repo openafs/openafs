@@ -1,0 +1,32 @@
+:Base TAAFSCFG.HLP
+:Title IBM AFS Server Configuration
+1 Hilfe zu IBM AFS Server Configuration
+2 Informationen zu AFS, zum AFS Server und zum AFS Control Center=About_AFS_and_the_AFS_Server_and_AFS_Control_Center
+2 Konfigurieren des AFS Servers
+3 Übersicht=Configuring_the_AFS_Server
+3 Der AFS Server Configuration-Assistent=The_AFS_Server_Configuration_Wizard
+3 Führen Sie folgende Schritte aus, um den AFS Server in eine vorhandene Zelle zu konfigurieren=Configuring_the_AFS_Server_into_an_Existing_Cell
+3 Führen Sie die folgenden Schritte aus, um den AFS Server als ersten AFS Server in eine vorhandene Zelle zu konfigurieren.=Configuring_the_AFS_Server_as_the_First_AFS_Server_in_a_Cell
+3 Zugreifen auf AFS-Daten=Accessing_AFS_Data
+2 Das Dialogfenster AFS Server Configuration
+3 Übersicht=The_AFS_Server_Configuration_Dialog_Box
+3 Führen Sie folgende Schritte aus, um auf das Dialogfenster AFS Server Configuration zuzugreifen=To_Access_the_AFS_Server_Configuration_Dialog_Box
+3 Register Partitionen
+4 Übersicht=IDH_PARTITIONS_PAGE
+4 Einrichten von AFS-Partitionen
+5 Übersicht=Setting_Up_AFS_Partitions
+5 Führen Sie folgende Schritte aus, um eine AFS-Partition zu erstellen=To_Create_an_AFS_Partion
+4 Verwalten von AFS-Partitionen
+5 Übersicht=Administering_AFS_Partitions
+5 Wiederherstellen einer AFS-Partition
+6 Übersicht=Salvaging_an_AFS_Partition
+6 Führen sie folgende Schritte aus, um eine AFS-Partition wiederherzustellen=To_Salvage_an_AFS_Partition
+5 Entfernen von AFS-Partitionen
+6 Übersicht=Removing_AFS_Partitions
+6 Führen Sie folgende Schritte aus, um eine AFS-Partition zu entfernen=To_Remove_an_AFS_Partition
+3 Register Services
+4 Übersicht=IDH_SERVICES_PAGE
+4 Aufgabenbereiche der AFS Server=AFS_Server_Roles
+4 AFS-Services=AFS_Services
+4 Führen Sie folgende Schritte aus, um einen AFS-Service zu konfigurieren und zu starten=To_Configure_and_Start_an_AFS_Service
+4 Führen Sie folgende Schritte aus, um einen AFS-Service zu stoppen und zu dekonfigurieren=To_Stop_and_Unconfigure_an_AFS_Service

@@ -1,0 +1,83 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3190/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 5 Nov 1999 at 13:58:29                -->
+<META HTTP-EQUIV="updated" CONTENT="Fri, 05 Nov 1999 13:58:29">
+<META HTTP-EQUIV="review" CONTENT="Sun, 05 Nov 2000 13:58:29">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 05 Nov 2001 13:58:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf174.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf176.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRFSTRACE_LSSET" HREF="auarf002.htm#ToC_189">fstrace lsset</A></H2>
+<P><STRONG>Purpose</STRONG>
+<A NAME="IDX5038"></A>
+<A NAME="IDX5039"></A>
+<P>Reports the status of an event set
+<P><STRONG>Synopsis</STRONG>
+<PRE><B>fstrace lsset</B> [<B>-set</B> &lt;<VAR>set_name</VAR>><SUP>+</SUP>]  [<B>-help</B>] 
+   
+<B>fstrace lss</B> [<B>-s</B> &lt;<VAR>set_name</VAR>><SUP>+</SUP>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>Description</STRONG>
+<P>The <B>fstrace lsset</B> command displays a list of the available event
+sets and reports their current status (active, inactive, or dormant).
+<P>To change an event set&#39;s status, use the <B>fstrace setset</B>
+command.
+<P><STRONG>Options</STRONG>
+<DL>
+<P><DT><B>-set
+</B><DD>Names the event set for which to display the status. The only
+acceptable value is <B>cm</B>, which is also the default if this argument
+is omitted.
+<P><DT><B>-help
+</B><DD>Prints the online help for this command. All other valid options
+are ignored.
+</DL>
+<P><STRONG>Output</STRONG>
+<P>The output lists the available event sets and the status of each, in the
+following format&#58;
+<PRE>   Available sets&#58;
+   cm {active | inactive | dormant}
+   
+</PRE>
+<P>where
+<DL>
+<P><DT><B><TT>active</TT>
+</B><DD>Indicates that tracing is enabled for the event set, and kernel memory
+allocated for the corresponding trace log.
+<P><DT><B><TT>inactive</TT>
+</B><DD>Indicates that tracing is temporarily disabled for the event set, but
+kernel memory still allocated for the corresponding trace log.
+<P><DT><B><TT>dormant</TT>
+</B><DD>Indicates that tracing is disabled for the event set, and no kernel memory
+allocated for the corresponding trace log.
+</DL>
+<P><STRONG>Examples</STRONG>
+<P>The following example displays the available event set and its
+status&#58;
+<PRE>   # <B>fstrace lsset</B>
+   Available sets&#58;
+   cm active
+   
+</PRE>
+<P><STRONG>Privilege Required</STRONG>
+<P>The issuer must be logged in as the local superuser <B>root</B>.
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf169.htm#HDRFSTRACE_INTRO">fstrace</A>
+<P><A HREF="auarf177.htm#HDRFSTRACE_SETSET">fstrace setset</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf174.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf176.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

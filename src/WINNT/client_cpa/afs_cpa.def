@@ -1,0 +1,10 @@
+; afs_cpa.def : Declares the module parameters for AFS for NT
+;               Control Panel Applet
+;
+LIBRARY      AFS_CPA.CPL
+
+CODE         PRELOAD MOVEABLE DISCARDABLE
+DATA	     PRELOAD SINGLE
+
+EXPORTS
+	CPlApplet

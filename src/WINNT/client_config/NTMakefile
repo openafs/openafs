@@ -1,0 +1,135 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+#
+
+# make compiler warnings fatal
+
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -WX
+
+# include the AFSD source tree on our inclusion path
+
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -I ..\afsd
+
+# include the primary makefile
+
+!INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\..\config\NTMakefile.version
+
+############################################################################
+#
+# BUILD TARGETS
+#
+
+EXEFILE = $(DESTDIR)\root.client\usr\vice\etc\afs_config.exe
+
+EXEOBJS = \
+	afs_config_stub.res \
+	cellservdb.obj \
+	checklist.obj \
+	config.obj \
+	ctl_sockaddr.obj \
+	ctl_spinner.obj \
+	dialog.obj \
+	drivemap.obj \
+	fastlist.obj \
+	fs_utils.obj \
+	hashlist.obj \
+	isadmin.obj \
+	main.obj \
+	misc.obj \
+	pagesize.obj \
+	resize.obj \
+	subclass.obj \
+	tab_advanced.obj \
+	tab_drives.obj \
+	tab_hosts.obj \
+	tab_general.obj \
+	tab_prefs.obj \
+	dlg_misc.obj \
+	dlg_logon.obj \
+	dlg_diag.obj \
+	dlg_automap.obj
+
+VCLIBS =\
+	comctl32.lib \
+	shell32.lib \
+	mpr.lib
+
+EXELIBS = \
+	$(DESTDIR)\lib\afs\TaLocale.lib \
+	$(DESTDIR)\lib\afsrpc.lib \
+	$(DESTDIR)\lib\afsauthent.lib \
+	$(DESTDIR)\lib\libafsconf.lib
+
+############################################################################
+#
+# EXTERNAL SOURCE FILES
+#
+# The following source files are required by this application, but live
+# elsewhere in the tree. To prevent checking in more than one copy of the
+# source files, they are copied to this directory at build-time.
+#
+
+COPYHEADERS = \
+	$(DESTDIR)\include\WINNT\al_resource.h \
+	$(DESTDIR)\include\WINNT\checklist.h \
+	$(DESTDIR)\include\WINNT\ctl_sockaddr.h \
+	$(DESTDIR)\include\WINNT\ctl_spinner.h \
+	$(DESTDIR)\include\WINNT\dialog.h \
+	$(DESTDIR)\include\WINNT\fastlist.h \
+	$(DESTDIR)\include\WINNT\hashlist.h \
+	$(DESTDIR)\include\WINNT\resize.h \
+	$(DESTDIR)\include\WINNT\subclass.h
+
+COPYSOURCES = \
+	.\checklist.cpp \
+	.\checklist.h \
+	.\ctl_sockaddr.cpp \
+	.\ctl_sockaddr.h \
+	.\ctl_spinner.cpp \
+	.\ctl_spinner.h \
+	.\dialog.cpp \
+	.\dialog.h \
+	.\fastlist.cpp \
+	.\fastlist.h \
+	.\fs_utils.c \
+	.\hashlist.cpp \
+	.\hashlist.h \
+	.\resize.cpp \
+	.\resize.h \
+	.\subclass.cpp \
+	.\subclass.h
+
+############################################################################
+
+{..\afsapplib}.h{$(DESTDIR)\include\WINNT}.h:
+	$(COPY) ..\afsapplib\$(*B).h $(DESTDIR)\include\WINNT
+
+{..\afsapplib}.h{.\}.h:
+	$(COPY) ..\afsapplib\$(*B).h .
+
+{..\afsapplib}.cpp{.\}.cpp:
+	$(COPY) ..\afsapplib\$(*B).cpp .
+
+{..\afsd}.c{.\}.c:
+	$(COPY) ..\afsd\$(*B).c .
+
+############################################################################
+
+$(EXEFILE) : $(EXEOBJS) $(EXELIBS)
+	$(EXEGUILINK) $(VCLIBS)
+	$(EXEPREP) 
+
+install : $(COPYSOURCES) $(COPYHEADERS) $(EXEFILE) lang
+
+lang ::
+	$(CD) lang
+	for /f %l in ('dir /B ??_??') do @$(NTLANG) %l $(MAKECMD) /nologo /f NTMakefile install
+	$(CD) ..
+
+############################################################################
+#
+# Dependencies
+#
+
+afs_config_stub.res : afs_config_stub.rc AFS_component_version_number.h
+

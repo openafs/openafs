@@ -1,0 +1,51 @@
+#!/sbin/sh
+# @(#) $Revision$
+#
+##################################################################
+#
+# Name :
+#	 umount (afs) - /sbin/fs/afs/umount
+#
+# Description
+# 	This file contains scripts/commands necessary to umount
+#	the afs file system.
+#	
+#	It should be invoked by the generic umountall only.
+#
+# Input Parameters:
+#	None
+#
+# Expected results:
+#	see description.
+#
+# Side effects of this test:
+#  	none
+#
+# Supporting files and Relationship:
+#        i) various "/sbin/fs/afs" commands are used by this script.
+#       ii) generic bcheckrc scrtipt located in the /sbin
+#           directory invokes this script.
+#
+#
+##################################################################
+#
+#
+# Description - This function is used by umountall to unmount afs 
+# file system.
+#
+# Result values -  none
+#
+# Used (exclusively) by - /sbin/umountall
+#
+
+
+#  we are passed in AFS /afs. We are supposed to unmount the AFS
+# file system. Currently, we cannot unmount the AFS file system
+# dynimacally. The only way to do this is to reboot the machine.
+
+# do nothing
+exit 1
+
+#*********************************************************************
+# End of umount (afs)
+#*********************************************************************

@@ -1,0 +1,99 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRFS_LSMOUNT" HREF="auarf002.htm#ToC_165">fs lsmount</A></H2>
+<A NAME="IDX4884"></A>
+<A NAME="IDX4885"></A>
+<A NAME="IDX4886"></A>
+<A NAME="IDX4887"></A>
+<A NAME="IDX4888"></A>
+<P><STRONG>目的</STRONG>
+<P>ディレクトリーがマウント・ポイントのボリュームを報告します。
+<P><STRONG>構文</STRONG>
+<PRE><B>fs lsmount  -dir</B> &lt;<VAR>directory</VAR>><SUP>+</SUP>  [<B>-help</B>]
+   
+<B>fs ls  -d </B>&lt;<VAR>directory</VAR>><SUP>+</SUP>  [<B>-h</B>] 
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>fs lsmount</B> コマンドは、指定された各ディレクトリーがマウント・ポイントになっているボリュームを報告します。また、ディレクトリーがマウント・ポイントではなかったり、AFS にはないことを示すエラー・メッセージを表示します。
+<P>マウント・ポイントを作成するには、<B>fs mkmount</B> コマンドを使用します。これを削除するには、<B>fs rmmount</B> コマンドを使用します。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B>-dir
+</B><DD>ボリュームのマウント・ポイントとして機能するディレクトリーを指定します。指定されたパス名の最後の要素は、実際の名前でなければなりません。1 つまたは 2 つのピリオド (<B>.</B> または <B>..</B>) のような省略表現で指定しないでください。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>出力</STRONG>
+<P>指定されたディレクトリーがマウント・ポイントではない場合には、出力の形式は、以下のようになります。
+<PRE>   '<VAR>directory</VAR>' is a mount point for volume '<VAR>volume name</VAR>'
+   
+</PRE>
+<P>ここで、
+<UL>
+<LI>番号記号 (<TT>#</TT>) は、正規のマウント・ポイントの文字列 <VAR>volume name</VAR> の前に置きます。
+</LI><LI>パーセント記号 (<TT>%</TT>) は、読み取り / 書き込みマウント・ポイントの文字列
+<VAR>volume name</VAR> の前に置きます。
+</LI><LI>セル名およびコロン (<TT>:</TT>) は、番号記号またはパーセント記号の後、セルラー・マウント・ポイントの文字列 <VAR>volume name</VAR> の前に置きます。
+</LI></UL>
+<P>キャッシュ・マネージャーが 3 つのタイプのマウント・ポイントをどのように解釈するかについては、<B>fs mkmount</B> 解説ページを参照してください。
+<P>ディレクトリーがマウント・ポイントにシンボリック・リンクである場合、出力の形式は次のとおりです。
+<PRE>   '<VAR>directory</VAR>' is a symbolic link, leading to a mount point for volume '<VAR>volume name</VAR>'
+   
+</PRE>
+<P>ディレクトリーがマウント・ポイントでないか、AFS にない場合、出力は次のようになります。
+<PRE>   '<VAR>directory</VAR>' is not a mount point.
+   
+</PRE>
+<P>出力が混同している場合には、マウント・ポイントがローカルの AFS クライアント・キャッシュで破壊された可能性があります。
+<B>fs flushmount</B> コマンドを使用してそのマウント・ポイントを破棄し、キャッシュ・マネージャーにマウント・ポイントを最新表示させてください。
+<P><STRONG>例</STRONG>
+<P>次の例では、ユーザー <B>smith</B> のホーム・ディレクトリーのマウント・ポイントを示しています。
+<PRE>   % <B>fs lsmount /afs/abc.com/usr/smith</B>
+   '/afs/abc.com/usr/smith' is a mount point for volume '#user.smith'
+   
+</PRE>
+<P>以下の例は、
+ABC Corporation セルの <TT>root.cell</TT> ボリューム用の、正規マウント・ポイントと読み取り / 書き込みマウント・ポイントの両方を示しています。
+<PRE>   % <B>fs lsmount /afs/abc.com</B>
+   '/afs/abc.com' is a mount point for volume '#root.cell'
+   
+   % <B>fs lsmount /afs/.abc.com</B>
+   '/afs/.abc.com' is a mount point for volume '%root.cell'
+   
+</PRE>
+<P>次の例では、セルラー・マウント・ポイントを示しています。ここでは、State University セルの <TT>root.cell</TT> ボリュームが ABC Corporation セルのツリーにマウントしています。
+<PRE>   % <B>fs lsmount /afs/stateu.edu</B>
+   '/afs/stateu.edu' is a mount point for volume '#stateu.edu:root.cell'
+   
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>発行者は、
+<B>-dir</B> 引き数で命名されたファイルまたはディレクトリーを格納するボリュームのルート・ディレクトリーの ACL で、およびパス名でその前に置かれる各ディレクトリーの ACL で、<B>l</B> (<B>検索</B>) アクセス権が必要です。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf141.htm#HDRFS_FLUSHMOUNT">fs flushmount</A>
+<P><A HREF="auarf153.htm#HDRFS_MKMOUNT">fs mkmount</A>
+<P><A HREF="auarf156.htm#HDRFS_RMMOUNT">fs rmmount</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf150.htm">前ページ</A> &#124; <A HREF="auarf152.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

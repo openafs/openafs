@@ -1,0 +1,23 @@
+#
+# Initialization file for AFSinstall on Alpha machines
+#
+# 
+#
+# Alternate directories
+#
+
+#
+# Install packages
+# file   Default    Description
+#
+modkernel     0  Dynamic kernel libraries and afsd
+bldkernel     1  Static  kernel libraries and afsd
+build         1  Perform kernel build
+installkernel 1  Install AFS aware kernel
+
+#
+# Client configuration options
+#
+# option definition
+
+

@@ -1,0 +1,57 @@
+EXPORTS
+	cfg_kaserverBosName			@1  DATA
+	cfg_ptserverBosName			@2  DATA
+	cfg_vlserverBosName			@3  DATA
+	cfg_buserverBosName			@4  DATA
+	cfg_fileserverBosName           	@5  DATA
+	cfg_upserverBosName			@6  DATA
+	cfg_upclientBosNamePrefix		@7  DATA
+	cfg_upclientSysBosSuffix		@8  DATA
+	cfg_upclientBinBosSuffix        	@9  DATA
+	cfg_HostOpen				@10
+	cfg_HostClose				@11
+	cfg_HostQueryStatus			@12
+	cfg_HostSetCell				@13
+	cfg_HostSetAfsPrincipal			@14
+	cfg_HostSetAdminPrincipal		@15
+	cfg_HostInvalidate			@16
+	cfg_HostPartitionTableEnumerate		@17
+	cfg_HostPartitionTableAddEntry		@18
+	cfg_HostPartitionTableRemoveEntry	@19
+	cfg_ClientQueryStatus			@20
+	cfg_ClientSetCell			@21
+	cfg_ClientCellServDbAdd			@22
+	cfg_ClientCellServDbRemove		@23
+	cfg_ClientStart				@24
+	cfg_CellServDbAddHost			@25
+	cfg_CellServDbRemoveHost		@26
+	cfg_CellServDbEnumerate			@27
+	cfg_BosServerStart			@28
+	cfg_BosServerStop			@29
+	cfg_BosServerQueryStatus		@30
+	cfg_AuthServerStart			@31
+	cfg_DbServersStart			@32
+	cfg_DbServersStop			@33
+	cfg_DbServersQueryStatus		@34
+	cfg_DbServersRestartAll			@35
+	cfg_DbServersWaitForQuorum		@36
+	cfg_DbServersStopAllBackup		@37
+	cfg_FileServerStart			@38
+	cfg_FileServerStop			@39
+	cfg_FileServerQueryStatus		@40
+	cfg_UpdateServerStart			@41
+	cfg_UpdateServerStop			@42
+	cfg_UpdateServerQueryStatus		@43
+	cfg_SysBinServerStart			@44
+	cfg_UpdateClientStart			@45
+	cfg_UpdateClientStop			@46
+	cfg_UpdateClientStopAll			@47
+	cfg_UpdateClientQueryStatus		@48
+	cfg_SysControlClientStart		@49
+	cfg_BinDistClientStart			@50
+	cfg_StringDeallocate			@51
+	cfg_PartitionListDeallocate		@52
+	cfg_CellServDbStatusDeallocate		@53
+	cfg_HostPartitionNameValid		@54
+	cfg_HostDeviceNameValid			@55
+	cfg_ClientStop				@56

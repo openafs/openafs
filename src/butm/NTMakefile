@@ -1,0 +1,43 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+#
+
+!INCLUDE ..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\config\NTMakefile.version
+
+
+############################################################################
+# Definitions for building a static library
+
+LIBFILE = $(DESTDIR)\lib\afs\afsbutm.lib
+
+LIBOBJS =\
+	file_tm.obj \
+	AFS_component_version_number.obj
+
+$(LIBFILE): $(LIBOBJS) 
+	$(LIBARCH) 
+
+
+############################################################################
+# Install target; primary makefile target
+
+install: $(LIBFILE) test_ftm.exe
+
+
+############################################################################
+# Local clean target; augments predefined clean target
+
+clean::
+	$(DEL) test_ftm.exe 
+
+############################################################################
+# Auxiliary build targets not built by default; e.g. test programs
+
+TESTLIBS = $(DESTDIR)\lib\afslwp.lib \
+	$(DESTDIR)\lib\afs\afscom_err.lib \
+	$(DESTDIR)\lib\afs\afsusd.lib \
+	$(DESTDIR)\lib\afs\afsutil.lib \
+	$(DESTDIR)\lib\afs\afsbubasics.lib
+
+test_ftm.exe: test_ftm.obj $(LIBFILE) $(TESTLIBS)
+	$(EXECONLINK)

@@ -1,0 +1,43 @@
+
+#/*
+# * (C) COPYRIGHT IBM CORPORATION 1988, 1989
+# * LICENSED MATERIALS - PROPERTY OF IBM
+# */
+
+# NOTE: VL_PERM value is hardcoded in audit/audit.h, so if you make
+# changes here, make sure that audit/audit.h is kept up to date.
+
+error_table vl
+  ec VL_IDEXIST, "Volume Id entry exists in vl database"
+  ec VL_IO, "I/O related error"
+  ec VL_NAMEEXIST, "Volume name entry exists in vl database"
+  ec VL_CREATEFAIL, "Internal creation failure"
+  ec VL_NOENT, "No such entry"
+  ec VL_EMPTY, "Vl database is empty"
+  ec VL_ENTDELETED, "Entry is deleted (soft delete)"
+  ec VL_BADNAME, "Volume name is illegal"
+  ec VL_BADINDEX, "Index is out of range"
+  ec VL_BADVOLTYPE, "Bad volume type"
+  ec VL_BADSERVER, "Illegal server number (out of range)"
+  ec VL_BADPARTITION, "Bad partition number"
+  ec VL_REPSFULL, "Run out of space for Replication sites"
+  ec VL_NOREPSERVER, "No such Replication server site exists"
+  ec VL_DUPREPSERVER, "Replication site already exists"
+  ec VL_RWNOTFOUND, "Parent R/W entry not found"
+  ec VL_BADREFCOUNT, "Illegal Reference Count number"
+  ec VL_SIZEEXCEEDED, "Vl size for attributes exceeded"
+  ec VL_BADENTRY, "Bad incoming vl entry"
+  ec VL_BADVOLIDBUMP, "Illegal max volid increment"
+  ec VL_IDALREADYHASHED, "RO/BACK id already hashed"
+  ec VL_ENTRYLOCKED, "Vl entry is already locked"
+  ec VL_BADVOLOPER, "Bad volume operation code"
+  ec VL_BADRELLOCKTYPE, "Bad release lock type"
+  ec VL_RERELEASE, "Status report: last release was aborted"
+  ec VL_BADSERVERFLAG, "Invalid replication site server flag"
+  ec VL_PERM, "No permission access"
+  ec VL_NOMEM, "malloc(realloc) failed to alloc enough memory"
+  ec VL_BADVERSION, "Wrong vldb version"
+  ec VL_INDEXERANGE, "Index out of range"
+  ec VL_MULTIPADDR, "Servers have the same ip address"
+  ec VL_BADMASK, "Illegal attribute mask value"
+end

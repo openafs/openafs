@@ -1,0 +1,817 @@
+/*
+ * (C) Copyright Transarc Corporation 1989
+ * Licensed Materials - Property of Transarc
+ * All Rights Reserved.
+ */
+
+/*------------------------------------------------------------------------
+ * fsprobe.c
+ *
+ * Description:
+ *	Implementation of the AFS FileServer probe facility.
+ *
+ *------------------------------------------------------------------------*/
+
+#include <afs/param.h>
+#include <fsprobe.h>			/*Interface for this module*/
+#include <lwp.h>			/*Lightweight process package*/
+#include <afs/cellconfig.h>
+
+#define LWP_STACK_SIZE	(16 * 1024)
+
+/*
+ * Routines we need that don't have explicit include file definitions.
+ */
+extern int RXAFSCB_ExecuteRequest();	/*AFS callback dispatcher*/
+extern char *hostutil_GetNameByINet();	/*Host parsing utility*/
+
+/*
+ * Help out the linker by explicitly importing the callback routines.
+ */
+extern afs_int32 SRXAFSCB_CallBack();
+extern afs_int32 SRXAFSCB_InitCallBackState2();
+extern afs_int32 SRXAFSCB_Probe();
+
+/*
+ * Exported variables.
+ */
+int fsprobe_numServers;				 /*Num servers connected*/
+struct fsprobe_ConnectionInfo *fsprobe_ConnInfo; /*Ptr to connection array*/
+struct fsprobe_ProbeResults fsprobe_Results;	 /*Latest probe results*/
+int fsprobe_ProbeFreqInSecs;			 /*Probe freq. in seconds*/
+
+/*
+ * Private globals.
+ */
+static int fsprobe_initflag = 0;		/*Was init routine called?*/
+static int fsprobe_debug = 0;			/*Debugging output enabled?*/
+static int (*fsprobe_Handler)();		/*Probe handler routine*/
+static PROCESS probeLWP_ID;			/*Probe LWP process ID*/
+static int fsprobe_statsBytes;			/*Num bytes in stats block*/
+static int fsprobe_probeOKBytes;		/*Num bytes in probeOK block*/
+
+/*
+ * We have to pass a port to Rx to start up our callback listener
+ * service, but 7001 is already taken up by the Cache Manager.  So,
+ * we make up our own.
+ */
+#define FSPROBE_CBPORT	7101
+
+
+/*------------------------------------------------------------------------
+ * [private] fsprobe_CleanupInit
+ *
+ * Description:
+ *	Set up for recovery after an error in initialization (i.e.,
+ *	during a call to fsprobe_Init.
+ *
+ * Arguments:
+ *	None.
+ *
+ * Returns:
+ *	0 on success,
+ *	Error value otherwise.
+ *
+ * Environment:
+ *	This routine is private to the module.
+ *
+ * Side Effects:
+ *	Zeros out basic data structures.
+ *------------------------------------------------------------------------*/
+
+static int fsprobe_CleanupInit()
+
+{ /*fsprobe_CleanupInit*/
+
+    afs_int32 code;			/*Return code from callback stubs*/
+    struct rx_call *rxcall;	/*Bogus param*/
+    AFSCBFids *Fids_Array;	/*Bogus param*/
+    AFSCBs *CallBack_Array;	/*Bogus param*/
+    struct interfaceAddr *interfaceAddr; /*Bogus param*/
+
+    fsprobe_ConnInfo = (struct fsprobe_ConnectionInfo *)0;
+    bzero(fsprobe_Results, sizeof(struct fsprobe_ProbeResults));
+
+    rxcall 	   = (struct rx_call *)0;
+    Fids_Array	   = (AFSCBFids *)0;
+    CallBack_Array = (AFSCBs *)0;
+    interfaceAddr  = (struct interfaceAddr *)0;
+
+    code = SRXAFSCB_CallBack(rxcall, Fids_Array, CallBack_Array);
+    if (code)
+	return(code);
+    code = SRXAFSCB_InitCallBackState2(rxcall, interfaceAddr);
+    if (code)
+	return(code);
+    code = SRXAFSCB_Probe(rxcall);
+    return(code);
+
+} /*fsprobe_CleanupInit*/
+
+
+/*------------------------------------------------------------------------
+ * [exported] fsprobe_Cleanup
+ *
+ * Description:
+ *	Clean up our memory and connection state.
+ *
+ * Arguments:
+ *	int a_releaseMem : Should we free up malloc'ed areas?
+ *
+ * Returns:
+ *	0 on total success,
+ *	-1 if the module was never initialized, or there was a problem
+ *		with the fsprobe connection array.
+ *
+ * Environment:
+ *	fsprobe_numServers should be properly set.  We don't do anything
+ *	unless fsprobe_Init() has already been called.
+ *
+ * Side Effects:
+ *	Shuts down Rx connections gracefully, frees allocated space
+ *	(if so directed).
+ *------------------------------------------------------------------------*/
+
+int fsprobe_Cleanup(a_releaseMem)
+    int a_releaseMem;
+
+{ /*fsprobe_Cleanup*/
+
+    static char rn[] = "fsprobe_Cleanup";	/*Routine name*/
+    int code;					/*Return code*/
+    int conn_idx;				/*Current connection index*/
+    struct fsprobe_ConnectionInfo *curr_conn;	/*Ptr to fsprobe connection*/
+
+    /*
+     * Assume the best, but check the worst.
+     */
+    if (!fsprobe_initflag) {
+      fprintf(stderr, "[%s] Refused; module not initialized\n", rn);
+      return(-1);
+    }
+    else
+      code = 0;
+
+    /*
+     * Take care of all Rx connections first.  Check to see that the
+     * server count is a legal value.
+     */
+    if (fsprobe_numServers <= 0) {
+      fprintf(stderr,
+	      "[%s] Illegal number of servers to clean up (fsprobe_numServers = %d)\n",
+	      rn, fsprobe_numServers);
+      code = -1;
+    }
+    else {
+      if (fsprobe_ConnInfo != (struct fsprobe_ConnectionInfo *)0) {
+	/*
+	 * The fsprobe connection structure array exists.  Go through it
+	 * and close up any Rx connections it holds.
+	 */
+	curr_conn = fsprobe_ConnInfo;
+	for (conn_idx = 0; conn_idx < fsprobe_numServers; conn_idx++) {
+	  if (curr_conn->rxconn != (struct rx_connection *)0) {
+	    rx_DestroyConnection(curr_conn->rxconn);
+	    curr_conn->rxconn = (struct rx_connection *)0;
+	  }
+	  if (curr_conn->rxVolconn != (struct rx_connection *)0) {
+	    rx_DestroyConnection(curr_conn->rxVolconn);
+	    curr_conn->rxVolconn = (struct rx_connection *)0;
+	  }
+	  curr_conn++;
+	} /*for each fsprobe connection*/
+      } /*fsprobe connection structure exists*/
+    } /*Legal number of servers*/
+
+    /*
+     * Now, release all the space we've allocated, if asked to.
+     */
+    if (a_releaseMem) {
+      if (fsprobe_ConnInfo != (struct fsprobe_ConnectionInfo *)0)
+	free(fsprobe_ConnInfo);
+      if (fsprobe_Results.stats != (struct ProbeViceStatistics *)0)
+	free(fsprobe_Results.stats);
+      if (fsprobe_Results.probeOK != (int *)0)
+	free(fsprobe_Results.probeOK);
+    }
+
+    /*
+     * Return the news, whatever it is.
+     */
+    return(code);
+
+} /*fsprobe_Cleanup*/
+
+/*------------------------------------------------------------------------
+ * [private] fsprobe_LWP
+ *
+ * Description:
+ *	This LWP iterates over the server connections and gathers up
+ *	the desired statistics from each one on a regular basis.  When
+ *	the sweep is done, the associated handler function is called
+ *	to process the new data.
+ *
+ * Arguments:
+ *	None.
+ *
+ * Returns:
+ *	Nothing.
+ *
+ * Environment:
+ *	Started by fsprobe_Init(), uses global sturctures.
+ *
+ * Side Effects:
+ *	As advertised.
+ *------------------------------------------------------------------------*/
+static void fsprobe_LWP()
+
+{ /*fsprobe_LWP*/
+
+    static char rn[] = "fsprobe_LWP";		/*Routine name*/
+    register afs_int32 code;				/*Results of calls*/
+    struct timeval tv;				/*Time structure*/
+    int conn_idx;				/*Connection index*/
+    struct fsprobe_ConnectionInfo *curr_conn;	/*Current connection*/
+    struct ProbeViceStatistics *curr_stats;	/*Current stats region*/
+    int *curr_probeOK;				/*Current probeOK field*/
+
+    while (1) { /*Service loop*/
+	/*
+	 * Iterate through the server connections, gathering data.
+	 * Don't forget to bump the probe count and zero the statistics
+	 * areas before calling the servers.
+	 */
+      if (fsprobe_debug)
+	fprintf(stderr, "[%s] Waking up, collecting data from %d connected servers\n",
+		rn, fsprobe_numServers);
+      curr_conn    = fsprobe_ConnInfo;
+      curr_stats   = fsprobe_Results.stats;
+      curr_probeOK = fsprobe_Results.probeOK;
+      fsprobe_Results.probeNum++;
+      bzero(fsprobe_Results.stats,   fsprobe_statsBytes);
+      bzero(fsprobe_Results.probeOK, fsprobe_probeOKBytes);
+
+      for (conn_idx = 0; conn_idx < fsprobe_numServers; conn_idx++) {
+	  /*
+	   * Grab the statistics for the current FileServer, if the
+	   * connection is valid.
+	   */
+	if (fsprobe_debug)
+	  fprintf(stderr, "[%s] Contacting server %s\n", rn, curr_conn->hostName);
+	if (curr_conn->rxconn != (struct rx_connection *)0) {
+	  if (fsprobe_debug)
+	    fprintf(stderr, "[%s] Connection valid, calling RXAFS_GetStatistics\n", rn);
+	  *curr_probeOK = RXAFS_GetStatistics(curr_conn->rxconn, curr_stats);
+
+	} /*Valid Rx connection*/
+
+	  /*
+	   * Call the Volume Server too to get additional stats
+	   */
+	if (fsprobe_debug)
+	  fprintf(stderr, "[%s] Contacting volume server %s\n", rn, curr_conn->hostName);
+	if (curr_conn->rxVolconn != (struct rx_connection *)0) {
+	    int i, code;
+	    char pname[10];
+	    struct diskPartition partition;
+
+	    if (fsprobe_debug)
+		fprintf(stderr, "[%s] Connection valid, calling RXAFS_GetStatistics\n", rn);
+	    for (i = 0 ; i < curr_conn->partCnt; i++) {
+		if (curr_conn->partList.partFlags[i] & PARTVALID) {
+		    MapPartIdIntoName(curr_conn->partList.partId[i], pname);
+		    code = AFSVolPartitionInfo(curr_conn->rxVolconn, pname, &partition);
+		    if (code) {
+			fprintf(stderr, "Could not get information on server %s partition %s\n", curr_conn->hostName, pname);
+		    } else {
+			curr_stats->Disk[i].BlocksAvailable = partition.free;
+			curr_stats->Disk[i].TotalBlocks = partition.minFree;
+			strcpy(curr_stats->Disk[i].Name, pname);
+		    }
+		}
+
+	    }
+	}
+
+
+	/*
+	 * Advance the fsprobe connection pointer & stats pointer.
+	 */
+	curr_conn++;
+	curr_stats++;
+	curr_probeOK++;
+
+      } /*For each fsprobe connection*/
+
+      /*
+       * All (valid) connections have been probed.  Now, call the
+       * associated handler function.  The handler does not take
+       * any explicit parameters, rather gets to the goodies via
+       * some of the objects exported by this module.
+       */
+      if (fsprobe_debug)
+	fprintf(stderr, "[%s] Polling complete, calling associated handler routine.\n",
+		rn);
+      code = fsprobe_Handler();
+      if (code)
+	fprintf(stderr, "[%s] Handler routine returned error code %d\n", rn, code);
+
+      /*
+       * Fall asleep for the prescribed number of seconds.
+       */
+      tv.tv_sec  = fsprobe_ProbeFreqInSecs;
+      tv.tv_usec = 0;
+      if (fsprobe_debug)
+	fprintf(stderr, "[%s] Falling asleep for %d seconds\n", rn, fsprobe_ProbeFreqInSecs);
+      code = IOMGR_Select(0,	/*Num fids*/
+			  0,	/*Descriptors ready for reading*/
+			  0,	/*Descriptors ready for writing*/
+			  0,	/*Descriptors w/exceptional conditions*/
+			  &tv);	/*Ptr to timeout structure*/
+      if (code)
+	fprintf(stderr, "[%s] IOMGR_Select returned code %d\n", rn, code);
+    } /*Service loop*/
+
+} /*fsprobe_LWP*/
+
+/*list all the partitions on <aserver> */
+static int newvolserver=0;
+XListPartitions(aconn, ptrPartList, cntp)
+    struct rx_connection *aconn;
+    struct partList *ptrPartList;
+    afs_int32 *cntp;
+{
+    struct pIDs partIds;
+    struct partEntries partEnts;
+    register int i, j=0, code;
+
+    *cntp = 0;
+    if (newvolserver == 1) {
+	for(i = 0; i < 26; i++)
+	    partIds.partIds[i]  = -1;
+tryold:
+	code = AFSVolListPartitions(aconn, &partIds);
+	if (!code) {
+	    for (i = 0;i < 26; i++) {
+		if((partIds.partIds[i]) != -1) {
+		    ptrPartList->partId[j] = partIds.partIds[i];
+		    ptrPartList->partFlags[j] = PARTVALID;
+		    j++;
+		} else
+		    ptrPartList->partFlags[i] = 0;
+	    }
+	    *cntp = j;
+	}
+	goto out;
+    }
+    partEnts.partEntries_len = 0;
+    partEnts.partEntries_val = (afs_int32 *)0;
+    code = AFSVolXListPartitions(aconn, &partEnts);
+    if (!newvolserver) {
+	if (code == RXGEN_OPCODE) {
+	    newvolserver = 1;	/* Doesn't support new interface */
+	    goto tryold;
+	} else if (!code) {
+	    newvolserver = 2;
+	}
+    }
+    if (!code) {
+	*cntp = partEnts.partEntries_len;
+	if (*cntp > VOLMAXPARTS) {
+	    fprintf(stderr,"Warning: number of partitions on the server too high %d (process only %d)\n",
+		    *cntp, VOLMAXPARTS);
+	    *cntp = VOLMAXPARTS;
+	}
+	for (i = 0;i < *cntp; i++) {
+	    ptrPartList->partId[i] = partEnts.partEntries_val[i];
+	    ptrPartList->partFlags[i] = PARTVALID;
+	}
+	free(partEnts.partEntries_val);
+    }
+out:
+    if (code)
+	fprintf(stderr,"Could not fetch the list of partitions from the server\n");
+    return code;
+}
+
+
+/*------------------------------------------------------------------------
+ * [exported] fsprobe_Init
+ *
+ * Description:
+ *	Initialize the fsprobe module: set up Rx connections to the
+ *	given set of servers, start up the probe and callback LWPs,
+ *	and associate the routine to be called when a probe completes.
+ *
+ * Arguments:
+ *	int a_numServers		  : Num. servers to connect to.
+ *	struct sockaddr_in *a_socketArray : Array of server sockets.
+ *	int a_ProbeFreqInSecs		  : Probe frequency in seconds.
+ *	int (*a_ProbeHandler)()		  : Ptr to probe handler fcn.
+ *	int a_debug;			  : Turn debugging output on?
+ *
+ * Returns:
+ *	0 on success,
+ *	-2 for (at least one) connection error,
+ *	LWP process creation code, if it failed,
+ *	-1 for other fatal errors.
+ *
+ * Environment:
+ *	*** MUST BE THE FIRST ROUTINE CALLED FROM THIS PACKAGE ***
+ *	Also, the server security object CBsecobj MUST be a static,
+ *	since it has to stick around after this routine exits.
+ *
+ * Side Effects:
+ *	Sets up just about everything.
+ *------------------------------------------------------------------------*/
+
+int fsprobe_Init(a_numServers, a_socketArray, a_ProbeFreqInSecs, a_ProbeHandler, a_debug)
+    int a_numServers;
+    struct sockaddr_in *a_socketArray;
+    int a_ProbeFreqInSecs;
+    int (*a_ProbeHandler)();
+    int a_debug;
+
+{ /*fsprobe_Init*/
+
+    static char rn[] = "fsprobe_Init";		/*Routine name*/
+    register afs_int32 code;			/*Return value*/
+    static struct rx_securityClass *CBsecobj;	/*Callback security object*/
+    struct rx_securityClass *secobj;		/*Client security object*/
+    struct rx_service *rxsrv_afsserver;		/*Server for AFS*/
+    int arg_errfound;				/*Argument error found?*/
+    int curr_srv;				/*Current server idx*/
+    struct fsprobe_ConnectionInfo *curr_conn;	/*Ptr to current conn*/
+    char *hostNameFound;			/*Ptr to returned host name*/
+    int conn_err;				/*Connection error?*/
+    int PortToUse;				/*Callback port to use*/
+
+    /*
+     * If we've already been called, snicker at the bozo, gently
+     * remind him of his doubtful heritage, and return success.
+     */
+    if (fsprobe_initflag) {
+      fprintf(stderr, "[%s] Called multiple times!\n", rn);
+      return(0);
+    }
+    else
+     fsprobe_initflag = 1; 
+
+    /*
+     * Check the parameters for bogosities.
+     */
+    arg_errfound = 0;
+    if (a_numServers <= 0) {
+      fprintf(stderr, "[%s] Illegal number of servers: %d\n",
+	      rn, a_numServers);
+      arg_errfound = 1;
+    }
+    if (a_socketArray == (struct sockaddr_in *)0) {
+      fprintf(stderr, "[%s] Null server socket array argument\n", rn);
+      arg_errfound = 1;
+    }
+    if (a_ProbeFreqInSecs <= 0) {
+      fprintf(stderr, "[%s] Illegal probe frequency: %d\n",
+	      rn, a_ProbeFreqInSecs);
+      arg_errfound = 1;
+    }
+    if (a_ProbeHandler == (int (*)())0) {
+      fprintf(stderr, "[%s] Null probe handler function argument\n", rn);
+      arg_errfound = 1;
+    }
+    if (arg_errfound)
+      return(-1);
+
+    /*
+     * Record our passed-in info.
+     */
+    fsprobe_debug	    = a_debug;
+    fsprobe_numServers      = a_numServers;
+    fsprobe_Handler	    = a_ProbeHandler;
+    fsprobe_ProbeFreqInSecs = a_ProbeFreqInSecs;
+
+    /*
+     * Get ready in case we have to do a cleanup - basically, zero
+     * everything out.
+     */
+    fsprobe_CleanupInit();
+
+    /*
+     * Allocate the necessary data structures and initialize everything
+     * else.
+     */
+    fsprobe_ConnInfo =
+      (struct fsprobe_ConnectionInfo *)
+	malloc(a_numServers * sizeof(struct fsprobe_ConnectionInfo));
+    if (fsprobe_ConnInfo == (struct fsprobe_ConnectionInfo *)0) {
+      fprintf(stderr,
+	      "[%s] Can't allocate %d connection info structs (%d bytes)\n",
+	      rn, a_numServers,
+	      (a_numServers * sizeof(struct fsprobe_ConnectionInfo)));
+      return(-1);	/*No cleanup needs to be done yet*/
+    }
+#if 0
+    else
+      fprintf(stderr, "[%s] fsprobe_ConnInfo allocated (%d bytes)\n",
+	      rn, a_numServers * sizeof(struct fsprobe_ConnectionInfo));
+#endif /* 0 */
+
+    fsprobe_statsBytes = a_numServers * sizeof(struct ProbeViceStatistics);
+    fsprobe_Results.stats = (struct ProbeViceStatistics *)
+      malloc(fsprobe_statsBytes);
+    if (fsprobe_Results.stats == (struct ProbeViceStatistics *)0) {
+      fprintf(stderr,
+	      "[%s] Can't allocate %d statistics structs (%d bytes)\n",
+	      rn, a_numServers, fsprobe_statsBytes);
+      fsprobe_Cleanup(1); /*Delete already-malloc'ed areas*/
+      return(-1);
+    }
+    else
+      if (fsprobe_debug)
+	fprintf(stderr, "[%s] fsprobe_Results.stats allocated (%d bytes)\n",
+		rn, fsprobe_statsBytes);
+
+    fsprobe_probeOKBytes = a_numServers * sizeof(int);
+    fsprobe_Results.probeOK = (int *) malloc(fsprobe_probeOKBytes);
+    if (fsprobe_Results.probeOK == (int *)0) {
+      fprintf(stderr,
+	      "[%s] Can't allocate %d probeOK array entries (%d bytes)\n",
+	      rn, a_numServers, fsprobe_probeOKBytes);
+      fsprobe_Cleanup(1); /*Delete already-malloc'ed areas*/
+      return(-1);
+    }
+    else
+      if (fsprobe_debug)
+	fprintf(stderr,
+		"[%s] fsprobe_Results.probeOK allocated (%d bytes)\n",
+		rn, fsprobe_probeOKBytes);
+
+    fsprobe_Results.probeNum  = 0;
+    fsprobe_Results.probeTime = 0;
+    bzero(fsprobe_Results.stats,
+	  (a_numServers * sizeof(struct ProbeViceStatistics)));
+
+    /*
+     * Initialize the Rx subsystem, just in case nobody's done it.
+     */
+    if (fsprobe_debug)
+      fprintf(stderr, "[%s] Initializing Rx\n", rn);
+    PortToUse = FSPROBE_CBPORT;
+    do {
+      code = rx_Init(htons(PortToUse));
+      if (code) {
+	if (code == RX_ADDRINUSE) {
+	  if (fsprobe_debug)
+	    fprintf(stderr, "[%s] Callback port %d in use, advancing\n",
+		    rn, PortToUse);
+	  PortToUse++;
+	}
+	else {
+	 fprintf(stderr, "[%s] Fatal error in rx_Init()\n", rn);
+	 return(-1);
+	}
+      }
+    } while (code);
+    if (fsprobe_debug)
+      fprintf(stderr, "[%s] Rx initialized on port %d\n", rn, PortToUse);
+
+    /*
+     * Create a null Rx server security object, to be used by the
+     * Callback listener.
+     */
+    CBsecobj = (struct rx_securityClass *) rxnull_NewServerSecurityObject();
+    if (CBsecobj == (struct rx_securityClass *)0) {
+      fprintf(stderr,
+	      "[%s] Can't create null security object for the callback listener.\n",
+	      rn);
+      fsprobe_Cleanup(1); /*Delete already-malloc'ed areas*/
+      return(-1);
+    }
+    if (fsprobe_debug)
+      fprintf(stderr, "[%s] Callback server security object created\n", rn);
+
+    /*
+     * Create a null Rx client security object, to be used by the
+     * probe LWP.
+     */
+    secobj = (struct rx_securityClass *) rxnull_NewClientSecurityObject();
+    if (secobj == (struct rx_securityClass *)0) {
+      fprintf(stderr,
+	      "[%s] Can't create client security object for probe LWP.\n",
+	      rn);
+      fsprobe_Cleanup(1); /*Delete already-malloc'ed areas*/
+      return(-1);
+    }
+    if (fsprobe_debug)
+      fprintf(stderr, "[%s] Probe LWP client security object created\n",
+	      rn);
+
+    curr_conn = fsprobe_ConnInfo;
+    conn_err = 0;
+    for (curr_srv = 0; curr_srv < a_numServers; curr_srv++) {
+	/*
+	 * Copy in the socket info for the current server, resolve its
+	 * printable name if possible.
+	 */
+      if (fsprobe_debug) {
+	fprintf(stderr, "[%s] Copying in the following socket info:\n", rn);
+	fprintf(stderr, "[%s] IP addr 0x%lx, port %d\n", rn,
+		(a_socketArray + curr_srv)->sin_addr.s_addr,
+		(a_socketArray + curr_srv)->sin_port);
+      }
+      bcopy(a_socketArray + curr_srv,
+	    &(curr_conn->skt),
+	    sizeof(struct sockaddr_in));
+
+      hostNameFound = hostutil_GetNameByINet(curr_conn->skt.sin_addr.s_addr);
+      if (hostNameFound == (char *)0) {
+	fprintf(stderr,
+		"[%s] Can't map Internet address %lu to a string name\n",
+		rn, curr_conn->skt.sin_addr.s_addr);
+	curr_conn->hostName[0] = '\0';
+      }
+      else {
+	strcpy(curr_conn->hostName, hostNameFound);
+	if (fsprobe_debug)
+	  fprintf(stderr, "[%s] Host name for server index %d is %s\n",
+		  rn, curr_srv, curr_conn->hostName);
+      }
+
+      /*
+       * Make an Rx connection to the current server.
+       */
+      if (fsprobe_debug)
+	fprintf(stderr,
+		"[%s] Connecting to srv idx %d, IP addr 0x%lx, port %d, service 1\n",
+		rn, curr_srv, curr_conn->skt.sin_addr.s_addr,
+		curr_conn->skt.sin_port);
+      curr_conn->rxconn =
+	rx_NewConnection(curr_conn->skt.sin_addr.s_addr, /*Server addr*/
+			 curr_conn->skt.sin_port,	 /*Server port*/
+			 1,				 /*AFS service num*/
+			 secobj,			 /*Security object*/
+			 0);				 /*Number of above*/
+      if (curr_conn->rxconn == (struct rx_connection *)0) {
+	fprintf(stderr,
+		"[%s] Can't create Rx connection to server %s (%lu)\n",
+		rn, curr_conn->hostName, curr_conn->skt.sin_addr.s_addr);
+	conn_err = 1;
+      }
+      if (fsprobe_debug)
+	fprintf(stderr, "[%s] New connection at 0x%lx\n",
+		rn, curr_conn->rxconn);
+
+      /*
+       * Make an Rx connection to the current volume server.
+       */
+      if (fsprobe_debug)
+	fprintf(stderr,
+		"[%s] Connecting to srv idx %d, IP addr 0x%lx, port %d, service 1\n",
+		rn, curr_srv, curr_conn->skt.sin_addr.s_addr, htons(7005));
+      curr_conn->rxVolconn =
+	rx_NewConnection(curr_conn->skt.sin_addr.s_addr, /*Server addr*/
+			 htons(AFSCONF_VOLUMEPORT),	 /*Volume Server port*/
+			 VOLSERVICE_ID,			 /*AFS service num*/
+			 secobj,			 /*Security object*/
+			 0);				 /*Number of above*/
+      if (curr_conn->rxVolconn == (struct rx_connection *)0) {
+	fprintf(stderr,
+		"[%s] Can't create Rx connection to volume server %s (%lu)\n",
+		rn, curr_conn->hostName, curr_conn->skt.sin_addr.s_addr);
+	conn_err = 1;
+      } else {
+	  int i, cnt;
+
+	  bzero(&curr_conn->partList, sizeof(struct partList));
+	  curr_conn->partCnt = 0;
+	  i = XListPartitions(curr_conn->rxVolconn, &curr_conn->partList, &cnt);
+	  if (!i) {
+	      curr_conn->partCnt = cnt;
+	  }
+      }
+      if (fsprobe_debug)
+	fprintf(stderr, "[%s] New connection at 0x%lx\n",
+		rn, curr_conn->rxVolconn);
+
+
+      /*
+       * Bump the current fsprobe connection to set up.
+       */
+      curr_conn++;
+
+    } /*for curr_srv*/
+
+    /*
+     * Create the AFS callback service (listener).
+     */
+    if (fsprobe_debug)
+      fprintf(stderr, "[%s] Creating AFS callback listener\n", rn);
+    rxsrv_afsserver =
+      rx_NewService(0,				/*Use default port*/
+		    1,				/*Service ID*/
+		    "afs",			/*Service name*/
+		    &CBsecobj,			/*Ptr to security object(s)*/
+		    1,				/*Number of security objects*/
+		    RXAFSCB_ExecuteRequest);	/*Dispatcher*/
+    if (rxsrv_afsserver == (struct rx_service *)0) {
+      fprintf(stderr, "[%s] Can't create callback Rx service/listener\n", rn);
+      fsprobe_Cleanup(1); /*Delete already-malloc'ed areas*/
+      return(-1);
+    }
+    if (fsprobe_debug)
+      fprintf(stderr, "[%s] Callback listener created\n", rn);
+
+    /*
+     * Start up the AFS callback service.
+     */
+    if (fsprobe_debug)
+      fprintf(stderr, "[%s] Starting up callback listener.\n", rn);
+    rx_StartServer(0 /*Don't donate yourself to LWP pool*/);
+
+    /*
+     * Start up the probe LWP.
+     */
+    if (fsprobe_debug)
+      fprintf(stderr, "[%s] Creating the probe LWP\n", rn);
+    code =
+      LWP_CreateProcess(fsprobe_LWP,		/*Function to start up*/
+			LWP_STACK_SIZE,		/*Stack size in bytes*/
+			1,			/*Priority*/
+			0,			/*Parameters*/
+			"fsprobe Worker",	/*Name to use*/
+			&probeLWP_ID);		/*Returned LWP process ID*/
+    if (code) {
+	fprintf(stderr, "[%s] Can't create fsprobe LWP!  Error is %d\n", rn, code);
+	fsprobe_Cleanup(1); /*Delete already-malloc'ed areas*/
+	return(code);
+    }
+    if (fsprobe_debug)
+      fprintf(stderr,
+	      "[%s] Probe LWP process structure located at 0x%x\n",
+	      rn, probeLWP_ID);
+
+#if 0
+    /*
+     * Do I need to do this?
+     */
+    if (fsprobe_debug)
+      fprintf(stderr, "[%s] Calling osi_Wakeup()\n", rn);
+    osi_Wakeup(&rxsrv_afsserver);	/*Wake up anyone waiting for it*/
+#endif /* 0 */
+
+    /*
+     * Return the final results.
+     */
+    if (conn_err)
+      return(-2);
+    else
+      return(0);
+
+} /*fsprobe_Init*/
+
+
+/*------------------------------------------------------------------------
+ * [exported] fsprobe_ForceProbeNow
+ *
+ * Description:
+ *	Wake up the probe LWP, forcing it to execute a probe immediately.
+ *
+ * Arguments:
+ *	None.
+ *
+ * Returns:
+ *	0 on success,
+ *	Error value otherwise.
+ *
+ * Environment:
+ *	The module must have been initialized.
+ *
+ * Side Effects:
+ *	As advertised.
+ *------------------------------------------------------------------------*/
+
+int fsprobe_ForceProbeNow()
+
+{ /*fsprobe_ForceProbeNow*/
+
+    static char rn[] = "fsprobe_ForceProbeNow";	/*Routine name*/
+
+    /*
+     * There isn't a prayer unless we've been initialized.
+     */
+    if (!fsprobe_initflag) {
+      fprintf(stderr, "[%s] Must call fsprobe_Init first!\n", rn);
+      return(-1);
+    }
+
+    /*
+     * Kick the sucker in the side.
+     */
+    IOMGR_Cancel(probeLWP_ID);
+
+    /*
+     * We did it, so report the happy news.
+     */
+    return(0);
+
+} /*fsprobe_ForceProbeNow*/

@@ -1,0 +1,38 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+#
+
+
+!INCLUDE ..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\config\NTMakefile.version
+
+
+INCFILEDIR = $(DESTDIR)\include\afs 
+
+INCFILES =\
+	$(INCFILEDIR)\rxgen_consts.h
+
+# build rxgen
+EXEFILE = $(DESTDIR)\bin\rxgen.exe
+
+EXEOBJS =\
+	rpc_main.obj \
+	rpc_hout.obj \
+	rpc_cout.obj \
+	rpc_parse.obj \
+	rpc_scan.obj \
+	rpc_util.obj \
+	rpc_svcout.obj \
+	rpc_clntout.obj
+	
+
+$(EXEFILE): $(EXEOBJS) $(EXELIBS)
+	$(EXECONLINK)
+	$(EXEPREP) 
+
+
+
+install: AFS_component_version_number.c $(EXEFILE) $(INCFILES)
+
+
+clean::
+	

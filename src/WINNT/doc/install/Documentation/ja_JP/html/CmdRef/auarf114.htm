@@ -1,0 +1,201 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRBOS_SALVAGE" HREF="auarf002.htm#ToC_128">bos salvage</A></H2>
+<A NAME="IDX4609"></A>
+<A NAME="IDX4610"></A>
+<A NAME="IDX4611"></A>
+<A NAME="IDX4612"></A>
+<A NAME="IDX4613"></A>
+<A NAME="IDX4614"></A>
+<A NAME="IDX4615"></A>
+<A NAME="IDX4616"></A>
+<P><STRONG>目的</STRONG>
+<P>ファイル・システムまたはボリュームに内部整合性を復元します。
+<P><STRONG>構文</STRONG>
+<PRE><B>bos salvage -server</B> &lt;<VAR>machine name</VAR>>  [<B>-partition</B> &lt;<VAR>salvage partition</VAR>>]
+            [<B>-volume</B> &lt;<VAR>salvage volume number or volume name</VAR>>]
+            [<B>-file</B> &lt;<VAR>salvage log output file</VAR>>]  [<B>-all</B>]  [<B>-showlog</B>]
+            [<B>-parallel</B> &lt;<VAR># of max parallel partition salvaging</VAR>>]  
+            [<B>-tmpdir</B> &lt;<VAR>directory to place tmp files</VAR>>] 
+            [<B>-orphans</B> &lt;<B>ignore</B> | <B>remove</B> | <B>attach</B>>]
+            [<B>-cell</B> &lt;<VAR>cell name</VAR>>]
+            [<B>-noauth</B>]  [<B>-localauth</B>]  [<B>-help</B>]
+   
+<B>bos sa -se</B> &lt;<VAR>machine name</VAR>>  [<B>-part</B> &lt;<VAR>salvage partition</VAR>>]
+       [<B>-v</B> &lt;<VAR>salvage volume number or volume name</VAR>>]  
+       [<B>-f</B> &lt;<VAR>salvage log output file</VAR>>]  [<B>-a</B>]  [<B>-sh</B>]
+       [<B>-para</B> &lt;<VAR># of max parallel partition salvaging</VAR>>]  
+       [<B>-t</B> &lt;<VAR>directory to place tmp files</VAR>>]   
+       [<B>-o</B> &lt;<B>ignore</B> | <B>remove</B> | <B>attach</B>>]
+       [<B>-c</B> &lt;<VAR>cell name</VAR>>]  [<B>-n</B>]  [<B>-l</B>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>bos salvage</B> コマンドは、
+<B>-server</B> 引き数で指定されたファイル・サーバー・マシン上の 1 つ、または複数のボリュームをサルベージします (内部整合性を復元します)。
+1 つ、または複数の区画をプロセスするとき、このコマンドは、壊れた読み取り / 書き込みボリュームの整合性を可能な限り復元します。読み取り専用ボリューム、またはバックアップ・ボリュームの場合、これはボリューム・ヘッダーだけを以下のように検査します。
+<UL>
+<LI>ボリューム・ヘッダーが壊れている場合、サルベージャーは、そのボリュームを完全に削除し、削除したことをログ・ファイル <B>/usr/afs/logs/SalvageLog</B> にレコードします。
+<B>vos release</B> または <B>vos backup</B> コマンドを発行して、読み取り専用ボリューム、またはバックアップ・ボリュームを作成します。
+</LI><LI>ボリューム・ヘッダーに変化がない場合、サルベージャーは、そのボリュームをスキップします (内容が破壊されているかどうかを検査しません)。ただし、ファイル・サーバーが初期化の際に、破壊を検出した場合、ボリュームを付加することや、ボリュームをオンラインに載せることを拒絶することがあります。この場合、最も簡単な処置は、
+<B>vos remove</B> または <B>vos zap</B> コマンドを発行して、そのボリュームを削除することです。その後、<B>vos release</B> または <B>vos backup</B> コマンドを発行して、再度、ボリュームを作成します。
+</LI></UL>
+<P>指定された引き数を使用して、次のように特定の数のボリュームをサルベージします。
+<UL>
+<LI>ファイル・サーバー・マシン上のすべてのボリュームをプロセスする場合には、
+<B>-server</B> 引き数と <B>-all</B> フラグを指定してください。サルベージャーの実行中は、
+BOS サーバーはファイル・サーバーおよびボリューム・サーバーのプロセスを停止します。このため、サルベージ操作中は、キャッシュ・マネージャーからアクセスできるボリュームはマシン上にありません。操作完了すると、BOS サーバーは、自動的にそれらのプロセスを再始動します。
+</LI><LI>1 つの区画上のすべてのボリュームをプロセスする場合には、
+<B>-server</B> および <B>-partition</B> 引き数を指定してください。マシン全体のサルベージの場合、サルベージ操作中に、キャッシュ・マネージャーからアクセスできるボリュームはマシン上にありません。
+BOS サーバーは、サルベージ操作が完了すると、ファイル・サーバーおよびボリューム・サーバーを自動的に再起動します。
+</LI><LI>1 つだけの読み取り / 書き込みボリュームをサルベージする場合には、
+<B>-server</B>、<B>-partition</B>、および <B>-volume</B> 引き数を組み合わせて使用してください。単一ボリュームをサルベージ中は、
+BOS サーバーはファイル・サーバーおよびボリューム・サーバーのプロセスを停止しません。このため、キャッシュ・マネージャーからアクセスできなくなるのはそのボリュームだけです。読み取り専用ボリュームまたはバックアップ・ボリュームを指定するのに、
+<B>-volume</B> 引き数を使用してはなりません。代わりに、<B>vos remove</B> または <B>vos zap</B> コマンドを使用して、ボリュームを削除します。その後、<B>vos release</B> または <B>vos backup</B> コマンドを使用して、ボリュームの新規コピーを作成します。
+</LI></UL>
+<P>マシンまたは区画全体のサルベージ中に、<B>bos status</B> コマンドは、<B>fs</B> プロセスの予備状況を <TT>Salvaging file system</TT> として報告します。
+<P>サルベージャーは常に、サルベージャーが実行しているファイル・サーバー・マシンの <B>/usr/afs/logs/SalvageLog</B> ファイルにトレースを書き込みます。トレースを別のファイルにもレコードするには (AFS でか、あるいは <B>bos salvage</B> コマンドが発行されるマシンのローカル・ディスク上で)、ファイルを <B>-file</B> 引き数で指定します。トレースは <B>/usr/afs/logs/SalvageLog</B> ファイルに書き込まれているため、それを標準出力ストリームに表示するには、
+<B>-showlog</B> フラグを指定します。
+<P>デフォルトでは、複数のサルベージャー・サブプロセスは、
+1 つの区画ごとに 4 つまで、4 つ以上の区画の場合には、4 つのサブプロセスを並行して実行します。並行して実行するサブプロセス数を増減する場合は、
+<B>-parallel</B> 引き数に正の整数値を指定してください。
+<P>物理ディスク上に複数のサーバー区画がある場合、デフォルトでは、サルベージャーは、ディスク・ヘッドをある区画から別の区画に絶えず移動させる非効率を避けるために、それらの区画を直列的にサルベージします。しかし、区画が複数のディスクにまたがる論理ボリュームとして構成されている場合には、このストラテジーが理想的でないことがあります。論理ボリュームを並行してサルベージすることをサルベージャーに強制するには、
+<B>-parallel</B> 引き数に対する値として、文字列 <B>all</B> を指定します。サルベージされる論理ボリュームの数に依存して、並行して実行するサブプロセスの数を指定するために正の整数を与えるか (たとえば、
+5 つのサブプロセスの場合は、<B>-parallel 5all</B>)、あるいは 4 つまでのサブプロセスを実行する場合は、整数を省略します。
+<P>サルベージャーは、実行中に一時ファイルを作成します。デフォルトでは、これらのファイルはサルベージしている区画に書き込まれます。一時ファイルはかなりの数になることがあるため、区画に十分なスペースがないと、サルベージャーはこのサルベージ操作を完了せずに終了する場合があります (サルベージャーは常に、終了前には一時ファイルを削除します)。一時ファイル用に十分なディスク・スペースを持つ区画が他にあれば、他のすべての区画のサルベージを終了するまで、同時に実行されている他のサルベージャー・サブプロセスは処理を継続します。中断したサルベージ操作を完了するには、<B>-tmpdir</B> 引き数を付けて該当する区画にコマンドを再発行して、十分なスペースを持つローカル・ディスク・ディレクトリーに一時ファイルが書き込まれるように指定してください。
+<P><B>-orphans</B> 引き数は、サルベージャーが、サルベージしているサーバーの区画上で検出したオーファン・ファイルとディレクトリーを処理する方法を制御します。
+<I>オーファン</I>要素には、アクセスすることはまったくできません。それは、(ファイル・スペースの上位にある) オーファン要素の親として働くディレクトリーの vnode から参照されないからです。オーファン・オブジェクトは、サーバー区画上にスペースを占めますが、ボリュームの割り当て量に不利になることはありません。
+<P><STRONG>注意</STRONG>
+<P>サルベージャー・プロセスは問題のデータを削除することで修復を行うので、このコマンドを実行すると、データが消失する場合があります。詳細については、<I>AFS 管理の手引き</I> を参照してください。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B>-server
+</B><DD>ボリュームをサルベージするファイル・サーバー・マシンを指定します。
+IP アドレスまたはホスト名 (完全修飾名または省略形) によってマシンを識別します。詳細については、<B>bos</B> コマンド・セットの概要の解説ページを参照してください。
+<P><DT><B>-partition
+</B><DD>すべてのボリュームをサルベージする単一区画を指定します。完全な区画名 (たとえば、<B>/vicepa</B>) または次の省略形の 1 つを指定します。
+<P>
+<PRE>   <B>/vicepa</B>     =     <B>vicepa</B>      =      <B>a</B>      =      <B>0</B>
+   <B>/vicepb</B>     =     <B>vicepb</B>      =      <B>b</B>      =      <B>1</B>
+   
+</PRE>
+<P>
+<P>
+<P><B>/vicepz</B> (これのインデックスは 25 です) の後には、以下が続きます。
+<P>
+<PRE>   <B>/vicepaa</B>    =     <B>vicepaa</B>     =      <B>aa</B>     =      <B>26</B>
+   <B>/vicepab</B>    =     <B>vicepab</B>     =      <B>ab</B>     =      <B>27</B>
+   
+</PRE>
+<P>
+<P>
+<P>次の値まで、以下同様となります。
+<P>
+<PRE>   <B>/vicepiv</B>    =     <B>vicepiv</B>     =      <B>iv</B>     =      <B>255</B>
+    
+</PRE>
+<P><DT><B>-volume
+</B><DD>サルベージする読み取り / 書き込みボリュームの名前、またはボリューム ID 番号を指定します。この引き数は、<B>-partition</B> 引き数と一緒に使用してください。
+<P><DT><B>-file
+</B><DD>サーバー・マシンの <B>/usr/afs/logs/SalvageLog</B> ファイルの他に、サルベージ操作のトレースを書き込むファイルの完全パス名を指定します。ファイルのパス名がローカルである場合には、トレースは、
+<B>bos salvage</B> コマンドが発行されるマシンのローカル・ディスクの、指定されたファイルに書き込まれます。
+<B>-volume</B> 引き数が指定されている場合には、ファイルは、サルベージされているボリュームではなく AFS の中に作成することができます。この引き数は、<B>-showlog</B> フラグと一緒に使用してはなりません。
+<P><DT><B>-all
+</B><DD><B>-server</B> 引き数で指定されたマシンのすべての区画上にあるすべてのボリュームをサルベージします。
+<P><DT><B>-showlog
+</B><DD><B>/usr/afs/logs/SalvageLog</B> ファイルにサルベージ操作の追跡を書き込むほかに、標準出力ストリームにもそれを送信します。このフラグは、<B>-file</B> 引き数と一緒に使用しないでください。
+<P><DT><B>-parallel
+</B><DD>並列で実行するサルベージャー・サブプロセスの最大数を指定します。以下の 3 つの値のいずれかを指定してください。
+<UL>
+<LI><B>1</B> から <B>32</B> までの整数。
+<B>1</B> を指定すると、単一のサルベージャー・プロセスが順次、区画をサルベージします。
+</LI><LI>文字列 <B>all</B>。複数の物理ディスクにまたがる論理ボリュームとしてフォーマットされた区画上で、
+4 つまでのサルベージャー・サブプロセスを並行して実行します。この値は、そのような論理ボリュームの場合にだけ使用してください。
+</LI><LI>文字列 <B>all</B> と、その直後 (スペースを空けないで) に続く <B>1</B> から <B>32</B> までの範囲の整数。論理ボリュームとしてフォーマットされた区画上で、指定された数のサルベージャー・サブプロセスを実行します。この値は、そのような論理ボリュームの場合にだけ使用してください。
+</LI></UL>
+<P>
+<P>
+<P>BOS サーバーは、区画数以上のサルベージャー・サブプロセスを開始することはありません。単一ボリュームをサルベージする場合には、
+1 つのプロセスしか開始しません。この引き数を省略すると、4 つまでのサルベージャー・サブプロセスが並行して実行されます。
+<P><DT><B>-tmpdir
+</B><DD>サルベージャー・プロセスが実行時に一時ファイルを書き込むローカル・ディスク・ディレクトリーを完全パス名で指定します。この引き数を省略するか、または不適格もしくは存在しないディレクトリーを指定すると、サルベージャー・プロセスは現在サルベージしている区画にファイルを書き込みます。
+<P><DT><B>-orphans
+</B><DD>サルベージャーによるオーファン・ファイルおよびディレクトリーの処理方法を制御します。次の 3 つの値のいずれかを選択してください。
+<P>
+<DL>
+<P><DT><B>ignore
+</B><DD>オーファン・オブジェクトをディスクにそのまま残しておきます。ただし、検出されたオーファンの数と、それが占めているおおよそのキロバイト数を <B>/usr/afs/logs/SalvageLog</B> ファイルにメッセージを出力します。
+<B>-orphans</B> 引き数が省略された場合は、この値がデフォルトになります。
+<P><DT><B>remove
+</B><DD>オーファン・オブジェクトを削除し、削除されたオーファンの数と、それが占めていたおおよそのディスク・サイズ (キロバイト) を報告する <B>/usr/afs/logs/SalvageLog</B> ファイルにメッセージを出力します。
+<P><DT><B>attach
+</B><DD>オーファン・オブジェクトへの参照を作成して、オーファン・オブジェクトをボリュームのルート・ディレクトリーの vnode に付加します。これにより各オブジェクトの実際の名前がなくなってしまうので、サルベージャーは各オブジェクトに次の形式の名前を割り当てます。
+<P>
+<DL>
+<DD><P>ファイルの場合: <B>_ _ORPHANFILE_ _.</B><VAR>index</VAR>
+<DD><P>ディレクトリーの場合: <B>_ _ORPHANDIR_ _.</B><VAR>index</VAR>
+</DL>
+<P>
+<P>
+<P>ここで、<VAR>index</VAR> は、各オブジェクトを一意に識別するための 2 桁の番号です。オーファンはボリューム割り当て量として数えられるので、ボリュームのルート・ディレクトリーに対して発行された <B>ls</B> コマンドの出力に表示されます。
+</DL>
+<P><DT><B><B>-cell</B>
+</B><DD>コマンドを実行するセルを指定します。この引き数は、
+<B>-localauth</B> フラグと一緒に使用してはなりません。詳細については、<B>bos</B> の解説ページを参照してください。
+<P><DT><B><B>-noauth</B>
+</B><DD>コマンドの発行側に非特権 ID <B>anonymous</B> を割り当てます。このフラグは <B>-localauth</B> フラグと一緒に使用してはなりません。詳細については、<B>bos</B> の解説ページを参照してください。
+<P><DT><B><B>-localauth</B>
+</B><DD>ローカルの <B>/usr/afs/etc/KeyFile</B> ファイルのキーを使用して、サーバー・チケットを構成します。
+<B>bos</B> コマンド・インタープリターは、相互認証中に、このチケットを BOS サーバーに渡します。このフラグは、<B>-cell</B> 引き数または <B>-noauth</B> フラグと一緒に使用してはなりません。詳細については、<B>bos</B> の解説ページを参照してください。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>例</STRONG>
+<P>次のコマンドは、マシン <B>db3.abc.com</B> の <B>/vicepd</B> 区画上のすべてのボリュームをサルベージしています。
+<PRE>   % <B>bos salvage -server db3.abc.com -partition /vicepd</B>
+   
+</PRE>
+<P>次のコマンドは、マシン <B>fs2.abc.com</B> の区画 <B>/vicepb</B> のボリューム ID 番号 536870988 をサルベージしています。
+<PRE>   % <B>bos salvage -server fs2.abc.com -partition /vicepb -volume 536870988</B>
+   
+</PRE>
+<P>次のコマンドは、マシン <B>fs4.abc.com</B> 上のすべてのボリュームをサルベージしています。デフォルトの 4 つではなく、6 つのサルベージャー・プロセスを並行して実行しています。
+<PRE>   % <B>bos salvage -server fs4.abc.com -all -parallel 6</B>
+    
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>コマンドの発行側は、<B>-server</B> 引き数で指定されたマシンの <B>/usr/afs/etc/UserList</B> ファイルにリストされているか、または <B>-localauth</B> フラグが使用されている場合は、ローカル・スーパーユーザー <B>root</B> としてサーバー・マシンにログオンしている必要があります。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf023.htm#HDRKEYFILE">KeyFile</A>
+<P><A HREF="auarf030.htm#HDRSALVAGELOG">SalvageLog</A>
+<P><A HREF="auarf035.htm#HDRUSERLIST">UserList</A>
+<P><A HREF="auarf093.htm#HDRBOS_INTRO">bos</A>
+<P><A HREF="auarf232.htm#HDRSALVAGER">salvager</A>
+<P><A HREF="auarf255.htm#HDRVOS_BACKUP">vos backup</A>
+<P><A HREF="auarf270.htm#HDRVOS_RELEASE">vos release</A>
+<P><A HREF="auarf271.htm#HDRVOS_REMOVE">vos remove</A>
+<P><A HREF="auarf280.htm#HDRVOS_ZAP">vos zap</A>
+<P><I>AFS 管理の手引き</I>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf113.htm">前ページ</A> &#124; <A HREF="auarf115.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

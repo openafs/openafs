@@ -1,0 +1,21 @@
+#!/bin/sh
+
+## Wrapper script for kdump on Solaris 7.
+
+BITS=32
+
+## Determine the bittedness of the OS
+
+if [ -x /bin/isalist ]
+then
+    case `/bin/isalist` in
+    *sparcv9* ) BITS=64 ;;
+    esac
+else
+    echo "/bin/isalist not executable"
+    exit 1
+fi
+
+## Execute the appropriate kdump and pass it all arguments
+
+exec $0${BITS} ${1+"$@"}

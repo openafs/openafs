@@ -1,0 +1,92 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+
+############################################################################
+
+# make compiler warnings fatal
+
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -WX
+
+# since we're using rpcndr.h, we can't include <afs/stds.h>'s "hyper" type.
+
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -DIGNORE_STDS_H
+
+# allow the resource compiler to search the dest\include tree
+
+AFSDEV_AUXRCFLAGS = $(AFSDEV_AUXRCFLAGS) -I$(DESTDIR)\include
+
+# include the primary makefile
+
+!INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\..\config\NTMakefile.version
+
+############################################################################
+#
+# BUILD TARGETS
+#
+
+EXEFILE = $(DESTDIR)\root.server\usr\afs\bin\TaAfsAccountManager.exe
+
+EXEOBJS = \
+	AfsUsrMgr_stub.res \
+	action.obj \
+	browse.obj \
+	cell_prop.obj \
+	cmdline.obj \
+	columns.obj \
+	command.obj \
+	creds.obj \
+	display.obj \
+	errdata.obj \
+	general.obj \
+	grp_col.obj \
+	grp_create.obj \
+	grp_delete.obj \
+	grp_prop.obj \
+	grp_rename.obj \
+	grp_tab.obj \
+	helpfunc.obj \
+	main.obj \
+	mch_col.obj \
+	mch_create.obj \
+	mch_delete.obj \
+	mch_tab.obj \
+	options.obj \
+	task.obj \
+	usr_col.obj \
+	usr_cpw.obj \
+	usr_create.obj \
+	usr_delete.obj \
+	usr_prop.obj \
+	usr_search.obj \
+	usr_tab.obj \
+	window.obj \
+	winlist.obj
+
+VCLIBS =\
+	comctl32.lib \
+	shell32.lib
+
+EXELIBS = \
+	$(DESTDIR)\lib\afs\TaAfsAdmSvrClient.lib \
+	$(DESTDIR)\lib\afs\TaAfsAppLib.lib
+
+############################################################################
+
+$(EXEFILE) : $(EXEOBJS) $(EXELIBS)
+	$(EXEGUILINK) $(VCLIBS)
+	$(EXEPREP) 
+
+lang ::
+	$(CD) lang
+	for /f %l in ('dir /B ??_??') do @$(NTLANG) %l $(MAKECMD) /nologo /f NTMakefile install
+	$(CD) ..
+
+install : $(EXEFILE) lang
+
+############################################################################
+#
+# Dependencies
+#
+
+AfsUsrMgr_stub.res : AfsUsrMgr_stub.rc AFS_component_version_number.h
+

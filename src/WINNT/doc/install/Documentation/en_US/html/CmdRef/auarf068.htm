@@ -1,0 +1,183 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3190/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 5 Nov 1999 at 13:58:29                -->
+<META HTTP-EQUIV="updated" CONTENT="Fri, 05 Nov 1999 13:58:29">
+<META HTTP-EQUIV="review" CONTENT="Sun, 05 Nov 2000 13:58:29">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 05 Nov 2001 13:58:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf067.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf069.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRBK_DELETEDUMP" HREF="auarf002.htm#ToC_82">backup deletedump</A></H2>
+<A NAME="IDX4275"></A>
+<A NAME="IDX4276"></A>
+<A NAME="IDX4277"></A>
+<A NAME="IDX4278"></A>
+<A NAME="IDX4279"></A>
+<P><STRONG>Purpose</STRONG>
+<P>Deletes one or more dump records from the Backup Database
+<P><STRONG>Synopsis</STRONG>
+<PRE><B>backup deletedump</B> [<B>-dumpid</B> &lt;<VAR>dump&nbsp;id</VAR>><SUP>+</SUP>]  [<B>-from</B> &lt;<VAR>date&nbsp;time</VAR>><SUP>+</SUP>]  [<B>-to</B> &lt;<VAR>date&nbsp;time</VAR>><SUP>+</SUP>]
+                  [<B>-localauth</B>]  [<B>-cell</B> &lt;<VAR>cell&nbsp;name</VAR>>]  [<B>-help</B>]
+  
+<B>backup dele</B> [<B>-d</B> &lt;<VAR>dump&nbsp;id</VAR>><SUP>+</SUP>]  [<B>-f</B> &lt;<VAR>date&nbsp;time</VAR>><SUP>+</SUP>]  [<B>-t</B> &lt;<VAR>date&nbsp;time</VAR>><SUP>+</SUP>]
+            [<B>-l</B>]  [<B>-c</B> &lt;<VAR>cell&nbsp;name</VAR>>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>Description</STRONG>
+<P>The <B>backup deletedump</B> command deletes one or more dump records
+from the Backup Database. Either use the <B>-dumpid</B> argument to
+specify the dump ID number of one or more dumps, or use the <B>-from</B>
+and <B>-to</B> arguments to delete the records for all regular dumps
+created during the time period bracketed by the specified values.
+<P>Use this command to remove dump records that are incorrect (possibly
+because a dump operation was interrupted or failed), or that correspond to
+dumps that are expired or otherwise no longer needed.
+<P><STRONG>Cautions</STRONG>
+<P>The only way to remove the dump record for an appended dump is to remove
+the record for its initial dump, and doing so removes the records for all of
+the initial dump&#39;s associated appended dumps.
+<P>The only way to remove the record for a Backup Database dump (created with
+the <B>backup savedb</B> command) is to specify its dump ID number with
+the <B>-dumpid</B> argument. Using the <B>-from</B> and
+<B>-to</B> arguments never removes database dump records.
+<P>Removing records of a dump makes it impossible to restore data from the
+corresponding tapes or from any dump that refers to the deleted dump as its
+parent, directly or indirectly. That is, restore operations must begin
+with the full dump and continue with each incremental dump in order. If
+the records for a specific dump are removed, it is not possible to restore
+data from later incremental dumps unless the deleted records are restored by
+running the <B>backup scantape</B> command with the <B>-dbadd</B>
+flag.
+<P>If a dump set contains any dumps that were created outside the time range
+specified by the <B>-from</B> and <B>-to</B> arguments, the command
+does not delete any of the records associated with the dump set, even if some
+of them represent dumps created during the time range.
+<P><STRONG>Options</STRONG>
+<DL>
+<P><DT><B>-dumpid
+</B><DD>Specifies the dump ID of each dump record to delete. The
+corresponding dumps must be initial dumps; it is not possible to delete
+appended dump records directly, but only by deleting the record of their
+associated initial dump. Using this argument is the only way to delete
+records of Backup Database dumps (created with the <B>backup savedb</B>
+command).
+<P>Provide either this argument or the <B>-to</B> (and optionally
+<B>-from</B>) argument.
+<P><DT><B>-from
+</B><DD>Specifies the beginning of a range of dates; the record for any dump
+created during the indicated period of time is deleted.
+<P>Omit this argument to indicate the default of midnight (00&#58;00 hours)
+on 1 January 1970 (UNIX time zero), or provide a date value in the format
+<VAR>mm/dd/yyyy</VAR> [<VAR>hh&#58;MM</VAR>]. The month (<VAR>mm</VAR>),
+day (<VAR>dd</VAR>), and year (<VAR>yyyy</VAR>) are required. The hour and
+minutes (<VAR>hh</VAR>&#58;<VAR>MM</VAR>) are optional, but if provided must be
+in 24-hour format (for example, the value <B>14&#58;36</B> represents
+2&#58;36 p.m.). If omitted, the time defaults to
+midnight (00&#58;00 hours).
+<P>The <B>-to</B> argument must be provided along with this one.
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Note:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">A plus sign follows this argument in the command&#39;s syntax statement
+because it accepts a multiword value which does not need to be enclosed in
+double quotes or other delimiters, not because it accepts multiple
+dates. Provide only one date (and optionally, time) definition.
+</TD></TR></TABLE>
+<P><DT><B>-to
+</B><DD>Specifies the end of a range of dates; the record of any dump created
+during the range is deleted from the Backup Database.
+<P>Provide either the value <B>NOW</B> to indicate the current date and
+time, or a date value in the same format as for the <B>-from</B>
+argument. Valid values for the year (<VAR>yyyy</VAR>) range from
+<B>1970</B> to <B>2037</B>; higher values are not valid because
+the latest possible date in the standard UNIX representation is in February
+2038. The command interpreter automatically reduces any later date to
+the maximum value.
+<P>If the time portion (<VAR>hh&#58;MM</VAR>) is omitted, it defaults to 59
+seconds after midnight (00&#58;00&#58;59 hours). Similarly, the
+<B>backup</B> command interpreter automatically adds 59 seconds to any
+time value provided. In both cases, adding 59 seconds compensates for
+how the Backup Database and <B>backup dumpinfo</B> command represent dump
+creation times in hours and minutes only. For example, the Database
+records a creation timestamp of <TT>20&#58;55</TT> for any dump operation
+that begins between 20&#58;55&#58;00 and 20&#58;55&#58;59.
+Automatically adding 59 seconds to a time thus includes the records for all
+dumps created during that minute.
+<P>Provide either this argument, or the <B>-dumpid</B> argument.
+This argument is required if the <B>-from</B> argument is provided.
+<P><B>Caution&#58;</B> Specifying the value <B>NOW</B> for this
+argument when the <B>-from</B> argument is omitted deletes all dump
+records from the Backup Database (except for Backup Database dump records
+created with the <B>backup savedb</B> command).
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Note:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">A plus sign follows this argument in the command&#39;s syntax statement
+because it accepts a multiword value which does not need to be enclosed in
+double quotes or other delimiters, not because it accepts multiple
+dates. Provide only one date (and optionally, time) definition.
+</TD></TR></TABLE>
+<P><DT><B>-localauth
+</B><DD>Constructs a server ticket using a key from the local
+<B>/usr/afs/etc/KeyFile</B> file. The <B>backup</B> command
+interpreter presents it to the Backup Server, Volume Server and VL Server
+during mutual authentication. Do not combine this flag with the
+<B>-cell</B> argument. For more details, see the introductory
+<B>backup</B> reference page.
+<P><DT><B>-cell
+</B><DD>Names the cell in which to run the command. Do not combine this
+argument with the <B>-localauth</B> flag. For more details, see the
+introductory <B>backup</B> reference page.
+<P><DT><B>-help
+</B><DD>Prints the online help for this command. All other valid options
+are ignored.
+</DL>
+<P><STRONG>Output</STRONG>
+<P>At the conclusion of processing, the output lists the dump IDs of all dump
+records deleted in the following format&#58;
+<PRE>   The following dumps were deleted&#58;
+        <VAR>dump ID 1</VAR>
+        <VAR>dump ID 2</VAR>
+        <VAR>etc.</VAR>
+   
+</PRE>
+<P><STRONG>Examples</STRONG>
+<P>The following command deletes the dump record with dump ID 653777462, and
+for any appended dumps associated with it&#58;
+<PRE>   % <B>backup deletedump -dumpid 653777462</B>
+   The following dumps were deleted&#58;
+        653777462
+   
+</PRE>
+<P>The following command deletes the Backup Database record of all dumps
+created between midnight on 1 January 1997 and 23&#58;59&#58;59 hours on
+31 December 1997&#58;
+<PRE>   % <B>backup deletedump -from 01/01/1997 -to 12/31/1997</B>
+   The following dumps were deleted&#58;
+        598324045
+        598346873
+           ...
+           ...
+        653777523
+        653779648
+   
+</PRE>
+<P><STRONG>Privilege Required</STRONG>
+<P>The issuer must be listed in the <B>/usr/afs/etc/UserList</B> file on
+every machine where the Backup Server is running, or must be logged onto a
+server machine as the local superuser <B>root</B> if the
+<B>-localauth</B> flag is included.
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf060.htm#HDRBK_INTRO">backup</A>
+<P><A HREF="auarf074.htm#HDRBK_DUMPINFO">backup dumpinfo</A>
+<P><A HREF="auarf087.htm#HDRBK_SCANTAPE">backup scantape</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf067.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf069.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

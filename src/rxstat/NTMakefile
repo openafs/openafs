@@ -1,0 +1,30 @@
+#
+#
+
+
+!INCLUDE ..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\config\NTMakefile.version
+
+
+INCFILEDIR = $(DESTDIR)\include
+
+INCFILES =\
+	$(INCFILEDIR)\rx\rxstat.h
+
+# Library component lists.
+
+LIBOBJS = \
+	rxstat.cs.obj \
+	rxstat.ss.obj \
+	rxstat.xdr.obj \
+	rxstat.obj
+
+LIBFILE = $(DESTDIR)\lib\afsrxstat.lib
+
+$(LIBFILE): $(LIBOBJS)
+	$(LIBARCH)
+
+rxstat.cs.c rxstat.ss.c rxstat.xdr.c rxstat.h: rxstat.xg
+	$(RXGEN) -x $**
+
+install: $(LIBFILE) $(INCFILES)

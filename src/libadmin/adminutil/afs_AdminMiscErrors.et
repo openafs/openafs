@@ -1,0 +1,11 @@
+#
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+#
+
+
+error_table am
+        ec ADMMISCDIRECTORYNULL, "the directory parameter cannot be NULL."
+        ec ADMMISCUSERNULL, "the user parameter cannot be NULL."
+        ec ADMMISCACLNULL, "the acl parameter cannot be NULL."
+        ec ADMMISCNODFSACL, "this interface does not support changing DFS acls."
+end

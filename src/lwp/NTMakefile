@@ -1,0 +1,34 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+
+# nmake Makefile for NT build of LWP. 
+
+!include ..\config\NTMakefile.$(SYS_NAME)
+!include ..\config\NTMakefile.version
+
+LIBOBJS = lock.obj \
+	  lwp_nt.obj \
+	  iomgr.obj \
+	  timer.obj\
+	  fasttime.obj \
+	  waitkey.obj \
+	  AFS_component_version_number.obj
+
+LIBFILE = $(DESTDIR)\lib\afslwp.lib
+
+INCFILES = \
+	$(DESTDIR)\include\lock.h \
+	$(DESTDIR)\include\lwp.h \
+	$(DESTDIR)\include\preempt.h \
+	$(DESTDIR)\include\timer.h
+
+
+
+install: $(LIBFILE) $(INCFILES)
+
+$(LIBFILE): $(LIBOBJS)
+	$(LIBARCH)
+
+tests: rw.exe
+
+rw.exe: rw.obj $(LIBFILE) $(DESTDIR)\lib\afs\afsutil.lib
+	$(EXECONLINK)

@@ -1,0 +1,4 @@
+#define  AFS_VERINFO_FILE_DESCRIPTION "AFS Explorer Extension DLL"
+
+#include "AFS_component_version_number.h"
+#include "..\..\config\NTVersioninfo.rc"

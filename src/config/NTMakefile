@@ -1,0 +1,133 @@
+# Copyright (C) 1998 Transarc Corporation - All rights reserved
+#
+
+!INCLUDE NTMakefile.$(SYS_NAME)
+
+# Relative path to src directory depends on how we got to current directory.
+
+!IF (EXIST(..\..\src))
+SRCROOT = ..\..\src
+!ELSE IF (EXIST(..\..\..\src))
+SRCROOT = ..\..\..\src
+!ELSE
+!ERROR Can not find src directory from current directory.
+!ENDIF
+
+
+
+INCFILEDIR = $(DESTDIR)\include\afs
+
+INCFILES =\
+	$(INCFILEDIR)\afs_args.h \
+	$(INCFILEDIR)\debug.h \
+	$(INCFILEDIR)\param.h \
+	$(INCFILEDIR)\afs_sysnames.h \
+	$(INCFILEDIR)\permit_xprt.h \
+	$(INCFILEDIR)\stds.h \
+	$(INCFILEDIR)\icl.h \
+	..\permit_xprt.h
+
+
+$(INCFILEDIR)\param.h: param.$(SYS_NAME).h
+	$(COPY) $? $@
+
+!IF (EXIST($(SRCROOT)\xprt\permit_xprt.h))
+..\permit_xprt.h: $(SRCROOT)\xprt\permit_xprt.h
+	$(DEL) ..\permit_xprt.h
+	$(COPY) $(SRCROOT)\xprt\permit_xprt.h ..\permit_xprt.h
+!ELSE
+..\permit_xprt.h: .\permit_xprt.h
+	$(DEL) ..\permit_xprt.h
+	$(COPY) .\permit_xprt.h ..\permit_xprt.h
+!ENDIF
+
+
+idirs: doclink
+!	IF (!EXIST($(DESTDIR)\include))
+		$(MKDIR) $(DESTDIR)\include
+!	ENDIF
+!	IF (!EXIST($(DESTDIR)\include\afs))
+		$(MKDIR) $(DESTDIR)\include\afs
+!	ENDIF
+!	IF (!EXIST($(DESTDIR)\include\rx))
+		$(MKDIR) $(DESTDIR)\include\rx
+!	ENDIF
+!	IF (!EXIST($(DESTDIR)\include\WINNT))
+		$(MKDIR) $(DESTDIR)\include\WINNT
+!	ENDIF
+!	IF (!EXIST($(DESTDIR)\lib))
+		$(MKDIR) $(DESTDIR)\lib
+!	ENDIF
+!	IF (!EXIST($(DESTDIR)\lib\afs))
+		$(MKDIR) $(DESTDIR)\lib\afs
+!	ENDIF
+!	IF (!EXIST($(DESTDIR)\lib\win95))
+		$(MKDIR) $(DESTDIR)\lib\win95
+!	ENDIF
+!	IF (!EXIST($(DESTDIR)\bin))
+		$(MKDIR) $(DESTDIR)\bin
+!	ENDIF
+!	IF (!EXIST($(DESTDIR)\etc))
+		$(MKDIR) $(DESTDIR)\etc
+!	ENDIF
+!	IF (!EXIST($(DESTDIR)\WinInstall))
+		$(MKDIR) $(DESTDIR)\WinInstall
+!	ENDIF
+!	IF (!EXIST($(DESTDIR)\root.server))
+		$(MKDIR) $(DESTDIR)\root.server
+!	ENDIF
+!	IF (!EXIST($(DESTDIR)\root.server\usr))
+		$(MKDIR) $(DESTDIR)\root.server\usr
+!	ENDIF
+!	IF (!EXIST($(DESTDIR)\root.server\usr\afs))
+		$(MKDIR) $(DESTDIR)\root.server\usr\afs
+!	ENDIF
+!	IF (!EXIST($(DESTDIR)\root.server\usr\afs\bin))
+		$(MKDIR) $(DESTDIR)\root.server\usr\afs\bin
+!	ENDIF
+!	IF (!EXIST($(DESTDIR)\root.client\usr\vice\etc))
+		$(MKDIR) $(DESTDIR)\root.client\usr\vice\etc
+!	ENDIF
+
+
+# Create link to docs needed for media build; allow to fail in case
+# symlink not available, e.g. if using a 3.4a client, since most builds
+# aren't media builds.
+doclink:
+!	IF (EXIST($(DESTDIR)\doc))
+		- symlink rm $(DESTDIR)\doc
+!	ENDIF
+	- symlink make $(DESTDIR)\doc doc-pathname
+
+
+version: $(DESTDIR)\bin\mkvers.exe NTMakefile.version
+
+NTMakefile.version: NTMakefile.version-CML NTMakefile.version-NOCML
+	$(DEL) NTMakefile.version
+!	IF (EXIST(..\..\src\CML\state) || EXIST(..\..\..\src\CML\state))
+		$(COPY) NTMakefile.version-CML NTMakefile.version
+!	ELSE
+		$(COPY) NTMakefile.version-NOCML NTMakefile.version
+!	ENDIF
+
+$(DESTDIR)\bin\mkvers.exe: mkvers.exe
+	$(COPY) mkvers.exe $(DESTDIR)\bin
+
+
+$(DESTDIR)\NTDllmap.txt: NTDllmap.txt
+	$(COPY) NTDllmap.txt $(DESTDIR)
+
+
+$(DESTDIR)\bin\NTLang.bat: NTLang.bat
+	$(COPY) NTLang.bat $(DESTDIR)\bin
+
+langsetup: $(DESTDIR)\bin\NTLang.bat
+
+
+install: idirs version $(INCFILES) $(DESTDIR)\NTDllmap.txt langsetup
+
+
+# This clean target must be named something different than the universal
+# 'clean' so that the version file can be removed last.
+clean_version:
+	$(DEL) NTMakefile.version

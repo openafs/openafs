@@ -1,0 +1,133 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>リリース情報</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1070\AWRNS000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 23 Feb 2000 at 13:24:44            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Wed, 23 Feb 2000 13:24:42">
+<META HTTP-EQUIV="review" CONTENT="Fri, 23 Feb 2001 13:24:42">
+<META HTTP-EQUIV="expires" CONTENT="Sat, 23 Feb 2002 13:24:42">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>リリース情報</H1>
+<HR><H1><A NAME="HDRLTCLIENT" HREF="AWRNS002.htm#ToC_29">AFS Light リリース情報</A></H1>
+<HR><H2><A NAME="Header_30" HREF="AWRNS002.htm#ToC_30">概要</A></H2>
+<P>この節では、AFS for Windows バージョン 3.6 の AFS Light コンポーネントに関する重要な情報について説明します。
+AFS Light を使用すると、Windows 95 または Windows 98 を稼働している PC から AFS ファイル・スペースにアクセスできるため、ユーザーは AFS のファイルおよびディレクトリーを管理することができます。
+AFS Light は、
+AFS Light Gateway として構成されている AFS クライアント・マシンを経由して、AFS クライアント・マシンにアクセスします。
+<HR><H2><A NAME="HDRLIGHT_PREREQ" HREF="AWRNS002.htm#ToC_31">AFS Light のインストール要件</A></H2>
+<P>AFS Light をインストールするには、システムを以下のハードウェア、ソフトウェア、および管理特権の要件に合わせなければなりません。
+<P><H3><A NAME="Header_32" HREF="AWRNS002.htm#ToC_32">ハードウェア</A></H3>
+<P>AFS Light をインストールするためのハードウェア要件は、以下のとおりです。
+<UL>
+<LI>80486/66 MHz (もしくはそれよりも高速) のマイクロプロセッサーまたは Pentium ベースのマイクロプロセッサー使用の PC
+</LI><LI>16 MB 以上の RAM
+</LI><LI>使用可能なディスク・スペースが 4 MB 以上あるハード・ディスク
+</LI></UL>
+<P><H3><A NAME="Header_33" HREF="AWRNS002.htm#ToC_33">ソフトウェア</A></H3>
+<P>AFS Light をインストールするためのソフトウェア要件は、以下のとおりです。
+<UL>
+<LI>Windows Sockets 2 update を適用した Microsoft Windows 95 または Microsoft Windows 98
+</LI><LI>AFS Light Gateway
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>注:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">AFS クライアントのバージョン 3.5 またはバージョン 3.6 を実行している Windows NT マシンが、
+AFS Light Gateway 対応になっていなければなりません。
+AFS Light は、AFS Light Gateway 経由で AFS にアクセスします。詳しくは、<A HREF="#HDRGATEWAY">AFS Light Gateway 経由での AFS へのアクセス</A>を参照してください。
+</TD></TR></TABLE>
+</LI></UL>
+<P><H3><A NAME="Header_34" HREF="AWRNS002.htm#ToC_34">管理特権の要件</A></H3>
+<P>AFS Light のインストールおよび構成に、管理は不要です。
+<HR><H2><A NAME="Header_35" HREF="AWRNS002.htm#ToC_35">製品情報</A></H2>
+<P>この節では、AFS for Windows バージョン 3.6 の AFS Light コンポーネントに関する重要な一般情報を中心に説明します。
+<P><H3><A NAME="HDRGATEWAY" HREF="AWRNS002.htm#ToC_36">AFS Light Gateway 経由での AFS へのアクセス</A></H3>
+<P>AFS Light は、AFS Light Gateway を経由して、AFS ファイル・スペースにアクセスします。
+AFS Light を使用するためには、
+AFS Client for Windows バージョン 3.5 または AFS Client for Windows バージョン 3.6 を実行している AFS Light マシンと同じドメインに、少なくとも 1 台のマシンがなければなりません。
+<UL>
+<LI><B>AFS Light セル・データベースと AFS Light Gateway セル・データベースは同期していなければなりません。</B>
+<P>
+<P>AFS Light ユーザーがセルにアクセスするには、セルに対する項目が、
+AFS Light セル・データベース (<B>afsdcell.ini</B> ファイル) と AFS Light Gateway セル・データベース (<B>afsdcell.ini</B> ファイル) の両方に存在しなければなりません。
+</LI><LI><B>AFS Light から AFS Light Gateway のサービス名を解決できなければなりません。</B>
+<P>
+<P>AFS Light は、ゲートウェイ・マシンと通信するために、ゲートウェイ・マシンの名前が解決できなればなりません。ゲートウェイ・マシンの名前は、
+<I>mach</I><B>-afs</B> という書式で表される、ゲートウェイの NetBIOS サービス名です。ここで、
+<I>mach</I> は、ホスト・コンピューター名で、最大 11 文字までです。名前の解決は、ゲートウェイの NetBIOS サービス名をクライアントの LMHOSTS ファイルまたは該当する DNS または WINS サーバーに追加して行うことができます。
+AFS Light マシンとその AFS Light Gateway マシンが同じサブネットに存在する場合、名前の解決は、NetBIOS 同報通信で自動的に達成されます。
+</LI><LI><B>AFS Light Gateway は、
+Windows のコンテキストで AFS Light ユーザーを認証できなければなりません。</B>
+<P>
+<P>AFS Light Gateway として構成されている場合、
+AFS Light Gateway は、
+Windows のコンテキストで AFS Light ユーザーを認証できなければなりません。この認証は、
+<I>ドメイン</I> ・ユーザー・アカウントまたは同期する<I>マシン</I> ・ユーザー・アカウントにより行われます。ドメイン・ユーザー・アカウントは、Windows ドメインのユーザー・アカウントです。マシン・ユーザー・アカウントは、特定のホスト・マシンでのみ有効なユーザー・アカウントです。
+<P>
+<P>AFS Light Gateway が Windows ドメインに構成されている場合、
+AFS Light ユーザーは、ゲートウェイが属するドメインのドメイン・ユーザー・アカウントか、ゲートウェイ・ドメインのドメイン・ユーザー・アカウントの場合と同じユーザー名およびパスワードをもつ、マシン・ユーザー・アカウントのいずれかにログオンしなければなりません。
+<P>
+<P>マシン・ユーザー・アカウントを使用する場合、これらのアカウントは AFS Light Gateway マシンと AFS Light マシンで同期していなければなりません。ユーザーは、
+AFS Light Gateway マシンで定義されているマシン・ユーザー・アカウントの場合と同じユーザー名およびパスワードで AFS Light マシンにログオンしなければなりません。
+<P>
+<P><I>管理を簡単にするために、ドメイン・ユーザー・アカウントの使用をお勧めします。</I>
+</LI></UL>
+<P><H3><A NAME="Header_37" HREF="AWRNS002.htm#ToC_37">AFS Light for Windows 95 に必要な Windows Sockets 2 のアップデート</A></H3>
+<P>Windows 95 マシンで AFS Light を実行させるには、
+Windows Sockets 2 アップデート・プログラムがまだインストールされていない場合、これをインストールする必要があります。このアップデート・プログラムは、Microsoft 社の Web サイトからダウンロードすることができます。
+<P><H3><A NAME="Header_38" HREF="AWRNS002.htm#ToC_38">AFS コマンド行バイナリー</A></H3>
+<P>Windows 98 システムにインストールすると、
+AFS Light には、
+<B>bos</B>、<B>kas</B>、
+<B>vos</B>、および <B>pts</B> などの管理者用コマンドの組があります。これらの組のコマンドは、Windows のコマンド・プロンプトから実行します。
+AFS Light が Windows 95 システムにインストールされた場合、コマンドの組は使用可能に<I>なりません</I>。
+<P>
+<P><H3><A NAME="Header_39" HREF="AWRNS002.htm#ToC_39">AFS Light のインストール先のディレクトリーに含まれるのは ANSI 文字のみ</A></H3>
+<P>AFS for Windows ソフトウェアのインストール先のディレクトリーのパスに含まれるのは、たとえば、デフォルト・ディレクトリー <B>C:\Program Files</B> のように、
+ANSI 文字のみでなければなりません。
+<P><H3><A NAME="Header_40" HREF="AWRNS002.htm#ToC_40">一時ファイル</A></H3>
+<P>AFS Light for Windows では、一時ファイルを作成する場合があります。こうしたファイルの作成場所を制御するには、環境変数 (TMP または TEMP) に、参照する一時ディレクトリーの完全修飾パスを設定します。一時ディレクトリーを指定していない場合、一時ファイルはいずれもファイルを作成するプロセスの現行作業ディレクトリーに作成されます。
+<P><H3><A NAME="Header_41" HREF="AWRNS002.htm#ToC_41">AFS Light の各国語サポート</A></H3>
+<P>AFS は、AFS Light グラフィカル・ユーザー・インターフェース (GUI) ツールおよびドキュメンテーションの各国語サポート (両方向スクリプト (ヘブライ語、アラビア語など) のサポートを含む) を提供します。インストールする言語文字列は、
+[コントロール パネル] の [地域のプロパティ] ダイアログ・ボックスに指定されているとおり、ユーザーのマシンのシステム・デフォルト・ロケールによって決まります。現行ロケールの言語文字列が存在しない場合、デフォルトで英語の言語文字列がインストールされます。
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>注:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">マシンの<I>システム・デフォルト</I> ・ロケールは、マシン上の<I>ユーザー</I> ・ロケール (ユーザーが指定) とは別にすることができます。ただし、AFS for Windows でインストールされる言語文字列は、常に、システム・デフォルト・ロケールにより決まります。
+</TD></TR></TABLE>
+<P><H3><A NAME="Header_42" HREF="AWRNS002.htm#ToC_42">Windows システムにおける kpwvalid パスワード安全性チェッカーの使用不可</A></H3>
+<P>AFS ユーザー・パスワードを Windows システムから変更すると、新規パスワードの内容の検査時に、
+<B>kpwvalid</B> プログラムが使用<I>されません</I>。
+(UNIX システム上で、<B>kpwvalid</B> プログラムが <B>kpasswd</B> プログラムと同じディレクトリーに存在する場合、
+<B>kpwvalid</B> プログラムは、すべての新規ユーザー・パスワードの内容を検査します。)
+<HR><H2><A NAME="Header_43" HREF="AWRNS002.htm#ToC_43">制限および制約事項</A></H2>
+<P>この節では、
+AFS for Windows バージョン 3.6 の AFS Light コンポーネントについて知られている制限および制約事項について簡単に説明します。
+<P><H3><A NAME="Header_44" HREF="AWRNS002.htm#ToC_44">中国語 (簡体字) ではサポートしていない暗号化</A></H3>
+<P>Microsoft Windows 98 の中国語 (簡体字) では、
+AFS Light から AFS Light Gateway に AFS パスワードを転送する必要がある、暗号化はサポートされていません。
+Microsoft Windows 98 の中国語 (簡体字) バージョンを使用する際に、
+AFS Light ユーザーが AFS トークンを取得するには、
+AFS の暗号化機能を使用不可にしなければなりません。
+<P>AFS の暗号化機能を使用不可にするには、
+Windows の <B>Autoexec.bat</B> ファイルに以下の行を追加します。
+<PRE>set AFS_RPC_ENCRYPT=OFF
+</PRE>
+<P>暗号化機能を使用不可にすると、セキュリティー・リスクが生じる可能性があることに注意してください。トークンが取得されたときに、AFS パスワードが暗号化されない状態で AFS Client Gateway に転送されるためです。
+<P><H3><A NAME="Header_45" HREF="AWRNS002.htm#ToC_45">AFS ファイルおよびディレクトリーへのシンボリック・リンク</A></H3>
+<P>ディレクトリーへのシンボリック・リンクは、ディレクトリーとして処理され、ファイルへのシンボリック・リンクは、
+Windows 98 システムおよび Windows 95 システムのファイルとして表示されます。どちらもシンボリック・リンクとしては表示されません。
+<P>現在のところ、Windows のインターフェース (たとえば、Windows エクスプローラ) を使用して、
+AFS ファイル・スペースでシンボリック・リンクを削除したり、作成したりすることはできません。
+Windows のインターフェースを使用して、シンボリック・リンクであるディレクトリーを削除しようとする場合、ディレクトリーの内容が削除されます。ディレクトリーそのものは削除されません。
+Windows のインターフェースを使用して、シンボリック・リンクであるファイルを削除しようとする場合、ターゲット・ファイルではなく、リンクが除去されます。
+<P>AFS ファイルおよびディレクトリーに対するシンボリック・リンクを作成または除去するには、
+AFS for Windows バージョン 3.6 で提供される <B>symlink.exe</B> プログラムを使用します。
+Windows NT のコマンド・プロンプトから <B>symlink</B> コマンドを実行します。
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="AWRNS004.htm">前ページ</A> &#124; <A HREF="AWRNS006.htm">次ページ</A> &#124; <A HREF="AWRNS002.htm#ToC">目次</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

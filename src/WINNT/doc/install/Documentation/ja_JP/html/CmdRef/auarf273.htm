@@ -1,0 +1,83 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRVOS_RENAME" HREF="auarf002.htm#ToC_287">vos rename</A></H2>
+<A NAME="IDX5819"></A>
+<A NAME="IDX5820"></A>
+<A NAME="IDX5821"></A>
+<A NAME="IDX5822"></A>
+<A NAME="IDX5823"></A>
+<A NAME="IDX5824"></A>
+<A NAME="IDX5825"></A>
+<A NAME="IDX5826"></A>
+<A NAME="IDX5827"></A>
+<A NAME="IDX5828"></A>
+<P><STRONG>目的</STRONG>
+<P>ボリュームの名前を変更します。
+<P><STRONG>構文</STRONG>
+<PRE><B>vos rename -oldname</B> &lt;<VAR>old volume name</VAR>>  <B>-newname</B> &lt;<VAR>new volume name</VAR>> 
+           [<B>-cell</B> &lt;<VAR>cell name</VAR>>]  [<B>-noauth</B>]  [<B>-localauth</B>]  [<B>-verbose</B>]  [<B>-help</B>]
+    
+<B>vos ren -o</B> &lt;<VAR>old volume name</VAR>>  <B>-ne</B> &lt;<VAR>new volume name</VAR>>  [<B>-c</B> &lt;<VAR>cell name</VAR>>]
+        [<B>-no</B>]  [<B>-l</B>]  [<B>-v</B>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>vos rename</B> コマンドは、
+<B>-oldname</B> 引き数で指定された読み取り / 書き込みボリュームの名前を <B>-newname</B> 引き数に指定された名前に変更します。読み取り / 書き込みボリュームの読み取り専用コピーおよびバックアップ・コピー (もしあれば) の名前は、一致するように自動的に変更されます。
+<P>このコマンドを発行したら、<B>fs rmmount</B> コマンドで古いマウント・ポイントを削除して、<B>fs mkmount</B> コマンドで新しいマウント・ポイントを作成して、古いボリューム名を参照しているマウント・ポイントを訂正してください。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B>-oldname
+</B><DD>読み取り / 書き込みボリュームの現在の名前です。
+<P><DT><B>-newname
+</B><DD>ボリュームの新規名を指定します。
+<P><DT><B>-cell
+</B><DD>コマンドを実行するセルを指定します。この引き数は、
+<B>-localauth</B> フラグと一緒に使用してはなりません。詳細については、<B>vos</B> の解説ページを参照してください。
+<P><DT><B>-noauth
+</B><DD>コマンドの発行側に非特権 ID <B>anonymous</B> を割り当てます。このフラグは <B>-localauth</B> フラグと一緒に使用してはなりません。詳細については、<B>vos</B> の解説ページを参照してください。
+<P><DT><B>-localauth
+</B><DD>ローカルの <B>/usr/afs/etc/KeyFile</B> ファイルのキーを使用して、サーバー・チケットを構成します。相互認証の間、<B>vos</B> コマンド・インタープリターは、ボリューム・サーバーおよびボリューム・ロケーション・サーバーに、このチケットを提供します。このフラグは、<B>-cell</B> 引き数、または <B>-noauth</B> フラグと一緒に使用してはなりません。詳細については、<B>vos</B> の解説ページを参照してください。
+<P><DT><B>-verbose
+</B><DD>標準出力ストリームに、コマンド実行の詳細なトレースを出力します。この引き数を省略すると、警告およびエラー・メッセージだけが表示されます。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>出力</STRONG>
+<P><B>vos rename</B> コマンドは、コマンド完了後に出力を生成しません。
+<P><B>-oldname</B> 引き数に指定されたボリュームがないと、次のメッセージが表示されます。
+<PRE>   vos: ボリューム <VAR>old volume name</VAR> が見付かりませんでした。
+   
+</PRE>
+<P><STRONG>例</STRONG>
+<P>次のコマンドは、間違って定義されたボリューム名 <B>sun4x_56.afsws</B> を正しい<TT>sun4x_56.usr.afsws</TT> に変更しています。
+<PRE>   % <B>vos rename -oldname sun4x_56.afsws -newname sun4x_56.usr.afsws</B>
+   
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>コマンドの発行側は、<B>-server</B> 引き数に指定されたマシン、および各データベース・サーバー・マシン上の <B>/usr/afs/etc/UserList</B> ファイルにリストされていなければなりません。<B>-localauth</B> フラグを使用する場合には、コマンドの発行側が、ローカル・スーパーユーザー <B>root</B> として、サーバー・マシンにログオンする必要があります。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf252.htm#HDRVOS_INTRO">vos</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf272.htm">前ページ</A> &#124; <A HREF="auarf274.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

@@ -1,0 +1,28 @@
+
+EXPORTS
+	kas_ServerOpen						@1
+	kas_ServerClose						@2
+	kas_PrincipalCreate					@3
+	kas_PrincipalDelete					@4
+	kas_PrincipalGet					@5
+	kas_PrincipalGetBegin					@6
+	kas_PrincipalGetNext					@7
+	kas_PrincipalGetDone					@8
+	kas_PrincipalKeySet					@9
+	kas_PrincipalLockStatusGet				@10
+	kas_PrincipalUnlock					@11
+	kas_PrincipalFieldsSet					@12
+	kas_ServerStatsGet					@13
+	kas_ServerDebugGet					@14
+	kas_ServerRandomKeyGet					@15
+	kas_StringToKey						@16
+	kas_KeyCheckSum						@17
+
+
+
+
+
+
+	KAA_function_names					@24 DATA
+	KAM_function_names					@25 DATA
+	KAT_function_names					@26 DATA

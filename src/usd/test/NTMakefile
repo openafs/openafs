@@ -1,0 +1,20 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+#
+
+
+!INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\..\config\NTMakefile.version
+
+LIBFILE = $(DESTDIR)\lib\afs\afsusd.lib
+LIBUTIL = $(DESTDIR)\lib\afs\afsutil.lib
+
+clean::
+
+test tests: usd_test.exe
+
+# make usd_test.exe
+usd_test.exe: usd_test.obj $(LIBFILE) $(LIBUTIL)
+	$(EXECONLINK)
+	
+
+

@@ -1,0 +1,115 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+
+############################################################################
+
+# make compiler warnings fatal
+
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -WX
+
+# allow the resource compiler to search the dest\include tree
+
+AFSDEV_AUXRCFLAGS = $(AFSDEV_AUXRCFLAGS) -I$(DESTDIR)\include
+
+# include the primary makefile
+
+!INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\..\config\NTMakefile.version
+
+############################################################################
+#
+# BUILD TARGETS
+#
+
+EXEFILE = $(DESTDIR)\root.server\usr\afs\bin\TaAfsServerManager.exe
+
+EXEOBJS = \
+	svrmgr_stub.res \
+	action.obj \
+	agg_col.obj \
+	agg_general.obj \
+	agg_prop.obj \
+	agg_tab.obj \
+	alert.obj \
+	cmdline.obj \
+	columns.obj \
+	command.obj \
+	creds.obj \
+	dispatch.obj \
+	dispguts.obj \
+	display.obj \
+	general.obj \
+	helpfunc.obj \
+	options.obj \
+	prefs.obj \
+	problems.obj \
+	propcache.obj \
+	set_clone.obj \
+	set_col.obj \
+	set_create.obj \
+	set_createrep.obj \
+	set_delete.obj \
+	set_dump.obj \
+	set_general.obj \
+	set_move.obj \
+	set_prop.obj \
+	set_quota.obj \
+	set_release.obj \
+	set_rename.obj \
+	set_repprop.obj \
+	set_restore.obj \
+	set_tab.obj \
+	subset.obj \
+	svc_col.obj \
+	svc_create.obj \
+	svc_delete.obj \
+	svc_general.obj \
+	svc_prop.obj \
+	svc_startstop.obj \
+	svc_tab.obj \
+	svc_viewlog.obj \
+	svr_address.obj \
+	svr_col.obj \
+	svr_execute.obj \
+	svr_general.obj \
+	svr_getdates.obj \
+	svr_hosts.obj \
+	svr_install.obj \
+	svr_prop.obj \
+	svr_prune.obj \
+	svr_salvage.obj \
+	svr_security.obj \
+	svr_syncvldb.obj \
+	svr_uninstall.obj \
+	svr_window.obj \
+	svrmgr.obj \
+	task.obj \
+	window.obj
+
+VCLIBS =\
+	comctl32.lib \
+	shell32.lib
+
+EXELIBS = \
+	$(DESTDIR)\lib\afs\AfsClass.lib \
+	$(DESTDIR)\lib\afs\TaAfsAppLib.lib
+
+############################################################################
+
+$(EXEFILE) : $(EXEOBJS) $(EXELIBS)
+	$(EXEGUILINK) $(VCLIBS)
+	$(EXEPREP) 
+
+lang ::
+	$(CD) lang
+	for /f %l in ('dir /B ??_??') do @$(NTLANG) %l $(MAKECMD) /nologo /f NTMakefile install
+	$(CD) ..
+
+install : $(EXEFILE) lang
+
+############################################################################
+#
+# Dependencies
+#
+
+svrmgr_stub.res : svrmgr_stub.rc AFS_component_version_number.h
+

@@ -1,0 +1,1009 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>관리 안내서</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- c:\IDWBWIN\TEMP\idwt1054\Auagd000.scr converted by idb2h R4.2    -->
+<!-- (359) ID Workbench Version (WINNT-WIN95) on 31 Dec 1999 at       -->
+<!-- 09:23:05                                                         -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=euc-kr">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 31 Dec 1999 09:22:58">
+<META HTTP-EQUIV="review" CONTENT="Sun, 31 Dec 2000 09:22:58">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 31 Dec 2001 09:22:58">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>관리 안내서</H1>
+<HR><H2><A NAME="ToC">목차</A></H2>
+<P><B><A NAME="ToC_1" HREF="auagd003.htm#HDRFIGLIST_START">그림</A></B><BR>
+<P><B><A NAME="ToC_2" HREF="auagd004.htm#HDRTLIST_START">표</A></B><BR>
+<P><B><A NAME="ToC_3" HREF="auagd005.htm#Header_3">이 안내서에 대하여</A></B><BR>
+<MENU>
+<LI><A NAME="ToC_4" HREF="auagd005.htm#HDRWQ1">사용자 및 목적</A>
+<LI><A NAME="ToC_5" HREF="auagd005.htm#HDRWQ2">문서 구성</A>
+<LI><A NAME="ToC_6" HREF="auagd005.htm#HDRWQ3">이 문서를 사용하는 방법</A>
+<LI><A NAME="ToC_7" HREF="auagd005.htm#HDRWQ4">관련 문서</A>
+<LI><A NAME="ToC_8" HREF="auagd005.htm#HDRTYPO_CONV">인쇄 규칙</A>
+</MENU>
+<P><B><A NAME="ToC_9" HREF="auagd006.htm#HDRWQ5">AFS 관리의 개요</A></B><BR>
+<MENU>
+<LI><A NAME="ToC_10" HREF="auagd006.htm#HDRWQ6">AFS의 광범위한 개요</A>
+<LI><A NAME="ToC_11" HREF="auagd006.htm#HDRWQ7">몇몇 기본 개념에 대한 상세한 정보</A>
+<MENU>
+<LI><A NAME="ToC_12" HREF="auagd006.htm#HDRWQ8">네트워크</A>
+<LI><A NAME="ToC_13" HREF="auagd006.htm#HDRWQ9">분산 파일 시스템</A>
+<LI><A NAME="ToC_14" HREF="auagd006.htm#HDRWQ10">서버 및 클라이언트</A>
+<LI><A NAME="ToC_15" HREF="auagd006.htm#HDRWQ11">셀</A>
+<LI><A NAME="ToC_16" HREF="auagd006.htm#HDRWQ12">균일 이름 공간 및 가시적 액세스</A>
+<LI><A NAME="ToC_17" HREF="auagd006.htm#HDRWQ13">볼륨</A>
+<LI><A NAME="ToC_18" HREF="auagd006.htm#HDRWQ14">마운트 포인트</A>
+<LI><A NAME="ToC_19" HREF="auagd006.htm#HDRWQ15">복제</A>
+<LI><A NAME="ToC_20" HREF="auagd006.htm#HDRWQ16">캐슁 및 콜백</A>
+</MENU>
+<LI><A NAME="ToC_21" HREF="auagd006.htm#HDRWQ17">AFS 서버 프로세스 및 캐쉬 관리 프로그램</A>
+<MENU>
+<LI><A NAME="ToC_22" HREF="auagd006.htm#HDRWQ18">파일 서버</A>
+<LI><A NAME="ToC_23" HREF="auagd006.htm#HDRWQ19">BOS(Basic OverSeer) 서버</A>
+<LI><A NAME="ToC_24" HREF="auagd006.htm#HDRWQ20">인증 서버</A>
+<LI><A NAME="ToC_25" HREF="auagd006.htm#HDRWQ21">보호 서버</A>
+<LI><A NAME="ToC_26" HREF="auagd006.htm#HDRWQ22">볼륨 서버</A>
+<LI><A NAME="ToC_27" HREF="auagd006.htm#HDRWQ23">볼륨 위치(VL) 서버</A>
+<LI><A NAME="ToC_28" HREF="auagd006.htm#HDRWQ24">갱신 서버</A>
+<LI><A NAME="ToC_29" HREF="auagd006.htm#HDRWQ25">백업 서버</A>
+<LI><A NAME="ToC_30" HREF="auagd006.htm#HDRWQ26">구조 프로그램</A>
+<LI><A NAME="ToC_31" HREF="auagd006.htm#HDRWQ27">NTPD(Network Time Protocol Daemon)</A>
+<LI><A NAME="ToC_32" HREF="auagd006.htm#HDRWQ28">캐쉬 관리 프로그램</A>
+</MENU></MENU>
+<P><B><A NAME="ToC_33" HREF="auagd007.htm#HDRWQ29">셀 구성 및 관리 문제</A></B><BR>
+<MENU>
+<LI><A NAME="ToC_34" HREF="auagd007.htm#HDRWQ30">AFS와 UNIX 간의 차이점: 요약</A>
+<MENU>
+<LI><A NAME="ToC_35" HREF="auagd007.htm#Header_35">파일 및 디렉토리 보호의 차이점</A>
+<LI><A NAME="ToC_36" HREF="auagd007.htm#HDRWQ31">인증의 차이점</A>
+<LI><A NAME="ToC_37" HREF="auagd007.htm#Header_37">표준 UNIX 명령 구문의 차이점</A>
+<LI><A NAME="ToC_38" HREF="auagd007.htm#Header_38">AFS 버전의 fsck 명령</A>
+<LI><A NAME="ToC_39" HREF="auagd007.htm#HDRWQ32">하드 연결 작성</A>
+<LI><A NAME="ToC_40" HREF="auagd007.htm#HDRWQ33">AFS에서 구현하는 닫을 때 저장</A>
+<LI><A NAME="ToC_41" HREF="auagd007.htm#Header_41">Setuid 프로그램</A>
+</MENU>
+<LI><A NAME="ToC_42" HREF="auagd007.htm#HDRWQ34">셀 이름 선택</A>
+<MENU>
+<LI><A NAME="ToC_43" HREF="auagd007.htm#Header_43">셀 이름 설정 방법</A>
+<LI><A NAME="ToC_44" HREF="auagd007.htm#HDRWQ35">적절한 셀 이름을 선택하는 것이 중요한 이유</A>
+</MENU>
+<LI><A NAME="ToC_45" HREF="auagd007.htm#HDRWQ36">AFS 전역 이름 공간에 참여하기</A>
+<MENU>
+<LI><A NAME="ToC_46" HREF="auagd007.htm#HDRWQ37">전역 이름 공간의 형태</A>
+<LI><A NAME="ToC_47" HREF="auagd007.htm#HDRWQ38">사용자의 셀을 다른 셀에서 볼 수 있게 만들기</A>
+<LI><A NAME="ToC_48" HREF="auagd007.htm#HDRWQ39">사용자의 셀에서 다른 셀을 볼 수 있게 만들기</A>
+<LI><A NAME="ToC_49" HREF="auagd007.htm#HDRWQ40">외부 사용자에게 셀에 대한 액세스 권한 부여 및 거부</A>
+</MENU>
+<LI><A NAME="ToC_50" HREF="auagd007.htm#HDRWQ41">AFS 파일 공간 구성</A>
+<MENU>
+<LI><A NAME="ToC_51" HREF="auagd007.htm#Header_51">상위 /afs 레벨</A>
+<LI><A NAME="ToC_52" HREF="auagd007.htm#HDRWQ42">두 번째 (Cellname) 레벨</A>
+<LI><A NAME="ToC_53" HREF="auagd007.htm#HDRWQ43">세 번째 레벨</A>
+</MENU>
+<LI><A NAME="ToC_54" HREF="auagd007.htm#HDRWQ44">볼륨을 작성하여 관리 간편화하기</A>
+<MENU>
+<LI><A NAME="ToC_55" HREF="auagd007.htm#Header_55">볼륨 이름 지정</A>
+<LI><A NAME="ToC_56" HREF="auagd007.htm#HDRWQ49">하나의 파티션에 연관된 볼륨 그룹화</A>
+<LI><A NAME="ToC_57" HREF="auagd007.htm#HDRWQ50">볼륨 복제 시기</A>
+<LI><A NAME="ToC_58" HREF="auagd007.htm#Header_58">새 볼륨의 기본 할당량 및 ACL</A>
+</MENU>
+<LI><A NAME="ToC_59" HREF="auagd007.htm#HDRWQ51">서버 시스템 구성</A>
+<MENU>
+<LI><A NAME="ToC_60" HREF="auagd007.htm#HDRWQ52">AFS 관리 데이터베이스 복제</A>
+<LI><A NAME="ToC_61" HREF="auagd007.htm#HDRWQ53">로컬 디스크의 AFS 파일</A>
+<LI><A NAME="ToC_62" HREF="auagd007.htm#Header_62">AFS 데이터를 저장하도록 파티션 구성하기</A>
+<LI><A NAME="ToC_63" HREF="auagd007.htm#Header_63">모니터링, 재부팅 및 자동 프로세스 재시작</A>
+</MENU>
+<LI><A NAME="ToC_64" HREF="auagd007.htm#HDRWQ54">클라이언트 시스템 구성</A>
+<MENU>
+<LI><A NAME="ToC_65" HREF="auagd007.htm#HDRWQ55">로컬 디스크 구성</A>
+<LI><A NAME="ToC_66" HREF="auagd007.htm#Header_66">외부 셀에 대한 액세스 사용 가능화</A>
+<LI><A NAME="ToC_67" HREF="auagd007.htm#HDRWQ56">경로 이름에 @sys 변수 사용</A>
+<LI><A NAME="ToC_68" HREF="auagd007.htm#Header_68">서버 선호 사항 설정</A>
+</MENU>
+<LI><A NAME="ToC_69" HREF="auagd007.htm#HDRWQ57">AFS 사용자 계정 구성</A>
+<MENU>
+<LI><A NAME="ToC_70" HREF="auagd007.htm#HDRWQ58">사용자 이름 선택 및 다른 계정 구성요소 명명</A>
+<LI><A NAME="ToC_71" HREF="auagd007.htm#HDRWQ59">홈 디렉토리 그룹화</A>
+<LI><A NAME="ToC_72" HREF="auagd007.htm#Header_72">사용자 볼륨의 백업 버전을 사용 가능하게 만들기</A>
+<LI><A NAME="ToC_73" HREF="auagd007.htm#HDRWQ60">새 AFS 계정에 표준 파일 작성</A>
+</MENU>
+<LI><A NAME="ToC_74" HREF="auagd007.htm#HDRWQ61">AFS 보호 그룹 사용</A>
+<MENU>
+<LI><A NAME="ToC_75" HREF="auagd007.htm#Header_75">세 가지 시스템 그룹</A>
+<LI><A NAME="ToC_76" HREF="auagd007.htm#HDRWQ62">두 가지 유형의 사용자 정의 그룹</A>
+</MENU>
+<LI><A NAME="ToC_77" HREF="auagd007.htm#HDRWQ63">AFS의 로그인 및 인증</A>
+<MENU>
+<LI><A NAME="ToC_78" HREF="auagd007.htm#HDRWQ64">PAG에 의한 AFS 토큰 식별</A>
+<LI><A NAME="ToC_79" HREF="auagd007.htm#HDRWQ65">AFS 수정 로그인 유틸리티 사용</A>
+<LI><A NAME="ToC_80" HREF="auagd007.htm#HDRWQ69">2단계 로그인 및 인증 사용</A>
+<LI><A NAME="ToC_81" HREF="auagd007.htm#Header_81">토큰 얻기, 표시하기 및 버리기</A>
+<LI><A NAME="ToC_82" HREF="auagd007.htm#Header_82">사용자에 대한 토큰 기본 수명 설정</A>
+<LI><A NAME="ToC_83" HREF="auagd007.htm#Header_83">암호 변경</A>
+<LI><A NAME="ToC_84" HREF="auagd007.htm#Header_84">암호 및 인증 시도에 대한 제한 적용</A>
+<LI><A NAME="ToC_85" HREF="auagd007.htm#HDRWQ70">Kerberos 인증 지원</A>
+</MENU>
+<LI><A NAME="ToC_86" HREF="auagd007.htm#HDRWQ71">AFS의 보안 및 권한부여</A>
+<MENU>
+<LI><A NAME="ToC_87" HREF="auagd007.htm#HDRWQ72">일부 중요한 보안 기능</A>
+<LI><A NAME="ToC_88" HREF="auagd007.htm#HDRWQ73">세 가지 유형의 권한</A>
+<LI><A NAME="ToC_89" HREF="auagd007.htm#Header_89">권한 확인 대 인증</A>
+<LI><A NAME="ToC_90" HREF="auagd007.htm#HDRWQ74">셀의 보안 향상</A>
+<LI><A NAME="ToC_91" HREF="auagd007.htm#HDRWQ75">상호 인증에 대한 상세한 설명</A>
+</MENU>
+<LI><A NAME="ToC_94" HREF="auagd007.htm#HDRWQ77">AFS 데이터 백업</A>
+<MENU>
+<LI><A NAME="ToC_95" HREF="auagd007.htm#Header_95">백업 볼륨</A>
+<LI><A NAME="ToC_96" HREF="auagd007.htm#Header_96">AFS 백업 시스템</A>
+</MENU>
+<LI><A NAME="ToC_97" HREF="auagd007.htm#HDRWQ78">AFS 환경에서 UNIX 원격 서비스 사용</A>
+<LI><A NAME="ToC_98" HREF="auagd007.htm#HDRWQ79">NFS를 통한 AFS 액세스</A>
+</MENU>
+<P><B><A NAME="ToC_99" HREF="auagd008.htm#HDRWQ80">서버 시스템 관리</A></B><BR>
+<MENU>
+<LI><A NAME="ToC_100" HREF="auagd008.htm#HDRWQ81">명령어(instruction) 요약</A>
+<LI><A NAME="ToC_101" HREF="auagd008.htm#HDRWQ83">서버 시스템의 로컬 디스크 파일</A>
+<MENU>
+<LI><A NAME="ToC_102" HREF="auagd008.htm#HDRWQ84">/usr/afs/bin 디렉토리의 2진 파일</A>
+<LI><A NAME="ToC_103" HREF="auagd008.htm#HDRWQ85">/usr/afs/etc 디렉토리의 일반 구성 파일</A>
+<LI><A NAME="ToC_104" HREF="auagd008.htm#HDRWQ86">/usr/afs/local 디렉토리의 로컬 구성 파일</A>
+<LI><A NAME="ToC_105" HREF="auagd008.htm#HDRWQ87">/usr/afs/db 디렉토리의 복제된 데이터베이스 파일</A>
+<LI><A NAME="ToC_106" HREF="auagd008.htm#HDRWQ88">/usr/afs/logs 디렉토리의 로그 파일</A>
+<LI><A NAME="ToC_107" HREF="auagd008.htm#HDRWQ89">서버 파티션의 볼륨 헤더</A>
+</MENU>
+<LI><A NAME="ToC_108" HREF="auagd008.htm#HDRWQ90">파일 서버 시스템의 네 가지 역할</A>
+<MENU>
+<LI><A NAME="ToC_109" HREF="auagd008.htm#HDRWQ91">단순 파일 서버 시스템</A>
+<LI><A NAME="ToC_110" HREF="auagd008.htm#HDRWQ92">데이터베이스 서버 시스템</A>
+<LI><A NAME="ToC_111" HREF="auagd008.htm#HDRWQ93">2진 분산 시스템</A>
+<LI><A NAME="ToC_112" HREF="auagd008.htm#HDRWQ94">시스템 제어 시스템</A>
+<LI><A NAME="ToC_113" HREF="auagd008.htm#HDRWQ95">데이터베이스 서버 시스템을 찾으려면</A>
+<LI><A NAME="ToC_114" HREF="auagd008.htm#HDRWQ96">시스템 제어 시스템을 찾으려면</A>
+<LI><A NAME="ToC_115" HREF="auagd008.htm#HDRWQ97">시스템 유형에 대한 2진 분산 시스템을 찾으려면</A>
+<LI><A NAME="ToC_116" HREF="auagd008.htm#HDRWQ98">bos status 명령으로부터 출력 해석</A>
+</MENU>
+<LI><A NAME="ToC_119" HREF="auagd008.htm#HDRWQ101">데이터베이스 서버 시스템 관리</A>
+<MENU>
+<LI><A NAME="ToC_120" HREF="auagd008.htm#HDRWQ102">AFS 관리 데이터베이스 복제</A>
+<LI><A NAME="ToC_125" HREF="auagd008.htm#HDRWQ107">관리 데이터베이스 백업 및 복원</A>
+<LI><A NAME="ToC_126" HREF="auagd008.htm#HDRWQ108">관리 데이터베이스를 백업하려면</A>
+<LI><A NAME="ToC_127" HREF="auagd008.htm#HDRWQ109">관리 데이터베이스를 복원하려면</A>
+</MENU>
+<LI><A NAME="ToC_128" HREF="auagd008.htm#HDRWQ110">서버 프로세스 소프트웨어 설치</A>
+<MENU>
+<LI><A NAME="ToC_129" HREF="auagd008.htm#HDRWQ111">새 2진 파일 설치</A>
+<LI><A NAME="ToC_130" HREF="auagd008.htm#Header_130">새 서버 2진 파일을 설치하려면</A>
+<LI><A NAME="ToC_131" HREF="auagd008.htm#HDRWQ113">이전 버전의 2진 파일로 복원</A>
+<LI><A NAME="ToC_132" HREF="auagd008.htm#Header_132">이전 버전의 2진 파일로 복원하려면</A>
+<LI><A NAME="ToC_133" HREF="auagd008.htm#HDRWQ115">2진 버전 날짜 표시</A>
+<LI><A NAME="ToC_134" HREF="auagd008.htm#Header_134">2진 파일 버전 날짜를 표시하려면</A>
+<LI><A NAME="ToC_135" HREF="auagd008.htm#HDRWQ116">이전 2진 파일 제거</A>
+<LI><A NAME="ToC_136" HREF="auagd008.htm#Header_136">이전 2진 파일을 제거하려면</A>
+<LI><A NAME="ToC_137" HREF="auagd008.htm#HDRWQ117">2진 파일의 빌드 레벨 표시</A>
+<LI><A NAME="ToC_138" HREF="auagd008.htm#Header_138">AFS 2진 파일의 빌드 레벨을 표시하려면</A>
+</MENU>
+<LI><A NAME="ToC_139" HREF="auagd008.htm#HDRWQ118">서버 CellServDB 파일 유지</A>
+<MENU>
+<LI><A NAME="ToC_140" HREF="auagd008.htm#HDRWQ119">서버 CellServDB 파일 분배</A>
+<LI><A NAME="ToC_141" HREF="auagd008.htm#HDRWQ120">셀의 데이터베이스 서버 시스템을 표시하려면</A>
+<LI><A NAME="ToC_142" HREF="auagd008.htm#HDRWQ121">CellServDB 파일에 데이터베이스 서버 시스템을 추가하려면</A>
+<LI><A NAME="ToC_143" HREF="auagd008.htm#HDRWQ122">CellServDB 파일에서 데이터베이스 서버 시스템을 제거하려면</A>
+</MENU>
+<LI><A NAME="ToC_144" HREF="auagd008.htm#HDRWQ123">인증 관리 및 권한 부여 요구조건</A>
+<MENU>
+<LI><A NAME="ToC_145" HREF="auagd008.htm#HDRWQ124">인증 대 권한 부여</A>
+<LI><A NAME="ToC_146" HREF="auagd008.htm#HDRWQ125">서버 시스템의 권한 확인 제어</A>
+<LI><A NAME="ToC_147" HREF="auagd008.htm#HDRWQ126">서버 시스템의 권한 확인을 사용 불가능하게 하려면</A>
+<LI><A NAME="ToC_148" HREF="auagd008.htm#HDRWQ127">서버 시스템의 권한 확인을 사용 가능하게 하려면</A>
+<LI><A NAME="ToC_149" HREF="auagd008.htm#HDRWQ128">개별 명령에 대한 상호 인증 무시</A>
+<LI><A NAME="ToC_150" HREF="auagd008.htm#HDRWQ129">bos, kas, pts 및 vos 명령에 대한 상호 인증을 무시하려면</A>
+<LI><A NAME="ToC_151" HREF="auagd008.htm#Header_151">fs 명령에 대한 상호 인증을 무시하려면</A>
+</MENU>
+<LI><A NAME="ToC_152" HREF="auagd008.htm#HDRWQ130">디스크 및 파티션 추가 또는 제거</A>
+<MENU>
+<LI><A NAME="ToC_153" HREF="auagd008.htm#HDRWQ131">AFS 볼륨을 저장할 새 디스크를 추가 및 마운트하려면</A>
+<LI><A NAME="ToC_154" HREF="auagd008.htm#HDRWQ135">AFS 볼륨을 저장하는 디스크를 언마운트 및 제거하려면</A>
+</MENU>
+<LI><A NAME="ToC_155" HREF="auagd008.htm#HDRWQ138">서버 IP 주소 및 VLDB 서버 항목 관리</A>
+<MENU>
+<LI><A NAME="ToC_156" HREF="auagd008.htm#Header_156">서버 NetInfo 파일을 작성하거나 편집하려면</A>
+<LI><A NAME="ToC_157" HREF="auagd008.htm#Header_157">서버 NetRestrict 파일을 작성하거나 편집하려면</A>
+<LI><A NAME="ToC_158" HREF="auagd008.htm#Header_158">VLDB에서 모든 서버 항목을 표시하려면</A>
+<LI><A NAME="ToC_159" HREF="auagd008.htm#Header_159">VLDB에서 이전 서버 항목을 제거하려면</A>
+<LI><A NAME="ToC_160" HREF="auagd008.htm#Header_160">서버 시스템의 IP 주소를 변경하려면</A>
+</MENU>
+<LI><A NAME="ToC_161" HREF="auagd008.htm#HDRWQ139">서버 시스템 재부팅</A>
+<MENU>
+<LI><A NAME="ToC_162" HREF="auagd008.htm#HDRWQ140">콘솔에서 파일 서버 시스템을 재부팅하는 방법</A>
+<LI><A NAME="ToC_163" HREF="auagd008.htm#HDRWQ141">파일 서버 시스템을 원격에서 재부팅하는 방법</A>
+</MENU></MENU>
+<P><B><A NAME="ToC_164" HREF="auagd009.htm#HDRWQ142">서버 프로세스 모니터 및 제어</A></B><BR>
+<MENU>
+<LI><A NAME="ToC_165" HREF="auagd009.htm#HDRWQ143">명령어(instruction) 요약</A>
+<LI><A NAME="ToC_166" HREF="auagd009.htm#HDRWQ145">AFS 서버 프로세스에 대한 간단한 설명</A>
+<MENU>
+<LI><A NAME="ToC_167" HREF="auagd009.htm#HDRWQ146">bosserver 프로세스: BOS(Basic OverSeer) 서버</A>
+<LI><A NAME="ToC_168" HREF="auagd009.htm#HDRWQ147">buserver 프로세스: 백업 서버</A>
+<LI><A NAME="ToC_169" HREF="auagd009.htm#HDRWQ148">fs 프로세스 모음: 파일 서버, 볼륨 서버 및 구조 프로그램</A>
+<LI><A NAME="ToC_170" HREF="auagd009.htm#HDRWQ149">kaserver 프로세스: 인증 서버</A>
+<LI><A NAME="ToC_171" HREF="auagd009.htm#HDRWQ150">ptserver 프로세스: 보호 서버</A>
+<LI><A NAME="ToC_172" HREF="auagd009.htm#HDRWQ151">runntp 프로세스</A>
+<LI><A NAME="ToC_173" HREF="auagd009.htm#HDRWQ152">upserver 및 upclient 프로세스: 갱신 서버</A>
+<LI><A NAME="ToC_174" HREF="auagd009.htm#HDRWQ153">vlserver 프로세스: 볼륨 위치 서버</A>
+</MENU>
+<LI><A NAME="ToC_175" HREF="auagd009.htm#HDRWQ154">프로세스 상태 제어 및 확인</A>
+<MENU>
+<LI><A NAME="ToC_176" HREF="auagd009.htm#Header_176">BosConfig 파일의 정보</A>
+<LI><A NAME="ToC_177" HREF="auagd009.htm#HDRWQ155">BOS 서버가 BosConfig 파일의 정보를 사용하는 방법</A>
+<LI><A NAME="ToC_178" HREF="auagd009.htm#HDRWQ156">데이터베이스 서버 프로세스 시작 및 정지에 대하여</A>
+<LI><A NAME="ToC_179" HREF="auagd009.htm#HDRWQ157">갱신 서버 시작 및 정지에 대하여</A>
+</MENU>
+<LI><A NAME="ToC_180" HREF="auagd009.htm#HDRWQ158">프로세스 상태와 BosConfig 파일의 정보 표시하기</A>
+<MENU>
+<LI><A NAME="ToC_181" HREF="auagd009.htm#HDRWQ159">서버 프로세스의 상태와 BosConfig 항목을 표시하려면</A>
+</MENU>
+<LI><A NAME="ToC_182" HREF="auagd009.htm#HDRWQ161">프로세스 작성 및 제거</A>
+<MENU>
+<LI><A NAME="ToC_183" HREF="auagd009.htm#HDRWQ162">새 프로세스를 작성 및 시작하려면</A>
+<LI><A NAME="ToC_184" HREF="auagd009.htm#Header_184">프로세스를 정지하고 BosConfig 파일에서 제거하려면</A>
+</MENU>
+<LI><A NAME="ToC_185" HREF="auagd009.htm#HDRWQ164">프로세스 영구 정지 및 시작</A>
+<MENU>
+<LI><A NAME="ToC_186" HREF="auagd009.htm#HDRWQ165">상태를 NotRun으로 변경하여 프로세스를 정지하려면</A>
+<LI><A NAME="ToC_187" HREF="auagd009.htm#HDRWQ166">상태 플래그를 Run으로 변경하여 프로세스를 시작하려면</A>
+</MENU>
+<LI><A NAME="ToC_188" HREF="auagd009.htm#HDRWQ167">프로세스 일시 정지 및 시작</A>
+<MENU>
+<LI><A NAME="ToC_189" HREF="auagd009.htm#HDRWQ168">프로세스를 일시적으로 정지하려면</A>
+<LI><A NAME="ToC_190" HREF="auagd009.htm#Header_190">BosConfig 파일에 상태 플래그가 Run으로 설정된 정지된 모든 프로세스를 시작하려면</A>
+<LI><A NAME="ToC_191" HREF="auagd009.htm#Header_191">특정 프로세스를 시작하려면</A>
+</MENU>
+<LI><A NAME="ToC_192" HREF="auagd009.htm#HDRWQ170">프로세스를 정지한 후 즉시 재시작하기</A>
+<MENU>
+<LI><A NAME="ToC_193" HREF="auagd009.htm#Header_193">BOS 서버를 포함하는 모든 프로세스를 정지한 후 재시작하려면</A>
+<LI><A NAME="ToC_194" HREF="auagd009.htm#Header_194">BOS 서버를 제외한 모든 프로세스를 정지한 후 즉시 재시작하려면</A>
+<LI><A NAME="ToC_195" HREF="auagd009.htm#Header_195">특정 프로세스를 정지한 후 즉시 재시작하려면</A>
+</MENU>
+<LI><A NAME="ToC_196" HREF="auagd009.htm#HDRWQ171">BOS 서버의 재시작 시간 설정</A>
+<MENU>
+<LI><A NAME="ToC_197" HREF="auagd009.htm#Header_197">BOS 서버 재시작 시간을 표시하려면</A>
+<LI><A NAME="ToC_198" HREF="auagd009.htm#HDRWQ172">일반 또는 2진 재시작 시간을 설정하려면</A>
+</MENU>
+<LI><A NAME="ToC_199" HREF="auagd009.htm#HDRWQ173">서버 프로세스 로그 파일 표시</A>
+<MENU>
+<LI><A NAME="ToC_200" HREF="auagd009.htm#Header_200">서버 프로세스 로그 파일을 검토하려면</A>
+</MENU></MENU>
+<P><B><A NAME="ToC_201" HREF="auagd010.htm#HDRWQ174">볼륨 관리</A></B><BR>
+<MENU>
+<LI><A NAME="ToC_202" HREF="auagd010.htm#HDRWQ175">명령어(instruction) 요약</A>
+<LI><A NAME="ToC_203" HREF="auagd010.htm#HDRWQ177">볼륨에 대하여</A>
+<MENU>
+<LI><A NAME="ToC_204" HREF="auagd010.htm#HDRWQ178">세 가지 유형의 볼륨</A>
+<LI><A NAME="ToC_205" HREF="auagd010.htm#HDRWQ179">볼륨이 AFS 효율을 높이는 방법</A>
+<LI><A NAME="ToC_206" HREF="auagd010.htm#HDRWQ180">VLDB의 볼륨 정보</A>
+<LI><A NAME="ToC_207" HREF="auagd010.htm#HDRWQ181">볼륨 헤더의 정보</A>
+<LI><A NAME="ToC_208" HREF="auagd010.htm#HDRWQ182">VLDB 및 볼륨 헤더의 동기화 상태 유지</A>
+<LI><A NAME="ToC_209" HREF="auagd010.htm#HDRWQ183">볼륨 마운트에 대하여</A>
+<LI><A NAME="ToC_210" HREF="auagd010.htm#HDRWQ184">볼륨 이름에 대하여</A>
+</MENU>
+<LI><A NAME="ToC_211" HREF="auagd010.htm#HDRWQ185">읽기/쓰기 볼륨 작성</A>
+<MENU>
+<LI><A NAME="ToC_212" HREF="auagd010.htm#Header_212">읽기/쓰기 볼륨을 작성(마운트)하려면</A>
+</MENU>
+<LI><A NAME="ToC_213" HREF="auagd010.htm#HDRWQ190">클론 및 클로닝에 대하여</A>
+<LI><A NAME="ToC_214" HREF="auagd010.htm#HDRWQ192">볼륨 복제(읽기 전용 볼륨 작성)</A>
+<MENU>
+<LI><A NAME="ToC_215" HREF="auagd010.htm#HDRWQ193">읽기 전용 볼륨의 효율적 사용</A>
+<LI><A NAME="ToC_216" HREF="auagd010.htm#Header_216">복제 시나리오</A>
+<LI><A NAME="ToC_217" HREF="auagd010.htm#HDRWQ194">읽기/쓰기 볼륨을 복제하려면 (읽기 전용 볼륨 작성)</A>
+</MENU>
+<LI><A NAME="ToC_218" HREF="auagd010.htm#HDRWQ201">백업 볼륨 작성</A>
+<MENU>
+<LI><A NAME="ToC_219" HREF="auagd010.htm#HDRWQ202">한 번에 여러 볼륨 백업</A>
+<LI><A NAME="ToC_220" HREF="auagd010.htm#HDRWQ203">백업 볼륨 작성 자동화</A>
+<LI><A NAME="ToC_221" HREF="auagd010.htm#HDRWQ204">백업 볼륨의 내용을 사용자가 사용할 수 있게 만들기</A>
+<LI><A NAME="ToC_222" HREF="auagd010.htm#HDRWQ205">백업 볼륨을 작성 및 마운트하려면</A>
+<LI><A NAME="ToC_223" HREF="auagd010.htm#Header_223">한 번에 여러 백업 볼륨을 작성하려면</A>
+</MENU>
+<LI><A NAME="ToC_224" HREF="auagd010.htm#HDRWQ208">볼륨 마운트</A>
+<MENU>
+<LI><A NAME="ToC_225" HREF="auagd010.htm#HDRWQ209">마운트 포인트 통과 규칙</A>
+<LI><A NAME="ToC_226" HREF="auagd010.htm#HDRWQ210">세 가지 유형의 마운트 포인트</A>
+<LI><A NAME="ToC_227" HREF="auagd010.htm#Header_227">외부 셀에 마운트 포인트 작성</A>
+<LI><A NAME="ToC_228" HREF="auagd010.htm#HDRWQ211">마운트 포인트를 표시하려면</A>
+<LI><A NAME="ToC_229" HREF="auagd010.htm#HDRWQ212">일반 또는 읽기/쓰기 마운트 포인트를 작성하려면</A>
+<LI><A NAME="ToC_230" HREF="auagd010.htm#HDRWQ213">셀 방식 마운트 포인트를 작성하려면</A>
+<LI><A NAME="ToC_231" HREF="auagd010.htm#HDRWQ215">마운트 포인트를 제거하려면</A>
+</MENU>
+<LI><A NAME="ToC_232" HREF="auagd010.htm#HDRWQ216">볼륨 정보 표시</A>
+<MENU>
+<LI><A NAME="ToC_233" HREF="auagd010.htm#HDRWQ217">VLDB 항목 표시</A>
+<LI><A NAME="ToC_234" HREF="auagd010.htm#HDRWQ218">VLDB 항목을 표시하려면</A>
+<LI><A NAME="ToC_235" HREF="auagd010.htm#HDRWQ219">볼륨 헤더 표시</A>
+<LI><A NAME="ToC_236" HREF="auagd010.htm#HDRWQ220">볼륨 헤더를 표시하려면</A>
+<LI><A NAME="ToC_237" HREF="auagd010.htm#HDRWQ221">볼륨의 VLDB 항목 및 볼륨 헤더 표시</A>
+<LI><A NAME="ToC_238" HREF="auagd010.htm#HDRWQ222">볼륨의 VLDB 항목 및 볼륨 헤더를 표시하려면</A>
+<LI><A NAME="ToC_239" HREF="auagd010.htm#HDRWQ223">파일이 들어 있는 볼륨의 이름 또는 위치 표시</A>
+</MENU>
+<LI><A NAME="ToC_243" HREF="auagd010.htm#HDRWQ226">볼륨 이동</A>
+<MENU>
+<LI><A NAME="ToC_244" HREF="auagd010.htm#Header_244">읽기/쓰기 볼륨을 이동하려면</A>
+</MENU>
+<LI><A NAME="ToC_245" HREF="auagd010.htm#HDRWQ227">VLDB 및 볼륨 헤더 동기화</A>
+<MENU>
+<LI><A NAME="ToC_246" HREF="auagd010.htm#Header_246">볼륨 헤더와 VLDB를 동기화하려면</A>
+</MENU>
+<LI><A NAME="ToC_247" HREF="auagd010.htm#HDRWQ232">볼륨 구조</A>
+<MENU>
+<LI><A NAME="ToC_248" HREF="auagd010.htm#HDRWQ233">볼륨을 구조하려면</A>
+</MENU>
+<LI><A NAME="ToC_249" HREF="auagd010.htm#HDRWQ234">볼륨 할당량과 현재 크기 설정 및 표시</A>
+<MENU>
+<LI><A NAME="ToC_250" HREF="auagd010.htm#Header_250">단일 볼륨에 대한 할당량을 설정하려면</A>
+<LI><A NAME="ToC_251" HREF="auagd010.htm#Header_251">하나 이상의 볼륨에 대한 최대 할당량을 설정하려면</A>
+<LI><A NAME="ToC_252" HREF="auagd010.htm#Header_252">사용된 퍼센트 할당량을 표시하려면</A>
+<LI><A NAME="ToC_253" HREF="auagd010.htm#Header_253">할당량, 현재 크기 및 기타 정보를 표시하려면</A>
+<LI><A NAME="ToC_254" HREF="auagd010.htm#Header_254">할당량, 현재 크기 및 추가 파티션 정보를 표시하려면</A>
+</MENU>
+<LI><A NAME="ToC_255" HREF="auagd010.htm#HDRWQ235">볼륨 및 마운트 포인트 제거</A>
+<MENU>
+<LI><A NAME="ToC_256" HREF="auagd010.htm#Header_256">기타 제거 명령</A>
+<LI><A NAME="ToC_257" HREF="auagd010.htm#HDRWQ236">볼륨을 제거하고 언마운트하려면</A>
+</MENU>
+<LI><A NAME="ToC_258" HREF="auagd010.htm#HDRWQ240">볼륨 덤프 및 복원</A>
+<MENU>
+<LI><A NAME="ToC_259" HREF="auagd010.htm#Header_259">볼륨 덤프에 대하여</A>
+<LI><A NAME="ToC_260" HREF="auagd010.htm#Header_260">볼륨을 덤프하려면</A>
+<LI><A NAME="ToC_261" HREF="auagd010.htm#Header_261">볼륨 복원에 대하여</A>
+<LI><A NAME="ToC_262" HREF="auagd010.htm#HDRWQ242">새 볼륨으로 덤프를 복원하고 마운트하려면</A>
+<LI><A NAME="ToC_263" HREF="auagd010.htm#HDRWQ244">덤프 파일을 복원하고 기존 볼륨을 덮어쓰려면</A>
+</MENU>
+<LI><A NAME="ToC_264" HREF="auagd010.htm#HDRWQ245">볼륨 이름 변경</A>
+<MENU>
+<LI><A NAME="ToC_265" HREF="auagd010.htm#HDRWQ246">볼륨의 이름을 변경하려면</A>
+</MENU>
+<LI><A NAME="ToC_266" HREF="auagd010.htm#HDRWQ247">VLDB 항목 잠금 해제 및 잠금</A>
+<MENU>
+<LI><A NAME="ToC_267" HREF="auagd010.htm#Header_267">VLDB 항목을 잠그려면</A>
+<LI><A NAME="ToC_268" HREF="auagd010.htm#Header_268">단일 VLDB 항목의 잠금을 해제하려면</A>
+<LI><A NAME="ToC_269" HREF="auagd010.htm#Header_269">복수의 VLDB 항목의 잠금을 해제하려면</A>
+</MENU></MENU>
+<P><B><A NAME="ToC_270" HREF="auagd011.htm#HDRWQ248">AFS 백업 시스템 구성</A></B><BR>
+<MENU>
+<LI><A NAME="ToC_271" HREF="auagd011.htm#HDRWQ249">명령어 요약</A>
+<LI><A NAME="ToC_272" HREF="auagd011.htm#HDRWQ251">백업 시스템 기능 소개</A>
+<MENU>
+<LI><A NAME="ToC_273" HREF="auagd011.htm#HDRWQ252">볼륨 세트 및 볼륨 항목</A>
+<LI><A NAME="ToC_274" HREF="auagd011.htm#Header_274">덤프 및 덤프 세트</A>
+<LI><A NAME="ToC_275" HREF="auagd011.htm#Header_275">덤프 계층, 덤프 레벨 및 만기 날짜</A>
+<LI><A NAME="ToC_276" HREF="auagd011.htm#HDRWQ253">덤프 이름과 테이프 이름</A>
+<LI><A NAME="ToC_277" HREF="auagd011.htm#HDRWQ254">테이프 레이블, 덤프 레이블 및 EOF 표시자</A>
+<LI><A NAME="ToC_278" HREF="auagd011.htm#HDRWQ255">테이프 조정자 시스템, 포트 오프셋 및 백업 데이터 파일</A>
+<LI><A NAME="ToC_279" HREF="auagd011.htm#HDRWQ256">백업 데이터베이스 및 백업 서버 프로세스</A>
+<LI><A NAME="ToC_280" HREF="auagd011.htm#Header_280">백업 시스템에 대한 인터페이스</A>
+</MENU>
+<LI><A NAME="ToC_281" HREF="auagd011.htm#HDRWQ257">백업 시스템 구성의 개요</A>
+<LI><A NAME="ToC_282" HREF="auagd011.htm#HDRWQ258">tapeconfig 파일 구성</A>
+<MENU>
+<LI><A NAME="ToC_283" HREF="auagd011.htm#HDRWQ259">압축되지 않은 테이프 장치에서 fms 명령 실행하기</A>
+</MENU>
+<LI><A NAME="ToC_284" HREF="auagd011.htm#HDRWQ260">백업 수행자에게 관리 특권 부여</A>
+<LI><A NAME="ToC_285" HREF="auagd011.htm#HDRWQ261">테이프 조정자 시스템 및 테이프 장치 구성</A>
+<MENU>
+<LI><A NAME="ToC_286" HREF="auagd011.htm#HDRWQ262">테이프 조정자 시스템 구성하기</A>
+<LI><A NAME="ToC_287" HREF="auagd011.htm#Header_287">기존 테이프 조정자 시스템에서 추가 테이프 조정자 구성하기</A>
+<LI><A NAME="ToC_288" HREF="auagd011.htm#Header_288">테이프 조정자 구성해제하기</A>
+<LI><A NAME="ToC_289" HREF="auagd011.htm#HDRWQ264">구성된 테이프 조정자 목록 표시하기</A>
+</MENU>
+<LI><A NAME="ToC_290" HREF="auagd011.htm#HDRWQ265">볼륨 세트와 볼륨 항목의 정의 및 표시</A>
+<MENU>
+<LI><A NAME="ToC_291" HREF="auagd011.htm#Header_291">볼륨 세트 작성하기</A>
+<LI><A NAME="ToC_292" HREF="auagd011.htm#Header_292">볼륨 세트에 볼륨 항목 추가하기</A>
+<LI><A NAME="ToC_293" HREF="auagd011.htm#HDRWQ266">볼륨 세트 및 볼륨 항목 표시하기</A>
+<LI><A NAME="ToC_294" HREF="auagd011.htm#Header_294">볼륨 세트 삭제하기</A>
+<LI><A NAME="ToC_295" HREF="auagd011.htm#Header_295">볼륨 세트에서 볼륨 항목 삭제하기</A>
+</MENU>
+<LI><A NAME="ToC_296" HREF="auagd011.htm#HDRWQ267">덤프 계층 정의 및 표시</A>
+<MENU>
+<LI><A NAME="ToC_297" HREF="auagd011.htm#HDRWQ268">테이프 재사용 스케줄 작성</A>
+<LI><A NAME="ToC_298" HREF="auagd011.htm#HDRWQ269">테이프 보존</A>
+<LI><A NAME="ToC_299" HREF="auagd011.htm#HDRWQ270">만기 날짜 정의</A>
+<LI><A NAME="ToC_300" HREF="auagd011.htm#Header_300">덤프 계층으로 덤프 레벨 추가하기</A>
+<LI><A NAME="ToC_301" HREF="auagd011.htm#Header_301">덤프 레벨의 만기 날짜 변경하기</A>
+<LI><A NAME="ToC_302" HREF="auagd011.htm#Header_302">덤프 계층에서 덤프 레벨 삭제하기</A>
+<LI><A NAME="ToC_303" HREF="auagd011.htm#HDRWQ271">덤프 계층 표시하기</A>
+</MENU>
+<LI><A NAME="ToC_304" HREF="auagd011.htm#HDRWQ272">테이프 레이블 기록 및 읽기</A>
+<MENU>
+<LI><A NAME="ToC_305" HREF="auagd011.htm#Header_305">레이블에 이름 기록</A>
+<LI><A NAME="ToC_306" HREF="auagd011.htm#Header_306">레이블에 용량 기록</A>
+<LI><A NAME="ToC_307" HREF="auagd011.htm#HDRWQ273">테이프에 레이블 지정하기</A>
+<LI><A NAME="ToC_308" HREF="auagd011.htm#HDRWQ274">테이프에서 레이블 읽기</A>
+</MENU>
+<LI><A NAME="ToC_309" HREF="auagd011.htm#HDRWQ275">백업 프로세스 자동화 및 효율성 증대</A>
+<MENU>
+<LI><A NAME="ToC_310" HREF="auagd011.htm#HDRWQ276">장치 구성 파일 작성</A>
+<LI><A NAME="ToC_311" HREF="auagd011.htm#HDRWQ277">장치의 테이프 마운트 및 마운트해제 루틴 호출</A>
+<LI><A NAME="ToC_314" HREF="auagd011.htm#HDRWQ278">초기 테이프에서 탐색 또는 프롬프트 삭제</A>
+<LI><A NAME="ToC_315" HREF="auagd011.htm#HDRWQ279">오류 상황에 대한 기본 응답 가능</A>
+<LI><A NAME="ToC_316" HREF="auagd011.htm#HDRWQ280">AFS 테이프 이름 체크 삭제</A>
+<LI><A NAME="ToC_317" HREF="auagd011.htm#HDRWQ281">테이프 스트림화를 위한 메모리 버퍼 설정</A>
+<LI><A NAME="ToC_318" HREF="auagd011.htm#HDRWQ282">백업 데이터 파일로 데이터 덤프</A>
+<LI><A NAME="ToC_319" HREF="auagd011.htm#Header_319">백업 데이터 파일 구성하기</A>
+</MENU></MENU>
+<P><B><A NAME="ToC_320" HREF="auagd012.htm#HDRWQ283">AFS 데이터 백업 및 복원</A></B><BR>
+<MENU>
+<LI><A NAME="ToC_321" HREF="auagd012.htm#HDRWQ284">명령어 요약</A>
+<LI><A NAME="ToC_322" HREF="auagd012.htm#HDRWQ286">백업 시스템의 인터페이스 사용</A>
+<MENU>
+<LI><A NAME="ToC_323" HREF="auagd012.htm#HDRWQ287">로컬 수퍼유저 루트로서 또는 외부 셀에서 백업 동작 수행</A>
+<LI><A NAME="ToC_324" HREF="auagd012.htm#HDRWQ288">대화식 및 일반 명령 모드 사용</A>
+<LI><A NAME="ToC_325" HREF="auagd012.htm#Header_325">대화식 모드 들어가기</A>
+<LI><A NAME="ToC_326" HREF="auagd012.htm#Header_326">대화식 모드 종료하기</A>
+<LI><A NAME="ToC_327" HREF="auagd012.htm#HDRWQ289">대화식 모드에서 보류중이거나 실행중인 작업 표시하기</A>
+<LI><A NAME="ToC_328" HREF="auagd012.htm#HDRWQ290">대화식 모드에서 동작 취소하기</A>
+<LI><A NAME="ToC_329" HREF="auagd012.htm#HDRWQ291">테이프 조정자 프로세스 시작 및 정지</A>
+<LI><A NAME="ToC_330" HREF="auagd012.htm#HDRWQ292">테이프 조정자 프로세스 시작하기</A>
+<LI><A NAME="ToC_331" HREF="auagd012.htm#Header_331">테이프 조정자 프로세스 정지하기</A>
+<LI><A NAME="ToC_332" HREF="auagd012.htm#HDRWQ295">테이프 조정자 프로세스의 상태 확인하기</A>
+</MENU>
+<LI><A NAME="ToC_333" HREF="auagd012.htm#HDRWQ296">데이터 백업</A>
+<MENU>
+<LI><A NAME="ToC_334" HREF="auagd012.htm#HDRWQ297">백업 동작을 보다 효과적으로 작성하기</A>
+<LI><A NAME="ToC_335" HREF="auagd012.htm#HDRWQ298">덤프 프로세스에 대한 구성 선택사항의 영향</A>
+<LI><A NAME="ToC_336" HREF="auagd012.htm#HDRWQ299">기존 덤프 세트로 덤프 추가</A>
+<LI><A NAME="ToC_337" HREF="auagd012.htm#HDRWQ300">덤프 스케줄</A>
+<LI><A NAME="ToC_338" HREF="auagd012.htm#HDRWQ301">덤프 작성하기</A>
+</MENU>
+<LI><A NAME="ToC_339" HREF="auagd012.htm#HDRWQ302">백업 덤프 레코드 표시</A>
+<MENU>
+<LI><A NAME="ToC_340" HREF="auagd012.htm#HDRWQ303">덤프 레코드 표시하기</A>
+<LI><A NAME="ToC_341" HREF="auagd012.htm#HDRWQ304">볼륨의 덤프 히스토리 표시하기</A>
+<LI><A NAME="ToC_342" HREF="auagd012.htm#HDRWQ305">테이프 내용 검색하기</A>
+</MENU>
+<LI><A NAME="ToC_343" HREF="auagd012.htm#HDRWQ306">데이터 복원 및 복구</A>
+<MENU>
+<LI><A NAME="ToC_344" HREF="auagd012.htm#HDRWQ307">보다 효율적으로 복원 동작 작성하기</A>
+<LI><A NAME="ToC_345" HREF="auagd012.htm#HDRWQ308">backup volrestore 명령 사용</A>
+<LI><A NAME="ToC_346" HREF="auagd012.htm#HDRWQ309">backup volrestore 명령으로 볼륨 복원하기</A>
+<LI><A NAME="ToC_347" HREF="auagd012.htm#HDRWQ310">backup diskrestore 명령 사용</A>
+<LI><A NAME="ToC_348" HREF="auagd012.htm#HDRWQ311">backup diskrestore 명령으로 파티션 복원하기</A>
+<LI><A NAME="ToC_349" HREF="auagd012.htm#HDRWQ312">backup volsetrestore 명령 사용</A>
+<LI><A NAME="ToC_352" HREF="auagd012.htm#HDRWQ315">backup volsetrestore 명령으로 볼륨 그룹 복원하기</A>
+</MENU>
+<LI><A NAME="ToC_353" HREF="auagd012.htm#HDRWQ316">백업 데이터베이스 유지</A>
+<MENU>
+<LI><A NAME="ToC_354" HREF="auagd012.htm#HDRWQ317">백업 데이터베이스 백업 및 복원</A>
+<LI><A NAME="ToC_355" HREF="auagd012.htm#HDRWQ318">백업 데이터베이스에서 손상 체크 및 복구</A>
+<LI><A NAME="ToC_356" HREF="auagd012.htm#HDRWQ319">백업 데이터베이스 안정성 확인하기</A>
+<LI><A NAME="ToC_357" HREF="auagd012.htm#HDRWQ320">백업 데이터베이스에서 손상 복구하기</A>
+<LI><A NAME="ToC_358" HREF="auagd012.htm#HDRWQ321">백업 데이터베이스에서 이전 레코드 제거</A>
+<LI><A NAME="ToC_359" HREF="auagd012.htm#HDRWQ322">백업 데이터베이스에서 레코드 삭제하기</A>
+</MENU></MENU>
+<P><B><A NAME="ToC_360" HREF="auagd013.htm#HDRWQ323">AFS 성능 모니터 및 감사</A></B><BR>
+<MENU>
+<LI><A NAME="ToC_361" HREF="auagd013.htm#HDRWQ324">명령 요약</A>
+<LI><A NAME="ToC_362" HREF="auagd013.htm#HDRWQ326">scout 프로그램 사용</A>
+<MENU>
+<LI><A NAME="ToC_363" HREF="auagd013.htm#HDRWQ327">시스템 요구조건</A>
+<LI><A NAME="ToC_364" HREF="auagd013.htm#HDRWQ328">-basename 인수를 사용한 도메인 이름 지정</A>
+<LI><A NAME="ToC_365" HREF="auagd013.htm#HDRWQ329">scout 디스플레이 배치</A>
+<LI><A NAME="ToC_369" HREF="auagd013.htm#HDRWQ332">주요 통계 강조표시</A>
+<LI><A NAME="ToC_372" HREF="auagd013.htm#HDRWQ334">scout 디스플레이 크기 재조정</A>
+<LI><A NAME="ToC_373" HREF="auagd013.htm#HDRWQ335">scout 프로그램 시작하기</A>
+<LI><A NAME="ToC_374" HREF="auagd013.htm#Header_374">scout 프로그램 정지하기</A>
+<LI><A NAME="ToC_375" HREF="auagd013.htm#HDRWQ336">명령 및 디스플레이 예</A>
+</MENU>
+<LI><A NAME="ToC_376" HREF="auagd013.htm#HDRWQ341">fstrace 명령 집합 사용</A>
+<MENU>
+<LI><A NAME="ToC_377" HREF="auagd013.htm#HDRWQ342">fstrace 명령 집합 정보</A>
+<LI><A NAME="ToC_378" HREF="auagd013.htm#HDRWQ343">fstrace 명령 집합을 사용하기 위한 요구조건</A>
+<LI><A NAME="ToC_379" HREF="auagd013.htm#Header_379">fstrace 명령의 효과적인 사용</A>
+<LI><A NAME="ToC_380" HREF="auagd013.htm#HDRWQ344">추적 로그 활성화</A>
+<LI><A NAME="ToC_381" HREF="auagd013.htm#Header_381">추적 로그 구성하기</A>
+<LI><A NAME="ToC_382" HREF="auagd013.htm#HDRWQ345">이벤트 세트 설정하기</A>
+<LI><A NAME="ToC_383" HREF="auagd013.htm#HDRWQ346">추적 로그 또는 이벤트 세트의 상태 표시</A>
+<LI><A NAME="ToC_384" HREF="auagd013.htm#Header_384">이벤트 세트 상태 표시하기</A>
+<LI><A NAME="ToC_385" HREF="auagd013.htm#Header_385">로그 크기 표시하기</A>
+<LI><A NAME="ToC_386" HREF="auagd013.htm#HDRWQ347">추적 로그 덤프 및 지우기</A>
+<LI><A NAME="ToC_387" HREF="auagd013.htm#Header_387">추적 로그 내용 덤프하기</A>
+<LI><A NAME="ToC_388" HREF="auagd013.htm#Header_388">추적 로그 내용 지우기</A>
+<LI><A NAME="ToC_389" HREF="auagd013.htm#HDRWQ348">fstrace 명령 예</A>
+</MENU>
+<LI><A NAME="ToC_390" HREF="auagd013.htm#HDRWQ349">afsmonitor 프로그램 사용</A>
+<MENU>
+<LI><A NAME="ToC_391" HREF="auagd013.htm#HDRWQ350">afsmonitor 프로그램을 실행하기 위한 요구조건</A>
+<LI><A NAME="ToC_392" HREF="auagd013.htm#Header_392">afsmonitor 출력 화면</A>
+<LI><A NAME="ToC_393" HREF="auagd013.htm#Header_393">시스템 개요 화면</A>
+<LI><A NAME="ToC_394" HREF="auagd013.htm#Header_394">파일 서버 화면</A>
+<LI><A NAME="ToC_395" HREF="auagd013.htm#Header_395">캐쉬 관리 프로그램 화면</A>
+</MENU>
+<LI><A NAME="ToC_396" HREF="auagd013.htm#HDRWQ351">afsmonitor 프로그램 구성</A>
+<LI><A NAME="ToC_397" HREF="auagd013.htm#HDRWQ352">파일로 afsmonitor 통계 기록하기</A>
+<LI><A NAME="ToC_398" HREF="auagd013.htm#Header_398">afsmonitor 프로그램 시작하기</A>
+<LI><A NAME="ToC_399" HREF="auagd013.htm#Header_399">afsmonitor 프로그램 정지하기</A>
+<LI><A NAME="ToC_400" HREF="auagd013.htm#HDRWQ353">xstat 데이터 모음 기능</A>
+<MENU>
+<LI><A NAME="ToC_401" HREF="auagd013.htm#Header_401">libxstat 라이브러리</A>
+<LI><A NAME="ToC_402" HREF="auagd013.htm#Header_402">xstat 명령 예</A>
+</MENU>
+<LI><A NAME="ToC_405" HREF="auagd013.htm#HDRWQ354">AIX 파일 서버에서의 AFS 이벤트 감사</A>
+<MENU>
+<LI><A NAME="ToC_406" HREF="auagd013.htm#Header_406">AIX 파일 서버에서 AFS 감사 구성</A>
+<LI><A NAME="ToC_407" HREF="auagd013.htm#Header_407">AFS 감사 사용 가능으로 설정하기</A>
+<LI><A NAME="ToC_408" HREF="auagd013.htm#Header_408">AFS 감사 사용 불가능으로 설정하기</A>
+</MENU></MENU>
+<P><B><A NAME="ToC_409" HREF="auagd014.htm#HDRWQ355">서버 암호화 키 관리</A></B><BR>
+<MENU>
+<LI><A NAME="ToC_410" HREF="auagd014.htm#HDRWQ356">명령 요약</A>
+<LI><A NAME="ToC_411" HREF="auagd014.htm#HDRWQ358">서버 암호화 키 정보</A>
+<MENU>
+<LI><A NAME="ToC_412" HREF="auagd014.htm#Header_412">키 및 상호 인증: 검토</A>
+<LI><A NAME="ToC_413" HREF="auagd014.htm#Header_413">AFS 서버 암호화 키 유지</A>
+</MENU>
+<LI><A NAME="ToC_414" HREF="auagd014.htm#HDRWQ359">서버 암호화 키 표시</A>
+<MENU>
+<LI><A NAME="ToC_415" HREF="auagd014.htm#HDRWQ360">KeyFile 파일 표시하기</A>
+<LI><A NAME="ToC_416" HREF="auagd014.htm#HDRWQ361">인증 데이터베이스에서 afs 키 표시하기</A>
+</MENU>
+<LI><A NAME="ToC_417" HREF="auagd014.htm#HDRWQ362">서버 암호화 키 추가</A>
+<MENU>
+<LI><A NAME="ToC_418" HREF="auagd014.htm#HDRWQ363">새로운 서버 암호화 키 추가하기</A>
+</MENU>
+<LI><A NAME="ToC_419" HREF="auagd014.htm#HDRWQ368">서버 암호화 키 제거</A>
+<MENU>
+<LI><A NAME="ToC_420" HREF="auagd014.htm#HDRWQ369">KeyFile 파일에서 키 제거하기</A>
+</MENU>
+<LI><A NAME="ToC_421" HREF="auagd014.htm#HDRWQ370">서버 암호화 키 비상사태 처리</A>
+<MENU>
+<LI><A NAME="ToC_422" HREF="auagd014.htm#HDRWQ371">상호 인증 예방</A>
+<LI><A NAME="ToC_423" HREF="auagd014.htm#Header_423">직접 권한부여 점검 사용 불가능 설정</A>
+<LI><A NAME="ToC_424" HREF="auagd014.htm#Header_424">각 시스템에서 빠르게 작업하기</A>
+<LI><A NAME="ToC_425" HREF="auagd014.htm#Header_425">콘솔에서의 작업</A>
+<LI><A NAME="ToC_426" HREF="auagd014.htm#HDRWQ372">각 KeyFile 파일 변경</A>
+<LI><A NAME="ToC_427" HREF="auagd014.htm#Header_427">두 개의 구성요소 프로시듀어</A>
+<LI><A NAME="ToC_430" HREF="auagd014.htm#Header_430">비상사태시 새로운 서버 암호화 키 작성하기</A>
+</MENU></MENU>
+<P><B><A NAME="ToC_431" HREF="auagd015.htm#HDRWQ387">클라이언트 시스템 및 캐쉬 관리 프로그램 관리</A></B><BR>
+<MENU>
+<LI><A NAME="ToC_432" HREF="auagd015.htm#HDRWQ388">명령 요약</A>
+<LI><A NAME="ToC_433" HREF="auagd015.htm#HDRWQ390">캐쉬 관리 프로그램 사용자 정의 개요</A>
+<LI><A NAME="ToC_434" HREF="auagd015.htm#HDRWQ391">로컬 디스크에서의 구성 및 캐쉬 관련 파일</A>
+<MENU>
+<LI><A NAME="ToC_435" HREF="auagd015.htm#HDRWQ392">/usr/vice/etc 디렉토리에 있는 구성 파일</A>
+<LI><A NAME="ToC_436" HREF="auagd015.htm#HDRWQ393">캐쉬 관련 파일</A>
+</MENU>
+<LI><A NAME="ToC_437" HREF="auagd015.htm#HDRWQ394">캐쉬 유형, 크기 및 위치 결정</A>
+<MENU>
+<LI><A NAME="ToC_438" HREF="auagd015.htm#Header_438">캐쉬 크기 선택</A>
+<LI><A NAME="ToC_439" HREF="auagd015.htm#HDRWQ395">캐쉬 크기와 위치의 표시 및 설정</A>
+<LI><A NAME="ToC_440" HREF="auagd015.htm#HDRWQ396">재부트시 설정한 캐쉬 크기 표시하기</A>
+<LI><A NAME="ToC_441" HREF="auagd015.htm#HDRWQ397">현재 캐쉬 크기 표시하시</A>
+<LI><A NAME="ToC_442" HREF="auagd015.htm#HDRWQ398">cacheinfo 파일 편집하기</A>
+<LI><A NAME="ToC_443" HREF="auagd015.htm#HDRWQ399">재부트없이 디스크 캐쉬 크기 변경하기</A>
+<LI><A NAME="ToC_444" HREF="auagd015.htm#Header_444">재부트하지 않고 디스크 캐쉬 크기로 재설정하기</A>
+<LI><A NAME="ToC_445" HREF="auagd015.htm#HDRWQ401">캐쉬 관리 프로그램이 버릴 데이터를 선택하는 방법</A>
+</MENU>
+<LI><A NAME="ToC_446" HREF="auagd015.htm#HDRWQ402">afsd 프로그램으로 기타 캐쉬 매개변수 설정</A>
+<MENU>
+<LI><A NAME="ToC_447" HREF="auagd015.htm#HDRWQ403">캐쉬 구성 매개변수 설정</A>
+<LI><A NAME="ToC_448" HREF="auagd015.htm#HDRWQ404">디스크 캐쉬 구성</A>
+<LI><A NAME="ToC_449" HREF="auagd015.htm#HDRWQ405">메모리 캐쉬 구성 제어</A>
+</MENU>
+<LI><A NAME="ToC_450" HREF="auagd015.htm#HDRWQ406">데이터베이스 서버 시스템 정보 유지</A>
+<MENU>
+<LI><A NAME="ToC_451" HREF="auagd015.htm#Header_451">클라이언트가 데이터베이스 서버 시스템 목록을 사용하는 방법</A>
+<LI><A NAME="ToC_452" HREF="auagd015.htm#HDRWQ407">CellServDB 파일의 형식</A>
+<LI><A NAME="ToC_453" HREF="auagd015.htm#HDRWQ408">클라이언트 CellServDB 파일 유지</A>
+<LI><A NAME="ToC_454" HREF="auagd015.htm#Header_454">/usr/vice/etc/CellServDB 파일 표시하기</A>
+<LI><A NAME="ToC_455" HREF="auagd015.htm#Header_455">커널 메모리에서 데이터베이스 서버 시스템 목록 표시하기</A>
+<LI><A NAME="ToC_456" HREF="auagd015.htm#Header_456">커널 메모리에서 셀의 데이터베이스 서버 시스템 목록 변경하기</A>
+</MENU>
+<LI><A NAME="ToC_457" HREF="auagd015.htm#HDRWQ409">클라이언트가 Setuid 프로그램을 실행할 수 있는 지 결정</A>
+<MENU>
+<LI><A NAME="ToC_458" HREF="auagd015.htm#Header_458">셀의 setuid 상태 결정하기</A>
+<LI><A NAME="ToC_459" HREF="auagd015.htm#Header_459">셀의 setuid 상태 변경하기</A>
+</MENU>
+<LI><A NAME="ToC_460" HREF="auagd015.htm#HDRWQ410">파일 서버 탐침 간격 설정</A>
+<MENU>
+<LI><A NAME="ToC_461" HREF="auagd015.htm#Header_461">클라이언트의 파일 서버 탐침 간격 설정하기</A>
+</MENU>
+<LI><A NAME="ToC_462" HREF="auagd015.htm#HDRWQ411">클라이언트 시스템의 셀 멤버쉽 설정</A>
+<MENU>
+<LI><A NAME="ToC_463" HREF="auagd015.htm#Header_463">클라이언트 시스템의 셀 멤버쉽 표시하기</A>
+<LI><A NAME="ToC_464" HREF="auagd015.htm#Header_464">클라이언트 시스템의 셀 멤버쉽 설정하기</A>
+</MENU>
+<LI><A NAME="ToC_465" HREF="auagd015.htm#HDRWQ412">캐쉬된 데이터 갱신 강요하기</A>
+<MENU>
+<LI><A NAME="ToC_466" HREF="auagd015.htm#Header_466">파일 또는 디렉토리 플러쉬하기</A>
+<LI><A NAME="ToC_467" HREF="auagd015.htm#Header_467">볼륨의 모든 데이터 플러쉬하기</A>
+<LI><A NAME="ToC_468" HREF="auagd015.htm#Header_468">캐쉬 관리 프로그램이 기타 볼륨 변경사항 알리도록 하기</A>
+<LI><A NAME="ToC_469" HREF="auagd015.htm#HDRWQ413">하나 이상의 마운트 포인트 플러쉬하기</A>
+</MENU>
+<LI><A NAME="ToC_470" HREF="auagd015.htm#HDRWQ414">서버 선호 사항 순위 유지</A>
+<MENU>
+<LI><A NAME="ToC_471" HREF="auagd015.htm#Header_471">캐쉬 관리 프로그램이 기본 순위를 설정하는 방법</A>
+<LI><A NAME="ToC_472" HREF="auagd015.htm#Header_472">캐쉬 관리 프로그램이 선호 사항 순위를 사용하는 방법</A>
+<LI><A NAME="ToC_473" HREF="auagd015.htm#Header_473">선호 사항 순위 표시 및 설정</A>
+<LI><A NAME="ToC_474" HREF="auagd015.htm#Header_474">서버 선호 사항 순위 표시하기</A>
+<LI><A NAME="ToC_475" HREF="auagd015.htm#Header_475">서버 선호 사항 순위 설정하기</A>
+</MENU>
+<LI><A NAME="ToC_476" HREF="auagd015.htm#HDRWQ415">멀티홈 클라이언트 시스템 관리</A>
+<MENU>
+<LI><A NAME="ToC_477" HREF="auagd015.htm#Header_477">클라이언트 NetInfo 파일 작성 또는 편집하기</A>
+<LI><A NAME="ToC_478" HREF="auagd015.htm#Header_478">클라이언트 NetRestrict 파일 작성 또는 편집하기</A>
+<LI><A NAME="ToC_479" HREF="auagd015.htm#Header_479">커널 메모리의 주소 목록 표시하기</A>
+<LI><A NAME="ToC_480" HREF="auagd015.htm#Header_480">커널 메모리에서 주소 목록 설정하기</A>
+</MENU>
+<LI><A NAME="ToC_481" HREF="auagd015.htm#HDRWQ416">경고 및 정보 메시지 표시 제어</A>
+<MENU>
+<LI><A NAME="ToC_482" HREF="auagd015.htm#Header_482">경고 및 상태 메시지 표시 제어하기</A>
+</MENU>
+<LI><A NAME="ToC_483" HREF="auagd015.htm#HDRWQ417">시스템 유형 이름 표시 및 설정</A>
+<MENU>
+<LI><A NAME="ToC_484" HREF="auagd015.htm#Header_484">시스템 유형 이름 표시하기</A>
+<LI><A NAME="ToC_485" HREF="auagd015.htm#Header_485">시스템 유형 이름 변경하기</A>
+</MENU>
+<LI><A NAME="ToC_486" HREF="auagd015.htm#HDRWQ418">비동기 기록 가능</A>
+<MENU>
+<LI><A NAME="ToC_487" HREF="auagd015.htm#Header_487">기본 비동기 저장값 설정하기</A>
+<LI><A NAME="ToC_488" HREF="auagd015.htm#Header_488">하나 이상의 파일에 대한 비동기 저장 설정하기</A>
+<LI><A NAME="ToC_489" HREF="auagd015.htm#Header_489">기본 비동기 저장값 표시하기</A>
+<LI><A NAME="ToC_490" HREF="auagd015.htm#Header_490">하나 이상의 파일에 대한 비동기 저장 표시하기</A>
+</MENU></MENU>
+<P><B><A NAME="ToC_491" HREF="auagd016.htm#HDRWQ419">package 프로그램을 사용한 클라이언트 시스템 구성</A></B><BR>
+<MENU>
+<LI><A NAME="ToC_492" HREF="auagd016.htm#HDRWQ420">명령 요약</A>
+<LI><A NAME="ToC_493" HREF="auagd016.htm#HDRWQ422">package 프로그램 사용</A>
+<MENU>
+<LI><A NAME="ToC_494" HREF="auagd016.htm#Header_494">파일 서버 시스템에서의 Package 사용</A>
+</MENU>
+<LI><A NAME="ToC_495" HREF="auagd016.htm#HDRWQ423">Package 개요</A>
+<MENU>
+<LI><A NAME="ToC_496" HREF="auagd016.htm#Header_496">프로토타입 파일 준비</A>
+<LI><A NAME="ToC_497" HREF="auagd016.htm#HDRWQ424">프로토타입 파일 컴파일</A>
+<LI><A NAME="ToC_498" HREF="auagd016.htm#Header_498">클라이언트 준비</A>
+</MENU>
+<LI><A NAME="ToC_499" HREF="auagd016.htm#HDRWQ425">package 디렉토리 구조</A>
+<MENU>
+<LI><A NAME="ToC_500" HREF="auagd016.htm#HDRWQ426">src 디렉토리</A>
+<LI><A NAME="ToC_501" HREF="auagd016.htm#Header_501">lib 디렉토리</A>
+<LI><A NAME="ToC_502" HREF="auagd016.htm#Header_502">etc 디렉토리</A>
+</MENU>
+<LI><A NAME="ToC_503" HREF="auagd016.htm#HDRWQ427">예제 프로토타입 및 라이브러리 파일</A>
+<MENU>
+<LI><A NAME="ToC_504" HREF="auagd016.htm#HDRWQ428">예제 프로토타입 파일</A>
+<LI><A NAME="ToC_505" HREF="auagd016.htm#Header_505">예제 라이브러리 파일</A>
+</MENU>
+<LI><A NAME="ToC_506" HREF="auagd016.htm#HDRWQ429">패키지 구성 파일 명령 구문</A>
+<MENU>
+<LI><A NAME="ToC_507" HREF="auagd016.htm#HDRWQ430">로컬 파일과 심볼릭 링크 비교</A>
+<LI><A NAME="ToC_508" HREF="auagd016.htm#HDRWQ431">디렉토리 정의</A>
+<LI><A NAME="ToC_509" HREF="auagd016.htm#HDRWQ432">파일 정의</A>
+<LI><A NAME="ToC_510" HREF="auagd016.htm#HDRWQ433">심볼릭 링크 정의</A>
+<LI><A NAME="ToC_511" HREF="auagd016.htm#HDRWQ434">블록 특별 장치 정의</A>
+<LI><A NAME="ToC_512" HREF="auagd016.htm#HDRWQ435">문자 특별 장치 정의</A>
+<LI><A NAME="ToC_513" HREF="auagd016.htm#HDRWQ436">소켓 정의</A>
+</MENU>
+<LI><A NAME="ToC_514" HREF="auagd016.htm#HDRWQ437">프로토타입 및 라이브러리 파일 구성</A>
+<MENU>
+<LI><A NAME="ToC_515" HREF="auagd016.htm#Header_515">프로토타입과 그 구성요소 라이브러리 파일을 구성하려면</A>
+</MENU>
+<LI><A NAME="ToC_516" HREF="auagd016.htm#HDRWQ438">Package Makefile 파일</A>
+<MENU>
+<LI><A NAME="ToC_517" HREF="auagd016.htm#Header_517">개요</A>
+<LI><A NAME="ToC_518" HREF="auagd016.htm#HDRWQ439">CONFIG 섹션</A>
+<LI><A NAME="ToC_519" HREF="auagd016.htm#HDRWQ440">BASE_LIBS 섹션</A>
+<LI><A NAME="ToC_520" HREF="auagd016.htm#HDRWQ441">MACHINE_LIBS 섹션</A>
+<LI><A NAME="ToC_521" HREF="auagd016.htm#HDRWQ442">LIBS 섹션</A>
+<LI><A NAME="ToC_522" HREF="auagd016.htm#HDRWQ443">.SUFFIXES 섹션</A>
+<LI><A NAME="ToC_523" HREF="auagd016.htm#HDRWQ444">Makefile 명령 섹션</A>
+</MENU>
+<LI><A NAME="ToC_524" HREF="auagd016.htm#HDRWQ445">Makefile 수정</A>
+<MENU>
+<LI><A NAME="ToC_525" HREF="auagd016.htm#Header_525">새 프로토타입 파일 추가</A>
+<LI><A NAME="ToC_526" HREF="auagd016.htm#Header_526">새 시스템 유형 추가</A>
+<LI><A NAME="ToC_527" HREF="auagd016.htm#Header_527">새 라이브러리 파일 추가</A>
+</MENU>
+<LI><A NAME="ToC_528" HREF="auagd016.htm#HDRWQ446">프로토타입 파일 컴파일</A>
+<MENU>
+<LI><A NAME="ToC_529" HREF="auagd016.htm#Header_529">프로토타입 파일을 컴파일하려면</A>
+</MENU>
+<LI><A NAME="ToC_530" HREF="auagd016.htm#HDRWQ447">클라이언트 시스템 수정</A>
+<MENU>
+<LI><A NAME="ToC_531" HREF="auagd016.htm#Header_531">package 프로그램을 실행하도록 클라이언트 시스템을 준비하려면</A>
+</MENU>
+<LI><A NAME="ToC_532" HREF="auagd016.htm#HDRWQ448">package 프로그램 실행</A>
+<MENU>
+<LI><A NAME="ToC_533" HREF="auagd016.htm#Header_533">재부트로 package 프로그램을 호출하려면</A>
+<LI><A NAME="ToC_534" HREF="auagd016.htm#Header_534">package 프로그램을 직접 호출하려면(재부트하지 않고)</A>
+</MENU></MENU>
+<P><B><A NAME="ToC_535" HREF="auagd017.htm#HDRWQ449">uss 명령 집합을 사용한 사용자 계정 작성 및 삭제</A></B><BR>
+<MENU>
+<LI><A NAME="ToC_536" HREF="auagd017.htm#HDRWQ450">명령 요약</A>
+<LI><A NAME="ToC_537" HREF="auagd017.htm#HDRWQ452">uss 명령 집합 개요</A>
+<MENU>
+<LI><A NAME="ToC_538" HREF="auagd017.htm#Header_538">AFS 사용자 계정의 구성요소</A>
+<LI><A NAME="ToC_539" HREF="auagd017.htm#HDRWQ453">uss 명령의 특권 요구조건</A>
+<LI><A NAME="ToC_540" HREF="auagd017.htm#HDRWQ454">오류 및 인터럽트된 조작 피하기 및 복구</A>
+</MENU>
+<LI><A NAME="ToC_541" HREF="auagd017.htm#HDRWQ455">uss를 사용한 로컬 암호 파일 항목 작성</A>
+<MENU>
+<LI><A NAME="ToC_542" HREF="auagd017.htm#HDRWQ456">일치하는 AFS와 UNIX UID 지정</A>
+<LI><A NAME="ToC_543" HREF="auagd017.htm#HDRWQ457">로컬 암호 파일에서 암호 지정</A>
+<LI><A NAME="ToC_544" HREF="auagd017.htm#HDRWQ458">공통 원본 암호 파일 작성</A>
+</MENU>
+<LI><A NAME="ToC_545" HREF="auagd017.htm#HDRWQ459">uss를 사용한 기존 UNIX 계정 변환</A>
+<MENU>
+<LI><A NAME="ToC_546" HREF="auagd017.htm#HDRWQ460">UNIX와 AFS UID 일치시키기</A>
+<LI><A NAME="ToC_547" HREF="auagd017.htm#HDRWQ461">제대로 암호 필드 설정하기</A>
+<LI><A NAME="ToC_548" HREF="auagd017.htm#HDRWQ462">AFS로 로컬 파일 이동</A>
+</MENU>
+<LI><A NAME="ToC_549" HREF="auagd017.htm#HDRWQ463">uss 템플릿 파일 구성</A>
+<MENU>
+<LI><A NAME="ToC_550" HREF="auagd017.htm#HDRWQ464">세 가지 유형의 사용자 계정 작성</A>
+<LI><A NAME="ToC_551" HREF="auagd017.htm#HDRWQ465">템플릿 파일에서 상수 및 변수 사용</A>
+<LI><A NAME="ToC_552" HREF="auagd017.htm#HDRWQ468">템플릿 파일을 저장할 위치</A>
+<LI><A NAME="ToC_553" HREF="auagd017.htm#HDRWQ469">템플릿 구성을 위한 몇몇 일반 규칙</A>
+<LI><A NAME="ToC_554" HREF="auagd017.htm#HDRWQ470">로컬 디스크 디렉토리 및 파일 작성에 대하여</A>
+<LI><A NAME="ToC_555" HREF="auagd017.htm#HDRWQ471">예제 uss 템플릿</A>
+<LI><A NAME="ToC_556" HREF="auagd017.htm#HDRWQ472">G 명령어를 사용하여 사용자 홈 디렉토리의 공평한 분배</A>
+<LI><A NAME="ToC_557" HREF="auagd017.htm#HDRWQ473">V 명령어를 사용한 볼륨 작성</A>
+<LI><A NAME="ToC_558" HREF="auagd017.htm#HDRWQ474">D 명령어를 사용하여 디렉토리 작성</A>
+<LI><A NAME="ToC_559" HREF="auagd017.htm#HDRWQ475">F 명령어를 사용하여 프로토타입에서 파일 작성</A>
+<LI><A NAME="ToC_560" HREF="auagd017.htm#HDRWQ476">E 명령어를 사용하여 한 행 파일 작성</A>
+<LI><A NAME="ToC_561" HREF="auagd017.htm#HDRWQ477">L 및 S 명령어를 사용한 연결 작성</A>
+<LI><A NAME="ToC_562" HREF="auagd017.htm#HDRWQ478">A 명령어로 계정 보안 높이기</A>
+<LI><A NAME="ToC_563" HREF="auagd017.htm#HDRWQ479">X 명령어를 사용하여 명령 실행</A>
+</MENU>
+<LI><A NAME="ToC_564" HREF="auagd017.htm#HDRWQ480">uss add 명령을 사용한 개별 계정 작성</A>
+<MENU>
+<LI><A NAME="ToC_565" HREF="auagd017.htm#HDRWQ483">uss add 명령을 사용하여 AFS 계정을 작성하려면</A>
+</MENU>
+<LI><A NAME="ToC_566" HREF="auagd017.htm#HDRWQ486">uss delete 명령을 사용한 개별 계정 삭제</A>
+<MENU>
+<LI><A NAME="ToC_567" HREF="auagd017.htm#HDRWQ487">AFS 계정을 삭제하려면</A>
+</MENU>
+<LI><A NAME="ToC_568" HREF="auagd017.htm#HDRWQ488">uss bulk 명령을 사용하여 복수의 계정 작성 및 삭제</A>
+<MENU>
+<LI><A NAME="ToC_569" HREF="auagd017.htm#HDRWQ489">벌크 입력 파일 구성</A>
+<LI><A NAME="ToC_570" HREF="auagd017.htm#Header_570">예제 벌크 입력 파일 명령어</A>
+<LI><A NAME="ToC_571" HREF="auagd017.htm#Header_571">복수의 AFS 사용자 계정을 작성 및 삭제하려면</A>
+</MENU></MENU>
+<P><B><A NAME="ToC_572" HREF="auagd018.htm#HDRWQ491">사용자 계정 관리</A></B><BR>
+<MENU>
+<LI><A NAME="ToC_573" HREF="auagd018.htm#HDRWQ492">명령 요약</A>
+<LI><A NAME="ToC_574" HREF="auagd018.htm#HDRWQ494">AFS 사용자 계정의 구성요소</A>
+<LI><A NAME="ToC_575" HREF="auagd018.htm#HDRWQ495">로컬 암호 파일 항목 작성</A>
+<MENU>
+<LI><A NAME="ToC_576" HREF="auagd018.htm#HDRWQ496">일치하는 AFS와 UNIX UID 지정</A>
+<LI><A NAME="ToC_577" HREF="auagd018.htm#HDRWQ497">로컬 암호 파일에서 암호 지정</A>
+</MENU>
+<LI><A NAME="ToC_578" HREF="auagd018.htm#HDRWQ498">기존 UNIX 계정 변환</A>
+<MENU>
+<LI><A NAME="ToC_579" HREF="auagd018.htm#HDRWQ499">UNIX와 AFS UID 일치시키기</A>
+<LI><A NAME="ToC_580" HREF="auagd018.htm#HDRWQ500">제대로 암호 필드 설정하기</A>
+<LI><A NAME="ToC_581" HREF="auagd018.htm#HDRWQ501">AFS로 로컬 파일 이동</A>
+</MENU>
+<LI><A NAME="ToC_582" HREF="auagd018.htm#HDRWQ502">AFS 사용자 계정 작성</A>
+<MENU>
+<LI><A NAME="ToC_583" HREF="auagd018.htm#HDRWQ503">개별 명령을 사용하여 사용자 계정을 하나 작성하려면</A>
+</MENU>
+<LI><A NAME="ToC_584" HREF="auagd018.htm#HDRWQ515">암호 및 인증 보안 향상</A>
+<MENU>
+<LI><A NAME="ToC_585" HREF="auagd018.htm#Header_585">연속 실패 인증 시도 횟수를 제한하려면</A>
+<LI><A NAME="ToC_586" HREF="auagd018.htm#Header_586">잠긴 사용자 계정을 잠금 해제하려면</A>
+<LI><A NAME="ToC_587" HREF="auagd018.htm#Header_587">암호 수명을 설정하려면</A>
+<LI><A NAME="ToC_588" HREF="auagd018.htm#Header_588">암호 재사용을 금지하려면</A>
+</MENU>
+<LI><A NAME="ToC_589" HREF="auagd018.htm#HDRWQ516">AFS 암호 변경</A>
+<MENU>
+<LI><A NAME="ToC_590" HREF="auagd018.htm#Header_590">AFS 암호를 변경하려면</A>
+</MENU>
+<LI><A NAME="ToC_591" HREF="auagd018.htm#HDRWQ517">사용자 볼륨에 대한 할당량 표시 및 설정</A>
+<LI><A NAME="ToC_592" HREF="auagd018.htm#HDRWQ518">사용자 이름 변경</A>
+<MENU>
+<LI><A NAME="ToC_593" HREF="auagd018.htm#Header_593">사용자 이름을 변경하려면</A>
+</MENU>
+<LI><A NAME="ToC_594" HREF="auagd018.htm#HDRWQ524">사용자 계정 제거</A>
+<MENU>
+<LI><A NAME="ToC_595" HREF="auagd018.htm#Header_595">사용자 계정을 제거하려면</A>
+</MENU></MENU>
+<P><B><A NAME="ToC_596" HREF="auagd019.htm#HDRWQ531">보호 데이터베이스 관리</A></B><BR>
+<MENU>
+<LI><A NAME="ToC_597" HREF="auagd019.htm#HDRWQ532">명령 요약</A>
+<LI><A NAME="ToC_598" HREF="auagd019.htm#HDRWQ534">보호 데이터베이스 정보</A>
+<MENU>
+<LI><A NAME="ToC_599" HREF="auagd019.htm#HDRWQ535">시스템 그룹</A>
+</MENU>
+<LI><A NAME="ToC_600" HREF="auagd019.htm#HDRWQ536">보호 데이터베이스에서 정보 표시</A>
+<MENU>
+<LI><A NAME="ToC_601" HREF="auagd019.htm#HDRWQ537">보호 데이터베이스 항목을 표시하려면</A>
+<LI><A NAME="ToC_602" HREF="auagd019.htm#HDRWQ538">그룹 멤버쉽을 표시하려면</A>
+<LI><A NAME="ToC_603" HREF="auagd019.htm#HDRWQ540">사용자나 그룹이 소유한 그룹 나열</A>
+<LI><A NAME="ToC_604" HREF="auagd019.htm#HDRWQ541">모든 보호 데이터베이스 항목을 표시하려면</A>
+</MENU>
+<LI><A NAME="ToC_605" HREF="auagd019.htm#HDRWQ542">사용자와 기계 항목 작성</A>
+<MENU>
+<LI><A NAME="ToC_606" HREF="auagd019.htm#HDRWQ543">보호 데이터베이스에서 기계 항목을 작성하려면</A>
+</MENU>
+<LI><A NAME="ToC_607" HREF="auagd019.htm#HDRWQ544">그룹 작성</A>
+<MENU>
+<LI><A NAME="ToC_608" HREF="auagd019.htm#HDRWQ545">그룹을 효과적으로 사용하는 방법</A>
+<LI><A NAME="ToC_609" HREF="auagd019.htm#HDRWQ546">그룹을 작성하려면</A>
+<LI><A NAME="ToC_610" HREF="auagd019.htm#HDRWQ547">자체-소유 그룹을 작성하려면</A>
+<LI><A NAME="ToC_611" HREF="auagd019.htm#HDRWQ548">접두어 부족 그룹 사용</A>
+</MENU>
+<LI><A NAME="ToC_612" HREF="auagd019.htm#HDRWQ549">그룹 구성원 추가 및 제거</A>
+<MENU>
+<LI><A NAME="ToC_613" HREF="auagd019.htm#HDRWQ550">그룹에 사용자와 기계를 추가하려면</A>
+<LI><A NAME="ToC_614" HREF="auagd019.htm#HDRWQ551">그룹에서 사용자와 기계를 제거하려면</A>
+</MENU>
+<LI><A NAME="ToC_615" HREF="auagd019.htm#HDRWQ552">보호 데이터베이스 항목 삭제</A>
+<MENU>
+<LI><A NAME="ToC_616" HREF="auagd019.htm#HDRWQ553">보호 데이터베이스 항목을 삭제하려면</A>
+</MENU>
+<LI><A NAME="ToC_617" HREF="auagd019.htm#HDRWQ554">그룹의 소유자 변경</A>
+<MENU>
+<LI><A NAME="ToC_618" HREF="auagd019.htm#HDRWQ555">그룹 소유자를 변경하려면</A>
+</MENU>
+<LI><A NAME="ToC_619" HREF="auagd019.htm#HDRWQ556">보호 데이터베이스 항목의 이름 변경</A>
+<MENU>
+<LI><A NAME="ToC_620" HREF="auagd019.htm#HDRWQ557">기계나 그룹 항목의 이름을 변경하려면</A>
+</MENU>
+<LI><A NAME="ToC_621" HREF="auagd019.htm#HDRWQ558">그룹-작성 할당량 설정</A>
+<MENU>
+<LI><A NAME="ToC_622" HREF="auagd019.htm#Header_622">그룹-작성 할당량을 설정하려면</A>
+</MENU>
+<LI><A NAME="ToC_623" HREF="auagd019.htm#HDRWQ559">데이터베이스 항목에서 개인 플래그 설정</A>
+<MENU>
+<LI><A NAME="ToC_624" HREF="auagd019.htm#Header_624">보호 데이터베이스 항목의 개인 플래그를 설정하려면</A>
+</MENU>
+<LI><A NAME="ToC_625" HREF="auagd019.htm#HDRWQ560">AFS UID와 GID 카운터 표시 및 설정</A>
+<MENU>
+<LI><A NAME="ToC_626" HREF="auagd019.htm#HDRWQ561">AFS ID 카운터를 표시하려면</A>
+<LI><A NAME="ToC_627" HREF="auagd019.htm#Header_627">AFS ID 카운터를 설정하려면</A>
+</MENU></MENU>
+<P><B><A NAME="ToC_628" HREF="auagd020.htm#HDRWQ562">액세스 제어 목록 관리</A></B><BR>
+<MENU>
+<LI><A NAME="ToC_629" HREF="auagd020.htm#HDRWQ563">명령 요약</A>
+<LI><A NAME="ToC_630" HREF="auagd020.htm#HDRWQ565">AFS에서의 데이터 보호</A>
+<MENU>
+<LI><A NAME="ToC_631" HREF="auagd020.htm#HDRWQ566">UFS와 AFS 데이터 보호간의 차이점</A>
+<LI><A NAME="ToC_632" HREF="auagd020.htm#HDRWQ567">AFS ACL 권한</A>
+<LI><A NAME="ToC_637" HREF="auagd020.htm#HDRWQ570">표준 및 부정적인 권한 사용</A>
+<LI><A NAME="ToC_638" HREF="auagd020.htm#HDRWQ571">ACL에서 그룹 사용</A>
+</MENU>
+<LI><A NAME="ToC_639" HREF="auagd020.htm#HDRWQ572">ACL 표시</A>
+<MENU>
+<LI><A NAME="ToC_640" HREF="auagd020.htm#Header_640">ACL 표시하려면</A>
+</MENU>
+<LI><A NAME="ToC_641" HREF="auagd020.htm#HDRWQ573">ACL 항목 설정</A>
+<MENU>
+<LI><A NAME="ToC_642" HREF="auagd020.htm#HDRWQ574">표준 ACL 권한을 제거 또는 편집하려면</A>
+<LI><A NAME="ToC_643" HREF="auagd020.htm#HDRWQ575">부정적 ACL 권한을 추가, 제거 또는 편집하려면</A>
+</MENU>
+<LI><A NAME="ToC_644" HREF="auagd020.htm#HDRWQ576">ACL 완전히 바꾸기</A>
+<MENU>
+<LI><A NAME="ToC_645" HREF="auagd020.htm#Header_645">ACL을 완전히 바꾸려면</A>
+</MENU>
+<LI><A NAME="ToC_646" HREF="auagd020.htm#HDRWQ577">디렉토리간 ACL 복사</A>
+<MENU>
+<LI><A NAME="ToC_647" HREF="auagd020.htm#Header_647">디렉토리간에 ACL을 복사하려면</A>
+</MENU>
+<LI><A NAME="ToC_648" HREF="auagd020.htm#HDRWQ579">ACL에서 쓸모없는 AFS ID 제거</A>
+<MENU>
+<LI><A NAME="ToC_649" HREF="auagd020.htm#Header_649">ACL에서 쓸모없는 AFS ID를 지우려면</A>
+</MENU>
+<LI><A NAME="ToC_650" HREF="auagd020.htm#HDRWQ580">AFS가 UNIX 모드 비트를 해석하는 방법</A>
+</MENU>
+<P><B><A NAME="ToC_651" HREF="auagd021.htm#HDRWQ581">관리 특권 관리</A></B><BR>
+<MENU>
+<LI><A NAME="ToC_652" HREF="auagd021.htm#HDRWQ582">명령 요약</A>
+<LI><A NAME="ToC_653" HREF="auagd021.htm#HDRWQ584">관리 특권 개요</A>
+<MENU>
+<LI><A NAME="ToC_654" HREF="auagd021.htm#HDRWQ585">별도의 특권이 필요한 이유</A>
+</MENU>
+<LI><A NAME="ToC_655" HREF="auagd021.htm#HDRWQ586">system:administrators 그룹 관리</A>
+<MENU>
+<LI><A NAME="ToC_656" HREF="auagd021.htm#HDRWQ587">system:administrators 그룹 구성원을 표시하려면</A>
+<LI><A NAME="ToC_657" HREF="auagd021.htm#Header_657">system:administrators 그룹에 사용자를 추가하려면</A>
+<LI><A NAME="ToC_658" HREF="auagd021.htm#HDRWQ588">system:administrators 그룹에서 사용자를 제거하려면</A>
+</MENU>
+<LI><A NAME="ToC_659" HREF="auagd021.htm#HDRWQ589">kas 명령에 특권 부여:  ADMIN 플래그</A>
+<MENU>
+<LI><A NAME="ToC_660" HREF="auagd021.htm#HDRWQ590">ADMIN 플래그가 설정되어 있는지 확인하려면</A>
+<LI><A NAME="ToC_661" HREF="auagd021.htm#Header_661">ADMIN 플래그를 설정 또는 제거하려면</A>
+</MENU>
+<LI><A NAME="ToC_662" HREF="auagd021.htm#HDRWQ592">UserList 파일 관리</A>
+<MENU>
+<LI><A NAME="ToC_663" HREF="auagd021.htm#HDRWQ593">UserList 파일에서 사용자를 표시하려면</A>
+<LI><A NAME="ToC_664" HREF="auagd021.htm#HDRWQ594">UserList 파일에 사용자를 추가하려면</A>
+<LI><A NAME="ToC_665" HREF="auagd021.htm#Header_665">UserList 파일에서 사용자를 제거하려면</A>
+</MENU></MENU>
+<P><B><A NAME="ToC_666" HREF="auagd022.htm#HDRWQ595">부록 A. NFS/AFS 변환기 관리</A></B><BR>
+<MENU>
+<LI><A NAME="ToC_667" HREF="auagd022.htm#HDRWQ596">명령 요약</A>
+<LI><A NAME="ToC_668" HREF="auagd022.htm#HDRWQ598">개요</A>
+<MENU>
+<LI><A NAME="ToC_669" HREF="auagd022.htm#HDRWQ599">비인증 또는 인증 AFS 액세스 사용 가능화</A>
+<LI><A NAME="ToC_670" HREF="auagd022.htm#HDRWQ600">AFSSERVER 및 AFSCONF 환경 변수 설정</A>
+<LI><A NAME="ToC_674" HREF="auagd022.htm#HDRWQ602">NFS 클라이언트 시스템에 저장된 파일에 대한 지연된 쓰기</A>
+</MENU>
+<LI><A NAME="ToC_675" HREF="auagd022.htm#HDRWQ603">NFS/AFS 변환기 기계 구성</A>
+<MENU>
+<LI><A NAME="ToC_676" HREF="auagd022.htm#Header_676">NFS 및 AFS 커널 확장 로드</A>
+<LI><A NAME="ToC_677" HREF="auagd022.htm#HDRRMTSYS">AFS 명령을 수용하도록 변환 기계 구성</A>
+<LI><A NAME="ToC_678" HREF="auagd022.htm#HDRWQ604">선택적 변환 기능 제어</A>
+<LI><A NAME="ToC_679" HREF="auagd022.htm#Header_679">NFS/AFS 변환 기계를 구성하려면</A>
+<LI><A NAME="ToC_680" HREF="auagd022.htm#Header_680">변환 기능을 사용 불가능 또는 사용 가능하게 하거나 선택적 기능을 설정하려면</A>
+</MENU>
+<LI><A NAME="ToC_681" HREF="auagd022.htm#HDRWQ606">NFS 클라이언트 시스템 구성</A>
+<MENU>
+<LI><A NAME="ToC_682" HREF="auagd022.htm#Header_682">AFS를 액세스하도록 NFS 클라이언트 시스템을 구성하려면</A>
+</MENU>
+<LI><A NAME="ToC_683" HREF="auagd022.htm#HDRWQ610">사용자 계정 구성</A>
+<MENU>
+<LI><A NAME="ToC_684" HREF="auagd022.htm#Header_684">AFS 명령을 실행하기 위해 사용자 계정을 구성하려면</A>
+</MENU>
+<LI><A NAME="ToC_685" HREF="auagd022.htm#HDRWQ612">지원되지 않는 NFS 클라이언트 시스템에서 인증 받기</A>
+<MENU>
+<LI><A NAME="ToC_686" HREF="auagd022.htm#Header_686">knfs 명령을 사용하여 인증을 받으려면</A>
+<LI><A NAME="ToC_687" HREF="auagd022.htm#Header_687">knfs 명령을 사용하여 토큰을 표시하려면</A>
+<LI><A NAME="ToC_688" HREF="auagd022.htm#Header_688">knfs 명령을 사용하여 토큰을 버리려면</A>
+</MENU></MENU>
+<P><B><A NAME="ToC_689" HREF="auagd023.htm#HDRCOMMANDS">부록 B. AFS 명령 사용</A></B><BR>
+<MENU>
+<LI><A NAME="ToC_690" HREF="auagd023.htm#HDRWQ613">AFS 명령 구문</A>
+<MENU>
+<LI><A NAME="ToC_691" HREF="auagd023.htm#Header_691">명령 이름</A>
+<LI><A NAME="ToC_692" HREF="auagd023.htm#Header_692">옵션</A>
+<LI><A NAME="ToC_693" HREF="auagd023.htm#Header_693">인수</A>
+<LI><A NAME="ToC_694" HREF="auagd023.htm#Header_694">플래그</A>
+<LI><A NAME="ToC_695" HREF="auagd023.htm#HDRCOMMAND-EX">예제 명령</A>
+<LI><A NAME="ToC_696" HREF="auagd023.htm#HDRWQ614">AFS 명령 입력 규칙</A>
+<LI><A NAME="ToC_699" HREF="auagd023.htm#HDRWQ615">약어 및 별명 사용 규칙</A>
+<LI><A NAME="ToC_705" HREF="auagd023.htm#HDRWQ616">AFS 명령에 대한 온라인 도움말 표시</A>
+</MENU></MENU>
+<P><B><A NAME="ToC_706" HREF="auagd024.htm#HDRWQ617">부록 C. afsmonitor 프로그램 통계</A></B><BR>
+<MENU>
+<LI><A NAME="ToC_707" HREF="auagd024.htm#HDRWQ618">캐쉬 관리 프로그램 통계</A>
+<MENU>
+<LI><A NAME="ToC_708" HREF="auagd024.htm#Header_708">성능 통계 섹션(PerfStats_section)</A>
+<LI><A NAME="ToC_709" HREF="auagd024.htm#Header_709">서버 시작/종료 통계 섹션(Server_UpDown_section)</A>
+<LI><A NAME="ToC_710" HREF="auagd024.htm#Header_710">RPC 조작 측정 섹션(RPCop_section)</A>
+<LI><A NAME="ToC_711" HREF="auagd024.htm#Header_711">인증 및 복제 파일 액세스 섹션(Auth_Access_section)</A>
+</MENU>
+<LI><A NAME="ToC_712" HREF="auagd024.htm#HDRWQ619">파일 서버 통계</A>
+<MENU>
+<LI><A NAME="ToC_713" HREF="auagd024.htm#Header_713">성능 통계 섹션(PerfStats_section)</A>
+<LI><A NAME="ToC_714" HREF="auagd024.htm#Header_714">RPC 조작 섹션(RPCop_section)</A>
+</MENU></MENU>
+<P><B><A NAME="ToC_715" HREF="auagd025.htm#HDRWQ620">부록 D. AIX 감사 이벤트</A></B><BR>
+<MENU>
+<LI><A NAME="ToC_716" HREF="auagd025.htm#HDRWQ621">소개</A>
+<LI><A NAME="ToC_717" HREF="auagd025.htm#HDRWQ622">감사-고유 이벤트</A>
+<LI><A NAME="ToC_718" HREF="auagd025.htm#HDRWQ627">볼륨 서버 이벤트</A>
+<LI><A NAME="ToC_719" HREF="auagd025.htm#HDRWQ630">백업 서버 이벤트</A>
+<LI><A NAME="ToC_720" HREF="auagd025.htm#HDRWQ633">보호 서버 이벤트</A>
+<LI><A NAME="ToC_721" HREF="auagd025.htm#HDRWQ636">인증 이벤트</A>
+<LI><A NAME="ToC_722" HREF="auagd025.htm#HDRWQ639">파일 서버 및 캐쉬 관리 프로그램 인터페이스 이벤트</A>
+<LI><A NAME="ToC_723" HREF="auagd025.htm#HDRWQ642">BOS 서버 이벤트</A>
+<LI><A NAME="ToC_724" HREF="auagd025.htm#HDRWQ645">볼륨 위치 서버 이벤트</A>
+</MENU>
+<P><B><A NAME="ToC_725" HREF="auagd026.htm#HDRINDEX">색인</A></B><BR>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">페이지의 맨 위</A> &#124; <A HREF="auagd000.htm">이전 페이지</A> &#124; <A HREF="auagd003.htm">다음 페이지</A> &#124; <A HREF="#ToC">목차</A> &#124; <A HREF="auagd026.htm#HDRINDEX">색인</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

@@ -1,0 +1,75 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+#
+
+!INCLUDE ..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\config\NTMakefile.version
+
+
+############################################################################
+# build butc
+
+EXEFILE = $(DESTDIR)\etc\butc.exe
+
+EXEOBJS =\
+	dbentries.obj \
+	tcprocs.obj \
+	lwps.obj \
+	list.obj \
+	recoverDb.obj \
+	tcudbprocs.obj \
+	dump.obj \
+	tcstatus.obj \
+	tcmain.obj \
+	butc.res
+
+EXELIBS =\
+	$(DESTDIR)\lib\afs\afsbudb.lib \
+        $(DESTDIR)\lib\afs\afsbxdb.lib \
+        $(DESTDIR)\lib\afs\afsbubasics.lib \
+        $(DESTDIR)\lib\afs\afsbutm.lib \
+        $(DESTDIR)\lib\afs\afsvolser.lib \
+        $(DESTDIR)\lib\afs\afsvldb.lib \
+        $(DESTDIR)\lib\afs\afsacl.lib \
+        $(DESTDIR)\lib\afs\afsprot.lib  \
+        $(DESTDIR)\lib\afs\afskauth.lib \
+        $(DESTDIR)\lib\afsubik.lib \
+        $(DESTDIR)\lib\afs\afsauth.lib \
+        $(DESTDIR)\lib\afsrxkad.lib \
+        $(DESTDIR)\lib\afsdes.lib \
+        $(DESTDIR)\lib\afsrx.lib \
+        $(DESTDIR)\lib\afslwp.lib \
+        $(DESTDIR)\lib\afs\afscmd.lib \
+        $(DESTDIR)\lib\afs\afscom_err.lib \
+        $(DESTDIR)\lib\afs\afsutil.lib \
+        $(DESTDIR)\lib\afs\afsusd.lib \
+	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
+	$(DESTDIR)\lib\afs\afspioctl.lib \
+	$(DESTDIR)\lib\afs\afseventlog.lib \
+	$(DESTDIR)\lib\afs\afsreg.lib
+
+$(EXEFILE): $(EXEOBJS) $(EXELIBS)
+	$(EXECONLINK)
+	$(EXEPREP)
+
+############################################################################
+# Definitions for generating versioninfo resources
+
+butc.res: butc.rc AFS_component_version_number.h
+	$(RC) $*.rc
+
+############################################################################
+# Install target; primary makefile target
+
+install: $(EXEFILE)
+	echo "Don't install $(EXEFILE) (will install from tbutc)"
+
+############################################################################
+# Local clean target; augments predefined clean target
+
+clean::
+
+
+############################################################################
+# Auxiliary build targets not built by default; e.g. test programs
+butc_test.exe: test.obj
+	$(EXECONLINK)

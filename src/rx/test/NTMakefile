@@ -1,0 +1,26 @@
+
+AFSDEV_AUXCDEFINES = -DRXDEBUG
+
+!INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\..\config\NTMakefile.version
+
+
+LIBS = \
+	$(DESTDIR)\lib\afslwp.lib \
+	$(DESTDIR)\lib\afs\afsutil.lib \
+	$(DESTDIR)\lib\afs\afsreg.lib \
+	$(DESTDIR)\lib\afsrx.lib
+
+
+RXTESTOBJS = testclient.obj testserver.obj
+
+
+test tests: testclient.exe testserver.exe tableGen.exe generator.exe
+
+testclient.exe: testclient.obj $(LIBS)
+	$(EXECONLINK)
+
+testserver.exe: testserver.obj $(LIBS)
+	$(EXECONLINK)
+
+$(RXTESTOBJS): ..\rx_clock.h ..\rx_queue.h ..\rx_event.h ..\rx.h

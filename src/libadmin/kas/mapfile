@@ -1,0 +1,28 @@
+#
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+#
+#
+
+{
+    global:
+	kas_ServerOpen;
+	kas_ServerClose;
+	kas_PrincipalCreate;
+	kas_PrincipalDelete;
+	kas_PrincipalGet;
+	kas_PrincipalGetBegin;
+	kas_PrincipalGetNext;
+	kas_PrincipalGetDone;
+	kas_PrincipalKeySet;
+	kas_PrincipalLockStatusGet;
+	kas_PrincipalUnlock;
+	kas_PrincipalFieldsSet;
+	kas_ServerStatsGet;
+	kas_ServerDebugGet;
+	kas_ServerRandomKeyGet;
+	kas_StringToKey;
+	kas_KeyCheckSum;
+
+    local:
+	*;
+};

@@ -1,0 +1,23 @@
+#
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+#
+
+
+error_table au
+    ec ADMUTILSERVERENTRYPNULL, "the server entry parameter cannot be NULL"
+    ec ADMUTILSERVERNAMENULL, "the server name parameter cannot be NULL"
+    ec ADMUTILSERVERADDRESSNULL, "the server address parameter cannot be NULL"
+    ec ADMUTILSERVERADDRESSPNULL, "the server address parameter cannot be NULL"
+    ec ADMUTILCANTGETSERVERNAME, "the server name parameter cannot translated to an address"
+    ec ADMUTILCANTOPENCELLSERVDB, "failed to open the client CellServDB file"
+    ec ADMUTILERRORTEXTPNULL, "the error text parameter cannot be NULL"
+    ec ADMUTILCELLNAMENULL, "the cell name parameter cannot be NULL"
+    ec ADMRXCONNNULL, "the rx connection parameter cannot be NULL"
+    ec ADMRPCPTRNULL, "the rpc function parameter cannot be NULL"
+    ec ADMUTILRPCSTATSNULL, "the rpc stats parameter cannot be NULL"
+    ec ADMRPCSTATENULL, "the state parameter cannot be NULL"
+    ec ADMRPCVERSIONNULL, "the rpc version parameter cannot be NULL"
+    ec ADMRXDEBUGHANDLENULL, "the rxdebug handle parameter cannot be null"
+    ec ADMRXDEBUGVERSIONNULL, "the rxdebug version parameter cannot be null"
+    ec ADMRXDEBUGSTATSNULL, "the rxdebug stats parameter cannot be null"
+end

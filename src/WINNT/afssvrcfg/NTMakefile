@@ -1,0 +1,91 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+#
+
+# AFSDEV_AUXCDEFINES = /DUNICODE
+!INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\..\config\NTMakefile.version
+
+
+############################################################################
+# Definitions for building afssvrcfg.exe.
+
+EXEFILE = $(DESTDIR)\root.server\usr\afs\bin\afssvrcfg.exe
+
+EXEOBJS =\
+    char_conv.obj             \
+	admin_info_dlg.obj        \
+	cfg_utils.obj             \
+	create_partition_dlg.obj  \
+	file_server_page.obj      \
+	graphics.obj              \
+	info_page.obj             \
+	intro_page.obj            \
+	partitions_page.obj       \
+	partition_page.obj        \
+	replicatition_page.obj    \
+	services_page.obj         \
+	toolbox.obj               \
+	afscfg.obj                \
+	backup_server_page.obj    \
+	config_server_page.obj    \
+	db_server_page.obj        \
+	get_cur_config.obj        \
+	help.obj                  \
+	info2_page.obj            \
+	logfile.obj               \
+	partition_utils.obj       \
+	root_afs_page.obj         \
+	sys_control_page.obj      \
+	volume_utils.obj          \
+	salvage_dlg.obj			  \
+    get_pw_dlg.obj            \
+    salvage_results_dlg.obj   \
+    validation.obj            \
+	afscfg_stub.res
+
+VCLIBS =\
+	comctl32.lib \
+    mpr.lib
+
+EXELIBS =\
+	$(DESTDIR)\lib\afs\taafsapplib.lib \
+	$(DESTDIR)\lib\afsauthent.lib \
+	$(DESTDIR)\lib\afs\afscfgadmin.lib \
+	$(DESTDIR)\lib\afs\afsbosadmin.lib \
+	$(DESTDIR)\lib\afs\afsvosadmin.lib \
+	$(DESTDIR)\lib\afs\afsclientadmin.lib \
+	$(DESTDIR)\lib\afs\afsadminutil.lib
+
+
+$(EXEFILE): $(EXEOBJS) $(EXELIBS) 
+	$(EXEGUILINK)  $(VCLIBS)
+	$(EXEPREP)     
+
+
+############################################################################
+# Definitions for generating versioninfo resource via RC
+
+afscfg_stub.res: afscfg_stub.rc AFS_component_version_number.h
+	$(RC) $*.rc
+
+
+############################################################################
+# Install target; primary makefile target
+
+install: $(EXEFILE) lang
+
+
+############################################################################
+# Language target
+
+lang::
+	$(CD) lang
+	for /f %l in ('dir /B ??_??') do @$(NTLANG) %l $(MAKECMD) /nologo /f NTMakefile install
+	$(CD) ..
+
+
+############################################################################
+# Local clean target; augments predefined clean target
+
+clean::
+

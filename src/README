@@ -1,0 +1,86 @@
+Building OpenAFS on UNIX and LINUX
+----------------------------------
+
+A. Creating the proper directory structure.
+
+   Uncompress the source into a directory of your choice.
+   Preferrably, afs space. In the directory that you uncompressed the
+   source in, you will only have an src directory.
+	
+   1. Make a directory for each system type that you plan on
+      building. Current tested system types include the following
+     (this step is skipped for the i386_nt40 system type):
+
+      alpha_dux40/
+      i386_linux22/
+      rs_aix42/
+      sun4x_56/
+      sun4x_57/
+
+      Example:
+      % mkdir i386_linux22
+      % ls -CF
+      i386_linux22/     src/
+
+      Builds for the following platforms will not fully compile:
+
+      hp_ux110/
+      sgi_65/
+
+   2. Within each of those directories, create a dest/ and obj/ directory.
+
+      Example:
+      % mkdir i386_linux22/dest
+      % mkdir i386_linux22/obj
+
+   3. Create symbolic links to the system type you are about to build
+
+      Example:
+      % ln -s @sys/dest dest
+      % ln -s @sys/obj  obj
+      % ls -CF
+      Makefile@     dest@     i386_linux22/     obj@     src/
+
+   4. If this source is NOT in AFS space, You must make a link from
+      @sys to your current system type. 
+
+      Example:
+      % ln -s i386_linux22 @sys
+
+      Within AFS space, the AFS Cache Manager automatically
+      substitutes the local machine's AFS system name (CPU/operating
+      system type [ie: alpha_dux40, i386_linux22, ...]) for the @sys
+      variable.
+
+   5. Create the top level Makefile:
+      a. For LINUX and UNIX versions
+
+         Example:
+         % ln -s src/Makefile Makefile
+         % ls -CF
+         Makefile@     i386_linux22/     src/
+
+B  Building
+
+   1. Make the obj links. This creates links from the @sys/obj/ tree
+      back to the source tree. The source tree remains unchanged and
+      builds are done in the platform specific object tree.
+
+      % make links
+
+   2. Begin building
+      a. For Linux
+         % make SYS_NAME="i386_linux22" LINUX_VERSION="2.2.14"
+
+      b. For UNIX versions, specify the system name as given by
+         the system type defined in step A1.
+         % make SYS_NAME="<system_name>"
+
+         Example for the rs_aix42 operating system:
+	 % make SYS_NAME="rs_aix42" 
+
+C  Problems
+   If you have a problem building this source, you may want to visit
+   http://oss.software.ibm.com/developerworks/opensource/afs/ to see
+   if any problems have been reported or to find out how to get more
+   help.

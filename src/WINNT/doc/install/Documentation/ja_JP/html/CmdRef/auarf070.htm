@@ -1,0 +1,80 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRBK_DELVOLENTRY" HREF="auarf002.htm#ToC_84">backup delvolentry</A></H2>
+<A NAME="IDX4285"></A>
+<A NAME="IDX4286"></A>
+<A NAME="IDX4287"></A>
+<A NAME="IDX4288"></A>
+<A NAME="IDX4289"></A>
+<A NAME="IDX4290"></A>
+<P><STRONG>目的</STRONG>
+<P>ボリューム・セットからボリューム項目を削除します。
+<P><STRONG>構文</STRONG>
+<PRE><B>backup delvolentry -name</B> &lt;<VAR>volume set name</VAR>>  <B>-entry</B> &lt;<VAR>volume set index</VAR>> 
+                   [<B>-localauth</B>]  [<B>-cell</B> &lt;<VAR>cell name</VAR>>]  [<B>-help</B>]
+   
+<B>backup delvole  -n</B> &lt;<VAR>volume set name</VAR>>  <B>-e</B> &lt;<VAR>volume set index</VAR>>
+                [<B>-l</B>]  [<B>-c</B> &lt;<VAR>cell name</VAR>>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>backup delvolentry</B> コマンドは、
+<B>-name</B> 引き数に指定されたボリューム・セットから、指定されたボリューム項目を削除します。ボリューム項目をインデックス番号で指定する場合には、
+<B>-entry</B> 引き数を使用してください。インデックス番号を表示するには、
+<B>backup listvolsets</B> コマンドを使用します。
+<P>削除された項目より大きいインデックス番号のボリューム項目がまだある場合は、それらのインデックスは自動的に順次番号が削減されて、インデックスの順序に空きが生じないようにします。
+<P><STRONG>注意</STRONG>
+<P>一時ボリューム・セットからのボリューム項目の削除は、ボリューム・セットが作成された対話式セッション内でのみ行うことができます。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B>-name
+</B><DD>ボリューム項目を削除するボリューム・セットの名前を指定します。
+<P><DT><B>-entry
+</B><DD>削除するボリューム項目のインデックス番号を指定します。ボリューム・セットのボリューム項目のインデックス番号を表示する場合には、
+<B>backup listvolsets</B> コマンドを使用してください。
+<P><DT><B>-localauth
+</B><DD>ローカルの <B>/usr/afs/etc/KeyFile</B> ファイルのキーを使用して、サーバー・チケットを構成します。相互認証の間、
+<B>backup</B> コマンド・インタープリターは、バックアップ・サーバー、ボリューム・サーバーおよび VL サーバーにこのチケットを提供します。このフラグは、<B>-cell</B> 引き数と一緒に使用してはなりません。詳細については、<B>backup</B> の解説ページを参照してください。
+<P><DT><B>-cell
+</B><DD>コマンドを実行するセルを指定します。この引き数は、
+<B>-localauth</B> フラグと一緒に使用してはなりません。詳細については、<B>backup</B> の解説ページを参照してください。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>例</STRONG>
+<P>次のコマンドは、<B>sys</B> というボリューム・セットから、
+4 番目のボリューム項目を削除しています。
+<PRE>   % <B>backup delvolentry -name sys -entry 4</B>
+   
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>コマンドの発行者は、バックアップ・サーバーが実行されているすべてのマシン上の <B>/usr/afs/etc/UserList</B> ファイルにリストされていなければなりません。また、<B>-localauth</B> フラグを使用する場合は、ローカル・スーパーユーザー <B>root</B> としてサーバー・マシンにログオンする必要があります。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf060.htm#HDRBK_INTRO">backup</A>
+<P><A HREF="auarf063.htm#HDRBK_ADDVOLENTRY">backup addvolentry</A>
+<P><A HREF="auarf064.htm#HDRBK_ADDVOLSET">backup addvolset</A>
+<P><A HREF="auarf071.htm#HDRBK_DELVOLSET">backup delvolset</A>
+<P><A HREF="auarf082.htm#HDRBK_LISTVOLSETS">backup listvolsets</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf069.htm">前ページ</A> &#124; <A HREF="auarf071.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

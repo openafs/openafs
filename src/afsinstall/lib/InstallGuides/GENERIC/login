@@ -1,0 +1,11 @@
+#
+# login
+#
+# An InstallGuide for installing the AFS integrated login
+#
+
+sub login {
+&ErrorsAreFatal(1);
+&Copy("bin/login", "/bin/login.afs");
+&Symlink("login.afs", "/bin/login");
+}

@@ -1,0 +1,160 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+#
+
+AFSDEV_AUXCDEFINES = -DAFS_PTHREAD_ENV -DRXDEBUG
+
+!INCLUDE ..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\config\NTMakefile.version
+
+SRCDIR = ..\butc
+
+############################################################################
+# build tbutc
+
+BUTCEXE = $(DESTDIR)\etc\butc.exe
+
+VICED   =..\viced
+VLSERVER=..\vlserver
+LWP     =..\lwp
+LIBACL  =..\libacl
+UTIL    =..\util
+DIR     =..\dir
+VOL     =..\vol
+FSINT   =..\fsint
+BUTM    =..\butm
+BUTC    =..\butc
+BUCOORD = ..\bucoord
+VOLSER  = ..\volser
+
+BUCOORDOBJS = ubik_db_if.obj $(BUCOORD)\volstub.obj $(BUCOORD)\dlq.obj \
+	                     $(BUCOORD)\status.obj $(BUCOORD)\bucoord_errs.obj
+
+VOLSERLIBOBJ = $(VOLSER)\volint.cs.obj  vsprocs.obj              $(VOLSER)\vsutils.obj \
+               $(VOLSER)\lockprocs.obj  $(VOLSER)\volint.xdr.obj $(VOLSER)\volerr.obj  \
+               $(VOLSER)\volint.ss.obj  AFS_component_version_number.obj 
+VOLSERLIBS  = afstvolser.lib
+
+LWPOBJS     = lock.obj
+
+BUTMOBJS    = file_tm.obj AFS_component_version_number.obj
+BUTMLIBS    = afstbutm.lib
+BUTMINCLUDE = -I$(DESTDIR)\include
+
+BUTCOBJS   = dbentries.obj tcprocs.obj lwps.obj tcmain.obj list.obj recoverDb.obj \
+	     tcudbprocs.obj dump.obj tcstatus.obj butc_xbsa.obj \
+             $(LWPOBJS) $(BUCOORDOBJS)
+BUTCINCLUDE= -I. -I$(DESTDIR)\include -I$(XBSADIR)\ 
+BUTCLIBS   = $(DESTDIR)\lib\afs\afsbudb.lib \
+	     $(DESTDIR)\lib\afs\afsbubasics.lib \
+	     $(VOLSERLIBS) \
+             $(BUTMLIBS) \
+	     $(DESTDIR)\lib\afs\afsvldb.lib \
+	     $(DESTDIR)\lib\afs\afskauth.lib \
+	     $(DESTDIR)\lib\afsubik.lib \
+	     $(DESTDIR)\lib\afs\afsauth.lib \
+\
+             $(DESTDIR)\lib\afsrxkad.lib \
+	     $(DESTDIR)\lib\afsrx.lib \
+             $(DESTDIR)\lib\afslwp.lib \
+\
+             $(DESTDIR)\lib\afs\afsutil.lib \
+             $(DESTDIR)\lib\afs\afsusd.lib \
+	     $(DESTDIR)\lib\afs\afspioctl.lib \
+	     $(DESTDIR)\lib\afsrpc.lib \
+             $(DESTDIR)\lib\afs\afscmd.lib \
+             $(DESTDIR)\lib\afs\afscom_err.lib \
+	     $(DESTDIR)\lib\afs\afsreg.lib \
+	     $(DESTDIR)\lib\afs\afsprocmgmt.lib \
+             $(DESTDIR)\lib\afs\afseventlog.lib \
+	     $(DESTDIR)\lib\pthread.lib \
+	     $(DESTDIR)\lib\afsdes.lib
+
+#	$(DESTDIR)\lib\afsauthent.lib \
+#	$(DESTDIR)\lib\afsrpc.lib \
+#	$(DESTDIR)\lib\afs\afscmd.lib \
+#	$(DESTDIR)\lib\afs\afsaudit.lib \
+#	$(DESTDIR)\lib/afs/afscom_err.lib \
+#	$(DESTDIR)\lib\afs\afsreg.lib \
+#	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
+#	$(DESTDIR)\lib\afs\afseventlog.lib \
+#	$(DESTDIR)\lib\pthread.lib
+
+include ..\config\NTMakefile.version
+
+# rm tcstatus.obj
+# nmake /nologo /f ntmakefile install
+#----------------------------------------------- BUTC
+
+$(BUTCEXE): $(BUTCOBJS) $(BUTCLIBS)
+	$(EXECONLINK)
+	$(EXEPREP)
+
+# 	$(C2OBJ) $**
+
+dbentries.obj: $(BUTC)/dbentries.c
+	$(C2OBJ) $**
+
+tcprocs.obj: $(BUTC)/tcprocs.c
+	$(C2OBJ) $**
+
+lwps.obj: $(BUTC)/lwps.c
+	$(C2OBJ) $**
+
+tcmain.obj: $(BUTC)/tcmain.c
+	$(C2OBJ) $**
+
+list.obj: $(BUTC)/list.c
+	$(C2OBJ) $**
+
+recoverDb.obj: $(BUTC)/recoverDb.c
+	$(C2OBJ) $**
+
+tcudbprocs.obj: $(BUTC)/tcudbprocs.c
+	$(C2OBJ) $**
+
+dump.obj: $(BUTC)/dump.c
+	$(C2OBJ) $**
+
+tcstatus.obj: $(BUTC)/tcstatus.c
+	$(C2OBJ) $**
+
+butc_xbsa.obj: $(BUTC)/butc_xbsa.c
+	$(C2OBJ) $**
+
+#----------------------------------------------- BUCOORD
+
+ubik_db_if.obj: $(BUCOORD)/ubik_db_if.c
+	$(C2OBJ) $**
+
+#----------------------------------------------- VOLSER
+# Build the afstvolser.lib library here. The file compiled
+# for is is vsprocs.c. The rest are from the VOLSER dir.
+
+afstvolser.lib: $(VOLSERLIBOBJ)
+	$(LIBARCH)
+
+vsprocs.obj: $(VOLSER)/vsprocs.c
+	$(C2OBJ) $**
+
+#----------------------------------------------- LWP
+
+lock.obj: $(LWP)/lock.c
+	$(C2OBJ) $**
+
+#----------------------------------------------- BUTC
+
+file_tm.obj: $(BUTM)/file_tm.c
+
+file_tm.obj: $(BUTM)/file_tm.c
+	$(C2OBJ) $**
+
+afstbutm.lib: $(BUTMOBJS)
+	$(LIBARCH)
+
+#-----------------------------------------------
+
+all: $(BUTCEXE) $(BUTMLIBS)
+
+install: all
+
+noversion: install

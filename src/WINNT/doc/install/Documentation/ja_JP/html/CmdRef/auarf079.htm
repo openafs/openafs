@@ -1,0 +1,148 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRBK_LABELTAPE" HREF="auarf002.htm#ToC_93">backup labeltape</A></H2>
+<A NAME="IDX4345"></A>
+<A NAME="IDX4346"></A>
+<A NAME="IDX4347"></A>
+<A NAME="IDX4348"></A>
+<A NAME="IDX4349"></A>
+<A NAME="IDX4350"></A>
+<A NAME="IDX4351"></A>
+<A NAME="IDX4352"></A>
+<A NAME="IDX4353"></A>
+<A NAME="IDX4354"></A>
+<A NAME="IDX4355"></A>
+<A NAME="IDX4356"></A>
+<P><STRONG>目的</STRONG>
+<P>磁気テープ上に磁気的なラベルを作成します。
+<P><STRONG>構文</STRONG>
+<PRE><B>backup labeltape</B> [<B>-name</B> &lt;<VAR>AFS tape name, defaults to NULL</VAR>>]
+                 [<B>-size</B> &lt;<VAR>tape size in Kbytes, defaults to size in tapeconfig</VAR>>]
+                 [<B>-portoffset</B> &lt;<VAR>TC port offset</VAR>>] 
+                 [<B>-pname</B> &lt;<VAR>permanent tape name</VAR>>] 
+                 [<B>-localauth</B>]  [<B>-cell</B> &lt;<VAR>cell name</VAR>>]  [<B>-help</B>]
+   
+<B>backup la</B> [<B>-n</B> &lt;<VAR>AFS tape name, defaults to NULL</VAR>>]
+          [<B>-s</B> &lt;<VAR>tape size in Kbytes, defaults to size in tapeconfig</VAR>>]
+          [<B>-po</B> &lt;<VAR>TC port offset</VAR>>]  [<B>-pn</B> &lt;<VAR>permanent tape name</VAR>>]
+          [<B>-l</B>]  [<B>-c</B> &lt;<VAR>cell name</VAR>>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>backup labeltape</B> コマンドは、磁気テープの先頭に、バックアップ・システムが読み取り可能な形式で磁気的なラベルを作成します。このラベルには、磁気テープの名前 (<I>永続名</I>、または磁気テープの内容を表す <I>AFS 磁気テープ名</I>が特定の形式で書き込まれます) とその容量が記録されます。
+<P>(指定されたポート・オフセットのテープ・コーディネーター・マシンにある <B>/usr/afs/backup/CFG_</B><VAR>device_name</VAR> ファイルに <B>FILE YES</B> 命令がある場合、
+<B>backup</B> コマンドを実行すると、磁気テープの先頭ではなく、テープ・コーディネーターの <B>/usr/afs/backup/tapeconfig</B> ファイルのポート・オフセットに対してリストされているバックアップ・データ・ファイルの最初の 16 KB にラベル情報が書き込まれます。説明を分かりやすくするために、以下では磁気テープ装置の場合について説明しますが、バックアップ・データ・ファイルの取り扱いは磁気テープ装置の場合とほとんど同じです。)
+<P>すでに AFS バックアップ・データのある磁気テープのラベルを作成し直すと、磁気テープ内の完全なダンプ・セットのレコードがバックアップ・データベースから削除されるため、データは使用不能になります。このコマンドを使用すると、実際には必要のない期限切れのダンプのある磁気テープが再利用できるようになります。
+<P>ラベルに永続名を書き込む場合には、
+<B>-pname</B> 引き数に 32 文字までの文字列を指定してください。
+<B>backup labeltape</B> コマンドに <B>-pname</B> 引き数が指定されない限り、永続名は変更されません。磁気テープの内容や磁気テープ・ラベルの作成回数、磁気テープの再利用回数には関係ありません。この引き数は、<B>-name</B> 引き数とは一緒に使用できません。この引き数を指定すると、AFS 磁気テープ名は <TT>&lt;NULL></TT> に設定されます。この引き数が省略されており、永続名が存在していない場合は、永続名は <TT>&lt;NULL></TT> に設定されます。
+<P>発行者は、セル内で AFS のバックアップに使用している磁気テープと永続名が重複しないように検査しなければなりません。
+<B>backup</B> コマンドは、永続名が重複している磁気テープがあるかどうか検査しません。磁気テープに永続名があると、バックアップ・システムは、プロンプトや <B>backup</B> コマンドの出力で AFS 磁気テープ名ではなく永続名を使用します。永続名は、<B>backup readlabel</B> コマンド出力の <TT>tape</TT> <TT>name</TT> フィールドに表示されます。
+<P>ラベルに AFS 磁気テープ名を書き込むには、
+[<B>オプション</B>]セクションで解説されている要求形式で、
+<B>-name</B> 引き数に値を指定してください。
+<B>-name</B> 引き数は、
+<B>-pname</B> 引き数と一緒に使用できません。この引き数を省略すると、AFS 磁気テープ名は <TT>&lt;NULL></TT> に設定されますが、この磁気テープが後で <B>backup dump</B> または <B>backup savedb</B> 操作で使用されると、バックアップ・システムはこの磁気テープに適切な名前を自動的に割り当てます。
+AFS 磁気テープ名は、<B>backup readlabel</B> および <B> backup scantape</B> コマンド出力の <TT>AFS</TT> <TT>tape</TT> <TT>name</TT> フィールドに表示されます。
+<P>磁気テープに永続名があると、
+<B>backup</B> コマンド・インタープリターは <B>-name</B> 引き数を受け付けません。磁気テープの永続名を削除する場合には、
+<B>-pname</B> 引き数にヌル値を指定して、次のコマンドを発行してください。
+<PRE>   % <B>backup labeltape -pname ""</B>
+   
+</PRE>
+<P>ラベルに磁気テープの容量を記録する場合には、
+<B>-size</B> 引き数に数値を KB 単位で指定してください。磁気テープに最初にラベルを作成するときに、この引き数を省略すると、バックアップ・システムは、テープ・コーディネーター・マシンの <B>/usr/afs/backup/tapeconfig</B> ファイルに指定されているポート・オフセットのデフォルトに設定されている磁気テープ容量を記録します。次に <B>-size</B> 引き数を指定して
+<B>backup labeltape</B> コマンドを発行するまで、
+size フィールドの値は保存されます。
+<P><B>backup dump</B> または <B>backup savedb</B> 操作実行中に、磁気テープに書き込むことのできるデータ量を決定するために、テープ・コーディネーターは、磁気テープ・ラベルに記録されている容量を読み取ります (または、磁気テープにラベルがない場合には、
+<B>/usr/afs/backup/tapeconfig</B> ファイルに指定されているポート・オフセットに関連付けられている値を使用します)。詳しくは、
+<B>backup dump</B> の解説ページを参照してください。
+<P>このコマンドを実行すると、デフォルトでは、テープ・コーディネーターは、ローカルの <B>/usr/afs/backup/CFG_</B><VAR>device_name</VAR> ファイルの <B>MOUNT</B> 命令を呼び出して、最初の磁気テープにアクセスします。<B>MOUNT</B> 命令がない場合には、磁気テープの挿入をバックアップ操作員に要求します。ただし、<B> CFG_</B><VAR>device_name</VAR> ファイルに <B>AUTOQUERY NO</B> 命令があるか、あるいは <B>butc</B> コマンドが <B>-noautoquery</B> フラグ付きで発行されている場合には、テープ・コーディネーターは、磁気テープがすでに装置に挿入されているとみなします。そうでない場合、テープ・コーディネーターは <B>MOUNT</B> 命令を呼び出すか、操作員にプロンプトを出します。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B>-name
+</B><DD>ラベルに記録する AFS 磁気テープ名を指定します。この引き数は、<B>-pname</B> 引き数と一緒に使用できません。この引き数を省略すると、AFS 磁気テープ名は <TT>&lt;NULL></TT> に設定されます。この引き数を指定する場合には、次の形式で指定してください。
+<P>
+<PRE>   <VAR>volume_set_name</VAR>.<VAR>dump_level_name</VAR>.<VAR>tape_index</VAR>
+   
+</PRE>
+<P>
+<P>
+<P><B>backup dump</B> 操作で将来使用可能な磁気テープの場合、
+<VAR>volume_set_name</VAR> は、磁気テープの作成された初期ダンプのボリューム・セット名と一致し、
+<VAR>dump_level_name</VAR> が、ボリューム・セットがダンプされたダンプ・レベルのパス名の最後の要素と一致していなければなりません。また、<VAR>tape_index</VAR> は、ダンプ・セット内での磁気テープの順序を示しています (索引は <B> 1</B> から開始します)。このタイプの名前の検査を使用禁止にするには、
+<B>CFG_</B><VAR>device_name</VAR> ファイルに <B>NAME_CHECK NO</B> 命令を組み込みます。
+<P>
+<P>将来 <B>backup savedb</B> 操作で使用できる磁気テープの場合には、
+<B>-name</B> 引き数を次の形式で指定しなければなりません。
+<P>
+<PRE>   <B>Ubik_db_dump.</B><VAR>tape_index</VAR>
+   
+</PRE>
+<P>
+<P>
+<P>ここで、<VAR>tape_index</VAR> はバックアップ・データベースのダンプを格納している磁気テープ・ セットの順番を示します。
+<P><DT><B>-size
+</B><DD>ラベルに記録する磁気テープの容量を指定します。整数値の後に単位を示す文字を指定しください。数値と文字の間にはスペースを入れないでください。
+<B>k</B> または <B>K</B> はキロバイトで、
+<B>m</B> または <B>M</B> はメガバイト、
+<B>g</B> または <B>G</B> はギガバイトです。単位を省略すると、デフォルトで KB が使用されます。
+<P>
+<P>磁気テープに最初にラベルを作成するときに、この引き数を省略すると、バックアップ・システムは、テープ・コーディネーター・マシンの <B>/usr/afs/backup/tapeconfig</B> ファイルに指定されているポート・オフセットの設定されている磁気テープ容量を記録します。最初に記録された値は、次に <B>-size</B> 引き数を指定してコマンドを発行するまで保存されます。
+<P><DT><B>-portoffset
+</B><DD>この操作で磁気テープを処理するテープ・コーディネーターのポート・オフセット番号を指定します。
+<P><DT><B>-pname
+</B><DD>ラベルに記録する永続名を指定します。最大 32 文字までの名前が指定できます。名前には英数字を使用することができます。シェルで特別な意味を持つメタ文字や、シェル・プロンプトのコマンドでリテラルに解釈されるマークは使用しないでください。
+<P>
+<P>この引き数は、<B>-name</B> 引き数とは一緒に使用できません。この引き数を指定すると、AFS 磁気テープ名は <TT>&lt;NULL></TT> に設定されます。この引き数を省略すると、既存の永続名が保存されます。
+<P><DT><B>-localauth
+</B><DD>ローカルの <B>/usr/afs/etc/KeyFile</B> ファイルのキーを使用して、サーバー・チケットを構成します。相互認証の間、
+<B>backup</B> コマンド・インタープリターは、バックアップ・サーバー、ボリューム・サーバーおよび VL サーバーにこのチケットを提供します。このフラグは、<B>-cell</B> 引き数と一緒に使用してはなりません。詳細については、<B>backup</B> の解説ページを参照してください。
+<P><DT><B>-cell
+</B><DD>コマンドを実行するセルを指定します。この引き数は、
+<B>-localauth</B> フラグと一緒に使用してはなりません。詳細については、<B>backup</B> の解説ページを参照してください。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>例</STRONG>
+<P>次のコマンドは、ポート・オフセット 3 の装置にある磁気テープのラベルに AFS 磁気テープ名 <B>user.monthly.1</B> を記録しています。
+<PRE>   % <B>backup labeltape -name user.monthly.1 -portoffset 3</B>
+   
+</PRE>
+<P>次の 3 つのコマンドは同じ結果になります。これらのコマンドはすべて、ポート・オフセット 4 の装置にある磁気テープのラベルに、
+2 GB の容量を記録します。また、AFS 磁気テープ名を <TT>&lt;NULL></TT> に設定し、永続名を変更していません。
+<PRE>   % <B>backup labeltape -size 2g -portoffset 4</B>
+   % <B>backup labeltape -size 2048M -portoffset 4</B>
+   % <B>backup labeltape -size 2097152 -portoffset 4</B>
+   
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>コマンドの発行者は、バックアップ・サーバーが実行されているすべてのマシン上の <B>/usr/afs/etc/UserList</B> ファイルにリストされていなければなりません。また、<B>-localauth</B> フラグを使用する場合は、ローカル・スーパーユーザー <B>root</B> としてサーバー・マシンにログオンする必要があります。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf018.htm#HDRCFG">CFG_<I>device_name</I></A>
+<P><A HREF="auarf060.htm#HDRBK_INTRO">backup</A>
+<P><A HREF="auarf084.htm#HDRBK_READLABEL">backup readlabel</A>
+<P><A HREF="auarf126.htm#HDRBUTC">butc</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf078.htm">前ページ</A> &#124; <A HREF="auarf080.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

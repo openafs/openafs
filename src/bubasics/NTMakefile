@@ -1,0 +1,80 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+#
+
+!INCLUDE ..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\config\NTMakefile.version
+
+
+############################################################################
+# Install headers
+
+INCFILEDIR = $(DESTDIR)\include\afs
+
+INCFILES =\
+	$(INCFILEDIR)\bubasics.h \
+	$(INCFILEDIR)\butc.h \
+	$(INCFILEDIR)\bumon.h \
+	$(INCFILEDIR)\butm.h \
+	$(INCFILEDIR)\butx.h \
+	$(INCFILEDIR)\tcdata.h
+
+
+############################################################################
+# build afsbubasics.lib
+
+LIBFILE = $(DESTDIR)\lib\afs\afsbubasics.lib
+
+LIBOBJS =\
+	butc.ss.obj \
+	butc.cs.obj \
+	butc.xdr.obj \
+	bumon.ss.obj \
+	bumon.cs.obj \
+	bumon.xdr.obj \
+	butc_errs.obj \
+	butm_errs.obj \
+	butx_errs.obj \
+	AFS_component_version_number.obj
+
+$(LIBFILE): $(LIBOBJS) 
+	$(LIBARCH) 
+
+############################################################################
+# rxgen on butc.xg and bumon.xg
+
+butc.h butc.xdr.c butc.ss.c butc.cs.c: butc.xg
+	$(RXGEN) $**
+
+bumon.h bumon.xdr.c bumon.ss.c bumon.cs.c: bumon.xg
+	$(RXGEN) $**
+
+
+############################################################################
+# compile_et on butm_errs.et and butc_errs.et 
+
+butm.h butm_errs.c: butm_errs.et butm.p.h
+	$(DEL) butm.h butm_errs.c
+	$(COMPILE_ET) butm_errs -h butm
+	
+tcdata.h butc_errs.c: butc_errs.et tcdata.p.h butm.h
+	$(DEL) tcdata.h butc_errs.c
+	$(COMPILE_ET) butc_errs -h tcdata
+
+butx_errs.c butx.h: butx_errs.et
+	$(DEL) butx.h butx_errs.c
+	$(COMPILE_ET) butx_errs -h butx
+
+############################################################################
+# install targets
+
+install: $(LIBFILE) $(INCFILES)
+
+
+############################################################################
+# Local clean target; augments predefined clean target
+
+clean::
+ 	$(DEL) *.xdr.c *.ss.c *.cs.c butc.h bumon.h butm.h tcdata.h butx.h \
+		butc_errs.c butm_errs.c	butx_errs.c
+
+

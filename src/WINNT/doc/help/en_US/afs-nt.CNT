@@ -1,0 +1,77 @@
+:Base AFS-NT.HLP
+:Title IBM AFS Client
+1 Overview
+2 About AFS=Working_in_AFS>main
+2 AFS Storage Concepts=AFSFileStorageConcepts>main
+2 AFS Security Concepts=AFS_security_concepts>main
+2 About the AFS Client=AFS_Client>main
+2 About Help=Audience_and_Purpose>main
+1 Getting Started
+2 Overview=Running_AFS>main
+2 Making your AFS Client a Member of a Cell=Adding_your_Client_to_a_Cell>main
+2 AFS Client Wizard=IDH_AFSCREDS_WIZ_START>main
+2 Starting and Stopping the AFS Client=StartingandStoppingtheAFSClient@afs-nt.hlp>main
+2 Changing the Startup Type of Your AFS Client=ChangingtheStartupTypeofYourAFSClient@afs-nt.hlp>main
+2 Mounting the AFS Filespace=Mapping_Drives_Overview>main
+2 Authenticating to AFS=Authentication>main
+2 Verifying Authentication=VerifyingAuthentication@afs-nt.hlp>main
+2 Unauthenticating from AFS=UnauthenticatingfromAFS@afs-nt.hlp>main
+1 Managing AFS
+2 Overview=AccessingAFS@afs-nt.hlp>main
+2 AFS Menu=FileManagerAFSMenu>main
+2 AFS Client Configuration Utility=AFS_Client_Configuration_Utility>main
+2 AFS Client Program Group=The_AFS_Client_Program_Group>main
+2 AFS Client Property Box=AFS_Credentials_utility.>main
+2 Command Prompt Commands=CommandPromptCommands@afs-nt.hlp>main
+1 Using AFS
+2 Access Control Lists
+3 Overview
+4 Access Control Lists=ProtectingFilesandDirectories>main
+4 Directory-Level Access Control=Directory.LevelAccessControl>main
+4 AFS Access Permissions=AFSAccessPermissions>main
+4 Additional Access Permissions=OtherVariablePermissions>main
+4 Normal and Negative Entries=NormalandNegativeEntries>main
+3 Using Access Control Lists
+4 Setting ACLs=AccessControlLists>main
+4 Adding ACL Entries=AddACLEntry>main
+4 Removing ACL Entries=Removing_ACL_Entries>main
+4 Copying ACLs=CopyACL>main
+2 Volumes and Partitions
+3 Overview=Volumes_and_Partitions>main
+3 Displaying Volume and Partition Information=Displaying_Volume_and_Partition_information>main
+3 Refreshing Name/Volume ID Mappings=Refreshname.IDmap>main
+2 Mount Points
+3 Overview=Mount_Point_first_page>main
+3 Displaying Mount Point Information=Displaying_Mount_Points>main
+3 Removing Mount Points=Removing_Mount_Points>main
+3 Creating Mount Points=Making_Mount_Points>main
+2 Cached Files
+3 Overview=Cached_Files>main
+3 Flushing Files and Directories=Flushing_files_or_directories>main
+3 Flushing Volumes=Flushing_Volumes>main
+2 Servers
+3 Listing Information
+4 Overview=ListingFileServerInformation>main
+4 Showing File Servers=Showing_File_Servers>main
+4 Showing the Status of File Servers=Showing_the_Status_of_File_Servers>main
+3 Server Preferences
+4 Overview=Server_Prefs_Overview>main
+4 Viewing Server Preferences=Viewing_Server_Preferences>main
+4 Adding Server Preferences=Adding_Server_Preferences>main
+4 Modifying Server Preferences=Modifying_Server_Preferences>main
+2 Cells
+3 Listing Information
+4 Showing Cells=Showing_Cell>main
+3 Cell Database
+4 Overview=Cells>main
+4 Adding Cells=Adding_Cells_to_your_Cell_Database>main
+4 Changing Cell Information=Changing_Cell_Information>main
+4 Removing Cells=Deleting_Cell_Information>main
+2 Submounts
+3 Overview=Submounts_Overview>main
+3 Creating Submounts=Creating_Submounts>main
+3 Modifying Submounts=Change_or_Edit_Submounts>main
+3 Removing Submounts=Delete_Submounts>main
+1 Reference
+2 Glossary=Glossary>main
+2 How To...=How_To...>main

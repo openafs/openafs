@@ -1,0 +1,109 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+#
+
+!INCLUDE ..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\config\NTMakefile.version
+
+
+#########################################################################
+# install local include file
+INCFILES = bc.h
+
+############################################################################
+# build afsbxdb.lib
+
+LIBFILE = $(DESTDIR)\lib\afs\afsbxdb.lib
+
+LIBOBJS =\
+	dsstub.obj \
+	ubik_db_if.obj \
+	status.obj \
+	dlq.obj \
+	bucoord_errs.obj \
+	volstub.obj \
+	AFS_component_version_number.obj
+
+$(LIBFILE): $(LIBOBJS)
+	$(LIBARCH)
+
+
+############################################################################
+# build backup
+
+EXEFILE = $(DESTDIR)\etc\backup.exe
+
+EXEOBJS =\
+	main.obj \
+	config.obj \
+	dsstub.obj \
+	volstub.obj \
+	commands.obj \
+	regex.obj \
+	server.obj \
+	dsvs.obj \
+	dump.obj \
+	restore.obj \
+	ubik_db_if.obj \
+	dump_sched.obj \
+	vol_sets.obj \
+	tape_hosts.obj \
+	bucoord_errs.obj \
+	bc_status.obj \
+	status.obj \
+	dlq.obj \
+	backup.res
+
+EXELIBS =\
+	$(DESTDIR)\lib\afs\afsbudb.lib \
+        $(DESTDIR)\lib\afs\afsbxdb.lib \
+        $(DESTDIR)\lib\afs\afsbubasics.lib \
+        $(DESTDIR)\lib\afs\afsbutm.lib \
+        $(DESTDIR)\lib\afs\afsvolser.lib \
+        $(DESTDIR)\lib\afs\afsvldb.lib \
+        $(DESTDIR)\lib\afs\afsacl.lib \
+        $(DESTDIR)\lib\afs\afsprot.lib      \
+        $(DESTDIR)\lib\afs\afskauth.lib \
+        $(DESTDIR)\lib\afsubik.lib \
+        $(DESTDIR)\lib\afs\afsauth.lib \
+        $(DESTDIR)\lib\afsrxkad.lib \
+        $(DESTDIR)\lib\afsdes.lib \
+        $(DESTDIR)\lib\afsrx.lib \
+        $(DESTDIR)\lib\afslwp.lib \
+        $(DESTDIR)\lib\afs\afscmd.lib \
+        $(DESTDIR)\lib\afs\afscom_err.lib \
+        $(DESTDIR)\lib\afs\afsutil.lib \
+        $(DESTDIR)\lib\afs\afsusd.lib \
+	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
+	$(DESTDIR)\lib\afs\afspioctl.lib \
+	$(DESTDIR)\lib\afs\afsreg.lib
+	
+
+$(EXEFILE): $(EXEOBJS) $(EXELIBS)
+	$(EXECONLINK)
+	$(EXEPREP)
+
+
+############################################################################
+# compile_et to get bc.h
+
+bucoord_errs.c bc.h:    bucoord_errs.et bc.p.h
+	$(DEL) bucoord_errs.c bc.h
+	$(COMPILE_ET) bucoord_errs -h bc
+
+############################################################################
+# Definitions for generating versioninfo resources
+
+backup.res: backup.rc AFS_component_version_number.h
+	$(RC) $*.rc
+
+############################################################################
+# Install 
+
+install: $(INCFILES) $(LIBFILE) $(EXEFILE)
+
+
+############################################################################
+# Local clean target; augments predefined clean target
+
+clean::
+

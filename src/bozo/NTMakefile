@@ -1,0 +1,145 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+#
+
+############################################################################
+
+
+!INCLUDE ..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\config\NTMakefile.version
+
+
+############################################################################
+# Header files to install
+
+INCFILES =\
+	$(DESTDIR)\include\afs\bosint.h \
+	$(DESTDIR)\include\afs\bnode.h
+
+############################################################################
+# Build afsbos.lib
+
+BOS_LIBFILE = $(DESTDIR)\lib\afs\afsbos.lib
+
+BOS_LIBOBJS =\
+	AFS_component_version_number.obj \
+	bosint.cs.obj \
+	bosint.xdr.obj \
+	boserr.obj
+
+$(BOS_LIBFILE): $(BOS_LIBOBJS)
+	$(LIBARCH)
+
+
+############################################################################
+# Build bosserver.exe
+
+BOSSERVER_EXEFILE = $(DESTDIR)\root.server\usr\afs\bin\bosserver.exe
+
+BOSSERVER_EXEOBJS =\
+	bosserver.obj \
+	bnode.obj \
+	cronbnodeops.obj \
+	ezbnodeops.obj \
+	fsbnodeops.obj \
+	bosint.ss.obj \
+	bosoprocs.obj \
+	bosserver.res
+
+
+BOSSERVER_EXELIBS =\
+	$(DESTDIR)\lib\afsrx.lib \
+	$(DESTDIR)\lib\afslwp.lib \
+	$(DESTDIR)\lib\afs\afscmd.lib \
+	$(DESTDIR)\lib\afs\afskauth.lib \
+	$(DESTDIR)\lib\afs\afsvolser.lib \
+	$(DESTDIR)\lib\afs\afsvldb.lib \
+	$(DESTDIR)\lib\afs\afsauth.lib \
+	$(DESTDIR)\lib\afsrxkad.lib \
+	$(DESTDIR)\lib\afsrxstat.lib \
+	$(DESTDIR)\lib\afsdes.lib \
+	$(DESTDIR)\lib\afsrx.lib \
+	$(DESTDIR)\lib\afsubik.lib \
+	$(DESTDIR)\lib\afs\afscom_err.lib \
+	$(DESTDIR)\lib\afs\afsutil.lib \
+	$(DESTDIR)\lib\afs\afsbos.lib \
+	$(DESTDIR)\lib\afs\afsaudit.lib \
+	$(DESTDIR)\lib\afs\afsreg.lib \
+	$(DESTDIR)\lib\afs\afseventlog.lib \
+	$(DESTDIR)\lib\afs\afsprocmgmt.lib
+
+$(BOSSERVER_EXEFILE): $(BOSSERVER_EXEOBJS) $(BOSSERVER_EXELIBS)
+	$(EXECONLINK)
+	$(EXEPREP)
+
+
+############################################################################
+# Build bos.exe
+
+RS_BOS_EXEFILE = $(DESTDIR)\root.server\usr\afs\bin\bos.exe
+CL_BOS_EXEFILE = $(DESTDIR)\bin\bos.exe
+
+BOS_EXEOBJS =\
+	bos.obj \
+	bos.res
+
+BOS_EXELIBS =\
+	$(DESTDIR)\lib\afsrx.lib \
+	$(DESTDIR)\lib\afslwp.lib \
+	$(DESTDIR)\lib\afs\afscmd.lib \
+	$(DESTDIR)\lib\afs\afskauth.lib \
+	$(DESTDIR)\lib\afs\afsvolser.lib \
+	$(DESTDIR)\lib\afs\afsvldb.lib \
+	$(DESTDIR)\lib\afs\afsauth.lib \
+	$(DESTDIR)\lib\afsrxkad.lib \
+	$(DESTDIR)\lib\afsdes.lib \
+	$(DESTDIR)\lib\afsrx.lib \
+	$(DESTDIR)\lib\afsubik.lib \
+	$(DESTDIR)\lib\afs\afscom_err.lib \
+	$(DESTDIR)\lib\afs\afsutil.lib \
+	$(DESTDIR)\lib\afs\afsbos.lib \
+	$(DESTDIR)\lib\afs\afsreg.lib \
+	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
+	$(DESTDIR)\lib\afs\afspioctl.lib
+
+
+$(RS_BOS_EXEFILE): $(BOS_EXEOBJS) $(BOS_EXELIBS)
+	$(EXECONLINK)
+	$(EXEPREP)
+
+$(CL_BOS_EXEFILE): $(RS_BOS_EXEFILE)
+	$(COPY) $** $@
+
+
+############################################################################
+# Definitions for generating files via RXGEN
+
+bosint.h bosint.cs.c bosint.ss.c bosint.xdr.c: bosint.xg
+	$(RXGEN) -x $**
+
+
+############################################################################
+# Definitions for generating files via COMPILE_ET
+
+bnode.h boserr.c: boserr.et bnode.p.h
+	$(DEL) boserr.c bnode.h
+	$(COMPILE_ET) boserr -h bnode
+
+############################################################################
+# Definitions for generating versioninfo resources
+
+bosserver.res: bosserver.rc AFS_component_version_number.h
+	$(RC) $*.rc
+
+bos.res: bos.rc AFS_component_version_number.h
+	$(RC) $*.rc
+
+############################################################################
+# Install target; primary makefile target
+
+install: $(BOS_LIBFILE) $(BOSSERVER_EXEFILE) $(CL_BOS_EXEFILE) $(INCFILES)
+
+
+############################################################################
+# Local clean target; augments predefined clean target
+
+clean::
