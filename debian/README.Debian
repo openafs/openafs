@@ -17,9 +17,13 @@ background.
    be mounted on /var/cache/openafs.
 
 * The libopenafs-dev package only includes static libraries because
-  AFS does not build shared libs.
+the shared libraries built by AFS are not compatible with Debian
+policy.  They include non-PIC code and do not have a stable ABI.
+
+* The upserver, upclient and kaserver are not included.
 
 
 
 
- -- Sam Hartman <hartmans@debian.org>, Fri,  3 Nov 2000 23:41:41 -0500
+
+ -- Sam Hartman <hartmans@mit.edu>, Tue Aug  5 16:09:13 2003
