@@ -69,7 +69,7 @@ extern char PRE_Block;	/* from preempt.c */
 #define  MAXINT     (~(1<<((sizeof(int)*8)-1)))
 #define  MINSTACK   44
 
-#ifdef __hp9000s800
+#if defined(__hp9000s800) || defined(AFS_PARISC_LINUX24_ENV)
 #define MINFRAME 128
 #define STACK_ALIGN 8
 #else
@@ -350,10 +350,13 @@ int LWP_CreateProcess(int (*ep)(), int stacksize, int priority,
 	/* Gross hack: beware! */
 	PRE_Block = 1;
 	lwp_cpptr = temp;
+#if defined(AFS_PARISC_LINUX24_ENV)
+	savecontext(Create_Process_Part2, &temp2->context, stackptr+MINFRAME);
+#else
 #ifdef __hp9000s800
 	savecontext(Create_Process_Part2, &temp2->context, stackptr+MINFRAME);
 #else
-#if defined(AFS_SGI62_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV) || defined(AFS_PARISC_LINUX24_ENV)
+#if defined(AFS_SGI62_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 	/* Need to have the sp on an 8-byte boundary for storing doubles. */
 	savecontext(Create_Process_Part2, &temp2->context,
 		    stackptr+stacksize-16); /* 16 = 2 * jmp_buf_type*/
@@ -372,6 +375,7 @@ int LWP_CreateProcess(int (*ep)(), int stacksize, int priority,
 #endif /* AFS_S390_LINUX20_ENV */
 #endif /* AFS_SPARC64_LINUX20_ENV || AFS_SPARC_LINUX20_ENV */
 #endif /* AFS_SGI62_ENV */
+#endif
 #endif
 	/* End of gross hack */
 
@@ -432,15 +436,7 @@ int LWP_CreateProcess2(int (*ep)(), int stacksize, int priority,
 	/* Gross hack: beware! */
 	PRE_Block = 1;
 	lwp_cpptr = temp;
-#ifdef __hp9000s800
-	savecontext(Create_Process_Part2, &temp2->context, stackptr+MINFRAME);
-#else
-#if defined(AFS_S390_LINUX20_ENV)
-	savecontext(Create_Process_Part2, &temp2->context, stackptr+stacksize-MINFRAME);
-#else
 	savecontext(Create_Process_Part2, &temp2->context, stackptr+stacksize-sizeof(void *));
-#endif
-#endif
 	/* End of gross hack */
 
 	Set_LWP_RC();
@@ -485,11 +481,11 @@ int LWP_DestroyProcess(PROCESS pid) /* destroy a lightweight process */
 	    pid -> status = DESTROYED;
 	    move(pid, &runnable[pid->priority], &blocked);
 	    temp = lwp_cpptr;
-#ifdef __hp9000s800
+#if defined(__hp9000s800) || defined(AFS_PARISC_LINUX24_ENV)
 	    savecontext(Dispatcher, &(temp -> context),
 			&(LWPANCHOR.dsptchstack[MINFRAME]));
 #else
-#if defined(AFS_SGI62_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV) || defined(AFS_PARISC_LINUX24_ENV)
+#if defined(AFS_SGI62_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 	    savecontext(Dispatcher, &(temp -> context),
 			&(LWPANCHOR.dsptchstack[(sizeof LWPANCHOR.dsptchstack)-8]));
 #else
@@ -811,7 +807,7 @@ static int Dispatcher(void)		/* Lightweight process dispatcher */
        the guard word at the front of the stack being damaged and
        for the stack pointer being below the front of the stack.
        WARNING!  This code assumes that stacks grow downward. */
-#ifdef __hp9000s800
+#if defined(__hp9000s800) || defined(AFS_PARISC_LINUX24_ENV)
     /* Fix this (stackcheck at other end of stack?) */
     if (lwp_cpptr != NULL && lwp_cpptr->stack != NULL
 	    && (lwp_cpptr->stackcheck != 
@@ -928,7 +924,7 @@ static void Initialize_PCB(PROCESS temp, int priority, char *stack,
     temp -> index = lwp_nextindex++;
     temp -> stack = stack;
     temp -> stacksize = stacksize;
-#ifdef __hp9000s800
+#if defined(__hp9000s800) || defined(AFS_PARISC_LINUX24_ENV)
     if (temp -> stack != NULL)
 	temp -> stackcheck = *(int *) ((temp -> stack) + stacksize - 4);
 #else
@@ -982,7 +978,7 @@ static afs_int32 Initialize_Stack(char *stackptr, int stacksize)
 	for (i=0; i<stacksize; i++)
 	    stackptr[i] = i &0xff;
     else
-#ifdef __hp9000s800
+#if defined(__hp9000s800) || defined(AFS_PARISC_LINUX24_ENV)
 	*(afs_int32 *)(stackptr + stacksize - 4) = STACKMAGIC;
 #else
 	*(afs_int32 *)stackptr = STACKMAGIC;
@@ -994,7 +990,7 @@ static int Stack_Used(register char *stackptr, int stacksize)
 {
     register int    i;
 
-#ifdef __hp9000s800
+#if defined(__hp9000s800) || defined(AFS_PARISC_LINUX24_ENV)
     if (*(afs_int32 *) (stackptr + stacksize - 4) == STACKMAGIC)
 	return 0;
     else {
