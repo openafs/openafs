@@ -389,8 +389,14 @@ extern int LWP_WaitProcess(char *event);
 extern PROCESS LWP_ThreadId(void);
 #endif
 
+#ifdef AFS_LINUX24_ENV
+/* max time we are allowed to spend in a select call on Linux to avoid 
+ lost signal issues */
+#define IOMGR_MAXWAITTIME        60	/* seconds */
+#else
 /* max time we are allowed to spend in a select call on NT */
 #define IOMGR_MAXWAITTIME        5	/* seconds */
+#endif
 
 /* max time we spend on a select in a Win95 DOS box */
 #define IOMGR_WIN95WAITTIME 5000	/* microseconds */
