@@ -5109,7 +5109,7 @@ afs_int32 *a_bytesFetchedP;
     struct iovec tiov[RX_MAXIOVECS];
     int tnio;
 #endif /* AFS_NT40_ENV */
-    int tlen;
+    afs_int32 tlen;
     afs_int32 optSize;
     struct stat tstat;
 #ifdef	AFS_AIX_ENV
@@ -5313,12 +5313,12 @@ StoreData_RXStyle(volptr, targetptr, Fid, client, Call, Pos, Length,
     afs_int32 optSize;			/* optimal transfer size */
     int DataLength;			/* size of inode */
     afs_int32 TruncatedLength;		/* size after ftruncate */
-    afs_int32 NewLength;			/* size after this store completes */
-    afs_int32 adjustSize;			/* bytes to call VAdjust... with */
+    afs_uint32 NewLength;		/* size after this store completes */
+    afs_int32 adjustSize;		/* bytes to call VAdjust... with */
     int linkCount;			/* link count on inode */
     int code;
     FdHandle_t *fdP;
-    struct in_addr logHostAddr;             /* host ip holder for inet_ntoa */
+    struct in_addr logHostAddr;		/* host ip holder for inet_ntoa */
 
 #if FS_STATS_DETAILED
     /*
@@ -5360,7 +5360,7 @@ StoreData_RXStyle(volptr, targetptr, Fid, client, Call, Pos, Length,
 	}
 	
 	if (linkCount != 1) {
-	    int size;
+	    afs_uint32 size;
 	    ViceLog(25, ("StoreData_RXStyle : inode %s has more than onelink\n",
 			 PrintInode(NULL, VN_GET_INO(targetptr))));
 	    /* other volumes share this data, better copy it first */
@@ -5940,7 +5940,7 @@ Update_ParentVnodeStatus(parentptr, volptr, dir, author, linkcount)
 #endif /* FS_STATS_DETAILED */
 
 {
-    int	newlength;	    /* Holds new directory length */
+    afs_uint32 newlength;	/* Holds new directory length */
     int errorCode;
 #if FS_STATS_DETAILED
     Date currDate;		/*Current date*/
