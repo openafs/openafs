@@ -1072,17 +1072,12 @@ Afs_syscall ()
 #endif
     } else if (uap->syscall == AFSCALL_SETPAG) {
 #ifdef	AFS_SUN5_ENV
-	struct cred *cred;
 	register proc_t *procp;
 
 	procp = ttoproc(curthread);
-	mutex_enter(&procp->p_crlock);
-	cred = procp->p_cred; 
 	AFS_GLOCK();
-	code =  afs_setpag(&cred);
+	code =  afs_setpag(&procp->p_cred);
 	AFS_GUNLOCK();
-	procp->p_cred = cred;
-	mutex_exit(&procp->p_crlock);
 #else
 	AFS_GLOCK();
 #if	defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
