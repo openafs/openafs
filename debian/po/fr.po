@@ -15,7 +15,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: openafs 1.2.9-2\n"
 "POT-Creation-Date: 2003-07-26 17:26-0400\n"
-"PO-Revision-Date: 2003-06-24 10:08+0200\n"
+"PO-Revision-Date: 2003-07-31 10:36+0100\n"
 "Last-Translator: Christian Perrier <bubulle@debian.org>\n"
 "Language-Team: French <debian-l10n-french@lists.debian.org>\n"
 "MIME-Version: 1.0\n"
@@ -61,7 +61,6 @@ msgstr "À quelle cellule AFS ce poste de travail appartient-elle ?"
 
 #. Description
 #: ../openafs-client.templates:16
-#, fuzzy
 msgid ""
 "AFS filespace is organized into cells or administrative domains. Each "
 "workstation belongs to one cell.  Usually the cell is the DNS domain name of "
@@ -78,7 +77,6 @@ msgstr "Quelle est la taille de votre cache pour AFS (en kilo-octets) ?"
 
 #. Description
 #: ../openafs-client.templates:24
-#, fuzzy
 msgid ""
 "AFS uses a  area of the disk to cache remote files for faster access.  This "
 "cache will be mounted on /var/cache/openafs.  It is important that the cache "
@@ -135,7 +133,6 @@ msgstr ""
 
 #. Description
 #: ../openafs-client.templates:54
-#, fuzzy
 msgid "Encrypt authenticated traffic with AFS fileserver?"
 msgstr ""
 "Faut-il chiffrer le trafic authentifié avec le serveur de fichiers AFS ?"
@@ -269,6 +266,3 @@ msgstr ""
 "est probable que le serveur refusera tout simplement de démarrer. Cependant, "
 "s'il démarre quand même, des corruptions de données peuvent avoir lieu. Vous "
 "voilà prévenu."
-
-#~ msgid "50000"
-#~ msgstr "50000"

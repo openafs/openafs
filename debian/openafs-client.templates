@@ -35,8 +35,9 @@ _Description: Run Openafs client now and at boot?
  Should the Openafs filesystem be started and mounted at boot? Normally,
  most users who install the openafs-client package expect to run it at
  boot.  However, if you are planning on setting up a new cell or are on a
- laptop, you may not want it started at boot time. If you answer no to this
- question, run /etc/init.d/openafs-client force-start to run.
+ laptop, you may not want it started at boot time. If you choose not
+ to start AFS at boot , run /etc/init.d/openafs-client force-start  to
+ start the client when you wish to run it.
 
 Template: openafs-client/afsdb
 Type: boolean
@@ -69,7 +70,7 @@ _Description: Dynamically generate the contents of /afs?
  .
  If you generate /afs dynamically, you may need to create
  /etc/openafs/CellAlias to include aliases for common cells. DO NOT SELECT
- THIS OPTION IF YOU ARE CREATING A NEW CELL.
+ tHIS OPTION if this machine is the first database server in a new cell .
 
 Template: openafs-client/fakestat
 Type: boolean

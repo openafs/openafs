@@ -1,6 +1,10 @@
 openafs (1.2.10-2) unstable; urgency=low
 
   * New Brazilian Portuguese (pt_BR) translations, Closes: #208035
+  * Don't conflict with ircd, Closes: #204865
+  * Fix wording of question about using dynroot, Closes: #209332
+  * New French debconf translations, sorry about the delay in including these, Closes: #203608
+  * Avoid yes/no construction in openafs-client templates, Closes: #198476
 
  --
 
