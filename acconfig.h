@@ -26,3 +26,7 @@ static /**/const char *const rcsid[] = { (char *)rcsid, "\100(#)" msg }
 
 #undef FAST_RESTART
 #undef BITMAP_LATER
+
+#undef INODE_SETATTR_NOT_VOID
+#undef STRUCT_INODE_HAS_I_BYTES
+#undef STRUCT_ADDRESS_SPACE_HAS_PAGE_LOCK
