@@ -23,6 +23,7 @@ extern struct vfs *afs_cacheVfsp;
  * now vectors to the correct EFS or XFS function. If new functionality is
  * added which accesses the inode, that will also need EFS/XFS variants.
  */
+#ifdef AFS_SGI_EFS_IOPS_ENV
 vnode_t *afs_EFSIGetVnode(ino_t ainode)
 {
     struct inode *ip;
@@ -39,6 +40,7 @@ vnode_t *afs_EFSIGetVnode(ino_t ainode)
     iunlock(ip);
     return (EFS_ITOV(ip));
 }    
+#endif /* AFS_SGI_EFS_IOPS_ENV */
 
 vnode_t *afs_XFSIGetVnode(ino_t ainode)
 {
@@ -142,6 +144,7 @@ osi_UFSTruncate(afile, asize)
     return code;
 }
 
+#ifdef AFS_SGI_EFS_IOPS_ENV
 void osi_DisableAtimes(avp)
 struct vnode *avp;
 {
@@ -152,6 +155,7 @@ struct vnode *avp;
    }
 
 }
+#endif /* AFS_SGI_EFS_IOPS_ENV */
 
 
 /* Generic read interface */
@@ -185,7 +189,9 @@ afs_osi_Read(afile, offset, aptr, asize)
     if (code == 0) {
 	code = asize - resid;
 	afile->offset += code;
+#ifdef AFS_SGI_EFS_IOPS_ENV
 	osi_DisableAtimes(afile->vnode);
+#endif /* AFS_SGI_EFS_IOPS_ENV */
     }
     else {
 	afs_Trace2(afs_iclSetp, CM_TRACE_READFAILED, ICL_TYPE_INT32, resid,

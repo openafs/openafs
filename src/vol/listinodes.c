@@ -417,6 +417,7 @@ ginode(inum) {
 /* libefs.h includes <assert.h>, which we don't want */
 #define	__ASSERT_H__
 
+#ifdef AFS_SGI_EFS_IOPS_ENV
 #include "../sgiefs/libefs.h"
 extern int Log();
 
@@ -606,6 +607,7 @@ Log("Ino=%d, bytes=%d, linkCnt=%d, [%x,%x,%x,%x]\n", inum, p->di_size, p->di_nli
 
 	return err;
 }
+#endif /* AFS_SGI_EFS_IOPS_ENV */
 
 #ifdef AFS_SGI_XFS_IOPS_ENV
 #include <dirent.h>
@@ -1022,7 +1024,9 @@ int *forcep, forceR;
 	int ninodes = 0, err = 0;
 	struct efs_dinode *dinodeBuf = NULL;
 	int last_cgno;
+#ifdef AFS_SGI_EFS_IOPS_ENV
 	EFS_MOUNT *mp;
+#endif
 	ino_t	imax, inum;	/* total number of I-nodes in file system */
 
 	*forcep = 0;
@@ -1044,15 +1048,18 @@ int *forcep, forceR;
 	}
 	else
 #endif
-	{
-	    if (root_inode.st_ino != EFS_ROOTINO) {
-		Log("%s is not root of a filesystem\n", mountedOn);
-		return -1;
-	    }
+#ifdef AFS_SGI_EFS_IOPS_ENV
+	  if (root_inode.st_ino == EFS_ROOTINO) {
 	    return efs_ListViceInodes(devname, mountedOn, resultFile,
-				     judgeInode, judgeParam,
+				      judgeInode, judgeParam,
 				     forcep, forceR, wpath);
 	}
+	else
+#endif
+	  {
+	      Log("%s is not root of a filesystem\n", mountedOn);
+	      return -1;
+	  }
 }
 
 #else /* AFS_SGI_ENV */

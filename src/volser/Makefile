@@ -107,10 +107,6 @@ volserver: $(SOBJS) $(LIBS) $(HACKS)
                 *linux*) \
                         ${CC} ${DBUG} -o volserver $(SOBJS) $(HACKS) \
 				${LDFLAGS} $(LIBS) ${XLIBS} ;; \
-                sgi_*) \
-                        ${CC} ${DBUG} -o volserver $(SOBJS) $(HACKS) \
-				${LDFLAGS} $(LIBS) ${XLIBS} \
-				../sgiefs/libefs.a ;; \
                 *) \
                         ${CC} ${DBUG} -g -o volserver $(SOBJS) $(HACKS) \
 				${LDFLAGS} $(LIBS) ${XLIBS} ;; \

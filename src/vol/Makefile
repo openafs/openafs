@@ -81,9 +81,6 @@ salvager: vol-salvage.o physio.o vlib.a
                 *linux* ) \
                         ${CC} ${LDFLAGS} -o salvager vol-salvage.o physio.o \
 				${LIBS}  ;; \
-                sgi_* ) \
-                        ${CC} ${LDFLAGS} -o salvager vol-salvage.o physio.o \
-				${LIBS} ../sgiefs/libefs.a ;; \
                 *) \
                         ${CC} ${LDFLAGS} -o salvager vol-salvage.o physio.o \
 				${LIBS};; \
