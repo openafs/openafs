@@ -65,7 +65,7 @@ afs_int32 fvTable[NFENTRIES];
 static struct volume *afs_NewVolumeByName(char *aname, afs_int32 acell, int agood,
 				   struct vrequest *areq, afs_int32 locktype);
 static struct volume *afs_NewDynrootVolume(struct VenusFid *fid);
-static inVolList();
+static int inVolList(struct VenusFid *fid, afs_int32 nvols, afs_int32 *vID, afs_int32 *cID);
 
 
 /* Convert a volume name to a #; return 0 if can't parse as a number */

@@ -177,23 +177,6 @@ afs_nbsd_lookupname(char *fnamep,
     return error;
 }
 
-#if 0
-int
-afs_rdwr(struct vnode *vp, struct uio *uiop, enum uio_rw op,
-	      int flags, struct AFS_UCRED *cred)
-{
-    uiop->uio_rw = op;
-    if (op == UIO_READ)
-	return VOP_READ(vp, uiop, flags, cred);
-    if (op == UIO_WRITE)
-	return VOP_WRITE(vp, uiop, flags, cred);
-#ifdef DIAGNOSTIC
-    panic("afs_rdwr mode");
-#endif
-    return EINVAL;
-}
-#endif
-
 int
 afs_quotactl()
 {

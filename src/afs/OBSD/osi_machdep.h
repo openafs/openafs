@@ -43,54 +43,62 @@ extern struct timeval time;
 #define	AFS_UCRED	ucred
 #define	AFS_PROC	struct proc
 
-#define afs_bufferpages bufpages
-
-#define osi_vnhold(avc, r) afs_vget(AFSTOV(avc), 0)
-
-#define afs_suser() afs_osi_suser(osi_curcred()) 
-
-extern int (**afs_vnodeop_p)();
 #define SetAfsVnode(vn) /* nothing; done in getnewvnode() */
 #define	IsAfsVnode(vn)	    ((vn)->v_op == afs_vnodeop_p)
 
-#define AFS_HOLD(vp) afs_nbsd_ref(vp)
-#define AFS_RELE(vp) afs_nbsd_rele(vp)
-extern int afs_vget();
+#define p_rcred         p_ucred
+
+#define AFS_HOLD(vp)	afs_nbsd_ref(vp)
+#define AFS_RELE(vp)	afs_nbsd_rele(vp)
+#define osi_vnhold(avc, r) afs_vget(AFSTOV(avc), 0)
+
+#define afsio_iov	uio_iov
+#define afsio_iovcnt	uio_iovcnt
+#define afsio_offset	uio_offset
+#define afsio_resid	uio_resid
+#define afsio_seg	uio_segflg
+#define AFS_KALLOC(s)	afs_nbsd_Alloc(s)
+#define AFS_KFREE(p, s)	afs_nbsd_Free((p), (s))
+#define AFS_UIOSYS	UIO_SYSSPACE
+#define AFS_UIOUSER	UIO_USERSPACE
+#define afs_bufferpages bufpages
+#define afs_suser()	afs_osi_suser(osi_curcred()) 
+#define osi_curcred()	(curproc->p_cred->pc_ucred)
+#define osi_curproc()	(curproc)
+#define osi_GetTime(x)	microtime(x)
+#define osi_vfs	mount
+#define osi_vfs_bsize	mnt_stat.f_bsize
+#define osi_vfs_fsid	mnt_stat.f_fsid
+#define printk printf			/* for RX version of xdr_* */
+#define setgroups	sys_setgroups
+#define UVM
+#define va_nodeid	va_fileid
+#define vfs_bsize	mnt_stat.f_bsize
+#define vfs_fsid	mnt_stat.f_fsid
+#define vfs_vnodecovered mnt_vnodecovered
+#define vnode_t		struct vnode
+#define vSetType(vc, type)	AFSTOV(vc)->v_type = (type)
+#define vSetVfsp(vc, vfsp)	AFSTOV(vc)->v_mount = (vfsp)
+#define vType(vc)		(vc)->v->v_type
+#define v_vfsp		v_mount
+
+/* This is not always in scope yet */
+struct vcache;
+
+extern int afs_nbsd_lookupname(char *fnamep, enum uio_seg segflg, int followlink,
+			       struct vnode **dirvpp, struct vnode **compvpp);
+extern void afs_nbsd_getnewvnode(struct vcache *tvc);
 extern void afs_nbsd_ref(struct vnode *);
 extern void afs_nbsd_rele(struct vnode *);
+extern void *afs_nbsd_Alloc(size_t asize);
+extern void afs_nbsd_Free(void *p, size_t asize);
+extern int afs_vget();
 
-#define va_nodeid va_fileid
-#define v_vfsp v_mount
-#define vfs_vnodecovered mnt_vnodecovered
-#define vfs_bsize mnt_stat.f_bsize
-typedef void (*osi_timeout_t)(void *);
-#define osi_timeout_t_done
-#define osi_curproc()		(curproc)
-#define osi_curcred()		(curproc->p_cred->pc_ucred)
-#define osi_vfs	mount
-#define osi_vfs_bsize mnt_stat.f_bsize
-#define osi_vfs_fsid mnt_stat.f_fsid
-#define afs_osi_alloc osi_Alloc
-#define afs_osi_free osi_Free
-#define printk printf			/* for RX version of xdr_* */
-#define	vType(vc)		(vc)->v->v_type
-#define vSetType(vc, type)	AFSTOV(vc)->v_type = (type)
-#define	vSetVfsp(vc, vfsp)	AFSTOV(vc)->v_mount = (vfsp)
-#define FTRUNC O_TRUNC
-#define FEXLOCK O_EXLOCK
-#define FSHLOCK O_SHLOCK
-#define UVM
-
-/* no protoytpe 'cuz our includers don't always have uio_rw in scope first */
-extern int afs_nbsd_rdwr();
-extern int afs_nbsd_lookupname();
-extern void afs_nbsd_getnewvnode();
-
-#define VOP_RDWR afs_nbsd_rdwr
 #define	gop_lookupname(fnamep, segflg, followlink, dirvpp, compvpp) \
 	afs_nbsd_lookupname((fnamep), (segflg), (followlink), (dirvpp), (compvpp))
 
 #ifdef KERNEL
+extern int (**afs_vnodeop_p)();
 extern struct simplelock afs_global_lock;
 
 #ifndef AFS_GLOBAL_SUNLOCK

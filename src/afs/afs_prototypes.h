@@ -406,6 +406,7 @@ extern const struct AFS_UCRED *afs_osi_proc2cred(AFS_PROC *pr);
 #endif
 
 /* afs_osi_pag.c */
+extern int afs_setpag();
 extern afs_uint32 genpag(void);
 extern afs_uint32 getpag(void);
 #if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
@@ -486,6 +487,13 @@ extern void afs_osi_Sleep(void *event);
 #ifndef afs_osi_SleepSig
 extern int afs_osi_SleepSig(void *event);
 #endif
+
+
+/* ARCH/osi_inode.c */
+extern int afs_syscall_icreate();
+extern int afs_syscall_iopen();
+extern int afs_syscall_iincdec();
+
 
 /* ARCH/osi_file.c */
 extern int afs_osicred_initialized;
@@ -786,8 +794,6 @@ extern int HandleFlock(register struct vcache *avc, int acom,
 
 
 /* VNOPS/afs_vnop_lookup.c */
-extern char *afs_strcat(register char *s1, register char *s2);
-extern char *afs_index(register char *a, register char c);
 extern int EvalMountPoint(register struct vcache *avc, struct vcache *advc,
         struct volume **avolpp, register struct vrequest *areq);
 extern void afs_InitFakeStat(struct afs_fakestat_state *state);
@@ -804,7 +810,7 @@ extern void Check_AtSys(register struct vcache *avc, const char *aname,
 extern int Next_AtSys(register struct vcache *avc, struct vrequest *areq, 
         struct sysname_info *state);
 extern int afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp);
-
+extern int afs_lookup();
 
 
 /* VNOPS/afs_vnop_read.c */
@@ -823,6 +829,10 @@ extern int afsremove(register struct vcache *adp, register struct dcache *tdc,
         register struct vcache *tvc, char *aname, struct AFS_UCRED *acred, 
         struct vrequest *treqp);
 extern int afs_remunlink(register struct vcache *avc, register int doit);
+
+
+/* VNOPS/afs_vnop_rename.c */
+extern int afsrename();
 
 
 /* VNOPS/afs_vnop_symlink.c */

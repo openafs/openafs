@@ -105,7 +105,6 @@ AFSAOBJS = \
 	afs_vnop_attrs.o \
 	afs_vnop_create.o \
 	afs_vnop_dirops.o \
-	afs_vnop_fid.o \
 	afs_vnop_flock.o \
 	afs_vnop_link.o \
 	afs_vnop_lookup.o \
@@ -159,6 +158,7 @@ AFSNFSOBJS = \
 	afs_nfsdisp.o	\
 	afs_call_nfs.o \
 	afs_pioctl_nfs.o \
+	afs_vnop_fid.o \
 	$(AFS_OS_NFSOBJS)
 
 AFSNONFSOBJS = \

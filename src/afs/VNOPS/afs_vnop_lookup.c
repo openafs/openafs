@@ -12,11 +12,6 @@
  * afs_lookup
  * EvalMountPoint
  * afs_DoBulkStat
- *
- * Locals:
- * afs_strcat
- * AFS_EQ_ATSYS (macro)
- * afs_index
  */
 
 #include <afsconfig.h>
@@ -992,6 +987,7 @@ tagain:
 /* was: (AFS_DEC_ENV) || defined(AFS_OSF30_ENV) || defined(AFS_NCR_ENV) */
 static int AFSDOBULK = 1;
 
+int
 #ifdef	AFS_OSF_ENV
 afs_lookup(adp, ndp)
     struct vcache *adp;

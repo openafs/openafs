@@ -13,6 +13,7 @@
 /* common.c */
 
 /* vsprocs.c */
+struct nvldbentry;
 extern void MapPartIdIntoName(afs_int32 partId, char *partName);
 extern int yesprompt(char *str);
 extern int PrintError(char *msg, afs_int32 errcode);

@@ -429,11 +429,7 @@ void *afs_osi_Alloc(size_t x)
     return osi_linux_alloc(x, 1);
 #else
     size = x;
-#ifdef AFS_OBSD_ENV
-    MALLOC(tm, struct osimem *, size, M_AFSGENERIC, M_WAITOK);
-#else
     tm = (struct osimem *) AFS_KALLOC(size);
-#endif
 #ifdef	AFS_SUN_ENV
     if (!tm)
 	osi_Panic("osi_Alloc: Couldn't allocate %d bytes; out of memory!\n",
@@ -458,11 +454,7 @@ void *afs_osi_Alloc_NoSleep(size_t x)
     size = x;
     AFS_STATS(afs_stats_cmperf.OutStandingAllocs++);
     AFS_STATS(afs_stats_cmperf.OutStandingMemUsage += x);
-#ifdef AFS_OBSD_ENV
-    MALLOC(tm, struct osimem *, size, M_AFSGENERIC, 0);
-#else
     tm = (struct osimem *) AFS_KALLOC_NOSLEEP(size);
-#endif
     return (void *) tm;
 }
 
@@ -477,8 +469,6 @@ void afs_osi_Free(void *x, size_t asize)
     AFS_STATS(afs_stats_cmperf.OutStandingMemUsage -= asize);
 #if defined(AFS_LINUX20_ENV)
     osi_linux_free(x);
-#elif defined(AFS_OBSD_ENV)
-    FREE(x, M_AFSGENERIC);
 #else
     AFS_KFREE((struct osimem *)x, asize);
 #endif
