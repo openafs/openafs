@@ -296,7 +296,7 @@ int osi_FreeSocket(register struct osi_socket *asocket)
     AFS_STATCNT(osi_FreeSocket);
 
     taddr.sin_family = AF_INET;
-    taddr.sin_port = htons(rx_port);
+    taddr.sin_port = rx_port;
     taddr.sin_addr.s_addr = htonl(0x7f000001);
 
     dvec.iov_base = &c;
