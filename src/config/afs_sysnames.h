@@ -198,6 +198,7 @@
 #define SYS_NAME_ID_sparc64_nbsd20	2523
 #define SYS_NAME_ID_macppc_nbsd20	2524
 #define SYS_NAME_ID_i386_nbsd21		2525
+#define SYS_NAME_ID_i386_nbsd30		2526
 
 #define SYS_NAME_ID_i386_obsd31		2600
 #define SYS_NAME_ID_i386_obsd32		2601
