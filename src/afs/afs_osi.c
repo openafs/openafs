@@ -283,13 +283,24 @@ afs_gfs_FlushText(vp)
 /* mask signals in afsds */
 void afs_osi_MaskSignals(){
 #ifdef AFS_LINUX22_ENV
-    spin_lock_irq(&current->sigmask_lock);
-    sigfillset(&current->blocked);
-    recalc_sigpending(current);
-    spin_unlock_irq(&current->sigmask_lock);
+    osi_linux_mask();
 #endif
 }
     
+/* unmask signals in rxk listener */
+void afs_osi_UnmaskRxkSignals(){
+#ifdef AFS_LINUX22_ENV
+    osi_linux_unmask();
+#endif
+}
+    
+/* register rxk listener proc info */
+void afs_osi_RxkRegister(){
+#ifdef AFS_LINUX22_ENV
+    osi_linux_rxkreg();
+#endif
+}
+
 /* procedure for making our processes as invisible as we can */
 void afs_osi_Invisible() {
 #ifdef AFS_LINUX22_ENV
