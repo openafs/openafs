@@ -47,6 +47,7 @@ pam_sm_authenticate(
     int ignore_uid  = 0;
     uid_t ignore_uid_id = 0;
     char my_password_buf[256];
+    char *cell_ptr=NULL;
     /*
      * these options are added to handle stupid apps, which won't call
      * pam_set_cred()
@@ -107,6 +108,14 @@ pam_sm_authenticate(
 		        pam_afs_syslog(LOG_ERR, PAMAFS_IGNOREUID, argv[i]);
                 }
 	    }
+	} else if (strcasecmp(argv[i], "cell") == 0) {
+	    i++;
+	    if (i == argc) {
+                pam_afs_syslog(LOG_ERR, PAMAFS_OTHERCELL, "cell missing argument");
+	    } else {
+		cell_ptr=argv[i];
+                pam_afs_syslog(LOG_INFO, PAMAFS_OTHERCELL, cell_ptr);
+	    }	    
 	} else if (strcasecmp(argv[i], "refresh_token" ) == 0) {
 	    refresh_token = 1;
 	} else if (strcasecmp(argv[i], "set_token" ) == 0) {
@@ -278,9 +287,9 @@ try_auth:
      */
 	if (use_klog) { /* used by kdm 2.x */
 	   if (refresh_token || set_token) {
-	      i = do_klog(user, password, NULL);
+	      i = do_klog(user, password, NULL, cell_ptr);
 	   } else {
-	      i = do_klog(user, password, "00:00:01");
+	      i = do_klog(user, password, "00:00:01", cell_ptr);
 	      ktc_ForgetAllTokens();
            }
 	   if (logmask && LOG_MASK(LOG_DEBUG))
@@ -297,7 +306,7 @@ try_auth:
                  code = ka_UserAuthenticateGeneral(KA_USERAUTH_VERSION,
 				    user, /* kerberos name */
 				    (char *)0, /* instance */
-				    (char *)0, /* realm */
+				    cell_ptr, /* realm */
 				    password, /* password */
 				    0, /* default lifetime */
                                     &password_expires,
@@ -307,7 +316,7 @@ try_auth:
                  code = ka_VerifyUserPassword(KA_USERAUTH_VERSION,
 				    user, /* kerberos name */
 				    (char *)0, /* instance */
-				    (char *)0, /* realm */
+				    cell_ptr, /* realm */
 				    password, /* password */
 				    0, /* spare 2 */
 				    &reason /* error string */ );
@@ -348,7 +357,7 @@ try_auth:
             code = ka_UserAuthenticateGeneral(KA_USERAUTH_VERSION,
 				    user, /* kerberos name */
 				    (char *)0, /* instance */
-				    (char *)0, /* realm */
+				    cell_ptr, /* realm */
 				    password, /* password */
 				    0, /* default lifetime */
                                     &password_expires,
@@ -358,7 +367,7 @@ try_auth:
             code = ka_VerifyUserPassword(KA_USERAUTH_VERSION,
 				    user, /* kerberos name */
 				    (char *)0, /* instance */
-				    (char *)0, /* realm */
+				    cell_ptr, /* realm */
 				    password, /* password */
 				    0, /* spare 2 */
 				    &reason /* error string */ );

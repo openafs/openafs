@@ -57,6 +57,7 @@ pam_sm_setcred(
     int i;
     struct pam_conv *pam_convp = NULL;
     char my_password_buf[256];
+    char *cell_ptr=NULL;
     char sbuffer[100];
     char *password = NULL;
     int torch_password = 1;
@@ -102,6 +103,14 @@ pam_sm_setcred(
 		        pam_afs_syslog(LOG_ERR, PAMAFS_IGNOREUID, argv[i]);
                 }
 	    }
+        } else if (strcasecmp(argv[i], "cell") == 0) {
+            i++;
+            if (i == argc) {
+                pam_afs_syslog(LOG_ERR, PAMAFS_OTHERCELL, "cell missing argument");
+            } else {
+		cell_ptr = argv[i];
+                pam_afs_syslog(LOG_INFO, PAMAFS_OTHERCELL, cell_ptr);
+            }
 	} else if (strcasecmp(argv[i], "no_unlog") == 0) {
 	    no_unlog = 1;
 	} else if (strcasecmp(argv[i], "refresh_token" ) == 0) {
@@ -269,14 +278,14 @@ pam_sm_setcred(
 
 	if ( flags & PAM_REFRESH_CRED ) {
 	    if (use_klog) {
-               auth_ok = ! do_klog(user, password, "00:00:01");
+               auth_ok = ! do_klog(user, password, "00:00:01", cell_ptr);
 	       ktc_ForgetAllTokens();
 	    } else {
             if ( ka_VerifyUserPassword(
                            KA_USERAUTH_VERSION,
                            user, /* kerberos name */
                            (char *)0, /* instance */
-                           (char *)0, /* realm */
+                           cell_ptr, /* realm */
                             password, /* password */
                             0, /* spare 2 */
                             &reason /* error string */
@@ -289,13 +298,13 @@ pam_sm_setcred(
 	}
 	    
 	if (  flags & PAM_ESTABLISH_CRED ) {
-	   if (use_klog) auth_ok = ! do_klog(user, password, NULL);
+	   if (use_klog) auth_ok = ! do_klog(user, password, NULL, cell_ptr);
 	   else {
 	    if ( ka_UserAuthenticateGeneral(
                            KA_USERAUTH_VERSION,
                            user, /* kerberos name */
                            (char *)0, /* instance */
-                           (char *)0, /* realm */
+                           cell_ptr, /* realm */
                             password, /* password */
                             0, /* default lifetime */
                             &password_expires,

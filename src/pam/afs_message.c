@@ -85,6 +85,7 @@ static char *fallback_messages[] = {
     "ka error, code=%d",                        /* 44: KAERROR          */
     "Passwords are not equal",                  /* 45: NE_PASSWORD      */
     "AFS ignoring unregistered user %s\n"       /* 46: IGNORE_UNREG     */
+    "Alternate cell name: %s\n",		/* 47: OTHERCELL	*/
 };
 
 static int num_fallbacks = sizeof(fallback_messages)/sizeof(char *);

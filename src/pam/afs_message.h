@@ -57,7 +57,7 @@
 #define PAMAFS_KAERROR          44 /* "ka error, code=%d"               */
 #define PAMAFS_NE_PASSWORD      45 /* "Passwords are not equal"         */
 #define PAMAFS_IGNORE_UNREG     46 /* "AFS ignoring unregistered user"  */
-
+#define PAMAFS_OTHERCELL	47 /* "Alternate cell name"		*/
 
 char *pam_afs_message(int msgnum, int *freeit);
 void pam_afs_syslog(int priority, int msgid, ...);
