@@ -224,6 +224,8 @@ run( "$openafsdirpath->{'afssrvsbindir'}/vos release root.cell -localauth" );
 unwind( "$openafsdirpath->{'afssrvsbindir'}/vos remove $server $part root.cell.readonly -localauth ");
 unwind( "$openafsdirpath->{'afssrvsbindir'}/vos remove $server $part root.afs.readonly -localauth ");
 
+run("$openafsinitcmd->{'client-restart'}");
+
 system ("pagsh -c './test-front.sh $lcell'");
 
 @unwinds = ();
