@@ -206,7 +206,7 @@ cm_dnlcLookup ( adp, sp)
     unsigned int key, skey;
     char* aname = sp->searchNamep;
     char *ts = aname;
-    struct nc * tnc;
+    struct nc * tnc, * tnc_begin;
     int safety, match;
   
     if (!cm_useDnlc)
@@ -224,7 +224,8 @@ cm_dnlcLookup ( adp, sp)
     lock_ObtainRead(&cm_dnlcLock);
     dnlcstats.lookups++;	     /* Is a dnlcread lock sufficient? */
 
-    for ( tvc = (cm_scache_t *) 0, tnc = nameHash[skey], safety=0; 
+    tnc_begin = nameHash[skey];
+    for ( tvc = (cm_scache_t *) 0, tnc = tnc_begin, safety=0; 
        tnc; tnc = tnc->next, safety++ ) 
     {
 	if (tnc->dirp == adp) 
@@ -259,10 +260,10 @@ cm_dnlcLookup ( adp, sp)
 	    }
 	}
 	if (tnc->next == nameHash[skey]) 
-    	{ 			/* end of list */
+    { 			/* end of list */
 	    break;
 	}
-	else if (safety >NCSIZE) 
+	else if (tnc->next == tnc_begin || safety >NCSIZE) 
 	{
 	    dnlcstats.cycles++;
 	    lock_ReleaseRead(&cm_dnlcLock);

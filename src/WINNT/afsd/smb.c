@@ -60,6 +60,7 @@ long ongoingOps = 0;
 unsigned int sessionGen = 0;
 
 extern void afsi_log(char *pattern, ...);
+extern HANDLE afsi_file;
 
 osi_hyper_t hzero = {0, 0};
 osi_hyper_t hones = {0xFFFFFFFF, -1};
@@ -88,14 +89,14 @@ int numNCBs, numSessions;
 int smb_maxVCPerServer;
 int smb_maxMpxRequests;
 
-#define NCBmax 100
+#define NCBmax MAXIMUM_WAIT_OBJECTS
 EVENT_HANDLE NCBavails[NCBmax], NCBevents[NCBmax];
 EVENT_HANDLE **NCBreturns;
 DWORD NCBsessions[NCBmax];
 NCB *NCBs[NCBmax];
 struct smb_packet *bufs[NCBmax];
 
-#define Sessionmax 100
+#define Sessionmax MAXIMUM_WAIT_OBJECTS
 EVENT_HANDLE SessionEvents[Sessionmax];
 unsigned short LSNs[Sessionmax];
 int lanas[Sessionmax];
@@ -180,6 +181,8 @@ extern char cm_confDir[];
        strcpy((str), cm_HostName); \
        *(sizep) = strlen(cm_HostName)
 #endif /* DJGPP */
+
+extern char AFSConfigKeyName[];
 
 /*
  * Demo expiration
@@ -1011,8 +1014,8 @@ retry:
 void smb_ReleaseFID(smb_fid_t *fidp)
 {
 	cm_scache_t *scp;
-        smb_vc_t *vcp;
-        smb_ioctl_t *ioctlp;
+    smb_vc_t *vcp;
+    smb_ioctl_t *ioctlp;
 
     if (!fidp)
         return NULL;
@@ -1020,7 +1023,7 @@ void smb_ReleaseFID(smb_fid_t *fidp)
 	scp = NULL;
 	lock_ObtainWrite(&smb_rctLock);
 	osi_assert(fidp->refCount-- > 0);
-        if (fidp->refCount == 0 && (fidp->flags & SMB_FID_DELETE)) {
+    if (fidp->refCount == 0 && (fidp->flags & SMB_FID_DELETE)) {
 		vcp = fidp->vcp;
 		if (!(fidp->flags & SMB_FID_IOCTL))
 			scp = fidp->scp;
@@ -1028,16 +1031,16 @@ void smb_ReleaseFID(smb_fid_t *fidp)
 		thrd_CloseHandle(fidp->raw_write_event);
 
 		/* and see if there is ioctl stuff to free */
-                ioctlp = fidp->ioctlp;
-                if (ioctlp) {
+        ioctlp = fidp->ioctlp;
+        if (ioctlp) {
 			if (ioctlp->prefix) cm_FreeSpace(ioctlp->prefix);
 			if (ioctlp->inAllocp) free(ioctlp->inAllocp);
 			if (ioctlp->outAllocp) free(ioctlp->outAllocp);
 			free(ioctlp);
-                }
-
-                free(fidp);
         }
+
+        free(fidp);
+    }
 	lock_ReleaseWrite(&smb_rctLock);
 
 	/* now release the scache structure */
@@ -1152,16 +1155,44 @@ int smb_FindShare(smb_vc_t *vcp, smb_packet_t *inp, char *shareName,
 	smb_user_t *uidp;
 	char temp[1024];
 	DWORD sizeTemp;
-        char sbmtpath[256];
-        char *p, *q;
+    char sbmtpath[256];
+    char *p, *q;
+	HKEY parmKey;
+	DWORD code;
+    DWORD allSubmount = 1;
 
 	if (strcmp(shareName, "IPC$") == 0) {
 		*pathNamep = NULL;
 		return 0;
 	}
 
-	if (_stricmp(shareName, "all") == 0) {
+    /* if allSubmounts == 0, only return the //mountRoot/all share 
+     * if in fact it has been been created in the subMounts table.  
+     * This is to allow sites that want to restrict access to the 
+     * world to do so.
+     */
+	code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSConfigKeyName,
+				0, KEY_QUERY_VALUE, &parmKey);
+	if (code == ERROR_SUCCESS) {
+        len = sizeof(allSubmount);
+        code = RegQueryValueEx(parmKey, "AllSubmount", NULL, NULL,
+                                (BYTE *) &allSubmount, &len);
+        if (code != ERROR_SUCCESS) {
+            allSubmount = 1;
+        }
+        RegCloseKey (parmKey);
+	}
+
+	if (allSubmount && _stricmp(shareName, "all") == 0) {
 		*pathNamep = NULL;
+		return 1;
+	}
+
+    /* In case, the all share is disabled we need to still be able
+     * to handle ioctl requests 
+     */
+	if (_stricmp(shareName, "ioctl$") == 0) {
+		*pathNamep = "/.__ioctl__";
 		return 1;
 	}
 
@@ -5671,15 +5702,48 @@ resume:
  */
 void smb_ClientWaiter(void *parmp)
 {
-	DWORD code, idx;
+	DWORD code;
+    int   idx;
 
 	while (1) {
 		code = thrd_WaitForMultipleObjects_Event(numNCBs, NCBevents,
 					      FALSE, INFINITE);
 		if (code == WAIT_OBJECT_0)
 			continue;
-		idx = code - WAIT_OBJECT_0;
 
+        /* error checking */
+        if (code >= WAIT_ABANDONED_0 && code < (WAIT_ABANDONED_0 + numNCBs))
+        {
+            int abandonIdx = code - WAIT_ABANDONED_0;
+            afsi_log("Error: smb_ClientWaiter event %d abandoned, errno %d\n", abandonIdx, GetLastError());
+        }
+
+        if (code == WAIT_IO_COMPLETION)
+        {
+            afsi_log("Error: smb_ClientWaiter WAIT_IO_COMPLETION\n");
+            continue;
+        }
+        
+        if (code == WAIT_TIMEOUT)
+        {
+            afsi_log("Error: smb_ClientWaiter WAIT_TIMEOUT, errno %d\n", GetLastError());
+        }
+
+        if (code == WAIT_FAILED)
+        {
+            afsi_log("Error: smb_ClientWaiter WAIT_FAILED, errno %d\n", GetLastError());
+        }
+
+            idx = code - WAIT_OBJECT_0;
+ 
+        /* check idx range! */
+        if (idx < 0 || idx > (sizeof(NCBevents) / sizeof(NCBevents[0])))
+        {
+            /* this is fatal - log as much as possible */
+            afsi_log("Fatal: NCBevents idx [ %d ] out of range.\n", idx);
+            osi_assert(0);
+        }
+        
 		thrd_ResetEvent(NCBevents[idx]);
 		thrd_SetEvent(NCBreturns[0][idx]);
 	}
@@ -5692,7 +5756,8 @@ void smb_ClientWaiter(void *parmp)
  */
 void smb_ServerWaiter(void *parmp)
 {
-	DWORD code, idx_session, idx_NCB;
+	DWORD code;
+    int idx_session, idx_NCB;
 	NCB *ncbp;
 #ifdef DJGPP
         dos_ptr dos_ncb;
@@ -5704,7 +5769,38 @@ void smb_ServerWaiter(void *parmp)
                                                    FALSE, INFINITE);
 		if (code == WAIT_OBJECT_0)
 			continue;
-		idx_session = code - WAIT_OBJECT_0;
+
+        if (code >= WAIT_ABANDONED_0 && code < (WAIT_ABANDONED_0 + numSessions))
+        {
+            int abandonIdx = code - WAIT_ABANDONED_0;
+            afsi_log("Error: smb_ServerWaiter (SessionEvents) event %d abandoned, errno %d\n", abandonIdx, GetLastError());
+        }
+	
+        if (code == WAIT_IO_COMPLETION)
+        {
+            afsi_log("Error: smb_ServerWaiter (SessionEvents) WAIT_IO_COMPLETION\n");
+            continue;
+        }
+	
+        if (code == WAIT_TIMEOUT)
+        {
+            afsi_log("Error: smb_ServerWaiter (SessionEvents) WAIT_TIMEOUT, errno %d\n", GetLastError());
+        }
+	
+        if (code == WAIT_FAILED)
+        {
+            afsi_log("Error: smb_ServerWaiter (SessionEvents) WAIT_FAILED, errno %d\n", GetLastError());
+        }
+	
+        idx_session = code - WAIT_OBJECT_0;
+
+        /* check idx range! */
+        if (idx_session < 0 || idx_session > (sizeof(SessionEvents) / sizeof(SessionEvents[0])))
+        {
+            /* this is fatal - log as much as possible */
+            afsi_log("Fatal: session idx [ %d ] out of range.\n", idx_session);
+            osi_assert(0);
+        }
 
 		/* Get an NCB */
 NCBretry:
@@ -5712,7 +5808,39 @@ NCBretry:
                                                    FALSE, INFINITE);
 		if (code == WAIT_OBJECT_0)
 			goto NCBretry;
-		idx_NCB = code - WAIT_OBJECT_0;
+
+        /* error checking */
+        if (code >= WAIT_ABANDONED_0 && code < (WAIT_ABANDONED_0 + numNCBs))
+        {
+            int abandonIdx = code - WAIT_ABANDONED_0;
+            afsi_log("Error: smb_ClientWaiter (NCBavails) event %d abandoned, errno %d\n", abandonIdx, GetLastError());
+        }
+	
+        if (code == WAIT_IO_COMPLETION)
+        {
+            afsi_log("Error: smb_ClientWaiter (NCBavails) WAIT_IO_COMPLETION\n");
+            continue;
+        }
+	
+        if (code == WAIT_TIMEOUT)
+        {
+            afsi_log("Error: smb_ClientWaiter (NCBavails) WAIT_TIMEOUT, errno %d\n", GetLastError());
+        }
+	
+        if (code == WAIT_FAILED)
+        {
+            afsi_log("Error: smb_ClientWaiter (NCBavails) WAIT_FAILED, errno %d\n", GetLastError());
+        }
+		
+        idx_NCB = code - WAIT_OBJECT_0;
+
+        /* check idx range! */
+        if (idx_NCB < 0 || idx_NCB > (sizeof(NCBsessions) / sizeof(NCBsessions[0])))
+        {
+            /* this is fatal - log as much as possible */
+            afsi_log("Fatal: idx_NCB [ %d ] out of range.\n", idx_NCB);
+            osi_assert(0);
+        }
 
 		/* Link them together */
 		NCBsessions[idx_NCB] = idx_session;
@@ -5755,9 +5883,10 @@ void smb_Server(VOID *parmp)
 	int myIdx = (int) parmp;
 	NCB *ncbp;
 	NCB *outncbp;
-        smb_packet_t *bufp;
+    smb_packet_t *bufp;
 	smb_packet_t *outbufp;
-        DWORD code, rcode, idx_NCB, idx_session;
+    DWORD code, rcode;
+    int idx_NCB, idx_session;
 	UCHAR rc;
 	smb_vc_t *vcp;
 	smb_t *smbp;
@@ -5788,7 +5917,39 @@ void smb_Server(VOID *parmp)
 		if (code == WAIT_OBJECT_0) {
 			continue;
         }
-		idx_NCB = code - WAIT_OBJECT_0;
+
+        /* error checking */
+        if (code >= WAIT_ABANDONED_0 && code < (WAIT_ABANDONED_0 + numNCBs))
+        {
+            int abandonIdx = code - WAIT_ABANDONED_0;
+            afsi_log("Error: smb_Server ( NCBreturns[%d] ) event %d abandoned, errno %d\n", myIdx, abandonIdx, GetLastError());
+        }
+	
+        if (code == WAIT_IO_COMPLETION)
+        {
+            afsi_log("Error: smb_Server ( NCBreturns[%d] ) WAIT_IO_COMPLETION\n", myIdx);
+            continue;
+        }
+	
+        if (code == WAIT_TIMEOUT)
+        {
+            afsi_log("Error: smb_Server ( NCBreturns[%d] ) WAIT_TIMEOUT, errno %d\n", myIdx, GetLastError());
+        }
+	
+        if (code == WAIT_FAILED)
+        {
+            afsi_log("Error: smb_Server ( NCBreturns[%d] ) WAIT_FAILED, errno %d\n", myIdx, GetLastError());
+        }
+
+        idx_NCB = code - WAIT_OBJECT_0;
+        
+        /* check idx range! */
+        if (idx_NCB < 0 || idx_NCB > (sizeof(NCBs) / sizeof(NCBs[0])))
+        {
+            /* this is fatal - log as much as possible */
+            afsi_log("Fatal: idx_NCB [ %d ] out of range.\n", idx_NCB);
+            osi_assert(0);
+        }
 
 		ncbp = NCBs[idx_NCB];
 #ifdef DJGPP
@@ -5812,6 +5973,10 @@ void smb_Server(VOID *parmp)
 			case NRC_SCLOSED:
 			case NRC_SNUMOUT:
 				/* Client closed session */
+                if (reportSessionStartups) 
+                {
+                    afsi_log("session [ %d ] closed", idx_session);
+                }
 				dead_sessions[idx_session] = TRUE;
 				vcp = smb_FindVC(ncbp->ncb_lsn, 0, lanas[idx_session]);
 				/* Should also release vcp.  Also, would do
@@ -5887,8 +6052,10 @@ void smb_Server(VOID *parmp)
 			default:
 				/* A weird error code.  Log it, sleep, and
 				 * continue. */
-				if (vcp->errorCount++ > 3)
+				if (vcp->errorCount++ > 3) {
+                    afsi_log("session [ %d ] closed, vcp->errorCount = %d", idx_session, vcp->errorCount);
 					dead_sessions[idx_session] = TRUE;
+                }
 				else {
 					thrd_Sleep(1000);
 					thrd_SetEvent(SessionEvents[idx_session]);
@@ -6065,6 +6232,8 @@ void InitNCBslot(int idx)
 	EVENT_HANDLE retHandle;
 	int i;
 
+    osi_assert( idx < (sizeof(NCBs) / sizeof(NCBs[0])) );
+
 	NCBs[idx] = GetNCB();
 	NCBavails[idx] = thrd_CreateEvent(NULL, FALSE, TRUE, NULL);
 #ifndef DJGPP
@@ -6185,11 +6354,14 @@ void smb_Listener(void *parmp)
 
 		/* Log session startup */
 #ifdef NOTSERVICE
-            fprintf(stderr, "New session(ncb_lsn,ncb_lana_num) %d,%d starting from host "
-				 "%s\n",
-                  ncbp->ncb_lsn,ncbp->ncb_lana_num, rname);
+        fprintf(stderr, "New session(ncb_lsn,ncb_lana_num) %d,%d starting from host "
+				"%s\n",
+                ncbp->ncb_lsn,ncbp->ncb_lana_num, rname);
 #endif
-		if (reportSessionStartups) {
+        afsi_log("New session(ncb_lsn,ncb_lana_num) (%d,%d) starting from host %s, %d ongoing ops",
+                  ncbp->ncb_lsn,ncbp->ncb_lana_num, rname, ongoingOps);
+
+        if (reportSessionStartups) {
 #ifndef DJGPP
 			HANDLE h;
 			char *ptbuf[1];
@@ -6214,16 +6386,17 @@ void smb_Listener(void *parmp)
 #endif /* !DJGPP */
 		}
 
-                /* now ncbp->ncb_lsn is the connection ID */
-                vcp = smb_FindVC(ncbp->ncb_lsn, SMB_FLAG_CREATE, ncbp->ncb_lana_num);
+        /* now ncbp->ncb_lsn is the connection ID */
+        vcp = smb_FindVC(ncbp->ncb_lsn, SMB_FLAG_CREATE, ncbp->ncb_lana_num);
 		vcp->flags |= flags;
-                strcpy(vcp->rname, rname);
+        strcpy(vcp->rname, rname);
 
 		/* Allocate slot in session arrays */
 		/* Re-use dead session if possible, otherwise add one more */
         /* But don't look at session[0], it is reserved */
 		for (i = 1; i < numSessions; i++) {
 			if (dead_sessions[i]) {
+                afsi_log("connecting to dead session [ %d ]", i);
 				dead_sessions[i] = FALSE;
 				break;
 			}
@@ -6253,6 +6426,7 @@ void smb_Listener(void *parmp)
 			/* Also add new session event */
 			SessionEvents[i] = thrd_CreateEvent(NULL, FALSE, TRUE, NULL);
 			numSessions++;
+            afsi_log("increasing numNCBs [ %d ] numSessions [ %d ]", numNCBs, numSessions);
 			thrd_SetEvent(SessionEvents[0]);
 		} else {
 			thrd_SetEvent(SessionEvents[i]);
@@ -6431,7 +6605,7 @@ void smb_NetbiosInit()
 
         if (code == 0) code = ncbp->ncb_retcode;
         if (code == 0) {
-            afsi_log("Netbios NCBADDNAME succeeded on lana %d", lana);
+            afsi_log("Netbios NCBADDNAME succeeded on lana %d\n", lana);
 #ifdef DJGPP
             /* we only use one LANA with djgpp */
             lana_list.lana[0] = lana;

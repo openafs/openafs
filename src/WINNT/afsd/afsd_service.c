@@ -48,6 +48,7 @@ unsigned int MainThreadId;
 jmp_buf notifier_jmp;
 
 extern int traceOnPanic;
+extern HANDLE afsi_file;
 
 /*
  * Notifier function for use by osi_panic
@@ -75,9 +76,16 @@ static void afsd_notifier(char *msgp, char *filep, long line)
 
 	afsd_ForceTrace(TRUE);
 
-	if (traceOnPanic) {
-		_asm int 3h;
-	}
+    afsi_log("--- begin dump ---");
+    cm_DumpSCache(afsi_file, "a");
+#ifdef keisa
+    cm_dnlcDump(afsi_file, "a");
+#endif
+    cm_DumpBufHashTable(afsi_file, "a");
+    smb_DumpVCP(afsi_file, "a");			
+    afsi_log("--- end   dump ---");
+    
+    DebugBreak();	
 
 	SetEvent(WaitToTerminate);
 

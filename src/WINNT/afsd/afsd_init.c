@@ -101,8 +101,15 @@ afsi_start()
 	int code;
 
 	afsi_file = INVALID_HANDLE_VALUE;
-	code = GetWindowsDirectory(wd, sizeof(wd));
-	if (code == 0) return;
+    if (getenv("TEMP"))
+    {
+        strcpy(wd, getenv("TEMP"));
+    }
+    else
+    {
+        code = GetWindowsDirectory(wd, sizeof(wd));
+        if (code == 0) return;
+    }
 	strcat(wd, "\\afsd_init.log");
 	GetTimeFormat(LOCALE_SYSTEM_DEFAULT, 0, NULL, NULL, t, sizeof(t));
 	afsi_file = CreateFile(wd, GENERIC_WRITE, FILE_SHARE_READ, NULL,
@@ -120,7 +127,7 @@ static int afsi_log_useTimestamp = 1;
 void
 afsi_log(char *pattern, ...)
 {
-	char s[100], t[100], u[100];
+	char s[100], t[100], d[100], u[100];
 	int zilch;
 	va_list ap;
 	va_start(ap, pattern);
@@ -128,7 +135,8 @@ afsi_log(char *pattern, ...)
 	vsprintf(s, pattern, ap);
     if ( afsi_log_useTimestamp ) {
         GetTimeFormat(LOCALE_SYSTEM_DEFAULT, 0, NULL, NULL, t, sizeof(t));
-        sprintf(u, "%s: %s\n", t, s);
+		GetDateFormat(LOCALE_SYSTEM_DEFAULT, 0, NULL, NULL, d, sizeof(d));
+		sprintf(u, "%s %s: %s\n", d, t, s);
         if (afsi_file != INVALID_HANDLE_VALUE)
             WriteFile(afsi_file, u, strlen(u), &zilch, NULL);
 #ifdef NOTSERVICE
@@ -214,7 +222,6 @@ int afsd_InitCM(char **reasonP)
 	srand(ntohl(cm_HostAddr));
 
 	/* Look up configuration parameters in Registry */
-
 	code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSConfigKeyName,
 				0, KEY_QUERY_VALUE, &parmKey);
 	if (code != ERROR_SUCCESS) {
@@ -825,7 +832,7 @@ void afsd_printStack(HANDLE hThread, CONTEXT *c)
   
     offset = 0;
   
-    afsi_log("\n--# FV EIP----- RetAddr- FramePtr StackPtr Symbol\n" );
+    afsi_log("\n--# FV EIP----- RetAddr- FramePtr StackPtr Symbol" );
   
     for ( frameNum = 0; ; ++ frameNum )
     {
@@ -849,7 +856,7 @@ void afsd_printStack(HANDLE hThread, CONTEXT *c)
       
         if ( s.AddrPC.Offset == 0 )
         {
-            afsi_log("(-nosymbols- PC == 0)\n" );
+            afsi_log("(-nosymbols- PC == 0)" );
         }
         else
         { 
@@ -858,7 +865,7 @@ void afsd_printStack(HANDLE hThread, CONTEXT *c)
             {
                 if ( GetLastError() != ERROR_INVALID_ADDRESS )
                 {
-                    afsi_log("SymGetSymFromAddr(): errno = %lu\n", 
+                    afsi_log("SymGetSymFromAddr(): errno = %lu", 
                              GetLastError());
                 }
             }
@@ -870,7 +877,7 @@ void afsd_printStack(HANDLE hThread, CONTEXT *c)
 
                 if ( offset != 0 )
                 {
-                    afsi_log(" %+ld bytes\n", (long) offset);
+                    afsi_log(" %+ld bytes", (long) offset);
                 }
             }
 
@@ -878,16 +885,15 @@ void afsd_printStack(HANDLE hThread, CONTEXT *c)
             {
                 if (GetLastError() != ERROR_INVALID_ADDRESS)
                 {
-                    afsi_log("Error: SymGetLineFromAddr(): errno = %lu\n", 
+                    afsi_log("Error: SymGetLineFromAddr(): errno = %lu", 
                              GetLastError());
                 }
             }
             else
             {
-                afsi_log("    Line: %s(%lu) %+ld bytes\n", Line.FileName, 
+                afsi_log("    Line: %s(%lu) %+ld bytes", Line.FileName, 
                          Line.LineNumber, offset);
             }
-	  
         }
       
         /* no return address means no deeper stackframe */
@@ -939,7 +945,7 @@ LONG __stdcall afsd_ExceptionFilter(EXCEPTION_POINTERS *ep)
 	   
     if (ep->ExceptionRecord->ExceptionCode == EXCEPTION_BREAKPOINT)
     {
-        afsi_log("EXCEPTION_BREAKPOINT - continue execition ...\n");
+        afsi_log("\nEXCEPTION_BREAKPOINT - continue execition ...\n");
     
 #ifdef _DEBUG
         if (allocRequestBrk)

@@ -312,29 +312,29 @@ smb_tran2Packet_t *smb_NewTran2Packet(smb_vc_t *vcp, smb_packet_t *inp,
 	int totalParms, int totalData)
 {
 	smb_tran2Packet_t *tp;
-        smb_t *smbp;
+    smb_t *smbp;
         
-        smbp = (smb_t *) inp->data;
+    smbp = (smb_t *) inp->data;
 	tp = malloc(sizeof(*tp));
-        memset(tp, 0, sizeof(*tp));
-        tp->vcp = vcp;
-        smb_HoldVC(vcp);
-        tp->curData = tp->curParms = 0;
-        tp->totalData = totalData;
-        tp->totalParms = totalParms;
-        tp->tid = smbp->tid;
-        tp->mid = smbp->mid;
-        tp->uid = smbp->uid;
-        tp->pid = smbp->pid;
+    memset(tp, 0, sizeof(*tp));
+    tp->vcp = vcp;
+    smb_HoldVC(vcp);
+    tp->curData = tp->curParms = 0;
+    tp->totalData = totalData;
+    tp->totalParms = totalParms;
+    tp->tid = smbp->tid;
+    tp->mid = smbp->mid;
+    tp->uid = smbp->uid;
+    tp->pid = smbp->pid;
 	tp->res[0] = smbp->res[0];
 	osi_QAdd((osi_queue_t **)&smb_tran2AssemblyQueuep, &tp->q);
-        tp->opcode = smb_GetSMBParm(inp, 14);
+    tp->opcode = smb_GetSMBParm(inp, 14);
 	if (totalParms != 0)
-        	tp->parmsp = malloc(totalParms);
+        tp->parmsp = malloc(totalParms);
 	if (totalData != 0)
-        	tp->datap = malloc(totalData);
+        tp->datap = malloc(totalData);
 	tp->flags |= SMB_TRAN2PFLAG_ALLOC;
-        return tp;
+    return tp;
 }
 
 smb_tran2Packet_t *smb_GetTran2ResponsePacket(smb_vc_t *vcp,
@@ -381,14 +381,14 @@ smb_tran2Packet_t *smb_GetTran2ResponsePacket(smb_vc_t *vcp,
 /* free a tran2 packet; must be called with smb_globalLock held */
 void smb_FreeTran2Packet(smb_tran2Packet_t *t2p)
 {
-        if (t2p->vcp) smb_ReleaseVC(t2p->vcp);
+    if (t2p->vcp) smb_ReleaseVC(t2p->vcp);
 	if (t2p->flags & SMB_TRAN2PFLAG_ALLOC) {
 		if (t2p->parmsp)
 			free(t2p->parmsp);
 		if (t2p->datap)
 			free(t2p->datap);
 	}
-        free(t2p);
+    free(t2p);
 }
 
 /* called with a VC, an input packet to respond to, and an error code.
@@ -4063,17 +4063,24 @@ long smb_ReceiveNTTranNotifyChange(smb_vc_t *vcp, smb_packet_t *inp,
 
 	fidp = smb_FindFID(vcp, fid, 0);
                 
-	osi_Log4(afsd_logp, "Request for NotifyChange filter 0x%x fid %d wtree %d file %s",
-		 filter, fid, watchtree, osi_LogSaveString(afsd_logp, fidp->NTopen_wholepathp));
+    if (fidp) {
+        osi_Log4(afsd_logp, "Request for NotifyChange filter 0x%x fid %d wtree %d file %s",
+                 filter, fid, watchtree, osi_LogSaveString(afsd_logp, fidp->NTopen_wholepathp));
 
-	scp = fidp->scp;
-	lock_ObtainMutex(&scp->mx);
-	if (watchtree)
-		scp->flags |= CM_SCACHEFLAG_WATCHEDSUBTREE;
-	else
-		scp->flags |= CM_SCACHEFLAG_WATCHED;
-	lock_ReleaseMutex(&scp->mx);
-	smb_ReleaseFID(fidp);
+        scp = fidp->scp;
+        lock_ObtainMutex(&scp->mx);
+        if (watchtree)
+            scp->flags |= CM_SCACHEFLAG_WATCHEDSUBTREE;
+        else
+            scp->flags |= CM_SCACHEFLAG_WATCHED;
+        lock_ReleaseMutex(&scp->mx);
+        smb_ReleaseFID(fidp);
+    }
+    else 
+    {
+        /* nothing - just a warning to main log file ... */
+        afsi_log("Warning: cannot find fidp vcp = 0x%X, fid = %d", vcp, fid);
+    }
 
 	outp->flags |= SMB_PACKETFLAG_NOSEND;
 
