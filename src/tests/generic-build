@@ -15,4 +15,4 @@ obj=$b-obj
 gzip -dc $filename | tar xvf - >&4 2>&1 || exit 1
 cd $b || exit 1
 ./configure >&4 || exit 1
-make $MAKEFLAGS || exit 1
+make $MAKEFLAGS >&4 || exit 1
