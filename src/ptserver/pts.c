@@ -72,7 +72,7 @@ int GetGlobals (as)
 	code = pr_Initialize(sec, AFSDIR_CLIENT_ETC_DIRPATH, cell);
     }
     if (code) {
-	com_err (whoami, code, "Couldn't initialize");
+	com_err (whoami, code, "while initializing");
 	return code;
     }
     if (as->parms[19].items)
