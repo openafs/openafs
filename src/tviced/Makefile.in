@@ -30,7 +30,7 @@ LWPOBJS=lock.o fasttime.o threadname.o
 
 LIBACLOBJS=aclprocs.o netprocs.o
 
-UTILOBJS=assert.o uuid.o serverLog.o fileutil.o netutils.o dirpath.o volparse.o flipbase64.o
+UTILOBJS=assert.o uuid.o serverLog.o fileutil.o netutils.o dirpath.o volparse.o flipbase64.o softsig.o
 
 DIROBJS=buffer.o dir.o salvage.o
 
@@ -83,6 +83,9 @@ netutils.o: ${UTIL}/netutils.c
 	${CCRULE}
 
 dirpath.o: ${UTIL}/dirpath.c
+	${CCRULE}
+
+softsig.o: ${UTIL}/softsig.c
 	${CCRULE}
 
 lock.o: ${LWP}/lock.c

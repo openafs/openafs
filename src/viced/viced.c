@@ -85,6 +85,9 @@ RCSID("$Header$");
 #endif
 #include "viced.h"
 #include "host.h"
+#ifdef AFS_PTHREAD_ENV
+#include "softsig.h"
+#endif
 #if defined(AFS_SGI_ENV)
 #include "sys/schedctl.h"
 #include "sys/lock.h"
@@ -235,21 +238,31 @@ int fs_rxstat_userok(struct rx_call *call)
 
 static void ResetCheckSignal(void)
 {
-#ifdef	AFS_HPUX_ENV
-    signal(SIGPOLL, CheckSignal_Signal);
+    int signo;
+
+#if defined(AFS_HPUX_ENV)
+    signo = SIGPOLL;
+#elsif defined(AFS_NT40_ENV)
+    signo = SIGUSR2;
 #else
-#ifdef AFS_NT40_ENV
-    signal(SIGUSR2, CheckSignal_Signal);
-#else
-    signal(SIGXCPU, CheckSignal_Signal);
+    signo = SIGXCPU;
 #endif
+
+#if defined(AFS_PTHREAD_ENV)
+    softsig_signal(signo, CheckSignal_Signal);
+#else
+    signal(signo, CheckSignal_Signal);
 #endif
 }
 
 static void ResetCheckDescriptors(void)
 {
 #ifndef AFS_NT40_ENV
+#if defined(AFS_PTHREAD_ENV)
+    softsig_signal(SIGTERM, CheckDescriptors_Signal);
+#else
     signal(SIGTERM, CheckDescriptors_Signal);
+#endif
 #endif
 }
 
@@ -317,21 +330,6 @@ CheckAdminName()
 	close(fd);	/* close fd if it was opened */
 
 } /*CheckAdminName*/
-
-
-#ifdef AFS_PTHREAD_ENV
-/* A special LWP that will receive signals, to avoid deadlock */
-static void SignalLWP()
-{
-    sigset_t nsigset;
-
-    sigfillset(&nsigset);
-    assert(AFS_SET_SIGMASK(SIG_UNBLOCK, &nsigset, NULL) == 0);
-
-    while (1)
-	sleep(60);
-}
-#endif
 
 
 /* This LWP does things roughly every 5 minutes */
@@ -1353,7 +1351,6 @@ main(int argc, char * argv[])
 #ifdef AFS_PTHREAD_ENV
     pthread_t parentPid, serverPid;
     pthread_attr_t tattr;
-    sigset_t nsigset;
 #else /* AFS_PTHREAD_ENV */
     PROCESS parentPid, serverPid;
 #endif /* AFS_PTHREAD_ENV */
@@ -1424,6 +1421,11 @@ main(int argc, char * argv[])
     ViceLog(0, ("XFS/EFS File server starting\n"));
 #else
     ViceLog(0, ("File server starting\n"));
+#endif
+
+#if defined(AFS_PTHREAD_ENV)
+    /* initialize the pthread soft signal handler thread */
+    softsig_init();
 #endif
 
     /* install signal handlers for controlling the fileserver process */
@@ -1625,10 +1627,6 @@ main(int argc, char * argv[])
 #ifdef AFS_PTHREAD_ENV
     assert(pthread_attr_init(&tattr) == 0);
     assert(pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED) == 0);
-    /* Block signals in this thread (and children), create a signal thread */
-    sigfillset(&nsigset);
-    assert(AFS_SET_SIGMASK(SIG_BLOCK, &nsigset, NULL) == 0);
-    assert(pthread_create(&serverPid, &tattr, (void *)SignalLWP, NULL) == 0);
 
     assert(pthread_create(&serverPid, &tattr, (void *)FiveMinuteCheckLWP, &fiveminutes) == 0);
     assert(pthread_create(&serverPid, &tattr, (void *)HostCheckLWP, &fiveminutes) == 0);
@@ -1676,8 +1674,14 @@ main(int argc, char * argv[])
 		   FS_HostName, hoststr, FS_HostAddr_NBO, FS_HostAddr_HBO));
     }
 
-    /* Install handler to catch the shutdown signal */
-    signal(SIGQUIT, ShutDown_Signal); /* bosserver assumes SIGQUIT shutdown */
+    /* Install handler to catch the shutdown signal;
+     * bosserver assumes SIGQUIT shutdown
+     */
+#if defined(AFS_PTHREAD_ENV)
+    softsig_signal(SIGQUIT, ShutDown_Signal);
+#else
+    signal(SIGQUIT, ShutDown_Signal);
+#endif
 
     ViceLog(0,("File Server started %s",
 	       afs_ctime(&tp.tv_sec, tbuffer, sizeof(tbuffer))));

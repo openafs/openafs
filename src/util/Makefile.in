@@ -29,6 +29,7 @@ includes = \
 	${TOP_INCDIR}/afs/pthread_glock.h \
 	${TOP_INCDIR}/afs/afs_atomlist.h \
 	${TOP_INCDIR}/afs/afs_lhash.h \
+	${TOP_INCDIR}/afs/softsig.h \
 	${TOP_INCDIR}/potpourri.h 
 
 all: ${includes} \
@@ -143,6 +144,7 @@ install: \
 	${DESTDIR}${includedir}/afs/pthread_glock.h \
 	${DESTDIR}${includedir}/afs/afs_atomlist.h \
 	${DESTDIR}${includedir}/afs/afs_lhash.h \
+	${DESTDIR}${includedir}/afs/softsig.h \
 	${DESTDIR}${includedir}/potpourri.h \
 	${DESTDIR}${libdir}/afs/util.a \
 	${DESTDIR}${libdir}/afs/libafsutil.a \
@@ -191,6 +193,9 @@ ${TOP_INCDIR}/afs/afs_atomlist.h: ${srcdir}/afs_atomlist.h
 	${INSTALL} $? $@
 
 ${TOP_INCDIR}/afs/afs_lhash.h: ${srcdir}/afs_lhash.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/afs/softsig.h: ${srcdir}/softsig.h
 	${INSTALL} $? $@
 
 ${TOP_INCDIR}/potpourri.h: ${srcdir}/potpourri.h
@@ -247,6 +252,9 @@ ${DESTDIR}${includedir}/afs/afs_atomlist.h: ${srcdir}/afs_atomlist.h
 	${INSTALL} $? $@
 
 ${DESTDIR}${includedir}/afs/afs_lhash.h: ${srcdir}/afs_lhash.h
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/afs/softsig.h: ${srcdir}/softsig.h
 	${INSTALL} $? $@
 
 ${DESTDIR}${includedir}/potpourri.h: ${srcdir}/potpourri.h
@@ -309,6 +317,9 @@ ${DEST}/include/afs/afs_atomlist.h: ${srcdir}/afs_atomlist.h
 ${DEST}/include/afs/afs_lhash.h: ${srcdir}/afs_lhash.h
 	${INSTALL} $? $@
 
+${DEST}/include/afs/softsig.h: ${srcdir}/softsig.h
+	${INSTALL} $? $@
+
 ${DEST}/include/potpourri.h: ${srcdir}/potpourri.h
 	${INSTALL} $? $@
 
@@ -352,6 +363,7 @@ dest: \
 	${DEST}/include/afs/pthread_glock.h \
 	${DEST}/include/afs/afs_atomlist.h \
 	${DEST}/include/afs/afs_lhash.h \
+	${DEST}/include/afs/softsig.h \
 	${DEST}/include/potpourri.h \
 	${DEST}/lib/afs/util.a \
 	${DEST}/lib/afs/libafsutil.a \
