@@ -15,11 +15,12 @@ OPTMZ=-O2
 PAM_CFLAGS = -O2 -Dlinux -DLINUX_PAM -fPIC
 # Put -O2 here to _ensure_ all Makefiles pick it up.
 XCFLAGS= -O2
-MT_CFLAGS=-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}
+MT_CFLAGS=-DAFS_PTHREAD_ENV -D_REENTRANT ${XCFLAGS}
 XLDFLAGS=
 SHLIB_LDFLAGS = -shared -Xlinker -x
 SHLIB_SUFFIX=so
-SHLIB_CFLAGS=
+SHLIB_CFLAGS= -fPIC
+SHLIB_LINKER=${MT_CC} -shared
 #
 # libraries
 MTLIBS=-lpthread

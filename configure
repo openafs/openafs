@@ -3519,7 +3519,7 @@ echo "configure:3398: checking your AFS sysname" >&5
 		i?86-*-linux*)
 			AFS_SYSNAME="i386_linuxXX"
 			;;
-		parisc-*-linux-gnu)
+		parisc-*-linux-gnu|hppa-*-linux-gnu)
 			AFS_SYSNAME="parisc_linuxXX"
 			;;
 		power*-ibm-aix4.2*)

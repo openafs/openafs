@@ -453,7 +453,7 @@ else
 		i?86-*-linux*)
 			AFS_SYSNAME="i386_linuxXX"
 			;;
-		parisc-*-linux-gnu)
+		parisc-*-linux-gnu|hppa-*-linux-gnu)
 			AFS_SYSNAME="parisc_linuxXX"
 			;;
 		power*-ibm-aix4.2*)
@@ -704,7 +704,7 @@ AC_PROG_LEX
 AC_DECL_YYTEXT])
 
 dnl
-dnl $Id: aclocal.m4,v 1.16 2003/04/13 20:49:23 hartmans Exp $
+dnl $Id: aclocal.m4,v 1.17 2003/04/13 21:26:56 hartmans Exp $
 dnl
 
 dnl check if this computer is little or big-endian
