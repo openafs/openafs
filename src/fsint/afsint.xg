@@ -666,6 +666,13 @@ ResidencyCmd(
   OUT struct ResidencyCmdOutputs *Outputs
 ) = 220;
 
+InlineBulkStatus(
+  IN  AFSCBFids *FidsArray,
+  OUT AFSBulkStats *StatArray,
+  AFSCBs *CBArray,
+  AFSVolSync *Sync
+) = 65536;
+
 FetchData64(
   IN  AFSFid *Fid, 
   afs_int64 Pos, 
@@ -673,7 +680,7 @@ FetchData64(
   OUT AFSFetchStatus *OutStatus, 
   AFSCallBack *CallBack, 
   AFSVolSync *Sync
-) split = 231;
+) split = 65537;
 
 StoreData64(
   IN  AFSFid *Fid, 
@@ -683,11 +690,5 @@ StoreData64(
   afs_int64 FileLength, 
   OUT AFSFetchStatus *OutStatus, 
   AFSVolSync *Sync
-) split = 233;
+) split = 65538;
 
-InlineBulkStatus(
-  IN  AFSCBFids *FidsArray,
-  OUT AFSBulkStats *StatArray,
-  AFSCBs *CBArray,
-  AFSVolSync *Sync
-) = 65536;

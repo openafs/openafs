@@ -782,8 +782,15 @@ afs_BioDaemon (nbiods)
 	if (bp->b_flags & B_PFSTORE) {	/* XXXX */
 	    ObtainWriteLock(&vcp->lock,404);	    
 	    if (vcp->v.v_gnode->gn_mwrcnt) {
+#ifdef AFS_64BIT_CLIENT
+		if (vcp->m.Length < 
+				(afs_offs_t)dbtob(bp->b_blkno) + bp->b_bcount)
+		    vcp->m.Length = 
+				(afs_offs_t)dbtob(bp->b_blkno) + bp->b_bcount;
+#else /* AFS_64BIT_CLIENT */
 		if (vcp->m.Length < bp->b_bcount + (u_int)dbtob(bp->b_blkno))
 		    vcp->m.Length = bp->b_bcount + (u_int)dbtob(bp->b_blkno);
+#endif /* AFS_64BIT_CLIENT */
 	    }
 	    ReleaseWriteLock(&vcp->lock);
 	}

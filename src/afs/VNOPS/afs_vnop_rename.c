@@ -40,7 +40,7 @@ afsrename(aodp, aname1, andp, aname2, acred)
     register afs_int32 code;
     afs_int32 returnCode;
     int oneDir, doLocally;
-    afs_int32 offset, len;
+    afs_size_t offset, len;
     struct VenusFid unlinkFid, fileFid;
     struct vcache *tvc;
     struct dcache *tdc1, *tdc2;

@@ -76,10 +76,14 @@ afs_ustrategy(abp)
 	tuio.afsio_iov = tiovec;
 	tuio.afsio_iovcnt = 1;
 #if	defined(AFS_SUN_ENV) || defined(AFS_ALPHA_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_FBSD_ENV)
+#ifdef AFS_64BIT_CLIENT
+	tuio.afsio_offset = (afs_offs_t) dbtob(abp->b_blkno);
+#else /* AFS_64BIT_CLIENT */
 	tuio.afsio_offset = (u_int) dbtob(abp->b_blkno);
 #if	defined(AFS_SUN5_ENV)
 	tuio._uio_offset._p._u = 0;
 #endif
+#endif /* AFS_64BIT_CLIENT */
 #else
 	tuio.afsio_offset = DEV_BSIZE * abp->b_blkno;
 #endif
@@ -129,9 +133,15 @@ afs_ustrategy(abp)
 	tuio.afsio_iov = tiovec;
 	tuio.afsio_iovcnt = 1;
 #if	defined(AFS_SUN_ENV) || defined(AFS_ALPHA_ENV) || defined(AFS_SUN5_ENV)
+#ifdef AFS_64BIT_CLIENT
+	tuio.afsio_offset = (afs_offs_t) dbtob(abp->b_blkno);
+#else /* AFS_64BIT_CLIENT */
 	tuio.afsio_offset = (u_int) dbtob(abp->b_blkno);
 #ifdef	AFS_SUN5_ENV
 	tuio._uio_offset._p._u = 0;
+#endif
+#endif /* AFS_64BIT_CLIENT */
+#ifdef	AFS_SUN5_ENV
 #ifdef	AFS_SUN59_ENV
 	tuio.uio_limit = curproc->p_fsz_ctl.rlim_cur;
 #else
@@ -152,7 +162,7 @@ afs_ustrategy(abp)
 	 */
 	len = MIN(len, tvc->m.Length - dbtob(abp->b_blkno));
 #endif
-#ifdef	AFS_ALPHA_ENV
+#ifdef AFS_ALPHA_ENV
 	len = MIN(abp->b_bcount, ((struct vcache *)abp->b_vp)->m.Length - dbtob(abp->b_blkno));
 #endif	/* AFS_ALPHA_ENV */
 	tuio.afsio_resid = len;

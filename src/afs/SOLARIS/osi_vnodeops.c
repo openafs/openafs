@@ -170,11 +170,8 @@ enum seg_rw rw;
 struct AFS_UCRED *acred;
 {
     register afs_int32 code = 0;
-#if	defined(AFS_SUN56_ENV)
-    u_offset_t	toff = (u_offset_t)off;
-#endif
-
     AFS_STATCNT(afs_getpage);
+
 #ifdef	AFS_SUN5_ENV
     if (vp->v_flag & VNOMAP)	/* File doesn't allow mapping */
 	return (ENOSYS);
@@ -184,7 +181,7 @@ struct AFS_UCRED *acred;
 
 #if	defined(AFS_SUN56_ENV)
     if (len <= PAGESIZE)
-	code = afs_GetOnePage((struct vnode *) vp, toff, len, protp, pl, plsz,
+	code = afs_GetOnePage((struct vnode *) vp, off, len, protp, pl, plsz,
 			      seg, addr, rw, acred);
 #else
 #ifdef	AFS_SUN5_ENV
@@ -206,7 +203,7 @@ struct AFS_UCRED *acred;
 #endif
 	afs_BozonLock(&vcp->pvnLock, vcp);
 #if	defined(AFS_SUN56_ENV)
-	code = pvn_getpages(afs_GetOnePage, (struct vnode *) vp, toff, 
+	code = pvn_getpages(afs_GetOnePage, (struct vnode *) vp, off, 
 			    len, protp, pl, plsz, seg, addr, rw, acred);
 #else
 	code = pvn_getpages(afs_GetOnePage, (struct vnode *) vp, (u_int)off, 
@@ -256,7 +253,8 @@ struct AFS_UCRED *acred;
     register struct vcache *avc;
     register struct dcache *tdc;
     int i, s, pexists;
-    int slot, offset, nlen;
+    int slot;
+    afs_size_t offset, nlen;
     struct vrequest treq;
     afs_int32 mapForRead = 0, Code=0;
 #if	defined(AFS_SUN56_ENV)
@@ -326,9 +324,9 @@ struct AFS_UCRED *acred;
 retry:
 #ifdef	AFS_SUN5_ENV
     if (rw == S_WRITE || rw == S_CREATE)
-	tdc = afs_GetDCache(avc, (afs_int32)off, &treq, &offset, &nlen, 5);
+	tdc = afs_GetDCache(avc, (afs_offs_t)off, &treq, &offset, &nlen, 5);
     else
-	tdc = afs_GetDCache(avc, (afs_int32)off, &treq, &offset, &nlen, 1);
+	tdc = afs_GetDCache(avc, (afs_offs_t)off, &treq, &offset, &nlen, 1);
     if (!tdc) return EINVAL;
 #endif
     code = afs_VerifyVCache(avc, &treq);
@@ -343,8 +341,9 @@ retry:
     ObtainReadLock(&avc->lock);
 
     afs_Trace4(afs_iclSetp, CM_TRACE_PAGEIN, ICL_TYPE_POINTER, (afs_int32) vp,
-	       ICL_TYPE_LONG, (afs_int32) off, ICL_TYPE_LONG, (afs_int32) len,
-	       ICL_TYPE_LONG, (int) rw);
+	       	ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(off), 
+		ICL_TYPE_LONG, len,
+	       	ICL_TYPE_LONG, (int) rw);
 
     tlen = len;
     slot = 0;
@@ -586,8 +585,9 @@ int afs_putpage(vp, off, len, flags, cred)
      */
     AFS_GLOCK();
     afs_Trace4(afs_iclSetp, CM_TRACE_PAGEOUT, ICL_TYPE_POINTER, (afs_int32) vp,
-	       ICL_TYPE_LONG, (afs_int32) off, ICL_TYPE_LONG, (afs_int32) len,
-	       ICL_TYPE_LONG, (int) flags);
+	       	ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(off),
+	       	ICL_TYPE_INT32, (afs_int32) len,
+	       	ICL_TYPE_LONG, (int) flags);
     avc = (struct vcache *) vp;
     afs_BozonLock(&avc->pvnLock, avc);
     ObtainWriteLock(&avc->lock,247);
@@ -654,7 +654,8 @@ int afs_putapage(struct vnode *vp, struct page *pages,
     struct buf *tbuf;
     struct vcache *avc = (struct vcache *)vp;
     afs_int32 code = 0;
-    u_int toff, tlen = PAGESIZE, off = (pages->p_offset/PAGESIZE)*PAGESIZE;
+    afs_offs_t  toff;
+    u_int tlen = PAGESIZE, off = (pages->p_offset/PAGESIZE)*PAGESIZE;
     u_int poff = pages->p_offset;
 
     /*
@@ -663,7 +664,7 @@ int afs_putapage(struct vnode *vp, struct page *pages,
      * adjust the i/o if the file space is less than a while page. XXX
      */
     toff = off;
-    if (tlen+toff > avc->m.Length) {
+    if (toff + tlen > avc->m.Length) {
 	tlen = avc->m.Length - toff;
     }
     /* can't call mapout with 0 length buffers (rmfree panics) */
@@ -681,8 +682,10 @@ int afs_putapage(struct vnode *vp, struct page *pages,
 	tbuf->b_blkno = btodb(pages->p_offset);
 	bp_mapin(tbuf);
 	AFS_GLOCK();
-	afs_Trace4(afs_iclSetp, CM_TRACE_PAGEOUTONE, ICL_TYPE_LONG, avc, ICL_TYPE_LONG, pages,
-	       ICL_TYPE_LONG, tlen, ICL_TYPE_LONG, toff);
+	afs_Trace4(afs_iclSetp, CM_TRACE_PAGEOUTONE, ICL_TYPE_LONG, avc, 
+		ICL_TYPE_LONG, pages,
+	       	ICL_TYPE_LONG, tlen, 
+		ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(toff));
 	code = afs_ustrategy(tbuf, credp);	/* unlocks page */
 	AFS_GUNLOCK();
 	bp_mapout(tbuf);
@@ -826,11 +829,11 @@ struct AFS_UCRED *acred;
     afs_int32 mode, sflags;
     register char *data;
     struct dcache *dcp, *dcp_newpage;
-    afs_int32 fileBase, size;
-    afs_int32 pageBase;
+    afs_size_t fileBase, size;
+    afs_size_t pageBase;
     register afs_int32 tsize;
     register afs_int32 pageOffset, extraResid=0;
-    register long origLength;		/* length when reading/writing started */
+    register afs_size_t origLength;		/* length when reading/writing started */
     register long appendLength;		/* length when this call will finish */
     int created;			/* created pages instead of faulting them */
     int lockCode;
@@ -849,11 +852,13 @@ struct AFS_UCRED *acred;
 
     afs_Trace4(afs_iclSetp, CM_TRACE_VMRW, ICL_TYPE_POINTER, (afs_int32)avc,
 	       ICL_TYPE_LONG, (arw==UIO_WRITE? 1 : 0),
-	       ICL_TYPE_LONG, auio->uio_offset,
-	       ICL_TYPE_LONG, auio->uio_resid);
+	       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(auio->uio_offset),
+	       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(auio->uio_resid));
 
+#ifndef AFS_64BIT_CLIENT
     if ( AfsLargeFileUio(auio) )	/* file is larger than 2 GB */
 	return (EFBIG);
+#endif
     
 #ifdef	AFS_SUN5_ENV
     if (!acred) osi_Panic("rdwr: !acred");
@@ -898,12 +903,14 @@ struct AFS_UCRED *acred;
 	return EINVAL;
     }
 
+#ifndef AFS_64BIT_CLIENT
 					/* file is larger than 2GB */
     if ( AfsLargeFileSize(auio->uio_offset, auio->uio_resid) ) {
 	ReleaseWriteLock(&avc->lock);	
 	afs_BozonUnlock(&avc->pvnLock, avc);
 	return EFBIG;
     }
+#endif
 
     didFakeOpen=0;	/* keep track of open so we can do close */
     if (arw == UIO_WRITE) {
@@ -996,7 +1003,7 @@ struct AFS_UCRED *acred;
 	eof = 0;	/* flag telling us if we hit the EOF on the read */
 	if (arw == UIO_READ) {		/* we're doing a read operation */
 	    /* don't read past EOF */
-	    if (tsize + fileBase > origLength) {
+	    if (fileBase + tsize > origLength) {
 		tsize = origLength - fileBase;
 		eof = 1;		/* we did hit the EOF */
 		if (tsize < 0) tsize = 0;	/* better safe than sorry */
@@ -1054,7 +1061,7 @@ struct AFS_UCRED *acred;
 	}
 	ReleaseWriteLock(&avc->vlock);
 	{
-	    int toff, tlen;
+	    afs_size_t toff, tlen;
 	    dcp = afs_GetDCache(avc, fileBase, &treq, &toff, &tlen, 2);
 	    if (!dcp) {
 		code = ENOENT;	
@@ -1225,14 +1232,16 @@ struct AFS_UCRED *cred;
 
 
 	/* check for reasonableness on segment bounds; apparently len can be < 0 */
-	if ((int)off < 0 || (int)(off + len) < 0) {
+	if (off < 0 || off + len < 0) {
 	    return (EINVAL);
 	}
+#ifndef AFS_64BIT_CLIENT
 	if ( AfsLargeFileSize(off, len) ) /* file is larger than 2 GB */
 	{
 	    code = EFBIG;
 	    goto out;
 	}
+#endif
 
 #if	defined(AFS_SUN5_ENV)
 	if (vp->v_flag & VNOMAP)	/* File isn't allowed to be mapped */

@@ -103,7 +103,6 @@ afsremove(adp, tdc, tvc, aname, acred, treqp)
     struct AFS_UCRED *acred; {
     register afs_int32 code;
     register struct conn *tc;
-    afs_int32 offset, len;
     struct AFSFetchStatus OutDirStatus;
     struct AFSVolSync tsync;
     XSTATS_DECLS
@@ -223,7 +222,7 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
     struct VenusFid unlinkFid;
     register afs_int32 code;
     register struct vcache *tvc;
-    afs_int32 offset, len;
+    afs_size_t offset, len;
     struct AFSFetchStatus OutDirStatus;
     struct AFSVolSync tsync;
     XSTATS_DECLS
@@ -368,7 +367,7 @@ afs_remunlink(avc, doit)
     struct vrequest treq;
     struct VenusFid dirFid;
     register struct dcache *tdc;
-    afs_int32 offset, len, code=0;
+    afs_int32 code=0;
 
     if (NBObtainWriteLock(&avc->lock, 423))
 	return 0;
