@@ -2065,7 +2065,7 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
     smb_fid_t *fidp;
     int attributes;
     char *lastNamep;
-    time_t dosTime;
+    afs_uint32 dosTime;
     int openFun;
     int trunc;
     int openMode;
@@ -2602,7 +2602,7 @@ long cm_GetShortName(char *pathp, cm_user_t *userp, cm_req_t *reqp,
 long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *opx)
 {
     smb_tran2Packet_t *outp;
-    time_t dosTime;
+    afs_uint32 dosTime;
     FILETIME ft;
     unsigned short infoLevel;
     int nbytesRequired;
@@ -3054,8 +3054,7 @@ long smb_ReceiveTran2SetFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
         if (LargeIntegerNotEqualToZero(*((LARGE_INTEGER *)&lastMod)) && 
              lastMod.dwLowDateTime != -1 && lastMod.dwHighDateTime != -1) {
             attr.mask |= CM_ATTRMASK_CLIENTMODTIME;
-            smb_UnixTimeFromLargeSearchTime(&attr.clientModTime,
-                                             &lastMod);
+            smb_UnixTimeFromLargeSearchTime(&attr.clientModTime, &lastMod);
             fidp->flags |= SMB_FID_MTIMESETDONE;
         }
 		
@@ -3297,7 +3296,7 @@ smb_ApplyV3DirListPatches(cm_scache_t *dscp,
     cm_scache_t *scp;
     cm_scache_t *targetScp;			/* target if scp is a symlink */
     char *dptr;
-    time_t dosTime;
+    afs_uint32 dosTime;
     FILETIME ft;
     int shortTemp;
     unsigned short attr;
@@ -4499,7 +4498,7 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     smb_fid_t *fidp;
     int attributes;
     char *lastNamep;
-    time_t dosTime;
+    afs_uint32 dosTime;
     int openFun;
     int trunc;
     int openMode;
@@ -4923,7 +4922,7 @@ long smb_ReceiveV3GetAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
     smb_fid_t *fidp;
     cm_scache_t *scp;
     long code = 0;
-    time_t searchTime;
+    afs_uint32 searchTime;
     cm_user_t *userp;
     cm_req_t req;
 
@@ -4985,7 +4984,7 @@ long smb_ReceiveV3SetAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
     smb_fid_t *fidp;
     cm_scache_t *scp;
     long code = 0;
-    time_t searchTime;
+    afs_uint32 searchTime;
     time_t unixTime;
     cm_user_t *userp;
     cm_attr_t attrs;

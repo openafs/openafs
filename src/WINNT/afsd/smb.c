@@ -161,8 +161,12 @@ extern HANDLE WaitToTerminate;
  */
 time_t smb_localZero = 0;
 
+#define USE_NUMERIC_TIME_CONV 1
+
+#ifndef USE_NUMERIC_TIME_CONV
 /* Time difference for converting to kludge-GMT */
-int smb_NowTZ;
+afs_uint32 smb_NowTZ;
+#endif /* USE_NUMERIC_TIME_CONV */
 
 char *smb_localNamep = NULL;
 
@@ -543,7 +547,7 @@ void GetTimeZoneInfo(BOOL *pDST, LONG *pDstBias, LONG *pBias)
 #endif /* DJGPP */
  
 
-void CompensateForSmbClientLastWriteTimeBugs(long *pLastWriteTime)
+void CompensateForSmbClientLastWriteTimeBugs(afs_uint32 *pLastWriteTime)
 {
     BOOL dst;       /* Will be TRUE if observing DST */
     LONG dstBias;   /* Offset from local time if observing DST */
@@ -579,6 +583,7 @@ void CompensateForSmbClientLastWriteTimeBugs(long *pLastWriteTime)
         *pLastWriteTime -= (-bias * 60);        /* Convert bias to seconds */
 }	        	
 
+#ifndef USE_NUMERIC_TIME_CONV
 /*
  * Calculate the difference (in seconds) between local time and GMT.
  * This enables us to convert file times to kludge-GMT.
@@ -595,21 +600,26 @@ smb_CalculateNowTZ()
     local_tm = *(localtime(&t));
 
     days = local_tm.tm_yday - gmt_tm.tm_yday;
-    hours = 24 * days + local_tm.tm_hour - gmt_tm.tm_hour
-#ifdef COMMENT
-        /* There is a problem with DST immediately after the time change
-        * which may continue to exist until the machine is rebooted
-         */
-        - (local_tm.tm_isdst ? 1 : 0)
-#endif /* COMMENT */
-            ;
+    hours = 24 * days + local_tm.tm_hour - gmt_tm.tm_hour;
     minutes = 60 * hours + local_tm.tm_min - gmt_tm.tm_min; 
     seconds = 60 * minutes + local_tm.tm_sec - gmt_tm.tm_sec;
 
     smb_NowTZ = seconds;
 }
+#endif /* USE_NUMERIC_TIME_CONV */
 
 #ifndef DJGPP
+#ifdef USE_NUMERIC_TIME_CONV
+void smb_LargeSearchTimeFromUnixTime(FILETIME *largeTimep, time_t unixTime)
+{
+    // Note that LONGLONG is a 64-bit value
+    LONGLONG ll;
+
+    ll = Int32x32To64(unixTime, 10000000) + 116444736000000000;
+    largeTimep->dwLowDateTime = (DWORD)(ll & 0xFFFFFFFF);
+    largeTimep->dwHighDateTime = (DWORD)(ll >> 32);
+}
+#else
 void smb_LargeSearchTimeFromUnixTime(FILETIME *largeTimep, time_t unixTime)
 {
     struct tm *ltp;
@@ -649,6 +659,7 @@ void smb_LargeSearchTimeFromUnixTime(FILETIME *largeTimep, time_t unixTime)
 
     SystemTimeToFileTime(&stm, largeTimep);
 }
+#endif /* USE_NUMERIC_TIME_CONV */
 #else /* DJGPP */
 void smb_LargeSearchTimeFromUnixTime(FILETIME *largeTimep, time_t unixTime)
 {
@@ -672,6 +683,22 @@ void smb_LargeSearchTimeFromUnixTime(FILETIME *largeTimep, time_t unixTime)
 #endif /* !DJGPP */
 
 #ifndef DJGPP
+#ifdef USE_NUMERIC_TIME_CONV
+void smb_UnixTimeFromLargeSearchTime(time_t *unixTimep, FILETIME *largeTimep)
+{
+    // Note that LONGLONG is a 64-bit value
+    LONGLONG ll;
+
+    ll = largeTimep->dwHighDateTime;
+    ll <<= 32;
+    ll += largeTimep->dwLowDateTime;
+
+    ll -= 116444736000000000;
+    ll /= 10000000;
+
+    *unixTimep = (DWORD)ll;
+}
+#else /* USE_NUMERIC_TIME_CONV */
 void smb_UnixTimeFromLargeSearchTime(time_t *unixTimep, FILETIME *largeTimep)
 {
     SYSTEMTIME stm;
@@ -694,6 +721,7 @@ void smb_UnixTimeFromLargeSearchTime(time_t *unixTimep, FILETIME *largeTimep)
     *unixTimep = mktime(&lt);
     _timezone = save_timezone;
 }       
+#endif /* USE_NUMERIC_TIME_CONV */
 #else /* DJGPP */
 void smb_UnixTimeFromLargeSearchTime(time_t *unixTimep, FILETIME *largeTimep)
 {
@@ -716,7 +744,7 @@ void smb_UnixTimeFromLargeSearchTime(time_t *unixTimep, FILETIME *largeTimep)
 }       
 #endif /* !DJGPP */
 
-void smb_SearchTimeFromUnixTime(time_t *dosTimep, time_t unixTime)
+void smb_SearchTimeFromUnixTime(afs_uint32 *searchTimep, time_t unixTime)
 {
     struct tm *ltp;
     int dosDate;
@@ -739,10 +767,10 @@ void smb_SearchTimeFromUnixTime(time_t *dosTimep, time_t unixTime)
 
     dosDate = ((ltp->tm_year-80)<<9) | ((ltp->tm_mon+1) << 5) | (ltp->tm_mday);
     dosTime = (ltp->tm_hour<<11) | (ltp->tm_min << 5) | (ltp->tm_sec / 2);
-    *dosTimep = (dosDate<<16) | dosTime;
+    *searchTimep = (dosDate<<16) | dosTime;
 }	
 
-void smb_UnixTimeFromSearchTime(time_t *unixTimep, time_t searchTime)
+void smb_UnixTimeFromSearchTime(time_t *unixTimep, afs_uint32 searchTime)
 {
     unsigned short dosDate;
     unsigned short dosTime;
@@ -762,12 +790,12 @@ void smb_UnixTimeFromSearchTime(time_t *unixTimep, time_t searchTime)
     *unixTimep = mktime(&localTm);
 }
 
-void smb_DosUTimeFromUnixTime(time_t *dosUTimep, time_t unixTime)
+void smb_DosUTimeFromUnixTime(afs_uint32 *dosUTimep, time_t unixTime)
 {
     *dosUTimep = unixTime - smb_localZero;
 }
 
-void smb_UnixTimeFromDosUTime(time_t *unixTimep, time_t dosTime)
+void smb_UnixTimeFromDosUTime(time_t *unixTimep, afs_uint32 dosTime)
 {
 #ifndef DJGPP
     *unixTimep = dosTime + smb_localZero;
@@ -2712,7 +2740,7 @@ long smb_ReceiveNegotiate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     char protocol_array[10][1024];  /* protocol signature of the client */
     int caps;                       /* capabilities */
     time_t unixTime;
-    time_t dosTime;
+    afs_uint32 dosTime;
     TIME_ZONE_INFORMATION tzi;
 
     osi_Log1(smb_logp, "SMB receive negotiate; %d + 1 ongoing ops",
@@ -2952,8 +2980,9 @@ void smb_Daemon(void *parmp)
             myTime.tm_sec = 0;
             smb_localZero = mktime(&myTime);
 
+#ifndef USE_NUMERIC_TIME_CONV
             smb_CalculateNowTZ();
-
+#endif /* USE_NUMERIC_TIME_CONV */
 #ifdef AFS_FREELANCE
             if ( smb_localZero != old_localZero )
                 cm_noteLocalMountPointChange();
@@ -3304,7 +3333,7 @@ long smb_ApplyDirListPatches(smb_dirListPatch_t **dirPatchespp,
     long code = 0;
     cm_scache_t *scp;
     char *dptr;
-    time_t dosTime;
+    afs_uint32 dosTime;
     u_short shortTemp;
     char attr;
     smb_dirListPatch_t *patchp;
@@ -3991,7 +4020,7 @@ long smb_ReceiveCoreSetFileAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_pack
     unsigned short attribute;
     cm_attr_t attr;
     cm_scache_t *newScp;
-    time_t dosTime;
+    afs_uint32 dosTime;
     cm_user_t *userp;
     int caseFold;
     char *tidPathp;
@@ -4101,7 +4130,7 @@ long smb_ReceiveCoreGetFileAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_pack
     long code = 0;
     cm_scache_t *rootScp;
     cm_scache_t *newScp, *dscp;
-    time_t dosTime;
+    afs_uint32 dosTime;
     int attrs;
     cm_user_t *userp;
     int caseFold;
@@ -4283,7 +4312,7 @@ long smb_ReceiveCoreOpen(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     long code = 0;
     cm_user_t *userp;
     cm_scache_t *scp;
-    time_t dosTime;
+    afs_uint32 dosTime;
     int caseFold;
     cm_space_t *spacep;
     char *tidPathp;
@@ -5208,7 +5237,7 @@ long smb_ReceiveCoreClose(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     unsigned short fid;
     smb_fid_t *fidp;
     cm_user_t *userp;
-    long dosTime;
+    afs_uint32 dosTime;
     long code = 0;
     cm_req_t req;
 
@@ -6194,7 +6223,7 @@ long smb_ReceiveCoreCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     int attributes;
     char *lastNamep;
     int caseFold;
-    long dosTime;
+    afs_uint32 dosTime;
     char *tidPathp;
     cm_req_t req;
 
@@ -7848,9 +7877,10 @@ void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
     myTime.tm_sec = 0;
     smb_localZero = mktime(&myTime);
 
+#ifndef USE_NUMERIC_TIME_CONV
     /* Initialize kludge-GMT */
     smb_CalculateNowTZ();
-
+#endif /* USE_NUMERIC_TIME_CONV */
 #ifdef AFS_FREELANCE_CLIENT
     /* Make sure the root.afs volume has the correct time */
     cm_noteLocalMountPointChange();

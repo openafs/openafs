@@ -324,7 +324,7 @@ long cm_CheckNTOpen(cm_scache_t *scp, unsigned int desiredAccess,
  * When CAP_NT_SMBS has been negotiated, deletion (of files or directories) is
  * done in three steps:
  * (1) open for deletion (NT_CREATE_AND_X)
- * (2) set for deletion on close (NTWTRANSACTION2, SET_FILE_INFO)
+ * (2) set for deletion on close (NT_TRANSACTION2, SET_FILE_INFO)
  * (3) close (CLOSE)
  * We must not do the RPC until step 3.  But if we are going to return an error
  * code (e.g. directory not empty), we must return it by step 2, otherwise most
