@@ -10,54 +10,54 @@ Architecture: i386
 Depends: ${shlibs:Depends}, debconf, dnsutils
 Recommends: openafs-modules
 Description: The AFS distributed filesystem- client support
-   AFS is a distributed filesystem allowing cross-platform sharing of
-   files among multiple computers.  Facilities are provided for access
-   control, authentication, backup and administrative management.
-   .
-   This package provides basic client support to mount and manipulate
-   AFS.
+ AFS is a distributed filesystem allowing cross-platform sharing of
+ files among multiple computers.  Facilities are provided for access
+ control, authentication, backup and administrative management.
+ .
+ This package provides basic client support to mount and manipulate
+ AFS.
 
 Package: openafs-fileserver
 Architecture: i386
 Depends: ${shlibs:Depends}, debconf, openafs-client (= ${Source-Version})
 Description: The AFS distributed filesystem- file server
-   AFS is a distributed filesystem allowing cross-platform sharing of
-   files among multiple computers.  Facilities are provided for access
-   control, authentication, backup and administrative management.
-   .
- This package provides the AFS fileserver binaries.  It should be
- installed on any machine that will export files into AFS.
+ AFS is a distributed filesystem allowing cross-platform sharing of
+ files among multiple computers.  Facilities are provided for access
+ control, authentication, backup and administrative management.
+ .
+This package provides the AFS fileserver binaries.  It should be
+installed on any machine that will export files into AFS.
 
 Package: openafs-dbserver
 Architecture: i386
 Depends: ${shlibs:Depends}, debconf, openafs-fileserver (= ${Source-Version}), perl5, openafs-ptutil
 Description: The AFS distributed filesystem- database server
-   AFS is a distributed filesystem allowing cross-platform sharing of
-   files among multiple computers.  Facilities are provided for access
-   control, authentication, backup and administrative management.
-   .
- This package provides AFS database server binaries.  It should be
- installed on the servers that will act as volume location and
- protection servers.
+ AFS is a distributed filesystem allowing cross-platform sharing of
+ files among multiple computers.  Facilities are provided for access
+ control, authentication, backup and administrative management.
+ .
+This package provides AFS database server binaries.  It should be
+installed on the servers that will act as volume location and
+protection servers.
 
 Package: libopenafs-dev
 Architecture: i386
 Priority: extra
 Description: The AFS distributed filesystem- development libraries
-   AFS is a distributed filesystem allowing cross-platform sharing of
-   files among multiple computers.  Facilities are provided for access
-   control, authentication, backup and administrative management.
-   .
-   This package provides static development libraries and headers
-   needed to compile AFS applications.
+ AFS is a distributed filesystem allowing cross-platform sharing of
+ files among multiple computers.  Facilities are provided for access
+ control, authentication, backup and administrative management.
+ .
+ This package provides static development libraries and headers
+ needed to compile AFS applications.
 
 Package: openafs-modules-source
 Priority: extra
 Depends: bison, flex
 Architecture: all
 Description: The AFS distributed filesystem- Module Sources
-   AFS is a distributed filesystem allowing cross-platform sharing of
-   files among multiple computers.  Facilities are provided for access
-   control, authentication, backup and administrative management.
-   .
-   This package provides source to the AFS kernel modules.
+ AFS is a distributed filesystem allowing cross-platform sharing of
+ files among multiple computers.  Facilities are provided for access
+ control, authentication, backup and administrative management.
+ .
+ This package provides source to the AFS kernel modules.
