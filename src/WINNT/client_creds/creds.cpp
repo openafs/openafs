@@ -401,23 +401,28 @@ int ObtainNewCredentials (LPCTSTR pszCell, LPCTSTR pszUser, LPCTSTR pszPassword,
 
       int Expiration = 0;
 
-      char  name[sizeof(szNameA)];
-      char  instance[sizeof(szNameA)];
-      char  cell[sizeof(szNameA)];
+	  if ( KFW_is_available() ) {
+		  // KFW_AFS_get_cred() parses the szNameA field as complete princial including potentially 
+		  // a different realm then the specified cell name.
+          rc = KFW_AFS_get_cred(szNameA, szCellA, szPasswordA, 0, szSmbNameA[0] ? szSmbNameA : NULL, &Result);
+	  } else {
+		char  name[sizeof(szNameA)];
+		char  instance[sizeof(szNameA)];
+		char  cell[sizeof(szNameA)];
       
-      name[0] = '\0';
-      instance[0] = '\0';
-      cell[0] = '\0';
-      ka_ParseLoginName(szNameA, name, instance, cell); 
+		name[0] = '\0';
+		instance[0] = '\0';
+		cell[0] = '\0';
+		ka_ParseLoginName(szNameA, name, instance, cell); 
 
-      if ( KFW_is_available() )
-          rc = KFW_AFS_get_cred(name, instance, szCellA, szPasswordA, 0, szSmbNameA[0] ? szSmbNameA : NULL, &Result);
-      else if ( szSmbNameA[0] )
-          rc = ka_UserAuthenticateGeneral2(KA_USERAUTH_VERSION+KA_USERAUTH_AUTHENT_LOGON, 
-                                           name, instance, szCellA, szPasswordA, szSmbNameA, 0, &Expiration, 0, &Result);
-      else 
-          rc = ka_UserAuthenticateGeneral(KA_USERAUTH_VERSION, name, instance, szCellA, szPasswordA, 0, &Expiration, 0, &Result);
-      }
+		if ( szSmbNameA[0] ) {
+			  rc = ka_UserAuthenticateGeneral2(KA_USERAUTH_VERSION+KA_USERAUTH_AUTHENT_LOGON, 
+				                               name, instance, szCellA, szPasswordA, szSmbNameA, 0, &Expiration, 0, &Result);
+		} else { 
+			  rc = ka_UserAuthenticateGeneral(KA_USERAUTH_VERSION, name, instance, szCellA, szPasswordA, 0, &Expiration, 0, &Result);
+		}
+	  }
+	}
 
    if (!Silent && rc != 0)
       {
