@@ -6127,16 +6127,18 @@ MakeDebugCall(osi_socket socket, afs_uint32 remoteAddr, afs_uint16 remotePort,
 	tv.tv_sec = 1;
 	tv.tv_usec = 0;
 	code = select(socket + 1, &imask, 0, 0, &tv);
-	if (code > 0) {
+	if (code == 1 && FD_ISSET(socket,&imask)) {
 	    /* now receive a packet */
 	    faddrLen = sizeof(struct sockaddr_in);
 	    code =
 		recvfrom(socket, tbuffer, sizeof(tbuffer), 0,
 			 (struct sockaddr *)&faddr, &faddrLen);
 
-	    memcpy(&theader, tbuffer, sizeof(struct rx_header));
-	    if (counter == ntohl(theader.callNumber))
-		break;
+        if (code > 0) {
+            memcpy(&theader, tbuffer, sizeof(struct rx_header));
+            if (counter == ntohl(theader.callNumber))
+                break;
+        }
 	}
 
 	/* see if we've timed out */
