@@ -132,10 +132,11 @@ dest_afs.ext.64: $(DEST)/root.client/usr/vice/etc/dkload/afs.ext.64
 # later 4.1.x (if they are ever made) and AIX 4.2.1 (and later AIX 4.2.x if
 # they are ever made. AIX 4.3 also uses the iauth translator.
 
-LIBAFSIAUTH = afs.ext.iauth
-LIBAFS = afs.ext
+LIBAFSIAUTH = afs.ext.32.iauth
+LIBAFS = afs.ext.32
 
 DEST_LIBAFSIAUTH = $(DEST)/root.client/usr/vice/etc/dkload/$(LIBAFSIAUTH)
+DEST_LIBAFS = $(DEST)/root.client/usr/vice/etc/dkload/$(LIBAFS)
 
 INST_LIBAFSIAUTH = ${DESTDIR}${afskerneldir}/$(LIBAFSIAUTH)
 INST_LIBAFS = ${DESTDIR}${afskerneldir}/$(LIBAFS)
