@@ -438,8 +438,6 @@ test:
 	cd test; $(MAKE)
 
 include ../config/Makefile.version
-${DESTDIR}${bindir}/sys: sys
-	${INSTALL} $? $@
 
 dest: \
 	${DEST}/include/afs/dirpath.h \
