@@ -1,8 +1,8 @@
-openafs (1.3.74-1) UNRELEASED; urgency=low
+openafs (1.3.74-1) experimental; urgency=low
 
   * New upstream version
 
- -- Sam Hartman <hartmans@mit.edu>  Sun, 14 Nov 2004 12:34:42 -0500
+ -- Sam Hartman <hartmans@mit.edu>  Mon, 15 Nov 2004 16:58:02 -0500
 
 openafs (1.3.73-1) experimental; urgency=low
 
