@@ -226,7 +226,6 @@ void afs_osi_Sleep(void *event)
  * Returns 0 if timeout, EINTR if signalled, and EGAIN if it might
  * have raced.
  */
-#if defined(AFS_GLOBAL_SUNLOCK)
 static int osi_TimedSleep(char *event, afs_int32 ams, int aintok)
 {
     int code = 0;
@@ -264,7 +263,6 @@ static int osi_TimedSleep(char *event, afs_int32 ams, int aintok)
 
     return code;
 }
-#endif
 
 
 void afs_osi_Wakeup(void *event)

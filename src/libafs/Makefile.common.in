@@ -93,6 +93,7 @@ AFSAOBJS = \
 	Kvice.xdr.o	\
 	xdr_arrayn.o	\
 	xdr_array.o	\
+	xdr_int32.o	\
 	xdr_int64.o	\
 	Kvice.cs.o	\
 	fcrypt.o		\
@@ -309,6 +310,8 @@ afsaux.o: $(AFSINT)/afsaux.c
 xdr_arrayn.o: $(RX)/xdr_arrayn.c
 	$(CRULE1)
 xdr_array.o: $(RX)/xdr_array.c
+	$(CRULE1)
+xdr_int32.o: $(RX)/xdr_int32.c
 	$(CRULE1)
 xdr_int64.o: $(RX)/xdr_int64.c
 	$(CRULE1)

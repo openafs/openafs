@@ -26,7 +26,7 @@ void nil_cleanup(
 	int		pam_end_status);
 
 extern char *cv2string(register char *ttp, register unsigned long aval);
-extern int do_klog(const char* user, const char* password, const char* lifetime);
+extern int do_klog(const char* user, const char* password, const char* lifetime, const char* cell_name);
 extern afs_int32 getPAG(void);
 
 #define KLOG "/usr/afsws/bin/klog"
