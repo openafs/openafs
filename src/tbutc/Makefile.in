@@ -28,7 +28,7 @@ BUCOORD = ${srcdir}/../bucoord
 VOLSER  = ${srcdir}/../volser
 
 BUCOORDOBJS=ubik_db_if.o ../bucoord/volstub.o ../bucoord/dlq.o \
-	    ../bucoord/status.o ../bucoord/bucoord_errs.o
+	    status.o ../bucoord/bucoord_errs.o
 
 VOLSERLIBOBJ=../volser/volint.cs.o  vsprocs.o ../volser/vsutils.o \
             ../volser/lockprocs.o ../volser/volint.xdr.o ../volser/volerr.o \
@@ -120,6 +120,9 @@ butc_xbsa.o: ${BUTC}/butc_xbsa.c ${BUTC}/butc_xbsa.h ${BUTCINCLS}
 
 ubik_db_if.o: ${BUCOORD}/ubik_db_if.c
 	${CC} ${CFLAGS} -c ${BUCOORD}/ubik_db_if.c
+
+status.o: ${BUCOORD}/status.c
+	${CC} ${CFLAGS} -c ${BUCOORD}/status.c
 
 vsprocs.o: ${VOLSER}/vsprocs.c
 	${CC} ${CFLAGS} -c ${VOLSER}/vsprocs.c
