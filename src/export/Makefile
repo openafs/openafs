@@ -53,14 +53,14 @@ export.ext.nonfs: export.nonfs.o symtab.o
 	${LD} -o export.ext.nonfs -eexport ${IMPORTS} export.nonfs.o symtab.o ${EXPORTS} -lcsys
 
 export.nonfs.o:
-	cc -DAFS_NONFSTRANS -c export.c
+	${CC} -DAFS_NONFSTRANS -c export.c
 	-mv export.o export.nonfs.o
 
 cfgexport: cfgexport.o
-	cc -O -o cfgexport cfgexport.o
+	${CC} -O -o cfgexport cfgexport.o
 
 cfgafs: cfgafs.o
-	cc -O -o cfgafs cfgafs.o
+	${CC} -O -o cfgafs cfgafs.o
 
 cfgexport.o: cfgexport.c AFS_component_version_number.c
 cfgafs.o: cfgafs.c AFS_component_version_number.c
