@@ -1292,11 +1292,11 @@ long smb_ReceiveV3Trans(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     }   
 
     /* now copy the parms and data */
-    if ( parmCount != 0 )
+    if ( asp->totalParms > 0 && parmCount != 0 )
     {
         memcpy(((char *)asp->parmsp) + parmDisp, inp->data + parmOffset, parmCount);
     }
-    if ( dataCount != 0 ) {
+    if ( asp->totalData > 0 && dataCount != 0 ) {
         memcpy(asp->datap + dataDisp, inp->data + dataOffset, dataCount);
     }
 
@@ -1305,8 +1305,9 @@ long smb_ReceiveV3Trans(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     asp->curParms += parmCount;
 
     /* finally, if we're done, remove the packet from the queue and dispatch it */
-    if (asp->curData > 0 && asp->curParms > 0 && 
-        asp->totalData <= asp->curData && 
+    if (asp->totalParms > 0 &&
+        asp->curParms > 0 &&
+        asp->totalData <= asp->curData &&
         asp->totalParms <= asp->curParms) {
 		/* we've received it all */
         lock_ObtainWrite(&smb_globalLock);

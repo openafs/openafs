@@ -63,6 +63,47 @@ void DebugEvent(char *b,...)
 	va_end(marker);
 }
 
+static HANDLE hInitMutex = NULL;
+static BOOL bInit = FALSE;
+
+BOOLEAN APIENTRY DllEntryPoint(HANDLE dll, DWORD reason, PVOID reserved)
+{
+	hDLL = dll;
+	switch (reason) {
+    case DLL_PROCESS_ATTACH:
+        /* Initialization Mutex */
+        hInitMutex = CreateMutex(NULL, FALSE, NULL);
+        break;
+
+    case DLL_PROCESS_DETACH:
+        CloseHandle(hInitMutex);
+        break;
+
+    case DLL_THREAD_ATTACH:
+    case DLL_THREAD_DETACH:
+    default:
+		/* Everything else succeeds but does nothing. */
+        break;
+	}
+
+	return TRUE;
+}
+
+void AfsLogonInit(void)
+{
+    if ( bInit == FALSE ) {
+         if ( WaitForSingleObject( hInitMutex, INFINITE ) == WAIT_OBJECT_0 ) {
+             if ( bInit == FALSE ) {
+                 rx_Init(0);
+                 initAFSDirPath();
+                 ka_Init(0);
+                 bInit = TRUE;
+             }
+             ReleaseMutex(hInitMutex);
+         }
+    }
+}
+
 CHAR *GenRandomName(CHAR *pbuf)
 {
 	int i;
@@ -137,28 +178,6 @@ DWORD MapAuthError(DWORD code)
 		return WN_NO_NETWORK; */
 	default: return WN_SUCCESS;
 	}
-}
-
-BOOLEAN APIENTRY DllEntryPoint(HANDLE dll, DWORD reason, PVOID reserved)
-{
-	hDLL = dll;
-	switch (reason) {
-		case DLL_PROCESS_ATTACH:
-			/* Initialize AFS libraries */
-			rx_Init(0);
-            initAFSDirPath();
-			ka_Init(0);
-			break;
-
-		/* Everything else succeeds but does nothing. */
-		case DLL_PROCESS_DETACH:
-		case DLL_THREAD_ATTACH:
-		case DLL_THREAD_DETACH:
-		default:
-			break;
-	}
-
-	return TRUE;
 }
 
 DWORD APIENTRY NPGetCaps(DWORD index)
@@ -551,6 +570,9 @@ DWORD APIENTRY NPLogonNotify(
 	int retryInterval;
 	int sleepInterval;
 
+    /* Make sure the AFS Libraries are initialized */
+    AfsLogonInit();
+
     /* Initialize Logon Script to none */
 	*lpLogonScript=NULL;
     
@@ -772,6 +794,9 @@ DWORD APIENTRY NPPasswordChangeNotify(
 	LPVOID StationHandle,
 	DWORD dwChangeInfo)
 {
+    /* Make sure the AFS Libraries are initialized */
+    AfsLogonInit();
+
 	DebugEvent0("AFS AfsLogon - NPPasswordChangeNotify");
 	return 0;
 }
@@ -815,6 +840,9 @@ VOID AFS_Startup_Event( PWLX_NOTIFICATION_INFO pInfo )
 	DWORD LSPtype, LSPsize;
 	HKEY NPKey;
 
+    /* Make sure the AFS Libraries are initialized */
+    AfsLogonInit();
+
     (void) RegOpenKeyEx(HKEY_LOCAL_MACHINE, REG_CLIENT_PARMS_KEY,
                         0, KEY_QUERY_VALUE, &NPKey);
 	LSPsize=sizeof(TraceOption);
@@ -833,6 +861,9 @@ VOID AFS_Logoff_Event( PWLX_NOTIFICATION_INFO pInfo )
     PTOKEN_USER  tokenUser = NULL;
     DWORD  retLen;
     HANDLE hToken;
+
+    /* Make sure the AFS Libraries are initialized */
+    AfsLogonInit();
 
     DebugEvent0("AFS_Logoff_Event - Starting");
 
