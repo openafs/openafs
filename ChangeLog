@@ -1,0 +1,476 @@
+2001-03-07 12:58  shadow
+
+	* src/config/Makefile.version-NOCML: DELTA
+	fix-typo-in-stable-20010307 AUTHOR shadow@dementia.org
+
+2001-03-06 17:34  shadow
+
+	* src/config/Makefile.version-NOCML: DELTA
+	create-openafs-stable-103-20010306 AUTHOR shadow@dementia.org
+
+2001-03-06 17:30  shadow
+
+	* src/comerr/et_lex.lex.l: DELTA
+	make-comerr-tolerate-different-eol-convention-20010306 AUTHOR
+	elorenzo@arsdigita.com
+
+2001-03-06 17:30  shadow
+
+	* src/afsd/afsd.c: DELTA make-afsd-be-less-annoying-20010306 AUTHOR
+	shadow@dementia.org
+
+2001-03-06 17:29  shadow
+
+	* src/libuafs/MakefileProto.AIX: DELTA
+	xlc-r-on-path-not-usr-bin-20010306 AUTHOR shadow@dementia.org
+
+2001-03-06 17:28  shadow
+
+	* src/export/Makefile: DELTA
+	use-dollar-cc-not-cc-for-aix-exporter-20010305 AUTHOR
+	shadow@dementia.org
+
+2001-03-06 17:27  shadow
+
+	* src/util/snprintf.c: DELTA
+	make-snprintf-compile-on-aix-433-20010305 AUTHOR
+	shadow@dementia.org
+
+2001-03-06 17:27  shadow
+
+	* src/bozo/bosserver.c: DELTA
+	make-bosserver-be-less-annoying-20010305 AUTHOR shadow@dementia.org
+
+2001-03-06 17:26  shadow
+
+	* src/Makefile: DELTA restore-rxdebug-to-the-living-20010305 AUTHOR
+	shadow@dementia.org
+
+2001-03-06 17:25  shadow
+
+	* src/kauth/krb_udp.c: DELTA
+	return-truncated-reason-from-krb-udp-interface-20010305 AUTHOR
+	shadow@dementia.org
+
+2001-03-06 17:24  shadow
+
+	* src/pam/: afs_message.c, afs_message.h, afs_password.c: DELTA
+	pam-afs-password-changing-support-20010305 AUTHOR
+	zrsha01@zdv.uni-tuebingen.de
+
+2001-03-06 17:23  shadow
+
+	* src/: lwp/Makefile, lwp/lwp.c, lwp/preempt.c, lwp/process.c,
+	lwp/process.s, config/Makefile.s390_linux22,
+	libafs/MakefileProto.LINUX: DELTA afs-linux-s390-updates-20010305
+	AUTHOR adam@sinenomine.net
+
+2001-03-06 17:22  shadow
+
+	* src/: sys/afssyscalls.h, vol/partition.c,
+	config/param.sun4x_58.h, afs/SOLARIS/osi_vnodeops.c: DELTA
+	support-namei-fileserver-on-solaris8-20010305 AUTHOR
+	reuter@rzg.mpg.de
+
+2001-03-06 17:21  shadow
+
+	* src/Makefile: DELTA allow-shadowed-src-trees-20010305 AUTHOR
+	reuter@rzg.mpg.de
+
+2001-03-06 17:21  shadow
+
+	* src/ntp/: ntp_proto.c, ntpsubs.c: DELTA
+	ntp-for-solaris-58-20010305 AUTHOR reuter@rzg.mpg.de
+
+2001-03-06 17:20  shadow
+
+	* src/: afs/DUX/osi_vfsops.c, util/snprintf.c: DELTA
+	support-dux-51-20010305 AUTHOR joda@pdc.kth.se
+
+2001-03-06 17:19  shadow
+
+	* src/config/: param.i386_linux22.h, param.i386_linux24.h: DELTA
+	linux-libafs-with-modversions-20010228 AUTHOR md5i@cs.cmu.edu
+
+2001-03-06 17:18  shadow
+
+	* src/afs/VNOPS/afs_vnop_lookup.c: DELTA
+	afs-lookup-check-evalmountpoint-return-20010221 AUTHOR
+	kolya@mit.edu
+
+2001-03-06 17:17  shadow
+
+	* src/bucoord/vol_sets.c: DELTA backup-addvolentry-fix-20010221
+	AUTHOR mattiasa@e.kth.se
+
+2001-03-06 17:17  shadow
+
+	* src/bozo/fsbnodeops.c: DELTA bos-mrafs-support-20010221 AUTHOR
+	shadow@dementia.org
+
+2001-03-06 17:16  shadow
+
+	* src/README: DELTA update-README-20010213 AUTHOR nneul@umr.edu
+
+2001-03-06 17:15  shadow
+
+	* src/util/snprintf.c: DELTA snprintf-for-aix-not-irix-20010212
+	AUTHOR shadow@dementia.org
+
+2001-03-06 17:14  shadow
+
+	* src/util/: Makefile, snprintf.c: DELTA
+	provide-snprintf-for-irix-dux-20010212 AUTHOR shadow@dementia.org
+
+2001-03-06 17:14  shadow
+
+	* src/libafs/: MakefileProto.AIX, MakefileProto.LINUX: DELTA
+	revert-xdr-int64-in-favor-of-common-makefile-20010212 AUTHOR
+	reuter@rzg.mpg.de
+
+2001-03-06 17:11  shadow
+
+	* src/auth/ktc.c: DELTA rework-ktc-to-allow-dummy-libkrb-20010212
+	AUTHOR reuter@rzg.mpg.de
+
+2001-03-06 17:08  shadow
+
+	* src/util/serverLog.c: DELTA mrafs-server-log-handling-20010212
+	AUTHOR reuter@rzg.mpg.de
+
+2001-03-06 17:07  shadow
+
+	* src/util/errors.h: DELTA mrafs-util-update-20010212 AUTHOR
+	reuter@rzg.mpg.de
+
+2001-03-06 17:07  shadow
+
+	* src/util/: dirpath.c, dirpath.h: DELTA
+	dirpath-mrafs-additions-20010212 AUTHOR reuter@rzg.mpg.de
+
+2001-03-06 17:02  shadow
+
+	* src/tviced/: Makefile, NTMakefile: DELTA
+	export-threadnames-totviced-20010212 AUTHOR reuter@rzg.mpg.de
+
+2001-03-06 17:01  shadow
+
+	* src/rx/rx_rdwr.c: DELTA rx-writevinit-for-mrafs-20010212 AUTHOR
+	reuter@rzg.mpg.de
+
+2001-03-06 17:00  shadow
+
+	* src/rx/rx_lwp.c: DELTA export-thread-id-info-in-rx-lwp-20010212
+	AUTHOR reuter@rzg.mpg.de
+
+2001-03-06 17:00  shadow
+
+	* src/rx/rx_kernel.h: DELTA
+	nicer-dummy-rxi-startserverprocs-20010212 AUTHOR reuter@rzg.mpg.de
+
+2001-03-06 16:58  shadow
+
+	* src/rx/: rx.c, rx_clock.c, rx_clock_nt.c: DELTA
+	allow-rx-shutdown-for-userlevel-20010212 AUTHOR reuter@rzg.mpg.de
+
+2001-03-06 16:58  shadow
+
+	* src/rx/NTMakefile: DELTA rx-nt-xdr-int64-support-20010212 AUTHOR
+	reuter@rzg.mpg.de
+
+2001-03-06 16:57  shadow
+
+	* src/lwp/: Makefile, NTMakefile, lock.h, lwp.c, lwp_nt.c,
+	threadname.c: DELTA thread-identification-routines-20010212 AUTHOR
+	reuter@rzg.mpg.de
+
+2001-03-06 16:55  shadow
+
+	* src/libafsrpc/: NTMakefile, afsrpc.exp: DELTA
+	libafsrpc-xdr-int64-support-20010212 AUTHOR reuter@rzg.mpg.de
+
+2001-03-06 16:54  shadow
+
+	* src/libafs/Makefile.common: DELTA
+	include-xdr-int64-in-libafs-20010212 AUTHOR reuter@rzg.mpg.de
+
+2001-03-06 16:53  shadow
+
+	* src/kauth/user.c: DELTA
+	export-kauth-GetTickets-for-dummy-libkrb-20010212 AUTHOR
+	reuter@rzg.mpg.de
+
+2001-03-06 16:53  shadow
+
+	* src/ftpd43+/getusershell.c: DELTA ftpd-placate-aix-20010212
+	AUTHOR reuter@rzg.mpg.de
+
+2001-03-06 16:52  shadow
+
+	* src/config/stds.h: DELTA clean-up-64bit-mod-spacing-20010212
+	AUTHOR shadow@dementia.org
+
+2001-03-06 16:52  shadow
+
+	* src/config/param.rs_aix42.h: DELTA
+	update-rs-aix42-afs-syscall-20010212 AUTHOR reuter@rzg.mpg.de
+
+2001-03-06 16:51  shadow
+
+	* src/cmd/: cmd.c, cmd.p.h: DELTA
+	cmd-suite-option-for-hiding-admin-commands-20010212 AUTHOR
+	reuter@rzg.mpg.de
+
+2001-03-06 16:50  shadow
+
+	* src/bozo/bosserver.c: DELTA
+	bosserver-rx-initialization-failed-warning-20010212 AUTHOR
+	reuter@rzg.mpg.de
+
+2001-03-06 16:49  shadow
+
+	* src/: bozo/bos.c, kauth/kaserver.c, ptserver/ptserver.c,
+	vlserver/vlserver.c, auth/cellconfig.c, auth/writeconfig.c,
+	ubik/beacon.c, ubik/recovery.c, ubik/ubik.c, ubik/ubik.p.h,
+	ubik/ubik_int.xg, ubik/udebug.c, ubik/vote.c: DELTA
+	ubik-clone-support-20010212 AUTHOR reuter@rzg.mpg.de
+
+2001-03-06 16:47  shadow
+
+	* src/: bozo/bos.c, bozo/fsbnodeops.c, util/volparse.c: DELTA
+	bos-mrafs-support-20010212 AUTHOR reuter@rzg.mpg.de
+
+2001-03-06 16:47  shadow
+
+	* src/bozo/bnode.c: DELTA
+	bozo-save-old-cores-by-date-option-20010212 AUTHOR
+	reuter@rzg.mpg.de
+
+2001-03-06 16:46  shadow
+
+	* src/auth/: cellconfig.c, cellconfig.p.h: DELTA
+	mrafs-port-definitions-20010212 AUTHOR reuter@rzg.mpg.de
+
+2001-03-06 16:44  shadow
+
+	* src/audit/audit.h: DELTA mrafs-audit-types-20010212 AUTHOR
+	reuter@rzg.mpg.de
+
+2001-03-06 16:44  shadow
+
+	* src/WINNT/afssvrmgr/svc_create.cpp: DELTA
+	svc-create-servicetype-to-afsservicetype-20010212 AUTHOR
+	reuter@rzg.mpg.de
+
+2001-03-06 16:43  shadow
+
+	* src/util/snprintf.c: DELTA include-snprintf-in-util-20010211
+	AUTHOR jhutz@cmu.edu
+
+2001-03-06 16:42  shadow
+
+	* src/kauth/krb_udp.c: DELTA
+	use-snprintf-for-krb-udp-error-packets-20010210 AUTHOR
+	shadow@dementia.org
+
+2001-03-06 16:41  shadow
+
+	* src/afs/DUX/osi_inode.c: DELTA dux50-osi-inode-fix-20010210
+	AUTHOR joda@pdc.kth.se
+
+2001-03-06 16:40  shadow
+
+	* src/config/stds.h: DELTA fix-64bit-stds-h-patch-20010210 AUTHOR
+	shadow@dementia.org
+
+2001-03-06 16:39  shadow
+
+	* src/README: DELTA update-systypes-in-README-20010210 AUTHOR
+	shadow@dementia.org
+
+2001-03-06 16:38  shadow
+
+	* src/: afs/afs_pioctl.c, afs/afs_stats.h, afs/afs_trace.et,
+	config/param.i386_linux22.h, config/stds.h, config/venus.h,
+	fsint/afsint.xg, libafs/MakefileProto.AIX,
+	libafs/MakefileProto.LINUX, libafsrpc/Makefile,
+	libuafs/Makefile.common, rx/Makefile, rx/xdr.h, rx/xdr_int64.c,
+	rxgen/rpc_main.c, viced/afsfileprocs.c: DELTA
+	mrafs-client-extensions-including-afs-int64-20010210 AUTHOR
+	reuter@rzg.mpg.de
+
+2001-03-06 16:32  shadow
+
+	* src/pam/: afs_auth.c, afs_message.c, afs_message.h,
+	afs_setcred.c: DELTA pam-afs-trust-root-login-20010210 AUTHOR
+	jacobi@de.ibm.com
+
+2001-03-06 16:23  shadow
+
+	* src/: Makefile, config/Makefile.alpha_dux50,
+	config/afs_sysnames.h, config/param.alpha_dux50.h,
+	config/param.alpha_dux50_usr.h, afs/afs_osi.c, afs/DUX/osi_inode.c,
+	afs/DUX/osi_vfsops.c, afs/DUX/osi_vnodeops.c,
+	afs/VNOPS/afs_vnop_write.c, rx/Makefile, libafs/MakefileProto.DUX:
+	DELTA tru64-50-initial-support-20010210 AUTHOR joda@pdc.kth.se
+
+2001-03-06 16:21  shadow
+
+	* src/WINNT/afsd/smb3.c: DELTA
+	winnt-directory-scan-memory-leak-20010210 AUTHOR
+	jimpeter@us.ibm.com
+
+2001-03-06 16:20  shadow
+
+	* src/afs/IRIX/osi_inode.c: DELTA
+	make-icreate-exist-always-for-irix65-20010207 AUTHOR
+	shadow@dementia.org
+
+2001-03-06 16:17  shadow
+
+	* src/tviced/Makefile: DELTA
+	remove-libefs-Makefile-reference-20010207 AUTHOR nneul@umr.edu
+
+2001-03-06 16:16  shadow
+
+	* src/README: DELTA minor-README-reorg-20010207 AUTHOR ssen@MIT.EDU
+
+2001-03-06 16:16  shadow
+
+	* src/libafs/sgi_master: DELTA add-ssi-master-file-20010207 AUTHOR
+	shadow@dementia.org
+
+2001-03-06 16:13  shadow
+
+	* src/afs/IRIX/: osi_inode.c, osi_vnodeops.c: DELTA
+	more-irix65-fixes-for-no-libefs-20010207 AUTHOR reuter@rzg.mpg.de
+
+2001-03-06 16:13  shadow
+
+	* src/afs/LINUX/osi_vfs.h: DELTA
+	fix-missattributed-loff-t-ifdef-20010207 AUTHOR nneul@umr.edu
+
+2001-03-06 16:12  shadow
+
+	* src/afs/VNOPS/afs_vnop_readdir.c: DELTA
+	fix-solaris-afs-readdir-move-20010131 AUTHOR chas@cmf.nrl.navy.mil
+	VS:	   afs_vnop_readdir.c CS:
+	-------------------------------------------------------------------
+	---
+
+2001-03-06 16:10  shadow
+
+	* src/: vol/Makefile, vol/devname.c, vol/listinodes.c,
+	vol/volume.c, vol/xfs_size_check.c, volser/Makefile, rx/rx.c,
+	libafs/MakefileProto.IRIX, afs/sysincludes.h, afs/IRIX/osi_file.c,
+	afs/IRIX/osi_inode.c: DELTA sgi_65-compilation-patches-20010131
+	AUTHOR reuter@rzg.mpg.de
+
+2001-03-06 16:09  shadow
+
+	* src/afsd/afs.rc.solaris.2.7: DELTA
+	fix-solaris7-afsd-rc-copyright-message-20010131 AUTHOR
+	nneul@umr.edu
+
+2001-03-06 16:08  shadow
+
+	* src/afs/LINUX/: osi_file.c, osi_misc.c, osi_vfsops.c,
+	osi_vnodeops.c: DELTA linux-iput-and-glock-changes-20010130 AUTHOR
+	chas@cmf.nrl.navy.mil
+
+2001-03-06 16:06  shadow
+
+	* src/afs/LINUX/: osi_vfs.h, osi_vnodeops.c: DELTA
+	support-reiserfs-20010129 AUTHOR cg2v@andrew.cmu.edu
+
+2001-03-06 16:05  shadow
+
+	* src/: bozo/bosserver.c, util/dirpath.c, util/dirpath.h: DELTA
+	allow-new-bosconfig-file-and-rename-into-place-20010129 AUTHOR
+	cg2v@andrew.cmu.edu
+
+2001-03-06 16:03  shadow
+
+	* src/bozo/: bos.c, bosint.xg, bosoprocs.c, bosserver.c: DELTA
+	implement-bos-restricted-mode-20010129 AUTHOR cg2v@andrew.cmu.edu
+
+2001-03-06 16:02  shadow
+
+	* src/WINNT/client_config/drivemap.cpp: DELTA
+	drive-letter-tabs-for-submounts-containing-string-afs-20010119
+	AUTHOR dkoziol@dragonflymobile.com "The following patch is to
+	addresses problems with the Drive Letters tabs in the AFS Client
+	and AFS Control Panel when using submounts which start with the
+	letters afs.  We had a test cell up and running with a name that
+	started with afs01 and this caused the afs client to misbehave."
+
+2001-03-05 17:47  shadow
+
+	* src/util/snprintf.c: DELTA
+	make-snprintf-compile-on-aix-433-20010305 AUTHOR
+	shadow@dementia.org AF_INET is in sys/socket.h on AIX 4.3.3
+
+2001-03-05 10:12  shadow
+
+	* src/util/snprintf.c: DELTA support-dux-51-20010305 AUTHOR
+	joda@pdc.kth.se Changes needed for OpenAFS Tru64 5.1 support
+
+2001-02-12 22:54  shadow
+
+	* src/util/snprintf.c: DELTA snprintf-for-aix-not-irix-20010212
+	AUTHOR shadow@dementia.org Irix 6.5 has snprintf
+
+2001-02-12 22:46  shadow
+
+	* src/util/snprintf.c: DELTA provide-snprintf-for-irix-dux-20010212
+	AUTHOR shadow@dementia.org So we can use snprintf, provide it for
+	platforms that don't have it
+
+2001-02-12 12:35  shadow
+
+	* src/lwp/threadname.c: DELTA
+	thread-identification-routines-20010212 AUTHOR reuter@rzg.mpg.de
+	Needed to identify thread in serverlog for mrafs
+
+2001-02-11 10:05  shadow
+
+	* src/util/snprintf.c: DELTA include-snprintf-in-util-20010211
+	AUTHOR jhutz@cmu.edu For platforms which need snprintf, this should
+	be suitable for AC_REPLACE_FUNCS when we get that far
+
+2001-02-10 16:26  shadow
+
+	* src/rx/xdr_int64.c: DELTA
+	mrafs-client-extensions-including-afs-int64-20010210 AUTHOR
+	reuter@rzg.mpg.de "	  Extensions used by MR-AFS in the client.
+	I have added only two	      pioctl-calls which are used by the
+	"fs"-command for a large number 	of MR-AFS specific
+	subcommands. With this modification also the	     data type
+	afs_int64 is introduced because MR-AFS supports large files.	   
+	  afs_int64 is either "long long" or a structure consisting of two 
+		32-bit numbers. We are already running on rs_aix42 a fully
+	large-file	    capable AFS-client, but these changes are still
+	in a beta test and	    not yet added here."
+
+2001-02-10 15:57  shadow
+
+	* src/config/: Makefile.alpha_dux50, param.alpha_dux50.h,
+	param.alpha_dux50_usr.h: DELTA tru64-50-initial-support-20010210
+	AUTHOR joda@pdc.kth.se makes client work under 5.0A, untested with
+	5.0 or 5.1
+
+2001-02-07 10:21  shadow
+
+	* src/libafs/sgi_master: DELTA add-ssi-master-file-20010207 AUTHOR
+	shadow@dementia.org First guess at this file based on master(4); I
+	haven't tried this yet but since it seems to be for the build-into-
+	kernel module I assume we don't need: d   dynamically loadable
+	kernel module R   auto-registrable dynamically loadable kernel
+	module N   don't allow auto-unload of dynamically loadable kernel
+	module
+	
+	and I don't know if we'd need or be able to use R, either.
+	
+	Afs_ to match what previous systems seem to be doing; For symmetry
+	it looks like it should be e.g. afs_
+

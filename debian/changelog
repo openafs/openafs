@@ -1,8 +1,11 @@
 openafs (1.0.3-1) unstable; urgency=low
 
   * New upstream version
+  * Allow host to be used instead of dnsutils, closes: #87915
+  * Document kernel module build.
+  * Include upstream changelog
 
- -- Sam Hartman <hartmans@mit.edu>  Thu,  8 Mar 2001 00:56:41 -0500
+ -- Sam Hartman <hartmans@debian.org>  Thu,  8 Mar 2001 14:35:57 -0500
 
 openafs (1.0.2-3) unstable; urgency=low
 
