@@ -85,6 +85,16 @@ OpenAFS for Windows
 
     The configurable properties are as follows:
 
+    AFSCACHEPATH
+        Registry key    : (Service parameters)
+        Registry value  : CachePath
+        Valid values    : string
+
+    AFSCACHESIZE
+        Registry key    : (Service parameters)
+        Registry value  : CacheSize
+        Valid values    : numeric
+
     AFSCELLNAME
 
 	Registry key	: (Service parameters)
@@ -114,17 +124,34 @@ OpenAFS for Windows
 
 	Option for AFSCREDS.EXE.  Enables renewing drive map at
 	startup.
+        (see below)
 
-	The four properties above determine the behavior of the AFS
+    CREDSSHOW
+        Valid values    : '-s' or ''
+
+        Option for AFSCREDS.EXE.  Enables displaying the credential
+        manager window when AFSCREDS starts up.
+
+	The five properties above determine the behavior of the AFS
 	credential manager ( AFSCREDS.EXE ).  Each property adds a
 	command line option to the shortcut that will be created in
-	the Program Menu (both under 'OpenAFS' and 'Startup' folders).
+	the Program Menu, both under 'OpenAFS' and 'Startup' folders
+        (see CREDSSTARTUP).
 
 	The way in which the options are specified was chosen for easy
 	integration with the Windows Installer user interface.
 	Although you can come up with creative ways to provide other
 	options to AFSCREDS.EXE, we advise against it because such
 	transforms may not apply to future releases of OpenAFS.
+
+    CREDSSTARTUP
+        Valid values    : '1' or '0'
+
+        Controls whether AFSCREDS.EXE starts up automatically when a
+        user logs on.  When CREDSSTARTUP is '1' a shortcut is added
+        to the 'Startup' folder in the 'Program menu' which starts
+        AFSCREDS.EXE with the options that are determined by the
+        other CREDS* properties.
 
     FREELANCEMODE
 

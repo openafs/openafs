@@ -378,6 +378,7 @@ int afsd_InitCM(char **reasonP)
 	char buf[200];
 	HKEY parmKey;
 	DWORD dummyLen;
+    DWORD regType;
 	long code;
 	/*int freelanceEnabled;*/
 	WSADATA WSAjunk;
@@ -588,12 +589,21 @@ int afsd_InitCM(char **reasonP)
 		/* Don't log */
 	}
 
-	dummyLen = sizeof(cm_CachePath);
-	code = RegQueryValueEx(parmKey, "CachePath", NULL, NULL,
-				cm_CachePath, &dummyLen);
-	if (code == ERROR_SUCCESS)
+	dummyLen = sizeof(buf);
+	code = RegQueryValueEx(parmKey, "CachePath", NULL, &regType,
+				buf, &dummyLen);
+    if (code == ERROR_SUCCESS && buf[0]) {
+        if(regType == REG_EXPAND_SZ) {
+            dummyLen = ExpandEnvironmentStrings(buf, cm_CachePath, sizeof(cm_CachePath));
+            if(dummyLen > sizeof(cm_CachePath)) {
+                afsi_log("Cache path [%s] longer than %d after expanding env strings", buf, sizeof(cm_CachePath));
+                osi_panic("CachePath too long", __FILE__, __LINE__);
+            }
+        } else {
+            StringCbCopyA(cm_CachePath, sizeof(cm_CachePath), buf);
+        }
 		afsi_log("Cache path %s", cm_CachePath);
-	else {
+    } else {
 		GetWindowsDirectory(cm_CachePath, sizeof(cm_CachePath));
 		cm_CachePath[2] = 0;	/* get drive letter only */
 		StringCbCatA(cm_CachePath, sizeof(cm_CachePath), "\\AFSCache");

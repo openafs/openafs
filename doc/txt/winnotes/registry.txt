@@ -32,7 +32,7 @@ Type    : QWORD
 Default : 20480 (CM_CONFIGDEFAULT_CACHESIZE)
 Variable: cm_initParams.cacheSize
 
-  Size of the AFS cache.
+  Size of the AFS cache in 1k blocks.
 
 Value   : ChunkSize
 Type    : DWORD
@@ -104,8 +104,8 @@ Variable: cm_mountRoot
   where the symlink exists)
  
 Value	: CachePath
-Type	: REG_SZ
-Default : "\AFSCache"
+Type	: REG_SZ or REG_EXPAND_SZ
+Default : "%SYSTEMDRIVE%\AFSCache"
 Variable: cm_CachePath
 
   Location of on-disk cache file.  The default implies the root 

@@ -20,6 +20,12 @@
 	<!-- empty property 
 	<Property Id="CREDSSHOW"></Property>
 	-->
+	<!-- empty property
+	<Property Id="AFSCACHEPATH"></Property>
+	-->
+	<!-- empty property
+	<Property Id="AFSCACHESIZE"></Property>
+	-->
 
     <!-- Add/remove programs -->
     <Property Id="ARPCOMMENTS">$(var.ProductComments)</Property>
@@ -108,5 +114,11 @@
     </Property>
     
     <Property Id="ABORTREASON">$(loc.StrNsisAbortReason)</Property>
+
+    <Property Id="OLDCELLSERVDB">
+      <DirectorySearch Id="dsOldCellServDB" Path="[WindowsFolder]" >
+        <FileSearch Id="fsOldCellServDB" Name="afsdcell.ini" />
+      </DirectorySearch>
+    </Property>
 
 </Include>

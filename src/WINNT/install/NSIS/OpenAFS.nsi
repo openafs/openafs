@@ -626,6 +626,8 @@ Section "AFS Client" secClient
   StrCmp $R1 "1" +1 +2
   StrCpy $R2 "$R2-S"
   
+  WriteRegStr HKLM "SOFTWARE\OpenAFS\Client" "AfscredsShortcutParams" "$R2"
+  
   CreateShortCut "$SMPROGRAMS\OpenAFS\Client\Authentication.lnk" "$INSTDIR\Client\Program\afscreds.exe" "$R2"
   
   ReadINIStr $R1 $2 "Field 1" "State"

@@ -1,17 +1,15 @@
 <?xml version="1.0"?>
 <Include>
-    <Directory Id="WindowsFolder">
-    </Directory>
     <Directory Id="SystemFolder">
         <Component Id="cmf_afslogon_DLL" Guid="123197FE-4F53-4035-8D51-FCFB6B50A777">
             <File Id="fileafslogon_DLL" Name="afslogon.dll" LongName="afslogon.dll" KeyPath="yes" DiskId="1" src="$(var.ClientDir)afslogon.dll" />
-            <Registry Id="reg_afslogon01" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" Name="*" />
+            <Registry Id="reg_afslogon01" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" Action="createKeyAndRemoveKeyOnUninstall" />
             <Registry Id="reg_afslogon02" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" />
-            <Registry Id="reg_afslogon03" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" Name="Asynchronous" Value="0" Type="integer" />
-            <Registry Id="reg_afslogon04" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" Name="Impersonate" Value="1" Type="integer" />
-            <Registry Id="reg_afslogon05" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" Name="DLLName" Value="#fileafslogon_DLL" />
-            <Registry Id="reg_afslogon06" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" Name="Logoff" Value="AFS_Logoff_Event" />
-            <Registry Id="reg_afslogon07" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" Name="Startup" Value="AFS_Startup_Event" />
+            <Registry Id="reg_afslogon03" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" Name="Asynchronous" Type="integer" Value="0" />
+            <Registry Id="reg_afslogon04" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" Name="Impersonate" Type="integer" Value="1" />
+            <Registry Id="reg_afslogon05" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" Name="DLLName" Type="string" Value="[#fileafslogon_DLL]" />
+            <Registry Id="reg_afslogon06" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" Name="Logoff" Type="string" Value="AFS_Logoff_Event" />
+            <Registry Id="reg_afslogon07" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" Name="Startup" Type="string" Value="AFS_Startup_Event" />
         </Component>
     <?ifdef DebugSyms?>
         <Component Id="cmp_ClientSystemDebug" Guid="DD34DA09-D9DA-4A5A-9521-87B7738A7D53">
@@ -733,9 +731,14 @@
             </Directory> <!-- Documentation -->
 
             <Directory Id="dirClient" Name="Client" LongName="Client" SourceName=".">
-                <Component Id="efl_CellServDB" Guid="8E69FDAB-08C5-4927-B1AA-57FCEEB065F2">
+                <Component Id="efl_CellServDB" Guid="8E69FDAB-08C5-4927-B1AA-57FCEEB065F2" NeverOverwrite="yes" Permanent="yes">
                     <File Id="file_CellServDB" Name="CelSrvDB" LongName="CellServDB" KeyPath="yes" DiskId="1" src="$(var.CellDbFile)"/>
-                    <CopyFile Id="copy_CellServDB" Delete="yes" DestinationFolder="dirClient" SourceFolder="WindowsFolder" SourceName="afsdcell.ini" />
+                    <Condition>OLDCELLSERVDB = ""</Condition>
+                </Component>
+                <Component Id="cpf_CellServDB" Guid="D5BA4C15-DBEC-4292-91FC-B54C30F24F2A">
+					<Registry Root="HKLM" Key="SOFTWARE\OpenAFS\Client" Name="CellServDBMoved" Type="integer" Value="1" Id="reg_OldCellDB" KeyPath="yes" />
+                    <CopyFile Id="copy_CellServDB" Delete="yes" DestinationDirectory="dirClient" DestinationName="CellServ|CellServDB" SourceDirectory="WindowsFolder" SourceName="afsdcell.ini" />
+                    <Condition>OLDCELLSERVDB &lt;&gt; ""</Condition>
                 </Component>
                 <Directory Id="dirProgram" Name="Program" LongName="Program" SourceName="." src="$(var.ClientDir)">
                     <Component Id="cmf_afsshare_EXE" Guid="E972DA35-E950-4736-AE48-E6DDCE8C97D0">
@@ -779,7 +782,7 @@
                     </Component>
                     <Component Id="cmf_afsd_service_EXE" Guid="37A90054-505D-4C57-B489-7EF4D97B86F6">
                         <File Id="fileafsd_service_EXE" Name="afsd_svc.exe" LongName="afsd_service.exe" KeyPath="yes" DiskId="1" />
-                        <ServiceControl Id="TransarcAFSDaemon" Name="TransarcAFSDaemon" Stop="both" Delete="both" Wait="yes" />
+                        <ServiceControl Id="TransarcAFSDaemon" Name="TransarcAFSDaemon" Stop="both" Remove="both" Wait="yes" />
                         <ServiceInstall Id="svc_Client" Name="TransarcAFSDaemon" DisplayName="OpenAFS Client" Type="ownProcess" Start="auto" ErrorControl="normal" Description="Provides access to files and directories stored in AFS">
 							<!-- ServiceConfig doesn't currently do what you think it does.
 							     We instead use a custom action to set the service failure actions.
@@ -828,7 +831,7 @@
                     </Component>
 					<Component Id="cmf_afs_cpa_CPL" Guid="C83091EC-2967-4AC6-A34D-860CD7FEDA57">
 						<File Id="fileafs_cpa_CPL" Name="afs_cpa.cpl" LongName="afs_cpa.cpl" KeyPath="yes" DiskId="1"/>
-				        <Registry Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Control Panel\Cpls" Name="AFS Client CPL" Value="[#fileafs_cpa_CPL]" Id="reg_Full_Client11" />
+				        <Registry Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Control Panel\Cpls" Name="AFS Client CPL" Type="string" Value="[#fileafs_cpa_CPL]" Id="reg_Full_Client11" />
 					</Component>
                 <?ifdef DebugSyms?>
                     <Component Id="cmp_ClientProgramDebug" Guid="A6A394F6-45D0-45A9-A7DD-C0997070EC14">
@@ -1198,7 +1201,7 @@
                             </Component>
                             <Component Id="cmf_bosctlsvc_EXE" Guid="8F6F62A8-BB6D-46C1-BA80-4F207AA24F0D">
                                 <File Id="filebosctlsvc_EXE" Name="bosct.exe" LongName="bosctlsvc.exe" KeyPath="yes" DiskId="1" />
-                                <ServiceControl Id="TransarcAFSServer" Name="TransarcAFSServer" Stop="both" Delete="both" Wait="yes" />
+                                <ServiceControl Id="TransarcAFSServer" Name="TransarcAFSServer" Stop="both" Remove="both" Wait="yes" />
                                 <ServiceInstall Id="svc_Server" Name="TransarcAFSServer" DisplayName="OpenAFS Server" Type="ownProcess" Start="auto" ErrorControl="normal" Description="Manages AFS server processes">
 									<!-- ServiceConfig does nothing 
                                     <ServiceConfig FirstFailureActionType="restart" RestartServiceDelayInSeconds="5" SecondFailureActionType="restart" ThirdFailureActionType="none"/>
@@ -1237,7 +1240,7 @@
                             </Component>
 							<Component Id="cmf_afsserver_CPL" Guid="E270281E-9DB2-40A8-A418-55B4EC4A3FE7">
 								<File Id="fileafsserver_CPL" Name="afsserve.cpl" LongName="afsserver.cpl" KeyPath="yes" DiskId="1"/>
-						        <Registry Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Control Panel\Cpls" Name="AFS Server CPL" Value="[#fileafsserver_CPL]" Id="reg_Server30" />
+						        <Registry Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Control Panel\Cpls" Name="AFS Server CPL" Type="string" Value="[#fileafsserver_CPL]" Id="reg_Server30" />
 							</Component>
 
                             <Component Id="cmp_Server_Program" Guid="8C4D0351-8EBF-4192-BF63-DCB3AADF4115" KeyPath="yes">
@@ -1279,9 +1282,11 @@
 
         </Directory> <!-- AFS -->
     </Directory> <!-- program files -->
+    <!-- References -->
     <Directory Id="ProgramMenuFolder" Name=".">
         <Directory Id="dirShortCut" Name="OpenAFS" LongName="OpenAFS"/>
     </Directory>
-    <Directory Id="StartupFolder" Name=".">
-    </Directory>
+    <Directory Id="StartupFolder" Name="." />
+    <Directory Id="WindowsVolume" Name="." />
+    <Directory Id="WindowsFolder" Name="." />
 </Include>
