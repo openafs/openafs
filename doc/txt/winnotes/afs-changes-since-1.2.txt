@@ -1,4 +1,26 @@
 Since 1.3.65:
+   * afs_config.exe now validates cell names against DNS in addition
+     to the CellServDB file.
+
+   * In order to allow the freelance client to connect to a volume with ID 
+     equal to 1 on the default cell we changed the fake root.afs volume ID
+     once again.  This time we choose 0xFFFFFFFF.  In addition, we change
+     the cell ID of the fake root.afs volume from 1 to 0xFFFFFFFF as well.
+     It will now be impossible for a volume ID to match that of another 
+     cell unless the client is connected to 0xFFFFFFFD cells.  That should
+     be enough room for growth.
+
+   * Fix "fs mkmount" command to work with UNC paths and when
+     started from non-AFS drives.  It is now possible to create a mount
+     point in the freelance fake root.afs volume with the command
+
+        fs mkmount \\AFS\all\<directory-name> <volume-name> <cellname>
+
+     For example,
+        
+        fs mkmount \\AFS\all\openafs.org root.cell openafs.org
+        fs mkmount \\AFS\all\.openafs.org root.cell openafs.org -rw
+
    * The algorithm used to re-attempt access to the servers associated with
      a volume has been altered to properly address the case in which all 
      servers have been marked down.  The previous algorithm did not reset
@@ -185,8 +207,8 @@ Since 1.3.64:
      builds as well as CHECKED (aka DEBUG) builds
 
    * Sites which have a volume ID of 0x20000001 assigned to their
-     root.afs volumes have been experiencing problems with accessing
-     the root.afs volume of their cell when Freelance mode has been
+     root.cell volumes have been experiencing problems with accessing
+     the root.cell volume of their cell when Freelance mode has been
      active.  This was because 0x20000001 was assigned to the fake
      root.afs volume created by freelance.  The fake volume id is
      now set to 0x00000001 to prevent conflicts.
@@ -230,9 +252,6 @@ Since 1.3.64:
 
      This should be the end of the "Server paused or restarting messages"
    
-   * Fix "fs mkmount" command to work with UNC paths and when
-     started from non-AFS drives
-
    * Add support for arbitrary UNC paths to the pioctl() support.
      This enables the fs commands as well as the AFS Shell Extension
      to work correctly when UNC paths are being used.
