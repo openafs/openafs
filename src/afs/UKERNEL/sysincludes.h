@@ -112,8 +112,8 @@
 #define FREAD			0x0001
 #endif /* AFS_USR_LINUX22_ENV */
 
-/* this is necessary for client programs as well as the library itself */
-#if defined(AFS_LINUX22_ENV) || defined(AFS_USR_LINUX22_ENV)
+/* glibc 2.2 has pthread_attr_setstacksize */
+#if defined(AFS_LINUX22_ENV) || defined(AFS_USR_LINUX22_ENV) && (__GLIBC_MINOR__ < 2)
 #define pthread_attr_setstacksize(a,b) 0
 #endif
 
