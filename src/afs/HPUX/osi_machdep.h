@@ -104,8 +104,8 @@ extern void       afsHashRelease(tid_t key);
  * use the get_sleep_lock.
  * afs_osi_Sleep and afs_osi_Wakeup are defined
  */
-void afs_osi_Sleep(char *event);
-void afs_osi_Wakeup(char *event);
+void afs_osi_Sleep(void *event);
+int afs_osi_Wakeup(void *event);
 #endif
 
 #define	osi_NullHandle(x)	((x)->proc == (caddr_t) 0)

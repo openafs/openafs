@@ -44,7 +44,7 @@
 #define SYS_NAME_ID_hp_ux102	 	 414
 #define SYS_NAME_ID_hp_ux110	 	 415
 #define SYS_NAME_ID_hp_ux11i             416
-#define SYS_NAME_ID_hp_ux1122            417
+#define SYS_NAME_ID_ia64_hpux1122		 417
 
 #define SYS_NAME_ID_mac2_51		 500	
 #define SYS_NAME_ID_mac_aux10		 501

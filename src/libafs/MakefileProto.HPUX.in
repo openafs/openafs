@@ -59,7 +59,7 @@ KDEFS_64 = +DA2.0W +DS2.0 +M2 +W 478,530
 
 <all>
 
-<hp_ux1122>
+<ia64_hpux1122>
 KDEFS= +kernel -Wp,-H300000 -D_KERNEL -D_KERNEL_BUILD -D_UNSUPPORTED \
   -DFINE_GRAINED_PROTO_FILES \
   -DMP -Wl,+k $(CPU_KDEFS)
@@ -85,7 +85,7 @@ include Makefile.common
 
 <hp_ux110 hp_ux102>
 BITS = 64 32
-<hp_ux1122>
+<ia64_hpux1122>
 BITS = 64
 <all>
 
@@ -93,7 +93,7 @@ setup:
 	-$(RM) -f  h conf net dux machine netinet nfs rpc s200 ufs sys
 <hp_ux110 hp_ux102>
 	ln -fs /usr/include/sys h
-<hp_ux1122>
+<ia64_hpux1122>
 	ln -fs /etc/conf/h h
 <all>
 	ln -fs /etc/conf conf
@@ -106,7 +106,7 @@ setup:
 	ln -fs /etc/conf/machine s200
 <hp_ux110 hp_ux102>
 	ln -fs /etc/conf/ufs ufs
-<hp_ux1122>
+<ia64_hpux1122>
 	ln -fs /etc/conf/sys ufs
 <all>
 	ln -fs /usr/include/sys sys

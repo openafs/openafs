@@ -1278,7 +1278,9 @@ retry:
     if (change_to_fstore)
        afspgin_update_dbd(vm_info, bsize);
     
-#if !defined(AFS_HPUX1122_ENV) /* needs to be fixed for 11.22 */
+#if defined(AFS_HPUX1122_ENV) 
+	getppdp()->cnt.v_exfod += count;
+#else
     mpproc_info[getprocindex()].cnt.v_exfod += count;
 #endif
     vmemp_unlockx();      /* free up VM empire */
@@ -1646,18 +1648,25 @@ afs_pageout(vp,prp, start, end, flags)
 	/*
 	 * Update statistics
 	 */
-#if !defined(AFS_HPUX1122_ENV) /* needs to be checked for 11.22 */
 	if (steal) {
 	    if (flags & PF_DEACT) {
+#if defined(AFS_HPUX1122_ENV)
+		getppdp()->cnt.v_pswpout += npages;
+#else
 		mpproc_info[getprocindex()].cnt.v_pswpout += npages;
+#endif
 /*		sar_bswapout += ptod(npages);*/
 	    }
 	    else if (vhand) {
+#if defined(AFS_HPUX1122_ENV)
+		getppdp()->cnt.v_pgout++;
+		getppdp()->cnt.v_pgpgout += npages;
+#else
 		mpproc_info[getprocindex()].cnt.v_pgout++;
 		mpproc_info[getprocindex()].cnt.v_pgpgout += npages;
+#endif
 	    }
 	}
-#endif
 
 	/*
 	 * If time and patience have delivered enough
@@ -1909,7 +1918,11 @@ afs_swapfs_len(bp)
 afs_mmap(vp, off, size_bytes, access)
      struct vnode *vp;
      u_int off;
+#if defined(AFS_HPUX1122_ENV)
+	 u_long size_bytes;
+#else
      u_int size_bytes;
+#endif
      int access;
 {
         long bsize = vtoblksz(vp);
@@ -1943,7 +1956,11 @@ int
 afs_unmap(vp,off, size_bytes,access)
      struct vnode *vp;
      u_int off;
+#if defined(AFS_HPUX1122_ENV)
+	 u_long size_bytes;
+#else
      u_int size_bytes;
+#endif
      int access;
 {
 	return 0;
@@ -1965,6 +1982,7 @@ afs_read_ahead(vp, prp, wrt, space, vaddr, rhead_cnt)
 int
 afs_prealloc(vp, size, ignore_minfree, reserved)
       struct vnode    *vp;
+      /* DEE on 11.22 following is off_t */
       size_t          size;
       int             ignore_minfree;
       int             reserved;

@@ -16,10 +16,6 @@ RCSID("$Header$");
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"   /* afs statistics */
 
-#if defined(AFS_HPUX1122_ENV)
-void afs_osi_Wakeup(char *event);
-void afs_osi_Sleep(char *event);
-#endif
 
 static char waitV;
 
@@ -32,10 +28,14 @@ static int afs_osi_CallProc(aproc, arock, ams)
     int code;
 
     AFS_STATCNT(osi_CallProc);
+#if !defined(AFS_HPUX1122_ENV)
     AFS_GUNLOCK();
+#endif
     /* hz is in cycles/second, and timeout's 3rd parm is in cycles */
     code = timeout(aproc, arock, (ams * afs_hz)/1000 + 1);
+#if !defined(AFS_HPUX1122_ENV)
     AFS_GLOCK();
+#endif
     return code;
 }
 
@@ -47,17 +47,34 @@ static int afs_osi_CancelProc(aproc, arock)
     int code = 0;
     AFS_STATCNT(osi_CancelProc);
 
+#if !defined(AFS_HPUX1122_ENV)
     AFS_GUNLOCK();
+#endif
     code = untimeout(aproc, arock);
+#if !defined(AFS_HPUX1122_ENV)
     AFS_GLOCK();
+#endif
     return code;
 }
+
+#if defined(AFS_HPUX1122_ENV)
+static void AfsWaitHack(char * event)
+{
+    lock_t * sleep_lock;
+
+    AFS_STATCNT(WaitHack);
+	sleep_lock = get_sleep_lock(event);
+    wakeup(event);
+	spinunlock(sleep_lock);
+}
+#else
 
 static void AfsWaitHack()
 {
     AFS_STATCNT(WaitHack);
     wakeup(&waitV);
 }
+#endif
 
 void afs_osi_InitWaitHandle(struct afs_osi_WaitHandle *achandle)
 {
@@ -74,7 +91,12 @@ void afs_osi_CancelWait(struct afs_osi_WaitHandle *achandle)
     proc = achandle->proc;
     if (proc == 0) return;
     achandle->proc = (caddr_t) 0;   /* so dude can figure out he was signalled */
+#if defined(AFS_HPUX1122_ENV)
+	afs_osi_Wakeup((char *)achandle);
+#else
     afs_osi_Wakeup(&waitV);
+#endif
+
 }
 
 /* afs_osi_Wait
@@ -85,6 +107,10 @@ int afs_osi_Wait(afs_int32 ams, struct afs_osi_WaitHandle *ahandle, int aintok)
 {
     int code;
     afs_int32 endTime, tid;
+#if defined(AFS_HPUX1122_ENV)
+	char localwait;
+	char * event;
+#endif
 
     AFS_STATCNT(osi_Wait);
     endTime = osi_Time() + (ams/1000);
@@ -94,12 +120,24 @@ int afs_osi_Wait(afs_int32 ams, struct afs_osi_WaitHandle *ahandle, int aintok)
 	AFS_ASSERT_GLOCK();
 	code = 0;
 	/* do not do anything for solaris, digital, AIX, and SGI MP */
+#if defined(AFS_HPUX1122_ENV)
+	if (ahandle) { 
+		event = (char *) ahandle;
+    }
+	else {
+		event = &localwait;
+    }
+	afs_osi_CallProc(AfsWaitHack, event, ams);
+	afs_osi_Sleep(event);
+	afs_osi_CancelProc(AfsWaitHack, event);
+#else
 	afs_osi_CallProc(AfsWaitHack, (char *) u.u_procp, ams);
 	afs_osi_Sleep(&waitV); /* for HP 10.0 */
 
 	/* do not do anything for solaris, digital, and SGI MP */
 	afs_osi_CancelProc(AfsWaitHack,  (char *) u.u_procp); 
 	if (code) break;	/* if something happened, quit now */
+#endif
 	/* if we we're cancelled, quit now */
 	if (ahandle && (ahandle->proc == (caddr_t) 0)) {
 	    /* we've been signalled */
@@ -115,93 +153,31 @@ int afs_osi_SleepSig(void *event)
     return 0;
 }
 
+#if defined(AFS_HPUX1122_ENV)
+void afs_osi_Sleep(void *event)
+{
+	lock_t * sleep_lock;
+	
+	AFS_ASSERT_GLOCK();
+	get_sleep_lock(event);
+	AFS_GUNLOCK();
+	sleep((caddr_t) event, PZERO-2);
+	AFS_GLOCK();
+}
+	
+int afs_osi_Wakeup(void *event)
+{
+	lock_t * sleep_lock;
+
+	sleep_lock = get_sleep_lock(event);
+	wakeup((caddr_t) event);
+	spinunlock(sleep_lock);
+	return 0;
+}
+#else
 int afs_osi_Wakeup(void *event)
 {
     wakeup((caddr_t) event);
     return 0;
-}
-
-#if defined(AFS_HPUX1122_ENV)
-
-/* on HP 11.22 we are using beta semiphore for AFS_GLOCK */
-
-typedef struct afs_event {
-    struct afs_event *next;     /* next in hash chain */
-    char *event;                /* lwp event: an address */
-    int refcount;               /* Is it in use? */
-    int seq;                    /* Sequence number: this is incremented
-                                   by wakeup calls; wait will not return until
-                                   it changes */
-} afs_event_t;
-
-#define HASHSIZE 128
-afs_event_t *afs_evhasht[HASHSIZE];/* Hash table for events */
-#define afs_evhash(event)       (afs_uint32) ((((long)event)>>2) & (HASHSIZE-1));
-int afs_evhashcnt = 0;
-
-/* Get and initialize event structure corresponding to lwp event (i.e. address)
- * */
-static afs_event_t *afs_getevent(char *event)
-{
-    afs_event_t *evp, *newp = 0;
-    int hashcode;
-
-    AFS_ASSERT_GLOCK();
-    hashcode = afs_evhash(event);
-    evp = afs_evhasht[hashcode];
-    while (evp) {
-        if (evp->event == event) {
-            evp->refcount++;
-            return evp;
-        }
-        if (evp->refcount == 0)
-            newp = evp;
-        evp = evp->next;
-    }
-    if (!newp) {
-        newp = (afs_event_t *) osi_AllocSmallSpace(sizeof (afs_event_t));
-        afs_evhashcnt++;
-        newp->next = afs_evhasht[hashcode];
-        afs_evhasht[hashcode] = newp;
-        newp->seq = 0;
-    }
-    newp->event = event;
-    newp->refcount = 1;
-    return newp;
-}
-
-
-/* Release the specified event */
-#define relevent(evp) ((evp)->refcount--)
-
-void afs_osi_Sleep(char *event)
-{
-    struct afs_event *evp;
-    int seq;
-
-    evp = afs_getevent(event);
-    seq = evp->seq;
-    while (seq == evp->seq) {
-        AFS_ASSERT_GLOCK();
-	get_sleep_lock(event);
-        AFS_GUNLOCK();
-        sleep(event, PZERO-2);
-        AFS_GLOCK();
-    }
-    relevent(evp);
-}
-
-void afs_osi_Wakeup(char *event)
-{
-    struct afs_event *evp;
-    lock_t * sleep_lock;
-
-    evp = afs_getevent(event);
-    sleep_lock = get_sleep_lock(event);
-    if (evp->refcount > 1) {
-        evp->seq++;
-        wakeup(event);
-    }
-    spinunlock(sleep_lock);
 }
 #endif

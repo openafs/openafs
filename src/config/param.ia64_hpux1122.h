@@ -18,6 +18,7 @@
 #define	AFS_HPUX101_ENV	1
 #define	AFS_HPUX102_ENV	1
 #define	AFS_HPUX110_ENV	1
+#define AFS_HPUX1111_ENV 1
 #define AFS_HPUX1122_ENV 1
 
 #define AFS_64BIT_ENV		1       /* Defines afs_int32 as int, not long. */
@@ -30,8 +31,8 @@
 #define AFS_SYSCALL	48 /* slot reserved for AFS */
 
 /* Machine / Operating system information */
-#define SYS_NAME	"hp_ux1122"
-#define SYS_NAME_ID	SYS_NAME_ID_hp_ux1122
+#define SYS_NAME	"ia64_hpux1122"
+#define SYS_NAME_ID	SYS_NAME_ID_ia64_hpux1122
 #define AFSBIG_ENDIAN	1
 #define AFS_HAVE_FFS    1
 #define AFS_HAVE_STATVFS 1	/* System supports statvfs */

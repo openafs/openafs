@@ -379,7 +379,7 @@ else
 			AFS_SYSNAME="hp_ux110"
 			;;
 		ia64-hp-hpux*)
-			AFS_SYSNAME="hp_ux1122"
+			AFS_SYSNAME="ia64_hpux1122"
 			;;
 		hppa*-hp-hpux10*)
 			AFS_SYSNAME="hp_ux102"

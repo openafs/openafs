@@ -69,7 +69,7 @@ process.o	: process.s process.c
 		${CC} -E -I${TOP_INCDIR} process.S >process.ss ; \
 		${AS} process.ss -o process.o ;  \
 		$(RM) -f process.S ;;\
-	hp_ux11* ) \
+	ia64_hpux11* | hp_ux11* ) \
 		${CC} ${CFLAGS} -c ${srcdir}/process.c;; \
 	*) \
 		/lib/cpp -P -I${TOP_INCDIR} ${srcdir}/process.s process.ss; \
