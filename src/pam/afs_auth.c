@@ -256,6 +256,9 @@ try_auth:
      */
     if (!refresh_token) {
        setpag();
+#ifdef AFS_KERBEROS_ENV
+       ktc_newpag();
+#endif
        if (logmask && LOG_MASK(LOG_DEBUG))
 	 syslog(LOG_DEBUG, "New PAG created in pam_authenticate()");
     }
