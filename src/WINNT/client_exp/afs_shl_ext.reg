@@ -1,0 +1,21 @@
+REGEDIT4
+
+[HKEY_CLASSES_ROOT\CLSID\{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}]
+    @="AFS Client Shell Extension"
+
+[HKEY_CLASSES_ROOT\CLSID\{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}\InprocServer32]
+    @="c:\\winnt\\system32\\afs_shl_ext.dll"
+"ThreadingModel"="Apartment"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved]
+   "{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}"="AFS Client Shell Extension"
+
+[HKEY_CLASSES_ROOT\*\shellex\ContextMenuHandlers]
+   @="afs_shl_ext"
+[HKEY_CLASSES_ROOT\*\shellex\ContextMenuHandlers\AFS Client Shell Extension]
+   @="{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}"
+
+[HKEY_CLASSES_ROOT\Folder\shellex\ContextMenuHandlers]
+   @="afs_shl_ext"
+[HKEY_CLASSES_ROOT\Folder\shellex\ContextMenuHandlers\AFS Client Shell Extension]
+   @="{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}"

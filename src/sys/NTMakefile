@@ -1,0 +1,34 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+#
+
+############################################################################
+
+!INCLUDE ..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\config\NTMakefile.version
+
+############################################################################
+# Header files to install
+
+INCFILES =\
+	$(DESTDIR)\include\afs\afssyscalls.h \
+	$(DESTDIR)\include\afs\pioctl_nt.h
+
+# Library to install
+
+LIBFILE = $(DESTDIR)\lib\afs\afspioctl.lib
+
+LIBOBJS =\
+	pioctl_nt.obj
+
+$(LIBFILE): $(LIBOBJS)
+	$(LIBARCH)
+
+############################################################################
+# Install target; primary makefile target
+
+install: $(INCFILES) $(LIBFILE)
+
+############################################################################
+# Local clean target; augments predefined clean target
+
+clean::

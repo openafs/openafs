@@ -1,0 +1,84 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRUSS_INTRO" HREF="auarf002.htm#ToC_256">uss</A></H2>
+<A NAME="IDX5508"></A>
+<A NAME="IDX5509"></A>
+<A NAME="IDX5510"></A>
+<A NAME="IDX5511"></A>
+<A NAME="IDX5512"></A>
+<A NAME="IDX5513"></A>
+<A NAME="IDX5514"></A>
+<A NAME="IDX5515"></A>
+<A NAME="IDX5516"></A>
+<P><STRONG>目的</STRONG>
+<P><B>uss</B> コマンド・セットの概要
+<P><STRONG>構文</STRONG>
+<P><B>uss</B> コマンド・セットのコマンドを使用すると、管理者は、AFS ユーザー・アカウントを簡単に、より効果的に作成することができます。
+<B>uss</B> コマンドを使用せずにアカウントを作成する場合は、
+5 つの異なる AFS サーバーに少なくとも 6 つの別々のコマンドを発行する必要があります。
+<P>このコマンド・セットには、次の 3 つの主要なコマンドがあります。
+<UL>
+<LI><B>uss add</B> コマンドは、コマンド行引き数およびテンプレート・ファイルの命令に基づいて、単一の完全なユーザー・アカウントを作成します。
+</LI><LI><B>uss bulk</B> コマンドは、コマンド行引き数、テンプレート・ファイルの命令およびバルク入力ファイルに基づいて、
+1 度に複数のアカウントを作成します。
+</LI><LI><B>uss delete</B> コマンドは、大部分のユーザー・アカウントを削除します。
+</LI></UL>
+<P>ヘルプを表示する場合は、<B>uss apropos</B> および <B>uss help</B> コマンドを使用してください。
+<P><STRONG>オプション </STRONG>
+<P><B>uss</B> セットの多くのコマンドでは、以下の引き数およびフラグを使用することができます。各コマンドの解説ページにも説明はありますが、ここでは詳しく説明します。
+<DL>
+<P><DT><B>-admin &lt;<VAR>administrator to authenticate</VAR>>
+</B><DD>ユーザー・アカウントの様々な部分を管理する AFS サーバー・プロセスとの接続を確立する AFS ユーザー名を指定します。省略された場合、接続は発行側の有効なユーザー ID (ローカル・ファイル・システムでのユーザー ID) で確立されます。この引き数を指定しても、
+<B>uss</B> 操作 (たとえば、
+UNIX <B>/etc/chown</B> コマンド) 時に実行されていた UNIX コマンドは、有効なユーザー ID で実行されます。
+<P><DT><B>-cell &lt;<VAR>cell name</VAR>>
+</B><DD>コマンドを実行するセルの名前を示します。ローカル・マシン上の <B>/usr/vice/etc/CellServDB</B> ファイルにある他の項目と区別できる場合には、セル名の省略形を使用することができます。
+<B>-cell</B> 引き数が省略されると、コマンド・インタープリターは、次の内容を順に読み込み、ローカル・セルの名前を判別します。
+<P>
+<OL TYPE=1>
+<LI>AFSCELL 環境変数値
+</LI><LI>ローカル <B>/usr/vice/etc/ThisCell</B> ファイル
+</LI></OL>
+<P><DT><B>-dryrun
+</B><DD>コマンド・インタープリターが、
+<B>uss</B> 操作の実行時に、実際には実行していなくても、実行する必要があるアクションを報告します。このフラグは、コマンドにより必要なアカウント構成が作成されることを検証するために組み込まれます。詳細な情報を作成する場合は、
+<B>-verbose</B> フラグと併せて使用してください。この出力で、コマンドが失敗する問題の原因がすべて判明するわけではありません。特に、一時的なサーバーまたはネットワークの停止の場合はそうです。
+<P><DT><B>-help
+</B><DD>標準出力ストリームにコマンドのオンライン・ヘルプ・メッセージを出力します。このフラグは、コマンドの他のオプションと一緒に使用してはなりません。このフラグを使用すると、コマンド・インタープリターは、他のすべての引き数およびフラグを無視し、ヘルプ・メッセージの出力だけを行います。
+<P><DT><B>-skipauth
+</B><DD>AFS 認証サーバーとの相互認証をバイパスします。これにより、サイトで AFS 認証サーバーではなく Kerberos を使用して認証のフォームを置換することができます。
+</DL>
+<P><STRONG>必要となる特権</STRONG>
+<P><B>uss</B> コマンドの発行側は、同等のアクションを個別に実行するために必要な権利をすべて持っていなければなりません。各 <B>uss</B> コマンドの解説ページを参照してください。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf054.htm#HDRUSSBULKINPUT">uss バルク入力ファイル</A>
+<P><A HREF="auarf055.htm#HDRUSSFILE">uss テンプレート・ファイル</A>
+<P><A HREF="auarf243.htm#HDRUSS_ADD">uss add</A>
+<P><A HREF="auarf244.htm#HDRUSS_APROPOS">uss apropos</A>
+<P><A HREF="auarf245.htm#HDRUSS_BULK">uss bulk</A>
+<P><A HREF="auarf246.htm#HDRUSS_DELETE">uss delete</A>
+<P><A HREF="auarf247.htm#HDRUSS_HELP">uss help</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf241.htm">前ページ</A> &#124; <A HREF="auarf243.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

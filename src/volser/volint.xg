@@ -1,0 +1,387 @@
+/*
+ * (C) COPYRIGHT IBM CORPORATION 1988
+ * LICENSED MATERIALS - PROPERTY OF IBM
+ */
+/*
+ *  Module:	    Volint.xg
+ *  System:	    Volser
+ *  Instituition:   	    ITC, CMU
+ *  Date:	    	    December, 88
+ */
+
+package AFSVol
+prefix S
+statindex 16
+
+#define	    VOLCREATEVOLUME	100
+#define	    VOLDELETEVOLUME	101
+#define	    VOLRESTORE		102
+#define	    VOLFORWARD		103
+#define	    VOLENDTRANS		104
+#define	    VOLCLONE		105
+#define	    VOLSETFLAGS		106
+#define	    VOLGETFLAGS		107
+#define	    VOLTRANSCREATE	108
+#define	    VOLDUMP		109
+#define	    VOLGETNTHVOLUME	110
+#define	    VOLSETFORWARDING	111  /* defunct */
+#define	    VOLGETNAME		112
+#define	    VOLGETSTATUS	113
+#define 	    VOLSIGRESTORE 	114
+#define	    VOLLISTPARTITIONS	115
+#define	    VOLLISTVOLS		116
+#define 	    VOLSETIDSTYPES	117
+#define 	    VOLMONITOR		118
+#define 	    VOLDISKPART	119
+#define		VOLRECLONE	120
+#define	    VOLLISTONEVOL	121
+#define		VOLNUKE		122
+#define 	VOLSETDATE	123
+#define		VOLXLISTVOLS	124
+#define		VOLXLISTONEVOL	125
+#define	    VOLSETINFO		126
+#define	    VOLXLISTPARTITIONS	127
+#define	    VOLFORWARDMULTIPLE  128
+
+const SIZE = 1024;
+
+struct volser_status {
+	afs_int32 volID;		/* Volume id--unique over all systems */
+	afs_int32 nextUnique;		/* Next vnode uniquifier for this volume */
+	int type;			/* readwrite, etc. */
+	afs_int32 parentID;		/* Id of parent, if type==readonly or backup */
+	afs_int32 cloneID;		/* Latest read-only clone, if type==readwrite */
+	afs_int32 backupID;		/* Latest backup copy of this read write volume */
+	afs_int32 restoredFromID;	/* The id in a dump this volume was restored from--used simply
+    				   to make sure that an incremental dump is not restored on top
+				   of something inappropriate:  Note:  this field itself is NEVER
+				   dumped!!! */
+	afs_int32 maxQuota;		/* Quota maximum, 1K blocks */
+	afs_int32 minQuota;		/* Quota minimum, 1K blocks */
+	afs_int32 owner;		/* The person responsible for this volume */
+	afs_int32 creationDate;		/* Creation date for a read/write
+    				   volume; cloning date for original copy of
+				   a readonly volume (replicated volumes have
+				   the same creation date) */
+	afs_int32 accessDate;		/* Last access time by a user, large granularity */
+	afs_int32 updateDate;		/* Last modification by user */
+	afs_int32 expirationDate;		/* 0 if it never expires */
+	afs_int32 backupDate;		/* last time a backup clone was taken */
+	afs_int32 copyDate;		/* Time that this copy of this volume was created */
+};
+
+struct destServer {
+    afs_int32 destHost;
+    afs_int32 destPort;
+    afs_int32 destSSID;
+};
+
+
+struct volintInfo {
+#define VNAMESIZE 32
+    char name[VNAMESIZE];
+    afs_int32 volid;		/* volume's id */
+    afs_int32 type;		/* read-only, read-write, backup */
+    afs_int32 backupID;
+    afs_int32 parentID;
+    afs_int32 cloneID;
+    afs_int32 status;
+    afs_int32 copyDate;
+    unsigned char inUse;
+    unsigned char needsSalvaged;
+    unsigned char destroyMe;
+    afs_int32 creationDate;
+    afs_int32 accessDate;
+    afs_int32 updateDate;
+    afs_int32 backupDate;
+    int dayUse;
+    int filecount;
+    int maxquota;
+    int size;
+    afs_int32 flags;		/* used by the backup system */
+    afs_int32 spare0;		/* Used to hold the minquota value */
+    afs_int32 spare1;		/* Used to hold the weekuse value */
+    afs_int32 spare2;
+    afs_int32 spare3;
+};
+
+/*
+ * Define some values needed for the detailed volume info structure.
+ */
+const VOLINT_STATS_NUM_RWINFO_FIELDS = 4;
+
+const VOLINT_STATS_SAME_NET      = 0;	/*Within same site (total)*/
+const VOLINT_STATS_SAME_NET_AUTH = 1;	/*Within same site (authenticated);
+					  (must be 1 more than above)*/
+const VOLINT_STATS_DIFF_NET	 = 2;	/*From external site (total)*/
+const VOLINT_STATS_DIFF_NET_AUTH = 3;	/*From external site (authenticated)
+					  (must be 1 more than above)*/
+
+const VOLINT_STATS_NUM_TIME_RANGES = 6;
+
+const VOLINT_STATS_TIME_CAP_0	=     60;  /*60 seconds*/
+const VOLINT_STATS_TIME_CAP_1	=    600;  /*10 minutes, in seconds*/
+const VOLINT_STATS_TIME_CAP_2	=   3600;  /*1 hour, in seconds*/
+const VOLINT_STATS_TIME_CAP_3	=  86400;  /*1 day, in seconds*/
+const VOLINT_STATS_TIME_CAP_4	= 604800;  /*1 week, in seconds*/
+
+const VOLINT_STATS_NUM_TIME_FIELDS = 6;
+
+const VOLINT_STATS_TIME_IDX_0 = 0;	/*0 secs to 60 secs*/
+const VOLINT_STATS_TIME_IDX_1 = 1;	/*1 min to 10 mins*/
+const VOLINT_STATS_TIME_IDX_2 = 2;	/*10 mins to 60 mins*/
+const VOLINT_STATS_TIME_IDX_3 = 3;	/*1 hr to 24 hrs*/
+const VOLINT_STATS_TIME_IDX_4 = 4;	/*1 day to 7 days*/
+const VOLINT_STATS_TIME_IDX_5 = 5;	/*Greater than 1 week*/
+
+/*
+ * More detailed volume info
+ */
+struct volintXInfo {
+    char name[VNAMESIZE];
+    afs_int32 volid;			/*Volume's ID*/
+    afs_int32 type;			/*RWVOL, ROVOL, BACKVOL*/
+    afs_int32 backupID;		/*Backup volume ID*/
+    afs_int32 parentID;		/*Parent volume ID*/
+    afs_int32 cloneID;		/*Clone volume ID*/
+    afs_int32 status;		/*Volume status*/
+    afs_int32 copyDate;		/*Date when this volume INSTANCE created*/
+    unsigned char inUse;	/*In use at time of last crash?*/
+    afs_int32 creationDate;		/*Date when this volume was created*/
+    afs_int32 accessDate;		/*Date when this volume was last accessed*/
+    afs_int32 updateDate;		/*Date when this volume was last updated*/
+    afs_int32 backupDate;		/*Date when this volume was last backed up*/
+    int dayUse;			/*Number of accesses since midnight*/
+    int filecount;		/*Number of files in the volume*/
+    int maxquota;		/*Max volume quota, in Kbytes*/
+    int size;			/*Current size in Kbytes*/
+    /*
+     * Detailed statistics for reads/writes and authorship.
+     */
+    afs_int32 stat_reads[VOLINT_STATS_NUM_RWINFO_FIELDS];
+    afs_int32 stat_writes[VOLINT_STATS_NUM_RWINFO_FIELDS];
+    afs_int32 stat_fileSameAuthor[VOLINT_STATS_NUM_TIME_FIELDS];
+    afs_int32 stat_fileDiffAuthor[VOLINT_STATS_NUM_TIME_FIELDS];
+    afs_int32 stat_dirSameAuthor[VOLINT_STATS_NUM_TIME_FIELDS];
+    afs_int32 stat_dirDiffAuthor[VOLINT_STATS_NUM_TIME_FIELDS];
+};
+
+struct transDebugInfo {
+	afs_int32 tid;		 /*transaction id */
+	afs_int32 time;	 /* time transaction was last active (for timeouts) */
+    	afs_int32 creationTime;    /* time the transaction started */
+    	afs_int32 returnCode;	    /* transaction error code */
+	afs_int32 volid;	/*sequence number of the next packet to be read*/ /* open volume's id */
+    	afs_int32 partition;	    /* open volume's partition */
+	short iflags;	    /* initial attach mode flags (IT*) */
+    	char vflags;	    /* current volume status flags (VT*) */
+    	char tflags;	    /* transaction flags (TT*) */
+	char lastProcName[30];  /* name of the last procedure which used transaction */
+	int callValid;	/*flag which determines if following data is valid*/
+	afs_int32 readNext;	/*sequence number of the next packet to be read*/
+	afs_int32 transmitNext;	/*sequence number of the next packet to be transmitted*/
+	int lastSendTime;
+	int lastReceiveTime;
+};
+
+struct pIDs {
+	afs_int32 partIds[26];
+};
+
+struct diskPartition {
+	 char	name[32];	/* Mounted partition name */
+   	 char	devName[32];	
+	 int	lock_fd;
+	int	totalUsable;
+	int 	free;
+	int 	minFree;
+
+};
+
+struct restoreCookie {
+	char name[32];
+	afs_int32 type;
+	afs_int32 clone;
+	afs_int32 parent;
+};
+
+struct replica {
+	afs_int32 trans;
+	struct destServer server;
+};
+
+typedef  replica manyDests<>;
+typedef  afs_int32 manyResults<>;
+typedef  transDebugInfo transDebugEntries<>;
+typedef  volintInfo volEntries<>;
+typedef  afs_int32 partEntries<>;
+typedef  volintXInfo volXEntries<>;
+
+proc CreateVolume(
+  IN afs_int32 partition,
+  string name<>,
+  IN afs_int32 type,
+  IN afs_int32 parent,
+  INOUT afs_int32 *volid,
+  OUT afs_int32 *trans
+) = VOLCREATEVOLUME;
+
+proc DeleteVolume(
+  IN afs_int32 trans
+) = VOLDELETEVOLUME;
+
+proc Restore(
+  IN afs_int32 toTrans,
+  IN afs_int32 flags,
+  IN struct restoreCookie *cookie
+) split = VOLRESTORE;
+
+proc Forward(
+  IN afs_int32 fromTrans,
+  IN afs_int32 fromDate,
+  IN struct destServer *destination,
+  IN afs_int32 destTrans,
+  IN struct restoreCookie *cookie
+) = VOLFORWARD;
+
+proc EndTrans(
+  IN afs_int32 trans,
+  OUT afs_int32 *rcode
+) = VOLENDTRANS;
+
+proc Clone(
+  IN afs_int32 trans,
+  IN afs_int32 purgeVol,
+  IN afs_int32 newType,
+  IN string newName<>,
+  INOUT afs_int32 *newVol
+) = VOLCLONE;
+
+proc SetFlags(
+  IN afs_int32 trans,
+  IN afs_int32 flags
+) = VOLSETFLAGS;
+
+proc GetFlags(
+  IN afs_int32 trans,
+  OUT afs_int32 *flags
+) = VOLGETFLAGS;
+
+proc TransCreate(
+  IN afs_int32 volume,
+  IN afs_int32 partition,
+  IN afs_int32 flags,
+  OUT afs_int32 *trans
+) = VOLTRANSCREATE;
+
+proc Dump(
+  IN afs_int32 fromTrans,
+  IN afs_int32 fromDate
+) split = VOLDUMP;
+
+proc GetNthVolume(
+  IN afs_int32 index,
+  OUT afs_int32 *volume,
+  OUT afs_int32 *partition
+) = VOLGETNTHVOLUME;
+
+proc SetForwarding(
+  IN afs_int32 tid,
+  IN afs_int32 newsite
+) = VOLSETFORWARDING;
+
+proc GetName(
+  IN afs_int32 tid,
+  OUT string tname<256>
+) = VOLGETNAME;
+
+proc GetStatus(
+  IN afs_int32 tid,
+  OUT struct volser_status *status
+) = VOLGETSTATUS;
+
+proc SignalRestore(
+  IN string name<>,
+  int type,
+  afs_int32 pid,
+  afs_int32 cloneid
+) = VOLSIGRESTORE;
+
+proc ListPartitions(
+  OUT struct pIDs *partIDs
+) = VOLLISTPARTITIONS;
+
+proc ListVolumes(
+  IN afs_int32 partID,
+  afs_int32 flags,
+  OUT volEntries *resultEntries
+) = VOLLISTVOLS;
+
+proc SetIdsTypes(
+  IN afs_int32 tId,
+  string name<>,
+  afs_int32 type,
+  afs_int32 pId,
+  afs_int32 cloneId,
+  afs_int32 backupId
+) = VOLSETIDSTYPES;
+
+proc Monitor(
+  OUT transDebugEntries *result
+) = VOLMONITOR;
+
+proc PartitionInfo(
+  IN string name<>,
+  OUT struct diskPartition *partition
+) = VOLDISKPART;
+
+proc ReClone(
+  IN afs_int32 tid,
+  afs_int32 cloneID
+) = VOLRECLONE;
+
+proc ListOneVolume(
+  IN afs_int32 partID,
+  afs_int32 volid,
+  OUT volEntries *resultEntries
+) = VOLLISTONEVOL;
+
+proc NukeVolume(
+  IN afs_int32 partID,
+  afs_int32 volID
+) = VOLNUKE;
+
+proc SetDate(
+  IN afs_int32 tid,
+  afs_int32 newDate
+) = VOLSETDATE;
+
+proc XListVolumes(
+  IN afs_int32 partID,
+  afs_int32 flags,
+  OUT volXEntries *resultXEntriesP
+) = VOLXLISTVOLS;
+
+proc XListOneVolume(
+  IN afs_int32 partID,
+  afs_int32 volid,
+  OUT volXEntries *resultXEntries
+) = VOLXLISTONEVOL;
+
+proc SetInfo(
+  IN afs_int32 tid,
+  struct volintInfo *status
+) = VOLSETINFO;
+
+proc XListPartitions(
+  OUT struct partEntries *partIDs
+) = VOLXLISTPARTITIONS;
+
+proc ForwardMultiple(
+  IN afs_int32 fromTrans,
+  IN afs_int32 fromDate,
+  IN manyDests *destinations,
+  IN afs_int32 spare,
+  IN struct restoreCookie *cookie,
+  OUT manyResults *results
+) = VOLFORWARDMULTIPLE;

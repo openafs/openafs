@@ -1,0 +1,42 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+#
+
+!INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\..\config\NTMakefile.version
+
+############################################################################
+# Definitions for building a bosctlsvc.exe
+
+EXEFILE = $(DESTDIR)\root.server\usr\afs\bin\bosctlsvc.exe
+
+EXEOBJS =\
+	bosctlsvc.obj \
+	bosctlsvc.res
+
+EXELIBS =\
+	$(DESTDIR)\lib\afs\afsutil.lib \
+	$(DESTDIR)\lib\afs\afseventlog.lib \
+	$(DESTDIR)\lib\afs\afsreg.lib \
+	$(DESTDIR)\lib\afs\afsprocmgmt.lib
+
+$(EXEFILE): $(EXEOBJS) $(EXELIBS)
+	$(EXECONLINK)
+	$(EXEPREP)
+
+############################################################################
+# Definitions for generating versioninfo resource via RC
+
+bosctlsvc.res: bosctlsvc.rc AFS_component_version_number.h
+#	$(RC) $*.rc
+
+
+############################################################################
+# Install target; primary makefile target
+
+install: $(LIBFILE) $(DLLFILE) $(EXEFILE) $(INCFILES)
+
+
+############################################################################
+# Local clean target; augments predefined clean target
+
+clean::

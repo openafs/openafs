@@ -1,0 +1,177 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+#
+
+# Override default definitions in NTMakefile.$(SYS_NAME) before including.
+
+!INCLUDE ..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\config\NTMakefile.version
+
+
+############################################################################
+# Definitions for installing header files
+
+INCFILEDIR = $(DESTDIR)\include 
+
+INCFILES =\
+	$(INCFILEDIR)\afs\ptserver.h \
+	$(INCFILEDIR)\afs\ptint.h \
+	$(INCFILEDIR)\afs\pterror.h \
+	$(INCFILEDIR)\afs\ptclient.h 
+
+############################################################################
+# build afsprot.lib
+
+LIBFILE = $(DESTDIR)\lib\afs\afsprot.lib
+
+LIBOBJS =\
+	ptuser.obj \
+	pterror.obj \
+	ptint.cs.obj \
+	ptint.xdr.obj \
+	AFS_component_version_number.obj
+
+
+$(LIBFILE): $(LIBOBJS)  
+	$(LIBARCH) 
+
+############################################################################
+# build ptserver.exe
+
+PTSERVER = $(DESTDIR)\root.server\usr\afs\bin\ptserver.exe
+
+PTSERVER_EXEOBJS =\
+	ptint.ss.obj \
+	ptint.xdr.obj \
+	ptserver.obj \
+	ptutils.obj \
+	ptprocs.obj \
+	utils.obj \
+	ptserver.res
+	
+
+PTSERVER_EXELIBS =\
+	$(DESTDIR)\lib\afsubik.lib \
+	$(DESTDIR)\lib\afs\afsauth.lib \
+	$(DESTDIR)\lib\afsrxkad.lib \
+	$(DESTDIR)\lib\afsrxstat.lib \
+	$(DESTDIR)\lib\afsrx.lib \
+	$(DESTDIR)\lib\afslwp.lib \
+	$(DESTDIR)\lib\afsdes.lib \
+	$(DESTDIR)\lib\afs\afscom_err.lib \
+	$(DESTDIR)\lib\afs\afsutil.lib \
+	$(DESTDIR)\lib\afs\afsaudit.lib \
+	$(DESTDIR)\lib\afs\afseventlog.lib \
+	$(DESTDIR)\lib\afs\afsreg.lib \
+	$(DESTDIR)\lib\afs\afsprocmgmt.lib
+
+
+$(PTSERVER): $(PTSERVER_EXEOBJS) $(PTSERVER_EXELIBS)
+	$(EXECONLINK)
+	$(EXEPREP) 
+
+
+
+############################################################################
+# build pts.exe
+
+PTS = $(DESTDIR)\bin\pts.exe
+
+PTS_EXEOBJS =\
+	pts.obj \
+	pts.res
+
+PTS_EXELIBS =\
+	$(DESTDIR)\lib\afsubik.lib \
+	$(DESTDIR)\lib\afs\afsauth.lib \
+	$(DESTDIR)\lib\afsrxkad.lib \
+	$(DESTDIR)\lib\afsrx.lib \
+	$(DESTDIR)\lib\afslwp.lib \
+	$(DESTDIR)\lib\afsdes.lib \
+	$(DESTDIR)\lib\afs\afscom_err.lib \
+	$(DESTDIR)\lib\afs\afsutil.lib \
+	$(DESTDIR)\lib\afs\afsprot.lib \
+	$(DESTDIR)\lib\afs\afscmd.lib \
+	$(DESTDIR)\lib\afs\afsreg.lib \
+	$(DESTDIR)\lib\afs\afseventlog.lib \
+	$(DESTDIR)\lib\afs\afspioctl.lib
+
+$(PTS): $(PTS_EXEOBJS) $(PTS_EXELIBS) 
+	$(EXECONLINK)
+	$(EXEPREP) 
+
+
+
+############################################################################
+# generate versioninfo resources
+
+ptserver.res: ptserver.rc AFS_component_version_number.h
+	$(RC) $*.rc
+pts.res: pts.rc AFS_component_version_number.h
+	$(RC) $*.rc
+
+############################################################################
+# rxgen on pting.xg
+
+ptint.ss.c ptint.cs.c ptint.xdr.c $(DESTDIR)\include\afs\ptint.h: ptint.xg
+	$(RXGEN) -x $**
+	$(COPY) ptint.h $(DESTDIR)\include\afs\ptint.h
+
+
+############################################################################
+# Definitions for generating files via COMPILE_ET
+
+$(DESTDIR)\include\afs\pterror.h pterror.c: pterror.et
+	$(DEL) pterror.h pterror.c
+	$(COMPILE_ET) pterror  -h pterror
+	$(COPY) pterror.h $(DESTDIR)\include\afs\pterror.h
+
+############################################################################
+# install pts, ptserver and afsprot.lib
+
+install: $(INCFILES) $(LIBFILE) $(PTSERVER) $(PTS) readgroup.exe \
+	readpwd.exe  testpt.exe db_verify.exe  \
+	$(DESTDIR)\root.server\usr\afs\bin\pts.exe \
+	$(INCFILEDIR)\afs\prserver.h $(INCFILEDIR)\afs\print.h \
+	$(INCFILEDIR)\afs\prerror.h $(INCFILEDIR)\afs\prclient.h
+
+
+# install various exe's and header files
+$(DESTDIR)\root.server\usr\afs\bin\pts.exe: $(PTS)
+	$(COPY) $(PTS) $(DESTDIR)\root.server\usr\afs\bin\pts.exe
+
+$(INCFILEDIR)\afs\prserver.h: $(INCFILEDIR)\afs\ptserver.h
+	$(COPY)	$(INCFILEDIR)\afs\ptserver.h $(INCFILEDIR)\afs\prserver.h
+
+$(INCFILEDIR)\afs\print.h: $(INCFILEDIR)\afs\ptint.h 
+	$(COPY)	$(INCFILEDIR)\afs\ptint.h    $(INCFILEDIR)\afs\print.h
+
+$(INCFILEDIR)\afs\prerror.h: $(INCFILEDIR)\afs\pterror.h
+	$(COPY)	$(INCFILEDIR)\afs\pterror.h  $(INCFILEDIR)\afs\prerror.h
+
+$(INCFILEDIR)\afs\prclient.h: $(INCFILEDIR)\afs\ptclient.h
+	$(COPY)	$(INCFILEDIR)\afs\ptclient.h $(INCFILEDIR)\afs\prclient.h
+	$(ECHO) #define ERROR_TABLE_BASE_pr ERROR_TABLE_BASE_pt >> $(INCFILEDIR)\afs\prclient.h
+
+############################################################################
+# clean up
+
+clean::
+	$(DEL) ptint.cs.c ptint.ss.c ptclient ptint.xdr.c ptint.h
+	$(DEL) readgroup.exe readpwd.exe db_verify.exe testpt.exe 
+	$(DEL) pterror.h pterror.c
+
+############################################################################
+# tests?
+TEST_LIBS = $(PTS_EXELIBS)
+
+readgroup.exe: readgroup.obj $(LIBFILE) $(TEST_LIBS)
+	$(EXECONLINK)
+	
+readpwd.exe: readpwd.obj $(LIBFILE) $(TEST_LIBS)
+	$(EXECONLINK)
+
+testpt.exe: testpt.obj $(LIBFILE) $(TEST_LIBS)
+	$(EXECONLINK)
+
+db_verify.exe: db_verify.obj pterror.obj display.obj $(LIBFILE) $(TEST_LIBS)
+	$(EXECONLINK)

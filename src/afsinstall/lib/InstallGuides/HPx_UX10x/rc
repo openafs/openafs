@@ -1,0 +1,13 @@
+#
+# rc
+#
+# An InstallGuide for installing the initialization script
+# For HP 9000 series systems running HPUX 10.X
+#
+
+sub rc {
+&Copy("root.client/usr/vice/etc/dkload/afs.rc", "/sbin/init.d/afs");
+&Chmod (0555, "/sbin/init.d/afs");
+&Symlink("../init.d/afs", "/sbin/rc2.d/K800afs");
+&Symlink("../init.d/afs", "/sbin/rc2.d/S460afs");
+}

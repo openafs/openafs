@@ -1,0 +1,21 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+#
+
+!INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\..\config\NTMakefile.version
+
+LIBS =\
+	$(DESTDIR)\lib\afs\afsutil.lib \
+	$(DESTDIR)\lib\afs\afsreg.lib
+
+dirpath_test.exe: dirpath_test.obj $(LIBS)
+	$(EXECONLINK)
+
+test tests: dirpath_test.exe
+
+clean::
+	$(DEL) dirpath_test.exe
+
+
+
+

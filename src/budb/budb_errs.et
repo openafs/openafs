@@ -1,0 +1,56 @@
+#/* Copyright (C) 1989,1990 Transarc Corporation - All rights reserved */
+#/*
+# * (C) COPYRIGHT IBM CORPORATION 1989
+# * LICENSED MATERIALS - PROPERTY OF IBM
+# */
+
+# Backup Database error table
+
+# NOTE: BUDB_NOTPERMITTED value is hardcoded in audit/audit.h, so if you
+# make changes here, make sure that audit/audit.h is kept up to date.
+
+error_table budb
+#useful errors
+	ec BUDB_DUMPIDEXISTS, "dump with specified id already exists"
+	ec BUDB_NODUMPID, "no dump matching the id was found"
+	ec BUDB_NODUMPNAME, "no dump matching the name was found"
+	ec BUDB_NOTAPENAME, "no tape matching the name was found"
+	ec BUDB_NOVOLUMENAME, "no volume matching the name was found"
+	ec BUDB_NOENT, "entry doesn't exist"
+	ec BUDB_TAPENOTINUSE, "reference to a tape not being used"
+	ec BUDB_DUMPFAILED, "dump of database failed"
+	ec BUDB_NOTPERMITTED, "access to database denied"
+	ec BUDB_VERSIONMISMATCH, "incompatible version numbers"
+
+#interface
+	ec BUDB_BADARGUMENT, "argument too long or out of range"
+	ec BUDB_BADPROTOCOL, "sequence of operations incorrect"
+	ec BUDB_BADFLAGS, "inconsistent or unsupported flags bit combination"
+	ec BUDB_LIST2BIG, "requested list too large"
+	ec BUDB_ENDOFLIST, "index to iterator function is out of range"
+	ec BUDB_BLOCKTYPE, "bad database block type"
+
+#access control
+        ec BUDB_NOTLOCKED, "lock is not set"
+	ec BUDB_LOCKED,	"lock is held by another user"
+	ec BUDB_SELFLOCKED, "attempt to lock a lock already held"
+
+#compatibility
+	ec BUDB_OLDINTERFACE, "interface incompatible"
+
+#generic - operational/programming
+	ec BUDB_IO, "Ubik I/O error"
+	ec BUDB_ADDR, "bad database address"
+	ec BUDB_DATABASEINCONSISTENT, "backup database is inconsistent"
+	ec BUDB_INTERNALERROR, "internal error encountered in backup database server"
+	ec BUDB_NOCELLS, "error reading cell database"
+	ec BUDB_NOCELL, "cell name not found"
+	ec BUDB_EMPTY, "database empty or corrupted"
+	ec BUDB_UBIKINIT, "Ubik ClientInit failed"
+	ec BUDB_ALLOCFAIL, "couldn't allocate entry"
+        ec BUDB_NOMEM, "can't allocate memory"
+
+#useful errors
+	ec BUDB_NOTINITIALDUMP, "dump is not an initial dump"
+	ec BUDB_DUMPNOTINUSE, "reference to a dump not being used"
+end

@@ -1,0 +1,45 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+#
+
+!INCLUDE ..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\config\NTMakefile.version
+
+
+
+############################################################################
+# Definitions for installing header files
+
+INCFILEDIR = $(DESTDIR)\include\afs
+
+INCFILES =\
+	$(INCFILEDIR)\dir.h
+
+
+############################################################################
+# build afsdir.lib
+
+DIR_LIBFILE = $(DESTDIR)\lib\afs\afsdir.lib
+
+DIR_LIBOBJS =\
+	buffer.obj \
+	dir.obj \
+	salvage.obj \
+	AFS_component_version_number.obj
+
+$(DIR_LIBFILE): $(DIR_LIBOBJS) 
+	$(LIBARCH)  
+
+
+############################################################################
+# make and install library.
+install: $(DIR_LIBFILE) $(INCFILES)
+
+
+############################################################################
+# Local clean target; augments predefined clean target
+
+clean::
+
+
+
+

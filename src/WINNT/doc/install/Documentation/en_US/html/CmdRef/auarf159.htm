@@ -1,0 +1,103 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3190/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 5 Nov 1999 at 13:58:29                -->
+<META HTTP-EQUIV="updated" CONTENT="Fri, 05 Nov 1999 13:58:29">
+<META HTTP-EQUIV="review" CONTENT="Sun, 05 Nov 2000 13:58:29">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 05 Nov 2001 13:58:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf158.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf160.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRFS_SETCELL" HREF="auarf002.htm#ToC_173">fs setcell</A></H2>
+<A NAME="IDX4955"></A>
+<A NAME="IDX4956"></A>
+<A NAME="IDX4957"></A>
+<A NAME="IDX4958"></A>
+<A NAME="IDX4959"></A>
+<A NAME="IDX4960"></A>
+<P><STRONG>Purpose</STRONG>
+<P>Allows or disallows running of setuid programs from specified cells
+<P><STRONG>Synopsis</STRONG>
+<PRE><B>fs setcell -cell</B> &lt;<VAR>cell&nbsp;name</VAR>><SUP>+</SUP>  [<B>-suid</B>]  [<B>-nosuid</B>]  [<B>-help</B>]
+   
+<B>fs setce -c</B> &lt;<VAR>cell&nbsp;name</VAR>><SUP>+</SUP>  [<B>-s</B>]  [<B>-n</B>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>Description</STRONG>
+<P>The <B>fs setcell</B> command sets whether the Cache Manager allows
+programs (and other executable files) from each cell named by the
+<B>-cell</B> argument to run with setuid permission. By default,
+the Cache Manager allows programs from its home cell to run with setuid
+permission, but not programs from any foreign cells. A program belongs
+to the same cell as the file server machine that houses the volume in which
+the program&#39;s binary file resides, as specified in the file server
+machine&#39;s <B>/usr/afs/etc/ThisCell</B> file. The Cache Manager
+determines its own home cell by reading the <B>/usr/vice/etc/ThisCell</B>
+file at initialization.
+<P>To enable programs from each specified cell to run with setuid permission,
+include the <B>-suid</B> flag. To prohibit programs from running
+with setuid permission, include the <B>-nosuid</B> flag, or omit both
+flags.
+<P>The <B>fs setcell</B> command directly alters a cell&#39;s setuid
+status as recorded in kernel memory, so rebooting the machine is
+unnecessary. However, non-default settings do not persist across
+reboots of the machine unless the appropriate <B>fs setcell</B> command
+appears in the machine&#39;s AFS initialization file.
+<P>To display a cell&#39;s setuid status, issue the <B>fs
+getcellstatus</B> command.
+<P><STRONG>Cautions</STRONG>
+<P>AFS does not recognize effective UID&#58; if a setuid program accesses
+AFS files and directories, it does so using the current AFS identity of the
+AFS user who initialized the program, not of the program&#39;s owner.
+Only the local file system recognizes effective UID.
+<P>Only members of the <B>system&#58;administrators</B> group can turn
+on the setuid mode bit on an AFS file or directory.
+<P>When the setuid mode bit is turned on, the UNIX <B>ls -l</B> command
+displays the third user mode bit as an <TT>s</TT> instead of an
+<TT>x</TT>. However, the <TT>s</TT> does not appear on an AFS file
+or directory unless setuid permission is enabled for the cell in which the
+file resides.
+<P><STRONG>Options</STRONG>
+<DL>
+<P><DT><B>-cell
+</B><DD>Names each cell for which to set setuid status. Provide the fully
+qualified domain name, or a shortened form that disambiguates it from the
+other cells listed in the local <B>/usr/vice/etc/CellServDB</B>
+file.
+<P><DT><B>-suid
+</B><DD>Allows programs from each specified cell to run with setuid
+privilege. Provide it or the <B>-nosuid</B> flag, or omit both
+flags to disallow programs from running with setuid privilege.
+<P><DT><B>-nosuid
+</B><DD>Prevents programs from each specified cell from running with setuid
+privilege. Provide it or the <B>-suid</B> flag, or omit both flags
+to disallow programs form running with setuid privilege.
+<P><DT><B>-help
+</B><DD>Prints the online help for this command. All other valid options
+are ignored.
+</DL>
+<P><STRONG>Examples</STRONG>
+<P>The following command enables executable files from the State University
+cell to run with setuid privilege on the local machine&#58;
+<PRE>   % <B>fs setcell -cell stateu.edu -suid</B>
+   
+</PRE>
+<P><STRONG>Privilege Required</STRONG>
+<P>The issuer must be logged in as the local superuser <B>root</B>.
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf144.htm#HDRFS_GETCELLSTATUS">fs getcellstatus</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf158.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf160.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

@@ -1,0 +1,50 @@
+#!/sbin/sh
+# @(#) $Revision: 1.1 $
+#
+##################################################################
+#
+# Name :
+#	 mount (afs) - /sbin/fs/afs/mount
+#
+# Description
+# 	This file contains scripts/commands necessary to mount
+#	the afs file systems.
+#	
+#	It should be invoked by the generic mountall only.
+#
+# Input Parameters:
+#	None
+#
+# Expected results:
+#	see description.
+#
+# Side effects of this test:
+#  	none
+#
+# Supporting files and Relationship:
+#        i) various "/sbin/fs/afs" commands are used by this script.
+#       ii) generic bcheckrc scrtipt located in the /sbin
+#           directory invokes this script.
+#
+#
+##################################################################
+#
+#
+# Description - This function is used by mountall to mount all the afs 
+# file systems  in the static file system table, /etc/fstab.
+#
+# Result values -  code returned from hfs mount.
+#
+# Used (exclusively) by - /sbin/mountall
+#
+
+
+# The $1 parameter has the form -Fafs. This is to be filtered before
+# the arguments are passed onto the hfs mount.
+
+/sbin/fs/hfs/mount $2 $3 $4 $5 $6 $7 $8 $9  
+exit $?
+
+#*********************************************************************
+# End of mount (afs)
+#*********************************************************************

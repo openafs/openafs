@@ -1,0 +1,9 @@
+/* Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+ */
+
+/* Define VERSIONINFO resource */
+
+#define  AFS_VERINFO_FILE_DESCRIPTION "AFS Authentication Utilities DLL"
+
+#include "AFS_component_version_number.h"
+#include "..\config\NTVersioninfo.rc"

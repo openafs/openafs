@@ -1,0 +1,178 @@
+#! /bin/sh
+#
+# AFS	Start and stop AFS components
+# 
+# 
+# chkconfig: 345 60 20
+# description:  AFS is a distributed file system which provides location
+#		transparency, caching and secure authentication.
+#		Additional configuration can be done in the /etc/sysconfig/afs
+#		file. Read the documentation in that file for more information.
+#
+# Note that AFS does not use a pid file in /var/run. It is turned off by
+# unmounting /afs.
+
+
+# Gather up options and post startup script name, if present
+if [ -f /etc/sysconfig/afs ]; then
+	. /etc/sysconfig/afs
+fi
+
+# is_on returns 1 if value of arg is "on"
+is_on() {
+	if  test "$1" = "on" ; then return 0
+	else return 1
+	fi
+}
+
+# If choose_client can't correctly determine which client to use, set
+# LIBAFS manually.
+choose_client() {
+
+	# Use the second field of the uname -v output instead of just
+	# doing a match on the whole thing to protect against matching
+	# a timezone named SMP -- I don't know of one, but let's be
+	# paranoid.
+
+	set X `uname -v`; shift
+	case $2 in
+	SMP) MP=.mp ;;	# MP system
+	*)   MP= ;;	# SP system
+	esac
+
+	# For now, just use uname -r to get the module version. 
+	VERSION=`uname -r`
+
+	LIBAFS=libafs-$VERSION$MP.o
+}
+
+#
+# Find prefix symbol to use with insmod.  We find the unregister_filesystem
+# string from /proc/ksyms since we know it's there.  If /proc/ksyms does not
+# exist, we print that info to the console and use the uname -v output to
+# decide on a prefix.
+# unregister_filesystem_Rsmp_b240cad8 is a typcial SMP version string from
+# a kernel built from ftp.kernel.org
+#
+
+KSYMS_FILE=/proc/ksyms
+SEARCH_STR="unregister_filesystem"
+DEFAULT_SMP_PREFIX="smp_" # Redhat kernels need "smp" instead
+PREFIX="" # none needed for UP with <= 1Gig memory
+
+set_prefix()
+{
+	h='[0-9a-fA-F]'
+	h8="$h$h$h$h$h$h$h$h"
+	prefix_set=0
+
+	set X `fgrep $SEARCH_STR $KSYMS_FILE 2> /dev/null`; shift
+	str=$2
+	case $str in
+	${SEARCH_STR}_R$h8)
+		# No prefix required
+		;;
+	$SEARCH_STR)
+		# No versioning in kernel symbols
+		;;
+	${SEARCH_STR}_R*$h8)
+		suffix=${str#${SEARCH_STR}_R}
+		PREFIX=${suffix%$h8}
+		;;
+	*)
+		case $str in
+		'')
+			echo afsd: Cannot find \"$SEARCH_STR\" in file $KSYMS_FILE
+			;;
+		*)
+			echo afsd: Malformed kernel version symbol \"$str\"
+			;;
+		esac
+
+		echo Guessing prefix from output of uname -v
+		set X `uname -v`; shift
+		case $2 in
+		SMP)
+			PREFIX=$DEFAULT_SMP_PREFIX
+			;;
+		esac
+		;;
+	esac
+}
+
+
+MODLOADDIR=/usr/vice/etc/modload
+# load_client loads the AFS client module if it's not already loaded. 
+load_client() {
+	# If LIBAFS is set, use it.
+	if [ -z "$LIBAFS" ] ; then
+		# Try to determine the right client.
+		choose_client
+	fi
+    
+	if [ ! -f $MODLOADDIR/$LIBAFS ] ; then
+		echo AFS module $MODLOADDIR/$LIBAFS does not exist. Not starting AFS.
+		exit 1
+	fi
+
+	# use the prefix command if required
+	set_prefix
+	/sbin/insmod ${PREFIX:+-P $PREFIX} -f -m $MODLOADDIR/$LIBAFS > $MODLOADDIR/libafs.map 2>&1
+}
+
+case "$1" in 
+  start)
+	# Load kernel extensions
+	if  load_client  ; then :
+	else
+		echo Failed to load AFS client, not starting AFS services.
+		exit 1
+	fi
+
+	echo "Starting AFS services..... "
+	# Start bosserver, it if exists
+	if  is_on $AFS_SERVER && test -x /usr/afs/bin/bosserver  ; then
+		/usr/afs/bin/bosserver 
+	fi
+
+	# Start AFS client
+	if  is_on $AFS_CLIENT && test -x /usr/vice/etc/afsd  ; then
+		/usr/vice/etc/afsd ${OPTIONS}
+
+		# Start AFS version of inetd.conf if present.
+		if  test -f /usr/afsws/etc/inetd.conf -a -x /usr/afsws/etc/inetd.afs ; then
+			/usr/afsws/etc/inetd.afs /usr/afsws/etc/inetd.conf
+		fi
+		$AFS_POST_INIT
+	fi
+
+	;;
+
+  stop)
+	# Stop AFS
+	echo "Stopping AFS services..... "
+
+	if  is_on $AFS_CLIENT  ; then
+		killall inetd.afs
+		umount /afs
+	fi
+
+	if  is_on $AFS_SERVER && test -x /usr/afs/bin/bos ; then
+		echo "Stopping AFS bosserver"
+		/usr/afs/bin/bos shutdown localhost -localauth -wait
+		killall -HUP bosserver
+	fi
+
+	LIBAFS=`/sbin/lsmod | fgrep libafs`
+	if [ -n "$LIBAFS" ] ; then
+		LIBAFS=`echo $LIBAFS | awk 'BEGIN { FS = " " } { print $1 }'`
+		/sbin/rmmod $LIBAFS
+	fi
+
+	;;
+
+  *)
+	echo Usage: 'afs <start|stop>'
+
+esac
+

@@ -1,0 +1,165 @@
+#/* Copyright (C) 1995, 1989 Transarc Corporation - All rights reserved */
+# 
+# MakefileProto for AIX systems
+#
+
+DESTDIR=DEST/
+include $(DESTDIR)../obj/config/Makefile.${SYS_NAME}
+
+# OS specific object files:
+AFS_OS_OBJS = \
+	osi_assem.o \
+	osi_config.o \
+	osi_groups.o \
+	osi_file.o \
+	osi_inode.o \
+	osi_misc.o \
+	osi_sleep.o \
+	osi_timeout.o \
+	osi_vm.o \
+	xdr.o \
+	xdr_array.o
+
+AFSNOIAUTHOBJS = \
+	afs_call.o \
+	afs_pioctl.o \
+	osi_vfsops.o \
+	osi_vnodeops.o
+
+
+# Object files for iauth NFS->AFS authenticator.
+AFSIAUTHOBJS = \
+	afs_call_iauth.o \
+	afs_nfsclnt_iauth.o \
+	afs_pioctl_iauth.o \
+	osi_vfsops_iauth.o \
+	osi_vnodeops_iauth.o
+
+# System specific build commands
+STRIP = /bin/strip
+DBUG  = -g
+#OPT   = -O
+OPT2   = -O
+
+IMPORTS = -bI:/lib/kernex.exp -bI:/lib/syscalls.exp -bI:/lib/sockets.exp \
+	-bI:/lib/netinet.exp \
+	-bI:${DESTDIR}lib/afs/extras.exp -bI:${DESTDIR}lib/afs/export.exp
+KDEFS = -U_IBMR2 -D_POWER -D_AIX -DNLS -D_NLS -DMSG -D__STR31__ -Daiws \
+	-D_POWER_RS -D_POWER_PC -D_POWER_RS1 -D_POWER_RS2 -D_POWER_RSC \
+	 -D_POWER_601 -D_POWER_603 -D_POWER_604 -D_THREADS -M  -D_KERNEL \
+	-D_POWER_MP -UKOFF -DAFSDEBUG -DVICE -DNFS -DUFS -DINET -DQUOTA \
+	 -DGETMOUNT -H8 -DAFS -DAFS_COMMON -D_VOPS -D_SUN -DKERNEL
+LDSTUFF= -b"binder:/usr/lib/bind glink:/usr/lib/glink.o" -bnoentry -b h:4 \
+	-D0 -T512
+LDFLAGS = -m -eafs_config -bexport:${DESTDIR}/lib/afs/afs.exp ${IMPORTS} \
+	 -lsys -lcsys 
+
+CFLAGS=-I. -I.. ${FSINCLUDES} $(KDEFS) $(KOPTS) ${DBUG}
+
+# Name of directory to hold object files and libraries.
+KOBJ = MODLOAD
+
+# This tells Makefile.common to use it's single directory build target.
+COMPDIRS = single_compdir
+
+include Makefile.common
+
+setup:
+	-mkdir $(KOBJ)
+	-rm $(KOBJ)/Makefile $(KOBJ)/Makefile.common
+	ln -s ../Makefile $(KOBJ)/Makefile
+	ln -s ../Makefile.common $(KOBJ)/Makefile.common
+	-rm -f  h net netinet rpc ufs nfs  machine sys
+	ln -s /usr/include/sys h
+	ln -s /usr/include/net net
+	ln -s /usr/include/netinet netinet
+	ln -s /usr/include/rpc rpc
+	ln -s /usr/include/sys sys
+	ln -s /usr/include/nfs nfs
+	ln -s /usr/include/jfs ufs
+
+
+
+
+
+# Standard AFS->NFS translator support is removed in AFS 3.5 in favor of
+# the iauth authentication mechanism. The model was changed by IBM in the
+# middle of an OS release. So iauth is only supported on AIX 4.1.5 and 
+# later 4.1.x (if they are ever made) and AIX 4.2.1 (and later AIX 4.2.x if
+# they are ever made. AIX 4.3 also uses the iauth translator.
+
+CLIENTDIR = $(DESTDIR)root.client/usr/vice/etc/dkload
+LIBAFSIAUTH = afs.ext.iauth
+LIBAFS = afs.ext
+
+DEST_LIBAFSIAUTH = $(CLIENTDIR)/$(LIBAFSIAUTH)
+DEST_LIBAFS = $(CLIENTDIR)/$(LIBAFS)
+
+$(DEST_LIBAFS): $(LIBAFS)
+	$(INSTALL) -f $? $@
+	-${STRIP} $@
+	$(INSTALL) -f $?.map $@.map
+	
+$(DEST_LIBAFSIAUTH): $(LIBAFSIAUTH)
+	$(INSTALL) -f $? $@
+	-${STRIP} $@
+	$(INSTALL) -f $?.map $@.map
+	
+	
+
+$(LIBAFSIAUTH): $(AFSAOBJS) $(AFSIAUTHOBJS)
+	${LD} ${LDSTUFF}  -bloadmap:afs.ext.iauth.loadmap \
+	 -bmap:afs.ext.iauth.map -o afs.ext.iauth \
+	${AFSAOBJS} ${AFSIAUTHOBJS} ${LIBS} ${LDFLAGS}
+
+$(LIBAFS): $(AFSAOBJS) $(AFSNOIAUTHOBJS)
+	${LD} ${LDSTUFF}  -bloadmap:afs.ext.loadmap \
+	 -bmap:afs.ext.map -o afs.ext \
+	${AFSAOBJS} $(AFSNOIAUTHOBJS) ${LIBS} ${LDFLAGS}
+
+libafs: $(DEST_LIBAFS) $(DEST_LIBAFSIAUTH)
+
+
+# Object build rules:
+# Common objects
+xdr.o: $(RX)/xdr.c
+	$(CRULE1);
+
+xdr_array.o: $(RX)/xdr_array.c
+	$(CRULE1);
+
+osi_assem.o:	${AFS}/osi_assem.s
+	${AS} -o osi_assem.o ${AFS}/osi_assem.s
+osi_config.o: $(AFS)/osi_config.c
+	$(CRULE1);
+osi_groups.o: $(AFS)/osi_groups.c
+	$(CRULE1);
+osi_file.o: $(AFS)/osi_file.c
+	$(CRULE1);
+osi_inode.o: $(AFS)/osi_inode.c
+	$(CRULE1);
+osi_misc.o: $(AFS)/osi_misc.c
+	$(CRULE1);
+osi_sleep.o: $(AFS)/osi_sleep.c
+	$(CRULE1);
+osi_timeout.o: $(AFS)/osi_timeout.c
+	$(CRULE1);
+osi_vfsops.o: $(AFS)/osi_vfsops.c
+	$(CRULE1);
+osi_vm.o: $(AFS)/osi_vm.c
+	$(CRULE1);
+osi_vnodeops.o: $(AFS)/osi_vnodeops.c
+	$(CRULE1);
+
+
+# Build rules for iauth objects.
+afs_call_iauth.o:	$(AFS)/afs_call.c
+	$(CRULE1) -DAFS_NONFSTRANS -DAFS_AIX_IAUTH_ENV -o afs_call_iauth.o;
+afs_nfsclnt_iauth.o:	$(AFS)/afs_nfsclnt.c
+	$(CRULE1) -DAFS_NONFSTRANS -DAFS_AIX_IAUTH_ENV -o afs_nfsclnt_iauth.o;
+afs_pioctl_iauth.o:	$(AFS)/afs_pioctl.c
+	$(CRULE1) -DAFS_NONFSTRANS -DAFS_AIX_IAUTH_ENV -o afs_pioctl_iauth.o;
+osi_vfsops_iauth.o: $(AFS)/osi_vfsops.c
+	$(CRULE1) -DAFS_NONFSTRANS  -DAFS_AIX_IAUTH_ENV -o osi_vfsops_iauth.o;
+osi_vnodeops_iauth.o:	$(AFS)/osi_vnodeops.c
+	$(CRULE1) -DAFS_NONFSTRANS -DAFS_AIX_IAUTH_ENV -o osi_vnodeops_iauth.o;

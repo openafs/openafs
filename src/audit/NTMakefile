@@ -1,0 +1,25 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+#
+
+!INCLUDE ..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\config\NTMakefile.version
+
+
+INCFILEDIR = $(DESTDIR)\include\afs
+
+INCFILES =\
+	$(INCFILEDIR)\audit.h
+
+# build afsaudit.lib
+
+LIBFILE = $(DESTDIR)\lib\afs\afsaudit.lib
+
+LIBOBJS =\
+	audit.obj
+
+$(LIBFILE): $(LIBOBJS) 
+	$(LIBARCH)  
+
+install:  $(INCFILES)  $(LIBFILE)
+
+clean::

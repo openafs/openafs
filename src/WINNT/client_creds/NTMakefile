@@ -1,0 +1,117 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+
+############################################################################
+
+# make compiler warnings fatal
+
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -WX
+
+# include the AFSD source tree on our inclusion path
+
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -I ..\afsd
+
+# include the primary makefile
+
+!INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\..\config\NTMakefile.version
+
+############################################################################
+#
+# BUILD TARGETS
+#
+
+EXEFILE = $(DESTDIR)\root.client\usr\vice\etc\afscreds.exe
+
+EXEOBJS = \
+	afscreds_stub.res \
+	advtab.obj \
+	afswiz.obj \
+	al_wizard.obj \
+	checklist.obj \
+	creds.obj \
+	credstab.obj \
+	drivemap.obj \
+	fs_utils.obj \
+	main.obj \
+	misc.obj \
+	mounttab.obj \
+	settings.obj \
+	shortcut.obj \
+	subclass.obj \
+	trayicon.obj \
+	window.obj
+
+VCLIBS =\
+	comctl32.lib \
+	shell32.lib \
+	uuid.lib \
+	ole32.lib \
+	mpr.lib
+
+EXELIBS = \
+	$(DESTDIR)\lib\afs\afspioctl.lib \
+	$(DESTDIR)\lib\afs\TaLocale.lib
+
+############################################################################
+#
+# EXTERNAL SOURCE FILES
+#
+# The following source files are required by this application, but live
+# elsewhere in the tree. To prevent checking in more than one copy of the
+# source files, they are copied to this directory at build-time.
+#
+
+COPYHEADERS = \
+	$(DESTDIR)\include\WINNT\al_wizard.h \
+	$(DESTDIR)\include\WINNT\checklist.h \
+	$(DESTDIR)\include\WINNT\subclass.h
+
+COPYSOURCES = \
+	.\al_wizard.cpp \
+	.\al_wizard.h \
+	.\checklist.cpp \
+	.\checklist.h \
+	.\drivemap.cpp \
+	.\drivemap.h \
+	.\fs_utils.c \
+	.\subclass.cpp \
+	.\subclass.h
+
+############################################################################
+
+{..\afsd}.c{.\}.c:
+	$(COPY) ..\afsd\$(*B).c .
+
+{..\afsapplib}.h{.\}.h:
+	$(COPY) ..\afsapplib\$(*B).h .
+
+{..\afsapplib}.cpp{.\}.cpp:
+	$(COPY) ..\afsapplib\$(*B).cpp .
+
+{..\client_config}.h{.\}.h:
+	$(COPY) ..\client_config\$(*B).h .
+
+{..\client_config}.cpp{.\}.cpp:
+	$(COPY) ..\client_config\$(*B).cpp .
+
+
+############################################################################
+
+$(EXEFILE) : $(EXEOBJS) $(EXELIBS)
+	$(EXEGUILINK) $(VCLIBS)
+	$(EXEPREP) 
+
+install : $(COPYSOURCES) $(COPYHEADERS) $(EXEFILE) lang
+
+lang ::
+	$(CD) lang
+	for /f %l in ('dir /B ??_??') do @$(NTLANG) %l $(MAKECMD) /nologo /f NTMakefile install
+	$(CD) ..
+
+############################################################################
+#
+# Dependencies
+#
+
+afscreds_stub.res : afscreds_stub.rc AFS_component_version_number.h
+

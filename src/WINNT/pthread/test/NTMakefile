@@ -1,0 +1,16 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+
+!INCLUDE ../../../config/NTMakefile.$(SYS_NAME)
+
+test tests: ptest.exe tsd.exe native.exe
+
+
+ptest.exe: ptest.obj $(DESTDIR)/lib/pthread.lib $(DESTDIR)/lib/afs/afsutil.lib
+	$(EXECONLINK)
+
+tsd.exe: tsd.obj $(DESTDIR)/lib/pthread.lib $(DESTDIR)/lib/afs/afsutil.lib
+	$(EXECONLINK)
+
+native.exe: native.obj $(DESTDIR)/lib/pthread.lib $(DESTDIR)/lib/afs/afsutil.lib
+	$(EXECONLINK)
+

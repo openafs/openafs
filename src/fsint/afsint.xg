@@ -1,0 +1,542 @@
+/*
+ * Copyright (C) 1989 Transarc Corporation - All rights reserved
+ *
+ * (C) COPYRIGHT IBM CORPORATION 1987, 1988
+ * LICENSED MATERIALS - PROPERTY OF IBM
+ *
+ * afsint.xg:
+ *	Definition of the AFS File Server RPC interface.
+ */
+
+#include "common.xg"			/*Common structures & definitions*/
+
+%#define VICECONNBAD	1234
+%#define VICETOKENDEAD	1235
+%#define AFS_LOCKWAIT	(5*60)
+
+customized struct CBS {
+    afs_int32 SeqLen;
+    char *SeqBody;
+};
+
+customized struct BBS {
+    afs_int32 MaxSeqLen;
+    afs_int32 SeqLen;
+    char *SeqBody;
+};
+
+customized struct AFSAccessList {
+    afs_int32 MaxSeqLen;
+    afs_int32 SeqLen;
+    char *SeqBody;
+};
+
+typedef AFSFid ViceFid;
+
+typedef afs_int32 ViceDataType;
+
+%#define Invalid 0
+%#define File 1 
+%#define Directory 2 
+%#define SymbolicLink 3 
+
+%#ifdef	KERNEL
+%#define	xdr_array(a,b,c,d,e,f)	xdr_arrayN(a,b,c,d,e,f)
+%#endif
+
+struct BD {
+    afs_int32 host;
+    afs_int32 portal;
+    afs_int32 session;
+};
+
+struct AFSVolSync {
+    afs_uint32 spare1;
+    afs_uint32 spare2;
+    afs_uint32 spare3;
+    afs_uint32 spare4;
+    afs_uint32 spare5;
+    afs_uint32 spare6;
+};
+
+struct AFSOldFetchStatus {
+    afs_uint32 InterfaceVersion;
+    afs_uint32 FileType;
+    afs_uint32 LinkCount;
+    afs_uint32 Length;
+    afs_uint32 DataVersion;
+    afs_uint32 Author;
+    afs_uint32 Owner;
+    afs_uint32 CallerAccess;
+    afs_uint32 AnonymousAccess;
+    afs_uint32 UnixModeBits;
+    afs_uint32 ParentVnode;
+    afs_uint32 ParentUnique;
+    afs_uint32 SegSize;
+    afs_uint32 ClientModTime;
+    afs_uint32 ServerModTime;
+    afs_uint32 Group;
+};
+
+struct AFSFetchStatus {
+    afs_uint32 InterfaceVersion;
+    afs_uint32 FileType;
+    afs_uint32 LinkCount;
+    afs_uint32 Length;
+    afs_uint32 DataVersion;
+    afs_uint32 Author;
+    afs_uint32 Owner;
+    afs_uint32 CallerAccess;
+    afs_uint32 AnonymousAccess;
+    afs_uint32 UnixModeBits;
+    afs_uint32 ParentVnode;
+    afs_uint32 ParentUnique;
+    afs_uint32 SegSize;
+    afs_uint32 ClientModTime;
+    afs_uint32 ServerModTime;
+    afs_uint32 Group;
+    afs_uint32 SyncCounter;
+    afs_uint32 dataVersionHigh; /* For AFS/DFS translator, hi bits of dvn */
+    afs_uint32 spare2;
+    afs_uint32 spare3;
+    afs_uint32 spare4;
+};
+
+struct AFSStoreStatus {
+    afs_uint32 Mask;	
+    afs_uint32 ClientModTime;
+    afs_uint32 Owner;
+    afs_uint32 Group;
+    afs_uint32 UnixModeBits;
+    afs_uint32 SegSize;
+};
+
+%#define	AFS_SETMODTIME	1
+%#define	AFS_SETOWNER	2
+%#define	AFS_SETGROUP		4
+%#define	AFS_SETMODE		8
+%#define	AFS_SETSEGSIZE	16
+%#define	AFS_FSYNC       1024
+
+typedef afs_int32 ViceVolumeType;
+
+%#define ReadOnly 0
+%#define ReadWrite 1
+
+
+struct ViceDisk {
+    afs_int32	BlocksAvailable;
+    afs_int32	TotalBlocks;
+    DiskName	Name;
+};
+
+struct ViceStatistics {
+    afs_uint32 CurrentMsgNumber;
+    afs_uint32 OldestMsgNumber;
+    afs_uint32 CurrentTime;
+    afs_uint32 BootTime;
+    afs_uint32 StartTime;
+    afs_int32	  CurrentConnections;
+    afs_uint32 TotalViceCalls;
+    afs_uint32 TotalFetchs;
+    afs_uint32 FetchDatas;
+    afs_uint32 FetchedBytes;
+    afs_int32	  FetchDataRate;
+    afs_uint32 TotalStores;
+    afs_uint32 StoreDatas;
+    afs_uint32 StoredBytes;
+    afs_int32	  StoreDataRate;
+    afs_uint32 TotalRPCBytesSent;
+    afs_uint32 TotalRPCBytesReceived;
+    afs_uint32 TotalRPCPacketsSent;
+    afs_uint32 TotalRPCPacketsReceived;
+    afs_uint32 TotalRPCPacketsLost;
+    afs_uint32 TotalRPCBogusPackets;
+    afs_int32	  SystemCPU;
+    afs_int32	  UserCPU;
+    afs_int32	  NiceCPU;
+    afs_int32	  IdleCPU;
+    afs_int32	  TotalIO;
+    afs_int32	  ActiveVM;
+    afs_int32	  TotalVM;
+    afs_int32	  EtherNetTotalErrors;
+    afs_int32	  EtherNetTotalWrites;
+    afs_int32	  EtherNetTotalInterupts;
+    afs_int32	  EtherNetGoodReads;
+    afs_int32	  EtherNetTotalBytesWritten;
+    afs_int32	  EtherNetTotalBytesRead;
+    afs_int32	  ProcessSize;
+    afs_int32	  WorkStations;
+    afs_int32	  ActiveWorkStations;
+    afs_int32	  Spare1;
+    afs_int32	  Spare2;
+    afs_int32	  Spare3;
+    afs_int32	  Spare4;
+    afs_int32	  Spare5;
+    afs_int32	  Spare6;
+    afs_int32	  Spare7;
+    afs_int32	  Spare8;
+    ViceDisk	  Disk1;
+    ViceDisk	  Disk2;
+    ViceDisk	  Disk3;
+    ViceDisk	  Disk4;
+    ViceDisk	  Disk5;
+    ViceDisk	  Disk6;
+    ViceDisk	  Disk7;
+    ViceDisk	  Disk8;
+    ViceDisk	  Disk9;
+    ViceDisk	  Disk10;
+};
+
+struct VolumeStatus {
+    afs_int32 Vid;
+    afs_int32 ParentId;
+    char Online;
+    char InService;
+    char Blessed;
+    char NeedsSalvage;
+    afs_int32 Type;
+    afs_int32 MinQuota;
+    afs_int32 MaxQuota;
+    afs_int32 BlocksInUse;
+    afs_int32 PartBlocksAvail;
+    afs_int32 PartMaxBlocks;
+};
+
+struct AFSFetchVolumeStatus {
+    afs_int32 Vid;
+    afs_int32 ParentId;
+    char Online;
+    char InService;
+    char Blessed;
+    char NeedsSalvage;
+    afs_int32 Type;
+    afs_int32 MinQuota;
+    afs_int32 MaxQuota;
+    afs_int32 BlocksInUse;
+    afs_int32 PartBlocksAvail;
+    afs_int32 PartMaxBlocks;
+};
+
+struct AFSStoreVolumeStatus {
+    afs_int32 Mask;
+    afs_int32 MinQuota;
+    afs_int32 MaxQuota;
+};
+
+const AFS_SETMINQUOTA = 1;
+const AFS_SETMAXQUOTA = 2;
+
+struct AFSVolumeInfo {
+    afs_uint32  Vid;
+    afs_int32	   Type;
+    afs_uint32  Type0;
+    afs_uint32  Type1;
+    afs_uint32  Type2;
+    afs_uint32  Type3;
+    afs_uint32  Type4;
+    afs_uint32  ServerCount;
+    afs_uint32  Server0;
+    afs_uint32  Server1;
+    afs_uint32  Server2;
+    afs_uint32  Server3;
+    afs_uint32  Server4;
+    afs_uint32  Server5;
+    afs_uint32  Server6;
+    afs_uint32  Server7;
+    unsigned short Port0;
+    unsigned short Port1;
+    unsigned short Port2;
+    unsigned short Port3;
+    unsigned short Port4;
+    unsigned short Port5;
+    unsigned short Port6;
+    unsigned short Port7;
+};
+
+struct VolumeInfo {
+    afs_uint32 Vid;
+    afs_int32	  Type;
+    afs_uint32 Type0;
+    afs_uint32 Type1;
+    afs_uint32 Type2;
+    afs_uint32 Type3;
+    afs_uint32 Type4;
+    afs_uint32 ServerCount;
+    afs_uint32 Server0;
+    afs_uint32 Server1;
+    afs_uint32 Server2;
+    afs_uint32 Server3;
+    afs_uint32 Server4;
+    afs_uint32 Server5;
+    afs_uint32 Server6;
+    afs_uint32 Server7;
+};
+
+typedef afs_int32 ViceLockType;
+typedef AFSFetchStatus AFSBulkStats<AFSCBMAX>;
+
+%#define LockRead		0
+%#define LockWrite		1
+%#define LockExtend	2
+%#define LockRelease	3
+
+typedef afs_int32 ViceOfflineType;
+
+%#define NoSalvage 0
+%#define Salvage 1
+
+%#ifdef KERNEL
+%#include "../afs/longc_procs.h"
+%#endif
+
+const FLUSHMAX = 10;
+typedef afs_int32 ViceIds<FLUSHMAX>;
+typedef	afs_int32 IPAddrs<FLUSHMAX>;
+
+package RXAFS_
+prefix S
+statindex 7
+
+FetchData(
+  IN  AFSFid *Fid, 
+  afs_int32 Pos, 
+  afs_int32 Length, 
+  OUT AFSFetchStatus *OutStatus, 
+  AFSCallBack *CallBack, 
+  AFSVolSync *Sync
+) split = 130;
+
+FetchACL(
+  IN  AFSFid *Fid, 
+  OUT AFSOpaque *AccessList, 
+  AFSFetchStatus *OutStatus, 
+  AFSVolSync *Sync
+) = 131;
+
+FetchStatus(
+  IN  AFSFid *Fid, 
+  OUT AFSFetchStatus *OutStatus, 
+  AFSCallBack *CallBack, 
+  AFSVolSync *Sync
+) = 132;
+
+StoreData(
+  IN  AFSFid *Fid, 
+  AFSStoreStatus *InStatus, 
+  afs_int32 Pos, 
+  afs_int32 Length, 
+  afs_int32 FileLength, 
+  OUT AFSFetchStatus *OutStatus, 
+  AFSVolSync *Sync
+) split = 133;
+
+StoreACL(
+  IN  AFSFid *Fid, 
+  AFSOpaque *AccessList,  
+  OUT AFSFetchStatus *OutStatus, 
+  AFSVolSync *Sync
+) = 134;
+
+StoreStatus(
+  IN  AFSFid *Fid, 
+  AFSStoreStatus *InStatus, 
+  OUT AFSFetchStatus *OutStatus, 
+  AFSVolSync *Sync
+) = 135;
+
+RemoveFile(
+  IN  AFSFid *DirFid, 
+  string Name<AFSNAMEMAX>, 
+  OUT AFSFetchStatus *OutStatus, 
+  AFSVolSync *Sync
+) = 136;
+
+CreateFile(
+  IN  AFSFid *DirFid, 
+  string Name<AFSNAMEMAX>,  
+  AFSStoreStatus *InStatus, 
+  OUT AFSFid *OutFid, 
+  AFSFetchStatus *OutFidStatus, 
+  AFSFetchStatus *OutDirStatus, 
+  AFSCallBack *CallBack, 
+  AFSVolSync *Sync) = 137;
+
+Rename(
+  IN  AFSFid *OldDirFid, 
+  string OldName<AFSNAMEMAX>, 
+  AFSFid *NewDirFid, 
+  string NewName<AFSNAMEMAX>, 
+  OUT AFSFetchStatus *OutOldDirStatus, 
+  AFSFetchStatus *OutNewDirStatus, 
+  AFSVolSync *Sync
+) = 138;
+
+Symlink(
+  IN  AFSFid *DirFid, 
+  string Name<AFSNAMEMAX>, 
+  string LinkContents<AFSPATHMAX>, 
+  AFSStoreStatus *InStatus, 
+  OUT AFSFid *OutFid, 
+  AFSFetchStatus *OutFidStatus, 
+  AFSFetchStatus *OutDirStatus, 
+  AFSVolSync *Sync
+) = 139;
+
+Link(
+  IN  AFSFid *DirFid, 
+  string Name<AFSNAMEMAX>, 
+  AFSFid *ExistingFid, 
+  OUT AFSFetchStatus *OutFidStatus, 
+  AFSFetchStatus *OutDirStatus, 
+  AFSVolSync *Sync
+) = 140;
+
+MakeDir(
+  IN  AFSFid *DirFid, 
+  string Name<AFSNAMEMAX>, 
+  AFSStoreStatus *InStatus, 
+  OUT AFSFid *OutFid, 
+  AFSFetchStatus *OutFidStatus, 
+  AFSFetchStatus *OutDirStatus, 
+  AFSCallBack *CallBack, 
+  AFSVolSync *Sync
+) = 141;
+
+RemoveDir(
+  IN  AFSFid *DirFid, 
+  string Name<AFSNAMEMAX>, 
+  OUT AFSFetchStatus *OutDirStatus, 
+  AFSVolSync *Sync
+) = 142;
+
+OldSetLock(
+  IN  AFSFid *Fid, 
+  ViceLockType Type, 
+  AFSVolSync *Sync
+) = 143;
+
+OldExtendLock(
+  IN  AFSFid *Fid, 
+  AFSVolSync *Sync
+) = 144;
+
+OldReleaseLock(
+  IN  AFSFid *Fid, 
+  AFSVolSync *Sync
+) = 145;
+
+GetStatistics(
+  OUT ViceStatistics *Statistics
+) = 146;
+
+GiveUpCallBacks(
+  IN  AFSCBFids *Fids_Array,
+  AFSCBs *CallBacks_Array
+) = 147;
+
+GetVolumeInfo(
+  IN  string VolumeName<AFSNAMEMAX>, 
+  OUT VolumeInfo *Volumeinfo
+) = 148;
+
+GetVolumeStatus(
+  IN  afs_int32 Volumeid, 
+  OUT AFSFetchVolumeStatus *Volumestatus, 
+  string Name<AFSNAMEMAX>,
+  string OfflineMsg<AFSOPAQUEMAX>, 
+  string Motd<AFSOPAQUEMAX>
+) = 149;
+
+SetVolumeStatus(
+  IN  afs_int32 Volumeid, 
+  AFSStoreVolumeStatus *Volumestatus,
+  string Name<AFSNAMEMAX>,
+  string OfflineMsg<AFSOPAQUEMAX>,
+  string Motd<AFSOPAQUEMAX>
+) = 150;
+
+GetRootVolume(
+  OUT string VolumeName<AFSNAMEMAX>
+) = 151;
+
+CheckToken(
+  IN  afs_int32 ViceId,  
+  AFSOpaque *token
+) = 152;
+
+GetTime(
+  OUT afs_uint32 *Seconds, 
+  afs_uint32 *USeconds
+) = 153;
+
+NGetVolumeInfo(
+  IN  string VolumeName<AFSNAMEMAX>,
+  OUT AFSVolumeInfo *stuff
+) = 154;
+
+BulkStatus(
+  IN  AFSCBFids *FidsArray,
+  OUT AFSBulkStats *StatArray,
+  AFSCBs *CBArray,
+  AFSVolSync *Sync
+) = 155;
+
+SetLock(
+  IN  AFSFid *Fid, 
+  ViceLockType Type, 
+  OUT AFSVolSync *Sync
+) = 156;
+
+ExtendLock(
+  IN  AFSFid *Fid, 
+  OUT AFSVolSync *Sync
+) = 157;
+
+ReleaseLock(
+  IN  AFSFid *Fid, 
+  OUT AFSVolSync *Sync
+) = 158;
+
+XStatsVersion(
+  OUT afs_int32 *versionNumberP
+) = 159;
+
+GetXStats(
+  IN  afs_int32 clientVersionNumber,
+  afs_int32 collectionNumber,
+  OUT afs_int32 *srvVersionNumberP,
+  afs_int32 *timeP,
+  AFS_CollData *dataP
+) = 160;
+
+/* This interface is to supported the AFS/DFS Protocol Translator */
+Lookup(
+  IN  AFSFid *DirFid,
+  string Name<AFSNAMEMAX>,
+  OUT AFSFid *OutFid,
+  AFSFetchStatus *OutFidStatus,
+  AFSFetchStatus *OutDirStatus,
+  AFSCallBack *CallBack,
+  AFSVolSync *Sync
+) = 161;
+
+FlushCPS(
+  IN  ViceIds *IdsArray,
+  IPAddrs *AddrsArray,
+  afs_int32    spare1,
+  OUT afs_int32    *spare2,
+  afs_int32    *spare3
+) = 162;
+
+DFSSymlink(
+  IN  AFSFid *DirFid, 
+  string Name<AFSNAMEMAX>, 
+  string LinkContents<AFSPATHMAX>, 
+  AFSStoreStatus *InStatus, 
+  OUT AFSFid *OutFid, 
+  AFSFetchStatus *OutFidStatus, 
+  AFSFetchStatus *OutDirStatus, 
+  AFSCallBack *CallBack,
+  AFSVolSync *Sync
+) = 163;

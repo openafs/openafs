@@ -1,0 +1,35 @@
+# Keep macros within each section in sorted order for clean diff displays.
+#
+# AFS_OSTYPE used to indicate suffixes and os specific subdirectories.
+AFS_OSTYPE = AIX
+
+# compilation and link editor flags
+OPTMZ=-O
+LWP_OPTMZ=-O
+DBG=
+XCFLAGS=-K -D_NO_PROTO -D_NONSTD_TYPES -D_MBI=void
+MT_CFLAGS=-DAFS_PTHREAD_ENV ${XCFLAGS}
+SHLIB_SUFFIX=o
+SHLIB_CFLAGS=
+#
+# libraries
+TXLIBS=-lcurses
+MTLIBS=-lpthreads
+XLIBS=-ldl
+#
+# programs
+MT_CC=xlc_r
+AR=ar
+AS=as
+CP=cp
+INSTALL=${SRCDIR}bin/install
+LD=ld   
+LEX=lex
+MV=mv
+RANLIB=ranlib
+RM=rm
+WASHTOOL=${SRCDIR}bin/washtool
+#
+# This is the XBSA make flag and pathname to XBSA header files (xbsa.h)
+XBSA_FLAGS=-Dxbsa
+XBSADIR=/usr/tivoli/tsm/client/api/bin/xopen

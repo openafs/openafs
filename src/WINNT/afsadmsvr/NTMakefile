@@ -1,0 +1,152 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+
+############################################################################
+
+# make compiler warnings fatal
+
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -WX
+
+# since we're using rpcndr.h, we can't include <afs/stds.h>'s "hyper" type.
+
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -DIGNORE_STDS_H
+
+# include the primary makefile
+
+!INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\..\config\NTMakefile.version
+
+############################################################################
+#
+# BUILD TARGETS
+#
+
+INCFILEDIR = $(DESTDIR)\include\WINNT
+
+EXEFILE = $(DESTDIR)\root.server\usr\afs\bin\TaAfsAdmSvr.exe
+
+LIBFILE = $(DESTDIR)\lib\afs\TaAfsAdmSvrClient.lib
+
+INCFILES = \
+	$(INCFILEDIR)\TaAfsAdmSvr.h \
+	$(INCFILEDIR)\TaAfsAdmSvrClient.h \
+	$(INCFILEDIR)\TaAfsAdmSvrCommon.h \
+	$(INCFILEDIR)\iTaAfsAdmSvr.h \
+	$(INCFILEDIR)\iTaAfsAdmSvrTypes.h
+
+IDLFILES = \
+	iTaAfsAdmSvr.h \
+	iTaAfsAdmSvrTypes.h
+
+LIBOBJS = \
+	TaAfsAdmSvrClient.obj \
+	TaAfsAdmSvrClientBind.obj \
+	TaAfsAdmSvrClientCache.obj \
+	TaAfsAdmSvrClientCell.obj \
+	TaAfsAdmSvrClientGroup.obj \
+	TaAfsAdmSvrClientInternal.obj \
+	TaAfsAdmSvrClientNotify.obj \
+	TaAfsAdmSvrClientPing.obj \
+	TaAfsAdmSvrClientUser.obj \
+	TaAfsAdmSvrCommon.obj \
+	iTaAfsAdmSvr_c.obj
+
+EXEOBJS = \
+	AfsAdmSvr.res \
+	TaAfsAdmSvr.obj \
+	TaAfsAdmSvrCallback.obj \
+	TaAfsAdmSvrCell.obj \
+	TaAfsAdmSvrCommon.obj \
+	TaAfsAdmSvrDebug.obj \
+	TaAfsAdmSvrGeneral.obj \
+	TaAfsAdmSvrGroup.obj \
+	TaAfsAdmSvrMain.obj \
+	TaAfsAdmSvrProperties.obj \
+	TaAfsAdmSvrSearch.obj \
+	TaAfsAdmSvrUser.obj \
+	iTaAfsAdmSvr_s.obj
+
+VCLIBS =\
+ 	gdi32.lib \
+	user32.lib \
+	rpcns4.lib \
+	rpcrt4.lib \
+	comctl32.lib \
+	gdi32.lib
+
+EXELIBS = \
+	$(DESTDIR)\lib\afs\AfsClass.lib \
+	$(DESTDIR)\lib\afs\TaAfsAppLib.lib \
+	$(DESTDIR)\lib\afs\AfsKasAdmin.lib \
+	$(DESTDIR)\lib\afs\AfsPtsAdmin.lib \
+	$(DESTDIR)\lib\afs\AfsVosAdmin.lib \
+	$(DESTDIR)\lib\afs\AfsBosAdmin.lib \
+	$(DESTDIR)\lib\afs\AfsAdminUtil.lib \
+	$(DESTDIR)\lib\afs\AfsClientAdmin.lib
+
+############################################################################
+#
+# IDL COMPILATION
+#
+
+MIDL_FLAGS=/ms_ext \
+           /app_config \
+           /I $(INCFILEDIR) \
+           /I . \
+           /env win32 \
+           /win32 \
+           /align 8 \
+           /pack 8 \
+           /W3 \
+           /WX \
+           /nologo
+
+.SUFFIXES: .h .idl
+
+.idl.h:
+	midl $(MIDL_FLAGS) $<
+
+############################################################################
+
+afsapplib_headers :
+	$(CD) ..\afsapplib
+	nmake /nologo /f ntmakefile headers
+	$(CD) ..\afsadmsvr
+
+$(LIBFILE) : $(LIBOBJS)
+	$(LIBARCH)
+
+afsapplib_primary :
+	$(CD) ..\afsapplib
+	nmake /nologo /f ntmakefile primary
+	$(CD) ..\afsadmsvr
+
+afsclass_primary :
+	$(CD) ..\afsclass
+	nmake /nologo /f ntmakefile primary
+	$(CD) ..\afsadmsvr
+
+$(EXEFILE) : $(EXEOBJS) $(EXELIBS)
+	$(EXECONLINK)  $(VCLIBS)
+	$(EXEPREP) 
+
+install : \
+	$(IDLFILES) \
+	$(INCFILES) \
+	afsapplib_headers \
+	$(LIBFILE) \
+	afsapplib_primary \
+	afsclass_primary \
+	$(EXEFILE)
+
+clean::
+	if exist ITaAfsAdmSvr*.cpp del ITaAfsAdmSvr*.cpp
+	if exist ITaAfsAdmSvr*.c del ITaAfsAdmSvr*.c
+	if exist ITaAfsAdmSvr*.h del ITaAfsAdmSvr*.h
+
+############################################################################
+#
+# Dependencies
+#
+
+AfsAdmSvr.res : AfsAdmSvr.rc AFS_component_version_number.h
+

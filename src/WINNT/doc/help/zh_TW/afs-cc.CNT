@@ -1,0 +1,11 @@
+:Base AFS-CC.HLP
+:Title IBM AFS 控制中心
+1 AFS 控制中心架構
+2 預設 Cell
+3 設定預設 AFS Cell 進行管理=Cell_Membership>main
+2 Cell 資料庫
+3 概觀=Cell_Database_Overview>main
+3 新增 Cell 到 Cell 資料庫=Adding_Cells_to_Your_Cell_Database>main
+3 變更 Cell 資訊=Changing_Cell_Information>main
+3 從 Cell資料庫中移除 Cell=Removing_Cells_From_Your_Cell_Database>main
+

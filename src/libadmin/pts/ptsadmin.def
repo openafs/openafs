@@ -1,0 +1,31 @@
+
+EXPORTS
+	pts_GroupMemberAdd					@1
+	pts_GroupOwnerChange					@2
+	pts_GroupCreate						@3
+	pts_GroupGet						@4
+	pts_GroupDelete						@5
+	pts_GroupMaxGet						@6
+	pts_GroupMaxSet						@7
+	pts_GroupMemberListBegin				@8
+	pts_GroupMemberListNext					@9
+	pts_GroupMemberListDone					@10
+	pts_GroupMemberRemove					@11
+	pts_GroupRename						@12
+	pts_GroupModify						@13
+	pts_UserCreate						@14
+	pts_UserDelete						@15
+	pts_UserGet						@16
+	pts_UserRename						@17
+	pts_UserModify						@18
+	pts_UserMaxGet						@19
+	pts_UserMaxSet						@20
+	pts_UserMemberListBegin					@21
+	pts_UserMemberListNext					@22
+	pts_UserMemberListDone					@23
+	pts_OwnedGroupListBegin					@24
+	pts_OwnedGroupListNext					@25
+	pts_OwnedGroupListDone					@26
+
+
+	PR_function_names					@29 DATA

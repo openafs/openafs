@@ -1,0 +1,10 @@
+#
+# login
+#
+# An InstallGuide for installing integrated login
+# For Alpha systems running Digital Unix 4.x and SIA
+#
+
+sub login {
+&Copy("lib/afs/libafssiad.so", "/usr/shlib/libafssiad.so");
+}

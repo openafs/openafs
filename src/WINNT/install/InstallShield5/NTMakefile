@@ -1,0 +1,26 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+
+
+!INCLUDE ..\..\..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\..\..\config\NTMakefile.version
+
+############################################################################
+
+CELLSERVDB = $(DESTDIR)\root.client\usr\vice\etc\afsdcell.ini
+
+$(CELLSERVDB): afsdcell.ini
+    copy $** $@
+
+prep: $(CELLSERVDB) AFS_component_version_number.txt
+    CreateISDirTree.bat
+    ScatterFiles.bat
+    CreateGeneratedFiles.bat
+    CompileScript.bat
+
+build:
+    BuildSetup.bat
+    xcopy/s/e "Media\Transarc AFS\Disk Images\disk1\*.*" $(DESTDIR)\WinInstall
+    copy AFS_component_version_number.txt $(DESTDIR)\WinInstall\Version.txt
+    del /q "Media\Transarc AFS\Disk Images\disk1\*.*"
+
+install: prep build

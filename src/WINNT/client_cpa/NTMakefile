@@ -1,0 +1,53 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+#
+
+!INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\..\config\NTMakefile.version
+
+
+############################################################################
+# Definitions for building afs_cpa.cpl
+
+DLLFILE = $(DESTDIR)\root.client\usr\vice\etc\afs_cpa.cpl
+
+DLLOBJS =\
+	afs_cpa_stub.res \
+	cpl_interface.obj \
+	AFS_component_version_number.obj
+
+DLLLIBS =\
+	$(DESTDIR)\lib\afs\TaLocale.lib \
+	comctl32.lib
+
+DEFFILE = afs_cpa.def
+
+$(DLLFILE): $(DLLOBJS)
+	$(DLLGUILINK)  $(DLLLIBS) /DEF:$(DEFFILE)
+	$(DLLPREP)
+
+
+############################################################################
+# Install target; primary makefile target
+
+install: $(DLLFILE) lang
+
+
+############################################################################
+# Language target
+
+lang::
+	$(CD) lang
+	for /f %l in ('dir /B ??_??') do @$(NTLANG) %l $(MAKECMD) /nologo /f NTMakefile install
+	$(CD) ..
+
+
+############################################################################
+# Local clean target; augments predefined clean target
+
+clean::
+
+############################################################################
+# Dependencies
+
+afs_cpa_stub.res : afs_cpa_stub.rc AFS_component_version_number.h
+

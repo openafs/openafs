@@ -1,0 +1,14 @@
+# Copyright 1998 Transarc Corporation - All rights reserved.
+
+!include ..\..\config\NTMakefile.$(SYS_NAME)
+
+testit.exe: testit.obj $(DESTDIR)\lib\afsdes.lib $(DESTDIR)\lib\afs\afsutil.lib
+	$(EXECONLINK)
+
+verify.exe: verify.obj $(DESTDIR)\lib\afsdes.lib $(DESTDIR)\lib\afs\afsutil.lib
+	$(EXECONLINK)
+
+key_test.exe: key_test.obj $(DESTDIR)\lib\afsdes.lib $(DESTDIR)\lib\afs\afsutil.lib
+	$(EXECONLINK)
+
+tests: testit.exe verify.exe key_test.exe

@@ -1,0 +1,37 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+
+############################################################################
+
+# make compiler warnings fatal
+
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -WX
+
+# include the primary makefile
+
+!INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
+
+############################################################################
+
+INCFILEDIR = $(DESTDIR)\include\WINNT
+
+LIBOBJS = \
+	tal_alloc.obj \
+	tal_main.obj \
+	tal_string.obj \
+	tal_dialog.obj
+
+LIBINCLUDES = \
+	$(INCFILEDIR)\talocale.h \
+	$(INCFILEDIR)\tal_alloc.h \
+	$(INCFILEDIR)\tal_string.h \
+	$(INCFILEDIR)\tal_dialog.h
+
+LIBFILE = $(DESTDIR)\lib\afs\talocale.lib
+
+############################################################################
+
+install: $(LIBINCLUDES) $(LIBFILE)
+
+$(LIBFILE): $(LIBOBJS)
+	$(LIBARCH)
+

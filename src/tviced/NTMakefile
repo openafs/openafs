@@ -1,0 +1,192 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+#
+
+AFSDEV_AUXCDEFINES = -DAFS_PTHREAD_ENV -DRXDEBUG
+
+!INCLUDE ..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\config\NTMakefile.version
+
+SRC_DIR = ..\viced
+
+############################################################################
+# Build the fileserver
+
+EXEFILE = $(DESTDIR)\root.server\usr\afs\bin\fileserver.exe
+
+
+VICED = ..\viced
+VLSERVER = ..\vlserver
+LWP = ..\lwp
+LIBACL = ..\libacl
+UTIL = ..\util
+DIR = ..\dir
+VOL = ..\vol
+FSINT = ..\fsint
+
+VICEDOBJS = viced.obj afsfileprocs.obj host.obj physio.obj callback.obj	\
+		$(VICED)\fileserver.res
+
+VLSERVEROBJS = vldbint.cs.obj vldbint.xdr.obj
+
+LWPOBJS = lock.obj fasttime.obj
+
+LIBACLOBJS = aclprocs.obj netprocs.obj
+
+UTILOBJS = assert.obj uuid.obj serverLog.obj fileutil.obj
+
+DIROBJS = buffer.obj dir.obj salvage.obj
+
+VOLOBJS = vnode.obj volume.obj vutil.obj partition.obj fssync.obj purge.obj \
+	  clone.obj common.obj ihandle.obj ntops.obj
+
+FSINTOBJS = afsaux.obj afscbint.cs.obj afsint.ss.obj afsint.xdr.obj
+
+EXEOBJS = $(VICEDOBJS) $(VLSERVEROBJS) $(LWPOBJS) $(LIBACLOBJS) \
+	 $(UTILOBJS) $(DIROBJS) $(VOLOBJS) $(FSINTOBJS)
+
+
+
+noversion: install
+
+all: fileserver
+
+
+############################################################################
+# VICED package
+viced.obj: $(VICED)/viced.c
+	$(C2OBJ) $**
+
+afsfileprocs.obj: $(VICED)/afsfileprocs.c
+	$(C2OBJ) $**
+
+host.obj: $(VICED)/host.c
+	$(C2OBJ) $**
+
+physio.obj: $(VICED)/physio.c
+	$(C2OBJ) $**
+
+callback.obj: $(VICED)/callback.c
+	$(C2OBJ) $**
+
+############################################################################
+# UTIL package
+assert.obj: $(UTIL)/assert.c
+	$(C2OBJ) $**
+
+uuid.obj: $(UTIL)/uuid.c
+	$(C2OBJ) $**
+
+serverLog.obj: $(UTIL)/serverLog.c
+	$(C2OBJ) $**
+
+fileutil.obj: $(UTIL)/fileutil.c
+	$(C2OBJ) $**
+
+############################################################################
+# LWP package
+lock.obj: $(LWP)/lock.c
+	$(C2OBJ) $**
+
+fasttime.obj: $(LWP)/fasttime.c
+	$(C2OBJ) $**
+
+############################################################################
+# LIBACL package
+aclprocs.obj: $(LIBACL)/aclprocs.c
+	$(C2OBJ) $**
+
+netprocs.obj: $(LIBACL)/netprocs.c
+	$(C2OBJ) $**
+
+############################################################################
+# VLSERVER package
+vldbint.cs.obj: $(VLSERVER)/vldbint.cs.c
+	$(C2OBJ) $**
+
+vldbint.xdr.obj: $(VLSERVER)/vldbint.xdr.c
+	$(C2OBJ) $**
+
+############################################################################
+# DIR package
+buffer.obj: $(DIR)/buffer.c
+	$(C2OBJ) $**
+
+dir.obj: $(DIR)/dir.c
+	$(C2OBJ) $**
+
+salvage.obj: $(DIR)/salvage.c
+	$(C2OBJ) $**
+
+############################################################################
+# VOL package
+vnode.obj: $(VOL)/vnode.c
+	$(C2OBJ) $**
+
+volume.obj: $(VOL)/volume.c
+	$(C2OBJ) $**
+
+vutil.obj: $(VOL)/vutil.c
+	$(C2OBJ) $**
+
+partition.obj: $(VOL)/partition.c
+	$(C2OBJ) $**
+
+fssync.obj: $(VOL)/fssync.c
+	$(C2OBJ) $**
+
+purge.obj: $(VOL)/purge.c
+	$(C2OBJ) $**
+
+clone.obj: $(VOL)/clone.c
+	$(C2OBJ) $**
+
+nuke.obj: $(VOL)/nuke.c
+	$(C2OBJ) $**
+
+common.obj: $(VOL)/common.c
+	$(C2OBJ) $**
+
+ihandle.obj: $(VOL)/ihandle.c
+	$(C2OBJ) $**
+
+ntops.obj: $(VOL)/ntops.c
+	$(C2OBJ) $**
+
+############################################################################
+# FSINT package
+afsaux.obj: $(FSINT)/afsaux.c
+	$(C2OBJ) $**
+
+afscbint.cs.obj: $(FSINT)/afscbint.cs.c
+	$(C2OBJ) $**
+
+afscbint.ss.obj: $(FSINT)/afscbint.ss.c
+	$(C2OBJ) $**
+
+afsint.cs.obj: $(FSINT)/afsint.cs.c
+	$(C2OBJ) $**
+
+afsint.ss.obj: $(FSINT)/afsint.ss.c
+	$(C2OBJ) $**
+
+afsint.xdr.obj: $(FSINT)/afsint.xdr.c
+	$(C2OBJ) $**
+
+
+
+EXELIBS = \
+	$(DESTDIR)\lib\afsauthent.lib \
+	$(DESTDIR)\lib\afsrpc.lib \
+	$(DESTDIR)\lib\afs\afscmd.lib \
+	$(DESTDIR)\lib\afs\afsaudit.lib \
+	$(DESTDIR)\lib/afs/afscom_err.lib \
+	$(DESTDIR)\lib\afs\afsreg.lib \
+	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
+	$(DESTDIR)\lib\afs\afseventlog.lib \
+	$(DESTDIR)\lib\pthread.lib
+
+$(EXEFILE): $(EXEOBJS) $(EXELIBS)
+	$(EXECONLINK)
+	$(EXEPREP) 
+
+install:  $(EXEFILE)

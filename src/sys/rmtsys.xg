@@ -1,0 +1,42 @@
+/*
+ * (C) COPYRIGHT IBM CORPORATION 1987, 1988
+ * LICENSED MATERIALS - PROPERTY OF IBM
+ */
+
+package RMTSYS_
+statindex 10
+prefix	S
+#define MAXPATHLEN 80
+
+%#include <rx/rx.h>
+%#include <rx/rx_null.h>
+
+%#define RMTSYS_SERVICEID		4	/* shared between client+server */
+
+/* The following defines really belong to "afs/cellconfig.h" (and are there) but there is a deadlock dependency situation among the sys and auth packages: auth depends on libsys.a (in sys) and sys depends on cellconfig.h (in auth). To avoid creating a third package we define the needed macros below. Make sure to change them whenever they're changed in "afs/cellconfig.h"... */
+%#define	AFSCONF_RMTSYSPORT		7009
+%#define	AFSCONF_RMTSYSSERVICE	"afsrmtsys"
+%#define	NIL_PATHP			"__FOO__"
+
+/* The following struct contains the necessary client credentials that need to be passed along over the net. Group0+group1 implement a 32-bit pag number */
+struct clientcred {
+	afs_int32	uid;
+	afs_int32	group0;
+	afs_int32	group1;
+};
+
+const MAXBUFFERLEN = 2048;	/* limited due to kernel buffer restrictions */
+typedef opaque rmtbulk<MAXBUFFERLEN>;
+
+SetPag(	IN	clientcred *cred,
+	OUT	afs_int32 *newpag,
+		afs_int32 *errornumber) = 1;
+
+Pioctl(	IN	clientcred *cred,
+		string path<MAXPATHLEN>, 
+		afs_int32 cmd, 
+		afs_int32 follow, 
+		rmtbulk *InData, 
+	INOUT	rmtbulk *OutData,
+	OUT	afs_int32 *errornumber) = 2;
+

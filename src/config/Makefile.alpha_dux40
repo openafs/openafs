@@ -1,0 +1,21 @@
+AFS_OSTYPE = DUX
+
+MT_CC=cc
+XCFLAGS= -D_NO_PROTO -DOSF
+MT_CFLAGS=-D_REENTRANT=1 -pthread -DAFS_PTHREAD_ENV ${XCFLAGS}
+SHLIB_SUFFIX=so
+SHLIB_CFLAGS=
+XLIBS=
+MTLIBS=-pthread -lpthread -lmach -lexc -lc
+NON_SHARED=-non_shared
+TXLIBS= -lcurses
+LWP_OPTMZ=-O2
+OPTMZ=-O2
+DBG=-g3
+CSTATIC=-non_shared
+RANLIB=/bin/true
+WASHTOOL=${SRCDIR}bin/washtool
+INSTALL=${SRCDIR}bin/install
+
+#this is for the vol package
+FS_CONV_OSF40D= $(DESTDIR)root.server/usr/afs/bin/fs_conv_dux40D

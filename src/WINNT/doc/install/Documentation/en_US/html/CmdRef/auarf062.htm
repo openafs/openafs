@@ -1,0 +1,116 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3190/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 5 Nov 1999 at 13:58:29                -->
+<META HTTP-EQUIV="updated" CONTENT="Fri, 05 Nov 1999 13:58:29">
+<META HTTP-EQUIV="review" CONTENT="Sun, 05 Nov 2000 13:58:29">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 05 Nov 2001 13:58:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf061.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf063.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRBK_ADDHOST" HREF="auarf002.htm#ToC_76">backup addhost</A></H2>
+<A NAME="IDX4229"></A>
+<A NAME="IDX4230"></A>
+<A NAME="IDX4231"></A>
+<A NAME="IDX4232"></A>
+<A NAME="IDX4233"></A>
+<A NAME="IDX4234"></A>
+<A NAME="IDX4235"></A>
+<A NAME="IDX4236"></A>
+<A NAME="IDX4237"></A>
+<A NAME="IDX4238"></A>
+<P><STRONG>Purpose</STRONG>
+<P>Adds a Tape Coordinator entry to the Backup Database
+<P><STRONG>Synopsis</STRONG>
+<PRE><B>backup addhost -tapehost</B> &lt;<VAR>tape&nbsp;machine&nbsp;name</VAR>> [<B>-portoffset</B> &lt;<VAR>TC&nbsp;port&nbsp;offset</VAR>>]
+               [<B>-localauth</B>]  [<B>-cell</B> &lt;<VAR>cell&nbsp;name</VAR>>]  [<B>-help</B>]
+   
+<B>backup addh -t</B> &lt;<VAR>tape&nbsp;machine&nbsp;name</VAR>>  [<B>-p</B> &lt;<VAR>TC&nbsp;port&nbsp;offset</VAR>>]
+            [<B>-l</B>]  [<B>-c</B> &lt;<VAR>cell&nbsp;name</VAR>>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>Description</STRONG>
+<P>The <B>backup addhost</B> command creates a Tape Coordinator entry in
+the Backup Database. The entry records
+<UL>
+<P><LI>The host name of the Tape Coordinator machine where the Tape Coordinator
+(<B>butc</B>) process runs, as specified with the <B>-tapehost</B>
+argument.
+<P><LI>The Tape Coordinator&#39;s port offset number, as specified with the
+<B>-portoffset</B> argument. An entry for the port offset must also
+appear in the <B>/usr/afs/backup/tapeconfig</B> file on the Tape
+Coordinator machine, where it is mapped to a UNIX device name (for a tape
+device) or pathname (for a backup data file).
+</UL>
+<P>Each Tape Coordinator must have its own port offset number, and the command
+fails if a Backup Database entry already exists for the requested port offset
+number. To display existing Tape Coordinator entries, use the
+<B>backup listhosts</B> command.
+<P><STRONG>Options</STRONG>
+<DL>
+<P><DT><B>-tapehost
+</B><DD>Specifies the fully-qualified hostname of the machine for which to create
+a Tape Coordinator entry in the Backup Database. The machine must have
+an entry in either the cell&#39;s naming service (such as the Domain Name
+Service) or the host file (<B>/etc/hosts</B> or equivalent) on the machine
+where the command is issued.
+<P><DT><B>-portoffset
+</B><DD>Specifies the Tape Coordinator&#39;s port offset number. Provide
+an integer from the range <B>0</B> through <B>58510</B>, or omit this
+argument to use the default value of <B>0</B> (zero). The value
+must match the port offset number recorded for the same combination of Tape
+Coordinator and tape device or file in the
+<B>/usr/afs/backup/tapeconfig</B> file on the Tape Coordinator machine
+named by the <B>-tapehost</B> argument.
+<P><DT><B>-localauth
+</B><DD>Constructs a server ticket using a key from the local
+<B>/usr/afs/etc/KeyFile</B> file. The <B>backup</B> command
+interpreter presents it to the Backup Server, Volume Server and VL Server
+during mutual authentication. Do not combine this flag with the
+<B>-cell</B> argument. For more details, see the introductory
+<B>backup</B> reference page.
+<P><DT><B>-cell
+</B><DD>Names the cell in which to run the command. Do not combine this
+argument with the <B>-localauth</B> flag. For more details, see the
+introductory <B>backup</B> reference page.
+<P><DT><B>-help
+</B><DD>Prints the online help for this command. All other valid options
+are ignored.
+</DL>
+<P><STRONG>Examples</STRONG>
+<P>The following command creates an entry in the Backup Database that assigns
+port offset number 4 to a Tape Coordinator running on the machine
+<B>backup1.abc.com</B>&#58;
+<PRE>   % <B>backup addhost -tapehost backup1.abc.com -portoffset 4</B>
+   
+</PRE>
+<P>The following command creates a Backup Database entry that assigns port
+offset number 0 to a Tape Coordinator on the machine
+<B>backup3.abc.com</B>&#58;
+<PRE>   % <B>backup addhost backup3.abc.com</B>
+   
+</PRE>
+<P><STRONG>Privilege Required</STRONG>
+<P>The issuer must be listed in the <B>/usr/afs/etc/UserList</B> file on
+every machine where the Backup Server is running, or must be logged onto a
+server machine as the local superuser <B>root</B> if the
+<B>-localauth</B> flag is included.
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf060.htm#HDRBK_INTRO">backup</A>
+<P><A HREF="auarf069.htm#HDRBK_DELHOST">backup delhost</A>
+<P><A HREF="auarf081.htm#HDRBK_LISTHOSTS">backup listhosts</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf061.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf063.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

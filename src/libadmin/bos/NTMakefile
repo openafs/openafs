@@ -1,0 +1,55 @@
+#
+# Copyright (C) 1998 Transarc Corporation - All rights reserved
+#
+
+AFSDEV_AUXCDEFINES = -DAFS_PTHREAD_ENV
+
+!include ..\..\config\NTMakefile.$(SYS_NAME)
+!include ..\..\config\NTMakefile.version
+
+
+BOZO = ..\..\bozo\
+
+BOZOOBJS = \
+	bosint.xdr.obj bosint.cs.obj
+
+ADMINOBJS = \
+	afs_bosAdmin.obj
+
+DLLOBJS =\
+	$(ADMINOBJS) \
+	$(BOZOOBJS) \
+	afsbosadmin.res
+
+LIBINCLUDES = \
+	$(DESTDIR)\include\afs\afs_bosAdmin.h
+
+DLLFILE = $(DESTDIR)\root.server\usr\afs\bin\afsbosadmin.dll
+ILIBDIR = $(DESTDIR)\lib\afs
+
+DLLLIBS =\
+	$(DESTDIR)\lib\afs\afsadminutil.lib \
+	$(DESTDIR)\lib\afs\afsvosadmin.lib \
+	$(DESTDIR)\lib\afsauthent.lib \
+	$(DESTDIR)\lib\afsrpc.lib \
+	$(DESTDIR)\lib\pthread.lib
+
+$(DLLFILE): $(DLLOBJS) $(DLLLIBS)
+	$(DLLCONLINK) /DEF:bosadmin.def
+	$(DLLPREP)
+	$(COPY) $*.lib $(ILIBDIR)
+	$(DEL) $*.lib $*.exp
+
+
+install: $(DLLFILE) $(LIBINCLUDES)
+
+
+bosint.xdr.obj: $(BOZO)\bosint.xdr.c
+	$(C2OBJ) $(BOZO)\bosint.xdr.c
+
+bosint.cs.obj: $(BOZO)\bosint.cs.c
+	$(C2OBJ) $(BOZO)\bosint.cs.c
+
+# Definitions for generating versioninfo resources
+afsbosadmin.res: afsbosadmin.rc AFS_component_version_number.h
+	$(RC) $*.rc

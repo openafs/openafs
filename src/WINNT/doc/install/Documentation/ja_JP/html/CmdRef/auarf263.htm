@@ -1,0 +1,82 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRVOS_LISTADDRS" HREF="auarf002.htm#ToC_277">vos listaddrs</A></H2>
+<A NAME="IDX5698"></A>
+<A NAME="IDX5699"></A>
+<A NAME="IDX5700"></A>
+<A NAME="IDX5701"></A>
+<A NAME="IDX5702"></A>
+<P><STRONG>目的</STRONG>
+<P>すべての VLDB サーバー項目を表示します。
+<P><STRONG>構文</STRONG>
+<PRE><B>vos listaddrs</B> [<B>-cell</B> &lt;<VAR>cell name</VAR>>]  [<B>-noauth</B>]
+              [<B>-localauth</B>]  [<B>-verbose</B>]  [<B>-help</B>]
+    
+<B>vos lista</B> [<B>-c</B> &lt;<VAR>cell name</VAR>>]  [<B>-n</B>]  [<B>-l</B>]  [<B>-v</B>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>vos listaddrs</B> コマンドは、Volume Location Database (VLDB) のサーバー項目をすべて表示します。項目は、ファイル・サーバーが、
+VLDB の <B>/usr/afs/local/sysid</B> ファイルの内容を初期化して登録するときに作成されます。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B>-cell
+</B><DD>コマンドを実行するセルを指定します。この引き数は、
+<B>-localauth</B> フラグと一緒に使用してはなりません。詳細については、<B>vos</B> の解説ページを参照してください。
+<P><DT><B>-noauth
+</B><DD>コマンドの発行側に非特権 ID <B>anonymous</B> を割り当てます。このフラグは <B>-localauth</B> フラグと一緒に使用してはなりません。詳細については、<B>vos</B> の解説ページを参照してください。
+<P><DT><B>-localauth
+</B><DD>ローカルの <B>/usr/afs/etc/KeyFile</B> ファイルのキーを使用して、サーバー・チケットを構成します。相互認証の間、<B>vos</B> コマンド・インタープリターは、ボリューム・サーバーおよびボリューム・ロケーション・サーバーに、このチケットを提供します。このフラグは、<B>-cell</B> 引き数、または <B>-noauth</B> フラグと一緒に使用してはなりません。詳細については、<B>vos</B> の解説ページを参照してください。
+<P><DT><B>-verbose
+</B><DD>標準出力ストリームに、コマンド実行の詳細なトレースを出力します。この引き数を省略すると、警告およびエラー・メッセージだけが表示されます。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>出力</STRONG>
+<P>出力は、VLDB のすべてのサーバー項目を、1 行 1 項目で表示します。ファイル・サーバー・マシンがマルチホームになっている場合には、登録されているすべてのアドレスは 1 行に表示されます。最初の項目は、
+<B>vos examine</B> および <B>vos listvldb</B> コマンドからの出力に、
+volume's site としてレポートされている項目です。
+<P>VLDB は IP アドレスを記録し、ローカル名サービス (ドメイン・ネーム・サービスのようなプロセスまたはローカル・ホスト・テーブル) は、これらのアドレスを表示する前にホスト名に変換します。
+IP アドレスが出力に表示されている場合には、変換は行えません。
+<P>項目が存在しても、必ずしもそのマシンがまだアクティブ・ファイル・サーバー・マシンであるとは限りません。不要なサーバー項目を削除するには、
+<B>vos changeaddr</B> コマンドに <B>-remove</B> 引き数を指定して使用します。
+<P><STRONG>例</STRONG>
+<P>以下のコマンドは、ABC 社のセルの VLDB サーバー項目を表示します。
+<PRE>   % <B>vos listaddrs </B>
+   sv5.abc.com
+   sv1.abc.com
+   sv2.abc.com  afs2.abc.com
+   sv6.abc.com
+   
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>なし。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf049.htm#HDRSYSID">sysid</A>
+<P><A HREF="auarf252.htm#HDRVOS_INTRO">vos</A>
+<P><A HREF="auarf257.htm#HDRVOS_CHANGEADDR">vos changeaddr</A>
+<P><A HREF="auarf261.htm#HDRVOS_EXAMINE">vos examine</A>
+<P><A HREF="auarf265.htm#HDRVOS_LISTVLDB">vos listvldb</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf262.htm">前ページ</A> &#124; <A HREF="auarf264.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

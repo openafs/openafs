@@ -1,0 +1,81 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRBOS_REMOVEHOST" HREF="auarf002.htm#ToC_124">bos removehost</A></H2>
+<A NAME="IDX4588"></A>
+<A NAME="IDX4589"></A>
+<A NAME="IDX4590"></A>
+<A NAME="IDX4591"></A>
+<A NAME="IDX4592"></A>
+<P><STRONG>目的</STRONG>
+<P><B>/usr/afs/etc/CellServDB</B> ファイルからデータベース・サーバー・マシンを削除します。
+<P><STRONG>構文</STRONG>
+<PRE><B>bos removehost -server</B> &lt;<VAR>machine name</VAR>>  <B>-host</B> &lt;<VAR>host name</VAR>><SUP>+</SUP>
+               [<B>-cell</B> &lt;<VAR>cell name</VAR>>]  [<B>-noauth</B>]  [<B>-localauth</B>]  [<B>-help</B>]
+  
+<B>bos removeh -s</B> &lt;<VAR>machine name</VAR>>  <B>-ho</B> &lt;<VAR>host name</VAR>><SUP>+</SUP>  [<B>-c</B> &lt;<VAR>cell name</VAR>>]
+            [<B>-n</B>]  [<B>-l</B>]  [<B>-he</B>]
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>bos removehost</B> コマンドは、
+<B>-server</B> 引き数で指定されたサーバー・マシンの <B>/usr/afs/etc/CellServDB</B> ファイルから、
+<B>-host</B> 引き数で指定されたデータベース・サーバー・マシンの項目を削除します。
+<P><STRONG>注意</STRONG>
+<P>このコマンドの実行後 (更新サーバーを使用している場合には、それが変更を送り終えるまで待機した後)、すべてのデータベース・サーバー・マシンのデータベース・サーバー・プロセスを再起動し、<B>/usr/afs/etc/CellServDB</B> ファイルにリストされた新規のマシン・セットから候補を 1 つ選択してください。データベース・サーバー・マシンの追加および削除方法については、<I>AFS インストールの手引き</I> を参照してください。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B><B>-server</B>
+</B><DD><B>/usr/afs/etc/CellServDB</B> ファイルを変更するサーバー・マシンを指定します。
+IP アドレスまたはホスト名 (完全修飾名または省略形) によってマシンを識別します。詳細については、<B>bos</B> コマンド・セットの概要の解説ページを参照してください。
+<P>
+<P>米国版 AFS を実行し、更新サーバーを使って <B>/usr/afs/etc</B> ディレクトリーの内容を配布するセルでは、通常 <B>-server</B> 引き数の値としてシステム・コントロール・マシンだけを指定します。国際版 AFS を実行しているセルでは、各ファイル・サーバー・マシンに対しコマンドを繰り返し発行してください。詳細については、<B>bos</B> コマンド・セットの解説ページを参照してください。
+<P><DT><B><B>-host</B>
+</B><DD><B>CellServDB</B> ファイルから削除する各データベース・サーバー・マシンの完全修飾されたホスト名 (<B>fs2.abc.com</B> など) を指定します。
+<P><DT><B><B>-cell</B>
+</B><DD>コマンドを実行するセルを指定します。この引き数は、
+<B>-localauth</B> フラグと一緒に使用してはなりません。詳細については、<B>bos</B> の解説ページを参照してください。
+<P><DT><B><B>-noauth</B>
+</B><DD>コマンドの発行側に非特権 ID <B>anonymous</B> を割り当てます。このフラグは <B>-localauth</B> フラグと一緒に使用してはなりません。詳細については、<B>bos</B> の解説ページを参照してください。
+<P><DT><B><B>-localauth</B>
+</B><DD>ローカルの <B>/usr/afs/etc/KeyFile</B> ファイルのキーを使用して、サーバー・チケットを構成します。
+<B>bos</B> コマンド・インタープリターは、相互認証中に、このチケットを BOS サーバーに渡します。このフラグは、<B>-cell</B> 引き数または <B>-noauth</B> フラグと一緒に使用してはなりません。詳細については、<B>bos</B> の解説ページを参照してください。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>例</STRONG>
+<P>次のコマンドは、前のデータベース・サーバー・マシン <B>db2.abc.com</B> をシステム・コントロール・マシン <B>fs1.abc.com</B> の <B>CellServDB</B> ファイルから削除しています。
+<PRE>   % <B>bos removehost -server fs1.abc.com -host db2.abc.com</B>
+   
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>コマンドの発行側は、<B>-server</B> 引き数で指定されたマシンの <B>/usr/afs/etc/UserList</B> ファイルにリストされているか、または <B>-localauth</B> フラグが使用されている場合は、ローカル・スーパーユーザー <B>root</B> としてサーバー・マシンにログオンしている必要があります。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf023.htm#HDRKEYFILE">KeyFile</A>
+<P><A HREF="auarf035.htm#HDRUSERLIST">UserList</A>
+<P><A HREF="auarf093.htm#HDRBOS_INTRO">bos</A>
+<P><A HREF="auarf094.htm#HDRBOS_ADDHOST">bos addhost</A>
+<P><A HREF="auarf106.htm#HDRBOS_LISTHOSTS">bos listhosts</A>
+<P><I>AFS インストールの手引き</I>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf109.htm">前ページ</A> &#124; <A HREF="auarf111.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

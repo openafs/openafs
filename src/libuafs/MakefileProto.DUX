@@ -1,0 +1,79 @@
+#/* Copyright (C) 1995, 1989 Transarc Corporation - All rights reserved */
+# 
+# MakefileProto for Solaris systems
+#
+DBUG=-O
+
+include $(DESTDIR)/../obj/config/Makefile.${SYS_NAME}
+
+MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
+
+# System specific build commands and flags
+CC = cc
+DEFINES=-DAFSDEBUG -DKERNEL -DUKERNEL -DAFS -DVICE -D_NO_PROTO -DOSF
+KOPTS=
+DBUG=
+OPTF=-O
+CFLAGS=-I. -I.. ${FSINCLUDES} $(DEFINES) $(KOPTS) ${DBUG} -pthread
+WEBOPTS = -I../nsapi -DNETSCAPE_NSAPI -DNET_SSL -DXP_UNIX -DMCC_HTTPD
+
+TEST_CFLAGS=-pthread -D_NO_PROTO -D_REENTRANT -DAFS_PTHREAD_ENV -Dosf -DAFS_OSF_ENV -DOSF
+TEST_LDFLAGS=-pthread
+TEST_LIBS=-lm
+
+LIBUAFS = libuafs.a
+LIBAFSWEB = nsafs.so
+LIBAFSWEBKRB = nsafs.krb.so
+
+include Makefile.common
+
+setup_common:
+	-rm -f  h net netinet rpc ufs nfs  machine sys inet nsapi
+	-ln -s /usr/include/sys h
+	-ln -s /usr/include/net net
+	-ln -s /usr/include/netinet netinet
+	-ln -s /usr/include/rpc rpc
+	-ln -s /usr/include/sys sys
+	-ln -s /usr/include/nfs nfs
+	-ln -s /usr/include/inet inet
+	-ln -s /usr/include/ufs ufs
+	-ln -s $(NS_INCL) nsapi
+
+setup_uafs: setup_common
+	set UAFS; $(MKDIR_IF_NEEDED)
+	-rm -f UAFS/Makefile UAFS/Makefile.common
+	ln -s ../Makefile UAFS/Makefile
+	ln -s ../Makefile.common UAFS/Makefile.common
+
+setup_nsafs: setup_common
+	set AFSWEB; $(MKDIR_IF_NEEDED)
+	-rm -f AFSWEB/Makefile AFSWEB/Makefile.common
+	ln -s ../Makefile AFSWEB/Makefile
+	ln -s ../Makefile.common AFSWEB/Makefile.common
+
+UAFS/$(LIBUAFS): setup_uafs
+	cd UAFS; \
+	$(MAKE) $(LIBUAFS)
+
+AFSWEB/$(LIBAFSWEB): setup_nsafs
+	cd AFSWEB; \
+	$(MAKE) $(LIBAFSWEB)
+
+AFSWEB/$(LIBAFSWEBKRB): setup_nsafs
+	cd AFSWEB; \
+	$(MAKE) $(LIBAFSWEBKRB)
+
+# Below this line are targets when in the COMMON directory:
+
+$(LIBUAFS): $(UAFSOBJ)
+	-rm -f $(LIBUAFS)
+	$(AR) $(ARFLAGS) $(LIBUAFS) $(UAFSOBJ)
+	ranlib $(LIBUAFS)
+
+$(LIBAFSWEB): $(AFSWEBOBJ) ${DES}/libdes.a
+	-rm -f $(LIBAFSWEB)
+	ld -all -shared -expect_unresolved "*" $(LIBAFSWEB) $(AFSWEBOBJ) ${DES}/libdes.a $(WEBLIBS)
+
+$(LIBAFSWEBKRB): $(AFSWEBOBJKRB) ${DES}/libdes.a
+	-rm -f $(LIBAFSWEBKRB)
+	ld -all -shared -expect_unresolved "*" $(LIBAFSWEBKRB) $(AFSWEBOBJKRB) ${DES}/libdes.a $(WEBLIBS)

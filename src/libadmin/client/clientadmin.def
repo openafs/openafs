@@ -1,0 +1,25 @@
+
+EXPORTS
+	afsclient_TokenGetExisting				@1
+	afsclient_TokenGetNew					@2
+	afsclient_TokenQuery					@3
+	afsclient_CellOpen					@4
+	afsclient_CellClose					@5
+	afsclient_TokenClose					@6
+	afsclient_LocalCellGet					@7
+	afsclient_MountPointCreate				@8
+	afsclient_ACLEntryAdd					@9
+	afsclient_Init						@10
+	afsclient_NullCellOpen					@11
+	afsclient_CellNameGet					@12
+	afsclient_AFSServerGet					@13
+	afsclient_AFSServerGetBegin				@14
+	afsclient_AFSServerGetNext				@15
+	afsclient_AFSServerGetDone				@16
+	afsclient_TokenSet					@17
+	afsclient_RPCStatOpen					@18
+	afsclient_RPCStatClose					@19
+	afsclient_RPCStatOpenPort				@21
+	afsclient_CMStatOpenPort				@20
+	afsclient_CMStatClose					@22
+

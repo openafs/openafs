@@ -1,0 +1,49 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+
+!INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\..\config\NTMakefile.version
+
+
+############################################################################
+# Export header files
+
+LIBINCLUDES = \
+	$(DESTDIR)\include\pthread.h
+
+############################################################################
+# Build standard pthread.dll
+
+PTHR_DLLFILE = $(DESTDIR)\lib\pthread.dll
+
+PTHR_DLLOBJS = \
+	pthread.obj \
+	pthread.res
+
+$(PTHR_DLLFILE): $(PTHR_DLLOBJS)
+	$(DLLCONLINK) /DEF:pthread.def
+	$(DLLPREP)
+
+############################################################################
+# Build Windows 95 version of pthread.dll
+
+PTHR95_DLLFILE = $(DESTDIR)\lib\win95\pthread.dll
+
+PTHR95_DLLOBJS = \
+	pthread_95.obj \
+	pthread95.res
+
+$(PTHR95_DLLFILE): $(PTHR95_DLLOBJS)
+	$(DLLCONLINK) /DEF:pthread.def
+	$(DLLPREP)
+
+pthread_95.obj: pthread.c
+	$(C2OBJ) pthread.c -DAFS_WIN95_ENV /Fopthread_95.obj
+
+
+install: $(PTHR_DLLFILE) $(PTHR95_DLLFILE) $(LIBINCLUDES)
+
+pthread.res: pthread.rc AFS_component_version_number.h
+	$(RC) $*.rc
+
+pthread95.res: pthread95.rc AFS_component_version_number.h
+	$(RC) $*.rc

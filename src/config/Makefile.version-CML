@@ -1,0 +1,18 @@
+VERSFILE=AFS_component_version_number
+
+$(VERSFILE).o: $(VERSFILE).c
+
+# mkvers checks timestamps
+
+$(VERSFILE).c:
+	$(DESTDIR)bin/mkvers -o $(VERSFILE).c
+# only done for RX in NT
+#	-c $(CML_PREFIX)
+
+$(VERSFILE).h:
+	$(DESTDIR)bin/mkvers -o $(VERSFILE).h -v
+
+$(VERSFILE).txt:
+	$(DESTDIR)bin/mkvers -o $(VERSFILE).txt -t
+
+noversion: install

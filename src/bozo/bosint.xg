@@ -1,0 +1,222 @@
+
+/* Copyright (C) 1990 Transarc Corporation - All rights reserved */
+/*
+ * (C) COPYRIGHT IBM CORPORATION 1987, 1988
+ * LICENSED MATERIALS - PROPERTY OF IBM
+ */
+
+typedef int bstring;	/*force xdr output */
+
+const BOZO_BSSIZE = 256;
+%#undef min
+struct bozo_netKTime {
+    int mask;
+    short hour;	    /* 0 - 23 */
+    short min;	    /* 0 - 60 */
+    short sec;	    /* 0 - 60 */
+    short day;	    /* 0 is sunday */
+};
+
+struct bozo_key {
+    char data[8];
+};
+
+struct bozo_keyInfo {
+	afs_int32 mod_sec;
+	afs_int32 mod_usec;
+	afs_uint32 keyCheckSum;
+	afs_int32 spare2;
+};
+
+struct bozo_status {
+	afs_int32 goal;			/* the short-term goal */
+	afs_int32 fileGoal;			/* the goal field in the file  */
+	afs_int32 procStartTime;		/* last time a process was started */
+	afs_int32 procStarts;		/* process starts */
+	afs_int32 lastAnyExit;		/* time process exited, any reason */
+	afs_int32 lastErrorExit;		/* time process exited unexpectedly */
+	afs_int32 errorCode;			/* last exit return code */
+	afs_int32 errorSignal;		/* last proc terminating signal */
+	afs_int32 flags;			/* flags (see below) */
+	afs_int32 spare[8];			/* spare fields */
+};
+
+%#define BOZO_HASCORE		1	/* core file exists */
+%#define BOZO_ERRORSTOP		2	/* stopped due to too many errors */
+%#define BOZO_BADDIRACCESS	4	/* bad mode bits on /usr/afs dirs */
+
+%#define BOZO_PRUNEOLD		1	/* prune .OLD files */
+%#define BOZO_PRUNEBAK		2	/* prune .BAK files */
+%#define BOZO_PRUNECORE		4	/* prune core files */
+
+package BOZO_
+statindex 1
+
+CreateBnode(
+  IN string type<BOZO_BSSIZE>,
+  string instance<BOZO_BSSIZE>,
+  string p1<BOZO_BSSIZE>,
+  string p2<BOZO_BSSIZE>,
+  string p3<BOZO_BSSIZE>,
+  string p4<BOZO_BSSIZE>,
+  string p5<BOZO_BSSIZE>,
+  string p6<BOZO_BSSIZE>
+) = 80;
+
+DeleteBnode(
+  IN string instance<BOZO_BSSIZE>
+) = 81;
+
+SetStatus(
+  IN string instance<BOZO_BSSIZE>,
+  IN afs_int32 status
+) = 82;
+
+GetStatus(
+  IN string instance<BOZO_BSSIZE>,
+  OUT afs_int32 *intStat,
+  OUT string statdescr<BOZO_BSSIZE>
+) = 83;
+
+EnumerateInstance(
+  IN afs_int32 instance,
+  OUT string iname<BOZO_BSSIZE>
+)=84;
+
+GetInstanceInfo(
+  IN string instance<BOZO_BSSIZE>,
+  OUT string type<BOZO_BSSIZE>,
+  struct bozo_status *status
+) = 85;
+
+GetInstanceParm(
+  IN string instance<BOZO_BSSIZE>,
+  afs_int32 num,
+  OUT string parm<BOZO_BSSIZE>
+) =86;
+
+AddSUser(
+  IN string name<BOZO_BSSIZE>
+) = 87;
+
+DeleteSUser(
+  IN string name<BOZO_BSSIZE>
+) = 88;
+
+ListSUsers(
+  IN afs_int32 an,
+  OUT string name<BOZO_BSSIZE>
+) = 89;
+
+ListKeys(
+  IN afs_int32 an,
+  OUT afs_int32 *kvno,
+  struct bozo_key *key,
+  struct bozo_keyInfo *keyinfo
+) = 90;
+
+AddKey(
+  IN afs_int32 an,
+  struct bozo_key *key
+) = 91;
+
+DeleteKey(
+  IN afs_int32 an
+) = 92;
+
+SetCellName(
+  IN string name<BOZO_BSSIZE>
+) = 93;
+
+GetCellName(
+  OUT string name<BOZO_BSSIZE>
+) = 94;
+
+GetCellHost(
+  IN afs_int32 awhich,
+  OUT string name<BOZO_BSSIZE>
+) = 95;
+
+AddCellHost(
+  IN string name<BOZO_BSSIZE>
+) = 96;
+
+DeleteCellHost(
+  IN string name<BOZO_BSSIZE>
+) = 97;
+
+SetTStatus(
+  IN string instance<BOZO_BSSIZE>,
+  IN afs_int32 status
+) = 98;
+
+ShutdownAll(
+) = 99;
+
+RestartAll(
+) = 100;
+
+StartupAll(
+) = 101;
+
+SetNoAuthFlag(
+  IN afs_int32 flag
+)= 102;
+
+ReBozo(
+) = 103;
+
+Restart(
+  IN string instance<BOZO_BSSIZE>
+) = 104;
+
+Install(
+  IN string path<BOZO_BSSIZE>,
+  afs_int32 size,
+  afs_int32 flags,
+  afs_int32 date
+) split = 105;
+
+UnInstall(
+  IN string path<BOZO_BSSIZE>
+) = 106;
+
+GetDates(
+  IN string path<BOZO_BSSIZE>,
+  OUT afs_int32 *newtime,
+  afs_int32 *baktime,
+  afs_int32 *oldtime
+) = 107;
+
+Exec(
+  IN string cmd<BOZO_BSSIZE>
+) = 108;
+
+Prune(
+  IN afs_int32 flags
+) = 109;
+
+SetRestartTime(
+  IN afs_int32 type,
+  IN struct bozo_netKTime *restartTime
+) = 110;
+
+GetRestartTime(
+  IN afs_int32 type,
+  OUT struct bozo_netKTime *restartTime
+) = 111;
+
+GetLog(
+  IN string name<BOZO_BSSIZE>
+) split = 112;
+
+WaitAll(
+) = 113;
+
+GetInstanceStrings(
+  IN string instance<BOZO_BSSIZE>,
+  OUT string errorName<BOZO_BSSIZE>,
+  OUT string spare1<BOZO_BSSIZE>,
+  OUT string spare2<BOZO_BSSIZE>,
+  OUT string spare3<BOZO_BSSIZE>
+) = 114;

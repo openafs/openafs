@@ -1,0 +1,59 @@
+
+EXPORTS
+	vos_BackupVolumeCreate					@1
+	vos_BackupVolumeCreateMultiple				@2
+	vos_PartitionGet					@3
+	vos_PartitionGetBegin					@4
+	vos_PartitionGetNext					@5
+	vos_PartitionGetDone					@6
+	vos_ServerOpen						@7
+	vos_ServerClose						@8
+	vos_ServerSync						@9
+	vos_FileServerAddressChange				@10
+	vos_FileServerAddressRemove				@11
+	vos_FileServerGetBegin					@12
+	vos_FileServerGetNext					@13
+	vos_FileServerGetDone					@14
+	vos_ServerTransactionStatusGetBegin			@15
+	vos_ServerTransactionStatusGetNext			@16
+	vos_ServerTransactionStatusGetDone			@17
+	vos_VLDBGet						@18
+	vos_VLDBGetBegin					@19
+	vos_VLDBGetNext						@20
+	vos_VLDBGetDone						@21
+	vos_VLDBEntryRemove					@22
+	vos_VLDBEntryLock					@23
+	vos_VLDBEntryUnlock					@24
+	vos_VLDBReadOnlySiteCreate				@25
+	vos_VLDBReadOnlySiteDelete				@26
+	vos_VLDBSync						@27
+	vos_VolumeCreate					@28
+	vos_VolumeDelete					@29
+	vos_VolumeRename					@30
+	vos_VolumeDump						@31
+	vos_VolumeRestore					@32
+	vos_VolumeOnline					@33
+	vos_VolumeOffline					@34
+	vos_VolumeGet						@35
+	vos_VolumeGetBegin					@36
+	vos_VolumeGetNext					@37
+	vos_VolumeGetDone					@38
+	vos_VolumeMove						@39
+	vos_VolumeRelease					@40
+	vos_VolumeZap						@41
+	vos_PartitionNameToId					@42
+	vos_PartitionIdToName					@43
+	vos_VolumeQuotaChange					@44
+	vos_VLDBUnlock						@45
+
+
+
+
+
+
+
+
+	RXAFS_function_names					@54 DATA
+	RXAFSCB_function_names					@55 DATA
+	VL_function_names					@56 DATA
+	AFSVolfunction_names					@57 DATA

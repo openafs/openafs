@@ -1,0 +1,32 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+#
+
+AFSDEV_AUXCDEFINES = -DAFS_PTHREAD_ENV
+
+!INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
+
+
+install test tests: afscp.exe
+
+AFSCP_EXELIBS =\
+	$(DESTDIR)\lib\pthread.lib \
+	$(DESTDIR)\lib\afs\afsadminutil.lib \
+	$(DESTDIR)\lib\afs\afsclientadmin.lib \
+	$(DESTDIR)\lib\afs\afsbosadmin.lib \
+	$(DESTDIR)\lib\afs\afsvosadmin.lib \
+	$(DESTDIR)\lib\afs\afskasadmin.lib \
+	$(DESTDIR)\lib\afs\afsptsadmin.lib \
+	$(DESTDIR)\lib\afsauthent.lib \
+	$(DESTDIR)\lib\afsrpc.lib \
+	$(DESTDIR)\lib\afs\afscmd.lib  # static library
+
+AFSCP_EXEOBJS =\
+	bos.obj \
+	client.obj \
+	kas.obj \
+	pts.obj \
+	util.obj \
+	vos.obj
+
+afscp.exe: afscp.obj $(AFSCP_EXEOBJS) $(AFSCP_EXELIBS)
+	$(EXECONLINK)

@@ -1,0 +1,183 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>Notas de Release</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- D:\IDWB\TEMP\idwt1220\AWRNS000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 27 Jan 2000 at 14:26:07            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+<META HTTP-EQUIV="updated" CONTENT="Thu, 27 Jan 2000 14:26:06">
+<META HTTP-EQUIV="review" CONTENT="Sat, 27 Jan 2001 14:26:06">
+<META HTTP-EQUIV="expires" CONTENT="Sun, 27 Jan 2002 14:26:06">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. Todos os Direitos Reservados.    -->
+<BODY bgcolor="ffffff">
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Notas de Release</H1>
+<HR><H1><A NAME="HDRLTCLIENT" HREF="awrns002.htm#ToC_29">Notas de Release do AFS Light</A></H1>
+<HR><H2><A NAME="Header_30" HREF="awrns002.htm#ToC_30">Introdução</A></H2>
+<P>Esta seção contém informações importantes sobre o componente AFS Light
+do AFS para Windows, versão 3.6. O AFS Light fornece acesso ao
+espaço de arquivos do AFS a partir de um PC executando o Windows 95 ou Windows
+98, possibilitando aos usuários gerenciar arquivos e diretórios no AFS.
+O AFS Light acessa o espaço de arquivos do AFS através de uma máquina AFS
+Client configurada como um AFS Light Gateway.
+<HR><H2><A NAME="HDRLIGHT_PREREQ" HREF="awrns002.htm#ToC_31">Requisitos de Instalação do AFS Light</A></H2>
+<P>O sistema deve atender aos seguintes requisitos de hardware, software e
+privilégios administrativos para instalar o AFS Light.
+<P><H3><A NAME="Header_32" HREF="awrns002.htm#ToC_32">Hardware</A></H3>
+<P>Os requisitos de hardware para instalar o AFS Light são:
+<UL>
+<LI>Um PC usando um microprocessador 80486/66 MHz (ou mais rápido) ou um
+microprocessador baseado em Pentium
+</LI><LI>No mínimo 16 MB de RAM
+</LI><LI>Um disco rígido com no mínimo 4 MB de espaço disponível em disco
+</LI></UL>
+<P><H3><A NAME="Header_33" HREF="awrns002.htm#ToC_33">Software</A></H3>
+<P>Os requisitos de software para instalar o AFS Light são:
+<UL>
+<LI>Microsoft Windows 95 com a atualização Windows Sockets 2 ou Microsoft
+Windows 98
+</LI><LI>AFS Light Gateway
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Nota:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">O AFS Light Gateway deve ser ativado em uma máquina Windows NT executando o
+AFS Client, versão 3.5 ou versão 3.6. O AFS Light acessa
+o AFS através do AFS Light Gateway. Consulte <A HREF="#HDRGATEWAY">Acessando o AFS através do AFS Light Gateway</A> para obter maiores informações.
+</TD></TR></TABLE>
+</LI></UL>
+<P><H3><A NAME="Header_34" HREF="awrns002.htm#ToC_34">Requisito de Privilégio Administrativo</A></H3>
+<P>Nenhum privilégio administrativo é necessário para instalar e
+configurar o AFS Light.
+<HR><H2><A NAME="Header_35" HREF="awrns002.htm#ToC_35">Notas do Produto</A></H2>
+<P>Esta seção destaca informações gerais importantes sobre o componente
+AFS Light do AFS para Windows, versão 3.6.
+<P><H3><A NAME="HDRGATEWAY" HREF="awrns002.htm#ToC_36">Acessando o AFS através do AFS Light Gateway</A></H3>
+<P>O AFS Light acessa o espaço de arquivos do AFS através de um AFS Light
+Gateway. Para usar o AFS Light, é preciso ter no mínimo uma máquina no
+mesmo domínio da máquina do AFS Light executando o AFS Client para Windows,
+versão 3.5 ou o AFS Client para Windows, versão 3.6.
+<UL>
+<LI><B>O banco de dados da célula do AFS Light e o banco de dados da célula
+do AFS Light Gateway devem estar sincronizados</B>
+<P>Para que um usuário do AFS Light possa acessar uma célula, uma entrada para
+a célula deve existir no banco de dados da célula do AFS Light (arquivo
+<B>afsdcell.ini</B>) e no banco de dados da célula do AFS Light
+Gateway (arquivo <B>afsdcell.ini</B>).
+</LI><LI><B>O AFS Light deve ser capaz de resolver o nome de serviço do AFS Light
+Gateway</B>
+<P>O AFS Light deve ser capaz de resolver o nome de serviço da máquina gateway
+para se comunicar com a máquina gateway. O nome da máquina gateway é o
+nome do serviço NetBIOS do gateway, no formato
+<I>mach</I><B>-afs</B>, onde <I>mach</I> é o nome do
+computador host até um máximo de 11 caracteres. A resolução de nome
+pode ser obtida incluindo o nome do serviço NetBIOS do gateway ao arquivo
+LMHOSTS do cliente ou aos servidores DNS ou WINS adequados. Se a
+máquina do AFS Light e a máquina de seu AFS Light Gateway residirem na mesma
+sub-rede, a resolução de nome ocorre automaticamente através de uma difusão
+NetBIOS.
+</LI><LI><B>O AFS Light Gateway deve ser capaz de autenticar um usuário do AFS
+Light em um contexto Windows</B>
+<P>Uma vez configurada como um AFS Light Gateway, sua máquina AFS Client deve
+ser capaz de autenticar usuários AFS Light em um contexto Windows. Esta
+autenticação pode ser obtida através de uma conta do usuário de
+<I>domínio</I> ou através de contas do usuário de <I>máquina</I>
+sincronizadas. Uma conta do usuário de domínio é uma conta do usuário
+em um domínio Windows. Uma conta do usuário de máquina é uma conta do
+usuário que é válida somente em uma máquina host específica.
+<P>Quando o AFS Light Gateway é configurado em um domínio Windows, um usuário
+do AFS Light deve efetuar o logon ou em uma conta de usuário do domínio no
+domínio ao qual pertence o gateway ou em uma conta de usuário de máquina com o
+mesmo nome do usuário e senha que os de uma conta de usuário do domínio no
+domínio do gateway.
+<P>Se as contas do usuário de máquina são empregadas, então estas contas devem
+ser sincronizadas nas máquinas AFS Light Gateway e AFS Light. Um
+usuário deve se conectar em uma máquina AFS Light com o mesmo nome do usuário
+e senha de uma conta do usuário de máquina que esteja definida na máquina AFS
+Light Gateway.
+<P><I>O uso de contas de usuário de domínio é recomendado para simplificar a
+administração.</I>
+</LI></UL>
+<P><H3><A NAME="Header_37" HREF="awrns002.htm#ToC_37">O AFS Light para Windows 95 Requer a Atualização do Windows Sockets 2</A></H3>
+<P>Para executar o AFS Light em uma máquina Windows 95, é preciso instalar
+a atualização do Windows Sockets 2 se esta ainda não estiver instalada.
+Esta atualização está disponível para fazer o download no site Web da
+Microsoft.
+<P><H3><A NAME="Header_38" HREF="awrns002.htm#ToC_38">Binários de Linha de Comandos AFS</A></H3>
+<P>Quando instalado em um sistema Windows 98, o AFS Light inclui conjuntos de
+comandos orientados a administração tais como <B>bos</B>, <B>kas</B>,
+<B>vos</B> e <B>pts</B>. Execute os comandos destes conjuntos a
+partir do Prompt de Comandos do Windows. Os conjuntos de comandos
+<I>não</I> estão disponíveis quando o AFS Light estiver instalado em um
+sistema Windows 95.
+<P>
+<P><H3><A NAME="Header_39" HREF="awrns002.htm#ToC_39">O AFS Light Deve Ser Instalado em um diretório Cujo Caminho Contenha Somente Caracteres ANSI</A></H3>
+<P>O software do AFS para Windows deve ser instalado em um diretório cujo
+caminho contenha somente caracteres ANSI, por exemplo o diretório padrão
+<B>C:\Arquivos de Programas</B>.
+<P><H3><A NAME="Header_40" HREF="awrns002.htm#ToC_40">Arquivos Temporários</A></H3>
+<P>O AFS Light para Windows ocasionalmente cria arquivos
+temporários. Para controlar onde tais arquivos são criados, defina a
+variável de ambiente (TMP ou TEMP) para o nome do caminho completo do
+diretório temporário preferencial. Se um diretório temporário não for
+especificado, quaisquer arquivos temporários serão criados no diretório de
+trabalho atual do processo que criar os arquivos.
+<P><H3><A NAME="Header_41" HREF="awrns002.htm#ToC_41">Suporte a Idioma Nacional para o AFS Light</A></H3>
+<P>O AFS fornece suporte a idioma nacional para as ferramentas e
+documentação da interface gráfica com o usuário (GUI) do AFS Light, incluindo
+suporte a scripts bidirecionais (Hebraico, Árabe, etc.). As
+cadeias de idioma instaladas são determinadas pelas características locais
+padrão da máquina, conforme especificadas na caixa de diálogo Propriedades de
+Configurações Regionais. Se não existirem cadeias de idioma para as
+características locais atuais, as cadeias de idioma para Inglês serão
+instaladas por padrão.
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Nota:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">As características locais <I>padrão do sistema</I> para uma máquina podem
+ser diferentes das características locais de <I>usuário</I> (especificadas
+por um usuário) na máquina. No entanto, as cadeias de idioma instaladas
+com o AFS para Windows são sempre determinadas pelas características locais
+padrão do sistema.
+</TD></TR></TABLE>
+<P><H3><A NAME="Header_42" HREF="awrns002.htm#ToC_42">O Verificador de Força da Senha kpwvalid Não É Usado em Sistemas Windows</A></H3>
+<P>Quando uma senha de usuário do AFS é alterada a partir de um sistema
+Windows, o programa <B>kpwvalid</B> <I>não</I> é usado para verificar
+a qualidade da nova senha. (Em sistemas UNIX, se existir um programa
+<B>kpwvalid</B> no mesmo diretório do programa <B>kpasswd</B>, o
+programa <B>kpwvalid</B> verifica a qualidade de toda nova senha de
+usuário.)
+<HR><H2><A NAME="Header_43" HREF="awrns002.htm#ToC_43">Limitações e Restrições</A></H2>
+<P>Esta seção descreve resumidamente as limitações e restrições conhecidas
+no componente AFS Light do AFS para Windows, versão 3.6.
+<P><H3><A NAME="Header_44" HREF="awrns002.htm#ToC_44">Criptografia Não Suportada na Versão Chinês Simplificado</A></H3>
+<P>A versão Chinês Simplificado do Microsoft Windows 98 não suporta
+criptografia, que é necessária para transmitir senhas AFS do AFS Light para o
+AFS Light Gateway. Para que usuários do AFS Light obtenham tokens AFS
+quando usarem a versão Chinês Simplificado do Microsoft Windows 98, a
+criptografia no AFS deve ser desativada.
+<P>Para desativar a criptografia no AFS, inclua a seguinte linha ao arquivo
+<B>Autoexec.bat</B> do Windows:
+<PRE>set AFS_RPC_ENCRYPT=OFF
+</PRE>
+<P>Note que desativar a criptografia introduz um risco potencial de segurança
+porque as senhas AFS são transmitidas ao AFS Client Gateway de forma aberta
+quando os tokens são obtidos.
+<P><H3><A NAME="Header_45" HREF="awrns002.htm#ToC_45">Ligações Simbólicas a Arquivos e Diretórios do AFS</A></H3>
+<P>Ligações simbólicas a diretórios são tratadas como diretórios, e
+ligações simbólicas a arquivos aparecem como arquivos em sistemas Windows 98 e
+Windows 95. Nenhuma delas aparece como ligação simbólica.
+<P>Atualmente, não é possível usar a interface do Windows (o Windows Explorer,
+por exemplo) para excluir ou criar ligações simbólicas no espaço de arquivos
+do AFS. Se tentar excluir um diretório que é uma ligação simbólica
+usando a interface do Windows, o conteúdo do diretório será excluído. O
+próprio diretório não será excluído. Se tentar excluir um arquivo que é
+uma ligação simbólica usando a interface do Windows, a ligação é removida, em
+vez do arquivo de destino.
+<P>Para criar e excluir ligações simbólicas a arquivos e diretórios do AFS,
+use o programa <B>symlink.exe</B> que é fornecido com o AFS para
+Windows, versão 3.6. Execute comandos <B>symlink</B> a
+partir do Prompt de Comandos do Windows NT.
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">In&iacute;cio da P&aacute;gina</A> &#124; <A HREF="awrns004.htm">P&aacute;gina Anterior</A> &#124; <A HREF="awrns006.htm">Pr&oacute;xima P&aacute;gina</A> &#124; <A HREF="awrns002.htm#ToC">&Iacute;ndice</A> &#93;</B>
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B>
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  Todos os Direitos Reservados.
+</B>
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

@@ -1,0 +1,20 @@
+# Copyright (C) 1998  Transarc Corporation.  All rights reserved.
+#
+
+# This makefile creates the AFS_component_version_number.c header file
+# for binaries. It is invoked from the NTMakefile in the binary's tree. Hence
+# the paths are correct for those trees.
+
+!IFNDEF VERSFILE
+VERSFILE=AFS_component_version_number
+!ENDIF
+
+$(VERSFILE).c:
+	echo char $(CML_PREFIX)cml_version_number[]="@(#)CML not accessible: No version information"; >$(VERSFILE).c
+	echo char* AFSVersion = "afs??";  >>$(VERSFILE).c
+
+$(VERSFILE).h:
+	echo #define AFS_VERINFO_BUILD "CML not accessible: No version information" >$(VERSFILE).h
+
+$(VERSFILE).txt:
+	echo CML not accessible: No version information >$(VERSFILE).txt

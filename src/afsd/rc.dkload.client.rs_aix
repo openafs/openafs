@@ -1,0 +1,3 @@
+echo 'Loading AFS ...'>/dev/console
+/usr/vice/etc/dkload/cfgexport -a /usr/vice/etc/dkload/export.ext.nonfs
+/usr/vice/etc/dkload/cfgafs  -a /usr/vice/etc/dkload/afs.ext

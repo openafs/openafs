@@ -1,0 +1,854 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理の手引き</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- E:\IDWB\TEMP\idwt2118\AUAGD000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 12:07:32            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 12:07:30">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 12:07:30">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 12:07:30">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理の手引き</H1>
+<HR><H1><A NAME="HDRWQ566" HREF="auagd002.htm#ToC_491">パッケージ・プログラムを使用したクライアント・マシンの構成</A></H1>
+<P><B>パッケージ</B>・プログラムにより、クライアントの構成プロセスが多くの点で自動化できます。<B>パッケージ</B>・プログラムを使用すると、グローバル構成ファイルを定義して、多くのクライアントのローカル・ディスクの構成が簡単に行えます。
+<A NAME="IDX7514"></A>
+<A NAME="IDX7515"></A>
+<A NAME="IDX7516"></A>
+<A NAME="IDX7517"></A>
+<HR><H2><A NAME="HDRWQ567" HREF="auagd002.htm#ToC_492">説明の要約</A></H2>
+<P>本章では、指示されたコマンド、またはプロトタイプ・ファイルの命令を使用した以下のタスクの実行方法を説明します。
+<BR>
+<TABLE WIDTH="100%">
+<TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="37%">クライアント・マシンのローカル・ディスクの構成
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="63%"><B>パッケージ</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="37%">ディレクトリーを定義する
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="63%"><B>D</B>[<VAR>update_code</VAR>] <VAR>directory</VAR> <VAR>owner</VAR> <VAR>group</VAR> <VAR>mode_bits</VAR>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="37%">ファイルを定義する
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="63%"><B>F</B>[<VAR>update_code</VAR>] <VAR>file</VAR> <VAR>source_file</VAR> [<VAR>owner</VAR> <VAR>group</VAR> <VAR>mode_bits</VAR>]
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="37%">記号リンクの定義
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="63%"><B>L</B>[<VAR>update_code</VAR>] <VAR>link</VAR> <VAR>actual_file</VAR> [<VAR>owner</VAR> <VAR>group</VAR> <VAR>mode_bits</VAR>]
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="37%">ブロック・スペシャル装置の定義
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="63%"><B>B</B> <VAR>device_name</VAR> <VAR>major_device_number</VAR> <VAR>minor_device_number</VAR> <VAR>owner</VAR> <VAR>group</VAR> <VAR>mode_bits</VAR>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="37%">キャラクター型スペシャル装置の定義
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="63%"><B>C</B> <VAR>device_name</VAR> <VAR>major_device_number</VAR> <VAR>minor_device_number</VAR> <VAR>owner</VAR> <VAR>group</VAR> <VAR>mode_bits</VAR>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="37%">ソケットを定義する
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="63%"><B>S</B> <VAR>socket_name</VAR> [<VAR>owner</VAR> <VAR>group</VAR> <VAR>mode_bits</VAR>]
+</TD></TR></TABLE>
+<HR><H2><A NAME="HDRWQ575" HREF="auagd002.htm#ToC_493">パッケージ・プログラムの使用</A></H2>
+<A NAME="IDX7518"></A>
+<A NAME="IDX7519"></A>
+<P><B>パッケージ</B>・プログラムは、システム独立型の<I>プロトタイプ・ファイル</I>を使用して、標準のディスク構成を定義します。プロトタイプ・ファイルは、どのファイルがローカル・クライアント・ディスクに常駐すべきか、どのファイルが AFS へのリンクとなるべきか、などを指示します。この後、このプロトタイプ・ファイルは、それぞれのシステム・タイプごとに<I>構成ファイル</I>にコンパイルされます。
+<P>すべてのクライアント・マシンが同じ構成を持つわけではありません。異なるプロトタイプ・ファイルを異なるクライアント機能 (プリント・サーバー、正規クライアント、など) に作成することも可能です。.
+<P><B>パッケージ</B>・プログラムは、ローカル・クライアント・ディスクの内容を構成ファイルと比較します。何らかの相違がある場合は、
+<B>パッケージ</B>が、AFS からのファイルをディスクにコピーし、ローカル・ディスクに必要な更新を行います。<B>パッケージ</B>・プログラムの構成で、システム構成の一部ではないファイルを削除したり、または特定のファイル (<B>dkload</B> など) が更新されたときに、クライアントを自動的にリブートすることもできます。
+<P><B>パッケージ</B>・プログラムでは、プロトタイプ・ファイルが作成されるまで、ある程度の時間がかかりますが、以下のような利点が生じます。
+<UL>
+<LI>それぞれのマシンを個々に構成する必要がなくなる。プロトタイプ構成ファイルは、すべてのマシンに適用される。
+</LI><LI>プロトタイプ・ファイルの変更およびクライアントのリブートをするだけで、マシン構成を変更することができる。
+</LI><LI>ディスク編成が、一連のマシン全体に渡って一様になる。
+</LI><LI>構成ファイルが、そのディスク上のファイル・レコード、およびシンボリック・リンクの役割をする。
+</LI></UL>
+<P><H3><A NAME="Header_494" HREF="auagd002.htm#ToC_494">ファイル・サーバー・マシン上でのパッケージの使用</A></H3>
+<P><B>パッケージ</B>は、クライアント・マシン上で使用するように設計されていますが、ファイル・サーバー・マシンのディスクの構成に使用することもできます。しかし、構成ファイル内の参照されたファイルのいずれかが、そのファイル・サーバー上のボリュームに常駐している場合、
+<B>パッケージ</B>・プログラムは、リブート中 (また、そのファイル・サーバーの処理、およびボリューム・サーバーの処理が再開するまで) は、そのボリュームにアクセスできなくなります。
+<P><B>パッケージ</B>・プログラムがファイルにアクセスできずにアボートした場合、ファイル・サーバー・マシン上のボリュームに常駐している AFS 内のファイルへの参照を除去する必要があります。これらの制約のため、以下この章では、
+<B>パッケージ</B>・プログラムがクライアント構成に使用されていることを前提としています。
+<HR><H2><A NAME="HDRWQ576" HREF="auagd002.htm#ToC_495">パッケージの概説</A></H2>
+<P><B>パッケージ</B>・プログラムを実行する前に、3 つの主なステップを踏む必要があります。
+<OL TYPE=1>
+<LI>機能特定型の <I>プロトタイプ・ファイル</I> (および、組み込まれている任意の <I>ライブラリー・ファイル</I>) を作成する。
+</LI><LI><B>パッケージ</B>を<B> MAKE ファイル</B>に変更し、プロトタイプ・ファイルをシステム特定型の <I>構成ファイル</I> にコンパイルする。
+</LI><LI>適切な<B>パッケージ</B>構成ファイルを自動的に実行するよう、クライアント・マシンを変更する。
+</LI></OL>
+<P>以下は、これらのステップの要約です。
+<P><H3><A NAME="Header_496" HREF="auagd002.htm#ToC_496">プロトタイプ・ファイルの作成</A></H3>
+<A NAME="IDX7520"></A>
+<A NAME="IDX7521"></A>
+<P>クライアント・マシンが実行する各種機能および役割、およびこれらの機能をサポートするローカル・ディスク構成をリストすることより始めます。サンプルの役割には、AFS アクセスを提供する標準クライアント、プリンターを駆動するプリント・サーバー、および <B>backup</B> スイートからコマンドを発行するバックアップ・マシンが含まれます。役割ごとに、異なる <I>プロトタイプ・ファイル</I> を作成します。
+<P>プロトタイプ・ファイルは、特定の役割をサポートするディスク構成を定義します。通常、プロトタイプ・ファイルは、機能特定型のファイルですが、システムからは独立しています。つまり、システム特定型の値は、変数およびライブラリー・ファイルを使用して定義することができます。そのため、変数またはライブラリー・ファイルを変更すると、その変更は <B>パッケージ</B>・プログラムが起動されるときに、すべての該当するクライアントに伝達されます。
+<P><A HREF="#HDRWQ580">サンプル・プロトタイプ・ファイルおよびライブラリー・ファイル</A> に、保守が簡単でフレキシブルなプロトタイプ・ファイルを構築するための方法が記載されています。
+<P><H3><A NAME="HDRWQ577" HREF="auagd002.htm#ToC_497">プロトタイプ・ファイルのコンパイル</A></H3>
+<A NAME="IDX7522"></A>
+<A NAME="IDX7523"></A>
+<A NAME="IDX7524"></A>
+<P>プロトタイプ・ファイルは、通常、システムからは独立したファイルですが、異なるシステム・タイプの必要性を満たすために <TT>ifdef</TT> ステートメントが組み込まれている場合があります。プロトタイプ・ファイルは、オペレーティング・システム特定型のバージョンを生成するためにコンパイルされます。コンパイル中、
+<B>パッケージ</B>・プログラムは、それぞれのシステム・タイプごとに適切な定義を選択し、任意の変数を実際の値と置き換えます。これらのコンパイルされた、マシン特定型のファイルを、<I>構成ファイル</I>と呼びます。
+<P>プロトタイプ・ファイルは、<A HREF="#HDRWQ591">パッケージ Makefile ファイル</A> に記載されているように、標準タイプの <B>Makefile</B> ファイルを使用してコンパイルされます。
+<P><H3><A NAME="Header_498" HREF="auagd002.htm#ToC_498">クライアントの作成</A></H3>
+<P>システム特定型の構成ファイルが作成されると、
+<B>パッケージ</B>・プログラムがそのクライアント上で実行できるようになります。最初に、
+<B>パッケージ</B>のバイナリーを使用可能にし、正しい構成ファイルを指定しなければなりません。
+<P>以下に記載されているようにクライアントを変更します。
+<OL TYPE=1>
+<LI><B>.package</B> ファイルを、デフォルト構成ファイルが定義されているクライアントのローカル・ディスクごとのルート ( <B>/</B> ) ディレクトリーに作成する。
+</LI><LI><B>パッケージ</B>のバイナリー (<B>/etc/package</B>) をローカル・ディスク上で使用可能にする。
+</LI><LI>マシンの初期設定ファイル (<B>/etc/rc</B>
+またはこれと同等) を修正して、<B>package</B> プログラムへの呼び出しを組み込む。
+</LI></OL>
+<P>これらのステップは、<A HREF="#HDRWQ600">クライアント・マシンの変更</A> に詳細に記されています。
+<HR><H2><A NAME="HDRWQ578" HREF="auagd002.htm#ToC_499">パッケージのディレクトリー構造</A></H2>
+<A NAME="IDX7525"></A>
+<P>本機能グループは、<I>AFS インストールの手引き</I> に推奨されているように、
+<B>パッケージ</B>関連のファイルが、<B>/afs/</B><VAR>cellname</VAR>/<B>wsadmin</B> の 3 つのサブディレクトリーの
+<B>src</B>、<B>lib</B> および <B>etc</B> に導入されていることを前提としています。
+<P>これらのディレクトリーには、いくつかのサンプル・プロトタイプ、ライブラリー、および構成ファイルが含まれており、
+<B>パッケージ</B>・プログラムの機能を説明する手助けとなります。ただし、これは所属するセルに適したものであるとは限らず、必要に応じて修正する必要があります。
+<P><H3><A NAME="HDRWQ579" HREF="auagd002.htm#ToC_500">src ディレクトリー</A></H3>
+<P><B>src</B> ディレクトリーには、いくつかのサンプル・プロトタイプ・ファイル (構成ファイルの作成に使用される) 、プロトタイプ・ファイルの作成に使用される <B>MAKE ファイル</B> 、および結果としてのコンパイルされた構成ファイルが含まれます。
+<P>プロトタイプ・ファイルは、<VAR>function</VAR>.<B>proto</B> 形式の名前をとります。たとえば、<B>minimal.proto</B> ファイルは、
+AFS の実行に必要な最小限のライブラリー・ファイルを定義し、<B>staff.dkload.proto</B> ファイルは、動的カーネル・ロード・プログラムを使用したクライアントの構成を定義します。プロトタイプ・ファイルは、
+<B>hosts.equiv</B> などのシステム管理ファイルの定義を含むこともできます。
+<P><B>Makefile</B> は、システムから独立したプロトタイプ・ファイルをシステム特定型の構成ファイルにコンパイルするために使用されます。ユーザーのセル内での使用のためにこのファイルを変更するには、<A HREF="#HDRWQ591">パッケージ Makefile ファイル</A> を参照してください。
+<P>構成ファイルは、プロとタイプ・ファイルのコンパイルされたバージョンで、
+<VAR>function</VAR><B>.</B><VAR>sysname</VAR> という名前で呼ばれています。構成ファイルは、<B>etc</B> サブディレクトリー内にも表示され、
+<B>パッケージ</B>プログラムがディスクを構成するときにアクセスします。
+<P><H3><A NAME="Header_501" HREF="auagd002.htm#ToC_501">lib ディレクトリー</A></H3>
+<P><B>lib</B> ディレクトリーには、プロトタイプ・ファイル内で参照されたサンプル・ライブラリー・ファイルの多くが含まれます。たとえば、<B>base.generic</B> ファイルは、システムから独立したファイルで、セル名、システム・オプションおよび変数の各定義が組み込まれています。これらは、そのファイル内の <VAR>owner</VAR>、<VAR>group</VAR>、および <VAR>mode_bits</VAR> フィールド、およびシンボリック・リンクの定義の設定に使用されます。
+<P><H3><A NAME="Header_502" HREF="auagd002.htm#ToC_502">etc ディレクトリー</A></H3>
+<P><B>etc</B> ディレクトリーには、<B>src</B> サブディレクトリー内のプロトタイプ・ファイルから作成された、システム特定型の構成ファイルが含まれます。
+<B>パッケージ</B>・プログラムは、
+<B>etc</B> ディレクトリー内の構成ファイルを使用して、ディスクを構成します。
+<P>いくつかのサンプル・ファイルには、異なるシステム・タイプ用にコンパイルされた、<B>minimal</B>、および <B>staff</B> プロトタイプ・ファイルが組み込まれています。
+<HR><H2><A NAME="HDRWQ580" HREF="auagd002.htm#ToC_503">サンプル・プロトタイプ・ファイルおよびライブラリー・ファイル</A></H2>
+<A NAME="IDX7526"></A>
+<A NAME="IDX7527"></A>
+<P>プロトタイプ・ファイルは、クライアントのローカル・ディスクの構成を定義するテンプレートです。プロトタイプ・ファイルは、通常、機能特定型のファイル (たとえば、バックアップ・マシン、プリント・サーバーなど) ですが、システム独立型のファイルです。プロトタイプ・ファイルは、
+<TT>ifdef</TT> ステートメントおよび変数をサポートしますので、システム特定型の定義を組み込むことができます。実際のシステム特定型の構成ファイルは、そのプロトタイプ・ファイルがコンパイルされるときに生成されます。
+<P>プロトタイプ・ファイル内に定義されているコンポーネンツは、プリント・サーバーあるいはバックアップ・マシンのような特定の役割を実行するために、クライアントのローカル・ディスク上に常駐している必要のあるディレクトリー、ファイル、シンボリック・リンク、ブロック・スペシャル・デバイス、キャラクター型スペシャル・デバイス、およびソケットを組み込むことができます。そのため、それぞれの異なるクライアント機能ごとに固有のプロトタイプ・ファイルを構成することをお勧めします。
+<P><B>パッケージ</B>・プログラムをより有効に、かつ保守を簡単にするために、特定のプロトタイプ・ファイルではなく、モジュラーで汎用的なプロトタイプ・ファイルを作成します。
+<A NAME="IDX7528"></A>
+<A NAME="IDX7529"></A>
+<UL>
+<LI>汎用ライブラリー・ファイルを作成することによって、たくさんのプロトタイプ・ファイル内に同じライブラリー・ファイルを組み込むことができます。そのため、1 つのライブラリー・ファイルを変更することで、グローバルな構成変更を行うことができます。プロトタイプ・ファイルを個々に変更する必要はありません。
+</LI><LI>変数は、その変数の値を変更することで、定義を変更することができます。
+</LI></UL>
+<P><H3><A NAME="HDRWQ581" HREF="auagd002.htm#ToC_504">サンプル・プロトタイプ・ファイル</A></H3>
+<A NAME="IDX7530"></A>
+<P>以下は、AFS を実行するのに必要な最低限の定義を含むサンプル・プロトタイプ・ファイルの一部です。
+<B>minimal.proto</B> と呼ばれる類似ファイルが、<B>src</B> サブディレクトリーに常駐している場合があります。推奨されているように、このプロトタイプ・ファイルはライブラリー・ファイルを参照するのであって、実際の定義が組み込まれているのではありません。
+<PRE>            .
+            .
+   # Package prototype for a minimal configuration.
+   # Base components
+   %include ${wsadmin}/lib/base.generic
+   # Machine-specific components
+   %ifdef rs_aix42
+   %include ${wsadmin}/lib/rs_aix42.readonly
+   %include ${wsadmin}/lib/rs_aix42.AFS
+   %endif rs_aix42
+   %ifdef alpha_dux40
+   %include ${wsadmin}/lib/alpha_dux40.readonly
+   %include ${wsadmin}/lib/alpha_dux40.AFS
+   %endif alpha_dux40
+   %ifdef sun4x_56
+   %include ${wsadmin}/lib/sun4x_56.readonly
+   %include ${wsadmin}/lib/sun4x_56.AFS
+   %endif sun4x_56
+            .
+            .
+</PRE>
+<P>上記サンプルのコメントのない第 1 行目には、<B>/lib/base.generic</B> ライブラリー・ファイルが組み込まれます。このライブラリー・ファイルには、多くのプロトタイプ・ファイルに適した定義が含まれている場合があります。
+<B>base.generic</B> ライブラリー・ファイルも、<B>staff.proto</B> あるいは <B>backup.proto</B> のように、他のプロトタイプ・ファイルに組み込まれている場合があります。サンプル・ライブラリー・ファイルは、次の機能グループに記載されています。
+<P>システム特定型の定義は、<TT>ifdef</TT> 文および変数 (たとえば、<TT>${wsadmin}</TT> を使用してパス名を指定します)
+を使用した場合に許可されているので注意が必要です。したがって、異なるファイル、ディレクトリー、シンボリック・リンク、およびデバイスが必要な場合でも、
+AIX 4.2 あるいは Solaris 2.6 を実行しているマシンを同じプロとタイプ・ファイルを使用して構成することができます。
+<P>このサンプルの、コメントのない次の行には、管理者が異なるシステム・タイプの異なるライブラリー・ファイルを構成してあります。これらはそれぞれ、固有の構成ファイルにコンパイルされます。たとえば、このプロトタイプ・ファイルの下記の行は、値 <TT>rs_aix42</TT> が宣言されたら、構成ファイル用にライブラリー・ファイル <B>lib/rs_aix42.readonly</B> および <B>lib/rs_aix42.AFS</B>
+を使用するよう<B>パッケージ</B>・プログラムに伝えます。
+(システム・タイプの定義は、<B>Makefile</B> で宣言されます。<A HREF="#HDRWQ591">パッケージ Makefile ファイル</A> を参照してください。)
+<PRE>   %ifdef rs_aix42
+   %include ${wsadmin}/lib/rs_aix42.readonly
+   %include ${wsadmin}/lib/rs_aix42.AFS
+   %endif rs_aix42
+</PRE>
+<P>同様に、下記の行は、値 <TT>sun4x_56</TT> が宣言されたら、ライブラリー・ファイル <B>lib/sun4x_56.readonly</B> および
+<B>lib/sun4x_56.AFS</B> を使用するよう
+<B>パッケージ</B>・プログラムに伝えます。
+<PRE>   %ifdef sun4x_56
+   %include ${wsadmin}/lib/sun4x_56.readonly
+   %include ${wsadmin}/lib/sun4x_56.AFS
+   %endif sun4x_56
+</PRE>
+<P><H3><A NAME="Header_505" HREF="auagd002.htm#ToC_505">サンプル・ライブラリー・ファイル</A></H3>
+<A NAME="IDX7531"></A>
+<A NAME="IDX7532"></A>
+<A NAME="IDX7533"></A>
+<A NAME="IDX7534"></A>
+<P>以下は、基本的な構成定義のためのサンプル・ライブラリー・ファイルの一部です。<B>base.generic</B>と呼ばれる類似ファイルが、<B>lib</B> サブディレクトリーに常駐している場合があります。構成は、標準の <TT>ifdef</TT> ステートメントを使用して定義されますので、ご注意ください。
+<PRE>            .
+            .
+   #
+   # Base package definitions.
+   #
+   %ifndef	cell
+   %define	cell	abc.com
+   %endif	cell
+   %ifndef	sys
+   %include /etc/package.sys
+   %endif	sys
+   %define	${name}		${name}
+   %define	${cpu}		${cpu}
+   %define	${sys}		${sys}
+   %define	${dept}		${dept}
+   %define	${hostname}	${hostname}
+   %ifdef	rs_aix42
+   %	define 	AIX
+   %	define	rootlinks
+   %ifndef	noafsd 
+   %	define	afsd
+   %endif	noafsd
+   %endif	rs_aix42
+            .
+            .
+   #
+   # Some definitions to handle common combinations of owner, group,
+   # and protection fields.
+   #
+   %define	rzmode		root wheel 600
+   %define	usermode	root wheel 666
+   %define      systemmode	root wheel 644
+   %define	diskmode	root wheel 644
+   %define	ptymode		root wheel 666
+   %define	ttymode		root wheel 666
+            .
+            .
+   %define aix_rootbin	   root bin
+   %define aix_rootprintq  root printq
+   %define aix_rootstaff   root staff
+   %define aix_rootsys	   root system
+   %define aix_binbin      bin bin
+   %define aix_binmail	   bin mail
+   %define aix_binsys	   bin system
+   %define aix_addsys	   adduser system
+   %define aix_romode	   444
+   %define aix_loginmode   544
+   %define aix_usermode	   666
+   %define aix_systemmode  644
+   %define aix_textmode	   644
+   %define aix_rwmode1	   660
+   %define aix_allrugw	   664
+</PRE>
+<P>以下のサンプル・ライブラリー・ファイルは、<B>パッケージ</B>特定型の構文を使用して、ファイル、ディレクトリー、ソケットなどを定義しています。<I>構成ファイル行</I>と呼ばれる各行は、ディスク構成の、ある特定のコンポーネントを定義します。この命令の正しい構文は、
+<A HREF="#HDRWQ582">パッケージ構成ファイル命令の構文</A> に簡単に記載されています。詳細は、<I>AFS Administration Reference</I> の<B>パッケージ</B>構成ファイルを参照してください。
+<P>このサンプルでは、ライブラリー・ファイルに、
+<B>rs_aix42</B> マシンの構成特有の命令が含まれています。ユーザーの <B>lib</B> サブディレクトリーに類似のライブラリー・ファイルがある場合があります。
+<PRE>            .
+            .
+   #
+   # Generic configuration for an AFS rs_aix42 machine.
+   #
+   D	/                                       ${treemode}
+   D	/afs
+   FAQ	/unix	       ${machine}/unix.std 	${binmode}
+   LA	/unix.std	/unix
+   D	/bin					${treemode}
+   F	/bin/as		${machine}		${binmode}
+   F	/bin/ld		${machine}		${binmode}
+   F	/bin/nm		${machine}		${binmode}
+   FO	/bin/login	${afstest}		${suidmode}
+            .
+            .
+   FAQ  /usr/vice/etc/ThisCell  ${common}/etc/ThisCell ${textmode}
+   FQ	/usr/vice/etc/afsd      ${afstest}/root.client ${binmode}
+   FA	/usr/vice/etc/bos       ${afstest}/bin/bos     ${binmode}
+   FA	/usr/vice/etc/fs        ${afstest}/bin/fs      ${binmode}
+</PRE>
+<HR><H2><A NAME="HDRWQ582" HREF="auagd002.htm#ToC_506">パッケージ構成ファイル命令の構文</A></H2>
+<A NAME="IDX7535"></A>
+<A NAME="IDX7536"></A>
+<P>ライブラリー・ファイル内では、構成ファイル命令は、特定のディスク構成の定義に使用されます。各命令は、クライアント・マシン上のファイル、ディレクトリー、ソケット、あるいはデバイスの定義に使用することができます。各有効命令タイプの構文は、ここに簡単に記載されています。フィールドの詳細記述については、
+<I>AFS コマンド解説書</I> に記載されています。
+<UL>
+<LI><B>D</B> は、ディレクトリーを定義
+</LI><LI><B>F</B> は、ファイルを定義
+</LI><LI><B>L</B> は、リンクを定義
+</LI><LI><B>B</B> は、ブロック・スペシャル・デバイスを定義
+</LI><LI><B>C</B> は、キャラクター型スペシャル・デバイスを定義
+</LI><LI><B>S</B> は、ソケットを定義
+</LI></UL>
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>注:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">それぞれの構成命令は、単一行に改行なしで配置しなくてはなりません。ここで複数行にわたって現れる命令がありますが、これは単に読みやすくするためです。
+<P>
+<P>構成ファイルは、完全に正しいものである必要があります。構文エラーや誤った値があると、
+<B>package</B> コマンド・インタープリターは命令を実行せずに終了します。
+</TD></TR></TABLE>
+<P><H3><A NAME="HDRWQ583" HREF="auagd002.htm#ToC_507">ローカル・ファイル対シンボリック・リンク</A></H3>
+<P>AFS 分散ファイル・システムの利点を生かすために、ローカル・クライアント・ディスク上のファイル数を最小限に抑えることをお勧めします。代わりに、AFS へと指しているシンボリック・リンクを作成します。こうすることによって、キャッシングおよびスワッピングのスペースを広げ、マシンのパフォーマンスを向上させます。
+<P>しかし、いくつかのファイルは、以下に記載されているように、ローカル・ディスク上に常駐しなければなりません。これらのファイルは、<B>L</B> (シンボリック・リンク) 命令ではなく <B>F</B> (ファイル) 命令を使用して、プロトタイプ・ファイルまたはライブラリー・ファイル内に作成してください。
+<P>以下のタイプのファイルは、すべての AFS クライアントのローカル・ディスク上に常駐していなければなりません。
+<UL>
+<LI><B>afsd</B> プログラムの実行前に実行されたブート・シーケンス・ファイル。
+<P>
+<P><B>afsd</B> が実行され、キャッシュ・マネージャーが初期化されるまで、AFS はクライアントからアクセスできません。<B>afsd</B> より前に実行されるファイルはいずれも、ローカル・クライアント・ディスク上に常駐していなければなりません。
+<P>
+<P>たとえば、ディスク・キャッシュを使用するマシンの場合、
+<B>/usr/vice/cache</B> ディレクトリーは、キャッシュ・マネージャーを立ち上げる際には、キャッシュ・ファイルのロケーションの確保のために必ず存在していなければなりません。バイナリー・ファイル <B>/etc/mount</B> および <B>/etc/umount</B> は、マシンがブートする際にローカル・ディスク上で使用可能な状態である必要があり、
+<B>/usr/vice/cache</B> ディレクトリーがマウントできるようにします。
+<P>
+<P>また、初期設定ファイル (<B>/etc/rc</B> またはこれに同等) およびファイル・システム・マッピング・ファイル (<B>/etc/fstab</B> またはこれに同等) など特定の UNIX ファイルは、ローカル・ディスク上に常駐していなければなりません。
+</LI><LI>診断および回復ファイル
+<P>
+<P>ある特定のコマンドが、ファイル・サーバーの故障が原因である問題の診断および回復に使用することができます。これらコマンドのバイナリーのコピーをローカル・ディスク上に配置しておくのがよいでしょう。たとえば、
+<B>bos</B> および <B>fs</B> バイナリーをローカル・ディスクの <B>/usr/vice/etc</B> ディレクトリー、および <B>/usr/afsws</B> ディレクトリー (通常の構成における、
+AFS へのシンボリック・リンク) に保管します。その上で、PATH 環境変数を設定し、
+<B>/usr/afsws</B> が<B>/usr/vice/etc</B> の前に表示されるようにします。これにより、ユーザーが AFS にアクセスできない場合
+(たとえば、ファイル・サーバー障害による)、<B>bos</B> および <B>fs</B> バイナリーのコピー (ローカル・ディスクの <B>/usr/vice/etc</B> にある) にアクセスすることができます。
+</LI><LI><B>/usr/vice</B> ディレクトリーのファイル
+<P>
+<P><B>cache</B> サブディレクトリー内のキャッシュおよび <B>etc</B> サブディレクトリー内の構成ファイルを含む
+<B>/usr/vice</B> ディレクトリーの内容は、ローカル・ディスク上に常駐している必要がありますディレクトリー内のファイルの説明については、<A HREF="auagd015.htm#HDRWQ538">ローカル・ディスク上の構成ファイルおよびキャッシュ関連ファイル</A> を参照してください。
+</LI></UL>
+<A NAME="IDX7537"></A>
+<A NAME="IDX7538"></A>
+<A NAME="IDX7539"></A>
+<A NAME="IDX7540"></A>
+<P><H3><A NAME="HDRWQ584" HREF="auagd002.htm#ToC_508">ディレクトリーの定義</A></H3>
+<P><B>D</B> 命令は、ローカル・ディスク上に作成されるディレクトリーを定義します。シンボリック・リンク、ファイル、またはローカル・ディスクのその他の要素が同じ名前を持つ場合、これはディレクトリーに置き換えられます。ディレクトリーが既に存在する場合、その所有者、グループ、およびモード・ビットが、必要に応じて命令に適合するよう変更されます。
+<P>下記の命令を使用して、ディレクトリーを定義してください。
+<PRE>   <B>D</B>[<VAR>update_code</VAR>]   <VAR>directory</VAR>   <VAR>owner</VAR>   <VAR>group</VAR>   <VAR>mode_bits</VAR>
+</PRE>
+<P>下の例は、<B>/usr</B> ディレクトリーを定義しています。
+<PRE>   D /usr root wheel 755
+</PRE>
+<A NAME="IDX7541"></A>
+<A NAME="IDX7542"></A>
+<A NAME="IDX7543"></A>
+<A NAME="IDX7544"></A>
+<P><H3><A NAME="HDRWQ585" HREF="auagd002.htm#ToC_509">ファイルの定義</A></H3>
+<P><B>F</B> 命令は、ローカル・ディスク上に作成されるファイルを定義します。ソース・ファイルは、AFS 内あるいはローカル・ディスク内のいずれかに常駐することができます。
+<P>この名前のファイルがすでに存在する場合は、<B>I</B> 更新コードが指定されていない限り、そのファイルはソース・ファイルで更新 (上書き) されています。この名前のシンボリック・リンクあるいはディレクトリーが存在する場合は、<B>パッケージ</B>がソース・ファイルと置き換えます。
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>注:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">ファイルには、ローカル・ディスクに常駐しなければならないものがあります。これらは、シンボリック・リンクになることはできません。<A HREF="#HDRWQ583">ローカル・ファイル対シンボリック・リンク</A> を参照してください。
+</TD></TR></TABLE>
+<P>下記の命令を使用して、ファイルを定義してください。
+<PRE>   <B>F</B>[<VAR>update_code</VAR>]   <VAR>file</VAR>   <VAR>source_file</VAR>  [<VAR>owner</VAR>   <VAR>group</VAR>   <VAR>mode_bits</VAR>]
+</PRE>
+<P>ソースとして
+<B>/afs/abc.com/rs_aix42/bin/grep</B> を使用して、ローカル・ディスク上にファイル <B>/bin/grep</B> を作成/更新する例。
+<PRE>   F /bin/grep /afs/abc.com/rs_aix42 root wheel 755
+</PRE>
+<P>下の例では、2 つの更新コードが使用されており、<I>owner</I> 、<I>group</I> および <I>mode_bits</I> スロットが空です。そのため、そのディスク・ファイルはそれらのスロットにソース・ファイルの値を採用します。
+<PRE>   FAQ /usr/vice/etc/ThisCell /afs/abc.com/common/etc/ThisCell
+</PRE>
+<A NAME="IDX7545"></A>
+<A NAME="IDX7546"></A>
+<A NAME="IDX7547"></A>
+<A NAME="IDX7548"></A>
+<P><H3><A NAME="HDRWQ586" HREF="auagd002.htm#ToC_510">シンボリック・リンクの定義</A></H3>
+<P><B>L</B> 命令は、ローカル・ディスク上に作成されるシンボリック・リンクを定義します。シンボリック・リンクは、AFS ファイル・システムまたはローカル・ディスクを指す場合があります。同一のシンボリック・リンクがすでに存在する場合、<B>パッケージ</B>は何も行いません。しかし、同じ名前の要素がファイルまたはディレクトリーとしてディスク上に存在する場合は、
+<B>パッケージ</B>は、その要素をシンボリック・リンクと置き換えます。
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>注:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">ファイルには、ローカル・ディスクに常駐しなければならないものがあります。これらは、シンボリック・リンクになることはできません。<A HREF="#HDRWQ583">ローカル・ファイル対シンボリック・リンク</A> を参照してください。
+</TD></TR></TABLE>
+<P>以下の命令を使用して、シンボリック・リンクを定義します。
+<PRE>   <B>L</B>[<VAR>update_code</VAR>]  <VAR>link</VAR> <VAR>actual_file</VAR>  [<VAR>owner</VAR>   <VAR>group</VAR>   <VAR>mode_bits</VAR>]
+</PRE>
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>注:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">名前が番号記号 (<B>#</B>) またはパーセント記号 (<B>%</B>) で始まるファイルに対して、記号リンクを作成してはいけません。キャッシュ・マネージャーはこのようなリンクをそれぞれ標準の、または読み取り / 書き込みボリュームに対するマウント・ポイントと解釈します。
+</TD></TR></TABLE>
+<P>以下の例は、ローカル・ディスク上の <B>/etc/ftpd</B> から AFS 内の <B>/afs/abc.com/hp_ux110/etc/ftpd</B> へのシンボリック・リンクを作成します。<I>owner</I>、<I>group</I> および <I>mode_bits</I> の各フィールドが空のため、シンボリック・リンクはこれらのフィールドに実際のファイルから値を採用します。
+<PRE>   L /etc/ftpd /afs/abc.com/hp_ux110 
+</PRE>
+<P>この例は、<B>A</B> 更新コードを使用しています。
+<PRE>   LA /etc/printcap /afs/abc.com/common/etc/printcap.remote 
+               root wheel 644
+</PRE>
+<A NAME="IDX7549"></A>
+<A NAME="IDX7550"></A>
+<A NAME="IDX7551"></A>
+<A NAME="IDX7552"></A>
+<P><H3><A NAME="HDRWQ587" HREF="auagd002.htm#ToC_511">ブロック・スペシャル・デバイスの定義</A></H3>
+<P><B>B</B> 命令は、ブロック・スペシャル・デバイスを定義します。ブロック・スペシャル・デバイスは、ディスクのような、マルチバイト・ブロックのユニット内のデータを使用するデバイスです。同じ名前のデバイスがすでに存在する場合、
+<B>パッケージ</B>は、それを指定されたブロック・デバイスと置き換えます。
+<P>以下の命令を使用してブロック・スペシャル装置を定義します
+(ここでは読みやすくするため 2 行で表示します)。
+<PRE>   <B>B</B> <VAR>device_name</VAR>   <VAR>major_device_number</VAR>   <VAR>minor_device_number</VAR>  \
+   <VAR>owner</VAR>   <VAR>group</VAR>   <VAR>mode_bits</VAR>
+</PRE>
+<P>下の例は、<B>/dev/hd0a</B> と呼ばれるディスクのメジャー・デバイス番号およびマイナー・デバイス番号を <B>1</B> および <B>0</B> に定義しています。
+<PRE>   B /dev/hd0a 1 0 root wheel 644
+</PRE>
+<A NAME="IDX7553"></A>
+<A NAME="IDX7554"></A>
+<A NAME="IDX7555"></A>
+<A NAME="IDX7556"></A>
+<P><H3><A NAME="HDRWQ588" HREF="auagd002.htm#ToC_512">キャラクター型スペシャル・デバイスの定義</A></H3>
+<P><B>C</B> 命令は、キャラクター型スペシャル・デバイスを定義します。これは、ターミナルまたは tty のような、一度に 1 つの文字のユニット内のデータを使用するデバイスです。同じ名前のデバイスがすでに存在する場合、<B>パッケージ</B>は、それを指定されたキャラクター・デバイスと置き換えます。
+<P>以下の命令を使用してキャラクター型スペシャル・デバイスを定義します
+(ここでは読みやすくするため 2 行で表示します)。
+<PRE>   <B>C </B><VAR>device_name</VAR>   <VAR>major_device_number</VAR>   <VAR>minor_device_number</VAR>  \
+   <VAR>owner</VAR>   <VAR>group</VAR>   <VAR>mode_bits</VAR>
+</PRE>
+<P>下記の例は、<B>/dev/ttyp5</B> と呼ばれる tty のメジャー・デバイス番号およびマイナー・デバイス番号を <B>6</B> および <B>5</B> に定義しています。
+<PRE>   C /dev/ttyp5 6 5 root wheel 666
+</PRE>
+<A NAME="IDX7557"></A>
+<A NAME="IDX7558"></A>
+<A NAME="IDX7559"></A>
+<A NAME="IDX7560"></A>
+<P><H3><A NAME="HDRWQ589" HREF="auagd002.htm#ToC_513">ソケットの定義</A></H3>
+<P><B>S</B> 命令は、ソケットを定義しています。ソケットは、UDP および TCP/IP 接続用の通信装置です。同じ名前のソケットがすでに存在する場合、<B>パッケージ</B>は、それを置き換えます。
+<P>以下の命令を使用して、ソケットを定義してください。
+<PRE>   <B>S</B>   <VAR>socket_name</VAR>   [<VAR>owner</VAR>   <VAR>group</VAR>   <VAR>mode_bits</VAR>]
+</PRE>
+<P>下の例は、<B>/dev/printer</B>と呼ばれるソケットを定義しています。
+<PRE>   S /dev/printer root wheel 777
+</PRE>
+<HR><H2><A NAME="HDRWQ590" HREF="auagd002.htm#ToC_514">プロトタイプ・ファイルおよびライブラリー・ファイルの構成</A></H2>
+<A NAME="IDX7561"></A>
+<A NAME="IDX7562"></A>
+<A NAME="IDX7563"></A>
+<P>この機能グループは、<B>パッケージ</B>のプロトタイプ・ファイルおよびライブラリー・ファイルの作成に必要な、一般的なステップを説明しています。ガイドラインについては前章を、例についてはユーザーの <B>wsadmin</B> ディレクトリー内のファイルを参照してください。プロトタイプ・ファイルおよびライブラリー・ファイルの構造は、それぞれのセルごとに異なります。
+<P><H3><A NAME="Header_515" HREF="auagd002.htm#ToC_515">プロトタイプ・ファイルおよびそのコンポーネントのライブラリー・ファイルを構成するには</A></H3>
+<OL TYPE=1>
+<LI>3 つの<B>パッケージ</B>関連のサブディレクトリー (<B>src</B>、<B>lib</B> および <B>etc</B>) をセルのファイル・ツリーのどこに常駐させるかを決定します。以下の説明は、<I>AFS インストールの手引き</I> に記載されているように、3 つのサブディレクトリーが <B>/afs/</B><VAR>cellname</VAR><B>/wsadmin</B> ディレクトリーにロードされていることを前提としています。
+</LI><LI>セル内のクライアント・マシンにいくつの異なる機能を実行してほしいかを決定してください。それぞれの機能ごとに別々のプロトタイプ・ファイルを構成することをお勧めします。共通の機能には、以下が含まれます。
+<UL>
+<LI>標準ワークステーション: ユーザーに AFS 内ファイルへのアクセスを提供
+</LI><LI>プリンター・サーバー: プリンターを駆動する。「スタッフ機能」と結合する場合がある
+</LI><LI>バックアップ・マシン: AFS のバックアップ・システム・ソフトウェアを実行することにより、
+AFS ボリュームのテープへのバックアップを実行する
+</LI></UL>
+</LI><LI>すべてのクライアントに必要な最低限の機能 (AFS セットアップなど) を決定し、これらの汎用定義を 1 つ以上のライブラリー・ファイルに配置してください。
+</LI><LI>それぞれのクライアント (プリンター・サーバー、バックアップ・マシンなど) のタイプごとに、すべてのシステム独立型の定義を 1 つのファイルに配置し、すべてのオペレーティング・システム従属型の定義を別の 1 つのファイルに配置してください。
+</LI></OL>
+<HR><H2><A NAME="HDRWQ591" HREF="auagd002.htm#ToC_516">パッケージ Makefile ファイル</A></H2>
+<A NAME="IDX7564"></A>
+<A NAME="IDX7565"></A>
+<A NAME="IDX7566"></A>
+<P>適切なプロトタイプ・ファイルおよびライブラリー・ファイルを作成したら、必ずそのプロトタイプをシステム・タイプごとにコンパイルしなければなりません。結果は、システム特定型の構成ファイルとなります。
+<P><B>Makefile</B> ファイルは、使用されているプロトタイプ・ファイルとライブラリー・ファイルの定義、およびコンパイルの順序の定義をします。この機能グループに記載されているように、
+AFS に提供されているサンプルを変更することによってユーザーの
+<B>Makefile</B> を作成することをお勧めします。通常の構成では、これは <B>/afs/</B><VAR>cellname</VAR><B>/wsadmin/src/Makefile</B> に配置されています。
+<P><H3><A NAME="Header_517" HREF="auagd002.htm#ToC_517">概説</A></H3>
+<P>以下のリストには、<B>パッケージ</B> <B>Makefile</B> ファイルの機能グループについて説明します。機能グループを開始するヘッダー名によりそれぞれを識別しています。詳細を以下に記します。
+<DL>
+<P><DT><B><TT>CONFIG=</TT>
+</B><DD>作成されるすべての構成ファイルをリストし、どのプロトタイプ・ファイルがどのシステム・タイプ用にコンパイルされるかを定義する。
+<A HREF="#HDRWQ592">CONFIG 機能グループ</A> を参照してください。
+<P><DT><B><TT>BASE_LIBS=</TT>
+</B><DD>任意のプロトタイプ・ファイルに組み込まれているすべてのオペレーティング・システム独立型の、および機能独立型のライブラリー・ファイルのパス名をリストする。<A HREF="#HDRWQ593">BASE_LIBS 機能グループ</A> を参照してください。
+<P><DT><B><TT>MACHINE_LIBS=</TT>
+</B><DD>任意のプロトタイプ・ファイルに組み込まれているすべてのオペレーティング・システム特定型のライブラリー・ファイルのパス名をリストする。
+<A HREF="#HDRWQ594">MACHINE_LIBS 機能グループ</A> を参照してください。
+<P><DT><B><TT>LIBS=</TT>
+</B><DD><TT>BASE_LIBS</TT> および <TT>MACHINE_LIBS</TT> の組み合わせとして、<TT>LIBS</TT> を定義する 1 行命令。<A HREF="#HDRWQ595">LIBS 機能グループ</A> を参照してください。
+<P><DT><B><TT>.SUFFIXES</TT>
+</B><DD>プロトタイプ・ファイルまたは構成ファイル上に表示されるすべてのサフィックスを定義する。
+<A HREF="#HDRWQ596">.SUFFIXES 機能グループ</A> を参照してください。
+</DL>
+<P>最後に、<B>Makefile</B> ファイルには、
+<B>パッケージ</B>・プログラムが構成ファイルを生成するために従う命令セットが含まれます。この機能グループの変更は、一般に必要ありません。<A HREF="#HDRWQ597">MAKE ファイルの命令機能グループ</A> を参照してください。
+<P><H3><A NAME="HDRWQ592" HREF="auagd002.htm#ToC_518">CONFIG 機能グループ</A></H3>
+<P>前述のように、構成ファイルは、特定のオペレーティング・システム・タイプ用にコンパイルされたプロトタイプ・ファイルです。
+<B>Makefile</B> ファイルの <TT>CONFIG</TT> 機能グループは、どのプロトタイプ・ファイルをどのシステム・タイプ用にコンパイルするのかを定義します。結果として生じたコンパイル済みファイルは、システム特定型の構成ファイルです。
+<P>サンプルの <B>Makefile</B> ファイルから取った以下の例をよくお読みください。構成ファイルが、プロトタイプ・システムの組み合わせを
+<VAR>prototype_file</VAR><B>.</B><VAR>sysname</VAR> と指定して定義されています。プロトタイプ・システム・タイプの組み合わせごとに構成ファイルを生成する必要はありませんので、ご注意ください。
+<PRE>   #Makefile...
+   #	(C) Copyright IBM Corporation 1999
+   #	Licensed Materials - Property of IBM
+   #	All Rights Reserved.
+   #
+   CONFIG = \
+            staff.rs_aix42 \
+            staff.alpha_dux40 \
+            staff.xdm.alpha_dux40 \
+            staff.sun4x_56 \
+            staff.hp_ux110 \
+            minimal.rs_aix42 \
+            minimal.alpha_dux40 \
+            minimal.hp_ux110 \
+            minimal.sun4x_56
+</PRE>
+<P><TT>CONFIG</TT> 機能グループの項目は以下の形式をとります。
+<UL>
+<LI>項目の最初の部分が、プロトタイプ・ファイルを定義しており、そのプロトタイプ・ファイルの名前 (拡張子 <B>.proto</B> は除く) と同じでなければなりません。入力の 2 番目の部分は、プロトタイプ・ファイルがコンパイルされるシステム・タイプを示しています。
+<A HREF="#HDRWQ596">.SUFFIXES 機能グループ</A> に記載されているように、これらのサフィックスの完全なリストが、
+<B>Makefile</B> ファイルの <TT>.SUFFIXES</TT> 機能グループにあります。この <VAR>prototype_file</VAR><B>.</B><VAR>sysname</VAR> 定義が、コンパイル済みの構成ファイルの名前になります。
+<P>
+<P>たとえば、<B>staff.rs_aix42</B> は、
+<B>staff.proto</B> ファイルが AIX 4.2 を実行しているマシン用にコンパイルされることを示しています。結果のコンパイル済み構成ファイルは、
+<B> staff.rs_aix42</B> と呼ばれます。
+</LI><LI>各構成ファイルは、必ず別々の行に表示されなければなりません。
+</LI><LI>最後を除いて、<TT>CONFIG=</TT> ヘッダーおよびすべての名前の後には円記号を付ける必要があります。円記号は、ブランク行にも必ず表示しなければなりません。
+</LI></UL>
+<P><H3><A NAME="HDRWQ593" HREF="auagd002.htm#ToC_519">BASE_LIBS 機能グループ</A></H3>
+<P>この機能グループでは、任意のプロトタイプ・ファイルに組み込まれているすべてのシステム独立型および機能独立型のライブラリー・ファイルの完全なパス名を定義します。
+(システム特定型のライブラリー・ファイルは、
+<TT>MACHINE_LIBS</TT> 機能グループに定義されています)。パス名には、
+<TT>${wsadmin}</TT> 変数が組み込まれている場合があります。その値は、
+<B> make</B> コマンド行に提供されています。
+<P>必ず、参照されているすべてのライブラリー・ファイルをプロトタイプ・ファイル内に組み込まなければなりません。組み込まれているファイルでも、使用されていないファイルは無視されます。
+<P>下の例をよくお読み下さい。すべての項目 (最後を除く) の後ろには、必ず円記号を付ける必要がありますので、ご注意ください。
+<PRE>   BASE_LIBS = \
+	   ${wsadmin}/src/admin \
+	   ${wsadmin}/lib/devel \
+	   ${wsadmin}/lib/base.generic
+</PRE>
+<P><H3><A NAME="HDRWQ594" HREF="auagd002.htm#ToC_520">MACHINE_LIBS 機能グループ</A></H3>
+<P>この機能グループは、プロトタイプ・ファイル内のすべてのオペレーティング・システム特定型のライブラリー・ファイルの完全なパス名をリストしています。
+(システム独立型および機能独立型のライブラリー・ファイルは、
+<TT>BASE_LIBS</TT> 機能グループに定義されています。)
+<P>下の例をよくお読み下さい。この例では、ライブラリー・ファイルがオペレーティング・システム・タイプによってグループ化されています。ここでも、すべての行 (最後を除く) の後ろには、必ず円記号が付いていなければなりません。
+<TT>${wsadmin}</TT> 変数が許可されています。また、組み込まれているファイルでも使用されていないファイルは無視されます。
+<PRE>   MACHINE_LIBS = \
+           ${wsadmin}/lib/rs_aix42.generic \
+           ${wsadmin}/lib/rs_aix42.generic.dev \
+           ${wsadmin}/lib/rs_aix42.readonly \
+           ${wsadmin}/lib/rs_aix42.readwrite \
+           ${wsadmin}/lib/rt_aix42.generic.printer \
+    \
+    .
+    .
+           ${wsadmin}/lib/alpha_dux40.AFS \
+           ${wsadmin}/lib/hp_ux110.AFS \
+           ${wsadmin}/lib/sun4x_56.AFS \
+           ${wsadmin}/lib/rs_aix42.AFS
+</PRE>
+<P><H3><A NAME="HDRWQ595" HREF="auagd002.htm#ToC_521">LIBS 機能グループ</A></H3>
+<P>この機能グループには、1 つだけ命令が含まれています。その命令は、<TT>LIBS</TT> が、
+<TT>MACHINE_LIBS</TT> および <TT>BASE_LIBS</TT> の組み合わせとして定義されていることを示しています。この行の後にブランク行を挿入して、この機能グループを次の行と分けてください。
+<PRE>   LIBS = ${MACHINE_LIBS} ${BASE_LIBS}
+</PRE>
+<P><H3><A NAME="HDRWQ596" HREF="auagd002.htm#ToC_522">.SUFFIXES 機能グループ</A></H3>
+<P>この機能グループでは、有効なマシン・タイプのサフィックスをリストします。このリストには、現在 AFS でサポートされているシステム・タイプが含まれます。未使用のサフィックスは無視されます。
+<PRE>   .SUFFIXES: .rs_aix42 \
+              .alpha_dux40 \
+              .proto \
+              .sun4x_56 \
+              .i386_linux22 \
+              .hp_ux110
+</PRE>
+<P><H3><A NAME="HDRWQ597" HREF="auagd002.htm#ToC_523">MAKE ファイルの命令機能グループ</A></H3>
+<P><B>Makefile</B> ファイルの残りの部分では、
+<B>package</B> プログラムによる構成ファイルの作成を制御します。
+<P>下の例をよくお読みください。ユーザーが、プログラミングおよび <B>Makefile</B> の概念に通じていることを前提としています。
+<PRE>   #The following appear on a single line each in the actual file
+   .proto.rs_aix42: ;  mpp -Dwsadmin=${wsadmin} -Dsys=rs_aix42  
+                           -Dname=$* $*.proto > $@
+   .proto.alpha_dux40: ; mpp -Dwsadmin=${wsadmin} -Dsys=alpha_dux40 
+                           -Dname=$* $*.proto > $@
+   .proto.sun4x_56:  ; mpp -Dwsadmin=${wsadmin} -Dsys=sun4x_56 
+                           -Dname=$* $*.proto > $@
+   .proto.hp_ux110:  ; mpp -Dwsadmin=${wsadmin} -Dsys=hp_ux110  
+                           -Dname=$* $*.proto > $@
+   all: ${CONFIG}
+   ${CONFIG}: ${LIBS}
+   system: install
+   install: ${CONFIG}
+	   cp ${CONFIG} ${wsadmin}/etc
+   clean:
+	   rm -f ${CONFIG} *.BAK *.CKP
+</PRE>
+<HR><H2><A NAME="HDRWQ598" HREF="auagd002.htm#ToC_524">MAKE ファイルの変更</A></H2>
+<A NAME="IDX7567"></A>
+<A NAME="IDX7568"></A>
+<A NAME="IDX7569"></A>
+<P>以下のような場合に、<B>パッケージ</B> <B>Makefile</B> ファイルを変更します。
+<UL>
+<LI>新規のプロトタイプ・ファイル (<VAR>function</VAR><B>.proto</B>) を追加する。
+</LI><LI>新規のシステム・タイプを追加する。
+</LI><LI>新規のライブラリー・ファイルを追加する。
+</LI></UL>
+<P>これらの理由で
+<B>Makefile</B> ファイルを変更する方法の簡単な例を、以下の機能グループで提供します。
+<P><H3><A NAME="Header_525" HREF="auagd002.htm#ToC_525">新規のプロトタイプ・ファイルの追加</A></H3>
+<P>新規のプロトタイプ・ファイルを作成する場合、そのファイル名および <B>Makefile</B> ファイルの
+<TT>CONFIG</TT> 機能グループに新規のプロトタイプ・ファイルが構築される各システム・タイプを追加していください。
+<P>たとえば、
+<B>alpha_dux40</B> および <B>hp_ux110</B> 用の
+<VAR>function</VAR><B>.proto</B> を追加するには、以下の項目を <TT>CONFIG</TT> 機能グループに追加します。
+<PRE>   CONFIG = \
+   ...
+           <VAR>function</VAR>.alpha_dux40 \
+           <VAR>function</VAR>.hp_ux110 \
+   ...
+</PRE>
+<P>このプロトタイプ機能に新規のライブラリー・ファイルを追加した場合、それらを <TT>MACHINE_LIBS</TT> 機能グループに追加します。
+<P><H3><A NAME="Header_526" HREF="auagd002.htm#ToC_526">新規のシステム・タイプの追加</A></H3>
+<P>新規のシステム・タイプ用に作成したいそれぞれのプロトタイプ・ファイルごとに、項目を <TT>CONFIG</TT> 機能グループに追加してください。任意の新規ライブラリーを <TT>MACHINE_LIBS</TT> 機能グループに、また、その新規のシステム・タイプを <TT>.SUFFIXES</TT> 機能グループに追加します。
+<P>以下の例は、この新規のシステム・タイプ用の
+<B>staff</B> および <B>minimal</B> プロトタイプ・ファイルを作成する際に適切な変更を示しています。
+<PRE>   CONFIG = \
+   ...
+           staff.<VAR>sysname</VAR> \
+           minimal.<VAR>sysname</VAR> \
+   ...
+</PRE>
+<P>この新規のマシン・タイプに対応するライブラリー・ファイルが作成されている場合は、それらを <TT>MACHINE_LIBS</TT> 機能グループに追加します。
+<PRE>   MACHINE_LIBS = \
+   ...
+           ${wsadmin}/lib/<VAR>sysname</VAR>.generic \
+           ${wsadmin}/lib/<VAR>sysname</VAR>.generic.dev \
+           ${wsadmin}/lib/<VAR>sysname</VAR>.readonly \
+           ${wsadmin}/lib/<VAR>sysname</VAR>.readwrite \
+   ...
+</PRE>
+<P>新規のシステム・タイプを <TT>SUFFIXES</TT> 機能グループに追加します。
+<PRE>   .SUFFIXES: ...\
+            .<VAR>sysname</VAR> \
+   ...
+</PRE>
+<P>このシステムのための構成ファイルを構築するための行を、構成ファイルを構築するための残りのコマンドのある機能グループに追加してください。
+<PRE>   .proto.<VAR>sysname</VAR>: ; mpp -Dwsadmin=${wsadmin} \
+   -Dsys=<VAR>sysname</VAR>  -Dname=$* $*.proto > $
+</PRE>
+<P><H3><A NAME="Header_527" HREF="auagd002.htm#ToC_527">新規のライブラリー・ファイルの追加</A></H3>
+<P>システム・タイプごとに新規のライブラリー・ファイルを追加する場合は
+(<VAR>sysname</VAR><B>.</B><VAR>library_file</VAR>)、これらのファイルを<B> Makefile</B> ファイルの MACHINE_LIBS 機能グループに追加します。
+<PRE>   MACHINE_LIBS = \
+   ...
+           ${wsadmin}/lib/rs_aix42.<VAR>library_file</VAR> \
+   ...
+           ${wsadmin}/lib/alpha_dux40.<VAR>library_file</VAR> \
+   ...
+           ${wsadmin}/lib/sun4x_56.<VAR>library_file</VAR> \
+   ...
+</PRE>
+<P>すべてのシステム・タイプに共通の新規のライブラリー・ファイルを追加する場合は
+(<I>library_file</I>)。これを <TT>BASE_LIBS</TT> 機能グループにのみ追加してください。
+<PRE>   BASE_LIBS = \
+   ...
+           ${wsadmin}/lib/<VAR>library_file</VAR> \
+   ...
+</PRE>
+<HR><H2><A NAME="HDRWQ599" HREF="auagd002.htm#ToC_528">プロトタイプ・ファイルのコンパイル</A></H2>
+<A NAME="IDX7570"></A>
+<A NAME="IDX7571"></A>
+<P><B>パッケージ</B>・プログラムは、構成ファイルを生成し、
+<B>make</B> コマンド行で <B>wsadmin=</B> と指定されるディレクトリーの <B>etc</B> および <B>src</B> サブディレクトリーにこれを導入します。プロトタイプ・ファイルまたはライブラリー・ファイルを変更する場合は、必ず再コンパイルしてください。
+<P><H3><A NAME="Header_529" HREF="auagd002.htm#ToC_529">プロトタイプ・ファイルをコンパイルするには</A></H3>
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>注:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">以下の説明では、<B>パッケージ</B>関連のファイルが <B>/afs/</B><VAR>cellname</VAR><B>/wsadmin</B> ディレクトリーに格納されていることを前提としています。別のディレクトリーを使用する場合は、その名前を <B>/afs/</B><VAR>cellname</VAR><B>/wsadmin</B> に置き換えてください。
+</TD></TR></TABLE>
+<OL TYPE=1>
+<LI><B>/afs/</B><VAR>cellname</VAR><B>/wsadmin</B> ディレクトリー、およびその <B>src</B>、<B>lib</B> および <B>etc</B> サブディレクトリーの特権を所有しているか確認します。必要があれば、<B>fs</B> <B>listacl</B> コマンドを発行します。
+<P>
+<PRE>   % <B>fs listacl</B> [<VAR>dir/file path</VAR>]
+</PRE>
+</LI><LI><B>/afs/</B><VAR>cellname</VAR><B>/wsadmin/src</B> サブディレクトリーに変更します。
+<P>
+<PRE>   % <B>cd /afs/</B><VAR>cellname</VAR><B>/wsadmin/src</B>
+</PRE>
+</LI><LI>AFS に含まれる <B>Makefile</B> ファイルのバックアップ・コピーを作成します。
+<P>
+<PRE>   % <B>cp  Makefile Makefile.example</B> 
+</PRE>
+</LI><LI><B>Makefile</B> ファイルの <TT>CONFIG</TT>、
+<TT>BASE_LIBS</TT> および <TT>MACHINE_LIBS</TT> 機能グループを変更します
+(<A HREF="#HDRWQ592">CONFIG 機能グループ</A>、<A HREF="#HDRWQ593">BASE_LIBS 機能グループ</A>、および
+<A HREF="#HDRWQ594">MACHINE_LIBS 機能グループ</A> を参照)。
+</LI><LI><B>make</B> コマンドを使用して、プロトタイプ・ファイルをコンパイルします。
+<P>
+<P><B>wsadmin=</B> 引き数を使用して、<B>パッケージ</B>ディレクトリーを指定します。これは、プロトタイプ・ファイルおよびライブラリー・ファイルの <TT>${wsadmin}</TT> 変数の値になります。
+<P>
+<P><B>パッケージ</B>・プログラムは、構成ファイルを生成し、
+<B>wsadmin=</B> ディレクトリーの <B>etc</B> および
+<B>src</B> サブディレクトリーにこれを導入します。
+<P>
+<PRE>   % <B>make system wsadmin=/afs/</B><VAR>cellname</VAR><B>/wsadmin</B>
+</PRE>
+</LI></OL>
+<HR><H2><A NAME="HDRWQ600" HREF="auagd002.htm#ToC_530">クライアント・マシンの変更</A></H2>
+<A NAME="IDX7572"></A>
+<A NAME="IDX7573"></A>
+<A NAME="IDX7574"></A>
+<A NAME="IDX7575"></A>
+<P>クライアントが <B>パッケージ</B>・プログラムを自動的に実行するようにするには、以下のステップに従います。指示は、システム固有の構成ファイルを参照しないので、一般的なものです。必要であれば、
+<I>AFS Administration Reference</I> に記載されているように、<B>パッケージ</B>・プログラムを特定の引き数で起動することもできます。
+<OL TYPE=1>
+<LI>使用する構成ファイルの指定
+<P>
+<P>クライアント・マシンのルート (<B>/</B>) ディレクトリーにある
+<B>.package</B> ファイルは、
+<B>パッケージ</B>・コマンドへの引き数として指定変更されます。
+<B>.package</B> ファイルは、
+<B>パッケージ</B>がどの構成ファイルを使用するか指定します。
+</LI><LI>ローカル・ディスクにコピーするか、あるいは AFS へのシンボリック・リンクを作成して、
+<B>パッケージ</B>・バイナリーをクライアントに対して使用可能にします。
+<UL>
+<LI>シンボリック・リンクは、ローカル・ディスクのスペースを節約します。しかし、ローカル・ディスクを格納しているファイル・サーバー・マシンがダウンすると、
+<B>パッケージ</B>・バイナリーは、アクセス不能になります。
+</LI><LI><B>パッケージ</B>・バイナリーをローカル・ディスクに置くことにより、ファイル・サーバーがダウンしていても <B>パッケージ</B>・プログラムを実行することができます。しかし、ファイル・サーバー・マシンが故障すると、ほとんどの構成ファイルの命令が AFS 内のファイルを参照するため、<B>パッケージ</B>の実行が難しくなります。
+<B>パッケージ</B>・バイナリーのローカル・コピーは、命令で参照されるファイルが複写ボリュームにある場合に便利です。
+</LI></UL>
+</LI><LI>クライアント・マシンの初期設定ファイルを変更して、ブート時に<B>パッケージ</B>・プログラムを起動します。
+<B>パッケージ</B>・プログラムが、
+<B>Q</B> 更新コードの付いている任意のファイルを更新すると、そのクライアントは再度リブートします。
+</LI></OL>
+<P><H3><A NAME="Header_531" HREF="auagd002.htm#ToC_531">パッケージ・プログラムを実行してクライアント・マシンを準備する</A></H3>
+<P><B>パッケージ</B>を実行するすべてのクライアント上で、以下に示した命令を繰り返してください。
+<P>下記の命令は、<B>パッケージ</B>構成ファイル
+(プロトタイプ・ファイルがコンパイルされたときに作成された) が、
+<B>/afs/</B><VAR>cellname</VAR><B>/wsadmin/etc</B> に常駐していることを前提としています。
+<OL TYPE=1>
+<LI>まだの場合は、<B>su</B> コマンドを発行し、マシン上でローカル・スーパーユーザー <B>root</B> になります。
+<P>
+<PRE>   % <B>su root</B>
+   Password: <VAR>root_password</VAR>
+</PRE>
+</LI><LI><B>.package</B> ファイルを、ルート ( <B>/</B>) ディレクトリーに作成し、使用するプロトタイプ・ファイルの名前を指定します。システム・タイプのサフィックス
+(<B>.rs_aix42</B> など) は組み込まないでください。
+<B>パッケージ</B>・プログラムは自動的に正しいのマシン・タイプを決定します。
+<P>
+<PRE>   # <B>echo "/afs/</B><VAR>cellname</VAR><B>/wsadmin/etc/</B><VAR>config_file</VAR><B>" >> /.package</B>
+</PRE>
+<P>
+<P>たとえば、クライアントをスタッフ・マシンのメンバーに構成したい場合は (適切なプロトタイプ・ファイルが、そのシステム・タイプ用に定義およびコンパイルされていることを前提として)、適当なコマンドは以下のようになります。
+<P>
+<PRE>   # <B>echo "/afs/</B><VAR>cellname</VAR><B>/wsadmin/etc/staff" >> /.package</B>
+</PRE>
+</LI><LI><B>パッケージ</B>・バイナリーをローカル・ディスク上で <B>/etc/package</B> として使用可能にします。ファイルを作成したいか、またはシンボリック・リンクを作成したいかによって、下のコマンドのうちの 1 つを発行します。
+<P>
+<P><B>パッケージ</B>・バイナリーをローカルに保管するには、以下のコマンドを入力します。
+<P>
+<PRE>   # <B>cp /afs/</B><VAR>cellname</VAR><B>/</B><VAR>sysname</VAR><B>/usr/afsws/etc/package   /etc/package</B>
+</PRE>
+<P>
+<P>シンボリック・リンクを作成するには、以下のコマンドを入力します。
+<P>
+<PRE>   # <B>ln -s /afs/</B><VAR>cellname</VAR><B>/</B><VAR>sysname</VAR><B>/usr/afsws/etc/package   /etc/package</B>
+</PRE>
+</LI><LI><B>afsd</B> コマンドを起動した後に、下記の行を適切な初期設定ファイルに追加します。これがファイル・サーバー・マシンの場合、
+<B>bosserver</B> コマンドは <B>package</B> コマンドに続けます。
+<P>
+<P><B>-v</B> および <B>-c</B> オプションの使用を推奨します。<B>-v</B> フラグは詳細なトレースを作成し、
+<B>-c</B> オプションは、構成ファイルのベース名にシステム・タイプを追加します。他のオプションの説明については、<I>AFS Administration Reference</I> を参照してください。
+<P>
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>注:</B></TD><TD ALIGN="LEFT" VALIGN="TOP"><B>shutdown</B> コマンドが、マシンをリブートするのに適切でない場合は、類似のコマンドに置き換える必要があります。
+</TD></TR></TABLE>
+<P>
+<PRE>   if [ -f /etc/package ]; then
+           if [ -f /.package ]: then
+                   /etc/package -v -c `cat /.package` >/dev/console
+           else
+                   /etc/package -v >/dev/console
+   fi
+   case $? in
+   0)
+           echo "Package completed successfully" >/dev/console 2>&amp;1
+           date >/dev/console 2>&amp;1
+           ;;
+   4)
+           echo "Rebooting to restart system" >/dev/console 2>&amp;1
+           echo >/fastboot
+           shutdown
+           ;;
+   *)
+           echo "Update failed, continuing anyway" >/dev/console 2>&amp;1
+           ;;
+   esac
+   fi
+</PRE>
+</LI></OL>
+<HR><H2><A NAME="HDRWQ601" HREF="auagd002.htm#ToC_532">パッケージ・プログラムの実行</A></H2>
+<P>プロトタイプ・ファイルの作成およびコンパイルと、クライアント・マシンの変更が終わったら、<B>パッケージ</B>を実行する準備が整ったことになります。
+<B>package</B> プログラムをマシンの AFS 初期化ファイルで呼び出して、リブート時に自動的に実行するのが最も簡単ですが、コマンド・シェル・プロンプトでもコマンドを発行できます。
+<P>構成ファイルは、完全に正しいものである必要があります。構文エラーや誤った値があると、プログラムは命令を実行せずに終了します。構成ファイルを検査するには、
+<B>package</B> コマンドに <B>-noaction</B> および <B>-debug</B> フラグを付けてコマンド・シェル・プロンプトから発行します。これにより、実際に命令を実行せずに、潜在的な問題のリストが表示されます。
+<P><B>パッケージ</B>・プログラムは、以下に示した一般規則に従います。完全な説明は、<A HREF="#HDRWQ582">パッケージ構成ファイル命令の構文</A> にあります。
+<UL>
+<LI><B>パッケージ</B>は、<B>R</B> 更新コードがプロトタイプ・ファイル内で指定されない限り、ディスクからのいずれのファイルも削除しません。
+<B>R</B> 更新コードが親ディレクトリーに関連している場合、<B>パッケージ</B>は、構成ファイル内に指定されていないものはどれでも、ローカル・ディスクのディレクトリーから削除します。
+</LI><LI>ローカル・ファイルが更新されるのは、ファイルが古い場合のみです。構成ファイルの <B>F</B> 命令ごとに、<B>パッケージ</B>は、ローカル・ファイルの時間を指示されたソース・ファイルと比較します。ソース・ファイルの方がローカル・ファイルより新しい場合、そのファイルは更新されます。
+</LI><LI>初期設定ファイルが <A HREF="#HDRWQ600">クライアント・マシンの変更</A> で推奨されているように変更されていると、
+<B>パッケージ</B>・プログラムは、
+<B>Q</B> 更新コードの付いている任意のファイルが更新されている場合、および <B>パッケージ</B>・プログラムが初期設定ファイルから起動されている場合に、ワークステーションを自動的にリブートします。<B>Q</B> 更新コードでマークされたファイルが変更すると、
+<B>パッケージ</B>・プログラムは状況コード 4 で終了し、リブートします
+(初期設定ファイルに指示されているとおり)。変更が認識される前にリブートを必要とするファイル (オペレーティング・システム・カーネル、および <B>/usr/vice/etc/CellServDB</B> ファイル) は、構成ファイル内で <B>Q</B> 更新コードが付けられる必要があります。
+</LI><LI><B>パッケージ</B>・プログラムは、使用した構成ファイルを使用直後に <B>/etc/package.</B><VAR>sysname</VAR> にコピーします。<VAR>sysname</VAR> がこのマシンのシステム・タイプを反映しています。<B>パッケージ</B>・コマンド・インタープリターは、ユーザーが構成ファイルの名前を提供していない場合、このファイルを照会します。ローカル・ディスクが構成されたか確認するには、その内容を検討します。
+</LI></UL>
+<P><H3><A NAME="Header_533" HREF="auagd002.htm#ToC_533">リブートによるパッケージ・プログラムの起動</A></H3>
+<OL TYPE=1>
+<LI>まだの場合は、<B>su</B> コマンドを発行し、マシン上でローカル・スーパーユーザー <B>root</B> になります。
+<P>
+<PRE>   % <B>su root</B>
+   Password: <VAR>root_password</VAR>
+</PRE>
+</LI><LI><B>(推奨)</B> 以下を確認します。
+<UL>
+<LI><B>/.package</B> ファイルが任意の構成ファイルを識別している
+</LI><LI><B>パッケージ</B>・バイナリーが <B>/etc/package</B> として使用可能である。
+</LI><LI>初期設定ファイルを正しく修正して、
+<B>パッケージ</B>・プログラムを自動的に起動するようにしてある。
+</LI></UL>
+</LI><LI>適切なコマンドを使用して、マシンをリブートします。
+<P>
+<PRE>   # <B>shutdown</B>
+</PRE>
+</LI></OL>
+<A NAME="IDX7576"></A>
+<A NAME="IDX7577"></A>
+<P><H3><A NAME="Header_534" HREF="auagd002.htm#ToC_534">パッケージ・プログラムを直接 (リブートせずに) 起動するには</A></H3>
+<OL TYPE=1>
+<LI>まだの場合は、<B>su</B> コマンドを発行し、マシン上でローカル・スーパーユーザー <B>root</B> になります。
+<P>
+<PRE>   % <B>su root</B>
+   Password: <VAR>root_password</VAR>
+</PRE>
+</LI><LI>以下の確認します。
+<UL>
+<LI><B>/.package</B> ファイルが任意の構成ファイルを識別している
+</LI><LI><B>パッケージ</B>・バイナリーが <B>/etc/package</B> として使用可能である。
+</LI><LI>初期設定ファイルを正しく修正して、
+<B>パッケージ</B>・プログラムを自動的に起動するようにしてある。
+</LI></UL>
+</LI><LI><B>パッケージ</B>・コマンドを発行します。
+<P>
+<PRE>   # <B>package</B>  [<B>initcmd</B>]  [<B>-config</B> &lt;<VAR>base name of configuration file</VAR>>]  \
+    [<B>-fullconfig</B> &lt;<VAR>full name of configuration file, or stdin for standard input</VAR>>]  \
+    [<B>-overwrite</B>]  [<B>-noaction</B>]  [<B>-verbose</B>]  [<B>-silent</B>] [<B>-rebootfiles</B>] 
+</PRE>
+<P>
+<P>ここで、
+<P>
+<DL>
+<P><DT><B>-config
+</B><DD>は、使用する構成ファイルのフルパス名を指定します。ファイルのベース名で終わるフルパス名で、マシン・タイプを示すサフィックスは省略されます。
+<B>パッケージ</B>が、マシンのタイプを決定する方法を覚えており、基本ファイル名の適切なバージョンを自動的に選択します。この引き数の適切な値の例は、<B>staff.rs_aix42</B> ではなく、
+<B>staff</B> です。<B>パッケージ</B>に <B>/.package</B> を参照させて以下の値を提供することにより、その構成ファイルを覚えさせることも可能です。
+<P>
+<P><B>`cat /.package`</B>
+<P>
+<P>この引き数は、
+<B>-fullconfig</B> 引き数とは一緒に使用できません。
+<P><DT><B>-fullconfig
+</B><DD>使用する構成ファイルのフルネームを指定します。マシン・タイプの拡張子を付けて完全にします。例は、<B>staff.rs_aix42</B>
+および <B>minimal.hp_ux110</B> ファイルです。
+<P>
+<P>別の方法としては、
+<B>stdin</B> があります。これは、発行元が標準入力経由で、パイプ接続されたファイルとして、または構成ファイルをキーボードからタイプ入力することによって、構成情報を提供することを示しています。
+&lt;<B>Ctrl-d</B>> を押して、入力を完了します。
+<P>
+<P>この引き数は、
+<B>-config</B> 引き数とは一緒に使用できません。
+<P><DT><B>-overwrite
+</B><DD>最初の (owner) <B>w</B> (<B>write</B>) モード・ビットがファイルのローカル・ディスク・コピー上でオフになっていても、構成ファイルに指示されているソース・バージョンで、ローカル・ディスク上の要素を上書きします。
+<B>I</B> 更新コードで保護されているファイルは、上書きされません。
+<B>F</B> 命令の定義を参照してください。
+<P><DT><B>-noaction
+</B><DD>実際に実行するのではなく、コマンドの実行で起こりうる問題のトレースを、標準出力ストリームに表示します。<B>-verbose</B> フラグを追加した場合、トレースには、<B>パッケージ</B>・プログラムが試行したアクションも記録されます。
+<P><DT><B>-silent
+</B><DD>トレースのデフォルト・レベルを明示的に呼び出します。これには、コマンドを実行すると生ずる問題のリストのみが含まれます。
+<P><DT><B>-verbose
+</B><DD>標準出力ストリーム上で、コマンド・アクションの詳細トレースを生成します。トレースは、構成ファイル内の各要素の転送、および所有権 / モード・ビットの設定について報告します。
+<P><DT><B>-rebootfiles
+</B><DD>構成ファイル内で、<B>Q</B> 更新モードの付いた要素を上書きしないようにします。これにより、
+<B>パッケージ</B>・プログラムが初期設定ファイルから起動した場合に、マシンが自動的にリブートしないようにできます。
+</DL>
+</LI><LI><B>Q</B> コードでマークされたファイルが更新されたと思われる場合は、マシンをリブートします。このリブートは、自動的には起こりません。
+</LI></OL>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auagd015.htm">前ページ</A> &#124; <A HREF="auagd017.htm">次ページ</A> &#124; <A HREF="auagd002.htm#ToC">目次</A> &#124; <A HREF="auagd026.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved<!-- 991224 --> 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

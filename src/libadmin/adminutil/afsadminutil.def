@@ -1,0 +1,29 @@
+
+EXPORTS
+    util_AdminErrorCodeTranslate			@1
+    util_AdminServerAddressGetFromName			@2
+    IteratorInit					@3
+    IteratorNext					@4
+    IteratorDone					@5
+    util_DatabaseServerGetBegin				@6
+    util_DatabaseServerGetNext				@7
+    util_DatabaseServerGetDone				@8
+    CellHandleIsValid					@9
+    util_RPCStatsGetBegin				@10
+    util_RPCStatsGetNext				@11
+    util_RPCStatsGetDone				@12
+    util_RPCStatsStateGet				@13
+    util_RPCStatsStateEnable				@14
+    util_RPCStatsStateDisable				@15
+    util_RPCStatsClear					@16
+    util_RPCStatsVersionGet				@17
+    util_CMGetServerPrefsDone				@18
+    util_CMGetServerPrefsNext				@19
+    util_CMGetServerPrefsBegin				@20
+    util_CMListCellsDone				@21
+    util_CMListCellsNext				@22
+    util_CMListCellsBegin				@23
+    util_CMLocalCell					@24
+    util_CMClientConfig					@25
+
+

@@ -1,0 +1,39 @@
+#
+# Copyright (C) 1998 Transarc Corporation - All rights reserved
+#
+
+AFSDEV_AUXCDEFINES = -DAFS_PTHREAD_ENV
+
+!include ..\..\config\NTMakefile.$(SYS_NAME)
+!include ..\..\config\NTMakefile.version
+
+
+DLLOBJS = \
+	afs_clientAdmin.obj \
+	afsclientadmin.res
+
+LIBINCLUDES = \
+	$(DESTDIR)\include\afs\afs_clientAdmin.h
+
+DLLFILE = $(DESTDIR)\root.server\usr\afs\bin\afsclientadmin.dll
+ILIBDIR = $(DESTDIR)\lib\afs
+
+DLLLIBS =\
+	$(DESTDIR)\lib\afs\afsvosadmin.lib \
+	$(DESTDIR)\lib\afs\afsadminutil.lib \
+	$(DESTDIR)\lib\afsauthent.lib \
+	$(DESTDIR)\lib\afsrpc.lib \
+	$(DESTDIR)\lib\pthread.lib
+
+$(DLLFILE): $(DLLOBJS) $(DLLLIBS)
+	$(DLLCONLINK) /DEF:clientadmin.def
+	$(DLLPREP)
+	$(COPY) $*.lib $(ILIBDIR)
+	$(DEL) $*.lib $*.exp
+
+
+install: $(DLLFILE) $(LIBINCLUDES)
+
+# Definitions for generating versioninfo resources
+afsclientadmin.res: afsclientadmin.rc AFS_component_version_number.h
+	$(RC) $*.rc

@@ -1,0 +1,49 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+#
+
+!INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\..\config\NTMakefile.version
+
+
+# test exe's
+EXELIBS =\
+	$(DESTDIR)\lib\afs\afscmd.lib \
+	$(DESTDIR)\lib\afs\afsutil.lib \
+	$(DESTDIR)\lib\afs\afscom_err.lib
+
+# build itest.exe
+ITEST_EXEOBJS =\
+	itest.obj
+
+ITEST_EXEFILE = itest.exe
+
+$(ITEST_EXEFILE): $(ITEST_EXEOBJS) 
+	$(EXECONLINK) $(EXELIBS)  
+	$(EXEPREP) 
+
+#build ctest.exe
+CTEST_EXEOBJS =\
+	ctest.obj
+
+CTEST_EXEFILE = ctest.exe
+
+$(CTEST_EXEFILE): $(CTEST_EXEOBJS) 
+	$(EXECONLINK) $(EXELIBS)  
+	$(EXEPREP) 
+
+# build dtest.exe
+DTEST_EXEOBJS =\
+	dtest.obj
+
+DTEST_EXEFILE = dtest.exe
+
+$(DTEST_EXEFILE): $(DTEST_EXEOBJS) 
+	$(EXECONLINK) $(EXELIBS)  
+	$(EXEPREP) 
+
+all: test
+
+test tests: $(CTEST_EXEFILE) $(ITEST_EXEFILE) $(DTEST_EXEFILE)
+
+clean::
+	$(DEL) ctest.exe dtest.exe itest.exe

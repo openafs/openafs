@@ -1,0 +1,143 @@
+#!/sbin/sh
+# @(#) $Revision: 1.1 $
+#
+##################################################################
+#
+# Name :
+#	 bcheckrc (afs) - /sbin/fs/afs/bcheckrc
+#
+# Description
+# 	This file contains scripts/commands necessary to checks
+#	the afs file systems before mounting.
+#	
+#	It should be invoked by the generic bcheckrc script only.
+#
+# Input Parameters:
+#	None
+#
+# Expected results:
+#	see description.
+#
+# Side effects of this test:
+#  	none
+#
+# Supporting files and Relationship:
+#        i) various "/sbin/fs/afs" commands are used by this script.
+#       ii) generic bcheckrc scrtipt located in the /sbin
+#           directory invokes this script.
+#
+#
+##################################################################
+#
+#
+# Description - This function will check (fsck) all the afs file systems
+# in the static file system table, /etc/fstab.
+#
+# Result values - status = 0 for success
+#                 status = non-0 for failure
+#
+# Used (exclusively) by - /sbin/bcheckrc's fsck_afs portion
+#
+
+
+#
+#	ROOTSHELL   - is the command that gives the user a shell in which
+#		      to run fsck interactively.  Someday fsck -y should
+#		      be fixed to give the right answers to the questions,
+#		      rather than always "yes", so this error-prone
+#		      interactive fixing business can go away entirely.
+#
+
+	ROOTSHELL='/sbin/sh'
+
+#	set stty (for manual mode)
+
+	/sbin/stty clocal icanon echo opost onlcr ixon icrnl ignpar erase "^h"
+
+#	
+#	In the remaining part of the function is devoted to the actual
+#	cleaning of the afs file systems.
+#
+#		1) run fsck -m and determine if any afs file systems
+#		   need cleaning.
+#
+#		2) check exit status of fsck -m -
+#
+#			0 - indicates (and lists) that  this afs file
+#			    system was verified clean.  Continues to
+#			    boot.
+#
+#		        * - indicates and lists the file systems that 
+#			    were not properly shutdown.  File systems
+#			    that are corrupt should be fixed before
+#			    continuing with the boot.
+#
+#
+#		3) exit the function with the appropriate return status.
+#
+#
+#		When the file systems are corrupt the following steps are
+#		taken ...
+#		
+#			1) fsck_afs(1M) command is invoked using the
+#			following command line - "/sbin/fsck -F afs -P -f"
+#			(refer to the fsck_afs(1M) man page)
+#			
+#			2) The following actions are taken according to
+#			the appropriate return values ...
+#				 0 - the corrupt file system was fixed.
+#				     Continue with boot'ing.
+#				 * - could not automatically fix the
+#				     corrupt file system, going into
+#				     manual mode (shell).
+
+
+
+afs_partitions_clean()
+{
+    serverPartition=0 		# number of AFS server partitions
+	
+    for name in `/sbin/awk ' $0 ~ /^[ \t]*#/ { next }
+			     $3 == "afs" { print $1 }' /etc/fstab`
+    do
+        /sbin/fs/hfs/fsck -m $name 	# check sanity
+        if [ $? -ne 0 ]
+        then
+		echo Cleaning AFS server partition $name
+               	/sbin/fs/afs/fsck -P -f $name
+
+		case $? in
+		0)
+			echo AFS server partition $name is fixed
+			;;
+                *)
+                        echo "\007\n\n"
+                        echo "UNEXPECTED ERROR DURING fsck -P, RUN fsck INTERACT
+IVELY!"
+                        echo "LOGGING IN AS root FOR MANUAL fsck, ENTER ^D WHEN
+FILE SYSTEM FIXED"
+                        PS1="(in bcheckrc)# "
+                        export PS1
+                        $ROOTSHELL
+                        echo "CONTINUING bcheckrc"
+			;;
+		esac
+
+	
+        fi
+	serverPartition=1
+    done
+    
+    if [ serverPartition -ne 1 ]
+    then
+    	echo "NO AFS server partitions found"
+    fi
+	 
+    exit 0
+}
+
+afs_partitions_clean
+
+#*********************************************************************
+# End of bcheckrc (afs)
+#*********************************************************************

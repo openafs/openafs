@@ -1,0 +1,16 @@
+#
+# login
+#
+# An InstallGuide for AFS integrated login on rs_aix32 systems
+#
+
+sub login {
+&ErrorsAreFatal(1);
+&Symlink ("login.noafs", "/bin/login");
+&Symlink ("../bin/login", "/etc/getty");
+&Symlink ("../bin/login",   "/etc/tsm");
+&Symlink ("../bin/login.afs", "/etc/afsok");
+&Copy ("bin/login.noafs",   "/bin/login.noafs");
+&Copy ("bin/login.afs",     "/bin/login.afs");
+&Copy ("bin/login.afs.krb", "/bin/login.afs.krb");
+}

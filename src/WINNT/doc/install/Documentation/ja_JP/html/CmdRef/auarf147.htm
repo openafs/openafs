@@ -1,0 +1,70 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRFS_HELP" HREF="auarf002.htm#ToC_161">fs help</A></H2>
+<A NAME="IDX4851"></A>
+<A NAME="IDX4852"></A>
+<A NAME="IDX4853"></A>
+<P><STRONG>目的</STRONG>
+<P>指定された <B>fs</B> コマンドの構文を表示するか、すべての <B>fs</B> コマンドの機能説明をリストします。
+<P><STRONG>構文</STRONG>
+<PRE><B>fs help</B> [<B>-topic</B> &lt;<VAR>help string</VAR>><SUP>+</SUP>]  [<B>-help</B>]
+   
+<B>fs h</B> [<B>-t</B> &lt;<VAR>help string</VAR>><SUP>+</SUP>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>fs help</B> コマンドは、<B>-topic</B> 引き数によって指定された各コマンドの命令コードについての、完全なオンライン・ヘルプ項目 (概説および構文ステートメント) を表示します。
+<B>-topic</B> 引き数が省略された場合は、すべての <B>fs</B> コマンドのオンライン・ヘルプ項目の最初の行 (名前および概説) が出力されます。
+<P>指定されたキーワードを名前や概説に含んでいる <B>fs</B> コマンドをすべて表示するには、
+<B>fs apropos</B> コマンドを使用します。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B>-topic
+</B><DD>各コマンドの完全なオンライン・ヘルプ項目が表示されます。コマンド名の <B>fs</B> の部分を省略し、命令コードだけを指定します ( たとえば、<B>fs setacl</B> ではなく <B>setacl</B> を指定)。この引き数が省略されると、すべての <B>fs</B> コマンドの概説が出力されます。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>出力</STRONG>
+<P>各 <B>fs</B> コマンドのオンライン・ヘルプ項目は、次の 2 行または 3 行から構成されます。
+<UL>
+<LI>最初の行には、コマンド名および機能の説明が表示されます。
+</LI><LI>次の行には、コマンドの別名 (ある場合) が表示されます。
+</LI><LI>最後の行は、<TT>Usage</TT> という文字列で始まり、コマンドのオプションが一定の順序で表示されます。オンライン・ヘルプの項目では、この文書の解説ページと同じ記号 (大括弧など) が使用されています。
+</LI></UL>
+<P><STRONG>例</STRONG>
+<P>次のコマンドは、<B>fs setacl</B> コマンドのオンライン・ヘルプ項目を表示します。
+<PRE>   % <B>fs help setacl </B>
+   fs setacl: set access control list
+   aliases: sa 
+   Usage: fs setacl -dir &lt;directory><SUP>+</SUP>
+   -acl &lt;access list entries><SUP>+</SUP> [-clear] [-negative] [-help]
+   
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>なし。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf131.htm#HDRFS_INTRO">fs</A>
+<P><A HREF="auarf132.htm#HDRFS_APROPOS">fs apropos</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf146.htm">前ページ</A> &#124; <A HREF="auarf148.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

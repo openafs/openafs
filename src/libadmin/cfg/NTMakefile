@@ -1,0 +1,88 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+#
+
+AFSDEV_AUXCDEFINES = -DAFS_PTHREAD_ENV -DADMINEXPORT=__declspec(dllexport)
+
+!INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\..\config\NTMakefile.version
+
+############################################################################
+
+INCFILES =\
+	$(DESTDIR)\include\afs\afs_cfgAdmin.h
+
+############################################################################
+# Build afscfgadmin.dll
+
+DLLFILE = $(DESTDIR)\root.server\usr\afs\bin\afscfgadmin.dll
+ILIBDIR = $(DESTDIR)\lib\afs
+
+
+UBIKOBJS=\
+	ubik_int.cs.obj \
+	ubik_int.xdr.obj
+
+CLIENTOBJS=\
+	cellservdb.obj
+
+DLLOBJS =\
+	$(UBIKOBJS) \
+	$(CLIENTOBJS) \
+	cfgclient.obj \
+	cfgdb.obj \
+	cfghost.obj \
+	cfgservers.obj \
+	cfginternal.obj \
+	afscfgadmin.res
+
+DLLLIBS =\
+	$(DESTDIR)\lib\pthread.lib \
+	$(DESTDIR)\lib\afs\afsadminutil.lib \
+	$(DESTDIR)\lib\afs\afsbosadmin.lib \
+	$(DESTDIR)\lib\afs\afskasadmin.lib \
+	$(DESTDIR)\lib\afs\afsclientadmin.lib \
+	$(DESTDIR)\lib\afs\afsptsadmin.lib \
+	$(DESTDIR)\lib\afs\afsvosadmin.lib \
+	$(DESTDIR)\lib\afsrpc.lib \
+	$(DESTDIR)\lib\afsauthent.lib \
+	$(DESTDIR)\lib\afs\afsreg.lib
+
+$(DLLFILE): $(DLLOBJS) $(DLLLIBS)
+	$(DLLCONLINK) /DEF:afscfgadmin.def
+	$(DLLPREP)
+	$(COPY) $*.lib $(ILIBDIR)
+	$(DEL) $*.lib $*.exp
+
+############################################################################
+# Definitions for building ubik objects
+
+UBIKDIR=..\..\ubik
+
+ubik_int.cs.obj: $(UBIKDIR)\ubik_int.cs.c
+	$(C2OBJ) $(UBIKDIR)\ubik_int.cs.c
+
+ubik_int.xdr.obj: $(UBIKDIR)\ubik_int.xdr.c
+	$(C2OBJ) $(UBIKDIR)\ubik_int.xdr.c
+
+############################################################################
+# Definitions for building client objects
+#   NOTE: headers should be installed and .obj should be put in a static lib
+
+CLIENTCFGDIR = ..\..\WINNT\client_config
+
+cellservdb.obj: $(CLIENTCFGDIR)\cellservdb.c
+	$(C2OBJ) -I$(CLIENTCFGDIR) $(CLIENTCFGDIR)\cellservdb.c
+
+cfgclient.obj: cfgclient.c
+	$(C2OBJ) -I$(CLIENTCFGDIR) cfgclient.c
+
+############################################################################
+# Definitions for generating versioninfo resources
+
+afscfgadmin.res: afscfgadmin.rc AFS_component_version_number.h
+	$(RC) $*.rc
+
+
+install: $(DLLFILE) $(INCFILES)
+
+clean::

@@ -1,0 +1,14 @@
+#
+# miscserver
+#
+# An InstallGuide for fileserver processes
+#
+
+sub miscserver {
+&Print("Installs the following into /usr/afs/bin:");
+&Print("  root.server/usr/afs/bin/buserver");
+&Print("  root.server/usr/afs/bin/upserver");
+&Print("  root.server/usr/afs/bin/upclient");
+&Print("  root.server/usr/afs/bin/runntp");
+&Print("  root.server/usr/afs/bin/ntpd");
+}

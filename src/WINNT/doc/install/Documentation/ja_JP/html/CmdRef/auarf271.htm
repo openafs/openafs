@@ -1,0 +1,113 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRVOS_REMOVE" HREF="auarf002.htm#ToC_285">vos remove</A></H2>
+<A NAME="IDX5805"></A>
+<A NAME="IDX5806"></A>
+<A NAME="IDX5807"></A>
+<A NAME="IDX5808"></A>
+<A NAME="IDX5809"></A>
+<A NAME="IDX5810"></A>
+<A NAME="IDX5811"></A>
+<A NAME="IDX5812"></A>
+<P><STRONG>目的</STRONG>
+<P>サイトからボリュームを削除します。
+<P><STRONG>構文</STRONG>
+<PRE><B>vos remove</B> [<B>-server</B> &lt;<VAR>machine name</VAR>>]  [<B>-partition</B> &lt;<VAR>partition name</VAR>>]
+           <B>-id</B> &lt;<VAR>volume name or ID</VAR>>  [<B>-cell</B> &lt;<VAR>cell name</VAR>>]
+           [<B>-noauth</B>]  [<B>-localauth</B>]  [<B>-verbose</B>]  [<B>-help</B>]
+    
+<B>vos remo</B> [<B>-s</B> &lt;<VAR>machine name</VAR>>]  [<B>-p</B> &lt;<VAR>partition name</VAR>>]  <B>-i</B> &lt;<VAR>volume name or ID</VAR>> 
+         [<B>-c</B> &lt;<VAR>cell name</VAR>>]  [<B>-n</B>]  [<B>-l</B>]  [<B>-v</B>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>vos remove</B> コマンドは、指定されたボリュームが常駐する区画からそのボリュームを削除します。ボリューム・ロケーション・データベース (VLDB) の記録は、次に示すように、適宜変更されます。このコマンドを使用すると、3 つのタイプのボリュームをいずれも削除することができます。削除結果は、ボリュームのタイプによって異なります。
+<UL>
+<LI><B>-id</B> 引き数で読み取り / 書き込みボリュームを指定している (つまり、ボリュームのベース名を指定している) 場合は、それとそれに関連したバックアップ・ボリュームが両方とも、含まれる区画から削除されます。
+1 つの読み取り / 書き込みサイトしか存在しないため、
+<B>-server</B> および <B>-partition</B> 引き数はオプションです。ボリュームが削除されると、サイト情報も VLDB 項目から削除されます。読み取り / 書き込みボリュームおよびバックアップ・ボリュームの ID 番号は、
+<B>vos listvldb</B> または <B>vos examine</B> コマンドによる出力には表示されなくなりましたが、内部には保存されています。読み取り専用サイトは、存在するとしても、それに影響はありませんが、読み取り / 書き込みサイトが再定義されない限り、変更できません。
+<B>vos examine</B> および <B>vos listvldb</B> コマンドにより、
+<TT>サイト数</TT>として報告されるサイト・カウントは、1 ずつ減っていきます。読み取り専用サイトがない場合には、VLDB 項目全体が削除されます。
+</LI><LI><B>-id</B> 引き数で読み取り専用ボリュームを指定している場合は、そのボリュームは、それが含まれる区画から削除され、対応するサイト情報が VLDB 項目から削除されます。
+<B>vos examine</B> および <B>vos listvldb</B> コマンドにより、
+<TT>サイト数</TT>として報告されるサイト・カウントは、削除するボリュームごとに、1 ずつ減っていきます。複数の読み取り専用サイトが存在する場合、
+<B>-server</B> 引き数 (および、オプションで <B>-partition</B> 引き数) を使用して、ボリュームを削除する先のサイトを指定しなければなりません。読み取り専用サイトが 1 つしかない場合は、
+<B>-id</B> 引き数だけで十分です。この場合、読み取り / 書き込みボリュームもなければ、VLDB 項目全体が削除されます。
+</LI><LI><B>-id</B> 引き数でバックアップ・ボリュームを指定している場合は、そのボリュームは、それが含まれる区画から削除されます。
+1 つのバックアップ・サイトしか存在し得ないため、
+<B>-server</B> および <B>-partition</B> 引き数はオプションです。バックアップ・ボリュームの ID 番号は、
+<B>vos listvldb</B> コマンドによる出力、または、これに対応する <B>vos examine</B> コマンドによる出力の部分には表示されなくなりましたが、内部には保存されています。
+</LI></UL>
+<P>このコマンドは、ほとんどすべての場合にボリュームを削除するための最も適切なるコマンドです。ボリュームだけまたは VLDB 項目だけを削除する他のコマンド (<B>vos delentry</B>、<B>vos remsite</B>、および <B>vos zap</B> コマンド) を使用すると、定義上、ボリュームと VLDB の同期が取れなくなる場合があります。これらのコマンドは、その解説ページで説明している特定の状況でのみ使用します。
+<B>vos delentry</B> コマンドと同様に、このコマンドは、ファイル・サーバー・マシンに対応するボリュームが存在しないときに、
+VLDB 項目を削除することができます。
+<B>vos zap</B> コマンドと同様に、このコマンドは、ボリュームがオンラインで、<B>-server</B> および <B>-partition</B> 引き数が指定されていて、
+<B>-id</B> 引き数でボリュームの ID 番号が指定されている場合に限り、
+VLDB 項目のないボリュームを削除することができます。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B>-server
+</B><DD>削除するボリュームがあるファイル・サーバー・マシンを指定します。これが必要なのは、<B>-id</B> 引き数で複数サイトにある読み取り専用ボリュームを指定している場合だけです。マシンの IP アドレスまたはホスト名 (完全修飾名またはあいまいでない省略形) を指定します。詳細については、<B>vos</B> コマンド・セットの解説ページを参照してください。
+<P><DT><B>-partition
+</B><DD>削除するボリュームのある区画 (<B>-server</B> 引き数に指定されたファイル・サーバー・マシン上にある) を指定します。名前の前にスラッシュを付けて完全な区画名を指定するか (たとえば、<B>/vicepa</B>)、または使用可能な 3 つの省略形のいずれかを使用してください。詳細については、<B>vos</B> コマンド・セットの解説ページを参照してください。
+<P>
+<P>この引き数を組み込む必要があるのは、
+<B>-id</B> 引き数で複数サイトにある読み取り専用ボリュームを指定している場合だけです。この引き数と一緒に <B>-server</B> 引き数を指定します。
+<P><DT><B>-id
+</B><DD>削除するボリュームを、その完全名またはボリューム ID 番号で識別します。読み取り専用ボリュームまたはバックアップ・ボリュームを名前で識別する場合は、適切な拡張子 (<B>.readonly</B> または <B>.backup</B>) を含めます。
+<P>
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>注:</B></TD><TD ALIGN="LEFT" VALIGN="TOP"><B>-server</B> 引き数および <B>-partition</B> 引き数を省略する場合は、
+<B>-id</B> スイッチを指定しなければなりません。
+</TD></TR></TABLE>
+<P><DT><B>-cell
+</B><DD>コマンドを実行するセルを指定します。この引き数は、
+<B>-localauth</B> フラグと一緒に使用してはなりません。詳細については、<B>vos</B> の解説ページを参照してください。
+<P><DT><B>-noauth
+</B><DD>コマンドの発行側に非特権 ID <B>anonymous</B> を割り当てます。このフラグは <B>-localauth</B> フラグと一緒に使用してはなりません。詳細については、<B>vos</B> の解説ページを参照してください。
+<P><DT><B>-localauth
+</B><DD>ローカルの <B>/usr/afs/etc/KeyFile</B> ファイルのキーを使用して、サーバー・チケットを構成します。相互認証の間、<B>vos</B> コマンド・インタープリターは、ボリューム・サーバーおよびボリューム・ロケーション・サーバーに、このチケットを提供します。このフラグは、<B>-cell</B> 引き数、または <B>-noauth</B> フラグと一緒に使用してはなりません。詳細については、<B>vos</B> の解説ページを参照してください。
+<P><DT><B>-verbose
+</B><DD>標準出力ストリームに、コマンド実行の詳細なトレースを出力します。この引き数を省略すると、警告およびエラー・メッセージだけが表示されます。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>例</STRONG>
+<P>次の例は、読み取り / 書き込みボリューム <B> user.terry</B> とそのバックアップ・バージョン (もしあれば) を削除しています。
+<PRE>   % <B>vos remove  -id user.terry</B>
+   
+</PRE>
+<P>次の例は、読み取り専用ボリューム <B>root.afs.readonly</B> をそのサイトの 1 つ (ファイル・サーバー・マシン <B>fs1.abc.com</B> の <B>/vicepa</B> 区画) から削除しています。
+<PRE>   % <B>vos remove fs1.abc.com  a  root.afs.readonly</B>
+   
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>コマンドの発行側は、<B>-server</B> 引き数に指定されたマシン、および各データベース・サーバー・マシン上の <B>/usr/afs/etc/UserList</B> ファイルにリストされていなければなりません。<B>-localauth</B> フラグを使用する場合には、コマンドの発行側が、ローカル・スーパーユーザー <B>root</B> として、サーバー・マシンにログオンする必要があります。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf252.htm#HDRVOS_INTRO">vos</A>
+<P><A HREF="auarf259.htm#HDRVOS_DELENTRY">vos delentry</A>
+<P><A HREF="auarf272.htm#HDRVOS_REMSITE">vos remsite</A>
+<P><A HREF="auarf280.htm#HDRVOS_ZAP">vos zap</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf270.htm">前ページ</A> &#124; <A HREF="auarf272.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

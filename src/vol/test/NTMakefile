@@ -1,0 +1,34 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+#
+
+!INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\..\config\NTMakefile.version
+
+
+############################################################################
+# External libraries
+
+EXEC_LIBS = \
+	$(DESTDIR)\lib\afs\afscmd.lib \
+	$(DESTDIR)\lib\afs\afsvol.lib \
+	$(DESTDIR)\lib\afs\afsutil.lib \
+	$(DESTDIR)\lib\afs\afsdir.lib \
+	$(DESTDIR)\lib\afslwp.lib \
+	$(DESTDIR)\lib\afs\afsacl.lib \
+	$(DESTDIR)\lib\afs\afsreg.lib
+
+
+############################################################################
+# build inode lister
+ILIST = ilist.exe
+
+$(ILIST): ilist_nt.obj $(EXEC_LIBS)
+	$(EXECONLINK)
+
+
+############################################################################
+# build link table lister
+LTLIST = ltlist.exe
+
+$(LTLIST): ltlist.obj $(EXEC_LIBS)
+	$(EXECONLINK)

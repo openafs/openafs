@@ -1,0 +1,120 @@
+HOW TO SET THE AFS FOR WINDOWS VERSION INFORMATION
+
+
+DECIDE WHAT THE VERSION INFO SHOULD BE
+
+First decide what the version information should be.  There are
+the following values that will need to be set:
+
+MajorVersion
+MinorVersion
+PatchLevel
+BetaLevel
+ReleaseType
+Title (called VersionString in the registry)
+
+MajorVersion is the first number in a dotted version scheme.  For 
+example, if the version is 3.5, then MajorVersion is set to 3.
+
+MinorVersion is the second number in a dotted version scheme.  For
+example, if the version is 3.5, then MinorVersion is set to 5.
+
+PatchLevel is an integer number representing the patch level.  If
+the patch level is 4, then PatchLevel is set to 400.  If the patch 
+level is 3.32, then PatchLevel is set to 332.  The reason patch
+numbers aren't just 1, 2, etc., is that they are currently set to
+the cml configuration number of the build used to produce the patch.
+We may later switch to just making the patch level a single digit,
+in which case the PatchLevel value must be set to something big
+enough so that in a comparison with the old patch levels, it will
+evaluate as bigger.  So if you want a patch level of 4, use a 
+PatchLevel setting of 400.  If this is not a patch release, then
+set PatchLevel to 0.
+
+BetaLevel is an integer number representing the beta level.  This is
+just a way to have multiple beta releases.  So if this is the first
+beta release, set BetaLevel to 1.  If this is not a beta release,
+then set BetaLevel to 0.
+
+ReleaseType is kind of redundant; it is set to the string "GA" if 
+this is a non-beta release and "Beta" if this is a beta release.
+
+Title is the product version as a full string.  So if this is
+release 3.5 3.22, then Title is set to "3.5 3.22".  If this is
+3.6 Beta 2, then Title is set to "3.6 Beta 2".
+
+Title is used when showing the version to the user, like, for
+example, in the afs creds tool.
+
+************************* NOTE ******************************
+You MUST set all of these values correctly and in a consistent
+manner from one release to the next so that the installer can
+properly determine whether to perform upgrades, downgrades, or
+reinstalls.
+
+Look at the function CompareVersions in file setup.rul to see
+how these values are used to make version info decisions.
+
+
+SET THE VERSION IN THE INSTALLSHIELD FILES
+
+You will need to edit the following InstallShield files:
+
+value.shl:
+
+This file contains all of the strings used by the program.  Set
+all of the following identifiers to the new version number:
+
+TITLE_MAIN
+UNINST_DISPLAY_NAME_CC
+UNINST_DISPLAY_NAME_CLIENT
+UNINST_DISPLAY_NAME_DOCS
+UNINST_DISPLAY_NAME_LIGHT_CLIENT
+UNINST_DISPLAY_NAME_SERVER
+
+These identifiers below correspond to the version information
+discussed in the first section above.
+
+PRODUCT_VERSION_MAJOR
+PRODUCT_VERSION_MINOR
+PRODUCT_VERSION_PATCH_LEVEL
+PRODUCT_VERSION_BETA_LEVEL
+PRODUCT_VERSION_RELEASE_TYPE
+PRODUCT_VERSION_TITLE
+
+Default.rge:
+
+This file contains information that will be written to the registry
+at install time.
+
+Change all occurances of the following to the proper verison info:
+
+MajorVersion (set to same value as PRODUCT_VERSION_MAJOR in value.shl)
+MinorVersion (set to same value as PRODUCT_VERSION_MINOR in value.shl)
+PatchLevel (set to same value as PRODUCT_VERSION_PATCH_LEVEL in value.shl)
+BetaLevel (set to same value as PRODUCT_VERSION_BETA_LEVEL in value.shl)
+ReleaseType (set to same value as PRODUCT_RELEASE_TYPE in value.shl)
+VersionString (set to same value as PRODUCT_VERSION_TITLE in value.shl)
+
+Finally, change any string matching the form below to have the new verison
+info:
+
+HKLMn=Software\TransarcCorporation\Product Name\Version
+
+For example, one such string may be:
+
+HKLM2=Software\TransarcCorporation\AFS Control Center\3.5 3.32
+
+To update the verison info to 3.6 patch 3, the string would change
+to:
+
+HKLM2=Software\TransarcCorporation\AFS Control Center\3.6 3
+
+That's it!  Build and test the thing, making sure that the version info
+in the registry is correct for each app, and that upgrades of previous
+versions, downgrades to previous versions from this version, and reinstalls
+of this version work correctly.
+
+If you're the poor sucker who had to do this, then I offer you my sympathy!
+
+

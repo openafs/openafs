@@ -1,0 +1,13 @@
+#
+# rc
+#
+# An InstallGuide for installing the initialization script
+# For Sun systems running Solaris 5.x
+#
+
+sub rc {
+&Copy("root.client/usr/vice/etc/modload/afs.rc", "/etc/init.d/afs");
+&Chmod (0555, "/etc/init.d/afs");
+&Symlink("../init.d/afs", "/etc/rc3.d/S14afs");
+&Symlink("../init.d/afs", "/etc/rc2.d/K66afs");
+}

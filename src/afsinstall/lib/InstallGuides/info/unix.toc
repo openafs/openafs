@@ -1,0 +1,14 @@
+#
+# unix
+#
+# An InstallGuide for installing the AFS aware unix programs
+#
+
+sub unix {
+&Print("Installs the modified Unix programs into the system specific");
+&Print("directories. The programs include:");
+&Print("  inetd.afs");
+&Print("  rsh");
+&Print("  rcp");
+&Print("  ftpd\n");
+}

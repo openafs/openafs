@@ -1,0 +1,47 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+#
+
+!INCLUDE ..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\config\NTMakefile.version
+
+############################################################################
+# Install inc files
+
+INCFILEDIR = $(DESTDIR)\include\afs
+
+INCFILES =\
+	$(INCFILEDIR)\acl.h \
+	$(INCFILEDIR)\prs_fs.h
+
+
+############################################################################
+# build afsacl.lib
+
+LIBFILE = $(DESTDIR)\lib\afs\afsacl.lib 
+
+LIBOBJS =\
+	aclprocs.obj \
+	netprocs.obj \
+	AFS_component_version_number.obj
+
+$(LIBFILE): $(LIBOBJS) 
+	$(LIBARCH) 
+
+
+############################################################################
+# install afsacl.lib
+
+install_headers: $(INCFILES)
+
+install: $(LIBFILE)
+
+clean::
+
+
+############################################################################
+# Auxiliary build targets not built by default; e.g. test programs
+
+test:
+	$(CD) test
+	$(MAKECMD) /f NTMakefile acltest
+

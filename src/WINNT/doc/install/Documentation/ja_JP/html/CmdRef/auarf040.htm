@@ -1,0 +1,44 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRVOLUMEITEMS" HREF="auarf002.htm#ToC_38">VolumeItems</A></H2>
+<P><STRONG>目的</STRONG>
+<A NAME="IDX4000"></A>
+<A NAME="IDX4001"></A>
+<A NAME="IDX4002"></A>
+<A NAME="IDX4003"></A>
+<P>ディスク・キャッシュを使用してキャッシュ・マネージャーがアクセスしたボリュームのロケーション・マッピングを記録します。
+<P><STRONG>構文</STRONG>
+<P><B>VolumeItems</B> ファイルには、ディスク・キャッシュを使用するクライアント・マシンで初期化されてからキャッシュ・マネージャーがアクセスしたボリュームごとに、ボリューム名とマウント・ポイントとのマッピングが記録されます。キャッシュ・マネージャーはマッピングを使用して、現在の作業ディレクトリーに関する照会に正しく応答します。この照会は、オペレーティング・システムあるいは UNIX の <B>pwd</B> コマンドなどのコマンドから発行されます。
+<P>キャッシュ・マネージャーは、初期化時にローカル・ディスク・キャッシュ・ディレクトリーにバイナリー形式の <B>VolumeItems</B> ファイルを作成します。このファイルは、この位置に常駐している必要があります。標準のディレクトリー名は <B>/usr/vice/cache</B> です。
+<P><STRONG>注意</STRONG>
+<P><B>VolumeItems</B> ファイルを編集したり、削除すると、カーネルに問題が発生する可能性があります。ファイルの内容を更新する場合には、<B>fs checkvolumes</B> コマンドを使用してください。
+<B>VolumeItems</B> ファイルが偶発的に変更または削除された場合には、マシンを再始動すると、通常のパフォーマンスに復元されます。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf017.htm#HDRCACHEITEMS">CacheItems</A>
+<P><A HREF="auarf043.htm#HDRCACHEINFO">cacheinfo</A>
+<P><A HREF="auarf058.htm#HDRAFSD">afsd</A>
+<P><A HREF="auarf134.htm#HDRFS_CHECKVOLUMES">fs checkvolumes</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf039.htm">前ページ</A> &#124; <A HREF="auarf041.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

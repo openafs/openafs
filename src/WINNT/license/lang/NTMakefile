@@ -1,0 +1,23 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+
+############################################################################
+
+# make compiler warnings fatal
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -WX
+
+# include the primary makefile
+!INCLUDE ..\..\..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\..\..\config\NTMakefile.version
+
+############################################################################
+
+install :
+    @$(DESTDIR)\bin\sgml2rtf -1252 en_US.ide
+    @$(DESTDIR)\bin\sgml2rtf -932 ja_JP.ide
+    @$(DESTDIR)\bin\sgml2rtf -949 ko_KR.ide
+    @$(DESTDIR)\bin\sgml2rtf -936 zh_CN.ide
+    @$(DESTDIR)\bin\sgml2rtf -950 zh_TW.ide
+    @$(DESTDIR)\bin\sgml2rtf -1252 pt_BR.ide
+    @$(DESTDIR)\bin\sgml2rtf -1252 es_ES.ide
+    @$(DESTDIR)\bin\sgml2rtf -1252 de_DE.ide
+

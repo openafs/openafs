@@ -1,0 +1,90 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+#
+
+!INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\..\config\NTMakefile.version
+
+
+############################################################################
+# Definitions for installing header files
+
+INCFILEDIR = $(DESTDIR)\include  # header file install directory
+
+INCFILES =\
+	$(INCFILEDIR)\dbrpc.h \
+	$(INCFILEDIR)\basic.h   \
+	$(INCFILEDIR)\osidebug.h  \
+	$(INCFILEDIR)\osiltype.h \
+	$(INCFILEDIR)\osistatl.h \
+	$(INCFILEDIR)\trylock.h \
+	$(INCFILEDIR)\main.h \
+	$(INCFILEDIR)\osibasel.h \
+	$(INCFILEDIR)\osifd.h  \
+	$(INCFILEDIR)\osiqueue.h \
+	$(INCFILEDIR)\osiutils.h \
+	$(INCFILEDIR)\osi.h \
+	$(INCFILEDIR)\osidb.h \
+	$(INCFILEDIR)\osilog.h \
+	$(INCFILEDIR)\osisleep.h \
+	$(INCFILEDIR)\perf.h
+
+
+$(INCFILEDIR)\dbrpc.h: dbrpc.h
+
+############################################################################
+# Definitions for building a DLL.
+
+DLLFILE = $(DESTDIR)\root.client\usr\vice\etc\libosi.dll
+
+ILIBDIR = $(DESTDIR)\lib
+
+DLLOBJS =\
+	dbrpc_s.obj \
+	osistatl.obj \
+	osibasel.obj \
+	osisleep.obj \
+	osiqueue.obj \
+	osiltype.obj \
+	osidb.obj \
+	osifd.obj \
+	osilog.obj \
+	osiutils.obj \
+	libosi.res
+
+DLLLIBS =\
+        rpcndr.lib \
+        rpcrt4.lib \
+        rpcns4.lib \
+	largeint.lib
+
+$(DLLFILE): $(DLLOBJS) 
+	$(DLLGUILINK) $(DLLLIBS) -def:libosi.def
+	$(DLLPREP)
+	$(COPY) $*.lib $(ILIBDIR)
+	$(DEL) $*.lib $*.exp
+
+
+############################################################################
+# midl on dbrpc.idl
+
+dbrpc.h dbrpc_c.c dbrpc_s.c: dbrpc.idl
+	$(MIDL) -Zp4 -cpp_cmd $(cc) -cpp_opt "-E" dbrpc.idl
+
+############################################################################
+# generate versioninfo resources
+
+libosi.res: libosi.rc AFS_component_version_number.h
+
+############################################################################
+# Install target; primary makefile target
+
+install_headers: $(INCFILES)
+
+install: install_headers $(DLLFILE)
+
+############################################################################
+# Local clean target; augments predefined clean target
+
+clean::
+	$(DEL) dbrpc_s.c dbrpc_c.c dbrpc.h 
+

@@ -1,0 +1,20 @@
+#
+# miscserver
+#
+# An InstallGuide for fileserver processes
+# For SGI systems running IRIX
+#
+
+sub IRIXmiscserver {
+&ReadInstallGuide("$InstallGuideDir/GENERIC/miscserver");
+&miscserver;
+
+system("/etc/chkconfig -f afsserver on");
+}
+
+
+
+
+sub miscserver {
+goto &IRIXmiscserver;
+}

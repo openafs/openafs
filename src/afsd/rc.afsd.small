@@ -1,0 +1,7 @@
+# for small systems, small cache, limited memory, light usage,
+# probably one or two users at most.  
+# these settings are identical to the AFS 3.1b defaults.
+/usr/vice/etc/afsd -stat 300 -dcache 100 -daemons 2 -volumes 50 $*
+
+
+

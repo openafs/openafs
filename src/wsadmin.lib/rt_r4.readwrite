@@ -1,0 +1,14 @@
+# (C) Copyright Transarc Corporation 1989
+# Licensed Materials - Property of Transarc
+# All Rights Reserved
+#
+# Package include file for the rt_r4 specifying use of only read-write
+# volumes.
+#
+%ifndef	cell
+%define	cell	transarc.com
+%endif	cell
+
+%define	common		/afs/.${cell}/common
+%define	machine		/afs/.${cell}/rt_r4
+%define	etcdir		${machine}

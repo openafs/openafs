@@ -1,0 +1,94 @@
+/*
+ * Copyright (C) 1989 Transarc Corporation - All rights reserved 
+ *
+ * (C) COPYRIGHT IBM CORPORATION 1987, 1988
+ * LICENSED MATERIALS - PROPERTY OF IBM
+ *
+ * afscbint.xg:
+ *	Definition of the AFS Cache Manager callback RPC interface.
+ */
+
+
+#include "common.xg"		/*Common structures & definitions*/
+
+%#ifdef KERNEL
+%#include "../afs/longc_procs.h"
+%#endif
+
+package RXAFSCB_
+prefix S
+statindex 6
+
+proc CallBack(
+  IN  AFSCBFids *Fids_Array,
+  AFSCBs *CallBacks_Array
+) multi = 204;
+
+proc InitCallBackState(
+) = 205;
+
+proc Probe(
+) multi = 206;
+
+proc GetLock(
+  IN  afs_int32 index,
+  OUT AFSDBLock *lock
+) = 207;
+
+proc GetCE(
+  IN  afs_int32 index,
+  OUT AFSDBCacheEntry *ce
+) = 208;
+
+proc XStatsVersion(
+  OUT afs_int32 *versionNumberP
+) = 209;
+
+proc GetXStats(
+  IN  afs_int32 clientVersionNumber,
+  afs_int32 collectionNumber,
+  OUT afs_int32 *srvVersionNumberP,
+  afs_int32 *timeP,
+  AFSCB_CollData *dataP
+) = 210;
+
+/* Used in the AFS 3.5 beta release */
+proc InitCallBackState2(
+  OUT struct interfaceAddr* addr
+) = 211;
+
+proc WhoAreYou(
+  OUT struct interfaceAddr* addr
+) = 212;
+
+proc InitCallBackState3(
+  IN afsUUID *serverUuid
+) = 213;
+
+proc ProbeUuid(
+  IN afsUUID *clientUuid
+) multi = 214;
+
+proc GetServerPrefs(
+  IN afs_int32 serverIndex,
+  OUT afs_int32 *srvrAddr,
+  OUT afs_int32 *srvrRank
+) = 215;
+
+proc GetCellServDB(
+  IN afs_int32 cellIndex,
+  OUT string cellName<AFSNAMEMAX>,
+  OUT serverList *cellHosts
+) = 216;
+
+proc GetLocalCell(
+  OUT string cellName<AFSNAMEMAX>
+) = 217;
+
+proc GetCacheConfig(
+  IN afs_uint32 callerVersion,
+  OUT afs_uint32 *serverVersion,
+  OUT afs_uint32 *configCount,
+  OUT cacheConfig *config
+) = 218;
+

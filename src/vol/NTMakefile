@@ -1,0 +1,95 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+#
+
+!INCLUDE ..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\config\NTMakefile.version
+
+############################################################################
+# Definitions for installing header files
+
+INCFILEDIR = $(DESTDIR)\include  # header file install directory
+
+INCFILES =\
+	$(INCFILEDIR)\afs\fssync.h \
+	$(INCFILEDIR)\afs\ihandle.h \
+	$(INCFILEDIR)\afs\nfs.h \
+	$(INCFILEDIR)\afs\ntops.h \
+	$(INCFILEDIR)\afs\partition.h \
+	$(INCFILEDIR)\afs\viceinode.h \
+	$(INCFILEDIR)\afs\vnode.h \
+	$(INCFILEDIR)\afs\volume.h \
+	$(INCFILEDIR)\afs\voldefs.h
+
+
+
+############################################################################
+# Build afsvol.lib
+
+LIBFILE = $(DESTDIR)\lib\afs\afsvol.lib
+
+LIBOBJS =\
+	common.obj \
+	clone.obj \
+	fssync.obj \
+	ntops.obj \
+	nuke.obj \
+	partition.obj \
+	purge.obj \
+	vnode.obj \
+	volume.obj \
+	vutil.obj \
+	ihandle.obj \
+	AFS_component_version_number.obj	
+
+$(LIBFILE): $(LIBOBJS)
+	$(LIBARCH)
+
+
+
+############################################################################
+# External libraries
+
+EXEC_LIBS = \
+	$(DESTDIR)\lib\afs\afscmd.lib \
+	$(DESTDIR)\lib\afs\afsvol.lib \
+	$(DESTDIR)\lib\afs\afsutil.lib \
+	$(DESTDIR)\lib\afs\afsdir.lib \
+	$(DESTDIR)\lib\afslwp.lib \
+	$(DESTDIR)\lib\afs\afsacl.lib \
+	$(DESTDIR)\lib\afs\afsreg.lib \
+	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
+	$(DESTDIR)\lib\afs\afseventlog.lib \
+	$(DESTDIR)\lib\pthread.lib
+
+############################################################################
+# build salvager
+SALVAGER = $(DESTDIR)\root.server\usr\afs\bin\salvager.exe
+
+SALVAGER_EXEOBJS =\
+	vol-salvage.obj \
+	physio.obj \
+	AFS_component_version_number.obj \
+	salvager.res
+
+$(SALVAGER): $(SALVAGER_EXEOBJS) $(EXEC_LIBS)
+	$(EXECONLINK)
+	$(EXEPREP)
+
+
+############################################################################
+# build volinfo
+VOLINFO = $(DESTDIR)\root.server\usr\afs\bin\volinfo.exe
+
+$(VOLINFO): vol-info.obj physio.obj volinfo.res $(EXEC_LIBS)
+	$(EXECONLINK)
+	$(EXEPREP)
+
+############################################################################
+# generate versioninfo resources
+salvager.res: salvager.rc AFS_component_version_number.h
+
+volinfo.res: volinfo.rc AFS_component_version_number.h
+
+############################################################################
+# Install targets
+install: $(INCFILES) $(LIBFILE) $(SALVAGER) $(VOLINFO) 

@@ -1,0 +1,140 @@
+#
+# Copyright 1987 by the Massachusetts Institute of Technology.
+#
+# For copying and distribution information,
+# please see the file <mit-cpyright.h>.
+#
+# Makefile for BSD DES library
+#
+# First define machine type, compiler, and object file suffix
+# Could be for VAX or PC-DOS
+#
+# Some of these files are cross compiled on the vax for the pc8086,
+# using the MIT LCS cross-compilation environment
+# Others are always executed on the vax(host).
+#
+# A machine, e.g. Vax, pc8086, IBM experimental workstation, is 
+# described in terms of defines for its word length
+# (BITS32 or BITS16), byte ordering (LSBFIRST or MSBFIRST) and 
+# operating system (BSDUNIX or CROSSMSDOS).
+#
+# Make sure these are properly defined for any new machine types.
+# target machine for run-time code (may cross-compile),
+# override as needed 
+#
+
+
+!INCLUDE ..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\config\NTMakefile.version
+
+
+INCFILEDIR = $(DESTDIR)\include
+
+INCFILES =\
+	$(INCFILEDIR)\des.h \
+	$(INCFILEDIR)\des_conf.h \
+	$(INCFILEDIR)\mit-cpyright.h \
+	$(INCFILEDIR)\des_odd.h \
+	$(INCFILEDIR)\crypt.h
+
+$(INCFILEDIR)\des_odd.h: odd.h
+	$(COPY) odd.h $@
+
+
+# Library component lists.
+
+LIBOBJS = \
+	des.obj \
+	cbc_encrypt.obj \
+	pcbc_encrypt.obj \
+	cksum.obj \
+	new_rnd_key.obj \
+	key_sched.obj \
+	debug_decl.obj \
+	quad_cksum.obj \
+	key_parity.obj \
+	weak_key.obj \
+	read_pssword.obj \
+	strng_to_key.obj \
+	misco.obj \
+	util.obj \
+	crypt.obj
+
+LIBFILE = $(DESTDIR)\lib\afsdes.lib
+
+$(LIBFILE): $(LIBOBJS)
+	$(LIBARCH)
+
+# Special case, since misc.c includes a "main" for the table generators.
+misco.obj: misc.c
+	$(C2OBJ) misc.c /Fomisco.obj -DDONT_INCL_MAIN
+
+#####################
+# Generator Files ###
+#####################
+
+GENERATED_FILES = \
+	key_perm.h \
+	p_table.h \
+	s_table.h \
+	odd.h \
+	p.c \
+	s.c \
+	fp.c \
+	ip.c
+
+# Make generated files.
+MAKETARG = $** $@
+
+key_perm.h: make_keyperm.exe
+	$(MAKETARG)
+
+p_table.h: make_p_table.exe
+	$(MAKETARG)
+
+s_table.h: make_s_table.exe
+	$(MAKETARG)
+
+odd.h: make_odd.exe
+	$(MAKETARG)
+
+p.c: make_p.exe
+	$(MAKETARG)
+
+s.c: make_s.exe
+	$(MAKETARG)
+
+fp.c: make_fp.exe
+	$(MAKETARG)
+
+ip.c: make_ip.exe
+	$(MAKETARG)
+
+# Make generators.
+misc.obj: AFS_component_version_number.c
+
+make_keyperm.exe: make_keyperm.obj misc.obj
+	$(EXECONLINK)
+
+make_p_table.exe: make_p_table.obj misc.obj
+	$(EXECONLINK)
+
+make_s_table.exe: make_s_table.obj misc.obj
+	$(EXECONLINK)
+
+make_odd.exe: make_odd.obj misc.obj
+	$(EXECONLINK)
+
+make_p.exe: make_p.obj misc.obj
+	$(EXECONLINK)
+
+make_s.exe: make_s.obj misc.obj
+	$(EXECONLINK)
+
+make_fp.exe: make_fp.obj misc.obj
+	$(EXECONLINK)
+
+make_ip.exe: make_ip.obj misc.obj
+	$(EXECONLINK)
+
+install: $(GENERATED_FILES) $(LIBFILE) $(INCFILES)

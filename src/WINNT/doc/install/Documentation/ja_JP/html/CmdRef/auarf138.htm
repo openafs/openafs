@@ -1,0 +1,111 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRFS_EXAMINE" HREF="auarf002.htm#ToC_152">fs examine</A></H2>
+<A NAME="IDX4772"></A>
+<A NAME="IDX4773"></A>
+<A NAME="IDX4774"></A>
+<A NAME="IDX4775"></A>
+<A NAME="IDX4776"></A>
+<A NAME="IDX4777"></A>
+<A NAME="IDX4778"></A>
+<A NAME="IDX4779"></A>
+<A NAME="IDX4780"></A>
+<A NAME="IDX4781"></A>
+<A NAME="IDX4782"></A>
+<A NAME="IDX4783"></A>
+<A NAME="IDX4784"></A>
+<A NAME="IDX4785"></A>
+<A NAME="IDX4786"></A>
+<A NAME="IDX4787"></A>
+<A NAME="IDX4788"></A>
+<A NAME="IDX4789"></A>
+<A NAME="IDX4790"></A>
+<A NAME="IDX4791"></A>
+<A NAME="IDX4792"></A>
+<A NAME="IDX4793"></A>
+<A NAME="IDX4794"></A>
+<A NAME="IDX4795"></A>
+<P><STRONG>目的</STRONG>
+<P>ディレクトリーまたはファイルを含むボリュームについての情報を表示します。
+<P><STRONG>構文</STRONG>
+<PRE><B>fs examine</B> [<B>-path </B>&lt;<VAR>dir/file path</VAR>><SUP>+</SUP>]  [<B>-help</B>]
+   
+<B>fs exa</B> [<B>-p</B> &lt;<VAR>dir/file path</VAR>><SUP>+</SUP>]  [<B>-h</B>] 
+         
+<B>fs listvol</B> [<B>-p</B> &lt;<VAR>dir/file path</VAR>><SUP>+</SUP>]  [<B>-h</B>] 
+     
+<B>fs listv</B> [<B>-p</B> &lt;<VAR>dir/file path</VAR>><SUP>+</SUP>]  [<B>-h</B>] 
+        
+<B>fs lv</B> [<B>-p</B> &lt;<VAR>dir/file path</VAR>><SUP>+</SUP>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>fs examine</B> コマンドは、指定された各ディレクトリーまたはファイルを含むボリュームについての情報を表示します。これには、ボリューム ID 番号、割り当て量、および割り当て量の使用パーセンテージが含まれます。
+<P>このコマンドは、ボリュームに関するほとんどの情報を提供しますが、<B>fs listquota</B> コマンドは表形式で類似の情報を表示し、<B>fs quota</B> は使用された割り当て量のパーセンテージのみを報告します。
+<P>ボリュームの割り当て量を設定するには、<B>fs setquota</B> または <B>fs setvol</B> コマンドを使用します。
+<P><STRONG>注意</STRONG>
+<P>区画に関するコマンド出力の統計が、常にそれに対応する標準 UNIX の <B>df</B> コマンドの出力値と一致するわけではありません。このコマンドによって報告された統計は、キャッシュ・マネージャーがその周波数での区画情報のために、ファイル・サーバーをポーリングするため、最高 5 分経過している可能性があるからです。一部のオペレーティング・システムでも、<B>df</B> コマンドが報告する区画サイズに、このコマンドによる計算に含まれない予約スペースが含まれてしまい、約 10% 多く報告される場合があります。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B>-path
+</B><DD>出力を作成するボリュームに常駐しているファイルまたはディレクトリーを指定します。部分的なパス名は、現行作業ディレクトリーに相対するものと解釈され、この引き数が省略された場合にもデフォルト値となります。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>出力</STRONG>
+<P>出力は、指定された各ディレクトリーまたはファイルを格納しているボリュームについての情報を、次の形式で表示します。
+<PRE>   Volume status for vid = <VAR>volume ID</VAR> named <VAR>volume name</VAR>
+   Current offline message is <VAR>message</VAR>
+   Current disk quota is <VAR>quota in kilobytes</VAR>
+   Current blocks used are <VAR>volume size in kilobytes</VAR>
+   The partition has <VAR>available partition</VAR> blocks available out of
+      <VAR>partition size</VAR>
+   
+</PRE>
+<P>最初の行でボリュームの ID 番号と名前を指定します。<TT>Current</TT> <TT>offline</TT> <TT>message</TT> の行は、管理者が <B>-offlinemsg</B> 引き数を <B>fs</B> コマンドに指定場合のみ、表示されます。残りの行はそれぞれ以下を報告してます。
+<UL>
+<LI>KB で表したボリュームの割り当て量。または無制限の割り当て量を示す文字列 <TT>unlimited</TT>。
+</LI><LI>ボリュームの現在のサイズを KB で表示します。
+</LI><LI>使用可能なブロックの数およびホスト区画の合計サイズを KB で表示します。
+</LI></UL>
+<P><STRONG>例</STRONG>
+<P>次の例では、ボリューム <B>user.smith</B> およびそれを格納する区画の出力を表示します。
+<PRE>   % <B>fs examine -path /afs/abc.com/usr/smith</B>
+   Volume status for vid = 50489902 named user.smith
+   Current maximum quota is 15000
+   Current blocks used are 5073
+   The partition has 336662 blocks available out of 4177920
+   
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>発行者は、
+<B>-path</B> 引き数で命名されたファイルまたはディレクトリーを格納するボリュームのルート・ディレクトリーの ACL で、およびパス名でその前に置かれる各ディレクトリーの ACL で、
+<B>l</B> (<B>検索</B>) アクセス権が必要です。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf150.htm#HDRFS_LISTQUOTA">fs listquota</A>
+<P><A HREF="auarf155.htm#HDRFS_QUOTA">fs quota</A>
+<P><A HREF="auarf161.htm#HDRFS_SETQUOTA">fs setquota</A>
+<P><A HREF="auarf163.htm#HDRFS_SETVOL">fs setvol</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf137.htm">前ページ</A> &#124; <A HREF="auarf139.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

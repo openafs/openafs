@@ -1,0 +1,162 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRFSTRACE_DUMP" HREF="auarf002.htm#ToC_186">fstrace dump</A></H2>
+<P><STRONG>目的</STRONG>
+<A NAME="IDX5031"></A>
+<A NAME="IDX5032"></A>
+<P>トレース・ログをダンプします。
+<P><STRONG>構文</STRONG>
+<PRE><B>fstrace dump</B> [<B>-set</B> &lt;<VAR>set_name</VAR>><SUP>+</SUP>]  [<B>-follow</B> &lt;<VAR>log_name</VAR>>]  
+             [<B>-file</B> &lt;<VAR>output_filename</VAR>>]  
+             [<B>-sleep</B> &lt;<VAR>seconds_between_reads</VAR>>]  [<B>-help</B>]
+   
+<B>fstrace d</B> [<B>-se</B> &lt;<VAR>set_name</VAR>><SUP>+</SUP>]  [<B>-fo</B> &lt;<VAR>log_name</VAR>>]  [<B>-fi</B> &lt;<VAR>output_filename</VAR>>] 
+          [<B>-sl</B> &lt;<VAR>seconds_between_reads</VAR>>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>fstrace dump</B> コマンドは、標準出力ストリーム上の <B>cmfx</B> トレース・ログの現在の内容を表示するか、または、<B>-file</B> 引き数で指定された名前のファイルに書き込みます。
+<P>標準出力またはファイルへ連続して書き込むには、
+<B>-follow</B> 引き数を使用します。デフォルトでは、ログの内容は 10 秒ごとに書き出されてから自動的に消去されます。書き込み間隔を変更するには、<B>-sleep</B> 引き数を使用します。
+<P><STRONG>注意</STRONG>
+<P>このコマンドは、活動状態の <B>cm</B> イベント設定のみの出力を生成します。イベント設定の状態を表示または設定するには、それぞれ
+<B>fstrace lsset</B> または <B>fstrace
+setset</B> コマンドを使用します。
+<P>このコマンドからの最大読み込み可能な出力を作成するには、
+<B>afszcm.cat</B> と呼ばれるメッセージ・カタログ・ファイルがローカルの <B>/usr/vice/etc/C</B> ディレクトリーに常駐していなければなりません。もし必要ならば、トレースを活動化する前に AFS バイナリー分散からファイルをディレクトリーにコピーします。
+<P><B>cm</B> イベント設定が活動状態の時、定義された総カーネル・メモリー (デフォルトでは、60 KB) は、
+<B>cmfx</B> トレース・ログのために割り振られます。概要の <B>fstrace</B> 参照ページで説明しているとおり、バッファーがいっぱいになると、メッセージが上書きされます(新しいメッセージが古いメッセージを上書きします)。ログのためのカーネル・メモリーの割り振りを増やすには、<B>fstrace setlog</B> コマンドを使用します。現在のログ・バッファーのサイズを表示するには、<B>fstrace
+lslog</B> コマンドに <B>-long</B> 引き数を付けて使用します。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B>-set
+</B><DD>書き出したい関連するトレース・ログのイベント設定の名前を指定します。唯一の許容値は、(関連したトレース・ログが <B>cmfx</B> のための) <B>cm</B> です。この引き数か <B>-log</B> 引き数のどちらか 1 つを指定するか、デフォルトとして <B>cmfx</B> ログへ書き出すために両方を省略します。
+<P><DT><B>-follow
+</B><DD>指定された間隔で連続して書き出すトレース・ログの名前を指定します (デフォルトでは、毎 10 秒ごとです。間隔を変更するには <B>-sleep</B> 引き数を使用します)。各書き込み操作の後に、ログは消去されます。
+<P>
+<P>唯一の許容値は、
+<B>cmfx</B> です。この引き数か <B>-set</B> 引き数のどちらか 1 つを指定するか、デフォルトとして <B>cmfx</B> ログへ書き出すために両方を省略します。
+<P><DT><B>-file
+</B><DD>トレース・ログの内容を書き込むファイルのパス名を指定します。
+AFS またはローカル・ディスク上にあるパス名を使用できます。部分的なパス名を指定すると、現行作業ディレクトリーとの相対位置で解釈されます。この引き数を省略すると、トレース・ログは標準出力に表示されます。
+<P><DT><B>-sleep
+</B><DD>連続してダンプされるトレース・ログの内容の書き込み秒間を設定します。この値といっしょに <B>-follow</B> 引き数を与えます。この引き数を省略すると、デフォルトのインターバルは 10 秒です。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>出力</STRONG>
+<P>出力は、指定したデータおよび書き込み操作が開始された時間のヘッダーを付けて開始します。<B>-follow</B> 引き数が組み込まれない場合、ヘッダーは、ダンプされたログの数もレポートします。これは、
+<B>cmfx</B> トレース・ログのみがある時から常に、
+<TT>1</TT>です。ヘッダーの形式は、以下のようになります。
+<PRE>   AFS Trace Dump -
+     Date: <VAR>starting_timestamp</VAR>
+   Found 1 logs.
+   Contents of log cmfx:
+   
+</PRE>
+<P>以下の各メッセージは、以下の形式のキャッシュ・マネージャー・オペレーションを説明します。
+<PRE>   time <VAR>timestamp</VAR>, pid <VAR>pid</VAR>:<VAR>event_message</VAR>
+   
+</PRE>
+<P>ここで、
+<DL>
+<P><DT><B><VAR>timestamp</VAR>
+</B><DD>キャッシュ・マネージャーがオペレーションを実行された時間を、ダンプ開始からの秒数として指定します。
+<P><DT><B><VAR>pid</VAR>
+</B><DD>処理またはメッセージに関連したスレッドのプロセス IDを指定します。
+<P><DT><B><VAR>event_message</VAR>
+</B><DD>メッセージそのものです。これは通常、AFS ソース・コードで慣れた方にのみ分かりやすいものです。
+</DL>
+<P>加えて、毎 1024 秒ごとに <B>fstrace</B> コマンド・インタープリターは現在のクロック時刻をレコードしたメッセージを以下の形式で書き込みます。
+<PRE>time <VAR>timestamp</VAR>, pid <VAR>pid</VAR>: Current time: <VAR>unix_time</VAR>
+   
+</PRE>
+<P>ここで、
+<DL>
+<P><DT><B><VAR>timestamp</VAR>
+</B><DD>ログのトレース開始からの秒数です。
+<P><DT><B><VAR>pid</VAR>
+</B><DD>プロセス ID 番号です。
+<P><DT><B><VAR>unix_time</VAR>
+</B><DD>マシンのクロック時刻で、
+UNIX の標準時刻形式として 1970 年 1 月 1
+日の午前 0 時からの秒数で表します。
+</DL>
+<P>各ログ・メッセージに関連した実際のクロック時刻を判別するためにこのメッセージを使用します。実際の時刻の判別は、以下のようになります。
+<OL TYPE=1>
+<LI>関心のあるメッセージを配置します。
+</LI><LI>最新の時刻メッセージのトレース・ファイルを逆方向から通して検索します。
+</LI><LI>現在の時間メッセージの <VAR>timestamp</VAR> が ログ・メッセージの <VAR>timestamp</VAR> より小さい場合、最新から前者を減算します。現在の時間メッセージの
+<VAR>timestamp</VAR> が ログ・メッセージの
+<VAR>timestamp</VAR> より大きい場合、1024 を最新に加算して結果から前者を減算します。
+</LI><LI>ログ・メッセージの実時間を判別するための現在の時間メッセージの
+<VAR>unix_time</VAR> へ結果値を加算します。
+</LI></OL>
+<P>カーネル・トレース・バッファーにある任意のデータがトレースが活動開始されてから上書きされた場合、以下のメッセージが、出力の適切な位置に表示されます。
+<PRE>Log wrapped; data missing.
+   
+</PRE>
+<P>上書きの可能性を削減するには、カーネル・バッファーのバッファーを増加するために <B>fstrace setlog</B> コマンドを使用します。現在の定義されたバッファー・サイズを表示するには、
+<B>fstrace lslog</B> コマンドに
+<B>-long</B> 引き数を付けて使用します。
+<P>以下のログ・ダンプの最後のメッセージは、作業が完了されたことを指示しています。
+<PRE>AFS Trace Dump - Completed
+   
+</PRE>
+<P><STRONG>例</STRONG>
+<P>以下のコマンドは、関連した <B>cm</B> イベント設定のログを標準出力へダンプします。
+<PRE>   # <B>fstrace dump -set cm</B>
+   AFS Trace Dump -
+      Date: Tue Apr  7 10:54:57 1998
+   Found 1 logs.
+   time 32.965783, pid 0: Tue Apr  7 10:45:52 1998
+   time 32.965783, pid 33657: Close 0x5c39ed8 flags 0x20
+   time 32.965897, pid 33657: Gn_close vp 0x5c39ed8 flags 0x20 (returns 0x0)
+   time 35.159854, pid 10891: Breaking callback for 5bd95e4 states 1024 (volume 0)
+   time 35.407081, pid 10891: Breaking callback for 5c0fadc states 1024 (volume 0)
+                                    .
+                                    .
+                                    .
+   time 71.440456, pid 33658: Lookup adp 0x5bbdcf0 name g3oCKs \
+        fid (756 4fb7e:588d240.2ff978a8.6)
+   time 71.440569, pid 33658: Returning code 2 from 19
+   time 71.440619, pid 33658: Gn_lookup vp 0x5bbdcf0 name g3oCKs (returns 0x2)
+   time 71.464989, pid 38267: Gn_open vp 0x5bbd000 flags 0x0 (returns 0x0)
+   AFS Trace Dump - Completed
+   
+</PRE>
+<P>以下のコマンドは、ダンプ成功の間 10 秒のデフォルト間隔を使用して、ローカル・マシン上の <B>cm</B> イベント設定に関連したトレース・ログをファイル <B>cmfx.dump.file.1</B> へダンプします。
+<PRE>   # <B>fstrace dump -follow cmfx -file cmfx.dump.file.1</B>
+   
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>コマンドの発行者は、ローカル・スーパーユーザー <B>root</B> としてログインする必要があります。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf041.htm#HDRAFSZCM">afszcm.cat</A>
+<P><A HREF="auarf169.htm#HDRFSTRACE_INTRO">fstrace</A>
+<P><A HREF="auarf174.htm#HDRFSTRACE_LSLOG">fstrace lslog</A>
+<P><A HREF="auarf176.htm#HDRFSTRACE_SETLOG">fstrace setlog</A>
+<P><A HREF="auarf175.htm#HDRFSTRACE_LSSET">fstrace lsset</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf171.htm">前ページ</A> &#124; <A HREF="auarf173.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

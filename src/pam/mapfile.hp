@@ -1,0 +1,6 @@
++e pam_sm_authenticate
++e pam_sm_acct_mgmt
++e pam_sm_setcred
++e pam_sm_open_session
++e pam_sm_close_session
++e pam_sm_chauthtok

@@ -1,0 +1,61 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+#
+
+!INCLUDE ..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\config\NTMakefile.version
+
+####################################################################
+# install  comerr header files 
+INCFILEDIR = $(DESTDIR)\include\afs
+INCFILES =\
+	$(INCFILEDIR)\com_err.h \
+	$(INCFILEDIR)\error_table.h \
+	$(INCFILEDIR)\mit-sipb-cr.h 
+
+####################################################################
+# build and install  afscom_err.lib static lib
+COMERR_LIBFILE = $(DESTDIR)\lib\afs\afscom_err.lib
+
+COMERR_LIBOBJS =\
+		error_msg.obj  \
+		et_name.obj  \
+		com_err.obj \
+		AFS_component_version_number.obj
+
+$(COMERR_LIBFILE): $(COMERR_LIBOBJS)
+	$(LIBARCH)  
+
+####################################################################
+# build and install the compile_et executable
+COMPILE_ET_EXEFILE = $(DESTDIR)\bin\compile_et.exe
+
+et_lex.lex_nt.c:   et_lex.lex.l
+    $(LEX) -t et_lex.lex.l > $@
+    
+error_table_nt.c:  et_lex.lex_nt.c error_table.y
+    $(YACC) -d -o $@ error_table.y
+
+COMPILE_ET_EXEOBJS =\
+		compile_et.obj \
+		error_table_nt.obj
+		
+COMPILE_ET_EXELIBS =\
+	$(DESTDIR)\lib\afs\afsutil.lib
+
+$(COMPILE_ET_EXEFILE): $(COMPILE_ET_EXEOBJS) $(COMPILE_ET_EXELIBS)  
+	$(EXECONLINK)
+	$(EXEPREP) 
+
+####################################################################
+install: $(INCFILES) $(COMERR_LIBFILE) $(COMPILE_ET_EXEFILE) 
+
+clean::
+	$(DEL) *~ \#* *.bak \
+                 *.otl *.aux *.toc *.PS *.dvi *.x9700 *.ps \
+                 *.cp *.fn *.ky *.log *.pg *.tp *.vr \
+                 et.ar TAGS
+
+test:
+
+
+	

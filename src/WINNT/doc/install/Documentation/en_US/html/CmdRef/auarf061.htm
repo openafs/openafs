@@ -1,0 +1,186 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3190/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 5 Nov 1999 at 13:58:29                -->
+<META HTTP-EQUIV="updated" CONTENT="Fri, 05 Nov 1999 13:58:29">
+<META HTTP-EQUIV="review" CONTENT="Sun, 05 Nov 2000 13:58:29">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 05 Nov 2001 13:58:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf060.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf062.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRBK_ADDDUMP" HREF="auarf002.htm#ToC_75">backup adddump</A></H2>
+<A NAME="IDX4218"></A>
+<A NAME="IDX4219"></A>
+<A NAME="IDX4220"></A>
+<A NAME="IDX4221"></A>
+<A NAME="IDX4222"></A>
+<A NAME="IDX4223"></A>
+<A NAME="IDX4224"></A>
+<A NAME="IDX4225"></A>
+<A NAME="IDX4226"></A>
+<A NAME="IDX4227"></A>
+<A NAME="IDX4228"></A>
+<P><STRONG>Purpose</STRONG>
+<P>Defines a dump level in the dump hierarchy
+<P><STRONG>Synopsis</STRONG>
+<PRE><B>backup adddump -dump</B> &lt;<VAR>dump&nbsp;level&nbsp;name</VAR>><SUP>+</SUP> [<B>-expires</B> &lt;<VAR>expiration&nbsp;date</VAR>><SUP>+</SUP>]
+               [<B>-localauth</B>]  [<B>-cell</B> &lt;<VAR>cell&nbsp;name</VAR>>]  [<B>-help</B>]
+   
+<B>backup addd -d</B>  &lt;<VAR>dump&nbsp;level&nbsp;name</VAR>><SUP>+</SUP> [<B>-e</B> &lt;<VAR>expiration&nbsp;date</VAR>><SUP>+</SUP>]  [<B>-l</B>]  
+            [<B>-c</B> &lt;<VAR>cell&nbsp;name</VAR>>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>Description</STRONG>
+<P>The <B>backup adddump</B> command creates one or more dump levels in
+the dump hierarchy stored in the Backup Database, and optionally assigns an
+expiration date to each one. All of the dump levels in the Backup
+Database collectively constitute the dump hierarchy.
+<P>Use the <B>-expires</B> argument to associate an expiration date with
+each dump level. When the Backup System subsequently creates a dump at
+the dump level, it uses the specified value to derive the dump&#39;s
+expiration date, which it records on the label of the tape (or backup data
+file). The Backup System refuses to overwrite a tape until after the
+latest expiration date of any dump that the tape contains, unless the
+<B>backup labeltape</B> command is used to relabel the tape. If a
+dump level does not have an expiration date, the Backup System treats dumps
+created at the level as expired as soon as it creates them.
+<P>(Note that the Backup System does not automatically remove a dump&#39;s
+record from the Backup Database when the dump reaches its expiration date, but
+only if the tape that contains the dump is recycled or relabeled. To
+remove expired and other obsolete dump records, use the <B>backup
+deletedump</B> command.)
+<P>Define either an absolute or relative expiration date&#58;
+<UL>
+<P><LI>An absolute expiration date defines the month/day/year (and, optionally,
+hour and minutes) at which a dump expires. If the expiration date
+predates the dump creation time, the Backup System immediately treats the dump
+as expired.
+<P><LI>A relative date defines the number of years, months, or days (or a
+combination of the three) after the dump&#39;s creation that it
+expires. When the Backup System creates a dump at the dump level, it
+calculates an actual expiration date by adding the relative date to the start
+time of the dump operation.
+</UL>
+<P><STRONG>Options</STRONG>
+<DL>
+<P><DT><B>-dump
+</B><DD>Names each dump level to add to the dump hierarchy. Precede full
+dump level names with a slash (for example, <B>/full</B>). Indicate
+an incremental dump level by preceding it with an ordered list of the dump
+levels directly above it in the hierarchy (its parent dump levels); use
+the slash as a separator. The parent dump levels must already
+exist. For example, the dump levels <B>/full</B> and
+<B>/full/incremental1</B> must exist when the incremental dump level
+<B>/full/incremental1/incremental2</B> is created.
+<P>Dump level names can have any number of levels, but cannot exceed 256
+characters in length, including the slashes. The maximum length for any
+single level (the text between slashes) is 28 characters, not including the
+preceding slash.
+<P>All alphanumeric characters are allowed in dump level names. Do not
+use the period (<B>.</B>), however, because it is the separator
+between the volume set name and dump level name in the dump name assigned
+automatically by the <B>backup dump</B> command. It is best not to
+include other metacharacters either; if using them, enclose them in
+double quotes (<B>" "</B>) when issuing the <B>backup adddump</B>
+command outside interactive mode.
+<P><DT><B>-expires
+</B><DD>Defines the absolute or relative expiration date to associate with each
+dump level named by the <B>-dump</B> argument. Absolute expiration
+dates have the following format&#58;
+<P>
+<PRE>   [<B>at</B>] {<B>NEVER</B> | <VAR>mm</VAR><B>/</B><VAR>dd</VAR><B>/</B><VAR>yyyy</VAR> [<VAR>hh</VAR><B>&#58;</B><VAR>MM</VAR>] }
+   
+</PRE>
+<P>where the optional word <B>at</B> is followed either by the string
+<B>NEVER</B>, which indicates that dumps created at the dump level never
+expire, or by a date value with a required portion (<VAR>mm</VAR> for month,
+<VAR>dd</VAR> for day, and <VAR>yyyy</VAR> for year) and an optional portion
+(<VAR>hh</VAR> for hours and <VAR>MM</VAR> for minutes). 
+<P>Omit the <VAR>hh</VAR>&#58;<VAR>MM</VAR> portion to use the default of
+midnight (00&#58;00 hours), or provide a value in 24-hour format (for
+example, <B>20&#58;30</B> is 8&#58;30 p.m.).
+Valid values for the year range from <B>1970</B> to <B>2037</B>;
+higher values are not valid because the latest possible date in the standard
+UNIX representation is in February 2038. The command interpreter
+automatically reduces later dates to the maximum value.
+<P>Relative expiration dates have the following format&#58; 
+<PRE>   [<B>in</B>] [<VAR>years</VAR><B>y</B>] [<VAR>months</VAR><B>m</B>] [<VAR>days</VAR><B>d</B>]
+   
+</PRE>
+<P>
+<P>where the optional word <B>in</B> is followed by at least one of a
+number of years (maximum <B>9999</B>) followed by the letter <B>y</B>,
+a number of months (maximum <B>12</B>) followed by the letter
+<B>m</B>, or a number of days (maximum <B>31</B>) followed by the
+letter <B>d</B>. If providing more than one of the three, list them
+in the indicated order. If the date that results from adding the
+relative expiration value to a dump&#39;s creation time is later than the
+latest possible date in the UNIX time representation, the Backup System
+automatically reduces it to that date. 
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Note:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">A plus sign follows this argument in the command&#39;s syntax statement
+because it accepts a multiword value which does not need to be enclosed in
+double quotes or other delimiters, not because it accepts multiple
+dates. Provide only one date (and optionally, time) definition to be
+associated with each dump level specified by the <B>-dump</B>
+argument.
+</TD></TR></TABLE>
+<P><DT><B>-localauth
+</B><DD>Constructs a server ticket using a key from the local
+<B>/usr/afs/etc/KeyFile</B> file. The <B>backup</B> command
+interpreter presents it to the Backup Server, Volume Server and VL Server
+during mutual authentication. Do not combine this flag with the
+<B>-cell</B> argument. For more details, see the introductory
+<B>backup</B> reference page.
+<P><DT><B>-cell
+</B><DD>Names the cell in which to run the command. Do not combine this
+argument with the <B>-localauth</B> flag. For more details, see the
+introductory <B>backup</B> reference page.
+<P><DT><B>-help
+</B><DD>Prints the online help for this command. All other valid options
+are ignored.
+</DL>
+<P><STRONG>Examples</STRONG>
+<P>The following command defines a full dump called <B>/1999</B> with a
+relative expiration date of one year&#58;
+<PRE>   % <B>backup adddump -dump /1999 -expires in 1y</B>
+   
+</PRE>
+<P>The following command defines an incremental dump called
+<B>/sunday1/monday</B>1 with a relative expiration date of 13 days&#58;
+<PRE>   % <B>backup adddump -dump /sunday1/monday1 -expires in 13d</B>
+   
+</PRE>
+<P>The following command defines two dump incremental dump levels,
+<B>/Monthly/Week1</B> and <B>/Monthly/Week2</B>. Their parent,
+the full dump level <B>/Monthly</B>, must already exist. The
+expiration date for both levels is 12&#58;00 a.m. on 1 January
+2000.
+<PRE>   % <B>backup adddump -dump /Monthly/Week1 /Monthly/Week2 -expires at 01/01/2000</B>
+   
+</PRE>
+<P><STRONG>Privilege Required</STRONG>
+<P>The issuer must be listed in the <B>/usr/afs/etc/UserList</B> file on
+every machine where the Backup Server is running, or must be logged onto a
+server machine as the local superuser <B>root</B> if the
+<B>-localauth</B> flag is included.
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf060.htm#HDRBK_INTRO">backup</A>
+<P><A HREF="auarf067.htm#HDRBK_DELDUMP">backup deldump</A>
+<P><A HREF="auarf068.htm#HDRBK_DELETEDUMP">backup deletedump</A>
+<P><A HREF="auarf080.htm#HDRBK_LISTDUMPS">backup listdumps</A>
+<P><A HREF="auarf088.htm#HDRBK_SETEXP">backup setexp</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf060.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf062.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

@@ -1,0 +1,170 @@
+Building OpenAFS on Windows NT
+------------------------------
+
+There are several steps that must be performed before a successful
+build of AFS on Windows NT can be completed. These steps are as follows:
+
+   A. Install a compiler
+   B. Add missing header files
+   C. Optional: Install Installshield 5.x
+   D. Optional: Install flex and bison
+   E. Configure the OpenAFS build environment
+   F. Begin the build
+
+Each step is explained in detail below:
+
+A. Install a compiler
+
+   You must install a copy of Microsoft Visual C++ 5.0 (6 might also
+   work). The "Typical" install setting is sufficient. It may be
+   possible to use other compilers, but the source code as provided
+   will work with MS VC++ 5.0.
+
+B. Add missing header files
+
+   Files from Microsoft's Device Driver Development kits for NT and
+   Windows 9x are required to complete a build on NT. They are
+   copyrighted by Microsoft and so cannot be included with the OpenAFS
+   source tree. These files are:
+
+   netmpr.h
+   netspi.h
+   npapi.h
+
+   These files come from Microsoft DDKs as follows:
+
+   January 1997 Windows NT Workstation DDK - /ddk/frc/network/inc/npapi.h
+   July 1998 Windows 95 DDK - net/inc/netmpr.h and net/inc/netspi.h
+
+   The may also be available on more recent releases of the DDKs.
+   These files must live on the include path.
+
+C. Optional: Install Installshield 5.x
+
+   There are two ways to build OpenAFS on NT:
+      1. Build of the product, or
+      2. build of the product plus an installer package
+
+   In order to do the build that includes the installer package, a
+   copy of InstallShield 5.x must be installed. NOTE: InstallShield
+   versions 6 and higher WILL NOT WORK.
+
+D. Optional: Install flex and bison
+
+   There are two files in the source tree that are processed with lex
+   and yacc on UNIX systems, src/comerr/et_lex.lex.l and
+   src/comerr/error_table.y, that when processed produce the files
+   et_lex.lex_nt.c, error_table_nt.c, and error_table_nt.h.
+
+   Since NT does not include lex and yacc or any equivalent tools, we
+   have provided the output files that lex and yacc produce (using
+   Win32 ports of flex and bison). This will allow builds to work for
+   anyone who does not need to change the .l and .y files.
+
+   If you do need to change et_lex.lex.l, then you will need to
+   install Win32 port of flex on your system. Put flex.exe in a
+   directory on the path and rebuild.
+
+   If you do need to change error_table.y, then you will need to
+   install a Win32 port of bison on your system. Put bison.exe in a
+   directory on the path, configure bison as explained in step 5, and
+   rebuild.
+
+   You can also attempt to use other replacements for lex and yacc.
+   This will require modifying the LEX and YACC settings in
+   src/config/NTMakefile.i386_nt40. If the replacements require
+   different command line options than flex and bison, then you may
+   also need to change src/comerr/NTMakefile.
+
+E. Configure the OpenAFS build environment
+
+   A set of environment variables used by the OpenAFS makefiles must
+   be properly set for a build to successfully complete. The file
+   src/ntbuild.bat is a DOS-style batch file that will configure these
+   settings for you. Within this file there are the following lines
+   that must be set to match your system settings:
+
+   set MSVCDIR=<path to vc directory of MS Visual C++>
+   Ex: set MSVCDIR=c:\progra~1\DevStudio\vc
+
+      This is the path to the compiler directory of the Microsot Visual
+      C++ installation.
+
+   set AFSDEV_INCLUDE=<default include directories>
+   Ex: set AFSDEV_INCLUDE=%MSVCDIR%\include;%MSVCDIR%\mfc\include
+
+      This contains a semicolon separated list of directories that
+      contain compiler provided include files. You do not need to add paths
+      here of AFS include files.
+
+   set AFSDEV_LIB=<default library directories>
+   Ex: set AFSDEV_LIB=%MSVCDIR%\lib;%MSVCDIR%\mfc\lib
+
+      This contains a semicolon separated list of directories that
+      contain compiler provided library files. You do not need to add
+      paths here of AFS library files.
+
+   set AFSDEV_BIN=<compiler binaries directory>
+   Ex: set AFSDEV_BIN=%MSVCDIR%\bin
+
+      This is the path to the compiler binary files.
+
+   set AFSROOT=<Root directory of OpenAFS - parent of the src directory>
+   Ex: set AFSROOT=d:\OpenAFS
+
+      This is the root directory of OpenAFS, which is the parent
+      directory of the src directory.
+
+   set IS5ROOT=<root directory of the InstallShield5 program files>
+   Ex: set IS5ROOT=d:\progra~1\instal~1\instal~1.1pr
+
+      This is the path to the InstallShield5 program directory. You
+      should only define this if you have InstallShield installed on
+      your computer and want to create the install package as part of
+      the build.
+
+   set BISON_SIMPLE=<path to bison.simple>
+   set BISON_HAIRY=<path to bison.hairy>
+   Ex: set BISON_SIMPLE=c:\bin\bison.simple
+   Ex: set BISON_HAIRY=c:\bin\bison.hairy
+
+      bison has two files (in addition to the bison executable) that
+      must be on the system. In order for bison to find these files,
+      you must set the environment variables listed above to the paths
+      to these files. There are other ways to do this, but this is
+      what the build system expects.
+
+   NOTE: There are other settings in ntbuild.bat, but the ones listed
+         above must be set correctly for the build to succeed.
+
+   As can be seen in the examples above, all paths in ntbuild.bat must
+   be in the old MSDOS 8.3 format.
+
+F. Begin the build
+
+ 1. Make sure you are running the default NT command shell, cmd.exe.
+    Other shells may work, but many do not.
+
+ 2. Run the ntbuild.bat file that was configured in step 5. You can
+    include the word "checked" on the command line to create binaries
+    that include debug information, or the word "free" to create
+    binaries that do not include debug information.
+
+    For a debug build, run:
+       ntbuild checked
+
+    For a release build, run:
+       ntbuild free
+
+ 3. Copy the file src/NTMakefile to the parent of the src directory.
+    You only need to do this once.
+
+ 4. Begin the build. You can choose to build just the product bits,
+    or, if InstallShield is installed, the product bits and the
+    install package.
+
+    To build just the product bits, run:
+       nmake /f NTMakefile install
+
+    To build the product bits and the install package, run:
+       nmake /f NTMakefile media

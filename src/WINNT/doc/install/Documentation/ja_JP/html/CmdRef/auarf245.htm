@@ -1,0 +1,100 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRUSS_BULK" HREF="auarf002.htm#ToC_259">uss bulk</A></H2>
+<A NAME="IDX5539"></A>
+<A NAME="IDX5540"></A>
+<A NAME="IDX5541"></A>
+<A NAME="IDX5542"></A>
+<A NAME="IDX5543"></A>
+<P><STRONG>目的</STRONG>
+<P>ファイルにリストされている複数の <B>uss</B> コマンドを実行します。
+<P><STRONG>構文</STRONG>
+<PRE><B>uss bulk -file</B> &lt;<VAR>bulk input file</VAR>>  [<B>-template</B> &lt;<VAR>pathname of template file</VAR>>]
+         [<B>-verbose</B>]  [<B>-cell</B> &lt;<VAR>cell name</VAR>>]  
+         [<B>-admin</B> &lt;<VAR>administrator to authenticate</VAR>>]  [<B>-dryrun</B>]  
+         [<B>-skipauth</B>]  [<B>-overwrite</B>]
+         [<B>-pwexpires</B> &lt;<VAR>password expires in [0..254] days (0 => never)</VAR>>]  
+         [<B>-pipe</B>]  [<B>-help</B>]
+     
+<B>uss b -f</B> &lt;<VAR>bulk input file</VAR>>  [<B>-t</B> &lt;<VAR>pathname of template file</VAR>>]  [<B>-v</B>]  
+      [<B>-c</B> &lt;<VAR>cell name</VAR>>]  [<B>-a</B> &lt;<VAR>administrator to authenticate</VAR>>]  [<B>-d</B>]  [<B>-s</B>]  
+      [<B>-o</B>]  [<B>-pw</B> &lt;<VAR>password expires in [0..254] days (0 => never)</VAR>>]  
+      [<B>-pi</B>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>uss bulk</B> コマンドは、
+<B>-file</B> 引き数で指定された<B>バルク入力ファイル</B>にリストされている <B>uss</B> コマンドを実行します。バルク入力ファイルに、テンプレート・ファイルを参照する <B>add</B> 命令が含まれている場合、<B>-template</B> 引き数が必要になります。
+<P>単一アカウントを作成するには、<B>uss add</B> コマンドを使用します。
+1 つまたは複数のアカウントを削除するには、
+<B>uss delete</B> コマンドを使用します。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B>-file
+</B><DD>バルク入力ファイルのパス名を指定します。部分的なパス名を指定すると、現行作業ディレクトリーとの相対位置で解釈されます。ファイル形式の詳細については、<A HREF="auarf054.htm#HDRUSSBULKINPUT">uss バルク入力ファイル</A> を参照してください。
+<P><DT><B>-template
+</B><DD>バルク入力ファイルに入る <B>uss add</B> コマンドのテンプレート・ファイルをパス名で指定します。部分的なパス名を指定すると、現行作業ディレクトリーとの相対位置で解釈されます。ファイル形式の詳細については、<A HREF="auarf055.htm#HDRUSSFILE">uss テンプレート・ファイル</A> を参照してください。
+<P><DT><B>-verbose
+</B><DD>標準出力ストリームに、コマンド実行の詳細なトレースを出力します。この引き数を省略すると、警告およびエラー・メッセージだけが表示されます。
+<P><DT><B>-cell
+</B><DD>コマンドを実行するセルを指定します。詳細については、<B>uss</B> の解説ページを参照してください。
+<P><DT><B>-admin
+</B><DD>ユーザー・アカウントのさまざまなコンポーネントを保守する AFS サーバー・プロセスとの認証接続で使用する AFS ユーザー名を指定します。詳細については、<B>uss</B> の解説ページを参照してください。
+<P><DT><B>-dryrun
+</B><DD>コマンド・インタープリターが、コマンドの実行中に、実際には実行していなくても実行する必要があるアクションを報告します。詳細については、<B>uss</B> の解説ページを参照してください。
+<P><DT><B>-skipauth
+</B><DD>Kerberos を使用するサイトにその認証フォームの置換を許可し、AFS 認証サーバーでの認証を不可にします。
+<P><DT><B>-overwrite
+</B><DD>バルク入力ファイルの <B>add</B> 命令で参照されるテンプレート・ファイルにある <B>D</B>、
+<B>E</B>、<B>F</B>、
+<B>L</B>、または <B>S</B> 命令によって、ファイル・システムにあるディレクトリー、ファイルおよびリンクを上書きします。このフラグを省略すると、コマンド・インタープリターは、バルク入力ファイルの <B>add</B> 命令ごとにプロンプトを表示し、このような要素を上書きするかどうかを確認します。バルク入力ファイルに <B>add</B> 命令が含まれていない場合は、このフラグを使用しないでください。
+<P><DT><B>-pwexpires
+</B><DD>バルク入力ファイルの
+<B>add</B> 命令で指定された各ユーザーに対し、パスワード変更後の有効日数を指定します。有効期限までの日数を指定する場合には、<B>1</B> から <B>254</B> までの整数を指定してください。パスワードに有効期限を設定しない場合には、
+<B>0</B> (デフォルト) を指定してください。
+<P>
+<P>パスワードが無効 (有効期限切れ) になると、そのユーザーは認証されません。ただし、<B>kpasswd</B> コマンドを発行してパスワードを変更すると、そのパスワードは変更後 30 日までは保持されます。
+(これは管理者のみが変更可能です。)
+<P><DT><B>-pipe
+</B><DD>発行側または <B>-admin</B> 引き数で指定されたユーザーのパスワードに対して、認証サーバーのプロンプトが表示されないように設定します
+(認証サーバーは常に、認証データベースにある項目の作成者を分離して認証します)。その代わり、コマンド・インタープリターは、他のプログラムからパイプ接続された時のように、標準入力ストリーム経由のパスワードを受け入れます。これによって、無人バッチ・ジョブの 1 部として <B>uss bulk</B> コマンドを実行できます。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>例</STRONG>
+<P>以下のコマンド例は、テンプレート・ファイル <B>student.template</B> を参照する <B>add</B> 命令を使用し、
+<B>new_students</B> というバルク入力ファイルの命令を実行します。両方のファイルが、現行作業ディレクトリーに常駐しています。
+<PRE>   % <B>uss bulk new_students student.template</B>
+   
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>発行側 (または、<B>-admin</B> 引き数で指定されたユーザー) は、バルク入力ファイルにある命令に対応するコマンドを実行するために特権が必要です。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf054.htm#HDRUSSBULKINPUT">uss バルク入力ファイル</A>
+<P><A HREF="auarf055.htm#HDRUSSFILE">uss テンプレート・ファイル</A>
+<P><A HREF="auarf242.htm#HDRUSS_INTRO">uss</A>
+<P><A HREF="auarf243.htm#HDRUSS_ADD">uss add</A>
+<P><A HREF="auarf246.htm#HDRUSS_DELETE">uss delete</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf244.htm">前ページ</A> &#124; <A HREF="auarf246.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

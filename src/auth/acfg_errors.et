@@ -1,0 +1,16 @@
+#/*
+# * (C) COPYRIGHT IBM CORPORATION 1989
+# * LICENSED MATERIALS - PROPERTY OF IBM
+# */
+
+# AFS Configuration Package error table
+
+error_table acfg
+  ec AFSCONF_FAILURE, "mysterious failure"
+  ec AFSCONF_NOTFOUND, "could not find entry"
+  ec AFSCONF_UNKNOWN, "do not know that information"
+  ec AFSCONF_NOCELL, "line appears before a cell has been defined"
+  ec AFSCONF_SYNTAX, "syntax error"
+  ec AFSCONF_NODB, "a database file is missing"
+  ec AFSCONF_FULL, "no more entries"
+end

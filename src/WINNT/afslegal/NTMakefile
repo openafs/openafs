@@ -1,0 +1,40 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+
+############################################################################
+
+# make compiler warnings fatal
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -WX
+
+# include the primary makefile
+!INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\..\config\NTMakefile.version
+
+############################################################################
+# Build afslegal.exe
+
+EXEFILE = $(DESTDIR)\root.server\usr\afs\bin\afslegal.exe
+
+EXEOBJS = \
+	afslegal_stub.res \
+	afslegal.obj
+
+EXELIBS = \
+	$(DESTDIR)\lib\afs\talocale.lib \
+	comctl32.lib
+
+$(EXEFILE) : $(EXEOBJS)
+	$(EXEGUILINK) $(EXELIBS)
+	$(EXEPREP) 
+
+############################################################################
+install : $(EXEFILE) lang
+
+lang ::
+	$(CD) lang
+	for /f %l in ('dir /B ??_??') do @$(NTLANG) %l $(MAKECMD) /nologo /f NTMakefile install
+	$(CD) ..
+
+############################################################################
+# Dependencies
+
+afslegal_stub.res : afslegal_stub.rc AFS_component_version_number.h

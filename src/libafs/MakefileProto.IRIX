@@ -1,0 +1,448 @@
+#/* Copyright (C) 1995, 1989 Transarc Corporation - All rights reserved */
+# 
+# MakefileProto for IRIX systems
+#
+
+DESTDIR=DEST/
+include $(DESTDIR)../obj/config/Makefile.${SYS_NAME}
+
+
+# OS specific object files:
+AFS_OS_OBJS = \
+	afs_base64.o \
+	osi_groups.o \
+	osi_idbg.o \
+	osi_file.o \
+	osi_inode.o \
+	osi_misc.o \
+	osi_sleep.o \
+	osi_vm.o \
+	osi_vnodeops.o
+
+AFS_OS_NFSOBJS = \
+	osi_vfsops_nfs.o
+
+AFS_OS_NONFSOBJS = \
+	osi_vfsops.o
+
+
+# System specific build commands and flags
+DBUG=-g
+
+<sgi_62>
+MPS=MP SP
+<sgi_63>
+MPS=SP
+<sgi_64>
+MPS=MP
+
+<sgi_61>
+# Turning off warnings regarding constant conditionals and not prototyped.
+KDEFS=-D_K64U64 -D_KERNEL -DSTATIC=static -D_PAGESZ=16384 -D_MIPS3_ADDRSPACE \
+	-DTFP -non_shared -elf -xansi -64 -mips4 -TENV:kernel \
+	-TENV:misalignment=1 -OPT:space \
+	-D${CPUBOARD} -D${MPSP}  -D${CPUARCH} -DAFS_SGIMP_ENV ${NODYNOPT} \
+	-jalr -woff 1209,1196,1496
+<sgi_62>
+# Turning off warnings regarding constant conditionals and not prototyped.
+KDEFS_64BIT= -64 -D_K64U64 -D_PAGESZ=16384 -TENV:kernel -OPT:space \
+	-TENV:misalignment=1
+R4000_LDFLAGS = -mips3 -64
+R4000_KDEFS = -mips3  -DR4000_DADDIU_WAR -DFAST_LOCORE_TFAULT -DUSE_LGPAGES \
+	-DR4000 -DEVEREST -DBADVA_WAR -DMP_R4000_BADVA_WAR \
+	-DECC_RECOVER -DCLOCK_CTIME_IS_ABSOLUTE -D_SHAREII -D_HIBERNATORII \
+	 -DPIOMEMOPS -DULI ${KDEFS_64BIT}
+R8000_KDEFS = -mips4 -DTFP -DR8000 ${KDEFS_64BIT}
+R8000_LDFLAGS = -mips4 -64
+KDEFS= -I/usr/include -I/usr/include/sys -D_KERNEL -DSTATIC=static \
+	-D_MIPS3_ADDRSPACE -non_shared -elf -xansi \
+	${CPU_KDEFS} \
+	-D${CPUBOARD} -D${MPSP} -DAFS_SGIMP_ENV ${NODYNOPT} \
+	-jalr -woff 1209,1196,1496
+R10000_KDEFS = -mips4 -DR10000 -DEXPRESS -DIP28 -DI2_64 -DFAST_LOCORE_FAULT \
+	-DSCACHE_SET_ASSOC=2 -D_NO_UNCACHED_MEM_WAR -DMIPS4_ISA \
+	-DR10000_SPECULATION_WAR  \
+	-OPT:quad_align_branch_targets=FALSE \
+	-OPT:quad_align_with_memops=FALSE -OPT:unroll_times=0 \
+	-DDEFAULTSEMAMETER=1 ${KDEFS_64BIT}
+R10000_LDFLAGS = -mips4 -64
+R4000_32_LDFLAGS = -mips2 -o32
+R4000_32_KDEFS = -mips2 -o32 -elf -DEXPRESS -D_K32U64 -xansi\
+	-D_PAGESZ=4096 -D_KERNEL \
+	-DSTATIC=static -DBADVA_WAR -DJUMP_WAR -DPROBE_WAR -D_MEM_PARITY_WAR \
+	-D_TLB_LOOP_LIMIT -DTLBMOD_BADVADDR_WAR -D_VCE_AVOIDANCE \
+	-D_R4600_CACHEOP_WAR -D_R4600_2_0_CACHEOP_WAR -D_IRIX5_MIPS3 \
+	-D_IRIX5_MIPS4 -D_R5000_BADVADDR_WAR -D_R5000_JUMP_WAR -DMIPS4_ISA \
+	-DR4000 -DR4000PC -DR4600 -DR4600SC -DTRITON -DTRITON_INDYSC \
+	-Wc,-pic0 -fullwarn -non_shared -nostdinc  -Wf,-XNp12000 \
+	-woff 1685,515,608,658,799,803,835,852,1048,1233,1499,1501 \
+	-DDEFAULTSEMAMETER=1
+<sgi_63>
+# Turning off warnings regarding constant conditionals and not prototyped.
+# NOTE: Only for R5000 at the moment.
+KDEFS= -I/usr/include -I/usr/include/sys -D_KERNEL -DSTATIC=static \
+	-non_shared -elf -xansi \
+	${CPU_KDEFS} \
+	-D${CPUBOARD} -D${MPSP} -DAFS_SGIMP_ENV ${NODYNOPT} \
+	-jalr -woff 1209,1196,1496
+R5000_LDFLAGS = -mips2 -o32
+R5000_KDEFS =  -DCRIME -DIP32 -DCRM -D_K32U64 -xansi -D_PAGESZ=4096 \
+	-D_KERNEL -DSTATIC=static -DPROBE_WAR -D_VCE_AVOIDANCE -DTILE_DATA \
+	-D_VCE_AVOIDANCE_DEBUG -D_R4600_CACHEOP_WAR -D_TLB_LOOP_LIMIT \
+	-D_R4600_2_0_CACHEOP_WAR -DP0_WAR -D_IRIX5_MIPS4 -D_IRIX5_MIPS3 \
+	-D_R5000_BADVADDR_WAR -DMIPS4_ISA -DSW_FAST_CACHE_SYNCH -DSWASH \
+	-D_R5000_CVT_WAR=1 -D_MTEXT_VFS -DR4000 -DR4000PC -DR4600 \
+	-DR4600SC -DTRITON -g -elf -mips2 -fullwarn -non_shared -nostdinc \
+	-mips2 -o32 -woff 1685,515,608,658,799,803,852,1048,1233,1499,1501 \
+	-Wf,-XNp12000 -DDEFAULTSEMAMETER=1
+R10000_LDFLAGS = -mips2 -o32
+R10000_KDEFS = -DCRIME -DIP32 -DCRM -D_K32U64 -xansi -D_K32U64 -D_PAGESZ=4096 \
+	-D_KERNEL -DSTATIC=static -D_VCE_AVOIDANCE -DTILE_DATA \
+	-DTLBMOD_BADVADDR_WAR -D_VCE_AVOIDANCE_DEBUG -D_TLB_LOOP_LIMIT \
+	-DP0_WAR -D_IRIX5_MIPS4 -D_IRIX5_MIPS3 -D_R5000_BADVADDR_WAR \
+	-DMIPS4_ISA -DSW_FAST_CACHE_SYNCH -DSWASH -DSCACHE_SET_ASSOC=2 \
+	-D_R5000_CVT_WAR=1 -D_MTEXT_VFS -DR10000_SPECULATION_WAR \
+	-DMH_R10000_SPECULATION_WAR -DSP -DIP32 -DR4000 -DR4000PC -DR4600 \
+	-DR4600SC -DTRITON -DR10000 -D_NO_R4000 -g -elf -mips2 -fullwarn \
+	-non_shared -nostdinc -mips2 -o32 \
+	-woff 1685,515,608,658,799,803,852,1048,1233,1499,1501 \
+	-Wf,-XNp12000 -DDEFAULTSEMAMETER=1 
+<sgi_64>
+KDEFS= -I/usr/include -I/usr/include/sys -D_KERNEL -DSTATIC=static \
+	-non_shared -elf -xansi \
+	${CPU_KDEFS} \
+	-D${CPUBOARD} -D${MPSP} -DAFS_SGIMP_ENV ${NODYNOPT} \
+	-jalr -woff 1209,1196,1496
+R10000_LDFLAGS = -mips4 -64
+R10000_KDEFS = -DKONA -DIP27 -DIP27 -DDISCONTIG_PHYSMEM -DNUMA_BASE -DNUMA_PM \
+	 -DNUMA_TBORROW -DNUMA_MIGR_CONTROL -DNUMA_REPLICATION \
+	-DNUMA_REPL_CONTROL -DNUMA_SCHED -DLARGE_CPU_COUNT -DHUB2_NACK_WAR \
+	-DBRIDGE_ERROR_INTR_WAR -DMAPPED_KERNEL -DBHV_SYNCH -DHUB_ERR_STS_WAR \
+	 -DHUB_MIGR_WAR -DNCR16C550 -DTL16PIR552 -DSN0_INTR_BROKEN -DFRU \
+	-DFORCE_ERRORS -DSN0_USE_BTE -DBTE_BZERO_WAR -DREV1_BRIDGE_SUPPORTED \
+	-DHUB_II_IFDR_WAR -xansi -DDISCONTIG_PHYSMEM -DNUMA_BASE -DNUMA_PM \
+	-DNUMA_TBORROW -DNUMA_MIGR_CONTROL -DNUMA_REPLICATION \
+	-DNUMA_REPL_CONTROL -DNUMA_SCHED -DLARGE_CPU_COUNT -DHUB2_NACK_WAR \
+	-DBRIDGE_ERROR_INTR_WAR -DMAPPED_KERNEL -DBHV_SYNCH \
+	-DHUB_ERR_STS_WAR -DHUB_MIGR_WAR -DNCR16C550 -DTL16PIR552 \
+	-DSN0_INTR_BROKEN -DFRU -DFORCE_ERRORS -DSN0_USE_BTE -DBTE_BZERO_WAR \
+	-DREV1_BRIDGE_SUPPORTED -DHUB_II_IFDR_WAR -D_PAGESZ=16384 -D_KERNEL \
+	-DSTATIC=static -D_MIPS3_ADDRSPACE -DSN0 -DMIPS4_ISA \
+	-DCLOCK_CTIME_IS_ABSOLUTE -DFAST_LOCORE_TFAULT -DULI -DCKPT \
+	-DIDLESTACK_FASTINT -DR10K_LLSC_WAR -DPTE_64BIT -DRMAPS \
+	-DPAGE_MIGRATION -DSW_FAST_CACHE_SYNCH -DINTR_KTHREADS \
+	-DMRSP_AS_MR -D_MP_NETLOCKS -DMP_STREAMS=1 -DIP27 -DR10000 \
+	-g -TENV:kernel -TENV:misalignment=1 -OPT:space \
+	-OPT:quad_align_branch_targets=FALSE \
+	-OPT:quad_align_with_memops=FALSE \
+	-OPT:unroll_times=0 -OPT:Olimit=5000 -TARG:processor=r10000 \
+	-FE:pointer_readonly -use_readonly_const -fullwarn \
+	-non_shared -mips4 -64 \
+	-woff 1685,515,608,658,799,803,852,1048,1233,1499,1501 \
+	-DDEFAULTSEMAMETER=1
+<sgi_65>
+# For Irix 6.5 we are building based on cpu board number rather than CPU number
+# While -G 8 is recommended for space, we know that the table overflows when
+# both AFS and DFS are compiled into the kernel. For Irix 6.5, define MP
+# so we pick up locks.
+KDEFS= -I/usr/include -I/usr/include/sys -DSTATIC=static -DAFS_SGIMP_ENV \
+	-DMP -D_KERNEL -DMP_STREAMS -D_MP_NETLOCKS -DMRSP_AS_MR \
+	-fullwarn -non_shared -G 0 \
+	-TENV:kernel -OPT:space -OPT:Olimit=0 -CG:unique_exit=on \
+	-TENV:X=1 -OPT:IEEE_arithmetic=1 -OPT:roundoff=0 \
+	-OPT:wrap_around_unsafe_opt=off \
+	${CPU_KDEFS} -woff 1209,1196,1496
+# 32 bit specific flags:
+KDEFS_32 = -n32 -D_PAGESZ=4096 -mips3
+# 64 bit specific flags:
+KDEFS_64 = -64 -D_PAGESZ=16384 -D_MIPS3_ADDRSPACE -mips4
+
+# CPU board specific flags:
+IP19_KDEFS = -DIP19 -DEVEREST -DMP -DR4000 \
+	-mips3  -D_PAGESZ=16384 -D_MIPS3_ADDRSPACE -64
+IP20_KDEFS = -DIP20 -DR4000 -DJUMP_WAR -DBADVA_WAR -DTRITON -DUSE_PCI_PIO \
+		$(KDEFS_32)
+IP21_KDEFS = -DIP21 -DEVEREST -DMP -DTFP -TARG:processor=r8000 $(KDEFS_64)
+IP25_KDEFS = -DIP25 -DEVEREST -DMP -DR10000 -TARG:processor=r10000 $(KDEFS_64)
+IP26_KDEFS = -DIP26 -DTFP -TARG:sync=off -TARG:processor=r8000 $(KDEFS_64)
+IP27_KDEFS =  -DIP27 -DR10000 -DMP -DSN -DSN0 -DMAPPED_KERNEL \
+	-DLARGE_CPU_COUNT \
+	-DPTE_64BIT -DULI -DCKPT -DMIPS4_ISA -DR10K_LLSC_WAR -DNUMA_BASE \
+	-DNUMA_PM  -DNUMA_TBORROW -DNUMA_MIGR_CONTROL -DNUMA_REPLICATION \
+	-DNUMA_REPL_CONTROL -DNUMA_SCHED -DCELL_PREPARE -DBHV_PREPARE \
+	-TARG:processor=r10000 $(KDEFS_64)
+IP28_KDEFS = -DIP28 -DR10000 -DSCACHE_SET_ASSOC=2 -D_NO_UNCACHED_MEM_WAR \
+	-DR10000_SPECULATION_WAR -TARG:processor=r10000 \
+	-TARG:t5_no_spec_stores $(KDEFS_64)
+IP30_KDEFS = -DIP30 -DR10000 -DMP -DCELL_PREPARE -DBHV_PREPARE \
+	-TARG:processor=r10000 $(KDEFS_64)
+# Loader flags
+LDFLAGS_64 = -64
+LDFLAGS_32 = -n32
+
+
+<all>
+DEFINES= -DAFSDEBUG -DKERNEL -DAFS -DVICE -DNFS -DUFS -DINET -DQUOTA -DGETMOUNT
+OPTF=${OPT} 
+OPTF2=${OPT2} 
+CFLAGS=-I. -I.. ${FSINCLUDES} $(DEFINES) -G 0 $(KDEFS) $(KOPTS) ${DBUG}
+
+# This tells Makefile.common to use it's single directory build target.
+#COMPDIRS = single_compdir
+# This is the irix multiple directory target.
+COMPDIRS = irix_compdirs
+
+include Makefile.common
+
+# Make all the directories, even if only building one.
+<sgi_62>
+PROCESSORS=R4000 R4000_32 R8000 R10000
+<sgi_63>
+PROCESSORS = R5000 R1000
+<sgi_64>
+PROCESSORS = R10000
+<sgi_65>
+PROCESSORS = IP19 IP20 IP21 IP25 IP26 IP27 IP28 IP30
+<all>
+
+KOBJ = STATIC MODLOAD
+
+
+setup:
+	-rm -f  h net netinet rpc ufs nfs  machine sys sgiefs
+	-ln -s /usr/include/sys h
+	-ln -s /usr/include/net /usr/include/netinet .
+	-ln -s /usr/include/rpc /usr/include/sys .
+	-ln -s ../../obj/sgiefs sgiefs
+	-mkdir ${DESTDIR}root.client/bin
+	-mkdir ${DESTDIR}root.client/usr/vice/etc/sgiload
+<all -sgi_65>
+	BUILDPROCS="${PROCESSORS}" ; \
+	BUILDMPS="${MPS}" ; \
+	if [ "${CPUARCH}" != "" ] ; then \
+		BUILDPROCS=${CPUARCH}; \
+		BUILDMPS=${MPSP}; \
+	fi ; \
+	for p in $${BUILDPROCS} ; do \
+	  for n in $${BUILDMPS} ; do \
+	    for t in ${KOBJ} ; do \
+		dir=$$t.$$n.$$p ; \
+		echo Making directory: $$dir; \
+		mkdir -p $$dir; \
+		rm -f $$dir/Makefile.common $$dir/Makefile; \
+		ln -s ../Makefile.common $$dir/Makefile.common; \
+		ln -s ../Makefile $$dir/Makefile; \
+	    done; \
+	  done; \
+	done
+<sgi_65>
+	BUILDPROCS="${PROCESSORS}" ; \
+	if [ "${IPNO}" != "" ] ; then \
+		BUILDPROCS="${IPNO}"; \
+	fi ; \
+	for p in $${BUILDPROCS} ; do \
+	    for t in ${KOBJ} ; do \
+		dir=$$t.$$p ; \
+		echo Making directory: $$dir; \
+		mkdir -p $$dir; \
+		rm -f $$dir/Makefile.common $$dir/Makefile; \
+		ln -s ../Makefile.common $$dir/Makefile.common; \
+		ln -s ../Makefile $$dir/Makefile; \
+	    done; \
+	done
+<all>
+	echo Setup compelete.
+
+
+# Compile static and modload versions of the clients.
+<all -sgi_65>
+${COMPDIRS}:
+	BUILDPROCS="${PROCESSORS}" ; \
+	if [ "${CPUARCH}" != "" ] ; then \
+		BUILDPROCS=${CPUARCH}; \
+		BUILDMPS=${MPSP}; \
+	fi ; \
+	for p in $${BUILDPROCS} ; do \
+	  for n in $${BUILDMPS} ; do \
+	    for t in ${KOBJ} ; do \
+	      dir=$$t.$$n.$$p ; \
+	        echo Building directory: $$dir; \
+		case $$p in \
+			R4000) \
+			 CPUBOARD=IP19; \
+			 CPU_KDEFS="${R4000_KDEFS}"; \
+			 LDFLAGS="${R4000_LDFLAGS}";; \
+			R4000_32) \
+			 CPUBOARD=IP22; \
+			 CPU_KDEFS="${R4000_32_KDEFS}"; \
+			 LDFLAGS="${R4000_32_LDFLAGS}";; \
+			R5000) \
+			 CPUBOARD=IP32; \
+			 CPU_KDEFS="${R5000_KDEFS}"; \
+			 LDFLAGS="${R5000_LDFLAGS}";; \
+			R8000) \
+			 CPUBOARD=IP26; \
+			 CPU_KDEFS="${R8000_KDEFS}"; \
+			 LDFLAGS="${R8000_LDFLAGS}";; \
+			R10000) \
+<sgi_62>
+			 CPUBOARD=IP28; \
+<sgi_63>
+			 CPUBOARD=IP32; \
+<sgi_64>
+			 CPUBOARD=IP27; \
+<sgi_62 sgi_63 sgi_64>
+			 CPU_KDEFS="${R10000_KDEFS}"; \
+			 LDFLAGS="${R10000_LDFLAGS}";; \
+			*) echo "Unknown CPUARCH <$$p>" ; exit 1 ;; \
+			esac ;\
+			export CPUBOARD ;\
+			export CPU_KDEFS ;\
+			export LDFLAGS; \
+		cd $$dir ; \
+		$(MAKE) CPUARCH=$$p MPSP=$$n DESTDIR=../${DESTDIR} $$t.libafs || exit $$?;\
+		cd ../ ; \
+	    done; \
+	  done; \
+	done
+<sgi_65>
+${COMPDIRS}:
+	BUILDPROCS="${PROCESSORS}" ; \
+	if [ "${IPNO}" != "" ] ; then \
+		BUILDPROCS="${IPNO}"; \
+	fi ; \
+	for p in $${BUILDPROCS} ; do \
+	    for t in ${KOBJ} ; do \
+	      dir=$$t.$$p ; \
+	        echo Building directory: $$dir; \
+		LDFLAGS="${LDFLAGS_64}"; \
+		case $$p in \
+		IP19)   CPU_KDEFS="${IP19_KDEFS}";; \
+		IP20)   CPU_KDEFS="${IP20_KDEFS}"; \
+			LDFLAGS="${LDFLAGS_32}";; \
+		IP21)   CPU_KDEFS="${IP21_KDEFS}";; \
+		IP25)   CPU_KDEFS="${IP25_KDEFS}";; \
+		IP26)   CPU_KDEFS="${IP26_KDEFS}";; \
+		IP27) 	CPU_KDEFS="${IP27_KDEFS}";; \
+		IP28)   CPU_KDEFS="${IP28_KDEFS}";; \
+		IP30)   CPU_KDEFS="${IP30_KDEFS}";; \
+		*) echo Unknown IP number $$p ; exit 1 ;; \
+		esac ;\
+		case $$t in \
+		MODLOAD) CPU_KDEFS="$${CPU_KDEFS} -TARG:force_jalr";; \
+		esac ;\
+		case $$t in \
+		STATIC) echo X $${CPU_KDEFS} | sed 's/^X//' > $$dir/CPU_KDEFS;; \
+		esac ;\
+		export CPU_KDEFS ;\
+		export LDFLAGS ;\
+		cd $$dir ; \
+		$(MAKE) IPNO=$$p DESTDIR=../${DESTDIR} $$t.libafs || exit $$?; \
+		cd ../ ; \
+	  done; \
+	done
+<all>
+
+
+LIBAFSA = libafs.a
+LIBAFSNONFSA = libafs.nonfs.a
+COPYFILES = copyfiles
+LINKFILES = linkfiles
+
+STATICCLIENTDIR = ${DESTDIR}root.client/bin
+MODLOADCLIENTDIR = ${DESTDIR}root.client/usr/vice/etc/sgiload
+
+# Make the NFS and no-NFS clients for this directory.
+# STATIC.libafs: ${LIBAFSA} ${LIBAFSNONFSA} ${COPYFILES} ${LINKFILES}
+STATIC.libafs: ${LIBAFSNONFSA} ${COPYFILES} ${LINKFILES}
+<all -sgi_65>
+	${CP} ${LIBAFSA} \
+		${STATICCLIENTDIR}/libafs.${MPSP}.${CPUARCH}.a
+	${CP} ${LIBAFSNONFSA} \
+		${STATICCLIENTDIR}/libafs.${MPSP}.${CPUARCH}.nonfs.a
+<sgi_65>
+	${CP} ${LIBAFSA} \
+		${STATICCLIENTDIR}/libafs.${IPNO}.a
+	${CP} ${LIBAFSNONFSA} \
+		${STATICCLIENTDIR}/libafs.${IPNO}.nonfs.a
+<all>
+
+${LIBAFSA}: $(AFSAOBJS) $(AFSNFSOBJS)
+	$(AR) cru  $@ $?
+
+${LIBAFSNONFSA}: $(AFSAOBJS) $(AFSNONFSOBJS)
+	$(AR) cru  $@ $?
+
+LIBAFSO = libafs.o
+LIBAFSNONFSO = libaf.nonfs.o
+
+# MODLOAD.libafs: ${LIBAFSO} ${LIBAFSNONFSO} ${COPYFILES} ${LINKFILES}
+MODLOAD.libafs: ${LIBAFSNONFSO} ${COPYFILES} ${LINKFILES}
+<all -sgi_65>
+	${CP} ${LIBAFSO} \
+		${MODLOADCLIENTDIR}/libafs.${MPSP}.${CPUARCH}.o
+	${CP} ${LIBAFSNONFSO} \
+		${MODLOADCLIENTDIR}/libafs.${MPSP}.${CPUARCH}.nonfs.o
+<sgi_65>
+	${CP} ${LIBAFSO} \
+		${MODLOADCLIENTDIR}/libafs.${IPNO}.o
+	${CP} ${LIBAFSNONFSO} \
+		${MODLOADCLIENTDIR}/libafs.${IPNO}.nonfs.o
+<all>
+
+${LIBAFSO}: $(AFSAOBJS) $(AFSNFSOBJS)
+	$(LD) ${LDFLAGS} -elf -r -d -G 0 -o ${LIBAFSO} $(AFSAOBJS) $(AFSNFSOBJS)
+	
+
+${LIBAFSNONFSO}: $(AFSAOBJS) $(AFSNONFSOBJS)
+	$(LD) ${LDFLAGS} -elf -r -d -G 0 -o ${LIBAFSNONFSO} \
+		$(AFSAOBJS) $(AFSNONFSOBJS)
+
+${COPYFILES}:
+	${CP} ../sgi_system ${STATICCLIENTDIR}/afs.sm
+	chmod 644 ${STATICCLIENTDIR}/afs.sm
+	${CP} ../sgi_master ${STATICCLIENTDIR}/afs
+	chmod 644 ${STATICCLIENTDIR}/afs
+
+# Create symlinks to clients we don't need to build.
+# If this changes, also change the kdump symlinks.
+${LINKFILES}:
+<sgi_65>
+	ln -fs  libafs.IP20.a       ${DESTDIR}root.client/bin/libafs.IP22.a
+	ln -fs  libafs.IP20.a       ${DESTDIR}root.client/bin/libafs.IP32.a
+	ln -fs  libafs.IP20.nonfs.a ${DESTDIR}root.client/bin/libafs.IP22.nonfs.a
+	ln -fs  libafs.IP20.nonfs.a ${DESTDIR}root.client/bin/libafs.IP32.nonfs.a
+	ln -fs  libafs.IP20.o       ${DESTDIR}root.client/usr/vice/etc/sgiload/libafs.IP22.o
+	ln -fs  libafs.IP20.o       ${DESTDIR}root.client/usr/vice/etc/sgiload/libafs.IP32.o
+	ln -fs  libafs.IP20.nonfs.o ${DESTDIR}root.client/usr/vice/etc/sgiload/libafs.IP22.nonfs.o
+	ln -fs  libafs.IP20.nonfs.o ${DESTDIR}root.client/usr/vice/etc/sgiload/libafs.IP32.nonfs.o
+
+	
+
+
+# Object build rules:
+# Common objects
+afs_base64.o: $(AFS)/afs_base64.c
+	$(CRULE1);
+osi_groups.o: $(AFS)/osi_groups.c
+	$(CRULE1);
+osi_idbg.o: $(AFS)/osi_idbg.c
+	$(CRULE1);
+osi_inode.o: $(AFS)/osi_inode.c
+	$(CRULE1);
+osi_file.o: $(AFS)/osi_file.c
+	$(CRULE1);
+osi_misc.o: $(AFS)/osi_misc.c
+	$(CRULE1);
+osi_sleep.o: $(AFS)/osi_sleep.c
+	$(CRULE1);
+osi_vfsops_nfs.o: $(AFS)/osi_vfsops.c
+	$(CRULE1) -o osi_vfsops_nfs.o;
+osi_vfsops.o: $(AFS)/osi_vfsops.c
+	$(CRULE1) -DAFS_NONFSTRANS;
+osi_vm.o: $(AFS)/osi_vm.c
+	$(CRULE1);
+osi_vnodeops.o: $(AFS)/osi_vnodeops.c
+	$(CRULE1);
+
+

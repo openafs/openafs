@@ -1,0 +1,31 @@
+
+#/* Copyright (C) 1989 Transarc Corporation - All rights reserved */
+#/*
+# * (C) COPYRIGHT IBM CORPORATION 1989
+# * LICENSED MATERIALS - PROPERTY OF IBM
+# */
+
+# Protection Server error table
+
+# NOTE: PRPERM value is hardcoded in audit/audit.h, so if you make
+# changes here, make sure that audit/audit.h is kept up to date.
+
+error_table pt
+	ec PREXIST, "Entry for name already exists"
+	ec PRIDEXIST, "Entry for id already exists"
+	ec PRNOIDS, "Couldn't allocate an id for this entry"
+	ec PRDBFAIL, "Couldn't read/write the database"
+	ec PRNOENT, "User or group doesn't exist"
+	ec PRPERM, "Permission denied"
+	ec PRNOTGROUP, "No group specified"
+	ec PRNOTUSER, "No user specified"
+	ec PRBADNAM, "Badly formed name (group prefix doesn't match owner?)"
+	ec PRBADARG, "argument illegal or out of range"
+	ec PRNOMORE, "may not create more groups"
+	ec PRDBBAD, "database needs rebuilding"
+	ec PRGROUPEMPTY, "can't make owner an empty group"
+	ec PRINCONSISTENT, "database is inconsistent"
+	ec PRDBADDR, "bad database address"
+	ec PRTOOMANY, "too many elements in group"
+	ec PRNOMEM, "malloc failed to alloc enough memory"
+end

@@ -1,0 +1,90 @@
+#!/bin/sh
+#
+# rc.afs: rc script for AFS on AIX platforms
+#
+# Install this script as /etc/rc.afs
+# then make an entry in /etc/inittab after the NFS entry:
+# rcnfs:2:wait:/etc/rc.nfs > /dev/console 2>&1 # Start NFS Daemons
+# rcafs:2:wait:/etc/rc.afs > /dev/console 2>&1 # Start AFS Daemons
+# 
+
+# Choose one depending on how much usage this client gets
+SMALL="-stat 300 -dcache 100 -daemons 2 -volumes 50"
+MEDIUM="-stat 2000 -dcache 800 -daemons 3 -volumes 70"
+LARGE="-stat 2800 -dcache 2400 -daemons 5 -volumes 128"
+OPTIONS=$LARGE
+
+# Choose one depending on how you want NFS requests handled by AFS
+# Use "none" if this machine won't be an AFS/NFS Translator.
+# To make the machine an AFS/NFS Translator, use iauth for:
+#   AIX 4.1.x  where x >= 5
+#   AIX 4.2.x  where x >= 1
+#   AIX 4.3.x  for any x
+# otherwise use "nfs"
+NFS_NONE="none"
+NFS_NFS="nfs"
+NFS_IAUTH="iauth"
+NFS=$NFS_NONE
+
+if [ "$NFS" = "nfs" ]; then
+  ExportExt=""
+  AFSExt=".trans"
+  RMTSYS="-rmtsys"
+elif [ "$NFS" = "iauth" ]; then
+  ExportExt=".nonfs"
+  AFSExt=".iauth"
+  RMTSYS="-rmtsys"
+else
+  ExportExt=".nonfs"
+  AFSExt=""
+  RMTSYS=""
+fi
+
+# Load AFS into the kernel
+cd /usr/vice/etc/dkload
+/usr/vice/etc/dkload/cfgexport -a /usr/vice/etc/dkload/export.ext${ExportExt}
+/usr/vice/etc/dkload/cfgafs -a /usr/vice/etc/dkload/afs.ext${AFSExt}
+if [ $? -ne 0 ]; then
+  /bin/echo "Unable to load AFS extensions into kernel. Not starting client."
+  exit 1
+fi
+
+
+# Start bosserver
+if [ -x /usr/afs/bin/bosserver ]; then
+  echo 'Starting bosserver' > /dev/console
+  /usr/afs/bin/bosserver &
+fi
+
+
+#
+# Check that all of the client configuration files exist
+#
+for file in afsd cacheinfo ThisCell CellServDB; do
+  if [ ! -f /usr/vice/etc/${file} ]; then
+    /bin/echo "/usr/vice/etc/${file} does not exist. Not starting AFS client."
+    exit 2
+  fi
+done
+
+
+#
+# Check that the root directory for AFS (/afs) 
+# and the cache directory (/usr/vice/cache) both exist
+#
+for dir in `awk -F: '{print $1, $2}' /usr/vice/etc/cacheinfo`; do
+  if [ ! -d ${dir} ]; then
+    echo "${dir} does not exist. Not starting AFS client."
+    exit 3
+  fi
+done
+
+
+# Start afsd
+/usr/vice/etc/afsd $OPTIONS $RMTSYS
+
+
+# Start AFS inetd services
+if [ -x /etc/inetd.afs -a -f /etc/inetd.conf.afs ]; then
+    /etc/inetd.afs /etc/inetd.conf.afs
+fi

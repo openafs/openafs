@@ -1,0 +1,56 @@
+/*
+ * (C) COPYRIGHT IBM CORPORATION 1987, 1988
+ * LICENSED MATERIALS - PROPERTY OF IBM
+ */
+
+#include <sys/types.h>
+#include <signal.h>
+
+static int ignore=0;
+static int sleepTime = 10;
+
+sigproc() {
+    printf("testproc received signal\n");
+    if (ignore) return 0;
+    exit(0);
+}
+
+main(argc, argv)
+int argc;
+char **argv; {
+    register int i;
+
+#ifdef	AFS_AIX31_ENV
+    /*
+     * The following signal action for AIX is necessary so that in case of a 
+     * crash (i.e. core is generated) we can include the user's data section 
+     * in the core dump. Unfortunately, by default, only a partial core is
+     * generated which, in many cases, isn't too useful.
+     */
+    struct sigaction nsa;
+    
+    sigemptyset(&nsa.sa_mask);
+    nsa.sa_handler = SIG_DFL;
+    nsa.sa_flags = SA_FULLDUMP;
+    sigaction(SIGSEGV, &nsa, NULL);
+#endif
+    signal(SIGTERM, sigproc);
+    signal(SIGQUIT, sigproc);
+    for(i=1;i<argc;i++) {
+	if (strcmp(argv[i], "-ignore")==0) {
+	    ignore = 1;
+	}
+	else if (strcmp(argv[i], "-sleep")==0) {
+	    sleepTime = atoi(argv[i+1]);
+	    i++;
+	}
+	else {
+	    printf("unrecognized option '%s', try one of\n", argv[i]);
+	    printf("-ignore	    ignore SIGTERM signal\n");
+	    printf("-sleep <n>	    sleep N seconds before exiting\n");
+	    exit(1);
+	}
+    }
+    sleep(sleepTime);
+    exit(0);
+}

@@ -1,0 +1,230 @@
+#!/usr/bin/sh
+
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+#
+#
+# Temporary NT obj directory creation utility; will be obsoleted when
+# washtool is ported to NT.
+#
+# Execute on a Unix box in the directory above src (e.g., afs/3.5).
+
+dirs="\
+	config \
+	WINNT \
+	WINNT/afsreg \
+	WINNT/afsreg/test \
+	WINNT/eventlog \
+	WINNT/eventlog/test \
+	WINNT/pthread \
+	WINNT/pthread/test \
+	WINNT/license \
+	WINNT/license/lang \
+	WINNT/bosctlsvc \
+	WINNT/talocale \
+	WINNT/afsadmsvr \
+	WINNT/afsapplib \
+	WINNT/afsapplib/resource \
+	WINNT/afsapplib/test \
+	WINNT/afsclass \
+	WINNT/afssvrmgr \
+	WINNT/afssvrmgr/resource \
+	WINNT/afsusrmgr \
+	WINNT/afsusrmgr/resource \
+	WINNT/afssvrcfg \
+	WINNT/afssvrcpa \
+	WINNT/afs_setup_utils \
+	WINNT/afs_setup_utils/lang \
+	WINNT/afs_setup_utils/lang/de_DE \
+	WINNT/afs_setup_utils/lang/en_US \
+	WINNT/afs_setup_utils/lang/es_ES \
+	WINNT/afs_setup_utils/lang/ja_JP \
+	WINNT/afs_setup_utils/lang/ko_KR \
+	WINNT/afs_setup_utils/lang/pt_BR \
+	WINNT/afs_setup_utils/lang/zh_CN \
+	WINNT/afs_setup_utils/lang/zh_TW \
+	WINNT/install \
+	WINNT/install/InstallShield5 \
+	WINNT/install/InstallShield5/lang \
+	WINNT/install/InstallShield5/lang/de_DE \
+	WINNT/install/InstallShield5/lang/en_US \
+	WINNT/install/InstallShield5/lang/es_ES \
+	WINNT/install/InstallShield5/lang/ja_JP \
+	WINNT/install/InstallShield5/lang/ko_KR \
+	WINNT/install/InstallShield5/lang/pt_BR \
+	WINNT/install/InstallShield5/lang/zh_CN \
+	WINNT/install/InstallShield5/lang/zh_TW \
+        WINNT/client_osi \
+        WINNT/client_cpa \
+        WINNT/client_config \
+	WINNT/client_exp \
+        WINNT/client_creds \
+        WINNT/client_ddk \
+        WINNT/afsd \
+	WINNT/afsapplib/lang \
+	WINNT/afsapplib/lang/de_DE \
+	WINNT/afsapplib/lang/en_US \
+	WINNT/afsapplib/lang/es_ES \
+	WINNT/afsapplib/lang/ja_JP \
+	WINNT/afsapplib/lang/ko_KR \
+	WINNT/afsapplib/lang/pt_BR \
+	WINNT/afsapplib/lang/zh_CN \
+	WINNT/afsapplib/lang/zh_TW \
+	WINNT/afssvrmgr/lang \
+	WINNT/afssvrmgr/lang/de_DE \
+	WINNT/afssvrmgr/lang/en_US \
+	WINNT/afssvrmgr/lang/es_ES \
+	WINNT/afssvrmgr/lang/ja_JP \
+	WINNT/afssvrmgr/lang/ko_KR \
+	WINNT/afssvrmgr/lang/pt_BR \
+	WINNT/afssvrmgr/lang/zh_CN \
+	WINNT/afssvrmgr/lang/zh_TW \
+	WINNT/afsusrmgr/lang \
+	WINNT/afsusrmgr/lang/de_DE \
+	WINNT/afsusrmgr/lang/en_US \
+	WINNT/afsusrmgr/lang/es_ES \
+	WINNT/afsusrmgr/lang/ja_JP \
+	WINNT/afsusrmgr/lang/ko_KR \
+	WINNT/afsusrmgr/lang/pt_BR \
+	WINNT/afsusrmgr/lang/zh_CN \
+	WINNT/afsusrmgr/lang/zh_TW \
+	WINNT/afssvrcfg/lang \
+	WINNT/afssvrcfg/lang/de_DE \
+	WINNT/afssvrcfg/lang/en_US \
+	WINNT/afssvrcfg/lang/es_ES \
+	WINNT/afssvrcfg/lang/ja_JP \
+	WINNT/afssvrcfg/lang/ko_KR \
+	WINNT/afssvrcfg/lang/pt_BR \
+	WINNT/afssvrcfg/lang/zh_CN \
+	WINNT/afssvrcfg/lang/zh_TW \
+	WINNT/afssvrcpa/lang \
+	WINNT/afssvrcpa/lang/de_DE \
+	WINNT/afssvrcpa/lang/en_US \
+	WINNT/afssvrcpa/lang/es_ES \
+	WINNT/afssvrcpa/lang/ja_JP \
+	WINNT/afssvrcpa/lang/ko_KR \
+	WINNT/afssvrcpa/lang/pt_BR \
+	WINNT/afssvrcpa/lang/zh_CN \
+	WINNT/afssvrcpa/lang/zh_TW \
+	WINNT/client_cpa/lang \
+	WINNT/client_cpa/lang/de_DE \
+	WINNT/client_cpa/lang/en_US \
+	WINNT/client_cpa/lang/es_ES \
+	WINNT/client_cpa/lang/ja_JP \
+	WINNT/client_cpa/lang/ko_KR \
+	WINNT/client_cpa/lang/pt_BR \
+	WINNT/client_cpa/lang/zh_CN \
+	WINNT/client_cpa/lang/zh_TW \
+	WINNT/client_config/lang \
+	WINNT/client_config/lang/de_DE \
+	WINNT/client_config/lang/en_US \
+	WINNT/client_config/lang/es_ES \
+	WINNT/client_config/lang/ja_JP \
+	WINNT/client_config/lang/ko_KR \
+	WINNT/client_config/lang/pt_BR \
+	WINNT/client_config/lang/zh_CN \
+	WINNT/client_config/lang/zh_TW \
+	WINNT/client_exp/lang \
+	WINNT/client_exp/lang/de_DE \
+	WINNT/client_exp/lang/en_US \
+	WINNT/client_exp/lang/es_ES \
+	WINNT/client_exp/lang/ja_JP \
+	WINNT/client_exp/lang/ko_KR \
+	WINNT/client_exp/lang/pt_BR \
+	WINNT/client_exp/lang/zh_CN \
+	WINNT/client_exp/lang/zh_TW \
+	WINNT/client_creds/lang \
+	WINNT/client_creds/lang/de_DE \
+	WINNT/client_creds/lang/en_US \
+	WINNT/client_creds/lang/es_ES \
+	WINNT/client_creds/lang/ja_JP \
+	WINNT/client_creds/lang/ko_KR \
+	WINNT/client_creds/lang/pt_BR \
+	WINNT/client_creds/lang/zh_CN \
+	WINNT/client_creds/lang/zh_TW \
+	WINNT/eventlog/lang \
+	WINNT/eventlog/lang/de_DE \
+	WINNT/eventlog/lang/en_US \
+	WINNT/eventlog/lang/es_ES \
+	WINNT/eventlog/lang/ja_JP \
+	WINNT/eventlog/lang/ko_KR \
+	WINNT/eventlog/lang/pt_BR \
+	WINNT/eventlog/lang/zh_CN \
+	WINNT/eventlog/lang/zh_TW \
+	procmgmt \
+	procmgmt/test \
+	util \
+	util/test \
+	lwp \
+	lwp/test \
+	rx \
+	rx/test \
+	comerr \
+	comerr/test \
+	des \
+	des_stub \
+	cmd \
+	rxgen \
+	rxstat \
+	rxkad \
+	rxkad/domestic \
+	rxkad/test \
+	fsint \
+	audit \
+	sys \
+	auth \
+	auth/test \
+	ubik \
+	ptserver \
+	libacl \
+	libacl/test \
+	kauth \
+	kauth/test \
+        vlserver \
+	usd \
+        bubasics \
+        budb \
+	butm \
+        bucoord \
+        butc \
+        tbutc \
+	dir \
+	vol \
+	volser \
+	viced \
+	tviced \
+	bozo \
+        update \
+	bu_utils \
+	finale \
+	libafsrpc \
+        libafsauthent \
+	libadmin \
+	libadmin/adminutil \
+	libadmin/bos \
+	libadmin/client \
+	libadmin/kas \
+	libadmin/pts \
+	libadmin/vos \
+	libadmin/cfg \
+	libadmin/test \
+	libadmin/cfg/test"
+
+if [ ! -d src ]; then
+	echo $0: Execute from directory above src, e.g., afs/3.5.
+	exit 1
+fi
+
+if [ ! -d i386_nt40 ]; then
+	echo $0: Directory i386_nt40 does not exist.
+	exit 1
+fi
+
+if [ ! -x  src/WINNT/docs/build/ntobjdirs ]; then
+	echo $0: script src/WINNT/docs/build/ntobjdirs not found.
+	exit 1
+fi
+
+for d in $dirs; do
+	echo src/WINNT/docs/build/ntobjdirs -d $d
+	src/WINNT/docs/build/ntobjdirs -d $d
+done

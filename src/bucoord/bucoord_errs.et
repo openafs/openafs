@@ -1,0 +1,31 @@
+# Backup Coordinator Module error table
+
+error_table bucd
+	ec BC_BADARG, "Unacceptable user supplied argument"
+	ec BC_VERSIONMISMATCH, "Object has been updated"
+	ec BC_NOTUNIQUE, "Search matched more than one item"
+
+# resource problems
+	ec BC_NOMEM, "Can't allocate working memory"
+
+# configuration problems
+	ec BC_NOCELLCONFIG, "Can't get cell configuration information"
+	ec BC_EXISTS, "Specified item already exists"
+	ec BC_CONFIGERR, "Error in configuration parameters"
+
+# volume sets
+	ec BC_NOVOLSET, "No such volume set"
+	ec BC_NOVOLENTRY, "No such volume entry"
+	ec BC_VOLSETEXISTS, "Volume set already exists"
+
+# general
+	ec BC_NOHOST, "No such server"	
+	ec BC_NOPARTITION, "No such partition"
+	ec BC_VERSIONFAIL, "Version number mismatch"
+
+# programming/internal errors
+	ec BC_NOTLOCKED, "Lock has not been acquired"
+	ec BC_INTERNALERROR, "Internal error"
+
+	ec BC_NOHOSTENTRY, "No such host/port entry"
+end

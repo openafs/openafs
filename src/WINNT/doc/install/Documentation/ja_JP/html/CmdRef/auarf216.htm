@@ -1,0 +1,87 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRPTS_DELETE" HREF="auarf002.htm#ToC_230">pts delete</A></H2>
+<A NAME="IDX5293"></A>
+<A NAME="IDX5294"></A>
+<A NAME="IDX5295"></A>
+<A NAME="IDX5296"></A>
+<A NAME="IDX5297"></A>
+<A NAME="IDX5298"></A>
+<A NAME="IDX5299"></A>
+<A NAME="IDX5300"></A>
+<A NAME="IDX5301"></A>
+<A NAME="IDX5302"></A>
+<P><STRONG>目的</STRONG>
+<P>保護データベース項目を削除します。
+<P><STRONG>構文</STRONG>
+<PRE><B>pts delete -nameorid</B> &lt;<VAR>user or group name or id</VAR>><SUP>+</SUP>  [<B>-cell</B> &lt;<VAR>cell name</VAR>>]  
+           [<B>-noauth</B>]  [<B>-force</B>]  [<B>-help</B>]
+   
+<B>pts d -na</B> &lt;<VAR>user or group name or id</VAR>><SUP>+</SUP>  [<B>-c</B> &lt;<VAR>cell name</VAR>>]  [<B>-no</B>]  [<B>-f</B>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>pts delete</B> コマンドは、保護データベースから、
+<B>-nameorid</B> 引き数に指定された各項目を削除します。項目の削除は、システムの他の部分に、次のようなさまざまな影響を及ぼします。
+<UL>
+<LI>削除されたユーザーおよびグループが、アクセス制御リスト (ACL) 上にまだ表示されているが、それが名前ではなく AFS UID や GID でリストされている場合があります。これは ID の変換に関連する名前がもはや存在しないためです。これらの不要な項目を ACL から削除するには、
+<B>fs cleanacl</B> コマンドを使用します。
+</LI><LI>ユーザーおよびマシンの項目を削除すると、その項目が属しているすべてのグループのメンバーシップ・リストから、その項目は削除されます。
+</LI><LI>グループ項目を削除すると、そのグループが属するすべてのユーザー、またはマシン項目のメンバーシップ・リストから、そのグループ項目は削除されます。また、作成者がそのグループをすでに所有していなくても、グループの作成者のグループ作成割り当て量が 1 だけ 増分されます。
+</LI></UL>
+<P>項目を実際に削除せずに、グループからユーザーまたはマシンを削除するには、
+<B>pts removeuser</B> コマンドを使用します。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B>-nameorid
+</B><DD>削除する各ユーザーの名前または AFS UID、各グループの名前または AFS GID、各マシン項目の IP アドレス (完全またはワイルドカード形式) または AFS UID を指定します。同じコマンド行に、ユーザー、マシンおよびグループに加えて、名前 (マシンの IP アドレス) と ID も、混在させることができます。負であることを示すために、各グループの GID の前にハイフンを付けてください。
+<P><DT><B>-cell
+</B><DD>コマンドを実行するセルを指定します。詳細については、<B>pts</B> の概要に関する解説ページを参照してください。
+<P><DT><B>-noauth
+</B><DD>発行者に、非特権 ID <B>anonymous</B> を割り当てます。詳細については、
+<B>pts</B> の概要に関する解説ページを参照してください。
+<P><DT><B>-force
+</B><DD>このフラグを使用すると、エラーや他の問題が発生したときに、最初のエラーでコマンドの実行を停止するのではなく、可能な限り継続します。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>例</STRONG>
+<P>次の例では、ユーザー項目 <B>pat</B>、および <B>terry</B> を削除しています。
+<PRE>   % <B>pts delete pat terry</B>
+   
+</PRE>
+<P>次の例では、グループの保護データベース項目を AFS GID -215で削除しています。
+<PRE>   %<B> pts delete -215</B>
+   
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>ユーザーおよびマシン項目を削除するには、発行者は、
+<B>system:administrators</B> グループに属している必要があります。グループ項目を削除するには、発行者がそのグループを所有しているか、
+<B>system:administrators</B> グループに属している必要があります。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf135.htm#HDRFS_CLEANACL">fs cleanacl</A>
+<P><A HREF="auarf210.htm#HDRPTS_INTRO">pts</A>
+<P><A HREF="auarf223.htm#HDRPTS_REMOVEUSER">pts removeuser</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf215.htm">前ページ</A> &#124; <A HREF="auarf217.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

@@ -1,0 +1,42 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+#
+
+!INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\..\config\NTMakefile.version
+
+############################################################################
+CELL_EXEFILE = testcellconf.exe
+
+CELL_EXEOBJS =\
+	testcellconf.obj
+
+CELL_EXELIBS =\
+	$(DESTDIR)\lib\afs\afsauth.lib \
+	$(DESTDIR)\lib\afsrx.lib \
+	$(DESTDIR)\lib\afslwp.lib \
+	$(DESTDIR)\lib\afs\afsutil.lib \
+	$(DESTDIR)\lib\afs\afsreg.lib
+
+$(CELL_EXEFILE): $(CELL_EXEOBJS)  $(CELL_EXELIBS)
+	$(EXECONLINK)
+	$(EXEPREP) 
+
+############################################################################
+KTC_EXEFILE = ktctest.exe
+
+KTC_EXEOBJS =\
+	ktctest.obj
+
+KTC_EXELIBS =\
+	$(DESTDIR)\lib\afs\afsutil.lib \
+	$(DESTDIR)\lib\afs\afsauth.lib \
+	$(DESTDIR)\lib\afs\afsreg.lib \
+	$(DESTDIR)\lib\afs\afspioctl.lib
+
+$(KTC_EXEFILE): $(KTC_EXEOBJS)  $(KTC_EXELIBS)
+	$(EXECONLINK)
+	$(EXEPREP) 
+
+test tests: $(CELL_EXEFILE) $(KTC_EXEFILE)
+
+clean::

@@ -1,0 +1,7 @@
+# (c) Copyright Transarc Corporation 1989
+# Licensed Materials - Property of Transarc
+# All Rights Reserved
+#
+# Package environment variable: Is this a (CMU) development machine?
+#
+%define	devel	1

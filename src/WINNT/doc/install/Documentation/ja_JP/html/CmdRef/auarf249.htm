@@ -1,0 +1,80 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRVLSERVER" HREF="auarf002.htm#ToC_263">vlserver</A></H2>
+<A NAME="IDX5560"></A>
+<A NAME="IDX5561"></A>
+<A NAME="IDX5562"></A>
+<A NAME="IDX5563"></A>
+<P><STRONG>目的</STRONG>
+<P>ボリューム・ロケーション・サーバーを初期化します。
+<P><STRONG>構文</STRONG>
+<PRE><B>vlserver</B> [<B>-p</B> &lt;<VAR>lwp processes</VAR>>]  [<B>-nojumbo</B>]  
+         [<B>-enable_peer_stats</B>]  [<B>-enable_process_stats</B>]  [<B>-help</B>]
+</PRE>
+<P>このコマンドは、AFS コマンド・セットの構文規則に準拠していません。コマンド名およびすべてのオプション名は省略せずにすべて指定してください。
+<P><STRONG>構文</STRONG>
+<P><B>vlserver</B> コマンドは、各データベース・サーバー・マシン上で実行するボリューム・ロケーション (VL) サーバーを初期化します。通常の構成では、バイナリー・ファイルはファイル・サーバー・マシンの <B>/usr/afs/bin</B> ディレクトリーにあります。
+<P><B>vlserver</B> コマンドは、通常はコマンド・シェル・プロンプトでは発行せず、ファイル・サーバー・マシンの <B>/usr/afs/local/BosConfig</B> ファイルに <B>bos create</B> コマンドと一緒に記述します。コマンド・シェル・プロンプトで発行される場合は、発行者は、ローカル・スーパーユーザーの<B>ルート (root)</B> としてデータベース・サーバー・マシンにログオンされていなければなりません。
+<P>初期化する場合、ボリューム・ロケ ーション・データベース (VLDB) を構成する <B>vldb.DB0</B> および <B>vldb.DBSYS1</B> の 2 つのファイルがまだ存在していない場合は、VL サーバーはこれらのファイルを <B>/usr/afs/db</B> ディレクトリーに作成します。データベースを管理するには、
+<B>vos</B> セットにあるコマンドを使用してください。
+<P>VL サーバーは、ボリューム・ロケーション・データベース (VLDB) にあるボリューム・ロケーションのレコードを保守します。アプリケーション・プログラムからのファイル要求を処理するときに、キャッシュ・マネージャーは、まず VL サーバーにアクセスし、ファイルのあるボリュームを格納しているファイル・サーバー・マシンの位置を調べます。次に、キャッシュ・マネージャーは、そのファイル・サーバー・マシン上で実行されているファイル・サーバー・プロセスからの要求を処理します。
+<P>VL サーバーは、<B>/usr/afs/logs/VLLog</B> ファイルの活動のトレースを記録します。
+<B>bos getlog</B> コマンドを使用して、ファイルの内容を表示します。デフォルトでは、認証サーバーは、最小限のメッセージを記録します。ロギング量を増やす指示については、<B>VLLog</B> 解説ページを参照してください。
+<P>デフォルトでは、VL サーバーは 9 つの負荷の低いプロセス (LWP) を実行します。数値を変更する場合には、<B>-p</B> 引き数を使用してください。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B>-p
+</B><DD>実行する負荷が低いサーバー・プロセス (LWP) の番号を設定します。
+<B>4</B> から <B>16</B> までの整数を指定してください。デフォルトは、9 です。
+<P><DT><B>-nojumbo
+</B><DD>サーバーが jumbograms を送信または受信することを禁止します。
+jumbogram は、同じヘッダーを共用する、2 つから 4 つの通常の Rx データ・パケットで構成される大きなサイズのパケットです。
+VL サーバーは、デフォルトで jumbogram を使用しますが、ルーターによっては、
+jumbogram を小さなパケットに適切に分割して、それらを再組み立てすることができません。
+<P><DT><B>-enable_peer_stats
+</B><DD>Rx 統計集合を活動化し、それらを保管するためのメモリーを割り振ります。別のマシンの特定の UDP ポートとの接続ごとに、送信または受信された RPC の各タイプ (FetchFile、
+GetStatus など) のレコードが別々に保持されています。レコードを表示したり、ほかの方法でレコードにアクセスするには、
+Rx Monitoring API を使用します。
+<P><DT><B>-enable_process_stats
+</B><DD>Rx 統計集合を活動化し、それらを保管するためのメモリーを割り振ります。送信または受信された RPC の各タイプ (FetchFile、GetStatus など) ごとに、レコードが別々に保持され、別のマシンへのすべての接続が集計されます。レコードを表示したり、ほかの方法でレコードにアクセスするには、
+Rx Monitoring API を使用します。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>例</STRONG>
+<P>以下の <B>bos create</B> コマンドは、6 つの負荷の低い処理を使用する <B>fs2.abc.com</B> マシン上で、<B>vlserver</B> プロセスを作成します。1 行にコマンドをタイプします。
+<PRE>   % <B>bos create -server fs2.abc.com -instance vlserver -type simple</B>  \
+                <B>-cmd "/usr/afs/bin/vlserver -p 6"</B>
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>シェル・プロンプトでコマンドを発行するためには、発行者はファイルのサーバー・マシン上でローカル・スーパーユーザー <B>root</B> としてログインする必要があります。通常は、<B>bos create</B> コマンドを発行して、プロセスの作成および開始を行います。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf016.htm#HDRBOSCONFIG">BosConfig</A>
+<P><A HREF="auarf038.htm#HDRVLLOG">VLLog</A>
+<P><A HREF="auarf051.htm#HDRVLDBDB">vldb.DB0 および vldb.DBSYS1</A>
+<P><A HREF="auarf098.htm#HDRBOS_CREATE">bos create</A>
+<P><A HREF="auarf102.htm#HDRBOS_GETLOG">bos getlog</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf248.htm">前ページ</A> &#124; <A HREF="auarf250.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

@@ -1,0 +1,11 @@
+#
+# installkernel
+#
+# An InstallGuide for installing a new kernel
+# For Alpha systems running Digital Unix
+#
+
+
+sub installkernel {
+&VersionCopyFile("/usr/sys/AFS/vmunix", "/vmunix");
+}

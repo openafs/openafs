@@ -1,0 +1,55 @@
+/*
+ * Copyright (C)  1999  Transarc Corporation.  All rights reserved.
+ *
+ */
+
+typedef  afs_uint32 rpcStats<>;
+
+prefix M
+
+package RXSTATS_
+statindex 9
+
+RetrieveProcessRPCStats(
+  IN afs_uint32 clientVersion,
+  OUT afs_uint32 *serverVersion,
+  OUT afs_uint32 *clock_sec,
+  OUT afs_uint32 *clock_usec,
+  OUT afs_uint32 *stat_count,
+  OUT rpcStats *stats
+) multi;
+
+RetrievePeerRPCStats(
+  IN afs_uint32 clientVersion,
+  OUT afs_uint32 *serverVersion,
+  OUT afs_uint32 *stat_count,
+  OUT afs_uint32 *clock_sec,
+  OUT afs_uint32 *clock_usec,
+  OUT rpcStats *stats
+) multi;
+
+QueryProcessRPCStats(
+  OUT afs_int32 *on
+);
+
+QueryPeerRPCStats(
+  OUT afs_int32 *on
+);
+
+EnableProcessRPCStats();
+EnablePeerRPCStats();
+
+DisableProcessRPCStats();
+DisablePeerRPCStats();
+
+QueryRPCStatsVersion(
+  OUT afs_uint32 *ver
+);
+
+ClearProcessRPCStats(
+  IN afs_uint32 clearFlag
+);
+
+ClearPeerRPCStats(
+  IN afs_uint32 clearFlag
+);

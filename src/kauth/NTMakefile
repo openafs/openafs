@@ -1,0 +1,217 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+#
+
+# Override default definitions in NTMakefile.$(SYS_NAME) before including.
+
+!INCLUDE ..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\config\NTMakefile.version
+
+
+############################################################################
+# Definitions for installing header files
+
+INCFILEDIR = $(DESTDIR)\include\afs
+
+INCFILES =\
+	$(INCFILEDIR)\kautils.h \
+	$(INCFILEDIR)\kauth.h \
+	$(INCFILEDIR)\kaport.h
+
+
+############################################################################
+# build afskauth.lib
+
+KAUTH_LIBFILE = $(DESTDIR)\lib\afs\afskauth.lib
+
+KAUTH_LIBOBJS =\
+	kauth.xdr.obj \
+	kauth.cs.obj \
+	kaaux.obj \
+	client.obj \
+	authclient.obj \
+	token.obj \
+	kautils.obj \
+	kalocalcell.obj \
+	kaerrors.obj \
+	user_nt.obj \
+	krb_tf.obj \
+	cm_config.obj \
+	AFS_component_version_number.obj
+
+WINNTAFSD = ..\WINNT\afsd\
+
+cm_config.obj: $(WINNTAFSD)\cm_config.c
+	$(C2OBJ) $(WINNTAFSD)\cm_config.c
+
+$(KAUTH_LIBFILE): $(KAUTH_LIBOBJS) 
+	$(LIBARCH)  
+
+############################################################################
+# build afskauth.krb.lib
+
+KAUTH_KRB_LIBFILE = $(DESTDIR)\lib\afs\afskauth.krb.lib
+
+KAUTH_KRB_LIBOBJS =\
+	kauth.xdr.obj \
+	kauth.cs.obj \
+	kaaux.obj \
+	client.obj \
+	authclient.obj \
+	token.obj \
+	kautils.obj \
+	kalocalcell.obj \
+	kaerrors.obj \
+	user.krb.obj \
+	krb_tf.obj \
+	cm_config.obj \
+	AFS_component_version_number.obj
+
+$(KAUTH_KRB_LIBFILE): $(KAUTH_KRB_LIBOBJS) 
+	$(LIBARCH)  
+
+#make user.krb.obj
+user.krb.obj: user_nt.c $(INCFILES) $(DESTDIR)/include/afs/vice.h
+	$(C2OBJ) user_nt.c  /DAFS_KERBEROS_ENV /Fouser.krb.obj
+
+
+# common libs
+AFSLIBDIR = $(DESTDIR)\lib\afs
+AFSLIBS =  \
+	$(AFSLIBDIR)\afsprot.lib \
+	$(AFSLIBDIR)\afsauth.lib \
+	$(AFSLIBDIR)\afscmd.lib \
+	$(AFSLIBDIR)\afscom_err.lib \
+	$(AFSLIBDIR)\afsutil.lib \
+	$(AFSLIBDIR)\afsaudit.lib \
+	$(DESTDIR)\lib\afs\afsreg.lib \
+	$(DESTDIR)\lib\afslwp.lib \
+	$(DESTDIR)\lib\afsdes.lib \
+	$(DESTDIR)\lib\afsrxstat.lib \
+	$(DESTDIR)\lib\afsrx.lib \
+	$(DESTDIR)\lib\afsubik.lib \
+	$(DESTDIR)\lib\afs\afseventlog.lib \
+	$(DESTDIR)\lib\afsrxkad.lib
+	
+TOKENLIB = $(DESTDIR)\lib\afs\afspioctl.lib
+
+############################################################################
+# build kaserver
+
+KASERVER = $(DESTDIR)\root.server\usr\afs\bin\kaserver.exe
+
+KASERVER_OBJS =\
+	kaserver.obj \
+	kautils.obj \
+	kalocalcell.obj \
+	kadatabase.obj \
+	krb_udp.obj \
+	kaprocs.obj \
+	kalog.obj \
+	kauth.ss.obj \
+	kauth.xdr.obj \
+	kaaux.obj \
+	kaauxdb.obj \
+	kaserver.res
+
+KASERVER_EXELIBS =\
+	$(DESTDIR)\lib\afs\afsprocmgmt.lib
+
+$(KASERVER): $(KASERVER_OBJS) $(AFSLIBS) $(KASERVER_EXELIBS)
+	$(EXECONLINK)
+	$(EXEPREP) 
+
+#build kadatabase.obj
+kadatabase.obj: kadatabase.c $(INCFILES) 
+	$(C2OBJ) kadatabase.c  /DSPECIAL=1 /Fokadatabase.obj
+#build kaprocs.obj
+kaprocs.obj: kaprocs.c $(INCFILES)
+	$(C2OBJ) kaprocs.c /DSPECIAL=1 /Fokaprocs.obj
+
+############################################################################
+# build kas
+
+KAS = $(DESTDIR)\root.server\usr\afs\bin\kas.exe
+
+KAS_OBJS =\
+	kas.obj \
+	admin_tools.obj \
+	kkids.obj \
+	kas.res
+	
+$(KAS): $(KAS_OBJS) $(AFSLIBS) $(KAUTH_LIBFILE) $(TOKENLIB)
+	$(EXECONLINK)
+	$(EXEPREP) 
+
+########### Misc Exes #######################################################
+#kpasswd.exe
+KPASSWD_EXEFILE = $(DESTDIR)\bin\kpasswd.exe
+
+KPASSWD_OBJS =\
+	kpasswd.obj \
+	kkids.obj \
+	kpasswd.res
+
+$(KPASSWD_EXEFILE): $(KPASSWD_OBJS) $(AFSLIBS) $(KAUTH_LIBFILE) $(TOKENLIB)
+	$(EXECONLINK)
+	$(EXEPREP)
+
+#kpwvalid.exe
+kpwvalid.exe: kpwvalid.obj $(AFSLIBS) $(KAUTH_LIBFILE)
+	$(EXECONLINK)
+
+#kdb.exe - Not implemented for NT - because dbm not available on NT
+#kdb.exe: kdb.obj $(AFSLIBS) $(KAUTH_LIBFILE) 
+#	$(EXECONLINK)
+
+
+
+#rebuild.exe 
+rebuild.exe: rebuild.obj kautils.obj $(AFSLIBS) 
+	$(EXECONLINK)
+
+############################################################################
+# Definitions for generating versioninfo resources
+
+kaserver.res: kaserver.rc AFS_component_version_number.h
+
+kas.res: kas.rc AFS_component_version_number.h
+
+kpasswd.res: kpasswd.rc AFS_component_version_number.h
+
+############################################################################
+# rxgen on kauth.rg
+
+kauth.ss.c kauth.cs.c kauth.xdr.c $(DESTDIR)\include\afs\kauth.h: kauth.rg
+	$(RXGEN) -x $**
+	$(COPY) kauth.h $(DESTDIR)\include\afs\kauth.h
+
+############################################################################
+# compile_et on kaerrors.c 
+
+kaerrors.c $(DESTDIR)\include\afs\kautils.h: kaerrors.et kautils.p.h
+	$(DEL) kautils.h kaerrors.c
+	$(COMPILE_ET) kaerrors -h kautils
+	$(COPY) kautils.h  $(DESTDIR)\include\afs\kautils.h
+
+############################################################################
+# install 
+
+install: $(INCFILES) $(KAUTH_LIBFILE) $(KAUTH_KRB_LIBFILE) $(KASERVER) $(KAS) \
+	$(KPASSWD_EXEFILE) \
+	kpwvalid.exe rebuild.exe  \
+	$(DESTDIR)\etc\kas.exe
+
+# installation targets that depend on local targets
+$(DESTDIR)\etc\kas.exe:  $(DESTDIR)\root.server\usr\afs\bin\kas.exe
+	$(COPY) $(DESTDIR)\root.server\usr\afs\bin\kas.exe \
+					$(DESTDIR)\etc\kas.exe
+
+
+############################################################################
+# Local clean target; augments predefined clean target
+
+clean::
+
+
+
+

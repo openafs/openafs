@@ -1,0 +1,34 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+
+############################################################################
+
+# make compiler warnings fatal
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -WX
+
+# include the primary makefile
+!INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\..\config\NTMakefile.version
+
+############################################################################
+
+EXEFILE = $(DESTDIR)\bin\sgml2rtf.exe
+
+EXEOBJS = \
+	main.obj \
+	multistring.obj
+
+EXELIBS = \
+	user32.lib
+
+$(EXEFILE) : $(EXEOBJS)
+	$(EXECONLINK) $(EXELIBS)
+	$(EXEPREP) 
+
+############################################################################
+install : $(EXEFILE) lang
+
+lang ::
+	$(CD) lang
+	@$(MAKECMD) /nologo /f NTMakefile install
+	$(CD) ..
+
