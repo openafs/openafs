@@ -211,8 +211,12 @@ afs_osi_Write(afile, offset, aptr, asize)
     size_t resid;
     register afs_int32 code;
     AFS_STATCNT(osi_Write);
-    if ( !afile )
-        osi_Panic("afs_osi_Write called with null param");
+    if ( !afile ) {
+	if ( !afs_shuttingdown )
+	    osi_Panic("afs_osi_Write called with null param");
+	else
+	    return EIO;
+    } 
     if (offset != -1) afile->offset = offset;
     AFS_GUNLOCK();
     code = osi_rdwr(UIO_WRITE, afile, (caddr_t)aptr, asize, &resid);
