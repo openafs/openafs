@@ -1502,10 +1502,16 @@ static PSetVolumeStatus(avc, afun, areq, ain, aout, ainSize, aoutSize)
     cp = ain;
     bcopy(cp, (char *)&volstat, sizeof(AFSFetchVolumeStatus));
     cp += sizeof(AFSFetchVolumeStatus);
+    if (strlen(cp) >= sizeof(volName))
+	return E2BIG;
     strcpy(volName, cp);
     cp += strlen(volName)+1;
+    if (strlen(cp) >= sizeof(offLineMsg))
+	return E2BIG;
     strcpy(offLineMsg, cp);
     cp +=  strlen(offLineMsg)+1;
+    if (strlen(cp) >= sizeof(motd))
+	return E2BIG;
     strcpy(motd, cp);
     storeStat.Mask = 0;
     if (volstat.MinQuota != -1) {
