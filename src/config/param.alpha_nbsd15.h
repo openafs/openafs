@@ -12,4 +12,4 @@
 
 #define AFSLITTLE_ENDIAN 1
 
-#endif	/* AFS_PARAM_COMMON_H */
+#endif	/* AFS_PARAM_H */

@@ -1,5 +1,5 @@
-#ifndef	AFS_PARAM_COMMON_H
-#define	AFS_PARAM_COMMON_H
+#ifndef	AFS_PARAM_H
+#define	AFS_PARAM_H
 
 #include <sys/param.h>
 
@@ -12,4 +12,4 @@
 
 #define AFSLITTLE_ENDIAN 1
 
-#endif	/* AFS_PARAM_COMMON_H */
+#endif	/* AFS_PARAM_H */
