@@ -111,6 +111,7 @@ struct cmd_syndesc *as;
     struct rx_debugConn tconn;
     short noConns;
     short showPeers;
+    short showLong;
     int version_flag;
     char version[64];
     afs_int32 length=64;
@@ -130,6 +131,7 @@ struct cmd_syndesc *as;
     version_flag=(as->parms[10].items ? 1 : 0);
     noConns = (as->parms[11].items ? 1 : 0);
     showPeers = (as->parms[12].items ? 1 : 0);
+    showLong = (as->parms[13].items ? 1 : 0);
 
     if (as->parms[0].items)
 	hostName = as->parms[0].items->data;
@@ -500,6 +502,15 @@ struct cmd_syndesc *as;
 		   tpeer.rtt >> 3, tpeer.rtt_dev >> 2);
 	    printf("\ttimeout %d.%03d sec\n",
 		   tpeer.timeout.sec, tpeer.timeout.usec / 1000);
+	    if (!showLong) continue;
+
+	    printf("\tin/out packet skew: %d/%d\n",
+		   tpeer.inPacketSkew, tpeer.outPacketSkew);
+	    printf("\tcongestion window %d, MTU %d\n",
+		   tpeer.cwind, tpeer.MTU);
+	    printf("\tcurrent/if/max jumbogram size: %d/%d/%d\n",
+		   tpeer.nDgramPackets, tpeer.ifDgramPackets,
+		   tpeer.maxDgramPackets);
 	}
     }
     exit(0);
@@ -542,6 +553,7 @@ char **argv;
     cmd_AddParm(ts,"-version",CMD_FLAG,CMD_OPTIONAL,"show AFS version id");
     cmd_AddParm(ts,"-noconns",CMD_FLAG,CMD_OPTIONAL,"show no connections");
     cmd_AddParm(ts,"-peers",CMD_FLAG,CMD_OPTIONAL,"show peers");
+    cmd_AddParm(ts,"-long",CMD_FLAG,CMD_OPTIONAL,"detailed output");
 
     cmd_Dispatch(argc, argv);
     exit(0);
