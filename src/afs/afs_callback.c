@@ -51,7 +51,9 @@ static struct ltable {
     {"afs_ftf",     (char *)&afs_ftf},
     {"afs_xcbhash", (char *)&afs_xcbhash},
     {"afs_xaxs",    (char *)&afs_xaxs},
-    {"afs_xinterface", (char *)&afs_xinterface}
+    {"afs_xinterface", (char *)&afs_xinterface},
+    {"afs_xosi",    (char *)&afs_xosi},
+    {"afs_xsrvAddr",(char *)&afs_xsrvAddr}
 };
 unsigned long  lastCallBack_vnode;
 unsigned int   lastCallBack_dv;
