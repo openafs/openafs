@@ -25,7 +25,7 @@ static int osi_TimedSleep(char *event, afs_int32 ams, int aintok);
 void afs_osi_Wakeup(char *event);
 void afs_osi_Sleep(char *event);
 
-static char waitV;
+static char waitV, dummyV;
 
 #if ! defined(AFS_GLOBAL_SUNLOCK)
 
@@ -96,15 +96,14 @@ int afs_osi_Wait(afs_int32 ams, struct afs_osi_WaitHandle *ahandle, int aintok)
     if (ahandle)
 	ahandle->proc = (caddr_t) current;
 
+    AFS_ASSERT_GLOCK();
     do {
-	AFS_ASSERT_GLOCK();
-	code = 0;
 #if	defined(AFS_GLOBAL_SUNLOCK)
         code = osi_TimedSleep(&waitV, ams, 1);
-        if (code) {
-                if (aintok) break;
+        if (code == EINTR) {
+                if (aintok) 
+		    return EINTR;
                 flush_signals(current);
-                code = 0;
         }
 #else
 	timer = afs_osi_CallProc(AfsWaitHack, (char *) current, ams);
@@ -113,10 +112,10 @@ int afs_osi_Wait(afs_int32 ams, struct afs_osi_WaitHandle *ahandle, int aintok)
 #endif /* AFS_GLOBAL_SUNLOCK */
 	if (ahandle && (ahandle->proc == (caddr_t) 0)) {
 	    /* we've been signalled */
-	    break;
+	    return EINTR;
 	}
     } while (osi_Time() < endTime);
-    return code;
+    return 0;
 }
 
 
@@ -160,26 +159,52 @@ static afs_event_t *afs_getevent(char *event)
 	    newp = evp;
 	evp = evp->next;
     }
-    if (!newp) {
-	newp = (afs_event_t *) osi_AllocSmallSpace(sizeof (afs_event_t));
-	afs_evhashcnt++;
-	newp->next = afs_evhasht[hashcode];
-	afs_evhasht[hashcode] = newp;
-#if defined(AFS_LINUX24_ENV)
-	init_waitqueue_head(&newp->cond);
-#else
-	init_waitqueue(&newp->cond);
-#endif
-	newp->seq = 0;
-    }
+    if (!newp)
+	return NULL;
+
     newp->event = event;
     newp->refcount = 1;
     return newp;
 }
 
+/* afs_addevent -- allocates a new event for the address.  It isn't returned;
+ *     instead, afs_getevent should be called again.  Thus, the real effect of
+ *     this routine is to add another event to the hash bucket for this
+ *     address.
+ *
+ * Locks:
+ *     Called with GLOCK held. However the function might drop
+ *     GLOCK when it calls osi_AllocSmallSpace for allocating
+ *     a new event (In Linux, the allocator drops GLOCK to avoid
+ *     a deadlock).
+ */
+
+static void afs_addevent(char *event)
+{
+    int hashcode;
+    afs_event_t *newp;
+    
+    AFS_ASSERT_GLOCK();
+    hashcode = afs_evhash(event);
+    newp = osi_AllocSmallSpace(sizeof(afs_event_t));
+    afs_evhashcnt++;
+    newp->next = afs_evhasht[hashcode];
+    afs_evhasht[hashcode] = newp;
+#if defined(AFS_LINUX24_ENV)
+    init_waitqueue_head(&newp->cond);
+#else
+    init_waitqueue(&newp->cond);
+#endif
+    newp->seq = 0;
+    newp->event = &dummyV;  /* Dummy address for new events */
+    newp->refcount = 0;
+}
+
+
 /* Release the specified event */
 #define relevent(evp) ((evp)->refcount--)
 
+/* afs_osi_Sleep -- waits for an event to be notified. */
 
 void afs_osi_Sleep(char *event)
 {
@@ -187,8 +212,23 @@ void afs_osi_Sleep(char *event)
     int seq;
 
     evp = afs_getevent(event);
+    if (!evp) {
+	/* Can't block because allocating a new event would require dropping
+         * the GLOCK, which may cause us to miss the wakeup.  So call the
+         * allocator then return immediately.  We'll find the new event next
+         * time around without dropping the GLOCK. */
+        afs_addevent(event);
+        return;
+    }
+
     seq = evp->seq;
+
     while (seq == evp->seq) {
+        afs_Trace4(afs_iclSetp, CM_TRACE_SLEEP,
+		ICL_TYPE_POINTER, evp,
+		   ICL_TYPE_INT32, 0/*count*/,
+		ICL_TYPE_INT32, seq,
+		ICL_TYPE_INT32, evp->seq);
 	AFS_ASSERT_GLOCK();
 	AFS_GUNLOCK();
 	interruptible_sleep_on(&evp->cond);
@@ -204,11 +244,8 @@ void afs_osi_Sleep(char *event)
  * ams --- max sleep time in milliseconds
  * aintok - 1 if should sleep interruptibly
  *
- * Returns 0 if timeout and EINTR if signalled.
- *
- * While the Linux kernel still has a global lock, we can use the standard
- * sleep calls and drop our locks early. The kernel lock will protect us
- * until we get to sleep.
+ * Returns 0 if timeout, EINTR if signalled, and EGAIN if it might
+ * have raced.
  */
 static int osi_TimedSleep(char *event, afs_int32 ams, int aintok)
 {
@@ -216,6 +253,14 @@ static int osi_TimedSleep(char *event, afs_int32 ams, int aintok)
     struct afs_event *evp;
 
     evp = afs_getevent(event);
+    if (!evp) {
+        /* Can't block because allocating a new event would require dropping
+         * the GLOCK, which may cause us to miss the wakeup.  So call the
+         * allocator then return immediately.  We'll find the new event next
+         * time around without dropping the GLOCK. */
+        afs_addevent(event);
+        return EAGAIN;
+    }
 
     AFS_GUNLOCK();
     if (aintok)
@@ -223,6 +268,8 @@ static int osi_TimedSleep(char *event, afs_int32 ams, int aintok)
     else
 	t = sleep_on_timeout(&evp->cond, t);
     AFS_GLOCK();
+
+    relevent(evp);
 
     return t ? EINTR : 0;
 }
@@ -233,8 +280,14 @@ void afs_osi_Wakeup(char *event)
     struct afs_event *evp;
 
     evp = afs_getevent(event);
+    if (!evp)                          /* No sleepers */
+	return;
+
     if (evp->refcount > 1) {
 	evp->seq++;    
+        afs_Trace2(afs_iclSetp, CM_TRACE_WAKE,
+		ICL_TYPE_POINTER, evp,
+		ICL_TYPE_INT32, evp->seq);
 	wake_up(&evp->cond);
     }
     relevent(evp);
