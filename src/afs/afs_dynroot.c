@@ -253,6 +253,9 @@ afs_RefreshDynroot()
     afs_dynroot_addDirEnt(dirHeader, &curPage, &curChunk, "..", 1);
     linkCount += 2;
 
+    /* Reserve space for "." and ".." */
+    curChunk += 2;
+
     for (cellidx = 0; cellidx < maxcellidx; cellidx++) {
 	c = afs_GetCellByIndex(cellidx, READ_LOCK);
 	afs_dynroot_addDirEnt(dirHeader, &curPage, &curChunk,
