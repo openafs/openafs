@@ -81,6 +81,10 @@ RCSID
 #ifndef AFS_LINUX20_ENV
 #include "netinet/in.h"
 #endif
+
+/* Irix needs this */
+struct DirEntry *DRead();
+
 #else /* !defined(UKERNEL) */
 #include "afs/stds.h"
 #include "afs/sysincludes.h"
