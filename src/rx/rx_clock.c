@@ -10,12 +10,12 @@
 /* Elapsed time package */
 /* See rx_clock.h for calling conventions */
 
+#include <afsconfig.h>
 #ifdef	KERNEL
 #include "afs/param.h"
 #else
 #include <afs/param.h>
 #endif
-#include <afsconfig.h>
 
 #ifdef AFS_SUN59_ENV
 #include <sys/time_impl.h>

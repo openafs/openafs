@@ -11,8 +11,8 @@
  * xdr_afsuuid.c, XDR routine for built in afsUUID data type.
  */
 
-#include "afs/param.h"
 #include <afsconfig.h>
+#include "afs/param.h"
 
 RCSID
     ("$Header$");

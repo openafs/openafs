@@ -11,12 +11,12 @@
  * Implement caching of rx connections.
  */
 
+#include <afsconfig.h>
 #ifdef UKERNEL
 #include "afs/param.h"
 #else
 #include <afs/param.h>
 #endif
-#include <afsconfig.h>
 
 RCSID
     ("$Header$");
