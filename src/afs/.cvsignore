@@ -3,3 +3,5 @@ Makefile
 afs_trace.h
 afs_trace.msf
 afszcm.cat
+unified_afs.c
+unified_afs.h
