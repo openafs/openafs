@@ -181,7 +181,8 @@ void osi_StopListener(void)
     if (rxk_ListenerPid) {
 	(void) (*sys_killp)(rxk_ListenerPid, 9);
 #ifdef AFS_LINUX24_ENV
-	afs_osi_Sleep(&rxk_ListenerPid);
+	afs_osi_Sleep(&rxk_ListenerPid); /* get an event */
+	afs_osi_Sleep(&rxk_ListenerPid); /* actually sleep */
 #else
 	rxk_ListenerPid = 0;
 #endif
