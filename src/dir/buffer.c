@@ -394,10 +394,7 @@ char *DNew (fid,page)
      */
     register struct buffer *tb;
     ObtainWriteLock(&afs_bufferLock);
-    if ((tb = newslot(fid,page,0)) == 0) {
-	ReleaseWriteLock(&afs_bufferLock);
-	return 0;
-    }
+    tb = newslot(fid,page,0);
     ObtainWriteLock(&tb->lock);
     ReleaseWriteLock(&afs_bufferLock);
     tb->lockers++;
