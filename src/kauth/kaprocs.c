@@ -1707,6 +1707,11 @@ static afs_int32 GetTicket (version, call, kvno, authDomain, aticket,
     if (import && (celllen == 0)) {code = KABADTICKET; goto abort;}
     if (export && (celllen == 0)) strcpy (cell, lrealm);
 
+    if (!krb4_cross && celllen && strcmp(lrealm, cell) != 0) {
+      code = KABADUSER;
+      goto abort;
+    }
+
     des_ecb_encrypt (atimes->SeqBody, &times, schedule, DECRYPT);
     times.start = ntohl(times.start);
     times.end = ntohl(times.end);

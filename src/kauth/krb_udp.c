@@ -462,6 +462,11 @@ afs_int32 UDP_GetTicket (ksoc, pkt, kvno, authDomain, ticket, ticketLen, auth, a
 	cell[MAXKTCREALMLEN-1] = 0;
     };
 
+    if (!krb4_cross && strcmp(lrealm, cell) != 0) {
+	code = KERB_ERR_PRINCIPAL_UNKNOWN;
+	goto abort;
+    }
+
     if (krb_udp_debug) {
 	printf ("UGetTicket: got ticket from '%s'.'%s'@'%s'\n",
 		name, inst, cell);
