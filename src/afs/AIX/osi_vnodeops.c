@@ -1066,6 +1066,7 @@ afs_vm_rdwr(vp, uiop, rw, ioflag, credp)
     afs_size_t finalOffset;
     off_t toffset;
     int mixed = 0;
+    afs_size_t add2resid = 0;
 #endif /* AFS_64BIT_CLIENT */
     register struct vcache *vcp = VTOAFS(vp);
     struct dcache *tdc;
@@ -1104,6 +1105,16 @@ afs_vm_rdwr(vp, uiop, rw, ioflag, credp)
 
 #ifdef AFS_64BIT_CLIENT
     if (xfrOffset + xfrSize > afs_vmMappingEnd) {
+        if (rw == UIO_READ) {
+            /* don't read past EOF */
+            if (xfrSize+xfrOffset > fileSize) {
+            add2resid = xfrSize + xfrOffset - fileSize;
+            xfrSize = fileSize - xfrOffset;
+            if (xfrSize <= 0) goto fail;
+                txfrSize = xfrSize;
+                afsio_trim(uiop, txfrSize);
+            }
+        }
 	if (xfrOffset < afs_vmMappingEnd) {
 	    /* special case of a buffer crossing the VM mapping line */
 	    struct uio tuio;
@@ -1135,6 +1146,7 @@ afs_vm_rdwr(vp, uiop, rw, ioflag, credp)
 	} else {
 	    ReleaseReadLock(&vcp->lock);
 	    code = afs_direct_rdwr(vp, uiop, rw, ioflag, credp);
+	    uiop->uio_resid += add2resid;
 	    return code;
 	}
     }
@@ -1198,6 +1210,7 @@ afs_vm_rdwr(vp, uiop, rw, ioflag, credp)
 	if (mixed) {
 	    uiop->afsio_offset = finalOffset;
 	}
+	uiop->uio_resid += add2resid;
 #endif /* AFS_64BIT_CLIENT */
 	return code;
     }
