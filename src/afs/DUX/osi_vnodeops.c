@@ -450,7 +450,7 @@ mp_afs_ubcrdwr(avc, uio, ioflag, cred)
 	return EISDIR;	/* can't read or write other things */
     }
     afs_BozonLock(&avc->pvnLock, avc);
-    osi_FlushPages(avc);	/* hold bozon lock, but not basic vnode lock */
+    osi_FlushPages(avc, cred);	/* hold bozon lock, but not basic vnode lock */
     ObtainWriteLock(&avc->lock,162);
     /* adjust parameters when appending files */
     if ((ioflag & IO_APPEND) && uio->uio_rw == UIO_WRITE)
@@ -718,7 +718,7 @@ mp_afs_mmap(avc, offset, map, addrp, len, prot, maxprot, flags, cred)
       return code;
     }
     afs_BozonLock(&avc->pvnLock, avc);
-    osi_FlushPages(avc);	/* ensure old pages are gone */
+    osi_FlushPages(avc, cred);	/* ensure old pages are gone */
     afs_BozonUnlock(&avc->pvnLock, avc);
     ObtainWriteLock(&avc->lock,166);
     avc->states |= CMAPPED;
