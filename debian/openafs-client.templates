@@ -50,3 +50,12 @@ Description: Look up AFS cells in DNS?
  that file it can use DNS to look for AFSDB records that contain the
  information.
 
+Template: openafs-client/crypt
+Type: boolean
+Default: true
+Description: ENcrypt authenticated traffic with AFS fileserver? 
+ AFS provides a weak form of encryption that can optionally be used
+ between a client and the fileservers.  While this encryption is weaker
+ than DES and thus is not sufficient for highly confidential data, it
+ does provide some confidentiality and is likely to make the job of a
+ casual attacker significantly more difficult.

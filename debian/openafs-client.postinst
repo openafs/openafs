@@ -61,8 +61,10 @@ case "$1" in
 
 	db_get openafs-client/run-client
 	echo AFS_CLIENT=$RET >/etc/openafs/afs.conf.client
-db_get openafs-client/afsdb
-echo AFS_AFSDB=$RET >>/etc/openafs/afs.conf.client
+	db_get openafs-client/afsdb
+	echo AFS_AFSDB=$RET >>/etc/openafs/afs.conf.client
+	db_get openafs-client/crypt
+	echo AFS_CRYPT=$RET >>/etc/openafs/afs.conf.client
 
     ;;
 

@@ -1,3 +1,10 @@
+openafs (1.2.3final-1) unstable; urgency=low
+
+  * New upstream release
+  * Add support for fs setcrypt in debconf; by default traffic is encrypted.
+
+ -- Sam Hartman <hartmans@debian.org>  Wed, 30 Jan 2002 10:46:46 -0500
+
 openafs (1.2.3candidate3-1) unstable; urgency=low
 
   *  New  upstream release candidate
