@@ -47,6 +47,9 @@
 /* Define if you have the getprogname function.  */
 #undef HAVE_GETPROGNAME
 
+/* Define if you have the mkstemp function.  */
+#undef HAVE_MKSTEMP
+
 /* Define if you have the random function.  */
 #undef HAVE_RANDOM
 
@@ -55,9 +58,6 @@
 
 /* Define if you have the re_exec function.  */
 #undef HAVE_RE_EXEC
-
-/* Define if you have the res_search function.  */
-#undef HAVE_RES_SEARCH
 
 /* Define if you have the setprogname function.  */
 #undef HAVE_SETPROGNAME
@@ -73,6 +73,9 @@
 
 /* Define if you have the srandom function.  */
 #undef HAVE_SRANDOM
+
+/* Define if you have the strerror function.  */
+#undef HAVE_STRERROR
 
 /* Define if you have the timegm function.  */
 #undef HAVE_TIMEGM
@@ -197,6 +200,9 @@
 /* define if your linux kernel exports sys_close */
 #undef EXPORTED_SYS_CLOSE
 
+/* define if your linux kernel exports sys_wait4 */
+#undef EXPORTED_SYS_WAIT4
+
 /* define if your linux kernel exports tasklist_lock */
 #undef EXPORTED_TASKLIST_LOCK
 
@@ -221,6 +227,9 @@
 /* define if your struct inode has truncate_sem */
 #undef STRUCT_INODE_HAS_I_TRUNCATE_SEM
 
+/* define if your struct inode has alloc_sem */
+#undef STRUCT_INODE_HAS_I_ALLOC_SEM
+
 /* define if you struct inode has i_devices */
 #undef STRUCT_INODE_HAS_I_DEVICES
 
@@ -229,6 +238,9 @@
 
 /* define if your recalc_sigpending takes void */
 #undef RECALC_SIGPENDING_TAKES_VOID
+
+/* define if your linux kernel has linux/syscall.h */
+#undef HAVE_KERNEL_LINUX_SYSCALL_H
 
 /* define if your struct task_struct has parent */
 #undef STRUCT_TASK_STRUCT_HAS_PARENT
@@ -266,9 +278,6 @@
 /* define if you have gethostbyname */
 #undef HAVE_GETHOSTBYNAME
 
-/* define if you have res_search */
-#undef HAVE_RES_SEARCH
-
 /* define if you want to have fast restart */
 #undef FAST_RESTART
 
@@ -280,6 +289,9 @@
 
 /* define if you want to want bos restricted mode */
 #undef BOS_RESTRICTED_MODE
+
+/* define if you want to enable automatic renaming of BosConfig.new to BosConfig at startup */
+#undef BOS_NEW_CONFIG
 
 /* define if you want to want namei fileserver */
 #undef AFS_NAMEI_ENV
@@ -314,6 +326,7 @@ static /**/const char *const rcsid[] = { (char *)rcsid, "\100(#)" msg }
 
 #undef BITMAP_LATER
 #undef BOS_RESTRICTED_MODE
+#undef BOS_NEW_CONFIG
 #undef FAST_RESTART
 #undef FULL_LISTVOL_SWITCH
 
@@ -323,6 +336,7 @@ static /**/const char *const rcsid[] = { (char *)rcsid, "\100(#)" msg }
 #undef EXPORTED_KALLSYMS_ADDRESS
 #undef EXPORTED_KALLSYMS_SYMBOL
 #undef EXPORTED_SYS_CALL_TABLE
+#undef EXPORTED_IA32_SYS_CALL_TABLE
 #undef EXPORTED_TASKLIST_LOCK
 #undef INODE_SETATTR_NOT_VOID
 #undef RECALC_SIGPENDING_TAKES_VOID
@@ -331,6 +345,7 @@ static /**/const char *const rcsid[] = { (char *)rcsid, "\100(#)" msg }
 #undef STRUCT_FS_HAS_FS_ROLLED
 #undef STRUCT_INODE_HAS_I_DEVICES
 #undef STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS
+#undef STRUCT_INODE_HAS_I_ALLOC_SEM
 #undef STRUCT_INODE_HAS_I_TRUNCATE_SEM
 #undef STRUCT_TASK_STRUCT_HAS_PARENT
 #undef STRUCT_TASK_STRUCT_HAS_REAL_PARENT
