@@ -417,7 +417,7 @@ afs_remunlink(avc, doit)
 	    if (adp) {
 		tdc = afs_FindDCache(adp, 0);
 		ObtainWriteLock(&adp->lock, 159);
-		ObtainSharedLock(&tdc->lock, 639);
+		if (tdc) ObtainSharedLock(&tdc->lock, 639);
 
 		/* afsremove releases the adp & tdc locks, and does vn_rele(avc) */
 		code = afsremove(adp, tdc, avc, unlname, cred, &treq);
