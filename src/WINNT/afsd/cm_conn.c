@@ -222,9 +222,6 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 	/* special codes:  missing volumes */
 	if (errorCode == VNOVOL || errorCode == VMOVED || errorCode == VOFFLINE
 	    || errorCode == VSALVAGE || errorCode == VNOSERVICE) {
-		long newSum;
-		int same;
-
 		/* Log server being offline for this volume */
 		osi_Log4(afsd_logp, "cm_Analyze found server %d.%d.%d.%d marked offline for a volume",
 			 ((serverp->addr.sin_addr.s_addr & 0xff)),
@@ -321,7 +318,7 @@ long cm_ConnByMServers(cm_serverRef_t *serversp, cm_user_t *usersp,
 	cm_serverRef_t *tsrp;
         cm_server_t *tsp;
         long firstError = 0;
-	int someBusy = 0, someOffline = 0;
+	int someBusy = 0, someOffline = 0, allDown = 1;
 	long timeUsed, timeLeft, hardTimeLeft;
 #ifdef DJGPP
         struct timeval now;
@@ -352,6 +349,7 @@ long cm_ConnByMServers(cm_serverRef_t *serversp, cm_user_t *usersp,
         tsp->refCount++;
         lock_ReleaseWrite(&cm_serverLock);
         if (!(tsp->flags & CM_SERVERFLAG_DOWN)) {
+            allDown = 0;
             if (tsrp->status == busy)
                 someBusy = 1;
             else if (tsrp->status == offline)
@@ -379,19 +377,23 @@ long cm_ConnByMServers(cm_serverRef_t *serversp, cm_user_t *usersp,
                 if (firstError == 0) 
                     firstError = code;
             }
-        }
+		} 
         lock_ObtainWrite(&cm_serverLock);
         osi_assert(tsp->refCount-- > 0);
     }   
 
 	lock_ReleaseWrite(&cm_serverLock);
 	if (firstError == 0) {
-		if (someBusy) firstError = CM_ERROR_ALLBUSY;
-		else if (someOffline) firstError = CM_ERROR_ALLOFFLINE;
-		else if (serversp) firstError = CM_ERROR_TIMEDOUT;
+		if (someBusy) 
+			firstError = CM_ERROR_ALLBUSY;
+		else if (someOffline) 
+			firstError = CM_ERROR_ALLOFFLINE;
+		else if (!allDown && serversp) 
+			firstError = CM_ERROR_TIMEDOUT;
 		/* Only return CM_ERROR_NOSUCHVOLUME if there are no
 		   servers for this volume */
-		else firstError = CM_ERROR_NOSUCHVOLUME;
+		else 
+			firstError = CM_ERROR_NOSUCHVOLUME;
 	}
 	osi_Log1(afsd_logp, "cm_ConnByMServers returning %x", firstError);
     return firstError;

@@ -401,6 +401,9 @@ long buf_AddBuffers(long nbuffers)
 	HANDLE hm;
 	long cs;
 
+    afsi_log("%d buffers being added to the existing cache of size %d",
+              nbuffers, buf_nbuffers);
+
 	/*
 	 * Cache file mapping constrained by
 	 * system allocation granularity;

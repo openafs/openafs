@@ -1811,7 +1811,7 @@ void smb_MapNTError(long code, unsigned long *NTStatusp)
 		NTStatus = 0xC000000FL;	/* No such file */
         }
         else if (code == CM_ERROR_TIMEDOUT) {
-		NTStatus = 0xC00000CFL;	/* Paused */
+            NTStatus = 0xC00000CFL;	/* Sharing Paused */
         }
         else if (code == CM_ERROR_RETRY) {
 		NTStatus = 0xC000022DL;	/* Retry */
@@ -1862,7 +1862,11 @@ void smb_MapNTError(long code, unsigned long *NTStatusp)
 		NTStatus = 0xC00000CCL;	/* Bad network name */
 	}
 	else if (code == CM_ERROR_NOIPC) {
+#ifdef COMMENT
 		NTStatus = 0xC0000022L;	/* Access Denied */
+#else
+        NTStatus = 0xC000013DL; /* Remote Resources */
+#endif
 	}
 	else if (code == CM_ERROR_CLOCKSKEW) {
 		NTStatus = 0xC0000133L;	/* Time difference at DC */

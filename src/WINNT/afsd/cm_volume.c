@@ -264,6 +264,8 @@ void cm_ForceUpdateVolume(cm_fid_t *fidp, cm_user_t *userp, cm_req_t *reqp)
 	cm_volume_t *volp;
 	long code;
 
+	if (!fidp) return;
+
 	cellp = cm_FindCellByID(fidp->cell);
 	if (!cellp) return;
 
