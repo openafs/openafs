@@ -45,7 +45,7 @@ else
 [#include <linux/version.h>
 #include <linux/config.h>
 ],
-[#if !defined(CONFIG_MODVERSIONS) || (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0))
+[#if !defined(CONFIG_MODVERSIONS)
 lose;
 #endif
 ],
@@ -53,7 +53,9 @@ lose;
   ac_cv_linux_config_modversions=no)])
   AC_MSG_RESULT($ac_cv_linux_config_modversions)
   AC_MSG_CHECKING(which kernel modules to build)
-  if test "x$ac_linux_rhconfig" = "xyes" -o "x$ac_cv_linux_config_modversions" = "xno"; then
+  if test "x$ac_linux_rhconfig" = "xyes"; then
+      MPS="MP SP"
+  elif test "x$ac_cv_linux_config_modversions" = "xno" -a "$AFS_SYSKVERS" -lt 26; then
       MPS="MP SP"
   else
   AC_CACHE_VAL(ac_cv_linux_config_smp, [
