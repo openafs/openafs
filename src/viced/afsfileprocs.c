@@ -1064,6 +1064,7 @@ SRXAFS_InlineBulkStatus(tcon, Fids, OutStats, CallBacks, Sync)
 			     READ_LOCK, &rights, &anyrights)) {
 	    tstatus = &OutStats->AFSBulkStats_val[i];
 	    tstatus->errorCode = errorCode;
+	    PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *) 0, volptr);
 	    parentwhentargetnotdir = (Vnode *) 0;
 	    targetptr = (Vnode *) 0;
 	    volptr = (Volume *) 0;
