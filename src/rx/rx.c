@@ -11,6 +11,7 @@
 
 #ifdef	KERNEL
 #include "../afs/param.h"
+#include <afsconfig.h>
 #include "../afs/sysincludes.h"
 #include "../afs/afsincludes.h"
 #ifndef UKERNEL
@@ -67,6 +68,7 @@ extern afs_int32 afs_termState;
 # include "../afsint/rxgen_consts.h"
 #else /* KERNEL */
 # include <afs/param.h>
+# include <afsconfig.h>
 # include <sys/types.h>
 # include <errno.h>
 #ifdef AFS_NT40_ENV
@@ -90,10 +92,12 @@ extern afs_int32 afs_termState;
 # include "rx_internal.h"
 # include <afs/rxgen_consts.h>
 #endif /* KERNEL */
-
-#ifdef RXDEBUG
-extern afs_uint32 LWP_ThreadId();
-#endif /* RXDEBUG */
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
 
 int (*registerProgram)() = 0;
 int (*swapNameProgram)() = 0;
@@ -625,7 +629,7 @@ void rxi_StartServerProcs(nExistingProcs)
 void rx_StartServer(donateMe)
 {
     register struct rx_service *service;
-    register int i, nProcs;
+    register int i, nProcs=0;
     SPLVAR;
     clock_NewTime();
 
@@ -1081,7 +1085,7 @@ register struct rx_connection *aconn; {
 
     NETPRI;
     for(i=0; i<RX_MAXCALLS; i++) {
-      if (tcall = aconn->call[i]) {
+      if ((tcall = aconn->call[i])) {
 	if ((tcall->state == RX_STATE_ACTIVE) 
 	    || (tcall->state == RX_STATE_PRECALL)) {
 	  USERPRI;
@@ -1532,14 +1536,14 @@ rx_GetCall(tno, cur_service, socketp)
 {
     struct rx_serverQueueEntry *sq;
     register struct rx_call *call = (struct rx_call *) 0, *choice2;
-    struct rx_service *service;
+    struct rx_service *service = NULL;
     SPLVAR;
 
     NETPRI;
     AFS_RXGLOCK();
     MUTEX_ENTER(&freeSQEList_lock);
 
-    if (sq = rx_FreeSQEList) {
+    if ((sq = rx_FreeSQEList)) {
 	rx_FreeSQEList = *(struct rx_serverQueueEntry **)sq;
 	MUTEX_EXIT(&freeSQEList_lock);
     } else {    /* otherwise allocate a new one and return that */
@@ -3223,7 +3227,6 @@ struct rx_packet *rxi_ReceiveAckPacket(call, np, istack)
     afs_uint32 serial;
     /* because there are CM's that are bogus, sending weird values for this. */
     afs_uint32 skew = 0;
-    int needRxStart = 0;
     int nbytes;
     int missing;
     int acked;
@@ -6248,7 +6251,6 @@ afs_int32 rx_GetServerPeers(
 {
     struct rx_debugIn in;
     afs_int32 rc = 0;
-    int i;
 
     /*
      * supportedValues is currently unused, but added to allow future
@@ -6406,7 +6408,7 @@ void shutdown_rx(void)
 
     MUTEX_ENTER(&freeSQEList_lock);
 
-    while (np = rx_FreeSQEList) {
+    while ((np = rx_FreeSQEList)) {
 	rx_FreeSQEList = *(struct rx_serverQueueEntry **)np;
 	MUTEX_DESTROY(&np->lock);
 	rxi_Free(np, sizeof(*np));
@@ -6905,9 +6907,6 @@ int rx_RetrieveProcessRPCStats(
 	ptr = *stats = (afs_uint32 *) rxi_Alloc(space);
 
 	if (ptr != NULL) {
-	    register struct rx_peer *pp;
-	    int i;
-	    int num_copied = 0;
 	    rx_interface_stat_p rpc_stat, nrpc_stat;
 
 
@@ -7010,8 +7009,6 @@ int rx_RetrievePeerRPCStats(
 	ptr = *stats = (afs_uint32 *) rxi_Alloc(space);
 
 	if (ptr != NULL) {
-	    int i;
-	    int num_copied = 0;
 	    rx_interface_stat_p rpc_stat, nrpc_stat;
 	    char *fix_offset;
 

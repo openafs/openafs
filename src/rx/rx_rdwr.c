@@ -9,6 +9,7 @@
 
 #ifdef	KERNEL
 #include "../afs/param.h"
+#include <afsconfig.h>
 #ifndef UKERNEL
 #if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 #include "../afs/sysincludes.h"
@@ -56,6 +57,7 @@
 #endif  /* AFS_ALPHA_ENV */
 #else /* KERNEL */
 # include <afs/param.h>
+# include <afsconfig.h>
 # include <sys/types.h>
 #ifndef AFS_NT40_ENV
 # include <sys/socket.h>
@@ -72,6 +74,15 @@
 # include "rx_globals.h"
 # include "rx_internal.h"
 #endif /* KERNEL */
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
 
 
 #ifdef RX_LOCKS_DB
@@ -128,7 +139,7 @@ int rxi_ReadProc(call, buf, nbytes)
                * work.  It may reduce the length of the packet by up
                * to conn->maxTrailerSize, to reflect the length of the
                * data + the header. */
-	      if (error = RXS_CheckPacket(conn->securityObject, call, rp)) {
+	      if ((error = RXS_CheckPacket(conn->securityObject, call, rp))) {
 		/* Used to merely shut down the call, but now we 
 		 * shut down the whole connection since this may 
 		 * indicate an attempt to hijack it */
@@ -401,7 +412,7 @@ int rxi_FillReadVec(call, seq, serial, flags)
     struct rx_packet *rp;
     struct rx_packet *curp;
     struct iovec *call_iov;
-    struct iovec *cur_iov;
+    struct iovec *cur_iov = NULL;
 
     curp = call->currentPacket;
     if (curp) {
@@ -424,7 +435,7 @@ int rxi_FillReadVec(call, seq, serial, flags)
              * work.  It may reduce the length of the packet by up
              * to conn->maxTrailerSize, to reflect the length of the
              * data + the header. */
-	    if (error = RXS_CheckPacket(conn->securityObject, call, rp)) {
+	    if ((error = RXS_CheckPacket(conn->securityObject, call, rp))) {
 	      /* Used to merely shut down the call, but now we 
 	       * shut down the whole connection since this may 
 	       * indicate an attempt to hijack it */
@@ -732,7 +743,7 @@ int rxi_WriteProc(call, buf, nbytes)
 		}
 #endif /* RX_ENABLE_LOCKS */
 	    }
-	    if (cp = rxi_AllocSendPacket(call, nbytes)) {
+	    if ((cp = rxi_AllocSendPacket(call, nbytes))) {
 		call->currentPacket = cp;
 		call->nFree = cp->length;
 		call->curvec = 1;   /* 0th vec is always header */
@@ -1106,7 +1117,6 @@ int rxi_WritevProc(call, iov, nio, nbytes)
     int nio;
     int nbytes;
 {
-    struct rx_connection *conn = call->conn;
     struct rx_packet *cp = call->currentPacket;
     register struct rx_packet *tp; /* Temporary packet pointer */
     register struct rx_packet *nxp; /* Next packet pointer, for queue_Scan */
@@ -1154,8 +1164,6 @@ int rxi_WritevProc(call, iov, nio, nbytes)
     nextio = 0;
     queue_Init(&tmpq);
     do {
-	unsigned int t;
-
 	if (call->nFree == 0 && cp) {
 	    clock_NewTime(); /* Bogus:  need new time package */
 	    /* The 0, below, specifies that it is not the last packet: 

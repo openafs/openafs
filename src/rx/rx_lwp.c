@@ -58,7 +58,7 @@ void rxi_Wakeup(void *addr)
 }
 
 PROCESS rx_listenerPid = 0;	/* LWP process id of socket listener process */
-void rx_ListenerProc(void *dummy);
+static void rx_ListenerProc(void *dummy);
 
 /*
  * Delay the current thread the specified number of seconds.
@@ -149,7 +149,10 @@ void rxi_ListenerProc(rfds, tnop, newcallp)
     afs_int32 nextPollTime;		/* time to next poll FD before sleeping */
     int lastPollWorked, doingPoll;	/* true iff last poll was useful */
     struct timeval tv, *tvp;
-    int i, code;
+    int code;
+#ifdef AFS_NT40_ENV
+    int i;
+#endif
     PROCESS pid;
     char name[MAXTHREADNAMELENGTH] = "srv_0";
 
@@ -440,4 +443,5 @@ int rxi_Sendmsg(osi_socket socket, struct msghdr *msg_p, int flags)
     }
     if (sfds)
 	IOMGR_FreeFDSet(sfds);
+    return 0;
 }

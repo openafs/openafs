@@ -9,6 +9,7 @@
 
 #include <sys/types.h>
 #include <afs/param.h>
+#include <afsconfig.h>
 #include <errno.h>
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
@@ -16,11 +17,22 @@
 #include <sys/socket.h>
 #include <sys/file.h>
 #include <netdb.h>
+#endif
+#ifdef HAVE_NETINET_IN_H
 #include <netinet/in.h>
+#endif
+#ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
+#endif
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
+#ifdef HAVE_STRING_H
 #include <string.h>
+#endif
+#ifdef HAVE_STRINGS_H
+#include <string.h>
+#endif
 #include <sys/stat.h>
 #include <afs/stds.h>
 #include <afs/cmd.h>

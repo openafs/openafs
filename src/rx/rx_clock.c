@@ -72,9 +72,11 @@ void clock_Init(void) {
 
 #ifndef KERNEL
 /* Make clock uninitialized. */
+int
 clock_UnInit()
 {
     clockInitialized = 0;
+    return 0;
 } 
 #endif 
 

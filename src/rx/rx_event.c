@@ -170,7 +170,6 @@ struct rxevent *rxevent_Post(struct clock *when, void (*func)(),
 {
     register struct rxevent *ev, *evqe, *evqpr;
     register struct rxepoch *ep, *epqe, *epqpr;
-    struct clock ept;
     int isEarliest = 0;
 
     MUTEX_ENTER(&rxevent_lock);

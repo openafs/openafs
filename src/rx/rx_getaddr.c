@@ -327,7 +327,9 @@ int    maxSize;        /* sizeof of buffer in afs_int32 units */
     struct ifconf   ifc;
     struct ifreq    ifs[NIFS], *ifr;
     struct sockaddr_in *a;
+#if     defined(AFS_AIX41_ENV) || defined(AFS_USR_AIX_ENV)
     char	*cp, *cplim;	/* used only for AIX 41 */
+#endif
 
     s = socket(AF_INET, SOCK_DGRAM, 0);
     if (s < 0)
@@ -392,9 +394,11 @@ int rxi_getAllAddrMaskMtu (addrBuffer, maskBuffer, mtuBuffer, maxSize)
    int     s;
    int     i, len, count=0;
    struct ifconf   ifc;
-   struct ifreq    ifs[NIFS], *ifr, tempIfr;
+   struct ifreq    ifs[NIFS], *ifr;
    struct sockaddr_in *a;
+#if     defined(AFS_AIX41_ENV) || defined(AFS_USR_AIX_ENV)
    char        *cp, *cplim;    /* used only for AIX 41 */
+#endif
 
 #if !defined(AFS_USERSPACE_IP_ADDR)
    count = rx_getAllAddr(addrBuffer, 1024);
