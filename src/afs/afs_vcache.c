@@ -958,8 +958,8 @@ restart:
 	list_add(&ip->i_sb_list, &ip->i_sb->s_inodes);
 #endif
 #ifdef STRUCT_INODE_HAS_INOTIFY_LOCK
-	INIT_LIST_HEAD(&inode->inotify_watches); 
-	spin_lock_init(&inode->inotify_lock); 
+	INIT_LIST_HEAD(&ip->inotify_watches); 
+	spin_lock_init(&ip->inotify_lock); 
 #endif 
     }
 #endif
