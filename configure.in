@@ -2,6 +2,7 @@ AC_INIT(src/config/stds.h)
 AM_INIT_AUTOMAKE(openafs,1.2.6)
 AC_CONFIG_HEADER(src/config/afsconfig.h)
 
+AC_PROG_CC
 OPENAFS_CONFIGURE_COMMON
 
 TOP_SRCDIR="${SRCDIR_PARENT}/src"
