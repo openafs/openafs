@@ -883,6 +883,7 @@ afs_lookup(adp, aname, avcp, acred)
     extern afs_int32 afs_mariner;			/*Writing activity to log?*/
     OSI_VC_CONVERT(adp)
     afs_hyper_t versionNo;
+    int no_read_access = 0;
 
     AFS_STATCNT(afs_lookup);
 #ifdef	AFS_OSF_ENV
@@ -990,6 +991,10 @@ afs_lookup(adp, aname, avcp, acred)
        else adp->last_looker = treq.uid;
     } 
 
+    /* Check for read access as well.  We need read access in order to
+       stat files, but not to stat subdirectories. */
+    if (!afs_AccessOK(adp, PRSFS_READ, &treq, CHECK_MODE_BITS))
+	no_read_access = 1;
 
     /* special case lookup of ".".  Can we check for it sooner in this code,
      * for instance, way up before "redo:" ??
@@ -1011,25 +1016,30 @@ afs_lookup(adp, aname, avcp, acred)
 
     tvc = osi_dnlc_lookup (adp, tname, WRITE_LOCK);
     *avcp = tvc;  /* maybe wasn't initialized, but it is now */
-#ifdef AFS_LINUX22_ENV
     if (tvc) {
-      if (tvc->mvstat == 2) { /* we don't trust the dnlc for root vcaches */
-	AFS_RELE(tvc);
-	*avcp = 0;
-      }
-      else {  
+	if (no_read_access && vType(tvc) != VDIR) {
+	    /* need read access on dir to stat non-directory */
+	    afs_PutVCache(tvc, WRITE_LOCK);
+	    *avcp = (struct vcache *)0;
+	    code = EACCES;
+	    goto done;
+	}
+#ifdef AFS_LINUX22_ENV
+	if (tvc->mvstat == 2) { /* we don't trust the dnlc for root vcaches */
+	    AFS_RELE(tvc);
+	    *avcp = 0;
+	}
+	else {  
+	    code = 0;
+	    hit = 1;
+	    goto done;
+	}
+#else /* non - LINUX */
 	code = 0;
 	hit = 1;
 	goto done;
-      }
-    }
-#else /* non - LINUX */
-    if (tvc) {
-      code = 0;
-      hit = 1;
-      goto done;
-    }
 #endif /* linux22 */
+    }
 
     {
     register struct dcache *tdc;
