@@ -287,6 +287,15 @@ else
 		sparc-sun-solaris2.9)
 			AFS_SYSNAME="sun4x_59"
 			;;
+		i386-pc-solaris2.7)
+			AFS_SYSNAME="sunx86_57"
+			;;
+		i386-pc-solaris2.8)
+			AFS_SYSNAME="sunx86_58"
+			;;
+		i386-pc-solaris2.9)
+			AFS_SYSNAME="sunx86_59"
+			;;
 		alpha*-dec-osf4.0*)
 			AFS_SYSNAME="alpha_dux40"
 			;;

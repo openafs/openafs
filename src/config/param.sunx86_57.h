@@ -24,7 +24,6 @@
 #define	AFS_SUN55_ENV		1
 #define	AFS_SUN56_ENV		1
 #define AFS_SUN57_ENV		1
-#define AFS_SUN58_ENV		1
 #define AFS_X86_ENV		1
 
 #define AFS_64BIT_ENV		1       /* Defines afs_int32 as int, not long. */
@@ -35,21 +34,16 @@
 #define RXK_LISTENER_ENV   1
 #define AFS_GCPAGS		1       /* if nonzero, garbage collect PAGs */
 
-#ifdef AFS_NAMEI_ENV
-#define AFS_64BIT_IOPS_ENV	1	/* needed for NAMEI... */
-#else /* AFS_NAMEI_ENV */
 #define	AFS_3DISPARES		1	/* Utilize the 3 available disk inode 'spares' */
-#endif /* AFS_NAMEI_ENV */
-
-#define	AFS_SYSCALL		65
+#define	AFS_SYSCALL		73
 
 /* File system entry (used if mount.h doesn't define MOUNT_AFS */
 #define AFS_MOUNT_AFS	 "afs"
 
 /* Machine / Operating system information */
-#define sys_sunx86_58	1
-#define SYS_NAME	"sunx86_58"
-#define SYS_NAME_ID	SYS_NAME_ID_sunx86_58
+#define sys_sunx86_57	1
+#define SYS_NAME	"sunx86_57"
+#define SYS_NAME_ID	SYS_NAME_ID_sunx86_57
 #define AFSLITTLE_ENDIAN	1
 #define AFS_HAVE_FFS    1       /* Use system's ffs. */
 #define AFS_HAVE_VXFS	1	/* Support cache on Veritas vxfs file system */

@@ -206,7 +206,7 @@ viced: project vlserver audit
 
 tviced: project viced vlserver libafsrpc libafsauthent
 	case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux110|*fbsd*) \
+	alpha_dux*|sgi_*|sun*_*|rs_aix*|*linux*|hp_ux110|*fbsd*) \
 		${COMPILE_PART1} tviced ${COMPILE_PART2} ;; \
 	*) \
 		echo Not building MT viced for ${SYS_NAME} ;; \
@@ -714,7 +714,7 @@ package.files: package
 ntp: project volser
 	@case ${WITH_OBSOLETE} in \
 	YES) 	case ${SYS_NAME} in \
-		sun4x_58 | sunx86_58 | *linux* | *fbsd* | ppc_darwin* ) echo skipping ntp for ${SYS_NAME} ;; \
+		sun4x_58 | sunx86_* | *linux* | *fbsd* | ppc_darwin* ) echo skipping ntp for ${SYS_NAME} ;; \
 		* ) ${COMPILE_PART1} ntp ${COMPILE_PART2} ;; \
 		esac ;; \
 	*)	echo skipping deprecated target: ntp ;; \
