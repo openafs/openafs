@@ -54,6 +54,9 @@
 #define COMPAT_43
 #endif
 
+#define KERNEL_HAVE_UERROR 1
+#define KERNEL_HAVE_PIN 1
+
 /* Extra kernel definitions (from kdefs file) */
 #ifdef _KERNEL
 #define	AFS_SHORTGID	1
@@ -116,6 +119,7 @@
 #define AFS_USR_AIX_ENV		1
 #define AFS_USR_AIX41_ENV	1
 #define AFS_USR_AIX42_ENV	1
+#define AFS_USR_AIX51_ENV		1
 
 #else  /* KERNEL */
 
@@ -123,6 +127,7 @@
 #define	AFS_AIX32_ENV		1
 #define	AFS_AIX41_ENV		1
 #define AFS_AIX42_ENV		1
+#define AFS_AIX51_ENV		1
 
 #endif /* KERNEL */
 
@@ -137,9 +142,9 @@
 #define AFS_MOUNT_AFS	 4
 
 /* Machine / Operating system information */
-#define sys_rs_aix42	1
-#define SYS_NAME	"rs_aix42"
-#define SYS_NAME_ID	SYS_NAME_ID_rs_aix42
+#define sys_rs_aix51	1
+#define SYS_NAME	"rs_aix51"
+#define SYS_NAME_ID	SYS_NAME_ID_rs_aix51
 #define AFSBIG_ENDIAN	1
 #define AFS_HAVE_FFS            1       /* Use system's ffs. */
 #define AFS_HAVE_STATVFS	0	/* System doesn't support statvfs */
