@@ -84,7 +84,10 @@ xdr_array(xdrs, addrp, sizep, maxsize, elsize, elproc)
 	register caddr_t target = *addrp;
 	register u_int c;  /* the actual element count */
 	register bool_t stat = TRUE;
-	register int nodesize;
+	register u_int nodesize;
+
+        i = ((~0) >> 1) / elsize;
+        if (maxsize > i) maxsize = i;
 
 	/* like strings, arrays are really counted arrays */
 	if (! xdr_u_int(xdrs, sizep)) {

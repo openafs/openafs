@@ -558,6 +558,8 @@ xdr_string(xdrs, cpp, maxsize)
 	u_int size;
 	u_int nodesize;
 
+        if (maxsize > ((~0) >> 1) - 1) maxsize = ((~0) >> 1) - 1;
+
 	/*
 	 * first deal with the length since xdr strings are counted-strings
 	 */
