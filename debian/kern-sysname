@@ -8,6 +8,9 @@ i[3456]86)
 	    2.4*)
 		echo i386_linux24
 		;;
+	    2.6)
+	        echo i386_linux26
+		;;
 	    esac
 ;;
     ia64)
