@@ -7,6 +7,14 @@ OpenAFS News -- history of user-visible changes. October 19, 2001
    This is enabled by passing -fakestat to afsd, but might not be stable
    on all platforms.
 
+* Changes incorporated in OpenAFS 1.2.4
+
+** Server logfiles now more consistant about format in which hosts are
+   referred to.
+
+** vfsck on Solaris will now allow force runs (using -y flag) even if old 
+   inodes exist.
+
 * Changes incorporated in OpenAFS 1.2.3
 
 ** Cell aliases for dynroot can be specified in the CellAlias file in
