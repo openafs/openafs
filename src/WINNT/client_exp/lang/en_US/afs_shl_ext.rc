@@ -635,6 +635,18 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
+    IDS_SYMBOLICLINK_ADD                  "&Add"
+    IDS_SYMBOLICLINK_EDIT                 "&Edit..."
+    IDS_SYMBOLICLINK_REMOVE               "&Remove"
+    IDS_SYMBOLIC_LINK_ITEM                "Symbolic &Link"
+    IDS_UNABLE_TO_CREATE_SYMBOLIC_LINK    "Unable to create symbolic link: %o."
+    IDS_UNABLE_TO_SET_CURRENT_DIRECTORY   "Unable to set current directory."
+    IDS_CURRENT_DIRECTORY_PATH_TOO_LONG   "Current directory pathname is too long."
+    IDS_CLEANACL_ERROR                    "Error Cleaning ACL(s)"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
     AFX_IDS_APP_TITLE       "AFS Client"
 END
 

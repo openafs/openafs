@@ -237,11 +237,10 @@ STDMETHODIMP CShellExt::XMenuExt::QueryContextMenu(HMENU hMenu,UINT indexMenu,
     HMENU hSymbolicMenu = CreatePopupMenu();
 	int indexSymbolicMenu = 0;
     ::InsertMenu(hSymbolicMenu, indexSymbolicMenu++, MF_STRING | MF_BYPOSITION, idCmdFirst + IDM_SYMBOLICLINK_ADD, GetMessageString(IDS_SYMBOLICLINK_ADD));
-    // ::InsertMenu(hSymbolicMenu, indexSymbolicMenu++, MF_STRING | MF_BYPOSITION, idCmdFirst + IDM_SYMBOLICLINK_EDIT, GetMessageString(IDS_SYMBOLICLINK_EDIT));
-	::InsertMenu(hSymbolicMenu, indexSymbolicMenu++, MF_STRING | MF_BYPOSITION, idCmdFirst + IDM_SYMBOLICLINK_REMOVE, GetMessageString(IDS_SYMBOLICLINK_REMOVE));
-       
-	::EnableMenuItem(hSymbolicMenu,1,((pThis->m_bIsSymlink)?MF_ENABLED:MF_GRAYED)|MF_BYPOSITION);
-    // ::EnableMenuItem(hSymbolicMenu,2,((pThis->m_bIsSymlink)?MF_ENABLED:MF_GRAYED)|MF_BYPOSITION);
+    // ::InsertMenu(hSymbolicMenu, indexSymbolicMenu, MF_STRING | MF_BYPOSITION, idCmdFirst + IDM_SYMBOLICLINK_EDIT, GetMessageString(IDS_SYMBOLICLINK_EDIT));
+	// ::EnableMenuItem(hSymbolicMenu,indexSymbolicMenu++,((pThis->m_bIsSymlink)?MF_ENABLED:MF_GRAYED)|MF_BYPOSITION);
+	::InsertMenu(hSymbolicMenu, indexSymbolicMenu, MF_STRING | MF_BYPOSITION, idCmdFirst + IDM_SYMBOLICLINK_REMOVE, GetMessageString(IDS_SYMBOLICLINK_REMOVE));
+	::EnableMenuItem(hSymbolicMenu,indexSymbolicMenu++,((pThis->m_bIsSymlink)?MF_ENABLED:MF_GRAYED)|MF_BYPOSITION);
 	::InsertMenu(hAfsMenu, indexAfsMenu++, MF_STRING | MF_BYPOSITION | MF_POPUP, (UINT)hSymbolicMenu, GetMessageString(IDS_SYMBOLIC_LINK_ITEM));
 	
 	// The Submounts menu has been removed because the AFS tray icon

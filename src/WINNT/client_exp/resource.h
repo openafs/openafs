@@ -126,25 +126,27 @@
 #define IDS_CURRENT_DIRECTORY_PATH_TOO_LONG    134
 #define IDS_CLEANACL_ERROR                     135
                                            
-#define IDM_AUTHENTICATION              901
-#define IDM_ACL_SET                     902
-#define IDM_VOLUME_PROPERTIES           903
-#define IDM_VOLUMEPARTITION_UPDATENAMEIDTABLE 904
-#define IDM_MOUNTPOINT_SHOW             905
-#define IDM_MOUNTPOINT_REMOVE           906
-#define IDM_MOUNTPOINT_MAKE             907
-#define IDM_FLUSH                       908
-#define IDM_FLUSH_VOLUME                909
-#define IDM_SHOW_SERVER                 910
-#define IDM_SHOWCELL                    911
-#define IDM_SERVER_STATUS               912
-#define IDM_SYMBOLICLINK_REMOVE         913
-#define IDM_SYMBOLICLINK_ADD            914
-#define IDM_SUBMOUNTS                   915
-#define IDM_ACL_CLEAN                   916
+#define IDM_AUTHENTICATION                    0
+#define IDM_ACL_SET                           1
+#define IDM_VOLUME_PROPERTIES                 2
+#define IDM_VOLUMEPARTITION_UPDATENAMEIDTABLE 3
+#define IDM_MOUNTPOINT_SHOW                   4
+#define IDM_MOUNTPOINT_REMOVE                 5
+#define IDM_MOUNTPOINT_MAKE                   6
+#define IDM_FLUSH                             7
+#define IDM_FLUSH_VOLUME                      8
+#define IDM_SHOW_SERVER                       9
+#define IDM_SHOWCELL                          10
+#define IDM_SERVER_STATUS                     11
+#define IDM_SYMBOLICLINK_REMOVE               12
+#define IDM_SYMBOLICLINK_ADD                  13
+#define IDM_SUBMOUNTS                         14
+#define IDM_ACL_CLEAN                         15
+#define IDM_SUBMOUNTS_EDIT                    16
+#define IDM_REMOVE_SYMLINK                    17
+                                           
 #define ID_GET_TOKENS                   917
 #define ID_DISCARD_TOKENS               918
-#define IDM_SUBMOUNTS_EDIT              919
 #define IDD_KLOG_DIALOG                 920
 #define IDR_MENU_FILE                   930
 #define IDD_VOLUME_INFO                 931
@@ -168,7 +170,9 @@
 #define IDD_UNLOG_DIALOG                954
 #define IDD_ADD_SUBMOUNT                955
 #define IDD_SYMBOLICLINK_ADD            956
-#define IDM_REMOVE_SYMLINK              957
+#define ID_REMOVE_SYMLINK               957
+#define ID_SYMBOLICLINK_ADD             958
+#define ID_SYMBOLICLINK_REMOVE          959
 #define IDC_LIST                        1001
 #define IDC_PASSWORD                    1002
 #define IDC_OFFLINE_MSG                 1003
@@ -255,9 +259,6 @@
 #define IDC_STATIC_CONTROL2             1084
 #define IDC_SHARE_NAME                  1085
 #define IDC_PATH_NAME                   1086
-#define ID_REMOVE_SYMLINK               32828
-#define ID_SYMBOLICLINK_ADD             59195
-#define ID_SYMBOLICLINK_REMOVE          59196
 
 
 // Next default values for new objects
