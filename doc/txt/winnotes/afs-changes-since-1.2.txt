@@ -1,10 +1,4 @@
 Since 1.3.66:
-   * The WinLogon Event Handlers for "Startup" and "Logoff" have been
-     removed at the very last moment due to problems caused with the
-     final release version of XP SP2.  This means that tokens will 
-     not be destroyed on logoff.  The code is not being removed it
-     is simply not going to be enabled.
-
    * file and directory names beginning with "." will now be given the
      hidden attribute when the volume access is anonymous.  this matches
      the behavior when the volume access is via an authenticated user.
@@ -137,7 +131,8 @@ Since 1.3.65:
      user's profile is not loaded from within AFS.  If the profile 
      was loaded from AFS we can't release the tokens since the Logoff
      event is triggered prior to the profile being written back to 
-     the its source location.
+     the its source location.  This is now performed in an XP SP2 
+     safe manner.
 
    * Windows XP SP2 Internet Connection Firewall interoperability
      has been added.

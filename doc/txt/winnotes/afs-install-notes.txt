@@ -318,18 +318,7 @@ unless the user's profile was loaded from an AFS volume.  In this situation
 there is no mechanism to determine when the profile has been successfully
 written back to the network.  It is therefore unsafe to release the user's
 tokens.
-
-Note: This functionality has been disabled in the 1.3.70 installers due
-to problems discovered with the final release build of XP SP2.  To enable
-this functionality on other versions of Windows the following registry 
-entries should be added:
-
-  REG_DWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" "Asynchronous" 0
-  REG_DWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" "Impersonate"  1
-  REG_SZ    HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" "DLLName" "afslogon.dll"
-  REG_SZ    HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" "Logoff" "AFS_Logoff_Event"
-  REG_SZ    HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" "Startup" "AFS_Startup_Event"
-
+                                                   
 
 23. Terminal Server installations.
 When installing under Terminal Server, you must execute the NSIS installer
