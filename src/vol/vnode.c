@@ -392,6 +392,7 @@ Vnode *VAllocVnode_r(ec,vp,type)
 	  } else {
 	      /* growing file - grow in a reasonable increment */
 	      char *buf = (char *)malloc(16*1024);
+	      if (!buf) Abort("VAllocVnode: malloc failed\n");
 	      memset(buf, 0, 16*1024);
 	      FDH_WRITE(fdP, buf, 16*1024);
 	      free(buf);

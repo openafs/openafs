@@ -1719,6 +1719,7 @@ void VAddToVolumeUpdateList_r(Error *ec, Volume *vp)
 	    UpdateList = (VolumeId *) realloc(UpdateList, sizeof (VolumeId) * updateSize);
 	}
     }
+    assert(UpdateList != NULL);
     UpdateList[nUpdatedVolumes++] = V_id(vp);
 }
 
