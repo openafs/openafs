@@ -18,13 +18,14 @@ Next, unpack openafs-modules-source
 cd /usr/src
 tar xzf openafs.tar.gz
 
-Now, change into your kernel source tree.
-You should then create a .config file; the easiest way to do this is
-to run make menuconfig or to copy in a kernel configuration from the
-same version of the kernel.  Finally build the modules
+Now, change into your kernel source tree.  You should then create a
+.config file; the easiest way to do this is to run make menuconfig or
+to copy in a kernel configuration from the same version of the kernel.
+Debian kernel packages store a copy of their kernel configuration in
+/boot/config.version_number.  Finally build the modules
 
 make-kpkg configure
-make-kpkg modules
+make-kpkg modules_image
 
 Ignore any errors about genchanges.sh failing.  An openafs-modules deb
 should be created.  Use dpkg -i to install this version.
