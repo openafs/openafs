@@ -394,7 +394,7 @@ int afsd_InitCM(char **reasonP)
     static struct rx_securityClass *nullServerSecurityClassp;
     struct hostent *thp;
     char *msgBuf;
-    char buf[1024];
+    char buf[1024], *p, *q;
     HKEY parmKey;
     DWORD dummyLen;
     DWORD regType;
@@ -671,35 +671,36 @@ int afsd_InitCM(char **reasonP)
 
     dummyLen = sizeof(buf);
     code = RegQueryValueEx(parmKey, "SysName", NULL, NULL, buf, &dummyLen);
-    if (code == ERROR_SUCCESS && buf[0]) {
-        char * p, *q; 
-        afsi_log("Sys name %s", buf);
-
-        for (p = q = buf; p < buf + dummyLen; p++)
-        {
-            if (*p == '\0' || isspace(*p)) {
-                memcpy(cm_sysNameList[cm_sysNameCount],q,p-q);
-                cm_sysNameList[cm_sysNameCount][p-q] = '\0';
-                cm_sysNameCount++;
-
-                do {
-                    if (*p == '\0')
-                        goto done_sysname;
-                        
-                    p++;
-                } while (*p == '\0' || isspace(*p));
-                q = p;
-                p--;
-            }
-        }
-      done_sysname:
-        StringCbCopyA(cm_sysName, MAXSYSNAME, cm_sysNameList[0]);
-    } else {
-        cm_sysNameCount = 1;
-        StringCbCopyA(cm_sysName, MAXSYSNAME, "i386_nt40");
-        StringCbCopyA(cm_sysNameList[0], MAXSYSNAME, "i386_nt40");
-        afsi_log("Default sys name %s", cm_sysName);
+    if (code != ERROR_SUCCESS || !buf[0]) {
+#if defined(_IA64_)
+        StringCbCopyA(buf, sizeof(buf), "ia64_win64");
+#elif defined(_AMD64)
+        StringCbCopyA(buf, sizeof(buf), "amd64_win64");
+#else /* assume x86 32-bit */
+        StringCbCopyA(buf, sizeof(buf), "x86_win32 i386_w2k i386_nt40");
+#endif
     }
+    afsi_log("Sys name %s", buf); 
+
+    /* breakup buf into individual search string entries */
+    for (p = q = buf; p < buf + dummyLen; p++)
+    {
+        if (*p == '\0' || isspace(*p)) {
+            memcpy(cm_sysNameList[cm_sysNameCount],q,p-q);
+            cm_sysNameList[cm_sysNameCount][p-q] = '\0';
+            cm_sysNameCount++;
+
+            do {
+                if (*p == '\0')
+                    goto done_sysname;
+                p++;
+            } while (*p == '\0' || isspace(*p));
+            q = p;
+            p--;
+        }
+    }
+  done_sysname:
+    StringCbCopyA(cm_sysName, MAXSYSNAME, cm_sysNameList[0]);
 
     dummyLen = sizeof(cryptall);
     code = RegQueryValueEx(parmKey, "SecurityLevel", NULL, NULL,

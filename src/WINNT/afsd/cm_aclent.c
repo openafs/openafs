@@ -28,7 +28,8 @@
  * An aclent structure is free if it has no back vnode pointer.
  */
 osi_rwlock_t cm_aclLock;		/* lock for system's aclents */
-
+cm_aclent_t *cm_aclLRUp;                /* LRUQ for dudes in vnode's lists */
+cm_aclent_t *cm_aclLRUEndp;             /* ditto */
 /* 
  * Get an acl cache entry for a particular user and file, or return that it doesn't exist.
  * Called with the scp locked.
@@ -51,13 +52,13 @@ long cm_FindACLCache(cm_scache_t *scp, cm_user_t *userp, long *rightsp)
                  */
             } else {
                 *rightsp = aclp->randomAccess;
-                if (cm_data.aclLRUEndp == aclp)
-                    cm_data.aclLRUEndp = (cm_aclent_t *) osi_QPrev(&aclp->q);
+                if (cm_aclLRUEndp == aclp)
+                    cm_aclLRUEndp = (cm_aclent_t *) osi_QPrev(&aclp->q);
 
                 /* move to the head of the LRU queue */
-                osi_QRemove((osi_queue_t **) &cm_data.aclLRUp, &aclp->q);
-                osi_QAddH((osi_queue_t **) &cm_data.aclLRUp,
-                           (osi_queue_t **) &cm_data.aclLRUEndp,
+                osi_QRemove((osi_queue_t **) &cm_aclLRUp, &aclp->q);
+                osi_QAddH((osi_queue_t **) &cm_aclLRUp,
+                           (osi_queue_t **) &cm_aclLRUEndp,
                            &aclp->q);
                 retval = 0;     /* success */
             }               
@@ -80,14 +81,14 @@ static cm_aclent_t *GetFreeACLEnt(void)
     cm_aclent_t *taclp;
     cm_aclent_t **laclpp;
 
-    if (cm_data.aclLRUp == NULL)
+    if (cm_aclLRUp == NULL)
         osi_panic("empty aclent LRU", __FILE__, __LINE__);
 
     lock_ObtainWrite(&cm_aclLock);
-    aclp = cm_data.aclLRUEndp;
-    if (aclp == cm_data.aclLRUEndp)
-        cm_data.aclLRUEndp = (cm_aclent_t *) osi_QPrev(&aclp->q);
-    osi_QRemove((osi_queue_t **) &cm_data.aclLRUp, &aclp->q);
+    aclp = cm_aclLRUEndp;
+    if (aclp == cm_aclLRUEndp)
+        cm_aclLRUEndp = (cm_aclent_t *) osi_QPrev(&aclp->q);
+    osi_QRemove((osi_queue_t **) &cm_aclLRUp, &aclp->q);
     if (aclp->backp) {
         /* 
          * Remove the entry from the vnode's list 
@@ -140,7 +141,7 @@ long cm_AddACLCache(cm_scache_t *scp, cm_user_t *userp, long rights)
      * someone there.
      */
     aclp = GetFreeACLEnt();		 /* can't fail, panics instead */
-    osi_QAddH((osi_queue_t **) &cm_data.aclLRUp, (osi_queue_t **) &cm_data.aclLRUEndp, &aclp->q);
+    osi_QAddH((osi_queue_t **) &cm_aclLRUp, (osi_queue_t **) &cm_aclLRUEndp, &aclp->q);
     aclp->backp = scp;
     aclp->nextp = scp->randomACLp;
     scp->randomACLp = aclp;
@@ -153,73 +154,10 @@ long cm_AddACLCache(cm_scache_t *scp, cm_user_t *userp, long rights)
     return 0;
 }
 
-long cm_ShutdownACLCache(void)
-{
-    return 0;
-}
-
-long cm_ValidateACLCache(void)
-{
-    long size = cm_data.stats * 2;
-    long count;
-    cm_aclent_t * aclp;
-
-    for ( aclp = cm_data.aclLRUp, count = 0; aclp;
-          aclp = (cm_aclent_t *) osi_QNext(&aclp->q), count++ ) {
-        if (aclp->magic != CM_ACLENT_MAGIC) {
-            afsi_log("cm_ValidateACLCache failure: acpl->magic != CM_ACLENT_MAGIC");
-            fprintf(stderr, "cm_ValidateACLCache failure: acpl->magic != CM_ACLENT_MAGIC\n");
-            return -1;
-        }
-        if (aclp->nextp && aclp->nextp->magic != CM_ACLENT_MAGIC) {
-            afsi_log("cm_ValidateACLCache failure: acpl->nextp->magic != CM_ACLENT_MAGIC");
-            fprintf(stderr,"cm_ValidateACLCache failure: acpl->nextp->magic != CM_ACLENT_MAGIC\n");
-            return -2;
-        }
-        if (aclp->backp && aclp->backp->magic != CM_SCACHE_MAGIC) {
-            afsi_log("cm_ValidateACLCache failure: acpl->backp->magic != CM_SCACHE_MAGIC");
-            fprintf(stderr,"cm_ValidateACLCache failure: acpl->backp->magic != CM_SCACHE_MAGIC\n");
-            return -3;
-        }
-        if (count != 0 && aclp == cm_data.aclLRUp || count > size) {
-            afsi_log("cm_ValidateACLCache failure: loop in cm_data.aclLRUp list");
-            fprintf(stderr, "cm_ValidateACLCache failure: loop in cm_data.aclLRUp list\n");
-            return -4;
-        }
-    }
-
-    for ( aclp = cm_data.aclLRUEndp, count = 0; aclp;
-          aclp = (cm_aclent_t *) osi_QPrev(&aclp->q), count++ ) {
-        if (aclp->magic != CM_ACLENT_MAGIC) {
-            afsi_log("cm_ValidateACLCache failure: aclp->magic != CM_ACLENT_MAGIC");
-            fprintf(stderr, "cm_ValidateACLCache failure: aclp->magic != CM_ACLENT_MAGIC\n");
-            return -5;
-        }
-        if (aclp->nextp && aclp->nextp->magic != CM_ACLENT_MAGIC) {
-            afsi_log("cm_ValidateACLCache failure: aclp->nextp->magic != CM_ACLENT_MAGIC");
-            fprintf(stderr, "cm_ValidateACLCache failure: aclp->nextp->magic != CM_ACLENT_MAGIC\n");
-            return -6;
-        }
-        if (aclp->backp && aclp->backp->magic != CM_SCACHE_MAGIC) {
-            afsi_log("cm_ValidateACLCache failure: aclp->backp->magic != CM_SCACHE_MAGIC");
-            fprintf(stderr, "cm_ValidateACLCache failure: aclp->backp->magic != CM_SCACHE_MAGIC\n");
-            return -7;
-        }
-
-        if (count != 0 && aclp == cm_data.aclLRUEndp || count > size) {
-            afsi_log("cm_ValidateACLCache failure: loop in cm_data.aclLRUEndp list");
-            fprintf(stderr, "cm_ValidateACLCache failure: loop in cm_data.aclLRUEndp list\n");
-            return -8;
-        }
-    }
-
-    return 0;
-}
-
 /* 
  * Initialize the cache to have an entries.  Called during system startup.
  */
-long cm_InitACLCache(int newFile, long size)
+long cm_InitACLCache(long size)
 {
     cm_aclent_t *aclp;
     long i;
@@ -231,26 +169,16 @@ long cm_InitACLCache(int newFile, long size)
     }
 
     lock_ObtainWrite(&cm_aclLock);
-    if ( newFile ) {
-        cm_data.aclLRUp = cm_data.aclLRUEndp = NULL;
-        aclp = (cm_aclent_t *) cm_data.aclBaseAddress;
-        memset(aclp, 0, size * sizeof(cm_aclent_t));
+    cm_aclLRUp = cm_aclLRUEndp = NULL;
+    aclp = (cm_aclent_t *) malloc(size * sizeof(cm_aclent_t));
+    memset(aclp, 0, size * sizeof(cm_aclent_t));
 
-        /* 
-         * Put all of these guys on the LRU queue 
-         */
-        for (i = 0; i < size; i++) {
-            aclp->magic = CM_ACLENT_MAGIC;
-            osi_QAddH((osi_queue_t **) &cm_data.aclLRUp, (osi_queue_t **) &cm_data.aclLRUEndp, &aclp->q);
-            aclp++;
-        }
-    } else {
-        aclp = (cm_aclent_t *) cm_data.aclBaseAddress;
-        for (i = 0; i < size; i++) {
-            aclp->userp = NULL;
-            aclp->tgtLifetime = 0;
-            aclp++;
-        }
+    /* 
+     * Put all of these guys on the LRU queue 
+     */
+    for (i = 0; i < size; i++) {
+        osi_QAddH((osi_queue_t **) &cm_aclLRUp, (osi_queue_t **) &cm_aclLRUEndp, &aclp->q);
+        aclp++;
     }
     lock_ReleaseWrite(&cm_aclLock);
     return 0;
