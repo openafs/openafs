@@ -1492,6 +1492,13 @@ osi_socket *socketp;
 	    MUTEX_EXIT(&rx_serverPool_lock);
 	    MUTEX_ENTER(&call->lock);
 
+	    if (call->flags & RX_CALL_WAIT_PROC) {
+		call->flags &= ~RX_CALL_WAIT_PROC;
+		MUTEX_ENTER(&rx_stats_mutex);
+		rx_nWaiting--;
+		MUTEX_EXIT(&rx_stats_mutex);
+	    }
+
 	    if (call->state != RX_STATE_PRECALL || call->error) {
 		MUTEX_EXIT(&call->lock);
 		MUTEX_ENTER(&rx_serverPool_lock);
@@ -1505,10 +1512,6 @@ osi_socket *socketp;
 		rxi_SendAck(call, 0, 0, 0, 0, RX_ACK_DELAY, 0);
 
 	    CLEAR_CALL_QUEUE_LOCK(call);
-	    call->flags &= ~RX_CALL_WAIT_PROC;
-	    MUTEX_ENTER(&rx_stats_mutex);
-	    rx_nWaiting--;
-	    MUTEX_EXIT(&rx_stats_mutex);
 	    break;
 	}
 	else {
