@@ -31,7 +31,7 @@ RCSID("$Header$");
 #include "../h/time.h"
 #ifndef AFS_LINUX22_ENV
 #include "../rpc/types.h"
-#include "../rpc/xdr.h"
+#include "../rx/xdr.h"
 #endif /* AFS_LINUX22_ENV */
 #else /* !UKERNEL */
 #include "../afs/sysincludes.h"

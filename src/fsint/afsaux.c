@@ -28,7 +28,7 @@ RCSID("$Header$");
 #else
 #include "../h/types.h"
 #include "../rpc/types.h"
-#include "../rpc/xdr.h"
+#include "../rx/xdr.h"
 #endif
 #if !defined(AFS_ALPHA_ENV)
 #ifndef	XDR_GETINT32
@@ -37,9 +37,6 @@ RCSID("$Header$");
 #ifndef	XDR_PUTINT32
 #define	XDR_PUTINT32	XDR_PUTLONG
 #endif
-#endif
-#ifndef AFS_LINUX22_ENV
-#include "../rpc/auth.h"
 #endif
 #endif /* defined(UKERNEL) */
 #include "../afsint/afsint.h"

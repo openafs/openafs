@@ -93,9 +93,7 @@ struct coda_inode_info {};
 #include "../afs/afs_osi.h"
 #include "../rx/rx_kmutex.h"
 #include "../afs/lock.h"
-#ifndef AFS_LINUX22_ENV
-#include "../rpc/xdr.h"
-#endif
+#include "../rx/xdr.h"
 #include "../rx/rx.h"
 #include "../rx/rx_globals.h"
 #include "../afs/longc_procs.h"

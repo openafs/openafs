@@ -1136,7 +1136,7 @@ int SRXAFSCB_GetCellServDB(struct rx_call *a_call, afs_int32 a_index,
 	afs_PutCell(tcell, READ_LOCK);
     }
 
-    t_name = (char *)rxi_Alloc(i+1);
+    t_name = (char *)afs_osi_Alloc(i+1);
     if (t_name == NULL) {
 	ReleaseReadLock(&afs_xcell);
 	RX_AFS_GUNLOCK();
@@ -1207,7 +1207,7 @@ int SRXAFSCB_GetLocalCell(struct rx_call *a_call, char **a_name)
 	plen = strlen(p_name);
     else
 	plen = 0;
-    t_name = (char *)rxi_Alloc(plen+1);
+    t_name = (char *)afs_osi_Alloc(plen+1);
     if (t_name == NULL) {
 	ReleaseReadLock(&afs_xcell);
 	RX_AFS_GUNLOCK();
@@ -1300,7 +1300,7 @@ int SRXAFSCB_GetCacheConfig(struct rx_call *a_call, afs_uint32 callerVersion,
      * Currently only support version 1
      */
     allocsize = sizeof(cm_initparams_v1);
-    t_config = (afs_uint32 *)rxi_Alloc(allocsize);
+    t_config = (afs_uint32 *)afs_osi_Alloc(allocsize);
     if (t_config == NULL) {
 	RX_AFS_GUNLOCK();
 	return ENOMEM;

@@ -92,6 +92,8 @@ AFSAOBJS = \
 	afsaux.o		\
 	Kvice.xdr.o	\
 	xdr_arrayn.o	\
+	xdr_array.o	\
+	xdr_int64.o	\
 	Kvice.cs.o	\
 	fcrypt.o		\
 	rx.o		\
@@ -119,6 +121,7 @@ AFSAOBJS = \
 	rxkad_client.o	\
 	rxkad_common.o	\
 	xdr_afsuuid.o	\
+	xdr.o		\
 	afs_uuid.o $(AFS_OS_OBJS)
 
 # These next two allow nfs and nonfs builds to occur in the same directory.
@@ -307,6 +310,12 @@ Kvice.cs.o: $(AFSINT)/Kvice.cs.c
 afsaux.o: $(AFSINT)/afsaux.c
 	$(CRULE1)
 xdr_arrayn.o: $(RX)/xdr_arrayn.c
+	$(CRULE1)
+xdr_array.o: $(RX)/xdr_array.c
+	$(CRULE1)
+xdr_int64.o: $(RX)/xdr_int64.c
+	$(CRULE1)
+xdr.o: $(RX)/xdr.c
 	$(CRULE1)
 Kvldbint.cs.o: $(AFSINT)/Kvldbint.cs.c
 	$(CRULE1)

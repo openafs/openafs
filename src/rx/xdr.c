@@ -83,14 +83,14 @@ bool_t xdr_void(void)
  * XDR afs_int32 integers
  * same as xdr_u_long - open coded to save a proc call!
  */
-bool_t xdr_long(register XDR *xdrs, long *lp)
+bool_t xdr_int(register XDR *xdrs, int *ip)
 {
 
 	if (xdrs->x_op == XDR_ENCODE)
-		return (XDR_PUTINT32(xdrs, lp));
+		return (XDR_PUTINT32(xdrs, (long *)ip));
 
 	if (xdrs->x_op == XDR_DECODE)
-		return (XDR_GETINT32(xdrs, lp));
+		return (XDR_GETINT32(xdrs, (long *)ip));
 
 	if (xdrs->x_op == XDR_FREE)
 		return (TRUE);
@@ -102,22 +102,22 @@ bool_t xdr_long(register XDR *xdrs, long *lp)
  * XDR unsigned afs_int32 integers
  * same as xdr_long - open coded to save a proc call!
  */
-bool_t xdr_u_long(register XDR *xdrs, u_long *ulp)
+bool_t xdr_u_int(register XDR *xdrs, u_int *up)
 {
 
 	if (xdrs->x_op == XDR_DECODE)
-		return (XDR_GETINT32(xdrs, (long *)ulp));
+		return (XDR_GETINT32(xdrs, (long *)up));
 
 	if (xdrs->x_op == XDR_ENCODE)
-		return (XDR_PUTINT32(xdrs, (long *)ulp));
+		return (XDR_PUTINT32(xdrs, (long *)up));
 
 	if (xdrs->x_op == XDR_FREE)
 		return (TRUE);
 
 	return (FALSE);
 }
-#endif
 
+#else
 /*
  * XDR afs_int32 integers
  * same as xdr_u_long - open coded to save a proc call!
@@ -146,8 +146,47 @@ bool_t xdr_u_int(register XDR *xdrs, u_int *ulp)
 
 	if (xdrs->x_op == XDR_DECODE)
 		return (XDR_GETINT32(xdrs, (long *)ulp));
+
 	if (xdrs->x_op == XDR_ENCODE)
 		return (XDR_PUTINT32(xdrs, (long *)ulp));
+
+	if (xdrs->x_op == XDR_FREE)
+		return (TRUE);
+
+	return (FALSE);
+}
+#endif
+
+/*
+ * XDR afs_int32 integers
+ * same as xdr_u_long - open coded to save a proc call!
+ */
+bool_t xdr_long(register XDR *xdrs, long *lp)
+{
+
+	if (xdrs->x_op == XDR_ENCODE)
+		return (XDR_PUTINT32(xdrs, lp));
+
+	if (xdrs->x_op == XDR_DECODE)
+		return (XDR_GETINT32(xdrs, lp));
+
+	if (xdrs->x_op == XDR_FREE)
+		return (TRUE);
+
+	return (FALSE);
+}
+
+/*
+ * XDR unsigned afs_int32 integers
+ * same as xdr_long - open coded to save a proc call!
+ */
+bool_t xdr_u_long(register XDR *xdrs, u_long *ulp)
+{
+
+	if (xdrs->x_op == XDR_DECODE)
+		return (XDR_GETINT32(xdrs, ulp));
+	if (xdrs->x_op == XDR_ENCODE)
+		return (XDR_PUTINT32(xdrs, ulp));
 	if (xdrs->x_op == XDR_FREE)
 		return (TRUE);
 	return (FALSE);
