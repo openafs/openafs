@@ -29,10 +29,6 @@ RCSID("$Header$");
 #include <sys/time.h>
 #endif
 #include <stdlib.h>
-#ifdef AFS_LINUX20_ENV
-/* Should now have all the possible places for picking up insque. */
-#include <search.h>
-#endif
 
 #define _TIMER_IMPL_
 #include "timer.h"
@@ -54,9 +50,8 @@ typedef unsigned char bool;
 
 static globalInitDone = 0;
 
-#if !defined(AFS_HPUX_ENV) && !defined(AFS_NT40_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_FBSD_ENV)
-extern insque();
-#endif
+void openafs_insque(struct TM_Elem *, struct TM_Elem *);
+void openafs_remque(struct TM_Elem *);
 
 /* t1 = t2 - t3 */
 static void subtract(t1, t2, t3)
@@ -183,7 +178,7 @@ void TM_Insert(tlistPtr, elem)
 
     /* Special case -- infinite timeout */
     if (blocking(elem)) {
-	insque(elem, tlistPtr->Prev);
+	openafs_insque(elem, tlistPtr->Prev);
 	return;
     }
 
@@ -201,7 +196,7 @@ void TM_Insert(tlistPtr, elem)
      })
 
     if (next == NULL) next = tlistPtr;
-    insque(elem, next->Prev);
+    openafs_insque(elem, next->Prev);
 }
 
 /*
@@ -262,7 +257,6 @@ struct TM_Elem *TM_GetEarliest(tlist)
     return (e == tlist ? NULL : e);
 }
 
-#if defined(AFS_HPUX_ENV) || defined(AFS_NT40_ENV) || defined(AFS_FBSD_ENV)
 /* This used to be in hputils.c, but it's only use is in the LWP package. */
 /*
  * Emulate the vax instructions for queue insertion and deletion, somewhat.
@@ -275,7 +269,8 @@ struct TM_Elem *TM_GetEarliest(tlist)
  * effort...
  */
 
-void insque(struct TM_Elem *elementp, struct TM_Elem *quep)
+void
+openafs_insque(struct TM_Elem *elementp, struct TM_Elem *quep)
 {
     elementp->Next = quep->Next;
     elementp->Prev = quep;
@@ -284,11 +279,10 @@ void insque(struct TM_Elem *elementp, struct TM_Elem *quep)
     quep->Next = elementp;
 }
 
-void remque(struct TM_Elem *elementp)
+void
+openafs_remque(struct TM_Elem *elementp)
 {
     elementp->Next->Prev = elementp->Prev;
     elementp->Prev->Next = elementp->Next;
-    elementp->Prev = elementp->Next = (struct TM_Elem*)0;
+    elementp->Prev = elementp->Next = NULL;
 }
-
-#endif /* AFS_HPUX_ENV || AFS_NT40_ENV || AFS_FBSD_ENV */

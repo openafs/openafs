@@ -23,14 +23,13 @@ struct TM_Elem {
     char		*BackPointer;	/* filled by caller, not interpreted by package */
 };
 
-#if defined(AFS_HPUX_ENV) || defined(AFS_NT40_ENV)
-extern void insque(struct TM_Elem *elementp, struct TM_Elem *quep);
-extern void remque(struct TM_Elem *elementp);
+void openafs_insque(struct TM_Elem *elementp, struct TM_Elem *quep);
+void openafs_remque(struct TM_Elem *elementp);
 extern int TM_eql(struct timeval *t1, struct timeval *t2);
-#endif
+
 #ifndef _TIMER_IMPL_
-#define Tm_Insert(list, elem) insque(list, elem)
-#define TM_Remove(list, elem) remque(elem)
+#define Tm_Insert(list, elem) openafs_insque(list, elem)
+#define TM_Remove(list, elem) openafs_remque(elem)
 extern int TM_Rescan();
 void TM_Insert();
 extern struct TM_Elem *TM_GetExpired();
