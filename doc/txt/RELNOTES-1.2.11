@@ -12,9 +12,6 @@ All systems:
 - A bug where replicating volumes on systems with namei fileservers could
   result in an empty volume was fixed.
 
-- A bug where a reference to a zero length dcache file could be leaked was
-  fixed.
-
 Linux:
 
 - We no longer assume ext2 when doing a device check in the vol package.
