@@ -62,7 +62,7 @@ clean:
 	dh_testdir
 	dh_testroot
 	rm -f build-stamp configure-stamp
-	-rm -rf obj dest $(SYS_NAME) @sys Makefile
+	-rm -rf obj dest $(SYS_NAME) @sys Makefile debian/openafs-client.init
 	# Add here commands to clean up after the build process.
 
 
