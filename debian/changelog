@@ -1,3 +1,9 @@
+openafs (1.3.65-1) experimental; urgency=low
+
+  * New upstream Version, Closes: #256580
+
+ -- Sam Hartman <hartmans@debian.org>  Mon, 28 Jun 2004 19:40:30 -0400
+
 openafs (1.3.64-2) experimental; urgency=low
 
   * Allow loading of a .ko file not just .o
