@@ -487,6 +487,59 @@ int afs_RemoveVCB(register struct VenusFid *afid)
     return 0;
 }
 
+#ifdef AFS_LINUX22_ENV
+/* afs_TryFlushDcacheChildren -- Shakes loose vcache references held by
+ *                               children of the dentry
+ *
+ * LOCKS -- Called with afs_xvcache write locked. Drops and reaquires
+ *          AFS_GLOCK, so it can call dput, which may call iput, but
+ *          keeps afs_xvcache exclusively.
+ *
+ * Tree traversal algorithm from fs/dcache.c: select_parent()
+ */
+static void afs_TryFlushDcacheChildren(struct dentry *parent)
+{
+    struct dentry *this_parent = parent;
+    struct list_head *next;
+
+ repeat:
+    next = this_parent->d_subdirs.next;
+ resume:
+    DLOCK();
+    while (next != &this_parent->d_subdirs) {
+	struct list_head *tmp = next;
+	struct dentry *dentry = list_entry(tmp, struct dentry, d_child);
+
+	next = tmp->next;
+	if (!DCOUNT(dentry) && !dentry->d_inode) {
+	    DGET(dentry);
+	    AFS_GUNLOCK();
+	    DUNLOCK();
+	    d_drop(dentry);
+	    dput(dentry);
+	    AFS_GLOCK();
+	    goto repeat;
+	}
+	/*
+	 * Descend a level if the d_subdirs list is non-empty.
+         */
+	if (!list_empty(&dentry->d_subdirs)) {
+	    this_parent = dentry;
+	    goto repeat;
+	}
+    }
+    DUNLOCK();
+
+    /*
+     * All done at this level ... ascend and resume the search.
+     */
+    if (this_parent != parent) {
+	next = this_parent->d_child.next;
+	this_parent = this_parent->d_parent;
+	goto resume;
+    }
+}
+#endif /* AFS_LINUX22_ENV */
 
 /*
  * afs_NewVCache
@@ -558,6 +611,10 @@ struct vcache *afs_NewVCache(struct VenusFid *afid, struct server *serverp,
 		    cur = head;
 		    while ((cur = cur->next) != head) {
 			struct dentry *dentry = list_entry(cur, struct dentry, d_alias);
+			if (DCOUNT(dentry)) {
+			    afs_TryFlushDcacheChildren(dentry);
+			}
+
 			if (!DCOUNT(dentry)) {
 			    AFS_GUNLOCK();
 			    DGET(dentry);
