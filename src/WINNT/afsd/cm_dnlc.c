@@ -153,7 +153,7 @@ cm_dnlcEnter ( adp, aname, avc )
     dnlcstats.enters++;
   
     for (tnc = nameHash[skey], safety=0; tnc; tnc = tnc->next, safety++ )
-	if ((tnc->dirp == adp) && (!cm_stricmp(tnc->name, aname)))
+	if ((tnc->dirp == adp) && (!strcmp(tnc->name, aname)))
 	    break;				/* preexisting entry */
 	else if ( tnc->next == nameHash[skey])	/* end of list */
 	{
@@ -224,39 +224,55 @@ cm_dnlcLookup ( adp, sp)
     lock_ObtainRead(&cm_dnlcLock);
     dnlcstats.lookups++;	     /* Is a dnlcread lock sufficient? */
 
+    ts = 0;
     tnc_begin = nameHash[skey];
     for ( tvc = (cm_scache_t *) 0, tnc = tnc_begin, safety=0; 
        tnc; tnc = tnc->next, safety++ ) 
     {
 	if (tnc->dirp == adp) 
 	{
+        if( cm_debugDnlc ) 
+            osi_Log1(afsd_logp,"Looking at [%s]",
+                     osi_LogSaveString(afsd_logp,tnc->name));
+
 	    if ( sp->caseFold ) 	/* case insensitive */
 	    {
-		match = cm_stricmp(tnc->name, aname);
-		if ( !match )	/* something matches */
-		{
-			/* determine what type of match it is */
-			if ( !strcmp(tnc->name, aname))
-			{	
-      				/* exact match, do nothing */
-			}
-			else if ( cm_NoneUpper(tnc->name))
-				sp->LCfound = 1;
-			else if ( cm_NoneLower(tnc->name))
-				sp->UCfound = 1;
-			else    sp->NCfound = 1;
-      			tvc = tnc->vp; 
-      			break;
-		}
+            match = cm_stricmp(tnc->name, aname);
+            if ( !match )	/* something matches */
+            {
+                tvc = tnc->vp;
+                ts = tnc->name;
+
+                /* determine what type of match it is */
+                if ( !strcmp(tnc->name, aname))
+                {	
+                    /* exact match. */
+                    sp->ExactFound = 1;
+
+                    if( cm_debugDnlc )
+                        osi_Log1(afsd_logp,"DNLC found exact match [%s]",
+                                 osi_LogSaveString(afsd_logp,tnc->name));
+                    break;
+                }
+                else if ( cm_NoneUpper(tnc->name))
+                    sp->LCfound = 1;
+                else if ( cm_NoneLower(tnc->name))
+                    sp->UCfound = 1;
+                else    
+                    sp->NCfound = 1;
+                /* Don't break here. We might find an exact match yet */
+            }
 	    }
 	    else			/* case sensitive */
 	    {
-		match = strcmp(tnc->name, aname);
-		if ( !match ) /* found a match */
-		{
-      			tvc = tnc->vp; 
-      			break;
-		}
+            match = strcmp(tnc->name, aname);
+            if ( !match ) /* found a match */
+            {
+                sp->ExactFound = 1;
+                tvc = tnc->vp; 
+                ts = tnc->name;
+                break;
+            }
 	    }
 	}
 	if (tnc->next == nameHash[skey]) 
@@ -276,24 +292,31 @@ cm_dnlcLookup ( adp, sp)
 	}
     }
 
+    if(cm_debugDnlc && ts) {
+        osi_Log3(afsd_logp, "DNLC matched [%s] for [%s] with vnode[%ld]",
+                 osi_LogSaveString(afsd_logp,ts),
+                 osi_LogSaveString(afsd_logp,aname),
+                 (long) tvc->fid.vnode);
+    }
+
     if (!tvc) 
-	dnlcstats.misses++; 	/* Is a dnlcread lock sufficient? */
+        dnlcstats.misses++; 	/* Is a dnlcread lock sufficient? */
     else 
     {
-	sp->found = 1;
-	sp->fid.vnode  = tvc->fid.vnode; 
-	sp->fid.unique = tvc->fid.unique;	
+        sp->found = 1;
+        sp->fid.vnode  = tvc->fid.vnode; 
+        sp->fid.unique = tvc->fid.unique;	
     }
     lock_ReleaseRead(&cm_dnlcLock);
 
     if (tvc) {
- 	lock_ObtainWrite(&cm_scacheLock);
-	tvc->refCount++;	/* scache entry held */
-	lock_ReleaseWrite(&cm_scacheLock);
+        lock_ObtainWrite(&cm_scacheLock);
+        tvc->refCount++;	/* scache entry held */
+        lock_ReleaseWrite(&cm_scacheLock);
     }
 
     if ( cm_debugDnlc && tvc ) 
-	osi_Log1(afsd_logp, "cm_dnlcLookup found %x", tvc);
+        osi_Log1(afsd_logp, "cm_dnlcLookup found %x", tvc);
     
     return tvc;
 }
@@ -355,7 +378,7 @@ cm_dnlcRemove ( adp, aname)
     for (tnc = nameHash[skey], safety=0; tnc; safety++) 
     {
 	if ( (tnc->dirp == adp) && (tnc->key == key) 
-			&& !cm_stricmp(tnc->name,aname) )
+			&& !strcmp(tnc->name,aname) )
 	{
 	    tnc->dirp = (cm_scache_t *) 0; /* now it won't match anything */
 	    tmp = tnc->next;

@@ -1053,7 +1053,7 @@ int cm_GetShortNameProc(cm_scache_t *scp, cm_dirEntry_t *dep, void *vrockp,
 	/* compare both names and vnodes, though probably just comparing vnodes
 	 * would be safe enough.
 	 */
-	if (stricmp(dep->name, rockp->maskp) != 0)
+	if (cm_stricmp(dep->name, rockp->maskp) != 0)
 		return 0;
 	if (ntohl(dep->fid.vnode) != rockp->vnode)
 		return 0;
@@ -1755,6 +1755,7 @@ int smb_V3MatchMask(char *namep, char *maskp, int flags)
 	int sawDot = 0, sawStar = 0, req8dot3 = 0;
 	char *starNamep, *starMaskp;
 	static char nullCharp[] = {0};
+    int casefold = flags & CM_FLAG_CASEFOLD;
 
 	/* make sure we only match 8.3 names, if requested */
     req8dot3 = (flags & CM_FLAG_8DOT3);
@@ -1843,8 +1844,9 @@ int smb_V3MatchMask(char *namep, char *maskp, int flags)
 					tcp2 = *maskp++;
 
 				/* skip over characters that don't match tcp2 */
-				while (req8dot3 && tcn1 != '.' && tcn1 != 0
-					&& cm_foldUpper[tcn1] != cm_foldUpper[tcp2])
+				while (req8dot3 && tcn1 != '.' && tcn1 != 0 && 
+                       ((casefold && cm_foldUpper[tcn1] != cm_foldUpper[tcp2]) || 
+                         (!casefold && tcn1 != tcp2)))
 					tcn1 = *++namep;
 
 				/* No match */
@@ -1862,7 +1864,8 @@ int smb_V3MatchMask(char *namep, char *maskp, int flags)
 		}
 		else {
 			/* tcp1 is not a wildcard */
-			if (cm_foldUpper[tcn1] == cm_foldUpper[tcp1]) {
+            if ((casefold && cm_foldUpper[tcn1] == cm_foldUpper[tcp1]) || 
+                (!casefold && tcn1 == tcp1)) {
 				/* they match */
 				namep++;
 				continue;
@@ -1926,6 +1929,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 	int align;
 	char shortName[13];		/* 8.3 name if needed */
 	int NeedShortName;
+    int foundInexact;
 	char *shortNameEnd;
     int fileType;
     cm_fid_t fid;
@@ -2075,6 +2079,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         return code;
     }
 
+  startsearch:
     dirLength = scp->length;
     bufferp = NULL;
     bufferOffset.LowPart = bufferOffset.HighPart = 0;
@@ -2082,6 +2087,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     curOffset.LowPart = nextCookie;
 	origOp = outp->datap;
 
+    foundInexact = 0;
     code = 0;
     returnedNames = 0;
     bytesInBuffer = 0;
@@ -2243,11 +2249,13 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 			NeedShortName = 1;
 		}
 
-        if (dep->fid.vnode != 0
-             && (smb_V3MatchMask(dep->name, maskp, CM_FLAG_CASEFOLD)
-                 || (NeedShortName
-                      && smb_V3MatchMask(shortName, maskp,
-                                          CM_FLAG_CASEFOLD)))) {
+        /* When matching, we are using doing a case fold if we have a wildcard mask.
+         * If we get a non-wildcard match, it's a lookup for a specific file. 
+         */
+        if (dep->fid.vnode != 0 && 
+            (smb_V3MatchMask(dep->name, maskp, (starPattern? CM_FLAG_CASEFOLD : 0))
+              || (NeedShortName
+                   && smb_V3MatchMask(shortName, maskp, CM_FLAG_CASEFOLD)))) {
 
             /* Eliminate entries that don't match requested attributes */
             if (smb_hideDotFiles && !(dsp->attribute & SMB_ATTR_HIDDEN) && 
@@ -2391,6 +2399,14 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
             }
 
 		}	/* if we're including this name */
+        else if(!NeedShortName &&
+                 !starPattern &&
+                 !foundInexact &&
+                 					dep->fid.vnode != 0 &&
+                 smb_V3MatchMask(dep->name, maskp, CM_FLAG_CASEFOLD)) {
+            /* We were looking for exact matches, but here's an inexact one*/
+            foundInexact = 1;
+        }
                 
       nextEntry:
         /* and adjust curOffset to be where the new cookie is */
@@ -2398,6 +2414,17 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         thyper.LowPart = CM_DIR_CHUNKSIZE * numDirChunks;
         curOffset = LargeIntegerAdd(thyper, curOffset);
     }		/* while copying data for dir listing */
+
+    /* If we didn't get a star pattern, we did an exact match during the first pass. 
+     * If there were no exact matches found, we fail over to inexact matches by
+     * marking the query as a star pattern (matches all case permutations), and
+     * re-running the query. 
+     */
+    if (returnedNames == 0 && !starPattern && foundInexact) {
+        osi_Log0(afsd_logp,"T2 Search: No exact matches. Re-running for inexact matches");
+        starPattern = 1;
+        goto startsearch;
+    }
 
 	/* release the mutex */
 	lock_ReleaseMutex(&scp->mx);
@@ -3263,17 +3290,30 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
 	dscp = NULL;
 	code = 0;
-	code = cm_NameI(baseDirp, realPathp, CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
-			userp, tidPathp, &req, &scp);
-	if (code == 0) foundscp = TRUE;
+    /* For an exclusive create, we want to do a case sensitive match for the last component. */
+    if (createDisp == 2 || createDisp == 4) {
+        code = cm_NameI(baseDirp, spacep->data, CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
+                        userp, tidPathp, &req, &dscp);
+        if(code == 0) {
+            code = cm_Lookup(dscp, (lastNamep)?(lastNamep+1):realPathp, CM_FLAG_FOLLOW,
+                             userp, tidPathp, &req, &scp);
+        } else
+            dscp = NULL;
+    } else {
+        code = cm_NameI(baseDirp, realPathp, CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
+                        userp, tidPathp, &req, &scp);
+    }
+	
+    if (code == 0) foundscp = TRUE;
 	if (code != 0
 	    || (fidflags & (SMB_FID_OPENDELETE | SMB_FID_OPENWRITE))) {
 		/* look up parent directory */
         /* If we are trying to create a path (i.e. multiple nested directories), then we don't *need*
-        the immediate parent.  We have to work our way up realPathp until we hit something that we
-        recognize.
-        */
+         * the immediate parent.  We have to work our way up realPathp until we hit something that we
+         * recognize.
+         */
 
+        if ( !dscp ) {
         while(1) {
             char *tp;
 
@@ -3299,6 +3339,8 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
             else
                 break;
         }
+        } else
+            code = 0;
 
         if (baseFid != 0) smb_ReleaseFID(baseFidp);
 
@@ -3328,9 +3370,13 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         }
 
         if (!foundscp && !treeCreate) {
-			code = cm_Lookup(dscp, lastNamep,
-					 CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
-					 userp, &req, &scp);
+            if(createDisp == 2 || createDisp == 4)
+                code = cm_Lookup(dscp, lastNamep,
+                                  CM_FLAG_FOLLOW, userp, &req, &scp);
+            else
+                code = cm_Lookup(dscp, lastNamep,
+                                 CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
+                                 userp, &req, &scp);
 			if (code && code != CM_ERROR_NOSUCHFILE) {
 				cm_ReleaseSCache(dscp);
 				cm_ReleaseUser(userp);
@@ -3741,16 +3787,31 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
 
 	dscp = NULL;
 	code = 0;
-	code = cm_NameI(baseDirp, realPathp, CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
-			userp, tidPathp, &req, &scp);
+    if (createDisp == 2 || createDisp == 4) {
+        code = cm_NameI(baseDirp, spacep->data, CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
+                        userp, tidPathp, &req, &dscp);
+        if (code == 0) {
+            code = cm_Lookup(dscp, (lastNamep)?(lastNamep+1):realPathp, CM_FLAG_FOLLOW,
+                             userp, tidPathp, &req, &scp);
+        } else 
+            dscp = NULL;
+    } else {
+        code = cm_NameI(baseDirp, realPathp, CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
+                        userp, tidPathp, &req, &scp);
+    }
+
 	if (code == 0) foundscp = TRUE;
 	if (code != 0
 	    || (fidflags & (SMB_FID_OPENDELETE | SMB_FID_OPENWRITE))) {
 		/* look up parent directory */
-		code = cm_NameI(baseDirp, spacep->data,
-				CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
-				userp, tidPathp, &req, &dscp);
-		cm_FreeSpace(spacep);
+        if ( !dscp ) {
+            code = cm_NameI(baseDirp, spacep->data,
+                             CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
+                             userp, tidPathp, &req, &dscp);
+        } else
+            code = 0;
+        
+        cm_FreeSpace(spacep);
 
 		if (baseFid != 0) {
            smb_ReleaseFID(baseFidp);
@@ -3770,9 +3831,13 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
             return CM_ERROR_BADNTFILENAME;
 
 		if (!foundscp) {
-			code = cm_Lookup(dscp, lastNamep,
-                             CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
-                             userp, &req, &scp);
+            if (createDisp == 2 || createDisp == 4)
+                code = cm_Lookup(dscp, lastNamep,
+                                 CM_FLAG_FOLLOW, userp, &req, &scp);
+            else
+                code = cm_Lookup(dscp, lastNamep,
+                                 CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
+                                 userp, &req, &scp);
 			if (code && code != CM_ERROR_NOSUCHFILE) {
 				cm_ReleaseSCache(dscp);
 				cm_ReleaseUser(userp);

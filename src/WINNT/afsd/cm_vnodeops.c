@@ -467,11 +467,17 @@ long cm_ApplyDir(cm_scache_t *scp, cm_DirFuncp_t funcp, void *parmp,
 	if (  retscp ) 			/* if this is a lookup call */
 	{
 		cm_lookupSearch_t*	sp = parmp;
+        int casefold = sp->caseFold;
+
+        sp->caseFold = 0; /* we have a strong preference for exact matches */
 		if ( *retscp = cm_dnlcLookup(scp, sp))	/* dnlc hit */
 		{
+            sp->caseFold = casefold;
 			lock_ReleaseMutex(&scp->mx);
 			return 0;
 		}
+
+        sp->caseFold = casefold;
 	}	
 
 	/*
@@ -659,11 +665,11 @@ long cm_LookupSearchProc(cm_scache_t *scp, cm_dirEntry_t *dep, void *rockp,
 	osi_hyper_t *offp)
 {
 	cm_lookupSearch_t *sp;
-        int match;
+    int match;
 	char shortName[13];
 	char *matchName;
         
-        sp = rockp;
+    sp = (cm_lookupSearch_t *) rockp;
 
 	matchName = dep->name;
 	if (sp->caseFold)
@@ -686,12 +692,13 @@ long cm_LookupSearchProc(cm_scache_t *scp, cm_dirEntry_t *dep, void *rockp,
 		return 0;
 
 	sp->found = 1;
+    if(!sp->caseFold) sp->ExactFound = 1;
 
 	if (!sp->caseFold || matchName == shortName) {
 		sp->fid.vnode = ntohl(dep->fid.vnode);
 		sp->fid.unique = ntohl(dep->fid.unique);
-                return CM_ERROR_STOPNOW;
-        }
+        return CM_ERROR_STOPNOW;
+    }
 
 	/*
 	 * If we get here, we are doing a case-insensitive search, and we
@@ -703,10 +710,11 @@ long cm_LookupSearchProc(cm_scache_t *scp, cm_dirEntry_t *dep, void *rockp,
 	/* Exact matches are the best. */
 	match = strcmp(matchName, sp->searchNamep);
 	if (match == 0) {
+        sp->ExactFound = 1;
 		sp->fid.vnode = ntohl(dep->fid.vnode);
 		sp->fid.unique = ntohl(dep->fid.unique);
-                return CM_ERROR_STOPNOW;
-        }
+        return CM_ERROR_STOPNOW;
+    }
 
 	/* Lower-case matches are next. */
 	if (sp->LCfound)
@@ -1060,7 +1068,7 @@ haveFid:
     *outpScpp = tscp;
 
 	/* insert scache in dnlc */
-	if ( !dnlcHit && !(flags & CM_FLAG_NOMOUNTCHASE) ) {
+	if ( !dnlcHit && !(flags & CM_FLAG_NOMOUNTCHASE) && rock.ExactFound ) {
 	    /* lock the directory entry to prevent racing callback revokes */
 	    lock_ObtainMutex(&dscp->mx);
 	    if ( dscp->cbServerp && dscp->cbExpires )

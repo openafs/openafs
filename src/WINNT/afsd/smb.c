@@ -111,6 +111,9 @@ int smb_RawBufSel[SMB_RAW_BUFS];
 char *smb_RawBufs;
 #endif /* DJGPP */
 
+#define SMB_MASKFLAG_TILDE 1
+#define SMB_MASKFLAG_CASEFOLD 2
+
 #define RAWTIMEOUT INFINITE
 
 /* for raw write */
@@ -2063,6 +2066,9 @@ void smb_MapNTError(long code, unsigned long *NTStatusp)
 	else if (code == CM_ERROR_BUFFERTOOSMALL) {
 		NTStatus = 0xC0000023L;	/* Buffer too small */
 	}
+    else if (code == CM_ERROR_AMBIGUOUS_FILENAME) {
+        NTStatus = 0xC000049CL; /* Potential file found */
+    }
 	else {
 		NTStatus = 0xC0982001L;	/* SMB non-specific error */
 	}
@@ -3886,7 +3892,7 @@ typedef struct smb_unlinkRock {
 	cm_req_t *reqp;
 	smb_vc_t *vcp;
 	char *maskp;		/* pointer to the star pattern */
-	int hasTilde;
+	int flags;
 	int any;
 } smb_unlinkRock_t;
 
@@ -3901,19 +3907,19 @@ int smb_UnlinkProc(cm_scache_t *dscp, cm_dirEntry_t *dep, void *vrockp, osi_hype
         
 	rockp = vrockp;
 
-	if (rockp->vcp->flags & SMB_VCFLAG_USEV3)
-		caseFold = CM_FLAG_CASEFOLD;
-	else 
-		caseFold = CM_FLAG_CASEFOLD | CM_FLAG_8DOT3;
+    caseFold = ((rockp->flags & SMB_MASKFLAG_CASEFOLD)? CM_FLAG_CASEFOLD : 0);
+    if (!(rockp->vcp->flags & SMB_VCFLAG_USEV3))
+        caseFold |= CM_FLAG_8DOT3;
 
 	matchName = dep->name;
 	match = smb_V3MatchMask(matchName, rockp->maskp, caseFold);
 	if (!match
-	    && rockp->hasTilde
+	    && (rockp->flags & SMB_MASKFLAG_TILDE)
 	    && !cm_Is8Dot3(dep->name)) {
 		cm_Gen8Dot3Name(dep, shortName, NULL);
 		matchName = shortName;
-		match = smb_V3MatchMask(matchName, rockp->maskp, caseFold);
+        /* 8.3 matches are always case insensitive */
+        match = smb_V3MatchMask(matchName, rockp->maskp, caseFold | CM_FLAG_CASEFOLD);
 	}
 	if (match) {
 		osi_Log1(smb_logp, "Unlinking %s",
@@ -3923,8 +3929,12 @@ int smb_UnlinkProc(cm_scache_t *dscp, cm_dirEntry_t *dep, void *vrockp, osi_hype
 			smb_NotifyChange(FILE_ACTION_REMOVED,
 							 FILE_NOTIFY_CHANGE_FILE_NAME,
 							 dscp, dep->name, NULL, TRUE);
-		if (code == 0)
+		if (code == 0) {
 			rockp->any = 1;
+            /* If we made a case sensitive exact match, we might as well quit now. */
+            if(!(rockp->flags & SMB_MASKFLAG_CASEFOLD) && !strcmp(matchName, rockp->maskp))
+                code = CM_ERROR_STOPNOW;
+        }
 	}
 	else code = 0;
 
@@ -3981,7 +3991,7 @@ long smb_ReceiveCoreUnlink(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
 	rock.any = 0;
 	rock.maskp = smb_FindMask(pathp);
-	rock.hasTilde = ((strchr(rock.maskp, '~') != NULL) ? 1 : 0);
+	rock.flags = ((strchr(rock.maskp, '~') != NULL) ? SMB_MASKFLAG_TILDE : 0);
         
 	thyper.LowPart = 0;
 	thyper.HighPart = 0;
@@ -3989,7 +3999,25 @@ long smb_ReceiveCoreUnlink(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 	rock.reqp = &req;
 	rock.dscp = dscp;
 	rock.vcp = vcp;
-	code = cm_ApplyDir(dscp, smb_UnlinkProc, &rock, &thyper, userp, &req, NULL);
+
+    /* Now, if we aren't dealing with a wildcard match, we first try an exact 
+     * match.  If that fails, we do a case insensitve match. 
+     */
+    if (!(rock.flags & SMB_MASKFLAG_TILDE) &&
+        !smb_IsStarMask(rock.maskp)) {
+        code = cm_ApplyDir(dscp, smb_UnlinkProc, &rock, &thyper, userp, &req, NULL);
+        if(!rock.any) {
+            thyper.LowPart = 0;
+            thyper.HighPart = 0;
+            rock.flags |= SMB_MASKFLAG_CASEFOLD;
+        }
+    }
+ 
+    if (!rock.any)
+        code = cm_ApplyDir(dscp, smb_UnlinkProc, &rock, &thyper, userp, &req, NULL);
+    
+    if (code == CM_ERROR_STOPNOW) 
+        code = 0;
 
 	cm_ReleaseUser(userp);
         
@@ -4007,7 +4035,7 @@ typedef struct smb_renameRock {
 	cm_req_t *reqp;		/* request struct */
 	smb_vc_t *vcp;		/* virtual circuit */
 	char *maskp;		/* pointer to star pattern of old file name */
-	int hasTilde;		/* star pattern might be shortname? */
+	int flags;		    /* tilde, casefold, etc */
 	char *newNamep;		/* ptr to the new file's name */
 } smb_renameRock_t;
 
@@ -4021,14 +4049,13 @@ int smb_RenameProc(cm_scache_t *dscp, cm_dirEntry_t *dep, void *vrockp, osi_hype
         
 	rockp = (smb_renameRock_t *) vrockp;
 
-	if (rockp->vcp->flags & SMB_VCFLAG_USEV3)
-		caseFold = CM_FLAG_CASEFOLD;
-	else 
-		caseFold = CM_FLAG_CASEFOLD | CM_FLAG_8DOT3;
+    caseFold = ((rockp->flags & SMB_MASKFLAG_CASEFOLD)? CM_FLAG_CASEFOLD : 0);
+    if (!(rockp->vcp->flags & SMB_VCFLAG_USEV3))
+        caseFold |= CM_FLAG_8DOT3;
 
 	match = smb_V3MatchMask(dep->name, rockp->maskp, caseFold);
 	if (!match
-	    && rockp->hasTilde
+	    && (rockp->flags & SMB_MASKFLAG_TILDE)
 	    && !cm_Is8Dot3(dep->name)) {
 		cm_Gen8Dot3Name(dep, shortName, NULL);
 		match = smb_V3MatchMask(shortName, rockp->maskp, caseFold);
@@ -4054,11 +4081,12 @@ long smb_ReceiveCoreRename(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 	char *oldPathp;
 	char *newPathp;
 	char *tp;
-	cm_space_t *spacep;
+	cm_space_t *spacep = NULL;
 	smb_renameRock_t rock;
-	cm_scache_t *oldDscp;
-	cm_scache_t *newDscp;
-	cm_scache_t *tmpscp;
+	cm_scache_t *oldDscp = NULL;
+	cm_scache_t *newDscp = NULL;
+	cm_scache_t *tmpscp= NULL;
+	cm_scache_t *tmpscp2 = NULL;
 	char *oldLastNamep;
 	char *newLastNamep;
 	osi_hyper_t thyper;
@@ -4074,7 +4102,7 @@ long smb_ReceiveCoreRename(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 	oldPathp = smb_ParseASCIIBlock(tp, &tp);
 	newPathp = smb_ParseASCIIBlock(tp, &tp);
 
-	osi_Log2(smb_logp, "smb rename %s to %s",
+	osi_Log2(smb_logp, "smb rename [%s] to [%s]",
 			 osi_LogSaveString(smb_logp, oldPathp),
 			 osi_LogSaveString(smb_logp, newPathp));
 
@@ -4130,6 +4158,8 @@ long smb_ReceiveCoreRename(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 		newLastNamep = newPathp;
 	else 
 		newLastNamep++;
+
+    /* TODO: The old name could be a wildcard.  The new name must not be */
 	
 	/* do the vnode call */
 	rock.odscp = oldDscp;
@@ -4138,28 +4168,43 @@ long smb_ReceiveCoreRename(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 	rock.reqp = &req;
 	rock.vcp = vcp;
 	rock.maskp = oldLastNamep;
-	rock.hasTilde = ((strchr(oldLastNamep, '~') != NULL) ? 1 : 0);
+	rock.flags = ((strchr(oldLastNamep, '~') != NULL) ? SMB_MASKFLAG_TILDE : 0);
 	rock.newNamep = newLastNamep;
 
     /* Check if the file already exists; if so return error */
 	code = cm_Lookup(newDscp,newLastNamep,CM_FLAG_CHECKPATH,userp,&req,&tmpscp);
-	if((code != CM_ERROR_NOSUCHFILE) && (code != CM_ERROR_NOSUCHPATH) && (code != CM_ERROR_NOSUCHVOLUME) ) {
-        cm_ReleaseSCache(newDscp);
-        cm_ReleaseSCache(oldDscp);
-        cm_ReleaseUser(userp);
-        if (!code)
-            cm_ReleaseSCache(tmpscp);
+	if ((code != CM_ERROR_NOSUCHFILE) && (code != CM_ERROR_NOSUCHPATH) && (code != CM_ERROR_NOSUCHVOLUME) ) {
+        osi_Log2(afsd_logp, "  lookup returns %ld for [%s]", code,
+                 osi_LogSaveString(afsd_logp, newLastNamep));
+ 
         /* Check if the old and the new names differ only in case. If so return
          * success, else return CM_ERROR_EXISTS 
          */
-        if(oldDscp == newDscp && !stricmp(oldLastNamep, newLastNamep)) {
-            osi_Log0(afsd_logp, "Rename: Old and new names are the same");
-            code = 0;
+        if (!code && oldDscp == newDscp && !stricmp(oldLastNamep, newLastNamep)) {
+
+            /* This would be a success only if the old file is *as same as* the new file */
+            code = cm_Lookup(oldDscp, oldLastNamep, CM_FLAG_CHECKPATH, userp, &req, &tmpscp2);
+            if (!code) {
+                if (tmpscp == tmpscp2) 
+                    code = 0;
+                else 
+                    code = CM_ERROR_EXISTS;
+                cm_ReleaseSCache(tmpscp2);
+				tmpscp2 = NULL;
+            } else {
+                code = CM_ERROR_NOSUCHFILE;
+            }
         } else {
             /* file exist, do not rename, also fixes move */
             osi_Log0(afsd_logp, "Can't rename.  Target already exists");
             code = CM_ERROR_EXISTS;
         }
+
+		if(tmpscp != NULL)
+            cm_ReleaseSCache(tmpscp);
+        cm_ReleaseSCache(newDscp);
+        cm_ReleaseSCache(oldDscp);
+        cm_ReleaseUser(userp);
 	    return code; 
 	}
 
@@ -4196,7 +4241,9 @@ long smb_ReceiveCoreRename(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 							 NULL, TRUE);
 	}
 
-	cm_ReleaseUser(userp);
+    if(tmpscp != NULL) 
+        cm_ReleaseSCache(tmpscp);
+    cm_ReleaseUser(userp);
 	cm_ReleaseSCache(oldDscp);
 	cm_ReleaseSCache(newDscp);
 	return code;
@@ -4207,7 +4254,7 @@ typedef struct smb_rmdirRock {
 	cm_user_t *userp;
 	cm_req_t *reqp;
 	char *maskp;		/* pointer to the star pattern */
-	int hasTilde;
+	int flags;
 	int any;
 } smb_rmdirRock_t;
 
@@ -4219,12 +4266,15 @@ int smb_RmdirProc(cm_scache_t *dscp, cm_dirEntry_t *dep, void *vrockp, osi_hyper
 	char shortName[13];
 	char *matchName;
         
-	rockp = vrockp;
+	rockp = (smb_rmdirRock_t *) vrockp;
 
 	matchName = dep->name;
-	match = (cm_stricmp(matchName, rockp->maskp) == 0);
+    if (rockp->flags & SMB_MASKFLAG_CASEFOLD)
+        match = (cm_stricmp(matchName, rockp->maskp) == 0);
+    else
+        match = (strcmp(matchName, rockp->maskp) == 0);
 	if (!match
-	    && rockp->hasTilde
+	    && (rockp->flags & SMB_MASKFLAG_TILDE)
 	    && !cm_Is8Dot3(dep->name)) {
 		cm_Gen8Dot3Name(dep, shortName, NULL);
 		matchName = shortName;
@@ -4290,14 +4340,21 @@ long smb_ReceiveCoreRemoveDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
 	
 	rock.any = 0;
 	rock.maskp = lastNamep;
-	rock.hasTilde = ((strchr(rock.maskp, '~') != NULL) ? 1 : 0);
+	rock.flags = ((strchr(rock.maskp, '~') != NULL) ? SMB_MASKFLAG_TILDE : 0);
 
 	thyper.LowPart = 0;
 	thyper.HighPart = 0;
 	rock.userp = userp;
 	rock.reqp = &req;
 	rock.dscp = dscp;
-	code = cm_ApplyDir(dscp, smb_RmdirProc, &rock, &thyper, userp, &req, NULL);
+    /* First do a case sensitive match, and if that fails, do a case insensitive match */
+    code = cm_ApplyDir(dscp, smb_RmdirProc, &rock, &thyper, userp, &req, NULL);
+    if (code == 0 && !rock.any) {
+        thyper.LowPart = 0;
+        thyper.HighPart = 0;
+        rock.flags |= SMB_MASKFLAG_CASEFOLD;
+        code = cm_ApplyDir(dscp, smb_RmdirProc, &rock, &thyper, userp, &req, NULL);
+    }
 
 	cm_ReleaseUser(userp);
         
@@ -4358,17 +4415,17 @@ int smb_FullNameProc(cm_scache_t *scp, cm_dirEntry_t *dep, void *rockp,
 	char shortName[13];
 	struct smb_FullNameRock *vrockp;
 
-	vrockp = rockp;
+	vrockp = (struct smb_FullNameRock *)rockp;
 
 	if (!cm_Is8Dot3(dep->name)) {
 		cm_Gen8Dot3Name(dep, shortName, NULL);
 
-		if (strcmp(shortName, vrockp->name) == 0) {
+		if (cm_stricmp(shortName, vrockp->name) == 0) {
 			vrockp->fullName = strdup(dep->name);
 			return CM_ERROR_STOPNOW;
 		}
 	}
-	if (stricmp(dep->name, vrockp->name) == 0
+	if (cm_stricmp(dep->name, vrockp->name) == 0
 	    && ntohl(dep->fid.vnode) == vrockp->vnode->fid.vnode
 	    && ntohl(dep->fid.unique) == vrockp->vnode->fid.unique) {
 		vrockp->fullName = strdup(dep->name);
@@ -5269,7 +5326,7 @@ long smb_ReceiveCoreMakeDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp
         lastNamep = pathp;
     else 
         lastNamep++;
-    code = cm_Lookup(dscp, lastNamep, caseFold, userp, &req, &scp);
+    code = cm_Lookup(dscp, lastNamep, 0, userp, &req, &scp);
     if (scp) cm_ReleaseSCache(scp);
     if (code != CM_ERROR_NOSUCHFILE) {
         if (code == 0) code = CM_ERROR_EXISTS;
@@ -5386,7 +5443,7 @@ long smb_ReceiveCoreCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     }
 #endif    
 
-    code = cm_Lookup(dscp, lastNamep, caseFold, userp, &req, &scp);
+    code = cm_Lookup(dscp, lastNamep, 0, userp, &req, &scp);
     if (code && code != CM_ERROR_NOSUCHFILE) {
 		cm_ReleaseSCache(dscp);
         cm_ReleaseUser(userp);
