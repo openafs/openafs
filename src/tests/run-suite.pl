@@ -141,6 +141,8 @@ run("$openafsdirpath->{'afssrvsbindir'}/vos create $server a root.afs -localauth
 $cachesize = $rl->readline("What size cache (in 1k blocks)? ") unless $cachesize;
 die "Please specify a cache size\n" unless $cachesize;
 
+mkdir "/usr/vice/cache", 0700;
+
 run("echo /afs:/usr/vice/cache:${cachesize} >$openafsdirpath->{'viceetcdir'}/cacheinfo");
 run("$openafsinitcmd->{'client-forcestart'}");
 my $afs_running = 0;
