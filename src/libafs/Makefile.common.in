@@ -28,7 +28,6 @@ COMMON_INCLUDE = -I. -I.. -I../nfs \
 	-I${TOP_SRCDIR}/config \
 	-I${TOP_SRCDIR}/rx/${MKAFS_OSTYPE} \
 	-I${TOP_SRCDIR}/rxkad \
-	-I${TOP_SRCDIR}/rxkad/domestic \
 	-I${TOP_SRCDIR}/util \
 	-I${TOP_OBJDIR}/src \
 	-I${TOP_OBJDIR}/src/afs \
@@ -126,7 +125,7 @@ AFSAOBJS = \
 	xdr_int32.o	\
 	xdr_int64.o	\
 	Kvice.cs.o	\
-	fcrypt.o		\
+	bg-fcrypt.o		\
 	rx.o		\
 	rx_rdwr.o	\
 	rx_clock.o	\
@@ -146,7 +145,6 @@ AFSAOBJS = \
 	Krxstat.ss.o	\
 	Krxstat.xdr.o	\
 	rxstat.o	\
-	crypt_conn.o	\
 	AFS_component_version_number.o\
 	afs_exporter.o	\
 	rxkad_client.o	\
@@ -277,9 +275,7 @@ afs_memcache.o: $(TOP_SRC_AFS)/afs_memcache.c
 	$(CRULE1)
 afs_stat.o: $(TOP_SRC_AFS)/afs_stat.c
 	$(CRULE1)
-fcrypt.o: 	$(TOP_SRC_RXKAD)/domestic/fcrypt.c
-	$(CRULE1)
-crypt_conn.o: $(TOP_SRC_RXKAD)/domestic/crypt_conn.c
+bg-fcrypt.o: 	$(TOP_SRC_RXKAD)/bg-fcrypt.c
 	$(CRULE1)
 rxkad_client.o: $(TOP_SRC_RXKAD)/rxkad_client.c
 	$(CRULE1)

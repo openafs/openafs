@@ -72,6 +72,7 @@ RCSID("$Header$");
 #include "fcrypt.h"
 #include "rxkad.h"
 #include "fcrypt.h"
+#include "private_data.h"
 
 #undef WORDS_BIGENDIAN
 #ifdef AFSBIG_ENDIAN
@@ -258,9 +259,9 @@ static const afs_uint32 sbox3[256] = {
  */
 
 #define F_ENCRYPT(R, L, sched) { \
- union lc4 { afs_uint32 l; unsigned char c[4]; } u; \
- u.l = sched ^ R; \
- L ^= sbox0[u.c[0]] ^ sbox1[u.c[1]] ^ sbox2[u.c[2]] ^ sbox3[u.c[3]]; }
+ union lc4 { afs_uint32 l; unsigned char c[4]; } un; \
+ un.l = sched ^ R; \
+ L ^= sbox0[un.c[0]] ^ sbox1[un.c[1]] ^ sbox2[un.c[2]] ^ sbox3[un.c[3]]; }
 
 #ifndef WORDS_BIGENDIAN
 /* BEWARE: this code is endian dependent.
@@ -269,9 +270,9 @@ static const afs_uint32 sbox3[256] = {
 #undef F_ENCRYPT
 #define FF(y, shiftN) (((y) >> shiftN) & 0xFF)
 #define F_ENCRYPT(R, L, sched) { \
- afs_uint32 u; \
- u = sched ^ R; \
- L ^= sbox0[FF(u, 0)] ^ sbox1[FF(u, 8)] ^ sbox2[FF(u, 16)] ^ sbox3[FF(u, 24)];}
+ afs_uint32 un; \
+ un = sched ^ R; \
+ L ^= sbox0[FF(un, 0)] ^ sbox1[FF(un, 8)] ^ sbox2[FF(un, 16)] ^ sbox3[FF(un, 24)];}
 #endif
 
 static inline
@@ -428,7 +429,10 @@ fc_ecb_encrypt(afs_uint32 *in, afs_uint32 *out,
 	       fc_KeySchedule sched,
 	       int encrypt)
 {
-  if (encrypt)
+  LOCK_RXKAD_STATS
+  rxkad_stats.fc_encrypts[encrypt]++;
+  UNLOCK_RXKAD_STATS
+  if (encrypt) 
     fc_ecb_enc(in[0], in[1], out, sched);
   else
     fc_ecb_dec(in[0], in[1], out, sched);
@@ -533,7 +537,6 @@ fc_keysched(void *key_,
   *sched++ = EFF_NTOHL((afs_uint32)k);
   ROT56R64(k, 11);
   *sched++ = EFF_NTOHL((afs_uint32)k);
-  return 0;
 #else
   afs_uint32 hi, lo; /* hi is upper 24 bits and lo lower 32, total 56 */
 
@@ -591,8 +594,11 @@ fc_keysched(void *key_,
   *sched++ = EFF_NTOHL(lo);
   ROT56R(hi, lo, 11);
   *sched++ = EFF_NTOHL(lo);
-  return 0;
 #endif
+  LOCK_RXKAD_STATS
+  rxkad_stats.fc_key_scheds++;
+  UNLOCK_RXKAD_STATS
+  return 0;
 }
 
 /*
@@ -609,6 +615,14 @@ rxkad_EncryptPacket(const struct rx_connection *rx_connection_not_used,
 {
   afs_uint32 ivec[2];
   struct iovec *frag;
+  struct rx_securityClass *obj;
+  struct rxkad_cprivate *tp;          /* s & c have type at same offset */
+
+  obj = rx_SecurityObjectOf(rx_connection_not_used);
+  tp = (struct rxkad_cprivate *)obj->privateData;
+  LOCK_RXKAD_STATS
+  rxkad_stats.bytesEncrypted[rxkad_TypeIndex(tp->type)] += len;
+  UNLOCK_RXKAD_STATS
 
   {
     /* What is this good for?
@@ -643,6 +657,14 @@ rxkad_DecryptPacket(const struct rx_connection *rx_connection_not_used,
 {
   afs_uint32 ivec[2];
   struct iovec *frag;
+  struct rx_securityClass *obj;
+  struct rxkad_cprivate *tp;          /* s & c have type at same offset */
+
+  obj = rx_SecurityObjectOf(rx_connection_not_used);
+  tp = (struct rxkad_cprivate *)obj->privateData;
+  LOCK_RXKAD_STATS
+  rxkad_stats.bytesDecrypted[rxkad_TypeIndex(tp->type)] += len;
+  UNLOCK_RXKAD_STATS
 
   memcpy(ivec, iv, sizeof(ivec)); /* Must use copy of iv */
   for (frag = &packet->wirevec[1]; len > 0; frag++)

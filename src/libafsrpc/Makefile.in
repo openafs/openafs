@@ -85,8 +85,7 @@ RXKADOBJS =\
 	ticket.o \
 	ticket5.o \
 	crc.o \
-	fcrypt.o \
-	crypt_conn.o
+	bg-fcrypt.o
 
 DESOBJS =\
 	des.o \
@@ -190,10 +189,7 @@ ticket5.o: ${RXKAD}/ticket5.c
 crc.o: ${RXKAD}/crc.c
 	${CCRULE}
 
-fcrypt.o: ${RXKAD}/fcrypt.c
-	${CCRULE}
-
-crypt_conn.o: ${RXKAD}/crypt_conn.c
+bg-fcrypt.o: ${RXKAD}/bg-fcrypt.c
 	${CCRULE}
 
 AFS_component_version_number.o: ${RX}/AFS_component_version_number.c
