@@ -596,9 +596,11 @@ int getAFSServer(char *cellName, int *cellHosts, int *numServers, int *ttl)
   fprintf(stderr, "getAFSServer: cell %s, cm_dnsEnabled=%d\n", cellName, cm_dnsEnabled);
 #endif
 
+#if !defined(_WIN32_WINNT) || _WIN32_WINNT < 0x500
   if (cm_dnsEnabled == -1) { /* not yet initialized, eg when called by klog */
     cm_InitDNS(1);    /* assume enabled */
   }
+#endif
   if (cm_dnsEnabled == 0) {  /* possibly we failed in cm_InitDNS above */
     fprintf(stderr, "DNS initialization failed, disabled\n");
     *numServers = 0;

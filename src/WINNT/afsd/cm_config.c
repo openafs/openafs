@@ -391,7 +391,9 @@ long cm_SearchCellByDNS(char *cellNamep, char *newCellNamep, int *ttl,
 
 	success = FALSE;
 
-	/* query the AFSDB records of cell */
+    DebugEvent_local("AFS SearchCellDNS-","Doing search for [%s]", cellNamep);
+
+    /* query the AFSDB records of cell */
 	if(DnsQuery_A(cellNamep, DNS_TYPE_AFSDB, DNS_QUERY_STANDARD, NULL, &pDnsCell, NULL) == ERROR_SUCCESS) {
 
 		memset((void*) &vlSockAddr, 0, sizeof(vlSockAddr));
