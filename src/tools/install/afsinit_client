@@ -1,0 +1,37 @@
+#! /bin/sh
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# Configuration information for AFS client
+
+# AFS_CLIENT and AFS_SERVER determine if we should start the client and or
+# the bosserver. Possible values are on and off.
+AFS_CLIENT=on
+AFS_SERVER=off
+
+# AFS client configuration options:
+LARGE="-stat 2800 -dcache 2400 -daemons 5 -volumes 128"
+MEDIUM="-stat 2000 -dcache 800 -daemons 3 -volumes 70"
+SMALL="-stat 300 -dcache 100 -daemons 2 -volumes 50"
+OPTIONS=$MEDIUM
+
+# Set to "-verbose" for a lot of debugging information from afsd. Only
+# useful for debugging as it prints _a lot_ of information.
+VERBOSE=
+
+# AFSD_OPTIONS are the options passed to afsd.
+AFSD_OPTIONS="$OPTIONS $VERBOSE"
+
+
+# Sample server preferences function. Set server preferences using this.
+# afs_serverprefs() {
+#    /usr/afsws/etc/fs setserverprefs <host> <rank>
+#}
+
+# Either the name of an executable script or a set of commands go here.
+# AFS_POST_INIT=afs_serverprefs
+AFS_POST_INIT=
