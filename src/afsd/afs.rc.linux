@@ -187,7 +187,7 @@ case "$1" in
 	;;
 
   *)
-	echo Usage: 'afs <start|stop>'
+	echo Usage: 'openafs-client <start|stop>'
 
 esac
 
