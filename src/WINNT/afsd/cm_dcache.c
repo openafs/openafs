@@ -55,7 +55,8 @@ long cm_BufWrite(void *vfidp, osi_hyper_t *offsetp, long length, long flags,
     osi_hyper_t thyper;
     AFSVolSync volSync;
     AFSFid tfid;
-    struct rx_call *oldCallp, *callp;
+    struct rx_call *callp;
+    struct rx_connection *rxconnp;
     osi_queueData_t *qdp;
     cm_buf_t *bufp;
     long wbytes;
@@ -129,9 +130,9 @@ long cm_BufWrite(void *vfidp, osi_hyper_t *offsetp, long length, long flags,
         if (code) 
             continue;
 		
-        oldCallp = cm_GetRxConn(connp);
-        callp = rx_NewCall(oldCallp);
-        rx_PutConnection(oldCallp);
+        rxconnp = cm_GetRxConn(connp);
+        callp = rx_NewCall(rxconnp);
+        rx_PutConnection(rxconnp);
 
         osi_Log3(afsd_logp, "CALL StoreData scp 0x%x, off 0x%x, size 0x%x",
                  (long) scp, biod.offset.LowPart, nbytes);
@@ -238,7 +239,8 @@ long cm_StoreMini(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
     long code;
     long truncPos;
     cm_conn_t *connp;
-    struct rx_call *oldCallp, *callp;
+    struct rx_call *callp;
+    struct rx_connection *rxconnp;
 
     /* Serialize StoreData RPC's; for rationale see cm_scache.c */
     (void) cm_SyncOp(scp, NULL, userp, reqp, 0,
@@ -266,9 +268,9 @@ long cm_StoreMini(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
         if (code) 
             continue;
 		
-        oldCallp = cm_GetRxConn(connp);
-        callp = rx_NewCall(oldCallp);
-        rx_PutConnection(oldCallp);
+        rxconnp = cm_GetRxConn(connp);
+        callp = rx_NewCall(rxconnp);
+        rx_PutConnection(rxconnp);
 
         code = StartRXAFS_StoreData(callp, &tfid, &inStatus,
                                     0, 0, truncPos);
@@ -1120,7 +1122,8 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *up,
     cm_buf_t *tbufp;		/* buf we're filling */
     osi_queueData_t *qdp;		/* q element we're scanning */
     AFSFid tfid;
-    struct rx_call *oldCallp, *callp;
+    struct rx_call *callp;
+    struct rx_connection *rxconnp;
     cm_bulkIO_t biod;		/* bulk IO descriptor */
     cm_conn_t *connp;
     int getroot;
@@ -1252,9 +1255,9 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *up,
         if (code) 
             continue;
 	
-        oldCallp = cm_GetRxConn(connp);
-        callp = rx_NewCall(oldCallp);
-        rx_PutConnection(oldCallp);
+        rxconnp = cm_GetRxConn(connp);
+        callp = rx_NewCall(rxconnp);
+        rx_PutConnection(rxconnp);
 
         osi_Log3(afsd_logp, "CALL FetchData vp %x, off 0x%x, size 0x%x",
                   (long) scp, biod.offset.LowPart, biod.length);

@@ -595,7 +595,7 @@ long cm_ApplyDir(cm_scache_t *scp, cm_DirFuncp_t funcp, void *parmp,
                 break;
             }
         }	/* if (wrong buffer) ... */
-                
+           
         /* now we have the buffer containing the entry we're interested
          * in; copy it out if it represents a non-deleted entry.
          */
