@@ -532,9 +532,10 @@ SubEnumerateEntry(struct nvldbentry *entry)
 	    fprintf(STDOUT, "RO Site ");
 	if (isMixed) {
 	    if (entry->serverFlags[i] & NEW_REPSITE)
-		fprintf(STDOUT, " -- New release");
+		fprintf(STDOUT," -- New release");
 	    else
-		fprintf(STDOUT, " -- Old release");
+		if (!(entry->serverFlags[i] & ITSRWVOL))
+		    fprintf(STDOUT," -- Old release");
 	} else {
 	    if (entry->serverFlags[i] & RO_DONTUSE)
 		fprintf(STDOUT, " -- Not released");
@@ -3213,11 +3214,13 @@ UV_ReleaseVolume(afs_int32 afromvol, afs_int32 afromserver,
     }
 
     /* Will we be completing a previously unfinished release. -force overrides */
-    for (fullrelease = 1, i = 0; (fullrelease && (i < entry.nServers)); i++) {
-	if (entry.serverFlags[i] & NEW_REPSITE)
-	    fullrelease = 0;
+    for (s = 0, m = 0, fullrelease=0, i=0; (i<entry.nServers); i++) {
+	if (entry.serverFlags[i] & ITSROVOL) {
+	    m++;
+	    if (entry.serverFlags[i] & NEW_REPSITE) s++;
+	}
     }
-    if (forceflag && !fullrelease)
+    if ((forceflag && !fullrelease) || (s == m) || (s == 0))
 	fullrelease = 1;
 
     /* Determine which volume id to use and see if it exists */
