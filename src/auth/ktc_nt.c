@@ -116,9 +116,9 @@ send_key(afs_uuid_t uuid, char sessionKey[8])
 	if (!strcmpi(encrypt, "OFF"))
 	    encryptionOff = TRUE;
 
-    /* Protocol sequence is named pipe by default */
+    /* Protocol sequence is local by default */
     if (!GetEnvironmentVariable("AFS_RPC_PROTSEQ", protseq, sizeof(protseq)))
-	strcpy(protseq, "ncacn_np");
+	strcpy(protseq, "ncalrpc");
 
     /* Server name */
     getservername(&serverNamep, sizeof(serverName));
@@ -189,9 +189,9 @@ receive_key(afs_uuid_t uuid, char sessionKey[8])
 	if (!strcmpi(encrypt, "OFF"))
 	    encryptionOff = TRUE;
 
-    /* Protocol sequence is named pipe by default */
+    /* Protocol sequence is local by default */
     if (!GetEnvironmentVariable("AFS_RPC_PROTSEQ", protseq, sizeof(protseq)))
-	strcpy(protseq, "ncacn_np");
+	strcpy(protseq, "ncalrpc");
 
     /* Server name */
     getservername(&serverNamep, sizeof(serverName));
