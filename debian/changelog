@@ -1,3 +1,11 @@
+openafs (1.2.9-2) unstable; urgency=low
+
+  * Fix   to not build PAM krb since we don't install it and it breaks alpha, Closes: #189548
+  * Don't install pagsh man page symlink since we no longer link to
+    undocumented, Closes: #189860
+
+ -- Sam Hartman <hartmans@debian.org>  Mon, 21 Apr 2003 21:05:51 -0400
+
 openafs (1.2.9-1) unstable; urgency=low
 
   * Literal newline fixes, Closes: #175627
