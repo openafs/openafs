@@ -90,33 +90,34 @@ void cm_RecordRacingRevoke(cm_fid_t *fidp, long cancelFlags)
 
 /*
  * When we lose a callback, may have to send change notification replies.
+ * Do not call with a lock on the scp.
  */
 void cm_CallbackNotifyChange(cm_scache_t *scp)
 {
     osi_Log2(afsd_logp, "CallbackNotifyChange FileType %d Flags %lX",
               scp->fileType, scp->flags);
 
-	if (scp->fileType == CM_SCACHETYPE_DIRECTORY) {
-		if (scp->flags & CM_SCACHEFLAG_ANYWATCH)
-			smb_NotifyChange(0,
-			 FILE_NOTIFY_GENERIC_DIRECTORY_FILTER,
-			 scp, NULL, NULL, TRUE);
-	} else {
-		cm_fid_t tfid;
-		cm_scache_t *dscp;
+    if (scp->fileType == CM_SCACHETYPE_DIRECTORY) {
+        if (scp->flags & CM_SCACHEFLAG_ANYWATCH)
+            smb_NotifyChange(0,
+                             FILE_NOTIFY_GENERIC_DIRECTORY_FILTER,
+                             scp, NULL, NULL, TRUE);
+    } else {
+        cm_fid_t tfid;
+        cm_scache_t *dscp;
 
-		tfid.cell = scp->fid.cell;
-		tfid.volume = scp->fid.volume;
-		tfid.vnode = scp->parentVnode;
-		tfid.unique = scp->parentUnique;
-		dscp = cm_FindSCache(&tfid);
-		if (dscp &&
-			dscp->flags & CM_SCACHEFLAG_ANYWATCH)
-			smb_NotifyChange(0,
-			 FILE_NOTIFY_GENERIC_FILE_FILTER,
-			 dscp, NULL, NULL, TRUE);
-		if (dscp) cm_ReleaseSCache(dscp);
-	}
+        tfid.cell = scp->fid.cell;
+        tfid.volume = scp->fid.volume;
+        tfid.vnode = scp->parentVnode;
+        tfid.unique = scp->parentUnique;
+        dscp = cm_FindSCache(&tfid);
+        if (dscp &&
+             dscp->flags & CM_SCACHEFLAG_ANYWATCH)
+            smb_NotifyChange( 0,
+                              FILE_NOTIFY_GENERIC_FILE_FILTER,
+                              dscp,   NULL, NULL, TRUE);
+        if (dscp) cm_ReleaseSCache(dscp);
+    }
 }
 
 /* called with no locks held for every file ID that is revoked directly by
@@ -906,13 +907,13 @@ void cm_CheckCBExpiration(void)
         for(scp = cm_hashTablep[i]; scp; scp=scp->nextp) {
             scp->refCount++;
             lock_ReleaseWrite(&cm_scacheLock);
-            lock_ObtainMutex(&scp->mx);
             if (scp->cbExpires > 0 && (scp->cbServerp == NULL || now > scp->cbExpires)) {
                 osi_Log1(afsd_logp, "Callback Expiration Discarding SCache scp %x", scp);
                 cm_CallbackNotifyChange(scp);
+                lock_ObtainMutex(&scp->mx);
                 cm_DiscardSCache(scp);
+                lock_ReleaseMutex(&scp->mx);
             }
-            lock_ReleaseMutex(&scp->mx);
             lock_ObtainWrite(&cm_scacheLock);
             osi_assert(scp->refCount-- > 0);
         }

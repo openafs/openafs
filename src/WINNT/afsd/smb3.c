@@ -5861,211 +5861,211 @@ void smb_NotifyChange(DWORD action, DWORD notifyFilter,
 	cm_scache_t *dscp, char *filename, char *otherFilename,
 	BOOL isDirectParent)
 {
-	smb_packet_t *watch, *lastWatch, *nextWatch;
-	ULONG parmSlot, parmCount, parmOffset, dataOffset, nameLen;
-	char *outData, *oldOutData;
-	ULONG filter;
-	USHORT fid, wtree;
-	ULONG maxLen;
-	BOOL twoEntries = FALSE;
-	ULONG otherNameLen, oldParmCount = 0;
-	DWORD otherAction;
-	smb_vc_t *vcp;
-	smb_fid_t *fidp;
+    smb_packet_t *watch, *lastWatch, *nextWatch;
+    ULONG parmSlot, parmCount, parmOffset, dataOffset, nameLen;
+    char *outData, *oldOutData;
+    ULONG filter;
+    USHORT fid, wtree;
+    ULONG maxLen;
+    BOOL twoEntries = FALSE;
+    ULONG otherNameLen, oldParmCount = 0;
+    DWORD otherAction;
+    smb_vc_t *vcp;
+    smb_fid_t *fidp;
 
-	/* Get ready for rename within directory */
-	if (action == FILE_ACTION_RENAMED_OLD_NAME && otherFilename != NULL) {
-		twoEntries = TRUE;
-		otherAction = FILE_ACTION_RENAMED_NEW_NAME;
-	}
+    /* Get ready for rename within directory */
+    if (action == FILE_ACTION_RENAMED_OLD_NAME && otherFilename != NULL) {
+        twoEntries = TRUE;
+        otherAction = FILE_ACTION_RENAMED_NEW_NAME;
+    }
 
     osi_Log2(smb_logp,"in smb_NotifyChange for file [%s] dscp [%x]",
-              osi_LogSaveString(smb_logp,filename),dscp);
+             osi_LogSaveString(smb_logp,filename),dscp);
 
-	lock_ObtainMutex(&smb_Dir_Watch_Lock);
-	watch = smb_Directory_Watches;
-	while (watch) {
-		filter = smb_GetSMBParm(watch, 19)
-				| (smb_GetSMBParm(watch, 20) << 16);
-		fid = smb_GetSMBParm(watch, 21);
-		wtree = smb_GetSMBParm(watch, 22) & 0xffff;  /* TODO: should this be 0xff ? */
-		maxLen = smb_GetSMBOffsetParm(watch, 5, 1)
-				| (smb_GetSMBOffsetParm(watch, 6, 1) << 16);
-		vcp = watch->vcp;
+    lock_ObtainMutex(&smb_Dir_Watch_Lock);
+    watch = smb_Directory_Watches;
+    while (watch) {
+        filter = smb_GetSMBParm(watch, 19)
+            | (smb_GetSMBParm(watch, 20) << 16);
+        fid = smb_GetSMBParm(watch, 21);
+        wtree = smb_GetSMBParm(watch, 22) & 0xffff;  /* TODO: should this be 0xff ? */
+        maxLen = smb_GetSMBOffsetParm(watch, 5, 1)
+            | (smb_GetSMBOffsetParm(watch, 6, 1) << 16);
+        vcp = watch->vcp;
 
-		/*
-		 * Strange hack - bug in NT Client and NT Server that we
-		 * must emulate?
-		 */
-		if (filter == 3 && wtree)
-			filter = 0x17;
+        /*
+         * Strange hack - bug in NT Client and NT Server that we
+         * must emulate?
+         */
+        if (filter == 3 && wtree)
+            filter = 0x17;
 
-		fidp = smb_FindFID(vcp, fid, 0);
+        fidp = smb_FindFID(vcp, fid, 0);
         if (!fidp) {
             osi_Log1(smb_logp," no fidp for fid[%d]",fid);
-        	lastWatch = watch;
-        	watch = watch->nextp;
-        	continue;
-        }
-		if (fidp->scp != dscp
-		    || (filter & notifyFilter) == 0
-		    || (!isDirectParent && !wtree)) {
+            lastWatch = watch;
+            watch = watch->nextp;
+            continue;
+        }       
+        if (fidp->scp != dscp
+             || (filter & notifyFilter) == 0
+             || (!isDirectParent && !wtree)) {
             osi_Log1(smb_logp," passing fidp->scp[%x]", fidp->scp);
             smb_ReleaseFID(fidp);
-			lastWatch = watch;
-			watch = watch->nextp;
-			continue;
-		}
-		smb_ReleaseFID(fidp);
+            lastWatch = watch;
+            watch = watch->nextp;
+            continue;
+        }
+        smb_ReleaseFID(fidp);
 
-		osi_Log4(smb_logp,
-			 "Sending Change Notification for fid %d filter 0x%x wtree %d file %s",
-			 fid, filter, wtree, osi_LogSaveString(smb_logp, filename));
+        osi_Log4(smb_logp,
+                  "Sending Change Notification for fid %d filter 0x%x wtree %d file %s",
+                  fid, filter, wtree, osi_LogSaveString(smb_logp, filename));
 
-		nextWatch = watch->nextp;
-		if (watch == smb_Directory_Watches)
-			smb_Directory_Watches = nextWatch;
-		else
-			lastWatch->nextp = nextWatch;
+        nextWatch = watch->nextp;
+        if (watch == smb_Directory_Watches)
+            smb_Directory_Watches = nextWatch;
+        else
+            lastWatch->nextp = nextWatch;
 
-		/* Turn off WATCHED flag in dscp */
-		lock_ObtainMutex(&dscp->mx);
-		if (wtree)
-			dscp->flags &= ~CM_SCACHEFLAG_WATCHEDSUBTREE;
-		else
-			dscp->flags &= ~CM_SCACHEFLAG_WATCHED;
-		lock_ReleaseMutex(&dscp->mx);
+        /* Turn off WATCHED flag in dscp */
+        lock_ObtainMutex(&dscp->mx);
+        if (wtree)
+            dscp->flags &= ~CM_SCACHEFLAG_WATCHEDSUBTREE;
+        else
+            dscp->flags &= ~CM_SCACHEFLAG_WATCHED;
+        lock_ReleaseMutex(&dscp->mx);
 
-		/* Convert to response packet */
-		((smb_t *) watch)->reb = 0x80;
-		((smb_t *) watch)->wct = 0;
+        /* Convert to response packet */
+        ((smb_t *) watch)->reb = 0x80;
+        ((smb_t *) watch)->wct = 0;
 
-		/* out parms */
-		if (filename == NULL)
-			parmCount = 0;
-		else {
-			nameLen = strlen(filename);
-			parmCount = 3*4 + nameLen*2;
-			parmCount = (parmCount + 3) & ~3;	/* pad to 4 */
-			if (twoEntries) {
-				otherNameLen = strlen(otherFilename);
-				oldParmCount = parmCount;
-				parmCount += 3*4 + otherNameLen*2;
-				parmCount = (parmCount + 3) & ~3; /* pad to 4 */
-			}
-			if (maxLen < parmCount)
-				parmCount = 0;	/* not enough room */
-		}
-		parmOffset = 8*4 + 39;
-		parmOffset += 1;			/* pad to 4 */
-		dataOffset = parmOffset + parmCount;
+        /* out parms */
+        if (filename == NULL)
+            parmCount = 0;
+        else {
+            nameLen = strlen(filename);
+            parmCount = 3*4 + nameLen*2;
+            parmCount = (parmCount + 3) & ~3;	/* pad to 4 */
+            if (twoEntries) {
+                otherNameLen = strlen(otherFilename);
+                oldParmCount = parmCount;
+                parmCount += 3*4 + otherNameLen*2;
+                parmCount = (parmCount + 3) & ~3; /* pad to 4 */
+            }
+            if (maxLen < parmCount)
+                parmCount = 0;	/* not enough room */
+        }
+        parmOffset = 8*4 + 39;
+        parmOffset += 1;			/* pad to 4 */
+        dataOffset = parmOffset + parmCount;
 
-		parmSlot = 1;
-		watch->oddByte = 1;
-		/* Total Parameter Count */
-		smb_SetSMBParmLong(watch, parmSlot, parmCount); parmSlot += 2;
-		/* Total Data Count */
-		smb_SetSMBParmLong(watch, parmSlot, 0); parmSlot += 2;
-		/* Parameter Count */
-		smb_SetSMBParmLong(watch, parmSlot, parmCount); parmSlot += 2;
-		/* Parameter Offset */
-		smb_SetSMBParmLong(watch, parmSlot, parmOffset); parmSlot += 2;
-		/* Parameter Displacement */
-		smb_SetSMBParmLong(watch, parmSlot, 0); parmSlot += 2;
-		/* Data Count */
-		smb_SetSMBParmLong(watch, parmSlot, 0); parmSlot += 2;
-		/* Data Offset */
-		smb_SetSMBParmLong(watch, parmSlot, dataOffset); parmSlot += 2;
-		/* Data Displacement */
-		smb_SetSMBParmLong(watch, parmSlot, 0); parmSlot += 2;
-		smb_SetSMBParmByte(watch, parmSlot, 0);	/* Setup Count */
-		smb_SetSMBDataLength(watch, parmCount + 1);
+        parmSlot = 1;
+        watch->oddByte = 1;
+        /* Total Parameter Count */
+        smb_SetSMBParmLong(watch, parmSlot, parmCount); parmSlot += 2;
+        /* Total Data Count */
+        smb_SetSMBParmLong(watch, parmSlot, 0); parmSlot += 2;
+        /* Parameter Count */
+        smb_SetSMBParmLong(watch, parmSlot, parmCount); parmSlot += 2;
+        /* Parameter Offset */
+        smb_SetSMBParmLong(watch, parmSlot, parmOffset); parmSlot += 2;
+        /* Parameter Displacement */
+        smb_SetSMBParmLong(watch, parmSlot, 0); parmSlot += 2;
+        /* Data Count */
+        smb_SetSMBParmLong(watch, parmSlot, 0); parmSlot += 2;
+        /* Data Offset */
+        smb_SetSMBParmLong(watch, parmSlot, dataOffset); parmSlot += 2;
+        /* Data Displacement */
+        smb_SetSMBParmLong(watch, parmSlot, 0); parmSlot += 2;
+        smb_SetSMBParmByte(watch, parmSlot, 0);	/* Setup Count */
+        smb_SetSMBDataLength(watch, parmCount + 1);
 
-		if (parmCount != 0) {
-			outData = smb_GetSMBData(watch, NULL);
-			outData++;	/* round to get to parmOffset */
-			oldOutData = outData;
-			*((DWORD *)outData) = oldParmCount; outData += 4;
-					/* Next Entry Offset */
-			*((DWORD *)outData) = action; outData += 4;
-					/* Action */
-			*((DWORD *)outData) = nameLen*2; outData += 4;
-					/* File Name Length */
-			mbstowcs((WCHAR *)outData, filename, nameLen);
-					/* File Name */
-			if (twoEntries) {
-				outData = oldOutData + oldParmCount;
-				*((DWORD *)outData) = 0; outData += 4;
-					/* Next Entry Offset */
-				*((DWORD *)outData) = otherAction; outData += 4;
-					/* Action */
-				*((DWORD *)outData) = otherNameLen*2;
-				outData += 4;	/* File Name Length */
-				mbstowcs((WCHAR *)outData, otherFilename,
-					 otherNameLen);	/* File Name */
-			}
-		}
+        if (parmCount != 0) {
+            outData = smb_GetSMBData(watch, NULL);
+            outData++;	/* round to get to parmOffset */
+            oldOutData = outData;
+            *((DWORD *)outData) = oldParmCount; outData += 4;
+            /* Next Entry Offset */
+            *((DWORD *)outData) = action; outData += 4;
+            /* Action */
+            *((DWORD *)outData) = nameLen*2; outData += 4;
+            /* File Name Length */
+            mbstowcs((WCHAR *)outData, filename, nameLen);
+            /* File Name */
+            if (twoEntries) {
+                outData = oldOutData + oldParmCount;
+                *((DWORD *)outData) = 0; outData += 4;
+                /* Next Entry Offset */
+                *((DWORD *)outData) = otherAction; outData += 4;
+                /* Action */
+                *((DWORD *)outData) = otherNameLen*2;
+                outData += 4;	/* File Name Length */
+                mbstowcs((WCHAR *)outData, otherFilename,
+                          otherNameLen);	/* File Name */
+            }       
+        }       
 
-		/*
-		 * If filename is null, we don't know the cause of the
-		 * change notification.  We return zero data (see above),
-		 * and set error code to NT_STATUS_NOTIFY_ENUM_DIR
-		 * (= 0x010C).  We set the error code here by hand, without
-		 * modifying wct and bcc.
-		 */
-		if (filename == NULL) {
-			((smb_t *) watch)->rcls = 0x0C;
-			((smb_t *) watch)->reh = 0x01;
-			((smb_t *) watch)->errLow = 0;
-			((smb_t *) watch)->errHigh = 0;
-			/* Set NT Status codes flag */
-			((smb_t *) watch)->flg2 |= 0x4000;
-		}
+        /*
+         * If filename is null, we don't know the cause of the
+         * change notification.  We return zero data (see above),
+         * and set error code to NT_STATUS_NOTIFY_ENUM_DIR
+         * (= 0x010C).  We set the error code here by hand, without
+         * modifying wct and bcc.
+         */
+        if (filename == NULL) {
+            ((smb_t *) watch)->rcls = 0x0C;
+            ((smb_t *) watch)->reh = 0x01;
+            ((smb_t *) watch)->errLow = 0;
+            ((smb_t *) watch)->errHigh = 0;
+            /* Set NT Status codes flag */
+            ((smb_t *) watch)->flg2 |= 0x4000;
+        }
 
-		smb_SendPacket(vcp, watch);
+        smb_SendPacket(vcp, watch);
         smb_ReleaseVC(vcp);
-		smb_FreePacket(watch);
-		watch = nextWatch;
-	}
-	lock_ReleaseMutex(&smb_Dir_Watch_Lock);
-}
+        smb_FreePacket(watch);
+        watch = nextWatch;
+    }
+    lock_ReleaseMutex(&smb_Dir_Watch_Lock);
+}       
 
 long smb_ReceiveNTCancel(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
-	unsigned char *replyWctp;
-	smb_packet_t *watch, *lastWatch;
-	USHORT fid, watchtree;
-	smb_fid_t *fidp;
-	cm_scache_t *scp;
+    unsigned char *replyWctp;
+    smb_packet_t *watch, *lastWatch;
+    USHORT fid, watchtree;
+    smb_fid_t *fidp;
+    cm_scache_t *scp;
 
-	osi_Log0(smb_logp, "SMB3 receive NT cancel");
+    osi_Log0(smb_logp, "SMB3 receive NT cancel");
 
-	lock_ObtainMutex(&smb_Dir_Watch_Lock);
-	watch = smb_Directory_Watches;
-	while (watch) {
-		if (((smb_t *)watch)->uid == ((smb_t *)inp)->uid
-		    && ((smb_t *)watch)->pid == ((smb_t *)inp)->pid
-		    && ((smb_t *)watch)->mid == ((smb_t *)inp)->mid
-		    && ((smb_t *)watch)->tid == ((smb_t *)inp)->tid) {
-			if (watch == smb_Directory_Watches)
-				smb_Directory_Watches = watch->nextp;
-			else
-				lastWatch->nextp = watch->nextp;
-			lock_ReleaseMutex(&smb_Dir_Watch_Lock);
+    lock_ObtainMutex(&smb_Dir_Watch_Lock);
+    watch = smb_Directory_Watches;
+    while (watch) {
+        if (((smb_t *)watch)->uid == ((smb_t *)inp)->uid
+             && ((smb_t *)watch)->pid == ((smb_t *)inp)->pid
+             && ((smb_t *)watch)->mid == ((smb_t *)inp)->mid
+             && ((smb_t *)watch)->tid == ((smb_t *)inp)->tid) {
+            if (watch == smb_Directory_Watches)
+                smb_Directory_Watches = watch->nextp;
+            else
+                lastWatch->nextp = watch->nextp;
+            lock_ReleaseMutex(&smb_Dir_Watch_Lock);
 
-			/* Turn off WATCHED flag in scp */
-			fid = smb_GetSMBParm(watch, 21);
-			watchtree = smb_GetSMBParm(watch, 22) & 0xffff;
+            /* Turn off WATCHED flag in scp */
+            fid = smb_GetSMBParm(watch, 21);
+            watchtree = smb_GetSMBParm(watch, 22) & 0xffff;
 
             if (vcp != watch->vcp)
                 osi_Log2(smb_logp, "smb_ReceiveNTCancel: vcp %x not equal to watch vcp %x", 
-                         vcp, watch->vcp);
+                          vcp, watch->vcp);
 
-			fidp = smb_FindFID(vcp, fid, 0);
+            fidp = smb_FindFID(vcp, fid, 0);
             if (fidp) {
                 osi_Log3(smb_logp, "Cancelling change notification for fid %d wtree %d file %s", 
-                         fid, watchtree,
-                         osi_LogSaveString(smb_logp, (fidp)?fidp->NTopen_wholepathp:""));
+                          fid, watchtree,
+                          osi_LogSaveString(smb_logp, (fidp)?fidp->NTopen_wholepathp:""));
 
                 scp = fidp->scp;
                 lock_ObtainMutex(&scp->mx);
@@ -6079,28 +6079,28 @@ long smb_ReceiveNTCancel(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
                 osi_Log2(smb_logp,"NTCancel unable to resolve fid [%d] in vcp[%x]", fid,vcp);
             }
 
-			/* assume STATUS32; return 0xC0000120 (CANCELED) */
-			replyWctp = watch->wctp;
-			*replyWctp++ = 0;
-			*replyWctp++ = 0;
-			*replyWctp++ = 0;
-			((smb_t *)watch)->rcls = 0x20;
-			((smb_t *)watch)->reh = 0x1;
-			((smb_t *)watch)->errLow = 0;
-			((smb_t *)watch)->errHigh = 0xC0;
-			((smb_t *)watch)->flg2 |= 0x4000;
-			smb_SendPacket(vcp, watch);
+            /* assume STATUS32; return 0xC0000120 (CANCELED) */
+            replyWctp = watch->wctp;
+            *replyWctp++ = 0;
+            *replyWctp++ = 0;
+            *replyWctp++ = 0;
+            ((smb_t *)watch)->rcls = 0x20;
+            ((smb_t *)watch)->reh = 0x1;
+            ((smb_t *)watch)->errLow = 0;
+            ((smb_t *)watch)->errHigh = 0xC0;
+            ((smb_t *)watch)->flg2 |= 0x4000;
+            smb_SendPacket(vcp, watch);
             if (watch->vcp)
                 smb_ReleaseVC(watch->vcp);
-			smb_FreePacket(watch);
-			return 0;
-		}
-		lastWatch = watch;
-		watch = watch->nextp;
-	}
-	lock_ReleaseMutex(&smb_Dir_Watch_Lock);
+            smb_FreePacket(watch);
+            return 0;
+        }
+        lastWatch = watch;
+        watch = watch->nextp;
+    }
+    lock_ReleaseMutex(&smb_Dir_Watch_Lock);
 
-	return 0;
+    return 0;
 }
 
 void smb3_Init()
