@@ -63,6 +63,9 @@ crget(void)
     CRED_UNLOCK();
 
     memset(tmp, 0, sizeof(cred_t));
+#if defined(AFS_LINUX26_ENV)
+    tmp->cr_group_info = groups_alloc(0);
+#endif
     tmp->cr_ref = 1;
     return tmp;
 }
@@ -71,6 +74,9 @@ void
 crfree(cred_t * cr)
 {
     if (cr->cr_ref > 1) {
+#if defined(AFS_LINUX26_ENV)
+	put_group_info(cr->cr_group_info);
+#endif
 	cr->cr_ref--;
 	return;
     }
@@ -88,7 +94,24 @@ cred_t *
 crdup(cred_t * cr)
 {
     cred_t *tmp = crget();
-    *tmp = *cr;
+
+    tmp->cr_uid = cr->cr_uid;
+    tmp->cr_ruid = cr->cr_ruid;
+    tmp->cr_gid = cr->cr_gid;
+#if defined(AFS_LINUX26_ENV)
+{
+    struct group_info *old_info;
+
+    old_info = tmp->cr_group_info;
+    get_group_info(cr->cr_group_info);
+    tmp->cr_group_info = cr->cr_group_info;
+    put_group_info(old_info);
+}
+#else
+    memcpy(tmp->cr_groups, cr->cr_groups, NGROUPS * sizeof(gid_t));
+    tmp->cr_ngroups = cr->cr_ngroups;
+#endif
+
     tmp->cr_ref = 1;
     return tmp;
 }
@@ -97,17 +120,19 @@ cred_t *
 crref(void)
 {
     cred_t *cr = crget();
+
     cr->cr_uid = current->fsuid;
     cr->cr_ruid = current->uid;
     cr->cr_gid = current->fsgid;
     cr->cr_rgid = current->gid;
 #if defined(AFS_LINUX26_ENV)
 {
-    int i;
+    struct group_info *old_info;
 
-    for(i = 0; i < current->group_info->ngroups && i < NGROUPS; ++i)
-        cr->cr_groups[i] = GROUP_AT(current->group_info, i);
-    cr->cr_ngroups = current->group_info->ngroups;
+    old_info = cr->cr_group_info;
+    get_group_info(current->group_info);
+    cr->cr_group_info = current->group_info;
+    put_group_info(old_info);
 }
 #else
     memcpy(cr->cr_groups, current->groups, NGROUPS * sizeof(gid_t));
@@ -127,14 +152,13 @@ crset(cred_t * cr)
     current->gid = cr->cr_rgid;
 #if defined(AFS_LINUX26_ENV)
 {
-    struct group_info *new_info;
-    int i;
+    struct group_info *old_info;
 
-    new_info = groups_alloc(cr->cr_ngroups);
-    for(i = 0; i < cr->cr_ngroups; ++i)
-	GROUP_AT(new_info, i) = cr->cr_groups[i];
-    set_current_groups(new_info);
-    put_group_info(new_info);
+    /* using set_current_groups() will sort the groups */
+    old_info = current->group_info;
+    get_group_info(cr->cr_group_info);
+    current->group_info = cr->cr_group_info;
+    put_group_info(old_info);
 }
 #else
     memcpy(current->groups, cr->cr_groups, NGROUPS * sizeof(gid_t));

@@ -47,7 +47,6 @@ RCSID
 extern struct vcache *afs_globalVp;
 extern afs_rwlock_t afs_xvcache;
 
-extern struct dentry_operations *afs_dops;
 #if defined(AFS_LINUX24_ENV)
 extern struct inode_operations afs_file_iops;
 extern struct address_space_operations afs_file_aops;
@@ -272,39 +271,33 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
     struct afs_fakestat_state fakestat;
 
     AFS_GLOCK();
+#if defined(AFS_LINUX26_ENV)
+    lock_kernel();
+#endif
     AFS_STATCNT(afs_readdir);
 
     code = afs_InitReq(&treq, credp);
     crfree(credp);
-    if (code) {
-	AFS_GUNLOCK();
-	return -code;
-    }
+    if (code)
+	goto out1;
 
     afs_InitFakeStat(&fakestat);
     code = afs_EvalFakeStat(&avc, &fakestat, &treq);
-    if (code) {
-	afs_PutFakeStat(&fakestat);
-	AFS_GUNLOCK();
-	return -code;
-    }
+    if (code)
+	goto out;
 
     /* update the cache entry */
   tagain:
     code = afs_VerifyVCache(avc, &treq);
-    if (code) {
-	afs_PutFakeStat(&fakestat);
-	AFS_GUNLOCK();
-	return -code;
-    }
+    if (code)
+	goto out;
 
     /* get a reference to the entire directory */
     tdc = afs_GetDCache(avc, (afs_size_t) 0, &treq, &origOffset, &tlen, 1);
     len = tlen;
     if (!tdc) {
-	afs_PutFakeStat(&fakestat);
-	AFS_GUNLOCK();
-	return -ENOENT;
+	code = -ENOENT;
+	goto out;
     }
     ObtainReadLock(&avc->lock);
     ObtainReadLock(&tdc->lock);
@@ -335,7 +328,7 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
      * takes an offset in units of blobs, rather than bytes.
      */
     code = 0;
-    offset = (int)fp->f_pos;
+    offset = (int) fp->f_pos;
     while (1) {
 	dirpos = BlobScan(&tdc->f.inode, offset);
 	if (!dirpos)
@@ -352,11 +345,11 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
 	else {
 	    printf("afs_linux_readdir: afs_dir_GetBlob failed, null name (inode %x, dirpos %d)\n", 
 		   &tdc->f.inode, dirpos);
-	    DRelease(de, 0);
+	    DRelease((struct buffer *) de, 0);
 	    afs_PutDCache(tdc);
 	    ReleaseReadLock(&avc->lock);
-	    afs_PutFakeStat(&fakestat);
-	    return -ENOENT;
+	    code = -ENOENT;
+	    goto out;
 	}
 
 	/* filldir returns -EINVAL when the buffer is full. */
@@ -396,7 +389,7 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
 #else
 	code = (*filldir) (dirbuf, de->name, len, offset, ino);
 #endif
-	DRelease(de, 0);
+	DRelease((struct buffer *)de, 0);
 	if (code)
 	    break;
 	offset = dirpos + 1 + ((len + 16) >> 5);
@@ -409,9 +402,16 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
     ReleaseReadLock(&tdc->lock);
     afs_PutDCache(tdc);
     ReleaseReadLock(&avc->lock);
+    code = 0;
+
+out:
     afs_PutFakeStat(&fakestat);
+out1:
+#if defined(AFS_LINUX26_ENV)
+    unlock_kernel();
+#endif
     AFS_GUNLOCK();
-    return 0;
+    return code;
 }
 
 
@@ -763,15 +763,6 @@ struct file_operations afs_file_fops = {
  * AFS Linux dentry operations
  **********************************************************************/
 
-static int
-afs_linux_getattr(struct vfsmount *mnt, struct dentry *dentry, struct kstat *stat)
-{
-        int err = afs_linux_revalidate(dentry);
-        if (!err)
-                generic_fillattr(dentry->d_inode, stat);
-        return err;
-}
-
 /* afs_linux_revalidate
  * Ensure vcache is stat'd before use. Return 0 if entry is valid.
  */
@@ -827,6 +818,16 @@ afs_linux_revalidate(struct dentry *dp)
     return -code;
 }
 
+#if defined(AFS_LINUX26_ENV)
+static int
+afs_linux_getattr(struct vfsmount *mnt, struct dentry *dentry, struct kstat *stat)
+{
+        int err = afs_linux_revalidate(dentry);
+        if (!err)
+                generic_fillattr(dentry->d_inode, stat);
+        return err;
+}
+#endif
 
 /* Validate a dentry. Return 1 if unchanged, 0 if VFS layer should re-evaluate.
  * In kernels 2.2.10 and above, we are passed an additional flags var which
@@ -918,6 +919,7 @@ afs_linux_dentry_revalidate(struct dentry *dp)
     return !bad_dentry;
 }
 
+#if !defined(AFS_LINUX26_ENV)
 /* afs_dentry_iput */
 static void
 afs_dentry_iput(struct dentry *dp, struct inode *ip)
@@ -932,6 +934,7 @@ afs_dentry_iput(struct dentry *dp, struct inode *ip)
 
     osi_iput(ip);
 }
+#endif
 
 static int
 afs_dentry_delete(struct dentry *dp)
@@ -952,10 +955,11 @@ afs_dentry_delete(struct dentry *dp)
 
 struct dentry_operations afs_dentry_operations = {
   .d_revalidate =	afs_linux_dentry_revalidate,
-  .d_iput =		afs_dentry_iput,
   .d_delete =		afs_dentry_delete,
+#if !defined(AFS_LINUX26_ENV)
+  .d_iput =		afs_dentry_iput,
+#endif
 };
-struct dentry_operations *afs_dops = &afs_dentry_operations;
 
 /**********************************************************************
  * AFS Linux inode operations
@@ -983,6 +987,9 @@ afs_linux_create(struct inode *dip, struct dentry *dp, int mode)
     vattr.va_mode = mode;
 
     AFS_GLOCK();
+#if defined(AFS_LINUX26_ENV)
+    lock_kernel();
+#endif
     code =
 	afs_create(ITOAFS(dip), name, &vattr, NONEXCL, mode,
 		   (struct vcache **)&ip, credp);
@@ -1011,11 +1018,14 @@ afs_linux_create(struct inode *dip, struct dentry *dp, int mode)
 	    ip->i_op = &afs_symlink_iops;
 #endif
 
-	dp->d_op = afs_dops;
+	dp->d_op = &afs_dentry_operations;
 	dp->d_time = jiffies;
 	d_instantiate(dp, ip);
     }
 
+#if defined(AFS_LINUX26_ENV)
+    unlock_kernel();
+#endif
     AFS_GUNLOCK();
     crfree(credp);
     return -code;
@@ -1034,7 +1044,11 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
     cred_t *credp = crref();
     struct vcache *vcp = NULL;
     const char *comp = dp->d_name.name;
+
     AFS_GLOCK();
+#if defined(AFS_LINUX26_ENV)
+    lock_kernel();
+#endif
     code = afs_lookup(ITOAFS(dip), comp, &vcp, credp);
     
     if (vcp) {
@@ -1064,9 +1078,12 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
 #endif
     }
     dp->d_time = jiffies;
-    dp->d_op = afs_dops;
+    dp->d_op = &afs_dentry_operations;
     d_add(dp, AFSTOI(vcp));
 
+#if defined(AFS_LINUX26_ENV)
+    unlock_kernel();
+#endif
     AFS_GUNLOCK();
     crfree(credp);
 
@@ -1114,10 +1131,16 @@ afs_linux_unlink(struct inode *dip, struct dentry *dp)
     const char *name = dp->d_name.name;
 
     AFS_GLOCK();
+#if defined(AFS_LINUX26_ENV)
+    lock_kernel();
+#endif
     code = afs_remove(ITOAFS(dip), name, credp);
-    AFS_GUNLOCK();
     if (!code)
 	d_drop(dp);
+#if defined(AFS_LINUX26_ENV)
+    lock_kernel();
+#endif
+    AFS_GUNLOCK();
     crfree(credp);
     return -code;
 }
@@ -1154,6 +1177,9 @@ afs_linux_mkdir(struct inode *dip, struct dentry *dp, int mode)
     const char *name = dp->d_name.name;
 
     AFS_GLOCK();
+#if defined(AFS_LINUX26_ENV)
+    lock_kernel();
+#endif
     VATTR_NULL(&vattr);
     vattr.va_mask = ATTR_MODE;
     vattr.va_mode = mode;
@@ -1164,11 +1190,14 @@ afs_linux_mkdir(struct inode *dip, struct dentry *dp, int mode)
 #if defined(AFS_LINUX24_ENV)
 	tvcp->v.v_fop = &afs_dir_fops;
 #endif
-	dp->d_op = afs_dops;
+	dp->d_op = &afs_dentry_operations;
 	dp->d_time = jiffies;
 	d_instantiate(dp, AFSTOI(tvcp));
     }
 
+#if defined(AFS_LINUX26_ENV)
+    unlock_kernel();
+#endif
     AFS_GUNLOCK();
     crfree(credp);
     return -code;
@@ -1182,6 +1211,9 @@ afs_linux_rmdir(struct inode *dip, struct dentry *dp)
     const char *name = dp->d_name.name;
 
     AFS_GLOCK();
+#if defined(AFS_LINUX26_ENV)
+    lock_kernel();
+#endif
     code = afs_rmdir(ITOAFS(dip), name, credp);
 
     /* Linux likes to see ENOTEMPTY returned from an rmdir() syscall
@@ -1196,6 +1228,9 @@ afs_linux_rmdir(struct inode *dip, struct dentry *dp)
 	d_drop(dp);
     }
 
+#if defined(AFS_LINUX26_ENV)
+    unlock_kernel();
+#endif
     AFS_GUNLOCK();
     crfree(credp);
     return -code;
@@ -1212,26 +1247,38 @@ afs_linux_rename(struct inode *oldip, struct dentry *olddp,
     const char *oldname = olddp->d_name.name;
     const char *newname = newdp->d_name.name;
 
+    AFS_GLOCK();
+#if defined(AFS_LINUX26_ENV)
+    lock_kernel();
+#endif
     /* Remove old and new entries from name hash. New one will change below.
      * While it's optimal to catch failures and re-insert newdp into hash,
      * it's also error prone and in that case we're already dealing with error
      * cases. Let another lookup put things right, if need be.
      */
-    if (!list_empty(&olddp->d_hash)) {
+#if defined(AFS_LINUX26_ENV)
+    if (!d_unhashed(olddp))
 	d_drop(olddp);
-    }
-    if (!list_empty(&newdp->d_hash)) {
+    if (!d_unhashed(newdp))
 	d_drop(newdp);
-    }
-    AFS_GLOCK();
+#else
+    if (!list_empty(&olddp->d_hash))
+	d_drop(olddp);
+    if (!list_empty(&newdp->d_hash))
+	d_drop(newdp);
+#endif
     code = afs_rename(ITOAFS(oldip), oldname, ITOAFS(newip), newname, credp);
-    AFS_GUNLOCK();
 
     if (!code) {
 	/* update time so it doesn't expire immediately */
 	newdp->d_time = jiffies;
 	d_move(olddp, newdp);
     }
+
+#if defined(AFS_LINUX26_ENV)
+    unlock_kernel();
+#endif
+    AFS_GUNLOCK();
 
     crfree(credp);
     return -code;

@@ -56,7 +56,19 @@
 #undef gop_lookupname
 #define gop_lookupname osi_lookupname
 
-#define osi_vnhold(v, n)  VN_HOLD(v)
+#define osi_vnhold(v, n) do { VN_HOLD(AFSTOV(v)); } while (0)
+
+#if defined(AFS_LINUX24_ENV)
+#define VN_HOLD(V) atomic_inc(&((vnode_t *) V)->i_count)
+#else
+#define VN_HOLD(V) ((vnode_t *) V)->i_count++
+#endif
+
+#if defined(AFS_LINUX26_ENV)
+#define VN_RELE(V) iput((struct inode *) V)
+#else
+#define VN_RELE(V) osi_iput((struct inode *) V)
+#endif
 
 #define osi_AllocSmall afs_osi_Alloc
 #define osi_FreeSmall afs_osi_Free
@@ -105,9 +117,6 @@ extern struct vnodeops afs_file_iops, afs_dir_iops, afs_symlink_iops;
 
 
 #define PAGESIZE PAGE_SIZE
-#ifndef NGROUPS
-#define NGROUPS NGROUPS_MAX
-#endif
 
 /* cred struct */
 typedef struct cred {		/* maps to task field: */
@@ -120,8 +129,12 @@ typedef struct cred {		/* maps to task field: */
     uid_t cr_ruid;		/* uid */
     gid_t cr_gid;		/* egid */
     gid_t cr_rgid;		/* gid */
+#if defined(AFS_LINUX26_ENV)
+    struct group_info *cr_group_info;
+#else
     gid_t cr_groups[NGROUPS];	/* 32 groups - empty set to NOGROUP */
     int cr_ngroups;
+#endif
 } cred_t;
 #define AFS_UCRED cred
 #define AFS_PROC struct task_struct

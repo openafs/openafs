@@ -63,12 +63,6 @@ enum vcexcl { EXCL, NONEXCL } ;
 #define FSYNC O_SYNC
 
 #define VTOI(V)  ((struct inode*)V)
-#ifdef AFS_LINUX24_ENV
-#define VN_HOLD(V) atomic_inc(&((vnode_t*)V)->i_count)
-#else
-#define VN_HOLD(V) ((vnode_t*)V)->i_count++;
-#endif
-#define VN_RELE(V) osi_iput((struct inode *)V);
 #define VFS_STATFS(V, S) ((V)->s_op->statfs)((V), (S), sizeof(*(S)))
 
 
@@ -110,7 +104,9 @@ typedef struct vattr {
  */
 #define AT_SIZE		ATTR_SIZE
 #define AT_MODE		ATTR_MODE
+#undef AT_UID
 #define AT_UID		ATTR_UID
+#undef AT_GID
 #define AT_GID		ATTR_GID
 #define AT_MTIME	ATTR_MTIME
 

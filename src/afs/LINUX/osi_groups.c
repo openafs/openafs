@@ -26,10 +26,86 @@ RCSID
 #include "h/smp_lock.h"
 #endif
 
-static int afs_getgroups(cred_t * cr, gid_t * groups);
-static int afs_setgroups(cred_t ** cr, int ngroups, gid_t * gidset,
-			 int change_parent);
+#if defined(AFS_LINUX26_ENV)
+static int
+afs_setgroups(cred_t **cr, struct group_info *group_info, int change_parent)
+{
+    struct group_info *old_info;
 
+    AFS_STATCNT(afs_setgroups);
+
+    old_info = (*cr)->cr_group_info;
+    get_group_info(group_info);
+    (*cr)->cr_group_info = group_info;
+    put_group_info(old_info);
+
+    crset(*cr);
+
+    if (change_parent) {
+	old_info = current->parent->group_info;
+	get_group_info(group_info);
+	current->parent->group_info = group_info;
+	put_group_info(old_info);
+    }
+
+    return (0);
+}
+#else
+static int
+afs_setgroups(cred_t **cr, int ngroups, gid_t * gidset, int change_parent)
+{
+    int ngrps;
+    int i;
+    gid_t *gp;
+
+    AFS_STATCNT(afs_setgroups);
+
+    if (ngroups > NGROUPS)
+	return EINVAL;
+
+    gp = (*cr)->cr_groups;
+    if (ngroups < NGROUPS)
+	gp[ngroups] = (gid_t) NOGROUP;
+
+    for (i = ngroups; i > 0; i--) {
+	*gp++ = *gidset++;
+    }
+
+    (*cr)->cr_ngroups = ngroups;
+    crset(*cr);
+    return (0);
+}
+#endif
+
+#if defined(AFS_LINUX26_ENV)
+static struct group_info *
+afs_getgroups(cred_t * cr)
+{
+    AFS_STATCNT(afs_getgroups);
+
+    get_group_info(cr->cr_group_info);
+    return cr->cr_group_info;
+}
+#else
+/* Returns number of groups. And we trust groups to be large enough to
+ * hold all the groups.
+ */
+static int
+afs_getgroups(cred_t *cr, gid_t *groups)
+{
+    int i;
+    AFS_STATCNT(afs_getgroups);
+
+    gid_t *gp = cr->cr_groups;
+    int n = cr->cr_ngroups;
+
+    for (i = 0; (i < n) && (*gp != (gid_t) NOGROUP); i++)
+	*groups++ = *gp++;
+    return i;
+}
+#endif
+
+#if !defined(AFS_LINUX26_ENV)
 /* Only propogate the PAG to the parent process. Unix's propogate to 
  * all processes sharing the cred.
  */
@@ -37,21 +113,6 @@ int
 set_pag_in_parent(int pag, int g0, int g1)
 {
     int i;
-#if defined(AFS_LINUX26_ENV)
-    struct group_info *old_info, *new_info;
-
-    old_info = current->parent->group_info;
-    new_info = groups_alloc(old_info->ngroups + 2);
-
-    for(i = 0; i < old_info->ngroups; ++i)
-	GROUP_AT(new_info, i) = GROUP_AT(old_info, i);
-
-    GROUP_AT(new_info, i++) = g0;
-    GROUP_AT(new_info, i++) = g1;
-
-    current->parent->group_info = new_info;
-    put_group_info(old_info);
-#else
 #ifdef STRUCT_TASK_STRUCT_HAS_PARENT
     gid_t *gp = current->parent->groups;
     int ngroups = current->parent->ngroups;
@@ -80,14 +141,47 @@ set_pag_in_parent(int pag, int g0, int g1)
 #else
     current->p_pptr->ngroups = ngroups;
 #endif
-#endif
     return 0;
 }
+#endif
 
 int
 setpag(cred_t ** cr, afs_uint32 pagvalue, afs_uint32 * newpag,
        int change_parent)
 {
+#if defined(AFS_LINUX26_ENV)
+    struct group_info *group_info;
+    gid_t g0, g1;
+
+    AFS_STATCNT(setpag);
+
+    group_info = afs_getgroups(*cr);
+    g0 = GROUP_AT(group_info, 0);
+    g1 = GROUP_AT(group_info, 1);
+
+    if (afs_get_pag_from_groups(g0, g1) == NOPAG) {
+	/* We will have to make sure group_info is big enough for pag */
+	struct group_info *tmp;
+	int i;
+	
+	tmp = groups_alloc(group_info->ngroups + 2);
+	for (i = 0; i < group_info->ngroups; ++i)
+		GROUP_AT(tmp, i + 2) = GROUP_AT(group_info, i);
+	put_group_info(group_info);
+	group_info = tmp;
+    }
+
+    *newpag = (pagvalue == -1 ? genpag() : pagvalue);
+    afs_get_groups_from_pag(*newpag, &g0, &g1);
+    GROUP_AT(group_info, 0) = g0;
+    GROUP_AT(group_info, 1) = g1;
+
+    afs_setgroups(cr, group_info, change_parent);
+
+    put_group_info(group_info);
+
+    return 0;
+#else
     gid_t *gidset;
     afs_int32 ngroups, code = 0;
     int j;
@@ -121,6 +215,7 @@ setpag(cred_t ** cr, afs_uint32 pagvalue, afs_uint32 * newpag,
 
     osi_Free((char *)gidset, NGROUPS * sizeof(int));
     return code;
+#endif
 }
 
 
@@ -297,44 +392,3 @@ afs32_xsetgroups32(int gidsetsize, gid_t * grouplist)
 #endif
 #endif
 
-static int
-afs_setgroups(cred_t ** cr, int ngroups, gid_t * gidset, int change_parent)
-{
-    int ngrps;
-    int i;
-    gid_t *gp;
-
-    AFS_STATCNT(afs_setgroups);
-
-    if (ngroups > NGROUPS)
-	return EINVAL;
-
-    gp = (*cr)->cr_groups;
-    if (ngroups < NGROUPS)
-	gp[ngroups] = (gid_t) NOGROUP;
-
-    for (i = ngroups; i > 0; i--) {
-	*gp++ = *gidset++;
-    }
-
-    (*cr)->cr_ngroups = ngroups;
-    crset(*cr);
-    return (0);
-}
-
-/* Returns number of groups. And we trust groups to be large enough to
- * hold all the groups.
- */
-static int
-afs_getgroups(cred_t * cr, gid_t * groups)
-{
-    int i;
-    gid_t *gp = cr->cr_groups;
-    int n = cr->cr_ngroups;
-    AFS_STATCNT(afs_getgroups);
-
-    for (i = 0; (i < n) && (*gp != (gid_t) NOGROUP); i++) {
-	*groups++ = *gp++;
-    }
-    return i;
-}

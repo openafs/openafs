@@ -74,7 +74,9 @@ osi_Init(void)
 #endif /* AFS_HPUX_ENV */
 
     if (!afs_osicred_initialized) {
-#ifdef AFS_XBSD_ENV
+#if defined(AFS_LINUX26_ENV)
+	afs_osi_credp = crref();
+#elif defined(AFS_XBSD_ENV)
 	/* Can't just invent one, must use crget() because of mutex */
 	afs_osi_credp = crdup(osi_curcred());
 #else
@@ -1059,15 +1061,8 @@ afs_osi_proc2cred(AFS_PROC * pr)
 	cr.cr_ref = 1;
 	cr.cr_uid = pr->uid;
 #if defined(AFS_LINUX26_ENV)
-{
-	int i;
-
-	memset(cr.cr_groups, 0, NGROUPS * sizeof(gid_t));
-
-	cr.cr_ngroups = pr->group_info->ngroups;
-	for(i = 0; i < pr->group_info->ngroups; ++i)
-		cr.cr_groups[i] = GROUP_AT(pr->group_info, i);
-}
+	get_group_info(pr->group_info);
+	cr.cr_group_info = pr->group_info;
 #else
 	cr.cr_ngroups = pr->ngroups;
 	memcpy(cr.cr_groups, pr->groups, NGROUPS * sizeof(gid_t));

@@ -376,16 +376,13 @@ osi_clear_inode(struct inode *ip)
 
     afs_InactiveVCache(vcp, credp);
     ObtainWriteLock(&vcp->lock, 504);
-#if defined(AFS_LINUX24_ENV)
-    atomic_set(&ip->i_count, 0);
-#else
-    ip->i_count = 0;
-#endif
     ip->i_nlink = 0;		/* iput checks this after calling this routine. */
+    ip->i_state = I_CLEAR;
     ReleaseWriteLock(&vcp->lock);
     crfree(credp);
 }
 
+#if !defined(AFS_LINUX26_ENV)
 /* iput an inode. Since we still have a separate inode pool, we don't want
  * to call iput on AFS inodes, since they would then end up on Linux's
  * inode_unsed list.
@@ -418,9 +415,13 @@ osi_iput(struct inode *ip)
 #else
     if (!--ip->i_count)
 #endif
-	    osi_clear_inode(ip);
+					   {
+	osi_clear_inode(ip);
+	ip->i_state = 0;
+    }
     AFS_GUNLOCK();
 }
+#endif
 
 /* check_bad_parent() : Checks if this dentry's vcache is a root vcache
  * that has its mvid (parent dir's fid) pointer set to the wrong directory
@@ -453,7 +454,7 @@ check_bad_parent(struct dentry *dp)
 	afs_lookup(pvc, dp->d_name.name, &avc, credp);
 	if (!avc || vcp != avc) {	/* bad, very bad.. */
 	    afs_Trace4(afs_iclSetp, CM_TRACE_TMP_1S3L, ICL_TYPE_STRING,
-		       "afs_linux_revalidate : bad pointer returned from afs_lookup origvc newvc dentry",
+		       "check_bad_parent: bad pointer returned from afs_lookup origvc newvc dentry",
 		       ICL_TYPE_POINTER, vcp, ICL_TYPE_POINTER, avc,
 		       ICL_TYPE_POINTER, dp);
 	}

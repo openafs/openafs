@@ -450,25 +450,27 @@ PagInCred(const struct AFS_UCRED *cred)
     g0 = cred->cr_groups[1];
     g1 = cred->cr_groups[2];
 #else
-#ifdef	AFS_AIX_ENV
-#ifdef AFS_AIX51_ENV
+#if defined(AFS_AIX51_ENV)
     if (kcred_getpag(cred, PAG_AFS, &pag) < 0 || pag == 0)
 	pag = NOPAG;
     return pag;
-#else
+#elif defined(AFS_AIX_ENV)
     if (cred->cr_ngrps < 2) {
 	return NOPAG;
     }
-#endif
-#else
-#if defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_DUX40_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_XBSD_ENV)
+#elif defined(AFS_LINUX26_ENV)
+    if (cred->cr_group_info->ngroups < 2)
+	return NOPAG;
+#elif defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_DUX40_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_XBSD_ENV)
     if (cred->cr_ngroups < 2)
 	return NOPAG;
 #endif
-#endif
-#ifdef AFS_AIX51_ENV
+#if defined(AFS_AIX51_ENV)
     g0 = cred->cr_groupset.gs_union.un_groups[0];
     g1 = cred->cr_groupset.gs_union.un_groups[1];
+#elif defined(AFS_LINUX26_ENV)
+    g0 = GROUP_AT(cred->cr_group_info, 0);
+    g1 = GROUP_AT(cred->cr_group_info, 1);
 #else
     g0 = cred->cr_groups[0];
     g1 = cred->cr_groups[1];

@@ -225,6 +225,9 @@ afs_notify_change(struct dentry *dp, struct iattr *iattrp)
     struct inode *ip = dp->d_inode;
 
     AFS_GLOCK();
+#if defined(AFS_LINUX26_ENV)
+    lock_kernel();
+#endif
     VATTR_NULL(&vattr);
     iattr2vattr(&vattr, iattrp);	/* Convert for AFS vnodeops call. */
     update_inode_cache(ip, &vattr);
@@ -234,6 +237,9 @@ afs_notify_change(struct dentry *dp, struct iattr *iattrp)
      * least we've got the newest version of what was supposed to be set.
      */
 
+#if defined(AFS_LINUX26_ENV)
+    unlock_kernel();
+#endif
     AFS_GUNLOCK();
     crfree(credp);
     return -code;
@@ -275,21 +281,12 @@ afs_write_inode(struct inode *ip)
 }
 
 
-#if defined(AFS_LINUX26_ENV)
 static void
 afs_destroy_inode(struct inode *ip)
 {
-    /* afs inodes cannot be destroyed */
+    ip->i_state = 0;
 }
 
-static void
-afs_clear_inode(struct inode *ip)
-{
-    AFS_GLOCK();
-    osi_clear_inode(ip);
-    AFS_GUNLOCK();
-}
-#else
 
 /* afs_put_inode
  * called from iput when count goes to zero. Linux version of inactive.
@@ -303,11 +300,14 @@ afs_delete_inode(struct inode *ip)
 {
     struct vcache *vp = ITOAFS(ip);
 
+#ifdef AFS_LINUX26_ENV
+    put_inode_on_dummy_list(ip);
+#endif
+
     AFS_GLOCK();
     osi_clear_inode(ip);
     AFS_GUNLOCK();
 }
-#endif
 
 
 /* afs_put_super
@@ -400,11 +400,10 @@ afs_umount_begin(struct super_block *sbp)
 
 struct super_operations afs_sops = {
 #if defined(AFS_LINUX26_ENV)
+  .drop_inode =		generic_delete_inode,
   .destroy_inode =	afs_destroy_inode,
-  .clear_inode =	afs_clear_inode,
-#else
-  .delete_inode =	afs_delete_inode,
 #endif
+  .delete_inode =	afs_delete_inode,
   .write_inode =	afs_write_inode,
   .put_super =		afs_put_super,
   .statfs =		afs_statfs,
@@ -516,14 +515,6 @@ vattr2inode(struct inode *ip, struct vattr *vp)
     ip->i_mtime = vp->va_mtime.tv_sec;
     ip->i_ctime = vp->va_ctime.tv_sec;
 #endif
-
-    /* we should put our inodes on a dummy inode list to keep linux happy. */
-    if (!ip->i_list.prev && !ip->i_list.next) {
-	/* this might be bad as we are reaching under the covers of the 
-	 * list structure but we want to avoid putting the inode 
-	 * on the list more than once.   */
-	put_inode_on_dummy_list(ip);
-    }
 }
 
 /* Put this afs inode on our own dummy list. Linux expects to see inodes

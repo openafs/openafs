@@ -1024,6 +1024,7 @@ afs_NewVCache(struct VenusFid *afid, struct server *serverp)
 	ip->i_dev = afs_globalVFS->s_dev;
 #endif
     ip->i_sb = afs_globalVFS;
+    put_inode_on_dummy_list(ip);
 }
 #endif
 
