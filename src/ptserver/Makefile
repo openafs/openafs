@@ -57,7 +57,7 @@ include ../config/Makefile.version
 
 clean:
 	$(RM) -f *.o ptserver ptint.cs.c ptint.ss.c ptclient ptint.xdr.c ptint.h \
-	libprot.a  pts readgroup readpwd db_verify testpt pterror.h pterror.c \
+	libprot.a  pts readgroup readpwd db_verify testpt pt_util pterror.h pterror.c \
 	 core  AFS_component_version_number.c
 
 ptserver: ptserver.o ptutils.o ptprocs.o ptint.ss.o ptint.xdr.o utils.o $(LIBS) ${auditlib}
@@ -108,7 +108,6 @@ libprot.a: ${LIBOBJS} AFS_component_version_number.o
 	$(RM) -f libprot.a
 	$(AR) r libprot.a ${LIBOBJS} AFS_component_version_number.o
 	$(RANLIB) libprot.a
-		
 
 pts: pts.o libprot.a ${SRCDIR}lib/afs/libcmd.a $(LIBS)
 	$(CC) ${CFLAGS} -o pts pts.o ${SRCDIR}lib/afs/libcmd.a libprot.a ${LIBS} ${XLIBS}
@@ -130,6 +129,10 @@ testpt: testpt.o libprot.a ${SRCDIR}lib/afs/libcmd.a $(LIBS)
 
 testpt.o: testpt.c ${INCLS} ${SRCDIR}include/afs/cmd.h AFS_component_version_number.c
 
+pt_util: pt_util.o ptutils.o ubik.o utils.o libprot.a $(LIBS)
+	$(CC) ${CFLAGS} -o pt_util pt_util.o ptutils.o ubik.o utils.o libprot.a $(LIBS) ${XLIBS}
+
+ubik.o: ubik.c ${INCLS}
 
 system: install
 
@@ -143,7 +146,7 @@ ukinstall webinstall: ${UKSRCS} Kptint.h Kptint.cs.c Kptint.xdr.c
 	${INSTALL} Kptint.xdr.c ${UKERNELDIR}afsint/ptint.xdr.c
 	${INSTALL} ${UKSRCS} ${UKERNELDIR}afs
 
-all: ptclient libprot.a pts db_verify readgroup readpwd testpt
+all: ptclient libprot.a pts db_verify readgroup readpwd testpt pt_util
 
 ${DESTDIR}root.server/usr/afs/bin/ptserver: ptserver
 	${INSTALL} $? $@
@@ -151,11 +154,14 @@ ${DESTDIR}root.server/usr/afs/bin/ptserver: ptserver
 ${DESTDIR}bin/pts ${DESTDIR}root.server/usr/afs/bin/pts: pts
 	${INSTALL} $? $@
 
+${DESTDIR}root.server/usr/afs/bin/pt_util: pt_util
+	${INSTALL} $? $@
+
 ${DESTDIR}lib/afs/libprot.a: libprot.a
 	${INSTALL}   $? $@
 
 
-install: all ukinstall ${DESTDIR}root.server/usr/afs/bin/ptserver ${DESTDIR}root.server/usr/afs/bin/pts ${DESTDIR}bin/pts ${DESTDIR}lib/afs/libprot.a
+install: all ukinstall ${DESTDIR}root.server/usr/afs/bin/ptserver ${DESTDIR}root.server/usr/afs/bin/pts ${DESTDIR}bin/pts ${DESTDIR}lib/afs/libprot.a ${DESTDIR}/root.server/usr/afs/bin/pt_util
 	${INSTALL} libprot.a ${DESTDIR}lib/afs/libprot.a
 	${INSTALL} ptserver.h ptint.h pterror.h ptclient.h ${DESTDIR}include/afs
 	${INSTALL} ptserver.h ${DESTDIR}include/afs/prserver.h
