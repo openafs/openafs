@@ -400,40 +400,49 @@ afs_ENameOK(register char *aname)
     return 1;
 }
 
-int
+static int
 afs_getsysname(register struct vrequest *areq, register struct vcache *adp,
-	       register char *bufp)
+               register char *bufp, int *num, char **sysnamelist[])
 {
     register struct unixuser *au;
     register afs_int32 error;
 
-    if (!afs_nfsexporter) {
-	strcpy(bufp, afs_sysname);
-	return 0;
-    }
     AFS_STATCNT(getsysname);
-    au = afs_GetUser(areq->uid, adp->fid.Cell, 0);
-    afs_PutUser(au, 0);
-    if (au->exporter) {
-	error = EXP_SYSNAME(au->exporter, NULL, bufp);
-	if (error)
-	    strcpy(bufp, "@sys");
-	return -1;
-    } else {
-	strcpy(bufp, afs_sysname);
-	return 0;
+
+    *sysnamelist = afs_sysnamelist;
+
+    if (!afs_nfsexporter) 
+       strcpy(bufp, (*sysnamelist)[0]);
+    else {
+       au = afs_GetUser(areq->uid, adp->fid.Cell, 0);
+       if (au->exporter) {
+           error = EXP_SYSNAME(au->exporter, (char *)0, sysnamelist, num);
+           if (error) {
+               strcpy(bufp, "@sys");
+               afs_PutUser(au, 0);   
+               return -1;
+           } else {
+               strcpy(bufp, (*sysnamelist)[0]);
+           }
+       } else 
+           strcpy(bufp, afs_sysname);
+       afs_PutUser(au, 0);       
     }
+    return 0;
 }
 
 void
-Check_AtSys(register struct vcache *avc, const char *aname,
-	    struct sysname_info *state, struct vrequest *areq)
+Check_AtSys(register struct vcache *avc, char *aname, 
+            struct sysname_info *state, struct vrequest *areq)
 {
+    int num = 0;
+    char **sysnamelist[MAXSYSNAME];
+
     if (AFS_EQ_ATSYS(aname)) {
 	state->offset = 0;
 	state->name = (char *)osi_AllocLargeSpace(AFS_SMALLOCSIZ);
 	state->allocked = 1;
-	state->index = afs_getsysname(areq, avc, state->name);
+	state->index = afs_getsysname(areq, avc, state->name, &num, sysnamelist);
     } else {
 	state->offset = -1;
 	state->allocked = 0;
@@ -444,32 +453,54 @@ Check_AtSys(register struct vcache *avc, const char *aname,
 
 int
 Next_AtSys(register struct vcache *avc, struct vrequest *areq,
-	   struct sysname_info *state)
+           struct sysname_info *state)
 {
-    if (state->index == -1)
-	return 0;		/* No list */
+    int num = afs_sysnamecount;
+    char **sysnamelist[MAXSYSNAME];
 
-    /* Check for the initial state of aname != "@sys" in Check_AtSys */
+    if (state->index == -1)
+       return 0;       /* No list */
+
+    /* Check for the initial state of aname != "@sys" in Check_AtSys*/
     if (state->offset == -1 && state->allocked == 0) {
-	register char *tname;
-	/* Check for .*@sys */
-	for (tname = state->name; *tname; tname++)
-	    /*Move to the end of the string */ ;
-	if ((tname > state->name + 4) && (AFS_EQ_ATSYS(tname - 4))) {
-	    state->offset = (tname - 4) - state->name;
-	    tname = (char *)osi_AllocLargeSpace(AFS_LRALLOCSIZ);
-	    strncpy(tname, state->name, state->offset);
-	    state->name = tname;
-	    state->allocked = 1;
-	    state->index =
-		afs_getsysname(areq, avc, state->name + state->offset);
-	    return 1;
-	} else
-	    return 0;		/* .*@sys doesn't match either */
-    } else if (++(state->index) >= afs_sysnamecount
-	       || !afs_sysnamelist[(int)state->index])
-	return 0;		/* end of list */
-    strcpy(state->name + state->offset, afs_sysnamelist[(int)state->index]);
+       register char *tname;
+
+       /* Check for .*@sys */
+       for (tname=state->name; *tname; tname++)
+           /*Move to the end of the string*/;
+
+       if ((tname > state->name + 4) && (AFS_EQ_ATSYS(tname-4))) {
+           state->offset = (tname - 4) - state->name;
+           tname = (char *) osi_AllocLargeSpace(AFS_LRALLOCSIZ);
+           strncpy(tname, state->name, state->offset);
+           state->name = tname;
+           state->allocked = 1;
+            num = 0;
+            state->index = afs_getsysname(areq, avc, state->name+state->offset,
+                                          &num, sysnamelist);
+           return 1;
+       } else
+           return 0; /* .*@sys doesn't match either */
+    } else {
+       register struct unixuser *au;
+       register afs_int32 error;
+      
+       *sysnamelist = afs_sysnamelist;
+
+       if (afs_nfsexporter) {
+           au = afs_GetUser(areq->uid, avc->fid.Cell, 0);
+           if (au->exporter) {
+               error = EXP_SYSNAME(au->exporter, (char *)0, sysnamelist, num);
+               if (error) {
+                   return 0;
+               }
+           } 
+           afs_PutUser(au, 0); 
+       }
+       if (++(state->index) >= num || !(*sysnamelist)[state->index])
+           return 0;   /* end of list */
+    }
+    strcpy(state->name+state->offset, (*sysnamelist)[state->index]);
     return 1;
 }
 

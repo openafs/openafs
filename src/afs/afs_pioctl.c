@@ -2643,13 +2643,13 @@ DECL_PIOCTL(PGetVnodeXStatus)
  /* for the reader.  */
 DECL_PIOCTL(PSetSysName)
 {
-    char *cp, inname[MAXSYSNAME], outname[MAXSYSNAME];
+    char *cp, *cp2, inname[MAXSYSNAME], outname[MAXSYSNAME];
     int setsysname, foundname = 0;
     register struct afs_exporter *exporter;
     register struct unixuser *au;
     register afs_int32 pag, error;
-    int t, count;
-
+    int t, count, num = 0;
+    char **sysnamelist[MAXSYSNAME];
 
     AFS_STATCNT(PSetSysName);
     if (!afs_globalVFS) {
@@ -2668,6 +2668,7 @@ DECL_PIOCTL(PSetSysName)
 	/* Check my args */
 	if (setsysname < 0 || setsysname > MAXNUMSYSNAMES)
 	    return EINVAL;
+	cp2 = ain;
 	for (cp = ain, count = 0; count < setsysname; count++) {
 	    /* won't go past end of ain since maxsysname*num < ain length */
 	    t = strlen(cp);
@@ -2680,10 +2681,11 @@ DECL_PIOCTL(PSetSysName)
 	}
 	/* args ok */
 
-	/* inname gets first entry in case we're being a translater */
+	/* inname gets first entry in case we're being a translator */
 	t = strlen(ain);
 	memcpy(inname, ain, t + 1);	/* include terminating null */
 	ain += t + 1;
+	num = count;
     }
     if ((*acred)->cr_gid == RMTUSER_REQ) {	/* Handles all exporters */
 	pag = PagInCred(*acred);
@@ -2697,7 +2699,8 @@ DECL_PIOCTL(PSetSysName)
 	    afs_PutUser(au, READ_LOCK);
 	    return EINVAL;	/* Better than panicing */
 	}
-	error = EXP_SYSNAME(exporter, (setsysname ? inname : NULL), outname);
+	error = EXP_SYSNAME(exporter, (setsysname ? cp2 : NULL), sysnamelist,
+			    &num);
 	if (error) {
 	    if (error == ENODEV)
 		foundname = 0;	/* sysname not set yet! */
@@ -2705,17 +2708,19 @@ DECL_PIOCTL(PSetSysName)
 		afs_PutUser(au, READ_LOCK);
 		return error;
 	    }
-	} else
-	    foundname = 1;
+	} else {
+            foundname = num;
+            strcpy(outname, (*sysnamelist)[0]);
+	}
 	afs_PutUser(au, READ_LOCK);
     } else {
-
 	/* Not xlating, so local case */
 	if (!afs_sysname)
 	    osi_Panic("PSetSysName: !afs_sysname\n");
 	if (!setsysname) {	/* user just wants the info */
 	    strcpy(outname, afs_sysname);
 	    foundname = afs_sysnamecount;
+	    *sysnamelist = afs_sysnamelist;
 	} else {		/* Local guy; only root can change sysname */
 	    if (!afs_osi_suser(*acred))
 		return EACCES;
@@ -2746,14 +2751,13 @@ DECL_PIOCTL(PSetSysName)
 	    strcpy(cp, outname);	/* ... the entry, ... */
 	    cp += strlen(outname) + 1;
 	    for (count = 1; count < foundname; ++count) {	/* ... or list. */
-		/* Note: we don't support @sys lists for exporters */
-		if (!afs_sysnamelist[count])
+		if (!(*sysnamelist)[count])
 		    osi_Panic
 			("PSetSysName: no afs_sysnamelist entry to read\n");
-		t = strlen(afs_sysnamelist[count]);
+		t = strlen((*sysnamelist)[count]);
 		if (t >= MAXSYSNAME)
 		    osi_Panic("PSetSysName: sysname entry garbled\n");
-		strcpy(cp, afs_sysnamelist[count]);
+		strcpy(cp, (*sysnamelist)[count]);
 		cp += t + 1;
 	    }
 	}

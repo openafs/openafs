@@ -298,24 +298,37 @@ afs_nfsclient_hold(np)
 
 
 /* if inname is non-null, a new system name value is set for the remote user (inname contains the new sysname). In all cases, outname returns the current sysname value for this remote user */
-int
-afs_nfsclient_sysname(np, inname, outname)
-     register struct nfsclientpag *np;
-     char *inname, *outname;
+int 
+afs_nfsclient_sysname(register struct nfsclientpag *np, char *inname, 
+		      char **outname[], int *num)
 {
+    char *cp;
+    int count, t;
 #if defined(AFS_SGIMP_ENV)
     osi_Assert(ISAFS_GLOCK());
 #endif
     AFS_STATCNT(afs_nfsclient_sysname);
     if (inname) {
-	if (!np->sysname) {
-	    np->sysname = afs_osi_Alloc(MAXSYSNAME);
+	if (np->sysname) {
+	    for(count=0; count < np->sysnamecount;++count) {
+		afs_osi_Free(np->sysname[count], MAXSYSNAME);
+	    }
 	}
-	strcpy(np->sysname, inname);
+	for(count=0; count < *num;++count) {
+	    np->sysname[count]= afs_osi_Alloc(MAXSYSNAME);
+	}
+	cp = inname;
+	for(count=0; count < *num;++count) {
+	    t = strlen(cp);
+	    memcpy(np->sysname[count], cp, t+1); /* include null */
+	    cp += t+1;
+	}
+	np->sysnamecount = *num;
     } else if (!np->sysname) {
-	return ENODEV;		/* XXX */
+	return ENODEV;      /* XXX */
     }
-    strcpy(outname, np->sysname);
+    *outname = np->sysname;
+    *num = np->sysnamecount;
     return 0;
 }
 

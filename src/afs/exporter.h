@@ -93,8 +93,8 @@ struct afs_exporter {
         (*(EXP)->exp_op->export_hold)(EXP)
 #define	EXP_RELE(EXP)	\
         (*(EXP)->exp_op->export_rele)(EXP)
-#define	EXP_SYSNAME(EXP, INNAME, OUTNAME)   \
-        (*(EXP)->exp_op->export_sysname)(EXP, INNAME, OUTNAME)
+#define	EXP_SYSNAME(EXP, INNAME, OUTNAME, NUM)   \
+        (*(EXP)->exp_op->export_sysname)(EXP, INNAME, OUTNAME, NUM)
 #define	EXP_GC(EXP, param)	\
         (*(EXP)->exp_op->export_garbagecollect)(EXP, param)
 #define	EXP_STATISTICS(EXP)	\

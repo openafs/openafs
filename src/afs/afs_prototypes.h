@@ -950,9 +950,7 @@ extern int afs_TryEvalFakeStat(struct vcache **avcp,
 			       struct vrequest *areq);
 extern void afs_PutFakeStat(struct afs_fakestat_state *state);
 extern int afs_ENameOK(register char *aname);
-extern int afs_getsysname(register struct vrequest *areq,
-			  register struct vcache *adp, register char *bufp);
-extern void Check_AtSys(register struct vcache *avc, const char *aname,
+extern void Check_AtSys(register struct vcache *avc, char *aname,
 			struct sysname_info *state, struct vrequest *areq);
 extern int Next_AtSys(register struct vcache *avc, struct vrequest *areq,
 		      struct sysname_info *state);
