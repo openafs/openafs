@@ -642,4 +642,18 @@ cm_user_t *smb_FindOrCreateUser(smb_vc_t *vcp, char *usern);
 #ifdef NOTSERVICE
 extern void smb_LogPacket(smb_packet_t *packet);
 #endif /* NOTSERVICE */
+
+#ifndef MSV1_0_OPTION_ALLOW_BLANK_PASSWORD
+#define MSV1_0_OPTION_ALLOW_BLANK_PASSWORD      0x1
+#define MSV1_0_OPTION_DISABLE_ADMIN_LOCKOUT     0x2
+#define MSV1_0_OPTION_DISABLE_FORCE_GUEST       0x4
+#define MSV1_0_OPTION_TRY_CACHE_FIRST           0x10
+
+typedef struct _MSV1_0_SETPROCESSOPTION_REQUEST {
+    MSV1_0_PROTOCOL_MESSAGE_TYPE MessageType;
+    ULONG ProcessOptions;
+    BOOLEAN DisableOptions;
+} MSV1_0_SETPROCESSOPTION_REQUEST, *PMSV1_0_SETPROCESSOPTION_REQUEST; 
+#endif
+
 #endif /* whole file */

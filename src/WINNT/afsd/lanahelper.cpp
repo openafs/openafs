@@ -60,6 +60,7 @@ static const char *szNetbiosNameValue = "NetbiosName";
 static const char *szIsGatewayValue = "IsGateway";
 static const char *szLanAdapterValue = "LanAdapter";
 static const char *szNoFindLanaByName = "NoFindLanaByName";
+static const char *szForceLanaLoopback = "ForceLanaLoopback";
 
 // Use the IShellFolder API to get the connection name for the given Guid.
 static HRESULT lana_ShellGetNameFromGuidW(WCHAR *wGuid, WCHAR *wName, int NameSize)
@@ -435,6 +436,19 @@ extern "C" BOOL lana_IsLoopback(lana_number_t lana)
     } astat;
     unsigned char kWLA_MAC[6] = { 0x02, 0x00, 0x4c, 0x4f, 0x4f, 0x50 };
     int status;
+    HKEY hkConfig;
+    LONG rv;
+    int regLana = -1;
+    DWORD dummyLen;
+
+    rv = RegOpenKeyEx(HKEY_LOCAL_MACHINE,AFSREG_CLT_SVC_PARAM_SUBKEY,0,KEY_READ,&hkConfig);
+    if (rv == ERROR_SUCCESS) {
+        rv = RegQueryValueEx(hkConfig, szForceLanaLoopback, NULL, NULL, (LPBYTE) &regLana, &dummyLen);
+        RegCloseKey(hkConfig);
+
+        if (regLana == lana)
+            return TRUE;
+    }
 
     // Reset the adapter: in Win32, this is required for every process, and
     // acts as an init call, not as a real hardware reset.

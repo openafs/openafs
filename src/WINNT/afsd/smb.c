@@ -1,3 +1,4 @@
+#define LARRY_HACK 1
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
@@ -91,19 +92,6 @@ int smb_authType = SMB_AUTH_EXTENDED; /* type of SMB auth to use. One of SMB_AUT
 HANDLE smb_lsaHandle;
 ULONG smb_lsaSecPackage;
 LSA_STRING smb_lsaLogonOrigin;
-
-#ifndef MSV1_0_OPTION_ALLOW_BLANK_PASSWORD
-#define MSV1_0_OPTION_ALLOW_BLANK_PASSWORD      0x1
-#define MSV1_0_OPTION_DISABLE_ADMIN_LOCKOUT     0x2
-#define MSV1_0_OPTION_DISABLE_FORCE_GUEST       0x4
-#define MSV1_0_OPTION_TRY_CACHE_FIRST           0x10
-
-typedef struct _MSV1_0_SETPROCESSOPTION_REQUEST {
-    MSV1_0_PROTOCOL_MESSAGE_TYPE MessageType;
-    ULONG ProcessOptions;
-    BOOLEAN DisableOptions;
-} MSV1_0_SETPROCESSOPTION_REQUEST, *PMSV1_0_SETPROCESSOPTION_REQUEST; 
-#endif
 
 #define NCBmax MAXIMUM_WAIT_OBJECTS
 EVENT_HANDLE NCBavails[NCBmax], NCBevents[NCBmax];
@@ -824,34 +812,6 @@ smb_vc_t *smb_FindVC(unsigned short lsn, int flags, int lana)
             MSV1_0_LM20_CHALLENGE_REQUEST lsaReq;
             PMSV1_0_LM20_CHALLENGE_RESPONSE lsaResp;
             ULONG lsaRespSize = 0;
-
-            /* BEGIN - This code is from Larry */
-            PVOID pResponse = NULL;
-            ULONG cbResponse = 0;
-            MSV1_0_SETPROCESSOPTION_REQUEST OptionsRequest;
-    
-            RtlZeroMemory(&OptionsRequest, sizeof(OptionsRequest));
-            OptionsRequest.MessageType = (MSV1_0_PROTOCOL_MESSAGE_TYPE) MsV1_0SetProcessOption;
-            OptionsRequest.ProcessOptions = MSV1_0_OPTION_TRY_CACHE_FIRST; 
-            OptionsRequest.DisableOptions = FALSE;
-
-
-            nts = LsaCallAuthenticationPackage( smb_lsaHandle,
-                                                smb_lsaSecPackage,
-                                                &OptionsRequest,
-                                                sizeof(OptionsRequest),
-                                                &pResponse,
-                                                &cbResponse,
-                                                &ntsEx
-                                                );
-
-            if (nts != STATUS_SUCCESS && ntsEx != STATUS_SUCCESS) {
-                osi_Log2(smb_logp,"MsV1_0SetProcessOption failure: nts 0x%x ntsEx 0x%x",
-                         nts, ntsEx);
-                OutputDebugString("MsV1_0SetProcessOption failure: nts 0x%x ntsEx 0x%x",
-                                  nts, ntsEx);
-            }
-            /* END - code from Larry */
 
             lsaReq.MessageType = MsV1_0Lm20ChallengeRequest;
 
@@ -7646,10 +7606,6 @@ void smb_NetbiosInit()
     int lana_found = 0;
     OSVERSIONINFO Version;
 
-    /* AFAIK, this is the default for the ms loopback adapter.*/
-    unsigned char kWLA_MAC[6] = { 0x02, 0x00, 0x4c, 0x4f, 0x4f, 0x50 };
-    /*******************************************************************/
-
     /* Get the version of Windows */
     memset(&Version, 0x00, sizeof(Version));
     Version.dwOSVersionInfoSize = sizeof(Version);
@@ -8062,7 +8018,7 @@ void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
 
     /* if we are doing SMB authentication we have register outselves as a logon process */
     if (smb_authType != SMB_AUTH_NONE) {
-        NTSTATUS nts;
+        NTSTATUS nts = STATUS_UNSUCCESSFUL, ntsEx = STATUS_UNSUCCESSFUL;
         LSA_STRING afsProcessName;
         LSA_OPERATIONAL_MODE dummy; /*junk*/
 
@@ -8080,6 +8036,38 @@ void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
             packageName.MaximumLength = packageName.Length + 1;
             nts = LsaLookupAuthenticationPackage(smb_lsaHandle, &packageName , &smb_lsaSecPackage);
             if (nts == STATUS_SUCCESS) {
+#ifdef LARRY_HACK
+                /* BEGIN - This code is from Larry */
+                PVOID pResponse = NULL;
+                ULONG cbResponse = 0;
+                MSV1_0_SETPROCESSOPTION_REQUEST OptionsRequest;
+
+                RtlZeroMemory(&OptionsRequest, sizeof(OptionsRequest));
+                OptionsRequest.MessageType = (MSV1_0_PROTOCOL_MESSAGE_TYPE) MsV1_0SetProcessOption;
+                OptionsRequest.ProcessOptions = MSV1_0_OPTION_TRY_CACHE_FIRST; 
+                OptionsRequest.DisableOptions = FALSE;
+
+                nts = LsaCallAuthenticationPackage( smb_lsaHandle,
+                                                    smb_lsaSecPackage,
+                                                    &OptionsRequest,
+                                                    sizeof(OptionsRequest),
+                                                    &pResponse,
+                                                    &cbResponse,
+                                                    &ntsEx
+                                                    );
+
+                if (nts != STATUS_SUCCESS && ntsEx != STATUS_SUCCESS) {
+                    osi_Log2(smb_logp,"MsV1_0SetProcessOption failure: nts 0x%x ntsEx 0x%x",
+                              nts, ntsEx);
+                    OutputDebugString("MsV1_0SetProcessOption failure: nts 0x%x ntsEx 0x%x",
+                                       nts, ntsEx);
+                } else {
+                    osi_Log0(smb_logp,"MsV1_0SetProcessOption success");
+                    OutputDebugString("MsV1_0SetProcessOption success");
+                }
+                /* END - code from Larry */
+#endif /* LARRY_HACK */
+
                 smb_lsaLogonOrigin.Buffer = "OpenAFS";
                 smb_lsaLogonOrigin.Length = strlen(smb_lsaLogonOrigin.Buffer);
                 smb_lsaLogonOrigin.MaximumLength = smb_lsaLogonOrigin.Length + 1;
