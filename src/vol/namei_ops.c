@@ -204,6 +204,10 @@ int namei_ViceREADME(char *partition)
    char filename[32];
    int fd;
 
+   /* Create the inode directory if we're starting for the first time */
+   sprintf(filename, "%s/%s", partition, INODEDIR);
+   mkdir(filename, 0700);
+
    sprintf(filename, "%s/%s/README", partition, INODEDIR);
    fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0444);
    if (fd >= 0) {

@@ -196,11 +196,13 @@ static void VInitPartition_r(char *path, char *devname, Device dev)
     dp->next = 0;
     strcpy(dp->name, path);
 #if defined(AFS_NAMEI_ENV) && !defined(AFS_NT40_ENV)
-#ifdef AFS_SUN5_ENV
-    strcpy(dp->devName, devname);
-#else /* AFS_SUN5_ENV */
+    /* Create a lockfile for the partition, of the form /vicepa/Lock/vicepa */
     strcpy(dp->devName, path);
-#endif
+    strcat(dp->devName, "/");
+    strcat(dp->devName, "Lock");
+    mkdir(dp->devName, 0700);
+    strcat(dp->devName, path);
+    close(open(dp->devName, O_RDWR | O_CREAT, 0600));
     dp->device = volutil_GetPartitionID(path);
 #else
     strcpy(dp->devName, devname);
@@ -312,6 +314,59 @@ int VCheckPartition(part, devname)
 
     return 0;
 }
+
+/* VIsAlwaysAttach() checks whether a /vicepX directory should always be
+ * attached (return value 1), or only attached when it is a separately
+ * mounted partition (return value 0).  For non-NAMEI environments, it
+ * always returns 0.
+ */
+static int VIsAlwaysAttach(part)
+    char *part;
+{
+#ifdef AFS_NAMEI_ENV
+    struct stat st;
+    char checkfile[256];
+    int ret;
+
+    if (strncmp(part, VICE_PARTITION_PREFIX, VICE_PREFIX_SIZE))
+	return 0;
+
+    strncpy(checkfile, part, 100);
+    strcat(checkfile, "/");
+    strcat(checkfile, VICE_ALWAYSATTACH_FILE);
+
+    ret = stat(checkfile, &st);
+    return (ret < 0) ? 0 : 1;
+#else  /* AFS_NAMEI_ENV */
+    return 0;
+#endif /* AFS_NAMEI_ENV */
+}
+
+/* VAttachPartitions2() looks for and attaches /vicepX partitions
+ * where a special file (VICE_ALWAYSATTACH_FILE) exists.  This is
+ * used to attach /vicepX directories which aren't on dedicated
+ * partitions, in the NAMEI fileserver.
+ */
+void VAttachPartitions2() {
+#ifdef AFS_NAMEI_ENV
+    DIR *dirp;
+    struct dirent *de;
+    char pname[32];
+
+    dirp = opendir("/");
+    while (de = readdir(dirp)) {
+	strcpy(pname, "/");
+	strncat(pname, de->d_name, 20);
+	pname[sizeof(pname)-1] = '\0';
+
+	/* Only keep track of "/vicepx" partitions since automounter
+	   may hose us */
+	if (VIsAlwaysAttach(pname))
+	    VCheckPartition(pname, "");
+    }
+    closedir(dirp);
+#endif /* AFS_NAMEI_ENV */
+}
 #endif /* AFS_NT40_ENV */
 
 #ifdef AFS_SUN5_ENV
@@ -332,11 +387,18 @@ int VAttachPartitions(void)
 	    (strncmp(mnt.mnt_mntopts, "ro,ignore",9) ==0)) 
 	    continue; 
 
+	/* If we're going to always attach this partition, do it later. */
+	if (VIsAlwaysAttach(mnt.mnt_mountp))
+	    continue;
+
 	if (VCheckPartition(mnt.mnt_mountp, mnt.mnt_special) < 0 )
 	    errors ++;
     }
 
-   (void) fclose(mntfile);
+    (void) fclose(mntfile);
+
+    /* Process the always-attach partitions, if any. */
+    VAttachPartitions2();
 
     return errors ;
 }
@@ -356,11 +418,18 @@ int VAttachPartitions(void)
     while (mntent = getmntent(mfd)) {
 	if (!hasmntopt(mntent, MNTOPT_RW)) continue;
 	
+	/* If we're going to always attach this partition, do it later. */
+	if (VIsAlwaysAttach(mntent->mnt_dir))
+	    continue;
+
 	if (VCheckPartition(mntent->mnt_dir, mntent->mnt_fsname) < 0 )
 	    errors ++;
     }
 
     endmntent(mfd);
+
+    /* Process the always-attach partitions, if any. */
+    VAttachPartitions2();
 
     return errors ;
 }
@@ -449,11 +518,18 @@ int VAttachPartitions(void)
 	}
 #endif
 
+	/* If we're going to always attach this partition, do it later. */
+	if (VIsAlwaysAttach(part))
+	    continue;
+
 	if (VCheckPartition(part, vmt2dataptr(vmountp, VMT_OBJECT)) < 0 )
 	    errors ++;
     }
-    return errors ;
 
+    /* Process the always-attach partitions, if any. */
+    VAttachPartitions2();
+
+    return errors ;
 }
 #endif
 #if defined(AFS_DUX40_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
@@ -470,11 +546,18 @@ int VAttachPartitions(void)
     while (fsent = getfsent()) {
 	if (strcmp(fsent->fs_type, "rw") != 0) continue;
 
+	/* If we're going to always attach this partition, do it later. */
+	if (VIsAlwaysAttach(fsent->fs_file))
+	    continue;
+
 	if (VCheckPartition(fsent->fs_file, fsent->fs_spec) < 0 )
 	    errors ++;
     }
     endfsent();
     
+    /* Process the always-attach partitions, if any. */
+    VAttachPartitions2();
+
     return errors ;
 }
 #endif
@@ -644,10 +727,17 @@ int VAttachPartitions(void)
 	}
     }
     while (mntent = getmntent(mfd)) {
+	/* If we're going to always attach this partition, do it later. */
+	if (VIsAlwaysAttach(mntent->mnt_dir))
+	    continue;
+
 	if (VCheckPartition(mntent->mnt_dir, mntent->mnt_fsname) < 0 )
 	    errors ++;
     }
     endmntent(mfd);
+
+    /* Process the always-attach partitions, if any. */
+    VAttachPartitions2();
 
     return errors ;
 }
@@ -1001,7 +1091,7 @@ void VLockPartition_r(char *name)
 	assert (lockf(dp->lock_fd, F_LOCK, 0) != -1); 
 #else
 	assert (flock(dp->lock_fd, LOCK_EX) == 0);
-#endif	/* defined(AFS_AIX_ENV) */
+#endif	/* defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) */
 #endif
 }
 

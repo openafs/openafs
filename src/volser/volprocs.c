@@ -1585,13 +1585,11 @@ struct rx_call *acid;
 struct pIDs *partIds;
 {   
     char namehead[9];
-    struct stat rbuf, pbuf;
     int code;
     char i;
 
     strcpy(namehead, "/vicep");	/*7 including null terminator*/
 
-#ifdef AFS_NT40_ENV
     /* Just return attached partitions. */
     namehead[7] = '\0';
     for (i=0; i<26; i++) {
@@ -1599,23 +1597,7 @@ struct pIDs *partIds;
 	if (VGetPartition(namehead, 0))
 	    partIds->partIds[i] = VGetPartition(namehead, 0) ? i : -1;
     }
-#else
-    
-    (void) stat("/",&rbuf);	/*interested in buf->st_dev*/
-   
-    for(i = 0 ; i < 26 ; i++){
-	
-	namehead[6] = i + 'a';
-	namehead[7] = '\0';
-	code = stat(namehead,&pbuf);
-	if(!code){
-	    if(rbuf.st_dev != pbuf.st_dev) /*the partition is mounted */
-		partIds->partIds[i] = i ;
-	    else  partIds->partIds[i ] = -1;
-	}
-	else partIds->partIds[i ] = -1;
-    }
-#endif   
+
     return 0;
 }
 
@@ -1642,7 +1624,8 @@ struct partEntries *pEntries;
     int code, i, j=0, k;
 
     strcpy(namehead, "/vicep");	/*7 including null terminator*/
-#ifdef AFS_NT40_ENV
+
+    /* Only report attached partitions */
     for(i = 0 ; i < VOLMAXPARTS; i++){
 	if (i < 26) {
 	    namehead[6] = i + 'a';
@@ -1660,28 +1643,6 @@ struct partEntries *pEntries;
     pEntries->partEntries_val = (afs_int32 *) malloc(j * sizeof(int));
     memcpy((char *)pEntries->partEntries_val, (char *)&partList, j * sizeof(int));
     pEntries->partEntries_len = j;
-#else
-    code = stat("/",&rbuf);	/*interested in buf->st_dev*/
-    for(i = 0 ; i < VOLMAXPARTS; i++){
-	if (i < 26) {
-	    namehead[6] = i + 'a';
-	    namehead[7] = '\0';
-	} else {
-	    k = i - 26;
-	    namehead[6] = 'a' + (k/26);
-	    namehead[7] = 'a' + (k%26);
-	    namehead[8] = '\0';
-	}
-	code = stat(namehead,&pbuf);
-	if(!code){
-	    if(rbuf.st_dev != pbuf.st_dev) /*the partition is mounted */
-		partList.partId[j++] = i;
-	}
-    } 
-    pEntries->partEntries_val = (afs_int32 *) malloc(j * sizeof(int));
-    memcpy((char *)pEntries->partEntries_val, (char *)&partList, j * sizeof(int));
-    pEntries->partEntries_len = j;
-#endif
     return 0;
 
 }
