@@ -37,7 +37,7 @@ APPVER = 4.0
 !ENDIF
 
 #define used in WinNT/2000 installation and program version display
-AFSPRODUCT_VERSION=1.2.8
+AFSPRODUCT_VERSION=1.2.9a
 CELLNAME_DEFAULT=openafs.org
 CELLSERVDB_INSTALL=CellServDB.GrandCentral
 CELLSERVDB_WEB=http://grand.central.org/dl/cellservdb/CellServDB
