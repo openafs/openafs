@@ -237,7 +237,7 @@ afscflags =\
 
 !IF ("$(AFSDEV_BUILDTYPE)" == "FREE")
 
-afscflags = $(afscflags) /Ox
+#afscflags = $(afscflags) /Ox
 cdebug = $(cdebug:-Od=) # avoid annoying override warning (D4025)
 cvarsdll = $(cvarsdll:-MDd=-MD)
 NODEBUG=1
