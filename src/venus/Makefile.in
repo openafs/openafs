@@ -69,7 +69,7 @@ CMLIBS=${TOP_LIBDIR}/libsys.a \
 
 LIBS = ${FSLIBS} 
 
-all: fs up fstrace cmdebug kdump kdump64
+all: fs up fstrace cmdebug livesys kdump kdump64
 
 #
 # Build targets
@@ -80,6 +80,9 @@ cacheout: cacheout.o
 cacheout.o: cacheout.c
 
 ${DEST}/bin/fs ${DEST}/root.server/usr/afs/bin/fs: fs
+	${INSTALL} -s $? $@
+
+${DEST}/bin/livesys: livesys
 	${INSTALL} -s $? $@
 
 ${DEST}/bin/up: up
@@ -134,6 +137,11 @@ fs.o: fs.c ${INCLS} AFS_component_version_number.c
 
 fs: fs.o $(LIBS)
 	${CC} ${CFLAGS} -g -o fs fs.o ${TOP_LIBDIR}/libprot.a $(LIBS) ${XLIBS}
+
+livesys.o: livesys.c ${INCLS} AFS_component_version_number.c
+
+livesys: livesys.c $(LIBS)
+	${CC} -g -o livesys $(CFLAGS) livesys.c $(LIBS) ${XLIBS}
 
 twiddle: twiddle.c $(LIBS)
 	${CC} -g -o twiddle $(CFLAGS) twiddle.c $(LIBS) ${XLIBS}
@@ -263,6 +271,7 @@ kdump64 : kdump64.o
 #
 install: \
 	${DESTDIR}${bindir}/fs \
+	${DESTDIR}${bindir}/livesys \
 	${DESTDIR}${afssrvbindir}/fs \
 	${DESTDIR}${bindir}/up \
 	${DESTDIR}${sbindir}/fstrace \
@@ -283,6 +292,9 @@ test:
 include ../config/Makefile.version
 
 ${DESTDIR}${bindir}/fs: fs
+	${INSTALL} -s $? $@
+
+${DESTDIR}${bindir}/livesys: livesys
 	${INSTALL} -s $? $@
 
 ${DESTDIR}${afssrvbindir}/fs: fs
@@ -331,6 +343,7 @@ ${DESTDIR}${sbindir}/kdump64: kdump64
 
 dest: \
 	${DEST}/bin/fs \
+	${DEST}/bin/livesys \
 	${DEST}/root.server/usr/afs/bin/fs \
 	${DEST}/bin/up \
 	${DEST}/etc/fstrace \
