@@ -8,18 +8,49 @@
 !INCLUDE ..\..\..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\..\..\config\NTMakefile.version
 
+#  Install comments
+#             Don't use '=' in the following strings!
+#             WELCOMEMESSAGE=Display during installation process
+#             AFSBUILDCOMMENTS=Displayed in properity page for install file
+#             CELLSERVDB_CONFIGNAME = name of configuration file (ThisCell)
+
+CELLSERVDB_CONFIGNAME=afsdcell.ini
+WELCOMEMESSAGE=Default Configuration Information:\nBuild:*DatE* *TimE* Ver:$(AFSPRODUCT_VERSION)\nCellname:$(CELLNAME_DEFAULT)\nCellSrvDB:$(CELLSERVDB_INSTALL)
+AFSBUILDCOMMENTS=Build:*DatE* *TimE* CellServDB:$(CELLSERVDB_INSTALL)
+
 ############################################################################
 
-CELLSERVDB = $(DESTDIR)\root.client\usr\vice\etc\afsdcell.ini
-
-$(CELLSERVDB): afsdcell.ini
-    copy $** $@
-
-prep: $(CELLSERVDB) AFS_component_version_number.txt
+prep: AFS_component_version_number.txt
+    $(DESTDIR)\bin\util_cr.exe } "$(AFSPRODUCT_VERSION)" ".\lang\en_US\valuee.shl"
+    $(DESTDIR)\bin\util_cr.exe } "$(AFSPRODUCT_VERSION)" "default.txt" "default.rge"
+    $(DESTDIR)\bin\util_cr.exe @ "$(AFSROOT)\src\WINNT\install\InstallShield5\lang\en_US\value.shl" "[DATA] CELLSERVDB_CONFIGNAME=$(CELLSERVDB_CONFIGNAME)"
+    $(DESTDIR)\bin\util_cr.exe @ "$(AFSROOT)\src\WINNT\install\InstallShield5\lang\en_US\value.shl" "[DATA] CELLNAME_DEFAULT=$(CELLNAME_DEFAULT)"
+    $(DESTDIR)\bin\util_cr.exe @ "$(AFSROOT)\src\WINNT\install\InstallShield5\lang\en_US\value.shl" "[DATA] CELLSERVDB_INSTALL=$(CELLSERVDB_INSTALL)"
+    $(DESTDIR)\bin\util_cr.exe @ "$(AFSROOT)\src\WINNT\install\InstallShield5\lang\en_US\value.shl" "[DATA] CELLSERVDB_WEB=$(CELLSERVDB_WEB)"
+!IF "$(WELCOMEMESSAGE)" != ""
+      $(DESTDIR)\bin\util_cr.exe @ "$(AFSROOT)\src\WINNT\install\InstallShield5\lang\en_US\value.shl" "[DATA] WELCOME_MESSAGE=$(WELCOMEMESSAGE)"
+!ENDIF
+!     IF ((EXIST("$(ISWEB)")) &&("$(ISWEB)"!=""))
+      $(DESTDIR)\bin\util_cr.exe @ "$(AFSROOT)\src\WINNT\install\InstallShield5\packageweb.pfw" "[Options] Version=$(AFSPRODUCT_VERSION)"
+      $(DESTDIR)\bin\util_cr.exe @ "$(AFSROOT)\src\WINNT\install\InstallShield5\packageweb.pfw" "[Options] Comments=$(AFSBUILDCOMMENTS)"
+      $(DESTDIR)\bin\util_cr.exe @ "$(AFSROOT)\src\WINNT\install\InstallShield5\packageweb.pfw" "[Options] ApplicationName=AFSforWindows"
+      $(DESTDIR)\bin\util_cr.exe @ "$(AFSROOT)\src\WINNT\install\InstallShield5\packageweb.pfw" "[Options] Company=Open AFS"
+      
+!     ENDIF
     CreateISDirTree.bat
     ScatterFiles.bat
     CreateGeneratedFiles.bat
     CompileScript.bat
+    $(COPY) $(DESTDIR)\WinInstall\Config\wininet.dll ".\Setup Files\Compressed Files\0009-English\Intel 32\."
+    $(COPY) $(DESTDIR)\WinInstall\Config\shlwapi.dll ".\Setup Files\Compressed Files\0009-English\Intel 32\."
+    $(COPY) ..\..\afs_setup_utils\_isuser\_isuser.dll ".\Setup Files\Compressed Files\0009-English\Intel 32\."
+    $(COPY) ..\..\afs_setup_utils\getwebdll\getwebdll.dll ".\Setup Files\Compressed Files\0009-English\Intel 32\."
+    $(COPY) $(DESTDIR)\WinInstall\Config\$(CELLSERVDB_INSTALL) ".\Setup Files\Compressed Files\0009-English\Intel 32\$(CELLSERVDB_CONFIGNAME)"
+    $(DESTDIR)\bin\util_cr.exe ~ "$(DESTDIR)\root.client\usr\vice\etc\$(CELLSERVDB_CONFIGNAME)"
+    $(DESTDIR)\bin\util_cr.exe ~ ".\Setup Files\Compressed Files\0009-English\Intel 32\_ISUSER.DLL"
+    $(DESTDIR)\bin\util_cr.exe ~ ".\Setup Files\Compressed Files\0009-English\Intel 32\shlwapi.DLL"
+    $(DESTDIR)\bin\util_cr.exe ~ ".\Setup Files\Compressed Files\0009-English\Intel 32\wininet.DLL"
+    $(DESTDIR)\bin\util_cr.exe ~ ".\Setup Files\Compressed Files\0009-English\Intel 32\GETWEBDLL.DLL"
 
 build:
     BuildSetup.bat

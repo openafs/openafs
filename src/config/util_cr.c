@@ -15,14 +15,20 @@
 #include "process.h"
 #include "windows.h"
 #include "malloc.h"
+#include "time.h"
 
 void usuage()
 {
 	printf("util_cr file ;remove cr (from crlf)\n\
+	OR util_cr } ProductVersion in_filename out_filename ; substitute for %1-%5 in file\n\
+	   %1=Major version, %2=Minor version, %3=Patch(first digit) %4=(last two digits) %5=Version display string \n\
+	   ProductVersion=maj.min.pat.pat2 ;maj=numeric, min=numeric pat,pat2 are not more than 3 digits or 1-2 digits and one alpha \n\
+	   e.g 1.0.4.1, 1.0.4 a 1.0.401, 1.0.4a  all represent the same version\n\
 	OR util_cr + file ;add cr\n \
 	OR util_cr * \"+[register key value] x=y\" ; add register key value\n\
 	OR util_cr * \"-[register key value]\" ; aremove register key value\n\
-	OR util_cr & file.ini \"SectionKey=value\" ; update ini-ipr-pwf file\n\
+	OR util_cr @ file.ini \"[SectionKey]variable=value\" ; update ini-ipr-pwf file\n\
+	OR util_cr @ file.ini \"[SectionKey]variable=value*DatE*\" ; update ini-ipr-pwf file, insert date\n\
 	OR util_cr ~  ;force error\n");
 	exit(0xc000);
 }
@@ -101,11 +107,147 @@ int main(int argc, char* argv[])
 
 	if (argc<3)
 		usuage();
+ 	if (strcmp(argv[1],"}")==0)
+ 	{
+ 		char v1[4],v2[4],v3[4],v4[4];
+ 		char v5[132];
+ 		char *ptr=NULL;
+ 		char *buf;
+ 		int maj;
+ 		int min;
+ 		int pat,pat2;
+ 		strcpy(v5,argv[2]);
+ 		if (argc<5)
+ 			usuage();
+ 		if ((ptr=strtok(argv[2],". \n"))==NULL)
+ 			return 0;
+ 		maj=atoi(ptr);
+ 		if ((ptr=strtok(NULL,". \n"))==NULL)
+ 			return 0;
+ 		min=atoi(ptr);
+ 		if ((ptr=strtok(NULL,". \n"))==NULL)
+ 			return 0;
+ 		pat2=-1;
+ 		switch (strlen(ptr))
+ 		{
+ 		case 0:
+ 			usuage();
+ 		case 1:
+ 			pat=atoi(ptr);
+ 			if (isdigit(*ptr)!=0)
+ 				break;
+ 			usuage();
+ 		case 2:	//ONLY 1.0.44 is interpreted as 1.0.4.4 or 1.0.4a as 1.0.4.a
+ 			if (isdigit(*ptr)==0)
+ 				usuage();
+ 			pat=*ptr-'0';
+ 			ptr++;
+ 			if (isalpha(*ptr)==0)
+ 			{
+ 				pat2=atoi(ptr);
+ 			} else if (isalpha(*ptr)!=0)
+ 			{
+ 				pat2=tolower(*ptr)-'a'+1;
+ 			} else 
+ 				usuage();
+ 			break;			
+ 		case 3://1.0.401 or 1.0.40a are the same; 
+ 			if ((isdigit(*ptr)==0)	// first 2 must be digit
+ 				|| (isdigit(*(ptr+1)==0))
+ 				|| (*(ptr+1)!='0' && isdigit(*(ptr+2))==0) // disallow 1.0.4b0  or 1.0.41a 
+ 				)
+ 				usuage();
+ 			pat=*ptr-'0';
+ 			ptr++;
+ 			pat2=atoi(ptr);
+ 			ptr++;
+ 			if (isalpha(*ptr))
+ 				pat2=tolower(*ptr)-'a'+1;
+ 			break;
+ 		default:
+ 			usuage();
+ 		}
+ 		// last can be 1-2 digits or one alpha (if pat2 hasn't been set)
+ 		if ((ptr=strtok(NULL,". \n"))!=NULL)
+ 		{
+ 			if (pat2>=0)
+ 				usuage();
+ 			switch (strlen(ptr))
+ 			{
+ 			case 1:
+ 				pat2=(isdigit(*ptr))?atoi(ptr):tolower(*ptr)-'a'+1;
+ 				break;
+ 			case 2:
+ 				if ( 
+ 					isdigit(*ptr)==0 
+ 					|| isdigit(*(ptr+1))==0
+ 					) 
+ 					usuage();
+ 				pat2=atoi(ptr);
+ 			default:
+ 				usuage();
+ 			}
+ 		}
+ 		file=fopen(argv[3],"r");
+ 		if (file==NULL)
+ 			usuage();
+ 		len=filelength(_fileno(file));
+ 		buf=(char *)malloc(len+1);
+ 		len=fread(buf,sizeof(char),len,file);
+ 		buf[len]=0;	//set eof
+ 		fclose(file);
+ 		file=fopen(argv[4],"w");
+ 		if (file==NULL)
+ 			usuage();
+ 		sprintf(v1,"%i",maj);
+ 		sprintf(v2,"%i",min);
+ 		sprintf(v3,"%i",pat);
+ 		sprintf(v4,"%02i",pat2);
+ 		while (1)
+ 		{
+ 			ptr=strstr(buf,"%");
+ 			fwrite(buf,1,(ptr)?ptr-buf:strlen(buf),file);	//write file if no % found or up to %
+ 			if (ptr==NULL)
+ 				break;
+ 			switch (*(ptr+1))	//skip first scan if buf="1...."
+ 			{
+ 			case '1':
+ 				fwrite(v1,1,strlen(v1),file);
+ 				ptr++;
+ 				break;				
+ 			case '2':
+ 				fwrite(v2,1,strlen(v2),file);
+ 				ptr++;
+ 				break;				
+ 			case '3':
+ 				fwrite(v3,1,strlen(v3),file);
+ 				ptr++;
+ 				break;				
+ 			case '4':
+ 				fwrite(v4,1,strlen(v4),file);
+ 				ptr++;
+ 				break;				
+ 			case '5':
+ 				fwrite(v5,1,strlen(v5),file);
+ 				ptr++;
+ 				break;
+ 			default:
+ 				fwrite("%",1,1,file);	//either % at end of file or no %1...
+ 				break;
+ 			}
+ 			buf=ptr+1;
+ 		}
+ 		fclose(file);
+ 		return 0;
+ 	}
 	if (strcmp(argv[1],"~")==0)
 	{	//check for file presence
 		if (fopen(argv[2],"r"))
-			return(0);
-		printf("Error---%s\n",argv[3]);
+  			return(0);
+ 		if(argc<4)
+ 			printf("ERROR --- File not present %s\n",argv[2]);
+ 		else 
+ 			printf("Error---%s\n",argv[3]);
 		exit(0xc000);
 	}
 	if (strcmp(argv[1],"*")==0)
@@ -149,31 +291,62 @@ int main(int argc, char* argv[])
 		}
 		return 0;
 	}
-	if (strcmp(argv[1],"&")==0)
+	if (strcmp(argv[1],"@")==0)
 	{
+		char msg[256],msgt[256];
+		char *ptr;
 		if (argc<4)
 			usuage();
 		for (i=3;argc>=4;i++)
 		{
-			char *ssect=strtok(argv[i],"[");
-			char *skey=strtok(argv[i],"]");
+
+			char *ssect=strstr(argv[i],"[");
+			char *skey=strstr(ssect,"]");
 			char *sval;
-			skey=strtok(NULL,"=");
 			if ((ssect==NULL) || (skey==NULL))
 			{
 				printf("format error parameter %s\n",argv[i]);
 				exit(0xc000);
 			}
-			while(*skey==' ') 
-				skey++;
-
-			sval=strtok(NULL,"=");
+			ssect++;
+			*skey=0;
+			if ((strlen(skey+1)==0)||(strlen(ssect)==0))
+			{
+				printf("format error parameter %s\n",argv[i]);
+				exit(0xc000);
+			}
+			while(*++skey==' ');
+			sval=strstr(skey,"=");
 			if (sval==NULL)
 			{
 				printf("format error parameter %s\n",argv[i]);
 				exit(0xc000);
 			}
-//			printf("parameters %s %s %s %s\n",ssect,skey,sval,argv[2]);
+			ptr=sval;
+			while(*--ptr==' ') ;
+			*(ptr+1)=0;
+			while(*++sval==' ') ;
+			if (ptr=strstr(sval,"*DatE*"))
+			{// ok so lets substitute date in this string;
+				char tmpbuf[32];
+				*(ptr)=0;
+				strcpy(msg,sval);
+			    _tzset();
+			    _strdate( tmpbuf );
+				strcat(msg,tmpbuf);
+				strcat(msg,ptr+6);
+				sval=msg;
+			}
+			if (ptr=strstr(sval,"*TimE*"))
+			{
+				char tmpbuf[32];
+				*(ptr)=0;
+				strcpy(msgt,sval);
+			    _strtime( tmpbuf );
+				strncat(msgt,tmpbuf,5);
+				strcat(msgt,ptr+6);
+				sval=msgt;
+			}
 			if (WritePrivateProfileString(ssect,skey,sval,argv[2])==0)
 			{
 				LPVOID lpMsgBuf;

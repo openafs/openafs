@@ -48,7 +48,8 @@ RSC=rc.exe
 HLPDIR= .\HELP
 
 prep : 
-	$(DESTDIR)\bin\util_cr.exe ~ "$(MSSDK)\Include\windows.h" "MSSDK must point to SDK include headers "
+	$(DESTDIR)\bin\util_cr.exe ~ "$(MSSDK)\Include\windows.h" "Enviornment variable MSSDK must point to SDK" 
+
 
 !IF  "$(AFSDEV_BUILDTYPE)" == "FREE"
 
@@ -76,7 +77,7 @@ CPP_PROJ=/nologo /MD /W3 /GX /O2 \
 	/D "NDEBUG" /D "_MFC" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_WINNT" /D "_AFXDLL" /D "ENCRIPT" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 MTL_PROJ=/nologo /D "NDEBUG" /mktyplib203 /win32 
-RSC_PROJ=/l 0x409 /fo"$(INTDIR)\WinAfsLoad.res" $(AFSD_INC_MFC) /d "NDEBUG" /d "_AFXDLL" 
+RSC_PROJ=/l 0x409 /fo"$(INTDIR)\WinAfsLoad.res" $(AFSD_INC_MFC) /d "AFSPRODUCT_VERSION=\"$(AFSPRODUCT_VERSION)\"" /d "NDEBUG" /d "_AFXDLL" 
 BSC32=bscmake.exe
 BSC32_FLAGS=/nologo /o"$(INTDIR)\WinAfsLoad.bsc" 
 BSC32_SBRS= \
@@ -137,7 +138,7 @@ CPP_PROJ=/nologo /MDd /W3 /Gm /GX /ZI /Od \
 	/D "_DEBUG" /D "WIN32_LEAN_AND_MEAN" /D _WIN32_IE=0x0400 /D "TESTBUTTONS" /D "_MFC" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_WINNT" /D "_AFXDLL" /D "ENCRIPT" /D "NOKNOK" /Yu"stdafx.h" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
 
 MTL_PROJ=/nologo /D "_DEBUG" /mktyplib203 /win32 
-RSC_PROJ=/l 0x409 /fo"$(INTDIR)\WinAfsLoad.res" $(AFSD_INC_MFC) /d "_DEBUG" /d "_AFXDLL" 
+RSC_PROJ=/l 0x409 /fo"$(INTDIR)\WinAfsLoad.res" $(AFSD_INC_MFC) /d "AFSPRODUCT_VERSION=\"$(AFSPRODUCT_VERSION)\"" /d "_DEBUG" /d "_AFXDLL" 
 BSC32=bscmake.exe
 BSC32_FLAGS=/nologo /o"$(INTDIR)\WinAfsLoad.bsc" 
 BSC32_SBRS= \

@@ -271,6 +271,11 @@ Entry102=SERVER_GROUP_NAME
 Entry103=CLIENT_GROUP_NAME
 Entry104=CCENTER_GROUP_NAME
 Entry105=LIGHT_GROUP_NAME
+Entry106=CELLNAME_DEFAULT
+Entry107=WELCOME_MESSAGE
+Entry108=CELLSERVDB_WEB
+Entry109=CELLSERVDB_INSTALL
+Entry110=CELLSERVDB_CONFIGNAME
 
 [CONFIGURING_AFS_CREDS]
 Comment=
@@ -431,4 +436,19 @@ Comment=
 
 [LIGHT_GROUP_NAME]
 Comment=
+
+[CELLNAME_DEFAULT]
+Comment=Default Cell name
+
+[WELCOME_MESSAGE]
+Comment=Display in Welcome Box
+
+[CELLSERVDB_WEB]
+Comment=Web address to load cellservdb
+
+[CELLSERVDB_INSTALL]
+Comment=Source file for installable Cellservdb
+
+[CELLSERVDB_CONFIGNAME]
+Comment=Cellservdb file name
 

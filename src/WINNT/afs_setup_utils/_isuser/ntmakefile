@@ -1,0 +1,100 @@
+# Microsoft Developer Studio Generated NMAKE File, Based on _IsUser.dsp
+!IF "$(OS)" == "Windows_NT"
+NULL=
+!ELSE 
+NULL=nul
+!ENDIF 
+
+OUTDIR=.
+INTDIR=.
+# Begin Custom Macros
+OutDir=.
+# End Custom Macros
+
+ALL : "$(OUTDIR)\_IsUser.dll"
+
+
+CLEAN :
+	-@erase "$(INTDIR)\_isuser.obj"
+	-@erase "$(INTDIR)\_Isuser.res"
+	-@erase "$(INTDIR)\vc60.idb"
+	-@erase "$(OUTDIR)\_IsUser.dll"
+	-@erase "$(OUTDIR)\_IsUser.exp"
+	-@erase "$(OUTDIR)\_IsUser.lib"
+	-@erase "$(OUTDIR)\*.pch"
+
+"$(OUTDIR)" :
+    if not exist "$(OUTDIR)/$(NULL)" mkdir "$(OUTDIR)"
+
+CPP=cl.exe
+CPP_PROJ=/nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "_ISUSER_EXPORTS" /YX /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+
+.c{$(INTDIR)}.obj::
+   $(CPP) @<<
+   $(CPP_PROJ) $< 
+<<
+
+.cpp{$(INTDIR)}.obj::
+   $(CPP) @<<
+   $(CPP_PROJ) $< 
+<<
+
+.cxx{$(INTDIR)}.obj::
+   $(CPP) @<<
+   $(CPP_PROJ) $< 
+<<
+
+.c{$(INTDIR)}.sbr::
+   $(CPP) @<<
+   $(CPP_PROJ) $< 
+<<
+
+.cpp{$(INTDIR)}.sbr::
+   $(CPP) @<<
+   $(CPP_PROJ) $< 
+<<
+
+.cxx{$(INTDIR)}.sbr::
+   $(CPP) @<<
+   $(CPP_PROJ) $< 
+<<
+
+MTL=midl.exe
+MTL_PROJ=/nologo /D "NDEBUG" /mktyplib203 /win32 
+RSC=rc.exe
+RSC_PROJ=/l 0x409 /fo"$(INTDIR)\_Isuser.res" /d "NDEBUG" 
+BSC32=bscmake.exe
+BSC32_FLAGS=/nologo /o"$(OUTDIR)\_IsUser.bsc" 
+BSC32_SBRS= \
+	
+LINK32=link.exe
+LINK32_FLAGS=kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /incremental:no /pdb:"$(OUTDIR)\_IsUser.pdb" /machine:I386 /out:"$(OUTDIR)\_IsUser.dll" /implib:"$(OUTDIR)\_IsUser.lib" 
+LINK32_OBJS= \
+	"$(INTDIR)\_isuser.obj" \
+	"$(INTDIR)\_Isuser.res"
+
+"$(OUTDIR)\_IsUser.dll" : "$(OUTDIR)" $(DEF_FILE) $(LINK32_OBJS)
+    $(LINK32) @<<
+  $(LINK32_FLAGS) $(LINK32_OBJS)
+<<
+
+
+!IF "$(NO_EXTERNAL_DEPS)" != "1"
+!IF EXISTS("_IsUser.dep")
+!INCLUDE "_IsUser.dep"
+!ELSE 
+!MESSAGE Warning: cannot find "_IsUser.dep"
+!ENDIF 
+!ENDIF 
+
+
+SOURCE=.\_isuser.c
+
+"$(INTDIR)\_isuser.obj" : $(SOURCE) "$(INTDIR)"
+
+
+SOURCE=.\_Isuser.RC
+
+"$(INTDIR)\_Isuser.res" : $(SOURCE) "$(INTDIR)"
+	$(RSC) $(RSC_PROJ) $(SOURCE)
+

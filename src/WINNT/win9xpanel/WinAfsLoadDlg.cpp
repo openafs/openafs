@@ -333,6 +333,7 @@ BOOL CWinAfsLoadDlg::OnInitDialog()
 	LOG("ADVAPI32 %d.%d",(vernum>>16) & 0xff,vernum & 0xff);
 	m_pEncript = (CEncript *)new CEncript(this);
 	
+
 	// initiallze AFS and setup Progress display
 	if (!m_cAfs.Init(this,msg))
 		HandleError(msg);
@@ -341,7 +342,11 @@ BOOL CWinAfsLoadDlg::OnInitDialog()
 	EnableToolTips(TRUE);
 	
 	m_bServiceIsActive=FALSE;
-	SetWindowText(AFSTITLE);
+	// Obtain Version String
+	CRegkey key(HKEY_LOCAL_MACHINE,"Software\\Open AFS\\AFS Control Center","CurrentVersion");
+	key.GetString("VersionString",m_VersionString,128);
+	msg.Format("%s %s",AFSTITLE,m_VersionString);
+	SetWindowText(msg);
 
 	UpdateData(TRUE);
 
@@ -349,7 +354,6 @@ BOOL CWinAfsLoadDlg::OnInitDialog()
 	m_sComputername=compName;
 	m_sMountDisplay.Format("Connected Drives on Computer:%s",compName);
 	m_sUsername="";
-	m_bHomepath=FALSE;
 	CRect rect;
 	GetWindowRect(&m_OriginalRect);
 	m_cOptionLine.GetWindowRect(&rect);
@@ -366,28 +370,41 @@ BOOL CWinAfsLoadDlg::OnInitDialog()
 	}
 	CHAR pLoginName[UNLEN + 1];
 	size=UNLEN;
-	if (GetUserName(pLoginName,&size))
-		m_sLoginName=pLoginName;
-	else
-		m_sLoginName="Bozo";
-	CString sUser,sPass;
-	RegPassword(sUser,sPass,TRUE);
-	if ((m_sUsername=="") || (m_sLoginName.IsEmpty()))
+	if (CWINAFSLOADAPP->m_bNoID)
 	{
-		m_sUsername=sUser;
+		CWnd *w=GetDlgItem(IDC_USERNAME);
+		w->EnableWindow(FALSE);
+		w=GetDlgItem(IDC_PASSWORD);
+		w->EnableWindow(FALSE);
+		w=GetDlgItem(IDC_SAVEUSERNAME);
+		w->EnableWindow(FALSE);
+	} else {
+		if (GetUserName(pLoginName,&size))
+		{
+			m_sLoginName=pLoginName;
+		} else
+			m_sLoginName="Bozo";
+		CString sUser,sPass;
+		RegPassword(sUser,sPass,TRUE);
+		if (m_sUsername=="")
+		{
+			m_sUsername=sUser;
+		}
+		if ((m_sUsername=="") && (m_sLoginName!="Bozo"))
+		{
+			m_sUsername=m_sLoginName;
+		}
+		if ((m_sPassword=="") || (m_sPassword.IsEmpty()))
+		{
+			m_sPassword=sPass;
+		}
+		if (m_sPassword.IsEmpty())
+		{
+			m_cSaveUsername.SetCheck(FALSE);
+			RegLastUser(m_sUsername,TRUE);
+		} else
+			m_cSaveUsername.SetCheck(TRUE);
 	}
-	if ((m_sPassword=="") || (m_sPassword.IsEmpty()))
-	{
-		m_sPassword=sPass;
-	}
-
-	if (m_sPassword.IsEmpty())
-	{
-		m_cSaveUsername.SetCheck(FALSE);
-		RegLastUser(m_sUsername,TRUE);
-	} else
-		m_cSaveUsername.SetCheck(TRUE);
-	
 	// Initialize mount control list
 
 	m_pImagelist = new CImageList();
@@ -621,13 +638,30 @@ void CWinAfsLoadDlg::OnSysCommand(UINT nID, LPARAM lParam)
 			BYTE *lpData=(BYTE *)new BYTE[rc];
 			if (GetFileVersionInfo(wdir,wHandle,rc,lpData))
 			{
-				VS_FIXEDFILEINFO *pver;
 				UINT len;
-				if (VerQueryValue(lpData,"\\",(PVOID *)&pver,&len))
-				{
-					dlgAbout.m_sVersion.Format("WinAFSload Version %d.%d.%d",(pver->dwProductVersionMS>>16) &0xff ,pver->dwProductVersionMS & 0xff,(pver->dwProductVersionLS>>16) &0xff );
+				struct TRANSLATION {
+					WORD langID;         // language ID
+					WORD charset;        // character set (code page)
+				};
+				CString msg;
+				TRANSLATION mTrans,* pTrans;
+				if (VerQueryValue(lpData,
+					"\\VarFileInfo\\Translation", (PVOID *)&pTrans, &len) && len >= 4) {
+					mTrans = *pTrans;
+					TRACE("code page = %d\n", mTrans.charset);
+					}
+				LPCTSTR pVal;
+				UINT iLenVal;
+				CString query;
+				query.Format(_T("\\StringFileInfo\\%04x%04x\\%s"),
+					mTrans.langID,
+					mTrans.charset,
+					_T("ProductVersion"));
+				if (VerQueryValue(lpData, (LPTSTR)(LPCTSTR)query,
+					(LPVOID*)&pVal, &iLenVal)) {
+//					dlgAbout.m_sVersion.Format("WinAFSload Version %s",pVal);
 				}
-			}
+   			}
 			delete lpData;
 		}
 		dlgAbout.DoModal();
@@ -721,17 +755,20 @@ void CWinAfsLoadDlg::OnConnect()
 		return;
 	}
 	CCancel cancel(m_bConnect,FALSE);		//clear m_bConnect when connection done
-	if (m_sUsername.IsEmpty() || m_sPassword.IsEmpty()) 
+	if (									// if username is present then must have password
+		IsGetTokens() 
+		&& (m_sPassword=="")
+		) 
 	{
-		HandleError("You must enter a username and password!");
-		if (m_sUsername.IsEmpty()) m_cUsername.SetFocus();
-		else m_cPassword.SetFocus();
+		HandleError("You must enter a password!");
+		m_cPassword.SetFocus();
 		return;
 	}
 	CProgress progress(this,7);
 	progress.Next();
 	if (!m_cAfs.Create(msg,m_sComputername,m_procInfo)) 
 	{
+		progress.Finish();
 		HandleError(msg);
 		m_procInfo.hThread=0;
 		return;
@@ -739,12 +776,13 @@ void CWinAfsLoadDlg::OnConnect()
 	// CWINAFSLOADAPP->m_sMsg contains the host name used for login
 	LOG("AFS Client Console started successfully [%s].",(const char *)m_sComputername);
 	CString sDrive;
-	// lets find the All
+
 	CString sKey;
+	int iMounted=-1;
 	for (int iItem=0;iItem<m_cMountlist.GetItemCount();iItem++)
 	{
 		sKey = m_cMountlist.GetItemText(iItem,COLSHARE);
-		if (stricmp(sKey,"all")!=0) continue;
+		if (stricmp(sKey,"all")!=0) continue;		// lets find the All first
 		CString sAuto(m_cMountlist.GetItemText(iItem,COLAUTO));
 		if (sAuto!="*")
 			continue;
@@ -754,34 +792,70 @@ void CWinAfsLoadDlg::OnConnect()
 		{
 			m_cMountlist.SetCheck(iItem,TRUE);
 			AddMenu(sDrive,sKey);
+			iMounted=iItem;
 		} else {
 			CString msg2;
 			m_cAfs.Shutdown(msg2);
 			m_procInfo.hThread=0;
 			msg2.Format("Connect can't continue: %s",msg);
+			progress.Finish();
 			HandleError(msg2);
 			return;
 		}
 		break;
 	}
-	if (stricmp(sKey,"all")!=0){
-		m_cAfs.Shutdown(msg);
-		m_procInfo.hThread=0;
-		msg="Connect can't continue, 'all' path not defined";
-		HandleError(msg);
-		return;
+	if (iMounted<0){
+		// Scan for any other connection
+		for (int iItem=0;iItem<m_cMountlist.GetItemCount();iItem++)
+		{
+			CString sAuto(m_cMountlist.GetItemText(iItem,COLAUTO));
+			if (sAuto!="*")
+				continue;
+			sDrive=m_cMountlist.GetItemText(iItem,COLDRIVE);
+			LOG("Connect %s %s",sDrive,sKey);
+			if (m_cAfs.Mount(msg,sDrive,sKey))
+			{
+				m_cMountlist.SetCheck(iItem,TRUE);
+				AddMenu(sDrive,sKey);
+				iMounted=iItem;
+			} else {
+				CString msg2;
+				m_cAfs.Shutdown(msg2);
+				m_procInfo.hThread=0;
+				msg2.Format("Connect can't continue: %s",msg);
+				progress.Finish();
+				HandleError(msg2);
+				return;
+			}
+			break;
+		}
 	}
 	progress.Next();
-	if (!m_cAfs.Authencate(msg,m_sUsername,m_sPassword))
+	if  (IsGetTokens())
 	{
-		CString msg2;
-		m_cAfs.Dismount(msg2,sDrive,TRUE);
-		m_cMountlist.SetCheck(iItem,FALSE);
-		RemoveMenu(sDrive);
-		m_cAfs.Shutdown(msg2);
-		m_procInfo.hThread=0;
-		HandleError(msg);
-		return;
+#if 0
+		if (iMounted<0)		//have we mounted at least one drive
+		{
+			m_cAfs.Shutdown(msg);
+			m_procInfo.hThread=0;
+			msg="Connect can't continue, mountable drive not defined";
+			progress.Finish();
+			HandleError(msg);
+			return;
+		}
+#endif
+		if (!m_cAfs.Authencate(msg,m_sUsername,m_sPassword))
+		{
+			CString msg2;
+			m_cAfs.Dismount(msg2,sDrive,TRUE);
+			m_cMountlist.SetCheck(iItem,FALSE);
+			RemoveMenu(sDrive);
+			m_cAfs.Shutdown(msg2);
+			m_procInfo.hThread=0;
+			progress.Finish();
+			HandleError(msg);
+			return;
+		}
 	}
 	progress.Next();	
 	// scan through the list for any additional items to connect
@@ -789,7 +863,7 @@ void CWinAfsLoadDlg::OnConnect()
 	for (iItem=0;iItem<m_cMountlist.GetItemCount();iItem++)
 	{
 		CString sKey(m_cMountlist.GetItemText(iItem,COLSHARE));
-		if (stricmp(sKey,"all")==0) continue;
+		if (iItem==iMounted) continue;
 		CString sAuto(m_cMountlist.GetItemText(iItem,COLAUTO));
 		if (sAuto!="*")
 			continue;
@@ -1028,8 +1102,15 @@ void CWinAfsLoadDlg::UpdateConnect()
 		m_cConnect.Invalidate();
 		m_cCancel.SetWindowText("Cancel");
 		m_cCancel.Invalidate();
-		m_cAuthenicate.ModifyStyle(WS_DISABLED,0);
-		m_cAuthenicate.Invalidate();
+		if (!CWINAFSLOADAPP->m_bNoID)
+		{	
+			m_cAuthenicate.ModifyStyle(WS_DISABLED,0);
+			if (IsGetTokens())
+				m_cAuthenicate.SetWindowText("ReAuthenicate");
+			 else 	//tokens are not gotten; allow authenication
+				m_cAuthenicate.SetWindowText("Authenicate");
+			m_cAuthenicate.Invalidate();
+		}
 		m_trayIcon.SetConnectState(0);
 		return;
 	}
@@ -1073,7 +1154,8 @@ void CWinAfsLoadDlg::OnTrayButton4()
 	OnSysCommand(IDM_EXPLORERAFS+64, 0);
 }
 
-#define MAXKEY (SHARENAMESIZE+1)*MAXSHARES
+#define MAXDRIVESIZE (SHARENAMESIZE+5)*MAXSHARES
+
 BOOL CWinAfsLoadDlg::ProfileData(BOOL put)
 {
 	CString dINI;
@@ -1106,7 +1188,6 @@ BOOL CWinAfsLoadDlg::ProfileData(BOOL put)
 				dptr=dblock+dused;
 				wsprintf(dptr,"%s=%s%s",sKey,sAuto,sDrive);
 				dused+=len;
-				if (stricmp(sKey,"all")==0) continue;	//skip 'all' output
 				len=sKey.GetLength()+sPath.GetLength()+2;
 				if (sused+len>=scur)
 					sblock=(char *)realloc(sblock,(scur+=BLOCKSIZE));
@@ -1121,91 +1202,41 @@ BOOL CWinAfsLoadDlg::ProfileData(BOOL put)
 		WritePrivateProfileSection("AFS Drivemounts",dblock,dINI);
 		delete dblock;
 		delete sblock;
-	} else {
-		char sKey[MAXKEY+2];
+	} else {	//get
+		char sShare[SHARENAMESIZE+1];
 		CHAR sPath[MAX_PATH+1];
+		CHAR sDriveMount[MAXDRIVESIZE+2];
 		CHAR sDrive[DRIVESIZE+1];
 		CHAR sAuto[AUTOSIZE+1];
 		strcpy(sAuto," ");
-		int len;
 		CString path;
-		int keylen=GetPrivateProfileString("AFS Submounts", NULL, "", sKey, MAXKEY,tINI);
-		PCHAR pkey=sKey;
-		if (keylen>=MAXKEY)
-		{
-			CString msg;
-			msg.Format("Profile String Error - Too many entries (%d)",MAXSHARES);
-			HandleError(msg,TRUE);
-			return FALSE;
-		}
-		// lets scan for all and home first, we want to place them 
+		// lets scan for all and home first, we want to place them first
 		//mode: 0=look for all, 1=look for home, 2=finish the rest		
 		for(int mode=0;mode<3;mode++)
 		{
-			while (keylen>1)
+			int drivelen=GetPrivateProfileString("AFS Drivemounts", NULL, "", sDriveMount, MAXDRIVESIZE,dINI);
+			if (drivelen>=MAXDRIVESIZE)
 			{
-				switch (mode)
+				CString msg;
+				msg.Format("Profile String Error - Too many entries (%d)",MAXSHARES);
+				HandleError(msg,TRUE);
+				return FALSE;
+			}
+			PCHAR pDrivekey=sDriveMount;
+			while (drivelen>1)
+			{
+				if ((strlen(pDrivekey)==0) || (strlen(pDrivekey)>SHARENAMESIZE))
 				{
-				case 0:	//we skip looking for all
-					break;
-				case 1:
-					if (stricmp(pkey,"home")!=0)
-					{
-						keylen-=(strlen(pkey)+1);
-						pkey+=(strlen(pkey)+1);
-						continue;
-					}
-					break;
-				default:
-					if((stricmp(pkey,"all")==0) || (stricmp(pkey,"home")==0))
-					{
-						keylen-=(strlen(pkey)+1);
-						pkey+=(strlen(pkey)+1);
-						continue;
-					}
-					break;
-				}
-				if (strlen(pkey)==0)
-				{
-					HandleError("Profile String Error - Empty key",FALSE);
+					HandleError("Profile String Error - AFS Drivemounts - Share Name",FALSE);
 					ret=FALSE;
-					keylen-=(strlen(pkey)+1);
-					continue;
+					break;
 				}
-				if (mode!=0)
+				strcpy(sShare,pDrivekey);
+				if (GetPrivateProfileString("AFS Drivemounts", sShare, "", sDrive, DRIVESIZE,dINI)==0)
 				{
-					if ((len=GetPrivateProfileString("AFS Submounts", pkey, "", sPath, MAX_PATH,tINI))==0)
-					{
-						CString msg;
-						msg.Format("Profile String Error on Submount key:%s",pkey);
-						HandleError(msg,FALSE);
-						ret=FALSE;
-						keylen-=(strlen(pkey)+1);
-						pkey+=(strlen(pkey)+1);
-						continue;
-					}
-				} else {
-					strcpy(sPath,"\\");
-					pkey="all";
-				}
-				*sDrive=0;
-				if ((len=GetPrivateProfileString("AFS Drivemounts", pkey, "", sDrive, DRIVESIZE,dINI))==0)
-				{
-					if ((stricmp("all",pkey)==0)||(stricmp("home",pkey)==0))
-					{// allow for no drive id on home
-						if (stricmp("home",pkey)==0)
-							strcpy(sDrive,"*U");
-						else
-							strcpy(sDrive,"*Z");
-					} else {
-						CString msg;
-						msg.Format("Profile String Error on Path key:%s",pkey);
-						HandleError(msg,TRUE);
-						ret=FALSE;
-						keylen-=(strlen(pkey)+1);
-						pkey+=(strlen(pkey)+1);
-						continue;
-					} 
+					HandleError("Profile String Error - AFS Drivemounts - Drive Name",FALSE);
+					ret=FALSE;
+					break;
 				}
 				if (sDrive[0]=='*')	//test for leading *
 				{
@@ -1215,46 +1246,53 @@ BOOL CWinAfsLoadDlg::ProfileData(BOOL put)
 				} else
 					strcpy(sAuto," ");
 				sDrive[1]=0;	//force to be single character
-				if (stricmp("home",pkey)==0)	//force auto connect for home and all
-				{
-					m_bHomepath=TRUE;
-				} 
 				strupr(sDrive);
-				if ((strlen(sDrive)!=1)||(strspn(sDrive,"ABCDEFGHIJKLMNOPQRSTUVWXYZ")==0))
+				if (strspn(sDrive,"DEFGHIJKLMNOPQRSTUVWXYZ")==0)
 				{
-					if (stricmp("home",pkey)==0)
-						strcpy(sDrive,"U");
-					else if (stricmp("all",pkey)==0)
-						strcpy(sDrive,"Z");
-					else
-						strcpy(sDrive,"");
+					HandleError("Profile String Error - AFS Drivemounts - Drive Letter",FALSE);
+					ret=FALSE;
+					break;
 				}
 				strcat(sDrive,":");
-				if (mode==0) 
-					strcpy(sAuto,"*");	//no matter how it turns out 'all' is forced on.
-				AddToList(sDrive,sPath,pkey,sAuto);
-				if (mode<2) break;
-				keylen-=(strlen(pkey)+1);
-				pkey+=(strlen(pkey)+1);
-			}
-			switch (mode)
-			{
-			case 0:
-				if (keylen<=1)	//we never found "all"
-					AddToList("Z:","\\","all","*");
-				keylen=GetPrivateProfileString("AFS Submounts", NULL, "", sKey, MAXKEY,tINI);
-				pkey=sKey;
-				break;
-			case 1:
-				if (keylen<=1)	//we never found "home"
+				switch (mode)
+				{
+				case 0:
+					if (stricmp("all",sShare)!=0) break;
+					if (GetPrivateProfileString("AFS Submounts", sShare, "", sPath, MAX_PATH,tINI)==0)
+					{
+						strcpy(sPath,"/");	//none defined
+					}
+					AddToList(sDrive,sPath,sShare,sAuto);
+					drivelen=0;
+					continue;
+
+				case 1:
+					if (stricmp("home",sShare)!=0) break;
+					if (GetPrivateProfileString("AFS Submounts", sShare, "", sPath, MAX_PATH,tINI)==0)
+					{
+						HandleError("Profile String Error - AFS Drivemounts - Share Name",FALSE);
+						ret=FALSE;
+						break;
+					}
+					AddToList(sDrive,sPath,sShare,sAuto);
+					drivelen=0;
+					continue;
+				default:
+					if ((stricmp("all",sShare)==0)|| (stricmp("home",sShare)==0)) break;
+					if (GetPrivateProfileString("AFS Submounts", sShare, "", sPath, MAX_PATH,tINI)==0)
+					{
+						HandleError("Profile String Error - AFS Drivemounts - Share Name",FALSE);
+						ret=FALSE;
+						break;
+					}
+					AddToList(sDrive,sPath,sShare,sAuto);
 					break;
-				keylen=GetPrivateProfileString("AFS Submounts", NULL, "", sKey, MAXKEY,tINI);
-				pkey=sKey;
- 				break;
-			default:
-				break;
+				}
+				drivelen-=(strlen(pDrivekey)+1);
+				pDrivekey+=(strlen(pDrivekey)+1);
 			}
 		}
+
 	}
 	return ret;
 }
@@ -1359,11 +1397,13 @@ void CWinAfsLoadDlg::OnRemove()
 			HandleError("You cannot remove Item from the list while connected!");
 			continue;
 		}
+#if 0
 		if (stricmp(m_cMountlist.GetItemText(nItem,COLSHARE),"all")==0)
 		{
 			HandleError("You cannot remove 'All' Item from the list!");
 			continue;
 		}
+#endif
 		m_cMountlist.DeleteItem(nItem);
 	}
 	ProfileData(TRUE);
@@ -1686,16 +1726,31 @@ void CWinAfsLoadDlg::OnAuthenicate()
 	m_nShown=0;
 	m_cAuthWarn.ShowWindow(SW_HIDE);
 	LOG("Re-Authenication");
+	if (m_sUsername=="")
+	{
+		HandleError("You must enter a user name!");
+		m_cUsername.SetFocus();
+		return;
+	}
+	if (m_sPassword=="")
+	{
+		HandleError("You must enter a password!");
+		m_cPassword.SetFocus();
+		return;
+	}
 	if (!m_cAfs.Authencate(msg,m_sUsername,m_sPassword))
 	{
 		HandleError(msg);
 		return;
 	}
+	m_cAuthenicate.SetWindowText("ReAuthenicate");
+	m_cAuthenicate.Invalidate();
 	if (!m_cSaveUsername.GetCheck())
 	{
 		m_sPassword.Empty();
 		UpdateData(FALSE);
 	}
+
 }
 
 

@@ -1,0 +1,9 @@
+# Microsoft Developer Studio Generated Dependency File, included by _IsUser.mak
+
+.\_isuser.c : \
+	"c:\program files\microsoft visual studio\vc98\include\basetsd.h"\
+	
+
+.\_Isuser.RC : \
+	".\SDRC.H"\
+	

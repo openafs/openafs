@@ -37,6 +37,7 @@ public:
 	void OnShowAddMenus();
 	LRESULT OnNotifyReturn(WPARAM wParam, LPARAM lParam);
 	LRESULT OnAfsEvent(WPARAM wParam, LPARAM lParam);
+	BOOL IsGetTokens(){return (!CWINAFSLOADAPP->m_bNoID) && (m_sUsername!="");}
 
 // Dialog Data
 	//{{AFX_DATA(CWinAfsLoadDlg)
@@ -72,6 +73,7 @@ public:
 
 // Implementation
 protected:
+	CString m_VersionString;
 	CAfs m_cAfs;
 	CTrayIcon	m_trayIcon;		// my tray icon
 	HICON m_hIcon;

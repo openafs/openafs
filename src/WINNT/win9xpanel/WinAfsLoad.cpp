@@ -154,6 +154,7 @@ BOOL CWinAfsLoadApp::InitInstance()
 	// show userid: password: connect
 	CharLower(m_lpCmdLine);
 	m_bShowAfs=(strstr(m_lpCmdLine,"show")!=NULL);
+	m_bConnect=(strstr(m_lpCmdLine,"connect")!=NULL);
 	if (m_bLogWindow)
 		ShowLog(TRUE);
 	if (m_bLog)
@@ -170,7 +171,7 @@ BOOL CWinAfsLoadApp::InitInstance()
 	{
 		cPassWord=(strstr(str,":"));
 	}
-//	BOOL bConnect=(strstr(m_lpCmdLine,"connect")!=NULL);
+	m_bNoID=(strstr(m_lpCmdLine,"noid")!=NULL);
 
 	if (m_hAfsLoadFinish)	// SOME REASON THE WINDOW WAS NOT SHUT DOWN, SO LETES KILL IT
 	{

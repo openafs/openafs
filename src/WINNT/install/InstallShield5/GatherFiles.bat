@@ -23,6 +23,9 @@ copy "Script Files\setup.rul" .
 
 copy "Setup Files\Uncompressed Files\Language Independent\OS Independent\setup.bmp" .
 
+
+copy "Setup Files\Uncompressed Files\Language Independent\OS Independent\_isuser.dll" .
+
 copy "Shell Objects\Default.shl" .\Default.shell
 
 copy "String Tables\Default.shl" .
