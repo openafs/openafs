@@ -126,12 +126,40 @@ asmlinkage int afs_xsetgroups(int gidsetsize, gid_t *grouplist)
     return code;
 }
 
-#if defined(AFS_SPARC64_LINUX20_ENV) || defined(AFS_LINUX24_ENV)
+#if defined(AFS_LINUX24_ENV)
+/* Intercept the standard uid32 system call. */
+extern int (*sys_setgroups32p)(int gidsetsize, gid_t *grouplist);
+asmlinkage int afs_xsetgroups32(int gidsetsize, gid_t *grouplist)
+{
+    int code;
+    cred_t *cr = crref();
+    afs_uint32 junk;
+    int old_pag;
+    
+    lock_kernel();
+    old_pag = PagInCred(cr);
+    crfree(cr);
+    unlock_kernel();
+
+    code = (*sys_setgroups32p)(gidsetsize, grouplist);
+    if (code) {
+	return code;
+    }
+
+    lock_kernel();
+    cr = crref();
+    if (old_pag != NOPAG && PagInCred(cr) == NOPAG) {
+	/* re-install old pag if there's room. */
+	code = setpag(&cr, old_pag, &junk, 0);
+    }
+    crfree(cr);
+    unlock_kernel();
+
+    return code;
+}
+#endif
 #if defined(AFS_SPARC64_LINUX20_ENV)
 asmlinkage int afs_xsetgroups32(int gidsetsize, __kernel_gid_t32 *grouplist)
-#else
-asmlinkage int afs_xsetgroups32(int gidsetsize, __kernel_gid32_t *grouplist)
-#endif
 {
     gid_t gl[NGROUPS];
     int ret, i;
