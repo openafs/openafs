@@ -102,7 +102,7 @@ volint.xdr.o: volint.xdr.c ${INTINCLS}
 
 volserver: $(SOBJS) $(LIBS) $(HACKS)
 	case ${SYS_NAME} in \
-                *linux*) \
+                *linux* | *fbsd* ) \
                         ${CC} ${DBUG} -o volserver $(SOBJS) $(HACKS) \
 				${LDFLAGS} $(LIBS) ${XLIBS} ;; \
                 *) \

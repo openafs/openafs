@@ -101,7 +101,7 @@ gi: ${DESTDIR}/lib/afs/libsys.a
 
 volinfo: vol-info.o physio.o ihandle.o
 	case ${SYS_NAME} in \
-		*linux*) \
+		*linux* | *fbsd*) \
 			${CC} ${CFLAGS} ${DBG} -o volinfo vol-info.o physio.o \
 				ihandle.o ${LIBS}  ;; \
 		*) \

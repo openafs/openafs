@@ -6,6 +6,8 @@
 #define AFS_XBSD_ENV 1             /* {Free,Open,Net}BSD */
 #define AFS_X86_XBSD_ENV 1
 
+#define AFS_NAMEI_ENV     1   /* User space interface to file system */
+#define AFS_64BIT_IOPS_ENV 1  /* Needed for NAMEI */
 #define AFS_FBSD_ENV 1
 #define AFS_FBSD40_ENV 1
 #define AFS_FBSD42_ENV 1
@@ -14,7 +16,7 @@
 #define AFS_X86_FBSD42_ENV 1
 #define AFS_X86_ENV 1
 #define AFS_NONFSTRANS 1
-#define AFS_KERBEROS_ENV
+#define AFS_KERBEROS_ENV 1
 #define O_SYNC O_FSYNC
 #define FTRUNC O_TRUNC
 
@@ -35,14 +37,12 @@
 #define AFS_VFSINCL_ENV 1
 #define AFS_GREEDY43_ENV	1
 #define AFS_ENV  	1
-#define AFS_MINPHYS_ENV	1
-#define CMUSTD_ENV	1
 
 #define AFS_SYSCALL	210
 #define AFS_MOUNT_AFS	"afs"
 
 #ifndef MOUNT_UFS
-#define MOUNT_UFS 1
+#define MOUNT_UFS "ufs"
 #endif
 
 #ifndef	MOUNT_AFS
@@ -54,31 +54,10 @@
 #define AFS_HAVE_FFS            1       /* Use system's ffs. */
 #define AFS_HAVE_STATVFS	0	/* System doesn't supports statvfs */
 
-#define AFS_GCPAGS		1       /* if nonzero, garbage collect PAGs */
-#define AFS_3DISPARES   1       /* Utilize the 3 available disk inode spares */
-#define AFS_USE_GETTIMEOFDAY 1  /* use gettimeofday to implement rx clock */
+#define AFS_GCPAGS	        0       /* if nonzero, garbage collect PAGs */
+#define AFS_USE_GETTIMEOFDAY    1       /* use gettimeofday to implement rx clock */
 
-#if	!defined(ASSEMBLER) && !defined(__LANGUAGE_ASSEMBLY__)
-#include <machine/endian.h>
-#if	BYTE_ORDER == BIG_ENDIAN
-#define	AFSBIG_ENDIAN		1
-#else
-#if	BYTE_ORDER == LITTLE_ENDIAN
-#define	AFSLITTLE_ENDIAN	1
-#else
-#error	machine/endian.h must define BYTE_ORDER!
-#endif
-#endif
-#endif	/* ! ASSEMBLER && ! __LANGUAGE_ASSEMBLY__ */
-
-#define NEARINODE_HINT  1 /* hint to ufs module to scatter inodes on disk*/
-#define nearInodeHash(volid, hval) {                          \
-                unsigned char*  ts = (unsigned char*)&(volid);\
-                for ((hval)=0; ts<(unsigned char*)&(volid)+sizeof(volid);ts++){\
-                    (hval) *= 173;                      \
-                    (hval) += *ts;                      \
-                }                                       \
-                }
+#define AFSLITTLE_ENDIAN 1
 
 /* Extra kernel definitions (from kdefs file) */
 #ifdef _KERNEL

@@ -56,6 +56,8 @@ long afs_global_owner;
 simple_lock_data_t afs_global_lock;
 #elif defined(AFS_DARWIN_ENV)
 struct lock__bsd__ afs_global_lock;
+#elif defined(AFS_FBSD_ENV)
+struct simplelock afs_global_lock;
 #endif
 #if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 thread_t afs_global_owner;
@@ -132,7 +134,7 @@ long parm, parm2, parm3, parm4, parm5, parm6;
     if (!afs_suser() && (parm != AFSOP_GETMTU)
 	&& (parm != AFSOP_GETMASK)) {
       /* only root can run this code */
-#if !defined(AFS_SGI_ENV) && !defined(AFS_OSF_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV)
+#if !defined(AFS_SGI_ENV) && !defined(AFS_OSF_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
 	setuerror(EACCES);
 	return(EACCES);
 #else
@@ -202,7 +204,7 @@ long parm, parm2, parm3, parm4, parm5, parm6;
 	while (afs_initState < AFSOP_START_AFS) 
 	    afs_osi_Sleep(&afs_initState);
 
-#if defined(AFS_SUN_ENV) || defined(AFS_SGI_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV)
+#if defined(AFS_SUN_ENV) || defined(AFS_SGI_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 	temp = AFS_MINBUFFERS;  /* Should fix this soon */
 #else
 	temp = ((afs_bufferpages * NBPG)>>11);	/* number of 2k buffers we could get from all of the buffer space */
@@ -291,7 +293,7 @@ long parm, parm2, parm3, parm4, parm5, parm6;
 	struct afsop_cell tcell;
 	char *tbuffer = osi_AllocSmallSpace(AFS_SMALLOCSIZ), *lcnamep = 0;
 	char *tbuffer1 = osi_AllocSmallSpace(AFS_SMALLOCSIZ), *cnamep = 0;
-#if defined(AFS_SGI61_ENV) || defined(AFS_SUN57_ENV) || defined(AFS_DARWIN_ENV)
+#if defined(AFS_SGI61_ENV) || defined(AFS_SUN57_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 	size_t bufferSize;	
 #else /* AFS_SGI61_ENV */
 	u_int bufferSize;	
@@ -329,7 +331,7 @@ long parm, parm2, parm3, parm4, parm5, parm6;
 	while (afs_initState < AFSOP_START_BKG) afs_osi_Sleep(&afs_initState);
 	AFS_COPYIN((char *)parm2, (caddr_t) &cparms, sizeof(cparms), code);
 	if (code) {
-#if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined (AFS_SGI64_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV)
+#if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined (AFS_SGI64_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 	    goto out;
 #else
 	    setuerror(code);
@@ -375,7 +377,7 @@ long parm, parm2, parm3, parm4, parm5, parm6;
 	code = afs_InitCacheFile((char *) 0, ainode);
     }
     else if (parm == AFSOP_ROOTVOLUME) {
-#if defined(AFS_SGI61_ENV) || defined(AFS_SUN57_ENV) || defined(AFS_DARWIN_ENV)
+#if defined(AFS_SGI61_ENV) || defined(AFS_SUN57_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 	size_t bufferSize;
 #else /* AFS_SGI61_ENV */
 	u_int bufferSize;
@@ -393,7 +395,7 @@ long parm, parm2, parm3, parm4, parm5, parm6;
     else if (parm == AFSOP_CACHEFILE || parm == AFSOP_CACHEINFO ||
 	      parm == AFSOP_VOLUMEINFO || parm == AFSOP_AFSLOG) {
 	char *tbuffer = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
-#if defined(AFS_SGI61_ENV) || defined(AFS_SUN57_ENV) || defined(AFS_DARWIN_ENV)
+#if defined(AFS_SGI61_ENV) || defined(AFS_SUN57_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 	size_t bufferSize;
 #else /* AFS_SGI61_ENV */
 	u_int bufferSize;
@@ -501,7 +503,7 @@ long parm, parm2, parm3, parm4, parm5, parm6;
 #endif /* AFS_SGI62_ENV && !AFS_SGI65_ENV */
 #endif /* AFS_SGI53_ENV */
     else if (parm == AFSOP_SHUTDOWN) {
-#if	defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV)
+#if	defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 	extern struct mount *afs_globalVFS;
 #else	/* AFS_OSF_ENV */
 	extern struct vfs *afs_globalVFS;
@@ -524,7 +526,7 @@ long parm, parm2, parm3, parm4, parm5, parm6;
       afs_vfs_mount(parm2, parm3, parm4, parm5);
 #endif /* AFS_HPUX100_ENV */
 #else /* defined(AFS_HPUX_ENV) */
-#if defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV)
+#if defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
       code = EINVAL;
 #else
       setuerror(EINVAL);
@@ -893,7 +895,7 @@ Afs_syscall (uap, rvp)
 {
     int *retval = &rvp->r_val1;
 #else /* AFS_SUN5_ENV */
-#if	defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV)
+#if	defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 afs3_syscall(p, args, retval)
 	struct proc *p;
 	void *args;
@@ -1031,7 +1033,7 @@ Afs_syscall ()
 	mutex_exit(&procp->p_crlock);
 #else
 	AFS_GLOCK();
-#if	defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV)
+#if	defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 	code = afs_setpag(p, args, retval);
 #else	/* AFS_OSF_ENV */
 	code = afs_setpag();
@@ -1043,7 +1045,7 @@ Afs_syscall ()
 #ifdef	AFS_SUN5_ENV
         code = afs_syscall_pioctl(uap->parm1, uap->parm2, uap->parm3, uap->parm4, rvp, CRED());
 #else
-#ifdef AFS_DARWIN_ENV
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
         code = afs_syscall_pioctl(uap->parm1, uap->parm2, uap->parm3, uap->parm4, p->p_cred->pc_ucred);
 #else
 	code = afs_syscall_pioctl(uap->parm1, uap->parm2, uap->parm3, uap->parm4);
@@ -1055,7 +1057,7 @@ Afs_syscall ()
 
 	code = copyin_iparam((char *)uap->parm3, &iparams);
 	if (code) {
-#if !defined(AFS_SUN5_ENV) && !defined(AFS_OSF_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV)
+#if !defined(AFS_SUN5_ENV) && !defined(AFS_OSF_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
 	    setuerror(code);
 #endif
 	} else
@@ -1064,7 +1066,7 @@ Afs_syscall ()
 				   iparams.param3, iparams.param4, rvp, CRED());
 #else
 	code =  afs_syscall_icreate(uap->parm1, uap->parm2, iparams.param1, iparams.param2,
-#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV)
+#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 				   iparams.param3, iparams.param4, retval);
 #else
 				   iparams.param3, iparams.param4);
@@ -1074,7 +1076,7 @@ Afs_syscall ()
 #ifdef	AFS_SUN5_ENV
 	code = afs_syscall_iopen(uap->parm1, uap->parm2, uap->parm3, rvp, CRED());
 #else
-#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV)
+#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 	code = afs_syscall_iopen(uap->parm1, uap->parm2, uap->parm3, retval);
 #else
 	code = afs_syscall_iopen(uap->parm1, uap->parm2, uap->parm3);
@@ -1103,13 +1105,13 @@ Afs_syscall ()
 	}
 #else
         if (code) {
-#if !defined(AFS_SUN5_ENV) && !defined(AFS_OSF_ENV) && !defined(AFS_DARWIN_ENV)
+#if !defined(AFS_SUN5_ENV) && !defined(AFS_OSF_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
 	    setuerror(code);
 #endif
         }
 #endif /* !AFS_LINUX20_ENV */
     } else {
-#if defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV)
+#if defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 	code = EINVAL;
 #else
         setuerror(EINVAL);
@@ -1301,7 +1303,7 @@ Afscall_icl(long opcode, long p1, long p2, long p3, long p4, long *retval)
     register afs_int32 code;
     struct afs_icl_log *logp;
     struct afs_icl_set *setp;
-#if defined(AFS_SGI61_ENV) || defined(AFS_SUN57_ENV) || defined(AFS_DARWIN_ENV)
+#if defined(AFS_SGI61_ENV) || defined(AFS_SUN57_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
     size_t temp;
 #else /* AFS_SGI61_ENV */
     afs_uint32 temp;
@@ -1317,7 +1319,7 @@ Afscall_icl(long opcode, long p1, long p2, long p3, long p4, long *retval)
     }
 #else
     if (!afs_suser()) {	/* only root can run this code */
-#if !defined(AFS_SGI_ENV) && !defined(AFS_OSF_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV)
+#if !defined(AFS_SGI_ENV) && !defined(AFS_OSF_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
 	setuerror(EACCES);
 	return EACCES;
 #else

@@ -73,7 +73,7 @@ check_sysid: check_sysid.c
 fileserver: viced.o ${objects} ${headers} ${LIBS}
 	set -x; \
 	case ${SYS_NAME} in \
-	*linux*) \
+	*linux* | *fbsd* ) \
 	    ${CC} ${LDFLAGS} -o fileserver ${objects} \
 	    ${auditlib} ${LIBS} ${XLIBS} ;; \
 	rs_aix*) \

@@ -381,7 +381,7 @@ afs_xioctl (p, args, retval)
         caddr_t arg;
     } *uap = (struct a *)args;
 #else /* AFS_OSF_ENV */
-#ifdef AFS_DARWIN_ENV
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 struct ioctl_args {
         int fd;
         u_long com;
@@ -411,12 +411,12 @@ afs_xioctl ()
 	caddr_t arg;
       } *uap = (struct a *)u.u_ap;
 #endif /* AFS_LINUX22_ENV */
-#endif /* AFS_DARWIN_ENV */
+#endif /* AFS_DARWIN_ENV || AFS_FBSD_ENV */
 #endif /* AFS_OSF_ENV */
 #endif	/* AFS_SUN5_ENV */
 #endif
 #ifndef AFS_LINUX22_ENV
-#if	defined(AFS_AIX32_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV)
+#if	defined(AFS_AIX32_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
       struct file *fd;
 #else
       register struct file *fd;
@@ -426,7 +426,7 @@ afs_xioctl ()
       register int ioctlDone = 0, code = 0;
       
       AFS_STATCNT(afs_xioctl);
-#ifdef AFS_DARWIN_ENV
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
         if ((code=fdgetf(p, uap->fd, &fd)))
            return code;
 #else
@@ -502,7 +502,7 @@ afs_xioctl ()
 	    if (code) {
 	      osi_FreeSmallSpace(datap);
 	      AFS_GUNLOCK();
-#ifdef AFS_DARWIN_ENV
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
               return code;
 #else 
 #if	defined(AFS_SUN5_ENV)
@@ -575,7 +575,7 @@ afs_xioctl ()
 #endif
           code = ioctl(uap, rvp);
 #else
-#if defined(AFS_DARWIN_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
         return ioctl(p, uap, retval);
 #else
 #ifdef  AFS_OSF_ENV
@@ -608,7 +608,7 @@ afs_xioctl ()
 #ifdef AFS_LINUX22_ENV
       return -code;
 #else
-#if    !defined(AFS_OSF_ENV) && !defined(AFS_DARWIN_ENV)
+#if    !defined(AFS_OSF_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
       if (!getuerror())
 	  setuerror(code);
 #if	defined(AFS_AIX32_ENV) && !defined(AFS_AIX41_ENV)
@@ -619,7 +619,7 @@ afs_xioctl ()
 #endif
 #endif /* AFS_LINUX22_ENV */
 #endif	/* AFS_SUN5_ENV */
-#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV)
+#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
       return (code);
 #endif
     }
@@ -671,7 +671,7 @@ afs_pioctl(p, args, retval)
 
 extern struct mount *afs_globalVFS;
 #else	/* AFS_OSF_ENV */
-#ifdef AFS_DARWIN_ENV
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 afs_pioctl(p, args, retval)
         struct proc *p;
         void *args;
@@ -706,7 +706,7 @@ afs_syscall_pioctl(path, com, cmarg, follow, rvp, credp)
     rval_t *rvp;
     struct AFS_UCRED *credp;
 #else
-#ifdef AFS_DARWIN_ENV
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 afs_syscall_pioctl(path, com, cmarg, follow, credp)
     struct AFS_UCRED *credp;
 #else
@@ -737,7 +737,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 #ifndef	AFS_SUN5_ENV
     if (! _VALIDVICEIOCTL(com)) {
 	PIOCTL_FREE_CRED();
-#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV)
+#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
         return EINVAL;
 #else	/* AFS_OSF_ENV */
 #if defined(AFS_SGI64_ENV) || defined(AFS_LINUX22_ENV)
@@ -752,7 +752,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
     code = copyin_afs_ioctl(cmarg, &data);
     if (code) {
 	PIOCTL_FREE_CRED();
-#if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SGI64_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV)
+#if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SGI64_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 	return (code);
 #else
 	setuerror(code);
@@ -760,7 +760,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 #endif
   }
     if ((com & 0xff) == PSetClientContext) {
-#if defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV)
+#if defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 	return EINVAL; /* Not handling these yet. */
 #else
 #if	defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV) || defined(AFS_LINUX22_ENV)
@@ -782,14 +782,14 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 	      crfree(foreigncreds);
 	  }
 	  PIOCTL_FREE_CRED();
-#if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SGI64_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV)
+#if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SGI64_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 	  return (code);
 #else
 	  return (setuerror(code), code);
 #endif
       }
     } 
-#if !defined(AFS_LINUX22_ENV) && !defined(AFS_DARWIN_ENV)
+#if !defined(AFS_LINUX22_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
     if (foreigncreds) {
       /*
        * We could have done without temporary setting the u.u_cred below
@@ -826,7 +826,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
     if ((com & 0xff) == 15) {
       /* special case prefetch so entire pathname eval occurs in helper process.
 	 otherwise, the pioctl call is essentially useless */
-#if	defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV)
+#if	defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 	code =  Prefetch(path, &data, follow,
 			 foreigncreds ? foreigncreds : credp);
 #else
@@ -840,7 +840,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 #endif /* AFS_SGI64_ENV */
 #endif /* AFS_HPUX101_ENV */
 #endif
-#if !defined(AFS_LINUX22_ENV) && !defined(AFS_DARWIN_ENV)
+#if !defined(AFS_LINUX22_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
 	if (foreigncreds) {
 #ifdef	AFS_AIX41_ENV
  	    crset(tmpcred);	/* restore original credentials */
@@ -861,7 +861,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 	}
 #endif /* AFS_LINUX22_ENV */
 	PIOCTL_FREE_CRED();
-#if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SGI64_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV)
+#if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SGI64_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 	return (code);
 #else
 	return (setuerror(code), code);
@@ -883,7 +883,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 #endif /* AFS_AIX41_ENV */
 	AFS_GLOCK();
 	if (code) {
-#if !defined(AFS_LINUX22_ENV) && !defined(AFS_DARWIN_ENV)
+#if !defined(AFS_LINUX22_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
 	    if (foreigncreds) {
 #ifdef	AFS_AIX41_ENV
 		crset(tmpcred);	/* restore original credentials */
@@ -904,7 +904,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 	    }
 #endif /* AFS_LINUX22_ENV */
 	    PIOCTL_FREE_CRED();
-#if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SGI64_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV)
+#if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SGI64_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 	    return (code);
 #else
 	    return(setuerror(code), code);
@@ -959,7 +959,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
       code = afs_HandlePioctl(vp, com, &data, follow, &credp);
       }
 #else
-#if defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV)
+#if defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
       code = afs_HandlePioctl(vp, com, &data, follow, &credp);
 #else
       code = afs_HandlePioctl(vp, com, &data, follow, &u.u_cred);
@@ -969,7 +969,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 #endif /* AFS_AIX41_ENV */
 #endif /* AFS_SUN5_ENV */
     } else {
-#if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SGI64_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV)
+#if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SGI64_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 	code = EINVAL;	/* not in /afs */
 #else
 	setuerror(EINVAL);
@@ -982,7 +982,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 #endif
     }
 
-#if !defined(AFS_LINUX22_ENV) && !defined(AFS_DARWIN_ENV)
+#if !defined(AFS_LINUX22_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
     if (foreigncreds) {
 #ifdef	AFS_AIX41_ENV
 	crset(tmpcred);
@@ -1010,7 +1010,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 #endif
     }
     PIOCTL_FREE_CRED();
-#if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SGI64_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV)
+#if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SGI64_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
     return (code);
 #else
     if (!getuerror()) 	
@@ -1421,7 +1421,7 @@ static PGCPAGs(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
     afs_PutCell(tcell, READ_LOCK);
     if (set_parent_pag) {
 	int pag;
-#ifdef AFS_DARWIN_ENV
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
         struct proc *p=current_proc(); /* XXX */
         uprintf("Process %d (%s) tried to change pags in PSetTokens\n",
                 p->p_pid, p->p_comm);
@@ -2046,7 +2046,7 @@ struct AFS_UCRED *acred;
 {
     register char *tp;
     register afs_int32 code;
-#if defined(AFS_SGI61_ENV) || defined(AFS_SUN57_ENV) || defined(AFS_DARWIN_ENV)
+#if defined(AFS_SGI61_ENV) || defined(AFS_SUN57_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
     size_t bufferSize;
 #else
     u_int bufferSize;
@@ -2556,7 +2556,7 @@ struct AFS_UCRED *acred;
 #if	defined(AFS_SGI_ENV) || defined(AFS_ALPHA_ENV)  || defined(AFS_SUN5_ENV)  || defined(AFS_HPUX_ENV)
 		VN_HOLD((struct vnode *)tvc);
 #else
-#if defined(AFS_DARWIN_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 		osi_vnhold(tvc, 0);
 #else
 		tvc->vrefCount++;
@@ -2708,7 +2708,7 @@ register struct AFS_UCRED *acred;
     AFS_STATCNT(PSetSysName);
     if (!afs_globalVFS) {
       /* Afsd is NOT running; disable it */
-#if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SGI64_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV)
+#if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SGI64_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 	return (EINVAL);
 #else
 	return (setuerror(EINVAL), EINVAL);

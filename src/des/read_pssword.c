@@ -28,9 +28,6 @@
 #ifdef	AFS_SUN5_ENV
 #define BSD_COMP
 #endif
-#if defined(AFS_FBSD_ENV)
-#define USE_OLD_TTY
-#endif
 #include <sys/ioctl.h>
 #include <signal.h>
 #include <setjmp.h>
@@ -60,7 +57,7 @@ static int intrupt;
 #endif
 
 static int intrupt;
-#if defined(AFS_SGI_ENV) || defined (AFS_AIX_ENV) /*|| defined (AFS_HPUX_ENV) || defined(AFS_SUN5_ENV)*/
+#if defined(AFS_SGI_ENV) || defined (AFS_AIX_ENV) || defined(AFS_FBSD_ENV) /*|| defined (AFS_HPUX_ENV) || defined(AFS_SUN5_ENV)*/
 #undef	BSDUNIX
 #endif
 
@@ -137,7 +134,7 @@ des_read_pw_string(s,maxa,prompt,verify)
     struct sigaction newsig, oldsig;
     struct termios save_ttyb, ttyb;
 #endif
-#if defined(AFS_DARWIN_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
     FILE *fi;
 #endif
 #if	defined(AFS_SUN_ENV) && !defined(AFS_SUN5_ENV)
@@ -308,7 +305,7 @@ lose:
     if (!ok)
 	bzero(s, maxa);
     printf("\n");
-#ifdef	AFS_HPUX_ENV
+#if defined(AFS_HPUX_ENV) || defined(AFS_FBSD_ENV)
     /*
      * Restore the terminal to its previous characteristics.
      * Restore the old signal handler for SIGINT.
