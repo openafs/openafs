@@ -781,6 +781,7 @@ h_TossStuff_r(register struct host *host)
 		    *hp = th->next;
 		    h_DeleteList_r(host);
 		    FreeHT(host);
+		    free(th);
 		    break;
 		}
 	    }
