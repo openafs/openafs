@@ -177,7 +177,7 @@ install_libafs: ${LIBAFSNONFS}
 	${INSTALL} -f ${LIBAFSNONFS} ${DESTDIR}${afskerneldir}/libafs${BITS}.nonfs.o
 
 dest_libafs: ${LIBAFSNONFS}
-	${INSTALL} -f ${LIBAFSNONFS} ${DEST}/root.client/usr/vice/etc/libafs${BITS}.nonfs.o
+	${INSTALL} -f ${LIBAFSNONFS} ${DEST}/root.client/usr/vice/etc/modload/libafs${BITS}.nonfs.o
 
 <all>
 
