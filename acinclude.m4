@@ -14,9 +14,7 @@ AC_ARG_WITH(afs-sysname,
 [  --with-afs-sysname=sys    use sys for the afs sysname]
 )
 AC_ARG_ENABLE( obsolete,
-[  --enable-obsolete 			enable obsolete portions of AFS (mpp, ntp and package)],, enable_obsolete="no")
-AC_ARG_ENABLE( insecure,
-[  --enable-insecure 			enable insecure portions of AFS (ftpd, inetd, rcp, rlogind and rsh)],, enable_insecure="no")
+[  --enable-obsolete 			enable obsolete portions of AFS (mpp and package)],, enable_obsolete="no")
 AC_ARG_ENABLE( afsdb,
 [  --disable-afsdb 			disable AFSDB RR support],, enable_afsdb="yes")
 AC_ARG_ENABLE( pam,
@@ -883,11 +881,6 @@ if test "$enable_obsolete" = "yes"; then
 	WITH_OBSOLETE=YES
 fi
 
-WITH_INSECURE=NO
-if test "$enable_insecure" = "yes"; then
-	WITH_INSECURE=YES
-fi
-
 if test "x$with_bsd_kernel_headers" != "x"; then
 	BSD_KERNEL_PATH="$with_bsd_kernel_headers"
 else
@@ -1068,7 +1061,6 @@ AC_SUBST(TOP_INCDIR)
 AC_SUBST(TOP_LIBDIR)
 AC_SUBST(DEST)
 AC_SUBST(WITH_OBSOLETE)
-AC_SUBST(WITH_INSECURE)
 AC_SUBST(DARWIN_INFOFILE)
 AC_SUBST(IRIX_BUILD_IP35)
 

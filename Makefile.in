@@ -13,7 +13,6 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 # Enable build+install of obsolete and insecure packages
 # Set to anything other than YES, or comment out to disable the build
 WITH_OBSOLETE=@WITH_OBSOLETE@
-WITH_INSECURE=@WITH_INSECURE@
 
 ENABLE_KERNEL_MODULE=@ENABLE_KERNEL_MODULE@
 
@@ -275,7 +274,7 @@ scout: cmd comerr gtx fsprobe
 uss: des kauth cmd comerr rx vlserver vol volser
 	${COMPILE_PART1} uss ${COMPILE_PART2}
 
-bozo: cmd comerr ntp audit
+bozo: cmd comerr audit
 	${COMPILE_PART1} bozo ${COMPILE_PART2}
 
 vfsck:	vol
@@ -663,12 +662,6 @@ clean2:
 	-${COMPILE_PART1} finale ${COMPILE_CLEAN}
 	-${COMPILE_PART1} mpp ${COMPILE_CLEAN}
 	-${COMPILE_PART1} package ${COMPILE_CLEAN}
-	-${COMPILE_PART1} ntp ${COMPILE_CLEAN}
-	-${COMPILE_PART1} ftpd43+ ${COMPILE_CLEAN}
-	-${COMPILE_PART1} inetd ${COMPILE_CLEAN}
-	-${COMPILE_PART1} rsh ${COMPILE_CLEAN}
-	-${COMPILE_PART1} rlogind ${COMPILE_CLEAN}
-	-${COMPILE_PART1} rcp ${COMPILE_CLEAN}
 	-${COMPILE_PART1} libafs ${COMPILE_CLEAN}
 	-${COMPILE_PART1} libuafs ${COMPILE_CLEAN}
 	-${COMPILE_PART1} tests ${COMPILE_CLEAN}
@@ -717,9 +710,7 @@ distclean: clean
 	src/finale/Makefile \
 	src/fsint/Makefile \
 	src/fsprobe/Makefile \
-	src/ftpd43+/Makefile \
 	src/gtx/Makefile \
-	src/inetd/Makefile \
 	src/kauth/test/Makefile \
 	src/kauth/Makefile \
 	src/libacl/test/Makefile \
@@ -750,7 +741,6 @@ distclean: clean
 	src/lwp/test/Makefile \
 	src/lwp/Makefile \
 	src/mpp/Makefile \
-	src/ntp/Makefile \
 	src/null/Makefile \
 	src/package/Makefile \
 	src/pam/Makefile \
@@ -759,9 +749,6 @@ distclean: clean
 	src/procmgmt/Makefile \
 	src/procmgmt/test/Makefile \
 	src/ptserver/Makefile \
-	src/rcp/Makefile \
-	src/rlogind/Makefile \
-	src/rsh/Makefile \
 	src/rx/Makefile \
 	src/rx/bulk.example/Makefile \
 	src/rx/bulktest/Makefile \
@@ -811,8 +798,8 @@ pristine: distclean
 maintainer-clean: pristine
 
 #
-# Below targets are all deprecated, insecure, or obsolte, 
-# see README.OBSOLETE and README.INSECURE for more info
+# Below targets are all deprecated, obsolete, 
+# see README.OBSOLETE for more info
 #
 
 mpp: project
@@ -832,58 +819,4 @@ package.files: package
 	YES) 	${DESTDIR}/bin/makepkgfiles afs.dev ;; \
 	*)	echo skipping deprecated target: package.files ;; \
 	esac
-
-ntp: project volser
-	@case ${WITH_OBSOLETE} in \
-	YES) 	case ${SYS_NAME} in \
-		sun4x_58 | sunx86_* | *linux* | *fbsd* | *_darwin* | *nbsd*) echo skipping ntp for ${SYS_NAME} ;; \
-		* ) ${COMPILE_PART1} ntp ${COMPILE_PART2} ;; \
-		esac ;; \
-	*)	echo skipping deprecated target: ntp ;; \
-	esac
-
-ftpd43+: project kauth rxkad
-	@case ${WITH_INSECURE} in \
-	YES) 	case ${SYS_NAME} in \
-		rs_aix* | sun4x_55 | *linux*) \
-			${COMPILE_PART1} ftpd43+ ${COMPILE_PART2} ;; \
-		*) echo skip ftpd43+ for ${SYS_NAME} ;; \
-		esac ;; \
-	*)	echo skipping deprecated target: ftpd43+ ;; \
-	esac
-
-inetd: project kauth rxkad
-	@case ${WITH_INSECURE} in \
-	YES) 	${COMPILE_PART1} inetd ${COMPILE_PART2} ;; \
-	*)	echo skipping deprecated target: inetd ;; \
-	esac
-
-rsh: project inetd
-	@case ${WITH_INSECURE} in \
-	YES) 	${COMPILE_PART1} rsh ${COMPILE_PART2} ;; \
-	*)	echo skipping deprecated target: rsh ;; \
-	esac
-
-rlogind: project rsh ftpd43+ login
-	@case ${WITH_INSECURE} in \
-	YES) 	case ${SYS_NAME} in \
-		rs_aix*) ${COMPILE_PART1} rlogind ${COMPILE_PART2} ;; \
-		*) echo skipping rlogind for ${SYS_NAME} ;; \
-		esac ;; \
-	*)	echo skipping deprecated target: rlogind ;; \
-	esac
-
-rcp: project rsh inetd
-	@case ${WITH_INSECURE} in \
-	YES) 	case ${SYS_NAME} in \
-		sgi_* )	echo skip rcp for ${SYS_NAME} ;; \
-		*)	${COMPILE_PART1} rcp ${COMPILE_PART2} ;; \
-		esac ;; \
-	*)	echo skipping deprecated target: rcp ;; \
-	esac
-
-allrcmds: project rcp rlogind
-
-
-
 

@@ -39,9 +39,7 @@ src/export/Makefile \
 src/finale/Makefile \
 src/fsint/Makefile \
 src/fsprobe/Makefile \
-src/ftpd43+/Makefile \
 src/gtx/Makefile \
-src/inetd/Makefile \
 src/JAVA/libjafs/Makefile \
 src/kauth/test/Makefile \
 src/kauth/Makefile \
@@ -71,7 +69,6 @@ src/login/Makefile \
 src/lwp/test/Makefile \
 src/lwp/Makefile \
 src/mpp/Makefile \
-src/ntp/Makefile \
 src/null/Makefile \
 src/package/Makefile \
 src/pam/Makefile \
@@ -80,9 +77,6 @@ src/pinstall/Makefile \
 src/procmgmt/Makefile \
 src/procmgmt/test/Makefile \
 src/ptserver/Makefile \
-src/rcp/Makefile \
-src/rlogind/Makefile \
-src/rsh/Makefile \
 src/rx/Makefile \
 src/rx/bulk.example/Makefile \
 src/rx/bulktest/Makefile \
