@@ -589,9 +589,8 @@ long cm_FreelanceAddMount(char *filename, char *cellname, char *volume, int rw, 
               osi_LogSaveString(afsd_logp,cellname), 
               osi_LogSaveString(afsd_logp,volume), rw ? "rw" : "ro");
     if (cellname[0] == '.') {
-        if (!cm_GetCell_Gen(&cellname[1], &fullname[1], CM_FLAG_CREATE))
+        if (!cm_GetCell_Gen(&cellname[1], fullname, CM_FLAG_CREATE))
             return -1;
-        fullname[0]='.';
     } else {
         if (!cm_GetCell_Gen(cellname, fullname, CM_FLAG_CREATE))
             return -1;
