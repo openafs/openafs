@@ -13,3 +13,6 @@ with it, mpp) are not strictly part of a distributed filesystem package.
 However, Carnegie Mellon Computing Services has continued to use
 and occasionally develop them, and current versions can be found at:
 ftp://ftp.andrew.cmu.edu/pub/AFS-Tools
+
+To disable building of the obsolete code included with OpenAFS, set the
+WITH_OBSOLETE flag in the makefile to NO. 

@@ -22,7 +22,8 @@ MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
 
 # Enable build+install of obsolete and insecure packages
 # Set to anything other than YES, or comment out to disable the build
-WITH_DEPRECATED=YES
+WITH_OBSOLETE=YES
+WITH_INSECURE=YES
 
 # To compile AFS from scratch in the src tree run "make SYS_NAME=<type>".
 #   This recursively calls "make install ..." and does not depend on the
@@ -179,17 +180,7 @@ kerndir: minproject
 dir: project
 	${COMPILE_PART1} dir ${COMPILE_PART2}
 
-# Removed from sgi_* case below:
-# ${COMPILE_PART1} sgiefs ${COMPILE_PART2};;
-sgiefs:
-	case ${SYS_NAME} in \
-	sgi_*) \
-                echo "SGI efs not supported" ;; \
-	*) \
-		echo No efs stuff for ${SYS_NAME};; \
-	esac
-
-vol: project dir afs sgiefs
+vol: project dir afs 
 	${COMPILE_PART1} vol ${COMPILE_PART2}
 
 vlserver: project vol audit
@@ -289,7 +280,6 @@ KERNELDIR= \
   kernutil \
   kernacl \
   kvlserver \
-  sgiefs  \
   krxstat
 
 
@@ -552,25 +542,25 @@ links:
 #
 
 mpp: project
-	@case ${WITH_DEPRECATED} in \
+	@case ${WITH_OBSOLETE} in \
 	YES) 	${COMPILE_PART1} mpp ${COMPILE_PART2} ;; \
 	*)	echo skipping deprecated target: mpp ;; \
 	esac
 
 package: project mpp
-	@case ${WITH_DEPRECATED} in \
+	@case ${WITH_OBSOLETE} in \
 	YES) 	${COMPILE_PART1} package ${COMPILE_PART2} ;; \
 	*)	echo skipping deprecated target: package ;; \
 	esac
 
 package.files: package
-	@case ${WITH_DEPRECATED} in \
+	@case ${WITH_OBSOLETE} in \
 	YES) 	${DESTDIR}/bin/makepkgfiles afs.dev ;; \
 	*)	echo skipping deprecated target: package.files ;; \
 	esac
 
 ntp: project volser
-	@case ${WITH_DEPRECATED} in \
+	@case ${WITH_OBSOLETE} in \
 	YES) 	case ${SYS_NAME} in \
 		sun4x_58 | *linux* | *fbsd* | ppc_darwin* ) echo skipping ntp for ${SYS_NAME} ;; \
 		* ) ${COMPILE_PART1} ntp ${COMPILE_PART2} ;; \
@@ -579,7 +569,7 @@ ntp: project volser
 	esac
 
 sgistuff: project rlogind
-	@case ${WITH_DEPRECATED} in \
+	@case ${WITH_OBSOLETE} in \
 	YES) 	case ${SYS_NAME} in \
 		sgi_* )	${COMPILE_PART1} sgistuff ${COMPILE_PART2} ;; \
 		* ) echo skipping sgistuff for ${SYS_NAME} ;; \
@@ -588,7 +578,7 @@ sgistuff: project rlogind
 	esac
 
 ftpd43+: project kauth rxkad
-	@case ${WITH_DEPRECATED} in \
+	@case ${WITH_INSECURE} in \
 	YES) 	case ${SYS_NAME} in \
 		rs_aix* | sun4x_55 | *linux*) \
 			${COMPILE_PART1} ftpd43+ ${COMPILE_PART2} ;; \
@@ -598,19 +588,19 @@ ftpd43+: project kauth rxkad
 	esac
 
 inetd: project kauth rxkad
-	@case ${WITH_DEPRECATED} in \
+	@case ${WITH_INSECURE} in \
 	YES) 	${COMPILE_PART1} inetd ${COMPILE_PART2} ;; \
 	*)	echo skipping deprecated target: inetd ;; \
 	esac
 
 rsh: project inetd
-	@case ${WITH_DEPRECATED} in \
+	@case ${WITH_INSECURE} in \
 	YES) 	${COMPILE_PART1} rsh ${COMPILE_PART2} ;; \
 	*)	echo skipping deprecated target: rsh ;; \
 	esac
 
 rlogind: project rsh ftpd43+ login
-	@case ${WITH_DEPRECATED} in \
+	@case ${WITH_INSECURE} in \
 	YES) 	case ${SYS_NAME} in \
 		rs_aix*) ${COMPILE_PART1} rlogind ${COMPILE_PART2} ;; \
 		*) echo skipping rlogind for ${SYS_NAME} ;; \
@@ -619,7 +609,7 @@ rlogind: project rsh ftpd43+ login
 	esac
 
 rcp: project rsh inetd
-	@case ${WITH_DEPRECATED} in \
+	@case ${WITH_INSECURE} in \
 	YES) 	case ${SYS_NAME} in \
 		sgi_* )	echo skip rcp for ${SYS_NAME} ;; \
 		*)	${COMPILE_PART1} rcp ${COMPILE_PART2} ;; \

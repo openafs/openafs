@@ -20,3 +20,5 @@ has RFC2228 security extensions.
 In any case, carefully consider the security implications before deploying 
 these utilities.
 
+To disable building of the insecure code included with OpenAFS, set the
+WITH_INSECURE flag in the makefile to NO. 
