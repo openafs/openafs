@@ -560,7 +560,6 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_COMPLETION_H_EXISTS
 		 LINUX_DEFINES_FOR_EACH_PROCESS
 		 LINUX_DEFINES_PREV_TASK
-		 LINUX_EXPORTS_TASKLIST_LOCK
 	         LINUX_FS_STRUCT_ADDRESS_SPACE_HAS_PAGE_LOCK
 	         LINUX_FS_STRUCT_ADDRESS_SPACE_HAS_GFP_MASK
 		 LINUX_FS_STRUCT_INODE_HAS_I_ALLOC_SEM
@@ -635,9 +634,6 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 fi
 		 if test "x$ac_cv_linux_exports_sys_wait4" = "xyes" ; then
 		  AC_DEFINE(EXPORTED_SYS_WAIT4, 1, [define if your linux kernel exports sys_wait4])
-		 fi
-		 if test "x$ac_cv_linux_exports_tasklist_lock" = "xyes" ; then
-		  AC_DEFINE(EXPORTED_TASKLIST_LOCK, 1, [define if your linux kernel exports tasklist_lock])
 		 fi
                  if test "x$ac_cv_linux_exports_sys_call_table" = "xyes"; then
                   AC_DEFINE(EXPORTED_SYS_CALL_TABLE)

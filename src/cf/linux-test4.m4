@@ -188,23 +188,6 @@ AC_MSG_RESULT($ac_cv_linux_exports_sys_wait4)
 CPPFLAGS="$save_CPPFLAGS"])
 
 
-AC_DEFUN([LINUX_EXPORTS_TASKLIST_LOCK], [
-AC_MSG_CHECKING(for exported tasklist_lock)
-save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
-AC_CACHE_VAL(ac_cv_linux_exports_tasklist_lock,
-[
-AC_TRY_COMPILE(
-[#include <linux/modversions.h>],
-[#ifndef __ver_tasklist_lock
-#error tasklist_lock not exported
-#endif],
-ac_cv_linux_exports_tasklist_lock=yes,
-ac_cv_linux_exports_tasklist_lock=no)])
-AC_MSG_RESULT($ac_cv_linux_exports_tasklist_lock)
-CPPFLAGS="$save_CPPFLAGS"])
-
-
 AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_I_CDEV], [
 AC_MSG_CHECKING(for i_cdev in struct inode)
 save_CPPFLAGS="$CPPFLAGS"
