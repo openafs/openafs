@@ -1,5 +1,5 @@
 #ifndef EIO
-#error Can't deal with this case
+#error Cant deal with this case
 #endif /* EIO */
 
 /* Cases we know we should deal with */
