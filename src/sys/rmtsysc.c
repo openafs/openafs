@@ -13,6 +13,7 @@
  * calls of setpag, and pioctl are supported.
  */
 #include <afs/param.h>
+#include <afsconfig.h>
 #include <errno.h>
 #include <limits.h>
 #include <sys/types.h>
@@ -26,6 +27,9 @@
 #endif
 #include <sys/stat.h>
 #include <stdio.h>
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
 #include <rx/xdr.h>
 #include "rmtsys.h"
 

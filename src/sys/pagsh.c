@@ -8,20 +8,29 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>
 #endif
 #include <stdio.h>
+#include <stdlib.h>
+#ifndef AFS_NT40_ENV
+#include <unistd.h>
+#endif
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
 #include <pwd.h>
-
-#ifdef	notdef
-/* AFS_KERBEROS_ENV is now conditionally defined in the Makefile */
-#define AFS_KERBEROS_ENV
+#ifdef AFS_KERBEROS_ENV
+#include <sys/types.h>
+#include <sys/stat.h>
 #endif
 
 #include "AFS_component_version_number.c"
 
-main(argc, argv)
+extern afs_int32 setpag();
+
+int main(argc, argv)
 int argc;
 char **argv;
 {
@@ -69,11 +78,6 @@ char **argv;
 
 #ifdef AFS_KERBEROS_ENV
 /* stolen from auth/ktc.c */
-
-#include <sys/types.h>
-#include <sys/stat.h>
-
-extern char *malloc();
 
 static afs_uint32 curpag()
 {

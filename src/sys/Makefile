@@ -14,7 +14,7 @@ include ../config/Makefile.${SYS_NAME}
 MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
 
 UKERNELDIR=../libuafs/
-CFLAGS= ${DBUG}  -I${SRCDIR}include  ${XCFLAGS} ${DBG_DEFS}
+CFLAGS= ${DBUG}  -I${TOP_SRCDIR}/config -I${SRCDIR}include  ${XCFLAGS} ${DBG_DEFS}
 SFLAGS=-P -I${SRCDIR}include  
 LIBS= libsys.a ${SRCDIR}lib/librx.a libsys.a ${SRCDIR}lib/liblwp.a ${SRCDIR}lib/afs/util.a ${XLIBS}
 UKSRCS=afsl.exp
