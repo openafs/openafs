@@ -69,7 +69,7 @@ comerr: basics util
 cmd: basics comerr
 	${COMPILE_PART1} cmd ${COMPILE_PART2}
 	@case ${SYS_NAME} in \
-	sgi_6* | sun4x_57 | sun4x_58 | hp_ux11* | sparc64_linux* ) \
+	sgi_6* | sun4x_57 | sun4x_58 | hp_ux11* | sparc64_linux* | alpha_linux* ) \
 		${COMPILE_PART1} cmd ${COMPILE_PART2} install64 ;; \
 	esac
 
