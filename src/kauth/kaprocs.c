@@ -772,9 +772,7 @@ set_password (tt, name, instance, password, kvno, caller)
     
 
     if (special_name (name, instance)) { /* set key over rides key_version */
-#if SPECIAL
 	tentry.flags = htonl (ntohl(tentry.flags) | KAFSPECIAL);
-#endif
 	if (code = ka_NewKey (tt, to, &tentry, password)) return(code);
     }
     else {

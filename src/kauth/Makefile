@@ -82,18 +82,10 @@ kautils.o: kautils.c ${INCLS}
 kalocalcell.o: kalocalcell.c ${INCLS}
 
 kadatabase.o: kadatabase.c ${INCLS}
-	${CC} ${CFLAGS} -c kadatabase.c -DSPECIAL=1
-
-xkaprocs: kaprocs.c ${INCLS}
-	${CC} ${CFLAGS} -c kaprocs.c -DAUTOCPWINTERVAL=30 -DAUTOCPWUPDATES=3
-
-# Installations using Auth2 conversion server should specify the GETPASSWORD
-# flag.  This also means logins to machines running this server must be
-# tightly controlled.
-#	${CC} ${CFLAGS} -c kaprocs.c -DSPECIAL=1 -DGETPASSWORD
+	${CC} ${CFLAGS} -c kadatabase.c 
 
 kaprocs.o: kaprocs.c ${INCLS} kaport.h
-	${CC} ${CFLAGS} -c kaprocs.c -DSPECIAL=1
+	${CC} ${CFLAGS} -c kaprocs.c 
 
 authclient.o: authclient.c ${INCLS}
 
