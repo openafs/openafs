@@ -223,9 +223,22 @@ void afs_osi_Sleep(char *event)
     seq = evp->seq;
 
     while (seq == evp->seq) {
+	sigset_t saved_set;
+
 	AFS_ASSERT_GLOCK();
 	AFS_GUNLOCK();
+	spin_lock_irq(&current->sigmask_lock);
+	saved_set = current->blocked;
+	sigfillset(&current->blocked);
+	recalc_sigpending(current);
+	spin_unlock_irq(&current->sigmask_lock);
+
 	interruptible_sleep_on(&evp->cond);
+
+	spin_lock_irq(&current->sigmask_lock);
+	current->blocked = saved_set;
+	recalc_sigpending(current);
+	spin_unlock_irq(&current->sigmask_lock);
 	AFS_GLOCK();
     }
     relevent(evp);
