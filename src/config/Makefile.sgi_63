@@ -12,7 +12,7 @@ AFS_OSTYPE = IRIX
 
 # compilation and link editor flags
 DBG=-g
-FSINCLUDES=-I/usr/include/sys/fs -I../sgiefs
+FSINCLUDES=-I/usr/include/sys/fs
 LWP_OPTMZ=-O
 OPTMZ=-O
 XCFLAGS=-D_OLD_TERMIOS -D_BSD_COMPAT -o32
