@@ -316,6 +316,10 @@ main(argc, argv)
     time_t currentTime;
     afs_int32 code = 0;
 
+    char  clones[MAXHOSTSPERCELL];
+
+	
+	
     struct rx_service *tservice;
     struct rx_securityClass *sca[3];
 
@@ -430,7 +434,8 @@ main(argc, argv)
 
 	LogDebug(1, "Using server list from %s cell database.\n", lcell);
 
-	code = afsconf_GetCellInfo(BU_conf, lcell, 0, &cellinfo);
+	code = afsconf_GetExtendedCellInfo (BU_conf, lcell, 0, &cellinfo, 
+					    &clones); 
 	code =
 	    convert_cell_to_ubik(&cellinfo, &globalConfPtr->myHost,
 				 globalConfPtr->serverList);
@@ -465,8 +470,13 @@ main(argc, argv)
 
     rx_SetRxDeadTime(60);	/* 60 seconds inactive before timeout */
 
-    code = ubik_ServerInit(globalConfPtr->myHost, htons(AFSCONF_BUDBPORT), globalConfPtr->serverList, dbNamePtr,	/* name prefix */
-			   &BU_dbase);
+    code = ubik_ServerInitByInfo (globalConfPtr->myHost,
+				  htons(AFSCONF_BUDBPORT), 
+				  &cellinfo,
+				  &clones,              
+				  dbNamePtr,           /* name prefix */
+				  &BU_dbase);
+
     if (code) {
 	LogError(code, "Ubik init failed\n");
 	com_err(whoami, code, "Ubik init failed");
