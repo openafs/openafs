@@ -24,12 +24,44 @@
  * in either the free list or in the LRU queue.  A read lock prevents someone
  * from modifying the list(s), and a write lock is required for modifying
  * the list.  The actual data stored in the randomUid and randomAccess fields
- * is actually maintained as up-to-date or not via the scache llock.
+ * is actually maintained as up-to-date or not via the scache lock.
  * An aclent structure is free if it has no back vnode pointer.
  */
 osi_rwlock_t cm_aclLock;		/* lock for system's aclents */
 cm_aclent_t *cm_aclLRUp;                /* LRUQ for dudes in vnode's lists */
 cm_aclent_t *cm_aclLRUEndp;             /* ditto */
+
+/* This function must be called with cm_aclLock and the aclp->back_mx held */
+static void CleanupACLEnt(cm_aclent_t * aclp)
+{
+    cm_aclent_t *taclp;
+    cm_aclent_t **laclpp;
+
+    if (aclp->backp) {
+        /* 
+         * Remove the entry from the vnode's list
+         */
+        laclpp = &aclp->backp->randomACLp;
+        for ( taclp = *laclpp; taclp; laclpp = &taclp->nextp, taclp = *laclpp ) {
+            if (taclp == aclp)
+                break;
+        }
+        if (!taclp)
+            osi_panic("CleanupACLEnt race",__FILE__,__LINE__);
+        *laclpp = aclp->nextp;                  /* remove from the vnode's list */
+        aclp->backp = NULL;
+    }
+
+    /* release the old user */
+    if (aclp->userp) {
+        cm_ReleaseUser(aclp->userp);
+        aclp->userp = NULL;
+    }
+
+    aclp->randomAccess = 0;
+    aclp->tgtLifetime = 0;
+}
+
 /* 
  * Get an acl cache entry for a particular user and file, or return that it doesn't exist.
  * Called with the scp locked.
@@ -40,16 +72,18 @@ long cm_FindACLCache(cm_scache_t *scp, cm_user_t *userp, long *rightsp)
     long retval = -1;
 
     lock_ObtainWrite(&cm_aclLock);
+    *rightsp = 0;       /* get a new acl from server if we don't find a 
+                         * current entry
+                         */
     for (aclp = scp->randomACLp; aclp; aclp = aclp->nextp) {
         if (aclp->userp == userp) {
-            if (aclp->tgtLifetime && aclp->tgtLifetime <= (long) osi_Time()) {
+            if (aclp->tgtLifetime && aclp->tgtLifetime <= osi_Time()) {
                 /* ticket expired */
-                aclp->tgtLifetime = 0;
-                *rightsp = 0;   /* get a new acl from server */
-
-                /* Shouldn't we remove this entry from the scp?
-                 * 2005-01-25 - jaltman@secure-endpoints.com
-                 */
+                osi_QRemove((osi_queue_t **) &cm_aclLRUp, &aclp->q);
+                CleanupACLEnt(aclp);
+                osi_QAddT((osi_queue_t **) &cm_aclLRUp,
+                           (osi_queue_t **) &cm_aclLRUEndp,
+                           &aclp->q);
             } else {
                 *rightsp = aclp->randomAccess;
                 if (cm_aclLRUEndp == aclp)
@@ -78,36 +112,14 @@ long cm_FindACLCache(cm_scache_t *scp, cm_user_t *userp, long *rightsp)
 static cm_aclent_t *GetFreeACLEnt(void)
 {
     cm_aclent_t *aclp;
-    cm_aclent_t *taclp;
-    cm_aclent_t **laclpp;
 
     if (cm_aclLRUp == NULL)
         osi_panic("empty aclent LRU", __FILE__, __LINE__);
 
     aclp = cm_aclLRUEndp;
-    if (aclp == cm_aclLRUEndp)
-        cm_aclLRUEndp = (cm_aclent_t *) osi_QPrev(&aclp->q);
+    cm_aclLRUEndp = (cm_aclent_t *) osi_QPrev(&aclp->q);
     osi_QRemove((osi_queue_t **) &cm_aclLRUp, &aclp->q);
-    if (aclp->backp) {
-        /* 
-         * Remove the entry from the vnode's list 
-         */
-        laclpp = &aclp->backp->randomACLp;
-        for (taclp = *laclpp; taclp; laclpp = &taclp->nextp, taclp = *laclpp) {
-            if (taclp == aclp) 
-                break;
-        }
-        if (!taclp) 
-            osi_panic("GetFreeACLEnt race", __FILE__, __LINE__);
-        *laclpp = aclp->nextp;			/* remove from vnode list */
-        aclp->backp = NULL;
-    }
-
-    /* release the old user */
-    if (aclp->userp) {
-        cm_ReleaseUser(aclp->userp);
-        aclp->userp = NULL;
-    }
+    CleanupACLEnt(aclp);
     return aclp;
 }
 

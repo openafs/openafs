@@ -3362,7 +3362,7 @@ VOID initUpperCaseTable(VOID)
 // BOOL : TRUE/FALSE (match/mistmatch)
 
 BOOL 
-szWildCardMatchFileName(PSZ pattern, PSZ name) 
+szWildCardMatchFileName(PSZ pattern, PSZ name, int casefold) 
 {
     PSZ pename;         // points to the last 'name' character
     PSZ p;
@@ -3379,13 +3379,15 @@ szWildCardMatchFileName(PSZ pattern, PSZ name)
             if (*pattern == '\0')
                 return TRUE;
             for (p = pename; p >= name; --p) {
-                if ((mapCaseTable[*p] == mapCaseTable[*pattern]) &&
-                     szWildCardMatchFileName(pattern + 1, p + 1))
+                if ((casefold && (mapCaseTable[*p] == mapCaseTable[*pattern]) ||
+                     !casefold && (*p == *pattern)) &&
+                     szWildCardMatchFileName(pattern + 1, p + 1, casefold))
                     return TRUE;
             } /* endfor */
             return FALSE;
         default:
-            if (mapCaseTable[*name] != mapCaseTable[*pattern]) 
+            if ((casefold && mapCaseTable[*name] != mapCaseTable[*pattern]) ||
+                (!casefold && *name != *pattern))
                 return FALSE;
             ++pattern, ++name;
             break;
@@ -3404,12 +3406,14 @@ szWildCardMatchFileName(PSZ pattern, PSZ name)
 int smb_V3MatchMask(char *namep, char *maskp, int flags) 
 {
     char * newmask;
-    int    i, j, star, qmark, retval;
+    int    i, j, star, qmark, casefold, retval;
 
     /* make sure we only match 8.3 names, if requested */
     if ((flags & CM_FLAG_8DOT3) && !cm_Is8Dot3(namep)) 
         return 0;
     
+    casefold = (flags & CM_FLAG_CASEFOLD) ? 1 : 0;
+
     /* optimize the pattern:
      * if there is a mixture of '?' and '*',
      * for example  the sequence "*?*?*?*"
@@ -3446,7 +3450,7 @@ int smb_V3MatchMask(char *namep, char *maskp, int flags)
     }
     newmask[j++] = '\0';
 
-    retval = szWildCardMatchFileName(newmask, namep) ? 1:0;
+    retval = szWildCardMatchFileName(newmask, namep, casefold) ? 1:0;
 
     free(newmask);
     return retval;
@@ -5406,8 +5410,8 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         }
 
         if (scp->fileType != CM_SCACHETYPE_FILE) {
-			if (dscp)
-            cm_ReleaseSCache(dscp);
+            if (dscp)
+                cm_ReleaseSCache(dscp);
             cm_ReleaseSCache(scp);
             cm_ReleaseUser(userp);
             free(realPathp);
@@ -5418,7 +5422,8 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     /* (only applies to single component case) */
     if (realDirFlag == 1 && scp->fileType == CM_SCACHETYPE_FILE) {
         cm_ReleaseSCache(scp);
-        cm_ReleaseSCache(dscp);
+        if (dscp)
+            cm_ReleaseSCache(dscp);
         cm_ReleaseUser(userp);
         free(realPathp);
         return CM_ERROR_NOTDIR;
