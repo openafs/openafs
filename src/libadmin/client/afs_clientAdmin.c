@@ -26,6 +26,7 @@
 #include <afs/venus.h>
 #include <errno.h>
 #include <strings.h>
+#include <unistd.h>
 #endif
 #include <string.h>
 #include <afs/kautils.h>
@@ -1180,7 +1181,7 @@ int ADMINAPI afsclient_LocalCellGet(
         goto fail_afsclient_LocalCellGet;
     }
 
-    if (tst = afsconf_GetLocalCell(tdir, cellName, MAXCELLCHARS)) {
+    if ((tst = afsconf_GetLocalCell(tdir, cellName, MAXCELLCHARS))) {
         goto fail_afsclient_LocalCellGet;
     }
 
@@ -1395,7 +1396,7 @@ int ADMINAPI afsclient_MountPointCreate(
 	goto fail_afsclient_MountPointCreate;
     }
 #else
-    if (tst = symlink(space, directory)) {
+    if ((tst = symlink(space, directory))) {
 	goto fail_afsclient_MountPointCreate;
     }
 #endif
@@ -1432,7 +1433,7 @@ int ADMINAPI afsclient_ACLEntryAdd(
     char *ptr;
     Acl_t cur_acl;
     char cur_user[64];
-    int cur_user_acl;
+    int cur_user_acl = 0;
     int i;
     char tmp[64+35];
     int is_dfs;
@@ -1533,7 +1534,7 @@ int ADMINAPI afsclient_ACLEntryAdd(
      * file.
      */
 
-    is_dfs = sscanf(old_acl_string, "%d dfs:%d %s", &cur_acl.nplus, &cur_acl.dfs, &cur_acl.cell);
+    is_dfs = sscanf(old_acl_string, "%d dfs:%d %s", &cur_acl.nplus, &cur_acl.dfs, cur_acl.cell);
     ptr = strchr(old_acl_string, '\n');
     ptr++;
     sscanf(ptr, "%d", &cur_acl.nminus);
@@ -1557,7 +1558,7 @@ int ADMINAPI afsclient_ACLEntryAdd(
      */
 
     for(i=0;i<(cur_acl.nplus + cur_acl.nminus);i++) {
-	sscanf(ptr, "%s%d\n", &cur_user, &cur_user_acl);
+	sscanf(ptr, "%s%d\n", cur_user, &cur_user_acl);
 	/*
 	 * Skip the entry for the user we are replacing/adding
 	 */
@@ -1618,7 +1619,8 @@ int ADMINAPI afsclient_Init(
     int rc = 0;
     afs_status_t tst = 0;
  
-    (client_init || pthread_once(&client_init_once, client_once));
+    if ( !client_init )
+	pthread_once(&client_init_once, client_once);
 
 #ifdef AFS_NT40_ENV
     if (afs_winsockInit() < 0) {
@@ -1637,7 +1639,7 @@ int ADMINAPI afsclient_Init(
 	goto fail_afsclient_Init;
     }
 
-    if (tst = ka_CellConfig((char *)AFSDIR_CLIENT_ETC_DIRPATH)) {
+    if ((tst = ka_CellConfig((char *)AFSDIR_CLIENT_ETC_DIRPATH))) {
 	goto fail_afsclient_Init;
     }
 
@@ -1772,8 +1774,6 @@ static int GetServerRPC(
         *last_item_contains_data = 1;
     }
     rc = 1;
- 
-fail_GetServerRPC:
  
     if (st != NULL) {
         *st = tst;

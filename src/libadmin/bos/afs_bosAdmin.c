@@ -20,8 +20,11 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <stdlib.h>
 #ifdef AFS_NT40_ENV
 #include <io.h>
+#else
+#include <unistd.h>
 #endif
 
 
@@ -2087,7 +2090,6 @@ static int GetKeyRPC(
     int rc = 0;
     afs_status_t tst = 0;
     key_get_p key = (key_get_p) rpc_specific;
-    char *ptr = (char *) &key->key[slot];
     struct bozo_keyInfo keyInfo;
 
     tst = BOZO_ListKeys(key->server, key->next++,
@@ -3076,25 +3078,25 @@ int ADMINAPI bos_ExecutableRestartTimeSet(
     }
 
     if ((time.mask & BOS_RESTART_TIME_HOUR) &&
-        (time.hour < 0) || (time.hour > 23)) {
+        ((time.hour < 0) || (time.hour > 23))) {
 	tst = ADMBOSHOURINVALID;
 	goto fail_bos_ExecutableRestartTimeSet;
     }
 
     if ((time.mask & BOS_RESTART_TIME_MINUTE) &&
-	(time.min < 0) || (time.min > 60)) {
+	((time.min < 0) || (time.min > 60))) {
 	tst = ADMBOSMINUTEINVALID;
 	goto fail_bos_ExecutableRestartTimeSet;
     }
 
     if ((time.mask & BOS_RESTART_TIME_SECOND) &&
-	(time.sec < 0) || (time.sec > 60)) {
+	((time.sec < 0) || (time.sec > 60))) {
 	tst = ADMBOSSECONDINVALID;
 	goto fail_bos_ExecutableRestartTimeSet;
     }
 
     if ((time.mask & BOS_RESTART_TIME_DAY) &&
-	(time.day < 0) || (time.day > 6)) {
+	((time.day < 0) || (time.day > 6))) {
 	tst = ADMBOSDAYINVALID;
 	goto fail_bos_ExecutableRestartTimeSet;
     }
@@ -3223,7 +3225,7 @@ int ADMINAPI bos_LogGet(
     int rc = 0;
     afs_status_t tst = 0;
     bos_server_p b_handle = (bos_server_p) serverHandle;
-    struct rx_call *tcall;
+    struct rx_call *tcall = NULL;
     afs_int32 error;
     char buffer;
     int have_call = 0;
@@ -3484,7 +3486,6 @@ int ADMINAPI bos_Salvage(
     int have_volume = 0;
     unsigned int part = 0;
     int try_to_stop_fileserver = 0;
-    int stopped_fileserver = 0;
     bos_ProcessType_t procType;
     bos_ProcessInfo_t procInfo;
     FILE *log = NULL;
@@ -3628,8 +3629,8 @@ int ADMINAPI bos_Salvage(
 	goto fail_bos_Salvage;
     }
 
-    while (poll_rc = bos_ProcessInfoGet(serverHandle, "salvage-tmp", &procType,
-			                &procInfo, &tst)) {
+    while ((poll_rc = bos_ProcessInfoGet(serverHandle, "salvage-tmp", &procType,
+			                &procInfo, &tst))) {
 	sleep(5);
     }
 

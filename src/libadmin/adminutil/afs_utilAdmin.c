@@ -95,7 +95,8 @@ int ADMINAPI util_AdminErrorCodeTranslate(
      * Translate the error
      */
 
-    (error_init_done || pthread_once(&error_init_once, init_once));
+    if ( !error_init_done )
+		pthread_once(&error_init_once, init_once);
     code = (afs_int32) errorCode;
     *errorTextP = error_message(code);
     rc = 1;
@@ -144,8 +145,6 @@ static int GetDatabaseServerRPC(
         *last_item_contains_data = 1;
     }
     rc = 1;
- 
-fail_GetDatabaseServerRPC:
  
     if (st != NULL) {
         *st = tst;
@@ -224,7 +223,6 @@ int ADMINAPI util_DatabaseServerGetBegin(
     afs_admin_iterator_p iter = (afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
     database_server_get_p serv = (database_server_get_p) calloc(1, sizeof(database_server_get_t));
     char copyCell[MAXCELLCHARS];
-    int mutex_inited = 0;
  
     /*
      * Validate arguments
@@ -324,7 +322,6 @@ int ADMINAPI util_DatabaseServerGetNext(
     int rc = 0;
     afs_status_t tst = 0;
     afs_admin_iterator_p iter = (afs_admin_iterator_p) iterationId;
-    int iter_locked = 0;
  
     if (iter == NULL) {
 	tst = ADMITERATORNULL;
@@ -1037,7 +1034,6 @@ int IteratorInit(
     int rc = 0;
     afs_status_t tst = 0;
     int mutex_inited = 0;
-    int attr_inited = 0;
     int add_item_cond_inited = 0;
     int remove_item_cond_inited = 0;
 
@@ -1246,7 +1242,6 @@ static int GetRPCStatsRPC(
     int rc = 0;
     afs_status_t tst = 0;
     rpc_stat_get_p t = (rpc_stat_get_p) rpc_specific;
-    afs_uint32 index = t->index;
 
     t->stats[slot].clientVersion = t->clientVersion;
     t->stats[slot].serverVersion = t->serverVersion;
@@ -2411,7 +2406,6 @@ int ADMINAPI util_RXDebugVersion(
     int rc = 0;
     afs_status_t tst = 0;
     int code;
-    int len;
 
     if (handle == NULL) {
         tst = ADMRXDEBUGHANDLENULL;
@@ -2471,7 +2465,6 @@ int ADMINAPI util_RXDebugSupportedStats(
     int rc = 0;
     afs_status_t tst = 0;
     struct rx_debugStats tstats;
-    int code;
 
     if (handle == NULL) {
 	tst = ADMRXDEBUGHANDLENULL;
