@@ -47,6 +47,8 @@ RCSID("$Header$");
 #include "xdr.h"
 #ifndef AFS_NT40_ENV
 #include <netinet/in.h>
+#else
+#include <limits.h>
 #endif
 
 static bool_t	xdrmem_getint32();
