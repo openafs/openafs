@@ -423,6 +423,9 @@ callproc_read(char *buffer, char **start, off_t offset, int count,
 }
 
 static struct proc_dir_entry *openafs_procfs;
+#if defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV)
+static int ioctl32_done;
+#endif
 
 static int
 afsproc_init(void)
@@ -450,6 +453,10 @@ afsproc_init(void)
     entry = create_proc_read_entry(PROC_SERVICES_NAME, (S_IFREG|S_IRUGO), openafs_procfs, servicesproc_read, NULL);
 
     entry = create_proc_read_entry(PROC_RXSTATS_NAME, (S_IFREG|S_IRUGO), openafs_procfs, rxstatsproc_read, NULL);
+#if defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV)
+    if (register_ioctl32_conversion(VIOC_SYSCALL32, NULL) == 0) 
+	    ioctl32_done = 1;
+#endif
 
     return 0;
 }
@@ -466,6 +473,10 @@ afsproc_exit(void)
     remove_proc_entry(PROC_CELLSERVDB_NAME, openafs_procfs);
     remove_proc_entry(PROC_SYSCALL_NAME, openafs_procfs);
     remove_proc_entry(PROC_FSDIRNAME, proc_root_fs);
+#if defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV)
+    if (ioctl32_done)
+	    unregister_ioctl32_conversion(VIOC_SYSCALL32);
+#endif
 }
 
 extern asmlinkage long
@@ -479,7 +490,7 @@ afs_ioctl(struct inode *inode, struct file *file, unsigned int cmd,
     struct afsprocdata sysargs;
     struct afsprocdata32 sysargs32;
 
-    if (cmd != VIOC_SYSCALL) return -EINVAL;
+    if (cmd != VIOC_SYSCALL && cmd != VIOC_SYSCALL32) return -EINVAL;
 
 #if defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV)
 #ifdef AFS_SPARC64_LINUX24_ENV
