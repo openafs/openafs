@@ -171,7 +171,7 @@ afs_MemWrite(avc, auio, aio, acred, noLock)
 	return (EFBIG);
     }
 #endif
-#ifdef	AFS_VM_RDWR_ENV
+#if (!defined(AFS_VM_RDWR_ENV)||defined(AFS_LINUX20_ENV))
     /*
      * If write is implemented via VM, afs_FakeOpen() is called from the
      * high-level write op.
@@ -280,7 +280,7 @@ afs_MemWrite(avc, auio, aio, acred, noLock)
 	if (filePos > avc->m.Length)
 	    avc->m.Length = filePos;
 #endif
-#ifndef	AFS_VM_RDWR_ENV
+#if (!defined(AFS_VM_RDWR_ENV)||defined(AFS_LINUX20_ENV))
 	/*
 	 * If write is implemented via VM, afs_DoPartialWrite() is called from
 	 * the high-level write op.
