@@ -7,7 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-//#define NOSERVICE 1
+//#define NOTSERVICE 1
+#define LOG_PACKET 1
 
 #include <afs/param.h>
 #include <afs/stds.h>
@@ -189,6 +190,9 @@ extern char cm_confDir[];
        *(sizep) = strlen(cm_HostName)
 #endif /* DJGPP */
 
+#ifdef LOG_PACKET
+void smb_LogPacket(smb_packet_t *packet);
+#endif /* LOG_PACKET */
 extern char AFSConfigKeyName[];
 
 char smb_ServerDomainName[MAX_COMPUTERNAME_LENGTH + 1] = ""; /* domain name */
@@ -213,164 +217,180 @@ GUID smb_ServerGUID = { 0x40015cb8, 0x058a, 0x44fc, { 0xae, 0x7e, 0xbb, 0x29, 0x
 
 char * myCrt_Dispatch(int i)
 {
-	switch (i)
-	{
-	default:
-		return "unknown SMB op";
-	case 0x00:
-		return "(00)ReceiveCoreMakeDir";
-	case 0x01:
-		return "(01)ReceiveCoreRemoveDir";
-	case 0x02:
-		return "(02)ReceiveCoreOpen";
-	case 0x03:
-		return "(03)ReceiveCoreCreate";
-	case 0x04:
-		return "(04)ReceiveCoreClose";
-	case 0x05:
-		return "(05)ReceiveCoreFlush";
-	case 0x06:
-		return "(06)ReceiveCoreUnlink";
-	case 0x07:
-		return "(07)ReceiveCoreRename";
-	case 0x08:
-		return "(08)ReceiveCoreGetFileAttributes";
-	case 0x09:
-		return "(09)ReceiveCoreSetFileAttributes";
-	case 0x0a:
-		return "(0a)ReceiveCoreRead";
-	case 0x0b:
-		return "(0b)ReceiveCoreWrite";
-	case 0x0c:
-		return "(0c)ReceiveCoreLockRecord";
-	case 0x0d:
-		return "(0d)ReceiveCoreUnlockRecord";
-	case 0x0e:
-		return "(0e)SendCoreBadOp";
-	case 0x0f:
-		return "(0f)ReceiveCoreCreate";
-	case 0x10:
-		return "(10)ReceiveCoreCheckPath";
-	case 0x11:
-		return "(11)SendCoreBadOp";
-	case 0x12:
-		return "(12)ReceiveCoreSeek";
-	case 0x1a:
-		return "(1a)ReceiveCoreReadRaw";
-	case 0x1d:
-		return "(1d)ReceiveCoreWriteRawDummy";
-	case 0x22:
-		return "(22)ReceiveV3SetAttributes";
-	case 0x23:
-		return "(23)ReceiveV3GetAttributes";
-	case 0x24:
-		return "(24)ReceiveV3LockingX";
-	case 0x25:
-		return "(25)ReceiveV3Trans";
-	case 0x26:
-		return "(26)ReceiveV3Trans[aux]";
-	case 0x29:
-		return "(29)SendCoreBadOp";
-	case 0x2b:
-		return "(2b)ReceiveCoreEcho";
-	case 0x2d:
-		return "(2d)ReceiveV3OpenX";
-	case 0x2e:
-		return "(2e)ReceiveV3ReadX";
-	case 0x32:
-		return "(32)ReceiveV3Tran2A";
-	case 0x33:
-		return "(33)ReceiveV3Tran2A[aux]";
-	case 0x34:
-		return "(34)ReceiveV3FindClose";
-	case 0x35:
-		return "(35)ReceiveV3FindNotifyClose";
-	case 0x70:
-		return "(70)ReceiveCoreTreeConnect";
-	case 0x71:
-		return "(71)ReceiveCoreTreeDisconnect";
-	case 0x72:
-		return "(72)ReceiveNegotiate";
-	case 0x73:
-		return "(73)ReceiveV3SessionSetupX";
-	case 0x74:
-		return "(74)ReceiveV3UserLogoffX";
-	case 0x75:
-		return "(75)ReceiveV3TreeConnectX";
-	case 0x80:
-		return "(80)ReceiveCoreGetDiskAttributes";
-	case 0x81:
-		return "(81)ReceiveCoreSearchDir";
-	case 0xA0:
-		return "(A0)ReceiveNTTransact";
-	case 0xA2:
-		return "(A2)ReceiveNTCreateX";
-	case 0xA4:
-		return "(A4)ReceiveNTCancel";
-	case 0xc0:
-		return "(c0)SendCoreBadOp";
-	case 0xc1:
-		return "(c1)SendCoreBadOp";
-	case 0xc2:
-		return "(c2)SendCoreBadOp";
-	case 0xc3:
-		return "(c3)SendCoreBadOp";
-	}
-}
+    switch (i)
+    {
+    case 0x00:
+        return "(00)ReceiveCoreMakeDir";
+    case 0x01:
+        return "(01)ReceiveCoreRemoveDir";
+    case 0x02:
+        return "(02)ReceiveCoreOpen";
+    case 0x03:
+        return "(03)ReceiveCoreCreate";
+    case 0x04:
+        return "(04)ReceiveCoreClose";
+    case 0x05:
+        return "(05)ReceiveCoreFlush";
+    case 0x06:
+        return "(06)ReceiveCoreUnlink";
+    case 0x07:
+        return "(07)ReceiveCoreRename";
+    case 0x08:
+        return "(08)ReceiveCoreGetFileAttributes";
+    case 0x09:
+        return "(09)ReceiveCoreSetFileAttributes";
+    case 0x0a:
+        return "(0a)ReceiveCoreRead";
+    case 0x0b:
+        return "(0b)ReceiveCoreWrite";
+    case 0x0c:
+        return "(0c)ReceiveCoreLockRecord";
+    case 0x0d:
+        return "(0d)ReceiveCoreUnlockRecord";
+    case 0x0e:
+        return "(0e)SendCoreBadOp";
+    case 0x0f:
+        return "(0f)ReceiveCoreCreate";
+    case 0x10:
+        return "(10)ReceiveCoreCheckPath";
+    case 0x11:
+        return "(11)SendCoreBadOp";
+    case 0x12:
+        return "(12)ReceiveCoreSeek";
+    case 0x1a:
+        return "(1a)ReceiveCoreReadRaw";
+    case 0x1d:
+        return "(1d)ReceiveCoreWriteRawDummy";
+    case 0x22:
+        return "(22)ReceiveV3SetAttributes";
+    case 0x23:
+        return "(23)ReceiveV3GetAttributes";
+    case 0x24:
+        return "(24)ReceiveV3LockingX";
+    case 0x25:
+        return "(25)ReceiveV3Trans";
+    case 0x26:
+        return "(26)ReceiveV3Trans[aux]";
+    case 0x29:
+        return "(29)SendCoreBadOp";
+    case 0x2b:
+        return "(2b)ReceiveCoreEcho";
+    case 0x2d:
+        return "(2d)ReceiveV3OpenX";
+    case 0x2e:
+        return "(2e)ReceiveV3ReadX";
+    case 0x32:
+        return "(32)ReceiveV3Tran2A";
+    case 0x33:
+        return "(33)ReceiveV3Tran2A[aux]";
+    case 0x34:
+        return "(34)ReceiveV3FindClose";
+    case 0x35:
+        return "(35)ReceiveV3FindNotifyClose";
+    case 0x70:
+        return "(70)ReceiveCoreTreeConnect";
+    case 0x71:
+        return "(71)ReceiveCoreTreeDisconnect";
+    case 0x72:
+        return "(72)ReceiveNegotiate";
+    case 0x73:
+        return "(73)ReceiveV3SessionSetupX";
+    case 0x74:
+        return "(74)ReceiveV3UserLogoffX";
+    case 0x75:
+        return "(75)ReceiveV3TreeConnectX";
+    case 0x80:
+        return "(80)ReceiveCoreGetDiskAttributes";
+    case 0x81:
+        return "(81)ReceiveCoreSearchDir";
+    case 0x82:
+        return "(82)Find";
+    case 0x83:
+        return "(83)FindUnique";
+    case 0x84:
+        return "(84)FindClose";
+    case 0xA0:
+        return "(A0)ReceiveNTTransact";
+    case 0xA2:
+        return "(A2)ReceiveNTCreateX";
+    case 0xA4:
+        return "(A4)ReceiveNTCancel";
+    case 0xA5:
+        return "(A5)ReceiveNTRename";
+    case 0xc0:
+        return "(C0)OpenPrintFile";
+    case 0xc1:
+        return "(C1)WritePrintFile";
+    case 0xc2:
+        return "(C2)ClosePrintFile";
+    case 0xc3:
+        return "(C3)GetPrintQueue";
+    case 0xd8:
+        return "(D8)ReadBulk";
+    case 0xd9:
+        return "(D9)WriteBulk";
+    case 0xda:
+        return "(DA)WriteBulkData";
+    default:
+        return "unknown SMB op";
+    }
+}       
 
 char * myCrt_2Dispatch(int i)
 {
-	switch (i)
-	{
-	default:
-		return "unknown SMB op-2";
-	case 0:
-		return "S(00)CreateFile";
-	case 1:
-		return "S(01)FindFirst";
-	case 2:
-		return "S(02)FindNext";	/* FindNext */
-	case 3:
-		return "S(03)QueryFileSystem_ReceiveTran2QFSInfo";
-	case 4:
-		return "S(04)??";
-	case 5:
-		return "S(05)QueryFileInfo_ReceiveTran2QPathInfo";
-	case 6:
-		return "S(06)SetFileInfo_ReceiveTran2SetPathInfo";
-	case 7:
-		return "S(07)SetInfoHandle_ReceiveTran2QFileInfo";
-	case 8:
-		return "S(08)??_ReceiveTran2SetFileInfo";
-	case 9:
-		return "S(09)??_ReceiveTran2FSCTL";
-	case 10:
-		return "S(0a)_ReceiveTran2IOCTL";
-	case 11:
-		return "S(0b)_ReceiveTran2FindNotifyFirst";
-	case 12:
-		return "S(0c)_ReceiveTran2FindNotifyNext";
-	case 13:
-		return "S(0d)CreateDirectory_ReceiveTran2MKDir";
-	}
-}
+    switch (i)
+    {
+    default:
+        return "unknown SMB op-2";
+    case 0:
+        return "S(00)CreateFile";
+    case 1:
+        return "S(01)FindFirst";
+    case 2:
+        return "S(02)FindNext";	/* FindNext */
+    case 3:
+        return "S(03)QueryFileSystem_ReceiveTran2QFSInfo";
+    case 4:
+        return "S(04)??";
+    case 5:
+        return "S(05)QueryFileInfo_ReceiveTran2QPathInfo";
+    case 6:
+        return "S(06)SetFileInfo_ReceiveTran2SetPathInfo";
+    case 7:
+        return "S(07)SetInfoHandle_ReceiveTran2QFileInfo";
+    case 8:
+        return "S(08)??_ReceiveTran2SetFileInfo";
+    case 9:
+        return "S(09)??_ReceiveTran2FSCTL";
+    case 10:
+        return "S(0a)_ReceiveTran2IOCTL";
+    case 11:
+        return "S(0b)_ReceiveTran2FindNotifyFirst";
+    case 12:
+        return "S(0c)_ReceiveTran2FindNotifyNext";
+    case 13:
+        return "S(0d)_ReceiveTran2CreateDirectory";
+    case 14:
+        return "S(0e)_ReceiveTran2SessionSetup";
+    }
+}       
 
 char * myCrt_RapDispatch(int i)
 {
-	switch(i)
-	{
-	default:
-		return "unknown RAP OP";
-	case 0:
-		return "RAP(0)NetShareEnum";
-	case 1:
-		return "RAP(1)NetShareGetInfo";
-	case 13:
-		return "RAP(13)NetServerGetInfo";
-	case 63:
-		return "RAP(63)NetWkStaGetInfo";
-	}
-}
+    switch(i)
+    {
+    default:
+        return "unknown RAP OP";
+    case 0:
+        return "RAP(0)NetShareEnum";
+    case 1:
+        return "RAP(1)NetShareGetInfo";
+    case 13:
+        return "RAP(13)NetServerGetInfo";
+    case 63:
+        return "RAP(63)NetWkStaGetInfo";
+    }
+}       
 
 /* scache must be locked */
 unsigned int smb_Attributes(cm_scache_t *scp)
@@ -1492,8 +1512,8 @@ int smb_FindShare(smb_vc_t *vcp, smb_user_t *uidp, char *shareName,
 
 int smb_FindShareCSCPolicy(char *shareName)
 {
-	DWORD len;
-	char policy[1024];
+    DWORD len;
+    char policy[1024];
     DWORD dwType;
     HKEY hkCSCPolicy;
     int  retval = CSC_POLICY_MANUAL;
@@ -1511,20 +1531,20 @@ int smb_FindShareCSCPolicy(char *shareName)
     len = sizeof(policy);
     if ( RegQueryValueEx( hkCSCPolicy, shareName, 0, &dwType, policy, &len ) ||
          len == 0) {
-		retval = CSC_POLICY_MANUAL;
+        retval = stricmp("all",shareName) ? CSC_POLICY_MANUAL : CSC_POLICY_DISABLE;
     }
-	else if (stricmp(policy, "documents") == 0)
-	{
-		retval = CSC_POLICY_DOCUMENTS;
-	}
-	else if (stricmp(policy, "programs") == 0)
-	{
-		retval = CSC_POLICY_PROGRAMS;
-	}
-	else if (stricmp(policy, "disable") == 0)
-	{
-		retval = CSC_POLICY_DISABLE;
-	}
+    else if (stricmp(policy, "documents") == 0)
+    {
+        retval = CSC_POLICY_DOCUMENTS;
+    }
+    else if (stricmp(policy, "programs") == 0)
+    {
+        retval = CSC_POLICY_PROGRAMS;
+    }
+    else if (stricmp(policy, "disable") == 0)
+    {
+        retval = CSC_POLICY_DISABLE;
+    }
 	
     RegCloseKey(hkCSCPolicy);
 	return retval;
@@ -2132,131 +2152,136 @@ void smb_SendPacket(smb_vc_t *vcp, smb_packet_t *inp)
 #endif /* !DJGPP */
         
 	if (code != 0)
-		osi_Log1(smb_logp, "SendPacket failure code %d", code);
+            osi_Log1(smb_logp, "SendPacket failure code %d", code);
 
 	if (localNCB)
-		FreeNCB(ncbp);
+            FreeNCB(ncbp);
 }
 
 void smb_MapNTError(long code, unsigned long *NTStatusp)
 {
-	unsigned long NTStatus;
+    unsigned long NTStatus;
 
-	/* map CM_ERROR_* errors to NT 32-bit status codes */
+    /* map CM_ERROR_* errors to NT 32-bit status codes */
     /* NT Status codes are listed in ntstatus.h not winerror.h */
-	if (code == CM_ERROR_NOSUCHCELL) {
-		NTStatus = 0xC000000FL;	/* No such file */
-	}
-	else if (code == CM_ERROR_NOSUCHVOLUME) {
-		NTStatus = 0xC000000FL;	/* No such file */
-	}
-	else if (code == CM_ERROR_TIMEDOUT) {
-		NTStatus = 0xC00000CFL;	/* Sharing Paused */
-	}
-	else if (code == CM_ERROR_RETRY) {
-		NTStatus = 0xC000022DL;	/* Retry */
-	}
-	else if (code == CM_ERROR_NOACCESS) {
-		NTStatus = 0xC0000022L;	/* Access denied */
-	}
-	else if (code == CM_ERROR_READONLY) {
-		NTStatus = 0xC00000A2L;	/* Write protected */
-	}	
-	else if (code == CM_ERROR_NOSUCHFILE) {
-		NTStatus = 0xC000000FL;	/* No such file */
-	}
-	else if (code == CM_ERROR_NOSUCHPATH) {
-		NTStatus = 0xC000003AL;	/* Object path not found */
-	}		
-	else if (code == CM_ERROR_TOOBIG) {
-		NTStatus = 0xC000007BL;	/* Invalid image format */
-	}
-	else if (code == CM_ERROR_INVAL) {
-		NTStatus = 0xC000000DL;	/* Invalid parameter */
-	}
-	else if (code == CM_ERROR_BADFD) {
-		NTStatus = 0xC0000008L;	/* Invalid handle */
-	}
-	else if (code == CM_ERROR_BADFDOP) {
-		NTStatus = 0xC0000022L;	/* Access denied */
-	}
-	else if (code == CM_ERROR_EXISTS) {
-		NTStatus = 0xC0000035L;	/* Object name collision */
-	}
-	else if (code == CM_ERROR_NOTEMPTY) {
-		NTStatus = 0xC0000101L;	/* Directory not empty */
-	}	
-	else if (code == CM_ERROR_CROSSDEVLINK) {
-		NTStatus = 0xC00000D4L;	/* Not same device */
-	}
-	else if (code == CM_ERROR_NOTDIR) {
-		NTStatus = 0xC0000103L;	/* Not a directory */
-	}
-	else if (code == CM_ERROR_ISDIR) {
-		NTStatus = 0xC00000BAL;	/* File is a directory */
-	}
-	else if (code == CM_ERROR_BADOP) {
-		NTStatus = 0xC09820FFL;	/* SMB no support */
-	}
-	else if (code == CM_ERROR_BADSHARENAME) {
-		NTStatus = 0xC00000CCL;	/* Bad network name */
-	}
-	else if (code == CM_ERROR_NOIPC) {
+    if (code == CM_ERROR_NOSUCHCELL) {
+        NTStatus = 0xC000000FL;	/* No such file */
+    }
+    else if (code == CM_ERROR_NOSUCHVOLUME) {
+        NTStatus = 0xC000000FL;	/* No such file */
+    }
+    else if (code == CM_ERROR_TIMEDOUT) {
+        NTStatus = 0xC00000CFL;	/* Sharing Paused */
+    }
+    else if (code == CM_ERROR_RETRY) {
+        NTStatus = 0xC000022DL;	/* Retry */
+    }
+    else if (code == CM_ERROR_NOACCESS) {
+        NTStatus = 0xC0000022L;	/* Access denied */
+    }
+    else if (code == CM_ERROR_READONLY) {
+        NTStatus = 0xC00000A2L;	/* Write protected */
+    }	
+    else if (code == CM_ERROR_NOSUCHFILE) {
+        NTStatus = 0xC000000FL;	/* No such file */
+    }
+    else if (code == CM_ERROR_NOSUCHPATH) {
+        NTStatus = 0xC000003AL;	/* Object path not found */
+    }		
+    else if (code == CM_ERROR_TOOBIG) {
+        NTStatus = 0xC000007BL;	/* Invalid image format */
+    }
+    else if (code == CM_ERROR_INVAL) {
+        NTStatus = 0xC000000DL;	/* Invalid parameter */
+    }
+    else if (code == CM_ERROR_BADFD) {
+        NTStatus = 0xC0000008L;	/* Invalid handle */
+    }
+    else if (code == CM_ERROR_BADFDOP) {
+        NTStatus = 0xC0000022L;	/* Access denied */
+    }
+    else if (code == CM_ERROR_EXISTS) {
+        NTStatus = 0xC0000035L;	/* Object name collision */
+    }
+    else if (code == CM_ERROR_NOTEMPTY) {
+        NTStatus = 0xC0000101L;	/* Directory not empty */
+    }	
+    else if (code == CM_ERROR_CROSSDEVLINK) {
+        NTStatus = 0xC00000D4L;	/* Not same device */
+    }
+    else if (code == CM_ERROR_NOTDIR) {
+        NTStatus = 0xC0000103L;	/* Not a directory */
+    }
+    else if (code == CM_ERROR_ISDIR) {
+        NTStatus = 0xC00000BAL;	/* File is a directory */
+    }
+    else if (code == CM_ERROR_BADOP) {
 #ifdef COMMENT
-		NTStatus = 0xC0000022L;	/* Access Denied */
+        /* I have no idea where this comes from */
+        NTStatus = 0xC09820FFL;	/* SMB no support */
 #else
+        NTStatus = 0xC00000BBL;     /* Not supported */
+#endif /* COMMENT */
+    }
+    else if (code == CM_ERROR_BADSHARENAME) {
+        NTStatus = 0xC00000CCL;	/* Bad network name */
+    }
+    else if (code == CM_ERROR_NOIPC) {
+#ifdef COMMENT
+        NTStatus = 0xC0000022L;	/* Access Denied */
+#else   
         NTStatus = 0xC000013DL; /* Remote Resources */
 #endif
-	}
-	else if (code == CM_ERROR_CLOCKSKEW) {
-		NTStatus = 0xC0000133L;	/* Time difference at DC */
-	}
-	else if (code == CM_ERROR_BADTID) {
-		NTStatus = 0xC0982005L;	/* SMB bad TID */
-	}
-	else if (code == CM_ERROR_USESTD) {
-		NTStatus = 0xC09820FBL;	/* SMB use standard */
-	}
-	else if (code == CM_ERROR_QUOTA) {
-		NTStatus = 0xC0000044L;	/* Quota exceeded */
-	}
-	else if (code == CM_ERROR_SPACE) {
-		NTStatus = 0xC000007FL;	/* Disk full */
-	}
-	else if (code == CM_ERROR_ATSYS) {
-		NTStatus = 0xC0000033L;	/* Object name invalid */
-	}
-	else if (code == CM_ERROR_BADNTFILENAME) {
-		NTStatus = 0xC0000033L;	/* Object name invalid */
-	}
-	else if (code == CM_ERROR_WOULDBLOCK) {
-		NTStatus = 0xC0000055L;	/* Lock not granted */
-	}
-	else if (code == CM_ERROR_PARTIALWRITE) {
-		NTStatus = 0xC000007FL;	/* Disk full */
-	}
-	else if (code == CM_ERROR_BUFFERTOOSMALL) {
-		NTStatus = 0xC0000023L;	/* Buffer too small */
-	}
-    else if (code == CM_ERROR_AMBIGUOUS_FILENAME) {
-		NTStatus = 0xC0000035L;	/* Object name collision */
     }
-	else if (code == CM_ERROR_BADPASSWORD) {
-		NTStatus = 0xC000006DL; /* unknown username or bad password */
-	}
-	else if (code == CM_ERROR_BADLOGONTYPE) {
-		NTStatus = 0xC000015BL; /* logon type not granted */
-	}
-	else if (code == CM_ERROR_GSSCONTINUE) {
-		NTStatus = 0xC0000016L; /* more processing required */
-	}
-	else {
-		NTStatus = 0xC0982001L;	/* SMB non-specific error */
-	}
+    else if (code == CM_ERROR_CLOCKSKEW) {
+        NTStatus = 0xC0000133L;	/* Time difference at DC */
+    }
+    else if (code == CM_ERROR_BADTID) {
+        NTStatus = 0xC0982005L;	/* SMB bad TID */
+    }
+    else if (code == CM_ERROR_USESTD) {
+        NTStatus = 0xC09820FBL;	/* SMB use standard */
+    }
+    else if (code == CM_ERROR_QUOTA) {
+        NTStatus = 0xC0000044L;	/* Quota exceeded */
+    }
+    else if (code == CM_ERROR_SPACE) {
+        NTStatus = 0xC000007FL;	/* Disk full */
+    }
+    else if (code == CM_ERROR_ATSYS) {
+        NTStatus = 0xC0000033L;	/* Object name invalid */
+    }
+    else if (code == CM_ERROR_BADNTFILENAME) {
+        NTStatus = 0xC0000033L;	/* Object name invalid */
+    }
+    else if (code == CM_ERROR_WOULDBLOCK) {
+        NTStatus = 0xC0000055L;	/* Lock not granted */
+    }
+    else if (code == CM_ERROR_PARTIALWRITE) {
+        NTStatus = 0xC000007FL;	/* Disk full */
+    }
+    else if (code == CM_ERROR_BUFFERTOOSMALL) {
+        NTStatus = 0xC0000023L;	/* Buffer too small */
+    }
+    else if (code == CM_ERROR_AMBIGUOUS_FILENAME) {
+        NTStatus = 0xC0000035L;	/* Object name collision */
+    }   
+    else if (code == CM_ERROR_BADPASSWORD) {
+        NTStatus = 0xC000006DL; /* unknown username or bad password */
+    }
+    else if (code == CM_ERROR_BADLOGONTYPE) {
+        NTStatus = 0xC000015BL; /* logon type not granted */
+    }
+    else if (code == CM_ERROR_GSSCONTINUE) {
+        NTStatus = 0xC0000016L; /* more processing required */
+    }
+    else {
+        NTStatus = 0xC0982001L;	/* SMB non-specific error */
+    }
 
-	*NTStatusp = NTStatus;
-	osi_Log2(smb_logp, "SMB SEND code %lX as NT %lX", code, NTStatus);
-}
+    *NTStatusp = NTStatus;
+    osi_Log2(smb_logp, "SMB SEND code %lX as NT %lX", code, NTStatus);
+}       
 
 void smb_MapCoreError(long code, smb_vc_t *vcp, unsigned short *scodep,
 	unsigned char *classp)
@@ -2418,7 +2443,8 @@ void smb_MapCoreError(long code, smb_vc_t *vcp, unsigned short *scodep,
 
 long smb_SendCoreBadOp(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
-	return CM_ERROR_BADOP;
+    osi_Log0(smb_logp,"SendCoreBadOp - NOT_SUPPORTED");
+    return CM_ERROR_BADOP;
 }
 
 long smb_ReceiveCoreEcho(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
@@ -4373,41 +4399,36 @@ int smb_RenameProc(cm_scache_t *dscp, cm_dirEntry_t *dep, void *vrockp, osi_hype
 	return code;
 }
 
-long smb_ReceiveCoreRename(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
+
+long 
+smb_Rename(smb_vc_t *vcp, smb_packet_t *inp, char * oldPathp, char * newPathp, int attrs)
 {
-	long code = 0;
-	char *oldPathp;
-	char *newPathp;
-	char *tp;
-	cm_space_t *spacep = NULL;
-	smb_renameRock_t rock;
-	cm_scache_t *oldDscp = NULL;
-	cm_scache_t *newDscp = NULL;
-	cm_scache_t *tmpscp= NULL;
-	cm_scache_t *tmpscp2 = NULL;
-	char *oldLastNamep;
-	char *newLastNamep;
-	osi_hyper_t thyper;
-	cm_user_t *userp;
-	int caseFold;
-	char *tidPathp;
-	DWORD filter;
-	cm_req_t req;
+    long code = 0;
+    cm_space_t *spacep = NULL;
+    smb_renameRock_t rock;
+    cm_scache_t *oldDscp = NULL;
+    cm_scache_t *newDscp = NULL;
+    cm_scache_t *tmpscp= NULL;
+    cm_scache_t *tmpscp2 = NULL;
+    char *oldLastNamep;
+    char *newLastNamep;
+    osi_hyper_t thyper;
+    cm_user_t *userp;
+    int caseFold;
+    char *tidPathp;
+    DWORD filter;
+    cm_req_t req;
 
-	cm_InitReq(&req);
-        
-	tp = smb_GetSMBData(inp, NULL);
-	oldPathp = smb_ParseASCIIBlock(tp, &tp);
-	newPathp = smb_ParseASCIIBlock(tp, &tp);
+    userp = smb_GetUser(vcp, inp);
+    code = smb_LookupTIDPath(vcp, ((smb_t *)inp)->tid, &tidPathp);
+    if (code) {
+        cm_ReleaseUser(userp);
+        return CM_ERROR_NOSUCHPATH;
+    }
 
-	osi_Log2(smb_logp, "smb rename [%s] to [%s]",
-			 osi_LogSaveString(smb_logp, oldPathp),
-			 osi_LogSaveString(smb_logp, newPathp));
-
-	spacep = inp->spacep;
-	smb_StripLastComponent(spacep->data, &oldLastNamep, oldPathp);
-
-	userp = smb_GetUser(vcp, inp);
+    cm_InitReq(&req);
+    spacep = inp->spacep;
+    smb_StripLastComponent(spacep->data, &oldLastNamep, oldPathp);
 
  /*
   * Changed to use CASEFOLD always.  This enables us to rename Foo/baz when
@@ -4420,65 +4441,59 @@ long smb_ReceiveCoreRename(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
   *
   *	caseFold = CM_FLAG_CASEFOLD;
   */
-	caseFold = CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD;
+    caseFold = CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD;
+    code = cm_NameI(cm_rootSCachep, spacep->data, caseFold,
+                    userp, tidPathp, &req, &oldDscp);
 
-	code = smb_LookupTIDPath(vcp, ((smb_t *)inp)->tid, &tidPathp);
-    if(code) {
+    if (code) {
         cm_ReleaseUser(userp);
-        return CM_ERROR_NOSUCHPATH;
+        return code;
     }
-	code = cm_NameI(cm_rootSCachep, spacep->data, caseFold,
-					userp, tidPathp, &req, &oldDscp);
-
-	if (code) {
-		cm_ReleaseUser(userp);
-		return code;
-	}
         
-	smb_StripLastComponent(spacep->data, &newLastNamep, newPathp);
-	code = cm_NameI(cm_rootSCachep, spacep->data, caseFold,
-					userp, tidPathp, &req, &newDscp);
+    smb_StripLastComponent(spacep->data, &newLastNamep, newPathp);
+    code = cm_NameI(cm_rootSCachep, spacep->data, caseFold,
+                    userp, tidPathp, &req, &newDscp);
 
-	if (code) {
-		cm_ReleaseSCache(oldDscp);
-		cm_ReleaseUser(userp);
-		return code;
-	}
+    if (code) {
+        cm_ReleaseSCache(oldDscp);
+        cm_ReleaseUser(userp);
+        return code;
+    }
         
-	/* otherwise, oldDscp and newDscp point to the corresponding directories.
-	 * next, get the component names, and lower case them.
-	 */
+    /* otherwise, oldDscp and newDscp point to the corresponding directories.
+     * next, get the component names, and lower case them.
+     */
 
-	/* handle the old name first */
-	if (!oldLastNamep) 
-		oldLastNamep = oldPathp;
-	else 
-		oldLastNamep++;
+    /* handle the old name first */
+    if (!oldLastNamep) 
+        oldLastNamep = oldPathp;
+    else 
+        oldLastNamep++;
 
-	/* and handle the new name, too */
-	if (!newLastNamep) 
-		newLastNamep = newPathp;
-	else 
-		newLastNamep++;
+    /* and handle the new name, too */
+    if (!newLastNamep) 
+        newLastNamep = newPathp;
+    else 
+        newLastNamep++;
 
     /* TODO: The old name could be a wildcard.  The new name must not be */
-	
-	/* do the vnode call */
-	rock.odscp = oldDscp;
-	rock.ndscp = newDscp;
-	rock.userp = userp;
-	rock.reqp = &req;
-	rock.vcp = vcp;
-	rock.maskp = oldLastNamep;
-	rock.flags = ((strchr(oldLastNamep, '~') != NULL) ? SMB_MASKFLAG_TILDE : 0);
-	rock.newNamep = newLastNamep;
+
+    /* do the vnode call */
+    rock.odscp = oldDscp;
+    rock.ndscp = newDscp;
+    rock.userp = userp;
+    rock.reqp = &req;
+    rock.vcp = vcp;
+    rock.maskp = oldLastNamep;
+    rock.flags = ((strchr(oldLastNamep, '~') != NULL) ? SMB_MASKFLAG_TILDE : 0);
+    rock.newNamep = newLastNamep;
 
     /* Check if the file already exists; if so return error */
-	code = cm_Lookup(newDscp,newLastNamep,CM_FLAG_CHECKPATH,userp,&req,&tmpscp);
-	if ((code != CM_ERROR_NOSUCHFILE) && (code != CM_ERROR_NOSUCHPATH) && (code != CM_ERROR_NOSUCHVOLUME) ) {
+    code = cm_Lookup(newDscp,newLastNamep,CM_FLAG_CHECKPATH,userp,&req,&tmpscp);
+    if ((code != CM_ERROR_NOSUCHFILE) && (code != CM_ERROR_NOSUCHPATH) && (code != CM_ERROR_NOSUCHVOLUME) ) {
         osi_Log2(smb_logp, "  lookup returns %ld for [%s]", code,
                  osi_LogSaveString(afsd_logp, newLastNamep));
- 
+
         /* Check if the old and the new names differ only in case. If so return
          * success, else return CM_ERROR_EXISTS 
          */
@@ -4502,54 +4517,203 @@ long smb_ReceiveCoreRename(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
             code = CM_ERROR_EXISTS;
         }
 
-		if(tmpscp != NULL)
+        if(tmpscp != NULL)
             cm_ReleaseSCache(tmpscp);
         cm_ReleaseSCache(newDscp);
         cm_ReleaseSCache(oldDscp);
         cm_ReleaseUser(userp);
-	    return code; 
-	}
+        return code; 
+    }
 
     /* Now search the directory for the pattern, and do the appropriate rename when found */
-	thyper.LowPart = 0;		/* search dir from here */
+    thyper.LowPart = 0;		/* search dir from here */
     thyper.HighPart = 0;
 
     code = cm_ApplyDir(oldDscp, smb_RenameProc, &rock, &thyper, userp, &req, NULL);
 
     if (code == CM_ERROR_STOPNOW)
-		code = 0;
-	else if (code == 0)
-		code = CM_ERROR_NOSUCHFILE;
+        code = 0;
+    else if (code == 0)
+        code = CM_ERROR_NOSUCHFILE;
 
-	/* Handle Change Notification */
-	/*
-	 * Being lazy, not distinguishing between files and dirs in this
-	 * filter, since we'd have to do a lookup.
-	 */
-	filter = FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_DIR_NAME;
-	if (oldDscp == newDscp) {
-		if (oldDscp->flags & CM_SCACHEFLAG_ANYWATCH)
-			smb_NotifyChange(FILE_ACTION_RENAMED_OLD_NAME,
-							 filter, oldDscp, oldLastNamep,
-							 newLastNamep, TRUE);
-	} else {
-		if (oldDscp->flags & CM_SCACHEFLAG_ANYWATCH)
-			smb_NotifyChange(FILE_ACTION_RENAMED_OLD_NAME,
-							 filter, oldDscp, oldLastNamep,
-							 NULL, TRUE);
-		if (newDscp->flags & CM_SCACHEFLAG_ANYWATCH)
-			smb_NotifyChange(FILE_ACTION_RENAMED_NEW_NAME,
-							 filter, newDscp, newLastNamep,
-							 NULL, TRUE);
-	}
+    /* Handle Change Notification */
+    /*
+    * Being lazy, not distinguishing between files and dirs in this
+    * filter, since we'd have to do a lookup.
+    */
+    filter = FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_DIR_NAME;
+    if (oldDscp == newDscp) {
+        if (oldDscp->flags & CM_SCACHEFLAG_ANYWATCH)
+            smb_NotifyChange(FILE_ACTION_RENAMED_OLD_NAME,
+                              filter, oldDscp, oldLastNamep,
+                              newLastNamep, TRUE);
+    } else {
+        if (oldDscp->flags & CM_SCACHEFLAG_ANYWATCH)
+            smb_NotifyChange(FILE_ACTION_RENAMED_OLD_NAME,
+                              filter, oldDscp, oldLastNamep,
+                              NULL, TRUE);
+        if (newDscp->flags & CM_SCACHEFLAG_ANYWATCH)
+            smb_NotifyChange(FILE_ACTION_RENAMED_NEW_NAME,
+                              filter, newDscp, newLastNamep,
+                              NULL, TRUE);
+    }
 
     if(tmpscp != NULL) 
         cm_ReleaseSCache(tmpscp);
     cm_ReleaseUser(userp);
-	cm_ReleaseSCache(oldDscp);
-	cm_ReleaseSCache(newDscp);
-	return code;
+    cm_ReleaseSCache(oldDscp);
+    cm_ReleaseSCache(newDscp);
+        return code;
 }
+
+long 
+smb_Link(smb_vc_t *vcp, smb_packet_t *inp, char * oldPathp, char * newPathp) 
+{
+    long code = 0;
+    cm_space_t *spacep = NULL;
+    cm_scache_t *oldDscp = NULL;
+    cm_scache_t *newDscp = NULL;
+    cm_scache_t *tmpscp= NULL;
+    cm_scache_t *tmpscp2 = NULL;
+    cm_scache_t *sscp = NULL;
+    char *oldLastNamep;
+    char *newLastNamep;
+    cm_user_t *userp;
+    int caseFold;
+    char *tidPathp;
+    DWORD filter;
+    cm_req_t req;
+
+    userp = smb_GetUser(vcp, inp);
+
+    code = smb_LookupTIDPath(vcp, ((smb_t *)inp)->tid, &tidPathp);
+    if (code) {
+        cm_ReleaseUser(userp);
+        return CM_ERROR_NOSUCHPATH;
+    }
+
+    cm_InitReq(&req);
+
+    caseFold = CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD;
+
+    spacep = inp->spacep;
+    smb_StripLastComponent(spacep->data, &oldLastNamep, oldPathp);
+    
+    code = cm_NameI(cm_rootSCachep, spacep->data, caseFold,
+                    userp, tidPathp, &req, &oldDscp);
+    if (code) {
+        cm_ReleaseUser(userp);
+        return code;
+    }
+        
+    smb_StripLastComponent(spacep->data, &newLastNamep, newPathp);
+    code = cm_NameI(cm_rootSCachep, spacep->data, caseFold,
+                    userp, tidPathp, &req, &newDscp);
+    if (code) {
+        cm_ReleaseSCache(oldDscp);
+        cm_ReleaseUser(userp);
+        return code;
+    }
+
+    /* Now, although we did two lookups for the two directories (because the same
+     * directory can be referenced through different paths), we only allow hard links
+     * within the same directory. */
+    if (oldDscp != newDscp) {
+        cm_ReleaseSCache(oldDscp);
+        cm_ReleaseSCache(newDscp);
+        cm_ReleaseUser(userp);
+        return CM_ERROR_CROSSDEVLINK;
+    }
+
+    /* handle the old name first */
+    if (!oldLastNamep) 
+        oldLastNamep = oldPathp;
+    else 
+        oldLastNamep++;
+
+    /* and handle the new name, too */
+    if (!newLastNamep) 
+        newLastNamep = newPathp;
+    else 
+        newLastNamep++;
+
+    /* now lookup the old name */
+    osi_Log1(smb_logp,"  looking up [%s]", osi_LogSaveString(smb_logp,oldLastNamep));
+    code = cm_Lookup(oldDscp, oldLastNamep, CM_FLAG_CHECKPATH | CM_FLAG_CASEFOLD, userp, &req, &sscp);
+    if (code) {
+        cm_ReleaseSCache(oldDscp);
+        cm_ReleaseSCache(newDscp);
+        cm_ReleaseUser(userp);
+        return code;
+    }
+
+    /* Check if the file already exists; if so return error */
+    code = cm_Lookup(newDscp,newLastNamep,CM_FLAG_CHECKPATH,userp,&req,&tmpscp);
+    if ((code != CM_ERROR_NOSUCHFILE) && (code != CM_ERROR_NOSUCHPATH) && (code != CM_ERROR_NOSUCHVOLUME) ) {
+        osi_Log2(smb_logp, "  lookup returns %ld for [%s]", code,
+                  osi_LogSaveString(afsd_logp, newLastNamep));
+
+        /* if the existing link is to the same file, then we return success */
+        if (!code) {
+            if(sscp == tmpscp) {
+                code = 0;
+            } else {
+                osi_Log0(smb_logp, "Can't create hardlink.  Target already exists");
+                code = CM_ERROR_EXISTS;
+            }
+        }
+
+        if (tmpscp != NULL)
+            cm_ReleaseSCache(tmpscp);
+        cm_ReleaseSCache(sscp);
+        cm_ReleaseSCache(newDscp);
+        cm_ReleaseSCache(oldDscp);
+        cm_ReleaseUser(userp);
+        return code; 
+    }
+
+    /* now create the hardlink */
+    osi_Log1(smb_logp,"  Attempting to create new link [%s]", osi_LogSaveString(smb_logp, newLastNamep));
+    code = cm_Link(newDscp, newLastNamep, sscp, 0, userp, &req);
+    osi_Log1(smb_logp,"  Link returns %d", code);
+
+    /* Handle Change Notification */
+    if (code == 0) {
+        filter = (sscp->fileType == CM_SCACHETYPE_FILE)? FILE_NOTIFY_CHANGE_FILE_NAME : FILE_NOTIFY_CHANGE_DIR_NAME;
+        if (newDscp->flags & CM_SCACHEFLAG_ANYWATCH)
+            smb_NotifyChange(FILE_ACTION_ADDED,
+                             filter, newDscp, newLastNamep,
+                             NULL, TRUE);
+    }
+
+    if (tmpscp != NULL) 
+        cm_ReleaseSCache(tmpscp);
+    cm_ReleaseUser(userp);
+    cm_ReleaseSCache(sscp);
+    cm_ReleaseSCache(oldDscp);
+    cm_ReleaseSCache(newDscp);
+    return code;
+}
+
+long 
+smb_ReceiveCoreRename(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
+{
+    char *oldPathp;
+    char *newPathp;
+    char *tp;
+
+    tp = smb_GetSMBData(inp, NULL);
+    oldPathp = smb_ParseASCIIBlock(tp, &tp);
+    newPathp = smb_ParseASCIIBlock(tp, &tp);
+
+    osi_Log2(smb_logp, "smb rename [%s] to [%s]",
+              osi_LogSaveString(smb_logp, oldPathp),
+              osi_LogSaveString(smb_logp, newPathp));
+
+    return smb_Rename(vcp,inp,oldPathp,newPathp,0);
+}
+
+
 
 typedef struct smb_rmdirRock {
 	cm_scache_t *dscp;
@@ -5933,225 +6097,232 @@ void smb_DispatchPacket(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
     int temp;
     unsigned char *tp;
     unsigned short errCode;
-	unsigned long NTStatus;
+    unsigned long NTStatus;
     int noSend;
     unsigned char errClass;
-	unsigned int oldGen;
-	DWORD oldTime, newTime;
+    unsigned int oldGen;
+    DWORD oldTime, newTime;
 
-	/* get easy pointer to the data */
-	smbp = (smb_t *) inp->data;
+    /* get easy pointer to the data */
+    smbp = (smb_t *) inp->data;
 
-	if (!(outp->flags & SMB_PACKETFLAG_SUSPENDED)) {
+    if (!(outp->flags & SMB_PACKETFLAG_SUSPENDED)) {
         /* setup the basic parms for the initial request in the packet */
-		inp->inCom = smbp->com;
+        inp->inCom = smbp->com;
         inp->wctp = &smbp->wct;
         inp->inCount = 0;
-		inp->ncb_length = ncbp->ncb_length;
-	}
+        inp->ncb_length = ncbp->ncb_length;
+    }
     noSend = 0;
 
-	/* Sanity check */
-	if (ncbp->ncb_length < offsetof(struct smb, vdata)) {
-		/* log it and discard it */
+    /* Sanity check */
+    if (ncbp->ncb_length < offsetof(struct smb, vdata)) {
+        /* log it and discard it */
 #ifndef DJGPP
-		HANDLE h;
-		char *ptbuf[1];
-		char s[100];
-		h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);
-		sprintf(s, "SMB message too short, len %d", ncbp->ncb_length);
-		ptbuf[0] = s;
-		ReportEvent(h, EVENTLOG_WARNING_TYPE, 0, 1007, NULL,
-			1, ncbp->ncb_length, ptbuf, inp);
-		DeregisterEventSource(h);
+        HANDLE h;
+        char *ptbuf[1];
+        char s[100];
+        h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);
+        sprintf(s, "SMB message too short, len %d", ncbp->ncb_length);
+        ptbuf[0] = s;
+        ReportEvent(h, EVENTLOG_WARNING_TYPE, 0, 1007, NULL,
+                     1, ncbp->ncb_length, ptbuf, inp);
+        DeregisterEventSource(h);
 #else /* DJGPP */
         osi_Log1(smb_logp, "SMB message too short, len %d", ncbp->ncb_length);
 #endif /* !DJGPP */
-		return;
-	}
+        return;
+    }
 
-	/* We are an ongoing op */
-	thrd_Increment(&ongoingOps);
+    /* We are an ongoing op */
+    thrd_Increment(&ongoingOps);
 
     /* set up response packet for receiving output */
-	if (!(outp->flags & SMB_PACKETFLAG_SUSPENDED))
+    if (!(outp->flags & SMB_PACKETFLAG_SUSPENDED))
         smb_FormatResponsePacket(vcp, inp, outp);
     outWctp = outp->wctp;
 
-	/* Remember session generation number and time */
-	oldGen = sessionGen;
-	oldTime = GetCurrentTime();
+    /* Remember session generation number and time */
+    oldGen = sessionGen;
+    oldTime = GetCurrentTime();
 
-	while(inp->inCom != 0xff) {
+    while (inp->inCom != 0xff) {
         dp = &smb_dispatchTable[inp->inCom];
 
-		if (outp->flags & SMB_PACKETFLAG_SUSPENDED) {
-			outp->flags &= ~SMB_PACKETFLAG_SUSPENDED;
-			code = outp->resumeCode;
-			goto resume;
-		}
+        if (outp->flags & SMB_PACKETFLAG_SUSPENDED) {
+            outp->flags &= ~SMB_PACKETFLAG_SUSPENDED;
+            code = outp->resumeCode;
+            goto resume;
+        }
 
         /* process each request in the packet; inCom, wctp and inCount
          * are already set up.
          */
-		osi_Log2(smb_logp, "SMB received op 0x%x lsn %d", inp->inCom,
-                 ncbp->ncb_lsn);
+        osi_Log2(smb_logp, "SMB received op 0x%x lsn %d", inp->inCom,
+                  ncbp->ncb_lsn);
 
-		/* now do the dispatch */
-		/* start by formatting the response record a little, as a default */
+        /* now do the dispatch */
+        /* start by formatting the response record a little, as a default */
         if (dp->flags & SMB_DISPATCHFLAG_CHAINED) {
-			outWctp[0] = 2;
+            outWctp[0] = 2;
             outWctp[1] = 0xff;	/* no operation */
             outWctp[2] = 0;		/* padding */
             outWctp[3] = 0;
             outWctp[4] = 0;
         }
-		else {
-			/* not a chained request, this is a more reasonable default */
+        else {
+            /* not a chained request, this is a more reasonable default */
             outWctp[0] = 0;	/* wct of zero */
             outWctp[1] = 0;	/* and bcc (word) of zero */
             outWctp[2] = 0;
-		}   
+        }   
 
-		/* once set, stays set.  Doesn't matter, since we never chain
+        /* once set, stays set.  Doesn't matter, since we never chain
          * "no response" calls.
          */
-		if (dp->flags & SMB_DISPATCHFLAG_NORESPONSE)
+        if (dp->flags & SMB_DISPATCHFLAG_NORESPONSE)
             noSend = 1;
 
         if (dp->procp) {
-			/* we have a recognized operation */
+            /* we have a recognized operation */
 
-			if (inp->inCom == 0x1d)
-				/* Raw Write */
-				code = smb_ReceiveCoreWriteRaw (vcp, inp, outp,
-                                                rwcp);
-			else {
-					osi_LogEvent("AFS Dispatch %s",(myCrt_Dispatch(inp->inCom)),"vcp[%x] lana[%d] lsn[%d]",(int)vcp,vcp->lana,vcp->lsn);
-					osi_Log4(smb_logp,"Dispatch %s vcp[%x] lana[%d] lsn[%d]",(myCrt_Dispatch(inp->inCom)),vcp,vcp->lana,vcp->lsn);
-					code = (*(dp->procp)) (vcp, inp, outp);
-					osi_LogEvent("AFS Dispatch return",NULL,"Code[%d]",(code==0)?0:code-CM_ERROR_BASE);
-					osi_Log1(smb_logp,"Dispatch return  code[%d]",(code==0)?0:code-CM_ERROR_BASE);
-            }
+            if (inp->inCom == 0x1d)
+                /* Raw Write */
+                code = smb_ReceiveCoreWriteRaw (vcp, inp, outp,
+                                                 rwcp);
+            else {
+                osi_LogEvent("AFS Dispatch %s",(myCrt_Dispatch(inp->inCom)),"vcp[%x] lana[%d] lsn[%d]",(int)vcp,vcp->lana,vcp->lsn);
+                osi_Log4(smb_logp,"Dispatch %s vcp[%x] lana[%d] lsn[%d]",(myCrt_Dispatch(inp->inCom)),vcp,vcp->lana,vcp->lsn);
+                code = (*(dp->procp)) (vcp, inp, outp);
+                osi_LogEvent("AFS Dispatch return",NULL,"Code[%d]",(code==0)?0:code-CM_ERROR_BASE);
+                osi_Log1(smb_logp,"Dispatch return  code[%d]",(code==0)?0:code-CM_ERROR_BASE);
+#ifdef LOG_PACKET
+                if ( code == CM_ERROR_BADSMB ||
+                     code == CM_ERROR_BADOP )
+                smb_LogPacket(inp);
+#endif /* LOG_PACKET */
+            }   
 
-			if (oldGen != sessionGen) {
+            if (oldGen != sessionGen) {
 #ifndef DJGPP
-				HANDLE h;
-				char *ptbuf[1];
-				char s[100];
-				newTime = GetCurrentTime();
-				h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);
-				sprintf(s, "Pkt straddled session startup, took %d ms, ncb length %d",
-                        newTime - oldTime, ncbp->ncb_length);
-				ptbuf[0] = s;
-				ReportEvent(h, EVENTLOG_WARNING_TYPE, 0,
-                            1005, NULL, 1, ncbp->ncb_length, ptbuf, smbp);
-				DeregisterEventSource(h);
+                HANDLE h;
+                char *ptbuf[1];
+                char s[100];
+                newTime = GetCurrentTime();
+                h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);
+                sprintf(s, "Pkt straddled session startup, took %d ms, ncb length %d",
+                         newTime - oldTime, ncbp->ncb_length);
+                ptbuf[0] = s;
+                ReportEvent(h, EVENTLOG_WARNING_TYPE, 0,
+                             1005, NULL, 1, ncbp->ncb_length, ptbuf, smbp);
+                DeregisterEventSource(h);
 #endif /* !DJGPP */
-				osi_Log1(smb_logp, "Pkt straddled session startup, "
-                         "ncb length %d", ncbp->ncb_length);
-			}
+                osi_Log1(smb_logp, "Pkt straddled session startup, "
+                          "ncb length %d", ncbp->ncb_length);
+            }
         }
         else {
-			/* bad opcode, fail the request, after displaying it */
-#ifdef NOTSERVICE
+            /* bad opcode, fail the request, after displaying it */
+            osi_Log1(smb_logp, "Received bad SMB req 0x%X", inp->inCom);
+#ifdef LOG_PACKET
             smb_LogPacket(inp);
-#endif  /* NOTSERVICE */
+#endif  /* LOG_PACKET */
 
 #ifndef DJGPP
-			if (showErrors) {
-				sprintf(tbuffer, "Received bad SMB req 0x%x", inp->inCom);
+            if (showErrors) {
+                sprintf(tbuffer, "Received bad SMB req 0x%x", inp->inCom);
                 code = (*smb_MBfunc)(NULL, tbuffer, "Cancel: don't show again",
-                                     MB_OKCANCEL|MB_SERVICE_NOTIFICATION);
-                if (code == IDCANCEL) showErrors = 0;
-			}
+                                      MB_OKCANCEL|MB_SERVICE_NOTIFICATION);
+                if (code == IDCANCEL) 
+                    showErrors = 0;
+            }
 #endif /* DJGPP */
             code = CM_ERROR_BADOP;
         }
 
-		/* catastrophic failure:  log as much as possible */
-		if (code == CM_ERROR_BADSMB) {
+        /* catastrophic failure:  log as much as possible */
+        if (code == CM_ERROR_BADSMB) {
 #ifndef DJGPP
-			HANDLE h;
-			char *ptbuf[1];
-			char s[100];
+            HANDLE h;
+            char *ptbuf[1];
+            char s[100];
 
-			osi_Log1(smb_logp,
+            osi_Log1(smb_logp,
                       "Invalid SMB, ncb_length %d",
                       ncbp->ncb_length);
 
-			h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);
-			sprintf(s, "Invalid SMB message, length %d",
+            h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);
+            sprintf(s, "Invalid SMB message, length %d",
                      ncbp->ncb_length);
-			ptbuf[0] = s;
-			ReportEvent(h, EVENTLOG_ERROR_TYPE, 0, 1002, NULL,
+            ptbuf[0] = s;
+            ReportEvent(h, EVENTLOG_ERROR_TYPE, 0, 1002, NULL,
                          1, ncbp->ncb_length, ptbuf, smbp);
-			DeregisterEventSource(h);
-#ifdef NOTSERVICE
+            DeregisterEventSource(h);
+#ifdef LOG_PACKET
             smb_LogPacket(inp);
-#endif /* NOTSERVICE */
+#endif /* LOG_PACKET */
 #endif /* !DJGPP */
             osi_Log1(smb_logp, "Invalid SMB message, length %d",
                      ncbp->ncb_length);
 
-			code = CM_ERROR_INVAL;
-		}
+            code = CM_ERROR_INVAL;
+        }
 
-		if (outp->flags & SMB_PACKETFLAG_NOSEND) {
-			thrd_Decrement(&ongoingOps);
-			return;
-		}
+        if (outp->flags & SMB_PACKETFLAG_NOSEND) {
+            thrd_Decrement(&ongoingOps);
+            return;
+        }
 
       resume:
-		/* now, if we failed, turn the current response into an empty
+        /* now, if we failed, turn the current response into an empty
          * one, and fill in the response packet's error code.
          */
-		if (code) {
-			if (vcp->flags & SMB_VCFLAG_STATUS32) {
-				smb_MapNTError(code, &NTStatus);
-				outWctp = outp->wctp;
-				smbp = (smb_t *) &outp->data;
-				if (code != CM_ERROR_PARTIALWRITE
-				    && code != CM_ERROR_BUFFERTOOSMALL 
-                    && code != CM_ERROR_GSSCONTINUE) {
-					/* nuke wct and bcc.  For a partial
-					 * write or an in-process authentication handshake, 
+        if (code) {
+            if (vcp->flags & SMB_VCFLAG_STATUS32) {
+                smb_MapNTError(code, &NTStatus);
+                outWctp = outp->wctp;
+                smbp = (smb_t *) &outp->data;
+                if (code != CM_ERROR_PARTIALWRITE
+                     && code != CM_ERROR_BUFFERTOOSMALL 
+                     && code != CM_ERROR_GSSCONTINUE) {
+                    /* nuke wct and bcc.  For a partial
+                     * write or an in-process authentication handshake, 
                      * assume they're OK.
-					 */
-					*outWctp++ = 0;
-					*outWctp++ = 0;
-					*outWctp++ = 0;
-				}
-				smbp->rcls = (unsigned char) (NTStatus & 0xff);
-				smbp->reh = (unsigned char) ((NTStatus >> 8) & 0xff);
-				smbp->errLow = (unsigned char) ((NTStatus >> 16) & 0xff);
-				smbp->errHigh = (unsigned char) ((NTStatus >> 24) & 0xff);
-				smbp->flg2 |= 0x4000;
-				break;
-			}
-			else {
+                     */
+                    *outWctp++ = 0;
+                    *outWctp++ = 0;
+                    *outWctp++ = 0;
+                }
+                smbp->rcls = (unsigned char) (NTStatus & 0xff);
+                smbp->reh = (unsigned char) ((NTStatus >> 8) & 0xff);
+                smbp->errLow = (unsigned char) ((NTStatus >> 16) & 0xff);
+                smbp->errHigh = (unsigned char) ((NTStatus >> 24) & 0xff);
+                smbp->flg2 |= 0x4000;
+                break;
+            }
+            else {
                 smb_MapCoreError(code, vcp, &errCode, &errClass);
-				outWctp = outp->wctp;
-				smbp = (smb_t *) &outp->data;
-				if (code != CM_ERROR_PARTIALWRITE) {
-					/* nuke wct and bcc.  For a partial
-					 * write, assume they're OK.
-					 */
-					*outWctp++ = 0;
-					*outWctp++ = 0;
-					*outWctp++ = 0;
-				}
-				smbp->errLow = (unsigned char) (errCode & 0xff);
-				smbp->errHigh = (unsigned char) ((errCode >> 8) & 0xff);
+                outWctp = outp->wctp;
+                smbp = (smb_t *) &outp->data;
+                if (code != CM_ERROR_PARTIALWRITE) {
+                    /* nuke wct and bcc.  For a partial
+                     * write, assume they're OK.
+                     */
+                    *outWctp++ = 0;
+                    *outWctp++ = 0;
+                    *outWctp++ = 0;
+                }
+                smbp->errLow = (unsigned char) (errCode & 0xff);
+                smbp->errHigh = (unsigned char) ((errCode >> 8) & 0xff);
                 smbp->rcls = errClass;
-				break;
-			}
-		}	/* error occurred */
-                
+                break;
+            }
+        }	/* error occurred */
+
         /* if we're here, we've finished one request.  Look to see if
-		 * this is a chained opcode.  If it is, setup things to process
-		 * the chained request, and setup the output buffer to hold the
-		 * chained response.  Start by finding the next input record.
+         * this is a chained opcode.  If it is, setup things to process
+         * the chained request, and setup the output buffer to hold the
+         * chained response.  Start by finding the next input record.
          */
         if (!(dp->flags & SMB_DISPATCHFLAG_CHAINED))
             break;		/* not a chained req */
@@ -6168,7 +6339,7 @@ void smb_DispatchPacket(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
 
         /* and now append the next output request to the end of this
          * last request.  Begin by finding out where the last response
-		 * ends, since that's where we'll put our new response.
+         * ends, since that's where we'll put our new response.
          */
         outWctp = outp->wctp;		/* ptr to out parameters */
         osi_assert (outWctp[0] >= 2);	/* need this for all chained requests */
@@ -6176,35 +6347,35 @@ void smb_DispatchPacket(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
         tp = outWctp + nparms + 1;	/* now points to bcc field */
         nbytes = tp[0] + (tp[1] << 8);	/* # of data bytes */
         tp += 2 /* for the count itself */ + nbytes;
-		/* tp now points to the new output record; go back and patch the
+        /* tp now points to the new output record; go back and patch the
          * second parameter (off2) to point to the new record.
          */
-		temp = (unsigned int)tp - ((unsigned int) outp->data);
+        temp = (unsigned int)tp - ((unsigned int) outp->data);
         outWctp[3] = (unsigned char) (temp & 0xff);
         outWctp[4] = (unsigned char) ((temp >> 8) & 0xff);
         outWctp[2] = 0;	/* padding */
         outWctp[1] = inp->inCom;	/* next opcode */
 
-		/* finally, setup for the next iteration */
+        /* finally, setup for the next iteration */
         outp->wctp = tp;
-		outWctp = tp;
-	}	/* while loop over all requests in the packet */
+        outWctp = tp;
+    }	/* while loop over all requests in the packet */
 
-	/* done logging out, turn off logging-out flag */
-	if (!(inp->flags & SMB_PACKETFLAG_PROFILE_UPDATE_OK)) {
-		vcp->justLoggedOut = NULL;
-		if (loggedOut) {
-			loggedOut = 0;
-			free(loggedOutName);
-			loggedOutName = NULL;
-			smb_ReleaseUID(loggedOutUserp);
-			loggedOutUserp = NULL;
-		}
-	}
+    /* done logging out, turn off logging-out flag */
+    if (!(inp->flags & SMB_PACKETFLAG_PROFILE_UPDATE_OK)) {
+        vcp->justLoggedOut = NULL;
+        if (loggedOut) {
+            loggedOut = 0;
+            free(loggedOutName);
+            loggedOutName = NULL;
+            smb_ReleaseUID(loggedOutUserp);
+            loggedOutUserp = NULL;
+        }
+    }
  
     /* now send the output packet, and return */
     if (!noSend)
-		smb_SendPacket(vcp, outp);
+        smb_SendPacket(vcp, outp);
 	thrd_Decrement(&ongoingOps);
 
 	if (!(vcp->flags & SMB_VCFLAG_ALREADYDEAD)) {
@@ -6214,12 +6385,12 @@ void smb_DispatchPacket(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
                       "Replacing active_vcp %x with %x", active_vcp, vcp);
         }
         smb_HoldVC(vcp);
-		active_vcp = vcp;
-		last_msg_time = GetCurrentTime();
-	}
+            active_vcp = vcp;
+            last_msg_time = GetCurrentTime();
+	}       
 	else if (active_vcp == vcp) {
-        smb_ReleaseVC(active_vcp);
-		active_vcp = NULL;
+            smb_ReleaseVC(active_vcp);
+            active_vcp = NULL;
     }
 
     return;
@@ -6929,7 +7100,7 @@ void smb_Listener(void *parmp)
         fprintf(stderr, "New session(ncb_lsn,ncb_lana_num) %d,%d starting from host "
 				"%s\n",
                 ncbp->ncb_lsn,ncbp->ncb_lana_num, rname);
-#endif
+#endif /* NOTSERVICE */
         osi_Log4(smb_logp, "New session(ncb_lsn,ncb_lana_num) (%d,%d) starting from host %s, %d ongoing ops",
                   ncbp->ncb_lsn,ncbp->ncb_lana_num, osi_LogSaveString(smb_logp, rname), ongoingOps);
 
@@ -7341,100 +7512,112 @@ void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
     retHandle = thrd_CreateEvent(NULL, FALSE, FALSE, eventName);
     if ( GetLastError() == ERROR_ALREADY_EXISTS )
         afsi_log("Event Object Already Exists: %s", eventName);
-	for (i = 0; i < smb_NumServerThreads; i++) {
-		NCBreturns[i] = malloc(NCBmax * sizeof(EVENT_HANDLE));
-		NCBreturns[i][0] = retHandle;
-	}
-	for (i = 1; i <= nThreads; i++)
-		InitNCBslot(i);
-	numNCBs = nThreads + 1;
+    for (i = 0; i < smb_NumServerThreads; i++) {
+        NCBreturns[i] = malloc(NCBmax * sizeof(EVENT_HANDLE));
+        NCBreturns[i][0] = retHandle;
+    }
+    for (i = 1; i <= nThreads; i++)
+        InitNCBslot(i);
+    numNCBs = nThreads + 1;
 
-	/* Initialize dispatch table */
-	memset(&smb_dispatchTable, 0, sizeof(smb_dispatchTable));
-	smb_dispatchTable[0x00].procp = smb_ReceiveCoreMakeDir;
-	smb_dispatchTable[0x01].procp = smb_ReceiveCoreRemoveDir;
-	smb_dispatchTable[0x02].procp = smb_ReceiveCoreOpen;
-	smb_dispatchTable[0x03].procp = smb_ReceiveCoreCreate;
-	smb_dispatchTable[0x04].procp = smb_ReceiveCoreClose;
-	smb_dispatchTable[0x05].procp = smb_ReceiveCoreFlush;
-	smb_dispatchTable[0x06].procp = smb_ReceiveCoreUnlink;
-	smb_dispatchTable[0x07].procp = smb_ReceiveCoreRename;
-	smb_dispatchTable[0x08].procp = smb_ReceiveCoreGetFileAttributes;
-	smb_dispatchTable[0x09].procp = smb_ReceiveCoreSetFileAttributes;
-	smb_dispatchTable[0x0a].procp = smb_ReceiveCoreRead;
-	smb_dispatchTable[0x0b].procp = smb_ReceiveCoreWrite;
-	smb_dispatchTable[0x0c].procp = smb_ReceiveCoreLockRecord;
-	smb_dispatchTable[0x0d].procp = smb_ReceiveCoreUnlockRecord;
-	smb_dispatchTable[0x0e].procp = smb_SendCoreBadOp; /* create temporary */
-	smb_dispatchTable[0x0f].procp = smb_ReceiveCoreCreate;
-	smb_dispatchTable[0x10].procp = smb_ReceiveCoreCheckPath;
-	smb_dispatchTable[0x11].procp = smb_SendCoreBadOp;	/* process exit */
-	smb_dispatchTable[0x12].procp = smb_ReceiveCoreSeek;
-	smb_dispatchTable[0x1a].procp = smb_ReceiveCoreReadRaw;
-	/* Set NORESPONSE because smb_ReceiveCoreReadRaw() does the responses itself */
-	smb_dispatchTable[0x1a].flags |= SMB_DISPATCHFLAG_NORESPONSE;
-	smb_dispatchTable[0x1d].procp = smb_ReceiveCoreWriteRawDummy;
-	smb_dispatchTable[0x22].procp = smb_ReceiveV3SetAttributes;
-	smb_dispatchTable[0x23].procp = smb_ReceiveV3GetAttributes;
-	smb_dispatchTable[0x24].procp = smb_ReceiveV3LockingX;
-	smb_dispatchTable[0x24].flags |= SMB_DISPATCHFLAG_CHAINED;
-	smb_dispatchTable[0x25].procp = smb_ReceiveV3Trans;
-	smb_dispatchTable[0x25].flags |= SMB_DISPATCHFLAG_NORESPONSE;
-	smb_dispatchTable[0x26].procp = smb_ReceiveV3Trans;
-	smb_dispatchTable[0x26].flags |= SMB_DISPATCHFLAG_NORESPONSE;
-	smb_dispatchTable[0x29].procp = smb_SendCoreBadOp;	/* copy file */
-	smb_dispatchTable[0x2b].procp = smb_ReceiveCoreEcho;
-	/* Set NORESPONSE because smb_ReceiveCoreEcho() does the responses itself */
-	smb_dispatchTable[0x2b].flags |= SMB_DISPATCHFLAG_NORESPONSE;
+    /* Initialize dispatch table */
+    memset(&smb_dispatchTable, 0, sizeof(smb_dispatchTable));
+    /* Prepare the table for unknown operations */
+    for(i=0; i<= SMB_NOPCODES; i++) {
+        smb_dispatchTable[i].procp = smb_SendCoreBadOp;
+    }
+    /* Fill in the ones we do know */
+    smb_dispatchTable[0x00].procp = smb_ReceiveCoreMakeDir;
+    smb_dispatchTable[0x01].procp = smb_ReceiveCoreRemoveDir;
+    smb_dispatchTable[0x02].procp = smb_ReceiveCoreOpen;
+    smb_dispatchTable[0x03].procp = smb_ReceiveCoreCreate;
+    smb_dispatchTable[0x04].procp = smb_ReceiveCoreClose;
+    smb_dispatchTable[0x05].procp = smb_ReceiveCoreFlush;
+    smb_dispatchTable[0x06].procp = smb_ReceiveCoreUnlink;
+    smb_dispatchTable[0x07].procp = smb_ReceiveCoreRename;
+    smb_dispatchTable[0x08].procp = smb_ReceiveCoreGetFileAttributes;
+    smb_dispatchTable[0x09].procp = smb_ReceiveCoreSetFileAttributes;
+    smb_dispatchTable[0x0a].procp = smb_ReceiveCoreRead;
+    smb_dispatchTable[0x0b].procp = smb_ReceiveCoreWrite;
+    smb_dispatchTable[0x0c].procp = smb_ReceiveCoreLockRecord;
+    smb_dispatchTable[0x0d].procp = smb_ReceiveCoreUnlockRecord;
+    smb_dispatchTable[0x0e].procp = smb_SendCoreBadOp; /* create temporary */
+    smb_dispatchTable[0x0f].procp = smb_ReceiveCoreCreate;
+    smb_dispatchTable[0x10].procp = smb_ReceiveCoreCheckPath;
+    smb_dispatchTable[0x11].procp = smb_SendCoreBadOp;	/* process exit */
+    smb_dispatchTable[0x12].procp = smb_ReceiveCoreSeek;
+    smb_dispatchTable[0x1a].procp = smb_ReceiveCoreReadRaw;
+    /* Set NORESPONSE because smb_ReceiveCoreReadRaw() does the responses itself */
+    smb_dispatchTable[0x1a].flags |= SMB_DISPATCHFLAG_NORESPONSE;
+    smb_dispatchTable[0x1d].procp = smb_ReceiveCoreWriteRawDummy;
+    smb_dispatchTable[0x22].procp = smb_ReceiveV3SetAttributes;
+    smb_dispatchTable[0x23].procp = smb_ReceiveV3GetAttributes;
+    smb_dispatchTable[0x24].procp = smb_ReceiveV3LockingX;
+    smb_dispatchTable[0x24].flags |= SMB_DISPATCHFLAG_CHAINED;
+    smb_dispatchTable[0x25].procp = smb_ReceiveV3Trans;
+    smb_dispatchTable[0x25].flags |= SMB_DISPATCHFLAG_NORESPONSE;
+    smb_dispatchTable[0x26].procp = smb_ReceiveV3Trans;
+    smb_dispatchTable[0x26].flags |= SMB_DISPATCHFLAG_NORESPONSE;
+    smb_dispatchTable[0x29].procp = smb_SendCoreBadOp;	/* copy file */
+    smb_dispatchTable[0x2b].procp = smb_ReceiveCoreEcho;
+    /* Set NORESPONSE because smb_ReceiveCoreEcho() does the responses itself */
+    smb_dispatchTable[0x2b].flags |= SMB_DISPATCHFLAG_NORESPONSE;
     smb_dispatchTable[0x2d].procp = smb_ReceiveV3OpenX;
     smb_dispatchTable[0x2d].flags |= SMB_DISPATCHFLAG_CHAINED;
     smb_dispatchTable[0x2e].procp = smb_ReceiveV3ReadX;
     smb_dispatchTable[0x2e].flags |= SMB_DISPATCHFLAG_CHAINED;
-	smb_dispatchTable[0x32].procp = smb_ReceiveV3Tran2A;	/* both are same */
+    smb_dispatchTable[0x32].procp = smb_ReceiveV3Tran2A;	/* both are same */
     smb_dispatchTable[0x32].flags |= SMB_DISPATCHFLAG_NORESPONSE;
     smb_dispatchTable[0x33].procp = smb_ReceiveV3Tran2A;
     smb_dispatchTable[0x33].flags |= SMB_DISPATCHFLAG_NORESPONSE;
     smb_dispatchTable[0x34].procp = smb_ReceiveV3FindClose;
     smb_dispatchTable[0x35].procp = smb_ReceiveV3FindNotifyClose;
-	smb_dispatchTable[0x70].procp = smb_ReceiveCoreTreeConnect;
-	smb_dispatchTable[0x71].procp = smb_ReceiveCoreTreeDisconnect;
-	smb_dispatchTable[0x72].procp = smb_ReceiveNegotiate;
-	smb_dispatchTable[0x73].procp = smb_ReceiveV3SessionSetupX;
+    smb_dispatchTable[0x70].procp = smb_ReceiveCoreTreeConnect;
+    smb_dispatchTable[0x71].procp = smb_ReceiveCoreTreeDisconnect;
+    smb_dispatchTable[0x72].procp = smb_ReceiveNegotiate;
+    smb_dispatchTable[0x73].procp = smb_ReceiveV3SessionSetupX;
     smb_dispatchTable[0x73].flags |= SMB_DISPATCHFLAG_CHAINED;
     smb_dispatchTable[0x74].procp = smb_ReceiveV3UserLogoffX;
     smb_dispatchTable[0x74].flags |= SMB_DISPATCHFLAG_CHAINED;
     smb_dispatchTable[0x75].procp = smb_ReceiveV3TreeConnectX;
     smb_dispatchTable[0x75].flags |= SMB_DISPATCHFLAG_CHAINED;
-	smb_dispatchTable[0x80].procp = smb_ReceiveCoreGetDiskAttributes;
-	smb_dispatchTable[0x81].procp = smb_ReceiveCoreSearchDir;
-	smb_dispatchTable[0xA0].procp = smb_ReceiveNTTransact;
-	smb_dispatchTable[0xA2].procp = smb_ReceiveNTCreateX;
-	smb_dispatchTable[0xA2].flags |= SMB_DISPATCHFLAG_CHAINED;
-	smb_dispatchTable[0xA4].procp = smb_ReceiveNTCancel;
-	smb_dispatchTable[0xA4].flags |= SMB_DISPATCHFLAG_NORESPONSE;
-	smb_dispatchTable[0xc0].procp = smb_SendCoreBadOp;
-	smb_dispatchTable[0xc1].procp = smb_SendCoreBadOp;
-	smb_dispatchTable[0xc2].procp = smb_SendCoreBadOp;
-	smb_dispatchTable[0xc3].procp = smb_SendCoreBadOp;
-	for(i=0xd0; i<= 0xd7; i++) {
-		smb_dispatchTable[i].procp = smb_SendCoreBadOp;
-    }
+    smb_dispatchTable[0x80].procp = smb_ReceiveCoreGetDiskAttributes;
+    smb_dispatchTable[0x81].procp = smb_ReceiveCoreSearchDir;
+    smb_dispatchTable[0x82].procp = smb_SendCoreBadOp; /* Find */
+    smb_dispatchTable[0x83].procp = smb_SendCoreBadOp; /* Find Unique */
+    smb_dispatchTable[0x84].procp = smb_SendCoreBadOp; /* Find Close */
+    smb_dispatchTable[0xA0].procp = smb_ReceiveNTTransact;
+    smb_dispatchTable[0xA2].procp = smb_ReceiveNTCreateX;
+    smb_dispatchTable[0xA2].flags |= SMB_DISPATCHFLAG_CHAINED;
+    smb_dispatchTable[0xA4].procp = smb_ReceiveNTCancel;
+    smb_dispatchTable[0xA4].flags |= SMB_DISPATCHFLAG_NORESPONSE;
+    smb_dispatchTable[0xA5].procp = smb_ReceiveNTRename;
+    smb_dispatchTable[0xc0].procp = smb_SendCoreBadOp;  /* Open Print File */
+    smb_dispatchTable[0xc1].procp = smb_SendCoreBadOp;  /* Write Print File */
+    smb_dispatchTable[0xc2].procp = smb_SendCoreBadOp;  /* Close Print File */
+    smb_dispatchTable[0xc3].procp = smb_SendCoreBadOp;  /* Get Print Queue */
+    smb_dispatchTable[0xD8].procp = smb_SendCoreBadOp;  /* Read Bulk */
+    smb_dispatchTable[0xD9].procp = smb_SendCoreBadOp;  /* Write Bulk */
+    smb_dispatchTable[0xDA].procp = smb_SendCoreBadOp;  /* Write Bulk Data */
 
-	/* setup tran 2 dispatch table */
-	smb_tran2DispatchTable[0].procp = smb_ReceiveTran2Open;
-	smb_tran2DispatchTable[1].procp = smb_ReceiveTran2SearchDir;	/* FindFirst */
-	smb_tran2DispatchTable[2].procp = smb_ReceiveTran2SearchDir;	/* FindNext */
-	smb_tran2DispatchTable[3].procp = smb_ReceiveTran2QFSInfo;
-	smb_tran2DispatchTable[4].procp = smb_ReceiveTran2SetFSInfo;
-	smb_tran2DispatchTable[5].procp = smb_ReceiveTran2QPathInfo;
-	smb_tran2DispatchTable[6].procp = smb_ReceiveTran2SetPathInfo;
-	smb_tran2DispatchTable[7].procp = smb_ReceiveTran2QFileInfo;
-	smb_tran2DispatchTable[8].procp = smb_ReceiveTran2SetFileInfo;
-	smb_tran2DispatchTable[9].procp = smb_ReceiveTran2FSCTL;
-	smb_tran2DispatchTable[10].procp = smb_ReceiveTran2IOCTL;
-	smb_tran2DispatchTable[11].procp = smb_ReceiveTran2FindNotifyFirst;
-	smb_tran2DispatchTable[12].procp = smb_ReceiveTran2FindNotifyNext;
-	smb_tran2DispatchTable[13].procp = smb_ReceiveTran2MKDir;
+    /* setup tran 2 dispatch table */
+    smb_tran2DispatchTable[0].procp = smb_ReceiveTran2Open;
+    smb_tran2DispatchTable[1].procp = smb_ReceiveTran2SearchDir;	/* FindFirst */
+    smb_tran2DispatchTable[2].procp = smb_ReceiveTran2SearchDir;	/* FindNext */
+    smb_tran2DispatchTable[3].procp = smb_ReceiveTran2QFSInfo;
+    smb_tran2DispatchTable[4].procp = smb_ReceiveTran2SetFSInfo;
+    smb_tran2DispatchTable[5].procp = smb_ReceiveTran2QPathInfo;
+    smb_tran2DispatchTable[6].procp = smb_ReceiveTran2SetPathInfo;
+    smb_tran2DispatchTable[7].procp = smb_ReceiveTran2QFileInfo;
+    smb_tran2DispatchTable[8].procp = smb_ReceiveTran2SetFileInfo;
+    smb_tran2DispatchTable[9].procp = smb_ReceiveTran2FSCTL;
+    smb_tran2DispatchTable[10].procp = smb_ReceiveTran2IOCTL;
+    smb_tran2DispatchTable[11].procp = smb_ReceiveTran2FindNotifyFirst;
+    smb_tran2DispatchTable[12].procp = smb_ReceiveTran2FindNotifyNext;
+    smb_tran2DispatchTable[13].procp = smb_ReceiveTran2CreateDirectory;
+    smb_tran2DispatchTable[14].procp = smb_ReceiveTran2SessionSetup;
+    smb_tran2DispatchTable[14].procp = smb_ReceiveTran2GetDFSReferral;
+    smb_tran2DispatchTable[14].procp = smb_ReceiveTran2ReportDFSInconsistency;
 
     /* setup the rap dispatch table */
     memset(smb_rapDispatchTable, 0, sizeof(smb_rapDispatchTable));
@@ -7443,45 +7626,45 @@ void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
     smb_rapDispatchTable[63].procp = smb_ReceiveRAPNetWkstaGetInfo;
     smb_rapDispatchTable[13].procp = smb_ReceiveRAPNetServerGetInfo;
 
-	smb3_Init();
+    smb3_Init();
 
-	/* if we are doing SMB authentication we have register outselves as a logon process */
-	if (smb_authType != SMB_AUTH_NONE) {
+    /* if we are doing SMB authentication we have register outselves as a logon process */
+    if (smb_authType != SMB_AUTH_NONE) {
         NTSTATUS nts;
-		LSA_STRING afsProcessName;
-		LSA_OPERATIONAL_MODE dummy; /*junk*/
+        LSA_STRING afsProcessName;
+        LSA_OPERATIONAL_MODE dummy; /*junk*/
 
-		afsProcessName.Buffer = "OpenAFSClientDaemon";
-		afsProcessName.Length = strlen(afsProcessName.Buffer);
-		afsProcessName.MaximumLength = afsProcessName.Length + 1;
+        afsProcessName.Buffer = "OpenAFSClientDaemon";
+        afsProcessName.Length = strlen(afsProcessName.Buffer);
+        afsProcessName.MaximumLength = afsProcessName.Length + 1;
 
-		nts = LsaRegisterLogonProcess(&afsProcessName, &smb_lsaHandle, &dummy);
+        nts = LsaRegisterLogonProcess(&afsProcessName, &smb_lsaHandle, &dummy);
 
-		if (nts == STATUS_SUCCESS) {
-			LSA_STRING packageName;
-			/* we are registered. Find out the security package id */
-			packageName.Buffer = MSV1_0_PACKAGE_NAME;
-			packageName.Length = strlen(packageName.Buffer);
-			packageName.MaximumLength = packageName.Length + 1;
-			nts = LsaLookupAuthenticationPackage(smb_lsaHandle, &packageName , &smb_lsaSecPackage);
-			if (nts == STATUS_SUCCESS) {
-				smb_lsaLogonOrigin.Buffer = "OpenAFS";
-				smb_lsaLogonOrigin.Length = strlen(smb_lsaLogonOrigin.Buffer);
-				smb_lsaLogonOrigin.MaximumLength = smb_lsaLogonOrigin.Length + 1;
-			} else {
-				afsi_log("Can't determine security package name for NTLM!! NTSTATUS=[%l]",nts);
-			}
-		} else {
-			afsi_log("Can't register logon process!! NTSTATUS=[%l]",nts);
-		}
+        if (nts == STATUS_SUCCESS) {
+            LSA_STRING packageName;
+            /* we are registered. Find out the security package id */
+            packageName.Buffer = MSV1_0_PACKAGE_NAME;
+            packageName.Length = strlen(packageName.Buffer);
+            packageName.MaximumLength = packageName.Length + 1;
+            nts = LsaLookupAuthenticationPackage(smb_lsaHandle, &packageName , &smb_lsaSecPackage);
+            if (nts == STATUS_SUCCESS) {
+                smb_lsaLogonOrigin.Buffer = "OpenAFS";
+                smb_lsaLogonOrigin.Length = strlen(smb_lsaLogonOrigin.Buffer);
+                smb_lsaLogonOrigin.MaximumLength = smb_lsaLogonOrigin.Length + 1;
+            } else {
+                afsi_log("Can't determine security package name for NTLM!! NTSTATUS=[%l]",nts);
+            }
+        } else {
+            afsi_log("Can't register logon process!! NTSTATUS=[%l]",nts);
+        }
 
-		if (nts != STATUS_SUCCESS) {
-			/* something went wrong. We report the error and revert back to no authentication
-			   because we can't perform any auth requests without a successful lsa handle
-			   or sec package id. */
-			afsi_log("Reverting to NO SMB AUTH");
-			smb_authType = SMB_AUTH_NONE;
-		} 
+        if (nts != STATUS_SUCCESS) {
+            /* something went wrong. We report the error and revert back to no authentication
+            because we can't perform any auth requests without a successful lsa handle
+            or sec package id. */
+            afsi_log("Reverting to NO SMB AUTH");
+            smb_authType = SMB_AUTH_NONE;
+        } 
 #ifdef COMMENT
         /* Don't fallback to SMB_AUTH_NTLM.  Apparently, allowing SPNEGO to be used each
          * time prevents the failure of authentication when logged into Windows with an
@@ -7645,8 +7828,8 @@ char *smb_GetSharename()
     return name;
 }   
 
-#ifdef NOTSERVICE
 
+#ifdef LOG_PACKET
 void smb_LogPacket(smb_packet_t *packet)
 {
 	BYTE *vp, *cp;
@@ -7701,14 +7884,14 @@ void smb_LogPacket(smb_packet_t *packet)
 
 		*cp = 0;
 
-		osi_Log0( smb_logp, buf );
+		osi_Log0( smb_logp, osi_LogSaveString(smb_logp, buf));
 	}
 
 	osi_Log0(smb_logp, "*** End SMB packet dump ***");
 
 }
+#endif /* LOG_PACKET */
 
-#endif /* NOTSERVICE */
 
 int smb_DumpVCP(FILE *outputFile, char *cookie)
 {

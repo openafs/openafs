@@ -800,8 +800,8 @@ long smb_ReceiveV3SessionSetupX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
         unp = uidp->unp;
         userp = unp->userp;
         newUid = (unsigned short)uidp->userID;  /* For some reason these are different types!*/
-                osi_LogEvent("AFS smb_ReceiveV3SessionSetupX",NULL,"FindUserByName:Lana[%d],lsn[%d],userid[%d],name[%s]",vcp->lana,vcp->lsn,newUid,osi_LogSaveString(smb_logp, usern));
-		osi_Log3(smb_logp,"smb_ReceiveV3SessionSetupX FindUserByName:Lana[%d],lsn[%d],userid[%d]",vcp->lana,vcp->lsn,newUid);
+        osi_LogEvent("AFS smb_ReceiveV3SessionSetupX",NULL,"FindUserByName:Lana[%d],lsn[%d],userid[%d],name[%s]",vcp->lana,vcp->lsn,newUid,osi_LogSaveString(smb_logp, usern));
+        osi_Log3(smb_logp,"smb_ReceiveV3SessionSetupX FindUserByName:Lana[%d],lsn[%d],userid[%d]",vcp->lana,vcp->lsn,newUid);
         smb_ReleaseUID(uidp);
     }
     else {
@@ -826,8 +826,8 @@ long smb_ReceiveV3SessionSetupX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
         uidp = smb_FindUID(vcp, newUid, SMB_FLAG_CREATE);
         lock_ObtainMutex(&uidp->mx);
         uidp->unp = unp;
-                osi_LogEvent("AFS smb_ReceiveV3SessionSetupX",NULL,"MakeNewUser:VCP[%x],Lana[%d],lsn[%d],userid[%d],TicketKTCName[%s]",(int)vcp,vcp->lana,vcp->lsn,newUid,osi_LogSaveString(smb_logp, usern));
-		osi_Log4(smb_logp,"smb_ReceiveV3SessionSetupX MakeNewUser:VCP[%x],Lana[%d],lsn[%d],userid[%d]",vcp,vcp->lana,vcp->lsn,newUid);
+        osi_LogEvent("AFS smb_ReceiveV3SessionSetupX",NULL,"MakeNewUser:VCP[%x],Lana[%d],lsn[%d],userid[%d],TicketKTCName[%s]",(int)vcp,vcp->lana,vcp->lsn,newUid,osi_LogSaveString(smb_logp, usern));
+        osi_Log4(smb_logp,"smb_ReceiveV3SessionSetupX MakeNewUser:VCP[%x],Lana[%d],lsn[%d],userid[%d]",vcp,vcp->lana,vcp->lsn,newUid);
         lock_ReleaseMutex(&uidp->mx);
         smb_ReleaseUID(uidp);
     }
@@ -881,35 +881,35 @@ long smb_ReceiveV3SessionSetupX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
 
 long smb_ReceiveV3UserLogoffX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
-	smb_user_t *uidp;
+    smb_user_t *uidp;
 
-	/* don't get tokens from this VC */
-	vcp->flags |= SMB_VCFLAG_ALREADYDEAD;
+    /* don't get tokens from this VC */
+    vcp->flags |= SMB_VCFLAG_ALREADYDEAD;
 
-	inp->flags |= SMB_PACKETFLAG_PROFILE_UPDATE_OK;
+    inp->flags |= SMB_PACKETFLAG_PROFILE_UPDATE_OK;
 
-	/* find the tree and free it */
+    /* find the tree and free it */
     uidp = smb_FindUID(vcp, ((smb_t *)inp)->uid, 0);
     /* TODO: smb_ReleaseUID() ? */
     if (uidp) {
-		char *s1 = NULL, *s2 = NULL;
+        char *s1 = NULL, *s2 = NULL;
 
-		if (s2 == NULL) s2 = " ";
-		if (s1 == NULL) {s1 = s2; s2 = " ";}
+        if (s2 == NULL) s2 = " ";
+        if (s1 == NULL) {s1 = s2; s2 = " ";}
 
-		osi_Log4(smb_logp, "SMB3 user logoffX uid %d name %s%s%s", uidp->userID,
-                 osi_LogSaveString(smb_logp, (uidp->unp) ? uidp->unp->name: " "), s1, s2);
+        osi_Log4(smb_logp, "SMB3 user logoffX uid %d name %s%s%s", uidp->userID,
+                  osi_LogSaveString(smb_logp, (uidp->unp) ? uidp->unp->name: " "), s1, s2);
 
-		lock_ObtainMutex(&uidp->mx);
-		uidp->flags |= SMB_USERFLAG_DELETE;
-		/*
-		 * it doesn't get deleted right away
-		 * because the vcp points to it
-		 */
+        lock_ObtainMutex(&uidp->mx);
+        uidp->flags |= SMB_USERFLAG_DELETE;
+        /*
+         * it doesn't get deleted right away
+         * because the vcp points to it
+         */
         lock_ReleaseMutex(&uidp->mx);
     }
-	else    
-		osi_Log0(smb_logp, "SMB3 user logoffX");
+    else    
+        osi_Log0(smb_logp, "SMB3 user logoffX");
 
     smb_SetSMBDataLength(outp, 0);
     return 0;
@@ -923,89 +923,89 @@ long smb_ReceiveV3TreeConnectX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *o
     smb_user_t *uidp;
     unsigned short newTid;
     char shareName[256];
-	char *sharePath;
-	int shareFound;
+    char *sharePath;
+    int shareFound;
     char *tp;
     char *pathp;
     char *passwordp;
-	char *servicep;
+    char *servicep;
     cm_user_t *userp;
-	int ipc = 0;
+    int ipc = 0;
         
-	osi_Log0(smb_logp, "SMB3 receive tree connect");
+    osi_Log0(smb_logp, "SMB3 receive tree connect");
 
-	/* parse input parameters */
-	tp = smb_GetSMBData(inp, NULL);
+    /* parse input parameters */
+    tp = smb_GetSMBData(inp, NULL);
     passwordp = smb_ParseString(tp, &tp);
-	pathp = smb_ParseString(tp, &tp);
-	servicep = smb_ParseString(tp, &tp);
+    pathp = smb_ParseString(tp, &tp);
+    servicep = smb_ParseString(tp, &tp);
 
-	tp = strrchr(pathp, '\\');
+    tp = strrchr(pathp, '\\');
     if (!tp) {
         return CM_ERROR_BADSMB;
     }
     strcpy(shareName, tp+1);
 
     osi_Log2(smb_logp, "Tree connect pathp[%s] shareName[%s]",
-        osi_LogSaveString(smb_logp, pathp),
-        osi_LogSaveString(smb_logp, shareName));
+             osi_LogSaveString(smb_logp, pathp),
+             osi_LogSaveString(smb_logp, shareName));
 
-	if (strcmp(servicep, "IPC") == 0 || strcmp(shareName, "IPC$") == 0) {
+    if (strcmp(servicep, "IPC") == 0 || strcmp(shareName, "IPC$") == 0) {
 #ifndef NO_IPC
-		osi_Log0(smb_logp, "TreeConnectX connecting to IPC$");
-		ipc = 1;
+        osi_Log0(smb_logp, "TreeConnectX connecting to IPC$");
+        ipc = 1;
 #else
-		return CM_ERROR_NOIPC;
+        return CM_ERROR_NOIPC;
 #endif
-	}
+    }
 
     userp = smb_GetUser(vcp, inp);
 
-	lock_ObtainMutex(&vcp->mx);
+    lock_ObtainMutex(&vcp->mx);
     newTid = vcp->tidCounter++;
-	lock_ReleaseMutex(&vcp->mx);
+    lock_ReleaseMutex(&vcp->mx);
         
-	tidp = smb_FindTID(vcp, newTid, SMB_FLAG_CREATE);
+    tidp = smb_FindTID(vcp, newTid, SMB_FLAG_CREATE);
 
-	if(!ipc) {
-    uidp = smb_FindUID(vcp, ((smb_t *)inp)->uid, 0);
+    if(!ipc) {
+        uidp = smb_FindUID(vcp, ((smb_t *)inp)->uid, 0);
 	shareFound = smb_FindShare(vcp, uidp, shareName, &sharePath);
-    if (uidp)
-        smb_ReleaseUID(uidp);
+        if (uidp)
+            smb_ReleaseUID(uidp);
 	if (!shareFound) {
-		smb_ReleaseTID(tidp);
-		return CM_ERROR_BADSHARENAME;
+            smb_ReleaseTID(tidp);
+            return CM_ERROR_BADSHARENAME;
 	}
 
 	if (vcp->flags & SMB_VCFLAG_USENT)
-    {
-        int policy = smb_FindShareCSCPolicy(shareName);
-        smb_SetSMBParm(outp, 2, SMB_SUPPORT_SEARCH_BITS | (policy << 2));
+        {
+            int policy = smb_FindShareCSCPolicy(shareName);
+            smb_SetSMBParm(outp, 2, SMB_SUPPORT_SEARCH_BITS | (policy << 2));
+        }
+    } else {
+        smb_SetSMBParm(outp, 2, 0);
+        sharePath = NULL;
     }
-	} else {
-		smb_SetSMBParm(outp, 2, 0);
-		sharePath = NULL;
-	}
 
     lock_ObtainMutex(&tidp->mx);
     tidp->userp = userp;
-	tidp->pathname = sharePath;
-	if(ipc) tidp->flags |= SMB_TIDFLAG_IPC;
+    tidp->pathname = sharePath;
+    if(ipc) tidp->flags |= SMB_TIDFLAG_IPC;
     lock_ReleaseMutex(&tidp->mx);
     smb_ReleaseTID(tidp);
 
-	((smb_t *)outp)->tid = newTid;
-	((smb_t *)inp)->tid = newTid;
-	tp = smb_GetSMBData(outp, NULL);
-	if(!ipc) {
-    *tp++ = 'A';
-    *tp++ = ':';
-    *tp++ = 0;
-    smb_SetSMBDataLength(outp, 3);
-	} else {
-		strcpy(tp, "IPC");
-		smb_SetSMBDataLength(outp, 4);
-	}
+    ((smb_t *)outp)->tid = newTid;
+    ((smb_t *)inp)->tid = newTid;
+    tp = smb_GetSMBData(outp, NULL);
+    if (!ipc) {
+        *tp++ = 'A';
+        *tp++ = ':';
+        *tp++ = 0;
+        smb_SetSMBDataLength(outp, 3);
+    } else {
+        strcpy(tp, "IPC");
+        smb_SetSMBDataLength(outp, 4);
+    }
 
     osi_Log1(smb_logp, "SMB3 tree connect created ID %d", newTid);
     return 0;
@@ -1014,12 +1014,12 @@ long smb_ReceiveV3TreeConnectX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *o
 /* must be called with global tran lock held */
 smb_tran2Packet_t *smb_FindTran2Packet(smb_vc_t *vcp, smb_packet_t *inp)
 {
-	smb_tran2Packet_t *tp;
+    smb_tran2Packet_t *tp;
     smb_t *smbp;
         
     smbp = (smb_t *) inp->data;
-	for(tp = smb_tran2AssemblyQueuep; tp; tp = (smb_tran2Packet_t *) osi_QNext(&tp->q)) {
-		if (tp->vcp == vcp && tp->mid == smbp->mid && tp->tid == smbp->tid)
+    for (tp = smb_tran2AssemblyQueuep; tp; tp = (smb_tran2Packet_t *) osi_QNext(&tp->q)) {
+        if (tp->vcp == vcp && tp->mid == smbp->mid && tp->tid == smbp->tid)
             return tp;
     }
     return NULL;
@@ -1028,11 +1028,11 @@ smb_tran2Packet_t *smb_FindTran2Packet(smb_vc_t *vcp, smb_packet_t *inp)
 smb_tran2Packet_t *smb_NewTran2Packet(smb_vc_t *vcp, smb_packet_t *inp,
 	int totalParms, int totalData)
 {
-	smb_tran2Packet_t *tp;
+    smb_tran2Packet_t *tp;
     smb_t *smbp;
         
     smbp = (smb_t *) inp->data;
-	tp = malloc(sizeof(*tp));
+    tp = malloc(sizeof(*tp));
     memset(tp, 0, sizeof(*tp));
     tp->vcp = vcp;
     smb_HoldVC(vcp);
@@ -1043,63 +1043,63 @@ smb_tran2Packet_t *smb_NewTran2Packet(smb_vc_t *vcp, smb_packet_t *inp,
     tp->mid = smbp->mid;
     tp->uid = smbp->uid;
     tp->pid = smbp->pid;
-	tp->res[0] = smbp->res[0];
-	osi_QAdd((osi_queue_t **)&smb_tran2AssemblyQueuep, &tp->q);
-	if (totalParms != 0)
+    tp->res[0] = smbp->res[0];
+    osi_QAdd((osi_queue_t **)&smb_tran2AssemblyQueuep, &tp->q);
+    if (totalParms != 0)
         tp->parmsp = malloc(totalParms);
-	if (totalData != 0)
+    if (totalData != 0)
         tp->datap = malloc(totalData);
-	if (smbp->com == 0x25 || smbp->com == 0x26)
-		tp->com = 0x25;
-	else {
-	    tp->opcode = smb_GetSMBParm(inp, 14);
-		tp->com = 0x32;
-	}
-	tp->flags |= SMB_TRAN2PFLAG_ALLOC;
+    if (smbp->com == 0x25 || smbp->com == 0x26)
+        tp->com = 0x25;
+    else {
+        tp->opcode = smb_GetSMBParm(inp, 14);
+        tp->com = 0x32;
+    }
+    tp->flags |= SMB_TRAN2PFLAG_ALLOC;
     return tp;
 }
 
 smb_tran2Packet_t *smb_GetTran2ResponsePacket(smb_vc_t *vcp,
-	smb_tran2Packet_t *inp, smb_packet_t *outp,
-	int totalParms, int totalData)
+                                               smb_tran2Packet_t *inp, smb_packet_t *outp,
+                                               int totalParms, int totalData)  
 {
-	smb_tran2Packet_t *tp;
-	unsigned short parmOffset;
-	unsigned short dataOffset;
-	unsigned short dataAlign;
+    smb_tran2Packet_t *tp;
+    unsigned short parmOffset;
+    unsigned short dataOffset;
+    unsigned short dataAlign;
         
-	tp = malloc(sizeof(*tp));
+    tp = malloc(sizeof(*tp));
     memset(tp, 0, sizeof(*tp));
     tp->vcp = NULL;
     tp->curData = tp->curParms = 0;
     tp->totalData = totalData;
     tp->totalParms = totalParms;
-	tp->oldTotalParms = totalParms;
+    tp->oldTotalParms = totalParms;
     tp->tid = inp->tid;
     tp->mid = inp->mid;
     tp->uid = inp->uid;
     tp->pid = inp->pid;
-	tp->res[0] = inp->res[0];
+    tp->res[0] = inp->res[0];
     tp->opcode = inp->opcode;
-	tp->com = inp->com;
+    tp->com = inp->com;
 
-	/*
-	 * We calculate where the parameters and data will start.
-	 * This calculation must parallel the calculation in
-	 * smb_SendTran2Packet.
-	 */
+    /*
+     * We calculate where the parameters and data will start.
+     * This calculation must parallel the calculation in
+     * smb_SendTran2Packet.
+     */
 
-	parmOffset = 10*2 + 35;
-	parmOffset++;			/* round to even */
-	tp->parmsp = (unsigned short *) (outp->data + parmOffset);
+    parmOffset = 10*2 + 35;
+    parmOffset++;			/* round to even */
+    tp->parmsp = (unsigned short *) (outp->data + parmOffset);
 
-	dataOffset = parmOffset + totalParms;
-	dataAlign = dataOffset & 2;	/* quad-align */
-	dataOffset += dataAlign;
-	tp->datap = outp->data + dataOffset;
+    dataOffset = parmOffset + totalParms;
+    dataAlign = dataOffset & 2;	/* quad-align */
+    dataOffset += dataAlign;
+    tp->datap = outp->data + dataOffset;
 
     return tp;
-}
+}       
 
 /* free a tran2 packet; must be called with smb_globalLock held */
 void smb_FreeTran2Packet(smb_tran2Packet_t *t2p)
@@ -1328,7 +1328,7 @@ long smb_ReceiveV3Trans(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
             code = CM_ERROR_BADOP;
         }
 
-		/* if an error is returned, we're supposed to send an error packet,
+        /* if an error is returned, we're supposed to send an error packet,
          * otherwise the dispatched function already did the data sending.
          * We give dispatched proc the responsibility since it knows how much
          * space to allocate.
@@ -1337,20 +1337,20 @@ long smb_ReceiveV3Trans(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
             smb_SendTran2Error(vcp, asp, outp, code);
         }
 
-		/* free the input tran 2 packet */
-		lock_ObtainWrite(&smb_globalLock);
+        /* free the input tran 2 packet */
+        lock_ObtainWrite(&smb_globalLock);
         smb_FreeTran2Packet(asp);
-		lock_ReleaseWrite(&smb_globalLock);
+        lock_ReleaseWrite(&smb_globalLock);
     }
     else if (firstPacket) {
-		/* the first packet in a multi-packet request, we need to send an
+        /* the first packet in a multi-packet request, we need to send an
          * ack to get more data.
          */
         smb_SetSMBDataLength(outp, 0);
         smb_SendPacket(vcp, outp);
     }
 
-	return 0;
+    return 0;
 }
 
 /* ANSI versions.  The unicode versions support arbitrary length
@@ -1993,10 +1993,10 @@ long smb_ReceiveV3Tran2A(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
 long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
 {
-	char *pathp;
+    char *pathp;
     smb_tran2Packet_t *outp;
     long code = 0;
-	cm_space_t *spacep;
+    cm_space_t *spacep;
     int excl;
     cm_user_t *userp;
     cm_scache_t *dscp;		/* dir we're dealing with */
@@ -2014,26 +2014,26 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
     int openAction;
     int parmSlot;			/* which parm we're dealing with */
     long returnEALength;
-	char *tidPathp;
-	cm_req_t req;
+    char *tidPathp;
+    cm_req_t req;
 
-	cm_InitReq(&req);
+    cm_InitReq(&req);
 
     scp = NULL;
         
-	extraInfo = (p->parmsp[0] & 1);	/* return extra info */
+    extraInfo = (p->parmsp[0] & 1);	/* return extra info */
     returnEALength = (p->parmsp[0] & 8);	/* return extended attr length */
 
-	openFun = p->parmsp[6];		/* open function */
+    openFun = p->parmsp[6];		/* open function */
     excl = ((openFun & 3) == 0);
     trunc = ((openFun & 3) == 2);	/* truncate it */
-	openMode = (p->parmsp[1] & 0x7);
+    openMode = (p->parmsp[1] & 0x7);
     openAction = 0;			/* tracks what we did */
 
     attributes = p->parmsp[3];
     dosTime = p->parmsp[4] | (p->parmsp[5] << 16);
         
-	/* compute initial mode bits based on read-only flag in attributes */
+    /* compute initial mode bits based on read-only flag in attributes */
     initialModeBits = 0666;
     if (attributes & 1) initialModeBits &= ~0222;
         
@@ -2041,20 +2041,20 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
         
     outp = smb_GetTran2ResponsePacket(vcp, p, op, 40, 0);
 
-	spacep = cm_GetSpace();
+    spacep = cm_GetSpace();
     smb_StripLastComponent(spacep->data, &lastNamep, pathp);
 
-	if (lastNamep && strcmp(lastNamep, SMB_IOCTL_FILENAME) == 0) {
-		/* special case magic file name for receiving IOCTL requests
+    if (lastNamep && strcmp(lastNamep, SMB_IOCTL_FILENAME) == 0) {
+        /* special case magic file name for receiving IOCTL requests
          * (since IOCTL calls themselves aren't getting through).
          */
         fidp = smb_FindFID(vcp, 0, SMB_FLAG_CREATE);
         smb_SetupIoctlFid(fidp, spacep);
 
         /* copy out remainder of the parms */
-		parmSlot = 0;
-		outp->parmsp[parmSlot] = fidp->fid; parmSlot++;
-		if (extraInfo) {
+        parmSlot = 0;
+        outp->parmsp[parmSlot] = fidp->fid; parmSlot++;
+        if (extraInfo) {
             outp->parmsp[parmSlot] = /* attrs */ 0; parmSlot++;
             outp->parmsp[parmSlot] = 0; parmSlot++;	/* mod time */
             outp->parmsp[parmSlot] = 0; parmSlot++;
@@ -2063,17 +2063,17 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
             outp->parmsp[parmSlot] = openMode; parmSlot++;
             outp->parmsp[parmSlot] = 0; parmSlot++; /* file type 0 ==> normal file or dir */
             outp->parmsp[parmSlot] = 0; parmSlot++; /* IPC junk */
-		}   
-		/* and the final "always present" stuff */
+        }   
+        /* and the final "always present" stuff */
         outp->parmsp[parmSlot] = /* openAction found existing file */ 1; parmSlot++;
-		/* next write out the "unique" ID */
-		outp->parmsp[parmSlot] = 0x1234; parmSlot++;
-		outp->parmsp[parmSlot] = 0x5678; parmSlot++;
+        /* next write out the "unique" ID */
+        outp->parmsp[parmSlot] = 0x1234; parmSlot++;
+        outp->parmsp[parmSlot] = 0x5678; parmSlot++;
         outp->parmsp[parmSlot] = 0; parmSlot++;
-		if (returnEALength) {
-			outp->parmsp[parmSlot] = 0; parmSlot++;
-			outp->parmsp[parmSlot] = 0; parmSlot++;
-        }
+        if (returnEALength) {
+            outp->parmsp[parmSlot] = 0; parmSlot++;
+            outp->parmsp[parmSlot] = 0; parmSlot++;
+        }       
                 
         outp->totalData = 0;
         outp->totalParms = parmSlot * 2;
@@ -2082,22 +2082,22 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
                 
         smb_FreeTran2Packet(outp);
 
-		/* and clean up fid reference */
+        /* and clean up fid reference */
         smb_ReleaseFID(fidp);
         return 0;
     }
 
 #ifdef DEBUG_VERBOSE
-	{
-		char *hexp, *asciip;
-		asciip = (lastNamep ? lastNamep : pathp);
-		hexp = osi_HexifyString( asciip );
-		DEBUG_EVENT2("AFS","T2Open H[%s] A[%s]", hexp, asciip);
-		free(hexp);
-	}
+    {
+        char *hexp, *asciip;
+        asciip = (lastNamep ? lastNamep : pathp);
+        hexp = osi_HexifyString( asciip );
+        DEBUG_EVENT2("AFS","T2Open H[%s] A[%s]", hexp, asciip);
+        free(hexp);
+    }       
 #endif
 
-	userp = smb_GetTran2User(vcp, p);
+    userp = smb_GetTran2User(vcp, p);
     /* In the off chance that userp is NULL, we log and abandon */
     if (!userp) {
         osi_Log1(smb_logp, "ReceiveTran2Open user [%d] not resolvable", p->uid);
@@ -2105,8 +2105,8 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
         return CM_ERROR_BADSMB;
     }
 
-	code = smb_LookupTIDPath(vcp, p->tid, &tidPathp);
-    if(code == CM_ERROR_TIDIPC) {
+    code = smb_LookupTIDPath(vcp, p->tid, &tidPathp);
+    if (code == CM_ERROR_TIDIPC) {
         /* Attempt to use TID allocated for IPC.  The client is
            probably trying to locate DCE RPC end points, which
            we don't support. */
@@ -2116,154 +2116,174 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
         return CM_ERROR_NOSUCHPATH;
     }
 
-	dscp = NULL;
-	code = cm_NameI(cm_rootSCachep, pathp,
-                    CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
-                    userp, tidPathp, &req, &scp);
-	if (code != 0) {
-		code = cm_NameI(cm_rootSCachep, spacep->data,
-                        CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
-                        userp, tidPathp, &req, &dscp);
-		cm_FreeSpace(spacep);
+    dscp = NULL;
+    code = cm_NameI(cm_rootSCachep, pathp,
+                     CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
+                     userp, tidPathp, &req, &scp);
+    if (code != 0) {
+        code = cm_NameI(cm_rootSCachep, spacep->data,
+                         CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
+                         userp, tidPathp, &req, &dscp);
+        cm_FreeSpace(spacep);
 
         if (code) {
             cm_ReleaseUser(userp);
-			smb_FreeTran2Packet(outp);
+            smb_FreeTran2Packet(outp);
             return code;
         }
         
         /* otherwise, scp points to the parent directory.  Do a lookup,
-		 * and truncate the file if we find it, otherwise we create the
-		 * file.
+         * and truncate the file if we find it, otherwise we create the
+         * file.
          */
-        if (!lastNamep) lastNamep = pathp;
-        else lastNamep++;
+        if (!lastNamep) 
+            lastNamep = pathp;
+        else 
+            lastNamep++;
         code = cm_Lookup(dscp, lastNamep, CM_FLAG_CASEFOLD, userp,
                          &req, &scp);
         if (code && code != CM_ERROR_NOSUCHFILE) {
-			cm_ReleaseSCache(dscp);
+            cm_ReleaseSCache(dscp);
             cm_ReleaseUser(userp);
-			smb_FreeTran2Packet(outp);
+            smb_FreeTran2Packet(outp);
             return code;
         }
-	}
+    }
     else {
         cm_FreeSpace(spacep);
-	}
+    }
         
     /* if we get here, if code is 0, the file exists and is represented by
      * scp.  Otherwise, we have to create it.
      */
-	if (code == 0) {
+    if (code == 0) {
         code = cm_CheckOpen(scp, openMode, trunc, userp, &req);
         if (code) {
             if (dscp) cm_ReleaseSCache(dscp);
             cm_ReleaseSCache(scp);
             cm_ReleaseUser(userp);
-			smb_FreeTran2Packet(outp);
+            smb_FreeTran2Packet(outp);
             return code;
         }
 
-		if (excl) {
-			/* oops, file shouldn't be there */
+        if (excl) {
+            /* oops, file shouldn't be there */
             if (dscp) cm_ReleaseSCache(dscp);
             cm_ReleaseSCache(scp);
             cm_ReleaseUser(userp);
-			smb_FreeTran2Packet(outp);
+            smb_FreeTran2Packet(outp);
             return CM_ERROR_EXISTS;
         }
 
-		if (trunc) {
-			setAttr.mask = CM_ATTRMASK_LENGTH;
+        if (trunc) {
+            setAttr.mask = CM_ATTRMASK_LENGTH;
             setAttr.length.LowPart = 0;
             setAttr.length.HighPart = 0;
-			code = cm_SetAttr(scp, &setAttr, userp, &req);
+            code = cm_SetAttr(scp, &setAttr, userp, &req);
             openAction = 3;	/* truncated existing file */
-		}   
-        else openAction = 1;	/* found existing file */
+        }   
+        else 
+            openAction = 1;	/* found existing file */
     }
-	else if (!(openFun & SMB_ATTR_DIRECTORY)) {
-		/* don't create if not found */
+    else if (!(openFun & SMB_ATTR_DIRECTORY)) {
+        /* don't create if not found */
         if (dscp) cm_ReleaseSCache(dscp);
         osi_assert(scp == NULL);
         cm_ReleaseUser(userp);
-		smb_FreeTran2Packet(outp);
+        smb_FreeTran2Packet(outp);
         return CM_ERROR_NOSUCHFILE;
     }
     else {
-		osi_assert(dscp != NULL && scp == NULL);
-		openAction = 2;	/* created file */
-		setAttr.mask = CM_ATTRMASK_CLIENTMODTIME;
-		smb_UnixTimeFromSearchTime(&setAttr.clientModTime, dosTime);
+        osi_assert(dscp != NULL && scp == NULL);
+        openAction = 2;	/* created file */
+        setAttr.mask = CM_ATTRMASK_CLIENTMODTIME;
+        smb_UnixTimeFromSearchTime(&setAttr.clientModTime, dosTime);
         code = cm_Create(dscp, lastNamep, 0, &setAttr, &scp, userp,
-                         &req);
-		if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
-			smb_NotifyChange(FILE_ACTION_ADDED,
+                          &req);
+        if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
+            smb_NotifyChange(FILE_ACTION_ADDED,
                              FILE_NOTIFY_CHANGE_FILE_NAME,  
                              dscp, lastNamep, NULL, TRUE);
         if (!excl && code == CM_ERROR_EXISTS) {
-			/* not an exclusive create, and someone else tried
-			 * creating it already, then we open it anyway.  We
-			 * don't bother retrying after this, since if this next
-			 * fails, that means that the file was deleted after we
-			 * started this call.
+            /* not an exclusive create, and someone else tried
+             * creating it already, then we open it anyway.  We
+             * don't bother retrying after this, since if this next
+             * fails, that means that the file was deleted after we
+             * started this call.
              */
             code = cm_Lookup(dscp, lastNamep, CM_FLAG_CASEFOLD,
-                             userp, &req, &scp);
+                              userp, &req, &scp);
             if (code == 0) {
                 if (trunc) {
-					setAttr.mask = CM_ATTRMASK_LENGTH;
+                    setAttr.mask = CM_ATTRMASK_LENGTH;
                     setAttr.length.LowPart = 0;
                     setAttr.length.HighPart = 0;
                     code = cm_SetAttr(scp, &setAttr, userp,
-                                      &req);
+                                       &req);
                 }   
-			}	/* lookup succeeded */
+            }	/* lookup succeeded */
         }
     }
         
-	/* we don't need this any longer */
-	if (dscp) cm_ReleaseSCache(dscp);
+    /* we don't need this any longer */
+    if (dscp) cm_ReleaseSCache(dscp);
 
     if (code) {
-		/* something went wrong creating or truncating the file */
+        /* something went wrong creating or truncating the file */
         if (scp) cm_ReleaseSCache(scp);
         cm_ReleaseUser(userp);
-		smb_FreeTran2Packet(outp);
+        smb_FreeTran2Packet(outp);
         return code;
     }
         
-	/* make sure we're about to open a file */
-	if (scp->fileType != CM_SCACHETYPE_FILE) {
-		cm_ReleaseSCache(scp);
-		cm_ReleaseUser(userp);
-		smb_FreeTran2Packet(outp);
-		return CM_ERROR_ISDIR;
-	}
+    /* make sure we're about to open a file */
+    if (scp->fileType != CM_SCACHETYPE_FILE) {
+        code = 0;
+        while (code == 0 && scp->fileType == CM_SCACHETYPE_SYMLINK) {
+            cm_scache_t * targetScp = 0;
+            code = cm_EvaluateSymLink(dscp, scp, &targetScp, userp, &req);
+            if (code == 0) {
+                /* we have a more accurate file to use (the
+                * target of the symbolic link).  Otherwise,
+                * we'll just use the symlink anyway.
+                */
+                osi_Log2(smb_logp, "symlink vp %x to vp %x",
+                          scp, targetScp);
+                cm_ReleaseSCache(scp);
+                scp = targetScp;
+            }
+        }
+        if (scp->fileType != CM_SCACHETYPE_FILE) {
+            cm_ReleaseSCache(scp);
+            cm_ReleaseUser(userp);
+            smb_FreeTran2Packet(outp);
+            return CM_ERROR_ISDIR;
+        }
+    }
 
     /* now all we have to do is open the file itself */
     fidp = smb_FindFID(vcp, 0, SMB_FLAG_CREATE);
     osi_assert(fidp);
 	
-	/* save a pointer to the vnode */
+    /* save a pointer to the vnode */
     fidp->scp = scp;
         
-	/* compute open mode */
+    /* compute open mode */
     if (openMode != 1) fidp->flags |= SMB_FID_OPENREAD;
     if (openMode == 1 || openMode == 2)
         fidp->flags |= SMB_FID_OPENWRITE;
 
-	smb_ReleaseFID(fidp);
+    smb_ReleaseFID(fidp);
         
-	cm_Open(scp, 0, userp);
+    cm_Open(scp, 0, userp);
 
     /* copy out remainder of the parms */
-	parmSlot = 0;
-	outp->parmsp[parmSlot] = fidp->fid; parmSlot++;
-	lock_ObtainMutex(&scp->mx);
-	if (extraInfo) {
+    parmSlot = 0;
+    outp->parmsp[parmSlot] = fidp->fid; parmSlot++;
+    lock_ObtainMutex(&scp->mx);
+    if (extraInfo) {
         outp->parmsp[parmSlot] = smb_Attributes(scp); parmSlot++;
-		smb_SearchTimeFromUnixTime(&dosTime, scp->clientModTime);
+        smb_SearchTimeFromUnixTime(&dosTime, scp->clientModTime);
         outp->parmsp[parmSlot] = (unsigned short)(dosTime & 0xffff); parmSlot++;
         outp->parmsp[parmSlot] = (unsigned short)((dosTime>>16) & 0xffff); parmSlot++;
         outp->parmsp[parmSlot] = (unsigned short) (scp->length.LowPart & 0xffff);
@@ -2273,23 +2293,23 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
         outp->parmsp[parmSlot] = openMode; parmSlot++;
         outp->parmsp[parmSlot] = 0; parmSlot++; /* file type 0 ==> normal file or dir */
         outp->parmsp[parmSlot] = 0; parmSlot++; /* IPC junk */
-	}   
-	/* and the final "always present" stuff */
+    }   
+    /* and the final "always present" stuff */
     outp->parmsp[parmSlot] = openAction; parmSlot++;
-	/* next write out the "unique" ID */
-	outp->parmsp[parmSlot] = (unsigned short) (scp->fid.vnode & 0xffff); parmSlot++;
-	outp->parmsp[parmSlot] = (unsigned short) (scp->fid.volume & 0xffff); parmSlot++;
+    /* next write out the "unique" ID */
+    outp->parmsp[parmSlot] = (unsigned short) (scp->fid.vnode & 0xffff); parmSlot++;
+    outp->parmsp[parmSlot] = (unsigned short) (scp->fid.volume & 0xffff); parmSlot++;
     outp->parmsp[parmSlot] = 0; parmSlot++;
     if (returnEALength) {
-		outp->parmsp[parmSlot] = 0; parmSlot++;
-		outp->parmsp[parmSlot] = 0; parmSlot++;
-    }
-	lock_ReleaseMutex(&scp->mx);
-	outp->totalData = 0;		/* total # of data bytes */
+        outp->parmsp[parmSlot] = 0; parmSlot++;
+        outp->parmsp[parmSlot] = 0; parmSlot++;
+    }   
+    lock_ReleaseMutex(&scp->mx);
+    outp->totalData = 0;		/* total # of data bytes */
     outp->totalParms = parmSlot * 2;	/* shorts are two bytes */
 
-	smb_SendTran2Packet(vcp, outp, op);
-        
+    smb_SendTran2Packet(vcp, outp, op);
+
     smb_FreeTran2Packet(outp);
 
     cm_ReleaseUser(userp);
@@ -2299,103 +2319,105 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
 
 long smb_ReceiveTran2FindFirst(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *outp)
 {
+    osi_Log0(smb_logp,"ReceiveTran2FindFirst - NOT_SUPPORTED");
     return CM_ERROR_BADOP;
 }
 
 long smb_ReceiveTran2FindNext(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *outp)
 {
+    osi_Log0(smb_logp,"ReceiveTran2FindNext - NOT_SUPPORTED");
     return CM_ERROR_BADOP;
 }
 
 long smb_ReceiveTran2QFSInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
 {
-	smb_tran2Packet_t *outp;
+    smb_tran2Packet_t *outp;
     smb_tran2QFSInfo_t qi;
-	int responseSize;
-	osi_hyper_t temp;
-	static char FSname[6] = {'A', 0, 'F', 0, 'S', 0};
+    int responseSize;
+    osi_hyper_t temp;
+    static char FSname[6] = {'A', 0, 'F', 0, 'S', 0};
         
-	osi_Log1(smb_logp, "T2 QFSInfo type 0x%x", p->parmsp[0]);
+    osi_Log1(smb_logp, "T2 QFSInfo type 0x%x", p->parmsp[0]);
 
-	switch (p->parmsp[0]) {
-	case 1: responseSize = sizeof(qi.u.allocInfo); break;
-	case 2: responseSize = sizeof(qi.u.volumeInfo); break;
-	case 0x102: responseSize = sizeof(qi.u.FSvolumeInfo); break;
-	case 0x103: responseSize = sizeof(qi.u.FSsizeInfo); break;
-	case 0x104: responseSize = sizeof(qi.u.FSdeviceInfo); break;
-	case 0x105: responseSize = sizeof(qi.u.FSattributeInfo); break;
-	default: return CM_ERROR_INVAL;
-	}
+    switch (p->parmsp[0]) {
+    case 1: responseSize = sizeof(qi.u.allocInfo); break;
+    case 2: responseSize = sizeof(qi.u.volumeInfo); break;
+    case 0x102: responseSize = sizeof(qi.u.FSvolumeInfo); break;
+    case 0x103: responseSize = sizeof(qi.u.FSsizeInfo); break;
+    case 0x104: responseSize = sizeof(qi.u.FSdeviceInfo); break;
+    case 0x105: responseSize = sizeof(qi.u.FSattributeInfo); break;
+    default: return CM_ERROR_INVAL;
+    }
 
     outp = smb_GetTran2ResponsePacket(vcp, p, op, 0, responseSize);
-	switch (p->parmsp[0]) {
-	case 1:
-		/* alloc info */
+    switch (p->parmsp[0]) {
+    case 1:
+        /* alloc info */
         qi.u.allocInfo.FSID = 0;
         qi.u.allocInfo.sectorsPerAllocUnit = 1;
         qi.u.allocInfo.totalAllocUnits = 0x7fffffff;
         qi.u.allocInfo.availAllocUnits = 0x3fffffff;
         qi.u.allocInfo.bytesPerSector = 1024;
-		break;
+        break;
 
     case 2:
-		/* volume info */
+        /* volume info */
         qi.u.volumeInfo.vsn = 1234;
         qi.u.volumeInfo.vnCount = 4;
-		/* we're supposed to pad it out with zeroes to the end */
-		memset(&qi.u.volumeInfo.label, 0, sizeof(qi.u.volumeInfo.label));
+        /* we're supposed to pad it out with zeroes to the end */
+        memset(&qi.u.volumeInfo.label, 0, sizeof(qi.u.volumeInfo.label));
         memcpy(qi.u.volumeInfo.label, "AFS", 4);
-		break;
+        break;
 
-	case 0x102:
-		/* FS volume info */
-		memset((char *)&qi.u.FSvolumeInfo.vct, 0, sizeof(FILETIME));
-		qi.u.FSvolumeInfo.vsn = 1234;
-		qi.u.FSvolumeInfo.vnCount = 8;
-		memcpy(qi.u.FSvolumeInfo.label, "A\0F\0S\0\0", 8);
-		break;
+    case 0x102:
+        /* FS volume info */
+        memset((char *)&qi.u.FSvolumeInfo.vct, 0, sizeof(FILETIME));
+        qi.u.FSvolumeInfo.vsn = 1234;
+        qi.u.FSvolumeInfo.vnCount = 8;
+        memcpy(qi.u.FSvolumeInfo.label, "A\0F\0S\0\0", 8);
+        break;
 
-	case 0x103:
-		/* FS size info */
-		temp.HighPart = 0;
-		temp.LowPart = 0x7fffffff;
-		qi.u.FSsizeInfo.totalAllocUnits = temp;
-		temp.LowPart = 0x3fffffff;
-		qi.u.FSsizeInfo.availAllocUnits = temp;
-		qi.u.FSsizeInfo.sectorsPerAllocUnit = 1;
-		qi.u.FSsizeInfo.bytesPerSector = 1024;
-		break;
+    case 0x103:
+        /* FS size info */
+        temp.HighPart = 0;
+        temp.LowPart = 0x7fffffff;
+        qi.u.FSsizeInfo.totalAllocUnits = temp;
+        temp.LowPart = 0x3fffffff;
+        qi.u.FSsizeInfo.availAllocUnits = temp;
+        qi.u.FSsizeInfo.sectorsPerAllocUnit = 1;
+        qi.u.FSsizeInfo.bytesPerSector = 1024;
+        break;
 
-	case 0x104:
-		/* FS device info */
-		qi.u.FSdeviceInfo.devType = 0;	/* don't have a number */
-		qi.u.FSdeviceInfo.characteristics = 0x50; /* remote, virtual */
-		break;
+    case 0x104:
+        /* FS device info */
+        qi.u.FSdeviceInfo.devType = 0;	/* don't have a number */
+        qi.u.FSdeviceInfo.characteristics = 0x50; /* remote, virtual */
+        break;
 
 	case 0x105:
-		/* FS attribute info */
-		/* attributes, defined in WINNT.H:
-		 *	FILE_CASE_SENSITIVE_SEARCH	0x1
-		 *	FILE_CASE_PRESERVED_NAMES	0x2
-		 *	<no name defined>		0x4000
-		 *	   If bit 0x4000 is not set, Windows 95 thinks
-		 *	   we can't handle long (non-8.3) names,
-		 *	   despite our protestations to the contrary.
-		 */
-		qi.u.FSattributeInfo.attributes = 0x4003;
-		qi.u.FSattributeInfo.maxCompLength = 255;
-		qi.u.FSattributeInfo.FSnameLength = 6;
-		memcpy(qi.u.FSattributeInfo.FSname, FSname, 6);
-		break;
-    }
+        /* FS attribute info */
+        /* attributes, defined in WINNT.H:
+         *	FILE_CASE_SENSITIVE_SEARCH	0x1
+         *	FILE_CASE_PRESERVED_NAMES	0x2
+         *	<no name defined>		0x4000
+         *	   If bit 0x4000 is not set, Windows 95 thinks
+         *	   we can't handle long (non-8.3) names,
+         *	   despite our protestations to the contrary.
+         */
+        qi.u.FSattributeInfo.attributes = 0x4003;
+        qi.u.FSattributeInfo.maxCompLength = 255;
+        qi.u.FSattributeInfo.FSnameLength = 6;
+        memcpy(qi.u.FSattributeInfo.FSname, FSname, 6);
+        break;
+    }   
         
-	/* copy out return data, and set corresponding sizes */
-	outp->totalParms = 0;
+    /* copy out return data, and set corresponding sizes */
+    outp->totalParms = 0;
     outp->totalData = responseSize;
     memcpy(outp->datap, &qi, responseSize);
 
-	/* send and free the packets */
-	smb_SendTran2Packet(vcp, outp, op);
+    /* send and free the packets */
+    smb_SendTran2Packet(vcp, outp, op);
     smb_FreeTran2Packet(outp);
 
     return 0;
@@ -2403,132 +2425,133 @@ long smb_ReceiveTran2QFSInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *
 
 long smb_ReceiveTran2SetFSInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *outp)
 {
+    osi_Log0(smb_logp,"ReceiveTran2SetFSInfo - NOT_SUPPORTED");
     return CM_ERROR_BADOP;
 }
 
 struct smb_ShortNameRock {
-	char *maskp;
-	unsigned int vnode;
-	char *shortName;
-	size_t shortNameLen;
-};
+    char *maskp;
+    unsigned int vnode;
+    char *shortName;
+    size_t shortNameLen;
+};      
 
 int cm_GetShortNameProc(cm_scache_t *scp, cm_dirEntry_t *dep, void *vrockp,
-	osi_hyper_t *offp)
-{
-	struct smb_ShortNameRock *rockp;
-	char *shortNameEnd;
+                         osi_hyper_t *offp)
+{       
+    struct smb_ShortNameRock *rockp;
+    char *shortNameEnd;
 
-	rockp = vrockp;
-	/* compare both names and vnodes, though probably just comparing vnodes
-	 * would be safe enough.
-	 */
-	if (cm_stricmp(dep->name, rockp->maskp) != 0)
-		return 0;
-	if (ntohl(dep->fid.vnode) != rockp->vnode)
-		return 0;
-	/* This is the entry */
-	cm_Gen8Dot3Name(dep, rockp->shortName, &shortNameEnd);
-	rockp->shortNameLen = shortNameEnd - rockp->shortName;
-	return CM_ERROR_STOPNOW;
-}
+    rockp = vrockp;
+    /* compare both names and vnodes, though probably just comparing vnodes
+     * would be safe enough.
+     */
+    if (cm_stricmp(dep->name, rockp->maskp) != 0)
+        return 0;
+    if (ntohl(dep->fid.vnode) != rockp->vnode)
+        return 0;
+    /* This is the entry */
+    cm_Gen8Dot3Name(dep, rockp->shortName, &shortNameEnd);
+    rockp->shortNameLen = shortNameEnd - rockp->shortName;
+    return CM_ERROR_STOPNOW;
+}       
 
 long cm_GetShortName(char *pathp, cm_user_t *userp, cm_req_t *reqp,
 	char *tidPathp, int vnode, char *shortName, size_t *shortNameLenp)
 {
-	struct smb_ShortNameRock rock;
-	char *lastNamep;
-	cm_space_t *spacep;
-	cm_scache_t *dscp;
-	int caseFold = CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD;
-	long code = 0;
-	osi_hyper_t thyper;
+    struct smb_ShortNameRock rock;
+    char *lastNamep;
+    cm_space_t *spacep;
+    cm_scache_t *dscp;
+    int caseFold = CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD;
+    long code = 0;
+    osi_hyper_t thyper;
 
-	spacep = cm_GetSpace();
-	smb_StripLastComponent(spacep->data, &lastNamep, pathp);
+    spacep = cm_GetSpace();
+    smb_StripLastComponent(spacep->data, &lastNamep, pathp);
 
-	code = cm_NameI(cm_rootSCachep, spacep->data, caseFold, userp, tidPathp,
+    code = cm_NameI(cm_rootSCachep, spacep->data, caseFold, userp, tidPathp,
                      reqp, &dscp);
-	cm_FreeSpace(spacep);
-	if (code) return code;
+    cm_FreeSpace(spacep);
+    if (code) return code;
 
-	if (!lastNamep) lastNamep = pathp;
-	else lastNamep++;
-	thyper.LowPart = 0;
-	thyper.HighPart = 0;
-	rock.shortName = shortName;
-	rock.vnode = vnode;
-	rock.maskp = lastNamep;
-	code = cm_ApplyDir(dscp, cm_GetShortNameProc, &rock, &thyper, userp,
+    if (!lastNamep) lastNamep = pathp;
+    else lastNamep++;
+    thyper.LowPart = 0;
+    thyper.HighPart = 0;
+    rock.shortName = shortName;
+    rock.vnode = vnode;
+    rock.maskp = lastNamep;
+    code = cm_ApplyDir(dscp, cm_GetShortNameProc, &rock, &thyper, userp,
                         reqp, NULL);
 
-	cm_ReleaseSCache(dscp);
+    cm_ReleaseSCache(dscp);
 
-	if (code == 0)
-		return CM_ERROR_NOSUCHFILE;
-	if (code == CM_ERROR_STOPNOW) {
-		*shortNameLenp = rock.shortNameLen;
-		return 0;
-	}
-	return code;
+    if (code == 0)
+        return CM_ERROR_NOSUCHFILE;
+    if (code == CM_ERROR_STOPNOW) {
+        *shortNameLenp = rock.shortNameLen;
+        return 0;
+    }
+    return code;
 }
 
 long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *opx)
 {
-	smb_tran2Packet_t *outp;
+    smb_tran2Packet_t *outp;
     time_t dosTime;
-	FILETIME ft;
+    FILETIME ft;
     unsigned short infoLevel;
     int nbytesRequired;
     unsigned short attributes;
-	unsigned long extAttributes;
-	char shortName[13];
-	unsigned int len;
+    unsigned long extAttributes;
+    char shortName[13];
+    unsigned int len;
     cm_user_t *userp;
-	cm_space_t *spacep;
+    cm_space_t *spacep;
     cm_scache_t *scp, *dscp;
     long code = 0;
     char *op;
-	char *tidPathp;
-	char *lastComp;
-	cm_req_t req;
+    char *tidPathp;
+    char *lastComp;
+    cm_req_t req;
 
-	cm_InitReq(&req);
+    cm_InitReq(&req);
 
-	infoLevel = p->parmsp[0];
+    infoLevel = p->parmsp[0];
     if (infoLevel == 6) nbytesRequired = 0;
     else if (infoLevel == 1) nbytesRequired = 22;
     else if (infoLevel == 2) nbytesRequired = 26;
-	else if (infoLevel == 0x101) nbytesRequired = 40;
-	else if (infoLevel == 0x102) nbytesRequired = 24;
-	else if (infoLevel == 0x103) nbytesRequired = 4;
-	else if (infoLevel == 0x108) nbytesRequired = 30;
+    else if (infoLevel == 0x101) nbytesRequired = 40;
+    else if (infoLevel == 0x102) nbytesRequired = 24;
+    else if (infoLevel == 0x103) nbytesRequired = 4;
+    else if (infoLevel == 0x108) nbytesRequired = 30;
     else {
-		osi_Log2(smb_logp, "Bad Tran2 op 0x%x infolevel 0x%x",
+        osi_Log2(smb_logp, "Bad Tran2 op 0x%x infolevel 0x%x",
                   p->opcode, infoLevel);
-		smb_SendTran2Error(vcp, p, opx, CM_ERROR_INVAL);
+        smb_SendTran2Error(vcp, p, opx, CM_ERROR_INVAL);
         return 0;
     }
-	osi_Log2(smb_logp, "T2 QPathInfo type 0x%x path %s", infoLevel,
-             osi_LogSaveString(smb_logp, (char *)(&p->parmsp[3])));
+    osi_Log2(smb_logp, "T2 QPathInfo type 0x%x path %s", infoLevel,
+              osi_LogSaveString(smb_logp, (char *)(&p->parmsp[3])));
 
     outp = smb_GetTran2ResponsePacket(vcp, p, opx, 2, nbytesRequired);
 
-	if (infoLevel > 0x100)
-		outp->totalParms = 2;
-	else
-		outp->totalParms = 0;
-        outp->totalData = nbytesRequired;
+    if (infoLevel > 0x100)
+        outp->totalParms = 2;
+    else
+        outp->totalParms = 0;
+    outp->totalData = nbytesRequired;
         
     /* now, if we're at infoLevel 6, we're only being asked to check
      * the syntax, so we just OK things now.  In particular, we're *not*
      * being asked to verify anything about the state of any parent dirs.
      */
-	if (infoLevel == 6) {
-		smb_SendTran2Packet(vcp, outp, opx);
+    if (infoLevel == 6) {
+        smb_SendTran2Packet(vcp, outp, opx);
         smb_FreeTran2Packet(outp);
-		return 0;
-    }
+        return 0;
+    }   
         
     userp = smb_GetTran2User(vcp, p);
     if (!userp) {
@@ -2537,7 +2560,7 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         return CM_ERROR_BADSMB;
     }
 
-	code = smb_LookupTIDPath(vcp, p->tid, &tidPathp);
+    code = smb_LookupTIDPath(vcp, p->tid, &tidPathp);
     if(code) {
         cm_ReleaseUser(userp);
         smb_SendTran2Error(vcp, p, opx, CM_ERROR_NOSUCHPATH);
@@ -2545,32 +2568,32 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         return 0;
     }
 
-	/*
-	 * XXX Strange hack XXX
-	 *
-	 * As of Patch 7 (13 January 98), we are having the following problem:
-	 * In NT Explorer 4.0, whenever we click on a directory, AFS gets
-	 * requests to look up "desktop.ini" in all the subdirectories.
-	 * This can cause zillions of timeouts looking up non-existent cells
-	 * and volumes, especially in the top-level directory.
-	 *
-	 * We have not found any way to avoid this or work around it except
-	 * to explicitly ignore the requests for mount points that haven't
-	 * yet been evaluated and for directories that haven't yet been
-	 * fetched.
-	 */
-	if (infoLevel == 0x101) {
-		spacep = cm_GetSpace();
-		smb_StripLastComponent(spacep->data, &lastComp,
-					(char *)(&p->parmsp[3]));
-		/* Make sure that lastComp is not NULL */
-		if (lastComp) {
-		    if (strcmp(lastComp, "\\desktop.ini") == 0) {
+    /*
+     * XXX Strange hack XXX
+     *
+     * As of Patch 7 (13 January 98), we are having the following problem:
+     * In NT Explorer 4.0, whenever we click on a directory, AFS gets
+     * requests to look up "desktop.ini" in all the subdirectories.
+     * This can cause zillions of timeouts looking up non-existent cells
+     * and volumes, especially in the top-level directory.
+     *
+     * We have not found any way to avoid this or work around it except
+     * to explicitly ignore the requests for mount points that haven't
+     * yet been evaluated and for directories that haven't yet been
+     * fetched.
+     */
+    if (infoLevel == 0x101) {
+        spacep = cm_GetSpace();
+        smb_StripLastComponent(spacep->data, &lastComp,
+                                (char *)(&p->parmsp[3]));
+        /* Make sure that lastComp is not NULL */
+        if (lastComp) {
+            if (strcmp(lastComp, "\\desktop.ini") == 0) {
                 code = cm_NameI(cm_rootSCachep, spacep->data,
-                                CM_FLAG_CASEFOLD
-                                | CM_FLAG_DIRSEARCH
-                                | CM_FLAG_FOLLOW,
-                                userp, tidPathp, &req, &dscp);
+                                 CM_FLAG_CASEFOLD
+                                 | CM_FLAG_DIRSEARCH
+                                 | CM_FLAG_FOLLOW,
+                                 userp, tidPathp, &req, &dscp);
                 if (code == 0) {
                     if (dscp->fileType == CM_SCACHETYPE_MOUNTPOINT
                          && !dscp->mountRootFidp)
@@ -2593,90 +2616,90 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
                 }
             }
         }
-		cm_FreeSpace(spacep);
-	}
+        cm_FreeSpace(spacep);
+    }
 
-	/* now do namei and stat, and copy out the info */
+    /* now do namei and stat, and copy out the info */
     code = cm_NameI(cm_rootSCachep, (char *)(&p->parmsp[3]),
-                    CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD, userp, tidPathp, &req, &scp);
+                     CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD, userp, tidPathp, &req, &scp);
 
-	if (code) {
-		cm_ReleaseUser(userp);
+    if (code) {
+        cm_ReleaseUser(userp);
         smb_SendTran2Error(vcp, p, opx, code);
         smb_FreeTran2Packet(outp);
         return 0;
     }
 
     lock_ObtainMutex(&scp->mx);
-        code = cm_SyncOp(scp, NULL, userp, &req, 0,
-                         CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
-	if (code) goto done;
+    code = cm_SyncOp(scp, NULL, userp, &req, 0,
+                      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    if (code) goto done;
         
     /* now we have the status in the cache entry, and everything is locked.
-	 * Marshall the output data.
+     * Marshall the output data.
      */
-	op = outp->datap;
-	/* for info level 108, figure out short name */
-	if (infoLevel == 0x108) {
-		code = cm_GetShortName((char *)(&p->parmsp[3]), userp, &req,
+    op = outp->datap;
+    /* for info level 108, figure out short name */
+    if (infoLevel == 0x108) {
+        code = cm_GetShortName((char *)(&p->parmsp[3]), userp, &req,
                                 tidPathp, scp->fid.vnode, shortName,
                                 (size_t *) &len);
-		if (code) {
-			goto done;
-		}
+        if (code) {
+            goto done;
+        }
 
-		op = outp->datap;
-		*((u_long *)op) = len * 2; op += 4;
-		mbstowcs((unsigned short *)op, shortName, len);
-		op += (len * 2);
+        op = outp->datap;
+        *((u_long *)op) = len * 2; op += 4;
+        mbstowcs((unsigned short *)op, shortName, len);
+        op += (len * 2);
 
-		goto done;
-	}
-	if (infoLevel == 1 || infoLevel == 2) {
-		smb_SearchTimeFromUnixTime(&dosTime, scp->clientModTime);
+        goto done;
+    }
+    if (infoLevel == 1 || infoLevel == 2) {
+        smb_SearchTimeFromUnixTime(&dosTime, scp->clientModTime);
         *((u_long *)op) = dosTime; op += 4;	/* creation time */
         *((u_long *)op) = dosTime; op += 4;	/* access time */
         *((u_long *)op) = dosTime; op += 4;	/* write time */
         *((u_long *)op) = scp->length.LowPart; op += 4;	/* length */
         *((u_long *)op) = scp->length.LowPart; op += 4;	/* alloc size */
-		attributes = smb_Attributes(scp);
-		*((u_short *)op) = attributes; op += 2;	/* attributes */
-	}
-	else if (infoLevel == 0x101) {
-		smb_LargeSearchTimeFromUnixTime(&ft, scp->clientModTime);
-		*((FILETIME *)op) = ft; op += 8;	/* creation time */
-		*((FILETIME *)op) = ft; op += 8;	/* last access time */
-		*((FILETIME *)op) = ft; op += 8;	/* last write time */
-		*((FILETIME *)op) = ft; op += 8;	/* last change time */
-		extAttributes = smb_ExtAttributes(scp);
-		*((u_long *)op) = extAttributes; op += 4; /* extended attribs */
-		*((u_long *)op) = 0; op += 4;	/* don't know what this is */
-	}
-	else if (infoLevel == 0x102) {
-		*((LARGE_INTEGER *)op) = scp->length; op += 8;	/* alloc size */
-		*((LARGE_INTEGER *)op) = scp->length; op += 8;	/* EOF */
-		*((u_long *)op) = scp->linkCount; op += 4;
-		*op++ = 0;
-		*op++ = 0;
-		*op++ = (scp->fileType == CM_SCACHETYPE_DIRECTORY ? 1 : 0);
-		*op++ = 0;
-	}
-	else if (infoLevel == 0x103) {
-   		memset(op, 0, 4); op += 4;	/* EA size */
-	}
+        attributes = smb_Attributes(scp);
+        *((u_short *)op) = attributes; op += 2;	/* attributes */
+    }
+    else if (infoLevel == 0x101) {
+        smb_LargeSearchTimeFromUnixTime(&ft, scp->clientModTime);
+        *((FILETIME *)op) = ft; op += 8;	/* creation time */
+        *((FILETIME *)op) = ft; op += 8;	/* last access time */
+        *((FILETIME *)op) = ft; op += 8;	/* last write time */
+        *((FILETIME *)op) = ft; op += 8;	/* last change time */
+        extAttributes = smb_ExtAttributes(scp);
+        *((u_long *)op) = extAttributes; op += 4; /* extended attribs */
+        *((u_long *)op) = 0; op += 4;	/* don't know what this is */
+    }
+    else if (infoLevel == 0x102) {
+        *((LARGE_INTEGER *)op) = scp->length; op += 8;	/* alloc size */
+        *((LARGE_INTEGER *)op) = scp->length; op += 8;	/* EOF */
+        *((u_long *)op) = scp->linkCount; op += 4;
+        *op++ = 0;
+        *op++ = 0;
+        *op++ = (scp->fileType == CM_SCACHETYPE_DIRECTORY ? 1 : 0);
+        *op++ = 0;
+    }
+    else if (infoLevel == 0x103) {
+        memset(op, 0, 4); op += 4;	/* EA size */
+    }
 
-        /* now, if we are being asked about extended attrs, return a 0 size */
-	if (infoLevel == 2) {
-		*((u_long *)op) = 0; op += 4;
-	}
-        
+    /* now, if we are being asked about extended attrs, return a 0 size */
+    if (infoLevel == 2) {
+        *((u_long *)op) = 0; op += 4;
+    }
 
-	/* send and free the packets */
+
+    /* send and free the packets */
   done:
-	lock_ReleaseMutex(&scp->mx);
+    lock_ReleaseMutex(&scp->mx);
     cm_ReleaseSCache(scp);
     cm_ReleaseUser(userp);
-	if (code == 0) 
+    if (code == 0) 
         smb_SendTran2Packet(vcp, outp, opx);
     else 
         smb_SendTran2Error(vcp, p, opx, code);
@@ -2687,304 +2710,344 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 
 long smb_ReceiveTran2SetPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *outp)
 {
+    osi_Log0(smb_logp,"ReceiveTran2SetPathInfo - NOT_SUPPORTED");
     return CM_ERROR_BADOP;
 }
 
 long smb_ReceiveTran2QFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *opx)
 {
-	smb_tran2Packet_t *outp;
-	FILETIME ft;
-	unsigned long attributes;
-	unsigned short infoLevel;
-	int nbytesRequired;
-	unsigned short fid;
-	cm_user_t *userp;
+    smb_tran2Packet_t *outp;
+    FILETIME ft;
+    unsigned long attributes;
+    unsigned short infoLevel;
+    int nbytesRequired;
+    unsigned short fid;
+    cm_user_t *userp;
     smb_fid_t *fidp;
-	cm_scache_t *scp;
-	char *op;
-	long code = 0;
-	cm_req_t req;
+    cm_scache_t *scp;
+    char *op;
+    long code = 0;
+    cm_req_t req;
 
-	cm_InitReq(&req);
+    cm_InitReq(&req);
 
     fid = p->parmsp[0];
     fidp = smb_FindFID(vcp, fid, 0);
 
-	if (fidp == NULL) {
-		smb_SendTran2Error(vcp, p, opx, CM_ERROR_BADFD);
-		return 0;
-	}
+    if (fidp == NULL) {
+        smb_SendTran2Error(vcp, p, opx, CM_ERROR_BADFD);
+        return 0;
+    }
 
-	infoLevel = p->parmsp[1];
-	if (infoLevel == 0x101) nbytesRequired = 40;
-	else if (infoLevel == 0x102) nbytesRequired = 24;
-	else if (infoLevel == 0x103) nbytesRequired = 4;
-	else if (infoLevel == 0x104) nbytesRequired = 6;
-	else {
-		osi_Log2(smb_logp, "Bad Tran2 op 0x%x infolevel 0x%x",
-                 p->opcode, infoLevel);
-		smb_SendTran2Error(vcp, p, opx, CM_ERROR_INVAL);
+    infoLevel = p->parmsp[1];
+    if (infoLevel == 0x101) nbytesRequired = 40;
+    else if (infoLevel == 0x102) nbytesRequired = 24;
+    else if (infoLevel == 0x103) nbytesRequired = 4;
+    else if (infoLevel == 0x104) nbytesRequired = 6;
+    else {
+        osi_Log2(smb_logp, "Bad Tran2 op 0x%x infolevel 0x%x",
+                  p->opcode, infoLevel);
+        smb_SendTran2Error(vcp, p, opx, CM_ERROR_INVAL);
         smb_ReleaseFID(fidp);
-		return 0;
-	}
-	osi_Log2(smb_logp, "T2 QFileInfo type 0x%x fid %d", infoLevel, fid);
+        return 0;
+    }
+    osi_Log2(smb_logp, "T2 QFileInfo type 0x%x fid %d", infoLevel, fid);
 
-	outp = smb_GetTran2ResponsePacket(vcp, p, opx, 2, nbytesRequired);
+    outp = smb_GetTran2ResponsePacket(vcp, p, opx, 2, nbytesRequired);
 
-	if (infoLevel > 0x100)
-		outp->totalParms = 2;
-	else
-		outp->totalParms = 0;
-	outp->totalData = nbytesRequired;
+    if (infoLevel > 0x100)
+        outp->totalParms = 2;
+    else
+        outp->totalParms = 0;
+    outp->totalData = nbytesRequired;
 
-	userp = smb_GetTran2User(vcp, p);
+    userp = smb_GetTran2User(vcp, p);
     if (!userp) {
     	osi_Log1(smb_logp, "ReceiveTran2QFileInfo unable to resolve user [%d]", p->uid);
     	code = CM_ERROR_BADSMB;
     	goto done;
+    }   
+
+    scp = fidp->scp;
+    lock_ObtainMutex(&scp->mx);
+    code = cm_SyncOp(scp, NULL, userp, &req, 0,
+                      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    if (code) 
+        goto done;
+
+    /* now we have the status in the cache entry, and everything is locked.
+     * Marshall the output data.
+     */
+    op = outp->datap;
+    if (infoLevel == 0x101) {
+        smb_LargeSearchTimeFromUnixTime(&ft, scp->clientModTime);
+        *((FILETIME *)op) = ft; op += 8;	/* creation time */
+        *((FILETIME *)op) = ft; op += 8;	/* last access time */
+        *((FILETIME *)op) = ft; op += 8;	/* last write time */
+        *((FILETIME *)op) = ft; op += 8;	/* last change time */
+        attributes = smb_ExtAttributes(scp);
+        *((u_long *)op) = attributes; op += 4;
+        *((u_long *)op) = 0; op += 4;
+    }
+    else if (infoLevel == 0x102) {
+        *((LARGE_INTEGER *)op) = scp->length; op += 8;	/* alloc size */
+        *((LARGE_INTEGER *)op) = scp->length; op += 8;	/* EOF */
+        *((u_long *)op) = scp->linkCount; op += 4;
+        *op++ = ((fidp->flags & SMB_FID_DELONCLOSE) ? 1 : 0);
+        *op++ = (scp->fileType == CM_SCACHETYPE_DIRECTORY ? 1 : 0);
+        *op++ = 0;
+        *op++ = 0;
+    }
+    else if (infoLevel == 0x103) {
+        *((u_long *)op) = 0; op += 4;
+    }
+    else if (infoLevel == 0x104) {
+        unsigned long len;
+        char *name;
+
+        if (fidp->NTopen_wholepathp)
+            name = fidp->NTopen_wholepathp;
+        else
+            name = "\\";	/* probably can't happen */
+        len = strlen(name);
+        outp->totalData = (len*2) + 4;	/* this is actually what we want to return */
+        *((u_long *)op) = len * 2; op += 4;
+        mbstowcs((unsigned short *)op, name, len); op += (len * 2);
     }
 
-	scp = fidp->scp;
-	lock_ObtainMutex(&scp->mx);
-	code = cm_SyncOp(scp, NULL, userp, &req, 0,
-                     CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
-	if (code) goto done;
-
-	/* now we have the status in the cache entry, and everything is locked.
-	 * Marshall the output data.
-	 */
-	op = outp->datap;
-	if (infoLevel == 0x101) {
-		smb_LargeSearchTimeFromUnixTime(&ft, scp->clientModTime);
-		*((FILETIME *)op) = ft; op += 8;	/* creation time */
-		*((FILETIME *)op) = ft; op += 8;	/* last access time */
-		*((FILETIME *)op) = ft; op += 8;	/* last write time */
-		*((FILETIME *)op) = ft; op += 8;	/* last change time */
-		attributes = smb_ExtAttributes(scp);
-		*((u_long *)op) = attributes; op += 4;
-		*((u_long *)op) = 0; op += 4;
-	}
-	else if (infoLevel == 0x102) {
-		*((LARGE_INTEGER *)op) = scp->length; op += 8;	/* alloc size */
-		*((LARGE_INTEGER *)op) = scp->length; op += 8;	/* EOF */
-		*((u_long *)op) = scp->linkCount; op += 4;
-		*op++ = ((fidp->flags & SMB_FID_DELONCLOSE) ? 1 : 0);
-		*op++ = (scp->fileType == CM_SCACHETYPE_DIRECTORY ? 1 : 0);
-		*op++ = 0;
-		*op++ = 0;
-	}
-	else if (infoLevel == 0x103) {
-		*((u_long *)op) = 0; op += 4;
-	}
-	else if (infoLevel == 0x104) {
-		unsigned long len;
-		char *name;
-
-		if (fidp->NTopen_wholepathp)
-			name = fidp->NTopen_wholepathp;
-		else
-			name = "\\";	/* probably can't happen */
-		len = strlen(name);
-		outp->totalData = (len*2) + 4;	/* this is actually what we want to return */
-		*((u_long *)op) = len * 2; op += 4;
-		mbstowcs((unsigned short *)op, name, len); op += (len * 2);
-	}
-
-	/* send and free the packets */
+    /* send and free the packets */
   done:
-	lock_ReleaseMutex(&scp->mx);
-	cm_ReleaseUser(userp);
-	smb_ReleaseFID(fidp);
-	if (code == 0) smb_SendTran2Packet(vcp, outp, opx);
-	else smb_SendTran2Error(vcp, p, opx, code);
-	smb_FreeTran2Packet(outp);
+    lock_ReleaseMutex(&scp->mx);
+    cm_ReleaseUser(userp);
+    smb_ReleaseFID(fidp);
+    if (code == 0) 
+        smb_SendTran2Packet(vcp, outp, opx);
+    else 
+        smb_SendTran2Error(vcp, p, opx, code);
+    smb_FreeTran2Packet(outp);
 
-	return 0;
-}
+    return 0;
+}       
 
 long smb_ReceiveTran2SetFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
 {
-	long code = 0;
-	unsigned short fid;
-	smb_fid_t *fidp;
-	unsigned short infoLevel;
-	smb_tran2Packet_t *outp;
-	cm_user_t *userp;
-	cm_scache_t *scp;
-	cm_req_t req;
+    long code = 0;
+    unsigned short fid;
+    smb_fid_t *fidp;
+    unsigned short infoLevel;
+    smb_tran2Packet_t *outp;
+    cm_user_t *userp;
+    cm_scache_t *scp;
+    cm_req_t req;
 
-	cm_InitReq(&req);
+    cm_InitReq(&req);
 
     fid = p->parmsp[0];
-	fidp = smb_FindFID(vcp, fid, 0);
+    fidp = smb_FindFID(vcp, fid, 0);
 
-	if (fidp == NULL) {
-		smb_SendTran2Error(vcp, p, op, CM_ERROR_BADFD);
-		return 0;
-	}
+    if (fidp == NULL) {
+        smb_SendTran2Error(vcp, p, op, CM_ERROR_BADFD);
+        return 0;
+    }
 
-	infoLevel = p->parmsp[1];
-	if (infoLevel > 0x104 || infoLevel < 0x101) {
-		osi_Log2(smb_logp, "Bad Tran2 op 0x%x infolevel 0x%x",
-			 p->opcode, infoLevel);
-		smb_SendTran2Error(vcp, p, op, CM_ERROR_INVAL);
+    infoLevel = p->parmsp[1];
+    osi_Log2(smb_logp,"ReceiveTran2SetFileInfo type=[%x] fid=[%x]", infoLevel, fid);
+    if (infoLevel > 0x104 || infoLevel < 0x101) {
+        osi_Log2(smb_logp, "Bad Tran2 op 0x%x infolevel 0x%x",
+                  p->opcode, infoLevel);
+        smb_SendTran2Error(vcp, p, op, CM_ERROR_INVAL);
         smb_ReleaseFID(fidp);
-		return 0;
-	}
+        return 0;
+    }
 
-	if (infoLevel == 0x102 && !(fidp->flags & SMB_FID_OPENDELETE)) {
-		smb_SendTran2Error(vcp, p, op, CM_ERROR_NOACCESS);
+    if (infoLevel == 0x102 && !(fidp->flags & SMB_FID_OPENDELETE)) {
+        smb_SendTran2Error(vcp, p, op, CM_ERROR_NOACCESS);
         smb_ReleaseFID(fidp);
-		return 0;
-	}
-	if ((infoLevel == 0x103 || infoLevel == 0x104)
-	    && !(fidp->flags & SMB_FID_OPENWRITE)) {
-		smb_SendTran2Error(vcp, p, op, CM_ERROR_NOACCESS);
+        return 0;
+    }
+    if ((infoLevel == 0x103 || infoLevel == 0x104)
+         && !(fidp->flags & SMB_FID_OPENWRITE)) {
+        smb_SendTran2Error(vcp, p, op, CM_ERROR_NOACCESS);
         smb_ReleaseFID(fidp);
-		return 0;
-	}
+        return 0;
+    }
 
-	osi_Log1(smb_logp, "T2 SFileInfo type 0x%x", infoLevel);
+    osi_Log1(smb_logp, "T2 SFileInfo type 0x%x", infoLevel);
 
-	outp = smb_GetTran2ResponsePacket(vcp, p, op, 2, 0);
+    outp = smb_GetTran2ResponsePacket(vcp, p, op, 2, 0);
 
-	outp->totalParms = 2;
-	outp->totalData = 0;
+    outp->totalParms = 2;
+    outp->totalData = 0;
 
-	userp = smb_GetTran2User(vcp, p);
+    userp = smb_GetTran2User(vcp, p);
     if (!userp) {
     	osi_Log1(smb_logp,"ReceiveTran2SetFileInfo unable to resolve user [%d]", p->uid);
     	code = CM_ERROR_BADSMB;
     	goto done;
-    }
+    }   
 
-	scp = fidp->scp;
+    scp = fidp->scp;
 
-	if (infoLevel == 0x101) {
-		FILETIME lastMod;
-		unsigned int attribute;
-		cm_attr_t attr;
+    if (infoLevel == 0x101) {
+        FILETIME lastMod;
+        unsigned int attribute;
+        cm_attr_t attr;
 
-		/* lock the vnode with a callback; we need the current status
-		 * to determine what the new status is, in some cases.
-		 */
-		lock_ObtainMutex(&scp->mx);
-		code = cm_SyncOp(scp, NULL, userp, &req, 0,
-                         CM_SCACHESYNC_GETSTATUS
+        /* lock the vnode with a callback; we need the current status
+         * to determine what the new status is, in some cases.
+         */
+        lock_ObtainMutex(&scp->mx);
+        code = cm_SyncOp(scp, NULL, userp, &req, 0,
+                          CM_SCACHESYNC_GETSTATUS
                          | CM_SCACHESYNC_NEEDCALLBACK);
-		if (code) {
-			lock_ReleaseMutex(&scp->mx);
-			goto done;
-		}
+        if (code) {
+            lock_ReleaseMutex(&scp->mx);
+            goto done;
+        }
 
-		/* prepare for setattr call */
-		attr.mask = 0;
-		
-		lastMod = *((FILETIME *)(p->datap + 16));
-		/* when called as result of move a b, lastMod is (-1, -1). 
+        /* prepare for setattr call */
+        attr.mask = 0;
+
+        lastMod = *((FILETIME *)(p->datap + 16));
+        /* when called as result of move a b, lastMod is (-1, -1). 
          * If the check for -1 is not present, timestamp
-		 * of the resulting file will be 1969 (-1)
-		 */
-		if (LargeIntegerNotEqualToZero(*((LARGE_INTEGER *)&lastMod)) && 
-            lastMod.dwLowDateTime != -1 && lastMod.dwHighDateTime != -1) {
-			attr.mask |= CM_ATTRMASK_CLIENTMODTIME;
-			smb_UnixTimeFromLargeSearchTime(&attr.clientModTime,
-							&lastMod);
-			fidp->flags |= SMB_FID_MTIMESETDONE;
-		}
+         * of the resulting file will be 1969 (-1)
+         */
+        if (LargeIntegerNotEqualToZero(*((LARGE_INTEGER *)&lastMod)) && 
+             lastMod.dwLowDateTime != -1 && lastMod.dwHighDateTime != -1) {
+            attr.mask |= CM_ATTRMASK_CLIENTMODTIME;
+            smb_UnixTimeFromLargeSearchTime(&attr.clientModTime,
+                                             &lastMod);
+            fidp->flags |= SMB_FID_MTIMESETDONE;
+        }
 		
-		attribute = *((u_long *)(p->datap + 32));
-		if (attribute != 0) {
-			if ((scp->unixModeBits & 0222)
-			    && (attribute & 1) != 0) {
-				/* make a writable file read-only */
-				attr.mask |= CM_ATTRMASK_UNIXMODEBITS;
-				attr.unixModeBits = scp->unixModeBits & ~0222;
-			}
-			else if ((scp->unixModeBits & 0222) == 0
-				 && (attribute & 1) == 0) {
-				/* make a read-only file writable */
-				attr.mask |= CM_ATTRMASK_UNIXMODEBITS;
-				attr.unixModeBits = scp->unixModeBits | 0222;
-			}
-		}
-		lock_ReleaseMutex(&scp->mx);
+        attribute = *((u_long *)(p->datap + 32));
+        if (attribute != 0) {
+            if ((scp->unixModeBits & 0222)
+                 && (attribute & 1) != 0) {
+                /* make a writable file read-only */
+                attr.mask |= CM_ATTRMASK_UNIXMODEBITS;
+                attr.unixModeBits = scp->unixModeBits & ~0222;
+            }
+            else if ((scp->unixModeBits & 0222) == 0
+                      && (attribute & 1) == 0) {
+                /* make a read-only file writable */
+                attr.mask |= CM_ATTRMASK_UNIXMODEBITS;
+                attr.unixModeBits = scp->unixModeBits | 0222;
+            }
+        }
+        lock_ReleaseMutex(&scp->mx);
 
-		/* call setattr */
-		if (attr.mask)
-			code = cm_SetAttr(scp, &attr, userp, &req);
-		else
-			code = 0;
-	}
-	else if (infoLevel == 0x103 || infoLevel == 0x104) {
-		LARGE_INTEGER size = *((LARGE_INTEGER *)(p->datap));
-		cm_attr_t attr;
+        /* call setattr */
+        if (attr.mask)
+            code = cm_SetAttr(scp, &attr, userp, &req);
+        else
+            code = 0;
+    }               
+    else if (infoLevel == 0x103 || infoLevel == 0x104) {
+        LARGE_INTEGER size = *((LARGE_INTEGER *)(p->datap));
+        cm_attr_t attr;
 
-		attr.mask = CM_ATTRMASK_LENGTH;
-		attr.length.LowPart = size.LowPart;
-		attr.length.HighPart = size.HighPart;
-		code = cm_SetAttr(scp, &attr, userp, &req);
-	}
-	else if (infoLevel == 0x102) {
-		if (*((char *)(p->datap))) {
-			code = cm_CheckNTDelete(fidp->NTopen_dscp, scp, userp,
-						&req);
-			if (code == 0)
-				fidp->flags |= SMB_FID_DELONCLOSE;
-		}
-		else {
-			code = 0;
-			fidp->flags &= ~SMB_FID_DELONCLOSE;
-		}
-	}
+        attr.mask = CM_ATTRMASK_LENGTH;
+        attr.length.LowPart = size.LowPart;
+        attr.length.HighPart = size.HighPart;
+        code = cm_SetAttr(scp, &attr, userp, &req);
+    }       
+    else if (infoLevel == 0x102) {
+        if (*((char *)(p->datap))) {
+            code = cm_CheckNTDelete(fidp->NTopen_dscp, scp, userp,
+                                     &req);
+            if (code == 0)          
+                fidp->flags |= SMB_FID_DELONCLOSE;
+        }               
+        else {  
+            code = 0;
+            fidp->flags &= ~SMB_FID_DELONCLOSE;
+        }
+    }       
+
   done:
-	cm_ReleaseUser(userp);
-	smb_ReleaseFID(fidp);
-	if (code == 0) smb_SendTran2Packet(vcp, outp, op);
-	else smb_SendTran2Error(vcp, p, op, code);
-	smb_FreeTran2Packet(outp);
+    cm_ReleaseUser(userp);
+    smb_ReleaseFID(fidp);
+    if (code == 0) 
+        smb_SendTran2Packet(vcp, outp, op);
+    else 
+        smb_SendTran2Error(vcp, p, op, code);
+    smb_FreeTran2Packet(outp);
 
-	return 0;
+    return 0;
 }
 
-long smb_ReceiveTran2FSCTL(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *outp)
+long 
+smb_ReceiveTran2FSCTL(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *outp)
 {
+    osi_Log0(smb_logp,"ReceiveTran2FSCTL - NOT_SUPPORTED");
     return CM_ERROR_BADOP;
 }
 
-long smb_ReceiveTran2IOCTL(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *outp)
+long 
+smb_ReceiveTran2IOCTL(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *outp)
 {
+    osi_Log0(smb_logp,"ReceiveTran2IOCTL - NOT_SUPPORTED");
     return CM_ERROR_BADOP;
 }
 
-long smb_ReceiveTran2FindNotifyFirst(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *outp)
+long 
+smb_ReceiveTran2FindNotifyFirst(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *outp)
 {
+    osi_Log0(smb_logp,"ReceiveTran2FindNotifyFirst - NOT_SUPPORTED");
     return CM_ERROR_BADOP;
 }
 
-long smb_ReceiveTran2FindNotifyNext(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *outp)
+long 
+smb_ReceiveTran2FindNotifyNext(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *outp)
 {
+    osi_Log0(smb_logp,"ReceiveTran2FindNotifyNext - NOT_SUPPORTED");
     return CM_ERROR_BADOP;
 }
 
-long smb_ReceiveTran2MKDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *outp)
+long 
+smb_ReceiveTran2CreateDirectory(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *outp)
 {
+    osi_Log0(smb_logp,"ReceiveTran2CreateDirectory - NOT_SUPPORTED");
     return CM_ERROR_BADOP;
 }
 
-long smb_ApplyV3DirListPatches(cm_scache_t *dscp,
+long 
+smb_ReceiveTran2SessionSetup(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *outp)
+{
+    osi_Log0(smb_logp,"ReceiveTran2SessionSetup - NOT_SUPPORTED");
+    return CM_ERROR_BADOP;
+}
+
+long 
+smb_ReceiveTran2GetDFSReferral(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *outp)
+{
+    osi_Log0(smb_logp,"ReceiveTran2GetDFSReferral - NOT_SUPPORTED");
+    return CM_ERROR_BADOP;
+}
+
+long 
+smb_ReceiveTran2ReportDFSInconsistency(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *outp)
+{
+    osi_Log0(smb_logp,"ReceiveTran2ReportDFSInconsistency - NOT_SUPPORTED");
+    return CM_ERROR_BADOP;
+}
+
+long 
+smb_ApplyV3DirListPatches(cm_scache_t *dscp,
 	smb_dirListPatch_t **dirPatchespp, int infoLevel, cm_user_t *userp,
 	cm_req_t *reqp)
 {
-	long code = 0;
+    long code = 0;
     cm_scache_t *scp;
     cm_scache_t *targetScp;			/* target if scp is a symlink */
     char *dptr;
     time_t dosTime;
-	FILETIME ft;
+    FILETIME ft;
     int shortTemp;
     unsigned short attr;
-	unsigned long lattr;
+    unsigned long lattr;
     smb_dirListPatch_t *patchp;
     smb_dirListPatch_t *npatchp;
         
@@ -3074,17 +3137,18 @@ long smb_ApplyV3DirListPatches(cm_scache_t *dscp,
         }
                 
         /* now watch for a symlink */
-        if (scp->fileType == CM_SCACHETYPE_SYMLINK) {
-			lock_ReleaseMutex(&scp->mx);
+        code = 0;
+        while (code == 0 && scp->fileType == CM_SCACHETYPE_SYMLINK) {
+            lock_ReleaseMutex(&scp->mx);
             code = cm_EvaluateSymLink(dscp, scp, &targetScp, userp, reqp);
             if (code == 0) {
-				/* we have a more accurate file to use (the
-				 * target of the symbolic link).  Otherwise,
-				 * we'll just use the symlink anyway.
+                /* we have a more accurate file to use (the
+                 * target of the symbolic link).  Otherwise,
+                 * we'll just use the symlink anyway.
                  */
-				osi_Log2(smb_logp, "symlink vp %x to vp %x",
-                         scp, targetScp);
-				cm_ReleaseSCache(scp);
+                osi_Log2(smb_logp, "symlink vp %x to vp %x",
+                          scp, targetScp);
+                cm_ReleaseSCache(scp);
                 scp = targetScp;
             }
             lock_ObtainMutex(&scp->mx);
@@ -4267,9 +4331,9 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         
 	/* make sure we're about to open a file */
 	if (scp->fileType != CM_SCACHETYPE_FILE) {
-		cm_ReleaseSCache(scp);
-		cm_ReleaseUser(userp);
-		return CM_ERROR_ISDIR;
+            cm_ReleaseSCache(scp);
+            cm_ReleaseUser(userp);
+            return CM_ERROR_ISDIR;
 	}
 
     /* now all we have to do is open the file itself */
@@ -4642,146 +4706,147 @@ long smb_ReceiveV3ReadX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         
 /*
  * Values for createDisp, copied from NTDDK.H
- *
- *  FILE_SUPERSEDE	0	(???)
- *  FILE_OPEN		1	(open)
- *  FILE_CREATE		2	(exclusive)
- *  FILE_OPEN_IF	3	(non-exclusive)
- *  FILE_OVERWRITE	4	(open & truncate, but do not create)
- *  FILE_OVERWRITE_IF	5	(open & truncate, or create)
  */
+#define  FILE_SUPERSEDE	0	// (???)
+#define  FILE_OPEN     	1	// (open)
+#define  FILE_CREATE	2	// (exclusive)
+#define  FILE_OPEN_IF	3	// (non-exclusive)
+#define  FILE_OVERWRITE	4	// (open & truncate, but do not create)
+#define  FILE_OVERWRITE_IF 5	// (open & truncate, or create)
 
 long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
-	char *pathp, *realPathp;
-	long code = 0;
-	cm_space_t *spacep;
-	cm_user_t *userp;
-	cm_scache_t *dscp;		/* parent dir */
-	cm_scache_t *scp;		/* file to create or open */
-	cm_attr_t setAttr;
-	char *lastNamep;
+    char *pathp, *realPathp;
+    long code = 0;
+    cm_space_t *spacep;
+    cm_user_t *userp;
+    cm_scache_t *dscp;		/* parent dir */
+    cm_scache_t *scp;		/* file to create or open */
+    cm_scache_t *targetScp;	/* if scp is a symlink */
+    cm_attr_t setAttr;
+    char *lastNamep;
     char *treeStartp;
-	unsigned short nameLength;
-	unsigned int flags;
-	unsigned int requestOpLock;
-	unsigned int requestBatchOpLock;
-	unsigned int mustBeDir;
+    unsigned short nameLength;
+    unsigned int flags;
+    unsigned int requestOpLock;
+    unsigned int requestBatchOpLock;
+    unsigned int mustBeDir;
     unsigned int treeCreate;
-	int realDirFlag;
-	unsigned int desiredAccess;
-	unsigned int extAttributes;
-	unsigned int createDisp;
-	unsigned int createOptions;
-	int initialModeBits;
-	unsigned short baseFid;
-	smb_fid_t *baseFidp;
-	smb_fid_t *fidp;
-	cm_scache_t *baseDirp;
-	unsigned short openAction;
-	int parmSlot;
-	long fidflags;
-	FILETIME ft;
-	LARGE_INTEGER sz;
-	char *tidPathp;
-	BOOL foundscp;
-	cm_req_t req;
+    int realDirFlag;
+    unsigned int desiredAccess;
+    unsigned int extAttributes;
+    unsigned int createDisp;
+    unsigned int createOptions;
+    int initialModeBits;
+    unsigned short baseFid;
+    smb_fid_t *baseFidp;
+    smb_fid_t *fidp;
+    cm_scache_t *baseDirp;
+    unsigned short openAction;
+    int parmSlot;
+    long fidflags;
+    FILETIME ft;
+    LARGE_INTEGER sz;
+    char *tidPathp;
+    BOOL foundscp;
+    cm_req_t req;
 
-	cm_InitReq(&req);
+    cm_InitReq(&req);
 
     treeCreate = FALSE;
-	foundscp = FALSE;
-	scp = NULL;
+    foundscp = FALSE;
+    scp = NULL;
 
-	nameLength = smb_GetSMBOffsetParm(inp, 2, 1);
-	flags = smb_GetSMBOffsetParm(inp, 3, 1)
-		  | (smb_GetSMBOffsetParm(inp, 4, 1) << 16);
-	requestOpLock = flags & 0x02;
-	requestBatchOpLock = flags & 0x04;
-	mustBeDir = flags & 0x08;
+    nameLength = smb_GetSMBOffsetParm(inp, 2, 1);
+    flags = smb_GetSMBOffsetParm(inp, 3, 1)
+        | (smb_GetSMBOffsetParm(inp, 4, 1) << 16);
+    requestOpLock = flags & 0x02;
+    requestBatchOpLock = flags & 0x04;
+    mustBeDir = flags & 0x08;
 
-	/*
-	 * Why all of a sudden 32-bit FID?
-	 * We will reject all bits higher than 16.
-	 */
-	if (smb_GetSMBOffsetParm(inp, 6, 1) != 0)
-		return CM_ERROR_INVAL;
-	baseFid = smb_GetSMBOffsetParm(inp, 5, 1);
-	desiredAccess = smb_GetSMBOffsetParm(inp, 7, 1)
-			  | (smb_GetSMBOffsetParm(inp, 8, 1) << 16);
-	extAttributes = smb_GetSMBOffsetParm(inp, 13, 1)
-			  | (smb_GetSMBOffsetParm(inp, 14, 1) << 16);
-	createDisp = smb_GetSMBOffsetParm(inp, 17, 1)
-			| (smb_GetSMBOffsetParm(inp, 18, 1) << 16);
-	createOptions = smb_GetSMBOffsetParm(inp, 19, 1)
-			  | (smb_GetSMBOffsetParm(inp, 20, 1) << 16);
+    /*
+     * Why all of a sudden 32-bit FID?
+     * We will reject all bits higher than 16.
+     */
+    if (smb_GetSMBOffsetParm(inp, 6, 1) != 0)
+        return CM_ERROR_INVAL;
+    baseFid = smb_GetSMBOffsetParm(inp, 5, 1);
+    desiredAccess = smb_GetSMBOffsetParm(inp, 7, 1)
+        | (smb_GetSMBOffsetParm(inp, 8, 1) << 16);
+    extAttributes = smb_GetSMBOffsetParm(inp, 13, 1)
+        | (smb_GetSMBOffsetParm(inp, 14, 1) << 16);
+    createDisp = smb_GetSMBOffsetParm(inp, 17, 1)
+        | (smb_GetSMBOffsetParm(inp, 18, 1) << 16);
+    createOptions = smb_GetSMBOffsetParm(inp, 19, 1)
+        | (smb_GetSMBOffsetParm(inp, 20, 1) << 16);
 
-	/* mustBeDir is never set; createOptions directory bit seems to be
+    /* mustBeDir is never set; createOptions directory bit seems to be
      * more important
-	 */
-	if (createOptions & 1)
-		realDirFlag = 1;
-	else if (createOptions & 0x40)
-		realDirFlag = 0;
-	else
-		realDirFlag = -1;
+     */
+    if (createOptions & 1)
+        realDirFlag = 1;
+    else if (createOptions & 0x40)
+        realDirFlag = 0;
+    else
+        realDirFlag = -1;
 
-	/*
-	 * compute initial mode bits based on read-only flag in
-	 * extended attributes
-	 */
-	initialModeBits = 0666;
-	if (extAttributes & 1) initialModeBits &= ~0222;
+    /*
+     * compute initial mode bits based on read-only flag in
+     * extended attributes
+     */
+    initialModeBits = 0666;
+    if (extAttributes & 1) 
+        initialModeBits &= ~0222;
 
-	pathp = smb_GetSMBData(inp, NULL);
-	/* Sometimes path is not null-terminated, so we make a copy. */
-	realPathp = malloc(nameLength+1);
-	memcpy(realPathp, pathp, nameLength);
-	realPathp[nameLength] = 0;
+    pathp = smb_GetSMBData(inp, NULL);
+    /* Sometimes path is not null-terminated, so we make a copy. */
+    realPathp = malloc(nameLength+1);
+    memcpy(realPathp, pathp, nameLength);
+    realPathp[nameLength] = 0;
 
-	spacep = inp->spacep;
-	smb_StripLastComponent(spacep->data, &lastNamep, realPathp);
+    spacep = inp->spacep;
+    smb_StripLastComponent(spacep->data, &lastNamep, realPathp);
 
     osi_Log1(smb_logp,"NTCreateX for [%s]",osi_LogSaveString(smb_logp,realPathp));
-    osi_Log4(smb_logp,"NTCreateX da=[%x] ea=[%x] cd=[%x] co=[%x]", desiredAccess, extAttributes, createDisp, createOptions);
-    osi_Log1(smb_logp,"NTCreateX lastNamep=[%s]",osi_LogSaveString(smb_logp,(lastNamep?lastNamep:"null")));
+    osi_Log4(smb_logp,"... da=[%x] ea=[%x] cd=[%x] co=[%x]", desiredAccess, extAttributes, createDisp, createOptions);
+    osi_Log2(smb_logp,"... flags=[%x] lastNamep=[%s]", flags, osi_LogSaveString(smb_logp,(lastNamep?lastNamep:"null")));
 
-	if (lastNamep && strcmp(lastNamep, SMB_IOCTL_FILENAME) == 0) {
-		/* special case magic file name for receiving IOCTL requests
-		 * (since IOCTL calls themselves aren't getting through).
-		 */
-		fidp = smb_FindFID(vcp, 0, SMB_FLAG_CREATE);
-		smb_SetupIoctlFid(fidp, spacep);
-		osi_Log1(smb_logp,"NTCreateX Setting up IOCTL on fid[%d]",fidp->fid);
+    if (lastNamep && strcmp(lastNamep, SMB_IOCTL_FILENAME) == 0) {
+        /* special case magic file name for receiving IOCTL requests
+         * (since IOCTL calls themselves aren't getting through).
+         */
+        fidp = smb_FindFID(vcp, 0, SMB_FLAG_CREATE);
+        smb_SetupIoctlFid(fidp, spacep);
+        osi_Log1(smb_logp,"NTCreateX Setting up IOCTL on fid[%d]",fidp->fid);
 
-		/* set inp->fid so that later read calls in same msg can find fid */
-		inp->fid = fidp->fid;
+        /* set inp->fid so that later read calls in same msg can find fid */
+        inp->fid = fidp->fid;
 
-		/* out parms */
-		parmSlot = 2;
-		smb_SetSMBParmByte(outp, parmSlot, 0);	/* oplock */
-		smb_SetSMBParm(outp, parmSlot, fidp->fid); parmSlot++;
-		smb_SetSMBParmLong(outp, parmSlot, 1); parmSlot += 2; /* Action */
-		/* times */
-		memset(&ft, 0, sizeof(ft));
-		smb_SetSMBParmDouble(outp, parmSlot, (char *)&ft); parmSlot += 4;
-		smb_SetSMBParmDouble(outp, parmSlot, (char *)&ft); parmSlot += 4;
-		smb_SetSMBParmDouble(outp, parmSlot, (char *)&ft); parmSlot += 4;
-		smb_SetSMBParmDouble(outp, parmSlot, (char *)&ft); parmSlot += 4;
-		smb_SetSMBParmLong(outp, parmSlot, 0); parmSlot += 2; /* attr */
-		sz.HighPart = 0x7fff; sz.LowPart = 0;
-		smb_SetSMBParmDouble(outp, parmSlot, (char *)&sz); parmSlot += 4; /* alen */
-		smb_SetSMBParmDouble(outp, parmSlot, (char *)&sz); parmSlot += 4; /* len */
-		smb_SetSMBParm(outp, parmSlot, 0); parmSlot++;	/* filetype */
-		smb_SetSMBParm(outp, parmSlot, 0); parmSlot++;	/* dev state */
-		smb_SetSMBParmByte(outp, parmSlot, 0);	/* is a dir? */
-		smb_SetSMBDataLength(outp, 0);
+        /* out parms */
+        parmSlot = 2;
+        smb_SetSMBParmByte(outp, parmSlot, 0);	/* oplock */
+        smb_SetSMBParm(outp, parmSlot, fidp->fid); parmSlot++;
+        smb_SetSMBParmLong(outp, parmSlot, 1); parmSlot += 2; /* Action */
+        /* times */
+        memset(&ft, 0, sizeof(ft));
+        smb_SetSMBParmDouble(outp, parmSlot, (char *)&ft); parmSlot += 4;
+        smb_SetSMBParmDouble(outp, parmSlot, (char *)&ft); parmSlot += 4;
+        smb_SetSMBParmDouble(outp, parmSlot, (char *)&ft); parmSlot += 4;
+        smb_SetSMBParmDouble(outp, parmSlot, (char *)&ft); parmSlot += 4;
+        smb_SetSMBParmLong(outp, parmSlot, 0); parmSlot += 2; /* attr */
+        sz.HighPart = 0x7fff; sz.LowPart = 0;
+        smb_SetSMBParmDouble(outp, parmSlot, (char *)&sz); parmSlot += 4; /* alen */
+        smb_SetSMBParmDouble(outp, parmSlot, (char *)&sz); parmSlot += 4; /* len */
+        smb_SetSMBParm(outp, parmSlot, 0); parmSlot++;	/* filetype */
+        smb_SetSMBParm(outp, parmSlot, 0); parmSlot++;	/* dev state */
+        smb_SetSMBParmByte(outp, parmSlot, 0);	/* is a dir? */
+        smb_SetSMBDataLength(outp, 0);
 
-		/* clean up fid reference */
-		smb_ReleaseFID(fidp);
-		free(realPathp);
-		return 0;
-	}
+        /* clean up fid reference */
+        smb_ReleaseFID(fidp);
+        free(realPathp);
+        return 0;
+    }
 
 #ifdef DEBUG_VERBOSE
     {
@@ -4799,46 +4864,48 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     	return CM_ERROR_INVAL;
     }
 
-	if (baseFid == 0) {
-		baseDirp = cm_rootSCachep;
-		code = smb_LookupTIDPath(vcp, ((smb_t *)inp)->tid, &tidPathp);
-        if(code == CM_ERROR_TIDIPC) {
+    if (baseFid == 0) {
+        baseDirp = cm_rootSCachep;
+        code = smb_LookupTIDPath(vcp, ((smb_t *)inp)->tid, &tidPathp);
+        if (code == CM_ERROR_TIDIPC) {
             /* Attempt to use a TID allocated for IPC.  The client
-               is probably looking for DCE RPC end points which we
-               don't support. */
+             * is probably looking for DCE RPC end points which we
+             * don't support. */
             osi_Log0(smb_logp, "NTCreateX received IPC TID");
             free(realPathp);
             cm_ReleaseUser(userp);
             return CM_ERROR_NOSUCHFILE;
         }
-	}
-	else {
+    }
+    else {
         baseFidp = smb_FindFID(vcp, baseFid, 0);
         if (!baseFidp) {
-        	osi_Log1(smb_logp, "NTCreateX Invalid base fid [%d]", baseFid);
-        	free(realPathp);
-        	cm_ReleaseUser(userp);
-        	return CM_ERROR_INVAL;
-        }
-		baseDirp = baseFidp->scp;
-		tidPathp = NULL;
-	}
+            osi_Log1(smb_logp, "NTCreateX Invalid base fid [%d]", baseFid);
+            free(realPathp);
+            cm_ReleaseUser(userp);
+            return CM_ERROR_INVAL;
+        }       
+        baseDirp = baseFidp->scp;
+        tidPathp = NULL;
+    }
 
     osi_Log1(smb_logp, "NTCreateX tidPathp=[%s]", (tidPathp==NULL)?"null": osi_LogSaveString(smb_logp,tidPathp));
-	
-    /* compute open mode */
-	fidflags = 0;
-	if (desiredAccess & DELETE)
-		fidflags |= SMB_FID_OPENDELETE;
-	if (desiredAccess & AFS_ACCESS_READ)
-		fidflags |= SMB_FID_OPENREAD;
-	if (desiredAccess & AFS_ACCESS_WRITE)
-		fidflags |= SMB_FID_OPENWRITE;
 
-	dscp = NULL;
-	code = 0;
+    /* compute open mode */
+    fidflags = 0;
+    if (desiredAccess & DELETE)
+        fidflags |= SMB_FID_OPENDELETE;
+    if (desiredAccess & AFS_ACCESS_READ)
+        fidflags |= SMB_FID_OPENREAD;
+    if (desiredAccess & AFS_ACCESS_WRITE)
+        fidflags |= SMB_FID_OPENWRITE;
+
+    dscp = NULL;
+    code = 0;
     /* For an exclusive create, we want to do a case sensitive match for the last component. */
-    if (createDisp == 2 || createDisp == 4 || createDisp == 5) {
+    if ( createDisp == FILE_CREATE || 
+         createDisp == FILE_OVERWRITE ||
+         createDisp == FILE_OVERWRITE_IF) {
         code = cm_NameI(baseDirp, spacep->data, CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
                         userp, tidPathp, &req, &dscp);
         if (code == 0) {
@@ -4848,7 +4915,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
                 code = cm_Lookup(dscp, (lastNamep)?(lastNamep+1):realPathp, 
                                  CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD, userp, &req, &scp);
                 if (code == 0 && realDirFlag == 1) {
-					cm_ReleaseSCache(scp);
+                    cm_ReleaseSCache(scp);
                     cm_ReleaseSCache(dscp);
                     cm_ReleaseUser(userp);
                     free(realPathp);
@@ -4862,10 +4929,10 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
                         userp, tidPathp, &req, &scp);
     }
     if (code == 0) 
-		foundscp = TRUE;
+        foundscp = TRUE;
 
-	if (!foundscp || (fidflags & (SMB_FID_OPENDELETE | SMB_FID_OPENWRITE))) {
-		/* look up parent directory */
+    if (!foundscp || (fidflags & (SMB_FID_OPENDELETE | SMB_FID_OPENWRITE))) {
+        /* look up parent directory */
         /* If we are trying to create a path (i.e. multiple nested directories), then we don't *need*
          * the immediate parent.  We have to work our way up realPathp until we hit something that we
          * recognize.
@@ -4881,7 +4948,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
                 if (code && 
                      (tp = strrchr(spacep->data,'\\')) &&
-                     (createDisp == 2) &&
+                     (createDisp == FILE_CREATE) &&
                      (realDirFlag == 1)) {
                     *tp++ = 0;
                     treeCreate = TRUE;
@@ -4932,25 +4999,28 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         }
 
         if (!foundscp && !treeCreate) {
-            if (createDisp == 2 || createDisp == 4)
+            if ( createDisp == FILE_CREATE || 
+                 createDisp == FILE_OVERWRITE ||
+                 createDisp == FILE_OVERWRITE_IF) {
                 code = cm_Lookup(dscp, lastNamep,
                                   CM_FLAG_FOLLOW, userp, &req, &scp);
-            else
-                code = cm_Lookup(dscp, lastNamep,
-                                 CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
-                                 userp, &req, &scp);
-			if (code && code != CM_ERROR_NOSUCHFILE) {
-				cm_ReleaseSCache(dscp);
-				cm_ReleaseUser(userp);
-				free(realPathp);
-				return code;
-			}
-		}
-	}
-	else {
-		if (baseFid != 0) 
-			smb_ReleaseFID(baseFidp);
-	}
+                 } else {
+                     code = cm_Lookup(dscp, lastNamep,
+                                       CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
+                                       userp, &req, &scp);
+                 }
+            if (code && code != CM_ERROR_NOSUCHFILE) {
+                cm_ReleaseSCache(dscp);
+                cm_ReleaseUser(userp);
+                free(realPathp);
+                return code;
+            }
+        }
+    }
+    else {
+        if (baseFid != 0) 
+            smb_ReleaseFID(baseFidp);
+	}       
 
 	/* if we get here, if code is 0, the file exists and is represented by
 	 * scp.  Otherwise, we have to create it.  The dir may be represented
@@ -4958,229 +5028,282 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 	 * scp is NULL.
 	 */
 	if (code == 0 && !treeCreate) {
-		code = cm_CheckNTOpen(scp, desiredAccess, createDisp, userp,
-				      &req);
-		if (code) {
-			if (dscp) cm_ReleaseSCache(dscp);
-			cm_ReleaseSCache(scp);
-			cm_ReleaseUser(userp);
-			free(realPathp);
-			return code;
-		}
+            code = cm_CheckNTOpen(scp, desiredAccess, createDisp, userp,
+                                  &req);
+            if (code) {
+                if (dscp) cm_ReleaseSCache(dscp);
+                cm_ReleaseSCache(scp);
+                cm_ReleaseUser(userp);
+                free(realPathp);
+                return code;
+            }
 
-		if (createDisp == 2) {
-			/* oops, file shouldn't be there */
-			if (dscp) cm_ReleaseSCache(dscp);
-			cm_ReleaseSCache(scp);
-			cm_ReleaseUser(userp);
-			free(realPathp);
-			return CM_ERROR_EXISTS;
-		}
+            if (createDisp == FILE_CREATE) {
+                /* oops, file shouldn't be there */
+                if (dscp) cm_ReleaseSCache(dscp);
+                cm_ReleaseSCache(scp);
+                cm_ReleaseUser(userp);
+                free(realPathp);
+                return CM_ERROR_EXISTS;
+            }
 
-		if (createDisp == 4
-		    || createDisp == 5) {
-			setAttr.mask = CM_ATTRMASK_LENGTH;
-			setAttr.length.LowPart = 0;
-			setAttr.length.HighPart = 0;
-			code = cm_SetAttr(scp, &setAttr, userp, &req);
-			openAction = 3;	/* truncated existing file */
-		}
-		else openAction = 1;	/* found existing file */
-	}
-	else if (createDisp == 1 || createDisp == 4) {
-		/* don't create if not found */
-		if (dscp) cm_ReleaseSCache(dscp);
-		cm_ReleaseUser(userp);
-		free(realPathp);
-		return CM_ERROR_NOSUCHFILE;
-	}
+            if ( createDisp == FILE_OVERWRITE || 
+                 createDisp == FILE_OVERWRITE_IF) {
+                setAttr.mask = CM_ATTRMASK_LENGTH;
+                setAttr.length.LowPart = 0;
+                setAttr.length.HighPart = 0;
+                /* now watch for a symlink */
+                code = 0;
+                while (code == 0 && scp->fileType == CM_SCACHETYPE_SYMLINK) {
+                    targetScp = 0;
+                    code = cm_EvaluateSymLink(dscp, scp, &targetScp, userp, &req);
+                    if (code == 0) {
+                        /* we have a more accurate file to use (the
+                        * target of the symbolic link).  Otherwise,
+                        * we'll just use the symlink anyway.
+                        */
+                        osi_Log2(smb_logp, "symlink vp %x to vp %x",
+                                  scp, targetScp);
+                        cm_ReleaseSCache(scp);
+                        scp = targetScp;
+                    }
+                }
+                code = cm_SetAttr(scp, &setAttr, userp, &req);
+                openAction = 3;	/* truncated existing file */
+            }
+            else openAction = 1;	/* found existing file */
+	}       
+	else if (createDisp == FILE_OPEN || createDisp == FILE_OVERWRITE) {
+            /* don't create if not found */
+            if (dscp) cm_ReleaseSCache(dscp);
+            cm_ReleaseUser(userp);
+            free(realPathp);
+            return CM_ERROR_NOSUCHFILE;
+	}       
 	else if (realDirFlag == 0 || realDirFlag == -1) {
-		osi_assert(dscp != NULL);
-		osi_Log1(smb_logp, "smb_ReceiveNTCreateX creating file %s",
-				osi_LogSaveString(smb_logp, lastNamep));
-		openAction = 2;		/* created file */
-		setAttr.mask = CM_ATTRMASK_CLIENTMODTIME;
-		setAttr.clientModTime = time(NULL);
-		code = cm_Create(dscp, lastNamep, 0, &setAttr, &scp, userp,
-				 &req);
-		if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
-			smb_NotifyChange(FILE_ACTION_ADDED,
-					 FILE_NOTIFY_CHANGE_FILE_NAME,
-					 dscp, lastNamep, NULL, TRUE);
-		if (code == CM_ERROR_EXISTS && createDisp != 2) {
-			/* Not an exclusive create, and someone else tried
-			 * creating it already, then we open it anyway.  We
-			 * don't bother retrying after this, since if this next
-			 * fails, that means that the file was deleted after we
-			 * started this call.
-			 */
-			code = cm_Lookup(dscp, lastNamep, CM_FLAG_CASEFOLD,
-					 userp, &req, &scp);
-			if (code == 0) {
-				if (createDisp == 5) {
-					setAttr.mask = CM_ATTRMASK_LENGTH;
-					setAttr.length.LowPart = 0;
-					setAttr.length.HighPart = 0;
-					code = cm_SetAttr(scp, &setAttr, userp,
-							  &req);
-				}
-			}	/* lookup succeeded */
-		}
-	}
+            osi_assert(dscp != NULL);
+            osi_Log1(smb_logp, "smb_ReceiveNTCreateX creating file %s",
+                      osi_LogSaveString(smb_logp, lastNamep));
+            openAction = 2;		/* created file */
+            setAttr.mask = CM_ATTRMASK_CLIENTMODTIME;
+            setAttr.clientModTime = time(NULL);
+            code = cm_Create(dscp, lastNamep, 0, &setAttr, &scp, userp,
+                              &req);
+            if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
+                smb_NotifyChange(FILE_ACTION_ADDED,
+                                  FILE_NOTIFY_CHANGE_FILE_NAME,
+                                  dscp, lastNamep, NULL, TRUE);
+            if (code == CM_ERROR_EXISTS && createDisp != FILE_CREATE) {
+                /* Not an exclusive create, and someone else tried
+                 * creating it already, then we open it anyway.  We
+                 * don't bother retrying after this, since if this next
+                 * fails, that means that the file was deleted after we
+                 * started this call.
+                 */
+                code = cm_Lookup(dscp, lastNamep, CM_FLAG_CASEFOLD,
+                                  userp, &req, &scp);
+                if (code == 0) {
+                    if (createDisp == FILE_OVERWRITE_IF) {
+                        setAttr.mask = CM_ATTRMASK_LENGTH;
+                        setAttr.length.LowPart = 0;
+                        setAttr.length.HighPart = 0;
+
+                        /* now watch for a symlink */
+                        code = 0;
+                        while (code == 0 && scp->fileType == CM_SCACHETYPE_SYMLINK) {
+                            targetScp = 0;
+                            code = cm_EvaluateSymLink(dscp, scp, &targetScp, userp, &req);
+                            if (code == 0) {
+                                /* we have a more accurate file to use (the
+                                * target of the symbolic link).  Otherwise,
+                                * we'll just use the symlink anyway.
+                                */
+                                osi_Log2(smb_logp, "symlink vp %x to vp %x",
+                                          scp, targetScp);
+                                cm_ReleaseSCache(scp);
+                                scp = targetScp;
+                            }
+                        }
+                        code = cm_SetAttr(scp, &setAttr, userp, &req);
+                    }
+                }	/* lookup succeeded */
+            }
+	}       
 	else {
-        char *tp, *pp;
-        char *cp; /* This component */
-        int clen = 0; /* length of component */
-        cm_scache_t *tscp;
-        int isLast = 0;
+            char *tp, *pp;
+            char *cp; /* This component */
+            int clen = 0; /* length of component */
+            cm_scache_t *tscp;
+            int isLast = 0;
 		
-        /* create directory */
-		if ( !treeCreate ) treeStartp = lastNamep;
-        osi_assert(dscp != NULL);
-        osi_Log1(smb_logp, "smb_ReceiveNTCreateX creating directory [%s]",
-				osi_LogSaveString(smb_logp, treeStartp));
-		openAction = 2;		/* created directory */
+            /* create directory */
+            if ( !treeCreate ) 
+                treeStartp = lastNamep;
+            osi_assert(dscp != NULL);
+            osi_Log1(smb_logp, "smb_ReceiveNTCreateX creating directory [%s]",
+                      osi_LogSaveString(smb_logp, treeStartp));
+            openAction = 2;		/* created directory */
 
-		setAttr.mask = CM_ATTRMASK_CLIENTMODTIME;
-		setAttr.clientModTime = time(NULL);
+            setAttr.mask = CM_ATTRMASK_CLIENTMODTIME;
+            setAttr.clientModTime = time(NULL);
 		
-		pp = treeStartp;
-		cp = spacep->data;
-		tscp = dscp;
+            pp = treeStartp;
+            cp = spacep->data;
+            tscp = dscp;
 
-		while (pp && *pp) {
-			tp = strchr(pp, '\\');
-			if (!tp) {
-				strcpy(cp,pp);
-                clen = strlen(cp);
-				isLast = 1; /* indicate last component.  the supplied path never ends in a slash */
-			}
-			else {
-				clen = tp - pp;
-				strncpy(cp,pp,clen);
-				*(cp + clen) = 0;
-				tp++;
-			}
-			pp = tp;
+            while (pp && *pp) {
+                tp = strchr(pp, '\\');
+                if (!tp) {
+                    strcpy(cp,pp);
+                    clen = strlen(cp);
+                    isLast = 1; /* indicate last component.  the supplied path never ends in a slash */
+                }
+                else {
+                    clen = tp - pp;
+                    strncpy(cp,pp,clen);
+                    *(cp + clen) = 0;
+                    tp++;
+                }
+                pp = tp;
 
-			if (clen == 0) continue; /* the supplied path can't have consecutive slashes either , but */
+                if (clen == 0) 
+                    continue; /* the supplied path can't have consecutive slashes either , but */
 
-			/* cp is the next component to be created. */
-			code = cm_MakeDir(tscp, cp, 0, &setAttr, userp, &req);
-			if (code == 0 && (tscp->flags & CM_SCACHEFLAG_ANYWATCH))
-				smb_NotifyChange(FILE_ACTION_ADDED,
-				FILE_NOTIFY_CHANGE_DIR_NAME,
-				tscp, cp, NULL, TRUE);
-			if (code == 0 || 
-				(code == CM_ERROR_EXISTS && createDisp != 2)) {
-					/* Not an exclusive create, and someone else tried
-					* creating it already, then we open it anyway.  We
-					* don't bother retrying after this, since if this next
-					* fails, that means that the file was deleted after we
-					* started this call.
-					*/
-					code = cm_Lookup(tscp, cp, CM_FLAG_CASEFOLD,
-						userp, &req, &scp);
-				}
-			if (code) break;
+                /* cp is the next component to be created. */
+                code = cm_MakeDir(tscp, cp, 0, &setAttr, userp, &req);
+                if (code == 0 && (tscp->flags & CM_SCACHEFLAG_ANYWATCH))
+                    smb_NotifyChange(FILE_ACTION_ADDED,
+                                      FILE_NOTIFY_CHANGE_DIR_NAME,
+                                      tscp, cp, NULL, TRUE);
+                if (code == 0 || 
+                     (code == CM_ERROR_EXISTS && createDisp != FILE_CREATE)) {
+                    /* Not an exclusive create, and someone else tried
+                     * creating it already, then we open it anyway.  We
+                     * don't bother retrying after this, since if this next
+                     * fails, that means that the file was deleted after we
+                     * started this call.
+                     */
+                    code = cm_Lookup(tscp, cp, CM_FLAG_CASEFOLD,
+                                      userp, &req, &scp);
+                }
+                if (code) break;
 
-			if (!isLast) { /* for anything other than dscp, release it unless it's the last one */
-				cm_ReleaseSCache(tscp);
-				tscp = scp; /* Newly created directory will be next parent */
-			}
-		}
+                if (!isLast) { /* for anything other than dscp, release it unless it's the last one */
+                    cm_ReleaseSCache(tscp);
+                    tscp = scp; /* Newly created directory will be next parent */
+                }
+            }
 
-		/* 
-		if we get here and code == 0, then scp is the last directory created, and tscp is the
-		parent of scp.  dscp got released if dscp != tscp. both tscp and scp are held.
-		*/
-		dscp = tscp;
+            /* 
+             * if we get here and code == 0, then scp is the last directory created, and tscp is the
+             * parent of scp.  dscp got released if dscp != tscp. both tscp and scp are held.
+             */
+            dscp = tscp;
 	}
 
-	if (code) {
-		/* something went wrong creating or truncating the file */
-		if (scp) cm_ReleaseSCache(scp);
+    if (code) {
+        /* something went wrong creating or truncating the file */
+        if (scp) cm_ReleaseSCache(scp);
         if (dscp) cm_ReleaseSCache(dscp);
-		cm_ReleaseUser(userp);
-		free(realPathp);
-		return code;
-	}
+        cm_ReleaseUser(userp);
+        free(realPathp);
+        return code;
+    }
 
-	/* make sure we have file vs. dir right (only applies for single component case) */
-	if (realDirFlag == 0 && scp->fileType != CM_SCACHETYPE_FILE) {
-		cm_ReleaseSCache(scp);
-        if (dscp) cm_ReleaseSCache(dscp);
-		cm_ReleaseUser(userp);
-		free(realPathp);
-		return CM_ERROR_ISDIR;
-	}
+    /* make sure we have file vs. dir right (only applies for single component case) */
+    if (realDirFlag == 0 && scp->fileType != CM_SCACHETYPE_FILE) {
+        /* now watch for a symlink */
+        code = 0;
+        while (code == 0 && scp->fileType == CM_SCACHETYPE_SYMLINK) {
+            cm_scache_t * targetScp = 0;
+            code = cm_EvaluateSymLink(dscp, scp, &targetScp, userp, &req);
+            if (code == 0) {
+                /* we have a more accurate file to use (the
+                * target of the symbolic link).  Otherwise,
+                * we'll just use the symlink anyway.
+                */
+                osi_Log2(smb_logp, "symlink vp %x to vp %x",
+                          scp, targetScp);
+                cm_ReleaseSCache(scp);
+                scp = targetScp;
+            }
+        }
+
+        if (scp->fileType != CM_SCACHETYPE_FILE) {
+            cm_ReleaseSCache(scp);
+            cm_ReleaseUser(userp);
+            free(realPathp);
+            return CM_ERROR_ISDIR;
+        }
+    }
+
     /* (only applies to single component case) */
-	if (realDirFlag == 1 && scp->fileType == CM_SCACHETYPE_FILE) {
-		cm_ReleaseSCache(scp);
+    if (realDirFlag == 1 && scp->fileType == CM_SCACHETYPE_FILE) {
+        cm_ReleaseSCache(scp);
         if (dscp) cm_ReleaseSCache(dscp);
-		cm_ReleaseUser(userp);
-		free(realPathp);
-		return CM_ERROR_NOTDIR;
-	}
+        cm_ReleaseUser(userp);
+        free(realPathp);
+        return CM_ERROR_NOTDIR;
+    }
 
-	/* open the file itself */
-	fidp = smb_FindFID(vcp, 0, SMB_FLAG_CREATE);
-	osi_assert(fidp);
-	/* save a pointer to the vnode */
-	fidp->scp = scp;
+    /* open the file itself */
+    fidp = smb_FindFID(vcp, 0, SMB_FLAG_CREATE);
+    osi_assert(fidp);
+    /* save a pointer to the vnode */
+    fidp->scp = scp;
 
-	fidp->flags = fidflags;
+    fidp->flags = fidflags;
 
-	/* save parent dir and pathname for delete or change notification */
-	if (fidflags & (SMB_FID_OPENDELETE | SMB_FID_OPENWRITE)) {
-		fidp->flags |= SMB_FID_NTOPEN;
-		fidp->NTopen_dscp = dscp;
-		cm_HoldSCache(dscp);
-		fidp->NTopen_pathp = strdup(lastNamep);
-	}
-	fidp->NTopen_wholepathp = realPathp;
+    /* save parent dir and pathname for delete or change notification */
+    if (fidflags & (SMB_FID_OPENDELETE | SMB_FID_OPENWRITE)) {
+        fidp->flags |= SMB_FID_NTOPEN;
+        fidp->NTopen_dscp = dscp;
+        cm_HoldSCache(dscp);
+        fidp->NTopen_pathp = strdup(lastNamep);
+    }
+    fidp->NTopen_wholepathp = realPathp;
 
-	/* we don't need this any longer */
-	if (dscp) cm_ReleaseSCache(dscp);
-	cm_Open(scp, 0, userp);
+    /* we don't need this any longer */
+    if (dscp) cm_ReleaseSCache(dscp);
+    cm_Open(scp, 0, userp);
 
-	/* set inp->fid so that later read calls in same msg can find fid */
-	inp->fid = fidp->fid;
+    /* set inp->fid so that later read calls in same msg can find fid */
+    inp->fid = fidp->fid;
 
-	/* out parms */
-	parmSlot = 2;
-	lock_ObtainMutex(&scp->mx);
-	smb_SetSMBParmByte(outp, parmSlot, 0);	/* oplock */
-	smb_SetSMBParm(outp, parmSlot, fidp->fid); parmSlot++;
-	smb_SetSMBParmLong(outp, parmSlot, openAction); parmSlot += 2;
-	smb_LargeSearchTimeFromUnixTime(&ft, scp->clientModTime);
-	smb_SetSMBParmDouble(outp, parmSlot, (char *)&ft); parmSlot += 4;
-	smb_SetSMBParmDouble(outp, parmSlot, (char *)&ft); parmSlot += 4;
-	smb_SetSMBParmDouble(outp, parmSlot, (char *)&ft); parmSlot += 4;
-	smb_SetSMBParmDouble(outp, parmSlot, (char *)&ft); parmSlot += 4;
-	smb_SetSMBParmLong(outp, parmSlot, smb_ExtAttributes(scp));
-						parmSlot += 2;
-	smb_SetSMBParmDouble(outp, parmSlot, (char *)&scp->length); parmSlot += 4;
-	smb_SetSMBParmDouble(outp, parmSlot, (char *)&scp->length); parmSlot += 4;
-	smb_SetSMBParm(outp, parmSlot, 0); parmSlot++;	/* filetype */
-	smb_SetSMBParm(outp, parmSlot, 0); parmSlot++;	/* dev state */
-	smb_SetSMBParmByte(outp, parmSlot,
-		scp->fileType == CM_SCACHETYPE_DIRECTORY); /* is a dir? */
-	lock_ReleaseMutex(&scp->mx);
-	smb_SetSMBDataLength(outp, 0);
+    /* out parms */
+    parmSlot = 2;
+    lock_ObtainMutex(&scp->mx);
+    smb_SetSMBParmByte(outp, parmSlot, 0);	/* oplock */
+    smb_SetSMBParm(outp, parmSlot, fidp->fid); parmSlot++;
+    smb_SetSMBParmLong(outp, parmSlot, openAction); parmSlot += 2;
+    smb_LargeSearchTimeFromUnixTime(&ft, scp->clientModTime);
+    smb_SetSMBParmDouble(outp, parmSlot, (char *)&ft); parmSlot += 4;
+    smb_SetSMBParmDouble(outp, parmSlot, (char *)&ft); parmSlot += 4;
+    smb_SetSMBParmDouble(outp, parmSlot, (char *)&ft); parmSlot += 4;
+    smb_SetSMBParmDouble(outp, parmSlot, (char *)&ft); parmSlot += 4;
+    smb_SetSMBParmLong(outp, parmSlot, smb_ExtAttributes(scp));
+    parmSlot += 2;
+    smb_SetSMBParmDouble(outp, parmSlot, (char *)&scp->length); parmSlot += 4;
+    smb_SetSMBParmDouble(outp, parmSlot, (char *)&scp->length); parmSlot += 4;
+    smb_SetSMBParm(outp, parmSlot, 0); parmSlot++;	/* filetype */
+    smb_SetSMBParm(outp, parmSlot, 0); parmSlot++;	/* dev state */
+    smb_SetSMBParmByte(outp, parmSlot,
+                        scp->fileType == CM_SCACHETYPE_DIRECTORY); /* is a dir? */
+    lock_ReleaseMutex(&scp->mx);
+    smb_SetSMBDataLength(outp, 0);
 
-	osi_Log2(smb_logp, "SMB NT CreateX opening fid %d path %s", fidp->fid,
-		 osi_LogSaveString(smb_logp, realPathp));
+    osi_Log2(smb_logp, "SMB NT CreateX opening fid %d path %s", fidp->fid,
+              osi_LogSaveString(smb_logp, realPathp));
 
-	smb_ReleaseFID(fidp);
+    smb_ReleaseFID(fidp);
 
-	cm_ReleaseUser(userp);
+    cm_ReleaseUser(userp);
 
     /* Can't free realPathp if we get here since fidp->NTopen_wholepathp is pointing there */
 
-	/* leave scp held since we put it in fidp->scp */
-	return 0;
-}
+    /* leave scp held since we put it in fidp->scp */
+    return 0;
+}       
 
 /*
  * A lot of stuff copied verbatim from NT Create&X to NT Tran Create.
@@ -5188,165 +5311,167 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
  */
 long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
-	char *pathp, *realPathp;
-	long code = 0;
-	cm_space_t *spacep;
-	cm_user_t *userp;
-	cm_scache_t *dscp;		/* parent dir */
-	cm_scache_t *scp;		/* file to create or open */
-	cm_attr_t setAttr;
-	char *lastNamep;
-	unsigned long nameLength;
-	unsigned int flags;
-	unsigned int requestOpLock;
-	unsigned int requestBatchOpLock;
-	unsigned int mustBeDir;
+    char *pathp, *realPathp;
+    long code = 0;
+    cm_space_t *spacep;
+    cm_user_t *userp;
+    cm_scache_t *dscp;		/* parent dir */
+    cm_scache_t *scp;		/* file to create or open */
+    cm_scache_t *targetScp;     /* if scp is a symlink */
+    cm_attr_t setAttr;
+    char *lastNamep;
+    unsigned long nameLength;
+    unsigned int flags;
+    unsigned int requestOpLock;
+    unsigned int requestBatchOpLock;
+    unsigned int mustBeDir;
     unsigned int extendedRespRequired;
-	int realDirFlag;
-	unsigned int desiredAccess;
+    int realDirFlag;
+    unsigned int desiredAccess;
 #ifdef DEBUG_VERBOSE    
     unsigned int allocSize;
     unsigned int shareAccess;
 #endif
-	unsigned int extAttributes;
-	unsigned int createDisp;
+    unsigned int extAttributes;
+    unsigned int createDisp;
 #ifdef DEBUG_VERBOSE
     unsigned int sdLen;
 #endif
-	unsigned int createOptions;
-	int initialModeBits;
-	unsigned short baseFid;
-	smb_fid_t *baseFidp;
-	smb_fid_t *fidp;
-	cm_scache_t *baseDirp;
-	unsigned short openAction;
-	int parmSlot;
-	long fidflags;
-	FILETIME ft;
-	char *tidPathp;
-	BOOL foundscp;
-	int parmOffset, dataOffset;
-	char *parmp;
-	ULONG *lparmp;
-	char *outData;
-	cm_req_t req;
+    unsigned int createOptions;
+    int initialModeBits;
+    unsigned short baseFid;
+    smb_fid_t *baseFidp;
+    smb_fid_t *fidp;
+    cm_scache_t *baseDirp;
+    unsigned short openAction;
+    int parmSlot;
+    long fidflags;
+    FILETIME ft;
+    char *tidPathp;
+    BOOL foundscp;
+    int parmOffset, dataOffset;
+    char *parmp;
+    ULONG *lparmp;
+    char *outData;
+    cm_req_t req;
 
-	cm_InitReq(&req);
+    cm_InitReq(&req);
 
-	foundscp = FALSE;
-	scp = NULL;
+    foundscp = FALSE;
+    scp = NULL;
 
-	parmOffset = smb_GetSMBOffsetParm(inp, 11, 1)
-			| (smb_GetSMBOffsetParm(inp, 12, 1) << 16);
-	parmp = inp->data + parmOffset;
-	lparmp = (ULONG *) parmp;
+    parmOffset = smb_GetSMBOffsetParm(inp, 11, 1)
+        | (smb_GetSMBOffsetParm(inp, 12, 1) << 16);
+    parmp = inp->data + parmOffset;
+    lparmp = (ULONG *) parmp;
 
-	flags = lparmp[0];
-	requestOpLock = flags & 0x02;
-	requestBatchOpLock = flags & 0x04;
-	mustBeDir = flags & 0x08;
+    flags = lparmp[0];
+    requestOpLock = flags & 0x02;
+    requestBatchOpLock = flags & 0x04;
+    mustBeDir = flags & 0x08;
     extendedRespRequired = flags & 0x10;
 
-	/*
-	 * Why all of a sudden 32-bit FID?
-	 * We will reject all bits higher than 16.
-	 */
-	if (lparmp[1] & 0xFFFF0000)
-		return CM_ERROR_INVAL;
-	baseFid = (unsigned short)lparmp[1];
-	desiredAccess = lparmp[2];
+    /*
+     * Why all of a sudden 32-bit FID?
+     * We will reject all bits higher than 16.
+     */
+    if (lparmp[1] & 0xFFFF0000)
+        return CM_ERROR_INVAL;
+    baseFid = (unsigned short)lparmp[1];
+    desiredAccess = lparmp[2];
 #ifdef DEBUG_VERBOSE
     allocSize = lparmp[3];
 #endif /* DEBUG_VERSOSE */
-	extAttributes = lparmp[5];
+    extAttributes = lparmp[5];
 #ifdef DEBUG_VEROSE
     shareAccess = lparmp[6];
 #endif
-	createDisp = lparmp[7];
-	createOptions = lparmp[8];
+    createDisp = lparmp[7];
+    createOptions = lparmp[8];
 #ifdef DEBUG_VERBOSE
     sdLen = lparmp[9];
 #endif
-	nameLength = lparmp[11];
+    nameLength = lparmp[11];
 
 #ifdef DEBUG_VERBOSE
-	osi_Log4(smb_logp,"NTTransCreate with da[%x],ea[%x],sa[%x],cd[%x]",desiredAccess,extAttributes,shareAccess,createDisp);
-	osi_Log2(smb_logp,"... co[%x],sdl[%x],as[%x]",createOptions,sdLen,allocSize);
-	osi_Log1(smb_logp,"... flags[%x]",flags);
+    osi_Log4(smb_logp,"NTTranCreate with da[%x],ea[%x],sa[%x],cd[%x]",desiredAccess,extAttributes,shareAccess,createDisp);
+    osi_Log3(smb_logp,"... co[%x],sdl[%x],as[%x]",createOptions,sdLen,allocSize);
+    osi_Log1(smb_logp,"... flags[%x]",flags);
 #endif
 
-	/* mustBeDir is never set; createOptions directory bit seems to be
-         * more important
-	 */
-	if (createOptions & 1)
-		realDirFlag = 1;
-	else if (createOptions & 0x40)
-		realDirFlag = 0;
-	else
-		realDirFlag = -1;
+    /* mustBeDir is never set; createOptions directory bit seems to be
+     * more important
+     */
+    if (createOptions & 1)
+        realDirFlag = 1;
+    else if (createOptions & 0x40)
+        realDirFlag = 0;
+    else
+        realDirFlag = -1;
 
-	/*
-	 * compute initial mode bits based on read-only flag in
-	 * extended attributes
-	 */
-	initialModeBits = 0666;
-	if (extAttributes & 1) initialModeBits &= ~0222;
+    /*
+     * compute initial mode bits based on read-only flag in
+     * extended attributes
+     */
+    initialModeBits = 0666;
+    if (extAttributes & 1) 
+        initialModeBits &= ~0222;
 
-	pathp = parmp + (13 * sizeof(ULONG)) + sizeof(UCHAR);
-	/* Sometimes path is not null-terminated, so we make a copy. */
-	realPathp = malloc(nameLength+1);
-	memcpy(realPathp, pathp, nameLength);
-	realPathp[nameLength] = 0;
+    pathp = parmp + (13 * sizeof(ULONG)) + sizeof(UCHAR);
+    /* Sometimes path is not null-terminated, so we make a copy. */
+    realPathp = malloc(nameLength+1);
+    memcpy(realPathp, pathp, nameLength);
+    realPathp[nameLength] = 0;
 
-	spacep = cm_GetSpace();
-	smb_StripLastComponent(spacep->data, &lastNamep, realPathp);
+    spacep = cm_GetSpace();
+    smb_StripLastComponent(spacep->data, &lastNamep, realPathp);
 
-	/*
-	 * Nothing here to handle SMB_IOCTL_FILENAME.
-	 * Will add it if necessary.
-	 */
+    /*
+     * Nothing here to handle SMB_IOCTL_FILENAME.
+     * Will add it if necessary.
+     */
 
 #ifdef DEBUG_VERBOSE
-	{
-		char *hexp, *asciip;
-		asciip = (lastNamep? lastNamep : realPathp);
-		hexp = osi_HexifyString( asciip );
-		DEBUG_EVENT2("AFS", "NTTranCreate H[%s] A[%s]", hexp, asciip);
-		free(hexp);
-	}
+    {
+        char *hexp, *asciip;
+        asciip = (lastNamep? lastNamep : realPathp);
+        hexp = osi_HexifyString( asciip );
+        DEBUG_EVENT2("AFS", "NTTranCreate H[%s] A[%s]", hexp, asciip);
+        free(hexp);
+    }
 #endif
 
-	userp = smb_GetUser(vcp, inp);
+    userp = smb_GetUser(vcp, inp);
     if (!userp) {
     	osi_Log1(smb_logp, "NTTranCreate invalid user [%d]", ((smb_t *) inp)->uid);
     	free(realPathp);
     	return CM_ERROR_INVAL;
     }
 
-	if (baseFid == 0) {
-		baseDirp = cm_rootSCachep;
-		code = smb_LookupTIDPath(vcp, ((smb_t *)inp)->tid, &tidPathp);
+    if (baseFid == 0) {
+        baseDirp = cm_rootSCachep;
+        code = smb_LookupTIDPath(vcp, ((smb_t *)inp)->tid, &tidPathp);
         if(code == CM_ERROR_TIDIPC) {
             /* Attempt to use TID allocated for IPC.  The client is
-               probably trying to locate DCE RPC endpoints, which we
-               don't support. */
+             * probably trying to locate DCE RPC endpoints, which we
+             * don't support. */
             osi_Log0(smb_logp, "NTTranCreate received IPC TID");
             free(realPathp);
             cm_ReleaseUser(userp);
             return CM_ERROR_NOSUCHPATH;
         }
-	}
-	else {
+    }
+    else {
         baseFidp = smb_FindFID(vcp, baseFid, 0);
         if (!baseFidp) {
         	osi_Log1(smb_logp, "NTTranCreate Invalid fid [%d]", baseFid);
-        	free(realPathp);
-        	cm_ReleaseUser(userp);
-        	return CM_ERROR_INVAL;
-        }
-		baseDirp = baseFidp->scp;
-		tidPathp = NULL;
-	}
+            free(realPathp);
+            cm_ReleaseUser(userp);
+            return CM_ERROR_INVAL;
+        }       
+        baseDirp = baseFidp->scp;
+        tidPathp = NULL;
+    }
 
     /* compute open mode */
     fidflags = 0;
@@ -5357,9 +5482,11 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
     if (desiredAccess & AFS_ACCESS_WRITE)
         fidflags |= SMB_FID_OPENWRITE;
 
-	dscp = NULL;
-	code = 0;
-    if (createDisp == 2 || createDisp == 4 || createDisp == 5) {
+    dscp = NULL;
+    code = 0;
+    if ( createDisp == FILE_OPEN || 
+         createDisp == FILE_OVERWRITE ||
+         createDisp == FILE_OVERWRITE_IF) {
         code = cm_NameI(baseDirp, spacep->data, CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
                         userp, tidPathp, &req, &dscp);
         if (code == 0) {
@@ -5369,7 +5496,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
                 code = cm_Lookup(dscp, (lastNamep)?(lastNamep+1):realPathp, 
                                  CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD, userp, &req, &scp);
                 if (code == 0 && realDirFlag == 1) {
-					cm_ReleaseSCache(scp);
+                    cm_ReleaseSCache(scp);
                     cm_ReleaseSCache(dscp);
                     cm_ReleaseUser(userp);
                     free(realPathp);
@@ -5383,10 +5510,11 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
                         userp, tidPathp, &req, &scp);
     }
 
-	if (code == 0) foundscp = TRUE;
-	if (code != 0
-	    || (fidflags & (SMB_FID_OPENDELETE | SMB_FID_OPENWRITE))) {
-		/* look up parent directory */
+    if (code == 0) 
+        foundscp = TRUE;
+    if (code != 0
+         || (fidflags & (SMB_FID_OPENDELETE | SMB_FID_OPENWRITE))) {
+        /* look up parent directory */
         if ( !dscp ) {
             code = cm_NameI(baseDirp, spacep->data,
                              CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
@@ -5396,179 +5524,233 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
         
         cm_FreeSpace(spacep);
 
-		if (baseFid != 0) {
-           smb_ReleaseFID(baseFidp);
-           baseFidp = 0;
+        if (baseFid != 0) {
+            smb_ReleaseFID(baseFidp);
+            baseFidp = 0;
         }
 
-		if (code) {
-			cm_ReleaseUser(userp);
-			free(realPathp);
-			return code;
-		}
+        if (code) {
+            cm_ReleaseUser(userp);
+            free(realPathp);
+            return code;
+        }
 
-		if (!lastNamep) lastNamep = realPathp;
-		else lastNamep++;
+        if (!lastNamep) lastNamep = realPathp;
+        else lastNamep++;
 
         if (!smb_IsLegalFilename(lastNamep))
             return CM_ERROR_BADNTFILENAME;
 
-		if (!foundscp) {
-            if (createDisp == 2 || createDisp == 4)
+        if (!foundscp) {
+            if (createDisp == FILE_CREATE || createDisp == FILE_OVERWRITE_IF) {
                 code = cm_Lookup(dscp, lastNamep,
-                                 CM_FLAG_FOLLOW, userp, &req, &scp);
-            else
+                                  CM_FLAG_FOLLOW, userp, &req, &scp);
+            } else {
                 code = cm_Lookup(dscp, lastNamep,
                                  CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
                                  userp, &req, &scp);
-			if (code && code != CM_ERROR_NOSUCHFILE) {
-				cm_ReleaseSCache(dscp);
-				cm_ReleaseUser(userp);
-				free(realPathp);
-				return code;
-			}
-		}
-	}
-	else {
-		if (baseFid != 0) {
+            }
+            if (code && code != CM_ERROR_NOSUCHFILE) {
+                cm_ReleaseSCache(dscp);
+                cm_ReleaseUser(userp);
+                free(realPathp);
+                return code;
+            }
+        }
+    }
+    else {
+        if (baseFid != 0) {
             smb_ReleaseFID(baseFidp);
             baseFidp = 0;
         }
-		cm_FreeSpace(spacep);
-	}
+        cm_FreeSpace(spacep);
+    }
 
-	/* if we get here, if code is 0, the file exists and is represented by
-	 * scp.  Otherwise, we have to create it.  The dir may be represented
-	 * by dscp, or we may have found the file directly.  If code is non-zero,
-	 * scp is NULL.
-	 */
-	if (code == 0) {
-		code = cm_CheckNTOpen(scp, desiredAccess, createDisp, userp,
-				      &req);
-		if (code) {
-			if (dscp) cm_ReleaseSCache(dscp);
-			cm_ReleaseSCache(scp);
-			cm_ReleaseUser(userp);
-			free(realPathp);
-			return code;
-		}
+    /* if we get here, if code is 0, the file exists and is represented by
+     * scp.  Otherwise, we have to create it.  The dir may be represented
+     * by dscp, or we may have found the file directly.  If code is non-zero,
+     * scp is NULL.
+     */
+    if (code == 0) {
+        code = cm_CheckNTOpen(scp, desiredAccess, createDisp, userp,
+                               &req);
+        if (code) {     
+            if (dscp) cm_ReleaseSCache(dscp);
+            cm_ReleaseSCache(scp);
+            cm_ReleaseUser(userp);
+            free(realPathp);
+            return code;
+        }
 
-		if (createDisp == 2) {
-			/* oops, file shouldn't be there */
-			if (dscp) cm_ReleaseSCache(dscp);
-			cm_ReleaseSCache(scp);
-			cm_ReleaseUser(userp);
-			free(realPathp);
-			return CM_ERROR_EXISTS;
-		}
+        if (createDisp == FILE_CREATE) {
+            /* oops, file shouldn't be there */
+            if (dscp) cm_ReleaseSCache(dscp);
+            cm_ReleaseSCache(scp);
+            cm_ReleaseUser(userp);
+            free(realPathp);
+            return CM_ERROR_EXISTS;
+        }
 
-		if (createDisp == 4
-		    || createDisp == 5) {
-			setAttr.mask = CM_ATTRMASK_LENGTH;
-			setAttr.length.LowPart = 0;
-			setAttr.length.HighPart = 0;
-			code = cm_SetAttr(scp, &setAttr, userp, &req);
-			openAction = 3;	/* truncated existing file */
-		}
-		else openAction = 1;	/* found existing file */
-	}
-	else if (createDisp == 1 || createDisp == 4) {
-		/* don't create if not found */
-		if (dscp) cm_ReleaseSCache(dscp);
-		cm_ReleaseUser(userp);
-		free(realPathp);
-		return CM_ERROR_NOSUCHFILE;
-	}
-	else if (realDirFlag == 0 || realDirFlag == -1) {
-		osi_assert(dscp != NULL);
-		osi_Log1(smb_logp, "smb_ReceiveNTTranCreate creating file %s",
-                 osi_LogSaveString(smb_logp, lastNamep));
-		openAction = 2;		/* created file */
-		setAttr.mask = CM_ATTRMASK_CLIENTMODTIME;
-		setAttr.clientModTime = time(NULL);
-		code = cm_Create(dscp, lastNamep, 0, &setAttr, &scp, userp,
-				 &req);
-		if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
-			smb_NotifyChange(FILE_ACTION_ADDED,
-					 FILE_NOTIFY_CHANGE_FILE_NAME,
-					 dscp, lastNamep, NULL, TRUE);
-		if (code == CM_ERROR_EXISTS && createDisp != 2) {
-			/* Not an exclusive create, and someone else tried
-			 * creating it already, then we open it anyway.  We
-			 * don't bother retrying after this, since if this next
-			 * fails, that means that the file was deleted after we
-			 * started this call.
-			 */
-			code = cm_Lookup(dscp, lastNamep, CM_FLAG_CASEFOLD,
-					 userp, &req, &scp);
-			if (code == 0) {
-				if (createDisp == 5) {
-					setAttr.mask = CM_ATTRMASK_LENGTH;
-					setAttr.length.LowPart = 0;
-					setAttr.length.HighPart = 0;
-					code = cm_SetAttr(scp, &setAttr, userp,
-							  &req);
-				}
-			}	/* lookup succeeded */
-		}
-	}
-	else {
-		/* create directory */
-		osi_assert(dscp != NULL);
-		osi_Log1(smb_logp,
-				"smb_ReceiveNTTranCreate creating directory %s",
-				osi_LogSaveString(smb_logp, lastNamep));
-		openAction = 2;		/* created directory */
-		setAttr.mask = CM_ATTRMASK_CLIENTMODTIME;
-		setAttr.clientModTime = time(NULL);
-		code = cm_MakeDir(dscp, lastNamep, 0, &setAttr, userp, &req);
-		if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
-			smb_NotifyChange(FILE_ACTION_ADDED,
-					 FILE_NOTIFY_CHANGE_DIR_NAME,
-					 dscp, lastNamep, NULL, TRUE);
-		if (code == 0
-		    || (code == CM_ERROR_EXISTS && createDisp != 2)) {
-			/* Not an exclusive create, and someone else tried
-			 * creating it already, then we open it anyway.  We
-			 * don't bother retrying after this, since if this next
-			 * fails, that means that the file was deleted after we
-			 * started this call.
-			 */
-			code = cm_Lookup(dscp, lastNamep, CM_FLAG_CASEFOLD,
-					 userp, &req, &scp);
-		}
-	}
+        if (createDisp == FILE_OVERWRITE ||
+            createDisp == FILE_OVERWRITE_IF) {
+            setAttr.mask = CM_ATTRMASK_LENGTH;
+            setAttr.length.LowPart = 0;
+            setAttr.length.HighPart = 0;
 
-	if (code) {
-		/* something went wrong creating or truncating the file */
-		if (scp) cm_ReleaseSCache(scp);
-		cm_ReleaseUser(userp);
-		free(realPathp);
-		return code;
-	}
+            /* now watch for a symlink */
+            code = 0;
+            while (code == 0 && scp->fileType == CM_SCACHETYPE_SYMLINK) {
+                targetScp = 0;
+                code = cm_EvaluateSymLink(dscp, scp, &targetScp, userp, &req);
+                if (code == 0) {
+                    /* we have a more accurate file to use (the
+                    * target of the symbolic link).  Otherwise,
+                    * we'll just use the symlink anyway.
+                    */
+                    osi_Log2(smb_logp, "symlink vp %x to vp %x",
+                              scp, targetScp);
+                    cm_ReleaseSCache(scp);
+                    scp = targetScp;
+                }
+            }
+            code = cm_SetAttr(scp, &setAttr, userp, &req);
+            openAction = 3;	/* truncated existing file */
+        }
+        else openAction = 1;	/* found existing file */
+    }
+    else if (createDisp == FILE_OPEN || createDisp == FILE_OVERWRITE) {
+        /* don't create if not found */
+        if (dscp) cm_ReleaseSCache(dscp);
+        cm_ReleaseUser(userp);
+        free(realPathp);
+        return CM_ERROR_NOSUCHFILE;
+    }
+    else if (realDirFlag == 0 || realDirFlag == -1) {
+        osi_assert(dscp != NULL);
+        osi_Log1(smb_logp, "smb_ReceiveNTTranCreate creating file %s",
+                  osi_LogSaveString(smb_logp, lastNamep));
+        openAction = 2;		/* created file */
+        setAttr.mask = CM_ATTRMASK_CLIENTMODTIME;
+        setAttr.clientModTime = time(NULL);
+        code = cm_Create(dscp, lastNamep, 0, &setAttr, &scp, userp,
+                          &req);
+        if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
+            smb_NotifyChange(FILE_ACTION_ADDED,
+                              FILE_NOTIFY_CHANGE_FILE_NAME,
+                              dscp, lastNamep, NULL, TRUE);
+        if (code == CM_ERROR_EXISTS && createDisp != FILE_CREATE) {
+            /* Not an exclusive create, and someone else tried
+             * creating it already, then we open it anyway.  We
+             * don't bother retrying after this, since if this next
+             * fails, that means that the file was deleted after we
+             * started this call.
+             */
+            code = cm_Lookup(dscp, lastNamep, CM_FLAG_CASEFOLD,
+                              userp, &req, &scp);
+            if (code == 0) {
+                if (createDisp == FILE_OVERWRITE_IF) {
+                    setAttr.mask = CM_ATTRMASK_LENGTH;
+                    setAttr.length.LowPart = 0;
+                    setAttr.length.HighPart = 0;
 
-	/* make sure we have file vs. dir right */
-	if (realDirFlag == 0 && scp->fileType != CM_SCACHETYPE_FILE) {
-		cm_ReleaseSCache(scp);
-		cm_ReleaseUser(userp);
-		free(realPathp);
-		return CM_ERROR_ISDIR;
-	}
-	if (realDirFlag == 1 && scp->fileType == CM_SCACHETYPE_FILE) {
-		cm_ReleaseSCache(scp);
-		cm_ReleaseUser(userp);
-		free(realPathp);
-		return CM_ERROR_NOTDIR;
-	}
+                    /* now watch for a symlink */
+                    code = 0;
+                    while (code == 0 && scp->fileType == CM_SCACHETYPE_SYMLINK) {
+                        targetScp = 0;
+                        code = cm_EvaluateSymLink(dscp, scp, &targetScp, userp, &req);
+                        if (code == 0) {
+                            /* we have a more accurate file to use (the
+                            * target of the symbolic link).  Otherwise,
+                            * we'll just use the symlink anyway.
+                            */
+                            osi_Log2(smb_logp, "symlink vp %x to vp %x",
+                                      scp, targetScp);
+                            cm_ReleaseSCache(scp);
+                            scp = targetScp;
+                        }
+                    }
+                    code = cm_SetAttr(scp, &setAttr, userp, &req);
+                }       
+            }	/* lookup succeeded */
+        }
+    }
+    else {
+        /* create directory */
+        osi_assert(dscp != NULL);
+        osi_Log1(smb_logp,
+                  "smb_ReceiveNTTranCreate creating directory %s",
+                  osi_LogSaveString(smb_logp, lastNamep));
+        openAction = 2;		/* created directory */
+        setAttr.mask = CM_ATTRMASK_CLIENTMODTIME;
+        setAttr.clientModTime = time(NULL);
+        code = cm_MakeDir(dscp, lastNamep, 0, &setAttr, userp, &req);
+        if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
+            smb_NotifyChange(FILE_ACTION_ADDED,
+                              FILE_NOTIFY_CHANGE_DIR_NAME,
+                              dscp, lastNamep, NULL, TRUE);
+        if (code == 0 ||
+            (code == CM_ERROR_EXISTS && createDisp != FILE_CREATE)) {
+            /* Not an exclusive create, and someone else tried
+             * creating it already, then we open it anyway.  We
+             * don't bother retrying after this, since if this next
+             * fails, that means that the file was deleted after we
+             * started this call.
+             */
+            code = cm_Lookup(dscp, lastNamep, CM_FLAG_CASEFOLD,
+                              userp, &req, &scp);
+        }       
+    }
 
-	/* open the file itself */
-	fidp = smb_FindFID(vcp, 0, SMB_FLAG_CREATE);
-	osi_assert(fidp);
+    if (code) {
+        /* something went wrong creating or truncating the file */
+        if (scp) cm_ReleaseSCache(scp);
+        cm_ReleaseUser(userp);
+        free(realPathp);
+        return code;
+    }
 
-	/* save a pointer to the vnode */
-	fidp->scp = scp;
+    /* make sure we have file vs. dir right */
+    if (realDirFlag == 0 && scp->fileType != CM_SCACHETYPE_FILE) {
+        /* now watch for a symlink */
+        code = 0;
+        while (code == 0 && scp->fileType == CM_SCACHETYPE_SYMLINK) {
+            targetScp = 0;
+            code = cm_EvaluateSymLink(dscp, scp, &targetScp, userp, &req);
+            if (code == 0) {
+                /* we have a more accurate file to use (the
+                * target of the symbolic link).  Otherwise,
+                * we'll just use the symlink anyway.
+                */
+                osi_Log2(smb_logp, "symlink vp %x to vp %x",
+                          scp, targetScp);
+                cm_ReleaseSCache(scp);
+                scp = targetScp;
+            }
+        }
 
-	fidp->flags = fidflags;
+        if (scp->fileType != CM_SCACHETYPE_FILE) {
+            cm_ReleaseSCache(scp);
+            cm_ReleaseUser(userp);
+            free(realPathp);
+            return CM_ERROR_ISDIR;
+        }
+    }
+
+    if (realDirFlag == 1 && scp->fileType == CM_SCACHETYPE_FILE) {
+        cm_ReleaseSCache(scp);
+        cm_ReleaseUser(userp);
+        free(realPathp);
+        return CM_ERROR_NOTDIR;
+    }
+
+    /* open the file itself */
+    fidp = smb_FindFID(vcp, 0, SMB_FLAG_CREATE);
+    osi_assert(fidp);
+
+    /* save a pointer to the vnode */
+    fidp->scp = scp;
+
+    fidp->flags = fidflags;
 
     /* save parent dir and pathname for deletion or change notification */
     if (fidflags & (SMB_FID_OPENDELETE | SMB_FID_OPENWRITE)) {
@@ -5577,15 +5759,15 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
         cm_HoldSCache(dscp);
         fidp->NTopen_pathp = strdup(lastNamep);
     }
-	fidp->NTopen_wholepathp = realPathp;
+    fidp->NTopen_wholepathp = realPathp;
 
-	/* we don't need this any longer */
-	if (dscp) cm_ReleaseSCache(dscp);
+    /* we don't need this any longer */
+    if (dscp) cm_ReleaseSCache(dscp);
 
-	cm_Open(scp, 0, userp);
+    cm_Open(scp, 0, userp);
 
-	/* set inp->fid so that later read calls in same msg can find fid */
-	inp->fid = fidp->fid;
+    /* set inp->fid so that later read calls in same msg can find fid */
+    inp->fid = fidp->fid;
 
     /* check whether we are required to send an extended response */
     if (!extendedRespRequired) {
@@ -5689,15 +5871,15 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
         lock_ReleaseMutex(&scp->mx);
     }
 
-	osi_Log1(smb_logp, "SMB NTTranCreate opening fid %d", fidp->fid);
+    osi_Log1(smb_logp, "SMB NTTranCreate opening fid %d", fidp->fid);
 
-	smb_ReleaseFID(fidp);
+    smb_ReleaseFID(fidp);
 
-	cm_ReleaseUser(userp);
+    cm_ReleaseUser(userp);
 
-   	/* free(realPathp); Can't free realPathp here because fidp->NTopen_wholepathp points there */
-	/* leave scp held since we put it in fidp->scp */
-	return 0;
+    /* free(realPathp); Can't free realPathp here because fidp->NTopen_wholepathp points there */
+    /* leave scp held since we put it in fidp->scp */
+    return 0;
 }
 
 long smb_ReceiveNTTranNotifyChange(smb_vc_t *vcp, smb_packet_t *inp,
@@ -5828,26 +6010,26 @@ long smb_ReceiveNTTranQuerySecurityDesc(smb_vc_t *vcp, smb_packet_t *inp, smb_pa
 
 long smb_ReceiveNTTransact(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
-	unsigned short function;
+    unsigned short function;
 
-	function = smb_GetSMBParm(inp, 18);
+    function = smb_GetSMBParm(inp, 18);
 
-	osi_Log1(smb_logp, "SMB NT Transact function %d", function);
+    osi_Log1(smb_logp, "SMB NT Transact function %d", function);
 
-	/* We can handle long names */
-	if (vcp->flags & SMB_VCFLAG_USENT)
-		((smb_t *)outp)->flg2 |= 0x40;	/* IS_LONG_NAME */
+    /* We can handle long names */
+    if (vcp->flags & SMB_VCFLAG_USENT)
+        ((smb_t *)outp)->flg2 |= 0x40;	/* IS_LONG_NAME */
         
-	switch (function) {
-
-		case 6: return smb_ReceiveNTTranQuerySecurityDesc(vcp, inp, outp);
-
-		case 4: return smb_ReceiveNTTranNotifyChange(vcp, inp, outp);
-
-		case 1: return smb_ReceiveNTTranCreate(vcp, inp, outp);
-
-		default: return CM_ERROR_INVAL;
-	}
+    switch (function) {
+    case 6: 
+        return smb_ReceiveNTTranQuerySecurityDesc(vcp, inp, outp);
+    case 4: 
+        return smb_ReceiveNTTranNotifyChange(vcp, inp, outp);
+    case 1: 
+        return smb_ReceiveNTTranCreate(vcp, inp, outp);
+    default: 
+        return CM_ERROR_INVAL;
+    }
 }
 
 /*
@@ -6103,9 +6285,52 @@ long smb_ReceiveNTCancel(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     return 0;
 }
 
+/*
+ * NT rename also does hard links.
+ */
+
+#define RENAME_FLAG_MOVE_CLUSTER_INFORMATION 0x102
+#define RENAME_FLAG_HARD_LINK                0x103
+#define RENAME_FLAG_RENAME                   0x104
+#define RENAME_FLAG_COPY                     0x105
+
+long smb_ReceiveNTRename(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
+{
+    char *oldname, *newname;
+    long code = 0;
+    cm_user_t *userp;
+    char * tp;
+    int attrs;
+    int rename_type;
+
+    attrs = smb_GetSMBParm(inp, 0);
+    rename_type = smb_GetSMBParm(inp, 1);
+
+    if (rename_type != RENAME_FLAG_RENAME && rename_type != RENAME_FLAG_HARD_LINK) {
+        osi_Log1(smb_logp, "NTRename invalid infolevel [%x]", rename_type);
+        return CM_ERROR_NOACCESS;
+    }
+
+    tp = smb_GetSMBData(inp, NULL);
+    oldname = smb_ParseASCIIBlock(tp, &tp);
+    newname = smb_ParseASCIIBlock(tp, &tp);
+
+    osi_Log3(smb_logp, "NTRename for [%s]->[%s] type [%s]",
+             osi_LogSaveString(smb_logp, oldname),
+             osi_LogSaveString(smb_logp, newname),
+             ((rename_type==RENAME_FLAG_RENAME)?"rename":"hardlink"));
+
+    if (rename_type == RENAME_FLAG_RENAME) {
+        code = smb_Rename(vcp,inp,oldname,newname,attrs);
+    } else { /* RENAME_FLAG_HARD_LINK */
+        code = smb_Link(vcp,inp,oldname,newname);
+    }
+    return code;
+}
+
 void smb3_Init()
 {
-	lock_InitializeMutex(&smb_Dir_Watch_Lock, "Directory Watch List Lock");
+    lock_InitializeMutex(&smb_Dir_Watch_Lock, "Directory Watch List Lock");
 }
 
 cm_user_t *smb_FindCMUserByName(/*smb_vc_t *vcp,*/ char *usern, char *machine)

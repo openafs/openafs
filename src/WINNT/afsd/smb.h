@@ -561,6 +561,10 @@ extern long smb_ReadData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count,
 	char *op, cm_user_t *userp, long *readp, int dosflag);
 #endif /* !DJGPP */
 
+extern long smb_Rename(smb_vc_t *vcp, smb_packet_t *inp, char *oldPathp, char *newPathp, int attrs);
+
+extern long smb_Link(smb_vc_t *vcp, smb_packet_t *inp, char *oldPathp, char *newPathp);
+
 extern BOOL smb_IsLegalFilename(char *filename);
 
 extern char *smb_GetSharename(void);

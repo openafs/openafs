@@ -104,6 +104,9 @@ extern long cm_Rename(cm_scache_t *oldDscp, char *oldLastNamep,
 extern long cm_HandleLink(cm_scache_t *linkScp, struct cm_user *userp,
 	cm_req_t *reqp);
 
+extern long cm_Link(cm_scache_t *dscp, char *namep, cm_scache_t *sscp,
+    long flags, cm_user_t *userp, cm_req_t *reqp);
+
 extern long cm_SymLink(cm_scache_t *dscp, char *namep, char *contentsp,
 	long flags, cm_attr_t *attrp, cm_user_t *userp, cm_req_t *reqp);
 

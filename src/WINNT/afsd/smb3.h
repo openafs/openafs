@@ -149,7 +149,16 @@ extern long smb_ReceiveTran2FindNotifyFirst(smb_vc_t *vcp, smb_tran2Packet_t *p,
 extern long smb_ReceiveTran2FindNotifyNext(smb_vc_t *vcp, smb_tran2Packet_t *p,
 	smb_packet_t *outp);
 
-extern long smb_ReceiveTran2MKDir(smb_vc_t *vcp, smb_tran2Packet_t *p,
+extern long smb_ReceiveTran2CreateDirectory(smb_vc_t *vcp, smb_tran2Packet_t *p,
+	smb_packet_t *outp);
+
+extern long smb_ReceiveTran2SessionSetup(smb_vc_t *vcp, smb_tran2Packet_t *p,
+	smb_packet_t *outp);
+
+extern long smb_ReceiveTran2GetDFSReferral(smb_vc_t *vcp, smb_tran2Packet_t *p,
+	smb_packet_t *outp);
+
+extern long smb_ReceiveTran2ReportDFSInconsistency(smb_vc_t *vcp, smb_tran2Packet_t *p,
 	smb_packet_t *outp);
 
 extern long smb_ReceiveV3FindClose(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp);
@@ -177,6 +186,8 @@ extern void smb_NotifyChange(DWORD action, DWORD notifyFilter,
 	BOOL isDirectParent);
 
 extern long smb_ReceiveNTCancel(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp);
+
+extern long smb_ReceiveNTRename(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp);
 
 extern int smb_V3MatchMask(char *namep, char *maskp, int flags);
 

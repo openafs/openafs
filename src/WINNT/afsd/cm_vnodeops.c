@@ -2082,6 +2082,60 @@ long cm_MakeDir(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
         return code;
 }
 
+long cm_Link(cm_scache_t *dscp, char *namep, cm_scache_t *sscp, long flags,
+             cm_user_t *userp, cm_req_t *reqp)
+{
+    cm_conn_t *connp;
+    long code = 0;
+    AFSFid dirAFSFid;
+    AFSFid existingAFSFid;
+    AFSFetchStatus updatedDirStatus;
+    AFSFetchStatus newLinkStatus;
+    AFSVolSync volSync;
+
+    if (dscp->fid.cell != sscp->fid.cell ||
+        dscp->fid.volume != sscp->fid.volume) {
+        return CM_ERROR_CROSSDEVLINK;
+    }
+
+    lock_ObtainMutex(&dscp->mx);
+    code = cm_SyncOp(dscp, NULL, userp, reqp, 0, CM_SCACHESYNC_STOREDATA);
+    lock_ReleaseMutex(&dscp->mx);
+
+    if (code)
+        return code;
+
+    do {
+        code = cm_Conn(&dscp->fid, userp, reqp, &connp);
+        if (code) continue;
+
+        dirAFSFid.Volume = dscp->fid.volume;
+        dirAFSFid.Vnode = dscp->fid.vnode;
+        dirAFSFid.Unique = dscp->fid.unique;
+
+        existingAFSFid.Volume = sscp->fid.volume;
+        existingAFSFid.Vnode = sscp->fid.vnode;
+        existingAFSFid.Unique = sscp->fid.unique;
+
+        code = RXAFS_Link(connp->callp, &dirAFSFid, namep, &existingAFSFid,
+            &newLinkStatus, &updatedDirStatus, &volSync);
+
+        osi_Log1(smb_logp,"  RXAFS_Link returns %d", code);
+    } while (cm_Analyze(connp, userp, reqp,
+        &dscp->fid, &volSync, NULL, NULL, code));
+
+    code = cm_MapRPCError(code, reqp);
+
+    lock_ObtainMutex(&dscp->mx);
+    cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_STOREDATA);
+    if (code == 0) {
+        cm_MergeStatus(dscp, &updatedDirStatus, &volSync, userp, 0);
+    }
+    lock_ReleaseMutex(&dscp->mx);
+
+    return code;
+}
+
 long cm_SymLink(cm_scache_t *dscp, char *namep, char *contentsp, long flags,
 	cm_attr_t *attrp, cm_user_t *userp, cm_req_t *reqp)
 {
