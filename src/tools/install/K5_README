@@ -1,0 +1,104 @@
+6/27/02
+
+This is a brief description of how to use the OpenAFS Tools to create a cell
+that uses Kerberos 5 authentication, rather than the kaserver program that
+comes with OpenAFS.
+
+*** INTRODUCTION ***
+
+Kerberos 5 is an authentication protocol that is widely used by many
+applications.  If you have an OpenAFS environment that is K5-aware, your
+users will not have to obtain authenticate separately with OpenAFS -- they
+can use their Kerberos tickets instead.  For more information about the
+benefits of K5 over AFS authentication, see the following webpage:
+
+http://www.mathematik.uni-karlsruhe.de/~iwrmm/Persons/Schulz/Unix/afs/afs-krb5.html
+
+You should also check out AFSLore (http://grand.central.org/twiki/).
+
+Also, refer to the OpenAFS Tools README for a much more complete set
+of requirements and instructions.  This document contains only things that
+are specific to the process of using Kerberos; it assumes you are already
+familiar with the other OpenAFS Tools requirements.
+
+*** REQUIREMENTS ***
+
+There are two major implementations of K5 -- MIT, and Heimdal.  From what
+I can gather, one is not significantly better than the other.  Unfortunately,
+their command line interfaces differ slightly, so for these tools I had to
+choose one with which to be compatible.  I chose the MIT version.  It is
+available at http://web.mit.edu/kerberos/www/index.html.  You should download,
+compile, and install this if you haven't already.
+
+If you have an existing Kerberos realm that you plan to use, you only need to
+configure your soon-to-be OpenAFS server as a Kerberos client.  If you're
+making a new realm, you're going to have to create a master KDC (which can
+be the same as your OpenAFS server if you want, but that's not advised), and
+also configure your OpenAFS server to be a client.  The aforementioned MIT
+website has all the information you'll need on how to create or connect to
+a K5 realm.  IMPORTANT NOTE: If you're creating a new realm, keep in mind
+that the OpenAFS cell you will be creating later must have the same name as
+the realm, except the name of the realm must be in all caps.
+
+The next step is to install the OpenAFS RPMs, available at 
+http://www.openafs.org/.  You'll need to get the openafs, openafs-kernel,
+openafs-client, openafs-server, and openafs-krb5 packages, and install
+them all.  
+
+*** INSTALLATION ***
+
+Installation is pretty easy.  Just do a normal install_afs command (as 
+described in the OpenAFS Tools README), but specify the "-k" option.  This
+informs the program that you are going to be using Kerberos for authentication.
+During the installation process, it will ask for a Kerberos administration
+password; this is the password for the admin/admin principal in your
+Kerberos realm.  If it is not correct, the installation will not work!
+
+IMPORTANT NOTE: As far as I can tell, the name of your cell must be THE SAME
+as the name of the Kerberos realm you are using, except in should be in lower
+case letters instead of upper case.  Supposedly there are ways to get around
+this, but I have not found them.  Currently, the OpenAFS Tools supports only
+same-name integration.
+
+*** USE ***
+
+After the install_afs program completes, you should be ready to go.  To test
+it out, execute the following commands.
+
+  kinit admin
+  aklog
+  vos create <machine_name> <partition_name> test.vol
+
+This will create a test volume in your AFS cell.  If you see any error 
+messages about authentication, then something's not working.
+
+If everything works, you can start using your AFS cell.  When you want to make
+new users, make them a Kerberos account, and then give them a PTS entry in
+your OpenAFS cell.  That should be it!
+
+*** COMMON PROBLEMS ***
+
+Here are some solutions to problems I've encountered:
+
+- Some KDC in your Kerberos realm must be running the following programs 
+before you run the OpenAFS installation program:
+  kadmind
+  krb5kdc
+  krb524d -m
+- The name of your OpenAFS cell and Kerberos realm must be the same, except
+for differences in capitalization.
+- Make sure, after uninstalling OpenAFS, to delete the 'admin' and 'afs'
+principals from the Kerberos database.
+
+*** Future Work ***
+
+These tools should support both MIT and Heimdal implementations, and any
+others that may exist.  Unfortunately, the only reasonable way to do this 
+that I can see is to use the actual Kerberos 5 API.  This would require 
+writing a C program or two and integrating them into the OpenAFS
+installation script.  While certainly possible, this would probably take
+some work.
+
+Removing the same name dependency between the OpenAFS cell and the Kerberos
+realm would be fantastic.
+
