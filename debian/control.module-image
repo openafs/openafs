@@ -1,5 +1,5 @@
 Source: openafs
-Section: non-us
+Section: non-us/main
 Priority: optional
 Maintainer: Sam Hartman <hartmans@mit.edu>
 Standards-Version: 3.1.1

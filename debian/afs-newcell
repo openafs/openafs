@@ -3,11 +3,45 @@
 use Term::ReadLine;
 use strict;
 use Debian::OpenAFS::ConfigUtils;
+use Getopt::Long;
 use vars qw($admin $server
 	   $requirements_met  $shutdown_needed);
 my $rl = new Term::ReadLine('afs-newcell');
 $shutdown_needed = 1;
+
+=head1  NAME
+
+   afs-newcell - Set up initial database server for AFS cell.
+
+=head1 SYNOPSIS
+
+B<afs-newcell> [B<--requirements-met>] [B<--admin> admin_user]
+
+=head1 DESCRIPTION
+
+
+This script sets up the initial AFS database and configures the first
+database/file server.
+
+The B<requirements-met> option specifies that the initial requirements
+have been met and that the script can proceed without displaying the
+initial banner or asking for confirmation.
+
+The B<admin> option specifies the name of the administrative user.
+This user will be given system:administrators and susers permission in
+the cell.
+
+=head1 AUTHOR
+
+Sam Hartman <hartmans@mit.edu>
+
+=cut
+
 # main script
+
+GetOptions (
+	    "requirements-met" => \$requirements_met, 
+	    "admin=s" => \$admin);
 
 unless ($requirements_met) {
   print <<eoreqs;
@@ -71,7 +105,7 @@ print "If the fileserver is not running, this may hang for 30 seconds.\n";
 run("/etc/init.d/openafs-fileserver stop");
 $server = `hostname`;
 chomp $server;
-$admin = $rl->readline("What administrative principal should be used?");
+$admin = $rl->readline("What administrative principal should be used?") unless $admin;
  die "Please specify an administrative user\n" unless $admin;
 $admin =~ s:/:.:g;
 if($admin =~ /@/) {

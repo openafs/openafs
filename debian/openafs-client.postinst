@@ -15,7 +15,8 @@ set -e
 case "$1" in
     configure)
 
-	. /usr/share/debconf/confmodule
+	test -d /afs || mkdir /afs
+    . /usr/share/debconf/confmodule
 
 	db_version 2.0
 

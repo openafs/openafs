@@ -1,3 +1,15 @@
+openafs (1.0.snap20001106-7) unstable; urgency=low
+
+  * Add command line options to afs-newcell
+  * Fix control.module for real this time.
+  * Add kpasswd and kas to the openafs-kpasswd package.
+  * Add manpage for afs-newcell and many undocumented links.
+  * Remove PAM module from libopenafs-dev.
+  * Instal udebug, pagsh, cmdebug.
+  * Remove execute bit from some includes in /usr/include.
+
+ --  Sam Hartman <hartmans@mit.edu>  Mon, 27 Nov 2000 03:02:57 -0500
+
 openafs (1.0.snap20001106-6) unstable; urgency=medium
 
   * Add config option to disable  client on boot

@@ -1,9 +1,7 @@
 		 Setting up a Debian OpennAFS Server
 
-Currently, most of the configuration mechanisms are not present for
-setting up a Debian server.  These packages include the binaries with
-appropriate FHS-compatible path names.  Here is a rough map from the
-AFS paths to the Debian paths:
+These packages include binaries with FHS-compatible path names.  Here
+is a map from AFS paths to FHS paths:
 
 /usr/afs/etc		/etc/openafs/server
 /usr/afs/local		/etc/openafs/server-local
@@ -11,9 +9,15 @@ AFS paths to the Debian paths:
 /usr/afs/logs		/var/log/openafs
 /usr/afs/bin		/usr/lib/openafs
 
-The main problem linking the AFS configuration model into the Debian
-model is how to deal with synchronization of servers.  Once this is
-resolved, support for configuring the servers directly will be added.  
+
+Scripts are provided to configure a single database/file server.  The
+afs-newcell script sets up the initial databases and configures
+bosserver.  After running this script, get tokens in the cell and run
+the afs-rootvol script to populate the root volume and root.cell.  A
+sample transcript of configuring an AFS cell can be found in
+/usr/share/doc/openafs-dbserver/configuration-transcript.txt.gz.  This
+transcript assumes you are using MIT Kerberos and the openafs-krb5
+package.  Similar steps could be taken with Heimdal.
 
 Another issue is upgrades.  It is likely that futurue versions of this
 package will install for example /usr/lib/openafs/fileserver.package
@@ -24,13 +28,20 @@ the new versions.  The intent is that people could install the new
 package on all their servers and then quickly move the links before
 restarting the bosserver.
 
-		    Things to do for manual config
+		      Adding Additional Servers
 
-* Create /etc/openafs/server/CellServDB only with the server's cell
-* create /etc/openafs/server/KeyFile -- good luck finding out how
-* start bosserver
-* add ptserver and vlserver
-* create prdb (again good luck without starting in noauth)
-* Create vldb
-* add fileserver process
+If you decide one server is not enough, here is roughly what needs to
+happen:
 
+1) Copy securely (using scp , encrypted Kerberized rcp or some other
+   secure method) /etc/openafs/server to the new server.
+
+2) Start a bosserver.
+
+3) If the machine is to be a file server, create an fs instance using
+   bos create.  For file servers this is all you need to do.
+
+4) For database servers, you also need to do a bos addhost on all
+   servers (including the new server) to add the new server to
+   /etc/openafs/server/CellServDB.  Then create ptserver and vlserver
+   instances.

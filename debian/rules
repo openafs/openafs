@@ -75,6 +75,9 @@ install: build
 	dh_clean -k
 	dh_installdirs
 
+	for pkg in openafs-dbserver openafs-fileserver openafs-kpasswd; do \
+		ln -s openafs-client debian/$$pkg/usr/share/doc/$$pkg; \
+		done
 	# Add here commands to install the package into debian/tmp.
 	cat debian/filelist |sh debian/movefiles
 	cp dest/root.client/usr/vice/etc/afs.rc debian/openafs-client.init
@@ -82,10 +85,17 @@ install: build
 	install -m 755 -o root -g root debian/afs-rootvol debian/openafs-dbserver/usr/sbin
 	install -g root -o root -m 755 debian/afs-newcell \
 		debian/openafs-dbserver/usr/sbin
-	install -D debian/ConfigUtils.pm \
+	install -D -m 644 debian/ConfigUtils.pm \
 		debian/openafs-dbserver/usr/lib/perl5/Debian/OpenAFS/ConfigUtils.pm
 	(cd debian&&pod2man --section 8 --center "Debian GNU/Linux"  \
 		afs-rootvol ) >debian/openafs-dbserver/usr/share/man/man8/afs-rootvol.8
+	(cd debian&&pod2man --section 8 --center "Debian GNU/Linux"  \
+		afs-newcell ) >debian/openafs-dbserver/usr/share/man/man8/afs-newcell.8
+	# No, includes should not have the x bit set
+	find debian/libopenafs-dev/usr/include -type f -print | \
+		xargs chmod a-x
+	# And drop the pam modules
+	rm debian/libopenafs-dev/usr/lib/*pam*
 
 # Build architecture-independent files here.
 # Pass -i to all debhelper commands in this target to reduce clutter.
@@ -105,7 +115,7 @@ binary-indep: build install binary-source
 	dh_installcron
 #	dh_installmanpages
 	dh_installinfo
-#	dh_undocumented
+	dh_undocumented
 	dh_installchangelogs 
 	dh_link
 	dh_compress
@@ -136,7 +146,7 @@ binary-arch: build install
 	dh_installcron
 #	dh_installmanpages
 	dh_installinfo
-#	dh_undocumented
+	dh_undocumented
 	dh_installchangelogs 
 	dh_strip
 	dh_link
