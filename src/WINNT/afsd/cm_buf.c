@@ -319,10 +319,20 @@ long buf_Init(cm_buf_ops_t *opsp)
                 afsi_log("Error creating cache file \"%s\" error %d", 
                           cm_CachePath, GetLastError());
                 return CM_ERROR_INVAL;
+            } else if (GetLastError() == ERROR_ALREADY_EXISTS) {
+                BY_HANDLE_FILE_INFORMATION fileInfo;
+
+                afsi_log("Cache File \"%s\" already exists", cm_CachePath);
+                if ( GetFileInformationByHandle(hf, &fileInfo) )
+                    afsi_log("Existing File Size: %08X:%08X",
+                              fileInfo.nFileSizeHigh,
+                              fileInfo.nFileSizeLow);
             }
         } else { /* buf_cacheType == CM_BUF_CACHETYPE_VIRTUAL */
             hf = INVALID_HANDLE_VALUE;
         }
+        afsi_log("File Mapping Size: %08X", buf_nbuffers * buf_bufferSize);
+
         CacheHandle = hf;
         hm = CreateFileMapping(hf,
                                 NULL,
@@ -331,8 +341,7 @@ long buf_Init(cm_buf_ops_t *opsp)
                                 NULL);
         if (hm == NULL) {
             if (GetLastError() == ERROR_DISK_FULL) {
-                afsi_log("Error creating cache file \"%s\" mapping: disk full",
-                          cm_CachePath);
+                afsi_log("Error creating cache file mapping: disk full");
                 return CM_ERROR_TOOMANYBUFS;
             }
             return CM_ERROR_INVAL;

@@ -173,6 +173,16 @@ afsd_ServiceControlHandler(DWORD ctrlCode)
     switch (ctrlCode) {
     case SERVICE_CONTROL_SHUTDOWN:
     case SERVICE_CONTROL_STOP:
+        ServiceStatus.dwCurrentState = SERVICE_STOP_PENDING;
+        ServiceStatus.dwWin32ExitCode = NO_ERROR;
+        ServiceStatus.dwCheckPoint = 1;
+        ServiceStatus.dwWaitHint = 30000;
+        ServiceStatus.dwControlsAccepted = 0;
+        SetServiceStatus(StatusHandle, &ServiceStatus);
+
+#ifdef	FLUSH_VOLUME
+        afsd_ServiceFlushVolume((DWORD) lpEventData);                         
+#endif                                                                                      
         /* Force trace if requested */
         code = RegOpenKeyEx(HKEY_LOCAL_MACHINE,
                              AFSConfigKeyName,
@@ -193,14 +203,9 @@ afsd_ServiceControlHandler(DWORD ctrlCode)
         }
 
       doneTrace:
-        ServiceStatus.dwCurrentState = SERVICE_STOP_PENDING;
-        ServiceStatus.dwWin32ExitCode = NO_ERROR;
-        ServiceStatus.dwCheckPoint = 1;
-        ServiceStatus.dwWaitHint = 10000;
-        ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN;
-        SetServiceStatus(StatusHandle, &ServiceStatus);
         SetEvent(WaitToTerminate);
         break;
+
     case SERVICE_CONTROL_INTERROGATE:
         ServiceStatus.dwCurrentState = SERVICE_RUNNING;
         ServiceStatus.dwWin32ExitCode = NO_ERROR;
@@ -234,7 +239,19 @@ afsd_ServiceControlHandlerEx(
 
     switch (ctrlCode) 
     {
+    case SERVICE_CONTROL_SHUTDOWN:
     case SERVICE_CONTROL_STOP:
+        ServiceStatus.dwCurrentState = SERVICE_STOP_PENDING;
+        ServiceStatus.dwWin32ExitCode = NO_ERROR;
+        ServiceStatus.dwCheckPoint = 1;
+        ServiceStatus.dwWaitHint = 30000;
+        ServiceStatus.dwControlsAccepted = 0;
+        SetServiceStatus(StatusHandle, &ServiceStatus);
+
+#ifdef	FLUSH_VOLUME
+        afsd_ServiceFlushVolume((DWORD) lpEventData);                         
+#endif                                                                                      
+
         /* Force trace if requested */
         code = RegOpenKeyEx(HKEY_LOCAL_MACHINE,
                             AFSConfigKeyName,
@@ -255,12 +272,6 @@ afsd_ServiceControlHandlerEx(
         }
 
       doneTrace:
-        ServiceStatus.dwCurrentState = SERVICE_STOP_PENDING;
-        ServiceStatus.dwWin32ExitCode = NO_ERROR;
-        ServiceStatus.dwCheckPoint = 1;
-        ServiceStatus.dwWaitHint = 10000;
-        ServiceStatus.dwControlsAccepted = 0;
-        SetServiceStatus(StatusHandle, &ServiceStatus);
         SetEvent(WaitToTerminate);
         dwRet = NO_ERROR;
         break;

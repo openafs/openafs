@@ -2510,7 +2510,7 @@ ViceIDToUsername(char *username,
              * level
              */
 
-            if (status = pr_Initialize(1L, confname, aserver->cell, 0))
+            if (status = pr_Initialize(1L, confname, aserver->cell))
                 return status;
             if (status = pr_CreateUser(username, &id))
                 return status;

@@ -138,30 +138,30 @@ static long cm_GetServerList(struct cm_fid *fidp, struct cm_user *userp,
  */
 int
 cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
-	struct cm_fid *fidp, 
-	AFSVolSync *volSyncp, 
-	cm_serverRef_t * serversp,
-	cm_callbackRequest_t *cbrp, long errorCode)
+           struct cm_fid *fidp, 
+           AFSVolSync *volSyncp, 
+           cm_serverRef_t * serversp,
+           cm_callbackRequest_t *cbrp, long errorCode)
 {
     cm_server_t *serverp = 0;
     cm_serverRef_t **serverspp = 0;
-	cm_serverRef_t *tsrp;
-	cm_ucell_t *ucellp;
+    cm_serverRef_t *tsrp;
+    cm_ucell_t *ucellp;
     int retry = 0;
     int free_svr_list = 0;
-	int dead_session;
+    int dead_session;
     long timeUsed, timeLeft;
         
-	osi_Log2(afsd_logp, "cm_Analyze connp 0x%x, code %d",
-		 (long) connp, errorCode);
+    osi_Log2(afsd_logp, "cm_Analyze connp 0x%x, code %d",
+             (long) connp, errorCode);
 
-	/* no locking required, since connp->serverp never changes after
-	 * creation */
-	dead_session = (userp->cellInfop == NULL);
-	if (connp)
-		serverp = connp->serverp;
+    /* no locking required, since connp->serverp never changes after
+     * creation */
+    dead_session = (userp->cellInfop == NULL);
+    if (connp)
+        serverp = connp->serverp;
 
-	/* Update callback pointer */
+    /* Update callback pointer */
     if (cbrp && serverp && errorCode == 0) {
         if (cbrp->serverp) {
             if ( cbrp->serverp != serverp ) {
@@ -178,39 +178,39 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
         lock_ReleaseWrite(&cm_callbackLock);
     }
 
-	/* If not allowed to retry, don't */
-	if (reqp->flags & CM_REQ_NORETRY)
-		goto out;
+    /* If not allowed to retry, don't */
+    if (reqp->flags & CM_REQ_NORETRY)
+        goto out;
 
-	/* if timeout - check that it did not exceed the SMB timeout
+    /* if timeout - check that it did not exceed the SMB timeout
      * and retry */
     
-	    /* timeleft - get if from reqp the same way as cmXonnByMServers does */
+    /* timeleft - get if from reqp the same way as cmXonnByMServers does */
 #ifndef DJGPP
-	    timeUsed = (GetCurrentTime() - reqp->startTime) / 1000;
+    timeUsed = (GetCurrentTime() - reqp->startTime) / 1000;
 #else
-	    gettimeofday(&now, NULL);
-	    timeUsed = sub_time(now, reqp->startTime) / 1000;
+    gettimeofday(&now, NULL);
+    timeUsed = sub_time(now, reqp->startTime) / 1000;
 #endif
 	    
-	    /* leave 5 seconds margin for sleep */
-	    timeLeft = RDRtimeout - timeUsed;
+    /* leave 5 seconds margin for sleep */
+    timeLeft = RDRtimeout - timeUsed;
 
     if (errorCode == CM_ERROR_TIMEDOUT && timeLeft > 5 ) {
-            thrd_Sleep(3000);
-            cm_CheckServers(CM_FLAG_CHECKDOWNSERVERS, NULL);
-            retry = 1;
-        } 
+        thrd_Sleep(3000);
+        cm_CheckServers(CM_FLAG_CHECKDOWNSERVERS, NULL);
+        retry = 1;
+    } 
 
     /* if all servers are offline, mark them non-busy and start over */
     if (errorCode == CM_ERROR_ALLOFFLINE && timeLeft > 7) {
-	    osi_Log0(afsd_logp, "cm_Analyze passed CM_ERROR_ALLOFFLINE.");
-	    thrd_Sleep(5000);
-	    /* cm_ForceUpdateVolume marks all servers as non_busy */
-		/* No it doesn't and it won't do anything if all of the 
-		 * the servers are marked as DOWN.  So clear the DOWN
-		 * flag and reset the busy state as well.
-		 */
+        osi_Log0(afsd_logp, "cm_Analyze passed CM_ERROR_ALLOFFLINE.");
+        thrd_Sleep(5000);
+        /* cm_ForceUpdateVolume marks all servers as non_busy */
+        /* No it doesn't and it won't do anything if all of the 
+         * the servers are marked as DOWN.  So clear the DOWN
+         * flag and reset the busy state as well.
+         */
         if (!serversp) {
             cm_GetServerList(fidp, userp, reqp, &serverspp);
             serversp = *serverspp;
@@ -233,7 +233,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 
         if (fidp != NULL)   /* Not a VLDB call */
             cm_ForceUpdateVolume(fidp, userp, reqp);
-	}
+    }
 
 	/* if all servers are busy, mark them non-busy and start over */
     if (errorCode == CM_ERROR_ALLBUSY && timeLeft > 7) {
@@ -258,127 +258,128 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 
 	/* special codes:  VBUSY and VRESTARTING */
 	if (errorCode == VBUSY || errorCode == VRESTARTING) {
-        if (!serversp) {
-            cm_GetServerList(fidp, userp, reqp, &serverspp);
-            serversp = *serverspp;
-            free_svr_list = 1;
-        }
-		lock_ObtainWrite(&cm_serverLock);
-		for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
-			if (tsrp->server == serverp
-			    && tsrp->status == not_busy) {
-				tsrp->status = busy;
-				break;
-			}
-		}
-        lock_ReleaseWrite(&cm_serverLock);
-        if (free_svr_list) {
-            cm_FreeServerList(&serversp);
-            *serverspp = serversp;
-        }
-		retry = 1;
+            if (!serversp) {
+                cm_GetServerList(fidp, userp, reqp, &serverspp);
+                serversp = *serverspp;
+                free_svr_list = 1;
+            }
+            lock_ObtainWrite(&cm_serverLock);
+            for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
+                if (tsrp->server == serverp
+                     && tsrp->status == not_busy) {
+                    tsrp->status = busy;
+                    break;
+                }
+            }
+            lock_ReleaseWrite(&cm_serverLock);
+            if (free_svr_list) {
+                cm_FreeServerList(&serversp);
+                *serverspp = serversp;
+            }
+            retry = 1;
 	}
 
 	/* special codes:  missing volumes */
 	if (errorCode == VNOVOL || errorCode == VMOVED || errorCode == VOFFLINE
-	    || errorCode == VSALVAGE || errorCode == VNOSERVICE) {
-		/* Log server being offline for this volume */
-		osi_Log4(afsd_logp, "cm_Analyze found server %d.%d.%d.%d marked offline for a volume",
-			 ((serverp->addr.sin_addr.s_addr & 0xff)),
-			 ((serverp->addr.sin_addr.s_addr & 0xff00)>> 8),
-			 ((serverp->addr.sin_addr.s_addr & 0xff0000)>> 16),
-			 ((serverp->addr.sin_addr.s_addr & 0xff000000)>> 24));
-		/* Create Event Log message */ 
-		{
-		    HANDLE h;
-		    char *ptbuf[1];
-		    char s[100];
-		    h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);
-		    sprintf(s, "cm_Analyze: Server %d.%d.%d.%d reported volume %d as missing.",
-			    ((serverp->addr.sin_addr.s_addr & 0xff)),
-			    ((serverp->addr.sin_addr.s_addr & 0xff00)>> 8),
-			    ((serverp->addr.sin_addr.s_addr & 0xff0000)>> 16),
-			    ((serverp->addr.sin_addr.s_addr & 0xff000000)>> 24),
-			    fidp->volume);
-		    ptbuf[0] = s;
-		    ReportEvent(h, EVENTLOG_WARNING_TYPE, 0, 1009, NULL,
-				1, 0, ptbuf, NULL);
-		    DeregisterEventSource(h);
-		}
+	    || errorCode == VSALVAGE || errorCode == VNOSERVICE) 
+        {
+            /* Log server being offline for this volume */
+            osi_Log4(afsd_logp, "cm_Analyze found server %d.%d.%d.%d marked offline for a volume",
+                      ((serverp->addr.sin_addr.s_addr & 0xff)),
+                      ((serverp->addr.sin_addr.s_addr & 0xff00)>> 8),
+                      ((serverp->addr.sin_addr.s_addr & 0xff0000)>> 16),
+                      ((serverp->addr.sin_addr.s_addr & 0xff000000)>> 24));
+            /* Create Event Log message */ 
+            {
+                HANDLE h;
+                char *ptbuf[1];
+                char s[100];
+                h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);
+                sprintf(s, "cm_Analyze: Server %d.%d.%d.%d reported volume %d as missing.",
+                         ((serverp->addr.sin_addr.s_addr & 0xff)),
+                         ((serverp->addr.sin_addr.s_addr & 0xff00)>> 8),
+                         ((serverp->addr.sin_addr.s_addr & 0xff0000)>> 16),
+                         ((serverp->addr.sin_addr.s_addr & 0xff000000)>> 24),
+                         fidp->volume);
+                ptbuf[0] = s;
+                ReportEvent(h, EVENTLOG_WARNING_TYPE, 0, 1009, NULL,
+                             1, 0, ptbuf, NULL);
+                DeregisterEventSource(h);
+            }
 
-		/* Mark server offline for this volume */
-        if (!serversp) {
-            cm_GetServerList(fidp, userp, reqp, &serverspp);
-            serversp = *serverspp;
-            free_svr_list = 1;
-        }
-		for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
-			if (tsrp->server == serverp)
-				tsrp->status = offline;
-		}
-        if (free_svr_list) {
-            cm_FreeServerList(&serversp);
-            *serverspp = serversp;
-        }
-        if ( timeLeft > 2 )
+            /* Mark server offline for this volume */
+            if (!serversp) {
+                cm_GetServerList(fidp, userp, reqp, &serverspp);
+                serversp = *serverspp;
+                free_svr_list = 1;
+            }
+            for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
+                if (tsrp->server == serverp)
+                    tsrp->status = offline;
+            }
+            if (free_svr_list) {
+                cm_FreeServerList(&serversp);
+                *serverspp = serversp;
+            }
+            if ( timeLeft > 2 )
 		retry = 1;
 	}
 
 	/* RX codes */
 	if (errorCode == RX_CALL_TIMEOUT) {
-		/* server took longer than hardDeadTime 
-		 * don't mark server as down but don't retry
-		 * this is to prevent the SMB session from timing out
-		 * In addition, we log an event to the event log 
-		 */
+            /* server took longer than hardDeadTime 
+             * don't mark server as down but don't retry
+             * this is to prevent the SMB session from timing out
+             * In addition, we log an event to the event log 
+             */
 #ifndef DJGPP
-		HANDLE h;
-                char *ptbuf[1];
-                char s[100];
-                h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);
-                sprintf(s, "cm_Analyze: HardDeadTime exceeded.");
-                ptbuf[0] = s;
-                ReportEvent(h, EVENTLOG_WARNING_TYPE, 0, 1009, NULL,
-                        1, 0, ptbuf, NULL);
-                DeregisterEventSource(h);
+            HANDLE h;
+            char *ptbuf[1];
+            char s[100];
+            h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);
+            sprintf(s, "cm_Analyze: HardDeadTime exceeded.");
+            ptbuf[0] = s;
+            ReportEvent(h, EVENTLOG_WARNING_TYPE, 0, 1009, NULL,
+                         1, 0, ptbuf, NULL);
+            DeregisterEventSource(h);
 #endif /* !DJGPP */
 	  
-		retry = 0;
-	  	osi_Log0(afsd_logp, "cm_Analyze: hardDeadTime exceeded");
+            retry = 0;
+            osi_Log0(afsd_logp, "cm_Analyze: hardDeadTime exceeded");
 	}
 	else if (errorCode >= -64 && errorCode < 0) {
-		/* mark server as down */
-		lock_ObtainMutex(&serverp->mx);
-        serverp->flags |= CM_SERVERFLAG_DOWN;
-		lock_ReleaseMutex(&serverp->mx);
+            /* mark server as down */
+            lock_ObtainMutex(&serverp->mx);
+            serverp->flags |= CM_SERVERFLAG_DOWN;
+            lock_ReleaseMutex(&serverp->mx);
             if ( timeLeft > 2 )
-        retry = 1;
-    }
+                retry = 1;
+        }
 
-	if (errorCode == RXKADEXPIRED && !dead_session) {
-		lock_ObtainMutex(&userp->mx);
-		ucellp = cm_GetUCell(userp, serverp->cellp);
-		if (ucellp->ticketp) {
-			free(ucellp->ticketp);
-			ucellp->ticketp = NULL;
-		}
-		ucellp->flags &= ~CM_UCELLFLAG_RXKAD;
-		ucellp->gen++;
-		lock_ReleaseMutex(&userp->mx);
-            if ( timeLeft > 2 )
-		retry = 1;
-	}
+    if (errorCode == RXKADEXPIRED && !dead_session) {
+        lock_ObtainMutex(&userp->mx);
+        ucellp = cm_GetUCell(userp, serverp->cellp);
+        if (ucellp->ticketp) {
+            free(ucellp->ticketp);
+            ucellp->ticketp = NULL;
+        }
+        ucellp->flags &= ~CM_UCELLFLAG_RXKAD;
+        ucellp->gen++;
+        lock_ReleaseMutex(&userp->mx);
+        if ( timeLeft > 2 )
+            retry = 1;
+    }       
 
-	if (retry && dead_session)
-		retry = 0;
- 
-out:
-	/* drop this on the way out */
-	if (connp)
-		cm_PutConn(connp);
+    if (retry && dead_session)
+        retry = 0;
 
-	/* retry until we fail to find a connection */
-        return retry;
+  out:
+    /* drop this on the way out */
+    if (connp)
+        cm_PutConn(connp);
+
+    /* retry until we fail to find a connection */
+    return retry;
 }
 
 long cm_ConnByMServers(cm_serverRef_t *serversp, cm_user_t *usersp,
