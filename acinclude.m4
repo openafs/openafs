@@ -249,6 +249,14 @@ else
 			AFS_PARAM_COMMON=param.nbsd15.h
 			AFS_SYSNAME="alpha_nbsd15"
 			;;
+		i?86-*-netbsd*1.6*)
+			AFS_PARAM_COMMON=param.nbsd16.h
+			AFS_SYSNAME="i386_nbsd16"
+			;;
+		alpha-*-netbsd*1.6*)
+			AFS_PARAM_COMMON=param.nbsd16.h
+			AFS_SYSNAME="alpha_nbsd16"
+			;;
 		hppa*-hp-hpux11*)
 			AFS_SYSNAME="hp_ux110"
 			;;

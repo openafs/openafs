@@ -134,7 +134,7 @@ case $AFS_SYSNAME in
 		YACC="byacc"
 		;;
 
-	*nbsd15)
+	*nbsd15|*nbsd16)
 		LEX="flex -l"
 		MT_CFLAGS='${XCFLAGS}'
 		MT_LIBS=""
