@@ -38,7 +38,6 @@ RCSID("$Header$");
 #endif
 
 asmlinkage int (*sys_settimeofdayp)(struct timeval *tv, struct timezone *tz);
-asmlinkage int (*sys_killp)(int pid, int signal);
 asmlinkage long (*sys_setgroupsp)(int gidsetsize, gid_t *grouplist);
 
 #ifdef EXPORTED_SYS_CALL_TABLE
@@ -193,7 +192,7 @@ int init_module(void)
 {
 #if defined(AFS_IA64_LINUX20_ENV)
     unsigned long kernel_gp;
-    static struct fptr sys_kill, sys_settimeofday, sys_setgroups;
+    static struct fptr sys_settimeofday, sys_setgroups;
 #endif
     extern int afs_syscall();
     extern long afs_xsetgroups();
@@ -319,18 +318,13 @@ int init_module(void)
     kernel_gp = ((struct fptr *)printk)->gp;
 
     sys_settimeofdayp = (void *) &sys_settimeofday;
-    sys_killp = (void *) &sys_kill;
 
     ((struct fptr *)sys_settimeofdayp)->ip =
 		SYSCALL2POINTER sys_call_table[__NR_settimeofday - 1024];
     ((struct fptr *)sys_settimeofdayp)->gp = kernel_gp;
     
-    ((struct fptr *)sys_killp)->ip =
-		SYSCALL2POINTER sys_call_table[__NR_kill - 1024];
-    ((struct fptr *)sys_killp)->gp = kernel_gp;
 #else /* !AFS_IA64_LINUX20_ENV */
     sys_settimeofdayp = SYSCALL2POINTER sys_call_table[__NR_settimeofday];
-    sys_killp = SYSCALL2POINTER sys_call_table[__NR_kill];
 #endif /* AFS_IA64_LINUX20_ENV */
 
     /* setup AFS entry point. */
