@@ -224,7 +224,7 @@ afs_MemHandleLink(avc, areq)
      struct vrequest *areq;
   {
       register struct dcache *tdc;
-      register char *tp;
+      register char *tp, *rbuf;
       afs_int32 offset, len, alen;
       register afs_int32 code;
 
@@ -245,10 +245,14 @@ afs_MemHandleLink(avc, areq)
 	  }
 	  if (avc->m.Mode	& 0111)	alen = len+1;	/* regular link */
 	  else alen = len;			/* mt point */
-          tp = afs_osi_Alloc(alen); /* make room for terminating null */
+	  rbuf = (char *) osi_AllocLargeSpace(AFS_LRALLOCSIZ);
           addr = afs_MemCacheOpen(tdc->f.inode);
-          code = afs_MemReadBlk(addr, 0, tp, len);
-	  tp[alen-1] = 0;
+          code = afs_MemReadBlk(addr, 0, rbuf, len);
+	  rbuf[alen-1] = '\0';
+	  alen = strlen(rbuf) + 1;
+          tp = afs_osi_Alloc(alen); /* make room for terminating null */
+	  memcpy(tp, rbuf, alen);
+	  osi_FreeLargeSpace(rbuf);
 	  afs_PutDCache(tdc);
 	  if (code != len) {
 	      afs_osi_Free(tp, alen);
@@ -263,7 +267,7 @@ afs_UFSHandleLink(avc, areq)
     register struct vcache *avc;
     struct vrequest *areq; {
     register struct dcache *tdc;
-    register char *tp;
+    register char *tp, *rbuf;
     char *tfile;
     afs_int32 offset, len, alen;
     register afs_int32 code;
@@ -285,11 +289,15 @@ afs_UFSHandleLink(avc, areq)
 	tfile = osi_UFSOpen (tdc->f.inode);
 	if (avc->m.Mode	& 0111)	alen = len+1;	/* regular link */
 	else alen = len;			/* mt point */
-	tp = afs_osi_Alloc(alen);			/* make room for terminating null */
-	code = afs_osi_Read(tfile, -1, tp, len);
-	tp[alen-1] = 0;
+	rbuf = (char *) osi_AllocLargeSpace(AFS_LRALLOCSIZ);
+	code = afs_osi_Read(tfile, -1, rbuf, len);
+	rbuf[alen-1] = '\0';
 	osi_UFSClose(tfile);
 	afs_PutDCache(tdc);
+	alen = strlen(rbuf) + 1;
+	tp = afs_osi_Alloc(alen);	/* make room for terminating null */
+	memcpy(tp, rbuf, alen);
+	osi_FreeLargeSpace(rbuf);
 	if (code != len) {
 	    afs_osi_Free(tp, alen);
 	    return EIO;
