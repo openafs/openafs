@@ -165,11 +165,11 @@ kdump.o: kdump.c ${INCLS} AFS_component_version_number.c
 	case ${SYS_NAME} in \
 		alpha_linux* ) \
 			for lv in ${LINUX_VERS}; do \
-				${CC} -g -I${LINUX_SRCDIR}$$lv/include -I${DESTDIR}include -I${SRCDIR}include ${XCFLAGS} -mno-fp-regs -ffixed-8 -o kdump-$$lv.o -c kdump.c ; \
+				${CC} -g -I${LINUX_SRCDIR}$$lv/include -I${DESTDIR}include -I${TOP_SRCDIR}/config -I${SRCDIR}include ${XCFLAGS} -mno-fp-regs -ffixed-8 -o kdump-$$lv.o -c kdump.c ; \
 				done ;; \
 		*linux* ) \
 			for lv in ${LINUX_VERS}; do \
-				${CC} -g -I${LINUX_SRCDIR}$$lv/include -I${DESTDIR}include -I${SRCDIR}include ${XCFLAGS} -o kdump-$$lv.o -c kdump.c ; \
+				${CC} -g -I${LINUX_SRCDIR}$$lv/include -I${DESTDIR}include -I${TOP_SRCDIR}/config -I${SRCDIR}include ${XCFLAGS} -o kdump-$$lv.o -c kdump.c ; \
 			done ;; \
 		alpha_osf1 | alpha_osf20 |  alpha_osf30 | alpha_osf32 | alpha_osf32c| alpha_dux?? ) \
 			${CC} -g ${CFLAGS} -I/usr/sys/include -I/usr/sys/BINARY -I/usr/sys/AFS -DDEBUGGER -c kdump.c ;;\
@@ -182,12 +182,14 @@ kdump.o: kdump.c ${INCLS} AFS_component_version_number.c
 				case $$CPU_KDEFS in \
 				*-64*)	${CC} -D_KMEMUSER -woff 1178 \
 						-g -I${DESTDIR}include \
+						-I${TOP_SRCDIR}/config \
 						$$CPU_KDEFS \
 						${XCFLAGS64} \
 						-c kdump.c -o kdump.$$IP.o \
 					;; \
 				*)	${CC} -D_KMEMUSER -woff 1178 \
 						-g -I${DESTDIR}include \
+						-I${TOP_SRCDIR}/config \
 						$$CPU_KDEFS \
 						${XCFLAGS} -DAFS_32BIT_KERNEL_ENV \
 						-c kdump.c -o kdump.$$IP.o \
@@ -196,14 +198,14 @@ kdump.o: kdump.c ${INCLS} AFS_component_version_number.c
 			done \
 			;; \
 		*) \
-			${CC} -g -I${DESTDIR}include -I${SRCDIR}include ${XCFLAGS} -c kdump.c ;; \
+			${CC} -g -I${DESTDIR}include -I${TOP_SRCDIR}/config -I${SRCDIR}include ${XCFLAGS} -c kdump.c ;; \
 	esac ;
 
 kdump64.o : kdump.c ${INCLS} AFS_component_version_number.c
 	-set -x; \
 	case ${SYS_NAME} in \
 	sun4x_57 | hp_ux11* ) \
-		${CC} -g -I${DESTDIR}include -I${SRCDIR}include ${XCFLAGS64} -o kdump64.o -c kdump.c ;; \
+		${CC} -g -I${DESTDIR}include -I${TOP_SRCDIR}/config -I${SRCDIR}include ${XCFLAGS64} -o kdump64.o -c kdump.c ;; \
 	esac
 
 kdump:  kdump.o
