@@ -30,6 +30,7 @@ typedef unsigned short                  etap_event_t;
 #include "../h/vfs.h"		/* stops SUN56 socketvar.h warnings */
 #include "../h/stropts.h"	/* stops SUN56 socketvar.h warnings */
 #include "../h/stream.h"	/* stops SUN56 socketvar.h errors */
+#include "../h/disp.h"
 #endif
 #include "../h/socket.h"
 #ifndef AFS_LINUX22_ENV
