@@ -41,7 +41,7 @@ if [ "x$AFS_DYNROOT" = "xtrue" ] ; then
     DYNROOT="-dynroot"
     else DYNROOT=""
     fi
-if ["x$AFS_FAKESTAT" = "xtrue" ] ; then
+if [ "x$AFS_FAKESTAT" = "xtrue" ] ; then
     FAKESTAT="-fakestat"
     else FAKESTAT=""
     fi
