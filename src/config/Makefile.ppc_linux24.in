@@ -36,7 +36,7 @@ MV=mv
 RANLIB=ranlib
 RM=rm
 
-INSTALL=${TOP_SRCDIR}/pinstall/pinstall
+INSTALL=${TOP_OBJDIR}/src/pinstall/pinstall
 #
 # Other OS specific requirements
 #

@@ -10,6 +10,9 @@
 DEST=@DEST@
 TOP_INCDIR=@TOP_INCDIR@
 TOP_LIBDIR=@TOP_LIBDIR@
+TOP_OBJDIR=@TOP_OBJDIR@
+srcdir=@srcdir@
+VPATH=${srcdir}
 prefix=@prefix@
 exec_prefix=@exec_prefix@
 bindir=@bindir@
@@ -21,7 +24,7 @@ mandir=@mandir@
 afssrvbindir=@afssrvbindir@
 afssrvsbindir=@afssrvsbindir@
 afssrvlibexecdir=@afssrvlibexecdir@
-RXGEN=${TOP_SRCDIR}/rxgen/rxgen
+RXGEN=${TOP_OBJDIR}/src/rxgen/rxgen
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
@@ -31,9 +34,9 @@ include ../config/Makefile.${SYS_NAME}
 
 KERNELDIR = ../libafs/
 UKERNELDIR = ../libuafs/
-COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+COMPILE_ET=${TOP_OBJDIR}/src/comerr/compile_et
 
-CFLAGS=${OPTMZ} -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS}
+CFLAGS=-I. -I${srcdir} ${OPTMZ} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS}
 INCLS=${TOP_INCDIR}/rx/rx.h ${TOP_INCDIR}/rx/xdr.h \
        rxkad.h
 
@@ -171,7 +174,7 @@ rxkad_errs.o: rxkad_errs.c
 
 rxkad_errs.c rxkad.h: rxkad_errs.et rxkad.p.h
 	$(RM) -f rxkad.h rxkad_errs.c
-	${COMPILE_ET} rxkad_errs -h rxkad
+	${COMPILE_ET} -p ${srcdir} rxkad_errs -h rxkad
 
 ticket.o: ticket.c lifetimes.h ${INCLS}
 

@@ -14,7 +14,7 @@ PROGS = \
 	testit \
 	verify
 
-INCDIRS= -I${TOP_SRCDIR}/config -I${DESTDIR}/include -I.. 
+INCDIRS= -I${TOP_OBJDIR}/src/config -I${DESTDIR}/include -I.. 
 LIBS=-L.. -ldes
 CFLAGS = ${INCDIRS} ${XCFLAGS}
 

@@ -8,6 +8,9 @@
 DEST=@DEST@
 TOP_INCDIR=@TOP_INCDIR@
 TOP_LIBDIR=@TOP_LIBDIR@
+TOP_OBJDIR=@TOP_OBJDIR@
+srcdir=@srcdir@
+VPATH=${srcdir}
 prefix=@prefix@
 exec_prefix=@exec_prefix@
 bindir=@bindir@
@@ -19,8 +22,8 @@ mandir=@mandir@
 afssrvbindir=@afssrvbindir@
 afssrvsbindir=@afssrvsbindir@
 afssrvlibexecdir=@afssrvlibexecdir@
-COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
-RXGEN=${TOP_SRCDIR}/rxgen/rxgen
+COMPILE_ET=${TOP_OBJDIR}/src/comerr/compile_et
+RXGEN=${TOP_OBJDIR}/src/rxgen/rxgen
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 MKAFS_OSTYPE=@MKAFS_OSTYPE@
@@ -32,7 +35,7 @@ include ../config/Makefile.${SYS_NAME}
 KERNELDIR = ../libafs/
 UKERNELDIR = ../libuafs/
 
-CFLAGS=${OPTMZ} -I${TOP_SRCDIR}/config -I${TOP_INCDIR} -I${TOP_INCDIR}/rx -DRXDEBUG ${XCFLAGS}
+CFLAGS=-I. -I${srcdir} ${OPTMZ} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} -I${TOP_INCDIR}/rx -DRXDEBUG ${XCFLAGS}
 
 LIBS=${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/libcmd.a \
 	       ${TOP_LIBDIR}/util.a ${TOP_LIBDIR}/libsys.a
@@ -42,7 +45,7 @@ all: rxdebug rxdumptrace
 rxdebug.o: rxdebug.c
 
 rxdumptrace.o: ../rx/rx_trace.c
-	$(CC) $(CFLAGS) -DDUMPTRACE -c -o rxdumptrace.o ../rx/rx_trace.c
+	$(CC) $(CFLAGS) -DDUMPTRACE -c -o rxdumptrace.o ${srcdir}/../rx/rx_trace.c
 
 rxdumptrace: rxdumptrace.o ${LIBS}
 	$(RM) -f rxdumptrace

@@ -7,6 +7,9 @@
 DEST=@DEST@
 TOP_INCDIR=@TOP_INCDIR@
 TOP_LIBDIR=@TOP_LIBDIR@
+TOP_OBJDIR=@TOP_OBJDIR@
+srcdir=@srcdir@
+VPATH=${srcdir}
 prefix=@prefix@
 exec_prefix=@exec_prefix@
 bindir=@bindir@
@@ -26,10 +29,10 @@ SHELL = /bin/sh
 include ../config/Makefile.${SYS_NAME}
 
 UKERNELDIR=../libuafs/
-RXGEN=${TOP_SRCDIR}/rxgen/rxgen
-COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+RXGEN=${TOP_OBJDIR}/src/rxgen/rxgen
+COMPILE_ET=${TOP_OBJDIR}/src/comerr/compile_et
 
-CFLAGS=$(DBUG) -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS}
+CFLAGS=-I. -I${srcdir} $(DBUG) -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS}
 INCLS=${TOP_INCDIR}/ubik.h \
 	${TOP_INCDIR}/lock.h  \
 	${TOP_INCDIR}/lwp.h \
@@ -81,16 +84,16 @@ ptint.cs.o: ptint.cs.c ptint.xdr.c ptint.xg
 ptint.xdr.o: ptint.xdr.c ptint.h ptint.xg
 
 ptint.ss.c ptint.cs.c ptint.xdr.c ptint.h: ptint.xg
-	${RXGEN} -x ptint.xg
+	${RXGEN} -x ${srcdir}/ptint.xg
 
 Kptint.cs.c: ptint.xg Kptint.h
-	${RXGEN} -x -k -C -o Kptint.cs.c ptint.xg
+	${RXGEN} -x -k -C -o Kptint.cs.c ${srcdir}/ptint.xg
  
 Kptint.xdr.c: ptint.xg
-	${RXGEN} -x -k -c -o Kptint.xdr.c ptint.xg
+	${RXGEN} -x -k -c -o Kptint.xdr.c ${srcdir}/ptint.xg
  
 Kptint.h: ptint.xg
-	${RXGEN} -x -k -h -o Kptint.h ptint.xg
+	${RXGEN} -x -k -h -o Kptint.h ${srcdir}/ptint.xg
 
 display.o: display.c ${INCLS}
 
@@ -108,7 +111,7 @@ ptuser.o: ptuser.c ${LINCLS}
 
 pterror.h pterror.c: pterror.et
 	$(RM) -f pterror.h pterror.c
-	${COMPILE_ET} pterror
+	${COMPILE_ET} -p ${srcdir} pterror
 
 libprot.a: ptuser.o pterror.o ptint.cs.o ptint.xdr.o AFS_component_version_number.o
 	$(RM) -f $@

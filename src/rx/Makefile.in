@@ -8,6 +8,9 @@
 DEST=@DEST@
 TOP_INCDIR=@TOP_INCDIR@
 TOP_LIBDIR=@TOP_LIBDIR@
+TOP_OBJDIR=@TOP_OBJDIR@
+srcdir=@srcdir@
+VPATH=${srcdir}
 prefix=@prefix@
 exec_prefix=@exec_prefix@
 bindir=@bindir@
@@ -19,8 +22,8 @@ mandir=@mandir@
 afssrvbindir=@afssrvbindir@
 afssrvsbindir=@afssrvsbindir@
 afssrvlibexecdir=@afssrvlibexecdir@
-COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
-RXGEN=${TOP_SRCDIR}/rxgen/rxgen
+COMPILE_ET=${TOP_OBJDIR}/src/comerr/compile_et
+RXGEN=${TOP_OBJDIR}/src/rxgen/rxgen
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 MKAFS_OSTYPE=@MKAFS_OSTYPE@
@@ -29,34 +32,35 @@ SHELL = /bin/sh
 
 include ../config/Makefile.${SYS_NAME}
 
-KERNELDIR = ../libafs/
-UKERNELDIR = ../libuafs/
+KERNELDIR = ../libafs
+UKERNELDIR = ../libuafs
 
-CFLAGS=${OPTMZ} -I${TOP_SRCDIR}/config -I${TOP_INCDIR} -DRXDEBUG ${XCFLAGS}
+CFLAGS=-I. -I${srcdir} ${OPTMZ} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} -DRXDEBUG ${XCFLAGS}
 
 #
 # Generic xdr objects (or, at least, xdr stuff that's not newly defined for rx).
 # Really the xdr stuff should be in its own directory.
 #
-XDROBJS = xdr_arrayn.o xdr_rx.o xdr_afsuuid.o
+XDROBJS_common = xdr_rx.o xdr_afsuuid.o
 
-RXOBJS = rx_clock.o rx_event.o rx_user.o rx_lwp.o rx.o rx_null.o rx_globals.o \
-	rx_getaddr.o rx_misc.o rx_packet.o rx_rdwr.o  rx_trace.o rx_conncache.o \
-	xdr_int64.o 
+XDROBJS = xdr_arrayn.o ${XDROBJS_common}
+
+XDROBJS_djgpp = xdr.o xdr_rec.o xdr_stdio.o \
+	xdr_float.o  xdr_refernce.o  xdr_update.o \
+	xdr_array.o xdr_mem.o ${XDROBJS_common}
+
+RXOBJS_common = rx_clock.o rx_event.o rx_user.o rx_lwp.o rx.o rx_null.o \
+	rx_globals.o rx_getaddr.o rx_misc.o rx_packet.o rx_rdwr.o rx_trace.o \
+	rx_conncache.o xdr_int64.o 
+
+RXOBJS = ${RXOBJS_common} 
+RXOBJS_djgpp = ${RXOBJS_common} rx_xmit_nt.o
 
 MULTIOBJS = rx_multi.o
 
 LIBOBJS = ${RXOBJS} ${MULTIOBJS} ${XDROBJS}
 
 LIBOBJS_djgpp = ${RXOBJS_djgpp} ${MULTIOBJS} ${XDROBJS_djgpp}
-
-XDROBJS_djgpp = xdr.o xdr_rec.o xdr_stdio.o \
-	xdr_float.o  xdr_refernce.o  xdr_update.o \
-	xdr_array.o xdr_mem.o xdr_rx.o xdr_afsuuid.o
-
-RXOBJS_djgpp = rx_clock.o rx_event.o rx_user.o rx_lwp.o rx.o rx_null.o rx_globals.o \
-		rx_getaddr.o rx_misc.o rx_packet.o rx_rdwr.o  rx_trace.o rx_conncache.o \
-		xdr_int64.o rx_xmit_nt.o
 
 BASICINCLS=${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/lock.h \
 	     rx_clock.h rx_queue.h rx_event.h
@@ -72,7 +76,14 @@ KSRCS = rx.c rx.h rx_clock.c rx_clock.h rx_event.c rx_event.h \
 	xdr_afsuuid.c rx_trace.h xdr_int64.c
 UKSRCS = $(KSRCS) rx_conncache.c
 
-all: includes kinstall ukinstall ${TOP_LIBDIR}/librx.a
+all: \
+	includes kinstall ukinstall \
+	${TOP_LIBDIR}/librx.a
+
+install-djgpp: \
+	includes kinstall ukinstall \
+	${TOP_INCDIR}/rx/rx_xmit_nt.h \
+	${TOP_LIBDIR}/librx-djgpp.a
 
 RX_component_version_number.c: AFS_component_version_number.c
 	sed 's/cml_version/rx_cml_version/' <AFS_component_version_number.c >RX_component_version_number.c
@@ -118,20 +129,6 @@ librx-djgpp.a: ${LIBOBJS_djgpp} RX_component_version_number.o
 #
 # Install targets
 #
-install:  ${DESTDIR}${libdir}/librx.a \
-	${DESTDIR}${includedir}/rx/rx_packet.h \
-	${DESTDIR}${includedir}/rx/rx.h \
-	${DESTDIR}${includedir}/rx/rx_user.h \
-	${DESTDIR}${includedir}/rx/rx_event.h \
-	${DESTDIR}${includedir}/rx/rx_queue.h \
-	${DESTDIR}${includedir}/rx/rx_globals.h \
-	${DESTDIR}${includedir}/rx/rx_clock.h \
-	${DESTDIR}${includedir}/rx/rx_multi.h \
-	${DESTDIR}${includedir}/rx/rx_pthread.h \
-	${DESTDIR}${includedir}/rx/rx_lwp.h \
-	${DESTDIR}${includedir}/rx/rx_misc.h \
-	${DESTDIR}${includedir}/rx/rx_null.h \
-	${DESTDIR}${includedir}/rx/xdr.h
 
 includes: \
 	${TOP_INCDIR}/rx/rx_packet.h \
@@ -148,99 +145,339 @@ includes: \
 	${TOP_INCDIR}/rx/rx_null.h \
 	${TOP_INCDIR}/rx/xdr.h
 
-kinstall: ${KERNELDIR}/rx
-	$(INSTALL) $(MKAFS_OSTYPE)/*.[ch] $(KERNELDIR)rx
-	$(INSTALL) $(KSRCS) $(KERNELDIR)rx
-
-ukinstall: ${UKERNELDIR}/rx
-	$(INSTALL) $(UKSRCS) $(UKERNELDIR)rx
-	-$(INSTALL) UKERNEL/*.[ch] $(UKERNELDIR)rx
-
-${DEST}/include/rx/rx_packet.h: rx_packet.h
-	${INSTALL} $? $@
-
-${DEST}/include/rx/rx.h: rx.h
-	${INSTALL} $? $@
-
-${DEST}/include/rx/rx_user.h: rx_user.h
-	${INSTALL} $? $@
-
-${DEST}/include/rx/rx_event.h: rx_event.h
-	${INSTALL} $? $@
-
-${DEST}/include/rx/rx_queue.h: rx_queue.h
-	${INSTALL} $? $@
-
-${DEST}/include/rx/rx_globals.h: rx_globals.h
-	${INSTALL} $? $@
-
-${DEST}/include/rx/rx_clock.h: rx_clock.h
-	${INSTALL} $? $@
-
-${DEST}/include/rx/rx_multi.h: rx_multi.h
-	${INSTALL} $? $@
-
-${DEST}/include/rx/rx_pthread.h: rx_pthread.h
-	${INSTALL} $? $@
-
-${DEST}/include/rx/rx_lwp.h: rx_lwp.h
-	${INSTALL} $? $@
-
-${DEST}/include/rx/rx_misc.h: rx_misc.h
-	${INSTALL} $? $@
-
-${DEST}/include/rx/rx_null.h: rx_null.h
-	${INSTALL} $? $@
-
-${DEST}/include/rx/xdr.h: xdr.h
-	${INSTALL} $? $@
-
-${UKERNELDIR}/rx:
-	mkdir -p ${UKERNELDIR}/rx
-
-${KERNELDIR}/rx:
-	mkdir -p ${KERNELDIR}/rx
-
-install-djgpp: includes kinstall ukinstall librx-djgpp ${TOP_INCDIR}/rx/rx_xmit_nt.h ${TOP_LIBDIR}/librx-djgpp.a
-
-${DEST}/lib/librx.a: librx.a
-	${INSTALL} $? $@
-
-# rule will never be satisfied
-${DESTDIR}/lib/librx-djgpp.a: librx-djgpp.a
-	${INSTALL} $? ${DESTDIR}/lib/librx.a
-
-${DESTDIR}/include/rx/rx_xmit_nt.h: rx_xmit_nt.h ${TOP_INCDIR}/rx
-	${INSTALL} $? $@
-
-#
-# Misc. targets
-#
-clean:
-	$(RM) -f *.o *.a core *_component_version_number.c
-
-include ../config/Makefile.version
-
-${DESTDIR}${libdir}/librx.a: librx.a
-	${INSTALL} $? $@
-
 ${TOP_LIBDIR}/librx.a: librx.a
 	${INSTALL} $? $@
 
-dest: ${DEST}/lib/librx.a \
-	${DEST}/include/rx/rx_packet.h \
-	${DEST}/include/rx/rx.h \
-	${DEST}/include/rx/rx_user.h \
-	${DEST}/include/rx/rx_event.h \
-	${DEST}/include/rx/rx_queue.h \
-	${DEST}/include/rx/rx_globals.h \
-	${DEST}/include/rx/rx_clock.h \
-	${DEST}/include/rx/rx_multi.h \
-	${DEST}/include/rx/rx_pthread.h \
-	${DEST}/include/rx/rx_lwp.h \
-	${DEST}/include/rx/rx_misc.h \
-	${DEST}/include/rx/rx_null.h \
-	${DEST}/include/rx/xdr.h
+${TOP_LIBDIR}/librx-djgpp.a: librx-djgpp.a
+	${INSTALL} $? ${TOP_LIBDIR}/librx-djgpp.a
+	${INSTALL} $? ${TOP_LIBDIR}/librx.a
+
+${TOP_INCDIR}/rx/rx_packet.h: rx_packet.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/rx/rx.h: rx.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/rx/rx_user.h: rx_user.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/rx/rx_event.h: rx_event.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/rx/rx_queue.h: rx_queue.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/rx/rx_globals.h: rx_globals.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/rx/rx_clock.h: rx_clock.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/rx/rx_multi.h: rx_multi.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/rx/rx_pthread.h: rx_pthread.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/rx/rx_lwp.h: rx_lwp.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/rx/rx_misc.h: rx_misc.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/rx/rx_null.h: rx_null.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/rx/xdr.h: xdr.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/rx/rx_xmit_nt.h: rx_xmit_nt.h 
+	${INSTALL} $? $@
+
+kinstall: \
+	${KERNELDIR}/rx \
+	${KERNELDIR}/rx/rx.c \
+	${KERNELDIR}/rx/rx_clock.c \
+	${KERNELDIR}/rx/rx_clock.h \
+	${KERNELDIR}/rx/rx_event.c \
+	${KERNELDIR}/rx/rx_event.h \
+	${KERNELDIR}/rx/rx_getaddr.c \
+	${KERNELDIR}/rx/rx_globals.c \
+	${KERNELDIR}/rx/rx_globals.h \
+	${KERNELDIR}/rx/rx.h \
+	${KERNELDIR}/rx/rx_kcommon.c \
+	${KERNELDIR}/rx/rx_kcommon.h \
+	${KERNELDIR}/rx/rx_kernel.h \
+	${KERNELDIR}/rx/rx_kmutex.h \
+	${KERNELDIR}/rx/rx_knet.c \
+	${KERNELDIR}/rx/rx_misc.c \
+	${KERNELDIR}/rx/rx_misc.h \
+	${KERNELDIR}/rx/rx_multi.h \
+	${KERNELDIR}/rx/rx_null.c \
+	${KERNELDIR}/rx/rx_null.h \
+	${KERNELDIR}/rx/rx_packet.c \
+	${KERNELDIR}/rx/rx_packet.h \
+	${KERNELDIR}/rx/rx_queue.h \
+	${KERNELDIR}/rx/rx_rdwr.c \
+	${KERNELDIR}/rx/rx_trace.h \
+	${KERNELDIR}/rx/xdr_afsuuid.c \
+	${KERNELDIR}/rx/xdr_array.c \
+	${KERNELDIR}/rx/xdr_arrayn.c \
+	${KERNELDIR}/rx/xdr.c \
+	${KERNELDIR}/rx/xdr.h \
+	${KERNELDIR}/rx/xdr_int64.c	 \
+	${KERNELDIR}/rx/xdr_rx.c
+
+ukinstall: \
+	${UKERNELDIR}/rx \
+	${UKERNELDIR}/rx/rx.c \
+	${UKERNELDIR}/rx/rx_clock.c \
+	${UKERNELDIR}/rx/rx_clock.h \
+	${UKERNELDIR}/rx/rx_conncache.c \
+	${UKERNELDIR}/rx/rx_event.c \
+	${UKERNELDIR}/rx/rx_event.h \
+	${UKERNELDIR}/rx/rx_getaddr.c \
+	${UKERNELDIR}/rx/rx_globals.c \
+	${UKERNELDIR}/rx/rx_globals.h \
+	${UKERNELDIR}/rx/rx.h \
+	${UKERNELDIR}/rx/rx_kcommon.c \
+	${UKERNELDIR}/rx/rx_kcommon.h \
+	${UKERNELDIR}/rx/rx_kcommon.h \
+	${UKERNELDIR}/rx/rx_kernel.h \
+	${UKERNELDIR}/rx/rx_kmutex.h \
+	${UKERNELDIR}/rx/rx_knet.c \
+	${UKERNELDIR}/rx/rx_misc.c \
+	${UKERNELDIR}/rx/rx_misc.h \
+	${UKERNELDIR}/rx/rx_multi.h \
+	${UKERNELDIR}/rx/rx_null.c \
+	${UKERNELDIR}/rx/rx_null.h \
+	${UKERNELDIR}/rx/rx_packet.c \
+	${UKERNELDIR}/rx/rx_packet.h \
+	${UKERNELDIR}/rx/rx_queue.h \
+	${UKERNELDIR}/rx/rx_rdwr.c \
+	${UKERNELDIR}/rx/rx_trace.h \
+	${UKERNELDIR}/rx/xdr_afsuuid.c \
+	${UKERNELDIR}/rx/xdr_array.c \
+	${UKERNELDIR}/rx/xdr_arrayn.c \
+	${UKERNELDIR}/rx/xdr.c \
+	${UKERNELDIR}/rx/xdr.h \
+	${UKERNELDIR}/rx/xdr_int64.c \
+	${UKERNELDIR}/rx/xdr_rx.c
+
+
+${UKERNELDIR}/rx:
+	mkdir -p $@
+
+${KERNELDIR}/rx:
+	mkdir -p $@
+
+${KERNELDIR}/rx/rx.c: rx.c
+	${INSTALL} $? $@
+
+${KERNELDIR}/rx/rx_clock.c: rx_clock.c
+	${INSTALL} $? $@
+
+${KERNELDIR}/rx/rx_clock.h: rx_clock.h
+	${INSTALL} $? $@
+
+${KERNELDIR}/rx/rx_event.c: rx_event.c
+	${INSTALL} $? $@
+
+${KERNELDIR}/rx/rx_event.h: rx_event.h
+	${INSTALL} $? $@
+
+${KERNELDIR}/rx/rx_getaddr.c: rx_getaddr.c
+	${INSTALL} $? $@
+
+${KERNELDIR}/rx/rx_globals.c: rx_globals.c
+	${INSTALL} $? $@
+
+${KERNELDIR}/rx/rx_globals.h: rx_globals.h
+	${INSTALL} $? $@
+
+${KERNELDIR}/rx/rx.h: rx.h
+	${INSTALL} $? $@
+
+${KERNELDIR}/rx/rx_kcommon.c: rx_kcommon.c
+	${INSTALL} $? $@
+
+${KERNELDIR}/rx/rx_kcommon.h: rx_kcommon.h
+	${INSTALL} $? $@
+
+${KERNELDIR}/rx/rx_kernel.h: rx_kernel.h
+	${INSTALL} $? $@
+
+${KERNELDIR}/rx/rx_kmutex.h: ${MKAFS_OSTYPE}/rx_kmutex.h
+	${INSTALL} $? $@
+
+${KERNELDIR}/rx/rx_knet.c: ${MKAFS_OSTYPE}/rx_knet.c
+	${INSTALL} $? $@
+
+${KERNELDIR}/rx/rx_misc.c: rx_misc.c
+	${INSTALL} $? $@
+
+${KERNELDIR}/rx/rx_misc.h: rx_misc.h
+	${INSTALL} $? $@
+
+${KERNELDIR}/rx/rx_multi.h: rx_multi.h
+	${INSTALL} $? $@
+
+${KERNELDIR}/rx/rx_null.c: rx_null.c
+	${INSTALL} $? $@
+
+${KERNELDIR}/rx/rx_null.h: rx_null.h
+	${INSTALL} $? $@
+
+${KERNELDIR}/rx/rx_packet.c: rx_packet.c
+	${INSTALL} $? $@
+
+${KERNELDIR}/rx/rx_packet.h: rx_packet.h
+	${INSTALL} $? $@
+
+${KERNELDIR}/rx/rx_queue.h: rx_queue.h
+	${INSTALL} $? $@
+
+${KERNELDIR}/rx/rx_rdwr.c: rx_rdwr.c
+	${INSTALL} $? $@
+
+${KERNELDIR}/rx/rx_trace.h: rx_trace.h
+	${INSTALL} $? $@
+
+${KERNELDIR}/rx/xdr_afsuuid.c: xdr_afsuuid.c
+	${INSTALL} $? $@
+
+${KERNELDIR}/rx/xdr_array.c: xdr_array.c
+	${INSTALL} $? $@
+
+${KERNELDIR}/rx/xdr_arrayn.c: xdr_arrayn.c
+	${INSTALL} $? $@
+
+${KERNELDIR}/rx/xdr.c: xdr.c
+	${INSTALL} $? $@
+
+${KERNELDIR}/rx/xdr.h: xdr.h
+	${INSTALL} $? $@
+
+${KERNELDIR}/rx/xdr_int64.c: xdr_int64.c
+	${INSTALL} $? $@
+
+${KERNELDIR}/rx/xdr_rx.c: xdr_rx.c
+	${INSTALL} $? $@
+
+${UKERNELDIR}/rx/rx_clock.c: rx_clock.c
+	${INSTALL} $? $@
+
+${UKERNELDIR}/rx/rx_clock.h: rx_clock.h
+	${INSTALL} $? $@
+
+${UKERNELDIR}/rx/rx_conncache.c: rx_conncache.c
+	${INSTALL} $? $@
+
+${UKERNELDIR}/rx/rx.c: rx.c
+	${INSTALL} $? $@
+
+${UKERNELDIR}/rx/rx_event.c: rx_event.c
+	${INSTALL} $? $@
+
+${UKERNELDIR}/rx/rx_event.h: rx_event.h
+	${INSTALL} $? $@
+
+${UKERNELDIR}/rx/rx_getaddr.c: rx_getaddr.c
+	${INSTALL} $? $@
+
+${UKERNELDIR}/rx/rx_globals.c: rx_globals.c
+	${INSTALL} $? $@
+
+${UKERNELDIR}/rx/rx_globals.h: rx_globals.h
+	${INSTALL} $? $@
+
+${UKERNELDIR}/rx/rx.h: rx.h
+	${INSTALL} $? $@
+
+${UKERNELDIR}/rx/rx_kcommon.c: rx_kcommon.c
+	${INSTALL} $? $@
+
+${UKERNELDIR}/rx/rx_kcommon.h: UKERNEL/rx_kcommon.h
+	${INSTALL} $? $@
+
+${UKERNELDIR}/rx/rx_kernel.h: rx_kernel.h
+	${INSTALL} $? $@
+
+${UKERNELDIR}/rx/rx_kmutex.h: UKERNEL/rx_kmutex.h
+	${INSTALL} $? $@
+
+${UKERNELDIR}/rx/rx_knet.c: UKERNEL/rx_knet.c
+	${INSTALL} $? $@
+
+${UKERNELDIR}/rx/rx_misc.c: rx_misc.c
+	${INSTALL} $? $@
+
+${UKERNELDIR}/rx/rx_misc.h : rx_misc.h
+	${INSTALL} $? $@
+
+${UKERNELDIR}/rx/rx_multi.h: rx_multi.h
+	${INSTALL} $? $@
+
+${UKERNELDIR}/rx/rx_null.c: rx_null.c
+	${INSTALL} $? $@
+
+${UKERNELDIR}/rx/rx_null.h: rx_null.h
+	${INSTALL} $? $@
+
+${UKERNELDIR}/rx/rx_packet.c: rx_packet.c
+	${INSTALL} $? $@
+
+${UKERNELDIR}/rx/rx_packet.h: rx_packet.h
+	${INSTALL} $? $@
+
+${UKERNELDIR}/rx/rx_queue.h: rx_queue.h
+	${INSTALL} $? $@
+
+${UKERNELDIR}/rx/rx_rdwr.c: rx_rdwr.c
+	${INSTALL} $? $@
+
+${UKERNELDIR}/rx/rx_trace.h: rx_trace.h
+	${INSTALL} $? $@
+
+${UKERNELDIR}/rx/xdr_afsuuid.c: xdr_afsuuid.c
+	${INSTALL} $? $@
+
+${UKERNELDIR}/rx/xdr_array.c: xdr_array.c
+	${INSTALL} $? $@
+
+${UKERNELDIR}/rx/xdr_arrayn.c: xdr_arrayn.c
+	${INSTALL} $? $@
+
+${UKERNELDIR}/rx/xdr.c: xdr.c
+	${INSTALL} $? $@
+
+${UKERNELDIR}/rx/xdr.h: xdr.h
+	${INSTALL} $? $@
+
+${UKERNELDIR}/rx/xdr_int64.c: xdr_int64.c
+	${INSTALL} $? $@
+
+${UKERNELDIR}/rx/xdr_rx.c: xdr_rx.c
+	${INSTALL} $? $@
+
+install:
+	${DESTDIR}${libdir}/librx.a \
+	${DESTDIR}${includedir}/rx/rx_packet.h \
+	${DESTDIR}${includedir}/rx/rx.h \
+	${DESTDIR}${includedir}/rx/rx_user.h \
+	${DESTDIR}${includedir}/rx/rx_event.h \
+	${DESTDIR}${includedir}/rx/rx_queue.h \
+	${DESTDIR}${includedir}/rx/rx_globals.h \
+	${DESTDIR}${includedir}/rx/rx_clock.h \
+	${DESTDIR}${includedir}/rx/rx_multi.h \
+	${DESTDIR}${includedir}/rx/rx_pthread.h \
+	${DESTDIR}${includedir}/rx/rx_lwp.h \
+	${DESTDIR}${includedir}/rx/rx_misc.h \
+	${DESTDIR}${includedir}/rx/rx_null.h \
+	${DESTDIR}${includedir}/rx/xdr.h
+
+${DESTDIR}${libdir}/librx.a: librx.a
+	${INSTALL} $? $@
 
 ${DESTDIR}${includedir}/rx/rx_packet.h: rx_packet.h
 	${INSTALL} $? $@
@@ -282,42 +519,67 @@ ${DESTDIR}${includedir}/rx/xdr.h: xdr.h
 	${INSTALL} $? $@
 
 
-${TOP_INCDIR}/rx/rx_packet.h: rx_packet.h
+dest: ${DEST}/lib/librx.a \
+	${DEST}/include/rx/rx_packet.h \
+	${DEST}/include/rx/rx.h \
+	${DEST}/include/rx/rx_user.h \
+	${DEST}/include/rx/rx_event.h \
+	${DEST}/include/rx/rx_queue.h \
+	${DEST}/include/rx/rx_globals.h \
+	${DEST}/include/rx/rx_clock.h \
+	${DEST}/include/rx/rx_multi.h \
+	${DEST}/include/rx/rx_pthread.h \
+	${DEST}/include/rx/rx_lwp.h \
+	${DEST}/include/rx/rx_misc.h \
+	${DEST}/include/rx/rx_null.h \
+	${DEST}/include/rx/xdr.h
+
+${DEST}/lib/librx.a: librx.a
 	${INSTALL} $? $@
 
-${TOP_INCDIR}/rx/rx.h: rx.h
+${DEST}/include/rx/rx_packet.h: rx_packet.h
 	${INSTALL} $? $@
 
-${TOP_INCDIR}/rx/rx_user.h: rx_user.h
+${DEST}/include/rx/rx.h: rx.h
 	${INSTALL} $? $@
 
-${TOP_INCDIR}/rx/rx_event.h: rx_event.h
+${DEST}/include/rx/rx_user.h: rx_user.h
 	${INSTALL} $? $@
 
-${TOP_INCDIR}/rx/rx_queue.h: rx_queue.h
+${DEST}/include/rx/rx_event.h: rx_event.h
 	${INSTALL} $? $@
 
-${TOP_INCDIR}/rx/rx_globals.h: rx_globals.h
+${DEST}/include/rx/rx_queue.h: rx_queue.h
 	${INSTALL} $? $@
 
-${TOP_INCDIR}/rx/rx_clock.h: rx_clock.h
+${DEST}/include/rx/rx_globals.h: rx_globals.h
 	${INSTALL} $? $@
 
-${TOP_INCDIR}/rx/rx_multi.h: rx_multi.h
+${DEST}/include/rx/rx_clock.h: rx_clock.h
 	${INSTALL} $? $@
 
-${TOP_INCDIR}/rx/rx_pthread.h: rx_pthread.h
+${DEST}/include/rx/rx_multi.h: rx_multi.h
 	${INSTALL} $? $@
 
-${TOP_INCDIR}/rx/rx_lwp.h: rx_lwp.h
+${DEST}/include/rx/rx_pthread.h: rx_pthread.h
 	${INSTALL} $? $@
 
-${TOP_INCDIR}/rx/rx_misc.h: rx_misc.h
+${DEST}/include/rx/rx_lwp.h: rx_lwp.h
 	${INSTALL} $? $@
 
-${TOP_INCDIR}/rx/rx_null.h: rx_null.h
+${DEST}/include/rx/rx_misc.h: rx_misc.h
 	${INSTALL} $? $@
 
-${TOP_INCDIR}/rx/xdr.h: xdr.h
+${DEST}/include/rx/rx_null.h: rx_null.h
 	${INSTALL} $? $@
 
+${DEST}/include/rx/xdr.h: xdr.h
+	${INSTALL} $? $@
+
+#
+# Misc. targets
+#
+clean:
+	$(RM) -f *.o *.a core *_component_version_number.c
+
+include ../config/Makefile.version

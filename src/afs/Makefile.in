@@ -8,6 +8,9 @@
 DEST=@DEST@
 TOP_INCDIR=@TOP_INCDIR@
 TOP_LIBDIR=@TOP_LIBDIR@
+TOP_OBJDIR=@TOP_OBJDIR@
+srcdir=@srcdir@
+VPATH=${srcdir}
 prefix=@prefix@
 exec_prefix=@exec_prefix@
 bindir=@bindir@
@@ -19,14 +22,14 @@ mandir=@mandir@
 afssrvbindir=@afssrvbindir@
 afssrvsbindir=@afssrvsbindir@
 afssrvlibexecdir=@afssrvlibexecdir@
-COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
-RXGEN=${TOP_SRCDIR}/rxgen/rxgen
+COMPILE_ET=${TOP_OBJDIR}/src/comerr/compile_et
+RXGEN=${TOP_OBJDIR}/src/rxgen/rxgen
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
 SHELL=/bin/sh
-KERNELDIR = ../libafs/
-UKERNELDIR = ../libuafs/
+KERNELDIR = ../libafs
+UKERNELDIR = ../libuafs
 
 include ../config/Makefile.${SYS_NAME}
 
@@ -38,12 +41,18 @@ all: kinstall ukinstall ${TOP_INCDIR}/afs/afs.h ${TOP_INCDIR}/afs/osi_inode.h ${
 
 # NOTE: linux case uses --new as well to work around bug in some versions of
 # gencat.
-kinstall: ${KERNELDIR}/afs AFS_component_version_number.c
-	-chmod 666 ${KERNELDIR}afs/*
-	${COMPILE_ET} -v 2 afs_trace.et
-	${INSTALL} *.[csh] ${KERNELDIR}afs
-	${INSTALL} VNOPS/*.[csh] ${KERNELDIR}afs
-	${INSTALL} ${AFS_OSTYPE}/*.[csh] ${KERNELDIR}afs
+kinstall: ${KERNELDIR}/afs AFS_component_version_number.c afszcm.cat
+	-chmod 666 ${KERNELDIR}/afs/*
+	${INSTALL} ${srcdir}/*.[csh] ${KERNELDIR}/afs
+	-${INSTALL} *.[csh] ${KERNELDIR}/afs
+	${INSTALL} ${srcdir}/VNOPS/*.[csh] ${KERNELDIR}/afs
+	${INSTALL} ${srcdir}/${AFS_OSTYPE}/*.[csh] ${KERNELDIR}/afs
+	-${INSTALL} ${AFS_OSTYPE}/*.[csh] ${KERNELDIR}/afs
+
+afs_trace.h afs_trace.msf:
+	${COMPILE_ET} -v 2 -p ${srcdir} afs_trace.et
+
+afszcm.cat: afs_trace.msf
 	-$(RM) -f afszcm.cat
 	case ${SYS_NAME} in \
 		sgi_* ) \
@@ -59,12 +68,12 @@ kinstall: ${KERNELDIR}/afs AFS_component_version_number.c
 ${KERNELDIR}/afs:
 	mkdir -p $@
 
-ukinstall: ${UKERNELDIR}/afs AFS_component_version_number.c
-	-chmod 666 ${UKERNELDIR}afs/*
-	${COMPILE_ET} -v 2 afs_trace.et
-	${INSTALL} *.[csh] ${UKERNELDIR}afs
-	${INSTALL} VNOPS/*.[csh] ${UKERNELDIR}afs
-	${INSTALL} UKERNEL/*.[csh] ${UKERNELDIR}afs
+ukinstall: ${UKERNELDIR}/afs afs_trace.msf AFS_component_version_number.c
+	-chmod 666 ${UKERNELDIR}/afs/*
+	${INSTALL} *.[csh] ${UKERNELDIR}/afs
+	${INSTALL} ${srcdir}/*.[csh] ${UKERNELDIR}/afs
+	${INSTALL} ${srcdir}/VNOPS/*.[csh] ${UKERNELDIR}/afs
+	${INSTALL} ${srcdir}/UKERNEL/*.[csh] ${UKERNELDIR}/afs
 
 ${UKERNELDIR}/afs:
 	mkdir -p $@

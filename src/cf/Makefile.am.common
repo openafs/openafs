@@ -162,9 +162,9 @@ install-data-local: install-cat-mans
 
 
 .et.h:
-	$(COMPILE_ET) $<
+	${COMPILE_ET} $<
 .et.c:
-	$(COMPILE_ET) $<
+	${COMPILE_ET} $<
 
 if KRB4
 LIB_kafs = $(top_builddir)/lib/kafs/libkafs.la $(AIX_EXTRA_KAFS)

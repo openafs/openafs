@@ -8,6 +8,9 @@
 DEST=@DEST@
 TOP_INCDIR=@TOP_INCDIR@
 TOP_LIBDIR=@TOP_LIBDIR@
+TOP_OBJDIR=@TOP_OBJDIR@
+srcdir=@srcdir@
+VPATH=${srcdir}
 prefix=@prefix@
 exec_prefix=@exec_prefix@
 bindir=@bindir@
@@ -19,8 +22,8 @@ mandir=@mandir@
 afssrvbindir=@afssrvbindir@
 afssrvsbindir=@afssrvsbindir@
 afssrvlibexecdir=@afssrvlibexecdir@
-COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
-RXGEN=${TOP_SRCDIR}/rxgen/rxgen
+COMPILE_ET=${TOP_OBJDIR}/src/comerr/compile_et
+RXGEN=${TOP_OBJDIR}/src/rxgen/rxgen
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
@@ -34,7 +37,8 @@ include ../config/Makefile.${SYS_NAME}
 INSTALLex = ${INSTALL} -m 755
 CCXPG2= /usr/xpg2bin/cc
 
-CFLAGS=${OPTMZ} -I${TOP_INCDIR} -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS}
+# Note - be careful with this line, ubik.h is very picky about getting the right lock.h
+CFLAGS=${OPTMZ} -I${TOP_INCDIR} -I. -I${srcdir} -I${TOP_OBJDIR}/src/config ${XCFLAGS}
 
 INCLS=${TOP_INCDIR}/afs/afsint.h \
 	${TOP_INCDIR}/afs/cmd.h \
@@ -141,7 +145,7 @@ fs: fs.o $(LIBS)
 livesys.o: livesys.c ${INCLS} AFS_component_version_number.c
 
 livesys: livesys.c $(LIBS)
-	${CC} -g -o livesys $(CFLAGS) livesys.c $(LIBS) ${XLIBS}
+	${CC} -g -o livesys $(CFLAGS) ${srcdir}/livesys.c $(LIBS) ${XLIBS}
 
 twiddle: twiddle.c $(LIBS)
 	${CC} -g -o twiddle $(CFLAGS) twiddle.c $(LIBS) ${XLIBS}
@@ -157,9 +161,9 @@ whatfid: whatfid.o ${LIBS}
 fstrace.o: fstrace.c AFS_component_version_number.c
 	case ${SYS_NAME} in \
 		sun4_411 | sun4c_411 | sun4m_412 ) \
-			${CCXPG2} -g -I${TOP_SRCDIR}/config -I${TOP_INCDIR} -I${TOP_INCDIR} -c fstrace.c ;; \
+			${CCXPG2} -g -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} -I${TOP_INCDIR} -c ${srcdir}/fstrace.c ;; \
 		* ) \
-			${CC} ${CFLAGS} -g -I${TOP_SRCDIR}/config -I${TOP_INCDIR} -I${TOP_INCDIR} -c fstrace.c ;; \
+			${CC} ${CFLAGS} -g -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} -I${TOP_INCDIR} -c ${srcdir}/fstrace.c ;; \
 	esac
 
 fstrace: fstrace.o
@@ -169,7 +173,7 @@ fstrace: fstrace.o
 		sun4_411 | sun4c_411 | sun4m_412 ) \
 			${CCXPG2} ${CFLAGS} -g -o fstrace fstrace.o ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/util.a ;; \
 		hp700_ux100 | hp800_ux100 | hp?00_ux10? | hp_ux10? | hp_ux11?) \
-			${CC} -I${TOP_SRCDIR}/config  -o fstrace fstrace.o ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/util.a ;; \
+			${CC} -I${TOP_OBJDIR}/src/config  -o fstrace fstrace.o ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/util.a ;; \
 		* ) \
 			${CC} ${CFLAGS} -o fstrace fstrace.o ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/util.a ;; \
 	esac
@@ -183,9 +187,9 @@ kdump.o: kdump.c ${INCLS} AFS_component_version_number.c
 	-set -x; \
 	case ${SYS_NAME} in \
 		alpha_linux* ) \
-			${CC} -g -I${LINUX_KERNEL_PATH}/include -I${TOP_INCDIR} -I${TOP_SRCDIR}/config -I${TOP_SRCDIR}/libafs/afs -I${TOP_INCDIR} ${XCFLAGS} -mno-fp-regs -ffixed-8 -o kdump-${LINUX_VERSION}.o -c kdump.c ;; \
+			${CC} -g -I${LINUX_KERNEL_PATH}/include -I${TOP_INCDIR}/afs -I${TOP_OBJDIR}/src/config -I${TOP_OBJDIR}/src/libafs/afs -I${TOP_INCDIR} ${XCFLAGS} -mno-fp-regs -ffixed-8 -o kdump-${LINUX_VERSION}.o -c kdump.c ;; \
 		*linux* ) \
-			${CC} -g -I${LINUX_KERNEL_PATH}/include -I${TOP_INCDIR} -I${TOP_SRCDIR}/config -I${TOP_SRCDIR}/libafs/afs -I${TOP_INCDIR} ${XCFLAGS} -o kdump-${LINUX_VERSION}.o -c kdump.c ;; \
+			${CC} -g -I${LINUX_KERNEL_PATH}/include -I${TOP_INCDIR}/afs -I${TOP_OBJDIR}/src/config -I${TOP_OBJDIR}/src/libafs/afs -I${TOP_INCDIR} ${XCFLAGS} -o kdump-${LINUX_VERSION}.o -c kdump.c ;; \
 		alpha_osf1 | alpha_osf20 |  alpha_osf30 | alpha_osf32 | alpha_osf32c| alpha_dux?? ) \
 			${CC} -g ${CFLAGS} -I/usr/sys/include -I/usr/sys/BINARY -I/usr/sys/AFS -DDEBUGGER -c kdump.c ;;\
 		sgi_6? ) \
@@ -197,30 +201,30 @@ kdump.o: kdump.c ${INCLS} AFS_component_version_number.c
 				case $$CPU_KDEFS in \
 				*-64*)	${CC} -D_KMEMUSER -woff 1178 \
 						-g -I${TOP_INCDIR} \
-						-I${TOP_SRCDIR}/config \
+						-I${TOP_OBJDIR}/src/config \
 						$$CPU_KDEFS \
 						${XCFLAGS64} \
-						-c kdump.c -o kdump.$$IP.o \
+						-c ${srcdir}/kdump.c -o kdump.$$IP.o \
 					;; \
 				*)	${CC} -D_KMEMUSER -woff 1178 \
 						-g -I${TOP_INCDIR} \
-						-I${TOP_SRCDIR}/config \
+						-I${TOP_OBJDIR}/src/config \
 						$$CPU_KDEFS \
 						${XCFLAGS} -DAFS_32BIT_KERNEL_ENV \
-						-c kdump.c -o kdump.$$IP.o \
+						-c ${srcdir}/kdump.c -o kdump.$$IP.o \
 					;; \
 				esac || exit $$?; \
 			done \
 			;; \
 		*) \
-			${CC} -g -I${TOP_INCDIR} -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS} -c kdump.c ;; \
+			${CC} -g -I${TOP_INCDIR}/afs -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS} -c ${srcdir}/kdump.c ;; \
 	esac ;
 
 kdump64.o : kdump.c ${INCLS} AFS_component_version_number.c
 	-set -x; \
 	case ${SYS_NAME} in \
 	sun4x_5[78] | hp_ux11* ) \
-		${CC} -g -I${TOP_INCDIR} -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS64} -o kdump64.o -c kdump.c ;; \
+		${CC} -g -I${TOP_INCDIR}/afs -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS64} -o kdump64.o -c ${srcdir}/kdump.c ;; \
 	esac
 
 kdump:  kdump.o

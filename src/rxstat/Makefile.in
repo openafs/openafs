@@ -8,6 +8,9 @@
 DEST=@DEST@
 TOP_INCDIR=@TOP_INCDIR@
 TOP_LIBDIR=@TOP_LIBDIR@
+TOP_OBJDIR=@TOP_OBJDIR@
+srcdir=@srcdir@
+VPATH=${srcdir}
 prefix=@prefix@
 exec_prefix=@exec_prefix@
 bindir=@bindir@
@@ -19,7 +22,7 @@ mandir=@mandir@
 afssrvbindir=@afssrvbindir@
 afssrvsbindir=@afssrvsbindir@
 afssrvlibexecdir=@afssrvlibexecdir@
-COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+COMPILE_ET=${TOP_OBJDIR}/src/comerr/compile_et
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
@@ -28,11 +31,11 @@ include ../config/Makefile.${SYS_NAME}
 
 KERNELDIR = ../libafs/
 UKERNELDIR = ../libuafs/
-RXGEN=${TOP_SRCDIR}/rxgen/rxgen
+RXGEN=${TOP_OBJDIR}/src/rxgen/rxgen
 
 KSRCS=rxstat.c rxstat.h Krxstat.ss.c Krxstat.xdr.c
 
-CFLAGS=-I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS}
+CFLAGS=-I. -I${srcdir} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS}
 
 LIBOBJS = rxstat.cs.o rxstat.ss.o rxstat.xdr.o rxstat.o
 
@@ -42,7 +45,7 @@ all: kinstall ukinstall ${TOP_INCDIR}/rx/rxstat.h ${TOP_LIBDIR}/librxstat.a
 # Build targets
 #
 rxstat.cs.c rxstat.ss.c rxstat.xdr.c rxstat.h: rxstat.xg
-	${RXGEN} -x rxstat.xg
+	${RXGEN} -x ${srcdir}/rxstat.xg
 
 librxstat.a: ${LIBOBJS} AFS_component_version_number.o
 	-$(RM) -f $@
@@ -50,13 +53,13 @@ librxstat.a: ${LIBOBJS} AFS_component_version_number.o
 	$(RANLIB) $@
 
 Krxstat.cs.c: rxstat.xg
-	${RXGEN} -x -k -C -o $@ rxstat.xg
+	${RXGEN} -x -k -C -o $@ ${srcdir}/rxstat.xg
 
 Krxstat.ss.c: rxstat.xg
-	${RXGEN} -x -k -S -o $@ rxstat.xg
+	${RXGEN} -x -k -S -o $@ ${srcdir}/rxstat.xg
 
 Krxstat.xdr.c: rxstat.xg
-	${RXGEN} -x -k -c -o $@ rxstat.xg
+	${RXGEN} -x -k -c -o $@ ${srcdir}/rxstat.xg
 
 #
 # Install targets

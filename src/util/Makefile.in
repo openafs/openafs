@@ -8,6 +8,9 @@
 DEST=@DEST@
 TOP_INCDIR=@TOP_INCDIR@
 TOP_LIBDIR=@TOP_LIBDIR@
+TOP_OBJDIR=@TOP_OBJDIR@
+srcdir=@srcdir@
+VPATH=${srcdir}
 bindir=@bindir@
 sbindir=@sbindir@
 libexecdir=@libexecdir@
@@ -16,8 +19,8 @@ includedir=@includedir@
 mandir=@mandir@
 sysconfdir=@sysconfdir@
 localstatedir=@localstatedir@
-COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
-RXGEN=${TOP_SRCDIR}/rxgen/rxgen
+COMPILE_ET=${TOP_OBJDIR}/src/comerr/compile_et
+RXGEN=${TOP_OBJDIR}/src/rxgen/rxgen
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 prefix=@prefix@
@@ -37,7 +40,7 @@ SHELL = /bin/sh
 
 include ../config/Makefile.${SYS_NAME}
 
-CFLAGS=${OPTMZ} -I${TOP_SRCDIR}/config -I. -I${TOP_INCDIR} ${XCFLAGS}
+CFLAGS=-I. -I${srcdir} ${OPTMZ} -I${TOP_OBJDIR}/src/config -I. -I${TOP_INCDIR} ${XCFLAGS}
 LDFLAGS = ${OPTMZ} ${XLDFLAGS}
 
 objects = assert.o base64.o casestrcpy.o ktime.o volparse.o hostparse.o \
@@ -65,7 +68,7 @@ all: ukinstall kinstall \
 	${TOP_LIBDIR}/libafsutil.a \
 	sys
 
-dirpath.h: dirpath.hin Makefile
+dirpath.h: ${srcdir}/dirpath.hin Makefile
 	( sed \
 		-e "s+@afsconfdir+${afsconfdir}+" \
 		-e "s+@viceetcdir+${viceetcdir}+" \
@@ -77,7 +80,7 @@ dirpath.h: dirpath.hin Makefile
 		-e "s+@afslocaldir+${afslocaldir}+" \
 		-e "s+@afsbackupdir+${afsbackupdir}+" \
 		-e "s+@afsbosconfigdir+${afsbosconfigdir}+" \
-		dirpath.hin >dirpath.h.tmp && \
+		${srcdir}/dirpath.hin >dirpath.h.tmp && \
 		mv dirpath.h.tmp dirpath.h )
 
 util.a: ${objects} AFS_component_version_number.o
@@ -85,56 +88,68 @@ util.a: ${objects} AFS_component_version_number.o
 	$(AR) crv util.a ${objects} AFS_component_version_number.o
 	$(RANLIB) util.a
 
-volparse.o: volparse.c
-	${CC} ${CFLAGS} -c volparse.c
+assert.o: ${srcdir}/assert.c
+	${CC} ${CFLAGS} -c ${srcdir}/assert.c
 
-snprintf.o: snprintf.c
-	${CC} ${CFLAGS} -c snprintf.c
+casestrcpy.o: ${srcdir}/casestrcpy.c
+	${CC} ${CFLAGS} -c ${srcdir}/casestrcpy.c
 
-base64.o: base64.c
-	${CC} ${CFLAGS} -c base64.c
+hputil.o: ${srcdir}/hputil.c
+	${CC} ${CFLAGS} -c ${srcdir}/hputil.c
 
-hostparse.o: hostparse.c afsutil.h
-	${CC} ${CFLAGS} -c hostparse.c
+flipbase64.o: ${srcdir}/flipbase64.c
+	${CC} ${CFLAGS} -c ${srcdir}/flipbase64.c
 
-ktime.o: ktime.c
-	${CC} ${CFLAGS} -c ktime.c
+volparse.o: ${srcdir}/volparse.c
+	${CC} ${CFLAGS} -c ${srcdir}/volparse.c
 
-kreltime.o: kreltime.c
-	${CC} ${CFLAGS} -c kreltime.c
+snprintf.o: ${srcdir}/snprintf.c
+	${CC} ${CFLAGS} -c ${srcdir}/snprintf.c
 
-get_krbrlm.o: get_krbrlm.c
-	${CC} ${CFLAGS} -c get_krbrlm.c
+base64.o: ${srcdir}/base64.c
+	${CC} ${CFLAGS} -c ${srcdir}/base64.c
 
-uuid.o: uuid.c
-	${CC} ${CFLAGS} -c uuid.c
+hostparse.o: ${srcdir}/hostparse.c ${srcdir}/afsutil.h
+	${CC} ${CFLAGS} -c ${srcdir}/hostparse.c
 
-sys.o: sys.c ${TOP_INCDIR}/afs/param.h AFS_component_version_number.c
-	${CC} ${CFLAGS} -c sys.c
+ktime.o: ${srcdir}/ktime.c
+	${CC} ${CFLAGS} -c ${srcdir}/ktime.c
+
+kreltime.o: ${srcdir}/kreltime.c
+	${CC} ${CFLAGS} -c ${srcdir}/kreltime.c
+
+get_krbrlm.o: ${srcdir}/get_krbrlm.c
+	${CC} ${CFLAGS} -c ${srcdir}/get_krbrlm.c
+
+uuid.o: ${srcdir}/uuid.c
+	${CC} ${CFLAGS} -c ${srcdir}/uuid.c
+
+sys.o: ${srcdir}/sys.c ${TOP_INCDIR}/afs/param.h AFS_component_version_number.c
+	${CC} ${CFLAGS} -c ${srcdir}/sys.c
 
 sys: sys.o 
 	${CC} ${LDFLAGS} -o sys sys.o
 
-isathing.o: isathing.c
-	${CC} ${CFLAGS} -c isathing.c
+isathing.o: ${srcdir}/isathing.c
+	${CC} ${CFLAGS} -c ${srcdir}/isathing.c
 
-serverLog.o: serverLog.c
-	${CC} ${CFLAGS} -c serverLog.c
+serverLog.o: ${srcdir}/serverLog.c
+	${CC} ${CFLAGS} -c ${srcdir}/serverLog.c
 
-dirpath.o: dirpath.c dirpath.h
-	${CC} ${CFLAGS} -c dirpath.c
+dirpath.o: ${srcdir}/dirpath.c dirpath.h
+	${CC} ${CFLAGS} -c ${srcdir}/dirpath.c
 
-fileutil.o: fileutil.c fileutil.h
-	${CC} ${CFLAGS} -c fileutil.c
+fileutil.o: ${srcdir}/fileutil.c ${srcdir}/fileutil.h
+	${CC} ${CFLAGS} -c ${srcdir}/fileutil.c
 
-netutils.o: netutils.c netutils.h
-	${CC} ${CFLAGS} -c netutils.c
+netutils.o: ${srcdir}/netutils.c ${srcdir}/netutils.h
+	${CC} ${CFLAGS} -c ${srcdir}/netutils.c
 
-afs_atomlist.o: afs_atomlist.c afs_atomlist.h
-	${CC} ${CFLAGS} -c afs_atomlist.c
+afs_atomlist.o: ${srcdir}/afs_atomlist.c ${srcdir}/afs_atomlist.h
+	${CC} ${CFLAGS} -c ${srcdir}/afs_atomlist.c
 
-afs_lhash.o: afs_lhash.c afs_lhash.h afs_atomlist.h
-	${CC} ${CFLAGS} -c afs_lhash.c
+afs_lhash.o: ${srcdir}/afs_lhash.c ${srcdir}/afs_lhash.h ${srcdir}/afs_atomlist.h
+	${CC} ${CFLAGS} -c ${srcdir}/afs_lhash.c
 
 #
 # Install targets
@@ -165,46 +180,46 @@ install: \
 ${TOP_INCDIR}/afs/dirpath.h: dirpath.h
 	${INSTALL} $? $@
 
-${TOP_INCDIR}/afs/pthread_nosigs.h: pthread_nosigs.h
+${TOP_INCDIR}/afs/pthread_nosigs.h: ${srcdir}/pthread_nosigs.h
 	${INSTALL} $? $@
 
-${TOP_INCDIR}/afs/assert.h: assert.h
+${TOP_INCDIR}/afs/assert.h: ${srcdir}/assert.h
 	${INSTALL} $? $@
 
-${TOP_INCDIR}/afs/errors.h: errors.h
+${TOP_INCDIR}/afs/errors.h: ${srcdir}/errors.h
 	${INSTALL} $? $@
 
-${TOP_INCDIR}/afs/vice.h: vice.h
+${TOP_INCDIR}/afs/vice.h: ${srcdir}/vice.h
 	${INSTALL} $? $@
 
-${TOP_INCDIR}/afs/remote.h: remote.h
+${TOP_INCDIR}/afs/remote.h: ${srcdir}/remote.h
 	${INSTALL} $? $@
 
-${TOP_INCDIR}/afs/ktime.h: ktime.h
+${TOP_INCDIR}/afs/ktime.h: ${srcdir}/ktime.h
 	${INSTALL} $? $@
 
-${TOP_INCDIR}/afs/fileutil.h: fileutil.h
+${TOP_INCDIR}/afs/fileutil.h: ${srcdir}/fileutil.h
 	${INSTALL} $? $@
 
-${TOP_INCDIR}/afs/netutils.h: netutils.h
+${TOP_INCDIR}/afs/netutils.h: ${srcdir}/netutils.h
 	${INSTALL} $? $@
 
-${TOP_INCDIR}/afs/packages.h: packages.h
+${TOP_INCDIR}/afs/packages.h: ${srcdir}/packages.h
 	${INSTALL} $? $@
 
-${TOP_INCDIR}/afs/afsutil.h: afsutil.h
+${TOP_INCDIR}/afs/afsutil.h: ${srcdir}/afsutil.h
 	${INSTALL} $? $@
 
-${TOP_INCDIR}/afs/pthread_glock.h: pthread_glock.h
+${TOP_INCDIR}/afs/pthread_glock.h: ${srcdir}/pthread_glock.h
 	${INSTALL} $? $@
 
-${TOP_INCDIR}/afs/afs_atomlist.h: afs_atomlist.h
+${TOP_INCDIR}/afs/afs_atomlist.h: ${srcdir}/afs_atomlist.h
 	${INSTALL} $? $@
 
-${TOP_INCDIR}/afs/afs_lhash.h: afs_lhash.h
+${TOP_INCDIR}/afs/afs_lhash.h: ${srcdir}/afs_lhash.h
 	${INSTALL} $? $@
 
-${TOP_INCDIR}/potpourri.h: potpourri.h
+${TOP_INCDIR}/potpourri.h: ${srcdir}/potpourri.h
 	${INSTALL} $? $@
 
 
@@ -218,46 +233,46 @@ ${TOP_LIBDIR}/libafsutil.a: util.a
 ${DESTDIR}${includedir}/afs/dirpath.h: dirpath.h
 	${INSTALL} $? $@
 
-${DESTDIR}${includedir}/afs/pthread_nosigs.h: pthread_nosigs.h
+${DESTDIR}${includedir}/afs/pthread_nosigs.h: ${srcdir}/pthread_nosigs.h
 	${INSTALL} $? $@
 
-${DESTDIR}${includedir}/afs/assert.h: assert.h
+${DESTDIR}${includedir}/afs/assert.h: ${srcdir}/assert.h
 	${INSTALL} $? $@
 
-${DESTDIR}${includedir}/afs/errors.h: errors.h
+${DESTDIR}${includedir}/afs/errors.h: ${srcdir}/errors.h
 	${INSTALL} $? $@
 
-${DESTDIR}${includedir}/afs/vice.h: vice.h
+${DESTDIR}${includedir}/afs/vice.h: ${srcdir}/vice.h
 	${INSTALL} $? $@
 
-${DESTDIR}${includedir}/afs/remote.h: remote.h
+${DESTDIR}${includedir}/afs/remote.h: ${srcdir}/remote.h
 	${INSTALL} $? $@
 
-${DESTDIR}${includedir}/afs/ktime.h: ktime.h
+${DESTDIR}${includedir}/afs/ktime.h: ${srcdir}/ktime.h
 	${INSTALL} $? $@
 
-${DESTDIR}${includedir}/afs/fileutil.h: fileutil.h
+${DESTDIR}${includedir}/afs/fileutil.h: ${srcdir}/fileutil.h
 	${INSTALL} $? $@
 
-${DESTDIR}${includedir}/afs/netutils.h: netutils.h
+${DESTDIR}${includedir}/afs/netutils.h: ${srcdir}/netutils.h
 	${INSTALL} $? $@
 
-${DESTDIR}${includedir}/afs/packages.h: packages.h
+${DESTDIR}${includedir}/afs/packages.h: ${srcdir}/packages.h
 	${INSTALL} $? $@
 
-${DESTDIR}${includedir}/afs/afsutil.h: afsutil.h
+${DESTDIR}${includedir}/afs/afsutil.h: ${srcdir}/afsutil.h
 	${INSTALL} $? $@
 
-${DESTDIR}${includedir}/afs/pthread_glock.h: pthread_glock.h
+${DESTDIR}${includedir}/afs/pthread_glock.h: ${srcdir}/pthread_glock.h
 	${INSTALL} $? $@
 
-${DESTDIR}${includedir}/afs/afs_atomlist.h: afs_atomlist.h
+${DESTDIR}${includedir}/afs/afs_atomlist.h: ${srcdir}/afs_atomlist.h
 	${INSTALL} $? $@
 
-${DESTDIR}${includedir}/afs/afs_lhash.h: afs_lhash.h
+${DESTDIR}${includedir}/afs/afs_lhash.h: ${srcdir}/afs_lhash.h
 	${INSTALL} $? $@
 
-${DESTDIR}${includedir}/potpourri.h: potpourri.h
+${DESTDIR}${includedir}/potpourri.h: ${srcdir}/potpourri.h
 	${INSTALL} $? $@
 
 
@@ -275,46 +290,46 @@ ${DESTDIR}${bindir}/sys: sys
 ${DEST}/include/afs/dirpath.h: dirpath.h
 	${INSTALL} $? $@
 
-${DEST}/include/afs/pthread_nosigs.h: pthread_nosigs.h
+${DEST}/include/afs/pthread_nosigs.h: ${srcdir}/pthread_nosigs.h
 	${INSTALL} $? $@
 
-${DEST}/include/afs/assert.h: assert.h
+${DEST}/include/afs/assert.h: ${srcdir}/assert.h
 	${INSTALL} $? $@
 
-${DEST}/include/afs/errors.h: errors.h
+${DEST}/include/afs/errors.h: ${srcdir}/errors.h
 	${INSTALL} $? $@
 
-${DEST}/include/afs/vice.h: vice.h
+${DEST}/include/afs/vice.h: ${srcdir}/vice.h
 	${INSTALL} $? $@
 
-${DEST}/include/afs/remote.h: remote.h
+${DEST}/include/afs/remote.h: ${srcdir}/remote.h
 	${INSTALL} $? $@
 
-${DEST}/include/afs/ktime.h: ktime.h
+${DEST}/include/afs/ktime.h: ${srcdir}/ktime.h
 	${INSTALL} $? $@
 
-${DEST}/include/afs/fileutil.h: fileutil.h
+${DEST}/include/afs/fileutil.h: ${srcdir}/fileutil.h
 	${INSTALL} $? $@
 
-${DEST}/include/afs/netutils.h: netutils.h
+${DEST}/include/afs/netutils.h: ${srcdir}/netutils.h
 	${INSTALL} $? $@
 
-${DEST}/include/afs/packages.h: packages.h
+${DEST}/include/afs/packages.h: ${srcdir}/packages.h
 	${INSTALL} $? $@
 
-${DEST}/include/afs/afsutil.h: afsutil.h
+${DEST}/include/afs/afsutil.h: ${srcdir}/afsutil.h
 	${INSTALL} $? $@
 
-${DEST}/include/afs/pthread_glock.h: pthread_glock.h
+${DEST}/include/afs/pthread_glock.h: ${srcdir}/pthread_glock.h
 	${INSTALL} $? $@
 
-${DEST}/include/afs/afs_atomlist.h: afs_atomlist.h
+${DEST}/include/afs/afs_atomlist.h: ${srcdir}/afs_atomlist.h
 	${INSTALL} $? $@
 
-${DEST}/include/afs/afs_lhash.h: afs_lhash.h
+${DEST}/include/afs/afs_lhash.h: ${srcdir}/afs_lhash.h
 	${INSTALL} $? $@
 
-${DEST}/include/potpourri.h: potpourri.h
+${DEST}/include/potpourri.h: ${srcdir}/potpourri.h
 	${INSTALL} $? $@
 
 
@@ -337,25 +352,25 @@ kinstall: ${KDIR}/vice.h \
 	${KDIR}/afs_lhash.c \
 	${KDIR}/afs_lhash.h
 
-${KDIR}/vice.h: vice.h
+${KDIR}/vice.h: ${srcdir}/vice.h
 	${INSTALL} $? $@
 
-${KDIR}/afs_base64.c: base64.c
+${KDIR}/afs_base64.c: ${srcdir}/base64.c
 	${INSTALL} $? $@
 
-${KDIR}/afs_uuid.c: uuid.c
+${KDIR}/afs_uuid.c: ${srcdir}/uuid.c
 	${INSTALL} $? $@
 
-${KDIR}/afs_atomlist.c: afs_atomlist.c
+${KDIR}/afs_atomlist.c: ${srcdir}/afs_atomlist.c
 	${INSTALL} $? $@
 
-${KDIR}/afs_atomlist.h: afs_atomlist.h
+${KDIR}/afs_atomlist.h: ${srcdir}/afs_atomlist.h
 	${INSTALL} $? $@
 
-${KDIR}/afs_lhash.c: afs_lhash.c
+${KDIR}/afs_lhash.c: ${srcdir}/afs_lhash.c
 	${INSTALL} $? $@
 
-${KDIR}/afs_lhash.h: afs_lhash.h
+${KDIR}/afs_lhash.h: ${srcdir}/afs_lhash.h
 	${INSTALL} $? $@
 
 ukinstall: \
@@ -377,55 +392,55 @@ ukinstall: \
 	${UKDIR}/casestrcpy.c \
 	${UKDIR}/hostparse.c 
 
-${UKDIR}/errors.h: errors.h
+${UKDIR}/errors.h: ${srcdir}/errors.h
 	${INSTALL} $? $@
 
-${UKDIR}/afsutil.h: afsutil.h
+${UKDIR}/afsutil.h: ${srcdir}/afsutil.h
 	${INSTALL} $? $@
 
 ${UKDIR}/dirpath.h: dirpath.h
 	${INSTALL} $? $@
 
-${UKDIR}/dirpath.c: dirpath.c
+${UKDIR}/dirpath.c: ${srcdir}/dirpath.c
 	${INSTALL} $? $@
 
-${UKDIR}/fileutil.h: fileutil.h
+${UKDIR}/fileutil.h: ${srcdir}/fileutil.h
 	${INSTALL} $? $@
 
-${UKDIR}/fileutil.c: fileutil.c
+${UKDIR}/fileutil.c: ${srcdir}/fileutil.c
 	${INSTALL} $? $@
 
-${UKDIR}/netutils.h: netutils.h
+${UKDIR}/netutils.h: ${srcdir}/netutils.h
 	${INSTALL} $? $@
 
-${UKDIR}/netutils.c: netutils.c
+${UKDIR}/netutils.c: ${srcdir}/netutils.c
 	${INSTALL} $? $@
 
-${UKDIR}/casestrcpy.c: casestrcpy.c
+${UKDIR}/casestrcpy.c: ${srcdir}/casestrcpy.c
 	${INSTALL} $? $@
 
-${UKDIR}/hostparse.c: hostparse.c
+${UKDIR}/hostparse.c: ${srcdir}/hostparse.c
 	${INSTALL} $? $@
 
-${UKDIR}/pthread_glock.h: pthread_glock.h
+${UKDIR}/pthread_glock.h: ${srcdir}/pthread_glock.h
 	${INSTALL} $? $@
 
-${UKDIR}/vice.h: vice.h
+${UKDIR}/vice.h: ${srcdir}/vice.h
 	${INSTALL} $? $@
 
-${UKDIR}/afs_uuid.c: uuid.c
+${UKDIR}/afs_uuid.c: ${srcdir}/uuid.c
 	${INSTALL} $? $@
 
-${UKDIR}/afs_atomlist.c: afs_atomlist.c
+${UKDIR}/afs_atomlist.c: ${srcdir}/afs_atomlist.c
 	${INSTALL} $? $@
 
-${UKDIR}/afs_atomlist.h: afs_atomlist.h
+${UKDIR}/afs_atomlist.h: ${srcdir}/afs_atomlist.h
 	${INSTALL} $? $@
 
-${UKDIR}/afs_lhash.c: afs_lhash.c
+${UKDIR}/afs_lhash.c: ${srcdir}/afs_lhash.c
 	${INSTALL} $? $@
 
-${UKDIR}/afs_lhash.h: afs_lhash.h
+${UKDIR}/afs_lhash.h: ${srcdir}/afs_lhash.h
 	${INSTALL} $? $@
 
 #

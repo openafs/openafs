@@ -8,6 +8,9 @@
 DEST=@DEST@
 TOP_INCDIR=@TOP_INCDIR@
 TOP_LIBDIR=@TOP_LIBDIR@
+TOP_OBJDIR=@TOP_OBJDIR@
+srcdir=@srcdir@
+VPATH=${srcdir}
 prefix=@prefix@
 exec_prefix=@exec_prefix@
 bindir=@bindir@
@@ -19,8 +22,8 @@ mandir=@mandir@
 afssrvbindir=@afssrvbindir@
 afssrvsbindir=@afssrvsbindir@
 afssrvlibexecdir=@afssrvlibexecdir@
-COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
-RXGEN=${TOP_SRCDIR}/rxgen/rxgen
+COMPILE_ET=${TOP_OBJDIR}/src/comerr/compile_et
+RXGEN=${TOP_OBJDIR}/src/rxgen/rxgen
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
@@ -32,7 +35,7 @@ include ../config/Makefile.${SYS_NAME}
 # subtle bugs that may have been introduced in process.s, be warned!
 OPTIMIZE=${LWP_OPTMZ}
 
-CFLAGS=${OPTIMIZE} -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS}
+CFLAGS=${OPTIMIZE} -I. -I${srcdir} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS}
 
 LIBOBJS=lwp.o process.o lock.o iomgr.o timer.o fasttime.o preempt.o \
 	waitkey.o threadname.o AFS_component_version_number.o
@@ -54,57 +57,57 @@ process.s:
 process.o	: process.s process.c
 	@case "$(SYS_NAME)" in \
 	pmax_he1) \
-		$(CC) -c -I${TOP_INCDIR} process.s;; \
+		$(CC) -c -I${TOP_INCDIR} ${srcdir}/process.s;; \
 	sun4c_51 | sun4c_52 | sun4m_51 | sun4m_52 | sun4c_53 | sun4m_53  | sun4_53 | sun4_52 | sun4_54 | sun4c_54 | sun4m_54 | sun4x_5? | sunx86_54) \
-		/usr/ccs/lib/cpp -P -I${TOP_INCDIR} process.s process.ss; \
+		/usr/ccs/lib/cpp -P -I${TOP_INCDIR} ${srcdir}/process.s process.ss; \
 		${AS} process.ss -o process.o; \
 			$(RM) process.ss ;; \
 	sgi_5* ) \
-		$(CC) -c -I${TOP_INCDIR} -KPIC -G0  process.s;; \
+		$(CC) -c -I${TOP_INCDIR} -KPIC -G0  ${srcdir}/process.s;; \
 	sgi_61 | sgi_62 | sgi_63 ) \
-		$(CC) -c ${XCFLAGS} -I${TOP_INCDIR} -KPIC -G0  process.s;; \
+		$(CC) -c ${XCFLAGS} -I${TOP_INCDIR} -KPIC -G0  ${srcdir}/process.s;; \
 	s390*) \
-		/lib/cpp -P -I${TOP_INCDIR} process.s >process.ss; \
+		/lib/cpp -P -I${TOP_INCDIR} ${srcdir}/process.s >process.ss; \
 		${AS} -ahlns process.ss -o process.o >process.lst; \
 		$(RM) process.ss ;; \
 	ppc_darwin* ) \
-		$(CC) -c ${XCFLAGS} -I${TOP_INCDIR} process.s;; \
+		$(CC) -c ${XCFLAGS} -I${TOP_INCDIR} ${srcdir}/process.s;; \
 	i386_fbsd* ) \
-		/usr/bin/cpp -P process.fbsd.s > process.ss; \
+		/usr/bin/cpp -P ${srcdir}/process.fbsd.s > process.ss; \
 		${AS} -o process.o process.ss; \
 		$(RM) process.ss ;; \
 	hp* | *_linux* | sgi_64 | sgi_65 ) \
-		${CC} ${CFLAGS} -c process.c;; \
+		${CC} ${CFLAGS} -c ${srcdir}/process.c;; \
 	ncrx86_*) \
-		/usr/ccs/lib/cpp -P -I${TOP_INCDIR} process.s process.ss; \
+		/usr/ccs/lib/cpp -P -I${TOP_INCDIR} ${srcdir}/process.s process.ss; \
 		${AS} -o process.o process.ss; \
 		$(RM) process.ss ;; \
 	alpha_osf1 | alpha_osf20 |  alpha_osf30 | alpha_osf32 | alpha_osf32c | alpha_dux?? ) \
-		${AS} -v  -P -DOSF -I${TOP_INCDIR} -DASSEMBLER process.s; \
+		${AS} -v  -P -DOSF -I${TOP_INCDIR} -DASSEMBLER ${srcdir}/process.s; \
 		${AS} -v process.i -o process.o;; \
 	*_obsd* ) \
-		cp process.s process.S ; \
+		cp ${srcdir}/process.s process.S ; \
 		${CC} -E -I${TOP_INCDIR} process.S >process.ss ; \
 		${AS} process.ss -o process.o ;  \
 		$(RM) -f process.S ;;\
 	hp_ux110 ) \
-		${CC} ${CFLAGS} -c process.c;; \
+		${CC} ${CFLAGS} -c ${srcdir}/process.c;; \
 	*) \
-		/lib/cpp -P -I${TOP_INCDIR} process.s process.ss; \
+		/lib/cpp -P -I${TOP_INCDIR} ${srcdir}/process.s process.ss; \
 		${AS} process.ss -o process.o; \
 		$(RM) process.ss ;; \
 	esac
 
 iomgr.o		: iomgr.c lwp.h timer.h
-		${CC} -c ${CFLAGS} iomgr.c
+		${CC} -c ${CFLAGS} ${srcdir}/iomgr.c
 
 preempt.o	: preempt.c lwp.h preempt.h
 lwp.o		: lwp.c lwp.h
 	case "$(SYS_NAME)" in \
 		rs_aix*) \
-			$(CC) -I${TOP_SRCDIR}/config -I${TOP_INCDIR} -c lwp.c;; \
+			$(CC) -I${srcdir} -I. -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} -c ${srcdir}/lwp.c;; \
 		*)  \
-			$(CC) ${CFLAGS} -c lwp.c;; \
+			$(CC) ${CFLAGS} -c ${srcdir}/lwp.c;; \
 		esac
 lock.o		: lock.c lock.h lwp.h
 timer.o		: timer.c
@@ -120,7 +123,7 @@ rw: rw.o liblwp.a $(TOP_LIBDIR)/util.a
 	${CC} ${CFLAGS} -o rw rw.o liblwp.a $(TOP_LIBDIR)/util.a
 
 rw.o: rw.c
-	${CC} ${CFLAGS} -c rw.c
+	${CC} ${CFLAGS} -c ${srcdir}/rw.c
 
 
 #

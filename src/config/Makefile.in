@@ -8,6 +8,8 @@
 DEST=@DEST@
 TOP_INCDIR=@TOP_INCDIR@
 TOP_LIBDIR=@TOP_LIBDIR@
+srcdir=@srcdir@
+VPATH=${srcdir}
 prefix=@prefix@
 exec_prefix=@exec_prefix@
 bindir=@bindir@
@@ -19,8 +21,8 @@ mandir=@mandir@
 afssrvbindir=@afssrvbindir@
 afssrvsbindir=@afssrvsbindir@
 afssrvlibexecdir=@afssrvlibexecdir@
-COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
-RXGEN=${TOP_SRCDIR}/rxgen/rxgen
+COMPILE_ET=${TOP_OBJDIR}/src/comerr/compile_et
+RXGEN=${TOP_OBJDIR}/src/rxgen/rxgen
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
@@ -43,10 +45,10 @@ all: config mkvers ukinstall kinstall \
 	${TOP_INCDIR}/afs/venus.h \
 	${TOP_INCDIR}/afs/debug.h
 
-Makefile.version: Makefile.version-CML Makefile.version-NOCML
+Makefile.version: ${srcdir}/Makefile.version-CML Makefile.version-NOCML
 	$(RM) -f Makefile.version
 	if	[ -r SRC/../CML/state ] ; \
-	then	$(CP) Makefile.version-CML Makefile.version ; \
+	then	$(CP) ${srcdir}/Makefile.version-CML Makefile.version ; \
 	else	$(CP) Makefile.version-NOCML Makefile.version ; \
 	fi
 
@@ -68,11 +70,14 @@ ${UKERNELDIR}/afs/AFS_component_version_number.c: AFS_component_version_number.c
 config: config.o mc.o
 	$(CC) $(CFLAGS) -o config config.o mc.o
 
-mkvers: mkvers.c
-	$(CC) $(CFLAGS) -o mkvers mkvers.c
+mkvers: ${srcdir}/mkvers.c
+	$(CC) $(CFLAGS) -o mkvers ${srcdir}/mkvers.c
 
-mc.o: mc.c
-config.o: config.c AFS_component_version_number.c
+mc.o: ${srcdir}/mc.c
+	$(CC) $(CFLAGS) -c ${srcdir}/mc.c
+
+config.o: ${srcdir}/config.c AFS_component_version_number.c
+	$(CC) $(CFLAGS) -I. -c ${srcdir}/config.c
 
 #
 # Include installation targets
@@ -93,31 +98,31 @@ UKDIRS = ${UKERNELDIR}/afs \
 $(UKDIRS): 
 	mkdir -p $@
 
-${KERNELDIR}/afs/param.h ${DEST}/include/afs/param.h ${DESTDIR}${includedir}/afs/param.h ${TOP_INCDIR}/afs/param.h: param.${SYS_NAME}.h
+${KERNELDIR}/afs/param.h ${DEST}/include/afs/param.h ${DESTDIR}${includedir}/afs/param.h ${TOP_INCDIR}/afs/param.h: ${srcdir}/param.${SYS_NAME}.h
 	-$(INST)
 
-${UKERNELDIR}/afs/afs_sysnames.h ${KERNELDIR}/afs/afs_sysnames.h ${DEST}/include/afs/afs_sysnames.h ${DESTDIR}${includedir}/afs/afs_sysnames.h ${TOP_INCDIR}/afs/afs_sysnames.h: afs_sysnames.h
+${UKERNELDIR}/afs/afs_sysnames.h ${KERNELDIR}/afs/afs_sysnames.h ${DEST}/include/afs/afs_sysnames.h ${DESTDIR}${includedir}/afs/afs_sysnames.h ${TOP_INCDIR}/afs/afs_sysnames.h: ${srcdir}/afs_sysnames.h
 	$(INST)
 
-${UKERNELDIR}/afs/stds.h ${KERNELDIR}/afs/stds.h ${DEST}/include/afs/stds.h ${DESTDIR}${includedir}/afs/stds.h ${TOP_INCDIR}/afs/stds.h: stds.h
+${UKERNELDIR}/afs/stds.h ${KERNELDIR}/afs/stds.h ${DEST}/include/afs/stds.h ${DESTDIR}${includedir}/afs/stds.h ${TOP_INCDIR}/afs/stds.h: ${srcdir}/stds.h
 	$(INST)
 
 ${UKERNELDIR}/config/Makefile.${SYS_NAME} ${KERNELDIR}/config/Makefile.${SYS_NAME}: Makefile.${SYS_NAME}
 	$(INST)
 
-${UKERNELDIR}/afs/icl.h ${KERNELDIR}/afs/icl.h ${DEST}/include/afs/icl.h ${DESTDIR}${includedir}/afs/icl.h ${TOP_INCDIR}/afs/icl.h: icl.h 
+${UKERNELDIR}/afs/icl.h ${KERNELDIR}/afs/icl.h ${DEST}/include/afs/icl.h ${DESTDIR}${includedir}/afs/icl.h ${TOP_INCDIR}/afs/icl.h: ${srcdir}/icl.h 
 	$(INST)
 
-${UKERNELDIR}/afs/afs_args.h ${KERNELDIR}/afs/afs_args.h ${DEST}/include/afs/afs_args.h ${DESTDIR}${includedir}/afs/afs_args.h ${TOP_INCDIR}/afs/afs_args.h: afs_args.h 
+${UKERNELDIR}/afs/afs_args.h ${KERNELDIR}/afs/afs_args.h ${DEST}/include/afs/afs_args.h ${DESTDIR}${includedir}/afs/afs_args.h ${TOP_INCDIR}/afs/afs_args.h: ${srcdir}/afs_args.h 
 	$(INST)
 
-${UKERNELDIR}/afs/venus.h ${DEST}/include/afs/venus.h ${DESTDIR}${includedir}/afs/venus.h ${TOP_INCDIR}/afs/venus.h: venus.h 
+${UKERNELDIR}/afs/venus.h ${DEST}/include/afs/venus.h ${DESTDIR}${includedir}/afs/venus.h ${TOP_INCDIR}/afs/venus.h: ${srcdir}/venus.h 
 	$(INST)
 
-${DEST}/include/afs/debug.h ${DESTDIR}${includedir}/afs/debug.h ${TOP_INCDIR}/afs/debug.h: debug.h 
+${DEST}/include/afs/debug.h ${DESTDIR}${includedir}/afs/debug.h ${TOP_INCDIR}/afs/debug.h: ${srcdir}/debug.h 
 	$(INST)
 
-${UKERNELDIR}/afs/param.h: param.${SYS_NAME}_usr.h
+${UKERNELDIR}/afs/param.h: ${srcdir}/param.${SYS_NAME}_usr.h
 	$(INST)
 
 # these are needed to compile the kernel.  Config is necessary to

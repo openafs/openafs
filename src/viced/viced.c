@@ -1596,7 +1596,7 @@ InitVL() {
 				 AFSDIR_SERVER_NETINFO_FILEPATH,
 				 AFSDIR_SERVER_NETRESTRICT_FILEPATH);
       if (code < 0) {
-	ViceLog(0,("Can' register any valid addresses:%s\n",reason));
+	ViceLog(0,("Can't register any valid addresses: %s\n",reason));
 	exit(1);
       }
       FS_HostAddr_cnt = (afs_uint32) code;

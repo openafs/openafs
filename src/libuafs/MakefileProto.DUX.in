@@ -12,6 +12,9 @@ DEST=@DEST@
 TOP_SRCDIR=@TOP_SRCDIR@
 TOP_INCDIR=@TOP_INCDIR@
 TOP_LIBDIR=@TOP_LIBDIR@
+TOP_OBJDIR=@TOP_OBJDIR@
+srcdir=@srcdir@
+VPATH=${srcdir}
 prefix=@prefix@
 exec_prefix=@exec_prefix@
 bindir=@bindir@
@@ -30,11 +33,11 @@ DBUG=-O
 include ../config/Makefile.${SYS_NAME}
 
 # System specific build commands and flags
-DEFINES=-DAFSDEBUG -DKERNEL -DUKERNEL -DAFS -DVICE -D_NO_PROTO -DOSF
+DEFINES=-DKERNEL -DUKERNEL -D_NO_PROTO -DOSF
 KOPTS=
 DBUG=
 OPTF=-O
-CFLAGS=-I. -I.. -I${TOP_SRCDIR}/config ${FSINCLUDES} $(DEFINES) $(KOPTS) ${DBUG} -pthread
+CFLAGS=-I. -I.. -I${TOP_OBJDIR}/src/config ${FSINCLUDES} $(DEFINES) $(KOPTS) ${DBUG} -pthread
 WEBOPTS = -I../nsapi -DNETSCAPE_NSAPI -DNET_SSL -DXP_UNIX -DMCC_HTTPD
 
 TEST_CFLAGS=-pthread -D_NO_PROTO -D_REENTRANT -DAFS_PTHREAD_ENV -Dosf -DAFS_OSF_ENV -DOSF

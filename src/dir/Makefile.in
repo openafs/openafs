@@ -8,6 +8,9 @@
 DEST=@DEST@
 TOP_INCDIR=@TOP_INCDIR@
 TOP_LIBDIR=@TOP_LIBDIR@
+TOP_OBJDIR=@TOP_OBJDIR@
+srcdir=@srcdir@
+VPATH=${srcdir}
 prefix=@prefix@
 exec_prefix=@exec_prefix@
 bindir=@bindir@
@@ -19,8 +22,8 @@ mandir=@mandir@
 afssrvbindir=@afssrvbindir@
 afssrvsbindir=@afssrvsbindir@
 afssrvlibexecdir=@afssrvlibexecdir@
-COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
-RXGEN=${TOP_SRCDIR}/rxgen/rxgen
+COMPILE_ET=${TOP_OBJDIR}/src/comerr/compile_et
+RXGEN=${TOP_OBJDIR}/src/rxgen/rxgen
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
@@ -28,41 +31,29 @@ SHELL = /bin/sh
 
 include ../config/Makefile.${SYS_NAME}
 
-KERNELDIR = ../libafs/
-UKERNELDIR = ../libuafs/
+KERNELDIR = ../libafs
+UKERNELDIR = ../libuafs
 
-INCDIRS=-I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XINCLS}
+INCDIRS=-I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XINCLS}
 CFLAGS = ${OPTMZ} ${INCDIRS} ${XCFLAGS}
 
-OBJS=buffer.o dir.o salvage.o
-include ../config/Makefile.version
+all: \
+	${TOP_LIBDIR}/libdir.a \
+	${TOP_INCDIR}/afs/dir.h \
+	${KERNELDIR}/afs \
+	${KERNELDIR}/afs/dir.h \
+	${KERNELDIR}/afs/afs_dir.c \
+	${UKERNELDIR}/afs \
+	${UKERNELDIR}/afs/dir.h \
+	${UKERNELDIR}/afs/afs_dir.c
 
-noversion: install
-
-cmdall: all test
-
-all: kinstall ukinstall ${TOP_LIBDIR}/libdir.a ${TOP_INCDIR}/afs/dir.h
-
-libdir.a: ${OBJS} AFS_component_version_number.o
+libdir.a: buffer.o dir.o salvage.o AFS_component_version_number.o
 	$(RM) -f $@
-	$(AR) crv $@ $(OBJS) AFS_component_version_number.o
+	$(AR) crv $@ buffer.o dir.o salvage.o  AFS_component_version_number.o
 	$(RANLIB) $@
 
-kinstall:
-	${INSTALL} dir.h ${KERNELDIR}/afs
-	${INSTALL} dir.c ${KERNELDIR}/afs/afs_dir.c
-
-ukinstall webinstall: ${UKERNELDIR}/afs
-	${INSTALL} dir.h ${UKERNELDIR}/afs
-	${INSTALL} dir.c ${UKERNELDIR}/afs/afs_dir.c
-
-${UKERNELDIR}/afs:
-	mkdir -p $@
-
-install:    ${DESTDIR}${libdir}/afs/libdir.a ${DESTDIR}${includedir}/afs/dir.h
-
 test: 
-	(cd test; $(MAKE) )
+	cd test; $(MAKE)
 
 buffer.o: buffer.c
 
@@ -70,29 +61,58 @@ dir.o: dir.c dir.h
 
 salvage.o: salvage.c dir.h
 
-clean:
-	$(RM) -f *.o *.a core AFS_component_version_number.c
-${DEST}/lib/afs/libdir.a: libdir.a
-	${INSTALL} $? $@
 
-${DESTDIR}${libdir}/afs/libdir.a: libdir.a
+#
+# Install targets
+#
+${TOP_INCDIR}/afs/dir.h: dir.h
 	${INSTALL} $? $@
-
 
 ${TOP_LIBDIR}/libdir.a: libdir.a
 	${INSTALL} $? $@
 
+${KERNELDIR}/afs:
+	mkdir -p $@
 
-${DEST}/include/afs/dir.h: dir.h
+${UKERNELDIR}/afs:
+	mkdir -p $@
+
+${KERNELDIR}/afs/dir.h: dir.h
+	${INSTALL} $? $@
+
+${KERNELDIR}/afs/afs_dir.c: dir.c
+	${INSTALL} $? $@
+
+${UKERNELDIR}/afs/dir.h: dir.h
+	${INSTALL} $? $@
+
+${UKERNELDIR}/afs/afs_dir.c: dir.c
+	${INSTALL} $? $@
+
+install: \
+	${DESTDIR}${libdir}/afs/libdir.a \
+	${DESTDIR}${includedir}/afs/dir.h
+
+${DESTDIR}${libdir}/afs/libdir.a: libdir.a
 	${INSTALL} $? $@
 
 ${DESTDIR}${includedir}/afs/dir.h: dir.h
 	${INSTALL} $? $@
 
+dest: \
+	${DEST}/lib/afs/libdir.a \
+	${DEST}/include/afs/dir.h
 
-${TOP_INCDIR}/afs/dir.h: dir.h
+${DEST}/lib/afs/libdir.a: libdir.a
 	${INSTALL} $? $@
 
+${DEST}/include/afs/dir.h: dir.h
+	${INSTALL} $? $@
 
-dest:    ${DEST}/lib/afs/libdir.a ${DEST}/include/afs/dir.h
+#
+# Misc. targets
+#
+include ../config/Makefile.version
 
+clean:
+	$(RM) -f *.o *.a core AFS_component_version_number.c

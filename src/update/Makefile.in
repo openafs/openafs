@@ -8,6 +8,9 @@
 DEST=@DEST@
 TOP_INCDIR=@TOP_INCDIR@
 TOP_LIBDIR=@TOP_LIBDIR@
+TOP_OBJDIR=@TOP_OBJDIR@
+srcdir=@srcdir@
+VPATH=${srcdir}
 prefix=@prefix@
 exec_prefix=@exec_prefix@
 bindir=@bindir@
@@ -19,7 +22,7 @@ mandir=@mandir@
 afssrvbindir=@afssrvbindir@
 afssrvsbindir=@afssrvsbindir@
 afssrvlibexecdir=@afssrvlibexecdir@
-COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+COMPILE_ET=${TOP_OBJDIR}/src/comerr/compile_et
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
@@ -36,9 +39,9 @@ LIBS=${TOP_LIBDIR}/libauth.a \
 	${TOP_LIBDIR}/util.a \
 	${TOP_LIBDIR}/libsys.a
 
-CFLAGS=-I${TOP_INCDIR} -I${TOP_SRCDIR}/config ${XCFLAGS}
+CFLAGS=-I. -I${srcdir} -I${TOP_INCDIR} -I${TOP_OBJDIR}/src/config ${XCFLAGS}
 
-RXGEN=${TOP_SRCDIR}/rxgen/rxgen
+RXGEN=${TOP_OBJDIR}/src/rxgen/rxgen
 
 all: upserver upclient
 
@@ -56,7 +59,7 @@ utils.o: utils.c update.h global.h
 client.o server.o: update.h global.h AFS_component_version_number.c
 
 update.cs.c update.ss.c update.er.c update.h: update.xg
-	${RXGEN} update.xg
+	${RXGEN} ${srcdir}/update.xg
 
 #
 # Installation targets

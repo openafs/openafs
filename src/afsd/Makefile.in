@@ -10,6 +10,9 @@
 DEST=@DEST@
 TOP_INCDIR=@TOP_INCDIR@
 TOP_LIBDIR=@TOP_LIBDIR@
+TOP_OBJDIR=@TOP_OBJDIR@
+srcdir=@srcdir@
+VPATH=${srcdir}
 prefix=@prefix@
 exec_prefix=@exec_prefix@
 bindir=@bindir@
@@ -21,8 +24,8 @@ mandir=@mandir@
 afssrvbindir=@afssrvbindir@
 afssrvsbindir=@afssrvsbindir@
 afssrvlibexecdir=@afssrvlibexecdir@
-COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
-RXGEN=${TOP_SRCDIR}/rxgen/rxgen
+COMPILE_ET=${TOP_OBJDIR}/src/comerr/compile_et
+RXGEN=${TOP_OBJDIR}/src/rxgen/rxgen
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
@@ -30,7 +33,7 @@ SHELL = /bin/sh
 
 include ../config/Makefile.${SYS_NAME}
 
-CFLAGS=-g -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS}
+CFLAGS=-g -I. -I${srcdir} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS}
 LDFLAGS = -g ${XLDFLAGS}
 
 INSTALLex = ${INSTALL} -m 755
@@ -84,46 +87,46 @@ ${DESTDIR}${sbindir}/vsys: vsys
 dest: ${DEST}/root.client/usr/vice/etc/afsd ${DEST}/etc/vsys
 	case ${SYS_NAME} in \
 		rs_aix*)  \
-			${INSTALL} -f rc.afs.rs_aix ${DEST}/root.client/usr/vice/etc/dkload/rc.afs ; \
-			${INSTALL} -f rc.dkload.client.rs_aix ${DEST}/root.client/usr/vice/etc/dkload/rc.dkload.client ; \
-			${INSTALL} -f rc.dkload.server.rs_aix ${DEST}/root.client/usr/vice/etc/dkload/rc.dkload.server ;; \
+			${INSTALL} -f ${srcdir}/rc.afs.rs_aix ${DEST}/root.client/usr/vice/etc/dkload/rc.afs ; \
+			${INSTALL} -f ${srcdir}/rc.dkload.client.rs_aix ${DEST}/root.client/usr/vice/etc/dkload/rc.dkload.client ; \
+			${INSTALL} -f ${srcdir}/rc.dkload.server.rs_aix ${DEST}/root.client/usr/vice/etc/dkload/rc.dkload.server ;; \
 		sgi_65 ) \
-			${INSTALL} -f afs.rc.sgi_ipnos ${DEST}/root.client/usr/vice/etc/sgiload/afs.rc ;\
-			${INSTALL} -f afs.rc.sgi_ipnos ${DEST}/root.server/etc/init.d/afs.rc ;;\
+			${INSTALL} -f ${srcdir}/afs.rc.sgi_ipnos ${DEST}/root.client/usr/vice/etc/sgiload/afs.rc ;\
+			${INSTALL} -f ${srcdir}/afs.rc.sgi_ipnos ${DEST}/root.server/etc/init.d/afs.rc ;;\
 		sgi_* ) \
-			${INSTALL} -f afs.rc.sgi ${DEST}/root.client/usr/vice/etc/sgiload/afs.rc ;\
-			${INSTALL} -f afs.rc.sgi ${DEST}/root.server/etc/init.d/afs.rc ;\
+			${INSTALL} -f ${srcdir}/afs.rc.sgi ${DEST}/root.client/usr/vice/etc/sgiload/afs.rc ;\
+			${INSTALL} -f ${srcdir}/afs.rc.sgi ${DEST}/root.server/etc/init.d/afs.rc ;\
 			case ${SYS_NAME} in \
 				sgi_53 | sgi_61 ) \
-				${INSTALL} -f afs_rtsymtab.pl.${SYS_NAME} ${DEST}/root.client/usr/vice/etc/sgiload/afs_rtsymtab.pl ;;\
+				${INSTALL} -f ${srcdir}/afs_rtsymtab.pl.${SYS_NAME} ${DEST}/root.client/usr/vice/etc/sgiload/afs_rtsymtab.pl ;;\
 			esac;; \
 		sun4_52 | sun4_53 | sun4c_52 | sun4c_53 | sun4m_52 | sun4m_53 | sun4m_54 | sun4_54 | sun4c_54 | sunx86_54) \
-			${INSTALL} -f afs.rc.solaris ${DEST}/root.client/usr/vice/etc/modload/afs.rc ;;\
+			${INSTALL} -f ${srcdir}/afs.rc.solaris ${DEST}/root.client/usr/vice/etc/modload/afs.rc ;;\
 		sun4x_57 ) \
-			${INSTALL} -f afs.rc.solaris.2.7 ${DEST}/root.client/usr/vice/etc/modload/afs.rc ;;\
+			${INSTALL} -f ${srcdir}/afs.rc.solaris.2.7 ${DEST}/root.client/usr/vice/etc/modload/afs.rc ;;\
 		sun4x_58 ) \
-			${INSTALL} -f afs.rc.solaris.2.8 ${DEST}/root.client/usr/vice/etc/modload/afs.rc ;;\
+			${INSTALL} -f ${srcdir}/afs.rc.solaris.2.8 ${DEST}/root.client/usr/vice/etc/modload/afs.rc ;;\
 		sun4x_59 ) \
-			${INSTALL} -f afs.rc.solaris.2.9 ${DEST}/root.client/usr/vice/etc/modload/afs.rc ;;\
+			${INSTALL} -f ${srcdir}/afs.rc.solaris.2.9 ${DEST}/root.client/usr/vice/etc/modload/afs.rc ;;\
                 sun4x_5? ) \
-                        ${INSTALL} -f afs.rc.solaris.2_5 ${DEST}/root.client/usr/vice/etc/modload/afs.rc ;;\
+                        ${INSTALL} -f ${srcdir}/afs.rc.solaris.2_5 ${DEST}/root.client/usr/vice/etc/modload/afs.rc ;;\
 		alpha_osf* ) \
-			${INSTALL} -f afs.rc.alpha ${DEST}/root.client/usr/vice/etc/dkload/afs.rc ;;\
+			${INSTALL} -f ${srcdir}/afs.rc.alpha ${DEST}/root.client/usr/vice/etc/dkload/afs.rc ;;\
 		hp_ux10? | hp_ux11? ) \
-			${INSTALL} -f afs.rc.hpux10 ${DEST}/root.client/usr/vice/etc/dkload/afs.rc ;\
-			${INSTALL} -f afs.hpux102.driver ${DEST}/root.client/usr/vice/etc/afs.driver ;;\
+			${INSTALL} -f ${srcdir}/afs.rc.hpux10 ${DEST}/root.client/usr/vice/etc/dkload/afs.rc ;\
+			${INSTALL} -f ${srcdir}/afs.hpux102.driver ${DEST}/root.client/usr/vice/etc/afs.driver ;;\
 		alpha_dux* ) \
-			${INSTALL} -f afs.rc.alpha_dux40 ${DEST}/root.client/usr/vice/etc/dkload/afs.rc ;;\
+			${INSTALL} -f ${srcdir}/afs.rc.alpha_dux40 ${DEST}/root.client/usr/vice/etc/dkload/afs.rc ;;\
                 hp?00_ux10? ) \
-			${INSTALL} -f afs.rc.hpux10 ${DEST}/root.client/usr/vice/etc/dkload/afs.rc ;;\
+			${INSTALL} -f ${srcdir}/afs.rc.hpux10 ${DEST}/root.client/usr/vice/etc/dkload/afs.rc ;;\
 		*linux* ) \
-			${INSTALLex} -f afs.rc.linux ${DEST}/root.client/usr/vice/etc/afs.rc; \
-			${INSTALL} -f afs.conf.linux ${DEST}/root.client/usr/vice/etc/afs.conf ;; \
+			${INSTALLex} -f ${srcdir}/afs.rc.linux ${DEST}/root.client/usr/vice/etc/afs.rc; \
+			${INSTALL} -f ${srcdir}/afs.conf.linux ${DEST}/root.client/usr/vice/etc/afs.conf ;; \
 		ppc_darwin*) \
-			${INSTALLex} -f afs.rc.darwin ${DEST}/root.client/usr/vice/etc/afs.rc ; \
-			${INSTALL} -f afs.rc.darwin.plist ${DEST}/root.client/usr/vice/etc/StartupParameters.plist ;; \
+			${INSTALLex} -f ${srcdir}/afs.rc.darwin ${DEST}/root.client/usr/vice/etc/afs.rc ; \
+			${INSTALL} -f ${srcdir}/afs.rc.darwin.plist ${DEST}/root.client/usr/vice/etc/StartupParameters.plist ;; \
 		*fbsd*) \
-			${INSTALL} -f afs.rc.fbsd ${DEST}/root.client/usr/vice/etc/afs.rc.fbsd ;; \
+			${INSTALL} -f ${srcdir}/afs.rc.fbsd ${DEST}/root.client/usr/vice/etc/afs.rc.fbsd ;; \
 		* )  \
 			echo No rc scripts installed for ${SYS_NAME} ;; \
 	esac

@@ -20,4 +20,4 @@ AR = /usr/ccs/bin/ar
 LD = /usr/ccs/bin/ld
 LORDER = /usr/ccs/bin/lorder
 STRIP= /usr/ccs/bin/strip
-INSTALL=${TOP_SRCDIR}/pinstall/pinstall
+INSTALL=${TOP_OBJDIR}/src/pinstall/pinstall

@@ -113,9 +113,10 @@ static const char msf_warning[] =
 char c_file[MAXPATHLEN];	/* output file */
 char h_file[MAXPATHLEN];	/* output */
 char msf_file[MAXPATHLEN];
+char et_file[MAXPATHLEN];       /* full path to input file */
 
 static void usage () {
-    fprintf (stderr, "%s: usage: %s ERROR_TABLE [-debug] [-language LANG] [-h INCLUDE] [-v version]\n",
+    fprintf (stderr, "%s: usage: %s ERROR_TABLE [-debug] [-language LANG] [-h INCLUDE] [-p prefix] [-v version]\n",
 	     whoami, whoami);
     exit (1);
 }
@@ -133,6 +134,7 @@ int main (argc, argv) int argc; char **argv; {
     char const * const *cpp;
     int got_language = 0;
     char *got_include = 0;
+    char *got_prefix = ".";
     char lcname[6];
 
 #ifdef	AFS_AIX32_ENV
@@ -199,6 +201,11 @@ int main (argc, argv) int argc; char **argv; {
 		if (!arg) usage ();
 		got_include = arg;
 	    }
+	    else if (strcmp (arg, "p") == 0) {
+		arg = *++argv, argc--;
+		if (!arg) usage ();
+		got_prefix = arg;
+	    }
 	    else if (strcmp (arg, "v") == 0) {
 		arg = *++argv, argc--;
 		version = atoi(arg);
@@ -261,9 +268,11 @@ int main (argc, argv) int argc; char **argv; {
         filename = p;
     }
 
-    yyin = fopen(filename, "r");
+    sprintf(et_file, "%s/%s", got_prefix, filename);
+
+    yyin = fopen(et_file, "r");
     if (!yyin) {
-	perror(filename);
+	perror(et_file);
 	exit(1);
     }
 
@@ -284,7 +293,9 @@ int main (argc, argv) int argc; char **argv; {
 	FILE *prolog_hfile;
 	int   count, written;
 
-	strcpy (prolog_h_file, got_include);
+	strcpy (prolog_h_file, got_prefix);
+	strcat (prolog_h_file, "/");
+	strcat (prolog_h_file, got_include);
 	strcat (prolog_h_file, ".p.h");
 	prolog_hfile = fopen(prolog_h_file, "r");
 	if (prolog_hfile) {

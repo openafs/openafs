@@ -8,6 +8,9 @@
 DEST=@DEST@
 TOP_INCDIR=@TOP_INCDIR@
 TOP_LIBDIR=@TOP_LIBDIR@
+TOP_OBJDIR=@TOP_OBJDIR@
+srcdir=@srcdir@
+VPATH=${srcdir}
 prefix=@prefix@
 exec_prefix=@exec_prefix@
 bindir=@bindir@
@@ -19,8 +22,8 @@ mandir=@mandir@
 afssrvbindir=@afssrvbindir@
 afssrvsbindir=@afssrvsbindir@
 afssrvlibexecdir=@afssrvlibexecdir@
-COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
-RXGEN=${TOP_SRCDIR}/rxgen/rxgen
+COMPILE_ET=${TOP_OBJDIR}/src/comerr/compile_et
+RXGEN=${TOP_OBJDIR}/src/rxgen/rxgen
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
@@ -28,7 +31,7 @@ SHELL=/bin/sh
 
 include ../config/Makefile.${SYS_NAME}
 
-INCDIRS=-I${TOP_SRCDIR}/config -I. -I${TOP_INCDIR} ${FSINCLUDES}
+INCDIRS=-I${TOP_OBJDIR}/src/config -I. -I${srcdir} -I${TOP_INCDIR} ${FSINCLUDES}
 LDFLAGS = ${OPTMZ} ${PROF} ${LDIRS} ${XLDFLAGS}
 
 LIBS=${TOP_LIBDIR}/libcmd.a vlib.a ${TOP_LIBDIR}/util.a \
@@ -164,9 +167,9 @@ vol-info: vol-info.o physio.o ihandle.o
 listinodes.o: listinodes.c AFS_component_version_number.c
 	case ${SYS_NAME} in				\
 		hp?00_ux101 | hp_ux10? )		\
-			${CC} ${CFLAGS} -D_FILE64 -c listinodes.c \
+			${CC} ${CFLAGS} -D_FILE64 -c ${srcdir}/listinodes.c \
 				;;			\
-		* )	${CC} ${CFLAGS} -c listinodes.c \
+		* )	${CC} ${CFLAGS} -c ${srcdir}/listinodes.c \
 				;;			\
 	esac
 
@@ -175,7 +178,7 @@ gi: ${TOP_LIBDIR}/libsys.a
                 *linux* | sgi_* | *fbsd* ) \
 			echo "Don't build gi on ${SYS_NAME}";; \
                 *) \
-			${CC} ${CFLAGS} -c gi.c ; \
+			${CC} ${CFLAGS} -c ${srcdir}/gi.c ; \
 			${CC} ${LDFLAGS} -o gi gi.o ${TOP_LIBDIR}/libsys.a;; \
         esac
 
@@ -197,10 +200,10 @@ fs_conv_sol26: fs_conv_411.o vlib.a
 	${CC} ${CFLAGS} ${TOP_LIBDIR}/libcmd.a -o fs_conv_sol26 fs_conv_411.o  ${LIBS} 
 
 fs_conv_411.o: fs_conv_411.c AFS_component_version_number.c
-	${CC} ${CFLAGS} -c fs_conv_411.c
+	${CC} ${CFLAGS} -c ${srcdir}/fs_conv_411.c
 
 xfs_size_check: xfs_size_check.c
-	${CC} ${CFLAGS} -o xfs_size_check xfs_size_check.c
+	${CC} ${CFLAGS} -o xfs_size_check ${srcdir}/xfs_size_check.c
 
 #
 # Misc. targets

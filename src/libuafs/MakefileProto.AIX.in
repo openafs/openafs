@@ -12,6 +12,9 @@ DEST=@DEST@
 TOP_SRCDIR=@TOP_SRCDIR@
 TOP_INCDIR=@TOP_INCDIR@
 TOP_LIBDIR=@TOP_LIBDIR@
+TOP_OBJDIR=@TOP_OBJDIR@
+srcdir=@srcdir@
+VPATH=${srcdir}
 prefix=@prefix@
 exec_prefix=@exec_prefix@
 bindir=@bindir@
@@ -28,8 +31,8 @@ SYS_NAME=@AFS_SYSNAME@
 include ../config/Makefile.${SYS_NAME}
 
 # System specific build commands and flags
-DEFINES= -DAFSDEBUG -DKERNEL -DUKERNEL -DAFS -DVICE
-CFLAGS=-I. -I.. -I${TOP_SRCDIR}/config ${FSINCLUDES} $(DEFINES) $(KOPTS) ${DBUG}
+DEFINES= -DKERNEL -DUKERNEL
+CFLAGS=-I. -I.. -I${TOP_OBJDIR}/src/config ${FSINCLUDES} $(DEFINES) $(KOPTS) ${DBUG}
 AR = /usr/bin/ar
 ARFLAGS = -r
 RANLIB = /bin/ranlib

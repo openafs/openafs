@@ -11,6 +11,9 @@ DEST=@DEST@
 TOP_INCDIR=@TOP_INCDIR@
 TOP_LIBDIR=@TOP_LIBDIR@
 TOP_SRCDIR=@TOP_SRCDIR@
+TOP_OBJDIR=@TOP_OBJDIR@
+srcdir=@srcdir@
+VPATH=${srcdir}
 prefix=@prefix@
 exec_prefix=@exec_prefix@
 bindir=@bindir@
@@ -91,7 +94,7 @@ CCFLAGS =   -O2 -fomit-frame-pointer -fno-strict-aliasing -pipe \
 	-ffixed-r13 -mfixed-range=f10-f15,f32-f127 -falign-functions=32 -mb-step
 DEFINES = -D__KERNEL__ -DKERNEL -D_KERNEL ${SMP_DEF} -DMODULE
 <all>
-INCLUDES = -I. -I../ -I${TOP_SRCDIR}/config
+INCLUDES = -I. -I../ -I${TOP_OBJDIR}/src/config
 
 CFLAGS = $(CCFLAGS) $(DEFINES) $(INCLUDES)
 

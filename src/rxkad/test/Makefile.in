@@ -65,7 +65,7 @@ th_stress_errs.o: stress_errs.c
 	${THRULE} -o th_stress_errs.o
 
 stress_errs.c stress_errs.h: stress_errs.et
-	$(RM) -f stress_errs.h stress_errs.c; ${COMPILE_ET} stress_errs -h stress_errs
+	$(RM) -f stress_errs.h stress_errs.c; ${COMPILE_ET} -p ${srcdir} stress_errs -h stress_errs
 
 stress.o stress_c.o stress_s.o: ${HEADERS}
 

@@ -122,8 +122,8 @@ case $system in
 		AC_MSG_RESULT(linux)
 		if test "x$enable_kernel_module" = "xyes"; then
 	         ifdef([OPENAFS_CONFIGURE_LIBAFS],
-	           [LINUX_BUILD_VNODE_FROM_INODE(config,afs)],
-	           [LINUX_BUILD_VNODE_FROM_INODE(src/config,src/afs/LINUX)]
+	           [LINUX_BUILD_VNODE_FROM_INODE(src/config,afs)],
+	           [LINUX_BUILD_VNODE_FROM_INODE(${srcdir}/src/config,src/afs/LINUX,${srcdir}/src/afs/LINUX)]
 	         )
 	         LINUX_FS_STRUCT_ADDRESS_SPACE_HAS_PAGE_LOCK
 	  	 LINUX_INODE_SETATTR_RETURN_TYPE
@@ -471,6 +471,7 @@ AC_SUBST(LIB_AFSDB)
 AC_SUBST(LINUX_KERNEL_PATH)
 AC_SUBST(LINUX_VERSION)
 AC_SUBST(MKAFS_OSTYPE)
+AC_SUBST(TOP_OBJDIR)
 AC_SUBST(TOP_SRCDIR)
 AC_SUBST(TOP_INCDIR)
 AC_SUBST(TOP_LIBDIR)

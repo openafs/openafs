@@ -10,6 +10,9 @@ DEST=@DEST@
 TOP_SRCDIR=@TOP_SRCDIR@
 TOP_INCDIR=@TOP_INCDIR@
 TOP_LIBDIR=@TOP_LIBDIR@
+TOP_OBJDIR=@TOP_OBJDIR@
+srcdir=@srcdir@
+VPATH=${srcdir}
 prefix=@prefix@
 exec_prefix=@exec_prefix@
 bindir=@bindir@
@@ -173,9 +176,10 @@ export2: project fsint
 
 export: fsint
 	@case ${SYS_NAME} in \
-	rs_aix*)	\
-	    ${COMPILE_PART1} export ${COMPILE_PART2} ;; \
-	  * ) echo skipping export for ${SYS_NAME} ;; \
+	rs_aix*) \
+		${COMPILE_PART1} export ${COMPILE_PART2} ;; \
+	*) \
+		echo skipping export for ${SYS_NAME} ;; \
 	esac
 
 afs: export
@@ -184,7 +188,7 @@ afs: export
 des: config
 	${COMPILE_PART1} des ${COMPILE_PART2} 
 
-sys: project des rx rxstat fsint
+sys: project afs des rx rxstat fsint
 	${COMPILE_PART1} sys ${COMPILE_PART2}
 
 rxkad: project des
@@ -236,12 +240,12 @@ vlserver: project vol audit
 	${COMPILE_PART1} vlserver ${COMPILE_PART2}
 
 viced: project vlserver audit
-	${COMPILE_PART1} viced  ${COMPILE_PART2}
+	${COMPILE_PART1} viced ${COMPILE_PART2}
 
 tviced: project viced vlserver libafsrpc libafsauthent
 	case ${SYS_NAME} in \
 	alpha_dux*|sgi_*|sun4x_*|rs_aix*|*linux*|hp_ux110) \
-		${COMPILE_PART1} tviced  ${COMPILE_PART2} ;; \
+		${COMPILE_PART1} tviced ${COMPILE_PART2} ;; \
 	*) \
 		echo Not building MT viced for ${SYS_NAME} ;; \
 	esac
@@ -259,17 +263,17 @@ afsd: project sys kauth
 null: project
 	${COMPILE_PART1} null ${COMPILE_PART2}
 
-gtx: project null auth # kauth rxkad ?
+${TOP_LIBDIR}/libtermlib.a: 
+	$(RM) -f ${TOP_LIBDIR}/libtermlib.a
 	case ${SYS_NAME} in \
-	  rs_aix* | sun4x_5? | sgi_6? | *linux* | ppc_darwin* | *fbsd*) \
-		$(RM) -f ${TOP_LIBDIR}/libtermlib.a; \
-		ln -s libnull.a ${TOP_LIBDIR}/libtermlib.a; \
-		${COMPILE_PART1} gtx ${COMPILE_PART2};; \
-	  *) \
-		$(RM) -f ${TOP_LIBDIR}/libtermlib.a; \
-		ln -s /usr/lib/libtermlib.a ${TOP_LIBDIR}/libtermlib.a; \
-		${COMPILE_PART1} gtx ${COMPILE_PART2};; \
+	rs_aix* | sun4x_5? | sgi_6? | *linux* | ppc_darwin* | *fbsd*) \
+		ln -s libnull.a ${TOP_LIBDIR}/libtermlib.a ;; \
+	*) \
+		ln -s /usr/lib/libtermlib.a ${TOP_LIBDIR}/libtermlib.a ;; \
 	esac
+
+gtx: project null auth ${TOP_LIBDIR}/libtermlib.a
+	${COMPILE_PART1} gtx ${COMPILE_PART2}
 
 fsprobe: project util fsint
 	${COMPILE_PART1} fsprobe ${COMPILE_PART2}
@@ -435,7 +439,7 @@ tests: rxtests ubiktests
 libafsrpc: rx rxkad des
 	case ${SYS_NAME} in \
 	alpha_dux*|sgi_*|sun4x_*|rs_aix*|*linux*|hp_ux110) \
-	${COMPILE_PART1} libafsrpc  ${COMPILE_PART2} ;; \
+	${COMPILE_PART1} libafsrpc ${COMPILE_PART2} ;; \
 	*) \
 		echo Not building MT libafsrpc for ${SYS_NAME} ;; \
 	esac
@@ -443,7 +447,7 @@ libafsrpc: rx rxkad des
 libafsauthent: ubik auth kauth libafsrpc
 	case ${SYS_NAME} in \
 	alpha_dux*|sgi_*|sun4x_*|rs_aix*|*linux*|hp_ux110) \
-	${COMPILE_PART1} libafsauthent  ${COMPILE_PART2} ;; \
+	${COMPILE_PART1} libafsauthent ${COMPILE_PART2} ;; \
 	*) \
 		echo Not building MT libafsrpc for ${SYS_NAME} ;; \
 	esac
@@ -654,10 +658,12 @@ distclean: clean
 	src/libadmin/test/Makefile \
 	src/libadmin/vos/Makefile \
 	src/libafs/Makefile \
+	src/libafs/Makefile.common \
 	src/libafs/MakefileProto.${MKAFS_OSTYPE} \
 	src/libafsauthent/Makefile \
 	src/libafsrpc/Makefile \
 	src/libuafs/Makefile \
+	src/libuafs/Makefile.common \
 	src/libuafs/MakefileProto.${MKAFS_OSTYPE} \
 	src/log/test/Makefile \
 	src/log/Makefile \

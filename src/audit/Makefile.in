@@ -15,6 +15,9 @@
 DEST=@DEST@
 TOP_INCDIR=@TOP_INCDIR@
 TOP_LIBDIR=@TOP_LIBDIR@
+TOP_OBJDIR=@TOP_OBJDIR@
+srcdir=@srcdir@
+VPATH=${srcdir}
 prefix=@prefix@
 exec_prefix=@exec_prefix@
 bindir=@bindir@
@@ -26,8 +29,8 @@ mandir=@mandir@
 afssrvbindir=@afssrvbindir@
 afssrvsbindir=@afssrvsbindir@
 afssrvlibexecdir=@afssrvlibexecdir@
-COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
-RXGEN=${TOP_SRCDIR}/rxgen/rxgen
+COMPILE_ET=${TOP_OBJDIR}/src/comerr/compile_et
+RXGEN=${TOP_OBJDIR}/src/rxgen/rxgen
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
@@ -37,7 +40,7 @@ include ../config/Makefile.${SYS_NAME}
 
 UKERNELDIR = ../libuafs/
 
-CFLAGS=${OPTMZ} -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS}
+CFLAGS=-I. -I${srcdir} ${OPTMZ} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS}
 
 all: ukinstall ${TOP_LIBDIR}/libaudit.a ${TOP_INCDIR}/afs/audit.h
 
@@ -64,7 +67,7 @@ libaudit.a: audit.o AFS_component_version_number.o
 	$(RANLIB) libaudit.a
 
 audit.o: audit.c audit.h 
-	${CC} ${CFLAGS} -c audit.c
+	${CC} ${CFLAGS} -c ${srcdir}/audit.c
 
 clean:
 	$(RM) -f *.a *.o core AFS_component_version_number.c

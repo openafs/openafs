@@ -4,7 +4,8 @@ AC_CONFIG_HEADER(src/config/afsconfig.h)
 
 OPENAFS_CONFIGURE_COMMON
 
-TOP_SRCDIR="${SRCDIR_PARENT}/src"
+TOP_SRCDIR="${srcdir}/src"
+TOP_OBJDIR="${SRCDIR_PARENT}"
 TOP_INCDIR="${SRCDIR_PARENT}/include"
 TOP_LIBDIR="${SRCDIR_PARENT}/lib"
 if test "${DEST}x" = "x"; then
@@ -13,8 +14,8 @@ fi
 
 # Check for files involved in porting.  Report errors, don't make the
 # user hunt through the configure log after the build fails!
-if test ! -r src/config/Makefile.${AFS_SYSNAME}.in ; then
-  AC_MSG_ERROR(no source file src/config/Makefile.${AFS_SYSNAME}.in)
+if test ! -r ${TOP_SRCDIR}/config/Makefile.${AFS_SYSNAME}.in ; then
+  AC_MSG_ERROR(no source file ${TOP_SRCDIR}/config/Makefile.${AFS_SYSNAME}.in)
 fi
 
 AC_OUTPUT(             \
@@ -69,10 +70,12 @@ src/libadmin/pts/Makefile \
 src/libadmin/samples/Makefile \
 src/libadmin/test/Makefile \
 src/libadmin/vos/Makefile \
+src/libafs/Makefile.common \
 src/libafs/MakefileProto.${MKAFS_OSTYPE} \
 ${DARWIN_PLIST} \
 src/libafsauthent/Makefile \
 src/libafsrpc/Makefile \
+src/libuafs/Makefile.common \
 src/libuafs/MakefileProto.${MKAFS_OSTYPE} \
 src/log/test/Makefile \
 src/log/Makefile \

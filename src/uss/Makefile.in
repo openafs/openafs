@@ -10,6 +10,9 @@
 DEST=@DEST@
 TOP_INCDIR=@TOP_INCDIR@
 TOP_LIBDIR=@TOP_LIBDIR@
+TOP_OBJDIR=@TOP_OBJDIR@
+srcdir=@srcdir@
+VPATH=${srcdir}
 prefix=@prefix@
 exec_prefix=@exec_prefix@
 bindir=@bindir@
@@ -21,8 +24,8 @@ mandir=@mandir@
 afssrvbindir=@afssrvbindir@
 afssrvsbindir=@afssrvsbindir@
 afssrvlibexecdir=@afssrvlibexecdir@
-COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
-RXGEN=${TOP_SRCDIR}/rxgen/rxgen
+COMPILE_ET=${TOP_OBJDIR}/src/comerr/compile_et
+RXGEN=${TOP_OBJDIR}/src/rxgen/rxgen
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
@@ -32,7 +35,7 @@ include ../config/Makefile.${SYS_NAME}
 
 all: uss
 
-CFLAGS=${DBUG} -I/usr/include -I${TOP_SRCDIR}/config \
+CFLAGS=-I. -I${srcdir} ${DBUG} -I${TOP_OBJDIR}/src/config \
 	-I${TOP_INCDIR} -I. ${XCFLAGS}
 
 #
@@ -69,34 +72,34 @@ uss: uss.o ${OBJS}
 	${CC} ${CFLAGS} -o uss uss.o ${OBJS} ${LIBS}
 
 uss.o:  uss.c AFS_component_version_number.c
-	${CC} -c ${CFLAGS} uss.c
+	${CC} -c ${CFLAGS} ${srcdir}/uss.c
 
 uss_procs.o : uss_procs.c
-	${CC} -c ${CFLAGS} uss_procs.c
+	${CC} -c ${CFLAGS} ${srcdir}/uss_procs.c
 
 uss_common.o : uss_common.c
-	${CC} -c ${CFLAGS} uss_common.c
+	${CC} -c ${CFLAGS} ${srcdir}/uss_common.c
 
 uss_vol.o : uss_vol.c
-	${CC} -c ${CFLAGS} uss_vol.c
+	${CC} -c ${CFLAGS} ${srcdir}/uss_vol.c
 
 uss_acl.o : uss_acl.c
-	${CC} -c ${CFLAGS} uss_acl.c
+	${CC} -c ${CFLAGS} ${srcdir}/uss_acl.c
 
 uss_ptserver.o : uss_ptserver.c
-	${CC} -c ${CFLAGS} uss_ptserver.c
+	${CC} -c ${CFLAGS} ${srcdir}/uss_ptserver.c
 
 uss_kauth.o : uss_kauth.c
-	${CC} -c ${CFLAGS} uss_kauth.c
+	${CC} -c ${CFLAGS} ${srcdir}/uss_kauth.c
 
 uss_fs.o : uss_fs.c
-	${CC} -c ${CFLAGS} uss_fs.c
+	${CC} -c ${CFLAGS} ${srcdir}/uss_fs.c
 
 lex.yy.o : lex.yy.c y.tab.c
 	${CC} -c ${CFLAGS} lex.yy.c
 
 lex.yy.c : lex.c
-	${LEX} lex.c
+	${LEX} ${srcdir}/lex.c
 
 y.tab.o : y.tab.c
 	${CC} -c ${CFLAGS} y.tab.c
@@ -118,7 +121,7 @@ uss_kauth.c: uss_kauth.h uss_common.h
 uss_fs.c: uss_fs.h
 
 y.tab.c : grammar.y
-	${YACC} -d grammar.y
+	${YACC} -d ${srcdir}/grammar.y
 
 #
 # Installation targets

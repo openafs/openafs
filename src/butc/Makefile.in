@@ -8,6 +8,9 @@
 DEST=@DEST@
 TOP_INCDIR=@TOP_INCDIR@
 TOP_LIBDIR=@TOP_LIBDIR@
+TOP_OBJDIR=@TOP_OBJDIR@
+srcdir=@srcdir@
+VPATH=${srcdir}
 prefix=@prefix@
 exec_prefix=@exec_prefix@
 bindir=@bindir@
@@ -19,8 +22,8 @@ mandir=@mandir@
 afssrvbindir=@afssrvbindir@
 afssrvsbindir=@afssrvsbindir@
 afssrvlibexecdir=@afssrvlibexecdir@
-COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
-RXGEN=${TOP_SRCDIR}/rxgen/rxgen
+COMPILE_ET=${TOP_OBJDIR}/src/comerr/compile_et
+RXGEN=${TOP_OBJDIR}/src/rxgen/rxgen
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
@@ -30,7 +33,7 @@ include ../config/Makefile.${SYS_NAME}
 
 CFLAGS=-g -w ${INCDIRS} ${XCFLAGS}
 
-INCDIRS=-I${TOP_SRCDIR}/config -I${TOP_INCDIR}/afs \
+INCDIRS=-I${TOP_OBJDIR}/src/config -I${TOP_INCDIR}/afs \
 	-I${TOP_INCDIR}/rx -I${TOP_INCDIR}
 
 INCLS=${TOP_INCDIR}/afs/partition.h ${TOP_INCDIR}/afs/volume.h \
@@ -78,7 +81,7 @@ butc_test: ${TESTOBJS} ${LIBS} ${INCLS} ${HACKS}
 	${CC} ${CFLAGS} ${TESTOBJS} ${LIBS} ${XLIBS} -o butc_test
 
 tdump: tdump.c AFS_component_version_number.c
-	${CC} ${CFLAGS} tdump.c -o tdump
+	${CC} ${CFLAGS} ${srcdir}/tdump.c -o tdump
 
 butc: ${SOBJS} ${LIBS} ${INCLS} ${HACKS}
 	@case ${SYS_NAME} in \
@@ -98,7 +101,7 @@ dump.o: dump.c ${INCLS}
 tcstatus.o: tcstatus.c ${INCLS}
 
 read_tape: read_tape.c
-	${CC} ${CFLAGS} -o read_tape read_tape.c \
+	${CC} ${CFLAGS} -o read_tape ${srcdir}/read_tape.c \
 		${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/util.a \
 		${TOP_LIBDIR}/libusd.a
 

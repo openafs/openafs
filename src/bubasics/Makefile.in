@@ -8,6 +8,9 @@
 DEST=@DEST@
 TOP_INCDIR=@TOP_INCDIR@
 TOP_LIBDIR=@TOP_LIBDIR@
+TOP_OBJDIR=@TOP_OBJDIR@
+srcdir=@srcdir@
+VPATH=${srcdir}
 prefix=@prefix@
 exec_prefix=@exec_prefix@
 bindir=@bindir@
@@ -26,10 +29,10 @@ SHELL = /bin/sh
 
 include ../config/Makefile.${SYS_NAME}
 
-RXGEN=${TOP_SRCDIR}/rxgen/rxgen
-COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+RXGEN=${TOP_OBJDIR}/src/rxgen/rxgen
+COMPILE_ET=${TOP_OBJDIR}/src/comerr/compile_et
 
-CFLAGS=${DBUG} -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS}
+CFLAGS=-I. -I${srcdir} ${DBUG} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS}
 
 all: ${TOP_LIBDIR}/libbubasics.a ${TOP_INCDIR}/afs/bumon.h ${TOP_INCDIR}/afs/butc.h ${TOP_INCDIR}/afs/bubasics.h ${TOP_INCDIR}/afs/tcdata.h ${TOP_INCDIR}/afs/butm.h ${TOP_INCDIR}/afs/butx.h
 
@@ -41,22 +44,22 @@ libbubasics.a: $(OBJS) AFS_component_version_number.o
 	${RANLIB} libbubasics.a
 
 butc.xdr.c butc.ss.c butc.cs.c butc.h: butc.xg
-	${RXGEN} butc.xg
+	${RXGEN} ${srcdir}/butc.xg
 
 bumon.xdr.c bumon.ss.c bumon.cs.c bumon.h: bumon.xg
-	${RXGEN} bumon.xg
+	${RXGEN} ${srcdir}/bumon.xg
 
 butm_errs.c butm.h: butm_errs.et butm.p.h
 	$(RM) -f butm.h butm_errs.c
-	${COMPILE_ET} butm_errs -h butm
+	${COMPILE_ET} -p ${srcdir} butm_errs -h butm
 
 butc_errs.c tcdata.h: butc_errs.et tcdata.p.h butm.h
 	$(RM) -f tcdata.h butc_errs.c
-	${COMPILE_ET} butc_errs -h tcdata
+	${COMPILE_ET} -p ${srcdir} butc_errs -h tcdata
 
 butx_errs.c butx.h: butx_errs.et
 	$(RM) -f butx.h butx_errs.c
-	${COMPILE_ET} butx_errs -h butx
+	${COMPILE_ET} -p ${srcdir} butx_errs -h butx
 
 #
 # Installation targets

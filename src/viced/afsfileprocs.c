@@ -273,6 +273,7 @@ static CallPreamble(acall, activecall)
     struct client *tclient;
     int retry_flag=1;
     int code = 0;
+    char hoststr[16];
     tconn = rx_ConnectionOf(*acall);
     *acall = (struct rx_call *)tconn;	    /* change it! */
 
@@ -312,21 +313,23 @@ retry:
 
     h_Lock_r(thost);
     if (thost->hostFlags & HOSTDELETED) {
-      ViceLog(3,("Discarded a packet for deleted host %08x\n",thost->host));
+      ViceLog(3,("Discarded a packet for deleted host %s\n",afs_inet_ntoa_r(thost->host,hoststr)));
       code = VBUSY; /* raced, so retry */
     }
     else if (thost->hostFlags & VENUSDOWN) {
       if (BreakDelayedCallBacks_r(thost)) {
-	ViceLog(0,("BreakDelayedCallbacks FAILED for host %08x which IS UP.  Possible network or routing failure.\n",thost->host));
+	ViceLog(0,("BreakDelayedCallbacks FAILED for host %s which IS UP.  Possible network or routing failure.\n",
+		afs_inet_ntoa_r(thost->host, hoststr)));
 	if ( MultiProbeAlternateAddress_r (thost) ) {
-	    ViceLog(0, ("MultiProbe failed to find new address for host %x.%d\n",
-			thost->host, thost->port));
+	    ViceLog(0, ("MultiProbe failed to find new address for host %s:%d\n",
+			afs_inet_ntoa_r(thost->host, hoststr), thost->port));
 	    code = -1;
 	} else {
-	    ViceLog(0, ("MultiProbe found new address for host %x.%d\n",
-			thost->host, thost->port));
+	    ViceLog(0, ("MultiProbe found new address for host %s:%d\n",
+			afs_inet_ntoa_r(thost->host, hoststr), thost->port));
 	    if (BreakDelayedCallBacks_r(thost)) {
-		ViceLog(0,("BreakDelayedCallbacks FAILED AGAIN for host %08x which IS UP.  Possible network or routing failure.\n",thost->host));
+		ViceLog(0,("BreakDelayedCallbacks FAILED AGAIN for host %s which IS UP.  Possible network or routing failure.\n",
+			afs_inet_ntoa_r(thost->host, hoststr)));
 		code = -1;
 	    }
 	}

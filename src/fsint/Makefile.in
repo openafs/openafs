@@ -8,6 +8,9 @@
 DEST=@DEST@
 TOP_INCDIR=@TOP_INCDIR@
 TOP_LIBDIR=@TOP_LIBDIR@
+TOP_OBJDIR=@TOP_OBJDIR@
+srcdir=@srcdir@
+VPATH=${srcdir}
 prefix=@prefix@
 exec_prefix=@exec_prefix@
 bindir=@bindir@
@@ -19,30 +22,52 @@ mandir=@mandir@
 afssrvbindir=@afssrvbindir@
 afssrvsbindir=@afssrvsbindir@
 afssrvlibexecdir=@afssrvlibexecdir@
-COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
-RXGEN=${TOP_SRCDIR}/rxgen/rxgen
+COMPILE_ET=${TOP_OBJDIR}/src/comerr/compile_et
+RXGEN=${TOP_OBJDIR}/src/rxgen/rxgen
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
-
 include ../config/Makefile.${SYS_NAME}
+
 SHELL = /bin/sh
-KERNELDIR = ../libafs/
-UKERNELDIR = ../libuafs/
+KERNELDIR = ../libafs
+UKERNELDIR = ../libuafs
 
 OBJS=afsaux.o afscbint.cs.o afscbint.ss.o afscbint.xdr.o afsint.cs.o afsint.ss.o afsint.xdr.o
-CFLAGS=${DBUG} -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS}
-KDSRCS=Kcallback.ss.c Kcallback.h Kvice.cs.c Kvice.h Kvice.xdr.c afscbint.h \
-afsint.h
-KSRCS=${KDSRCS} afsaux.c
+CFLAGS=-I. -I${srcdir} ${DBUG} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS}
+
+KSRCS=Kcallback.ss.c Kcallback.h Kvice.cs.c Kvice.h Kvice.xdr.c \
+	afscbint.h afsint.h afsaux.c
 UKSRCS=${KSRCS}
-UTILS=${RXGEN}
 
-include ../config/Makefile.version
-
-noversion: install
-
-all: kinstall ukinstall ${TOP_LIBDIR}/libafsint.a ${TOP_INCDIR}/afs/afsint.h ${TOP_INCDIR}/afs/afscbint.h
+all: \
+	${TOP_LIBDIR}/libafsint.a \
+	${TOP_INCDIR}/afs/afsint.h \
+	${TOP_INCDIR}/afs/afscbint.h \
+	${KERNELDIR}/afsint \
+	${KERNELDIR}/afsint/rxgen_consts.h \
+	${KERNELDIR}/afsint/rx.h \
+	${KERNELDIR}/afsint/afscbint.h \
+	${UKERNELDIR}/afsint \
+	${UKERNELDIR}/afsint/rxgen_consts.h \
+	${UKERNELDIR}/afsint/rx.h \
+	${UKERNELDIR}/afsint/afscbint.h \
+	${KERNELDIR}/afsint/Kcallback.ss.c \
+	${KERNELDIR}/afsint/Kcallback.h \
+	${KERNELDIR}/afsint/Kvice.cs.c \
+	${KERNELDIR}/afsint/Kvice.h \
+	${KERNELDIR}/afsint/Kvice.xdr.c \
+	${KERNELDIR}/afsint/afscbint.h \
+	${KERNELDIR}/afsint/afsint.h \
+	${KERNELDIR}/afsint/afsaux.c \
+	${UKERNELDIR}/afsint/Kcallback.ss.c \
+	${UKERNELDIR}/afsint/Kcallback.h \
+	${UKERNELDIR}/afsint/Kvice.cs.c \
+	${UKERNELDIR}/afsint/Kvice.h \
+	${UKERNELDIR}/afsint/Kvice.xdr.c \
+	${UKERNELDIR}/afsint/afscbint.h \
+	${UKERNELDIR}/afsint/afsint.h \
+	${UKERNELDIR}/afsint/afsaux.c
 
 libafsint.a: ${OBJS} AFS_component_version_number.o
 	-$(RM) -f $@
@@ -51,110 +76,173 @@ libafsint.a: ${OBJS} AFS_component_version_number.o
 
 afsaux.o: afsaux.c afsint.h
 
-Kcallback.cs.c: common.xg afscbint.xg Kvice.h Kcallback.h $(UTILS)
-	${RXGEN} -x -k -C -o Kcallback.cs.c afscbint.xg
+Kcallback.cs.c: common.xg afscbint.xg Kvice.h Kcallback.h
+	${RXGEN} -x -k -C -o Kcallback.cs.c ${srcdir}/afscbint.xg
 
-Kcallback.ss.c: common.xg afscbint.xg Kvice.h Kcallback.h $(UTILS)
-	${RXGEN} -x -k -S -o Kcallback.ss.c afscbint.xg
+Kcallback.ss.c: common.xg afscbint.xg Kvice.h Kcallback.h
+	${RXGEN} -x -k -S -o Kcallback.ss.c ${srcdir}/afscbint.xg
 
-Kcallback.xdr.c: common.xg afscbint.xg Kvice.h Kcallback.h $(UTILS)
-	${RXGEN} -x -k -y -c -o Kcallback.xdr.c afscbint.xg
+Kcallback.xdr.c: common.xg afscbint.xg Kvice.h Kcallback.h
+	${RXGEN} -x -k -y -c -o Kcallback.xdr.c ${srcdir}/afscbint.xg
 
-Kvice.cs.c: common.xg afsint.xg Kvice.h  $(UTILS)
-	${RXGEN} -x -k -C -o Kvice.cs.c afsint.xg
+Kvice.cs.c: common.xg afsint.xg Kvice.h
+	${RXGEN} -x -k -C -o Kvice.cs.c ${srcdir}/afsint.xg
 
-Kvice.ss.c: common.xg afsint.xg Kvice.h $(UTILS)
-	${RXGEN} -x -k -S -o Kvice.ss.c afsint.xg
+Kvice.ss.c: common.xg afsint.xg Kvice.h
+	${RXGEN} -x -k -S -o Kvice.ss.c ${srcdir}/afsint.xg
 
-Kvice.xdr.c: common.xg afsint.xg $(UTILS)
-	${RXGEN} -x -k -c -o Kvice.xdr.c afsint.xg
+Kvice.xdr.c: common.xg afsint.xg
+	${RXGEN} -x -k -c -o Kvice.xdr.c ${srcdir}/afsint.xg
 
-Kvice.h: common.xg afsint.xg $(UTILS)
-	${RXGEN} -x -k -h -o Kvice.h afsint.xg
+Kvice.h: common.xg afsint.xg
+	${RXGEN} -x -k -h -o Kvice.h ${srcdir}/afsint.xg
 
-Kcallback.h: common.xg afscbint.xg $(UTILS)
-	${RXGEN} -x -k -h -o Kcallback.h afscbint.xg
+Kcallback.h: common.xg afscbint.xg
+	${RXGEN} -x -k -h -o Kcallback.h ${srcdir}/afscbint.xg
 
-afscbint.cs.c: common.xg afscbint.xg afsint.h afscbint.h $(UTILS)
-	${RXGEN} -x -C -o afscbint.cs.c afscbint.xg
+afscbint.cs.c: common.xg afscbint.xg afsint.h afscbint.h 
+	${RXGEN} -x -C -o afscbint.cs.c ${srcdir}/afscbint.xg
 
-afscbint.ss.c: common.xg afscbint.xg afsint.h afscbint.h $(UTILS)
-	${RXGEN} -x -S -o afscbint.ss.c afscbint.xg
+afscbint.ss.c: common.xg afscbint.xg afsint.h afscbint.h
+	${RXGEN} -x -S -o afscbint.ss.c ${srcdir}/afscbint.xg
 
-afscbint.xdr.c: common.xg afscbint.xg afsint.h afscbint.h $(UTILS)
-	${RXGEN} -x -y -c -o afscbint.xdr.c afscbint.xg
+afscbint.xdr.c: common.xg afscbint.xg afsint.h afscbint.h
+	${RXGEN} -x -y -c -o afscbint.xdr.c ${srcdir}/afscbint.xg
 
-afsint.cs.c: common.xg afsint.xg afsint.h $(UTILS)
-	${RXGEN} -x -C -o afsint.cs.c afsint.xg
+afsint.cs.c: common.xg afsint.xg afsint.h
+	${RXGEN} -x -C -o afsint.cs.c ${srcdir}/afsint.xg
 
-afsint.ss.c: common.xg afsint.xg afsint.h $(UTILS)
-	${RXGEN} -x -S -o afsint.ss.c afsint.xg
+afsint.ss.c: common.xg afsint.xg afsint.h
+	${RXGEN} -x -S -o afsint.ss.c ${srcdir}/afsint.xg
 
-afsint.xdr.c: common.xg afsint.xg $(UTILS)
-	${RXGEN} -x -c -o afsint.xdr.c afsint.xg
+afsint.xdr.c: common.xg afsint.xg
+	${RXGEN} -x -c -o afsint.xdr.c ${srcdir}/afsint.xg
 
-afsint.h: common.xg afsint.xg $(UTILS)
-	${RXGEN} -x -h -o afsint.h afsint.xg
+afsint.h: common.xg afsint.xg
+	${RXGEN} -x -h -o afsint.h ${srcdir}/afsint.xg
 
-afscbint.h: common.xg afscbint.xg $(UTILS)
-	${RXGEN} -x -h -o afscbint.h afscbint.xg
+afscbint.h: common.xg afscbint.xg
+	${RXGEN} -x -h -o afscbint.h ${srcdir}/afscbint.xg
 
-system: install
+#
+# Installation targets
+#
+${TOP_LIBDIR}/libafsint.a: libafsint.a
+	${INSTALL} $? $@
 
-kinstall: ${KSRCS} ${KERNELDIR}/afsint
-	${INSTALL} $(KSRCS) ${KERNELDIR}/afsint
-	${INSTALL} ${TOP_INCDIR}/afs/rxgen_consts.h ${KERNELDIR}/afsint
-	-${INSTALL} ${KERNELDIR}/rx/rx.h ${KERNELDIR}/afsint/rx.h
-	${INSTALL} afscbint.h ${KERNELDIR}/afs
+${TOP_INCDIR}/afs/afsint.h: afsint.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/afs/afscbint.h: afscbint.h
+	${INSTALL} $? $@
+
+${KERNELDIR}/afsint/rxgen_consts.h: ${TOP_INCDIR}/afs/rxgen_consts.h
+	${INSTALL} $? $@
+
+${KERNELDIR}/afsint/rx.h: ${KERNELDIR}/rx/rx.h
+	${INSTALL} $? $@
+
+${KERNELDIR}/afs/afscbint.h: afscbint.h
+	${INSTALL} $? $@
 
 ${KERNELDIR}/afsint:
 	mkdir -p $@
 
-ukinstall webinstall: ${UKERNELDIR}/afsint ${UKSRCS}
-	${INSTALL} $(UKSRCS) ${UKERNELDIR}/afsint
-	${INSTALL} ${TOP_INCDIR}/afs/rxgen_consts.h ${UKERNELDIR}/afsint
-	-${INSTALL} ${UKERNELDIR}/rx/rx.h ${UKERNELDIR}/afsint/rx.h
-	${INSTALL} afscbint.h ${UKERNELDIR}/afs
-
 ${UKERNELDIR}/afsint:
 	mkdir -p $@
 
-install:    ${DESTDIR}${libdir}/afs/libafsint.a ${DESTDIR}${includedir}/afs/afsint.h ${DESTDIR}${includedir}/afs/afscbint.h
-
-clean:
-	$(RM) -f *.o *.cs.c *.ss.c *.er.c afsint.h afsint.xdr.c libafsint.a $(KDSRCS) core AFS_component_version_number.c afscbint.xdr.c
-${DEST}/lib/afs/libafsint.a: libafsint.a
+${UKERNELDIR}/afsint/rxgen_consts.h: ${TOP_INCDIR}/afs/rxgen_consts.h
 	${INSTALL} $? $@
+
+${UKERNELDIR}/afsint/rx.h: ${UKERNELDIR}/rx/rx.h
+	${INSTALL} $? $@
+
+${UKERNELDIR}/afs/afscbint.h: afscbint.h
+	${INSTALL} $? $@
+
+${KERNELDIR}/afsint/Kcallback.ss.c: Kcallback.ss.c
+	${INSTALL} $? $@
+
+${KERNELDIR}/afsint/Kcallback.h: Kcallback.h
+	${INSTALL} $? $@
+
+${KERNELDIR}/afsint/Kvice.cs.c: Kvice.cs.c
+	${INSTALL} $? $@
+
+${KERNELDIR}/afsint/Kvice.h: Kvice.h
+	${INSTALL} $? $@
+
+${KERNELDIR}/afsint/Kvice.xdr.c: Kvice.xdr.c
+	${INSTALL} $? $@
+
+${KERNELDIR}/afsint/afscbint.h: afscbint.h
+	${INSTALL} $? $@
+
+${KERNELDIR}/afsint/afsint.h: afsint.h
+	${INSTALL} $? $@
+
+${KERNELDIR}/afsint/afsaux.c: afsaux.c
+	${INSTALL} $? $@
+
+${UKERNELDIR}/afsint/Kcallback.ss.c: Kcallback.ss.c
+	${INSTALL} $? $@
+
+${UKERNELDIR}/afsint/Kcallback.h: Kcallback.h
+	${INSTALL} $? $@
+
+${UKERNELDIR}/afsint/Kvice.cs.c: Kvice.cs.c
+	${INSTALL} $? $@
+
+${UKERNELDIR}/afsint/Kvice.h: Kvice.h
+	${INSTALL} $? $@
+
+${UKERNELDIR}/afsint/Kvice.xdr.c: Kvice.xdr.c
+	${INSTALL} $? $@
+
+${UKERNELDIR}/afsint/afscbint.h: afscbint.h
+	${INSTALL} $? $@
+
+${UKERNELDIR}/afsint/afsint.h: afsint.h
+	${INSTALL} $? $@
+
+${UKERNELDIR}/afsint/afsaux.c: afsaux.c
+	${INSTALL} $? $@
+
+install: \
+	${DESTDIR}${libdir}/afs/libafsint.a \
+	${DESTDIR}${includedir}/afs/afsint.h \
+	${DESTDIR}${includedir}/afs/afscbint.h
 
 ${DESTDIR}${libdir}/afs/libafsint.a: libafsint.a
-	${INSTALL} $? $@
-
-
-${TOP_LIBDIR}/libafsint.a: libafsint.a
-	${INSTALL} $? $@
-
-
-${DEST}/include/afs/afsint.h: afsint.h
 	${INSTALL} $? $@
 
 ${DESTDIR}${includedir}/afs/afsint.h: afsint.h
 	${INSTALL} $? $@
 
-
-${TOP_INCDIR}/afs/afsint.h: afsint.h
+${DESTDIR}${includedir}/afs/afscbint.h: afscbint.h
 	${INSTALL} $? $@
 
+dest: \
+	${DEST}/lib/afs/libafsint.a \
+	${DEST}/include/afs/afsint.h \
+	${DEST}/include/afs/afscbint.h
+
+${DEST}/lib/afs/libafsint.a: libafsint.a
+	${INSTALL} $? $@
 
 ${DEST}/include/afs/afscbint.h: afscbint.h
 	${INSTALL} $? $@
 
-${DESTDIR}${includedir}/afs/afscbint.h: afscbint.h
+${DEST}/include/afs/afsint.h: afsint.h
 	${INSTALL} $? $@
 
+#
+# Misc targets
+#
 
-${TOP_INCDIR}/afs/afscbint.h: afscbint.h
-	${INSTALL} $? $@
+clean:
+	$(RM) -f *.o *.cs.c *.ss.c *.er.c *.a *.xdr.c core \
+		afsint.h afscbint.h AFS_component_version_number.c 
 
-
-dest:    ${DEST}/lib/afs/libafsint.a ${DEST}/include/afs/afsint.h ${DEST}/include/afs/afscbint.h
+include ../config/Makefile.version
 

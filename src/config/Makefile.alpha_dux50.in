@@ -22,7 +22,7 @@ DBG=-g3
 CP=cp
 CSTATIC=-non_shared
 RANLIB=/bin/true
-INSTALL=${TOP_SRCDIR}/pinstall/pinstall
+INSTALL=${TOP_OBJDIR}/src/pinstall/pinstall
 
 #this is for the vol package
 FS_CONV_OSF40D         = fs_conv_dux40D

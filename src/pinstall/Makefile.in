@@ -9,6 +9,9 @@
 DEST=@DEST@
 TOP_INCDIR=@TOP_INCDIR@
 TOP_LIBDIR=@TOP_LIBDIR@
+TOP_OBJDIR=@TOP_OBJDIR@
+srcdir=@srcdir@
+VPATH=${srcdir}
 prefix=@prefix@
 exec_prefix=@exec_prefix@
 bindir=@bindir@
@@ -20,8 +23,8 @@ mandir=@mandir@
 afssrvbindir=@afssrvbindir@
 afssrvsbindir=@afssrvsbindir@
 afssrvlibexecdir=@afssrvlibexecdir@
-COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
-RXGEN=${TOP_SRCDIR}/rxgen/rxgen
+COMPILE_ET=${TOP_OBJDIR}/src/comerr/compile_et
+RXGEN=${TOP_OBJDIR}/src/rxgen/rxgen
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
@@ -30,18 +33,18 @@ SHELL = /bin/sh
 include ../config/Makefile.${SYS_NAME}
 
 LIBS= ${XLIBS}
-CFLAGS=${OPTMZ} -g -I. -I${TOP_INCDIR} -I${TOP_SRCDIR}/config ${XCFLAGS}
+CFLAGS=${OPTMZ} -g -I. -I${TOP_INCDIR} -I../config ${XCFLAGS}
 
 all: pinstall
 
-pinstall: install.c AFS_component_version_number.c 
+pinstall: ${srcdir}/install.c AFS_component_version_number.c 
 	case ${SYS_NAME} in \
                 sgi_64 | sgi_65) \
-                        ${CC} ${CFLAGS} install.c -o pinstall ${LIBS} ;; \
+                        ${CC} ${CFLAGS} ${srcdir}/install.c -o pinstall ${LIBS} ;; \
                 sgi_* ) \
-                        ${CC} ${CFLAGS} install.c -o pinstall ${LIBS} -lmld ;; \
+                        ${CC} ${CFLAGS} ${srcdir}/install.c -o pinstall ${LIBS} -lmld ;; \
                 *) \
-                        ${CC} ${CFLAGS} install.c -o pinstall ${LIBS} ;; \
+                        ${CC} ${CFLAGS} ${srcdir}/install.c -o pinstall ${LIBS} ;; \
         esac
 
 test: pinstall

@@ -8,6 +8,9 @@
 DEST=@DEST@
 TOP_INCDIR=@TOP_INCDIR@
 TOP_LIBDIR=@TOP_LIBDIR@
+TOP_OBJDIR=@TOP_OBJDIR@
+srcdir=@srcdir@
+VPATH=${srcdir}
 prefix=@prefix@
 exec_prefix=@exec_prefix@
 bindir=@bindir@
@@ -19,8 +22,8 @@ mandir=@mandir@
 afssrvbindir=@afssrvbindir@
 afssrvsbindir=@afssrvsbindir@
 afssrvlibexecdir=@afssrvlibexecdir@
-COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
-RXGEN=${TOP_SRCDIR}/rxgen/rxgen
+COMPILE_ET=${TOP_OBJDIR}/src/comerr/compile_et
+RXGEN=${TOP_OBJDIR}/src/rxgen/rxgen
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
@@ -28,7 +31,7 @@ SHELL = /bin/sh
 
 include ../config/Makefile.${SYS_NAME}
 
-CFLAGS=-DNINTERFACE -I${TOP_SRCDIR}/config -I. -I${TOP_INCDIR} -I${TOP_INCDIR}/afs \
+CFLAGS=-DNINTERFACE -I${TOP_OBJDIR}/src/config -I. -I${TOP_INCDIR} -I${TOP_INCDIR}/afs \
 	 ${XCFLAGS} -DRXDEBUG
 
 LDFLAGS = ${DBUG} ${XLDFLAGS}
@@ -80,7 +83,7 @@ ${objects}: ${headers}
 viced.o: AFS_component_version_number.o
 
 check_sysid: check_sysid.c
-	${CC} ${CFLAGS} -o check_sysid check_sysid.c
+	${CC} ${CFLAGS} -o check_sysid ${srcdir}/check_sysid.c
 
 fileserver: ${objects} ${headers} ${LIBS}
 	set -x; \
@@ -94,13 +97,13 @@ fileserver: ${objects} ${headers} ${LIBS}
 	esac
 
 fsprobe.o: fsprobe.c AFS_component_version_number.c
-	${CC} ${CFLAGS} -DINTERPRET_DUMP -c fsprobe.c
+	${CC} ${CFLAGS} -DINTERPRET_DUMP -c ${srcdir}/fsprobe.c
 
 fsprobe: fsprobe.o
 	${CC} ${CFLAGS} -o fsprobe fsprobe.o ${LIBS} ${XLIBS} 
 
 cbd.o: callback.c AFS_component_version_number.c
-	${CC} ${CFLAGS} -DINTERPRET_DUMP -c -o cbd.o callback.c
+	${CC} ${CFLAGS} -DINTERPRET_DUMP -c -o cbd.o ${srcdir}/callback.c
 
 cbd: cbd.o
 	${CC} ${CFLAGS} -DINTERPRET_DUMP -o cbd cbd.o ${LIBS} ${XLIBS} 

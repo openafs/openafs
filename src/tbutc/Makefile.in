@@ -8,6 +8,9 @@
 DEST=@DEST@
 TOP_INCDIR=@TOP_INCDIR@
 TOP_LIBDIR=@TOP_LIBDIR@
+TOP_OBJDIR=@TOP_OBJDIR@
+srcdir=@srcdir@
+VPATH=${srcdir}
 prefix=@prefix@
 exec_prefix=@exec_prefix@
 bindir=@bindir@
@@ -19,8 +22,8 @@ mandir=@mandir@
 afssrvbindir=@afssrvbindir@
 afssrvsbindir=@afssrvsbindir@
 afssrvlibexecdir=@afssrvlibexecdir@
-COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
-RXGEN=${TOP_SRCDIR}/rxgen/rxgen
+COMPILE_ET=${TOP_OBJDIR}/src/comerr/compile_et
+RXGEN=${TOP_OBJDIR}/src/rxgen/rxgen
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
@@ -34,22 +37,23 @@ BUTMINCLS   =${TOP_INCDIR}/afs/com_err.h ${TOP_INCDIR}/afs/butm.h
 BUTMINCLUDE =-I${TOP_INCDIR}
 
 CC      = ${MT_CC}
-CFLAGS  = ${DBG} -w -I${TOP_SRCDIR}/config ${MT_CFLAGS} @XBSA_CFLAGS@ ${BUTMINCLUDE}
+CFLAGS=-I. -I${srcdir} ${DBG} -w -I${TOP_OBJDIR}/src/config ${MT_CFLAGS} @XBSA_CFLAGS@ ${BUTMINCLUDE} \
+	-I../bucoord -I../volser
 
 LDFLAGS = ${DBG} ${XLDFLAGS}
 
-LWP     =../lwp
-BUTM    =../butm
-BUTC    =../butc
-BUCOORD = ../bucoord
-VOLSER  = ../volser
+LWP     = ${srcdir}/../lwp
+BUTM    = ${srcdir}/../butm
+BUTC    = ${srcdir}/../butc
+BUCOORD = ${srcdir}/../bucoord
+VOLSER  = ${srcdir}/../volser
 
-BUCOORDOBJS=ubik_db_if.o ${BUCOORD}/volstub.o ${BUCOORD}/dlq.o \
-	    ${BUCOORD}/status.o ${BUCOORD}/bucoord_errs.o
+BUCOORDOBJS=ubik_db_if.o ../bucoord/volstub.o ../bucoord/dlq.o \
+	    ../bucoord/status.o ../bucoord/bucoord_errs.o
 
-VOLSERLIBOBJ=${VOLSER}/volint.cs.o  vsprocs.o              ${VOLSER}/vsutils.o \
-            ${VOLSER}/lockprocs.o  ${VOLSER}/volint.xdr.o ${VOLSER}/volerr.o \
-            ${VOLSER}/volint.ss.o  AFS_component_version_number.o 
+VOLSERLIBOBJ=../volser/volint.cs.o  vsprocs.o ../volser/vsutils.o \
+            ../volser/lockprocs.o ../volser/volint.xdr.o ../volser/volerr.o \
+            ../volser/volint.ss.o  AFS_component_version_number.o 
 VOLSERLIBS  =libvolser.a
 
 LWPOBJS     =lock.o
