@@ -19,7 +19,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/afsmonitor/afsmonitor.c,v 1.15 2003/10/24 06:26:06 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afsmonitor/afsmonitor.c,v 1.18 2004/08/06 21:48:28 shadow Exp $");
 
 #include <stdio.h>
 #include <math.h>
@@ -277,7 +277,7 @@ extern char *cm_categories[];	/* cache manager data category names */
 
 
 
-#if !defined(AFS_FBSD_ENV) && !defined(AFS_DARWIN70_ENV)
+#if !defined(AFS_FBSD_ENV) && !defined(AFS_DARWIN70_ENV) && !defined(AFS_NBSD20_ENV)
 /*	
         strcasestr(): Return first occurence of pattern s2 in s1, case 
 	insensitive. 
@@ -898,7 +898,7 @@ parse_threshEntry(a_line)
 	    fprintf(stderr, "[ %s ] Programming error 2\n", rn);
 	    return (-1);
 	}
-    } else if ((strcasecmp(arg1, "cm")) != 0 && (strcasecmp(arg1, "cm")) != 0) {
+    } else {
 	fprintf(stderr,
 		"[ %s ] Syntax error. Second argument should be \"fs\" or \"cm\" \n",
 		rn);
@@ -2624,7 +2624,7 @@ cm_Results_ltoa(a_cmData, a_cmResults)
 
 
     fullP = (struct afs_stats_CMFullPerf *)
-	(xstat_cm_Results.data.AFSCB_CollData_val);
+	(a_cmResults->data.AFSCB_CollData_val);
 
     /* There are 4 parts to CM statistics
      * - Overall performance statistics (including up/down statistics)
@@ -3615,7 +3615,7 @@ quit_signal(sig)
 
 
 /*-----------------------------------------------------------------------
- * afsmon_execut()
+ * afsmon_execute()
  *
  * Description:
  *	This is where we start it all. Initialize an array of sockets for

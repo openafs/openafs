@@ -523,6 +523,12 @@ else
 		powerpc-apple-darwin7.3*)
 			AFS_SYSNAME="ppc_darwin_70"
 			;;
+		powerpc-apple-darwin7.4*)
+			AFS_SYSNAME="ppc_darwin_70"
+			;;
+		powerpc-apple-darwin7.5*)
+			AFS_SYSNAME="ppc_darwin_70"
+			;;
 		sparc-sun-solaris2.5*)
 			AFS_SYSNAME="sun4x_55"
 			enable_login="yes"

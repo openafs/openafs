@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/UKERNEL/rx_knet.c,v 1.9 2004/04/18 06:10:35 kolya Exp $");
+    ("$Header: /cvs/openafs/src/rx/UKERNEL/rx_knet.c,v 1.10 2004/07/28 22:34:14 shadow Exp $");
 
 #include "rx/rx_kcommon.h"
 
@@ -170,7 +170,7 @@ rx_ServerProc(void)
  * we start the receiver threads.
  */
 struct osi_socket *
-rxk_NewSocket(short aport)
+rxk_NewSocketHost(afs_uint32 ahost, short aport)
 {
     struct usr_socket *usockp;
 
@@ -180,6 +180,12 @@ rxk_NewSocket(short aport)
     usockp->sock = -1;
 
     return (struct osi_socket *)usockp;
+}
+
+struct osi_socket *
+rxk_NewSocket(short aport)
+{
+    return rxk_NewSocketHost(htonl(INADDR_ANY), aport);
 }
 
 /*

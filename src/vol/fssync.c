@@ -21,6 +21,7 @@ int newVLDB;			/* Compatibility flag */
 #endif
 static int newVLDB = 1;
 
+
 #ifndef AFS_PTHREAD_ENV
 #define USUAL_PRIORITY (LWP_MAX_PRIORITY - 2)
 
@@ -35,11 +36,21 @@ static int newVLDB = 1;
    fsync.c
    File server synchronization with external volume utilities.
  */
+
+/* This controls the size of an fd_set; it must be defined early before
+ * the system headers define that type and the macros that operate on it.
+ * Its value should be as large as the maximum file descriptor limit we
+ * are likely to run into on any platform.  Right now, that is 65536
+ * which is the default hard fd limit on Solaris 9 */
+#ifndef _WIN32
+#define FD_SETSIZE 65536
+#endif
+
 #include <afsconfig.h>
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vol/fssync.c,v 1.23 2003/12/08 06:09:12 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vol/fssync.c,v 1.26 2004/07/28 21:49:18 shadow Exp $");
 
 #include <sys/types.h>
 #include <stdio.h>
@@ -94,7 +105,7 @@ int (*V_BreakVolumeCallbacks) ();
 
 #define MAXHANDLERS	4	/* Up to 4 clients; must be at least 2, so that
 				 * move = dump+restore can run on single server */
-#define MAXOFFLINEVOLUMES 30	/* This needs to be as big as the maximum
+#define MAXOFFLINEVOLUMES 128   /* This needs to be as big as the maximum
 				 * number that would be offline for 1 operation.
 				 * Current winner is salvage, which needs all
 				 * cloned read-only copies offline when salvaging
@@ -276,6 +287,8 @@ getport(struct sockaddr_in *addr)
     return sd;
 }
 
+static fd_set FSYNC_readfds;
+
 static void
 FSYNC_sync()
 {
@@ -331,18 +344,17 @@ FSYNC_sync()
     InitHandler();
     AcceptOn();
     for (;;) {
-	fd_set readfds;
 	int maxfd;
-	GetHandler(&readfds, &maxfd);
+	GetHandler(&FSYNC_readfds, &maxfd);
 	/* Note: check for >= 1 below is essential since IOMGR_select
 	 * doesn't have exactly same semantics as select.
 	 */
 #ifdef AFS_PTHREAD_ENV
-	if (select(maxfd + 1, &readfds, NULL, NULL, NULL) >= 1)
+	if (select(maxfd + 1, &FSYNC_readfds, NULL, NULL, NULL) >= 1)
 #else /* AFS_PTHREAD_ENV */
-	if (IOMGR_Select(maxfd + 1, &readfds, NULL, NULL, NULL) >= 1)
+	if (IOMGR_Select(maxfd + 1, &FSYNC_readfds, NULL, NULL, NULL) >= 1)
 #endif /* AFS_PTHREAD_ENV */
-	    CallHandler(&readfds);
+	    CallHandler(&FSYNC_readfds);
     }
 }
 

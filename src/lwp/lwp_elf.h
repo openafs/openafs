@@ -32,11 +32,11 @@
  */
 
 /*
- * For common usage of elf platforms
+ * This file is mis-named. It is used by both a.out and elf platforms.
+ * It either adds the leading underscore or not as needed.
  *
- * $Id: lwp_elf.h,v 1.2 2004/06/24 17:38:32 shadow Exp $
+ * $Id: lwp_elf.h,v 1.3 2004/08/03 14:45:49 rees Exp $
  */
-#include <afs/param.h>
 
 #ifndef _C_LABEL
 #if !defined(SYSV) && !defined(__ELF__) && !defined(AFS_SUN5_ENV)

@@ -20,3 +20,8 @@ sun4x_57
 autom4te.cache
 ID
 TAGS
+dest
+obj
+NTLang.bat
+NTMakefile
+golast.bat

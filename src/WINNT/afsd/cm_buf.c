@@ -75,6 +75,7 @@ long buf_nbuffers = CM_BUF_BUFFERS;
 long buf_nOrigBuffers;
 long buf_bufferSize = CM_BUF_SIZE;
 long buf_hashSize = CM_BUF_HASHSIZE;
+int buf_cacheType = CM_BUF_CACHETYPE_FILE;
 
 #ifndef DJGPP
 static
@@ -295,6 +296,7 @@ long buf_Init(cm_buf_ops_t *opsp)
 		sectorSize = 1;
 
 #ifndef DJGPP
+        if(buf_cacheType == CM_BUF_CACHETYPE_FILE) {
 		/* Reserve buffer space by mapping cache file */
 		psa = CreateCacheFileSA();
 		hf = CreateFile(cm_CachePath,
@@ -309,6 +311,9 @@ long buf_Init(cm_buf_ops_t *opsp)
 			return CM_ERROR_INVAL;
 		}
 		FreeCacheFileSA(psa);
+        } else { /* buf_cacheType == CM_BUF_CACHETYPE_VIRTUAL */
+            hf = INVALID_HANDLE_VALUE;
+        }
 		CacheHandle = hf;
 		hm = CreateFileMapping(hf,
 			NULL,
@@ -327,7 +332,7 @@ long buf_Init(cm_buf_ops_t *opsp)
 			0, 0,
 			buf_nbuffers * buf_bufferSize);
 		if (data == NULL) {
-			CloseHandle(hf);
+			if(hf != INVALID_HANDLE_VALUE) CloseHandle(hf);
 			CloseHandle(hm);
 			return CM_ERROR_INVAL;
 		}
@@ -403,6 +408,15 @@ long buf_AddBuffers(long nbuffers)
 
     afsi_log("%d buffers being added to the existing cache of size %d",
               nbuffers, buf_nbuffers);
+
+    if (buf_cacheType == CM_BUF_CACHETYPE_VIRTUAL) {
+        /* The size of a virtual cache cannot be changed after it has
+         * been created.  Subsequent calls to MapViewofFile() with
+         * an existing mapping object name would not allow the 
+         * object to be resized.  Return failure immediately.
+	 */
+        return CM_ERROR_INVAL;
+    }
 
 	/*
 	 * Cache file mapping constrained by

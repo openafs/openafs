@@ -21,10 +21,22 @@
 	IO Manager routines & server process for VICE server.
 */
 
+/* This controls the size of an fd_set; it must be defined early before
+ * the system headers define that type and the macros that operate on it.
+ * Its value should be as large as the maximum file descriptor limit we
+ * are likely to run into on any platform.  Right now, that is 65536
+ * which is the default hard fd limit on Solaris 9 */
+/* We don't do this on Windows because on that platform there is code
+ * which allocates fd_set's on the stack (IOMGR_Sleep on Win9x, and
+ * FDSetAnd on WinNT) */
+#ifndef _WIN32
+#define FD_SETSIZE 65536
+#endif
+
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /cvs/openafs/src/lwp/iomgr.c,v 1.12 2003/11/29 22:08:14 jaltman Exp $");
+RCSID("$Header: /cvs/openafs/src/lwp/iomgr.c,v 1.13 2004/07/08 05:16:57 shadow Exp $");
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -177,7 +189,7 @@ static _go32_dpmi_seginfo callback_info;
 
 /* fd_set pool managment. 
  * Use the pool instead of creating fd_set's on the stack. fd_set's can be
- * 2K in size, so making three could put 6K in the limited space of an LWP
+ * 8K in size, so making three could put 24K in the limited space of an LWP
  * stack.
  */
 struct IOMGR_fd_set {

@@ -13,9 +13,9 @@
 #define CM_CONFIGDEFAULT_CACHESIZE	20480
 #define CM_CONFIGDEFAULT_BLOCKSIZE	4096
 #define CM_CONFIGDEFAULT_STATS		1000
-#define CM_CONFIGDEFAULT_CHUNKSIZE	15
+#define CM_CONFIGDEFAULT_CHUNKSIZE	17
 #define CM_CONFIGDEFAULT_DAEMONS	2
-#define CM_CONFIGDEFAULT_SVTHREADS	4
+#define CM_CONFIGDEFAULT_SVTHREADS	25
 #define CM_CONFIGDEFAULT_TRACEBUFSIZE	5000
 
 #ifndef __CM_CONFIG_INTERFACES_ONLY__
@@ -52,6 +52,8 @@ extern long cm_AppendNewCell(cm_configFile_t *filep, char *cellNamep);
 extern long cm_AppendNewCellLine(cm_configFile_t *filep, char *linep);
 
 extern long cm_CloseCellFile(cm_configFile_t *filep);
+
+extern long cm_GetCellServDB(char *cellNamep);
 
 #endif /* __CM_CONFIG_INTERFACES_ONLY__ */
 

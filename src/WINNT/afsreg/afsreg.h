@@ -168,8 +168,8 @@
 /* AFSREG_CLT_SVC_PARAM_KEY values */
 #define AFSREG_CLT_SVC_PARAM_CELL_VALUE      "Cell"
 
-
-
+#define AFSREG_CLT_OPENAFS_KEY "HKEY_LOCAL_MACHINE\\Software\\OpenAFS\\Client"
+#define AFSREG_CLT_OPENAFS_CELLSERVDB_DIR_VALUE  "CellServDBDir"
 
 
 /* Extended (alternative) versions of registry access functions */

@@ -302,5 +302,16 @@ TYPEDEF_FUNC(
     lsh_LoadKrb4LeashErrorTables,
     (HMODULE hLeashDll, INT useCallBackFunction)
     );
-
+TYPEDEF_FUNC(
+    int,
+    CALLCONV_C,
+    krb_life_to_time,
+    (int start, int life)
+    );
+TYPEDEF_FUNC(
+    int,
+    CALLCONV_C,
+    krb_time_to_life,
+    (int start, int end)
+    );
 #endif /* __LOADFUNCS_KRB_H__ */

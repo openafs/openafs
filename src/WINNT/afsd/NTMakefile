@@ -64,7 +64,8 @@ INCFILES =\
 	$(INCFILEDIR)\cm_freelance.h \
     $(INCFILEDIR)\afsd_eventlog.h \
     $(INCFILEDIR)\afsd_eventmessages.h \
-    $(INCFILEDIR)\afskfw.h
+    $(INCFILEDIR)\afskfw.h \
+    $(INCFILEDIR)\afsicf.h
 
 IDLFILES =\
 	afsrpc.h $(OUT)\afsrpc_c.obj
@@ -116,7 +117,8 @@ AFSDOBJS=\
 !ENDIF
     $(OUT)\cm_freelance.obj \
     $(OUT)\afsd_eventlog.obj \
-    $(OUT)\afsd_flushvol.obj
+    $(OUT)\afsd_flushvol.obj \
+    $(OUT)\afsicf.obj
 
 $(AFSDOBJS):
 
@@ -170,7 +172,7 @@ CONF_DLLLIBS = \
     $(DESTDIR)\lib\afs\afsreg.lib
 
 $(CONF_DLLFILE): $(CONFOBJS) $(OUT)\libafsconf.res $(CONF_DLLLIBS)
-	$(DLLGUILINK) -def:libafsconf.def dnsapi.lib
+	$(DLLGUILINK) -def:libafsconf.def dnsapi.lib mpr.lib
 	$(DLLPREP)
 	$(COPY) $*.lib $(ILIBDIR)
 	$(DEL) $*.lib $*.exp
@@ -208,6 +210,7 @@ LOGON_DLLFILE = $(DESTDIR)\root.client\usr\vice\etc\afslogon.dll
 
 LOGON_DLLOBJS =\
 	$(OUT)\afslogon.obj \
+    $(OUT)\logon_ad.obj \
 	$(OUT)\afslogon.res
 
 LOGON_DLLLIBS =\
@@ -217,8 +220,19 @@ LOGON_DLLLIBS =\
     $(DESTDIR)\lib\afsdes.lib \
     $(AFSKFWLIB)
 
+LOGON_DLLSDKLIBS =\
+	dnsapi.lib mpr.lib \
+	advapi32.lib \
+	secur32.lib \
+	strsafe.lib \
+	oleaut32.lib \
+	ole32.lib \
+	adsiid.lib \
+	activeds.lib \
+    userenv.lib
+
 $(LOGON_DLLFILE): $(LOGON_DLLOBJS) $(LOGON_DLLLIBS)
-	$(DLLGUILINK) $(LOGONLINKFLAGS) -def:afslogon.def dnsapi.lib secur32.lib
+	$(DLLGUILINK) $(LOGONLINKFLAGS) -def:afslogon.def $(LOGON_DLLSDKLIBS)
 	$(DLLPREP)
 	$(COPY) $*.lib $(DESTDIR)\lib
 	$(DEL) $*.lib $*.exp
@@ -237,7 +251,7 @@ LOG95_DLLLIBS =\
 	$(DESTDIR)\lib\libafsconf.lib
 
 $(LOG95_DLLFILE): $(LOG95_DLLOBJS) $(LOG95_DLLLIBS)
-	$(DLLGUILINK) $(LOGONLINKFLAGS) -def:afslog95.def dnsapi.lib
+	$(DLLGUILINK) $(LOGONLINKFLAGS) -def:afslog95.def dnsapi.lib mpr.lib
 	$(DLLPREP)
 	$(COPY) $*.lib $(DESTDIR)\lib
 	$(DEL) $*.lib $*.exp
@@ -245,9 +259,10 @@ $(LOG95_DLLFILE): $(LOG95_DLLOBJS) $(LOG95_DLLLIBS)
 ############################################################################
 # Install target; primary makefile target
 
-install_objs: $(OUT)\cm_dns.obj $(OUT)\cm_config.obj $(LANAHELPERLIB)
+install_objs: $(OUT)\cm_dns.obj $(OUT)\cm_config.obj $(LANAHELPERLIB) $(OUT)\afsicf.obj
      $(COPY) $(OUT)\cm_dns.obj $(DESTDIR)\lib
      $(COPY) $(OUT)\cm_config.obj $(DESTDIR)\lib
+     $(COPY) $(OUT)\afsicf.obj $(DESTDIR)\lib
 
 install_headers: $(IDLFILES) $(INCFILES)
 
@@ -303,17 +318,17 @@ EXELIBS = \
 
 # klog.exe
 $(EXEDIR)\klog.exe: $(OUT)\cklog.obj $(OUT)\klog.res $(EXELIBS)
-	$(EXECONLINK) dnsapi.lib
+	$(EXECONLINK) dnsapi.lib mpr.lib
 	$(EXEPREP)
 
 # tokens.exe
 $(EXEDIR)\tokens.exe: $(OUT)\ctokens.obj $(OUT)\tokens.res $(EXELIBS)
-	$(EXECONLINK) dnsapi.lib
+	$(EXECONLINK) dnsapi.lib mpr.lib
 	$(EXEPREP)
 
 # unlog.exe
 $(EXEDIR)\unlog.exe: $(OUT)\cunlog.obj $(OUT)\unlog.res $(EXELIBS)
-	$(EXECONLINK) dnsapi.lib
+	$(EXECONLINK) dnsapi.lib mpr.lib
 	$(EXEPREP)
 
 # afsd.exe
@@ -322,12 +337,15 @@ AFSD_EXEFILE = $(EXEDIR)\afsd.exe
 AFSD_SDKLIBS =\
 	largeint.lib \
 	netapi32.lib \
-    mpr.lib \
-    dnsapi.lib \
+    dnsapi.lib mpr.lib \
 	rpcrt4.lib \
 	user32.lib \
     Dbghelp.lib \
-    strsafe.lib
+    strsafe.lib \
+    mpr.lib \
+    secur32.lib \
+    ole32.lib \
+    oleaut32.lib
 
 AFSD_EXELIBS =\
 	$(DESTDIR)\lib\libosi.lib \
@@ -351,12 +369,12 @@ $(EXEDIR)\afsd_service.exe: $(OUT)\afsd_service.obj $(AFSDOBJS) $(OUT)\afsd_serv
 
 # fs.exe
 $(EXEDIR)\fs.exe: $(FSOBJS) $(OUT)\fs.res $(EXELIBS)
-	$(EXECONLINK) dnsapi.lib
+	$(EXECONLINK) dnsapi.lib mpr.lib
 	$(EXEPREP)
 
 # symlink.exe
 $(EXEDIR)\symlink.exe: $(SLOBJS) $(OUT)\symlink.res  $(EXELIBS)
-	$(EXECONLINK) dnsapi.lib
+	$(EXECONLINK) dnsapi.lib mpr.lib
 	$(EXEPREP)
 
 # afsshare.exe

@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/viced/host.c,v 1.56 2003/12/08 01:45:34 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/viced/host.c,v 1.57 2004/08/05 14:48:09 shadow Exp $");
 
 #include <stdio.h>
 #include <errno.h>
@@ -1545,6 +1545,9 @@ h_FindClient_r(struct rx_connection *tcon)
     oldClient = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
     if (oldClient && oldClient->tcon == tcon) {
 	oldClient->tcon = (struct rx_connection *)0;
+	ViceLog(0, ("FindClient: client %x(%x) already had conn %x (host %x), stolen by client %x(%x)\n", 
+		    oldClient, oldClient->sid, tcon, 
+		    rx_HostOf(rx_PeerOf(tcon)), client, client->sid));
 	/* rx_SetSpecific will be done immediately below */
     }
     client->tcon = tcon;

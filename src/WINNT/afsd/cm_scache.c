@@ -272,10 +272,12 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
 	// because we have to fill in the status stuff 'coz we
 	// don't want trybulkstat to fill it in for us
 #ifdef AFS_FREELANCE_CLIENT
-	special = (fidp->cell==0x1 && fidp->volume==AFS_FAKE_ROOT_VOL_ID && 
+	special = (fidp->cell==AFS_FAKE_ROOT_CELL_ID && 
+               fidp->volume==AFS_FAKE_ROOT_VOL_ID &&
 			   !(fidp->vnode==0x1 && fidp->unique==0x1));
-	isRoot = (fidp->cell==0x1 && fidp->volume==AFS_FAKE_ROOT_VOL_ID && 
-			   fidp->vnode==0x1 && fidp->unique==0x1);
+	isRoot = (fidp->cell==AFS_FAKE_ROOT_CELL_ID && 
+              fidp->volume==AFS_FAKE_ROOT_VOL_ID &&
+			  fidp->vnode==0x1 && fidp->unique==0x1);
 	if (cm_freelanceEnabled && isRoot) {
 		osi_Log0(afsd_logp,"cm_getSCache Freelance and isRoot");
           /* freelance: if we are trying to get the root scp for the first
@@ -295,7 +297,7 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
 		scp->volp = cm_rootSCachep->volp;
 		if (scp->dotdotFidp == (cm_fid_t *) NULL)
 			scp->dotdotFidp = (cm_fid_t *) malloc (sizeof(cm_fid_t));
-		scp->dotdotFidp->cell=0x1;
+		scp->dotdotFidp->cell=AFS_FAKE_ROOT_CELL_ID;
 		scp->dotdotFidp->volume=AFS_FAKE_ROOT_VOL_ID;
 		scp->dotdotFidp->unique=1;
 		scp->dotdotFidp->vnode=1;
@@ -314,8 +316,8 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
 
 		scp->owner=0x0;
 		scp->unixModeBits=0x1ff;
-		scp->clientModTime=0x3b49f6e2;
-		scp->serverModTime=0x3b49f6e2;
+		scp->clientModTime=FakeFreelanceModTime;
+		scp->serverModTime=FakeFreelanceModTime;
 		scp->parentUnique = 0x1;
 		scp->parentVnode=0x1;
 		scp->group=0;
@@ -592,7 +594,7 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *up, cm_req_t *reqp,
 #ifdef AFS_FREELANCE_CLIENT
 			&& (!cm_freelanceEnabled || !(!(scp->fid.vnode==0x1 &&
 				                         scp->fid.unique==0x1) &&
-				                         scp->fid.cell==0x1 &&
+				                         scp->fid.cell==AFS_FAKE_ROOT_CELL_ID &&
 				                         scp->fid.volume==AFS_FAKE_ROOT_VOL_ID))
 #endif /* AFS_FREELANCE_CLIENT */
 		    ) {
@@ -648,6 +650,8 @@ sleep:
 		osi_Log1(afsd_logp, "CM SyncOp sleeping scp %x", (long) scp);
         if ( scp->flags & CM_SCACHEFLAG_WAITING ) 
             osi_Log1(afsd_logp, "CM SyncOp CM_SCACHEFLAG_WAITING already set for 0x%x", scp);
+        else 
+            osi_Log1(afsd_logp, "CM SyncOp CM_SCACHEFLAG_WAITING set for 0x%x", scp);
 		scp->flags |= CM_SCACHEFLAG_WAITING;
 		if (bufLocked) lock_ReleaseMutex(&bufp->mx);
         osi_SleepM((long) &scp->flags, &scp->mx);
@@ -775,8 +779,9 @@ void cm_SyncOpDone(cm_scache_t *scp, cm_buf_t *bufp, long flags)
         
         /* and wakeup anyone who is waiting */
         if (scp->flags & CM_SCACHEFLAG_WAITING) {
-		scp->flags &= ~CM_SCACHEFLAG_WAITING;
-                osi_Wakeup((long) &scp->flags);
+            osi_Log1(afsd_logp, "CM SyncOp CM_SCACHEFLAG_WAITING reset for 0x%x", scp);
+            scp->flags &= ~CM_SCACHEFLAG_WAITING;
+            osi_Wakeup((long) &scp->flags);
         }
 }
 
@@ -814,8 +819,8 @@ void cm_MergeStatus(cm_scache_t *scp, AFSFetchStatus *statusp, AFSVolSync *volp,
 		statusp->ParentVnode = 0x1;
 		statusp->ParentUnique = 0x1;
 		statusp->ResidencyMask = 0;
-		statusp->ClientModTime = 0x3b49f6e2;
-		statusp->ServerModTime = 0x3b49f6e2;
+		statusp->ClientModTime = FakeFreelanceModTime;
+		statusp->ServerModTime = FakeFreelanceModTime;
 		statusp->Group = 0;
 		statusp->SyncCounter = 0;
 		statusp->dataVersionHigh = 0;

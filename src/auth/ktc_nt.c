@@ -13,7 +13,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/auth/ktc_nt.c,v 1.16 2004/04/04 02:35:47 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/auth/ktc_nt.c,v 1.17 2004/07/08 13:24:00 jaltman Exp $");
 
 #include <afs/stds.h>
 #include <stdio.h>
@@ -116,9 +116,9 @@ send_key(afs_uuid_t uuid, char sessionKey[8])
 	if (!strcmpi(encrypt, "OFF"))
 	    encryptionOff = TRUE;
 
-    /* Protocol sequence is named pipe by default */
+    /* Protocol sequence is local by default */
     if (!GetEnvironmentVariable("AFS_RPC_PROTSEQ", protseq, sizeof(protseq)))
-	strcpy(protseq, "ncacn_np");
+	strcpy(protseq, "ncalrpc");
 
     /* Server name */
     getservername(&serverNamep, sizeof(serverName));
@@ -189,9 +189,9 @@ receive_key(afs_uuid_t uuid, char sessionKey[8])
 	if (!strcmpi(encrypt, "OFF"))
 	    encryptionOff = TRUE;
 
-    /* Protocol sequence is named pipe by default */
+    /* Protocol sequence is local by default */
     if (!GetEnvironmentVariable("AFS_RPC_PROTSEQ", protseq, sizeof(protseq)))
-	strcpy(protseq, "ncacn_np");
+	strcpy(protseq, "ncalrpc");
 
     /* Server name */
     getservername(&serverNamep, sizeof(serverName));

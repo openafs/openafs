@@ -247,5 +247,5 @@ int  KFW_AFS_unlog(void);
 int  KFW_AFS_klog(krb5_context, krb5_ccache, char*, char*, char*, int, char*);
 void KFW_import_ccache_data(void);
 BOOL MSLSA_IsKerberosLogon();
-char *afs_realm_of_cell(struct afsconf_cell *);
+char *afs_realm_of_cell(krb5_context, struct afsconf_cell *);
 #endif /* AFSKFW_INT_H */

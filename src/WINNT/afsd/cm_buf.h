@@ -32,6 +32,11 @@ extern long buf_bufferSize;
 #define CM_BUF_HASHSIZE	1024
 extern long buf_hashSize;
 
+/* cache type */
+#define CM_BUF_CACHETYPE_FILE 1
+#define CM_BUF_CACHETYPE_VIRTUAL 2
+extern int buf_cacheType;
+
 /* force it to be signed so that mod comes out positive or 0 */
 #define BUF_HASH(fidp,offsetp) ((((fidp)->vnode+((fidp)->unique << 5)	\
 				+(fidp)->volume+(fidp)->cell		\

@@ -16,6 +16,8 @@
  * "ojala que es correcto!"
  */
 
+#define IGNORE_STDS_H  1
+#include <afs/param.h>
 #include <lwp_elf.h>
 
 	.file "process.s"

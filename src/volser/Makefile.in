@@ -148,7 +148,18 @@ ${DEST}/lib/afs/libvolser.a: libvolser.a
 	${INSTALL} $? $@
 
 ${DEST}/root.server/usr/afs/bin/volserver: volserver
-	${INSTALL} $? $@
+	@case ${SYS_NAME} in \
+	alpha_dux4*|*linux*|rs_aix*|sgi_6*|sun4x*|sunx86*) \
+	echo "Don't install volserver for ${SYS_NAME}" ;; \
+	*_darwin_[1-6][0-9]) \
+	echo ${INSTALL} -ns $? $@ ; \
+	${INSTALL} -ns $? $@ ;; \
+	*_darwin_*) \
+	echo "Don't install volserver for ${SYS_NAME}" ;; \
+	*) \
+	echo ${INSTALL} -ns $? $@ ; \
+	${INSTALL} -ns $? $@ ;; \
+	esac
 
 #
 # Misc targets
@@ -184,7 +195,18 @@ ${DESTDIR}${afssrvsbindir}/vos: vos
 	${INSTALL} $? $@
 
 ${DESTDIR}${afssrvlibexecdir}/volserver: volserver
-	${INSTALL} $? $@
+	@case ${SYS_NAME} in \
+	alpha_dux4*|*linux*|rs_aix*|sgi_6*|sun4x*|sunx86*) \
+	echo "Don't install volserver for ${SYS_NAME}" ;; \
+	*_darwin_[1-6][0-9]) \
+	echo ${INSTALL} -ns $? $@ ; \
+	${INSTALL} -ns $? $@ ;; \
+	*_darwin_*) \
+	echo "Don't install volserver for ${SYS_NAME}" ;; \
+	*) \
+	echo ${INSTALL} -ns $? $@ ; \
+	${INSTALL} -ns $? $@ ;; \
+	esac
 
 ${DESTDIR}${libdir}/afs/libvolser.a: libvolser.a
 	${INSTALL} $? $@

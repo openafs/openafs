@@ -3,6 +3,7 @@
 
 #ifndef DJGPP
 #include <windows.h>
+#include <winreg.h>
 #include <winsock2.h>
 #else
 #include <netdb.h>
@@ -29,28 +30,75 @@ cm_localMountPoint_t* cm_localMountPoints;
 osi_mutex_t cm_Freelance_Lock;
 int cm_localMountPointChangeFlag = 0;
 int cm_freelanceEnabled = 0;
+afs_uint32    FakeFreelanceModTime = 0x3b49f6e2;
 
 void cm_InitFakeRootDir();
 
-void cm_InitFreelance() {
-  
-#ifdef COMMENT
-    while ( !IsDebuggerPresent() ) {
-        Sleep(1000);
+#if !defined(DJGPP)
+void cm_FreelanceChangeNotifier(void * parmp) {
+    HANDLE hFreelanceChangeEvent = 0;
+    HKEY   hkFreelance = 0;
+
+    if (RegOpenKeyEx( HKEY_LOCAL_MACHINE, 
+                      "SOFTWARE\\OpenAFS\\Client\\Freelance",
+                      0,
+                      KEY_NOTIFY,
+                      &hkFreelance) == ERROR_SUCCESS) {
+
+        hFreelanceChangeEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+        if (hFreelanceChangeEvent == NULL) {
+            RegCloseKey(hkFreelance);
+            return;
+        }
     }
+
+    while ( TRUE ) {
+    /* check hFreelanceChangeEvent to see if it is set. 
+     * if so, call cm_noteLocalMountPointChange()
+     */
+        if (RegNotifyChangeKeyValue( hkFreelance,   /* hKey */
+                                     FALSE,         /* bWatchSubtree */
+                                     REG_NOTIFY_CHANGE_LAST_SET, /* dwNotifyFilter */
+                                     hFreelanceChangeEvent, /* hEvent */
+                                     TRUE          /* fAsynchronous */
+                                     ) != ERROR_SUCCESS) {
+            RegCloseKey(hkFreelance);
+            CloseHandle(hFreelanceChangeEvent);
+            return;
+        }
+
+        if (WaitForSingleObject(hFreelanceChangeEvent, INFINITE) == WAIT_OBJECT_0)
+        {
+            cm_noteLocalMountPointChange();
+        }
+    }
+}
+#endif
+
+void cm_InitFreelance() {
+#if !defined(DJGPP)
+    thread_t phandle;
+    int lpid;
 #endif
 
 	lock_InitializeMutex(&cm_Freelance_Lock, "Freelance Lock");
-  
+
 	// yj: first we make a call to cm_initLocalMountPoints
 	// to read all the local mount points from an ini file
 	cm_InitLocalMountPoints();
-	
+
 	// then we make a call to InitFakeRootDir to create
 	// a fake root directory based on the local mount points
 	cm_InitFakeRootDir();
-
 	// --- end of yj code
+
+#if !defined(DJGPP)
+    /* Start the registry monitor */
+    phandle = thrd_Create(NULL, 65536, (ThreadFunc) cm_FreelanceChangeNotifier,
+                          NULL, 0, &lpid, "cm_FreelanceChangeNotifier");
+	osi_assert(phandle != NULL);
+	thrd_CloseHandle(phandle);
+#endif
 }
 
 /* yj: Initialization of the fake root directory */
@@ -231,37 +279,36 @@ void cm_InitFakeRootDir() {
 
 int cm_FakeRootFid(cm_fid_t *fidp)
 {
-      fidp->cell = 0x1;            /* root cell */
+      fidp->cell = AFS_FAKE_ROOT_CELL_ID;            /* root cell */
       fidp->volume = AFS_FAKE_ROOT_VOL_ID;   /* root.afs ? */
       fidp->vnode = 0x1;
       fidp->unique = 0x1;
       return 0;
 }
   
-int cm_getLocalMountPointChange() {
-  return cm_localMountPointChangeFlag;
-}
-
-int cm_clearLocalMountPointChange() {
-  cm_localMountPointChangeFlag = 0;
-  return 0;
-}
-
 /* called directly from ioctl */
 /* called while not holding freelance lock */
 int cm_noteLocalMountPointChange() {
-  lock_ObtainMutex(&cm_Freelance_Lock);
-  cm_fakeDirVersion++;
-  cm_localMountPointChangeFlag = 1;
-  lock_ReleaseMutex(&cm_Freelance_Lock);
-  return 1;
+    lock_ObtainMutex(&cm_Freelance_Lock);
+    cm_fakeDirVersion++;
+    cm_localMountPointChangeFlag = 1;
+    lock_ReleaseMutex(&cm_Freelance_Lock);
+    return 1;
+}
+
+int cm_getLocalMountPointChange() {
+    return cm_localMountPointChangeFlag;
+}
+
+int cm_clearLocalMountPointChange() {
+    cm_localMountPointChangeFlag = 0;
+    return 0;
 }
 
 int cm_reInitLocalMountPoints() {
 	cm_fid_t aFid;
 	int i, hash;
 	cm_scache_t *scp, **lscpp, *tscp;
-
 	
 	osi_Log0(afsd_logp,"----- freelance reinitialization starts ----- ");
 
@@ -270,7 +317,7 @@ int cm_reInitLocalMountPoints() {
 
 	osi_Log0(afsd_logp,"Invalidating local mount point scp...  ");
 
-	aFid.cell = 0x1;
+	aFid.cell = AFS_FAKE_ROOT_CELL_ID;
 	aFid.volume=AFS_FAKE_ROOT_VOL_ID;
 	aFid.unique=0x1;
 	aFid.vnode=0x2;
@@ -344,14 +391,113 @@ int cm_reInitLocalMountPoints() {
 // process for the freelance client.
 /* to be called while holding freelance lock unless during init. */
 long cm_InitLocalMountPoints() {
-	
 	FILE *fp;
-	char line[200];
-	int i;
+    int i;
+	char line[512];
 	char* t;
 	cm_localMountPoint_t* aLocalMountPoint;
 	char hdir[120];
+    long code;
+    char rootCellName[256];
+#if !defined(DJGPP)
+    HKEY hkFreelance = 0;
+    DWORD dwType, dwSize;
+    DWORD dwMountPoints;
+    DWORD dwIndex;
+    FILETIME ftLastWriteTime;
+    afs_uint32 unixTime;
+#endif
 
+#if !defined(DJGPP)
+    if (RegOpenKeyEx( HKEY_LOCAL_MACHINE, 
+                        "SOFTWARE\\OpenAFS\\Client\\Freelance",
+						0,
+                        KEY_READ|KEY_WRITE|KEY_QUERY_VALUE,
+                        &hkFreelance) == ERROR_SUCCESS) {
+
+        RegQueryInfoKey( hkFreelance,
+                         NULL,  /* lpClass */
+                         NULL,  /* lpcClass */
+                         NULL,  /* lpReserved */
+                         NULL,  /* lpcSubKeys */
+                         NULL,  /* lpcMaxSubKeyLen */
+                         NULL,  /* lpcMaxClassLen */
+                         &dwMountPoints, /* lpcValues */
+                         NULL,  /* lpcMaxValueNameLen */
+                         NULL,  /* lpcMaxValueLen */
+                         NULL,  /* lpcbSecurityDescriptor */
+                         &ftLastWriteTime /* lpftLastWriteTime */
+                         );
+
+        smb_UnixTimeFromLargeSearchTime(&FakeFreelanceModTime, &ftLastWriteTime);
+
+        if ( dwMountPoints == 0 ) {
+            sprintf(line,"%s#%s:root.cell.\n",rootCellName,rootCellName);
+            dwType = REG_SZ;
+            dwSize = strlen(line) + 1;
+            RegSetValueEx( hkFreelance, "0", 0, dwType, line, dwSize);
+            sprintf(line,".%s%%%s:root.cell.\n",rootCellName,rootCellName);
+            dwSize = strlen(line) + 1;
+            RegSetValueEx( hkFreelance, "1", 0, dwType, line, dwSize);
+            dwMountPoints = 2;
+        }
+
+        // get the number of entries there are from the first line
+        // that we read
+        cm_noLocalMountPoints = dwMountPoints;
+
+        // create space to store the local mount points
+        cm_localMountPoints = malloc(sizeof(cm_localMountPoint_t) * cm_noLocalMountPoints);
+        aLocalMountPoint = cm_localMountPoints;
+
+        // now we read n lines and parse them into local mount points
+        // where n is the number of local mount points there are, as
+        // determined above.
+        // Each line in the ini file represents 1 local mount point and 
+        // is in the format xxx#yyy:zzz, where xxx is the directory
+        // entry name, yyy is the cell name and zzz is the volume name.
+        // #yyy:zzz together make up the mount point.
+        for ( dwIndex = 0 ; dwIndex < dwMountPoints; dwIndex++ ) {
+            TCHAR szValueName[16];
+            DWORD dwValueSize = 16;
+            dwSize = sizeof(line);
+            RegEnumValue( hkFreelance, dwIndex, szValueName, &dwValueSize, NULL,
+                          &dwType, line, &dwSize);
+
+            // line is not empty, so let's parse it
+            t = strchr(line, '#');
+            if (!t)
+                t = strchr(line, '%');
+            // make sure that there is a '#' or '%' separator in the line
+            if (!t) {
+                afsi_log("error occurred while parsing entry in %s: no # or %% separator in line %d", AFS_FREELANCE_INI, dwIndex);
+                fprintf(stderr, "error occurred while parsing entry in afs_freelance.ini: no # or %% separator in line %d", dwIndex);
+                cm_noLocalMountPoints--;
+                continue;
+            }
+            aLocalMountPoint->namep=malloc(t-line+1);
+            memcpy(aLocalMountPoint->namep, line, t-line);
+            *(aLocalMountPoint->namep + (t-line)) = 0;
+		
+            aLocalMountPoint->mountPointStringp=malloc(strlen(line) - (t-line) + 1);
+            memcpy(aLocalMountPoint->mountPointStringp, t, strlen(line)-(t-line)-2);
+            *(aLocalMountPoint->mountPointStringp + (strlen(line)-(t-line)-2)) = 0;
+    
+            osi_Log2(afsd_logp,"found mount point: name %s, string %s",
+                      osi_LogSaveString(afsd_logp,aLocalMountPoint->namep),
+                      osi_LogSaveString(afsd_logp,aLocalMountPoint->mountPointStringp));
+
+            aLocalMountPoint++;
+        }
+
+        RegCloseKey(hkFreelance);
+        return 0;
+    }
+#endif
+
+    /* What follows is the old code to read freelance mount points 
+     * out of a text file modified to copy the data into the registry
+     */
 	cm_GetConfigDir(hdir);
 	strcat(hdir, AFS_FREELANCE_INI);
 	// open the ini file for reading
@@ -359,18 +505,40 @@ long cm_InitLocalMountPoints() {
 
 	// if we fail to open the file, create an empty one
 	if (!fp) {
-	  fp = fopen(hdir, "w");
-	  fputs("0\n", fp);
-	  fclose(fp);
-	  return 0;  /* success */
+        fp = fopen(hdir, "w");
+      	code = cm_GetRootCellName(rootCellName);
+        if (code == 0) {
+            fputs("1\n", fp);
+            fprintf(fp,"%s#%s:root.cell.\n",rootCellName,rootCellName);
+            fprintf(fp,".%s%%%s:root.cell.\n",rootCellName,rootCellName);
+            fclose(fp);
+            fopen(hdir, "r");
+        } else {
+            fputs("0\n", fp);
+            fclose(fp);
+            return 0;  /* success */
+        }
 	}
 
 	// we successfully opened the file
 	osi_Log0(afsd_logp,"opened afs_freelance.ini");
 	
+#if !defined(DJGPP)
+    RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
+                    "SOFTWARE\\OpenAFS\\Client\\Freelance",
+                    0,
+                    NULL,
+                    REG_OPTION_NON_VOLATILE,
+                    KEY_READ|KEY_WRITE,
+                    NULL,
+                    &hkFreelance,
+                    NULL);
+    dwIndex = 0;
+#endif
+
 	// now we read the first line to see how many entries
 	// there are
-	fgets(line, 200, fp);
+	fgets(line, sizeof(line), fp);
 
 	// if the line is empty at any point when we're reading
 	// we're screwed. report error and return.
@@ -396,38 +564,58 @@ long cm_InitLocalMountPoints() {
 	// entry name, yyy is the cell name and zzz is the volume name.
 	// #yyy:zzz together make up the mount point.
 	for (i=0; i<cm_noLocalMountPoints; i++) {
-		fgets(line, 200, fp);
+		fgets(line, sizeof(line), fp);
 		// check that the line is not empty
 		if (line[0]==0) {
 			afsi_log("error occurred while parsing entry in %s: empty line in line %d", AFS_FREELANCE_INI, i);
 			fprintf(stderr, "error occurred while parsing entry in afs_freelance.ini: empty line in line %d", i);
 			return -1;
 		}
+
+#if !defined(DJGPP)
+        if ( hkFreelance ) {
+            char szIndex[16];
+            /* we are migrating to the registry */
+            sprintf(szIndex,"%d",dwIndex++);
+            dwType = REG_SZ;
+            dwSize = strlen(line) + 1;
+            RegSetValueEx( hkFreelance, szIndex, 0, dwType, line, dwSize);
+        }
+#endif 
+
 		// line is not empty, so let's parse it
 		t = strchr(line, '#');
-		// make sure that there is a '#' separator in the line
+        if (!t)
+            t = strchr(line, '%');
+		// make sure that there is a '#' or '%' separator in the line
 		if (!t) {
-			afsi_log("error occurred while parsing entry in %s: no # separator in line %d", AFS_FREELANCE_INI, i);
-			fprintf(stderr, "error occurred while parsing entry in afs_freelance.ini: no # separator in line %d", i);
+			afsi_log("error occurred while parsing entry in %s: no # or %% separator in line %d", AFS_FREELANCE_INI, i);
+			fprintf(stderr, "error occurred while parsing entry in afs_freelance.ini: no # or %% separator in line %d", i);
 			return -1;
 		}
 		aLocalMountPoint->namep=malloc(t-line+1);
 		memcpy(aLocalMountPoint->namep, line, t-line);
 		*(aLocalMountPoint->namep + (t-line)) = 0;
-		aLocalMountPoint->mountPointStringp=malloc(strlen(line) - (t-line) + 1);
+		
+        aLocalMountPoint->mountPointStringp=malloc(strlen(line) - (t-line) + 1);
 		memcpy(aLocalMountPoint->mountPointStringp, t, strlen(line)-(t-line)-2);
 		*(aLocalMountPoint->mountPointStringp + (strlen(line)-(t-line)-2)) = 0;
     
         osi_Log2(afsd_logp,"found mount point: name %s, string %s",
-			aLocalMountPoint->namep,
-			aLocalMountPoint->mountPointStringp);
+                  aLocalMountPoint->namep,
+                  aLocalMountPoint->mountPointStringp);
 
         aLocalMountPoint++;
 	}
 	fclose(fp);
+#if !defined(DJGPP)
+    if ( hkFreelance ) {
+        RegCloseKey(hkFreelance);
+        DeleteFile(hdir);
+    }
+#endif
 	return 0;
 }
-
 
 int cm_getNoLocalMountPoints() {
 	return cm_noLocalMountPoints;
@@ -437,114 +625,222 @@ cm_localMountPoint_t* cm_getLocalMountPoint(int vnode) {
 	return 0;
 }
 
-long cm_FreelanceAddMount(char *filename, char *cellname, char *volume, cm_fid_t *fidp)
+long cm_FreelanceAddMount(char *filename, char *cellname, char *volume, int rw, cm_fid_t *fidp)
 {
     FILE *fp;
     char hfile[120];
-    char line[200];
+    char line[512];
     char fullname[200];
     int n;
     int alias = 0;
+#if !defined(DJGPP)
+    HKEY hkFreelance = 0;
+    DWORD dwType, dwSize;
+    DWORD dwMountPoints;
+    DWORD dwIndex;
+#endif
 
     /* before adding, verify the cell name; if it is not a valid cell,
        don't add the mount point.
        allow partial matches as a means of poor man's alias. */
     /* major performance issue? */
-    osi_Log3(afsd_logp,"Freelance Add Mount request: filename=%s cellname=%s volume=%s",
-              filename, cellname, volume);
+    osi_Log4(afsd_logp,"Freelance Add Mount request: filename=%s cellname=%s volume=%s %s",
+              osi_LogSaveString(afsd_logp,filename), 
+              osi_LogSaveString(afsd_logp,cellname), 
+              osi_LogSaveString(afsd_logp,volume), 
+              rw ? "rw" : "ro");
     if (cellname[0] == '.') {
-        if (!cm_GetCell_Gen(&cellname[1], &fullname[1], CM_FLAG_CREATE))
+        if (!cm_GetCell_Gen(&cellname[1], fullname, CM_FLAG_CREATE))
             return -1;
-        fullname[0]='.';
     } else {
         if (!cm_GetCell_Gen(cellname, fullname, CM_FLAG_CREATE))
             return -1;
     }
     
-    osi_Log1(afsd_logp,"Freelance Adding Mount for Cell: %s", cellname);
+    osi_Log1(afsd_logp,"Freelance Adding Mount for Cell: %s", 
+              osi_LogSaveString(afsd_logp,cellname));
 
     lock_ObtainMutex(&cm_Freelance_Lock);
 
-     cm_GetConfigDir(hfile);
-     strcat(hfile, AFS_FREELANCE_INI);
-     fp = fopen(hfile, "r+");
-     if (!fp)
-       return CM_ERROR_INVAL;
-     fgets(line, 200, fp);
-     n = atoi(line);
-     n++;
-     fseek(fp, 0, SEEK_SET);
-     fprintf(fp, "%d", n);
-     fseek(fp, 0, SEEK_END);
-     fprintf(fp, "%s#%s:%s\n", filename, fullname, volume);
-     fclose(fp);
-     lock_ReleaseMutex(&cm_Freelance_Lock);
+#if !defined(DJGPP)
+    if (RegOpenKeyEx( HKEY_LOCAL_MACHINE, 
+                      "SOFTWARE\\OpenAFS\\Client\\Freelance",
+                      0,
+                      KEY_READ|KEY_WRITE|KEY_QUERY_VALUE,
+                      &hkFreelance) == ERROR_SUCCESS) {
 
-     /* cm_reInitLocalMountPoints(); */
-     if (fidp) {
-       fidp->unique = 1;
-       fidp->vnode = cm_noLocalMountPoints + 1;   /* vnode value of last mt pt */
-     }
-     cm_noteLocalMountPointChange();
-    
-     return 0;
+        RegQueryInfoKey( hkFreelance,
+                         NULL,  /* lpClass */
+                         NULL,  /* lpcClass */
+                         NULL,  /* lpReserved */
+                         NULL,  /* lpcSubKeys */
+                         NULL,  /* lpcMaxSubKeyLen */
+                         NULL,  /* lpcMaxClassLen */
+                         &dwMountPoints, /* lpcValues */
+                         NULL,  /* lpcMaxValueNameLen */
+                         NULL,  /* lpcMaxValueLen */
+                         NULL,  /* lpcbSecurityDescriptor */
+                         NULL   /* lpftLastWriteTime */
+                         );
+
+        if (rw)
+            sprintf(line, "%s%%%s:%s\n", filename, fullname, volume);
+        else
+            sprintf(line, "%s#%s:%s\n", filename, fullname, volume);
+
+        /* If we are adding a new value, there must be an unused name
+         * within the range 0 to dwMountPoints 
+         */
+        for ( dwIndex = 0; dwIndex <= dwMountPoints; dwIndex++ ) {
+            char szIndex[16];
+            sprintf(szIndex, "%d", dwIndex);
+            if (RegQueryValueEx( hkFreelance, szIndex, 0, &dwType, NULL, &dwSize) != ERROR_SUCCESS) {
+                /* found an unused value */
+                dwType = REG_SZ;
+                dwSize = strlen(line) + 1;
+                RegSetValueEx( hkFreelance, szIndex, 0, dwType, line, dwSize);
+                break;
+            }
+        }
+        RegCloseKey(hkFreelance);
+    } else 
+#endif
+    {
+        cm_GetConfigDir(hfile);
+        strcat(hfile, AFS_FREELANCE_INI);
+        fp = fopen(hfile, "r+");
+        if (!fp)
+            return CM_ERROR_INVAL;
+        fgets(line, sizeof(line), fp);
+        n = atoi(line);
+        n++;
+        fseek(fp, 0, SEEK_SET);
+        fprintf(fp, "%d", n);
+        fseek(fp, 0, SEEK_END);
+        if (rw)
+            fprintf(fp, "%s%%%s:%s\n", filename, fullname, volume);
+        else
+            fprintf(fp, "%s#%s:%s\n", filename, fullname, volume);
+        fclose(fp);
+    }
+    lock_ReleaseMutex(&cm_Freelance_Lock);
+
+    /* cm_reInitLocalMountPoints(); */
+    if (fidp) {
+        fidp->unique = 1;
+        fidp->vnode = cm_noLocalMountPoints + 1;   /* vnode value of last mt pt */
+    }
+    cm_noteLocalMountPointChange();
+    return 0;
 }
 
 long cm_FreelanceRemoveMount(char *toremove)
 {
-     int i, n;
-     char* cp;
-     char line[200];
-     char shortname[200];
-     char hfile[120], hfile2[120];
-     FILE *fp1, *fp2;
-     int found=0;
+    int i, n;
+    char* cp;
+    char line[512];
+    char shortname[200];
+    char hfile[120], hfile2[120];
+    FILE *fp1, *fp2;
+    int found=0;
+#if !defined(DJGPP)
+    HKEY hkFreelance = 0;
+    DWORD dwType, dwSize;
+    DWORD dwMountPoints;
+    DWORD dwIndex;
+#endif
 
     lock_ObtainMutex(&cm_Freelance_Lock);
 
-     cm_GetConfigDir(hfile);
-     strcat(hfile, AFS_FREELANCE_INI);
-     strcpy(hfile2, hfile);
-     strcat(hfile2, "2");
-     fp1=fopen(hfile, "r+");
-     if (!fp1)
-       return CM_ERROR_INVAL;
-     fp2=fopen(hfile2, "w+");
-     if (!fp2) {
-       fclose(fp1);
-       return CM_ERROR_INVAL;
-     }
 
-     fgets(line, 200, fp1);
-     n=atoi(line);
-     fprintf(fp2, "%d\n", n-1);
+#if !defined(DJGPP)
+    if (RegOpenKeyEx( HKEY_LOCAL_MACHINE, 
+                      "SOFTWARE\\OpenAFS\\Client\\Freelance",
+                      0,
+                      KEY_READ|KEY_WRITE|KEY_QUERY_VALUE,
+                      &hkFreelance) == ERROR_SUCCESS) {
 
-     for (i=0; i<n; i++) {
-          fgets(line, 200, fp1);
-          cp=strchr(line, '#');
-          memcpy(shortname, line, cp-line);
-          shortname[cp-line]=0;
+        RegQueryInfoKey( hkFreelance,
+                         NULL,  /* lpClass */
+                         NULL,  /* lpcClass */
+                         NULL,  /* lpReserved */
+                         NULL,  /* lpcSubKeys */
+                         NULL,  /* lpcMaxSubKeyLen */
+                         NULL,  /* lpcMaxClassLen */
+                         &dwMountPoints, /* lpcValues */
+                         NULL,  /* lpcMaxValueNameLen */
+                         NULL,  /* lpcMaxValueLen */
+                         NULL,  /* lpcbSecurityDescriptor */
+                         NULL   /* lpftLastWriteTime */
+                         );
 
-          if (strcmp(shortname, toremove)==0) {
+        for ( dwIndex = 0; dwIndex < dwMountPoints; dwIndex++ ) {
+            TCHAR szValueName[16];
+            DWORD dwValueSize = 16;
+            dwSize = sizeof(line);
+            RegEnumValue( hkFreelance, dwIndex, szValueName, &dwValueSize, NULL,
+                          &dwType, line, &dwSize);
 
-          } else {
-	    found = 1;
-	    fputs(line, fp2);
-          }
-     }
+            cp=strchr(line, '#');
+            if (!cp)
+                cp=strchr(line, '%');
+            memcpy(shortname, line, cp-line);
+            shortname[cp-line]=0;
 
-     fclose(fp1);
-     fclose(fp2);
-     if (!found)
-       return CM_ERROR_NOSUCHFILE;
+            if (!strcmp(shortname, toremove)) {
+                RegDeleteValue( hkFreelance, szValueName );
+                break;
+            }
+        }
+        RegCloseKey(hkFreelance);
+    } else 
+#endif
+    {
+        cm_GetConfigDir(hfile);
+        strcat(hfile, AFS_FREELANCE_INI);
+        strcpy(hfile2, hfile);
+        strcat(hfile2, "2");
+        fp1=fopen(hfile, "r+");
+        if (!fp1)
+            return CM_ERROR_INVAL;
+        fp2=fopen(hfile2, "w+");
+        if (!fp2) {
+            fclose(fp1);
+            return CM_ERROR_INVAL;
+        }
 
-     unlink(hfile);
-     rename(hfile2, hfile);
+        fgets(line, sizeof(line), fp1);
+        n=atoi(line);
+        fprintf(fp2, "%d\n", n-1);
 
-     lock_ReleaseMutex(&cm_Freelance_Lock);
+        for (i=0; i<n; i++) {
+            fgets(line, sizeof(line), fp1);
+            cp=strchr(line, '#');
+            if (!cp)
+                cp=strchr(line, '%');
+            memcpy(shortname, line, cp-line);
+            shortname[cp-line]=0;
 
-     cm_noteLocalMountPointChange();
-     return 0;
+            if (strcmp(shortname, toremove)==0) {
+
+            } else {
+                found = 1;
+                fputs(line, fp2);
+            }
+        }
+
+        fclose(fp1);
+        fclose(fp2);
+        if (!found)
+            return CM_ERROR_NOSUCHFILE;
+
+        unlink(hfile);
+        rename(hfile2, hfile);
+    }
+    
+    lock_ReleaseMutex(&cm_Freelance_Lock);
+    cm_noteLocalMountPointChange();
+    return 0;
 }
 
 #endif /* AFS_FREELANCE_CLIENT */

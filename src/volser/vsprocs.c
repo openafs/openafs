@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/volser/vsprocs.c,v 1.32 2004/06/02 08:39:34 shadow Exp $");
+    ("$Header: /cvs/openafs/src/volser/vsprocs.c,v 1.33 2004/07/29 03:44:08 shadow Exp $");
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -4040,6 +4040,7 @@ UV_RestoreVolume(afs_int32 toserver, afs_int32 topart, afs_int32 tovolid,
     afs_int32 totid, code, rcode, vcode, terror = 0;
     afs_int32 rxError = 0;
     struct volser_status tstatus;
+    struct volintInfo vinfo;
     char partName[10];
     afs_int32 pvolid;
     afs_int32 temptid;
@@ -4049,7 +4050,8 @@ UV_RestoreVolume(afs_int32 toserver, afs_int32 topart, afs_int32 tovolid,
     int islocked;
     struct restoreCookie cookie;
     int reuseID;
-    afs_int32 newDate, volflag, voltype, volsertype;
+    afs_int32 volflag, voltype, volsertype;
+    afs_int32 oldCreateDate, oldUpdateDate, newCreateDate, newUpdateDate;
     int index, same, errcode;
     char apartName[10];
 
@@ -4129,6 +4131,13 @@ UV_RestoreVolume(afs_int32 toserver, afs_int32 topart, afs_int32 tovolid,
 	    EGOTO1(refail, code, "Failed to start transaction on %u\n",
 		   pvolid);
 
+	    code = AFSVolGetStatus(toconn, totid, &tstatus);
+	    EGOTO1(refail, code, "Could not get timestamp from volume %u\n",
+		   pvolid);
+
+	    oldCreateDate = tstatus.creationDate;
+	    oldUpdateDate = tstatus.updateDate;
+
 	    code =
 		AFSVolSetFlags(toconn, totid,
 			       VTDeleteOnSalvage | VTOutOfService);
@@ -4150,8 +4159,6 @@ UV_RestoreVolume(afs_int32 toserver, afs_int32 topart, afs_int32 tovolid,
 		AFSVolCreateVolume(toconn, topart, tovolname, volsertype, 0,
 				   &pvolid, &totid);
 	    EGOTO1(refail, code, "Could not create new volume %u\n", pvolid);
-
-	    newDate = 0;
 	} else {
 	    code =
 		AFSVolTransCreate(toconn, pvolid, topart, ITOffline, &totid);
@@ -4161,9 +4168,15 @@ UV_RestoreVolume(afs_int32 toserver, afs_int32 topart, afs_int32 tovolid,
 	    code = AFSVolGetStatus(toconn, totid, &tstatus);
 	    EGOTO1(refail, code, "Could not get timestamp from volume %u\n",
 		   pvolid);
-	    newDate = tstatus.creationDate;
+
+	    oldCreateDate = tstatus.creationDate;
+	    oldUpdateDate = tstatus.updateDate;
 	}
+    } else {
+	oldCreateDate = 0;
+	oldUpdateDate = 0;
     }
+
     cookie.parent = pvolid;
     cookie.type = voltype;
     cookie.clone = 0;
@@ -4204,12 +4217,35 @@ UV_RestoreVolume(afs_int32 toserver, afs_int32 topart, afs_int32 tovolid,
 	error = code;
 	goto refail;
     }
-    if (!newDate)
-	newDate = time(0);
-    code = AFSVolSetDate(toconn, totid, newDate);
+
+    if (flags & RV_CRDUMP)
+	newCreateDate = tstatus.creationDate;
+    else if (flags & RV_CRKEEP && oldCreateDate != 0)
+	newCreateDate = oldCreateDate;
+    else
+	newCreateDate = time(0);
+    if (flags & RV_LUDUMP)
+	newUpdateDate = tstatus.updateDate;
+    else if (flags & RV_LUKEEP)
+	newUpdateDate = oldUpdateDate;
+    else
+	newUpdateDate = time(0);
+    code = AFSVolSetDate(toconn,totid, newCreateDate);
     if (code) {
-	fprintf(STDERR, "Could not set the date on %lu\n",
-		(unsigned long)pvolid);
+	fprintf(STDERR, "Could not set the 'creation' date on %u\n", pvolid);
+	error = code;
+	goto refail;
+    }
+
+    memset(&vinfo, 0, sizeof(struct volintInfo));
+    vinfo.dayUse = -1;
+    vinfo.maxquota = -1;
+    vinfo.creationDate = newCreateDate;
+    vinfo.updateDate = newUpdateDate;
+    code = AFSVolSetInfo(toconn, totid, &vinfo);
+    if (code) {
+	fprintf(STDERR, "Could not set the 'last updated' date on %u\n",
+		pvolid);
 	error = code;
 	goto refail;
     }

@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_osi.c,v 1.45 2004/06/21 20:01:50 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_osi.c,v 1.48 2004/08/09 00:17:33 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -308,6 +308,26 @@ afs_osi_MaskSignals(void)
 void
 afs_osi_UnmaskRxkSignals(void)
 {
+}
+
+/* Two hacks to try and fix afsdb */
+void 
+afs_osi_MaskUserLoop()
+{
+#ifdef AFS_DARWIN_ENV
+    afs_osi_Invisible();
+    afs_osi_fullSigMask();
+#else
+    afs_osi_MaskSignals();
+#endif
+}
+
+void 
+afs_osi_UnmaskUserLoop()
+{
+#ifdef AFS_DARWIN_ENV
+    afs_osi_fullSigRestore();
+#endif
 }
 
 /* register rxk listener proc info */
@@ -617,7 +637,7 @@ afs_osi_suser(void *credp)
 #if defined(AFS_SUN5_ENV)
     return afs_suser(credp);
 #else
-    return afs_suser();
+    return afs_suser(NULL);
 #endif
 }
 #endif
@@ -786,6 +806,12 @@ afs_osi_TraverseProcTable(void)
 #endif
 
 #if defined(AFS_OSF_ENV)
+
+#ifdef AFS_DUX50_ENV
+extern struct pid_entry *pidtab;
+extern int npid; 
+#endif
+
 void
 afs_osi_TraverseProcTable(void)
 {

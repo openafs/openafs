@@ -145,7 +145,11 @@ extern int
 #define AFSDIR_FILELOG_FILE     "FileLog"
 #define AFSDIR_MIGRATE_LOGNAME  "wtlog."
 
+#ifdef COMMENT
 #define AFSDIR_CELLSERVDB_FILE_NTCLIENT  "afsdcell.ini"
+#else
+#define AFSDIR_CELLSERVDB_FILE_NTCLIENT  AFSDIR_CELLSERVDB_FILE
+#endif
 
 #define AFSDIR_NETINFO_FILE     "NetInfo"
 #define AFSDIR_NETRESTRICT_FILE "NetRestrict"

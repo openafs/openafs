@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/SOLARIS/rx_knet.c,v 1.17 2004/06/24 17:38:34 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/SOLARIS/rx_knet.c,v 1.19 2004/07/28 22:34:13 shadow Exp $");
 
 #ifdef AFS_SUN5_ENV
 #include "rx/rx_kcommon.h"
@@ -222,7 +222,7 @@ struct sockaddr_in rx_sockaddr;
 
 /* Allocate a new socket at specified port in network byte order. */
 struct osi_socket *
-rxk_NewSocket(short aport)
+rxk_NewSocketHost(afs_uint32 ahost, short aport)
 {
     vnode_t *accessvp;
     struct sonode *so;
@@ -296,7 +296,8 @@ rxk_NewSocket(short aport)
 
     addr.sin_family = AF_INET;
     addr.sin_port = aport;
-    addr.sin_addr.s_addr = INADDR_ANY;
+    addr.sin_addr.s_addr = ahost; /* I wonder what the odds are on
+				     needing to unbyteswap this */
     error = sockfs_sobind(so, (struct sockaddr *)&addr, sizeof(addr), 0, 0);
     if (error != 0) {
 	return NULL;
@@ -315,6 +316,12 @@ rxk_NewSocket(short aport)
     }
 
     return (struct osi_socket *)so;
+}
+
+struct osi_socket *
+rxk_NewSocket(short aport)
+{
+    return rxk_NewSocketHost(htonl(INADDR_ANY), aport);
 }
 
 int
@@ -341,14 +348,11 @@ osi_FreeSocket(register struct osi_socket *asocket)
 	afs_osi_Sleep(&rxk_ListenerPid);
     }
 
-#ifdef AFS_SUN510_ENV
+    /* Was sockfs_sounbind(so, 0); sockfs_sockfree(so); That's wrong */
     vp = SOTOV(so);
     VOP_CLOSE(vp, FREAD|FWRITE, 1, (offset_t)0, CRED());
     VN_RELE(vp);
-#else
-    sockfs_sounbind(so, 0);
-    sockfs_sockfree(so);
-#endif
+
     return 0;
 }
 
@@ -506,7 +510,7 @@ dev_t afs_udp_rdev = (dev_t) 0;
 
 /* Allocate a new socket at specified port in network byte order. */
 struct osi_socket *
-rxk_NewSocket(short aport)
+rxk_NewSocketHost(afs_uint32 ahost, short aport)
 {
     TIUSER *udp_tiptr;
     struct t_bind *reqp, *rspp;
@@ -537,7 +541,7 @@ rxk_NewSocket(short aport)
     myaddrp = (struct sockaddr_in *)reqp->addr.buf;
     myaddrp->sin_family = AF_INET;
     myaddrp->sin_port = aport;
-    myaddrp->sin_addr.s_addr = INADDR_ANY;	/* XXX Was 0 XXX */
+    myaddrp->sin_addr.s_addr = ahost;	/* byteswap? */
 
     code = t_kbind(udp_tiptr, reqp, rspp);
     if (code) {
@@ -567,6 +571,11 @@ rxk_NewSocket(short aport)
     return (struct osi_socket *)udp_tiptr;
 }
 
+struct osi_socket *
+rxk_NewSocket(short aport)
+{
+    return rxk_NewSocketHost(htonl(INADDR_ANY), aport);
+}
 
 int
 osi_FreeSocket(register struct osi_socket *asocket)

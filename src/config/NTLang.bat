@@ -143,55 +143,48 @@ set LANGID=1041
 set LANGNAME=ja_JP
 set LANGCP=932
 echo Building Japanese resources (%LANGID%, %LANGNAME%)
-goto arg2_warn
+goto arg2
 
 :ko_KR
 set LANGID=1042
 set LANGNAME=ko_KR
 set LANGCP=949
 echo Building Korean resources (%LANGID%, %LANGNAME%)
-goto arg2_warn
+goto arg2
 
 :zh_CN
 set LANGID=2052
 set LANGNAME=zh_CN
 set LANGCP=936
 echo Building Chinese (Simplified: PR China) resources (%LANGID%, %LANGNAME%)
-goto arg2_warn
+goto arg2
 
 :zh_TW
 set LANGID=1028
 set LANGNAME=zh_TW
 set LANGCP=950
 echo Building Chinese (Traditional: Taiwan) resources (%LANGID%, %LANGNAME%)
-goto arg2_warn
+goto arg2
 
 :pt_BR
 set LANGID=1046
 set LANGNAME=pt_BR
 set LANGCP=1252
 echo Building Brazilian Portuguese resources (%LANGID%, %LANGNAME%)
-goto arg2_warn
+goto arg2
 
 :es_ES
 set LANGID=1034
 set LANGNAME=es_ES
 set LANGCP=1252
 echo Building Spanish resources (%LANGID%, %LANGNAME%)
-goto arg2_warn
+goto arg2
 
 :de_DE
 set LANGID=1032
 set LANGNAME=de_DE
 set LANGCP=1252
 echo Building German resources (%LANGID%, %LANGNAME%)
-goto arg2_warn
-
-###############################################################################
-# Warn the user that ntlang.reg is required to build non-us languages
-
-:arg2_warn
-echo NOTE: If you have not already run WINNT/docs/NTLang.reg, do so now!
 goto arg2
 
 ###############################################################################

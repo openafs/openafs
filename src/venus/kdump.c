@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/venus/kdump.c,v 1.32 2004/05/11 19:52:28 shadow Exp $");
+    ("$Header: /cvs/openafs/src/venus/kdump.c,v 1.33 2004/07/13 05:49:54 shadow Exp $");
 
 #include <stdio.h>
 #include <errno.h>
@@ -25,6 +25,16 @@ RCSID
 #define _SYS_STATFS_H 1
 #define _BITS_SIGCONTEXT_H 1
 #undef USE_UCONTEXT
+#endif
+
+#ifdef AFS_LINUX26_ENV
+/* For some reason, this doesn't get defined in linux/types.h
+   if __KERNEL_STRICT_NAMES is defined. But the definition of
+   struct inode uses it.
+*/
+#ifndef pgoff_t
+#define pgoff_t unsigned long
+#endif
 #endif
 
 #include <string.h>
@@ -625,7 +635,11 @@ PrintIPAddr(int addr)
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef AFS_LINUX26_ENV
+#define KSYMS "/proc/kallsyms"
+#else
 #define KSYMS "/proc/ksyms"
+#endif
 
 /* symlist_t contains all the kernel symbols. Forcing a 64 byte array is
  * a bit wasteful, but simple.
@@ -689,6 +703,13 @@ read_ksyms(void)
 	}
 	ksyms[nksyms].s_value = (int)strtoul(line, &p, 16);
 	p++;
+#ifdef AFS_LINUX26_ENV
+	/* Linux 2.6 /proc/kallsyms has a one-char symbol type
+	   between address and name, so step over it and the following
+	   blank.
+	*/
+	p += 2;
+#endif
 	q = strchr(p, '\t');
 	if (q)
 	    *q = '\0';
@@ -2779,8 +2800,13 @@ print_vnode(kmem, vep, ptr, pnt)
 	 vep->i_atime, vep->i_mtime, vep->i_ctime, vep->i_version,
 	 vep->i_nrpages);
 #endif
+#ifdef AFS_LINUX26_ENV
+    printf("\ti_op=0x%x, i_rdev=0x%x, i_sb=0x%x\n", vep->i_op,
+	   vep->i_rdev, vep->i_sb);
+#else /* AFS_LINUX26_ENV */
     printf("\ti_op=0x%x, i_dev=0x%x, i_rdev=0x%x, i_sb=0x%x\n", vep->i_op,
 	   vep->i_dev, vep->i_rdev, vep->i_sb);
+#endif /* AFS_LINUX26_ENV */
 #ifdef AFS_LINUX24_ENV
 #ifdef AFS_PARISC_LINUX24_ENV
     printf("\ti_sem: count=%d, wait=0x%x\n", vep->i_sem.count,
@@ -2793,9 +2819,15 @@ print_vnode(kmem, vep, ptr, pnt)
     printf("\ti_sem: count=%d, waking=%d, wait=0x%x\n", vep->i_sem.count,
 	   vep->i_sem.waking, vep->i_sem.wait);
 #endif
+#ifdef AFS_LINUX26_ENV
+    printf("\ti_hash=0x%x:0x%x, i_list=0x%x:0x%x, i_dentry=0x%x:0x%x\n",
+	   vep->i_hash.pprev, vep->i_hash.next, vep->i_list.prev,
+	   vep->i_list.next, vep->i_dentry.prev, vep->i_dentry.next);
+#else /* AFS_LINUX26_ENV */
     printf("\ti_hash=0x%x:0x%x, i_list=0x%x:0x%x, i_dentry=0x%x:0x%x\n",
 	   vep->i_hash.prev, vep->i_hash.next, vep->i_list.prev,
 	   vep->i_list.next, vep->i_dentry.prev, vep->i_dentry.next);
+#endif /* AFS_LINUX26_ENV */
 #endif /* AFS_LINUX22_ENV */
 }
 
@@ -2830,7 +2862,7 @@ print_vcache(kmem, vep, ptr, pnt)
 #ifdef AFS_64BIT_CLIENT
 	printf
 	    ("truncPos=(0x%x, 0x%x),\n\tcallb=x%lx, cbE=%d, opens=%d, XoW=%d, ",
-	     (int)vep->truncPos >> 32, (int)vep->truncPos & 0xffffffff,
+	     (int)(vep->truncPos >> 32), (int)(vep->truncPos & 0xffffffff),
 	     vep->callback, vep->cbExpires, vep->opens, vep->execsOrWriters);
 #else /* AFS_64BIT_CLIENT */
 	printf("truncPos=%d,\n\tcallb=x%lx, cbE=%d, opens=%d, XoW=%d, ",
@@ -2846,11 +2878,11 @@ print_vcache(kmem, vep, ptr, pnt)
 #ifdef AFS_64BIT_CLIENT
 	printf("\tquick[dc=%x, stamp=%x, f=%x, min=%d, len=(0x%x, 0x%x)]\n",
 	       vep->quick.dc, vep->quick.stamp, vep->quick.f,
-	       vep->quick.minLoc, (int)vep->quick.len >> 32,
-	       (int)vep->quick.len & 0xffffffff);
+	       vep->quick.minLoc, (int)(vep->quick.len >> 32),
+	       (int)(vep->quick.len & 0xffffffff));
 	printf
 	    ("\tmstat[len=(0x%x, 0x%x), DV=%d.%d, Date=%d, Owner=%d, Group=%d, Mode=0%o, linkc=%d]\n",
-	     (int)vep->m.Length >> 32, (int)vep->m.Length & 0xffffffff,
+	     (int)(vep->m.Length >> 32), (int)(vep->m.Length & 0xffffffff),
 	     vep->m.DataVersion.high, vep->m.DataVersion.low, vep->m.Date,
 	     vep->m.Owner, vep->m.Group, vep->m.Mode, vep->m.LinkCount);
 #else /* AFS_64BIT_CLIENT */

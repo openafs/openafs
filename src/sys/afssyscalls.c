@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/sys/afssyscalls.c,v 1.9 2004/05/11 20:36:27 shadow Exp $");
+    ("$Header: /cvs/openafs/src/sys/afssyscalls.c,v 1.10 2004/07/08 05:35:26 shadow Exp $");
 
 #include <signal.h>
 #include <sys/errno.h>
@@ -319,7 +319,8 @@ int proc_afs_syscall(long syscall, long param1, long param2, long param3,
 		     long param4, int *rval) {
   struct afsprocdata syscall_data;
   int fd = open(PROC_SYSCALL_FNAME, O_RDWR);
-
+  if(fd < 0)
+      fd = open(PROC_SYSCALL_ARLA_FNAME, O_RDWR);
   if(fd < 0)
     return -1;
 

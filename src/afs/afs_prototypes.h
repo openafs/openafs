@@ -464,6 +464,7 @@ extern void afs_osi_Invisible(void);
 extern void afs_osi_RxkRegister(void);
 extern void afs_osi_MaskSignals(void);
 extern void afs_osi_UnmaskRxkSignals(void);
+extern void afs_osi_MaskUserLoop(void);
 extern void *afs_osi_Alloc_debug(size_t x, char *func, int line);
 #ifndef afs_osi_Alloc_NoSleep
 extern void *afs_osi_Alloc_NoSleep(size_t x);
@@ -1084,7 +1085,7 @@ extern afs_int32 RXSTATS_ExecuteRequest(struct rx_call *acall);
 
 
 
-#if defined(AFS_SUN5_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_AIX_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_SGI62_ENV)
+#if defined(AFS_SUN5_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_AIX_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_SGI62_ENV) || defined(AFS_OSF_ENV)
 #include "osi_prototypes.h"
 #endif
 

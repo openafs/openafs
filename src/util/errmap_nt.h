@@ -21,7 +21,9 @@ extern int nterr_nt2unix(long ntErr, int defaultErr);
 #define AFS_NT_ERRNO_BASE  100
 
 /* Overloaded codes. */
+#ifndef EWOULDBLOCK
 #define EWOULDBLOCK        EAGAIN
+#endif
 
 /* New codes */
 #define ELOOP              (AFS_NT_ERRNO_BASE + 1)

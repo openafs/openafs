@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/volser/volprocs.c,v 1.33 2004/01/01 06:22:31 shadow Exp $");
+    ("$Header: /cvs/openafs/src/volser/volprocs.c,v 1.34 2004/07/29 03:44:08 shadow Exp $");
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -1540,6 +1540,10 @@ VolSetInfo(struct rx_call *acid, afs_int32 atrans,
 	td->maxquota = astatus->maxquota;
     if (astatus->dayUse != -1)
 	td->dayUse = astatus->dayUse;
+    if (astatus->creationDate != -1)
+	td->creationDate = astatus->creationDate;
+    if (astatus->updateDate != -1)
+	td->updateDate = astatus->updateDate;
     VUpdateVolume(&error, tv);
     tt->rxCallPtr = (struct rx_call *)0;
     if (TRELE(tt))

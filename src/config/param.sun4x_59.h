@@ -22,6 +22,7 @@
 #define AFS_SUN59_ENV		1
 
 #define AFS_64BIT_ENV		1	/* Defines afs_int32 as int, not long. */
+#define AFS_64BIT_CLIENT	1	
 
 #define AFS_HAVE_FLOCK_SYSID    1
 

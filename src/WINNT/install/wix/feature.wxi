@@ -31,6 +31,7 @@
 				
 				<Feature Id="feaCredsStartup" AllowAdvertise="no" FollowParent="yes" Display="hidden" InstallDefault="local" Level="30">
 					<ComponentRef Id="cmp_credsStartup" />
+					<Condition Level="130">CREDSSTARTUP = 0</Condition>
 				</Feature>
 				
 			<?ifdef DebugSyms?>
@@ -39,15 +40,20 @@
                     <ComponentRef Id="cmp_ClientProgramDebug" />
                     <ComponentRef Id="cmp_CommonCommonDebug" />
                     <ComponentRef Id="cmp_ClientCommonDebug" />
+                    <ComponentRef Id="cmp_ClientSystemDebug" />
                     <?include runtime_debug.wxi?>
 				</Feature>
 			<?endif?>
 
 				<ComponentRef Id="rcm_Client" />
+                <ComponentRef Id="rcm_ClientCacheSize" />
+                <ComponentRef Id="rcm_ClientCachePath" />
+
 				<ComponentRef Id="cmp_CommonDir" />
 
                 <ComponentRef Id="efl_Readme_TXT_$(var.Language)" />
-                <ComponentRef Id="efl_afsdcell_INI" />
+                <ComponentRef Id="efl_CellServDB" />
+                <ComponentRef Id="cpf_CellServDB" />
                 <ComponentRef Id="cmf_afs_cpa_CPL" />
 
                 <ComponentRef Id="cmf_afsrpc_DLL" />

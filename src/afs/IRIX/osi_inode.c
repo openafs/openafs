@@ -43,7 +43,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/IRIX/osi_inode.c,v 1.11 2003/07/15 23:14:23 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/IRIX/osi_inode.c,v 1.12 2004/07/29 03:13:47 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -314,7 +314,7 @@ afs_syscall_icreate(dev, near_inode, param1, param2, param3, param4, rvp)
     int error;
 
     AFS_STATCNT(afs_syscall_icreate);
-    if (!afs_suser())
+    if (!afs_suser(NULL))
 	return EPERM;
 
     if (error = getinode(0, (dev_t) dev, 2, &ip))
@@ -567,7 +567,7 @@ afs_syscall_icreatename64(int dev, int datap, int datalen, int paramp,
     ino_t ino;
 
 
-    if (!afs_suser())
+    if (!afs_suser(NULL))
 	return EPERM;
 
 #ifdef AFS_SGI65_ENV
@@ -638,7 +638,7 @@ afs_syscall_iopen(int dev, ino_t inode, int usrmod, rval_t * rvp)
     struct vnode *vp;
 
     AFS_STATCNT(afs_syscall_iopen);
-    if (!afs_suser())
+    if (!afs_suser(NULL))
 	return EPERM;
     vfsp = vfs_devsearch(dev, xfs_fstype);
     if (!vfsp)
@@ -689,7 +689,7 @@ afs_syscall_iopen(int dev, ino_t inode, int usrmod, rval_t * rvp)
     struct vfs *vfsp;
 
     AFS_STATCNT(afs_syscall_iopen);
-    if (!afs_suser())
+    if (!afs_suser(NULL))
 	return EPERM;
     vfsp = vfs_devsearch(dev);
     if (!vfsp) {
@@ -764,7 +764,7 @@ afs_syscall_iopen(dev, inode, usrmod, rvp)
     int error;
 
     AFS_STATCNT(afs_syscall_iopen);
-    if (!afs_suser())
+    if (!afs_suser(NULL))
 	return EPERM;
     if (error = igetinode(0, (dev_t) dev, inode, &ip))
 	return error;
@@ -971,7 +971,7 @@ iincdec64(int dev, int inode_hi, int inode_lo, int inode_p1, int amount)
 {
     struct vfs *vfsp;
 
-    if (!afs_suser())
+    if (!afs_suser(NULL))
 	return EPERM;
 #ifdef AFS_SGI65_ENV
     vfsp = vfs_devsearch(dev, VFS_FSTYPE_ANY);
@@ -1044,7 +1044,7 @@ iincdec(dev, inode, inode_p1, amount)
 {
     struct vfs *vfsp;
 
-    if (!afs_suser())
+    if (!afs_suser(NULL))
 	return EPERM;
     vfsp = vfs_devsearch(dev);
     if (!vfsp) {
@@ -1083,7 +1083,7 @@ afs_syscall_iincdec(dev, inode, inode_p1, amount)
     struct inode *ip;
     int error = 0;
 
-    if (!afs_suser())
+    if (!afs_suser(NULL))
 	return EPERM;
     if (error = igetinode(0, (dev_t) dev, inode, &ip))
 	return error;
@@ -1146,7 +1146,7 @@ afs_syscall_ilistinode64(int dev, int inode_hi, int inode_lo, int datap,
     i_list_inode_t data;
     int idatalen;
 
-    if (!afs_suser())
+    if (!afs_suser(NULL))
 	return EPERM;
 #ifdef AFS_SGI65_ENV
     vfsp = vfs_devsearch(dev, xfs_fstype);

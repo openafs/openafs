@@ -21,3 +21,4 @@ EXPORTS
      getAFSServer             @14
      cm_InitDNS               @15
      cm_GetConfigDir          @16
+  

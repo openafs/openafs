@@ -471,7 +471,7 @@ BEGIN
     MENUITEM "토큰 표시(&S)...",            M_ACTIVATE
     MENUITEM "만기 전 경고(&W)",            M_REMIND, CHECKED
     MENUITEM SEPARATOR
-    MENUITEM "아이콘 제거(&R)",             M_TERMINATE
+    MENUITEM "아이콘 제거(&R)...",             M_TERMINATE
 END
 
 

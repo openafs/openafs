@@ -56,7 +56,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/afsd/afsd.c,v 1.41 2004/05/08 04:12:27 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afsd/afsd.c,v 1.43 2004/07/28 22:47:58 shadow Exp $");
 
 #define VFS 1
 
@@ -221,6 +221,7 @@ struct in_addr_42 {
 /*
  * Global configuration variables.
  */
+afs_int32 enable_rxbind = 0;
 afs_int32 afs_shutdown = 0;
 afs_int32 cacheBlocks;		/*Num blocks in the cache */
 afs_int32 cacheFiles = 1000;	/*Optimal # of files in workstation cache */
@@ -1049,6 +1050,8 @@ CheckCacheBaseDir(char *dir)
 	}
 	if (statfsbuf.f_type == 0x52654973) {	/* REISERFS_SUPER_MAGIC */
 	    return "cannot use reiserfs as cache partition";
+	} else if  (statfsbuf.f_type == 0x58465342) { /* XFS_SUPER_MAGIC */
+	    return "cannot use xfs as cache partition";
 	}
     }
 #endif
@@ -1494,7 +1497,12 @@ mainproc(as, arock)
 	/* -backuptree */
 	enable_backuptree = 1;
     }
+    if (as->parms[31].items) {
+	/* -rxbind */
+	enable_rxbind = 1;
+    }
 
+    
     /*
      * Pull out all the configuration info for the workstation's AFS cache and
      * the cellular community we're willing to let our users see.
@@ -1638,7 +1646,7 @@ mainproc(as, arock)
     sprintf(fullpn_VFile, "%s/", cacheBaseDir);
     vFilePtr = fullpn_VFile + strlen(fullpn_VFile);
 
-    if ((fsTypeMsg = CheckCacheBaseDir(cacheBaseDir))) {
+    if  (!(cacheFlags & AFSCALL_INIT_MEMCACHE) && (fsTypeMsg = CheckCacheBaseDir(cacheBaseDir))) {
 	printf("%s: WARNING: Cache dir check failed (%s)\n", rn, fsTypeMsg);
     }
 #if 0
@@ -1665,9 +1673,11 @@ mainproc(as, arock)
 	    parseNetFiles(addrbuf, maskbuf, mtubuf, MAXIPADDRS, reason,
 			  AFSDIR_CLIENT_NETINFO_FILEPATH,
 			  AFSDIR_CLIENT_NETRESTRICT_FILEPATH);
-	if (code > 0)
+	if (code > 0) {
+	    if (enable_rxbind)
+		code = code | 0x80000000;
 	    call_syscall(AFSOP_ADVISEADDR, code, addrbuf, maskbuf, mtubuf);
-	else
+	} else
 	    printf("ADVISEADDR: Error in specifying interface addresses:%s\n",
 		   reason);
     }
@@ -2166,6 +2176,7 @@ main(argc, argv)
     cmd_AddParm(ts, "-nomount", CMD_FLAG, CMD_OPTIONAL, "Do not mount AFS");
     cmd_AddParm(ts, "-backuptree", CMD_FLAG, CMD_OPTIONAL,
 		"Prefer backup volumes for mointpoints in backup volumes");
+    cmd_AddParm(ts, "-rxbind", CMD_FLAG, CMD_OPTIONAL, "Bind the Rx socket (one interface only)");
     return (cmd_Dispatch(argc, argv));
 }
 
@@ -2269,7 +2280,8 @@ call_syscall(param1, param2, param3, param4, param5, param6, param7)
     long eparm[4];
     struct afsprocdata syscall_data;
     int fd = open(PROC_SYSCALL_FNAME,O_RDWR);
-
+    if (fd < 0)
+	fd = open(PROC_SYSCALL_ARLA_FNAME,O_RDWR);
     eparm[0] = param4;
     eparm[1] = param5;
     eparm[2] = param6;

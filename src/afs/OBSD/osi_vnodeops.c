@@ -3,7 +3,7 @@
  * Original NetBSD version for Transarc afs by John Kohl <jtk@MIT.EDU>
  * OpenBSD version by Jim Rees <rees@umich.edu>
  *
- * $Id: osi_vnodeops.c,v 1.17 2004/03/19 16:38:29 rees Exp $
+ * $Id: osi_vnodeops.c,v 1.18 2004/07/27 14:39:31 rees Exp $
  */
 
 /*
@@ -99,7 +99,7 @@ NONINFRINGEMENT.
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/OBSD/osi_vnodeops.c,v 1.17 2004/03/19 16:38:29 rees Exp $");
+    ("$Header: /cvs/openafs/src/afs/OBSD/osi_vnodeops.c,v 1.18 2004/07/27 14:39:31 rees Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afs/afsincludes.h"	/* Afs-based standard headers */
@@ -107,6 +107,9 @@ RCSID
 
 #include <sys/malloc.h>
 #include <sys/namei.h>
+#ifdef AFS_OBSD36_ENV
+#include <sys/pool.h>
+#endif
 
 #include "afs/afs_cbqueue.h"
 #include "afs/nfsclient.h"
@@ -209,6 +212,12 @@ struct vnodeopv_desc afs_vnodeop_opv_desc =
     name[cnp->cn_namelen] = '\0'
 
 #define DROPNAME() FREE(name, M_TEMP)
+
+#ifdef AFS_OBSD36_ENV
+#define DROPCNP(cnp) pool_put(&namei_pool, (cnp)->cn_pnbuf)
+#else
+#define DROPCNP(cnp) FREE((cnp)->cn_pnbuf, M_NAMEI)
+#endif
 
 int afs_debug;
 
@@ -331,7 +340,7 @@ afs_nbsd_create(void *v)
 	*ap->a_vpp = 0;
 
     if ((cnp->cn_flags & SAVESTART) == 0)
-	FREE(cnp->cn_pnbuf, M_NAMEI);
+	DROPCNP(cnp);
     vput(dvp);
     DROPNAME();
     if (afs_debug & AFSDEB_VNLAYER)
@@ -348,7 +357,7 @@ afs_nbsd_mknod(void *v)
 				 * struct componentname *a_cnp;
 				 * struct vattr *a_vap;
 				 * } */ *ap = v;
-    free(ap->a_cnp->cn_pnbuf, M_NAMEI);
+    DROPCNP(ap->a_cnp);
     vput(ap->a_dvp);
     return (ENODEV);
 }
@@ -561,7 +570,7 @@ afs_nbsd_remove(void *v)
     else
 	vput(vp);
     vput(dvp);
-    FREE(cnp->cn_pnbuf, M_NAMEI);
+    DROPCNP(cnp);
     DROPNAME();
     return code;
 }
@@ -597,7 +606,7 @@ afs_nbsd_link(void *v)
     AFS_GLOCK();
     code = afs_link(VTOAFS(vp), VTOAFS(dvp), name, cnp->cn_cred);
     AFS_GUNLOCK();
-    FREE(cnp->cn_pnbuf, M_NAMEI);
+    DROPCNP(cnp);
     if (dvp != vp)
 	VOP_UNLOCK(vp, 0, curproc);
 
@@ -741,8 +750,8 @@ afs_nbsd_mkdir(void *v)
 	vn_lock(AFSTOV(vcp), LK_EXCLUSIVE | LK_RETRY, curproc);
     } else
 	*ap->a_vpp = 0;
+    DROPCNP(cnp);
     DROPNAME();
-    FREE(cnp->cn_pnbuf, M_NAMEI);
     vput(dvp);
     return code;
 }
@@ -763,7 +772,7 @@ afs_nbsd_rmdir(void *v)
     if (dvp == vp) {
 	vrele(dvp);
 	vput(vp);
-	FREE(cnp->cn_pnbuf, M_NAMEI);
+	DROPCNP(cnp);
 	DROPNAME();
 	return (EINVAL);
     }
@@ -796,8 +805,8 @@ afs_nbsd_symlink(void *v)
     code =
 	afs_symlink(VTOAFS(dvp), name, ap->a_vap, ap->a_target, cnp->cn_cred);
     AFS_GUNLOCK();
+    DROPCNP(cnp);
     DROPNAME();
-    FREE(cnp->cn_pnbuf, M_NAMEI);
     vput(dvp);
     return code;
 }

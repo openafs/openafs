@@ -530,7 +530,6 @@ Section "AFS Client" secClient
   File "${AFS_CLIENT_BUILDDIR}\afscreds.exe"
   !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afs_shl_ext.dll" "$INSTDIR\Client\Program\afs_shl_ext.dll" "$INSTDIR"
   File "${AFS_CLIENT_BUILDDIR}\afsd_service.exe"
-  !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afslogon.dll" "$INSTDIR\Client\Program\afslogon.dll" "$INSTDIR"
   File "${AFS_CLIENT_BUILDDIR}\symlink.exe"
   File "${AFS_DESTDIR}\bin\kpasswd.exe"
   File "${AFS_SERVER_BUILDDIR}\pts.exe"
@@ -541,17 +540,13 @@ Section "AFS Client" secClient
   File "${AFS_DESTDIR}\bin\translate_et.exe"
   File "${AFS_DESTDIR}\etc\rxdebug.exe"
   File "${AFS_DESTDIR}\etc\backup.exe"
+  !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afs_cpa.cpl" "$INSTDIR\Client\Program\afs_cpa.cpl" "$INSTDIR"
   
-   Call AFSLangFiles
-   
-
-   
-  ; Do WINDOWSDIR components
-  
-  ; Do Windows SYSDIR (Control panel)
   SetOutPath "$SYSDIR"
-  !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afs_cpa.cpl" "$SYSDIR\afs_cpa.cpl" "$INSTDIR"
-  
+  !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afslogon.dll" "$SYSDIR\afslogon.dll" "$INSTDIR"
+   
+   Call AFSLangFiles
+
   ; Get AFS CellServDB file
   Call afs.GetCellServDB
 
@@ -574,6 +569,7 @@ Section "AFS Client" secClient
   WriteRegStr HKCR "CLSID\{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}\InprocServer32" "ThreadingModel" "Apartment"
   WriteRegStr HKCR "FOLDER\shellex\ContextMenuHandlers\AFS Client Shell Extension" "" "{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}"
   WriteRegStr HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved" "{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}" "AFS Client Shell Extension"
+  WriteRegStr HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Control Panel\Cpls" "afs_cpa" "$INSTDIR\Client\Program\afs_cpa.cpl"
   
   ; AFS Reg entries
   DeleteRegKey HKLM "${AFS_REGKEY_ROOT}\AFS Client\CurrentVersion"
@@ -630,14 +626,14 @@ Section "AFS Client" secClient
   StrCmp $R1 "1" +1 +2
   StrCpy $R2 "$R2-S"
   
+  WriteRegStr HKLM "SOFTWARE\OpenAFS\Client" "AfscredsShortcutParams" "$R2"
+  
   CreateShortCut "$SMPROGRAMS\OpenAFS\Client\Authentication.lnk" "$INSTDIR\Client\Program\afscreds.exe" "$R2"
   
   ReadINIStr $R1 $2 "Field 1" "State"
   StrCmp $R1 "1" +1 +2
   CreateShortCut "$SMSTARTUP\AFS Credentials.lnk" "$INSTDIR\Client\Program\afscreds.exe" "$R2"
 
-  
-  
   Push "$INSTDIR\Client\Program"
   Call AddToUniquePath
   Push "$INSTDIR\Common"
@@ -665,9 +661,8 @@ skipremove:
 
   ; Daemon entries
   WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon" "" ""
-  WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "ProviderPath" "$INSTDIR\Client\Program\afslogon.dll"
-  WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "AuthentProviderPath" "$INSTDIR\Client\Program\afslogon.dll"
-  WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "AuthentProviderPath" "$INSTDIR\Client\Program\afslogon.dll"
+  WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "ProviderPath" "$SYSDIR\afslogon.dll"
+  WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "AuthentProviderPath" "$SYSDIR\afslogon.dll"
   WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "Class" 2
   WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "VerboseLogging" 10
 
@@ -676,11 +671,7 @@ skipremove:
   ; to also include the service name.
   Call AddProvider
   ReadINIStr $R0 $1 "Field 7" "State"
-  ReadINIStr $R1 $1 "Field 9" "State"
-  ; Complicated way to do $R1 = ($R1 *2) + $R0
-  IntOp $R2 $R1 * 2
-  IntOp $R1 $R2 + $R0
-  WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "LogonOptions" $R1
+  WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "LogonOptions" $R0
   WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "LogonScript" "$INSTDIR\Client\Program\afscreds.exe -:%s -x -a -m -n -q"
   WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "Name" "OpenAFSDaemon"
 
@@ -692,7 +683,7 @@ skipremove:
   WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "SecurityLevel" $R0
   ReadINIStr $R0 $1 "Field 5" "State"  
   WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "FreelanceClient" $R0
-  ReadINIStr $R0 $1 "Field 11" "State"
+  ReadINIStr $R0 $1 "Field 9" "State"
   WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "UseDNS" $R0
   WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "NetbiosName" "AFS"
   WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "MountRoot" "/afs"
@@ -716,6 +707,13 @@ skipremove:
   strcpy $REG_DATA_2  "NETBIOS"
   strcpy $REG_DATA_3  "RpcSs"
   Call RegWriteMultiStr
+
+  ; WinLogon Event Notification
+  WriteRegDWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" "Asynchronous" 0
+  WriteRegDWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" "Impersonate"  1
+  WriteRegStr HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" "DLLName" "afslogon.dll"
+  WriteRegStr HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" "Logoff" "AFS_Logoff_Event"
+  WriteRegStr HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" "Startup" "AFS_Startup_Event"
 
   SetRebootFlag true
   
@@ -794,8 +792,6 @@ skipCheck:
  File "${AFS_SERVER_BUILDDIR}\afskasadmin.dll"
  File "${AFS_SERVER_BUILDDIR}\afsptsadmin.dll"
 
-!ifdef DEBUG
-!endif
  SetOutPath "$INSTDIR\Common"
    Call AFSLangFiles
    
@@ -880,76 +876,6 @@ Section "AFS Control Center" secControl
  Call AFSLangFiles
  SetOutPath "$INSTDIR\Common"
 
-  SetOutPath "$INSTDIR\Common"
-!IFDEF DEBUG
-!IFDEF CL_1310
-   File "${SYSTEMDIR}\msvcr71d.dll"
-   File "${SYSTEMDIR}\msvcp71d.dll"
-   File "${SYSTEMDIR}\mfc71d.dll"
-   File "${SYSTEMDIR}\MFC71CHS.DLL"
-   File "${SYSTEMDIR}\MFC71CHT.DLL"
-   File "${SYSTEMDIR}\MFC71DEU.DLL"
-   File "${SYSTEMDIR}\MFC71ENU.DLL"
-   File "${SYSTEMDIR}\MFC71ESP.DLL"
-   File "${SYSTEMDIR}\MFC71FRA.DLL"
-   File "${SYSTEMDIR}\MFC71ITA.DLL"
-   File "${SYSTEMDIR}\MFC71JPN.DLL"
-   File "${SYSTEMDIR}\MFC71KOR.DLL"
-!ELSE
-!IFDEF CL_1300
-   File "${SYSTEMDIR}\msvcr70d.dll"
-   File "${SYSTEMDIR}\msvcp70d.dll"
-   File "${SYSTEMDIR}\mfc70d.dll"
-   File "${SYSTEMDIR}\MFC70CHS.DLL"
-   File "${SYSTEMDIR}\MFC70CHT.DLL"
-   File "${SYSTEMDIR}\MFC70DEU.DLL"
-   File "${SYSTEMDIR}\MFC70ENU.DLL"
-   File "${SYSTEMDIR}\MFC70ESP.DLL"
-   File "${SYSTEMDIR}\MFC70FRA.DLL"
-   File "${SYSTEMDIR}\MFC70ITA.DLL"
-   File "${SYSTEMDIR}\MFC70JPN.DLL"
-   File "${SYSTEMDIR}\MFC70KOR.DLL"
-!ELSE
-   File "${SYSTEMDIR}\mfc42d.dll"
-   File "${SYSTEMDIR}\msvcp60d.dll"
-   File "${SYSTEMDIR}\msvcrtd.dll"
-!ENDIF
-!ENDIF
-!ELSE
-!IFDEF CL_1310
-   File "${SYSTEMDIR}\mfc71.dll"
-   File "${SYSTEMDIR}\msvcr71.dll"
-   File "${SYSTEMDIR}\msvcp71.dll"
-   File "${SYSTEMDIR}\MFC71CHS.DLL"
-   File "${SYSTEMDIR}\MFC71CHT.DLL"
-   File "${SYSTEMDIR}\MFC71DEU.DLL"
-   File "${SYSTEMDIR}\MFC71ENU.DLL"
-   File "${SYSTEMDIR}\MFC71ESP.DLL"
-   File "${SYSTEMDIR}\MFC71FRA.DLL"
-   File "${SYSTEMDIR}\MFC71ITA.DLL"
-   File "${SYSTEMDIR}\MFC71JPN.DLL"
-   File "${SYSTEMDIR}\MFC71KOR.DLL"
-!ELSE
-!IFDEF CL_1300
-   File "${SYSTEMDIR}\mfc70.dll"
-   File "${SYSTEMDIR}\msvcr70.dll"
-   File "${SYSTEMDIR}\msvcp70.dll"
-   File "${SYSTEMDIR}\MFC70CHS.DLL"
-   File "${SYSTEMDIR}\MFC70CHT.DLL"
-   File "${SYSTEMDIR}\MFC70DEU.DLL"
-   File "${SYSTEMDIR}\MFC70ENU.DLL"
-   File "${SYSTEMDIR}\MFC70ESP.DLL"
-   File "${SYSTEMDIR}\MFC70FRA.DLL"
-   File "${SYSTEMDIR}\MFC70ITA.DLL"
-   File "${SYSTEMDIR}\MFC70JPN.DLL"
-   File "${SYSTEMDIR}\MFC70KOR.DLL"
-!ELSE
-   File "${SYSTEMDIR}\mfc42.dll"
-   File "${SYSTEMDIR}\msvcp60.dll"
-   File "${SYSTEMDIR}\msvcrt.dll"
-!ENDIF
-!ENDIF
-!ENDIF   
    ;Store install folder
   WriteRegStr HKCU "${AFS_REGKEY_ROOT}\AFS Control Center\CurrentVersion" "PathName" $INSTDIR
   WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Control Center\CurrentVersion" "VersionString" ${AFS_VERSION}
@@ -1185,7 +1111,6 @@ Section "Debug symbols" secDebug
   File "${AFS_CLIENT_BUILDDIR}\afscreds.pdb"
   File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext.pdb"
   File "${AFS_CLIENT_BUILDDIR}\afsd_service.pdb"
-  File "${AFS_CLIENT_BUILDDIR}\afslogon.pdb"
   File "${AFS_CLIENT_BUILDDIR}\symlink.pdb"
   File "${AFS_DESTDIR}\bin\kpasswd.pdb"
   File "${AFS_DESTDIR}\bin\pts.pdb"
@@ -1196,9 +1121,10 @@ Section "Debug symbols" secDebug
   File "${AFS_DESTDIR}\bin\translate_et.pdb"
   File "${AFS_DESTDIR}\etc\rxdebug.pdb"
   File "${AFS_DESTDIR}\etc\backup.pdb"
+  File "${AFS_CLIENT_BUILDDIR}\afs_cpa.pdb"
 
   SetOutPath "$SYSDIR"
-  File "${AFS_CLIENT_BUILDDIR}\afs_cpa.pdb"
+  File "${AFS_CLIENT_BUILDDIR}\afslogon.pdb"
   
 DoServer:
   	SectionGetFlags ${secServer} $R0
@@ -1700,7 +1626,7 @@ StartRemove:
    Delete /REBOOTOK "$INSTDIR\Common\afscfgadmin.pdb"
    Delete /REBOOTOK "$INSTDIR\Common\afskasadmin.pdb"
    Delete /REBOOTOK "$INSTDIR\Common\afsptsadmin.pdb"
-
+!IFDEF DEBUG
 !IFDEF CL_1310
    Delete /REBOOTOK "$INSTDIR\bin\msvcr71d.dll"
    Delete /REBOOTOK "$INSTDIR\bin\msvcr71d.pdb"
@@ -1723,6 +1649,7 @@ StartRemove:
    Delete /REBOOTOK "$INSTDIR\bin\msvcp60d.pdb"
    Delete /REBOOTOK "$INSTDIR\bin\msvcrtd.dll"
    Delete /REBOOTOK "$INSTDIR\bin\msvcrtd.pdb"
+!ENDIF
 !ENDIF
 !ELSE
 !IFDEF CL_1310
@@ -1761,18 +1688,16 @@ StartRemove:
 !ENDIF
   
    IfSilent SkipDel
-;  IfFileExists "$WINDIR\afsdcell.ini" CellExists SkipDelAsk
+;  IfFileExists "$INSTDIR\Client\CellServDB" CellExists SkipDelAsk
 ;  CellExists:
   MessageBox MB_YESNO "Would you like to keep your configuration files?" IDYES SkipDel
-  Delete "$WINDIR\afsdcell.ini"
+  Delete "$INSTDIR\Client\CellServDB"
 
-  Delete "$WINDIR\afsdsbmt.ini"
 ; Only remove krb5.ini if KfW was installed
 !IFDEF INSTALL_KFW
   Delete "$WINDIR\krb5.ini"
 !ENDIF
-  Delete "$WINDIR\afsdns.ini"
-  Delete "$WINDIR\afs_freelance.ini"
+  Delete "$INSTDIR\Client\afsdns.ini"
   
   SkipDel:
   Delete "$WINDIR\afsd_init.log"
@@ -1826,10 +1751,12 @@ StartRemove:
   
   Delete /REBOOTOK "$SYSDIR\afsserver.cpl"
   Delete /REBOOTOK "$SYSDIR\afs_cpa.cpl"
+  Delete /REBOOTOK "$SYSDIR\afslogon.dll"
 
   Delete /REBOOTOK "$SYSDIR\afsserver.pdb"
   Delete /REBOOTOK "$SYSDIR\afs_cpa.pdb"
-  
+  Delete /REBOOTOK "$SYSDIR\afslogon.pdb"
+
   RMDir /r "$INSTDIR\Documentation\html\CmdRef"
   RMDir /r "$INSTDIR\Documentation\html\InstallGd"
   RMDir /r "$INSTDIR\Documentation\html\ReleaseNotes"
@@ -1958,6 +1885,10 @@ StartRemove:
   DeleteRegKey HKCR "CLSID\{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}"
   DeleteRegKey HKCR "FOLDER\shellex\ContextMenuHandlers\AFS Client Shell Extension"
   DeleteRegValue HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved" "{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}"
+  DeleteRegValue HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Control Panel\Cpls" "afs_cpa"
+
+  ; WinLogon Event Notification
+  DeleteRegKey HKLM "Software\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\AfsLogon"
 
   DeleteRegKey HKLM "${AFS_REGKEY_ROOT}\AFS Client\CurrentVersion"
   DeleteRegKey HKLM "${AFS_REGKEY_ROOT}\AFS Client"
@@ -2017,21 +1948,21 @@ goto UsePackaged
 
 DoDownload:
    ReadINIStr $R0 $0 "Field 5" "State"
-   NSISdl::download $R0 "$WINDIR\afsdcell.ini"
+   NSISdl::download $R0 "$INSTDIR\Client\CellServDB"
    Pop $R0 ;Get the return value
    StrCmp $R0 "success" +2
       MessageBox MB_OK|MB_ICONSTOP "Download failed: $R0"
    goto done
 
 UsePackaged:
-   SetOutPath "$WINDIR"
-   File "afsdcell.ini"
+   SetOutPath "$INSTDIR\Client"
+   File "CellServDB"
    goto done
    
 CheckOther:
    ReadINIStr $R0 $0 "Field 7" "State"
    StrCmp $R0 "" done
-   CopyFiles $R0 "$WINDIR\afsdcell.ini"
+   CopyFiles $R0 "$INSTDIR\Client\CellServDB"
    
 done:
 
@@ -2182,8 +2113,12 @@ startOver:
   WriteINISTR $0 "Field 4" "State" "0"
   WriteINIStr $0 "Field 6" "State" "0"
   
-  ; If there is an existing afsdcell.ini file, allow the user to choose it and make it default
-  IfFileExists "$WINDIR\afsdcell.ini" +1 notpresent
+  ; If there is an existing afsdcell.ini file, migrate it to CellServDB
+  IfFileExists "$WINDIR\afsdcell.ini" +1 +3
+  CopyFiles /SILENT "$WINDIR\afsdcell.ini" "$INSTDIR\Client\CellServDB"
+  Delete "$WINDIR\afsdcell.ini"
+  ; If there is an existing CellServDB file, allow the user to choose it and make it default
+  IfFileExists "$INSTDIR\Client\CellServDB" +1 notpresent
   WriteINIStr $0 "Field 2" "Flags" "ENABLED"
   WriteINIStr $0 "Field 2" "State" "1"
   WriteINIStr $0 "Field 3" "State" "0"
@@ -2637,98 +2572,91 @@ Function AFSLangFiles
    ; Common files
    SetOutPath "$INSTDIR\Common"
    File "${AFS_CLIENT_BUILDDIR}\afs_config.exe"
-   File "${AFS_SERVER_BUILDDIR}\afsadminutil.dll"
   !insertmacro ReplaceDLL "${AFS_DESTDIR}\lib\afsauthent.dll" "$INSTDIR\Common\afsauthent.dll" "$INSTDIR"
   !insertmacro ReplaceDLL "${AFS_DESTDIR}\lib\afspthread.dll" "$INSTDIR\Common\afspthread.dll" "$INSTDIR"
   !insertmacro ReplaceDLL "${AFS_DESTDIR}\lib\afsrpc.dll" "$INSTDIR\Common\afsrpc.dll" "$INSTDIR"
-   File "${AFS_SERVER_BUILDDIR}\afsclientadmin.dll"
-   File "${AFS_SERVER_BUILDDIR}\afsprocmgmt.dll"
-   File "${AFS_SERVER_BUILDDIR}\afsvosadmin.dll"
-   File "${AFS_SERVER_BUILDDIR}\TaAfsAppLib.dll"
-   File "${AFS_SERVER_BUILDDIR}\afsvosadmin.dll"
-   File "${AFS_SERVER_BUILDDIR}\afsbosadmin.dll"
-   File "${AFS_SERVER_BUILDDIR}\afscfgadmin.dll"
-   File "${AFS_SERVER_BUILDDIR}\afskasadmin.dll"
-   File "${AFS_SERVER_BUILDDIR}\afsptsadmin.dll"
+  !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\afsadminutil.dll"    "$INSTDIR\Common\afsadminutil.dll"    "$INSTDIR"
+  !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\afsclientadmin.dll"  "$INSTDIR\Common\afsclientadmin.dll"  "$INSTDIR" 
+  !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\afsprocmgmt.dll"     "$INSTDIR\Common\afsprocmgmt.dll"     "$INSTDIR" 
+  !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\afsvosadmin.dll"     "$INSTDIR\Common\afsvosadmin.dll"     "$INSTDIR" 
+  !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\TaAfsAppLib.dll"     "$INSTDIR\Common\TaAfsAppLib.dll"     "$INSTDIR" 
+  !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\afsvosadmin.dll"     "$INSTDIR\Common\afsvosadmin.dll"     "$INSTDIR" 
+  !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\afsbosadmin.dll"     "$INSTDIR\Common\afsbosadmin.dll"     "$INSTDIR" 
+  !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\afscfgadmin.dll"     "$INSTDIR\Common\afscfgadmin.dll"     "$INSTDIR" 
+  !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\afskasadmin.dll"     "$INSTDIR\Common\afskasadmin.dll"     "$INSTDIR" 
+  !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\afsptsadmin.dll"     "$INSTDIR\Common\afsptsadmin.dll"     "$INSTDIR" 
+
+ SetOutPath "$INSTDIR\Common"
 
 !IFDEF DEBUG
 !IFDEF CL_1310
-   File "${SYSTEMDIR}\msvcr71d.dll"
-   File "${SYSTEMDIR}\msvcr71d.pdb"
-   File "${SYSTEMDIR}\msvcp71d.dll"
-   File "${SYSTEMDIR}\msvcp71d.pdb"
-   File "${SYSTEMDIR}\mfc71d.dll"
-   File "${SYSTEMDIR}\mfc71d.pdb"
-   File "${SYSTEMDIR}\MFC71CHS.DLL"
-   File "${SYSTEMDIR}\MFC71CHT.DLL"
-   File "${SYSTEMDIR}\MFC71DEU.DLL"
-   File "${SYSTEMDIR}\MFC71ENU.DLL"
-   File "${SYSTEMDIR}\MFC71ESP.DLL"
-   File "${SYSTEMDIR}\MFC71FRA.DLL"
-   File "${SYSTEMDIR}\MFC71ITA.DLL"
-   File "${SYSTEMDIR}\MFC71JPN.DLL"
-   File "${SYSTEMDIR}\MFC71KOR.DLL"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\msvcr71d.dll" "$INSTDIR\Common\msvcr71d.dll" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\msvcp71d.dll" "$INSTDIR\Common\msvcp71d.dll" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\mfc71d.dll" "$INSTDIR\Common\mfc71d.dll" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC71CHS.DLL" "$INSTDIR\Common\MFC71CHS.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC71CHT.DLL" "$INSTDIR\Common\MFC71CHT.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC71DEU.DLL" "$INSTDIR\Common\MFC71DEU.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC71ENU.DLL" "$INSTDIR\Common\MFC71ENU.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC71ESP.DLL" "$INSTDIR\Common\MFC71ESP.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC71FRA.DLL" "$INSTDIR\Common\MFC71FRA.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC71ITA.DLL" "$INSTDIR\Common\MFC71ITA.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC71JPN.DLL" "$INSTDIR\Common\MFC71JPN.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC71KOR.DLL" "$INSTDIR\Common\MFC71KOR.DLL" "$INSTDIR"
 !ELSE
 !IFDEF CL_1300
-   File "${SYSTEMDIR}\msvcr70d.dll"
-   File "${SYSTEMDIR}\msvcr70d.pdb"
-   File "${SYSTEMDIR}\msvcp70d.dll"
-   File "${SYSTEMDIR}\msvcp70d.pdb"
-   File "${SYSTEMDIR}\mfc70d.dll"
-   File "${SYSTEMDIR}\mfc70d.pdb"
-   File "${SYSTEMDIR}\MFC70CHS.DLL"
-   File "${SYSTEMDIR}\MFC70CHT.DLL"
-   File "${SYSTEMDIR}\MFC70DEU.DLL"
-   File "${SYSTEMDIR}\MFC70ENU.DLL"
-   File "${SYSTEMDIR}\MFC70ESP.DLL"
-   File "${SYSTEMDIR}\MFC70FRA.DLL"
-   File "${SYSTEMDIR}\MFC70ITA.DLL"
-   File "${SYSTEMDIR}\MFC70JPN.DLL"
-   File "${SYSTEMDIR}\MFC70KOR.DLL"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\msvcr70d.dll" "$INSTDIR\Common\msvcr70d.dll" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\msvcp70d.dll" "$INSTDIR\Common\msvcp70d.dll" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\mfc70d.dll" "$INSTDIR\Common\mfc70d.dll" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC70CHS.DLL" "$INSTDIR\Common\MFC70CHS.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC70CHT.DLL" "$INSTDIR\Common\MFC70CHT.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC70DEU.DLL" "$INSTDIR\Common\MFC70DEU.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC70ENU.DLL" "$INSTDIR\Common\MFC70ENU.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC70ESP.DLL" "$INSTDIR\Common\MFC70ESP.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC70FRA.DLL" "$INSTDIR\Common\MFC70FRA.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC70ITA.DLL" "$INSTDIR\Common\MFC70ITA.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC70JPN.DLL" "$INSTDIR\Common\MFC70JPN.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC70KOR.DLL" "$INSTDIR\Common\MFC70KOR.DLL" "$INSTDIR"
 !ELSE
-   File "${SYSTEMDIR}\mfc42d.dll"
-   File "${SYSTEMDIR}\mfc42d.pdb"
-   File "${SYSTEMDIR}\msvcp60d.dll"
-   File "${SYSTEMDIR}\msvcp60d.pdb"
-   File "${SYSTEMDIR}\msvcrtd.dll"
-   File "${SYSTEMDIR}\msvcrtd.pdb"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\mfc42d.dll" "$INSTDIR\Common\mfc42d.dll" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\msvcp60d.dll" "$INSTDIR\Common\msvcp60d.dll" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\msvcrtd.dll" "$INSTDIR\Common\msvcrtd.dll" "$INSTDIR"
 !ENDIF
 !ENDIF
 !ELSE
 !IFDEF CL_1310
-   File "${SYSTEMDIR}\mfc71.dll"
-   File "${SYSTEMDIR}\msvcr71.dll"
-   File "${SYSTEMDIR}\msvcp71.dll"
-   File "${SYSTEMDIR}\MFC71CHS.DLL"
-   File "${SYSTEMDIR}\MFC71CHT.DLL"
-   File "${SYSTEMDIR}\MFC71DEU.DLL"
-   File "${SYSTEMDIR}\MFC71ENU.DLL"
-   File "${SYSTEMDIR}\MFC71ESP.DLL"
-   File "${SYSTEMDIR}\MFC71FRA.DLL"
-   File "${SYSTEMDIR}\MFC71ITA.DLL"
-   File "${SYSTEMDIR}\MFC71JPN.DLL"
-   File "${SYSTEMDIR}\MFC71KOR.DLL"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\mfc71.dll" "$INSTDIR\Common\mfc71.dll" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\msvcr71.dll" "$INSTDIR\Common\msvcr71.dll" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\msvcp71.dll" "$INSTDIR\Common\msvcp71.dll" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC71CHS.DLL" "$INSTDIR\Common\MFC71CHS.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC71CHT.DLL" "$INSTDIR\Common\MFC71CHT.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC71DEU.DLL" "$INSTDIR\Common\MFC71DEU.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC71ENU.DLL" "$INSTDIR\Common\MFC71ENU.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC71ESP.DLL" "$INSTDIR\Common\MFC71ESP.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC71FRA.DLL" "$INSTDIR\Common\MFC71FRA.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC71ITA.DLL" "$INSTDIR\Common\MFC71ITA.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC71JPN.DLL" "$INSTDIR\Common\MFC71JPN.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC71KOR.DLL" "$INSTDIR\Common\MFC71KOR.DLL" "$INSTDIR"
 !ELSE
 !IFDEF CL_1300
-   File "${SYSTEMDIR}\mfc70.dll"
-   File "${SYSTEMDIR}\msvcr70.dll"
-   File "${SYSTEMDIR}\msvcp70.dll"
-   File "${SYSTEMDIR}\MFC70CHS.DLL"
-   File "${SYSTEMDIR}\MFC70CHT.DLL"
-   File "${SYSTEMDIR}\MFC70DEU.DLL"
-   File "${SYSTEMDIR}\MFC70ENU.DLL"
-   File "${SYSTEMDIR}\MFC70ESP.DLL"
-   File "${SYSTEMDIR}\MFC70FRA.DLL"
-   File "${SYSTEMDIR}\MFC70ITA.DLL"
-   File "${SYSTEMDIR}\MFC70JPN.DLL"
-   File "${SYSTEMDIR}\MFC70KOR.DLL"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\mfc70.dll" "$INSTDIR\Common\mfc70.dll" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\msvcr70.dll" "$INSTDIR\Common\msvcr70.dll" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\msvcp70.dll" "$INSTDIR\Common\msvcp70.dll" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC70CHS.DLL" "$INSTDIR\Common\MFC70CHS.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC70CHT.DLL" "$INSTDIR\Common\MFC70CHT.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC70DEU.DLL" "$INSTDIR\Common\MFC70DEU.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC70ENU.DLL" "$INSTDIR\Common\MFC70ENU.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC70ESP.DLL" "$INSTDIR\Common\MFC70ESP.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC70FRA.DLL" "$INSTDIR\Common\MFC70FRA.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC70ITA.DLL" "$INSTDIR\Common\MFC70ITA.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC70JPN.DLL" "$INSTDIR\Common\MFC70JPN.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC70KOR.DLL" "$INSTDIR\Common\MFC70KOR.DLL" "$INSTDIR"
 !ELSE
-   File "${SYSTEMDIR}\mfc42.dll"
-   File "${SYSTEMDIR}\msvcp60.dll"
-   File "${SYSTEMDIR}\msvcrt.dll"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\mfc42.dll" "$INSTDIR\Common\mfc42.dll" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\msvcp60.dll" "$INSTDIR\Common\msvcp60.dll" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\msvcrt.dll" "$INSTDIR\Common\msvcrt.dll" "$INSTDIR"
 !ENDIF
 !ENDIF
-!ENDIF
+!ENDIF   
 
    StrCmp $LANGUAGE ${LANG_ENGLISH} DoEnglish
    StrCmp $LANGUAGE ${LANG_GERMAN} DoGerman

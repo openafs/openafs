@@ -535,6 +535,12 @@ else
 		powerpc-apple-darwin7.3*)
 			AFS_SYSNAME="ppc_darwin_70"
 			;;
+		powerpc-apple-darwin7.4*)
+			AFS_SYSNAME="ppc_darwin_70"
+			;;
+		powerpc-apple-darwin7.5*)
+			AFS_SYSNAME="ppc_darwin_70"
+			;;
 		sparc-sun-solaris2.5*)
 			AFS_SYSNAME="sun4x_55"
 			enable_login="yes"
@@ -2592,6 +2598,27 @@ case $AFS_SYSNAME in
 		;;
 
 	sunx86_58)
+		CC="/opt/SUNWspro/bin/cc"
+		CCOBJ="/opt/SUNWspro/bin/cc"
+		LEX="lex"
+		LD="/usr/ccs/bin/ld"
+		MT_CC="/opt/SUNWspro/bin/cc"
+		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_LIBS="-lpthread -lsocket"
+		PAM_CFLAGS="-KPIC"
+		PAM_LIBS="-lc -lpam -lsocket -lnsl -lm"
+		SHLIB_CFLAGS="-KPIC"
+		SHLIB_LDFLAGS="-G -Bsymbolic"
+		TXLIBS="-lcurses"
+		XCFLAGS64='${XCFLAGS} -xarch=v9'
+		XCFLAGS="-dy -Bdynamic"
+		XLIBELFA="-lelf"
+		XLIBKVM="-lkvm"
+		XLIBS="${LIB_AFSDB} -lsocket -lnsl -lintl -ldl"
+		SHLIB_LINKER="${CC} -G -dy -Wl,-M\$(srcdir)/mapfile -Bsymbolic -z text"
+		;;
+
+	sunx86_59)
 		CC="/opt/SUNWspro/bin/cc"
 		CCOBJ="/opt/SUNWspro/bin/cc"
 		LEX="lex"

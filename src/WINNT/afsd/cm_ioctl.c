@@ -419,8 +419,7 @@ long cm_IoctlGetACL(smb_ioctl_t *ioctlp, cm_user_t *userp)
                 if (code) continue;
                 
                 code = RXAFS_FetchACL(connp->callp, &fid, &acl, &fileStatus, &volSync);
-	} while (cm_Analyze(connp, userp, &req, &scp->fid,
-			    &volSync, NULL, code));
+	} while (cm_Analyze(connp, userp, &req, &scp->fid, &volSync, NULL, NULL, code));
 	code = cm_MapRPCError(code, &req);
 	cm_ReleaseSCache(scp);
         
@@ -485,8 +484,7 @@ long cm_IoctlSetACL(struct smb_ioctl *ioctlp, struct cm_user *userp)
                 if (code) continue;
                 
                 code = RXAFS_StoreACL(connp->callp, &fid, &acl, &fileStatus, &volSync);
-	} while (cm_Analyze(connp, userp, &req, &scp->fid,
-			    &volSync, NULL, code));
+	} while (cm_Analyze(connp, userp, &req, &scp->fid, &volSync, NULL, NULL, code));
 	code = cm_MapRPCError(code, &req);
 
 	/* invalidate cache info, since we just trashed the ACL cache */
@@ -611,7 +609,7 @@ long cm_IoctlSetVolumeStatus(struct smb_ioctl *ioctlp, struct cm_user *userp)
 
 		code = RXAFS_SetVolumeStatus(tcp->callp, scp->fid.volume,
 			&storeStat, volName, offLineMsg, motd);
-	} while (cm_Analyze(tcp, userp, &req, &scp->fid, NULL, NULL, code));
+	} while (cm_Analyze(tcp, userp, &req, &scp->fid, NULL, NULL, NULL, code));
 	code = cm_MapRPCError(code, &req);
 
 	/* return on failure */
@@ -669,7 +667,7 @@ long cm_IoctlGetVolumeStatus(struct smb_ioctl *ioctlp, struct cm_user *userp)
 
 		code = RXAFS_GetVolumeStatus(tcp->callp, scp->fid.volume,
 			&volStat, &Name, &OfflineMsg, &MOTD);
-	} while (cm_Analyze(tcp, userp, &req, &scp->fid, NULL, NULL, code));
+	} while (cm_Analyze(tcp, userp, &req, &scp->fid, NULL, NULL, NULL, code));
 	code = cm_MapRPCError(code, &req);
 
 	cm_ReleaseSCache(scp);
@@ -695,43 +693,43 @@ long cm_IoctlGetVolumeStatus(struct smb_ioctl *ioctlp, struct cm_user *userp)
 long cm_IoctlWhereIs(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
 	long code;
-        cm_scache_t *scp;
-        cm_cell_t *cellp;
-        cm_volume_t *tvp;
-	cm_serverRef_t *tsrp;
-        cm_server_t *tsp;
-        unsigned long volume;
-        char *cp;
-        cm_req_t req;
+    cm_scache_t *scp;
+    cm_cell_t *cellp;
+    cm_volume_t *tvp;
+	cm_serverRef_t **tsrpp, *current;
+    cm_server_t *tsp;
+    unsigned long volume;
+    char *cp;
+    cm_req_t req;
 
 	cm_InitReq(&req);
 
-        code = cm_ParseIoctlPath(ioctlp, userp, &req, &scp);
-        if (code) return code;
+    code = cm_ParseIoctlPath(ioctlp, userp, &req, &scp);
+    if (code) return code;
         
 	volume = scp->fid.volume;
 
 	cellp = cm_FindCellByID(scp->fid.cell);
-        osi_assert(cellp);
+    osi_assert(cellp);
 
-        cm_ReleaseSCache(scp);
+    cm_ReleaseSCache(scp);
 
 	code = cm_GetVolumeByID(cellp, volume, userp, &req, &tvp);
-        if (code) return code;
+    if (code) return code;
 	
-        cp = ioctlp->outDatap;
+    cp = ioctlp->outDatap;
         
 	lock_ObtainMutex(&tvp->mx);
-	tsrp = cm_GetVolServers(tvp, volume);
+	tsrpp = cm_GetVolServers(tvp, volume);
 	lock_ObtainRead(&cm_serverLock);
-	while(tsrp) {
-		tsp = tsrp->server;
+	for (current = *tsrpp; current; current = current->next) {
+		tsp = current->server;
 		memcpy(cp, (char *)&tsp->addr.sin_addr.s_addr, sizeof(long));
 		cp += sizeof(long);
-                tsrp = tsrp->next;
 	}
 	lock_ReleaseRead(&cm_serverLock);
-        lock_ReleaseMutex(&tvp->mx);
+    cm_FreeServerList(tsrpp);
+    lock_ReleaseMutex(&tvp->mx);
 
 	/* still room for terminating NULL, add it on */
 	volume = 0;	/* reuse vbl */
@@ -1007,14 +1005,14 @@ long cm_IoctlGetCacheParms(struct smb_ioctl *ioctlp, struct cm_user *userp)
 long cm_IoctlGetCell(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
 	long whichCell;
-        long magic = 0;
+    long magic = 0;
 	cm_cell_t *tcellp;
 	cm_serverRef_t *serverRefp;
-        cm_server_t *serverp;
+    cm_server_t *serverp;
 	long i;
-        char *cp;
-        char *tp;
-        char *basep;
+    char *cp;
+    char *tp;
+    char *basep;
 
 	cm_SkipIoctlPath(ioctlp);
 
@@ -1028,7 +1026,7 @@ long cm_IoctlGetCell(struct smb_ioctl *ioctlp, struct cm_user *userp)
 		memcpy((char *)&magic, tp, sizeof(long));
 	}
 
-        lock_ObtainRead(&cm_cellLock);
+    lock_ObtainRead(&cm_cellLock);
 	for(tcellp = cm_allCellsp; tcellp; tcellp = tcellp->nextp) {
 		if (whichCell == 0) break;
 		whichCell--;
@@ -1044,15 +1042,16 @@ long cm_IoctlGetCell(struct smb_ioctl *ioctlp, struct cm_user *userp)
 			max = 13;
 		}
 		memset(cp, 0, max * sizeof(long));
-                basep = cp;
+        basep = cp;
 		lock_ObtainRead(&cm_serverLock);	/* for going down server list */
+        /* jaltman - do the reference counts to serverRefp contents need to be increased? */
 		serverRefp = tcellp->vlServersp;
 		for(i=0; i<max; i++) {
 			if (!serverRefp) break;
 			serverp = serverRefp->server;
 			memcpy(cp, &serverp->addr.sin_addr.s_addr, sizeof(long));
 			cp += sizeof(long);
-                        serverRefp = serverRefp->next;
+            serverRefp = serverRefp->next;
 		}
 		lock_ReleaseRead(&cm_serverLock);
 		cp = basep + max * sizeof(afs_int32);
@@ -1435,7 +1434,8 @@ long cm_IoctlCreateMountPoint(struct smb_ioctl *ioctlp, struct cm_user *userp)
 	  /* we are adding the mount point to the root dir., so call
 	     the freelance code to do the add. */
 	  osi_Log0(afsd_logp,"IoctlCreateMountPoint within Freelance root dir");
-	  code = cm_FreelanceAddMount(leaf, fullCell, volume, NULL);
+	  code = cm_FreelanceAddMount(leaf, fullCell, volume, 
+                                  *ioctlp->inDatap == '%', NULL);
 	  return code;
 	}
 #endif
@@ -1690,8 +1690,13 @@ long cm_IoctlSetToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
         if (flags & PIOCTL_LOGON) {
 		  /* SMB user name with which to associate tokens */
 		  smbname = tp;
-		  fprintf(stderr, "SMB name = %s\n", smbname);
+          osi_Log2(smb_logp,"cm_IoctlSetToken for user [%s] smbname [%s]",
+                    osi_LogSaveString(smb_logp,uname), osi_LogSaveString(smb_logp,smbname));
+          fprintf(stderr, "SMB name = %s\n", smbname);
 		  tp += strlen(tp) + 1;
+        } else {
+            osi_Log1(smb_logp,"cm_IoctlSetToken for user [%s]",
+                      osi_LogSaveString(smb_logp,uname));
         }
 
 #ifndef DJGPP   /* for win95, session key is back in pioctl */
@@ -1700,8 +1705,10 @@ long cm_IoctlSetToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
 		if (!cm_FindTokenEvent(uuid, sessionKey))
 			return CM_ERROR_INVAL;
 #endif /* !DJGPP */
-	} else
+	} else {
 		cellp = cm_rootCellp;
+        osi_Log0(smb_logp,"cm_IoctlSetToken - no name specified");
+    }
 
 	if (flags & PIOCTL_LOGON) {
           userp = smb_FindCMUserByName(smbname, ioctlp->fidp->vcp->rname);
@@ -1710,6 +1717,7 @@ long cm_IoctlSetToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
 	/* store the token */
 	lock_ObtainMutex(&userp->mx);
 	ucellp = cm_GetUCell(userp, cellp);
+    osi_Log1(smb_logp,"cm_IoctlSetToken ucellp %lx", ucellp);
 	ucellp->ticketLen = ticketLen;
 	if (ucellp->ticketp)
 		free(ucellp->ticketp);	/* Discard old token if any */
@@ -1944,6 +1952,8 @@ long cm_IoctlDelToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
 		return CM_ERROR_NOMORETOKENS;
 	}
 
+    osi_Log1(smb_logp,"cm_IoctlDelToken ucellp %lx", ucellp);
+
 	if (ucellp->ticketp) {
 		free(ucellp->ticketp);
 		ucellp->ticketp = NULL;
@@ -1964,7 +1974,8 @@ long cm_IoctlDelAllToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
 
 	lock_ObtainMutex(&userp->mx);
 
-	for (ucellp = userp->cellInfop; ucellp; ucellp = ucellp->nextp) {
+    for (ucellp = userp->cellInfop; ucellp; ucellp = ucellp->nextp) {
+        osi_Log1(smb_logp,"cm_IoctlDelAllToken ucellp %lx", ucellp);
 		ucellp->flags &= ~CM_UCELLFLAG_RXKAD;
 		ucellp->gen++;
 	}
@@ -1980,11 +1991,12 @@ long cm_IoctlMakeSubmount(smb_ioctl_t *ioctlp, cm_user_t *userp)
 {
 	char afspath[MAX_PATH];
 	char *submountreqp;
-	int iteration;
-	int submountDataSize;
-	char *submountData;
-	char *submountName;
 	int nextAutoSubmount;
+    HKEY hkSubmounts;
+    DWORD dwType, dwSize;
+    DWORD status;
+    DWORD dwIndex;
+    DWORD dwSubmounts;
 
 	cm_SkipIoctlPath(ioctlp);
 
@@ -2003,33 +2015,44 @@ long cm_IoctlMakeSubmount(smb_ioctl_t *ioctlp, cm_user_t *userp)
 	 * that submount name is in use... if so, the submount's path
 	 * has to match our path.
 	 */
-	if (submountreqp && *submountreqp) {
+
+    RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
+                    "SOFTWARE\\OpenAFS\\Client\\Submounts",
+                    0, 
+                    "AFS", 
+                    REG_OPTION_NON_VOLATILE,
+                    KEY_READ|KEY_WRITE|KEY_QUERY_VALUE,
+                    NULL, 
+                    &hkSubmounts,
+                    NULL );
+
+    if (submountreqp && *submountreqp) {
 		char submountPathNormalized[MAX_PATH];
 		char submountPath[MAX_PATH];
-		int submountPathLen;
 
-		submountPathLen = GetPrivateProfileString("AFS Submounts",
-					submountreqp, "", submountPath,
-					sizeof(submountPath), "afsdsbmt.ini");
+        dwSize = sizeof(submountPath);
+        status = RegQueryValueEx( hkSubmounts, submountreqp, 0,
+                         &dwType, submountPath, &dwSize);
 
-		if ((submountPathLen == 0) ||
-		    (submountPathLen == sizeof(submountPath) - 1)) {
+		if (status != ERROR_SUCCESS) {
 
 			/* The suggested submount name isn't in use now--
 			 * so we can safely map the requested submount name
 			 * to the supplied path. Remember not to write the
 			 * leading "/afs" when writing out the submount.
 			 */
-			WritePrivateProfileString("AFS Submounts",
-					submountreqp, 
-					(strlen(&afspath[strlen(cm_mountRoot)])) ?
-						  &afspath[strlen(cm_mountRoot)]:"/",
-					"afsdsbmt.ini");
+            RegSetValueEx( hkSubmounts, submountreqp, 0,
+                           REG_SZ, 
+                           (strlen(&afspath[strlen(cm_mountRoot)])) ?
+                           &afspath[strlen(cm_mountRoot)]:"/",
+                           (strlen(&afspath[strlen(cm_mountRoot)])) ?
+                           strlen(&afspath[strlen(cm_mountRoot)])+1:2);
 
+            RegCloseKey( hkSubmounts );
 			strcpy(ioctlp->outDatap, submountreqp);
 			ioctlp->outDatap += strlen(ioctlp->outDatap) +1;
 			lock_ReleaseMutex(&cm_Afsdsbmt_Lock);
-        		return 0;
+            return 0;
 		}
 
 		/* The suggested submount name is already in use--if the
@@ -2040,35 +2063,26 @@ long cm_IoctlMakeSubmount(smb_ioctl_t *ioctlp, cm_user_t *userp)
 		if (!strcmp (submountPathNormalized, afspath)) {
 			strcpy(ioctlp->outDatap, submountreqp);
 			ioctlp->outDatap += strlen(ioctlp->outDatap) +1;
+            RegCloseKey( hkSubmounts );
 			lock_ReleaseMutex(&cm_Afsdsbmt_Lock);
-        		return 0;
+            return 0;
 		}
 	}
 
-	/* At this point, the user either didn't request a particular
-	 * submount name, or that submount name couldn't be used.
-	 * Look through afsdsbmt.ini to see if there are any submounts
-	 * already associated with the specified path. The first
-	 * step in doing that search is to load the AFS Submounts
-	 * section of afsdsbmt.ini into memory.
-	 */
+    RegQueryInfoKey( hkSubmounts,
+                 NULL,  /* lpClass */
+                 NULL,  /* lpcClass */
+                 NULL,  /* lpReserved */
+                 NULL,  /* lpcSubKeys */
+                 NULL,  /* lpcMaxSubKeyLen */
+                 NULL,  /* lpcMaxClassLen */
+                 &dwSubmounts, /* lpcValues */
+                 NULL,  /* lpcMaxValueNameLen */
+                 NULL,  /* lpcMaxValueLen */
+                 NULL,  /* lpcbSecurityDescriptor */
+                 NULL   /* lpftLastWriteTime */
+                 );
 
-	submountDataSize = 1024;
-	submountData = malloc (submountDataSize);
-
-	for (iteration = 0; iteration < 5; ++iteration) {
-
-		int sectionSize;
-		sectionSize = GetPrivateProfileString("AFS Submounts",
-					NULL, "", submountData,
-					submountDataSize, "afsdsbmt.ini");
-		if (sectionSize < submountDataSize-2)
-			break;
-
-		free (submountData);
-		submountDataSize *= 2;
-		submountData = malloc (submountDataSize);
-	}
 
 	/* Having obtained a list of all available submounts, start
 	 * searching that list for a path which matches the requested
@@ -2078,13 +2092,15 @@ long cm_IoctlMakeSubmount(smb_ioctl_t *ioctlp, cm_user_t *userp)
 
 	nextAutoSubmount = 1;
 
-	for (submountName = submountData;
-        	submountName && *submountName;
-        	submountName += 1+strlen(submountName)) {
-
+    for ( dwIndex = 0; dwIndex < dwSubmounts; dwIndex ++ ) {
 		char submountPathNormalized[MAX_PATH];
 		char submountPath[MAX_PATH] = "";
-		int submountPathLen;
+		DWORD submountPathLen = sizeof(submountPath);
+        char submountName[256];
+        DWORD submountNameLen = sizeof(submountName);
+
+        RegEnumValue( hkSubmounts, dwIndex, submountName, &submountNameLen, NULL,
+              &dwType, submountPath, &submountPathLen);
 
 		/* If this is an Auto### submount, remember its ### value */
 
@@ -2095,14 +2111,6 @@ long cm_IoctlMakeSubmount(smb_ioctl_t *ioctlp, cm_user_t *userp)
 			nextAutoSubmount = max (nextAutoSubmount,
 						thisAutoSubmount+1);
 		}
-
-		/* We have the name of a submount in the AFS Submounts
-		 * section; read that entry to find out what path it
-		 * maps to.
-		 */
-		submountPathLen = GetPrivateProfileString("AFS Submounts",
-					submountName, "", submountPath,
-					sizeof(submountPath), "afsdsbmt.ini");
 
 		if ((submountPathLen == 0) ||
 		    (submountPathLen == sizeof(submountPath) - 1)) {
@@ -2115,17 +2123,14 @@ long cm_IoctlMakeSubmount(smb_ioctl_t *ioctlp, cm_user_t *userp)
 		 */
 		cm_NormalizeAfsPath (submountPathNormalized, submountPath);
 		if (!strcmp (submountPathNormalized, afspath)) {
-
 			strcpy(ioctlp->outDatap, submountName);
 			ioctlp->outDatap += strlen(ioctlp->outDatap) +1;
-			free (submountData);
+            RegCloseKey(hkSubmounts);
 			lock_ReleaseMutex(&cm_Afsdsbmt_Lock);
-        		return 0;
+            return 0;
 
 		}
 	}
-
-	free (submountData);
 
 	/* We've been through the entire list of existing submounts, and
 	 * didn't find any which matched the specified path. So, we'll
@@ -2135,12 +2140,17 @@ long cm_IoctlMakeSubmount(smb_ioctl_t *ioctlp, cm_user_t *userp)
 
 	sprintf(ioctlp->outDatap, "auto%ld", nextAutoSubmount);
 
-	WritePrivateProfileString("AFS Submounts", ioctlp->outDatap,
-				  (strlen(&afspath[lstrlen(cm_mountRoot)])) ? 
-				  &afspath[lstrlen(cm_mountRoot)]:"/",
-				  "afsdsbmt.ini");
+    RegSetValueEx( hkSubmounts, 
+                   ioctlp->outDatap,
+                   0,
+                   REG_SZ, 
+                   (strlen(&afspath[strlen(cm_mountRoot)])) ?
+                   &afspath[strlen(cm_mountRoot)]:"/",
+                   (strlen(&afspath[strlen(cm_mountRoot)])) ?
+                   strlen(&afspath[strlen(cm_mountRoot)])+1:2);
 
 	ioctlp->outDatap += strlen(ioctlp->outDatap) +1;
+    RegCloseKey(hkSubmounts);
 	lock_ReleaseMutex(&cm_Afsdsbmt_Lock);
 	return 0;
 }

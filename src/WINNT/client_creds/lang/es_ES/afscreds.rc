@@ -503,7 +503,7 @@ BEGIN
     MENUITEM "&Mostrar señales...",         M_ACTIVATE
     MENUITEM "A&visar antes de la caducidad", M_REMIND, CHECKED
     MENUITEM SEPARATOR
-    MENUITEM "&Eliminar icono",             M_TERMINATE
+    MENUITEM "&Eliminar icono...",             M_TERMINATE
 END
 
 

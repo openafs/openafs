@@ -23,7 +23,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_osi_pag.c,v 1.20 2004/04/21 02:20:21 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_osi_pag.c,v 1.21 2004/07/29 03:13:37 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -161,7 +161,7 @@ afs_setpag(void)
 #elif  defined(AFS_OBSD_ENV)
     if (!afs_osi_suser(p->p_ucred))
 #else
-    if (!afs_suser())
+    if (!afs_suser(NULL))
 #endif
     {
 	while (osi_Time() - pag_epoch < pagCounter) {
@@ -251,7 +251,7 @@ afs_setpag_val(int pagval)
 #ifdef AFS_SUN5_ENV
     if (!afs_suser(*credpp))
 #else
-    if (!afs_suser())
+    if (!afs_suser(NULL))
 #endif
     {
 	while (osi_Time() - pag_epoch < pagCounter) {

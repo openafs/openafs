@@ -36,6 +36,7 @@
 #define AFS_NAMEI_ENV     1	/* User space interface to file system */
 
 #define AFS_64BIT_ENV		1	/* Defines afs_int32 as int, not long. */
+#define AFS_64BIT_CLIENT	1
 #define AFS_32BIT_USR_ENV       1
 #define AFS_64BITPOINTER_ENV	1	/* pointers are 64 bits. */
 

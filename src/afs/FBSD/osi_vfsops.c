@@ -2,7 +2,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/FBSD/osi_vfsops.c,v 1.15 2004/03/10 23:01:51 rees Exp $");
+    ("$Header: /cvs/openafs/src/afs/FBSD/osi_vfsops.c,v 1.16 2004/07/27 16:24:40 rees Exp $");
 
 #include <afs/sysincludes.h>	/* Standard vendor system headers */
 #include <afsincludes.h>	/* Afs-based standard headers */
@@ -74,7 +74,11 @@ afs_unmount(struct mount *mp, int flags, THREAD_OR_PROC)
      * the root vnode (this is just a guess right now).
      * This has to be done outside the global lock.
      */
+#ifdef AFS_FBSD53_ENV
+    vflush(mp, 1, (flags & MNT_FORCE) ? FORCECLOSE : 0, p);
+#else
     vflush(mp, 1, (flags & MNT_FORCE) ? FORCECLOSE : 0);
+#endif
     AFS_GLOCK();
     AFS_STATCNT(afs_unmount);
     afs_globalVFS = 0;

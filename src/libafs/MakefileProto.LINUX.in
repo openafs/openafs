@@ -35,7 +35,7 @@ COMMON_DEFINES=-D__KERNEL__ -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF}
 LINUX_KERNEL_PATH=@LINUX_KERNEL_PATH@
 
 # System specific build commands and flags
-<i386_linux26>
+<linux26>
 # All the platform-specific and kernel-related things are provided by
 # the kernel build system.  So we should _not_ use COMMON_KERN_CFLAGS!
 CCFLAGS = -Wno-strict-prototypes
@@ -104,9 +104,9 @@ DESTDIRS=linux_destdirs
 
 include Makefile.common
 
-<i386_linux26>
+<linux26>
 LINUX_MODULE_EXT=ko
-<all -i386_linux26>
+<all -linux26>
 LINUX_MODULE_EXT=o
 <all>
 
@@ -229,7 +229,7 @@ libafs.ep: $(LIBAFS_EP)
 libafs.bm: $(LIBAFS_BM)
 	echo BM Build Complete
 
-<i386_linux26>
+<linux26>
 ${LIBAFS} ${LIBAFS_MP} ${LIBAFS_EP} ${LIBAFS_BM}: libafs.ko
 	cp libafs.ko $@
 
@@ -239,7 +239,7 @@ libafs.ko: .FORCE
 	  @TOP_OBJDIR@/src/config/Makefile.config Makefile.afs Makefile.common
 	$(MAKE) -C ${LINUX_KERNEL_PATH} M=@TOP_OBJDIR@/src/libafs/${KDIR} modules
         
-<all -i386_linux26>
+<all -linux26>
 ${LIBAFS}: $(AFSAOBJS) $(AFSNONFSOBJS)
 	$(RM) -f $@
 	$(LD) -r -o $@ $(AFSAOBJS) $(AFSNONFSOBJS)

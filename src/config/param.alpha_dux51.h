@@ -25,6 +25,7 @@
 #define	AFS_ALPHA_ENV	1
 #define	AFS_DECOSF_ENV	1
 #define	AFS_64BIT_ENV	1
+#define AFS_64BIT_CLIENT	1
 
 #include <afs/afs_sysnames.h>
 

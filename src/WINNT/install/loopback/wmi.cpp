@@ -739,26 +739,44 @@ BOOL UpdateHostsFile( LPCWSTR swName, LPCWSTR swIp, LPCSTR szFilename, BOOL bPre
 		strcpy(buffer, etcPath);
 		strcat(buffer, ".old");
 
-        errno = 0;
-		
-        if ((unlink( buffer ) != 0) && (errno == EACCES))
-        {
-            ReportMessage(0,"FAILED : Can't delete file",buffer,0,errno);            
-            return FALSE;
-            
+        if(!DeleteFileA(buffer)) {
+            DWORD status;
+            int i;
+            char * eos;
+
+            status = GetLastError();
+            if(status == ERROR_ACCESS_DENIED) {
+                /* try changing the file attribtues. */
+                if(SetFileAttributesA(buffer, FILE_ATTRIBUTE_NORMAL) &&
+                    DeleteFileA(buffer)) {
+                    status = 0;
+                    ReportMessage(0,"Changed attributes and deleted back host file", buffer, 0, 0);
+                }
+            }
+            if(status && status != ERROR_FILE_NOT_FOUND) {
+                /* we can't delete the file.  Try to come up with 
+                   a different name that's not already taken. */
+                srand(GetTickCount());
+                eos = buffer + strlen(buffer);
+                for(i=0; i < 50; i++) {
+                    itoa(rand(), eos, 16);
+                    if(GetFileAttributesA(buffer) == INVALID_FILE_ATTRIBUTES &&
+                        GetLastError() == ERROR_FILE_NOT_FOUND)
+                        break;
+                }
+                /* At this point if we don't have a unique name, we just let the rename
+                   fail.  Too bad. */
+            }
         }
-        
-        if ((errno) && (errno != ENOENT)) ReportMessage(0,"WEIRD : errno after unlink ",0,0,errno);
 
-		if(rename( etcPath, buffer) != 0)
-		{
-			ReportMessage(0,"FAILED : Can't rename old file",etcPath,0,errno);
-			return FALSE;
-		}
+        if(!MoveFileA( etcPath, buffer )) {
+            ReportMessage(0,"FAILED: Can't rename old file", etcPath, 0, GetLastError());
+            return FALSE;
+        }
 
-		if(rename( tempPath, etcPath ) != 0)
+		if(!MoveFileA( tempPath, etcPath ) != 0)
 		{
-			ReportMessage(0,"FAILED : Can't rename new file",tempPath,0,errno);
+			ReportMessage(0,"FAILED : Can't rename new file", tempPath, 0, GetLastError());
 			return FALSE;
 		}
 

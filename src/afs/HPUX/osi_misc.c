@@ -16,7 +16,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/HPUX/osi_misc.c,v 1.6 2003/07/15 23:14:21 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/HPUX/osi_misc.c,v 1.7 2004/07/29 03:13:47 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -29,7 +29,7 @@ RCSID
  * Here we have to save and restore errno since the HP-UX suser() sets errno.
  */
 
-afs_suser()
+afs_suser(void *credp)
 {
     int save_errno;
     int code;

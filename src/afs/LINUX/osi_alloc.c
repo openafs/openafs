@@ -15,7 +15,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_alloc.c,v 1.21 2004/04/12 16:04:32 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_alloc.c,v 1.22 2004/07/14 04:14:31 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
@@ -335,9 +335,7 @@ osi_linux_alloc(unsigned int asize, int drop_glock)
 
   free_error:
     if (new) {
-	up(&afs_linux_alloc_sem);
 	linux_free(new);
-	down(&afs_linux_alloc_sem);
     }
     new = NULL;
     goto error;
