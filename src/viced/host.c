@@ -54,6 +54,7 @@ RCSID("$Header$");
 #include <rx/rx.h>
 #include <afs/cellconfig.h>
 #include <stdlib.h>
+#include "viced_prototypes.h"
 #include "viced.h"
 #include "host.h"
 

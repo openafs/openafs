@@ -114,6 +114,7 @@ RCSID("$Header$");
 #include <afs/ihandle.h>
 #include <afs/vnode.h>
 #include <afs/volume.h>
+#include "viced_prototypes.h"
 #include "viced.h"
 
 #include <afs/ptclient.h>  /* need definition of prlist for host.h */
