@@ -1,7 +1,7 @@
 # $Id$
 
 umask 022
-if [ ! -d mkdir /afs ]; then
+if [ ! -d /afs ]; then
   mkdir /afs
 fi
 
