@@ -23,7 +23,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_osi_pag.c,v 1.21 2004/07/29 03:13:37 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_osi_pag.c,v 1.21.2.1 2004/10/18 07:11:45 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -139,6 +139,43 @@ getpag(void)
  * activates tokens repeatedly) for that entire period.
  */
 
+static int afs_pag_sleepcnt = 0;
+
+static int 
+afs_pag_sleep(struct AFS_UCRED **acred) 
+{
+  int rv = 0;
+  if(!afs_suser(acred)) {
+    if(osi_Time() - pag_epoch < pagCounter) {
+      rv = 1;
+    }
+  }
+
+  return rv;
+}
+
+static int 
+afs_pag_wait(struct AFS_UCRED **acred)
+{
+  if(afs_pag_sleep(acred)) {
+    if(!afs_pag_sleepcnt) {
+      printf("%s() PAG throttling triggered, pid %d... sleeping.  sleepcnt %d\n",
+	     __func__, getpid(), afs_pag_sleepcnt);
+    }
+    
+    afs_pag_sleepcnt++;
+    
+    do {
+      /* XXX spins on EINTR */
+      afs_osi_Wait(1000, (struct afs_osi_WaitHandle *)0, 0);
+    } while(afs_pag_sleep(acred));
+    
+    afs_pag_sleepcnt--;
+  }
+
+  return 0;
+}
+
 int
 #if	defined(AFS_SUN5_ENV)
 afs_setpag(struct AFS_UCRED **credpp)
@@ -148,6 +185,15 @@ afs_setpag(struct proc *p, void *args, int *retval)
 afs_setpag(void)
 #endif
 {
+
+#if     defined(AFS_SUN5_ENV)
+    struct AFS_UCRED **acred = *credpp;
+#elif  defined(AFS_OBSD_ENV)
+    struct AFS_UCRED **acred = p->p_ucred;
+#else
+    struct AFS_UCRED **acred = NULL;
+#endif
+
     int code = 0;
 
 #if defined(AFS_SGI53_ENV) && defined(MP)
@@ -156,18 +202,10 @@ afs_setpag(void)
 #endif /* defined(AFS_SGI53_ENV) && defined(MP) */
 
     AFS_STATCNT(afs_setpag);
-#if	defined(AFS_SUN5_ENV)
-    if (!afs_suser(*credpp))
-#elif  defined(AFS_OBSD_ENV)
-    if (!afs_osi_suser(p->p_ucred))
-#else
-    if (!afs_suser(NULL))
-#endif
-    {
-	while (osi_Time() - pag_epoch < pagCounter) {
-	    afs_osi_Wait(1000, (struct afs_osi_WaitHandle *)0, 0);
-	}
-    }
+
+    afs_pag_wait(acred);
+
+
 #if	defined(AFS_SUN5_ENV)
     code = AddPag(genpag(), credpp);
 #elif	defined(AFS_OSF_ENV) || defined(AFS_XBSD_ENV)
@@ -213,13 +251,16 @@ afs_setpag(void)
 #endif
 
     afs_Trace1(afs_iclSetp, CM_TRACE_SETPAG, ICL_TYPE_INT32, code);
+
 #if defined(KERNEL_HAVE_UERROR)
     if (!getuerror())
 	setuerror(code);
 #endif
+
 #if defined(AFS_SGI53_ENV) && defined(MP)
     AFS_GUNLOCK();
 #endif /* defined(AFS_SGI53_ENV) && defined(MP) */
+
     return (code);
 }
 
@@ -240,6 +281,15 @@ afs_setpag_val(struct proc *p, void *args, int *retval, int pagval)
 afs_setpag_val(int pagval)
 #endif
 {
+
+#if     defined(AFS_SUN5_ENV)
+    struct AFS_UCRED **acred = *credp;
+#elif  defined(AFS_OBSD_ENV)
+    struct AFS_UCRED **acred = p->p_ucred;
+#else
+    struct AFS_UCRED **acred = NULL;
+#endif
+
     int code = 0;
 
 #if defined(AFS_SGI53_ENV) && defined(MP)
@@ -248,16 +298,9 @@ afs_setpag_val(int pagval)
 #endif /* defined(AFS_SGI53_ENV) && defined(MP) */
 
     AFS_STATCNT(afs_setpag);
-#ifdef AFS_SUN5_ENV
-    if (!afs_suser(*credpp))
-#else
-    if (!afs_suser(NULL))
-#endif
-    {
-	while (osi_Time() - pag_epoch < pagCounter) {
-	    afs_osi_Wait(1000, (struct afs_osi_WaitHandle *)0, 0);
-	}
-    }
+
+    afs_pag_wait(acred);
+
 #if	defined(AFS_SUN5_ENV)
     code = AddPag(pagval, credpp);
 #elif	defined(AFS_OSF_ENV) || defined(AFS_XBSD_ENV)

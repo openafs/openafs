@@ -331,8 +331,19 @@
 /* define if your struct inode has truncate_sem */
 #undef STRUCT_INODE_HAS_I_TRUNCATE_SEM
 
+<<<<<<< local
 /* define if you struct sockaddr sa_len */
 #undef STRUCT_SOCKADDR_HAS_SA_LEN
+||||||| base
+/* define if your linux kernel has linux/syscall.h */
+#undef HAVE_KERNEL_LINUX_SYSCALL_H
+=======
+/* define if your linux kernel uses 5 arguments for sock_create */
+#undef LINUX_KERNEL_SOCK_CREATE_V
+
+/* define if your linux kernel has linux/syscall.h */
+#undef HAVE_KERNEL_LINUX_SYSCALL_H
+>>>>>>> new
 
 /* define if your struct task_struct has parent */
 #undef STRUCT_TASK_STRUCT_HAS_PARENT

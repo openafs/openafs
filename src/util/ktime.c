@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/util/ktime.c,v 1.10 2003/11/29 21:38:03 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/util/ktime.c,v 1.10.2.1 2004/10/18 07:12:17 shadow Exp $");
 
 #include <sys/types.h>
 #include <stdio.h>
@@ -165,7 +165,8 @@ ktime_DateOf(afs_int32 atime)
 {
     static char tbuffer[30];
     register char *tp;
-    tp = ctime((time_t *) & atime);
+    time_t t = atime;
+    tp = ctime(&t);
     if (tp) {
 	strcpy(tbuffer, tp);
 	tbuffer[24] = 0;	/* get rid of new line */

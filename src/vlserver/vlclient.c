@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vlserver/vlclient.c,v 1.12 2003/12/07 22:49:42 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/vlserver/vlclient.c,v 1.12.2.1 2004/10/18 07:12:25 shadow Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -162,102 +162,17 @@ GetVolume(vol, entry)
 
 /* Almost identical's to pr_Initialize in vlserver/pruser.c */
 afs_int32
-vl_Initialize(auth, confDir, server, cellp)
-     int auth, server;
-     char *confDir, *cellp;
+vl_Initialize(int auth, char *confDir, int server, char *cellp)
 {
-    afs_int32 code;
-    struct afsconf_dir *tdir;
-    struct ktc_principal sname;
-    struct ktc_token ttoken;
-    afs_int32 scIndex = 0;
-    struct rx_securityClass *sc;
-    struct afsconf_cell info;
-    afs_int32 i;
-
-    code = rx_Init(0);
-    if (code) {
-	fprintf(stderr, "vl_Initialize:  Could not initialize rx.\n");
-	return code;
-    }
-
-    rx_SetRxDeadTime(50);
-    if (!server) {
-	tdir = afsconf_Open(confDir);
-	if (!tdir) {
-	    fprintf(stderr, "Could not open configuration directory (%s).\n",
-		    confDir);
-	    return -1;
-	}
-    }
-    if (auth) {			/* we don't need tickets for null */
-	if (!server) {
-	    code = afsconf_GetLocalCell(tdir, sname.cell, sizeof(sname.cell));
-	    if (code) {
-		fprintf(stderr,
-			"vl_Initialize: Could not get local cell name.\n");
-		return code;
-	    }
-	} else
-	    strncpy(sname.cell, cellp, sizeof(sname.cell));
-	sname.instance[0] = 0;
-	strcpy(sname.name, "afs");
-	code = ktc_GetToken(&sname, &ttoken, sizeof(ttoken), NULL);
-	if (code) {
-	    fprintf(stderr,
-		    "vl_Initialize: Could not get afs tokens, running unauthenticated.\n");
-	    scIndex = 0;
-	} else if (ttoken.kvno <= 255)
-	    scIndex = 2;
-	else {			/* bcrypt */
-	    fprintf(stderr,
-		    "vl_Initialize: funny kvno (%d) in ticket, proceeding\n",
-		    ttoken.kvno);
-	    scIndex = 2;
-	}
-    }
-    switch (scIndex) {
-    case 0:
-	sc = rxnull_NewClientSecurityObject();
-	break;
-    case 1:
-	return -1;
-    case 2:
-	sc = rxkad_NewClientSecurityObject(rxkad_clear, &ttoken.sessionKey,
-					   ttoken.kvno, ttoken.ticketLen,
-					   ttoken.ticket);
-    }
-    if (!server) {
-	code = afsconf_GetCellInfo(tdir, NULL, AFSCONF_VLDBSERVICE, &info);
-	if (info.numServers > MAXSERVERS) {
-	    fprintf(stderr,
-		    "vl_Initialize: info.numServers=%d (> MAXSERVERS=%d)\n",
-		    info.numServers, MAXSERVERS);
-	    exit(1);
-	}
-	for (i = 0; i < info.numServers; i++)
-	    serverconns[i] =
-		rx_NewConnection(info.hostAddr[i].sin_addr.s_addr,
-				 info.hostAddr[i].sin_port, USER_SERVICE_ID,
-				 sc, scIndex);
-    } else {
-	serverconns[0] =
-	    rx_NewConnection(server, htons(AFSCONF_VLDBPORT), USER_SERVICE_ID,
-			     sc, scIndex);
-    }
-    code = ubik_ClientInit(serverconns, &cstruct);
-
-    if (code) {
-	fprintf(stderr, "vl_Initialize: ubik client init failed.\n");
-	return code;
-    }
-    return 0;
+    return ugen_ClientInit(auth?0:1, confDir, cellp, 0,
+			  &cstruct, NULL, "vl_Initialize", rxkad_clear, 
+			  MAXSERVERS, AFSCONF_VLDBSERVICE, 50, server,
+			  htons(AFSCONF_VLDBPORT), USER_SERVICE_ID);
 }
 
 /* return host address in network byte order */
 afs_int32
-GetServer(aname)
-     char *aname;
+GetServer(char *aname)
 {
     register struct hostent *th;
     afs_int32 addr;

@@ -144,29 +144,29 @@ ${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
 	$(RM) -f asm-generic
 	ln -fs ${LINUX_KERNEL_PATH}/include/asm-generic asm-generic
 	$(RM) -f asm
-<parisc_linux22 parisc_linux24>
+<parisc_linux22 parisc_linux24 parisc_linux26>
 	ln -fs ${LINUX_KERNEL_PATH}/include/asm-parisc asm
-<alpha_linux_22 alpha_linux_24>
+<alpha_linux_22 alpha_linux_24 alpha_linux26>
 	ln -fs ${LINUX_KERNEL_PATH}/include/asm-alpha asm
-<i386_linux22 i386_linux24>
+<i386_linux22 i386_linux24 i386_linux26>
 	ln -fs ${LINUX_KERNEL_PATH}/include/asm-i386 asm
-<i386_umlinux22 i386_umlinux24>
+<i386_umlinux22 i386_umlinux24 i386_umlinux26>
 	ln -fs ${LINUX_KERNEL_PATH}/include/asm-um asm
-<amd64_linux24>
+<amd64_linux24 amd64_linux26>
 	ln -fs ${LINUX_KERNEL_PATH}/include/asm-x86_64 asm
-<s390_linux22 s390_linux24>
+<s390_linux22 s390_linux24 s390_linux26>
 	ln -fs ${LINUX_KERNEL_PATH}/include/asm-s390 asm
-<s390x_linux22 s390x_linux24>
+<s390x_linux22 s390x_linux24 s390x_linux26>
 	ln -fs ${LINUX_KERNEL_PATH}/include/asm-s390x asm
-<ppc_linux22 ppc_linux24>
+<ppc_linux22 ppc_linux24 ppc_linux26>
 	ln -fs ${LINUX_KERNEL_PATH}/include/asm-ppc asm 
-<ppc64_linux24>
+<ppc64_linux24 ppc64_linux26>
 	ln -s ${LINUX_KERNEL_PATH}/include/asm-ppc64 asm 
-<sparc_linux22 sparc_linux24>
+<sparc_linux22 sparc_linux24 sparc_linux26>
 	ln -fs ${LINUX_KERNEL_PATH}/include/asm-sparc asm
-<sparc64_linux22 sparc64_linux24>
+<sparc64_linux22 sparc64_linux24 sparc64_linux26>
 	ln -fs ${LINUX_KERNEL_PATH}/include/asm-sparc64 asm
-<ia64_linux24>
+<ia64_linux24 ia64_linux26>
 	ln -fs ${LINUX_KERNEL_PATH}/include/asm-ia64 asm
 <all>
 	for m in ${MPS} ; do \

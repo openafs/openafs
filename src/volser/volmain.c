@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/volser/volmain.c,v 1.18 2003/12/07 22:49:44 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/volser/volmain.c,v 1.18.2.1 2004/10/18 07:12:29 shadow Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -100,7 +100,7 @@ int Testing = 0;		/* for ListViceInodes */
 		       }
 
 
-static
+static afs_int32
 MyBeforeProc(struct rx_call *acall)
 {
     VTRANS_LOCK;
@@ -109,7 +109,7 @@ MyBeforeProc(struct rx_call *acall)
     return 0;
 }
 
-static
+static afs_int32
 MyAfterProc(struct rx_call *acall, afs_int32 code)
 {
     VTRANS_LOCK;
@@ -121,7 +121,7 @@ MyAfterProc(struct rx_call *acall, afs_int32 code)
 /* Called every GCWAKEUP seconds to try to unlock all our partitions,
  * if we're idle and there are no active transactions 
  */
-static
+static void
 TryUnlock()
 {
     /* if there are no running calls, and there are no active transactions, then
@@ -135,7 +135,7 @@ TryUnlock()
 }
 
 /* background daemon for timing out transactions */
-static
+static void
 BKGLoop()
 {
     struct timeval tv;
@@ -161,7 +161,7 @@ BKGLoop()
 
 /* Background daemon for sleeping so the volserver does not become I/O bound */
 afs_int32 TTsleep, TTrun;
-static
+static void
 BKGSleep()
 {
     struct volser_trans *tt;
@@ -194,9 +194,7 @@ BKGSleep()
 
 #ifndef AFS_NT40_ENV
 int
-volser_syscall(a3, a4, a5)
-     afs_uint32 a3, a4;
-     void *a5;
+volser_syscall(afs_uint32 a3, afs_uint32 a4, void *a5)
 {
     afs_uint32 rcode;
     void (*old) ();
@@ -218,16 +216,14 @@ volser_syscall(a3, a4, a5)
 
 /* check whether caller is authorized to manage RX statistics */
 int
-vol_rxstat_userok(call)
-     struct rx_call *call;
+vol_rxstat_userok(struct rx_call *call)
 {
     return afsconf_SuperUser(tdir, call, NULL);
 }
 
 #include "AFS_component_version_number.c"
-main(argc, argv)
-     int argc;
-     char **argv;
+int 
+main(int argc, char **argv)
 {
     register afs_int32 code;
     struct rx_securityClass *(securityObjects[3]);

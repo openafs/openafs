@@ -88,7 +88,8 @@ main(argc, argv)
 			if (tokenExpireTime <= current_time)
 				printf("[>> Expired <<]\n");
 			else {
-				expireString = ctime(&tokenExpireTime);
+                                time_t t = tokenExpireTime;
+				expireString = ctime(&t);
 				expireString += 4;	 /* Skip day of week */
 				expireString[12] = '\0'; /* Omit secs & year */
 				printf("[Expires %s]\n", expireString);

@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rxdebug.c,v 1.15.2.1 2004/08/25 07:09:42 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rxdebug.c,v 1.15.2.2 2004/10/18 17:43:59 shadow Exp $");
 
 #include <sys/types.h>
 #include <errno.h>
@@ -109,6 +109,7 @@ MainCommand(as, arock)
     int withRxStats;
     int withWaiters;
     int withIdleThreads;
+    int withWaited;
     int withPeers;
     struct rx_debugStats tstats;
     char *portName, *hostName;
@@ -253,6 +254,7 @@ MainCommand(as, arock)
     withRxStats = (supportedDebugValues & RX_SERVER_DEBUG_RX_STATS);
     withWaiters = (supportedDebugValues & RX_SERVER_DEBUG_WAITER_CNT);
     withIdleThreads = (supportedDebugValues & RX_SERVER_DEBUG_IDLE_THREADS);
+    withIdleThreads = (supportedDebugValues & RX_SERVER_DEBUG_WAITED_CNT);
     withPeers = (supportedDebugValues & RX_SERVER_DEBUG_ALL_PEER);
 
     printf("Free packets: %d, packet reclaims: %d, calls: %d, used FDs: %d\n",
@@ -265,6 +267,8 @@ MainCommand(as, arock)
 	printf("%d calls waiting for a thread\n", tstats.nWaiting);
     if (withIdleThreads)
 	printf("%d threads are idle\n", tstats.idleThreads);
+    if (withWaited)
+	printf("%d calls have waited for a thread\n", tstats.nWaited);
 
     if (rxstats) {
 	if (!withRxStats) {

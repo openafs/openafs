@@ -20,7 +20,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/util/serverLog.c,v 1.22 2003/12/07 22:49:40 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/util/serverLog.c,v 1.22.2.1 2004/10/18 07:12:18 shadow Exp $");
 
 #include <stdio.h>
 #ifdef AFS_NT40_ENV
@@ -235,8 +235,9 @@ OpenLog(const char *fileName)
 #endif
 
     if (mrafsStyleLogs) {
+        time_t t = Start.tv_sec;
 	TM_GetTimeOfDay(&Start, 0);
-	TimeFields = localtime(&Start.tv_sec);
+	TimeFields = localtime(&t);
 	if (fileName) {
 	    if (strncmp(fileName, (char *)&ourName, strlen(fileName)))
 		strcpy((char *)&ourName, (char *)fileName);

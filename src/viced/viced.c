@@ -20,7 +20,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/viced/viced.c,v 1.58 2004/03/24 17:36:57 shadow Exp $");
+    ("$Header: /cvs/openafs/src/viced/viced.c,v 1.58.2.1 2004/10/18 07:12:24 shadow Exp $");
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -1564,6 +1564,7 @@ main(int argc, char *argv[])
     struct rlimit rlim;		/* max number of open file descriptors */
 #endif
     int curLimit;
+    time_t t;
 
 #ifdef	AFS_AIX32_ENV
     struct sigaction nsa;
@@ -1868,9 +1869,10 @@ main(int argc, char *argv[])
     TM_GetTimeOfDay(&tp, 0);
 
 #ifndef AFS_QUIETFS_ENV
-    if (console != NULL) {
+    if (console != NULL) { 
+        time_t t = tp.tv_sec;
 	fprintf(console, "File server has started at %s\r",
-		afs_ctime(&tp.tv_sec, tbuffer, sizeof(tbuffer)));
+		afs_ctime(&t, tbuffer, sizeof(tbuffer)));
     }
 #endif
 
@@ -1907,9 +1909,10 @@ main(int argc, char *argv[])
     (void)signal(SIGQUIT, ShutDown_Signal);
 #endif
 
+    t = tp.tv_sec;
     ViceLog(0,
 	    ("File Server started %s",
-	     afs_ctime(&tp.tv_sec, tbuffer, sizeof(tbuffer))));
+	     afs_ctime(&t, tbuffer, sizeof(tbuffer))));
 #if FS_STATS_DETAILED
     afs_FullPerfStats.det.epoch.tv_sec = StartTime = tp.tv_sec;
 #endif

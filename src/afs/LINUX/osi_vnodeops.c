@@ -22,7 +22,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vnodeops.c,v 1.81.2.2 2004/08/25 07:10:39 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vnodeops.c,v 1.81.2.3 2004/10/18 17:43:51 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
@@ -333,11 +333,11 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
     code = 0;
     offset = (int) fp->f_pos;
     while (1) {
-	dirpos = BlobScan(&tdc->f.inode, offset);
+	dirpos = BlobScan(&tdc->f, offset);
 	if (!dirpos)
 	    break;
 
-	de = afs_dir_GetBlob(&tdc->f.inode, dirpos);
+	de = afs_dir_GetBlob(&tdc->f, dirpos);
 	if (!de)
 	    break;
 
@@ -649,12 +649,7 @@ afs_linux_lock(struct file *fp, int cmd, struct file_lock *flp)
     int code = 0;
     struct vcache *vcp = ITOAFS(FILE_INODE(fp));
     cred_t *credp = crref();
-#ifdef AFS_LINUX24_ENV
-    struct flock64 flock;
-#else
-    struct flock flock;
-#endif
-
+    struct AFS_FLOCK flock;
     /* Convert to a lock format afs_lockctl understands. */
     memset((char *)&flock, 0, sizeof(flock));
     flock.l_type = flp->fl_type;
@@ -1484,6 +1479,12 @@ afs_linux_writepage(struct page *pp)
     unsigned long end_index;
     unsigned offset = PAGE_CACHE_SIZE;
     long status;
+
+#ifdef PageLaunder
+    if (PageLaunder(pp)) {
+	return(fail_writepage(pp));
+    }
+#endif
 
     inode = (struct inode *)mapping->host;
     end_index = inode->i_size >> PAGE_CACHE_SHIFT;

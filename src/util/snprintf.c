@@ -4,7 +4,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/util/snprintf.c,v 1.21.2.1 2004/08/09 20:57:10 shadow Exp $");
+    ("$Header: /cvs/openafs/src/util/snprintf.c,v 1.21.2.2 2004/10/18 17:44:05 shadow Exp $");
 
 #include <sys/types.h>
 #include <stdarg.h>
@@ -436,9 +436,11 @@ afs_vsnprintf(char *p, size_t avail, const char *fmt, va_list ap)
 		} else {
 		    x = "%u.%u.%u.%u";
 		}
-		sprintf(xbuf, x, (UVAL & 0xff000000) >> 24,
-			(UVAL & 0x00ff0000) >> 16, (UVAL & 0x0000ff00) >> 8,
-			(UVAL & 0x000000ff));
+		/* typecast to whatever '%u' is! */
+		sprintf(xbuf, x, (unsigned int)((UVAL & 0xff000000) >> 24),
+			(unsigned int)((UVAL & 0x00ff0000) >> 16), 
+			(unsigned int)((UVAL & 0x0000ff00) >> 8),
+			(unsigned int)(UVAL & 0x000000ff));
 		x = xbuf;
 		len = strlen(xbuf);
 	    }

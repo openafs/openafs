@@ -15,7 +15,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_packet.c,v 1.35.2.1 2004/08/25 07:09:42 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_packet.c,v 1.35.2.2 2004/10/18 17:43:58 shadow Exp $");
 
 #ifdef KERNEL
 #if defined(UKERNEL)
@@ -865,7 +865,11 @@ rxi_ReadPacket(int socket, register struct rx_packet *p, afs_uint32 * host,
 	     * never be cleaned up.
 	     */
 	    peer = rxi_FindPeer(*host, *port, 0, 0);
-	    if (peer) {
+	    /* Since this may not be associated with a connection,
+	     * it may have no refCount, meaning we could race with
+	     * ReapConnections
+	     */
+	    if (peer && (peer->refCount > 0)) {
 		MUTEX_ENTER(&peer->peer_lock);
 		hadd32(peer->bytesReceived, p->length);
 		MUTEX_EXIT(&peer->peer_lock);
@@ -1160,6 +1164,7 @@ rxi_ReceiveDebugPacket(register struct rx_packet *ap, osi_socket asocket,
 	    tstat.packetReclaims = htonl(rx_packetReclaims);
 	    tstat.usedFDs = CountFDs(64);
 	    tstat.nWaiting = htonl(rx_nWaiting);
+	    tstat.nWaited = htonl(rx_nWaited);
 	    queue_Count(&rx_idleServerQueue, np, nqe, rx_serverQueueEntry,
 			tstat.idleThreads);
 	    MUTEX_EXIT(&rx_serverPool_lock);

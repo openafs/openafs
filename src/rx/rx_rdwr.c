@@ -15,7 +15,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_rdwr.c,v 1.21 2003/07/15 23:16:10 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_rdwr.c,v 1.21.2.1 2004/10/18 07:12:06 shadow Exp $");
 
 #ifdef KERNEL
 #ifndef UKERNEL
@@ -1301,7 +1301,7 @@ rxi_FlushWrite(register struct rx_call *call)
 		return;
 	    }
 	    cp->length = 0;
-	    cp->niovecs = 1;	/* just the header */
+	    cp->niovecs = 2;	/* header + space for rxkad stuff */
 	    call->nFree = 0;
 	}
 

@@ -56,8 +56,8 @@ typedef struct osi_qiStat {
  */
 typedef struct osi_mutexStat {
 	osi_queue_t q;		/* queue of all mutexes */
-	osi_turnstile_t turn;		/* the real turnstile */
-	short refCount;			/* so we can iterate cleanly */
+	osi_turnstile_t turn;  	/* the real turnstile */
+	unsigned long refCount;	/* so we can iterate cleanly */
 	short states;
 
 	/* track # of lock calls and blocks */
@@ -79,7 +79,7 @@ typedef struct osi_mutexStat {
 typedef struct osi_rwlockStat {
 	osi_queue_t q;			/* queue of all mutexes */
 	osi_turnstile_t turn;		/* the real turnstile */
-	short refCount;			/* so we can iterate cleanly */
+	unsigned long refCount;		/* so we can iterate cleanly */
 	short states;
 
 	/* statistics */

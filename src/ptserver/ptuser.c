@@ -15,7 +15,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/ptserver/ptuser.c,v 1.16 2004/06/23 14:27:42 shadow Exp $");
+    ("$Header: /cvs/openafs/src/ptserver/ptuser.c,v 1.16.2.1 2004/10/18 07:12:04 shadow Exp $");
 
 #if defined(UKERNEL)
 #include "afs/sysincludes.h"
@@ -86,6 +86,8 @@ pr_Initialize(IN afs_int32 secLevel, IN char *confDir, IN char *cell)
 	/*
 	 * Different conf dir; force re-evaluation.
 	 */
+	if (tdir) 
+	    afsconf_Close(tdir);
 	tdir = (struct afsconf_dir *)0;
 	pruclient = (struct ubik_client *)0;
     }
@@ -168,7 +170,7 @@ pr_Initialize(IN afs_int32 secLevel, IN char *confDir, IN char *cell)
 	if (code)
 	    scIndex = 0;
 	else {
-	    if (ttoken.kvno >= 0 && ttoken.kvno <= 255)
+	    if (ttoken.kvno >= 0 && ttoken.kvno <= 256)
 		/* this is a kerberos ticket, set scIndex accordingly */
 		scIndex = 2;
 	    else {
@@ -178,7 +180,7 @@ pr_Initialize(IN afs_int32 secLevel, IN char *confDir, IN char *cell)
 		scIndex = 2;
 	    }
 	    sc[2] =
-		rxkad_NewClientSecurityObject(secLevel, &ttoken.sessionKey,
+		rxkad_NewClientSecurityObject(rxkad_clear, &ttoken.sessionKey,
 					      ttoken.kvno, ttoken.ticketLen,
 					      ttoken.ticket);
 	}

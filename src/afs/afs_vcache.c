@@ -39,7 +39,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_vcache.c,v 1.65.2.3 2004/08/25 07:16:11 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_vcache.c,v 1.65.2.4 2004/10/18 17:43:50 shadow Exp $");
 
 #include "afs/sysincludes.h"	/*Standard vendor system headers */
 #include "afsincludes.h"	/*AFS-based standard headers */
@@ -840,9 +840,18 @@ afs_NewVCache(struct VenusFid *afid, struct server *serverp)
 #elif defined(AFS_LINUX22_ENV)
 	    if (tvc != afs_globalVp && VREFCOUNT(tvc) && tvc->opens == 0) {
 #if defined(AFS_LINUX26_ENV)
-		AFS_GUNLOCK();
-		d_prune_aliases(AFSTOI(tvc));
-		AFS_GLOCK();
+                struct dentry *dentry;
+                struct list_head *cur, *head = &(AFSTOI(tvc))->i_dentry;
+                AFS_GUNLOCK();
+                cur=head;
+                while ((cur = cur->next) != head) {
+                    dentry = list_entry(cur, struct dentry, d_alias);
+                    if (!d_unhashed(dentry) &&
+                        !list_empty(&dentry->d_subdirs))
+			shrink_dcache_parent(dentry);
+                }
+                d_prune_aliases(AFSTOI(tvc));
+                AFS_GLOCK();
 #else
 		afs_TryFlushDcacheChildren(tvc);
 #endif

@@ -197,6 +197,7 @@ case $system in
 	  	 LINUX_INODE_SETATTR_RETURN_TYPE
 		 LINUX_KERNEL_LINUX_SYSCALL_H
 		 LINUX_KERNEL_SELINUX
+		 LINUX_KERNEL_SOCK_CREATE
 		 LINUX_NEED_RHCONFIG
 		 LINUX_RECALC_SIGPENDING_ARG_TYPE
 		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_PARENT
@@ -307,6 +308,9 @@ case $system in
 		 fi
 		 if test "x$ac_cv_linux_kernel_is_selinux" = "xyes" ; then
 		  AC_DEFINE(LINUX_KERNEL_IS_SELINUX, 1, [define if your linux kernel uses SELinux features])
+		 fi
+		 if test "x$ac_cv_linux_kernel_sock_create_v" = "xyes" ; then
+		  AC_DEFINE(LINUX_KERNEL_SOCK_CREATE_V, 1, [define if your linux kernel uses 5 arguments for sock_create])
 		 fi
 		 if test "x$ac_linux_syscall" = "xyes" ; then
 		  AC_DEFINE(HAVE_KERNEL_LINUX_SYSCALL_H, 1, [define if your linux kernel has linux/syscall.h])
@@ -2651,6 +2655,23 @@ AC_TRY_COMPILE(
 AC_MSG_RESULT($ac_cv_linux_kernel_is_selinux)
 CPPFLAGS="$save_CPPFLAGS"])
 
+AC_DEFUN([LINUX_KERNEL_SOCK_CREATE],[
+AC_MSG_CHECKING(for 5th argument in sock_create found in some SELinux kernels)
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+AC_CACHE_VAL(ac_cv_linux_kernel_sock_create_v,
+[
+AC_TRY_COMPILE(
+  [#include <linux/net.h>],
+  [
+  sock_create(0,0,0,0,0)
+  ],
+  ac_cv_linux_kernel_sock_create_v=yes,
+  ac_cv_linux_kernel_sock_create_v=no)])
+AC_MSG_RESULT($ac_cv_linux_kernel_sock_create_v)
+CPPFLAGS="$save_CPPFLAGS"])
+
+
 AC_DEFUN([SOLARIS_UFSVFS_HAS_DQRWLOCK], [
 AC_MSG_CHECKING(for vfs_dqrwlock in struct ufsvfs)
 AC_CACHE_VAL(ac_cv_solaris_ufsvfs_has_dqrwlock,
@@ -2959,12 +2980,14 @@ case $AFS_SYSNAME in
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
 
-	amd64_linux24)
+	amd64_linux*)
+		CCOBJ="${CC} -fPIC"
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
 		PAM_CFLAGS="-g -O2 -Dlinux -DLINUX_PAM -fPIC"
+		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="-lncurses"
 		XCFLAGS="-g -O2 -D_LARGEFILE64_SOURCE"

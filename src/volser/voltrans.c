@@ -18,7 +18,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/volser/voltrans.c,v 1.10 2003/11/22 02:57:04 shadow Exp $");
+    ("$Header: /cvs/openafs/src/volser/voltrans.c,v 1.10.2.1 2004/10/18 07:12:29 shadow Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <afs/afsutil.h>
@@ -79,9 +79,7 @@ static afs_int32 transCounter = 1;
 
 /* create a new transaction, returning ptr to same with high ref count */
 struct volser_trans *
-NewTrans(avol, apart)
-     afs_int32 avol;
-     afs_int32 apart;
+NewTrans(afs_int32 avol, afs_int32 apart)
 {
     /* set volid, next, partition */
     register struct volser_trans *tt;
@@ -117,8 +115,7 @@ NewTrans(avol, apart)
 
 /* find a trans, again returning with high ref count */
 struct volser_trans *
-FindTrans(atrans)
-     register afs_int32 atrans;
+FindTrans(register afs_int32 atrans)
 {
     register struct volser_trans *tt;
     VTRANS_LOCK;
@@ -135,8 +132,8 @@ FindTrans(atrans)
 }
 
 /* delete transaction if refcount == 1, otherwise queue delete for later.  Does implicit TRELE */
-DeleteTrans(atrans)
-     register struct volser_trans *atrans;
+afs_int32 
+DeleteTrans(register struct volser_trans *atrans, afs_int32 lock)
 {
     register struct volser_trans *tt, **lt;
     afs_int32 error;
@@ -149,7 +146,7 @@ DeleteTrans(atrans)
     }
 
     /* otherwise we zap it ourselves */
-    VTRANS_LOCK;
+    if (lock) VTRANS_LOCK;
     lt = &allTrans;
     for (tt = *lt; tt; lt = &tt->next, tt = *lt) {
 	if (tt == atrans) {
@@ -158,19 +155,19 @@ DeleteTrans(atrans)
 	    tt->volume = NULL;
 	    *lt = tt->next;
 	    free(tt);
-	    VTRANS_UNLOCK;
+	    if (lock) VTRANS_UNLOCK;
 	    return 0;
 	}
     }
-    VTRANS_UNLOCK;
+    if (lock) VTRANS_UNLOCK;
     return -1;			/* failed to find the transaction in the generic list */
 }
 
 /* THOLD is a macro defined in volser.h */
 
 /* put a transaction back */
-TRELE(at)
-     register struct volser_trans *at;
+afs_int32 
+TRELE(register struct volser_trans *at)
 {
     if (at->refCount == 0) {
 	Log("TRELE: bad refcount\n");
@@ -179,7 +176,7 @@ TRELE(at)
 
     at->time = FT_ApproxTime();	/* we're still using it */
     if (at->refCount == 1 && (at->tflags & TTDeleted)) {
-	DeleteTrans(at);
+	DeleteTrans(at, 1);
 	return 0;
     }
     /* otherwise simply drop refcount */
@@ -191,6 +188,7 @@ TRELE(at)
 #define	OLDTRANSTIME	    600	/* seconds */
 #define	OLDTRANSWARN	    300	/* seconds */
 static int GCDeletes = 0;
+afs_int32
 GCTrans()
 {
     register struct volser_trans *tt, *nt;
@@ -212,7 +210,7 @@ GCTrans()
 	if (tt->time + OLDTRANSTIME < now) {
 	    Log("trans %u on volume %u has timed out\n", tt->tid, tt->volid);
 	    tt->refCount++;	/* we're using it now */
-	    DeleteTrans(tt);	/* drops refCount or deletes it */
+	    DeleteTrans(tt, 0);	/* drops refCount or deletes it */
 	    GCDeletes++;
 	}
     }
