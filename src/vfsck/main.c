@@ -1074,7 +1074,11 @@ n	printf("(%d frags, %d blocks, %.1f%% fragmentation)\n",
                         exit(-1);
                 else
 #endif
+#ifdef  AFS_SUN5_ENV
+		    exit(exitstat);
+#else
 		exit(4);
+#endif
 	}
 #endif
 #ifdef VICE
