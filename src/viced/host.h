@@ -66,7 +66,7 @@ struct host {
 				 * byte order */
     unsigned short port;	/* port address of host */
     char Console;		/* XXXX This host is a console */
-    char hostFlags;		/*  bit map */
+    unsigned short hostFlags;		/*  bit map */
 #if FS_STATS_DETAILED
     char InSameNetwork;		/*Is host's addr in the same network as
 				 * the File Server's? */
