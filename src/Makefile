@@ -69,7 +69,7 @@ comerr: basics util
 cmd: basics comerr
 	${COMPILE_PART1} cmd ${COMPILE_PART2}
 	@case ${SYS_NAME} in \
-	sgi_6* | sun4x_57 | hp_ux11* ) \
+	sgi_6* | sun4x_57 | sun4x_58 | hp_ux11* ) \
 		${COMPILE_PART1} cmd ${COMPILE_PART2} install64 ;; \
 	esac
 
@@ -231,6 +231,7 @@ uss: des kauth project rx vlserver vol
 
 ntp: project volser
 	case ${SYS_NAME} in \
+	  sun4x_58 ) echo skipping ntp for ${SYS_NAME} ;; \
 	  *linux* ) echo skipping ntp for ${SYS_NAME} ;; \
 	  * ) ${COMPILE_PART1} ntp ${COMPILE_PART2} ;; \
 	esac
@@ -259,6 +260,8 @@ vfsck:	minproject vol
 	sun4x_56 )  \
 		echo skip vfsck for ${SYS_NAME} ;; \
 	sun4x_57 )  \
+		echo skip vfsck for ${SYS_NAME} ;; \
+	sun4x_58 )  \
 		echo skip vfsck for ${SYS_NAME} ;; \
 	 * ) \
 		${COMPILE_PART1} vfsck ${COMPILE_PART2} ;; \

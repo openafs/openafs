@@ -36,6 +36,9 @@
 #if	defined(AFS_SUN56_ENV)
 #include <inet/led.h>
 #include <inet/common.h>
+#if     defined(AFS_SUN58_ENV)
+#include <netinet/ip6.h>
+#endif
 #include <inet/ip.h>
 #endif
 

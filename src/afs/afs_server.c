@@ -51,6 +51,13 @@
 #if	defined(AFS_SUN56_ENV)
 #include <inet/led.h>
 #include <inet/common.h>
+#if     defined(AFS_SUN58_ENV)
+# include <netinet/ip6.h>
+# define ipif_local_addr ipif_lcl_addr
+#  ifndef V4_PART_OF_V6
+#  define V4_PART_OF_V6(v6)       v6.s6_addr32[3]
+#  endif
+# endif
 #include <inet/ip.h>
 #endif
 

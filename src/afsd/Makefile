@@ -88,6 +88,8 @@ install: all
 			${INSTALL} -f afs.rc.solaris ${DESTDIR}root.client/usr/vice/etc/modload/afs.rc ;;\
 		sun4x_57 ) \
 			${INSTALL} -f afs.rc.solaris.2.7 ${DESTDIR}root.client/usr/vice/etc/modload/afs.rc ;;\
+		sun4x_58 ) \
+			${INSTALL} -f afs.rc.solaris.2.8 ${DESTDIR}root.client/usr/vice/etc/modload/afs.rc ;;\
                 sun4x_5? ) \
                         ${INSTALL} -f afs.rc.solaris.2_5 ${DESTDIR}root.client/usr/vice/etc/modload/afs.rc ;;\
 		alpha_osf* ) \

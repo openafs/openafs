@@ -1368,7 +1368,7 @@ mainproc(as, arock)
 #endif
 #else
 #ifdef	AFS_SUN5_ENV
-    if ((mount("",cacheMountDir,mountFlags,"afs", (char *)0, 0)) < 0) {
+    if ((mount("AFS",cacheMountDir,mountFlags,"afs", (char *)0, 0)) < 0) {
 #else
 #if defined(AFS_SGI_ENV)
     mountFlags = MS_FSS;
@@ -1464,7 +1464,7 @@ char **argv; {
 #endif
 
 static int HandleMTab() {
-#if defined (AFS_SUN_ENV) || defined (AFS_HPUX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) || defined(AFS_LINUX20_ENV)
+#if (defined (AFS_SUN_ENV) || defined (AFS_HPUX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) || defined(AFS_LINUX20_ENV)) && !defined(AFS_SUN58_ENV)
     FILE *tfilep;
 #ifdef	AFS_SUN5_ENV
     char tbuf[16];

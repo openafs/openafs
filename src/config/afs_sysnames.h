@@ -77,6 +77,7 @@
 #define SYS_NAME_ID_sunx86_56          	 936
 #define SYS_NAME_ID_sunx86_55          	 937
 #define SYS_NAME_ID_sun4x_57		 938
+#define SYS_NAME_ID_sun4x_58		 939
 
 
 #define SYS_NAME_ID_vax_ul4		1003
