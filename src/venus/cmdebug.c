@@ -92,9 +92,9 @@ static PrintInterfaces(aconn)
 
     printf("Host interfaces:\n");
     for (i=0; i<addr.numberOfInterfaces; i++) {
-	printf("%s", inet_ntoa(&addr.addr_in[i]));
+	printf("%s", afs_inet_ntoa(htonl(addr.addr_in[i])));
 	if (addr.subnetmask[i])
-	    printf(", netmask %s", inet_ntoa(&addr.subnetmask[i]));
+	    printf(", netmask %s", afs_inet_ntoa(htonl(addr.subnetmask[i])));
 	if (addr.mtu[i])
 	    printf(", MTU %d", addr.mtu[i]);
 	printf("\n");
