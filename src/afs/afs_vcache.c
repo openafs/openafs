@@ -951,6 +951,9 @@ struct vcache *afs_NewVCache(struct VenusFid *afid, struct server *serverp,
 	sema_init(&ip->i_zombie, 1);
 	init_waitqueue_head(&ip->i_wait);
 	spin_lock_init(&ip->i_data.i_shared_lock);
+#ifdef STRUCT_ADDRESS_SPACE_HAS_PAGE_LOCK
+	spin_lock_init(&ip->i_data.page_lock);
+#endif
 	INIT_LIST_HEAD(&ip->i_data.clean_pages);
 	INIT_LIST_HEAD(&ip->i_data.dirty_pages);
 	INIT_LIST_HEAD(&ip->i_data.locked_pages);
