@@ -1,0 +1,89 @@
+Copyright 2000, International Business Machines Corporation and others.
+All Rights Reserved.
+
+This software has been released under the terms of the IBM Public
+License.  For details, see the LICENSE file in the top-level source
+directory or online at http://www.openafs.org/dl/license10.html
+
+Building OpenAFS on UNIX and LINUX
+----------------------------------
+
+A. Creating the proper directory structure.
+
+   Uncompress the source into a directory of your choice. A directory
+   in afs space is also valid. In the directory that you uncompressed the
+   source in, you will only have an src/ directory.
+
+   1. Pick a system to build for, and note its default AFS sys_name.
+      A directory will be automatically created for binaries to be written 
+      into with this name when you build.
+
+      alpha_dux40
+      alpha_dux50 (only tested on 5.0A)
+      i386_linux22
+      i386_linux24 (only tested with 2.4.0 kernel)
+      rs_aix42
+      sgi_65 (file server not tested)
+      sun4x_56
+      sun4x_57
+      sun4x_58
+      ppc_darwin_13
+      alpha_linux_22 (DES does not work, will require one more change to
+				compile)
+      hp_ux110 (No client support, but db servers and utilities work)
+      hp_ux102 (No client support, but db servers and utilities work)
+
+   2. Using configure in the top level directory, configure for your
+      AFS system type, providing the necessary flags:
+      % ./configure --with-afs-sysname=sun4x_58
+
+      For Linux systems you need also provide the patch in which your
+      kernel headers for your configured kernel can be found. This should
+      be the path of the directory containing a child directory named
+      "include". So if your version file was 
+      /usr/src/linux/include/linux/version.h you would invoke:
+      % ./configure --with-afs-sysname=i386_linux24 --with-linux-kernel-headers=/usr/src/linux
+
+      Currently you can build for only one Linux kernel at a time,
+      and the version is extracted from the kernel headers in the root
+      you specify.
+
+      Be prepared to provide the switches --enable-obsolete and
+      --enable-insecure if you require the use of any bundled but obsolete
+      or insecure software included with OpenAFS. See README.obsolete and
+      README.insecure for more details.
+
+B  Building
+
+   1. Now, you can build OpenAFS. 
+
+      % make
+
+      When the build completes, you will have a complete binary tree
+      in the dest directory under the directory named for the sys_name you
+      built for, e.g. sun4x_57/dest or i386_linux22/dest 
+
+   2. As appropriate you can clean up or, if you're using Linux, build for
+      another kernel version:
+      a. To clean up:
+         % make clean
+
+      b. To build for another Linux kernel version:
+         the system type defined in step A1.
+         % ./configure --with-afs-sysname=i386_linux22 --with-linux-kernel-headers=/usr/src/linux-2.2.19-i686
+         % make 
+
+         Your dest tree will now include an additional kernel module for your
+         additional kernel headers. Be aware that if the kernel version string
+         which UTS_RELEASE is defined to in include/linux/version.h matches
+         the last kernel you built for, the previous kernel module will be 
+         overwritten.
+
+C  Problems
+   If you have a problem building this source, you may want to visit
+   http://www.openafs.org/ to see if any problems have been reported 
+   or to find out how to get more help.
+
+   Mailing lists have been set up to help; More details can be found
+   on the openafs.org site.
+
