@@ -26,6 +26,7 @@ extern void rx_SetConnDeadTime(register struct rx_connection *conn,
 			       register int seconds);
 extern void rxi_CleanupConnection(struct rx_connection *conn);
 extern void rxi_DestroyConnection(register struct rx_connection *conn);
+extern void rx_GetConnection(register struct rx_connection *conn);
 extern void rx_DestroyConnection(register struct rx_connection *conn);
 extern struct rx_call *rx_NewCall(register struct rx_connection *conn);
 extern int rxi_HasActiveCalls(register struct rx_connection *aconn);
