@@ -421,6 +421,6 @@ AFSDEV_AUXMIDLFLAGS=/Oi
 !ENDIF
 
 # Lex/Yacc macros
-LEX =1.2.2 a
+LEX = flex -l
 YACC = bison
 
