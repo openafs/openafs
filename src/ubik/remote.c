@@ -72,9 +72,13 @@ afs_int32 SDISK_Begin(rxcall, atid)
     urecovery_CheckTid(atid);
     if (ubik_currentTrans) {
         /* If the thread is not waiting for lock - ok to end it */
+#if !defined(UBIK_PAUSE)
         if (ubik_currentTrans->locktype != LOCKWAIT) {
+#endif /* UBIK_PAUSE */
 	   udisk_end(ubik_currentTrans);
+#if !defined(UBIK_PAUSE)
 	}
+#endif /* UBIK_PAUSE */
 	ubik_currentTrans = (struct ubik_trans *) 0;
     }
     code = udisk_begin(ubik_dbase, UBIK_WRITETRANS, &ubik_currentTrans);
@@ -153,9 +157,13 @@ afs_int32 SDISK_ReleaseLocks(rxcall, atid)
     }
 
     /* If the thread is not waiting for lock - ok to end it */
+#if !defined(UBIK_PAUSE)
     if (ubik_currentTrans->locktype != LOCKWAIT) {
-       udisk_end(ubik_currentTrans);
-    }
+#endif /* UBIK_PAUSE */
+	udisk_end(ubik_currentTrans);
+#if !defined(UBIK_PAUSE)
+    }    
+#endif /* UBIK_PAUSE */
     ubik_currentTrans = (struct ubik_trans *) 0;
     DBRELE(dbase);
     return 0;
@@ -190,9 +198,13 @@ afs_int32 SDISK_Abort(rxcall, atid)
 
     code = udisk_abort(ubik_currentTrans);
     /* If the thread is not waiting for lock - ok to end it */
+#if !defined(UBIK_PAUSE)
     if (ubik_currentTrans->locktype != LOCKWAIT) {
-       udisk_end(ubik_currentTrans);
-    }
+#endif /* UBIK_PAUSE */
+        udisk_end(ubik_currentTrans);
+#if !defined(UBIK_PAUSE)
+     }
+#endif /* UBIK_PAUSE */
     ubik_currentTrans = (struct ubik_trans *) 0;
     DBRELE(dbase);
     return code;
@@ -606,6 +618,7 @@ UbikInterfaceAddr	*inAddr, *outAddr;
 	for ( i=0; i < UBIK_MAX_INTERFACE_ADDR && inAddr->hostAddr[i]; i++)
 	    ubik_print("%s ", afs_inet_ntoa(htonl(inAddr->hostAddr[i])));
 	ubik_print("\n");
+	fflush(stdout); fflush(stderr);
 	printServerInfo();
         return UBADHOST;
     }
