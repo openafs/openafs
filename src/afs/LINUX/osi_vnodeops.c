@@ -542,11 +542,11 @@ static int afs_linux_lock(struct file *fp, int cmd, struct file_lock *flp)
 
     /* Safe because there are no large files, yet */
 #if defined(F_GETLK64) && (F_GETLK != F_GETLK64)
-    if (cmd = F_GETLK64)
+    if (cmd == F_GETLK64)
 	cmd = F_GETLK;
-    else if (cmd = F_SETLK64)
+    else if (cmd == F_SETLK64)
 	cmd = F_SETLK;
-    else if (cmd = F_SETLKW64)
+    else if (cmd == F_SETLKW64)
 	cmd = F_SETLKW;
 #endif /* F_GETLK64 && F_GETLK != F_GETLK64 */
 
