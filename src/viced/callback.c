@@ -572,6 +572,7 @@ XCallBackBulk_r(struct host * ahost, struct AFSFid * fids, afs_int32 nfids)
     struct AFSCBs tc;
     int code;
     int j;
+    struct rx_connection *cb_conn = NULL;
 
 #ifdef	ADAPT_MTU
     rx_SetConnDeadTime(ahost->callback_rxcon, 4);
@@ -594,8 +595,12 @@ XCallBackBulk_r(struct host * ahost, struct AFSFid * fids, afs_int32 nfids)
 	tc.AFSCBs_len = i;
 	tc.AFSCBs_val = tcbs;
 
+	cb_conn = ahost->callback_rxcon;
+	rx_GetConnection(cb_conn);
 	H_UNLOCK;
-	code |= RXAFSCB_CallBack(ahost->callback_rxcon, &tf, &tc);
+	code |= RXAFSCB_CallBack(cb_conn, &tf, &tc);
+	rx_PutConnection(cb_conn);
+	cb_conn = NULL;
 	H_LOCK;
     }
 
@@ -1085,21 +1090,24 @@ BreakDelayedCallBacks_r(struct host *host)
     struct CallBack *cb;
     int code;
     char hoststr[16];
+    struct rx_connection *cb_conn;
 
     cbstuff.nbreakers++;
     if (!(host->hostFlags & RESETDONE) && !(host->hostFlags & HOSTDELETED)) {
 	host->hostFlags &= ~ALTADDR;	/* alterrnate addresses are invalid */
+	cb_conn = host->callback_rxcon;
+	rx_GetConnection(cb_conn);
 	if (host->interface) {
 	    H_UNLOCK;
 	    code =
-		RXAFSCB_InitCallBackState3(host->callback_rxcon,
-					   &FS_HostUUID);
-	    H_LOCK;
+		RXAFSCB_InitCallBackState3(cb_conn, &FS_HostUUID);
 	} else {
 	    H_UNLOCK;
-	    code = RXAFSCB_InitCallBackState(host->callback_rxcon);
-	    H_LOCK;
+	    code = RXAFSCB_InitCallBackState(cb_conn);
 	}
+	rx_PutConnection(cb_conn);
+	cb_conn = NULL;
+	H_LOCK;
 	host->hostFlags |= ALTADDR;	/* alternate addresses are valid */
 	if (code) {
 	    if (ShowProblems) {
@@ -1635,6 +1643,7 @@ ClearHostCallbacks_r(struct host *hp, int locked)
     int code;
     int held = 0;
     char hoststr[16];
+    struct rx_connection *cb_conn = NULL;
 
     ViceLog(5,
 	    ("GSS: Delete longest inactive host %s\n",
@@ -1670,16 +1679,19 @@ ClearHostCallbacks_r(struct host *hp, int locked)
     } else {
 	/* host is up, try a call */
 	hp->hostFlags &= ~ALTADDR;	/* alternate addresses are invalid */
+	cb_conn = hp->callback_rxcon;
+	rx_GetConnection(hp->callback_rxcon);
 	if (hp->interface) {
 	    H_UNLOCK;
 	    code =
-		RXAFSCB_InitCallBackState3(hp->callback_rxcon, &FS_HostUUID);
-	    H_LOCK;
+		RXAFSCB_InitCallBackState3(cb_conn, &FS_HostUUID);
 	} else {
 	    H_UNLOCK;
-	    code = RXAFSCB_InitCallBackState(hp->callback_rxcon);
-	    H_LOCK;
+	    code = RXAFSCB_InitCallBackState(cb_conn);
 	}
+	rx_PutConnection(cb_conn);
+	cb_conn = NULL;
+	H_LOCK;
 	hp->hostFlags |= ALTADDR;	/* alternate addresses are valid */
 	if (code) {
 	    /* failed, mark host down and need reset */
