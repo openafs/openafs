@@ -377,13 +377,14 @@ int cm_reInitLocalMountPoints() {
                  ) {
 
                 // mark the scp to be reused
+                cm_HoldSCacheNoLock(scp);
                 lock_ReleaseWrite(&cm_scacheLock);
                 lock_ObtainMutex(&scp->mx);
                 cm_DiscardSCache(scp);
                 lock_ReleaseMutex(&scp->mx);
                 cm_CallbackNotifyChange(scp);
                 lock_ObtainWrite(&cm_scacheLock);
-                scp->refCount--;
+                cm_ReleaseSCacheNoLock(scp);
 
                 // take the scp out of the hash
                 lscpp = &cm_hashTablep[hash];
