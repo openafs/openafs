@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -53,14 +53,14 @@ struct buffer {
     afs_int32 page;
     afs_int32 accesstime;
     struct buffer *hashNext;
-    char *data;
+    void *data;
     char lockers;
     char dirty;
     char hashIndex;
     struct Lock lock;
-    } **Buffers;
+} **Buffers;
 
-char *BufferData;
+void *BufferData;
 
 static struct buffer *phTable[PHSIZE];	/* page hash table */
 static struct buffer *LastBuffer;
@@ -72,25 +72,27 @@ struct buffer *newslot();
 
 int DStat (abuffers, acalls, aios)
     int *abuffers, *acalls, *aios;
-    {*abuffers = nbuffers;
+{
+    *abuffers = nbuffers;
     *acalls = calls;
     *aios = ios;
     return 0;
-    }
+ }
 
 int DInit (abuffers)
     int abuffers;
-    {/* Initialize the venus buffer system. */
+{
+    /* Initialize the venus buffer system. */
     register int i, tsize;
     register struct buffer *tb;
-    register char *tp;
+    register void *tp;
 
     Lock_Init(&afs_bufferLock);
     /* Align each element of Buffers on a doubleword boundary */
     tsize = (sizeof(struct buffer) + 7) & ~7;
-    tp = (char *) malloc(abuffers * tsize);
+    tp = (void *) malloc(abuffers * tsize);
     Buffers = (struct buffer **) malloc(abuffers * sizeof(struct buffer *));
-    BufferData = (char *) malloc(abuffers * BUFFER_PAGE_SIZE);
+    BufferData = (void *) malloc(abuffers * BUFFER_PAGE_SIZE);
     timecounter = 0;
     LastBuffer = (struct buffer *)tp;
     nbuffers = abuffers;
@@ -110,10 +112,11 @@ int DInit (abuffers)
     return 0;
     }
 
-char *DRead(fid,page)
+void *DRead(fid,page)
   register afs_int32 *fid;
   register int page;
-{ /* Read a page from the disk. */
+{
+    /* Read a page from the disk. */
     register struct buffer *tb, *tb2, **bufhead;
 
     ObtainWriteLock(&afs_bufferLock);
@@ -123,13 +126,13 @@ char *DRead(fid,page)
 #define buf_Front(head,parent,p) {(parent)->hashNext = (p)->hashNext; (p)->hashNext= *(head);*(head)=(p);}
 
     /* this apparently-complicated-looking code is simply an example of
-     * a little bit of loop unrolling, and is a standard linked-list 
+     * a little bit of loop unrolling, and is a standard linked-list
      * traversal trick. It saves a few assignments at the the expense
      * of larger code size.  This could be simplified by better use of
      * macros.  With the use of these LRU queues, the old one-cache is
-     * probably obsolete. 
+     * probably obsolete.
      */
-    if ( tb = phTable[pHash(fid)] ) {  /* ASSMT HERE */
+    if ( tb = phTable[pHash(fid)] ) { /* ASSMT HERE */
 	if (bufmatch(tb)) {
 	    ObtainWriteLock(&tb->lock);
 	    tb->lockers++;
@@ -139,37 +142,37 @@ char *DRead(fid,page)
 	    return tb->data;
 	}
 	else {
-	  bufhead = &( phTable[pHash(fid)] );
-	  while (tb2 = tb->hashNext) {
-	    if (bufmatch(tb2)) {
-	      buf_Front(bufhead,tb,tb2);
-	      ObtainWriteLock(&tb2->lock);
-	      tb2->lockers++;
-	      ReleaseWriteLock(&afs_bufferLock);
-	      tb2->accesstime = ++timecounter;
-	      ReleaseWriteLock(&tb2->lock);
-	      return tb2->data;
+	    bufhead = &( phTable[pHash(fid)] );
+	    while (tb2 = tb->hashNext) {
+		if (bufmatch(tb2)) {
+		    buf_Front(bufhead,tb,tb2);
+		    ObtainWriteLock(&tb2->lock);
+		    tb2->lockers++;
+		    ReleaseWriteLock(&afs_bufferLock);
+		    tb2->accesstime = ++timecounter;
+		    ReleaseWriteLock(&tb2->lock);
+		    return tb2->data;
+		}
+		if (tb = tb2->hashNext) { /* ASSIGNMENT HERE! */
+		    if (bufmatch(tb)) {
+			buf_Front(bufhead,tb2,tb);
+			ObtainWriteLock(&tb->lock);
+			tb->lockers++;
+			ReleaseWriteLock(&afs_bufferLock);
+			tb->accesstime = ++timecounter;
+			ReleaseWriteLock(&tb->lock);
+			return tb->data;
+		    }
+		}
+		else break;
 	    }
-	    if (tb = tb2->hashNext) { /* ASSIGNMENT HERE! */ 
-	      if (bufmatch(tb)) {
-		buf_Front(bufhead,tb2,tb);
-		ObtainWriteLock(&tb->lock);
-		tb->lockers++;
-		ReleaseWriteLock(&afs_bufferLock);
-		tb->accesstime = ++timecounter;
-		ReleaseWriteLock(&tb->lock);
-		return tb->data;
-	      }
-	    }
-	    else break;
-	  }
 	}
-      }  
+    }
     else tb2 = NULL;
 
     /* can't find it */
     /* The last thing we looked at was either tb or tb2 (or nothing). That
-     * is at least the oldest buffer on one particular hash chain, so it's 
+     * is at least the oldest buffer on one particular hash chain, so it's
      * a pretty good place to start looking for the truly oldest buffer.
      */
     tb = newslot(fid, page, (tb ? tb : tb2));
@@ -192,7 +195,8 @@ char *DRead(fid,page)
 
 static FixupBucket(ap)
     register struct buffer *ap;
-    {register struct buffer **lp, *tp;
+{
+    register struct buffer **lp, *tp;
     register int i;
     /* first try to get it out of its current hash bucket, in which it might not be */
     i = ap->hashIndex;
@@ -213,36 +217,37 @@ static FixupBucket(ap)
 
 struct buffer *newslot (afid, apage, lp)
     afs_int32 *afid, apage;
-     register struct buffer *lp;   /* pointer to a fairly-old buffer */
-    {/* Find a usable buffer slot */
+    register struct buffer *lp;   /* pointer to a fairly-old buffer */
+{
+    /* Find a usable buffer slot */
     register afs_int32 i;
     afs_int32 lt;
     register struct buffer **tbp;
 
     if (lp && (lp->lockers == 0)) {
-      lt = lp->accesstime;
+	lt = lp->accesstime;
     }
     else {
-      lp = 0;
-      lt = BUFFER_LONG_MAX;
+	lp = 0;
+	lt = BUFFER_LONG_MAX;
     }
 
     tbp = Buffers;
     for (i=0;i<nbuffers;i++,tbp++) {
-      if ((*tbp)->lockers == 0) {
-	if ((*tbp)->accesstime < lt) {
-	  lp = (*tbp);
-	  lt = (*tbp)->accesstime;
+	if ((*tbp)->lockers == 0) {
+	    if ((*tbp)->accesstime < lt) {
+		lp = (*tbp);
+		lt = (*tbp)->accesstime;
+	    }
 	}
-      }
     }
 
     /* There are no unlocked buffers */
     if (lp == 0) {
-      if (lt < 0)
-	Die("accesstime counter wrapped");
-      else 
-	Die ("all buffers locked");
+	if (lt < 0)
+	    Die("accesstime counter wrapped");
+	else
+	    Die ("all buffers locked");
     }
 
     /* We do not need to lock the buffer here because it has no lockers
@@ -251,7 +256,7 @@ struct buffer *newslot (afid, apage, lp)
     if (lp->dirty) {
         if (ReallyWrite(lp->fid,lp->page,lp->data)) Die("writing bogus buffer");
         lp->dirty = 0;
-        }
+    }
 
     /* Now fill in the header. */
     FidZap(lp->fid);
@@ -262,39 +267,42 @@ struct buffer *newslot (afid, apage, lp)
     FixupBucket(lp);		/* move to the right hash bucket */
 
     return lp;
-    }
+}
 
 void
 DRelease (bp,flag)
     register struct buffer *bp;
     int flag;
-    {/* Release a buffer, specifying whether or not the buffer has been modified by the locker. */
+{
+    /* Release a buffer, specifying whether or not the buffer has been modified by the locker. */
     register int index;
 
     if (!bp) return;
-    index = (((char *)bp)-((char *)BufferData))>>LOGPS;
+    index = (((void *)bp)-((void *)BufferData))>>LOGPS;
     bp = Buffers[index];
     ObtainWriteLock(&bp->lock);
     bp->lockers--;
     if (flag) bp->dirty=1;
     ReleaseWriteLock(&bp->lock);
-    }
+}
 
 DVOffset (ap)
     register void *ap;
-    {/* Return the byte within a file represented by a buffer pointer. */
+{
+    /* Return the byte within a file represented by a buffer pointer. */
     register struct buffer *bp;
     register int index;
     bp=ap;
-    index = (((char *)bp) - ((char *)BufferData)) >> LOGPS;
+    index = (((void *)bp) - ((void *)BufferData)) >> LOGPS;
     if (index<0 || index >= nbuffers) return -1;
     bp = Buffers[index];
-    return BUFFER_PAGE_SIZE*bp->page+((char *)ap)-bp->data;
-    }
+    return BUFFER_PAGE_SIZE*bp->page+((void *)ap)-bp->data;
+}
 
 DZap (fid)
     register afs_int32 *fid;
-    {/* Destroy all buffers pertaining to a particular fid. */
+{
+    /* Destroy all buffers pertaining to a particular fid. */
     register struct buffer *tb;
     ObtainReadLock(&afs_bufferLock);
     for(tb=phTable[pHash(fid)]; tb; tb=tb->hashNext)
@@ -305,11 +313,12 @@ DZap (fid)
 	    ReleaseWriteLock(&tb->lock);
 	}
     ReleaseReadLock(&afs_bufferLock);
-    }
+}
 
 DFlushVolume (vid)
     register afs_int32 vid;
-    {/* Flush all data and release all inode handles for a particular volume */
+{
+    /* Flush all data and release all inode handles for a particular volume */
     register struct buffer *tb;
     register int code, rcode = 0;
     ObtainReadLock(&afs_bufferLock);
@@ -327,11 +336,12 @@ DFlushVolume (vid)
 	}
     ReleaseReadLock(&afs_bufferLock);
     return rcode;
-    }
+}
 
 DFlushEntry (fid)
-register afs_int32 *fid;
-{/* Flush pages modified by one entry. */
+    register afs_int32 *fid;
+{
+    /* Flush pages modified by one entry. */
     register struct buffer *tb;
     int code;
 
@@ -355,7 +365,8 @@ register afs_int32 *fid;
 }
 
 DFlush ()
-{/* Flush all the modified buffers. */
+{
+    /* Flush all the modified buffers. */
     register int i;
     register struct buffer **tbp;
     afs_int32 code, rcode;
@@ -371,7 +382,7 @@ DFlush ()
 	    if ((*tbp)->dirty) {
 		code = ReallyWrite((*tbp)->fid, (*tbp)->page, (*tbp)->data);
 		if (!code)
-		    (*tbp)->dirty = 0;	/* Clear the dirty flag */
+		    (*tbp)->dirty = 0; /* Clear the dirty flag */
 		if (code && !rcode) {
 		    rcode = code;
 		}
@@ -385,9 +396,9 @@ DFlush ()
     return rcode;
 }
 
-char *DNew (fid,page)
-  register int page;
-  register afs_int32 *fid;
+void *DNew (fid,page)
+    register int page;
+    register afs_int32 *fid;
 {
     /* Same as read, only do *not* even try to read the page,
      * since it probably doesn't exist.

@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -108,7 +108,7 @@ RCSID("$Header$");
 # ifdef HAVE_UNISTD_H
 #  include <unistd.h>
 # endif
-# include <sys/types.h>	
+# include <sys/types.h>
 # include <errno.h>
 # include "dir.h"
 #ifdef AFS_NT40_ENV
@@ -132,7 +132,7 @@ struct DirEntry *DRead();
 struct DirEntry *DNew();
 
 /* Local static prototypes */
-static struct DirEntry *FindItem (char *dir, char *ename,
+static struct DirEntry *FindItem (void *dir, char *ename,
         unsigned short **previtem);
 
 
@@ -143,9 +143,11 @@ int NameBlobs (char *name)
     return 1+((i+15)>>5);
 }
 
-int Create (char *dir, char *entry, afs_int32 *vfid)
+/* Create an entry in a file.  Dir is a file representation, while entry is a string name. */
+
+int Create (void *dir, char *entry, void *voidfid)
 {
-    /* Create an entry in a file.  Dir is a file representation, while entry is a string name. */
+    afs_int32 *vfid = (afs_int32 *) voidfid;
     int blobs, firstelt;
     register int i;
     register struct DirEntry *ep;
@@ -155,22 +157,22 @@ int Create (char *dir, char *entry, afs_int32 *vfid)
     /* check name quality */
     if (*entry == 0) return EINVAL;
     /* First check if file already exists. */
-    ep = FindItem(dir,entry,&pp);
+    ep = FindItem(dir, entry, &pp);
     if (ep) {
         DRelease(ep, 0);
         DRelease(pp, 0);
         return EEXIST;
     }
     blobs = NameBlobs(entry);	/* number of entries required */
-    firstelt = FindBlobs(dir,blobs);
+    firstelt = FindBlobs(dir, blobs);
     if (firstelt < 0) return EFBIG;	/* directory is full */
     /* First, we fill in the directory entry. */
-    ep = GetBlob(dir,firstelt);
+    ep = GetBlob(dir, firstelt);
     if (ep == 0) return EIO;
     ep->flag = FFIRST;
     ep->fid.vnode = htonl(vfid[1]);
     ep->fid.vunique = htonl(vfid[2]);
-    strcpy(ep->name,entry);
+    strcpy(ep->name, entry);
     /* Now we just have to thread it on the hash table list. */
     dhp = (struct DirHeader *) DRead(dir,0);
     if (!dhp) {
@@ -185,7 +187,7 @@ int Create (char *dir, char *entry, afs_int32 *vfid)
     return 0;
 }
 
-int Length (char *dir)
+int Length (void *dir)
 {
     int i,ctr;
     struct DirHeader *dhp;
@@ -202,7 +204,7 @@ int Length (char *dir)
     return ctr*AFS_PAGESIZE;
 }
 
-int Delete (char *dir, char *entry)
+int Delete (void *dir, char *entry)
 {
     /* Delete an entry from a directory, including update of all free entry descriptors. */
     int nitems, index;
@@ -219,7 +221,7 @@ int Delete (char *dir, char *entry)
     return 0;
 }
 
-int FindBlobs (char *dir, int nblobs)
+int FindBlobs (void *dir, int nblobs)
 {
     /* Find a bunch of contiguous entries; at least nblobs in a row. */
     register int i, j, k;
@@ -286,7 +288,7 @@ int FindBlobs (char *dir, int nblobs)
     return -1;
 }
 
-void AddPage (char *dir, int pageno)
+void AddPage (void *dir, int pageno)
 {/* Add a page to a directory. */
     register int i;
     register struct PageHeader *pp;
@@ -301,9 +303,10 @@ void AddPage (char *dir, int pageno)
     DRelease(pp,1);
 }
 
-void FreeBlobs(char *dir, register int firstblob, int nblobs)
+/* Free a whole bunch of directory entries. */
+
+void FreeBlobs(void *dir, register int firstblob, int nblobs)
 {
-    /* Free a whole bunch of directory entries. */
     register int i;
     int page;
     struct DirHeader *dhp;
@@ -318,12 +321,15 @@ void FreeBlobs(char *dir, register int firstblob, int nblobs)
     if (pp) for (i=0;i<nblobs;i++)
         pp->freebitmap[(firstblob+i)>>3] &= ~(1<<((firstblob+i)&7));
     DRelease(pp,1);
-    }
+}
 
-int MakeDir (char *dir, afs_int32 *me, afs_int32 *parent)
+/*
+ * Format an empty directory properly.  Note that the first 13 entries in a
+ * directory header page are allocated, 1 to the page header, 4 to the
+ * allocation map and 8 to the hash table.
+ */
+int MakeDir (void *dir, afs_int32 *me, afs_int32 *parent)
 {
-    /* Format an empty directory properly.  Note that the first 13 entries in a directory header
-      page are allocated, 1 to the page header, 4 to the allocation map and 8 to the hash table. */
     register int i;
     register struct DirHeader *dhp;
     dhp = (struct DirHeader *) DNew(dir,0);
@@ -340,11 +346,13 @@ int MakeDir (char *dir, afs_int32 *me, afs_int32 *parent)
     Create(dir,".",me);
     Create(dir,"..",parent);	/* Virtue is its own .. */
     return 0;
-    }
+}
 
-int Lookup (char *dir, char *entry, register afs_int32 *fid)
+/* Look up a file name in directory. */
+
+int Lookup (void *dir, char *entry, void *voidfid)
 {
-    /* Look up a file name in directory. */
+    afs_int32 *fid = (afs_int32 *) voidfid;
     register struct DirEntry *firstitem;
     unsigned short *previtem;
 
@@ -357,24 +365,26 @@ int Lookup (char *dir, char *entry, register afs_int32 *fid)
     return 0;
 }
 
-int LookupOffset (char *dir, char *entry, register afs_int32 *fid, long *offsetp)
-{
-      /* Look up a file name in directory. */
-      register struct DirEntry *firstitem;
-      unsigned short *previtem;
+/* Look up a file name in directory. */
 
-      firstitem = FindItem(dir,entry,&previtem);
-      if (firstitem == 0) return ENOENT;
-      DRelease(previtem,0);
-      fid[1] = ntohl(firstitem->fid.vnode);
-      fid[2] = ntohl(firstitem->fid.vunique);
-      if (offsetp)
-	  *offsetp = DVOffset(firstitem);
-      DRelease(firstitem,0);
-      return 0;
+int LookupOffset (void *dir, char *entry, void *voidfid, long *offsetp)
+{
+    afs_int32 *fid = (afs_int32 *) voidfid;
+    register struct DirEntry *firstitem;
+    unsigned short *previtem;
+
+    firstitem = FindItem(dir,entry,&previtem);
+    if (firstitem == 0) return ENOENT;
+    DRelease(previtem,0);
+    fid[1] = ntohl(firstitem->fid.vnode);
+    fid[2] = ntohl(firstitem->fid.vunique);
+    if (offsetp)
+	*offsetp = DVOffset(firstitem);
+    DRelease(firstitem,0);
+    return 0;
 }
 
-int EnumerateDir (char *dir, int (*hookproc)(), void *hook)
+int EnumerateDir (void *dir, int (*hookproc)(), void *hook)
 {
     /* Enumerate the contents of a directory. */
     register int i;
@@ -408,7 +418,7 @@ int EnumerateDir (char *dir, int (*hookproc)(), void *hook)
     return 0;
 }
 
-int IsEmpty (char *dir)
+int IsEmpty (void *dir)
 {
     /* Enumerate the contents of a directory. */
     register int i;
@@ -437,7 +447,7 @@ int IsEmpty (char *dir)
     return 0;
 }
 
-struct DirEntry *GetBlob (char *dir, afs_int32 blobno)
+struct DirEntry *GetBlob (void *dir, afs_int32 blobno)
 {
     /* Return a pointer to an entry, given its number. */
     struct DirEntry *ep;
@@ -463,7 +473,7 @@ int DirHash (register char *string)
     return tval;
 }
 
-static struct DirEntry *FindItem (char *dir, char *ename,
+static struct DirEntry *FindItem (void *dir, char *ename,
 	unsigned short **previtem)
 {
     /* Find a directory entry, given its name.  This entry returns a pointer to a locked buffer, and a pointer to a locked buffer (in previtem) referencing the found item (to aid the delete code).  If no entry is found, however, no items are left locked, and a null pointer is returned instead. */
