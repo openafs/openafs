@@ -555,6 +555,25 @@ values using registry keys.  This is useful for managed machines in a
 Windows domain which are centrally located (e.g., in a computing
 lab.)  See registry.txt for details on the "Server Preferences" keys.
 
+39. As of 1.3.81, timestamps on file stored in AFS are reported to 
+Windows in UTC all year round.  Previously, in locales with daylight
+savings time, the time reported by AFS to Windows when DST is active
+was UTC+1.  This was done to preserve the relative local time for the
+user.  A file stored at 11:00am EST in January would be reported as
+having been stored at 11:00am EDT in June.  Unfortunately, this has
+the negative side effect of changing the reported timestamp from 16:00UTC
+to 15:00UTC.  Since Windows treats all file times in UTC, data 
+synchronization applications which rely on the timestamp would believe
+that all files stored in AFS had changed.  This will no longer be the
+case. 
+
+It should be noted that Unix based operating systems (such as Solaris)
+do not appear to report file times to applications in UTC.  They do 
+preserve the relative local time.  This may confuse some users who are
+used to being able to compare the timestamp in an Unix shell with the
+timestamp from the Windows explorer.  During DST, these two times will
+no longer agree even though they are in fact describing the same time.
+
 ------------------------------------------------------------------------
 
 Reporting Bugs:

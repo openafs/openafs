@@ -6,6 +6,13 @@ Since 1.3.80:
   * Replaced time conversion code (UnixTime <-> FILETIME) to 
     be completely arithmetic instead of relying on a bizarre
     algorithm involving a variety of C RTL time functions.
+    This has the side effect that UnixTime and FILETIME which
+    are both stored in UTC are interpretted as UTC throughout
+    the year.  Windows will apply the same localization to AFS
+    as it does to NTFS.  Applications which rely on the ability
+    to sync files between the two file systems will no longer
+    see the timestamps of files in AFS change an hour relative
+    to the files stored in NTFS or Windows based backup devices.
 
   * Fixed a invalid memory access under a bizarre circumstance.
     Windows will allow a physical mass media device to be 
