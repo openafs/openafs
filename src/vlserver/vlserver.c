@@ -49,9 +49,7 @@ int lwps = 9;
 struct vldstats dynamic_statistics;
 struct ubik_dbase *VL_dbase;
 afs_uint32	HostAddress[MAXSERVERID+1];
-extern afs_int32 afsconf_GetKey();
 extern int afsconf_CheckAuth();
-extern int afsconf_ClientAuth();
 extern int afsconf_ServerAuth();
 
 extern afs_int32 ubik_lastYesTime;
