@@ -19,14 +19,28 @@
 RCSID("$Header$");
 
 
+#include "lwp.h"
+#include "preempt.h"
+
 #if defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV) || defined(AFS_DJGPP_ENV)
 int PRE_Block = 0;
+
+
+int PRE_InitPreempt(slice)
+    struct timeval *slice;
+{
+    return LWP_SUCCESS;
+}
+
+int PRE_EndPreempt()
+{
+    return LWP_SUCCESS;
+}
+
 #else
 #include <sys/time.h>
 #include <signal.h>
 #include <ucontext.h>
-#include "lwp.h"
-#include "preempt.h"
 
 #if defined(AFS_OSF_ENV) || defined(AFS_S390_LINUX20_ENV)
 int PRE_Block = 0;		/* used in lwp.c and process.s */

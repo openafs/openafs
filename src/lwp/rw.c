@@ -27,6 +27,7 @@ RCSID("$Header$");
 extern char *calloc();
 #endif
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "lwp.h"
 #include "lock.h"
@@ -96,9 +97,9 @@ int asleep;	/* Number of processes sleeping -- used for
 		   clean termination */
 
 static int read_process(id)
-    int id;
+    int *id;
 {
-    printf("\t[Reader %d]\n", id);
+    printf("\t[Reader %d]\n", *id);
     LWP_DispatchProcess();		/* Just relinquish control for now */
 
     PRE_PreemptMe();
@@ -116,7 +117,7 @@ static int read_process(id)
 	asleep--;
 	for (i=0; i<10000; i++) ;
 	PRE_BeginCritical();
-	printf("[%d: %s]\n", id, Remove(q));
+	printf("[%d: %s]\n", *id, Remove(q));
 	PRE_EndCritical();
 	ReleaseReadLock(&q->lock);
 	LWP_DispatchProcess();
@@ -201,8 +202,10 @@ main(argc, argv)
    int argc; char **argv;
 {
     int nreaders, i;
+    PROCESS pid;
     afs_int32 interval;	/* To satisfy Brad */
     PROCESS *readers;
+    int *readerid;
     PROCESS writer;
     struct timeval tv;
 
@@ -219,7 +222,7 @@ main(argc, argv)
     interval = (argc >= 3 ? atoi(*++argv)*1000 : 50000);
 
     if (argc == 4) lwp_debug = 1;
-    LWP_InitializeProcessSupport(0, (PROCESS*)&i);
+    LWP_InitializeProcessSupport(0, &pid);
     printf("[Support initialized]\n");
     tv.tv_sec = 0;
     tv.tv_usec = interval;
@@ -235,9 +238,10 @@ main(argc, argv)
     /* Now create readers */
     printf("[Creating Readers...\n");
     readers = (PROCESS *) calloc(nreaders, sizeof(PROCESS));
+    readerid = (int *)calloc(nreaders, sizeof(i));
     for (i=0; i<nreaders; i++)
-	LWP_CreateProcess(read_process, STACK_SIZE, 0, (void*)i, "Reader",
-			  &readers[i]);
+	LWP_CreateProcess(read_process, STACK_SIZE, 0, (void*)&readerid[i],
+			  "Reader", &readers[i]);
     printf("done]\n");
 
     printf("\t[Creating Writer...\n");

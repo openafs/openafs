@@ -837,12 +837,12 @@ static int Dispatcher()		/* Lightweight process dispatcher */
 		   lwp_cpptr->stack + lwp_cpptr->stacksize - 4)) {
 #else
     if (lwp_cpptr && lwp_cpptr->stack &&
-	(lwp_cpptr->stackcheck != *(afs_int32 *)(lwp_cpptr->stack) ||
+	(lwp_cpptr->stackcheck != *(int *)(lwp_cpptr->stack) ||
 	 lwp_cpptr->context.topstack < lwp_cpptr->stack        ||
 	 lwp_cpptr->context.topstack > (lwp_cpptr->stack + lwp_cpptr->stacksize))) {
 #endif
         printf("stackcheck = %u: stack = %u \n",
-	       lwp_cpptr->stackcheck, *(afs_int32 *)lwp_cpptr->stack);
+	       lwp_cpptr->stackcheck, *(int *)lwp_cpptr->stack);
 	printf("topstack = 0x%x: stackptr = 0x%x: stacksize = 0x%x\n", 
 	        lwp_cpptr->context.topstack, lwp_cpptr->stack, lwp_cpptr->stacksize);
 
@@ -953,10 +953,10 @@ static void Initialize_PCB(temp, priority, stack, stacksize, ep, parm, name)
     temp -> stacksize = stacksize;
 #ifdef __hp9000s800
     if (temp -> stack != NULL)
-	temp -> stackcheck = *(afs_int32 *) ((temp -> stack) + stacksize - 4);
+	temp -> stackcheck = *(int *) ((temp -> stack) + stacksize - 4);
 #else
     if (temp -> stack != NULL)
-	temp -> stackcheck = *(afs_int32 *) (temp -> stack);
+	temp -> stackcheck = *(int *) (temp -> stack);
 #endif
     temp -> ep = ep;
     temp -> parm = parm;

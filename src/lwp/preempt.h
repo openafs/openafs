@@ -14,10 +14,12 @@
 * 								    *
 \*******************************************************************/
 
+#if defined( _WIN32)
+#define PRE_InitPreempt(A)
+#endif
 
 #if defined( _WIN32) || defined(AFS_LINUX20_ENV)
 /* preemption not implemented for win32. Use threads instead. */
-#define PRE_InitPreempt(A)
 #define PRE_PreemptMe()		
 #define PRE_BeginCritical()
 #define PRE_EndCritical()
