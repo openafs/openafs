@@ -30,6 +30,7 @@ MKAFS_OSTYPE=@MKAFS_OSTYPE@
 # Systype-specific items
 LINUX_KERNEL_PATH=@LINUX_KERNEL_PATH@
 LINUX_VERSION=@LINUX_VERSION@
+DARWIN_INFOFILE=@DARWIN_INFOFILE@
 
 # Other items
 LIB_AFSDB=@LIB_AFSDB@
@@ -291,7 +292,7 @@ bozo: project ntp audit
 vfsck:	vol
 	set -x; \
 	case ${SYS_NAME} in \
-	sgi_* | *linux* | rs_aix42 | ppc_darwin* | hp_ux* | *fbsd* ) \
+	sgi_* | *linux* | rs_aix42 | ppc_darwin* | hp_ux* | *fbsd* | *_obsd* ) \
 		echo skip vfsck for ${SYS_NAME} ;; \
 	 * ) \
 		${COMPILE_PART1} vfsck ${COMPILE_PART2} ;; \
@@ -310,7 +311,7 @@ login: project kauth rxkad
 		 ${COMPILE_PART1} login ${COMPILE_PART2} ;; \
 	sun4x_* | hp_ux11* | *linux* | *fbsd* ) \
 		${COMPILE_PART1} pam ${COMPILE_PART2} ;; \
-	ppc_darwin* ) \
+	ppc_darwin* | *_obsd* ) \
 		echo Skipping login for ${SYS_NAME} ;; \
 	* ) \
 		${COMPILE_PART1} login ${COMPILE_PART2} ;; \
@@ -354,7 +355,7 @@ libafs_tree: libafs_setup ${KERNELDIR}
 		[ -d libafs_tree/$$d ] || mkdir -p libafs_tree/$$d; \
 	done
 	for f in `cd src/libafs; find . -name '*.[ch]'` \
-		Makefile.common Makefile.extradefs \
+		Makefile.common Makefile.extradefs ${DARWIN_INFOFILE} \
 		afs.shutdown afs.startup redhat.sh sgi_master sgi_system \
 		; do \
 		${INSTALL} -c -f src/libafs/$$f libafs_tree/$$f; \
@@ -371,7 +372,7 @@ libafs_tree: libafs_setup ${KERNELDIR}
 libuafs: libuafs_setup ${UKERNELDIR}
 	set -x; \
 	case ${SYS_NAME} in \
-	hp_ux102* ) \
+	hp_ux102* | *_obsd* ) \
 		echo Skipping libuafs for ${SYS_NAME} ;; \
 	* ) \
 		${COMPILE_PART1} libuafs ${COMPILE_PART2} ;; \

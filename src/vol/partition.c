@@ -18,7 +18,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/vol/partition.c,v 1.7 2001/07/15 07:22:32 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/vol/partition.c,v 1.8 2001/09/20 06:47:48 hartmans Exp $");
 
 #include <ctype.h>
 #ifdef AFS_NT40_ENV
@@ -32,7 +32,7 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/vol/partition.c,v 1.7 2001/07/15 07:22:
 #if AFS_HAVE_STATVFS
 #include <sys/statvfs.h>
 #endif /* AFS_HAVE_STATVFS */
-#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 #include <sys/mount.h>
 #endif
 
@@ -46,7 +46,7 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/vol/partition.c,v 1.7 2001/07/15 07:22:
 #ifdef	AFS_SUN5_ENV
 #include <sys/fs/ufs_fs.h>
 #else
-#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 #include <ufs/ufs/dinode.h>
 #include <ufs/ffs/fs.h>
 #else
@@ -54,7 +54,7 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/vol/partition.c,v 1.7 2001/07/15 07:22:
 #endif
 #endif
 #else /* AFS_VFSINCL_ENV */
-#if !defined(AFS_AIX_ENV) && !defined(AFS_LINUX22_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
+#if !defined(AFS_AIX_ENV) && !defined(AFS_LINUX22_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_XBSD_ENV)
 #include <sys/fs.h>
 #endif
 #endif /* AFS_VFSINCL_ENV */
@@ -456,7 +456,7 @@ int VAttachPartitions(void)
 
 }
 #endif
-#if defined(AFS_DUX40_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_DUX40_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 int VAttachPartitions(void)
 {
     int errors = 0;
@@ -803,7 +803,6 @@ void VResetDiskUsage(void)
 
 void VAdjustDiskUsage_r(Error *ec, Volume *vp, afs_int32 blocks, afs_int32 checkBlocks)
 {
-    afs_int32 rem, minavail;
     *ec = 0;
     /* why blocks instead of checkBlocks in the check below?  Otherwise, any check
        for less than BlocksSpare would skip the error-checking path, and we
@@ -811,6 +810,8 @@ void VAdjustDiskUsage_r(Error *ec, Volume *vp, afs_int32 blocks, afs_int32 check
        blocks. */
     if (blocks > 0) {
 #ifdef	AFS_AIX32_ENV
+        afs_int32 rem, minavail;
+
 	if ((rem = vp->partition->free - checkBlocks) < 
 	    (minavail = (vp->partition->totalUsable * aixlow_water) / 100))
 #else
@@ -833,9 +834,10 @@ void VAdjustDiskUsage(Error *ec, Volume *vp, afs_int32 blocks, afs_int32 checkBl
 
 int VDiskUsage_r(Volume *vp, afs_int32 blocks)
 {
-    afs_int32 rem, minavail;
     if (blocks > 0) {
 #ifdef	AFS_AIX32_ENV
+        afs_int32 rem, minavail;
+
 	if ((rem = vp->partition->free - blocks) < 
 	    (minavail = (vp->partition->totalUsable * aixlow_water) / 100))
 #else

@@ -16,10 +16,10 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/lwp/preempt.c,v 1.8 2001/09/11 15:48:27 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/lwp/preempt.c,v 1.9 2001/09/20 06:47:46 hartmans Exp $");
 
 
-#if defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV) || defined(AFS_DJGPP_ENV)
+#if defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV) || defined(AFS_DJGPP_ENV)
 int PRE_Block = 0;
 #else
 #include <sys/time.h>

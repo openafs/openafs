@@ -28,7 +28,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/viced/afsfileprocs.c,v 1.4 2001/09/11 15:48:55 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/viced/afsfileprocs.c,v 1.5 2001/09/20 06:47:47 hartmans Exp $");
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -78,7 +78,7 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/viced/afsfileprocs.c,v 1.4 2001/09/11 1
 #include <rx/rx.h>
 #include <rx/rx_globals.h>
 #include <sys/stat.h>
-#if ! defined(AFS_SGI_ENV) && ! defined(AFS_AIX32_ENV) && ! defined(AFS_NT40_ENV) && ! defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
+#if ! defined(AFS_SGI_ENV) && ! defined(AFS_AIX32_ENV) && ! defined(AFS_NT40_ENV) && ! defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_XBSD_ENV)
 #include <sys/map.h>
 #endif
 #if !defined(AFS_NT40_ENV)
@@ -89,7 +89,7 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/viced/afsfileprocs.c,v 1.4 2001/09/11 1
 #include <sys/statfs.h>
 #include <sys/lockf.h>
 #else
-#if !defined(AFS_SUN5_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
+#if !defined(AFS_SUN5_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_XBSD_ENV)
 #include <sys/dk.h>
 #endif
 #endif
