@@ -548,6 +548,12 @@ to logon to Windows via a cross-realm relationship with a multi-domain
 Windows forest, you must enable Windows logon caching unless the 
 workstation is Longhorn Beta 1 or later.
 
+
+38. VLDB and File Server Preferences can now be provided initial 
+values using registry keys.  This is useful for managed machines in a
+Windows domain which are centrally located (e.g., in a computing
+lab.)  See registry.txt for details on the "Server Preferences" keys.
+
 ------------------------------------------------------------------------
 
 Reporting Bugs:
