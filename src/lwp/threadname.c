@@ -84,14 +84,16 @@ int registerthread(id, name)
     for (i = 0; i < nThreads; i++) {
        if (ThreadId[i] == id) {
            strncpy(&ThreadName[i][0], name, MAXTHREADNAMELENGTH);
-           return;
+           return 0;
        }
     }
-    if (nThreads == MAX_THREADS) return;
+    if (nThreads == MAX_THREADS) return 0;
     ThreadId[nThreads] = id;
     strncpy(&ThreadName[nThreads][0], name, MAXTHREADNAMELENGTH);
     ThreadName[nThreads][MAXTHREADNAMELENGTH -1] =0;
     nThreads++;
+
+    return 0;
 }
 
 int swapthreadname(id, new, old)

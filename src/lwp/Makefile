@@ -121,6 +121,7 @@ rw.o: rw.c
 #
 #	Installation
 #
+all: system
 system:	install
 
 kinstall ukinstall webinstall:

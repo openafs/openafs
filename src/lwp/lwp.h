@@ -360,6 +360,14 @@ extern int LWP_WaitProcess(void *event);
 extern int LWP_INTERNALSIGNAL(void *event, int yield);
 extern int LWP_QWait(void);
 extern int LWP_QSignal(PROCESS pid);
+#else
+extern int LWP_CurrentProcess();
+extern int LWP_INTERNALSIGNAL();
+extern int LWP_InitializeProcessSupport();
+extern int LWP_CreateProcess();
+extern int LWP_DestroyProcess();
+extern int LWP_WaitProcess();
+extern PROCESS LWP_ThreadId();
 #endif
 
 /* max time we are allowed to spend in a select call on NT */
