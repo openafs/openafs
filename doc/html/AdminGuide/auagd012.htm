@@ -1,0 +1,2765 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 4//EN">
+<HTML><HEAD>
+<TITLE>Administration Guide</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3570/auagd000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 2 Oct 2000 at 11:42:14                -->
+<META HTTP-EQUIV="updated" CONTENT="Mon, 02 Oct 2000 11:42:13">
+<META HTTP-EQUIV="review" CONTENT="Tue, 02 Oct 2001 11:42:13">
+<META HTTP-EQUIV="expires" CONTENT="Wed, 02 Oct 2002 11:42:13">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Guide</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auagd002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auagd011.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auagd013.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auagd026.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<HR><H1><A NAME="HDRWQ283" HREF="auagd002.htm#ToC_320">Backing Up and Restoring AFS Data</A></H1>
+<P>The instructions in this chapter explain how to back up and
+restore AFS data and to administer the Backup Database. They assume
+that you have already configured all of the Backup System components by
+following the instructions in <A HREF="auagd011.htm#HDRWQ248">Configuring the AFS Backup System</A>.
+<HR><H2><A NAME="HDRWQ284" HREF="auagd002.htm#ToC_321">Summary of Instructions</A></H2>
+<P>This chapter explains how to perform the following tasks by
+using the indicated commands:
+<BR>
+<TABLE WIDTH="100%">
+<TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Enter interactive mode
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>backup (interactive)</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Leave interactive mode
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>(backup) quit</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">List operations in interactive mode
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>(backup) jobs</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Cancel operation in interactive mode
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>(backup) kill</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Start Tape Coordinator
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>butc</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Stop Tape Coordinator
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%">&lt;<B>Ctrl-c</B>>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Check status of Tape Coordinator
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>backup status</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Back up data
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>backup dump</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Display dump records
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>backup dumpinfo</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Display volume's dump history
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>backup volinfo</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Scan contents of tape
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>backup scantape</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Restore volume
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>backup volrestore</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Restore partition
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>backup diskrestore</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Restore group of volumes
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>backup volsetrestore</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Verify integrity of Backup Database
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>backup dbverify</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Repair corruption in Backup Database
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>backup savedb</B> and <B>backup restoredb</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">Delete dump set from Backup Database
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>backup deletedump</B>
+</TD></TR></TABLE>
+<HR><H2><A NAME="HDRWQ286" HREF="auagd002.htm#ToC_322">Using the Backup System's Interfaces</A></H2>
+<A NAME="IDX6974"></A>
+<P>When performing backup operations, you interact with three Backup System
+components:
+<UL>
+<P><LI>You initiate backup operations by issuing commands from the
+<B>backup</B> suite. You can issue the commands in a command shell
+(or invoke them in a shell script) on any AFS client or server machine from
+which you can access the <B>backup</B> binary. In the conventional
+configuration, the binary resides in the <B>/usr/afs/bin</B> directory on
+a server machine and the <B>/usr/afsws/etc</B> directory on a client
+machine.
+<P>The suite provides an interactive mode, in which you can issue multiple
+commands over a persistent connection to the Backup Server and the Volume
+Location (VL) Server. Interactive mode has several convenient
+features. For a discussion and instructions, see <A HREF="#HDRWQ288">Using Interactive and Regular Command Mode</A>.
+<P>Note that some operating systems include a <B>backup</B> command of
+their own. You must configure machines that run such an operating
+system to ensure that you are accessing the desired <B>backup</B>
+binary.
+<P><LI>Before you perform a backup operation that involves reading or writing to
+a tape device or backup data file, you must open a dedicated connection to the
+appropriate Tape Coordinator machine and start the Tape Coordinator
+(<B>butc</B>) process that handles the device or file. The
+<B>butc</B> process must continue to run over the dedicated connection as
+long as it is executing an operation or is to be available to execute
+one. For further discussion and instructions, see <A HREF="#HDRWQ291">Starting and Stopping the Tape Coordinator Process</A>.
+<P><LI>The Backup Server (<B>buserver</B>) process must be running on
+database server machines, because most backup operations require accessing or
+changing information in the Backup Database. The <I>IBM AFS Quick
+Beginnings</I> explains how to configure the Backup Server.
+</UL>
+<P>For consistent Backup System performance, the AFS build level of all three
+binaries (<B>backup</B>, <B>butc</B>, and <B>buserver</B>) must
+match. For instructions on displaying the build level, see <A HREF="auagd008.htm#HDRWQ117">Displaying A Binary File's Build Level</A>.
+<P><H3><A NAME="HDRWQ287" HREF="auagd002.htm#ToC_323">Performing Backup Operations as the Local Superuser Root or in a Foreign Cell</A></H3>
+<A NAME="IDX6975"></A>
+<A NAME="IDX6976"></A>
+<A NAME="IDX6977"></A>
+<P>By default, the volumes and Backup Database involved in a backup operation
+must reside on server machines that belong to the cell named in the
+<B>/usr/vice/etc/ThisCell</B> files on both the Tape Coordinator machine
+and the machine where you issue the <B>backup</B> command. Also, to
+issue most <B>backup</B> commands you must have AFS tokens for an identity
+listed in the local cell's <B>/usr/afs/etc/UserList</B> file (which
+by convention is the same on every server machine in a cell). You can,
+however, perform backup operations on volumes or the Backup Database from a
+foreign cell, or perform backup operations while logged in as the local
+superuser <B>root</B> rather than as a privileged AFS identity.
+<P>To perform backup operations on volumes that reside in a foreign cell using
+machines from the local cell, you must designate the foreign cell as the cell
+of execution for both the Tape Coordinator and the <B>backup</B> command
+interpreter. Use one of the two following methods. For either
+method, you must also have tokens as an administrator listed in the foreign
+cell's <B>/usr/afs/etc/UserList</B> file.
+<UL>
+<P><LI>Before issuing <B>backup</B> commands and the <B>butc</B> command,
+set the AFSCELL environment variable to the foreign cell name in both command
+shells.
+<P><LI>Include the <B>-cell</B> argument to the <B>butc</B> and all
+<B>backup</B> commands. If you include the argument on the
+<B>backup (interactive)</B> command, it applies to all commands issued
+during the interactive session.
+</UL>
+<P>To perform backup operations without having administrative AFS tokens, you
+must log on as the local superuser <B>root</B> on both the Tape
+Coordinator machine and the machine where you issue <B>backup</B>
+commands. Both machines must be server machines, or at least have a
+<B>/usr/afs/etc/KeyFile</B> file that matches the file on other server
+machines. Then include the <B>-localauth</B> argument on both the
+<B>butc</B> command and all <B>backup</B> commands (or the <B>backup
+(interactive)</B> command). The Tape Coordinator and
+<B>backup</B> command interpreter construct a server ticket using the
+server encryption key with the highest key version number in the local
+<B>/usr/afs/etc/KeyFile</B> file, and present it to the Backup Server,
+Volume Server, and VL Server that belong to the cell named in the local
+<B>/usr/afs/etc/ThisCell</B> file. The ticket never expires.
+<P>You cannot combine the <B>-cell</B> and <B>-localauth</B> options
+on the same command. Also, each one overrides the local cell setting
+defined by the AFSCELL environment variable or the
+<B>/usr/vice/etc/ThisCell</B> file.
+<P><H3><A NAME="HDRWQ288" HREF="auagd002.htm#ToC_324">Using Interactive and Regular Command Mode</A></H3>
+<A NAME="IDX6978"></A>
+<A NAME="IDX6979"></A>
+<P>The <B>backup</B> command suite provides an <I>interactive
+mode</I>, in which you can issue multiple commands over a persistent
+connection to the Backup Server and the VL Server. Interactive mode
+provides the following features:
+<UL>
+<P><LI>The <TT>backup></TT> prompt replaces the usual command shell
+prompt.
+<P><LI>You omit the initial <B>backup</B> string from command names.
+Type only the operation code and option names.
+<P><LI>You cannot issue commands that do not belong to the <B>backup</B>
+suite.
+<P><LI>If you assume an administrative AFS identity or specify a foreign cell as
+you enter interactive mode, it applies to all commands issued during the
+interactive session. See <A HREF="#HDRWQ287">Performing Backup Operations as the Local Superuser Root or in a Foreign Cell</A>.
+<P><LI>You do not need to enclose shell metacharacters in double quotes.
+</UL>
+<A NAME="IDX6980"></A>
+<A NAME="IDX6981"></A>
+<P>When you initiate a backup operation in interactive mode, the Backup System
+assigns it a <I>job ID number</I>. You can display the list of
+current and pending operations with the <B>(backup) jobs</B> command, for
+which instructions appear in <A HREF="#HDRWQ289">To display pending or running jobs in interactive mode</A>. (In both regular and interactive modes, the Tape
+Coordinator also assigns a <I>task ID number</I> to each operation you
+initiate with a <B>backup</B> command. You can track task ID
+numbers with the <B>backup status</B> command. See <A HREF="#HDRWQ291">Starting and Stopping the Tape Coordinator Process</A>.)
+<P>You can cancel an operation in interactive mode with the <B>(backup)
+kill</B> command, for which instructions appear in <A HREF="#HDRWQ290">To cancel operations in interactive mode</A>. However, it is best not to interrupt a dump
+operation because the resulting dump is incomplete, and interrupting a restore
+operation can leave volumes in an inconsistent state, or even completely
+remove them from the server machine. For further discussion, see <A HREF="#HDRWQ296">Backing Up Data</A> and <A HREF="#HDRWQ306">Restoring and Recovering Data</A>.
+<P>The <B>(backup) jobs</B> and <B>(backup) kill</B> commands are
+available only in interactive mode and there is no equivalent functionality in
+regular command mode.
+<A NAME="IDX6982"></A>
+<A NAME="IDX6983"></A>
+<A NAME="IDX6984"></A>
+<A NAME="IDX6985"></A>
+<P><H3><A NAME="Header_325" HREF="auagd002.htm#ToC_325">To enter interactive mode</A></H3>
+<OL TYPE=1>
+<P><LI>Verify that you are authenticated as a user listed in the
+<B>/usr/afs/etc/UserList</B> file. Entering interactive mode does
+not itself require privilege, but most other <B>backup</B> commands do,
+and the AFS identity you assume when entering the mode applies to all commands
+you issue within it. If necessary, issue the <B>bos listusers</B>
+command, which is fully described in <A HREF="auagd021.htm#HDRWQ593">To display the users in the UserList file</A>. 
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE>
+<P><LI>Issue the <B>backup (interactive)</B> command at the system
+prompt. The <TT>backup></TT> prompt appears. You can include
+either, but not both, of the <B>-localauth</B> and <B>-cell</B>
+options, as discussed in <A HREF="#HDRWQ287">Performing Backup Operations as the Local Superuser Root or in a Foreign Cell</A>. 
+<PRE>   % <B>backup</B>
+   backup>
+</PRE>
+</OL>
+<A NAME="IDX6986"></A>
+<A NAME="IDX6987"></A>
+<A NAME="IDX6988"></A>
+<A NAME="IDX6989"></A>
+<P><H3><A NAME="Header_326" HREF="auagd002.htm#ToC_326">To exit interactive mode</A></H3>
+<P><B></B>
+<OL TYPE=1>
+<P><LI>Issue the <B>quit</B> command at the <TT>backup></TT> prompt.
+The command shell prompt reappears when the command succeeds, which it does
+only if there are no jobs pending or currently running. To display and
+cancel pending or running jobs, follow the instructions in <A HREF="#HDRWQ289">To display pending or running jobs in interactive mode</A> and <A HREF="#HDRWQ290">To cancel operations in interactive mode</A>. 
+<PRE>   backup> <B>quit</B>
+   %
+</PRE>
+</OL>
+<A NAME="IDX6990"></A>
+<A NAME="IDX6991"></A>
+<A NAME="IDX6992"></A>
+<A NAME="IDX6993"></A>
+<A NAME="IDX6994"></A>
+<A NAME="IDX6995"></A>
+<P><H3><A NAME="HDRWQ289" HREF="auagd002.htm#ToC_327">To display pending or running jobs in interactive mode</A></H3>
+<OL TYPE=1>
+<P><LI>Issue the <B>jobs</B> command at the <TT>backup></TT> prompt.
+<P>
+<PRE>   backup> <B>jobs</B>
+</PRE> 
+<P>where
+<DL>
+<P><DT><B>j
+</B><DD>Is the shortest acceptable abbreviation of <B>jobs</B>.
+</DL>
+</OL>
+<P>The output always includes the expiration date and time of the tokens that
+the <B>backup</B> command interpreter is using during the current
+interactive session, in the following format: 
+<PRE>   <VAR>date</VAR>   <VAR>time</VAR>: TOKEN EXPIRATION
+</PRE>
+<P>If the execution date and time specified for a scheduled dump operation is
+later than <I>date time</I>, then its individual line (as described in the
+following paragraphs) appears below this line to indicate that the current
+tokens will not be available to it.
+<P>If the issuer of the <B>backup</B> command included the
+<B>-localauth</B> flag when entering interactive mode, the line instead
+reads as follows:
+<PRE>   :  TOKEN NEVER EXPIRES
+</PRE>
+<P>The entry for a scheduled dump operation has the following format:
+<PRE>   Job <VAR>job_ID</VAR>:  <VAR>timestamp</VAR>:  dump  <VAR>volume_set</VAR>  <VAR>dump_level</VAR>
+</PRE>
+<P>where
+<DL>
+<P><DT><B><VAR>job_ID</VAR>
+</B><DD>Is a job identification number assigned by the Backup System.
+<P><DT><B><VAR>timestamp</VAR>
+</B><DD>Indicates the date and time the dump operation is to begin, in the format
+<I>month</I>/<I>date</I>/<I>year</I>
+<I>hours</I>:<I>minutes</I> (in 24-hour format)
+<P><DT><B><VAR>volume_set</VAR>
+</B><DD>Indicates the volume set to dump.
+<P><DT><B><VAR>dump_level</VAR>
+</B><DD>Indicates the dump level at which to perform the dump operation.
+</DL>
+<P>The line for a pending or running operation of any other type has the
+following format:
+<PRE>   Job <VAR>job_ID</VAR>:  <VAR>operation</VAR>  <VAR>status</VAR>
+</PRE>
+<P>where
+<DL>
+<P><DT><B><VAR>job_ID</VAR>
+</B><DD>Is a job identification number assigned by the Backup System.
+<P><DT><B><VAR>operation</VAR>
+</B><DD>Identifies the operation the Tape Coordinator is performing, which is
+initiated by the indicated command:
+<DL>
+<P><DT><B><TT>Dump</TT> <TT>(</TT><VAR>dump name</VAR><TT>)</TT>
+</B><DD>Initiated by the <B>backup dump</B> command. The <VAR>dump
+name</VAR> has the following format: 
+<P><VAR>volume_set_name</VAR><B>.</B><VAR>dump_level_name</VAR>
+<P><DT><B><TT>Restore</TT>
+</B><DD>Initiated by the <B>backup diskrestore</B>, <B>backup
+volrestore</B>, or <B>backup volsetrestore</B> command.
+<P><DT><B><TT>Labeltape</TT> <TT>(</TT><VAR>tape_label</VAR><TT>)</TT>
+</B><DD>Initiated by the <B>backup labeltape</B> command. The
+<VAR>tape_label</VAR> is the name specified by the <B>backup labeltape</B>
+command's <B>-name</B> or <B>-pname</B> argument.
+<P><DT><B><TT>Scantape</TT>
+</B><DD>Initiated by the <B>backup scantape</B> command.
+<P><DT><B><TT>SaveDb</TT>
+</B><DD>Initiated by the <B>backup savedb</B> command.
+<P><DT><B><TT>RestoreDb</TT>
+</B><DD>Initiated by the <B>backup restoredb</B> command.
+</DL>
+<P><DT><B><VAR>status</VAR>
+</B><DD>Indicates the job's current status in one of the following
+messages. If no message appears, the job is either still pending or has
+finished.
+<DL>
+<P><DT><B><VAR>number</VAR> <TT>Kbytes, volume</TT> <VAR>volume_name</VAR>
+</B><DD>For a running dump operation, indicates the number of kilobytes copied to
+tape or a backup data file so far, and the volume currently being
+dumped.
+<P><DT><B><VAR>number</VAR> <TT>Kbytes, restore.volume</TT>
+</B><DD>For a running restore operation, indicates the number of kilobytes copied
+into AFS from a tape or a backup data file so far.
+<P><DT><B><TT>[abort requested]</TT>
+</B><DD>The <B>(backup) kill</B> command was issued, but the termination
+signal has yet to reach the Tape Coordinator.
+<P><DT><B><TT>[abort sent]</TT>
+</B><DD>The operation is canceled by the <B>(backup) kill</B> command.
+Once the Backup System removes an operation from the queue or stops it from
+running, it no longer appears at all in the output from the command.
+<P><DT><B><TT>[butc contact lost]</TT>
+</B><DD>The <B>backup</B> command interpreter cannot reach the Tape
+Coordinator. The message can mean either that the Tape Coordinator
+handling the operation was terminated or failed while the operation was
+running, or that the connection to the Tape Coordinator timed out.
+<P><DT><B><TT>[done]</TT>
+</B><DD>The Tape Coordinator has finished the operation.
+<P><DT><B><TT>[drive wait]</TT>
+</B><DD>The operation is waiting for the specified tape drive to become
+free.
+<P><DT><B><TT>[operator wait]</TT>
+</B><DD>The Tape Coordinator is waiting for the backup operator to insert a tape
+in the drive.
+</DL>
+</DL>
+<A NAME="IDX6996"></A>
+<A NAME="IDX6997"></A>
+<A NAME="IDX6998"></A>
+<A NAME="IDX6999"></A>
+<A NAME="IDX7000"></A>
+<P><H3><A NAME="HDRWQ290" HREF="auagd002.htm#ToC_328">To cancel operations in interactive mode</A></H3>
+<OL TYPE=1>
+<P><LI>Issue the <B>jobs</B> command at the <TT>backup></TT> prompt, to
+learn the job ID number of the operation you want to cancel. For
+details, see <A HREF="#HDRWQ289">To display pending or running jobs in interactive mode</A>. 
+<PRE>   backup> <B>jobs</B>
+</PRE>
+<P><LI>Issue the <B>(backup) kill</B> command to cancel the operation.
+<P>
+<PRE>   backup> <B>kill</B> &lt;<VAR>job&nbsp;ID&nbsp;or&nbsp;dump&nbsp;set&nbsp;name</VAR>>
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>k
+</B><DD>Is the shortest acceptable abbreviation of <B>kill</B>.
+<P><DT><B><VAR>job ID or dump set name</VAR>
+</B><DD>Specifies either the job ID number of the operation to cancel, as reported
+by the <B>jobs</B> command, or for a dump operation only, the dump name in
+the format <VAR>volume_set_name</VAR>.<VAR>dump_level_name</VAR>.
+</DL>
+</OL>
+<P><H3><A NAME="HDRWQ291" HREF="auagd002.htm#ToC_329">Starting and Stopping the Tape Coordinator Process</A></H3>
+<A NAME="IDX7001"></A>
+<P>Before performing a backup operation that reads from or writes to a tape
+device or backup data file, you must start the Tape Coordinator
+(<B>butc</B>) process that handles the drive or file. This section
+explains how to start, stop, and check the status of a Tape Coordinator
+process. To use these instructions, you must have already configured
+the Tape Coordinator machine and created a Tape Coordinator entry in the
+Backup Database, as instructed in <A HREF="auagd011.htm#HDRWQ261">Configuring Tape Coordinator Machines and Tape Devices</A>.
+<P>
+<A NAME="IDX7002"></A>
+<A NAME="IDX7003"></A>
+The Tape Coordinator assigns a <I>task ID number</I> to each operation it
+performs. The number is distinct from the job ID number assigned by the
+<B>backup</B> command interpreter in interactive mode (which is discussed
+in <A HREF="#HDRWQ288">Using Interactive and Regular Command Mode</A>). The Tape Coordinator reports the task ID number in
+its onscreen trace and in the messages that it writes to its log and error
+files. To view the task ID numbers of a Tape Coordinator's running
+or pending operations, issue the <B>backup status</B> command.
+<A NAME="IDX7004"></A>
+<A NAME="IDX7005"></A>
+<A NAME="IDX7006"></A>
+<P><H3><A NAME="HDRWQ292" HREF="auagd002.htm#ToC_330">To start a Tape Coordinator process</A></H3>
+<OL TYPE=1>
+<P><LI>Verify that you are authenticated as a user listed in the
+<B>/usr/afs/etc/UserList</B> file of the cell in which the Tape
+Coordinator is to access volume data and the Backup Database. If
+necessary, issue the <B>bos listusers</B> command, which is fully
+described in <A HREF="auagd021.htm#HDRWQ593">To display the users in the UserList file</A>. 
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE> 
+<P>Alternately, you can log into a file server machine as the local superuser
+<B>root</B> in Step <A HREF="#LIWQ293">3</A>.
+<P><LI>Verify that you can write to the Tape Coordinator's log and error
+files in the local <B>/usr/afs/backup</B> directory (the
+<B>TE_</B><VAR>device_name</VAR> and <B>TL_</B><VAR>device_name</VAR>
+files). If the log and error files do not already exist, you must be
+able to insert and write to files in the <B>/usr/afs/backup</B>
+directory.
+<P><LI><A NAME="LIWQ293"></A>Open a connection (using a command such as <B>telnet</B> or
+<B>rlogin</B>) to the Tape Coordinator machine that drives the tape
+device, or whose local disk houses the backup data file. The Tape
+Coordinator uses a devoted connection or window that must remain open for the
+Tape Coordinator to accept requests and while it is executing them.
+<P>If you plan to include the <B>-localauth</B> flag to the
+<B>butc</B> command in the next step, log in as the local superuser
+<B>root</B>.
+<P><LI><A NAME="LIWQ294"></A>Issue the <B>butc</B> command to start the Tape
+Coordinator. You can include either, but not both, of the
+<B>-localauth</B> and <B>-cell</B> options, as discussed in <A HREF="#HDRWQ287">Performing Backup Operations as the Local Superuser Root or in a Foreign Cell</A>. 
+<PRE>   % <B>butc</B> [&lt;<VAR>port&nbsp;offset</VAR>>]  [<B>-debuglevel</B> &lt;<VAR>trace&nbsp;level</VAR>>]  \
+          [<B>-cell</B> &lt;<VAR>cellname</VAR>>] [<B>-noautoquery</B>] [<B>-localauth</B>]
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>butc
+</B><DD>Must be typed in full.
+<P><DT><B><VAR>port offset</VAR>
+</B><DD>Specifies the Tape Coordinator's port offset number. You must
+provide this argument unless the default value of <B>0</B> (zero) is
+appropriate.
+<P><DT><B>-debuglevel
+</B><DD>Specifies the type of trace messages that the Tape Coordinator writes to
+the standard output stream (stdout). Provide one of the following three
+values, or omit this argument to display the default type of messages
+(equivalent to setting a value of <B>0</B> [zero]): 
+<UL>
+<P><LI><B>0</B>: The Tape Coordinator generates only the minimum number
+of messages necessary to communicate with the backup operator, including
+prompts for insertion of additional tapes and messages that indicate errors or
+the beginning or completion of operations.
+<P><LI><B>1</B>: In addition to the messages displayed at level
+<B>0</B>, the Tape Coordinator displays the name of each volume being
+dumped or restored.
+<P><LI><B>2</B>: In addition to the messages displayed at levels
+<B>0</B> and <B>1</B>, the Tape Coordinator displays all of the
+messages it is also writing to its log file
+(<B>/usr/afs/backup/TL_</B><VAR>device_name</VAR>).
+</UL>
+<P><DT><B><VAR>cellname</VAR>
+</B><DD>Names the cell in which to perform the backup operations (the cell where
+the relevant volumes reside and the Backup Server process is running).
+If you omit this argument, the Tape Coordinator uses its home cell, as defined
+in the local <B>/usr/vice/etc/ThisCell</B> file. Do not combine
+this argument with the <B>-localauth</B> flag.
+<P><DT><B>-noautoquery
+</B><DD>Disables the Tape Coordinator's prompt for the first tape it needs
+for each operation. For a description of the advantages and
+consequences of including this flag, see <A HREF="auagd011.htm#HDRWQ278">Eliminating the Search or Prompt for the Initial Tape</A>.
+<P><DT><B>-localauth
+</B><DD>Constructs a server ticket using a key from the local
+<B>/usr/afs/etc/KeyFile</B> file. The <B>butc</B> process
+presents it to the Backup Server, Volume Server, and VL Server during mutual
+authentication. You must be logged into a file server machine as the
+local superuser <B>root</B> to include this flag, and cannot combine it
+with the <B>-cell</B> argument.
+</DL>
+</OL>
+<A NAME="IDX7007"></A>
+<P><H3><A NAME="Header_331" HREF="auagd002.htm#ToC_331">To stop a Tape Coordinator process</A></H3>
+<OL TYPE=1>
+<P><LI>Enter an interrupt signal such as &lt;<B>Ctrl-c</B>> over the
+dedicated connection to the Tape Coordinator.
+</OL>
+<A NAME="IDX7008"></A>
+<A NAME="IDX7009"></A>
+<A NAME="IDX7010"></A>
+<P><H3><A NAME="HDRWQ295" HREF="auagd002.htm#ToC_332">To check the status of a Tape Coordinator process</A></H3>
+<OL TYPE=1>
+<P><LI>Verify that you are authenticated as a user listed in the
+<B>/usr/afs/etc/UserList</B> file. If necessary, issue the <B>bos
+listusers</B> command, which is fully described in <A HREF="auagd021.htm#HDRWQ593">To display the users in the UserList file</A>. 
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE>
+<P><LI>Issue the <B>backup status</B> command. 
+<PRE>   % <B>backup status</B> [&lt;<VAR>TC&nbsp;port&nbsp;offset</VAR>>]
+</PRE> 
+<P>where
+<DL>
+<P><DT><B>st
+</B><DD>Is the shortest acceptable abbreviation of <B>status</B>.
+<P><DT><B><VAR>TC port offset</VAR>
+</B><DD>Specifies the Tape Coordinator's port offset number. You must
+provide this argument unless the default value of <B>0</B> (zero) is
+appropriate.
+</DL>
+</OL>
+<P>The following message indicates that the Tape Coordinator is not currently
+performing an operation:
+<PRE>   Tape coordinator is idle
+</PRE>
+<P>Otherwise, the output includes a message of the following format for each
+running or pending operation:
+<PRE>   Task <VAR>task_ID</VAR>:  <VAR>operation</VAR>:   <VAR>status</VAR>
+</PRE>
+<P>where
+<DL>
+<P><DT><B><VAR>task_ID</VAR>
+</B><DD>Is a task identification number assigned by the Tape Coordinator.
+It begins with the Tape Coordinator's port offset number.
+<P><DT><B><VAR>operation</VAR>
+</B><DD>Identifies the operation the Tape Coordinator is performing, which is
+initiated by the indicated command:
+<UL>
+<P><LI><TT>Dump</TT> (the <B>backup dump</B> command)
+<P><LI><TT>Restore</TT> (the <B>backup diskrestore</B>, <B>backup
+volrestore</B>, or <B>backup volsetrestore</B> commands)
+<P><LI><TT>Labeltape</TT> (the <B>backup labeltape</B> command)
+<P><LI><TT>Scantape</TT> (the <B>backup scantape</B> command)
+<P><LI><TT>SaveDb</TT> (the <B>backup savedb</B> command)
+<P><LI><TT>RestoreDb</TT> (the <B>backup restoredb</B> command)
+</UL>
+<P><DT><B><VAR>status</VAR>
+</B><DD>Indicates the job's current status in one of the following
+messages. 
+<DL>
+<P><DT><B><VAR>number</VAR> <TT>Kbytes transferred, volume</TT> <VAR>volume_name</VAR>
+</B><DD>For a running dump operation, indicates the number of kilobytes copied to
+tape or a backup data file so far, and the volume currently being
+dumped.
+<P><DT><B><VAR>number</VAR> <TT>Kbytes, restore.volume</TT>
+</B><DD>For a running restore operation, indicates the number of kilobytes copied
+into AFS from a tape or a backup data file so far.
+<P><DT><B><TT>[abort requested]</TT>
+</B><DD>The <B>(backup) kill</B> command was issued, but the termination
+signal has yet to reach the Tape Coordinator.
+<P><DT><B><TT>[abort sent]</TT>
+</B><DD>The operation is canceled by the <B>(backup) kill</B> command.
+Once the Backup System removes an operation from the queue or stops it from
+running, it no longer appears at all in the output from the command.
+<P><DT><B><TT>[butc contact lost]</TT>
+</B><DD>The <B>backup</B> command interpreter cannot reach the Tape
+Coordinator. The message can mean either that the Tape Coordinator
+handling the operation was terminated or failed while the operation was
+running, or that the connection to the Tape Coordinator timed out.
+<P><DT><B><TT>[done]</TT>
+</B><DD>The Tape Coordinator has finished the operation.
+<P><DT><B><TT>[drive wait]</TT>
+</B><DD>The operation is waiting for the specified tape drive to become
+free.
+<P><DT><B><TT>[operator wait]</TT>
+</B><DD>The Tape Coordinator is waiting for the backup operator to insert a tape
+in the drive.
+</DL>
+</DL>
+<P>If the Tape Coordinator is communicating with an XBSA server (a third-party
+backup utility that implements the Open Group's Backup Service API
+[XBSA]), the following message appears last in the output:
+<PRE>   <VAR>XBSA_program</VAR> Tape coordinator
+</PRE>
+<P>where <VAR>XBSA_program</VAR> is the name of the XBSA-compliant
+program.
+<HR><H2><A NAME="HDRWQ296" HREF="auagd002.htm#ToC_333">Backing Up Data</A></H2>
+<A NAME="IDX7011"></A>
+<A NAME="IDX7012"></A>
+<A NAME="IDX7013"></A>
+<A NAME="IDX7014"></A>
+<A NAME="IDX7015"></A>
+<A NAME="IDX7016"></A>
+<A NAME="IDX7017"></A>
+<A NAME="IDX7018"></A>
+<A NAME="IDX7019"></A>
+<A NAME="IDX7020"></A>
+<A NAME="IDX7021"></A>
+<A NAME="IDX7022"></A>
+<P>This section explains how to use the <B>backup dump</B> command to back
+up AFS data to tape or to a backup data file. The instructions assume
+that you understand Backup System concepts and have already configured the
+Backup System according to the instructions in <A HREF="auagd011.htm#HDRWQ248">Configuring the AFS Backup System</A>. Specifically, you must already have:
+<UL>
+<P><LI>Decided whether to dump data to tape or to a backup data file, and
+configured the Tape Coordinator machine and Tape Coordinator process
+appropriately. See <A HREF="auagd011.htm#HDRWQ261">Configuring Tape Coordinator Machines and Tape Devices</A> and <A HREF="auagd011.htm#HDRWQ282">Dumping Data to a Backup Data File</A>.
+<P><LI>Defined a volume set that includes the volumes you want to dump
+together. See <A HREF="auagd011.htm#HDRWQ265">Defining and Displaying Volume Sets and Volume Entries</A>.
+<P><LI>Defined the dump level in the dump hierarchy at which you want to dump the
+volume set. If it is an incremental dump level, you must have
+previously created a dump at its parent level. See <A HREF="auagd011.htm#HDRWQ267">Defining and Displaying the Dump Hierarchy</A>.
+<P><LI>Created a device configuration file. Such a file is required for
+each tape stacker, jukebox device, or backup data file. You can also
+use it to configure the Backup System's automation features. See <A HREF="auagd011.htm#HDRWQ275">Automating and Increasing the Efficiency of the Backup Process</A>.
+</UL>
+<P>The most basic way to perform a dump operation is to create an initial dump
+of a single volume set as soon as the appropriate Tape Coordinator is
+available, by providing only the required arguments to the <B>backup
+dump</B> command. Instructions appear in <A HREF="#HDRWQ301">To create a dump</A>. The command has several optional arguments that
+you can use to increase the efficiency and flexibility of your backup
+procedures:
+<UL>
+<P><LI>To append a dump to the end of a set of tapes that already contains other
+dumps, include the <B>-append</B> argument. Otherwise, the Backup
+System creates an initial dump. Appending dumps enables you to use a
+tape's full capacity and has other potentially useful features.
+For a discussion, see <A HREF="#HDRWQ299">Appending Dumps to an Existing Dump Set</A>.
+<P><LI>To schedule one or more dump operations to run at a future time, include
+the <B>-at</B> argument. For a discussion and instructions, see <A HREF="#HDRWQ300">Scheduling Dumps</A>.
+<P><LI>To initiate a number of dump operations with a single <B>backup
+dump</B> command, include the <B>-file</B> argument to name a file in
+which you have listed the commands. For a discussion and instructions,
+see <A HREF="#HDRWQ299">Appending Dumps to an Existing Dump Set</A> and <A HREF="#HDRWQ300">Scheduling Dumps</A>.
+<P><LI>To generate a list of the volumes to be included in a dump, without
+actually dumping them, combine the <B>-n</B> flag with the other arguments
+to be used on the actual command.
+</UL>
+<P><H3><A NAME="HDRWQ297" HREF="auagd002.htm#ToC_334">Making Backup Operations More Efficient</A></H3>
+<A NAME="IDX7023"></A>
+<P>There are several ways to make dump operations more efficient, less prone
+to error, and less disruptive to your users. Several of them also
+simplify the process of restoring data if that becomes necessary.
+<UL>
+<P><LI>It is best not to dump the read/write or read-only version of a volume,
+because no other users or processes can access a volume while it is being
+dumped. Instead, shortly before the dump operation begins, create a
+backup version of each volume to be dumped, and dump the backup
+version. Creating a Backup version usually makes the source volume
+unavailable for just a few moments (during which access attempts by other
+processes are blocked but do not fail). To automate the creation of
+backup volumes, you can create a <B>cron</B> process in the
+<B>/usr/afs/local/BosConfig</B> file on one or more server machines,
+setting its start time at a sufficient interval before the dump operation is
+to begin. Include the <B>-localauth</B> argument to the <B>vos
+backup</B> or <B>vos backupsys</B> command to enable it to run without
+administrative tokens. For instructions, see <A HREF="auagd009.htm#HDRWQ162">To create and start a new process</A>.
+<P><LI>The volume set, dump level, and Tape Coordinator port offset you specify
+on the <B>backup dump</B> command line must be properly defined in the
+Backup Database. The Backup System checks the database before beginning
+a dump operation and halts the command immediately if any of the required
+entities are missing. If necessary, use the indicated commands:
+<UL>
+<P><LI>To display volume sets, use the <B>backup listvolsets</B> command as
+described in <A HREF="auagd011.htm#HDRWQ266">To display volume sets and volume entries</A>.
+<P><LI>To display dump levels, use the <B>backup listdumps</B> command as
+described in <A HREF="auagd011.htm#HDRWQ271">To display the dump hierarchy</A>.
+<P><LI>To display port offsets, use the <B>backup listhosts</B> command as
+described in <A HREF="auagd011.htm#HDRWQ264">To display the list of configured Tape Coordinators</A>.
+</UL>
+<P><LI>Ensure that a valid token corresponding to a privileged administrative
+identity is available to the Backup System processes both when the <B>backup
+dump</B> command is issued and when the dump operation actually runs (for a
+complete description or the necessary privileges, see <A HREF="auagd011.htm#HDRWQ260">Granting Administrative Privilege to Backup Operators</A>). This is a special concern for scheduled
+dumps. One alternative is to run <B>backup</B> commands (or the
+script that invokes them) and the <B>butc</B> command on server machines,
+and to include the <B>-localauth</B> argument on the command. In
+this case, the processes use the key with the highest key version number in
+the local <B>/usr/afs/etc/KeyFile</B> file to construct a token that never
+expires. Otherwise, you must use a method to renew tokens before they
+expire, or grant tokens with long lifetimes. In either case, you must
+protect against improper access to the tokens by securing the machines both
+physically and against unauthorized network access. The protection
+possibly needs to be even stronger than when a human operator is present
+during the operations.
+<P><LI>Record tape capacity and filemark size values that are as accurate as
+possible in the Tape Coordinator's <B>/usr/afs/backup/tapeconfig</B>
+file and on the tape's label. For suggested values and a
+description of what can happen when they are inaccurate, see <A HREF="auagd011.htm#HDRWQ258">Configuring the tapeconfig File</A>.
+<P><LI>If an unattended dump requires multiple tapes, arrange to provide them by
+properly configuring a tape stacker or jukebox and writing a tape-mounting
+script to be invoked in the device's <B>CFG_</B><VAR>device_name</VAR>
+file. For instructions, see <A HREF="auagd011.htm#HDRWQ277">Invoking a Device's Tape Mounting and Unmounting Routines</A>.
+<P><LI>You can configure any tape device or backup data file's
+<B>CFG_</B><VAR>device_name</VAR> file to take advantage of the Backup
+System's automation features. See <A HREF="auagd011.htm#HDRWQ275">Automating and Increasing the Efficiency of the Backup Process</A>.
+<P><LI>When you issue a <B>backup</B> command in regular (noninteractive)
+mode, the command shell prompt does not return until the operation
+completes. To avoid having to open additional connections, issue the
+<B>backup dump</B> command in interactive mode, especially when including
+the <B>-at</B> argument to schedule dump operations.
+<P><LI>An incremental dump proceeds most smoothly if there is a dump created at
+the dump level immediately above the level you are using. If the Backup
+System does not find a Backup Database record for a dump created at the
+immediate parent level, it looks for a dump created at one level higher in the
+hierarchy, continuing up to the full dump level if necessary. It
+creates an incremental dump at the level one below the lowest valid parent
+dump that it finds, or even creates a full dump if that is necessary.
+This algorithm guarantees that the dump captures all data that has changed
+since the last dump, but has a couple of disadvantages. First, the
+Backup System's search through the database for a valid parent dump takes
+extra time. Second, the subsequent pattern of dumps can be confusing to
+a human operator who needs to restore data from them, because they were not
+performed at the expected dump levels. 
+<P>The easiest way to guarantee that a dump exists at the immediate parent
+level is always to perform dump operations on the predetermined
+schedule. To check that the parent dump exists, you can issue the
+<B>backup dumpinfo</B> command (as described in <A HREF="#HDRWQ303">To display dump records</A>) and search for it in the output. Alternatively,
+issue the <B>backup volinfo</B> command (as described in <A HREF="#HDRWQ304">To display a volume's dump history</A>) for a volume that you believe is in the parent dump.
+<P><LI>Always use dump levels from the same hierarchy (levels that are
+descendants of the same full level) when dumping a given volume set.
+The result of alternating between levels from different hierarchies can be
+confusing when you need to restore data or read dump records. It also
+increases the chance that changed data is not captured in any dump, or is
+backed up redundantly into more than one dump.
+<P><LI>Use permanent tape names rather than AFS tape names. You can make
+permanent names more descriptive than is allowed by an AFS tape name's
+strict format, and also bypass the name-checking step that the Backup System
+performs by default when a tape has an AFS tape name only. You can also
+configure the Tape Coordinator always to skip the check, however; for
+instructions and a description of the acceptable format for AFS tape names,
+see <A HREF="auagd011.htm#HDRWQ280">Eliminating the AFS Tape Name Check</A>.
+<P><LI>If you write dumps to tape, restore operations are simplest if all of your
+tape devices are compatible (can read the same type of tape, at the same
+compression ratios, and so on). If you must use incompatible devices,
+then at least use compatible devices for all dumps performed at dump levels
+that are at the same depth in their respective hierarchies (compatible devices
+for all dumps performed at a full dump level, compatible devices for all dumps
+performed at a level 1 incremental dump level, and so on). The
+<B>-portoffset</B> argument to the <B>backup diskrestore</B> and
+<B>backup volsetrestore</B> commands accepts multiple port offset numbers,
+but uses the first listed port offset when restoring all full dumps, the
+second port offset when restoring all level 1 dumps, and so on. If you
+did not use compatible tape devices when creating dumps at the same depth in a
+hierarchy, you must restore one volume at a time with the <B>backup
+volrestore</B> command.
+<P><LI>In some cases, it makes sense to use a <I>temporary</I> volume set,
+which exists only within the context of the interactive session in which it is
+created and for which no record is created in the Backup Database. One
+suitable situation is when dumping a volume to tape in preparation for
+removing it permanently (perhaps because its owner is leaving the
+cell). In this case, you can define a volume entry that includes only
+the volume of interest without cluttering up the Backup Database with a volume
+set record that you are using only once.
+<P><LI>Do not perform a dump operation when you know that there are network,
+machine, or server process problems that can prevent the Backup System from
+accessing volumes or the Volume Location Database (VLDB). Although the
+Backup System automatically makes a number of repeated attempts to get to an
+inaccessible volume, the dump operation takes extra time and in some cases
+stops completely to prompt you for instructions on how to continue.
+Furthermore, if the Backup System's last access attempt fails and the
+volume is omitted from the dump, you must take extra steps to have it backed
+up (namely, the steps described just following for a halted dump
+operation). For a more complete description of how the Backup System
+makes repeated access attempts, see <A HREF="#HDRWQ298">How Your Configuration Choices Influence the Dump Process</A>.
+<P><LI>Review the logs created by the Backup System as soon as possible after a
+dump operation completes, particularly if it ran unattended. They name
+any volumes that were not successfully backed up, among other problems.
+The Backup Server writes to the <B>/usr/afs/logs/BackupLog</B> file on the
+local disk of the database server machine, and you can use the <B>bos
+getlog</B> command to read it remotely if you wish; for instructions,
+see <A HREF="auagd009.htm#HDRWQ173">Displaying Server Process Log Files</A>. The Tape Coordinator writes to two files in the
+local <B>/usr/afs/backup</B> directory on the machine where it is
+running: the <B>TE_</B><VAR>device_name</VAR> file records errors, and
+the <B>TL_</B><VAR>device_name</VAR> file records both trace and error
+messages.
+<P><LI>Avoid halting a dump operation (for instance, by issuing the <B>(backup)
+kill</B> command in interactive mode), both because it introduces the
+potential for confusion and because recovering from the interruption requires
+extra effort. When a dump operation is interrupted, the volumes that
+were backed up before the halt signal is received are complete on the tape or
+in the backup data file, and are usable in restore operations. The
+records in the Backup Database about the volumes' dump history accurately
+show when and at which dump level they were backed up; to display the
+records, use the <B>backup volinfo</B> command as described in <A HREF="#HDRWQ304">To display a volume's dump history</A>. 
+<P>However, there is no indication in the dump's Backup Database record
+that volumes were omitted; to display the record, use the <B>backup
+dumpinfo</B> command as described in <A HREF="#HDRWQ303">To display dump records</A>. You must choose one of the following methods for
+dealing with the volumes that were not backed up before the dump operation
+halted. (Actually, you must make the same decision if the dump
+operation halts for reasons outside your control.)
+<UL>
+<P><LI>You can take no action, waiting until the next regularly scheduled dump
+operation to back them up. At that time, the Backup System
+automatically dumps them at the appropriate level to guarantee that the dump
+captures all of the data that changed since the volume was last dumped.
+However, you are gambling that restoring the volume is not necessary before
+the next dump operation. If restoration is necessary, you can restore
+the volume only to its state at the time it was last included in a
+dump--you have lost all changes made to the volume since that
+time.
+<P><LI>You can discard the entire dump and run the dump operation again.
+To discard the dump, use the <B>backup labeltape</B> command to relabel
+the tapes or backup data file, which automatically removes all associated
+records from the Backup Database. For instructions, see <A HREF="auagd011.htm#HDRWQ272">Writing and Reading Tape Labels</A>. If a long time has passed since the backup version
+of the volumes was created, some of the source volumes have possibly
+changed. If that seems likely, reissue the <B>vos backup</B> or
+<B>vos backupsys</B> command on them before redoing the dump
+operation.
+<P><LI>You can create a new volume set that includes the missed volumes and dump
+it at a full dump level (even if you specify an incremental dump level, the
+Backup System uses the full dump level at the top of your specified
+level's hierarchy, because it has never before backed up these volumes as
+part of the new volume set). The next time you dump the original volume
+set, the Backup System automatically dumps the missed volumes at the level one
+below the level it used the last time it dumped the volumes as part of the
+original volume set.
+</UL>
+</UL>
+<P><H3><A NAME="HDRWQ298" HREF="auagd002.htm#ToC_335">How Your Configuration Choices Influence the Dump Process</A></H3>
+<A NAME="IDX7024"></A>
+<P>This section provides an overview of the backup process, describing what
+happens at each stage both by default and as a result of your configuration
+choices, including the configuration instructions you include in the
+device-specific <B>CFG_</B><VAR>device_name</VAR> file. For the sake
+of clarity, it tracks the progress of a single <B>backup dump</B> command
+that creates an initial dump. For a discussion of the slight
+differences in the procedure when you append or schedule dumps, see <A HREF="#HDRWQ299">Appending Dumps to an Existing Dump Set</A> or <A HREF="#HDRWQ300">Scheduling Dumps</A>.
+<P>As a concrete example, the following description traces a dump of the
+volume set <B>user</B> at the <B>/weekly/mon/tues/wed</B> dump
+level. The <B>user</B> volume set has one volume entry that matches
+the backup version of all user volumes:
+<PRE>   <B>.*    .*    user.*\.backup</B>
+</PRE>
+<P>The dump level belongs to the following dump hierarchy.
+<PRE>   /weekly
+          /mon
+              /tues
+                   /wed
+                       /thurs
+                             /fri
+</PRE>
+<OL TYPE=1>
+<P><LI><A NAME="LIBKOV-BUTC"></A>You issue the <B>butc</B> command to start a Tape
+Coordinator to handle the dump operation. The Tape Coordinator does not
+have to be running when you issue the <B>backup dump</B> command, but must
+be active in time to accept the list of volumes to be included in the dump,
+when Step <A HREF="#LIBKOV-VOLMATCHES">3</A> is completed. To avoid coordination problems, it is
+best to start the Tape Coordinator before issuing the <B>backup dump</B>
+command. 
+<P>As the Tape Coordinator initializes, it reads the entry in its local
+<B>/usr/afs/backup/tapeconfig</B> file for the port offset you specify on
+the <B>butc</B> command line. The entry specifies the name of the
+device to use, and the Tape Coordinator verifies that it can access it.
+It also reads the device's configuration file,
+<B>/usr/afs/backup/CFG_</B><VAR>device_name</VAR>, if it exists. See
+Step <A HREF="#LIBKOV-READCFG">6</A> for a description of how the instructions in the file
+influence the dump operation.
+<P><LI>You issue the <B>backup dump</B> command, specifying a volume set,
+dump level, and the same port offset number you specified on the
+<B>butc</B> command in Step <A HREF="#LIBKOV-BUTC">1</A>. The Backup System verifies that they have
+correct Backup Database records and halts the operation with an error message
+if they do not. 
+<P>If you issue the command in interactive mode, the Backup System assigns the
+operation a job ID number, which you can use to check the operation's
+status or halt it by using the <B>(backup) jobs</B> or <B>(backup)
+kill</B> command, respectively. For instructions, see <A HREF="#HDRWQ289">To display pending or running jobs in interactive mode</A> and <A HREF="#HDRWQ290">To cancel operations in interactive mode</A>.
+<P><LI><A NAME="LIBKOV-VOLMATCHES"></A>The Backup System works with the VL Server to
+generate a list of the volumes in the VLDB that match the name and location
+criteria defined in the volume set's volume entries. If a volume
+matches more than one volume entry, the Backup System ignores the duplicates
+so that the dump includes only one copy of data from the volume. 
+<P>To reduce the number of times you need to switch tapes during a restore
+operation, the Backup System sorts the volumes by server machine and
+partition, and during the dump operation writes the data from all volumes
+stored on a specific partition before moving to the next partition.
+<P>As previously mentioned, it is best to back up backup volumes rather than
+read/write volumes, to avoid blocking users' access to data during the
+dump. To achieve this, you must explicitly include the
+<B>.backup</B> suffix on the volume names in volume entry
+definitions. For instructions, and to learn how to define volume
+entries that match multiple volumes, see <A HREF="auagd011.htm#HDRWQ265">Defining and Displaying Volume Sets and Volume Entries</A>.
+<P>In the example, suppose that 50 volumes match the <B>user</B> volume
+set criteria, including three called <B>user.pat.backup</B>,
+<B>user.terry.backup</B>, and
+<B>user.smith.backup</B>.
+<P><LI><A NAME="LIBKOV-CLONEDATE"></A>The Backup System next scans the dump hierarchy for
+the dump level you have specified on the <B>backup dump</B> command
+line. If it is a full level, then in the current operation the Backup
+System backs up all of the data in all of the volumes in the list obtained in
+Step <A HREF="#LIBKOV-VOLMATCHES">3</A>. 
+<P>If the dump level is incremental, the Backup System reads each
+volume's dump history in the Backup Database to learn which of the parent
+levels in its pathname was used when the volume was most recently backed up as
+part of this volume set. In the usual case, it is the current dump
+level's immediate parent level.
+<P>An incremental dump of a volume includes only the data that changed since
+the volume was included in the parent dump. To determine which data are
+eligible, the Backup System uses the concept of a volume's <I>clone
+date</I>. A read/write volume's clone date is when the Backup
+System locks the volume before copying its contents into a dump. A
+backup volume's clone date is the completion time of the operation that
+created it by cloning its read/write source volume (the operation initiated by
+a <B>vos backup</B> or <B>vos backupsys</B> command). A
+read-only volume's clone date is the time of the release operation
+(initiated by the <B>vos release</B> command) that completed most recently
+before the dump operation.
+<P>More precisely then, an incremental dump includes only data that have a
+modification timestamp between the clone date of the volume included in the
+parent dump (the <I>parent clone date</I>) and the clone date of the
+volume to be included in the current dump (the <I>current clone
+date</I>).
+<P>There are some common exceptions to the general rule that a volume's
+parent dump is the dump created at the immediate parent level:
+<UL>
+<P><LI>The volume did not exist at all at the time of the last dump. In
+this case, the Backup System automatically does a full dump of it.
+<P><LI>The volume did not match the volume set's name and location criteria
+at the time of the last dump. In this case, the Backup System
+automatically does a full dump of it, even if it was backed up recently (fully
+or incrementally) as part of another volume set. This redundancy is an
+argument for defining volume entries in terms of names rather than locations,
+particularly if you move volumes frequently.
+<P><LI>The volume was not included in the dump at the immediate parent level for
+some reason (perhaps a process, machine, or network access prevented the
+Backup System from accessing it). In this case, the Backup System sets
+the clone date to the time of the last dump operation that included the
+volume. If the volume was not included in a dump performed at any of
+the levels in the current level's pathname, the Backup System does a full
+dump of it.
+</UL>
+<P>In the example, the current dump level is
+<B>/weekly/mon/tues/wed</B>. The
+<B>user.pat.backup</B> and
+<B>user.terry.backup</B> volumes were included in the dump
+performed yesterday, Tuesday, at the <B>/weekly/mon/tues</B> level.
+The Backup System uses as their parent clone date 3:00
+a.m. on Tuesday, which is when backup versions of them were
+created just before Tuesday's dump operation. However,
+Tuesday's dump did not include the
+<B>user.smith.backup</B> volume for some reason. The
+last time it was included in a dump was Monday, at the <B>/weekly/mon</B>
+level. The Backup System uses a parent clone date of Monday at
+2:47 a.m., which is when a backup version of the volume
+was created just before the dump operation on Monday.
+<P><LI>If performing an incremental dump, the Backup System works with the Volume
+Server to prepare a list of all of the files in each volume that have changed
+(have modification timestamps) between the parent clone date and the current
+clone date. The dump includes the complete contents of every such
+file. If a file has not changed, the dump includes only a placeholder
+stub for it. The dump also includes a copy of the complete directory
+structure in the volume, whether or not it has changed since the previous
+dump. 
+<P>If none of the data in the volume has changed since the last dump, the
+Backup System omits the volume completely. It generates the following
+message in the Tape Coordinator window and log files: 
+<PRE>   Volume <VAR>volume_name</VAR> (<VAR>volume_ID</VAR>) not dumped - has not been modified 
+      since last dump.
+</PRE>
+<P><LI><A NAME="LIBKOV-READCFG"></A>The Tape Coordinator prepares to back up the
+data. If there is a <B>CFG_</B><VAR>device_name</VAR> file, the Tape
+Coordinator already read it in Step <A HREF="#LIBKOV-BUTC">1</A>. The following list describes how the instructions in
+the file guide the Tape Coordinator's behavior at this point:
+<DL>
+<P><DT><B>FILE
+</B><DD>If this instruction is set to <B>YES</B>, the Tape Coordinator writes
+data to a backup data file. The <VAR>device_name</VAR> field in the
+<B>tapeconfig</B> file must also specify a filename for the dump to work
+properly. For further discussion and instructions on configuring a
+backup data file, see <A HREF="auagd011.htm#HDRWQ282">Dumping Data to a Backup Data File</A>. 
+<P>If it is set to <B>NO</B> or does not appear in the file, the Tape
+Coordinator writes to a tape device.
+<P><DT><B>MOUNT and UNMOUNT
+</B><DD>If there is a <B>MOUNT</B> instruction in the file, each time the Tape
+Coordinator needs a new tape, it invokes the indicated script or program to
+mount a tape in the device's tape drive. There must be a
+<B>MOUNT</B> instruction if you want to utilize a tape stacker or
+jukebox's ability to switch between tapes automatically. If there
+is no <B>MOUNT</B> instruction, the Tape Coordinator prompts the human
+operator whenever it needs a tape. 
+<P>The <B>AUTOQUERY</B> instruction, which is described just following,
+modifies the Tape Coordinator's tape acquisition procedure for the first
+tape it needs in a dump operation.
+<P>If there is an <B>UNMOUNT</B> instruction, then the Tape Coordinator
+invokes the indicated script or program whenever it closes the tape
+device. Not all tape devices have a separate tape unmounting routine,
+in which case the <B>UNMOUNT</B> instruction is not necessary. For
+more details on both instructions, see <A HREF="auagd011.htm#HDRWQ277">Invoking a Device's Tape Mounting and Unmounting Routines</A>.
+<P><DT><B>AUTOQUERY
+</B><DD>If this instruction is set to <B>NO</B>, the Tape Coordinator assumes
+that the first tape needed for the dump operation is already in the tape
+drive. It does not use its usual tape acquisition procedure as
+described in the preceding discussion of the <B>MOUNT</B>
+instruction. You can achieve the same effect by including the
+<B>-noautoquery</B> flag to the <B>butc</B> command. 
+<P>If this instruction is absent or set to <B>YES</B>, the Tape
+Coordinator uses its usual tape acquisition procedure even for the first
+tape. For more details, see <A HREF="auagd011.htm#HDRWQ278">Eliminating the Search or Prompt for the Initial Tape</A>.
+<P><DT><B>BUFFERSIZE
+</B><DD>If this instruction appears in the file, the Tape Coordinator sets its
+buffer size to the specified value rather than using the default buffer size
+of 16 KB. For further discussion, see <A HREF="auagd011.htm#HDRWQ281">Setting the Memory Buffer Size to Promote Tape Streaming</A>.
+</DL>
+<P>If there is no <B>CFG_</B><VAR>device_name</VAR> file, the Tape
+Coordinator writes data to a tape device and prompts the human operator each
+time it needs a tape (the only exception being the first tape if you include
+the <B>-noautoquery</B> flag to the <B>butc</B> command).
+<P><LI><A NAME="LIBKOV-NAMECHECK"></A>The Tape Coordinator opens either a tape drive or
+backup data file at this point, as directed by the instructions in the
+<B>CFG_</B><VAR>device_name</VAR> file (described in Step <A HREF="#LIBKOV-READCFG">6</A>). The instructions also determine whether it
+invokes a mount script or prompts the operator. In Step <A HREF="#LIBKOV-BUTC">1</A> the Tape Coordinator read in the device's capacity and
+filemark size from the <B>tapeconfig</B> file. It now reads the
+same values from the tape or backup data file's magnetic label, and
+overwrites the <B>tapeconfig</B> values if there is a difference. 
+<P>If creating an initial dump (as in the current example) and there is no
+permanent name on the label, the Tape Coordinator next checks that the AFS
+tape name has one of the three acceptable formats. If not, it rejects
+the tape and you must use the <B>backup labeltape</B> command to write an
+acceptable name. You can bypass this name-checking step by including
+the <B>NAME_CHECK NO</B> instruction in the
+<B>CFG_</B><VAR>device_name</VAR> file. For discussion and a list of
+the acceptable AFS tape name values, see <A HREF="auagd011.htm#HDRWQ280">Eliminating the AFS Tape Name Check</A>.
+<P><LI><A NAME="LIBKOV-EXPDATE"></A>For an initial dump, the Tape Coordinator starts writing
+at the beginning of the tape or backup dump file, overwriting any existing
+data. To prevent inappropriate overwriting, the Backup System first
+checks the Backup Database for any dump records associated with the name
+(permanent or AFS tape name) on the tape or backup dump file's
+label. It refuses to write to a backup data file that has unexpired
+dumps in it, or to a tape that belongs to a dump set with any unexpired
+dumps. To recycle a file or tape before all dumps have expired, you
+must use the <B>backup labeltape</B> command to relabel it. Doing
+so removes the Backup Database records of all dumps in the file or on all
+tapes in the dump set, which makes it impossible to restore data from any of
+the tapes. For more information on expiration dates, see <A HREF="auagd011.htm#HDRWQ270">Defining Expiration Dates</A>.
+<P>The Tape Coordinator also checks for two other types of inappropriate tape
+reuse. The tape cannot already have data on it that belongs to the dump
+currently being performed, because that implies that the previous tape is
+still in the drive, or you have mistakenly reinserted it. The Tape
+Coordinator generates the following message and attempts to obtain another
+tape: 
+<PRE>   Can't overwrite tape containing the dump in progress
+</PRE> 
+<P>The tape cannot contain data from a parent dump of the current
+(incremental) dump, because overwriting a parent dump makes it impossible to
+restore data from the current dump. The Tape Coordinator generates the
+following message and attempts to obtain another tape: 
+<PRE>   Can't overwrite the parent dump <VAR>parent_name</VAR> (<VAR>parent_dump_ID</VAR>)
+</PRE>
+<P><LI><A NAME="LIBKOV-WRITE"></A>The Tape Coordinator now writes data to the tape or backup
+data file. It uses the capacity and filemark size it obtained in Step <A HREF="#LIBKOV-NAMECHECK">7</A> as it tracks how much more space is available, automatically
+using its tape acquisition procedure if the dump is not finished when it
+reaches the end of the tape. For a more detailed description, and a
+discussion of what happens if the Tape Coordinator reaches the physical
+end-of-tape unexpectedly, see <A HREF="auagd011.htm#HDRWQ258">Configuring the tapeconfig File</A>. Similarly, for instructions on configuring a backup
+data file to optimize recovery from unexpectedly running out of space, see
+Step <A HREF="auagd011.htm#LITAPECONFIG-FILE">6</A> in the instructions in <A HREF="auagd011.htm#HDRWQ282">Dumping Data to a Backup Data File</A>.
+<P>If the Tape Coordinator cannot access a volume during the dump (perhaps
+because of a server process, machine, or network outage), it skips the volume
+and continues dumping all volumes that it can access. It generates an
+error message in the Tape Coordinator window and log file about the omitted
+volume. It generates a similar message if it discovers that a backup
+volume has not been recloned since the previous dump operation (that is, that
+the volume's current clone date is the same as its parent clone
+date): 
+<PRE>   Volume <VAR>volume_name</VAR> (<VAR>volume_ID</VAR>) not dumped - has not been re-cloned 
+       since last dump.
+</PRE> 
+<P>After completing a first pass through all of the volumes, it attempts to
+dump each omitted volume again. It first checks to see if the reason
+that the volume was inaccessible during the first pass is that it has been
+moved since the VL Server generated the list of volumes to dump in Step <A HREF="#LIBKOV-VOLMATCHES">3</A>. If so, it dumps the volume from its new site.
+If the second attempt to access a volume also fails, the Tape Coordinator it
+generates the following message, prompting you for instruction on how to
+proceed: 
+<PRE>   Dump of volume <VAR>volume_name</VAR> (<VAR>volume_ID</VAR>) failed
+   Please select action to be taken for this volume.
+      r - retry, try dumping this volume again
+      o - omit, this volume from this dump
+      a - abort, the entire dump
+</PRE> 
+<P>To increase the automation of the dump process, you can include the
+<B>ASK NO</B> instruction in the <B>CFG_</B><VAR>device_name</VAR> file
+to suppress this prompt and have the Tape Coordinator automatically omit the
+volume from the dump.
+<P>If you are tracking the dump as it happens, the prompt enables you to take
+corrective action. If the volume has not been recloned, you can issue
+the <B>vos backup</B> command. If the volume is inaccessible, you
+can investigate and attempt to resolve the cause.
+<A NAME="IDX7025"></A>
+<A NAME="IDX7026"></A>
+<A NAME="IDX7027"></A>
+<A NAME="IDX7028"></A>
+<A NAME="IDX7029"></A>
+<P><LI>If the tape or backup data file does not already have an AFS tape name,
+the Backup System constructs the appropriate one and records it on the label
+and in the Backup Database. It also assigns a dump name and ID number
+to the dump and records them in dump record that it creates in the Backup
+Database. For details on tape and dump names, see <A HREF="auagd011.htm#HDRWQ253">Dump Names and Tape Names</A>. For instructions on displaying dump records or a
+volume's dump history, or scanning the contents of a tape, see <A HREF="#HDRWQ302">Displaying Backup Dump Records</A>.
+</OL>
+<P><H3><A NAME="HDRWQ299" HREF="auagd002.htm#ToC_336">Appending Dumps to an Existing Dump Set</A></H3>
+<A NAME="IDX7030"></A>
+<P>The AFS Backup System enables you to append dumps to the end of the final
+tape in a dump set by including the <B>-append</B> flag to the <B>backup
+dump</B> command. Appending dumps improves Backup System automation
+and efficiency in several ways:
+<UL>
+<P><LI>It maximizes use of a tape's capacity. An initial dump must
+always start on a new tape, but does not necessarily extend to the end of the
+final tape in the dump set. You can fill up the unused tape by
+appending one or more dumps.
+<P><LI>It can reduce the number of tapes and tape changes needed to complete a
+dump operation. Rather than performing a series of initial dumps first,
+instead begin with an initial dump and follow it immediately with several
+appended dumps. In this way you can write all dumps in the series to
+the same tape (assuming the tape is large enough to accommodate them
+all). If, in contrast, you perform all of the initial dumps first, each
+must begin on a new tape and you must switch tapes again if you then want to
+append dumps. 
+<P>You can either issue the appropriate series of <B>backup dump</B>
+commands at the interactive <TT>backup></TT> prompt, or record them in a
+file that you then name with the <B>-file</B> argument to the <B>backup
+dump</B> command. Appending dumps in this way enables you to run
+multiple unattended backup operations even without a tape stacker or jukebox,
+if all of the dumps fit on one tape.
+<P><LI>It can reduce the number of tape changes during a restore
+operation. For example, if you append all of the incremental dumps of a
+volume set to tapes in one dump set, then restoring a volume from the volume
+set requires a minimum number of tape changes. It is best not to append
+incremental dumps to a tape that contains the parent full dump, however:
+if the tape is lost or damaged, you lose all of the data from the
+volume. 
+<P>Although it can be efficient to group together appended dumps that are
+related, the Backup System does not require any relationship between the
+appended dumps on a tape or in a dump set.
+</UL>
+<P>When writing an appended dump, the Backup System performs most of the steps
+described in <A HREF="#HDRWQ298">How Your Configuration Choices Influence the Dump Process</A>. Appended dumps do not have to be related to one
+another or the initial dump, so it skips Step <A HREF="#LIBKOV-NAMECHECK">7</A>: there is no need to check that the AFS tape name
+reflects the volume set and dump level names in this case. It also
+skips Step <A HREF="#LIBKOV-EXPDATE">8</A>. Because it is not overwriting any existing data on
+the tape, it does not need to check the expiration dates of existing dumps on
+the tape or in the file. Then in Step <A HREF="#LIBKOV-WRITE">9</A> the Tape Coordinator scans to the end of the last dump on
+the tape or in the backup data file before it begins writing data.
+<P>The Backup System imposes the following conditions on appended dumps:
+<UL>
+<P><LI>If writing to tape, the Tape Coordinator checks that it is the final one
+in a dump set for which there are complete and valid tape and dump records in
+the Backup Database. If not, it rejects the tape and requests an
+acceptable one. If you believe the tape has valid data on it, you can
+reconstruct the Backup Database dump records for it by using the
+<B>-dbadd</B> argument to the <B>backup scantape</B> command as
+instructed in <A HREF="#HDRWQ305">To scan the contents of a tape</A>.
+<P><LI>The most recent dump on the tape or in the backup data file must have
+completed successfully.
+<P><LI>The dump set to which the tape or file belongs must begin with an initial
+dump that is recorded in the Backup Database. If there are no dumps on
+the current tape, then the Backup System treats the dump operation as an
+initial dump and imposes the relevant requirements (for example, checks the
+AFS tape name if appropriate).
+</UL>
+<P>As you append dumps, keep in mind that all of a dump set's dump and
+tape records in the Backup Database are indexed to the initial dump. If
+you want to delete an appended dump's record, you must delete the initial
+dump record, and doing so erases the records of all dumps in the dump
+set. Without those records, you cannot restore any of the data in the
+dump set.
+<P>Similarly, all of the dumps in a dump set must expire before you can
+recycle (write a new initial dump to) any of the tapes in a dump set.
+Do not append a dump if its expiration date is later than the date on which
+you want to recycle any of the tapes in its dump set. To recycle a tape
+before the last expiration date, you must delete the initial dump's
+record from the Backup Database. Either use the <B>backup
+labeltape</B> command to relabel the tape as instructed in <A HREF="auagd011.htm#HDRWQ273">To label a tape</A>, or use the <B>backup deletedump</B> command
+to delete the record directly as instructed in <A HREF="#HDRWQ322">To delete dump records from the Backup Database</A>.
+<P>Although in theory you can append as many dumps as you wish, it generally
+makes sense to limit the number of tapes in a dump set (for example, to five),
+for these reasons:
+<UL>
+<P><LI>If an unreadable spot develops on one of the tapes in a dump set, it can
+prevent the Tape Coordinator from scanning the tape as part of a <B>backup
+scantape</B> operation you use to reconstruct Backup Database
+records. The Tape Coordinator can almost always scan the tape
+successfully up to the point of damage and can usually skip past minor
+damage. A scanning operation can start on any tape in a dump set, so
+damage on one tape does not prevent scanning of the others in the dump
+set. However, you can scan only the tapes that precede the damaged one
+in the dump set or the ones that follow the damaged one, but not both.
+(For more information on using tapes to reconstruct the information in the
+Backup Database, see <A HREF="#HDRWQ305">To scan the contents of a tape</A>.)
+<P>An unreadable bad spot can also prevent you from restoring a volume
+completely, because restore operations must begin with the full dump and
+continue with each incremental dump in order. If you cannot restore a
+specific dump, you cannot restore any data from later incremental
+dumps.
+<P><LI>If you decide in the future to archive one or more dumps, then you must
+archive the entire set of tapes that constitute the dump set, rather than just
+the ones that contain the data of interest. This wastes both tape and
+archive storage space. For more information on archiving, see <A HREF="auagd011.htm#HDRWQ269">Archiving Tapes</A>.
+</UL>
+<P><H3><A NAME="HDRWQ300" HREF="auagd002.htm#ToC_337">Scheduling Dumps</A></H3>
+<P>By default, the Backup System starts executing a dump
+operation as soon as you enter the <B>backup dump</B> command, and the
+Tape Coordinator begins writing data as soon as it is not busy and the list of
+files to write is available. You can, however, schedule a dump
+operation to begin at a specific later time:
+<UL>
+<P><LI>To schedule a single dump operation, include the <B>-at</B> argument
+to specify its start time.
+<P><LI>To schedule multiple dump operations, list the operations in a file named
+by the <B>-file</B> argument and use the <B>-at</B> argument to
+specify when the <B>backup</B> command interpreter reads the file.
+If you omit the <B>-at</B> argument, the command interpreter reads the
+file immediately, which does not count as scheduling, but does allow you to
+initiate multiple dump operations in a single command. Do not combine
+the <B>-file</B> argument with the <B>-volumeset</B>,
+<B>-dump</B>, <B>-portoffset</B>, <B>-append</B>, or <B>-n</B>
+options.
+<P>For file-formatting instructions, see the description of the
+<B>-file</B> argument in Step <A HREF="#LIBKDUMP-SYNTAX">7</A> of <A HREF="#HDRWQ301">To create a dump</A>.
+</UL>
+<P>The Backup System performs initial and appended dumps in the same manner
+whether they are scheduled or begin running as soon as you issue the
+<B>backup dump</B> command. The only difference is that the
+requirements for successful execution hold both at the time you issue the
+command and when the Backup System actually begins running it. All
+required Backup Database entries for volume sets, dump levels, and port
+offsets, and all dump and tape records must exist at both times.
+Perhaps more importantly, the required administrative tokens must be available
+at both times. See <A HREF="#HDRWQ297">Making Backup Operations More Efficient</A>.
+<P><H3><A NAME="HDRWQ301" HREF="auagd002.htm#ToC_338">To create a dump</A></H3>
+<OL TYPE=1>
+<P><LI>Verify that you are authenticated as a user listed in the
+<B>/usr/afs/etc/UserList</B> file. If necessary, issue the <B>bos
+listusers</B> command, which is fully described in <A HREF="auagd021.htm#HDRWQ593">To display the users in the UserList file</A>. 
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE>
+<P><LI>If the Tape Coordinator for the tape device that is to perform the
+operation is not already running, open a connection to the appropriate Tape
+Coordinator machine and issue the <B>butc</B> command, for which complete
+instructions appear in <A HREF="#HDRWQ292">To start a Tape Coordinator process</A>. 
+<PRE>   % <B>butc</B> [&lt;<VAR>port offset</VAR>>] [<B>-noautoquery</B>]
+</PRE>
+<P><LI>If using a tape device, insert the tape.
+<P><LI>Issue the <B>backup</B> command to enter interactive mode. 
+<PRE>   % <B>backup</B>
+</PRE>
+<P><LI>Decide which volume set and dump level to use. If necessary, issue
+the <B>backup listvolsets</B> and <B>backup listdumps</B> commands to
+display the existing volume sets and dump levels. For complete
+instructions and a description of the output, see <A HREF="auagd011.htm#HDRWQ266">To display volume sets and volume entries</A> and <A HREF="auagd011.htm#HDRWQ271">To display the dump hierarchy</A>. 
+<PRE>   backup> <B>listvolsets</B>  [&lt;<VAR>volume&nbsp;set&nbsp;name</VAR>>]
+   backup> <B>listdumps</B>
+</PRE> 
+<P>If you want to use a temporary volume set, you must create it during the
+current interactive session. This can be useful if you are dumping a
+volume to tape in preparation for removing it permanently (perhaps because its
+owner is leaving the cell). In this case, you can define a volume entry
+that includes only the volume of interest without cluttering up the Backup
+Database with a volume set record that you are using only once.
+Complete instructions appear in <A HREF="auagd011.htm#HDRWQ265">Defining and Displaying Volume Sets and Volume Entries</A>. 
+<PRE>   backup>  <B>addvolset</B> &lt;<VAR>volume&nbsp;set&nbsp;name</VAR>> <B>-temporary</B>
+   backup> <B>addvolentry  -name</B> &lt;<VAR>volume&nbsp;set&nbsp;name</VAR>>  \
+                        <B>-server</B> &lt;<VAR>machine&nbsp;name</VAR>>  \
+                        <B>-partition</B> &lt;<VAR>partition&nbsp;name</VAR>>  \
+                        <B>-volumes</B> &lt;<VAR>volume&nbsp;name&nbsp;(regular&nbsp;expression)</VAR>>
+</PRE>
+<P><LI>If you are creating an initial dump and writing to a tape or backup data
+file that does not have a permanent name, its AFS tape name must satisfy the
+Backup System's format requirements as described in <A HREF="auagd011.htm#HDRWQ280">Eliminating the AFS Tape Name Check</A>. If necessary, use the <B>backup readlabel</B>
+command to display the label and the <B>backup labeltape</B> command to
+change the names, as instructed in <A HREF="auagd011.htm#HDRWQ272">Writing and Reading Tape Labels</A>. You must also relabel a tape if you want to
+overwrite it and it is part of a dump set that includes any unexpired dumps,
+though this is not recommended. For a discussion of the appropriate way
+to recycle tapes, see <A HREF="auagd011.htm#HDRWQ268">Creating a Tape Recycling Schedule</A>.
+<A NAME="IDX7031"></A>
+<A NAME="IDX7032"></A>
+<P><LI><A NAME="LIBKDUMP-SYNTAX"></A>Issue the <B>backup dump</B> command to dump the
+volume set. 
+<UL>
+<P><LI>To create one initial dump, provide only the volume set name, dump level
+name, and port offset (if not zero).
+<P><LI>To create one appended dump, add the <B>-append</B> flag.
+<P><LI>To schedule a single initial or appended dump, add the <B>-at</B>
+argument.
+<P><LI>To initiate multiple dump operations, record the appropriate commands in a
+file and name it with the <B>-file</B> argument. Do not combine
+this argument with options other than the <B>-at</B> argument.
+</UL> 
+<PRE>   backup> <B>dump</B> &lt;<VAR>volume&nbsp;set&nbsp;name</VAR>> &lt;<VAR>dump&nbsp;level&nbsp;name</VAR>> [&lt;<VAR>TC&nbsp;port&nbsp;offset</VAR>>]   \
+                [<B>-at</B> &lt;<VAR>Date/time&nbsp;to&nbsp;start&nbsp;dump</VAR>><SUP>+</SUP>]  \
+                [<B>-append</B>]  [<B>-n</B>] [<B>-file</B> &lt;<VAR>load file</VAR>>]
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>dump
+</B><DD>Must be typed in full.
+<P><DT><B><VAR>volume set name</VAR>
+</B><DD>Names the volume set to dump.
+<P><DT><B><VAR>dump level name</VAR>
+</B><DD>Specifies the complete pathname of the dump level at which to dump the
+volume set.
+<P><DT><B><VAR>TC port offset</VAR>
+</B><DD>Specifies the port offset number of the Tape Coordinator process that is
+handling the operation. You must provide this argument unless the
+default value of 0 (zero) is appropriate.
+<P><DT><B>-at
+</B><DD>Specifies the date and time in the future at which to run the command, or
+to read the file named by the <B>-file</B> argument. Provide a
+value in the format <VAR>mm</VAR>/<VAR>dd</VAR>/<VAR>yyyy</VAR>
+[<VAR>hh</VAR>:<VAR>MM</VAR>], where the month (<VAR>mm</VAR>), day
+(<VAR>dd</VAR>), and year (<VAR>yyyy</VAR>) are required. Valid values for
+the year range from <B>1970</B> to <B>2037</B>; higher values are
+not valid because the latest possible date in the standard UNIX representation
+is in February 2038. The Backup System automatically reduces any later
+date to the maximum value in 2038.
+<P>The hour and minutes (<VAR>hh</VAR>:<VAR>MM</VAR>) are optional, but if
+provided must be in 24-hour format (for example, the value
+<B>14:36</B> represents 2:36 p.m.). If
+you omit them, the time defaults to midnight (00:00 hours).
+<P>As an example, the value <B>04/23/1999 20:20</B> schedules the
+command for 8:20 p.m. on 23 April 1999.
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Note:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">A plus sign follows this argument in the command's syntax statement
+because it accepts a multiword value which does not need to be enclosed in
+double quotes or other delimiters, not because it accepts multiple
+dates. Provide only one date (and optionally, time) definition.
+</TD></TR></TABLE>
+<P><DT><B>-append
+</B><DD>Creates an appended dump by scanning to the end of the data from one or
+more previous dump operations that it finds on the tape or in the backup data
+file.
+<P><DT><B>-n
+</B><DD>Displays the names of all volumes to be included in the indicated dump,
+without actually writing data to tape or the backup data file. Combine
+this flag with the arguments you plan to use on the actual command, but not
+with the <B>-file</B> argument.
+<P><DT><B>-file
+</B><DD>Specifies the local disk or AFS pathname of a file containing
+<B>backup</B> commands. The Backup System reads the file
+immediately, or at the time specified by the <B>-at</B> argument if it is
+provided. A partial pathname is interpreted relative to the current
+working directory.
+<P>Place each <B>backup dump</B> command on its own line in the indicated
+file, using the same syntax as for the command line, but without the word
+<B>backup</B> at the start of the line. Each command must include
+the <VAR>volume set name</VAR> and <VAR>dump level name</VAR> arguments plus the
+<VAR>TC port offset</VAR> argument if the default value of zero is not
+appropriate. Commands in the file can also include any of the
+<B>backup dump</B> command's optional arguments, including the
+<B>-at</B> argument (which must specify a date and time later than the
+date and time at which the Backup System reads the file).
+</DL>
+<P><LI>If you did not include the <B>-noautoquery</B> flag when you issued
+the <B>butc</B> command, or if the device's
+<B>CFG_</B><VAR>device_name</VAR> configuration file includes the
+instruction <B>AUTOQUERY YES</B>, then the Tape Coordinator prompts you to
+place the tape in the device's drive. You have already done so,
+but you must now press &lt;<B>Return</B>> to indicate that the tape is
+ready for labeling.
+<P>If more than one tape is required, you must either include the
+<B>MOUNT</B> instruction in the <B>CFG_</B><VAR>device_name</VAR> file
+and stock the corresponding stacker or jukebox with tapes, or remain at the
+console to respond to the Tape Coordinator's prompts for subsequent
+tapes.
+<P><LI>After the dump operation completes, review the Backup System's log
+files to check for errors. Use the <B>bos getlog</B> command as
+instructed in <A HREF="auagd009.htm#HDRWQ173">Displaying Server Process Log Files</A> to read the <B>/usr/afs/logs/BackupLog</B> file, and a
+text editor on the Tape Coordinator machine to read the
+<B>TE_</B><VAR>device_name</VAR> and <B>TL_</B><VAR>device_name</VAR>
+files in the local <B>/usr/afs/backup</B> directory.
+<P>It is also a good idea to record the tape name and dump ID number on the
+exterior label of each tape.
+</OL>
+<HR><H2><A NAME="HDRWQ302" HREF="auagd002.htm#ToC_339">Displaying Backup Dump Records</A></H2>
+<P>The <B>backup</B> command suite includes three commands
+for displaying information about data you have backed up:
+<UL>
+<P><LI>To display information about one or more dump operations, such as the date
+it was performed and the number of volumes included, use the <B>backup
+dumpinfo</B> command as described in <A HREF="#HDRWQ303">To display dump records</A>. You can display a detailed record of a single dump
+or more condensed records for a certain number of dumps, starting with the
+most recent and going back in time. You can specify the number of dumps
+or accept the default of 10.
+<P><LI>To display a volume's dump history, use the <B>backup volinfo</B>
+command as described in <A HREF="#HDRWQ304">To display a volume's dump history</A>.
+<P><LI>To display information extracted from a tape or backup data file about the
+volumes it includes, use the <B>backup scantape</B> command. To
+create new dump and tape records in the Backup Database derived from the tape
+and dump labels, add the <B>-dbadd</B> flag. For instructions, see <A HREF="#HDRWQ305">To scan the contents of a tape</A>.
+</UL>
+<A NAME="IDX7033"></A>
+<A NAME="IDX7034"></A>
+<A NAME="IDX7035"></A>
+<A NAME="IDX7036"></A>
+<A NAME="IDX7037"></A>
+<A NAME="IDX7038"></A>
+<A NAME="IDX7039"></A>
+<P><H3><A NAME="HDRWQ303" HREF="auagd002.htm#ToC_340">To display dump records</A></H3>
+<OL TYPE=1>
+<P><LI>Verify that you are authenticated as a user listed in the
+<B>/usr/afs/etc/UserList</B> file. If necessary, issue the <B>bos
+listusers</B> command, which is fully described in <A HREF="auagd021.htm#HDRWQ593">To display the users in the UserList file</A>. 
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE>
+<P><LI>Issue the <B>backup dumpinfo</B> command to list information about
+dumps recorded in the Backup Database. 
+<PRE>   % <B>backup dumpinfo</B> [<B>-ndumps</B> &lt;<VAR>no.&nbsp;of&nbsp;dumps</VAR>>]  [<B>-id</B> &lt;<VAR>dump&nbsp;id</VAR>>]  [<B>-verbose</B>]
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>dump
+</B><DD>Is the shortest acceptable abbreviation of <B>dumpinfo</B>.
+<P><DT><B>-ndumps
+</B><DD>Displays the Backup Database record for each of the specified number of
+dumps, starting with the most recent and going back in time. If the
+database contains fewer dumps than are requested, the output includes the
+records for all existing dumps. Do not combine this argument with the
+<B>-id</B> argument or <B>-verbose</B> flag; omit all three
+options to display the records for the last 10 dumps.
+<P><DT><B>-id
+</B><DD>Specifies the dump ID number of a single dump for which to display the
+Backup Database record. You must include the <B>-id</B>
+switch. Do not combine this option with the <B>-ndumps</B> or
+<B>-verbose</B> arguments; omit all three arguments to display the
+records for the last 10 dumps.
+<P><DT><B>-verbose
+</B><DD>Provides more detailed information about the dump specified with the
+<B>-id</B> argument, which must be provided along with it. Do not
+combine this flag with the <B>-ndumps</B> option.
+</DL>
+</OL>
+<P>If the <B>-ndumps</B> argument is provided, the output presents the
+following information in table form, with a separate line for each dump:
+<DL>
+<P><DT><B><TT>dumpid</TT>
+</B><DD>The dump ID number.
+<P><DT><B><TT>parentid</TT>
+</B><DD>The dump ID number of the dump's parent dump. A value of
+<TT>0</TT> (zero) identifies a full dump.
+<P><DT><B><TT>lv</TT>
+</B><DD>The depth in the dump hierarchy of the dump level used to create the
+dump. A value of <TT>0</TT> (zero) identifies a full dump, in which
+case the value in the <TT>parentid</TT> field is also <TT>0</TT>. A
+value of <TT>1</TT> or greater indicates an incremental dump made at the
+corresponding level in the dump hierarchy.
+<P><DT><B><TT>created</TT>
+</B><DD>The date and time at which the Backup System started the dump operation
+that created the dump.
+<P><DT><B><TT>nt</TT>
+</B><DD>The number of tapes that contain the data in the dump. A value of
+<TT>0</TT> (zero) indicates that the dump operation was terminated or
+failed. Use the <B>backup deletedump</B> command to remove such
+entries.
+<P><DT><B><TT>nvols</TT>
+</B><DD>The number of volumes from which the dump includes data. If a
+volume spans tapes, it is counted twice. A value of <TT>0</TT> (zero)
+indicates that the dump operation was terminated or failed; the value in
+the <TT>nt</TT> field is also <TT>0</TT> in this case.
+<P><DT><B><TT>dump name</TT>
+</B><DD>The dump name in the form 
+<PRE>   <VAR>volume_set_name</VAR>.<VAR>dump_level_name</VAR> (<VAR>initial_dump_ID</VAR>)
+   
+</PRE>
+<P>
+<P>where <VAR>volume_set_name</VAR> is the name of the volume set, and
+<VAR>dump_level_name</VAR> is the last element in the dump level pathname at
+which the volume set was dumped.
+<P>The <VAR>initial_dump_ID</VAR>, if displayed, is the dump ID of the initial
+dump in the dump set to which this dump belongs. If there is no value
+in parentheses, the dump is the initial dump in a dump set that has no
+appended dumps.
+</DL>
+<P>If the <B>-id</B> argument is provided alone, the first line of output
+begins with the string <TT>Dump</TT> and reports information for the entire
+dump in the following fields:
+<DL>
+<P><DT><B><TT>id</TT>
+</B><DD>The dump ID number.
+<P><DT><B><TT>level</TT>
+</B><DD>The depth in the dump hierarchy of the dump level used to create the
+dump. A value of <TT>0</TT> (zero) identifies a full dump. A
+value of <TT>1</TT> (one) or greater indicates an incremental dump made at
+the specified level in the dump hierarchy.
+<P><DT><B><TT>volumes</TT>
+</B><DD>The number of volumes for which the dump includes data.
+<P><DT><B><TT>created</TT>
+</B><DD>The date and time at which the dump operation began.
+</DL>
+<P>If an XBSA server was the backup medium for the dump (rather than a tape
+device or backup data file), the following line appears next:
+<PRE>   Backup Service: <VAR>XBSA_program</VAR>: Server: <VAR>hostname</VAR>
+</PRE>
+<P>where <VAR>XBSA_program</VAR> is the name of the XBSA-compliant program and
+<VAR>hostname</VAR> is the name of the machine on which the program runs.
+<P>Next the output includes an entry for each tape that houses volume data
+from the dump. Following the string <TT>Tape</TT>, the first two
+lines of each entry report information about that tape in the following
+fields:
+<DL>
+<P><DT><B><TT>name</TT>
+</B><DD>The tape's permanent name if it has one, or its AFS tape name
+otherwise, and its tape ID number in parentheses.
+<P><DT><B><TT>nVolumes</TT>
+</B><DD>The number of volumes for which this tape includes dump data.
+<P><DT><B><TT>created</TT>
+</B><DD>The date and time at which the Tape Coordinator began writing data to this
+tape.
+</DL>
+<P>Following another blank line, the tape-specific information concludes with
+a table that includes a line for each volume dump on the tape. The
+information appears in columns with the following headings:
+<DL>
+<P><DT><B><TT>Pos</TT>
+</B><DD>The relative position of each volume in this tape or file. On a
+tape, the counter begins at position 2 (the tape label occupies position 1),
+and increments by one for each volume. For volumes in a backup data
+file, the position numbers start with 1 and do not usually increment only by
+one, because each is the ordinal of the 16 KB offset in the file at which the
+volume's data begins. The difference between the position numbers
+therefore indicates how many 16 KB blocks each volume's data
+occupies. For example, if the second volume is at position 5 and the
+third volume in the list is at position 9, that means that the dump of the
+second volume occupies 64 KB (four 16-KB blocks) of space in the file.
+<P><DT><B><TT>Clone time</TT>
+</B><DD>For a backup or read-only volume, the time at which it was cloned from its
+read/write source. For a Read/Write volume, it is the same as the dump
+creation date reported on the first line of the output.
+<P><DT><B><TT>Nbytes</TT>
+</B><DD>The number of bytes of data in the dump of the volume.
+<P><DT><B><TT>Volume</TT>
+</B><DD>The volume name, complete with <TT>.backup</TT> or
+<TT>.readonly</TT> extension if appropriate.
+</DL>
+<P>If both the <B>-id</B> and <B>-verbose</B> options are provided,
+the output is divided into several sections:
+<UL>
+<P><LI>The first section, headed by the underlined string <TT>Dump</TT>,
+includes information about the entire dump. The fields labeled
+<TT>id</TT>, <TT>level</TT>, <TT>created</TT>, and <TT>nVolumes</TT>
+report the same values (though in a different order) as appear on the first
+line of output when the <B>-id</B> argument is provided by itself.
+Other fields of potential interest to the backup operator are: 
+<DL>
+<P><DT><B><TT>Group id</TT>
+</B><DD>The dump's <I>group ID number</I>, which is recorded in the
+dump's Backup Database record if the <B>GROUPID</B> instruction
+appears in the Tape Coordinator's <B>
+/usr/afs/backup/CFG_</B><VAR>tcid</VAR> file when the dump is created.
+<P><DT><B><TT>maxTapes</TT>
+</B><DD>The number of tapes that contain the dump set to which this dump
+belongs.
+<P><DT><B><TT>Start Tape Seq</TT>
+</B><DD>The ordinal of the tape on which this dump begins in the set of tapes that
+contain the dump set.
+</DL>
+<P><LI>For each tape that contains data from this dump, there follows a section
+headed by the underlined string <TT>Tape</TT>. The fields labeled
+<TT>name</TT>, <TT>written</TT>, and <TT>nVolumes</TT> report the same
+values (though in a different order) as appear on the second and third lines
+of output when the <B>-id</B> argument is provided by itself. Other
+fields of potential interest to the backup operator are: 
+<DL>
+<P><DT><B><TT>expires</TT>
+</B><DD>The date and time when this tape can be recycled, because all dumps it
+contains have expired.
+<P><DT><B><TT>nMBytes Data</TT> and <TT>nBytes Data</TT>
+</B><DD>Summed together, these fields represent the total amount of dumped data
+actually from volumes (as opposed to labels, filemarks, and other
+markers).
+<P><DT><B><TT>KBytes Tape Used</TT>
+</B><DD>The number of kilobytes of tape (or disk space, for a backup data file)
+used to store the dump data. It is generally larger than the sum of the
+values in the <TT>nMBytes Data</TT> and <TT>nBytes Data</TT> fields,
+because it includes the space required for the label, file marks and other
+markers, and because the Backup System writes data at 16 KB offsets, even if
+the data in a given block doesn't fill the entire 16 KB.
+</DL>
+<P><LI>For each volume on a given tape, there follows a section headed by the
+underlined string <TT>Volume</TT>. The fields labeled
+<TT>name</TT>, <TT>position</TT>, <TT>clone</TT>, and <TT>nBytes</TT>
+report the same values (though in a different order) as appear in the table
+that lists the volumes in each tape when the <B>-id</B> argument is
+provided by itself. Other fields of potential interest to the backup
+operator are: 
+<DL>
+<P><DT><B><TT>id</TT>
+</B><DD>The volume ID.
+<P><DT><B><TT>tape</TT>
+</B><DD>The name of the tape containing this volume data.
+</DL>
+</UL>
+<P>The following example command displays the Backup Database records for the
+five most recent dump operations.
+<PRE>   % <B>backup dump 5</B>
+      dumpid   parentid lv created          nt nvols dump name
+   924424000          0 0  04/18/1999 04:26  1    22 usr.sun (924424000)
+   924685000  924424000 1  04/21/1999 04:56  1    62 usr.wed (924424000)
+   924773000  924424000 1  04/22/1999 05:23  1    46 usr.thu (924424000)
+   924860000  924424000 1  04/23/1999 05:33  1    58 usr.fri (924424000)
+   925033000          0 0  04/25/1999 05:36  2    73 sys.week
+</PRE>
+<A NAME="IDX7040"></A>
+<A NAME="IDX7041"></A>
+<A NAME="IDX7042"></A>
+<A NAME="IDX7043"></A>
+<P><H3><A NAME="HDRWQ304" HREF="auagd002.htm#ToC_341">To display a volume's dump history</A></H3>
+<OL TYPE=1>
+<P><LI>Verify that you are authenticated as a user listed in the
+<B>/usr/afs/etc/UserList</B> file. If necessary, issue the <B>bos
+listusers</B> command, which is fully described in <A HREF="auagd021.htm#HDRWQ593">To display the users in the UserList file</A>. 
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE>
+<P><LI>Issue the <B>backup volinfo</B> command to display a volume's
+dump history. 
+<PRE>   % <B>backup volinfo</B> &lt;<VAR>volume&nbsp;name</VAR>>
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>voli
+</B><DD>Is the shortest acceptable abbreviation of <B>volinfo</B>.
+<P><DT><B><VAR>volume name</VAR>
+</B><DD>Names the volume for which to display the dump history. If you
+dumped the backup or read-only version of the volume, include the
+<B>.backup</B> or <B>.readonly</B> extension.
+</DL>
+</OL>
+<P>The output includes a line for each Backup Database dump record that
+mentions the specified volume, order from most to least recent. The
+output for each record appears in a table with six columns:
+<DL>
+<P><DT><B><TT>dumpID</TT>
+</B><DD>The dump ID of the dump that includes the volume.
+<P><DT><B><TT>lvl</TT>
+</B><DD>The depth in the dump hierarchy of the dump level at which the volume was
+dumped. A value of <TT>0</TT> indicates a full dump. A value
+of <TT>1</TT> or greater indicates an incremental dump made at the specified
+depth in the dump hierarchy.
+<P><DT><B><TT>parentid</TT>
+</B><DD>The dump ID of the dump's parent dump. A value of <TT>0</TT>
+indicates a full dump, which has no parent; in this case, the value in
+the <TT>lvl</TT> column is also <TT>0</TT>.
+<P><DT><B><TT>creation date</TT>
+</B><DD>The date and time at which the Backup System started the dump operation
+that created the dump.
+<P><DT><B><TT>clone date</TT>
+</B><DD>For a backup or read-only volume, the time at which it was cloned from its
+read/write source. For a read/write volume, the same as the value in
+the <TT>creation date</TT> field.
+<P><DT><B><TT>tape name</TT>
+</B><DD>The name of the tape containing the dump: either the permanent tape
+name, or an AFS tape name in the format
+<I>volume_set_name</I>.<I>dump_level_name</I>.<I>tape_index</I>
+where <I>volume_set_name</I> is the name of the volume set associated with
+the initial dump in the dump set of which this tape is a part;
+<I>dump_level_name</I> is the name of the dump level at which the initial
+dump was backed up; <I>tape_index</I> is the ordinal of the tape in
+the dump set. Either type of name can be followed by a dump ID in
+parentheses; if it appears, it is the dump ID of the initial dump in the
+dump set to which this appended dump belongs.
+</DL>
+<P>The following example shows part of the dump history of the backup volume
+<B>user.smith.backup</B>:
+<PRE>   %<B> backup volinfo user.smith.backup</B>
+   DumpID    lvl parentID  creation   date  clone date       tape name
+   924600000 1   924427600 04/20/1999 05:20 04/20/1999 05:01 user_incr_2 (924514392)
+   924514392 1   924427600 04/19/1999 05:33 04/19/1999 05:08 user_incr_2 
+   924427600 0           0 04/18/1999 05:26 04/18/1999 04:58 user_full_6 
+       .     .      .         .       .       .      .         .
+       .     .      .         .       .       .      .         .
+</PRE>
+<A NAME="IDX7044"></A>
+<A NAME="IDX7045"></A>
+<A NAME="IDX7046"></A>
+<A NAME="IDX7047"></A>
+<A NAME="IDX7048"></A>
+<P><H3><A NAME="HDRWQ305" HREF="auagd002.htm#ToC_342">To scan the contents of a tape</A></H3>
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Note:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">The ability to scan a tape that is corrupted or damaged
+depends on the extent of the damage and what type of data is corrupted.
+The Backup System can almost always scan the tape successfully up to the point
+of damage. If the damage is minor, the Backup System can usually skip
+over it and scan the rest of the tape, but more major damage can prevent
+further scanning. A scanning operation does not have to begin with the
+first tape in a dump set, but the Backup System can process tapes only in
+sequential order after the initial tape provided. Therefore, damage on
+one tape does not prevent scanning of the others in the dump set, but it is
+possible to scan either the tapes that precede the damaged one or the ones
+that follow it, not both. 
+<P>If you use the <B>-dbadd</B> flag to scan information into the Backup
+Database and the first tape you provide is not the first tape in the dump set,
+the following restrictions apply:
+<UL>
+<P><LI>If the first data on the tape is a continuation of a volume that begins on
+the previous (unscanned) tape in the dump set, the Backup System does not add
+a record for that volume to the Backup Database.
+<P><LI>The Backup System must read the marker that indicates the start of an
+appended dump to add database records for the volumes in it. If the
+first volume on the tape belongs to an appended dump, but is not immediately
+preceded by the appended-dump marker, the Backup System does not create a
+Backup Database record for it or any subsequent volumes that belong to that
+appended dump.
+</UL>
+</TD></TR></TABLE>
+<OL TYPE=1>
+<P><LI>Verify that you are authenticated as a user listed in the
+<B>/usr/afs/etc/UserList</B> file. If necessary, issue the <B>bos
+listusers</B> command, which is fully described in <A HREF="auagd021.htm#HDRWQ593">To display the users in the UserList file</A>. 
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE>
+<P><LI>If the Tape Coordinator for the tape device that is to perform the
+operation is not already running, open a connection to the appropriate Tape
+Coordinator machine and issue the <B>butc</B> command, for which complete
+instructions appear in <A HREF="#HDRWQ292">To start a Tape Coordinator process</A>. 
+<PRE>   % <B>butc</B> [&lt;<VAR>port offset</VAR>>] [<B>-noautoquery</B>]
+</PRE>
+<P><LI>If scanning a tape, place it in the drive.
+<P><LI><B>(Optional)</B> Issue the <B>backup</B> command to enter
+interactive mode. 
+<PRE>   % <B>backup</B>
+</PRE>
+<A NAME="IDX7049"></A>
+<A NAME="IDX7050"></A>
+<P><LI>Issue the <B>backup scantape</B> command to read the contents of the
+tape. 
+<PRE>   backup> <B>scantape</B> [<B>-dbadd</B>] [<B>-portoffset</B> &lt;<VAR>TC&nbsp;port&nbsp;offset</VAR>>]
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>sc
+</B><DD>Is the shortest acceptable abbreviation of <B>scantape</B>.
+<P><DT><B>-dbadd
+</B><DD>Constructs dump and tape records from the tape and dump labels in the dump
+and writes them into the Backup Database.
+<P><DT><B><VAR>TC port offset</VAR>
+</B><DD>Specifies the port offset number of the Tape Coordinator process that is
+handling the operation. You must provide this argument unless the
+default value of 0 (zero) is appropriate.
+</DL>
+<P><LI>If you did not include the <B>-noautoquery</B> flag when you issued
+the <B>butc</B> command, or the device's
+<B>CFG_</B><VAR>device_name</VAR> configuration file includes the
+instruction <B>AUTOQUERY YES</B> instruction, then the Tape Coordinator
+prompts you to place the tape in the device's drive. You have
+already done so, but you must now press &lt;<B>Return</B>> to indicate
+that the tape is ready for reading.
+</OL>
+<P>To terminate a tape scanning operation, use a termination signal such as
+&lt;<B>Ctrl-c</B>>, or issue the <B>(backup) kill</B> command in
+interactive mode. It is best not to interrupt the scan if you included
+the <B>-dbadd</B> argument. If the Backup System has already
+written new records into the Backup Database, then you must remove them before
+rerunning the scanning operation. If during the repeated scan operation
+the Backup System finds that a record it needs to create already exists, it
+halts the operation.
+<P>For each dump on the tape, the output in the Tape Coordinator window
+displays the dump label followed by an entry for each volume. There is
+no output in the command window. The dump label has the same fields as
+the tape label displayed by the <B>backup readlabel</B> command, as
+described in <A HREF="auagd011.htm#HDRWQ272">Writing and Reading Tape Labels</A>. Or see the <I>IBM AFS Administration
+Reference</I> for a detailed description of the fields in the output.
+<P>The following example shows the dump label and first volume entry on the
+tape in the device that has port offset 2:
+<PRE>   % <B>backup scantape 2</B>
+   -- Dump label --
+   tape name = monthly_guest
+   AFS tape name = guests.monthly.3
+   creationTime =  Mon Feb  1 04:06:40 1999
+   cell = abc.com
+   size = 2150000 Kbytes
+   dump path = /monthly
+   dump id = 917860000
+   useCount = 44
+   -- End of dump label --
+   -- volume --
+   volume name: user.guest10.backup
+   volume ID 1937573829
+   dumpSetName: guests.monthly
+   dumpID 917860000
+   level 0
+   parentID 0
+   endTime 0
+   clonedate Mon Feb  1 03:03:23 1999
+</PRE>
+<HR><H2><A NAME="HDRWQ306" HREF="auagd002.htm#ToC_343">Restoring and Recovering Data</A></H2>
+<A NAME="IDX7051"></A>
+<A NAME="IDX7052"></A>
+<A NAME="IDX7053"></A>
+<A NAME="IDX7054"></A>
+<A NAME="IDX7055"></A>
+<A NAME="IDX7056"></A>
+<A NAME="IDX7057"></A>
+<A NAME="IDX7058"></A>
+<A NAME="IDX7059"></A>
+<A NAME="IDX7060"></A>
+<A NAME="IDX7061"></A>
+<A NAME="IDX7062"></A>
+<P>The purpose of making backups is to enable you to recover when data becomes
+corrupted or is removed accidentally, returning the data to a coherent past
+state. The AFS Backup System provides three commands that restore
+varying numbers of volumes:
+<UL>
+<P><LI>To restore one or more volumes to a single site (partition on an AFS file
+server machine), use the <B>backup volrestore</B> command.
+<P><LI>To restore one or more volumes that are defined as a volume set, each to a
+specified site, use the <B>backup volsetrestore</B> command.
+<P><LI>To restore an entire partition (that is, all of the volumes that the VLDB
+lists as resident on it), use the <B>backup diskrestore</B>
+command.
+</UL>
+<P>The commands are suited to different purposes because they vary in the
+combinations of features they offer and in the requirements they
+impose. To decide which is appropriate for a specific restore
+operation, see the subsequent sections of this introduction: <A HREF="#HDRWQ308">Using the backup volrestore Command</A>, <A HREF="#HDRWQ310">Using the backup diskrestore Command</A>, and <A HREF="#HDRWQ312">Using the backup volsetrestore Command</A>.
+<P><H3><A NAME="HDRWQ307" HREF="auagd002.htm#ToC_344">Making Restore Operations More Efficient</A></H3>
+<P>The following comments apply to all types of restore
+operation:
+<UL>
+<P><LI>The Backup System begins by restoring the most recent full dump of a
+volume. As it restores subsequent incremental dumps, it alters the data
+in the full dump appropriately, essentially repeating the volume's change
+history. The <B>backup diskrestore</B> and <B>backup
+volsetrestore</B> commands always restore all incremental dumps, bringing a
+volume to its state at the time of the most recent incremental dump.
+You can use the <B>backup volrestore</B> command to return a volume to its
+state at a specified time in the past, by not restoring the data from
+incremental dumps performed after that time.
+<P><LI>The Backup System sets a restored volume's creation date to the date
+and time of the restore operation. The creation date appears in the
+<TT>Creation</TT> field of the output from the <B>vos examine</B> and
+<B>vos listvol</B> commands.
+<P><LI>When identifying the volumes to restore, it is best to specify the base
+(read/write) name. In this case, the Backup System searches the Backup
+Database for the most recent dump set that includes data from either the
+read/write or backup version of the volume, and restores dumps of that volume
+starting with the most recent full dump. If you include the
+<B>.backup</B> or <B>.readonly</B> extension on the
+volume name, the Backup System restores dumps of that version only. If
+it cannot find data dumped from that version, it does not perform the
+restoration even if another version was dumped.
+<P><LI>All three restoration commands accept the <B>-n</B> option, which
+generates a list of the volumes to be restored and the tapes or backup data
+files that contain the necessary dumps, without actually restoring data to AFS
+server partitions. This enables you to gather together the tapes before
+beginning the restore operation, even preloading them into a stacker or
+jukebox if you are using one.
+<P><LI>If you back up AFS data to tape, restoration is simplest if all of your
+tape devices are compatible, meaning that they can read the same type of tape,
+at the same compression ratios, and so on. (This suggestion also
+appears in <A HREF="#HDRWQ297">Making Backup Operations More Efficient</A>, because by the time you need to restore data it is too late
+to implement it.) You can still restore multiple volumes with a single
+command even if data was backed up using incompatible devices, because the
+<B>-portoffset</B> argument to all three restoration commands accepts
+multiple values. However, the Backup System uses the first port offset
+listed when restoring the full dump of each volume, the next port offset when
+restoring the level 1 incremental dump of each volume, and so on. If
+you did not use a compatible tape device when creating the full dump of every
+volume (and at each incremental level too), you cannot restore multiple
+volumes with a single command. You must use the <B>backup
+volrestore</B> command to restore one volume at a time, or use the
+<B>backup volsetrestore</B> command after defining volume sets that group
+volumes according to the tape device used to dump them.
+<P><LI>During a restore operation, the Backup System uses instructions in the
+relevant <B>CFG_</B><VAR>device_name</VAR> configuration file in much the
+same way as during a dump operation, as described in <A HREF="#HDRWQ298">How Your Configuration Choices Influence the Dump Process</A>. It uses the <B>MOUNT</B>, <B>UNMOUNT</B>,
+<B>AUTOQUERY</B>, <B>BUFFERSIZE</B>, and <B>FILE</B> instructions
+just as for a dump operation. A difference for the
+<B>BUFFERSIZE</B> instruction is that the default buffer size overridden
+by the instruction is 32 KB for restore operations rather than the 16 KB used
+for dump operations. The Backup System does not use the
+<B>NAME_CHECK</B> instruction at all during restore operations. The
+<B>ASK</B> instruction controls whether the Backup System prompts you if
+it cannot restore a volume for any reason. If the setting is
+<B>NO</B>, it skips the problematic volume and restores as many of the
+other volumes as possible.
+<P><LI>Do not perform a restore operation when you know that there are network,
+machine, or server process problems that can prevent the Backup System from
+accessing volumes or the VLDB. Although the Backup System automatically
+makes a number of repeated attempts to restore a volume, the restore operation
+takes extra time and in some cases stops completely to prompt you for
+instructions on how to continue.
+<P><LI>Avoid halting a restore operation (for instance by issuing the
+<B>(backup) kill</B> command in interactive mode). If a restore
+operation is interrupted for any reason, including causes outside your
+control, reissue the same restoration command as soon as is practical; if
+an outage or other problem caused the operation to halt, do not continue until
+the system returns to normal. 
+<P>Any volume that is completely restored when the operation halts is online
+and usable, but very few volumes are likely to be in this state. When
+restoring multiple volumes at once, the Backup System restores the full dump
+of every volume before beginning the level 1 incremental restore for any of
+them, and so on, completing the restore of every volume at a specific
+incremental level before beginning to restore data from the next incremental
+level. Unless a volume was dumped at fewer incremental levels than
+others being restored as part of the same operation, it is unlikely to be
+complete.
+<P>It is even more dangerous to interrupt a restore operation if you are
+overwriting the current contents of the volume. Depending on how far
+the restore operation has progressed, it is possible that the volume is in
+such an inconsistent state that the Backup System removes it entirely.
+The data being restored is still available on tape or in the backup data file,
+but you must take extra steps to re-create the volume.
+</UL>
+<P><H3><A NAME="HDRWQ308" HREF="auagd002.htm#ToC_345">Using the backup volrestore Command</A></H3>
+<A NAME="IDX7063"></A>
+<A NAME="IDX7064"></A>
+<A NAME="IDX7065"></A>
+<A NAME="IDX7066"></A>
+<A NAME="IDX7067"></A>
+<A NAME="IDX7068"></A>
+<P>The <B>backup volrestore</B> command is most appropriate when you need
+to restore a few volumes to a single site (partition on a file server
+machine). By default, it restores the volumes to their state at the
+time of the most recent dump operation (this is termed a <I>full
+restore</I>). You can also use the command to perform a
+<I>date-specific restore</I>, which restores only the dumps (full and
+incremental) performed before a specified date and time, leaving the volume in
+the state it was in at the time of the final relevant incremental dump.
+The <B>backup diskrestore</B> and <B>backup volsetrestore</B> commands
+can only perform full restores.
+<P>You can restore data into a new copy of each volume rather than overwriting
+the current version, by including the <B>-extension</B> argument.
+After mounting the new volume in the filespace, you can compare the contents
+of the two and decide which to keep permanently.
+<P>The following list summarizes how to combine the <B>backup
+volrestore</B> command's arguments to restore a volume in different
+ways:
+<UL>
+<P><LI>To perform a date-specific restore as described just previously, use the
+<B>-date</B> argument to specify the date and optionally time. The
+Backup System restores the most recent full dump and each subsequent
+incremental dump for which the clone date of the volume included in the dump
+is before the indicated date and time (for a definition of the clone date, see
+Step <A HREF="#LIBKOV-CLONEDATE">4</A> in <A HREF="#HDRWQ298">How Your Configuration Choices Influence the Dump Process</A>). You can combine this argument with
+the <B>-extension</B> argument to place the date-specific restore in a new
+volume.
+<P><LI>To move a volume to a new site as you overwrite its contents with the
+restored data, use the <B>-server</B> and <B>-partition</B> arguments,
+singly or in combination, to specify the new site rather than the current
+site. The Backup System creates a new volume at that site, removes the
+existing volume, and updates the site information in the volume's VLDB
+entry. The volume's backup version is not removed automatically
+from the original site, if it exists. Use the <B>vos remove</B>
+command to remove it and the <B>vos backup</B> command to create a backup
+version at the new site.
+<P><LI>To create a new volume to house the restored data, rather than overwriting
+an existing volume, use the <B>-extension</B> argument. The Backup
+System creates the new volume on the server and partition named by the
+<B>-server</B> and <B>-partition</B> arguments, derives its name by
+adding the extension to the name specified with the <B>-volume</B>
+argument, and creates a new VLDB entry for it. The command does not
+affect the existing volume in any way. However, if a volume with the
+specified extension also already exists, the command overwrites it. To
+make the contents of the new volume accessible, use the <B>fs mkmount</B>
+command to mount it. You can then compare its contents to those of the
+existing volume, to see which to retain permanently.
+<P><LI>To restore a volume that no longer exists on an AFS server partition, but
+for which you have backed up data, specify the name of the new volume with the
+<B>-volume</B> argument and use the <B>-server</B> and
+<B>-partition</B> arguments to place it at the desired site. The
+Backup System creates a new volume and new VLDB entry.
+</UL>
+<A NAME="IDX7069"></A>
+<A NAME="IDX7070"></A>
+<P><H3><A NAME="HDRWQ309" HREF="auagd002.htm#ToC_346">To restore volumes with the backup volrestore command</A></H3>
+<OL TYPE=1>
+<P><LI>Verify that you are authenticated as a user listed in the
+<B>/usr/afs/etc/UserList</B> file. If necessary, issue the <B>bos
+listusers</B> command, which is fully described in <A HREF="auagd021.htm#HDRWQ593">To display the users in the UserList file</A>. 
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE>
+<P><LI>If the Tape Coordinator for the tape device that is to perform the
+operation is not already running, open a connection to the appropriate Tape
+Coordinator machine and issue the <B>butc</B> command, for which complete
+instructions appear in <A HREF="#HDRWQ292">To start a Tape Coordinator process</A>. 
+<PRE>   % <B>butc</B> [&lt;<VAR>port offset</VAR>>] [<B>-noautoquery</B>]
+</PRE> 
+<P>Repeat the command for each Tape Coordinator if you are using more than one
+tape device.
+<P><LI>If using a tape device, insert the tape.
+<P><LI>Issue the <B>backup</B> command to enter interactive mode. 
+<PRE>   % <B>backup</B>
+</PRE>
+<P><LI>Issue the <B>backup volrestore</B> command with the desired
+arguments. 
+<PRE>   backup> <B>volrestore</B> &lt;<VAR>destination&nbsp;machine</VAR>> &lt;<VAR>destination&nbsp;partition</VAR>>  \ 
+                      <B>-volume</B> &lt;<VAR>volume(s)&nbsp;to&nbsp;restore</VAR>><SUP>+</SUP>  \
+                      [<B>-extension</B> &lt;<VAR>new&nbsp;volume&nbsp;name&nbsp;extension</VAR>>]  \
+                      [<B>-date</B> &lt;<VAR>date&nbsp;from&nbsp;which&nbsp;to&nbsp;restore</VAR>>]  \
+                      [<B>-portoffset</B> &lt;<VAR>TC&nbsp;port&nbsp;offsets</VAR>><SUP>+</SUP>] [<B>-n</B>]
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>volr
+</B><DD>Is the shortest acceptable abbreviation of <B>volrestore</B>.
+<P><DT><B><VAR>destination machine</VAR>
+</B><DD>Names the file server machine on which to restore each volume. It
+does not have to be a volume's current site.
+<P><DT><B><VAR>destination partition</VAR>
+</B><DD>Names the partition on which to restore each volume. It does not
+have to be a volume's current site.
+<P><DT><B>-volume
+</B><DD>Names each volume to restore. It is best to provide the base
+(read/write) name, for the reasons discussed in <A HREF="#HDRWQ307">Making Restore Operations More Efficient</A>.
+<P><DT><B>-extension
+</B><DD>Creates a new volume to house the restored data, with a name derived by
+appending the specified string to each volume named by the <B>-volume</B>
+extension. The Backup System preserves the contents of the existing
+volume if it still exists. Do not use either of the
+<B>.readonly</B> or <B>.backup</B> extensions, which are
+reserved. The combination of base volume name and extension cannot
+exceed 22 characters in length. If you want a period to separate the
+extension from the name, specify it as the first character of the string (as
+in <B>.rst</B>, for example).
+<P><DT><B>-date
+</B><DD>Specifies a date and optionally time; the restored volume includes
+data from dumps performed before the date only. Provide a value in the
+format <I>mm</I>/<I>dd</I>/<I>yyyy</I>
+[<I>hh</I>:<I>MM</I>], where the required <I>mm/dd/yyyy</I>
+portion indicates the month (<I>mm</I>), day (<I>dd</I>), and year
+(<I>yyyy</I>), and the optional <I>hh:MM</I> portion indicates
+the hour and minutes in 24-hour format (for example, the value
+<B>14:36</B> represents 2:36 p.m.). If
+omitted, the time defaults to 59 seconds after midnight (00:00:59
+hours).
+<P>Valid values for the year range from <B>1970</B> to
+<B>2037</B>; higher values are not valid because the latest possible
+date in the standard UNIX representation is in February 2038. The
+command interpreter automatically reduces any later date to the maximum
+value.
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Note:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">A plus sign follows this argument in the command's syntax statement
+because it accepts a multiword value which does not need to be enclosed in
+double quotes or other delimiters, not because it accepts multiple
+dates. Provide only one date (and optionally, time) definition.
+</TD></TR></TABLE>
+<P><DT><B>-portoffset
+</B><DD>Specifies one or more port offset numbers, each corresponding to a Tape
+Coordinator to use in the operation. If there is more than one value,
+the Backup System uses the first one when restoring the full dump of each
+volume, the second one when restoring the level 1 incremental dump of each
+volume, and so on. It uses the final value in the list when restoring
+dumps at the corresponding depth in the dump hierarchy and all dumps at lower
+levels.
+<P>Provide this argument unless the default value of 0 (zero) is appropriate
+for all dumps. If 0 is just one of the values in the list, provide it
+explicitly in the appropriate order.
+<P><DT><B>-n
+</B><DD>Displays the list of tapes that contain the dumps required by the restore
+operation, without actually performing the operation.
+</DL>
+<P><LI>If you did not include the <B>-noautoquery</B> flag when you issued
+the <B>butc</B> command, or the device's
+<B>CFG_</B><VAR>device_name</VAR> configuration file includes the
+instruction <B>AUTOQUERY YES</B>, then the Tape Coordinator prompts you to
+place the tape in the device's drive. You have already done so,
+but you must now press &lt;<B>Return</B>> to indicate that the tape is
+ready for labeling.
+<P>If more than one tape is required, you must either include the
+<B>MOUNT</B> instruction in the <B>CFG_</B><VAR>device_name</VAR> file
+and stock the corresponding stacker or jukebox with tapes, or remain at the
+console to respond to the Tape Coordinator's prompts for subsequent
+tapes.
+<P><LI>After the restore operation completes, review the Backup System's log
+files to check for errors. Use the <B>bos getlog</B> command as
+instructed in <A HREF="auagd009.htm#HDRWQ173">Displaying Server Process Log Files</A> to read the <B>/usr/afs/logs/BackupLog</B> file, and a
+text editor on the Tape Coordinator machine to read the
+<B>TE_</B><VAR>device_name</VAR> and <B>TL_</B><VAR>device_name</VAR>
+files in the local <B>/usr/afs/backup</B> directory.
+</OL>
+<P><H3><A NAME="HDRWQ310" HREF="auagd002.htm#ToC_347">Using the backup diskrestore Command</A></H3>
+<A NAME="IDX7071"></A>
+<A NAME="IDX7072"></A>
+<P>The <B>backup diskrestore</B> command is most appropriate when you need
+to restore all of the volumes on an AFS server partition, perhaps because a
+hardware failure has corrupted or destroyed all of the data. The
+command performs a full restore of all of the read/write volumes for which the
+VLDB lists the specified partition as the current site, using the dumps of
+either the read/write or backup version of each volume depending on which type
+was dumped more recently. (You can restore any backup or read-only
+volumes that resided on the partition by using the <B>vos backup</B> and
+<B>vos release</B> commands after the <B>backup diskrestore</B>
+operation is complete.)
+<P>By default, the Backup System restores the volumes to the site they
+previously occupied. To move the partition contents to a different
+site, use the <B>-newserver</B> and <B>-newpartition</B> arguments,
+singly or in combination.
+<P>By default, the Backup System overwrites the contents of existing volumes
+with the restored data. To create a new volume to house the restored
+data instead, use the <B>-extension</B> argument. The Backup System
+creates the new volume at the site designated by the <B>-newserver</B> and
+<B>-newpartition</B> arguments if they are used or the <B>-server</B>
+and <B>-partition</B> arguments otherwise. It derives the volume
+name by adding the extension to the read/write base name listed in the VLDB,
+and creates a new VLDB entry. The command does not affect the existing
+volume in any way. However, if a volume with the specified extension
+also already exists, the command overwrites it.
+<P>If a partition seems damaged, be sure not to run the <B>vos
+syncserv</B> command before the <B>backup diskrestore</B>
+command. As noted, the Backup System restores volumes according to VLDB
+site definitions. The <B>vos syncserv</B> command sometimes removes
+a volume's VLDB entry when the corruption on the partition is so severe
+that the Volume Server cannot confirm the volume's presence.
+<A NAME="IDX7073"></A>
+<A NAME="IDX7074"></A>
+<P><H3><A NAME="HDRWQ311" HREF="auagd002.htm#ToC_348">To restore a partition with the backup diskrestore command</A></H3>
+<OL TYPE=1>
+<P><LI>Verify that you are authenticated as a user listed in the
+<B>/usr/afs/etc/UserList</B> file. If necessary, issue the <B>bos
+listusers</B> command, which is fully described in <A HREF="auagd021.htm#HDRWQ593">To display the users in the UserList file</A>. 
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE>
+<P><LI>If the Tape Coordinator for the tape device that is to perform the
+operation is not already running, open a connection to the appropriate Tape
+Coordinator machine and issue the <B>butc</B> command, for which complete
+instructions appear in <A HREF="#HDRWQ292">To start a Tape Coordinator process</A>. 
+<PRE>   % <B>butc</B> [&lt;<VAR>port offset</VAR>>] [<B>-noautoquery</B>]
+</PRE> 
+<P>Repeat the command for each Tape Coordinator if you are using more than one
+tape device.
+<P><LI>If using a tape device, insert the tape.
+<P><LI>Issue the <B>backup</B> command to enter interactive mode. 
+<PRE>   % <B>backup</B>
+</PRE>
+<P><LI>Issue the <B>backup diskrestore</B> command with the desired
+arguments. 
+<PRE>   backup> <B>diskrestore</B> &lt;<VAR>machine&nbsp;to&nbsp;restore</VAR>> &lt;<VAR>partition&nbsp;to&nbsp;restore</VAR>>  \
+                       [<B>-portoffset</B> &lt;<VAR>TC&nbsp;port&nbsp;offset</VAR>><SUP>+</SUP>]  \
+                       [<B>-newserver</B> &lt;<VAR>destination&nbsp;machine</VAR>>]  \
+                       [<B>-newpartition</B> &lt;<VAR>destination&nbsp;partition</VAR>>]  \
+                       [<B>-extension</B> &lt;<VAR>new&nbsp;volume&nbsp;name&nbsp;extension</VAR>>] [<B>-n</B>]
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>di
+</B><DD>Is the shortest acceptable abbreviation of <B>diskrestore</B>.
+<P><DT><B><VAR>machine to restore</VAR>
+</B><DD>Names the file server machine that the VLDB lists as the site of the
+volumes that need to be restored.
+<P><DT><B><VAR>partition to restore</VAR>
+</B><DD>Names the partition that the VLDB lists as the site of the volumes that
+need to be restored.
+<P><DT><B>-portoffset
+</B><DD>Specifies one or more port offset numbers, each corresponding to a Tape
+Coordinator to use in the operation. If there is more than one value,
+the Backup System uses the first one when restoring the full dump of each
+volume, the second one when restoring the level 1 incremental dump of each
+volume, and so on. It uses the final value in the list when restoring
+dumps at the corresponding depth in the dump hierarchy and all dumps at lower
+levels.
+<P>Provide this argument unless the default value of 0 (zero) is appropriate
+for all dumps. If 0 is just one of the values in the list, provide it
+explicitly in the appropriate order.
+<P><DT><B>-newserver
+</B><DD>Names an alternate file server machine to which to restore the
+volumes. If you omit this argument, the volumes are restored to the
+file server machine named by the <B>-server</B> argument.
+<P><DT><B>-newpartition
+</B><DD>Names an alternate partition to which to restore the data. If you
+omit this argument, the volumes are restored to the partition named by the
+<B>-partition</B> argument.
+<P><DT><B>-extension
+</B><DD>Creates a new volume for each volume being restored, to house the restored
+data, appending the specified string to the volume's read/write base name
+as listed in the VLDB. Any string other than
+<B>.readonly</B> or <B>.backup</B> is acceptable, but
+the combination of the base name and extension cannot exceed 22 characters in
+length. To use a period to separate the extension from the name,
+specify it as the first character of the string (as in <B>.rst</B>,
+for example).
+<P><DT><B>-n
+</B><DD>Displays a list of the tapes necessary to perform the requested restore,
+without actually performing the operation.
+</DL>
+<P><LI>If you did not include the <B>-noautoquery</B> flag when you issued
+the <B>butc</B> command, or the device's
+<B>CFG_</B><VAR>device_name</VAR> configuration file includes the
+instruction <B>AUTOQUERY YES</B>, then the Tape Coordinator prompts you to
+place the tape in the device's drive. You have already done so,
+but you must now press &lt;<B>Return</B>> to indicate that the tape is
+ready for labeling.
+<P>If more than one tape is required, you must either include the
+<B>MOUNT</B> instruction in the <B>CFG_</B><VAR>device_name</VAR> file
+and stock the corresponding stacker or jukebox with tapes, or remain at the
+console to respond to the Tape Coordinator's prompts for subsequent
+tapes.
+<P><LI>After the restore operation completes, review the Backup System's log
+files to check for errors. Use the <B>bos getlog</B> command as
+instructed in <A HREF="auagd009.htm#HDRWQ173">Displaying Server Process Log Files</A> to read the <B>/usr/afs/logs/BackupLog</B> file, and a
+text editor on the Tape Coordinator machine to read the
+<B>TE_</B><VAR>device_name</VAR> and <B>TL_</B><VAR>device_name</VAR>
+files in the local <B>/usr/afs/backup</B> directory.
+</OL>
+<P><H3><A NAME="HDRWQ312" HREF="auagd002.htm#ToC_349">Using the backup volsetrestore Command</A></H3>
+<P>The <B>backup volsetrestore</B> command is most
+appropriate when you need to perform a full restore of several read/write
+volumes, placing each at a specified site. You specify the volumes to
+restore either by naming a volume set with the <B>-name</B> argument or by
+listing each volume's name and restoration site in a file named by the
+<B>-file</B> argument, as described in the following sections.
+<P>Because the <B>backup volsetrestore</B> command enables you to restore
+a large number of volumes with a single command, the restore operation can
+potentially take hours to complete. One way to reduce the time is to
+run multiple instances of the command simultaneously. Either use the
+<B>-name</B> argument to specify disjoint volume sets for each command, or
+the <B>-file</B> argument to name files that list different
+volumes. You must have several Tape Coordinators available to read the
+required tapes. Depending on how the volumes to be restored were dumped
+to tape, specifying disjoint volume sets can also reduce the number of tape
+changes required.
+<P><H4><A NAME="HDRWQ313">Restoring a Volume Set with the -name Argument</A></H4>
+<P>Use the <B>-name</B> argument to restore a group of
+volumes defined in a volume set. The Backup System creates a list of
+the volumes in the VLDB that match the server, partition, and volume name
+criteria defined in the volume set's volume entries, and for which dumps
+are available. The volumes do not have to exist on the server partition
+as long as the VLDB still lists them (this can happen when, for instance, a
+hardware problem destroys the contents of an entire disk).
+<P>By default, the Backup System restores, as a read/write volume, each volume
+that matches the volume set criteria to the site listed in the VLDB. If
+a volume of the matching name exists at that site, its current contents are
+overwritten. You can instead create a new volume to house the restored
+data by including the <B>-extension</B> argument. The Backup System
+creates the new volume at the existing volume's site, derives its name by
+adding the extension to the existing volume's read/write base name, and
+creates a new VLDB entry for it. The command does not affect the
+existing volume in any way. However, if a volume with the specified
+extension also already exists, the command overwrites it. To make the
+contents of the new volume accessible, use the <B>fs mkmount</B> command
+to mount it. You can then compare its contents to those of the existing
+volume, to see which to retain permanently.
+<P>It is not required that the volume set was previously used to back up
+volumes (was used as the <B>-volumeset</B> option to the <B>backup
+dump</B> command). It can be defined especially to match the volumes
+that need to be restored with this command, and that is usually the better
+choice. Indeed, a <I>temporary</I> volume set, created by including
+the <B>-temporary</B> flag to the <B>backup addvolset</B> command, can
+be especially useful in this context (instructions appear in <A HREF="auagd011.htm#HDRWQ265">Defining and Displaying Volume Sets and Volume Entries</A>). A temporary volume set is not added to the Backup
+Database and exists only during the current interactive backup session, which
+is suitable if the volume set is needed only to complete the single restore
+operation initialized by this command.
+<P>The reason that a specially defined volume set is probably better is that
+volume sets previously defined for use in dump operations usually match the
+backup version of volumes, whereas for a restore operation it is best to
+define volume entries that match the base (read/write) name. In this
+case, the Backup System searches the Backup Database for the newest dump set
+that includes a dump of either the read/write or the backup version of the
+volume. If, in contrast, a volume entry explicitly matches the
+volume's backup or read-only version, the Backup System uses dumps of
+that volume version only, restoring them to a read/write volume by stripping
+off the <B>.backup</B> or <B>.readonly</B>
+extension.
+<P>If there are VLDB entries that match the volume set criteria, but for which
+there are no dumps recorded in the Backup Database, the Backup System cannot
+restore them. It generates an error message on the standard error
+stream for each one.
+<P><H4><A NAME="HDRWQ314">Restoring Volumes Listed in a File with the -file Argument</A></H4>
+<P>Use the <B>-file</B> argument to specify the name and
+site of each read/write volume to restore. Each volume's entry
+must appear on its own (unbroken) line in the file, and comply with the
+following format:
+<PRE>   <VAR>machine</VAR>    <VAR>partition</VAR>   <VAR>volume</VAR>    [<VAR>comments...</VAR>]
+</PRE>
+<P>where
+<DL>
+<P><DT><B><VAR>machine</VAR>
+</B><DD>Names the file server machine to which to restore the volume. You
+can move the volume as you restore it by naming a machine other than the
+current site.
+<P><DT><B><VAR>partition</VAR>
+</B><DD>Names the partition to which to restore the volume. You can move
+the volume as you restore it by naming a partition other than the current
+site.
+<P><DT><B><VAR>volume</VAR>
+</B><DD>Names the volume to restore. Specify the base (read/write) name to
+have the Backup System search the Backup Database for the newest dump set that
+includes a dump of either the read/write or the backup version of the
+volume. It restores the dumps of that version of the volume, starting
+with the most recent full dump. If, in contrast, you include the
+<TT>.backup</TT> or <TT>.readonly</TT> extension, the Backup
+System restores dumps of that volume version only, but into a read/write
+volume without the extension. The base name must match the name used in
+Backup Database dump records rather than in the VLDB, if they differ, because
+the Backup System does not consult the VLDB when you use the <B>-file</B>
+argument.
+<P><DT><B><VAR>comments...</VAR>
+</B><DD>Is any other text. The Backup System ignores any text on each line
+that appears after the volume name, so you can use this field for helpful
+notes.
+</DL>
+<P>Do not use wildcards (for example, <B>.*</B>) in the
+<VAR>machine</VAR>, <VAR>partition</VAR>, or <VAR>volume</VAR> fields. It is
+acceptable for multiple lines in the file to name the same volume, but the
+Backup System processes only the first of them.
+<P>By default, the Backup System replaces the existing version of each volume
+with the restored data, placing the volume at the site specified in the
+<VAR>machine</VAR> and <VAR>partition</VAR> fields. You can instead create
+a new volume to house the restored contents by including the
+<B>-extension</B> argument. The Backup System creates a new volume
+at the site named in the <VAR>machine</VAR> and <VAR>partition</VAR> fields,
+derives its name by adding the specified extension to the read/write version
+of the name in the <VAR>volume</VAR> field, and creates a new VLDB entry for
+it. The command does not affect the existing volume in any way.
+However, if a volume with the specified extension also already exists, the
+command overwrites it. To make the contents of the new volume
+accessible, use the <B>fs mkmount</B> command to mount it. You can
+then compare its contents to those of the existing volume, to see which to
+retain permanently.
+<P>If the file includes entries for volumes that have no dumps recorded in the
+Backup Database, the Backup System cannot restore them. It generates an
+error message on the standard error stream for each one.
+<P>One way to generate a file to use as input to the <B>-file</B> argument
+is to issue the command with the <B>-name</B> and <B>-n</B> options
+and direct the output to a file. The output includes a line like the
+following for each volume (shown here on two lines only for legibility
+reasons); the value comes from the source indicated in the following
+list:
+<PRE>   <VAR>machine</VAR>   <VAR>partition</VAR>   <VAR>volume_dumped</VAR>  # as   <VAR>volume_restored</VAR>;    \
+         <VAR>tape_name</VAR>   (<VAR>tape_ID</VAR>);   pos   <VAR>position_number</VAR>;   <VAR>date</VAR>
+</PRE>
+<P>where
+<DL>
+<P><DT><B><VAR>machine</VAR>
+</B><DD>Names the file server machine that currently houses the volume, as listed
+in the VLDB.
+<P><DT><B><VAR>partition</VAR>
+</B><DD>Names the partition that currently houses the volume, as listed in the
+VLDB.
+<P><DT><B><VAR>volume_dumped</VAR>
+</B><DD>Specifies the version (read/write or backup) of the volume that was
+dumped, as listed in the Backup Database.
+<P><DT><B><VAR>volume_restored</VAR>
+</B><DD>Specifies the name under which the Backup System restores the volume when
+the <B>-n</B> flag is not included. If you include the
+<B>-extension</B> argument with the <B>-name</B> and <B>-n</B>
+options, then the extension appears on the name in this field (as in
+<TT>user.pat.rst</TT>, for example).
+<P><DT><B><VAR>tape_name</VAR>
+</B><DD>Names the tape containing the dump of the volume, from the Backup
+Database. If the tape has a permanent name, it appears here;
+otherwise, it is the AFS tape name.
+<P><DT><B><VAR>tape_ID</VAR>
+</B><DD>The tape ID of the tape containing the dump of the volume, from the Backup
+Database.
+<P><DT><B><VAR>position_number</VAR>
+</B><DD>Specifies the dump's position on the tape (for example, <TT>31</TT>
+indicates that 30 volume dumps precede the current one on the tape). If
+the dump was written to a backup data file, this number is the ordinal of the
+16 KB-offset at which the volume's data begins.
+<P><DT><B><VAR>date</VAR>
+</B><DD>The date and time when the volume was dumped.
+</DL>
+<P>To make the entries suitable for use with the <B>-file</B> argument,
+edit them as indicated:
+<UL>
+<P><LI>The Backup System uses only the first three fields on each line of the
+input file, and so ignores all the fields after the number sign
+(<TT>#</TT>). You can remove them if it makes it easier for you to
+read the file, but that is not necessary.
+<P><LI>The <VAR>volume_dumped</VAR> (third) field of each line in the output file
+becomes the <VAR>volume</VAR> field in the input file. The Backup System
+restores data to read/write volumes only, so remove the
+<TT>.backup</TT> or <TT>.readonly</TT> extension if it
+appears on the name in the <VAR>volume_dumped</VAR> field.
+<P><LI>The output file includes a line for every dump operation in which a
+specific volume was included (the full dump and any incremental dumps), but
+the Backup System only processes the first line in the input file that
+mentions a specific volume. You can remove the repeated lines if it
+makes the file easier for you to read.
+<P><LI>The <I>machine</I> and <I>partition</I> fields on an output line
+designate the volume's current site. To move the volume to another
+location as you restore it, change the values.
+</UL>
+<A NAME="IDX7075"></A>
+<A NAME="IDX7076"></A>
+<P><H3><A NAME="HDRWQ315" HREF="auagd002.htm#ToC_352">To restore a group of volumes with the backup volsetrestore command</A></H3>
+<OL TYPE=1>
+<P><LI>Verify that you are authenticated as a user listed in the
+<B>/usr/afs/etc/UserList</B> file. If necessary, issue the <B>bos
+listusers</B> command, which is fully described in <A HREF="auagd021.htm#HDRWQ593">To display the users in the UserList file</A>. 
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE>
+<P><LI>If the Tape Coordinator for the tape device that is to perform the
+operation is not already running, open a connection to the appropriate Tape
+Coordinator machine and issue the <B>butc</B> command, for which complete
+instructions appear in <A HREF="#HDRWQ292">To start a Tape Coordinator process</A>. 
+<PRE>   % <B>butc</B> [&lt;<VAR>port offset</VAR>>] [<B>-noautoquery</B>]
+</PRE> 
+<P>Repeat the command for each Tape Coordinator if you are using more than one
+tape device.
+<P><LI>If using a tape device, insert the tape.
+<P><LI>Issue the <B>backup</B> command to enter interactive mode. 
+<PRE>   % <B>backup</B>
+</PRE>
+<P><LI><B>(Optional)</B> If appropriate, issue the <B>(backup)
+addvolset</B> command to create a new volume set expressly for this restore
+operation. Include the <B>-temporary</B> flag if you do not need to
+add the volume set to the Backup Database. Then issue one or more
+<B>(backup) addvolentry</B> commands to create volume entries that include
+only the volumes to be restored. Complete instructions appear in <A HREF="auagd011.htm#HDRWQ265">Defining and Displaying Volume Sets and Volume Entries</A>. 
+<PRE>   backup> <B>addvolset</B> &lt;<VAR>volume&nbsp;set&nbsp;name</VAR>>  [<B>-temporary</B>]
+   
+   backup> <B>addvolentry  -name</B> &lt;<VAR>volume&nbsp;set&nbsp;name</VAR>>  \
+                        <B>-server</B> &lt;<VAR>machine&nbsp;name</VAR>>  \
+                        <B>-partition</B> &lt;<VAR>partition&nbsp;name</VAR>>  \
+                        <B>-volumes</B> &lt;<VAR>volume&nbsp;name&nbsp;(regular&nbsp;expression)</VAR>>
+</PRE>
+<P><LI>Issue the <B>backup volsetrestore</B> command with the desired
+arguments. 
+<PRE>   backup> <B>volsetrestore</B> [<B>-name</B> &lt;<VAR>volume&nbsp;set&nbsp;name</VAR>>]  \
+                 [<B>-file</B> &lt;<VAR>file&nbsp;name</VAR>>]  \
+                 [<B>-portoffset</B> &lt;<VAR>TC&nbsp;port&nbsp;offset</VAR>><SUP>+</SUP>]  \
+                 [<B>-extension</B> &lt;<VAR>new&nbsp;volume&nbsp;name&nbsp;extension</VAR>>] [<B>-n</B>] 
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>-name
+</B><DD>Names a volume set to restore. The Backup System restores all of
+the volumes listed in the VLDB that match the volume set's volume
+entries, as described in <A HREF="#HDRWQ313">Restoring a Volume Set with the -name Argument</A>. Provide this argument or the <B>-file</B>
+argument, but not both.
+<P><DT><B>-file
+</B><DD>Specifies the full pathname of a file that lists one or more volumes and
+the site (file server machine and partition) to which to restore each.
+The input file has the format described in <A HREF="#HDRWQ314">Restoring Volumes Listed in a File with the -file Argument</A>. Use either this argument or the <B>-name</B>
+argument, but not both.
+<P><DT><B><B>-portoffset</B>
+</B><DD>Specifies one or more port offset numbers, each corresponding to a Tape
+Coordinator to use in the operation. If there is more than one value,
+the Backup System uses the first one when restoring the full dump of each
+volume, the second one when restoring the level 1 incremental dump of each
+volume, and so on. It uses the final value in the list when restoring
+dumps at the corresponding depth in the dump hierarchy and all dumps at lower
+levels.
+<P>Provide this argument unless the default value of 0 (zero) is appropriate
+for all dumps. If 0 is just one of the values in the list, provide it
+explicitly in the appropriate order.
+<P><DT><B>-extension
+</B><DD>Creates a new volume for each volume being restored, to house the restored
+data, appending the specified string to the volume's read/write base name
+as listed in the VLDB. Any string other than
+<B>.readonly</B> or <B>.backup</B> is acceptable, but
+the combination of the base name and extension cannot exceed 22 characters in
+length. To use a period to separate the extension from the name,
+specify it as the first character of the string (as in <B>.rst</B>,
+for example).
+<P><DT><B><B>-n</B>
+</B><DD>Displays a list of the volumes to be restored when the flag is not
+included, without actually restoring them. The <B>Output</B>
+section of this reference page details the format of the output. When
+combined with the <B>-name</B> argument, its output is easily edited for
+use as input to the <B>-file</B> argument on a subsequent <B>backup
+volsetrestore</B> command.
+</DL>
+<P><LI>If you did not include the <B>-noautoquery</B> flag when you issued
+the <B>butc</B> command, or the device's
+<B>CFG_</B><VAR>device_name</VAR> configuration file includes the
+instruction <B>AUTOQUERY YES</B>, then the Tape Coordinator prompts you to
+place the tape in the device's drive. You have already done so,
+but you must now press &lt;<B>Return</B>> to indicate that the tape is
+ready for labeling.
+<P>If more than one tape is required, you must either include the
+<B>MOUNT</B> instruction in the <B>CFG_</B><VAR>device_name</VAR> file
+and stock the corresponding stacker or jukebox with tapes, or remain at the
+console to respond to the Tape Coordinator's prompts for subsequent
+tapes.
+<P><LI>After the restore operation completes, review the Backup System's log
+files to check for errors. Use the <B>bos getlog</B> command as
+instructed in <A HREF="auagd009.htm#HDRWQ173">Displaying Server Process Log Files</A> to read the <B>/usr/afs/logs/BackupLog</B> file, and a
+text editor on the Tape Coordinator machine to read the
+<B>TE_</B><VAR>device_name</VAR> and <B>TL_</B><VAR>device_name</VAR>
+files in the local <B>/usr/afs/backup</B> directory.
+</OL>
+<A NAME="IDX7077"></A>
+<HR><H2><A NAME="HDRWQ316" HREF="auagd002.htm#ToC_353">Maintaining the Backup Database</A></H2>
+<P>The Backup Database stores all of the configuration and
+tracking information that the Backup System uses when dumping and restoring
+data. If a hardware failure or other problem on a database server
+machine corrupts or damages the database, it is relatively easy to recreate
+the configuration information (the dump hierarchy and lists of volume sets and
+Tape Coordinator port offset numbers). However, restoring the dump
+tracking information (dump records) is more complicated and
+time-consuming. To protect yourself against loss of data, back up the
+Backup Database itself to tape on a regular schedule.
+<P>Another potential concern is that the Backup Database can grow large rather
+quickly, because the Backup System keeps very detailed and cross-referenced
+records of dump operations. Backup operations become less efficient if
+the Backup Server has to navigate through a large number of obsolete records
+to find the data it needs. To keep the database to a manageable size,
+use the <B>backup deletedump</B> command to delete obsolete records, as
+described in <A HREF="#HDRWQ321">Removing Obsolete Records from the Backup Database</A>. If you later find that you have removed records that
+you still need, you can use the <B>backup scantape</B> command to read the
+information from the dump and tape labels on the corresponding tapes back into
+the database, as instructed in <A HREF="#HDRWQ305">To scan the contents of a tape</A>.
+<A NAME="IDX7078"></A>
+<A NAME="IDX7079"></A>
+<A NAME="IDX7080"></A>
+<A NAME="IDX7081"></A>
+<A NAME="IDX7082"></A>
+<P><H3><A NAME="HDRWQ317" HREF="auagd002.htm#ToC_354">Backing Up and Restoring the Backup Database</A></H3>
+<P>Because of the importance of the information in the Backup
+Database, it is best to back it up to tape or other permanent media on a
+regular basis. As for the other AFS, administrative databases, the
+recommended method is to use a utility designed to back up a machine's
+local disk, such as the UNIX <B>tar</B> command. For instructions,
+see <A HREF="auagd008.htm#HDRWQ107">Backing Up and Restoring the Administrative Databases</A>.
+<P>In the rare event that the Backup Database seems damaged or corrupted, you
+can use the <B>backup dbverify</B> command to check its status. If
+it is corrupted, use the <B>backup savedb</B> command to repair some types
+of damage. Then use the <B>backup restoredb</B> to return the
+corrected database to the local disks of the database server machines.
+For instructions, see <A HREF="#HDRWQ318">Checking for and Repairing Corruption in the Backup Database</A>.
+<P><H3><A NAME="HDRWQ318" HREF="auagd002.htm#ToC_355">Checking for and Repairing Corruption in the Backup Database</A></H3>
+<P>In rare cases, the Backup Database can become damaged or
+corrupted, perhaps because of disk or other hardware errors. Use the
+<B>backup dbverify</B> command to check the integrity of the
+database. If it is corrupted, the most efficient way to repair it is to
+use the <B>backup savedb</B> command to copy the database to tape.
+The command automatically repairs several types of corruption, and you can
+then use the <B>backup restoredb</B> command to transfer the repaired copy
+of the database back to the local disks of the database server
+machines.
+<P>The <B>backup savedb</B> command also removes <I>orphan blocks</I>,
+which are ranges of memory that the Backup Server preallocated in the database
+but cannot use. Orphan blocks do not interfere with database access,
+but do waste disk space. The <B>backup dbverify</B> command reports
+the existence of orphan blocks if you include the <B>-detail</B>
+flag.
+<A NAME="IDX7083"></A>
+<A NAME="IDX7084"></A>
+<A NAME="IDX7085"></A>
+<P><H3><A NAME="HDRWQ319" HREF="auagd002.htm#ToC_356">To verify the integrity of the Backup Database</A></H3>
+<OL TYPE=1>
+<P><LI>Verify that you are authenticated as a user listed in the
+<B>/usr/afs/etc/UserList</B> file. If necessary, issue the <B>bos
+listusers</B> command, which is fully described in <A HREF="auagd021.htm#HDRWQ593">To display the users in the UserList file</A>. 
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE>
+<P><LI>Issue the <B>backup dbverify</B> command to check the integrity of the
+Backup Database. 
+<PRE>   % <B>backup dbverify</B> [<B>-detail</B>]
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>db
+</B><DD>Is the shortest acceptable abbreviation of <B>dbverify</B>.
+<P><DT><B>-detail
+</B><DD>Reports the existence of orphan blocks and other information about the
+database, as described on the <B>backup dbverify</B> reference page in the
+<I>IBM AFS Administration Reference</I>.
+</DL>
+<P>The output reports one of the following messages:
+<UL>
+<P><LI><TT>Database OK</TT> indicates that the Backup Database is
+undamaged.
+<P><LI><TT>Database not OK</TT> indicates that the Backup Database is
+damaged. To recover from the problem, use the instructions in <A HREF="#HDRWQ320">To repair corruption in the Backup Database</A>.
+</UL>
+</OL>
+<A NAME="IDX7086"></A>
+<A NAME="IDX7087"></A>
+<P><H3><A NAME="HDRWQ320" HREF="auagd002.htm#ToC_357">To repair corruption in the Backup Database</A></H3>
+<OL TYPE=1>
+<P><LI>Log in as the local superuser <B>root</B> on each database server
+machine in the cell.
+<P><LI><A NAME="LISAVEDB-STARTTC"></A>If the Tape Coordinator for the tape device that is to
+perform the operation is not already running, open a connection to the
+appropriate Tape Coordinator machine and issue the <B>butc</B> command,
+for which complete instructions appear in <A HREF="#HDRWQ292">To start a Tape Coordinator process</A>. 
+<PRE>   % <B>butc</B> [&lt;<VAR>port offset</VAR>>] [<B>-noautoquery</B>]
+</PRE>
+<P><LI>If writing to tape, place a tape in the appropriate device.
+<P><LI>Working on one of the machines, issue the <B>backup</B> command to
+enter interactive mode. 
+<PRE>   # <B> backup -localauth</B>
+</PRE> 
+<P>where <B>-localauth</B> constructs a server ticket from the local
+<B>/usr/afs/etc/KeyFile</B> file. This flag enables you to issue a
+privileged command while logged in as the local superuser <B>root</B> but
+without AFS administrative tokens.
+<P><LI>Verify that no backup operations are actively running. If
+necessary, issue the <B>(backup) status</B> command as described in <A HREF="#HDRWQ295">To check the status of a Tape Coordinator process</A>. Repeat for each Tape Coordinator port offset in
+turn. 
+<PRE>   backup> <B>status -portoffset</B> &lt;<VAR>TC&nbsp;port&nbsp;offset</VAR>>
+</PRE>
+<P><LI><A NAME="LISAVEDB-CMD"></A>Issue the <B>(backup) savedb</B> command to repair
+corruption in the database as it is written to tape or a file. 
+<PRE>   backup> <B>savedb</B> [<B>-portoffset</B> &lt;<VAR>TC&nbsp;port&nbsp;offset</VAR>>]
+</PRE> 
+<P>where
+<DL>
+<P><DT><B>sa
+</B><DD>Is the shortest acceptable abbreviation of <B>savedb</B>.
+<P><DT><B>-portoffset
+</B><DD>Specifies the port offset number of the Tape Coordinator handling the tape
+or backup data file for this operation. You must provide this argument
+unless the default value of 0 (zero) is appropriate.
+</DL>
+<P><LI>Exit interactive mode. 
+<PRE>   backup>  <B>quit</B>  
+</PRE>
+<P><LI>On each machine in turn, issue the <B>bos shutdown</B> command to shut
+down the Backup Server process. Include the <B>-localauth</B> flag
+because you are logged in as the local superuser root, but do not necessarily
+have administrative tokens. For complete command syntax, see <A HREF="auagd009.htm#HDRWQ168">To stop processes temporarily</A>.
+<PRE>   # <B>/usr/afs/bin/bos shutdown</B> &lt;<VAR>machine&nbsp;name</VAR>> <B>buserver  -localauth  -wait</B>
+</PRE>
+<P><LI>On each machine in turn, issue the following commands to remove the Backup
+Database. 
+<PRE>   # <B>cd /usr/afs/db</B>
+   # <B>rm bdb.DB0</B>
+   # <B>rm bdb.DBSYS1</B>
+</PRE>
+<P><LI>On each machine in turn, starting with the machine with the lowest IP
+address, issue the <B>bos start</B> command to restart the Backup Server
+process, which creates a zero-length copy of the Backup Database as it
+starts. For complete command syntax, see <A HREF="auagd009.htm#HDRWQ166">To start processes by changing their status flags to Run</A>.
+<PRE>   # <B>/usr/afs/bin/bos start</B> &lt;<VAR>machine&nbsp;name</VAR>> <B>buserver  -localauth</B>
+</PRE>
+<P><LI>Working on one of the machines, issue the <B>backup</B> command to
+enter interactive mode. 
+<PRE>   # <B> backup -localauth</B>
+</PRE> 
+<P>where <B>-localauth</B> constructs a server ticket from the local
+<B>/usr/afs/etc/KeyFile</B> file.
+<P><LI>Issue the <B>(backup) addhost</B> command to create an entry in the
+new, empty database for the Tape Coordinator process handling the tape or file
+from which you are reading the repaired copy of the database (presumably the
+process you started in Step <A HREF="#LISAVEDB-STARTTC">2</A> and which performed the <B>backup savedb</B> operation
+in Step <A HREF="#LISAVEDB-CMD">6</A>). For complete syntax, see Step <A HREF="auagd011.htm#LICONFTC-ADDHOST">8</A> in <A HREF="auagd011.htm#HDRWQ262">To configure a Tape Coordinator machine</A>.
+<PRE>   backup>  <B>addhost</B> &lt;<VAR>tape&nbsp;machine&nbsp;name</VAR>> [&lt;<VAR>TC&nbsp;port&nbsp;offset</VAR>>]
+</PRE>
+<A NAME="IDX7088"></A>
+<A NAME="IDX7089"></A>
+<P><LI>Issue the <B>(backup) restoredb</B> command to copy the repaired
+database to the database server machines. 
+<PRE>   backup> <B>restoredb</B>  [<B>-portoffset</B> &lt;<VAR>TC&nbsp;port&nbsp;offset</VAR>>]
+</PRE> 
+<P>where
+<DL>
+<P><DT><B>res
+</B><DD>Is the shortest acceptable abbreviation of <B>restoredb</B>.
+<P><DT><B>-portoffset
+</B><DD>Specifies the port offset number of the Tape Coordinator handling the tape
+or backup data file for this operation. You must provide this argument
+unless the default value of <B>0</B> (zero) is appropriate.
+</DL>
+<P><LI><B>(Optional)</B> Exit interactive mode if you do not plan to issue
+any additional <B>backup</B> commands. 
+<PRE>   backup> <B>quit</B>
+</PRE>
+<P><LI><B>(Optional)</B> If desired, enter <B>Ctrl-d</B> or another
+interrupt signal to exit the <B>root</B> shell on each database server
+machine. You can also issue the <B>Ctrl-c</B> signal on the Tape
+Coordinator machine to stop the process.
+</OL>
+<A NAME="IDX7090"></A>
+<A NAME="IDX7091"></A>
+<P><H3><A NAME="HDRWQ321" HREF="auagd002.htm#ToC_358">Removing Obsolete Records from the Backup Database</A></H3>
+<P>Whenever you recycle or relabel a tape using the <B>backup
+dump</B> or <B>backup labeltape</B> command, the Backup System
+automatically removes all of the dump records for the dumps contained on the
+tape and all other tapes in the dump set. However, obsolete records can
+still accumulate in the Backup Database over time. For example, when
+you discard a backup tape after using it the maximum number of times
+recommended by the manufacturer, the records for dumps on it remain in the
+database. Similarly, the Backup System does not automatically remove a
+dump's record when the dump reaches its expiration date, but only if you
+then recycle or relabel the tape that contains the dump. Finally, if a
+backup operation halts in the middle, the records for any volumes successfully
+written to tape before the halt remain in the database.
+<P>A very large Backup Database can make backup operations less efficient
+because the Backup Server has to navigate through a large number of records to
+find the ones it needs. To remove obsolete records, use the <B>backup
+deletedump</B> command. Either identify individual dumps by dump ID
+number, or specify the removal of all dumps created during a certain time
+period. Keep in mind that you cannot remove the record of an appended
+dump except by removing the record of its initial dump, which removes the
+records of all associated appended dumps. Removing records of a dump
+makes it impossible to restore data from the corresponding tapes or from any
+dump that refers to the deleted dump as its parent, directly or
+indirectly. That is, restore operations must begin with the full dump
+and continue with each incremental dump in order. If you have removed
+the records for a specific dump, you cannot restore any data from later
+incremental dumps.
+<P>Another way to truncate the Backup Database is to include the
+<B>-archive</B> argument to the <B>backup savedb</B> command.
+After a copy of the database is written to tape or to a backup data file, the
+Backup Server deletes the dump records for all dump operations with timestamps
+prior to the date and time you specify. However, issuing the
+<B>backup deletedump</B> command with only the <B>-to</B> argument is
+equivalent in effect and is simpler because it does not require starting a
+Tape Coordinator process as the <B>backup savedb</B> command does.
+For further information on the <B>-archive</B> argument to the <B>backup
+savedb</B> command, see the command's reference page in the <I>IBM
+AFS Administration Reference</I>.
+<P>If you later need to access deleted dump records, and the corresponding
+tapes still exist, you can use the <B>-dbadd</B> argument to the
+<B>backup scantape</B> command to scan their contents into the database,
+as instructed in <A HREF="#HDRWQ305">To scan the contents of a tape</A>.
+<A NAME="IDX7092"></A>
+<A NAME="IDX7093"></A>
+<P><H3><A NAME="HDRWQ322" HREF="auagd002.htm#ToC_359">To delete dump records from the Backup Database</A></H3>
+<OL TYPE=1>
+<P><LI>Verify that you are authenticated as a user listed in the
+<B>/usr/afs/etc/UserList</B> file. If necessary, issue the <B>bos
+listusers</B> command, which is fully described in <A HREF="auagd021.htm#HDRWQ593">To display the users in the UserList file</A>. 
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE>
+<P><LI><B>(Optional)</B> Issue the <B>backup</B> command to enter
+interactive mode, if you want to delete multiple records or issue additional
+commands. The interactive prompt appears in the following step. 
+<PRE>   % <B>backup</B>
+</PRE>
+<P><LI><B>(Optional)</B> Issue the <B>backup dumpinfo</B> command to list
+information from the Backup Database that can help you decide which records to
+delete. For detailed instructions, see <A HREF="#HDRWQ303">To display dump records</A>. 
+<PRE>   backup> <B>dumpinfo</B> [&lt;<VAR>no.&nbsp;of&nbsp;dumps</VAR>>]  [<B>-id</B> &lt;<VAR>dump&nbsp;id</VAR>>]  [<B>-verbose</B>]
+</PRE>
+<P><LI>Issue the <B>backup deletedump</B> command to delete one or more dump
+sets. 
+<PRE>   backup> <B>deletedump</B> [<B>-dumpid</B> &lt;<VAR>dumpid</VAR>><SUP>+</SUP>] [<B>-from</B> &lt;<VAR>date&nbsp;time</VAR>>]  \
+                      [<B>-to</B> &lt;<VAR>date&nbsp;time</VAR>>] 
+</PRE> 
+<P>where
+<DL>
+<P><DT><B>dele
+</B><DD>Is the shortest acceptable abbreviation of <B>deletedump</B>.
+<P><DT><B>-dumpid
+</B><DD>Specifies the dump ID of each initial dump to delete from the Backup
+Database. The records for all associated appended dumps are also
+deleted. Provide either this argument or the <B>-to</B> (and
+optionally, <B>-from</B>) argument.
+<P><DT><B>-from
+</B><DD>Specifies the beginning of a range of dates; the record for any dump
+created during the indicated period of time is deleted.
+<P>To omit all records before the time indicated with the <B>-to</B>
+argument, omit this argument. Otherwise provide a value in the
+following format
+<P><VAR>mm</VAR>/<VAR>dd</VAR>/<VAR>yyyy</VAR> [<VAR>hh</VAR>:<VAR>MM</VAR>]
+<P>where the month (<VAR>mm</VAR>), day (<VAR>dd</VAR>), and year (<VAR>yyyy</VAR>)
+are required. You can omit the hour and minutes
+(<VAR>hh</VAR>:<VAR>MM</VAR>) to indicate the default of midnight
+(00:00 hours). If you provide them, use 24-hour format (for
+example, the value <B>14:36</B> represents 2:36
+p.m.).
+<P>You must provide the <B>-to</B> argument along with this one.
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Note:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">A plus sign follows this argument in the command's syntax statement
+because it accepts a multiword value which does not need to be enclosed in
+double quotes or other delimiters, not because it accepts multiple
+dates. Provide only one date (and optionally, time) definition.
+</TD></TR></TABLE>
+<P><DT><B>-to
+</B><DD>Specifies the end of a range of dates; the record of any dump created
+during the range is deleted from the Backup Database.
+<P>To delete all records created after the date you specify with the
+<B>-from</B> argument, specify the value <B>NOW</B>. To delete
+every dump record in the Backup Database, provide the value <B>NOW</B> and
+omit the <B>-from</B> argument. Otherwise, provide a date value in
+the same format as described for the <B>-from</B> argument. Valid
+values for the year (<VAR>yyyy</VAR>) range from <B>1970</B> to
+<B>2037</B>; higher values are not valid because the latest possible
+date in the standard UNIX representation is in early 2038. The command
+interpreter automatically reduces any later date to the maximum value in
+2038.
+<P>If you omit the time portion (<VAR>hh</VAR>:<VAR>MM</VAR>), it defaults
+to 59 seconds after midnight (00:00:59 hours). Similarly,
+the <B>backup</B> command interpreter automatically adds 59 seconds to any
+time value you provide. In both cases, adding 59 seconds compensates
+for how the Backup Database and <B>backup dumpinfo</B> command represent
+dump creation times in hours and minutes only. For example, the
+Database records a creation timestamp of <TT>20:55</TT> for any dump
+operation that begins between 20:55:00 and
+20:55:59. Automatically adding 59 seconds to a time thus
+includes the records for all dumps created during that minute.
+<P>Provide either this argument, or the <B>-dumpid</B> argument.
+This argument is required if the <B>-from</B> argument is provided.
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Note:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">A plus sign follows this argument in the command's syntax statement
+because it accepts a multiword value which does not need to be enclosed in
+double quotes or other delimiters, not because it accepts multiple
+dates. Provide only one date (and optionally, time) definition.
+</TD></TR></TABLE>
+</DL>
+</OL>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auagd002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auagd011.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auagd013.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auagd026.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

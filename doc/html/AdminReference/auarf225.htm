@@ -1,0 +1,199 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 4//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3672/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 3 Oct 2000 at 16:18:30                -->
+<META HTTP-EQUIV="updated" CONTENT="Tue, 03 Oct 2000 16:18:29">
+<META HTTP-EQUIV="review" CONTENT="Wed, 03 Oct 2001 16:18:29">
+<META HTTP-EQUIV="expires" CONTENT="Thu, 03 Oct 2002 16:18:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf224.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf226.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRPTS_SETFIELDS" HREF="auarf002.htm#ToC_239">pts setfields</A></H2>
+<A NAME="IDX5396"></A>
+<A NAME="IDX5397"></A>
+<A NAME="IDX5398"></A>
+<A NAME="IDX5399"></A>
+<A NAME="IDX5400"></A>
+<A NAME="IDX5401"></A>
+<A NAME="IDX5402"></A>
+<A NAME="IDX5403"></A>
+<A NAME="IDX5404"></A>
+<A NAME="IDX5405"></A>
+<A NAME="IDX5406"></A>
+<A NAME="IDX5407"></A>
+<A NAME="IDX5408"></A>
+<P><STRONG>Purpose</STRONG>
+<P>Sets privacy flags or the group-creation quota for a Protection Database
+entry.
+<P><STRONG>Synopsis</STRONG>
+<PRE><B>pts setfields -nameorid</B> &lt;<VAR>user&nbsp;or&nbsp;group&nbsp;name&nbsp;or&nbsp;id</VAR>><SUP>+</SUP>
+              [<B>-access</B> &lt;<VAR>set&nbsp;privacy&nbsp;flags</VAR>>]
+              [<B>-groupquota</B> &lt;<VAR>set&nbsp;limit&nbsp;on&nbsp;group&nbsp;creation</VAR>>]
+              [<B>-cell</B> &lt;<VAR>cell&nbsp;name</VAR>>]  [<B>-noauth</B>]  [<B>-force</B>]  [<B>-help</B>]
+   
+<B>pts setf -na</B> &lt;<VAR>user&nbsp;or&nbsp;group&nbsp;name&nbsp;or&nbsp;id</VAR>><SUP>+</SUP>  [<B>-a</B> &lt;<VAR>set&nbsp;privacy&nbsp;flags</VAR>>] 
+         [<B>-g</B> &lt;<VAR>set&nbsp;limit&nbsp;on&nbsp;group&nbsp;creation</VAR>>]  [<B>-c</B> &lt;<VAR>cell&nbsp;name</VAR>>] 
+         [<B>-no</B>]  [<B>-f</B>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>Description</STRONG>
+<P>The <B>pts setfields</B> command sets the group-creation quota, the
+privacy flags, or both, associated with each user, machine, or group entry
+specified by the <B>-nameorid</B> argument.
+<P>To examine the current quota and privacy flags, use the <B>pts
+examine</B> command.
+<P><STRONG>Cautions</STRONG>
+<P>Changing a machine or group's group-creation quota is allowed, but not
+recommended. The concept is meaningless for machines and groups,
+because it is impossible to authenticate as a group or machine.
+<P>Similarly, some privacy flag settings do not have a sensible
+interpretation. The <B>Arguments</B> section specifies the
+appropriate settings.
+<P><STRONG>Options</STRONG>
+<DL>
+<P><DT><B>-nameorid
+</B><DD>Specifies the name or AFS UID of each user, the IP address (complete or
+wildcard-style) of each machine, or the name or AFS GID of each machine for
+which to set privacy flags or group-creation quota. It is acceptable to
+mix users, machines, and groups on the same command line, as well as names (IP
+addresses for machines) and IDs. Precede the GID of each group with a
+hyphen to indicate that it is negative.
+<P><DT><B>-access
+</B><DD>Specifies the privacy flags to apply to each entry. Provide a
+string of five characters, one for each of the permissions. If this
+option is omitted, the current setting remains unchanged.
+<P>Set each flag to achieve the desired combination of permissions. If
+the following list does not mention a certain setting, it is not
+acceptable. For further discussion of the privacy flags, see the
+<B>pts examine</B> reference page. 
+<UL>
+<P><LI>The first flag determines who can use the <B>pts examine</B> command
+to display information from a user, machine or group's Protection
+Database entry. 
+<UL>
+<P><LI>Set it to lowercase <B>s</B> to permit the members of the
+<B>system:administrators</B> group to display a user, machine, or
+group entry, and the associated user to display a user entry.
+<P><LI>Set it to uppercase <B>S</B> to permit anyone who can access the
+cell's database server machines to display a user, machine, or group
+entry.
+</UL>
+<P><LI>The second flag determines who can use the <B>pts listowned</B>
+command to list the groups that a user or group owns. 
+<UL>
+<P><LI>Set it to the hyphen (<B>-</B>) to permit the members of the
+<B>system:administrators</B> group and a user to list the groups he
+or she owns, or to permit the members of the
+<B>system:administrators</B> group and a group's owner to list
+the groups that a group owns.
+<P><LI>Set it to uppercase letter <B>O</B> to permit anyone who can access
+the cell's database server machines to list the groups owned by a machine
+or group entry.
+</UL>
+<P><LI>The third flag determines who can use the <B>pts membership</B>
+command to list the groups to which a user or machine belongs, or the users
+and machines that belong to a group. 
+<UL>
+<P><LI>Set it to the hyphen (<B>-</B>) to permit the members of the
+<B>system:administrators</B> group and a user to list the groups he
+or she belongs to, to permit the members of the
+<B>system:administrators</B> group to list the groups a machine
+belongs to, or to permit the members of the
+<B>system:administrators</B> group and a group's owner to list
+the users and machines that belong to it.
+<P><LI>Set it to lowercase <B>m</B> to permit members of a group to list the
+other members. (For user and machine entries, this setting is
+equivalent to the hyphen.)
+<P><LI>Set it to uppercase <B>M</B> to permit anyone who can access the
+cell's database server machines to list membership information for a
+user, machine or group.
+</UL>
+<P><LI>The fourth flag determines who can use the <B>pts adduser</B> command
+to add users and machines as members of a group. This flag has no
+sensible interpretation for user and machine entries, but must be set
+nonetheless, preferably to the hyphen. 
+<UL>
+<P><LI>Set it to the hyphen (<B>-</B>) to permit the members of the
+<B>system:administrators</B> group and the owner of the group to add
+members.
+<P><LI>Set it to lowercase <B>a</B> to permit members of a group to add other
+members.
+<P><LI>Set it to uppercase <B>A</B> to permit anyone who can access the
+cell's database server machines to add members to a group.
+</UL>
+<P><LI>The fifth flag determines who can use the <B>pts removeuser</B>
+command to remove users and machines from membership in a group. This
+flag has no sensible interpretation for user and machine entries, but must be
+set nonetheless, preferably to the hyphen. 
+<UL>
+<P><LI>Set it to the hyphen (<B>-</B>) to permit the members of the
+<B>system:administrators</B> group and the owner of the group to
+remove members.
+<P><LI>Set it to lowercase <B>r</B> to permit members of a group to remove
+other members.
+</UL>
+</UL>
+<P><DT><B>-groupquota
+</B><DD>Specifies the number of additional groups a user can create (it does not
+matter how many he or she has created already). Do not include this
+argument for a group or machine entry.
+<P><DT><B>-cell
+</B><DD>Names the cell in which to run the command. For more details, see
+the introductory <B>pts</B> reference page.
+<P><DT><B>-noauth
+</B><DD>Assigns the unprivileged identity <B>anonymous</B> to the
+issuer. For more details, see the introductory <B>pts</B> reference
+page.
+<P><DT><B>-force
+</B><DD>Enables the command to continue executing as far as possible when errors
+or other problems occur, rather than halting execution at the first
+error.
+<P><DT><B>-help
+</B><DD>Prints the online help for this command. All other valid options
+are ignored.
+</DL>
+<P><STRONG>Examples</STRONG>
+<P>The following example changes the privacy flags on the group
+<B>operators</B>, retaining the default values of the first, second and
+third flags, but setting the fourth and fifth flags to enable the group's
+members to add and remove other members.
+<PRE>   % <B>pts setfields -nameorid operators -access S-Mar</B>
+   
+</PRE>
+<P>The following example changes the privacy flags and sets group quota on the
+user entry <B>admin</B>. It retains the default values of the
+first, fourth, and fifth flags, but sets the second and third flags, to enable
+anyone to list the groups that <B>admin</B> owns and belongs to.
+Users authenticated as <B>admin</B> can create an additional 50
+groups.
+<PRE>   % <B>pts setfields -nameorid admin -access SOM-- -groupquota 50</B>
+   
+</PRE>
+<P><STRONG>Privilege Required</STRONG>
+<P>To edit group entries or set the privacy flags on any type of entry, the
+issuer must own the entry or belong to the
+<B>system:administrators</B> group. To set group-creation
+quota on a user entry, the issuer must belong to the
+<B>system:administrators</B> group.
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf210.htm#HDRPTS_INTRO">pts</A>
+<P><A HREF="auarf211.htm#HDRPTS_ADDUSER">pts adduser</A>
+<P><A HREF="auarf217.htm#HDRPTS_EXAMINE">pts examine</A>
+<P><A HREF="auarf221.htm#HDRPTS_LISTOWNED">pts listowned</A>
+<P><A HREF="auarf222.htm#HDRPTS_MEMBERSHIP">pts membership</A>
+<P><A HREF="auarf223.htm#HDRPTS_REMOVEUSER">pts removeuser</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf224.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf226.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

@@ -1,0 +1,2375 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 4//EN">
+<HTML><HEAD>
+<TITLE>Administration Guide</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3570/auagd000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 2 Oct 2000 at 11:42:14                -->
+<META HTTP-EQUIV="updated" CONTENT="Mon, 02 Oct 2000 11:42:13">
+<META HTTP-EQUIV="review" CONTENT="Tue, 02 Oct 2001 11:42:13">
+<META HTTP-EQUIV="expires" CONTENT="Wed, 02 Oct 2002 11:42:13">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Guide</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auagd002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auagd006.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auagd008.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auagd026.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<HR><H1><A NAME="HDRWQ29" HREF="auagd002.htm#ToC_33">Issues in Cell Configuration and Administration</A></H1>
+<P>This chapter discusses many of the issues to consider when
+configuring and administering a cell, and directs you to detailed related
+information available elsewhere in this guide. It is assumed you are
+already familiar with the material in <A HREF="auagd006.htm#HDRWQ5">An Overview of AFS Administration</A>.
+<P>It is best to read this chapter before installing your cell's first
+file server machine or performing any other administrative task.
+<A NAME="IDX5609"></A>
+<A NAME="IDX5610"></A>
+<A NAME="IDX5611"></A>
+<HR><H2><A NAME="HDRWQ30" HREF="auagd002.htm#ToC_34">Differences between AFS and UNIX: A Summary</A></H2>
+<P>AFS behaves like a standard UNIX file system in most
+respects, while also making file sharing easy within and between cells.
+This section describes some differences between AFS and the UNIX file system,
+referring you to more detailed information as appropriate.
+<A NAME="IDX5612"></A>
+<P><H3><A NAME="Header_35" HREF="auagd002.htm#ToC_35">Differences in File and Directory Protection</A></H3>
+<P>AFS augments the standard UNIX file protection mechanism in two
+ways: it associates an <I>access control list</I> (<I>ACL</I>)
+with each directory, and it enables users to define a large number of their
+own groups, which can be placed on ACLs.
+<P>AFS uses ACLs to protect files and directories, rather than relying
+exclusively on the mode bits. This has several implications, which are
+discussed further in the indicated sections:
+<UL>
+<P><LI>AFS ACLs use seven access permissions rather than the three UNIX mode
+bits. See <A HREF="auagd020.htm#HDRWQ567">The AFS ACL Permissions</A>.
+<P><LI>For directories, AFS ignores the UNIX mode bits. For files, AFS
+uses only the first set of mode bits (the <B>owner</B> bits) , and their
+meaning interacts with permissions on the directory's ACL. See <A HREF="auagd020.htm#HDRWQ580">How AFS Interprets the UNIX Mode Bits</A>.
+<P><LI>A directory's ACL protects all of the files in a directory in the
+same manner. To apply a more restrictive set of AFS permissions to
+certain file, place it in directory with a different ACL.
+<P><LI>Moving a file to a different directory changes its protection. See <A HREF="auagd020.htm#HDRWQ566">Differences Between UFS and AFS Data Protection</A>.
+<P><LI>An ACL can include about 20 entries granting different combinations of
+permissions to different users or groups, rather than only the three UNIX
+entities represented by the three sets of mode bits. See <A HREF="auagd020.htm#HDRWQ566">Differences Between UFS and AFS Data Protection</A>.
+<P><LI>You can designate an AFS file as write-only as in the UNIX file system, by
+setting only the <B>w</B> (<B>write</B>) mode bit. You cannot
+designate an AFS directory as write-only, because AFS ignores the mode bits on
+a directory. See <A HREF="auagd020.htm#HDRWQ580">How AFS Interprets the UNIX Mode Bits</A>.
+</UL>
+<P>AFS enables users to define the groups of other users. Placing these
+groups on ACLs extends the same permissions to a number of exactly specified
+users at the same time, which is much more convenient than placing the
+individuals on the ACLs directly. See <A HREF="auagd019.htm#HDRWQ531">Administering the Protection Database</A>.
+<P>There are also system-defined groups, <B>system:anyuser</B> and
+<B>system:authuser</B>, whose presence on an ACL extends access to a
+wide range of users at once. See <A HREF="auagd019.htm#HDRWQ535">The System Groups</A> and <A HREF="auagd020.htm#HDRWQ571">Using Groups on ACLs</A>.
+<A NAME="IDX5613"></A>
+<A NAME="IDX5614"></A>
+<P><H3><A NAME="HDRWQ31" HREF="auagd002.htm#ToC_36">Differences in Authentication</A></H3>
+<P>Just as the AFS filespace is distinct from each
+machine's local file system, AFS authentication is separate from local
+login. This has two practical implications, which are discussed further
+in <A HREF="#HDRWQ65">Using an AFS-modified login Utility</A>.
+<UL>
+<P><LI>To access AFS files, users must both log into the local machine's
+UNIX file system and authenticate with the AFS authentication service.
+(Logging into the local UNIX file system is necessary because the AFS
+filespace is accessed through the Cache Manager, which resides in the local
+machine's kernel.)
+<P>AFS provides a modified login utility for each system type that
+accomplishes both local login and AFS authentication in one step, based on a
+single password. If you choose not to use the AFS-modified login
+utility, your users must login and authenticate in separate steps, as detailed
+in the <I>IBM AFS User Guide</I>.
+<P><LI>Passwords are stored in two separate places: the Authentication
+Database for AFS and each machine's local password file
+(<B>/etc/passwd</B> or equivalent) for the UNIX file system. A
+user's passwords in the two places can differ if desired, though the
+resulting behavior depends on whether and how the cell is using an
+AFS-modified login utility.
+</UL>
+<P><H3><A NAME="Header_37" HREF="auagd002.htm#ToC_37">Differences in the Semantics of Standard UNIX Commands</A></H3>
+<P>This section summarizes how AFS modifies the functionality of some UNIX
+commands.
+<DL>
+<A NAME="IDX5615"></A>
+<A NAME="IDX5616"></A>
+<A NAME="IDX5617"></A>
+<P><DT><B>The chmod command
+</B><DD>Only members of the <B>system:administrators</B> group can use
+this command to turn on the setuid, setgid or sticky mode bits on AFS
+files. For more information, see <A HREF="auagd015.htm#HDRWQ409">Determining if a Client Can Run Setuid Programs</A>.
+<A NAME="IDX5618"></A>
+<A NAME="IDX5619"></A>
+<P><DT><B>The chown command
+</B><DD>Only members of the <B>system:administrators</B> group can issue
+this command on AFS files.
+<A NAME="IDX5620"></A>
+<A NAME="IDX5621"></A>
+<P><DT><B>The chgrp command
+</B><DD>Only members of the <B>system:administrators</B> can issue this
+command on AFS files and directories.
+<A NAME="IDX5622"></A>
+<A NAME="IDX5623"></A>
+<P><DT><B>The ftpd daemon
+</B><DD>The AFS-modified version of this daemon attempts to authenticate remote
+issuers of the <B>ftp</B> command with the local AFS authentication
+service. See <A HREF="#HDRWQ78">Using UNIX Remote Services in the AFS Environment</A>.
+<A NAME="IDX5624"></A>
+<A NAME="IDX5625"></A>
+<P><DT><B>The groups command
+</B><DD>If the user's AFS tokens are associated with a process authentication
+group (PAG), the output of this command sometimes includes two large
+numbers. To learn about PAGs, see <A HREF="#HDRWQ64">Identifying AFS Tokens by PAG</A>.
+<A NAME="IDX5626"></A>
+<A NAME="IDX5627"></A>
+<P><DT><B>The inetd daemon
+</B><DD>The AFS-modified version of this daemon authenticates remote issuers of
+the AFS-modified <B>rcp</B> and <B>rsh</B> commands with the local AFS
+authentication service. See <A HREF="#HDRWQ78">Using UNIX Remote Services in the AFS Environment</A>.
+<P><DT><B>The login utility
+</B><DD>AFS-modified login utilities both log the issuer into the local file
+system and authenticate the user with the AFS authentication service.
+See <A HREF="#HDRWQ65">Using an AFS-modified login Utility</A>.
+<A NAME="IDX5628"></A>
+<A NAME="IDX5629"></A>
+<P><DT><B>The ln command
+</B><DD>This command cannot create hard links between files in different AFS
+directories. See <A HREF="#HDRWQ32">Creating Hard Links</A>.
+<A NAME="IDX5630"></A>
+<A NAME="IDX5631"></A>
+<P><DT><B>The rcp command
+</B><DD>The AFS-modified version of this command enables the issuer to access
+files on the remote machine as an authenticated AFS user. See <A HREF="#HDRWQ78">Using UNIX Remote Services in the AFS Environment</A>.
+<A NAME="IDX5632"></A>
+<A NAME="IDX5633"></A>
+<P><DT><B>The rlogind daemon
+</B><DD>The AFS-modified version of this daemon authenticates remote issuers of
+the <B>rlogin</B> command with the local AFS authentication
+service. See <A HREF="#HDRWQ78">Using UNIX Remote Services in the AFS Environment</A>.
+<P>The AFS distribution for some system types possibly does not include a
+modified <B>rlogind</B> program. See the <I>IBM AFS Release
+Notes</I>.
+<A NAME="IDX5634"></A>
+<A NAME="IDX5635"></A>
+<P><DT><B>The remsh or rsh command
+</B><DD>The AFS-modified version of this command enables the issuer to execute
+commands on the remote machine as an authenticated AFS user. See <A HREF="#HDRWQ78">Using UNIX Remote Services in the AFS Environment</A>.
+</DL>
+<A NAME="IDX5636"></A>
+<A NAME="IDX5637"></A>
+<A NAME="IDX5638"></A>
+<A NAME="IDX5639"></A>
+<A NAME="IDX5640"></A>
+<A NAME="IDX5641"></A>
+<P><H3><A NAME="Header_38" HREF="auagd002.htm#ToC_38">The AFS version of the fsck Command</A></H3>
+<P>Never run the standard UNIX <B>fsck</B> command on an AFS file
+server machine. It does not understand how the File Server organizes
+volume data on disk, and so moves all AFS data into the <B>lost+found</B>
+directory on the partition.
+<P>Instead, use the version of the <B>fsck</B> program that is included in
+the AFS distribution. The <I>IBM AFS Quick Beginnings</I> explains
+how to replace the vendor-supplied <B>fsck</B> program with the AFS
+version as you install each server machine.
+<P>The AFS version functions like the standard <B>fsck</B> program on data
+stored on both UFS and AFS partitions. The appearance of a banner like
+the following as the <B>fsck</B> program initializes confirms that you are
+running the correct one:
+<PRE>   --- AFS (R) <VAR>version</VAR> fsck---
+</PRE>
+<P>where <VAR>version</VAR> is the AFS version. For correct results, it
+must match the AFS version of the server binaries in use on the
+machine.
+<P>If you ever accidentally run the standard version of the program, contact
+AFS Product Support immediately. It is sometimes possible to recover
+volume data from the <B>lost+found</B> directory.
+<A NAME="IDX5642"></A>
+<A NAME="IDX5643"></A>
+<P><H3><A NAME="HDRWQ32" HREF="auagd002.htm#ToC_39">Creating Hard Links</A></H3>
+<P>AFS does not allow hard links (created with the UNIX
+<B>ln</B> command) between files that reside in different directories,
+because in that case it is unclear which of the directory's ACLs to
+associate with the link.
+<P>AFS also does not allow hard links to directories, in order to keep the
+file system organized as a tree.
+<P>It is possible to create symbolic links (with the UNIX <B>ln -s</B>
+command) between elements in two different AFS directories, or even between an
+element in AFS and one in a machine's local UNIX file system. Do
+not create a symbolic link to a file whose name begins with either a number
+sign (<B>#</B>) or a percent sign (<B>%</B>), however. The
+Cache Manager interprets such links as a mount point to a regular or
+read/write volume, respectively.
+<A NAME="IDX5644"></A>
+<A NAME="IDX5645"></A>
+<A NAME="IDX5646"></A>
+<P><H3><A NAME="HDRWQ33" HREF="auagd002.htm#ToC_40">AFS Implements Save on Close</A></H3>
+<P>When an application issues the UNIX <B>close</B> system
+call on a file, the Cache Manager performs a synchronous write of the data to
+the File Server that maintains the central copy of the file. It does
+not return control to the application until the File Server has acknowledged
+receipt of the data. For the <B>fsync</B> system call, control does
+not return to the application until the File Server indicates that it has
+written the data to non-volatile storage on the file server machine.
+<P>When an application issues the UNIX <B>write</B> system call, the Cache
+Manager writes modifications to the local AFS client cache only. If the
+local machine crashes or an application program exits without issuing the
+<B>close</B> system call, it is possible that the modifications are not
+recorded in the central copy of the file maintained by the File Server.
+The Cache Manager does sometimes write this type of modified data from the
+cache to the File Server without receiving the <B>close</B> or
+<B>fsync</B> system call, for example if it needs to free cache chunks for
+new data. However, it is not generally possible to predict when the
+Cache Manager transfers modified data to the File Server in this way.
+<P>The implication is that if an application's <B>Save</B> option
+invokes the <B>write</B> system call rather than <B>close</B> or
+<B>fsync</B>, the changes are not necessarily stored permanently on the
+File Server machine. Most application programs issue the
+<B>close</B> system call for save operations, as well as when they finish
+handling a file and when they exit.
+<P><H3><A NAME="Header_41" HREF="auagd002.htm#ToC_41">Setuid Programs</A></H3>
+<A NAME="IDX5647"></A>
+<P>Set the UNIX setuid bit only for the local superuser <B>root</B>;
+this does not present an automatic security risk: the local superuser
+has no special privilege in AFS, but only in the local machine's UNIX
+file system and kernel.
+<P>Any file can be marked with the setuid bit, but only members of the
+<B>system:administrators</B> group can issue the <B>chown</B>
+system call or the <B>/etc/chown</B> command.
+<P>The <B>fs setcell</B> command determines whether setuid programs that
+originate in a foreign cell can run on a given client machine. See <A HREF="auagd015.htm#HDRWQ409">Determining if a Client Can Run Setuid Programs</A>.
+<A NAME="IDX5648"></A>
+<A NAME="IDX5649"></A>
+<A NAME="IDX5650"></A>
+<A NAME="IDX5651"></A>
+<HR><H2><A NAME="HDRWQ34" HREF="auagd002.htm#ToC_42">Choosing a Cell Name</A></H2>
+<P>This section explains how to choose a cell name and explains
+why choosing an appropriate cell name is important.
+<P>Your cell name must distinguish your cell from all others in the AFS global
+namespace. By conventions, the cell name is the second element in any
+AFS pathname; therefore, a unique cell name guarantees that every AFS
+pathname uniquely identifies a file, even if cells use the same directory
+names at lower levels in their local AFS filespace. For example, both
+the ABC Corporation cell and the State University cell can have a home
+directory for the user <B>pat</B>, because the pathnames are
+distinct: <B>/afs/abc.com/usr/pat</B> and
+<B>/afs/stateu.edu/usr/pat</B>.
+<P>By convention, cell names follow the ARPA Internet Domain System
+conventions for site names. If you are already an Internet site, then
+it is simplest to choose your Internet domain name as the cellname.
+<P>If you are not an Internet site, it is best to choose a unique
+Internet-style name, particularly if you plan to connect to the Internet in
+the future. AFS Product Support is available for help in selecting an
+appropriate name. There are a few constraints on AFS cell names:
+<UL>
+<P><LI>It can contain as many as 64 characters, but shorter names are better
+because the cell name frequently is part of machine and file names. If
+your cell name is long, you can reduce pathname length by creating a symbolic
+link to the complete cell name, at the second level in your file tree.
+See <A HREF="#HDRWQ42">The Second (Cellname) Level</A>.
+<P><LI>To guarantee it is suitable for different operating system types, the cell
+name can contain only lowercase characters, numbers, underscores, dashes, and
+periods. Do not include command shell metacharacters.
+<P><LI>It can include any number of fields, which are conventionally separated by
+periods (see the examples below).
+<P><LI>It must end in a suffix that indicates the type of institution it is, or
+the country in which it is situated. The following are some of the
+standard suffixes:
+<DL>
+<P><DT><B>.com
+</B><DD>For businesses and other commercial organizations. Example:
+<B>abc.com</B> for the ABC Corporation cell.
+<P><DT><B>.edu
+</B><DD>For educational institutions such as universities. Example:
+<B>stateu.edu</B> for the State University cell.
+<P><DT><B>.gov
+</B><DD>For United States government institutions.
+<P><DT><B>.mil
+</B><DD>For United States military installations.
+</DL>
+</UL>
+<P>Other suffixes are available if none of these are appropriate. 
+<A NAME="IDX5652"></A>
+<A NAME="IDX5653"></A>
+You can learn about suffixes by calling the Defense Data Network [Internet]
+Network Information Center in the United States at (800) 235-3155. The
+NIC can also provide you with the forms necessary for registering your cell
+name as an Internet domain name. Registering your name prevents another
+Internet site from adopting the name later.
+<A NAME="IDX5654"></A>
+<A NAME="IDX5655"></A>
+<A NAME="IDX5656"></A>
+<A NAME="IDX5657"></A>
+<P><H3><A NAME="Header_43" HREF="auagd002.htm#ToC_43">How to Set the Cell Name</A></H3>
+<P>The cell name is recorded in two files on the local disk of each file
+server and client machine. Among other functions, these files define
+the machine's cell membership and so affect how programs and processes
+run on the machine; see <A HREF="#HDRWQ35">Why Choosing the Appropriate Cell Name is Important</A>. The procedure for setting the cell name is different
+for the two types of machines.
+<P>For file server machines, the two files that record the cell name are the
+<B>/usr/afs/etc/ThisCell</B> and <B>/usr/afs/etc/CellServDB</B>
+files. As described more explicitly in the <I>IBM AFS Quick
+Beginnings</I>, you set the cell name in both by issuing the <B>bos
+setcellname</B> command on the first file server machine you install in your
+cell. It is not usually necessary to issue the command again. If
+you run the United States edition of AFS and use the Update Server, it
+distributes its copy of the <B>ThisCell</B> and <B>CellServDB</B>
+files to additional server machines that you install. If you use the
+international edition of AFS, the <I>IBM AFS Quick Beginnings</I> explains
+how to copy the files manually.
+<P>For client machines, the two files that record the cell name are the
+<B>/usr/vice/etc/ThisCell</B> and <B>/usr/vice/etc/CellServDB</B>
+files. You create these files on a per-client basis, either with a text
+editor or by copying them onto the machine from a central source in
+AFS. See <A HREF="auagd015.htm#HDRWQ406">Maintaining Knowledge of Database Server Machines</A> for details.
+<P>Change the cell name in these files only when you want to transfer the
+machine to a different cell (it can only belong to one cell at a time).
+If the machine is a file server, follow the complete set of instructions in
+the <I>IBM AFS Quick Beginnings</I> for configuring a new cell. If
+the machine is a client, all you need to do is change the files appropriately
+and reboot the machine. The next section explains further the negative
+consequences of changing the name of an existing cell.
+<P>To set the default cell name used by most AFS commands without changing the
+local <B>/usr/vice/etc/ThisCell</B> file, set the AFSCELL environment
+variable in the command shell. It is worth setting this variable if you
+need to complete significant administrative work in a foreign cell.
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Note:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">The <B>fs checkservers</B> and <B>fs mkmount</B> commands do not use
+the AFSCELL variable. The <B>fs checkservers</B> command always
+defaults to the cell named in the <B>ThisCell</B> file, unless the
+<B>-cell</B> argument is used. The <B>fs mkmount</B> command
+defaults to the cell in which the parent directory of the new mount point
+resides.
+</TD></TR></TABLE>
+<A NAME="IDX5658"></A>
+<P><H3><A NAME="HDRWQ35" HREF="auagd002.htm#ToC_44">Why Choosing the Appropriate Cell Name is Important</A></H3>
+<P>Take care to select a cell name that is suitable for
+long-term use. Changing a cell name later is complicated. An
+appropriate cell name is important because it is the second element in the
+pathname of all files in a cell's file tree. Because each cell
+name is unique, its presence in an AFS pathname makes the pathname unique in
+the AFS global namespace, even if multiple cells use similar filespace
+organization at lower levels. For instance, it means that every cell
+can have a home directory called <B>/afs/<VAR>cellname</VAR>/usr/pat</B>
+without causing a conflict. The presence of the cell name in pathnames
+also means that users in every cell use the same pathname to access a file,
+whether the file resides in their local cell or in a foreign cell.
+<P>Another reason to choose the correct cell name early in the process of
+installing your cell is that the cell membership defined in each
+machine's <B>ThisCell</B> file affects the performance of many
+programs and processes running on the machine. For instance, AFS
+commands (<B>fs</B>, <B>kas</B>, <B>pts</B> and <B>vos</B>
+commands) by default execute in the cell of the machine on which they are
+issued. The command interpreters check the <B>ThisCell</B> file on
+the local disk and then contact the database server machines listed in the
+<B>CellServDB</B> file for the indicated cell (the <B>bos</B> commands
+work differently because the issuer always has to name of the machine on which
+to run the command).
+<P>The <B>ThisCell</B> file also determines the cell for which a user
+receives an AFS token when he or she logs in to a machine. The cell
+name also plays a role in security. As it converts a user password into
+an encryption key for storage in the Authentication Database, the
+Authentication Server combines the password with the cell name found in the
+<B>ThisCell</B> file. AFS-modified login utilities use the same
+algorithm to convert the user's password into an encryption key before
+contacting the Authentication Server to obtain a token for the user.
+(For a description of how AFS's security system uses encryption keys, see
+<A HREF="#HDRWQ75">A More Detailed Look at Mutual Authentication</A>.)
+<P>This method of converting passwords into encryption keys means that the
+same password results in different keys in different cells. Even if a
+user uses the same password in multiple cells, obtaining a user's token
+from one cell does not enable unauthorized access to the user's account
+in another cell.
+<P>If you change the cell name, you must change the <B>ThisCell</B> and
+<B>CellServDB</B> files on every server and client machine. Failure
+to change them all can prevent login, because the encryption keys produced by
+the login utility do not match the keys stored in the Authentication
+Database. In addition, many commands from the AFS suites do not work as
+expected.
+<A NAME="IDX5659"></A>
+<A NAME="IDX5660"></A>
+<A NAME="IDX5661"></A>
+<HR><H2><A NAME="HDRWQ36" HREF="auagd002.htm#ToC_45">Participating in the AFS Global Namespace</A></H2>
+<P>Participating in the AFS global namespace makes your
+cell's local file tree visible to AFS users in foreign cells and makes
+other cells' file trees visible to your local users. It makes file
+sharing across cells just as easy as sharing within a cell. This
+section outlines the procedures necessary for participating in the global
+namespace.
+<UL>
+<P><LI>Participation in the global namespace is not mandatory. Some cells
+use AFS primarily to facilitate file sharing within the cell, and are not
+interested in providing their users with access to foreign cells.
+<P><LI>Making your file tree visible does not mean making it vulnerable.
+You control how foreign users access your cell using the same protection
+mechanisms that control local users' access. See <A HREF="#HDRWQ40">Granting and Denying Foreign Users Access to Your Cell</A>.
+<P><LI>The two aspects of participation are independent. A cell can make
+its file tree visible without allowing its users to see foreign cells'
+file trees, or can enable its users to see other file trees without
+advertising its own.
+<P><LI>You make your cell visible to others by advertising your database server
+machines. See <A HREF="#HDRWQ38">Making Your Cell Visible to Others</A>.
+<P><LI>You control access to foreign cells on a per-client machine basis.
+In other words, it is possible to make a foreign cell accessible from one
+client machine in your cell but not another. See <A HREF="#HDRWQ39">Making Other Cells Visible in Your Cell</A>.
+</UL>
+<A NAME="IDX5662"></A>
+<A NAME="IDX5663"></A>
+<A NAME="IDX5664"></A>
+<A NAME="IDX5665"></A>
+<A NAME="IDX5666"></A>
+<A NAME="IDX5667"></A>
+<P><H3><A NAME="HDRWQ37" HREF="auagd002.htm#ToC_46">What the Global Namespace Looks Like</A></H3>
+<P>The AFS global namespace appears the same to all AFS cells
+that participate in it, because they all agree to follow a small set of
+conventions in constructing pathnames.
+<P>The first convention is that all AFS pathnames begin with the string
+<B>/afs</B> to indicate that they belong to the AFS global
+namespace.
+<P>The second convention is that the cell name is the second element in an AFS
+pathname; it indicates where the file resides (that is, the cell in which
+a file server machine houses the file). As noted, the presence of a
+cell name in pathnames makes the global namespace possible, because it
+guarantees that all AFS pathnames are unique even if cells use the same
+directory names at lower levels in their AFS filespace.
+<P>What appears at the third and lower levels in an AFS pathname depends on
+how a cell has chosen to arrange its filespace. There are some
+suggested conventional directories at the third level; see <A HREF="#HDRWQ43">The Third Level</A>.
+<A NAME="IDX5668"></A>
+<A NAME="IDX5669"></A>
+<A NAME="IDX5670"></A>
+<P><H3><A NAME="HDRWQ38" HREF="auagd002.htm#ToC_47">Making Your Cell Visible to Others</A></H3>
+<P>You make your cell visible to others by advertising your cell
+name and database server machines. Just like client machines in the
+local cell, the Cache Manager on machines in foreign cells use the information
+to reach your cell's Volume Location (VL) Servers when they need volume
+and file location information. Similarly, client-side authentication
+programs running in foreign cells use the information to contact your
+cell's authentication service.
+<P>There are two places you can make this information available:
+<UL>
+<A NAME="IDX5671"></A>
+<A NAME="IDX5672"></A>
+<P><LI>In the global <B>CellServDB</B> file maintained by the AFS Product
+Support group. This file lists the name and database server machines of
+every cell that has agreed to make this information available to other
+cells. 
+<P>To add or change your cell's listing in this file, have the official
+support contact at your site call or write to AFS Product Support.
+Changes to the file are frequent enough that AFS Product Support does not
+announce each one. It is a good policy to check the file for changes on
+a regular schedule.
+<A NAME="IDX5673"></A>
+<A NAME="IDX5674"></A>
+<P><LI>A file called <B>CellServDB.local</B> in the
+<B>/afs/</B><VAR>cellname</VAR><B>/service/etc</B> directory of your
+cell's filespace. List only your cell's database server
+machines.
+</UL>
+<P>Update the files whenever you change the identity of your cell's
+database server machines. Also update the copies of the
+<B>CellServDB</B> files on all of your server machines (in the
+<B>/usr/afs/etc</B> directory) and client machines (in the
+<B>/usr/vice/etc</B> directory). For instructions, see <A HREF="auagd008.htm#HDRWQ118">Maintaining the Server CellServDB File</A> and <A HREF="auagd015.htm#HDRWQ406">Maintaining Knowledge of Database Server Machines</A>.
+<P>Once you have advertised your database server machines, it can be difficult
+to make your cell invisible again. You can remove the
+<B>CellServDB.local</B> file and ask AFS Product Support to remove
+your entry from the global <B>CellServDB</B> file, but other cells
+probably have an entry for your cell in their local <B>CellServDB</B>
+files already. To make those entries invalid, you must change the names
+or IP addresses of your database server machines.
+<P>Your cell does not have to be invisible to be inaccessible, however.
+To make your cell completely inaccessible to foreign users, remove the
+<B>system:anyuser</B> group from all ACLs at the top three levels of
+your filespace; see <A HREF="#HDRWQ40">Granting and Denying Foreign Users Access to Your Cell</A>.
+<A NAME="IDX5675"></A>
+<A NAME="IDX5676"></A>
+<A NAME="IDX5677"></A>
+<A NAME="IDX5678"></A>
+<P><H3><A NAME="HDRWQ39" HREF="auagd002.htm#ToC_48">Making Other Cells Visible in Your Cell</A></H3>
+<P>To make a foreign cell's filespace visible on a client
+machine in your cell, perform the following three steps:
+<OL TYPE=1>
+<P><LI>Mount the cell's <B>root.cell</B> volume at the second
+level in your cell's filespace just below the <B>/afs</B>
+directory. Use the <B>fs mkmount</B> command with the
+<B>-cell</B> argument as instructed in <A HREF="auagd010.htm#HDRWQ213">To create a cellular mount point</A>.
+<P><LI>Mount AFS at the <B>/afs</B> directory on the client machine.
+The <B>afsd</B> program, which initializes the Cache Manager, performs the
+mount automatically at the directory named in the first field of the local
+<B>/usr/vice/etc/cacheinfo</B> file or by the command's
+<B>-mountdir</B> argument. Mounting AFS at an alternate location
+makes it impossible to reach the filespace of any cell that mounts its
+<B>root.afs</B> and <B>root.cell</B> volumes at the
+conventional locations. See <A HREF="auagd015.htm#HDRWQ395">Displaying and Setting the Cache Size and Location</A>.
+<P><LI>Create an entry for the cell in the list of database server machines which
+the Cache Manager maintains in kernel memory. 
+<P>The <B>/usr/vice/etc/CellServDB</B> file on every client machine's
+local disk lists the database server machines for the local and foreign
+cells. The <B>afsd</B> program reads the contents of the
+<B>CellServDB</B> file into kernel memory as it initializes the Cache
+Manager. You can also use the <B>fs newcell</B> command to add or
+alter entries in kernel memory directly between reboots of the machine.
+See <A HREF="auagd015.htm#HDRWQ406">Maintaining Knowledge of Database Server Machines</A>.
+</OL>
+<P>Note that making a foreign cell visible to client machines does not
+guarantee that your users can access its filespace. The ACLs in the
+foreign cell must also grant them the necessary permissions.
+<A NAME="IDX5679"></A>
+<A NAME="IDX5680"></A>
+<P><H3><A NAME="HDRWQ40" HREF="auagd002.htm#ToC_49">Granting and Denying Foreign Users Access to Your Cell</A></H3>
+<P>Making your cell visible in the AFS global namespace does not
+take away your control over the way in which users from foreign cells access
+your file tree.
+<P>By default, foreign users access your cell as the user
+<B>anonymous</B>, which means they have only the permissions granted to
+the <B>system:anyuser</B> group on each directory's ACL.
+Normally these permissions are limited to the <B>l</B> (<B>lookup</B>)
+and <B>r</B> (<B>read</B>) permissions.
+<P>There are two ways to grant wider access to foreign users:
+<UL>
+<P><LI>Grant additional permissions to the <B>system:anyuser</B> group
+on certain ACLs. Keep in mind, however, that all users can then access
+that directory in the indicated way (not just specific foreign users you have
+in mind).
+<P><LI>Create a local authentication account for specific foreign users, by
+creating entries in the Protection and Authentication Databases and local
+password file. It is not possible to place foreign usernames on ACLs,
+nor to authenticate in a foreign cell without having an account in it.
+</UL>
+<A NAME="IDX5681"></A>
+<A NAME="IDX5682"></A>
+<A NAME="IDX5683"></A>
+<HR><H2><A NAME="HDRWQ41" HREF="auagd002.htm#ToC_50">Configuring Your AFS Filespace</A></H2>
+<P>This section summarizes the issues to consider when
+configuring your AFS filespace. For a discussion of creating volumes
+that correspond most efficiently to the filespace's directory structure,
+see <A HREF="#HDRWQ44">Creating Volumes to Simplify Administration</A>.
+<P><B>Note for Windows users:</B> Windows uses a backslash
+(&nbsp;<B>\</B>&nbsp;) rather than a forward slash
+(&nbsp;<B>/</B>&nbsp;) to separate the elements in a
+pathname. The hierarchical organization of the filespace is however the
+same as on a UNIX machine.
+<P>AFS pathnames must follow a few conventions so the AFS global namespace
+looks the same from any AFS client machine. There are corresponding
+conventions to follow in building your file tree, not just because pathnames
+reflect the structure of a file tree, but also because the AFS Cache Manager
+expects a certain configuration.
+<A NAME="IDX5684"></A>
+<A NAME="IDX5685"></A>
+<P><H3><A NAME="Header_51" HREF="auagd002.htm#ToC_51">The Top /afs Level</A></H3>
+<P>The first convention is that the top level in your file tree be called
+the <B>/afs</B> directory. If you name it something else, then you
+must use the <B>-mountdir</B> argument with the <B>afsd</B> program to
+get Cache Managers to mount AFS properly. You cannot participate in the
+AFS global namespace in that case.
+<A NAME="IDX5686"></A>
+<A NAME="IDX5687"></A>
+<A NAME="IDX5688"></A>
+<P><H3><A NAME="HDRWQ42" HREF="auagd002.htm#ToC_52">The Second (Cellname) Level</A></H3>
+<P>The second convention is that just below the <B>/afs</B>
+directory you place directories corresponding to each cell whose file tree is
+visible and accessible from the local cell. Minimally, there must be a
+directory for the local cell. Each such directory is a mount point to
+the indicated cell's <B>root.cell</B> volume. For
+example, in the ABC Corporation cell, <B>/afs/abc.com</B> is a
+mount point for the cell's own <B>root.cell</B> volume and
+<B>stateu.edu</B> is a mount point for the State University
+cell's <B>root.cell</B> volume. The <B>fs
+lsmount</B> command displays the mount points.
+<PRE>   % <B>fs lsmount /afs/abc.com</B> 
+   '/afs/abc.com' is a mount point for volume '#root.cell'
+   % <B>fs lsmount /afs/stateu.edu</B>
+   '/afs/stateu.edu' is a mount point for volume '#stateu.edu:root.cell'
+</PRE>
+<P>To reduce the amount of typing necessary in pathnames, you can create a
+symbolic link with an abbreviated name to the mount point of each cell your
+users frequently access (particularly the home cell). In the ABC
+Corporation cell, for instance, <B>/afs/abc</B> is a symbolic link to the
+<B>/afs/abc.com</B> mount point, as the <B>fs lsmount</B>
+command reveals.
+<PRE>   % <B>fs lsmount /afs/abc</B>
+   '/afs/abc' is a symbolic link, leading to a mount point for volume '#root.cell'
+</PRE>
+<A NAME="IDX5689"></A>
+<A NAME="IDX5690"></A>
+<P><H3><A NAME="HDRWQ43" HREF="auagd002.htm#ToC_53">The Third Level</A></H3>
+<P>You can organize the third level of your cell's file
+tree any way you wish. The following list describes directories that
+appear at this level in the conventional configuration:
+<DL>
+<P><DT><B>common
+</B><DD>This directory contains programs and files needed by users working on
+machines of all system types, such as text editors, online documentation
+files, and so on. Its <B>/etc</B> subdirectory is a logical place
+to keep the central update sources for files used on all of your cell's
+client machines, such as the <B>ThisCell</B> and <B>CellServDB</B>
+files.
+<P><DT><B>public
+</B><DD>A directory accessible to anyone who can access your filespace, because
+its ACL grants the <B>l</B> (<B>lookup</B>) and <B>r</B>
+(<B>read</B>) permissions to the <B>system:anyuser</B>
+group. It is useful if you want to enable your users to make selected
+information available to everyone, but do not want to grant foreign users
+access to the contents of the <B>usr</B> directory which houses user home
+directories ( and is also at this level). It is conventional to create
+a subdirectory for each of your cell's users.
+<P><DT><B>service
+</B><DD>This directory contains files and subdirectories that help cells
+coordinate resource sharing. For a list of the proposed standard files
+and subdirectories to create, call or write to AFS Product Support.
+<P>As an example, files that other cells expect to find in this
+directory's <B>etc</B> subdirectory can include the following:
+<UL>
+<P><LI><B>CellServDB.export</B>, a list of database server machines
+for many cells
+<P><LI><B>CellServDB.local</B>, a list of the cell's own database
+server machines
+<P><LI><B>passwd</B>, a copy of the local password file
+(<B>/etc/passwd</B> or equivalent) kept on the local disk of the
+cell's client machines
+<P><LI><B>group</B>, a copy of the local groups file (<B>/etc/group</B>
+or equivalent) kept on the local disk of the cell's client machines
+</UL>
+<P><DT><B><VAR>sys_type</VAR>
+</B><DD>A separate directory for storing the server and client binaries for each
+system type you use in the cell. Configuration is simplest if you use
+the system type names assigned in the AFS distribution, particularly if you
+wish to use the <B>@sys</B> variable in pathnames (see <A HREF="#HDRWQ56">Using the @sys Variable in Pathnames</A>). The <I>IBM AFS Release Notes</I> lists the
+conventional name for each supported system type.
+<P>Within each such directory, create directories named <B>bin</B>,
+<B>etc</B>, <B>usr</B>, and so on, to store the programs normally kept
+in the <B>/bin</B>, <B>/etc</B> and <B>/usr</B> directories on a
+local disk. Then create symbolic links from the local directories on
+client machines into AFS; see <A HREF="#HDRWQ55">Configuring the Local Disk</A>. Even if you do not choose to use symbolic links in
+this way, it can be convenient to have central copies of system binaries in
+AFS. If binaries are accidentally removed from a machine, you can
+recopy them onto the local disk from AFS rather than having to recover them
+from tape
+<P><DT><B>usr
+</B><DD>This directory contains home directories for your local users. As
+discussed in the previous entry for the <B>public</B> directory, it is
+often practical to protect this directory so that only locally authenticated
+users can access it. This keeps the contents of your user's home
+directories as secure as possible.
+<P>If your cell is quite large, directory lookup can be slowed if you put all
+home directories in a single <B>usr</B> directory. For suggestions
+on distributing user home directories among multiple grouping directories, see
+<A HREF="#HDRWQ59">Grouping Home Directories</A>.
+<P><DT><B>wsadmin
+</B><DD>This directory contains prototype, configuration and library files for use
+with the <B>package</B> program. See <A HREF="auagd016.htm#HDRWQ419">Configuring Client Machines with the package Program</A>.
+</DL>
+<A NAME="IDX5691"></A>
+<A NAME="IDX5692"></A>
+<A NAME="IDX5693"></A>
+<A NAME="IDX5694"></A>
+<HR><H2><A NAME="HDRWQ44" HREF="auagd002.htm#ToC_54">Creating Volumes to Simplify Administration</A></H2>
+<P>This section discusses how to create volumes in ways that
+make administering your system easier.
+<P>At the top levels of your file tree (at least through the third level),
+each directory generally corresponds to a separate volume. Some cells
+also configure the subdirectories of some third level directories as separate
+volumes. Common examples are the
+<B>/afs/</B><VAR>cellname</VAR><B>/common</B> and
+<B>/afs/</B><VAR>cellname</VAR><B>/usr</B> directories.
+<P>You do not have to create a separate volume for every directory level in a
+tree, but the advantage is that each volume tends to be smaller and easier to
+move for load balancing. The overhead for a mount point is no greater
+than for a standard directory, nor does the volume structure itself require
+much disk space. Most cells find that below the fourth level in the
+tree, using a separate volume for each directory is no longer
+efficient. For instance, while each user's home directory (at the
+fourth level in the tree) corresponds to a separate volume, all of the
+subdirectories in the home directory normally reside in the same
+volume.
+<P>Keep in mind that only one volume can be mounted at a given directory
+location in the tree. In contrast, a volume can be mounted at several
+locations, though this is not recommended because it distorts the hierarchical
+nature of the file tree, potentially causing confusion.
+<A NAME="IDX5695"></A>
+<A NAME="IDX5696"></A>
+<A NAME="IDX5697"></A>
+<A NAME="IDX5698"></A>
+<A NAME="IDX5699"></A>
+<P><H3><A NAME="Header_55" HREF="auagd002.htm#ToC_55">Assigning Volume Names</A></H3>
+<P>You can name your volumes anything you choose, subject to a few
+restrictions:
+<UL>
+<P><LI>Read/write volume names can be up to 22 characters in length. The
+maximum length for volume names is 31 characters, and there must be room to
+add the <B>.readonly</B> extension on read-only volumes.
+<P><LI>Do not add the <B>.readonly</B> and <B>.backup</B>
+extensions to volume names yourself, even if they are appropriate. The
+Volume Server adds them automatically as it creates a read-only or backup
+version of a volume.
+<P><LI>There must be volumes named <B>root.afs</B> and
+<B>root.cell</B>, mounted respectively at the top (<B>/afs</B>)
+level in the filespace and just below that level, at the cell's name (for
+example, at <B>/afs/abc.com</B> in the ABC Corporation
+cell).
+<P>Deviating from these names only creates confusion and extra work.
+Changing the name of the <B>root.afs</B> volume, for instance,
+means that you must use the <B>-rootvol</B> argument to the
+<B>afsd</B> program on every client machine, to name the alternate
+volume.
+<P>Similarly, changing the <B>root.cell</B> volume name prevents
+users in foreign cells from accessing your filespace, if the mount point for
+your cell in their filespace refers to the conventional
+<B>root.cell</B> name. Of course, this is one way to make
+your cell invisible to other cells.
+</UL>
+<P>It is best to assign volume names that indicate the type of data they
+contain, and to use similar names for volumes with similar contents. It
+is also helpful if the volume name is similar to (or at least has elements in
+common with) the name of the directory at which it is mounted.
+Understanding the pattern then enables you accurately to guess what a volume
+contains and where it is mounted.
+<P>Many cells find that the most effective volume naming scheme puts a common
+prefix on the names of all related volumes. <A HREF="#TBLVOL-PREFIX">Table 1</A> describes the recommended prefixing scheme.
+<BR>
+<P><B><A NAME="TBLVOL-PREFIX" HREF="auagd004.htm#FT_TBLVOL-PREFIX">Table 1. Suggested volume prefixes</A></B><BR>
+<TABLE WIDTH="100%" BORDER>
+<TR>
+<TH ALIGN="LEFT" VALIGN="BOTTOM" WIDTH="14%"><B>Prefix</B>
+</TH><TH ALIGN="LEFT" VALIGN="BOTTOM" WIDTH="28%"><B>Contents</B>
+</TH><TH ALIGN="LEFT" VALIGN="BOTTOM" WIDTH="22%"><B>Example Name</B>
+</TH><TH ALIGN="LEFT" VALIGN="BOTTOM" WIDTH="36%"><B>Example Mount Point</B>
+</TH></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="14%"><B>common.</B>
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="28%">popular programs and files
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="22%"><B>common.etc</B>
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="36%"><B>/afs/</B><VAR>cellname</VAR><B>/common/etc</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="14%"><B>src.</B>
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="28%">source code
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="22%"><B>src.afs</B>
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="36%"><B>/afs/</B><VAR>cellname</VAR><B>/src/afs</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="14%"><B>proj.</B>
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="28%">project data
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="22%"><B>proj.portafs</B>
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="36%"><B>/afs/</B><VAR>cellname</VAR><B>/proj/portafs</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="14%"><B>test.</B><TT></TT>
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="28%">testing or other temporary data
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="22%"><B>test.smith</B>
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="36%"><B>/afs/</B><VAR>cellname</VAR><B>/usr/smith/test</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="14%"><B>user.</B>
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="28%">user home directory data
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="22%"><B>user.terry</B>
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="36%"><B>/afs/</B><VAR>cellname</VAR><B>/usr/terry</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="14%"><VAR>sys_type</VAR><B>.</B>
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="28%">programs compiled for an operating system type
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="22%"><B>rs_aix42.bin</B>
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="36%"><B>/afs/</B><VAR>cellname</VAR><B>/rs_aix42/bin</B>
+</TD></TR></TABLE>
+<P><A HREF="#TBLPREFIX-EXAMPLE">Table 2</A> is a more specific example for a cell's
+<B>rs_aix42</B> system volumes and directories:
+<BR>
+<P><B><A NAME="TBLPREFIX-EXAMPLE" HREF="auagd004.htm#FT_TBLPREFIX-EXAMPLE">Table 2. Example volume-prefixing scheme</A></B><BR>
+<TABLE WIDTH="100%" BORDER>
+<TR>
+<TH ALIGN="LEFT" VALIGN="BOTTOM" WIDTH="35%"><B><B>Example Name</B></B>
+</TH><TH ALIGN="LEFT" VALIGN="BOTTOM" WIDTH="65%"><B><B>Example Mount Point</B></B>
+</TH></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="35%"><B>rs_aix42.bin</B>
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="65%"><B>/afs/</B><VAR>cellname</VAR><B>/rs_aix42/bin</B><B>/afs/<B>cell</B>/rs_aix42/bin</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="35%"><B>rs_aix42.etc</B>
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="65%"><B>/afs/</B><VAR>cellname</VAR><B>/rs_aix42/etc</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="35%"><B>rs_aix42.usr</B>
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="65%"><B>/afs/</B><VAR>cellname</VAR><B>/rs_aix42/usr</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="35%"><B>rs_aix42.usr.afsws</B>
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="65%"><B>/afs/</B><VAR>cellname</VAR><B>/rs_aix42/usr/afsws</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="35%"><B>rs_aix42.usr.lib</B>
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="65%"><B>/afs/</B><VAR>cellname</VAR><B>/rs_aix42/usr/lib</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="35%"><B>rs_aix42.usr.bin</B>
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="65%"><B>/afs/</B><VAR>cellname</VAR><B>/rs_aix42/usr/bin</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="35%"><B>rs_aix42.usr.etc</B>
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="65%"><B>/afs/</B><VAR>cellname</VAR><B>/rs_aix42/usr/etc</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="35%"><B>rs_aix42.usr.inc</B>
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="65%"><B>/afs/</B><VAR>cellname</VAR><B>/rs_aix42/usr/inc</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="35%"><B>rs_aix42.usr.man</B>
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="65%"><B>/afs/</B><VAR>cellname</VAR><B>/rs_aix42/usr/man</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="35%"><B>rs_aix42.usr.sys</B>
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="65%"><B>/afs/</B><VAR>cellname</VAR><B>/rs_aix42/usr/sys</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="35%"><B>rs_aix42.usr.local</B>
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="65%"><B>/afs/</B><VAR>cellname</VAR><B>/rs_aix42/usr/local</B>
+</TD></TR></TABLE>
+<P>There are several advantages to this scheme:
+<UL>
+<P><LI>The volume name is similar to the mount point name in the
+filespace. In all of the entries in <A HREF="#TBLPREFIX-EXAMPLE">Table 2</A>, for example, the only difference between the
+volume and mount point name is that the former uses periods as separators and
+the latter uses slashes. Another advantage is that the volume name
+indicates the contents, or at least suggests the directory on which to issue
+the <B>ls</B> command to learn the contents.
+<P><LI>It makes it easy to manipulate groups of related volumes at one
+time. In particular, the <B>vos backupsys</B> command's
+<B>-prefix</B> argument enables you to create a backup version of every
+volume whose name starts with the same string of characters. Making a
+backup version of each volume is one of the first steps in backing up a volume
+with the AFS Backup System, and doing it for many volumes with one command
+saves you a good deal of typing. For instructions for creating backup
+volumes, see <A HREF="auagd010.htm#HDRWQ201">Creating Backup Volumes</A>, For information on the AFS Backup System, see <A HREF="auagd011.htm#HDRWQ248">Configuring the AFS Backup System</A> and <A HREF="auagd012.htm#HDRWQ283">Backing Up and Restoring AFS Data</A>.
+<P><LI>It makes it easy to group related volumes together on a partition.
+Grouping related volumes together has several advantages of its own, discussed
+in <A HREF="#HDRWQ49">Grouping Related Volumes on a Partition</A>.
+</UL>
+<A NAME="IDX5700"></A>
+<A NAME="IDX5701"></A>
+<P><H3><A NAME="HDRWQ49" HREF="auagd002.htm#ToC_56">Grouping Related Volumes on a Partition</A></H3>
+<P>If your cell is large enough to make it practical, consider
+grouping related volumes together on a partition. In general, you need
+at least three file server machines for volume grouping to be
+effective. Grouping has several advantages, which are most obvious when
+the file server machine becomes inaccessible:
+<UL>
+<P><LI>If you keep a hardcopy record of the volumes on a partition, you know
+which volumes are unavailable. You can keep such a record without
+grouping related volumes, but a list composed of unrelated volumes is much
+harder to maintain. Note that the record must be on paper, because the
+outage can prevent you from accessing an online copy or from issuing the
+<B>vos listvol</B> command, which gives you the same information.
+<P><LI>The effect of an outage is more localized. For example, if all of
+the binaries for a given system type are on one partition, then only users of
+that system type are affected. If a partition houses binary volumes
+from several system types, then an outage can affect more people, particularly
+if the binaries that remain available are interdependent with those that are
+not available.
+</UL>
+<P>The advantages of grouping related volumes on a partition do not
+necessarily extend to the grouping of all related volumes on one file server
+machine. For instance, it is probably unwise in a cell with two file
+server machines to put all system volumes on one machine and all user volumes
+on the other. An outage of either machine probably affects
+everyone.
+<P>Admittedly, the need to move volumes for load balancing purposes can limit
+the practicality of grouping related volumes. You need to weigh the
+complementary advantages case by case.
+<A NAME="IDX5702"></A>
+<A NAME="IDX5703"></A>
+<A NAME="IDX5704"></A>
+<A NAME="IDX5705"></A>
+<P><H3><A NAME="HDRWQ50" HREF="auagd002.htm#ToC_57">When to Replicate Volumes</A></H3>
+<P>As discussed in <A HREF="auagd006.htm#HDRWQ15">Replication</A>, replication refers to making a copy, or
+clone, of a read/write source volume and then placing the copy on one or more
+additional file server machines. Replicating a volume can increase the
+availability of the contents. If one file server machine housing the
+volume becomes inaccessible, users can still access the copy of the volume
+stored on a different machine. No one machine is likely to become
+overburdened with requests for a popular file, either, because the file is
+available from several machines.
+<P>However, replication is not appropriate for all cells. If a cell
+does not have much disk space, replication can be unduly expensive, because
+each clone not on the same partition as the read/write source takes up as much
+disk space as its source volume did at the time the clone was made.
+Also, if you have only one file server machine, replication uses up disk space
+without increasing availability.
+<P>Replication is also not appropriate for volumes that change
+frequently. You must issue the <B>vos release</B> command every
+time you need to update a read-only volume to reflect changes in its
+read/write source.
+<P>For both of these reasons, replication is appropriate only for popular
+volumes whose contents do not change very often, such as system binaries and
+other volumes mounted at the upper levels of your filespace. User
+volumes usually exist only in a read/write version since they change so
+often.
+<P>If you are replicating any volumes, you must replicate the
+<B>root.afs</B> and <B>root.cell</B> volumes, preferably
+at two or three sites each (even if your cell only has two or three file
+server machines). The Cache Manager needs to pass through the
+directories corresponding to the <B>root.afs</B> and
+<B>root.cell</B> volumes as it interprets any pathname. The
+unavailability of these volumes makes all other volumes unavailable too, even
+if the file server machines storing the other volumes are still
+functioning.
+<P>Another reason to replicate the <B>root.afs</B> volume is that
+it can lessen the load on the File Server machine. The Cache Manager
+has a bias to access a read-only version of the <B>root.afs</B>
+volume if it is replicate, which puts the Cache Manager onto the
+<I>read-only path</I> through the AFS filespace. While on the
+read-only path, the Cache Manager attempts to access a read-only copy of
+replicated volumes. The File Server needs to track only one callback
+per Cache Manager for all of the data in a read-only volume, rather than the
+one callback per file it must track for read/write volumes. Fewer
+callbacks translate into a smaller load on the File Server.
+<P>If the <B>root.afs</B> volume is not replicated, the Cache
+Manager follows a read/write path through the filespace, accessing the
+read/write version of each volume. The File Server distributes and
+tracks a separate callback for each file in a read/write volume, imposing a
+greater load on it.
+<P>For more on read/write and read-only paths, see <A HREF="auagd010.htm#HDRWQ209">The Rules of Mount Point Traversal</A>.
+<P>It also makes sense to replicate system binary volumes in many cases, as
+well as the volume corresponding to the
+<B>/afs/</B><VAR>cellname</VAR><B>/usr</B> directory and the volumes
+corresponding to the <B>/afs/</B><VAR>cellname</VAR><B>/common</B>
+directory and its subdirectories.
+<P>It is a good idea to place a replica on the same partition as the
+read/write source. In this case, the read-only volume is a clone (like
+a backup volume): it is a copy of the source volume's <VAR>vnode
+index</VAR>, rather than a full copy of the volume contents. Only if the
+read/write volume moves to another partition or changes substantially does the
+read-only volume consume significant disk space. Read-only volumes kept
+on other partitions always consume the full amount of disk space that the
+read/write source consumed when the read-only volume was created.
+<P><H3><A NAME="Header_58" HREF="auagd002.htm#ToC_58">The Default Quota and ACL on a New Volume</A></H3>
+<P>Every AFS volume has associated with it a quota that limits the amount
+of disk space the volume is allowed to use. To set and change quota,
+use the commands described in <A HREF="auagd010.htm#HDRWQ234">Setting and Displaying Volume Quota and Current Size</A>.
+<P>By default, every new volume is assigned a space quota of 5000 KB blocks
+unless you include the <B>-maxquota</B> argument to the <B>vos
+create</B> command. Also by default, the ACL on the root directory of
+every new volume grants all permissions to the members of the
+<B>system:administrators</B> group. To learn how to change
+these values when creating an account with individual commands, see <A HREF="auagd018.htm#HDRWQ503">To create one user account with individual commands</A>. When using <B>uss</B> commands to create
+accounts, you can specify alternate ACL and quota values in the template
+file's <B>V</B> instruction; see <A HREF="auagd017.htm#HDRWQ473">Creating a Volume with the V Instruction</A>.
+<A NAME="IDX5706"></A>
+<A NAME="IDX5707"></A>
+<A NAME="IDX5708"></A>
+<A NAME="IDX5709"></A>
+<A NAME="IDX5710"></A>
+<HR><H2><A NAME="HDRWQ51" HREF="auagd002.htm#ToC_59">Configuring Server Machines</A></H2>
+<P>This section discusses some issues to consider when
+configuring server machines, which store AFS data, transfer it to client
+machines on request, and house the AFS administrative databases. To
+learn about client machines, see <A HREF="#HDRWQ54">Configuring Client Machines</A>.
+<P>If your cell has more than one AFS server machine, you can configure them
+to perform specialized functions. A machine can assume one or more of
+the roles described in the following list. For more details, see <A HREF="auagd008.htm#HDRWQ90">The Four Roles for File Server Machines</A>.
+<UL>
+<P><LI>A <I>simple file server machine</I> runs only the processes that store
+and deliver AFS files to client machines. You can run as many simple
+file server machines as you need to satisfy your cell's performance and
+disk space requirements.
+<P><LI>A <I>database server machine</I> runs the four database server
+processes that maintain AFS's replicated administrative databases:
+the Authentication, Backup, Protection, and Volume Location (VL) Server
+processes.
+<P><LI>A <I>binary distribution machine</I> distributes the AFS server
+binaries for its system type to all other server machines of that system
+type.
+<P><LI>The single <I>system control machine</I> distributes common server
+configuration files to all other server machines in the cell, in a cell that
+runs the United States edition of AFS (cells that use the international
+edition of AFS must not use the system control machine for this
+purpose). The machine conventionally also serves as the time
+synchronization source for the cell, adjusting its clock according to a time
+source outside the cell.
+</UL>
+<P>The <I>IBM AFS Quick Beginnings</I> explains how to configure your
+cell's first file server machine to assume all four roles. The
+<I>IBM AFS Quick Beginnings</I> chapter on installing additional server
+machines also explains how to configure them to perform one or more
+roles.
+<A NAME="IDX5711"></A>
+<A NAME="IDX5712"></A>
+<A NAME="IDX5713"></A>
+<A NAME="IDX5714"></A>
+<P><H3><A NAME="HDRWQ52" HREF="auagd002.htm#ToC_60">Replicating the AFS Administrative Databases</A></H3>
+<P>The AFS administrative databases are housed on database
+server machines and store information that is crucial for correct cell
+functioning. Both server processes and Cache Managers access the
+information frequently:
+<UL>
+<P><LI>Every time a Cache Manager fetches a file from a directory that it has not
+previously accessed, it must look up the file's location in the Volume
+Location Database (VLDB).
+<P><LI>Every time a user obtains an AFS token from the Authentication Server, the
+server looks up the user's password in the Authentication
+Database.
+<P><LI>The first time that a user accesses a volume housed on a specific file
+server machine, the File Server contacts the Protection Server for a list of
+the user's group memberships as recorded in the Protection
+Database.
+<P><LI>Every time you back up a volume using the AFS Backup System, the Backup
+Server creates records for it in the Backup Database.
+</UL>
+<P>Maintaining your cell is simplest if the first machine has the lowest IP
+address of any machine you plan to use as a database server machine. If
+you later decide to use a machine with a lower IP address as a database server
+machine, you must update the <B>CellServDB</B> file on all clients before
+introducing the new machine.
+<P>If your cell has more than one server machine, it is best to run more than
+one as a database server machine (but more than three are rarely
+necessary). Replicating the administrative databases in this way yields
+the same benefits as replicating volumes: increased availability and
+reliability. If one database server machine or process stops
+functioning, the information in the database is still available from
+others. The load of requests for database information is spread across
+multiple machines, preventing any one from becoming overloaded.
+<P>Unlike replicated volumes, however, replicated databases do change
+frequently. Consistent system performance demands that all copies of
+the database always be identical, so it is not acceptable to record changes in
+only some of them. To synchronize the copies of a database, the
+database server processes use AFS's distributed database technology,
+Ubik. See <A HREF="auagd008.htm#HDRWQ102">Replicating the AFS Administrative Databases</A>.
+<P>If your cell has only one file server machine, it must also serve as a
+database server machine. If you cell has two file server machines, it
+is not always advantageous to run both as database server machines. If
+a server, process, or network failure interrupts communications between the
+database server processes on the two machines, it can become impossible to
+update the information in the database because neither of them can alone elect
+itself as the synchronization site.
+<A NAME="IDX5715"></A>
+<A NAME="IDX5716"></A>
+<P><H3><A NAME="HDRWQ53" HREF="auagd002.htm#ToC_61">AFS Files on the Local Disk</A></H3>
+<P>It is generally simplest to store the binaries for all AFS
+server processes in the <B>/usr/afs/bin</B> directory on every file server
+machine, even if some processes do not actively run on the machine.
+This makes it easier to reconfigure a machine to fill a new role.
+<P>For security reasons, the <B>/usr/afs</B> directory on a file server
+machine and all of its subdirectories and files must be owned by the local
+superuser <B>root</B> and have only the first <B>w</B>
+(<B>write</B>) mode bit turned on. Some files even have only the
+first <B>r</B> (<B>read</B>) mode bit turned on (for example, the
+<B>/usr/afs/etc/KeyFile</B> file, which lists the AFS server encryption
+keys). Each time the BOS Server starts, it checks that the mode bits on
+certain files and directories match the expected values. For a list,
+see the <I>IBM AFS Quick Beginnings</I> section about protecting sensitive
+AFS directories, or the discussion of the output from the <B>bos
+status</B> command in <A HREF="auagd009.htm#HDRWQ159">To display the status of server processes and their BosConfig entries</A>.
+<P>For a description of the contents of all AFS directories on a file server
+machine's local disk, see <A HREF="auagd008.htm#HDRWQ80">Administering Server Machines</A>.
+<P><H3><A NAME="Header_62" HREF="auagd002.htm#ToC_62">Configuring Partitions to Store AFS Data</A></H3>
+<P>The partitions that house AFS volumes on a file server machine must be
+mounted at directories named
+<P><B>/vicep<VAR>index</VAR></B>
+<P>where <VAR>index</VAR> is one or two lowercase letters. By convention,
+the first AFS partition created is mounted at the <B>/vicepa</B>
+directory, the second at the <B>/vicepb</B> directory, and so on through
+the <B>/vicepz</B> directory. The names then continue with
+<B>/vicepaa</B> through <B>/vicepaz</B>, <B>/vicepba</B> through
+<B>/vicepbz</B>, and so on, up to the maximum supported number of server
+partitions, which is specified in the <I>IBM AFS Release Notes</I>.
+<P>Each <B>/vicep</B><VAR>x</VAR> directory must correspond to an entire
+partition or logical volume, and must be a subdirectory of the root directory
+( / ). It is not acceptable to configure part of (for example) the
+<B>/usr</B> partition as an AFS server partition and mount it on a
+directory called <B>/usr/vicepa</B>.
+<P>Also, do not store non-AFS files on AFS server partitions. The File
+Server and Volume Server expect to have available all of the space on the
+partition. Sharing space also creates competition between AFS and the
+local UNIX file system for access to the partition, particularly if the UNIX
+files are frequently used.
+<A NAME="IDX5717"></A>
+<A NAME="IDX5718"></A>
+<A NAME="IDX5719"></A>
+<A NAME="IDX5720"></A>
+<A NAME="IDX5721"></A>
+<P><H3><A NAME="Header_63" HREF="auagd002.htm#ToC_63">Monitoring, Rebooting and Automatic Process Restarts</A></H3>
+<P>AFS provides several tools for monitoring the File Server, including
+the <B>scout</B> and <B>afsmonitor</B> programs. You can
+configure them to alert you when certain threshold values are exceeded, for
+example when a server partition is more than 95% full. See <A HREF="auagd013.htm#HDRWQ323">Monitoring and Auditing AFS Performance</A>.
+<P>Rebooting a file server machine requires shutting down the AFS processes
+and so inevitably causes a service outage. Reboot file server machines
+as infrequently as possible. For instructions, see <A HREF="auagd008.htm#HDRWQ139">Rebooting a Server Machine</A>.
+<P>By default, the BOS Server on each file server machine stops and
+immediately restarts all AFS server processes on the machine (including
+itself) once a week, at 4:00 a.m. on Sunday. This
+reduces the potential for the core leaks that can develop as any process runs
+for an extended time.
+<P>The BOS Server also checks each morning at 5:00 a.m.
+for any newly installed binary files in the <B>/usr/afs/bin</B>
+directory. It compares the timestamp on each binary file to the time at
+which the corresponding process last restarted. If the timestamp on the
+binary is later, the BOS Server restarts the corresponding process to start
+using it.
+<P>The default times are in the early morning hours when the outage that
+results from restarting a process is likely to disturb the fewest number of
+people. You can display the restart times for each machine with the
+<B>bos getrestart</B> command, and set them with the <B>bos
+setrestart</B> command. The latter command enables you to disable
+automatic restarts entirely, by setting the time to <B>never</B>.
+See <A HREF="auagd009.htm#HDRWQ171">Setting the BOS Server's Restart Times</A>.
+<A NAME="IDX5722"></A>
+<A NAME="IDX5723"></A>
+<HR><H2><A NAME="HDRWQ54" HREF="auagd002.htm#ToC_64">Configuring Client Machines</A></H2>
+<P>This section summarizes issues to consider as you install and
+configure client machines in your cell.
+<A NAME="IDX5724"></A>
+<A NAME="IDX5725"></A>
+<A NAME="IDX5726"></A>
+<P><H3><A NAME="HDRWQ55" HREF="auagd002.htm#ToC_65">Configuring the Local Disk</A></H3>
+<P>You can often free up significant amounts of local disk space
+on AFS client machines by storing standard UNIX files in AFS and creating
+symbolic links to them from the local disk. The <B>@sys</B>
+pathname variable can be useful in links to system-specific files; see <A HREF="#HDRWQ56">Using the @sys Variable in Pathnames</A>.
+<P>There are two types of files that must actually reside on the local
+disk: boot sequence files needed before the <B>afsd</B> program is
+invoked, and files that can be helpful during file server machine
+outages.
+<P>During a reboot, AFS is inaccessible until the <B>afsd</B> program
+executes and initializes the Cache Manager. (In the conventional
+configuration, the AFS initialization file is included in the machine's
+initialization sequence and invokes the <B>afsd</B> program.) Files
+needed during reboot prior to that point must reside on the local disk.
+They include the following, but this list is not necessarily
+exhaustive.
+<UL>
+<P><LI>Standard UNIX utilities including the following or their
+equivalents:
+<UL>
+<P><LI>Machine initialization files (stored in the <B>/etc</B> or
+<B>/sbin</B> directory on many system types)
+<P><LI>The <B>fstab</B> file
+<P><LI>The <B>mount</B> command binary
+<P><LI>The <B>umount</B> command binary
+</UL>
+<P><LI>All subdirectories and files in the <B>/usr/vice</B> directory,
+including the following:
+<UL>
+<P><LI>The <B>/usr/vice/cache</B> directory
+<P><LI>The <B>/usr/vice/etc/afsd</B> command binary
+<P><LI>The <B>/usr/vice/etc/cacheinfo</B> file
+<P><LI>The <B>/usr/vice/etc/CellServDB</B> file
+<P><LI>The <B>/usr/vice/etc/ThisCell</B> file
+</UL>
+<P>For more information on these files, see <A HREF="auagd015.htm#HDRWQ391">Configuration and Cache-Related Files on the Local Disk</A>.
+</UL>
+<P>The other type of files and programs to retain on the local disk are those
+you need when diagnosing and fixing problems caused by a file server outage,
+because the outage can make inaccessible the copies stored in AFS.
+Examples include the binaries for a text editor (such as <B>ed</B> or
+<B>vi</B>) and for the <B>fs</B> and <B>bos</B> commands.
+Store copies of AFS command binaries in the <B>/usr/vice/etc</B> directory
+as well as including them in the <B>/usr/afsws</B> directory, which is
+normally a link into AFS. Then place the <B>/usr/afsws</B>
+directory before the <B>/usr/vice/etc</B> directory in users'
+<TT>PATH</TT> environment variable definition. When AFS is
+functioning normally, users access the copy in the <B>/usr/afsws</B>
+directory, which is more likely to be current than a local copy.
+<P>You can automate the configuration of client machine local disks by using
+the <B>package</B> program, which updates the contents of the local disk
+to match a configuration file. See <A HREF="auagd016.htm#HDRWQ419">Configuring Client Machines with the package Program</A>.
+<A NAME="IDX5727"></A>
+<P><H3><A NAME="Header_66" HREF="auagd002.htm#ToC_66">Enabling Access to Foreign Cells</A></H3>
+<P>As detailed in <A HREF="#HDRWQ39">Making Other Cells Visible in Your Cell</A>, you enable the Cache Manager to access a cell's
+AFS filespace by storing a list of the cell's database server machines in
+the local <B>/usr/vice/etc/CellServDB</B> file. The Cache Manager
+reads the list into kernel memory at reboot for faster retrieval. You
+can change the list in kernel memory between reboots by using the <B>fs
+newcell</B> command. It is often practical to store a central version
+of the <B>CellServDB</B> file in AFS and use the <B>package</B>
+program periodically to update each client's version with the source
+copy. See <A HREF="auagd015.htm#HDRWQ406">Maintaining Knowledge of Database Server Machines</A>.
+<P>Because each client machine maintains its own copy of the
+<B>CellServDB</B> file, you can in theory enable access to different
+foreign cells on different client machines. This is not usually
+practical, however, especially if users do not always work on the same
+machine.
+<A NAME="IDX5728"></A>
+<A NAME="IDX5729"></A>
+<A NAME="IDX5730"></A>
+<P><H3><A NAME="HDRWQ56" HREF="auagd002.htm#ToC_67">Using the @sys Variable in Pathnames</A></H3>
+<P>When creating symbolic links into AFS on the local disk, it
+is often practical to use the <VAR>@sys</VAR> variable in pathnames. The
+Cache Manager automatically substitutes the local machine's AFS system
+name (CPU/operating system type) for the <VAR>@sys</VAR> variable. This
+means you can place the same links on machines of various system types and
+still have each machine access the binaries for its system type. For
+example, the Cache Manager on a machine running AIX 4.2 converts
+<B>/afs/abc.com/@sys</B> to
+<B>/afs/abc.com/rs_aix42</B>, whereas a machine running Solaris 7
+converts it to <B>/afs/abc.com/sun4x_57</B>.
+<P>If you want to use the <VAR>@sys</VAR> variable, it is simplest to use the
+conventional AFS system type names as specified in the <I>IBM AFS Release
+Notes</I>. The Cache Manager records the local machine's system
+type name in kernel memory during initialization. If you do not use the
+conventional names, you must use the <B>fs sysname</B> command to change
+the value in kernel memory from its default just after Cache Manager
+initialization, on every client machine of the relevant system type.
+The <B>fs sysname</B> command also displays the current value; see <A HREF="auagd015.htm#HDRWQ417">Displaying and Setting the System Type Name</A>.
+<P>In pathnames in the AFS filespace itself, use the <VAR>@sys</VAR> variable
+carefully and sparingly, because it can lead to unexpected results. It
+is generally best to restrict its use to only one level in the
+filespace. The third level is a common choice, because that is where
+many cells store the binaries for different machine types.
+<P>Multiple instances of the <VAR>@sys</VAR> variable in a pathname are
+especially dangerous to people who must explicitly change directories (with
+the <B>cd</B> command, for example) into directories that store binaries
+for system types other than the machine on which they are working, such as
+administrators or developers who maintain those directories. After
+changing directories, it is recommended that such people verify they are in
+the desired directory.
+<P><H3><A NAME="Header_68" HREF="auagd002.htm#ToC_68">Setting Server Preferences</A></H3>
+<P>The Cache Manager stores a table of preferences for file server
+machines in kernel memory. A preference rank pairs a file server
+machine interface's IP address with an integer in the range from 1 to
+65,534. When it needs to access a file, the Cache Manager compares the
+ranks for the interfaces of all machines that house the file, and first
+attempts to access the file via the interface with the best rank. As it
+initializes, the Cache Manager sets default ranks that bias it to access files
+via interfaces that are close to it in terms of network topology. You
+can adjust the preference ranks to improve performance if you wish.
+<P>The Cache Manager also uses similar preferences for Volume Location (VL)
+Server machines. Use the <B>fs getserverprefs</B> command to
+display preference ranks and the <B>fs setserverprefs</B> command to set
+them. See <A HREF="auagd015.htm#HDRWQ414">Maintaining Server Preference Ranks</A>.
+<A NAME="IDX5731"></A>
+<HR><H2><A NAME="HDRWQ57" HREF="auagd002.htm#ToC_69">Configuring AFS User Accounts</A></H2>
+<P>This section discusses some of the issues to consider when
+configuring AFS user accounts. Because AFS is separate from the UNIX
+file system, a user's AFS account is separate from her UNIX
+account.
+<P>The preferred method for creating a user account is with the <B>uss</B>
+suite of commands. With a single command, you can create all the
+components of one or many accounts, after you have prepared a template file
+that guides the account creation. See <A HREF="auagd017.htm#HDRWQ449">Creating and Deleting User Accounts with the uss Command Suite</A>.
+<P>Alternatively, you can issue the individual commands that create each
+component of an account. For instructions, along with instructions for
+removing user accounts and changing user passwords, user volume quotas and
+usernames, see <A HREF="auagd018.htm#HDRWQ491">Administering User Accounts</A>.
+<P>When users leave your system, it is often good policy to remove their
+accounts. Instructions appear in <A HREF="auagd017.htm#HDRWQ486">Deleting Individual Accounts with the uss delete Command</A> and <A HREF="auagd018.htm#HDRWQ524">Removing a User Account</A>.
+<P>An AFS user account consists of the following components, which are
+described in greater detail in <A HREF="auagd018.htm#HDRWQ494">The Components of an AFS User Account</A>.
+<UL>
+<P><LI>A Protection Database entry
+<P><LI>An Authentication Database entry
+<P><LI>A volume
+<P><LI>A home directory at which the volume is mounted
+<P><LI>Ownership of the home directory and full permissions on its ACL
+<P><LI>An entry in the local password file (<B>/etc/passwd</B> or equivalent)
+of each machine the user needs to log into
+<P><LI>Optionally, standard files and subdirectories that make the account more
+useful
+</UL>
+<P>By creating some components but not others, you can create accounts at
+different levels of functionality, using either <B>uss</B> commands as
+described in <A HREF="auagd017.htm#HDRWQ449">Creating and Deleting User Accounts with the uss Command Suite</A> or individual commands as described in <A HREF="auagd018.htm#HDRWQ491">Administering User Accounts</A>. The levels of functionality include
+the following
+<UL>
+<P><LI>An <I>authentication-only account</I> enables the user to obtain AFS
+tokens and so to access protected AFS data and to issue privileged
+commands. It consists only of entries in the Authentication and
+Protection Database. This type of account is suitable for
+administrative accounts and for users from foreign cells who need to access
+protected data. Local users generally also need a volume and home
+directory.
+<P><LI>A <I>basic user account</I> includes a volume for the user, in
+addition to Authentication and Protection Database entries. The volume
+is mounted in the AFS filespace as the user's home directory, and
+provides a repository for the user's personal files.
+<P><LI>A <I>full account</I> adds configuration files for basic functions
+such as logging in, printing, and mail delivery to a basic account, making it
+more convenient and useful. For a discussion of some useful types of
+configuration files, see <A HREF="#HDRWQ60">Creating Standard Files in New AFS Accounts</A>.
+</UL>
+<P>If your users have UNIX user accounts that predate the introduction of AFS
+in the cell, you possibly want to convert them into AFS accounts. There
+are three main issues to consider:
+<UL>
+<P><LI>Making UNIX and AFS UIDs match
+<P><LI>Setting the password field in the local password file appropriately
+<P><LI>Moving files from the UNIX file system into AFS
+</UL>
+<P>For further discussion, see <A HREF="auagd017.htm#HDRWQ459">Converting Existing UNIX Accounts with uss</A> or <A HREF="auagd018.htm#HDRWQ498">Converting Existing UNIX Accounts</A>.
+<A NAME="IDX5732"></A>
+<A NAME="IDX5733"></A>
+<A NAME="IDX5734"></A>
+<A NAME="IDX5735"></A>
+<A NAME="IDX5736"></A>
+<P><H3><A NAME="HDRWQ58" HREF="auagd002.htm#ToC_70">Choosing Usernames and Naming Other Account Components</A></H3>
+<P>This section suggests schemes for choosing usernames, AFS
+UIDs, user volume names and mount point names, and also outlines some
+restrictions on your choices.
+<P><B>Usernames</B>
+<P>AFS imposes very few restrictions on the form of usernames. It is
+best to keep usernames short, both because many utilities and applications can
+handle usernames of no more than eight characters and because by convention
+many components of and AFS account incorporate the name. These include
+the entries in the Protection and Authentication Databases, the volume, and
+the mount point. Depending on your electronic mail delivery system, the
+username can become part of the user's mailing address. The
+username is also the string that the user types when logging in to a client
+machine.
+<P>Some common choices for usernames are last names, first names, initials, or
+a combination, with numbers sometimes added. It is also best to avoid
+using the following characters, many of which have special meanings to the
+command shell.
+<UL>
+<P><LI>The comma ( <B>,</B> )
+<P><LI>The colon ( <B>:</B> ), because AFS reserves it as a field
+separator in protection group names; see <A HREF="#HDRWQ62">The Two Types of User-Defined Groups</A>
+<P><LI>The semicolon ( <B>;</B> )
+<P><LI>The "at-sign" ( <B>@</B> ); this character is reserved for
+Internet mailing addresses
+<P><LI>Spaces
+<P><LI>The newline character
+<P><LI>The period ( <B>.</B> ); it is conventional to use this
+character only in the special username that an administrator adopts while
+performing privileged tasks, such as <B>pat.admin</B>
+</UL>
+<P><B>AFS UIDs and UNIX UIDs</B>
+<P>AFS associates a unique identification number, the <I>AFS UID</I>, with
+every username, recording the mapping in the user's Protection Database
+entry. The AFS UID functions within AFS much as the UNIX UID does in
+the local file system: the AFS server processes and the Cache Manager
+use it internally to identify a user, rather than the username.
+<P>Every AFS user also must have a UNIX UID recorded in the local password
+file (<B>/etc/passwd</B> or equivalent) of each client machine they log
+onto. Both administration and a user's AFS access are simplest if
+the AFS UID and UNIX UID match. One important consequence of matching
+UIDs is that the owner reported by the <B>ls -l</B> command matches the
+AFS username.
+<P>It is usually best to allow the Protection Server to allocate the AFS UID
+as it creates the Protection Database entry. However, both the <B>pts
+createuser</B> command and the <B>uss</B> commands that create user
+accounts enable you to assign AFS UIDs explicitly. This is appropriate
+in two cases:
+<UL>
+<P><LI>You wish to group together the AFS UIDs of related users
+<P><LI>You are converting an existing UNIX account into an AFS account and want
+to make the AFS UID match the existing UNIX UID
+</UL>
+<P>After the Protection Server initializes for the first time on a cell's
+first file server machine, it starts assigning AFS UIDs at a default
+value. To change the default before creating any user accounts, or at
+any time, use the <B>pts setmax</B> command to reset the <TT>max user
+id</TT> counter. To display the counter, use the <B>pts
+listmax</B> command. See <A HREF="auagd019.htm#HDRWQ560">Displaying and Setting the AFS UID and GID Counters</A>.
+<P>AFS reserves one AFS UID, 32766, for the user <B>anonymous</B>.
+The AFS server processes assign this identity and AFS UID to any user who does
+not possess a token for the local cell. Do not assign this AFS UID to
+any other user or hardcode its current value into any programs or a
+file's owner field, because it is subject to change in future
+releases.
+<A NAME="IDX5737"></A>
+<A NAME="IDX5738"></A>
+<P><B>User Volume Names</B>
+<P>Like any volume name, a user volume's base (read/write) name cannot
+exceed 22 characters in length or include the <B>.readonly</B> or
+<B>.backup</B> extension. See <A HREF="#HDRWQ44">Creating Volumes to Simplify Administration</A>. By convention, user volume names have the format
+<B>user.</B><VAR>username</VAR>. Using the
+<B>user.</B> prefix not only makes it easy to identify the
+volume's contents, but also to create a backup version of all user
+volumes by issuing a single <B>vos backupsys</B> command.
+<A NAME="IDX5739"></A>
+<A NAME="IDX5740"></A>
+<P><B>Mount Point Names</B>
+<P>By convention, the mount point for a user's volume is named after the
+username. Many cells follow the convention of mounting user volumes in
+the <B>/afs/</B><VAR>cellname</VAR><B>/usr</B> directory, as discussed
+in <A HREF="#HDRWQ43">The Third Level</A>. Very large cells sometimes find that mounting all
+user volumes in the same directory slows directory lookup, however; for
+suggested alternatives, see the following section.
+<A NAME="IDX5741"></A>
+<A NAME="IDX5742"></A>
+<P><H3><A NAME="HDRWQ59" HREF="auagd002.htm#ToC_71">Grouping Home Directories</A></H3>
+<P>Mounting user volumes in the
+<B>/afs/</B><VAR>cellname</VAR><B>/usr</B> directory is an
+AFS-appropriate variation on the standard UNIX practice of putting user home
+directories under the <B>/usr</B> subdirectory. However, cells with
+more than a few hundred users sometimes find that mounting all user volumes in
+a single directory results in slow directory lookup. The solution is to
+distribute user volume mount points into several directories; there are a
+number of alternative methods to accomplish this.
+<UL>
+<P><LI>Distribute user home directories into multiple directories that reflect
+organizational divisions, such as academic or corporate departments.
+For example, a company can create group directories called
+<B>usr/marketing</B>, <B>usr/research</B>,
+<B>usr/finance</B>. A good feature of this scheme is that knowing a
+user's department is enough to find the user's home
+directory. Also, it makes it easy to set the ACL to limit access to
+members of the department only. A potential drawback arises if
+departments are of sufficiently unequal size that users in large departments
+experience slower lookup than users in small departments. This scheme
+is also not appropriate in cells where users frequently change between
+divisions.
+<P><LI>Distribute home directories into alphabetic subdirectories of the
+<B>usr</B> directory (the <B>usr/a</B> subdirectory, the
+<B>usr/b</B> subdirectory, and so on), based on the first letter of the
+username. If the cell is very large, create subdirectories under each
+letter that correspond to the second letter in the user name. This
+scheme has the same advantages and disadvantages of a department-based
+scheme. Anyone who knows the user's username can find the
+user's home directory, but users with names that begin with popular
+letters sometimes experience slower lookup.
+<P><LI>Distribute home directories randomly but evenly into more than one
+grouping directory. One cell that uses this scheme has over twenty such
+directories called the <B>usr1</B> directory, the <B>usr2</B>
+directory, and so on. This scheme is especially appropriate in cells
+where the other two schemes do not seem feasible. It eliminates the
+potential problem of differences in lookup speed, because all directories are
+about the same size. Its disadvantage is that there is no way to guess
+which directory a given user's volume is mounted in, but a solution is to
+create a symbolic link in the regular <B>usr</B> directory that references
+the actual mount point. For example, if user <B>smith</B>'s
+volume is mounted at the <B>/afs/bigcell.com/usr17/smith</B>
+directory, then the <B>/afs/bigcell.com/usr/smith</B> directory is
+a symbolic link to the <B>../usr17/smith</B>
+directory. This way, if someone does not know which directory the user
+<B>smith</B> is in, he or she can access it through the link called
+<B>usr/smith</B>; people who do know the appropriate directory save
+lookup time by specifying it.
+</UL>
+<P>For instructions on how to implement the various schemes when using the
+<B>uss</B> program to create user accounts, see <A HREF="auagd017.htm#HDRWQ472">Evenly Distributing User Home Directories with the G Instruction</A> and <A HREF="auagd017.htm#HDRWQ473">Creating a Volume with the V Instruction</A>.
+<P><H3><A NAME="Header_72" HREF="auagd002.htm#ToC_72">Making a Backup Version of User Volumes Available</A></H3>
+<P>Mounting the backup version of a user's volume is a simple way to
+enable users themselves to restore data they have accidentally removed or
+deleted. It is conventional to mount the backup version at a
+subdirectory of the user's home directory (called perhaps the
+<B>OldFiles</B> subdirectory), but other schemes are possible. Once
+per day you create a new backup version to capture the changes made that day,
+overwriting the previous day's backup version with the new one.
+Users can always retrieve the previous day's copy of a file without your
+assistance, freeing you to deal with more pressing tasks.
+<P>Users sometimes want to delete the mount point to their backup volume,
+because they erroneously believe that the backup volume's contents count
+against their quota. Remind them that the backup volume is separate, so
+the only space it uses in the user volume is the amount needed for the mount
+point.
+<P>For further discussion of backup volumes, see <A HREF="#HDRWQ77">Backing Up AFS Data</A> and <A HREF="auagd010.htm#HDRWQ201">Creating Backup Volumes</A>.
+<A NAME="IDX5743"></A>
+<A NAME="IDX5744"></A>
+<A NAME="IDX5745"></A>
+<P><H3><A NAME="HDRWQ60" HREF="auagd002.htm#ToC_73">Creating Standard Files in New AFS Accounts</A></H3>
+<P>From your experience as a UNIX administrator, you are
+probably familiar with the use of login and shell initialization files (such
+as the <B>.login</B> and <B>.cshrc</B> files) to make an
+account easier to use.
+<P>It is often practical to add some AFS-specific directories to the
+definition of the user's <TT>PATH</TT> environment variable, including
+the following:
+<UL>
+<P><LI>The path to a <B>bin</B> subdirectory in the user's home
+directory for binaries the user has created (that is,
+<B>/afs/<VAR>cellname</VAR><B>/usr/</B>
+<VAR>username</VAR><B>/bin</B>)</B>
+<P><LI>The <B>/usr/afsws/bin</B> path, which conventionally includes programs
+like <B>fs</B>, <B>klog</B>, <B>kpasswd</B>, <B>pts</B>,
+<B>tokens</B>, and <B>unlog</B>
+<P><LI>The <B>/usr/afsws/etc</B> path, if the user is an administrator;
+it usually houses the AFS command suites that require privilege (the
+<B>backup</B>, <B>butc</B>, <B>kas</B>, <B>uss</B>,
+<B>vos</B> commands), the <B>package</B> program, and others
+</UL>
+<P>If you are not using an AFS-modified login utility, it can be helpful to
+users to invoke the <B>klog</B> command in their <B>.login</B>
+file so that they obtain AFS tokens as part of logging in. In the
+following example command sequence, the first line echoes the string
+<TT>klog</TT> to the standard output stream, so that the user understands
+the purpose of the <TT>Password:</TT> prompt that appears when the
+second line is executed. The <B>-setpag</B> flag associates the new
+tokens with a process authentication group (PAG), which is discussed further
+in <A HREF="#HDRWQ64">Identifying AFS Tokens by PAG</A>.
+<PRE>   echo -n "klog "
+   klog -setpag
+</PRE>
+<P>The following sequence of commands has a similar effect, except that the
+<B>pagsh</B> command forks a new shell with which the PAG and tokens are
+associated.
+<PRE>   pagsh
+   echo -n "klog "
+   klog
+</PRE>
+<P>If you use an AFS-modified login utility, this sequence is not necessary,
+because such utilities both log a user in locally and obtain AFS
+tokens.
+<A NAME="IDX5746"></A>
+<A NAME="IDX5747"></A>
+<A NAME="IDX5748"></A>
+<A NAME="IDX5749"></A>
+<HR><H2><A NAME="HDRWQ61" HREF="auagd002.htm#ToC_74">Using AFS Protection Groups</A></H2>
+<P>AFS enables users to define their own <I>groups</I> of
+other users or machines. The groups are placed on ACLs to grant the
+same permissions to many users without listing each user individually.
+For group creation instructions, see <A HREF="auagd019.htm#HDRWQ531">Administering the Protection Database</A>.
+<P>Groups have AFS ID numbers, just as users do, but an AFS group ID (GID) is
+a negative integer whereas a user's AFS UID is a positive integer.
+By default, the Protection Server allocates a new group's AFS GID
+automatically, but members of the <B>system:administrators</B> group
+can assign a GID when issuing the <B>pts creategroup</B> command.
+Before explicitly assigning a GID, it is best to verify that it is not already
+in use.
+<P>A group cannot belong to another group, but it can own another group or
+even itself as long as it (the owning group) has at least one member.
+The current owner of a group can transfer ownership of the group to another
+user or group, even without the new owner's permission. At that
+point the former owner loses administrative control over the group.
+<P>By default, each user can create 20 groups. A system administrator
+can increase or decrease this group creation quota with the <B>pts
+setfields</B> command.
+<P>Each Protection Database entry (group or user) is protected by a set of
+five <I>privacy flags</I>which limit who can administer the entry and what
+they can do. The default privacy flags are fairly restrictive,
+especially for user entries. See <A HREF="auagd019.htm#HDRWQ559">Setting the Privacy Flags on Database Entries</A>.
+<A NAME="IDX5750"></A>
+<A NAME="IDX5751"></A>
+<A NAME="IDX5752"></A>
+<A NAME="IDX5753"></A>
+<P><H3><A NAME="Header_75" HREF="auagd002.htm#ToC_75">The Three System Groups</A></H3>
+<P>As the Protection Server initializes for the first time on a
+cell's first database server machine, it automatically creates three
+group entries: the <B>system:anyuser</B>,
+<B>system:authuser</B>, and <B>system:administrators</B>
+groups. 
+<A NAME="IDX5754"></A>
+<P>The first two system groups are unlike any other groups in the Protection
+Database in that they do not have a stable membership:
+<UL>
+<P><LI>The <B>system:anyuser</B> group includes everyone who can access
+a cell's AFS filespace: users who have tokens for the local cell,
+users who have logged in on a local AFS client machine but not obtained tokens
+(such as the local superuser <B>root</B>), and users who have connected to
+a local machine from outside the cell. Placing the
+<B>system:anyuser</B> group on an ACL grants access to the widest
+possible range of users. It is the only way to extend access to users
+from foreign AFS cells that do not have local accounts.
+<P><LI>The <B>system:authuser</B> group includes everyone who has a
+valid token obtained from the cell's AFS authentication service.
+</UL>
+<P>Because the groups do not have a stable membership, the <B>pts
+membership</B> command produces no output for them. Similarly, they
+do not appear in the list of groups to which a user belongs.
+<P>The <B>system:administrators</B> group does have a stable
+membership, consisting of the cell's privileged administrators.
+Members of this group can issue any <B>pts</B> command, and are the only
+ones who can issue several other restricted commands (such as the
+<B>chown</B> command on AFS files). By default, they also
+implicitly have the <B>a</B> (<B>administer</B>) and <B>l</B>
+(<B>lookup</B>) permissions on every ACL in the filespace. For
+information about changing this default, see <A HREF="auagd021.htm#HDRWQ586">Administering the system:administrators Group</A>.
+<P>For a discussion of how to use system groups effectively on ACLs, see <A HREF="auagd020.htm#HDRWQ571">Using Groups on ACLs</A>.
+<P><H3><A NAME="HDRWQ62" HREF="auagd002.htm#ToC_76">The Two Types of User-Defined Groups</A></H3>
+<P>All users can create <I>regular</I> groups. A
+regular group name has two fields separated by a colon, the first of which
+must indicate the group's ownership. The Protection Server refuses
+to create or change the name of a group if the result does not accurately
+indicate the ownership.
+<P>Members of the <B>system:administrators</B> group can create
+<I>prefix-less</I> groups whose names do not have the first field that
+indicates ownership. For suggestions on using the two types of groups
+effectively, see <A HREF="auagd019.htm#HDRWQ545">Using Groups Effectively</A>.
+<A NAME="IDX5755"></A>
+<A NAME="IDX5756"></A>
+<HR><H2><A NAME="HDRWQ63" HREF="auagd002.htm#ToC_77">Login and Authentication in AFS</A></H2>
+<P>As explained in <A HREF="#HDRWQ31">Differences in Authentication</A>, AFS authentication is separate from UNIX
+authentication because the two file systems are separate. The
+separation has two practical implications:
+<UL>
+<P><LI>To access AFS files, users must both log into the local file system and
+authenticate with the AFS authentication service. (Logging into the
+local file system is necessary because the only way to access the AFS
+filespace is through a Cache Manager, which resides in the local
+machine's kernel.)
+<P><LI>Passwords are stored in two separate places: in the Authentication
+Database for AFS and in the each machine's local password file (the
+<B>/etc/passwd</B> file or equivalent) for the local file system.
+</UL>
+<P>When a user successfully authenticates, the AFS authentication service
+passes a <I>token</I> to the user's Cache Manager. The token
+is a small collection of data that certifies that the user has correctly
+provided the password associated with a particular AFS identity. The
+Cache Manager presents the token to AFS server processes along with service
+requests, as proof that the user is genuine. To learn about the mutual
+authentication procedure they use to establish identity, see <A HREF="#HDRWQ75">A More Detailed Look at Mutual Authentication</A>.
+<P>The Cache Manager stores tokens in the user's credential structure in
+kernel memory. To distinguish one user's credential structure from
+another's, the Cache Manager identifies each one either by the
+user's UNIX UID or by a <I>process authentication group</I>
+(<I>PAG</I>), which is an identification number guaranteed to be unique in
+the cell. For further discussion, see <A HREF="#HDRWQ64">Identifying AFS Tokens by PAG</A>.
+<A NAME="IDX5757"></A>
+<P>A user can have only one token per cell in each separately identified
+credential structure. To obtain a second token for the same cell, the
+user must either log into a different machine or obtain another credential
+structure with a different identifier than any existing credential structure,
+which is most easily accomplished by issuing the <B>pagsh</B> command (see
+<A HREF="#HDRWQ64">Identifying AFS Tokens by PAG</A>). In a single credential structure, a user can have
+one token for each of many cells at the same time. As this implies,
+authentication status on one machine or PAG is independent of authentication
+status on another machine or PAG, which can be very useful to a user or system
+administrator.
+<P>The AFS distribution includes library files that enable each system
+type's login utility to authenticate users with AFS and log them into the
+local file system in one step. If you do not configure an AFS-modified
+login utility on a client machine, its users must issue the <B>klog</B>
+command to authenticate with AFS after logging in. 
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Note:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">The AFS-modified libraries do not necessarily support all features available
+in an operating system's proprietary login utility. In some cases,
+it is not possible to support a utility at all. For more information
+about the supported utilities in each AFS version, see the <I>IBM AFS
+Release Notes</I>.
+</TD></TR></TABLE>
+<A NAME="IDX5758"></A>
+<A NAME="IDX5759"></A>
+<A NAME="IDX5760"></A>
+<A NAME="IDX5761"></A>
+<A NAME="IDX5762"></A>
+<A NAME="IDX5763"></A>
+<A NAME="IDX5764"></A>
+<P><H3><A NAME="HDRWQ64" HREF="auagd002.htm#ToC_78">Identifying AFS Tokens by PAG</A></H3>
+<P>As noted, the Cache Manager identifies user credential
+structures either by UNIX UID or by PAG. Using a PAG is preferable
+because it guaranteed to be unique: the Cache Manager allocates it based
+on a counter that increments with each use. In contrast, multiple users
+on a machine can share or assume the same UNIX UID, which creates potential
+security problems. The following are two common such situations:
+<UL>
+<P><LI>The local superuser <B>root</B> can always assume any other
+user's UNIX UID simply by issuing the <B>su</B> command, without
+providing the user's password. If the credential structure is
+associated with the user's UNIX UID, then assuming the UID means
+inheriting the AFS tokens.
+<P><LI>Two users working on different NFS client machines can have the same UNIX
+UID in their respective local file systems. If they both access the
+same NFS/AFS Translator machine, and the Cache Manager there identifies them
+by their UNIX UID, they become indistinguishable. To eliminate this
+problem, the Cache Manager on a translator machine automatically generates a
+PAG for each user and uses it, rather than the UNIX UID, to tell users
+apart.
+</UL>
+<P>Yet another advantage of PAGs over UIDs is that processes spawned by the
+user inherit the PAG and so share the token; thus they gain access to AFS
+as the authenticated user. In many environments, for example, printer
+and other daemons run under identities (such as the local superuser
+<B>root</B>) that the AFS server processes recognize only as the
+<B>anonymous</B> user. Unless PAGs are used, such daemons cannot
+access files for which the <B>system:anyuser</B> group does not have
+the necessary ACL permissions.
+<P>Once a user has a PAG, any new tokens the user obtains are associated with
+the PAG. The PAG expires two hours after any associated tokens expire
+or are discarded. If the user issues the <B>klog</B> command before
+the PAG expires, the new token is associated with the existing PAG (the PAG is
+said to be <I>recycled</I> in this case).
+<P>AFS-modified login utilities automatically generate a PAG, as described in
+the following section. If you use a standard login utility, your users
+must issue the <B>pagsh</B> command before the <B>klog</B> command, or
+include the latter command's <B>-setpag</B> flag. For
+instructions, see <A HREF="#HDRWQ69">Using Two-Step Login and Authentication</A>.
+<P>Users can also use either command at any time to create a new PAG.
+The difference between the two commands is that the <B>klog</B> command
+replaces the PAG associated with the current command shell and tokens.
+The <B>pagsh</B> command initializes a new command shell before creating a
+new PAG. If the user already had a PAG, any running processes or jobs
+continue to use the tokens associated with the old PAG whereas any new jobs or
+processes use the new PAG and its associated tokens. When you exit the
+new shell (by pressing &lt;<B>Ctrl-d</B>>, for example), you return to the
+original PAG and shell. By default, the <B>pagsh</B> command
+initializes a Bourne shell, but you can include the <B>-c</B> argument to
+initialize a C shell (the <B>/bin/csh</B> program on many system types) or
+Korn shell (the <B>/bin/ksh</B> program) instead.
+<A NAME="IDX5765"></A>
+<P><H3><A NAME="HDRWQ65" HREF="auagd002.htm#ToC_79">Using an AFS-modified login Utility</A></H3>
+<P>As previously mentioned, an AFS-modified login utility
+simultaneously obtains an AFS token and logs the user into the local file
+system. This section outlines the login and authentication process and
+its interaction with the value in the password field of the local password
+file.
+<P>An AFS-modified login utility performs a sequence of steps similar to the
+following; details can vary for different operating systems:
+<OL TYPE=1>
+<P><LI>It checks the user's entry in the local password file (the
+<B>/etc/passwd</B> file or equivalent).
+<P><LI>If no entry exists, or if an asterisk ( <TT>*</TT> ) appears in the
+entry's password field, the login attempt fails. If the entry
+exists, the attempt proceeds to the next step.
+<P><LI><A NAME="LIWQ66"></A>The utility obtains a PAG.
+<P><LI><A NAME="LIWQ67"></A>The utility converts the password provided by the user into an
+encryption key and encrypts a packet of data with the key. It sends the
+packet to the AFS authentication service (the AFS Authentication Server in the
+conventional configuration).
+<P><LI>The authentication service decrypts the packet and, depending on the
+success of the decryption, judges the password to be correct or
+incorrect. (For more details, see <A HREF="#HDRWQ75">A More Detailed Look at Mutual Authentication</A>.)
+<UL>
+<P><LI>If the authentication service judges the password incorrect, the user does
+not receive an AFS token. The PAG is retained, ready to be associated
+with any tokens obtained later. The attempt proceeds to Step <A HREF="#LIWQ68">6</A>.
+<P><LI>If the authentication service judges the password correct, it issues a
+token to the user as proof of AFS authentication. The login utility
+logs the user into the local UNIX file system. Some login utilities
+echo the following banner to the screen to alert the user to authentication
+with AFS. Step <A HREF="#LIWQ68">6</A> is skipped. 
+<PRE>   AFS(R) <VAR>version</VAR> Login 
+</PRE>
+</UL>
+<P><LI><A NAME="LIWQ68"></A>If no AFS token was granted in Step <A HREF="#LIWQ67">4</A>, the login utility attempts to log the user into the local
+file system, by comparing the password provided to the local password
+file. 
+<UL>
+<P><LI>If the password is incorrect or any value other than an encrypted
+13-character string appears in the password field, the login attempt
+fails.
+<P><LI>If the password is correct, the user is logged into the local file system
+only.
+</UL>
+</OL>
+<A NAME="IDX5766"></A>
+<A NAME="IDX5767"></A>
+<A NAME="IDX5768"></A>
+<P>As indicated, when you use an AFS-modified login utility, the password
+field in the local password file is no longer the primary gate for access to
+your system. If the user provides the correct AFS password, then the
+program never consults the local password file. However, you can still
+use the password field to control access, in the following way:
+<UL>
+<P><LI>To prevent both local login and AFS authentication, place an asterisk (
+<B>*</B> ) in the field. This is useful mainly in emergencies, when
+you want to prevent a certain user from logging into the machine.
+<P><LI>To prevent login to the local file system if the user does not provide the
+correct AFS password, place a character string of any length other than the
+standard thirteen characters in the field. This is appropriate if you
+want to permit only people with local AFS accounts to login on your
+machines. A single <B>X</B> or other character is the most easily
+recognizable way to do this.
+<P><LI>To enable a user to log into the local file system even after providing an
+incorrect AFS password, record a standard UNIX encrypted password in the field
+by issuing the standard UNIX password-setting command (<B>passwd</B> or
+equivalent).
+</UL>
+<P>Systems that use a Pluggable Authentication Module (PAM) for login and AFS
+authentication do not necessarily consult the local password file at all, in
+which case they do not use the password field to control authentication and
+login attempts. Instead, instructions in the PAM configuration file (on
+many system types, <B>/etc/pam.conf</B>) fill the same
+function. See the instructions in the <I>IBM AFS Quick
+Beginnings</I> for installing AFS-modified login utilities.
+<A NAME="IDX5769"></A>
+<P><H3><A NAME="HDRWQ69" HREF="auagd002.htm#ToC_80">Using Two-Step Login and Authentication</A></H3>
+<P>In cells that do not use an AFS-modified login utility, users
+must issue separate commands to login and authenticate, as detailed in the
+<I>IBM AFS User Guide</I>:
+<OL TYPE=1>
+<P><LI>They use the standard <B>login</B> program to login to the local file
+system, providing the password listed in the local password file (the
+<B>/etc/passwd</B> file or equivalent).
+<P><LI>They must issue the <B>klog</B> command to authenticate with the AFS
+authentication service, including its <B>-setpag</B> flag to associate the
+new tokens with a process authentication group (PAG).
+</OL>
+<P>As mentioned in <A HREF="#HDRWQ60">Creating Standard Files in New AFS Accounts</A>, you can invoke the <B>klog -setpag</B> command in a
+user's <B>.login</B> file (or equivalent) so that the user
+does not have to remember to issue the command after logging in. The
+user still must type a password twice, once at the prompt generated by the
+login utility and once at the <B>klog</B> command's prompt.
+This implies that the two passwords can differ, but it is less confusing if
+they do not.
+<P>Another effect of not using an AFS-modified login utility is that the AFS
+servers recognize the standard <B>login</B> program as the
+<B>anonymous</B> user. If the <B>login</B> program needs to
+access any AFS files (such as the <B>.login</B> file in a
+user's home directory), then the ACL that protects the file must include
+an entry granting the <B>l</B> (<B>lookup</B>) and <B>r</B>
+(<B>read</B>) permissions to the <B>system:anyuser</B>
+group.
+<P>When you do not use an AFS-modified login utility, an actual (scrambled)
+password must appear in the local password file for each user. Use the
+<B>/bin/passwd</B> file to insert or change these passwords. It is
+simpler if the password in the local password file matches the AFS password,
+but it is not required.
+<A NAME="IDX5770"></A>
+<A NAME="IDX5771"></A>
+<A NAME="IDX5772"></A>
+<A NAME="IDX5773"></A>
+<A NAME="IDX5774"></A>
+<A NAME="IDX5775"></A>
+<A NAME="IDX5776"></A>
+<A NAME="IDX5777"></A>
+<A NAME="IDX5778"></A>
+<A NAME="IDX5779"></A>
+<A NAME="IDX5780"></A>
+<A NAME="IDX5781"></A>
+<A NAME="IDX5782"></A>
+<A NAME="IDX5783"></A>
+<P><H3><A NAME="Header_81" HREF="auagd002.htm#ToC_81">Obtaining, Displaying, and Discarding Tokens</A></H3>
+<P>Once logged in, a user can obtain a token at any time with the
+<B>klog</B> command. If a valid token already exists, the new one
+overwrites it. If a PAG already exists, the new token is associated
+with it.
+<P>By default, the <B>klog</B> command authenticates the issuer using the
+identity currently logged in to the local file system. To authenticate
+as a different identity, use the <B>-principal</B> argument. To
+obtain a token for a foreign cell, use the <B>-cell</B> argument (it can
+be combined with the <B>-principal</B> argument). See the <I>IBM
+AFS User Guide</I> and the entry for the <B>klog</B> command in the
+<I>IBM AFS Administration Reference</I>.
+<P>To discard either all tokens or the token for a particular cell, issue the
+<B>unlog</B> command. The command affects only the tokens
+associated with the current command shell. See the <I>IBM AFS User
+Guide</I>and the entry for the <B>unlog</B> command in the <I>IBM AFS
+Administration Reference</I>.
+<P>To display the tokens associated with the current command shell, issue the
+<B>tokens</B> command. The following examples illustrate its output
+in various situations.
+<P>If the issuer is not authenticated in any cell:
+<PRE>   % <B>tokens</B>
+   Tokens held by the Cache Manager:
+          --End of list--
+</PRE>
+<P>The following shows the output for a user with AFS UID 1000 in the ABC
+Corporation cell:
+<PRE>   % <B>tokens</B>
+   Tokens held by the Cache Manager: 
+   
+   User's (AFS ID 1000) tokens for afs@abc.com  [Expires Jun  2 10:00]
+       --End of list--
+</PRE>
+<P>The following shows the output for a user who is authenticated in ABC
+Corporation cell, the State University cell and the DEF Company cell.
+The user has different AFS UIDs in the three cells. Tokens for the last
+cell are expired:
+<PRE>   % <B>tokens</B>
+   Tokens held by the Cache Manager:
+    
+   User's (AFS ID 1000) tokens for afs@abc.com  [Expires Jun  2 10:00]
+   User's (AFS ID 4286) tokens for afs@stateu.edu  [Expires Jun  3 1:34]
+   User's (AFS ID 22) tokens for afs@def.com  [>>Expired&lt;&lt;]
+       --End of list--
+</PRE>
+<P>The Kerberos version of the <B>tokens</B> command (the
+<B>tokens.krb</B> command), also reports information on the
+ticket-granting ticket, including the ticket's owner, the ticket-granting
+service, and the expiration date, as in the following example. Also see
+<A HREF="#HDRWQ70">Support for Kerberos Authentication</A>.
+<PRE>   % <B>tokens.krb</B>
+   Tokens held by the Cache Manager:
+   User's (AFS ID 1000) tokens for afs@abc.com [Expires Jun  2 10:00]
+   User smith's tokens for krbtgt.ABC.COM@abc.com [Expires Jun  2 10:00]
+     --End of list--
+</PRE>
+<P><H3><A NAME="Header_82" HREF="auagd002.htm#ToC_82">Setting Default Token Lifetimes for Users</A></H3>
+<A NAME="IDX5784"></A>
+<P>The maximum lifetime of a user token is the smallest of the <I>ticket
+lifetimes</I> recorded in the following three Authentication Database
+entries. The <B>kas examine</B> command reports the lifetime as
+<TT>Max ticket lifetime</TT>. Administrators who have the
+<TT>ADMIN</TT> flag on their Authentication Database entry can use the
+<B>-lifetime</B> argument to the <B>kas setfields</B> command to set
+an entry's ticket lifetime.
+<UL>
+<P><LI>The <B>afs</B> entry, which corresponds to the AFS server
+processes. The default is 100 hours.
+<P><LI>The <B>krbtgt</B>.<VAR>cellname</VAR> entry, which corresponds to
+the ticket-granting ticket used internally in generating the token. The
+default is 720 hours (30 days).
+<P><LI>The entry for the user of the AFS-modified login utility or issuer of the
+<B>klog</B> command. The default is 25 hours for user entries
+created using the AFS 3.1 or later version of the Authentication
+Server, and 100 hours for user entries created using the AFS 3.0
+version of the Authentication Server. A user can use the <B>kas
+examine</B> command to display his or her own Authentication Database
+entry.
+</UL>
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Note:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">An AFS-modified login utility always grants a token with a lifetime
+calculated from the previously described three values. When issuing the
+<B>klog</B> command, a user can request a lifetime shorter than the
+default by using the <B>-lifetime</B> argument. For further
+information, see the <I>IBM AFS User Guide</I> and the <B>klog</B>
+reference page in the <I>IBM AFS Administration Reference</I>.
+</TD></TR></TABLE>
+<P><H3><A NAME="Header_83" HREF="auagd002.htm#ToC_83">Changing Passwords</A></H3>
+<A NAME="IDX5785"></A>
+<A NAME="IDX5786"></A>
+<A NAME="IDX5787"></A>
+<A NAME="IDX5788"></A>
+<A NAME="IDX5789"></A>
+<P>Regular AFS users can change their own passwords by using either the
+<B>kpasswd</B> or <B>kas setpassword</B> command. The commands
+prompt for the current password and then twice for the new password, to screen
+out typing errors.
+<P>Administrators who have the <TT>ADMIN</TT> flag on their Authentication
+Database entries can change any user's password, either by using the
+<B>kpasswd</B> command (which requires knowing the current password) or
+the <B>kas setpassword</B> command.
+<P>If your cell does not use an AFS-modified login utility, remember also to
+change the local password, using the operating system's password-changing
+command. For more instructions on changing passwords, see <A HREF="auagd018.htm#HDRWQ516">Changing AFS Passwords</A>.
+<P><H3><A NAME="Header_84" HREF="auagd002.htm#ToC_84">Imposing Restrictions on Passwords and Authentication Attempts</A></H3>
+<P>You can help to make your cell more secure by imposing restrictions on
+user passwords and authentication attempts. To impose the restrictions
+as you create an account, use the <B>A</B> instruction in the
+<B>uss</B> template file as described in <A HREF="auagd017.htm#HDRWQ478">Increasing Account Security with the A Instruction</A>. To set or change the values on an existing
+account, use the <B>kas setfields</B> command as described in <A HREF="auagd018.htm#HDRWQ515">Improving Password and Authentication Security</A>.
+<A NAME="IDX5790"></A>
+<A NAME="IDX5791"></A>
+<A NAME="IDX5792"></A>
+<A NAME="IDX5793"></A>
+<A NAME="IDX5794"></A>
+<A NAME="IDX5795"></A>
+<P>By default, AFS passwords never expire. Limiting password lifetime
+can help improve security by decreasing the time the password is subject to
+cracking attempts. You can choose an lifetime from 1 to 254 days after
+the password was last changed. It automatically applies to each new
+password as it is set. When the user changes passwords, you can also
+insist that the new password is not similar to any of the 20 passwords
+previously used.
+<A NAME="IDX5796"></A>
+<A NAME="IDX5797"></A>
+<A NAME="IDX5798"></A>
+<A NAME="IDX5799"></A>
+<P>Unscrupulous users can try to gain access to your AFS cell by guessing an
+authorized user's password. To protect against this type of
+attack, you can limit the number of times that a user can consecutively fail
+to provide the correct password. When the limit is exceeded, the
+authentication service refuses further authentication attempts for a specified
+period of time (the <I>lockout time</I>). To reenable
+authentication attempts before the lockout time expires, an administrator must
+issue the <B>kas unlock</B> command.
+<A NAME="IDX5800"></A>
+<A NAME="IDX5801"></A>
+<A NAME="IDX5802"></A>
+<A NAME="IDX5803"></A>
+<A NAME="IDX5804"></A>
+<A NAME="IDX5805"></A>
+<P>In addition to settings on user's authentication accounts, you can
+improve security by automatically checking the quality of new user
+passwords. The <B>kpasswd</B> and <B>kas setpassword</B>
+commands pass the proposed password to a program or script called
+<B>kpwvalid</B>, if it exists. The <B>kpwvalid</B> performs
+quality checks and returns a code to indicate whether the password is
+acceptable. You can create your own program or modified the sample
+program included in the AFS distribution. See the <B>kpwvalid</B>
+reference page in the <I>IBM AFS Administration Reference</I>.
+<P>There are several types of quality checks that can improve password
+quality.
+<UL>
+<P><LI>The password is a minimum length
+<P><LI>The password is not a word
+<P><LI>The password contains both numbers and letters
+</UL>
+<P><H3><A NAME="HDRWQ70" HREF="auagd002.htm#ToC_85">Support for Kerberos Authentication</A></H3>
+<A NAME="IDX5806"></A>
+<A NAME="IDX5807"></A>
+<A NAME="IDX5808"></A>
+<A NAME="IDX5809"></A>
+<A NAME="IDX5810"></A>
+<A NAME="IDX5811"></A>
+<A NAME="IDX5812"></A>
+<P>If your site is using standard Kerberos authentication rather than the AFS
+Authentication Server, use the modified versions of the <B>klog</B>,
+<B>pagsh</B>, and <B>tokens</B> commands that support Kerberos
+authentication. The binaries for the modified version of these commands
+have the same name as the standard binaries with the addition of a
+<B>.krb</B> extension.
+<P>Use either the Kerberos version or the standard command throughout the
+cell; do not mix the two versions. AFS Product Support can provide
+instructions on installing the Kerberos version of these four commands.
+For information on the differences between the two versions of these commands,
+see the <I>IBM AFS Administration Reference</I>.
+<HR><H2><A NAME="HDRWQ71" HREF="auagd002.htm#ToC_86">Security and Authorization in AFS</A></H2>
+<P>AFS incorporates several features to ensure that only
+authorized users gain access to data. This section summarizes the most
+important of them and suggests methods for improving security in your
+cell.
+<P><H3><A NAME="HDRWQ72" HREF="auagd002.htm#ToC_87">Some Important Security Features</A></H3>
+<A NAME="IDX5813"></A>
+<A NAME="IDX5814"></A>
+<P><B>ACLs on Directories</B>
+<P>Files in AFS are protected by the access control list (ACL) associated with
+their parent directory. The ACL defines which users or groups can
+access the data in the directory, and in what way. See <A HREF="auagd020.htm#HDRWQ562">Managing Access Control Lists</A>.
+<P><B>Mutual Authentication Between Client and Server</B>
+<P>When an AFS client and server process communicate, each requires the other
+to prove its identity during mutual authentication, which involves the
+exchange of encrypted information that only valid parties can decrypt and
+respond to. For a detailed description of the mutual authentication
+process, see <A HREF="#HDRWQ75">A More Detailed Look at Mutual Authentication</A>.
+<P>AFS server processes mutually authenticate both with one another and with
+processes that represent human users. After mutual authentication is
+complete, the server and client have established an authenticated connection,
+across which they can communicate repeatedly without having to authenticate
+again until the connection expires or one of the parties closes it.
+Authenticated connections have varying lifetimes.
+<P><B>Tokens</B>
+<P>In order to access AFS files, users must prove their identities to the AFS
+authentication service by providing the correct AFS password. If the
+password is correct, the authentication service sends the user a
+<I>token</I> as evidence of authenticated status. See <A HREF="#HDRWQ63">Login and Authentication in AFS</A>.
+<P>Servers assign the user identity <B>anonymous</B> to users and
+processes that do not have a valid token. The <B>anonymous</B>
+identity has only the access granted to the <B>system:anyuser</B>
+group on ACLs.
+<P><B>Authorization Checking</B>
+<P>Mutual authentication establishes that two parties communicating with one
+another are actually who they claim to be. For many functions, AFS
+server processes also check that the client whose identity they have verified
+is also authorized to make the request. Different requests require
+different kinds of privilege. See <A HREF="#HDRWQ73">Three Types of Privilege</A>.
+<P><B>Encrypted Network Communications</B>
+<A NAME="IDX5815"></A>
+<A NAME="IDX5816"></A>
+<A NAME="IDX5817"></A>
+<P>The AFS server processes encrypt particularly sensitive information before
+sending it back to clients. Even if an unauthorized party is able to
+eavesdrop on an authenticated connection, they cannot decipher encrypted data
+without the proper key.
+<P>The following AFS commands encrypt data because they involve server
+encryption keys and passwords: 
+<UL>
+<P><LI>The <B>bos addkey</B> command, which adds a server encryption key to
+the <B>/usr/afs/etc/KeyFile</B> file
+<P><LI>The <B>bos listkeys</B> command, which lists the server encryption
+keys from the <B>/usr/afs/etc/KeyFile</B> file
+<P><LI>The <B>kpasswd</B> command, which changes a password in the
+Authentication Database
+<P><LI>Most commands in the <B>kas</B> command suite
+</UL>
+<P>In addition, the United States edition of the Update Server encrypts
+sensitive information (such as the contents of <B>KeyFile</B>) when
+distributing it. Other commands in the <B>bos</B> suite and the
+commands in the <B>fs</B>, <B>pts</B> and <B>vos</B> suites do not
+encrypt data before transmitting it.
+<P><H3><A NAME="HDRWQ73" HREF="auagd002.htm#ToC_88">Three Types of Privilege</A></H3>
+<P>AFS uses three separate types of privilege for the reasons
+discussed in <A HREF="auagd021.htm#HDRWQ585">The Reason for Separate Privileges</A>.
+<UL>
+<P><LI>Membership in the <B>system:administrators</B> group.
+Members are entitled to issue any <B>pts</B> command and those
+<B>fs</B> commands that set volume quota. By default, they also
+implicitly have the <B>a</B> (<B>administer</B>) and <B>l</B>
+(<B>lookup</B>) permissions on every ACL in the file tree even if the ACL
+does not include an entry for them.
+<P><LI>The <TT>ADMIN</TT> flag on the Authentication Database entry. An
+administrator with this flag can issue any <B>kas</B> command.
+<P><LI>Inclusion in the <B>/usr/afs/etc/UserList</B> file. An
+administrator whose username appears in this file can issue any
+<B>bos</B>, <B>vos</B>, or <B>backup</B> command (although some
+<B>backup</B> commands require additional privilege as described in <A HREF="auagd011.htm#HDRWQ260">Granting Administrative Privilege to Backup Operators</A>).
+</UL>
+<P><H3><A NAME="Header_89" HREF="auagd002.htm#ToC_89">Authorization Checking versus Authentication</A></H3>
+<P>AFS distinguishes between authentication and authorization
+checking. <I>Authentication</I> refers to the process of proving
+identity. <I>Authorization checking</I> refers to the process of
+verifying that an authenticated identity is allowed to perform a certain
+action.
+<P>AFS implements authentication at the level of connections. Each time
+two parties establish a new connection, they mutually authenticate. In
+general, each issue of an AFS command establishes a new connection between AFS
+server process and client.
+<P>AFS implements authorization checking at the level of server
+machines. If authorization checking is enabled on a server machine,
+then all of the server processes running on it provide services only to
+authorized users. If authorization checking is disabled on a server
+machine, then all of the server processes perform any action for
+anyone. Obviously, disabling authorization checking is an extreme
+security exposure. For more information, see <A HREF="auagd008.htm#HDRWQ123">Managing Authentication and Authorization Requirements</A>.
+<P><H3><A NAME="HDRWQ74" HREF="auagd002.htm#ToC_90">Improving Security in Your Cell</A></H3>
+<A NAME="IDX5818"></A>
+<P>You can improve the level of security in your cell by configuring user
+accounts, server machines, and system administrator accounts in the indicated
+way.
+<P><B>User Accounts</B>
+<UL>
+<P><LI>Use an AFS-modified login utility, or include the <B>-setpag</B> flag
+to the <B>klog</B> command, to associate the credential structure that
+houses tokens with a PAG rather than a UNIX UID. This prevents users
+from inheriting someone else's tokens by assuming their UNIX
+identity. For further discussion, see <A HREF="#HDRWQ64">Identifying AFS Tokens by PAG</A>.
+<P><LI>Encourage users to issue the <B>unlog</B> command to destroy their
+tokens before logging out. This forestalls attempts to access tokens
+left behind kernel memory. Consider including the <B>unlog</B>
+command in every user's <B>.logout</B> file or
+equivalent.
+</UL>
+<P><B>Server Machines</B>
+<UL>
+<P><LI>Disable authorization checking only in emergencies or for very brief
+periods of time. It is best to work at the console of the affected
+machine during this time, to prevent anyone else from accessing the machine
+through the keyboard.
+<P><LI>Change the AFS server encryption key on a frequent and regular
+schedule. Make it difficult to guess (a long string including
+nonalphabetic characters, for instance). Unlike user passwords, the
+password from which the AFS key is derived can be longer than eight
+characters, because it is never used during login. The <B>kas
+setpassword</B> command accepts a password hundreds of characters
+long. For instructions, see <A HREF="auagd014.htm#HDRWQ355">Managing Server Encryption Keys</A>.
+<P><LI>As much as possible, limit the number of people who can login at a server
+machine's console or remotely. Imposing this limit is an extra
+security precaution rather than a necessity. The machine cannot serve
+as an AFS client in this case.
+<P><LI>Particularly limit access to the local superuser <B>root</B> account
+on a server machine. The local superuser <B>root</B> has free
+access to important administrative subdirectories of the <B>/usr/afs</B>
+directory, as described in <A HREF="#HDRWQ53">AFS Files on the Local Disk</A>.
+<A NAME="IDX5819"></A>
+<P><LI>As in any computing environment, server machines must be located in a
+secured area. Any other security measures are effectively worthless if
+unauthorized people can access the computer hardware.
+</UL>
+<P><B>System Administrators</B>
+<UL>
+<P><LI>Limit the number of system administrators in your cell. Limit the
+use of system administrator accounts on publicly accessible
+workstations. Such machines are not secure, so unscrupulous users can
+install programs that try to steal tokens or passwords. If
+administrators must use publicly accessible workstations at times, they must
+issue the <B>unlog</B> command before leaving the machine.
+<P><LI>Create an administrative account for each administrator separate from the
+personal account, and assign AFS privileges only to the administrative
+account. The administrators must authenticate to the administrative
+accounts to perform duties that require privilege, which provides a useful
+audit trail as well.
+<P><LI>Administrators must not leave a machine unattended while they have valid
+tokens. Issue the <B>unlog</B> command before leaving.
+<P><LI>Use the <B>-lifetime</B> argument to the <B>kas setfields</B>
+command to set the token lifetime for administrative accounts to a fairly
+short amount of time. The default lifetime for AFS tokens is 25 hours,
+but 30 or 60 minutes is possibly a more reasonable lifetime for administrative
+tokens. The tokens for administrators who initiate AFS Backup System
+operations must last somewhat longer, because it can take several hours to
+complete some dump operations, depending on the speed of the tape device and
+the network connecting it to the file server machines that house the volumes
+is it accessing.
+<P><LI>Limit administrators' use of the <B>telnet</B> program. It
+sends unencrypted passwords across the network. Similarly, limit use of
+other remote programs such as <B>rsh</B> and <B>rcp</B>, which send
+unencrypted tokens across the network.
+</UL>
+<A NAME="IDX5820"></A>
+<A NAME="IDX5821"></A>
+<A NAME="IDX5822"></A>
+<A NAME="IDX5823"></A>
+<P><H3><A NAME="HDRWQ75" HREF="auagd002.htm#ToC_91">A More Detailed Look at Mutual Authentication</A></H3>
+<P>As in any file system, security is a prime concern in
+AFS. A file system that makes file sharing easy is not useful if it
+makes file sharing mandatory, so AFS incorporates several features that
+prevent unauthorized users from accessing data. Security in a networked
+environment is difficult because almost all procedures require transmission of
+information across wires that almost anyone can tap into. Also, many
+machines on networks are powerful enough that unscrupulous users can monitor
+transactions or even intercept transmissions and fake the identity of one of
+the participants.
+<P>The most effective precaution against eavesdropping and information theft
+or fakery is for servers and clients to accept the claimed identity of the
+other party only with sufficient proof. In other words, the nature of
+the network forces all parties on the network to assume that the other party
+in a transaction is not genuine until proven so. <I>Mutual
+authentication</I> is the means through which parties prove their
+genuineness.
+<P>Because the measures needed to prevent fakery must be quite sophisticated,
+the implementation of mutual authentication procedures is complex. The
+underlying concept is simple, however: parties prove their identities by
+demonstrating knowledge of a <I>shared secret</I>. A shared secret
+is a piece of information known only to the parties who are mutually
+authenticating (they can sometimes learn it in the first place from a trusted
+third party or some other source). The party who originates the
+transaction presents the shared secret and refuses to accept the other party
+as valid until it shows that it knows the secret too.
+<P>The most common form of shared secret in AFS transactions is the
+<I>encryption key</I>, also referred to simply as a <I>key</I>.
+The two parties use their shared key to encrypt the packets of information
+they send and to decrypt the ones they receive. Encryption using keys
+actually serves two related purposes. First, it protects messages as
+they cross the network, preventing anyone who does not know the key from
+eavesdropping. Second, ability to encrypt and decrypt messages
+successfully indicates that the parties are using the key (it is their shared
+secret). If they are using different keys, messages remain scrambled
+and unintelligible after decryption.
+<P>The following sections describe AFS's mutual authentication procedures
+in more detail. Feel free to skip these sections if you are not
+interested in the mutual authentication process.
+<P><H4><A NAME="Header_92">Simple Mutual Authentication</A></H4>
+<P>Simple mutual authentication involves only one encryption key and two
+parties, generally a client and server. The client contacts the server
+by sending a <I>challenge</I> message encrypted with a key known only to
+the two of them. The server decrypts the message using its key, which
+is the same as the client's if they really do share the same
+secret. The server responds to the challenge and uses its key to
+encrypt its response. The client uses its key to decrypt the
+server's response, and if it is correct, then the client can be sure that
+the server is genuine: only someone who knows the same key as the client
+can decrypt the challenge and answer it correctly. On its side, the
+server concludes that the client is genuine because the challenge message made
+sense when the server decrypted it.
+<P>AFS uses simple mutual authentication to verify user identities during the
+first part of the login procedure. In that case, the key is based on
+the user's password.
+<P><H4><A NAME="HDRWQ76">Complex Mutual Authentication</A></H4>
+<P>Complex mutual authentication involves three encryption keys
+and three parties. All secure AFS transactions (except the first part
+of the login process) employ complex mutual authentication.
+<A NAME="IDX5824"></A>
+<A NAME="IDX5825"></A>
+<A NAME="IDX5826"></A>
+<P>When a client wishes to communicate with a server, it first contacts a
+third party called a <I>ticket-granter</I>. The ticket-granter and
+the client mutually authenticate using the simple procedure. When they
+finish, the ticket-granter gives the client a <I>server ticket</I> (or
+simply <I>ticket</I>) as proof that it (the ticket-granter) has
+preverified the identity of the client. The ticket-granter encrypts the
+ticket with the first of the three keys, called the <I>server encryption
+key</I> because it is known only to the ticket-granter and the server the
+client wants to contact. The client does not know this key.
+<P>The ticket-granter sends several other pieces of information along with the
+ticket. They enable the client to use the ticket effectively despite
+being unable to decrypt the ticket itself. Along with the ticket, the
+items constitute a <I>token</I>:
+<UL>
+<A NAME="IDX5827"></A>
+<P><LI>A <I>session key</I>, which is the second encryption key involved in
+mutual authentication. The ticket-granter invents the session key at
+random as the shared secret between client and server. For reasons
+explained further below, the ticket-granter also puts a copy of the session
+key inside the ticket. The client and server use the session key to
+encrypt messages they send to one another during their transactions.
+The ticket-granter invents a different session key for each connection between
+a client and a server (there can be several transactions during a single
+connection).
+<P><LI>The name of the server for which the ticket is valid (and so which server
+encryption key encrypts the ticket itself).
+<P><LI>A ticket lifetime indicator. The default lifetime of AFS server
+tickets is 100 hours. If the client wants to contact the server again
+after the ticket expires, it must contact the ticket-granter to get a new
+ticket.
+</UL>
+<P>The ticket-granter seals the entire token with the third key involved in
+complex mutual authentication--the key known only to it (the
+ticket-granter) and the client. In some cases, this third key is
+derived from the password of the human user whom the client represents.
+<P>Now that the client has a valid server ticket, it is ready to contact the
+server. It sends the server two things:
+<UL>
+<P><LI>The server ticket. This is encrypted with the server encryption
+key.
+<P><LI>Its request message, encrypted with the session key. Encrypting the
+message protects it as it crosses the network, since only the server/client
+pair for whom the ticket-granter invented the session key know it.
+</UL>
+<P>At this point, the server does not know the session key, because the
+ticket-granter just created it. However, the ticket-granter put a copy
+of the session key inside the ticket. The server uses the server
+encryption key to decrypts the ticket and learns the session key. It
+then uses the session key to decrypt the client's request message.
+It generates a response and sends it to the client. It encrypts the
+response with the session key to protect it as it crosses the network.
+<P>This step is the heart of mutual authentication between client and server,
+because it proves to both parties that they know the same secret:
+<UL>
+<P><LI>The server concludes that the client is authorized to make a request
+because the request message makes sense when the server decrypts it using the
+session key. If the client uses a different session key than the one
+the server finds inside the ticket, then the request message remains
+unintelligible even after decryption. The two copies of the session key
+(the one inside the ticket and the one the client used) can only be the same
+if they both came from the ticket-granter. The client cannot fake
+knowledge of the session key because it cannot look inside the ticket, sealed
+as it is with the server encryption key known only to the server and the
+ticket-granter. The server trusts the ticket-granter to give tokens
+only to clients with whom it (the ticket-granter) has authenticated, so the
+server decides the client is legitimate.
+<P>(Note that there is no direct communication between the ticket-granter and
+the server, even though their relationship is central to ticket-based mutual
+authentication. They interact only indirectly, via the client's
+possession of a ticket sealed with their shared secret.)
+<P><LI>The client concludes that the server is genuine and trusts the response it
+gets back from the server, because the response makes sense after the client
+decrypts it using the session key. This indicates that the server
+encrypted the response with the same session key as the client knows.
+The only way for the server to learn that matching session key is to decrypt
+the ticket first. The server can only decrypt the ticket because it
+shares the secret of the server encryption key with the ticket-granter.
+The client trusts the ticket-granter to give out tickets only for legitimate
+servers, so the client accepts a server that can decrypt the ticket as
+genuine, and accepts its response.
+</UL>
+<HR><H2><A NAME="HDRWQ77" HREF="auagd002.htm#ToC_94">Backing Up AFS Data</A></H2>
+<P>AFS provides two related facilities that help the
+administrator back up AFS data: backup volumes and the AFS Backup
+System.
+<P><H3><A NAME="Header_95" HREF="auagd002.htm#ToC_95">Backup Volumes</A></H3>
+<P>The first facility is the backup volume, which you create by cloning a
+read/write volume. The backup volume is read-only and so preserves the
+state of the read/write volume at the time the clone is made.
+<P>Backup volumes can ease administration if you mount them in the file system
+and make their contents available to users. For example, it often makes
+sense to mount the backup version of each user volume as a subdirectory of the
+user's home directory. A conventional name for this mount point is
+<B>OldFiles</B>. Create a new version of the backup volume (that
+is, reclone the read/write) once a day to capture any changes that were made
+since the previous backup. If a user accidentally removes or changes
+data, the user can restore it from the backup volume, rather than having to
+ask you to restore it.
+<P>The <I>IBM AFS User Guide</I> does not mention backup volumes, so
+regular users do not know about them if you decide not to use them.
+This implies that if you <B>do</B> make backup versions of user volumes,
+you need to tell your users about how the backup works and where you have
+mounted it.
+<P>Users are often concerned that the data in a backup volume counts against
+their volume quota and some of them even want to remove the
+<B>OldFiles</B> mount point. It does not, because the backup volume
+is a separate volume. The only amount of space it uses in the
+user's volume is the amount needed for the mount point, which is about
+the same as the amount needed for a standard directory element.
+<P>Backup volumes are discussed in detail in <A HREF="auagd010.htm#HDRWQ201">Creating Backup Volumes</A>.
+<P><H3><A NAME="Header_96" HREF="auagd002.htm#ToC_96">The AFS Backup System</A></H3>
+<P>Backup volumes can reduce restoration requests, but they reside on disk
+and so do not protect data from loss due to hardware failure. Like any
+file system, AFS is vulnerable to this sort of data loss.
+<P>To protect your cell's users from permanent loss of data, you are
+strongly urged to back up your file system to tape on a regular and frequent
+schedule. The AFS Backup System is available to ease the administration
+and performance of backups. For detailed information about the AFS
+Backup System, see <A HREF="auagd011.htm#HDRWQ248">Configuring the AFS Backup System</A> and <A HREF="auagd012.htm#HDRWQ283">Backing Up and Restoring AFS Data</A>.
+<A NAME="IDX5828"></A>
+<A NAME="IDX5829"></A>
+<A NAME="IDX5830"></A>
+<A NAME="IDX5831"></A>
+<A NAME="IDX5832"></A>
+<A NAME="IDX5833"></A>
+<A NAME="IDX5834"></A>
+<A NAME="IDX5835"></A>
+<A NAME="IDX5836"></A>
+<A NAME="IDX5837"></A>
+<A NAME="IDX5838"></A>
+<A NAME="IDX5839"></A>
+<HR><H2><A NAME="HDRWQ78" HREF="auagd002.htm#ToC_97">Using UNIX Remote Services in the AFS Environment</A></H2>
+<P>The AFS distribution includes modified versions of several
+standard UNIX commands, daemons and programs that provide remote services,
+including the following:
+<UL>
+<P><LI>The <B>ftpd</B> program
+<P><LI>The <B>inetd</B> daemon
+<P><LI>The <B>rcp</B> program
+<P><LI>The <B>rlogind</B> daemon
+<P><LI>The <B>rsh</B> command
+</UL>
+<P>These modifications enable the commands to handle AFS authentication
+information (tokens). This enables issuers to be recognized on the
+remote machine as an authenticated AFS user.
+<P>Replacing the standard versions of these programs in your file tree with
+the AFS-modified versions is optional. It is likely that AFS's
+transparent access reduces the need for some of the programs anyway,
+especially those involved in transferring files from machine to machine, like
+the <B>ftpd</B> and <B>rcp</B> programs.
+<P>If you decide to use the AFS versions of these commands, be aware that
+several of them are interdependent. For example, the passing of AFS
+authentication information works correctly with the <B>rcp</B> command
+only if you are using the AFS version of both the <B>rcp</B> and
+<B>inetd</B> commands.
+<P>The conventional installation location for the modified remote commands are
+the <B>/usr/afsws/bin</B> and <B>/usr/afsws/etc</B>
+directories. To learn more about commands' functionality, see
+their reference pages in the <I>IBM AFS Administration
+Reference</I>.
+<HR><H2><A NAME="HDRWQ79" HREF="auagd002.htm#ToC_98">Accessing AFS through NFS</A></H2>
+<P>Users of NFS client machines can access the AFS filespace by
+mounting the <B>/afs</B> directory of an AFS client machine that is
+running the <I>NFS/AFS Translator</I>. This is a particular
+advantage in cells already running NFS who want to access AFS using client
+machines for which AFS is not available. See <A HREF="auagd022.htm#HDRWQ595">Appendix A,  Managing the NFS/AFS Translator</A>.
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auagd002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auagd006.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auagd008.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auagd026.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

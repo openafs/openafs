@@ -1,0 +1,279 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 4//EN">
+<HTML><HEAD>
+<TITLE>User Guide</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3629/auusg000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 2 Oct 2000 at 14:38:44                -->
+<META HTTP-EQUIV="updated" CONTENT="Mon, 02 Oct 2000 14:38:42">
+<META HTTP-EQUIV="review" CONTENT="Tue, 02 Oct 2001 14:38:42">
+<META HTTP-EQUIV="expires" CONTENT="Wed, 02 Oct 2002 14:38:42">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>User Guide</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auusg002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auusg011.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auusg013.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auusg013.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<HR><H1><A NAME="HDRWQ90" HREF="auusg002.htm#ToC_182">Appendix C. Glossary</A></H1>
+<DL>
+<P><DT><B><B>a (administer) Permission</B>
+</B><DD>The ACL permission that allows the possessor to change the entries on the
+ACL .
+<P><DT><B><B>a Privacy Flag</B>
+</B><DD>The fourth privacy flag on a group, which enables the possessor to add
+members to it.
+<P><DT><B><B>Access Control List (ACL)</B>
+</B><DD>A list associated with an AFS directory that specifies what actions a user
+or group can perform on the directory and the files in it. There are
+seven access permissions: <B>a</B> (<B>administer</B>),
+<B>d</B> (<B>delete</B>), <B>i</B> (<B>insert</B>),
+<B>k</B> (<B>lock</B>), <B>l</B> (<B>lookup</B>), <B>r</B>
+(<B>read</B>), and <B>w</B> (<B>write</B>).
+<P><DT><B><B>ACL Entry</B>
+</B><DD>An entry on an ACL that pairs a user or group with specific access
+permissions.
+<P><DT><B><B>Alias</B>
+</B><DD>An alternative name for an AFS command.
+<P><DT><B><B>all ACL Shorthand</B>
+</B><DD>A shorthand notation used with the <B>fs setacl</B> command to
+represent all seven permissions.
+<P><DT><B><B>Anonymous</B>
+</B><DD>The identity assigned to a user who does not have a valid token for the
+local cell.
+<P><DT><B><B>Argument</B>
+</B><DD>The portion of a command that names an entity to be affected by the
+command. Arguments consist of two parts: a <I>switch</I> and
+one or more <I>instances</I>. Some AFS commands take one or more
+arguments.
+<P><DT><B><B>Authenticate</B>
+</B><DD>To become recognized as a valid AFS user by providing the correct
+password. Authenticate by logging onto a machine that uses an
+AFS-modified login utility or by issuing the <B>klog</B> command.
+Only authenticated users can perform most AFS actions.
+<P><DT><B><B>Byte, kilobyte</B>
+</B><DD>A unit of measure used to measure usage of space in a volume or on a
+partition. A kilobyte block is equal to 1024 bytes.
+<P><DT><B><B>Cache Manager</B>
+</B><DD>A set of modifications to the operating system on a client machine which
+enables users on the machine to access files stored in AFS. The Cache
+Manager requests files from the File Server and stores (<I>caches</I>) a
+copy of each file on the client machine's local disk. Application
+programs then use the cached copy, which eliminates repeated network requests
+to file server machines.
+<P><DT><B><B>Cached File</B>
+</B><DD>A copy of a file that the Cache Manager stores on a workstation's
+local disk.
+<P><DT><B><B>Callback</B>
+</B><DD>A promise from the File Server to contact the Cache Manager if the
+centrally stored copy of the file changes while the Cache Manager has a cached
+copy. If the file is altered, the File Server <I>breaks</I> the
+callback. The next time an application program asks for data from the
+file, the Cache Manager notices the broken callback and retrieves an updated
+copy of the file from the File Server. Callbacks ensure the user is
+working with the most recent copy of a file.
+<P><DT><B><B>Cell</B>
+</B><DD>An independently administered site running AFS, consisting of a collection
+of file server machines and client machines defined to belong to the
+cell. A machine can belong to only one cell at a time.
+<P><DT><B><B>Client Machines</B>
+</B><DD>Computers that perform computations for users. Users normally work
+on a client machine, accessing files stored on a file server machine.
+<P><DT><B><B>Client/Server Computing</B>
+</B><DD>A computing system in which two types of computers (client machines and
+server machines) perform different specialized functions.
+<P><DT><B><B>Command</B>
+</B><DD>A string of characters indicating an action for an AFS server to
+perform. For a description of AFS command syntax, see <A HREF="auusg011.htm#HDRWQ86">Appendix B,  AFS Command Syntax and Online Help</A>.
+<P><DT><B><B>Command Suite</B>
+</B><DD>A group of AFS commands with related functions. The command suite
+name is the first word in many AFS commands.
+<P><DT><B><B>Complete Pathname</B>
+</B><DD>A full specification of a file's location in AFS, starting at the
+root of the filespace (by convention mounted at the <B>/afs</B> directory)
+and specifying all the directories the Cache Manager must pass through to
+access the file. The names of the directories are separated by
+slashes.
+<P><DT><B><B>d (delete) Permission</B>
+</B><DD>The ACL permission that enables the possessor to remove elements from a
+directory.
+<P><DT><B><B>Directory</B>
+</B><DD>A logical structure containing a collection of files and other
+directories.
+<P><DT><B><B>Distributed File System</B>
+</B><DD>A file system that joins the file systems of individual machines.
+Files are stored on different machines in the network but are accessible from
+all machines.
+<P><DT><B><B>File</B>
+</B><DD>A collection of information stored and retrieved as a unit.
+<P><DT><B><B>File Server Machine</B>
+</B><DD>A type of machine that stores files and transfers them to client machines
+on request.
+<P><DT><B><B>Flag</B>
+</B><DD>Part of a command that determines how the command executes, or the type of
+output it produces.
+<P><DT><B><B>Foreign Cell</B>
+</B><DD>A cell other than the cell to which the client machine belongs. If
+the client machine is appropriately configured, users can access the AFS
+filespace in foreign cells as well as the local cell, and can authenticate in
+foreign cells in which they have AFS accounts.
+<P><DT><B><B>Group</B>
+</B><DD>A defined list of users, which can be placed on a directory's ACL to
+extend a set of permissions to all of its members at once.
+<P><DT><B><B>Group-owned Group</B>
+</B><DD>A group owned by another group. All members of the owning group can
+administer the owned group; the members of the owned group do not have
+administer permissions themselves.
+<P><DT><B><B>Hierarchical File Structure</B>
+</B><DD>A method of storing data in directories that are organized in a tree
+structure.
+<P><DT><B><B>Home Directory</B>
+</B><DD>A directory owned by a user and dedicated to storage of the user's
+personal files.
+<P><DT><B><B>i (insert) Permission</B>
+</B><DD>The ACL permission that enables the possessor to add files or
+subdirectories to a directory.
+<P><DT><B><B>Instance</B>
+</B><DD>The part of a command string that defines the entity to affect.
+<P><DT><B><B>k (lock) Permission</B>
+</B><DD>See the k (lock) Permission entry. The ACL permission that enables
+programs to place advisory locks on a file.
+<P><DT><B>Kilobyte
+</B><DD>A unit of measure used to measure usage of space in a volume or on a
+partition. A kilobyte is equal to 1024 bytes. The term
+<I>kilobyte block</I> is sometimes used when referring to disk
+space.
+<P><DT><B><B>l (lookup) Permission</B>
+</B><DD>The ACL permission that enables the possessor to list the contents of a
+directory and display its ACL.
+<P><DT><B><B>Local Cell</B>
+</B><DD>The cell to which the user's account and client machine
+belong.
+<P><DT><B><B>lock Permission</B>
+</B><DD>See the <B>k (lock) Permission</B> entry.
+<P><DT><B><B>Login</B>
+</B><DD>The process of establishing a connection to a client machine's local
+file system as a specific user.
+<P><DT><B><B>Logout</B>
+</B><DD>The process of ending a connection to the local file system.
+<P><DT><B><B>m Privacy Flag</B>
+</B><DD>The third privacy flag on a group, which enables the possessor to list the
+members of a group or the groups to which a user belongs.
+<P><DT><B><B>Mode Bits</B>
+</B><DD>A set of permissions that the UNIX file system associates with a file or
+directory to control access to it. They appear in the first field of
+the output from the <B>ls -l</B> command.
+<P><DT><B><B>Mount Point</B>
+</B><DD>A special type of directory that associates a location in the AFS file
+space with a volume. It acts like a standard UNIX directory in that
+users can change directory to it and list its contents with the UNIX
+<B>cd</B> and <B>ls</B> commands.
+<P><DT><B><B>Mutual Authentication</B>
+</B><DD>A procedure through which two parties prove their identities to one
+another. AFS server and client processes normally mutually authenticate
+as they establish a connection.
+<P><DT><B><B>NFS/AFS Translator</B>
+</B><DD>A program that enables users on NFS client machines to access files in the
+AFS filespace.
+<P><DT><B><B>none ACL Shorthand</B>
+</B><DD>A shorthand notation used with the <B>fs setacl</B> command to delete
+an entry from an ACL.
+<P><DT><B><B>o Privacy Flag</B>
+</B><DD>The second privacy flag on a group, which enables the possessor to list
+groups owned by the user or group.
+<P><DT><B><B>Operation Code</B>
+</B><DD>The second word in an AFS command that belongs to a suite. It
+indicates the command's function.
+<P><DT><B><B>Owner of a Group</B>
+</B><DD>The person or group who can administer a group.
+<P><DT><B><B>Parent Directory</B>
+</B><DD>The directory in which a directory or file resides.
+<P><DT><B><B>Partition</B>
+</B><DD>A logical section of a disk in a computer.
+<P><DT><B><B>Password</B>
+</B><DD>A unique, user-defined string of characters validating the user's
+system identity. The user must correctly enter the password in order to
+be authenticated.
+<P><DT><B><B>Permission</B>
+</B><DD>A certain type of access granted on an ACL. Anyone who possesses
+the permission can perform the action.
+<P><DT><B><B>Quota</B>
+</B><DD>The size limit of a volume, assigned by the system administrator and
+measured in kilobyte blocks.
+<P><DT><B><B>r (read) Permission</B>
+</B><DD>The ACL permission that enables the possessor to examine the contents of a
+file.
+<P><DT><B><B>r Privacy Flag</B>
+</B><DD>The fifth privacy flag on a group, which enables the possessor to remove
+members from it.
+<P><DT><B><B>read ACL Shorthand</B>
+</B><DD>A shorthand notation used with the <B>fs setacl</B> command to
+represent the <B>r</B> and <B>l</B> permissions.
+<P><DT><B><B>Relative Pathname</B>
+</B><DD>A pathname that does not begin at the root of the AFS or local filespace
+and so represents a file or directory's location with respect to the
+current working directory.
+<P><DT><B><B>Remote Commands</B>
+</B><DD>Commands used to run programs on a remote machine without establishing a
+persistent connection to it.
+<P><DT><B><B>s Privacy Flag</B>
+</B><DD>The first privacy flag on a group, which enables the possessor to list
+general information about it.
+<P><DT><B><B>Self-owned Group</B>
+</B><DD>A group that owns itself, enabling all of its members to administer
+it.
+<P><DT><B><B>Server</B>
+</B><DD>A program or machine that provides a specialized service to its clients,
+such as storing and transferring files or performing authentication.
+<P><DT><B><B>Subdirectory</B>
+</B><DD>A directory that resides in another directory in the file system
+hierarchy.
+<P><DT><B><B>Switch</B>
+</B><DD>The part of a command string defining the type of an argument. It
+is preceded by a hyphen.
+<P><DT><B><B>Syntax Statement</B>
+</B><DD>A specification of the options available on a command and their
+ordering.
+<P><DT><B><B>System Administrator</B>
+</B><DD>A user who is authorized to administer an AFS cell.
+<P><DT><B><B>System Groups</B>
+</B><DD>Groups that AFS defines automatically to represent users who share certain
+characteristics. See the following three entries.
+<P><DT><B><B>System:administrators group</B>
+</B><DD>A system group that includes users authorized to administer AFS.
+<P><DT><B><B>System:anyuser</B> group
+</B><DD>A system group that includes everyone who can gain access the cell's
+AFS filespace. It includes unauthenticated users, who are assigned the
+identity <B>anonymous</B>.
+<P><DT><B><B>System:authuser</B> group
+</B><DD>A system group that includes all users who currently have valid AFS tokens
+for the local cell.
+<P><DT><B><B>Token</B>
+</B><DD>A collection of data that the AFS server processes accept as evidence that
+the possessor has successfully proved his or her identity to the cell's
+AFS authentication service. AFS assigns the identity
+<B>anonymous</B> to users who do not have a token.
+<P><DT><B><B>UNIX Mode Bits</B>
+</B><DD>See the <B>Mode Bits</B> entry.
+<P><DT><B><B>Username</B>
+</B><DD>A character string entered at login that uniquely identifies a person in
+the local cell.
+<P><DT><B><B>Volume</B>
+</B><DD>A structure that AFS uses to group a set of files and directories into a
+single unit for administrative purposes. The contents of a volume
+reside on a single disk partition and must be mounted in the AFS filespace to
+be accessible.
+<P><DT><B><B>w (write) Permission</B>
+</B><DD>The ACL permission that enables the possessor to modify the contents of a
+file.
+<P><DT><B><B>write ACL Shorthand</B>
+</B><DD>A shorthand notation used with the <B>fs setacl</B> command to
+represent all permissions except the <B>a</B> permission.
+</DL>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auusg002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auusg011.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auusg013.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auusg013.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

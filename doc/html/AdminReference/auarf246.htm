@@ -1,0 +1,132 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 4//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3672/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 3 Oct 2000 at 16:18:30                -->
+<META HTTP-EQUIV="updated" CONTENT="Tue, 03 Oct 2000 16:18:29">
+<META HTTP-EQUIV="review" CONTENT="Wed, 03 Oct 2001 16:18:29">
+<META HTTP-EQUIV="expires" CONTENT="Thu, 03 Oct 2002 16:18:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf245.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf247.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRUSS_DELETE" HREF="auarf002.htm#ToC_260">uss delete</A></H2>
+<A NAME="IDX5544"></A>
+<A NAME="IDX5545"></A>
+<A NAME="IDX5546"></A>
+<A NAME="IDX5547"></A>
+<A NAME="IDX5548"></A>
+<A NAME="IDX5549"></A>
+<A NAME="IDX5550"></A>
+<A NAME="IDX5551"></A>
+<A NAME="IDX5552"></A>
+<A NAME="IDX5553"></A>
+<P><STRONG>Purpose</STRONG>
+<P>Deletes a user account
+<P><STRONG>Synopsis</STRONG>
+<PRE><B>uss delete -user</B> &lt;<VAR>login name</VAR>>  [<B>-mountpoint</B> &lt;<VAR>mountpoint for user's volume</VAR>>] 
+           [<B>-savevolume</B>]  [<B>-verbose</B>]  [<B>-cell</B> &lt;<VAR>cell name</VAR>>]  
+           [<B>-admin</B> &lt;<VAR>administrator to authenticate</VAR>>]  [<B>-dryrun</B>]  
+           [<B>-skipauth</B>]  [<B>-help</B>]
+    
+<B>uss d -u</B> &lt;<VAR>login name</VAR>>  [<B>-m</B> &lt;<VAR>mountpoint for user's volume</VAR>>]  [<B>-sa</B>]  [<B>-v</B>]
+      [<B>-c</B> &lt;<VAR>cell name</VAR>>]  <B>-a</B> &lt;<VAR>administrator to authenticate</VAR>>]  
+      [<B>-d</B>]  [<B>-sk</B>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>Description</STRONG>
+<P>The <B>uss delete</B> command removes the Authentication Database and
+Protection Database entries for the user named by <B>-user</B>
+argument. In addition, it can remove the user's home volume and
+associated VLDB entry, a mount point for the volume or both, depending on
+whether the <B>-mountpoint</B> and <B>-savevolume</B> options are
+provided.
+<UL>
+<P><LI>To remove both the volume and mount point, use the <B>-mountpoint</B>
+argument to name the user's home directory. It is best to create a
+tape backup of a volume before deleting it. Note that other mount
+points for the volume are not removed, if they exist.
+<P><LI>To remove the mount point only, provide both the <B>-mountpoint</B>
+and <B>-savevolume</B> options.
+<P><LI>To preserve both the volume and mount point, omit the
+<B>-mountpoint</B> argument (or both it and the <B>-savevolume</B>
+flag).
+</UL>
+<P><STRONG>Options</STRONG>
+<DL>
+<P><DT><B>-user
+</B><DD>Names the entry to delete from the Protection and Authentication
+Databases.
+<P><DT><B>-mountpoint
+</B><DD>Specifies the pathname to the user's home directory, which is deleted
+from the filespace. By default, the volume referenced by the mount
+point is also removed from the file server machine that houses it, along with
+its Volume Location Database (VLDB) entry. To retain the volume and
+VLDB entry, include the <B>-savevolume</B> flag. Partial pathnames
+are interpreted relative to the current working directory. 
+<P>Specify the read/write path to the mount point, to avoid the failure that
+results from attempting to remove a mount point from a read-only
+volume. By convention, the read/write path is indicated by placing a
+period before the cell name at the pathname's second level (for example,
+<B>/afs/.abc.com</B>). For further discussion of the
+concept of read/write and read-only paths through the filespace, see the
+<B>fs mkmount</B> reference page.
+<P><DT><B>-savevolume
+</B><DD>Preserves the user's volume and VLDB entry.
+<P><DT><B>-verbose
+</B><DD>Produces on the standard output stream a detailed trace of the
+command's execution. If this argument is omitted, only warnings
+and error messages appear.
+<P><DT><B>-cell
+</B><DD>Specifies the cell in which to run the command. For more details,
+see the introductory <B>uss</B> reference page.
+<P><DT><B>-admin
+</B><DD>Specifies the AFS user name under which to establish authenticated
+connections to the AFS server processes that maintain the various components
+of a user account. For more details, see the introductory
+<B>uss</B> reference page.
+<P><DT><B>-dryrun
+</B><DD>Reports actions that the command interpreter needs to perform while
+executing the command, without actually performing them. For more
+details, see the introductory <B>uss</B> reference page.
+<P><DT><B>-skipauth
+</B><DD>Prevents authentication with the AFS Authentication Server, allowing a
+site using Kerberos to substitute that form of authentication.
+<P><DT><B>-help
+</B><DD>Prints the online help for this command. All other valid options
+are ignored.
+</DL>
+<P><STRONG>Examples</STRONG>
+<P>The following command removes <B>smith</B>'s user account from the
+<B>abc.com</B> cell. The <B>-savevolume</B> argument
+retains the <TT>user.smith</TT> volume on its file server
+machine.
+<PRE>   % <B>uss delete smith -mountpoint /afs/abc.com/usr/smith -savevolume</B>
+   
+</PRE>
+<P><STRONG>Privilege Required</STRONG>
+<P>The issuer (or the user named by <B>-admin</B> argument) must belong to
+the <B>system:administrators</B> group in the Protection Database,
+must have the <TT>ADMIN</TT> flag turned on in his or her Authentication
+Database entry, and must have at least <B>a</B> (<B>administer</B>)
+and <B>d</B> (<B>delete</B>) permissions on the access control list
+(ACL) of the mount point's parent directory. If the
+<B>-savevolume</B> flag is not included, the issuer must also be listed in
+the <B>/usr/afs/etc/UserList</B> file.
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf035.htm#HDRUSERLIST">UserList</A>
+<P><A HREF="auarf153.htm#HDRFS_MKMOUNT">fs mkmount</A>
+<P><A HREF="auarf242.htm#HDRUSS_INTRO">uss</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf245.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf247.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

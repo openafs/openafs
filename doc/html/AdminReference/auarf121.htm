@@ -1,0 +1,235 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 4//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3672/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 3 Oct 2000 at 16:18:30                -->
+<META HTTP-EQUIV="updated" CONTENT="Tue, 03 Oct 2000 16:18:29">
+<META HTTP-EQUIV="review" CONTENT="Wed, 03 Oct 2001 16:18:29">
+<META HTTP-EQUIV="expires" CONTENT="Thu, 03 Oct 2002 16:18:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf120.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf122.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRBOS_STATUS" HREF="auarf002.htm#ToC_135">bos status</A></H2>
+<A NAME="IDX4656"></A>
+<A NAME="IDX4657"></A>
+<A NAME="IDX4658"></A>
+<A NAME="IDX4659"></A>
+<A NAME="IDX4660"></A>
+<A NAME="IDX4661"></A>
+<A NAME="IDX4662"></A>
+<P><STRONG>Purpose</STRONG>
+<P>Displays the status of server processes
+<P><STRONG>Synopsis</STRONG>
+<PRE><B>bos status -server</B> &lt;<VAR>machine&nbsp;name</VAR>>  [<B>-instance</B> &lt;<VAR>server&nbsp;process&nbsp;name</VAR>><SUP>+</SUP>]  
+           [<B>-long</B>]  [<B>-cell</B> &lt;<VAR>cell&nbsp;name</VAR>>]  [<B>-noauth</B>]  [<B>-localauth</B>]  [<B>-help</B>] 
+    
+<B>bos stat -s</B> &lt;<VAR>machine&nbsp;name</VAR>>  [<B>-i</B> &lt;<VAR>server&nbsp;process&nbsp;name</VAR>><SUP>+</SUP>] 
+         [<B>-lon</B>]  [<B>-c</B> &lt;<VAR>cell&nbsp;name</VAR>>]  [<B>-n</B>]  [<B>-loc</B>]  [<B>-h</B>] 
+</PRE>
+<P><STRONG>Description</STRONG>
+<P>The <B>bos status</B> command reports the status of processes on the
+server machine named by the <B>-server</B> argument, either 
+<UL>
+<P><LI>All of the AFS server processes listed in the
+<B>/usr/afs/local/BosConfig</B> file
+<P><LI>Only these processes named by the <B>-instance</B> argument
+</UL>
+<P><STRONG>Options</STRONG>
+<DL>
+<P><DT><B><B>-server</B>
+</B><DD>Indicates the server machine for which to report server process
+status. Identify the machine by IP address or its host name (either
+fully-qualified or abbreviated unambiguously). For details, see the
+introductory reference page for the <B>bos</B> command suite.
+<P><DT><B><B>-instance</B>
+</B><DD>Names each process for which to report status. Use the process name
+assigned with the <B>-instance</B> argument to the <B>bos</B>
+command. The output from the <B>bos status</B> command lists the
+names.
+<P><DT><B><B>-long</B>
+</B><DD>Produces more detailed status information.
+<P><DT><B><B>-cell</B>
+</B><DD>Names the cell in which to run the command. Do not combine this
+argument with the <B>-localauth</B> flag. For more details, see the
+introductory <B>bos</B> reference page.
+<P><DT><B><B>-noauth</B>
+</B><DD>Assigns the unprivileged identity <B>anonymous</B> to the
+issuer. Do not combine this flag with the <B>-localauth</B>
+flag. For more details, see the introductory <B>bos</B> reference
+page.
+<P><DT><B><B>-localauth</B>
+</B><DD>Constructs a server ticket using a key from the local
+<B>/usr/afs/etc/KeyFile</B> file. The <B>bos</B> command
+interpreter presents the ticket to the BOS Server during mutual
+authentication. Do not combine this flag with the <B>-cell</B> or
+<B>-noauth</B> options. For more details, see the introductory
+<B>bos</B> reference page.
+<P><DT><B>-help
+</B><DD>Prints the online help for this command. All other valid options
+are ignored.
+</DL>
+<P><STRONG>Output</STRONG>
+<P>The output for a process includes at least one line, which reports one of
+the following as the process's current status:
+<UL>
+<P><LI><TT>currently running normally</TT>. The process's status
+flag in the <B>BosConfig</B> file is <TT>Run</TT>. For
+<B>cron</B> entries, this message indicates only that the command is
+scheduled to run, not necessarily that it was executing when the <B>bos
+status</B> command was issued.
+<P><LI><TT>disabled</TT>. The process is not running, and its
+<B>BosConfig</B> status flag is <TT>NotRun</TT>.
+<P><LI><TT>temporarily disabled</TT>. The process is not running
+although its status flag in the <B>BosConfig</B> file is
+<TT>Run</TT>. Either an administrator used the <B>bos
+shutdown</B> command to stop it, or the
+<P><LI>BOS Server stopped trying to restart it after numerous failed
+attempts. In the second case, the auxiliary message is <TT>stopped for
+ too many errors</TT>.
+<P><LI><TT>temporarily enabled</TT>. The process is running although its
+status flag in the <B>BosConfig</B> file is <TT>NotRun</TT>. An
+administrator has used the <B>bos startup</B> command to start it.
+</UL>
+<P>If one of the following special circumstances applies to the process, the
+indicated message appears in its entry:
+<UL>
+<P><LI><TT>has core file</TT>. The process failed and created a core
+file in the <B>/usr/afs/logs</B> directory. If the BOS Server was
+able to restart the process after the failure, the primary status is
+<TT>currently running normally</TT>.
+<P><LI><TT>stopped for too many  errors</TT>. The reason for the primary
+status <TT>temporarily  disabled</TT> is that the BOS Server's attempts
+to restart the process all failed.
+</UL>
+<P>The entry for the <B>fs</B> process always includes a second line to
+report the process's <TT>Auxiliary status</TT>, which is one of the
+following:
+<UL>
+<P><LI><TT>file server running</TT>. The File Server and Volume Server
+components of the File Server process are running normally.
+<P><LI><TT>salvaging file system</TT>. The Salvager is running, so the
+File Server and Volume Server are temporarily disabled. The BOS Server
+restarts them as soon as the Salvager is finished.
+</UL>
+<P>The entry for a <B>cron</B> process includes an <TT>Auxiliary 
+status</TT> that reports when the command will next execute.
+<P>If the <B>-long</B> flag is used, each entry includes the following
+additional information:
+<UL>
+<P><LI>The process's type (<TT>simple</TT>, <TT>fs</TT>, or
+<TT>cron</TT>).
+<P><LI>The day and time the process last started or restarted.
+<P><LI>The number of <TT>proc starts</TT>, which is how many times the BOS
+Server has started or restarted the process since it started itself.
+<P><LI>The <TT>Last exit</TT> time when the process (or one of the component
+processes in the <B>fs</B> process) last terminated. This line does
+not appear if the process has not terminated since the BOS Server
+started.
+<P><LI>The <TT>Last error exit</TT> time when the process (or one of the
+component processes in the <B>fs</B> process) last failed due to an
+error. A further explanation such as <TT>due to shutdown request</TT>
+sometimes appears. This line does not appear if the process has not
+failed since the BOS Server started.
+<P><LI>Each command that the BOS Server invokes to start the process, as
+specified by the <B>-cmd</B> argument to the <B>bos create</B>
+command.
+<P><LI>The pathname of the notifier program that the BOS Server invokes when the
+process terminates (if any), as specified by the <B>-notifier</B> argument
+to the <B>bos create</B> command.
+</UL>
+<P>If the <B>-long</B> flag is provided and the BOS Server discovers that
+the mode bits on files and subdirectories in the local <B>/usr/afs</B>
+directory differ from the expected values, it prints the following warning
+message:
+<PRE>   Bosserver reports inappropriate access on server directories
+   
+</PRE>
+<P>The following chart summarizes the expected mode bit settings. A
+question mark indicates that the BOS Server does not check that bit.
+<BR>
+<TABLE WIDTH="100%">
+<TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="50%"><B>/usr/afs</B>
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="50%"><TT>drwxr</TT>?<TT>xr-x</TT>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="50%"><B>/usr/afs/backup</B>
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="50%"><TT>drwx</TT>???<TT>---</TT>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="50%"><B>/usr/afs/bin</B>
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="50%"><TT>drwxr</TT>?<TT>xr-x</TT>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="50%"><B>/usr/afs/db</B>
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="50%"><TT>drwx</TT>???<TT>---</TT>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="50%"><B>/usr/afs/etc</B>
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="50%"><TT>drwxr</TT>?<TT>xr-x</TT>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="50%"><B>/usr/afs/etc/KeyFile</B>
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="50%"><TT>-rw</TT>????<TT>---</TT>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="50%"><B>/usr/afs/etc/UserList</B>
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="50%"><TT>-rw</TT>?????<TT>--</TT>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="50%"><B>/usr/afs/local</B>
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="50%"><TT>drwx</TT>???<TT>---</TT>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="50%"><B>/usr/afs/logs</B>
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="50%"><TT>drwxr</TT>?<TT>xr-x</TT>
+</TD></TR></TABLE>
+<P><STRONG>Examples</STRONG>
+<P>The following example command displays the status of processes on the
+machine <B>fs3.abc.com</B>:
+<PRE>   %<B> bos status fs3.abc.com</B>
+   Instance buserver, currently running normally.
+   Instance kaserver, currently running normally.
+   Instance ptserver, currently running normally.
+   Instance vlserver, currently running normally.
+   Instance fs, has core file, currently running normally.
+       Auxiliary status is: file server running.
+   Instance upserver, currently running normally.
+   Instance runntp, currently running normally.
+   
+</PRE>
+<P>The following example command displays a detailed status report for the
+<B>fs</B> and <B>ptserver</B> processes on the machine
+<B>fs1.abc.com</B>.
+<PRE>   % <B>bos status -server fs1.abc.com -instance fs ptserver -long</B>
+   Instance fs, (type is fs), currently running normally.
+      Auxiliary status is: file server running.
+      Process last started at Wed Jan 7 5:34:49 1998 (3 proc starts)
+      Last exit at Wed Jan 7 5:34:49 1998 
+      Last error exit at Wed Jan 7 5:34:49 1998, due to shutdown 
+          request
+      Command 1 is '/usr/afs/bin/fileserver'
+      Command 2 is '/usr/afs/bin/volserver'
+      Command 3 is '/usr/afs/bin/salvager'
+   Instance ptserver, (type is simple) currently running normally.
+      Process last started at Tue Jan 6 8:29:19 1998 (1 proc starts)
+      Command 1 is '/usr/afs/bin/ptserver'
+   
+</PRE>
+<P><STRONG>Privilege Required</STRONG>
+<P>None
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf016.htm#HDRBOSCONFIG">BosConfig</A>
+<P><A HREF="auarf023.htm#HDRKEYFILE">KeyFile</A>
+<P><A HREF="auarf093.htm#HDRBOS_INTRO">bos</A>
+<P><A HREF="auarf098.htm#HDRBOS_CREATE">bos create</A>
+<P><A HREF="auarf118.htm#HDRBOS_SHUTDOWN">bos shutdown</A>
+<P><A HREF="auarf120.htm#HDRBOS_STARTUP">bos startup</A>
+<P><A HREF="#HDRBOS_STATUS">bos status</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf120.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf122.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

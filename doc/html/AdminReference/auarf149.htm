@@ -1,0 +1,89 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 4//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3672/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 3 Oct 2000 at 16:18:30                -->
+<META HTTP-EQUIV="updated" CONTENT="Tue, 03 Oct 2000 16:18:29">
+<META HTTP-EQUIV="review" CONTENT="Wed, 03 Oct 2001 16:18:29">
+<META HTTP-EQUIV="expires" CONTENT="Thu, 03 Oct 2002 16:18:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf148.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf150.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRFS_LISTCELLS" HREF="auarf002.htm#ToC_163">fs listcells</A></H2>
+<A NAME="IDX4860"></A>
+<A NAME="IDX4861"></A>
+<A NAME="IDX4862"></A>
+<A NAME="IDX4863"></A>
+<A NAME="IDX4864"></A>
+<A NAME="IDX4865"></A>
+<A NAME="IDX4866"></A>
+<A NAME="IDX4867"></A>
+<A NAME="IDX4868"></A>
+<P><STRONG>Purpose</STRONG>
+<P>Displays the database server machines in each cell known to the Cache
+Manager
+<P><STRONG>Synopsis</STRONG>
+<PRE><B>fs listcells</B> [<B>-numeric</B>]  [<B>-help</B>]
+   
+<B>fs listc</B> [<B>-n</B>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>Description</STRONG>
+<P>The <B>fs listcells</B> command formats and displays the list of the
+database server machines that the Cache Manager stores in kernel memory for
+its home cell and foreign cells.
+<P>At each reboot of the client machine, the Cache Manager copies the contents
+of <B>/usr/vice/etc/CellServDB</B> into kernel memory. To modify
+the list between reboots, use the <B>fs newcell</B> command.
+<P><STRONG>Options</STRONG>
+<DL>
+<P><DT><B>-numeric
+</B><DD>Displays each database server machine's IP address rather than
+hostname.
+<P><DT><B>-help
+</B><DD>Prints the online help for this command. All other valid options
+are ignored.
+</DL>
+<P><STRONG>Output</STRONG>
+<P>The output includes a line for each cell included in the Cache
+Manager's kernel memory list, in the following format:
+<PRE>   Cell <VAR>cell</VAR> on hosts <VAR>database server machines</VAR>
+   
+</PRE>
+<P>The Cache Manager stores IP addresses, but by default has them translated
+to hostnames before reporting them, by passing them to the cell's name
+service (such as the Domain Name Service or a local host table). The
+name service sometimes returns hostnames in uppercase letters, or an IP
+address if it cannot resolve a name.
+<P>Using the <B>-numeric</B> flag bypasses the translation to hostnames,
+which can result in significantly faster production of output. The
+output includes IP addresses only.
+<P><STRONG>Examples</STRONG>
+<P>The following example shows output for several cells as illustrations of
+the different formats for machine names:
+<PRE>   % <B>fs listcells</B>
+   Cell abc.com on hosts fs1.abc.com fs2.abc.com fs3.abc.com
+   Cell stateu.edu on hosts DB1.FS.STATEU.EDU 
+      DB2.FS.STATEU.EDU DB3.FS.STATEU.EDU
+   Cell def.gov on hosts 138.255.0.2 sv3.def.gov
+    
+</PRE>
+<P><STRONG>Privilege Required</STRONG>
+<P>None
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf019.htm#HDRCLI_CSDB">CellServDB (client version)</A>
+<P><A HREF="auarf154.htm#HDRFS_NEWCELL">fs newcell</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf148.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf150.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

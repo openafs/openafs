@@ -1,0 +1,146 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 4//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3672/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 3 Oct 2000 at 16:18:30                -->
+<META HTTP-EQUIV="updated" CONTENT="Tue, 03 Oct 2000 16:18:29">
+<META HTTP-EQUIV="review" CONTENT="Wed, 03 Oct 2001 16:18:29">
+<META HTTP-EQUIV="expires" CONTENT="Thu, 03 Oct 2002 16:18:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf221.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf223.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRPTS_MEMBERSHIP" HREF="auarf002.htm#ToC_236">pts membership</A></H2>
+<A NAME="IDX5374"></A>
+<A NAME="IDX5375"></A>
+<A NAME="IDX5376"></A>
+<A NAME="IDX5377"></A>
+<A NAME="IDX5378"></A>
+<A NAME="IDX5379"></A>
+<A NAME="IDX5380"></A>
+<A NAME="IDX5381"></A>
+<P><STRONG>Purpose</STRONG>
+<P>Displays the membership list for a user or group
+<P><STRONG>Synopsis</STRONG>
+<PRE><B>pts membership -nameorid</B> &lt;<VAR>user&nbsp;or&nbsp;group&nbsp;name&nbsp;or&nbsp;id</VAR>><SUP>+</SUP>  [<B>-cell</B> &lt;<VAR>cell&nbsp;name</VAR>>]  
+               [<B>-noauth</B>]  [<B>-force</B>]  [<B>-help</B>]
+   
+<B>pts m -na</B> &lt;<VAR>user&nbsp;or&nbsp;group&nbsp;name&nbsp;or&nbsp;id</VAR>><SUP>+</SUP>  [<B>-c</B> &lt;<VAR>cell&nbsp;name</VAR>>]  [<B>-no</B>]  [<B>-f</B>]  [<B>-h</B>]
+   
+<B>pts groups -na</B> &lt;<VAR>user&nbsp;or&nbsp;group&nbsp;name&nbsp;or&nbsp;id</VAR>><SUP>+</SUP>  [<B>-c</B> &lt;<VAR>cell&nbsp;name</VAR>>]
+           [<B>-no</B>] [<B>-f</B>]  [<B>-h</B>]
+   
+<B>pts g -na</B> &lt;<VAR>user&nbsp;or&nbsp;group&nbsp;name&nbsp;or&nbsp;id</VAR>><SUP>+</SUP>  [<B>-c</B> &lt;<VAR>cell&nbsp;name</VAR>>]  [<B>-no</B>]  [<B>-f</B>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>Description</STRONG>
+<P>The <B>pts membership</B> command lists the groups to which each user
+or machine specified by the <B>-nameorid</B> argument belongs, or lists
+the users and machines that belong to each group specified by the
+<B>-nameorid</B> argument.
+<P>It is not possible to list the members of the
+<B>system:anyuser</B> or <B>system:authuser</B> groups,
+and they do not appear in the list of groups to which a user belongs.
+<P>To add users or machine to groups, use the <B>pts adduser</B>
+command; to remove them, use the <B>pts removeuser</B>
+command.
+<P><STRONG>Options</STRONG>
+<DL>
+<P><DT><B>-nameorid
+</B><DD>Specifies the name or AFS UID of each user entry, the IP address (complete
+or wildcard-style) or AFS UID of each machine entry, or the name or AFS GID of
+each group, for which to list group membership. It is acceptable to mix
+users, machines, and groups on the same command line, as well as names and
+IDs. Precede the GID of each group with a hyphen to indicate that it is
+negative.
+<P><DT><B>-cell
+</B><DD>Names the cell in which to run the command. For more details, see
+the introductory <B>pts</B> reference page.
+<P><DT><B>-noauth
+</B><DD>Assigns the unprivileged identity <B>anonymous</B> to the
+issuer. For more details, see the introductory <B>pts</B> reference
+page.
+<P><DT><B>-force
+</B><DD>Enables the command to continue executing as far as possible when errors
+or other problems occur, rather than halting execution at the first
+error.
+<P><DT><B>-help
+</B><DD>Prints the online help for this command. All other valid options
+are ignored.
+</DL>
+<P><STRONG>Output</STRONG>
+<P>For each user and machine, the output begins with the following header
+line, followed by a list of the groups to which the user or machine
+belongs:
+<PRE>   Groups <VAR>name</VAR> (id: <VAR>AFS UID</VAR>) is a member of:
+   
+</PRE>
+<P>For each group, the output begins with the following header line, followed
+by a list of the users and machines who belong to the group:
+<PRE>   Members of <VAR>group_name</VAR> (id: <VAR>AFS GID</VAR>) are:
+   
+</PRE>
+<P><STRONG>Examples</STRONG>
+<P>The following example lists the groups to which the user <B>pat</B>
+belongs and the members of the group <B>smith:friends</B>.
+Note that third privacy flag for the <B>pat</B> entry was changed from the
+default hyphen to enable a non-administrative user to obtain this
+listing.
+<PRE>   % <B>pts membership pat smith:friends</B>
+   Groups pat (id: 1144) is a member of:
+     smith:friends
+     staff
+     johnson:project-team
+   Members of smith:friends (id: -562) are:
+     pat
+     terry
+     jones
+     richard
+     thompson
+   
+</PRE>
+<P><STRONG>Privilege Required</STRONG>
+<P>The required privilege depends on the setting of the third privacy flag in
+the Protection Database entry of each user or group indicated by the
+<B>-nameorid</B> argument (use the <B>pts examine</B> command to
+display the flags):
+<UL>
+<P><LI>If it is the hyphen and the <B>-nameorid</B> argument specifies a
+user, only the associated user and members of the
+<B>system:administrators</B> group can list the groups to which the
+user belongs.
+<P><LI>If it is the hyphen and the <B>-nameorid</B> argument specifies a
+machine, only the members of the <B>system:administrators</B> group
+can list the groups to which the machine belongs.
+<P><LI>If it is the hyphen and the <B>-nameorid</B> argument specifies a
+group, only the owner of the group and members of the
+<B>system:administrators</B> group can list the members of the
+group.
+<P><LI>If it is lowercase <TT>m</TT> and the <B>-nameorid</B> argument
+specifies a user or machine entry, the meaning is equivalent to the
+hyphen.
+<P><LI>If it is lowercase <TT>m</TT> and the <B>-nameorid</B> argument
+specifies a group, members of the group can also list the other
+members.
+<P><LI>If it is uppercase <TT>M</TT>, anyone who can access the cell's
+database server machines can list group memberships.
+</UL>
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf210.htm#HDRPTS_INTRO">pts</A>
+<P><A HREF="auarf211.htm#HDRPTS_ADDUSER">pts adduser</A>
+<P><A HREF="auarf217.htm#HDRPTS_EXAMINE">pts examine</A>
+<P><A HREF="auarf223.htm#HDRPTS_REMOVEUSER">pts removeuser</A>
+<P><A HREF="auarf225.htm#HDRPTS_SETFIELDS">pts setfields</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf221.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf223.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

@@ -1,0 +1,3623 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 4//EN">
+<HTML><HEAD>
+<TITLE>Administration Guide</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3570/auagd000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 2 Oct 2000 at 11:42:14                -->
+<META HTTP-EQUIV="updated" CONTENT="Mon, 02 Oct 2000 11:42:13">
+<META HTTP-EQUIV="review" CONTENT="Tue, 02 Oct 2001 11:42:13">
+<META HTTP-EQUIV="expires" CONTENT="Wed, 02 Oct 2002 11:42:13">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Guide</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auagd002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auagd009.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auagd011.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auagd026.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<HR><H1><A NAME="HDRWQ174" HREF="auagd002.htm#ToC_201">Managing Volumes</A></H1>
+<P>This chapter explains how to manage the volumes stored on
+file server machines. The volume is the designated unit of
+administration in AFS, so managing them is a large part of the
+administrator's duties.
+<HR><H2><A NAME="HDRWQ175" HREF="auagd002.htm#ToC_202">Summary of Instructions</A></H2>
+<P>This chapter explains how to perform the following tasks by
+using the indicated commands:
+<BR>
+<TABLE WIDTH="100%">
+<TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="58%">Create read/write volume
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="42%"><B>vos create</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="58%">Create read-only volume
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="42%"><B>vos addsite</B> <B> and</B> <B>vos release</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="58%">Create backup volume
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="42%"><B>vos backup</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="58%">Create many backup volumes at once
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="42%"><B>vos backupsys</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="58%">Examine VLDB entry
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="42%"><B>vos listvldb</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="58%">Examine volume header
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="42%"><B>vos listvol</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="58%">Examine both VLDB entry and volume header
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="42%"><B>vos examine</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="58%">Display volume's name
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="42%"><B>fs listquota</B> <B>or</B> <B>fs examine</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="58%">Display volume's ID number
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="42%"><B>fs examine</B> <B>or</B> <B>vos examine</B> <B>or</B>
+<B>vos listvol</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="58%">Display partition's size and space available
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="42%"><B>vos partinfo</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="58%">Display volume's location
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="42%"><B>fs whereis</B> <B>or</B> <B>vos examine</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="58%">Create mount point
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="42%"><B>fs mkmount</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="58%">Remove mount point
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="42%"><B>fs rmmount</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="58%">Display mount point
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="42%"><B>fs lsmount</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="58%">Move read/write volume
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="42%"><B>vos move</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="58%">Synchronize VLDB with volume headers
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="42%"><B>vos syncvldb</B> <B>and</B> <B>vos syncserv</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="58%">Set volume quota
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="42%"><B>fs setvol</B> <B>or</B> <B>fs setquota</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="58%">Display volume quota
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="42%"><B>fs quota</B> <B>or</B> <B>fs listquota</B> <B>or</B>
+<B>fs examine</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="58%">Display volume's current size
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="42%"><B>fs listquota</B> <B>or</B> <B>fs examine</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="58%">Display list of volumes on a machine/partition
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="42%"><B>vos listvol</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="58%">Remove read/write volume
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="42%"><B>vos remove</B> <B>and</B> <B>fs rmmount</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="58%">Remove read-only volume
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="42%"><B>vos remove</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="58%">Remove backup volume
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="42%"><B>vos remove</B> <B>and</B> <B>fs rmmount</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="58%">Remove volume; no VLDB change
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="42%"><B>vos zap</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="58%">Remove read-only site definition
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="42%"><B>vos remsite</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="58%">Remove VLDB entry; no volume change
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="42%"><B>vos delentry</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="58%">Dump volume
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="42%"><B>vos dump</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="58%">Restore dumped volume
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="42%"><B>vos restore</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="58%">Rename volume
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="42%"><B>vos rename</B>, <B>fs rmmount</B> <B>and</B> <B>fs
+mkmount</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="58%">Unlock volume
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="42%"><B>vos unlock</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="58%">Unlock multiple volumes
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="42%"><B>vos unlockvldb</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="58%">Lock volume
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="42%"><B>vos lock</B>
+</TD></TR></TABLE>
+<HR><H2><A NAME="HDRWQ177" HREF="auagd002.htm#ToC_203">About Volumes</A></H2>
+<A NAME="IDX6430"></A>
+<P>An AFS <I>volume</I> is a logical unit of disk space that functions
+like a container for the files in an AFS directory, keeping them all together
+on one partition of a file server machine. To make a volume's
+contents visible in the cell's file tree and accessible to users, you
+mount the volume at a directory location in the AFS filespace. The
+association between the volume and its location in the filespace is called a
+<I>mount point</I>, and because of AFS's internal workings it looks
+and acts just like a standard directory element. Users can access and
+manipulate a volume's contents in the same way they access and manipulate
+the contents of a standard UNIX directory. For more on the relationship
+between volumes and directories, see <A HREF="#HDRWQ183">About Mounting Volumes</A>.
+<P>Many of an administrator's daily activities involve manipulating
+volumes, since they are the basic storage and administrative unit of
+AFS. For a discussion of some of the ways volumes can make your job
+easier, see <A HREF="#HDRWQ179">How Volumes Improve AFS Efficiency</A>.
+<P><H3><A NAME="HDRWQ178" HREF="auagd002.htm#ToC_204">The Three Types of Volumes</A></H3>
+<P>There are three types of volumes in AFS, as described in the
+following list:
+<UL>
+<P><LI>The single <I>read/write</I> version of a volume houses the modifiable
+versions of the files and directories in that volume. 
+<A NAME="IDX6431"></A>
+It is often referred to as the <I>read/write source</I> because volumes of
+the other two types are derived from it by a copying procedure called
+<I>cloning</I>. For instructions on creating read/write volumes,
+see <A HREF="#HDRWQ185">Creating Read/write Volumes</A>.
+<P><LI>A <I>read-only</I> volume is a copy of the read/write source volume
+and can exist at multiple <I>sites</I> (a site is a particular partition
+on a particular file server machine). 
+<A NAME="IDX6432"></A>
+<A NAME="IDX6433"></A>
+<A NAME="IDX6434"></A>
+Placing the same data at more than one site is called
+<I>replication</I>; see <A HREF="#HDRWQ179">How Volumes Improve AFS Efficiency</A>. As the name suggests, a
+read-only volume's contents do not change automatically as the read/write
+source changes, but only when an administrator issues the <B>vos
+release</B> command. For users to have a consistent view of the AFS
+filespace, all copies of the read-only volume must match each other and their
+read/write source. All read-only volumes share the same name, which is
+derived by adding the <B>.readonly</B> extension to the read/write
+source's name. For instructions on creating of read-only volumes,
+see <A HREF="#HDRWQ192">Replicating Volumes (Creating Read-only Volumes)</A>.
+<P><LI>A <I>backup</I> volume is a clone of the read/write source volume and
+is stored at the same site as the source. 
+<A NAME="IDX6435"></A>
+A backup version is useful because it records the state of the read/write
+source at a certain time, allowing recovery of data that is later mistakenly
+changed or deleted (for further discussion see <A HREF="#HDRWQ179">How Volumes Improve AFS Efficiency</A>). A backup volume's name is derived by adding
+the <B>.backup</B> extension to the read/write source's
+name. For instructions on creating of backup volumes, see <A HREF="#HDRWQ201">Creating Backup Volumes</A>.
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Note:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">A backup volume is not the same as the backup of a volume transferred to tape
+using the AFS Backup System, although making a backup version of a volume is
+usually a stage in the process of backing up the volume to tape. For
+information on backing up a volume using the AFS Backup System, see <A HREF="auagd012.htm#HDRWQ296">Backing Up Data</A>.
+</TD></TR></TABLE>
+</UL>
+<P>As noted, the three types of volumes are related to one another:
+read-only and backup volumes are both derived from a read/write volume through
+a process called cloning. Read-only and backup volumes are exact copies
+of the read/write source at the time they are created.
+<P><H3><A NAME="HDRWQ179" HREF="auagd002.htm#ToC_205">How Volumes Improve AFS Efficiency</A></H3>
+<A NAME="IDX6436"></A>
+<P>Volumes make your cell easier to manage and more efficient in the following
+three ways:
+<UL>
+<P><LI>Volumes are easy to move between partitions, on the same or different
+machines, because they are by definition smaller than a partition.
+<A NAME="IDX6437"></A>
+Perhaps the most common reasons to move volumes are to balance the load among
+file server machines or to take advantage of greater disk capacity on certain
+machines. You can move volumes as often as necessary without disrupting
+user access to their contents, because the move procedure makes the contents
+unavailable for only a few seconds. The automatic tracking of volume
+locations in the Volume Location Database (VLDB) assures that access remains
+transparent. For instructions on moving volumes, see <A HREF="#HDRWQ226">Moving Volumes</A>.
+<P><LI>Volumes are the unit of replication in AFS. 
+<A NAME="IDX6438"></A>
+<A NAME="IDX6439"></A>
+<I>Replication</I> refers to creating a read-only clone from the
+read/write source and distributing of the clone to one or more sites.
+Replication improves system efficiency because more than one machine can fill
+requests for popular files. It also boosts system reliability by
+helping to keep data available in the face of machine or server process
+outage. In general, volumes containing popular application programs and
+other files that do not change often are the best candidates for replication,
+but you can replicate any read/write volume. See <A HREF="#HDRWQ192">Replicating Volumes (Creating Read-only Volumes)</A>.
+<P><LI>Volumes are the unit of backup in AFS, in two senses. 
+<A NAME="IDX6440"></A>
+You can create a backup volume version to preserves the state of a read/write
+source volume at a specified time. You can mount the backup version in
+the AFS filespace, enabling users to restore data they have accidentally
+changed or deleted without administrator assistance, which frees you for more
+important jobs. If you make a new backup version of user volumes once a
+day (presumably overwriting the former backup), then users are always be able
+to retrieve the previous day's version of a file. For
+instructions, see <A HREF="#HDRWQ201">Creating Backup Volumes</A>. 
+<P>Backup also refers to using the AFS Backup System to store permanent copies
+of volume contents on tape or in a special backup data. See <A HREF="auagd011.htm#HDRWQ248">Configuring the AFS Backup System</A> and <A HREF="auagd012.htm#HDRWQ283">Backing Up and Restoring AFS Data</A>.
+</UL>
+<P><H3><A NAME="HDRWQ180" HREF="auagd002.htm#ToC_206">Volume Information in the VLDB</A></H3>
+<P>The Volume Location Database (VLDB) includes entries for
+every volume in a cell. Perhaps the most important information in the
+entry is the volume's location, which is key to transparent access to AFS
+data. When a user opens a file, the Cache Manager consults the Volume
+Location (VL) Server, which maintains the VLDB, for a list of the file server
+machines that house the volume containing the file. The Cache Manager
+then requests the file from the File Server running on one of the relevant
+file server machines. The file location procedure is invisible to the
+user, who only needs to know the file's pathname.
+<A NAME="IDX6441"></A>
+<A NAME="IDX6442"></A>
+<A NAME="IDX6443"></A>
+<P>The VLDB volume entry for a read/write volume also contains the pertinent
+information about the read-only and backup versions, which do not have their
+own VLDB entries. (The rare exception is a read-only volume that has
+its own VLDB entry because its read/write source has been removed.) A
+volume's VLDB entry records the volume's name, the unique volume ID
+number for each version (read/write, read-only, backup, and releaseClone), a
+count of the number of sites that house a read/write or read-only version, and
+a list of the sites.
+<P>To display the VLDB entry for one or more volumes, use the <B>vos
+listvldb</B> command as described in <A HREF="#HDRWQ218">To display VLDB entries</A>. To display the VLDB entry for a single volume along
+with its volume header, use the <B>vos examine</B> command as described in
+<A HREF="#HDRWQ222">To display one volume's VLDB entry and volume header</A>. (See the following section for a description of the
+volume header.)
+<P><H3><A NAME="HDRWQ181" HREF="auagd002.htm#ToC_207">The Information in Volume Headers</A></H3>
+<A NAME="IDX6444"></A>
+<A NAME="IDX6445"></A>
+<P>Whereas all versions of a volume share one VLDB entry, each volume on an
+AFS server partition has its own <I>volume header</I>, a data structure
+that maps the files and directories in the volume to physical memory addresses
+on the partition that stores them. The volume header binds the
+volume's contents into a logical unit without requiring that they be
+stored in contiguous memory blocks. The volume header also records the
+following information about the volume, some of it redundant with the VLDB
+entry: name, volume ID number, type, size, status (online, offline, or
+busy), space quota, timestamps for creation date and date of last
+modification, and number of accesses during the current day.
+<P>To display the volume headers on one or more partitions, use the <B>vos
+listvol</B> command as described in <A HREF="#HDRWQ220">To display volume headers</A>. To display the VLDB entry for a single volume along
+with its volume header, use the <B>vos examine</B> command as described in
+<A HREF="#HDRWQ222">To display one volume's VLDB entry and volume header</A>.
+<P><H3><A NAME="HDRWQ182" HREF="auagd002.htm#ToC_208">Keeping the VLDB and Volume Headers Synchronized</A></H3>
+<A NAME="IDX6446"></A>
+<A NAME="IDX6447"></A>
+<A NAME="IDX6448"></A>
+<A NAME="IDX6449"></A>
+<A NAME="IDX6450"></A>
+<A NAME="IDX6451"></A>
+<P>It is vital that the information in the VLDB correspond to the status of
+the actual volumes on the servers (as recorded in volume headers) as much of
+the time as possible. If a volume's location information in the
+VLDB is incorrect, the Cache Manager cannot find access its contents.
+Whenever you issue a <B>vos</B> command that changes a volume's
+status, the Volume Server and VL Server cooperate to keep the volume header
+and VLDB synchronized. In rare cases, the header and VLDB can diverge,
+for instance because a <B>vos</B> operation halts prematurely. For
+instructions on resynchronizing them, see <A HREF="#HDRWQ227">Synchronizing the VLDB and Volume Headers</A>.
+<P><H3><A NAME="HDRWQ183" HREF="auagd002.htm#ToC_209">About Mounting Volumes</A></H3>
+<A NAME="IDX6452"></A>
+<A NAME="IDX6453"></A>
+<A NAME="IDX6454"></A>
+<P>To make a volume's contents visible in the cell's file tree and
+accessible to users, you mount the volume at a directory location in the AFS
+filespace. The association between the volume and its location in the
+filespace is called a <I>mount point</I>. An AFS mount point looks
+and functions like a regular UNIX file system directory, but structurally it
+is more like a symbolic link that tells the Cache Manager the name of the
+volume associated with the directory. A mount point looks and acts like
+a directory only because the Cache Manager knows how to interpret it.
+<P>Consider the common case where the Cache Manager needs to retrieve a file
+requested by an application program. The Cache Manager traverses the
+file's complete pathname, starting at the AFS root (by convention mounted
+at the <B>/afs</B> directory) and continuing to the file. When the
+Cache Manager encounters (or <I>crosses</I>) a mount point during the
+traversal, it reads it to learn the name of the volume mounted at that
+directory location. After obtaining location information about the
+volume from the Volume Location (VL) Server, the Cache Manager fetches the
+indicated volume and opens its root directory. The <I>root
+directory</I> of a volume lists all the files, subdirectories, and mount
+points that reside in it. The Cache Manager scans the root directory
+listing for the next element in the pathname. It continues down the
+path, using this method to interpret any other mount points it encounters,
+until it reaches the volume that houses the requested file.
+<A NAME="IDX6455"></A>
+<A NAME="IDX6456"></A>
+<P>Mount points act as the glue that connects the AFS file space, creating the
+illusion of a single, seamless file tree even when volumes reside on many
+different file server machines. A volume's contents are visible
+and accessible when the volume is mounted at a directory location, and are not
+accessible at all if the volume is not mounted.
+<P>You can mount a volume at more than one location in the file tree, but this
+is not recommended for two reasons. First, it distorts the hierarchical
+nature of the filespace. Second, the Cache Manager can become confused
+about which pathname it followed to reach the file (causing unpredictable
+output from the <B>pwd</B> command, for example). However, if you
+mount a volume at more than one directory, the access control list (ACL)
+associated with the volume's root directory applies to all of the mount
+points.
+<A NAME="IDX6457"></A>
+<A NAME="IDX6458"></A>
+<P>There are several types of mount points, each of which the Cache Manager
+handles in a different way and each of which is appropriate for a different
+purpose. See <A HREF="#HDRWQ208">Mounting Volumes</A>.
+<P><H3><A NAME="HDRWQ184" HREF="auagd002.htm#ToC_210">About Volume Names</A></H3>
+<A NAME="IDX6459"></A>
+<A NAME="IDX6460"></A>
+<P>A read/write volume's name can be up to 22 characters in
+length. The Volume Server automatically adds the
+<B>.readonly</B> and <B>.backup</B> extensions to
+read-only and backup volumes respectively. Do not explicitly add the
+extensions to volume names, even if they are appropriate.
+<P>It is conventional for a volume's name to indicate the type of data it
+houses. For example, it is conventional to name all user volumes
+<B>user</B>.<VAR>username</VAR> where <VAR>username</VAR> is the
+user's login name. Similarly, many cells elect to put system
+binaries in volumes with names that begin with the system type code.
+For a list of other naming conventions, see <A HREF="auagd007.htm#HDRWQ44">Creating Volumes to Simplify Administration</A>.
+<A NAME="IDX6461"></A>
+<A NAME="IDX6462"></A>
+<HR><H2><A NAME="HDRWQ185" HREF="auagd002.htm#ToC_211">Creating Read/write Volumes</A></H2>
+<A NAME="IDX6463"></A>
+<A NAME="IDX6464"></A>
+<A NAME="IDX6465"></A>
+<P>A read/write volume is the most basic type of volume, and must exist before
+you can create read-only or backup versions of it. When you issue the
+<B>vos create</B> command to create a read/write volume, the VL Server
+creates a VLDB entry for it which records the name you specify, assigns a
+read/write volume ID number, and reserves the next two consecutive volume ID
+numbers for read-only and backup versions that possibly are to be created
+later. At the same time, the Volume Server creates a volume header at
+the site you designate, allocating space on disk to record the name of the
+volume's root directory. The name is filled in when you issue the
+<B>fs mkmount</B> command to mount the volume, and matches the mount point
+name. The following is also recorded in the volume header:
+<UL>
+<P><LI>An initial ACL associated with the volume's root directory. By
+default it grants all seven AFS access permissions to the
+<B>system:administrators</B> group. After you mount the
+volume, you can use the <B>fs setacl</B> command to add other entries and
+to remove or change the entry for the <B>system:administrators</B>
+group. See <A HREF="auagd020.htm#HDRWQ573">Setting ACL Entries</A>. 
+<A NAME="IDX6466"></A>
+<A NAME="IDX6467"></A>
+<P><LI>A space quota, which limits the amount of disk space the read/write
+version of the volume can use on the file server partition. The default
+is of 5000 kilobyte blocks, but you can use the <B>-maxquota</B> argument
+to the <B>vos create</B> command to set a different quota. 
+<P>To change the quota after creation, use the <B>fs setquota</B> command
+as described in <A HREF="#HDRWQ234">Setting and Displaying Volume Quota and Current Size</A>.
+<A NAME="IDX6468"></A>
+<A NAME="IDX6469"></A>
+</UL>
+<P><H3><A NAME="Header_212" HREF="auagd002.htm#ToC_212">To create (and mount) a read/write volume</A></H3>
+<OL TYPE=1>
+<P><LI>Verify that you are listed in the <B>/usr/afs/etc/UserList</B>
+file. If necessary, issue the <B>bos listusers</B> command, which
+is fully described in <A HREF="auagd021.htm#HDRWQ593">To display the users in the UserList file</A>. 
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE>
+<P><LI>Verify that you have the <B>a</B> (<B>administer</B>),
+<B>i</B> (<B>insert</B>), and <B>l</B> (<B>lookup</B>)
+permissions on the ACL of the directory where you plan to mount the
+volume. If necessary, issue the <B>fs listacl</B> command, which is
+fully described in <A HREF="auagd020.htm#HDRWQ572">Displaying ACLs</A>. 
+<PRE>   % <B>fs listacl</B> [&lt;<VAR>dir/file path</VAR>>]
+</PRE> 
+<P>Members of the <B>system:administrators</B> group always
+implicitly have the <B>a</B> (<B>administer</B>) and by default also
+the <B>l</B> (<B>lookup</B>) permission on every ACL and can use the
+<B>fs setacl</B> command to grant other rights as necessary.
+<A NAME="IDX6470"></A>
+<A NAME="IDX6471"></A>
+<P><LI><A NAME="LIWQ186"></A>Select a site (disk partition on a file server machine) for the
+new volume. To verify that the site has enough free space to house the
+volume (now, or if it grows to use its entire quota), issue the <B>vos
+partinfo</B> command.
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Note:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">The partition-related statistics in this command's output do not always
+agree with the corresponding values in the output of the standard UNIX
+<B>df</B> command. The statistics reported by this command can be
+up to five minutes old, because the Cache Manager polls the File Server for
+partition information at that frequency. Also, on some operating
+systems, the <B>df</B> command's report of partition size includes
+reserved space not included in this command's calculation, and so is
+likely to be about 10% larger.
+</TD></TR></TABLE> 
+<PRE>   % <B>vos partinfo</B> &lt;<VAR>machine&nbsp;name</VAR>> [&lt;<VAR>partition&nbsp;name</VAR>>]
+   
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>p
+</B><DD>Is the shortest acceptable abbreviation of <B>partinfo</B>.
+<P><DT><B><VAR>machine name</VAR>
+</B><DD>Specifies the file server machine for which to display partition size and
+usage.
+<P><DT><B><VAR>partition name</VAR>
+</B><DD>Names one partition for which to display partition size and usage.
+If you omit it, the output displays the size and space available for all
+partitions on the machine.
+</DL>
+<P><LI><A NAME="LIWQ187"></A>Select a volume name, taking note of the information in <A HREF="#HDRWQ184">About Volume Names</A>.
+<A NAME="IDX6472"></A>
+<A NAME="IDX6473"></A>
+<P><LI><A NAME="LIWQ188"></A>Issue the <B>vos create</B> command to create the
+volume. 
+<PRE>   
+   % <B>vos create</B> &lt;<VAR>machine&nbsp;name</VAR>> &lt;<VAR>partition&nbsp;name</VAR>> &lt;<VAR>volume&nbsp;name</VAR>>  \
+                [<B>-maxquota</B> &lt;<VAR>initial&nbsp;quota&nbsp;(KB)</VAR>>]
+   
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>cr
+</B><DD>Is the shortest acceptable abbreviation of <B>create</B>.
+<P><DT><B><VAR>machine name</VAR>
+</B><DD>Specifies the file server machine on which to place the volume.
+<P><DT><B><VAR>partition name</VAR>
+</B><DD>Specifies the disk partition on which to place the volume.
+<P><DT><B><VAR>volume name</VAR>
+</B><DD>Names the volume. It can be up to 22 alphanumeric and punctuation
+characters in length. Your cell possibly has naming conventions for
+volumes, such as beginning user volume names with the string <B>user</B>
+and using the period to separate parts of the name.
+<P><DT><B>-maxquota
+</B><DD>Sets the volume's quota, as a number of kilobyte blocks. If
+you omit this argument, the quota is set to 5000 kilobyte blocks.
+</DL>
+<A NAME="IDX6474"></A>
+<A NAME="IDX6475"></A>
+<A NAME="IDX6476"></A>
+<A NAME="IDX6477"></A>
+<P><LI><A NAME="LIWQ189"></A><B>(Optional)</B> Issue the <B>fs mkmount</B> command
+to mount the volume in the filespace. For complete syntax, see <A HREF="#HDRWQ212">To create a regular or read/write mount point</A>.
+<PRE>   
+   % <B>fs mkmount</B> &lt;<VAR>directory</VAR>> &lt;<VAR>volume&nbsp;name</VAR>> 
+   
+</PRE>
+<P><LI><B>(Optional)</B> Issue the <B>fs lsmount</B> command to verify
+that the mount point refers to the correct volume. Complete
+instructions appear in <A HREF="#HDRWQ211">To display a mount point</A>. 
+<PRE>   
+   % <B>fs lsmount</B> &lt;<VAR>directory</VAR>>
+   
+</PRE>
+<P><LI><B>(Optional)</B> Issue the <B>fs setvol</B> command with the
+<B>-offlinemsg</B> argument to record auxiliary information about the
+volume in its volume header. For example, you can record who owns the
+volume or where you have mounted it in the filespace. To display the
+information, use the <B>fs examine</B> command. 
+<PRE>   % <B>fs setvol</B> &lt;<VAR>dir/file path</VAR>> <B>-offlinemsg</B> &lt;<VAR>offline message</VAR>>
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>sv
+</B><DD>Is an acceptable alias for <B>setvol</B> (and <B>setv</B> the
+shortest acceptable abbreviation).
+<P><DT><B><VAR>dir/file path</VAR>
+</B><DD>Names the mount point of the volume with which to associate the
+message. Partial pathnames are interpreted relative to the current
+working directory. 
+<P>Specify the read/write path to the mount point, to avoid the failure that
+results when you attempt to change a read-only volume. By convention,
+you indicate the read/write path by placing a period before the cell name at
+the pathname's second level (for example,
+<B>/afs/.abc.com</B>). For further discussion of the
+concept of read/write and read-only paths through the filespace, see <A HREF="#HDRWQ209">The Rules of Mount Point Traversal</A>.
+<P><DT><B>-offlinemsg
+</B><DD>Specifies up to 128 characters of auxiliary information to record in the
+volume header.
+</DL>
+</OL>
+<HR><H2><A NAME="HDRWQ190" HREF="auagd002.htm#ToC_213">About Clones and Cloning</A></H2>
+<A NAME="IDX6478"></A>
+<A NAME="IDX6479"></A>
+<A NAME="IDX6480"></A>
+<A NAME="IDX6481"></A>
+<P>To create a backup or read-only volume, the Volume Server begins by
+<I>cloning</I> the read/write source volume to create a
+<I>clone</I>. The Volume Server creates the clone automatically
+when you issue the <B>vos backup</B> or <B>vos backupsys</B> command
+(for a backup volume) or the <B>vos release</B> command (for a read-only
+volume). No special action is required on your part.
+<P>A clone is not a copy of the data in the read/write source volume, but
+rather a copy of the read/write volume's <I>vnode index</I>.
+The vnode index is a table of pointers between the files and directories in
+the volume and the physical disk blocks on the partition where the data
+resides. From the clone, backup and read-only volumes are created in
+the following manner:
+<UL>
+<P><LI>A read-only volume that occupies the same partition as its read/write
+source (also known as a <I>read-only clone</I>), and a backup volume, are
+created by attaching a volume header to the clone. These volumes
+initially consume very little disk space, because the clone portion (the vnode
+index) points to exactly the same files as the read/write volume, as
+illustrated in <A HREF="#FIGWQ191">Figure 1</A>. The file sharing is possible only because the clone
+is on the same partition as the read/write source volume. When a file
+in the read/write volume is deleted, it is not actually removed from the
+partition, because the backup or read-only clone still points to it.
+Similarly, when a file in the read/write is changed, the entire original file
+is preserved on disk because the clone still points to it, and the read/write
+volume's vnode index changes to point to newly space for the changed
+file. When this happens, the backup or read-only volume is said to grow
+or start occupying actual disk space.
+<P><LI>A read-only volume that does not occupy the same site as the read/write
+source is a copy of the clone and of all of the data in the read/write source
+volume. It occupies the same amount of disk space as the read/write
+volume did at the time the read-only volume was created.
+</UL>
+<P><B><A NAME="FIGWQ191" HREF="auagd003.htm#FT_FIGWQ191">Figure 1. File Sharing Between the Read/write Source and a Clone Volume</A></B><BR>
+<TABLE BORDER ><TR><TD><BR>
+<B><BR><IMG SRC="vnode.gif" ALT="File Sharing Between the Read/write Source and a Clone Volume"><BR></B><BR>
+</TD></TR></TABLE>
+<A NAME="IDX6482"></A>
+<A NAME="IDX6483"></A>
+<A NAME="IDX6484"></A>
+<A NAME="IDX6485"></A>
+<A NAME="IDX6486"></A>
+<A NAME="IDX6487"></A>
+<A NAME="IDX6488"></A>
+<HR><H2><A NAME="HDRWQ192" HREF="auagd002.htm#ToC_214">Replicating Volumes (Creating Read-only Volumes)</A></H2>
+<P><I>Replication</I> refers to creating a read-only copy
+of a read/write volume and distributing the copy to one or more additional
+file server machines. Replication makes a volume's contents
+accessible on more than one file server machine, which increases data
+availability. It can also increase system efficiency by reducing load
+on the network and File Server. Network load is reduced if a client
+machine's server preference ranks lead the Cache Manager to access the
+copy of a volume stored on the closest file server machine. Load on the
+File Server is reduced because it issues only one callback for all data
+fetched from a read-only volume, as opposed to a callback for each file
+fetched from a read/write volume. The single callback is sufficient for
+an entire read-only volume because the volume does not change except in
+response to administrator action, whereas each read/write file can change at
+any time.
+<A NAME="IDX6489"></A>
+<A NAME="IDX6490"></A>
+<A NAME="IDX6491"></A>
+<A NAME="IDX6492"></A>
+<A NAME="IDX6493"></A>
+<P>Replicating a volume requires issuing two commands. First, use the
+<B>vos addsite</B> command to add one or more read-only site definitions
+to the volume's VLDB entry (a <I>site</I> is a particular partition
+on a file server machine). Then use the <B>vos release</B> command
+to clone the read/write source volume and distribute the clone to the defined
+read-only sites. You issue the <B>vos addsite</B> only once for
+each read-only site, but must reissue the <B>vos release</B> command every
+time the read/write volume's contents change and you want to update the
+read-only volumes.
+<P>For users to have a consistent view of the file system, the release of
+updated volume contents to read-only sites must be atomic: either all
+read-only sites receive the new version of the volume, or all sites keep the
+version they currently have. The <B>vos release</B> command is
+designed to ensure that all copies of the volume's read-only version
+match both the read/write source and each other. In cases where
+problems such as machine or server process outages prevent successful
+completion of the release operation, AFS uses two mechanisms to alert
+you.
+<A NAME="IDX6494"></A>
+<A NAME="IDX6495"></A>
+<A NAME="IDX6496"></A>
+<A NAME="IDX6497"></A>
+<A NAME="IDX6498"></A>
+<A NAME="IDX6499"></A>
+<A NAME="IDX6500"></A>
+<A NAME="IDX6501"></A>
+<A NAME="IDX6502"></A>
+<A NAME="IDX6503"></A>
+<A NAME="IDX6504"></A>
+<A NAME="IDX6505"></A>
+<A NAME="IDX6506"></A>
+<A NAME="IDX6507"></A>
+<P>First, the command interpreter generates an error message on the standard
+error stream naming each read-only site that did not receive the new volume
+version. Second, during the release operation the Volume Location (VL)
+Server marks site definitions in the VLDB entry with flags (<TT>New
+release</TT> and <TT>Old release</TT>) that indicate whether or not the
+site has the new volume version. If any flags remain after the
+operation completes, it was not successful. The Cache Manager refuses
+to access a read-only site marked with the <TT>Old release</TT> flag, which
+potentially imposes a greater load on the sites marked with the <TT>New
+release</TT> flag. It is important to investigate and eliminate the
+cause of the failure and then to issue the <B>vos release</B> command as
+many times as necessary to complete the release without errors.
+<P>The pattern of site flags remaining in the volume's VLDB entry after a
+failed release operation can help determine the point at which the operation
+failed. Use the <B>vos examine</B> or <B>vos listvldb</B>
+command to display the VLDB entry. The VL Server sets the flags in
+concert with the Volume Server's operations, as follows:
+<OL TYPE=1>
+<P><LI>Before the operation begins, the VL Server sets the <TT>New release</TT>
+flag on the read/write site definition in the VLDB entry and the <TT>Old
+release</TT> flag on read-only site definitions (unless the read-only site
+has been defined since the last release operation and has no actual volume, in
+which case its site flag remains <TT>Not released</TT>).
+<P><LI>If necessary, the Volume Server creates a temporary copy (a
+<I>clone</I>) of the read/write source called the ReleaseClone (see the
+following discussion of when the Volume Server does or does not create a new
+ReleaseClone.) It assigns the ReleaseClone its own volume ID number,
+which the VL Server records in the <TT>RClone</TT> field of the source
+volume's VLDB entry.
+<P><LI>The Volume Server distributes a copy of the ReleaseClone to each read-only
+site defined in the VLDB entry. As the site successfully receives the
+new clone, the VL Server sets the site's flag in the VLDB entry to
+<TT>New release</TT>.
+<P><LI>When all the read-only copies are successfully released, the VL Server
+clears all the <TT>New release</TT> site flags. The ReleaseClone is
+no longer needed, so the Volume Server deletes it and the VL Server erases its
+ID from the VLDB entry.
+</OL>
+<P>By default, the Volume Server determines automatically whether or not it
+needs to create a new ReleaseClone:
+<UL>
+<P><LI>If there are no flags (<TT>New release</TT>, <TT>Old release</TT>, or
+<TT>Not released</TT>) on site definitions in the VLDB entry, the previous
+<B>vos release</B> command completed successfully and all read-only sites
+currently have the same volume. The Volume Server infers that the
+current <B>vos release</B> command was issued because the read/write
+volume has changed. The Volume Server creates a new ReleaseClone and
+distributes it to all of the read-only sites.
+<P><LI>If any site definition in the VLDB entry is marked with a flag, either the
+previous release operation did not complete successfully or a new read-only
+site was defined since the last release. The Volume Server does not
+create a new ReleaseClone, instead distributing the existing ReleaseClone to
+sites marked with the <TT>Old release</TT> or <TT>Not released</TT>
+flag. As previously noted, the VL Server marks each VLDB site
+definition with the <TT>New release</TT> flag as the site receives the
+ReleaseClone, and clears all flags after all sites successfully receive
+it.
+</UL>
+<P>To override the default behavior, forcing the Volume Server to create and
+release a new ReleaseClone to the read-only sites, include the <B>-f</B>
+flag. This is appropriate if, for example, the data at the read/write
+site has changed since the existing ReleaseClone was created during the
+previous release operation.
+<P><H3><A NAME="HDRWQ193" HREF="auagd002.htm#ToC_215">Using Read-only Volumes Effectively</A></H3>
+<A NAME="IDX6508"></A>
+<A NAME="IDX6509"></A>
+<A NAME="IDX6510"></A>
+<A NAME="IDX6511"></A>
+<P>For maximum effectiveness, replicate only volumes that satisfy two
+criteria:
+<UL>
+<P><LI>The volume's contents are heavily used. Examples include a
+volume housing binary files for text editors or other popular application
+programs, and volumes mounted along heavily traversed directory paths such as
+the paths leading to user home directories. It is an inefficient use of
+disk space to replicate volumes for which the demand is low enough that a
+single File Server can easily service all requests.
+<P><LI>The volume's contents change infrequently. As noted, file
+system consistency demands that the contents of read-only volumes must match
+each other and their read/write source at all times. Each time the
+read/write volume changes, you must issue the <B>vos release</B> command
+to update the read-only volumes. This can become tedious (and easy to
+forget) if the read/write volume changes frequently.
+</UL>
+<A NAME="IDX6512"></A>
+<A NAME="IDX6513"></A>
+<P>Explicitly mounting a read-only volume (creating a mount point that names a
+volume with a <B>.readonly</B> extension) is not generally
+necessary or appropriate. The Cache Manager has a built-in bias to
+access the read-only version of a replicated volume whenever possible.
+As described in more detail in <A HREF="#HDRWQ209">The Rules of Mount Point Traversal</A>, when the Cache Manager encounters a mount point it reads
+the volume name inside it and contacts the VL Server for a list of the sites
+that house the volume. In the normal case, if the mount point resides
+in a read-only volume and names a read/write volume (one that does not have a
+<B>.readonly</B> or <B>.backup</B> extension), the Cache
+Manager always attempts to access a read-only copy of the volume. Thus
+there is normally no reason to force the Cache Manager to access a read-only
+volume by mounting it explicitly.
+<P>It is a good practice to place a read-only volume at the read/write site,
+for a couple of reasons. First, the read-only volume at the read/write
+site requires only a small amount of disk space, because it is a clone rather
+a copy of all of the data (see <A HREF="#HDRWQ190">About Clones and Cloning</A>). Only if a large number of files are removed or
+changed in the read/write volume does the read-only copy occupy much disk
+space. That normally does not happen because the appropriate response
+to changes in a replicated read/write volume is to reclone it. The
+other reason to place a read-only volume at the read/write site is that the
+Cache Manager does not attempt to access the read/write version of a
+replicated volume if all read-only copies become inaccessible. If the
+file server machine housing the read/write volume is the only accessible
+machine, the Cache Manager can access the data only if there is a read-only
+copy at the read/write site.
+<P>The number of read-only sites to define depends on several factors.
+Perhaps the main trade-off is between the level of demand for the
+volume's contents and how much disk space you are willing to use for
+multiple copies of the volume. Of course, each prospective read-only
+site must have enough available space to accommodate the volume. The
+limit on the number of read-only copies of a volume is determined by the
+maximum number of site definitions in a volume's VLDB entry, which is
+defined in the <I>IBM AFS Release Notes</I>. The site housing the
+read/write and backup versions of the volume counts as one site, and each
+read-only site counts as an additional site (even the read-only site defined
+on the same file server machine and partition as the read/write site counts as
+a separate site). Note also that the Volume Server permits only one
+read-only copy of a volume per file server machine.
+<P><H3><A NAME="Header_216" HREF="auagd002.htm#ToC_216">Replication Scenarios</A></H3>
+<A NAME="IDX6514"></A>
+<A NAME="IDX6515"></A>
+<A NAME="IDX6516"></A>
+<P>The instructions in the following section explain how to replicate a volume
+for which no read-only sites are currently defined. However, you can
+also use the instructions in other common situations:
+<UL>
+<P><LI>If you are releasing a new clone to sites that already exist, you can skip
+Step <A HREF="#LIWQ196">2</A>. It can still be useful to issue the <B>vos
+examine</B> command, however, to verify that the desired read-only sites are
+defined.
+<P><LI>If you are adding new read-only sites to existing ones, perform all of the
+steps. In Step <A HREF="#LIWQ197">3</A>, issue the <B>vos addsite</B> command for the new sites
+only.
+<P><LI>If you are defining sites but do not want to release a clone to them yet,
+stop after Step <A HREF="#LIWQ197">3</A> and continue when you are ready.
+<P><LI>If you are removing one or more sites before releasing a new clone to the
+remaining sites, follow the instructions for site removal in <A HREF="#HDRWQ235">Removing Volumes and their Mount Points</A> and then start with Step <A HREF="#LIWQ198">4</A>.
+</UL>
+<P><H3><A NAME="HDRWQ194" HREF="auagd002.htm#ToC_217">To replicate a read/write volume (create a read-only volume)</A></H3>
+<A NAME="IDX6517"></A>
+<A NAME="IDX6518"></A>
+<OL TYPE=1>
+<P><LI><A NAME="LIWQ195"></A>Verify that you are listed in the
+<B>/usr/afs/etc/UserList</B> file. If necessary, issue the <B>bos
+listusers</B> command, which is fully described in <A HREF="auagd021.htm#HDRWQ593">To display the users in the UserList file</A>. 
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE>
+<P><LI><A NAME="LIWQ196"></A>Select one or more sites at which to replicate the
+volume. There are several factors to consider:
+<UL>
+<P><LI>How many sites are already defined. As previously noted, it is
+usually appropriate to define a read-only site at the read/write site.
+Also, the Volume Server permits only one read-only copy of a volume per file
+server machine. To display the volume's current sites, issue the
+<B>vos examine</B> command, which is described fully in <A HREF="#HDRWQ221">Displaying One Volume's VLDB Entry and Volume Header</A>. 
+<PRE>   
+   % <B>vos examine</B> &lt;<VAR>volume&nbsp;name&nbsp;or &nbsp;ID</VAR>>
+    
+</PRE> 
+<P>The final lines of output display the volume's site definitions from
+the VLDB.
+<P><LI>Whether your cell dedicates any file server machines to housing read-only
+volumes only. In general, only very large cells use read-only server
+machines.
+<P><LI>Whether a site has enough free space to accommodate the volume. A
+read-only volume requires the same amount of space as the read/write version
+(unless it is at the read/write site itself). The first line of output
+from the <B>vos examine</B> command displays the read/write volume's
+current size in kilobyte blocks, as shown in <A HREF="#HDRWQ221">Displaying One Volume's VLDB Entry and Volume Header</A>. 
+<P>To display the amount of space available on a file server machine's
+partitions, use the <B>vos partinfo</B> command, which is described fully
+in <A HREF="#HDRWQ185">Creating Read/write Volumes</A>. 
+<PRE>   
+   % <B>vos partinfo</B> &lt;<VAR>machine&nbsp;name</VAR>> [&lt;<VAR>partition&nbsp;name</VAR>>]
+   
+</PRE>
+</UL>
+<A NAME="IDX6519"></A>
+<A NAME="IDX6520"></A>
+<A NAME="IDX6521"></A>
+<A NAME="IDX6522"></A>
+<A NAME="IDX6523"></A>
+<A NAME="IDX6524"></A>
+<P><LI><A NAME="LIWQ197"></A>Issue the <B>vos addsite</B> command to define each new
+read-only site in the VLDB. 
+<PRE>   
+   % <B>vos addsite</B> &lt;<VAR>machine&nbsp;name</VAR>> &lt;<VAR>partition&nbsp;name</VAR>> &lt;<VAR>volume&nbsp;name&nbsp;or&nbsp;ID</VAR>>
+   
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>ad
+</B><DD>Is the shortest acceptable abbreviation of <B>addsite</B>.
+<P><DT><B><VAR>machine name</VAR>
+</B><DD>Defines the file server machine for the new site.
+<P><DT><B><VAR>partition name</VAR>
+</B><DD>Names a disk partition on the machine <VAR>machine name</VAR>.
+<P><DT><B><VAR>volume name or ID</VAR>
+</B><DD>Identifies the read/write volume to be replicated, either by its complete
+name or its volume ID number.
+</DL>
+<P><LI><A NAME="LIWQ198"></A><B>(Optional)</B> Verify that the <B>fs</B> process
+(which incorporates the Volume Server) is functioning normally on each file
+server machine where you have defined a read-only site, and that the
+<B>vlserver</B> process (the Volume Location Server) is functioning
+correctly on each database server machine. Knowing that they are
+functioning eliminates two possible sources of failure for the release.
+Issue the <B>bos status</B> command on each file server machine housing a
+read-only site for this volume and on each database server machine. The
+command is described fully in <A HREF="auagd009.htm#HDRWQ158">Displaying Process Status and Information from the BosConfig File</A>. 
+<PRE>   
+   % <B>bos status</B> &lt;<VAR>machine&nbsp;name</VAR>> <B>fs vlserver</B>
+   
+</PRE>
+<A NAME="IDX6525"></A>
+<A NAME="IDX6526"></A>
+<A NAME="IDX6527"></A>
+<A NAME="IDX6528"></A>
+<P><LI><A NAME="LIWQ199"></A>Issue the <B>vos release</B> command to clone the
+read/write source volume and distribute the clone to each read-only
+site. 
+<PRE>   
+   % <B>vos release</B> &lt;<VAR>volume&nbsp;name&nbsp;or&nbsp;ID</VAR>> [<B>-f</B>]
+   
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>rel
+</B><DD>Is the shortest acceptable abbreviation of <B>release</B>.
+<P><DT><B><VAR>volume name or ID</VAR>
+</B><DD>Identifies the read/write volume to clone, either by its complete name or
+volume ID number. The read-only version is given the same name with a
+<B>.readonly</B> extension. All read-only copies share the
+same read-only volume ID number.
+<P><DT><B>-f
+</B><DD>Creates and releases a brand new clone.
+</DL>
+<P><LI><A NAME="LIWQ200"></A><B>(Optional)</B> Issue the <B>vos examine</B> command
+to verify that no site definition in the VLDB entry is marked with an <TT>Old
+release</TT> or <TT>New release</TT> flag. The command is described
+fully in <A HREF="#HDRWQ221">Displaying One Volume's VLDB Entry and Volume Header</A>. 
+<PRE>   
+   % <B>vos examine</B> &lt;<VAR>volume&nbsp;name&nbsp;or&nbsp;ID</VAR>>
+   
+</PRE>
+</OL>
+<P>If any flags appear in the output from Step <A HREF="#LIWQ200">6</A>, repeat Steps <A HREF="#LIWQ198">4</A> and <A HREF="#LIWQ199">5</A> until the Volume Server
+does not produce any error messages during the release operation and the flags
+no longer appear. Do not issue the <B>vos release</B> command when
+you know that the read/write site or any read-only site is inaccessible due to
+network, machine or server process outage.
+<HR><H2><A NAME="HDRWQ201" HREF="auagd002.htm#ToC_218">Creating Backup Volumes</A></H2>
+<A NAME="IDX6529"></A>
+<A NAME="IDX6530"></A>
+<A NAME="IDX6531"></A>
+<A NAME="IDX6532"></A>
+<A NAME="IDX6533"></A>
+<P>A <I>backup volume</I> is a clone that resides at the same site as its
+read/write source (to review the concept of cloning, see <A HREF="#HDRWQ190">About Clones and Cloning</A>). Creating a backup version of a volume has two
+purposes:
+<UL>
+<P><LI>It is by convention the first step when dumping a volume's contents
+to tape with the AFS Backup System. A volume is inaccessible while it
+is being dumped, so instead of dumping the read/write volume, you create and
+dump a backup version. Users do not normally access the backup version,
+so it is unlikely that the dump will disturb them. For more details,
+see <A HREF="auagd012.htm#HDRWQ296">Backing Up Data</A>.
+<P><LI>It enables users to restore mistakenly deleted or changed data themselves,
+freeing you for more crucial tasks. The backup version captures the
+state of its read/write source at the time the backup is made, and its
+contents cannot change. Mount the backup version in the filespace so
+that users can restore a file to its state at the time you made the
+backup. See <A HREF="#HDRWQ204">Making the Contents of Backup Volumes Available to Users</A>.
+</UL>
+<A NAME="IDX6534"></A>
+<A NAME="IDX6535"></A>
+<A NAME="IDX6536"></A>
+<P><H3><A NAME="HDRWQ202" HREF="auagd002.htm#ToC_219">Backing Up Multiple Volumes at Once</A></H3>
+<P>The <B>vos backupsys</B> command creates a backup
+version of many read/write volumes at once. This command is useful when
+preparing for large-scale backups to tape using the AFS Backup System.
+<P>To clone every read/write volume listed in the VLDB, omit all of the
+command's options. Otherwise, combine the command's options
+to clone various groups of volumes. The options use one of two basic
+criteria to select volumes: location (the <B>-server</B> and
+<B>-partition</B> arguments) or presence in the volume name of one of a
+set of specified character strings (the <B>-prefix</B>,
+<B>-exclude</B>, and <B>-xprefix</B> options).
+<P>To clone only volumes that reside on one file server machine, include the
+<B>-server</B> argument. To clone only volumes that reside on one
+partition, combine the <B>-server</B> and <B>-partition</B>
+arguments. The <B>-partition</B> argument can also be used alone to
+clone volumes that reside on the indicated partition on every file server
+machine. These arguments can be combined with those that select volumes
+based on their names.
+<P>Combine the <B>-prefix</B>, <B>-exclude</B>, and
+<B>-xprefix</B> options (with or without the <B>-server</B> and
+<B>-partition</B> arguments) in the indicated ways to select volumes based
+on character strings contained in their names:
+<UL>
+<P><LI>To clone every read/write volume at the specified location whose name
+includes one of a set of specified character strings (for example, begins with
+<B>user.</B> or includes the string <B>afs</B>), use the
+<B>-prefix</B> argument or combine the <B>-xprefix</B> and
+<B>-exclude</B> options.
+<P><LI>To clone every read/write volume at the specified location except those
+whose name includes one of a set of specified character strings, use the
+<B>-xprefix</B> argument or combine the <B>-prefix</B> and
+<B>-exclude</B> options.
+<P><LI>To clone every read/write volume at the specified location whose name
+includes one of one of a set of specified character strings, except those
+whose names include one of a different set of specified character strings,
+combine the <B>-prefix</B> and <B>-xprefix</B> arguments. The
+command creates a list of all volumes that match the <B>-prefix</B>
+argument and then removes from the list the volumes that match the
+<B>-xprefix</B> argument. For effective results, the strings
+specified by the <B>-xprefix</B> argument must designate a subset of the
+volumes specified by the <B>-prefix</B> argument.
+<P>If the <B>-exclude</B> flag is combined with the <B>-prefix</B> and
+<B>-xprefix</B> arguments, the command creates a list of all volumes that
+do not match the <B>-prefix</B> argument and then adds to the list any
+volumes that match the <B>-xprefix</B> argument. As when the
+<B>-exclude</B> flag is not used, the result is effective only if the
+strings specified by the <B>-xprefix</B> argument designate a subset of
+the volumes specified by the <B>-prefix</B> argument.
+</UL>
+<P>The <B>-prefix</B> and <B>-xprefix</B> arguments both accept
+multiple values, which can be used to define disjoint groups of
+volumes. Each value can be one of two types:
+<OL TYPE=1>
+<P><LI>A simple character string, which matches volumes whose name begin with the
+string. All characters are interpreted literally (that is, characters
+that potentially have special meaning to the command shell, such as the
+period, have only their literal meaning).
+<P><LI>A regular expression, which matches volumes whose names contain the
+expressions. Place a caret (&nbsp;<B>^</B>&nbsp;) at the
+beginning of the expression, and enclose the entire string in single quotes
+(<B>'</B>&nbsp;<B>'</B>). Explaining regular
+expressions is outside the scope of this reference page; see the UNIX
+manual page for <B>regexp(5)</B> or (for a brief introduction) <A HREF="auagd011.htm#HDRWQ265">Defining and Displaying Volume Sets and Volume Entries</A>. As an example, the following expression matches
+volumes that have the string <B>aix</B> anywhere in their names:
+<PRE>   <B>-prefix  '^.*aix'</B>
+</PRE>
+</OL>
+<P>To display a list of the volumes to be cloned, without actually cloning
+them, include the <B>-dryrun</B> flag. To display a statement that
+summarizes the criteria being used to select volume, include the
+<B>-verbose</B> flag.
+<P>To back up a single volume, use the <B>vos backup</B> command, which
+employs a more streamlined technique for finding a single volume.
+<A NAME="IDX6537"></A>
+<A NAME="IDX6538"></A>
+<A NAME="IDX6539"></A>
+<A NAME="IDX6540"></A>
+<A NAME="IDX6541"></A>
+<A NAME="IDX6542"></A>
+<P><H3><A NAME="HDRWQ203" HREF="auagd002.htm#ToC_220">Automating Creation of Backup Volumes</A></H3>
+<P>Most cells find that it is best to make a new backup version
+of relevant volumes each day. It is best to create the backup versions
+at a time when usage is low, because the backup operation causes the
+read/write volume to be unavailable momentarily.
+<P>You can either issue the necessary the <B>vos backupsys</B> or <B>vos
+backup</B> commands at the console or create a <B>cron</B> entry in the
+<B>BosConfig</B> file on a file server machine, which eliminates the need
+for an administrator to initiate the backup operation.
+<P>The following example command creates a <B>cron</B> process called
+<B>backupusers</B> in the <B>/usr/afs/local/BosConfig</B> file on the
+machine <B>fs3.abc.com</B>. The process runs every
+day at 1:00 a.m. to create a backup version of every
+volume in the cell whose name starts with the string <B>user</B>.
+The <B>-localauth</B> flag enables the process to invoke the privileged
+<B>vos backupsys</B> command while unauthenticated. Note that the
+<B>-cmd</B> argument specifies a complete pathname for the <B>vos</B>
+binary, because the PATH environment variable for the BOS Server (running as
+the local superuser <B>root</B>) generally does not include the path to
+AFS binaries.
+<PRE>   
+   % <B>bos create fs3.abc.com backupusers cron</B>  \
+     <B>-cmd "/usr/afs/bin/vos backupsys  -prefix user -localauth" "1:00"</B>
+    
+</PRE>
+<A NAME="IDX6543"></A>
+<A NAME="IDX6544"></A>
+<A NAME="IDX6545"></A>
+<P><H3><A NAME="HDRWQ204" HREF="auagd002.htm#ToC_221">Making the Contents of Backup Volumes Available to Users</A></H3>
+<P>As noted, a backup volume preserves the state of the
+read/write source at the time the backup is created. Many cells choose
+to mount backup volumes so that users can access and restore data they have
+accidentally deleted or changed since the last backup was made, without having
+to request help from administrators. The most sensible place to mount
+the backup version of a user volume is at a subdirectory of the user's
+home directory. Suitable names for this directory include
+<B>OldFiles</B> and <B>Backup</B>. The subdirectory looks just
+like the user's own home directory as it was at the time the backup was
+created, with all files and subdirectories in the same relative
+positions.
+<P>If you do create and mount backup volumes for your users, inform users of
+their existence. The <I>IBM AFS User Guide</I> does not mention
+backup volumes because making them available to users is optional.
+Explain to users how often you make a new backup, so they know what they can
+recover. Remind them also that the data in their backup volume cannot
+change; however, they can use the standard UNIX <B>cp</B> command to
+copy it into their home volume and modify it there. Reassure users that
+the data in their backup volumes does not count against their read/write
+volume quota.
+<P><H3><A NAME="HDRWQ205" HREF="auagd002.htm#ToC_222">To create and mount a backup volume</A></H3>
+<OL TYPE=1>
+<P><LI>Verify that you are listed in the <B>/usr/afs/etc/UserList</B>
+file. If necessary, issue the <B>bos listusers</B> command, which
+is fully described in <A HREF="auagd021.htm#HDRWQ593">To display the users in the UserList file</A>. 
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE>
+<P><LI>Verify that you have the <B>insert</B> (<B>i</B>) and
+<B>administer</B> (<B>a</B>) permissions on the ACL of the directory
+in which you wish to mount the volume. If necessary, issue the <B>fs
+listacl</B> command, which is fully described in <A HREF="auagd020.htm#HDRWQ572">Displaying ACLs</A>. 
+<PRE>   % <B>fs listacl</B> [&lt;<VAR>dir/file path</VAR>>]
+</PRE> 
+<P>Members of the <B>system:administrators</B> group always
+implicitly have the <B>a</B> (<B>administer</B>) and by default also
+the <B>l</B> (<B>lookup</B>) permission on every ACL and can use the
+<B>fs setacl</B> command to grant other rights as necessary.
+<A NAME="IDX6546"></A>
+<A NAME="IDX6547"></A>
+<P><LI><A NAME="LIWQ206"></A>Issue the <B>vos backup</B> command to create a backup
+version of a read/write source volume. The message shown confirms the
+success of the backup operation. 
+<PRE>   
+   % <B>vos backup</B> &lt;<VAR>volume&nbsp;name&nbsp;or&nbsp;ID</VAR>>
+   Created backup volume for <VAR>volume&nbsp;name&nbsp;or&nbsp;ID</VAR>
+   
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>backup
+</B><DD>Must be typed in full.
+<P><DT><B><VAR>volume name or ID</VAR>
+</B><DD>Identifies the read/write volume to back up, either by its complete name
+or volume ID number. The backup volume has the same name with the
+addition of the <B>.backup</B> extension. It has its own
+volume ID number.
+</DL>
+<A NAME="IDX6548"></A>
+<A NAME="IDX6549"></A>
+<P><LI><A NAME="LIWQ207"></A><B>(Optional)</B> Issue the <B>fs mkmount</B> to mount
+the backup volume. While this step is optional, Cache Managers cannot
+access the volume's contents if it is not mounted. 
+<PRE>   
+   % <B>fs mkmount</B> &lt;<VAR>directory</VAR>> &lt;<VAR>volume&nbsp;name</VAR>><B>.backup</B>
+   
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>mk
+</B><DD>Is the shortest acceptable abbreviation of <B>mkmount</B>.
+<P><DT><B><VAR>directory</VAR>
+</B><DD>Names the mount point to create. Do not create a file or directory
+of the same name beforehand. Partial pathnames are interpreted relative
+to the current working directory. For the backup version of a user
+volume, the conventional location is the user's home directory.
+<P><DT><B><VAR>volume name</VAR><B>.backup</B>
+</B><DD>Is the full name of the backup volume.
+</DL>
+<P><LI><B>(Optional)</B> Issue the <B>fs lsmount</B> command to verify
+that the mount point refers to the correct volume. Complete
+instructions appear in <A HREF="#HDRWQ211">To display a mount point</A>. 
+<PRE>   
+   % <B>fs lsmount</B> &lt;<VAR>directory</VAR>>
+   
+</PRE>
+</OL>
+<A NAME="IDX6550"></A>
+<A NAME="IDX6551"></A>
+<P><H3><A NAME="Header_223" HREF="auagd002.htm#ToC_223">To create multiple backup volumes at once</A></H3>
+<OL TYPE=1>
+<P><LI>Verify that you are listed in the <B>/usr/afs/etc/UserList</B>
+file. If necessary, issue the <B>bos listusers</B> command, which
+is fully described in <A HREF="auagd021.htm#HDRWQ593">To display the users in the UserList file</A>. 
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE>
+<P><LI>Issue the <B>vos backupsys</B> command to create a backup version of
+every read/write volume that shares the same prefix or site. The
+effects of combining the three arguments are described in <A HREF="#HDRWQ202">Backing Up Multiple Volumes at Once</A>. 
+<PRE>   % <B>vos backupsys</B> [<B>-prefix</B> &lt;<VAR>common&nbsp;prefix&nbsp;on&nbsp;volume(s)</VAR>><SUP>+</SUP>]   \
+        [<B>-server</B> &lt;<VAR>machine&nbsp;name</VAR>>] [<B>-partition</B> &lt;<VAR>partition&nbsp;name</VAR>>]  \
+        [<B>-exclude</B>]   [<B>-xprefix</B> &lt;<VAR>negative&nbsp;prefix&nbsp;on&nbsp;volume(s)</VAR>><SUP>+</SUP>] 
+        [<B>-dryrun</B>]  [<B>-verbose</B>]
+   
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>backups
+</B><DD>Is the shortest acceptable abbreviation of <B>backupsys</B>.
+<P><DT><B>-prefix
+</B><DD>Specifies one or more simple character strings or regular expressions of
+any length; a volume whose name includes the string is placed on the list
+of volumes to be cloned. Include field separators (such as periods) if
+appropriate. This argument can be combined with any combination of the
+<B>-server</B>, <B>-partition</B>, <B>-exclude</B>, and
+<B>-xprefix</B> options.
+<P><DT><B>-server
+</B><DD>Specifies the file server machine housing the volumes to backup.
+Can be combined with any combination of the <B>-prefix</B>,
+<B>-partition</B>, <B>-exclude</B>, and <B>-xprefix</B>
+options.
+<P><DT><B>-partition
+</B><DD>Specifies the partition housing the volumes you wish to backup. Can
+be combined with any combination of the <B>-prefix</B>,
+<B>-server</B>, <B>-exclude</B>, and <B>-xprefix</B>
+options.
+<P><DT><B>-exclude
+</B><DD>Indicates that all volumes except those indicated with the
+<B>-prefix</B> argument are to be backed up. The <B>-prefix</B>
+argument must be provided along with this one. Can also be combined
+with any combination of the <B>-prefix</B>, <B>-server</B>, and
+<B>-partition</B> arguments; or with both the <B>-prefix</B> and
+<B>-xprefix</B> arguments, but not with the <B>-xprefix</B> argument
+alone.
+<P><DT><B>-xprefix
+</B><DD>Specifies one or more simple character strings or regular expressions of
+any length; a volume whose name does not include the string is placed on
+the list of volumes to be cloned. Can be combined with any combination
+of the <B>-prefix</B>, <B>-server</B>, and <B>-partition</B>
+arguments; in addition, it can be combined with both the
+<B>-prefix</B> and <B>-exclude</B> options, but not with the
+<B>-exclude</B> flag alone.
+<P><DT><B>-dryrun
+</B><DD>Displays on the standard output stream a list of the volumes to be cloned,
+without actually cloning them.
+<P><DT><B>-verbose
+</B><DD>Displays on the standard output stream a statement that summarizes the
+criteria being used to select volumes, if combined with the <B>-dryrun</B>
+flag; otherwise, traces the cloning operation for each volume.
+</DL>
+</OL>
+<HR><H2><A NAME="HDRWQ208" HREF="auagd002.htm#ToC_224">Mounting Volumes</A></H2>
+<A NAME="IDX6552"></A>
+<P>Mount points make the contents of AFS volumes visible and accessible in the
+AFS filespace, as described in <A HREF="#HDRWQ183">About Mounting Volumes</A>. This section discusses in more detail how the Cache
+Manager handles mount points as it traverses the filespace. It
+describes the three types of mount points, their purposes, and how to
+distinguish between them, and provides instructions for creating, removing,
+and examining mount points.
+<P><H3><A NAME="HDRWQ209" HREF="auagd002.htm#ToC_225">The Rules of Mount Point Traversal</A></H3>
+<P>The Cache Manager observes three basic rules as it traverses
+the AFS filespace and encounters mount points:
+<UL>
+<P><LI><B>Rule 1:</B> Access Backup and Read-only Volumes When
+Specified
+<P>When the Cache Manager encounters a mount point that specifies a volume
+with either a <B>.readonly</B> or a <B>.backup</B>
+extension, it accesses that type of volume only. If a mount point does
+not have either a <B>.backup</B> or <B>.readonly</B>
+extension, the Cache Manager uses Rules 2 and 3.
+<P>For example, the Cache Manager never accesses the read/write version of a
+volume if the mount point names the backup version. If the specified
+version is inaccessible, the Cache Manager reports an error.
+<P><LI><B>Rule 2:</B> Follow the Read-only Path When Possible
+<P>If a mount point resides in a read-only volume and the volume that it
+references is replicated, the Cache Manager attempts to access a read-only
+copy of the volume; if the referenced volume is not replicated, the Cache
+Manager accesses the read/write copy. The Cache Manager is thus said to
+prefer a <I>read-only path</I> through the filespace, accessing read-only
+volumes when they are available.
+<P>The Cache Manager starts on the read-only path in the first place because
+it always accesses a read-only copy of the <B>root.afs</B> volume
+if it exists; the volume is mounted at the root of a cell's AFS
+filespace (named <B>/afs</B> by convention). That is, if the
+<B>root.afs</B> volume is replicated, the Cache Manager attempts to
+access a read-only copy of it rather than the read/write copy. This
+rule then keeps the Cache Manager on a read-only path as long as each
+successive volume is replicated. The implication is that both the
+<B>root.afs</B> and <B>root.cell</B> volumes must be
+replicated for the Cache Manager to access replicated volumes mounted below
+them in the AFS filespace. The volumes are conventionally mounted at
+the <B>/afs</B> and <B>/afs/</B><VAR>cellname</VAR> directories,
+respectively.
+<P><LI><B>Rule 3:</B> Once on a Read/write Path, Stay There
+<P>If a mount point resides in a read/write volume and the volume name does
+not have a <B>.readonly</B> or a <B>.backup</B>
+extension, the Cache Manager attempts to access only the a read/write version
+of the volume. The access attempt fails with an error if the read/write
+version is inaccessible, even if a read-only version is accessible. In
+this situation the Cache Manager is said to be on a <I>read/write path</I>
+and cannot switch back to the read-only path unless mount point explicitly
+names a volume with a <B>.readonly</B> extension. (Cellular
+mount points are an important exception to this rule, as explained in the
+following discussion.
+</UL>
+<P><H3><A NAME="HDRWQ210" HREF="auagd002.htm#ToC_226">The Three Types of Mount Points</A></H3>
+<P>AFS uses three types of mount points, each appropriate for a
+different purpose because of how the Cache Manager handles them.
+<UL>
+<P><LI>When the Cache Manager crosses a <I>regular</I> mount point, it obeys
+all three of the mount point traversal rules previously described. 
+<A NAME="IDX6553"></A>
+<A NAME="IDX6554"></A>
+<P>AFS performs best when the vast majority of mount points in the filespace
+are regular, because the mount point traversal rules promote the most
+efficient use of both replicated and nonreplicated volumes. Because
+there are likely to be multiple read-only copies of a replicated volume, it
+makes sense for the Cache Manager to access one of them rather than the single
+read/write version, and the second rule leads it to do so. If a volume
+is not replicated, the third rule means that the Cache Manager still accesses
+the read/write volume when that is the only type available. In other
+words, a regular mount point does not force the Cache Manager always to access
+read-only volumes (it is explicitly not a "read-only mount point").
+<P>To create a regular mount point, use the <B>fs mkmount</B> command as
+described in <A HREF="#HDRWQ212">To create a regular or read/write mount point</A>.
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Note:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">To enable the Cache Manager to access the read-only version of a replicated
+volume named by a regular mount point, all volumes that are mounted above it
+in the pathname must also be replicated. That is the only way the Cache
+Manager can stay on a read-only path to the target volume.
+</TD></TR></TABLE>
+<P><LI>When the Cache Manager crosses a <I>read/write</I> mount point, it
+attempts to access only the volume version named in the mount point. If
+the volume name is the base (read/write) form, without a
+<B>.readonly</B> or <B>.backup</B> extension, the Cache
+Manager accesses the read/write version of the volume, even if it is
+replicated. In other words, the Cache Manager disregards the second
+mount point traversal rule when crossing a read/write mount point: it
+switches to the read/write path through the filespace. 
+<A NAME="IDX6555"></A>
+<A NAME="IDX6556"></A>
+<P>It is conventional to create only one read/write mount point in a
+cell's filespace, using it to mount the cell's
+<B>root.cell</B> volume just below the AFS filespace root (by
+convention, <B>/afs/.</B><VAR>cellname</VAR>). As indicated,
+it is conventional to place a period at the start of the read/write mount
+point's name (for example,
+<B>/afs/.abc.com</B>). The period distinguishes the
+read/write mount point from the regular mount point for the
+<B>root.cell</B> volume at the same level. This is the only
+case in which it is conventional to create two mount points for the same
+volume. A desirable side effect of this naming convention for this
+read/write mount point is that it does not appear in the output of the UNIX
+<B>ls</B> command unless the <B>-a</B> flag is included, essentially
+hiding it from regular users who have no use for it.
+<P>The existence of a single read/write mount point at this point in the
+filespace provides access to the read/write version of every volume when
+necessary, because it puts the Cache Manager on a read/write path right at the
+top of the filespace. At the same time, the regular mount point for the
+<B>root.cell</B> volume puts the Cache Manager on a read-only path
+most of the time.
+<P>Using a read/write mount point for a read-only or backup volume is
+acceptable, but unnecessary. The first rule of mount point traversal
+already specifies that the Cache Manager accesses them if the volume name in a
+regular mount point has a <B>.readonly</B> or
+<B>.backup</B> extension.
+<P>To create a read/write mount point, use the <B>-rw</B> flag on the
+<B>fs mkmount</B> command as described in <A HREF="#HDRWQ212">To create a regular or read/write mount point</A>.
+<P><LI>When the Cache Manager crosses a <I>cellular</I> mount point, it
+accesses the indicated volume in the specified cell, which is normally a
+foreign cell. (If the mount point does not name a cell along with the
+volume, the Cache Manager accesses the volume in the cell where the mount
+point resides.) When crossing a regular cellular mount point, the Cache
+Manager disregards the third mount point traversal rule. Instead, it
+accesses a read-only version of the volume if it is replicated, even if the
+volume that houses the mount point is read/write. 
+<P>It is inappropriate to circumvent this behavior by creating a read/write
+cellular mount point, because traversing the read/write path imposes an unfair
+load on the foreign cell's file server machines. The File Server
+must issue a callback for each file fetched from the read/write volume, rather
+than single callback required for a read-only volume. In any case, only
+a cell's own administrators generally need to access the read/write
+versions of replicated volumes.
+<A NAME="IDX6557"></A>
+<A NAME="IDX6558"></A>
+<A NAME="IDX6559"></A>
+<P>It is conventional to create cellular mount points only at the second level
+in a cell's filespace, using them to mount foreign cells'
+<B>root.cell</B> volumes just below the AFS filespace root (by
+convention, at <B>/afs/</B><VAR>foreign_cellname</VAR>). The mount
+point enables local users to access the foreign cell's filespace,
+assuming they have the necessary permissions on the ACL of the volume's
+root directory and that there is an entry for the foreign cell in each local
+client machine's <B>/usr/vice/etc/CellServDB</B> file, as described
+in <A HREF="auagd015.htm#HDRWQ406">Maintaining Knowledge of Database Server Machines</A>.
+<P>Creating cellular mount points at other levels in the filespace and
+mounting foreign volumes other than the <B>root.cell</B> volume is
+not generally appropriate. It can be confusing to users if the Cache
+Manager switches between cells at various points in a pathname.
+<P>To create a regular cellular mount point, use the <B>-cell</B> argument
+to specify the cell name, as described in <A HREF="#HDRWQ213">To create a cellular mount point</A>.
+</UL>
+<P>To examine a mount point, use the <B>fs lsmount</B> command as
+described in <A HREF="#HDRWQ211">To display a mount point</A>. The command's output uses distinct notation to
+identify regular, read/write, and cellular mount points. To remove a
+mount point, use the <B>fs rmmount</B> command as described in <A HREF="#HDRWQ215">To remove a mount point</A>.
+<P><H3><A NAME="Header_227" HREF="auagd002.htm#ToC_227">Creating a mount point in a foreign cell</A></H3>
+<P>Creating a mount point in a foreign cell's filespace (as opposed
+to mounting a foreign volume in the local cell) is basically the same as
+creating a mount point in the local filespace. The differences are that
+the <B>fs mkmount</B> command's <VAR>directory</VAR> argument specifies
+a pathname in the foreign cell rather than the local cell, and you must have
+the required permissions on the ACL of the foreign directory where you are
+creating the mount point. The <B>fs mkmount</B> command's
+<B>-cell</B> argument always specifies the cell in which the volume
+resides, not the cell in which to create the mount point.
+<P><H3><A NAME="HDRWQ211" HREF="auagd002.htm#ToC_228">To display a mount point</A></H3>
+<A NAME="IDX6560"></A>
+<A NAME="IDX6561"></A>
+<A NAME="IDX6562"></A>
+<A NAME="IDX6563"></A>
+<A NAME="IDX6564"></A>
+<A NAME="IDX6565"></A>
+<OL TYPE=1>
+<P><LI>Issue the <B>fs lsmount</B> command. 
+<PRE>   
+   % <B>fs lsmount</B> &lt;<VAR>directory</VAR>>
+   
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>ls
+</B><DD>Is the shortest acceptable abbreviation of <B>lsmount</B>.
+<P><DT><B><VAR>directory</VAR>
+</B><DD>Names the mount point to display.
+</DL>
+</OL>
+<P>If the specified directory is a mount point, the output is of the following
+form:
+<PRE>   '<VAR>directory</VAR>' is a mount point for volume '<VAR>volume&nbsp;name</VAR>'
+   
+</PRE>
+<P>For a regular mount point, a number sign (<TT>#</TT>) precedes the
+<VAR>volume name</VAR> string, as in the following example command issued on a
+client machine in the <B>abc.com</B> cell.
+<PRE>   
+   % <B>fs lsmount /afs/abc.com/usr/terry</B>
+   '/afs/abc.com/usr/terry' is a mount point for volume '#user.terry'
+      
+</PRE>
+<P>For a read/write mount point, a percent sign (<TT>%</TT>) precedes the
+<VAR>volume name</VAR> string, as in the following example command issued on a
+client machine in the <B>abc.com</B> cell. The cell's
+administrators have followed the convention of preceding the read/write mount
+point's name with a period.
+<PRE>   
+   % <B>fs lsmount /afs/.abc.com </B>
+   '/afs/.abc.com' is a mount point for volume '%root.cell'
+   
+</PRE>
+<P>For a cellular mount point, a cell name and colon (<TT>:</TT>)
+follow the number or percent sign and precede the <VAR>volume name</VAR> string,
+as in the following example command issued on a client machine in the
+<B>abc.com</B> cell.
+<PRE>   
+    % <B>fs lsmount /afs/ghi.gov </B>
+   '/afs/ghi.gov' is a mount point for volume '#ghi.gov:root.cell'
+   
+</PRE>
+<P>For a symbolic link to a mount point, the output is of the form shown in
+the following example command issued on a client machine in the
+<B>abc.com</B> cell.
+<PRE>   
+   % <B>fs lsmount /afs/abc</B>
+   '/afs/abc' is a symbolic link, leading to a mount point for volume '#root.cell'
+   
+</PRE>
+<P>If the directory is not a mount point or is not in AFS, the output reads as
+follows.
+<PRE>   '<VAR>directory</VAR>' is not a mount point.
+   
+</PRE>
+<P>If the output is garbled, it is possible that the mount point has become
+corrupted in the local cache. Use the <B>fs flushmount</B> command
+as described in <A HREF="auagd015.htm#HDRWQ413">To flush one or more mount points</A>. This forces the Cache Manager to refetch the mount
+point.
+<P><H3><A NAME="HDRWQ212" HREF="auagd002.htm#ToC_229">To create a regular or read/write mount point</A></H3>
+<A NAME="IDX6566"></A>
+<A NAME="IDX6567"></A>
+<A NAME="IDX6568"></A>
+<A NAME="IDX6569"></A>
+<A NAME="IDX6570"></A>
+<A NAME="IDX6571"></A>
+<OL TYPE=1>
+<P><LI>Verify that you have the <B>i</B> (<B>insert</B>) and <B>a</B>
+(<B>administer</B>) permissions on the ACL of the directory where you are
+placing the mount point. If necessary, issue the <B>fs listacl</B>
+command, which is fully described in <A HREF="auagd020.htm#HDRWQ572">Displaying ACLs</A>. 
+<PRE>   % <B>fs listacl</B> [&lt;<VAR>dir/file path</VAR>>]
+</PRE>
+<P><LI>Issue the <B>fs mkmount</B> command to create the mount point.
+Include the <B>-rw</B> flag if creating a read/write mount point. 
+<PRE>   
+   % <B>fs mkmount</B> &lt;<VAR>directory</VAR>> &lt;<VAR>volume&nbsp;name</VAR>>  [<B>-rw</B>]
+   
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>mk
+</B><DD>Is the shortest acceptable abbreviation for <B>mkmount</B>.
+<P><DT><B><VAR>directory</VAR>
+</B><DD>Names the mount point to create. A file or directory with the same
+name cannot already exist. A partial pathname is interpreted relative
+to the current working directory.
+<P>Specify the read/write path to the mount point, to avoid the failure that
+results when you attempt to create a new mount point in a read-only
+volume. By convention, you indicate the read/write path by placing a
+period before the cell name at the pathname's second level (for example,
+<B>/afs/.abc.com</B>). For further discussion of the
+concept of read/write and read-only paths through the filespace, see <A HREF="#HDRWQ209">The Rules of Mount Point Traversal</A>.
+<P><DT><B><VAR>volume name</VAR>
+</B><DD>Specifies the volume's full name, including the
+<B>.backup</B> or <B>.readonly</B> extension for a
+backup or read-only volume, if appropriate.
+<P><DT><B>-rw
+</B><DD>Creates a read/write mount point.
+</DL>
+</OL>
+<P><H3><A NAME="HDRWQ213" HREF="auagd002.htm#ToC_230">To create a cellular mount point</A></H3>
+<A NAME="IDX6572"></A>
+<A NAME="IDX6573"></A>
+<A NAME="IDX6574"></A>
+<OL TYPE=1>
+<P><LI>Verify that you have the <B>i</B> (<B>insert</B>) and <B>a</B>
+(<B>administer</B>) permissions on the ACL of the directory where you are
+placing the mount point. If necessary, issue the <B>fs listacl</B>
+command, which is fully described in <A HREF="auagd020.htm#HDRWQ572">Displaying ACLs</A>. 
+<PRE>   % <B>fs listacl</B> [&lt;<VAR>dir/file path</VAR>>]
+</PRE>
+<P><LI><A NAME="LIWQ214"></A>If you are mounting one or more foreign cells'
+<B>root.cell</B> volume at the second level in your filespace and
+your cell's <B>root.afs</B> volume is replicated, you must
+create a temporary mount point for the <B>root.afs</B>
+volume's read/write version in a directory on which the ACL grants you
+the <B>i</B> and <B>a</B> permissions. The following command
+creates a mount point called <B>new_cells</B> in your cell's
+<B>/afs/.</B><VAR>cellname</VAR> directory (the entry point to the
+read/write path in your cell). 
+<P>Substitute your cell's name for <VAR>cellname</VAR>. 
+<PRE>   
+   % <B>cd /afs/.</B><VAR>cellname</VAR>
+   
+   % <B>fs  mkmount  new_cells  root.afs</B>
+ 
+   % <B>cd  new_cells</B>
+   
+</PRE>
+<P><LI>Issue the <B>fs mkmount</B> command with the <B>-cell</B> argument
+to create a cellular mount point. Repeat the command for each cellular
+mount point as required.
+<PRE>   
+   % <B>fs mkmount</B> &lt;<VAR>directory</VAR>> &lt;<VAR>volume&nbsp;name</VAR>> <B>-cell</B> &lt;<VAR>cell&nbsp;name</VAR>>
+   
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>mk
+</B><DD>Is the shortest acceptable abbreviation for <B>mkmount</B>.
+<P><DT><B><VAR>directory</VAR>
+</B><DD>Names the mount point to create. A file or directory with the same
+name cannot already exist. A partial pathname is interpreted relative
+to the current working directory. If you are mounting a foreign
+cell's <B>root.cell</B> volume, the standard value for this
+argument is the cell's complete Internet domain name.
+<P><DT><B><VAR>volume name</VAR>
+</B><DD>Specifies the volume's full name, usually <B>root.cell</B>
+for a cellular mount point.
+<P><DT><B>-cell
+</B><DD>Specifies the complete Internet domain name of the cell in which the
+volume resides.
+</DL>
+<P><LI>If you performed the instructions in Step <A HREF="#LIWQ214">2</A>, issue the <B>vos release</B> command to release the new
+version of the <B>root.afs</B> volume to its read-only
+sites. (This command requires that you be listed in your cell's
+<B>/usr/afs/etc/UserList</B> file. If necessary, verify by issuing
+the <B>bos listusers</B> command, which is fully described in <A HREF="auagd021.htm#HDRWQ593">To display the users in the UserList file</A>.)
+<P>Also issue the <B>fs checkvolumes</B> command to force the local Cache
+Manager to access the new replica of the <B>root.afs</B>
+volume. If desired, you can also remove the temporary
+<B>new_cells</B> mount point from the
+<B>/afs/.</B><VAR>cellname</VAR> directory. 
+<PRE>     
+   % <B>vos release root.afs</B>
+   
+   %  <B>fs checkvolumes</B>
+   
+   % <B>cd /afs/.</B><VAR>cellname</VAR>
+    
+   % <B>fs rmmount new_cells</B>
+   
+   
+</PRE> 
+<P>For your users to access a newly mounted foreign cell, you must also create
+an entry for it in each client machine's local
+<B>/usr/vice/etc/CellServDB</B> file and either reboot the machine or use
+the <B>fs newcell</B> command to insert the entry directly into its kernel
+memory. See the instructions in <A HREF="auagd015.htm#HDRWQ406">Maintaining Knowledge of Database Server Machines</A>.
+</OL>
+<P><H3><A NAME="HDRWQ215" HREF="auagd002.htm#ToC_231">To remove a mount point</A></H3>
+<A NAME="IDX6575"></A>
+<A NAME="IDX6576"></A>
+<A NAME="IDX6577"></A>
+<A NAME="IDX6578"></A>
+<A NAME="IDX6579"></A>
+<OL TYPE=1>
+<P><LI>Verify that you have the <B>d</B> (<B>delete</B>) permission on
+the ACL of the directory from which you are removing the mount point.
+If necessary, issue the <B>fs listacl</B> command, which is fully
+described in <A HREF="auagd020.htm#HDRWQ572">Displaying ACLs</A>. 
+<PRE>   % <B>fs listacl</B> [&lt;<VAR>dir/file path</VAR>>]
+</PRE> 
+<P>Members of the <B>system:administrators</B> group always
+implicitly have the <B>a</B> (<B>administer</B>) and by default also
+the <B>l</B> (<B>lookup</B>) permission on every ACL and can use the
+<B>fs setacl</B> command to grant other rights as necessary.
+<P><LI>Issue the <B>fs rmmount</B> command to remove the mount point.
+The volume still exists, but its contents are inaccessible if this is the only
+mount point for it. 
+<PRE>   
+   % <B>fs rmmount</B> &lt;<VAR>directory</VAR>>
+   
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>rm
+</B><DD>Is the shortest acceptable abbreviation of <B>rmmount</B>.
+<P><DT><B><VAR>directory</VAR>
+</B><DD>Names the mount point to remove. A partial pathname is interpreted
+relative to the current working directory.
+<P>Specify the read/write path to the mount point, to avoid the failure that
+results when you attempt to delete a mount point from a read-only
+volume. By convention, you indicate the read/write path by placing a
+period before the cell name at the pathname's second level (for example,
+<B>/afs/.abc.com</B>). For further discussion of the
+concept of read/write and read-only paths through the filespace, see <A HREF="#HDRWQ209">The Rules of Mount Point Traversal</A>.
+</DL>
+</OL>
+<HR><H2><A NAME="HDRWQ216" HREF="auagd002.htm#ToC_232">Displaying Information About Volumes</A></H2>
+<A NAME="IDX6580"></A>
+<A NAME="IDX6581"></A>
+<P>This section explains how to display information about volumes. If
+you know a volume's name or volume ID number, there are commands for
+displaying its VLDB entry, its volume header, or both. Other commands
+display the name or location of the volume that contains a specified file or
+directory.
+<P>For instructions on displaying a volume's quota, see <A HREF="#HDRWQ234">Setting and Displaying Volume Quota and Current Size</A>.
+<P><H3><A NAME="HDRWQ217" HREF="auagd002.htm#ToC_233">Displaying VLDB Entries</A></H3>
+<A NAME="IDX6582"></A>
+<A NAME="IDX6583"></A>
+<A NAME="IDX6584"></A>
+<A NAME="IDX6585"></A>
+<P>The <B>vos listvldb</B> command displays the VLDB entry for the volumes
+indicated by the combination of arguments you provide. The
+possibilities are listed here from most to least inclusive:
+<UL>
+<P><LI>To display every entry in the VLDB, provide no arguments. It can
+take a long time to generate the output, depending on the number of
+entries.
+<P><LI>To display every VLDB entry that mentions a specific file server machine
+as the site of a volume, specify the machine's name with the
+<B>-server</B> argument.
+<P><LI>To display every VLDB entry that mentions a certain partition on any file
+server machine as the site of a volume, specify the partition name with the
+<B>-partition</B> argument.
+<P><LI>To display every VLDB entry that mentions a certain partition on a certain
+file server machine as the site of a volume, combine the <B>-server</B>
+and <B>-partition</B> arguments.
+<P><LI>To display a single VLDB entry, specify a volume name or ID number with
+the <B>-name</B> argument.
+<P><LI>To display the VLDB entry only for volumes with locked VLDB entries, use
+the <B>-locked</B> flag with any of the site definitions mentioned
+previously.
+</UL>
+<A NAME="IDX6586"></A>
+<A NAME="IDX6587"></A>
+<P><H3><A NAME="HDRWQ218" HREF="auagd002.htm#ToC_234">To display VLDB entries</A></H3>
+<OL TYPE=1>
+<P><LI>Issue the <B>vos listvldb</B> command. 
+<PRE>   
+   % <B>vos listvldb</B>  [<B>-name</B> &lt;<VAR>volume&nbsp;name&nbsp;or&nbsp;ID</VAR>>] [<B>-server</B> &lt;<VAR>machine&nbsp;name</VAR>>] \
+                  [<B>-partition</B> &lt;<VAR>partition&nbsp;name</VAR>>] [<B>-locked</B>]
+   
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>listvl
+</B><DD>Is the shortest acceptable abbreviation of <B>listvldb</B>.
+<P><DT><B>-name
+</B><DD>Identifies one volume either by its complete name or volume ID
+number. Do not combine this argument with the <B>-server</B> or
+<B>-partition</B> arguments.
+<P><DT><B>-server
+</B><DD>Specifies a file server machine. Combine this argument with the
+<B>-partition</B> argument if desired, but not with the <B>-name</B>
+argument.
+<P><DT><B>-partition
+</B><DD>Specifies a partition. Combine this argument with the
+<B>-server</B> argument if desired, but not with the <B>-name</B>
+argument.
+<P><DT><B>-locked
+</B><DD>Displays only locked VLDB entries. Combine this flag with any of
+the other options.
+</DL>
+</OL>
+<P>The VLDB entry for each volume includes the following information:
+<UL>
+<P><LI>The base (read/write) volume name. The read-only and backup
+versions have the same name with a <B>.readonly</B> and
+<B>.backup</B> extension, respectively.
+<P><LI>The volume ID numbers allocated to the versions of the volume that
+actually exist, in fields labeled <TT>RWrite</TT> for the read/write,
+<TT>ROnly</TT> for the read-only, <TT>Backup</TT> for the backup, and
+<TT>RClone</TT> for the ReleaseClone. (If a field does not appear,
+the corresponding version of the volume does not exist.) The appearance
+of the <TT>RClone</TT> field normally indicates that a release operation did
+not complete successfully; the <TT>Old release</TT> and <TT>New
+release</TT> flags often also appear on one or more of the site definition
+lines described just following.
+<A NAME="IDX6588"></A>
+<A NAME="IDX6589"></A>
+<P><LI>The number of sites that house a read/write or read-only copy of the
+volume, following the string <TT>number of sites -></TT>.
+<A NAME="IDX6590"></A>
+<A NAME="IDX6591"></A>
+<A NAME="IDX6592"></A>
+<A NAME="IDX6593"></A>
+<A NAME="IDX6594"></A>
+<P><LI>A line for each site that houses a read/write or read-only copy of the
+volume, specifying the file server machine, partition, and type of volume
+(<TT>RW</TT> for read/write or <TT>RO</TT> for read-only). If a
+backup version exists, it is understood to share the read/write site.
+Several flags can appear with a site definition: 
+<DL>
+<A NAME="IDX6595"></A>
+<P><DT><B><TT>Not released</TT>
+</B><DD>Indicates that the <B>vos release</B> command has not been issued
+since the <B>vos addsite</B> command was used to define the read-only
+site.
+<A NAME="IDX6596"></A>
+<P><DT><B><TT>Old release</TT>
+</B><DD>Indicates that a <B>vos release</B> command did not complete
+successfully, leaving the previous, obsolete version of the volume at this
+site.
+<A NAME="IDX6597"></A>
+<P><DT><B><TT>New release</TT>
+</B><DD>Indicates that a <B>vos release</B> command did not complete
+successfully, but that this site did receive the correct new version of the
+volume.
+</DL>
+<P><LI>If the VLDB entry is locked, the string <TT>Volume is currently
+LOCKED</TT>.
+</UL>
+<P>For further discussion of the <TT>New release</TT> and <TT>Old
+release</TT> flags, see <A HREF="#HDRWQ192">Replicating Volumes (Creating Read-only Volumes)</A>.
+<P>An example of this command and its output for a single volume:
+<PRE>   
+   % <B>vos listvldb user.terry</B>
+   user.terry
+       RWrite: 50489902    Backup: 50489904
+       number of sites -> 1
+          server fs3.abc.com partition /vicepc RW Site
+  
+</PRE>
+<P><H3><A NAME="HDRWQ219" HREF="auagd002.htm#ToC_235">Displaying Volume Headers</A></H3>
+<A NAME="IDX6598"></A>
+<A NAME="IDX6599"></A>
+<P>The <B>vos listvol</B> command displays the volume header for every
+volume on one or all partitions on a file server machine. The
+<B>vos</B> command interpreter obtains the information from the Volume
+Server on the specified machine. You can control the amount of
+information displayed by including one of the <B>-fast</B>, the
+<B>-long</B>, or the <B>-extended</B> flags described following the
+instructions in <A HREF="#HDRWQ220">To display volume headers</A>.
+<P>To display a single volume's volume header of one volume only, use the
+<B>vos examine</B> command as described in <A HREF="#HDRWQ221">Displaying One Volume's VLDB Entry and Volume Header</A>.
+<A NAME="IDX6600"></A>
+<A NAME="IDX6601"></A>
+<P><H3><A NAME="HDRWQ220" HREF="auagd002.htm#ToC_236">To display volume headers</A></H3>
+<OL TYPE=1>
+<P><LI>Issue the <B>vos listvol</B> command. 
+<PRE>   
+   % <B>vos listvol</B> &lt;<VAR>machine&nbsp;name</VAR>> [&lt;<VAR>partition&nbsp;name</VAR>>] [<B>-fast</B>] [<B>-long</B>] [<B>-extended</B>]
+   
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>listvo
+</B><DD>Is the shortest acceptable abbreviation of <B>listvol</B>.
+<P><DT><B><VAR>machine name</VAR>
+</B><DD>Names the file server machine for which to display volume headers.
+Provide this argument alone or with the <VAR>partition name</VAR>
+argument.
+<P><DT><B><VAR>partition name</VAR>
+</B><DD>Names one partition on the file server machine named by the <VAR>machine
+name</VAR> argument, which must be provided along with this one.
+<P><DT><B>-fast
+</B><DD>Displays only the volume ID numbers of relevant volumes. Do not
+combine this flag with the <B>-long</B> or <B>-extended</B>
+flag.
+<P><DT><B>-long
+</B><DD>Displays more detailed information about each volume. Do not
+combine this flag with the <B>-fast</B> or <B>-extended</B>
+flag.
+<P><DT><B>-extended
+</B><DD>Displays all of the information displayed by the <B>-long</B> flag,
+plus tables of statistics about reads and writes to the files in the
+volume. Do not combine this flag with the <B>-fast</B> or
+<B>-long</B> flag.
+</DL>
+</OL>
+<P>The output is ordered alphabetically by volume name and by default provides
+the following information on a single line for each volume:
+<UL>
+<P><LI>Name
+<P><LI>Volume ID number
+<A NAME="IDX6602"></A>
+<P><LI>Type (the flag is <TT>RW</TT> for read/write, <TT>RO</TT> for
+read-only, <TT>BK</TT> for backup)
+<P><LI>Size in kilobytes (<TT>1024</TT> equals a megabyte)
+<P><LI>Number of files in the volume, if the <B>-extended</B> flag is
+provided
+<A NAME="IDX6603"></A>
+<P><LI>Status on the file server machine, which is one of the following:
+<DL>
+<A NAME="IDX6604"></A>
+<P><DT><B><TT>On-line</TT>
+</B><DD>The volume is completely accessible to Cache Managers.
+<A NAME="IDX6605"></A>
+<P><DT><B><TT>Off-line</TT>
+</B><DD>The volume is not accessible to Cache Managers, but does not seem to be
+corrupted. This status appears while a volume is being dumped, for
+example.
+<A NAME="IDX6606"></A>
+<P><DT><B><TT>Off-line**needs salvage**</TT>
+</B><DD>The volume is not accessible to Cache Managers, because it seems to be
+corrupted. Use the <B>bos salvage</B> or <B>salvager</B>
+command to repair the corruption.
+</DL>
+</UL>
+<P>If the following message appears instead of the previously listed
+information, it indicates that a volume is not accessible to Cache Managers or
+the <B>vos</B> command interpreter, for example because a clone is being
+created.
+<PRE>   **** Volume <VAR>volume_ID</VAR> is busy ****
+</PRE>
+<P>If the following message appears instead of the previously listed
+information, it indicates that the File Server is unable to attach the volume,
+perhaps because it is seriously corrupted. The <B>FileLog</B> and
+<B>VolserLog</B> log files in the <B>/usr/afs/logs</B> directory on
+the file server machine possibly provide additional information; use the
+<B>bos getlog</B> command to display them.
+<PRE>   **** Could not attach volume <VAR>volume_ID</VAR> ****
+</PRE>
+<P>(For instructions on salvaging a corrupted or unattached volume, see <A HREF="#HDRWQ232">Salvaging Volumes</A>.)
+<P>The information about individual volumes is bracketed by summary
+lines. The first line of output specifies the number of volumes in the
+listing. The last line of output summarizes the number of volumes that
+are online, offline, and busy, as in the following example:
+<PRE>   
+   % <B>vos listvol  fs2.abc.com /vicepb</B>
+   Total number of volumes on server fs2.abc.com \
+                                       partition /vicepb : 66
+   sys                  1969534847 RW       1582 K On-line
+   sys.backup           1969535105 BK       1582 K On-line
+         .                   .     .         .   .    .
+         .                   .     .         .   .    .
+   user.pat             1969534536 RW      17518 K On-line
+   user.pat.backup      1969534538 BK      17537 K On-line
+   Total volumes onLine 66 ; Total volumes offLine 0 ;  Total busy 0
+   
+</PRE>
+<P><B>Output with the -fast Flag</B>
+<P>
+<A NAME="IDX6607"></A>
+If you include the <B>-fast</B> flag displays only the volume ID number of
+each volume, arranged in increasing numerical order, as in the following
+example. The final line (which summarizes the number of on-line,
+off-line, and busy volumes) is omitted.
+<PRE>   
+   % <B>vos listvol fs3.abc.com /vicepa -f</B>
+   Total number of volumes on server fs3.abc.com  \
+                                       partition /vicepa: 37
+   50489902
+   50489904
+      .
+      .
+   35970325
+   49732810
+   
+</PRE>
+<P><B>Output with the -long Flag</B>
+<A NAME="IDX6608"></A>
+<P>When you include the <B>-long</B> flag, , the output for each volume
+includes all of the information in the default listing plus the
+following. Each item in this list corresponds to a separate line of
+output:
+<UL>
+<P><LI>The file server machine and partition that house the volume, as determined
+by the command interpreter as the command runs, rather than derived from the
+VLDB or the volume header.
+<A NAME="IDX6609"></A>
+<A NAME="IDX6610"></A>
+<A NAME="IDX6611"></A>
+<A NAME="IDX6612"></A>
+<A NAME="IDX6613"></A>
+<A NAME="IDX6614"></A>
+<A NAME="IDX6615"></A>
+<A NAME="IDX6616"></A>
+<P><LI>The volume ID numbers associated with the various versions of the
+volume: read/write (<TT>RWrite</TT>), read-only (<TT>ROnly</TT>),
+backup (<TT>Backup</TT>), and ReleaseClone (<TT>RClone</TT>). One
+of them matches the volume ID number that appears on the first line of the
+volume's output. If the value in the <TT>RWrite</TT>,
+<TT>ROnly</TT>, or <TT>Backup</TT> field is <TT>0</TT> (zero), there is
+no volume of that type. If there is currently no ReleaseClone, the
+<TT>RClone</TT> field does not appear at all.
+<A NAME="IDX6617"></A>
+<A NAME="IDX6618"></A>
+<P><LI>The maximum space quota allotted to the read/write copy of the volume,
+expressed in kilobyte blocks in the <TT>MaxQuota</TT> field.
+<A NAME="IDX6619"></A>
+<A NAME="IDX6620"></A>
+<P><LI>The date and time the volume was created, in the <TT>Creation</TT>
+field. If the volume has been restored with the <B>backup
+diskrestore</B>, <B>backup volrestore</B>, or <B>vos restore</B>
+command, this is the restore time.
+<A NAME="IDX6621"></A>
+<A NAME="IDX6622"></A>
+<P><LI>The date and time when the contents of the volume last changed, in the
+<TT>Last Update</TT> field. For read-only and backup volumes, it
+matches the timestamp in the <TT>Creation</TT> field.
+<A NAME="IDX6623"></A>
+<A NAME="IDX6624"></A>
+<P><LI>The number of times the volume has been accessed for a fetch or store
+operation since the later of the two following times: 
+<UL>
+<P><LI>12:00 a.m. on the day the command is issued
+<P><LI>The last time the volume changed location
+</UL>
+</UL>
+<P>An example of the output when the <B>-long</B> flag is included:
+<PRE>   
+   % <B>vos listvol fs2.abc.com b -long</B>
+   Total number of volumes on server fs2.abc.com 
+                                       partition /vicepb: 66
+         .                   .      .         .   .    .
+         .                   .      .         .   .    .
+   user.pat             1969534536 RW      17518 K On-line
+        fs2.abc.com /vicepb
+        RWrite 1969534536 ROnly 0        Backup 1969534538 
+        MaxQuota      20000 K
+        Creation    Mon Jun 12 09:02:25 1989
+        Last Update Thu Jan  4 17:39:34 1990
+        1573 accesses in the past day (i.e., vnode references)
+   user.pat.backup      1969534538 BK      17537 K On-line
+        fs2.abc.com /vicepb
+        RWrite 1969534536 ROnly 0        Backup 1969534538 
+        MaxQuota      20000 K
+        Creation    Fri Jan  5 06:37:59 1990
+        Last Update Fri Jan  5 06:37:59 1990
+        0 accesses in the past day (i.e., vnode references)
+	    .               .         .     .       .
+	    .               .         .     .       .
+   Total volumes onLine 66 ; Total volumes offLine 0 ; Total busy 0
+   
+</PRE>
+<P><B>Output with the -extended Flag</B>
+<A NAME="IDX6625"></A>
+<P>When you include the <B>-extended</B> flag, the output for each volume
+includes all of the information reported with the <B>-long</B> flag, plus
+two tables of statistics:
+<UL>
+<P><LI>The table labeled <TT>Raw Read/Write Stats</TT> table summarizes the
+number of times the volume has been accessed for reading or writing.
+<P><LI>The table labeled <TT>Writes Affecting Authorship</TT> table contains
+information on writes made to files and directories in the specified
+volume.
+</UL>
+<P>An example of the output when the <B>-extended</B> flag is
+included:
+<PRE>   % <B>vos listvol fs3.abc.com a -extended</B>
+   common.bboards   1969535592 RW    23149 K used 9401 files On-line
+       fs3.abc.com /vicepa
+       RWrite 1969535592 ROnly          0 Backup 1969535594
+       MaxQuota      30000 K
+       Creation    Mon Mar  8 14:26:05 1999
+       Last Update Mon Apr 26 09:20:43 1999
+       11533 accesses in the past day (i.e., vnode references)
+   
+                         Raw Read/Write Stats
+             |-------------------------------------------|
+             |    Same Network     |    Diff Network     |
+             |----------|----------|----------|----------|
+             |  Total   |   Auth   |   Total  |   Auth   |
+             |----------|----------|----------|----------|
+   Reads     |      151 |      151 |     1092 |     1068 |
+   Writes    |        3 |        3 |      324 |      324 |
+             |-------------------------------------------|
+    
+                      Writes Affecting Authorship
+             |-------------------------------------------|
+             |   File Authorship   | Directory Authorship|
+             |----------|----------|----------|----------|
+             |   Same   |   Diff   |    Same  |   Diff   |
+             |----------|----------|----------|----------|
+   0-60 sec  |       92 |        0 |      100 |        4 |
+   1-10 min  |        1 |        0 |       14 |        6 |
+   10min-1hr |        0 |        0 |       19 |        4 |
+   1hr-1day  |        1 |        0 |       13 |        0 |
+   1day-1wk  |        1 |        0 |        1 |        0 |
+   > 1wk     |        0 |        0 |        0 |        0 |
+             |-------------------------------------------|
+   
+</PRE>
+<P><H3><A NAME="HDRWQ221" HREF="auagd002.htm#ToC_237">Displaying One Volume's VLDB Entry and Volume Header</A></H3>
+<A NAME="IDX6626"></A>
+<A NAME="IDX6627"></A>
+<A NAME="IDX6628"></A>
+<A NAME="IDX6629"></A>
+<A NAME="IDX6630"></A>
+<A NAME="IDX6631"></A>
+<A NAME="IDX6632"></A>
+<P>The <B>vos examine</B> command displays information from both the VLDB
+and the volume header for a single volume. There is some redundancy in
+the information from the two sources, which allows you to compare the VLDB and
+volume header.
+<P>Because the volume header for each version of a volume (read/write,
+read-only, and backup) is different, you can specify which one to
+display. Include the <B>.readonly</B> or
+<B>.backup</B> extension on the <VAR>volume name or ID</VAR> argument
+as appropriate. The information from the VLDB is the same for all three
+versions.
+<A NAME="IDX6633"></A>
+<A NAME="IDX6634"></A>
+<P><H3><A NAME="HDRWQ222" HREF="auagd002.htm#ToC_238">To display one volume's VLDB entry and volume header</A></H3>
+<OL TYPE=1>
+<P><LI>Issue the <B>vos examine</B> command. 
+<PRE>   
+   % <B>vos examine</B> &lt;<VAR>volume&nbsp;name&nbsp;or&nbsp;ID</VAR>>
+   
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>e
+</B><DD>Is the shortest acceptable abbreviation of <B>examine</B>.
+<P><DT><B><VAR>volume name or ID</VAR>
+</B><DD>Identifies one volume either by its complete name or volume ID
+number. It can be a read/write, read-only, or backup type. Use
+the <B>.backup</B> or <B>.readonly</B> extension if
+appropriate.
+</DL>
+</OL>
+<P>The top part of the output displays the same information from a volume
+header as the <B>vos listvol</B> command with the <B>-long</B> flag,
+as described following the instructions in <A HREF="#HDRWQ220">To display volume headers</A>. If you specify the read-only version of the volume
+and it exists at more than one site, the output includes all of them.
+The bottom part of the output lists the same information from the VLDB as the
+<B>vos listvldb</B> command, as described following the instructions in <A HREF="#HDRWQ218">To display VLDB entries</A>.
+<P>Below is an example for a volume whose VLDB entry is currently
+locked.
+<PRE>   
+   % <B>vos examine user.terry</B>
+   user.terry                    536870981 RW   3459 K On-line
+       fs3.abc.com /vicepa
+       Write 5360870981   ROnly          0  Backup 536870983
+       MaxQuota      40000 K
+       Creation    Mon Jun 12 15:22:06 1989
+       Last Update Fri Jun 16 09:34:35 1989
+       5719 accesses in the past day (i.e., vnode references)
+       RWrite: 5360870981   Backup: 536870983
+       number of sites -> 1
+          server fs3.abc.com partition /vicepa RW Site 
+       Volume is currently LOCKED
+   
+</PRE>
+<P><H3><A NAME="HDRWQ223" HREF="auagd002.htm#ToC_239">Displaying the Name or Location of the Volume that Contains a File</A></H3>
+<P>This section explains how to learn the name, volume ID
+number, or location of the volume that contains a file or directory.
+<P>You can also use one piece of information about a volume (for example, its
+name) to obtain other information about it (for example, its location).
+The following list points you to the relevant instructions:
+<UL>
+<A NAME="IDX6635"></A>
+<A NAME="IDX6636"></A>
+<A NAME="IDX6637"></A>
+<A NAME="IDX6638"></A>
+<A NAME="IDX6639"></A>
+<A NAME="IDX6640"></A>
+<A NAME="IDX6641"></A>
+<A NAME="IDX6642"></A>
+<A NAME="IDX6643"></A>
+<A NAME="IDX6644"></A>
+<P><LI>To use a volume's name to learn the volume ID numbers of all its
+existing versions, use the <B>vos examine</B> command as described in <A HREF="#HDRWQ222">To display one volume's VLDB entry and volume header</A>.
+<P>You can also use the command to learn a volume's name by providing its
+ID number.
+<P><LI>To use a volume's name or ID number to learn its location, use the
+<B>vos listvldb</B> command as described in <A HREF="#HDRWQ218">To display VLDB entries</A>.
+<A NAME="IDX6645"></A>
+<A NAME="IDX6646"></A>
+<A NAME="IDX6647"></A>
+<A NAME="IDX6648"></A>
+<A NAME="IDX6649"></A>
+<A NAME="IDX6650"></A>
+</UL>
+<A NAME="IDX6651"></A>
+<A NAME="IDX6652"></A>
+<A NAME="IDX6653"></A>
+<A NAME="IDX6654"></A>
+<A NAME="IDX6655"></A>
+<A NAME="IDX6656"></A>
+<P><H4><A NAME="HDRWQ224">To display the name of the volume that contains a file</A></H4>
+<OL TYPE=1>
+<P><LI>Issue the <B>fs listquota</B> command.
+<PRE>   
+   % <B>fs listquota</B> [&lt;<VAR>dir/file&nbsp;path</VAR>>]
+   
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>lq
+</B><DD>Is an acceptable alias for <B>listquota</B> (and <B>listq</B> the
+shortest acceptable abbreviation).
+<P><DT><B><VAR>dir/file path</VAR>
+</B><DD>Names a directory or file housed in the volume for which to display the
+name. Partial pathnames are interpreted relative to the current working
+directory, which is the default if this argument is omitted.
+</DL>
+</OL>
+<P>The following is an example of the output:
+<PRE>   
+   % <B>fs listquota /afs/abc.com/usr/terry</B>
+   Volume Name     Quota    Used    % Used   Partition 
+   user.terry      15000    5071       34%         86%   
+   
+</PRE>
+<A NAME="IDX6657"></A>
+<A NAME="IDX6658"></A>
+<A NAME="IDX6659"></A>
+<A NAME="IDX6660"></A>
+<A NAME="IDX6661"></A>
+<A NAME="IDX6662"></A>
+<P><H4><A NAME="HDRWQ225">To display the ID number of the volume that contains a file</A></H4>
+<OL TYPE=1>
+<P><LI>Issue the <B>fs examine</B> command. 
+<PRE>   
+   % <B>fs examine</B> [&lt;<VAR>dir/file&nbsp;path</VAR>>]
+   
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>exa
+</B><DD>Is the shortest acceptable abbreviation of <B>examine</B>.
+<P><DT><B><VAR>dir/file path</VAR>
+</B><DD>Names a directory or file housed in the volume for which to display the
+volume ID. Partial pathnames are interpreted relative to the current
+working directory, which is the default if this argument is omitted.
+</DL>
+</OL>
+<P>The following example illustrates how the output reports the volume ID
+number in the <TT>vid</TT> field.
+<PRE>   
+   % <B>fs examine /afs/abc.com/usr/terry</B>
+   Volume status for vid = 50489902 named user.terry
+   Current maximum quota is 15000
+   Current blocks used are 5073
+   The partition has 46383 blocks available out of 333305  
+   
+</PRE>
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Note:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">The partition-related statistics in this command's output do not always
+agree with the corresponding values in the output of the standard UNIX
+<B>df</B> command. The statistics reported by this command can be
+up to five minutes old, because the Cache Manager polls the File Server for
+partition information at that frequency. Also, on some operating
+systems, the <B>df</B> command's report of partition size includes
+reserved space not included in this command's calculation, and so is
+likely to be about 10% larger.
+</TD></TR></TABLE>
+<A NAME="IDX6663"></A>
+<A NAME="IDX6664"></A>
+<A NAME="IDX6665"></A>
+<A NAME="IDX6666"></A>
+<A NAME="IDX6667"></A>
+<A NAME="IDX6668"></A>
+<A NAME="IDX6669"></A>
+<P><H4><A NAME="Header_242">To display the location of the volume that contains a file</A></H4>
+<OL TYPE=1>
+<P><LI>Issue the <B>fs whereis</B> command to display the name of the file
+server machine that houses the volume containing a file or directory. 
+<PRE>   
+   % <B>fs whereis</B> [&lt;<VAR>dir/file&nbsp;path</VAR>>]
+   
+</PRE>
+<P>where
+<DL>
+<P><DT><B>whe
+</B><DD>Is the shortest acceptable abbreviation of <B>whereis</B>.
+<P><DT><B><VAR>dir/file path</VAR>
+</B><DD>Names a directory or file for which to report the location. Partial
+pathnames are interpreted relative to the current working directory, which is
+the default if this argument is omitted.
+</DL>
+<P>The output displays the file server machine that houses the volume
+containing the file, as in the following example: 
+<PRE>   
+   % <B>fs whereis /afs/abc.com/user/terry</B>
+   File /afs/abc.com/usr/terry is on host fs2.abc.com
+   
+</PRE>
+<P><LI>If you also want to know which partition houses the volume, first issue
+the <B>fs listquota</B> command to display the volume's name.
+For complete syntax, see <A HREF="#HDRWQ224">To display the name of the volume that contains a file</A>. 
+<PRE>   
+   % <B>fs listquota</B> [&lt;<VAR>dir/file&nbsp;path</VAR>>]
+   
+</PRE>
+<P>Then issue the <B>vos listvldb</B> command, providing the volume name
+as the <VAR>volume name or ID</VAR> argument. For complete syntax and a
+description of the output, see <A HREF="#HDRWQ218">To display VLDB entries</A>.
+<PRE>   
+   % <B>vos listvldb</B> &lt;<VAR>volume&nbsp;name&nbsp;or&nbsp;ID</VAR>>
+   
+</PRE>
+</OL>
+<HR><H2><A NAME="HDRWQ226" HREF="auagd002.htm#ToC_243">Moving Volumes</A></H2>
+<A NAME="IDX6670"></A>
+<A NAME="IDX6671"></A>
+<P>There are three main reasons to move volumes:
+<UL>
+<P><LI>To place volumes on other partitions or machines temporarily while
+repairing or replacing a disk or file server machine.
+<P><LI>To free space on a partition that is becoming overcrowded. 
+<A NAME="IDX6672"></A>
+<A NAME="IDX6673"></A>
+<A NAME="IDX6674"></A>
+<A NAME="IDX6675"></A>
+<A NAME="IDX6676"></A>
+One symptom of overcrowding is that users cannot to save files even though the
+relevant volume is below its quota. The following error message
+confirms the problem: 
+<PRE>   
+   afs: failed to store file (partition full)
+   
+</PRE> 
+<P>You can track available space on AFS server partitions by using the
+<B>scout</B> or <B>afsmonitor</B> programs described in <A HREF="auagd013.htm#HDRWQ323">Monitoring and Auditing AFS Performance</A>.
+<P><LI>A file server machine is becoming overloaded because it houses many more
+volumes than other machines of the same size, or has volumes with more popular
+files in them.
+</UL>
+<P>
+<A NAME="IDX6677"></A>
+<A NAME="IDX6678"></A>
+To move a read/write volume, use the <B>vos move</B> command as described
+in the following instructions. Before attempting to move the volume,
+the <B>vos</B> command interpreter verifies that there is enough free
+space for it on the destination partition. If not, it does not attempt
+the move operation and prints the following message.
+<PRE>   
+   vos: no space on target partition <VAR>destination_part</VAR> to move volume <VAR>volume</VAR>
+   
+</PRE>
+<P>To move a read-only volume, you actually remove the volume from the current
+site by issuing the <B>vos remove</B> command as described in <A HREF="#HDRWQ236">To remove a volume and unmount it</A>. Then define a new site and release the volume to it
+by issuing the <B>vos addsite</B> and <B>vos release</B> commands as
+described in <A HREF="#HDRWQ194">To replicate a read/write volume (create a read-only volume)</A>. 
+<A NAME="IDX6679"></A>
+<A NAME="IDX6680"></A>
+<P>A backup volume always resides at the same site as its read/write source
+volume, so you cannot move a backup volume except as part of moving the
+read/write source. The <B>vos move</B> command automatically
+deletes the backup version when you move a read/write volume. To create
+a new backup volume at the new site as soon as the move operation completes,
+issue the <B>vos backup</B> command as described in <A HREF="#HDRWQ205">To create and mount a backup volume</A>.
+<A NAME="IDX6681"></A>
+<A NAME="IDX6682"></A>
+<P><H3><A NAME="Header_244" HREF="auagd002.htm#ToC_244">To move a read/write volume</A></H3>
+<OL TYPE=1>
+<P><LI>Verify that you are listed in the <B>/usr/afs/etc/UserList</B>
+file. If necessary, issue the <B>bos listusers</B> command, which
+is fully described in <A HREF="auagd021.htm#HDRWQ593">To display the users in the UserList file</A>. 
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE>
+<P><LI>Issue the <B>vos move</B> command to move the volume. Type it
+on a single line; it appears on multiple lines here only for
+legibility. 
+<PRE>   
+   % <B>vos move</B> &lt;<VAR>volume&nbsp;name&nbsp;or&nbsp;ID</VAR>>  \
+       &lt;<VAR>machine&nbsp;name&nbsp;on&nbsp;source</VAR>>  &lt;<VAR>partition&nbsp;name&nbsp;on&nbsp;source </VAR>>  \
+       &lt;<VAR>machine&nbsp;name&nbsp;on&nbsp;destination</VAR>>  &lt;<VAR>partition&nbsp;name&nbsp;on&nbsp;destination</VAR>>
+   
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>m
+</B><DD>Is the shortest acceptable abbreviation of <B>move</B>.
+<P><DT><B><VAR>volume name or ID</VAR>
+</B><DD>Specifies the name or volume ID number of the read/write volume to
+move.
+<P><DT><B><VAR>machine name on source</VAR>
+</B><DD>Names the file server machine currently housing the volume.
+<P><DT><B><VAR>partition name on source</VAR>
+</B><DD>Names the partition currently housing the volume.
+<P><DT><B><VAR>machine name on destination</VAR>
+</B><DD>Names the file server machine to which to move the volume.
+<P><DT><B><VAR>partition name on destination</VAR>
+</B><DD>Names the partition to which to move the volume.
+</DL> 
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Note:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">It is best not to halt a <B>vos move</B> operation before it completes,
+because parts of the volume can be left on both the source and destination
+machines. For more information, see the command's reference page
+in the <I>IBM AFS Administration Reference</I>.
+</TD></TR></TABLE>
+<P><LI><B>(Optional)</B> Issue the <B>vos listvldb</B> command to confirm
+the success of the move. Complete instructions appear in <A HREF="#HDRWQ218">To display VLDB entries</A>. 
+<PRE>   
+   % <B>vos listvldb</B> &lt;<VAR>volume&nbsp;name&nbsp;or&nbsp;ID</VAR>>
+   
+</PRE>
+<P><LI>If a backup version existed at the read/write volume's previous site,
+create a new backup at the new site by issuing the <B>vos backup</B>
+command, which is fully described in <A HREF="#HDRWQ205">To create and mount a backup volume</A>. 
+<PRE>   
+   % <B>vos backup</B> &lt;<VAR>volume&nbsp;name&nbsp;or&nbsp;ID</VAR>>
+   
+</PRE>
+</OL>
+<HR><H2><A NAME="HDRWQ227" HREF="auagd002.htm#ToC_245">Synchronizing the VLDB and Volume Headers</A></H2>
+<A NAME="IDX6683"></A>
+<A NAME="IDX6684"></A>
+<A NAME="IDX6685"></A>
+<P>AFS can provide transparent file access because the Volume Location
+Database (VLDB) constantly tracks volume locations. When the Cache
+Manager needs a file, it contacts the Volume Location (VL) Server, which reads
+the VLDB for the current location of the volume containing the file.
+Therefore, the VLDB must accurately reflect the state of volumes on the file
+server machines at all times. The Volume Server and VL Server
+automatically update a volume's VLDB entry when its status changes during
+a <B>vos</B> operation, by performing the following series of
+steps.
+<OL TYPE=1>
+<P><LI><A NAME="LIWQ228"></A>The VL Server locks the VLDB entry. The lock advises
+other operations not to manipulate any of the volume versions (read/write,
+read-only, or backup), which prevents the inconsistency that can result from
+multiple simultaneous operations.
+<P><LI><A NAME="LIWQ229"></A>The VL Server sets an <I>intention flag</I> in the VLDB
+entry that indicates the kind of operation to be performed. 
+<A NAME="IDX6686"></A>
+<A NAME="IDX6687"></A>
+This flag never appears in VLDB listings because it is for internal use
+only. In case the operation terminates prematurely, this flag tells the
+Salvager which operation was interrupted. (The Salvager then determines
+the steps necessary either to complete the operation or return the volume to a
+previous consistent state. For more information on salvaging, see <A HREF="#HDRWQ232">Salvaging Volumes</A>.)
+<P><LI><A NAME="LIWQ230"></A>The Volume Server manipulates the volume. It usually
+sets the <TT>Off-line</TT> flag in the volume header, which makes the volume
+inaccessible to the File Server and other Volume Server operations during the
+manipulation. When the operation completes, the volume is again marked
+<TT>On-line</TT>.
+<P><LI><A NAME="LIWQ231"></A>The VL Server records any changes resulting from the operation
+in the VLDB entry. Once the operation is complete, it removes the
+intention flag set in Step <A HREF="#LIWQ229">2</A> and releases the lock set in Step <A HREF="#LIWQ228">1</A>.
+</OL>
+<P>If a <B>vos</B> operation fails while the Volume Server is manipulating
+the volume (corresponding to Step <A HREF="#LIWQ230">3</A>), the volume can be left in an intermediate state, which is
+termed <I>corruption</I>. In this case, the <TT>Off-line</TT> or
+<TT>Off-line**needs salvage**</TT> marker usually appears at the end of the
+first line of output from the <B>vos examine</B> command. To repair
+the corruption, run the Salvager before attempting to resynchronize the VLDB
+and volume headers. For salvaging instructions, see <A HREF="#HDRWQ232">Salvaging Volumes</A>.
+<P>More commonly, an interruption while flags are being set or removed
+(corresponding to Step <A HREF="#LIWQ228">1</A>, Step <A HREF="#LIWQ229">2</A>, or Step <A HREF="#LIWQ231">4</A>) causes a discrepancy
+between the VLDB and volume headers. To resynchronize the VLDB and
+volumes, use the <B>vos syncvldb</B> and <B>vos syncserv</B>
+commands. To achieve complete VLDB consistency, it is best to run the
+<B>vos syncvldb</B> command on all file server machines in the cell, and
+then run the <B>vos syncserv</B> command on all file server machines in
+the cell.
+<A NAME="IDX6688"></A>
+<A NAME="IDX6689"></A>
+<A NAME="IDX6690"></A>
+<P>There are several symptoms that indicate a volume operation failed:
+<UL>
+<P><LI>Error messages on the standard error stream or in server process log files
+indicate that an operation terminated abnormally. Perhaps you had to
+halt the operation before it completed (for instance, by using a signal such
+as <B>Ctrl-c</B>), or a file server machine or server process was not
+functioning when the operation ran. To determine if a machine or
+process is still not functioning, issue the <B>bos status</B> command as
+described in <A HREF="auagd009.htm#HDRWQ158">Displaying Process Status and Information from the BosConfig File</A>.
+<P><LI>A subsequent <B>vos</B> operation fails because a previous failure
+left a VLDB entry locked. Sometimes an error message reports that a
+volume is locked. To display a list of locked volumes, use the
+<B>-locked</B> flag on the <B>vos listvldb</B> command as described in
+<A HREF="#HDRWQ217">Displaying VLDB Entries</A>. 
+<P>If the only problem with a volume is that its VLDB entry is locked, you
+probably do not need to synchronize the entire VLDB. Instead use the
+<B>vos unlock</B> or <B>vos unlockvldb</B> command to unlock the
+entry, as described in <A HREF="#HDRWQ247">Unlocking and Locking VLDB Entries</A>.
+<P><LI>A subsequent <B>vos</B> operation fails because a previous failure
+left a volume marked as offline. To check a volume's current
+status, check the first line of output from the <B>vos examine</B> command
+as described in <A HREF="#HDRWQ221">Displaying One Volume's VLDB Entry and Volume Header</A>.
+</UL>
+<A NAME="IDX6691"></A>
+<A NAME="IDX6692"></A>
+<A NAME="IDX6693"></A>
+<A NAME="IDX6694"></A>
+<A NAME="IDX6695"></A>
+<P>The <B>vos syncvldb</B> command corrects the information in the Volume
+Location Database (VLDB) either about all volumes housed on a file server
+machine, about the volumes on just one partition, or about a single
+volume. If checking about one or more partitions, the command contacts
+the Volume Server to obtain a list of the volumes that actually reside on each
+partition. It then obtains the VLDB entry for each volume from the VL
+Server. It changes the VLDB entry as necessary to reflect the state of
+the volume on the partition. For example, it creates or updates a VLDB
+entry when it finds a volume for which the VLDB entry is missing or
+incomplete. However, if there is already a VLDB entry that defines a
+different location for the volume, or there are irreconcilable conflicts with
+other VLDB entries, it instead writes a message about the conflict to the
+standard error stream. The command never removes volumes from the file
+server machine.
+<P>When checking a single volume's VLDB entry, the command also
+automatically performs the operations invoked by the <B>vos syncserv</B>
+command: it not only verifies that the VLDB entry is correct for the
+specified volume type (read/write, backup, or read-only), but also checks that
+any related volume types mentioned in the VLDB entry actually exist at the
+site listed in the entry.
+<A NAME="IDX6696"></A>
+<P>The <B>vos syncserv</B> command verifies that each volume type
+(read/write, read-only, and backup) mentioned in a VLDB entry actually exists
+at the site indicated in the entry. It checks all VLDB entries that
+mention a site either on any of a file server machine's partitions or on
+one partition. Note that command can end up inspecting sites other than
+on the specified machine or partition, if there are read-only versions of the
+volume at sites other than the read/write site.
+<P>The command alters any incorrect information in the VLDB, unless there is
+an irreconcilable conflict with other VLDB entries. In that case, it
+writes a message to the standard error stream instead. The command
+never removes volumes from their sites.
+<A NAME="IDX6697"></A>
+<A NAME="IDX6698"></A>
+<A NAME="IDX6699"></A>
+<A NAME="IDX6700"></A>
+<P><H3><A NAME="Header_246" HREF="auagd002.htm#ToC_246">To synchronize the VLDB with volume headers</A></H3>
+<OL TYPE=1>
+<P><LI>Verify that you are listed in the <B>/usr/afs/etc/UserList</B>
+file. If necessary, issue the <B>bos listusers</B> command, which
+is fully described in <A HREF="auagd021.htm#HDRWQ593">To display the users in the UserList file</A>. 
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE>
+<P><LI><A NAME="LIVOL-SYNCVL"></A>Issue the <B>vos syncvldb</B> command to make the VLDB
+reflect the true state of all volumes on a machine or partition, or the state
+of one volume.
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Note:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">To synchronize the VLDB completely, issue the command repeatedly,
+substituting each file server machine in your cell for the <B>-server</B>
+argument in turn and omitting the <B>-partition</B> and <B>-volume</B>
+arguments, before proceeding to Step <A HREF="#LIVOL-SYNCSR">3</A>.
+</TD></TR></TABLE> 
+<PRE>   % <B>vos syncvldb -server</B> &lt;<VAR>machine&nbsp;name</VAR>> [<B>-partition</B> &lt;<VAR>partition&nbsp;name</VAR>>]  [<B>-volume</B> &lt;<VAR>volume&nbsp;name&nbsp;or&nbsp;ID</VAR>>]  [<B>-verbose >></B> <VAR>file</VAR>]
+   
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>syncv
+</B><DD>Is the shortest acceptable abbreviation of <B>syncvldb</B>.
+<P><DT><B>-server
+</B><DD>Names the file server machine housing the volumes for which to verify VLDB
+entries. If you are also providing the <B>-volume</B> argument,
+this argument must name the machine where the volume actually resides.
+<P><DT><B>-partition
+</B><DD>Identifies the partition (on the file server machine specified by the
+<B>-server</B> argument) housing the volumes for which to verify VLDB
+entries. In general, it is best to omit this argument so that either
+the VLDB entries for all volumes on a server machine are corrected (if you do
+not provide the <B>-volume</B> argument), or so that you do not need to
+guarantee that the partition actually houses the volume named by the
+<B>-volume</B> argument.
+<P><DT><B>-volume
+</B><DD>Specifies the name or volume ID number of a single volume for which to
+verify the VLDB entry.
+<P><DT><B><B>-verbose >></B> <VAR>file</VAR>
+</B><DD>Directs a detailed trace to the file called <VAR>file</VAR>, which can be
+either in AFS or on the local disk of the machine on which you are issuing the
+command. The command often writes a large amount of output to the
+standard output stream; writing it to a file enables you to examine the
+output more carefully.
+</DL>
+<P><LI><A NAME="LIVOL-SYNCSR"></A>Issue the <B>vos syncserv</B> command to inspect each
+volume for which the VLDB lists a version at the specified site. 
+<P>
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Note:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">To synchronize the VLDB completely, issue the command repeatedly,
+substituting each file server machine in your cell for the <VAR>machine
+name</VAR> argument in turn and omitting the <VAR>partition name</VAR>
+argument.
+</TD></TR></TABLE> 
+<PRE>   % <B>vos syncserv</B> &lt;<VAR>machine&nbsp;name</VAR>> [&lt;<VAR>partition&nbsp;name</VAR>>] [<B>-v >></B> <VAR>file</VAR>]
+   
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>syncs
+</B><DD>Is the shortest acceptable abbreviation of <B>syncserv</B>.
+<P><DT><B><VAR>machine name</VAR>
+</B><DD>Names the file server machine mentioned in each VLDB entry to
+check.
+<P><DT><B><VAR>partition name</VAR>
+</B><DD>Identifies the partition mentioned in each VLDB entry to check. If
+synchronizing the entire VLDB, omit this argument.
+<P><DT><B>-v >> <I><VAR>file</VAR></I>
+</B><DD>Directs a detailed trace to the file called <VAR>file</VAR>, which can be
+either in AFS or on the local disk of the machine on which you are issuing the
+command. The command often writes a large amount of output to the
+standard output stream; writing it to a file enables you to examine the
+output more carefully.
+</DL>
+</OL>
+<HR><H2><A NAME="HDRWQ232" HREF="auagd002.htm#ToC_247">Salvaging Volumes</A></H2>
+<A NAME="IDX6701"></A>
+<A NAME="IDX6702"></A>
+<A NAME="IDX6703"></A>
+<A NAME="IDX6704"></A>
+<A NAME="IDX6705"></A>
+<A NAME="IDX6706"></A>
+<A NAME="IDX6707"></A>
+<A NAME="IDX6708"></A>
+<P>An unexpected interruption while the Volume Server or File Server is
+manipulating the data in a volume can leave the volume in an intermediate
+state (<I>corrupted</I>), rather than just creating a discrepancy between
+the information in the VLDB and volume headers. For example, the
+failure of the operation that saves changes to a file (by overwriting old data
+with new) can leave the old and new data mixed together on the disk.
+<P>If an operation halts because the Volume Server or File Server exits
+unexpectedly, the BOS Server automatically shuts down all components of the
+<B>fs</B> process and invokes the Salvager. The Salvager checks for
+and repairs any inconsistencies it can. Sometimes, however, there are
+symptoms of the following sort, which indicate corruption serious enough to
+create problems but not serious enough to cause the File Server component to
+fail. In these cases you can invoke the Salvager yourself by issuing
+the <B>bos salvage</B> command.
+<UL>
+<P><LI><B>Symptom:</B> A file appears in the output of the
+<B>ls</B> command, but attempts to access the file fail with messages
+indicating that it does not exist. 
+<P><B>Possible cause:</B> The Volume Server or File Server exited in
+the middle of a file-creation operation, after changing the directory
+structure, but before actually storing data. (Other possible causes are
+that the ACL on the directory does not grant the permissions you need to
+access the file, or there is a process, machine, or network outage.
+Check for these causes before assuming the file is corrupted.)
+<P><B>Salvager's solution:</B> Remove the file's entry
+from the directory structure.
+<P><LI><B>Symptom:</B> A volume is marked <TT>Off-line</TT> in the
+output from the <B>vos examine</B> and <B>vos listvol</B> commands, or
+attempts to access the volume fail. 
+<P><B>Possible cause:</B> Two files or versions of a file are
+sharing the same disk blocks because of an interrupted operation. The
+File Server and Volume Server normally refuse to attach volumes that exhibit
+this type of corruption, because it can be very dangerous. If the
+Volume Server or File Server do attach the volume but are unsure of the status
+of the affected disk blocks, they sometimes try to write yet more data
+there. When they cannot perform the write, the data is lost.
+This effect can cascade, causing loss of all data on a partition.
+<P><B>Salvager's solution:</B> Delete the data from the
+corrupted disk blocks in preference to losing an entire partition.
+<P><LI><B>Symptom:</B> There is less space available on the partition
+than you expect based on the size statistic reported for each volume by the
+<B>vos listvol</B> command. 
+<P><B>Possible cause:</B> There are orphaned files and
+directories. An orphaned element is completely inaccessible because it
+is not referenced by any directory that can act as its parent (is higher in
+the file tree). An orphaned element is not counted in the calculation
+of a volume's size (or against its quota), even though it occupies space
+on the server partition.
+<P><B>Salvager's solution:</B> By default, print a message to
+the <B>/usr/afs/logs/SalvageLog</B> file reporting how many orphans were
+found and the approximate number of kilobytes they are consuming. You
+can use the <B>-orphans</B> argument to remove or attach orphaned elements
+instead. See <A HREF="#HDRWQ233">To salvage volumes</A>.
+</UL>
+<P>When you notice symptoms such as these, use the <B>bos salvage</B>
+command to invoke the Salvager before corruption spreads. (Even though
+it operates on volumes, the command belongs to the <B>bos</B> suite
+because the BOS Server must coordinate the shutdown and restart of the Volume
+Server and File Server with the Salvager. It shuts them down before the
+Salvager starts, and automatically restarts them when the salvage operation
+finishes.)
+<P>All of the AFS data stored on a file server machine is inaccessible during
+the salvage of one or more partitions. If you salvage just one volume,
+it alone is inaccessible.
+<P>When processing one or more partitions, the command restores consistency to
+corrupted read/write volumes where possible. For read-only or backup
+volumes, it inspects only the volume header:
+<UL>
+<P><LI>If the volume header is corrupted, the Salvager removes the volume
+completely and records the removal in its log file,
+<B>/usr/afs/logs/SalvageLog</B>. Issue the <B>vos release</B>
+or <B>vos backup</B> command to create the read-only or backup volume
+again.
+<P><LI>If the volume header is intact, the Salvager skips the volume (does not
+check for corruption in the contents). However, if the File Server
+notices corruption as it initializes, it sometimes refuses to attach the
+volume or bring it online. In this case, it is simplest to remove the
+volume by issuing the <B>vos remove</B> or <B>vos zap</B>
+command. Then issue the <B>vos release</B> or <B>vos backup</B>
+command to create it again.
+</UL>
+<P>Combine the <B>bos salvage</B> command's arguments as indicated to
+salvage different numbers of volumes:
+<UL>
+<P><LI>To salvage all volumes on a file server machine, combine the
+<B>-server</B> argument and the <B>-all</B> flag.
+<P><LI>To salvage all volumes on one partition, combine the <B>-server</B>
+and <B>-partition</B> arguments.
+<P><LI>To salvage only one read/write volume, combine the <B>-server</B>,
+<B>-partition</B>, and <B>-volume</B> arguments. Only that
+volume is inaccessible to Cache Managers, because the BOS Server does not
+shutdown the File Server and Volume Server processes during the salvage of a
+single volume. Do not name a read-only or backup volume with the
+<B>-volume</B> argument. Instead, remove the volume, using the
+<B>vos remove</B> or <B>vos zap</B> command. Then create a new
+copy of the volume with the <B>vos release</B> or <B>vos backup</B>
+command.
+</UL>
+<P>The Salvager always writes a trace to the
+<B>/usr/afs/logs/SalvageLog</B> file on the file server machine where it
+runs. To record the trace in another file as well (either in AFS or on
+the local disk of the machine where you issue the <B>bos salvage</B>
+command), name the file with the <B>-file</B> argument. Or, to
+display the trace on the standard output stream as it is written to the
+<B>/usr/afs/logs/SalvageLog</B> file, include the <B>-showlog</B>
+flag.
+<P>By default, multiple Salvager subprocesses run in parallel: one for
+each partition up to four, and four subprocesses for four or more
+partitions. To increase or decrease the number of subprocesses running
+in parallel, provide a positive integer value for the <B>-parallel</B>
+argument.
+<P>If there is more than one server partition on a physical disk, the Salvager
+by default salvages them serially to avoid the inefficiency of constantly
+moving the disk head from one partition to another. However, this
+strategy is often not ideal if the partitions are configured as logical
+volumes that span multiple disks. To force the Salvager to salvage
+logical volumes in parallel, provide the string <B>all</B> as the value
+for the <B>-parallel</B> argument. Provide a positive integer to
+specify the number of subprocesses to run in parallel (for example,
+<B>-parallel 5all</B> for five subprocesses), or omit the integer to run
+up to four subprocesses, depending on the number of logical volumes being
+salvaged.
+<P>The Salvager creates temporary files as it runs, by default writing them to
+the partition it is salvaging. The number of files can be quite large,
+and if the partition is too full to accommodate them, the Salvager terminates
+without completing the salvage operation (it always removes the temporary
+files before exiting). Other Salvager subprocesses running at the same
+time continue until they finish salvaging all other partitions where there is
+enough disk space for temporary files. To complete the interrupted
+salvage, reissue the command against the appropriate partitions, adding the
+<B>-tmpdir</B> argument to redirect the temporary files to a local disk
+directory that has enough space.
+<P>The <B>-orphans</B> argument controls how the Salvager handles orphaned
+files and directories that it finds on server partitions it is
+salvaging. An <I>orphaned</I> element is completely inaccessible
+because it is not referenced by the vnode of any directory that can act as its
+parent (is higher in the filespace). Orphaned objects occupy space on
+the server partition, but do not count against the volume's quota.
+<P>During the salvage, the output of the <B>bos status</B> command reports
+the following auxiliary status for the <B>fs</B> process:
+<PRE>   
+   Salvaging file system
+   
+</PRE>
+<A NAME="IDX6709"></A>
+<A NAME="IDX6710"></A>
+<P><H3><A NAME="HDRWQ233" HREF="auagd002.htm#ToC_248">To salvage volumes</A></H3>
+<OL TYPE=1>
+<P><LI>Verify that you are listed in the <B>/usr/afs/etc/UserList</B>
+file. If necessary, issue the <B>bos listusers</B> command, which
+is fully described in <A HREF="auagd021.htm#HDRWQ593">To display the users in the UserList file</A>. 
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE>
+<P><LI>Issue the <B>bos salvage</B> command to salvage one or more
+volumes.
+<PRE>   
+   % <B>bos salvage  -server</B> &lt;<VAR>machine&nbsp;name</VAR>>  [<B>-partition</B> &lt;<VAR>salvage&nbsp;partition</VAR>>]  \
+                  [<B>-volume</B> &lt;<VAR>salvage&nbsp;volume&nbsp;number&nbsp;or&nbsp;volume&nbsp;name</VAR>>]  \
+                  [<B>-file</B> <VAR>salvage&nbsp;log&nbsp;output&nbsp;file</VAR>]  [<B>-all</B>]  [<B>-showlog</B>]  \
+                  [<B>-parallel</B> &lt;<VAR>#&nbsp;of&nbsp;max&nbsp;parallel&nbsp;partition&nbsp;salvaging</VAR>>]  \ 
+                  [<B>-tmpdir</B> &lt;<VAR>directory&nbsp;to&nbsp;place&nbsp;tmp&nbsp;files</VAR>>]  \ 
+                  [<B>-orphans</B> &lt;<B>ignore</B> | <B>remove</B> | <B>attach</B>>] 
+   
+</PRE>
+<P>where
+<DL>
+<P><DT><B>-server
+</B><DD>Names the file server machine on which to salvage volumes. This
+argument can be combined either with the <B>-all</B> flag, the
+<B>-partition</B> argument, or both the <B>-partition</B> and
+<B>-volume</B> arguments.
+<P><DT><B>-partition
+</B><DD>Names a single partition on which to salvage all volumes. The
+<B>-server</B> argument must be provided along with this one.
+<P><DT><B>-volume
+</B><DD>Specifies the name or volume ID number of one read/write volume to
+salvage. Combine this argument with the <B>-server</B> and
+<B>-partition</B> arguments.
+<P><DT><B>-file
+</B><DD>Specifies the complete pathname of a file into which to write a trace of
+the salvage operation, in addition to the <B>/usr/afs/logs/SalvageLog</B>
+file on the server machine. If the file pathname is local, the trace is
+written to the specified file on the local disk of the machine where the
+<B>bos salvage</B> command is issued. If the <B>-volume</B>
+argument is included, the file can be in AFS, though not in the volume being
+salvaged. Do not combine this argument with the <B>-showlog</B>
+flag.
+<P><DT><B>-all
+</B><DD>Salvages all volumes on all of the partitions on the machine named by the
+<B>-server</B> argument.
+<P><DT><B>-showlog
+</B><DD>Displays the trace of the salvage operation on the standard output stream,
+as well as writing it to the <B>/usr/afs/logs/SalvageLog</B> file.
+<P><DT><B>-parallel
+</B><DD>Specifies the maximum number of Salvager subprocesses to run in
+parallel. Provide one of three values:
+<UL>
+<P><LI>An integer from the range <B>1</B> to <B>32</B>. A value of
+<B>1</B> means that a single Salvager process salvages the partitions
+sequentially.
+<P><LI>The string <B>all</B> to run up to four Salvager subprocesses in
+parallel on partitions formatted as logical volumes that span multiple
+physical disks. Use this value only with such logical volumes.
+<P><LI>The string <B>all</B> followed immediately (with no intervening space)
+by an integer from the range <B>1</B> to <B>32</B>, to run the
+specified number of Salvager subprocesses in parallel on partitions formatted
+as logical volumes. Use this value only with such logical
+volumes.
+</UL>
+<P>The BOS Server never starts more Salvager subprocesses than there are
+partitions, and always starts only one process to salvage a single
+volume. If this argument is omitted, up to four Salvager subprocesses
+run in parallel.
+<P><DT><B>-tmpdir
+</B><DD>Specifies the full pathname of a local disk directory to which the
+Salvager process writes temporary files as it runs. By default, it
+writes them to the partition it is currently salvaging.
+<P><DT><B>-orphans
+</B><DD>Controls how the Salvager handles orphaned files and directories.
+Choose one of the following three values:
+<DL>
+<P><DT><B>ignore
+</B><DD>Leaves the orphaned objects on the disk, but prints a message to the
+<B>/usr/afs/logs/SalvageLog</B> file reporting how many orphans were found
+and the approximate number of kilobytes they are consuming. This is the
+default if you omit the <B>-orphans</B> argument.
+<P><DT><B>remove
+</B><DD>Removes the orphaned objects, and prints a message to the
+<B>/usr/afs/logs/SalvageLog</B> file reporting how many orphans were
+removed and the approximate number of kilobytes they were consuming.
+<P><DT><B>attach
+</B><DD>Attaches the orphaned objects by creating a reference to them in the vnode
+of the volume's root directory. Since each object's actual
+name is now lost, the Salvager assigns each one a name of the following
+form: 
+<DL>
+<DD><P><B>_ _ORPHANFILE_ _.</B><VAR>index</VAR> for files
+<DD><P><B>_ _ORPHANDIR_ _.</B><VAR>index</VAR> for directories
+</DL>
+<P>
+<P>where <VAR>index</VAR> is a two-digit number that uniquely identifies each
+object. The orphans are charged against the volume's quota and
+appear in the output of the <B>ls</B> command issued against the
+volume's root directory.
+</DL>
+</DL>
+</OL>
+<HR><H2><A NAME="HDRWQ234" HREF="auagd002.htm#ToC_249">Setting and Displaying Volume Quota and Current Size</A></H2>
+<A NAME="IDX6711"></A>
+<A NAME="IDX6712"></A>
+<P>Every AFS volume has an associated <VAR>quota</VAR> which limits the
+volume's size. The default quota for a newly created volume is
+5,000 kilobyte blocks (slightly less that 5 MB). When a volume reaches
+its quota, the File Server rejects attempts to create new files or directories
+in it. If an application is writing data into an existing file in a
+full volume, the File Server allows a defined overage (by default, 1
+MB). (You can use the <B>fileserver</B> command's
+<B>-spare</B> or <B>-pctspare</B> argument to change the default
+overage; see the command's reference page in the <I>IBM AFS
+Administration Reference</I>.)
+<P>To set a quota other than 5000 KB as you create a volume, include the
+<B>-maxquota</B> argument to the <B>vos create</B> command, as
+described in <A HREF="#HDRWQ185">Creating Read/write Volumes</A>. To modify an existing volume's quota, issue
+either the <B>fs setquota</B> or the <B>fs setvol</B> command as
+described in the following instructions. Do not set an existing
+volume's quota lower than its current size.
+<P>In general, smaller volumes are easier to administer than larger
+ones. If you need to move volumes, say for load-balancing purposes, it
+is easier to find enough free space on other partitions for small
+volumes. Move operations complete more quickly for small volumes,
+reducing the potential for outages or other errors to interrupt the
+move. AFS supports a maximum volume size, which can vary for different
+AFS releases; see the <I>IBM AFS Release Notes</I> for the version
+you are using. Also, the size of a partition or logical places an
+absolute limit on volume size, because a volume cannot span multiple
+partitions or logical volumes.
+<P>It is generally safe to overpack partitions by putting more volumes on them
+than can actually fit if all the volumes reach their maximum quota.
+However, only experience determines to what degree overpacking works in your
+cell. It depends on what kind of quota you assign to volumes
+(particularly user volumes, which are more likely than system volumes to grow
+unpredictably) and how much information people generate and store in
+comparison to their quota.
+<P>There are several commands that display a volume's quota, as described
+in the following instructions. They differ in how much related
+information they produce.
+<P><H3><A NAME="Header_250" HREF="auagd002.htm#ToC_250">To set quota for a single volume</A></H3>
+<A NAME="IDX6713"></A>
+<A NAME="IDX6714"></A>
+<A NAME="IDX6715"></A>
+<A NAME="IDX6716"></A>
+<A NAME="IDX6717"></A>
+<OL TYPE=1>
+<P><LI>Verify that you belong to the <B>system:administrators</B>
+group. If necessary, issue the <B>pts membership</B> command, which
+is fully described in <A HREF="auagd021.htm#HDRWQ587">To display the members of the system:administrators group</A>. 
+<PRE>   % <B>pts membership system:administrators</B>
+   
+</PRE>
+<P><LI>Issue the <B>fs setquota</B> command to set the volume's maximum
+quota. 
+<PRE>   
+   % <B>fs setquota</B> [&lt;<VAR>dir/file&nbsp;path</VAR>>] <B>-max</B> &lt;<VAR>max&nbsp;quota&nbsp;in&nbsp;kbytes</VAR>>
+   
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>sq
+</B><DD>Is an acceptable alias for <B>setquota</B>.
+<P><DT><B><VAR>dir/file path</VAR>
+</B><DD>Names a file or directory in the volume for which to set the indicated
+quota. Partial pathnames are interpreted relative to the current
+working directory, which is the default if you omit this argument. 
+<P>Specify the read/write path to the file or directory, to avoid the failure
+that results when you attempt to change a read-only volume. By
+convention, you indicate the read/write path by placing a period before the
+cell name at the pathname's second level (for example,
+<B>/afs/.abc.com</B>). For further discussion of the
+concept of read/write and read-only paths through the filespace, see <A HREF="#HDRWQ209">The Rules of Mount Point Traversal</A>.
+<P><DT><B><VAR>max quota in kbytes</VAR>
+</B><DD>Sets the volume's quota, expressed in kilobyte blocks
+(<B>1024</B> equals a megabyte). A value of <B>0</B> grants an
+unlimited quota, but the size of the partition imposes an absolute
+limit. You must include the <B>-max</B> switch if omitting the
+<VAR>dir/file path</VAR> argument (to set the quota on the volume that houses
+the current working directory).
+</DL>
+</OL>
+<P><H3><A NAME="Header_251" HREF="auagd002.htm#ToC_251">To set maximum quota on one or more volumes</A></H3>
+<A NAME="IDX6718"></A>
+<A NAME="IDX6719"></A>
+<A NAME="IDX6720"></A>
+<A NAME="IDX6721"></A>
+<OL TYPE=1>
+<P><LI>Verify that you belong to the <B>system:administrators</B>
+group. If necessary, issue the <B>pts membership</B> command, which
+is fully described in <A HREF="auagd021.htm#HDRWQ587">To display the members of the system:administrators group</A>. 
+<PRE>   % <B>pts membership system:administrators</B>
+   
+</PRE>
+<P><LI>Issue the <B>fs setvol</B> command to set the quota on one or more
+volumes. 
+<PRE>   
+   % <B>fs setvol</B> [&lt;<VAR>dir/file&nbsp;path</VAR>><SUP>+</SUP>] <B>-max</B> &lt;<VAR>disk&nbsp;space&nbsp;quota&nbsp;in&nbsp;1K&nbsp;units</VAR>>
+   
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>sv
+</B><DD>Is an acceptable alias for <B>setvol</B>.
+<P><DT><B><VAR>dir/file path</VAR>
+</B><DD>Names one file or directory that resides in each volume for which to set
+the indicated quota. Partial pathnames are interpreted relative to the
+current working directory, which is the default if you omit this
+argument.
+<P><DT><B><VAR>disk space quota in 1K units</VAR>
+</B><DD>Sets the maximum quota on each volume, expressed in kilobytes blocks
+(<B>1024</B> equals a megabyte). A value of <B>0</B> grants an
+unlimited quota, but the size of the partition does impose an absolute
+limit.
+</DL>
+</OL>
+<A NAME="IDX6722"></A>
+<A NAME="IDX6723"></A>
+<A NAME="IDX6724"></A>
+<A NAME="IDX6725"></A>
+<P><H3><A NAME="Header_252" HREF="auagd002.htm#ToC_252">To display percent quota used</A></H3>
+<OL TYPE=1>
+<P><LI>Issue the <B>fs quota</B> command. 
+<PRE>   
+   % <B>fs quota</B> [&lt;<VAR>dir/file&nbsp;path</VAR>><SUP>+</SUP>]
+   
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>q
+</B><DD>Is the shortest acceptable abbreviation of <B>quota</B>.
+<P><DT><B><VAR>dir/file path</VAR>
+</B><DD>Names a directory or file in each volume for which to display percent
+quota used. Partial pathnames are interpreted relative to the current
+working directory, which is the default if you omit this argument.
+</DL>
+</OL>
+<P>The following example illustrates the output produced by this
+command:
+<PRE>   
+   % <B>fs quota /afs/abc.com/usr/terry</B>
+   34% of quota used.
+   
+</PRE>
+<A NAME="IDX6726"></A>
+<A NAME="IDX6727"></A>
+<A NAME="IDX6728"></A>
+<A NAME="IDX6729"></A>
+<A NAME="IDX6730"></A>
+<A NAME="IDX6731"></A>
+<P><H3><A NAME="Header_253" HREF="auagd002.htm#ToC_253">To display quota, current size, and other information</A></H3>
+<OL TYPE=1>
+<P><LI>Issue the <B>fs listquota</B> command. 
+<PRE>   
+   % <B>fs listquota</B> [&lt;<VAR>dir/file&nbsp;path</VAR>><SUP>+</SUP>]
+   
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>lq
+</B><DD>Is an alias for <B>listquota</B>.
+<P><DT><B><VAR>dir/file path</VAR>
+</B><DD>Names a directory or file in each volume for which to display quota along
+with volume name and current space usage. Partial pathnames are
+interpreted relative to the current working directory, which is the default if
+you omit this argument.
+</DL>
+</OL>
+<P>As illustrated in the following example, the output reports the
+volume's name, its quota and current size (both in kilobyte units), the
+percent quota used, and the percentage of space on the volume's host
+partition that is used.
+<PRE>   
+   % <B>fs listquota /afs/abc.com/usr/terry</B>
+   Volume Name     Quota    Used    % Used   Partition 
+   user.terry      15000    5071       34%         86%   
+   
+</PRE>
+<A NAME="IDX6732"></A>
+<A NAME="IDX6733"></A>
+<A NAME="IDX6734"></A>
+<A NAME="IDX6735"></A>
+<A NAME="IDX6736"></A>
+<A NAME="IDX6737"></A>
+<A NAME="IDX6738"></A>
+<P><H3><A NAME="Header_254" HREF="auagd002.htm#ToC_254">To display quota, current size, and more partition information</A></H3>
+<OL TYPE=1>
+<P><LI>Issue the <B>fs examine</B> command. 
+<PRE>   
+   % <B>fs examine</B> [&lt;<VAR>dir/file&nbsp;path</VAR>><SUP>+</SUP>]
+   
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>exa
+</B><DD>Is the shortest acceptable abbreviation of <B>examine</B>.
+<P><DT><B><VAR>dir/file path</VAR>
+</B><DD>Names a directory or file in each volume for which to display quota
+information and information about the host partition. Partial pathnames
+are interpreted relative to the current working directory, which is the
+default if you omit this argument.
+</DL>
+</OL>
+<P>As illustrated in the following example, the output displays the
+volume's volume ID number and name, its quota and current size (both in
+kilobyte units), and the free and total number of kilobyte blocks on the
+volume's host partition.
+<PRE>   
+   % <B>fs examine /afs/abc.com/usr/terry</B>
+   Volume status for vid = 50489902 named user.terry
+   Current maximum quota is 15000
+   Current blocks used are 5073
+   The partition has 46383 blocks available out of 333305   
+   
+</PRE>
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Note:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">The partition-related statistics in this command's output do not always
+agree with the corresponding values in the output of the standard UNIX
+<B>df</B> command. The statistics reported by this command can be
+up to five minutes old, because the Cache Manager polls the File Server for
+partition information at that frequency. Also, on some operating
+systems, the <B>df</B> command's report of partition size includes
+reserved space not included in this command's calculation, and so is
+likely to be about 10% larger.
+</TD></TR></TABLE>
+<HR><H2><A NAME="HDRWQ235" HREF="auagd002.htm#ToC_255">Removing Volumes and their Mount Points</A></H2>
+<A NAME="IDX6739"></A>
+<A NAME="IDX6740"></A>
+<A NAME="IDX6741"></A>
+<A NAME="IDX6742"></A>
+<A NAME="IDX6743"></A>
+<P>To remove a volume from its site and its record from the VLDB, use the
+<B>vos remove</B> command. Use it to remove any of the three types
+of volumes; the effect depends on the type.
+<UL>
+<P><LI>If you indicate the read/write volume by specifying the volume's base
+name without a <B>.readonly</B> or <B>.backup</B>
+extension, the command removes both the read/write and associated backup
+volume from the partition that houses them. 
+<A NAME="IDX6744"></A>
+<A NAME="IDX6745"></A>
+You do not need to provide the <B>-server</B> and <B>-partition</B>
+arguments, because there can be only one read/write site. The site
+information is also removed from the VLDB entry, and the site count (reported
+by the <B>vos examine</B> and <B>vos listvldb</B> commands as
+<TT>number of sites</TT>) decrements by one. The read/write and
+backup volume ID numbers no longer appear in the output from the <B>vos
+examine</B> and <B>vos listvldb</B> commands, but they are preserved
+internally. Read-only sites, if any, are not affected, but cannot be
+changed unless a read/write site is again defined. The entire VLDB
+entry is removed if there are no read-only sites.
+<P>If there are no read-only copies left, it is best to remove the
+volume's mount point to prevent attempts to access the volume's
+contents. Do not remove the mount point if copies of the read-only
+volume remain.
+<P><LI>If you indicate a read-only volume by including the
+<B>.readonly</B> extension on its name, it is removed from the
+partition that houses it, and the corresponding site information is removed
+from the VLDB entry. The site count reported by the <B>vos
+examine</B> and <B>vos listvldb</B> commands as <TT>number of
+sites</TT> decrements by one for each volume you remove. 
+<A NAME="IDX6746"></A>
+<P>If there is more than one read-only site, you must include the
+<B>-server</B> argument (and optionally <B>-partition</B> argument) to
+specify the site from which to remove the volume. If there is only one
+read-only site, the volume name is sufficient; if no read/write volume
+exists in this case, the entire VLDB entry is removed.
+<P>It is not generally appropriate to remove the volume's mount point
+when removing a read-only volume, especially if the read/write version of the
+volume still exists. If the read/write version no longer exists, remove
+the mount point as described in Step <A HREF="#LIWQ239">5</A> of <A HREF="#HDRWQ236">To remove a volume and unmount it</A>.
+<P><LI>If you indicate a backup volume by including the <B>.backup</B>
+extension on its name, it is removed from the partition that houses it and its
+site information is removed from the VLDB entry. You do not need to
+provide the <B>-server</B> and <B>-partition</B> arguments, because
+there can be only one backup site. The backup volume ID number no
+longer appears in the output from the <B>vos examine</B> or <B>vos
+listvldb</B> command, but is preserved internally.
+<P>In the standard configuration, there is a separate mount point for the
+backup version of a user volume. Remember to remove the mount point to
+prevent attempt to access the nonexistent volume's contents.
+</UL>
+<P><H3><A NAME="Header_256" HREF="auagd002.htm#ToC_256">Other Removal Commands</A></H3>
+<A NAME="IDX6747"></A>
+<P>The <B>vos remove</B> command is almost always the appropriate way to
+remove a volume, because it automatically removes a volume's VLDB entry
+and both the volume header and all data from the partition. If either
+the VLDB entry or volume header does not exist, it is sometimes necessary to
+use other commands that remove only the remaining element. Do not use
+these commands in the normal case when both the VLDB entry and the volume
+header exist, because by definition they create discrepancies between
+them. For details on the commands' syntax, see their reference
+pages in the <I>IBM AFS Administration Reference</I>.
+<P>The <B>vos zap</B> command removes a volume from its site by removing
+the volume header and volume data for which a VLDB entry no longer
+exists. 
+<A NAME="IDX6748"></A>
+<A NAME="IDX6749"></A>
+You can tell a VLDB entry is missing if the <B>vos listvol</B> command
+displays the volume header but the <B>vos examine</B> or <B>vos
+listvldb</B> command cannot locate the VLDB entry. You must run this
+command to correct the discrepancy, because the <B>vos syncvldb</B> and
+<B>vos syncserv</B> commands never remove volume headers.
+<P>The <B>vos remsite</B> command removes a read-only site definition from
+the VLDB without affecting the volume on the file server machine. 
+<A NAME="IDX6750"></A>
+<A NAME="IDX6751"></A>
+Use this command when you have mistakenly issued the <B>vos addsite</B>
+command to define a read-only site, but have not yet issued the <B>vos
+release</B> command to release the volume to the site. If you have
+actually released a volume to the site, use the <B>vos remove</B> command
+instead.
+<P>The <B>vos delentry</B> command removes the entire VLDB entry that
+mentions the volume you specify. 
+<A NAME="IDX6752"></A>
+<A NAME="IDX6753"></A>
+If versions of the volume actually exist on file server machines, they are not
+affected. This command is useful if you know for certain that a volume
+removal was not recorded in the VLDB (perhaps you used the <B>vos zap</B>
+command during an emergency), and do not want to take the time to
+resynchronize the entire VLDB with the <B>vos syncvldb</B> and <B>vos
+syncserv</B> commands.
+<P><H3><A NAME="HDRWQ236" HREF="auagd002.htm#ToC_257">To remove a volume and unmount it</A></H3>
+<A NAME="IDX6754"></A>
+<OL TYPE=1>
+<P><LI>Verify that you are listed in the <B>/usr/afs/etc/UserList</B>
+file. If necessary, issue the <B>bos listusers</B> command, which
+is fully described in <A HREF="auagd021.htm#HDRWQ593">To display the users in the UserList file</A>. 
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE>
+<P><LI>If removing the volume's mount point, verify that you have the
+<B>d</B> (<B>delete</B>) permission on its parent directory's
+ACL. If necessary, issue the <B>fs listacl</B> command, which is
+fully described in <A HREF="auagd020.htm#HDRWQ572">Displaying ACLs</A>. 
+<PRE>   % <B>fs listacl</B> [&lt;<VAR>dir/file path</VAR>>]
+</PRE> 
+<P>Members of the <B>system:administrators</B> group always
+implicitly have the <B>a</B> (<B>administer</B>) and by default also
+the <B>l</B> (<B>lookup</B>) permission on every ACL and can use the
+<B>fs setacl</B> command to grant other rights as necessary.
+<P><LI><A NAME="LIWQ237"></A><B>(Optional)</B> Dump the volume to a file or to tape, in
+case you want to restore it later. To copy the volume's contents
+to a file, use the <B>vos dump</B> command as instructed in <A HREF="#HDRWQ240">Dumping and Restoring Volumes</A>. You can then copy the file to tape using a
+third-party backup utility or an archiving utility such as the UNIX
+<B>tar</B> command. 
+<P>Alternatively, use the AFS Backup System to create a tape copy. In
+this case, it can be convenient to create a temporary volume set that includes
+only the volume of interest. Temporary volume sets are not recorded in
+the Backup Database, and so do not clutter database with records for volume
+sets that you use only once. For instructions, see <A HREF="auagd012.htm#HDRWQ301">To create a dump</A>.
+<A NAME="IDX6755"></A>
+<A NAME="IDX6756"></A>
+<P><LI><A NAME="LIWQ238"></A>Issue the <B>vos remove</B> command to remove the
+volume. If removing a read-only volume from multiple sites, repeat the
+command for each one. 
+<PRE>   
+   % <B>vos remove</B> [<B>-server</B> <VAR>machine&nbsp;name</VAR>>]  [<B>-partition</B> &lt;<VAR>partition&nbsp;name</VAR>>]  \
+                <B>-id</B> &lt;<VAR>volume&nbsp;name&nbsp;or&nbsp;ID</VAR>>
+   
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>remo
+</B><DD>Is the shortest acceptable abbreviation of <B>remove</B>.
+<P><DT><B>-server
+</B><DD>Specifies the file server machine on which the volume resides. It
+is necessary only when the <B>-id</B> argument names a read-only volume
+that exists at multiple sites.
+<P><DT><B>-partition
+</B><DD>Specifies the partition on <VAR>machine name</VAR> where the volume
+resides. It is necessary only when the <B>-id</B> argument names a
+read-only volume that exists at multiple sites. Provide the
+<B>-server</B> argument along with this one.
+<P><DT><B>-id
+</B><DD>Identifies the volume to remove, either by its complete name or volume ID
+number. If identifying a read-only or backup volume by name, include
+the appropriate extension (<B>.readonly</B> or
+<B>.backup</B>).
+</DL>
+<A NAME="IDX6757"></A>
+<A NAME="IDX6758"></A>
+<P><LI><A NAME="LIWQ239"></A>If you are removing the last existing version of the volume,
+issue the <B>fs rmmount</B> command remove the corresponding mount
+point. Complete instructions appear in <A HREF="#HDRWQ236">To remove a volume and unmount it</A>.
+<P>If you are removing a backup volume that is mounted in the conventional way
+(at a subdirectory of its read/write volume's root directory), then
+removing the source volume's mount point in this step is sufficient to
+remove the backup volume's mount point. If you mounted the backup
+at a completely separate directory, you need to repeat this step for the
+backup volume's mount point. 
+<PRE>   
+   % <B>fs rmmount</B> &lt;<VAR>directory</VAR>>
+   
+</PRE>
+<P><LI><B>(Optional)</B> If you created a dump file in Step <A HREF="#LIWQ237">3</A>, transfer it to tape. The preferred method is to use
+the AFS Backup System, which is described in <A HREF="auagd011.htm#HDRWQ248">Configuring the AFS Backup System</A> and <A HREF="auagd012.htm#HDRWQ283">Backing Up and Restoring AFS Data</A>.
+</OL>
+<HR><H2><A NAME="HDRWQ240" HREF="auagd002.htm#ToC_258">Dumping and Restoring Volumes</A></H2>
+<A NAME="IDX6759"></A>
+<A NAME="IDX6760"></A>
+<P><I>Dumping</I> a volume with the <B>vos dump</B> command converts
+its contents into ASCII format and writes them to the file you specify.
+The <B>vos restore</B> command places a dump file's contents into a
+volume after converting them into the volume format appropriate for the
+indicated file server machine.
+<P><H3><A NAME="Header_259" HREF="auagd002.htm#ToC_259">About Dumping Volumes</A></H3>
+<A NAME="IDX6761"></A>
+<A NAME="IDX6762"></A>
+<A NAME="IDX6763"></A>
+<A NAME="IDX6764"></A>
+<A NAME="IDX6765"></A>
+<A NAME="IDX6766"></A>
+<P>Dumping a volume can be useful in several situations, including the
+following:
+<UL>
+<P><LI>You want to back it up to tape, perhaps by using a third-party backup
+utility. To facilitate this type of backup operation, the <B>vos
+dump</B> command can write to a named pipe. To learn about using the
+AFS Backup System instead, see <A HREF="auagd011.htm#HDRWQ248">Configuring the AFS Backup System</A> and <A HREF="auagd012.htm#HDRWQ283">Backing Up and Restoring AFS Data</A>.
+<P><LI>You are removing the volume from your cell (perhaps because its owner is
+leaving your cell). The <B>vos dump</B> command enables you to
+create a copy for safekeeping without incurring the overhead of the Backup
+System. For complete instructions on removing a volume, see <A HREF="#HDRWQ235">Removing Volumes and their Mount Points</A>.
+<P><LI>You want to create a copy of the volume for safekeeping on a non-AFS
+server partition, perhaps while you move the actual volume to another machine
+or perform maintenance tasks on the partition that houses the volume.
+<P><LI>You need to replace a corrupted read/write volume. If an
+uncorrupted read-only or backup version of the volume exists, dump it and
+restore the data into the read/write volume, overwriting the corrupted
+contents.
+<P><LI>You want to copy or transfer the contents of the volume to another
+cell. You cannot use the <B>vos move</B> command, because AFS
+supports volume moves only between file server machines that belong to the
+same cell.
+<P><LI>You want to have another read/write copy of the volume's
+contents. The second volume must have a different name than the
+original one. If you want the contents of the two volumes to remain
+identical, you must update them both manually. AFS provides no facility
+for keeping read/write volumes synchronized in this way.
+<P><LI>You want a copy of only the files and directories in the volume with
+modification time stamps after a certain date. The <B>vos dump</B>
+command can create an incremental dump file as described in Step <A HREF="#LIWQ241">3</A> of the following instructions.
+</UL>
+<A NAME="IDX6767"></A>
+<A NAME="IDX6768"></A>
+<A NAME="IDX6769"></A>
+<P>You can use the <B>vos dump</B> command to create a <I>full
+dump</I>, which contains the complete contents of the volume at the time you
+issue the command, or an <I>incremental dump</I>, which contains only
+those files and directories with modification timestamps (as displayed by the
+<B>ls -l</B> command) that are later than a date and time you
+specify. See Step <A HREF="#LIWQ241">3</A> of the following instructions.
+<P>Dumping a volume does not change its VLDB entry or permanently affect its
+status on the file server machine, but the volume's contents are
+inaccessible during the dump operation. To avoid interrupting access to
+the volume, it is generally best to dump the volume's backup version,
+just after using the <B>vos backup</B> or <B>vos backupsys</B> command
+to create a new backup version.
+<P>If you do not provide a filename into which to write the dump, the <B>vos
+dump</B> command directs the output to the standard output stream.
+You can pipe it directly to the <B>vos restore</B> command if you
+wish.
+<P>Because a volume dump file is in ASCII format, you can read its contents
+using a text editor or a command such as the <B>cat</B> command.
+However, dump files sometimes contain special characters that do not have
+alphanumeric correlates, which can cause problems for some display
+programs.
+<P>By default, the <B>vos</B> command interpreter consults the Volume
+Location Database (VLDB) to learn the volume's location, so the
+<B>-server</B> and <B>-partition</B> arguments are not
+required. If the <B>-id</B> argument identifies a read-only volume
+that resides at multiple sites, then the command dumps the version from just
+one of them (normally, the one listed first in the volume's VLDB entry as
+reported by the <B>vos examine</B> or <B>vos listvldb</B>
+command). To dump the read-only volume from a particular site, use the
+<B>-server</B> and <B>-partition</B> arguments to specify the
+site. To bypass the VLDB lookup entirely, provide a volume ID number
+(rather than a volume name) as the value for the <B>-id</B> argument,
+along with the <B>-server</B> and <B>-partition</B> arguments.
+This makes it possible to dump a volume for which there is no VLDB
+entry.
+<A NAME="IDX6770"></A>
+<A NAME="IDX6771"></A>
+<P><H3><A NAME="Header_260" HREF="auagd002.htm#ToC_260">To dump a volume</A></H3>
+<OL TYPE=1>
+<P><LI>Verify that you are listed in the <B>/usr/afs/etc/UserList</B>
+file. If necessary, issue the <B>bos listusers</B> command, which
+is fully described in <A HREF="auagd021.htm#HDRWQ593">To display the users in the UserList file</A>. 
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE>
+<P><LI>Verify that you have the permissions necessary to create the dump
+file. If placing it in AFS, you must have the <B>i</B>
+(<B>insert</B>) permission on the ACL of the file's directory.
+If necessary, issue the <B>fs listacl</B> command, which is fully
+described in <A HREF="auagd020.htm#HDRWQ572">Displaying ACLs</A>. 
+<PRE>   % <B>fs listacl</B> [&lt;<VAR>dir/file path</VAR>>]
+</PRE> 
+<P>Members of the <B>system:administrators</B> group always
+implicitly have the <B>a</B> (<B>administer</B>) and by default also
+the <B>l</B> (<B>lookup</B>) permission on every ACL and can use the
+<B>fs setacl</B> command to grant other rights as necessary.
+<P><LI><A NAME="LIWQ241"></A>Issue the <B>vos dump</B> command to dump the
+volume. 
+<PRE>   
+   % <B>vos dump -id</B> &lt;<VAR>volume&nbsp;name&nbsp;or&nbsp;ID</VAR>> [<B>-time</B> &lt;<VAR>dump&nbsp;from&nbsp;time</VAR>>]  [<B>-file</B> &lt;<VAR>arg</VAR>>]  [<B>-server</B> &lt;<VAR>server</VAR>>]  [<B>-partition</B> &lt;<VAR>partition</VAR>>]
+   
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>-id
+</B><DD>Identifies the volume to be dumped by its complete name or volume ID
+number. If you want to dump the read-only or backup version, specify
+its volume ID number or add the appropriate extension
+(<B>.readonly</B> or <B>.backup</B>) to the name.
+<P>To bypass the normal VLDB lookup of the volume's location, provide the
+volume ID number and combine this argument with the <B>-server</B> and
+<B>-partition</B> arguments.
+<P><DT><B>-time
+</B><DD>Specifies whether the dump is full or incremental. Omit this
+argument to create a full dump, or provide one of three acceptable
+values: 
+<UL>
+<P><LI>The value <B>0</B> (zero) to create a full dump.
+<P><LI>A date in the format
+<I>mm</I><B>/</B><I>dd</I><B>/</B><I>yyyy</I> (month, day
+and year) to create an incremental dump that includes only files and
+directories with modification timestamps later than midnight (12:00
+a.m.) on the indicated date. Valid values for the year
+range from <B>1970</B> to <B>2037</B>; higher values are not
+valid because the latest possible date in the standard UNIX representation is
+in 2038. The command interpreter automatically reduces later dates to
+the maximum value. An example is <B>01/13/1999</B>.
+<P><LI>A date and time in the format
+<B>"</B><I>mm</I><B>/</B><I>dd</I><B>/</B><I>yyyy</I>
+<I>hh</I><B>:</B><I>MM</I><B>"</B> to create an
+incremental dump that includes only files and directories with modification
+timestamps later than the specified date and time. The date format is
+the same as for a date alone. Express the time as hours and minutes
+(<I>hh</I>:<I>MM</I>) in 24-hour format (for example,
+<B>20:30</B> is 8:30 p.m.). Surround the
+entire expression with double quotes (" ") because it contains a space.
+An example is <B>"01/13/1999 22:30"</B>.
+</UL>
+<P><DT><B>-file
+</B><DD>Specifies the pathname of the file to which to write the dump. The
+file can be in AFS, but not in the volume being dumped. A partial
+pathname is interpreted relative to the current working directory. Omit
+this argument to direct the dump to the standard output stream.
+<P><DT><B>-server
+</B><DD>Specifies the file server machine on which the volume resides.
+Provide the <B>-partition</B> argument along with this one.
+<P><DT><B>-partition
+</B><DD>Specifies the partition on which the volume resides. Provide the
+<B>-server</B> argument along with this one.
+</DL>
+</OL>
+<P><H3><A NAME="Header_261" HREF="auagd002.htm#ToC_261">About Restoring Volumes</A></H3>
+<A NAME="IDX6772"></A>
+<A NAME="IDX6773"></A>
+<P>Although you can dump any of the three types of volumes (read/write,
+read-only, or backup), you can restore a dump file to the file system only as
+a read/write volume, using the <B>vos restore</B> command. The
+command automatically translates the dump file's contents from ASCII back
+into the volume format appropriate for the file server machine that stores the
+restored version. As with the <B>vos dump</B> command, you can
+restore a dump file via a named pipe, which facilitates interoperation with
+third-party backup utilities.
+<P>You can restore the contents of a dump file in one of two basic
+ways. In either case, you must restore a full dump of the volume before
+restoring any incremental dumps. Any incremental dumps that you then
+restore must have been created after the full dump. If there is more
+than one incremental dump, you must restore them in the order they were
+created.
+<UL>
+<P><LI>You can restore volume data into a brand new volume with a new name and at
+a location that you specify. See <A HREF="#HDRWQ242">To restore a dump into a new volume and mount it</A>.
+<P>You can assign a volume ID number as you restore the volume, though it is
+best to have the Volume Server allocate a volume number automatically.
+The most common reason for specifying the volume ID is that a volume's
+VLDB entry has disappeared for some reason, but you know the former read/write
+volume ID number and want to reuse it.
+<P><LI>You can restore volume data into an existing volume (usually the one that
+was previously dumped), overwriting its current contents. This is
+convenient if the current contents are corrupted or otherwise incorrect,
+because it allows you to replace them with a coherent version from the past or
+from one of the volume's clones. See <A HREF="#HDRWQ244">To restore a dump file, overwriting an existing volume</A>.
+<P>Provide the <B>-overwrite</B> argument to preconfirm that you wish to
+overwrite the volume's contents, and to specify whether you are restoring
+a full or incremental dump. If you omit the <B>-overwrite</B>
+argument, the Volume Server generates the following prompt to confirm that you
+want to overwrite the existing volume with either a full (<B>f</B>) or
+incremental (<B>i</B>) dump: 
+<PRE>   
+   Do you want to do a full/incremental restore or abort? [fia](a):
+   
+</PRE>
+<P>If you pipe in the dump file via the standard input stream instead of using
+the <B>-file</B> argument to name it, you must include the
+<B>-overwrite</B> argument because there is nowhere for the Volume Server
+to display the prompt in this case.
+<P>You can move the volume to a new site as you overwrite it with a full dump,
+by using the <B>-server</B> and <B>-partition</B> arguments to specify
+the new site. You cannot move the volume when restoring an incremental
+dump.
+</UL>
+<P>The <B>vos restore</B> command sets the restored volume's creation
+date in the volume header to the time of the restore operation, as reported in
+the <TT>Creation</TT> field in the output from the <B>vos examine</B>
+and <B>vos listvol</B> commands.
+<A NAME="IDX6774"></A>
+<A NAME="IDX6775"></A>
+<P><H3><A NAME="HDRWQ242" HREF="auagd002.htm#ToC_262">To restore a dump into a new volume and mount it</A></H3>
+<OL TYPE=1>
+<P><LI>Verify that you are listed in the <B>/usr/afs/etc/UserList</B>
+file. If necessary, issue the <B>bos listusers</B> command, which
+is fully described in <A HREF="auagd021.htm#HDRWQ593">To display the users in the UserList file</A>. 
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE>
+<P><LI>Verify that you have permissions needed to read the dump file and to mount
+the new volume. If the dump file resides in AFS, you need the
+<B>r</B> (<B>read</B>) permission on the ACL of its directory.
+You need the <B>i</B> (<B>insert</B>) and <B>a</B>
+(<B>administer</B>) permissions on the ACL of the directory where you are
+mounting the new volume. If necessary, issue the <B>fs listacl</B>
+command, which is fully described in <A HREF="auagd020.htm#HDRWQ572">Displaying ACLs</A>. 
+<PRE>   % <B>fs listacl</B> [&lt;<VAR>dir/file path</VAR>>]
+</PRE> 
+<P>Members of the <B>system:administrators</B> group always
+implicitly have the <B>a</B> (<B>administer</B>) and by default also
+the <B>l</B> (<B>lookup</B>) permission on every ACL and can use the
+<B>fs setacl</B> command to grant other rights as necessary.
+<P><LI>Select a site (disk partition on a file server machine) for the new
+volume. If your cell groups different types of volumes onto different
+file server machines, that can guide your decision. It often makes
+sense to put the volume on the emptiest partition that meets your other
+criteria. To display how much space is available on a file server
+machine's partitions, use the <B>vos partinfo</B> command, which is
+described fully in <A HREF="#HDRWQ185">Creating Read/write Volumes</A>. 
+<PRE>   
+   % <B>vos partinfo</B> &lt;<VAR>machine&nbsp;name</VAR>> [&lt;<VAR>partition&nbsp;name</VAR>>]
+   
+</PRE>
+<P><LI><A NAME="LIWQ243"></A>Issue the <B>vos restore</B> command to create a new volume
+and restore the dump file into it. Type it on a single line; it
+appears on multiple lines here only for legibility. 
+<PRE>   
+   % <B>vos restore</B> &lt;<VAR>machine&nbsp;name</VAR>> &lt;<VAR>partition&nbsp;name</VAR>>  \
+                 &lt;<VAR>name&nbsp;of&nbsp;volume&nbsp;to&nbsp;be&nbsp;restored</VAR>>   \
+                 [<B>-file</B> &lt;<VAR>dump&nbsp;file</VAR>>] [<B>-id</B> &lt;<VAR>volume&nbsp;ID</VAR>>]
+   
+</PRE>
+<P>where
+<DL>
+<P><DT><B>res
+</B><DD>Is the shortest acceptable abbreviation of <B>restore</B>.
+<P><DT><B><VAR>machine name</VAR>
+</B><DD>Names the file server machine on which to create the new volume.
+<P><DT><B><VAR>partition name</VAR>
+</B><DD>Names the partition on which to create the new volume.
+<P><DT><B><VAR>name of volume to be restored</VAR>
+</B><DD>Names the new read/write volume, which must not already have a VLDB
+entry. It can be up to 22 characters in length.
+<P><DT><B>-file
+</B><DD>Is the dump file to restore. Partial pathnames are interpreted with
+respect to the current working directory. Omit this argument if using a
+pipe to read in the dump file from the standard input stream.
+<P><DT><B>-volume
+</B><DD>Specifies the new volume's ID number. It is appropriate only
+if you are restoring a volume that no longer exists and want to use the volume
+ID number it had previously.
+</DL>
+<A NAME="IDX6776"></A>
+<A NAME="IDX6777"></A>
+<P><LI>Issue the <B>fs mkmount</B> command to mount the new volume, making
+its contents accessible. Complete instructions appear in <A HREF="#HDRWQ212">To create a regular or read/write mount point</A>. 
+<PRE>   
+   % <B>fs mkmount</B> &lt;<VAR>directory</VAR>> &lt;<VAR>volume&nbsp;name</VAR>>
+   
+</PRE>
+<P><LI><B>(Optional)</B> Issue the <B>fs lsmount</B> command to verify
+that the mount point refers to the correct volume. Complete
+instructions appear in <A HREF="#HDRWQ211">To display a mount point</A>. 
+<PRE>   
+   % <B>fs lsmount</B> &lt;<VAR>directory</VAR>>
+   
+</PRE>
+</OL>
+<A NAME="IDX6778"></A>
+<A NAME="IDX6779"></A>
+<P><H3><A NAME="HDRWQ244" HREF="auagd002.htm#ToC_263">To restore a dump file, overwriting an existing volume</A></H3>
+<OL TYPE=1>
+<P><LI>Verify that you are listed in the <B>/usr/afs/etc/UserList</B>
+file. If necessary, issue the <B>bos listusers</B> command, which
+is fully described in <A HREF="auagd021.htm#HDRWQ593">To display the users in the UserList file</A>. 
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE>
+<P><LI>Verify that you have permissions needed to read the dump file. If
+it resides in AFS, you need the <B>r</B> (<B>read</B>) permission on
+the ACL of its directory. If necessary, issue the <B>fs listacl</B>
+command, which is fully described in <A HREF="auagd020.htm#HDRWQ572">Displaying ACLs</A>. 
+<PRE>   % <B>fs listacl</B> [&lt;<VAR>dir/file path</VAR>>]
+</PRE> 
+<P>Members of the <B>system:administrators</B> group always
+implicitly have the <B>a</B> (<B>administer</B>) and by default also
+the <B>l</B> (<B>lookup</B>) permission on every ACL and can use the
+<B>fs setacl</B> command to grant other rights as necessary.
+<P><LI>Restore the contents of the dump file into a read/write volume,
+overwriting the current contents. The volume retains its current volume
+ID number. Type it on a single line; it appears on multiple lines
+here only for legibility. 
+<PRE>   
+   % <B>vos restore</B> &lt;<VAR>machine&nbsp;name</VAR>> &lt;<VAR>partition&nbsp;name</VAR>>  \
+                 &lt;<VAR>name&nbsp;of&nbsp;volume&nbsp;to&nbsp;be&nbsp;restored</VAR>>   \
+                 [<B>-file</B> &lt;<VAR>dump &nbsp;file</VAR>>]  \
+                 <B>-overwrite</B> &lt;<B>full</B> | <B>incremental</B>>
+   
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>res
+</B><DD>Is the shortest acceptable abbreviation of <B>restore</B>.
+<P><DT><B><VAR>machine name</VAR>
+</B><DD>Names the file server machine where the volume already exists, or the
+machine to which to move it. In the latter case, the value for the
+<B>-overwrite</B> argument must be <B>full</B>.
+<P><DT><B><VAR>partition name</VAR>
+</B><DD>Names the partition where the volume already exists, or the partition to
+which to move it. In the latter case, the value for the
+<B>-overwrite</B> argument must be <B>full</B>.
+<P><DT><B><VAR>name of volume to be restored</VAR>
+</B><DD>Names the read/write volume to overwrite with the contents of the dump
+file.
+<P><DT><B>-file
+</B><DD>Is the dump file to restore. Partial pathnames are interpreted with
+respect to the current working directory. Omit this argument if using a
+pipe to read in the dump file from the standard input stream; in this
+case, you must provide the <B>-overwrite</B> argument.
+<P><DT><B>-overwrite
+</B><DD>Preconfirms that you want to overwrite the existing volume and specifies
+which type of dump file you are restoring. Provide one of the following
+values:
+<UL>
+<P><LI><B>f</B> or <B>full</B> if restoring a full dump file
+<P><LI><B>i</B> or <B>incremental</B> if restoring an incremental dump
+file. This value is not acceptable if you are moving the volume while
+restoring it.
+<P><LI><B>a</B> to terminate the restore operation
+</UL>
+</DL>
+<P><LI>If the volume is replicated, issue the <B>vos release</B> command to
+release the newly restored contents to read-only sites. Complete
+instructions appear in <A HREF="#HDRWQ192">Replicating Volumes (Creating Read-only Volumes)</A>. 
+<PRE>   
+   % <B>vos release</B> &lt;<VAR>volume&nbsp;name&nbsp;or&nbsp;ID</VAR>>
+   
+</PRE>
+<P><LI>Issue the <B>vos backup</B> command to create a new backup version of
+the volume. Complete instructions appear in <A HREF="#HDRWQ201">Creating Backup Volumes</A>. 
+<PRE>   
+   % <B>vos backup</B> &lt;<VAR>volume&nbsp;name&nbsp;or&nbsp;ID</VAR>>
+   
+</PRE>
+</OL>
+<HR><H2><A NAME="HDRWQ245" HREF="auagd002.htm#ToC_264">Renaming Volumes</A></H2>
+<A NAME="IDX6780"></A>
+<A NAME="IDX6781"></A>
+<A NAME="IDX6782"></A>
+<A NAME="IDX6783"></A>
+<P>You can use the <B>vos rename</B> command to rename a volume.
+For example, it is appropriate to rename a user's home volume if you use
+the <B>user.</B><VAR>username</VAR> convention for user volume names
+and you change the username. (For complete instructions for changing
+usernames, see <A HREF="auagd018.htm#HDRWQ518">Changing Usernames</A>.)
+<P>
+<A NAME="IDX6784"></A>
+<A NAME="IDX6785"></A>
+<A NAME="IDX6786"></A>
+The <B>vos rename</B> command accepts only read/write volume names, but
+automatically changes the names of the associated read-only and backup
+volumes. As directed in the following instructions, you need to replace
+the volume's current mount point with a new one that reflects the name
+change.
+<A NAME="IDX6787"></A>
+<A NAME="IDX6788"></A>
+<P><H3><A NAME="HDRWQ246" HREF="auagd002.htm#ToC_265">To rename a volume</A></H3>
+<OL TYPE=1>
+<P><LI>Verify that you are listed in the <B>/usr/afs/etc/UserList</B>
+file. If necessary, issue the <B>bos listusers</B> command, which
+is fully described in <A HREF="auagd021.htm#HDRWQ593">To display the users in the UserList file</A>. 
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE>
+<P><LI>Verify that you have the <B>a</B> (<B>administer</B>),
+<B>d</B> (<B>delete</B>), and <B>i</B> (<B>insert</B>) access
+permissions for the directory in which you are replacing the volume's
+mount point. If necessary, issue the <B>fs listacl</B> command,
+which is fully described in <A HREF="auagd020.htm#HDRWQ572">Displaying ACLs</A>. 
+<PRE>   % <B>fs listacl</B> [&lt;<VAR>dir/file path</VAR>>]
+</PRE> 
+<P>Members of the <B>system:administrators</B> group always
+implicitly have the <B>a</B> (<B>administer</B>) and by default also
+the <B>l</B> (<B>lookup</B>) permission on every ACL and can use the
+<B>fs setacl</B> command to grant other rights as necessary.
+<P><LI><A NAME="LIVOL-REN"></A>Issue the <B>vos rename</B> command to rename the
+volume. 
+<PRE>   
+   % <B>vos rename</B> &lt;<VAR>old&nbsp;volume&nbsp;name</VAR>> &lt;<VAR>new&nbsp;volume&nbsp;name</VAR>>
+   
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>ren
+</B><DD>Is the shortest acceptable abbreviation of <B>rename</B>.
+<P><DT><B><VAR>old volume name</VAR>
+</B><DD>Is the current name of a read/write volume.
+<P><DT><B><VAR>new volume name</VAR>
+</B><DD>Is the new name for the volume. It cannot be more than 22
+characters in length.
+</DL>
+<P>If there is no Volume Location Database (VLDB) entry for the specified
+current volume name, the command fails with the following error message:
+<P>
+<PRE>   
+   vos: Could not find entry for volume <VAR>old_volume_name</VAR>. 
+   
+</PRE>
+<A NAME="IDX6789"></A>
+<A NAME="IDX6790"></A>
+<P><LI>Issue the <B>fs rmmount</B> command to remove the mount point that
+refers to the volume's old name. Complete instructions appear in <A HREF="#HDRWQ215">To remove a mount point</A>. 
+<PRE>   
+   % <B>fs rmmount</B> &lt;<VAR>directory</VAR>>
+   
+</PRE>
+<A NAME="IDX6791"></A>
+<A NAME="IDX6792"></A>
+<P><LI>Issue the <B>fs mkmount</B> to create a mount point that indicates the
+volume's new name. Complete instructions appear in <A HREF="#HDRWQ212">To create a regular or read/write mount point</A>. 
+<PRE>   
+   % <B>fs mkmount</B> &lt;<VAR>directory</VAR>> &lt;<VAR>volume&nbsp;name</VAR>> [<B>-rw</B>]
+    
+</PRE>
+</OL>
+<HR><H2><A NAME="HDRWQ247" HREF="auagd002.htm#ToC_266">Unlocking and Locking VLDB Entries</A></H2>
+<P>As detailed in <A HREF="#HDRWQ227">Synchronizing the VLDB and Volume Headers</A>, The Volume Location (VL) Server locks the
+Volume Location Database (VLDB) entry for a volume before the Volume Server
+executes any operation on it. No other operation can affect a volume
+with a locked VLDB entry, so the lock prevents the inconsistency or corruption
+that can result from multiple simultaneous operations on a volume.
+<A NAME="IDX6793"></A>
+<A NAME="IDX6794"></A>
+<A NAME="IDX6795"></A>
+<A NAME="IDX6796"></A>
+<A NAME="IDX6797"></A>
+<A NAME="IDX6798"></A>
+<P>To verify that a VLDB entry is locked, issue the <B>vos listvldb</B>
+command as described in <A HREF="#HDRWQ218">To display VLDB entries</A>. The command has a <B>-locked</B> flag that
+displays locked entries only. If the VLDB entry is locked, the string
+<TT>Volume is currently LOCKED</TT> appears on the last line of the
+volume's output.
+<P>To lock a VLDB entry yourself, use the <B>vos lock</B> command.
+This is useful when you suspect something is wrong with a volume and you want
+to prevent any changes to it while you are investigating the problem.
+<P>To unlock a locked VLDB entry, issue the <B>vos unlock</B> command,
+which unlocks a single VLDB entry, or the <B>vos unlockvldb</B> command,
+which unlocks potentially many entries. This is useful when a volume
+operation fails prematurely and leaves a VLDB entry locked, preventing you
+from acting to correct the problems resulting from the failure.
+<A NAME="IDX6799"></A>
+<A NAME="IDX6800"></A>
+<P><H3><A NAME="Header_267" HREF="auagd002.htm#ToC_267">To lock a VLDB entry</A></H3>
+<OL TYPE=1>
+<P><LI>Verify that you are listed in the <B>/usr/afs/etc/UserList</B>
+file. If necessary, issue the <B>bos listusers</B> command, which
+is fully described in <A HREF="auagd021.htm#HDRWQ593">To display the users in the UserList file</A>. 
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE>
+<P><LI>Issue the <B>vos lock</B> to lock the entry. 
+<PRE>   
+   % <B>vos lock</B> &lt;<VAR>volume&nbsp;name&nbsp;or&nbsp;ID</VAR>>
+   
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>lo
+</B><DD>Is the shortest acceptable abbreviation of <B>lock</B>.
+<P><DT><B><VAR>volume name or ID</VAR>
+</B><DD>Identifies the volume to be locked, either by its complete name or volume
+ID number. It can be any of the three versions of the volume.
+</DL>
+</OL>
+<A NAME="IDX6801"></A>
+<A NAME="IDX6802"></A>
+<P><H3><A NAME="Header_268" HREF="auagd002.htm#ToC_268">To unlock a single VLDB entry</A></H3>
+<OL TYPE=1>
+<P><LI>Verify that you are listed in the <B>/usr/afs/etc/UserList</B>
+file. If necessary, issue the <B>bos listusers</B> command, which
+is fully described in <A HREF="auagd021.htm#HDRWQ593">To display the users in the UserList file</A>. 
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE>
+<P><LI>Issue the <B>vos unlock</B> command to unlock the entry. 
+<PRE>   % <B>vos unlock</B> &lt;<VAR>volume&nbsp;name&nbsp;or&nbsp;ID</VAR>>
+   
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>unlock
+</B><DD>Must be typed in full.
+<P><DT><B><VAR>volume name or ID</VAR>
+</B><DD>Identifies the volume to be unlocked, either by its complete name or
+volume ID number. It can be any of the three versions of the
+volume.
+</DL>
+</OL>
+<A NAME="IDX6803"></A>
+<A NAME="IDX6804"></A>
+<P><H3><A NAME="Header_269" HREF="auagd002.htm#ToC_269">To unlock multiple VLDB entries</A></H3>
+<OL TYPE=1>
+<P><LI>Verify that you are listed in the <B>/usr/afs/etc/UserList</B>
+file. If necessary, issue the <B>bos listusers</B> command, which
+is fully described in <A HREF="auagd021.htm#HDRWQ593">To display the users in the UserList file</A>. 
+<PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
+</PRE>
+<P><LI>Issue the <B>vos unlockvldb</B> command to unlock the desired
+entries. 
+<PRE>   
+   % <B>vos unlockvldb</B> [&lt;<VAR>machine&nbsp;name</VAR>>] [&lt;<VAR>partition&nbsp;name</VAR>>]
+   
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>unlockv
+</B><DD>Is the shortest acceptable abbreviation of <B>unlockvldb</B>.
+<P><DT><B><VAR>machine name</VAR>
+</B><DD>Specifies a file server machine. Provide this argument alone to
+unlock all VLDB entries that mention the machine in a site definition.
+Omit both this argument and the <VAR>partition name</VAR> argument to unlock all
+VLDB entries.
+<P><DT><B><VAR>partition name</VAR>
+</B><DD>Specifies a partition. Provide this argument alone to unlock all
+VLDB entries that mention the partition (on any machine) in a site
+definition. Omit both this argument and the <VAR>machine name</VAR>
+argument to unlock all VLDB entries.
+</DL>
+</OL>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auagd002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auagd009.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auagd011.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auagd026.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

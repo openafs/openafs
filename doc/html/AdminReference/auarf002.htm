@@ -1,0 +1,314 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 4//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3672/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 3 Oct 2000 at 16:18:30                -->
+<META HTTP-EQUIV="updated" CONTENT="Tue, 03 Oct 2000 16:18:29">
+<META HTTP-EQUIV="review" CONTENT="Wed, 03 Oct 2001 16:18:29">
+<META HTTP-EQUIV="expires" CONTENT="Thu, 03 Oct 2002 16:18:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf000.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf003.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<H2><A NAME="ToC">Table of Contents</A></H2>
+<P><B><A NAME="ToC_1" HREF="auarf003.htm#HDRTLIST_START">Tables</A></B><BR>
+<P><B><A NAME="ToC_2" HREF="auarf004.htm#Header_2">About This Manual</A></B><BR>
+<MENU>
+<LI><A NAME="ToC_3" HREF="auarf005.htm#HDRWQ1">Audience and Purpose</A>
+<LI><A NAME="ToC_4" HREF="auarf006.htm#HDRWQ2">Organization</A>
+<LI><A NAME="ToC_5" HREF="auarf007.htm#HDRWQ3">How to Use This Document</A>
+<LI><A NAME="ToC_6" HREF="auarf008.htm#HDRWQ4">Related Documents</A>
+<LI><A NAME="ToC_7" HREF="auarf009.htm#HDRTYPO_CONV">Typographical Conventions</A>
+</MENU>
+<P><B><A NAME="ToC_8" HREF="auarf010.htm#Header_8">AFS System Files</A></B><BR>
+<MENU>
+<LI><A NAME="ToC_9" HREF="auarf011.htm#HDRFILESINTRO">afs_file_intro</A>
+<LI><A NAME="ToC_10" HREF="auarf012.htm#HDRAUTHLOG">AuthLog</A>
+<LI><A NAME="ToC_11" HREF="auarf013.htm#HDRWQ5">AuthLog.dir, AuthLog.pag</A>
+<LI><A NAME="ToC_12" HREF="auarf014.htm#HDRBACKUPLOG">BackupLog</A>
+<LI><A NAME="ToC_13" HREF="auarf015.htm#HDRBOSLOG">BosLog</A>
+<LI><A NAME="ToC_14" HREF="auarf016.htm#HDRBOSCONFIG">BosConfig</A>
+<LI><A NAME="ToC_15" HREF="auarf017.htm#HDRCACHEITEMS">CacheItems</A>
+<LI><A NAME="ToC_16" HREF="auarf018.htm#HDRCFG">CFG_<I>device_name</I></A>
+<LI><A NAME="ToC_17" HREF="auarf019.htm#HDRCLI_CSDB">CellServDB (client version)</A>
+<LI><A NAME="ToC_18" HREF="auarf020.htm#HDRSV_CSDB">CellServDB (server version)</A>
+<LI><A NAME="ToC_19" HREF="auarf021.htm#HDRFILELOG">FileLog</A>
+<LI><A NAME="ToC_20" HREF="auarf022.htm#HDRFORCESALVAGE">FORCESALVAGE</A>
+<LI><A NAME="ToC_21" HREF="auarf023.htm#HDRKEYFILE">KeyFile</A>
+<LI><A NAME="ToC_22" HREF="auarf024.htm#HDRCLI_NETINFO">NetInfo (client version)</A>
+<LI><A NAME="ToC_23" HREF="auarf025.htm#HDRSV_NETINFO">NetInfo (server version)</A>
+<LI><A NAME="ToC_24" HREF="auarf026.htm#HDRCLI_NETRESTRICT">NetRestrict (client version)</A>
+<LI><A NAME="ToC_25" HREF="auarf027.htm#HDRSV_NETRESTRICT">NetRestrict (server version)</A>
+<LI><A NAME="ToC_26" HREF="auarf028.htm#HDRNOAUTH">NoAuth</A>
+<LI><A NAME="ToC_27" HREF="auarf029.htm#HDRSALVAGEFS">SALVAGE.fs</A>
+<LI><A NAME="ToC_28" HREF="auarf030.htm#HDRSALVAGELOG">SalvageLog</A>
+<LI><A NAME="ToC_29" HREF="auarf031.htm#HDRTE">TE_<I>device_name</I></A>
+<LI><A NAME="ToC_30" HREF="auarf032.htm#HDRCLI_THISCELL">ThisCell (client version)</A>
+<LI><A NAME="ToC_31" HREF="auarf033.htm#HDRSV_THISCELL">ThisCell (server version)</A>
+<LI><A NAME="ToC_32" HREF="auarf034.htm#HDRTL">TL_<I>device_name</I></A>
+<LI><A NAME="ToC_33" HREF="auarf035.htm#HDRUSERLIST">UserList</A>
+<LI><A NAME="ToC_34" HREF="auarf036.htm#HDRVN">V<I>n</I></A>
+<LI><A NAME="ToC_35" HREF="auarf037.htm#HDRVVOLID">V<I>vol_ID</I>.vol</A>
+<LI><A NAME="ToC_36" HREF="auarf038.htm#HDRVLLOG">VLLog</A>
+<LI><A NAME="ToC_37" HREF="auarf039.htm#HDRVOLSERLOG">VolserLog</A>
+<LI><A NAME="ToC_38" HREF="auarf040.htm#HDRVOLUMEITEMS">VolumeItems</A>
+<LI><A NAME="ToC_39" HREF="auarf041.htm#HDRAFSZCM">afszcm.cat</A>
+<LI><A NAME="ToC_40" HREF="auarf042.htm#HDRBDBDB">bdb.DB0 and bdb.DBSYS1</A>
+<LI><A NAME="ToC_41" HREF="auarf043.htm#HDRCACHEINFO">cacheinfo</A>
+<LI><A NAME="ToC_42" HREF="auarf044.htm#HDRFMSLOG">fms.log</A>
+<LI><A NAME="ToC_43" HREF="auarf045.htm#HDRKASERVERDB">kaserver.DB0 and kaserver.DBSYS1</A>
+<LI><A NAME="ToC_44" HREF="auarf046.htm#HDRKASERVERAUXDB">kaserverauxdb</A>
+<LI><A NAME="ToC_45" HREF="auarf047.htm#HDRPRDBDB">prdb.DB0 and prdb.DBSYS1</A>
+<LI><A NAME="ToC_46" HREF="auarf048.htm#HDRSALVAGELOCK">salvage.lock</A>
+<LI><A NAME="ToC_47" HREF="auarf049.htm#HDRSYSID">sysid</A>
+<LI><A NAME="ToC_48" HREF="auarf050.htm#HDRTAPECONFIG">tapeconfig</A>
+<LI><A NAME="ToC_49" HREF="auarf051.htm#HDRVLDBDB">vldb.DB0 and vldb.DBSYS1</A>
+<LI><A NAME="ToC_50" HREF="auarf052.htm#HDRAFSMONCONFIG">afsmonitor Configuration File</A>
+<LI><A NAME="ToC_51" HREF="auarf053.htm#HDRPACKAGECONFIG">package Configuration File</A>
+<LI><A NAME="ToC_52" HREF="auarf054.htm#HDRUSSBULKINPUT">uss Bulk Input File</A>
+<LI><A NAME="ToC_53" HREF="auarf055.htm#HDRUSSFILE">uss Template File</A>
+</MENU>
+<P><B><A NAME="ToC_54" HREF="auarf056.htm#Header_54">AFS System Commands</A></B><BR>
+<MENU>
+<LI><A NAME="ToC_55" HREF="auarf057.htm#HDRAFSINTRO">afs_intro</A>
+<LI><A NAME="ToC_72" HREF="auarf058.htm#HDRAFSD">afsd</A>
+<LI><A NAME="ToC_73" HREF="auarf059.htm#HDRAFSMONITOR">afsmonitor</A>
+<LI><A NAME="ToC_74" HREF="auarf060.htm#HDRBK_INTRO">backup</A>
+<LI><A NAME="ToC_75" HREF="auarf061.htm#HDRBK_ADDDUMP">backup adddump</A>
+<LI><A NAME="ToC_76" HREF="auarf062.htm#HDRBK_ADDHOST">backup addhost</A>
+<LI><A NAME="ToC_77" HREF="auarf063.htm#HDRBK_ADDVOLENTRY">backup addvolentry</A>
+<LI><A NAME="ToC_78" HREF="auarf064.htm#HDRBK_ADDVOLSET">backup addvolset</A>
+<LI><A NAME="ToC_79" HREF="auarf065.htm#HDRBK_APROPOS">backup apropos</A>
+<LI><A NAME="ToC_80" HREF="auarf066.htm#HDRBK_DBVERIFY">backup dbverify</A>
+<LI><A NAME="ToC_81" HREF="auarf067.htm#HDRBK_DELDUMP">backup deldump</A>
+<LI><A NAME="ToC_82" HREF="auarf068.htm#HDRBK_DELETEDUMP">backup deletedump</A>
+<LI><A NAME="ToC_83" HREF="auarf069.htm#HDRBK_DELHOST">backup delhost</A>
+<LI><A NAME="ToC_84" HREF="auarf070.htm#HDRBK_DELVOLENTRY">backup delvolentry</A>
+<LI><A NAME="ToC_85" HREF="auarf071.htm#HDRBK_DELVOLSET">backup delvolset</A>
+<LI><A NAME="ToC_86" HREF="auarf072.htm#HDRBK_DISKRESTORE">backup diskrestore</A>
+<LI><A NAME="ToC_87" HREF="auarf073.htm#HDRBK_DUMP">backup dump</A>
+<LI><A NAME="ToC_88" HREF="auarf074.htm#HDRBK_DUMPINFO">backup dumpinfo</A>
+<LI><A NAME="ToC_89" HREF="auarf075.htm#HDRBK_HELP">backup help</A>
+<LI><A NAME="ToC_90" HREF="auarf076.htm#HDRBK_INTERACTIVE">backup interactive</A>
+<LI><A NAME="ToC_91" HREF="auarf077.htm#HDRBK_JOBS">backup jobs</A>
+<LI><A NAME="ToC_92" HREF="auarf078.htm#HDRBK_KILL">backup kill</A>
+<LI><A NAME="ToC_93" HREF="auarf079.htm#HDRBK_LABELTAPE">backup labeltape</A>
+<LI><A NAME="ToC_94" HREF="auarf080.htm#HDRBK_LISTDUMPS">backup listdumps</A>
+<LI><A NAME="ToC_95" HREF="auarf081.htm#HDRBK_LISTHOSTS">backup listhosts</A>
+<LI><A NAME="ToC_96" HREF="auarf082.htm#HDRBK_LISTVOLSETS">backup listvolsets</A>
+<LI><A NAME="ToC_97" HREF="auarf083.htm#HDRBK_QUIT">backup quit</A>
+<LI><A NAME="ToC_98" HREF="auarf084.htm#HDRBK_READLABEL">backup readlabel</A>
+<LI><A NAME="ToC_99" HREF="auarf085.htm#HDRBK_RESTOREDB">backup restoredb</A>
+<LI><A NAME="ToC_100" HREF="auarf086.htm#HDRBK_SAVEDB">backup savedb</A>
+<LI><A NAME="ToC_101" HREF="auarf087.htm#HDRBK_SCANTAPE">backup scantape</A>
+<LI><A NAME="ToC_102" HREF="auarf088.htm#HDRBK_SETEXP">backup setexp</A>
+<LI><A NAME="ToC_103" HREF="auarf089.htm#HDRBK_STATUS">backup status</A>
+<LI><A NAME="ToC_104" HREF="auarf090.htm#HDRBK_VOLINFO">backup volinfo</A>
+<LI><A NAME="ToC_105" HREF="auarf091.htm#HDRBK_VOLRESTORE">backup volrestore</A>
+<LI><A NAME="ToC_106" HREF="auarf092.htm#HDRBK_VOLSETRESTORE">backup volsetrestore</A>
+<LI><A NAME="ToC_107" HREF="auarf093.htm#HDRBOS_INTRO">bos</A>
+<LI><A NAME="ToC_108" HREF="auarf094.htm#HDRBOS_ADDHOST">bos addhost</A>
+<LI><A NAME="ToC_109" HREF="auarf095.htm#HDRBOS_ADDKEY">bos addkey</A>
+<LI><A NAME="ToC_110" HREF="auarf096.htm#HDRBOS_ADDUSER">bos adduser</A>
+<LI><A NAME="ToC_111" HREF="auarf097.htm#HDRBOS_APROPOS">bos apropos</A>
+<LI><A NAME="ToC_112" HREF="auarf098.htm#HDRBOS_CREATE">bos create</A>
+<LI><A NAME="ToC_113" HREF="auarf099.htm#HDRBOS_DELETE">bos delete</A>
+<LI><A NAME="ToC_114" HREF="auarf100.htm#HDRBOS_EXEC">bos exec</A>
+<LI><A NAME="ToC_115" HREF="auarf101.htm#HDRBOS_GETDATE">bos getdate</A>
+<LI><A NAME="ToC_116" HREF="auarf102.htm#HDRBOS_GETLOG">bos getlog</A>
+<LI><A NAME="ToC_117" HREF="auarf103.htm#HDRBOS_GETRESTART">bos getrestart</A>
+<LI><A NAME="ToC_118" HREF="auarf104.htm#HDRBOS_HELP">bos help</A>
+<LI><A NAME="ToC_119" HREF="auarf105.htm#HDRBOS_INSTALL">bos install</A>
+<LI><A NAME="ToC_120" HREF="auarf106.htm#HDRBOS_LISTHOSTS">bos listhosts</A>
+<LI><A NAME="ToC_121" HREF="auarf107.htm#HDRBOS_LISTKEYS">bos listkeys</A>
+<LI><A NAME="ToC_122" HREF="auarf108.htm#HDRBOS_LISTUSERS">bos listusers</A>
+<LI><A NAME="ToC_123" HREF="auarf109.htm#HDRBOS_PRUNE">bos prune</A>
+<LI><A NAME="ToC_124" HREF="auarf110.htm#HDRBOS_REMOVEHOST">bos removehost</A>
+<LI><A NAME="ToC_125" HREF="auarf111.htm#HDRBOS_REMOVEKEY">bos removekey</A>
+<LI><A NAME="ToC_126" HREF="auarf112.htm#HDRBOS_REMOVEUSER">bos removeuser</A>
+<LI><A NAME="ToC_127" HREF="auarf113.htm#HDRBOS_RESTART">bos restart</A>
+<LI><A NAME="ToC_128" HREF="auarf114.htm#HDRBOS_SALVAGE">bos salvage</A>
+<LI><A NAME="ToC_129" HREF="auarf115.htm#HDRBOS_SETAUTH">bos setauth</A>
+<LI><A NAME="ToC_130" HREF="auarf116.htm#HDRBOS_SETCELLNAME">bos setcellname</A>
+<LI><A NAME="ToC_131" HREF="auarf117.htm#HDRBOS_SETRESTART">bos setrestart</A>
+<LI><A NAME="ToC_132" HREF="auarf118.htm#HDRBOS_SHUTDOWN">bos shutdown</A>
+<LI><A NAME="ToC_133" HREF="auarf119.htm#HDRBOS_START">bos start</A>
+<LI><A NAME="ToC_134" HREF="auarf120.htm#HDRBOS_STARTUP">bos startup</A>
+<LI><A NAME="ToC_135" HREF="auarf121.htm#HDRBOS_STATUS">bos status</A>
+<LI><A NAME="ToC_136" HREF="auarf122.htm#HDRBOS_STOP">bos stop</A>
+<LI><A NAME="ToC_137" HREF="auarf123.htm#HDRBOS_UNINSTALL">bos uninstall</A>
+<LI><A NAME="ToC_138" HREF="auarf124.htm#HDRBOSSERVER">bosserver</A>
+<LI><A NAME="ToC_139" HREF="auarf125.htm#HDRBUSERVER">buserver</A>
+<LI><A NAME="ToC_140" HREF="auarf126.htm#HDRBUTC">butc</A>
+<LI><A NAME="ToC_141" HREF="auarf127.htm#HDRDLOG">dlog</A>
+<LI><A NAME="ToC_142" HREF="auarf128.htm#HDRDPASS">dpass</A>
+<LI><A NAME="ToC_143" HREF="auarf129.htm#HDRFILESERVER">fileserver</A>
+<LI><A NAME="ToC_144" HREF="auarf130.htm#HDRFMS">fms</A>
+<LI><A NAME="ToC_145" HREF="auarf131.htm#HDRFS_INTRO">fs</A>
+<LI><A NAME="ToC_146" HREF="auarf132.htm#HDRFS_APROPOS">fs apropos</A>
+<LI><A NAME="ToC_147" HREF="auarf133.htm#HDRFS_CHECKSERVERS">fs checkservers</A>
+<LI><A NAME="ToC_148" HREF="auarf134.htm#HDRFS_CHECKVOLUMES">fs checkvolumes</A>
+<LI><A NAME="ToC_149" HREF="auarf135.htm#HDRFS_CLEANACL">fs cleanacl</A>
+<LI><A NAME="ToC_150" HREF="auarf136.htm#HDRFS_COPYACL">fs copyacl</A>
+<LI><A NAME="ToC_151" HREF="auarf137.htm#HDRFS_DISKFREE">fs diskfree</A>
+<LI><A NAME="ToC_152" HREF="auarf138.htm#HDRFS_EXAMINE">fs examine</A>
+<LI><A NAME="ToC_153" HREF="auarf139.htm#HDRFS_EXPORTAFS">fs exportafs</A>
+<LI><A NAME="ToC_154" HREF="auarf140.htm#HDRFS_FLUSH">fs flush</A>
+<LI><A NAME="ToC_155" HREF="auarf141.htm#HDRFS_FLUSHMOUNT">fs flushmount</A>
+<LI><A NAME="ToC_156" HREF="auarf142.htm#HDRFS_FLUSHVOLUME">fs flushvolume</A>
+<LI><A NAME="ToC_157" HREF="auarf143.htm#HDRFS_GETCACHEPARMS">fs getcacheparms</A>
+<LI><A NAME="ToC_158" HREF="auarf144.htm#HDRFS_GETCELLSTATUS">fs getcellstatus</A>
+<LI><A NAME="ToC_159" HREF="auarf145.htm#HDRFS_GETCLIENTADDRS">fs getclientaddrs</A>
+<LI><A NAME="ToC_160" HREF="auarf146.htm#HDRFS_GETSERVERPREFS">fs getserverprefs</A>
+<LI><A NAME="ToC_161" HREF="auarf147.htm#HDRFS_HELP">fs help</A>
+<LI><A NAME="ToC_162" HREF="auarf148.htm#HDRFS_LISTACL">fs listacl</A>
+<LI><A NAME="ToC_163" HREF="auarf149.htm#HDRFS_LISTCELLS">fs listcells</A>
+<LI><A NAME="ToC_164" HREF="auarf150.htm#HDRFS_LISTQUOTA">fs listquota</A>
+<LI><A NAME="ToC_165" HREF="auarf151.htm#HDRFS_LSMOUNT">fs lsmount</A>
+<LI><A NAME="ToC_166" HREF="auarf152.htm#HDRFS_MESSAGES">fs messages</A>
+<LI><A NAME="ToC_167" HREF="auarf153.htm#HDRFS_MKMOUNT">fs mkmount</A>
+<LI><A NAME="ToC_168" HREF="auarf154.htm#HDRFS_NEWCELL">fs newcell</A>
+<LI><A NAME="ToC_169" HREF="auarf155.htm#HDRFS_QUOTA">fs quota</A>
+<LI><A NAME="ToC_170" HREF="auarf156.htm#HDRFS_RMMOUNT">fs rmmount</A>
+<LI><A NAME="ToC_171" HREF="auarf157.htm#HDRFS_SETACL">fs setacl</A>
+<LI><A NAME="ToC_172" HREF="auarf158.htm#HDRFS_SETCACHESIZE">fs setcachesize</A>
+<LI><A NAME="ToC_173" HREF="auarf159.htm#HDRFS_SETCELL">fs setcell</A>
+<LI><A NAME="ToC_174" HREF="auarf160.htm#HDRFS_SETCLIENTADDRS">fs setclientaddrs</A>
+<LI><A NAME="ToC_175" HREF="auarf161.htm#HDRFS_SETQUOTA">fs setquota</A>
+<LI><A NAME="ToC_176" HREF="auarf162.htm#HDRFS_SETSERVERPREFS">fs setserverprefs</A>
+<LI><A NAME="ToC_177" HREF="auarf163.htm#HDRFS_SETVOL">fs setvol</A>
+<LI><A NAME="ToC_178" HREF="auarf164.htm#HDRFS_STOREBEHIND">fs storebehind</A>
+<LI><A NAME="ToC_179" HREF="auarf165.htm#HDRFS_SYSNAME">fs sysname</A>
+<LI><A NAME="ToC_180" HREF="auarf166.htm#HDRFS_WHEREIS">fs whereis</A>
+<LI><A NAME="ToC_181" HREF="auarf167.htm#HDRFS_WHICHCELL">fs whichcell</A>
+<LI><A NAME="ToC_182" HREF="auarf168.htm#HDRFS_WSCELL">fs wscell</A>
+<LI><A NAME="ToC_183" HREF="auarf169.htm#HDRFSTRACE_INTRO">fstrace</A>
+<LI><A NAME="ToC_184" HREF="auarf170.htm#HDRFSTRACE_APROPOS">fstrace apropos</A>
+<LI><A NAME="ToC_185" HREF="auarf171.htm#HDRFSTRACE_CLEAR">fstrace clear</A>
+<LI><A NAME="ToC_186" HREF="auarf172.htm#HDRFSTRACE_DUMP">fstrace dump</A>
+<LI><A NAME="ToC_187" HREF="auarf173.htm#HDRFSTRACE_HELP">fstrace help</A>
+<LI><A NAME="ToC_188" HREF="auarf174.htm#HDRFSTRACE_LSLOG">fstrace lslog</A>
+<LI><A NAME="ToC_189" HREF="auarf175.htm#HDRFSTRACE_LSSET">fstrace lsset</A>
+<LI><A NAME="ToC_190" HREF="auarf176.htm#HDRFSTRACE_SETLOG">fstrace setlog</A>
+<LI><A NAME="ToC_191" HREF="auarf177.htm#HDRFSTRACE_SETSET">fstrace setset</A>
+<LI><A NAME="ToC_192" HREF="auarf178.htm#HDRFTPD">ftpd (AFS version)</A>
+<LI><A NAME="ToC_193" HREF="auarf179.htm#HDRINETD">inetd (AFS version)</A>
+<LI><A NAME="ToC_194" HREF="auarf180.htm#HDRKADB_CHECK">kadb_check</A>
+<LI><A NAME="ToC_195" HREF="auarf181.htm#HDRKAS_INTRO">kas</A>
+<LI><A NAME="ToC_196" HREF="auarf182.htm#HDRKAS_APROPOS">kas apropos</A>
+<LI><A NAME="ToC_197" HREF="auarf183.htm#HDRKAS_CREATE">kas create</A>
+<LI><A NAME="ToC_198" HREF="auarf184.htm#HDRKAS_DELETE">kas delete</A>
+<LI><A NAME="ToC_199" HREF="auarf185.htm#HDRKAS_EXAMINE">kas examine</A>
+<LI><A NAME="ToC_200" HREF="auarf186.htm#HDRKAS_FORGETTICKET">kas forgetticket</A>
+<LI><A NAME="ToC_201" HREF="auarf187.htm#HDRKAS_HELP">kas help</A>
+<LI><A NAME="ToC_202" HREF="auarf188.htm#HDRKAS_INTERACTIVE">kas interactive</A>
+<LI><A NAME="ToC_203" HREF="auarf189.htm#HDRKAS_LIST">kas list</A>
+<LI><A NAME="ToC_204" HREF="auarf190.htm#HDRKAS_LISTTICKETS">kas listtickets</A>
+<LI><A NAME="ToC_205" HREF="auarf191.htm#HDRKAS_NOAUTH">kas noauthentication</A>
+<LI><A NAME="ToC_206" HREF="auarf192.htm#HDRKAS_QUIT">kas quit</A>
+<LI><A NAME="ToC_207" HREF="auarf193.htm#HDRKAS_SETFIELDS">kas setfields</A>
+<LI><A NAME="ToC_208" HREF="auarf194.htm#HDRKAS_SETPASSWORD">kas setpassword</A>
+<LI><A NAME="ToC_209" HREF="auarf195.htm#HDRKAS_STATISTICS">kas statistics</A>
+<LI><A NAME="ToC_210" HREF="auarf196.htm#HDRKAS_STRINGTOKEY">kas stringtokey</A>
+<LI><A NAME="ToC_211" HREF="auarf197.htm#HDRKAS_UNLOCK">kas unlock</A>
+<LI><A NAME="ToC_212" HREF="auarf198.htm#HDRKASERVER">kaserver</A>
+<LI><A NAME="ToC_213" HREF="auarf199.htm#HDRKDB">kdb</A>
+<LI><A NAME="ToC_214" HREF="auarf200.htm#HDRKLOG">klog</A>
+<LI><A NAME="ToC_215" HREF="auarf201.htm#HDRKNFS">knfs</A>
+<LI><A NAME="ToC_216" HREF="auarf202.htm#HDRKPASSWD">kpasswd</A>
+<LI><A NAME="ToC_217" HREF="auarf203.htm#HDRKPWVALID">kpwvalid</A>
+<LI><A NAME="ToC_218" HREF="auarf204.htm#HDRPACKAGE">package</A>
+<LI><A NAME="ToC_219" HREF="auarf205.htm#HDRPACKAGE_APROPOS">package apropos</A>
+<LI><A NAME="ToC_220" HREF="auarf206.htm#HDRPACKAGE_HELP">package help</A>
+<LI><A NAME="ToC_221" HREF="auarf207.htm#HDRPACKAGE_TEST">package_test</A>
+<LI><A NAME="ToC_222" HREF="auarf208.htm#HDRPAGSH">pagsh</A>
+<LI><A NAME="ToC_223" HREF="auarf209.htm#HDRPRDB_CHECK">prdb_check</A>
+<LI><A NAME="ToC_224" HREF="auarf210.htm#HDRPTS_INTRO">pts</A>
+<LI><A NAME="ToC_225" HREF="auarf211.htm#HDRPTS_ADDUSER">pts adduser</A>
+<LI><A NAME="ToC_226" HREF="auarf212.htm#HDRPTS_APROPOS">pts apropos</A>
+<LI><A NAME="ToC_227" HREF="auarf213.htm#HDRPTS_CHOWN">pts chown</A>
+<LI><A NAME="ToC_228" HREF="auarf214.htm#HDRPTS_CREATEGROUP">pts creategroup</A>
+<LI><A NAME="ToC_229" HREF="auarf215.htm#HDRPTS_CREATEUSER">pts createuser</A>
+<LI><A NAME="ToC_230" HREF="auarf216.htm#HDRPTS_DELETE">pts delete</A>
+<LI><A NAME="ToC_231" HREF="auarf217.htm#HDRPTS_EXAMINE">pts examine</A>
+<LI><A NAME="ToC_232" HREF="auarf218.htm#HDRPTS_HELP">pts help</A>
+<LI><A NAME="ToC_233" HREF="auarf219.htm#HDRPTS_LISTENTRIES">pts listentries</A>
+<LI><A NAME="ToC_234" HREF="auarf220.htm#HDRPTS_LISTMAX">pts listmax</A>
+<LI><A NAME="ToC_235" HREF="auarf221.htm#HDRPTS_LISTOWNED">pts listowned</A>
+<LI><A NAME="ToC_236" HREF="auarf222.htm#HDRPTS_MEMBERSHIP">pts membership</A>
+<LI><A NAME="ToC_237" HREF="auarf223.htm#HDRPTS_REMOVEUSER">pts removeuser</A>
+<LI><A NAME="ToC_238" HREF="auarf224.htm#HDRPTS_RENAME">pts rename</A>
+<LI><A NAME="ToC_239" HREF="auarf225.htm#HDRPTS_SETFIELDS">pts setfields</A>
+<LI><A NAME="ToC_240" HREF="auarf226.htm#HDRPTS_SETMAX">pts setmax</A>
+<LI><A NAME="ToC_241" HREF="auarf227.htm#HDRPTSERVER">ptserver</A>
+<LI><A NAME="ToC_242" HREF="auarf228.htm#HDRRCP">rcp (AFS version)</A>
+<LI><A NAME="ToC_243" HREF="auarf229.htm#HDRRSH">rsh (AFS version)</A>
+<LI><A NAME="ToC_244" HREF="auarf230.htm#HDRRUNNTP">runntp</A>
+<LI><A NAME="ToC_245" HREF="auarf231.htm#HDRRXDEBUG">rxdebug</A>
+<LI><A NAME="ToC_246" HREF="auarf232.htm#HDRSALVAGER">salvager</A>
+<LI><A NAME="ToC_247" HREF="auarf233.htm#HDRSCOUT">scout</A>
+<LI><A NAME="ToC_248" HREF="auarf234.htm#HDRSYS">sys</A>
+<LI><A NAME="ToC_249" HREF="auarf235.htm#HDRTOKENS">tokens</A>
+<LI><A NAME="ToC_250" HREF="auarf236.htm#HDRTRANSLATE_ET">translate_et</A>
+<LI><A NAME="ToC_251" HREF="auarf237.htm#HDRUDEBUG">udebug</A>
+<LI><A NAME="ToC_252" HREF="auarf238.htm#HDRUNLOG">unlog</A>
+<LI><A NAME="ToC_253" HREF="auarf239.htm#HDRUP">up</A>
+<LI><A NAME="ToC_254" HREF="auarf240.htm#HDRUPCLIENT">upclient</A>
+<LI><A NAME="ToC_255" HREF="auarf241.htm#HDRUPSERVER">upserver</A>
+<LI><A NAME="ToC_256" HREF="auarf242.htm#HDRUSS_INTRO">uss</A>
+<LI><A NAME="ToC_257" HREF="auarf243.htm#HDRUSS_ADD">uss add</A>
+<LI><A NAME="ToC_258" HREF="auarf244.htm#HDRUSS_APROPOS">uss apropos</A>
+<LI><A NAME="ToC_259" HREF="auarf245.htm#HDRUSS_BULK">uss bulk</A>
+<LI><A NAME="ToC_260" HREF="auarf246.htm#HDRUSS_DELETE">uss delete</A>
+<LI><A NAME="ToC_261" HREF="auarf247.htm#HDRUSS_HELP">uss help</A>
+<LI><A NAME="ToC_262" HREF="auarf248.htm#HDRVLDB_CHECK">vldb_check</A>
+<LI><A NAME="ToC_263" HREF="auarf249.htm#HDRVLSERVER">vlserver</A>
+<LI><A NAME="ToC_264" HREF="auarf250.htm#HDRVOLINFO">volinfo</A>
+<LI><A NAME="ToC_265" HREF="auarf251.htm#HDRVOLSERVER">volserver</A>
+<LI><A NAME="ToC_266" HREF="auarf252.htm#HDRVOS_INTRO">vos</A>
+<LI><A NAME="ToC_267" HREF="auarf253.htm#HDRVOS_ADDSITE">vos addsite</A>
+<LI><A NAME="ToC_268" HREF="auarf254.htm#HDRVOS_APROPOS">vos apropos</A>
+<LI><A NAME="ToC_269" HREF="auarf255.htm#HDRVOS_BACKUP">vos backup</A>
+<LI><A NAME="ToC_270" HREF="auarf256.htm#HDRVOS_BACKUPSYS">vos backupsys</A>
+<LI><A NAME="ToC_271" HREF="auarf257.htm#HDRVOS_CHANGEADDR">vos changeaddr</A>
+<LI><A NAME="ToC_272" HREF="auarf258.htm#HDRVOS_CREATE">vos create</A>
+<LI><A NAME="ToC_273" HREF="auarf259.htm#HDRVOS_DELENTRY">vos delentry</A>
+<LI><A NAME="ToC_274" HREF="auarf260.htm#HDRVOS_DUMP">vos dump</A>
+<LI><A NAME="ToC_275" HREF="auarf261.htm#HDRVOS_EXAMINE">vos examine</A>
+<LI><A NAME="ToC_276" HREF="auarf262.htm#HDRVOS_HELP">vos help</A>
+<LI><A NAME="ToC_277" HREF="auarf263.htm#HDRVOS_LISTADDRS">vos listaddrs</A>
+<LI><A NAME="ToC_278" HREF="auarf264.htm#HDRVOS_LISTPART">vos listpart</A>
+<LI><A NAME="ToC_279" HREF="auarf265.htm#HDRVOS_LISTVLDB">vos listvldb</A>
+<LI><A NAME="ToC_280" HREF="auarf266.htm#HDRVOS_LISTVOL">vos listvol</A>
+<LI><A NAME="ToC_281" HREF="auarf267.htm#HDRVOS_LOCK">vos lock</A>
+<LI><A NAME="ToC_282" HREF="auarf268.htm#HDRVOS_MOVE">vos move</A>
+<LI><A NAME="ToC_283" HREF="auarf269.htm#HDRVOS_PARTINFO">vos partinfo</A>
+<LI><A NAME="ToC_284" HREF="auarf270.htm#HDRVOS_RELEASE">vos release</A>
+<LI><A NAME="ToC_285" HREF="auarf271.htm#HDRVOS_REMOVE">vos remove</A>
+<LI><A NAME="ToC_286" HREF="auarf272.htm#HDRVOS_REMSITE">vos remsite</A>
+<LI><A NAME="ToC_287" HREF="auarf273.htm#HDRVOS_RENAME">vos rename</A>
+<LI><A NAME="ToC_288" HREF="auarf274.htm#HDRVOS_RESTORE">vos restore</A>
+<LI><A NAME="ToC_289" HREF="auarf275.htm#HDRVOS_STATUS">vos status</A>
+<LI><A NAME="ToC_290" HREF="auarf276.htm#HDRVOS_SYNCSERV">vos syncserv</A>
+<LI><A NAME="ToC_291" HREF="auarf277.htm#HDRVOS_SYNCVLDB">vos syncvldb</A>
+<LI><A NAME="ToC_292" HREF="auarf278.htm#HDRVOS_UNLOCK">vos unlock</A>
+<LI><A NAME="ToC_293" HREF="auarf279.htm#HDRVOS_UNLOCKVLDB">vos unlockvldb</A>
+<LI><A NAME="ToC_294" HREF="auarf280.htm#HDRVOS_ZAP">vos zap</A>
+<LI><A NAME="ToC_295" HREF="auarf281.htm#HDRXFS_SIZE_CHECK">xfs_size_check</A>
+<LI><A NAME="ToC_296" HREF="auarf282.htm#HDRXSTAT_CM_TEST">xstat_cm_test</A>
+<LI><A NAME="ToC_297" HREF="auarf283.htm#HDRXSTAT_FS_TEST">xstat_fs_test</A>
+</MENU>
+<P><B><A NAME="ToC_298" HREF="auarf284.htm#HDRINDEX">Index</A></B><BR>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf000.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf003.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

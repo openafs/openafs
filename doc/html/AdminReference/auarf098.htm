@@ -1,0 +1,367 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 4//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3672/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 3 Oct 2000 at 16:18:30                -->
+<META HTTP-EQUIV="updated" CONTENT="Tue, 03 Oct 2000 16:18:29">
+<META HTTP-EQUIV="review" CONTENT="Wed, 03 Oct 2001 16:18:29">
+<META HTTP-EQUIV="expires" CONTENT="Thu, 03 Oct 2002 16:18:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf097.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf099.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRBOS_CREATE" HREF="auarf002.htm#ToC_112">bos create</A></H2>
+<A NAME="IDX4477"></A>
+<A NAME="IDX4478"></A>
+<A NAME="IDX4479"></A>
+<A NAME="IDX4480"></A>
+<A NAME="IDX4481"></A>
+<A NAME="IDX4482"></A>
+<A NAME="IDX4483"></A>
+<A NAME="IDX4484"></A>
+<A NAME="IDX4485"></A>
+<A NAME="IDX4486"></A>
+<P><STRONG>Purpose</STRONG>
+<P>Defines a new process in the <B>/usr/afs/local/BosConfig</B> file and
+starts it running
+<P><STRONG>Synopsis</STRONG>
+<PRE><B>bos create -server</B> &lt;<VAR>machine&nbsp;name</VAR>>  <B>-instance</B> &lt;<VAR>server process name</VAR>>
+           <B>-type</B> &lt;<VAR>server type</VAR>>  <B>-cmd</B> &lt;<VAR>command lines</VAR>><SUP>+</SUP>
+           [<B>-notifier</B> &lt;<VAR>Notifier program</VAR>>]  [<B>-cell</B> &lt;<VAR>cell&nbsp;name</VAR>>]
+           [<B>-noauth</B>]  [<B>-localauth</B>]  [<B>-help</B>]
+   
+<B>bos c -s</B> &lt;<VAR>machine&nbsp;name</VAR>>  <B>-i</B> &lt;<VAR>server process name</VAR>>  <B>-t</B> &lt;<VAR>server type</VAR>>
+      <B>-cm</B> &lt;<VAR>command lines</VAR>><SUP>+</SUP>  [<B>-not</B> &lt;<VAR>Notifier program</VAR>>]  [<B>-ce</B> &lt;<VAR>cell&nbsp;name</VAR>>]
+      [<B>-noa</B>]  [<B>-l</B>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>Description</STRONG>
+<P>The <B>bos create</B> command creates a server process entry in the
+<B>/usr/afs/local/BosConfig</B> file on the server machine named by the
+<B>-server</B> argument, sets the process's status to <B>Run</B>
+in the <B>BosConfig</B> file and in memory, and starts the process.
+<P>A server process's entry in the <B>BosConfig</B> file defines its
+name, its type, the command that initializes it, and optionally, the name of a
+notifier program that runs when the process terminates.
+<P><STRONG>Options</STRONG>
+<DL>
+<P><DT><B><B>-server</B>
+</B><DD>Indicates the server machine on which to define and start the new
+process. Identify the machine by IP address or its host name (either
+fully-qualified or abbreviated unambiguously). For details, see the
+introductory reference page for the <B>bos</B> command suite.
+<P><DT><B><B>-instance</B>
+</B><DD>Names the process to define and start. Any name is acceptable, but
+for the sake of simplicity it is best to use the last element of the
+process's binary file pathname, and to use the same name on every server
+machine. The conventional names, as used in all AFS documentation,
+are: 
+<DL>
+<P><DT><B><B>buserver</B>
+</B><DD>The Backup Server process
+<A NAME="IDX4487"></A>
+<A NAME="IDX4488"></A>
+<P><DT><B><B>fs</B>
+</B><DD>The process that combines the File Server, Volume Server, and Salvager
+processes (<B>fileserver</B>, <B>volserver</B>, and
+<B>salvager</B>)
+<A NAME="IDX4489"></A>
+<A NAME="IDX4490"></A>
+<P><DT><B><B>kaserver</B>
+</B><DD>The Authentication Server process
+<A NAME="IDX4491"></A>
+<A NAME="IDX4492"></A>
+<P><DT><B><B>ptserver</B>
+</B><DD>The Protection Server process
+<A NAME="IDX4493"></A>
+<A NAME="IDX4494"></A>
+<P><DT><B><B>runntp</B>
+</B><DD>The controller process for the Network Time Protocol Daemon
+<A NAME="IDX4495"></A>
+<A NAME="IDX4496"></A>
+<P><DT><B><B>upclientbin</B>
+</B><DD>The client portion of the Update Server process that retrieves binary
+files from the <B>/usr/afs/bin</B> directory of the binary distribution
+machine for this machine's CPU/operating system type. (The name of
+the binary is <B>upclient</B>, but the <B>bin</B> suffix distinguishes
+this process from <B>upclientetc</B>.)
+<A NAME="IDX4497"></A>
+<A NAME="IDX4498"></A>
+<P><DT><B><B>upclientetc</B>
+</B><DD>The client portion of the Update Server process that retrieves
+configuration files from the <B>/usr/afs/etc</B> directory of the system
+control machine. Do not run this process in cells that use the
+international edition of AFS. (The name of the binary is
+<B>upclient</B>, but the <B>etc</B> suffix distinguishes this process
+from <B>upclientbin</B>.)
+<P><DT><B><B>upserver</B>
+</B><DD>The server portion of the Update Server process
+<A NAME="IDX4499"></A>
+<A NAME="IDX4500"></A>
+<P><DT><B><B>vlserver</B>
+</B><DD>The Volume Location (VL) Server process
+<A NAME="IDX4501"></A>
+<A NAME="IDX4502"></A>
+</DL>
+<P><DT><B><B>-type</B>
+</B><DD>Specifies the process's type. The acceptable values are:
+<P>
+<DL>
+<P><DT><B><B>cron</B>
+</B><DD>Use this value for cron-type processes that the BOS Server starts only at
+a defined daily or weekly time, rather than whenever it detects that the
+process has terminated. AFS does not define any such processes by
+default, but makes this value available for administrator use. Define
+the time for command execution as part of the <B>-cmd</B> argument to the
+<B>bos create</B> command.
+<P><DT><B><B>fs</B>
+</B><DD>Use this value only for the <B>fs</B> process, which combines the File
+Server, Volume Server and Salvager processes. If one of the component
+processes terminates, the BOS Server shuts down and restarts the processes in
+the appropriate order.
+<P><DT><B><B>simple</B>
+</B><DD>Use this value for all processes listed as acceptable values to the
+<B>-instance</B> argument, except for the <B>fs</B> process.
+There are no interdependencies between simple processes, so the BOS Server can
+stop and start them independently as necessary.
+</DL>
+<P><DT><B><B>-cmd</B>
+</B><DD>Specifies each command the BOS Server runs to start the process.
+Specify no more than six commands (which can include the command's
+options, in which case the entire string is surrounded by double quotes);
+any additional commands are ignored.
+<P>For a simple process, provide the complete pathname of the process's
+binary file on the local disk (for example, <B>/usr/afs/bin/ptserver</B>
+for the Protection Server). If including any of the initialization
+command's options, surround the entire command in double quotes (<B>"
+"</B>). The <B>upclient</B> process has a required argument, and
+the commands for all other processes take optional arguments.
+<A NAME="IDX4503"></A>
+<P>For the <B>fs</B> process, provide the complete pathname of the local
+disk binary file for each of the component processes:
+<B>fileserver</B>, <B>volserver</B>, and <B>salvager</B>, in that
+order. The standard binary directory is <B>/usr/afs/bin</B>.
+If including any of an initialization command's options, surround the
+entire command in double quotes (<B>" "</B>).
+<A NAME="IDX4504"></A>
+<P>For a <B>cron</B> process, provide two parameters:
+<A NAME="IDX4505"></A>
+<UL>
+<P><LI>The complete local disk pathname of either an executable file or a command
+from one of the AFS suites (complete with all of the necessary
+arguments). Surround this parameter with double quotes (<B>" "</B>)
+if it contains spaces.
+<P><LI>A specification of when the BOS Server executes the file or command
+indicated by the first parameter. There are three acceptable
+values: 
+<UL>
+<P><LI>The string <B>now</B>, which directs the BOS Server to execute the
+file or command immediately and only once. It is usually simpler to
+issue the command directly or issue the <B>bos exec</B> command.
+<P><LI>A time of day. The BOS Server executes the file or command daily at
+the indicated time. Separate the hours and minutes with a colon
+(<I>hh</I>:<I>MM</I>), and use either 24-hour format, or a value
+in the range from <B>1:00</B> through <B>12:59</B> with
+the addition of <B>am</B> or <B>pm</B>. For example, both
+<B>14:30</B> and <B>"2:30 pm"</B> indicate 2:30 in
+the afternoon. Surround this parameter with double quotes (<B>"
+"</B>) if it contains a space.
+<P><LI>A day of the week and time of day, separated by a space and surrounded
+with double quotes (<B>" "</B>). The BOS Server executes the file
+or command weekly at the indicated day and time. For the day, provide
+either the whole name or the first three letters, all in lowercase letters
+(<B>sunday</B> or <B>sun</B>, <B>thursday</B> or <B>thu</B>,
+and so on). For the time, use the same format as when specifying the
+time alone.
+</UL>
+</UL>
+<P><DT><B><B>-notifier</B>
+</B><DD>Specifies the complete pathname on the local disk of a program that the
+BOS Server invokes when the process terminates. The AFS distribution
+does not include any notifier programs, but this argument is available for
+administrator use. See the <B>Related Information</B>
+section.
+<P><DT><B><B>-cell</B>
+</B><DD>Names the cell in which to run the command. Do not combine this
+argument with the <B>-localauth</B> flag. For more details, see the
+introductory <B>bos</B> reference page.
+<P><DT><B><B>-noauth</B>
+</B><DD>Assigns the unprivileged identity <B>anonymous</B> to the
+issuer. Do not combine this flag with the <B>-localauth</B>
+flag. For more details, see the introductory <B>bos</B> reference
+page.
+<P><DT><B><B>-localauth</B>
+</B><DD>Constructs a server ticket using a key from the local
+<B>/usr/afs/etc/KeyFile</B> file. The <B>bos</B> command
+interpreter presents the ticket to the BOS Server during mutual
+authentication. Do not combine this flag with the <B>-cell</B> or
+<B>-noauth</B> options. For more details, see the introductory
+<B>bos</B> reference page.
+<P><DT><B>-help
+</B><DD>Prints the online help for this command. All other valid options
+are ignored.
+</DL>
+<P><STRONG>Examples</STRONG>
+<P>The following command defines and starts the simple process
+<B>kaserver</B> on the machine <B>fs3.abc.com</B>:
+<PRE>   % <B>bos create -server fs3.abc.com -instance kaserver -type simple</B>  \              
+                <B>-cmd /usr/afs/bin/kaserver</B>
+   
+</PRE>
+<P>The following command defines and starts the simple process
+<B>upclientbin</B> on the machine
+<B>fs4.abc.com</B>. It references
+<B>fs1.abc.com</B> as the source for updates to binary
+files, checking for changes to the <B>/usr/afs/bin</B> directory every 120
+seconds.
+<PRE>   % <B>bos create -server fs4.abc.com -instance upclientbin -type simple</B>  \
+                <B>-cmd "/usr/afs/bin/upclient fs1.abc.com -clear -t 120</B>  \
+                <B>/usr/afs/bin"</B>
+   
+</PRE>
+<P>The following command creates the fs process <B>fs</B> on the machine
+<B>fs4.abc.com</B>. Type the command on a single
+line.
+<PRE>   % <B>bos create -server fs4.abc.com -instance fs -type fs</B>  \
+                <B>-cmd /usr/afs/bin/fileserver /usr/afs/bin/volserver</B>  \
+                <B>/usr/afs/bin/salvager</B>
+   
+</PRE>
+<P>The following command creates a <B>cron</B> process called
+<B>userbackup</B> on the machine <B>fs5.abc.com</B>, so
+that the BOS Server issues the indicated <B>vos backupsys</B> command each
+day at 3:00 a.m. (the command creates a backup version of
+every volume in the file system whose name begins with
+<B>user</B>). Note that the issuer provides the complete pathname
+to the <B>vos</B> command, includes the <B>-localauth</B> flag on it,
+and types the entire <B>bos create</B> command on one line.
+<PRE>   % <B>bos create -server fs5.abc.com -instance userbackup -type cron</B>  \      
+                <B>-cmd "/usr/afs/bin/vos backupsys -prefix user -localauth" 03:00</B>
+   
+</PRE>
+<P><STRONG>Privilege Required</STRONG>
+<P>The issuer must be listed in the <B>/usr/afs/etc/UserList</B> file on
+the machine named by the <B>-server</B> argument, or must be logged onto a
+server machine as the local superuser <B>root</B> if the
+<B>-localauth</B> flag is included.
+<P><STRONG>Related Information</STRONG>
+<P>If the <B>-notifier</B> argument is included when this command is used
+to define and start a process, the BOS Server invokes the indicated
+<I>notifier program</I> when the process exits. The intended use of
+a notifier program is to inform administrators when a process exits
+unexpectedly, but it can be used to perform any appropriate actions.
+The following paragraphs describe the <B>bnode</B> and
+<B>bnode_proc</B> structures in which the BOS Server records information
+about the exiting process. The list of AFS commands related to this one
+follows.
+<P>The BOS Server constructs and sends on the standard output stream one
+<B>bnode</B> and one <B>bnode_proc</B> structure for each exiting
+process associated with the notifier program. It brackets each
+structure with appropriate <TT>BEGIN</TT> and <TT>END</TT> statements
+(<TT>BEGIN bnode</TT> and <TT>END bnode</TT>, <TT>BEGIN bnode_proc</TT>
+and <TT>END bnode_proc</TT>), which immediately follow the preceding newline
+character with no intervening spaces or other characters. If the
+notifier program does not need information from a structure, it can scan ahead
+in the input stream for the <TT>END</TT> statement.
+<P>In general, each field in a structure is a string of ASCII text terminated
+by the newline character. The format of the information within a
+structure possibly varies slightly depending on the type of process associated
+with the notifier program.
+<P>The C code for the <B>bnode</B> and <B>bnode_proc</B> structures
+follows. Note that the structures sent by the BOS Server do not
+necessarily include all of the fields described here, because some are used
+only for internal record keeping. The notifier process must robustly
+handle the absence of expected fields, as well as the presence of unexpected
+fields, on the standard input stream.
+<P>For proper performance, the notifier program must continue processing the
+input stream until it detects the end-of-file (EOF). The BOS Server
+closes the standard input file descriptor to the notifier process when it has
+completed delivery of the data, and it is the responsibility of the notifier
+process to terminate properly.
+<P><B>struct bnode contents</B>
+<PRE>   struct bnode {
+      struct bnode *next;      /* next pointer in top-level's list */
+      char *name;              /* instance name */
+      long nextTimeout;        /* next time this guy should be awakened */
+      long period;             /* period between calls */
+      long rsTime;             /* time we started counting restarts */
+      long rsCount;            /* count of restarts since rsTime */
+      struct bnode_type *type; /* type object */
+      struct bnode_ops *ops;   /* functions implementing bnode class */
+      long procStartTime;      /* last time a process was started */
+      long procStarts;         /* number of process starts */
+      long lastAnyExit;        /* last time a process exited for any reason */
+      long lastErrorExit;      /* last time a process exited unexpectedly */
+      long errorCode;          /* last exit return code */
+      long errorSignal;        /* last proc terminating signal */
+      char *lastErrorName;     /* name of proc that failed last */
+      short refCount;          /* reference count */
+      short flags;             /* random flags */
+      char goal;               /* 1=running or 0=not running */
+      char fileGoal;           /* same, but to be stored in file */
+};
+   
+</PRE>
+<P><B>format of struct bnode explosion</B>
+<PRE>   printf("name: %s\n",tp->name);
+   printf("rsTime: %ld\n", tp->rsTime);
+   printf("rsCount: %ld\n", tp->rsCount);
+   printf("procStartTime: %ld\n", tp->procStartTime);
+   printf("procStarts: %ld\n", tp->procStarts);
+   printf("lastAnyExit: %ld\n", tp->lastAnyExit);
+   printf("lastErrorExit: %ld\n", tp->lastErrorExit);
+   printf("errorCode: %ld\n", tp->errorCode);
+   printf("errorSignal: %ld\n", tp->errorSignal);
+   printf("lastErrorName: %s\n", tp->lastErrorName);
+   printf("goal: %d\n", tp->goal);
+   
+</PRE>
+<P><B>struct bnode_proc contents</B>
+<PRE>   struct bnode_proc {
+      struct bnode_proc *next; /* next guy in top-level's list */
+      struct bnode *bnode;     /* bnode creating this process */
+      char *comLine;           /* command line used to start this process */
+      char *coreName;          /* optional core file component name */
+      long pid;                /* pid if created */
+      long lastExit;           /* last termination code */
+      long lastSignal;         /* last signal that killed this guy */
+      long flags;              /* flags giving process state */
+};
+   
+</PRE>
+<P><B>format of struct bnode_proc explosion</B>
+<PRE>   printf("comLine: %s\n", tp->comLine);
+   printf("coreName: %s\n", tp->coreName);
+   printf("pid: %ld\n", tp->pid);
+   printf("lastExit: %ld\n", tp->lastExit);
+   printf("lastSignal: %ld\n", tp->lastSignal);
+   
+</PRE>
+<P><A HREF="auarf016.htm#HDRBOSCONFIG">BosConfig</A>
+<P><A HREF="auarf023.htm#HDRKEYFILE">KeyFile</A>
+<P><A HREF="auarf035.htm#HDRUSERLIST">UserList</A>
+<P><A HREF="auarf093.htm#HDRBOS_INTRO">bos</A>
+<P><A HREF="auarf125.htm#HDRBUSERVER">buserver</A>
+<P><A HREF="auarf129.htm#HDRFILESERVER">fileserver</A>
+<P><A HREF="auarf198.htm#HDRKASERVER">kaserver</A>
+<P><A HREF="auarf227.htm#HDRPTSERVER">ptserver</A>
+<P><A HREF="auarf230.htm#HDRRUNNTP">runntp</A>
+<P><A HREF="auarf232.htm#HDRSALVAGER">salvager</A>
+<P><A HREF="auarf240.htm#HDRUPCLIENT">upclient</A>
+<P><A HREF="auarf241.htm#HDRUPSERVER">upserver</A>
+<P><A HREF="auarf249.htm#HDRVLSERVER">vlserver</A>
+<P><A HREF="auarf251.htm#HDRVOLSERVER">volserver</A>
+<P><A HREF="auarf256.htm#HDRVOS_BACKUPSYS">vos backupsys</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf097.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf099.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

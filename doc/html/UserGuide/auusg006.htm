@@ -1,0 +1,354 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 4//EN">
+<HTML><HEAD>
+<TITLE>User Guide</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3629/auusg000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 2 Oct 2000 at 14:38:44                -->
+<META HTTP-EQUIV="updated" CONTENT="Mon, 02 Oct 2000 14:38:42">
+<META HTTP-EQUIV="review" CONTENT="Tue, 02 Oct 2001 14:38:42">
+<META HTTP-EQUIV="expires" CONTENT="Wed, 02 Oct 2002 14:38:42">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>User Guide</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auusg002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auusg005.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auusg007.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auusg013.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<HR><H1><A NAME="HDRWQ38" HREF="auusg002.htm#ToC_61">Displaying Information about AFS</A></H1>
+<P>This chapter explains how to display information that can
+help you use AFS more effectively. It includes the following
+sections.
+<DL>
+<DD><P><A HREF="#HDRWQ39">Displaying Volume Quota</A>
+<DD><P><A HREF="#HDRWQ40">Locating Files and Directories</A>.
+<DD><P><A HREF="#HDRWQ41">Checking the Status of Server Machines</A>
+<DD><P><A HREF="#HDRWQ42">Determining Access to Foreign Cells</A>
+<DD><P><A HREF="#HDRWQ43">Displaying Server Preference Ranks</A>
+</DL>
+<HR><H2><A NAME="HDRWQ39" HREF="auusg002.htm#ToC_62">Displaying Volume Quota</A></H2>
+<P>By convention, the files in your home directory are stored
+together in a single volume. (For information about volumes, see <A HREF="auusg004.htm#HDRWQ6">Volumes and Mount Points</A>.) To allocate your cell's available disk space
+as fairly as possible, your system administrators impose a size limit, or
+<I>quota</I>, on each volume. You cannot store more data in a
+volume than its quota allows. If a volume is close to its quota, you
+sometimes cannot save changes you have made to files stored in the
+volume.
+<P>The amount of space available on the partition that houses the volume also
+limits how large the volume can grow. If the disk partition is full,
+you can become unable to save changes to a file even though the volume is not
+close to its quota.
+<A NAME="IDX884"></A>
+<A NAME="IDX885"></A>
+<P>Check the quota on your home volume periodically to make sure you have
+adequate space. Also, if you encounter problems saving a file, check
+the quota of the volume in which the file is stored. Use the following
+commands to display volume quota.
+<UL>
+<P><LI>The <B>fs quota</B> command lists the percentage of the volume quota
+used.
+<P><LI>Both the <B>fs listquota</B> and <B>fs examine</B> commands list
+the volume name, its maximum size (quota), and its current size. They
+also report the following additional information.
+<UL>
+<P><LI>The <B>fs listquota</B> command lists the percentage used of both the
+volume and the partition.
+<P><LI>The <B>fs examine</B> command lists the partition's size, the
+amount of space currently used, and any messages associated with the
+volume.
+</UL>
+</UL>
+<P><H3><A NAME="Header_63" HREF="auusg002.htm#ToC_63">To Display Percentage of Quota Used</A></H3>
+<A NAME="IDX886"></A>
+<A NAME="IDX887"></A>
+<A NAME="IDX888"></A>
+<A NAME="IDX889"></A>
+<P>Issue the <B>fs quota</B> command to display the percentage of the
+quota currently used for the volume that contains a specified directory or
+file.
+<PRE>   % <B>fs quota</B> [&lt;<VAR>dir/file&nbsp;path</VAR>><SUP>+</SUP>]
+</PRE>
+<P>where <VAR>dir/file path</VAR> specifies the pathname of a file or directory
+in each volume for which to display quota information. If you do not
+provide a pathname, the output reports quota information for the volume that
+contains the current working directory.
+<P><H3><A NAME="Header_64" HREF="auusg002.htm#ToC_64">Example: Displaying Percentage of Quota Used</A></H3>
+<P>
+<A NAME="IDX890"></A>
+The following example displays the percentage of quota used for the volumes
+that contain two user home directories in the ABC Corporation cell. 
+<PRE>   % <B>cd /afs/abc.com/usr</B>
+   % <B>fs quota terry pat</B>
+   34% of quota used.
+   85% of quota used.
+</PRE>
+<P><H3><A NAME="Header_65" HREF="auusg002.htm#ToC_65">To Display Quota and Other Information about a Volume</A></H3>
+<A NAME="IDX891"></A>
+<A NAME="IDX892"></A>
+<A NAME="IDX893"></A>
+<A NAME="IDX894"></A>
+<A NAME="IDX895"></A>
+<A NAME="IDX896"></A>
+<P>Issue the <B>fs listquota</B> command to display the following
+information:
+<UL>
+<P><LI>The name of the volume that houses each specified file or directory
+<P><LI>The quota, expressed as a number of kilobytes (<TT>1024</TT> indicates
+one megabyte)
+<P><LI>The current size of the volume (the number of kilobytes of currently used)
+<P><LI>The percentage of the quota used
+<P><LI>The percentage of space used on the disk partition housing the volume
+</UL>
+<P>The command's syntax is as follows.
+<PRE>   % <B>fs listquota</B> [&lt;<VAR>dir/file&nbsp;path</VAR>><SUP>+</SUP>]
+</PRE>
+<P>where <VAR>dir/file path</VAR> specifies the pathname of a file or directory
+in each volume for which to display quota information. If you do not
+provide a pathname, the output reports quota information for the volume that
+contains the current working directory.
+<P><H3><A NAME="Header_66" HREF="auusg002.htm#ToC_66">Example: Display Quota and Other Information about a Volume</A></H3>
+<A NAME="IDX897"></A>
+<P>The following example displays quota information about the volume that
+houses the home directory of user <B>terry</B>.
+<PRE>   % <B>fs listquota ~terry</B>
+   Volume Name     Quota    Used    % Used   Partition 
+   user.terry      10000    3400       34%         86% 
+</PRE>
+<P><H3><A NAME="Header_67" HREF="auusg002.htm#ToC_67">To Display Quota and Other Information about a Volume and Partition</A></H3>
+<A NAME="IDX898"></A>
+<A NAME="IDX899"></A>
+<A NAME="IDX900"></A>
+<A NAME="IDX901"></A>
+<A NAME="IDX902"></A>
+<A NAME="IDX903"></A>
+<P>Issue the <B>fs examine</B> command to display the following
+information about a volume and the partition it resides on:
+<UL>
+<P><LI>The volume's ID number (abbreviated in the output as <TT>vid</TT>)
+<P><LI>The volume name
+<P><LI>The volume's quota and current size, in kilobytes
+<P><LI>The number of kilobyte blocks available on the disk partition housing the
+volume and the total size of that partition
+<P><LI>An <I>off-line message</I> associated with the volume, if any, as set
+by a system administrator
+</UL>
+<P>The command's syntax is as follows.
+<PRE>   % <B>fs examine</B> [&lt;<VAR>dir/file&nbsp;path</VAR>><SUP>+</SUP>]
+</PRE>
+<P>where <VAR>dir/file path</VAR> specifies the pathname of a file or directory
+in each volume for which to display quota information. If you do not
+provide a pathname, the output reports quota information for the volume that
+contains the current working directory.
+<P><H3><A NAME="Header_68" HREF="auusg002.htm#ToC_68">Example: Displaying Quota and Other Information about a Volume and Partition</A></H3>
+<A NAME="IDX904"></A>
+<P>The following example displays quota and other information about the volume
+that houses the current working directory.
+<PRE>   % <B>fs examine</B>
+   Volume status for vid = 536871122 named user.terry
+   Current disk quota is 10000
+   Current blocks used are 5745
+   The partition has 1593 blocks available out of 99162
+</PRE>
+<HR><H2><A NAME="HDRWQ40" HREF="auusg002.htm#ToC_69">Locating Files and Directories</A></H2>
+<A NAME="IDX905"></A>
+<A NAME="IDX906"></A>
+<P>Normally, you do not need to know which file server machine stores the
+volume containing a file or directory. Given the pathname to a file,
+the Cache Manager on your client machine automatically accesses the
+appropriate server machine.
+<P>If you become unable to access a file, however, it can be useful to know
+which file server machine houses it. You can then check whether the
+File Server process or machine is functioning correctly, as described in <A HREF="#HDRWQ41">Checking the Status of Server Machines</A>. Or, if your system administrators schedule downtime
+for a machine, you can learn whether the outage is likely to prevent you from
+accessing certain files.
+<P><H3><A NAME="Header_70" HREF="auusg002.htm#ToC_70">To Display a File or Directory's Location</A></H3>
+<A NAME="IDX907"></A>
+<A NAME="IDX908"></A>
+<A NAME="IDX909"></A>
+<A NAME="IDX910"></A>
+<P>Issue the <B>fs whereis</B> command to display the file server machine
+on which a file or directory is stored.
+<PRE>   % <B>fs whereis</B> [&lt;<VAR>dir/file&nbsp;path</VAR>><SUP>+</SUP>]
+</PRE>
+<P>where <VAR>dir/file path</VAR> specifies the pathname of each file or
+directory for which you want location information. If you do not
+provide a pathname, the output reports the machine housing the volume that
+contains the current working directory.
+<P>If the output mentions more than one machine, there is a copy of the volume
+at each site (the volume is <I>replicated</I>). Your system
+administrators can choose to replicate volumes that contain information many
+people need to use, both for load balancing reasons and to make the
+information available even if there is an outage on one machine that houses
+the volume.
+<P><H3><A NAME="Header_71" HREF="auusg002.htm#ToC_71">Example: Displaying Directory Location</A></H3>
+<A NAME="IDX911"></A>
+<P>The following example displays the names of the server machines that house
+the home volumes for users <B>terry</B> and <B>pat</B>.
+<PRE>   % <B>cd /afs/abc.com/usr</B>
+   % <B>fs whereis terry pat</B>
+   File /afs/abc.com/usr/terry is on host fs2.abc.com
+   File /afs/abc.com/usr/pat is on host fs3.abc.com
+</PRE>
+<HR><H2><A NAME="HDRWQ41" HREF="auusg002.htm#ToC_72">Checking the Status of Server Machines</A></H2>
+<A NAME="IDX912"></A>
+<A NAME="IDX913"></A>
+<A NAME="IDX914"></A>
+<P>Sometimes one or more server machines in your cell become inaccessible due
+to hardware problems, software problems, or routine maintenance. During
+the outage, you cannot access files stored on those machines or save any
+changes you have made to files that are stored on those machines. (Your
+Cache Manager possibly has copies of the files stored locally, which you can
+still work with.)
+<P>To check the status of server machines, use the <B>fs checkservers</B>
+command. If a server machine has more than one network interface
+address (is <I>multihomed</I>), the Cache Manager sends the
+status-checking message to all of the machine's interfaces. If at
+least one of the server's interfaces replies, the command's output
+reports the machine as accessible. If there is no reply from any of the
+interfaces, the output reports the machine as inaccessible but displays only
+one of the interfaces (usually the one with the best preference rank; see
+<A HREF="#HDRWQ43">Displaying Server Preference Ranks</A>).
+<P>To check the status of different groups of server machines, combine the
+<B>fs checkservers</B> command's options as indicated:
+<UL>
+<P><LI>To check file server machines in the local cell only, do not include any
+options
+<P><LI>To check file server machines in a particular foreign cell only, include
+the <B>-cell</B> argument
+<P><LI>To check every file server machine that your Cache Manager has contacted
+in any cell, include the <B>-all</B> flag
+</UL>
+<P>It can take several minutes for the command shell prompt to return, because
+the <B>fs</B> command interpreter waits a timeout period before concluding
+that an unresponsive machine is really inaccessible. To have the
+command shell prompt return immediately, add the ampersand (<B>&amp;</B>),
+which runs the <B>fs checkservers</B> command in the background.
+<P><H3><A NAME="Header_73" HREF="auusg002.htm#ToC_73">To Check File Server Machine Status</A></H3>
+<A NAME="IDX915"></A>
+<A NAME="IDX916"></A>
+<P>Issue the <B>fs checkservers</B> command to check the status of file
+server machines.
+<PRE>   % <B>fs checkservers</B> [<B>-cell</B> &lt;<VAR>cell&nbsp;to&nbsp;check</VAR>>] [<B>-all</B>]  [<B>&amp;</B>]
+</PRE>
+<P>where
+<DL>
+<P><DT><B>-cell
+</B><DD>Names each cell for which to check server machine status. Do not
+combine this argument and the <B>-all</B> flag.
+<P><DT><B>-all
+</B><DD>Checks the status of all server machines. Do not combine this flag
+and the <B>-cell</B> argument.
+</DL>
+<P>The following message indicates that all server machines replied to the
+Cache Manager's status-checking message:
+<PRE>   All servers are running.
+</PRE>
+<P>Otherwise, a message like the following lists the inaccessible
+machines:
+<PRE>   These servers unavailable due to network or server problems: <VAR>list&nbsp;of&nbsp;machines</VAR>.
+</PRE>
+<P><H3><A NAME="Header_74" HREF="auusg002.htm#ToC_74">Example: Checking Server Machine Status</A></H3>
+<A NAME="IDX917"></A>
+<P>The following example checks the status of every file server machine the
+Cache Manager has contacted in any cell. Two machines are not
+responding.
+<PRE>   % <B>fs checkservers -all &amp;</B>
+   These servers unavailable due to network or server problems: 
+      fs1.abc.com server7.stateu.edu.
+</PRE>
+<HR><H2><A NAME="HDRWQ42" HREF="auusg002.htm#ToC_75">Determining Access to Foreign Cells</A></H2>
+<A NAME="IDX918"></A>
+<P>The Cache Manager maintains a list of foreign cells that it knows how to
+reach. A cell must appear in the list for you to access its AFS
+filespace. (In addition, the ACL on each directory in the pathname to
+the file must grant you the necessary permissions, and your system
+administrator must mount the cell in the local AFS filespace--by
+convention, just under the <B>/afs</B> directory.)
+<P><H3><A NAME="Header_76" HREF="auusg002.htm#ToC_76">To Display Foreign Cells</A></H3>
+<A NAME="IDX919"></A>
+<A NAME="IDX920"></A>
+<P>Issue the <B>fs listcells</B> command to display the cells you can
+access from this client machine. It can take several minutes for the
+command shell prompt to return. The Cache Manager stores the machines
+as IP addresses, but has the addresses translated to names before displaying
+them. To have the command shell prompt return immediately, use the
+ampersand (<B>&amp;</B>) to run the <B>fs listcells</B> command in the
+background as in the following example.
+<PRE>   % <B>fs listcells &amp;</B>
+   Cell abc.com  on hosts 
+        db1.abc.com
+        db2.abc.com
+        db3.abc.com
+   Cell test.abc.com on hosts 
+        test4.abc.com.
+   Cell stateu.edu on hosts 
+        sv5.stateu.edu.
+        sv2.stateu.edu.
+        sv11.stateu.edu.
+   Cell def.com on hosts 
+        serverA.def.com 
+</PRE>
+<HR><H2><A NAME="HDRWQ43" HREF="auusg002.htm#ToC_77">Displaying Server Preference Ranks</A></H2>
+<A NAME="IDX921"></A>
+<A NAME="IDX922"></A>
+<A NAME="IDX923"></A>
+<P>The Cache Manager stores a list of preference ranks for file server
+machines. When it needs to access a file or directory, the Cache
+Manager compares the ranks of the file server machines that house the relevant
+volume. It first tries to access the volume on the machine with the
+best rank. (If a file server machine is multihomed--has more than
+one network interface--the Cache Manager actually assigns a separate rank
+to each interface.)
+<P>The Cache Manager assigns a default rank to a file server machine interface
+by comparing its own IP address to the interface's IP address. It
+assigns a better rank to interfaces that are on its own subnetwork or network
+than to interfaces on other networks. Therefore, the ranks bias the
+Cache Manager to fetch files from file server machines that are close in terms
+of network distance, which tends to reduce network traffic and help the Cache
+Manager deliver data to applications more quickly.
+<P>The Cache Manager stores each rank as a pairing of a file server machine
+interface's IP address and an integer rank from the range <B>0</B> to
+<B>65,534</B>. A lower number is a better rank. To display
+the server preference ranks on the local client machine, use the <B>fs
+getserverprefs</B> command.
+<P>The Cache Manager stores a separate but similar set of ranks for Volume
+Location (VL) Servers, which tell the Cache Manager the location of volumes
+that house files and directories. To display those ranks, add the
+<B>-vlservers</B> flag to the <B>fs getserverprefs</B> command.
+<P>If the default ranks do not seem to result in the best performance, your
+system administrator can change them. Ask your system administrator
+about the ranks if appropriate.
+<P><H3><A NAME="Header_78" HREF="auusg002.htm#ToC_78">To Display Server Preference Ranks</A></H3>
+<P>Issue the <B>fs getserverprefs</B> command to display the file
+server machine preference ranks used by the Cache Manager on the local
+machine. To display VL Server ranks, add the <B>-vlservers</B>
+flag. By default, the Cache Manager has the IP address of each
+interface translated into a hostname before displaying it. To bypass
+the translation and display IP addresses, include the <B>-numeric</B>
+flag. This can significantly speed up the command's output.
+<PRE>   % <B>fs getserverprefs</B> [<B>-numeric</B>] [<B>-vlservers</B>]
+</PRE>
+<P>The following example displays the file server machine preference ranks for
+a client machine in the <B>abc.com</B> cell. The ranks of
+the file server machines in that cell are lower than the ranks of the file
+server machines from the foreign cell, <B>def.com</B>.
+Because the <B>-numeric</B> flag is not used, the output displays
+hostnames. The appearance of an IP address for two machines indicates
+that translating them was not possible.
+<PRE>   % <B>fs getserverprefs</B>
+   fs2.abc.com           20007
+   fs3.abc.com           30002
+   fs1.abc.com           20011
+   fs4.abc.com           30010
+   server1.def.com       40002
+   192.12.105.34         40000
+   server6.def.com       40012
+   192.12.105.37         40005
+</PRE>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auusg002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auusg005.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auusg007.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auusg013.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

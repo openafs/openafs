@@ -1,0 +1,85 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 4//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3672/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 3 Oct 2000 at 16:18:30                -->
+<META HTTP-EQUIV="updated" CONTENT="Tue, 03 Oct 2000 16:18:29">
+<META HTTP-EQUIV="review" CONTENT="Wed, 03 Oct 2001 16:18:29">
+<META HTTP-EQUIV="expires" CONTENT="Thu, 03 Oct 2002 16:18:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf103.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf105.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRBOS_HELP" HREF="auarf002.htm#ToC_118">bos help</A></H2>
+<A NAME="IDX4545"></A>
+<A NAME="IDX4546"></A>
+<A NAME="IDX4547"></A>
+<P><STRONG>Purpose</STRONG>
+<P>Displays the syntax of specified <B>bos</B> commands or lists
+functional descriptions of all <B>bos</B> commands
+<P><STRONG>Synopsis</STRONG>
+<PRE><B>bos help</B> [<B>-topic</B> &lt;<VAR>help string</VAR>><SUP>+</SUP>]  [<B>-help</B>]
+     
+<B>bos h</B> [<B>-t</B> &lt;<VAR>help string</VAR>><SUP>+</SUP>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>Description</STRONG>
+<P>The <B>bos help</B> command displays the complete online help entry
+(short description and syntax statement) for each command operation code
+specified by the <B>-topic</B> argument. If the <B>-topic</B>
+argument is omitted, the output includes the first line (name and short
+description) of the online help entry for every <B>bos</B> command.
+<P>To list every <B>bos</B> command whose name or short description
+includes a specified keyword, use the <B>bos apropos</B> command.
+<P><STRONG>Options</STRONG>
+<DL>
+<P><DT><B><B>-topic</B>
+</B><DD>Indicates each command for which to display the complete online help
+entry. Omit the <B>bos</B> part of the command name, providing only
+the operation code (for example, specify <B>status</B>, not <B>bos
+status</B>). If this argument is omitted, the output briefly
+describes every <B>bos</B> command.
+<P><DT><B>-help
+</B><DD>Prints the online help for this command. All other valid options
+are ignored.
+</DL>
+<P><STRONG>Output</STRONG>
+<P>The online help entry for each <B>bos</B> command consists of the
+following two or three lines:
+<UL>
+<P><LI>The first line names the command and briefly describes its
+function.
+<P><LI>The second line lists aliases for the command, if any.
+<P><LI>The final line, which begins with the string <TT>Usage</TT>, lists the
+command's options in the prescribed order. Online help entries use
+the same symbols (for example, brackets) as the reference pages in this
+document.
+</UL>
+<P><STRONG>Examples</STRONG>
+<P>The following command displays the online help entry for the <B>bos
+status</B> command:
+<PRE>   %<B> bos help status</B>
+   bos status: show server instance status 
+   Usage: bos status -server &lt;machine name> [-instance &lt;server
+   process name>+] [-long] [-cell &lt;cell name>] [-noauth] 
+   [-localauth] [-help]
+   
+</PRE>
+<P><STRONG>Privilege Required</STRONG>
+<P>None
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf093.htm#HDRBOS_INTRO">bos</A>
+<P><A HREF="auarf097.htm#HDRBOS_APROPOS">bos apropos</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf103.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf105.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

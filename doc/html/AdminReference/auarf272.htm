@@ -1,0 +1,120 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 4//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3672/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 3 Oct 2000 at 16:18:30                -->
+<META HTTP-EQUIV="updated" CONTENT="Tue, 03 Oct 2000 16:18:29">
+<META HTTP-EQUIV="review" CONTENT="Wed, 03 Oct 2001 16:18:29">
+<META HTTP-EQUIV="expires" CONTENT="Thu, 03 Oct 2002 16:18:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf271.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf273.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRVOS_REMSITE" HREF="auarf002.htm#ToC_286">vos remsite</A></H2>
+<A NAME="IDX5813"></A>
+<A NAME="IDX5814"></A>
+<A NAME="IDX5815"></A>
+<A NAME="IDX5816"></A>
+<A NAME="IDX5817"></A>
+<A NAME="IDX5818"></A>
+<P><STRONG>Purpose</STRONG>
+<P>Removes a read-only site definition from a VLDB entry
+<P><STRONG>Synopsis</STRONG>
+<PRE><B>vos remsite -server</B> &lt;<VAR>machine&nbsp;name</VAR>>  <B>-partition</B> &lt;<VAR>partition&nbsp;name</VAR>> 
+            <B>-id</B> &lt;<VAR>volume&nbsp;name&nbsp;or&nbsp;ID</VAR>>  [<B>-cell</B> &lt;<VAR>cell&nbsp;name</VAR>>]  [<B>-noauth</B>] 
+            [<B>-localauth</B>]  [<B>-verbose</B>]  [<B>-help</B>]
+    
+<B>vos rems -s</B> &lt;<VAR>machine&nbsp;name</VAR>>  <B>-p</B> &lt;<VAR>partition&nbsp;name</VAR>>  <B>-i</B> &lt;<VAR>volume&nbsp;name&nbsp;or&nbsp;ID</VAR>>  
+         [<B>-c</B> &lt;<VAR>cell&nbsp;name</VAR>>]  [<B>-n</B>]  [<B>-l</B>]  [<B>-v</B>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>Description</STRONG>
+<P>The <B>vos remsite</B> command removes the read-only replication site
+specified by the <B>-machine</B> and <B>-partition</B> arguments from
+the Volume Location Database (VLDB) entry for the indicated volume, which is
+read/write.
+<P>This command is useful for removing read-only sites that were mistakenly
+created with the <B>vos addsite</B> command, before the <B>vos
+release</B> command actually releases them. If a read-only copy
+already exists at the site, it is not affected. However, if this
+read-only site was the last site housing any version of the volume, then the
+entire VLDB entry is removed, even if a copy of the read-only version still
+actually exists at the site. The VL Server does not correct the
+discrepancy until the <B>vos syncserv</B> and <B>vos syncvldb</B>
+commands are run.
+<P><STRONG>Cautions</STRONG>
+<P>Do not use this command as the standard way to remove a read-only volume,
+because it can create a discrepancy between the VLDB and the volumes on file
+server machines. Use the <B>vos remove</B> command instead.
+<P><STRONG>Options</STRONG>
+<DL>
+<P><DT><B>-server
+</B><DD>Specifies the file server machine portion of the site definition to
+remove. Provide the machine's IP address or its host name (either
+fully qualified or using an unambiguous abbreviation). For details, see
+the introductory reference page for the <B>vos</B> command suite.
+<P><DT><B>-partition
+</B><DD>Specifies the partition name portion of the site definition to
+remove. Provide the partition's complete name with preceding slash
+(for example, <B>/vicepa</B>) or use one of the three acceptable
+abbreviated forms. For details, see the introductory reference page for
+the <B>vos</B> command suite.
+<P><DT><B>-id
+</B><DD>Specifies either the complete name or volume ID number of the read/write
+volume to remove.
+<P><DT><B>-cell
+</B><DD>Names the cell in which to run the command. Do not combine this
+argument with the <B>-localauth</B> flag. For more details, see the
+introductory <B>vos</B> reference page.
+<P><DT><B>-noauth
+</B><DD>Assigns the unprivileged identity <B>anonymous</B> to the
+issuer. Do not combine this flag with the <B>-localauth</B>
+flag. For more details, see the introductory <B>vos</B> reference
+page.
+<P><DT><B>-localauth
+</B><DD>Constructs a server ticket using a key from the local
+<B>/usr/afs/etc/KeyFile</B> file. The <B>vos</B> command
+interpreter presents it to the Volume Server and Volume Location Server during
+mutual authentication. Do not combine this flag with the
+<B>-cell</B> argument or <B>-noauth</B> flag. For more details,
+see the introductory <B>vos</B> reference page.
+<P><DT><B>-verbose
+</B><DD>Produces on the standard output stream a detailed trace of the
+command's execution. If this argument is omitted, only warnings
+and error messages appear.
+<P><DT><B>-help
+</B><DD>Prints the online help for this command. All other valid options
+are ignored.
+</DL>
+<P><STRONG>Examples</STRONG>
+<P>The following command removes the mistakenly defined read-only site
+<B>/viceph</B> on the file server machine
+<B>fs5.abc.com</B> from the VLDB entry for the volume
+<B>root.cell</B>.
+<PRE>   % <B>vos remsite -server fs5.abc.com -partition h -id root.cell</B>
+   
+</PRE>
+<P><STRONG>Privilege Required</STRONG>
+<P>The issuer must be listed in the <B>/usr/afs/etc/UserList</B> file on
+the machine specified with the <B>-server</B> argument and on each
+database server machine. If the <B>-localauth</B> flag is included,
+the issuer must instead be logged on to a server machine as the local
+superuser <B>root</B>.
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf252.htm#HDRVOS_INTRO">vos</A>
+<P><A HREF="auarf259.htm#HDRVOS_DELENTRY">vos delentry</A>
+<P><A HREF="auarf271.htm#HDRVOS_REMOVE">vos remove</A>
+<P><A HREF="auarf280.htm#HDRVOS_ZAP">vos zap</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf271.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf273.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

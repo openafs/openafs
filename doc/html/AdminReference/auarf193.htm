@@ -1,0 +1,351 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 4//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3672/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 3 Oct 2000 at 16:18:30                -->
+<META HTTP-EQUIV="updated" CONTENT="Tue, 03 Oct 2000 16:18:29">
+<META HTTP-EQUIV="review" CONTENT="Wed, 03 Oct 2001 16:18:29">
+<META HTTP-EQUIV="expires" CONTENT="Thu, 03 Oct 2002 16:18:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf192.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf194.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRKAS_SETFIELDS" HREF="auarf002.htm#ToC_207">kas setfields</A></H2>
+<A NAME="IDX5130"></A>
+<A NAME="IDX5131"></A>
+<A NAME="IDX5132"></A>
+<A NAME="IDX5133"></A>
+<A NAME="IDX5134"></A>
+<A NAME="IDX5135"></A>
+<A NAME="IDX5136"></A>
+<A NAME="IDX5137"></A>
+<A NAME="IDX5138"></A>
+<A NAME="IDX5139"></A>
+<A NAME="IDX5140"></A>
+<A NAME="IDX5141"></A>
+<A NAME="IDX5142"></A>
+<P><STRONG>Purpose</STRONG>
+<P>Sets optional characteristics in an Authentication Database entry
+<P><STRONG>Synopsis</STRONG>
+<PRE><B>kas setfields -name</B> &lt;<VAR>name&nbsp;of&nbsp;user</VAR>>
+              [<B>-flags</B> &lt;<VAR>hex&nbsp;flag&nbsp;value&nbsp;or&nbsp;flag&nbsp;name&nbsp;expression</VAR>>] 
+              [<B>-expiration</B> &lt;<VAR>date&nbsp;of&nbsp;account&nbsp;expiration</VAR>>] 
+              [<B>-lifetime</B> &lt;<VAR>maximum&nbsp;ticket&nbsp;lifetime</VAR>>] 
+              [<B>-pwexpires</B> &lt;<VAR>number&nbsp;days&nbsp;password&nbsp;is&nbsp;valid&nbsp;([0..254])</VAR>>]
+              [<B>-reuse</B> &lt;<VAR>permit&nbsp;password&nbsp;reuse&nbsp;(yes/no)</VAR>>]
+              [<B>-attempts</B> &lt;<VAR>maximum&nbsp;successive&nbsp;failed&nbsp;login&nbsp;tries&nbsp;([0..254])</VAR>>]
+              [<B>-locktime</B> &lt;<VAR>failure&nbsp;penalty&nbsp;[hh:mm&nbsp;or&nbsp;minutes]</VAR>>]
+              [<B>-admin_username</B> &lt;<VAR>admin&nbsp;principal&nbsp;to&nbsp;use&nbsp;for&nbsp;authentication</VAR>>] 
+              [<B>-password_for_admin</B> &lt;<VAR>admin&nbsp;password</VAR>>]  [<B>-cell</B> &lt;<VAR>cell&nbsp;name</VAR>>] 
+              [<B>-servers</B> &lt;<VAR>explicit&nbsp;list&nbsp;of&nbsp;authentication&nbsp;servers</VAR>><SUP>+</SUP>]
+              [<B>-noauth</B>]  [<B>-help</B>]
+   
+<B>kas setf -na</B> &lt;<VAR>name&nbsp;of&nbsp;user</VAR>>  [<B>-f</B> &lt;<VAR>hex&nbsp;flag&nbsp;value&nbsp;or&nbsp;flag&nbsp;name&nbsp;expression</VAR>>]
+         [<B>-e</B> &lt;<VAR>date&nbsp;of&nbsp;account&nbsp;expiration</VAR>>]  [<B>-li</B> &lt;<VAR>maximum&nbsp;ticket&nbsp;lifetime</VAR>>]
+         [<B>-pw</B> &lt;<VAR>number&nbsp;days&nbsp;password&nbsp;is&nbsp;valid&nbsp;([0..254])</VAR>>]
+         [<B>-r</B> &lt;<VAR>permit&nbsp;password&nbsp;reuse&nbsp;(yes/no)</VAR>>]
+         [<B>-at</B> &lt;<VAR>maximum&nbsp;successive&nbsp;failed&nbsp;login&nbsp;tries ([0..254])</VAR>>]
+         [<B>-lo</B> &lt;<VAR>failure&nbsp;penalty&nbsp;[hh:mm&nbsp;or&nbsp;minutes]</VAR>>]
+         [<B>-ad</B> &lt;<VAR>admin&nbsp;principal&nbsp;to&nbsp;use&nbsp;for&nbsp;authentication</VAR>>] 
+         [<B>-pa</B> &lt;<VAR>admin&nbsp;password</VAR>>]  [<B>-c</B> &lt;<VAR>cell&nbsp;name</VAR>>]
+         [<B>-s</B> &lt;<VAR>explicit&nbsp;list&nbsp;of&nbsp;authentication&nbsp;servers</VAR>><SUP>+</SUP>]  [<B>-no</B>]  [<B>-h</B>] 
+   
+<B>kas sf -na</B> &lt;<VAR>name&nbsp;of&nbsp;user</VAR>>  [<B>-f</B> &lt;<VAR>hex&nbsp;flag&nbsp;value&nbsp;or&nbsp;flag&nbsp;name&nbsp;expression</VAR>>]
+       [<B>-e</B> &lt;<VAR>date&nbsp;of&nbsp;account&nbsp;expiration</VAR>>]  [<B>-li</B> &lt;<VAR>maximum&nbsp;ticket&nbsp;lifetime</VAR>>]
+       [<B>-pw</B> &lt;<VAR>number&nbsp;days&nbsp;password&nbsp;is&nbsp;valid&nbsp;([0..254])</VAR>>]
+       [<B>-r</B> &lt;<VAR>permit&nbsp;password&nbsp;reuse&nbsp;(yes/no)</VAR>>]
+       [<B>-at</B> &lt;<VAR>maximum&nbsp;successive&nbsp;failed&nbsp;login&nbsp;tries&nbsp;([0..254])</VAR>>]
+       [<B>-lo</B> &lt;<VAR>failure&nbsp;penalty&nbsp;[hh:mm&nbsp;or&nbsp;minutes]</VAR>>]
+       [<B>-ad</B> &lt;<VAR>admin&nbsp;principal&nbsp;to&nbsp;use&nbsp;for&nbsp;authentication</VAR>>] 
+       [<B>-pa</B> &lt;<VAR>admin&nbsp;password</VAR>>]  [<B>-c</B> &lt;<VAR>cell&nbsp;name</VAR>>]
+       [<B>-s</B> &lt;<VAR>explicit&nbsp;list&nbsp;of&nbsp;authentication&nbsp;servers</VAR>><SUP>+</SUP>]  [<B>-no</B>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>Description</STRONG>
+<P>The <B>kas setfields</B> command changes the Authentication Database
+entry for the user named by the <B>-name</B> argument in the manner
+specified by the various optional arguments, which can occur singly or in
+combination:
+<UL>
+<P><LI>To set the flags that determine whether the user has administrative
+privileges to the Authentication Server, can obtain a ticket, can change his
+or her password, and so on, include the <B>-flags</B> argument.
+<P><LI>To set when the Authentication Database entry expires, include the
+<B>-expiration</B> argument.
+<P><LI>To set the maximum ticket lifetime associated with the entry, include the
+<B>-lifetime</B> argument. The reference page for the
+<B>klog</B> command explains how this value interacts with others to
+determine the actual lifetime of a token.
+<P><LI>To set when the user's password expires, include the
+<B>-pwexpires</B> argument.
+<P><LI>To set whether the user can reuse any of the previous twenty passwords
+when creating a new one, include the <B>-reuse</B> argument.
+<P><LI>To set the maximum number of times the user can provide an incorrect
+password before the Authentication Server refuses to accept any more attempts
+(locks the issuer out), include the <B>-attempts</B> argument.
+After the sixth failed authentication attempt, the Authentication Server logs
+a message in the UNIX system log file (the <B>syslog</B> file or
+equivalent, for which the standard location varies depending on the operating
+system).
+<P><LI>To set how long the Authentication Server refuses to process
+authentication attempts for a locked-out user, set the <B>-locktime</B>
+argument.
+</UL>
+<P>The <B>kas examine</B> command displays the settings made with this
+command.
+<P><STRONG>Cautions</STRONG>
+<P>The password lifetime set with the <B>-pwexpires</B> argument begins at
+the time the user's password was last changed, rather than when this
+command is issued. It can therefore be retroactive. If, for
+example, a user changed her password 100 days ago and the password lifetime is
+set to 100 days or less, the password effectively expires immediately.
+To avoid retroactive expiration, instruct the user to change the password just
+before setting a password lifetime.
+<P>Administrators whose authentication accounts have the <TT>ADMIN</TT> flag
+enjoy complete access to the sensitive information in the Authentication
+Database. To prevent access by unauthorized users, use the
+<B>-attempts</B> argument to impose a fairly strict limit on the number of
+times that a user obtaining administrative tokens can provide an incorrect
+password. Note, however, that there must be more than one account in
+the cell with the <TT>ADMIN</TT> flag. The <B>kas unlock</B>
+command requires the <TT>ADMIN</TT> privilege, so it is important that the
+locked-out administrator (or a colleague) can access another
+<TT>ADMIN</TT>-privileged account to unlock the current account.
+<P>In certain circumstances, the mechanism used to enforce the number of
+failed authentication attempts can cause a lockout even though the number of
+failed attempts is less than the limit set by the <B>-attempts</B>
+argument. Client-side authentication programs such as <B>klog</B>
+and an AFS-modified login utility normally choose an Authentication Server at
+random for each authentication attempt, and in case of a failure are likely to
+choose a different Authentication Server for the next attempt. The
+Authentication Servers running on the various database server machines do not
+communicate with each other about how many times a user has failed to provide
+the correct password to them. Instead, each Authentication Server
+maintains its own separate copy of the auxiliary database file
+<B>kaserverauxdb</B> (located in the <B>/usr/afs/local</B> directory
+by default), which records the number of consecutive authentication failures
+for each user account and the time of the most recent failure. This
+implementation means that on average each Authentication Server knows about
+only a fraction of the total number of failed attempts. The only way to
+avoid allowing more than the number of attempts set by the
+<B>-attempts</B> argument is to have each Authentication Server allow only
+some fraction of the total. More specifically, if the limit on failed
+attempts is <I>f</I>, and the number of Authentication Servers is
+<I>S</I>, then each Authentication Server can only permit a number of
+attempts equal to <I>f</I> divided by <I>S</I> (the Ubik
+synchronization site for the Authentication Server tracks any remainder,
+<I>fmodS</I>).
+<P>Normally, this implementation does not reduce the number of allowed
+attempts to less than the configured limit (<I>f</I>). If one
+Authentication Server refuses an attempt, the client contacts another instance
+of the server, continuing until either it successfully authenticates or has
+contacted all of the servers. However, if one or more of the
+Authentication Server processes is unavailable, the limit is effectively
+reduced by a percentage equal to the quantity <I>U</I> divided by
+<I>S</I>, where <I>U</I> is the number of unavailable servers and
+<I>S</I> is the number normally available.
+<P>To avoid the undesirable consequences of setting a limit on failed
+authentication attempts, note the following recommendations:
+<UL>
+<P><LI>Do not set the <B>-attempts</B> argument (the limit on failed
+authentication attempts) too low. A limit of nine failed attempts is
+recommended for regular user accounts, to allow three failed attempts per
+Authentication Server in a cell with three database server machines.
+<P><LI>Set fairly short lockout times when including the <B>-locktime</B>
+argument. Although guessing passwords is a common method of attack, it
+is not a very sophisticated one. Setting a lockout time can help
+discourage attackers, but excessively long times are likely to be more of a
+burden to authorized users than to potential attackers. A lockout time
+of 25 minutes is recommended for regular user accounts.
+<P><LI>Do not assign an infinite lockout time on an account (by setting the
+<B>-locktime</B> argument to <B>0</B> [zero]) unless there is a highly
+compelling reason. Such accounts almost inevitably become locked at
+some point, because each Authentication Server never resets the account's
+failure counter in its copy of the <B>kaauxdb</B> file (in contrast, when
+the lockout time is not infinite, the counter resets after the specified
+amount of time has passed since the last failed attempt to that Authentication
+Server). Furthermore, the only way to unlock an account with an
+infinite lockout time is for an administrator to issue the <B>kas
+unlock</B> command. It is especially dangerous to set an infinite
+lockout time on an administrative account; if all administrative accounts
+become locked, the only way to unlock them is to shut down all instances of
+the Authentication Server and remove the <B>kaauxdb</B> file on
+each.
+</UL>
+<P><STRONG>Options</STRONG>
+<DL>
+<P><DT><B>-name
+</B><DD>Names the Authentication Database account for which to change
+settings.
+<P><DT><B>-flags
+</B><DD>Sets one or more of four toggling flags, adding them to any flags
+currently set. Either specify one or more of the following strings, or
+specify a hexidecimal number that combines the indicated values. To
+return all four flags to their defaults, provide a value of <B>0</B>
+(zero). To set more than one flag at once using the strings, connect
+them with plus signs (example: <B>NOTGS+ADMIN+CPW</B>). To
+remove all the current flag settings before setting new ones, precede the list
+with an equal sign (example: <B>=NOTGS+ADMIN+CPW</B>). 
+<DL>
+<P><DT><B>ADMIN
+</B><DD>The user is allowed to issue privileged <B>kas</B> commands
+(hexadecimal equivalent is <B>0x004</B>, default is
+<B>NOADMIN</B>).
+<A NAME="IDX5143"></A>
+<P><DT><B>NOTGS
+</B><DD>The Authentication Server's Ticket Granting Service (TGS) refuses to
+issue tickets to the user (hexadecimal equivalent is <B>0x008</B>, default
+is <B>TGS</B>).
+<A NAME="IDX5144"></A>
+<P><DT><B>NOSEAL
+</B><DD>The Ticket Granting Service cannot use the contents of this entry's
+key field as an encryption key (hexadecimal equivalent is <B>0x020</B>,
+default is <B>SEAL</B>).
+<A NAME="IDX5145"></A>
+<P><DT><B>NOCPW
+</B><DD>The user cannot change his or her own password or key (hexadecimal
+equivalent is <B>0x040</B>, default is <B>CPW</B>).
+<A NAME="IDX5146"></A>
+</DL>
+<P><DT><B>-expiration
+</B><DD>Determines when the entry itself expires. When a user entry
+expires, the user becomes unable to log in; when a server entry such as
+<B>afs</B> expires, all server processes that use the associated key
+become inaccessible. Provide one of the three acceptable values: 
+<DL>
+<P><DT><B>never
+</B><DD>The account never expires (the default).
+<P><DT><B><VAR>mm/dd/yyyy</VAR>
+</B><DD>Sets the expiration date to 12:00 a.m. on the
+indicated date (month/day/year). Examples: <B>01/23/1999</B>,
+<B>10/07/2000</B>.
+<P><DT><B>"<VAR>mm/dd/yyyy hh:MM</VAR>"
+</B><DD>Sets the expiration date to the indicated time (hours:minutes) on
+the indicated date (month/day/year). Specify the time in 24-hour format
+(for example, <B>20:30</B> is 8:30 p.m.) Date
+format is the same as for a date alone. Surround the entire instance
+with quotes because it contains a space. Examples:
+<B>"01/23/1999 22:30"</B>, <B>"10/07/2000
+3:45"</B>.
+</DL>
+<P>
+<P>Acceptable values for the year range from <B>1970</B> (1 January 1970
+is time 0 in the standard UNIX date representation) through <B>2037</B>
+(2037 is the maximum because the UNIX representation cannot accommodate dates
+later than a value in February 2038).
+<P><DT><B>-lifetime
+</B><DD>Specifies the maximum lifetime that the Authentication Server's
+Ticket Granting Service (TGS) can assign to a ticket. If the account
+belongs to a user, this value is the maximum lifetime of a token issued to the
+user. If the account corresponds to a server such as <B>afs</B>,
+this value is the maximum lifetime of a ticket that the TGS issues to clients
+for presentation to the server during mutual authentication.
+<P>Specify an integer that represents a number of seconds (<B>3600</B>
+equals one hour), or include a colon in the number to indicate a number of
+hours and minutes (<B>10:00</B> equals 10 hours). If this
+argument is omitted, the default setting is 100:00 hours (360000
+seconds).
+<P><DT><B>-pwexpires
+</B><DD>Sets the number of days after the user's password was last changed
+that it remains valid. Provide an integer from the range <B>1</B>
+through <B>254</B> to specify the number of days until expiration, or the
+value <B>0</B> to indicate that the password never expires (the
+default).
+<P>When the password expires, the user is unable to authenticate, but has 30
+days after the expiration date in which to use the <B>kpasswd</B> command
+to change the password (after that, only an administrator can change it by
+using the <B>kas setpassword</B> command). Note that the clock
+starts at the time the password was last changed, not when the <B>kas
+setfields</B> command is issued. To avoid retroactive expiration,
+have the user change the password just before issuing a command that includes
+this argument.
+<P><DT><B>-reuse
+</B><DD>Specifies whether or not the user can reuse any of his or her last 20
+passwords. The acceptable values are <B>yes</B> to allow reuse of
+old passwords (the default) and <B>no</B> to prohibit reuse of a password
+that is similar to one of the previous 20 passwords.
+<P><DT><B>-attempts
+</B><DD>Sets the number of consecutive times the user can provide an incorrect
+password during authentication (using the <B>klog</B> command or a login
+utility that grants AFS tokens). When the user exceeds the limit, the
+Authentication Server rejects further attempts (locks the user out) for the
+amount of time specified by the <B>-locktime</B> argument. Provide
+an integer from the range <B>1</B> through <B>254</B> to specify the
+number of failures allowed, or <B>0</B> to indicate that there is no limit
+on authentication attempts (the default value).
+<P><DT><B>-locktime
+</B><DD>Specifies how long the Authentication Server refuses authentication
+attempts from a user who has exceeded the failure limit set by the
+<B>-attempts</B> argument.
+<P>Specify a number of hours and minutes (<VAR>hh</VAR>:<VAR>mm</VAR>) or
+minutes only (<VAR>mm</VAR>), from the range <B>01</B> (one minute) through
+<B>36:00</B> (36 hours). The <B>kas</B> command
+interpreter automatically reduces any larger value to <B>36:00</B>
+and also rounds up any non-zero value to the next higher multiple of
+8.5 minutes. A value of <B>0</B> (zero) sets an infinite
+lockout time; an administrator must issue the <B>kas unlock</B>
+command to unlock the account.
+<P><DT><B>-admin_username
+</B><DD>Specifies the user identity under which to authenticate with the
+Authentication Server for execution of the command. For more details,
+see the introductory <B>kas</B> reference page.
+<P><DT><B>-password_for_admin
+</B><DD>Specifies the password of the command's issuer. If it is
+omitted (as recommended), the <B>kas</B> command interpreter prompts for
+it and does not echo it visibly. For more details, see the introductory
+<B>kas</B> reference page.
+<P><DT><B>-cell
+</B><DD>Names the cell in which to run the command. For more details, see
+the introductory <B>kas</B> reference page.
+<P><DT><B>-servers
+</B><DD>Names each machine running an Authentication Server with which to
+establish a connection. For more details, see the introductory
+<B>kas</B> reference page.
+<P><DT><B>-noauth
+</B><DD>Assigns the unprivileged identity <B>anonymous</B> to the
+issuer. For more details, see the introductory <B>kas</B> reference
+page.
+<P><DT><B>-help
+</B><DD>Prints the online help for this command. All other valid options
+are ignored.
+</DL>
+<P><STRONG>Examples</STRONG>
+<P>In the following example, an administrator using the <B>admin</B>
+account grants administrative privilege to the user <B>smith</B>, and sets
+the Authentication Database entry to expire at midnight on 31 December
+2000.
+<PRE>   %<B> kas setfields -name smith -flags ADMIN -expiration 12/31/2000</B>
+   Password for admin:
+   
+</PRE>
+<P>In the following example, an administrator using the <B>admin</B>
+account sets the user <B>pat</B>'s password to expire in 60 days from
+when it last changed, and prohibits reuse of passwords.
+<PRE>   %<B> kas setfields -name pat -pwexpires 60 -reuse no</B>
+   Password for admin:
+   
+</PRE>
+<P><STRONG>Privilege Required</STRONG>
+<P>The issuer must have the <TT>ADMIN</TT> flag set on his or her
+Authentication Database entry.
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf046.htm#HDRKASERVERAUXDB">kaserverauxdb</A>
+<P><A HREF="auarf181.htm#HDRKAS_INTRO">kas</A>
+<P><A HREF="auarf185.htm#HDRKAS_EXAMINE">kas examine</A>
+<P><A HREF="auarf194.htm#HDRKAS_SETPASSWORD">kas setpassword</A>
+<P><A HREF="auarf197.htm#HDRKAS_UNLOCK">kas unlock</A>
+<P><A HREF="auarf200.htm#HDRKLOG">klog</A>
+<P><A HREF="auarf202.htm#HDRKPASSWD">kpasswd</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf192.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf194.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>
