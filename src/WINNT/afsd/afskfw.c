@@ -2718,13 +2718,13 @@ KFW_AFS_klog(
         }
 
         if ( smbname ) {
-            strncpy(aclient.smbname, smbname, MAXRANDOMNAMELEN);
-            aclient.smbname[MAXRANDOMNAMELEN-1] = '\0';
+            strncpy(aclient.smbname, smbname, sizeof(aclient.smbname));
+            aclient.smbname[sizeof(aclient.smbname)-1] = '\0';
         } else {
             aclient.smbname[0] = '\0';
         }
 
-        rc = ktc_SetToken(&aserver, &atoken, &aclient, 0);
+        rc = ktc_SetToken(&aserver, &atoken, &aclient, (aclient.smbname[0]?AFS_SETTOK_LOGON:0));
         if (!rc)
             goto cleanup;   /* We have successfully inserted the token */
 
@@ -2836,13 +2836,13 @@ KFW_AFS_klog(
     strcpy(aclient.cell, CellName);
 
     if ( smbname ) {
-        strncpy(aclient.smbname, smbname, MAXRANDOMNAMELEN);
-        aclient.smbname[MAXRANDOMNAMELEN-1] = '\0';
+        strncpy(aclient.smbname, smbname, sizeof(aclient.smbname));
+        aclient.smbname[sizeof(aclient.smbname)-1] = '\0';
     } else {
         aclient.smbname[0] = '\0';
     }
 
-    if (rc = ktc_SetToken(&aserver, &atoken, &aclient, 0))
+    if (rc = ktc_SetToken(&aserver, &atoken, &aclient, (aclient.smbname[0]?AFS_SETTOK_LOGON:0)))
     {
         KFW_AFS_error(rc, "ktc_SetToken()");
         code = rc;

@@ -14,6 +14,8 @@
 #include "netbios95.h"
 #endif /* DJGPP */
 
+#include <ntsecapi.h>
+
 /* basic core protocol SMB structure */
 typedef struct smb {
 	unsigned char id[4];
@@ -43,7 +45,35 @@ typedef struct smb {
 #define SMB_FLAG_CREATE		1	/* create the structure if necessary */
 
 /* max # of bytes we'll receive in an incoming SMB message */
-#define SMB_PACKETSIZE	8400
+/* the maximum is 2^18-1 for NBT and 2^25-1 for Raw transport messages */
+/* we will use something smaller but large enough to be efficient */
+#define SMB_PACKETSIZE	32768 /* was 8400 */
+/* raw mode is considered obsolete and cannot be used with message signing */
+#define SMB_MAXRAWSIZE  65536
+
+/* Negotiate protocol constants */
+/* Security */
+#define NEGOTIATE_SECURITY_USER_LEVEL               0x01
+#define NEGOTIATE_SECURITY_CHALLENGE_RESPONSE       0x02
+#define NEGOTIATE_SECURITY_SIGNATURES_ENABLED       0x04
+#define NEGOTIATE_SECURITY_SIGNATURES_REQUIRED      0x08
+
+/* Capabilities */
+#define NTNEGOTIATE_CAPABILITY_RAWMODE				0x00000001L
+#define NTNEGOTIATE_CAPABILITY_MPXMODE				0x00000002L
+#define NTNEGOTIATE_CAPABILITY_UNICODE				0x00000004L
+#define NTNEGOTIATE_CAPABILITY_LARGEFILES			0x00000008L
+#define NTNEGOTIATE_CAPABILITY_NTSMB				0x00000010L
+#define NTNEGOTIATE_CAPABILITY_RPCAPI				0x00000020L
+#define NTNEGOTIATE_CAPABILITY_NTSTATUS				0x00000040L
+#define NTNEGOTIATE_CAPABILITY_LEVEL_II_OPLOCKS		0x00000080L
+#define NTNEGOTIATE_CAPABILITY_LOCK_AND_READ		0x00000100L
+#define NTNEGOTIATE_CAPABILITY_NTFIND				0x00000200L
+#define NTNEGOTIATE_CAPABILITY_DFS					0x00001000L
+#define NTNEGOTIATE_CAPABILITY_NT_INFO_PASSTHRU		0x00002000L
+#define NTNEGOTIATE_CAPABILITY_BULK_TRANSFER		0x20000000L
+#define NTNEGOTIATE_CAPABILITY_COMPRESSED			0x40000000L
+#define NTNEGOTIATE_CAPABILITY_EXTENDED_SECURITY	0x80000000L
 
 /* a packet structure for receiving SMB messages; locked by smb_globalLock.
  * Most of the work involved is in handling chained requests and responses.
@@ -111,23 +141,27 @@ typedef struct myncb {
 /* one per virtual circuit */
 typedef struct smb_vc {
 	struct smb_vc *nextp;		/* not used */
-        int refCount;			/* the reference count */
-        long flags;			/* the flags, if any; locked by mx */
-        osi_mutex_t mx;			/* the mutex */
+    int refCount;			/* the reference count */
+    long flags;			/* the flags, if any; locked by mx */
+    osi_mutex_t mx;			/* the mutex */
 	long vcID;			/* VC id */
-        unsigned short lsn;		/* the NCB LSN associated with this */
+    unsigned short lsn;		/* the NCB LSN associated with this */
 	unsigned short uidCounter;	/* session ID counter */
-        unsigned short tidCounter;	/* tree ID counter */
-        unsigned short fidCounter;	/* file handle ID counter */
-        struct smb_tid *tidsp;		/* the first child in the tid list */
-        struct smb_user *usersp;	/* the first child in the user session list */
-        struct smb_fid *fidsp;		/* the first child in the open file list */
+    unsigned short tidCounter;	/* tree ID counter */
+    unsigned short fidCounter;	/* file handle ID counter */
+    struct smb_tid *tidsp;		/* the first child in the tid list */
+    struct smb_user *usersp;	/* the first child in the user session list */
+    struct smb_fid *fidsp;		/* the first child in the open file list */
 	struct smb_user *justLoggedOut;	/* ready for profile upload? */
 	unsigned long logoffTime;	/* tick count when logged off */
 	/*struct cm_user *logonDLLUser;	/* integrated logon user */
 	unsigned char errorCount;
-        char rname[17];
+    char rname[17];
 	int lana;
+	char encKey[MSV1_0_CHALLENGE_LENGTH]; /* MSV1_0_CHALLENGE_LENGTH is 8 */
+    void * secCtx;              /* security context when negotiating SMB extended auth
+                                 * valid when SMB_VCFLAG_AUTH_IN_PROGRESS is set
+                                 */
 } smb_vc_t;
 
 					/* have we negotiated ... */
@@ -137,6 +171,8 @@ typedef struct smb_vc {
 #define SMB_VCFLAG_STATUS32	8	/* use 32-bit NT status codes */
 #define SMB_VCFLAG_REMOTECONN	0x10	/* bad: remote conns not allowed */
 #define SMB_VCFLAG_ALREADYDEAD	0x20	/* do not get tokens from this vc */
+#define SMB_VCFLAG_SESSX_RCVD	0x40	/* we received at least one session setups on this vc */
+#define SMB_VCFLAG_AUTH_IN_PROGRESS 0x80 /* a SMB NT extended authentication is in progress */
 
 /* one per user session */
 typedef struct smb_user {
@@ -160,6 +196,8 @@ typedef struct smb_username {
 } smb_username_t;
 
 #define SMB_USERFLAG_DELETE	1	/* delete struct when ref count zero */
+
+#define SMB_MAX_USERNAME_LENGTH 256
 
 /* one per tree-connect */
 typedef struct smb_tid {
@@ -452,6 +490,39 @@ extern int smb_maxMpxRequests; /* max # of mpx requests */
 
 extern int smb_hideDotFiles;
 extern unsigned int smb_IsDotFile(char *lastComp);
+
+/* the following are used for smb auth */
+extern int smb_authType; /* Type of SMB authentication to be used. One from below. */
+
+#define SMB_AUTH_NONE 0
+#define SMB_AUTH_NTLM 1
+#define SMB_AUTH_EXTENDED 2
+
+extern HANDLE smb_lsaHandle; /* LSA handle obtained during smb_init if using SMB auth */
+extern ULONG smb_lsaSecPackage; /* LSA security package id. Set during smb_init */
+extern char smb_ServerDomainName[];
+extern int smb_ServerDomainNameLength;
+extern char smb_ServerOS[];
+extern int smb_ServerOSLength;
+extern char smb_ServerLanManager[];
+extern int smb_ServerLanManagerLength;
+extern GUID smb_ServerGUID;
+extern LSA_STRING smb_lsaLogonOrigin;
+
+/* used for getting a challenge for SMB auth */
+typedef struct _MSV1_0_LM20_CHALLENGE_REQUEST {  
+	MSV1_0_PROTOCOL_MESSAGE_TYPE MessageType;
+} MSV1_0_LM20_CHALLENGE_REQUEST, *PMSV1_0_LM20_CHALLENGE_REQUEST;
+
+typedef struct _MSV1_0_LM20_CHALLENGE_RESPONSE {  
+	MSV1_0_PROTOCOL_MESSAGE_TYPE MessageType;  
+	UCHAR ChallengeToClient[MSV1_0_CHALLENGE_LENGTH];
+} MSV1_0_LM20_CHALLENGE_RESPONSE, *PMSV1_0_LM20_CHALLENGE_RESPONSE;
+/**/
+
+extern long smb_AuthenticateUserLM(smb_vc_t *vcp, char * accountName, char * primaryDomain, char * ciPwd, unsigned ciPwdLength, char * csPwd, unsigned csPwdLength);
+
+extern long smb_GetNormalizedUsername(char * usern, const char * accountName, const char * domainName);
 
 extern void smb_FormatResponsePacket(smb_vc_t *vcp, smb_packet_t *inp,
 	smb_packet_t *op);

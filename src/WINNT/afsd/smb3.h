@@ -168,6 +168,9 @@ extern int smb_V3MatchMask(char *namep, char *maskp, int flags);
 extern void smb3_Init();
 extern cm_user_t *smb_FindCMUserByName(/*smb_vc_t *vcp,*/ char *usern, char *machine);
 
+/* SMB auth related functions */
+extern void smb_NegotiateExtendedSecurity(void ** secBlob, int * secBlobLength);
+
 #ifdef DJGPP
 #define DELETE (0x00010000)
 #define READ_CONTROL (0x00020000)

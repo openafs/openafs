@@ -69,9 +69,9 @@ automatically result in a new read-only mount point being created in the fake
 root.afs volume.  These mount points are preserved between service starts in 
 the %WINDIR%\afs_freelance.ini file.  
 
-Unfortunately, at the current time it is not possible to create read-write 
-mount points in the fake root.afs cell.  This is a limitation which will be 
-addressed in a future release.
+As of 1.3.66, Freelance mode supports read-write mount points in the fake
+root.afs volume.  In addition, if the mount point list is empty, mount points
+for "cellname" (ro) and ".cellname" (rw) will be automatically generated.
 
 4. The OpenAFS for Windows client will make use of AFSDB DNS records to 
 discover cell information when it is not located in the local CellServDB file 
@@ -103,7 +103,9 @@ In particular, if you are using this mode it is crucial that new AFS tokens
 not be obtained after the logon session starts except via the AFS Systray tool 
 as started by the AFS Network Provider.  If the AFS Systray tool is stopped 
 you must log off to obtain new tokens.  Do not use external tools such as 
-"aklog.exe" if High Security mode is turned on.
+"aklog.exe" if High Security mode is turned on. As of 1.3.66, OpenAFS supports 
+Authenticated SMB connections which removes the need for High Security mode. 
+DO NOT USE IT!!!!! 
 
 7. The AFS Systray tool (afscreds.exe) supports several new command line 
 options: 
@@ -178,11 +180,15 @@ reports.
 13. OpenAFS for Windows does not support files larger than 2GB.
 
 14. There are documented problems running the AFS Client on Hyperthreaded 
-Pentium 4 machines.  At the current time it is recommended that hyper- 
-threading be disabled in the machine configuration.
+Pentium 4 machines.  As of 1.3.66, a registry entry may be created to specify
+that the AFS Client Service should only use a single processor.  If you have
+a hyperthreaded system it is strongly advised that this registry value be set.
+See "registry.txt" for details on the MaxCPUs value. 
 
 15. OpenAFS for Windows currently requires the use of TCP based RPC. If the 
 machine is restricted to Local RPC only, you will be unable to store tokens.
+As of 1.3.66, Local RPC is used as the default RPC mechanism for setting 
+tokens.  TCP RPC is still used for debugging and other functions.
 
 16. OpenAFS for Windows does not automatically open ports in the Windows 
 Internet Connection Firewall.  You must manually open port 7001 to allow for 
@@ -191,6 +197,29 @@ incoming callback messages to be received by AFS file servers.
 17. The OpenAFS for Windows installer by default activates a weak form of 
 encrypted data transfer between the AFS client and the AFS servers.  This
 is often referred to as "crypt" mode.
+
+18. OpenAFS 1.3.66 adds support for authenticated SMB connections using 
+either NTLM or GSS SPNEGO (NTLM, Kerberos 5, ...).  In previous versions
+of OpenAFS the SMB connections were unauthenticated which left open the
+door for several security holes which could be used to obtain access to
+the use of other user's tokens on shared machines.  With the introduction
+of authenticated SMB connections the so called High Security mode should
+no longer be used.  
+
+When GSS SPNEGO results in a Kerberos 5 authentication, the Windows SMB
+client will attempt to retrieve service tickets for "cifs/afs@REALM" (if 
+the loopback adapter is in use) or "cifs/machine-afs@REALM" (if the loopback
+adapter is not being used).  It is extremely important that this service 
+principal not exist in the KDC database.   If the request for this ticket
+fails, a subsequent request for "cifs/HOST$@REALM" will be issued.  This 
+service principal should exist in the KDC database.  The key associated 
+with this service principal must match the key assigned to 
+"host/machine@REALM".  If the local machine is part of a Windows Domain
+this will all be taken care of for you.  If the local machine is using
+a non-MS KDC for authentication, then your KDC administrator will have to
+add these service principals to the list of principals to be maintained
+for each host.
+
 
 ------------------------------------------------------------------------
 

@@ -676,11 +676,7 @@ skipremove:
   ; to also include the service name.
   Call AddProvider
   ReadINIStr $R0 $1 "Field 7" "State"
-  ReadINIStr $R1 $1 "Field 9" "State"
-  ; Complicated way to do $R1 = ($R1 *2) + $R0
-  IntOp $R2 $R1 * 2
-  IntOp $R1 $R2 + $R0
-  WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "LogonOptions" $R1
+  WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "LogonOptions" $R0
   WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "LogonScript" "$INSTDIR\Client\Program\afscreds.exe -:%s -x -a -m -n -q"
   WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "Name" "OpenAFSDaemon"
 
@@ -692,7 +688,7 @@ skipremove:
   WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "SecurityLevel" $R0
   ReadINIStr $R0 $1 "Field 5" "State"  
   WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "FreelanceClient" $R0
-  ReadINIStr $R0 $1 "Field 11" "State"
+  ReadINIStr $R0 $1 "Field 9" "State"
   WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "UseDNS" $R0
   WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "NetbiosName" "AFS"
   WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "MountRoot" "/afs"
@@ -716,6 +712,27 @@ skipremove:
   strcpy $REG_DATA_2  "NETBIOS"
   strcpy $REG_DATA_3  "RpcSs"
   Call RegWriteMultiStr
+
+  ; The following are keys added for Terminal Server compatibility
+  ; http://support.microsoft.com/default.aspx?scid=kb;EN-US;186499
+  WriteRegDWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\afsd_service.exe" "Flags" 0x408
+  WriteRegDWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\afsshare.exe" "Flags" 0x408
+  WriteRegDWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\klog.exe" "Flags" 0x408
+  WriteRegDWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\tokens.exe" "Flags" 0x408
+  WriteRegDWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\aklog.exe" "Flags" 0x408
+  WriteRegDWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\unlog.exe" "Flags" 0x408
+  WriteRegDWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\fs.exe" "Flags" 0x408
+  WriteRegDWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\afscreds.exe" "Flags" 0x408
+  WriteRegDWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\symlink.exe" "Flags" 0x408
+  WriteRegDWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\kpasswd.exe" "Flags" 0x408
+  WriteRegDWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\pts.exe" "Flags" 0x408
+  WriteRegDWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\bos.exe" "Flags" 0x408
+  WriteRegDWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\kas.exe" "Flags" 0x408
+  WriteRegDWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\vos.exe" "Flags" 0x408
+  WriteRegDWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\udebug.exe" "Flags" 0x408
+  WriteRegDWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\translate_et.exe" "Flags" 0x408
+  WriteRegDWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\rxdebug.exe" "Flags" 0x408
+  WriteRegDWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\backup.exe" "Flags" 0x408
 
   SetRebootFlag true
   
@@ -1958,6 +1975,27 @@ StartRemove:
   DeleteRegKey HKCR "CLSID\{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}"
   DeleteRegKey HKCR "FOLDER\shellex\ContextMenuHandlers\AFS Client Shell Extension"
   DeleteRegValue HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved" "{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}"
+
+  ; The following are keys added for Terminal Server compatibility
+  ; http://support.microsoft.com/default.aspx?scid=kb;EN-US;186499
+  DeleteRegKey HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\afsd_service.exe"
+  DeleteRegKey HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\afsshare.exe"
+  DeleteRegKey HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\klog.exe"
+  DeleteRegKey HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\tokens.exe"
+  DeleteRegKey HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\aklog.exe"
+  DeleteRegKey HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\unlog.exe"
+  DeleteRegKey HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\fs.exe"
+  DeleteRegKey HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\afscreds.exe"
+  DeleteRegKey HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\symlink.exe"
+  DeleteRegKey HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\kpasswd.exe"
+  DeleteRegKey HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\pts.exe"
+  DeleteRegKey HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\bos.exe"
+  DeleteRegKey HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\kas.exe"
+  DeleteRegKey HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\vos.exe"
+  DeleteRegKey HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\udebug.exe"
+  DeleteRegKey HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\translate_et.exe"
+  DeleteRegKey HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\rxdebug.exe"
+  DeleteRegKey HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\backup.exe"
 
   DeleteRegKey HKLM "${AFS_REGKEY_ROOT}\AFS Client\CurrentVersion"
   DeleteRegKey HKLM "${AFS_REGKEY_ROOT}\AFS Client"

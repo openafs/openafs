@@ -28,6 +28,7 @@
 #include <time.h>
 
 #include <osi.h>
+#include <ntstatus.h>
 
 #include "afsd.h"
 
@@ -86,6 +87,11 @@ int numNCBs, numSessions, numVCs;
 
 int smb_maxVCPerServer;
 int smb_maxMpxRequests;
+
+int smb_authType = SMB_AUTH_EXTENDED; /* type of SMB auth to use. One of SMB_AUTH_* */
+HANDLE smb_lsaHandle;
+ULONG smb_lsaSecPackage;
+LSA_STRING smb_lsaLogonOrigin;
 
 #define NCBmax MAXIMUM_WAIT_OBJECTS
 EVENT_HANDLE NCBavails[NCBmax], NCBevents[NCBmax];
@@ -186,6 +192,15 @@ extern char cm_confDir[];
 #endif /* DJGPP */
 
 extern char AFSConfigKeyName[];
+
+char smb_ServerDomainName[MAX_COMPUTERNAME_LENGTH + 1] = ""; /* domain name */
+int smb_ServerDomainNameLength = 0;
+char smb_ServerOS[] = "Windows 5.0"; /* Faux OS String */
+int smb_ServerOSLength = sizeof(smb_ServerOS);
+char smb_ServerLanManager[] = "Windows 2000 LAN Manager"; /* Faux LAN Manager string */
+int smb_ServerLanManagerLength = sizeof(smb_ServerLanManager);
+
+GUID smb_ServerGUID = { 0x40015cb8, 0x058a, 0x44fc, { 0xae, 0x7e, 0xbb, 0x29, 0x52, 0xee, 0x7e, 0xff }};
 
 /*
  * Demo expiration
@@ -738,6 +753,33 @@ smb_vc_t *smb_FindVC(unsigned short lsn, int flags, int lana)
 		lock_InitializeMutex(&vcp->mx, "vc_t mutex");
 		vcp->lsn = lsn;
 		vcp->lana = lana;
+        vcp->secCtx = NULL;
+
+		if (smb_authType == SMB_AUTH_NTLM || smb_authType == SMB_AUTH_EXTENDED) {
+            /* We must obtain a challenge for extended auth 
+             * in case the client negotiates smb v3 
+             */
+            NTSTATUS nts,ntsEx;
+			MSV1_0_LM20_CHALLENGE_REQUEST lsaReq;
+			PMSV1_0_LM20_CHALLENGE_RESPONSE lsaResp;
+			ULONG lsaRespSize;
+
+			lsaReq.MessageType = MsV1_0Lm20ChallengeRequest;
+
+			nts = LsaCallAuthenticationPackage( smb_lsaHandle,
+                                                smb_lsaSecPackage,
+                                                &lsaReq,
+                                                sizeof(lsaReq),
+                                                &lsaResp,
+                                                &lsaRespSize,
+                                                &ntsEx);
+			osi_assert(nts == STATUS_SUCCESS); /* this had better work! */
+
+			memcpy(vcp->encKey, lsaResp->ChallengeToClient, MSV1_0_CHALLENGE_LENGTH);
+            LsaFreeReturnBuffer(lsaResp);
+		}
+		else
+			memset(vcp->encKey, 0, MSV1_0_CHALLENGE_LENGTH);
 	}
 	lock_ReleaseWrite(&smb_rctLock);
 	return vcp;
@@ -2097,6 +2139,15 @@ void smb_MapNTError(long code, unsigned long *NTStatusp)
     else if (code == CM_ERROR_AMBIGUOUS_FILENAME) {
 		NTStatus = 0xC0000035L;	/* Object name collision */
     }
+	else if (code == CM_ERROR_BADPASSWORD) {
+		NTStatus = 0xC000006DL; /* unknown username or bad password */
+	}
+	else if (code == CM_ERROR_BADLOGONTYPE) {
+		NTStatus = 0xC000015BL; /* logon type not granted */
+	}
+	else if (code == CM_ERROR_GSSCONTINUE) {
+		NTStatus = 0xC0000016L; /* more processing required */
+	}
 	else {
 		NTStatus = 0xC0982001L;	/* SMB non-specific error */
 	}
@@ -2247,6 +2298,11 @@ void smb_MapCoreError(long code, smb_vc_t *vcp, unsigned short *scodep,
 	else if (code == CM_ERROR_RENAME_IDENTICAL) {
 		class = 1;
 		error = 183;     /* Samba uses this */
+	}
+	else if (code == CM_ERROR_BADPASSWORD || code == CM_ERROR_BADLOGONTYPE) {
+		/* we don't have a good way of reporting CM_ERROR_BADLOGONTYPE */
+		class = 2;
+		error = 2; /* bad password */
 	}
 	else {
 		class = 2;
@@ -2423,18 +2479,22 @@ long smb_ReceiveCoreUnlockRecord(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t 
 long smb_ReceiveNegotiate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
 	char *namep;
+    char *datap;
 	int coreProtoIndex;
 	int v3ProtoIndex;
 	int NTProtoIndex;
-	int protoIndex;			/* index we're using */
+	int protoIndex;			        /* index we're using */
 	int namex;
 	int dbytes;
 	int entryLength;
 	int tcounter;
-	char protocol_array[10][1024]; /* protocol signature of the client */
+	char protocol_array[10][1024];  /* protocol signature of the client */
+    int caps;                       /* capabilities */
+    time_t unixTime;
+	long dosTime;
+	TIME_ZONE_INFORMATION tzi;
 
-        
-	osi_Log1(smb_logp, "SMB receive negotiate; %d + 1 ongoing ops",
+    osi_Log1(smb_logp, "SMB receive negotiate; %d + 1 ongoing ops",
 			 ongoingOps - 1);
 	if (!isGateway) {
 		if (active_vcp) {
@@ -2545,12 +2605,23 @@ long smb_ReceiveNegotiate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 	if (protoIndex == -1)
 		return CM_ERROR_INVAL;
 	else if (NTProtoIndex != -1) {
-		smb_SetSMBParm(outp, 0, protoIndex);
-        smb_SetSMBParmByte(outp, 1, 0);	/* share level security, no passwd encrypt */
+        smb_SetSMBParm(outp, 0, protoIndex);
+		if (smb_authType != SMB_AUTH_NONE) {
+			smb_SetSMBParmByte(outp, 1,
+				NEGOTIATE_SECURITY_USER_LEVEL |
+				NEGOTIATE_SECURITY_CHALLENGE_RESPONSE);	/* user level security, challenge response */
+		} else {
+            smb_SetSMBParmByte(outp, 1, 0); /* share level auth with plaintext password. */
+		}
         smb_SetSMBParm(outp, 1, smb_maxMpxRequests);	/* max multiplexed requests */
         smb_SetSMBParm(outp, 2, smb_maxVCPerServer);	/* max VCs per consumer/server connection */
-        smb_SetSMBParmLong(outp, 3, SMB_PACKETSIZE); /* xmit buffer size */
-		smb_SetSMBParmLong(outp, 5, 65536);	/* raw buffer size */
+        smb_SetSMBParmLong(outp, 3, SMB_PACKETSIZE);    /* xmit buffer size */
+		smb_SetSMBParmLong(outp, 5, SMB_MAXRAWSIZE);	/* raw buffer size */
+        /* The session key is not a well documented field however most clients
+         * will echo back the session key to the server.  Currently we are using
+         * the same value for all sessions.  We should generate a random value
+         * and store it into the vcp 
+         */
         smb_SetSMBParm(outp, 7, 1);	/* next 2: session key */
         smb_SetSMBParm(outp, 8, 1);
 		/* 
@@ -2568,30 +2639,100 @@ long smb_ReceiveNegotiate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 		 * and NT Find *
 		 * and NT SMB's *
 		 * and raw mode */
-		smb_SetSMBParmLong(outp, 9, 0x251);	
-		smb_SetSMBParmLong(outp, 11, 0);/* XXX server time: do we need? */
-		smb_SetSMBParmLong(outp, 13, 0);/* XXX server date: do we need? */
-		smb_SetSMBParm(outp, 15, 0);	/* XXX server tzone: do we need? */
-		smb_SetSMBParmByte(outp, 16, 0);/* Encryption key length */
-		smb_SetSMBDataLength(outp, 0);	/* perhaps should specify 8 bytes anyway */
+        caps = NTNEGOTIATE_CAPABILITY_NTSTATUS |
+			   NTNEGOTIATE_CAPABILITY_NTFIND |
+               NTNEGOTIATE_CAPABILITY_RAWMODE |
+			   NTNEGOTIATE_CAPABILITY_NTSMB;
+
+        if ( smb_authType == SMB_AUTH_EXTENDED )
+            caps |= NTNEGOTIATE_CAPABILITY_EXTENDED_SECURITY;
+
+        smb_SetSMBParmLong(outp, 9, caps);
+		time(&unixTime);
+		smb_SearchTimeFromUnixTime(&dosTime, unixTime);
+		smb_SetSMBParmLong(outp, 11, LOWORD(dosTime));/* server time */
+		smb_SetSMBParmLong(outp, 13, HIWORD(dosTime));/* server date */
+
+		GetTimeZoneInformation(&tzi);
+		smb_SetSMBParm(outp, 15, (unsigned short) tzi.Bias);	/* server tzone */
+
+		if (smb_authType == SMB_AUTH_NTLM) {
+			smb_SetSMBParmByte(outp, 16, MSV1_0_CHALLENGE_LENGTH);/* Encryption key length */
+			smb_SetSMBDataLength(outp, MSV1_0_CHALLENGE_LENGTH + smb_ServerDomainNameLength);
+			/* paste in encryption key */
+			datap = smb_GetSMBData(outp, NULL);
+			memcpy(datap,vcp->encKey,MSV1_0_CHALLENGE_LENGTH);
+			/* and the faux domain name */
+			strcpy(datap + MSV1_0_CHALLENGE_LENGTH,smb_ServerDomainName);
+		} else if ( smb_authType == SMB_AUTH_EXTENDED ) {
+            void * secBlob;
+			int secBlobLength;
+
+			smb_SetSMBParmByte(outp, 16, 0); /* Encryption key length */
+
+			smb_NegotiateExtendedSecurity(&secBlob, &secBlobLength);
+
+			smb_SetSMBDataLength(outp, secBlobLength + sizeof(smb_ServerGUID));
+			
+			datap = smb_GetSMBData(outp, NULL);
+			memcpy(datap, &smb_ServerGUID, sizeof(smb_ServerGUID));
+
+			if (secBlob) {
+				datap += sizeof(smb_ServerGUID);
+				memcpy(datap, secBlob, secBlobLength);
+				free(secBlob);
+			}
+        } else {
+			smb_SetSMBParmByte(outp, 16, 0); /* Encryption key length */
+			smb_SetSMBDataLength(outp, 0);   /* Perhaps we should specify 8 bytes anyway */
+		}
 	}
 	else if (v3ProtoIndex != -1) {
 		smb_SetSMBParm(outp, 0, protoIndex);
-		smb_SetSMBParm(outp, 1, 0);	/* share level security, no passwd encrypt */
+
+        /* NOTE: Extended authentication cannot be negotiated with v3
+         * therefore we fail over to NTLM 
+         */
+        if (smb_authType == SMB_AUTH_NTLM || smb_authType == SMB_AUTH_EXTENDED) {
+			smb_SetSMBParm(outp, 1,
+				NEGOTIATE_SECURITY_USER_LEVEL |
+				NEGOTIATE_SECURITY_CHALLENGE_RESPONSE);	/* user level security, challenge response */
+		} else {
+			smb_SetSMBParm(outp, 1, 0); /* share level auth with clear password */
+		}
 		smb_SetSMBParm(outp, 2, SMB_PACKETSIZE);
 		smb_SetSMBParm(outp, 3, smb_maxMpxRequests);	/* max multiplexed requests */
 		smb_SetSMBParm(outp, 4, smb_maxVCPerServer);	/* max VCs per consumer/server connection */
 		smb_SetSMBParm(outp, 5, 0);	/* no support of block mode for read or write */
 		smb_SetSMBParm(outp, 6, 1);	/* next 2: session key */
 		smb_SetSMBParm(outp, 7, 1);
-		smb_SetSMBParm(outp, 8, 0);	/* XXX server time: do we need? */
-		smb_SetSMBParm(outp, 9, 0);	/* XXX server date: do we need? */
-		smb_SetSMBParm(outp, 10, 0);	/* XXX server tzone: do we need? */
-		smb_SetSMBParm(outp, 11, 0);	/* resvd */
-		smb_SetSMBParm(outp, 12, 0);	/* resvd */
-		smb_SetSMBDataLength(outp, 0);	/* perhaps should specify 8 bytes anyway */
+		time(&unixTime);
+		smb_SearchTimeFromUnixTime(&dosTime, unixTime);
+		smb_SetSMBParm(outp, 8, LOWORD(dosTime));	/* server time */
+		smb_SetSMBParm(outp, 9, HIWORD(dosTime));	/* server date */
+
+		GetTimeZoneInformation(&tzi);
+		smb_SetSMBParm(outp, 10, (unsigned short) tzi.Bias);	/* server tzone */
+
+        /* NOTE: Extended authentication cannot be negotiated with v3
+         * therefore we fail over to NTLM 
+         */
+		if (smb_authType == SMB_AUTH_NTLM || smb_authType == SMB_AUTH_EXTENDED) {
+			smb_SetSMBParm(outp, 11, MSV1_0_CHALLENGE_LENGTH);	/* encryption key length */
+            smb_SetSMBParm(outp, 12, 0);	/* resvd */
+			smb_SetSMBDataLength(outp, MSV1_0_CHALLENGE_LENGTH + smb_ServerDomainNameLength);	/* perhaps should specify 8 bytes anyway */
+			datap = smb_GetSMBData(outp, NULL);
+			/* paste in a new encryption key */
+			memcpy(datap, vcp->encKey, MSV1_0_CHALLENGE_LENGTH);
+			/* and the faux domain name */
+			strcpy(datap + MSV1_0_CHALLENGE_LENGTH, smb_ServerDomainName);
+		} else {
+			smb_SetSMBParm(outp, 11, 0); /* encryption key length */
+			smb_SetSMBParm(outp, 12, 0); /* resvd */
+			smb_SetSMBDataLength(outp, 0);
+		}
 	}
-	else if (coreProtoIndex != -1) {
+	else if (coreProtoIndex != -1) {     /* not really supported anymore */
 		smb_SetSMBParm(outp, 0, protoIndex);
 		smb_SetSMBDataLength(outp, 0);
 	}
@@ -2605,8 +2746,21 @@ void smb_Daemon(void *parmp)
 	while(1) {
 		count++;
 		thrd_Sleep(10000);
-		if ((count % 360) == 0)		/* every hour */
-			smb_CalculateNowTZ();
+		if ((count % 360) == 0)	{	/* every hour */
+            struct tm myTime;
+		 
+            /* Initialize smb_localZero */
+            myTime.tm_isdst = -1;		/* compute whether on DST or not */
+            myTime.tm_year = 70;
+            myTime.tm_mon = 0;
+            myTime.tm_mday = 1;
+            myTime.tm_hour = 0;
+            myTime.tm_min = 0;
+            myTime.tm_sec = 0;
+            smb_localZero = mktime(&myTime);
+
+            smb_CalculateNowTZ();
+        }
 		/* XXX GC dir search entries */
 	}
 }
@@ -5822,9 +5976,11 @@ void smb_DispatchPacket(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
 				outWctp = outp->wctp;
 				smbp = (smb_t *) &outp->data;
 				if (code != CM_ERROR_PARTIALWRITE
-				    && code != CM_ERROR_BUFFERTOOSMALL) {
+				    && code != CM_ERROR_BUFFERTOOSMALL 
+                    && code != CM_ERROR_GSSCONTINUE) {
 					/* nuke wct and bcc.  For a partial
-					 * write, assume they're OK.
+					 * write or an in-process authentication handshake, 
+                     * assume they're OK.
 					 */
 					*outWctp++ = 0;
 					*outWctp++ = 0;
@@ -7139,6 +7295,69 @@ void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
 	smb_tran2DispatchTable[13].procp = smb_ReceiveTran2MKDir;
 
 	smb3_Init();
+
+	/* if we are doing SMB authentication we have register outselves as a logon process */
+	if (smb_authType != SMB_AUTH_NONE) {
+        NTSTATUS nts;
+		LSA_STRING afsProcessName;
+		LSA_OPERATIONAL_MODE dummy; /*junk*/
+		DWORD bufsize;
+
+		afsProcessName.Buffer = "OpenAFSClientDaemon";
+		afsProcessName.Length = strlen(afsProcessName.Buffer);
+		afsProcessName.MaximumLength = afsProcessName.Length + 1;
+
+		nts = LsaRegisterLogonProcess(&afsProcessName, &smb_lsaHandle, &dummy);
+
+		if (nts == STATUS_SUCCESS) {
+			LSA_STRING packageName;
+			/* we are registered. Find out the security package id */
+			packageName.Buffer = MSV1_0_PACKAGE_NAME;
+			packageName.Length = strlen(packageName.Buffer);
+			packageName.MaximumLength = packageName.Length + 1;
+			nts = LsaLookupAuthenticationPackage(smb_lsaHandle, &packageName , &smb_lsaSecPackage);
+			if (nts == STATUS_SUCCESS) {
+				/* Now get ourselves a domain name. */
+				/* For now we are using the local computer name as the domain name.
+				 * It is actually the domain for local logins, and we are acting as
+				 * a local SMB server. 
+                 */
+				bufsize = sizeof(smb_ServerDomainName) - 1;
+				GetComputerName(smb_ServerDomainName, &bufsize);
+				smb_ServerDomainNameLength = bufsize + 1; /* bufsize doesn't include terminator */
+				afsi_log("Setting SMB server domain name to [%s]", smb_ServerDomainName);
+
+				smb_lsaLogonOrigin.Buffer = "OpenAFS";
+				smb_lsaLogonOrigin.Length = strlen(smb_lsaLogonOrigin.Buffer);
+				smb_lsaLogonOrigin.MaximumLength = smb_lsaLogonOrigin.Length + 1;
+			} else {
+				afsi_log("Can't determine security package name for NTLM!! NTSTATUS=[%l]",nts);
+			}
+		} else {
+			afsi_log("Can't register logon process!! NTSTATUS=[%l]",nts);
+		}
+
+		if (nts != STATUS_SUCCESS) {
+			/* something went wrong. We report the error and revert back to no authentication
+			   because we can't perform any auth requests without a successful lsa handle
+			   or sec package id. */
+			afsi_log("Reverting to NO SMB AUTH");
+			smb_authType = SMB_AUTH_NONE;
+		} else if ( smb_authType == SMB_AUTH_EXTENDED) {
+            /* Test to see if there is anything to negotiate.  If SPNEGO is not going to be used 
+            * then the only option is NTLMSSP anyway; so just fallback. 
+            */
+            void * secBlob;
+            int secBlobLength;
+
+            smb_NegotiateExtendedSecurity(&secBlob, &secBlobLength);
+            if (secBlobLength == 0) {
+                smb_authType = SMB_AUTH_NTLM;
+                afsi_log("Reverting to SMB AUTH NTLM");
+            } else
+                free(secBlob);
+        }
+	}
 
 	/* Start listeners, waiters, servers, and daemons */
 

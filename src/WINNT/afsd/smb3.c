@@ -12,6 +12,8 @@
 
 #ifndef DJGPP
 #include <windows.h>
+#define SECURITY_WIN32
+#include <security.h>
 #endif /* !DJGPP */
 #include <stdlib.h>
 #include <malloc.h>
@@ -106,35 +108,687 @@ unsigned char *smb_ParseString(unsigned char *inp, char **chainpp)
     return inp;
 }   
 
+/*DEBUG do not checkin*/
+void OutputDebugF(char * format, ...) {
+#ifdef COMMENT
+    va_list args;
+    int len;
+    char * buffer;
+
+    va_start( args, format );
+    len = _vscprintf( format, args ) // _vscprintf doesn't count
+                               + 3; // terminating '\0' + '\n'
+    buffer = malloc( len * sizeof(char) );
+    vsprintf( buffer, format, args );
+    strcat(buffer, "\n");
+    OutputDebugString(buffer);
+    free( buffer );
+#endif
+}
+
+void OutputDebugHexDump(unsigned char * buffer, int len) {
+#ifdef COMMENT
+    int i,j,k;
+    char buf[256];
+    static char tr[16] = {'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
+
+    OutputDebugF("Hexdump length [%d]",len);
+
+    for(i=0;i<len;i++) {
+        if(!(i%16)) {
+            if(i)
+                OutputDebugString(buf);
+            sprintf(buf,"%5x",i);
+            memset(buf+5,' ',80);
+            buf[85] = 0;
+            strcat(buf,"\n");
+        }
+
+        j = (i%16);
+        j = j*3 + 7 + ((j>7)?1:0);
+        k = buffer[i];
+
+        buf[j] = tr[k / 16]; buf[j+1] = tr[k % 16];
+
+        j = (i%16);
+        j = j + 56 + ((j>7)?1:0);
+
+        buf[j] = (k>32 && k<127)?k:'.';
+    }    
+    if(i)
+        OutputDebugString(buf);
+#endif
+}   
+/**/
+
+#define SMB_EXT_SEC_PACKAGE_NAME "Negotiate"
+void smb_NegotiateExtendedSecurity(void ** secBlob, int * secBlobLength){
+    SECURITY_STATUS status, istatus;
+	CredHandle creds;
+	TimeStamp expiry;
+	SecBufferDesc secOut;
+	SecBuffer secTok;
+	CtxtHandle ctx;
+	ULONG flags;
+
+	*secBlob = NULL;
+	*secBlobLength = 0;
+
+    OutputDebugF("Negotiating Extended Security");
+
+	status = AcquireCredentialsHandle(
+		NULL,
+		SMB_EXT_SEC_PACKAGE_NAME,
+		SECPKG_CRED_INBOUND,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		&creds,
+		&expiry);
+
+	if (status != SEC_E_OK) {
+		/* Really bad. We return an empty security blob */
+		OutputDebugF("AcquireCredentialsHandle failed with %lX", status);
+		goto nes_0;
+	}
+
+	secOut.cBuffers = 1;
+	secOut.pBuffers = &secTok;
+	secOut.ulVersion = SECBUFFER_VERSION;
+
+	secTok.BufferType = SECBUFFER_TOKEN;
+	secTok.cbBuffer = 0;
+	secTok.pvBuffer = NULL;
+
+        ctx.dwLower = ctx.dwUpper = 0;
+
+	status = AcceptSecurityContext(
+		&creds,
+		NULL,
+		NULL,
+        ASC_REQ_CONNECTION | ASC_REQ_EXTENDED_ERROR | ASC_REQ_ALLOCATE_MEMORY,
+		SECURITY_NETWORK_DREP,
+		&ctx,
+		&secOut,
+		&flags,
+		&expiry
+		);
+
+	if (status == SEC_I_COMPLETE_NEEDED || status == SEC_I_COMPLETE_AND_CONTINUE) {
+		OutputDebugF("Completing token...");
+		istatus = CompleteAuthToken(&ctx, &secOut);
+        if ( istatus != SEC_E_OK )
+            OutputDebugF("Token completion failed: %x", istatus);
+	}
+
+	if (status == SEC_I_COMPLETE_AND_CONTINUE || status == SEC_I_CONTINUE_NEEDED) {
+		if (secTok.pvBuffer) {
+			*secBlobLength = secTok.cbBuffer;
+			*secBlob = malloc( secTok.cbBuffer );
+			memcpy(*secBlob, secTok.pvBuffer, secTok.cbBuffer );
+		}
+	} else {
+        if ( status != SEC_E_OK )
+            OutputDebugF("AcceptSecurityContext status != CONTINUE  %lX", status);
+    }
+
+	if (secTok.pvBuffer) FreeContextBuffer( secTok.pvBuffer );
+
+	/* Discard credentials handle.  We'll reacquire one when we get the session setup X */
+	FreeCredentialsHandle(&creds);
+
+  nes_0:
+
+    if (secBlob) {
+        OutputDebugF("Returning initial token:");
+        OutputDebugHexDump(*secBlob,*secBlobLength);
+    } else {
+        OutputDebugF("No initial token");
+    }
+	return;
+}
+
+struct smb_ext_context {
+	CredHandle creds;
+	CtxtHandle ctx;
+	int partialTokenLen;
+	void * partialToken;
+};
+
+long smb_AuthenticateUserExt(smb_vc_t * vcp, char * usern, char * secBlobIn, int secBlobInLength, char ** secBlobOut, int * secBlobOutLength) {
+    SECURITY_STATUS status, istatus;
+	CredHandle creds;
+	TimeStamp expiry;
+	long code = 0;
+	SecBufferDesc secBufIn;
+	SecBuffer secTokIn;
+	SecBufferDesc secBufOut;
+	SecBuffer secTokOut;
+	CtxtHandle ctx;
+	struct smb_ext_context * secCtx = NULL;
+	struct smb_ext_context * newSecCtx = NULL;
+	void * assembledBlob = NULL;
+	int assembledBlobLength = 0;
+	ULONG flags;
+
+	OutputDebugF("In smb_AuthenticateUserExt");
+
+	*secBlobOut = NULL;
+	*secBlobOutLength = 0;
+
+	if (vcp->flags & SMB_VCFLAG_AUTH_IN_PROGRESS) {
+		secCtx = vcp->secCtx;
+		lock_ObtainMutex(&vcp->mx);
+		vcp->flags &= ~SMB_VCFLAG_AUTH_IN_PROGRESS;
+		vcp->secCtx = NULL;
+		lock_ReleaseMutex(&vcp->mx);
+	}
+
+    if (secBlobIn) {
+        OutputDebugF("Received incoming token:");
+        OutputDebugHexDump(secBlobIn,secBlobInLength);
+    }
+    
+    if (secCtx) {
+        OutputDebugF("Continuing with existing context.");		
+        creds = secCtx->creds;
+        ctx = secCtx->ctx;
+
+		if (secCtx->partialToken) {
+			assembledBlobLength = secCtx->partialTokenLen + secBlobInLength;
+			assembledBlob = malloc(assembledBlobLength);
+            memcpy(assembledBlob,secCtx->partialToken, secCtx->partialTokenLen);
+			memcpy(((BYTE *)assembledBlob) + secCtx->partialTokenLen, secBlobIn, secBlobInLength);
+		}
+	} else {
+		status = AcquireCredentialsHandle(
+			NULL,
+			SMB_EXT_SEC_PACKAGE_NAME,
+			SECPKG_CRED_INBOUND,
+			NULL,
+			NULL,
+			NULL,
+			NULL,
+			&creds,
+			&expiry);
+
+		if (status != SEC_E_OK) {
+			OutputDebugF("Can't acquire Credentials handle [%lX]", status);
+			code = CM_ERROR_BADPASSWORD; /* means "try again when I'm sober" */
+			goto aue_0;
+		}
+
+		ctx.dwLower = 0;
+		ctx.dwUpper = 0;
+	}
+
+    secBufIn.cBuffers = 1;
+	secBufIn.pBuffers = &secTokIn;
+	secBufIn.ulVersion = SECBUFFER_VERSION;
+
+	secTokIn.BufferType = SECBUFFER_TOKEN;
+	if (assembledBlob) {
+		secTokIn.cbBuffer = assembledBlobLength;
+		secTokIn.pvBuffer = assembledBlob;
+	} else {
+		secTokIn.cbBuffer = secBlobInLength;
+		secTokIn.pvBuffer = secBlobIn;
+	}
+
+	secBufOut.cBuffers = 1;
+	secBufOut.pBuffers = &secTokOut;
+	secBufOut.ulVersion = SECBUFFER_VERSION;
+
+	secTokOut.BufferType = SECBUFFER_TOKEN;
+	secTokOut.cbBuffer = 0;
+	secTokOut.pvBuffer = NULL;
+
+	status = AcceptSecurityContext(
+		&creds,
+		((secCtx)?&ctx:NULL),
+		&secBufIn,
+		ASC_REQ_CONNECTION | ASC_REQ_EXTENDED_ERROR	| ASC_REQ_ALLOCATE_MEMORY,
+		SECURITY_NETWORK_DREP,
+		&ctx,
+		&secBufOut,
+		&flags,
+		&expiry
+		);
+
+	if (status == SEC_I_COMPLETE_NEEDED || status == SEC_I_COMPLETE_AND_CONTINUE) {
+		OutputDebugF("Completing token...");
+		istatus = CompleteAuthToken(&ctx, &secBufOut);
+        if ( istatus != SEC_E_OK )
+            OutputDebugF("Token completion failed: %lX", istatus);
+	}
+
+	if (status == SEC_I_COMPLETE_AND_CONTINUE || status == SEC_I_CONTINUE_NEEDED) {
+		OutputDebugF("Continue needed");
+
+		newSecCtx = malloc(sizeof(*newSecCtx));
+
+		newSecCtx->creds = creds;
+		newSecCtx->ctx = ctx;
+		newSecCtx->partialToken = NULL;
+		newSecCtx->partialTokenLen = 0;
+
+		lock_ObtainMutex( &vcp->mx );
+		vcp->flags |= SMB_VCFLAG_AUTH_IN_PROGRESS;
+		vcp->secCtx = newSecCtx;
+		lock_ReleaseMutex( &vcp->mx );
+
+		code = CM_ERROR_GSSCONTINUE;
+	}
+
+	if ((status == SEC_I_COMPLETE_NEEDED || status == SEC_E_OK || 
+         status == SEC_I_COMPLETE_AND_CONTINUE || status == SEC_I_CONTINUE_NEEDED) && 
+        secTokOut.pvBuffer) {
+		OutputDebugF("Need to send token back to client");
+
+		*secBlobOutLength = secTokOut.cbBuffer;
+		*secBlobOut = malloc(secTokOut.cbBuffer);
+		memcpy(*secBlobOut, secTokOut.pvBuffer, secTokOut.cbBuffer);
+
+        OutputDebugF("Outgoing token:");
+        OutputDebugHexDump(*secBlobOut,*secBlobOutLength);
+	} else if (status == SEC_E_INCOMPLETE_MESSAGE) {
+		OutputDebugF("Incomplete message");
+
+		newSecCtx = malloc(sizeof(*newSecCtx));
+
+		newSecCtx->creds = creds;
+		newSecCtx->ctx = ctx;
+		newSecCtx->partialToken = malloc(secTokOut.cbBuffer);
+		memcpy(newSecCtx->partialToken, secTokOut.pvBuffer, secTokOut.cbBuffer);
+		newSecCtx->partialTokenLen = secTokOut.cbBuffer;
+
+		lock_ObtainMutex( &vcp->mx );
+		vcp->flags |= SMB_VCFLAG_AUTH_IN_PROGRESS;
+		vcp->secCtx = newSecCtx;
+		lock_ReleaseMutex( &vcp->mx );
+
+		code = CM_ERROR_GSSCONTINUE;
+	}
+
+	if (status == SEC_E_OK || status == SEC_I_COMPLETE_NEEDED) {
+		/* woo hoo! */
+		SecPkgContext_Names names;
+
+		OutputDebugF("Authentication completed");
+        OutputDebugF("Returned flags : [%lX]", flags);
+
+		if (!QueryContextAttributes(&ctx, SECPKG_ATTR_NAMES, &names)) {
+            OutputDebugF("Received name [%s]", names.sUserName);
+            strcpy(usern, names.sUserName);
+            strlwr(usern); /* in tandem with smb_GetNormalizedUsername */
+            FreeContextBuffer(names.sUserName);
+        } else {
+            /* Force the user to retry if the context is invalid */
+            OutputDebugF("QueryContextAttributes Names failed [%x]", GetLastError());
+            code = CM_ERROR_BADPASSWORD; 
+        }
+	} else if (!code) {
+        switch ( status ) {
+        case SEC_E_INVALID_TOKEN:
+            OutputDebugF("Returning bad password :: INVALID_TOKEN");
+            break;
+        case SEC_E_INVALID_HANDLE:
+            OutputDebugF("Returning bad password :: INVALID_HANDLE");
+            break;
+        case SEC_E_LOGON_DENIED:
+            OutputDebugF("Returning bad password :: LOGON_DENIED");
+            break;
+        case SEC_E_UNKNOWN_CREDENTIALS:
+            OutputDebugF("Returning bad password :: UNKNOWN_CREDENTIALS");
+            break;
+        case SEC_E_NO_CREDENTIALS:
+            OutputDebugF("Returning bad password :: NO_CREDENTIALS");
+            break;
+        case SEC_E_CONTEXT_EXPIRED:
+            OutputDebugF("Returning bad password :: CONTEXT_EXPIRED");
+            break;
+        case SEC_E_INCOMPLETE_CREDENTIALS:
+            OutputDebugF("Returning bad password :: INCOMPLETE_CREDENTIALS");
+            break;
+        case SEC_E_WRONG_PRINCIPAL:
+            OutputDebugF("Returning bad password :: WRONG_PRINCIPAL");
+            break;
+        case SEC_E_TIME_SKEW:
+            OutputDebugF("Returning bad password :: TIME_SKEW");
+            break;
+        default:
+            OutputDebugF("Returning bad password :: Status == %lX", status);
+        }
+		code = CM_ERROR_BADPASSWORD;
+	}
+
+	if (secCtx) {
+		if (secCtx->partialToken) free(secCtx->partialToken);
+		free(secCtx);
+	}
+
+	if (assembledBlob) {
+		free(assembledBlob);
+	}
+
+	if (secTokOut.pvBuffer)
+		FreeContextBuffer(secTokOut.pvBuffer);
+
+	if (code != CM_ERROR_GSSCONTINUE) {
+		DeleteSecurityContext(&ctx);
+		FreeCredentialsHandle(&creds);
+	}
+
+  aue_0:
+	return code;
+}
+
+#define P_LEN 256
+#define P_RESP_LEN 128
+
+/* LsaLogonUser expects input parameters to be in a contiguous block of memory. 
+   So put stuff in a struct. */
+struct Lm20AuthBlob {
+	MSV1_0_LM20_LOGON lmlogon;
+	BYTE ciResponse[P_RESP_LEN];    /* Unicode representation */
+	BYTE csResponse[P_RESP_LEN];    /* ANSI representation */
+	WCHAR accountNameW[P_LEN];
+	WCHAR primaryDomainW[P_LEN];
+	WCHAR workstationW[MAX_COMPUTERNAME_LENGTH + 1];
+	TOKEN_GROUPS tgroups;
+	TOKEN_SOURCE tsource;
+};
+
+long smb_AuthenticateUserLM(smb_vc_t *vcp, char * accountName, char * primaryDomain, char * ciPwd, unsigned ciPwdLength, char * csPwd, unsigned csPwdLength) {
+
+	NTSTATUS nts, ntsEx;
+	struct Lm20AuthBlob lmAuth;
+	PMSV1_0_LM20_LOGON_PROFILE lmprofilep;
+	QUOTA_LIMITS quotaLimits;
+	DWORD size;
+	ULONG lmprofilepSize;
+	LUID lmSession;
+	HANDLE lmToken;
+
+	OutputDebugF("In smb_AuthenticateUser for user [%s] domain [%s]", accountName, primaryDomain);
+	OutputDebugF("ciPwdLength is %d and csPwdLength is %d", ciPwdLength, csPwdLength);
+
+    OutputDebugF("csPassword:");
+    OutputDebugHexDump(csPwd,csPwdLength);
+    OutputDebugF("ciPassword:");
+    OutputDebugHexDump(ciPwd,ciPwdLength);
+
+	if (ciPwdLength > P_RESP_LEN || csPwdLength > P_RESP_LEN) {
+		OutputDebugF("ciPwdLength or csPwdLength is too long");
+		return CM_ERROR_BADPASSWORD;
+	}
+
+	memset(&lmAuth,0,sizeof(lmAuth));
+
+	lmAuth.lmlogon.MessageType = MsV1_0NetworkLogon;
+	
+	lmAuth.lmlogon.LogonDomainName.Buffer = lmAuth.primaryDomainW;
+	mbstowcs(lmAuth.primaryDomainW, primaryDomain, P_LEN);
+	lmAuth.lmlogon.LogonDomainName.Length = wcslen(lmAuth.primaryDomainW) * sizeof(WCHAR);
+	lmAuth.lmlogon.LogonDomainName.MaximumLength = P_LEN * sizeof(WCHAR);
+
+	lmAuth.lmlogon.UserName.Buffer = lmAuth.accountNameW;
+	mbstowcs(lmAuth.accountNameW, accountName, P_LEN);
+	lmAuth.lmlogon.UserName.Length = wcslen(lmAuth.accountNameW) * sizeof(WCHAR);
+	lmAuth.lmlogon.UserName.MaximumLength = P_LEN * sizeof(WCHAR);
+
+	lmAuth.lmlogon.Workstation.Buffer = lmAuth.workstationW;
+	lmAuth.lmlogon.Workstation.MaximumLength = (MAX_COMPUTERNAME_LENGTH + 1) * sizeof(WCHAR);
+	size = MAX_COMPUTERNAME_LENGTH + 1;
+	GetComputerNameW(lmAuth.workstationW, &size);
+    lmAuth.lmlogon.Workstation.Length = wcslen(lmAuth.workstationW) * sizeof(WCHAR);
+
+	memcpy(lmAuth.lmlogon.ChallengeToClient, vcp->encKey, MSV1_0_CHALLENGE_LENGTH);
+
+	lmAuth.lmlogon.CaseInsensitiveChallengeResponse.Buffer = lmAuth.ciResponse;
+	lmAuth.lmlogon.CaseInsensitiveChallengeResponse.Length = ciPwdLength;
+	lmAuth.lmlogon.CaseInsensitiveChallengeResponse.MaximumLength = P_RESP_LEN;
+	memcpy(lmAuth.ciResponse, ciPwd, ciPwdLength);
+
+	lmAuth.lmlogon.CaseSensitiveChallengeResponse.Buffer = lmAuth.csResponse;
+	lmAuth.lmlogon.CaseSensitiveChallengeResponse.Length = csPwdLength;
+	lmAuth.lmlogon.CaseSensitiveChallengeResponse.MaximumLength = P_RESP_LEN;
+	memcpy(lmAuth.csResponse, csPwd, csPwdLength);
+
+	lmAuth.lmlogon.ParameterControl = 0;
+
+	lmAuth.tgroups.GroupCount = 0;
+	lmAuth.tgroups.Groups[0].Sid = NULL;
+	lmAuth.tgroups.Groups[0].Attributes = 0;
+
+	lmAuth.tsource.SourceIdentifier.HighPart = 0;
+	lmAuth.tsource.SourceIdentifier.LowPart = (DWORD) vcp;
+	strcpy(lmAuth.tsource.SourceName,"OpenAFS"); /* 8 char limit */
+
+	nts = LsaLogonUser(
+		smb_lsaHandle,
+		&smb_lsaLogonOrigin,
+		Network, /*3*/
+        smb_lsaSecPackage,
+		&lmAuth,
+		sizeof(lmAuth),
+        &lmAuth.tgroups,
+		&lmAuth.tsource,
+		&lmprofilep,
+		&lmprofilepSize,
+		&lmSession,
+		&lmToken,
+		&quotaLimits,
+		&ntsEx);
+
+	OutputDebugF("Return from LsaLogonUser is 0x%lX", nts);
+	OutputDebugF("Extended status is 0x%lX", ntsEx);
+
+	if (nts == ERROR_SUCCESS) {
+		/* free the token */
+		LsaFreeReturnBuffer(lmprofilep);
+        CloseHandle(lmToken);
+		return 0;
+	} else {
+		/* No AFS for you */
+		if (nts == 0xC000015BL)
+			return CM_ERROR_BADLOGONTYPE;
+		else /* our catchall is a bad password though we could be more specific */
+			return CM_ERROR_BADPASSWORD;
+	}
+}
+
+/* The buffer pointed to by usern is assumed to be at least SMB_MAX_USERNAME_LENGTH bytes */
+long smb_GetNormalizedUsername(char * usern, const char * accountName, const char * domainName) {
+
+	char * atsign;
+	const char * domain;
+
+	/* check if we have sane input */
+	if ((strlen(accountName) + strlen(domainName) + 1) > SMB_MAX_USERNAME_LENGTH)
+		return 1;
+
+	/* we could get : [accountName][domainName]
+	   [user][domain]
+	   [user@domain][]
+	   [user][]/[user][?]
+	   [][]/[][?] */
+
+	atsign = strchr(accountName, '@');
+
+	if (atsign) /* [user@domain][] -> [user@domain][domain] */
+		domain = atsign + 1;
+	else
+		domain = domainName;
+
+	/* if for some reason the client doesn't know what domain to use,
+		   it will either return an empty string or a '?' */
+	if (!domain[0] || domain[0] == '?')
+		/* Empty domains and empty usernames are usually sent from tokenless contexts.
+		   This way such logins will get an empty username (easy to check).  I don't know 
+		   when a non-empty username would be supplied with an anonymous domain, but *shrug* */
+		strcpy(usern,accountName);
+	else {
+		/* TODO: what about WIN.MIT.EDU\user vs. WIN\user? */
+		strcpy(usern,domain);
+		strcat(usern,"\\");
+		if (atsign)
+			strncat(usern,accountName,atsign - accountName);
+		else
+			strcat(usern,accountName);
+	}
+
+	strlwr(usern);
+
+	return 0;
+}
+
+/* When using SMB auth, all SMB sessions have to pass through here first to
+ * authenticate the user. 
+ * Caveat: If not use the SMB auth the protocol does not require sending a
+ * session setup packet, which means that we can't rely on a UID in subsequent
+ * packets.  Though in practice we get one anyway.
+ */
 long smb_ReceiveV3SessionSetupX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
     char *tp;
-    char *usern, *pwd, *pwdx;
     smb_user_t *uidp;
     unsigned short newUid;
-    unsigned long caps;
+    unsigned long caps = 0;
     cm_user_t *userp;
     smb_username_t *unp;
     char *s1 = " ";
+    long code = 0; 
+    char usern[SMB_MAX_USERNAME_LENGTH];
+    char *secBlobOut = NULL;
+    int  secBlobOutLength = 0;
 
     /* Check for bad conns */
     if (vcp->flags & SMB_VCFLAG_REMOTECONN)
         return CM_ERROR_REMOTECONN;
 
-    /* For NT LM 0.12 and up, get capabilities */
     if (vcp->flags & SMB_VCFLAG_USENT) {
-        caps = smb_GetSMBParm(inp, 11);
-        if (caps & 0x40)
-            vcp->flags |= SMB_VCFLAG_STATUS32;
-        /* for now, ignore other capability bits */
-    }
+        if (smb_authType == SMB_AUTH_EXTENDED) {
+            /* extended authentication */
+            char *secBlobIn;
+            int secBlobInLength;
+        
+            if (!(vcp->flags & SMB_VCFLAG_SESSX_RCVD)) {
+                caps = smb_GetSMBParm(inp,10) | (((unsigned long) smb_GetSMBParm(inp,11)) << 16);
+            }
 
-    /* Parse the data */
-    tp = smb_GetSMBData(inp, NULL);
-    if (vcp->flags & SMB_VCFLAG_USENT)
-        pwdx = smb_ParseString(tp, &tp);
-    pwd = smb_ParseString(tp, &tp);
-    usern = smb_ParseString(tp, &tp);
+            secBlobInLength = smb_GetSMBParm(inp, 7);
+            secBlobIn = smb_GetSMBData(inp, NULL);
+
+            code = smb_AuthenticateUserExt(vcp, usern, secBlobIn, secBlobInLength, &secBlobOut, &secBlobOutLength);
+
+            if (code == CM_ERROR_GSSCONTINUE) {
+                smb_SetSMBParm(outp, 2, 0);
+                smb_SetSMBParm(outp, 3, secBlobOutLength);
+                smb_SetSMBDataLength(outp, secBlobOutLength + smb_ServerOSLength + smb_ServerLanManagerLength + smb_ServerDomainNameLength);
+                tp = smb_GetSMBData(outp, NULL);
+                if (secBlobOutLength) {
+                    memcpy(tp, secBlobOut, secBlobOutLength);
+                    free(secBlobOut);
+                    tp += secBlobOutLength;
+                }	
+                memcpy(tp,smb_ServerOS,smb_ServerOSLength);
+                tp += smb_ServerOSLength;
+                memcpy(tp,smb_ServerLanManager,smb_ServerLanManagerLength);
+                tp += smb_ServerLanManagerLength;
+                memcpy(tp,smb_ServerDomainName,smb_ServerDomainNameLength);
+                tp += smb_ServerDomainNameLength;
+            }
+
+            /* TODO: handle return code and continue auth. Also free secBlobOut if applicable. */
+        } else {
+            unsigned ciPwdLength, csPwdLength;
+            char *ciPwd, *csPwd;
+            char *accountName;
+            char *primaryDomain;
+            int  datalen;
+
+            /* TODO: parse for extended auth as well */
+            ciPwdLength = smb_GetSMBParm(inp, 7); /* case insensitive password length */
+            csPwdLength = smb_GetSMBParm(inp, 8); /* case sensitive password length */
+
+            tp = smb_GetSMBData(inp, &datalen);
+
+            OutputDebugF("Session packet data size [%d]",datalen);
+
+            ciPwd = tp;
+            tp += ciPwdLength;
+            csPwd = tp;
+            tp += csPwdLength;
+
+            accountName = smb_ParseString(tp, &tp);
+            primaryDomain = smb_ParseString(tp, NULL);
+
+            if (smb_GetNormalizedUsername(usern, accountName, primaryDomain)) {
+                /* shouldn't happen */
+                code = CM_ERROR_BADSMB;
+                goto after_read_packet;
+            }
+
+            /* capabilities are only valid for first session packet */
+            if (!(vcp->flags & SMB_VCFLAG_SESSX_RCVD)) {
+                caps = smb_GetSMBParm(inp, 11) | (((unsigned long)smb_GetSMBParm(inp, 12)) << 16);
+            }
+
+            if (smb_authType == SMB_AUTH_NTLM) {
+                code = smb_AuthenticateUserLM(vcp, accountName, primaryDomain, ciPwd, ciPwdLength, csPwd, csPwdLength);
+            }
+        }
+    }  else { /* V3 */
+        unsigned ciPwdLength;
+        char *ciPwd;
+		char *accountName;
+		char *primaryDomain;
+
+		ciPwdLength = smb_GetSMBParm(inp, 7);
+        tp = smb_GetSMBData(inp, NULL);
+		ciPwd = tp;
+		tp += ciPwdLength;
+
+		accountName = smb_ParseString(tp, &tp);
+		primaryDomain = smb_ParseString(tp, NULL);
+
+		if ( smb_GetNormalizedUsername(usern, accountName, primaryDomain)) {
+			/* shouldn't happen */
+			code = CM_ERROR_BADSMB;
+            goto after_read_packet;
+		}
+
+        /* even if we wanted extended auth, if we only negotiated V3, we have to fallback
+         * to NTLM.
+         */
+		if (smb_authType == SMB_AUTH_NTLM || smb_authType == SMB_AUTH_EXTENDED) {
+			code = smb_AuthenticateUserLM(vcp,accountName,primaryDomain,ciPwd,ciPwdLength,"",0);
+		}
+	}
+
+  after_read_packet:
+	/* note down that we received a session setup X and set the capabilities flag */
+	if (!(vcp->flags & SMB_VCFLAG_SESSX_RCVD)) {
+		lock_ObtainMutex(&vcp->mx);
+		vcp->flags |= SMB_VCFLAG_SESSX_RCVD;
+        /* for the moment we can only deal with NTSTATUS */
+        if (caps & NTNEGOTIATE_CAPABILITY_NTSTATUS) {
+            vcp->flags |= SMB_VCFLAG_STATUS32;
+        }
+		lock_ReleaseMutex(&vcp->mx);
+	}
+
+	/* code would be non-zero if there was an authentication failure.
+	   Ideally we would like to invalidate the uid for this session or break
+	   early to avoid accidently stealing someone else's tokens. */
+
+	if (code) {
+		return code;
+	}
+
+	OutputDebugF("Received username=[%s]", usern);
 
     /* On Windows 2000, this function appears to be called more often than
        it is expected to be called. This resulted in multiple smb_user_t
@@ -189,8 +843,43 @@ long smb_ReceiveV3SessionSetupX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
 
     osi_Log3(smb_logp, "SMB3 session setup name %s creating ID %d%s",
              osi_LogSaveString(smb_logp, usern), newUid, osi_LogSaveString(smb_logp, s1));
+
     smb_SetSMBParm(outp, 2, 0);
-    smb_SetSMBDataLength(outp, 0);
+
+    if (vcp->flags & SMB_VCFLAG_USENT) {
+        if (smb_authType == SMB_AUTH_EXTENDED) {
+            smb_SetSMBParm(outp, 3, secBlobOutLength);
+            smb_SetSMBDataLength(outp, secBlobOutLength + smb_ServerOSLength + smb_ServerLanManagerLength + smb_ServerDomainNameLength);
+            tp = smb_GetSMBData(outp, NULL);
+            if (secBlobOutLength) {
+                memcpy(tp, secBlobOut, secBlobOutLength);
+                free(secBlobOut);
+                tp += secBlobOutLength;
+            }	
+            memcpy(tp,smb_ServerOS,smb_ServerOSLength);
+            tp += smb_ServerOSLength;
+            memcpy(tp,smb_ServerLanManager,smb_ServerLanManagerLength);
+            tp += smb_ServerLanManagerLength;
+            memcpy(tp,smb_ServerDomainName,smb_ServerDomainNameLength);
+            tp += smb_ServerDomainNameLength;
+        } else {
+            smb_SetSMBDataLength(outp, 0);
+        }
+    } else {
+        if (smb_authType == SMB_AUTH_EXTENDED) {
+            smb_SetSMBDataLength(outp, smb_ServerOSLength + smb_ServerLanManagerLength + smb_ServerDomainNameLength);
+            tp = smb_GetSMBData(outp, NULL);
+            memcpy(tp,smb_ServerOS,smb_ServerOSLength);
+            tp += smb_ServerOSLength;
+            memcpy(tp,smb_ServerLanManager,smb_ServerLanManagerLength);
+            tp += smb_ServerLanManagerLength;
+            memcpy(tp,smb_ServerDomainName,smb_ServerDomainNameLength);
+            tp += smb_ServerDomainNameLength;
+        } else {
+            smb_SetSMBDataLength(outp, 0);
+        }
+    }
+
     return 0;
 }
 
@@ -212,10 +901,8 @@ long smb_ReceiveV3UserLogoffX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
 		if (s2 == NULL) s2 = " ";
 		if (s1 == NULL) {s1 = s2; s2 = " ";}
 
-		osi_Log4(smb_logp, "SMB3 user logoffX uid %d name %s%s%s",
-                  uidp->userID,
-                  osi_LogSaveString(smb_logp,
-                                    (uidp->unp) ? uidp->unp->name: " "), s1, s2);
+		osi_Log4(smb_logp, "SMB3 user logoffX uid %d name %s%s%s", uidp->userID,
+                 osi_LogSaveString(smb_logp, (uidp->unp) ? uidp->unp->name: " "), s1, s2);
 
 		lock_ObtainMutex(&uidp->mx);
 		uidp->flags |= SMB_USERFLAG_DELETE;
@@ -742,7 +1429,7 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
 
 	userp = smb_GetTran2User(vcp, p);
     /* In the off chance that userp is NULL, we log and abandon */
-    if(!userp) {
+    if (!userp) {
         osi_Log1(smb_logp, "ReceiveTran2Open user [%d] not resolvable", p->uid);
         smb_FreeTran2Packet(outp);
         return CM_ERROR_BADSMB;
@@ -1165,7 +1852,7 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     }
         
     userp = smb_GetTran2User(vcp, p);
-    if(!userp) {
+    if (!userp) {
         osi_Log1(smb_logp, "ReceiveTran2QPathInfo unable to resolve user [%d]", p->uid);
         smb_FreeTran2Packet(outp);
         return CM_ERROR_BADSMB;
@@ -1366,7 +2053,7 @@ long smb_ReceiveTran2QFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 	outp->totalData = nbytesRequired;
 
 	userp = smb_GetTran2User(vcp, p);
-    if(!userp) {
+    if (!userp) {
     	osi_Log1(smb_logp, "ReceiveTran2QFileInfo unable to resolve user [%d]", p->uid);
     	code = CM_ERROR_BADSMB;
     	goto done;
@@ -1480,7 +2167,7 @@ long smb_ReceiveTran2SetFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
 	outp->totalData = 0;
 
 	userp = smb_GetTran2User(vcp, p);
-    if(!userp) {
+    if (!userp) {
     	osi_Log1(smb_logp,"ReceiveTran2SetFileInfo unable to resolve user [%d]", p->uid);
     	code = CM_ERROR_BADSMB;
     	goto done;
@@ -1677,7 +2364,7 @@ long smb_ApplyV3DirListPatches(cm_scache_t *dscp,
 			/* Copy attributes */
 			lattr = smb_ExtAttributes(scp);
             /* merge in hidden (dot file) attribute */
- 			if( patchp->flags & SMB_DIRLISTPATCH_DOTFILE )
+ 			if ( patchp->flags & SMB_DIRLISTPATCH_DOTFILE )
  				lattr |= SMB_ATTR_HIDDEN;
 			*((u_long *)dptr) = lattr;
 			dptr += 4;
@@ -1727,7 +2414,7 @@ long smb_ApplyV3DirListPatches(cm_scache_t *dscp,
 			/* finally copy out attributes as short */
 			attr = smb_Attributes(scp);
             /* merge in hidden (dot file) attribute */
-            if( patchp->flags & SMB_DIRLISTPATCH_DOTFILE )
+            if ( patchp->flags & SMB_DIRLISTPATCH_DOTFILE )
                 attr |= SMB_ATTR_HIDDEN;
 			*dptr++ = attr & 0xff;
 			*dptr++ = (attr >> 8) & 0xff;
@@ -2469,7 +3156,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
             }
 
 		}	/* if we're including this name */
-        else if(!NeedShortName &&
+        else if (!NeedShortName &&
                  !starPattern &&
                  !foundInexact &&
                  					dep->fid.vnode != 0 &&
@@ -3411,7 +4098,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
                     treeStartp = realPathp + (tp - spacep->data);
 
                     if (*tp && !smb_IsLegalFilename(tp)) {
-                        if(baseFid != 0) 
+                        if (baseFid != 0) 
                             smb_ReleaseFID(baseFidp);
                         cm_ReleaseUser(userp);
                         free(realPathp);
@@ -3455,7 +4142,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         }
 
         if (!foundscp && !treeCreate) {
-            if(createDisp == 2 || createDisp == 4)
+            if (createDisp == 2 || createDisp == 4)
                 code = cm_Lookup(dscp, lastNamep,
                                   CM_FLAG_FOLLOW, userp, &req, &scp);
             else
@@ -3571,9 +4258,9 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 		cp = spacep->data;
 		tscp = dscp;
 
-		while(pp && *pp) {
+		while (pp && *pp) {
 			tp = strchr(pp, '\\');
-			if(!tp) {
+			if (!tp) {
 				strcpy(cp,pp);
                 clen = strlen(cp);
 				isLast = 1; /* indicate last component.  the supplied path never ends in a slash */
@@ -3586,7 +4273,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 			}
 			pp = tp;
 
-			if(clen == 0) continue; /* the supplied path can't have consecutive slashes either , but */
+			if (clen == 0) continue; /* the supplied path can't have consecutive slashes either , but */
 
 			/* cp is the next component to be created. */
 			code = cm_MakeDir(tscp, cp, 0, &setAttr, userp, &req);
@@ -3605,9 +4292,9 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 					code = cm_Lookup(tscp, cp, CM_FLAG_CASEFOLD,
 						userp, &req, &scp);
 				}
-			if(code) break;
+			if (code) break;
 
-			if(!isLast) { /* for anything other than dscp, release it unless it's the last one */
+			if (!isLast) { /* for anything other than dscp, release it unless it's the last one */
 				cm_ReleaseSCache(tscp);
 				tscp = scp; /* Newly created directory will be next parent */
 			}
@@ -3840,7 +4527,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
 #endif
 
 	userp = smb_GetUser(vcp, inp);
-    if(!userp) {
+    if (!userp) {
     	osi_Log1(smb_logp, "NTTranCreate invalid user [%d]", ((smb_t *) inp)->uid);
     	free(realPathp);
     	return CM_ERROR_INVAL;
@@ -3852,7 +4539,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
 	}
 	else {
         baseFidp = smb_FindFID(vcp, baseFid, 0);
-        if(!baseFidp) {
+        if (!baseFidp) {
         	osi_Log1(smb_logp, "NTTranCreate Invalid fid [%d]", baseFid);
         	free(realPathp);
         	cm_ReleaseUser(userp);

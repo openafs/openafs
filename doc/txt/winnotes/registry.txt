@@ -291,6 +291,17 @@ Default : <no default>
   NOTE: Setting this entry to "1" may be required on hyperthreaded 
   systems to avoid crashes in the RX library.
 
+Value   : smbAuthType
+Type    : DWORD {0..2} 
+Default : 2
+
+  If this value is specified, it defines the type of SMB authentication    
+  which must be present in order for the Windows SMB client to connect
+  to the AFS Client Service's SMB server.  The values are:
+    0 = No authentication required
+    1 = NTLM authentication required
+    2 = Extended (GSS SPNEGO) authentication required
+  The default is Extended authentication
 
 Regkey:
 [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters\GlobalAutoMapper]
@@ -387,6 +398,12 @@ Type    : REG_SZ
 NSIS    : <install path>\afslogon.dll
 
   Specifies the DLL to use for the network provider
+
+Value  : TraceOption
+Type   : DWORD {1|0}
+Default : 0
+
+  Enables trace events for the network provider.
 
 Value   : VerboseLogging
 Type    : DWORD

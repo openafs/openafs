@@ -550,6 +550,16 @@ int afsd_InitCM(char **reasonP)
     }
     afsi_log("Maximum number of VCs per server is %d", smb_maxVCPerServer);
 
+	dummyLen = sizeof(smb_authType);
+	code = RegQueryValueEx(parmKey, "SMBAuthType", NULL, NULL,
+		(BYTE *) &smb_authType, &dummyLen);
+
+	if (code != ERROR_SUCCESS || 
+        (smb_authType != SMB_AUTH_EXTENDED && smb_authType != SMB_AUTH_NTLM && smb_authType != SMB_AUTH_NONE)) {
+		smb_authType = SMB_AUTH_EXTENDED; /* default is to use extended authentication */
+	}
+	afsi_log("SMB authentication type is %s", ((smb_authType == SMB_AUTH_NONE)?"NONE":((smb_authType == SMB_AUTH_EXTENDED)?"EXTENDED":"NTLM")));
+
     dummyLen = sizeof(rx_nojumbo);
     code = RegQueryValueEx(parmKey, "RxNoJumbo", NULL, NULL,
                            (BYTE *) &rx_nojumbo, &dummyLen);
