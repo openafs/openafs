@@ -81,6 +81,9 @@ DEST_LIBAFS = ${DEST}/root.client/bin/${LIBAFS}
 DEST_LIBAFSNONFS = ${DEST}/root.client/bin/${LIBAFSNONFS}
 
 
+# Without this line, gmake tries to build libafs
+.PHONY: libafs
+
 # libafs:	$(LIBAFS) $(LIBAFSNONFS)
 libafs:	$(LIBAFSNONFS)
 # install_libafs:	$(INST_LIBAFS) $(INST_LIBAFSNONFS)
