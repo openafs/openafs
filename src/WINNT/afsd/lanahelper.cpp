@@ -518,7 +518,7 @@ extern "C" long lana_GetUncServerNameEx(char *buffer, lana_number_t * pLana, int
             regLana = nLana;
 	}
 
-	if(rebNbName[0] &&
+	if(regNbName[0] &&
        (regLana >=0 && lana_IsLoopback((lana_number_t) regLana))) {
         strncpy(nbName,regNbName,15);
         nbName[16] = 0;
