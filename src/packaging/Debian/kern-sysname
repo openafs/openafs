@@ -11,8 +11,15 @@ i[3456]86)
 	    esac
 ;;
     ia64)
-    echo ia64_linux24
-;;
+	case $KVERS in
+	    2.4*)
+		echo ia64_linux24
+		;;
+	    2.6*)
+		echo ia64_linux26
+		;;
+	    esac
+	;;
     alpha)
 	case $KVERS in
 	    2.2*)
