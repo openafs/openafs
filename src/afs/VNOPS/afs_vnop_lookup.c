@@ -1199,6 +1199,7 @@ afs_lookup(adp, aname, avcp, acred)
 	    ReleaseWriteLock(&tvc->lock);
 
 	    if (code) {
+		afs_PutVCache(tvc, WRITE_LOCK);
 		if (tvolp) afs_PutVolume(tvolp, WRITE_LOCK);
 		goto done;
 	    }
