@@ -67,8 +67,8 @@ setup:
 
 
 # Below this line are targets when in the COMMON directory:
-LIBAFS = libafs.o
-LIBAFSNONFS = libafs.nonfs.o
+LIBAFS = libafsnfs.ko
+LIBAFSNONFS = libafs.ko
 
 INST_LIBAFS = ${DESTDIR}${afskerneldir}/${LIBAFS}
 INST_LIBAFSNONFS = ${DESTDIR}${afskerneldir}/${LIBAFSNONFS}
@@ -116,15 +116,15 @@ ${LIBAFS}: $(AFSAOBJS) $(AFSNFSOBJS)
 
 ${LIBAFSNONFS}:  $(AFSAOBJS) $(AFSNONFSOBJS)
 <i386_fbsd_42 i386_fbsd_43 i386_fbsd_44 i386_fbsd_45 i386_fbsd_46 i386_fbsd_47>
-	$(LD) -r -o ${LIBAFSNONFS}.kld ${AFSAOBJS} ${AFSNONFSOBJS}
-	gensetdefs ${LIBAFSNONFS}.kld
+	$(LD) -r -o libafs.kld ${AFSAOBJS} ${AFSNONFSOBJS}
+	gensetdefs libafs.kld
 	$(MAKE) setdef0.o setdef1.o
-	$(LD) -Bshareable -o ${LIBAFSNONFS} setdef0.o ${LIBAFSNONFS}.kld setdef1.o
+	$(LD) -Bshareable -o ${LIBAFSNONFS} setdef0.o libafs.kld setdef1.o
 <all -i386_fbsd_42 -i386_fbsd_43 -i386_fbsd_44 -i386_fbsd_45 -i386_fbsd_46 -i386_fbsd_47>
-	$(LD) -r -d -warn-common -o ${LIBAFSNONFS}.kld ${AFSAOBJS} ${AFSNONFSOBJS}
+	$(LD) -r -d -warn-common -o libafs.kld ${AFSAOBJS} ${AFSNONFSOBJS}
 	touch export_syms
-	awk -f ${KSRC}/conf/kmod_syms.awk ${LIBAFSNONFS}.kld export_syms | xargs -J% objcopy % ${LIBAFSNONFS}.kld
-	$(LD) -Bshareable -d -warn-common -o ${LIBAFSNONFS}.ko ${LIBAFSNONFS}.kld
+	awk -f ${KSRC}/conf/kmod_syms.awk libafs.kld export_syms | xargs -J% objcopy % libafs.kld
+	$(LD) -Bshareable -d -warn-common -o ${LIBAFSNONFS} libafs.kld
 <all>
 
 
