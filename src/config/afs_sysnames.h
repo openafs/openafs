@@ -172,6 +172,7 @@
 #define SYS_NAME_ID_sparc64_nbsd16	2513
 
 #define SYS_NAME_ID_i386_obsd31		2600
+#define SYS_NAME_ID_i386_obsd32		2601
 
 /*
  * Placeholder to keep system-wide standard flags since this file is included by all 

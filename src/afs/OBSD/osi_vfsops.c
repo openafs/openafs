@@ -528,3 +528,9 @@ afsmodload(struct lkm_table *lkmtp, int cmd, int ver)
     }
     DISPATCH(lkmtp,cmd,ver,afs_vfs_load,afs_vfs_unload,lkm_nofunc);
 }
+
+int
+libafs_lkmentry(struct lkm_table *lkmtp, int cmd, int ver)
+{
+    return afsmodload(lkmtp, cmd, ver);
+}

@@ -2,8 +2,8 @@
 # add the following line (without leading '# ') to /etc/rc.securelevel for OpenBSD
 # . /usr/vice/etc/rc.securelevel.afs
 
-rm -f /usr/vice/etc/dkload/netbsd_afs
-/sbin/modload -o /usr/vice/etc/dkload/netbsd_afs -eafsmodload /usr/vice/etc/dkload/libafs.o 
+rm -f /usr/vice/etc/dkload/openbsd_afs
+/sbin/modload -o /usr/vice/etc/dkload/openbsd_afs -eafsmodload /usr/vice/etc/dkload/libafs.o 
 
 /usr/vice/etc/afsd -nosettime -chunksize 18 -stat 4800
 /usr/vice/bin/fs setcrypt crypt
