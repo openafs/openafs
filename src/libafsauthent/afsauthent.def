@@ -77,6 +77,7 @@ EXPORTS
 	ktc_OldPioctl					@76
 	pioctl						@77
 	rx_Init						@78
+	ka_UserAuthenticateGeneral2			@79
 
 
 

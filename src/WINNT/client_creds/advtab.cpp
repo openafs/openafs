@@ -204,9 +204,9 @@ void Advanced_OnChangeService (HWND hDlg, WORD wCmd)
 
             case IDC_SERVICE_STOP:
                SERVICE_STATUS Status;
-               if (ControlService (hService, SERVICE_CONTROL_STOP, &Status))
-				   TestAndDoUnMapShare();
-                  fSuccess = TRUE;
+			   TestAndDoUnMapShare();
+               ControlService (hService, SERVICE_CONTROL_STOP, &Status);
+               fSuccess = TRUE;
                break;
             }
 

@@ -164,6 +164,7 @@ extern long smb_ReceiveNTCancel(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
 extern int smb_V3MatchMask(char *namep, char *maskp, int flags);
 
 extern void smb3_Init();
+extern cm_user_t *smb_FindCMUserByName(/*smb_vc_t *vcp,*/ char *usern, char *machine);
 
 #ifdef DJGPP
 #define DELETE (0x00010000)
