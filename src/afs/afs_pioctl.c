@@ -650,7 +650,7 @@ int afs_xioctl (void)
 #ifdef AFS_LINUX22_ENV
       return -code;
 #else
-#if    !defined(AFS_OSF_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
+#if defined(KERNEL_HAVE_SETUERROR)
       if (!getuerror())
 	  setuerror(code);
 #if	defined(AFS_AIX32_ENV) && !defined(AFS_AIX41_ENV)
@@ -777,12 +777,10 @@ afs_syscall_pioctl(path, com, cmarg, follow)
     code = copyin_afs_ioctl(cmarg, &data);
     if (code) {
 	PIOCTL_FREE_CRED();
-#if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SGI64_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
-	return (code);
-#else
+#if defined(KERNEL_HAVE_SETUERROR)
 	setuerror(code);
-	return code;
 #endif
+	return (code);
   }
     if ((com & 0xff) == PSetClientContext) {
 #if defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
@@ -807,10 +805,10 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 	      crfree(foreigncreds);
 	  }
 	  PIOCTL_FREE_CRED();
-#if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SGI64_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
-	  return (code);
-#else
+#if defined(KERNEL_HAVE_SETUERROR)
 	  return (setuerror(code), code);
+#else
+	  return (code);
 #endif
       }
     } 
@@ -886,10 +884,10 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 	}
 #endif /* AFS_LINUX22_ENV */
 	PIOCTL_FREE_CRED();
-#if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SGI64_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
-	return (code);
-#else
+#if defined(KERNEL_HAVE_SETUERROR)
 	return (setuerror(code), code);
+#else
+	return (code);
 #endif
     }
     if (path) {
@@ -929,10 +927,10 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 	    }
 #endif /* AFS_LINUX22_ENV */
 	    PIOCTL_FREE_CRED();
-#if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SGI64_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
-	    return (code);
-#else
+#if defined(KERNEL_HAVE_SETUERROR)
 	    return(setuerror(code), code);
+#else
+	    return (code);
 #endif
 	}
     }
@@ -994,10 +992,10 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 #endif /* AFS_AIX41_ENV */
 #endif /* AFS_SUN5_ENV */
     } else {
-#if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SGI64_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
-	code = EINVAL;	/* not in /afs */
-#else
+#if defined(KERNEL_HAVE_SETUERROR)
 	setuerror(EINVAL);
+#else
+	code = EINVAL;	/* not in /afs */
 #endif
 #ifdef AFS_DEC_ENV
 	if (vp) {
@@ -1035,12 +1033,12 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 #endif
     }
     PIOCTL_FREE_CRED();
-#if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SGI64_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
-    return (code);
-#else
+#if defined(KERNEL_HAVE_SETUERROR)
     if (!getuerror()) 	
  	setuerror(code);
     return (getuerror());
+#else
+    return (code);
 #endif
 }
   
@@ -2573,10 +2571,10 @@ DECL_PIOCTL(PSetSysName)
     AFS_STATCNT(PSetSysName);
     if (!afs_globalVFS) {
       /* Afsd is NOT running; disable it */
-#if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SGI64_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
-	return (EINVAL);
-#else
+#if defined(KERNEL_HAVE_SETUERROR)
 	return (setuerror(EINVAL), EINVAL);
+#else
+	return (EINVAL);
 #endif
     }
     memset(inname, 0, MAXSYSNAME);

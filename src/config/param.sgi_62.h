@@ -63,6 +63,8 @@
 #define SYS_NAME_ID	SYS_NAME_ID_sgi_62
 #define AFSBIG_ENDIAN	1
 
+#define KERNEL_HAVE_SETUERROR 1
+
 /* Extra kernel definitions (from kdefs file) */
 #ifdef KERNEL
 /* definitions here */

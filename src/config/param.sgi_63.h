@@ -55,6 +55,7 @@
 #define AFSBIG_ENDIAN	1
 #define AFS_VM_RDWR_ENV	1
 
+#define KERNEL_HAVE_SETUERROR 1
 /* Extra kernel definitions (from kdefs file) */
 #ifdef KERNEL
 /* definitions here */

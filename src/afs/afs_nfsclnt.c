@@ -212,7 +212,7 @@ afs_int32 *pagparam;
 #endif
 	    if (au) afs_PutUser(au, READ_LOCK);
 /*	    ReleaseWriteLock(&afs_xnfsreq);		*/
-#if	!defined(AFS_SUN5_ENV) && !defined(AFS_OSF_ENV) && !defined(AFS_SGI64_ENV)
+#if defined(KERNEL_HAVE_SETUERROR)
 	    setuerror(code);
 #endif
 	    return (code);
@@ -228,7 +228,7 @@ afs_int32 *pagparam;
 #endif
 		afs_PutNfsClientPag(np);
 /*		ReleaseWriteLock(&afs_xnfsreq);	*/
-#if	!defined(AFS_SUN5_ENV) && !defined(AFS_OSF_ENV) && !defined(AFS_SGI64_ENV)
+#if defined(KERNEL_HAVE_SETUERROR)
 		setuerror(code);
 #endif
 		return (code);
@@ -245,7 +245,7 @@ afs_int32 *pagparam;
 		    afs_PutNfsClientPag(np);
 		    afs_PutUser(au, READ_LOCK);
 		    /*	    ReleaseWriteLock(&afs_xnfsreq);	*/
-#if	!defined(AFS_SUN5_ENV) && !defined(AFS_OSF_ENV) && !defined(AFS_SGI64_ENV)
+#if defined(KERNEL_HAVE_SETUERROR)
 		    setuerror(code);
 #endif
 		    return (code);

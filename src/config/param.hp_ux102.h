@@ -46,6 +46,8 @@
                 }                                       \
                 }
 
+#define KERNEL_HAVE_SETUERROR 1
+
 /* Extra kernel definitions (from kdefs file) */
 #ifdef KERNEL
 #define _KERNEL 1

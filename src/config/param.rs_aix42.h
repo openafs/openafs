@@ -44,6 +44,8 @@
 #define COMPAT_43
 #endif
 
+#define KERNEL_HAVE_SETUERROR 1
+
 /* Extra kernel definitions (from kdefs file) */
 #ifdef _KERNEL
 #define	AFS_SHORTGID	1
