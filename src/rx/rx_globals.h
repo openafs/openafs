@@ -249,16 +249,15 @@ EXT struct rx_stats rx_stats;
 EXT struct rx_peer **rx_peerHashTable;
 EXT struct rx_connection **rx_connHashTable;
 EXT struct rx_connection *rx_connCleanup_list INIT(0);
-EXT afs_uint32 rx_hashTableSize INIT(256);	/* Power of 2 */
-EXT afs_uint32 rx_hashTableMask INIT(255);	/* One less than rx_hashTableSize */
+EXT afs_uint32 rx_hashTableSize INIT(257);	/* Prime number */
 #ifdef RX_ENABLE_LOCKS
 EXT afs_kmutex_t rx_peerHashTable_lock;
 EXT afs_kmutex_t rx_connHashTable_lock;
 #endif /* RX_ENABLE_LOCKS */
 
-#define CONN_HASH(host, port, cid, epoch, type) ((((cid)>>RX_CIDSHIFT)&rx_hashTableMask))
+#define CONN_HASH(host, port, cid, epoch, type) ((((cid)>>RX_CIDSHIFT)%rx_hashTableSize))
 
-#define PEER_HASH(host, port)  ((host ^ port) & rx_hashTableMask)
+#define PEER_HASH(host, port)  ((host ^ port) % rx_hashTableSize)
 
 /* Forward definitions of internal procedures */
 #define	rxi_ChallengeOff(conn)	rxevent_Cancel((conn)->challengeEvent, (struct rx_call*)0, 0);
