@@ -53,7 +53,7 @@ RCSID
  * Note that dumpEndTime is stored and returned in the dump creation time field.
  */
 
-afs_int32 DeleteDump();
+static afs_int32 DeleteDump();
 afs_int32 ScanDumpHdr();
 
 /* return the tape file name corresponding to a particular tape */

@@ -81,7 +81,7 @@ static int const pc_2[48 + 1] = { 0,
 
 static int ks_perm[16 + 1][48 + 1];
 
-static int des_debug;
+int des_debug;
 
 void
 gen(FILE * stream)
