@@ -14,7 +14,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_misc.c,v 1.8 2002/01/28 00:53:20 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_misc.c,v 1.9 2002/05/12 05:50:42 hartmans Exp $");
 
 #include "../afs/sysincludes.h"
 #include "../afs/afsincludes.h"
@@ -51,7 +51,8 @@ int osi_lookupname(char *aname, uio_seg_t seg, int followlink,
 	if (nd.dentry->d_inode) {
 	    *dpp = dget(nd.dentry);
 	    code = 0;
-	}
+	} else
+	    code = ENOENT;
 	path_release(&nd);
     }
 #else
@@ -299,7 +300,7 @@ void osi_linux_free_inode_pages(void)
 
     for (i=0; i<VCSIZE; i++) {
 	for(tvc = afs_vhashT[i]; tvc; tvc=tvc->hnext) {
-	    ip = (struct inode*)tvc;
+	    ip = AFSTOI(tvc);
 #if defined(AFS_LINUX24_ENV)
 	    if (ip->i_data.nrpages) {
 #else
@@ -328,7 +329,7 @@ void osi_linux_free_inode_pages(void)
 void osi_clear_inode(struct inode *ip)
 {
     cred_t *credp = crref();
-    struct vcache *vc = (struct vcache*)ip;
+    struct vcache *vc = ITOAFS(ip);
 
 #if defined(AFS_LINUX24_ENV)
     if (atomic_read(&ip->i_count) > 1)
@@ -404,8 +405,8 @@ void osi_iput(struct inode *ip)
 void check_bad_parent(struct dentry *dp)
 {
   cred_t *credp;
-  struct vcache *vcp = (struct vcache*)dp->d_inode, *avc = NULL;
-  struct vcache *pvc = (struct vcache *)dp->d_parent->d_inode;
+  struct vcache *vcp = ITOAFS(dp->d_inode), *avc = NULL;
+  struct vcache *pvc = ITOAFS(dp->d_parent->d_inode);
 
   if (vcp->mvid->Fid.Volume != pvc->fid.Fid.Volume) { /* bad parent */
     credp = crref();

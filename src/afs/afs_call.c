@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_call.c,v 1.10 2002/01/28 00:53:19 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_call.c,v 1.11 2002/05/12 05:50:41 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -980,6 +980,9 @@ asmlinkage int afs_syscall(long syscall, long parm1, long parm2, long parm3,
     long linux_ret=0;
     long *retval = &linux_ret;
     long eparm[4]; /* matches AFSCALL_ICL in fstrace.c */
+#ifdef AFS_SPARC64_LINUX24_ENV
+    afs_int32 eparm32[4];
+#endif
     /* eparm is also used by AFSCALL_CALL in afsd.c */
 #else
 #if defined(UKERNEL)
@@ -1042,6 +1045,25 @@ Afs_syscall ()
     uap->parm2 = parm2;
     uap->parm3 = parm3;
     if (syscall == AFSCALL_ICL || syscall == AFSCALL_CALL) {
+#ifdef AFS_SPARC64_LINUX24_ENV
+/* from arch/sparc64/kernel/sys_sparc32.c */
+#define AA(__x)                                \
+({     unsigned long __ret;            \
+       __asm__ ("srl   %0, 0, %0"      \
+                : "=r" (__ret)         \
+                : "0" (__x));          \
+       __ret;                          \
+})
+
+
+	if (current->thread.flags & SPARC_FLAG_32BIT) {
+	AFS_COPYIN((char*)parm4, (char*)eparm32, sizeof(eparm32), code);
+	eparm[0]=AA(eparm32[0]);
+	eparm[1]=AA(eparm32[1]);
+	eparm[2]=AA(eparm32[2]);
+#undef AA
+} else
+#endif
 	AFS_COPYIN((char*)parm4, (char*)eparm, sizeof(eparm), code);
 	uap->parm4 = eparm[0];
 	uap->parm5 = eparm[1];
@@ -1072,17 +1094,12 @@ Afs_syscall ()
 #endif
     } else if (uap->syscall == AFSCALL_SETPAG) {
 #ifdef	AFS_SUN5_ENV
-	struct cred *cred;
 	register proc_t *procp;
 
 	procp = ttoproc(curthread);
-	mutex_enter(&procp->p_crlock);
-	cred = procp->p_cred; 
 	AFS_GLOCK();
-	code =  afs_setpag(&cred);
+	code =  afs_setpag(&procp->p_cred);
 	AFS_GUNLOCK();
-	procp->p_cred = cred;
-	mutex_exit(&procp->p_crlock);
 #else
 	AFS_GLOCK();
 #if	defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)

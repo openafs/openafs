@@ -22,7 +22,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_lookup.c,v 1.9 2001/10/14 18:43:27 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_lookup.c,v 1.10 2002/05/12 05:50:43 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -924,7 +924,7 @@ afs_lookup(adp, aname, avcp, acred)
 
     AFS_STATCNT(afs_lookup);
 #ifdef	AFS_OSF_ENV
-    ndp->ni_dvp = (struct vnode *)adp;
+    ndp->ni_dvp = AFSTOV(adp);
     memcpy(aname, ndp->ni_ptr, ndp->ni_namelen);
     aname[ndp->ni_namelen] = '\0';
 #endif	/* AFS_OSF_ENV */
@@ -956,7 +956,7 @@ afs_lookup(adp, aname, avcp, acred)
 #ifdef	AFS_OSF_ENV
 	    extern struct vcache *afs_globalVp;
 	    if (adp == afs_globalVp) {
-		struct vnode *rvp = (struct vnode *)adp;
+		struct vnode *rvp = AFSTOV(adp);
 /*
 		ndp->ni_vp = rvp->v_vfsp->vfs_vnodecovered;
 		ndp->ni_dvp = ndp->ni_vp;
@@ -999,7 +999,7 @@ afs_lookup(adp, aname, avcp, acred)
 
     /* Check for read access as well.  We need read access in order to
        stat files, but not to stat subdirectories. */
-    if (!afs_AccessOK(adp, PRSFS_READ, &treq, CHECK_MODE_BITS))
+    if (!afs_AccessOK(adp, PRSFS_LOOKUP, &treq, CHECK_MODE_BITS))
 	no_read_access = 1;
 
     /* special case lookup of ".".  Can we check for it sooner in this code,

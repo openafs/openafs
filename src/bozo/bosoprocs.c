@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/bozo/bosoprocs.c,v 1.4 2002/01/22 20:29:44 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/bozo/bosoprocs.c,v 1.5 2002/05/12 05:50:43 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -1179,7 +1179,7 @@ char **ainstance; {
 
 struct bozo_bosEntryStats bozo_bosEntryStats[] = {
     {NULL, 1,1, 0755, 02}, /* AFSDIR_SERVER_AFS_DIRPATH    */
-    {NULL, 1,1, 0700, 02}, /* AFSDIR_SERVER_ETC_DIRPATH    */
+    {NULL, 1,1, 0755, 02}, /* AFSDIR_SERVER_ETC_DIRPATH    */
     {NULL, 1,1, 0755, 02}, /* AFSDIR_SERVER_BIN_DIRPATH    */
     {NULL, 1,1, 0755, 02}, /* AFSDIR_SERVER_LOGS_DIRPATH   */
     {NULL, 1,0, 0700, 07}, /* AFSDIR_SERVER_BACKUP_DIRPATH */

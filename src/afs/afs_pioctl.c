@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_pioctl.c,v 1.11 2002/01/22 20:29:43 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_pioctl.c,v 1.12 2002/05/12 05:50:42 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -484,7 +484,7 @@ afs_xioctl ()
       
       /* first determine whether this is any sort of vnode */
 #ifdef AFS_LINUX22_ENV
-      tvc = (struct vcache *)ip;
+      tvc = VTOAFS(ip);
       {
 #else
 #ifdef	AFS_SUN5_ENV
@@ -494,14 +494,14 @@ afs_xioctl ()
 #endif
 	/* good, this is a vnode; next see if it is an AFS vnode */
 #if	defined(AFS_AIX32_ENV) || defined(AFS_SUN5_ENV)
-	tvc = (struct vcache *) fd->f_vnode;	/* valid, given a vnode */
+	tvc = VTOAFS(fd->f_vnode);	/* valid, given a vnode */
 #else
-	tvc = (struct vcache *) fd->f_data;	/* valid, given a vnode */
+	tvc = VTOAFS((struct vnode*)fd->f_data);	/* valid, given a vnode */
 #endif
 #endif /* AFS_LINUX22_ENV */
-	if (tvc && IsAfsVnode((struct vnode *)tvc)) {
+	if (tvc && IsAfsVnode(AFSTOV(tvc))) {
 #ifdef AFS_DEC_ENV
-	  tvc = (struct vcache *) afs_gntovn((struct gnode *) tvc);
+	  tvc = VTOAFS(afs_gntovn((struct gnode *) tvc));
 	  if (!tvc) {	/* shouldn't happen with held gnodes */
 	    u.u_error = ENOENT;
 	    return;
@@ -2665,7 +2665,7 @@ struct AFS_UCRED *acred;
 	for(tvc = afs_vhashT[i]; tvc; tvc=tvc->hnext) {
 	    if (tvc->fid.Fid.Volume == volume && tvc->fid.Cell == cell) {
 #if	defined(AFS_SGI_ENV) || defined(AFS_ALPHA_ENV)  || defined(AFS_SUN5_ENV)  || defined(AFS_HPUX_ENV) || defined(AFS_LINUX20_ENV)
-		VN_HOLD((struct vnode *)tvc);
+		VN_HOLD(AFSTOV(tvc));
 #else
 #if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 		osi_vnhold(tvc, 0);

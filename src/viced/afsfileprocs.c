@@ -28,7 +28,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/viced/afsfileprocs.c,v 1.7 2002/01/22 20:29:45 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/viced/afsfileprocs.c,v 1.8 2002/05/12 05:50:44 hartmans Exp $");
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -2293,7 +2293,7 @@ SAFSS_Rename (tcon, OldDirFid, OldName, NewDirFid, NewName, OutOldDirStatus,
 				 V_parentId(volptr));
 		IH_RELEASE(newfileptr->handle);
 		if (errorCode == -1) {
-		    ViceLog(0, ("Del: inode=%d, name=%s, errno=%d\n",
+		    ViceLog(0, ("Del: inode=%s, name=%s, errno=%d\n",
 				PrintInode(NULL, VN_GET_INO(newfileptr)),
 				NewName, errno));
 		    if ((errno != ENOENT) && (errno != EIO) && (errno != ENXIO))

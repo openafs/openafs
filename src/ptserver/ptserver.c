@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/ptserver.c,v 1.7 2001/10/14 18:43:29 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/ptserver.c,v 1.8 2002/05/12 05:50:43 hartmans Exp $");
 
 #include <afs/stds.h>
 #ifdef	AFS_AIX32_ENV
@@ -268,9 +268,8 @@ void main (argc, argv)
     }
     else sc[2] = sc[0];
 
-    /* These two lines disallow jumbograms */
-    rx_maxReceiveSize = OLD_MAX_PACKET_SIZE;
-    rxi_nSendFrags = rxi_nRecvFrags = 1;
+    /* Disable jumbograms */
+    rx_SetNoJumbo();
 
     tservice = rx_NewService(0,PRSRV,"Protection Server",sc,3,PR_ExecuteRequest);
     if (tservice == (struct rx_service *)0) {
