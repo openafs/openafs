@@ -17,6 +17,7 @@ RCSID("$Header$");
 #endif
 #include <stdio.h>
 #include <stdlib.h>
+#include <limits.h>
 #ifndef AFS_NT40_ENV
 #include <unistd.h>
 #endif

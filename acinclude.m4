@@ -152,7 +152,7 @@ case $system in
                 AC_MSG_RESULT(hp_ux)
                 ;;
         *-irix*)
-		if test -d /usr/include/SN/SN1; then
+		if test -d /usr/include/sys/SN/SN1; then
 		 IRIX_BUILD_IP35="IP35"
 		fi
 		MKAFS_OSTYPE=IRIX
