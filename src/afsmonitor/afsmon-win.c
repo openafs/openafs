@@ -17,6 +17,7 @@
 #include <math.h>
 #include <cmd.h>
 #include <afs/param.h>
+#include <string.h>
 #undef IN
 #include <time.h>
 
@@ -2189,7 +2190,7 @@ create_FSframe_objects()
    numBytes = fs_numHosts_perPage * sizeof(struct ServerInfo_line);
    fs_lines = (struct ServerInfo_line *) malloc(numBytes);
    if (fs_lines == (struct ServerInfo_line *)0) {
-	sprintf(errMsg,"[ %s ] Failed to allocate % bytes for FS data lines\n",
+	sprintf(errMsg,"[ %s ] Failed to allocate %d bytes for FS data lines\n",
 		rn, numBytes);
 	afsmon_Exit(365);
    }
@@ -2203,7 +2204,7 @@ create_FSframe_objects()
 	numBytes = fs_cols_perPage * sizeof(struct onode *);
 	fs_lines_Ptr->data_o[arrIdx] = (struct onode **) malloc(numBytes);
 	if (fs_lines_Ptr->data_o[arrIdx] == (struct onode **)0) {
-	sprintf(errMsg,"[ %s ] Failed to allocate % bytes for FS data onodes\n",
+	sprintf(errMsg,"[ %s ] Failed to allocate %d bytes for FS data onodes\n",
 		rn, numBytes);
 	afsmon_Exit(370);
 	}
@@ -2515,7 +2516,7 @@ int a_LcolNum;		/* starting (leftmost) column number */
    }
    
    if (cmIdx >= numCM) {	/* whoops! screwed up */
-	sprintf(errMsg,"[ %s ] Programming error 1\n");
+	sprintf(errMsg,"[ %s ] Programming error 1\n", rn);
 	afsmon_Exit(405);
    }
 
@@ -2969,7 +2970,7 @@ create_CMframe_objects()
    numBytes = cm_numHosts_perPage * sizeof(struct ServerInfo_line);
    cm_lines = (struct ServerInfo_line *) malloc(numBytes);
    if (cm_lines == (struct ServerInfo_line *)0) {
-	sprintf(errMsg,"[ %s ] Failed to allocate % bytes for CM data lines\n",
+	sprintf(errMsg,"[ %s ] Failed to allocate %d bytes for CM data lines\n",
 		rn, numBytes);
 	afsmon_Exit(445);
    }
@@ -2983,7 +2984,7 @@ create_CMframe_objects()
 	numBytes = cm_cols_perPage * sizeof(struct onode *);
 	cm_lines_Ptr->data_o[arrIdx] = (struct onode **) malloc(numBytes);
 	if (cm_lines_Ptr->data_o[arrIdx] == (struct onode **)0) {
-	sprintf(errMsg,"[ %s ] Failed to allocate % bytes for CM data onodes\n",
+	sprintf(errMsg,"[ %s ] Failed to allocate %d bytes for CM data onodes\n",
 		rn, numBytes);
 	afsmon_Exit(450);
 	}
