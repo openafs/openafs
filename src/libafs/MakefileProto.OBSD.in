@@ -61,9 +61,9 @@ setup:
 	-$(RM) -f  $(KOBJ)/Makefile $(KOBJ)/Makefile.common $(KOBJ)/config
 	ln -fs ../Makefile $(KOBJ)/Makefile
 	ln -fs ../Makefile.common $(KOBJ)/Makefile.common
-	ln -fs ../config $(KOBJ)/config
-	-$(RM) -f  h
+	-$(RM) -f  h lib
 	-ln -fs ${KSRC}/sys h
+	-ln -fs ${KSRC}/lib .
 	-touch $(KOBJ)/sec_net.h
 
 
