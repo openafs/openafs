@@ -35,9 +35,11 @@ ukinsthdrs:
 	${INSTALL} afs/sysincludes.h ${DESTDIR}root.perf/include/afs
 	${INSTALL} afs/afs_usrops.h ${DESTDIR}root.perf/include/afs
 
-ukinstall: ukinsthdrs UAFS/$(LIBUAFS) linktest
+ukinstlibs:
 	${INSTALL} des/libdes.a ${DESTDIR}root.perf/lib
-	${INSTALL} UAFS/$(LIBUAFS) ${DESTDIR}root.perf/lib
+	${INSTALL} UAFS/$(LIBUAFS) ${DESTDIR}root.perf/lib	
+
+ukinstall: ukinsthdrs ukinstlibs UAFS/$(LIBUAFS) linktest
 
 linktest: UAFS/$(LIBUAFS) des/libdes.a
 	$(CC) $(TEST_CFLAGS) $(TEST_LDFLAGS) -o linktest linktest.c -I${DESTDIR}include -I${DESTDIR}include/rx -I${DESTDIR}root.perf/include ${DESTDIR}root.perf/lib/$(LIBUAFS) ${DESTDIR}root.perf/lib/libdes.a $(TEST_LIBS)
