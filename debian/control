@@ -29,8 +29,8 @@ Description: The AFS distributed filesystem- old password changing
  .
  This package provides kpasswd and kas, utilities needed by the 
  Transarc kaserver to create users and change passwords.  Only install
-this package if you are already using kaserver; generally you should
-not install this package for new cells or for cells using Kerberos5.
+ this package if you are already using kaserver; generally you should
+ not install this package for new cells or for cells using Kerberos5.
 
 Package: openafs-fileserver
 Architecture: i386, powerpc, sparc
