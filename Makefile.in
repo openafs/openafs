@@ -660,6 +660,7 @@ clean2:
 
  
 distclean: clean
+	/bin/rm -rf lib include
 	/bin/rm -f config.log config.cache config.status \
 	src/config/afsconfig.h \
 	Makefile \
