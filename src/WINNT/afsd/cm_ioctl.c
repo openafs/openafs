@@ -39,6 +39,10 @@
 
 #include "cm_rpc.h"
 
+#ifdef _DEBUG
+#include <crtdbg.h.
+#endif
+
 /* Copied from afs_tokens.h */
 #define PIOCTL_LOGON	0x1
 #define MAX_PATH 260

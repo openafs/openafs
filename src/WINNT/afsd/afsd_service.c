@@ -24,6 +24,9 @@
 #ifdef DEBUG
 //#define NOTSERVICE
 #endif
+#ifdef _DEBUG
+#include <crtdbg.h>
+#endif
 
 extern void afsi_log(char *pattern, ...);
 
