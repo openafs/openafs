@@ -1012,12 +1012,16 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 #endif
     }
     PIOCTL_FREE_CRED();
+#ifdef AFS_LINUX22_ENV
+    return -code;
+#else
 #if defined(KERNEL_HAVE_UERROR)
     if (!getuerror())
  	setuerror(code);
     return (getuerror());
 #else
     return (code);
+#endif
 #endif
 }
 
