@@ -27,7 +27,7 @@ typedef struct cm_server {
 	struct cm_conn *connsp;			/* locked by cm_connLock */
     long flags;				/* by mx */
     struct cm_cell *cellp;			/* cell containing this server */
-	int refCount;				/* locked by cm_serverLock */
+	unsigned long refCount;				/* locked by cm_serverLock */
     osi_mutex_t mx;
 	unsigned short ipRank;			/* server priority */
 } cm_server_t;
@@ -38,7 +38,7 @@ typedef struct cm_serverRef {
 	struct cm_serverRef *next;      /* locked by cm_serverLock */
 	struct cm_server *server;       /* locked by cm_serverLock */
 	enum repstate status;           /* locked by cm_serverLock */
-    int refCount;                   /* locked by cm_serverLock */
+    unsigned long refCount;                   /* locked by cm_serverLock */
 } cm_serverRef_t;
 
 /* types */
