@@ -3035,7 +3035,7 @@ JudgeEntry(struct DirSummary *dir, char *name, VnodeId vnodeNumber,
 	 * from different directories.
 	 */
 	if (vnodeEssence->parent != dir->vnodeNumber) {
-	    if (!vnodeEssence->claimed && !dirOrphaned) {
+	    if (!vnodeEssence->claimed && !dirOrphaned && vnodeNumber != 1) {
 		/* Vnode does not point back to this directory.
 		 * Orphaned dirs cannot claim a file (it may belong to
 		 * another non-orphaned dir).
@@ -3050,6 +3050,8 @@ JudgeEntry(struct DirSummary *dir, char *name, VnodeId vnodeNumber,
 		if (!Showmode) {
 		    if (dirOrphaned) {
 			Log("dir vnode %u: %s/%s parent vnode is %u (vnode %u, unique %u) -- %sdeleted\n", dir->vnodeNumber, (dir->name ? dir->name : "??"), name, vnodeEssence->parent, vnodeNumber, unique, (Testing ? "would have been " : ""));
+		    } else if (vnodeNumber == 1) {
+			Log("dir vnode %d: %s/%s is invalid (vnode %d, unique %d) -- %sdeleted\n", dir->vnodeNumber, (dir->name ? dir->name : "??"), name, vnodeNumber, unique, (Testing?"would have been ":""));
 		    } else {
 			Log("dir vnode %u: %s/%s already claimed by directory vnode %u (vnode %u, unique %u) -- %sdeleted\n", dir->vnodeNumber, (dir->name ? dir->name : "??"), name, vnodeEssence->parent, vnodeNumber, unique, (Testing ? "would have been " : ""));
 		    }
@@ -3193,11 +3195,21 @@ SalvageDir(char *name, VolumeId rwVid, struct VnodeInfo *dirVnodeInfo,
     if (dirVnodeInfo->inodes[i] == 0)
 	return;			/* Not allocated to a directory */
 
-    parent = CheckVnodeNumber(dirVnodeInfo->vnodes[i].parent);
-    if (parent && parent->salvaged == 0)
-	SalvageDir(name, rwVid, dirVnodeInfo, alinkH,
-		   vnodeIdToBitNumber(dirVnodeInfo->vnodes[i].parent),
-		   rootdir, rootdirfound);
+    if (bitNumberToVnodeNumber(i, vLarge) == 1) {
+	if (dirVnodeInfo->vnodes[i].parent) {
+	    Log("Bad parent, vnode 1; %s...\n",
+		(Testing ? "skipping" : "salvaging"));
+	    dirVnodeInfo->vnodes[i].parent = 0;
+	    dirVnodeInfo->vnodes[i].changed = 1;
+	}
+    } else {
+	parent = CheckVnodeNumber(dirVnodeInfo->vnodes[i].parent);
+	if (parent && parent->salvaged == 0)
+	    SalvageDir(name, rwVid, dirVnodeInfo, alinkH,
+		       vnodeIdToBitNumber(dirVnodeInfo->vnodes[i].parent),
+		       rootdir, rootdirfound);
+    }
+
     dir.vnodeNumber = bitNumberToVnodeNumber(i, vLarge);
     dir.unique = dirVnodeInfo->vnodes[i].unique;
     dir.copied = 0;
