@@ -1,4 +1,4 @@
-		 Setting up a Debian OpennAFS Server
+		 Setting up a Debian OpenAFS Server
 
 These packages include binaries with FHS-compatible path names.  Here
 is a map from AFS paths to FHS paths:

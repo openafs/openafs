@@ -1,3 +1,12 @@
+openafs (1.2.0-1) unstable; urgency=high
+
+  * Fix typo in  README.servers; thanks to mdz@debian.org, closes: #109199
+  * Upstream patch for configure-style path handling accepted, closes: #88897
+  * New upstream version.
+  * Update upstream changelog
+
+ -- Sam Hartman <hartmans@debian.org>  Tue, 11 Sep 2001 16:21:35 -0400
+
 openafs (1.1.1-3) unstable; urgency=low
 
   * Oops, that last upstream patch for rx debug and version didn't work on
