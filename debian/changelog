@@ -1,7 +1,11 @@
 openafs (1.2.2-1) unstable; urgency=low
 
   * New upstream release.
-  * Include buserver in openafs-dbserver, butc and fms in openafs-client.
+  * We now require openafs-modules1 and conflict with openafs-modules.
+  Our modules packages now provide openafs-modules1.  This is because
+  upstream made a forward and backward incompatible change in the modules
+  interface.
+	* Include buserver in openafs-dbserver, butc and fms in openafs-client.
     butc and fms may move, but they are there for now, closes: #114313
 
  -- Sam Hartman <hartmans@debian.org>  Sun, 14 Oct 2001 15:07:10 -0400
