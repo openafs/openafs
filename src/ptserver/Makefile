@@ -161,7 +161,7 @@ ${DESTDIR}lib/afs/libprot.a: libprot.a
 	${INSTALL}   $? $@
 
 
-install: all ukinstall ${DESTDIR}root.server/usr/afs/bin/ptserver ${DESTDIR}root.server/usr/afs/bin/pts ${DESTDIR}bin/pts ${DESTDIR}lib/afs/libprot.a ${DESTDIR}/root.server/usr/afs/bin/pt_util
+install: all ukinstall ${DESTDIR}root.server/usr/afs/bin/ptserver ${DESTDIR}root.server/usr/afs/bin/pts ${DESTDIR}bin/pts ${DESTDIR}lib/afs/libprot.a ${DESTDIR}root.server/usr/afs/bin/pt_util
 	${INSTALL} libprot.a ${DESTDIR}lib/afs/libprot.a
 	${INSTALL} ptserver.h ptint.h pterror.h ptclient.h ${DESTDIR}include/afs
 	${INSTALL} ptserver.h ${DESTDIR}include/afs/prserver.h
