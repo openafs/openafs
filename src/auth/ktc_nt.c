@@ -31,6 +31,8 @@ RCSID
 #include "auth.h"
 #include <afs/afsutil.h>
 
+/* TBUFFERSIZE must be at least 512 larger than KTCMAXTICKETSIZE */
+#define TBUFFERSIZE 8192  
 
 /* Forward declarations for local token cache. */
 static int SetLocalToken(struct ktc_principal *aserver,
@@ -248,7 +250,11 @@ ktc_SetToken(struct ktc_principal *server, struct ktc_token *token,
 	     struct ktc_principal *client, int flags)
 {
     struct ViceIoctl iob;
+<<<<<<< ktc_nt.c
+    char tbuffer[TBUFFERSIZE];
+=======
     char tbuffer[MAXKTCTICKETLEN];
+>>>>>>> 1.11
     char *tp;
     struct ClearToken ct;
     int temp;
@@ -416,7 +422,11 @@ ktc_GetToken(struct ktc_principal *server, struct ktc_token *token,
 	     int tokenLen, struct ktc_principal *client)
 {
     struct ViceIoctl iob;
+<<<<<<< ktc_nt.c
+    char tbuffer[TBUFFERSIZE];
+=======
     char tbuffer[MAXKTCTICKETLEN];
+>>>>>>> 1.11
     char *tp, *cp;
     char *ticketP;
     int ticketLen, temp;
@@ -537,9 +547,8 @@ ktc_GetToken(struct ktc_principal *server, struct ktc_token *token,
     /* user name is here */
 
     /* check that ticket will fit */
-    maxLen = tokenLen - sizeof(struct ktc_token) + MAXKTCTICKETLEN;
-    if (maxLen < ticketLen)
-	return KTC_TOOBIG;
+    if (MAXKTCTICKETLEN < ticketLen)
+		return KTC_TOOBIG;
 
     /* set return values */
     memcpy(token->ticket, ticketP, ticketLen);
@@ -569,7 +578,7 @@ int
 ktc_ListTokens(int cellNum, int *cellNumP, struct ktc_principal *server)
 {
     struct ViceIoctl iob;
-    char tbuffer[1024];
+    char tbuffer[TBUFFERSIZE];
     char *tp, *cp;
     int newIter, ticketLen, temp;
     int code;
@@ -662,7 +671,7 @@ int
 ktc_ForgetToken(struct ktc_principal *server)
 {
     struct ViceIoctl iob;
-    char tbuffer[1024];
+    char tbuffer[TBUFFERSIZE];
     char *tp;
     int code;
     HANDLE ktcMutex = NULL;
@@ -720,7 +729,7 @@ int
 ktc_ForgetAllTokens()
 {
     struct ViceIoctl iob;
-    char tbuffer[1024];
+    char tbuffer[TBUFFERSIZE];
     int code;
     HANDLE ktcMutex = NULL;
 
