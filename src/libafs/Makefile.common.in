@@ -128,7 +128,6 @@ AFSAOBJS = \
 AFSNFSOBJS = \
 	afs_nfsclnt.o	\
 	afs_nfsdisp.o	\
-	afs_nfsdisp_v3.o \
 	afs_call_nfs.o \
 	afs_pioctl_nfs.o \
 	$(AFS_OS_NFSOBJS)
@@ -262,8 +261,6 @@ afs_exporter.o: $(AFS)/afs_exporter.c
 afs_nfsclnt.o: $(AFS)/afs_nfsclnt.c
 	$(CRULE1)
 afs_nfsdisp.o: $(AFS)/afs_nfsdisp.c
-	$(CRULE1)
-afs_nfsdisp_v3.o: $(AFS)/afs_nfsdisp_v3.c
 	$(CRULE1)
 rx.o: $(RX)/rx.c
 	$(CRULE1)
