@@ -699,6 +699,9 @@ private Volume *attach2(ec, path, header, partp, isbusy)
     IH_INIT(vp->linkHandle, partp->device, header->parent,
 		   header->linkTable);
     vp->cacheCheck = ++VolumeCacheCheck;
+    /* just in case this ever rolls over */
+    if (!vp->cacheCheck) 
+	vp->cacheCheck = ++VolumeCacheCheck;
     vp->shuttingDown = 0;
     vp->goingOffline = 0;
     vp->nUsers = 1;

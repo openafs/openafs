@@ -634,7 +634,7 @@ Vnode *VGetVnode_r(ec,vp,vnodeNumber,locktype)
     /* Check that the vnode hasn't been removed while we were obtaining
        the lock */
     VNLog(102, 2, vnodeNumber, (afs_int32) vnp);
-    if (vnp->disk.type == vNull) {
+    if ((vnp->disk.type == vNull) || (vnp->cacheCheck == 0)){
 	if (vnp->nUsers-- == 1)
 	    StickOnLruChain_r(vnp,vcp);
 	if (locktype == READ_LOCK)
