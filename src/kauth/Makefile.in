@@ -79,22 +79,13 @@ include ../config/Makefile.version
 
 noversion: install
 
-
-PICTARGET =../pic/kauth
-PICOBJS = $(patsubst %.o,$(PICTARGET)/%.o,$(OBJS))
-$(PICTARGET)/%.o: %.c $(PICTARGET)
-	$(CC) -c $(PAM_CFLAGS) $(CFLAGS) $< -o $@
-
-$(PICTARGET):
-	mkdir -p $(PICTARGET)
-
-all: ukinstall kaserver kas kpwvalid klog klog.krb knfs kpasswd ${TOP_LIBDIR}/libkauth.a ${TOP_LIBDIR}/libkauth.krb.a rebuild kdb ${TOP_INCDIR}/afs/kautils.h ${TOP_INCDIR}/afs/kauth.h ${TOP_INCDIR}/afs/kaport.h $(PICOBJS)
+all: ukinstall kaserver kas kpwvalid klog klog.krb knfs kpasswd ${TOP_LIBDIR}/libkauth.a ${TOP_LIBDIR}/libkauth.krb.a rebuild kdb ${TOP_INCDIR}/afs/kautils.h ${TOP_INCDIR}/afs/kauth.h ${TOP_INCDIR}/afs/kaport.h
 
 test tests: all
 	cd test; $(MAKE)
 
 clean:
-	$(RM) -f *.o kaserver kas klog multiklog kpasswd klogin rebuild kauth.cs.c kauth.ss.c kauth.xdr.c kauth.h kautils.h kaerrors.c *.a core kpwvalid AFS_component_version_number.c klog.krb knfs klogin.krb kdb Kkauth.xdr.c Kkauth.h Kkauth.cs.c $(PICTARGET)/*.o
+	$(RM) -f *.o kaserver kas klog multiklog kpasswd klogin rebuild kauth.cs.c kauth.ss.c kauth.xdr.c kauth.h kautils.h kaerrors.c *.a core kpwvalid AFS_component_version_number.c klog.krb knfs klogin.krb kdb Kkauth.xdr.c Kkauth.h Kkauth.cs.c
 
 kaserver: kautils.o kalocalcell.o kadatabase.o kaprocs.o kalog.o kauth.ss.o kauth.xdr.o kaserver.o kaaux.o krb_udp.o kaauxdb.o $(LIBS) 
 	${CC} ${LDFLAGS} -o kaserver kaserver.o kautils.o kalocalcell.o kadatabase.o krb_udp.o kaprocs.o kalog.o kauth.ss.o kauth.xdr.o kaaux.o kaauxdb.o $(LIBS) ${XLIBS} ${TOP_LIBDIR}/libaudit.a
