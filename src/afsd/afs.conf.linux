@@ -23,7 +23,7 @@ OPTIONS=$MEDIUM
 # useful for debugging as it prints _a lot_ of information.
 VERBOSE=
 
-# AFSD_OPTIONS are the options passed to afsd.
+# OPTIONS are the options passed to afsd.
 OPTIONS="$OPTIONS $VERBOSE"
 
 
