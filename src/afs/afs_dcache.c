@@ -1301,8 +1301,9 @@ afs_UFSCacheStoreProc(register struct rx_call *acall, struct osi_file *afile,
 	(*abytesXferredP) += code;
 #endif /* AFS_NOSTATS */
 	if (code != got) {
+	    code = rx_Error(acall);
 	    osi_FreeLargeSpace(tbuffer);
-	    return -33;
+	    return code ? code : -33;
 	}
 	alen -= got;
 	/*
