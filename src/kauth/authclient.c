@@ -476,7 +476,7 @@ kawrap_ubik_Call(aproc, aclient, aflags, p1, p2, p3, p4, p5, p6, p7, p8)
 	    lcode = code;
 	    code =
 		ubik_CallIter(aproc, aclient, aflags, &count, p1, p2, p3, p4,
-			      p5, p6, p7, p8);
+			      p5, p6, p7, p8, 0, 0, 0, 0, 0, 0, 0, 0);
 	} while ((code == UNOQUORUM) || (code == UNOTSYNC)
 		 || (code == KALOCKED) || (code == -1));
 
