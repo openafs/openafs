@@ -358,6 +358,7 @@ ${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
 		IP27) 	CPU_KDEFS="${IP27_KDEFS}";; \
 		IP28)   CPU_KDEFS="${IP28_KDEFS}";; \
 		IP30)   CPU_KDEFS="${IP30_KDEFS}";; \
+		IP35)   CPU_KDEFS="${IP35_KDEFS}";; \
 		*) echo Unknown IP number $$p ; exit 1 ;; \
 		esac ;\
 		case $$t in \
