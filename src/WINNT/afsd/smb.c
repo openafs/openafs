@@ -1216,7 +1216,7 @@ int smb_FindShare(smb_vc_t *vcp, smb_packet_t *inp, char *shareName,
         /* We can accept either unix or PC style AFS pathnames.  Convert
            Unix-style to PC style here for internal use. */
         p = pathName;
-        if (strncmp(p, cm_mountRoot, strlen(cm_mountRoot) == 0)
+        if (strncmp(p, cm_mountRoot, strlen(cm_mountRoot)) == 0)
           p += strlen(cm_mountRoot);  /* skip mount path */
         q = p;
         while (*q) {

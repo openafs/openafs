@@ -51,16 +51,18 @@ AFSD = ..\afsd
 $(OUT)\fs_utils.obj: $(AFSD)\fs_utils.c
 	$(C2OBJ) $**
 
+DLLSDKLIBS =\
+    mpr.lib
+
 DLLLIBS =\
-	mpr.lib \
 	$(DESTDIR)\lib\afsrpc.lib \
 	$(DESTDIR)\lib\afsauthent.lib \
 	$(DESTDIR)\lib\libafsconf.lib \
 	$(DESTDIR)\lib\libosi.lib \
 	$(DESTDIR)\lib\afs\TaLocale.lib
 
-$(DLLFILE): $(DLLOBJS)
-	$(DLLCONLINK) /DEF:afs_shl_ext.def $(DLLLIBS)
+$(DLLFILE): $(DLLOBJS) $(DLLLIBS)
+	$(DLLCONLINK) /DEF:afs_shl_ext.def $(DLLSDKLIBS)
 	$(DLLPREP)
 
 ############################################################################
