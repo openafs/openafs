@@ -1148,7 +1148,9 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 		spacep = cm_GetSpace();
 		smb_StripLastComponent(spacep->data, &lastComp,
 					(char *)(&p->parmsp[3]));
-		if (strcmp(lastComp, "\\desktop.ini") == 0) {
+		/* Make sure that lastComp is not NULL */
+		if (lastComp)
+		    if (strcmp(lastComp, "\\desktop.ini") == 0) {
 			code = cm_NameI(cm_rootSCachep, spacep->data,
 					CM_FLAG_CASEFOLD
 					  | CM_FLAG_DIRSEARCH
