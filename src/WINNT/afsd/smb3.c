@@ -3242,40 +3242,41 @@ VOID initUpperCaseTable(VOID)
 // Return value
 // BOOL : TRUE/FALSE (match/mistmatch)
 
-BOOL szWildCardMatchFileName(PSZ pattern, PSZ name) {
-   PSZ pename;         // points to the last 'name' character
-   PSZ p;
-   pename = name + strlen(name) - 1;
-   while (*name) {
-      switch (*pattern) {
-         case '?':
-         case '>':
-            if (*(++pattern) != '<' || *(++pattern) != '*') {
-               if (*name == '.') 
-                   return FALSE;
-               ++name;
-               break;
-            } /* endif */
-         case '<':
+BOOL 
+szWildCardMatchFileName(PSZ pattern, PSZ name) 
+{
+    PSZ pename;         // points to the last 'name' character
+    PSZ p;
+    pename = name + strlen(name) - 1;
+    while (*name) {
+        switch (*pattern) {
+        case '?':
+            if (*name == '.') 
+                return FALSE;
+            ++pattern, ++name;
+            break;
          case '*':
-            while ((*pattern == '<') || (*pattern == '*') || (*pattern == '?') || (*pattern == '>')) 
-                ++pattern;
-            if (!*pattern) 
+            ++pattern;
+            if (*pattern == '\0')
                 return TRUE;
             for (p = pename; p >= name; --p) {
-               if ((mapCaseTable[*p] == mapCaseTable[*pattern]) &&
-                   szWildCardMatchFileName(pattern + 1, p + 1))
-                  return TRUE;
+                if ((mapCaseTable[*p] == mapCaseTable[*pattern]) &&
+                     szWildCardMatchFileName(pattern + 1, p + 1))
+                    return TRUE;
             } /* endfor */
             return FALSE;
-         default:
+        default:
             if (mapCaseTable[*name] != mapCaseTable[*pattern]) 
                 return FALSE;
             ++pattern, ++name;
             break;
       } /* endswitch */
    } /* endwhile */ 
-   return !*pattern;
+
+    if (*pattern == '\0' || *pattern == '*' && *(pattern+1) == '\0')
+        return TRUE;
+    else 
+        return FALSE;
 }
 
 /* do a case-folding search of the star name mask with the name in namep.
@@ -3283,11 +3284,53 @@ BOOL szWildCardMatchFileName(PSZ pattern, PSZ name) {
  */
 int smb_V3MatchMask(char *namep, char *maskp, int flags) 
 {
-	/* make sure we only match 8.3 names, if requested */
-	if ((flags & CM_FLAG_8DOT3) && !cm_Is8Dot3(namep)) 
+    char * newmask;
+    int    i, j, star, qmark, retval;
+
+    /* make sure we only match 8.3 names, if requested */
+    if ((flags & CM_FLAG_8DOT3) && !cm_Is8Dot3(namep)) 
         return 0;
-	
-	return szWildCardMatchFileName(maskp, namep) ? 1:0;
+    
+    /* optimize the pattern:
+     * if there is a mixture of '?' and '*',
+     * for example  the sequence "*?*?*?*"
+     * must be turned into the form "*"
+     */
+    newmask = (char *)malloc(strlen(maskp)+1);
+    for ( i=0, j=0, star=0, qmark=0; maskp[i]; i++) {
+        switch ( maskp[i] ) {
+        case '?':
+        case '>':
+            qmark++;
+            break;
+        case '<':
+        case '*':
+            star++;
+            break;
+        default:
+            if ( star ) {
+                newmask[j++] = '*';
+            } else if ( qmark ) {
+                while ( qmark-- )
+                    newmask[j++] = '?';
+            }
+            newmask[j++] = maskp[i];
+            star = 0;
+            qmark = 0;
+        }
+    }
+    if ( star ) {
+        newmask[j++] = '*';
+    } else if ( qmark ) {
+        while ( qmark-- )
+            newmask[j++] = '?';
+    }
+    newmask[j++] = '\0';
+
+    retval = szWildCardMatchFileName(newmask, namep) ? 1:0;
+
+    free(newmask);
+    return retval;
 }
 
 #else /* USE_OLD_MATCHING */

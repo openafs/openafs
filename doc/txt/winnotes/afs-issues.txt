@@ -196,10 +196,7 @@ List of unfunded projects:
       afsmap.exe <drive> /DELETE
   22. Write-through caching appears to be unsupported.   Files copied to AFS
       do not end up in the local cache.
-  23. The Win32 API CreateHardLink() is not properly supported by the SMB/CIFS
-      server.  It neither returns a valid error nor does it perform the 
-      operation.
-  24. Missing SMB/CIFS functions: 
+  23. Missing SMB/CIFS functions: 
         Find
         FindUnique
         FindClose
@@ -207,7 +204,8 @@ List of unfunded projects:
         WriteBulk       
         WriteBulkData
         Tran2::SessionSetup
+  24. StoreBehind mode is not implemented.  Or more correctly, all data is
+      written directly to the server and is not cached.  Writes invalidate
+      the local cache entries which are then read back from the server.
 
 
-        
-        
