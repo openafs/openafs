@@ -178,6 +178,9 @@ case $system in
                  if test "x$ac_cv_linux_config_modversions" = "xno"; then
                    AC_MSG_WARN([Cannot determine sys_call_table status. assuming it's exported])
                    ac_cv_linux_exports_sys_call_table=yes
+		   if test -f "$LINUX_KERNEL_PATH/include/asm/ia32_unistd.h"; then
+		     ac_cv_linux_exports_ia32_sys_call_table=yes
+		   fi
                  else
                    LINUX_EXPORTS_INIT_MM
                    LINUX_EXPORTS_KALLSYMS_ADDRESS
