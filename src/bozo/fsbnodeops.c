@@ -285,7 +285,7 @@ char *ascancmd; {
 	bailout = 1;
     }
 
-    if (strlen(ascancmd)) {
+    if (ascancmd && strlen(ascancmd)) {
        if (ConstructLocalBinPath(ascancmd, &scanCmdpath)) {
             bozo_Log("BNODE: command path invalid '%s'\n", ascancmd);
             bailout = 1;
@@ -320,7 +320,7 @@ char *ascancmd; {
 	    bailout = 1;
 	}
 
-        if (strlen(ascancmd)) {
+        if (ascancmd && strlen(ascancmd)) {
 	    sscanf(scanCmdpath, "%s", cmdname);
 #ifdef AFS_NT40_ENV
 	    AppendExecutableExtension(cmdname);
@@ -342,7 +342,7 @@ char *ascancmd; {
     te->filecmd = fileCmdpath;
     te->volcmd = volCmdpath;
     te->salcmd = salCmdpath;
-    if (strlen(ascancmd))
+    if (ascancmd && strlen(ascancmd))
        te->scancmd = scanCmdpath;
     else 
        te->scancmd = (char *)0;
