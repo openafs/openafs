@@ -991,6 +991,155 @@ Audit_and_Return:
 } /*SRXAFS_BulkStatus*/
 
 
+SRXAFS_InlineBulkStatus(tcon, Fids, OutStats, CallBacks, Sync)
+    struct rx_connection *tcon;
+    struct AFSCBFids *Fids;
+    struct AFSBulkStats *OutStats;
+    struct AFSCBs *CallBacks;
+    struct AFSVolSync *Sync;
+{
+    register int i;
+    afs_int32 nfiles;
+    Vnode * targetptr =	0;		/* pointer to vnode to fetch */
+    Vnode * parentwhentargetnotdir = 0;	/* parent vnode if targetptr is a file */
+    int	    errorCode =	0;		/* return code to caller */
+    Volume * volptr = 0;		/* pointer to the volume */
+    struct client *client;		/* pointer to the client data */
+    afs_int32 rights, anyrights;		/* rights for this and any user */
+    register struct AFSFid *tfid;	/* file id we're dealing with now */
+    struct rx_call *tcall = (struct rx_call *) tcon; 
+    AFSFetchStatus *tstatus;
+#if FS_STATS_DETAILED
+    struct fs_stats_opTimingData *opP;      /* Ptr to this op's timing struct */
+    struct timeval opStartTime,
+                   opStopTime;		    /* Start/stop times for RPC op*/
+    struct timeval elapsedTime;		    /* Transfer time */
+
+    /*
+     * Set our stats pointer, remember when the RPC operation started, and
+     * tally the operation.
+     */
+    opP = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_BULKSTATUS]);
+    FS_LOCK
+    (opP->numOps)++;
+    FS_UNLOCK
+    TM_GetTimeOfDay(&opStartTime, 0);
+#endif /* FS_STATS_DETAILED */
+
+    ViceLog(1, ("SAFS_InlineBulkStatus\n"));
+    FS_LOCK
+    AFSCallStats.TotalCalls++;
+    FS_UNLOCK
+
+    nfiles = Fids->AFSCBFids_len;	/* # of files in here */
+    if (nfiles <= 0) {                  /* Sanity check */
+	errorCode = EINVAL;
+	goto Audit_and_Return;
+    }
+
+    /* allocate space for return output parameters */
+    OutStats->AFSBulkStats_val = (struct AFSFetchStatus *)
+	malloc(nfiles * sizeof(struct AFSFetchStatus));
+    OutStats->AFSBulkStats_len = nfiles;
+    CallBacks->AFSCBs_val = (struct AFSCallBack *)
+	malloc(nfiles * sizeof(struct AFSCallBack));
+    CallBacks->AFSCBs_len = nfiles;
+
+    if (errorCode = CallPreamble((struct rx_call **) &tcon, ACTIVECALL)) {
+	goto Bad_InlineBulkStatus;
+    }
+
+    tfid = Fids->AFSCBFids_val;
+    for (i=0; i<nfiles; i++, tfid++) {
+	/*
+	 * Get volume/vnode for the fetched file; caller's rights to it
+	 * are also returned
+	 */
+	if (errorCode =
+	    GetVolumePackage(tcon, tfid, &volptr, &targetptr,
+			     DONTCHECK, &parentwhentargetnotdir, &client,
+			     READ_LOCK, &rights, &anyrights)) {
+	    tstatus = &OutStats->AFSBulkStats_val[i];
+	    tstatus->errorCode = errorCode;
+	    parentwhentargetnotdir = (Vnode *) 0;
+	    targetptr = (Vnode *) 0;
+	    volptr = (Volume *) 0;
+	    continue;
+	}
+
+	/* set volume synchronization information, but only once per call */
+	if (i == nfiles)
+	    SetVolumeSync(Sync, volptr);
+
+	/* Are we allowed to fetch Fid's status? */
+	if (targetptr->disk.type != vDirectory) {
+	    if (errorCode = Check_PermissionRights(targetptr, client, rights,
+						   CHK_FETCHSTATUS, 0)) {
+		tstatus = &OutStats->AFSBulkStats_val[i];
+		tstatus->errorCode = errorCode;
+		PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *) 0, volptr);
+		parentwhentargetnotdir = (Vnode *) 0;
+		targetptr = (Vnode *) 0;
+		volptr = (Volume *) 0;
+		continue;
+	    }
+	}
+
+	/* set OutStatus From the Fid  */
+	GetStatus(targetptr, &OutStats->AFSBulkStats_val[i],
+		  rights, anyrights, parentwhentargetnotdir);
+
+	/* If a r/w volume, also set the CallBack state */
+	if (VolumeWriteable(volptr))
+	    SetCallBackStruct(AddBulkCallBack(client->host, tfid),
+			      &CallBacks->AFSCBs_val[i]);
+	else {
+	  struct AFSFid myFid;		
+	  memset(&myFid, 0, sizeof(struct AFSFid));
+	  myFid.Volume = tfid->Volume;
+	  SetCallBackStruct(AddVolCallBack(client->host, &myFid),
+			      &CallBacks->AFSCBs_val[i]);
+	}
+
+	/* put back the file ID and volume */
+	PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *) 0, volptr);
+	parentwhentargetnotdir = (Vnode *) 0;
+	targetptr = (Vnode *) 0;
+	volptr = (Volume *) 0;
+    }
+
+Bad_InlineBulkStatus: 
+    /* Update and store volume/vnode and parent vnodes back */
+    PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *)0, volptr);
+    CallPostamble(tcon);
+
+#if FS_STATS_DETAILED
+    TM_GetTimeOfDay(&opStopTime, 0);
+    if (errorCode == 0) {
+	FS_LOCK
+        (opP->numSuccesses)++;
+        fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
+        fs_stats_AddTo((opP->sumTime), elapsedTime);
+        fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
+        if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
+	    fs_stats_TimeAssign((opP->minTime), elapsedTime);
+        }
+        if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
+	    fs_stats_TimeAssign((opP->maxTime), elapsedTime);
+        }
+	FS_UNLOCK
+    }	
+
+#endif /* FS_STATS_DETAILED */
+
+Audit_and_Return:
+    ViceLog(2, ("SAFS_InlineBulkStatus	returns	%d\n", errorCode)); 
+    osi_auditU (tcall, InlineBulkFetchStatusEvent, errorCode, AUD_FIDS, Fids, AUD_END);
+    return 0;
+
+} /*SRXAFS_InlineBulkStatus*/
+
+
 SRXAFS_FetchStatus (tcon, Fid, OutStatus, CallBack, Sync)
     struct AFSVolSync *Sync;
     struct rx_connection *tcon;		/* Rx connection handle */
@@ -6220,8 +6369,8 @@ void GetStatus(targetptr, status, rights, anyrights, parentptr)
 {
     /* initialize return status from a vnode  */
     status->InterfaceVersion = 1;
-    status->SyncCounter = status->dataVersionHigh = status->spare2 =
-    status->spare3 = status->spare4 = 0;
+    status->SyncCounter = status->dataVersionHigh = status->lockCount =
+    status->spare3 = status->errorCode = 0;
     if (targetptr->disk.type == vFile)
 	status->FileType = File;
     else if (targetptr->disk.type == vDirectory)
@@ -6244,7 +6393,8 @@ void GetStatus(targetptr, status, rights, anyrights, parentptr)
     status->SegSize = 0;
     status->ServerModTime = targetptr->disk.serverModifyTime;			
     status->Group = targetptr->disk.group;
-    status->spare2 = targetptr->disk.lock.lockCount;
+    status->lockCount = targetptr->disk.lock.lockCount;
+    status->errorCode = 0;
 
 } /*GetStatus*/
 
