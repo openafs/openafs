@@ -16,6 +16,7 @@ include ../config/Makefile.${SYS_NAME}
 KERNELDIR = ../libafs/
 UKERNELDIR = ../libuafs/
      DEFS =
+     INCS = -I${TOP_SRCDIR}/config -I${SRCDIR}include
    CFLAGS = ${OPTMZ} ${DEFS} ${INCS}
   EXPORTS = -bexport:export.exp
   IMPORTS = /lib/kernex.exp /lib/syscalls.exp extras.exp
