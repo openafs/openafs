@@ -41,12 +41,12 @@ Description: Run Openafs client now and at boot?
  force-start to run.
 
 Template: openafs-client/afsdb
-Type: string
+Type: boolean
 Default: true
 Description: Look up AFS cells in DNS?
  In order to contact an AFS cell, you need the IP addresses of the
  cell's database servers.  Normally, this information is read from
  /etc/openafs/CellServDB.  However, if Openafs cannot find a cell in
  that file it can use DNS to look for AFSDB records that contain the
-information.
+ information.
 
