@@ -108,7 +108,7 @@ static struct l
    {
    CRITICAL_SECTION *pcs;
    HWND hManager;
-   int idTimer;
+   UINT_PTR idTimer;
 
    ALLOCEXPANDARRAY *pHeap;
    size_t cChunks;
@@ -354,7 +354,7 @@ void SetDlgItemBytes (HWND hDlg, int idc, double lfValue)
 void MemMgr_ShowWarning (PMEMCHUNK pChunk, LPSTR pszFile, DWORD dwLine, LPTSTR pszDesc)
 {
    TCHAR szMessage[ 1024 ];
-   wsprintf (szMessage, TEXT("%s\n\n   Address: 0x%08lX (%s)\n   Allocated: %s line %ld\n   Freed: %s line %ld\n\nClick OK for memory details."), pszDesc, (long)pChunk->pData, pChunk->pszExpr, pChunk->pszFile, pChunk->dwLine, pszFile, dwLine);
+   wsprintf (szMessage, TEXT("%s\n\n   Address: 0x%08p (%s)\n   Allocated: %s line %ld\n   Freed: %s line %ld\n\nClick OK for memory details."), pszDesc, pChunk->pData, pChunk->pszExpr, pChunk->pszFile, pChunk->dwLine, pszFile, dwLine);
    if (MessageBox (NULL, szMessage, cszTITLE, MB_ICONHAND | MB_OKCANCEL | MB_DEFBUTTON2) == IDOK)
       {
       // TODO: Show Details
@@ -596,7 +596,7 @@ int MemMgr_CompareItems (LPTSTR pszKey1, LPTSTR pszKey2)
       case 0:
       case 4:
       case 5:
-         dw = (int)( (DWORD)pszKey1 - (DWORD)pszKey2 );
+         dw = (int)( pszKey1 - pszKey2 );
          break;
 
       default:
@@ -669,7 +669,7 @@ void MemMgr_OnListAdd (PMEMCHUNK pCopy)
    FormatBytes (szBytes, (double)pCopy->cbData);
 
    TCHAR szAddress[256];
-   wsprintf (szAddress, TEXT("0x%08lX"), (long)pCopy->pData);
+   wsprintf (szAddress, TEXT("0x%08p"), pCopy->pData);
 
    LPTSTR pszKey = NULL;
    switch (lr.iColSort)
@@ -1108,7 +1108,7 @@ BOOL CALLBACK MemMgr_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
          break;
       }
 
-   return DefWindowProc (hDlg, msg, wp, lp);
+   return (BOOL) DefWindowProc (hDlg, msg, wp, lp);
 }
 
 

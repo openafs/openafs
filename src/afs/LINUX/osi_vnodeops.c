@@ -22,7 +22,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vnodeops.c,v 1.81.2.12 2005/02/21 01:13:24 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vnodeops.c,v 1.81.2.13 2005/03/11 06:51:11 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
@@ -1565,9 +1565,7 @@ afs_linux_writepage(struct page *pp)
     if (pp->index >= end_index + 1 || !offset)
 	return -EIO;
   do_it:
-    AFS_GLOCK();
     status = afs_linux_writepage_sync(inode, pp, 0, offset);
-    AFS_GUNLOCK();
     SetPageUptodate(pp);
     UnlockPage(pp);
     if (status == offset)
@@ -1625,6 +1623,8 @@ afs_linux_writepage_sync(struct inode *ip, struct page *pp,
     base = (pp->index << PAGE_CACHE_SHIFT) + offset;
 
     credp = crref();
+    lock_kernel();
+    AFS_GLOCK();
     afs_Trace4(afs_iclSetp, CM_TRACE_UPDATEPAGE, ICL_TYPE_POINTER, vcp,
 	       ICL_TYPE_POINTER, pp, ICL_TYPE_INT32, page_count(pp),
 	       ICL_TYPE_INT32, 99999);
@@ -1651,20 +1651,14 @@ afs_linux_writepage_sync(struct inode *ip, struct page *pp,
 	       ICL_TYPE_POINTER, pp, ICL_TYPE_INT32, page_count(pp),
 	       ICL_TYPE_INT32, code);
 
+    AFS_GUNLOCK();
+    unlock_kernel();
     crfree(credp);
     kunmap(pp);
 
     return code;
 }
 
-static int
-afs_linux_updatepage(struct file *file, struct page *page,
-		     unsigned long offset, unsigned int count)
-{
-    struct dentry *dentry = file->f_dentry;
-
-    return afs_linux_writepage_sync(dentry->d_inode, page, offset, count);
-}
 #else
 /* afs_linux_updatepage
  * What one would have thought was writepage - write dirty page to file.
@@ -1717,12 +1711,11 @@ afs_linux_commit_write(struct file *file, struct page *page, unsigned offset,
 {
     int code;
 
-    lock_kernel();
-    AFS_GLOCK();
-    code = afs_linux_updatepage(file, page, offset, to - offset);
-    AFS_GUNLOCK();
-    unlock_kernel();
+    code = afs_linux_writepage_sync(file->f_dentry->d_inode, page,
+                                    offset, to - offset);
+#if !defined(AFS_LINUX26_ENV)
     kunmap(page);
+#endif
 
     return code;
 }
@@ -1731,7 +1724,11 @@ static int
 afs_linux_prepare_write(struct file *file, struct page *page, unsigned from,
 			unsigned to)
 {
+/* sometime between 2.4.0 and 2.4.19, the callers of prepare_write began to
+   call kmap directly instead of relying on us to do it */
+#if !defined(AFS_LINUX26_ENV)
     kmap(page);
+#endif
     return 0;
 }
 

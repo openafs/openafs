@@ -37,8 +37,6 @@ extern "C" {
 
 #define LANA_INVALID 0xff
 
-  int lana_GetNameFromGuid(char *Guid, char **Name);
-
     struct LANAINFO
     {
         lana_number_t lana_number;
@@ -53,25 +51,25 @@ extern "C" {
 
 #define LANA_NETBIOS_NAME_IN 2
 
-  int lana_GetNameFromGuid(char *Guid, char **Name);
+    int lana_GetNameFromGuid(char *Guid, char **Name);
 
-  struct LANAINFO * lana_FindLanaByName(const char *LanaName);
+    struct LANAINFO * lana_FindLanaByName(const char *LanaName);
 
-  lana_number_t lana_FindLoopback(void);
+    lana_number_t lana_FindLoopback(void);
 
-  BOOL lana_OnlyLoopback(void);
+    BOOL lana_OnlyLoopback(void);
 
-  BOOL lana_IsLoopback(lana_number_t lana);
+    BOOL lana_IsLoopback(lana_number_t lana);
 
-  long lana_GetUncServerNameEx(char *buffer, lana_number_t * pLana, int * pIsGateway, int flags);
+    long lana_GetUncServerNameEx(char *buffer, lana_number_t * pLana, int * pIsGateway, int flags);
 
-  void lana_GetUncServerNameDynamic(int lanaNumber, BOOL isGateway, TCHAR *name, int type);
+    void lana_GetUncServerNameDynamic(int lanaNumber, BOOL isGateway, TCHAR *name, int type);
 
-  void lana_GetUncServerName(TCHAR *name, int type);
+    void lana_GetUncServerName(TCHAR *name, int type);
 
-  void lana_GetAfsNameString(int lanaNumber, BOOL isGateway, TCHAR* name);
+    void lana_GetAfsNameString(int lanaNumber, BOOL isGateway, TCHAR* name);
 
-  void lana_GetNetbiosName(LPTSTR pszName, int type);
+    void lana_GetNetbiosName(LPTSTR pszName, int type);
 
 #ifdef __cplusplus
 }

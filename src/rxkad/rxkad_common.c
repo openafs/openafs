@@ -23,7 +23,7 @@
 #define INCLUDE_RXKAD_PRIVATE_DECLS
 
 RCSID
-    ("$Header: /cvs/openafs/src/rxkad/rxkad_common.c,v 1.20.2.2 2004/12/07 06:10:16 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rxkad/rxkad_common.c,v 1.20.2.3 2005/03/11 07:03:35 shadow Exp $");
 
 #ifdef KERNEL
 #ifndef UKERNEL
@@ -323,7 +323,7 @@ rxkad_CheckPacket(struct rx_securityClass *aobj, struct rx_call *acall,
     fc_KeySchedule *schedule;
     fc_InitializationVector *ivec;
     int len;
-    int nlen;
+    int nlen = 0;
     u_int word;			/* so we get unsigned right-shift */
     int checkCksum;
     afs_int32 *preSeq;

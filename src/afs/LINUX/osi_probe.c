@@ -52,6 +52,7 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 #endif
+#ifdef AFS_LINUX24_ENV
 #include <linux/module.h> /* early to avoid printf->printk mapping */
 #ifndef OSI_PROBE_STANDALONE
 #include "afs/sysincludes.h"
@@ -400,8 +401,8 @@ static int main_zapped_syscalls[] = {
  * mmap2 and fstat64 are implemented only for 32-bit calls
  */
 #ifdef AFS_PPC64_LINUX20_ENV
-    __NR_mmap2,
-    __NR_fstat64,
+    /* _mmap2, _fstat64 */
+    192, 197,
 #endif /* AFS_PPC64_LINUX20_ENV */
 
 /* Similarly for S390X, with lcown16 and fstat64 */
@@ -644,7 +645,8 @@ static int sct32_zapped_syscalls[] = {
 /* mmap2 and fstat64 are implemented only for 32-bit calls */
 static int sct32_unique_syscalls[] = {
 #ifdef AFS_PPC64_LINUX20_ENV
-    __NR_mmap2, __NR_fstat64,
+    /* _mmap2, _fstat64 */
+    192, 197,
 #endif
 #ifdef AFS_SPARC64_LINUX24_ENV
     /* 
@@ -1222,4 +1224,5 @@ void osi_probe_exit(void) { }
 
 module_init(osi_probe_init);
 module_exit(osi_probe_exit);
+#endif
 #endif

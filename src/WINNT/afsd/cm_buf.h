@@ -19,18 +19,12 @@
 
 /* default # of buffers if not changed */
 #define CM_BUF_BUFFERS	100
-extern long buf_nbuffers;
-
-/* orig # of buffers */
-extern long buf_nOrigBuffers;
 
 /* default buffer size */
-#define CM_BUF_SIZE		4096
-extern long buf_bufferSize;
+#define CM_BUF_BLOCKSIZE CM_CONFIGDEFAULT_BLOCKSIZE
 
 /* default hash size */
 #define CM_BUF_HASHSIZE	1024
-extern long buf_hashSize;
 
 /* cache type */
 #define CM_BUF_CACHETYPE_FILE 1
@@ -40,28 +34,34 @@ extern int buf_cacheType;
 /* force it to be signed so that mod comes out positive or 0 */
 #define BUF_HASH(fidp,offsetp) ((((fidp)->vnode+((fidp)->unique << 5)	\
 				+(fidp)->volume+(fidp)->cell		\
-				+((offsetp)->LowPart / buf_bufferSize))	\
+				+((offsetp)->LowPart / cm_data.buf_blockSize))	\
 				  & 0x7fffffff)				\
-				   % buf_hashSize)
+				   % cm_data.buf_hashSize)
 
 /* another hash fn */
 #define BUF_FILEHASH(fidp) ((((fidp)->vnode+((fidp)->unique << 5)	\
 				+(fidp)->volume+(fidp)->cell)		\
 				  & 0x7fffffff)				\
-				   % buf_hashSize)
+				   % cm_data.buf_hashSize)
 
 /* backup over pointer to the buffer */
 #define BUF_OVERTOBUF(op) ((cm_buf_t *)(((char *)op) - ((long)(&((cm_buf_t *)0)->over))))
 
+#ifdef notdef
 /* pretend we have logs, too */
 typedef char cm_log_t;
+#endif
+
+#define CM_BUF_MAGIC    ('B' | 'U' <<8 | 'F'<<16 | 'F'<<24)
 
 /* represents a single buffer */
 typedef struct cm_buf {
-	osi_queue_t q;		/* queue of all zero-refcount buffers */
-	struct cm_buf *hashp;	/* hash bucket pointer */
-	struct cm_buf *fileHashp; /* file hash bucket pointer */
-	struct cm_buf *fileHashBackp;	/* file hash bucket back pointer */
+    osi_queue_t q;		/* queue of all zero-refcount buffers */
+    afs_uint32     magic;
+    struct cm_buf *allp;	/* next in all list */
+    struct cm_buf *hashp;	/* hash bucket pointer */
+    struct cm_buf *fileHashp;   /* file hash bucket pointer */
+    struct cm_buf *fileHashBackp;	/* file hash bucket back pointer */
 				/*
 				 * The file hash chain is doubly linked, since
 				 * these chains can get rather long.  The
@@ -70,31 +70,30 @@ typedef struct cm_buf {
 				 * hash function is good and if there are
 				 * enough buckets for the size of the cache.
 				 */
-        struct cm_buf *allp;	/* next in all list */
-	osi_mutex_t mx;		/* mutex protecting structure except refcount */
-    unsigned long refCount;		/* reference count (buf_globalLock) */
-        long idCounter;		/* counter for softrefs; bumped at each recycle */
-        long dirtyCounter;	/* bumped at each dirty->clean transition */
+    osi_mutex_t mx;		/* mutex protecting structure except refcount */
+    unsigned long refCount;	/* reference count (buf_globalLock) */
+    long idCounter;		/* counter for softrefs; bumped at each recycle */
+    long dirtyCounter;	        /* bumped at each dirty->clean transition */
 #ifdef notdef
-	struct cm_log *logp;	/* log for this buffer, if any */
-	osi_hyper_t lsn;	/* lsn to force to (last LSN changing this buffer) */
+    cm_log_t *logp;	        /* log for this buffer, if any */
+    osi_hyper_t lsn;	        /* lsn to force to (last LSN changing this buffer) */
 #endif /* notdef */
-        osi_hyper_t offset;	/* offset */
-	cm_fid_t fid;		/* file ID */
-	long flags;		/* flags we're using */
-        long size;		/* size in bytes of this buffer */
-        char *datap;		/* data in this buffer */
-	unsigned long error;	/* last error code, if CM_BUF_ERROR is set */
-        struct cm_user *userp;	/* user who wrote to the buffer last */
+    osi_hyper_t offset;	        /* offset */
+    cm_fid_t fid;		/* file ID */
+    long flags;		        /* flags we're using */
+    long size;		        /* size in bytes of this buffer */
+    char *datap;		/* data in this buffer */
+    unsigned long error;	/* last error code, if CM_BUF_ERROR is set */
+    cm_user_t *userp;	        /* user who wrote to the buffer last */
 #ifndef DJGPP
-        OVERLAPPED over;	/* overlapped structure for I/O */
+    OVERLAPPED over;	        /* overlapped structure for I/O */
 #endif
         
-        /* fields added for the CM; locked by scp->mx */
-        long dataVersion;	/* data version of this page */
-        long cmFlags;		/* flags for cm */
+    /* fields added for the CM; locked by scp->mx */
+    long dataVersion;	        /* data version of this page */
+    long cmFlags;		/* flags for cm */
 #ifdef DISKCACHE95
-        cm_diskcache_t *dcp;    /* diskcache structure */
+    cm_diskcache_t *dcp;        /* diskcache structure */
 #endif /* DISKCACHE95 */
 } cm_buf_t;
 
@@ -106,8 +105,8 @@ typedef struct cm_buf {
 
 /* represents soft reference which is OK to lose on a recycle */
 typedef struct cm_softRef {
-	cm_buf_t *bufp;	/* buffer (may get reused) */
-        long counter;		/* counter of changes to identity */
+    cm_buf_t *bufp;	/* buffer (may get reused) */
+    long counter;		/* counter of changes to identity */
 } cm_softRef_t;
 
 #define CM_BUF_READING	1	/* now reading buffer to the disk */
@@ -121,26 +120,17 @@ typedef struct cm_softRef {
 #define CM_BUF_EOF		0x100	/* read 0 bytes; used for detecting EOF */
 
 typedef struct cm_buf_ops {
-	long (*Writep)(void *, osi_hyper_t *, long, long, struct cm_user *,
+    long (*Writep)(void *, osi_hyper_t *, long, long, struct cm_user *,
 			struct cm_req *);
-	long (*Readp)(cm_buf_t *, long, long *, struct cm_user *);
-        long (*Stabilizep)(void *, struct cm_user *, struct cm_req *);
-        long (*Unstabilizep)(void *, struct cm_user *);
+    long (*Readp)(cm_buf_t *, long, long *, struct cm_user *);
+    long (*Stabilizep)(void *, struct cm_user *, struct cm_req *);
+    long (*Unstabilizep)(void *, struct cm_user *);
 } cm_buf_ops_t;
 
 /* global locks */
 extern osi_rwlock_t buf_globalLock;
 
-/* buffer free list */
-extern cm_buf_t *buf_freeListp;
-
-/* pointer to hash table */
-extern cm_buf_t **buf_hashTablepp;
-
-/* another hash table */
-extern cm_buf_t **buf_fileHashTablepp;
-
-extern long buf_Init(cm_buf_ops_t *);
+extern long buf_Init(int newFile, cm_buf_ops_t *, long nbuffers);
 
 extern void buf_Shutdown(void);
 
@@ -184,6 +174,10 @@ extern int buf_TryReserveBuffers(long);
 
 extern void buf_UnreserveBuffers(long);
 
+#ifdef TESTING
+extern void buf_ValidateBufQueues(void);
+#endif /* TESTING */
+
 extern osi_log_t *buf_logp;
 
 extern long buf_Truncate(struct cm_scache *scp, cm_user_t *userp,
@@ -196,6 +190,8 @@ extern long buf_FlushCleanPages(cm_scache_t *scp, cm_user_t *userp,
 	cm_req_t *reqp);
 
 extern long buf_SetNBuffers(long nbuffers);
+
+extern long buf_ValidateBuffers(void);
 
 extern void buf_ForceTrace(BOOL flush);
 

@@ -29,7 +29,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/viced/afsfileprocs.c,v 1.81.2.3 2005/01/31 04:14:50 shadow Exp $");
+    ("$Header: /cvs/openafs/src/viced/afsfileprocs.c,v 1.81.2.4 2005/02/28 20:19:10 shadow Exp $");
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -3638,8 +3638,8 @@ SAFSS_CreateFile(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
     Update_TargetVnodeStatus(targetptr, TVS_CFILE, client, InStatus,
 			     parentptr, volptr, 0);
 
-    /* set up the return status for the parent dir and the newly created file */
-    GetStatus(targetptr, OutFidStatus, rights, anyrights, parentptr);
+    /* set up the return status for the parent dir and the newly created file, and since the newly created file is owned by the creator, give it PRSFS_ADMINISTER to tell the client its the owner of the file */
+    GetStatus(targetptr, OutFidStatus, rights | PRSFS_ADMINISTER, anyrights, parentptr);
     GetStatus(parentptr, OutDirStatus, rights, anyrights, 0);
 
     /* convert the write lock to a read lock before breaking callbacks */

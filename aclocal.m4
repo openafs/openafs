@@ -127,7 +127,10 @@ case $system in
 		 if test "x$with_linux_kernel_headers" != "x"; then
 		   LINUX_KERNEL_PATH="$with_linux_kernel_headers"
 		 else
-		   LINUX_KERNEL_PATH="/usr/src/linux-2.4"
+		   LINUX_KERNEL_PATH="/lib/modules/`uname -r`/build"
+		   if test ! -f "$LINUX_KERNEL_PATH/include/linux/version.h"; then
+		     LINUX_KERNEL_PATH="/usr/src/linux-2.4"
+		   fi
 		   if test ! -f "$LINUX_KERNEL_PATH/include/linux/version.h"; then
 		     LINUX_KERNEL_PATH="/usr/src/linux"
 		   fi
@@ -580,6 +583,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_FS_STRUCT_INODE_HAS_I_DEVICES
 		 LINUX_FS_STRUCT_INODE_HAS_I_SB_LIST
 		 LINUX_FS_STRUCT_INODE_HAS_I_SECURITY
+		 LINUX_FS_STRUCT_INODE_HAS_INOTIFY_LOCK
 	  	 LINUX_INODE_SETATTR_RETURN_TYPE
 	  	 LINUX_WRITE_INODE_RETURN_TYPE
 	  	 LINUX_IOP_NAMEIDATA
@@ -698,6 +702,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 fi
 		 if test "x$ac_cv_linux_fs_struct_inode_has_i_dirty_data_buffers" = "xyes"; then 
 		  AC_DEFINE(STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS, 1, [define if your struct inode has data_buffers])
+		 fi
+		 if test "x$ac_cv_linux_fs_struct_inode_has_inotify_lock" = "xyes"; then 
+		  AC_DEFINE(STRUCT_INODE_HAS_INOTIFY_LOCK, 1, [define if your struct inode has inotify_lock])
 		 fi
 		 if test "x$ac_cv_linux_func_recalc_sigpending_takes_void" = "xyes"; then 
 		  AC_DEFINE(RECALC_SIGPENDING_TAKES_VOID, 1, [define if your recalc_sigpending takes void])
@@ -1649,6 +1656,22 @@ printf("%d\n", _inode.i_dirty_data_buffers);],
 ac_cv_linux_fs_struct_inode_has_i_dirty_data_buffers=yes,
 ac_cv_linux_fs_struct_inode_has_i_dirty_data_buffers=no)])
 AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_dirty_data_buffers)
+CPPFLAGS="$save_CPPFLAGS"])
+
+
+AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_INOTIFY_LOCK], [
+AC_MSG_CHECKING(for inotify_lock in struct inode)
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+AC_CACHE_VAL(ac_cv_linux_fs_struct_inode_has_inotify_lock, 
+[
+AC_TRY_COMPILE(
+[#include <linux/fs.h>],
+[struct inode _inode;
+printf("%d\n", _inode.inotify_lock);], 
+ac_cv_linux_fs_struct_inode_has_inotify_lock=yes,
+ac_cv_linux_fs_struct_inode_has_inotify_lock=no)])
+AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_inotify_lock)
 CPPFLAGS="$save_CPPFLAGS"])
 
 

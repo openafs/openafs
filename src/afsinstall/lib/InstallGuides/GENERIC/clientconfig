@@ -67,7 +67,7 @@ sub clientconfig {
     close CELL;
   }
   if (($replaced && $different) || !$replaced) {
-    &VPvint("Creating new $cellfile");
+    &VPrint("Creating new $cellfile");
     unlink($replaced) if ($replaced);
     rename($cellfile, $replaced) if ($replaced);
     open(CELLNEW, ">$cellfile") || &ErrorMsg("Can't open cell file", 

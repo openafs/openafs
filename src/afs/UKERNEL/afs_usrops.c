@@ -15,7 +15,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/UKERNEL/afs_usrops.c,v 1.27.2.1 2004/08/25 07:15:34 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/UKERNEL/afs_usrops.c,v 1.27.2.2 2005/03/11 06:50:46 shadow Exp $");
 
 
 #ifdef	UKERNEL
@@ -650,7 +650,7 @@ int max_osi_files = 0;
  */
 int
 lookupname(char *fnamep, int segflg, int followlink,
-	   struct usr_vnode **dirvpp, struct usr_vnode **compvpp)
+	   struct usr_vnode **compvpp)
 {
     int i;
     int code;
@@ -658,7 +658,6 @@ lookupname(char *fnamep, int segflg, int followlink,
     struct usr_vnode *vp;
 
     /*usr_assert(followlink == 0); */
-    usr_assert(dirvpp == NULL);
 
     /*
      * Assume relative pathnames refer to files in AFS

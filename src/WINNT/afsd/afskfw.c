@@ -65,6 +65,8 @@
 #include <afs/ptserver.h>
 #include <afs/ptuser.h>
 
+#include <WINNT\afsreg.h>
+
 /*
  * TIMING _____________________________________________________________________
  *
@@ -228,6 +230,11 @@ FUNC_INFO leash_fi[] = {
     END_FUNC_INFO
 };
 
+FUNC_INFO leash_opt_fi[] = {
+    MAKE_FUNC_INFO(Leash_get_default_mslsa_import),
+    END_FUNC_INFO
+};
+
 FUNC_INFO k5_fi[] = {
     MAKE_FUNC_INFO(krb5_change_password),
     MAKE_FUNC_INFO(krb5_get_init_creds_opt_init),
@@ -282,6 +289,7 @@ FUNC_INFO k5_fi[] = {
     MAKE_FUNC_INFO(krb5_get_default_config_files),
     MAKE_FUNC_INFO(krb5_free_config_files),
     MAKE_FUNC_INFO(krb5_get_default_realm),
+    MAKE_FUNC_INFO(krb5_free_default_realm),
     MAKE_FUNC_INFO(krb5_free_ticket),
     MAKE_FUNC_INFO(krb5_decode_ticket),
     MAKE_FUNC_INFO(krb5_get_host_realm),
@@ -371,6 +379,7 @@ static HINSTANCE hComErr = 0;
 static HINSTANCE hService = 0;
 static HINSTANCE hProfile = 0;
 static HINSTANCE hLeash = 0;
+static HINSTANCE hLeashOpt = 0;
 static HINSTANCE hCCAPI = 0;
 static struct principal_ccache_data * princ_cc_data = NULL;
 static struct cell_principal_map    * cell_princ_map = NULL;
@@ -407,6 +416,7 @@ KFW_initialize(void)
             LoadFuncs(PROFILE_DLL, profile_fi, &hProfile, 0, 1, 0, 0);
             LoadFuncs(LEASH_DLL, leash_fi, &hLeash, 0, 1, 0, 0);
             LoadFuncs(CCAPI_DLL, ccapi_fi, &hCCAPI, 0, 1, 0, 0);
+            LoadFuncs(LEASH_DLL, leash_opt_fi, &hLeashOpt, 0, 1, 0, 0);
 
             if ( KFW_is_available() ) {
                 char rootcell[MAXCELLCHARS+1];
@@ -429,31 +439,31 @@ KFW_initialize(void)
 void
 KFW_cleanup(void)
 {
-    if (hKrb5)
-        FreeLibrary(hKrb5);
-#ifdef USE_KRB4
-    if (hKrb4)
-        FreeLibrary(hKrb4);
-#endif /* USE_KRB4 */
-    if (hProfile)
-        FreeLibrary(hProfile);
-    if (hComErr)
-        FreeLibrary(hComErr);
-    if (hService)
-        FreeLibrary(hService);
+    if (hLeashOpt)
+        FreeLibrary(hLeashOpt);
+    if (hCCAPI)
+        FreeLibrary(hCCAPI);
+    if (hLeash)
+        FreeLibrary(hLeash);
+    if (hKrb524)
+        FreeLibrary(hKrb524);
 #ifdef USE_MS2MIT
     if (hSecur32)
         FreeLibrary(hSecur32);
 #endif /* USE_MS2MIT */
-    if (hKrb524)
-        FreeLibrary(hKrb524);
-    if (hLeash)
-        FreeLibrary(hLeash);
-    if (hCCAPI)
-        FreeLibrary(hCCAPI);
+    if (hService)
+        FreeLibrary(hService);
+    if (hComErr)
+        FreeLibrary(hComErr);
+    if (hProfile)
+        FreeLibrary(hProfile);
+#ifdef USE_KRB4
+    if (hKrb4)
+        FreeLibrary(hKrb4);
+#endif /* USE_KRB4 */
+    if (hKrb5)
+        FreeLibrary(hKrb5);
 }
-
-static char OpenAFSConfigKeyName[] = "SOFTWARE\\OpenAFS\\Client";
 
 int
 KFW_use_krb524(void)
@@ -462,7 +472,7 @@ KFW_use_krb524(void)
     DWORD code, len;
     DWORD use524 = 0;
 
-    code = RegOpenKeyEx(HKEY_CURRENT_USER, OpenAFSConfigKeyName,
+    code = RegOpenKeyEx(HKEY_CURRENT_USER, AFSREG_USER_OPENAFS_SUBKEY,
                          0, KEY_QUERY_VALUE, &parmKey);
     if (code == ERROR_SUCCESS) {
         len = sizeof(use524);
@@ -471,7 +481,7 @@ KFW_use_krb524(void)
         RegCloseKey(parmKey);
     }
     if (code != ERROR_SUCCESS) {
-        code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, OpenAFSConfigKeyName,
+        code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_OPENAFS_SUBKEY,
                              0, KEY_QUERY_VALUE, &parmKey);
         if (code == ERROR_SUCCESS) {
             len = sizeof(use524);
@@ -490,7 +500,7 @@ KFW_is_available(void)
     DWORD code, len;
     DWORD enableKFW = 1;
 
-    code = RegOpenKeyEx(HKEY_CURRENT_USER, OpenAFSConfigKeyName,
+    code = RegOpenKeyEx(HKEY_CURRENT_USER, AFSREG_USER_OPENAFS_SUBKEY,
                          0, KEY_QUERY_VALUE, &parmKey);
     if (code == ERROR_SUCCESS) {
         len = sizeof(enableKFW);
@@ -500,7 +510,7 @@ KFW_is_available(void)
     }
     
     if (code != ERROR_SUCCESS) {
-        code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, OpenAFSConfigKeyName,
+        code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_OPENAFS_SUBKEY,
                              0, KEY_QUERY_VALUE, &parmKey);
         if (code == ERROR_SUCCESS) {
             len = sizeof(enableKFW);
@@ -930,7 +940,7 @@ KFW_import_windows_lsa(void)
     code = pkrb5_cc_get_principal(ctx, cc, &princ);
     if ( code ) goto cleanup;
 
-    dwMsLsaImport = pLeash_get_default_mslsa_import();
+    dwMsLsaImport = pLeash_get_default_mslsa_import ? pLeash_get_default_mslsa_import() : 1;
     switch ( dwMsLsaImport ) {
     case 0: /* do not import */
         goto cleanup;
@@ -1230,8 +1240,9 @@ KFW_AFS_get_cred( char * username,
     if ( code ) goto cleanup;
 
     realm = afs_realm_of_cell(ctx, &cellconfig);  // do not free
+
     userrealm = strchr(username,'@');
-    if (userrealm) {
+    if ( userrealm ) {
         pname = strdup(username);
         userrealm = strchr(pname, '@');
         *userrealm = '\0';
@@ -1254,7 +1265,6 @@ KFW_AFS_get_cred( char * username,
         strcat(pname,"@");
         strcat(pname,realm);
     }
-
     if ( IsDebuggerPresent() ) {
         OutputDebugString("Realm: ");
         OutputDebugString(realm);
@@ -2660,7 +2670,7 @@ KFW_AFS_klog(
         goto skip_krb5_init;
     }
 
-    /* lookfor client principals which cannot be distinguished 
+    /* look for client principals which cannot be distinguished 
      * from Kerberos 4 multi-component principal names
      */
     k5data = krb5_princ_component(ctx,client_principal,0);

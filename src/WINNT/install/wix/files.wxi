@@ -19,6 +19,9 @@
     </Directory>
     <Directory Id="ProgramFilesFolder">
         <Directory Id="AFSDIR" Name="OpenAFS" SourceName=".">
+	    <Component Id="efl_desktop_INI" Guid="0ADB427F-3648-4BE0-983B-C454AA51895C">
+		<File Id="fildesktop_INI" Name="desktop.ini" KeyPath="yes" DiskId="1" src="$(var.SrcDir)WINNT\install\wix\afsdesktop.ini" Hidden="yes" System="yes" />
+	    </Component>
             <Directory Id="dirCommon" Name="Common">
                 <Component Id="cmp_CommonDir" Guid="C86B03A1-AE97-48B1-A77B-1B2395F1E117" KeyPath="yes">
                     <Environment Id="envCommon" Name="PATH" Action="create" System="yes" Permanent="no" Part="last" Separator=";" Value="[AFSDIR]Common" />
@@ -762,6 +765,9 @@
                     <Component Id="cmf_fs_EXE" Guid="D19D5998-E8E1-424B-9D0D-655840DBC571">
                         <File Id="filefs_EXE" Name="fs.exe" LongName="fs.exe" KeyPath="yes" DiskId="1" />
                     </Component>
+                    <Component Id="cmf_afsdacl_EXE" Guid="215DBC86-A5E8-4622-8A95-0E5830B04D0B">
+                        <File Id="fileafsdacl_EXE" Name="afsdacl.exe" KeyPath="yes" DiskId="1" />
+                    </Component>
                     <Component Id="cmf_afscreds_EXE" Guid="A17567CF-866E-49AF-A717-0B4F17CA88D4">
                         <File Id="fileafscreds_EXE" Name="afscreds.exe" LongName="afscreds.exe" KeyPath="yes" DiskId="1">
 							<Shortcut Id="scAfsCreds" Directory="dirShortCut" Name="Auth.lnk" LongName="Authentication.lnk" Description="$(loc.StrAfsCredsDesc)" Arguments="[CREDSAUTOINIT] [CREDSRENEWDRMAP] [CREDSIPCHDET] [CREDSQUIET] [CREDSSHOW]" Icon="ico_afscreds" IconIndex="0" Show="normal" WorkingDirectory="dirCommon" />
@@ -829,10 +835,13 @@
                     <Component Id="cmf_aklog_EXE" Guid="84FADCD9-AA0D-4D80-B374-A20A85F5957B">
                         <File Id="fileaklog_EXE" Name="aklog.exe" LongName="aklog.exe" KeyPath="yes" DiskId="1" />
                     </Component>
-					<Component Id="cmf_afs_cpa_CPL" Guid="C83091EC-2967-4AC6-A34D-860CD7FEDA57">
-						<File Id="fileafs_cpa_CPL" Name="afs_cpa.cpl" LongName="afs_cpa.cpl" KeyPath="yes" DiskId="1"/>
-				        <Registry Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Control Panel\Cpls" Name="AFS Client CPL" Type="string" Value="[#fileafs_cpa_CPL]" Id="reg_Full_Client11" />
-					</Component>
+                    <Component Id="cmf_cmdebug_EXE" Guid="CFACE5C6-A867-439F-8BEE-31C0ED399B41">
+                        <File Id="filecmdebug_EXE" Name="cmdebug.exe" LongName="cmdebug.exe" KeyPath="yes" DiskId="1" />
+                    </Component>
+		    <Component Id="cmf_afs_cpa_CPL" Guid="C83091EC-2967-4AC6-A34D-860CD7FEDA57">
+		    	<File Id="fileafs_cpa_CPL" Name="afs_cpa.cpl" LongName="afs_cpa.cpl" KeyPath="yes" DiskId="1"/>
+		    <Registry Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Control Panel\Cpls" Name="AFS Client CPL" Type="string" Value="[#fileafs_cpa_CPL]" Id="reg_Full_Client11" />
+		    </Component>
                 <?ifdef DebugSyms?>
                     <Component Id="cmp_ClientProgramDebug" Guid="A6A394F6-45D0-45A9-A7DD-C0997070EC14">
                         <File Id="fileafsshare_PDB" Name="afsshare.pdb" LongName="afsshare.pdb" DiskId="1" />
@@ -856,7 +865,8 @@
                         <File Id="filerxdebug_PDB" Name="rxdebug.pdb" LongName="rxdebug.pdb" DiskId="1" src="$(var.EtcDir)\rxdebug.pdb"/>
                         <File Id="filebackup_PDB" Name="backup.pdb" LongName="backup.pdb" DiskId="1" src="$(var.EtcDir)\backup.pdb"/>
                         <File Id="fileaklog_PDB" Name="aklog.pdb" LongName="aklog.pdb" DiskId="1" />
-						<File Id="fileafs_cpa_PDB" Name="afs_cpa.pdb" LongName="afs_cpa.pdb" KeyPath="yes" DiskId="1"/>
+                        <File Id="filecmdebug_PDB" Name="cmdebug.pdb" LongName="cmdebug.pdb" DiskId="1" />
+			<File Id="fileafs_cpa_PDB" Name="afs_cpa.pdb" LongName="afs_cpa.pdb" KeyPath="yes" DiskId="1"/>
                     </Component>
                 <?endif?>
                     

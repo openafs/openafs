@@ -16,7 +16,7 @@
  * afs_osi.h.
  */
 
-/* $Id: osi_machdep.h,v 1.16 2004/07/29 03:13:49 shadow Exp $ */
+/* $Id: osi_machdep.h,v 1.16.2.1 2005/03/11 06:50:43 shadow Exp $ */
 
 #ifndef _OSI_MACHDEP_H_
 #define _OSI_MACHDEP_H_
@@ -102,15 +102,14 @@ extern struct timeval time;
 struct vcache;
 
 extern int afs_nbsd_lookupname(char *fnamep, enum uio_seg segflg,
-			       int followlink, struct vnode **dirvpp,
-			       struct vnode **compvpp);
+			       int followlink, struct vnode **compvpp);
 extern void afs_nbsd_getnewvnode(struct vcache *tvc);
 extern void *afs_nbsd_Alloc(size_t asize);
 extern void afs_nbsd_Free(void *p, size_t asize);
 extern int afs_vget();
 
-#define	gop_lookupname(fnamep, segflg, followlink, dirvpp, compvpp) \
-	afs_nbsd_lookupname((fnamep), (segflg), (followlink), (dirvpp), (compvpp))
+#define	gop_lookupname(fnamep, segflg, followlink, compvpp) \
+	afs_nbsd_lookupname((fnamep), (segflg), (followlink), (compvpp))
 
 #ifdef KERNEL
 extern int (**afs_vnodeop_p) ();

@@ -308,6 +308,9 @@
 /* define if your struct inode has data_buffers */
 #undef STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS
 
+/* define if your struct inode has inotify_lock */
+#undef STRUCT_INODE_HAS_INOTIFY_LOCK
+
 /* define if your recalc_sigpending takes void */
 #undef RECALC_SIGPENDING_TAKES_VOID
 

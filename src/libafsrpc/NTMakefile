@@ -95,7 +95,7 @@ DLLLIBS =\
 	$(DESTDIR)\lib\afs\afsreg.lib
 
 $(LIBFILE): $(DLLOBJS) $(DLLLIBS)
-	$(DLLCONLINK) /DEF:afsrpc.def
+	$(DLLCONLINK) /DEF:afsrpc.def iphlpapi.lib
 	$(DLLPREP)
 
 # Definitions for generating versioninfo resources

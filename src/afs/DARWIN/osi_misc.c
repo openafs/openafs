@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/DARWIN/osi_misc.c,v 1.6 2004/07/29 03:13:44 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/DARWIN/osi_misc.c,v 1.6.2.1 2005/03/11 06:50:35 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
@@ -19,7 +19,7 @@ RCSID
 
 int
 osi_lookupname(char *aname, enum uio_seg seg, int followlink,
-	       struct vnode **dirvpp, struct vnode **vpp)
+	       struct vnode **vpp)
 {
     struct nameidata n;
     int flags, error;
@@ -29,15 +29,10 @@ osi_lookupname(char *aname, enum uio_seg seg, int followlink,
 	flags |= FOLLOW;
     else
 	flags |= NOFOLLOW;
-    /*   if (dirvpp) flags|=WANTPARENT; *//* XXX LOCKPARENT? */
     NDINIT(&n, LOOKUP, flags, seg, aname, current_proc());
     if (error = namei(&n))
 	return error;
     *vpp = n.ni_vp;
-/*
-   if (dirvpp)
-      *dirvpp = n.ni_dvp;
-#/
    /* should we do this? */
     VOP_UNLOCK(n.ni_vp, 0, current_proc());
     return 0;

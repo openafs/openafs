@@ -84,25 +84,30 @@ long cm_MapRPCErrorRmdir(long error, cm_req_t *reqp)
 
 	/* If we had to stop retrying, report our saved error code. */
 	if (reqp && error == CM_ERROR_TIMEDOUT) {
-		if (reqp->accessError)
-			return reqp->accessError;
-		if (reqp->volumeError)
-			return reqp->volumeError;
-		if (reqp->rpcError)
-			return reqp->rpcError;
-		return error;
+            if (reqp->accessError)
+                return reqp->accessError;
+            if (reqp->volumeError)
+                return reqp->volumeError;
+            if (reqp->rpcError)
+                return reqp->rpcError;
+            return error;
 	}
 
-	if (error < 0) error = CM_ERROR_TIMEDOUT;
-	else if (error == 30) error = CM_ERROR_READONLY;
-	else if (error == 20) error = CM_ERROR_NOTDIR;
-        else if (error == 13) error = CM_ERROR_NOACCESS;
-        else if (error == 2) error = CM_ERROR_NOSUCHFILE;
+	if (error < 0) 
+            error = CM_ERROR_TIMEDOUT;
+	else if (error == 30) 
+            error = CM_ERROR_READONLY;
+	else if (error == 20) 
+            error = CM_ERROR_NOTDIR;
+        else if (error == 13) 
+            error = CM_ERROR_NOACCESS;
+        else if (error == 2) 
+            error = CM_ERROR_NOSUCHFILE;
 	else if (error == 17		/* AIX */
 		 || error == 66		/* SunOS 4, Digital UNIX */
 		 || error == 93		/* Solaris 2, IRIX */
 		 || error == 247)	/* HP/UX */
-		error = CM_ERROR_NOTEMPTY;
+            error = CM_ERROR_NOTEMPTY;
         return error;
 }
 
@@ -121,8 +126,10 @@ long cm_MapVLRPCError(long error, cm_req_t *reqp)
 		return error;
 	}
 
-	if (error < 0) error = CM_ERROR_TIMEDOUT;
-	else if (error == VL_NOENT) error = CM_ERROR_NOSUCHVOLUME;
+	if (error < 0) 
+            error = CM_ERROR_TIMEDOUT;
+	else if (error == VL_NOENT) 
+            error = CM_ERROR_NOSUCHVOLUME;
 	return error;
 }
 

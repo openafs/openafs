@@ -66,8 +66,9 @@
  *                                   EVENTLOG_INFORMATION_TYPE>
  */
 
-#define AFSREG_APPLOG_KEY \
-"HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Services\\EventLog\\Application"
+#define AFSREG_APPLOG_SUBKEY \
+       "System\\CurrentControlSet\\Services\\EventLog\\Application"
+#define AFSREG_APPLOG_KEY "HKEY_LOCAL_MACHINE\\" AFSREG_APPLOG_SUBKEY
 
 /* AFS event source subkey and subkey values -- client and server services */
 #define AFSREG_SVR_APPLOG_SUBKEY         "AFS Service"
@@ -88,10 +89,12 @@
  *         PatchLevel:REG_DWORD:<patch level>
  */
 
-#define AFSREG_SVR_SW_KEY \
-"HKEY_LOCAL_MACHINE\\Software\\TransarcCorporation\\" AFSREG_SVR_SW_NAME
+#define AFSREG_SVR_SW_SUBKEY \
+     "Software\\TransarcCorporation\\" AFSREG_SVR_SW_NAME
+#define AFSREG_SVR_SW_KEY "HKEY_LOCAL_MACHINE\\" AFSREG_SVR_SW_SUBKEY
 
 #define AFSREG_SVR_SW_VERSION_KEY  AFSREG_SVR_SW_KEY "\\CurrentVersion"
+#define AFSREG_SVR_SW_VERSION_SUBKEY  AFSREG_SVR_SW_SUBKEY "\\CurrentVersion"
 
 /* AFSREG_SVR_SW_VERSION_KEY values */
 #define AFSREG_SVR_SW_VERSION_DIR_VALUE   "PathName"
@@ -109,10 +112,12 @@
  *         PatchLevel:REG_DWORD:<patch level>
  */
 
-#define AFSREG_CLT_SW_KEY \
-"HKEY_LOCAL_MACHINE\\Software\\TransarcCorporation\\" AFSREG_CLT_SW_NAME
+#define AFSREG_CLT_SW_SUBKEY \
+    "Software\\TransarcCorporation\\" AFSREG_CLT_SW_NAME
+#define AFSREG_CLT_SW_KEY "HKEY_LOCAL_MACHINE\\" AFSREG_CLT_SW_SUBKEY
 
 #define AFSREG_CLT_SW_VERSION_KEY  AFSREG_CLT_SW_KEY "\\CurrentVersion"
+#define AFSREG_CLT_SW_VERSION_SUBKEY  AFSREG_CLT_SW_SUBKEY "\\CurrentVersion"
 
 /* AFSREG_CLT_SW_VERSION_KEY values */
 #define AFSREG_CLT_SW_VERSION_DIR_VALUE   "PathName"
@@ -137,9 +142,8 @@
 #define AFSREG_SVR_SVC_DISPLAYNAME_DATA  "IBM AFS Server"
 #define AFSREG_SVR_SVC_IMAGENAME_DATA "bosctlsvc.exe"
 
-
-#define AFSREG_SVR_SVC_KEY \
-"HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Services\\" AFSREG_SVR_SVC_NAME
+#define AFSREG_SVR_SVC_SUBKEY "System\\CurrentControlSet\\Services\\" AFSREG_SVR_SVC_NAME
+#define AFSREG_SVR_SVC_KEY "HKEY_LOCAL_MACHINE\\" AFSREG_SVR_SVC_SUBKEY
 
 #define AFSREG_SVR_SVC_AFSTAB_KEY   AFSREG_SVR_SVC_KEY "\\Afstab"
 
@@ -159,17 +163,23 @@
 #define AFSREG_CLT_SVC_DISPLAYNAME_DATA  "IBM AFS Client"
 #define AFSREG_CLT_SVC_IMAGENAME_DATA "afsd_service.exe"
 
-
-#define AFSREG_CLT_SVC_KEY \
-"HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Services\\" AFSREG_CLT_SVC_NAME
+#define AFSREG_CLT_SVC_SUBKEY "System\\CurrentControlSet\\Services\\" AFSREG_CLT_SVC_NAME
+#define AFSREG_CLT_SVC_KEY "HKEY_LOCAL_MACHINE\\" AFSREG_CLT_SVC_SUBKEY
 
 #define AFSREG_CLT_SVC_PARAM_KEY   AFSREG_CLT_SVC_KEY "\\Parameters"
+#define AFSREG_CLT_SVC_PARAM_SUBKEY   AFSREG_CLT_SVC_SUBKEY "\\Parameters"
+#define AFSREG_CLT_SVC_PROVIDER_KEY AFSREG_CLT_SVC_KEY "\\NetworkProvider"
+#define AFSREG_CLT_SVC_PROVIDER_SUBKEY AFSREG_CLT_SVC_SUBKEY "\\NetworkProvider"
 
 /* AFSREG_CLT_SVC_PARAM_KEY values */
 #define AFSREG_CLT_SVC_PARAM_CELL_VALUE      "Cell"
 
-#define AFSREG_CLT_OPENAFS_KEY "HKEY_LOCAL_MACHINE\\Software\\OpenAFS\\Client"
+#define AFSREG_CLT_OPENAFS_SUBKEY "Software\\OpenAFS\\Client"
+#define AFSREG_CLT_OPENAFS_KEY "HKEY_LOCAL_MACHINE\\" AFSREG_CLT_OPENAFS_SUBKEY
 #define AFSREG_CLT_OPENAFS_CELLSERVDB_DIR_VALUE  "CellServDBDir"
+
+#define AFSREG_USER_OPENAFS_SUBKEY "Software\\OpenAFS\\Client"
+#define AFSREG_USER_OPENAFS_KEY "HKEY_CURRENT_USER" AFSREG_USER_OPENAFS_SUBKEY
 
 
 /* Extended (alternative) versions of registry access functions */

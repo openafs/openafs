@@ -13,18 +13,18 @@
 #include <osi.h>
 
 typedef struct cm_callbackRequest {
-	long callbackCount;		/* callback count at start of the request */
-        long startTime;			/* time when we started the call */
-        struct cm_server *serverp;	/* server we really got the callback from */
+    long callbackCount;		/* callback count at start of the request */
+    unsigned long startTime;	/* time when we started the call */
+    struct cm_server *serverp;	/* server we really got the callback from */
 } cm_callbackRequest_t;
 
 #include "cm_scache.h"
 
 typedef struct cm_racingRevokes {
-        osi_queue_t q;			/* queue for forward/backward searches */
-        cm_fid_t fid;			/* fid revoked */
-        long callbackCount;		/* which callback this is */
-        long flags;
+    osi_queue_t q;		/* queue for forward/backward searches */
+    cm_fid_t fid;		/* fid revoked */
+    long callbackCount;		/* which callback this is */
+    long flags;
 } cm_racingRevokes_t;
 
 /* flags for cm_racingRevokes_t flags field */

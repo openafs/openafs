@@ -39,6 +39,7 @@ BOOL APIENTRY About(HWND, unsigned int, unsigned int, long);
 #include <afs/prs_fs.h>
 
 #include <osi.h>
+#include "cm_config.h"
 #include "cm_user.h"
 #include "cm_callback.h"
 #ifdef DISKCACHE95
@@ -47,19 +48,19 @@ BOOL APIENTRY About(HWND, unsigned int, unsigned int, long);
 #include "cm_conn.h"
 #include "cm_aclent.h"
 #include "cm_cell.h"
-#include "cm_config.h"
 #include "cm_server.h"
-#include "cm_volume.h"
 #include "cm_scache.h"
+#include "cm_volume.h"
 #include "cm_dcache.h"
 #include "cm_access.h"
+#include "cm_utils.h"
 #include "cm_vnodeops.h"
 #include "cm_dir.h"
-#include "cm_utils.h"
 #include "cm_daemon.h"
 #include "cm_ioctl.h"
 #include "cm_dnlc.h"
 #include "cm_buf.h"
+#include "cm_memmap.h"
 #include "cm_freelance.h"
 #include "smb_ioctl.h"
 #include "afsd_init.h"
@@ -100,29 +101,31 @@ extern BOOL isGateway;
 extern BOOL reportSessionStartups;
 
 #ifdef AFS_FREELANCE_CLIENT
+extern char *cm_FakeRootDir;				// the fake root.afs directory
 
-// yj: Variables used by Freelance Client
-extern char *cm_FakeRootDir;						// the fake root.afs directory
-
-extern int cm_noLocalMountPoints;					// no. of fake mountpoints
+extern int cm_noLocalMountPoints;			// no. of fake mountpoints
 
 extern cm_localMountPoint_t* cm_localMountPoints;	// array of fake mountpoints
 
-extern int cm_fakeDirSize;							// size (in bytes) of fake root.afs directory
+extern int cm_fakeDirSize;				// size (in bytes) of fake root.afs directory
 
-extern int cm_fakeDirCallback;						// state of the fake root.afs directory. indicates
+extern int cm_fakeDirCallback;				// state of the fake root.afs directory. indicates
 													// if it needs to be refreshed
 
-extern int cm_fakeGettingCallback;					// 1 if currently updating the fake root.afs directory,
+extern int cm_fakeGettingCallback;			// 1 if currently updating the fake root.afs directory,
 													// 0 otherwise
 
-extern int cm_fakeDirVersion;						// the version number of the root.afs directory. used 
-													// invalidate all the buffers containing root.afs data
-													// after reinitialization
-// ------------------------------------------
+extern int cm_fakeDirVersion;				// the version number of the root.afs directory. used 
 #endif /* AFS_FREELANCE_CLIENT */
 
 extern int cm_dnsEnabled;
 extern int cm_freelanceEnabled;
+
+#define CAPABILITY_ERRORTRANS (1<<0)
+#define CAPABILITY_BITS 1
+
+#define DFS_SUPPORT 1
+#define LOG_PACKET 1
+#undef  NOTSERVICE
 
 #endif /* AFSD_H_ENV */

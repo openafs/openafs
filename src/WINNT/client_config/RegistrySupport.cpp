@@ -12,6 +12,7 @@
 //#include <ctype.h>
 #include <stdlib.h>
 #include <drivemap.h>
+#include <WINNT\afsreg.h>
 
 BOOL Config_ReadString (LPCTSTR pszLHS, LPTSTR pszRHS, size_t cchMax);
 
@@ -19,9 +20,6 @@ BOOL Config_ReadString (LPCTSTR pszLHS, LPTSTR pszRHS, size_t cchMax);
  * REGISTRY ___________________________________________________________________
  *
  */
-
-extern const TCHAR AFSDConfigKeyName[] = TEXT("SYSTEM\\CurrentControlSet\\Services\\TransarcAFSDaemon\\Parameters");
-extern const TCHAR AFSClientKeyName[] = TEXT("SOFTWARE\\OpenAFS\\Client");
 
 void Config_GetGlobalDriveList (DRIVEMAPLIST *pDriveList)
 {
@@ -41,7 +39,7 @@ void Config_GetGlobalDriveList (DRIVEMAPLIST *pDriveList)
 
    memset(pDriveList, 0, sizeof(DRIVEMAPLIST));
 
-   lstrcpy(szKeyName, AFSDConfigKeyName);
+   lstrcpy(szKeyName, TEXT(AFSREG_CLT_SVC_PARAM_SUBKEY));
    lstrcat(szKeyName, TEXT("\\GlobalAutoMapper"));
 
    dwResult = RegOpenKeyEx(HKEY_LOCAL_MACHINE, szKeyName, 0, KEY_QUERY_VALUE, &hKey);
@@ -80,7 +78,7 @@ void Config_GetGlobalDriveList (DRIVEMAPLIST *pDriveList)
 BOOL Config_ReadGlobalNum (LPCTSTR pszLHS, DWORD *pdwRHS)
 {
    HKEY hk;
-   if (RegOpenKeyEx (HKEY_LOCAL_MACHINE, AFSDConfigKeyName, 0, KEY_QUERY_VALUE, &hk) != ERROR_SUCCESS)
+   if (RegOpenKeyEx (HKEY_LOCAL_MACHINE, TEXT(AFSREG_CLT_SVC_PARAM_SUBKEY), 0, KEY_QUERY_VALUE, &hk) != ERROR_SUCCESS)
       return FALSE;
 
    DWORD dwSize = sizeof(*pdwRHS);
@@ -98,7 +96,7 @@ BOOL Config_ReadGlobalNum (LPCTSTR pszLHS, DWORD *pdwRHS)
 BOOL Config_ReadGlobalString (LPCTSTR pszLHS, LPTSTR pszRHS, size_t cchMax)
 {
    HKEY hk;
-   if (RegOpenKeyEx (HKEY_LOCAL_MACHINE, AFSDConfigKeyName, 0, KEY_QUERY_VALUE, &hk) != ERROR_SUCCESS)
+   if (RegOpenKeyEx (HKEY_LOCAL_MACHINE, TEXT(AFSREG_CLT_SVC_PARAM_SUBKEY), 0, KEY_QUERY_VALUE, &hk) != ERROR_SUCCESS)
       return FALSE;
 
    DWORD dwSize = sizeof(TCHAR) * cchMax;
@@ -117,7 +115,7 @@ void Config_WriteGlobalNum (LPCTSTR pszLHS, DWORD dwRHS)
 {
    HKEY hk;
    DWORD dwDisp;
-   if (RegCreateKeyEx (HKEY_LOCAL_MACHINE, AFSDConfigKeyName, 0, TEXT("container"), 0, KEY_SET_VALUE, NULL, &hk, &dwDisp) == ERROR_SUCCESS)
+   if (RegCreateKeyEx (HKEY_LOCAL_MACHINE, TEXT(AFSREG_CLT_SVC_PARAM_SUBKEY), 0, TEXT("container"), 0, KEY_SET_VALUE, NULL, &hk, &dwDisp) == ERROR_SUCCESS)
       {
       RegSetValueEx (hk, pszLHS, NULL, REG_DWORD, (PBYTE)&dwRHS, sizeof(dwRHS));
       RegCloseKey (hk);
@@ -129,7 +127,7 @@ void Config_WriteGlobalString (LPCTSTR pszLHS, LPCTSTR pszRHS)
 {
    HKEY hk;
    DWORD dwDisp;
-   if (RegCreateKeyEx (HKEY_LOCAL_MACHINE, AFSDConfigKeyName, 0, TEXT("container"), 0, KEY_SET_VALUE, NULL, &hk, &dwDisp) == ERROR_SUCCESS)
+   if (RegCreateKeyEx (HKEY_LOCAL_MACHINE, TEXT(AFSREG_CLT_SVC_PARAM_SUBKEY), 0, TEXT("container"), 0, KEY_SET_VALUE, NULL, &hk, &dwDisp) == ERROR_SUCCESS)
       {
       RegSetValueEx (hk, pszLHS, NULL, REG_SZ, (PBYTE)pszRHS, sizeof(TCHAR) * (1+lstrlen(pszRHS)));
       RegCloseKey (hk);
@@ -140,8 +138,8 @@ void Config_WriteGlobalString (LPCTSTR pszLHS, LPCTSTR pszRHS)
 BOOL Config_ReadUserNum (LPCTSTR pszLHS, DWORD *pdwRHS)
 {
    HKEY hk;
-    if (RegOpenKeyEx (HKEY_CURRENT_USER, AFSClientKeyName, 0, KEY_QUERY_VALUE, &hk) != ERROR_SUCCESS)
-        if (RegOpenKeyEx (HKEY_LOCAL_MACHINE, AFSClientKeyName, 0, KEY_QUERY_VALUE, &hk) != ERROR_SUCCESS)
+    if (RegOpenKeyEx (HKEY_CURRENT_USER, TEXT(AFSREG_USER_OPENAFS_SUBKEY), 0, KEY_QUERY_VALUE, &hk) != ERROR_SUCCESS)
+        if (RegOpenKeyEx (HKEY_LOCAL_MACHINE, TEXT(AFSREG_CLT_OPENAFS_SUBKEY), 0, KEY_QUERY_VALUE, &hk) != ERROR_SUCCESS)
             return FALSE;
 
    DWORD dwSize = sizeof(*pdwRHS);
@@ -159,8 +157,8 @@ BOOL Config_ReadUserNum (LPCTSTR pszLHS, DWORD *pdwRHS)
 BOOL Config_ReadUserString (LPCTSTR pszLHS, LPTSTR pszRHS, size_t cchMax)
 {
    HKEY hk;
-    if (RegOpenKeyEx (HKEY_CURRENT_USER, AFSClientKeyName, 0, KEY_QUERY_VALUE, &hk) != ERROR_SUCCESS)
-        if (RegOpenKeyEx (HKEY_LOCAL_MACHINE, AFSClientKeyName, 0, KEY_QUERY_VALUE, &hk) != ERROR_SUCCESS)
+    if (RegOpenKeyEx (HKEY_CURRENT_USER, TEXT(AFSREG_USER_OPENAFS_SUBKEY), 0, KEY_QUERY_VALUE, &hk) != ERROR_SUCCESS)
+        if (RegOpenKeyEx (HKEY_LOCAL_MACHINE, TEXT(AFSREG_CLT_OPENAFS_SUBKEY), 0, KEY_QUERY_VALUE, &hk) != ERROR_SUCCESS)
             return FALSE;
 
    DWORD dwSize = sizeof(TCHAR) * cchMax;
@@ -179,7 +177,7 @@ void Config_WriteUserNum (LPCTSTR pszLHS, DWORD dwRHS)
 {
    HKEY hk;
    DWORD dwDisp;
-   if (RegCreateKeyEx (HKEY_CURRENT_USER, AFSClientKeyName, 0, TEXT("container"), 0, KEY_SET_VALUE, NULL, &hk, &dwDisp) == ERROR_SUCCESS)
+   if (RegCreateKeyEx (HKEY_CURRENT_USER, TEXT(AFSREG_USER_OPENAFS_SUBKEY), 0, TEXT("container"), 0, KEY_SET_VALUE, NULL, &hk, &dwDisp) == ERROR_SUCCESS)
       {
       RegSetValueEx (hk, pszLHS, NULL, REG_DWORD, (PBYTE)&dwRHS, sizeof(dwRHS));
       RegCloseKey (hk);
@@ -191,7 +189,7 @@ void Config_WriteUserString (LPCTSTR pszLHS, LPCTSTR pszRHS)
 {
    HKEY hk;
    DWORD dwDisp;
-   if (RegCreateKeyEx (HKEY_CURRENT_USER, AFSClientKeyName, 0, TEXT("container"), 0, KEY_SET_VALUE, NULL, &hk, &dwDisp) == ERROR_SUCCESS)
+   if (RegCreateKeyEx (HKEY_CURRENT_USER, TEXT(AFSREG_USER_OPENAFS_SUBKEY), 0, TEXT("container"), 0, KEY_SET_VALUE, NULL, &hk, &dwDisp) == ERROR_SUCCESS)
       {
       RegSetValueEx (hk, pszLHS, NULL, REG_SZ, (PBYTE)pszRHS, sizeof(TCHAR) * (1+lstrlen(pszRHS)));
       RegCloseKey (hk);

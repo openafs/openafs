@@ -14,11 +14,14 @@
 
 #define cm_TGTLifeTime(x)	(0x7fffffff)
 
+#define CM_ACLENT_MAGIC    ('A' | 'C' <<8 | 'L'<<16 | 'E'<<24)
+
 /*
  * Structure to hold an acl entry for a cached file
  */
 typedef struct cm_aclent {
     osi_queue_t q;		/* for quick removal from LRUQ */
+    afs_uint32 magic;           
     struct cm_aclent *nextp;	/* next guy same vnode */
     struct cm_scache *backp;	/* back ptr to vnode */
     struct cm_user *userp;	/* user whose access is cached */
@@ -28,7 +31,7 @@ typedef struct cm_aclent {
 
 extern osi_rwlock_t cm_aclLock;
 
-extern long cm_InitACLCache(long size);
+extern long cm_InitACLCache(int newFile, long size);
 
 extern long cm_FindACLCache(struct cm_scache *scp, struct cm_user *userp, long *rightsp);
 
@@ -39,5 +42,9 @@ extern long cm_AddACLCache(struct cm_scache *scp, struct cm_user *userp, long ri
 extern void cm_FreeAllACLEnts(struct cm_scache *scp);
 
 extern void cm_InvalidateACLUser(struct cm_scache *scp, struct cm_user *userp);
+
+extern long cm_ValidateACLCache(void);
+
+extern long cm_ShutdownACLCache(void);
 
 #endif  /* _CM_ACLENT_H_ */

@@ -92,7 +92,7 @@ Vnodes with 0 inode pointers in RW volumes are now deleted.
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vol/vol-salvage.c,v 1.41.2.3 2004/11/09 17:20:26 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vol/vol-salvage.c,v 1.41.2.5 2005/03/19 20:54:55 shadow Exp $");
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -2065,8 +2065,6 @@ DoSalvageVolumeGroup(register struct InodeSummary *isp, int nVols)
 		}
 		ip->linkCount++;
 	    }
-
-	   Log("%d inodes to process\n",totalInodes); 
 	}
 #ifdef AFS_NAMEI_ENV
 	while (dec_VGLinkH > 0) {

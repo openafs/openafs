@@ -15,7 +15,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_module.c,v 1.52.2.7 2005/02/21 01:15:35 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_module.c,v 1.52.2.9 2005/03/11 04:37:17 shadow Exp $");
 
 #include <linux/module.h> /* early to avoid printf->printk mapping */
 #include "afs/sysincludes.h"
@@ -98,7 +98,11 @@ csdbproc_read(char *buffer, char **start, off_t offset, int count,
 }
 
 static struct proc_dir_entry *openafs_procfs;
+#if defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV)
+static int ioctl32_done;
+#endif
 
+#ifdef AFS_LINUX24_ENV
 static int
 afsproc_init(void)
 {
@@ -114,6 +118,10 @@ afsproc_init(void)
 
     entry2 = create_proc_read_entry(PROC_CELLSERVDB_NAME, (S_IFREG|S_IRUGO), openafs_procfs, csdbproc_read, NULL);
 
+#if defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV)
+    if (register_ioctl32_conversion(VIOC_SYSCALL32, NULL) == 0) 
+	ioctl32_done = 1;
+#endif
     return 0;
 }
 
@@ -123,7 +131,12 @@ afsproc_exit(void)
     remove_proc_entry(PROC_CELLSERVDB_NAME, openafs_procfs);
     remove_proc_entry(PROC_SYSCALL_NAME, openafs_procfs);
     remove_proc_entry(PROC_FSDIRNAME, proc_root_fs);
+#if defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV)
+    if (ioctl32_done)
+	    unregister_ioctl32_conversion(VIOC_SYSCALL32);
+#endif
 }
+#endif
 
 extern asmlinkage long
 afs_syscall(long syscall, long parm1, long parm2, long parm3, long parm4);
@@ -136,7 +149,7 @@ afs_ioctl(struct inode *inode, struct file *file, unsigned int cmd,
     struct afsprocdata sysargs;
     struct afsprocdata32 sysargs32;
 
-    if (cmd != VIOC_SYSCALL) return -EINVAL;
+    if (cmd != VIOC_SYSCALL && cmd != VIOC_SYSCALL32) return -EINVAL;
 
 #if defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV)
 #ifdef AFS_SPARC64_LINUX24_ENV
@@ -212,7 +225,9 @@ init_module(void)
     if (e) return e;
     register_filesystem(&afs_fs_type);
     osi_sysctl_init();
+#ifdef AFS_LINUX24_ENV
     afsproc_init();
+#endif
 
     return 0;
 }
@@ -232,7 +247,9 @@ cleanup_module(void)
     osi_linux_free_inode_pages();	/* Invalidate all pages using AFS inodes. */
     osi_linux_free_afs_memory();
 
+#ifdef AFS_LINUX24_ENV
     afsproc_exit();
+#endif
     return;
 }
 
