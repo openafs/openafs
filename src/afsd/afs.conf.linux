@@ -35,7 +35,7 @@ CACHESIZE=
 OPTIONS=$MEDIUM
 
 # if we're looking for ntp, what files do we look for?
-TIME_SBIN_PROGS="ntptime ntpd  "
+TIME_SBIN_PROGS="ntptime ntpd   chronyd"
 
 # Should we support afsdb?
 if [ "x$AFS_AFSDB" = "xtrue" ] ; then
