@@ -369,6 +369,7 @@ int afsd_InitCM(char **reasonP)
     long maxcpus;
 	long ltt, ltto;
     long rx_mtu, rx_nojumbo;
+    long virtualCache;
 	char rootCellName[256];
 	struct rx_service *serverp;
 	static struct rx_securityClass *nullServerSecurityClassp;
@@ -598,6 +599,16 @@ int afsd_InitCM(char **reasonP)
 		StringCbCatA(cm_CachePath, sizeof(cm_CachePath), "\\AFSCache");
 		afsi_log("Default cache path %s", cm_CachePath);
 	}
+
+    dummyLen = sizeof(virtualCache);
+    code = RegQueryValueEx(parmKey, "NonPersistentCaching", NULL, NULL,
+        &virtualCache, &dummyLen);
+    if (code == ERROR_SUCCESS && virtualCache) {
+        buf_cacheType = CM_BUF_CACHETYPE_VIRTUAL;
+    } else {
+        buf_cacheType = CM_BUF_CACHETYPE_FILE;
+    }
+    afsi_log("Cache type is %s", ((buf_cacheType == CM_BUF_CACHETYPE_FILE)?"FILE":"VIRTUAL"));
 
 	dummyLen = sizeof(traceOnPanic);
 	code = RegQueryValueEx(parmKey, "TrapOnPanic", NULL, NULL,
