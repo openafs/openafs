@@ -9,8 +9,10 @@
 # Configuration information for AFS client
 
 # AFS_CLIENT and AFS_SERVER determine if we should start the client and or
-# the bosserver. Possible values are on and off.
-AFS_CLIENT=on
+# the bosserver. Possible values are true and false.
+# These are loaded from files written by debconf
+test -f /etc/openafs/afs.conf.client && . /etc/openafs/afs.conf.client
+
 AFS_SERVER=off
 
 # AFS client configuration options:

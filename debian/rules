@@ -74,8 +74,7 @@ install: build
 
 	# Add here commands to install the package into debian/tmp.
 	cat debian/filelist |sh debian/movefiles
-	cp dest/root.client/usr/vice/etc/afs.rc debian/openafs-client/etc/init.d/openafs-client
-	chmod 755 debian/openafs-client/etc/init.d/openafs-client
+	cp dest/root.client/usr/vice/etc/afs.rc debian/openafs-client.init
 	cp dest/root.client/usr/vice/etc/afs.conf debian/openafs-client/etc/openafs/afs.conf
 	install -m 755 -o root -g root debian/afs-rootvol debian/openafs-dbserver/usr/sbin
 	(cd debian&&pod2man --section 8 --center "Debian GNU/Linux"  \
@@ -126,7 +125,7 @@ binary-arch: build install
 	dh_installmenu
 #	dh_installemacsen
 #	dh_installpam
-#	dh_installinit
+	dh_installinit -r
 	dh_installcron
 #	dh_installmanpages
 	dh_installinfo

@@ -24,9 +24,9 @@ if [ -f /etc/openafs/afs.conf ]; then
 	. /etc/openafs/afs.conf
 fi
 
-# is_on returns 1 if value of arg is "on"
+# is_on returns 1 if value of arg is "true"
 is_on() {
-	if  test "$1" = "on" ; then return 0
+	if  test "$1" = "true" ; then return 0
 	else return 1
 	fi
 }
@@ -123,8 +123,20 @@ load_client() {
 
 	# use the prefix command if required
 	set_prefix
-	/sbin/insmod ${PREFIX:+-P $PREFIX} -f -m $MODLOADDIR/$LIBAFS > $MODLOADDIR/libafs.map 2>&1
+		LOADED=`/sbin/lsmod | fgrep openafs`
+	if [ -z "$LOADED" ] ; then
+	    /sbin/insmod ${PREFIX:+-P $PREFIX} -f -m $MODLOADDIR/$LIBAFS > $MODLOADDIR/libafs.map 2>&1
+	fi
 }
+
+# start_client() -- run afsd
+start_client() {
+		start-stop-daemon --start --quiet --exec /usr/sbin/afsd \
+		    -- ${OPTIONS}
+		echo -n " afsd"
+
+}
+
 
 case "$1" in 
   start)
@@ -136,40 +148,40 @@ case "$1" in
 	fi
 
 	echo -n "Starting AFS services: "
-	# Start bosserver, it if exists
-	if  is_on $AFS_SERVER && test -x /usr/afs/bin/bosserver  ; then
-		start-stop-daemon --start --quiet --pidfile /var/run/bos.pid \
-		    --exec /usr/afs/bin/bosserver
-		echo -n " bosserver"
-	fi
-
 	# Start AFS client
 	if  is_on $AFS_CLIENT && test -x /usr/sbin/afsd  ; then
-		start-stop-daemon --start --quiet --exec /usr/sbin/afsd \
-		    -- ${OPTIONS}
-		echo -n " afsd"
-
+	start_client
 		echo "."
 		$AFS_POST_INIT
 	fi
 
 	;;
 
-  stop)
+force-start)
+	# Load kernel extensions
+	if  load_client  ; then :
+	else
+		echo Failed to load AFS client, not starting AFS services.
+		exit 1
+	fi
+
+	echo -n "Starting AFS services: "
+	# Start AFS client
+	if test -x /usr/sbin/afsd  ; then
+	start_client
+		echo "."
+		$AFS_POST_INIT
+	fi
+    	;;
+  stop|force-stop)
 	# Stop AFS
 	echo -n "Stopping AFS services: "
 
-	if  is_on $AFS_CLIENT  ; then
+	if  mount |grep -q \^AFS  ; then
 		umount /afs
 		echo -n " afsd"
 	fi
 
-	if  is_on $AFS_SERVER && test -x /usr/afs/bin/bos ; then
-		echo "Stopping AFS bosserver"
-		/usr/afs/bin/bos shutdown localhost -localauth -wait
-		start-stop-daemon --stop --quiet --signal 1 \
-		    --pidfile /var/run/bos.pid
-	fi
 
 	LIBAFS=`/sbin/lsmod | fgrep openafs`
 	if [ -n "$LIBAFS" ] ; then
