@@ -7,7 +7,7 @@ Standards-Version: 3.5.0
 
 Package: openafs-client
 Architecture: i386 powerpc sparc alpha s390 ia64
-Depends: ${shlibs:Depends}, debconf, host|dnsutils, openafs-modules-source|openafs-modules1
+Depends: ${shlibs:Depends}, debconf,  openafs-modules-source|openafs-modules1
 Conflicts: arla, openafs-modules
 Description: The AFS distributed filesystem- client support
  AFS is a distributed filesystem allowing cross-platform sharing of
