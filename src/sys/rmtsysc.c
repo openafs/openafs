@@ -204,7 +204,10 @@ struct ViceIoctl *data;
     afs_int32 errorcode, groups[NGROUPS_MAX], errornumber, ins= data->in_size;
     rmtbulk InData, OutData;
     char pathname[256], *pathp = pathname, *inbuffer;
+#if 0/*ndef HAVE_GETCWD*/ /* XXX enable when autoconf happens */
     extern char *getwd();
+#define getcwd(x,y) getwd(x)
+#endif
     if (!(conn = rx_connection(&errorcode, "pioctl"))) {
 	/* Remote call can't be performed for some reason.
 	 * Try the local 'pioctl' system call ... */
@@ -230,7 +233,7 @@ struct ViceIoctl *data;
     if (path) {
 	if (*path != '/') {
 	    /* assuming relative path name */
-	    if (getwd(pathname) == NULL) {
+	    if (getcwd(pathname, 256) == NULL) {
 		free(inbuffer);
 		printf("getwd failed; exiting\n");
 		exit(1);

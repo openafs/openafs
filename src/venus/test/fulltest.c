@@ -25,13 +25,17 @@ char **argv; {
     struct timeval tvp[2];
     int fd1;
     int code;
+#ifndef HAVE_GETCWD
+    extern char *getwd();
+#define getcwd(x,y) getwd(x)
+#endif
 
     /* venus system tester */
     if (argc != 2) return printf("usage: fulltest <dir-to-screw-up>\n");
     dirName = argv[1];
     mkdir(dirName, 0777);
     if (chdir(dirName) < 0) return perror("chdir");
-    if (getwd(tempName) == 0) {
+    if (getcwd(tempName, 1024) == 0) {
 	return printf("Could not get working dir.\n");
     }
     /* now create some files */

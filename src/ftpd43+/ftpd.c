@@ -1737,8 +1737,11 @@ removedir(name)
 pwd()
 {
 	char path[MAXPATHLEN + 1];
+#if 0/*ndef HAVE_GETCWD*/ /* XXX enable when autoconf happens */
 	extern char *getwd();
-	if (getwd(path) == (char *)NULL)
+#define getcwd(x,y) getwd(x)	
+#endif
+	if (getcwd(path, MAXPATHLEN+1) == (char *)NULL)
 		reply(550, "%s.", path);
 	else
 		reply(257, "\"%s\" is current directory.", path);

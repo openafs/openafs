@@ -746,6 +746,10 @@ WorkerBee(as, arock)
   char   fname[MAXNAMELEN], name[MAXNAMELEN], lname[MAXNAMELEN], mname[MAXNAMELEN];
   char   thisdir[MAXPATHLEN], *t;
   struct DumpHeader dh;                  /* Defined in dump.h */
+#if 0/*ndef HAVE_GETCWD*/ /* XXX enable when autoconf happens */
+  extern char *getwd();
+#define getcwd(x,y) getwd(x)
+#endif
   
   if (as->parms[0].items) {                         /* -file <dumpfile> */
      dumpfile = fopen(as->parms[0].items->data, "r");
@@ -793,7 +797,7 @@ WorkerBee(as, arock)
    * or -dir or the current working dir.
    */
   if ((as->parms[3].items) || (as->parms[1].items)) {   /* -mountpoint  or -dir*/
-     t = (char *)getwd(thisdir);                /* remember current dir */
+     t = (char *)getcwd(thisdir, MAXPATHLEN);      /* remember current dir */
      if (!t) {
         fprintf(stderr, "Cannot get pathname of current working directory: %s\n",
 		thisdir);
@@ -807,7 +811,7 @@ WorkerBee(as, arock)
         fprintf(stderr, "Mount point directory not found: Error = %d\n", stderr);
 	goto cleanup;
      }
-     t = (char *)getwd(mntroot);           /* get its full pathname */
+     t = (char *)getcwd(mntroot, MAXPATHLEN);     /* get its full pathname */
      if (!t) {
         fprintf(stderr, "Cannot determine pathname of mount point root directory: %s\n",
 		mntroot);
@@ -821,7 +825,7 @@ WorkerBee(as, arock)
 	goto cleanup;
      }
   } else {                                   /* use current directory */
-     t = (char *)getwd(mntroot);             /* get full pathname of current dir */
+     t = (char *)getcwd(mntroot, MAXPATHLEN); /* get full pathname of current dir */
      if (!t) {
         fprintf(stderr, "Cannot determine pathname of current working directory: %s\n",
 		mntroot);
