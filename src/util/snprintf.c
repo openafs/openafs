@@ -1,5 +1,8 @@
 /* snprintf.c - Formatted, length-limited print to a string */
 
+#include <afs/param.h>
+#if defined(AFS_OSF20_ENV) || defined(AFS_SGI51_ENV)
+
 #include <sys/types.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -381,3 +384,4 @@ void snprintf(char *p, unsigned int avail, char *fmt, ...)
   vsnprintf(p, avail, fmt, ap);
   va_end(ap);
 }
+#endif /* AFS_OSF20_ENV || AFS_SGI51_ENV */
