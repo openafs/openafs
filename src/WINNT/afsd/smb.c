@@ -363,6 +363,10 @@ char * myCrt_2Dispatch(int i)
         return "S(0d)_ReceiveTran2CreateDirectory";
     case 14:
         return "S(0e)_ReceiveTran2SessionSetup";
+    case 16:
+        return "S(10)_ReceiveTran2GetDfsReferral";
+    case 17:
+        return "S(11)_ReceiveTran2ReportDfsInconsistency";
     }
 }       
 
@@ -7650,8 +7654,8 @@ void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
     smb_tran2DispatchTable[12].procp = smb_ReceiveTran2FindNotifyNext;
     smb_tran2DispatchTable[13].procp = smb_ReceiveTran2CreateDirectory;
     smb_tran2DispatchTable[14].procp = smb_ReceiveTran2SessionSetup;
-    smb_tran2DispatchTable[14].procp = smb_ReceiveTran2GetDFSReferral;
-    smb_tran2DispatchTable[14].procp = smb_ReceiveTran2ReportDFSInconsistency;
+    smb_tran2DispatchTable[16].procp = smb_ReceiveTran2GetDFSReferral;
+    smb_tran2DispatchTable[17].procp = smb_ReceiveTran2ReportDFSInconsistency;
 
     /* setup the rap dispatch table */
     memset(smb_rapDispatchTable, 0, sizeof(smb_rapDispatchTable));
