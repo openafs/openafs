@@ -4707,10 +4707,11 @@ print_addrs(const bulkaddrs * addrs, const afsUUID * m_uuid, int nentries,
 {
     afs_int32 vcode;
     afs_int32 i, j;
+    struct VLCallBack vlcb;
     afs_int32 *addrp;
     bulkaddrs m_addrs;
     ListAddrByAttributes m_attrs;
-    afs_int32 m_unique, m_nentries, *m_addrp;
+    afs_int32 m_nentries, *m_addrp;
     afs_int32 base, index;
     char buf[1024];
 
@@ -4740,7 +4741,7 @@ print_addrs(const bulkaddrs * addrs, const afsUUID * m_uuid, int nentries,
 		m_addrs.bulkaddrs_len = 0;
 		vcode =
 		    ubik_Call(VL_GetAddrsU, cstruct, 0, &m_attrs, &m_uuid,
-			      &m_unique, &m_nentries, &m_addrs);
+			      &vlcb, &m_nentries, &m_addrs);
 		if (vcode) {
 		    fprintf(STDERR,
 			    "vos: could not list the multi-homed server addresses\n");
@@ -4792,11 +4793,12 @@ ListAddrs(as)
 {
     afs_int32 vcode;
     afs_int32 i, noresolve = 0, printuuid = 0;
+    struct VLCallBack vlcb;
     afs_int32 nentries;
     bulkaddrs m_addrs;
     ListAddrByAttributes m_attrs;
     afsUUID m_uuid, askuuid;
-    afs_int32 m_unique, m_nentries;
+    afs_int32 m_nentries;
 
     memset(&m_attrs, 0, sizeof(struct ListAddrByAttributes));
     m_attrs.Mask = VLADDR_INDEX;
@@ -4834,7 +4836,7 @@ ListAddrs(as)
     m_addrs.bulkaddrs_len = 0;
 
     vcode =
-	ubik_Call_New(VL_GetAddrs, cstruct, 0, 0, 0, &m_unique, &nentries,
+	ubik_Call_New(VL_GetAddrs, cstruct, 0, 0, 0, &vlcb, &nentries,
 		      &m_addrs);
     if (vcode) {
 	fprintf(STDERR, "vos: could not list the server addresses\n");
@@ -4851,7 +4853,7 @@ ListAddrs(as)
 
 	vcode =
 	    ubik_Call_New(VL_GetAddrsU, cstruct, 0, &m_attrs, &m_uuid,
-			  &m_unique, &m_nentries, &m_addrs);
+			  &vlcb, &m_nentries, &m_addrs);
 	if (vcode == VL_NOENT) {
 	    i++;
 	    nentries++;
