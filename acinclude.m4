@@ -539,6 +539,9 @@ else
 		sparc-sun-solaris2.9)
 			AFS_SYSNAME="sun4x_59"
 			;;
+		sparc-sun-solaris2.10)
+			AFS_SYSNAME="sun4x_510"
+			;;
 		sparc-sun-sunos4*)
 			AFS_SYSNAME="sun4_413"
 			enable_login="yes"
@@ -551,6 +554,9 @@ else
 			;;
 		i386-pc-solaris2.9)
 			AFS_SYSNAME="sunx86_59"
+			;;
+		i386-pc-solaris2.10)
+			AFS_SYSNAME="sunx86_510"
 			;;
 		alpha*-dec-osf4.0*)
 			AFS_SYSNAME="alpha_dux40"

@@ -130,7 +130,7 @@ afs_InitSetup(int preallocs)
     rx_extraPackets = AFS_NRXPACKETS;	/* smaller # of packets */
     code = rx_Init(htons(7001));
     if (code) {
-	printf("AFS: RX failed to initialize.\n");
+	printf("AFS: RX failed to initialize %d).\n", code);
 	return code;
     }
     rx_SetRxDeadTime(afs_rx_deadtime);

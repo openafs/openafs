@@ -1212,16 +1212,24 @@ static int afs_SetServerPrefs(struct srvAddr *sa) {
     }
 #else				/* AFS_USERSPACE_IP_ADDR */
 #if	defined(AFS_SUN5_ENV)
+#ifdef AFS_SUN510_ENV
+    ill_walk_context_t ctx;
+#else
     extern struct ill_s *ill_g_headp;
+    long *addr = (long *)ill_g_headp;
+#endif
     ill_t *ill;
     ipif_t *ipif;
     int subnet, subnetmask, net, netmask;
-    long *addr = (long *)ill_g_headp;
 
     if (sa)
 	  sa->sa_iprank = 0;
+#ifdef AFS_SUN510_ENV
+    for (ill = ILL_START_WALK_ALL(&ctx) ; ill ; ill = ill_next(&ctx, ill)) {
+#else
     for (ill = (struct ill_s *)*addr /*ill_g_headp */ ; ill;
 	 ill = ill->ill_next) {
+#endif
 #ifdef AFS_SUN58_ENV
 	/* Make sure this is an IPv4 ILL */
 	if (ill->ill_isv6)

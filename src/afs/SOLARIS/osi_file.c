@@ -271,7 +271,15 @@ osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
      * The only time a flag is used (ATTR_UTIME) is when we're changing the time 
      */
     AFS_GUNLOCK();
+#ifdef AFS_SUN510_ENV
+    {
+	caller_context_t ct;
+
+	code = VOP_SETATTR(afile->vnode, &tvattr, 0, &afs_osi_cred, &ct);
+    }
+#else
     code = VOP_SETATTR(afile->vnode, &tvattr, 0, &afs_osi_cred);
+#endif
     AFS_GLOCK();
     MReleaseWriteLock(&afs_xosi);
     return code;

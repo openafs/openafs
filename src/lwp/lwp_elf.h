@@ -36,6 +36,7 @@
  *
  * $Id$
  */
+#include <afs/param.h>
 
 #ifndef _C_LABEL
 #if !defined(SYSV) && !defined(__ELF__) && !defined(AFS_SUN5_ENV)

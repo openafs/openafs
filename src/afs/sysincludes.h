@@ -186,6 +186,10 @@ typedef unsigned short etap_event_t;
 #include "h/stream.h"		/* stops SUN56 socketvar.h errors */
 #endif
 
+#ifdef AFS_SUN510_ENV
+#include <sys/cred_impl.h>
+#endif
+
 #include "h/socket.h"
 #include "h/socketvar.h"
 #include "h/protosw.h"
