@@ -118,10 +118,6 @@ BOOL CChange::OnInitDialog()
 		szDrive[3]='*';
 		m_cDrive.SetCurSel(m_cDrive.FindString(0,szDrive));
 	}
-	if (stricmp(m_sDescription,"all")) return TRUE;
-	m_cPath.ModifyStyle(0,WS_DISABLED);
-	m_cShare.ModifyStyle(0,WS_DISABLED);
-	m_cAuto.ModifyStyle(0,WS_DISABLED);
 	return TRUE;  // return TRUE unless you set the focus to a control
 	              // EXCEPTION: OCX Property Pages should return FALSE
 }
@@ -159,8 +155,6 @@ BOOL CChange::IsValidSubmountName (LPCTSTR pszSubmount)
 {
    if (!*pszSubmount)
       return FALSE;
-   if (stricmp(pszSubmount,"all")==0)
-	   return FALSE;					//disallow adding a share name of "all"
    for ( ; *pszSubmount; ++pszSubmount)
       {
       if (!isprint(*pszSubmount))

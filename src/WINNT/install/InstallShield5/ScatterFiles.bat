@@ -24,6 +24,7 @@ copy setup.rul "Script Files"
 
 rem Only copy this file when NOT doing a WSPP build
 if not defined AFSBLD_IS_WSPP copy setup.bmp "Setup Files\Uncompressed Files\Language Independent\OS Independent"
+if not defined AFSBLD_IS_WSPP copy _isuser.dll "Setup Files\Uncompressed Files\Language Independent\OS Independent"
 
 copy %AFSROOT%\DEST\root.server\usr\afs\bin\InstallUtils.dll "Setup Files\Compressed Files\Language Independent\OS Independent"
 copy %AFSROOT%\DEST\root.server\usr\afs\bin\afs_setup_utils_*.dll "Setup Files\Compressed Files\Language Independent\OS Independent"

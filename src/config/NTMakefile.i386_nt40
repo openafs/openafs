@@ -36,6 +36,12 @@
 APPVER = 4.0
 !ENDIF
 
+#define used in WinNT/2000 installation and program version display
+AFSPRODUCT_VERSION=1.1.1 a
+CELLNAME_DEFAULT=Your Cell Name
+CELLSERVDB_INSTALL=CellServDB.GrandCentral
+CELLSERVDB_WEB=http://grand.central.org/dl/cellservdb/CellServDB
+
 !IFNDEF TARGETOS
 TARGETOS = WINNT
 !ENDIF

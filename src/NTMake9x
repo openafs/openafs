@@ -307,9 +307,9 @@ clean: start
 	$(CD) $(OBJ)\WINNT\install\Win9x
 	nmake /nologo /f NTMakefile clean
 	$(CD) ..\..\..\..
-	.\src\rmbat $(DESTDIR)\include\*.* $(DESTDIR)\include\afs\*.* $(DESTDIR)\include\WINNT\*.* $(DESTDIR)\include\rx\*.*
-	.\src\rmbat $(DESTDIR)\LIB\*.LIB $(DESTDIR)\LIB\*.DLL $(DESTDIR)\LIB\AFS\*.LIB
-	.\src\RMBAT $(DESTDIR)\root.client\usr\vice\etc\*.*
+	$(DESTDIR)\BIN\rmbat $(DESTDIR)\include\*.* $(DESTDIR)\include\afs\*.* $(DESTDIR)\include\WINNT\*.* $(DESTDIR)\include\rx\*.*
+	$(DESTDIR)\BIN\rmbat $(DESTDIR)\LIB\*.LIB $(DESTDIR)\LIB\*.DLL $(DESTDIR)\LIB\AFS\*.LIB
+	$(DESTDIR)\BIN\rmbat $(DESTDIR)\root.client\usr\vice\etc\*.*
 	$(CD) $(OBJ)\config
 	nmake /nologo /f ntmakefile clean_version
 	$(CD) ..\..

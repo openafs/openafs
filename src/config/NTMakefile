@@ -65,6 +65,9 @@ idirs: doclink
 !	IF (!EXIST($(DESTDIR)\WinInstall))
 		$(MKDIR) $(DESTDIR)\WinInstall
 !	ENDIF
+!	IF (!EXIST($(DESTDIR)\WinInstall\Config))
+		$(MKDIR) $(DESTDIR)\WinInstall\Config
+!	ENDIF
 !	IF (!EXIST($(DESTDIR)\root.server))
 		$(MKDIR) $(DESTDIR)\root.server
 !	ENDIF
@@ -89,6 +92,7 @@ idirs: doclink
 !	IF (!EXIST($(DESTDIR)\root.client\usr\vice\etc))
 		$(MKDIR) $(DESTDIR)\root.client\usr\vice\etc
 !	ENDIF
+	$(COPY) AFSCONFIG-WINDOWS.H $(DESTDIR)\include\afs\.
 
 INCCOPY = \
 	$(DESTDIR)\bin\rmbat.bat \
