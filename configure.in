@@ -1,5 +1,5 @@
 AC_INIT(src/config/stds.h)
-AM_INIT_AUTOMAKE(openafs,1.1.0)
+AM_INIT_AUTOMAKE(openafs,1.1.1)
 AC_CANONICAL_HOST
 AC_CONFIG_HEADER(src/config/afsconfig.h)
 
@@ -239,6 +239,9 @@ else
 	case $AFS_SYSNAME in
 		*_linux*)
 			AFS_SYSKVERS=`echo $LINUX_VERSION | awk -F\. '{print $1 $2}'`
+			if test "x${AFS_SYSKVERS}" = "x"; then
+			 AC_MSG_ERROR(Couldn't guess your Linux version. Please use the --with-afs-sysname option to configure an AFS sysname.)
+			fi
 			_AFS_SYSNAME=`echo $AFS_SYSNAME|sed s/XX\$/$AFS_SYSKVERS/`
 			AFS_SYSNAME="$_AFS_SYSNAME"
 			;;

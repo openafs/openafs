@@ -22,7 +22,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_lookup.c,v 1.6 2001/07/15 07:22:27 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_lookup.c,v 1.7 2001/07/20 10:57:13 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -1003,8 +1003,8 @@ afs_lookup(adp, aname, avcp, acred)
     tvc = osi_dnlc_lookup (adp, tname, WRITE_LOCK);
     *avcp = tvc;  /* maybe wasn't initialized, but it is now */
     if (tvc) {
-	if (no_read_access && vType(tvc) != VDIR) {
-	    /* need read access on dir to stat non-directory */
+	if (no_read_access && vType(tvc) != VDIR && vType(tvc) != VLNK) {
+	    /* need read access on dir to stat non-directory / non-link */
 	    afs_PutVCache(tvc, WRITE_LOCK);
 	    *avcp = (struct vcache *)0;
 	    code = EACCES;
