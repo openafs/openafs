@@ -31,10 +31,11 @@ RCSID("$Header$");
  * -1 - Unable to read the inodes.
  * -2 - Unable to completely write temp file. Produces warning message in log.
  */
-ListViceInodes(devname, mountedOn, resultFile, judgeInode, judgeParam, forcep, forceR, wpath)
+ListViceInodes(devname, mountedOn, resultFile, judgeInode, judgeParam, forcep, forceR, wpath, rock)
 char *devname, *mountedOn, *resultFile, *wpath;
 int (*judgeInode)(); 
 int *forcep, forceR;
+void *rock;
 {
     Log("ListViceInodes not implemented for this platform!\n");
     return -1;
@@ -164,9 +165,10 @@ struct dinode *ginode();
 
 
 
-ListViceInodes(devname, mountedOn, resultFile, judgeInode, judgeParam, forcep, forceR, wpath)
+ListViceInodes(devname, mountedOn, resultFile, judgeInode, judgeParam, forcep, forceR, wpath, rock)
 char *devname, *mountedOn, *resultFile, *wpath;
 int (*judgeInode)(); 
+void *rock;
 int *forcep, forceR; {
 	FILE *inodeFile = NULL;
 	char dev[50], rdev[51];
@@ -300,7 +302,7 @@ int *forcep, forceR; {
 		info.u.param[2]  = p->di_vicep3;
 		info.u.param[3]  = p->di_vicep4;
 
-		if (judgeInode && (*judgeInode)(&info, judgeParam) == 0)
+		if (judgeInode && (*judgeInode)(&info, judgeParam, rock) == 0)
 			continue;
 
 		if (fwrite(&info, sizeof info, 1, inodeFile) != 1) {
@@ -459,10 +461,11 @@ afs_efs_figet(EFS_MOUNT *mp, struct efs_dinode *dinodeBuf, int *last_cgno,
 
 int
 efs_ListViceInodes(devname, mountedOn, resultFile, judgeInode, judgeParam,
-		   forcep, forceR, wpath)
+		   forcep, forceR, wpath, rock)
 char *devname, *mountedOn, *resultFile, *wpath;
 int (*judgeInode)(); 
 int *forcep, forceR;
+void *rock;
 {
 	FILE *inodeFile = NULL;
 	char dev[50], rdev[51];
@@ -559,7 +562,7 @@ BOMB!!
 Log("Ino=%d, bytes=%d, linkCnt=%d, [%x,%x,%x,%x]\n", inum, p->di_size, p->di_nlink,
        info.u.param[0],info.u.param[1],info.u.param[2],info.u.param[3]);
 #endif
-		if (judgeInode && (*judgeInode)(&info, judgeParam) == 0)
+		if (judgeInode && (*judgeInode)(&info, judgeParam, rock) == 0)
 			continue;
 
 		if (fwrite(&info, sizeof info, 1, inodeFile) != 1) {
@@ -806,10 +809,11 @@ int xfs_RenameFiles(char *dir, xfs_Rename_t *renames, int n_renames)
 
 
 xfs_ListViceInodes(devname, mountedOn, resultFile, judgeInode, judgeParam,
-		   forcep, forceR, wpath)
+		   forcep, forceR, wpath, rock)
 char *devname, *mountedOn, *resultFile, *wpath;
 int (*judgeInode)(); 
 int *forcep, forceR;
+void *rock;
 {
     FILE *inodeFile = NULL;
     i_list_inode_t info;
@@ -917,7 +921,7 @@ int *forcep, forceR;
 		goto err1_exit;
 	    }
 
-	    if (judgeInode && (*judgeInode)(&info.ili_info, judgeParam) == 0)
+	    if (judgeInode && (*judgeInode)(&info.ili_info, judgeParam, rock) == 0)
 		continue;
 	
 	    rename = 0;
@@ -1021,10 +1025,11 @@ int *forcep, forceR;
 #endif
 
 ListViceInodes(devname, mountedOn, resultFile, judgeInode, judgeParam, forcep,
-	       forceR, wpath)
+	       forceR, wpath, rock)
 char *devname, *mountedOn, *resultFile, *wpath;
 int (*judgeInode)(); 
 int *forcep, forceR;
+void *rock;
 {
 	FILE *inodeFile = NULL;
 	char dev[50], rdev[51];
@@ -1055,7 +1060,7 @@ int *forcep, forceR;
 	if (!strcmp("xfs", root_inode.st_fstype)) {
 	    return xfs_ListViceInodes(devname, mountedOn, resultFile,
 				     judgeInode, judgeParam,
-				     forcep, forceR, wpath);
+				     forcep, forceR, wpath, rock);
 	}
 	else
 #endif
@@ -1063,7 +1068,7 @@ int *forcep, forceR;
 	  if (root_inode.st_ino == EFS_ROOTINO) {
 	    return efs_ListViceInodes(devname, mountedOn, resultFile,
 				      judgeInode, judgeParam,
-				     forcep, forceR, wpath);
+				     forcep, forceR, wpath, rock);
 	}
 	else
 #endif
@@ -1099,9 +1104,10 @@ BUFAREA sblk;
 #endif /* AFS_HPUX_ENV */
 
 extern char *afs_rawname();
-int ListViceInodes(devname, mountedOn, resultFile, judgeInode, judgeParam, forcep, forceR, wpath)
+int ListViceInodes(devname, mountedOn, resultFile, judgeInode, judgeParam, forcep, forceR, wpath, rock)
     char *devname, *mountedOn, *resultFile, *wpath;
     int (*judgeInode)(), *forcep, forceR;
+    void *rock;
 {
    union {
 #ifdef	AFS_AIX_ENV
@@ -1201,7 +1207,7 @@ int ListViceInodes(devname, mountedOn, resultFile, judgeInode, judgeParam, force
        info.u.param[1] = auxp->aux_param2;
        info.u.param[2] = auxp->aux_param3;
        info.u.param[3] = auxp->aux_param4;
-       if (judgeInode && (*judgeInode)(&info, judgeParam) == 0)
+       if (judgeInode && (*judgeInode)(&info, judgeParam, rock) == 0)
 	   continue;
        if (fwrite(&info, sizeof info, 1, inodeFile) != 1) {
 	   Log("Error writing inode file for partition %s\n", partition);
@@ -1401,7 +1407,7 @@ printf("Ino=%d, v1=%x, v2=%x, v3=%x, mode=%x size=%d, lcnt=%d\n", i, p->di_vicep
 	            info.inodeNumber = i;
 	            info.byteCount = p->di_size;
 	            info.linkCount = p->di_nlink;
-		    if (judgeInode && (*judgeInode)(&info, judgeParam) == 0)
+		    if (judgeInode && (*judgeInode)(&info, judgeParam, rock) == 0)
 		        continue;
 	            if (fwrite(&info, sizeof info, 1, inodeFile) != 1) {
 	                Log("Error writing inode file for partition %s\n", partition);

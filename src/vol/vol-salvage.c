@@ -1414,9 +1414,10 @@ void CountVolumeInodes(register struct ViceInodeInfo *ip, int maxInodes,
     summary->maxUniquifier = maxunique;
 }
 
-int OnlyOneVolume(inodeinfo, singleVolumeNumber)
+int OnlyOneVolume(inodeinfo, singleVolumeNumber, rock)
     struct ViceInodeInfo *inodeinfo;
     VolumeId singleVolumeNumber;
+    void *rock;
 {
     if (inodeinfo->u.vnode.vnodeNumber == INODESPECIAL)
 	return (inodeinfo->u.special.parentId == singleVolumeNumber);
@@ -1448,7 +1449,7 @@ int GetInodeSummary(char *path, VolumeId singleVolumeNumber)
     char *tdir;
 
     /* This file used to come from vfsck; cobble it up ourselves now... */
-    if ((err = ListViceInodes(dev, fileSysPath, path, singleVolumeNumber?OnlyOneVolume:0, singleVolumeNumber, &forceSal, forceR, wpath)) < 0) {
+    if ((err = ListViceInodes(dev, fileSysPath, path, singleVolumeNumber?OnlyOneVolume:0, singleVolumeNumber, &forceSal, forceR, wpath, NULL)) < 0) {
        if (err == -2) {
 	    Log("*** I/O error %d when writing a tmp inode file %s; Not salvaged %s ***\nIncrease space on partition or use '-tmpdir'\n",
 		errno, path, dev);

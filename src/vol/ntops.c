@@ -940,7 +940,7 @@ static int WriteInodeInfo(FILE *fp, struct ViceInodeInfo *info, char *dir,
 int ListViceInodes(char *devname, char *mountedOn, char *resultFile,
 		   int (*judgeInode)(struct ViceInodeInfo *info, int vid),
 		   int singleVolumeNumber, int *forcep,
-		   int forceR, char *wpath)
+		   int forceR, char *wpath, void *rock)
 {
     FILE *fp = (FILE*)-1;
     int ninodes;
@@ -954,7 +954,7 @@ int ListViceInodes(char *devname, char *mountedOn, char *resultFile,
 	}
     }
     ninodes = nt_ListAFSFiles(wpath, WriteInodeInfo, fp,
-			   judgeInode, singleVolumeNumber);
+			   judgeInode, singleVolumeNumber, rock);
 
     if (!resultFile)
 	return ninodes;
@@ -1008,7 +1008,7 @@ int nt_ListAFSFiles(char *dev,
 				     char *),
 		    FILE *fp,
 		    int (*judgeFun)(struct ViceInodeInfo *, int),
-		    int singleVolumeNumber)
+		    int singleVolumeNumber, void *rock)
 {
     IHandle_t h;
     char name[MAX_PATH];
@@ -1025,7 +1025,7 @@ int nt_ListAFSFiles(char *dev,
 	if (nt_HandleToVolDir(name, &h)<0)
 	    return -1;
 	ninodes = nt_ListAFSSubDirs(&h, writeFun, fp,
-				 judgeFun, singleVolumeNumber);
+				 judgeFun, singleVolumeNumber, rock);
 	if (ninodes < 0)
 	    return ninodes;
     }
@@ -1040,7 +1040,7 @@ int nt_ListAFSFiles(char *dev,
 	while (dp = readdir(dirp)) {
 	    if (!DecodeVolumeName(dp->d_name, &h.ih_vid)) {
 		ninodes += nt_ListAFSSubDirs(&h, writeFun, fp,
-				 judgeFun, 0);
+				 judgeFun, 0, rock);
 	    }
 	}
     }
@@ -1062,8 +1062,8 @@ static int nt_ListAFSSubDirs(IHandle_t *dirIH,
 			     int (*writeFun)(FILE *, struct ViceInodeInfo *,
 					      char *, char *),
 			     FILE *fp,
-			     int (*judgeFun)(struct ViceInodeInfo *, int),
-			     int singleVolumeNumber)
+			     int (*judgeFun)(struct ViceInodeInfo *, int, void *rock),
+			     int singleVolumeNumber, void *rock)
 {
     int i;
     IHandle_t myIH = *dirIH;
@@ -1151,7 +1151,7 @@ static int nt_ListAFSSubDirs(IHandle_t *dirIH,
 		    info.u.param[2] = data.ftCreationTime.dwHighDateTime;
 		    info.u.param[3] = data.ftCreationTime.dwLowDateTime;
 		}
-		if (judgeFun && !(*judgeFun)(&info, singleVolumeNumber))
+		if (judgeFun && !(*judgeFun)(&info, singleVolumeNumber, rock))
 		    goto next_file;
 		if ((*writeFun)(fp, &info, path, data.cFileName)<0) {
 		    nt_close(linkHandle.fd_fd);
