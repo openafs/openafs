@@ -66,6 +66,12 @@ bc_AddVolEntryCmd(as, arock)
     partitionName = as->parms[2].items->data;
     volRegExp     = as->parms[3].items->data;
 
+    code = bc_UpdateVolumeSet();
+    if (code) {
+	com_err(whoami, code, "; Can't retrieve volume sets");
+	return(code);
+    }
+
     ctPtr = &bc_globalConfig->configText[TB_VOLUMESET];
 
     tset = bc_FindVolumeSet(bc_globalConfig, volSetName);
