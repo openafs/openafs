@@ -20,6 +20,42 @@
 #include "../afs/afs_stats.h" /* statistics stuff */
 #include <ufs/ufsmount.h>
 
+/* given a vnode, return the `inode number'; if it's a UFS vnode just
+   return the i_number from the in kernel inode struct, if not stat
+   the file to get the inumber from there */
+afs_uint32
+osi_vnodeToInumber(struct vnode *vnode)
+{
+    int error;
+    struct vattr attr;
+
+    /* use faster version with UFS */
+    if(vnode->v_tag == VT_UFS)
+	return VTOI(vnode)->i_number;
+    /* otherwise stat the file */
+    VOP_GETATTR(vnode, &attr, NULL, error);
+    if(error)
+	osi_Panic("VOP_GETATTR = %d", error);
+    return attr.va_fileid;
+}
+
+/* return the id of the device containing the file */
+afs_uint32
+osi_vnodeToDev(struct vnode *vnode)
+{
+    int error;
+    struct vattr attr;
+
+    /* use faster version with UFS */
+    if(vnode->v_tag == VT_UFS)
+	return VTOI(vnode)->i_dev;
+    /* otherwise stat the file */
+    VOP_GETATTR(vnode, &attr, NULL, error);
+    if(error)
+	osi_Panic("VOP_GETATTR = %d", error);
+    return attr.va_rdev;
+}
+
 getinode(fs, dev, inode, ipp, perror)
      struct mount *fs;
      struct inode **ipp;

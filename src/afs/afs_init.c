@@ -325,11 +325,7 @@ afs_InitVolumeInfo(afile)
 #else
     code = gop_lookupname(afile, AFS_UIOSYS, 0, (struct vnode **) 0, &filevp);
     if (code) return ENOENT;
-#if defined(AFS_SGI62_ENV) || defined(AFS_HAVE_VXFS)
-    fce.inode = volumeInode = VnodeToIno(filevp);
-#else
-    fce.inode = volumeInode = VTOI(filevp)->i_number;
-#endif
+    fce.inode = volumeInode = afs_vnodeToInumber(filevp);
 #ifdef AFS_DEC_ENV
     grele(filevp);
 #else
@@ -449,16 +445,13 @@ afs_InitCacheInfo(afile)
 #endif
     }
 #ifdef AFS_LINUX20_ENV
-      cacheInode = filevp->i_ino;
-      afs_cacheSBp = filevp->i_sb;
+    cacheInode = filevp->i_ino;
+    afs_cacheSBp = filevp->i_sb;
 #else
+    cacheInode = afs_vnodeToInumber(filevp);
+    cacheDev.dev = afs_vnodeToDev(filevp);
 #if defined(AFS_SGI62_ENV) || defined(AFS_HAVE_VXFS)
     afs_InitDualFSCacheOps(filevp);
-    cacheInode = VnodeToIno(filevp);
-    cacheDev.dev = VnodeToDev(filevp);
-#else
-    cacheInode = VTOI(filevp)->i_number;
-    cacheDev.dev = VTOI(filevp)->i_dev;
 #endif
     afs_cacheVfsp = filevp->v_vfsp;
 #endif /* AFS_LINUX20_ENV */
