@@ -114,6 +114,7 @@ dlqMoveb(fromptr, toptr)
 
     fromptr->dlq_next = fromptr;
     fromptr->dlq_prev = fromptr;
+    return (0);
 }
 
 /* dlqUnlinkb

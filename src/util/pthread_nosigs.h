@@ -17,9 +17,9 @@
 
 #ifdef AFS_NT40_ENV
 /* Compilers complain about empty declaration unless at end of decl's */
-#define AFS_SIGSET_DECL int i_junk
-#define AFS_SIGSET_CLEAR()
-#define AFS_SIGSET_RESTORE()
+#define AFS_SIGSET_DECL int i_junk=0
+#define AFS_SIGSET_CLEAR() ++i_junk
+#define AFS_SIGSET_RESTORE() --i_junk
 #else
 #define AFS_SIGSET_DECL sigset_t i_tset, i_oset
 #ifdef AFS_AIX42_ENV

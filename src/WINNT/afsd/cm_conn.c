@@ -222,7 +222,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 	/* special codes:  missing volumes */
 	if (errorCode == VNOVOL || errorCode == VMOVED || errorCode == VOFFLINE
 	    || errorCode == VSALVAGE || errorCode == VNOSERVICE) {
-		long oldSum, newSum;
+		long newSum;
 		int same;
 
 		/* Log server being offline for this volume */

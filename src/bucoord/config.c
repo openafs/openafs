@@ -71,7 +71,6 @@ bc_InitConfig(apath)
      char *apath;
 {
     register struct bc_config *tb;
-    register struct bc_hostEntry *the;
 
     /* initialize global config structure */
     tb = (struct bc_config *)malloc(sizeof(struct bc_config));

@@ -1149,7 +1149,6 @@ VolumeStats(pntr, entry, server, part, voltype)
      afs_int32 server, part;
 {
     int totalOK, totalNotOK, totalBusy;
-    afs_int32 vcode, vcode2;
 
     DisplayFormat(pntr, server, part, &totalOK, &totalNotOK, &totalBusy, 0, 1,
 		  1);
@@ -2084,9 +2083,6 @@ BackupVolume(as)
 
     afs_int32 buvolid, buserver, bupart, butype;
     struct nvldbentry buentry;
-    struct rx_connection *conn;
-    volEntries volInfo;
-    struct nvldbentry store;
 
     avolid = vsu_GetVolumeID(as->parms[0].items->data, cstruct, &err);
     if (avolid == 0) {
@@ -3452,6 +3448,10 @@ GetVolumeInfo(volid, server, part, voltype, rentry)
 	*part = rentry->serverPartition[index];
 	return 0;
     }
+    fprintf(STDERR,
+            "unexpected volume type for volume %lu\n",
+            (unsigned long)volid);
+    return -1;
 }
 
 static
@@ -3868,7 +3868,6 @@ BackSys(as)
     afs_int32 totalFail = 0;
     int previdx = -1, error, same;
     int comp = 0;
-    char compstr[50];
     struct cmd_item *ti;
     char *ccode;
     int match;
@@ -4416,7 +4415,6 @@ print_addrs(const bulkaddrs * addrs, const afsUUID * m_uuid, int nentries,
 {
     afs_int32 vcode;
     afs_int32 i, j;
-    struct VLCallBack unused;
     afs_int32 *addrp;
     bulkaddrs m_addrs;
     ListAddrByAttributes m_attrs;
@@ -4501,14 +4499,12 @@ ListAddrs(as)
      register struct cmd_syndesc *as;
 {
     afs_int32 vcode;
-    afs_int32 i, j, noresolve = 0, printuuid = 0;
-    struct VLCallBack unused;
-    afs_int32 nentries, *addrp;
-    bulkaddrs addrs, m_addrs;
+    afs_int32 i, noresolve = 0, printuuid = 0;
+    afs_int32 nentries;
+    bulkaddrs m_addrs;
     ListAddrByAttributes m_attrs;
     afsUUID m_uuid, askuuid;
-    afs_int32 m_unique, m_nentries, *m_addrp;
-    afs_int32 base, index;
+    afs_int32 m_unique, m_nentries;
 
     memset(&m_attrs, 0, sizeof(struct ListAddrByAttributes));
     m_attrs.Mask = VLADDR_INDEX;

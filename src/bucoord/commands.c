@@ -80,7 +80,6 @@ bc_EvalVolumeSet(aconfig, avs, avols, uclient)
      struct ubik_client *uclient;
 {				/*bc_EvalVolumeSet */
     int code;
-    int a, b, c;
     static afs_int32 use = 2;
 
     if (use == 2) {		/* Use EvalVolumeSet2() */
@@ -166,7 +165,7 @@ randSPEntries(serverlist, avols)
      struct serversort *serverlist;
      struct bc_volumeDump **avols;
 {
-    struct serversort *ss, **pss, *tss;
+    struct serversort *ss, **pss;
     struct partitionsort *ps, **pps;
     afs_int32 r;
     afs_int32 scount, pcount;
@@ -220,8 +219,8 @@ EvalVolumeSet2(aconfig, avs, avols, uclient)
     struct bc_volumeDump *tvd;
     afs_int32 code = 0, tcode;
     afs_int32 count = 0;
-    struct serversort *servers = 0, *lastserver = 0, *ss = 0, *nss;
-    struct partitionsort *ps = 0, *nps;
+    struct serversort *servers = 0, *lastserver = 0, *ss = 0;
+    struct partitionsort *ps = 0;
 
     *avols = (struct bc_volumeDump *)0;
     bulkentries.nbulkentries_len = 0;
@@ -833,7 +832,6 @@ bc_GetTapeStatusCmd(as, arock)
      char *arock;
 {
     afs_int32 code;
-    afs_int32 index, dumpID;
     struct rx_connection *tconn;
     afs_int32 portOffset = 0;
 
@@ -902,8 +900,6 @@ bc_WaitForNoJobs()
     int usefulJobRunning = 1;
 
     extern dlqlinkT statusHead;
-    statusP ptr;
-    dlqlinkP dptr;
 
     com_err(whoami, 0, "waiting for job termination");
 
@@ -933,9 +929,7 @@ bc_JobsCmd(as, arock)
      struct cmd_syndesc *as;
      char *arock;
 {
-    int i;
     afs_int32 prevTime;
-    struct bc_dumpTask *td;
     dlqlinkP ptr;
     statusP statusPtr;
     char ds[50];
@@ -1056,7 +1050,6 @@ bc_KillCmd(as, arock)
     struct bc_dumpTask *td;
     char *tp;
     char tbuffer[256];
-    afs_int32 code;
 
     dlqlinkP ptr;
     statusP statusPtr;
@@ -1151,7 +1144,7 @@ bc_VolRestoreCmd(as, arock)
     int oldFlag;
     afs_int32 fromDate;
     char *newExt, *timeString;
-    afs_int32 i, portRemain;
+    afs_int32 i;
     afs_int32 *ports = NULL;
     afs_int32 portCount = 0;
     int dontExecute;
@@ -1618,7 +1611,6 @@ bc_DumpCmd(as, arock)
     struct bc_volumeSet *tvs;	/*Ptr to list of generated volume info */
     struct bc_dumpSchedule *tds, *baseds;	/*Ptr to dump schedule node */
     struct bc_volumeDump *tve, *volsToDump;	/*Ptr to individual vols to be dumped */
-    struct bc_volumeDump *ntve, *tves, *ptves, *rtves;
     struct budb_dumpEntry dumpEntry, de, fde;	/* dump entry */
     afs_uint32 d;
 
@@ -1635,11 +1627,7 @@ bc_DumpCmd(as, arock)
     afs_int32 code;		/* Return code */
     int loadfile;		/* whether to load a file or not */
 
-    struct bc_dumpTask *dumpTaskPtr;	/* for dump thread */
-    afs_int32 dumpTaskSlot;
-    char *junk;
     statusP statusPtr;
-    int r, nservers, ns, serverfound;
 
     extern struct bc_dumpTask bc_dumpTasks[];
     extern afs_int32 bcdb_FindLastVolClone();
@@ -2443,7 +2431,6 @@ bc_deleteDumpCmd(as, arock)
     budb_dumpsList dumps, flags;
     int i;
     afs_int32 port = -1, dbonly = 0, force;
-    afs_uint32 taskid;
 
     /* Must specify at least one of -dumpid, -from, or -to */
     if (!as->parms[0].items && !as->parms[1].items && !as->parms[2].items
@@ -2885,7 +2872,6 @@ dumpInfo(dumpid, detailFlag)
     budb_volumeList vl;
     afs_int32 last, next, dbTime;
     afs_int32 tapedumpid;
-    afs_int32 numTapes;
 
     int tapeNumber;
     int i;

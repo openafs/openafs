@@ -3654,7 +3654,6 @@ T_DumpDatabase(call, filename)
     char *path = 0;
     dbadr dbAddr;
     int type, old, length, hash;
-    int block = 0, index = 0;
     struct memoryHashTable *mht;
     afs_int32 eval, code = 0;
 
@@ -3704,8 +3703,8 @@ T_DumpDatabase(call, filename)
 				ERROR(eval);
 
 			    fprintf(dumpfid,
-				    "\ndumpId hash %d, entry at %u: block %d, index %d\n",
-				    hash, dbAddr, block, index);
+				    "\ndumpId hash %d, entry at %u\n",
+				    hash, dbAddr);
 			    fprintf(dumpfid,
 				    "----------------------------\n");
 			    dump_ntoh(&diskDump, &hostDump);
@@ -3725,8 +3724,8 @@ T_DumpDatabase(call, filename)
 				ERROR(eval);
 
 			    fprintf(dumpfid,
-				    "\ndumpname hash %d, entry at %u: block %d, index %d\n",
-				    hash, dbAddr, block, index);
+				    "\ndumpname hash %d, entry at %u\n",
+				    hash, dbAddr);
 			    fprintf(dumpfid,
 				    "----------------------------\n");
 			    dump_ntoh(&diskDump, &hostDump);
@@ -3746,8 +3745,8 @@ T_DumpDatabase(call, filename)
 				ERROR(eval);
 
 			    fprintf(dumpfid,
-				    "\ntapename hash %d, entry at %u: block %d, index %d\n",
-				    hash, dbAddr, block, index);
+				    "\ntapename hash %d, entry at %u\n",
+				    hash, dbAddr);
 			    fprintf(dumpfid,
 				    "----------------------------\n");
 			    tape_ntoh(&diskTape, &hostTape);
@@ -3767,8 +3766,8 @@ T_DumpDatabase(call, filename)
 				ERROR(eval);
 
 			    fprintf(dumpfid,
-				    "\nvolname hash %d, entry at %u: block %d, index %d\n",
-				    hash, dbAddr, block, index);
+				    "\nvolname hash %d, entry at %u\n",
+				    hash, dbAddr);
 			    fprintf(dumpfid,
 				    "----------------------------\n");
 			    volInfo_ntoh(&diskVolInfo, &hostVolInfo);
@@ -3817,8 +3816,7 @@ volFragsDump(ut, dumpfid, dbAddr)
 	    return (0);
 	}
 
-	fprintf(dumpfid, "\nvolfragment entry at %u: block %d, index %d\n",
-		dbAddr, 0, 0);
+	fprintf(dumpfid, "\nvolfragment entry at %u\n", dbAddr);
 	fprintf(dumpfid, "----------------------------\n");
 	volFragment_ntoh(&diskVolFragment, &hostVolFragment);
 	printVolFragment(dumpfid, &hostVolFragment);

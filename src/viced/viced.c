@@ -640,7 +640,6 @@ void
 ShutDownAndCore(int dopanic)
 {
     time_t now = time(0);
-    char *tstr;
     char tbuffer[32];
 
     ViceLog(0,
@@ -1307,7 +1306,7 @@ ReadSysIdFile()
 afs_int32
 WriteSysIdFile()
 {
-    afs_int32 fd, nentries, i;
+    afs_int32 fd, i;
     struct versionStamp vsn;
     struct afs_stat status;
     afsUUID uuid;
@@ -1414,9 +1413,7 @@ Do_VLRegisterRPC()
 afs_int32
 InitVL()
 {
-    int (*old) ();
     afs_int32 code;
-    afs_int32 cnt, i;
     extern int rxi_numNetAddrs;
     extern afs_uint32 rxi_NetAddrs[];
 
@@ -1477,14 +1474,12 @@ InitVL()
 int
 main(int argc, char *argv[])
 {
-    int i;
     afs_int32 code;
-    FILE *file;
     char tbuffer[32];
     struct rx_securityClass *sc[4];
     struct rx_service *tservice;
 #ifdef AFS_PTHREAD_ENV
-    pthread_t parentPid, serverPid;
+    pthread_t serverPid;
     pthread_attr_t tattr;
 #else /* AFS_PTHREAD_ENV */
     PROCESS parentPid, serverPid;

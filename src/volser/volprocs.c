@@ -1177,7 +1177,7 @@ SAFSVolForwardMultiple(struct rx_call *acid, afs_int32 fromTrans, afs_int32
     struct rx_connection **tcons;
     struct rx_call **tcalls;
     struct Volume *vp;
-    int i, nconns, is_incremental;
+    int i, is_incremental;
 
     if (results)
 	memset(results, 0, sizeof(manyResults));
@@ -1625,7 +1625,6 @@ afs_int32
 VolListPartitions(struct rx_call *acid, struct pIDs *partIds)
 {
     char namehead[9];
-    int code;
     char i;
 
     strcpy(namehead, "/vicep");	/*7 including null terminator */

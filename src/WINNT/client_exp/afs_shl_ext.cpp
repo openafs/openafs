@@ -119,14 +119,13 @@ LRESULT DoRegCLSID(HKEY hKey,PTCHAR szSubKey,PTCHAR szData,PTCHAR szValue=NULL)
 // by exporting DllRegisterServer, you can use regsvr.exe
 STDAPI DllRegisterServer(void)
 {
-	int      i;
 	HKEY     hKey;
 	LRESULT  lResult;
 	DWORD    dwDisp;
 	TCHAR    szSubKey[MAX_PATH];
 	TCHAR    szCLSID[MAX_PATH];
-	TCHAR    szModule[MAX_PATH];
-	LPWSTR   pwsz;
+    TCHAR    szModule[MAX_PATH];
+    LPWSTR   pwsz;
 	AFX_MANAGE_STATE(AfxGetStaticModuleState());
 	COleObjectFactory::UpdateRegistryAll();
 

@@ -191,12 +191,13 @@ IdCmp(a, b)
      afs_int32 *a;
      afs_int32 *b;
 {
-    if (*a > *b)
+    if (*a > *b) {
 	return 1;
-    if (*a == *b)
+    } else if (*a == *b) {
 	return 0;
-    if (*a < *b)
+    } else /* (*a < *b) */ {
 	return -1;
+    }
 }
 
 static int
@@ -240,6 +241,7 @@ GetGroupLimit(N, x)
     return y;
 }
 
+void
 CreateUser(u)
      int u;
 {
@@ -276,9 +278,9 @@ CreateUser(u)
 	ownerUser = id;
 	strcpy(ownerUserName, name);
     }
-    return;
 }
 
+void
 CreateGroup(g)
      int g;
 {
@@ -345,7 +347,6 @@ CreateGroup(g)
 	lastGroup = id;
 	lastGroupPrefix = ownerName;
     }
-    return;
 }
 
 int
@@ -377,6 +378,7 @@ DeleteRandomId(list)
     return -1;			/* none left */
 }
 
+void
 AddUser(u, g)
      int u, g;
 {
@@ -398,9 +400,9 @@ AddUser(u, g)
 	printf("Adding user (%di) to group (%di)\n", ui, gi);
     population[u * number + g]++;
     nAdds++;
-    return;
 }
 
+void
 RemUser(u, g)
      int u, g;
 {
@@ -418,7 +420,6 @@ RemUser(u, g)
 	printf("Removing user (%di) from group (%di)\n", ui, gi);
     population[u * number + g]--;
     nRems++;
-    return;
 }
 
 TestManyMembers(as, arock)
@@ -599,7 +600,7 @@ TestManyMembers(as, arock)
     for (u = 0; u < number; u++) {
 	afs_int32 ui = users[u];
 	if (ui) {
-	    int i, j;
+	    int i;
 	    int ng;		/* number groups */
 	    int (*proc) ();	/* membership listing procedure */
 	    int over;
@@ -765,6 +766,7 @@ ka_ConvertBytes(ascii, alen, bs, bl)
 	}
     }
     *ascii = 0;			/* terminate string */
+    return 0;
 }
 
 /* This runs various tests on the server.  It creates, then deletes, a bunch of
@@ -931,7 +933,6 @@ MyAfterProc(as, arock)
      struct cmd_syndesc *as;
      char *arock;
 {
-    afs_int32 code;
     if (strlen(tmp_conf_file))
 	unlink(tmp_conf_file);
     if (strlen(tmp_cell_file))

@@ -427,4 +427,5 @@ main(argc, argv)
 
     ViceLog(0, ("Starting to process AuthServer requests\n"));
     rx_ServerProc();		/* donate this LWP */
+    return 0;
 }

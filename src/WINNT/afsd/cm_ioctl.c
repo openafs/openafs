@@ -112,16 +112,18 @@ void cm_ResetACLCache(cm_user_t *userp)
  */
 void TranslateExtendedChars(char *str)
 {
-  char *p;
-  
-        if (!str || !*str)
-                return;
+#ifdef DJGPP
+    char *p;
+#endif
+
+    if (!str || !*str)
+        return;
 
 #ifndef DJGPP
-        CharToOem(str, str);
+    CharToOem(str, str);
 #else
-        p = str;
-        while (*p) *p++ &= 0x7f;  /* turn off high bit; probably not right */
+    p = str;
+    while (*p) *p++ &= 0x7f;  /* turn off high bit; probably not right */
 #endif
 }
         
@@ -1320,8 +1322,6 @@ long cm_IoctlIslink(struct smb_ioctl *ioctlp, struct cm_user *userp)
 	cm_scache_t *dscp;
 	cm_scache_t *scp;
 	char *cp;
-	cm_space_t *spacep;
-	cm_scache_t *newRootScp;
 	cm_req_t req;
 
 	cm_InitReq(&req);

@@ -113,7 +113,7 @@ long smb_ReceiveV3SessionSetupX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
 {
     char *tp;
     char *usern, *pwd, *pwdx;
-    smb_user_t *uidp, *dead_uidp;
+    smb_user_t *uidp;
     unsigned short newUid;
     unsigned long caps;
     cm_user_t *userp;

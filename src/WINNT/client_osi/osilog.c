@@ -355,7 +355,8 @@ void osi_InitTraceOption()
 #define MAXBUF_ 131
 void osi_LogEvent0(char *a,char *b) 
 {
-	HANDLE h; char *ptbuf[1],buf[MAXBUF_+1];
+	HANDLE h; 
+    char *ptbuf[1];
 	if (!ISLOGONTRACE(osi_TraceOption))
 		return;
 	h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);

@@ -1500,7 +1500,7 @@ SalvageCmd(as)
 
     /* Find out whether fileserver is running MR-AFS (has a scanner instance) */
     /* XXX this should really be done some other way, potentially by RPC */
-    tp = &tname;
+    tp = &tname[0];
     if (code = BOZO_GetInstanceParm(tconn, "fs", 3, &tp) == 0)
 	mrafs = 1;
 

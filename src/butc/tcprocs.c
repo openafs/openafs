@@ -46,19 +46,6 @@ extern afs_int32 xbsaType;
 callPermitted(call)
      struct rx_call *call;
 {
-    afs_int32 code;
-
-    struct rx_connection *tconn;
-    rxkad_level level;
-    Date expiration;
-    char name[MAXKTCNAMELEN];
-    char inst[MAXKTCNAMELEN];
-    char celn[MAXKTCREALMLEN];
-    afs_int32 kvno;
-
-    char *cell;
-    afs_int32 flag;
-
     /* before this code can be used, the rx connection, on the bucoord side, must */
     /* be changed so that it will set up for token passing instead of using  a    */
     /* simple rx connection that, below, returns a value of 0 from rx_SecurityClassOf */
@@ -83,7 +70,6 @@ STC_LabelTape(acid, label, taskId)
 #else
     PROCESS pid;
 #endif
-    struct tc_tapeLabel *mylabel;
     struct labelTapeIf *ptr;
     statusP statusPtr;
     afs_int32 code;
@@ -627,12 +613,14 @@ STC_DeleteDump(acid, dumpID, taskId)
     struct deleteDumpIf *ptr = 0;
     statusP statusPtr = 0;
     afs_int32 code = TC_BADTASK;	/* If not compiled -Dxbsa then fail */
+#ifdef xbsa
 #ifdef AFS_PTHREAD_ENV
     pthread_t pid;
     pthread_attr_t tattr;
     AFS_SIGSET_DECL;
 #else
     PROCESS pid;
+#endif
 #endif
     extern afs_int32 DeleteDump();
     extern statusP createStatusNode();

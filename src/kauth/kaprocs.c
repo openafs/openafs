@@ -1114,7 +1114,6 @@ Authenticate(version, call, aname, ainstance, start, end, arequest, oanswer)
     struct ktc_encryptionKey tgskey;	/* service key for encrypting ticket */
     Date now;
     afs_uint32 pwexpires;
-    afs_uint32 lasttime;
 
     COUNT_REQ(Authenticate);
     if (!name_instance_legal(aname, ainstance))

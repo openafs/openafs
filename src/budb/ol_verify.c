@@ -561,9 +561,8 @@ verifyVolInfoEntry(ut, volInfoAddr, ai, ao, volInfo)
      struct volInfo *volInfo;
 {
     int volCount = 0, ccheck = 1;
-    int nFrags;
     afs_int32 volFragAddr;
-    int blockIndex, entryIndex, bindex, eindex;
+    int blockIndex, entryIndex;
     struct volFragment volFragment;
     afs_int32 code = 0, tcode;
 
@@ -1268,7 +1267,7 @@ verifyDatabase(ut, recreateFile)
      FILE *recreateFile;	/* not used */
 {
     afs_int32 eof;
-    int j, bmsize;
+    int bmsize;
     afs_int32 code = 0, tcode;
 
     extern int nBlocks;		/* no. blocks in database */

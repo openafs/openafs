@@ -482,12 +482,13 @@ IDCmp(a, b)
      afs_int32 *b;
 {
     /* used to sort CPS's so that comparison with acl's is easier */
-    if (*a > *b)
+    if (*a > *b) {
 	return 1;
-    if (*a == *b)
+    } else if (*a == *b) {
 	return 0;
-    if (*a < *b)
+    } else /* (*a < *b) */ {
 	return -1;
+    }
 }
 
 afs_int32

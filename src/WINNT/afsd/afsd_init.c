@@ -603,7 +603,7 @@ int afsd_InitDaemons(char **reasonP)
           code = cm_GetVolumeByName(cm_rootCellp, cm_rootVolumeName, cm_rootUserp,
                                     &req, CM_FLAG_CREATE, &cm_rootVolumep);
           afsi_log("cm_GetVolumeByName code %x root vol %x", code,
-                   (code ? 0xffffffff : cm_rootVolumep));
+                   (code ? (cm_volume_t *)-1 : cm_rootVolumep));
           if (code != 0) {
             *reasonP = "can't find root volume in root cell";
             return -1;
@@ -622,7 +622,7 @@ int afsd_InitDaemons(char **reasonP)
         
         code = cm_GetSCache(&cm_rootFid, &cm_rootSCachep, cm_rootUserp, &req);
 	afsi_log("cm_GetSCache code %x scache %x", code,
-		 (code ? 0xffffffff : cm_rootSCachep));
+		 (code ? (cm_scache_t *)-1 : cm_rootSCachep));
 	if (code != 0) {
 		*reasonP = "unknown error";
 		return -1;

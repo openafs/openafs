@@ -87,6 +87,8 @@ struct CEBlock {		/* block of CESPERBLOCK file entries */
     struct client entry[CESPERBLOCK];
 };
 
+static void h_TossStuff_r(register struct host *host);
+
 /*
  * Make sure the subnet macros have been defined.
  */
@@ -532,7 +534,6 @@ h_flushhostcps(register afs_uint32 hostaddr, register afs_uint32 hport)
 struct host *
 h_Alloc_r(register struct rx_connection *r_con)
 {
-    register int code;
     struct servent *serverentry;
     register index = h_HashIndex(rxr_HostOf(r_con));
     register struct host *host;
@@ -691,7 +692,7 @@ h_LookupUuid_r(afsUUID * uuidp)
  * To be called, there must be no holds, and either host->deleted
  * or host->clientDeleted must be set.
  */
-int
+static void
 h_TossStuff_r(register struct host *host)
 {
     register struct client **cp, *client;
@@ -942,7 +943,6 @@ h_GetHost_r(struct rx_connection *tcon)
     struct Identity *identP = NULL;
     afs_int32 haddr;
     afs_int32 hport;
-    int i, j, count;
     char hoststr[16], hoststr2[16];
     Capabilities caps;
 
@@ -1830,7 +1830,6 @@ h_DumpHosts()
 void
 h_GetWorkStats(int *nump, int *activep, int *delp, afs_int32 cutofftime)
 {
-    register int i;
     register struct host *host;
     register int num = 0, active = 0, del = 0;
 
@@ -1892,9 +1891,6 @@ h_ClassifyAddress(afs_uint32 a_targetAddr, afs_uint32 a_candAddr,
 		  afs_int32 * a_diffNetworkP)
 {				/*h_ClassifyAddress */
 
-    register int i;		/*Iterator thru host hash table */
-    register struct host *hostP;	/*Ptr to current host entry */
-    register afs_uint32 currHostAddr;	/*Current host address */
     afs_uint32 targetNet;
     afs_uint32 targetSubnet;
     afs_uint32 candNet;
@@ -2321,7 +2317,6 @@ int
 hashDelete_r(afs_int32 addr, struct host *host)
 {
     int flag;
-    int index;
     register struct h_hashChain **hp, *th;
 
     for (hp = &hostHashTable[h_HashIndex(addr)]; (th = *hp);) {

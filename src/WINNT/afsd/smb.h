@@ -344,6 +344,10 @@ extern void smb_ReleaseTID(smb_tid_t *tidp);
 
 extern smb_user_t *smb_FindUID(smb_vc_t *vcp, unsigned short uid, int flags);
 
+extern smb_username_t *smb_FindUserByName(char *usern, char *machine, int flags);
+
+extern smb_user_t *smb_FindUserByNameThisSession(smb_vc_t *vcp, char *usern); 
+
 extern void smb_ReleaseUID(smb_user_t *uidp);
 
 extern cm_user_t *smb_GetUser(smb_vc_t *vcp, smb_packet_t *inp);
@@ -422,6 +426,8 @@ extern unsigned long smb_LogoffTransferTimeout;
 
 extern void smb_FormatResponsePacket(smb_vc_t *vcp, smb_packet_t *inp,
 	smb_packet_t *op);
+
+extern char *myCrt_2Dispatch(int i); 
 
 extern unsigned int smb_Attributes(cm_scache_t *scp);
 

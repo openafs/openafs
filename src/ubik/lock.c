@@ -164,6 +164,7 @@ ulock_relLock(atrans)
  */
 
     atrans->locktype = 0;
+    return 0;
 }
 
 /* debugging hooks */
@@ -177,4 +178,5 @@ ulock_Debug(aparm)
 	aparm->anyReadLocks = rwlock.readers_reading;
 	aparm->anyWriteLocks = ((rwlock.excl_locked == WRITE_LOCK) ? 1 : 0);
     }
+    return 0;
 }

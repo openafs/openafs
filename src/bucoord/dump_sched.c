@@ -64,10 +64,9 @@ bc_AddDumpCmd(as, arock)
      char *arock;
 {
     register char *dname;	/* dump schedule name */
-    char *dateString;		/* expiration date */
     register afs_int32 code;
     afs_int32 expType, expDate;
-    register struct cmd_item *ti, *expItem;
+    register struct cmd_item *ti;
     udbClientTextP ctPtr;
 
     afs_int32 bc_ParseExpiration();

@@ -1257,7 +1257,7 @@ int
 MyAfterProc(struct cmd_syndesc *as)
 {
     if (!strcmp(as->name, "help"))
-	return;
+	return 0;
 
     /* Determine if we need to destory the ubik connection.
      * Closing it avoids resends of packets. 
@@ -1287,7 +1287,6 @@ static int
 MyBeforeProc(struct cmd_syndesc *as, char *arock)
 {
     extern struct passwd *getpwuid();
-    struct passwd *pw;
     struct ktc_encryptionKey key;
     struct ktc_principal auth_server, auth_token, client;
     char realm[MAXKTCREALMLEN];
@@ -1349,7 +1348,7 @@ MyBeforeProc(struct cmd_syndesc *as, char *arock)
 	    }
 #else
 	    /* No explicit name provided: use Unix uid. */
-	    pw = getpwuid(getuid());
+	    struct passwd pw = getpwuid(getuid());
 	    if (pw == 0) {
 		printf("Can't figure out your name from your user id.\n");
 		return KABADCMD;

@@ -350,7 +350,6 @@ ih_open(IHandle_t * ihP)
 int
 fd_close(FdHandle_t * fdP)
 {
-    FD_t closeFd;
     IHandle_t *ihP;
 
     if (!fdP)

@@ -414,7 +414,6 @@ PerformDumpTest(TestInfo * tip)
     if ((info.status & BUTM_STATUS_EOD) == 0) {
 	code = butm_ReadFileBegin(&info);
 	if (code && (code != BUTM_EOD)) {
-	  should_eot:
 	    com_err(whoami, code, "Should have encountered an 'End Of Tape'");
 	    ERROR_EXIT(8);
 	}

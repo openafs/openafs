@@ -72,6 +72,7 @@ $(LIBFILE): $(LIBOBJS)
 #####################
 
 GENERATED_FILES = \
+    $(VERSFILE).c \
 	key_perm.h \
 	p_table.h \
 	s_table.h \

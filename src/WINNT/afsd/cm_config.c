@@ -33,7 +33,9 @@ char AFSConfigKeyName[] =
 #define AFS_THISCELL "ThisCell"
 #define AFS_CELLSERVDB_UNIX "CellServDB"
 #define AFS_CELLSERVDB_NT "afsdcell.ini"
+#ifndef AFSDIR_CLIENT_ETC_DIRPATH
 #define AFSDIR_CLIENT_ETC_DIRPATH "c:/afs"
+#endif
 #if defined(DJGPP) || defined(AFS_WIN95_ENV)
 #define AFS_CELLSERVDB AFS_CELLSERVDB_UNIX
 #ifdef DJGPP
@@ -350,13 +352,13 @@ long cm_GetRootCellName(char *cellNamep)
 {
         FILE *thisCell;
         char thisCellPath[256];
-        char *afsconf_path;
         char *newline;
 
 #ifdef DJGPP
         strcpy(thisCellPath, cm_confDir);
 #else
         /* Win 95 */
+        char *afsconf_path;
         afsconf_path = getenv("AFSCONF");
         if (!afsconf_path)
           strcpy(thisCellPath, AFSDIR_CLIENT_ETC_DIRPATH);
@@ -385,14 +387,14 @@ long cm_GetRootCellName(char *cellNamep)
 cm_configFile_t *cm_CommonOpen(char *namep, char *rwp)
 {
 	char wdir[256];
-        long code;
-        long tlen;
-        FILE *tfilep;
-        char *afsconf_path;
+    long code;
+    long tlen;
+    FILE *tfilep;
 
 #if !defined(DJGPP) && !defined(AFS_WIN95_ENV)
 	code = GetWindowsDirectory(wdir, sizeof(wdir));
-        if (code == 0 || code > sizeof(wdir)) return NULL;
+        if (code == 0 || code > sizeof(wdir)) 
+            return 0;
         
 	/* add trailing backslash, if required */
         tlen = strlen(wdir);
@@ -401,7 +403,7 @@ cm_configFile_t *cm_CommonOpen(char *namep, char *rwp)
 #ifdef DJGPP
         strcpy(wdir,cm_confDir);
 #else
-        afsconf_path = getenv("AFSCONF");
+        char *afsconf_path = getenv("AFSCONF");
         if (!afsconf_path)
           strcpy(wdir, AFSDIR_CLIENT_ETC_DIRPATH);
         else
@@ -552,12 +554,13 @@ long cm_AppendNewCellLine(cm_configFile_t *filep, char *linep)
 long cm_CloseCellFile(cm_configFile_t *filep)
 {
 	char wdir[256];
-        char sdir[256];
-        long code;
-        long closeCode;
-        int tlen;
-        char *afsconf_path;
-
+    char sdir[256];
+    long code;
+    long closeCode;
+    int tlen;
+#ifdef AFS_WIN95_ENV
+    char *afsconf_path;
+#endif
 	closeCode = fclose((FILE *)filep);
 
 #if !defined(DJGPP) && !defined(AFS_WIN95_ENV)
@@ -604,9 +607,11 @@ long cm_CloseCellFile(cm_configFile_t *filep)
 void cm_GetConfigDir(char *dir)
 {
 	char wdir[256];
-     char *afsconf_path;
-     int code;
-     int tlen;
+    int code;
+    int tlen;
+#ifdef AFS_WIN95_ENV
+    char *afsconf_path;
+#endif
 
 #if !defined(DJGPP) && !defined(AFS_WIN95_ENV)
 	code = GetWindowsDirectory(wdir, sizeof(wdir));

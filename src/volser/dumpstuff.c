@@ -927,8 +927,9 @@ ProcessIndex(Volume * vp, VnodeClass class, afs_int32 ** Bufp, int *sizep,
 		    if (vnode->type != vNull && VNDISK_GET_INO(vnode)) {
 			cnt1++;
 			if (DoLogging) {
-			    afs_fsize_t vnodeLength;
-			    Log("RestoreVolume %u Cleanup: Removing old vnode=%u inode=%llu size=%llu\n", V_id(vp), bitNumberToVnodeNumber(i, class), (afs_uintmax_t) VNDISK_GET_INO(vnode), (afs_uintmax_t) vnodeLength);
+			    Log("RestoreVolume %u Cleanup: Removing old vnode=%u inode=%llu size=unknown\n", 
+                     V_id(vp), bitNumberToVnodeNumber(i, class), 
+                     (afs_uintmax_t) VNDISK_GET_INO(vnode));
 			}
 			IH_DEC(V_linkHandle(vp), VNDISK_GET_INO(vnode),
 			       V_parentId(vp));
@@ -1467,7 +1468,6 @@ SizeDumpVolume(register struct rx_call *call, register Volume * vp,
 	       afs_int32 fromtime, int dumpAllDirs,
 	       register struct volintSize *v_size)
 {
-    struct iod iod;
     int code = 0;
     register struct iod *iodp = (struct iod *)0;
 /*    iod_Init(iodp, call); */
@@ -1488,7 +1488,7 @@ SizeDumpDumpHeader(register struct iod *iodp, register Volume * vp,
 {
     int code = 0;
     int UseLatestReadOnlyClone = 1;
-    afs_int32 dumpTimes[2];
+/*    afs_int32 dumpTimes[2]; */
     afs_uint64 addvar;
 /*    iodp->device = vp->device; */
 /*    iodp->parentId = V_parentId(vp); */

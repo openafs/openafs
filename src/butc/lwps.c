@@ -402,6 +402,7 @@ GetResponseKey(int seconds, char *key)
         * * notes:
         * *     only external clients are in recoverDb.c. Was static. PA
         */
+void
 FFlushInput()
 {
     int w;
@@ -436,8 +437,6 @@ callOutRoutine(taskId, tapePath, flag, name, dbDumpId, tapecount)
      afs_uint32 dbDumpId;
      int tapecount;
 {
-    afs_int32 count;
-
     afs_int32 code = 0;
     int pid;
 
@@ -551,7 +550,6 @@ unmountTape(taskId, tapeInfoPtr)
      struct butm_tapeInfo *tapeInfoPtr;
 {
     afs_int32 code;
-    afs_int32 wcode;
     int cpid, status, rcpid;
 
     code = butm_Dismount(tapeInfoPtr);
@@ -741,8 +739,7 @@ PromptForTape(flag, name, dbDumpId, taskId, tapecount)
 		com_err(whoami, errno,
 			"Error waiting for callout script to terminate.");
 		TLog(taskId,
-		     "Can't get exit status from callout script. will prompt\n",
-		     wcode);
+		     "Can't get exit status from callout script. will prompt\n");
 		CallOut = 0;
 		break;
 	    }
@@ -1245,8 +1242,7 @@ restoreVolumeData(call, rparamsPtr)
 {
     afs_int32 curChunk;
     afs_uint32 totalWritten = 0;
-    afs_uint32 tapeID;
-    afs_int32 code, tcode;
+    afs_int32 code;
     afs_int32 headBytes, tailBytes, w;
     afs_int32 taskId;
     afs_int32 nbytes;		/* # bytes data in last tape block read */
@@ -1478,8 +1474,9 @@ xbsaRestoreVolume(taskId, restoreInfo, rparamsPtr)
      struct tc_restoreDesc *restoreInfo;
      struct restoreParams *rparamsPtr;
 {
-    afs_int32 code = 0, rc;
+    afs_int32 code = 0;
 #ifdef xbsa
+    afs_int32 rc;
     afs_int32 newServer, newPart, newVolId;
     char *newVolName;
     int restoreflags, havetrans = 0, startread = 0;
@@ -1675,7 +1672,6 @@ restoreVolume(taskId, restoreInfo, rparamsPtr)
     int restoreflags;
     afs_uint32 tapeID;
     struct butm_tapeInfo *tapeInfoPtr = rparamsPtr->tapeInfoPtr;
-    struct budb_dumpEntry dumpEntry;
 
     /* Check if we need a tape and prompt for one if so */
     tapeID =
@@ -1745,15 +1741,13 @@ restoreVolume(taskId, restoreInfo, rparamsPtr)
 Restorer(newNode)
      struct dumpNode *newNode;
 {
-    afs_int32 code = 0, tcode, rc;
+    afs_int32 code = 0, tcode;
     afs_uint32 taskId;
-    afs_uint32 dumpID;
     char *newVolName;
     struct butm_tapeInfo tapeInfo;
     struct tc_restoreDesc *Restore;
     struct tc_restoreDesc *RestoreDesc;
     struct restoreParams rparams;
-    int restoreflags;
     afs_int32 allocbufferSize;
     time_t startTime, endTime;
     afs_int32 goodrestore = 0;
@@ -1870,7 +1864,7 @@ Restorer(newNode)
 	unmountTape(taskId, &tapeInfo);
     } else {
 #ifdef xbsa
-	rc = InitToServer(taskId, &butxInfo, 0);	/* Return to original server */
+	code = InitToServer(taskId, &butxInfo, 0);	/* Return to original server */
 #endif
     }
 
@@ -2001,7 +1995,6 @@ FindVolTrailer(buffer, size, dSize, volTrailerPtr)
      afs_int32 *dSize;		/* dataSize */
 {
     afs_int32 offset, s;
-    afs_int32 code;
     int found;
 
     *dSize = size;

@@ -115,8 +115,7 @@ nuke(char *aname, afs_int32 avolid)
     struct afs_stat tstat;
     struct ilist *ti, *ni;
     register afs_int32 code;
-    char *tfile;
-    int i, j, forceSal;
+    int i, forceSal;
     char devName[64], wpath[100];
     char *lastDevComp;
 #ifdef AFS_NAMEI_ENV
@@ -144,12 +143,14 @@ nuke(char *aname, afs_int32 avolid)
     lastDevComp = &aname[strlen(aname) - 1];
     *lastDevComp = toupper(*lastDevComp);
 #else
-    tfile = vol_DevName(tstat.st_dev, wpath);
+    {
+    char *tfile = vol_DevName(tstat.st_dev, wpath);
     if (!tfile) {
 	printf("volnuke: can't find %s's device.\n", aname);
 	return 1;
     }
     strcpy(devName, tfile);	/* save this from the static buffer */
+    }
     /* aim lastDevComp at the 'foo' of '/dev/foo' */
     lastDevComp = strrchr(devName, '/');
     /* either points at slash, or there is no slash; adjust appropriately */
@@ -200,9 +201,12 @@ nuke(char *aname, afs_int32 avolid)
 		}
 #else /* AFS_NAMEI_ENV */
 		IH_INIT(fileH, (int)tstat.st_dev, avolid, ti->inode[i]);
-		for (j = 0; j < ti->count[i]; j++) {
-		    code = IH_DEC(fileH, ti->inode[i], avolid);
-		}
+        {
+        int j;
+        for (j = 0; j < ti->count[i]; j++) {
+		   code = IH_DEC(fileH, ti->inode[i], avolid);
+        }
+        }
 		IH_RELEASE(fileH);
 #endif /* AFS_NAMEI_ENV */
 	    }

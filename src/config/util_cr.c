@@ -308,7 +308,6 @@ gencurdir(char *val)
 int
 isequal(char *msg1, char *msg2, char *disp)
 {
-    int x;
     strlwr(msg1);
     strlwr(msg2);
     if (strcmp(msg1, msg2) != 0)
@@ -320,7 +319,6 @@ isequal(char *msg1, char *msg2, char *disp)
 int
 SetSysEnv(int argc, char *argv[])
 {
-    long ret;
     DWORD dwResult;
     printf("assignment %s %s\n", argv[2], argv[3]);
     Addkey("HKEY_LOCAL_MACHINE",

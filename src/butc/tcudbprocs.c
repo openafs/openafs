@@ -110,7 +110,6 @@ GetDBTape(taskId, expires, tapeInfoPtr, dumpid, sequence, queryFlag,
     int interactiveFlag;
     char tapeName[BU_MAXTAPELEN];
     char strlevel[5];
-    afs_int32 i;
     struct timeval tp;
     struct timezone tzp;
     afs_int32 curTime;
@@ -377,14 +376,11 @@ saveDbToTape(saveDbIfPtr)
     afs_int32 code = 0;
     afs_int32 i;
     int wroteLabel;
-    afs_int32 new;
     afs_uint32 taskId;
     Date expires;
 
     struct butm_tapeInfo tapeInfo;
     struct budb_dumpEntry dumpEntry;
-    struct tapeEntryList *next;
-    struct budb_dumpEntry de;
 
     extern struct deviceSyncNode *deviceLatch;
     extern struct tapeConfig globalTapeConfig;
@@ -512,8 +508,6 @@ makeDbDumpEntry(tapeEntPtr, dumpEntryPtr)
      struct budb_tapeEntry *tapeEntPtr;
      struct budb_dumpEntry *dumpEntryPtr;
 {
-    afs_int32 code;
-
     memset(dumpEntryPtr, 0, sizeof(struct budb_dumpEntry));
 
     dumpEntryPtr->id = tapeEntPtr->dump;
@@ -548,7 +542,7 @@ readDbTape(tapeInfoPtr, rstTapeInfoPtr, query)
 {
     afs_int32 code = 0;
     int interactiveFlag;
-    afs_int32 taskId, i;
+    afs_int32 taskId;
     struct butm_tapeLabel oldTapeLabel;
     char AFStapeName[BU_MAXTAPELEN], tapeName[BU_MAXTAPELEN];
     struct tapeEntryList *endList;
@@ -667,8 +661,7 @@ restoreDbFromTape(taskId)
      afs_uint32 taskId;
 {
     afs_int32 code = 0;
-    afs_int32 new, i;
-    struct dumpNode *node;
+    afs_int32 i;
     struct butm_tapeInfo tapeInfo;
     struct rstTapeInfo rstTapeInfo;
     struct budb_dumpEntry dumpEntry;
@@ -820,7 +813,7 @@ writeDbDump(tapeInfoPtr, taskId, expires, dumpid)
     afs_int32 chunksize = 0;
     afs_int32 tc_EndMargin, tc_KEndMargin, kRemaining;
     int sequence;
-    int wroteLabel, new;
+    int wroteLabel;
     int firstcall;
 #ifdef AFS_PTHREAD_ENV
     pthread_t alivePid;
@@ -1208,9 +1201,9 @@ restoreDbDump(tapeInfo, rstTapeInfoPtr, nextHeader)
     struct budb_tapeEntry netTapeEntry, hostTapeEntry;
     struct budb_volumeEntry netVolumeEntry, hostVolumeEntry;
     struct structDumpHeader netItemHeader;
-    afs_int32 newTape, taskId;
+    afs_int32 taskId;
     int restoreThisDump = 1;
-    afs_int32 code = 0, tcode;
+    afs_int32 code = 0;
 
     extern struct udbHandleS udbHandle;
 

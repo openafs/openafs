@@ -49,11 +49,9 @@ void cm_InitFreelance() {
 /* to be called while holding freelance lock unless during init. */
 void cm_InitFakeRootDir() {
 	
-	int i, j, t1, t2;
+	int i, t1, t2;
 	char* currentPos;
 	int noChunks;
-	char mask;
-	
 
 	// allocate space for the fake info
 	cm_dirHeader_t fakeDirHeader;
@@ -255,7 +253,7 @@ int cm_noteLocalMountPointChange() {
 
 int cm_reInitLocalMountPoints() {
 	cm_fid_t aFid;
-	int i, j, hash;
+	int i, hash;
 	cm_scache_t *scp, **lscpp, *tscp;
 
 	
@@ -343,7 +341,7 @@ long cm_InitLocalMountPoints() {
 	
 	FILE *fp;
 	char line[200];
-	int n, i;
+	int i;
 	char* t;
 	cm_localMountPoint_t* aLocalMountPoint;
 	char hdir[120];
@@ -484,13 +482,12 @@ long cm_FreelanceAddMount(char *filename, char *cellname, char *volume, cm_fid_t
 
 long cm_FreelanceRemoveMount(char *toremove)
 {
-     int i, n, t1, t2;
+     int i, n;
      char* cp;
      char line[200];
      char shortname[200];
      char hfile[120], hfile2[120];
      FILE *fp1, *fp2;
-     char cmd[200];
      int found=0;
 
     lock_ObtainMutex(&cm_Freelance_Lock);

@@ -195,7 +195,7 @@ CleanUp(as)
 {
 #if defined(SUPERGROUPS)
     if (as && !strcmp(as->name, "help"))
-	return;
+	return 0;
     if (pruclient) {
 	/* Need to shutdown the ubik_client & other connections */
 	pr_End();
@@ -203,7 +203,7 @@ CleanUp(as)
     }
 #else
     if (!strcmp(as->name, "help"))
-	return;
+	return 0;
     /* Need to shutdown the ubik_client & other connections */
     pr_End();
     rx_Finalize();
@@ -718,7 +718,6 @@ CheckEntry(as)
 	printf(".\n");
     }
 
-  done:
     if (lnames.namelist_val)
 	free(lnames.namelist_val);
     if (lids.idlist_val)

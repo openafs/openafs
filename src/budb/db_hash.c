@@ -671,6 +671,8 @@ ht_KeyMatch(type, key, e)
     default:
 	db_panic("illegal hash function");
     }
+    /* not reached */
+    return 0;
 }
 
 /* ht_LookupEntry
@@ -1217,7 +1219,6 @@ scanHashTable(ut, mhtPtr, selectFn, operationFn, rockPtr)
     int tableLength;		/* # entries */
     int blockLength;		/* # blocks */
     int hashIndex;
-    int blockIndex, entryIndex;
     int old;
     int i;
     afs_int32 code = 0;

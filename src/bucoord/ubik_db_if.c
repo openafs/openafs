@@ -511,7 +511,7 @@ bcdb_UseTape(teptr, newFlag)
 bcdb_GetTextFile(register udbClientTextP ctPtr)
 {
     afs_int32 bufferSize;
-    afs_int32 offset, nextOffset, chunkSize;
+    afs_int32 offset, nextOffset;
     charListT charList;
     afs_int32 code = 0;
 
@@ -965,8 +965,6 @@ udbClientInit(noAuthFlag, localauth, cellName)
      int localauth;
      char *cellName;
 {
-    afs_int32 serverList[MAXSERVERS];
-    char hostname[256];
     struct ktc_principal principal;
     struct ktc_token token;
     struct afsconf_cell info;
@@ -1357,7 +1355,7 @@ udbLocalInit()
 	return (code);
     }
 
-  abort:
+   /* abort: */
     return (0);
 }
 

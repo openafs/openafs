@@ -103,6 +103,7 @@ nextItem(linkPtr)
 
 char *cmdLine;
 
+int
 cmdDispatch()
 {
 #define	MAXV	100
@@ -127,6 +128,7 @@ cmdDispatch()
      */
     doDispatch(targc, targv, 1);
     cmd_FreeArgv(targv);
+    return(0);
 }
 
 statusWatcher()

@@ -533,13 +533,10 @@ readDump(taskId, tapeInfoPtr, scanInfoPtr)
     int moreTapes = 1;
     afs_int32 nbytes, flags, seq;
     int newDump = 1, newTape = 1;
-    afs_int32 tapePosition, c;
+    afs_int32 tapePosition;
     afs_int32 code = 0, tcode;
-    int interactiveFlag, badscan;
-
+    int badscan;
     struct volumeHeader volHeader, volTrailer;
-
-    int good;
     struct budb_tapeEntry tapeEntry;
     struct budb_volumeEntry volEntry;
 

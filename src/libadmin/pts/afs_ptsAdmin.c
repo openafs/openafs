@@ -2257,8 +2257,6 @@ SetUserAccess(const pts_UserUpdateEntry_p userP, afs_int32 * flags,
     }
     rc = 1;
 
-  fail_SetUserAccess:
-
     if (st != NULL) {
 	*st = tst;
     }

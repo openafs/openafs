@@ -652,8 +652,6 @@ incPosition(info, fid, dataSize)
      usd_handle_t fid;
      afs_uint32 dataSize;
 {
-    afs_hyper_t off;
-
     /* Add this to the amount of data written to the tape */
     incSize(info, dataSize);
 
@@ -663,6 +661,7 @@ incPosition(info, fid, dataSize)
 	info->posCount = 0;
 #if (defined(AFS_SUN_ENV) || defined(AFS_DEC_ENV) || defined(AFS_LINUX24_ENV))
 	if (!isafile) {
+        afs_hyper_t off;
 	    hset64(off, 0, 0);
 	    USD_IOCTL(fid, USD_IOCTL_SETSIZE, &off);
 	}
@@ -728,8 +727,6 @@ SeekFile(info, count)
      int count;
 {
     afs_int32 code = 0;
-    afs_int32 fcode;
-    int cpid, status, rcpid, stat;
     struct progress *p;
     afs_int32 error = 0;
 
@@ -972,9 +969,7 @@ rewindFile(info)
      struct butm_tapeInfo *info;
 {
     struct progress *p;
-    int cpid, status, rcpid, stat;
     afs_int32 code = 0;
-    afs_int32 rwcode;
     afs_int32 error;
 
     p = (struct progress *)info->tmRock;
@@ -1013,7 +1008,7 @@ file_Mount(info, tape)
     struct progress *p;
     char filename[64];
     usd_handle_t fid;
-    int cpid, status, rcpid, xflags;
+    int xflags;
     afs_int32 code = 0, error = 0, rc = 0;
 
     if (info->debug)
@@ -1096,11 +1091,7 @@ file_Dismount(info)
      struct butm_tapeInfo *info;
 {
     struct progress *p;
-    int cpid, status, rcpid, stat;
-    afs_int32 code = 0, error = 0, cd;
-    afs_int32 clcode;
-    int fd[2];
-    char c;
+    afs_int32 code = 0, error = 0;
 
     if (info->debug)
 	printf("butm: Unmount tape drive\n");
@@ -1356,7 +1347,6 @@ static afs_int32
 file_ReadFileBegin(info)
      struct butm_tapeInfo *info;
 {
-    struct fileMark mark;
     afs_int32 code = 0;
     afs_int32 blockType;
 
@@ -1539,7 +1529,6 @@ static afs_int32
 file_ReadFileEnd(info)
      struct butm_tapeInfo *info;
 {
-    struct fileMark mark;
     afs_int32 code = 0;
     afs_int32 blockType;
 
@@ -1666,7 +1655,6 @@ file_SeekEODump(info, position)
      struct butm_tapeInfo *info;
      afs_int32 position;
 {
-    struct fileMark mark;
     afs_int32 code = 0;
     afs_int32 blockType;
     afs_int32 w;

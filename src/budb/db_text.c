@@ -544,7 +544,6 @@ mkstemp(st)
     retval = open(mktemp(st), O_RDWR | O_CREAT | O_EXCL, 0600);
 #endif
 
-  error_exit:
     return (retval);
 }
 #endif

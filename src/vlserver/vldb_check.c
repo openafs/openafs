@@ -921,7 +921,7 @@ WorkerBee(as, arock)
     fd = open(dbfile, O_RDONLY, 0);
     if (fd < 0) {
 	printf("can't open file '%s'. error = %d\n", dbfile, errno);
-	return;
+	return 0;
     }
 
     /* read the ubik header and the vldb database header */
@@ -929,7 +929,7 @@ WorkerBee(as, arock)
     readheader(&header);
     if (header.vital_header.vldbversion < 3) {
 	printf("does not support vldb with version less than 3\n");
-	return;
+	return 0;
     }
 
     maxentries = (header.vital_header.eofPtr / sizeof(vlentry)) + 1;
@@ -1029,6 +1029,7 @@ WorkerBee(as, arock)
 		   record[i].type);
 	}
     }
+    return 0;
 }
 
 main(argc, argv)

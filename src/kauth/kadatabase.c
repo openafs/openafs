@@ -611,7 +611,7 @@ ka_DelKey(tt, tentryaddr, tentry)
      afs_int32 tentryaddr;
      struct kaentry *tentry;
 {
-    int code, i;
+    int code;
     struct kaOldKeys okeys;	/* old keys block */
     afs_int32 okeysaddr, nextaddr;	/* offset of old keys block */
     afs_int32 prevptr = 0;
@@ -682,7 +682,6 @@ ka_debugKeyCache(info)
 	if (keyCache[i].used) {
 	    if (info->kcUsed < KADEBUGKCINFOSIZE) {
 		int j = info->kcUsed;
-		int k;
 		char principal[sizeof(keyCache[0].name) +
 			       sizeof(keyCache[0].inst)];
 
@@ -692,8 +691,11 @@ ka_debugKeyCache(info)
 		    (keyCache[i].superseded == NEVERDATE);
 		info->kcInfo[j].keycksum = 0;
 #if DEBUG_KEY_CACHE
+        {
+        int k;
 		for (k = 0; k < sizeof(struct ktc_encryptionKey); k++)
 		    info->kcInfo[j].keycksum += ((char *)&keyCache[i].key)[k];
+        }
 #endif
 		strcpy(principal, keyCache[i].name);
 		strcat(principal, ".");
@@ -708,6 +710,7 @@ ka_debugKeyCache(info)
 
 /* Add a key to the key cache, expanding it if necessary. */
 
+void
 ka_Encache(name, inst, kvno, key, superseded)
      char *name;
      char *inst;

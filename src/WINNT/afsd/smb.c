@@ -1095,9 +1095,9 @@ int smb_ListShares()
                   smb_localNamep, this_share, (print_afs ? cm_mountRoot : "\0"),
                   pathName);
           num_shares++;
-          while (*this_share != NULL) this_share++;  /* find next NULL */
-          this_share++;   /* skip past the NULL */
-        } while (*this_share != NULL);  /* stop at final NULL */
+          while (*this_share != 0) this_share++;  /* find next NUL */
+          this_share++;   /* skip past the NUL */
+        } while (*this_share != 0);  /* stop at final NUL */
 
         return num_shares;
 }
@@ -6177,7 +6177,6 @@ void smb_NetbiosInit()
     }
 #endif /* !DJGPP */
 
- try_addname:
     /* and declare our name so we can receive connections */
     memset(ncbp, 0, sizeof(*ncbp));
     len=lstrlen(smb_localNamep);
@@ -6293,11 +6292,8 @@ void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
 	thread_t phandle;
     int lpid;
     int i;
-    long code;
     int len;
-    NCB *ncbp;
 	struct tm myTime;
-	char s[100];
 #ifdef DJGPP
     int npar, seg, sel;
     dos_ptr rawBuf;

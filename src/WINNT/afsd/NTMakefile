@@ -135,9 +135,12 @@ MIDL_FLAGS=/app_config \
 
 CONF_DLLFILE = $(DESTDIR)\root.client\usr\vice\etc\libafsconf.dll
 
+CONF_DLLLIBS = \
+    $(DESTDIR)\lib\afs\afsutil.lib \
+    $(DESTDIR)\lib\afs\afsreg.lib
 
 $(CONF_DLLFILE): $(CONFOBJS) $(OUT)\libafsconf.res
-	$(DLLGUILINK) -def:libafsconf.def
+	$(DLLGUILINK) -def:libafsconf.def $(CONF_DLLLIBS)
 	$(DLLPREP)
 	$(COPY) $*.lib $(ILIBDIR)
 	$(DEL) $*.lib $*.exp

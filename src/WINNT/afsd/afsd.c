@@ -130,9 +130,8 @@ BOOL InitInstance(
 	HWND hWnd;
 	HDC hDC;
 	TEXTMETRIC textmetric;
-	RECT rect;
 	INT nLineHeight;
-        long code;
+    long code;
 	char *reason;
  
 	/* remember this, since it is a useful thing for some of the Windows
@@ -156,7 +155,6 @@ BOOL InitInstance(
 
 	if (!hWnd)
 	        return (FALSE);
-
 
 	/* lookup text dimensions */
 	hDC = GetDC(hWnd);

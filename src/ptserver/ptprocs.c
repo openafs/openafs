@@ -952,8 +952,8 @@ SPR_UpdateEntry(call, aid, name, uentry)
     struct ubik_trans *tt;
     afs_int32 cid;
     struct prentry tentry;
-    afs_int32 loc, nptr;
-    int count, id = 0;
+    afs_int32 loc;
+    int id = 0;
 
     code = Initdb();
     if (code)

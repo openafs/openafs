@@ -130,7 +130,7 @@ kaux_write(afs_int32 to, unsigned int nfailures, afs_uint32 lasttime)
     if ((write(fd, &nfailures, sizeof(int)) != sizeof(int))
 	|| (write(fd, &lasttime, sizeof(afs_int32)) != sizeof(afs_int32)))
 	perror("kaux_write()");
-
+    return 0;
 }
 
 

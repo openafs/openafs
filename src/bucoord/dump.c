@@ -68,10 +68,8 @@ extern afs_int32 lastTaskCode;
 bc_Dumper(aindex)
 {
     struct rx_connection *tconn;
-    struct tc_dumpStat dumpStat;
     register struct bc_volumeDump *tde;
     afs_int32 count, port;
-    struct timeval tv;
     struct tc_dumpDesc *volDesc = 0;
     struct tc_dumpArray volArray;
     char *baseNamePtr;
@@ -268,8 +266,6 @@ bc_StartDmpRst(aconfig, adname, avname, avolsToDump, adestServer,
     register int i;
     register afs_int32 code;
     char *junk;
-    int doit;
-    struct bc_volumeDump *tvol, *temp;
 
     for (i = 0; i < BC_MAXSIMDUMPS; i++)
 	if (!(bc_dumpTasks[i].flags & BC_DI_INUSE))

@@ -774,7 +774,7 @@ SBOZO_ListSUsers(acall, an, aname)
     *tp = 0;			/* in case getnthuser doesn't null-terminate the string */
     code = afsconf_GetNthUser(bozo_confdir, an, tp, 256);
 
-  fail:
+  /* fail: */
     osi_auditU(acall, BOS_ListSUserEvent, code, AUD_END);
     return code;
 }

@@ -82,7 +82,7 @@ RXDLIBS = $(LIBDIR)\afs\afscmd.lib \
 	  $(LIBDIR)\afs\afsutil.lib \
           $(LIBDIR)\afs\afsreg.lib
 
-$(OUT)\rxdebug.res: rxdebug.rc AFS_component_version_number.h
+$(OUT)\rxdebug.res: rxdebug.rc $(VERSFILE).h
 	$(RC) /Fo$*.RES $(*F).rc 
 
 $(OUT)\rxdebug.obj: rxdebug.c

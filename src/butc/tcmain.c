@@ -268,7 +268,6 @@ stringReplace(name)
      char *name;
 {
     char *pos;
-    int i;
     char buffer[256];
 
     pos = strrchr(name, '/');
@@ -855,7 +854,6 @@ WorkerBee(as, arock)
      struct cmd_syndesc *as;
      char *arock;
 {
-    char *pid;
     register afs_int32 code;
     struct rx_securityClass *(securityObjects[3]);
     struct rx_service *service;
@@ -864,7 +862,6 @@ WorkerBee(as, arock)
     int localauth;
     /*process arguments */
     afs_int32 portOffset = 0;
-    afs_int32 logIOName;
 #ifdef AFS_PTHREAD_ENV
     pthread_t dbWatcherPid;
     pthread_attr_t tattr;
@@ -978,8 +975,9 @@ WorkerBee(as, arock)
     if (centralLogFile) {
 	struct stat sbuf;
 	afs_int32 statcode;
+#ifdef AFS_NT40_ENV
 	char path[AFSDIR_PATH_MAX];
-
+#endif
 	statcode = stat(centralLogFile, &sbuf);
 	centralLogIO = fopen(centralLogFile, "a");
 	if (!centralLogIO) {

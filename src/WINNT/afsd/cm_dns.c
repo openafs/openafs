@@ -41,7 +41,6 @@ int cm_InitDNS(int enabled)
   char configpath[100];
   int len;
   int code;
-  char *path;
   char *addr;
   
   if (!enabled) { fprintf(stderr, "DNS support disabled\n"); cm_dnsEnabled = 0; return 0; }
@@ -55,7 +54,7 @@ int cm_InitDNS(int enabled)
 #ifdef DJGPP
     strcpy(configpath, cm_confDir);
 #elif defined(AFS_WIN95_ENV)
-    path = getenv("AFSCONF");
+    char *path = getenv("AFSCONF");
     if (path) strcpy(configpath, path);
     else strcpy(configpath, "c:\\afscli");
 #else  /* nt */
@@ -250,7 +249,6 @@ PDNS_HDR get_DNS_Response(SOCKET commSock, SOCKADDR_IN sockAddr, char *buffer)
   /*static char buffer[BUFSIZE];*/
 
   int         addrLen = sizeof(SOCKADDR_IN);
-  int         res;
   int size;
 
 #ifndef WIN32_LEAN_AND_MEAN
@@ -548,7 +546,6 @@ u_char * processReplyBuffer_Addr(PDNS_HDR replyBuff)
 {
   u_char *ptr = (u_char *) replyBuff;
   int    answerCount = ntohs((replyBuff)->rr_count);
-  u_char i;
   PDNS_A_RR_HDR 
          rrPtr;
 
@@ -655,8 +652,6 @@ int DNSgetAddr(SOCKET commSock, char *hostName, struct in_addr *iNet)
 
   SOCKADDR_IN sockAddr;
   char buffer[BUFSIZE];
-  
-  int     i;
   u_char *addr;
   u_long *aPtr;
   int rc;

@@ -574,7 +574,9 @@ GetRights(struct client *client, struct acl_accessList *ACL,
 {
     extern prlist SystemAnyUserCPS;
     afs_int32 hrights = 0;
+#ifndef AFS_PTHREAD_ENV
     int code;
+#endif
 
     if (acl_CheckRights(ACL, &SystemAnyUserCPS, anyrights) != 0) {
 
@@ -1035,7 +1037,6 @@ CopyOnWrite(Vnode * targetptr, Volume * volptr)
     int wrlen;
     register afs_fsize_t size;
     register int length;
-    int ifd, ofd;
     char *buff;
     int rc;			/* return code */
     IHandle_t *newH;		/* Use until finished copying, then cp to vnode. */
@@ -4202,7 +4203,7 @@ SAFSS_Symlink(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
     DirHandle dir;		/* Handle for dir package I/O */
     Volume *volptr = 0;		/* pointer to the volume header */
     struct client *client;	/* pointer to client structure */
-    afs_int32 rights, anyrights, fd;	/* rights for this and any user */
+    afs_int32 rights, anyrights;	/* rights for this and any user */
     struct client *t_client;	/* tmp ptr to client data */
     struct in_addr logHostAddr;	/* host ip holder for inet_ntoa */
     FdHandle_t *fdP;
@@ -5896,7 +5897,6 @@ common_GiveUpCallBacks(struct rx_call *acall, struct AFSCBFids *FidArray,
 	FS_UNLOCK;
     }
 #endif /* FS_STATS_DETAILED */
-  out:
     return errorCode;
 
 }				/*common_GiveUpCallBacks */
@@ -5946,7 +5946,6 @@ afs_int32
 SRXAFS_GetCapabilities(struct rx_call * acall, Capabilities * capabilities)
 {
     afs_int32 *dataBuffP;
-    afs_int32 *dataP;
     afs_int32 dataBytes;
 
     dataBytes = 1 * sizeof(afs_int32);
@@ -6391,15 +6390,20 @@ SRXAFS_SetVolumeStatus(struct rx_call * acall, afs_int32 avolid,
 afs_int32
 SRXAFS_GetRootVolume(struct rx_call * acall, char **VolumeName)
 {
+#ifdef notdef
     int fd;
     int len;
     char *temp;
-    int errorCode = 0;		/* error code */
     struct rx_connection *tcon;
+#endif
+    int errorCode = 0;
 #if FS_STATS_DETAILED
     struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
-    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
+    struct timeval opStartTime;	/* Start time for RPC op */
+#ifdef notdef
+    struct timeval opStopTime;
     struct timeval elapsedTime;	/* Transfer time */
+#endif
 
     /*
      * Set our stats pointer, remember when the RPC operation started, and
@@ -6616,7 +6620,6 @@ FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
 {
     struct timeval StartTime, StopTime;	/* used to calculate file  transfer rates */
     int errorCode = 0;		/* Returned error code to caller */
-    int code;
     IHandle_t *ihP;
     FdHandle_t *fdP;
 #ifdef AFS_NT40_ENV
@@ -6627,10 +6630,6 @@ FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
 #endif /* AFS_NT40_ENV */
     afs_sfsize_t tlen;
     afs_int32 optSize;
-    struct afs_stat tstat;
-#ifdef	AFS_AIX_ENV
-    struct statfs tstatfs;
-#endif
 
 #if FS_STATS_DETAILED
     /*
@@ -6845,7 +6844,6 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
     afs_fsize_t NewLength;	/* size after this store completes */
     afs_sfsize_t adjustSize;	/* bytes to call VAdjust... with */
     int linkCount;		/* link count on inode */
-    int code;
     FdHandle_t *fdP;
     struct in_addr logHostAddr;	/* host ip holder for inet_ntoa */
 

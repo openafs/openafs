@@ -71,6 +71,7 @@ unlock_cmdLine()
 
 /* general */
 
+void
 clearStatus(taskId, flags)
      afs_uint32 taskId;
      afs_uint32 flags;
@@ -141,6 +142,7 @@ findStatus(taskId)
     return (ptr);
 }
 
+void
 setStatus(taskId, flags)
      afs_uint32 taskId;
      afs_uint32 flags;

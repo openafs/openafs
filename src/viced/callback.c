@@ -766,7 +766,6 @@ MultiBreakCallBack_r(struct cbstruct cba[], int ncbas,
 {
     int i, j;
     struct rx_connection *conns[MAX_CB_HOSTS];
-    int opt_TO;			/* secs, but internal adaptive parms are in ms */
     static struct AFSCBs tc = { 0, 0 };
 
     assert(ncbas <= MAX_CB_HOSTS);
@@ -878,7 +877,6 @@ BreakCallBack(struct host *xhost, AFSFid * fid, int flag)
     struct CallBack *cb, *nextcb;
     struct cbstruct cba[MAX_CB_HOSTS];
     int ncbas;
-    struct rx_connection *conns[MAX_CB_HOSTS];
     struct AFSCBFids tf;
     int hostindex;
     char hoststr[16];
@@ -1073,7 +1071,6 @@ BreakDelayedCallBacks_r(struct host *host)
     u_byte thead[AFSCBMAX];	/* This should match thead in struct Callback */
     int cbi, first, nfids;
     struct CallBack *cb;
-    struct interfaceAddr interf;
     int code;
     char hoststr[16];
 
@@ -1622,7 +1619,6 @@ GetSomeSpace_r(struct host *hostp, int locked)
 static int
 ClearHostCallbacks_r(struct host *hp, int locked)
 {
-    struct interfaceAddr interf;
     int code;
     int held = 0;
     char hoststr[16];
