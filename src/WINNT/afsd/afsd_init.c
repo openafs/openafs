@@ -170,7 +170,7 @@ void
 afsi_log(char *pattern, ...)
 {
     char s[256], t[100], d[100], u[512];
-    int zilch;
+    DWORD zilch;
     va_list ap;
     va_start(ap, pattern);
 
@@ -280,7 +280,7 @@ configureBackConnectionHostNames(void)
                 dwSize = 1;
             }
             pName = pHostNames;
-            StringCbCopyA(pName, size, strlen(cm_NetbiosName));
+            StringCbCopyA(pName, size, cm_NetbiosName);
             pName += size - 1;
             *pName = '\0';  /* add a second nul terminator */
 
