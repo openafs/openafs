@@ -1006,24 +1006,21 @@ BOOL ListMount(CStringArray& files)
 	return !error;
 }
 
-static BOOL InAFS(register char *apath)
+BOOL IsPathInAfs(const CHAR *strPath)
 {
     struct ViceIoctl blob;
-    register LONG code;
+    int code;
 
-	HOURGLASS hourglass;
+    HOURGLASS hourglass;
 
     blob.in_size = 0;
     blob.out_size = MAXSIZE;
     blob.out = space;
 
-    code = pioctl(apath, VIOC_FILE_CELL_NAME, &blob, 1);
-    if (code) {
-		if ((errno == EINVAL) || (errno == ENOENT))
-			return FALSE;
-    }
-    
-	return TRUE;
+    code = pioctl((LPTSTR)((LPCTSTR)strPath), VIOC_FILE_CELL_NAME, &blob, 1);
+    if (code)
+        return FALSE;
+    return TRUE;
 }
 
 /* return a static pointer to a buffer */
@@ -1070,7 +1067,7 @@ defect #3069
     else
 		cellName = (char *) 0;
 
-    if (!InAFS(Parent(PCCHAR(strDir)))) {
+    if (!IsPathInAfs(Parent(PCCHAR(strDir)))) {
 		ShowMessageBox(IDS_MAKE_MP_NOT_AFS_ERROR, MB_ICONEXCLAMATION, IDS_MAKE_MP_NOT_AFS_ERROR);
 		return FALSE;
     }
@@ -1157,6 +1154,8 @@ BOOL RemoveSymlink(const char * linkName)
 	char tpbuffer[1024];
     char *tp;
     
+	HOURGLASS hourglass;
+
 	tp = (char *) strrchr(linkName, '\\');
 	if (!tp)
 	    tp = (char *) strrchr(linkName, '/');
@@ -1191,6 +1190,9 @@ BOOL IsSymlink(const char * true_name)
     struct ViceIoctl blob;
 	char *last_component;
     int code;
+
+    HOURGLASS hourglass;
+
 	last_component = (char *) strrchr(true_name, '\\');
 	if (!last_component)
 	    last_component = (char *) strrchr(true_name, '/');
@@ -1570,27 +1572,15 @@ BOOL GetTokenInfo(CStringArray& tokenInfo)
 	return TRUE;
 }
 
-BOOL IsPathInAfs(const CHAR *strPath)
-{
-    struct ViceIoctl blob;
-    int code;
-
-    blob.in_size = 0;
-    blob.out_size = MAXSIZE;
-    blob.out = space;
-
-    code = pioctl((LPTSTR)((LPCTSTR)strPath), VIOC_FILE_CELL_NAME, &blob, 1);
-    if (code)
-        return FALSE;
-    return TRUE;
-}
-
 UINT MakeSymbolicLink(const char *strName ,const char *strDir)
 {
     struct ViceIoctl blob;
 	char space[MAXSIZE];
 	UINT code;
-	/*lets confirm its a good symlink*/
+
+    HOURGLASS hourglass;
+
+    /*lets confirm its a good symlink*/
 	if (!IsPathInAfs(strDir))
 		return 1;
 	LPTSTR lpsz = new TCHAR[strlen(strDir)+1];
@@ -1614,7 +1604,10 @@ void ListSymbolicLinkPath(const char *strName,char *strPath,UINT nlenPath)
     char parent_dir[MAX_PATH+1];		/*Parent directory of true name*/
     char *last_component;	/*Last component of true name*/
 	UINT code;    
-	strcpy(orig_name, strName);
+
+	HOURGLASS hourglass;
+
+    strcpy(orig_name, strName);
 	strcpy(true_name, orig_name);
 	/*
 	 * Find rightmost slash, if any.
