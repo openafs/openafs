@@ -95,7 +95,7 @@ int afs_CopyOutAttrs(register struct vcache *avc, register struct vattr *attrs)
     attrs->va_nlink = fakedir ? 100 : avc->m.LinkCount;
     attrs->va_size = fakedir ? 4096 : avc->m.Length;
     attrs->va_atime.tv_sec = attrs->va_mtime.tv_sec = attrs->va_ctime.tv_sec =
-	fakedir ? 0 : avc->m.Date;
+	fakedir ? 0 : (int)avc->m.Date;
     /* set microseconds to be dataversion # so that we approximate NFS-style
      * use of mtime as a dataversion #.  We take it mod 512K because
      * microseconds *must* be less than a million, and 512K is the biggest
