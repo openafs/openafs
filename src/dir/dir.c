@@ -90,6 +90,12 @@ extern void *DNew();
 #else /* !defined(UKERNEL) */
 #include "afs/stds.h"
 #include "afs/sysincludes.h"
+
+/* afs_buffer.c */
+/* These are needed because afs_prototypes.h is not included here */
+extern void *DRead();
+extern void *DNew();
+
 #endif /* !defined(UKERNEL) */
 #include "afs/afs_osi.h"
 
