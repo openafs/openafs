@@ -98,19 +98,15 @@ REM Location of netmpr.h/netspi.h (from Windows 95/98 DDK - 8.3 short name)
 SET W9XDDKDIR=c:\progra~1\micros~6
 
 set AFSDEV_INCLUDE=%MSSDKDIR%\include;%MSVCDIR%\include
-!IF ("$(AFSVER_CL)">="1310")
-set AFSDEV_INCLUDE=%AFSDEV_INCLUDE%;%MSVCDIR%\atlmfc\include
-!ELSE
-set AFSDEV_INCLUDE=%AFSDEV_INCLUDE%;%MSVCDIR%\atl\include;%MSVCDIR%\mfc\include
-!ENDIF
+IF "%AFSVER_CL" GE "1310" set AFSDEV_INCLUDE=%AFSDEV_INCLUDE%;%MSVCDIR%\atlmfc\include
+IF "%AFSVER_CL" LT "1310" set AFSDEV_INCLUDE=%AFSDEV_INCLUDE%;%MSVCDIR%\atl\include;%MSVCDIR%\mfc\include
 set AFSDEV_INCLUDE=%AFSDEV_INCLUDE%;%NTDDKDIR%\include;%W9XDDKDIR%\include
 
 set AFSDEV_LIB=%MSSDKDIR%\lib;%MSVCDIR%\lib
-!IF ("$(AFSVER_CL)">="1310")
+IF "%AFSVER_CL" GE "1310"
 set AFSDEV_LIB=%AFSDEV_LIB%;%MSVCDIR%\atlmfc\lib
-!ELSE
+IF "%AFSVER_CL" LT "1310"
 set AFSDEV_LIB=%AFSDEV_LIB%;%MSVCDIR%\mfc\lib
-!ENDIF
 
 set AFSDEV_BIN=%MSSDKDIR%\bin;%MSVCDIR%\bin
 
