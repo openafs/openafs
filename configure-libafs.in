@@ -1,5 +1,5 @@
 AC_INIT(Makefile.common)
-AM_INIT_AUTOMAKE(openafs-libafs,devel)
+AM_INIT_AUTOMAKE(openafs-libafs,1.2.0)
 AC_CANONICAL_HOST
 AC_CONFIG_HEADER(src/config/afsconfig.h)
 
