@@ -223,8 +223,11 @@ tagain:
 	len = strlen(de->name);
 
 	/* filldir returns -EINVAL when the buffer is full. */
-	/* code = (*filldir)(dirbuf, de->name, len, offset, ino); */
+#ifdef AFS_LINUX24_ENV
 	code = (*filldir)(dirbuf, de->name, len, offset, ino, DT_DIR);
+#else
+	code = (*filldir)(dirbuf, de->name, len, offset, ino); 
+#endif
 	DRelease(de, 0);
 	if (code)
 	    break;
@@ -1073,6 +1076,7 @@ struct dentry * afs_linux_follow_link(struct dentry *dp,
 {
     int code = 0;
     char *name;
+    struct dentry *res;
 
     AFS_GLOCK();
     name = osi_Alloc(PATH_MAX+1);
