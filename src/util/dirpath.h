@@ -175,7 +175,6 @@ ConstructLocalLogPath(const char *cpath,
 AFSDIR_CANONICAL_SERVER_AFS_DIRPATH "/server"
 
 #define AFSDIR_CANONICAL_SERVER_LOGS_DIRPATH \
-
 "/var/log/openafs/" 
 #define AFSDIR_CANONICAL_SERVER_LOCAL_DIRPATH \
    "/etc/openafs/server-local"
