@@ -40,6 +40,7 @@ RCSID
 #define	AFSLOGFILE	"AFSLog"
 #define	DCACHEFILE	"CacheItems"
 #define	VOLINFOFILE	"VolumeItems"
+#define	CELLINFOFILE	"CellItems"
 #define MAXIPADDRS 64
 
 #ifndef MIN
@@ -72,13 +73,13 @@ char afs_mountDir[1024];	/* AFS mount point */
 int afs_mountDirLen;		/* strlen of AFS mount point */
 char fullpn_DCacheFile[1024];	/* Full pathname of DCACHEFILE */
 char fullpn_VolInfoFile[1024];	/* Full pathname of VOLINFOFILE */
+char fullpn_CellInfoFile[1024];	/* Full pathname of CELLINFOFILE */
 char fullpn_AFSLogFile[1024];	/* Full pathname of AFSLOGFILE */
 char fullpn_CacheInfo[1024];	/* Full pathname of CACHEINFO */
 char fullpn_VFile[1024];	/* Full pathname of data cache files */
 char *vFileNumber;		/* Ptr to number in file pathname */
 char rootVolume[64] = "root.afs";	/* AFS root volume name */
 afs_int32 isHomeCell;		/* Is current cell info for home cell */
-afs_int32 lookingForHomeCell;	/* Are we still looking for home cell */
 int createAndTrunc = O_CREAT | O_TRUNC;	/* Create & truncate on open */
 int ownerRWmode = 0600;		/* Read/write OK by owner */
 static int nDaemons = 2;	/* Number of background daemons */
@@ -95,6 +96,7 @@ int afsd_CloseSynch = 0;	/* Are closes synchronous or not? */
 char **pathname_for_V;		/* Array of cache file pathnames */
 int missing_DCacheFile = 1;	/* Is the DCACHEFILE missing? */
 int missing_VolInfoFile = 1;	/* Is the VOLINFOFILE missing? */
+int missing_CellInfoFile = 1;
 struct afs_cacheParams cparams;	/* params passed to cache manager */
 struct afsconf_dir *afs_cdir;	/* config dir */
 
@@ -1342,6 +1344,8 @@ SweepAFSCache(int *vFilesFound)
 	     * Found the file holding the volume info.
 	     */
 	    missing_VolInfoFile = 0;
+	} else if (strcmp(currp->d_name, CELLINFOFILE) == 0) {
+	    missing_CellInfoFile = 0;
 	} else if ((strcmp(currp->d_name, ".") == 0)
 		   || (strcmp(currp->d_name, "..") == 0)
 		   || (strcmp(currp->d_name, "lost+found") == 0)) {
@@ -1376,6 +1380,12 @@ SweepAFSCache(int *vFilesFound)
 	    printf("%s: Creating '%s'\n", rn, fullpn_VolInfoFile);
 	if (CreateCacheFile(fullpn_VolInfoFile))
 	    printf("%s: Can't create '%s'\n", rn, fullpn_VolInfoFile);
+    }
+    if (missing_CellInfoFile) {
+	if (afsd_verbose)
+	    printf("%s: Creating '%s'\n", rn, fullpn_CellInfoFile);
+	if (CreateCacheFile(fullpn_CellInfoFile))
+	    printf("%s: Can't create '%s'\n", rn, fullpn_CellInfoFile);
     }
 
     if (*vFilesFound < cacheFiles) {
@@ -1413,12 +1423,8 @@ ConfigCell(register struct afsconf_cell *aci, char *arock,
 
     /* figure out if this is the home cell */
     isHomeCell = (strcmp(aci->name, afs_LclCellName) == 0);
-    if (isHomeCell) {
-	lookingForHomeCell = 0;
-	cellFlags = 1;		/* home cell, suid is ok */
-    } else {
+    if (!isHomeCell)
 	cellFlags = 2;		/* not home, suid is forbidden */
-    }
 
     /* build address list */
     for (i = 0; i < MAXHOSTSPERCELL; i++)
@@ -1434,6 +1440,16 @@ ConfigCell(register struct afsconf_cell *aci, char *arock,
 		 (long)cellFlags,	/* is this the home cell? */
 		 (long)aci->linkedCell);	/* Linked cell, if any */
     return 0;
+}
+
+static int
+ConfigCellAlias(aca, arock, adir)
+	struct afsconf_cellalias *aca;
+	char *arock;
+	struct afsconf_dir *adir;
+{
+	call_syscall(AFSOP_ADDCELLALIAS, aca->aliasName, aca->realName, 0, 0, 0);
+	return 0;
 }
 
 /*
@@ -1659,6 +1675,7 @@ uafs_Init(char *rn, char *mountDirParam, char *confDirParam,
      */
     sprintf(fullpn_DCacheFile, "%s/%s", cacheBaseDir, DCACHEFILE);
     sprintf(fullpn_VolInfoFile, "%s/%s", cacheBaseDir, VOLINFOFILE);
+    sprintf(fullpn_CellInfoFile, "%s/%s", cacheBaseDir, CELLINFOFILE);
     sprintf(fullpn_VFile, "%s/V", cacheBaseDir);
     vFileNumber = fullpn_VFile + strlen(fullpn_VFile);
 
@@ -1707,41 +1724,7 @@ uafs_Init(char *rn, char *mountDirParam, char *confDirParam,
 
     if (afsd_verbose)
 	printf("%s: Initializing AFS daemon.\n", rn);
-    fork_syscall(AFSCALL_CALL, AFSOP_BASIC_INIT);
-
-    if (afsd_verbose)
-	printf("%s: Forking AFS daemon.\n", rn);
-    fork_syscall(AFSCALL_CALL, AFSOP_START_AFS);
-
-    if (afsd_verbose)
-	printf("%s: Forking check server daemon.\n", rn);
-    fork_syscall(AFSCALL_CALL, AFSOP_START_CS);
-
-    if (afsd_verbose)
-	printf("%s: Forking %d background daemons.\n", rn, nDaemons);
-    for (i = 0; i < nDaemons; i++) {
-	fork_syscall(AFSCALL_CALL, AFSOP_START_BKG);
-    }
-
-    /*
-     * Tell the kernel about each cell in the configuration.
-     */
-    lookingForHomeCell = 1;
-
-    afsconf_CellApply(afs_cdir, ConfigCell, NULL);
-
-    /*
-     * If we're still looking for the home cell after the whole cell
-     * configuration database has been parsed, there's something wrong.
-     */
-    if (lookingForHomeCell) {
-	printf("%s: Can't find home cell '%s' in cell database!\n", rn,
-	       afs_LclCellName);
-    }
-
-    if (afsd_verbose)
-	printf("%s: Calling AFSOP_ROOTVOLUME with '%s'\n", rn, rootVolume);
-    call_syscall(AFSCALL_CALL, AFSOP_ROOTVOLUME, (long)rootVolume, 0, 0, 0);
+    call_syscall(AFSCALL_CALL, AFSOP_BASIC_INIT, 1, 0, 0, 0);
 
     /*
      * Tell the kernel some basic information about the workstation's cache.
@@ -1803,6 +1786,7 @@ uafs_Init(char *rn, char *mountDirParam, char *confDirParam,
 	call_syscall(AFSCALL_CALL, AFSOP_CACHEINFO, (long)fullpn_DCacheFile,
 		     0, 0, 0);
 
+    call_syscall(AFSCALL_CALL, AFSOP_CELLINFO, fullpn_CellInfoFile, 0, 0, 0);
 
     /*
      * Pass the kernel the name of the workstation cache file holding the
@@ -1824,6 +1808,32 @@ uafs_Init(char *rn, char *mountDirParam, char *confDirParam,
     if (!(cacheFlags & AFSCALL_INIT_MEMCACHE))	/* ... nor this ... */
 	call_syscall(AFSCALL_CALL, AFSOP_AFSLOG, (long)fullpn_AFSLogFile, 0,
 		     0, 0);
+
+    if (afsd_verbose)
+	printf("%s: Forking AFS daemon.\n", rn);
+    fork_syscall(AFSCALL_CALL, AFSOP_START_AFS);
+
+    if (afsd_verbose)
+	printf("%s: Forking check server daemon.\n", rn);
+    fork_syscall(AFSCALL_CALL, AFSOP_START_CS);
+
+    if (afsd_verbose)
+	printf("%s: Forking %d background daemons.\n", rn, nDaemons);
+    for (i = 0; i < nDaemons; i++) {
+	fork_syscall(AFSCALL_CALL, AFSOP_START_BKG);
+    }
+
+    /*
+     * Tell the kernel about each cell in the configuration.
+     */
+    afsconf_CellApply(afs_cdir, ConfigCell, NULL);
+    afsconf_CellAliasApply(afs_cdir, ConfigCellAlias, NULL);
+
+    fork_syscall(AFSCALL_CALL, AFSOP_SET_THISCELL, afs_LclCellName);
+
+    if (afsd_verbose)
+	printf("%s: Calling AFSOP_ROOTVOLUME with '%s'\n", rn, rootVolume);
+    call_syscall(AFSCALL_CALL, AFSOP_ROOTVOLUME, (long)rootVolume, 0, 0, 0);
 
     /*
      * Give the kernel the names of the AFS files cached on the workstation's
@@ -1862,7 +1872,7 @@ uafs_Init(char *rn, char *mountDirParam, char *confDirParam,
 	rc = lpioctl(0, _VICEIOCTL(8), &iob, 0);
 #endif
 	if (rc < 0) {
-	    usr_assert(errno == EDOM);
+	    usr_assert(errno == EDOM || errno == ENOSYS);
 	    break;
 	}
 
