@@ -33,12 +33,12 @@
 # Allow them to be overriden in an NTMakefile or via an environment variable.
 
 !IFNDEF APPVER
-APPVER = 4.0
+APPVER = 5.0
 !ENDIF
 
 #define used in WinNT/2000 installation and program version display
-AFSPRODUCT_VERSION=1.2.10
-AFSPRODUCT_FILE_VERSION=1,2,1000,0
+AFSPRODUCT_VERSION=1.2.13
+AFSPRODUCT_FILE_VERSION=1,2,1300,0
 CELLNAME_DEFAULT=openafs.org
 CELLSERVDB_INSTALL=CellServDB.GrandCentral
 CELLSERVDB_WEB=http://grand.central.org/dl/cellservdb/CellServDB
@@ -139,7 +139,8 @@ afscdefs =\
 	-I$(DESTDIR)\include\rx \
 	-DWIN32_LEAN_AND_MEAN \
 	-DSTRICT \
-	-D_WIN32_IE=0x0400 \
+	-D_WIN32_IE=0x0500 \
+        -D_WIN32_WINNT=0x0500 \
      -DAFS_AFSDB_ENV \
      -DAFS_FREELANCE_CLIENT
 
@@ -260,13 +261,13 @@ mfcdlllflags = $(mfcdlllflags) /NODEFAULTLIB:msvcrt.lib
 EXECONLINK = $(link) /OUT:$@ $(ldebug) $(conlflags) $(afslflags) $(conlibsdll) version.lib $**
 
 # EXE link macro for GUI applications
-EXEGUILINK = $(link) /OUT:$@ $(ldebug) $(guilflags) $(afslflags) $(guilibsdll) $**
+EXEGUILINK = $(link) /OUT:$@ $(ldebug) $(guilflags) $(afslflags) $(guilibsdll) version.lib $**
 
 # EXE link macro for MFC applications
-EXEMFCLINK = $(link) /OUT:$@ $(ldebug) $(mfclflags) $(afslflags) $(mfclibsdll) $**
+EXEMFCLINK = $(link) /OUT:$@ $(ldebug) $(mfclflags) $(afslflags) $(mfclibsdll) version.lib  $**
 
 # DLL link macro for console applications
-DLLCONLINK = $(link) /OUT:$@ $(ldebug) $(dlllflags) $(afslflags) $(conlibsdll) $**
+DLLCONLINK = $(link) /OUT:$@ $(ldebug) $(dlllflags) $(afslflags) $(conlibsdll) version.lib $**
 
 # DLL link macro for GUI applications
 !IF ("$(AFSDEV_BUILDTYPE)" == "CHECKED")
