@@ -36,6 +36,7 @@ RCSID
 #include "afs/sysincludes.h"
 #endif
 #if defined(AFS_FBSD_ENV)
+#include "h/libkern.h"
 #include "h/lock.h"
 #include "vm/vm.h"
 #include "vm/vm_extern.h"
