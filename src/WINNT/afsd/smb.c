@@ -6550,6 +6550,11 @@ void smb_NetbiosInit()
         } else {
             sprintf(s, "Netbios NCBRESET lana %d succeeded", lana_list.lana[i]);
             afsi_log(s);
+
+#ifdef COMMENT
+            /* This code searches for the loopback adapter but
+             * we already did this during afsd_init
+             */
             memset( ncbp, 0, sizeof (*ncbp) );
             ncbp->ncb_command = NCBASTAT;
             ncbp->ncb_lana_num = lana_list.lana[i];
@@ -6567,12 +6572,16 @@ void smb_NetbiosInit()
                     /*
                      * check to see if this is the Microsoft Loopback Adapter"
                      * if we are running on Windows XP or higher
+                     * or if we only have the loopback adapter because it was
+                     * selected during afsd_init
                      */
                     if ( Version.dwPlatformId == VER_PLATFORM_WIN32_NT &&
-                         ( Version.dwMajorVersion > 5 ||
-                           Version.dwMajorVersion == 5 &&
-                           Version.dwMinorVersion >= 1 )
-                 )  
+                         ( lana_list.length == 1 || 
+                           ( Version.dwMajorVersion > 5 ||
+                             Version.dwMajorVersion == 5 &&
+                             Version.dwMinorVersion >= 1 ) 
+                         )
+                       )  
                     {
                         sprintf(s, "Windows Loopback Adapter detected lana %d", lana_list.lana[i]);
                         afsi_log(s);
@@ -6588,6 +6597,7 @@ void smb_NetbiosInit()
                     }
                 }
             }
+#endif /* COMMENT */
         }
     }
 #else
