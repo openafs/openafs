@@ -29,8 +29,8 @@ LIBS=${TOP_LIBDIR}/librx.a \
 	${TOP_LIBDIR}/librxstat.a \
 	${TOP_LIBDIR}/librxkad.a \
 	${TOP_LIBDIR}/libdes.a \
-	${TOP_LIBDIR}/librx.a \
 	${TOP_LIBDIR}/libubik.a \
+	${TOP_LIBDIR}/librx.a \
 	${TOP_LIBDIR}/libcom_err.a \
 	${TOP_LIBDIR}/util.a \
 	${TOP_LIBDIR}/libsys.a \
