@@ -338,7 +338,9 @@ void osi_clear_inode(struct inode *ip)
 #endif
         printf("afs_put_inode: ino %d (0x%x) has count %d\n", ip->i_ino, ip);
 
+    ObtainWriteLock(&vc->lock, 504);
     afs_InactiveVCache(vc, credp);
+    ReleaseWriteLock(&vc->lock);
 #if defined(AFS_LINUX24_ENV)
     atomic_set(&ip->i_count, 0);
 #else
@@ -378,12 +380,10 @@ void osi_iput(struct inode *ip)
 	if (!ip->i_count)
 #endif
 	    osi_clear_inode(ip);
-        AFS_GUNLOCK();
     }
-    else { 
-        AFS_GUNLOCK();
+    else
 	iput(ip);
-    }
+    AFS_GUNLOCK();
 }
 
 /* check_bad_parent() : Checks if this dentry's vcache is a root vcache

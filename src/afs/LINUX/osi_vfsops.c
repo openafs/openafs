@@ -244,9 +244,7 @@ void afs_delete_inode(struct inode *ip)
     struct vcache *vc = (struct vcache*)ip;
 
     AFS_GLOCK();
-    ObtainWriteLock(&vc->lock, 504);
     osi_clear_inode(ip);
-    ReleaseWriteLock(&vc->lock);
     AFS_GUNLOCK();
 }
 
