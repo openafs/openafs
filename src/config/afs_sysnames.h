@@ -5,6 +5,8 @@
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
+ *
+ * Portions Copyright (c) 2003 Apple Computer, Inc.
  */
 
 /*
@@ -53,6 +55,7 @@
 #define SYS_NAME_ID_ppc_darwin_13        504
 #define SYS_NAME_ID_ppc_darwin_14        505
 #define SYS_NAME_ID_ppc_darwin_60        506
+#define SYS_NAME_ID_ppc_darwin_70        507
 
 #define SYS_NAME_ID_next_mach20		 601
 #define SYS_NAME_ID_next_mach30		 602

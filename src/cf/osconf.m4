@@ -363,6 +363,19 @@ case $AFS_SYSNAME in
 		TXLIBS="-lncurses"
 		;;
 
+	ppc_darwin_70)
+		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration"
+		LEX="lex -l"
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -D_REENTRANT ${XCFLAGS}'
+		KROOT=
+		KINCLUDES='-I$(KROOT)/System/Library/Frameworks/Kernel.framework/Headers'
+		LWP_OPTMZ="-O2"
+		REGEX_OBJ="regex.o"
+		XCFLAGS="-no-cpp-precomp"
+		TXLIBS="-lncurses"
+		EXTRA_VLIBOBJS="fstab.o"
+		;;
+
 	ppc_linux22)
 		INSTALL="install"
 		KERN_OPTMZ=-O2

@@ -4,6 +4,8 @@
 # This software has been released under the terms of the IBM Public
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
+#
+# Portions Copyright (c) 2003 Apple Computer, Inc.
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
@@ -47,7 +49,7 @@ syscall.o: syscall.s
 		/usr/ccs/lib/cpp  ${SFLAGS} ${srcdir}/syscall.s syscall.ss; \
 		as -o syscall.o syscall.ss;		\
 		$(RM) syscall.ss;;				\
-	 sgi_* |ppc_darwin* ) \
+	 sgi_* |*_darwin* ) \
                 ${CC} ${CFLAGS} -c ${srcdir}/syscall.s;;          \
 	 alpha_osf1 | alpha_osf20 |  alpha_osf30 | alpha_osf32 | alpha_osf32c | alpha_dux?? ) \
 		${AS} -P ${CFLAGS} -D_NO_PROTO -DMACH -DOSF -nostdinc -traditional -DASSEMBLER ${srcdir}/syscall.s; \

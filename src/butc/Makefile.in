@@ -4,6 +4,8 @@
 # This software has been released under the terms of the IBM Public
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
+#
+# Portions Copyright (c) 2003 Apple Computer, Inc.
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
@@ -84,6 +86,11 @@ install:
 	@case ${SYS_NAME} in \
 	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix4*|*linux*|hp_ux*) \
 		echo "Don't install butc for ${SYS_NAME} (will install from tbutc)" ;; \
+	*_darwin_[1-6][0-9]) \
+		echo ${INSTALL} butc ${DEST}/etc/butc ; \
+		${INSTALL} butc ${DEST}/etc/butc ;; \
+	*_darwin_*) \
+		echo "Don't install butc for ${SYS_NAME} (will install from tbutc)" ;; \
 	*) \
 		echo ${INSTALL} butc ${DESTDIR}${sbindir}/butc ; \
 		${INSTALL} butc ${DESTDIR}${sbindir}/butc ;; \
@@ -94,6 +101,11 @@ include ../config/Makefile.version
 dest:  
 	@case ${SYS_NAME} in \
 	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix4*|*linux*|hp_ux*) \
+		echo "Don't install butc for ${SYS_NAME} (will install from tbutc)" ;; \
+	*_darwin_[1-6][0-9]) \
+		echo ${INSTALL} butc ${DESTDIR}${sbindir}/butc ; \
+		${INSTALL} butc ${DESTDIR}${sbindir}/butc ;; \
+	*_darwin_*) \
 		echo "Don't install butc for ${SYS_NAME} (will install from tbutc)" ;; \
 	*) \
 		echo ${INSTALL} butc ${DEST}/etc/butc ; \

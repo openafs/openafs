@@ -138,7 +138,7 @@ readpwd.o: readpwd.c ${LINCLS} AFS_component_version_number.c
 
 testpt: testpt.o libprot.a ${TOP_LIBDIR}/libcmd.a $(LIBS)
 	case "$(SYS_NAME)" in \
-	ppc_darwin_12 ) \
+	*_darwin_12 ) \
 		$(CC) ${CFLAGS} -o testpt testpt.o ${TOP_LIBDIR}/libcmd.a libprot.a $(LIBS) ;; \
 	* ) \
 		$(CC) ${CFLAGS} -o testpt testpt.o -lm ${TOP_LIBDIR}/libcmd.a libprot.a $(LIBS) ${XLIBS} ;; \

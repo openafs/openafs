@@ -4,6 +4,8 @@
 # This software has been released under the terms of the IBM Public
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
+#
+# Portions Copyright (c) 2003 Apple Computer, Inc.
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
@@ -35,7 +37,8 @@ UTILOBJS=assert.o uuid.o serverLog.o fileutil.o netutils.o dirpath.o volparse.o 
 DIROBJS=buffer.o dir.o salvage.o
 
 VOLOBJS= vnode.o volume.o vutil.o partition.o fssync.o purge.o \
-	 clone.o devname.o common.o ihandle.o listinodes.o namei_ops.o
+	 clone.o devname.o common.o ihandle.o listinodes.o namei_ops.o \
+	 ${EXTRA_VLIBOBJS}
 
 FSINTOBJS= afsaux.o afscbint.cs.o afsint.ss.o afsint.xdr.o
 
@@ -144,6 +147,10 @@ nuke.o: ${VOL}/nuke.c
 
 devname.o: ${VOL}/devname.c
 	${CCRULE}
+
+# only for darwin
+fstab.o: ${VOL}/fstab.c
+	${COMPILE}
 
 common.o: ${VOL}/common.c
 	${CCRULE}

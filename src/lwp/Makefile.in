@@ -4,6 +4,8 @@
 # This software has been released under the terms of the IBM Public
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
+#
+# Portions Copyright (c) 2003 Apple Computer, Inc.
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
@@ -45,7 +47,7 @@ process.o	: process.s process.i386.s process.c
 		/lib/cpp -P -I${TOP_INCDIR} ${srcdir}/process.s >process.ss; \
 		${AS} -ahlns process.ss -o process.o >process.lst; \
 		$(RM) process.ss ;; \
-	ppc_darwin* ) \
+	*_darwin* ) \
 		$(CC) ${LWP_DBG} ${LWP_OPTMZ} -c ${XCFLAGS} -I${TOP_INCDIR} ${srcdir}/process.s;; \
 	i386_*bsd*) \
 		echo foo ; \

@@ -9,6 +9,8 @@ LIBAFSRPCMINOR=0
 # This software has been released under the terms of the IBM Public
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
+#
+# Portions Copyright (c) 2003 Apple Computer, Inc.
 
 # This is a pthread safe library containing rx, rxkad and des.
 
@@ -342,7 +344,7 @@ syscall.o: ${SYS}/syscall.s
 		/usr/ccs/lib/cpp  ${SFLAGS} ${SYS}/syscall.s syscall.ss; \
 		as -o syscall.o syscall.ss;		\
 		$(RM) syscall.ss;;				\
-	 sgi_* | ppc_darwin* ) \
+	 sgi_* | *_darwin_* ) \
                 ${CC} ${CFLAGS} -c ${SYS}/syscall.s;;          \
 	 alpha_dux?? ) \
 		${AS} -P ${CFLAGS} -D_NO_PROTO -DMACH -DOSF -nostdinc -traditional -DASSEMBLER ${SYS}/syscall.s; \

@@ -5,7 +5,12 @@
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
+ *
+ * Portions Copyright (c) 2003 Apple Computer, Inc.
  */
+
+#include <afsconfig.h>
+#include <afs/param.h>
 
 #define _POSIX_PTHREAD_SEMANTICS
 #include <afs/param.h>
@@ -21,11 +26,19 @@
 
 #include "pthread_nosigs.h"
 
+/*------------------------------------------------------------------------
+ * Under Darwin 6.x (including 7.0), sigwait() is broken, so we use
+ * sigsuspend() instead.  We also don't block signals we don't know
+ * about, so they should kill us, rather than us returning zero status.
+ *------------------------------------------------------------------------*/
+
 static pthread_t softsig_tid;
 static struct {
     void (*handler) (int);
     int pending;
+#if !defined(AFS_DARWIN60_ENV)
     int fatal;
+#endif /* !defined(AFS_DARWIN60_ENV) */
     int inited;
 } softsig_sigs[NSIG];
 
@@ -40,12 +53,17 @@ softsig_thread(void *arg)
     pthread_sigmask(SIG_BLOCK, &ss, &os);
     pthread_sigmask(SIG_SETMASK, &os, NULL);
     sigaddset(&ss, SIGUSR1);
+#if defined(AFS_DARWIN60_ENV)
+    pthread_sigmask (SIG_BLOCK, &ss, NULL);
+    sigdelset (&os, SIGUSR1);
+#else /* !defined(AFS_DARWIN60_ENV) */
     for (i = 0; i < NSIG; i++) {
 	if (!sigismember(&os, i) && i != SIGSTOP && i != SIGKILL) {
 	    sigaddset(&ss, i);
 	    softsig_sigs[i].fatal = 1;
 	}
     }
+#endif /* defined(AFS_DARWIN60_ENV) */
 
     while (1) {
 	void (*h) (int);
@@ -56,6 +74,10 @@ softsig_thread(void *arg)
 	for (i = 0; i < NSIG; i++) {
 	    if (softsig_sigs[i].handler && !softsig_sigs[i].inited) {
 		sigaddset(&ss, i);
+#if defined(AFS_DARWIN60_ENV)
+		pthread_sigmask (SIG_BLOCK, &ss, NULL);
+		sigdelset (&os, i);
+#endif /* defined(AFS_DARWIN60_ENV) */
 		softsig_sigs[i].inited = 1;
 	    }
 	    if (softsig_sigs[i].pending) {
@@ -65,16 +87,28 @@ softsig_thread(void *arg)
 	    }
 	}
 	if (i == NSIG) {
+#if defined(AFS_DARWIN60_ENV)
+	    sigsuspend (&os);
+#else /* !defined(AFS_DARWIN60_ENV) */
 	    sigwait(&ss, &sigw);
 	    if (sigw != SIGUSR1) {
 		if (softsig_sigs[sigw].fatal)
 		    exit(0);
 		softsig_sigs[sigw].pending = 1;
 	    }
+#endif /* defined(AFS_DARWIN60_ENV) */
 	} else if (h)
 	    h(i);
     }
 }
+
+#if defined(AFS_DARWIN60_ENV)
+static void
+softsig_usr1(int signo)
+{
+    signal (SIGUSR1, softsig_usr1);
+}
+#endif /* defined(AFS_DARWIN60_ENV) */
 
 void
 softsig_init()
@@ -85,6 +119,9 @@ softsig_init()
     rc = pthread_create(&softsig_tid, NULL, &softsig_thread, NULL);
     assert(0 == rc);
     AFS_SIGSET_RESTORE();
+#if defined(AFS_DARWIN60_ENV)
+    signal (SIGUSR1, softsig_usr1);
+#endif /* defined(AFS_DARWIN60_ENV) */
 }
 
 static void

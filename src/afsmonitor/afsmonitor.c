@@ -5,6 +5,8 @@
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
+ *
+ * Portions Copyright (c) 2003 Apple Computer, Inc.
  */
 
 /*
@@ -275,7 +277,7 @@ extern char *cm_categories[];	/* cache manager data category names */
 
 
 
-#ifndef AFS_FBSD_ENV
+#if !defined(AFS_FBSD_ENV) && !defined(AFS_DARWIN70_ENV)
 /*	
         strcasestr(): Return first occurence of pattern s2 in s1, case 
 	insensitive. 

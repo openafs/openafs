@@ -4,6 +4,8 @@
 # This software has been released under the terms of the IBM Public
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
+#
+# Portions Copyright (c) 2003 Apple Computer, Inc.
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
@@ -21,7 +23,7 @@ PUBLICHEADERS=nfs.h vnode.h viceinode.h volume.h voldefs.h partition.h\
 
 VLIBOBJS=vnode.o volume.o vutil.o partition.o fssync.o purge.o \
 	 clone.o nuke.o devname.o listinodes.o common.o ihandle.o \
-	 namei_ops.o
+	 namei_ops.o ${EXTRA_VLIBOBJS}
 
 OBJECTS=${VLIBOBJS} physio.o vol-salvage.o vol-info.o vol-dump.o
 

@@ -5,6 +5,8 @@
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
+ *
+ * Portions Copyright (c) 2003 Apple Computer, Inc.
  */
 
 /*
@@ -1101,6 +1103,9 @@ VLockPartition_r(char *name)
     unsigned int *globalMask;
     int globalMaskIndex;
 #endif /* defined(AFS_HPUX_ENV) */
+#if defined(AFS_DARWIN_ENV)
+    char lockfile[MAXPATHLEN];
+#endif /* defined(AFS_DARWIN_ENV) */
 #ifdef AFS_NAMEI_ENV
 #ifdef AFS_AIX42_ENV
     char LockFileName[MAXPATHLEN + 1];
@@ -1120,6 +1125,10 @@ VLockPartition_r(char *name)
     partitionName = dp->devName;
 #endif
     code = O_RDWR;
+#elif defined(AFS_DARWIN_ENV)
+    strlcpy((partitionName = lockfile), dp->name, sizeof(lockfile));
+    strlcat(lockfile, "/.lock.afs", sizeof(lockfile));
+    code = O_RDONLY | O_CREAT;
 #else
     partitionName = dp->name;
     code = O_RDONLY;

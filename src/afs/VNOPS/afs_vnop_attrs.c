@@ -5,6 +5,8 @@
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
+ *
+ * Portions Copyright (c) 2003 Apple Computer, Inc.
  */
 
 /*
@@ -68,20 +70,26 @@ afs_CopyOutAttrs(register struct vcache *avc, register struct vattr *attrs)
 	    attrs->va_mode &= ~(VSUID | VSGID);
     }
 #if defined(AFS_DARWIN_ENV)
-    /* Mac OS X uses the mode bits to determine whether a file or directory
-     * is accessible, and believes them, even though under AFS they're almost
-     * assuredly wrong, especially if the local uid does not match the AFS
-     * ID.  So we set the mode bits conservatively.
-     */
-    if (S_ISDIR(attrs->va_mode)) {
-	/* all access bits need to be set for directories, since even
-	 * a mode 0 directory can still be used normally.
-	 */
-	attrs->va_mode |= ACCESSPERMS;
-    } else {
-	/* for other files, replicate the user bits to group and other */
-	mode_t ubits = (attrs->va_mode & S_IRWXU) >> 6;
-	attrs->va_mode |= ubits | (ubits << 3);
+    {
+        extern u_int32_t afs_darwin_realmodes;
+	if (!afs_darwin_realmodes) {
+	    /* Mac OS X uses the mode bits to determine whether a file or
+	     * directory is accessible, and believes them, even though under
+	     * AFS they're almost assuredly wrong, especially if the local uid
+	     * does not match the AFS ID.  So we set the mode bits
+	     * conservatively.
+	     */
+	    if (S_ISDIR(attrs->va_mode)) {
+	        /* all access bits need to be set for directories, since even
+		 * a mode 0 directory can still be used normally.
+		 */
+	        attrs->va_mode |= ACCESSPERMS;
+	    } else {
+	        /* for other files, replicate the user bits to group and other */
+	        mode_t ubits = (attrs->va_mode & S_IRWXU) >> 6;
+		attrs->va_mode |= ubits | (ubits << 3);
+	    }
+	}
     }
 #endif /* AFS_DARWIN_ENV */
     attrs->va_uid = fakedir ? 0 : avc->m.Owner;
@@ -96,7 +104,11 @@ afs_CopyOutAttrs(register struct vcache *avc, register struct vattr *attrs)
 #ifdef AFS_OSF_ENV
     attrs->va_fsid = avc->v.v_mount->m_stat.f_fsid.val[0];
 #else
+#ifdef AFS_DARWIN70_ENV
+    attrs->va_fsid = avc->v.v_mount->mnt_stat.f_fsid.val[0]; 
+#else /* ! AFS_DARWIN70_ENV */
     attrs->va_fsid = 1;
+#endif /* AFS_DARWIN70_ENV */
 #endif
 #endif
 #endif /* AFS_SUN56_ENV */

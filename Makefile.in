@@ -4,6 +4,8 @@
 # This software has been released under the terms of the IBM Public
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
+#
+# Portions Copyright (c) 2003 Apple Computer, Inc.
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
@@ -61,7 +63,7 @@ dest_only_libafs: only_libafs dest_dirs
 
 packages: dest
 	@case ${SYS_NAME} in \
-	ppc_darwin* ) \
+	*_darwin_* ) \
 		${COMPILE_PART1} packaging/MacOS && sh ./buildpkg.sh ${DEST} ;; \
 	hp_ux110 ) \
 		${COMPILE_PART1} packaging/HP-UX && swpackage -s  psf-1.2.10-transarc-paths-11.00 ;; \
@@ -217,6 +219,10 @@ tviced: cmd comerr viced vlserver libafsrpc libafsauthent
 	case ${SYS_NAME} in \
 	alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*fbsd*|*nbsd2*) \
 		${COMPILE_PART1} tviced ${COMPILE_PART2} ;; \
+	*_darwin_[1-6][0-9]) \
+		echo Not building MT viced for ${SYS_NAME} ;; \
+	*_darwin_*) \
+		${COMPILE_PART1} tviced  ${COMPILE_PART2} ;; \
 	*) \
 		echo Not building MT viced for ${SYS_NAME} ;; \
 	esac
@@ -237,7 +243,7 @@ null: cmd comerr
 ${TOP_LIBDIR}/libtermlib.a: 
 	$(RM) -f ${TOP_LIBDIR}/libtermlib.a
 	case ${SYS_NAME} in \
-	rs_aix* | sun4x_* | sunx86_* | sgi_6? | *linux* | ppc_darwin* | *fbsd* | ia64_hpux*) \
+	rs_aix* | sun4x_* | sunx86_* | sgi_6? | *linux* | *_darwin* | *fbsd* | ia64_hpux*) \
 		ln -s libnull.a ${TOP_LIBDIR}/libtermlib.a ;; \
 	*) \
 		ln -s /usr/lib/libtermlib.a ${TOP_LIBDIR}/libtermlib.a ;; \
@@ -261,7 +267,7 @@ bozo: cmd comerr ntp audit
 vfsck:	vol
 	set -x; \
 	case ${SYS_NAME} in \
-	sgi_* | *linux* | rs_aix42 | ppc_darwin* | hp_ux* | ia64_hpux* | *fbsd* | *_obsd* | *_nbsd* | sun*_4* | rs_aix5* ) \
+	sgi_* | *linux* | rs_aix42 | *_darwin* | hp_ux* | ia64_hpux* | *fbsd* | *_obsd* | *_nbsd* | sun*_4* | rs_aix5* ) \
 		echo skip vfsck for ${SYS_NAME} ;; \
 	 * ) \
 		${COMPILE_PART1} vfsck ${COMPILE_PART2} ;; \
@@ -288,7 +294,7 @@ login: cmd comerr kauth rxkad
 		else \
 			echo Skipping pam for ${SYS_NAME} ; \
 		fi ;; \
-	ppc_darwin* | *_obsd* | *_nbsd* | hp_ux* | rs_aix5* ) \
+	*_darwin* | *_obsd* | *_nbsd* | hp_ux* | rs_aix5* ) \
 		echo Skipping login for ${SYS_NAME} ;; \
 	* ) \
 		${COMPILE_PART1} login ${COMPILE_PART2} ;; \
@@ -433,6 +439,10 @@ libafsrpc: rx rxkad des
 	case ${SYS_NAME} in \
 	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*fbsd*|*nbsd2*) \
 	${COMPILE_PART1} libafsrpc ${COMPILE_PART2} ;; \
+	*_darwin_[1-6][0-9]) \
+		echo Not building MT libafsrpc for ${SYS_NAME} ;; \
+	*_darwin_*) \
+		${COMPILE_PART1} libafsrpc  ${COMPILE_PART2} ;; \
 	*) \
 		echo Not building MT libafsrpc for ${SYS_NAME} ;; \
 	esac
@@ -441,8 +451,12 @@ libafsauthent: ubik auth kauth libafsrpc
 	case ${SYS_NAME} in \
 	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*fbsd*|*nbsd2*) \
 	${COMPILE_PART1} libafsauthent ${COMPILE_PART2} ;; \
+	*_darwin_[1-6][0-9]) \
+		echo Not building MT libafsauthent for ${SYS_NAME} ;; \
+	*_darwin_*) \
+		${COMPILE_PART1} libafsauthent  ${COMPILE_PART2} ;; \
 	*) \
-		echo Not building MT libafsrpc for ${SYS_NAME} ;; \
+		echo Not building MT libafsauthent for ${SYS_NAME} ;; \
 	esac
 
 # pthread based user space RX library
@@ -463,7 +477,7 @@ shlibafsauthent: ubik auth kauth shlibafsrpc
 	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*) \
 	${COMPILE_PART1} shlibafsauthent ${COMPILE_PART2} ;; \
 	*) \
-		echo Not building shared libafsrpc for ${SYS_NAME} ;; \
+		echo Not building shared libafsauthent for ${SYS_NAME} ;; \
 	esac
 
 libadmin_real: 
@@ -481,6 +495,10 @@ libadmin_real:
 libadmin: libafsauthent bozo
 	case ${SYS_NAME} in \
 	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*) \
+			$(MAKE) libadmin_real ;; \
+	*_darwin_[1-6][0-9]) \
+		echo Not building MT libadmin for ${SYS_NAME} ;; \
+	*_darwin_*) \
 			$(MAKE) libadmin_real ;; \
 	*) \
 		echo Not building MT libadmin for ${SYS_NAME} ;; \
@@ -782,7 +800,7 @@ package.files: package
 ntp: project volser
 	@case ${WITH_OBSOLETE} in \
 	YES) 	case ${SYS_NAME} in \
-		sun4x_58 | sunx86_* | *linux* | *fbsd* | ppc_darwin* | *nbsd*) echo skipping ntp for ${SYS_NAME} ;; \
+		sun4x_58 | sunx86_* | *linux* | *fbsd* | *_darwin* | *nbsd*) echo skipping ntp for ${SYS_NAME} ;; \
 		* ) ${COMPILE_PART1} ntp ${COMPILE_PART2} ;; \
 		esac ;; \
 	*)	echo skipping deprecated target: ntp ;; \

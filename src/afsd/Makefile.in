@@ -91,7 +91,7 @@ dest: ${DEST}/root.client/usr/vice/etc/afsd ${DEST}/etc/vsys
 		*linux* ) \
 			${INSTALL} -f ${srcdir}/afs.rc.linux -m 755 ${DEST}/root.client/usr/vice/etc/afs.rc; \
 			${INSTALL} -f ${srcdir}/afs.conf.linux ${DEST}/root.client/usr/vice/etc/afs.conf ;; \
-		ppc_darwin*) \
+		*_darwin*) \
 			${INSTALL} -f ${srcdir}/afs.rc.darwin -m 755 ${DEST}/root.client/usr/vice/etc/afs.rc ; \
 			${INSTALL} -f ${srcdir}/afs.rc.darwin.plist ${DEST}/root.client/usr/vice/etc/StartupParameters.plist ;; \
 		*fbsd*) \
