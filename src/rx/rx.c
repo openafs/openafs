@@ -5681,7 +5681,7 @@ void rxi_ReapConnections()
 		    MUTEX_ENTER(&rx_stats_mutex);
 		    rx_stats.nPeerStructs--;
 		    MUTEX_EXIT(&rx_stats_mutex);
-		    if (prev == *peer_ptr) {
+		    if (peer == *peer_ptr) {
 			*peer_ptr = next;
 			prev = next;
 		    }
