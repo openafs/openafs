@@ -1122,7 +1122,7 @@ afs_int32 uss_vol_GetVolInfoFromMountPoint(a_mountpoint)
      */
     MapHostToNetwork(&vldbEntry);
     if (vldbEntry.volumeId[RWVOL] != volID) {
-	printf("s: Volume '%s' (ID %d) is not a read/write volume!!\n",
+	printf("%s: Volume '%s' (ID %d) is not a read/write volume!!\n",
 	       uss_whoami, uss_Volume, volID);
 	return(-1);
     }
