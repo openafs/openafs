@@ -147,6 +147,9 @@ ${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
 		elif [ "$$m" = "EP" ] ; then \
 			SMP_DEF="-DAFS_SMP @RHCONFIG_MP@ ${LOCAL_SMP_DEF}" ; \
 			TARG="libafs.ep" ; \
+		elif [ "$$m" = "BM" ] ; then \
+			SMP_DEF="-DAFS_SMP @RHCONFIG_MP@ ${LOCAL_SMP_DEF}" ; \
+			TARG="libafs.bm" ; \
 		else  \
 			SMP_DEF="@RHCONFIG_SP@ ${LOCAL_SMP_DEF}" ; \
 			TARG=libafs ; \
@@ -159,12 +162,15 @@ ${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
 linux_compdirs_libafs: libafs
 linux_compdirs_libafs.mp: libafs.mp
 linux_compdirs_libafs.ep: libafs.ep
+linux_compdirs_libafs.bm: libafs.bm
 linux_instdirs_libafs: install_libafs
 linux_instdirs_libafs.mp: install_libafs.mp
 linux_instdirs_libafs.ep: install_libafs.ep
+linux_instdirs_libafs.bm: install_libafs.bm
 linux_destdirs_libafs: dest_libafs
 linux_destdirs_libafs.mp: dest_libafs.mp
 linux_destdirs_libafs.ep: dest_libafs.ep
+linux_destdirs_libafs.bm: dest_libafs.bm
 
 
 # Below this line are targets when in the COMMON directory:
@@ -172,14 +178,17 @@ linux_destdirs_libafs.ep: dest_libafs.ep
 LIBAFS = libafs-${CLIENT}.o
 LIBAFS_MP = libafs-${CLIENT}.mp.o
 LIBAFS_EP = libafs-${CLIENT}.ep.o
+LIBAFS_BM = libafs-${CLIENT}.bm.o
 
 INST_LIBAFS = ${DESTDIR}${afskerneldir}/${LIBAFS}
 INST_LIBAFS_MP = ${DESTDIR}${afskerneldir}/${LIBAFS_MP}
 INST_LIBAFS_EP = ${DESTDIR}${afskerneldir}/${LIBAFS_EP}
+INST_LIBAFS_BM = ${DESTDIR}${afskerneldir}/${LIBAFS_BM}
 
 DEST_LIBAFS = ${DEST}/root.client/usr/vice/etc/modload/${LIBAFS}
 DEST_LIBAFS_MP = ${DEST}/root.client/usr/vice/etc/modload/${LIBAFS_MP}
 DEST_LIBAFS_EP = ${DEST}/root.client/usr/vice/etc/modload/${LIBAFS_EP}
+DEST_LIBAFS_BM = ${DEST}/root.client/usr/vice/etc/modload/${LIBAFS_BM}
 
 
 libafs:	$(LIBAFS) 
@@ -190,6 +199,9 @@ libafs.mp: $(LIBAFS_MP)
 
 libafs.ep: $(LIBAFS_EP)
 	echo EP Build Complete
+
+libafs.bm: $(LIBAFS_BM)
+	echo BM Build Complete
 
 ${LIBAFS}: $(AFSAOBJS) $(AFSNONFSOBJS)
 	$(RM) -f $@
@@ -203,6 +215,10 @@ ${LIBAFS_EP}: $(AFSAOBJS) $(AFSNONFSOBJS)
 	$(RM) -f $@
 	$(LD) -r -o $@ $(AFSAOBJS) $(AFSNONFSOBJS)
 
+${LIBAFS_BM}: $(AFSAOBJS) $(AFSNONFSOBJS)
+	$(RM) -f $@
+	$(LD) -r -o $@ $(AFSAOBJS) $(AFSNONFSOBJS)
+
 install_libafs:	$(INST_LIBAFS) 
 	echo SP Install Complete
 
@@ -211,6 +227,9 @@ install_libafs.mp: $(INST_LIBAFS_MP)
 
 install_libafs.ep: $(INST_LIBAFS_EP)
 	echo EP Install Complete
+
+install_libafs.bm: $(INST_LIBAFS_BM)
+	echo BM Install Complete
 
 dest_libafs:	$(DEST_LIBAFS) 
 	echo SP Install Complete
@@ -221,6 +240,9 @@ dest_libafs.mp: $(DEST_LIBAFS_MP)
 dest_libafs.ep: $(DEST_LIBAFS_EP)
 	echo EP Install Complete
 
+dest_libafs.bm: $(DEST_LIBAFS_BM)
+	echo BM Install Complete
+
 $(INST_LIBAFS): $(LIBAFS)
 	${INSTALL} -f $? $@
 
@@ -230,6 +252,9 @@ $(INST_LIBAFS_MP): $(LIBAFS_MP)
 $(INST_LIBAFS_EP): $(LIBAFS_EP)
 	${INSTALL} -f $? $@
 
+$(INST_LIBAFS_BM): $(LIBAFS_BM)
+	${INSTALL} -f $? $@
+
 $(DEST_LIBAFS): $(LIBAFS)
 	${INSTALL} -f $? $@
 
@@ -237,6 +262,9 @@ $(DEST_LIBAFS_MP): $(LIBAFS_MP)
 	${INSTALL} -f $? $@
 
 $(DEST_LIBAFS_EP): $(LIBAFS_EP)
+	${INSTALL} -f $? $@
+
+$(DEST_LIBAFS_BM): $(LIBAFS_BM)
 	${INSTALL} -f $? $@
 
 
