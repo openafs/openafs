@@ -126,6 +126,9 @@ osi_UFSTruncate(afile, asize)
     if (code || tstat.size <= asize) return code;
     MObtainWriteLock(&afs_xosi,321);    
     AFS_GUNLOCK();
+#ifdef STRUCT_INODE_HAS_I_ALLOC_SEM
+    down_write(&inode->i_alloc_sem);
+#endif
     down(&inode->i_sem);
     inode->i_size = newattrs.ia_size = asize;
     newattrs.ia_valid = ATTR_SIZE | ATTR_CTIME;
@@ -156,6 +159,9 @@ osi_UFSTruncate(afile, asize)
 #endif
     code = -code;
     up(&inode->i_sem);
+#ifdef STRUCT_INODE_HAS_I_ALLOC_SEM
+    up_write(&inode->i_alloc_sem);
+#endif
     AFS_GLOCK();
     MReleaseWriteLock(&afs_xosi);
     return code;
