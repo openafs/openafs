@@ -1,4 +1,5 @@
 AC_INIT(src/config/stds.h)
+AM_INIT_AUTOMAKE(openafs,devel)
 AC_CANONICAL_HOST
 AC_CONFIG_HEADER(src/afsconfig.h)
 
@@ -30,6 +31,8 @@ dnl Checks for programs.
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_RANLIB
+AC_PROG_YACC
+AM_PROG_LEX
 
 dnl fix to use config.sub output
 AC_MSG_CHECKING(your OS)
@@ -133,3 +136,17 @@ AC_CHECK_HEADERS(sys/mount.h strings.h termios.h signal.h)
 AC_CHECK_HEADERS(windows.h malloc.h winsock2.h direct.h io.h)
 
 AC_CHECK_FUNCS(utimes random srandom getdtablesize snprintf re_comp re_exec)
+
+AC_OUTPUT(             \
+Makefile               \
+config/Makefile                \
+procmgmt/Makefile      \
+procmgmt/afs/Makefile  \
+util/Makefile          \
+util/afs/Makefile      \
+comerr/Makefile                \
+rxgen/Makefile         \
+include/Makefile       \
+include/afs/Makefile   \
+include/rx/Makefile
+)
