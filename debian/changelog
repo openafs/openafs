@@ -4,7 +4,7 @@ openafs (1.0.snap20001104-1) unstable; urgency=low
   * Fix path to afsd in /etc/init.d/openafs-client
   * Build openafs module packages
 
- --
+ --  <hartmans@mit.edu>  Mon,  6 Nov 2000 09:39:11 -0500
 
 openafs (1.0.snap20001103-1) unstable; urgency=low
 

@@ -18,8 +18,8 @@ export DH_OPTIONS
 # The AFS sysname is determined by a script
 SYS_NAME=$(shell debian/sysname)
 package=openafs
-srcpkg = openafs-module-source
-modulepkg=openafs-module-$(KVERS)
+srcpkg = openafs-modules-source
+modulepkg=$(shell echo openafs-modules-$(KVERS))
 ifndef KSRC
 KSRC=/usr/src/linux
 endif
@@ -28,6 +28,8 @@ KVERS=`awk '{ if (NR==1) v=$$3; else if (NR==2) p=$$3; else if (NR==3) s=$$3; \
        else if (NR==4) { e=$$3; exit; } } \
        END { printf("%s.%s.%s%s\n",v,p,s,e); }' $(KSRC)/Makefile`
 
+export KSRC 
+export KVERS
 
 
 configure: configure-stamp
@@ -79,7 +81,7 @@ install: build
 # Build architecture-independent files here.
 # Pass -i to all debhelper commands in this target to reduce clutter.
 binary-indep: DH_OPTIONS=-i
-binary-indep: build install
+binary-indep: build install binary-source
 	# Need this version of debhelper for DH_OPTIONS to work.
 	dh_testversion 1.1.17
 	dh_testdir
@@ -142,15 +144,15 @@ binary-arch: build install
 	dh_md5sums
 	dh_builddeb
 
-binary:  binary-arch
+binary:  binary-arch binary-indep
 .PHONY: build clean binary-indep binary-arch binary install configure
 
 ############################Module package support
-kdist_image:  build
+kdist_image:  build-modules
 	$(MAKE) $(MFLAGS) -f debian/rules MODDIR=$(KSRC)/.. binary-modules
 	$(MAKE) $(MFLAGS) -f debian/rules MODDIR=$(KSRC)/.. clean
 
-kdist:  build
+kdist:  build-modules
 	$(MAKE) $(MFLAGS) -f debian/rules MODDIR=$(KSRC)/.. KERNEL_DEPENDS=y binary-modules
 	KSRC="$(KSRC)" KMAINT="$(KMAINT)" KEMAIL="$(KEMAIL)" \
 		sh -v debian/genchanges.sh
@@ -174,7 +176,8 @@ binary-source:
 	install -d debian/$(srcpkg)
 # Clean up the sources	
 	install -d debian/$(srcpkg)/usr/src/modules/$(package)
-	find . \( -name \*.o -o -path ./debian/$(srcpkg) -o -path \*/CVS \) -prune -o -print | \
+	find . \( -name \*.o -o -path ./debian/$(srcpkg) -o -path \*/CVS -o -path ./src/WINNT  \
+		-o -path ./obj -o -path ./$(SYS_NAME) \) -prune -o -print | \
 		cpio -admp debian/$(srcpkg)/usr/src/modules/$(package)
 	( cd debian/$(srcpkg)/usr/src/modules/$(package); \
 		$(MAKE) -f debian/rules clean)
@@ -230,7 +233,7 @@ endif
 		sed -e 's#debian/$(modulepkg)/##' > debian/$(modulepkg)/DEBIAN/md5sums
 
 	dpkg-gencontrol -isp \
-		-p`\ls -1 debian/$(modulepkg)/usr/share/doc` \
+		-p$(modulepkg) \
 		-v`cat debian/VERSION` \
 		-Pdebian/$(modulepkg)
 	chown -R root.root debian/$(modulepkg)

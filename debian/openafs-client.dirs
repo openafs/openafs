@@ -1,3 +1,4 @@
+afs
 var/cache/openafs
 etc/openafs
 etc/init.d
