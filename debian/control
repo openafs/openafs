@@ -44,7 +44,9 @@ Description: The AFS distributed filesystem- file server
 
 Package: openafs-dbserver
 Architecture: i386, powerpc, sparc
-Depends: ${shlibs:Depends}, debconf, openafs-fileserver (= ${Source-Version}), openafs-client (= ${Source-Version}), perl5, openafs-ptutil
+Depends: ${shlibs:Depends}, debconf, openafs-fileserver (= ${Source-Version}), openafs-client (= ${Source-Version}), perl5
+Conflicts: openafs-ptutil
+Rplaces: openafs-ptutil
 Description: The AFS distributed filesystem- database server
  AFS is a distributed filesystem allowing cross-platform sharing of
  files among multiple computers.  Facilities are provided for access

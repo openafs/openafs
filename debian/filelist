@@ -6,6 +6,7 @@ openafs-fileserver/usr/lib/openafs  root.server/usr/afs/bin/fileserver root.serv
 openafs-kpasswd/usr/bin bin/kpasswd etc/kas
 openafs-fileserver/usr/sbin	root.server/usr/afs/bin/bosserver
 openafs-fileserver/usr/lib/openafs root.server/usr/afs/bin/salvager 
+openafs-dbserver/usr/sbin root.server/usr/afs/bin/pt_util
 openafs-dbserver/usr/lib/openafs	root.server/usr/afs/bin/vlserver 
 openafs-dbserver/usr/lib/openafs root.server/usr/afs/bin/ptserver
 libopenafs-dev/usr	lib
