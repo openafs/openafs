@@ -932,6 +932,7 @@ struct fcache {
 /* kept in memory */
 struct dcache {
     struct afs_q lruq;		/* Free queue for in-memory images */
+    struct afs_q dirty;		/* Queue of dirty entries that need written */
     afs_rwlock_t lock;		/* Protects validPos, some f */
     afs_rwlock_t tlock;		/* Atomizes updates to refCount */
     afs_rwlock_t mflock;	/* Atomizes accesses/updates to mflags */

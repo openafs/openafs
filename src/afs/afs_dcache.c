@@ -2582,8 +2582,8 @@ afs_WriteThroughDSlots(void)
 {
     register struct dcache *tdc;
     register afs_int32 i, touchedit = 0;
-    struct dcache **ents;
-    int entmax, entcount;
+
+    struct afs_q DirtyQ, *tq;
 
     AFS_STATCNT(afs_WriteThroughDSlots);
 
@@ -2593,9 +2593,7 @@ afs_WriteThroughDSlots(void)
      * for every dcache entry, and exit xdcache.
      */
     MObtainWriteLock(&afs_xdcache, 283);
-    entmax = afs_cacheFiles;
-    ents = afs_osi_Alloc(entmax * sizeof(struct dcache *));
-    entcount = 0;
+    QInit(&DirtyQ);
     for (i = 0; i < afs_cacheFiles; i++) {
 	tdc = afs_indexTable[i];
 
@@ -2605,7 +2603,7 @@ afs_WriteThroughDSlots(void)
 	    tdc->refCount++;
 	    ReleaseWriteLock(&tdc->tlock);
 
-	    ents[entcount++] = tdc;
+	    QAdd(&DirtyQ, &tdc->dirty);
 	}
     }
     MReleaseWriteLock(&afs_xdcache);
@@ -2616,9 +2614,11 @@ afs_WriteThroughDSlots(void)
      * afs_cacheInodep, and flush it.  Don't forget to put back
      * the refcounts.
      */
-    for (i = 0; i < entcount; i++) {
-	tdc = ents[i];
 
+#define DQTODC(q)	((struct dcache *)(((char *) (q)) - sizeof(struct afs_q)))
+
+    for (tq = DirtyQ.prev; tq != &DirtyQ; tq = QPrev(tq)) {
+        tdc = DQTODC(tq);
 	if (tdc->dflags & DFEntryMod) {
 	    int wrLock;
 
@@ -2638,7 +2638,6 @@ afs_WriteThroughDSlots(void)
 
 	afs_PutDCache(tdc);
     }
-    afs_osi_Free(ents, entmax * sizeof(struct dcache *));
 
     MObtainWriteLock(&afs_xdcache, 617);
     if (!touchedit && (cacheDiskType != AFS_FCACHE_TYPE_MEM)) {
