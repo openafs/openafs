@@ -844,20 +844,44 @@ afs_NewVCache(struct VenusFid *afid, struct server *serverp)
                 struct list_head *cur, *head = &(AFSTOI(tvc))->i_dentry;
                 AFS_FAST_HOLD(tvc);
                 AFS_GUNLOCK();
-shrink_restart:
-                DLOCK();
-                cur=head;
+
+restart:
+                spin_lock(&dcache_lock);
+                cur = head;
                 while ((cur = cur->next) != head) {
                     dentry = list_entry(cur, struct dentry, d_alias);
-                    if (!d_unhashed(dentry) &&
-                        !list_empty(&dentry->d_subdirs)) {
+
+		    if (d_unhashed(dentry))
+			continue;
+
+		    dget_locked(dentry);
+
+		    if (!list_empty(&dentry->d_subdirs)) {
                         DUNLOCK();
 			shrink_dcache_parent(dentry);
-                        goto shrink_restart;
+                        DLOCK();
                     }
+
+		    spin_lock(&dentry->d_lock);
+		    if (atomic_read(&dentry->d_count) > 1) {
+			if (dentry->d_inode && S_ISDIR(dentry->d_inode->i_mode)) {
+			    spin_unlock(&dentry->d_lock);
+			    spin_unlock(&dcache_lock);
+			    dput(dentry);
+			    goto inuse;
+			}
+		    }
+
+		    __d_drop(dentry);
+		    spin_unlock(&dentry->d_lock);
+		    spin_unlock(&dcache_lock);
+		    dput(dentry);
+		    goto restart;
+
                 }
                 DUNLOCK();
-                d_prune_aliases(AFSTOI(tvc));
+inuse:
+
                 AFS_GLOCK();
                 AFS_FAST_RELE(tvc);
 #else
