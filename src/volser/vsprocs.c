@@ -478,7 +478,7 @@ int UV_CreateVolume2(afs_int32 aserver, afs_int32 apart, char *aname, afs_int32 
     /* create the vldb entry */
     vcode = VLDB_CreateEntry(&storeEntry);
     if(vcode) {
-	fprintf(STDERR,"Could not create a VLDB entry for the  volume %s %u\n", aname,*anewid);
+	fprintf(STDERR,"Could not create a VLDB entry for the volume %s %u\n", aname,*anewid);
 	/*destroy the created volume*/
 	if(verbose) {
 	    fprintf(STDOUT,"Deleting the newly created volume %u\n",*anewid);
@@ -816,6 +816,10 @@ void sigint_handler(int x)
 }
 
 #define ONERR(ec, es, ep) if (ec) { fprintf(STDERR, (es), (ep)); PrintError("   ",ec); error = (ec); goto mfail; }
+#define VPRINT(es) if (verbose) { fprintf(STDOUT, (es)); fflush(STDOUT); }
+#define VPRINT1(es, vol) if (verbose) { fprintf(STDOUT, (es), (vol)); fflush(STDOUT); }
+#define VPRINT2(es, vol1, vol2) if (verbose) { fprintf(STDOUT, (es), (vol1), (vol2)); fflush(STDOUT); }
+#define VDONE if (verbose) { fprintf(STDOUT, " done\n"); fflush(STDOUT); }
 
 /* Move volume <afromvol> on <afromserver> <afrompart> to <atoserver>
  * <atopart>. The operation is almost idempotent 
@@ -945,16 +949,22 @@ UV_MoveVolume(afromvol, afromserver, afrompart, atoserver, atopart)
 	code = AFSVolTransCreate(fromconn, afromvol, afrompart, ITOffline, &fromtid);
 	if (!code) 
 	{   /* volume exists - delete it */
+	    VPRINT1("Setting flags on leftover source volume %u ...", afromvol);
 	    code = AFSVolSetFlags(fromconn, fromtid, VTDeleteOnSalvage | VTOutOfService);
-	    ONERR (code, "Failed to set flags on the volume %u\n", afromvol);
+	    ONERR (code, "Failed to set flags on the leftover source volume %u\n", afromvol);
+	    VDONE;
 
+	    VPRINT1("Deleting leftover source volume %u ...", afromvol);
 	    code = AFSVolDeleteVolume(fromconn,fromtid);
-	    ONERR (code, "Failed to delete the volume %u\n", afromvol);
+	    ONERR (code, "Failed to delete the leftover source volume %u\n", afromvol);
+	    VDONE;
 	    
+	    VPRINT1("Ending transaction on leftover source volume %u ...", afromvol);
 	    code = AFSVolEndTrans(fromconn, fromtid, &rcode);
 	    fromtid = 0;
 	    if (!code) code = rcode;
-	    ONERR (code, "Could not end the transaction for the volume %u \n", afromvol);
+	    ONERR (code, "Could not end the transaction for the leftover source volume %u \n", afromvol);
+	    VDONE;
 	}
 
 	/*delete the backup volume now */
@@ -962,16 +972,22 @@ UV_MoveVolume(afromvol, afromserver, afrompart, atoserver, atopart)
 	code = AFSVolTransCreate(fromconn, backupId, afrompart, ITOffline, &fromtid);
 	if (!code) 
 	{   /* backup volume exists - delete it */
+	    VPRINT1("Setting flags on leftover backup volume %u ...", backupId);
 	    code = AFSVolSetFlags(fromconn, fromtid, VTDeleteOnSalvage | VTOutOfService);
 	    ONERR (code, "Failed to set flags on the backup volume %u\n", backupId);
+	    VDONE;
 
+	    VPRINT1("Deleting leftover backup volume %u ...", backupId);
 	    code = AFSVolDeleteVolume(fromconn,fromtid);
-	    ONERR (code, "Could not delete the backup volume %u\n", backupId);
+	    ONERR (code, "Could not delete the leftover backup volume %u\n", backupId);
+	    VDONE;
 
+	    VPRINT1("Ending transaction on leftover backup volume %u ...", backupId);
 	    code = AFSVolEndTrans(fromconn, fromtid, &rcode);
 	    fromtid = 0;
 	    if (!code) code = rcode;
-	    ONERR (code,"Could not end the transaction for the backup volume %u \n",backupId);
+	    ONERR (code,"Could not end the transaction for the leftover backup volume %u \n",backupId);
+	    VDONE;
 	}
 
 	fromtid = 0;
@@ -1005,55 +1021,57 @@ UV_MoveVolume(afromvol, afromserver, afrompart, atoserver, atopart)
      * clone the read/write volume locally.
      * ***/
 
-    if (verbose) fprintf(STDOUT,"Starting transaction on source volume %u ...",afromvol);
-    fflush(STDOUT);
+    VPRINT1("Starting transaction on source volume %u ...", afromvol);
     code = AFSVolTransCreate(fromconn, afromvol, afrompart, ITBusy, &fromtid);
     ONERR (code, "Failed to create transaction on the volume %u\n", afromvol);
-    if (verbose) fprintf(STDOUT," done\n");
+    VDONE;
 
     /* Get a clone id */
+    VPRINT1("Allocating new volume id for clone of volume %u ...", afromvol);
     newVol = 0;
     vcode = ubik_Call (VL_GetNewVolumeId, cstruct, 0, 1, &newVol);
     ONERR (vcode, "Could not get an ID for the clone of volume %u from the VLDB\n", afromvol);
+    VDONE;
 
     /* Do the clone. Default flags on clone are set to delete on salvage and out of service */
-    if (verbose) fprintf (STDOUT,"Cloning source volume %u ...", afromvol);
-    fflush(STDOUT);
+    VPRINT1("Cloning source volume %u ...", afromvol);
     strcpy(vname, "move-clone-temp");
     code = AFSVolClone(fromconn, fromtid, 0,readonlyVolume, vname, &newVol);
     ONERR (code, "Failed to clone the source volume %u\n", afromvol);
-    if (verbose) fprintf(STDOUT," done\n");
+    VDONE;
 
     /* lookup the name of the volume we just cloned */
     volid = afromvol;
     code = AFSVolGetName(fromconn, fromtid, &volName);
     ONERR (code, "Failed to get the name of the volume %u\n", newVol);
 
-    if (verbose) fprintf (STDOUT,"Ending the transaction on the source volume %u ...", afromvol);
-    fflush(STDOUT);
+    VPRINT1("Ending the transaction on the source volume %u ...", afromvol);
     rcode = 0;
     code = AFSVolEndTrans(fromconn, fromtid, &rcode);
     fromtid = 0;
     if (!code) code = rcode;
     ONERR (code, "Failed to end the transaction on the source volume %u\n", afromvol);
-    if (verbose) fprintf (STDOUT," done\n");
+    VDONE;
 
     /* ***
      * Create the destination volume
      * ***/
 
-    if (verbose) fprintf(STDOUT, "Starting transaction on the cloned volume %u ...", newVol);
-    fflush(STDOUT);
+    VPRINT1("Starting transaction on the cloned volume %u ...", newVol);
     code = AFSVolTransCreate (fromconn, newVol, afrompart, ITOffline, &clonetid);
     ONERR (code, "Failed to start a transaction on the cloned volume%u\n", newVol);
-    if (verbose) fprintf(STDOUT," done\n");
+    VDONE;
 
+    VPRINT1("Setting flags on cloned volume %u ...", newVol);
     code = AFSVolSetFlags (fromconn, clonetid, VTDeleteOnSalvage|VTOutOfService); /*redundant */
     ONERR (code, "Could not set falgs on the cloned volume %u\n", newVol);
+    VDONE;
 
     /* remember time from which we've dumped the volume */
+    VPRINT1("Getting status of cloned volume %u ...", newVol);
     code = AFSVolGetStatus (fromconn, clonetid, &tstatus);
     ONERR (code, "Failed to get the status of the cloned volume %u\n", newVol);
+    VDONE;
 
     fromDate = tstatus.creationDate-CLOCKSKEW;
 
@@ -1082,33 +1100,33 @@ UV_MoveVolume(afromvol, afromserver, afrompart, atoserver, atopart)
        * we started against the cloned volume (clonetid above) will be
        * sitting idle. It will get cleaned up after 600 seconds
        */
-        if (verbose) fprintf(STDOUT,"Deleting pre-existing volume %u on destination ...",volid);
-	fflush(STDOUT);
-
+        VPRINT1("Deleting pre-existing volume %u on destination ...", volid);
 	code = AFSVolDeleteVolume(toconn, totid);
 	ONERR (code, "Could not delete the pre-existing volume %u on destination\n", volid);
+	VDONE;
 	
+	VPRINT1("Ending transaction on pre-existing volume %u on destination ...", volid);
 	code = AFSVolEndTrans(toconn, totid, &rcode);
 	totid = 0;
 	if (!code) code = rcode;
 	ONERR (code, "Could not end the transaction on pre-existing volume %u on destination\n",
 	       volid);
-
-	if (verbose) fprintf(STDOUT," done\n");
+	VDONE;
     }
 
-    if (verbose) fprintf(STDOUT,"Creating the destination volume %u ...",volid);
-    fflush(STDOUT);
+    VPRINT1("Creating the destination volume %u ...", volid);
     code = AFSVolCreateVolume (toconn, atopart, volName, volser_RW, volid, &volid, &totid);
     ONERR (code, "Failed to create the destination volume %u\n", volid);
-    if (verbose) fprintf(STDOUT," done\n");
+    VDONE;
 
     strncpy(tmpName, volName, VOLSER_OLDMAXVOLNAME);
     free(volName);
     volName = NULL;
 
+    VPRINT1("Setting volume flags on destination volume %u ...", volid);
     code = AFSVolSetFlags (toconn, totid, (VTDeleteOnSalvage | VTOutOfService));
     ONERR(code, "Failed to set the flags on the destination volume %u\n", volid);
+    VDONE;
 
     /***
      * Now dump the clone to the new volume
@@ -1119,56 +1137,62 @@ UV_MoveVolume(afromvol, afromserver, afrompart, atoserver, atopart)
     destination.destSSID = 1;
 
     /* Copy the clone to the new volume */
-    if (verbose) fprintf(STDOUT, "Dumping from clone %u on source to volume %u on destination ...",
-			 newVol, afromvol);
-    fflush(STDOUT);
+    VPRINT2("Dumping from clone %u on source to volume %u on destination ...", newVol, afromvol);
     strncpy(cookie.name,tmpName,VOLSER_OLDMAXVOLNAME);
     cookie.type   = RWVOL;
     cookie.parent = entry.volumeId[RWVOL];
     cookie.clone  = 0;
     code = AFSVolForward(fromconn, clonetid, 0, &destination, totid, &cookie);
     ONERR (code, "Failed to move data for the volume %u\n", volid);
-    if (verbose) fprintf(STDOUT," done\n");
+    VDONE;
 
+    VPRINT1("Ending transaction on cloned volume %u ...", newVol);
     code = AFSVolEndTrans(fromconn, clonetid, &rcode);
     if (!code) code = rcode;
     clonetid = 0;
     ONERR (code, "Failed to end the transaction on the cloned volume %u\n", newVol);
+    VDONE;
 
     /* ***
      * reattach to the main-line volume, and incrementally dump it.
      * ***/
 
-    if (verbose) 
-        fprintf(STDOUT,"Doing the incremental dump from source to destination for volume %u ... ", 
-		afromvol);
-    fflush(STDOUT);
-    
+    VPRINT1("Starting transaction on source volume %u ...", afromvol);
     code = AFSVolTransCreate(fromconn, afromvol, afrompart, ITBusy, &fromtid);
     ONERR (code, "Failed to create a transaction on the source volume %u\n", afromvol);
+    VDONE;
 
     /* now do the incremental */
+    VPRINT1("Doing the incremental dump from source to destination for volume %u ... ", afromvol);
     code = AFSVolForward(fromconn, fromtid, fromDate, &destination, totid,&cookie);
     ONERR (code, "Failed to do the incremental dump from rw volume on old site to rw volume on newsite\n", 0);
-    if (verbose)fprintf(STDOUT," done\n");
+    VDONE;
 
     /* now adjust the flags so that the new volume becomes official */
+    VPRINT1("Setting volume flags on old source volume %u ...", afromvol);
     code = AFSVolSetFlags(fromconn, fromtid, VTOutOfService);
     ONERR (code, "Failed to set the flags to make old source volume offline\n", 0);
+    VDONE;
 
+    VPRINT1("Setting volume flags on new source volume %u ...", afromvol);
     code = AFSVolSetFlags(toconn, totid, 0);
     ONERR (code, "Failed to set the flags to make new source volume online\n", 0);
+    VDONE;
 
 #ifdef	ENABLE_BUGFIX_1165
+    VPRINT1("Setting volume status on destination volume %u ...", volid);
     code = AFSVolSetInfo(toconn, totid, infop);
     ONERR (code, "Failed to set volume status on the destination volume %u\n", volid);
+    VDONE;
 #endif
 
     /* put new volume online */
+    VPRINT1("Ending transaction on destination volume %u ...", afromvol);
     code = AFSVolEndTrans(toconn, totid, &rcode);
     totid = 0;
     if (!code) code = rcode;
     ONERR (code, "Failed to end the transaction on the volume %u on the new site\n", afromvol);
+    VDONE;
 
     Lp_SetRWValue(&entry, afromserver, afrompart, atoserver, atopart);
     MapNetworkToHost(&entry,&storeEntry);
@@ -1194,6 +1218,7 @@ UV_MoveVolume(afromvol, afromserver, afrompart, atoserver, atopart)
 	/* or drop through */
     }
 
+    VPRINT1("Releasing lock on VLDB entry for volume %u ...", afromvol);
     vcode = VLDB_ReplaceEntry (afromvol, -1, &storeEntry, 
 			       (LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP));
     if (vcode) 
@@ -1204,6 +1229,7 @@ UV_MoveVolume(afromvol, afromserver, afrompart, atoserver, atopart)
 	goto mfail;
     }
     islocked=0;
+    VDONE;
 
     if (TESTC)
     {
@@ -1242,67 +1268,67 @@ UV_MoveVolume(afromvol, afromserver, afrompart, atoserver, atopart)
     if (atoserver != afromserver) 
     {
         /* set forwarding pointer for moved volumes */
+	VPRINT1("Setting forwarding pointer for volume %u ...", afromvol);
         code = AFSVolSetForwarding(fromconn, fromtid, atoserver);
 	ONERR (code, "Failed to set the forwarding pointer for the volume %u\n", afromvol);
+	VDONE;
     }
 
-    if (verbose) fprintf(STDOUT,"Deleting old volume %u on source ...", afromvol);
-    fflush(STDOUT);
-
+    VPRINT1("Deleting old volume %u on source ...", afromvol);
     code = AFSVolDeleteVolume(fromconn,fromtid);	/* zap original volume */
     ONERR (code, "Failed to delete the old volume %u on source\n", afromvol); 
+    VDONE;
     
+    VPRINT1("Ending transaction on old volume %u on the source ...", afromvol);
     code = AFSVolEndTrans(fromconn, fromtid, &rcode);
     fromtid = 0;
     if (!code) code = rcode;
     ONERR (code, "Failed to end the transaction on the old volume %u on the source\n", afromvol);
-
-    if (verbose) fprintf(STDOUT," done\n");
+    VDONE;
 
     /* Delete the backup volume on the original site */
+    VPRINT1("Creating transaction for backup volume %u on source ...", backupId);
     code = AFSVolTransCreate(fromconn, backupId, afrompart, ITOffline, &fromtid);
+    VDONE;
     if (!code) 
     {
-        fprintf(STDOUT, "WARNING : Deleting the backup volume %u on the source ...",backupId);
-	fflush(STDOUT);
-
+	VPRINT1("Setting flags on backup volume %u on source ...", backupId);
 	code = AFSVolSetFlags(fromconn, fromtid, VTDeleteOnSalvage | VTOutOfService);
 	ONERR (code, "Failed to set the flags on the backup volume on source\n", 0);
+	VDONE;
 
+	VPRINT1("Deleting the backup volume %u on the source ...", backupId);
 	code = AFSVolDeleteVolume(fromconn,fromtid);
 	ONERR (code, "Failed to delete the backup volume on source\n", 0);
+	VDONE;
 	
+	VPRINT1("Ending transaction on backup volume %u on source ...", backupId);
 	code = AFSVolEndTrans(fromconn,fromtid, &rcode);
 	fromtid = 0;
 	if (!code) code = rcode;
 	ONERR (code, "Failed to end the transaction on the backup volume %u on source\n", 0);
-
-	fprintf(STDOUT," done\n");
+	VDONE;
     }
     else code = 0;		/* no backup volume? that's okay */
 
     fromtid = 0;
-    if (verbose) fprintf(STDOUT,"Starting transaction on the cloned volume %u ...",newVol);
-    fflush(STDOUT);
-
+    VPRINT1("Starting transaction on the cloned volume %u ...", newVol);
     code = AFSVolTransCreate(fromconn, newVol, afrompart, ITOffline, &clonetid);
     ONERR (code, "Failed to start a transaction on the cloned volume%u\n", newVol);
-
-    if (verbose) fprintf(STDOUT," done\n");
+    VDONE;
     
     /* now delete the clone */
-    if (verbose) fprintf(STDOUT,"Deleting the clone %u ...", newVol);
-    fflush(STDOUT);
-
+    VPRINT1("Deleting the cloned volume %u ...", newVol);
     code = AFSVolDeleteVolume(fromconn, clonetid);
     ONERR (code, "Failed to delete the cloned volume %u\n", newVol);
+    VDONE;
     
-    if (verbose) fprintf(STDOUT," done\n");
-
+    VPRINT1("Ending transaction on cloned volume %u ...", newVol);
     code = AFSVolEndTrans(fromconn, clonetid, &rcode);
     if (!code) code = rcode;
     clonetid = 0;
     ONERR (code, "Failed to end the transaction on the cloned volume %u\n", newVol);
+    VDONE;
 
     /* fall through */
     /* END OF MOVE */
@@ -1333,44 +1359,56 @@ UV_MoveVolume(afromvol, afromserver, afrompart, atoserver, atopart)
 
     if (islocked)
     {
+	VPRINT1("Cleanup: Releasing VLDB lock on volume %u ...", afromvol);
         vcode = ubik_Call(VL_ReleaseLock,cstruct, 0, afromvol, -1, 
 			  (LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP));
         if (vcode) 
 	{
+	    VPRINT("\n");
 	    fprintf(STDERR," Could not release the lock on the VLDB entry for the volume %u \n",
 		    afromvol);
 	    if (!error) error = vcode;
 	}
+	VDONE;
     }
     
     if (fromtid) 
     {
+	VPRINT1("Cleanup: Ending transaction on source volume %u ...", afromvol);
 	code = AFSVolEndTrans(fromconn, fromtid, &rcode);
 	if (code || rcode)
 	{
+	    VPRINT("\n");
 	    fprintf(STDERR,"Could not end transaction on the source's clone volume %u\n", newVol);
 	    if (!error) error = (code ? code : rcode);
 	}
+	VDONE;
     }
 
     if (clonetid) 
     {
+	VPRINT1("Cleanup: Ending transaction on clone volume %u ...", newVol);
 	code = AFSVolEndTrans(fromconn, clonetid, &rcode);
 	if (code || rcode) 
 	{
+	    VPRINT("\n");
 	    fprintf(STDERR,"Could not end transaction on the source's clone volume %u\n",newVol);
 	    if (!error) error = (code ? code : rcode);
 	}
+	VDONE;
     }
 
     if (totid) 
     {
+	VPRINT1("Cleanup: Ending transaction on destination volume %u ...", afromvol);
 	code = AFSVolEndTrans(toconn, totid, &rcode);
 	if (code) 
 	{
+	    VPRINT("\n");
 	    fprintf(STDERR,"Could not end transaction on destination volume %u\n",afromvol);
 	    if (!error) error = (code ? code : rcode);
 	}
+	VDONE;
     }
     if (volName) free(volName);
 #ifdef	ENABLE_BUGFIX_1165
@@ -1393,22 +1431,37 @@ mfail:
 
     /* unlock VLDB entry */
     if (islocked)
+    {
+	VPRINT1("Recovery: Releasing VLDB lock on volume %u ...", afromvol);
         ubik_Call(VL_ReleaseLock, cstruct, 0, afromvol, -1,
 		  (LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP));
+	VDONE;
+    }
 
-    if (clonetid) AFSVolEndTrans(fromconn, clonetid, &rcode);
-    if (totid)    AFSVolEndTrans(toconn, totid, &rcode);
+    if (clonetid)
+    {
+	VPRINT("Recovery: Ending transaction on clone volume ...");
+	AFSVolEndTrans(fromconn, clonetid, &rcode);
+	VDONE;
+    }
+    if (totid)
+    {
+	VPRINT("Recovery: Ending transaction on destination volume ...");
+	AFSVolEndTrans(toconn, totid, &rcode);
+	VDONE;
+    }
     if (fromtid)
     {  /* put it on-line */
+	VPRINT("Recovery: Setting volume flags on source volume ...");
         AFSVolSetFlags(fromconn,fromtid,0);
+	VDONE;
+
+	VPRINT("Recovery: Ending transaction on source volume ...");
 	AFSVolEndTrans(fromconn, fromtid, &rcode);
+	VDONE;
     }
 
-    if (verbose) 
-    {	/* get current VLDB entry */
-	fprintf(STDOUT,"access VLDB\n");
-	fflush(STDOUT);
-    }
+    VPRINT("Recovery: Accessing VLDB.\n");
     vcode= VLDB_GetEntryByID (afromvol, -1, &entry);
     if (vcode)
     {
@@ -1431,20 +1484,48 @@ mfail:
 	}
 
 	if (volid && toconn) {
+	    VPRINT1("Recovery: Creating transaction for destination volume %u ...", volid);
 	    code=AFSVolTransCreate(toconn,volid,atopart, ITOffline,&totid);
+
 	    if (!code) {
+	        VDONE;
+
+		VPRINT1("Recovery: Setting flags on destination volume %u ...", volid);
 	        AFSVolSetFlags(toconn,totid, VTDeleteOnSalvage | VTOutOfService);
+		VDONE;
+
+		VPRINT1("Recovery: Deleting destination volume %u ...", volid);
 		AFSVolDeleteVolume(toconn,totid);
+		VDONE;
+
+		VPRINT1("Recovery: Ending transaction on destination volume %u ...", volid);
 		AFSVolEndTrans(toconn,totid,&rcode);
+		VDONE;
+	    }
+	    else
+	    {
+		VPRINT1("\nRecovery: Unable to start transaction on destination volume %u.\n", afromvol);
 	    }
 	}
 
 	/* put source volume on-line */
 	if (fromconn) {
+	    VPRINT1("Recovery: Creating transaction on source volume %u ...", afromvol);
 	    code=AFSVolTransCreate(fromconn, afromvol, afrompart, ITBusy, &fromtid);
 	    if (!code) {
+	    	VDONE;
+
+		VPRINT1("Recovery: Setting flags on source volume %u ...", afromvol);
 	        AFSVolSetFlags(fromconn,fromtid,0);
+		VDONE;
+
+		VPRINT1("Recovery: Ending transaction on source volume %u ...", afromvol);
 		AFSVolEndTrans(fromconn,fromtid,&rcode);
+		VDONE;
+	    }
+	    else
+	    {
+		VPRINT1("\nRecovery: Unable to start transaction on source volume %u.\n", afromvol);
 	    }
 	}
     }
@@ -1457,37 +1538,86 @@ mfail:
 
 	/* delete backup volume */
 	if (fromconn) {
+	    VPRINT1("Recovery: Creating transaction on backup volume %u ...", backupId);
 	    code=AFSVolTransCreate (fromconn,backupId,afrompart, ITOffline,&fromtid);
 	    if (!code) {
+		VDONE;
+
+		VPRINT1("Recovery: Setting flags on backup volume %u ...", backupId);
 	        AFSVolSetFlags(fromconn,fromtid, VTDeleteOnSalvage | VTOutOfService);
+		VDONE;
+
+		VPRINT1("Recovery: Deleting backup volume %u ...", backupId);
 		AFSVolDeleteVolume(fromconn,fromtid);
+		VDONE;
+
+		VPRINT1("Recovery: Ending transaction on backup volume %u ...", backupId);
 		AFSVolEndTrans(fromconn,fromtid,&rcode);
+		VDONE;
+	    }
+	    else
+	    {
+		VPRINT1("\nRecovery: Unable to start transaction on backup volume %u.\n", backupId);
 	    }
 
 	    /* delete source volume */
+	    VPRINT1("Recovery: Creating transaction on source volume %u ...", afromvol);
 	    code=AFSVolTransCreate (fromconn, afromvol, afrompart, ITBusy, &fromtid);
 	    if (!code) {
+		VDONE;
+
+		VPRINT1("Recovery: Setting flags on backup volume %u ...", afromvol);
 	        AFSVolSetFlags(fromconn,fromtid, VTDeleteOnSalvage | VTOutOfService);
+		VDONE;
+
 		if (atoserver != afromserver)
+		{
+		    VPRINT("Recovery: Setting volume forwarding pointer ...");
 		    AFSVolSetForwarding(fromconn,fromtid,atoserver);
+		    VDONE;
+		}
+
+		VPRINT1("Recovery: Deleting source volume %u ...", afromvol);
 		AFSVolDeleteVolume(fromconn,fromtid);
+		VDONE;
+
+		VPRINT1("Recovery: Ending transaction on source volume %u ...", afromvol);
 		AFSVolEndTrans(fromconn,fromtid,&rcode);
+		VDONE;
+	    }
+	    else
+	    {
+		VPRINT1("\nRecovery: Unable to start transaction on source volume %u.\n", afromvol);
 	    }
 	}
     }
 
     /* common cleanup - delete local clone */
     if (newVol) {
+	VPRINT1("Recovery: Creating transaction on clone volume %u ...", newVol);
         code = AFSVolTransCreate (fromconn, newVol, afrompart, ITOffline, &clonetid);
 	if (!code) {
+	    VDONE;
+
+	    VPRINT1("Recovery: Deleting clone volume %u ...", newVol);
 	    AFSVolDeleteVolume(fromconn,clonetid);
+	    VDONE;
+
+	    VPRINT1("Recovery: Ending transaction on clone volume %u ...", newVol);
 	    AFSVolEndTrans(fromconn,clonetid,&rcode);
+	    VDONE;
+	}
+	else
+	{
+	    VPRINT1("\nRecovery: Unable to start transaction on source volume %u.\n", afromvol);
 	}
     }
 
     /* unlock VLDB entry */
+    VPRINT1("Recovery: Releasing lock on VLDB entry for volume %u ...", afromvol);
     ubik_Call (VL_ReleaseLock, cstruct, 0, afromvol, -1,
 	       (LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP));
+    VDONE;
 
 done:	/* routine cleanup */
     if (volName)  free(volName);
