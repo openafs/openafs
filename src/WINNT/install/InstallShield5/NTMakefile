@@ -62,8 +62,7 @@ build:
 	$(DEL) /q $(DESTDIR)\Wininstall\PackageWeb\*.*
 	$(ISWEB)\Pftwwiz.exe $(AFSROOT)\src\winnt\install\InstallShield5\PackageWeb.pfw -s -a 
 !ENDIF
-	xcopy /s/e/y "Media\OpenAFS\Disk Images\disk1\*.*" $(DESTDIR)\WinInstall
+	$(DESTDIR)\bin\util_cr.exe # xp w2 # xcopy /s/e/y /s/e Media\OpenAFS\DiskIm~1\disk1\*.* $(DESTDIR)\WinInstall	
 	copy AFS_component_version_number.txt $(DESTDIR)\WinInstall\Version.txt
 	$(DEL) /q "Media\OpenAFS\Disk Images\disk1\*.*"
-
 install: prep build

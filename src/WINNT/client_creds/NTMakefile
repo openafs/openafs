@@ -100,7 +100,7 @@ COPYSOURCES = \
 ############################################################################
 
 $(EXEFILE) : $(EXEOBJS) $(EXELIBS)
-	$(EXEGUILINK) $(VCLIBS)
+	$(EXEMFCLINK) $(VCLIBS)
 	$(EXEPREP) 
 
 install : $(COPYSOURCES) $(COPYHEADERS) $(EXEFILE) lang

@@ -16,6 +16,7 @@
 #include "windows.h"
 #include "malloc.h"
 #include "time.h"
+#include "stdlib.h"
 
 void usuage()
 {
@@ -29,10 +30,106 @@ void usuage()
 	OR util_cr * \"-[register key value]\" ; aremove register key value\n\
 	OR util_cr @ file.ini \"[SectionKey]variable=value\" ; update ini-ipr-pwf file\n\
 	OR util_cr @ file.ini \"[SectionKey]variable=value*DatE*\" ; update ini-ipr-pwf file, insert date\n\
-	OR util_cr ~  ;force error\n");
+	OR util_cr ~  ;force error\n\
+	OR util_cr # [nt xp 98 9x w2] ;test for OS, return 0 if match else 1\n\
+	OR util_cr # [nt xp 98 9x w2] #[command] [true options] [false optiosn] [paramters] \n\t test for OS; execute command with options\n");
 	exit(0xc000);
 }
 
+int CheckVersion(int argc,char *argv[])
+{
+	OSVERSIONINFO VersionInfo;
+	int i;
+	memset(&VersionInfo,0,sizeof(VersionInfo));
+	VersionInfo.dwOSVersionInfoSize =sizeof(OSVERSIONINFO);
+	if (!GetVersionEx(&VersionInfo))
+	{
+		return 0XC000;
+	}
+	for (i=1;i<argc;i++)
+	{
+		if (stricmp(argv[i],"nt")==0)
+		{
+			if ((VersionInfo.dwPlatformId==VER_PLATFORM_WIN32_NT) 
+				&& (VersionInfo.dwMajorVersion==4)
+				&& (VersionInfo.dwMinorVersion==0))
+				return 0;
+		}
+		if (stricmp(argv[i],"xp")==0)
+		{
+			if ((VersionInfo.dwPlatformId==VER_PLATFORM_WIN32_NT) 
+				&& (VersionInfo.dwMajorVersion==5)
+				&& (VersionInfo.dwMinorVersion==1))
+				return 0;
+		}
+		if (stricmp(argv[i],"w2")==0)
+		{
+			if ((VersionInfo.dwPlatformId==VER_PLATFORM_WIN32_NT) 
+				&& (VersionInfo.dwMajorVersion==5)
+				&& (VersionInfo.dwMinorVersion==0))
+				return 0;
+		}
+		if (stricmp(argv[i],"98")==0)
+		{
+			if ((VersionInfo.dwPlatformId==VER_PLATFORM_WIN32_WINDOWS) && (VersionInfo.dwMinorVersion==10))
+				return 0;
+		}
+		if (stricmp(argv[i],"95")==0)
+		{
+			if ((VersionInfo.dwPlatformId==VER_PLATFORM_WIN32_WINDOWS) && (VersionInfo.dwMinorVersion==0))
+
+				return 0;
+		}
+		if (stricmp(argv[i],"9x")==0)
+		{
+			if (VersionInfo.dwPlatformId==VER_PLATFORM_WIN32_WINDOWS)
+				return 0;
+		}
+		if (stricmp(argv[i],"#")==0)
+			return 1;
+	}
+	return 1;
+}
+
+int DoCheckVersion(int argc,char *argv[])
+{
+	//arg 1 nth versions
+	//arg nth #
+	//arg n+1 command
+	//arg n+2 option true
+	//arg n+3 option false
+	//arg n+4 ... command arguments
+	int x,i;
+	int ret;
+	char command[1024];
+	for (x=1;((x<argc) && (strcmp(argv[x],"#")!=0));x++);
+	if (strcmp(argv[x],"#")!=0)
+		return 0xc000;
+	ret=CheckVersion(argc-x,&argv[x]);
+	if (x+6>=argc)
+		return (!ret)?0:1;
+	for (++x;((x<argc) && (strcmp(argv[x],"#")!=0));x++);
+	if (strcmp(argv[x],"#")!=0)
+		return 0xc000;
+	i=0;
+	GetSystemDirectory(command,sizeof(command));
+	sprintf(command,"%s\\cmd.exe",command);
+	argv[i++]=command;
+	argv[i++]="/c";
+	argv[i++]=argv[x+1];
+	if (!ret) 
+		argv[i++]=argv[x+2];
+	else 
+		argv[i++]=argv[x+3];
+	for (x+=4;x<argc;x++) 
+		argv[i++]=argv[x];
+	argv[i]=NULL;
+/*	for (i=0;argv[i];i++)
+		command=argv[i];
+*/
+	ret=_spawnv(_P_WAIT,argv[0],argv);
+	return 0;
+}
 
 void Addkey (const char *hkey,const char *subkey,const char *stag,const char *sval)
 {
@@ -107,6 +204,10 @@ int main(int argc, char* argv[])
 
 	if (argc<3)
 		usuage();
+	if (strcmp(argv[1],"#")==0)
+	{
+		return DoCheckVersion(argc,argv);
+	}
  	if (strcmp(argv[1],"}")==0)
  	{
  		char v1[4],v2[4],v3[4],v4[4];
