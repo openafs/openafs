@@ -1703,6 +1703,17 @@ mainproc(as, arock)
 	    printf("%s: Error enabling fakestat support.\n", rn);
     }
 
+    /*
+     * Tell the kernel about each cell in the configuration.
+     */
+    afsconf_CellApply(cdir, ConfigCell, NULL);
+    afsconf_CellAliasApply(cdir, ConfigCellAlias, NULL);
+
+    /*
+     * Set the primary cell name.
+     */
+    call_syscall(AFSOP_SET_THISCELL, LclCellName);
+
     /* Initialize AFS daemon threads. */
     if (afsd_verbose)
 	printf("%s: Forking AFS daemon.\n", rn);
@@ -1757,17 +1768,6 @@ mainproc(as, arock)
 	}
     }
 #endif
-
-    /*
-     * Tell the kernel about each cell in the configuration.
-     */
-    afsconf_CellApply(cdir, ConfigCell, NULL);
-    afsconf_CellAliasApply(cdir, ConfigCellAlias, NULL);
-
-    /*
-     * Set the primary cell name.
-     */
-    call_syscall(AFSOP_SET_THISCELL, LclCellName);
 
     /*
      * If the root volume has been explicitly set, tell the kernel.
