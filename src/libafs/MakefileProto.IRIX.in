@@ -401,9 +401,9 @@ ${LIBAFSNONFSO}: $(AFSAOBJS) $(AFSNONFSOBJS)
 		$(AFSAOBJS) $(AFSNONFSOBJS)
 
 ${COPYFILES}:
-	${CP} ../sgi_system ${STATICCLIENTDIR}/afs.sm
+	${CP} sgi_system ${STATICCLIENTDIR}/afs.sm
 	chmod 644 ${STATICCLIENTDIR}/afs.sm
-	${CP} ../sgi_master ${STATICCLIENTDIR}/afs
+	${CP} sgi_master ${STATICCLIENTDIR}/afs
 	chmod 644 ${STATICCLIENTDIR}/afs
 
 # Create symlinks to clients we don't need to build.

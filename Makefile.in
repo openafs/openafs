@@ -303,6 +303,10 @@ libafs_tree: libafs_setup ${KERNELDIR}
 		; do \
 		${INSTALL} -c -f src/libafs/$$f libafs_tree/$$f; \
 	done
+	for f in config.guess config.sub install-sh missing mkinstalldirs \
+		; do \
+		${INSTALL} -c -f $$f libafs_tree/$$f; \
+	done
 	src/config/config src/libafs/MakefileProto.${MKAFS_OSTYPE}.in libafs_tree/Makefile.in ${SYS_NAME}
 	${INSTALL} -c src/config/Makefile.${SYS_NAME}.in libafs_tree/config
 	${INSTALL} -c src/config/afsconfig.h.in libafs_tree/config
