@@ -31,6 +31,7 @@ LIBOBJS =\
 	$(OUT)\beacon.obj \
 	$(OUT)\recovery.obj \
 	$(OUT)\ubik.obj \
+	$(OUT)\uinit.obj \
 	$(OUT)\vote.obj \
 	$(OUT)\lock.obj \
 	$(OUT)\phys.obj \

@@ -97,7 +97,7 @@ CommandProc(struct cmd_syndesc *as, char *arock)
     register afs_int32 i, j, code;
     short port;
     int int32p;
-    afs_int32 now, diff, newtime;
+    time_t now, diff, newtime;
     struct hostent *th;
     struct rx_connection *tconn;
     struct rx_securityClass *sc;

@@ -211,6 +211,8 @@ returned with an error code of RX_CALL_DEAD ( transient error ) */
 #define rx_EnableHotThread()		(rx_enable_hot_thread = 1)
 #define rx_DisableHotThread()		(rx_enable_hot_thread = 0)
 
+#define rx_PutConnection(conn) rx_DestroyConnection(conn)
+
 /* A connection is an authenticated communication path, allowing 
    limited multiple asynchronous conversations. */
 #ifdef KDUMP_RX_LOCK
@@ -248,7 +250,7 @@ struct rx_connection {
     /* client-- to retransmit the challenge */
     struct rx_service *service;	/* used by servers only */
     u_short serviceId;		/* To stamp on requests (clients only) */
-    u_short refCount;		/* Reference count */
+    afs_uint32 refCount;		/* Reference count */
     u_char flags;		/* Defined below */
     u_char type;		/* Type of connection, defined below */
     u_char secondsUntilPing;	/* how often to ping for each active call */
@@ -363,7 +365,7 @@ struct rx_peer {
 
     /* For garbage collection */
     afs_uint32 idleWhen;	/* When the refcountwent to zero */
-    short refCount;		/* Reference count for this structure */
+    afs_uint32 refCount;		/* Reference count for this structure */
 
     /* Congestion control parameters */
     u_char burstSize;		/* Reinitialization size for the burst parameter */
@@ -817,7 +819,7 @@ struct rx_debugIn {
 #define RX_DEBUGI_BADTYPE     (-8)
 
 #define RX_DEBUGI_VERSION_MINIMUM ('L')	/* earliest real version */
-#define RX_DEBUGI_VERSION     ('Q')	/* Latest version */
+#define RX_DEBUGI_VERSION     ('R')	/* Latest version */
     /* first version w/ secStats */
 #define RX_DEBUGI_VERSION_W_SECSTATS ('L')
     /* version M is first supporting GETALLCONN and RXSTATS type */
@@ -829,6 +831,7 @@ struct rx_debugIn {
 #define RX_DEBUGI_VERSION_W_IDLETHREADS ('O')
 #define RX_DEBUGI_VERSION_W_NEWPACKETTYPES ('P')
 #define RX_DEBUGI_VERSION_W_GETPEER ('Q')
+#define RX_DEBUGI_VERSION_W_WAITED ('R')
 
 #define	RX_DEBUGI_GETSTATS	1	/* get basic rx stats */
 #define	RX_DEBUGI_GETCONN	2	/* get connection info */
@@ -846,7 +849,8 @@ struct rx_debugStats {
     char spare1;
     afs_int32 nWaiting;
     afs_int32 idleThreads;	/* Number of server threads that are idle */
-    afs_int32 spare2[8];
+    afs_int32 nWaited;
+    afs_int32 spare2[7];
 };
 
 struct rx_debugConn_vL {
@@ -971,6 +975,7 @@ extern int rx_callHoldType;
 #define RX_SERVER_DEBUG_OLD_CONN		0x20
 #define RX_SERVER_DEBUG_NEW_PACKETS		0x40
 #define RX_SERVER_DEBUG_ALL_PEER		0x80
+#define RX_SERVER_DEBUG_WAITED_CNT              0x100
 
 #define AFS_RX_STATS_CLEAR_ALL			0xffffffff
 #define AFS_RX_STATS_CLEAR_INVOCATIONS		0x1

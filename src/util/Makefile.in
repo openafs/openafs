@@ -62,10 +62,10 @@ util.a: ${objects} AFS_component_version_number.o
 	$(RANLIB) util.a
 
 assert.o: ${srcdir}/assert.c ${includes}
-	${CC} ${CFLAGS} -c ${srcdir}/assert.c
+	${CCOBJ} ${CFLAGS} -c ${srcdir}/assert.c
 
 casestrcpy.o: ${srcdir}/casestrcpy.c ${includes}
-	${CC} ${CFLAGS} -c ${srcdir}/casestrcpy.c
+	${CCOBJ} ${CFLAGS} -c ${srcdir}/casestrcpy.c
 
 hputil.o: ${srcdir}/hputil.c ${includes}
 	${CC} ${CFLAGS} -c ${srcdir}/hputil.c
@@ -110,10 +110,10 @@ serverLog.o: ${srcdir}/serverLog.c ${includes}
 	${CC} ${CFLAGS} -c ${srcdir}/serverLog.c
 
 dirpath.o: ${srcdir}/dirpath.c ${includes}
-	${CC} ${CFLAGS} -c ${srcdir}/dirpath.c
+	${CCOBJ} ${CFLAGS} -c ${srcdir}/dirpath.c
 
 fileutil.o: ${srcdir}/fileutil.c ${includes}
-	${CC} ${CFLAGS} -c ${srcdir}/fileutil.c
+	${CCOBJ} ${CFLAGS} -c ${srcdir}/fileutil.c
 
 netutils.o: ${srcdir}/netutils.c ${includes}
 	${CC} ${CFLAGS} -c ${srcdir}/netutils.c

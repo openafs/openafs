@@ -235,8 +235,9 @@ OpenLog(const char *fileName)
 #endif
 
     if (mrafsStyleLogs) {
+        time_t t = Start.tv_sec;
 	TM_GetTimeOfDay(&Start, 0);
-	TimeFields = localtime(&Start.tv_sec);
+	TimeFields = localtime(&t);
 	if (fileName) {
 	    if (strncmp(fileName, (char *)&ourName, strlen(fileName)))
 		strcpy((char *)&ourName, (char *)fileName);

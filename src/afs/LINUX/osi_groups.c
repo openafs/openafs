@@ -222,7 +222,7 @@ setpag(cred_t ** cr, afs_uint32 pagvalue, afs_uint32 * newpag,
 
 
 /* Intercept the standard system call. */
-extern long (*sys_setgroupsp) (int gidsetsize, gid_t * grouplist);
+extern asmlinkage long (*sys_setgroupsp) (int gidsetsize, gid_t * grouplist);
 asmlinkage long
 afs_xsetgroups(int gidsetsize, gid_t * grouplist)
 {
@@ -256,7 +256,7 @@ afs_xsetgroups(int gidsetsize, gid_t * grouplist)
 
 #if defined(AFS_LINUX24_ENV)
 /* Intercept the standard uid32 system call. */
-extern long (*sys_setgroups32p) (int gidsetsize, gid_t * grouplist);
+extern asmlinkage long (*sys_setgroups32p) (int gidsetsize, gid_t * grouplist);
 asmlinkage long
 afs_xsetgroups32(int gidsetsize, gid_t * grouplist)
 {
