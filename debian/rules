@@ -55,6 +55,9 @@ build-stamp:
 	dh_testdir
 
 	$(MAKE) SYS_NAME=$(SYS_NAME)
+	mkdir -p debian/openafs-dbserver/usr/share/man/man8
+		/usr/bin/docbook-to-man debian/pt_util.sgml  \
+		> debian/openafs-dbserver/usr/share/man/man8/pt_util.8
 
 	touch build-stamp
 
