@@ -8,6 +8,7 @@ Standards-Version: 3.1.1
 Package: openafs-client
 Architecture: i386
 Depends: ${shlibs:Depends}, debconf, dnsutils
+Conflicts: arla
 Recommends: openafs-modules
 Description: The AFS distributed filesystem- client support
  AFS is a distributed filesystem allowing cross-platform sharing of
@@ -29,6 +30,17 @@ Description: The AFS distributed filesystem- old password changing
  .
  This package provides kpasswd and kas, utilities needed by the 
  Transarc kaserver to create users and change passwords.
+
+Package: openafs-fileserver
+Architecture: i386
+Depends: ${shlibs:Depends}, debconf, openafs-client (= ${Source-Version})
+Description: The AFS distributed filesystem- file server
+ AFS is a distributed filesystem allowing cross-platform sharing of
+ files among multiple computers.  Facilities are provided for access
+ control, authentication, backup and administrative management.
+ .
+This package provides the AFS fileserver binaries.  It should be
+installed on any machine that will export files into AFS.
 
 Package: openafs-dbserver
 Architecture: i386
