@@ -739,6 +739,7 @@ struct rx_ackPacket {
 #define rx_AckDataSize(nAcks) (3 + offsetof(struct rx_ackPacket, acks[nAcks]))
 
 #define	RX_CHALLENGE_TIMEOUT	2   /* Number of seconds before another authentication request packet is generated */
+#define RX_CHALLENGE_MAXTRIES	50  /* Max # of times we resend challenge */
 
 /* RX error codes.  RX uses error codes from -1 to -64.  Rxgen may use other error codes < -64; user programs are expected to return positive error codes */
 
