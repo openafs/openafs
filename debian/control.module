@@ -6,6 +6,8 @@ Standards-Version: 3.1.1
 
 Package: openafs-modules-=KVERS
 Conflicts: openafs-client (= 1.0.snap20001103-1)
+
+Depends: openafs-client
 Provides: openafs-modules
 Architecture: any
 Description: The AFS distributed filesystem- Kernel Module

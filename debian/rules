@@ -214,6 +214,7 @@ binary-modules: build-modules
 		debian/$(modulepkg)/lib/modules/$(KVERS)/fs
 # Fix some stuff up
 	install -d -o root -g root -m 755 debian/$(modulepkg)/usr/share/doc
+	ln -s openafs-client debian/$(modulepkg)/usr/share/doc/$(modulepkg)
 	rm -rf debian/$(modulepkg)/usr/include
 ifeq ($(KERNEL_DEPENDS),y)
 	sh debian/prep-modules $(KSRC) debian/control.module > debian/control

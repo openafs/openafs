@@ -1,8 +1,9 @@
 openafs (1.0.snap20001106-1) unstable; urgency=low
 
   * New Upstream version
+  * Fix init.d script to properly remove openafs.o
 
- --
+ --  Sam Hartman <hartmans@mit.edu>  Tue,  7 Nov 2000 13:55:47 -0500
 
 openafs (1.0.snap20001104-1) unstable; urgency=low
 

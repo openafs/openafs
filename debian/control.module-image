@@ -8,6 +8,7 @@ Package: openafs-modules-=KVERS
 Conflicts: openafs-client (= 1.0.snap20001103-1)
 Provides: openafs-modules
 Architecture: any
+Depends: openafs-client
 Recommends: kernel-image-=KVERS (= =KREVS)
 Description: The AFS distributed filesystem- Kernel Module
    AFS is a distributed filesystem allowing cross-platform sharing of
@@ -15,3 +16,4 @@ Description: The AFS distributed filesystem- Kernel Module
    control, authentication, backup and administrative management.
    .
    This package provides the kernel module for the filesystem
+

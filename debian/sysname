@@ -2,4 +2,9 @@
 case `arch` in
 i[3456]86)
 	echo i386_linux22
+;;
+	*)
+	echo ERROr:  sysname not yet known
+	exit 1
+
 esac
