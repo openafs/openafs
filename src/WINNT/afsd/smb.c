@@ -1159,7 +1159,7 @@ int smb_FindShare(smb_vc_t *vcp, smb_packet_t *inp, char *shareName,
 	smb_user_t *uidp;
 	char temp[1024];
 	DWORD sizeTemp;
-    char sbmtpath[256];
+    char sbmtpath[MAX_PATH];
     char *p, *q;
 	HKEY parmKey;
 	DWORD code;
@@ -1196,75 +1196,87 @@ int smb_FindShare(smb_vc_t *vcp, smb_packet_t *inp, char *shareName,
      * to handle ioctl requests 
      */
 	if (_stricmp(shareName, "ioctl$") == 0) {
-		*pathNamep = "/.__ioctl__";
+		*pathNamep = strdup("/.__ioctl__");
 		return 1;
 	}
 
 #ifndef DJGPP
-        strcpy(sbmtpath, "afsdsbmt.ini");
+    strcpy(sbmtpath, "afsdsbmt.ini");
 #else /* DJGPP */
-        strcpy(sbmtpath, cm_confDir);
-        strcat(sbmtpath, "/afsdsbmt.ini");
+    strcpy(sbmtpath, cm_confDir);
+    strcat(sbmtpath, "/afsdsbmt.ini");
 #endif /* !DJGPP */
 	len = GetPrivateProfileString("AFS Submounts", shareName, "",
-				      pathName, sizeof(pathName), sbmtpath);
-	if (len == 0 || len == sizeof(pathName) - 1) {
-		*pathNamep = NULL;
-		return 0;
-	}
-        
+                                  pathName, sizeof(pathName), sbmtpath);
+	if (len != 0 && len != sizeof(pathName) - 1) {
         /* We can accept either unix or PC style AFS pathnames.  Convert
-           Unix-style to PC style here for internal use. */
+         * Unix-style to PC style here for internal use. 
+         */
         p = pathName;
         if (strncmp(p, cm_mountRoot, strlen(cm_mountRoot)) == 0)
-          p += strlen(cm_mountRoot);  /* skip mount path */
+            p += strlen(cm_mountRoot);  /* skip mount path */
         q = p;
         while (*q) {
-          if (*q == '/') *q = '\\';    /* change to \ */
-          q++;
+            if (*q == '/') *q = '\\';    /* change to \ */
+            q++;
         }
 
-	while (1)
-	{
-		if (var = smb_stristr(p, VNUserName)) {
-			uidp = smb_FindUID(vcp, ((smb_t *)inp)->uid, 0);
-			if (uidp && uidp->unp)
-			  smb_subst(p, var, sizeof(VNUserName),
-				       uidp->unp->name);
-			else
-			  smb_subst(p, var, sizeof(VNUserName),
-				       " ");
-			if (uidp)
-                smb_ReleaseUID(uidp);
-		}
-		else if (var = smb_stristr(p, VNLCUserName)) {
-			uidp = smb_FindUID(vcp, ((smb_t *)inp)->uid, 0);
-			if (uidp && uidp->unp)
-			  strcpy(temp, uidp->unp->name);
-			else strcpy(temp, " ");
-			_strlwr(temp);
-			smb_subst(p, var, sizeof(VNLCUserName), temp);
-			if (uidp)
-                smb_ReleaseUID(uidp);
-		}
-		else if (var = smb_stristr(p, VNComputerName)) {
-			sizeTemp = sizeof(temp);
-			GetComputerName((LPTSTR)temp, &sizeTemp);
-			smb_subst(p, var, sizeof(VNComputerName),
-				  temp);
-		}
-		else if (var = smb_stristr(p, VNLCComputerName)) {
-			sizeTemp = sizeof(temp);
-			GetComputerName((LPTSTR)temp, &sizeTemp);
-			_strlwr(temp);
-			smb_subst(p, var, sizeof(VNLCComputerName),
-				  temp);
-		}
-		else break;
+        while (1)
+        {
+            if (var = smb_stristr(p, VNUserName)) {
+                uidp = smb_FindUID(vcp, ((smb_t *)inp)->uid, 0);
+                if (uidp && uidp->unp)
+                    smb_subst(p, var, sizeof(VNUserName),uidp->unp->name);
+                else
+                    smb_subst(p, var, sizeof(VNUserName)," ");
+                if (uidp)
+                    smb_ReleaseUID(uidp);
+            }
+            else if (var = smb_stristr(p, VNLCUserName)) 
+            {
+                uidp = smb_FindUID(vcp, ((smb_t *)inp)->uid, 0);
+                if (uidp && uidp->unp)
+                    strcpy(temp, uidp->unp->name);
+                else 
+                    strcpy(temp, " ");
+                _strlwr(temp);
+                smb_subst(p, var, sizeof(VNLCUserName), temp);
+                if (uidp)
+                    smb_ReleaseUID(uidp);
+            }
+            else if (var = smb_stristr(p, VNComputerName)) 
+            {
+                sizeTemp = sizeof(temp);
+                GetComputerName((LPTSTR)temp, &sizeTemp);
+                smb_subst(p, var, sizeof(VNComputerName), temp);
+            }
+            else if (var = smb_stristr(p, VNLCComputerName)) 
+            {
+                sizeTemp = sizeof(temp);
+                GetComputerName((LPTSTR)temp, &sizeTemp);
+                _strlwr(temp);
+                smb_subst(p, var, sizeof(VNLCComputerName), temp);
+            }
+            else     
+                break;
+        }
+        *pathNamep = strdup(p);
+        return 1;
+    } 
+    else /* create  \\<netbiosName>\<cellname>  */
+    {
+        if (cm_GetCell_Gen(shareName, temp, CM_FLAG_CREATE))
+        {   
+            if (!stricmp(shareName, temp)) {  /* no partial matches allowed */
+                sprintf(pathName,"/%s/",shareName);
+                *pathNamep = strdup(strlwr(pathName));
+				return 1;
+            }
+        } 
 	}
-
-	*pathNamep = strdup(p);
-	return 1;
+    /* failure */
+    *pathNamep = NULL;
+    return 0;
 }
 
 /* find a dir search structure by cookie value, and return it held.
