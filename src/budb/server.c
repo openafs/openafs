@@ -306,14 +306,12 @@ main(argc, argv)
     struct rx_service *tservice;
     struct rx_securityClass *sca[3];
     
-    extern int afsconf_ClientAuth();
     extern int afsconf_ServerAuth();
     extern int afsconf_CheckAuth();
 
     extern int rx_stackSize;
     extern struct rx_securityClass *rxnull_NewServerSecurityObject();
     extern int BUDB_ExecuteRequest();
-    extern afsconf_GetKey();
     
 #ifdef AFS_NT40_ENV
     /* initialize winsock */
