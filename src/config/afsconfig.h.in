@@ -189,11 +189,13 @@ static /**/const char *const rcsid[] = { (char *)rcsid, "\100(#)" msg }
 #undef HAVE_SOCKET
 
 #if ENDIANESS_IN_SYS_PARAM_H
+# ifndef KERNEL
 #  include <sys/types.h>
 #  include <sys/param.h>
 #  if BYTE_ORDER == BIG_ENDIAN
 #  define WORDS_BIGENDIAN 1
 #  endif
+# endif
 #endif
 
 #undef AFS_AFSDB_ENV

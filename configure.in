@@ -163,10 +163,12 @@ if test "x$PTHREAD_LIBS" = xerror; then
 fi
 AC_SUBST(PTHREAD_LIBS)
 
+WITH_OBSOLETE=NO
 if test "$enable_obsolete" = "yes"; then
 	WITH_OBSOLETE=YES
 fi
 
+WITH_INSECURE=NO
 if test "$enable_insecure" = "yes"; then
 	WITH_INSECURE=YES
 fi
