@@ -494,9 +494,8 @@ verifyInterfaceAddress(ame, info, aservers)
     }
 
 #ifdef AFS_NT40_ENV
-    /* for now use getaddr(). use getAllAddr when implemented */
-    myAddr[0] = rxi_getaddr();
-    count = (myAddr[0] != 0);
+	/* get all my interface addresses in net byte order */
+	count = rx_getAllAddr(myAddr, UBIK_MAX_INTERFACE_ADDR);
 #else
     if (AFSDIR_SERVER_NETRESTRICT_FILEPATH || AFSDIR_SERVER_NETINFO_FILEPATH) {
 	/*
