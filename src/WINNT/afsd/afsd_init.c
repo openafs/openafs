@@ -323,9 +323,10 @@ int afsd_InitCM(char **reasonP)
 	cm_mountRootLen = sizeof(cm_mountRoot);
 	code = RegQueryValueEx(parmKey, "Mountroot", NULL, NULL,
 				cm_mountRoot, &cm_mountRootLen);
-	if (code == ERROR_SUCCESS)
+	if (code == ERROR_SUCCESS) {
 		afsi_log("Mount root %s", cm_mountRoot);
-	else {
+		cm_mountRootLen = strlen(cm_mountRoot);
+	} else {
 		strcpy(cm_mountRoot, "/afs");
 		cm_mountRootLen = 4;
 		/* Don't log */
