@@ -744,11 +744,7 @@ Check_PermissionRights(Vnode *targetptr,
 #define CHGRP(i,t) (((i)->Mask & AFS_SETGROUP) &&((i)->Group != (t)->disk.group))
 
     if (CallingRoutine & CHK_FETCH) {
-#ifdef	CMUCS
-	if (VanillaUser(client)) 
-#else
 	if (CallingRoutine == CHK_FETCHDATA || VanillaUser(client)) 
-#endif
 	  {
 	    if (targetptr->disk.type == vDirectory || targetptr->disk.type == vSymlink) {
 		if (   !(rights & PRSFS_LOOKUP)
@@ -5864,7 +5860,7 @@ static afs_int32 common_GiveUpCallBacks (struct rx_call *acall,
 					 struct AFSCBFids *FidArray,
 					 struct AFSCBs *CallBackArray)
 {
-    afs_int32 errorCode;
+    afs_int32 errorCode = 0;
     register int i;
     struct client *client;
     struct rx_connection *tcon;
@@ -5885,7 +5881,9 @@ static afs_int32 common_GiveUpCallBacks (struct rx_call *acall,
     TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
-    ViceLog(1, ("SAFS_GiveUpCallBacks (Noffids=%d)\n", FidArray->AFSCBFids_len));
+    if (FidArray)
+	ViceLog(1, ("SAFS_GiveUpCallBacks (Noffids=%d)\n", FidArray->AFSCBFids_len));
+
     FS_LOCK
     AFSCallStats.GiveUpCallBacks++, AFSCallStats.TotalCalls++;
     FS_UNLOCK
@@ -5893,6 +5891,8 @@ static afs_int32 common_GiveUpCallBacks (struct rx_call *acall,
 	goto Bad_GiveUpCallBacks;
 
     if (!FidArray && !CallBackArray) {
+	ViceLog(1, ("SAFS_GiveUpAllCallBacks: host=%x\n", 
+		(tcon->peer ? tcon->peer->host : 0)));
 	errorCode = GetClient(tcon, &client);
         if (!errorCode) 
 	    DeleteAllCallBacks_r(client->host, 1);
