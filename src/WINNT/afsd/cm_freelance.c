@@ -527,8 +527,15 @@ long cm_InitLocalMountPoints() {
             TCHAR szValueName[16];
             DWORD dwValueSize = 16;
             dwSize = sizeof(line);
-            RegEnumValue( hkFreelance, dwIndex, szValueName, &dwValueSize, NULL,
-                          &dwType, line, &dwSize);
+            if (RegEnumValue( hkFreelance, dwIndex, szValueName, &dwValueSize, NULL,
+                          &dwType, line, &dwSize))
+            {
+                afsi_log("RegEnumValue(hkFreelance) failed");
+                cm_noLocalMountPoints--;
+                continue;
+            }
+
+            afsi_log("Mountpoint[%d] = %s",dwIndex, line);
 
             /* find the trailing dot; null terminate after it */
             t2 = strrchr(line, '.');
@@ -568,8 +575,15 @@ long cm_InitLocalMountPoints() {
             TCHAR szValueName[16];
             DWORD dwValueSize = 16;
             dwSize = sizeof(line);
-            RegEnumValue( hkFreelanceSymlinks, dwIndex, szValueName, &dwValueSize, NULL,
-                          &dwType, line, &dwSize);
+            if (RegEnumValue( hkFreelanceSymlinks, dwIndex, szValueName, &dwValueSize, NULL,
+                              &dwType, line, &dwSize))
+            {
+                afsi_log("RegEnumValue(hkFreelanceSymlinks) failed");
+                cm_noLocalMountPoints--;
+                continue;
+            }
+
+            afsi_log("Symlink[%d] = %s",dwIndex, line);
 
             /* find the trailing dot; null terminate after it */
             t2 = strrchr(line, '.');
