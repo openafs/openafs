@@ -360,7 +360,7 @@ struct prdebugentry *aentry;
     code = pr_ReadEntry(tt, 0, apos, aentry);
     if (code) ABORT_WITH(tt,code);
 
-    if (!AccessOK (tt, cid, aentry, PRP_STATUS_MEM, PRP_STATUS_ANY))
+    if (!AccessOK (tt, cid, 0, PRP_STATUS_MEM, 0))
         ABORT_WITH(tt,PRPERM);
 
     /* Since prdebugentry is in the form of a prentry not a coentry, we will
