@@ -44,6 +44,7 @@ extern afs_rwlock_t afs_xcbhash;
 extern afs_int32 afs_mariner, afs_marinerHost;
 extern struct srvAddr *afs_srvAddrs[NSERVERS];
 extern int afs_resourceinit_flag;
+extern afs_int32 cryptall;
 
 static int PBogus(), PSetAcl(), PGetAcl(), PSetTokens(), PGetVolumeStatus();
 static int PSetVolumeStatus(), PFlush(), PNewStatMount(), PGetTokens(), PUnlog();
@@ -59,6 +60,7 @@ static int PSetSPrefs(), PGetSPrefs(), PGag(), PTwiddleRx();
 static int PSetSPrefs33(), PStoreBehind(), PGCPAGs();
 static int PGetCPrefs(), PSetCPrefs(); /* client network addresses */
 static int PGetInitParams(), PFlushMount(), PRxStatProc(), PRxStatPeer();
+static int PGetRxkcrypt(), PSetRxkcrypt();
 int PExportAfs();
 
 static int HandleClientContext(struct afs_ioctl *ablob, int *com, struct AFS_UCRED **acred, struct AFS_UCRED *credp);
@@ -121,6 +123,17 @@ static int (*(pioctlSw[]))() = {
   PFlushMount,			/* 52 - flush mount symlink data */
   PRxStatProc,			/* 53 - control process RX statistics */
   PRxStatPeer,			/* 54 - control peer RX statistics */
+  PGetRxkcrypt,			/* 55 -- Get rxkad encryption flag */
+  PSetRxkcrypt,			/* 56 -- Set rxkad encryption flag */
+  PNoop,			/* 57 -- arla: set file prio */
+  PNoop,			/* 58 -- arla: fallback getfh */
+  PNoop,			/* 59 -- arla: fallback fhopen */
+  PNoop,			/* 60 -- arla: controls xfsdebug */
+  PNoop,			/* 61 -- arla: controls arla debug */
+  PNoop,			/* 62 -- arla: debug interface */
+  PNoop,			/* 63 -- arla: print xfs status */
+  PNoop,			/* 64 -- arla: force cache check */
+  PNoop,			/* 65 -- arla: break callback */
 };
 
 #define PSetClientContext 99	/*  Special pioctl to setup caller's creds  */
@@ -3121,6 +3134,46 @@ static cred_t *crget(void)
     return cr;
 }
 #endif
+
+static int
+PGetRxkcrypt(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
+struct vcache *avc;
+int afun;
+struct vrequest *areq;
+char *ain, *aout;
+afs_int32 ainSize;
+afs_int32 *aoutSize;
+struct AFS_UCRED *acred;
+{
+    bcopy((char *)&cryptall, aout, sizeof(afs_int32));
+    *aoutSize=sizeof(afs_int32);
+    return 0;
+}
+
+static int
+PSetRxkcrypt(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
+struct vcache *avc;
+int afun;
+struct vrequest *areq;
+char *ain, *aout;
+afs_int32 ainSize;
+afs_int32 *aoutSize;
+struct AFS_UCRED *acred;
+{
+    afs_int32 tmpval;
+
+    if (!afs_osi_suser(acred))
+      return EPERM;
+    if (ainSize != sizeof(afs_int32) || ain == NULL)
+      return EINVAL;
+    bcopy(ain, (char *)&tmpval, sizeof(afs_int32));
+    /* if new mappings added later this will need to be changed */
+    if (tmpval != 0 && tmpval != 1)
+      return EINVAL;
+    cryptall = tmpval;
+    return 0;
+}
+
 /*
  * Create new credentials to correspond to a remote user with given
  * <hostaddr, uid, g0, g1>.  This allows a server running as root to

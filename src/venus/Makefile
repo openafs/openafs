@@ -159,6 +159,8 @@ cmdebug: cmdebug.o ${CMLIBS}
 kdump.o: kdump.c ${INCLS} AFS_component_version_number.c
 	set -x; \
 	case ${SYS_NAME} in \
+		*linux* ) \
+			${CC} -g -I${LINUX_SRCDIR}${LINUX_VERS}/include -I${DESTDIR}include -I${SRCDIR}include ${XCFLAGS} -c kdump.c ;; \
 		alpha_osf1 | alpha_osf20 |  alpha_osf30 | alpha_osf32 | alpha_osf32c| alpha_dux?? ) \
 			${CC} -g ${CFLAGS} -I/usr/sys/include -I/usr/sys/BINARY -I/usr/sys/AFS -DDEBUGGER -c kdump.c ;;\
 		sgi_6? ) \

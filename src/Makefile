@@ -12,7 +12,7 @@ INSTALL=${SRCDIR}bin/install
 WASHTOOL=true
 
 #WASHTOOLRCSUPDATE=${WASHTOOL} rcsupdate
-WASHTOOLCMD=make
+WASHTOOLCMD=$(MAKE)
 WASHTOOLFLAGS=-argument install
 
 COMPILE_PART1=cd obj; cd 

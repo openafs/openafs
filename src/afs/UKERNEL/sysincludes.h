@@ -197,10 +197,16 @@
 #define EXCL			usr_EXCL
 #define NONEXCL			usr_NONEXCL
 #define uio_rw			usr_uio_rw
+#ifdef ino_t
+#undef ino_t
+#endif
 #define ino_t			usr_ino_t
 #define offset_t		usr_offset_t
 #define getpid()		usr_getpid()
 #define setpag(A,B,C,D)		usr_setpag((A),(B),(C),(D))
+#ifdef pid_t
+#undef pid_t
+#endif
 #define pid_t			int
 
 enum usr_vcexcl { usr_NONEXCL, usr_EXCL };
