@@ -17,6 +17,7 @@ ln -s \
   $SRC/log/tokens \
   $SRC/log/unlog \
   $SRC/volser/vos \
+  $SRC/bozo/bos \
   usr/vice/bin
 ln -s $SRC/pinstall/pinstall usr/vice/bin/install
 
