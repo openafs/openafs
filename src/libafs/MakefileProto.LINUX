@@ -151,11 +151,11 @@ libafs.mp: $(DEST_LIBAFS_MP)
 	echo MP Build Complete
 
 $(DEST_LIBAFS): $(LIBAFS)
-	${INSTALL} -d $(@d)
+	${INSTALL} -d $(@D)
 	${INSTALL} $? $@
 
 $(DEST_LIBAFS_MP): $(LIBAFS_MP)
-	${INSTALL} -d $(@d)
+	${INSTALL} -d $(@D)
 	${INSTALL} $? $@
 
 ${LIBAFS}: $(AFSAOBJS) $(AFSNONFSOBJS)
