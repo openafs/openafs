@@ -369,7 +369,6 @@ void rxi_InitPeerParams(register struct rx_peer *pp)
 	pp->ifMTU = RX_REMOTE_PACKET_SIZE;
     }
 #else /* AFS_USERSPACE_IP_ADDR */
-    u_short rxmtu;
     struct ifnet *ifn;
 
 #if !defined(AFS_SGI62_ENV)
