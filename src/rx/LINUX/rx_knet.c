@@ -178,14 +178,9 @@ void osi_StopListener(void)
     extern int (*sys_killp)();
     extern int rxk_ListenerPid;
 
-    if (rxk_ListenerPid) {
+    while (rxk_ListenerPid) {
 	(void) (*sys_killp)(rxk_ListenerPid, 9);
-#ifdef AFS_LINUX24_ENV
-	afs_osi_Sleep(&rxk_ListenerPid); /* get an event */
-	afs_osi_Sleep(&rxk_ListenerPid); /* actually sleep */
-#else
-	rxk_ListenerPid = 0;
-#endif
+	afs_osi_Sleep(&rxk_ListenerPid); 
     }
     sock_release(rx_socket);
     rx_socket = NULL;
