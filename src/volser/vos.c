@@ -814,6 +814,8 @@ DisplayFormat2(server, partition, pntr)
     if (partition != partition_cache) {
 	MapPartIdIntoName(partition, pname);
 	partition_cache = partition;
+    } else {
+        pname[0] = '\0';
     }
     fprintf(STDOUT, "name\t\t%s\n", pntr->name);
     fprintf(STDOUT, "id\t\t%lu\n", pntr->volid);
@@ -1557,7 +1559,7 @@ volOffline(register struct cmd_syndesc *as)
 static int
 CreateVolume(register struct cmd_syndesc *as)
 {
-    afs_int32 pname;
+    afs_int32 pnum;
     char part[10];
     afs_int32 volid, code;
     struct nvldbentry entry;
@@ -1571,13 +1573,13 @@ CreateVolume(register struct cmd_syndesc *as)
 		as->parms[0].items->data);
 	return ENOENT;
     }
-    pname = volutil_GetPartitionID(as->parms[1].items->data);
-    if (pname < 0) {
+    pnum = volutil_GetPartitionID(as->parms[1].items->data);
+    if (pnum < 0) {
 	fprintf(STDERR, "vos: could not interpret partition name '%s'\n",
 		as->parms[1].items->data);
 	return ENOENT;
     }
-    if (!IsPartValid(pname, tserver, &code)) {	/*check for validity of the partition */
+    if (!IsPartValid(pnum, tserver, &code)) {	/*check for validity of the partition */
 	if (code)
 	    PrintError("", code);
 	else
@@ -1626,13 +1628,13 @@ CreateVolume(register struct cmd_syndesc *as)
     }
 
     code =
-	UV_CreateVolume2(tserver, pname, as->parms[2].items->data, quota, 0,
+	UV_CreateVolume2(tserver, pnum, as->parms[2].items->data, quota, 0,
 			 0, 0, 0, &volid);
     if (code) {
 	PrintDiagnostics("create", code);
 	return code;
     }
-    MapPartIdIntoName(pname, part);
+    MapPartIdIntoName(pnum, part);
     fprintf(STDOUT, "Volume %lu created on partition %s of %s\n",
 	    (unsigned long)volid, part, as->parms[0].items->data);
 
@@ -3291,7 +3293,7 @@ static
 SyncVldb(as)
      register struct cmd_syndesc *as;
 {
-    afs_int32 pname, code;	/* part name */
+    afs_int32 pnum, code;	/* part name */
     char part[10];
     int flags = 0;
     char *volname = 0;
@@ -3307,13 +3309,13 @@ SyncVldb(as)
     }
 
     if (as->parms[1].items) {
-	pname = volutil_GetPartitionID(as->parms[1].items->data);
-	if (pname < 0) {
+	pnum = volutil_GetPartitionID(as->parms[1].items->data);
+	if (pnum < 0) {
 	    fprintf(STDERR, "vos: could not interpret partition name '%s'\n",
 		    as->parms[1].items->data);
 	    exit(1);
 	}
-	if (!IsPartValid(pname, tserver, &code)) {	/*check for validity of the partition */
+	if (!IsPartValid(pnum, tserver, &code)) {	/*check for validity of the partition */
 	    if (code)
 		PrintError("", code);
 	    else
@@ -3334,14 +3336,14 @@ SyncVldb(as)
     if (as->parms[2].items) {
 	/* Synchronize an individual volume */
 	volname = as->parms[2].items->data;
-	code = UV_SyncVolume(tserver, pname, volname, flags);
+	code = UV_SyncVolume(tserver, pnum, volname, flags);
     } else {
 	if (!tserver) {
 	    fprintf(STDERR,
 		    "Without a -volume option, the -server option is required\n");
 	    exit(1);
 	}
-	code = UV_SyncVldb(tserver, pname, flags, 0 /*unused */ );
+	code = UV_SyncVldb(tserver, pnum, flags, 0 /*unused */ );
     }
 
     if (code) {
@@ -3358,7 +3360,7 @@ SyncVldb(as)
 	fprintf(STDOUT, " with state of server %s", as->parms[0].items->data);
     }
     if (flags) {
-	MapPartIdIntoName(pname, part);
+	MapPartIdIntoName(pnum, part);
 	fprintf(STDOUT, " partition %s\n", part);
     }
     fprintf(STDOUT, "\n");
@@ -3371,7 +3373,7 @@ SyncServer(as)
      register struct cmd_syndesc *as;
 
 {
-    afs_int32 pname, code;	/* part name */
+    afs_int32 pnum, code;	/* part name */
     char part[10];
 
     int flags = 0;
@@ -3383,13 +3385,13 @@ SyncServer(as)
 	exit(1);
     }
     if (as->parms[1].items) {
-	pname = volutil_GetPartitionID(as->parms[1].items->data);
-	if (pname < 0) {
+	pnum = volutil_GetPartitionID(as->parms[1].items->data);
+	if (pnum < 0) {
 	    fprintf(STDERR, "vos: could not interpret partition name '%s'\n",
 		    as->parms[1].items->data);
 	    exit(1);
 	}
-	if (!IsPartValid(pname, tserver, &code)) {	/*check for validity of the partition */
+	if (!IsPartValid(pnum, tserver, &code)) {	/*check for validity of the partition */
 	    if (code)
 		PrintError("", code);
 	    else
@@ -3399,15 +3401,17 @@ SyncServer(as)
 	    exit(1);
 	}
 	flags = 1;
+    } else {
+        pnum = -1;
     }
 
-    code = UV_SyncServer(tserver, pname, flags, 0 /*unused */ );
+    code = UV_SyncServer(tserver, pnum, flags, 0 /*unused */ );
     if (code) {
 	PrintDiagnostics("syncserv", code);
 	exit(1);
     }
     if (flags) {
-	MapPartIdIntoName(pname, part);
+	MapPartIdIntoName(pnum, part);
 	fprintf(STDOUT, "Server %s partition %s synchronized with VLDB\n",
 		as->parms[0].items->data, part);
     } else
