@@ -1360,6 +1360,7 @@ DECL_PIOCTL(PSetTokens)
     ain += sizeof(afs_int32);
     stp	= ain;	/* remember where the ticket is */
     if (i < 0 || i > 2000) return EINVAL;	/* malloc may fail */
+    if (i > MAXKTCTICKETLEN) return EINVAL;
     stLen = i;
     ain	+= i;	/* skip over ticket */
     memcpy((char *)&i, ain, sizeof(afs_int32));
