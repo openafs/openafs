@@ -1908,7 +1908,6 @@ listElements(call, aid, alist, over)
     return code;
 }
 
-#if defined(SUPERGROUPS)
 
 afs_int32
 SPR_ListSuperGroups(call, aid, alist, over)
@@ -1917,13 +1916,18 @@ SPR_ListSuperGroups(call, aid, alist, over)
      prlist *alist;
      afs_int32 *over;
 {
+#if defined(SUPERGROUPS)
     afs_int32 code;
 
     code = listSuperGroups(call, aid, alist, over);
     osi_auditU(call, "PTS_LstSGrps", code, AUD_LONG, aid, AUD_END);
     return code;
+#else
+    return RXGEN_OPCODE;
+#endif
 }
 
+#if defined(SUPERGROUPS)
 afs_int32
 listSuperGroups(call, aid, alist, over)
      struct rx_call *call;
