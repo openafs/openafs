@@ -107,6 +107,14 @@ static inline int CV_WAIT(afs_kcondvar_t *cv, afs_kmutex_t *l)
 {
     int isAFSGlocked = ISAFS_GLOCK(); 
     sigset_t saved_set;
+#ifdef DECLARE_WAITQUEUE
+    DECLARE_WAITQUEUE(wait, current);
+#else
+    struct wait_queue wait = { current, NULL };
+#endif
+ 
+    add_wait_queue((wait_queue_head_t *)cv, &wait);
+    set_current_state(TASK_INTERRUPTIBLE);
 
     if (isAFSGlocked) AFS_GUNLOCK();
     MUTEX_EXIT(l);
@@ -117,19 +125,16 @@ static inline int CV_WAIT(afs_kcondvar_t *cv, afs_kmutex_t *l)
     recalc_sigpending(current);
     spin_unlock_irq(&current->sigmask_lock);
 
-#if defined(AFS_LINUX24_ENV)
-    interruptible_sleep_on((wait_queue_head_t *)cv);
-#else
-    interruptible_sleep_on((struct wait_queue**)cv);
-#endif
+    schedule();
+    remove_wait_queue(cv, &wait);
 
     spin_lock_irq(&current->sigmask_lock);
     current->blocked = saved_set;
     recalc_sigpending(current);
     spin_unlock_irq(&current->sigmask_lock);
 
-    MUTEX_ENTER(l);
     if (isAFSGlocked) AFS_GLOCK();
+    MUTEX_ENTER(l);
 
     return 0;
 }
@@ -139,6 +144,14 @@ static inline int CV_TIMEDWAIT(afs_kcondvar_t *cv, afs_kmutex_t *l, int waittime
     int isAFSGlocked = ISAFS_GLOCK();
     long t = waittime * HZ / 1000;
     sigset_t saved_set;
+#ifdef DECLARE_WAITQUEUE
+    DECLARE_WAITQUEUE(wait, current);
+#else
+    struct wait_queue wait = { current, NULL };
+#endif
+ 
+    add_wait_queue((wait_queue_head_t *)cv, &wait);
+    set_current_state(TASK_INTERRUPTIBLE);
 
     if (isAFSGlocked) AFS_GUNLOCK();
     MUTEX_EXIT(l);
@@ -149,19 +162,16 @@ static inline int CV_TIMEDWAIT(afs_kcondvar_t *cv, afs_kmutex_t *l, int waittime
     recalc_sigpending(current);
     spin_unlock_irq(&current->sigmask_lock);
 
-#if defined(AFS_LINUX24_ENV)
-    t = interruptible_sleep_on_timeout((wait_queue_head_t *)cv, t);
-#else
-    t = interruptible_sleep_on_timeout((struct wait_queue**)cv, t);
-#endif
+    t = schedule_timeout(t);
+    remove_wait_queue(cv, &wait);
     
     spin_lock_irq(&current->sigmask_lock);
     current->blocked = saved_set;
     recalc_sigpending(current);
     spin_unlock_irq(&current->sigmask_lock);
 
-    MUTEX_ENTER(l);
     if (isAFSGlocked) AFS_GLOCK();
+    MUTEX_ENTER(l);
 
     return 0;
 }
