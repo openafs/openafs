@@ -2992,6 +2992,65 @@ long smb_ApplyV3DirListPatches(cm_scache_t *dscp,
 		if (code) { 
 			lock_ReleaseMutex(&scp->mx);
 			cm_ReleaseSCache(scp);
+
+            dptr = patchp->dptr;
+
+            /* Plug in fake timestamps. A time stamp of 0 causes 'invalid parameter'
+               errors in the client. */
+            if (infoLevel >= 0x101) {
+                /* 1969-12-31 23:59:59 +00 */
+                ft.dwHighDateTime = 0x19DB200;
+                ft.dwLowDateTime = 0x5BB78980;
+
+			    /* copy to Creation Time */
+			    *((FILETIME *)dptr) = ft;
+			    dptr += 8;
+
+			    /* copy to Last Access Time */
+			    *((FILETIME *)dptr) = ft;
+			    dptr += 8;
+
+			    /* copy to Last Write Time */
+			    *((FILETIME *)dptr) = ft;
+			    dptr += 8;
+
+			    /* copy to Change Time */
+			    *((FILETIME *)dptr) = ft;
+
+            } else {
+                /* 1969-12-31 23:59:58 +00*/
+                dosTime = 0xEBBFBF7D;
+
+			    /* and copy out date */
+			    shortTemp = (dosTime>>16) & 0xffff;
+			    *((u_short *)dptr) = shortTemp;
+			    dptr += 2;
+
+			    /* copy out creation time */
+			    shortTemp = dosTime & 0xffff;
+			    *((u_short *)dptr) = shortTemp;
+			    dptr += 2;
+
+			    /* and copy out date */
+			    shortTemp = (dosTime>>16) & 0xffff;
+			    *((u_short *)dptr) = shortTemp;
+			    dptr += 2;
+    			
+			    /* copy out access time */
+			    shortTemp = dosTime & 0xffff;
+			    *((u_short *)dptr) = shortTemp;
+			    dptr += 2;
+
+			    /* and copy out date */
+			    shortTemp = (dosTime>>16) & 0xffff;
+			    *((u_short *)dptr) = shortTemp;
+			    dptr += 2;
+    			
+			    /* copy out mod time */
+			    shortTemp = dosTime & 0xffff;
+			    *((u_short *)dptr) = shortTemp;
+			    dptr += 2;
+            }
 			continue;
         }
                 

@@ -378,17 +378,17 @@ extern void smb_Init(osi_log_t *logp, char *smbNamep, int useV3, int LANadapt,
 #endif
   );
 
-extern void smb_LargeSearchTimeFromUnixTime(FILETIME *largeTimep, long unixTime);
+extern void smb_LargeSearchTimeFromUnixTime(FILETIME *largeTimep, afs_uint32 unixTime);
 
-extern void smb_UnixTimeFromLargeSearchTime(long *unixTimep, FILETIME *largeTimep);
+extern void smb_UnixTimeFromLargeSearchTime(afs_uint32 *unixTimep, FILETIME *largeTimep);
 
-extern void smb_SearchTimeFromUnixTime(long *dosTimep, long unixTime);
+extern void smb_SearchTimeFromUnixTime(long *dosTimep, afs_uint32 unixTime);
 
-extern void smb_UnixTimeFromSearchTime(long *unixTimep, long searchTime);
+extern void smb_UnixTimeFromSearchTime(afs_uint32 *unixTimep, long searchTime);
 
-extern void smb_DosUTimeFromUnixTime(long *dosUTimep, long unixTime);
+extern void smb_DosUTimeFromUnixTime(afs_uint32 *dosUTimep, afs_uint32 unixTime);
 
-extern void smb_UnixTimeFromDosUTime(long *unixTimep, long dosUTime);
+extern void smb_UnixTimeFromDosUTime(afs_uint32 *unixTimep, afs_uint32 dosUTime);
 
 extern smb_vc_t *smb_FindVC(unsigned short lsn, int flags, int lana);
 

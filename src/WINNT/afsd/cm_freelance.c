@@ -30,12 +30,59 @@ cm_localMountPoint_t* cm_localMountPoints;
 osi_mutex_t cm_Freelance_Lock;
 int cm_localMountPointChangeFlag = 0;
 int cm_freelanceEnabled = 0;
+afs_uint32    FakeFreelanceModTime = 0x3b49f6e2;
 
 void cm_InitFakeRootDir();
 
+#if !defined(DJGPP)
+void cm_FreelanceChangeNotifier(void * parmp) {
+    HANDLE hFreelanceChangeEvent = 0;
+    HKEY   hkFreelance = 0;
+
+    if (RegOpenKeyEx( HKEY_LOCAL_MACHINE, 
+                      "SOFTWARE\\OpenAFS\\Client\\Freelance",
+                      0,
+                      KEY_NOTIFY,
+                      &hkFreelance) == ERROR_SUCCESS) {
+
+        hFreelanceChangeEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+        if (hFreelanceChangeEvent == NULL) {
+            RegCloseKey(hkFreelance);
+            return;
+        }
+    }
+
+    while ( TRUE ) {
+    /* check hFreelanceChangeEvent to see if it is set. 
+     * if so, call cm_noteLocalMountPointChange()
+     */
+        if (RegNotifyChangeKeyValue( hkFreelance,   /* hKey */
+                                     FALSE,         /* bWatchSubtree */
+                                     REG_NOTIFY_CHANGE_LAST_SET, /* dwNotifyFilter */
+                                     hFreelanceChangeEvent, /* hEvent */
+                                     TRUE          /* fAsynchronous */
+                                     ) != ERROR_SUCCESS) {
+            RegCloseKey(hkFreelance);
+            CloseHandle(hFreelanceChangeEvent);
+            return;
+        }
+
+        if (WaitForSingleObject(hFreelanceChangeEvent, INFINITE) == WAIT_OBJECT_0)
+        {
+            cm_noteLocalMountPointChange();
+        }
+    }
+}
+#endif
+
 void cm_InitFreelance() {
+#if !defined(DJGPP)
+    thread_t phandle;
+    int lpid;
+#endif
+
 	lock_InitializeMutex(&cm_Freelance_Lock, "Freelance Lock");
-  
+
 	// yj: first we make a call to cm_initLocalMountPoints
 	// to read all the local mount points from an ini file
 	cm_InitLocalMountPoints();
@@ -43,8 +90,15 @@ void cm_InitFreelance() {
 	// then we make a call to InitFakeRootDir to create
 	// a fake root directory based on the local mount points
 	cm_InitFakeRootDir();
-
 	// --- end of yj code
+
+#if !defined(DJGPP)
+    /* Start the registry monitor */
+    phandle = thrd_Create(NULL, 65536, (ThreadFunc) cm_FreelanceChangeNotifier,
+                          NULL, 0, &lpid, "cm_FreelanceChangeNotifier");
+	osi_assert(phandle != NULL);
+	thrd_CloseHandle(phandle);
+#endif
 }
 
 /* yj: Initialization of the fake root directory */
@@ -232,30 +286,29 @@ int cm_FakeRootFid(cm_fid_t *fidp)
       return 0;
 }
   
-int cm_getLocalMountPointChange() {
-  return cm_localMountPointChangeFlag;
-}
-
-int cm_clearLocalMountPointChange() {
-  cm_localMountPointChangeFlag = 0;
-  return 0;
-}
-
 /* called directly from ioctl */
 /* called while not holding freelance lock */
 int cm_noteLocalMountPointChange() {
-  lock_ObtainMutex(&cm_Freelance_Lock);
-  cm_fakeDirVersion++;
-  cm_localMountPointChangeFlag = 1;
-  lock_ReleaseMutex(&cm_Freelance_Lock);
-  return 1;
+    lock_ObtainMutex(&cm_Freelance_Lock);
+    cm_fakeDirVersion++;
+    cm_localMountPointChangeFlag = 1;
+    lock_ReleaseMutex(&cm_Freelance_Lock);
+    return 1;
+}
+
+int cm_getLocalMountPointChange() {
+    return cm_localMountPointChangeFlag;
+}
+
+int cm_clearLocalMountPointChange() {
+    cm_localMountPointChangeFlag = 0;
+    return 0;
 }
 
 int cm_reInitLocalMountPoints() {
 	cm_fid_t aFid;
 	int i, hash;
 	cm_scache_t *scp, **lscpp, *tscp;
-
 	
 	osi_Log0(afsd_logp,"----- freelance reinitialization starts ----- ");
 
@@ -339,8 +392,8 @@ int cm_reInitLocalMountPoints() {
 /* to be called while holding freelance lock unless during init. */
 long cm_InitLocalMountPoints() {
 	FILE *fp;
+    int i;
 	char line[512];
-	int i;
 	char* t;
 	cm_localMountPoint_t* aLocalMountPoint;
 	char hdir[120];
@@ -351,6 +404,8 @@ long cm_InitLocalMountPoints() {
     DWORD dwType, dwSize;
     DWORD dwMountPoints;
     DWORD dwIndex;
+    FILETIME ftLastWriteTime;
+    afs_uint32 unixTime;
 #endif
 
 #if !defined(DJGPP)
@@ -371,8 +426,10 @@ long cm_InitLocalMountPoints() {
                          NULL,  /* lpcMaxValueNameLen */
                          NULL,  /* lpcMaxValueLen */
                          NULL,  /* lpcbSecurityDescriptor */
-                         NULL   /* lpftLastWriteTime */
+                         &ftLastWriteTime /* lpftLastWriteTime */
                          );
+
+        smb_UnixTimeFromLargeSearchTime(&FakeFreelanceModTime, &ftLastWriteTime);
 
         if ( dwMountPoints == 0 ) {
             sprintf(line,"%s#%s:root.cell.\n",rootCellName,rootCellName);
@@ -413,9 +470,10 @@ long cm_InitLocalMountPoints() {
                 t = strchr(line, '%');
             // make sure that there is a '#' or '%' separator in the line
             if (!t) {
-                afsi_log("error occurred while parsing entry in %s: no # or %% separator in line %d", AFS_FREELANCE_INI, i);
-                fprintf(stderr, "error occurred while parsing entry in afs_freelance.ini: no # or %% separator in line %d", i);
-                return -1;
+                afsi_log("error occurred while parsing entry in %s: no # or %% separator in line %d", AFS_FREELANCE_INI, dwIndex);
+                fprintf(stderr, "error occurred while parsing entry in afs_freelance.ini: no # or %% separator in line %d", dwIndex);
+                cm_noLocalMountPoints--;
+                continue;
             }
             aLocalMountPoint->namep=malloc(t-line+1);
             memcpy(aLocalMountPoint->namep, line, t-line);
@@ -437,6 +495,9 @@ long cm_InitLocalMountPoints() {
     }
 #endif
 
+    /* What follows is the old code to read freelance mount points 
+     * out of a text file modified to copy the data into the registry
+     */
 	cm_GetConfigDir(hdir);
 	strcat(hdir, AFS_FREELANCE_INI);
 	// open the ini file for reading
@@ -462,7 +523,6 @@ long cm_InitLocalMountPoints() {
 	// we successfully opened the file
 	osi_Log0(afsd_logp,"opened afs_freelance.ini");
 	
-
 #if !defined(DJGPP)
     RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
                     "SOFTWARE\\OpenAFS\\Client\\Freelance",
@@ -584,10 +644,11 @@ long cm_FreelanceAddMount(char *filename, char *cellname, char *volume, int rw, 
        don't add the mount point.
        allow partial matches as a means of poor man's alias. */
     /* major performance issue? */
-    osi_Log3(afsd_logp,"Freelance Add Mount request: filename=%s cellname=%s volume=%s %s",
+    osi_Log4(afsd_logp,"Freelance Add Mount request: filename=%s cellname=%s volume=%s %s",
               osi_LogSaveString(afsd_logp,filename), 
               osi_LogSaveString(afsd_logp,cellname), 
-              osi_LogSaveString(afsd_logp,volume), rw ? "rw" : "ro");
+              osi_LogSaveString(afsd_logp,volume), 
+              rw ? "rw" : "ro");
     if (cellname[0] == '.') {
         if (!cm_GetCell_Gen(&cellname[1], fullname, CM_FLAG_CREATE))
             return -1;

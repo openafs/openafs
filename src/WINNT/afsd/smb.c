@@ -156,7 +156,7 @@ extern HANDLE WaitToTerminate;
  * Time in Unix format of midnight, 1/1/1970 local time.
  * When added to dosUTime, gives Unix (AFS) time.
  */
-long smb_localZero;
+long smb_localZero = 0;
 
 /* Time difference for converting to kludge-GMT */
 int smb_NowTZ;
@@ -432,7 +432,7 @@ static int ExtractBits(WORD bits, short start, short len)
 }
 
 #ifndef DJGPP
-void ShowUnixTime(char *FuncName, long unixTime)
+void ShowUnixTime(char *FuncName, afs_uint32 unixTime)
 {
 	FILETIME ft;
 	WORD wDate, wTime;
@@ -583,7 +583,7 @@ smb_CalculateNowTZ()
 }
 
 #ifndef DJGPP
-void smb_LargeSearchTimeFromUnixTime(FILETIME *largeTimep, long unixTime)
+void smb_LargeSearchTimeFromUnixTime(FILETIME *largeTimep, afs_uint32 unixTime)
 {
 	struct tm *ltp;
 	SYSTEMTIME stm;
@@ -623,7 +623,7 @@ void smb_LargeSearchTimeFromUnixTime(FILETIME *largeTimep, long unixTime)
 	SystemTimeToFileTime(&stm, largeTimep);
 }
 #else /* DJGPP */
-void smb_LargeSearchTimeFromUnixTime(FILETIME *largeTimep, long unixTime)
+void smb_LargeSearchTimeFromUnixTime(FILETIME *largeTimep, afs_uint32 unixTime)
 {
 	/* unixTime: seconds since 1/1/1970 00:00:00 GMT */
 	/* FILETIME: 100ns intervals since 1/1/1601 00:00:00 ??? */
@@ -645,7 +645,7 @@ void smb_LargeSearchTimeFromUnixTime(FILETIME *largeTimep, long unixTime)
 #endif /* !DJGPP */
 
 #ifndef DJGPP
-void smb_UnixTimeFromLargeSearchTime(long *unixTimep, FILETIME *largeTimep)
+void smb_UnixTimeFromLargeSearchTime(afs_uint32 *unixTimep, FILETIME *largeTimep)
 {
 	SYSTEMTIME stm;
 	struct tm lt;
@@ -668,7 +668,7 @@ void smb_UnixTimeFromLargeSearchTime(long *unixTimep, FILETIME *largeTimep)
 	_timezone = save_timezone;
 }
 #else /* DJGPP */
-void smb_UnixTimeFromLargeSearchTime(long *unixTimep, FILETIME *largeTimep)
+void smb_UnixTimeFromLargeSearchTime(afs_uint32 *unixTimep, FILETIME *largeTimep)
 {
 	/* unixTime: seconds since 1/1/1970 00:00:00 GMT */
 	/* FILETIME: 100ns intervals since 1/1/1601 00:00:00 GMT? */
@@ -689,7 +689,7 @@ void smb_UnixTimeFromLargeSearchTime(long *unixTimep, FILETIME *largeTimep)
 }
 #endif /* !DJGPP */
 
-void smb_SearchTimeFromUnixTime(long *dosTimep, long unixTime)
+void smb_SearchTimeFromUnixTime(long *dosTimep, afs_uint32 unixTime)
 {
 	struct tm *ltp;
 	int dosDate;
@@ -714,7 +714,7 @@ void smb_SearchTimeFromUnixTime(long *dosTimep, long unixTime)
 	*dosTimep = (dosDate<<16) | dosTime;
 }	
 
-void smb_UnixTimeFromSearchTime(long *unixTimep, long searchTime)
+void smb_UnixTimeFromSearchTime(afs_uint32 *unixTimep, long searchTime)
 {
 	unsigned short dosDate;
 	unsigned short dosTime;
@@ -734,12 +734,12 @@ void smb_UnixTimeFromSearchTime(long *unixTimep, long searchTime)
 	*unixTimep = mktime(&localTm);
 }
 
-void smb_DosUTimeFromUnixTime(long *dosUTimep, long unixTime)
+void smb_DosUTimeFromUnixTime(afs_uint32 *dosUTimep, afs_uint32 unixTime)
 {
 	*dosUTimep = unixTime - smb_localZero;
 }
 
-void smb_UnixTimeFromDosUTime(long *unixTimep, long dosTime)
+void smb_UnixTimeFromDosUTime(afs_uint32 *unixTimep, afs_uint32 dosTime)
 {
 #ifndef DJGPP
 	*unixTimep = dosTime + smb_localZero;
@@ -2813,13 +2813,14 @@ long smb_ReceiveNegotiate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
 void smb_Daemon(void *parmp)
 {
-	int count = 0;
+	afs_uint32 count = 0;
 
 	while(1) {
 		count++;
 		thrd_Sleep(10000);
-		if ((count % 360) == 0)	{	/* every hour */
+		if ((count % 72) == 0)	{	/* every five minutes */
             struct tm myTime;
+            long old_localZero = smb_localZero;
 		 
             /* Initialize smb_localZero */
             myTime.tm_isdst = -1;		/* compute whether on DST or not */
@@ -2832,6 +2833,11 @@ void smb_Daemon(void *parmp)
             smb_localZero = mktime(&myTime);
 
             smb_CalculateNowTZ();
+
+#ifdef AFS_FREELANCE
+            if ( smb_localZero != old_localZero )
+                cm_noteLocalMountPointChange();
+#endif
         }
 		/* XXX GC dir search entries */
 	}
@@ -7113,8 +7119,8 @@ void smb_NetbiosInit()
         code = Netbios(ncbp, dos_ncb);
 #endif /* !DJGPP */
           
-        osi_Log3(smb_logp, "Netbios NCBADDNAME lana=%d code=%d retcode=%d complete=%d",
-                 lana, code, ncbp->ncb_retcode,ncbp->ncb_cmd_cplt);
+        osi_Log4(smb_logp, "Netbios NCBADDNAME lana=%d code=%d retcode=%d complete=%d",
+                 lana, code, ncbp->ncb_retcode, ncbp->ncb_cmd_cplt);
         {
             char name[NCBNAMSZ+1];
             name[NCBNAMSZ]=0;
@@ -7246,6 +7252,11 @@ void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
 
 	/* Initialize kludge-GMT */
 	smb_CalculateNowTZ();
+
+#ifdef AFS_FREELANCE_CLIENT
+    /* Make sure the root.afs volume has the correct time */
+    cm_noteLocalMountPointChange();
+#endif
 
 	/* initialize the remote debugging log */
 	smb_logp = logp;

@@ -316,8 +316,8 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
 
 		scp->owner=0x0;
 		scp->unixModeBits=0x1ff;
-		scp->clientModTime=0x3b49f6e2;
-		scp->serverModTime=0x3b49f6e2;
+		scp->clientModTime=FakeFreelanceModTime;
+		scp->serverModTime=FakeFreelanceModTime;
 		scp->parentUnique = 0x1;
 		scp->parentVnode=0x1;
 		scp->group=0;
@@ -819,8 +819,8 @@ void cm_MergeStatus(cm_scache_t *scp, AFSFetchStatus *statusp, AFSVolSync *volp,
 		statusp->ParentVnode = 0x1;
 		statusp->ParentUnique = 0x1;
 		statusp->ResidencyMask = 0;
-		statusp->ClientModTime = 0x3b49f6e2;
-		statusp->ServerModTime = 0x3b49f6e2;
+		statusp->ClientModTime = FakeFreelanceModTime;
+		statusp->ServerModTime = FakeFreelanceModTime;
 		statusp->Group = 0;
 		statusp->SyncCounter = 0;
 		statusp->dataVersionHigh = 0;
