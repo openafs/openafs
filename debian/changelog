@@ -1,3 +1,9 @@
+openafs (1.2.3final2-3) unstable; urgency=medium
+
+  * Oops, install backup
+
+ -- Sam Hartman <hartmans@debian.org>  Thu,  7 Mar 2002 08:12:34 -0500
+
 openafs (1.2.3final2-2) unstable; urgency=low
 
   * Add dynroot support to debconf; currently no support for creating
