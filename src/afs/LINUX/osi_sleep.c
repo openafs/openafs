@@ -160,8 +160,13 @@ static void afs_addevent(char *event)
 /* Release the specified event */
 #define relevent(evp) ((evp)->refcount--)
 
-/* afs_osi_Sleep -- waits for an event to be notified. */
-
+/* afs_osi_Sleep -- waits for an event to be notified, ignoring signals.
+ * - NOTE: that on Linux, there are circumstances in which TASK_INTERRUPTIBLE
+ *   can wake up, even if all signals are blocked
+ * - TODO: handle signals correctly by passing an indication back to the
+ *   caller that the wait has been interrupted and the stack should be cleaned
+ *   up preparatory to signal delivery
+ */
 void afs_osi_Sleep(char *event)
 {
     struct afs_event *evp;

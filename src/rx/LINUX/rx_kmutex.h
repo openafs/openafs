@@ -97,9 +97,13 @@ static inline void MUTEX_EXIT(afs_kmutex_t *l)
 #endif
 #define CV_DESTROY(cv)
 
-/* CV_WAIT and CV_TIMEDWAIT rely on the fact that the Linux kernel has
- * a global lock. Thus we can safely drop our locks before calling the
- * kernel sleep services.
+/* CV_WAIT and CV_TIMEDWAIT sleep until the specified event occurs, or, in the
+ * case of CV_TIMEDWAIT, until the specified timeout occurs.
+ * - NOTE: that on Linux, there are circumstances in which TASK_INTERRUPTIBLE
+ *   can wake up, even if all signals are blocked
+ * - TODO: handle signals correctly by passing an indication back to the
+ *   caller that the wait has been interrupted and the stack should be cleaned
+ *   up preparatory to signal delivery
  */
 static inline int CV_WAIT(afs_kcondvar_t *cv, afs_kmutex_t *l)
 {
