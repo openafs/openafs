@@ -1258,7 +1258,7 @@ int afs_rwlock_nowait(vnode_t *vp, AFS_RWLOCK_T flag)
     return 0;
 }
 
-#if defined(AFS_SGI64_ENV) && defined(CKPT)
+#if defined(AFS_SGI64_ENV) && defined(CKPT) && !defined(_R5000_CVT_WAR)
 int afs_fid2(OSI_VC_DECL(avc), struct fid *fidp)
 {
     struct cell *tcell;
@@ -1283,10 +1283,21 @@ int afs_fid2(OSI_VC_DECL(avc), struct fid *fidp)
  * return of ENOSYS would make the code fail over to VOP_FID. We can't let
  * that happen, since we do a VN_HOLD there in the expectation that 
  * posthandle will be called to release the vnode.
+ *
+ * afs_fid2 is used to support the R5000 workarounds (_R5000_CVT_WAR)
  */
 int afs_fid2(OSI_VC_DECL(avc), struct fid *fidp)
 {
+#if defined(_R5000_CVT_WAR)
+    extern int R5000_cvt_war;
+
+    if (R5000_cvt_war)
+	return ENOSYS;
+    else
+	return EINVAL;
+#else
     return EINVAL;
+#endif
 }
 #endif /* AFS_SGI64_ENV && CKPT */
 

@@ -291,6 +291,9 @@ typedef struct vnode1 {
 #ifdef VNODE_TRACING
 	struct ktrace 	*v_trace;		/* trace header structure    */
 #endif
+#ifdef CKPT
+	ckpt_handle_t	v_ckpt;			/* ckpt lookup info */
+#endif
 } vnode1_t;
 
 extern struct pfdat *vnode_get_dpages(vnode_t*);
