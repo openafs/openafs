@@ -370,8 +370,8 @@ static int rxinit_status = 1;
 #define UNLOCK_RX_INIT
 #endif
 
-int
-rx_Init(u_int port)
+int 
+rx_InitHost(u_int host, u_int port)
 {
 #ifdef KERNEL
     osi_timeval_t tv;
@@ -407,7 +407,7 @@ rx_Init(u_int port)
     /* Allocate and initialize a socket for client and perhaps server
      * connections. */
 
-    rx_socket = rxi_GetUDPSocket((u_short) port);
+    rx_socket = rxi_GetHostUDPSocket(host, (u_short) port);
     if (rx_socket == OSI_NULLSOCKET) {
 	UNLOCK_RX_INIT return RX_ADDRINUSE;
     }
@@ -532,6 +532,11 @@ rx_Init(u_int port)
     USERPRI;
     tmp_status = rxinit_status = 0;
     UNLOCK_RX_INIT return tmp_status;
+}
+
+int rx_Init(u_int port) 
+{
+    return rx_InitHost(htonl(INADDR_ANY), port);
 }
 
 /* called with unincremented nRequestsRunning to see if it is OK to start
@@ -1247,7 +1252,7 @@ rx_NewService(u_short port, u_short serviceId, char *serviceName,
 	    if (socket == OSI_NULLSOCKET) {
 		/* If we don't already have a socket (from another
 		 * service on same port) get a new one */
-		socket = rxi_GetUDPSocket(port);
+		socket = rxi_GetHostUDPSocket(htonl(INADDR_ANY), port);
 		if (socket == OSI_NULLSOCKET) {
 		    AFS_RXGUNLOCK();
 		    USERPRI;

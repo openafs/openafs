@@ -30,6 +30,7 @@ int (*rxk_PacketArrivalProc) (register struct rx_packet * ahandle, register stru
 int (*rxk_GetPacketProc) (char **ahandle, int asize);
 #endif
 
+struct osi_socket *rxk_NewSocketHost(afs_uint32 ahost, short aport);
 extern struct interfaceAddr afs_cb_interface;
 
 rxk_ports_t rxk_ports;
@@ -102,16 +103,21 @@ rxk_shutdownPorts(void)
 }
 
 osi_socket
-rxi_GetUDPSocket(u_short port)
+rxi_GetHostUDPSocket(u_int host, u_short port)
 {
     struct osi_socket *sockp;
-    sockp = (struct osi_socket *)rxk_NewSocket(port);
+    sockp = (struct osi_socket *)rxk_NewSocketHost(host, port);
     if (sockp == (struct osi_socket *)0)
 	return OSI_NULLSOCKET;
     rxk_AddPort(port, (char *)sockp);
     return (osi_socket) sockp;
 }
 
+osi_socket
+rxi_GetUDPSocket(u_short port)
+{
+    return rxi_GetHostUDPSocket(htonl(INADDR_ANY), port);
+}
 
 void
 osi_Panic(msg, a1, a2, a3)
@@ -756,7 +762,7 @@ rxi_FindIfnet(afs_uint32 addr, afs_uint32 * maskp)
  * in network byte order.
  */
 struct osi_socket *
-rxk_NewSocket(short aport)
+rxk_NewSocketHost(afs_uint32 ahost, short aport)
 {
     register afs_int32 code;
     struct socket *newSocket;
@@ -816,7 +822,7 @@ rxk_NewSocket(short aport)
     memset(&myaddr, 0, sizeof myaddr);
     myaddr.sin_family = AF_INET;
     myaddr.sin_port = aport;
-    myaddr.sin_addr.s_addr = 0;
+    myaddr.sin_addr.s_addr = ahost;
 #ifdef STRUCT_SOCKADDR_HAS_SA_LEN
     myaddr.sin_len = sizeof(myaddr);
 #endif
@@ -908,6 +914,11 @@ rxk_NewSocket(short aport)
     return (struct osi_socket *)0;
 }
 
+struct osi_socket *
+rxk_NewSocket(short aport)
+{
+    return rxk_NewSocketHost(0, aport);
+}
 
 /* free socket allocated by rxk_NewSocket */
 int

@@ -94,7 +94,7 @@ pthread_mutex_t rx_if_mutex;
  * failure. Port must be in network byte order.	
  */
 osi_socket
-rxi_GetUDPSocket(u_short port)
+rxi_GetHostUDPSocket(u_int ahost, u_short port)
 {
     int binds, code = 0;
     osi_socket socketFd = OSI_NULLSOCKET;
@@ -121,7 +121,7 @@ rxi_GetUDPSocket(u_short port)
 	goto error;
     }
 
-    taddr.sin_addr.s_addr = INADDR_ANY;
+    taddr.sin_addr.s_addr = ahost;
     taddr.sin_family = AF_INET;
     taddr.sin_port = (u_short) port;
 #ifdef STRUCT_SOCKADDR_HAS_SA_LEN
@@ -199,6 +199,12 @@ rxi_GetUDPSocket(u_short port)
     rx_stats.socketGreedy = greedy;
     MUTEX_EXIT(&rx_stats_mutex);
     return OSI_NULLSOCKET;
+}
+
+osi_socket
+rxi_GetUDPSocket(u_short port)
+{
+    return rxi_GetHostUDPSocket(htonl(INADDR_ANY), port);
 }
 
 void

@@ -46,6 +46,7 @@ char afs_zeros[AFS_ZEROS];
 char afs_rootVolumeName[64] = "";
 struct afs_icl_set *afs_iclSetp = (struct afs_icl_set *)0;
 struct afs_icl_set *afs_iclLongTermSetp = (struct afs_icl_set *)0;
+afs_uint32 rx_bindhost;
 
 #if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
 kmutex_t afs_global_lock;
@@ -128,7 +129,7 @@ afs_InitSetup(int preallocs)
 
     /* start RX */
     rx_extraPackets = AFS_NRXPACKETS;	/* smaller # of packets */
-    code = rx_Init(htons(7001));
+    code = rx_InitHost(rx_bindhost, htons(7001));
     if (code) {
 	printf("AFS: RX failed to initialize %d).\n", code);
 	return code;
@@ -700,6 +701,7 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 		cacheNumEntries : 1));
     } else if (parm == AFSOP_ADVISEADDR) {
 	/* pass in the host address to the rx package */
+	int rxbind = 0;
 	afs_int32 count = parm2;
 	afs_int32 *buffer =
 	    afs_osi_Alloc(sizeof(afs_int32) * AFS_MAX_INTERFACE_ADDR);
@@ -708,6 +710,13 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 	afs_int32 *mtubuffer =
 	    afs_osi_Alloc(sizeof(afs_int32) * AFS_MAX_INTERFACE_ADDR);
 	int i;
+
+	/* Bind, but only if there's only one address configured */ 
+	if ( count & 0x80000000) {
+	    count &= ~0x80000000;
+	    if (count == 1)
+		rxbind=1;
+	}
 
 	if (count > AFS_MAX_INTERFACE_ADDR) {
 	    code = ENOMEM;
@@ -743,6 +752,11 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 	}
 	afs_uuid_create(&afs_cb_interface.uuid);
 	rxi_setaddr(buffer[0]);
+	if (rxbind)
+	    rx_bindhost = buffer[0];
+	else
+	    rx_bindhost = htonl(INADDR_ANY);
+
 	afs_osi_Free(buffer, sizeof(afs_int32) * AFS_MAX_INTERFACE_ADDR);
 	afs_osi_Free(maskbuffer, sizeof(afs_int32) * AFS_MAX_INTERFACE_ADDR);
 	afs_osi_Free(mtubuffer, sizeof(afs_int32) * AFS_MAX_INTERFACE_ADDR);

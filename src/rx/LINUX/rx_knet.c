@@ -30,7 +30,7 @@ RCSID
  * open and bind RX socket
  */
 struct osi_socket *
-rxk_NewSocket(short aport)
+rxk_NewSocketHost(afs_uint32 ahost, short aport)
 {
     struct socket *sockp;
     struct sockaddr_in myaddr;
@@ -47,7 +47,7 @@ rxk_NewSocket(short aport)
 
     /* Bind socket */
     myaddr.sin_family = AF_INET;
-    myaddr.sin_addr.s_addr = htonl(INADDR_ANY);
+    myaddr.sin_addr.s_addr = ahost;
     myaddr.sin_port = aport;
     code =
 	sockp->ops->bind(sockp, (struct sockaddr *)&myaddr, sizeof(myaddr));
@@ -64,6 +64,11 @@ rxk_NewSocket(short aport)
     return (struct osi_socket *)sockp;
 }
 
+struct osi_socket *
+rxk_NewSocket(short aport)
+{
+    return rxk_NewSocketHost(htonl(INADDR_ANY), aport);
+}
 
 /* free socket allocated by osi_NetSocket */
 int
