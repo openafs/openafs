@@ -1145,8 +1145,8 @@ static ParseArgs(argc, argv)
 	    if (!strcmp(argv[i], "-cb")) {
 		Sawcbs = 1;
 		numberofcbs = atoi(argv[++i]);
-		if ((numberofcbs < 10000) || (numberofcbs > 65535)) {
-		    printf("number of cbs %d invalid; must be between 10000 and 65535\n",
+		if ((numberofcbs < 10000) || (numberofcbs > 4294967295)) {
+		    printf("number of cbs %d invalid; must be between 10000 and 4294967295\n",
 			   numberofcbs);
 		    return -1;
 		}

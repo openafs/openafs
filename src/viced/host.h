@@ -81,13 +81,13 @@ struct host {
     struct client       *FirstClient;	/* first connection from host */
     afs_uint32	cpsCall;	/* time of last cps call from this host */
     struct Interface* 	interface;	/* all alternate addr for client */
-    unsigned short      cblist;		/* Call back list for this host */
+    afs_uint32      cblist;		/* Call back list for this host */
     /*
      * These don't get zeroed, keep them at the end. If index doesn't
      * follow an unsigned short then we need to pad to ensure that
-     * the index fields isn't zeroed.
+     * the index fields isn't zeroed. XXX
      */
-    unsigned short      index;          /* Host table index, for vicecb.c */
+    afs_uint32      index;          /* Host table index, for vicecb.c */
     struct Lock         lock;           /* Write lock for synchronization of
 				      VenusDown flag */
 #ifdef AFS_PTHREAD_ENV
@@ -180,9 +180,9 @@ extern int h_Lock_r();
 #define h_Unlock(host)  ReleaseWriteLock(&(host)->lock)
 #define h_Unlock_r(host)  ReleaseWriteLock(&(host)->lock)
 
-#define	AddCallBack(host, fid)	AddCallBack1((host), (fid), (u_short *)0, 1/*CB_NORMAL*/, 0)
-#define	AddVolCallBack(host, fid) AddCallBack1((host), (fid), (u_short *)0, 3/*CB_VOLUME*/, 0)
-#define	AddBulkCallBack(host, fid) AddCallBack1((host), (fid), (u_short *)0, 4/*CB_BULK*/, 0)
+#define	AddCallBack(host, fid)	AddCallBack1((host), (fid), (afs_uint32 *)0, 1/*CB_NORMAL*/, 0)
+#define	AddVolCallBack(host, fid) AddCallBack1((host), (fid), (afs_uint32 *)0, 3/*CB_VOLUME*/, 0)
+#define	AddBulkCallBack(host, fid) AddCallBack1((host), (fid), (afs_uint32 *)0, 4/*CB_BULK*/, 0)
 
 /* operations on the global linked list of hosts */
 #define h_InsertList_r(h) 	(h)->next =  hostList;			\
