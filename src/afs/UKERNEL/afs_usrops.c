@@ -932,6 +932,11 @@ void afs_osi_Free(void *ptr, size_t size)
     free(ptr);
 }
 
+void afs_osi_FreeStr(char *ptr)
+{
+    free(ptr);
+}
+
 void *osi_AllocLargeSpace(size_t size)
 {
     AFS_STATCNT(osi_AllocLargeSpace);

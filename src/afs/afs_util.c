@@ -81,6 +81,35 @@ char *afs_strchr(char *s, int c)
     return NULL;
 }
 
+int afs_strcasecmp(char *s1, char *s2)
+{
+    while (*s1 && *s2) {
+	char c1, c2;
+
+	c1 = *s1++;
+	c2 = *s2++;
+	if (c1 >= 'A' && c1 <= 'Z') c1 += 0x20;
+	if (c2 >= 'A' && c2 <= 'Z') c2 += 0x20;
+	if (c1 != c2)
+	    return c1-c2;
+    }
+
+    return *s1 - *s2;
+}
+
+char *afs_strdup(char *s)
+{
+    char *n;
+    int cc;
+
+    cc = strlen(s) + 1;
+    n = (char *) afs_osi_Alloc(cc);
+    if (n)
+	memcpy(n, s, cc);
+
+    return n;
+}
+
 void print_internet_address(char *preamble, struct srvAddr *sa,
 			    char *postamble, int flag)
 {

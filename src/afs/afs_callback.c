@@ -1386,7 +1386,9 @@ int SRXAFSCB_GetCellByNum(struct rx_call *a_call, afs_int32 a_cellnum,
     afs_int32 i, sn;
     struct cell *tcell;
 
-    RX_AFS_GLOCK();
+#ifdef RX_ENABLE_LOCKS
+    AFS_GLOCK();
+#endif /* RX_ENABLE_LOCKS */
     AFS_STATCNT(SRXAFSCB_GetCellByNum);
 
     a_hosts->serverList_val = 0;
@@ -1395,7 +1397,9 @@ int SRXAFSCB_GetCellByNum(struct rx_call *a_call, afs_int32 a_cellnum,
     tcell = afs_GetCellStale(a_cellnum, READ_LOCK);
     if (!tcell) {
 	*a_name = afs_strdup("");
-	RX_AFS_GUNLOCK();
+#ifdef RX_ENABLE_LOCKS
+	AFS_GUNLOCK();
+#endif /* RX_ENABLE_LOCKS */
 	return 0;
     }
 
@@ -1412,7 +1416,9 @@ int SRXAFSCB_GetCellByNum(struct rx_call *a_call, afs_int32 a_cellnum,
     ReleaseReadLock(&tcell->lock);
     afs_PutCell(tcell, READ_LOCK);
 
-    RX_AFS_GUNLOCK();
+#ifdef RX_ENABLE_LOCKS
+    AFS_GUNLOCK();
+#endif /* RX_ENABLE_LOCKS */
     return 0;
 }
  
