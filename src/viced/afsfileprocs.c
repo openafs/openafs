@@ -6002,6 +6002,7 @@ afs_int32 SRXAFS_FlushCPS(struct rx_call *acall,
       if ((client->ViceId != ANONYMOUSID) && client->CPS.prlist_val) {
 	free(client->CPS.prlist_val);
 	client->CPS.prlist_val = NULL;
+	client->CPS.prlist_len = 0;
       }
       ReleaseWriteLock(&client->lock);
     }

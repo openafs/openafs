@@ -582,7 +582,6 @@ struct host *h_Alloc_r(register struct rx_connection *r_con)
     host->hostFlags = 0;
     host->hcps.prlist_val = NULL;
     host->hcps.prlist_len = 0;
-    host->hcps.prlist_val = NULL;
     host->interface = 0;
 #ifdef undef
     host->hcpsfailed = 0; 	/* save cycles */
@@ -706,13 +705,14 @@ int h_TossStuff_r(register struct host *host)
 	h_Unlock_r(host);
     }
 
-    /* ASSUMPTION: r_FreeConnection() does not yield */
+    /* ASSUMPTION: rxi_FreeConnection() does not yield */
     for (cp = &host->FirstClient; (client = *cp); ) {
 	if ((host->hostFlags & HOSTDELETED) || client->deleted) {
 	    if ((client->ViceId != ANONYMOUSID) && client->CPS.prlist_val) {
 		free(client->CPS.prlist_val);
                 client->CPS.prlist_val = NULL;
 	    }
+	    client->CPS.prlist_len = 0;
 	    if (client->tcon) {
 		rx_SetSpecific(client->tcon, rxcon_client_key, (void *)0);
 	    }
@@ -1388,6 +1388,7 @@ ticket name length != 64
 	  client->sid = rxr_CidOf(tcon);
 	  client->VenusEpoch = rxr_GetEpoch(tcon);
 	  client->CPS.prlist_val = 0;
+	  client->CPS.prlist_len = 0;
 	  client->refCount = 1;
 	  CurrentConnections++;	/* increment number of connections */
        }
@@ -1399,6 +1400,7 @@ ticket name length != 64
 	   free(client->CPS.prlist_val);
 	}
 	client->CPS.prlist_val = NULL;
+	client->CPS.prlist_len = 0;
         client->ViceId = viceid;
 	client->expTime	= expTime;
 
