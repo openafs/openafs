@@ -46,7 +46,7 @@ typedef struct timeval osi_timeval_t;
 #endif /* !KERNEL */
 
 #define XSTATS_DECLS struct afs_stats_opTimingData *opP; \
-    osi_timeval_t opStartTime, opStopTime, elapsedTime;
+    osi_timeval_t opStartTime, opStopTime, elapsedTime
 
 #define XSTATS_START_TIME(arg) \
   opP = &(afs_stats_cmfullperf.rpc.fsRPCTimes[arg]); \
