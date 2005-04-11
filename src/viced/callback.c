@@ -1408,7 +1408,9 @@ BreakVolumeCallBacksLater(afs_uint32 volume)
 
     ViceLog(25, ("Fsync thread wakeup\n"));
 #ifdef AFS_PTHREAD_ENV
+    FSYNC_LOCK;
     assert(pthread_cond_broadcast(&fsync_cond) == 0);
+    FSYNC_UNLOCK;
 #else
     LWP_NoYieldSignal(fsync_wait);
 #endif
