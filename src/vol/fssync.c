@@ -197,7 +197,6 @@ FSYNC_clientFinis(void)
     close(FS_sd);
 #endif
     FS_sd = -1;
-    Lock_Destroy(&FSYNC_handler_lock);
 }
 
 int
