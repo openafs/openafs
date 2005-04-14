@@ -49,11 +49,6 @@
 extern void osirx_AssertMine(afs_kmutex_t * lockaddr, char *msg);
 #endif
 
-#define AFS_RXGLOCK()
-#define AFS_RXGUNLOCK()
-#define ISAFS_RXGLOCK()		1
-#define AFS_ASSERT_RXGLOCK()
-
 #define SPLVAR
 #define NETPRI
 #define USERPRI

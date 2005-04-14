@@ -139,9 +139,6 @@ extern struct simplelock afs_global_lock;
 #define AFS_ASSERT_GLOCK()
 #define ISAFS_GLOCK() 1
 #endif
-#define AFS_RXGLOCK()
-#define AFS_RXGUNLOCK()
-#define ISAFS_RXGLOCK() 1
 
 #undef SPLVAR
 #define SPLVAR int splvar

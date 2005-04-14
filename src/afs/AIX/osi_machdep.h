@@ -69,10 +69,6 @@ extern simple_lock_data afs_global_lock;
 			    simple_unlock((void *)&afs_global_lock);	\
 			} while(0)
 #define ISAFS_GLOCK()	lock_mine((void *)&afs_global_lock)
-
-#define AFS_RXGLOCK()
-#define AFS_RXGUNLOCK()
-#define ISAFS_RXGLOCK() 1
 #endif
 
 #endif /* _OSI_MACHDEP_H_ */

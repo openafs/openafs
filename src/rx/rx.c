@@ -468,7 +468,6 @@ rx_InitHost(u_int host, u_int port)
     rx_CheckPackets();
 
     NETPRI;
-    AFS_RXGLOCK();
 
     clock_Init();
 
@@ -534,7 +533,6 @@ rx_InitHost(u_int host, u_int port)
      * implementation environment--kernel or user space) */
     rxi_StartListener();
 
-    AFS_RXGUNLOCK();
     USERPRI;
     tmp_status = rxinit_status = 0;
     UNLOCK_RX_INIT;
@@ -667,7 +665,6 @@ rx_StartServer(int donateMe)
     clock_NewTime();
 
     NETPRI;
-    AFS_RXGLOCK();
     /* Start server processes, if necessary (exact function is dependent
      * on the implementation environment--kernel or user space).  DonateMe
      * will be 1 if there is 1 pre-existing proc, i.e. this one.  In this
@@ -694,7 +691,6 @@ rx_StartServer(int donateMe)
     /* Turn on reaping of idle server connections */
     rxi_ReapConnections();
 
-    AFS_RXGUNLOCK();
     USERPRI;
 
     if (donateMe) {
@@ -746,7 +742,6 @@ rx_NewConnection(register afs_uint32 shost, u_short sport, u_short sservice,
     CV_INIT(&conn->conn_call_cv, "conn call cv", CV_DEFAULT, 0);
 #endif
     NETPRI;
-    AFS_RXGLOCK();
     MUTEX_ENTER(&rx_connHashTable_lock);
     cid = (rx_nextCid += RX_MAXCALLS);
     conn->type = RX_CLIENT_CONNECTION;
@@ -780,7 +775,6 @@ rx_NewConnection(register afs_uint32 shost, u_short sport, u_short sservice,
     MUTEX_EXIT(&rx_stats_mutex);
 
     MUTEX_EXIT(&rx_connHashTable_lock);
-    AFS_RXGUNLOCK();
     USERPRI;
     return conn;
 }
@@ -1010,9 +1004,7 @@ rx_DestroyConnection(register struct rx_connection *conn)
     SPLVAR;
 
     NETPRI;
-    AFS_RXGLOCK();
     rxi_DestroyConnection(conn);
-    AFS_RXGUNLOCK();
     USERPRI;
 }
 
@@ -1022,11 +1014,9 @@ rx_GetConnection(register struct rx_connection *conn)
     SPLVAR;
 
     NETPRI;
-    AFS_RXGLOCK();
     MUTEX_ENTER(&conn->conn_data_lock);
     conn->refCount++;
     MUTEX_EXIT(&conn->conn_data_lock);
-    AFS_RXGUNLOCK();
     USERPRI;
 }
 
@@ -1052,7 +1042,6 @@ rx_NewCall(register struct rx_connection *conn)
 
     NETPRI;
     clock_GetTime(&queueTime);
-    AFS_RXGLOCK();
     MUTEX_ENTER(&conn->conn_call_lock);
 
     /*
@@ -1127,12 +1116,10 @@ rx_NewCall(register struct rx_connection *conn)
 
     MUTEX_EXIT(&call->lock);
     MUTEX_EXIT(&conn->conn_call_lock);
-    AFS_RXGUNLOCK();
     USERPRI;
 
 #ifdef	AFS_GLOBAL_RXLOCK_KERNEL
     /* Now, if TQ wasn't cleared earlier, do it now. */
-    AFS_RXGLOCK();
     MUTEX_ENTER(&call->lock);
     while (call->flags & RX_CALL_TQ_BUSY) {
 	call->flags |= RX_CALL_TQ_WAIT;
@@ -1147,7 +1134,6 @@ rx_NewCall(register struct rx_connection *conn)
 	queue_Init(&call->tq);
     }
     MUTEX_EXIT(&call->lock);
-    AFS_RXGUNLOCK();
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
 
     return call;
@@ -1250,7 +1236,6 @@ rx_NewService(u_short port, u_short serviceId, char *serviceName,
 
     tservice = rxi_AllocService();
     NETPRI;
-    AFS_RXGLOCK();
     for (i = 0; i < RX_MAX_SERVICES; i++) {
 	register struct rx_service *service = rx_services[i];
 	if (service) {
@@ -1263,7 +1248,6 @@ rx_NewService(u_short port, u_short serviceId, char *serviceName,
 		    (osi_Msg
 		     "rx_NewService: tried to install service %s with service id %d, which is already in use for service %s\n",
 		     serviceName, serviceId, service->serviceName);
-		    AFS_RXGUNLOCK();
 		    USERPRI;
 		    rxi_FreeService(tservice);
 		    return service;
@@ -1278,7 +1262,6 @@ rx_NewService(u_short port, u_short serviceId, char *serviceName,
 		 * service on same port) get a new one */
 		socket = rxi_GetHostUDPSocket(htonl(INADDR_ANY), port);
 		if (socket == OSI_NULLSOCKET) {
-		    AFS_RXGUNLOCK();
 		    USERPRI;
 		    rxi_FreeService(tservice);
 		    return 0;
@@ -1298,12 +1281,10 @@ rx_NewService(u_short port, u_short serviceId, char *serviceName,
 	    service->executeRequestProc = serviceProc;
 	    service->checkReach = 0;
 	    rx_services[i] = service;	/* not visible until now */
-	    AFS_RXGUNLOCK();
 	    USERPRI;
 	    return service;
 	}
     }
-    AFS_RXGUNLOCK();
     USERPRI;
     rxi_FreeService(tservice);
     (osi_Msg "rx_NewService: cannot support > %d services\n",
@@ -1343,14 +1324,12 @@ rxi_ServerProc(int threadID, struct rx_call *newcall, osi_socket * socketp)
 	    SPLVAR;
 
 	    NETPRI;
-	    AFS_RXGLOCK();
 	    MUTEX_ENTER(&call->lock);
 
 	    rxi_CallError(call, RX_RESTARTING);
 	    rxi_SendCallAbort(call, (struct rx_packet *)0, 0, 0);
 
 	    MUTEX_EXIT(&call->lock);
-	    AFS_RXGUNLOCK();
 	    USERPRI;
 	}
 #ifdef	KERNEL
@@ -1392,7 +1371,6 @@ rx_WakeupServerProcs(void)
     SPLVAR;
 
     NETPRI;
-    AFS_RXGLOCK();
     MUTEX_ENTER(&rx_serverPool_lock);
 
 #ifdef RX_ENABLE_LOCKS
@@ -1420,7 +1398,6 @@ rx_WakeupServerProcs(void)
 #endif /* RX_ENABLE_LOCKS */
     }
     MUTEX_EXIT(&rx_serverPool_lock);
-    AFS_RXGUNLOCK();
     USERPRI;
 }
 
@@ -1631,7 +1608,6 @@ rx_GetCall(int tno, struct rx_service *cur_service, osi_socket * socketp)
     SPLVAR;
 
     NETPRI;
-    AFS_RXGLOCK();
     MUTEX_ENTER(&freeSQEList_lock);
 
     if ((sq = rx_FreeSQEList)) {
@@ -1726,7 +1702,6 @@ rx_GetCall(int tno, struct rx_service *cur_service, osi_socket * socketp)
 	    osi_rxSleep(sq);
 #ifdef	KERNEL
 	    if (afs_termState == AFSOP_STOP_RXCALLBACK) {
-		AFS_RXGUNLOCK();
 		USERPRI;
 		rxi_Free(sq, sizeof(struct rx_serverQueueEntry));
 		return (struct rx_call *)0;
@@ -1767,7 +1742,6 @@ rx_GetCall(int tno, struct rx_service *cur_service, osi_socket * socketp)
 	dpf(("rx_GetCall(socketp=0x%x, *socketp=0x%x)\n", socketp, *socketp));
     }
 
-    AFS_RXGUNLOCK();
     USERPRI;
 
     return call;
@@ -1815,7 +1789,6 @@ rx_EndCall(register struct rx_call *call, afs_int32 rc)
     dpf(("rx_EndCall(call %x)\n", call));
 
     NETPRI;
-    AFS_RXGLOCK();
     MUTEX_ENTER(&call->lock);
 
     if (rc == 0 && call->error == 0) {
@@ -1926,7 +1899,6 @@ rx_EndCall(register struct rx_call *call, afs_int32 rc)
 	MUTEX_EXIT(&conn->conn_call_lock);
 	conn->flags &= ~RX_CONN_BUSY;
     }
-    AFS_RXGUNLOCK();
     USERPRI;
     /*
      * Map errors to the local host's errno.h format.

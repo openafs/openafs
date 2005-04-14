@@ -964,9 +964,7 @@ afs_rxevent_daemon(void)
 	AFS_GUNLOCK();
 #endif /* RX_ENABLE_LOCKS */
 	NETPRI;
-	AFS_RXGLOCK();
 	rxevent_RaiseEvents(&temp);
-	AFS_RXGUNLOCK();
 	USERPRI;
 #ifdef RX_ENABLE_LOCKS
 	AFS_GLOCK();
@@ -1151,9 +1149,7 @@ rxk_Listener(void)
 		osi_Panic("rxk_Listener: No more Rx buffers!\n");
 	}
 	if (!(code = rxk_ReadPacket(rx_socket, rxp, &host, &port))) {
-	    AFS_RXGLOCK();
 	    rxp = rxi_ReceivePacket(rxp, rx_socket, host, port, 0, 0);
-	    AFS_RXGUNLOCK();
 	}
     }
 

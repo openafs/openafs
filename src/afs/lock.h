@@ -59,10 +59,6 @@ typedef struct afs_bozoLock afs_bozoLock_t;
 
 #undef MObtainWriteLock		/* Defined also in ../rx/rx_machdep.h" */
 #undef MReleaseWriteLock
-#ifndef RXObtainWriteLock
-#define RXObtainWriteLock(lock)	ObtainWriteLock(lock)
-#define RXReleaseWriteLock(lock) ReleaseWriteLock(lock)
-#endif
 #define MObtainReadLock(lock)	ObtainReadLock(lock)
 #define MObtainWriteLock(lock,src)	ObtainWriteLock(lock,src)
 #define MObtainSharedLock(lock,src)	ObtainSharedLock(lock,src)
