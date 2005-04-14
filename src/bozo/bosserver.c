@@ -718,6 +718,7 @@ main(int argc, char **argv, char **envp)
     char namebuf[AFSDIR_PATH_MAX];
 #ifndef AFS_NT40_ENV
     int nofork = 0;
+    struct stat sb;
 #endif
 #ifdef	AFS_AIX32_ENV
     struct sigaction nsa;
@@ -863,7 +864,12 @@ main(int argc, char **argv, char **envp)
 	background();
 #endif /* ! AFS_NT40_ENV */
 
-    if (!DoSyslog) {
+    if ((!DoSyslog)
+#ifndef AFS_NT40_ENV
+	&& (!(fstat(AFSDIR_BOZLOG_FILE, &sb) == 0) && 
+	(S_ISFIFO(sb.st_mode)))
+#endif
+	) {
 	strcpy(namebuf, AFSDIR_BOZLOG_FILE);
 	strcat(namebuf, ".old");
 	renamefile(AFSDIR_BOZLOG_FILE, namebuf);	/* try rename first */
