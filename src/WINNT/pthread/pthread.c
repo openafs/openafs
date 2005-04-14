@@ -1114,6 +1114,9 @@ int pthread_setspecific(pthread_key_t key, const void *value) {
     int rc = 0;
     char **tsd;
 
+    /* make sure all thread-local storage has been allocated */
+    pthread_self();
+
     if (p_tsd_done || (!pthread_once(&pthread_tsd_once, pthread_tsd_init))) {
 	if ((key > -1) && (key < PTHREAD_KEYS_MAX )) {
 	    if (!pthread_mutex_lock(&pthread_tsd_mutex)) {
