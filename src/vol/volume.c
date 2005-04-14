@@ -325,6 +325,7 @@ VInitVolumePackage(ProgramType pt, int nLargeVnodes, int nSmallVnodes,
     if (programType == volumeUtility && connect) {
 	if (!VConnectFS()) {
 	    Log("Unable to connect to file server; aborted\n");
+	    Lock_Destroy(&FSYNC_handler_lock);
 	    exit(1);
 	}
     }
