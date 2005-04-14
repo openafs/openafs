@@ -354,7 +354,7 @@ extern void osi_StopListener(void);
 
 
 /* ARCH/rx_kmutex.c */
-#if defined(CONFIG_SMP) || defined(CONFIG_PREEMPT)
+#if defined(KERNEL) && defined(AFS_LINUX20_ENV) && (defined(CONFIG_SMP) || defined(CONFIG_PREEMPT)) 
 extern void afs_mutex_init(afs_kmutex_t * l);
 extern void afs_mutex_enter(afs_kmutex_t * l);
 extern int afs_mutex_tryenter(afs_kmutex_t * l);
