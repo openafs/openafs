@@ -44,6 +44,7 @@ RCSID
 #include <strings.h>
 #endif
 #endif
+#include <sys/stat.h>
 #include "afsutil.h"
 #include "fileutil.h"
 #if defined(AFS_PTHREAD_ENV)
@@ -228,10 +229,16 @@ OpenLog(const char *fileName)
     char FileName[MAXPATHLEN];
 
 #ifndef AFS_NT40_ENV
+    struct stat statbuf;
+
     if (serverLogSyslog) {
 	openlog(serverLogSyslogTag, LOG_PID, serverLogSyslogFacility);
 	return (0);
     }
+
+    /* Support named pipes as logs by not rotating them */
+    if ((fstat(fileName, &statbuf) == 0)  && (S_ISFIFO(statbuf.st_mode))) 
+	    return (0);
 #endif
 
     if (mrafsStyleLogs) {
