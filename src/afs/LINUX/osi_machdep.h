@@ -179,6 +179,9 @@ typedef struct uio {
 /* Get/set the inode in the osifile struct. */
 #define FILE_INODE(F) (F)->f_dentry->d_inode
 
+#if defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV)
+#define NEED_IOCTL32
+#endif
 
 /* page offset is obtained and stored here during module initialization 
  * We need a variable to do this because, the PAGE_OFFSET macro defined in

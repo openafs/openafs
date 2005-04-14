@@ -50,12 +50,21 @@ int afs_global_owner = 0;
 unsigned long afs_linux_page_offset = 0;	/* contains the PAGE_OFFSET value */
 #endif
 
-
-static int afs_ioctl(struct inode *, struct file *, unsigned int,
+static inline int afs_ioctl(struct inode *, struct file *, unsigned int,
 		     unsigned long);
+#if defined(HAVE_UNLOCKED_IOCTL) || defined(HAVE_COMPAT_IOCTL)
+static long afs_unlocked_ioctl(struct file *, unsigned int, unsigned long);
+#endif
 
 static struct file_operations afs_syscall_fops = {
+#ifdef HAVE_UNLOCKED_IOCTL
+    .unlocked_ioctl = afs_unlocked_ioctl,
+#else
     .ioctl = afs_ioctl,
+#endif
+#ifdef HAVE_COMPAT_IOCTL
+    .compat_ioctl = afs_unlocked_ioctl,
+#endif
 };
 
 int
@@ -423,7 +432,7 @@ callproc_read(char *buffer, char **start, off_t offset, int count,
 }
 
 static struct proc_dir_entry *openafs_procfs;
-#if defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV)
+#if defined(NEED_IOCTL32) && !defined(HAVE_COMPAT_IOCTL)
 static int ioctl32_done;
 #endif
 
@@ -454,7 +463,7 @@ afsproc_init(void)
     entry = create_proc_read_entry(PROC_SERVICES_NAME, (S_IFREG|S_IRUGO), openafs_procfs, servicesproc_read, NULL);
 
     entry = create_proc_read_entry(PROC_RXSTATS_NAME, (S_IFREG|S_IRUGO), openafs_procfs, rxstatsproc_read, NULL);
-#if defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV)
+#if defined(NEED_IOCTL32) && !defined(HAVE_COMPAT_IOCTL)
     if (register_ioctl32_conversion(VIOC_SYSCALL32, NULL) == 0) 
 	    ioctl32_done = 1;
 #endif
@@ -474,7 +483,7 @@ afsproc_exit(void)
     remove_proc_entry(PROC_CELLSERVDB_NAME, openafs_procfs);
     remove_proc_entry(PROC_SYSCALL_NAME, openafs_procfs);
     remove_proc_entry(PROC_FSDIRNAME, proc_root_fs);
-#if defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV)
+#if defined(NEED_IOCTL32) && !defined(HAVE_COMPAT_IOCTL)
     if (ioctl32_done)
 	    unregister_ioctl32_conversion(VIOC_SYSCALL32);
 #endif
@@ -490,11 +499,13 @@ afs_ioctl(struct inode *inode, struct file *file, unsigned int cmd,
 {
 
     struct afsprocdata sysargs;
+#ifdef NEED_IOCTL32
     struct afsprocdata32 sysargs32;
+#endif
 
     if (cmd != VIOC_SYSCALL && cmd != VIOC_SYSCALL32) return -EINVAL;
 
-#if defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV)
+#ifdef NEED_IOCTL32
 #ifdef AFS_SPARC64_LINUX24_ENV
     if (current->thread.flags & SPARC_FLAG_32BIT)
 #elif defined(AFS_SPARC64_LINUX20_ENV)
@@ -539,6 +550,12 @@ afs_ioctl(struct inode *inode, struct file *file, unsigned int cmd,
     }
 }
 
+#if defined(HAVE_UNLOCKED_IOCTL) || defined(HAVE_COMPAT_IOCTL)
+static long afs_unlocked_ioctl(struct file *file, unsigned int cmd,
+                               unsigned long arg) {
+    return afs_ioctl(FILE_INODE(file), file, cmd, arg);
+}
+#endif
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
 int __init
