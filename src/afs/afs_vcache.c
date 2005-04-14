@@ -933,9 +933,13 @@ restart:
 #ifdef STRUCT_INODE_HAS_I_SB_LIST
 	list_add(&ip->i_sb_list, &ip->i_sb->s_inodes);
 #endif
-#ifdef STRUCT_INODE_HAS_INOTIFY_LOCK
+#if defined(STRUCT_INODE_HAS_INOTIFY_LOCK) || defined(STRUCT_INODE_HAS_INOTIFY_SEM)
 	INIT_LIST_HEAD(&ip->inotify_watches); 
+#if defined(STRUCT_INODE_HAS_INOTIFY_SEM) 
+	sema_init(&ip->inotify_sem); 
+#else
 	spin_lock_init(&ip->inotify_lock); 
+#endif 
 #endif 
     }
 #endif
