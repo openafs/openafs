@@ -208,8 +208,6 @@ typedef struct timeval osi_timeval_t;
 #ifdef AFS_GLOBAL_SUNLOCK
 #define AFS_ASSERT_GLOCK() \
     (ISAFS_GLOCK() || (osi_Panic("afs global lock not held at %s:%d\n", __FILE__, __LINE__), 0))
-#define AFS_ASSERT_RXGLOCK() \
-    (ISAFS_RXGLOCK() || (osi_Panic("rx global lock not held at %s:%d\n", __FILE__, __LINE__), 0))
 #endif /* AFS_GLOBAL_SUNLOCK */
 
 #ifdef RX_ENABLE_LOCKS
@@ -227,10 +225,6 @@ typedef struct timeval osi_timeval_t;
 #define AFS_GUNLOCK()
 #define ISAFS_GLOCK() 1
 #define AFS_ASSERT_GLOCK()
-#define AFS_RXGLOCK()
-#define AFS_RXGUNLOCK()
-#define ISAFS_RXGLOCK() 1
-#define AFS_ASSERT_RXGLOCK()
 #endif
 
 /* On an MP that uses multithreading, splnet is not sufficient to provide

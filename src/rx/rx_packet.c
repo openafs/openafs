@@ -393,7 +393,6 @@ rxi_MorePackets(int apackets)
     PIN(p, getme);		/* XXXXX */
     memset((char *)p, 0, getme);
     NETPRI;
-    AFS_RXGLOCK();
     MUTEX_ENTER(&rx_freePktQ_lock);
 
     for (e = p + apackets; p < e; p++) {
@@ -410,7 +409,6 @@ rxi_MorePackets(int apackets)
     rxi_NeedMorePackets = FALSE;
     rxi_PacketsUnWait();
 
-    AFS_RXGUNLOCK();
     MUTEX_EXIT(&rx_freePktQ_lock);
     USERPRI;
 }
@@ -1487,7 +1485,6 @@ rxi_SendDebugPacket(struct rx_packet *apacket, osi_socket asocket,
 	} else
 	    nbytes -= apacket->wirevec[i].iov_len;
     }
-    AFS_RXGUNLOCK();
 #ifdef KERNEL
 #ifdef RX_KERNEL_TRACE
     if (ICL_SETACTIVE(afs_iclSetp)) {
@@ -1519,7 +1516,6 @@ rxi_SendDebugPacket(struct rx_packet *apacket, osi_socket asocket,
 	AFS_GLOCK();
 #endif
 #endif
-    AFS_RXGLOCK();
     if (saven) {		/* means we truncated the packet above. */
 	apacket->wirevec[i - 1].iov_len = savelen;
 	apacket->niovecs = saven;
@@ -1605,7 +1601,6 @@ rxi_SendPacket(struct rx_call *call, struct rx_connection *conn,
 	 * blocking socket, but unfortunately the interface doesn't
 	 * allow us to have the socket block in send mode, and not
 	 * block in receive mode */
-	AFS_RXGUNLOCK();
 #ifdef KERNEL
 	waslocked = ISAFS_GLOCK();
 #ifdef RX_KERNEL_TRACE
@@ -1656,7 +1651,6 @@ rxi_SendPacket(struct rx_call *call, struct rx_connection *conn,
 	    AFS_GLOCK();
 #endif
 #endif
-	AFS_RXGLOCK();
 #ifdef RXDEBUG
     }
     dpf(("%c %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %lx resend %d.%0.3d len %d", deliveryType, p->header.serial, rx_packetTypes[p->header.type - 1], peer->host, peer->port, p->header.serial, p->header.epoch, p->header.cid, p->header.callNumber, p->header.seq, p->header.flags, (unsigned long)p, p->retryTime.sec, p->retryTime.usec / 1000, p->length));
@@ -1799,7 +1793,6 @@ rxi_SendPacketList(struct rx_call *call, struct rx_connection *conn,
 	 * blocking socket, but unfortunately the interface doesn't
 	 * allow us to have the socket block in send mode, and not
 	 * block in receive mode */
-	AFS_RXGUNLOCK();
 #if	defined(AFS_SUN5_ENV) && defined(KERNEL)
 	waslocked = ISAFS_GLOCK();
 	if (!istack && waslocked)
@@ -1832,7 +1825,6 @@ rxi_SendPacketList(struct rx_call *call, struct rx_connection *conn,
 	if (!istack && waslocked)
 	    AFS_GLOCK();
 #endif
-	AFS_RXGLOCK();
 #ifdef RXDEBUG
     }
 

@@ -225,10 +225,6 @@ do { \
 #define AFS_GUNLOCK()
 #define ISAFS_GLOCK() 1
 #define AFS_ASSERT_GLOCK()
-#define AFS_ASSERT_RXGLOCK()
 #endif
 
-#define AFS_RXGLOCK()
-#define AFS_RXGUNLOCK()
-#define ISAFS_RXGLOCK() 1
 #endif /* OSI_MACHDEP_H_ */

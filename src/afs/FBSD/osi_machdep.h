@@ -107,10 +107,6 @@ extern struct proc *afs_global_owner;
 #define ISAFS_GLOCK() (afs_global_owner == curproc && curproc)
 #endif /* FBSD50 */
 
-#define AFS_RXGLOCK()
-#define AFS_RXGUNLOCK()
-#define ISAFS_RXGLOCK() 1
-
 #undef SPLVAR
 #define SPLVAR int splvar
 #undef NETPRI
