@@ -110,13 +110,6 @@ extern int clock_nUpdates;
 #define clock_ElapsedTime(cv1, cv2) \
     (((cv2)->sec - (cv1)->sec)*1000 + ((cv2)->usec - (cv1)->usec)/1000)
 
-#ifdef AFS_PTHREAD_ENV
-#define clock_Advance(cv)
-#else
-/* Advance the known value of the current clock time (clock_now) by the specified clock value */
-#define clock_Advance(cv) clock_Add(&clock_now, cv)
-#endif /* AFS_PTHREAD_ENV */
-
 /* Some comparison operators for clock values */
 #define	clock_Gt(a, b)	((a)->sec>(b)->sec || ((a)->sec==(b)->sec && (a)->usec>(b)->usec))
 #define	clock_Ge(a, b)	((a)->sec>(b)->sec || ((a)->sec==(b)->sec && (a)->usec>=(b)->usec))
