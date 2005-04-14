@@ -247,7 +247,7 @@ OpenLog(const char *fileName)
 		     TimeFields->tm_mon + 1, TimeFields->tm_mday,
 		     TimeFields->tm_hour, TimeFields->tm_min,
 		     TimeFields->tm_sec);
-	rename(fileName, FileName);	/* don't check error code */
+	renamefile(fileName, FileName);	/* don't check error code */
 	tempfd = open(fileName, O_WRONLY | O_TRUNC | O_CREAT, 0666);
     } else {
 	strcpy(oldName, fileName);
