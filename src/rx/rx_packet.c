@@ -463,14 +463,12 @@ rxi_MorePackets(int apackets)
 
     if (rx_ts_info->_FPQ.len > rx_TSFPQLocalMax) {
         NETPRI;
-	AFS_RXGLOCK();
 	MUTEX_ENTER(&rx_freePktQ_lock);
 
 	RX_TS_FPQ_LTOG(rx_ts_info);
 	rxi_NeedMorePackets = FALSE;
 	rxi_PacketsUnWait();
 
-	AFS_RXGUNLOCK();
 	MUTEX_EXIT(&rx_freePktQ_lock);
 	USERPRI;
     }
@@ -534,14 +532,12 @@ rxi_MorePacketsTSFPQ(int apackets, int flush_global, int num_keep_local)
     if (flush_global && 
         (num_keep_local < apackets)) {
         NETPRI;
-	AFS_RXGLOCK();
 	MUTEX_ENTER(&rx_freePktQ_lock);
 
 	RX_TS_FPQ_LTOG2(rx_ts_info, (apackets - num_keep_local));
 	rxi_NeedMorePackets = FALSE;
 	rxi_PacketsUnWait();
 
-	AFS_RXGUNLOCK();
 	MUTEX_EXIT(&rx_freePktQ_lock);
 	USERPRI;
     }
