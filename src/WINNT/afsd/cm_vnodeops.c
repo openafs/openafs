@@ -2692,7 +2692,7 @@ long cm_Lock(cm_scache_t *scp, unsigned char LockType,
               void **lockpp)
 {
     long code;
-    int Which = ((LockType & 0x1) ? LockRead : LockWrite);
+    int Which = ((LockType & LOCKING_ANDX_SHARED_LOCK) ? LockRead : LockWrite);
     AFSFid tfid;
     AFSVolSync volSync;
     cm_conn_t *connp;
@@ -2706,13 +2706,10 @@ long cm_Lock(cm_scache_t *scp, unsigned char LockType,
      */
     q = scp->fileLocks;
     while (q) {
-        fileLock = (cm_file_lock_t *)
-            ((char *) q - offsetof(cm_file_lock_t, fileq));
-        if ((fileLock->flags &
-              (CM_FILELOCK_FLAG_INVALID | CM_FILELOCK_FLAG_WAITING))
-             == 0) {
-            if ((LockType & 0x1) == 0
-                 || (fileLock->LockType & 0x1) == 0)
+        fileLock = (cm_file_lock_t *)((char *) q - offsetof(cm_file_lock_t, fileq));
+        if ((fileLock->flags & (CM_FILELOCK_FLAG_INVALID | CM_FILELOCK_FLAG_WAITING)) == 0) {
+            if ((LockType & LOCKING_ANDX_SHARED_LOCK) == 0 ||
+                (fileLock->LockType & LOCKING_ANDX_SHARED_LOCK) == 0)
                 return CM_ERROR_WOULDBLOCK;
             found = 1;
         }
@@ -2766,7 +2763,7 @@ long cm_Unlock(cm_scache_t *scp, unsigned char LockType,
                 cm_user_t *userp, cm_req_t *reqp)
 {
     long code = 0;
-    int Which = ((LockType & 0x1) ? LockRead : LockWrite);
+    int Which = ((LockType & LOCKING_ANDX_SHARED_LOCK) ? LockRead : LockWrite);
     AFSFid tfid;
     AFSVolSync volSync;
     cm_conn_t *connp;
@@ -2795,7 +2792,7 @@ long cm_Unlock(cm_scache_t *scp, unsigned char LockType,
             ourLock = fileLock;
             qq = q;
         }
-        else if (fileLock->LockType & 0x1)
+        else if (fileLock->LockType & LOCKING_ANDX_SHARED_LOCK)
             anotherReader = 1;
         q = osi_QNext(q);
     }
@@ -2907,7 +2904,7 @@ void cm_CheckLocks()
 long cm_RetryLock(cm_file_lock_t *oldFileLock, int vcp_is_dead)
 {
     long code;
-    int Which = ((oldFileLock->LockType & 0x1) ? LockRead : LockWrite);
+    int Which = ((oldFileLock->LockType & LOCKING_ANDX_SHARED_LOCK) ? LockRead : LockWrite);
     cm_scache_t *scp;
     AFSFid tfid;
     AFSVolSync volSync;
@@ -2939,8 +2936,8 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int vcp_is_dead)
         if ((fileLock->flags &
               (CM_FILELOCK_FLAG_INVALID | CM_FILELOCK_FLAG_WAITING))
              == 0) {
-            if ((oldFileLock->LockType & 0x1) == 0
-                 || (fileLock->LockType & 0x1) == 0) {
+            if ((oldFileLock->LockType & LOCKING_ANDX_SHARED_LOCK) == 0
+                 || (fileLock->LockType & LOCKING_ANDX_SHARED_LOCK) == 0) {
                 cm_ReleaseSCache(scp);
                 return CM_ERROR_WOULDBLOCK;
             }

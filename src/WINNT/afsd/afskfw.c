@@ -3409,3 +3409,49 @@ BOOL KFW_probe_kdc(struct afsconf_cell * cellconfig)
     return serverReachable;
 }
 
+BOOL
+KFW_AFS_get_lsa_principal(char * szUser, DWORD *dwSize)
+{
+    krb5_context   ctx = 0;
+    krb5_error_code code;
+    krb5_ccache mslsa_ccache=0;
+    krb5_principal princ = 0;
+    char * pname = 0;
+    BOOL success = 0;
+
+    if (!KFW_is_available())
+        return FALSE;
+
+    if (code = pkrb5_init_context(&ctx))
+        goto cleanup;
+
+    if (code = pkrb5_cc_resolve(ctx, "MSLSA:", &mslsa_ccache))
+        goto cleanup;
+
+    if (code = pkrb5_cc_get_principal(ctx, mslsa_ccache, &princ))
+        goto cleanup;
+
+    if (code = pkrb5_unparse_name(ctx, princ, &pname))
+        goto cleanup;
+
+    if ( strlen(pname) < *dwSize ) {
+        strncpy(szUser, pname, *dwSize);
+        szUser[*dwSize-1] = '\0';
+        success = 1;
+    }
+    *dwSize = strlen(pname);
+
+  cleanup:
+    if (pname)
+        pkrb5_free_unparsed_name(ctx, pname);
+
+    if (princ)
+        pkrb5_free_principal(ctx, princ);
+
+    if (mslsa_ccache)
+        pkrb5_cc_close(ctx, mslsa_ccache);
+
+    if (ctx)
+        pkrb5_free_context(ctx);
+    return success;
+}

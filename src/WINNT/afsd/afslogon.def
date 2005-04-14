@@ -10,5 +10,6 @@ EXPORTS
     NPPasswordChangeNotify
     AFS_Startup_Event
     AFS_Logoff_Event
+    AFS_Logon_Event
 
 

@@ -60,6 +60,7 @@ BOOL KFW_AFS_wait_for_service_start(void);
 BOOL KFW_probe_kdc(struct afsconf_cell *);
 int  KFW_AFS_get_cellconfig(char *, struct afsconf_cell *, char *);
 void KFW_import_windows_lsa(void);
+BOOL KFW_AFS_get_lsa_principal(char *, DWORD *);
 
 /* From afs/krb_prot.h */
 /* values for kerb error codes */

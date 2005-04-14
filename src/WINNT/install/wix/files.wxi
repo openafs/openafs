@@ -9,7 +9,8 @@
             <Registry Id="reg_afslogon04" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" Name="Impersonate" Type="integer" Value="1" />
             <Registry Id="reg_afslogon05" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" Name="DLLName" Type="string" Value="[#fileafslogon_DLL]" />
             <Registry Id="reg_afslogon06" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" Name="Logoff" Type="string" Value="AFS_Logoff_Event" />
-            <Registry Id="reg_afslogon07" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" Name="Startup" Type="string" Value="AFS_Startup_Event" />
+            <Registry Id="reg_afslogon07" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" Name="Logon" Type="string" Value="AFS_Logon_Event" />
+            <Registry Id="reg_afslogon08" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" Name="Startup" Type="string" Value="AFS_Startup_Event" />
         </Component>
     <?ifdef DebugSyms?>
         <Component Id="cmp_ClientSystemDebug" Guid="DD34DA09-D9DA-4A5A-9521-87B7738A7D53">
@@ -22,6 +23,9 @@
 	    <Component Id="efl_desktop_INI" Guid="0ADB427F-3648-4BE0-983B-C454AA51895C">
 		<File Id="fildesktop_INI" Name="desktop.ini" KeyPath="yes" DiskId="1" src="$(var.SrcDir)WINNT\install\wix\afsdesktop.ini" Hidden="yes" System="yes" />
 	    </Component>
+            <Component Id="efl_replace_afs_CMD" Guid="C9C93F3E-EEBA-4056-9669-5EF78D748D50">
+               <File Id="filreplace_afs_CMD" Name="replafs.cmd" LongName="replace_afs.cmd" KeyPath="yes" DiskId="1" src="$(var.SrcDir)\WINNT\install\wix\replace_afs.cmd" />
+            </Component>
             <Directory Id="dirCommon" Name="Common">
                 <Component Id="cmp_CommonDir" Guid="C86B03A1-AE97-48B1-A77B-1B2395F1E117" KeyPath="yes">
                     <Environment Id="envCommon" Name="PATH" Action="create" System="yes" Permanent="no" Part="last" Separator=";" Value="[AFSDIR]Common" />

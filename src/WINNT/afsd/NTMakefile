@@ -213,15 +213,16 @@ $(AFSKFWLIB): $(AFSKFWLIB_OBJS)
 LOGON_DLLFILE = $(DESTDIR)\root.client\usr\vice\etc\afslogon.dll
 
 LOGON_DLLOBJS =\
-	$(OUT)\afslogon.obj \
+    $(OUT)\afslogon.obj \
     $(OUT)\logon_ad.obj \
-	$(OUT)\afslogon.res
+    $(OUT)\afslogon.res
 
 LOGON_DLLLIBS =\
-	$(DESTDIR)\lib\afsauthent.lib \
-	$(DESTDIR)\lib\libafsconf.lib \
+    $(DESTDIR)\lib\afsauthent.lib \
+    $(DESTDIR)\lib\libafsconf.lib \
     $(DESTDIR)\lib\afsrxkad.lib \
     $(DESTDIR)\lib\afsdes.lib \
+    $(LANAHELPERLIB) \
     $(AFSKFWLIB)
 
 LOGON_DLLSDKLIBS =\
