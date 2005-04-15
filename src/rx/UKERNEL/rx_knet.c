@@ -169,7 +169,7 @@ rx_ServerProc(void)
  * routines. Allocate the socket buffer here, but don't open it until
  * we start the receiver threads.
  */
-struct osi_socket *
+osi_socket *
 rxk_NewSocketHost(afs_uint32 ahost, short aport)
 {
     struct usr_socket *usockp;
@@ -179,10 +179,10 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
 
     usockp->sock = -1;
 
-    return (struct osi_socket *)usockp;
+    return (osi_socket *)usockp;
 }
 
-struct osi_socket *
+osi_socket *
 rxk_NewSocket(short aport)
 {
     return rxk_NewSocketHost(htonl(INADDR_ANY), aport);

@@ -416,7 +416,7 @@ rxi_GetIFInfo()
 
 #ifdef AFS_SGI65_ENV
 osi_NetSend(asocket, addr, dvec, nvec, asize, istack)
-     register struct osi_socket *asocket;
+     register osi_socket *asocket;
      struct iovec *dvec;
      int nvec;
      register afs_int32 asize;
