@@ -335,7 +335,7 @@ extern int rxi_GetIFInfo(void);
 extern int rxk_FreeSocket(register struct socket *asocket);
 #endif
 #ifndef AFS_NT40_ENV
-extern struct osi_socket *rxk_NewSocket(short aport);
+extern osi_socket *rxk_NewSocket(short aport);
 #endif
 #endif
 extern int rxk_ReadPacket(osi_socket so, struct rx_packet *p, int *host,

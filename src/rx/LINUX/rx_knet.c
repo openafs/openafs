@@ -29,7 +29,7 @@ RCSID
 /* rxk_NewSocket
  * open and bind RX socket
  */
-struct osi_socket *
+osi_socket *
 rxk_NewSocketHost(afs_uint32 ahost, short aport)
 {
     struct socket *sockp;
@@ -70,10 +70,10 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
     sockp->ops->setsockopt(sockp, SOL_IP, IP_MTU_DISCOVER, (char *)&pmtu,
                            sizeof(pmtu));
     TO_KERNEL_SPACE();
-    return (struct osi_socket *)sockp;
+    return (osi_socket *)sockp;
 }
 
-struct osi_socket *
+osi_socket *
 rxk_NewSocket(short aport)
 {
     return rxk_NewSocketHost(htonl(INADDR_ANY), aport);
