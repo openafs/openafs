@@ -213,6 +213,9 @@ SetupLogSignals(void)
     (void)signal(SIGHUP, ResetDebug_Signal);
     /* Note that we cannot use SIGUSR1 -- Linux stole it for pthreads! */
     (void)signal(SIGTSTP, SetDebug_Signal);
+#ifndef AFS_NT40_ENV
+    (void)signal(SIGPIPE, SIG_IGN);
+#endif
 }
 
 int
@@ -222,7 +225,7 @@ OpenLog(const char *fileName)
      * This function should allow various libraries that inconsistently
      * use stdout/stderr to all go to the same place
      */
-    int tempfd;
+    int tempfd, isfifo = 0;
     char oldName[MAXPATHLEN];
     struct timeval Start;
     struct tm *TimeFields;
@@ -237,8 +240,9 @@ OpenLog(const char *fileName)
     }
 
     /* Support named pipes as logs by not rotating them */
-    if ((fstat(fileName, &statbuf) == 0)  && (S_ISFIFO(statbuf.st_mode))) 
-	    return (0);
+    if ((fstat(fileName, &statbuf) == 0)  && (S_ISFIFO(statbuf.st_mode))) {
+	isfifo = 1;
+    }
 #endif
 
     if (mrafsStyleLogs) {
@@ -254,15 +258,17 @@ OpenLog(const char *fileName)
 		     TimeFields->tm_mon + 1, TimeFields->tm_mday,
 		     TimeFields->tm_hour, TimeFields->tm_min,
 		     TimeFields->tm_sec);
-	renamefile(fileName, FileName);	/* don't check error code */
-	tempfd = open(fileName, O_WRONLY | O_TRUNC | O_CREAT, 0666);
+	if (!isfifo)
+	    renamefile(fileName, FileName);	/* don't check error code */
+	tempfd = open(fileName, O_WRONLY | O_TRUNC | O_CREAT | (isfifo?O_NONBLOCK:0), 0666);
     } else {
 	strcpy(oldName, fileName);
 	strcat(oldName, ".old");
 
 	/* don't check error */
-	renamefile(fileName, oldName);
-	tempfd = open(fileName, O_WRONLY | O_TRUNC | O_CREAT, 0666);
+	if (!isfifo)
+	    renamefile(fileName, oldName);
+	tempfd = open(fileName, O_WRONLY | O_TRUNC | O_CREAT | (isfifo?O_NONBLOCK:0), 0666);
     }
 
     if (tempfd < 0) {
@@ -290,8 +296,12 @@ OpenLog(const char *fileName)
 int
 ReOpenLog(const char *fileName)
 {
+    int isfifo = 0;
 #if !defined(AFS_PTHREAD_ENV)
     int tempfd;
+#endif
+#if !defined(AFS_NT40_ENV)
+    struct stat statbuf;
 #endif
 
     if (access(fileName, F_OK) == 0)
@@ -301,18 +311,23 @@ ReOpenLog(const char *fileName)
     if (serverLogSyslog) {
 	return 0;
     }
+
+    /* Support named pipes as logs by not rotating them */
+    if ((fstat(fileName, &statbuf) == 0)  && (S_ISFIFO(statbuf.st_mode))) {
+	isfifo = 1;
+    }
 #endif
 
 #if defined(AFS_PTHREAD_ENV)
     LOCK_SERVERLOG();
     if (serverLogFD > 0)
 	close(serverLogFD);
-    serverLogFD = open(fileName, O_WRONLY | O_APPEND | O_CREAT, 0666);
+    serverLogFD = open(fileName, O_WRONLY | O_APPEND | O_CREAT | (isfifo?O_NONBLOCK:0), 0666);
     UNLOCK_SERVERLOG();
     return serverLogFD < 0 ? -1 : 0;
 #else
 
-    tempfd = open(fileName, O_WRONLY | O_APPEND | O_CREAT, 0666);
+    tempfd = open(fileName, O_WRONLY | O_APPEND | O_CREAT | (isfifo?O_NONBLOCK:0), 0666);
     if (tempfd < 0) {
 	printf("Unable to open log file %s\n", fileName);
 	return -1;
