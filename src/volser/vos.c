@@ -3138,7 +3138,7 @@ RestoreVolume(as)
 	    restoreflags |= RV_LUNEW;
 	    break;
 	default:
-	    restoreflags |= RV_LUKEEP;
+	    restoreflags |= RV_LUDUMP;
     }
 
     code =
