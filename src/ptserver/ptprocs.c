@@ -86,6 +86,7 @@ RCSID
 
 #define	IP_WILDCARDS	1	/* XXX Should be defined outside of here XXX */
 
+extern int restricted;
 extern struct ubik_dbase *dbase;
 extern afs_int32 Initdb();
 extern int pr_noAuth;
@@ -119,6 +120,9 @@ CreateOK(ut, cid, oid, flag, admin)
      afs_int32 flag;		/* indicates type of entry */
      int admin;			/* sysadmin membership */
 {
+    if (restricted && !admin) 
+	return 0;
+
     if (flag & PRFOREIGN) {
 	/* Foreign users are recognized by the '@' sign and 
 	 * not by the PRFOREIGN flag.
@@ -346,7 +350,7 @@ newEntry(call, aname, flag, oid, aid)
 	    ABORT_WITH(tt, PRPERM);
 	admin = IsAMemberOf(tt, cid, SYSADMINID);
     } else {
-	admin = (!strcmp(aname, cname)) || IsAMemberOf(tt, cid, SYSADMINID);
+	admin = ((!restricted && !strcmp(aname, cname))) || IsAMemberOf(tt, cid, SYSADMINID);
 	oid = cid = SYSADMINID;
     }
     if (!CreateOK(tt, cid, oid, flag, admin))

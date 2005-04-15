@@ -44,6 +44,7 @@ RCSID
 extern char *optarg;
 extern int optind;
 
+int restricted = 0;
 int display_entry();
 void add_group();
 void display_groups();
