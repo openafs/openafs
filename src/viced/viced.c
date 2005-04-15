@@ -1475,7 +1475,7 @@ Do_VLRegisterRPC()
     if (code) {
 	if (code == VL_MULTIPADDR) {
 	    ViceLog(0,
-		    ("VL_RegisterAddrs rpc failed; The ethernet address exist on a different server; repair it\n"));
+		    ("VL_RegisterAddrs rpc failed; The IP address exists on a different server; repair it\n"));
 	    ViceLog(0,
 		    ("VL_RegisterAddrs rpc failed; See VLLog for details\n"));
 	    return code;
