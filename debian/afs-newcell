@@ -7,6 +7,7 @@ use Term::ReadLine;
 use strict;
 use Debian::OpenAFS::ConfigUtils;
 use Getopt::Long;
+use Socket qw(inet_ntoa);
 use vars qw($admin $server
 	   $requirements_met  $shutdown_needed);
 my $rl = new Term::ReadLine('afs-newcell');
@@ -111,6 +112,15 @@ print "If the fileserver is not running, this may hang for 30 seconds.\n";
 run("/etc/init.d/openafs-fileserver stop");
 $server = `hostname`;
 chomp $server;
+my $ip = gethostbyname $server;
+if (inet_ntoa ($ip) eq '127.0.0.1') {
+    print "Your hostname $server resolves to 127.0.0.1, which AFS cannot\n";
+    print "cope with.  Make sure your hostname resolves to a non-loopback\n";
+    print "IP address.  (Check /etc/hosts and make sure that your hostname\n";
+    print "isn't listed on the 127.0.0.1 line.  If it is, removing it from\n";
+    print "that line will probably solve this problem.)\n";
+    exit(1);
+}
 $admin = $rl->readline("What administrative principal should be used? ") unless $admin;
  die "Please specify an administrative user\n" unless $admin;
 $admin =~ s:/:.:g;
