@@ -172,14 +172,14 @@ binary:   binary-indep binary-arch
 
 ############################Module package support
 kdist_image:  build-modules
-	$(MAKE) $(MFLAGS) -f debian/rules MODDIR=$(KSRC)/.. binary-modules
-	$(MAKE) $(MFLAGS) -f debian/rules MODDIR=$(KSRC)/.. clean
+	$(ROOT_CMD) $(MAKE) $(MFLAGS) -f debian/rules MODDIR=$(KSRC)/.. binary-modules
+	$(ROOT_CMD) $(MAKE) $(MFLAGS) -f debian/rules MODDIR=$(KSRC)/.. clean
 
 kdist:  build-modules
-	$(MAKE) $(MFLAGS) -f debian/rules MODDIR=$(KSRC)/.. KERNEL_DEPENDS=y binary-modules
+	$(ROOT_CMD) $(MAKE) $(MFLAGS) -f debian/rules MODDIR=$(KSRC)/.. KERNEL_DEPENDS=y binary-modules
 	KSRC="$(KSRC)" KMAINT="$(KMAINT)" KEMAIL="$(KEMAIL)" \
 		sh -v debian/genchanges.sh
-	$(MAKE) $(MFLAGS) -f debian/rules MODDIR=$(KSRC)/.. clean
+	$(ROOT_CMD) $(MAKE) $(MFLAGS) -f debian/rules MODDIR=$(KSRC)/.. clean
 
 
 

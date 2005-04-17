@@ -1,6 +1,14 @@
+openafs (1.3.81-4) UNRELEASED; urgency=low
+
+  * make-kpkg doesn't run fakeroot for us but instead expects the module
+    rules file to use $(ROOT_CMD) appropriately.  (Closes: #237861)
+
+ --
+
 openafs (1.3.81-3) unstable; urgency=low
 
-  * Patch from kcr to fix osconf.m4 so that sparc defines afs_pthread_env and thus builds.
+  * Patch from kcr to fix osconf.m4 so that sparc defines afs_pthread_env
+    and thus builds.
 
  -- Sam Hartman <hartmans@debian.org>  Wed,  6 Apr 2005 19:54:24 -0400
 
@@ -717,8 +725,3 @@ openafs (1.0.snap20001103-1) unstable; urgency=low
   * Initial Release.
 
  -- unknown <hartmans@snorklewacker.mit.edu>  Fri,  3 Nov 2000 23:41:41 -0500
-
-Local variables:
-mode: debian-changelog
-add-log-mailing-address "hartmans@snorklewacker.mit.edu"
-End:
