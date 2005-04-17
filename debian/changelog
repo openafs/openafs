@@ -2,6 +2,9 @@ openafs (1.3.81-4) UNRELEASED; urgency=low
 
   * make-kpkg doesn't run fakeroot for us but instead expects the module
     rules file to use $(ROOT_CMD) appropriately.  (Closes: #237861)
+  * Put the compiled modules into KPKG_DEST_DIR if set.  This appears to
+    be preferred over DEB_DEST by the make-kpkg documentation.  Thanks,
+    Jonas Smedegaard.  (Closes: #206403)
 
  --
 

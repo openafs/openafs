@@ -24,11 +24,14 @@ modulepkg=$(shell echo openafs-modules-$(KVERS)${INT_SUBARCH})
 ifndef KSRC
 KSRC=/usr/src/linux
 endif
-MODDIR=..
-LINTIAN_PACKAGES= openafs-client openafs-fileserver
+ifndef KPKG_DEST_DIR
+KPKG_DEST_DIR=..
+endif
 export KSRC 
 export KVERS
+export KPKG_DEST_DIR
 
+LINTIAN_PACKAGES= openafs-client openafs-fileserver
 
 configure: configure-stamp
 configure-stamp:
@@ -172,14 +175,14 @@ binary:   binary-indep binary-arch
 
 ############################Module package support
 kdist_image:  build-modules
-	$(ROOT_CMD) $(MAKE) $(MFLAGS) -f debian/rules MODDIR=$(KSRC)/.. binary-modules
-	$(ROOT_CMD) $(MAKE) $(MFLAGS) -f debian/rules MODDIR=$(KSRC)/.. clean
+	$(ROOT_CMD) $(MAKE) $(MFLAGS) -f debian/rules binary-modules
+	$(ROOT_CMD) $(MAKE) $(MFLAGS) -f debian/rules clean
 
 kdist:  build-modules
-	$(ROOT_CMD) $(MAKE) $(MFLAGS) -f debian/rules MODDIR=$(KSRC)/.. KERNEL_DEPENDS=y binary-modules
+	$(ROOT_CMD) $(MAKE) $(MFLAGS) -f debian/rules KERNEL_DEPENDS=y binary-modules
 	KSRC="$(KSRC)" KMAINT="$(KMAINT)" KEMAIL="$(KEMAIL)" \
 		sh -v debian/genchanges.sh
-	$(ROOT_CMD) $(MAKE) $(MFLAGS) -f debian/rules MODDIR=$(KSRC)/.. clean
+	$(ROOT_CMD) $(MAKE) $(MFLAGS) -f debian/rules clean
 
 
 
@@ -271,4 +274,4 @@ endif
 		-Pdebian/$(modulepkg)
 	chown -R root.root debian/$(modulepkg)
 	chmod -R go=rX debian/$(modulepkg)
-	dpkg --build debian/$(modulepkg) $(MODDIR)
+	dpkg --build debian/$(modulepkg) $(KPKG_DEST_DIR)
