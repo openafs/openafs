@@ -202,11 +202,12 @@ binary-source:
 	install -d debian/$(srcpkg)
 # Clean up the sources	
 	install -d debian/$(srcpkg)/usr/src/modules/$(package)
-	find . \( -name \*.o -o -path ./debian/$(srcpkg) -o -path \*/CVS -o -path ./src/WINNT  \
+	find . \( -name \*.o -o -path ./debian/$(srcpkg) -o -path \*/CVS \
+		-o -path \*/.svn -o -path ./src/WINNT  \
 		-o -path ./obj -o -path ./$(SYS_NAME)  \
-	-o \( -path ./debian/\* -type d \) \
-	-o -path ./debian/\*debhelper \) -prune -o -print | \
-		cpio -admp debian/$(srcpkg)/usr/src/modules/$(package)
+		-o \( -path ./debian/\* -type d \) \
+		-o -path ./debian/\*debhelper \) -prune -o -print | \
+			cpio -admp debian/$(srcpkg)/usr/src/modules/$(package)
 	( cd debian/$(srcpkg)/usr/src/modules/$(package)&& \
 		$(MAKE) -f debian/rules clean && \
 	rm -rf src/libafs/rx src/libafs/afs src/libafs/afsint; \
