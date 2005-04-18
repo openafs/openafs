@@ -34,7 +34,6 @@
 #define AFS_X86_ENV		1
 
 #define AFS_64BIT_ENV		1	/* Defines afs_int32 as int, not long. */
-#define AFS_64BIT_CLIENT	1	
 
 #define AFS_HAVE_FLOCK_SYSID    1
 
@@ -92,27 +91,6 @@
 #define	AFS_CLBYTES	MCLBYTES
 #define	AFS_MINCHANGE	2
 #define	osi_GetTime(x)	uniqtime(x)
-
-/**
-  * These defines are for the 64 bit Solaris 7 port
-  * AFS_SYSCALL32 is used to protect the ILP32 syscall interface
-  * AFS_64BIT_ENV is for use of 64 bit inode numbers
-  */
-#if defined(__sparcv9)
-#define	AFS_SUN57_64BIT_ENV	1
-#define AFS_64BIT_INO   	1
-#endif
-
-/**
-  * Solaris 7 64 bit has two versions of uniqtime. Since we consistently
-  * use 32 bit quantities for time in afs, we now use uniqtime32
-  */
-#if defined(AFS_SUN57_64BIT_ENV)
-#undef osi_GetTime
-#define osi_GetTime(x)  uniqtime32(x)
-#endif
-
-
 
 #define	AFS_KALLOC(n)	kmem_alloc(n, KM_SLEEP)
 #define AFS_KALLOC_NOSLEEP(n)   kmem_alloc(n, KM_NOSLEEP)
