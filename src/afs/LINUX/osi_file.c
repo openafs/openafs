@@ -65,6 +65,7 @@ osi_UFSOpen(afs_int32 ainode)
     filp->f_mapping = tip->i_mapping;
 #endif
 #if defined(AFS_LINUX24_ENV)
+    filp->f_mode = FMODE_READ|FMODE_WRITE;
     filp->f_op = fops_get(tip->i_fop);
 #else
     filp->f_op = tip->i_op->default_file_ops;
