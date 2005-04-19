@@ -987,10 +987,6 @@ BOOL AFSModulesVerify(void)
     return success;
 }
 
-typedef BOOL ( APIENTRY * AfsdInitHook )(void);
-#define AFSD_INIT_HOOK "AfsdInitHook"
-#define AFSD_HOOK_DLL  "afsdhook.dll"
-
 /*
 control serviceex exists only on 2000/xp. These functions will be loaded dynamically.
 */
@@ -1009,9 +1005,8 @@ afsd_Main(DWORD argc, LPTSTR *argv)
 #ifdef JUMP
     int jmpret;
 #endif /* JUMP */
-    HANDLE hInitHookDll;
-    HANDLE hAdvApi32;
-    AfsdInitHook initHook;
+    HMODULE hHookDll;
+    HMODULE hAdvApi32;
 
 #ifdef _DEBUG
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF /*| _CRTDBG_CHECK_ALWAYS_DF*/ | 
@@ -1109,17 +1104,17 @@ afsd_Main(DWORD argc, LPTSTR *argv)
     }
 
     /* allow an exit to be called prior to any initialization */
-    hInitHookDll = LoadLibrary(AFSD_HOOK_DLL);
-    if (hInitHookDll)
+    hHookDll = LoadLibrary(AFSD_HOOK_DLL);
+    if (hHookDll)
     {
         BOOL hookRc = FALSE;
-        initHook = ( AfsdInitHook ) GetProcAddress(hInitHookDll, AFSD_INIT_HOOK);
+        AfsdInitHook initHook = ( AfsdInitHook ) GetProcAddress(hHookDll, AFSD_INIT_HOOK);
         if (initHook)
         {
             hookRc = initHook();
         }
-        FreeLibrary(hInitHookDll);
-        hInitHookDll = NULL;
+        FreeLibrary(hHookDll);
+        hHookDll = NULL;
 
         if (hookRc == FALSE)
         {
@@ -1172,6 +1167,33 @@ afsd_Main(DWORD argc, LPTSTR *argv)
 			osi_panic(reason, __FILE__, __LINE__);
         }
 
+        /* allow an exit to be called post rx initialization */
+        hHookDll = LoadLibrary(AFSD_HOOK_DLL);
+        if (hHookDll)
+        {
+            BOOL hookRc = FALSE;
+            AfsdRxStartedHook rxStartedHook = ( AfsdRxStartedHook ) GetProcAddress(hHookDll, AFSD_RX_STARTED_HOOK);
+            if (rxStartedHook)
+            {
+                hookRc = rxStartedHook();
+            }
+            FreeLibrary(hHookDll);
+            hHookDll = NULL;
+
+            if (hookRc == FALSE)
+            {
+                ServiceStatus.dwCurrentState = SERVICE_STOPPED;
+                ServiceStatus.dwWin32ExitCode = NO_ERROR;
+                ServiceStatus.dwCheckPoint = 0;
+                ServiceStatus.dwWaitHint = 0;
+                ServiceStatus.dwControlsAccepted = 0;
+                SetServiceStatus(StatusHandle, &ServiceStatus);
+                       
+                /* exit if initialization failed */
+                return;
+            }
+        }
+
 #ifndef NOTSERVICE
         ServiceStatus.dwCheckPoint++;
         ServiceStatus.dwWaitHint -= 5000;
@@ -1181,6 +1203,33 @@ afsd_Main(DWORD argc, LPTSTR *argv)
         if (code != 0) {
             afsi_log("afsd_InitSMB failed: %s (code = %d)", reason, code);
             osi_panic(reason, __FILE__, __LINE__);
+        }
+
+        /* allow an exit to be called post smb initialization */
+        hHookDll = LoadLibrary(AFSD_HOOK_DLL);
+        if (hHookDll)
+        {
+            BOOL hookRc = FALSE;
+            AfsdSmbStartedHook smbStartedHook = ( AfsdSmbStartedHook ) GetProcAddress(hHookDll, AFSD_SMB_STARTED_HOOK);
+            if (smbStartedHook)
+            {
+                hookRc = smbStartedHook();
+            }
+            FreeLibrary(hHookDll);
+            hHookDll = NULL;
+
+            if (hookRc == FALSE)
+            {
+                ServiceStatus.dwCurrentState = SERVICE_STOPPED;
+                ServiceStatus.dwWin32ExitCode = NO_ERROR;
+                ServiceStatus.dwCheckPoint = 0;
+                ServiceStatus.dwWaitHint = 0;
+                ServiceStatus.dwControlsAccepted = 0;
+                SetServiceStatus(StatusHandle, &ServiceStatus);
+                       
+                /* exit if initialization failed */
+                return;
+            }
         }
 
         MountGlobalDrives();
@@ -1217,6 +1266,34 @@ afsd_Main(DWORD argc, LPTSTR *argv)
         DeregisterEventSource(h);
     }
 
+    /* allow an exit to be called prior to stopping the service */
+    hHookDll = LoadLibrary(AFSD_HOOK_DLL);
+    if (hHookDll)
+    {
+        BOOL hookRc = FALSE;
+        AfsdStoppingHook stoppingHook = ( AfsdStoppingHook ) GetProcAddress(hHookDll, AFSD_STOPPING_HOOK);
+        if (stoppingHook)
+        {
+            hookRc = stoppingHook();
+        }
+        FreeLibrary(hHookDll);
+        hHookDll = NULL;
+
+        if (hookRc == FALSE)
+        {
+            ServiceStatus.dwCurrentState = SERVICE_STOPPED;
+            ServiceStatus.dwWin32ExitCode = NO_ERROR;
+            ServiceStatus.dwCheckPoint = 0;
+            ServiceStatus.dwWaitHint = 0;
+            ServiceStatus.dwControlsAccepted = 0;
+            SetServiceStatus(StatusHandle, &ServiceStatus);
+                       
+            /* exit if initialization failed */
+            return;
+        }
+    }
+
+
 #ifdef AFS_FREELANCE_CLIENT
     cm_FreelanceShutdown();
     afsi_log("Freelance Shutdown complete");
@@ -1246,6 +1323,20 @@ afsd_Main(DWORD argc, LPTSTR *argv)
     if (powerEventsRegistered)
         PowerNotificationThreadExit();
 #endif
+
+    /* allow an exit to be called after stopping the service */
+    hHookDll = LoadLibrary(AFSD_HOOK_DLL);
+    if (hHookDll)
+    {
+        BOOL hookRc = FALSE;
+        AfsdStoppedHook stoppedHook = ( AfsdStoppedHook ) GetProcAddress(hHookDll, AFSD_STOPPED_HOOK);
+        if (stoppedHook)
+        {
+            hookRc = stoppedHook();
+        }
+        FreeLibrary(hHookDll);
+        hHookDll = NULL;
+    }
 
     /* Remove the ExceptionFilter */
     SetUnhandledExceptionFilter(NULL);

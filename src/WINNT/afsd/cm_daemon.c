@@ -21,6 +21,7 @@
 #include <string.h>
 
 #include <rx/rx.h>
+#include <rx/rx_prototypes.h>
 
 #include "afsd.h"
 
@@ -111,6 +112,7 @@ void cm_Daemon(long parm)
     char thostName[200];
     unsigned long code;
     struct hostent *thp;
+    HMODULE hHookDll;
 
     /* ping all file servers, up or down, with unauthenticated connection,
      * to find out whether we have all our callbacks from the server still.
@@ -177,6 +179,25 @@ void cm_Daemon(long parm)
         if (now > lastTokenCacheCheck + cm_daemonTokenCheckInterval) {
             lastTokenCacheCheck = now;
             cm_CheckTokenCache(now);
+        }
+
+        /* allow an exit to be called prior to stopping the service */
+        hHookDll = LoadLibrary(AFSD_HOOK_DLL);
+        if (hHookDll)
+        {
+            BOOL hookRc = FALSE;
+            AfsdDaemonHook daemonHook = ( AfsdDaemonHook ) GetProcAddress(hHookDll, AFSD_DAEMON_HOOK);
+            if (daemonHook)
+            {
+                hookRc = daemonHook();
+            }
+            FreeLibrary(hHookDll);
+            hHookDll = NULL;
+
+            if (hookRc == FALSE)
+            {
+                SetEvent(WaitToTerminate);
+            }
         }
     }
 }       
