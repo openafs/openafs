@@ -102,13 +102,13 @@ ComputeSizeOfDataHeaders(DWORD cacheBlocks)
 }
 
 DWORD
-ComputeSizeOfMappingFile(DWORD stats, DWORD chunkSize, DWORD cacheBlocks, DWORD blockSize)
+ComputeSizeOfMappingFile(DWORD stats, DWORD maxVols, DWORD maxCells, DWORD chunkSize, DWORD cacheBlocks, DWORD blockSize)
 {
     DWORD size;
     
     size       =  ComputeSizeOfConfigData()
-               +  ComputeSizeOfVolumes(stats/2) 
-               +  ComputeSizeOfCells(stats/4) 
+               +  ComputeSizeOfVolumes(maxVols) 
+               +  ComputeSizeOfCells(maxCells) 
                +  ComputeSizeOfACLCache(stats)
                +  ComputeSizeOfSCache(stats)
                +  ComputeSizeOfSCacheHT(stats)
@@ -417,11 +417,13 @@ cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD chu
     PSECURITY_ATTRIBUTES psa;
     int newFile = 1;
     DWORD mappingSize;
+    DWORD maxVols = stats/2;
+    DWORD maxCells = stats/4;
     char * baseAddress = NULL;
     cm_config_data_t * config_data_p;
     char * p;
 
-    mappingSize = ComputeSizeOfMappingFile(stats, chunkSize, cacheBlocks, CM_CONFIGDEFAULT_BLOCKSIZE);
+    mappingSize = ComputeSizeOfMappingFile(stats, maxVols, maxCells, chunkSize, cacheBlocks, CM_CONFIGDEFAULT_BLOCKSIZE);
 
     if ( !virtualCache ) {
         psa = CreateCacheFileSA();
@@ -529,6 +531,8 @@ cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD chu
             if ( config_data_p->size == sizeof(cm_config_data_t) &&
                  config_data_p->magic == CM_CONFIG_DATA_MAGIC &&
                  config_data_p->stats == stats &&
+                 config_data_p->maxVolumes == maxVols &&
+                 config_data_p->maxCells == maxCells &&
                  config_data_p->chunkSize == chunkSize &&
                  config_data_p->buf_nbuffers == cacheBlocks &&
                  config_data_p->blockSize == CM_CONFIGDEFAULT_BLOCKSIZE &&
@@ -622,9 +626,9 @@ cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD chu
 
         baseAddress += ComputeSizeOfConfigData();
         cm_data.volumeBaseAddress = (cm_volume_t *) baseAddress;
-        baseAddress += ComputeSizeOfVolumes(stats/2);
+        baseAddress += ComputeSizeOfVolumes(maxVols);
         cm_data.cellBaseAddress = (cm_cell_t *) baseAddress;
-        baseAddress += ComputeSizeOfCells(stats/4);
+        baseAddress += ComputeSizeOfCells(maxCells);
         cm_data.aclBaseAddress = (cm_aclent_t *) baseAddress;
         baseAddress += ComputeSizeOfACLCache(stats);
         cm_data.scacheBaseAddress = (cm_scache_t *) baseAddress;
@@ -653,10 +657,10 @@ cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD chu
     RpcStringFree(&p);
 
     afsi_log("Initializing Volume Data");
-    cm_InitVolume(newFile, stats/2);
+    cm_InitVolume(newFile, maxVols);
 
     afsi_log("Initializing Cell Data");
-    cm_InitCell(newFile, stats/4);
+    cm_InitCell(newFile, maxCells);
 
     afsi_log("Initializing ACL Data");
     cm_InitACLCache(newFile, 2*stats);

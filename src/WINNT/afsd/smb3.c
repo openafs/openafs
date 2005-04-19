@@ -4832,7 +4832,7 @@ long smb_ReceiveV3LockingX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     op = smb_GetSMBData(inp, NULL);
 
     for (i=0; i<NumberOfUnlocks; i++) {
-        if (LockType & 0x10) {
+        if (LockType & LOCKING_ANDX_LARGE_FILES) {
             /* Large Files */
             LOffset.HighPart = *((LONG *)(op + 4));
             LOffset.LowPart = *((DWORD *)(op + 8));
@@ -4857,7 +4857,7 @@ long smb_ReceiveV3LockingX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     }       
 
     for (i=0; i<NumberOfLocks; i++) {
-        if (LockType & 0x10) {
+        if (LockType & LOCKING_ANDX_LARGE_FILES) {
             /* Large Files */
             LOffset.HighPart = *((LONG *)(op + 4));
             LOffset.LowPart = *((DWORD *)(op + 8));
