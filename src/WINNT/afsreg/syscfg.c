@@ -171,7 +171,7 @@ int syscfg_GetIFInfo(int *count, int *addrs, int *masks, int *mtus, int *flags)
     }
 
   done:
-    CloseHandle(hIpHlp);
+    FreeLibrary(hIpHlp);
     return nConfig;
 }
 
