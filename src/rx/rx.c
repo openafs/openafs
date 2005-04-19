@@ -663,6 +663,22 @@ rxi_StartServerProcs(int nExistingProcs)
 }
 #endif /* KERNEL */
 
+#ifdef AFS_NT40_ENV
+/* This routine is only required on Windows */
+void
+rx_StartClientThread(void)
+{
+#ifdef AFS_PTHREAD_ENV
+    int pid;
+    pid = (int) pthread_self();
+#endif /* AFS_PTHREAD_ENV */
+#ifdef RX_ENABLE_TSFPQ
+    rx_TSFPQMaxProcs++;
+    RX_TS_FPQ_COMPUTE_LIMITS;
+#endif /* RX_ENABLE_TSFPQ */
+}
+#endif /* AFS_NT40_ENV */
+
 /* This routine must be called if any services are exported.  If the
  * donateMe flag is set, the calling process is donated to the server
  * process pool */

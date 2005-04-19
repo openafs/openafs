@@ -42,6 +42,8 @@ void cm_BkgDaemon(long parm)
 {
     cm_bkgRequest_t *rp;
 
+    rx_StartClientThread();
+
     lock_ObtainWrite(&cm_daemonLock);
     while (daemon_ShutdownFlag == 0) {
         if (!cm_bkgListEndp) {

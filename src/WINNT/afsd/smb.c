@@ -6956,6 +6956,8 @@ void smb_Server(VOID *parmp)
     dos_ptr dos_ncb;
 #endif /* DJGPP */
 
+    rx_StartClientThread();
+
     outncbp = GetNCB();
     outbufp = GetPacket();
     outbufp->ncbp = outncbp;
