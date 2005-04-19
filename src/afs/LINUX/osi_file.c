@@ -185,14 +185,16 @@ int
 afs_osi_Read(register struct osi_file *afile, int offset, void *aptr,
 	     afs_int32 asize)
 {
-    size_t resid;
-    register afs_int32 code;
+    struct uio auio;
+    struct iovec iov;
+    afs_int32 code;
+
     AFS_STATCNT(osi_Read);
 
-    /**
-      * If the osi_file passed in is NULL, panic only if AFS is not shutting
-      * down. No point in crashing when we are already shutting down
-      */
+    /*
+     * If the osi_file passed in is NULL, panic only if AFS is not shutting
+     * down. No point in crashing when we are already shutting down
+     */
     if (!afile) {
 	if (!afs_shuttingdown)
 	    osi_Panic("osi_Read called with null param");
@@ -202,14 +204,15 @@ afs_osi_Read(register struct osi_file *afile, int offset, void *aptr,
 
     if (offset != -1)
 	afile->offset = offset;
+    setup_uio(&auio, &iov, aptr, afile->offset, asize, UIO_READ, AFS_UIOSYS);
     AFS_GUNLOCK();
-    code = osi_rdwr(UIO_READ, afile, (caddr_t) aptr, asize, &resid);
+    code = osi_rdwr(afile, &auio, UIO_READ);
     AFS_GLOCK();
     if (code == 0) {
-	code = asize - resid;
+	code = asize - auio.uio_resid;
 	afile->offset += code;
     } else {
-	afs_Trace2(afs_iclSetp, CM_TRACE_READFAILED, ICL_TYPE_INT32, resid,
+	afs_Trace2(afs_iclSetp, CM_TRACE_READFAILED, ICL_TYPE_INT32, auio.uio_resid,
 		   ICL_TYPE_INT32, code);
 	code = -1;
     }
@@ -221,22 +224,27 @@ int
 afs_osi_Write(register struct osi_file *afile, afs_int32 offset, void *aptr,
 	      afs_int32 asize)
 {
-    size_t resid;
-    register afs_int32 code;
+    struct uio auio;
+    struct iovec iov;
+    afs_int32 code;
+
     AFS_STATCNT(osi_Write);
+
     if (!afile) {
 	if (!afs_shuttingdown)
 	    osi_Panic("afs_osi_Write called with null param");
 	else
 	    return EIO;
     }
+
     if (offset != -1)
 	afile->offset = offset;
+    setup_uio(&auio, &iov, aptr, afile->offset, asize, UIO_WRITE, AFS_UIOSYS);
     AFS_GUNLOCK();
-    code = osi_rdwr(UIO_WRITE, afile, (caddr_t) aptr, asize, &resid);
+    code = osi_rdwr(afile, &auio, UIO_WRITE);
     AFS_GLOCK();
     if (code == 0) {
-	code = asize - resid;
+	code = asize - auio.uio_resid;
 	afile->offset += code;
     } else {
 	if (code == ENOSPC)
@@ -244,9 +252,10 @@ afs_osi_Write(register struct osi_file *afile, afs_int32 offset, void *aptr,
 		("\n\n\n*** Cache partition is FULL - Decrease cachesize!!! ***\n\n");
 	code = -1;
     }
-    if (afile->proc) {
-	(*afile->proc) (afile, code);
-    }
+
+    if (afile->proc)
+	(*afile->proc)(afile, code);
+
     return code;
 }
 

@@ -34,9 +34,7 @@ extern afs_rwlock_t afs_xosi;
 extern int osi_lookupname(char *aname, uio_seg_t seg, int followlink,
 			  struct dentry **dpp);
 extern int osi_InitCacheInfo(char *aname);
-extern int osi_rdwr(int rw, struct osi_file *file, caddr_t addrp,
-		    size_t asize, size_t * resid);
-extern int osi_file_uio_rdwr(struct osi_file *osifile, uio_t * uiop, int rw);
+extern int osi_rdwr(struct osi_file *osifile, uio_t * uiop, int rw);
 extern void afs_osi_SetTime(osi_timeval_t * tvp);
 extern void osi_linux_free_inode_pages(void);
 extern void check_bad_parent(struct dentry *dp);

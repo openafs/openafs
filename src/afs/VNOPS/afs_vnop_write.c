@@ -560,7 +560,7 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
 	}
 #elif defined(AFS_LINUX20_ENV)
 	AFS_GUNLOCK();
-	code = osi_file_uio_rdwr(tfile, &tuio, UIO_WRITE);
+	code = osi_rdwr(tfile, &tuio, UIO_WRITE);
 	AFS_GLOCK();
 #elif defined(AFS_DARWIN_ENV)
 	AFS_GUNLOCK();

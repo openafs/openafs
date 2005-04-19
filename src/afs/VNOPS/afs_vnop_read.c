@@ -788,7 +788,7 @@ afs_UFSRead(register struct vcache *avc, struct uio *auio,
 	    AFS_GLOCK();
 #elif defined(AFS_LINUX20_ENV)
 	    AFS_GUNLOCK();
-	    code = osi_file_uio_rdwr(tfile, &tuio, UIO_READ);
+	    code = osi_rdwr(tfile, &tuio, UIO_READ);
 	    AFS_GLOCK();
 #elif defined(AFS_DARWIN_ENV)
 	    AFS_GUNLOCK();
