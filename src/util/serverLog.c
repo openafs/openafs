@@ -67,6 +67,7 @@ static pthread_mutex_t serverLogMutex;
 
 #ifdef AFS_NT40_ENV
 #define F_OK 0
+#define O_NONBLOCK 0
 #endif
 
 char *(*threadNameProgram) ();
