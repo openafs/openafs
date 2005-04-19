@@ -25,6 +25,8 @@
 #include <time.h>
 
 #include <osi.h>
+#include <rx\rx.h>
+#include <rx/rx_prototypes.h>
 
 #include "afsd.h"
 #include <WINNT\afsreg.h>
@@ -152,7 +154,6 @@ int smb_useV3;		/* try to negotiate V3 */
 static showErrors = 1;
 /* MessageBox or something like it */
 int (_stdcall *smb_MBfunc)(HWND, LPCTSTR, LPCTSTR, UINT) = NULL;
-extern HANDLE WaitToTerminate;
 #endif /* DJGPP */
 
 /* GMT time info:

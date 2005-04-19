@@ -123,6 +123,8 @@ extern int cm_freelanceEnabled;
 
 extern long rx_mtu;
 
+extern HANDLE WaitToTerminate;
+
 #define CAPABILITY_ERRORTRANS (1<<0)
 #define CAPABILITY_BITS 1
 
@@ -130,4 +132,17 @@ extern long rx_mtu;
 #define LOG_PACKET 1
 #undef  NOTSERVICE
 
+#define AFSD_HOOK_DLL  "afsdhook.dll"
+#define AFSD_INIT_HOOK "AfsdInitHook"
+typedef BOOL ( APIENTRY * AfsdInitHook )(void);
+#define AFSD_RX_STARTED_HOOK "AfsdRxStartedHook"
+typedef BOOL ( APIENTRY * AfsdRxStartedHook )(void);
+#define AFSD_SMB_STARTED_HOOK "AfsdSmbStartedHook"
+typedef BOOL ( APIENTRY * AfsdSmbStartedHook )(void);
+#define AFSD_DAEMON_HOOK "AfsdDaemonHook"
+typedef BOOL ( APIENTRY * AfsdDaemonHook )(void);
+#define AFSD_STOPPING_HOOK "AfsdStoppingHook"
+typedef BOOL ( APIENTRY * AfsdStoppingHook )(void);
+#define AFSD_STOPPED_HOOK "AfsdStoppedHook"
+typedef BOOL ( APIENTRY * AfsdStoppedHook )(void);
 #endif /* AFSD_H_ENV */
