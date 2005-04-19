@@ -498,6 +498,10 @@ else
 			AFS_SYSNAME="rs_aix52"
 			enable_pam="no"
 			;;
+		power*-ibm-aix5.3*)
+			AFS_SYSNAME="rs_aix53"
+			enable_pam="no"
+			;;
 		x86_64-*-linux-gnu)
 			AFS_SYSNAME="amd64_linuxXX"
 			enable_pam="no"
