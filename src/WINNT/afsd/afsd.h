@@ -139,6 +139,8 @@ typedef BOOL ( APIENTRY * AfsdInitHook )(void);
 typedef BOOL ( APIENTRY * AfsdRxStartedHook )(void);
 #define AFSD_SMB_STARTED_HOOK "AfsdSmbStartedHook"
 typedef BOOL ( APIENTRY * AfsdSmbStartedHook )(void);
+#define AFSD_STARTED_HOOK "AfsdStartedHook"
+typedef BOOL ( APIENTRY * AfsdStartedHook )(void);
 #define AFSD_DAEMON_HOOK "AfsdDaemonHook"
 typedef BOOL ( APIENTRY * AfsdDaemonHook )(void);
 #define AFSD_STOPPING_HOOK "AfsdStoppingHook"
