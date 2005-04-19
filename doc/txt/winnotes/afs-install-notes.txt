@@ -555,6 +555,7 @@ values using registry keys.  This is useful for managed machines in a
 Windows domain which are centrally located (e.g., in a computing
 lab.)  See registry.txt for details on the "Server Preferences" keys.
 
+
 39. As of 1.3.81, timestamps on file stored in AFS are reported to 
 Windows in UTC all year round.  Previously, in locales with daylight
 savings time, the time reported by AFS to Windows when DST is active
@@ -573,6 +574,15 @@ preserve the relative local time.  This may confuse some users who are
 used to being able to compare the timestamp in an Unix shell with the
 timestamp from the Windows explorer.  During DST, these two times will
 no longer agree even though they are in fact describing the same time.
+
+
+40. If the installer refuses to install and complains about an RPC
+configuration error, check to ensure that the following registry
+entries are present and that they refer to the dll "rpcrt4.dll":
+
+   HKLM "SOFTWARE\Microsoft\RPC\ClientProtocols" "ncacn_np"
+   HKLM "SOFTWARE\Microsoft\RPC\ClientProtocols" "ncacn_ip_tcp"
+   HKLM "SOFTWARE\Microsoft\RPC\ClientProtocols" "ncadg_ip_udp"
 
 ------------------------------------------------------------------------
 

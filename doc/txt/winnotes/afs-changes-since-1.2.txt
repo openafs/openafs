@@ -1,3 +1,33 @@
+Since 1.3.81:
+  * Added a script command to the msi installer "afs_replace"
+    which can be used to replace one version of OpenAFS with
+    another without requiring an uninstall and reinstall if
+    the installed msi is no longer in its original location.
+
+  * Apparently the problem with multi-domain forests with cross-
+    realm trusts to non-Windows realms was not entirely solved.
+    The authentication to the AFS SMB service failed because 
+    the wrong name was being used.  Using ASU as an example,
+    the authentication was being performed with the name
+    "QAAD\user" (an account in the forest root) and not 
+    "user@ASU.EDU (the MIT Kerberos principal used to login with)
+
+    The solution was to add an additional dependency on KFW
+    in order or to be able to easily obtain the client principal 
+    name stored in the MSLSA ccache TGT.  This information is 
+    used in two locations:  
+
+    - the pioctl() function 
+
+    - a new WinLogon Event Handler for the "logon" event.  
+
+    The pioctl function will now be able to use the correct
+    name when calling WNetAddConnection2() and the "logon"
+    event handler will now be able to call WNetAddConnection2().
+    The hope is that the "logon" event handler will be called 
+    before the profile is loaded but I have not guarrantee
+    that will happen. 
+
 Since 1.3.80:
   * Fixed a locking error in cm_TryBulkStat() which had the
     potential of deadlocking the system for the length of time

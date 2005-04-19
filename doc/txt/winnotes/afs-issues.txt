@@ -172,7 +172,7 @@ List of unfunded projects:
   10. Documentation Documentation Documentation
   11. Large File support (> 2GB) in SMB/CIFS client
   12. Integrate KFW installation into the NSIS and MSI installers
-  13. Add support for record locking to AFS (requires changes to the servers)
+  13. Add support for byte range locking to AFS (requires changes to the servers)
   14. Unicode enable the SMB/CIFS server.  OEM Code Pages: 
       1. prevent the use of interoperable file names
       2. force the use of paths no longer than 256 characters
