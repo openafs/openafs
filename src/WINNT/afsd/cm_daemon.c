@@ -185,7 +185,7 @@ void cm_Daemon(long parm)
         hHookDll = LoadLibrary(AFSD_HOOK_DLL);
         if (hHookDll)
         {
-            BOOL hookRc = FALSE;
+            BOOL hookRc = TRUE;
             AfsdDaemonHook daemonHook = ( AfsdDaemonHook ) GetProcAddress(hHookDll, AFSD_DAEMON_HOOK);
             if (daemonHook)
             {

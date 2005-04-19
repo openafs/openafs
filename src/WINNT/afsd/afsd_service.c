@@ -1107,7 +1107,7 @@ afsd_Main(DWORD argc, LPTSTR *argv)
     hHookDll = LoadLibrary(AFSD_HOOK_DLL);
     if (hHookDll)
     {
-        BOOL hookRc = FALSE;
+        BOOL hookRc = TRUE;
         AfsdInitHook initHook = ( AfsdInitHook ) GetProcAddress(hHookDll, AFSD_INIT_HOOK);
         if (initHook)
         {
@@ -1171,7 +1171,7 @@ afsd_Main(DWORD argc, LPTSTR *argv)
         hHookDll = LoadLibrary(AFSD_HOOK_DLL);
         if (hHookDll)
         {
-            BOOL hookRc = FALSE;
+            BOOL hookRc = TRUE;
             AfsdRxStartedHook rxStartedHook = ( AfsdRxStartedHook ) GetProcAddress(hHookDll, AFSD_RX_STARTED_HOOK);
             if (rxStartedHook)
             {
@@ -1209,7 +1209,7 @@ afsd_Main(DWORD argc, LPTSTR *argv)
         hHookDll = LoadLibrary(AFSD_HOOK_DLL);
         if (hHookDll)
         {
-            BOOL hookRc = FALSE;
+            BOOL hookRc = TRUE;
             AfsdSmbStartedHook smbStartedHook = ( AfsdSmbStartedHook ) GetProcAddress(hHookDll, AFSD_SMB_STARTED_HOOK);
             if (smbStartedHook)
             {
@@ -1253,6 +1253,33 @@ afsd_Main(DWORD argc, LPTSTR *argv)
         }
     }
 
+    /* allow an exit to be called when started */
+    hHookDll = LoadLibrary(AFSD_HOOK_DLL);
+    if (hHookDll)
+    {
+        BOOL hookRc = TRUE;
+        AfsdStartedHook startedHook = ( AfsdStartedHook ) GetProcAddress(hHookDll, AFSD_STARTED_HOOK);
+        if (startedHook)
+        {
+            hookRc = startedHook();
+        }
+        FreeLibrary(hHookDll);
+        hHookDll = NULL;
+
+        if (hookRc == FALSE)
+        {
+            ServiceStatus.dwCurrentState = SERVICE_STOPPED;
+            ServiceStatus.dwWin32ExitCode = NO_ERROR;
+            ServiceStatus.dwCheckPoint = 0;
+            ServiceStatus.dwWaitHint = 0;
+            ServiceStatus.dwControlsAccepted = 0;
+            SetServiceStatus(StatusHandle, &ServiceStatus);
+                       
+            /* exit if initialization failed */
+            return;
+        }
+    }
+
     WaitForSingleObject(WaitToTerminate, INFINITE);
 
     afsi_log("Received Termination Signal, Stopping Service");
@@ -1270,7 +1297,7 @@ afsd_Main(DWORD argc, LPTSTR *argv)
     hHookDll = LoadLibrary(AFSD_HOOK_DLL);
     if (hHookDll)
     {
-        BOOL hookRc = FALSE;
+        BOOL hookRc = TRUE;
         AfsdStoppingHook stoppingHook = ( AfsdStoppingHook ) GetProcAddress(hHookDll, AFSD_STOPPING_HOOK);
         if (stoppingHook)
         {
@@ -1328,7 +1355,7 @@ afsd_Main(DWORD argc, LPTSTR *argv)
     hHookDll = LoadLibrary(AFSD_HOOK_DLL);
     if (hHookDll)
     {
-        BOOL hookRc = FALSE;
+        BOOL hookRc = TRUE;
         AfsdStoppedHook stoppedHook = ( AfsdStoppedHook ) GetProcAddress(hHookDll, AFSD_STOPPED_HOOK);
         if (stoppedHook)
         {
