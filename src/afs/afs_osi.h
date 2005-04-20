@@ -119,7 +119,7 @@ struct afs_osi_WaitHandle {
 /*
  * Vnode related macros
  */
-#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 #define vSetVfsp(vc, vfsp)      AFSTOV(vc)->v_mount = (vfsp)
 #define vSetType(vc, type)      AFSTOV(vc)->v_type = (type)
 #define vType(vc)               AFSTOV(vc)->v_type
@@ -129,16 +129,14 @@ struct afs_osi_WaitHandle {
 #define	vSetVfsp(vc,vfsp)   (vc)->v.v_vfsp = (vfsp)
 #endif
 
-#ifndef AFS_OBSD_ENV
-#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 extern int (**afs_vnodeop_p) ();
-#define IsAfsVnode(vc)      ((vc)->v_op == afs_vnodeop_p)
-#define SetAfsVnode(vc)     (vc)->v_op = afs_vnodeop_p
+#define IsAfsVnode(v)      ((v)->v_op == afs_vnodeop_p)
+#define SetAfsVnode(v)     (v)->v_op = afs_vnodeop_p
 #else
 extern struct vnodeops *afs_ops;
-#define	IsAfsVnode(vc)	    ((vc)->v_op == afs_ops)
-#define	SetAfsVnode(vc)	    (vc)->v_op = afs_ops
-#endif
+#define	IsAfsVnode(v)	    ((v)->v_op == afs_ops)
+#define	SetAfsVnode(v)	    (v)->v_op = afs_ops
 #endif
 
 #ifdef AFS_SGI65_ENV
@@ -146,10 +144,8 @@ extern struct vnodeops *afs_ops;
              lookupname((fnamep),(segflg),(followlink),NULL,(compvpp),\
 			NULL)
 #else
-#ifndef AFS_OBSD_ENV
 #define	gop_lookupname(fnamep,segflg,followlink,compvpp) \
              lookupname((fnamep),(segflg),(followlink),NULL,(compvpp))
-#endif
 #endif
 
 /*
