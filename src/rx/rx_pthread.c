@@ -426,6 +426,13 @@ struct rx_ts_info_t * rx_ts_info_init() {
     rx_ts_info = (rx_ts_info_t *) malloc(sizeof(rx_ts_info_t));
     assert(rx_ts_info != NULL && pthread_setspecific(rx_ts_info_key, rx_ts_info) == 0);
     memset(rx_ts_info, 0, sizeof(rx_ts_info_t));
+#ifdef RX_ENABLE_TSFPQ
     queue_Init(&rx_ts_info->_FPQ);
+
+    MUTEX_ENTER(&rx_stats_mutex);
+    rx_TSFPQMaxProcs++;
+    RX_TS_FPQ_COMPUTE_LIMITS;
+    MUTEX_EXIT(&rx_stats_mutex);
+#endif /* RX_ENABLE_TSFPQ */
     return rx_ts_info;
 }

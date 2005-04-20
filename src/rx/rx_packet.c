@@ -568,11 +568,14 @@ rxi_MorePacketsNoLock(int apackets)
 
 	queue_Append(&rx_freePacketQueue, p);
     }
+
     rx_nFreePackets += apackets;
 #ifdef RX_ENABLE_TSFPQ
     /* TSFPQ patch also needs to keep track of total packets */
+    MUTEX_ENTER(&rx_stats_mutex);
     rx_nPackets += apackets;
     RX_TS_FPQ_COMPUTE_LIMITS;
+    MUTEX_EXIT(&rx_stats_mutex);
 #endif /* RX_ENABLE_TSFPQ */
     rxi_NeedMorePackets = FALSE;
     rxi_PacketsUnWait();
@@ -588,6 +591,44 @@ rxi_FreeAllPackets(void)
 	     (rx_maxReceiveWindow + 2) * sizeof(struct rx_packet));
     UNPIN(rx_mallocedP, (rx_maxReceiveWindow + 2) * sizeof(struct rx_packet));
 }
+
+#ifdef RX_ENABLE_TSFPQ
+void
+rxi_AdjustLocalPacketsTSFPQ(int num_keep_local, int allow_overcommit)
+{
+    register struct rx_ts_info_t * rx_ts_info;
+    register int xfer;
+    SPLVAR;
+
+    RX_TS_INFO_GET(rx_ts_info);
+
+    if (num_keep_local != rx_ts_info->_FPQ.len) {
+        NETPRI;
+	MUTEX_ENTER(&rx_freePktQ_lock);
+        if (num_keep_local < rx_ts_info->_FPQ.len) {
+            xfer = rx_ts_info->_FPQ.len - num_keep_local;
+	    RX_TS_FPQ_LTOG2(rx_ts_info, xfer);
+	    rxi_PacketsUnWait();
+        } else {
+            xfer = num_keep_local - rx_ts_info->_FPQ.len;
+            if ((num_keep_local > rx_TSFPQLocalMax) && !allow_overcommit)
+                xfer = rx_TSFPQLocalMax - rx_ts_info->_FPQ.len;
+            if (rx_nFreePackets < xfer) {
+                rxi_MorePacketsNoLock(xfer - rx_nFreePackets);
+            }
+            RX_TS_FPQ_GTOL2(rx_ts_info, xfer);
+        }
+	MUTEX_EXIT(&rx_freePktQ_lock);
+	USERPRI;
+    }
+}
+
+void
+rxi_FlushLocalPacketsTSFPQ(void)
+{
+    rxi_AdjustLocalPacketsTSFPQ(0, 0);
+}
+#endif /* RX_ENABLE_TSFPQ */
 
 /* Allocate more packets iff we need more continuation buffers */
 /* In kernel, can't page in memory with interrupts disabled, so we
