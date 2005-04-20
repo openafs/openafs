@@ -653,10 +653,6 @@ rxi_StartServerProcs(int nExistingProcs)
     }
     nProcs += maxdiff;		/* Extra processes needed to allow max number requested to run in any given service, under good conditions */
     nProcs -= nExistingProcs;	/* Subtract the number of procs that were previously created for use as server procs */
-#ifdef RX_ENABLE_TSFPQ
-    rx_TSFPQMaxProcs += nProcs;
-    RX_TS_FPQ_COMPUTE_LIMITS;
-#endif /* RX_ENABLE_TSFPQ */
     for (i = 0; i < nProcs; i++) {
 	rxi_StartServerProc(rx_ServerProc, rx_stackSize);
     }
@@ -672,10 +668,6 @@ rx_StartClientThread(void)
     int pid;
     pid = (int) pthread_self();
 #endif /* AFS_PTHREAD_ENV */
-#ifdef RX_ENABLE_TSFPQ
-    rx_TSFPQMaxProcs++;
-    RX_TS_FPQ_COMPUTE_LIMITS;
-#endif /* RX_ENABLE_TSFPQ */
 }
 #endif /* AFS_NT40_ENV */
 
@@ -739,6 +731,12 @@ rx_StartServer(int donateMe)
 #endif /* AFS_NT40_ENV */
 	rx_ServerProc();	/* Never returns */
     }
+#ifdef RX_ENABLE_TSFPQ
+    /* no use leaving packets around in this thread's local queue if
+     * it isn't getting donated to the server thread pool. 
+     */
+    rxi_FlushLocalPacketsTSFPQ();
+#endif /* RX_ENABLE_TSFPQ */
     return;
 }
 
