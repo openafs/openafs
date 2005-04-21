@@ -2,3 +2,4 @@ AFS_component_version_number.c
 Makefile
 compile_et
 et_lex.lex.c
+y.tab.h
