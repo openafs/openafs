@@ -1226,6 +1226,39 @@ BOOL IsSymlink(const char * true_name)
 }       
 
 
+BOOL IsMountPoint(const char * name)
+{
+    register LONG code = 0;
+    struct ViceIoctl blob;
+    char tbuffer[1024];
+    char lsbuffer[1024];
+    register char *tp;
+    char szCurItem[1024];
+    strcpy(szCurItem, name);
+	
+    tp = (char *)strrchr(szCurItem, '\\');
+    if (tp) {
+        strncpy(tbuffer, szCurItem, code = tp - szCurItem + 1);  /* the dir name */
+        tbuffer[code] = 0;
+        tp++;   /* skip the slash */
+    } else {
+        fs_ExtractDriveLetter(szCurItem, tbuffer);
+        strcat(tbuffer, ".");
+        tp = szCurItem;
+        fs_StripDriveLetter(tp, tp, 0);
+    }
+
+    blob.in = tp;
+    blob.in_size = strlen(tp)+1;
+    blob.out = lsbuffer;
+    blob.out_size = sizeof(lsbuffer);
+
+    code = pioctl(tbuffer, VIOC_AFS_STAT_MT_PT, &blob, 0);
+
+    return (code==0);
+}       
+
+
 /*
  * Delete AFS mount points.  Variables are used as follows:
  *       tbuffer: Set to point to the null-terminated directory name of the mount point
@@ -1247,28 +1280,7 @@ BOOL RemoveMount(CStringArray& files)
     HOURGLASS hourglass;
 
     for (int i = 0; i < files.GetSize(); i++) {
-        char szCurItem[1024];
-        strcpy(szCurItem, files[i]);
-	
-        tp = (char *)strrchr(szCurItem, '\\');
-        if (tp) {
-            strncpy(tbuffer, szCurItem, code = tp - szCurItem + 1);  /* the dir name */
-            tbuffer[code] = 0;
-            tp++;   /* skip the slash */
-        } else {
-            fs_ExtractDriveLetter(szCurItem, tbuffer);
-            strcat(tbuffer, ".");
-            tp = szCurItem;
-            fs_StripDriveLetter(tp, tp, 0);
-        }
-
-        blob.in = tp;
-        blob.in_size = strlen(tp)+1;
-        blob.out = lsbuffer;
-        blob.out_size = sizeof(lsbuffer);
-
-        code = pioctl(tbuffer, VIOC_AFS_STAT_MT_PT, &blob, 0);
-        if (code) {
+        if (!IsMountPoint(files[i])) {
             error = TRUE;
             if (errno == EINVAL)
                 results.Add(GetMessageString(IDS_NOT_MOUNT_POINT_ERROR, StripPath(files[i])));
