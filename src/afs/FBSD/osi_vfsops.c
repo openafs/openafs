@@ -79,6 +79,14 @@ afs_omount(struct mount *mp, char *path, caddr_t data, struct nameidata *ndp,
     return 0;
 }
 
+#ifdef AFS_FBSD60_ENV
+static int
+afs_cmount(struct mntarg *ma, void *data, int flags, struct thread *td)
+{
+    return kernel_mount(ma, flags);
+}
+#endif
+
 int
 afs_unmount(struct mount *mp, int flags, THREAD_OR_PROC)
 {
@@ -211,7 +219,11 @@ afs_statfs(struct mount *mp, struct statfs *abp, THREAD_OR_PROC)
 }
 
 int
+#ifdef AFS_FBSD60_ENV
+afs_sync(struct mount *mp, int waitfor, struct thread *td)
+#else
 afs_sync(struct mount *mp, int waitfor, struct ucred *cred, THREAD_OR_PROC)
+#endif
 {
     return 0;
 }
@@ -222,6 +234,19 @@ afs_init(struct vfsconf *vfc)
     return 0;
 }
 
+#ifdef AFS_FBSD60_ENV
+struct vfsops afs_vfsops = {
+	.vfs_init =		afs_init,
+	.vfs_mount =		afs_mount,
+	.vfs_cmount =		afs_cmount,
+	.vfs_root =		afs_root,
+	.vfs_statfs =		afs_statfs,
+	.vfs_sync =		afs_sync,
+	.vfs_uninit =		vfs_stduninit,
+	.vfs_unmount =		afs_unmount,
+	.vfs_sysctl =		vfs_stdsysctl,
+};
+#else
 struct vfsops afs_vfsops = {
 #ifdef AFS_FBSD53_ENV
     afs_mount,
@@ -244,3 +269,4 @@ struct vfsops afs_vfsops = {
     vfs_stdsysctl,
 #endif
 };
+#endif

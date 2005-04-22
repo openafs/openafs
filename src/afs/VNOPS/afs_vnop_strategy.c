@@ -186,14 +186,20 @@ afs_ustrategy(abp)
 	code = afs_rdwr(VTOAFS(abp->b_vp), &tuio, UIO_WRITE, 0, credp);
 #endif
     }
-#if	!defined(AFS_AIX32_ENV) && !defined(AFS_SUN5_ENV)
-#if defined(AFS_DUX40_ENV) || (defined (AFS_XBSD_ENV) && !defined (AFS_FBSD50_ENV))
+
+#if defined(AFS_DUX40_ENV) || defined (AFS_XBSD_ENV)
     if (code) {
 	abp->b_error = code;
+#if !defined(AFS_FBSD50_ENV)
 	abp->b_flags |= B_ERROR;
+#endif
     }
+#endif
+
+#if defined(AFS_AIX32_ENV)
+    crfree(credp);
+#elif defined(AFS_DUX40_ENV)
     biodone(abp);
-#if defined(AFS_DUX40_ENV)
     if (code && !(abp->b_flags & B_READ)) {
 	/* prevent ubc from retrying writes */
 	AFS_GUNLOCK();
@@ -201,16 +207,16 @@ afs_ustrategy(abp)
 		       (vm_offset_t) dbtob(abp->b_blkno), PAGE_SIZE, B_INVAL);
 	AFS_GLOCK();
     }
-#endif
+#elif defined(AFS_FBSD60_ENV)
+    (*abp->b_iodone)(abp);
 #elif defined(AFS_FBSD50_ENV)
     biodone(&abp->b_io);
-#else /* AFS_DUX40_ENV */
+#elif defined(AFS_XBSD_ENV)
+    biodone(abp);
+#elif !defined(AFS_SUN5_ENV)
     iodone(abp);
-#endif /* AFS_DUX40_ENV */
 #endif
-#ifdef	AFS_AIX32_ENV
-    crfree(credp);
-#endif
+
     afs_Trace3(afs_iclSetp, CM_TRACE_STRATEGYDONE, ICL_TYPE_POINTER, tvc,
 	       ICL_TYPE_INT32, code, ICL_TYPE_LONG, tuio.afsio_resid);
     return code;
