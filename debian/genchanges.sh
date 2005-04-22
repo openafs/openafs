@@ -19,4 +19,4 @@ chfile="$KSRC/../$mprefix${KVERS}${INT_SUBARCH}_${MODVERS}_${ARCH}.changes"
 dpkg-genchanges -b ${KMAINT:+-m"$KMAINT <$KEMAIL>"} -u"$KSRC/.." \
 	-cdebian/control > "$chfile"
 #pgp -fast ${KMAINT:+-u"$KMAINT"} < "$chfile.pt" > "$chfile"
-rm "$chfile.pt"
+rm "$chfile.pt" || true
