@@ -1,3 +1,4 @@
+# translation of fr.po to French
 #
 #    Translators, if you are not familiar with the PO format, gettext
 #    documentation is worth reading, especially sections dedicated to
@@ -16,20 +17,21 @@ msgstr ""
 "Project-Id-Version: openafs 1.2.9-2\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2004-05-21 00:27-0400\n"
-"PO-Revision-Date: 2003-10-16 23:34+0100\n"
+"PO-Revision-Date: 2005-04-17 08:52+0200\n"
 "Last-Translator: Christian Perrier <bubulle@debian.org>\n"
 "Language-Team: French <debian-l10n-french@lists.debian.org>\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=iso-8859-15\n"
+"Content-Type: text/plain; charset=ISO-8859-15\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Generator: KBabel 1.9.1\n"
 
 #. Type: string
 #. Description
 #: ../openafs-client.templates:3
 msgid "What hosts are DB servers for your home cell?"
 msgstr ""
-"Quels hôtes sont serveurs de bases de données pour votre cellule locale "
-"(« home cell ») ?"
+"Hôtes serveurs de bases de données pour votre cellule locale (« home "
+"cell ») :"
 
 #. Type: string
 #. Description
@@ -61,7 +63,7 @@ msgstr ""
 #. Description
 #: ../openafs-client.templates:16
 msgid "What AFS cell does this workstation belong to?"
-msgstr "À quelle cellule AFS ce poste de travail appartient-elle ?"
+msgstr "Cellule AFS dont ce poste de travail fait partie :"
 
 #. Type: string
 #. Description
@@ -78,14 +80,12 @@ msgstr ""
 #. Type: string
 #. Description
 #: ../openafs-client.templates:24
-#, fuzzy
 msgid "How large is your AFS cache (kB)?"
-msgstr "Quelle est la taille de votre cache pour AFS (en kilo-octets) ?"
+msgstr "Taille de votre cache pour AFS (en kilo-octets) :"
 
 #. Type: string
 #. Description
 #: ../openafs-client.templates:24
-#, fuzzy
 msgid ""
 "AFS uses an  area of the disk to cache remote files for faster access.  This "
 "cache will be mounted on /var/cache/openafs.  It is important that the cache "
@@ -102,8 +102,7 @@ msgstr ""
 #. Description
 #: ../openafs-client.templates:34
 msgid "Run Openafs client now and at boot?"
-msgstr ""
-"Faut-il lancer le client AFS maintenant, puis au démarrage de la machine ?"
+msgstr "Lancer le client AFS maintenant, puis à chaque démarrage ?"
 
 #. Type: boolean
 #. Description
@@ -116,14 +115,14 @@ msgid ""
 "boot , run /etc/init.d/openafs-client force-start  to start the client when "
 "you wish to run it."
 msgstr ""
-"Le système de fichiers Openafs doit-il être mis en service et monté au "
-"démarrage ? Normalement, la majorité des utilisateurs qui installent le "
-"paquet openafs-client s'attendent à ce qu'il soit lancé au démarrage. "
-"Cependant, si vous prévoyez de mettre en service une nouvelle cellule ou si "
-"vous utilisez un ordinateur portable, vous ne souhaitez peut-être pas le "
-"lancer au démarrage. Si vous préférez ne pas le lancer au démarrage, "
-"utilisez la commande « /etc/init.d/openafs-client force-start » pour le "
-"lancer quand vous en aurez besoin."
+"Veuillez indiquer si le système de fichiers Openafs doit être mis en service "
+"et monté au démarrage. Normalement, la majorité des utilisateurs qui "
+"installent le paquet openafs-client s'attendent à ce qu'il soit lancé au "
+"démarrage. Cependant, si vous prévoyez de mettre en service une nouvelle "
+"cellule ou si vous utilisez un ordinateur portable, vous ne souhaitez peut-"
+"être pas le lancer au démarrage. Si vous préférez ne pas le lancer au "
+"démarrage, utilisez la commande « /etc/init.d/openafs-client force-start » "
+"pour le lancer quand vous en aurez besoin."
 
 #. Type: boolean
 #. Description
@@ -184,16 +183,15 @@ msgid ""
 "cell.  However, OpenAFS clients can generate the contents of /afs "
 "dynamically based on the contents of /etc/openafs/CellServDB and DNS."
 msgstr ""
-"/afs contient généralement une entrée par cellule accessible à un client "
-"donné. Traditionnellement, ces entrées ont été créées par les serveurs dans "
-"la cellule locale de chaque client. Cependant, OpenAFS peut gérer "
-"dynamiquement le contenu de /afs en se servant de /etc/openafs/CellServDB et "
-"du DNS."
+"Le répertoire /afs contient généralement une entrée par cellule accessible à "
+"un client donné. Traditionnellement, ces entrées ont été créées par les "
+"serveurs dans la cellule locale de chaque client. Cependant, OpenAFS peut "
+"gérer dynamiquement le contenu de /afs en se servant de /etc/openafs/"
+"CellServDB et du DNS."
 
 #. Type: boolean
 #. Description
 #: ../openafs-client.templates:65
-#, fuzzy
 msgid ""
 "If you generate /afs dynamically, you may need to create /etc/openafs/"
 "CellAlias to include aliases for common cells. DO NOT SELECT THIS OPTION IF "
@@ -209,8 +207,7 @@ msgstr ""
 #: ../openafs-client.templates:78
 msgid "Use fakestat to avoid hangs when listing /afs?"
 msgstr ""
-"Faut-il utiliser fakestat pour éviter les erreurs lors de l'affichage du "
-"contenu de /afs ?"
+"Utiliser fakestat pour éviter les erreurs à l'affichage du contenu de /afs ?"
 
 #. Type: boolean
 #. Description
@@ -234,7 +231,7 @@ msgstr ""
 #. Description
 #: ../openafs-fileserver.templates:3
 msgid "What cell does this server serve files for?"
-msgstr "Pour quelle cellule ce serveur est-il un serveur de fichiers ?"
+msgstr "Cellule pour laquelle ce serveur est un serveur de fichiers :"
 
 #. Type: string
 #. Description
@@ -253,7 +250,8 @@ msgstr ""
 #. Description
 #: ../openafs-fileserver.templates:11
 msgid "Upgrading will move files to new locations; continue?"
-msgstr "La mise à jour va déplacer des fichiers. Faut-il continuer ?"
+msgstr ""
+"Faut-il procéder au déplacement de fichiers requis pour la mise à jour ?"
 
 #. Type: boolean
 #. Description
@@ -279,7 +277,7 @@ msgstr ""
 #. Description
 #: ../openafs-fileserver.templates:22
 msgid "OpenAFS Fileserv Probably does not work!"
-msgstr "Le serveur OpenAFS ne fonctionne probablement pas !"
+msgstr "Le serveur OpenAFS ne fonctionne probablement pas"
 
 #. Type: note
 #. Description
@@ -294,5 +292,4 @@ msgstr ""
 "alpha. Cela ne fonctionne probablement pas ; le code DES est défectueux sur "
 "ces plateformes de même que le serveur de fichiers à processus légers. Il "
 "est probable que le serveur refusera tout simplement de démarrer. Cependant, "
-"s'il démarre quand même, des corruptions de données peuvent avoir lieu. Vous "
-"voilà prévenu."
+"s'il démarre quand même, des corruptions de données peuvent avoir lieu."
