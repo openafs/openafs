@@ -27,7 +27,6 @@ RCSID
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
 #include "afs/afs_stats.h"
-#include "afs/afs_osidnlc.h"
 #include "h/mm.h"
 #ifdef HAVE_MM_INLINE_H
 #include "h/mm_inline.h"
@@ -846,8 +845,7 @@ afs_linux_dentry_revalidate(struct dentry *dp)
 {
     cred_t *credp = NULL;
     struct vrequest treq;
-    struct vcache *lookupvcp = NULL;
-    int code, bad_dentry = 1;
+    int code, bad_dentry;
     struct vcache *vcp, *parentvcp;
 
 #ifdef AFS_LINUX24_ENV
@@ -856,60 +854,60 @@ afs_linux_dentry_revalidate(struct dentry *dp)
     AFS_GLOCK();
 
     vcp = ITOAFS(dp->d_inode);
-    parentvcp = ITOAFS(dp->d_parent->d_inode);
+    parentvcp = ITOAFS(dp->d_parent->d_inode);		/* dget_parent()? */
 
-    /* If it's a negative dentry, then there's nothing to do. */
-    if (!vcp || !parentvcp)
-	goto done;
-
-    /* If it is the AFS root, then there's no chance it needs 
-     * revalidating */
-    if (vcp == afs_globalVp) {
-	bad_dentry = 0;
+    /* If it's a negative dentry, it's never valid */
+    if (!vcp || !parentvcp) {
+	bad_dentry = 1;
 	goto done;
     }
 
-    /* Make this a fast path (no crref), since it's called so often. */
-    if (vcp->states & CStatd) {
-        if (*dp->d_name.name != '/' && vcp->mvstat == 2)        /* root vnode */
-            check_bad_parent(dp);       /* check and correct mvid */
-	vcache2inode(vcp);
-	bad_dentry = 0;
+    /* If it's @sys, perhaps it has been changed */
+    if (!afs_ENameOK(dp->d_name.name)) {
+	bad_dentry = 10;
 	goto done;
     }
 
+    /* If it's the AFS root no chance it needs revalidating */
+    if (vcp == afs_globalVp)
+	goto good_dentry;
+
+    /* Get a validated vcache entry */
     credp = crref();
-
-    /* get a validated vcache entry */
     code = afs_InitReq(&treq, credp);
-    if (code)
+    if (code) {
+	bad_dentry = 2;
 	goto done;
+    }
     code = afs_VerifyVCache(vcp, &treq);
-    if (!code) {
-	bad_dentry = 0;
+    if (code) {
+	bad_dentry = 3;
 	goto done;
     }
 
-    code = afs_lookup(parentvcp, dp->d_name.name, &lookupvcp, credp);
+    /* If we aren't the last looker, verify access */
+    if (vcp->last_looker != treq.uid) {
+	if (!afs_AccessOK(vcp, (vType(vcp) == VREG) ? PRSFS_READ : PRSFS_LOOKUP, &treq, CHECK_MODE_BITS)) {
+	    bad_dentry = 5;
+	    goto done;
+	}
 
-    /* Verify that the dentry does not point to an old inode */
-    if (vcp != lookupvcp)
-	goto done;
+	vcp->last_looker = treq.uid;
+    }
 
+  good_dentry:
     bad_dentry = 0;
 
   done:
+    if (bad_dentry)
+	afs_Trace2(afs_iclSetp, CM_TRACE_BAD_DENTRY, ICL_TYPE_POINTER, dp->d_name.name, ICL_TYPE_INT32, bad_dentry);
+
     /* Clean up */
-    if (lookupvcp)
-	afs_PutVCache(lookupvcp);
-
     AFS_GUNLOCK();
-
     if (bad_dentry) {
 	shrink_dcache_parent(dp);
 	d_drop(dp);
     }
-
 #ifdef AFS_LINUX24_ENV
     unlock_kernel();
 #endif
