@@ -428,6 +428,7 @@ VAllocVnode_r(Error * ec, Volume * vp, VnodeType type)
     vnp->disk.uniquifier = unique;
     vnp->handle = NULL;
     vcp->allocs++;
+    vp->header->diskstuff.filecount++;
     return vnp;
 }
 
@@ -760,6 +761,8 @@ VPutVnode_r(Error * ec, register Vnode * vnp)
 		 * (doing so could cause a "addled bitmap" message).
 		 */
 		if (vnp->delete && !*ec) {
+		    if (vnp->volumePtr->header->diskstuff.filecount-- < 1)
+			vnp->volumePtr->header->diskstuff.filecount = 0;
 		    VFreeBitMapEntry_r(ec, &vp->vnodeIndex[class],
 				       vnodeIdToBitNumber(vnp->vnodeNumber));
 		}
