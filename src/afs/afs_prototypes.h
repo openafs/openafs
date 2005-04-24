@@ -540,9 +540,7 @@ extern void afs_osi_SetTime(osi_timeval_t * atv);
 extern int osi_lookupname(char *aname, uio_seg_t seg, int followlink,
 			  struct dentry **dpp);
 extern int osi_InitCacheInfo(char *aname);
-extern int osi_rdwr(int rw, struct osi_file *file, caddr_t addrp,
-		    size_t asize, size_t * resid);
-extern int osi_file_uio_rdwr(struct osi_file *osifile, uio_t * uiop, int rw);
+extern int osi_rdwr(struct osi_file *osifile, uio_t * uiop, int rw);
 extern void setup_uio(uio_t * uiop, struct iovec *iovecp, const char *buf,
 		      afs_offs_t pos, int count, uio_flag_t flag,
 		      uio_seg_t seg);
