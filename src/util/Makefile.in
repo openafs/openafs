@@ -13,7 +13,8 @@ HELPER_SPLINT=@HELPER_SPLINT@
 objects = assert.o base64.o casestrcpy.o ktime.o volparse.o hostparse.o \
 	 hputil.o kreltime.o isathing.o get_krbrlm.o uuid.o serverLog.o \
 	 dirpath.o fileutil.o netutils.o flipbase64.o \
-	 afs_atomlist.o afs_lhash.o snprintf.o strlcat.o strlcpy.o ${REGEX_OBJ}
+	 afs_atomlist.o afs_lhash.o snprintf.o strlcat.o strlcpy.o \
+	 daemon.o ${REGEX_OBJ}
 
 includes = \
 	${TOP_INCDIR}/afs/dirpath.h \
@@ -129,6 +130,9 @@ strlcat.o: ${srcdir}/strlcat.c ${includes}
 
 strlcpy.o: ${srcdir}/strlcpy.c ${includes}
 	${CCOBJ} ${CFLAGS} -c ${srcdir}/strlcpy.c
+
+daemon.o: ${srcdir}/daemon.c ${includes}
+	${CCOBJ} ${CFLAGS} -c ${srcdir}/daemon.c
 
 #
 # Install targets

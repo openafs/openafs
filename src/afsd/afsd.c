@@ -1761,6 +1761,14 @@ mainproc(as, arock)
 	    printf("%s: Forking AFSDB lookup handler.\n", rn);
 	code = fork();
 	if (code == 0) {
+	    /* Since the AFSDB lookup handler runs as a user process, 
+	     * need to drop the controlling TTY, etc.
+	     */
+	    if (daemon(0, 0) == -1) {
+		printf("Error starting AFSDB lookup handler: %s\n",
+			strerror(errno));
+		exit(1);
+	    }
 	    AfsdbLookupHandler();
 	    exit(1);
 	}
