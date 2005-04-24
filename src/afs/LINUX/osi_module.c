@@ -113,7 +113,7 @@ length)
                         (int)((addr>>24) & 0xff),
 (int)((addr>>16) & 0xff),
                         (int)((addr>>8)  & 0xff), (int)( addr & 0xff));
-                sprintf(temp, "%s #%s%s\n", tbuffer, tbuffer);
+                sprintf(temp, "%s #%s\n", tbuffer, tbuffer);
                 sprintf(buffer + len, "%-89s\n", temp);
                 len += 90;
                 if (pos >= offset+length) {
