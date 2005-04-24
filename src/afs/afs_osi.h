@@ -48,11 +48,15 @@ struct osi_stat {
 
 struct osi_file {
     afs_int32 size;		/* file size in bytes XXX Must be first field XXX */
+#ifdef AFS_LINUX24_ENV
+    struct file *filp;		/* May need this if we really open the file. */
+#else
 #ifdef AFS_LINUX22_ENV
     struct dentry dentry;	/* merely to hold the pointer to the inode. */
     struct file file;		/* May need this if we really open the file. */
 #else
     struct vnode *vnode;
+#endif
 #endif
 #if	defined(AFS_HPUX102_ENV)
     k_off_t offset;
