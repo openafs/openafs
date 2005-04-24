@@ -40,16 +40,13 @@ extern struct simplelock afs_rxglobal_lock;
 #define v_vfsp		v_mount
 
 /* vnode */
+#undef SetAfsVnode
 #define SetAfsVnode(vn)		/* nothing; done in getnewvnode() */
-#define IsAfsVnode(vn)	((vn)->v_op == afs_vnodeop_p)
 #define VN_HOLD(vp)	afs_vget((vp), 0)
 #define VN_RELE(vp)	vrele(vp)
 #define osi_vnhold(avc, r) afs_vget(AFSTOV(avc), 0)
 #define va_nodeid	va_fileid
 #define vnode_t		struct vnode
-#define vSetType(vc, type)	AFSTOV(vc)->v_type = (type)
-#define vSetVfsp(vc, vfsp)	AFSTOV(vc)->v_mount = (vfsp)
-#define vType(vc)		(vc)->v->v_type
 
 /* uio */
 #define afsio_iov	uio_iov
@@ -108,11 +105,11 @@ extern void *afs_nbsd_Alloc(size_t asize);
 extern void afs_nbsd_Free(void *p, size_t asize);
 extern int afs_vget();
 
+#undef gop_lookupname
 #define	gop_lookupname(fnamep, segflg, followlink, compvpp) \
 	afs_nbsd_lookupname((fnamep), (segflg), (followlink), (compvpp))
 
 #ifdef KERNEL
-extern int (**afs_vnodeop_p) ();
 
 #ifdef AFS_GLOBAL_SUNLOCK
 extern struct proc *afs_global_owner;
