@@ -580,6 +580,7 @@ tweak_config()
 }
 #endif
 
+#if 0
 /*
  * This routine causes the calling process to go into the background and
  * to lose its controlling tty.
@@ -701,6 +702,7 @@ background(void)
     }
 }
 #endif /* ! AFS_NT40_ENV */
+#endif
 
 /* start a process and monitor it */
 
@@ -857,11 +859,13 @@ main(int argc, char **argv, char **envp)
     fflush(stdout);
 #endif
 
-    /* go into the background and remove our controlling tty */
+    /* go into the background and remove our controlling tty, close open 
+       file desriptors
+     */
 
 #ifndef AFS_NT40_ENV
     if (!nofork)
-	background();
+	daemon(0, 0);
 #endif /* ! AFS_NT40_ENV */
 
     if ((!DoSyslog)

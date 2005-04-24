@@ -1008,6 +1008,7 @@ AC_CHECK_TYPE(ssize_t, int)
 AC_SIZEOF_TYPE(long)
 
 AC_CHECK_FUNCS(timegm)
+AC_CHECK_FUNCS(daemon)
 
 dnl Directory PATH handling
 if test "x$enable_transarc_paths" = "xyes"  ; then 

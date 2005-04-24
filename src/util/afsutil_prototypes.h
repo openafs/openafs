@@ -33,6 +33,11 @@ extern char *lcstring(char *d, char *s, int n);
 extern char *ucstring(char *d, char *s, int n);
 extern char *strcompose(char *buf, size_t len, ...);
 
+/* daemon.c */
+#ifndef HAVE_DAEMON
+int daemon(int nochdir, int noclose);
+#endif
+
 /* dirpath.c */
 extern unsigned int initAFSDirPath(void);
 extern const char *getDirPath(afsdir_id_t string_id);
