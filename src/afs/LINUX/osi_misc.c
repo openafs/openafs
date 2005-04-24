@@ -141,7 +141,11 @@ osi_InitCacheInfo(char *aname)
 int
 osi_rdwr(struct osi_file *osifile, uio_t * uiop, int rw)
 {
+#ifdef AFS_LINUX24_ENV
+    struct file *filp = osifile->filp;
+#else
     struct file *filp = &osifile->file;
+#endif
     KERNEL_SPACE_DECL;
     int code = 0;
     struct iovec *iov;

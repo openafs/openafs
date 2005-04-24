@@ -26,8 +26,99 @@ int afs_osicred_initialized = 0;
 struct AFS_UCRED afs_osi_cred;
 afs_lock_t afs_xosi;		/* lock is for tvattr */
 extern struct osi_dev cacheDev;
+#if defined(AFS_LINUX24_ENV)
+extern struct vfsmount *afs_cacheMnt;
+#endif
 extern struct super_block *afs_cacheSBp;
 
+/*#if defined(AFS_LINUX26_ENV) && (defined(CONFIG_EXPORTFS) || defined(CONFIG_EXPORTFS_MODULE))
+#define HAS_UFSOPEN
+extern struct export_operations export_op_default;
+
+#define CALL(ops,fun) ((ops->fun)?(ops->fun):export_op_default.fun)
+
+XXX something based on encode_fh / find_exported_dentry 
+This would require us to store an inode -> fh mapping (acquired by
+afs_InitCacheFile or lookupname), but probably solves the resiserfs issue.
+#elif... */
+
+#if defined(AFS_LINUX24_ENV) && !defined(HAS_UFSOPEN)
+#define HAS_UFSOPEN
+void *
+osi_UFSOpen(afs_int32 ainode)
+{
+    register struct osi_file *afile = NULL;
+    extern int cacheDiskType;
+    struct inode *tip = NULL;
+#ifndef AFS_LINUX26_ENV
+    afs_int32 code = 0;
+    struct list_head *lp = NULL;
+    struct dentry *tdp = NULL;
+#endif
+    struct dentry *dp = NULL;
+    struct file *filp = NULL;
+    AFS_STATCNT(osi_UFSOpen);
+    if (cacheDiskType != AFS_FCACHE_TYPE_UFS) {
+	osi_Panic("UFSOpen called for non-UFS cache\n");
+    }
+    if (!afs_osicred_initialized) {
+	/* valid for alpha_osf, SunOS, Ultrix */
+	memset((char *)&afs_osi_cred, 0, sizeof(struct AFS_UCRED));
+	crhold(&afs_osi_cred);	/* don't let it evaporate, since it is static */
+	afs_osicred_initialized = 1;
+    }
+    afile = (struct osi_file *)osi_AllocLargeSpace(sizeof(struct osi_file));
+    AFS_GUNLOCK();
+    if (!afile) {
+	osi_Panic("osi_UFSOpen: Failed to allocate %d bytes for osi_file.\n",
+		  sizeof(struct osi_file));
+    }
+    memset(afile, 0, sizeof(struct osi_file));
+    tip = iget(afs_cacheSBp, (u_long) ainode);
+    if (!tip)
+	osi_Panic("Can't get inode %d\n", ainode);
+    tip->i_flags |= MS_NOATIME;	/* Disable updating access times. */
+
+#ifdef AFS_LINUX26_ENV
+    dp = d_alloc_anon(tip);
+#else
+    spin_lock(&dcache_lock);
+    for (lp = tip->i_dentry.next;  lp != &tip->i_dentry; lp = lp->next) {
+        tdp = list_entry(lp, struct dentry, d_alias);
+        if ( !(tdp->d_flags & DCACHE_NFSD_DISCONNECTED)) {
+             dget_locked(tdp);
+             dp=tdp;
+             break;
+        }
+    }
+    if (tdp && !dp) {
+             dget_locked(tdp);
+             dp=tdp;
+    }
+    tdp = NULL;
+    spin_unlock(&dcache_lock);
+    if (!dp)
+           dp = d_alloc_root(tip);
+    iput(tip);
+#endif
+    if (!dp) 
+           osi_Panic("Can't get dentry for inode %d\n", ainode);          
+
+    filp = dentry_open(dp, mntget(afs_cacheMnt), O_RDWR);
+
+    if (IS_ERR(filp))
+	osi_Panic("Can't open inode %d\n", ainode);
+    afile->filp = filp;
+    afile->size = FILE_INODE(filp)->i_size;
+    AFS_GLOCK();
+    afile->offset = 0;
+    afile->proc = (int (*)())0;
+    afile->inum = ainode;	/* for hint validity checking */
+    return (void *)afile;
+}
+#endif
+
+#if !defined(HAS_UFSOPEN)
 void *
 osi_UFSOpen(afs_int32 ainode)
 {
@@ -81,6 +172,7 @@ osi_UFSOpen(afs_int32 ainode)
     afile->inum = ainode;	/* for hint validity checking */
     return (void *)afile;
 }
+#endif
 
 int
 afs_osi_Stat(register struct osi_file *afile, register struct osi_stat *astat)
@@ -88,20 +180,35 @@ afs_osi_Stat(register struct osi_file *afile, register struct osi_stat *astat)
     register afs_int32 code;
     AFS_STATCNT(osi_Stat);
     MObtainWriteLock(&afs_xosi, 320);
-    astat->size = FILE_INODE(&afile->file)->i_size;
-    astat->blksize = FILE_INODE(&afile->file)->i_blksize;
+    astat->size = OSIFILE_INODE(afile)->i_size;
+    astat->blksize = OSIFILE_INODE(afile)->i_blksize;
 #if defined(AFS_LINUX26_ENV)
-    astat->mtime = FILE_INODE(&afile->file)->i_mtime.tv_sec;
-    astat->atime = FILE_INODE(&afile->file)->i_atime.tv_sec;
+    astat->mtime = OSIFILE_INODE(afile)->i_mtime.tv_sec;
+    astat->atime = OSIFILE_INODE(afile)->i_atime.tv_sec;
 #else
-    astat->mtime = FILE_INODE(&afile->file)->i_mtime;
-    astat->atime = FILE_INODE(&afile->file)->i_atime;
+    astat->mtime = OSIFILE_INODE(afile)->i_mtime;
+    astat->atime = OSIFILE_INODE(afile)->i_atime;
 #endif
     code = 0;
     MReleaseWriteLock(&afs_xosi);
     return code;
 }
 
+#ifdef AFS_LINUX24_ENV
+int
+osi_UFSClose(register struct osi_file *afile)
+{
+    AFS_STATCNT(osi_Close);
+    if (afile) {
+	if (OSIFILE_INODE(afile)) {
+             filp_close(afile->filp, NULL);
+	}
+    }
+
+    osi_FreeLargeSpace(afile);
+    return 0;
+}
+#else
 int
 osi_UFSClose(register struct osi_file *afile)
 {
@@ -118,6 +225,7 @@ osi_UFSClose(register struct osi_file *afile)
     osi_FreeLargeSpace(afile);
     return 0;
 }
+#endif
 
 int
 osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
@@ -125,7 +233,7 @@ osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
     register afs_int32 code;
     struct osi_stat tstat;
     struct iattr newattrs;
-    struct inode *inode = FILE_INODE(&afile->file);
+    struct inode *inode = OSIFILE_INODE(afile);
     AFS_STATCNT(osi_Truncate);
 
     /* This routine only shrinks files, and most systems
