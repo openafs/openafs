@@ -195,7 +195,7 @@ static int (*(CpioctlSw[])) () = {
 #define PSetClientContext 99	/*  Special pioctl to setup caller's creds  */
 int afs_nobody = NFS_NOBODY;
 
-#if (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL)) || defined(AFS_HPUX_64BIT_ENV) || defined(AFS_SUN57_64BIT_ENV) || (defined(AFS_SGI_ENV) && (_MIPS_SZLONG==64)) || (defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV))
+#if (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL)) || defined(AFS_HPUX_64BIT_ENV) || defined(AFS_SUN57_64BIT_ENV) || (defined(AFS_SGI_ENV) && (_MIPS_SZLONG==64)) || defined(NEED_IOCTL32)
 static void
 afs_ioctl32_to_afs_ioctl(const struct afs_ioctl32 *src, struct afs_ioctl *dst)
 {
@@ -603,8 +603,7 @@ afs_xioctl(void)
 		AFS_GLOCK();
 		datap =
 		    (struct afs_ioctl *)osi_AllocSmallSpace(AFS_SMALLOCSIZ);
-		AFS_COPYIN((char *)uap->arg, (caddr_t) datap,
-			   sizeof(struct afs_ioctl), code);
+		code=copyin_afs_ioctl((char *)uap->arg, datap);
 		if (code) {
 		    osi_FreeSmallSpace(datap);
 		    AFS_GUNLOCK();
