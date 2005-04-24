@@ -1198,7 +1198,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
 
     /* Check for read access as well.  We need read access in order to
      * stat files, but not to stat subdirectories. */
-    if (!afs_AccessOK(adp, PRSFS_LOOKUP, &treq, CHECK_MODE_BITS))
+    if (!afs_AccessOK(adp, PRSFS_READ, &treq, CHECK_MODE_BITS))
 	no_read_access = 1;
 
     /* special case lookup of ".".  Can we check for it sooner in this code,
