@@ -865,15 +865,11 @@ static int
 afs_linux_dentry_revalidate(struct dentry *dp)
 #endif
 {
-    char *name = NULL;
-    cred_t *credp = crref();
+    cred_t *credp = NULL;
     struct vrequest treq;
     struct vcache *lookupvcp = NULL;
     int code, bad_dentry = 1;
-    struct sysname_info sysState;
     struct vcache *vcp, *parentvcp;
-
-    sysState.allocked = 0;
 
 #ifdef AFS_LINUX24_ENV
     lock_kernel();
@@ -894,29 +890,27 @@ afs_linux_dentry_revalidate(struct dentry *dp)
 	goto done;
     }
 
-    if ((code = afs_InitReq(&treq, credp)))
-	goto done;
-
-    Check_AtSys(parentvcp, dp->d_name.name, &sysState, &treq);
-    name = sysState.name;
-
-    /* First try looking up the DNLC */
-    if ((lookupvcp = osi_dnlc_lookup(parentvcp, name, WRITE_LOCK))) {
-	/* Verify that the dentry does not point to an old inode */
-	if (vcp != lookupvcp)
-	    goto done;
-	/* Check and correct mvid */
-	if (*name != '/' && vcp->mvstat == 2)
-	    check_bad_parent(dp);
+    /* Make this a fast path (no crref), since it's called so often. */
+    if (vcp->states & CStatd) {
+        if (*dp->d_name.name != '/' && vcp->mvstat == 2)        /* root vnode */
+            check_bad_parent(dp);       /* check and correct mvid */
 	vcache2inode(vcp);
 	bad_dentry = 0;
 	goto done;
     }
 
-    /* A DNLC lookup failure cannot be trusted. Try a real lookup. 
-       Make sure to try the real name and not the @sys expansion; 
-       afs_lookup will expand @sys itself. */
-  
+    credp = crref();
+
+    /* get a validated vcache entry */
+    code = afs_InitReq(&treq, credp);
+    if (code)
+	goto done;
+    code = afs_VerifyVCache(vcp, &treq);
+    if (!code) {
+	bad_dentry = 0;
+	goto done;
+    }
+
     code = afs_lookup(parentvcp, dp->d_name.name, &lookupvcp, credp);
 
     /* Verify that the dentry does not point to an old inode */
@@ -929,8 +923,6 @@ afs_linux_dentry_revalidate(struct dentry *dp)
     /* Clean up */
     if (lookupvcp)
 	afs_PutVCache(lookupvcp);
-    if (sysState.allocked)
-	osi_FreeLargeSpace(name);
 
     AFS_GUNLOCK();
 
@@ -942,7 +934,8 @@ afs_linux_dentry_revalidate(struct dentry *dp)
 #ifdef AFS_LINUX24_ENV
     unlock_kernel();
 #endif
-    crfree(credp);
+    if (credp)
+	crfree(credp);
 
     return !bad_dentry;
 }
