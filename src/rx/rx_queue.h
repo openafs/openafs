@@ -64,9 +64,19 @@ for (n=0, queue_Scan(&myqueue, qe, nqe, myelement), n++) {}
 /* N.B.  I don't think it is possible to write this expression, correctly, with less than one comma (you can easily write an alternative expression with no commas that works with most or all compilers, but it's not clear that it really is un-ambiguous, legal C-code). */
 #define _QA(q,i,a,b) (((i->a=q->a)->b=i)->b=q, q->a=i)
 
-/* These ones splice two queues together.  If (a,b) is (next,prev) then (*q2) is appended to (*q1), otherwise (*q2) is prepended to (*q1). */
+/* These ones splice two queues together.  If (a,b) is (next,prev) then (*q2) is prepended to (*q1), otherwise (*q2) is appended to (*q1). */
 #define _QS(q1,q2,a,b) if (queue_IsEmpty(q2)); else \
     ((((q2->a->b=q1)->a->b=q2->b)->a=q1->a, q1->a=q2->a), queue_Init(q2))
+
+/* This one removes part of queue (*q1) and attaches it to queue (*q2).
+ * If (a,b) is (next,prev) then the subchain is prepended to (*q2), 
+ * otherwise the subchain is appended to (*q2).
+ * If (c,d) is (prev,next) then the subchain is the elements in (*q1) before (i),
+ * otherwise the subchain is the elements in (*q1) after (i).
+ * If (x,y) is (q1,i) then operation is either BeforePrepend of AfterAppend.
+ * If (x,y) is (i,q1) then operation is either BeforeAppend or AfterPrepend. */
+#define _QSP(q1,q2,i,a,b,c,d,x,y) if (!queue_IsEnd(q1,i->c)) \
+    (((y->b->a=q2->a)->b=y->b), ((x->a->b=q2)->a=x->a), ((i->c=q1)->d=i))
 
 /* Basic remove operation.  Doesn't update the queue item to indicate it's been removed */
 #define _QR(i) ((_Q(i)->prev->next=_Q(i)->next)->prev=_Q(i)->prev)
@@ -93,6 +103,18 @@ for (n=0, queue_Scan(&myqueue, qe, nqe, myelement), n++) {}
 
 /* Splice the members of queue (*q2) to the end of (*q1), re-initialize (*q2) */
 #define queue_SpliceAppend(q1,q2) _QS(_Q(q1),_Q(q2),prev,next)
+
+/* split the members after i off of queue (*q1), and append them onto queue (*q2) */
+#define queue_SplitAfterAppend(q1,q2,i) _QSP(_Q(q1),_Q(q2),_Q(i),prev,next,next,prev,_Q(q1),_Q(i))
+
+/* split the members after i off of queue (*q1), and prepend them onto queue (*q2) */
+#define queue_SplitAfterPrepend(q1,q2,i) _QSP(_Q(q1),_Q(q2),_Q(i),next,prev,next,prev,_Q(i),_Q(q1))
+
+/* split the members before i off of queue (*q1), and append them onto queue (*q2) */
+#define queue_SplitBeforeAppend(q1,q2,i) _QSP(_Q(q1),_Q(q2),_Q(i),prev,next,prev,next,_Q(i),_Q(q1))
+
+/* split the members before i off of queue (*q1), and prepend them onto queue (*q2) */
+#define queue_SplitBeforePrepend(q1,q2,i) _QSP(_Q(q1),_Q(q2),_Q(i),next,prev,prev,next,_Q(q1),_Q(i))
 
 /* Replace the queue (*q1) with the contents of the queue (*q2), re-initialize (*q2) */
 #define queue_Replace(q1,q2) if (queue_IsEmpty(q2)) queue_Init(q1); else \

@@ -253,11 +253,9 @@ EXT void rxi_FlushLocalPacketsTSFPQ(void); /* flush all thread-local packets to 
         register int i; \
         register struct rx_packet * p; \
         register int tsize = (rx_ts_info_p)->_FPQ.len - rx_TSFPQLocalMax + rx_TSFPQGlobSize; \
-        for (i=0; i < tsize; i++) { \
-            p = queue_Last(&((rx_ts_info_p)->_FPQ), rx_packet); \
-            queue_Remove(p); \
-            queue_Prepend(&rx_freePacketQueue,p); \
-        } \
+        for (i=0,p=queue_Last(&((rx_ts_info_p)->_FPQ), rx_packet); \
+             i < tsize; i++,p=queue_Prev(p, rx_packet)); \
+        queue_SplitAfterPrepend(&((rx_ts_info_p)->_FPQ),&rx_freePacketQueue,p); \
         (rx_ts_info_p)->_FPQ.len -= tsize; \
         rx_nFreePackets += tsize; \
         (rx_ts_info_p)->_FPQ.ltog_ops++; \
@@ -277,11 +275,9 @@ EXT void rxi_FlushLocalPacketsTSFPQ(void); /* flush all thread-local packets to 
     do { \
         register int i; \
         register struct rx_packet * p; \
-        for (i=0; i < (num_transfer); i++) { \
-            p = queue_Last(&((rx_ts_info_p)->_FPQ), rx_packet); \
-            queue_Remove(p); \
-            queue_Prepend(&rx_freePacketQueue,p); \
-        } \
+        for (i=0,p=queue_Last(&((rx_ts_info_p)->_FPQ), rx_packet); \
+	     i < (num_transfer); i++,p=queue_Prev(p, rx_packet)); \
+        queue_SplitAfterPrepend(&((rx_ts_info_p)->_FPQ),&rx_freePacketQueue,p); \
         (rx_ts_info_p)->_FPQ.len -= (num_transfer); \
         rx_nFreePackets += (num_transfer); \
         (rx_ts_info_p)->_FPQ.ltog_ops++; \
@@ -300,13 +296,13 @@ EXT void rxi_FlushLocalPacketsTSFPQ(void); /* flush all thread-local packets to 
    rx_freePktQ_lock must be held. */
 #define RX_TS_FPQ_GTOL(rx_ts_info_p) \
     do { \
-        register int i; \
+        register int i, tsize; \
         register struct rx_packet * p; \
-        for (i=0; (i < rx_TSFPQGlobSize) && queue_IsNotEmpty(&rx_freePacketQueue); i++) { \
-            p = queue_First(&rx_freePacketQueue, rx_packet); \
-            queue_Remove(p); \
-            queue_Append(&((rx_ts_info_p)->_FPQ),p); \
-        } \
+        tsize = (rx_TSFPQGlobSize <= rx_nFreePackets) ? \
+                 rx_TSFPQGlobSize : rx_nFreePackets; \
+        for (i=0,p=queue_First(&rx_freePacketQueue, rx_packet); \
+             i < tsize; i++,p=queue_Next(p, rx_packet)); \
+        queue_SplitBeforeAppend(&rx_freePacketQueue,&((rx_ts_info_p)->_FPQ),p); \
         (rx_ts_info_p)->_FPQ.len += i; \
         rx_nFreePackets -= i; \
         (rx_ts_info_p)->_FPQ.gtol_ops++; \
@@ -317,11 +313,9 @@ EXT void rxi_FlushLocalPacketsTSFPQ(void); /* flush all thread-local packets to 
     do { \
         register int i; \
         register struct rx_packet * p; \
-        for (i=0; i < (num_transfer); i++) { \
-            p = queue_First(&rx_freePacketQueue, rx_packet); \
-            queue_Remove(p); \
-            queue_Append(&((rx_ts_info_p)->_FPQ),p); \
-        } \
+        for (i=0,p=queue_First(&rx_freePacketQueue, rx_packet); \
+             i < (num_transfer); i++,p=queue_Next(p, rx_packet)); \
+        queue_SplitBeforeAppend(&rx_freePacketQueue,&((rx_ts_info_p)->_FPQ),p); \
         (rx_ts_info_p)->_FPQ.len += i; \
         rx_nFreePackets -= i; \
         (rx_ts_info_p)->_FPQ.gtol_ops++; \
