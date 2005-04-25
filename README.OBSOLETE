@@ -1,4 +1,4 @@
-The mpp and package included with AFS are obsolete. ntp is no longer included.
+The ntp, mpp and package included with AFS are obsolete.
 
 The ntp package is intended to only maintain time on servers; Clients
 get time from servers unless afsd is started with -nosettime. That said,
