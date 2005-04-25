@@ -24,7 +24,6 @@
 #define	AFS_GLOBAL_RXLOCK_KERNEL 1
 
 
-#if defined(CONFIG_SMP) || defined(CONFIG_PREEMPT)
 #define RX_ENABLE_LOCKS 1
 
 #ifndef _LINUX_CODA_FS_I
@@ -79,26 +78,5 @@ MUTEX_ISMINE(afs_kmutex_t * l)
 #define CV_SIGNAL(cv)		wake_up((struct wait_queue**)cv)
 #define CV_BROADCAST(cv)	wake_up((struct wait_queue**)cv)
 #endif
-
-#else
-
-#define MUTEX_ISMINE(a)
-#define osirx_AssertMine(addr, msg)
-
-#define MUTEX_DESTROY(a)
-#define MUTEX_ENTER(a)
-#define MUTEX_TRYENTER(a) 1
-#define MUTEX_EXIT(a)
-#define MUTEX_INIT(a,b,c,d)
-#define CV_INIT(a,b,c,d)
-#define CV_DESTROY(a)
-#endif
-
-/* Since we're using the RX listener daemon, we don't need to hold off
- * interrupts.
- */
-#define SPLVAR
-#define NETPRI
-#define USERPRI
 
 #endif /* RX_KMUTEX_H_ */

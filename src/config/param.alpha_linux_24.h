@@ -44,8 +44,8 @@
 #ifndef __SMP__
 #define __SMP__
 #endif
-#define AFS_GLOBAL_SUNLOCK
 #endif
+#define AFS_GLOBAL_SUNLOCK
 #if defined(MODULE) && defined(CONFIG_MODVERSIONS)
 #define MODVERSIONS
 #include <linux/modversions.h>

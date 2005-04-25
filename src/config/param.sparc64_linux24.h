@@ -57,8 +57,8 @@
 #ifdef AFS_SMP
 #define CONFIG_SMP 1
 #define __SMP__
-#define AFS_GLOBAL_SUNLOCK
 #endif
+#define AFS_GLOBAL_SUNLOCK
 
 #endif /* __KERNEL__  && !DUMP_KERNEL */
 #include <afs/afs_sysnames.h>

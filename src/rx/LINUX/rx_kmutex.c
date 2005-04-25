@@ -23,8 +23,6 @@ RCSID
 #include "rx_kmutex.h"
 #include "rx/rx_kernel.h"
 
-#if defined(CONFIG_SMP) || defined(CONFIG_PREEMPT)
-
 void
 afs_mutex_init(afs_kmutex_t * l)
 {
@@ -139,5 +137,3 @@ afs_cv_timedwait(afs_kcondvar_t * cv, afs_kmutex_t * l, int waittime)
 	AFS_GLOCK();
     MUTEX_ENTER(l);
 }
-
-#endif
