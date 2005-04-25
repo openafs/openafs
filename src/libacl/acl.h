@@ -54,7 +54,7 @@ of entries.  Each entry consists of a
 username or groupname followed by a decimal number representing the rights mask for that name.  Each
 entry in the list looks as if it had been produced by printf() using a format list of "%s\t%d\n".
 
-Note that the number of entries must be less than ACL_MAXENTRIES
+Note that the number of entries must be less than or equal to ACL_MAXENTRIES
 */
 
 /* This is temporary hack to get around changing the volume package
