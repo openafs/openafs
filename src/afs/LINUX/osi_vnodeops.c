@@ -920,9 +920,6 @@ afs_linux_dentry_revalidate(struct dentry *dp)
     bad_dentry = 0;
 
   done:
-    if (bad_dentry)
-	afs_Trace2(afs_iclSetp, CM_TRACE_BAD_DENTRY, ICL_TYPE_POINTER, dp->d_name.name, ICL_TYPE_INT32, bad_dentry);
-
     /* Clean up */
     AFS_GUNLOCK();
     if (bad_dentry) {
