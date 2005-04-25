@@ -47,8 +47,8 @@
 #ifndef __SMP__
 #define __SMP__
 #endif
-#define AFS_GLOBAL_SUNLOCK
 #endif
+#define AFS_GLOBAL_SUNLOCK
 
 #endif /* __KERNEL__  && !DUMP_KERNEL */
 
