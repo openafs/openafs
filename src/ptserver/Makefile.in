@@ -14,7 +14,7 @@ INCLS=${TOP_INCDIR}/ubik.h \
 	${TOP_INCDIR}/rx/xdr.h \
 	${TOP_INCDIR}/afs/keys.h \
 	${TOP_INCDIR}/afs/cellconfig.h \
-	ptserver.h ptclient.h ptuser.h ptint.h pterror.h map.h
+	ptserver.h ptclient.h ptuser.h ptint.h pterror.h map.h ptprototypes.h
 
 LINCLS=${TOP_INCDIR}/ubik.h \
 	${TOP_INCDIR}/lock.h \
