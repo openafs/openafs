@@ -67,6 +67,7 @@ RCSID
 #include <winsock2.h>
 #else
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #endif
 #ifdef HAVE_STRING_H
 #include <string.h>
@@ -77,6 +78,7 @@ RCSID
 #endif
 #include "ptserver.h"
 #include "pterror.h"
+#include "ptprototypes.h"
 #include "afs/audit.h"
 
 #ifdef AFS_ATHENA_STDENV
