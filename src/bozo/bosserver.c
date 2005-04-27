@@ -865,7 +865,7 @@ main(int argc, char **argv, char **envp)
 
 #ifndef AFS_NT40_ENV
     if (!nofork)
-	daemon(0, 0);
+	daemon(1, 0);
 #endif /* ! AFS_NT40_ENV */
 
     if ((!DoSyslog)
