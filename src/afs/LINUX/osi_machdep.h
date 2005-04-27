@@ -199,7 +199,7 @@ extern unsigned long afs_linux_page_offset;
 /* function to help with the page offset stuff */
 #define afs_linux_page_address(page) (afs_linux_page_offset + PAGE_SIZE * (page - mem_map))
 
-#if defined(__KERNEL__) && defined(CONFIG_SMP)
+#if defined(__KERNEL__)
 #include "../h/sched.h"
 #include "linux/wait.h"
 
