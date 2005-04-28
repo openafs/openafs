@@ -564,7 +564,7 @@ case $AFS_SYSNAME in
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
 		PAM_CFLAGS="-O -Dlinux -DLINUX_PAM -fPIC"
-		SHLIB_LDFLAGS="-shared -Xlinker -x"
+		SHLIB_LDFLAGS="-shared -Xlinker -x -Xlinker -Bsymbolic"
 		TXLIBS="-lncurses"
 		XCFLAGS="-O -g -D_LARGEFILE64_SOURCE -D__s390x__"
 		YACC="bison -y"
