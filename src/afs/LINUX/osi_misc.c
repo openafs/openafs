@@ -110,12 +110,12 @@ int
 osi_InitCacheInfo(char *aname)
 {
     int code;
-    struct dentry *dp,*dpp;
+    struct dentry *dp;
     extern ino_t cacheInode;
     extern struct osi_dev cacheDev;
     extern afs_int32 afs_fsfragsize;
     extern struct super_block *afs_cacheSBp;
-    extern struct vfsmnt *afs_cacheMnt;
+    extern struct vfsmount *afs_cacheMnt;
     code = osi_lookupname_internal(aname, 1, &afs_cacheMnt, &dp);
     if (code)
 	return ENOENT;
