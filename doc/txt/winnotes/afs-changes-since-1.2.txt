@@ -1,3 +1,10 @@
+Since 1.3.82:
+  * Fix a regression introduced into the pioctl() client code which
+    will cause a crash in winlogon.exe, explorer.exe and fs.exe if
+    MIT KFW is not installed.
+
+  * Remove AFS Gateway option from OpenAFS Control Panel
+
 Since 1.3.81:
   * Fix a race condition in cm_EndCallbackGrantingCall() that 
     could leave 'nrevp' pointing to freed memory.  In the process,
