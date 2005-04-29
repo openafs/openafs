@@ -10,7 +10,10 @@ RCSID
 #include <sys/malloc.h>
 #include <sys/namei.h>
 #include <sys/conf.h>
+#include <sys/module.h>
+#include <sys/sysproto.h>
 #include <sys/syscall.h>
+#include <sys/sysent.h>
 
 struct vcache *afs_globalVp = NULL;
 struct mount *afs_globalVFS = NULL;
@@ -22,10 +25,50 @@ int afs_pbuf_freecnt = -1;
 #define	THREAD_OR_PROC struct proc *p
 #endif
 
+extern int afs3_syscall();
+extern int Afs_xsetgroups();
+extern int afs_xioctl();
+
+static sy_call_t *old_handler;
+
+
+int
+afs_init(struct vfsconf *vfc)
+{
+    if (sysent[AFS_SYSCALL].sy_call != nosys
+	&& sysent[AFS_SYSCALL].sy_call != lkmnosys) {
+	printf("AFS_SYSCALL in use. aborting\n");
+	return EBUSY;
+    }
+    osi_Init();
+    afs_pbuf_freecnt = nswbuf / 2 + 1;
+#if 0
+    sysent[SYS_setgroups].sy_call = Afs_xsetgroups;
+    sysent[SYS_ioctl].sy_call = afs_xioctl;
+#endif
+    old_handler = sysent[AFS_SYSCALL].sy_call;
+    sysent[AFS_SYSCALL].sy_call = afs3_syscall;
+    sysent[AFS_SYSCALL].sy_narg = 5;
+    return 0;
+}
+
+int
+afs_uninit(struct vfsconf *vfc)
+{
+    if (afs_globalVFS)
+	return EBUSY;
+#if 0
+    sysent[SYS_ioctl].sy_call = ioctl;
+    sysent[SYS_setgroups].sy_call = setgroups;
+#endif
+    sysent[AFS_SYSCALL].sy_narg = 0;
+    sysent[AFS_SYSCALL].sy_call = old_handler;
+    return 0;
+}
+
 int
 afs_start(struct mount *mp, int flags, THREAD_OR_PROC)
 {
-    afs_pbuf_freecnt = nswbuf / 2 + 1;
     return (0);			/* nothing to do. ? */
 }
 
@@ -228,12 +271,6 @@ afs_sync(struct mount *mp, int waitfor, struct ucred *cred, THREAD_OR_PROC)
     return 0;
 }
 
-int
-afs_init(struct vfsconf *vfc)
-{
-    return 0;
-}
-
 #ifdef AFS_FBSD60_ENV
 struct vfsops afs_vfsops = {
 	.vfs_init =		afs_init,
@@ -242,7 +279,7 @@ struct vfsops afs_vfsops = {
 	.vfs_root =		afs_root,
 	.vfs_statfs =		afs_statfs,
 	.vfs_sync =		afs_sync,
-	.vfs_uninit =		vfs_stduninit,
+	.vfs_uninit =		afs_uninit,
 	.vfs_unmount =		afs_unmount,
 	.vfs_sysctl =		vfs_stdsysctl,
 };
@@ -263,7 +300,7 @@ struct vfsops afs_vfsops = {
     vfs_stdcheckexp,
     vfs_stdvptofh,
     afs_init,
-    vfs_stduninit,
+    afs_uninit,
     vfs_stdextattrctl,
 #ifdef AFS_FBSD50_ENV
     vfs_stdsysctl,

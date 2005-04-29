@@ -491,14 +491,16 @@ afs_vop_open(ap)
 				 * } */ *ap;
 {
     int error;
-    int bad;
     struct vcache *vc = VTOAFS(ap->a_vp);
-    bad = 0;
+
     AFS_GLOCK();
     error = afs_open(&vc, ap->a_mode, ap->a_cred);
 #ifdef DIAGNOSTIC
     if (AFSTOV(vc) != ap->a_vp)
 	panic("AFS open changed vnode!");
+#endif
+#ifdef AFS_FBSD60_ENV
+    vnode_create_vobject(ap->a_vp, vc->m.Length, ap->a_td);
 #endif
     osi_FlushPages(vc, ap->a_cred);
     AFS_GUNLOCK();
