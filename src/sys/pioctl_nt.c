@@ -246,8 +246,9 @@ IsKrb5Available()
             hKrb5DLL = 0;
             return FALSE;
         }
+        return TRUE;
     }
-    return TRUE;
+    return FALSE;
 }
 
 static BOOL
