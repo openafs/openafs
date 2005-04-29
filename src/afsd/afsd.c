@@ -2079,7 +2079,10 @@ mainproc(as, arock)
 	if (afsd_verbose)
 	    printf("%s: Mounting the AFS root on '%s', flags: %d.\n", rn,
 		   cacheMountDir, mountFlags);
-#ifdef AFS_FBSD_ENV
+#if defined(AFS_FBSD60_ENV)
+	/* data must be non-NULL but is otherwise ignored */
+	if ((mount(MOUNT_AFS, cacheMountDir, mountFlags, rn)) < 0) {
+#elif defined(AFS_FBSD_ENV)
 	if ((mount("AFS", cacheMountDir, mountFlags, (caddr_t) 0)) < 0) {
 #elif defined(AFS_AIX_ENV)
 	if (aix_vmount()) {
@@ -2089,8 +2092,7 @@ mainproc(as, arock)
 	if ((mount("AFS", cacheMountDir, mountFlags, "afs", NULL, 0)) < 0) {
 #elif defined(AFS_SGI_ENV)
 	mountFlags = MS_FSS;
-	if ((mount(MOUNT_AFS, cacheMountDir, mountFlags, (caddr_t) MOUNT_AFS))
-	    < 0) {
+	if ((mount(MOUNT_AFS, cacheMountDir, mountFlags, (caddr_t) MOUNT_AFS)) < 0) {
 #elif defined(AFS_LINUX20_ENV)
 	if ((mount("AFS", cacheMountDir, MOUNT_AFS, 0, NULL)) < 0) {
 #else
