@@ -51,10 +51,8 @@ BEGIN
     EDITTEXT        IDC_CELL,68,22,114,13,ES_LOWERCASE | ES_AUTOHSCROLL
     CONTROL         "登入 Windows 時取得 AFS 記號(&O)",IDC_LOGON,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,13,50,193,10
-    CONTROL         "提供 AFS Light 閘道(&P) ",IDC_GATEWAY,"Button",
+    CONTROL         "在工作列顯示「AFS 用戶端」圖示(&H)  ",IDC_TRAYICON,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,13,72,193,10
-    CONTROL         "在工作列顯示「AFS 用戶端」圖示(&H)  ",IDC_TRAYICON,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,95,193,10
     LTEXT           "附註：由於並未執行「AFS 用戶端」服務，因此控制都已停用。",
                     IDC_WARN,13,124,193,17
     GROUPBOX        "用戶端狀態",IDC_STATIC,7,157,206,61

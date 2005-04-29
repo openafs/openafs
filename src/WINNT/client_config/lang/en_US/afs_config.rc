@@ -52,10 +52,8 @@ BEGIN
     EDITTEXT        IDC_CELL,59,22,114,13,ES_LOWERCASE | ES_AUTOHSCROLL
     CONTROL         "&Obtain AFS tokens when logging into Windows",IDC_LOGON,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,50,193,10
-    CONTROL         "&Provide an AFS Light Gateway",IDC_GATEWAY,"Button",
+    CONTROL         "S&how the AFS Client icon in the taskbar",IDC_TRAYICON,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,13,72,193,10
-    CONTROL         "S&how the AFS Client icon in the taskbar",IDC_TRAYICON,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,95,193,10
     LTEXT           "Note: these controls are disabled because the AFS Client service is not running.",
                     IDC_WARN,13,124,193,17
     GROUPBOX        "Client Status",IDC_STATIC,7,157,206,61

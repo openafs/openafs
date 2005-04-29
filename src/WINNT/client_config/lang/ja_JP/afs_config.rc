@@ -52,11 +52,10 @@ BEGIN
     CONTROL         "Windows へのログイン時に AFS トークンを取得(&O)",
                     IDC_LOGON,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,50,
                     198,10
-    CONTROL         "AFS Light ゲートウェイを提供(&P)",IDC_GATEWAY,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,11,72,193,10
     CONTROL         "タスクバーにAFSクライアント・アイコンを表示(&H)",
-                    IDC_TRAYICON,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,95,
-                    201,10
+                    IDC_TRAYICON,
+                    "Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,11,72,193,10
     LTEXT           "注: AFS クライアント・サービスが実行されていないため、これらの制御は使用できません。",
                     IDC_WARN,13,124,193,17
     GROUPBOX        "クライアント状況",IDC_STATIC,7,157,206,61
