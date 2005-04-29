@@ -190,6 +190,8 @@ typedef struct {
 typedef struct timeval osi_timeval_t;
 #endif /* AFS_SGI61_ENV */
 
+#define osi_getpid() 		getpid()
+
 /*
  * osi_ThreadUnique() should yield a value that can be found in ps
  * output in order to draw correspondences between ICL traces and what
