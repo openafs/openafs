@@ -15,6 +15,14 @@ export DH_COMPAT=2
 # This has to be exported to make some magic below work.
 export DH_OPTIONS
 
+ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
+    DEBIAN_OPT_FLAGS = --disable-optimize --disable-lwp-optimize
+    DEBIAN_KERN_FLAGS = --disable-kernel-optimize
+else
+    DEBIAN_OPT_FLAGS =
+    DEBIAN_KERN_FLAGS =
+endif
+
 # The AFS sysname is determined by a script
 KVERS=`perl -e '$$_ = <>; $$_ =~ m/"(.+)"/; print "$$1\n";' < $(KSRC)/include/linux/version.h`
 SYS_NAME=$(shell KVERS=$(KVERS) sh debian/sysname)
@@ -39,10 +47,12 @@ configure-stamp:
 	-ln -s @sys/dest dest
 	-ln -s $(SYS_NAME) @sys
 #	sh regen.sh
-	 afslogsdir=/var/log/openafs sh configure --with-afs-sysname=$(SYS_NAME) --disable-kernel-module \
-	--prefix=/usr --sysconfdir=/etc --libexecdir=/usr/lib \
-	--localstatedir=/var/lib  afslocaldir=/etc/openafs/server-local \
-	--enable-supergroups --enable-largefile-fileserver --enable-debug
+	afslogsdir=/var/log/openafs sh configure \
+	    --with-afs-sysname=$(SYS_NAME) --disable-kernel-module \
+	    --prefix=/usr --sysconfdir=/etc --libexecdir=/usr/lib \
+	    --localstatedir=/var/lib  afslocaldir=/etc/openafs/server-local \
+	    --enable-supergroups --enable-largefile-fileserver \
+	    --enable-debug --enable-lwp-debug $(DEBIAN_OPT_FLAGS)
 	chmod a+x src/libafs/make_kbuild_makefile.pl         
 	install -d $(SYS_NAME)/dest/root.client/usr/vice/etc
 	install -d dest/root.server/usr/afs/bin
@@ -96,7 +106,7 @@ install: build
 	install -g root -o root -m 755 debian/afs-newcell \
 		debian/openafs-dbserver/usr/sbin
 	install -D -m 644 debian/ConfigUtils.pm \
-		debian/openafs-dbserver/usr/lib/perl5/Debian/OpenAFS/ConfigUtils.pm
+		debian/openafs-dbserver/usr/share/perl5/Debian/OpenAFS/ConfigUtils.pm
 	(cd debian&&pod2man --section 8 --center "Debian GNU/Linux"  \
 		afs-rootvol ) >debian/openafs-dbserver/usr/share/man/man8/afs-rootvol.8
 	(cd debian&&pod2man --section 8 --center "Debian GNU/Linux"  \
@@ -229,7 +239,10 @@ build-modules: build-modules-stamp
 build-modules-stamp: 
 	-ln -s @sys/dest dest
 	-ln -s $(SYS_NAME) @sys
-	sh configure --with-afs-sysname=$(SYS_NAME) --with-linux-kernel-headers=$(KSRC) --prefix=`pwd`/debian/tmp
+	sh configure --with-afs-sysname=$(SYS_NAME) \
+	    --with-linux-kernel-headers=$(KSRC) --prefix=`pwd`/debian/tmp \
+	    --enable-debug --enable-lwp-debug --enable-kernel-debug \
+	    $(DEBIAN_OPT_FLAGS) $(DEBIAN_KERN_FLAGS)
 	make only_libafs
 	cd src/libafs&&make install
 	touch build-modules-stamp

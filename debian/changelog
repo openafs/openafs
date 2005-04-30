@@ -4,6 +4,12 @@ openafs (1.3.81-5) unstable; urgency=low
     or ext3 and that XFS and ReiserFS will not work.  upserver and
     upclient are now provided.  Provide some information about why
     kaserver is not provided.  (Closes: #249315)
+  * Update standards version to 3.6.1.
+    - Install Debian::OpenAFS::ConfigUtils in /usr/share, not /usr/lib.
+    - Always enable debugging symbols and disable optimization if noopt is
+      set in DEB_BUILD_OPTIONS.
+    - /etc/init.d/openafs-fileserver restart starts bosserver if it's not
+      already running.
 
  --
 
