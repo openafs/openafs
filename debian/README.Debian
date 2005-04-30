@@ -1,29 +1,30 @@
-openafs for Debian
-----------------------
+OpenAFS for Debian
+------------------
+
+* AFS users may be confused by the directory layout.  The files that
+  normally go in /usr/vice/etc go in /etc/openafs.  The cache should be
+  mounted on /var/cache/openafs.
+
+* The AFS client cache must be on an ext2 or ext3 partition.  Other file
+  systems often do not support the semantics required by the AFS kernel
+  module and will cause kernel faults.  In particular, XFS and ReiserFS
+  will NOT work.
 
 * No manual pages are included.  I need to find out if versions exist
   that are OK for copyright reasons.
 
 * Documentation can be found at http://www.openafs.org.  If want to
-set up a new cell, read the docs there and then look at the example
-session in configuration-transcript.txt.gz in this directory.  You
-should also read README.servers.  The procedure outlined in these two
-files is much simpler and more secure than the one in the Openafs
-documentation, but the Openafs documentation provides useful
-background.
-
-*  AFS users may be confused by the directory layout.  The files that
-   normally go in /usr/vice/etc go in /etc/openafs.  The cache should
-   be mounted on /var/cache/openafs.
+  set up a new cell, read the docs there and then look at the example
+  session in configuration-transcript.txt.gz in this directory.  You
+  should also read README.servers.  The procedure outlined in these two
+  files is much simpler and more secure than the one in the Openafs
+  documentation, but the Openafs documentation provides useful background.
 
 * The libopenafs-dev package only includes static libraries because
-the shared libraries built by AFS are not compatible with Debian
-policy.  They include non-PIC code and do not have a stable ABI.
+  the shared libraries built by AFS are not compatible with Debian policy.
+  They include non-PIC code and do not have a stable ABI.
 
-* The upserver, upclient and kaserver are not included.
+* kaserver is not included.  New AFS cells should use Kerberos v5 rather
+  than the old K4-based kaserver KDC.
 
-
-
-
-
- -- Sam Hartman <hartmans@mit.edu>, Tue Aug  5 16:09:13 2003
+ -- Russ Allbery <rra@stanford.edu>, Sat Apr 30 11:15:25 2005
