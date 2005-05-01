@@ -47,7 +47,7 @@ Description: The AFS distributed filesystem- file server
 
 Package: openafs-dbserver
 Architecture: i386 powerpc sparc alpha s390 ia64 hppa amd64
-Depends: ${shlibs:Depends}, openafs-fileserver, openafs-client, perl5
+Depends: ${shlibs:Depends}, ${perl:Depends}, openafs-fileserver, openafs-client
 Conflicts: openafs-ptutil
 Replaces: openafs-ptutil
 Provides: openafs-ptutil
