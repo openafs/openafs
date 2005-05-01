@@ -4,10 +4,23 @@ openafs (1.3.81-5) unstable; urgency=low
     or ext3 and that XFS and ReiserFS will not work.  upserver and
     upclient are now provided.  Provide some information about why
     kaserver is not provided.  (Closes: #249315)
+  * Overhaul the module build rules.
+    - Use debhelper to build the module binary package.
+    - Let debhelper handle the module postinst and prerm control scripts.
+    - Properly support modules_config and modules_clean.
+    - Break the build process into configure, build, install, and binary
+      rules, paralleling the regular build rules and making it easier to
+      maintain the make-kpkg build targets.
+    - Include the kernel version in the long description.
+    - Update standards version of module packages to 3.6.1.
+    - Include the copyright and basic documentation in the module binary
+      package.  Otherwise, policy requires an exact versioned dependency
+      on the package containing the copyright file.
   * Update standards version to 3.6.1.
     - Install Debian::OpenAFS::ConfigUtils in /usr/share, not /usr/lib.
     - Always enable debugging symbols and disable optimization if noopt is
-      set in DEB_BUILD_OPTIONS.
+      set in DEB_BUILD_OPTIONS.  (Alas, this doesn't entirely work; the
+      upstream makefiles don't always honor the configure options.)
     - /etc/init.d/openafs-fileserver restart starts bosserver if it's not
       already running.
 

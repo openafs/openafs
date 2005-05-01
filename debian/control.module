@@ -2,7 +2,7 @@ Source: openafs
 Section: net
 Priority: optional
 Maintainer: Sam Hartman <hartmans@debian.org>
-Standards-Version: 3.1.1
+Standards-Version: 3.6.1
 
 Package: openafs-modules-=KVERS
 Conflicts: openafs-client (<< 1.2.9)
@@ -13,4 +13,5 @@ Description: The AFS distributed filesystem- Kernel Module
  files among multiple computers.  Facilities are provided for access
  control, authentication, backup and administrative management.
  .
- This package provides the kernel module for the filesystem
+ This package provides the compiled AFS kernel module for kernel
+ =KVERS.

@@ -26,9 +26,6 @@ endif
 # The AFS sysname is determined by a script
 KVERS=`perl -e '$$_ = <>; $$_ =~ m/"(.+)"/; print "$$1\n";' < $(KSRC)/include/linux/version.h`
 SYS_NAME=$(shell KVERS=$(KVERS) sh debian/sysname)
-package=openafs
-srcpkg = openafs-modules-source
-modulepkg=$(shell echo openafs-modules-$(KVERS)${INT_SUBARCH})
 ifndef KSRC
 KSRC=/usr/src/linux
 endif
@@ -38,6 +35,11 @@ endif
 export KSRC 
 export KVERS
 export KPKG_DEST_DIR
+
+package   = openafs
+srcpkg    = openafs-modules-source
+modulepkg = $(shell echo openafs-modules-$(KVERS)${INT_SUBARCH})
+moduledir = debian/$(modulepkg)/lib/modules/$(KVERS)/fs
 
 LINTIAN_PACKAGES= openafs-client openafs-fileserver
 
@@ -70,7 +72,8 @@ build-stamp:
 clean:
 	dh_testdir
 	dh_testroot
-	rm -f build-stamp configure-stamp build-modules-stamp
+	rm -f build-stamp configure-stamp configure-modules-stamp
+	rm -f build-modules-stamp
 	# Add here commands to clean up after the build process.
 	-$(MAKE) -ki distclean
 	-rm -rf obj dest $(SYS_NAME) @sys Makefile debian/openafs-client.init
@@ -180,25 +183,25 @@ binary-arch: build install
 	dh_md5sums
 	dh_builddeb
 
-binary:   binary-indep binary-arch
-.PHONY: build clean binary-indep binary-arch binary install configure
+binary: binary-indep binary-arch
 
 ############################Module package support
-kdist_image:  build-modules
+
+kdist_configure: configure-modules-stamp
+
+kdist_image: build-modules-stamp
 	$(ROOT_CMD) $(MAKE) $(MFLAGS) -f debian/rules binary-modules
 	$(ROOT_CMD) $(MAKE) $(MFLAGS) -f debian/rules clean
 
-kdist:  build-modules
-	$(ROOT_CMD) $(MAKE) $(MFLAGS) -f debian/rules KERNEL_DEPENDS=y binary-modules
+kdist: build-modules-stamp
+	$(ROOT_CMD) $(MAKE) $(MFLAGS) -f debian/rules KERNEL_DEPENDS=y \
+	    binary-modules
 	KSRC="$(KSRC)" KMAINT="$(KMAINT)" KEMAIL="$(KEMAIL)" \
-		sh -v debian/genchanges.sh
+	    sh -v debian/genchanges.sh
 	$(ROOT_CMD) $(MAKE) $(MFLAGS) -f debian/rules clean
 
-
-
-kdist_config: configure
-
-kdist_clean: clean
+kdist_clean:
+	$(ROOT_CMD) $(MAKE) $(MFLAGS) -f debian/rules clean
 
 ############################ source stuff #################################
 binary-source:
@@ -234,58 +237,54 @@ binary-source:
 	chmod 644 debian/$(srcpkg)/usr/src/$(package).tar.gz
 ############################ modules stuff #################################
 
-build-modules: build-modules-stamp
-
-build-modules-stamp: 
+configure-modules: configure-modules-stamp
+configure-modules-stamp:
+ifeq ($(KERNEL_DEPENDS),y)
+	sh debian/prep-modules $(KSRC) debian/control.module > debian/control
+else
+	sh debian/prep-modules $(KSRC) debian/control.module-image > debian/control
+endif
 	-ln -s @sys/dest dest
 	-ln -s $(SYS_NAME) @sys
 	sh configure --with-afs-sysname=$(SYS_NAME) \
 	    --with-linux-kernel-headers=$(KSRC) --prefix=`pwd`/debian/tmp \
 	    --enable-debug --enable-lwp-debug --enable-kernel-debug \
 	    $(DEBIAN_OPT_FLAGS) $(DEBIAN_KERN_FLAGS)
+	touch configure-modules-stamp
+
+build-modules: build-modules-stamp
+build-modules-stamp: configure-modules-stamp
 	make only_libafs
-	cd src/libafs&&make install
 	touch build-modules-stamp
 
-binary-modules: build-modules
-# Perform some tests
-	test -f debian/rules
-	test `id -u` = "0"
-
-# Setup everything first
-	-rm -rf debian/$(modulepkg) debian/substvars
-	install -d debian/$(modulepkg)
-
-# Install the software
-	install -d -g root -o root -m 755 debian/$(modulepkg)/lib/modules/$(KVERS)/fs
-	install -g root -o root -m 755  debian/tmp/lib/openafs/*o \
-		debian/$(modulepkg)/lib/modules/$(KVERS)/fs
-# Fix some stuff up
-	if test -f debian/$(modulepkg)/lib/modules/$(KVERS)/fs/openafs.o -a ! -f debian/$(modulepkg)/lib/modules/$(KVERS)/fs/openafs.mp.o; then ln debian/$(modulepkg)/lib/modules/$(KVERS)/fs/openafs.o debian/$(modulepkg)/lib/modules/$(KVERS)/fs/openafs.mp.o; fi
-	install -d -o root -g root -m 755 debian/$(modulepkg)/usr/share/doc
-	ln -s openafs-client debian/$(modulepkg)/usr/share/doc/$(modulepkg)
+install-modules: build-modules-stamp
+	dh_testdir
+	dh_testroot
+	dh_clean -k
+	cd src/libafs && make install
+	install -d -g root -o root -m 755 $(moduledir)
+	install -g root -o root -m 755 debian/tmp/lib/openafs/*o $(moduledir)/
+	if test -f $(moduledir)/openafs.o \
+	        -a ! -f $(moduledir)/openafs.mp.o ; then \
+	    ln $(moduledir)/openafs.o $(moduledir)/openafs.mp.o || exit 1 ; \
+	fi
 	rm -rf debian/$(modulepkg)/usr/include
-ifeq ($(KERNEL_DEPENDS),y)
-	sh debian/prep-modules $(KSRC) debian/control.module > debian/control
-else
-	sh debian/prep-modules $(KSRC) debian/control.module-image > debian/control
-endif
 
-# Install control files
-	install -d -o root -g root -m 755 debian/$(modulepkg)/DEBIAN
-	install -p -o root -g root -m 755 debian/prerm.mod \
-		debian/$(modulepkg)/DEBIAN/prerm
-	install -p -o root -g root -m 755 debian/postinst.mod \
-		debian/$(modulepkg)/DEBIAN/postinst
+binary-modules: install-modules
+	dh_testdir
+	dh_testroot
+	dh_installchangelogs
+	dh_installdocs
+	dh_installmodules
+	dh_strip
+	dh_link
+	dh_compress
+	dh_fixperms
+	dh_installdeb
+	dh_gencontrol -- -v`cat debian/VERSION`
+	dh_md5sums
+	dh_builddeb --destdir="$(KPKG_DEST_DIR)"
 
-# And now.. for the final packaging!
-	find debian/$(modulepkg) -type f | grep -v "./DEBIAN" | xargs md5sum | \
-		sed -e 's#debian/$(modulepkg)/##' > debian/$(modulepkg)/DEBIAN/md5sums
-
-	dpkg-gencontrol -isp \
-		-p$(modulepkg) \
-		-v`cat debian/VERSION` \
-		-Pdebian/$(modulepkg)
-	chown -R root.root debian/$(modulepkg)
-	chmod -R go=rX debian/$(modulepkg)
-	dpkg --build debian/$(modulepkg) $(KPKG_DEST_DIR)
+.PHONY: build clean binary-indep binary-arch binary install configure
+.PHONY: kdist_configure kdist_image kdist kdist_clean binary-source
+.PHONY: configure-modules build-modules install-modules binary-modules
