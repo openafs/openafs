@@ -23,8 +23,14 @@ openafs (1.3.81-5) unstable; urgency=low
       upstream makefiles don't always honor the configure options.)
     - /etc/init.d/openafs-fileserver restart starts bosserver if it's not
       already running.
+  * Update debhelper compatibility level to V4.
+    - Remove all *.conffiles control files.  They're no longer needed.
+    - Use misc:Depends to get debconf dependencies.
+    - Use dh_install rather than the movefiles script.
+  * openafs-dbserver doesn't need to depend on debconf.
+  * Remove unnecessary preinst for openafs-fileserver.
 
- --
+ -- Russ Allbery <rra@stanford.edu>  Sat, 30 Apr 2005 20:05:18 -0700
 
 openafs (1.3.81-4) unstable; urgency=low
 

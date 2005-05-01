@@ -1,0 +1,5 @@
+dest/root.server/usr/afs/bin/bosserver  usr/sbin
+dest/root.server/usr/afs/bin/up*        usr/sbin
+dest/root.server/usr/afs/bin/fileserver usr/lib/openafs
+dest/root.server/usr/afs/bin/salvager   usr/lib/openafs
+dest/root.server/usr/afs/bin/volserver  usr/lib/openafs

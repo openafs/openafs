@@ -8,7 +8,7 @@ Standards-Version: 3.6.1
 
 Package: openafs-client
 Architecture: i386 powerpc sparc alpha s390 ia64 hppa amd64
-Depends: ${shlibs:Depends}, debconf,  openafs-modules-source (>= 1.2.9)|openafs-modules2
+Depends: ${shlibs:Depends}, ${misc:Depends}, openafs-modules-source (>= 1.2.9) | openafs-modules2
 Conflicts: arla, openafs-modules1
 Description: The AFS distributed filesystem- client support
  AFS is a distributed filesystem allowing cross-platform sharing of
@@ -35,7 +35,7 @@ Description: The AFS distributed filesystem- old password changing
 
 Package: openafs-fileserver
 Architecture: i386 powerpc sparc alpha s390 ia64 hppa amd64
-Depends: ${shlibs:Depends}, debconf, openafs-client
+Depends: ${shlibs:Depends}, ${misc:Depends}, openafs-client
 Recommends: ntp
 Description: The AFS distributed filesystem- file server
  AFS is a distributed filesystem allowing cross-platform sharing of
@@ -47,7 +47,7 @@ Description: The AFS distributed filesystem- file server
 
 Package: openafs-dbserver
 Architecture: i386 powerpc sparc alpha s390 ia64 hppa amd64
-Depends: ${shlibs:Depends}, debconf, openafs-fileserver, openafs-client, perl5
+Depends: ${shlibs:Depends}, openafs-fileserver, openafs-client, perl5
 Conflicts: openafs-ptutil
 Replaces: openafs-ptutil
 Provides: openafs-ptutil

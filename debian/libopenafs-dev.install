@@ -1,0 +1,4 @@
+dest/bin/rxgen                          usr/bin
+dest/include                            usr
+dest/lib/*.a                            usr/lib
+dest/lib/afs                            usr/lib

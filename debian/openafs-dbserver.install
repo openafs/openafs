@@ -1,0 +1,4 @@
+dest/root.server/usr/afs/bin/pt_util    usr/sbin
+dest/root.server/usr/afs/bin/buserver   usr/lib/openafs
+dest/root.server/usr/afs/bin/ptserver   usr/lib/openafs
+dest/root.server/usr/afs/bin/vlserver   usr/lib/openafs

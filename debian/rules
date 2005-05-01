@@ -9,9 +9,6 @@
 # Uncomment this to turn on verbose mode. 
 #export DH_VERBOSE=1
 
-# This is the debhelper compatability version to use.
-export DH_COMPAT=2
-
 # This has to be exported to make some magic below work.
 export DH_OPTIONS
 
@@ -87,6 +84,7 @@ install: build
 	dh_testroot
 	dh_clean -k
 	dh_installdirs
+	dh_install
 	mkdir -p debian/openafs-dbserver/usr/share/man/man8
 		/usr/bin/docbook-to-man debian/pt_util.sgml >debian/openafs-dbserver/usr/share/man/man8/pt_util.8
 	for foo in $(LINTIAN_PACKAGES) ; do \
@@ -97,7 +95,6 @@ install: build
 		ln -s openafs-client debian/$$pkg/usr/share/doc/$$pkg; \
 		done
 	# Add here commands to install the package into debian/tmp.
-	cat debian/filelist |sh debian/movefiles
 	mv debian/openafs-client/usr/bin/pagsh  \
 	debian/openafs-client/usr/bin/pagsh.openafs
 	install -m644 -c dest/lib/pam_afs.so.1 \
