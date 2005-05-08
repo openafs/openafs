@@ -62,8 +62,8 @@ extern int base32_to_int(char *s);
  * early in name.
  */
 #ifdef AFS_64BIT_ENV
-#define int32_to_flipbase64(S, A) int64_to_flipbase64(S, (afs_int64)(A))
-extern char *int64_to_flipbase64(lb64_string_t s, afs_int64 a);
+#define int32_to_flipbase64(S, A) int64_to_flipbase64(S, (afs_uint64)(A))
+extern char *int64_to_flipbase64(lb64_string_t s, afs_uint64 a);
 extern afs_int64 flipbase64_to_int64(char *s);
 #else
 #define int32_to_flipbase64(S, A) int64_to_flipbase64(S, (u_int64_t)(A))

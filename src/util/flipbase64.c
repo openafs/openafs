@@ -80,7 +80,7 @@ static char c_reverse[] = {
  */
 #ifdef AFS_64BIT_ENV
 char *
-int64_to_flipbase64(lb64_string_t s, afs_int64 a)
+int64_to_flipbase64(lb64_string_t s, afs_uint64 a)
 #else
 char *
 int64_to_flipbase64(lb64_string_t s, u_int64_t a)
@@ -88,7 +88,7 @@ int64_to_flipbase64(lb64_string_t s, u_int64_t a)
 {
     int i;
 #ifdef AFS_64BIT_ENV
-    afs_int64 n;
+    afs_uint64 n;
 #else
     u_int64_t n;
 #endif
