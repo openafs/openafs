@@ -784,6 +784,13 @@ struct vcxstat {
     afs_uint32 states;
 };
 
+struct vcxstat2 {
+    afs_int32 callerAccess;
+    afs_int32 cbExpires;
+    afs_int32 anyAccess;
+    char mvstat;
+};
+
 struct sbstruct {
     int sb_thisfile;
     int sb_default;
