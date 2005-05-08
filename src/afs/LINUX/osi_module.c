@@ -34,6 +34,10 @@ RCSID
 #include <linux/sched.h>
 #endif
 
+#ifdef HAVE_KERNEL_LINUX_SEQ_FILE_H
+#include <linux/seq_file.h>
+#endif
+
 extern struct file_system_type afs_fs_type;
 
 #if !defined(AFS_LINUX24_ENV)
@@ -66,6 +70,86 @@ static struct file_operations afs_syscall_fops = {
     .compat_ioctl = afs_unlocked_ioctl,
 #endif
 };
+
+#ifdef HAVE_KERNEL_LINUX_SEQ_FILE_H
+static void *c_start(struct seq_file *m, loff_t *pos)
+{
+	struct afs_q *cq, *tq;
+	loff_t n = 0;
+
+	ObtainReadLock(&afs_xcell);
+	for (cq = CellLRU.next; cq != &CellLRU; cq = tq) {
+		tq = QNext(cq);
+
+		if (n++ == *pos)
+			break;
+	}
+	if (cq == &CellLRU)
+		return NULL;
+
+	return cq;
+}
+
+static void *c_next(struct seq_file *m, void *p, loff_t *pos)
+{
+	struct afs_q *cq = p, *tq;
+
+	(*pos)++;
+	tq = QNext(cq);
+
+	if (tq == &CellLRU)
+		return NULL;
+
+	return tq;
+}
+
+static void c_stop(struct seq_file *m, void *p)
+{
+	ReleaseReadLock(&afs_xcell);
+}
+
+static int c_show(struct seq_file *m, void *p)
+{
+	struct afs_q *cq = p;
+	struct cell *tc = QTOC(cq);
+	int j;
+
+	seq_printf(m, ">%s #(%d/%d)\n", tc->cellName,
+		   tc->cellNum, tc->cellIndex);
+
+	for (j = 0; j < MAXCELLHOSTS; j++) {
+		afs_uint32 addr;
+
+		if (!tc->cellHosts[j]) break;
+
+		addr = tc->cellHosts[j]->addr->sa_ip;
+		seq_printf(m, "%u.%u.%u.%u #%u.%u.%u.%u\n",
+			   NIPQUAD(addr), NIPQUAD(addr));
+	}
+
+	return 0;
+}
+
+static struct seq_operations afs_csdb_op = {
+	.start		= c_start,
+	.next		= c_next,
+	.stop		= c_stop,
+	.show		= c_show,
+};
+
+static int afs_csdb_open(struct inode *inode, struct file *file)
+{
+	return seq_open(file, &afs_csdb_op);
+}
+
+static struct file_operations afs_csdb_operations = {
+	.open		= afs_csdb_open,
+	.read		= seq_read,
+	.llseek		= seq_lseek,
+	.release	= seq_release,
+};
+
+#else /* HAVE_KERNEL_LINUX_SEQ_FILE_H */
 
 int
 csdbproc_info(char *buffer, char **start, off_t offset, int
@@ -134,45 +218,7 @@ done:
     return len;
 }
 
-
-int
-csdbproc_read(char *buffer, char **start, off_t offset, int count,
-	      int *eof, void *data)
-{
-    int len, j;
-    struct afs_q *cq, *tq;
-    struct cell *tc;
-    char tbuffer[16];
-    afs_uint32 addr;
-    
-    len = 0;
-    ObtainReadLock(&afs_xcell);
-    for (cq = CellLRU.next; cq != &CellLRU; cq = tq) {
-	tc = QTOC(cq); tq = QNext(cq);
-	len += sprintf(buffer + len, ">%s #(%d/%d)\n", tc->cellName, 
-		       tc->cellNum, tc->cellIndex);
-	for (j = 0; j < MAXCELLHOSTS; j++) {
-	    if (!tc->cellHosts[j]) break;
-	    addr = ntohl(tc->cellHosts[j]->addr->sa_ip);
-	    sprintf(tbuffer, "%d.%d.%d.%d", 
-		    (int)((addr>>24) & 0xff), (int)((addr>>16) & 0xff),
-		    (int)((addr>>8)  & 0xff), (int)( addr      & 0xff));
-            len += sprintf(buffer + len, "%s #%s\n", tbuffer, tbuffer);
-	}
-    }
-    ReleaseReadLock(&afs_xcell);
-    
-    if (offset >= len) {
-	*start = buffer;
-	*eof = 1;
-	return 0;
-    }
-    *start = buffer + offset;
-    if ((len -= offset) > count)
-	return count;
-    *eof = 1;
-    return len;
-}
+#endif /* HAVE_KERNEL_LINUX_SEQ_FILE_H */
 
 int
 peerproc_read(char *buffer, char **start, off_t offset, int count,
@@ -508,6 +554,7 @@ static int ioctl32_done;
 static int
 afsproc_init(void)
 {
+    struct proc_dir_entry *entry2;
     struct proc_dir_entry *entry1;
     struct proc_dir_entry *entry;
 
@@ -518,7 +565,13 @@ afsproc_init(void)
 
     entry1->owner = THIS_MODULE;
 
-    entry = create_proc_info_entry(PROC_CELLSERVDB_NAME, (S_IFREG|S_IRUGO), openafs_procfs, csdbproc_info);
+#ifdef HAVE_KERNEL_LINUX_SEQ_FILE_H
+    entry2 = create_proc_entry(PROC_CELLSERVDB_NAME, 0, openafs_procfs);
+    if (entry2)
+	entry2->proc_fops = &afs_csdb_operations;
+#else
+    entry2 = create_proc_info_entry(PROC_CELLSERVDB_NAME, (S_IFREG|S_IRUGO), openafs_procfs, csdbproc_info);
+#endif
 
     entry = create_proc_read_entry(PROC_PEER_NAME, (S_IFREG|S_IRUGO), openafs_procfs, peerproc_read, NULL);
 
