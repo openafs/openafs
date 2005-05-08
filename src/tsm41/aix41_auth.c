@@ -144,7 +144,7 @@ afs_getgrnam(char *name)
 struct passwd *
 afs_getpwnam(char *user)
 {
-    return (struct passwd *) afs_getpwnam_int(user, 0);
+  return (NULL);
 }
 
 struct passwd *
@@ -164,24 +164,23 @@ afs_getpwnam_int(char *user, int ignore)
     if (!user)
        return &pwd;
 
-    while ((p = getpwent()) != NULL) {
-	if (!strcmp(p->pw_name, user)) {
-	    strncpy(&name, p->pw_name, sizeof(name));
-	    strncpy(&passwd, p->pw_passwd, sizeof(passwd));
-	    strncpy(&gecos, p->pw_gecos, sizeof(gecos));
-	    strncpy(&dir, p->pw_dir, sizeof(dir));
-	    strncpy(&shell, p->pw_shell, sizeof(shell));
-	    pwd.pw_name = &name;
-	    pwd.pw_passwd = &passwd;
-	    pwd.pw_uid = p->pw_uid;
-	    pwd.pw_gid = p->pw_gid;
-	    pwd.pw_gecos = &gecos;
-	    pwd.pw_dir = &dir;
-	    pwd.pw_shell = &shell;
-	    break;
-	}
+    p = getpwnam (user);
+    
+    if (p) {
+      strncpy(&name, p->pw_name, sizeof(name));
+      strncpy(&passwd, p->pw_passwd, sizeof(passwd));
+      strncpy(&gecos, p->pw_gecos, sizeof(gecos));
+      strncpy(&dir, p->pw_dir, sizeof(dir));
+      strncpy(&shell, p->pw_shell, sizeof(shell));
     }
-    endpwent();
+    pwd.pw_name = &name;
+    pwd.pw_passwd = &passwd;
+    pwd.pw_uid = p->pw_uid;
+    pwd.pw_gid = p->pw_gid;
+    pwd.pw_gecos = &gecos;
+    pwd.pw_dir = &dir;
+    pwd.pw_shell = &shell;
+
     if (ignore && (p == NULL))
        return NULL;
     return &pwd;
