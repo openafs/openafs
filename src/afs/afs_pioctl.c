@@ -71,6 +71,7 @@ DECL_PIOCTL(PGetCellStatus);
 DECL_PIOCTL(PSetCellStatus);
 DECL_PIOCTL(PFlushVolumeData);
 DECL_PIOCTL(PGetVnodeXStatus);
+DECL_PIOCTL(PGetVnodeXStatus2);
 DECL_PIOCTL(PSetSysName);
 DECL_PIOCTL(PSetSPrefs);
 DECL_PIOCTL(PSetSPrefs33);
@@ -183,6 +184,7 @@ static int (*(VpioctlSw[])) () = {
 	PPrefetchFromTape,	/* 66 -- MR-AFS: prefetch file from tape */
 	PResidencyCmd,		/* 67 -- MR-AFS: generic commnd interface */
 	PBogus,			/* 68 -- arla: fetch stats */
+	PGetVnodeXStatus2,	/* 69 - get caller access and some vcache status */
 };
 
 static int (*(CpioctlSw[])) () = {
@@ -2640,6 +2642,8 @@ DECL_PIOCTL(PGetVnodeXStatus)
 	mode = PRSFS_READ;
     if (!afs_AccessOK(avc, mode, areq, CHECK_MODE_BITS))
 	return EACCES;
+
+    memset(&stat, 0, sizeof(struct vcxstat));
     stat.fid = avc->fid;
     hset32(stat.DataVersion, hgetlo(avc->m.DataVersion));
     stat.lock = avc->lock;
@@ -2669,6 +2673,36 @@ DECL_PIOCTL(PGetVnodeXStatus)
     return 0;
 }
 
+
+DECL_PIOCTL(PGetVnodeXStatus2)
+{
+    register afs_int32 code;
+    struct vcxstat2 stat;
+    afs_int32 mode;
+
+    if (!avc)
+        return EINVAL;
+    code = afs_VerifyVCache(avc, areq);
+    if (code)
+        return code;
+    if (vType(avc) == VDIR)
+        mode = PRSFS_LOOKUP;
+    else
+        mode = PRSFS_READ;
+    if (!afs_AccessOK(avc, mode, areq, CHECK_MODE_BITS))
+        return EACCES;
+
+    memset(&stat, 0, sizeof(struct vcxstat2));
+
+    stat.cbExpires = avc->cbExpires;
+    stat.anyAccess = avc->anyAccess;
+    stat.mvstat = avc->mvstat;
+    stat.callerAccess = afs_GetAccessBits(avc, ~0, areq);
+
+    memcpy(aout, (char *)&stat, sizeof(struct vcxstat2));
+    *aoutSize = sizeof(struct vcxstat2);
+    return 0;
+}
 
 /* We require root for local sysname changes, but not for remote */
 /* (since we don't really believe remote uids anyway) */
