@@ -273,7 +273,11 @@ afs_CheckLocks(void)
 #ifdef	AFS_OSF_ENV
 		if (VREFCOUNT(tvc) > 1)
 #else /* AFS_OSF_ENV */
+#ifdef AFS_DARWIN80_ENV
+		if (vnode_isinuse(AFSTOV(tvc)))
+#else
 		if (VREFCOUNT(tvc))
+#endif
 #endif
 		    afs_warn("Stat cache entry at %x is held\n", tvc);
 		if (CheckLock(&tvc->lock))

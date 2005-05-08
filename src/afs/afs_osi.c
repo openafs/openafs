@@ -60,7 +60,9 @@ osi_Init(void)
 #elif defined(AFS_FBSD50_ENV)
     mtx_init(&afs_global_mtx, "AFS global lock", NULL, MTX_DEF);
 #elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#if !defined(AFS_DARWIN80_ENV)
     lockinit(&afs_global_lock, PLOCK, "afs global lock", 0, 0);
+#endif
     afs_global_owner = 0;
 #elif defined(AFS_AIX41_ENV)
     lock_alloc((void *)&afs_global_lock, LOCK_ALLOC_PIN, 1, 1);

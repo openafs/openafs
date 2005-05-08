@@ -1177,9 +1177,15 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
 	*avcp = tvc;
 	code = (tvc ? 0 : ENOENT);
 	hit = 1;
+#ifdef AFS_DARWIN80_ENV
+	if (tvc && !vnode_isinuse(AFSTOV(tvc))) {
+	    osi_Panic("TT1");
+	}
+#else
 	if (tvc && !VREFCOUNT(tvc)) {
 	    osi_Panic("TT1");
 	}
+#endif
 	if (code) {
 	    /*printf("LOOKUP GETVCDOTDOT -> %d\n", code); */
 	}
@@ -1213,9 +1219,15 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
 	code = 0;
 	*avcp = tvc = adp;
 	hit = 1;
+#ifdef AFS_DARWIN80_ENV
+	if (adp && !vnode_isinuse(AFSTOV(adp))) {
+	    osi_Panic("TT2");
+	}
+#else
 	if (adp && !VREFCOUNT(adp)) {
 	    osi_Panic("TT2");
 	}
+#endif
 	goto done;
     }
 
@@ -1497,9 +1509,15 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
 		}
 	    }
 	*avcp = tvc;
+#ifdef AFS_DARWIN80_ENV
+	if (tvc && !vnode_isinuse(AFSTOV(tvc))) {
+	    osi_Panic("TT3");
+	}
+#else
 	if (tvc && !VREFCOUNT(tvc)) {
 	    osi_Panic("TT3");
 	}
+#endif
 	code = 0;
     } else {
 	/* if we get here, we found something in a directory that couldn't

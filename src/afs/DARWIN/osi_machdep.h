@@ -25,12 +25,21 @@ typedef unsigned short etap_event_t;
 #endif
 #endif
 
+#ifdef AFS_DARWIN80_ENV
+#include <kern/locks.h>
+#else
 #include <sys/lock.h>
+#endif
 #include <kern/thread.h>
 #include <sys/user.h>
 
+#ifdef AFS_DARWIN80_ENV
+#define getpid()                proc_selfpid()
+#define getppid()               proc_selfppid()
+#else
 #define getpid()                current_proc()->p_pid
 #define getppid()               current_proc()->p_pptr->p_pid
+#endif
 #undef gop_lookupname
 #define gop_lookupname osi_lookupname
 
@@ -38,6 +47,12 @@ typedef unsigned short etap_event_t;
 
 /* vcexcl - used only by afs_create */
 enum vcexcl { EXCL, NONEXCL };
+
+#ifdef AFS_DARWIN80_ENV
+#define vrele vnode_rele
+#define vput vnode_put
+#define vref vnode_ref
+#endif
 
 /* 
  * Time related macros
@@ -67,6 +82,22 @@ extern struct timeval time;
 #ifdef KERNEL
 extern thread_t afs_global_owner;
 /* simple locks cannot be used since sleep can happen at any time */
+#ifdef AFS_DARWIN80_ENV
+/* mach locks still don't have an exported try, but we are forced to use them */
+extern lck_mtx_t  *afs_global_lock;
+#define AFS_GLOCK() \
+    do { \
+        lk_mtx_lock(afs_global_lock); \
+	osi_Assert(afs_global_owner == 0); \
+	afs_global_owner = current_thread(); \
+    } while (0)
+#define AFS_GUNLOCK() \
+    do { \
+	osi_Assert(afs_global_owner == current_thread()); \
+	afs_global_owner = 0; \
+        lk_mtx_unlock(afs_global_lock); \
+    } while(0)
+#else
 /* Should probably use mach locks rather than bsd locks, since we use the
    mach thread control api's elsewhere (mach locks not used for consistency
    with rx, since rx needs lock_write_try() in order to use mach locks
@@ -84,6 +115,7 @@ extern struct lock__bsd__ afs_global_lock;
 	afs_global_owner = 0; \
         lockmgr(&afs_global_lock, LK_RELEASE, 0, current_proc()); \
     } while(0)
+#endif
 #define ISAFS_GLOCK() (afs_global_owner == current_thread())
 
 #define SPLVAR

@@ -19,6 +19,26 @@
 RCSID
     ("$Header$");
 
+#ifndef AFS_DARWIN80_ENV
 /*
  * Currently everything is implemented in rx_kmutex.h
  */
+#else
+lck_grp_t * openafs_lck_grp;
+static lck_grp_attr_t * openafs_lck_grp_attr;
+void rx_kmutex_setup(void) {
+    openafs_lck_grp_attr= lck_grp_attr_alloc_init();
+    lck_grp_attr_setstat(openafs_lck_grp_attr);
+
+    openafs_lck_grp = lck_grp_alloc_init("openafs",  openafs_lck_grp_attr);
+    lck_grp_attr_free(openafs_lck_grp_attr);
+    
+}
+
+void rx_kmutex_finish(void) {
+    lck_grp_free(openafs_lck_grp);
+}
+
+#endif
+
+

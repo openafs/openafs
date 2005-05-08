@@ -404,6 +404,9 @@ else
 		powerpc-apple-darwin7.5*)
 			AFS_SYSNAME="ppc_darwin_70"
 			;;
+		powerpc-apple-darwin8.0*)
+			AFS_SYSNAME="ppc_darwin_80"
+			;;
 		sparc-sun-solaris2.5*)
 			AFS_SYSNAME="sun4x_55"
 			enable_login="yes"

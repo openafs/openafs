@@ -366,17 +366,24 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
 	afs_symhint_inval(tvc);
 
     Tadp1 = adp;
+#ifndef AFS_DARWIN80_ENV
     Tadpr = VREFCOUNT(adp);
+#endif
     Ttvc = tvc;
     Tnam = aname;
     Tnam1 = 0;
     if (tvc)
+#ifndef AFS_DARWIN80_ENV
 	Ttvcr = VREFCOUNT(tvc);
 #ifdef	AFS_AIX_ENV
     if (tvc && (VREFCOUNT(tvc) > 2) && tvc->opens > 0
 	&& !(tvc->states & CUnlinked))
 #else
     if (tvc && (VREFCOUNT(tvc) > 1) && tvc->opens > 0
+	&& !(tvc->states & CUnlinked))
+#endif
+#else
+    if (tvc && (vnode_isinuse(AFSTOV(tvc))) && tvc->opens > 0
 	&& !(tvc->states & CUnlinked))
 #endif
     {

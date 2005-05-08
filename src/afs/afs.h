@@ -595,7 +595,11 @@ extern afs_uint32 afs_stampValue;	/* stamp for pair's usage */
 #define	MakeStamp()	(++afs_stampValue)
 
 #if defined(AFS_XBSD_ENV) || defined(AFS_DARWIN_ENV)
+#ifdef AFS_DARWIN80_ENV
+#define VTOAFS(v) ((struct vcache *)vnode_fsnode((v)))
+#else
 #define VTOAFS(v) ((struct vcache *)(v)->v_data)
+#endif
 #define AFSTOV(vc) ((vc)->v)
 #else
 #define VTOAFS(V) ((struct vcache *)(V))
@@ -658,7 +662,11 @@ struct vcache {
     int ownslock;		/* pid of owner of excl lock, else 0 - defect 3083 */
 #endif
 #ifdef AFS_DARWIN_ENV
+#ifdef AFS_DARWIN80_ENV
+    lck_mtx_t *rwlock;
+#else
     struct lock__bsd__ rwlock;
+#endif
 #endif
 #ifdef AFS_XBSD_ENV
     struct lock rwlock;

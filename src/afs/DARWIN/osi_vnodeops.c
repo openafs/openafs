@@ -153,10 +153,17 @@ darwin_vn_hold(struct vnode *vp)
        ourselves during vop_inactive, except we also need to not reinst
        the ubc... so we just call VREF there now anyway. */
 
+#ifdef AFS_DARWIN80_ENV
+    if (vnode_isinuse(vp))
+	vnode_ref(vp);
+    else
+	vnode_get(vp);
+#else
     if (VREFCOUNT(tvc) > 0)
 	VREF(((struct vnode *)(vp))); 
     else
 	afs_vget(afs_globalVFS, 0, (vp));
+#endif
 
     if (UBCINFOMISSING(vp) || UBCINFORECLAIMED(vp)) {
 	ubc_info_init(vp); 

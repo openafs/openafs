@@ -231,7 +231,11 @@ afs_FlushVCache(struct vcache *avc, int *slept)
     /* This should put it back on the vnode free list since usecount is 1 */
     afs_vcount--;
     vSetType(avc, VREG);
+#ifdef AFS_DARWIN80_ENV
+    if (vnode_isinuse(AFSTOV(avc))) {
+#else
     if (VREFCOUNT(avc) > 0) {
+#endif
 	VN_UNLOCK(AFSTOV(avc));
 	AFS_RELE(AFSTOV(avc));
     } else {
@@ -615,10 +619,19 @@ afs_NewVCache(struct VenusFid *afid, struct server *serverp)
 		refpanic("Exceeded pool of AFS vnodes(VLRU cycle?)");
 	    else if (QNext(uq) != tq)
 		refpanic("VLRU inconsistent");
+#ifdef AFS_DARWIN80_ENV
+	    else if (!vnode_isinuse(AFSTOV(tvc))) 
+#else
 	    else if (VREFCOUNT(tvc) < 1)
+#endif
 		refpanic("refcnt 0 on VLRU");
 
-	    if (VREFCOUNT(tvc) == 1 && tvc->opens == 0
+#ifdef AFS_DARWIN80_ENV
+	    if (vnode_isinuse(AFSTOV(tvc)) &&  
+#else
+	    if (VREFCOUNT(tvc) == 1 &&
+#endif
+		tvc->opens == 0
 		&& (tvc->states & CUnlinkedDel) == 0) {
 		code = afs_FlushVCache(tvc, &fv_slept);
 		if (code == 0) {
@@ -711,10 +724,14 @@ restart:
 	    }
 #endif
 
+#ifdef AFS_DARWIN80_ENV
+	    if (!vnode_isinuse(AFSTOV(tvc)
+#else
 	    if (((VREFCOUNT(tvc) == 0) 
 #if defined(AFS_DARWIN_ENV) && !defined(UKERNEL) 
 		 || ((VREFCOUNT(tvc) == 1) && 
 		     (UBCINFOEXISTS(AFSTOV(tvc))))
+#endif
 #endif
 		 ) && tvc->opens == 0 && (tvc->states & CUnlinkedDel) == 0) {
 #if defined (AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
@@ -807,7 +824,11 @@ restart:
     AFS_GUNLOCK();
     afs_darwin_getnewvnode(tvc);	/* includes one refcount */
     AFS_GLOCK();
+#ifdef AFS_DARWIN80_ENV
+    LOCKINIT(tvc->rwlock);
+#else
     lockinit(&tvc->rwlock, PINOD, "vcache", 0, 0);
+#endif
 #endif
 #ifdef AFS_FBSD_ENV
     {
