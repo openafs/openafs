@@ -3,7 +3,7 @@ Section: net
 Priority: optional
 Maintainer: Sam Hartman <hartmans@debian.org>
 Uploaders: Russ Allbery <rra@stanford.edu>
-Build-Depends: debhelper (>= 4.1.16), libncurses5-dev, libpam0g-dev, bison, docbook-to-man, flex, perl, e2fslibs-dev
+Build-Depends: debhelper (>= 4.1.16), libncurses5-dev, libpam0g-dev, bison, docbook-to-man, flex, perl, comerr-dev
 Standards-Version: 3.6.1
 
 Package: openafs-client
@@ -76,7 +76,7 @@ Description: The AFS distributed filesystem- development libraries
 
 Package: openafs-modules-source
 Priority: extra
-Depends: bison, flex, debhelper (>= 4.0.0), libpam0g-dev, libncurses5-dev, kernel-package, e2fslibs-dev
+Depends: bison, flex, debhelper (>= 4.0.0), libpam0g-dev, libncurses5-dev, kernel-package, comerr-dev
 Architecture: all
 Description: The AFS distributed filesystem- Module Sources
  AFS is a distributed filesystem allowing cross-platform sharing of
