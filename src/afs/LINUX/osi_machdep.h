@@ -111,6 +111,8 @@ extern struct vnodeops afs_file_iops, afs_dir_iops, afs_symlink_iops;
 /* We often need to pretend we're in user space to get memory transfers
  * right for the kernel calls we use.
  */
+#include <asm/uaccess.h>
+
 #ifdef KERNEL_SPACE_DECL
 #undef KERNEL_SPACE_DECL
 #undef TO_USER_SPACE
@@ -120,14 +122,16 @@ extern struct vnodeops afs_file_iops, afs_dir_iops, afs_symlink_iops;
 #define TO_USER_SPACE() { _fs_space_decl = get_fs(); set_fs(get_ds()); }
 #define TO_KERNEL_SPACE() set_fs(_fs_space_decl)
 
-/* Backwards compatibilty macros - copyin/copyout are redone because macro
- * inside parentheses is not evalutated.
- */
-#define memcpy_fromfs copy_from_user
-#define memcpy_tofs copy_to_user
-#define copyin(F, T, C)  (copy_from_user ((char*)(T), (char*)(F), (C)), 0)
-#define copyinstr(F, T, C, L) (copyin(F, T, C), *(L)=strlen(T), 0)
-#define copyout(F, T, C) (copy_to_user ((char*)(T), (char*)(F), (C)), 0)
+#define copyin(F, T, C)  (copy_from_user ((char*)(T), (char*)(F), (C)) > 0 ? EFAULT : 0)
+static inline long copyinstr(char *from, char *to, int count, int *length) {
+    long tmp;
+    tmp = strncpy_from_user(to, from, count);
+    if (tmp < 0)
+            return EFAULT;
+    *length = tmp;
+    return 0;
+}
+#define copyout(F, T, C) (copy_to_user ((char*)(T), (char*)(F), (C)) > 0 ? EFAULT : 0)
 
 /* kernel print statements */
 #define printf printk
