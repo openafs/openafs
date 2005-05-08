@@ -151,6 +151,7 @@
 #define SYS_NAME_ID_sparc64_linux2	1800
 #define SYS_NAME_ID_sparc64_linux22	1801
 #define SYS_NAME_ID_sparc64_linux24	1802
+#define SYS_NAME_ID_sparc64_linux26	1803
 
 #define SYS_NAME_ID_s390_linux2         1900
 #define SYS_NAME_ID_s390_linux22        1901
