@@ -53,7 +53,22 @@ choose_client() {
 	# For now, just use uname -r to get the module version. 
 	VERSION=`uname -r`
 
-	LIBAFS=openafs.*o
+        # The Debian OpenAFS packages do not add the .mp by default as of 1.3,
+        # but modules obtained from other sources may.  If a module with the
+        # .mp exists and this is an SMP system, use it; otherwise, use the
+        # default value.  Unset $MP if not using it so that we can use it
+        # later in the call to modprobe.
+        if [ -n "$MP" -a -f "$MODLOADDIR/openafs${MP}.o" ] ; then
+                LIBAFS=openafs${MP}.o
+        elif [ -n "$MP" -a -f "$MODLOADDIR/openafs${MP}.ko" ] ; then
+                LIBAFS=openafs${MP}.ko
+        elif [ -f "$MODLOADDIR/openafs.ko" ] ; then
+                MP=
+                LIBAFS=openafs.ko
+        else
+                MP=
+                LIBAFS=openafs.o
+        fi
 }
 
 #
@@ -120,18 +135,20 @@ load_client() {
 		choose_client
 	fi
     
-	if [ ! -f $MODLOADDIR/$LIBAFS ] ; then
-		echo AFS module $MODLOADDIR/$LIBAFS does not exist. Not starting AFS.
-		echo Please consider building kernel modules using instructions in
- echo /usr/share/doc/openafs-client/README.modules
+	if [ ! -f "$MODLOADDIR/$LIBAFS" ] ; then
+                echo <<EOF
+AFS module $MODLOADDIR/$LIBAFS does not exist.
+Not starting AFS.  Please consider building kernel modules using
+instructions in /usr/share/doc/openafs-client/README.modules
+EOF
 		exit 0
 	fi
 
 	# use the prefix command if required
 #	set_prefix
-		LOADED=`/sbin/lsmod | fgrep openafs`
+	LOADED=`/sbin/lsmod | fgrep openafs`
 	if [ -z "$LOADED" ] ; then
-	modprobe openafs
+                modprobe openafs${MP}
 	fi
 }
 
