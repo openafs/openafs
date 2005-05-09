@@ -53,15 +53,15 @@ install_only_libafs: only_libafs install_dirs
 
 dest: all dest_dirs
 	$(MAKE) build COMPILE_PART2B=dest
-	-${INSTALL} ${srcdir}/doc/LICENSE ${DEST}/LICENSE
+	-${INSTALL} ${srcdir}/src/LICENSE ${DEST}/LICENSE
 
 dest_nolibafs: all_nolibafs dest_dirs
 	$(MAKE) build TARGET=finale_nolibafs COMPILE_PART2B=dest
-	-${INSTALL} ${srcdir}/doc/LICENSE ${DEST}/LICENSE
+	-${INSTALL} ${srcdir}/src/LICENSE ${DEST}/LICENSE
 
 dest_only_libafs: only_libafs dest_dirs
 	$(MAKE) build TARGET=libafs COMPILE_PART2B=dest
-	-${INSTALL} ${srcdir}/doc/LICENSE ${DEST}/LICENSE
+	-${INSTALL} ${srcdir}/src/LICENSE ${DEST}/LICENSE
 
 packages: dest
 	@case ${SYS_NAME} in \
@@ -73,7 +73,7 @@ packages: dest
 		${COMPILE_PART1} packaging/HP-UX && swpackage -s  psf-1.2.10-transarc-paths-11.11 ;; \
 	ia64_hpux1122 ) \
 		${COMPILE_PART1} packaging/HP-UX && swpackage -s  psf-1.2.10-transarc-paths-11.22 ;; \
-	ia64_hpux1123 ) \
+	ia64_hpux1123 | hp_ux1123) \
 		${COMPILE_PART1} packaging/HP-UX && swpackage -s  psf-1.2.10-transarc-paths-11.23 ;; \
 	*) \
 		echo Not building packages for ${SYS_NAME} ;; \
@@ -416,7 +416,7 @@ libuafs: libuafs_setup vlserver_depinstall rx_depinstall fsint_depinstall \
 		rxstat_depinstall lwp_depinstall sys_depinstall des
 	set -x; \
 	case ${SYS_NAME} in \
-	hp_ux102* | *_obsd* | sun*_4* | *_nbsd*| hp_ux11i | ia64_hpux112*) \
+	hp_ux102* | *_obsd* | sun*_4* | *_nbsd*| hp_ux11i | hp_ux112* | ia64_hpux112*) \
 		echo Skipping libuafs for ${SYS_NAME} ;; \
 	* ) \
 		${COMPILE_PART1} libuafs ${COMPILE_PART2} ;; \
@@ -446,7 +446,7 @@ butm: cmd comerr bubasics usd uss
 butc: cmd comerr bubasics butm budb bucoord cmd rxgen rx
 	${COMPILE_PART1} butc ${COMPILE_PART2}
 
-tbutc: cmd comerr bubasics butm budb bucoord cmd butc
+tbutc: cmd comerr bubasics butm budb bucoord cmd butc libadmin
 	case ${SYS_NAME} in \
 	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*) \
 		${COMPILE_PART1} tbutc ${COMPILE_PART2} ;; \
@@ -555,13 +555,13 @@ jafsadm: libjafsadm
 finale: project cmd comerr afsd butc tbutc @ENABLE_KERNEL_MODULE@ libuafs audit kauth log package \
 	ptserver scout bu_utils ubik uss bozo vfsck volser tvolser \
 	venus update xstat afsmonitor dauth rxdebug libafsrpc \
-	libafsauthent shlibafsrpc shlibafsauthent libadmin
+	libafsauthent shlibafsrpc shlibafsauthent libadmin login
 	${COMPILE_PART1} finale ${COMPILE_PART2}
 
 finale_nolibafs: project cmd comerr afsd butc tbutc libuafs audit kauth log package \
 	ptserver scout bu_utils ubik uss bozo vfsck volser tvolser \
 	venus update xstat afsmonitor dauth rxdebug libafsrpc \
-	libafsauthent shlibafsrpc shlibafsauthent libadmin
+	libafsauthent shlibafsrpc shlibafsauthent libadmin login
 	${COMPILE_PART1} finale ${COMPILE_PART2}
 
 # Use washtool to ensure MakefileProto is current and obj/libafs exists.

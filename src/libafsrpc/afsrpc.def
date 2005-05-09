@@ -212,5 +212,6 @@ EXPORTS
         RXAFS_ResidencyCmd                      @217
         StartRXAFS_FetchData64                  @218
         StartRXAFS_StoreData64                  @219
+        rx_StartClientThread                    @220
 
 

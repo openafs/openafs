@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/volser/vsprocs.c,v 1.33.2.3 2005/01/31 04:34:47 shadow Exp $");
+    ("$Header: /cvs/openafs/src/volser/vsprocs.c,v 1.33.2.4 2005/04/15 18:46:26 shadow Exp $");
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -68,7 +68,8 @@ struct ubik_client *cstruct;
 int verbose = 0;
 
 struct release {
-    afs_int32 time;
+    afs_int32 crtime;
+    afs_int32 uptime;
     afs_int32 vldbEntryIndex;
 };
 
@@ -162,12 +163,11 @@ static int DelVol(struct rx_connection *conn, afs_int32 vid, afs_int32 part,
 		  afs_int32 flags);
 static int GetTrans(struct nvldbentry *vldbEntryPtr, afs_int32 index,
 		    struct rx_connection **connPtr, afs_int32 * transPtr,
-		    afs_int32 * timePtr);
+		    afs_int32 * crtimePtr, afs_int32 * uptimePtr);
 static int SimulateForwardMultiple(struct rx_connection *fromconn,
 				   afs_int32 fromtid, afs_int32 fromdate,
 				   manyDests * tr, afs_int32 flags,
 				   void *cookie, manyResults * results);
-static int rel_compar(struct release *r1, struct release *r2);
 static afs_int32 CheckVolume(volintInfo * volumeinfo, afs_int32 aserver,
 			     afs_int32 apart, afs_int32 * modentry,
 			     afs_uint32 * maxvolid);
@@ -3006,15 +3006,16 @@ DelVol(struct rx_connection *conn, afs_int32 vid, afs_int32 part,
 static int
 GetTrans(struct nvldbentry *vldbEntryPtr, afs_int32 index,
 	 struct rx_connection **connPtr, afs_int32 * transPtr,
-	 afs_int32 * timePtr)
+	 afs_int32 * crtimePtr, afs_int32 * uptimePtr)
 {
     afs_int32 volid;
     struct volser_status tstatus;
     int code, rcode, tcode;
 
     *connPtr = (struct rx_connection *)0;
-    *timePtr = 0;
     *transPtr = 0;
+    *crtimePtr = 0;
+    *uptimePtr = 0;
 
     /* get connection to the replication site */
     *connPtr = UV_Bind(vldbEntryPtr->serverNumber[index], AFSCONF_VOLUMEPORT);
@@ -3086,7 +3087,8 @@ GetTrans(struct nvldbentry *vldbEntryPtr, afs_int32 index,
 		       code);
 	    goto fail;
 	}
-	*timePtr = tstatus.creationDate - CLOCKSKEW;
+	*crtimePtr = tstatus.creationDate - CLOCKSKEW;
+	*uptimePtr = tstatus.updateDate - CLOCKSKEW;
     }
 
     return 0;
@@ -3120,12 +3122,6 @@ SimulateForwardMultiple(struct rx_connection *fromconn, afs_int32 fromtid,
     return 0;
 }
 
-
-static int
-rel_compar(struct release *r1, struct release *r2)
-{
-    return (r1->time - r2->time);
-}
 
 /* UV_ReleaseVolume()
  *    Release volume <afromvol> on <afromserver> <afrompart> to all
@@ -3166,10 +3162,10 @@ UV_ReleaseVolume(afs_int32 afromvol, afs_int32 afromserver,
     manyDests tr;
     manyResults results;
     int rwindex, roindex, roclone, roexists;
-    afs_int32 rwcrdate, clcrdate;
+    afs_int32 rwcrdate, rwupdate, clcrdate;
     struct rtime {
 	int validtime;
-	afs_uint32 time;
+	afs_uint32 uptime;
     } remembertime[NMAXNSERVERS];
     int releasecount = 0;
     struct volser_status volstatus;
@@ -3266,6 +3262,7 @@ UV_ReleaseVolume(afs_int32 afromvol, afs_int32 afromserver,
 	    ONERROR(code, afromvol,
 		    "Failed to get the status of RW volume %u\n");
 	    rwcrdate = volstatus.creationDate;
+	    rwupdate = volstatus.updateDate;
 
 	    /* End transaction on RW */
 	    code = AFSVolEndTrans(fromconn, fromtid, &rcode);
@@ -3286,11 +3283,11 @@ UV_ReleaseVolume(afs_int32 afromvol, afs_int32 afromserver,
 		    "Failed to get the status of RW clone %u\n");
 	    clcrdate = volstatus.creationDate;
 
-	    /* End transaction on RW */
+	    /* End transaction on clone */
 	    code = AFSVolEndTrans(fromconn, clonetid, &rcode);
 	    clonetid = 0;
 	    ONERROR((code ? code : rcode), cloneVolId,
-		    "Failed to end transaction on RW volume %u\n");
+		    "Failed to end transaction on RW clone %u\n");
 
 	    if (rwcrdate > clcrdate)
 		fullrelease = 2;/* Do a full release if RO clone older than RW */
@@ -3354,10 +3351,10 @@ UV_ReleaseVolume(afs_int32 afromvol, afs_int32 afromserver,
 	    if (roclone) {
 		strcpy(vname, entry.name);
 		strcat(vname, ".readonly");
-		VPRINT("Cloning RW volume %u to permanent RO...");
+		VPRINT1("Cloning RW volume %u to permanent RO...", afromvol);
 	    } else {
 		strcpy(vname, "readonly-clone-temp");
-		VPRINT("Cloning RW volume %u to temporary RO...");
+		VPRINT1("Cloning RW volume %u to temporary RO...", afromvol);
 	    }
 	    code =
 		AFSVolClone(fromconn, clonetid, 0, readonlyVolume, vname,
@@ -3367,18 +3364,19 @@ UV_ReleaseVolume(afs_int32 afromvol, afs_int32 afromserver,
 	}
 
 	/* Get the time the RW was created for future information */
-	VPRINT1("Getting status of RW volume %u...", cloneVolId);
+	VPRINT1("Getting status of RW volume %u...", afromvol);
 	code = AFSVolGetStatus(fromconn, clonetid, &volstatus);
-	ONERROR(code, cloneVolId,
+	ONERROR(code, afromvol,
 		"Failed to get the status of the RW volume %u\n");
 	VDONE;
 	rwcrdate = volstatus.creationDate;
+	rwupdate = volstatus.updateDate;
 
 	/* End the transaction on the RW volume */
-	VPRINT1("Ending cloning transaction on RW volume %u...", cloneVolId);
+	VPRINT1("Ending cloning transaction on RW volume %u...", afromvol);
 	code = AFSVolEndTrans(fromconn, clonetid, &rcode);
 	clonetid = 0;
-	ONERROR((code ? code : rcode), cloneVolId,
+	ONERROR((code ? code : rcode), afromvol,
 		"Failed to end cloning transaction on RW %u\n");
 	VDONE;
 
@@ -3520,13 +3518,14 @@ UV_ReleaseVolume(afs_int32 afromvol, afs_int32 afromserver,
 	    code =
 		GetTrans(&entry, vldbindex, &(toconns[volcount]),
 			 &(replicas[volcount].trans),
-			 &(times[volcount].time));
+			 &(times[volcount].crtime),
+			 &(times[volcount].uptime));
 	    if (code)
 		continue;
 
 	    /* Thisdate is the date from which we want to pick up all changes */
 	    if (forceflag || !fullrelease
-		|| (rwcrdate > times[volcount].time)) {
+		|| (rwcrdate > times[volcount].crtime)) {
 		/* If the forceflag is set, then we want to do a full dump.
 		 * If it's not a full release, we can't be sure that the creation
 		 *  date is good (so we also do a full dump).
@@ -3541,14 +3540,14 @@ UV_ReleaseVolume(afs_int32 afromvol, afs_int32 afromserver,
 		 * case time[volcount].time would be now instead of 0.
 		 */
 		thisdate =
-		    (remembertime[vldbindex].time <
-		     times[volcount].time) ? remembertime[vldbindex].
-		    time : times[volcount].time;
+		    (remembertime[vldbindex].uptime < times[volcount].uptime)
+			? remembertime[vldbindex].uptime
+			: times[volcount].uptime;
 	    } else {
-		thisdate = times[volcount].time;
+		thisdate = times[volcount].uptime;
 	    }
 	    remembertime[vldbindex].validtime = 1;
-	    remembertime[vldbindex].time = thisdate;
+	    remembertime[vldbindex].uptime = thisdate;
 
 	    if (volcount == 0) {
 		fromdate = thisdate;
@@ -3586,6 +3585,8 @@ UV_ReleaseVolume(afs_int32 afromvol, afs_int32 afromserver,
 
 	    if (fromdate == 0)
 		fprintf(STDOUT, " (full release)");
+	    else
+		fprintf(STDOUT, " (as of %.24s)", ctime((time_t *)&fromdate));
 	    fprintf(STDOUT, ".\n");
 	    fflush(STDOUT);
 	}

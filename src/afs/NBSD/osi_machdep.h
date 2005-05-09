@@ -76,9 +76,6 @@ extern thread_t afs_global_owner;
 	simple_unlock(&afs_global_lock); \
     } while(0)
 #endif /* 0 */
-#define AFS_RXGLOCK()
-#define AFS_RXGUNLOCK()
-#define ISAFS_RXGLOCK() 1
 
 #undef SPLVAR
 #define SPLVAR

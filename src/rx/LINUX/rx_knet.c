@@ -16,7 +16,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/LINUX/rx_knet.c,v 1.23.2.5 2005/01/31 04:25:34 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/LINUX/rx_knet.c,v 1.23.2.6 2005/04/15 18:37:17 shadow Exp $");
 
 #include <linux/version.h>
 #ifdef AFS_LINUX22_ENV
@@ -29,7 +29,7 @@ RCSID
 /* rxk_NewSocket
  * open and bind RX socket
  */
-struct osi_socket *
+osi_socket *
 rxk_NewSocketHost(afs_uint32 ahost, short aport)
 {
     struct socket *sockp;
@@ -70,10 +70,10 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
     sockp->ops->setsockopt(sockp, SOL_IP, IP_MTU_DISCOVER, (char *)&pmtu,
                            sizeof(pmtu));
     TO_KERNEL_SPACE();
-    return (struct osi_socket *)sockp;
+    return (osi_socket *)sockp;
 }
 
-struct osi_socket *
+osi_socket *
 rxk_NewSocket(short aport)
 {
     return rxk_NewSocketHost(htonl(INADDR_ANY), aport);

@@ -19,7 +19,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_event.c,v 1.14.2.2 2004/12/07 06:10:06 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_event.c,v 1.14.2.3 2005/04/14 02:31:44 shadow Exp $");
 
 #ifdef KERNEL
 #ifndef UKERNEL
@@ -198,7 +198,6 @@ _rxevent_Post(struct clock *when, void (*func) (), void *arg, void *arg1,
     int isEarliest = 0;
 
     MUTEX_ENTER(&rxevent_lock);
-    AFS_ASSERT_RXGLOCK();
 #ifdef RXDEBUG
     if (rx_Log_event) {
 	struct clock now;
@@ -337,7 +336,6 @@ rxevent_Cancel_1(register struct rxevent *ev, register struct rx_call *call,
     /* Append it to the free list (rather than prepending) to keep the free
      * list hot so nothing pages out
      */
-    AFS_ASSERT_RXGLOCK();
     MUTEX_ENTER(&rxevent_lock);
     if (!ev) {
 	MUTEX_EXIT(&rxevent_lock);
@@ -382,8 +380,6 @@ rxevent_RaiseEvents(struct clock *next)
     volatile struct clock now;
 
     MUTEX_ENTER(&rxevent_lock);
-
-    AFS_ASSERT_RXGLOCK();
 
     /* Events are sorted by time, so only scan until an event is found that has
      * not yet timed out */

@@ -21,9 +21,6 @@
 /* You can't have AFS_GLOBAL_SUNLOCK and not RX_ENABLE_LOCKS */
 #define RX_ENABLE_LOCKS 1
 #define AFS_GLOBAL_RXLOCK_KERNEL
-#ifndef AFS_GLOBAL_SUNLOCK
-#define AFS_ASSERT_RXGLOCK()
-#endif
 
 /* This is incomplete and probably wouldn't work with NCPUS > 1 */
 

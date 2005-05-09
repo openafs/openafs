@@ -85,9 +85,6 @@ extern struct lock__bsd__ afs_global_lock;
         lockmgr(&afs_global_lock, LK_RELEASE, 0, current_proc()); \
     } while(0)
 #define ISAFS_GLOCK() (afs_global_owner == current_thread())
-#define AFS_RXGLOCK()
-#define AFS_RXGUNLOCK()
-#define ISAFS_RXGLOCK() 1
 
 #define SPLVAR
 #define NETPRI

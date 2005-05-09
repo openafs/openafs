@@ -94,16 +94,6 @@ extern void osirx_AssertMine(afs_kmutex_t * lockaddr, char *msg);
 #endif
 #define MUTEX_EXIT(l) osi_Assert(pthread_mutex_unlock(l) == 0)
 
-#ifdef RXObtainWriteLock
-#undef RXObtainWriteLock
-#endif
-#define RXObtainWriteLock(l) MUTEX_ENTER(l)
-
-#ifdef RXReleaseWriteLock
-#undef RXReleaseWriteLock
-#endif
-#define RXReleaseWriteLock(l) MUTEX_EXIT(l)
-
 #ifdef CV_INIT
 #undef CV_INIT
 #endif

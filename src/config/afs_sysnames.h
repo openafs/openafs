@@ -48,6 +48,7 @@
 #define SYS_NAME_ID_hp_ux11i             416
 #define SYS_NAME_ID_ia64_hpux1122	 417
 #define SYS_NAME_ID_ia64_hpux1123	 418
+#define SYS_NAME_ID_hp_ux1123		 419
 
 #define SYS_NAME_ID_mac2_51		 500
 #define SYS_NAME_ID_mac_aux10		 501
@@ -67,6 +68,7 @@
 #define SYS_NAME_ID_rs_aix51		 704
 #define SYS_NAME_ID_rs_aix43		 705
 #define SYS_NAME_ID_rs_aix52		 706
+#define SYS_NAME_ID_rs_aix53		 707
 
 #define SYS_NAME_ID_sun3_411		 906
 #define SYS_NAME_ID_sun3x_411		 912
@@ -172,6 +174,7 @@
 #define SYS_NAME_ID_i386_fbsd_51        2106
 #define SYS_NAME_ID_i386_fbsd_52        2107
 #define SYS_NAME_ID_i386_fbsd_53        2108
+#define SYS_NAME_ID_i386_fbsd_60        2112
 
 #define SYS_NAME_ID_ia64_linux2		2200
 #define SYS_NAME_ID_ia64_linux22	2201

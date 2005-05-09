@@ -57,7 +57,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/afsd/afsd.c,v 1.43.2.5 2005/04/03 18:15:41 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afsd/afsd.c,v 1.43.2.7 2005/04/24 14:28:40 shadow Exp $");
 
 #define VFS 1
 
@@ -333,8 +333,7 @@ static int HandleMTab();
   *	Sets globals.
   *---------------------------------------------------------------------------*/
 
-int
-ParseCacheInfoFile()
+int ParseCacheInfoFile(void)
 {
     static char rn[] = "ParseCacheInfoFile";	/*This routine's name */
     FILE *cachefd;		/*Descriptor for cache info file */
@@ -396,8 +395,9 @@ ParseCacheInfoFile()
 	    ("\tcacheMountDir: '%s'\n\tcacheBaseDir: '%s'\n\tcacheBlocks: %d\n",
 	     tmd, tbd, tCacheBlocks);
     }
-    if (!(cacheFlags & AFSCALL_INIT_MEMCACHE))
-	PartSizeOverflow(tbd, cacheBlocks);
+    if (!(cacheFlags & AFSCALL_INIT_MEMCACHE)) {
+	return(PartSizeOverflow(tbd, cacheBlocks));
+    }
 
     return (0);
 }
@@ -407,10 +407,12 @@ ParseCacheInfoFile()
  * isn't a mounted partition it's also ignored since we can't guarantee 
  * what will be stored afterwards. Too many if's. This is now purely
  * advisory. ODS with over 2G partition also gives warning message.
+ *
+ * Returns:
+ *	0 if everything went well,
+ *	1 otherwise.
  */
-PartSizeOverflow(path, cs)
-     char *path;
-     int cs;
+int PartSizeOverflow(char *path, int cs)
 {
     int bsize = -1, totalblks, mint;
 #if AFS_HAVE_STATVFS
@@ -425,7 +427,15 @@ PartSizeOverflow(path, cs)
     }
     totalblks = statbuf.f_blocks;
     bsize = statbuf.f_frsize;
-#else
+#if AFS_AIX51_ENV
+    if(strcmp(statbuf.f_basetype, "jfs")) {
+        fprintf(stderr, "Cache filesystem '%s' must be jfs (now %s)\n",
+                path, statbuf.f_basetype);
+        return 1;
+    }
+#endif /* AFS_AIX51_ENV */
+
+#else /* AFS_HAVE_STATVFS */
     struct statfs statbuf;
 
     if (statfs(path, &statbuf) < 0) {
@@ -453,7 +463,10 @@ PartSizeOverflow(path, cs)
 	printf
 	    ("Cache size (%d) must be less than 95%% of partition size (which is %d). Lower cache size\n",
 	     cs, mint);
+        return 1;
     }
+
+    return 0;
 }
 
 /*-----------------------------------------------------------------------------
@@ -1761,6 +1774,14 @@ mainproc(as, arock)
 	    printf("%s: Forking AFSDB lookup handler.\n", rn);
 	code = fork();
 	if (code == 0) {
+	    /* Since the AFSDB lookup handler runs as a user process, 
+	     * need to drop the controlling TTY, etc.
+	     */
+	    if (daemon(0, 0) == -1) {
+		printf("Error starting AFSDB lookup handler: %s\n",
+			strerror(errno));
+		exit(1);
+	    }
 	    AfsdbLookupHandler();
 	    exit(1);
 	}

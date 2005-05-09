@@ -510,6 +510,10 @@ else
 			AFS_SYSNAME="rs_aix52"
 			enable_pam="no"
 			;;
+		power*-ibm-aix5.3*)
+			AFS_SYSNAME="rs_aix53"
+			enable_pam="no"
+			;;
 		x86_64-*-linux-gnu)
 			AFS_SYSNAME="amd64_linuxXX"
 			enable_pam="no"
@@ -582,6 +586,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_FS_STRUCT_INODE_HAS_I_SB_LIST
 		 LINUX_FS_STRUCT_INODE_HAS_I_SECURITY
 		 LINUX_FS_STRUCT_INODE_HAS_INOTIFY_LOCK
+		 LINUX_FS_STRUCT_INODE_HAS_INOTIFY_SEM
 	  	 LINUX_INODE_SETATTR_RETURN_TYPE
 	  	 LINUX_WRITE_INODE_RETURN_TYPE
 	  	 LINUX_IOP_NAMEIDATA
@@ -703,6 +708,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 fi
 		 if test "x$ac_cv_linux_fs_struct_inode_has_inotify_lock" = "xyes"; then 
 		  AC_DEFINE(STRUCT_INODE_HAS_INOTIFY_LOCK, 1, [define if your struct inode has inotify_lock])
+		 fi
+		 if test "x$ac_cv_linux_fs_struct_inode_has_inotify_sem" = "xyes"; then 
+		  AC_DEFINE(STRUCT_INODE_HAS_INOTIFY_SEM, 1, [define if your struct inode has inotify_sem])
 		 fi
 		 if test "x$ac_cv_linux_func_recalc_sigpending_takes_void" = "xyes"; then 
 		  AC_DEFINE(RECALC_SIGPENDING_TAKES_VOID, 1, [define if your recalc_sigpending takes void])
@@ -1015,6 +1023,7 @@ AC_CHECK_TYPE(ssize_t, int)
 AC_SIZEOF_TYPE(long)
 
 AC_CHECK_FUNCS(timegm)
+AC_CHECK_FUNCS(daemon)
 
 dnl Directory PATH handling
 if test "x$enable_transarc_paths" = "xyes"  ; then 
@@ -1664,6 +1673,21 @@ printf("%d\n", _inode.inotify_lock);],
 ac_cv_linux_fs_struct_inode_has_inotify_lock=yes,
 ac_cv_linux_fs_struct_inode_has_inotify_lock=no)])
 AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_inotify_lock)
+CPPFLAGS="$save_CPPFLAGS"])
+
+AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_INOTIFY_SEM], [
+AC_MSG_CHECKING(for inotify_sem in struct inode)
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+AC_CACHE_VAL(ac_cv_linux_fs_struct_inode_has_inotify_sem, 
+[
+AC_TRY_COMPILE(
+[#include <linux/fs.h>],
+[struct inode _inode;
+printf("%x\n", _inode.inotify_sem);], 
+ac_cv_linux_fs_struct_inode_has_inotify_sem=yes,
+ac_cv_linux_fs_struct_inode_has_inotify_sem=no)])
+AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_inotify_sem)
 CPPFLAGS="$save_CPPFLAGS"])
 
 
@@ -2582,6 +2606,19 @@ case $AFS_SYSNAME in
 		EXTRA_VLIBOBJS="fstab.o"
 		;;
 
+	ppc_darwin_80)
+		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration"
+		LEX="lex -l"
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -D_REENTRANT ${XCFLAGS}'
+		KROOT=
+		KINCLUDES='-I$(KROOT)/System/Library/Frameworks/Kernel.framework/Headers'
+		LWP_OPTMZ="-O2"
+		REGEX_OBJ="regex.o"
+		XCFLAGS="-no-cpp-precomp"
+		TXLIBS="-lncurses"
+		EXTRA_VLIBOBJS="fstab.o"
+		;;
+
 	ppc_linux*)
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
@@ -2640,6 +2677,22 @@ case $AFS_SYSNAME in
 		SHLIB_LINKER="${MT_CC} -bM:SRE -berok"
 		AIX64=""
 		;;
+
+	rs_aix53)	
+		DBG="-g"
+		LEX="lex"
+		LIBSYS_AIX_EXP="afsl.exp"
+		MT_CC="xlc_r"
+		MT_CFLAGS='-DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_LIBS="-lpthreads"
+		SHLIB_SUFFIX="o"
+		TXLIBS="-lcurses"
+		XCFLAGS="-K -D_NO_PROTO -D_NONSTD_TYPES -D_MBI=void"
+		XLIBS="${LIB_AFSDB} -ldl"
+		SHLIB_LINKER="${MT_CC} -bM:SRE -berok"
+		AIX64=""
+		;;
+
 	s390_linux22)
 		CC="gcc"
 		CCOBJ="gcc"
@@ -2684,7 +2737,7 @@ case $AFS_SYSNAME in
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
 		PAM_CFLAGS="-O -Dlinux -DLINUX_PAM -fPIC"
-		SHLIB_LDFLAGS="-shared -Xlinker -x"
+		SHLIB_LDFLAGS="-shared -Xlinker -x -Xlinker -Bsymbolic"
 		TXLIBS="-lncurses"
 		XCFLAGS="-O -g -D_LARGEFILE64_SOURCE -D__s390x__"
 		YACC="bison -y"

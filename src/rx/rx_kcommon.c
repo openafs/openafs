@@ -15,7 +15,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_kcommon.c,v 1.44.2.1 2004/08/25 07:09:41 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_kcommon.c,v 1.44.2.3 2005/04/15 18:37:14 shadow Exp $");
 
 #include "rx/rx_kcommon.h"
 
@@ -30,7 +30,7 @@ int (*rxk_PacketArrivalProc) (register struct rx_packet * ahandle, register stru
 int (*rxk_GetPacketProc) (char **ahandle, int asize);
 #endif
 
-struct osi_socket *rxk_NewSocketHost(afs_uint32 ahost, short aport);
+osi_socket *rxk_NewSocketHost(afs_uint32 ahost, short aport);
 extern struct interfaceAddr afs_cb_interface;
 
 rxk_ports_t rxk_ports;
@@ -105,9 +105,9 @@ rxk_shutdownPorts(void)
 osi_socket
 rxi_GetHostUDPSocket(u_int host, u_short port)
 {
-    struct osi_socket *sockp;
-    sockp = (struct osi_socket *)rxk_NewSocketHost(host, port);
-    if (sockp == (struct osi_socket *)0)
+    osi_socket *sockp;
+    sockp = (osi_socket *)rxk_NewSocketHost(host, port);
+    if (sockp == (osi_socket *)0)
 	return OSI_NULLSOCKET;
     rxk_AddPort(port, (char *)sockp);
     return (osi_socket) sockp;
@@ -761,7 +761,7 @@ rxi_FindIfnet(afs_uint32 addr, afs_uint32 * maskp)
 /* rxk_NewSocket creates a new socket on the specified port. The port is
  * in network byte order.
  */
-struct osi_socket *
+osi_socket *
 rxk_NewSocketHost(afs_uint32 ahost, short aport)
 {
     register afs_int32 code;
@@ -905,17 +905,17 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
 #if defined(AFS_DARWIN_ENV) && defined(KERNEL_FUNNEL)
     thread_funnel_switch(NETWORK_FUNNEL, KERNEL_FUNNEL);
 #endif
-    return (struct osi_socket *)newSocket;
+    return (osi_socket *)newSocket;
 
   bad:
     AFS_GLOCK();
 #if defined(AFS_DARWIN_ENV) && defined(KERNEL_FUNNEL)
     thread_funnel_switch(NETWORK_FUNNEL, KERNEL_FUNNEL);
 #endif
-    return (struct osi_socket *)0;
+    return (osi_socket *)0;
 }
 
-struct osi_socket *
+osi_socket *
 rxk_NewSocket(short aport)
 {
     return rxk_NewSocketHost(0, aport);
@@ -964,9 +964,7 @@ afs_rxevent_daemon(void)
 	AFS_GUNLOCK();
 #endif /* RX_ENABLE_LOCKS */
 	NETPRI;
-	AFS_RXGLOCK();
 	rxevent_RaiseEvents(&temp);
-	AFS_RXGUNLOCK();
 	USERPRI;
 #ifdef RX_ENABLE_LOCKS
 	AFS_GLOCK();
@@ -1151,9 +1149,7 @@ rxk_Listener(void)
 		osi_Panic("rxk_Listener: No more Rx buffers!\n");
 	}
 	if (!(code = rxk_ReadPacket(rx_socket, rxp, &host, &port))) {
-	    AFS_RXGLOCK();
 	    rxp = rxi_ReceivePacket(rxp, rx_socket, host, port, 0, 0);
-	    AFS_RXGUNLOCK();
 	}
     }
 

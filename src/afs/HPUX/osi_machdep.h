@@ -80,10 +80,6 @@ extern void afsHashRelease(tid_t key);
 
 #endif
 
-#define AFS_RXGLOCK()
-#define AFS_RXGUNLOCK()
-#define ISAFS_RXGLOCK() 1
-
 /* Uses splnet only in the SP case */
 #define SPLVAR      register ulong_t splvar
 #define NETPRI      NET_SPLNET(splvar)

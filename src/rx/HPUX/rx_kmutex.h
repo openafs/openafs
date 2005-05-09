@@ -132,10 +132,6 @@ typedef caddr_t afs_kcondvar_t;
 
 #ifdef AFS_HPUX102_ENV
 
-#define RXObtainWriteLock(a) AFS_ASSERT_RXGLOCK()
-#define RXReleaseWriteLock(a)
-
-
 #if defined(AFS_HPUX110_ENV)
 #undef osirx_AssertMine
 extern void osirx_AssertMine(afs_kmutex_t * lockaddr, char *msg);

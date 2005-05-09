@@ -48,11 +48,15 @@ struct osi_stat {
 
 struct osi_file {
     afs_int32 size;		/* file size in bytes XXX Must be first field XXX */
+#ifdef AFS_LINUX24_ENV
+    struct file *filp;		/* May need this if we really open the file. */
+#else
 #ifdef AFS_LINUX22_ENV
     struct dentry dentry;	/* merely to hold the pointer to the inode. */
     struct file file;		/* May need this if we really open the file. */
 #else
     struct vnode *vnode;
+#endif
 #endif
 #if	defined(AFS_HPUX102_ENV)
     k_off_t offset;
@@ -119,7 +123,7 @@ struct afs_osi_WaitHandle {
 /*
  * Vnode related macros
  */
-#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 #define vSetVfsp(vc, vfsp)      AFSTOV(vc)->v_mount = (vfsp)
 #define vSetType(vc, type)      AFSTOV(vc)->v_type = (type)
 #define vType(vc)               AFSTOV(vc)->v_type
@@ -129,16 +133,14 @@ struct afs_osi_WaitHandle {
 #define	vSetVfsp(vc,vfsp)   (vc)->v.v_vfsp = (vfsp)
 #endif
 
-#ifndef AFS_OBSD_ENV
-#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 extern int (**afs_vnodeop_p) ();
-#define IsAfsVnode(vc)      ((vc)->v_op == afs_vnodeop_p)
-#define SetAfsVnode(vc)     (vc)->v_op = afs_vnodeop_p
+#define IsAfsVnode(v)      ((v)->v_op == afs_vnodeop_p)
+#define SetAfsVnode(v)     /* nothing; done in getnewvnode() */
 #else
 extern struct vnodeops *afs_ops;
-#define	IsAfsVnode(vc)	    ((vc)->v_op == afs_ops)
-#define	SetAfsVnode(vc)	    (vc)->v_op = afs_ops
-#endif
+#define	IsAfsVnode(v)	    ((v)->v_op == afs_ops)
+#define	SetAfsVnode(v)	    (v)->v_op = afs_ops
 #endif
 
 #ifdef AFS_SGI65_ENV
@@ -146,10 +148,8 @@ extern struct vnodeops *afs_ops;
              lookupname((fnamep),(segflg),(followlink),NULL,(compvpp),\
 			NULL)
 #else
-#ifndef AFS_OBSD_ENV
 #define	gop_lookupname(fnamep,segflg,followlink,compvpp) \
              lookupname((fnamep),(segflg),(followlink),NULL,(compvpp))
-#endif
 #endif
 
 /*
@@ -208,8 +208,6 @@ typedef struct timeval osi_timeval_t;
 #ifdef AFS_GLOBAL_SUNLOCK
 #define AFS_ASSERT_GLOCK() \
     (ISAFS_GLOCK() || (osi_Panic("afs global lock not held at %s:%d\n", __FILE__, __LINE__), 0))
-#define AFS_ASSERT_RXGLOCK() \
-    (ISAFS_RXGLOCK() || (osi_Panic("rx global lock not held at %s:%d\n", __FILE__, __LINE__), 0))
 #endif /* AFS_GLOBAL_SUNLOCK */
 
 #ifdef RX_ENABLE_LOCKS
@@ -227,10 +225,6 @@ typedef struct timeval osi_timeval_t;
 #define AFS_GUNLOCK()
 #define ISAFS_GLOCK() 1
 #define AFS_ASSERT_GLOCK()
-#define AFS_RXGLOCK()
-#define AFS_RXGUNLOCK()
-#define ISAFS_RXGLOCK() 1
-#define AFS_ASSERT_RXGLOCK()
 #endif
 
 /* On an MP that uses multithreading, splnet is not sufficient to provide

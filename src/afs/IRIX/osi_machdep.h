@@ -172,11 +172,6 @@ extern long afs_global_owner;
     (AFS_ASSERT_GLOCK(), afs_global_owner = 0, mutex_exit(&afs_global_lock))
 #define ISAFS_GLOCK() (osi_ThreadUnique() == afs_global_owner)
 #endif /* AFS_SGI64_ENV */
-
-#define AFS_RXGLOCK()
-#define AFS_RXGUNLOCK()
-#define ISAFS_RXGLOCK() 1
-
 #else /* MP */
 #define AFS_GLOCK()
 #define AFS_GUNLOCK()

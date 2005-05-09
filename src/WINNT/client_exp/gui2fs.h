@@ -39,6 +39,7 @@ int GetCellName(char *baseNamep, struct afsconf_cell *infop);
 long fs_StripDriveLetter(const char *inPathp, char *outPathp, long outSize);
 long fs_ExtractDriveLetter(const char *inPathp, char *outPathp);
 BOOL IsSymlink(const char * true_name);
+BOOL IsMountPoint(const char * name);
 UINT MakeSymbolicLink(const char *,const char *);
 void ListSymbolicLinkPath(const char *strName,char *strPath,UINT nlenPath);
 #endif //__GUI2FS_H__

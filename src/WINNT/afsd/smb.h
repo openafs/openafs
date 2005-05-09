@@ -365,6 +365,12 @@ typedef struct smb_fid {
 #define SMB_ATTR_NOT_CONTENT_INDEXED 0x2000
 #define SMB_ATTR_ENCRYPTED      0x4000
 
+#define LOCKING_ANDX_SHARED_LOCK        0x01 /* Read-only lock */
+#define LOCKING_ANDX_OPLOCK_RELEASE     0x02 /* Oplock break notification */
+#define LOCKING_ANDX_CHANGE_LOCKTYPE    0x04 /* Change lock type */
+#define LOCKING_ANDX_CANCEL_LOCK        0x08 /* Cancel outstanding request */
+#define LOCKING_ANDX_LARGE_FILES        0x10 /* Large file locking format */
+
 /* for tracking in-progress directory searches */
 typedef struct smb_dirSearch {
     osi_queue_t q;			/* queue of all outstanding cookies */

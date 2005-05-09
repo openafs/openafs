@@ -22,12 +22,11 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vnodeops.c,v 1.81.2.13 2005/03/11 06:51:11 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vnodeops.c,v 1.81.2.19 2005/04/25 14:55:47 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
 #include "afs/afs_stats.h"
-#include "afs/afs_osidnlc.h"
 #include "h/mm.h"
 #ifdef HAVE_MM_INLINE_H
 #include "h/mm_inline.h"
@@ -426,6 +425,13 @@ out1:
 extern int afs_xioctl(struct inode *ip, struct file *fp, unsigned int com,
 		      unsigned long arg);
 
+#if defined(HAVE_UNLOCKED_IOCTL) || defined(HAVE_COMPAT_IOCTL)
+static long afs_unlocked_xioctl(struct file *fp, unsigned int com,
+                               unsigned long arg) {
+    return afs_xioctl(FILE_INODE(fp), fp, com, arg);
+
+}
+#endif
 
 /* We need to detect unmap's after close. To do that, we need our own
  * vm_operations_struct's. And we need to set them up for both the
@@ -733,7 +739,14 @@ struct file_operations afs_dir_fops = {
   .read =	generic_read_dir,
 #endif
   .readdir =	afs_linux_readdir,
+#ifdef HAVE_UNLOCKED_IOCTL
+  .unlocked_ioctl = afs_unlocked_xioctl,
+#else
   .ioctl =	afs_xioctl,
+#endif
+#ifdef HAVE_COMPAT_IOCTL
+  .compat_ioctl = afs_unlocked_xioctl,
+#endif
   .open =	afs_linux_open,
   .release =	afs_linux_release,
 };
@@ -741,7 +754,14 @@ struct file_operations afs_dir_fops = {
 struct file_operations afs_file_fops = {
   .read =	afs_linux_read,
   .write =	afs_linux_write,
+#ifdef HAVE_UNLOCKED_IOCTL
+  .unlocked_ioctl = afs_unlocked_xioctl,
+#else
   .ioctl =	afs_xioctl,
+#endif
+#ifdef HAVE_COMPAT_IOCTL
+  .compat_ioctl = afs_unlocked_xioctl,
+#endif
   .mmap =	afs_linux_mmap,
   .open =	afs_linux_open,
   .flush =	afs_linux_flush,
@@ -844,15 +864,10 @@ static int
 afs_linux_dentry_revalidate(struct dentry *dp)
 #endif
 {
-    char *name = NULL;
-    cred_t *credp = crref();
+    cred_t *credp = NULL;
     struct vrequest treq;
-    struct vcache *lookupvcp = NULL;
-    int code, bad_dentry = 1;
-    struct sysname_info sysState;
+    int code, bad_dentry;
     struct vcache *vcp, *parentvcp;
-
-    sysState.allocked = 0;
 
 #ifdef AFS_LINUX24_ENV
     lock_kernel();
@@ -860,68 +875,62 @@ afs_linux_dentry_revalidate(struct dentry *dp)
     AFS_GLOCK();
 
     vcp = ITOAFS(dp->d_inode);
-    parentvcp = ITOAFS(dp->d_parent->d_inode);
+    parentvcp = ITOAFS(dp->d_parent->d_inode);		/* dget_parent()? */
 
-    /* If it's a negative dentry, then there's nothing to do. */
-    if (!vcp || !parentvcp)
-	goto done;
-
-    /* If it is the AFS root, then there's no chance it needs 
-     * revalidating */
-    if (vcp == afs_globalVp) {
-	bad_dentry = 0;
+    /* If it's a negative dentry, it's never valid */
+    if (!vcp || !parentvcp) {
+	bad_dentry = 1;
 	goto done;
     }
 
-    if ((code = afs_InitReq(&treq, credp)))
+    /* If it's @sys, perhaps it has been changed */
+    if (!afs_ENameOK(dp->d_name.name)) {
+	bad_dentry = 10;
 	goto done;
+    }
 
-    Check_AtSys(parentvcp, dp->d_name.name, &sysState, &treq);
-    name = sysState.name;
+    /* If it's the AFS root no chance it needs revalidating */
+    if (vcp == afs_globalVp)
+	goto good_dentry;
 
-    /* First try looking up the DNLC */
-    if ((lookupvcp = osi_dnlc_lookup(parentvcp, name, WRITE_LOCK))) {
-	/* Verify that the dentry does not point to an old inode */
-	if (vcp != lookupvcp)
+    /* Get a validated vcache entry */
+    credp = crref();
+    code = afs_InitReq(&treq, credp);
+    if (code) {
+	bad_dentry = 2;
+	goto done;
+    }
+    code = afs_VerifyVCache(vcp, &treq);
+    if (code) {
+	bad_dentry = 3;
+	goto done;
+    }
+
+    /* If we aren't the last looker, verify access */
+    if (vcp->last_looker != treq.uid) {
+	if (!afs_AccessOK(vcp, (vType(vcp) == VREG) ? PRSFS_READ : PRSFS_LOOKUP, &treq, CHECK_MODE_BITS)) {
+	    bad_dentry = 5;
 	    goto done;
-	/* Check and correct mvid */
-	if (*name != '/' && vcp->mvstat == 2)
-	    check_bad_parent(dp);
-	vcache2inode(vcp);
-	bad_dentry = 0;
-	goto done;
+	}
+
+	vcp->last_looker = treq.uid;
     }
 
-    /* A DNLC lookup failure cannot be trusted. Try a real lookup. 
-       Make sure to try the real name and not the @sys expansion; 
-       afs_lookup will expand @sys itself. */
-  
-    code = afs_lookup(parentvcp, dp->d_name.name, &lookupvcp, credp);
-
-    /* Verify that the dentry does not point to an old inode */
-    if (vcp != lookupvcp)
-	goto done;
-
+  good_dentry:
     bad_dentry = 0;
 
   done:
     /* Clean up */
-    if (lookupvcp)
-	afs_PutVCache(lookupvcp);
-    if (sysState.allocked)
-	osi_FreeLargeSpace(name);
-
     AFS_GUNLOCK();
-
     if (bad_dentry) {
 	shrink_dcache_parent(dp);
 	d_drop(dp);
     }
-
 #ifdef AFS_LINUX24_ENV
     unlock_kernel();
 #endif
-    crfree(credp);
+    if (credp)
+	crfree(credp);
 
     return !bad_dentry;
 }
@@ -931,17 +940,6 @@ afs_linux_dentry_revalidate(struct dentry *dp)
 static void
 afs_dentry_iput(struct dentry *dp, struct inode *ip)
 {
-    int isglock;
-
-    if (ICL_SETACTIVE(afs_iclSetp)) {
-	isglock = ISAFS_GLOCK();
-	if (!isglock) AFS_GLOCK();
-	afs_Trace3(afs_iclSetp, CM_TRACE_DENTRYIPUT, ICL_TYPE_POINTER, ip,
-		   ICL_TYPE_STRING, dp->d_parent->d_name.name,
-		   ICL_TYPE_STRING, dp->d_name.name);
-	if (!isglock) AFS_GUNLOCK();
-    }
-
     osi_iput(ip);
 }
 #endif
@@ -949,16 +947,6 @@ afs_dentry_iput(struct dentry *dp, struct inode *ip)
 static int
 afs_dentry_delete(struct dentry *dp)
 {
-    int isglock;
-    if (ICL_SETACTIVE(afs_iclSetp)) {
-	isglock = ISAFS_GLOCK();
-	if (!isglock) AFS_GLOCK();
-	afs_Trace3(afs_iclSetp, CM_TRACE_DENTRYDELETE, ICL_TYPE_POINTER,
-		   dp->d_inode, ICL_TYPE_STRING, dp->d_parent->d_name.name,
-		   ICL_TYPE_STRING, dp->d_name.name);
-	if (!isglock) AFS_GUNLOCK();
-    }
-
     if (dp->d_inode && (ITOAFS(dp->d_inode)->states & CUnlinked))
 	return 1;		/* bad inode? */
 
@@ -1835,6 +1823,7 @@ struct inode_operations afs_symlink_iops = {
   .follow_link =	page_follow_link,
 #else
   .follow_link =	page_follow_link_light,
+  .put_link =           page_put_link,
 #endif
   .setattr =		afs_notify_change,
 #else

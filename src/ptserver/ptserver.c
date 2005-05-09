@@ -112,7 +112,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/ptserver/ptserver.c,v 1.21 2004/06/23 14:27:42 shadow Exp $");
+    ("$Header: /cvs/openafs/src/ptserver/ptserver.c,v 1.21.2.1 2005/04/15 19:40:43 shadow Exp $");
 
 #include <afs/stds.h>
 #ifdef	AFS_AIX32_ENV
@@ -162,6 +162,8 @@ extern int afsconf_CheckAuth();
 
 int pr_realmNameLen;
 char *pr_realmName;
+
+int restricted = 0;
 
 static struct afsconf_cell info;
 
@@ -296,6 +298,9 @@ main(int argc, char **argv)
 	    prp_user_default = prp_access_mask(argv[++a]);
 	    prp_group_default = prp_access_mask(argv[++a]);
 	}
+	else if (strncmp(arg, "-restricted", alen) == 0) {
+	    restricted = 1;
+	}
 	else if (strncmp(arg, "-enable_peer_stats", alen) == 0) {
 	    rx_enablePeerRPCStats();
 	} else if (strncmp(arg, "-enable_process_stats", alen) == 0) {
@@ -319,6 +324,7 @@ main(int argc, char **argv)
 		   "[-syslog[=FACILITY]] "
 		   "[-p <number of processes>] [-rebuild] "
 		   "[-groupdepth <depth>] "
+		   "[-restricted] "
 		   "[-enable_peer_stats] [-enable_process_stats] "
 		   "[-default_access default_user_access default_group_access] "
 		   "[-help]\n");
@@ -326,6 +332,7 @@ main(int argc, char **argv)
 	    printf("Usage: ptserver [-database <db path>] "
 		   "[-p <number of processes>] [-rebuild] "
 		   "[-default_access default_user_access default_group_access] "
+		   "[-restricted] "
 		   "[-groupdepth <depth>] " "[-help]\n");
 #endif
 #else
@@ -335,10 +342,12 @@ main(int argc, char **argv)
 		   "[-p <number of processes>] [-rebuild] "
 		   "[-enable_peer_stats] [-enable_process_stats] "
 		   "[-default_access default_user_access default_group_access] "
+		   "[-restricted] "
 		   "[-help]\n");
 #else /* AFS_NT40_ENV */
 	    printf("Usage: ptserver [-database <db path>] "
 		   "[-default_access default_user_access default_group_access] "
+		   "[-restricted] "
 		   "[-p <number of processes>] [-rebuild] " "[-help]\n");
 #endif
 #endif

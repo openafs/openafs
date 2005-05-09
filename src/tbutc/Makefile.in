@@ -24,16 +24,14 @@ VOLSER  = ${srcdir}/../volser
 BUCOORDOBJS=ubik_db_if.o ../bucoord/volstub.o ../bucoord/dlq.o \
 	    status.o ../bucoord/bucoord_errs.o
 
-VOLSERLIBOBJ=../volser/volint.cs.o  vsprocs.o ../volser/vsutils.o \
-            ../volser/lockprocs.o ../volser/volint.xdr.o ../volser/volerr.o \
-            ../volser/volint.ss.o  AFS_component_version_number.o 
-VOLSERLIBS  =libvolser.a
+VOLSEROBJS=vsprocs.o
+VOLSERLIBS=${TOP_LIBDIR}/libvosadmin.a ${TOP_LIBDIR}/libafsadminutil.a
 
 LWPOBJS     =lock.o
 
 BUTCOBJS   =dbentries.o tcprocs.o lwps.o tcmain.o list.o recoverDb.o \
 	    tcudbprocs.o dump.o tcstatus.o butc_xbsa.o \
-            ${LWPOBJS} ${BUCOORDOBJS}
+            ${LWPOBJS} ${BUCOORDOBJS} ${VOLSEROBJS}
 
 BUTCINCLS=${TOP_INCDIR}/afs/partition.h \
 	    ${TOP_INCDIR}/afs/volume.h \
@@ -54,14 +52,12 @@ BUTCLIBS=${TOP_LIBDIR}/libbudb.a \
 	    ${TOP_LIBDIR}/libbubasics.a \
 	    ${VOLSERLIBS} \
             ${BUTMLIBS} \
-	    ${TOP_LIBDIR}/libvldb.a \
 	    ${TOP_LIBDIR}/libafsauthent.a \
 	    ${TOP_LIBDIR}/libafsrpc.a \
             ${TOP_LIBDIR}/libcmd.a \
 	    ${TOP_LIBDIR}/util.a \
 	    ${TOP_LIBDIR}/libusd.a \
-	    ${TOP_LIBDIR}/libprocmgmt.a \
-	    ${TOP_LIBDIR}/librx.a
+	    ${TOP_LIBDIR}/libprocmgmt.a
 
 #
 # Build targets
@@ -71,11 +67,6 @@ all: butc
 
 butc: ${BUTCOBJS} ${BUTCLIBS}
 	${CC} ${CFLAGS} ${BUTCOBJS} ${BUTCLIBS} ${MT_LIBS} ${XLIBS} -o butc
-
-libvolser.a: vsprocs.o ${VOLSERLIBOBJ}
-	-$(RM) -f $@
-	$(AR) crv $@ vsprocs.o ${VOLSERLIBOBJ}
-	$(RANLIB) $@
 
 libbutm.a: ${BUTMOBJS} AFS_component_version_number.o
 	-$(RM) -f libbutm.a

@@ -498,6 +498,10 @@ else
 			AFS_SYSNAME="rs_aix52"
 			enable_pam="no"
 			;;
+		power*-ibm-aix5.3*)
+			AFS_SYSNAME="rs_aix53"
+			enable_pam="no"
+			;;
 		x86_64-*-linux-gnu)
 			AFS_SYSNAME="amd64_linuxXX"
 			enable_pam="no"
@@ -570,6 +574,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_FS_STRUCT_INODE_HAS_I_SB_LIST
 		 LINUX_FS_STRUCT_INODE_HAS_I_SECURITY
 		 LINUX_FS_STRUCT_INODE_HAS_INOTIFY_LOCK
+		 LINUX_FS_STRUCT_INODE_HAS_INOTIFY_SEM
 	  	 LINUX_INODE_SETATTR_RETURN_TYPE
 	  	 LINUX_WRITE_INODE_RETURN_TYPE
 	  	 LINUX_IOP_NAMEIDATA
@@ -691,6 +696,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 fi
 		 if test "x$ac_cv_linux_fs_struct_inode_has_inotify_lock" = "xyes"; then 
 		  AC_DEFINE(STRUCT_INODE_HAS_INOTIFY_LOCK, 1, [define if your struct inode has inotify_lock])
+		 fi
+		 if test "x$ac_cv_linux_fs_struct_inode_has_inotify_sem" = "xyes"; then 
+		  AC_DEFINE(STRUCT_INODE_HAS_INOTIFY_SEM, 1, [define if your struct inode has inotify_sem])
 		 fi
 		 if test "x$ac_cv_linux_func_recalc_sigpending_takes_void" = "xyes"; then 
 		  AC_DEFINE(RECALC_SIGPENDING_TAKES_VOID, 1, [define if your recalc_sigpending takes void])
@@ -1003,6 +1011,7 @@ AC_CHECK_TYPE(ssize_t, int)
 AC_SIZEOF_TYPE(long)
 
 AC_CHECK_FUNCS(timegm)
+AC_CHECK_FUNCS(daemon)
 
 dnl Directory PATH handling
 if test "x$enable_transarc_paths" = "xyes"  ; then 

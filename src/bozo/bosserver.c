@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/bozo/bosserver.c,v 1.23 2003/12/07 22:49:18 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/bozo/bosserver.c,v 1.23.2.3 2005/04/27 01:37:04 shadow Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -580,6 +580,7 @@ tweak_config()
 }
 #endif
 
+#if 0
 /*
  * This routine causes the calling process to go into the background and
  * to lose its controlling tty.
@@ -701,6 +702,7 @@ background(void)
     }
 }
 #endif /* ! AFS_NT40_ENV */
+#endif
 
 /* start a process and monitor it */
 
@@ -718,6 +720,7 @@ main(int argc, char **argv, char **envp)
     char namebuf[AFSDIR_PATH_MAX];
 #ifndef AFS_NT40_ENV
     int nofork = 0;
+    struct stat sb;
 #endif
 #ifdef	AFS_AIX32_ENV
     struct sigaction nsa;
@@ -856,14 +859,21 @@ main(int argc, char **argv, char **envp)
     fflush(stdout);
 #endif
 
-    /* go into the background and remove our controlling tty */
+    /* go into the background and remove our controlling tty, close open 
+       file desriptors
+     */
 
 #ifndef AFS_NT40_ENV
     if (!nofork)
-	background();
+	daemon(1, 0);
 #endif /* ! AFS_NT40_ENV */
 
-    if (!DoSyslog) {
+    if ((!DoSyslog)
+#ifndef AFS_NT40_ENV
+	&& (!(fstat(AFSDIR_BOZLOG_FILE, &sb) == 0) && 
+	(S_ISFIFO(sb.st_mode)))
+#endif
+	) {
 	strcpy(namebuf, AFSDIR_BOZLOG_FILE);
 	strcat(namebuf, ".old");
 	renamefile(AFSDIR_BOZLOG_FILE, namebuf);	/* try rename first */

@@ -41,6 +41,9 @@
 /* Define if you have the connect function.  */
 #undef HAVE_CONNECT
 
+/* Define if you have the daemon function.  */
+#undef HAVE_DAEMON
+
 /* Define if you have the getdtablesize function.  */
 #undef HAVE_GETDTABLESIZE
 
@@ -310,6 +313,9 @@
 
 /* define if your struct inode has inotify_lock */
 #undef STRUCT_INODE_HAS_INOTIFY_LOCK
+
+/* define if your struct inode has inotify_sem */
+#undef STRUCT_INODE_HAS_INOTIFY_SEM
 
 /* define if your recalc_sigpending takes void */
 #undef RECALC_SIGPENDING_TAKES_VOID

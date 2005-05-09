@@ -5,7 +5,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/DARWIN/osi_vnodeops.c,v 1.18.2.3 2005/04/04 04:01:19 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/DARWIN/osi_vnodeops.c,v 1.18.2.4 2005/04/29 01:51:07 shadow Exp $");
 
 #include <afs/sysincludes.h>	/* Standard vendor system headers */
 #include <afsincludes.h>	/* Afs-based standard headers */
@@ -345,9 +345,7 @@ afs_vop_open(ap)
     if (AFSTOV(vc) != vp)
 	panic("AFS open changed vnode!");
 #endif
-#if 0
     osi_FlushPages(vc, ap->a_cred);
-#endif
     AFS_GUNLOCK();
 #ifdef AFS_DARWIN14_ENV
     if (error && didhold)
@@ -373,9 +371,7 @@ afs_vop_close(ap)
 	code = afs_close(avc, ap->a_fflag, ap->a_cred, ap->a_p);
     else
 	code = afs_close(avc, ap->a_fflag, &afs_osi_cred, ap->a_p);
-#if 0
     osi_FlushPages(avc, ap->a_cred);	/* hold bozon lock, but not basic vnode lock */
-#endif
     AFS_GUNLOCK();
 
     return code;
@@ -443,9 +439,7 @@ afs_vop_read(ap)
     struct vnode *vp = ap->a_vp;
     struct vcache *avc = VTOAFS(vp);
     AFS_GLOCK();
-#if 0
     osi_FlushPages(avc, ap->a_cred);	/* hold bozon lock, but not basic vnode lock */
-#endif
     code = afs_read(avc, ap->a_uio, ap->a_cred, 0, 0, 0);
     AFS_GUNLOCK();
     return code;
@@ -521,9 +515,7 @@ afs_vop_pagein(ap)
     auio.uio_resid = aiov.iov_len = size;
     aiov.iov_base = (caddr_t) ioaddr;
     AFS_GLOCK();
-#if 0
     osi_FlushPages(tvc, ap->a_cred);	/* hold bozon lock, but not basic vnode lock */
-#endif
     code = afs_read(tvc, uio, cred, 0, 0, 0);
     if (code == 0) {
 	ObtainWriteLock(&tvc->lock, 2);
@@ -564,9 +556,7 @@ afs_vop_write(ap)
     struct vcache *avc = VTOAFS(ap->a_vp);
     void *object;
     AFS_GLOCK();
-#if 0
     osi_FlushPages(avc, ap->a_cred);	/* hold bozon lock, but not basic vnode lock */
-#endif
     if (UBCINFOEXISTS(ap->a_vp)) {
 	ubc_clean(ap->a_vp, 1);
     }
@@ -709,9 +699,7 @@ afs_vop_pageout(ap)
 #endif /* ] USV */
 
     AFS_GLOCK();
-#if 0
     osi_FlushPages(tvc, ap->a_cred);	/* hold bozon lock, but not basic vnode lock */
-#endif
     ObtainWriteLock(&tvc->lock, 1);
     afs_FakeOpen(tvc);
     ReleaseWriteLock(&tvc->lock);

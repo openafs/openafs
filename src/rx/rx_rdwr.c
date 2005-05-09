@@ -15,7 +15,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_rdwr.c,v 1.21.2.3 2005/04/03 18:15:51 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_rdwr.c,v 1.21.2.4 2005/04/14 02:31:44 shadow Exp $");
 
 #ifdef KERNEL
 #ifndef UKERNEL
@@ -337,11 +337,9 @@ rx_ReadProc(struct rx_call *call, char *buf, int nbytes)
     }
 
     NETPRI;
-    AFS_RXGLOCK();
     MUTEX_ENTER(&call->lock);
     bytes = rxi_ReadProc(call, buf, nbytes);
     MUTEX_EXIT(&call->lock);
-    AFS_RXGUNLOCK();
     USERPRI;
     return bytes;
 }
@@ -396,11 +394,9 @@ rx_ReadProc32(struct rx_call *call, afs_int32 * value)
     }
 
     NETPRI;
-    AFS_RXGLOCK();
     MUTEX_ENTER(&call->lock);
     bytes = rxi_ReadProc(call, (char *)value, sizeof(afs_int32));
     MUTEX_EXIT(&call->lock);
-    AFS_RXGUNLOCK();
     USERPRI;
     return bytes;
 }
@@ -644,11 +640,9 @@ rx_ReadvProc(struct rx_call *call, struct iovec *iov, int *nio, int maxio,
     SPLVAR;
 
     NETPRI;
-    AFS_RXGLOCK();
     MUTEX_ENTER(&call->lock);
     bytes = rxi_ReadvProc(call, iov, nio, maxio, nbytes);
     MUTEX_EXIT(&call->lock);
-    AFS_RXGUNLOCK();
     USERPRI;
     return bytes;
 }
@@ -867,11 +861,9 @@ rx_WriteProc(struct rx_call *call, char *buf, int nbytes)
     }
 
     NETPRI;
-    AFS_RXGLOCK();
     MUTEX_ENTER(&call->lock);
     bytes = rxi_WriteProc(call, buf, nbytes);
     MUTEX_EXIT(&call->lock);
-    AFS_RXGUNLOCK();
     USERPRI;
     return bytes;
 }
@@ -926,11 +918,9 @@ rx_WriteProc32(register struct rx_call *call, register afs_int32 * value)
     }
 
     NETPRI;
-    AFS_RXGLOCK();
     MUTEX_ENTER(&call->lock);
     bytes = rxi_WriteProc(call, (char *)value, sizeof(afs_int32));
     MUTEX_EXIT(&call->lock);
-    AFS_RXGUNLOCK();
     USERPRI;
     return bytes;
 }
@@ -1059,11 +1049,9 @@ rx_WritevAlloc(struct rx_call *call, struct iovec *iov, int *nio, int maxio,
     SPLVAR;
 
     NETPRI;
-    AFS_RXGLOCK();
     MUTEX_ENTER(&call->lock);
     bytes = rxi_WritevAlloc(call, iov, nio, maxio, nbytes);
     MUTEX_EXIT(&call->lock);
-    AFS_RXGUNLOCK();
     USERPRI;
     return bytes;
 }
@@ -1230,11 +1218,9 @@ rx_WritevProc(struct rx_call *call, struct iovec *iov, int nio, int nbytes)
     SPLVAR;
 
     NETPRI;
-    AFS_RXGLOCK();
     MUTEX_ENTER(&call->lock);
     bytes = rxi_WritevProc(call, iov, nio, nbytes);
     MUTEX_EXIT(&call->lock);
-    AFS_RXGUNLOCK();
     USERPRI;
     return bytes;
 }
@@ -1324,10 +1310,8 @@ rx_FlushWrite(struct rx_call *call)
 {
     SPLVAR;
     NETPRI;
-    AFS_RXGLOCK();
     MUTEX_ENTER(&call->lock);
     rxi_FlushWrite(call);
     MUTEX_EXIT(&call->lock);
-    AFS_RXGUNLOCK();
     USERPRI;
 }

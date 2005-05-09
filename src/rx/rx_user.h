@@ -24,14 +24,10 @@ error - foo error - foo error - foo
 #define AFS_GLOCK()
 #define AFS_GUNLOCK()
 #define AFS_ASSERT_GLOCK()
-#define AFS_RXGLOCK()
-#define AFS_RXGUNLOCK()
 #ifndef UKERNEL
 /* Defined in rx/UKERNEL/rx_kmutex.h */
 #define ISAFS_GLOCK()
-#define ISAFS_RXGLOCK()
 #endif
-#define AFS_ASSERT_RXGLOCK()
 /* Some "operating-system independent" stuff, for the user mode implementation */
 #ifdef UAFS_CLIENT
 typedef void *osi_socket;

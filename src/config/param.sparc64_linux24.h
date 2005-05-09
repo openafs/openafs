@@ -57,8 +57,8 @@
 #ifdef AFS_SMP
 #define CONFIG_SMP 1
 #define __SMP__
-#define AFS_GLOBAL_SUNLOCK
 #endif
+#define AFS_GLOBAL_SUNLOCK
 
 #endif /* __KERNEL__  && !DUMP_KERNEL */
 #include <afs/afs_sysnames.h>
@@ -74,6 +74,7 @@
 #define AFS_HAVE_FFS        1	/* Use system's ffs. */
 #define AFS_HAVE_STATVFS    0	/* System doesn't support statvfs */
 #define AFS_VM_RDWR_ENV	    1	/* read/write implemented via VM */
+#define AFS_USE_GETTIMEOFDAY       1	/* use gettimeofday to implement rx clock */
 
 
 #ifdef KERNEL

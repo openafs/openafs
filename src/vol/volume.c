@@ -20,7 +20,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vol/volume.c,v 1.35.2.2 2004/12/13 19:41:10 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vol/volume.c,v 1.35.2.3 2005/04/14 02:00:36 shadow Exp $");
 
 #include <rx/xdr.h>
 #include <afs/afsint.h>
@@ -325,6 +325,7 @@ VInitVolumePackage(ProgramType pt, int nLargeVnodes, int nSmallVnodes,
     if (programType == volumeUtility && connect) {
 	if (!VConnectFS()) {
 	    Log("Unable to connect to file server; aborted\n");
+	    Lock_Destroy(&FSYNC_handler_lock);
 	    exit(1);
 	}
     }

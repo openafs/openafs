@@ -15,7 +15,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_misc.c,v 1.34.2.5 2005/03/11 06:50:41 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_misc.c,v 1.34.2.8 2005/04/28 03:11:51 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
@@ -110,12 +110,12 @@ int
 osi_InitCacheInfo(char *aname)
 {
     int code;
-    struct dentry *dp,*dpp;
+    struct dentry *dp;
     extern ino_t cacheInode;
     extern struct osi_dev cacheDev;
     extern afs_int32 afs_fsfragsize;
     extern struct super_block *afs_cacheSBp;
-    extern struct vfsmnt *afs_cacheMnt;
+    extern struct vfsmount *afs_cacheMnt;
     code = osi_lookupname_internal(aname, 1, &afs_cacheMnt, &dp);
     if (code)
 	return ENOENT;
@@ -135,59 +135,21 @@ osi_InitCacheInfo(char *aname)
 #define FOP_WRITE(F, B, C) (F)->f_op->write(F, B, (size_t)(C), &(F)->f_pos)
 
 /* osi_rdwr
- * Seek, then read or write to an open inode. addrp points to data in
+ * seek, then read or write to an open inode. addrp points to data in
  * kernel space.
  */
 int
-osi_rdwr(int rw, struct osi_file *file, caddr_t addrp, size_t asize,
-	 size_t * resid)
+osi_rdwr(struct osi_file *osifile, uio_t * uiop, int rw)
 {
-    int code = 0;
-    KERNEL_SPACE_DECL;
-    struct file *filp = &file->file;
-    off_t offset = file->offset;
-    unsigned long savelim;
-
-    /* Seek to the desired position. Return -1 on error. */
-    if (filp->f_op->llseek) {
-	if (filp->f_op->llseek(filp, (loff_t) offset, 0) != offset)
-	    return -1;
-    } else
-	filp->f_pos = offset;
-
-    savelim = current->TASK_STRUCT_RLIM[RLIMIT_FSIZE].rlim_cur;
-    current->TASK_STRUCT_RLIM[RLIMIT_FSIZE].rlim_cur = RLIM_INFINITY;
-
-    /* Read/Write the data. */
-    TO_USER_SPACE();
-    if (rw == UIO_READ)
-	code = FOP_READ(filp, addrp, asize);
-    else if (rw == UIO_WRITE)
-	code = FOP_WRITE(filp, addrp, asize);
-    else			/* all is well? */
-	code = asize;
-    TO_KERNEL_SPACE();
-
-    current->TASK_STRUCT_RLIM[RLIMIT_FSIZE].rlim_cur = savelim;
-
-    if (code >= 0) {
-	*resid = asize - code;
-	return 0;
-    } else
-	return -1;
-}
-
-/* This variant is called from AFS read/write routines and takes a uio
- * struct and, if successful, returns 0.
- */
-int
-osi_file_uio_rdwr(struct osi_file *osifile, uio_t * uiop, int rw)
-{
+#ifdef AFS_LINUX24_ENV
+    struct file *filp = osifile->filp;
+#else
     struct file *filp = &osifile->file;
+#endif
     KERNEL_SPACE_DECL;
     int code = 0;
     struct iovec *iov;
-    int count;
+    afs_size_t count;
     unsigned long savelim;
 
     savelim = current->TASK_STRUCT_RLIM[RLIMIT_FSIZE].rlim_cur;
@@ -196,7 +158,13 @@ osi_file_uio_rdwr(struct osi_file *osifile, uio_t * uiop, int rw)
     if (uiop->uio_seg == AFS_UIOSYS)
 	TO_USER_SPACE();
 
-    filp->f_pos = uiop->uio_offset;
+    /* seek to the desired position. Return -1 on error. */
+    if (filp->f_op->llseek) {
+	if (filp->f_op->llseek(filp, (loff_t) uiop->uio_offset, 0) != uiop->uio_offset)
+	    return -1;
+    } else
+	filp->f_pos = uiop->uio_offset;
+
     while (code == 0 && uiop->uio_resid > 0 && uiop->uio_iovcnt > 0) {
 	iov = uiop->uio_iov;
 	count = iov->iov_len;

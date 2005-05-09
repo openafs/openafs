@@ -50,8 +50,8 @@
 #ifndef __SMP__
 #define __SMP__
 #endif
-#define AFS_GLOBAL_SUNLOCK
 #endif
+#define AFS_GLOBAL_SUNLOCK
 
 #if defined(MODULE) && defined(CONFIG_MODVERSIONS)
 #define MODVERSIONS
@@ -72,6 +72,7 @@
 #define AFS_HAVE_FFS        1	/* Use system's ffs. */
 #define AFS_HAVE_STATVFS    0	/* System doesn't support statvfs */
 #define AFS_VM_RDWR_ENV	    1	/* read/write implemented via VM */
+#define AFS_USE_GETTIMEOFDAY       1	/* use gettimeofday to implement rx clock */
 
 #ifdef KERNEL
 #ifndef MIN
@@ -149,6 +150,7 @@
 #define AFS_HAVE_FFS        1	/* Use system's ffs. */
 #define AFS_HAVE_STATVFS    0	/* System doesn't support statvfs */
 #define AFS_VM_RDWR_ENV	    1	/* read/write implemented via VM */
+#define AFS_USE_GETTIMEOFDAY       1	/* use gettimeofday to implement rx clock */
 
 #define	afsio_iov	uio_iov
 #define	afsio_iovcnt	uio_iovcnt
