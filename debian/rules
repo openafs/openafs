@@ -45,12 +45,13 @@ configure-stamp:
 	dh_testdir
 	-ln -s @sys/dest dest
 	-ln -s $(SYS_NAME) @sys
-	afslogsdir=/var/log/openafs sh configure \
+	afslogsdir=/var/log/openafs afslocaldir=/etc/openafs/server-local \
+	    sh configure \
 	    --with-afs-sysname=$(SYS_NAME) --disable-kernel-module \
 	    --prefix=/usr --sysconfdir=/etc --libexecdir=/usr/lib \
-	    --localstatedir=/var/lib  afslocaldir=/etc/openafs/server-local \
-	    --enable-supergroups --enable-largefile-fileserver \
-	    --enable-debug --enable-lwp-debug $(DEBIAN_OPT_FLAGS)
+	    --localstatedir=/var/lib --enable-supergroups \
+	    --enable-largefile-fileserver --enable-debug --enable-lwp-debug \
+	    $(DEBIAN_OPT_FLAGS)
 	chmod a+x src/libafs/make_kbuild_makefile.pl         
 	install -d $(SYS_NAME)/dest/root.client/usr/vice/etc
 	install -d dest/root.server/usr/afs/bin
