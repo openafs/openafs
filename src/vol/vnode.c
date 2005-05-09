@@ -17,7 +17,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vol/vnode.c,v 1.19.2.1 2004/08/25 07:14:19 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vol/vnode.c,v 1.19.2.2 2005/04/24 14:21:36 shadow Exp $");
 
 #include <errno.h>
 #include <stdio.h>
@@ -428,6 +428,7 @@ VAllocVnode_r(Error * ec, Volume * vp, VnodeType type)
     vnp->disk.uniquifier = unique;
     vnp->handle = NULL;
     vcp->allocs++;
+    vp->header->diskstuff.filecount++;
     return vnp;
 }
 
@@ -760,6 +761,8 @@ VPutVnode_r(Error * ec, register Vnode * vnp)
 		 * (doing so could cause a "addled bitmap" message).
 		 */
 		if (vnp->delete && !*ec) {
+		    if (vnp->volumePtr->header->diskstuff.filecount-- < 1)
+			vnp->volumePtr->header->diskstuff.filecount = 0;
 		    VFreeBitMapEntry_r(ec, &vp->vnodeIndex[class],
 				       vnodeIdToBitNumber(vnp->vnodeNumber));
 		}

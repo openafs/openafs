@@ -4,7 +4,7 @@
 # This software has been released under the terms of the IBM Public
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
-# $Header: /cvs/openafs/src/libafs/MakefileProto.DARWIN.in,v 1.21 2004/08/08 23:12:57 shadow Exp $
+# $Header: /cvs/openafs/src/libafs/MakefileProto.DARWIN.in,v 1.21.2.1 2005/04/19 16:03:07 shadow Exp $
 # 
 # MakefileProto for Digital Unix systems
 #
@@ -40,7 +40,7 @@ KOPTS=-no-cpp-precomp -static -fno-common -finline -fno-keep-inline-functions -f
 <ppc_darwin_14 ppc_darwin_13 ppc_darwin_12>
 KOPTS=-no-precomp -static -fno-common -finline -fno-keep-inline-functions -force_cpusubtype_ALL -msoft-float -mlong-branch 
 <all>
-CFLAGS=-I. -I.. -I${TOP_OBJDIR}/src/config ${KINCLUDES} $(DEFINES) $(KDEFS) $(KOPTS) ${DBUG} ${OPTMZ}
+CFLAGS=${KINCLUDES} -I. -I.. -I${TOP_OBJDIR}/src/config $(DEFINES) $(KDEFS) $(KOPTS) ${DBUG} ${OPTMZ}
 KINCLUDES=-I${KROOT}/System/Library/Frameworks/Kernel.Framework/Headers
 
 

@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vlserver/vlprocs.c,v 1.13 2003/11/29 21:38:04 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/vlserver/vlprocs.c,v 1.13.2.1 2005/04/27 01:37:06 shadow Exp $");
 
 #include <sys/types.h>
 #include <stdio.h>
@@ -1952,7 +1952,7 @@ SVL_GetAddrs(rxcall, Handle, spare2, spare3, nentries, addrsp)
     return (ubik_EndTrans(trans));
 }
 
-#define PADDR(addr) printf("%d.%d.%d.%d", (addr>>24)&0xff, (addr>>16)&0xff, (addr>>8) &0xff, addr&0xff);
+#define PADDR(addr) VLog(0,("%d.%d.%d.%d", (addr>>24)&0xff, (addr>>16)&0xff, (addr>>8) &0xff, addr&0xff));
 
 afs_int32
 SVL_RegisterAddrs(rxcall, uuidp, spare1, addrsp)
@@ -2087,18 +2087,18 @@ SVL_RegisterAddrs(rxcall, uuidp, spare1, addrsp)
 	|| (!foundUuidEntry && (count > 1))) {
 	VLog(0,
 	     ("The following fileserver is being registered in the VLDB:\n"));
-	printf("      [");
+	VLog(0, ("      ["));
 	for (k = 0; k < cnt; k++) {
 	    if (k > 0)
-		printf(" ");
+		VLog(0,(" "));
 	    PADDR(addrs[k]);
 	}
-	printf("]\n");
+	VLog(0,("]\n"));
 
 	if (foundUuidEntry) {
-	    printf
-		("   It would have replaced the existing VLDB server entry:\n");
-	    printf("      entry %d: [", FoundUuid);
+	    VLog(0,
+		 ("   It would have replaced the existing VLDB server entry:\n"));
+	    VLog(0, ("      entry %d: [", FoundUuid));
 	    base = (HostAddress[FoundUuid] >> 16) & 0xff;
 	    index = HostAddress[FoundUuid] & 0x0000ffff;
 	    exp = &ex_addr[base][index];
@@ -2106,21 +2106,21 @@ SVL_RegisterAddrs(rxcall, uuidp, spare1, addrsp)
 		if (!exp->ex_addrs[mhidx])
 		    continue;
 		if (mhidx > 0)
-		    printf(" ");
+		    VLog(0,(" "));
 		PADDR(ntohl(exp->ex_addrs[mhidx]));
 	    }
-	    printf("]\n");
+	    VLog(0, ("]\n"));
 	}
 
 	if (count == 1)
-	    printf("   Yet another VLDB server entry exists:\n");
+	    VLog(0, ("   Yet another VLDB server entry exists:\n"));
 	else
-	    printf("   Yet other VLDB server entries exist:\n");
+	    VLog(0, ("   Yet other VLDB server entries exist:\n"));
 	for (j = 0; j < count; j++) {
 	    srvidx = WillChange[j];
-	    printf("      entry %d: ", srvidx);
+	    VLog(0, ("      entry %d: ", srvidx));
 	    if ((HostAddress[srvidx] & 0xff000000) == 0xff000000) {
-		printf("[");
+		VLog(0, ("["));
 		base = (HostAddress[srvidx] >> 16) & 0xff;
 		index = HostAddress[srvidx] & 0x0000ffff;
 		exp = &ex_addr[base][index];
@@ -2128,25 +2128,25 @@ SVL_RegisterAddrs(rxcall, uuidp, spare1, addrsp)
 		    if (!exp->ex_addrs[mhidx])
 			continue;
 		    if (mhidx > 0)
-			printf(" ");
+			VLog(0, (" "));
 		    PADDR(ntohl(exp->ex_addrs[mhidx]));
 		}
-		printf("]");
+		VLog(0, ("]"));
 	    } else {
 		PADDR(HostAddress[srvidx]);
 	    }
-	    printf("\n");
+	    VLog(0, ("\n"));
 	}
 
 	if (count == 1)
-	    printf("   You must 'vos changeaddr' this other server entry\n");
+	    VLog(0, ("   You must 'vos changeaddr' this other server entry\n"));
 	else
-	    printf
-		("   You must 'vos changeaddr' these other server entries\n");
+	    VLog(0, 
+		("   You must 'vos changeaddr' these other server entries\n"));
 	if (foundUuidEntry)
-	    printf
-		("   and/or remove the sysid file from the registering fileserver\n");
-	printf("   before the fileserver can be registered in the VLDB.\n");
+	    VLog(0, 
+		("   and/or remove the sysid file from the registering fileserver\n"));
+	VLog(0, ("   before the fileserver can be registered in the VLDB.\n"));
 
 	ubik_AbortTrans(trans);
 	return VL_MULTIPADDR;
@@ -2178,26 +2178,26 @@ SVL_RegisterAddrs(rxcall, uuidp, spare1, addrsp)
     }
 
     VLog(0, ("The following fileserver is being registered in the VLDB:\n"));
-    printf("      [");
+    VLog(0, ("      ["));
     for (k = 0; k < cnt; k++) {
 	if (k > 0)
-	    printf(" ");
+	    VLog(0, (" "));
 	PADDR(addrs[k]);
     }
-    printf("]\n");
+    VLog(0, ("]\n"));
 
     if (foundUuidEntry) {
-	printf
-	    ("   It will replace the following existing entry in the VLDB (same uuid):\n");
-	printf("      entry %d: [", FoundUuid);
+	VLog(0, 
+	    ("   It will replace the following existing entry in the VLDB (same uuid):\n"));
+	VLog(0, ("      entry %d: [", FoundUuid));
 	for (k = 0; k < VL_MAXIPADDRS_PERMH; k++) {
 	    if (exp->ex_addrs[k] == 0)
 		continue;
 	    if (k > 0)
-		printf(" ");
+		VLog(0, (" "));
 	    PADDR(ntohl(exp->ex_addrs[k]));
 	}
-	printf("]\n");
+	VLog(0, ("]\n"));
     } else if (willReplaceCnt || (count == 1)) {
 	/* If we are not replacing an entry and there is only one entry to change,
 	 * then we will replace that entry.
@@ -2213,24 +2213,24 @@ SVL_RegisterAddrs(rxcall, uuidp, spare1, addrsp)
 	    index = HostAddress[ReplaceEntry] & 0x0000ffff;
 	    exp = &ex_addr[fbase][index];
 
-	    printf
-		("   It will replace the following existing entry in the VLDB (new uuid):\n");
-	    printf("      entry %d: [", ReplaceEntry);
+	    VLog(0, 
+		("   It will replace the following existing entry in the VLDB (new uuid):\n"));
+	    VLog(0, ("      entry %d: [", ReplaceEntry));
 	    for (k = 0; k < VL_MAXIPADDRS_PERMH; k++) {
 		if (exp->ex_addrs[k] == 0)
 		    continue;
 		if (k > 0)
-		    printf(" ");
+		    VLog(0, (" "));
 		PADDR(ntohl(exp->ex_addrs[k]));
 	    }
-	    printf("]\n");
+	    VLog(0, ("]\n"));
 	} else {
 	    /* Not a mh entry. So we have to create a new mh entry and 
 	     * put it on the ReplaceEntry slot of the HostAddress array.
 	     */
-	    printf("   It will replace existing entry %d, ", ReplaceEntry);
+	    VLog(0, ("   It will replace existing entry %d, ", ReplaceEntry));
 	    PADDR(HostAddress[ReplaceEntry]);
-	    printf(", in the VLDB (new uuid):\n");
+	    VLog(0,(", in the VLDB (new uuid):\n"));
 
 	    code =
 		FindExtentBlock(trans, uuidp, 1, ReplaceEntry, &exp, &fbase);
@@ -2243,7 +2243,7 @@ SVL_RegisterAddrs(rxcall, uuidp, spare1, addrsp)
 	/* There is no entry for this server, must create a new mh entry as
 	 * well as use a new slot of the HostAddress array.
 	 */
-	printf("   It will create a new entry in the VLDB.\n");
+	VLog(0, ("   It will create a new entry in the VLDB.\n"));
 	code = FindExtentBlock(trans, uuidp, 1, -1, &exp, &fbase);
 	if (code || !exp) {
 	    ubik_AbortTrans(trans);
@@ -2291,10 +2291,10 @@ SVL_RegisterAddrs(rxcall, uuidp, spare1, addrsp)
 	tex = &ex_addr[fbase][index];
 
 	if (++m == 1)
-	    printf
-		("   The following existing entries in the VLDB will be updated:\n");
+	    VLog(0, 
+		("   The following existing entries in the VLDB will be updated:\n"));
 
-	printf("      entry %d: [", WillChange[i]);
+	VLog(0, ("      entry %d: [", WillChange[i]));
 	for (h = j = 0; j < VL_MAXIPADDRS_PERMH; j++) {
 	    if (tex->ex_addrs[j]) {
 		if (j > 0)
@@ -2315,7 +2315,7 @@ SVL_RegisterAddrs(rxcall, uuidp, spare1, addrsp)
 	for (j = h; j < VL_MAXIPADDRS_PERMH; j++) {
 	    tex->ex_addrs[j] = 0;	/* zero rest of mh entry */
 	}
-	printf("]\n");
+	VLog(0, ("]\n"));
 
 	/* Write out the modified mh entry */
 	tex->ex_uniquifier = htonl(ntohl(tex->ex_uniquifier) + 1);
@@ -3212,25 +3212,25 @@ ChangeIPAddr(ipaddr1, ipaddr2, atrans)
     VLog(0,
 	 ("The following IP address is being %s:\n",
 	  (ipaddr2 ? "changed" : "removed")));
-    printf("      entry %d: ", i);
+    VLog(0, ("      entry %d: ", i));
     if (exp) {
-	printf("[");
+	VLog(0, ("["));
 	for (mhidx = 0; mhidx < VL_MAXIPADDRS_PERMH; mhidx++) {
 	    if (!exp->ex_addrs[mhidx])
 		continue;
 	    if (mhidx > 0)
-		printf(" ");
+		VLog(0, (" "));
 	    PADDR(ntohl(exp->ex_addrs[mhidx]));
 	}
-	printf("]");
+	VLog(0, ("]"));
     } else {
 	PADDR(ipaddr1);
     }
     if (ipaddr2) {
-	printf(" -> ");
+	VLog(0, (" -> "));
 	PADDR(ipaddr2);
     }
-    printf("\n");
+    VLog(0, ("\n"));
 
     /* Change the registered uuuid addresses */
     if (exp) {

@@ -36,6 +36,8 @@ extern int traceOnPanic;
 extern void afsd_DbgBreakAllocInit();
 extern void afsd_DbgBreakAdd(DWORD requestNumber);
 
+HANDLE WaitToTerminate = NULL;
+
 /*
  * Notifier function for use by osi_panic
  */

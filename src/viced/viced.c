@@ -20,7 +20,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/viced/viced.c,v 1.58.2.3 2005/02/24 15:23:41 shadow Exp $");
+    ("$Header: /cvs/openafs/src/viced/viced.c,v 1.58.2.4 2005/04/15 18:25:01 shadow Exp $");
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -1475,7 +1475,7 @@ Do_VLRegisterRPC()
     if (code) {
 	if (code == VL_MULTIPADDR) {
 	    ViceLog(0,
-		    ("VL_RegisterAddrs rpc failed; The ethernet address exist on a different server; repair it\n"));
+		    ("VL_RegisterAddrs rpc failed; The IP address exists on a different server; repair it\n"));
 	    ViceLog(0,
 		    ("VL_RegisterAddrs rpc failed; See VLLog for details\n"));
 	    return code;

@@ -4,6 +4,7 @@
             Description="$(loc.StrAFSProdDesc)" Display="expand" InstallDefault="local" Level="30"
             Title="OpenAFS">
            <ComponentRef Id="efl_desktop_INI" />
+           <ComponentRef Id="efl_replace_afs_CMD" />
             <Feature Id="feaClient" AllowAdvertise="no" Description="$(loc.StrAFSClientLongDesc)" Display="expand"
                 InstallDefault="followParent" Level="30" Title="$(loc.StrAFSClientDesc)">
                 

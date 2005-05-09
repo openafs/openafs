@@ -1,4 +1,4 @@
-/* $Id: pt_util.c,v 1.9 2004/06/23 14:27:41 shadow Exp $ */
+/* $Id: pt_util.c,v 1.9.2.1 2005/04/15 19:40:43 shadow Exp $ */
 
 /*
  *
@@ -23,7 +23,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/ptserver/pt_util.c,v 1.9 2004/06/23 14:27:41 shadow Exp $");
+    ("$Header: /cvs/openafs/src/ptserver/pt_util.c,v 1.9.2.1 2005/04/15 19:40:43 shadow Exp $");
 
 #include <afs/cmd.h>		/*Command line parsing */
 #include <errno.h>
@@ -44,6 +44,7 @@ RCSID
 extern char *optarg;
 extern int optind;
 
+int restricted = 0;
 int display_entry();
 void add_group();
 void display_groups();

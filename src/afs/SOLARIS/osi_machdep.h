@@ -74,10 +74,6 @@ extern kmutex_t afs_rxglobal_lock;
 #define AFS_GLOCK()	mutex_enter(&afs_global_lock);
 #define AFS_GUNLOCK()	mutex_exit(&afs_global_lock);
 #define ISAFS_GLOCK()	mutex_owned(&afs_global_lock)
-
-#define AFS_RXGLOCK()
-#define AFS_RXGUNLOCK()
-#define ISAFS_RXGLOCK() 1
 #endif
 
 

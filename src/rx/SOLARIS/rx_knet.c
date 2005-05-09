@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/SOLARIS/rx_knet.c,v 1.19 2004/07/28 22:34:13 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/SOLARIS/rx_knet.c,v 1.19.2.1 2005/04/15 18:37:19 shadow Exp $");
 
 #ifdef AFS_SUN5_ENV
 #include "rx/rx_kcommon.h"
@@ -221,7 +221,7 @@ rxi_FindIfMTU(afs_uint32 addr)
 struct sockaddr_in rx_sockaddr;
 
 /* Allocate a new socket at specified port in network byte order. */
-struct osi_socket *
+osi_socket *
 rxk_NewSocketHost(afs_uint32 ahost, short aport)
 {
     vnode_t *accessvp;
@@ -315,17 +315,17 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
 	return NULL;
     }
 
-    return (struct osi_socket *)so;
+    return (osi_socket *)so;
 }
 
-struct osi_socket *
+osi_socket *
 rxk_NewSocket(short aport)
 {
     return rxk_NewSocketHost(htonl(INADDR_ANY), aport);
 }
 
 int
-osi_FreeSocket(register struct osi_socket *asocket)
+osi_FreeSocket(register osi_socket *asocket)
 {
     extern int rxk_ListenerPid;
     struct sonode *so = (struct sonode *)asocket;
@@ -509,7 +509,7 @@ rxi_GetIFInfo()
 dev_t afs_udp_rdev = (dev_t) 0;
 
 /* Allocate a new socket at specified port in network byte order. */
-struct osi_socket *
+osi_socket *
 rxk_NewSocketHost(afs_uint32 ahost, short aport)
 {
     TIUSER *udp_tiptr;
@@ -523,7 +523,7 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
     afs_udp_rdev = makedevice(11 /*CLONE*/, ddi_name_to_major("udp"));
     code = t_kopen(NULL, afs_udp_rdev, FREAD | FWRITE, &udp_tiptr, CRED());
     if (code) {
-	return (struct osi_socket *)0;
+	return (osi_socket *)0;
     }
 
     code = t_kalloc(udp_tiptr, T_BIND, T_ADDR, (char **)&reqp);
@@ -534,7 +534,7 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
     if (code) {
 	t_kfree(udp_tiptr, (char *)reqp, T_BIND);
 	t_kclose(udp_tiptr, 0);
-	return (struct osi_socket *)0;
+	return (osi_socket *)0;
     }
 
     reqp->addr.len = sizeof(struct sockaddr_in);
@@ -548,13 +548,13 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
 	t_kfree(udp_tiptr, (char *)reqp, T_BIND);
 	t_kfree(udp_tiptr, (char *)rspp, T_BIND);
 	t_kclose(udp_tiptr, 0);
-	return (struct osi_socket *)0;
+	return (osi_socket *)0;
     }
     if (memcmp(reqp->addr.buf, rspp->addr.buf, rspp->addr.len)) {
 	t_kfree(udp_tiptr, (char *)reqp, T_BIND);
 	t_kfree(udp_tiptr, (char *)rspp, T_BIND);
 	t_kclose(udp_tiptr, 0);
-	return (struct osi_socket *)0;
+	return (osi_socket *)0;
     }
     t_kfree(udp_tiptr, (char *)reqp, T_BIND);
     t_kfree(udp_tiptr, (char *)rspp, T_BIND);
@@ -568,17 +568,17 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
     q->q_next->q_hiwat = rx_UdpBufSize;
     RD(q)->q_hiwat = rx_UdpBufSize;
 
-    return (struct osi_socket *)udp_tiptr;
+    return (osi_socket *)udp_tiptr;
 }
 
-struct osi_socket *
+osi_socket *
 rxk_NewSocket(short aport)
 {
     return rxk_NewSocketHost(htonl(INADDR_ANY), aport);
 }
 
 int
-osi_FreeSocket(register struct osi_socket *asocket)
+osi_FreeSocket(register osi_socket *asocket)
 {
     extern int rxk_ListenerPid;
     TIUSER *udp_tiptr = (TIUSER *) asocket;
@@ -681,7 +681,7 @@ osi_NetSend(osi_socket asocket, struct sockaddr_in *addr, struct iovec *dvec,
 
 
 int
-osi_NetReceive(struct osi_socket *asocket, struct sockaddr_in *addr,
+osi_NetReceive(osi_socket *asocket, struct sockaddr_in *addr,
 	       struct iovec *dvec, int nvecs, int *alength)
 {
     int i;

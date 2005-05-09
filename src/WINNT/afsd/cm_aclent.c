@@ -37,17 +37,20 @@ static void CleanupACLEnt(cm_aclent_t * aclp)
     cm_aclent_t **laclpp;
         
     if (aclp->backp) {
-        /* 
-         * Remove the entry from the vnode's list 
-         */
-        laclpp = &aclp->backp->randomACLp;
-        for (taclp = *laclpp; taclp; laclpp = &taclp->nextp, taclp = *laclpp) {
-            if (taclp == aclp) 
-                break;
+        if (aclp->backp->randomACLp) {
+            /* 
+             * Remove the entry from the vnode's list 
+             */
+            lock_AssertMutex(&aclp->backp->mx);
+            laclpp = &aclp->backp->randomACLp;
+            for (taclp = *laclpp; taclp; laclpp = &taclp->nextp, taclp = *laclpp) {
+                if (taclp == aclp) 
+                    break;
+            }
+            if (!taclp) 
+                osi_panic("CleanupACLEnt race", __FILE__, __LINE__);
+            *laclpp = aclp->nextp;			/* remove from vnode list */
         }
-        if (!taclp) 
-            osi_panic("CleanupACLEnt race", __FILE__, __LINE__);
-        *laclpp = aclp->nextp;			/* remove from vnode list */
         aclp->backp = NULL;
     }
 
@@ -110,10 +113,11 @@ long cm_FindACLCache(cm_scache_t *scp, cm_user_t *userp, long *rightsp)
  * This function returns a free (not in the LRU queue) acl cache entry.
  * It must be called with the cm_aclLock lock held
  */
-static cm_aclent_t *GetFreeACLEnt(void)
+static cm_aclent_t *GetFreeACLEnt(cm_scache_t * scp)
 {
     cm_aclent_t *aclp;
-
+    cm_scache_t *ascp = 0;
+	
     if (cm_data.aclLRUp == NULL)
         osi_panic("empty aclent LRU", __FILE__, __LINE__);
 
@@ -121,8 +125,14 @@ static cm_aclent_t *GetFreeACLEnt(void)
     cm_data.aclLRUEndp = (cm_aclent_t *) osi_QPrev(&aclp->q);
     osi_QRemove((osi_queue_t **) &cm_data.aclLRUp, &aclp->q);
 
+    if (aclp->backp && scp != aclp->backp) {
+        ascp = aclp->backp;
+        lock_ObtainMutex(&ascp->mx);
+    }
     CleanupACLEnt(aclp);
 
+    if (ascp)
+        lock_ReleaseMutex(&ascp->mx);
     return aclp;
 }
 
@@ -153,7 +163,7 @@ long cm_AddACLCache(cm_scache_t *scp, cm_user_t *userp, long rights)
      * and  reuse. But first try the free list and see if there's already 
      * someone there.
      */
-    aclp = GetFreeACLEnt();		 /* can't fail, panics instead */
+    aclp = GetFreeACLEnt(scp);		 /* can't fail, panics instead */
     osi_QAddH((osi_queue_t **) &cm_data.aclLRUp, (osi_queue_t **) &cm_data.aclLRUEndp, &aclp->q);
     aclp->backp = scp;
     aclp->nextp = scp->randomACLp;

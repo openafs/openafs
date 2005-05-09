@@ -433,6 +433,19 @@ case $AFS_SYSNAME in
 		EXTRA_VLIBOBJS="fstab.o"
 		;;
 
+	ppc_darwin_80)
+		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration"
+		LEX="lex -l"
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -D_REENTRANT ${XCFLAGS}'
+		KROOT=
+		KINCLUDES='-I$(KROOT)/System/Library/Frameworks/Kernel.framework/Headers'
+		LWP_OPTMZ="-O2"
+		REGEX_OBJ="regex.o"
+		XCFLAGS="-no-cpp-precomp"
+		TXLIBS="-lncurses"
+		EXTRA_VLIBOBJS="fstab.o"
+		;;
+
 	ppc_linux*)
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
@@ -491,6 +504,22 @@ case $AFS_SYSNAME in
 		SHLIB_LINKER="${MT_CC} -bM:SRE -berok"
 		AIX64=""
 		;;
+
+	rs_aix53)	
+		DBG="-g"
+		LEX="lex"
+		LIBSYS_AIX_EXP="afsl.exp"
+		MT_CC="xlc_r"
+		MT_CFLAGS='-DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_LIBS="-lpthreads"
+		SHLIB_SUFFIX="o"
+		TXLIBS="-lcurses"
+		XCFLAGS="-K -D_NO_PROTO -D_NONSTD_TYPES -D_MBI=void"
+		XLIBS="${LIB_AFSDB} -ldl"
+		SHLIB_LINKER="${MT_CC} -bM:SRE -berok"
+		AIX64=""
+		;;
+
 	s390_linux22)
 		CC="gcc"
 		CCOBJ="gcc"
@@ -535,7 +564,7 @@ case $AFS_SYSNAME in
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
 		PAM_CFLAGS="-O -Dlinux -DLINUX_PAM -fPIC"
-		SHLIB_LDFLAGS="-shared -Xlinker -x"
+		SHLIB_LDFLAGS="-shared -Xlinker -x -Xlinker -Bsymbolic"
 		TXLIBS="-lncurses"
 		XCFLAGS="-O -g -D_LARGEFILE64_SOURCE -D__s390x__"
 		YACC="bison -y"

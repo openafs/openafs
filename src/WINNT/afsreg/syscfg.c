@@ -64,7 +64,7 @@ int syscfg_GetIFInfo(int *count, int *addrs, int *masks, int *mtus, int *flags)
 
     hIpHlp = LoadLibrary("iphlpapi");
     if (hIpHlp != NULL) {
-        (FARPROC) pGetAdaptersAddresses = GetProcAddress(hIpHlp, "GetAdaptersAddressess");
+        (FARPROC) pGetAdaptersAddresses = GetProcAddress(hIpHlp, "GetAdaptersAddresses");
         if (pGetAdaptersAddresses == NULL)
             FreeLibrary(hIpHlp);
     }
@@ -171,7 +171,7 @@ int syscfg_GetIFInfo(int *count, int *addrs, int *masks, int *mtus, int *flags)
     }
 
   done:
-    CloseHandle(hIpHlp);
+    FreeLibrary(hIpHlp);
     return nConfig;
 }
 

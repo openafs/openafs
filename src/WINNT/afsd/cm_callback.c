@@ -1499,6 +1499,7 @@ void cm_EndCallbackGrantingCall(cm_scache_t *scp, cm_callbackRequest_t *cbrp,
     cm_racingRevokes_t *nrevp;		/* where we'll be next */
     int freeFlag;
     cm_server_t * serverp = 0;
+    int discardScp = 0;
 
     lock_ObtainWrite(&cm_callbackLock);
     if (flags & CM_CALLBACK_MAINTAINCOUNT) {
@@ -1561,16 +1562,7 @@ void cm_EndCallbackGrantingCall(cm_scache_t *scp, cm_callbackRequest_t *cbrp,
                       scp,
                       cbrp->callbackCount, revp->callbackCount,
                       cm_callbackCount);
-            cm_DiscardSCache(scp);
-            /*
-             * Since we don't have a callback to preserve, it's
-             * OK to drop the lock and re-obtain it.
-             */
-            lock_ReleaseMutex(&scp->mx);
-            lock_ReleaseWrite(&cm_callbackLock);
-            cm_CallbackNotifyChange(scp);
-            lock_ObtainMutex(&scp->mx);
-            lock_ObtainWrite(&cm_callbackLock);
+            discardScp = 1;
         }
         if (freeFlag) 
             free(revp);
@@ -1581,6 +1573,13 @@ void cm_EndCallbackGrantingCall(cm_scache_t *scp, cm_callbackRequest_t *cbrp,
         cm_racingRevokesp = NULL;
 
     lock_ReleaseWrite(&cm_callbackLock);
+
+    if ( discardScp ) {
+        cm_DiscardSCache(scp);
+        lock_ReleaseMutex(&scp->mx);
+        cm_CallbackNotifyChange(scp);
+        lock_ObtainMutex(&scp->mx);
+    }
 
     if ( serverp ) {
         lock_ObtainWrite(&cm_serverLock);

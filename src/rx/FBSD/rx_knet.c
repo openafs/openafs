@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/FBSD/rx_knet.c,v 1.14 2004/03/10 23:01:55 rees Exp $");
+    ("$Header: /cvs/openafs/src/rx/FBSD/rx_knet.c,v 1.14.2.1 2005/04/14 02:31:46 shadow Exp $");
 
 #ifdef AFS_FBSD40_ENV
 #include <sys/malloc.h>
@@ -283,7 +283,6 @@ rxk_input(struct mbuf *am, int iphlen)
 		 */
 		data_len = ntohs(tu->uh_ulen);
 		data_len -= 8;
-		AFS_RXGLOCK();
 		if (!(*rxk_GetPacketProc) (&phandle, data_len)) {
 		    if (rx_mb_to_packet(am, m_freem, 28, data_len, phandle)) {
 			/* XXX should just increment counter here.. */
@@ -294,7 +293,6 @@ rxk_input(struct mbuf *am, int iphlen)
 						  rxk_portRocks[i], data_len);
 		} else
 		    m_freem(am);
-		AFS_RXGUNLOCK();
 		USERPRI;
 		return;
 	    }

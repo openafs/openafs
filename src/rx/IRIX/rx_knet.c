@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/IRIX/rx_knet.c,v 1.14 2003/07/15 23:16:21 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/IRIX/rx_knet.c,v 1.14.2.1 2005/04/15 18:37:15 shadow Exp $");
 
 #include "rx/rx_kcommon.h"
 #include "h/tcp-param.h"
@@ -416,7 +416,7 @@ rxi_GetIFInfo()
 
 #ifdef AFS_SGI65_ENV
 osi_NetSend(asocket, addr, dvec, nvec, asize, istack)
-     register struct osi_socket *asocket;
+     register osi_socket *asocket;
      struct iovec *dvec;
      int nvec;
      register afs_int32 asize;

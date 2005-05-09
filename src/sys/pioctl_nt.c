@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/sys/pioctl_nt.c,v 1.18.2.8 2005/03/11 07:03:37 shadow Exp $");
+    ("$Header: /cvs/openafs/src/sys/pioctl_nt.c,v 1.18.2.9 2005/04/28 12:11:38 jaltman Exp $");
 
 #include <afs/stds.h>
 #include <windows.h>
@@ -42,6 +42,9 @@ RCSID
 #include <pioctl_nt.h>
 #include <WINNT/afsreg.h>
 #include <lanahelper.h>
+
+#include <loadfuncs-krb5.h>
+#include <krb5.h>
 
 static char AFSConfigKeyName[] = AFSREG_CLT_SVC_PARAM_SUBKEY;
 
@@ -121,6 +124,177 @@ IoctlDebug(void)
     }
 
     return debug;
+}
+
+
+// krb5 functions
+DECL_FUNC_PTR(krb5_cc_default_name);
+DECL_FUNC_PTR(krb5_cc_set_default_name);
+DECL_FUNC_PTR(krb5_get_default_config_files);
+DECL_FUNC_PTR(krb5_free_config_files);
+DECL_FUNC_PTR(krb5_free_context);
+DECL_FUNC_PTR(krb5_get_default_realm);
+DECL_FUNC_PTR(krb5_free_default_realm);
+DECL_FUNC_PTR(krb5_init_context);
+DECL_FUNC_PTR(krb5_cc_default);
+DECL_FUNC_PTR(krb5_parse_name);
+DECL_FUNC_PTR(krb5_free_principal);
+DECL_FUNC_PTR(krb5_cc_close);
+DECL_FUNC_PTR(krb5_cc_get_principal);
+DECL_FUNC_PTR(krb5_build_principal);
+DECL_FUNC_PTR(krb5_c_random_make_octets);
+DECL_FUNC_PTR(krb5_get_init_creds_password);
+DECL_FUNC_PTR(krb5_free_cred_contents);
+DECL_FUNC_PTR(krb5_cc_resolve);
+DECL_FUNC_PTR(krb5_unparse_name);
+DECL_FUNC_PTR(krb5_free_unparsed_name);
+
+FUNC_INFO krb5_fi[] = {
+    MAKE_FUNC_INFO(krb5_cc_default_name),
+    MAKE_FUNC_INFO(krb5_cc_set_default_name),
+    MAKE_FUNC_INFO(krb5_get_default_config_files),
+    MAKE_FUNC_INFO(krb5_free_config_files),
+    MAKE_FUNC_INFO(krb5_free_context),
+    MAKE_FUNC_INFO(krb5_get_default_realm),
+    MAKE_FUNC_INFO(krb5_free_default_realm),
+    MAKE_FUNC_INFO(krb5_init_context),
+    MAKE_FUNC_INFO(krb5_cc_default),
+    MAKE_FUNC_INFO(krb5_parse_name),
+    MAKE_FUNC_INFO(krb5_free_principal),
+    MAKE_FUNC_INFO(krb5_cc_close),
+    MAKE_FUNC_INFO(krb5_cc_get_principal),
+    MAKE_FUNC_INFO(krb5_build_principal),
+    MAKE_FUNC_INFO(krb5_c_random_make_octets),
+    MAKE_FUNC_INFO(krb5_get_init_creds_password),
+    MAKE_FUNC_INFO(krb5_free_cred_contents),
+    MAKE_FUNC_INFO(krb5_cc_resolve),
+    MAKE_FUNC_INFO(krb5_unparse_name),
+    MAKE_FUNC_INFO(krb5_free_unparsed_name),
+    END_FUNC_INFO
+};
+
+static int
+LoadFuncs(
+    const char* dll_name,
+    FUNC_INFO fi[],
+    HINSTANCE* ph,  // [out, optional] - DLL handle
+    int* pindex,    // [out, optional] - index of last func loaded (-1 if none)
+    int cleanup,    // cleanup function pointers and unload on error
+    int go_on,      // continue loading even if some functions cannot be loaded
+    int silent      // do not pop-up a system dialog if DLL cannot be loaded
+    )
+{
+    HINSTANCE h;
+    int i, n, last_i;
+    int error = 0;
+    UINT em;
+
+    if (ph) *ph = 0;
+    if (pindex) *pindex = -1;
+
+    for (n = 0; fi[n].func_ptr_var; n++)
+        *(fi[n].func_ptr_var) = 0;
+
+    if (silent)
+        em = SetErrorMode(SEM_FAILCRITICALERRORS);
+    h = LoadLibrary(dll_name);
+    if (silent)
+        SetErrorMode(em);
+
+    if (!h)
+        return 0;
+
+    last_i = -1;
+    for (i = 0; (go_on || !error) && (i < n); i++)
+    {
+        void* p = (void*)GetProcAddress(h, fi[i].func_name);
+        if (!p)
+            error = 1;
+        else
+        {
+            last_i = i;
+            *(fi[i].func_ptr_var) = p;
+        }
+    }
+    if (pindex) *pindex = last_i;
+    if (error && cleanup && !go_on) {
+        for (i = 0; i < n; i++) {
+            *(fi[i].func_ptr_var) = 0;
+        }
+        FreeLibrary(h);
+        return 0;
+    }
+    if (ph) *ph = h;
+    if (error) return 0;
+    return 1;
+}
+
+#define KERB5DLL "krb5_32.dll"
+static BOOL
+IsKrb5Available()
+{
+    static HINSTANCE hKrb5DLL = 0;
+
+    if ( hKrb5DLL )
+        return TRUE;
+
+    hKrb5DLL = LoadLibrary(KERB5DLL);
+    if (hKrb5DLL) {
+        if (!LoadFuncs(KERB5DLL, krb5_fi, 0, 0, 1, 0, 0))
+        {
+            FreeLibrary(hKrb5DLL);
+            hKrb5DLL = 0;
+            return FALSE;
+        }
+    }
+    return TRUE;
+}
+
+static BOOL
+GetLSAPrincipalName(char * szUser, DWORD *dwSize)
+{
+    krb5_context   ctx = 0;
+    krb5_error_code code;
+    krb5_ccache mslsa_ccache=0;
+    krb5_principal princ = 0;
+    char * pname = 0;
+    BOOL success = 0;
+
+    if (!IsKrb5Available())
+        return FALSE;
+
+    if (code = pkrb5_init_context(&ctx))
+        goto cleanup;
+
+    if (code = pkrb5_cc_resolve(ctx, "MSLSA:", &mslsa_ccache))
+        goto cleanup;
+
+    if (code = pkrb5_cc_get_principal(ctx, mslsa_ccache, &princ))
+        goto cleanup;
+
+    if (code = pkrb5_unparse_name(ctx, princ, &pname))
+        goto cleanup;
+
+    if ( strlen(pname) < *dwSize ) {
+        strncpy(szUser, pname, *dwSize);
+        szUser[*dwSize-1] = '\0';
+        success = 1;
+    }
+    *dwSize = strlen(pname);
+
+  cleanup:
+    if (pname)
+        pkrb5_free_unparsed_name(ctx, pname);
+
+    if (princ)
+        pkrb5_free_principal(ctx, princ);
+
+    if (mslsa_ccache)
+        pkrb5_cc_close(ctx, mslsa_ccache);
+
+    if (ctx)
+        pkrb5_free_context(ctx);
+    return success;
 }
 
 static long
@@ -213,14 +387,10 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
                                (va_list *) NULL
                                ) )
             {
-                fprintf(stderr,"pioctl CreateFile(%s) failed: 0x%8X\r\n\t[%s]\r\n",
+                fprintf(stderr,"pioctl CreateFile(%s) failed: 0x%X\r\n\t[%s]\r\n",
                         tbuffer,gle,buf);
             }
         }
-#ifdef COMMENT
-        if (gle != ERROR_DOWNGRADE_DETECTED)
-            return -1;                                   
-#endif
 
         lana_GetNetbiosName(szClient, LANA_NETBIOS_NAME_FULL);
 
@@ -234,7 +404,7 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
 
         if ( szUser[0] ) {
             if ( ioctlDebug )
-                fprintf(stderr, "pioctl logon user: [%s]\r\n",szUser);
+                fprintf(stderr, "pioctl Explorer logon user: [%s]\r\n",szUser);
 
             sprintf(szPath, "\\\\%s", szClient);
             memset (&nr, 0x00, sizeof(NETRESOURCE));
@@ -261,7 +431,7 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
             }
 
             if (gonext)
-                goto next_attempt;
+                goto try_lsa_principal;
 
             fh = CreateFile(tbuffer, GENERIC_READ | GENERIC_WRITE,
                              FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
@@ -281,7 +451,7 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
                                         (va_list *) NULL
                                         ) )
                     {
-                        fprintf(stderr,"pioctl CreateFile(%s) failed: 0x%8X\r\n\t[%s]\r\n",
+                        fprintf(stderr,"pioctl CreateFile(%s) failed: 0x%X\r\n\t[%s]\r\n",
                                  tbuffer,gle,buf);
                     }
                 }
@@ -289,11 +459,74 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
         }
     }
 
-  next_attempt:
+  try_lsa_principal:
+    if (fh == INVALID_HANDLE_VALUE) {
+        int  gonext = 0;
+
+        dwSize = sizeof(szUser);
+        if (GetLSAPrincipalName(szUser, &dwSize)) {
+            if ( ioctlDebug )
+                fprintf(stderr, "pioctl LSA Principal logon user: [%s]\r\n",szUser);
+
+            sprintf(szPath, "\\\\%s", szClient);
+            memset (&nr, 0x00, sizeof(NETRESOURCE));
+            nr.dwType=RESOURCETYPE_DISK;
+            nr.lpLocalName=0;
+            nr.lpRemoteName=szPath;
+            res = WNetAddConnection2(&nr,NULL,szUser,0);
+            if (res) {
+                if ( ioctlDebug ) {
+                    fprintf(stderr, "pioctl WNetAddConnection2(%s,%s) failed: 0x%X\r\n",
+                             szPath,szUser,res);
+                }
+                gonext = 1;
+            }
+
+            sprintf(szPath, "\\\\%s\\all", szClient);
+            res = WNetAddConnection2(&nr,NULL,szUser,0);
+            if (res) {
+                if ( ioctlDebug ) {
+                    fprintf(stderr, "pioctl WNetAddConnection2(%s,%s) failed: 0x%X\r\n",
+                             szPath,szUser,res);
+                }
+                gonext = 1;
+            }
+
+            if (gonext)
+                goto try_sam_compat;
+
+            fh = CreateFile(tbuffer, GENERIC_READ | GENERIC_WRITE,
+                             FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
+                             FILE_FLAG_WRITE_THROUGH, NULL);
+            fflush(stdout);
+            if (fh == INVALID_HANDLE_VALUE) {
+                gle = GetLastError();
+                if (gle && ioctlDebug ) {
+                    char buf[4096];
+
+                    if ( FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM,
+                                        NULL,
+                                        gle,
+                                        MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),
+                                        buf,
+                                        4096,
+                                        (va_list *) NULL
+                                        ) )
+                    {
+                        fprintf(stderr,"pioctl CreateFile(%s) failed: 0x%X\r\n\t[%s]\r\n",
+                                 tbuffer,gle,buf);
+                    }
+                }
+            }
+        }
+    }
+
+  try_sam_compat:
     if ( fh == INVALID_HANDLE_VALUE ) {
+        dwSize = sizeof(szUser);
         if (GetUserNameEx(NameSamCompatible, szUser, &dwSize)) {
             if ( ioctlDebug )
-                fprintf(stderr, "pioctl logon user: [%s]\r\n",szUser);
+                fprintf(stderr, "pioctl SamCompatible logon user: [%s]\r\n",szUser);
 
             sprintf(szPath, "\\\\%s", szClient);
             memset (&nr, 0x00, sizeof(NETRESOURCE));
@@ -336,13 +569,14 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
                                         (va_list *) NULL
                                         ) )
                     {
-                        fprintf(stderr,"pioctl CreateFile(%s) failed: 0x%8X\r\n\t[%s]\r\n",
+                        fprintf(stderr,"pioctl CreateFile(%s) failed: 0x%X\r\n\t[%s]\r\n",
                                  tbuffer,gle,buf);
                     }
                 }
                 return -1;
             }
         } else {
+            fprintf(stderr, "GetUserNameEx(NameSamCompatible) failed: 0x%X\r\n", GetLastError());
             return -1;
         }
     }

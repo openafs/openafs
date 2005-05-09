@@ -24,7 +24,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/ptserver/ptutils.c,v 1.18 2004/06/23 15:01:04 shadow Exp $");
+    ("$Header: /cvs/openafs/src/ptserver/ptutils.c,v 1.18.2.1 2005/04/15 19:40:43 shadow Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -53,7 +53,7 @@ RCSID
 /* Foreign cells are represented by the group system:authuser@cell*/
 #define AUTHUSER_GROUP "system:authuser"
 
-
+extern int restricted;
 extern struct ubik_dbase *dbase;
 extern struct afsconf_dir *prdir;
 extern int pr_noAuth;
@@ -319,6 +319,8 @@ AccessOK(struct ubik_trans *ut, afs_int32 cid,		/* caller id */
 	return 1;
     if (cid == SYSADMINID)
 	return 1;		/* special case fileserver */
+    if (restricted && ((mem == PRP_ADD_MEM) || (mem == any == 0)))
+	return 0;
     if (tentry) {
 	flags = tentry->flags;
 	oid = tentry->owner;
@@ -1866,6 +1868,8 @@ ChangeEntry(struct ubik_trans *at, afs_int32 aid, afs_int32 cid, char *name, afs
     code = pr_ReadEntry(at, 0, loc, &tentry);
     if (code)
 	return PRDBFAIL;
+    if (restricted && !IsAMemberOf(at, cid, SYSADMINID)) 
+	return PRPERM;
     if (tentry.owner != cid && !IsAMemberOf(at, cid, SYSADMINID)
 	&& !IsAMemberOf(at, cid, tentry.owner) && !pr_noAuth)
 	return PRPERM;

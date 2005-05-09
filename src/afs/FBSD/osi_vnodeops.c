@@ -48,7 +48,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/FBSD/osi_vnodeops.c,v 1.18.2.1 2005/04/03 18:15:37 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/FBSD/osi_vnodeops.c,v 1.18.2.2 2005/04/24 00:58:05 shadow Exp $");
 
 #include <afs/sysincludes.h>	/* Standard vendor system headers */
 #include <afsincludes.h>	/* Afs-based standard headers */
@@ -64,6 +64,73 @@ RCSID
 #include <vm/vm_pager.h>
 #include <vm/vnode_pager.h>
 extern int afs_pbuf_freecnt;
+
+#ifdef AFS_FBSD60_ENV
+static vop_access_t	afs_vop_access;
+static vop_advlock_t	afs_vop_advlock;
+static vop_close_t	afs_vop_close;
+static vop_create_t	afs_vop_create;
+static vop_fsync_t	afs_vop_fsync;
+static vop_getattr_t	afs_vop_getattr;
+static vop_getpages_t	afs_vop_getpages;
+static vop_inactive_t	afs_vop_inactive;
+static vop_ioctl_t	afs_vop_ioctl;
+static vop_link_t	afs_vop_link;
+static vop_lookup_t	afs_vop_lookup;
+static vop_mkdir_t	afs_vop_mkdir;
+static vop_mknod_t	afs_vop_mknod;
+static vop_open_t	afs_vop_open;
+static vop_pathconf_t	afs_vop_pathconf;
+static vop_poll_t	afs_vop_poll;
+static vop_print_t	afs_vop_print;
+static vop_putpages_t	afs_vop_putpages;
+static vop_read_t	afs_vop_read;
+static vop_readdir_t	afs_vop_readdir;
+static vop_readlink_t	afs_vop_readlink;
+static vop_reclaim_t	afs_vop_reclaim;
+static vop_remove_t	afs_vop_remove;
+static vop_rename_t	afs_vop_rename;
+static vop_rmdir_t	afs_vop_rmdir;
+static vop_setattr_t	afs_vop_setattr;
+static vop_strategy_t	afs_vop_strategy;
+static vop_symlink_t	afs_vop_symlink;
+static vop_write_t	afs_vop_write;
+
+struct vop_vector afs_vnodeops = {
+	.vop_default =		&default_vnodeops,
+	.vop_access =		afs_vop_access,
+	.vop_advlock =		afs_vop_advlock,
+	.vop_close =		afs_vop_close,
+	.vop_create =		afs_vop_create,
+	.vop_fsync =		afs_vop_fsync,
+	.vop_getattr =		afs_vop_getattr,
+	.vop_getpages =		afs_vop_getpages,
+	.vop_inactive =		afs_vop_inactive,
+	.vop_ioctl =		afs_vop_ioctl,
+	.vop_lease =		VOP_NULL,
+	.vop_link =		afs_vop_link,
+	.vop_lookup =		afs_vop_lookup,
+	.vop_mkdir =		afs_vop_mkdir,
+	.vop_mknod =		afs_vop_mknod,
+	.vop_open =		afs_vop_open,
+	.vop_pathconf =		afs_vop_pathconf,
+	.vop_poll =		afs_vop_poll,
+	.vop_print =		afs_vop_print,
+	.vop_putpages =		afs_vop_putpages,
+	.vop_read =		afs_vop_read,
+	.vop_readdir =		afs_vop_readdir,
+	.vop_readlink =		afs_vop_readlink,
+	.vop_reclaim =		afs_vop_reclaim,
+	.vop_remove =		afs_vop_remove,
+	.vop_rename =		afs_vop_rename,
+	.vop_rmdir =		afs_vop_rmdir,
+	.vop_setattr =		afs_vop_setattr,
+	.vop_strategy =		afs_vop_strategy,
+	.vop_symlink =		afs_vop_symlink,
+	.vop_write =		afs_vop_write,
+};
+
+#else /* AFS_FBSD60_ENV */
 
 int afs_vop_lookup(struct vop_lookup_args *);
 int afs_vop_create(struct vop_create_args *);
@@ -94,12 +161,9 @@ int afs_vop_readdir(struct vop_readdir_args *);
 int afs_vop_readlink(struct vop_readlink_args *);
 int afs_vop_inactive(struct vop_inactive_args *);
 int afs_vop_reclaim(struct vop_reclaim_args *);
-int afs_vop_lock(struct vop_lock_args *);
-int afs_vop_unlock(struct vop_unlock_args *);
 int afs_vop_bmap(struct vop_bmap_args *);
 int afs_vop_strategy(struct vop_strategy_args *);
 int afs_vop_print(struct vop_print_args *);
-int afs_vop_islocked(struct vop_islocked_args *);
 int afs_vop_advlock(struct vop_advlock_args *);
 
 
@@ -153,6 +217,7 @@ struct vnodeopv_entry_desc afs_vnodeop_entries[] = {
 };
 struct vnodeopv_desc afs_vnodeop_opv_desc =
     { &afs_vnodeop_p, afs_vnodeop_entries };
+#endif /* AFS_FBSD60_ENV */
 
 #define GETNAME()       \
     struct componentname *cnp = ap->a_cnp; \
@@ -882,10 +947,14 @@ afs_vop_fsync(ap)
 
     AFS_GLOCK();
     /*vflushbuf(vp, wait); */
+#ifdef AFS_FBSD60_ENV
+    error = afs_fsync(VTOAFS(vp), ap->a_td->td_ucred);
+#else
     if (ap->a_cred)
 	error = afs_fsync(VTOAFS(vp), ap->a_cred);
     else
 	error = afs_fsync(VTOAFS(vp), afs_osi_credp);
+#endif
     AFS_GUNLOCK();
     return error;
 }
@@ -1286,9 +1355,14 @@ afs_vop_reclaim(struct vop_reclaim_args *ap)
      */
     if (code)
 	printf("afs_vop_reclaim: afs_FlushVCache failed code %d\n", code);
+
+#ifdef AFS_FBSD60_ENV
+    vnode_destroy_vobject(vp);
+#endif
     return 0;
 }
 
+#ifndef AFS_FBSD60_ENV
 int
 afs_vop_bmap(ap)
      struct vop_bmap_args	/* {
@@ -1313,6 +1387,7 @@ afs_vop_bmap(ap)
 
     return 0;
 }
+#endif
 
 int
 afs_vop_strategy(ap)

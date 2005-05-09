@@ -19,8 +19,6 @@
 
 #define CALL_HOLD(call, type)
 #define CALL_RELE(call, type)
-#define RXObtainWriteLock(a) AFS_ASSERT_RXGLOCK()
-#define RXReleaseWriteLock(a)
 
 #define MUTEX_DESTROY(a)
 #define MUTEX_ENTER(a)

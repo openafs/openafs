@@ -83,7 +83,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/viced/callback.c,v 1.55.2.8 2005/03/11 07:03:46 shadow Exp $");
+    ("$Header: /cvs/openafs/src/viced/callback.c,v 1.55.2.9 2005/04/11 18:12:33 shadow Exp $");
 
 #include <stdio.h>
 #include <stdlib.h>		/* for malloc() */
@@ -1408,7 +1408,9 @@ BreakVolumeCallBacksLater(afs_uint32 volume)
 
     ViceLog(25, ("Fsync thread wakeup\n"));
 #ifdef AFS_PTHREAD_ENV
+    FSYNC_LOCK;
     assert(pthread_cond_broadcast(&fsync_cond) == 0);
+    FSYNC_UNLOCK;
 #else
     LWP_NoYieldSignal(fsync_wait);
 #endif

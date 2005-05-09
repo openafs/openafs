@@ -15,7 +15,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_packet.c,v 1.35.2.10 2005/04/04 04:27:02 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_packet.c,v 1.35.2.14 2005/04/20 21:23:47 jaltman Exp $");
 
 #ifdef KERNEL
 #if defined(UKERNEL)
@@ -244,6 +244,35 @@ rx_SlowWritePacket(struct rx_packet * packet, int offset, int resid, char *in)
     return (resid ? (r - resid) : r);
 }
 
+#ifdef RX_ENABLE_TSFPQ
+static struct rx_packet *
+allocCBuf(int class)
+{
+    struct rx_packet *c;
+    register struct rx_ts_info_t * rx_ts_info;
+    SPLVAR;
+
+    RX_TS_INFO_GET(rx_ts_info);
+
+    if (queue_IsEmpty(&rx_ts_info->_FPQ)) {
+        NETPRI;
+        MUTEX_ENTER(&rx_freePktQ_lock);
+
+	if (queue_IsEmpty(&rx_freePacketQueue)) {
+	    rxi_MorePacketsNoLock(rx_initSendWindow);
+	}
+
+	RX_TS_FPQ_GTOL(rx_ts_info);
+
+	MUTEX_EXIT(&rx_freePktQ_lock);
+	USERPRI;
+    }
+
+    RX_TS_FPQ_CHECKOUT(rx_ts_info, c);
+
+    return c;
+}
+#else /* RX_ENABLE_TSFPQ */
 static struct rx_packet *
 allocCBuf(int class)
 {
@@ -251,6 +280,7 @@ allocCBuf(int class)
     SPLVAR;
 
     NETPRI;
+
     MUTEX_ENTER(&rx_freePktQ_lock);
 
 #ifdef KERNEL
@@ -306,10 +336,36 @@ allocCBuf(int class)
     USERPRI;
     return c;
 }
+#endif /* RX_ENABLE_TSFPQ */
 
 /*
  * Free a packet currently used as a continuation buffer
  */
+#ifdef RX_ENABLE_TSFPQ
+void
+rxi_freeCBuf(struct rx_packet *c)
+{
+    register struct rx_ts_info_t * rx_ts_info;
+    register int i;
+    SPLVAR;
+
+    RX_TS_INFO_GET(rx_ts_info);
+    RX_TS_FPQ_CHECKIN(rx_ts_info,c);
+
+    if (rx_ts_info->_FPQ.len > rx_TSFPQLocalMax) {
+        NETPRI;
+	MUTEX_ENTER(&rx_freePktQ_lock);
+
+	RX_TS_FPQ_LTOG(rx_ts_info);
+
+	/* Wakeup anyone waiting for packets */
+	rxi_PacketsUnWait();
+
+	MUTEX_EXIT(&rx_freePktQ_lock);
+	USERPRI;
+    }
+}
+#else /* RX_ENABLE_TSFPQ */
 void
 rxi_freeCBuf(struct rx_packet *c)
 {
@@ -325,6 +381,7 @@ rxi_freeCBuf(struct rx_packet *c)
     MUTEX_EXIT(&rx_freePktQ_lock);
     USERPRI;
 }
+#endif /* RX_ENABLE_TSFPQ */
 
 /* this one is kind of awful.
  * In rxkad, the packet has been all shortened, and everything, ready for 
@@ -380,6 +437,43 @@ rxi_AllocDataBuf(struct rx_packet *p, int nb, int class)
 }
 
 /* Add more packet buffers */
+#ifdef RX_ENABLE_TSFPQ
+void
+rxi_MorePackets(int apackets)
+{
+    struct rx_packet *p, *e;
+    register struct rx_ts_info_t * rx_ts_info;
+    int getme;
+    SPLVAR;
+
+    getme = apackets * sizeof(struct rx_packet);
+    p = rx_mallocedP = (struct rx_packet *)osi_Alloc(getme);
+
+    PIN(p, getme);		/* XXXXX */
+    memset((char *)p, 0, getme);
+    RX_TS_INFO_GET(rx_ts_info);
+
+    for (e = p + apackets; p < e; p++) {
+        RX_PACKET_IOV_INIT(p);
+	p->niovecs = 2;
+
+	RX_TS_FPQ_CHECKIN(rx_ts_info,p);
+    }
+    rx_ts_info->_FPQ.delta += apackets;
+
+    if (rx_ts_info->_FPQ.len > rx_TSFPQLocalMax) {
+        NETPRI;
+	MUTEX_ENTER(&rx_freePktQ_lock);
+
+	RX_TS_FPQ_LTOG(rx_ts_info);
+	rxi_NeedMorePackets = FALSE;
+	rxi_PacketsUnWait();
+
+	MUTEX_EXIT(&rx_freePktQ_lock);
+	USERPRI;
+    }
+}
+#else /* RX_ENABLE_TSFPQ */
 void
 rxi_MorePackets(int apackets)
 {
@@ -393,14 +487,10 @@ rxi_MorePackets(int apackets)
     PIN(p, getme);		/* XXXXX */
     memset((char *)p, 0, getme);
     NETPRI;
-    AFS_RXGLOCK();
     MUTEX_ENTER(&rx_freePktQ_lock);
 
     for (e = p + apackets; p < e; p++) {
-	p->wirevec[0].iov_base = (char *)(p->wirehead);
-	p->wirevec[0].iov_len = RX_HEADER_SIZE;
-	p->wirevec[1].iov_base = (char *)(p->localdata);
-	p->wirevec[1].iov_len = RX_FIRSTBUFFERSIZE;
+        RX_PACKET_IOV_INIT(p);
 	p->flags |= RX_PKTFLAG_FREE;
 	p->niovecs = 2;
 
@@ -410,10 +500,49 @@ rxi_MorePackets(int apackets)
     rxi_NeedMorePackets = FALSE;
     rxi_PacketsUnWait();
 
-    AFS_RXGUNLOCK();
     MUTEX_EXIT(&rx_freePktQ_lock);
     USERPRI;
 }
+#endif /* RX_ENABLE_TSFPQ */
+
+#ifdef RX_ENABLE_TSFPQ
+void
+rxi_MorePacketsTSFPQ(int apackets, int flush_global, int num_keep_local)
+{
+    struct rx_packet *p, *e;
+    register struct rx_ts_info_t * rx_ts_info;
+    int getme;
+    SPLVAR;
+
+    getme = apackets * sizeof(struct rx_packet);
+    p = rx_mallocedP = (struct rx_packet *)osi_Alloc(getme);
+
+    PIN(p, getme);		/* XXXXX */
+    memset((char *)p, 0, getme);
+    RX_TS_INFO_GET(rx_ts_info);
+
+    for (e = p + apackets; p < e; p++) {
+        RX_PACKET_IOV_INIT(p);
+	p->niovecs = 2;
+
+	RX_TS_FPQ_CHECKIN(rx_ts_info,p);
+    }
+    rx_ts_info->_FPQ.delta += apackets;
+
+    if (flush_global && 
+        (num_keep_local < apackets)) {
+        NETPRI;
+	MUTEX_ENTER(&rx_freePktQ_lock);
+
+	RX_TS_FPQ_LTOG2(rx_ts_info, (apackets - num_keep_local));
+	rxi_NeedMorePackets = FALSE;
+	rxi_PacketsUnWait();
+
+	MUTEX_EXIT(&rx_freePktQ_lock);
+	USERPRI;
+    }
+}
+#endif /* RX_ENABLE_TSFPQ */
 
 #ifndef KERNEL
 /* Add more packet buffers */
@@ -433,16 +562,21 @@ rxi_MorePacketsNoLock(int apackets)
     memset((char *)p, 0, getme);
 
     for (e = p + apackets; p < e; p++) {
-	p->wirevec[0].iov_base = (char *)(p->wirehead);
-	p->wirevec[0].iov_len = RX_HEADER_SIZE;
-	p->wirevec[1].iov_base = (char *)(p->localdata);
-	p->wirevec[1].iov_len = RX_FIRSTBUFFERSIZE;
+        RX_PACKET_IOV_INIT(p);
 	p->flags |= RX_PKTFLAG_FREE;
 	p->niovecs = 2;
 
 	queue_Append(&rx_freePacketQueue, p);
     }
+
     rx_nFreePackets += apackets;
+#ifdef RX_ENABLE_TSFPQ
+    /* TSFPQ patch also needs to keep track of total packets */
+    MUTEX_ENTER(&rx_stats_mutex);
+    rx_nPackets += apackets;
+    RX_TS_FPQ_COMPUTE_LIMITS;
+    MUTEX_EXIT(&rx_stats_mutex);
+#endif /* RX_ENABLE_TSFPQ */
     rxi_NeedMorePackets = FALSE;
     rxi_PacketsUnWait();
 }
@@ -457,6 +591,44 @@ rxi_FreeAllPackets(void)
 	     (rx_maxReceiveWindow + 2) * sizeof(struct rx_packet));
     UNPIN(rx_mallocedP, (rx_maxReceiveWindow + 2) * sizeof(struct rx_packet));
 }
+
+#ifdef RX_ENABLE_TSFPQ
+void
+rxi_AdjustLocalPacketsTSFPQ(int num_keep_local, int allow_overcommit)
+{
+    register struct rx_ts_info_t * rx_ts_info;
+    register int xfer;
+    SPLVAR;
+
+    RX_TS_INFO_GET(rx_ts_info);
+
+    if (num_keep_local != rx_ts_info->_FPQ.len) {
+        NETPRI;
+	MUTEX_ENTER(&rx_freePktQ_lock);
+        if (num_keep_local < rx_ts_info->_FPQ.len) {
+            xfer = rx_ts_info->_FPQ.len - num_keep_local;
+	    RX_TS_FPQ_LTOG2(rx_ts_info, xfer);
+	    rxi_PacketsUnWait();
+        } else {
+            xfer = num_keep_local - rx_ts_info->_FPQ.len;
+            if ((num_keep_local > rx_TSFPQLocalMax) && !allow_overcommit)
+                xfer = rx_TSFPQLocalMax - rx_ts_info->_FPQ.len;
+            if (rx_nFreePackets < xfer) {
+                rxi_MorePacketsNoLock(xfer - rx_nFreePackets);
+            }
+            RX_TS_FPQ_GTOL2(rx_ts_info, xfer);
+        }
+	MUTEX_EXIT(&rx_freePktQ_lock);
+	USERPRI;
+    }
+}
+
+void
+rxi_FlushLocalPacketsTSFPQ(void)
+{
+    rxi_AdjustLocalPacketsTSFPQ(0, 0);
+}
+#endif /* RX_ENABLE_TSFPQ */
 
 /* Allocate more packets iff we need more continuation buffers */
 /* In kernel, can't page in memory with interrupts disabled, so we
@@ -483,17 +655,55 @@ rx_CheckPackets(void)
    */
 
 /* Actually free the packet p. */
+#ifdef RX_ENABLE_TSFPQ
+void
+rxi_FreePacketNoLock(struct rx_packet *p)
+{
+    register struct rx_ts_info_t * rx_ts_info;
+    dpf(("Free %lx\n", (unsigned long)p));
+
+    RX_TS_INFO_GET(rx_ts_info);
+    RX_TS_FPQ_CHECKIN(rx_ts_info,p);
+    if (rx_ts_info->_FPQ.len > rx_TSFPQLocalMax) {
+        RX_TS_FPQ_LTOG(rx_ts_info);
+    }
+}
+#else /* RX_ENABLE_TSFPQ */
 void
 rxi_FreePacketNoLock(struct rx_packet *p)
 {
     dpf(("Free %lx\n", (unsigned long)p));
 
-    if (p->flags & RX_PKTFLAG_FREE)
-	osi_Panic("rxi_FreePacketNoLock: packet already free\n");
+    RX_FPQ_MARK_FREE(p);
     rx_nFreePackets++;
-    p->flags |= RX_PKTFLAG_FREE;
     queue_Append(&rx_freePacketQueue, p);
 }
+#endif /* RX_ENABLE_TSFPQ */
+
+#ifdef RX_ENABLE_TSFPQ
+void
+rxi_FreePacketTSFPQ(struct rx_packet *p, int flush_global)
+{
+    register struct rx_ts_info_t * rx_ts_info;
+    dpf(("Free %lx\n", (unsigned long)p));
+
+    RX_TS_INFO_GET(rx_ts_info);
+    RX_TS_FPQ_CHECKIN(rx_ts_info,p);
+
+    if (flush_global && (rx_ts_info->_FPQ.len > rx_TSFPQLocalMax)) {
+        NETPRI;
+	MUTEX_ENTER(&rx_freePktQ_lock);
+
+	RX_TS_FPQ_LTOG(rx_ts_info);
+
+	/* Wakeup anyone waiting for packets */
+	rxi_PacketsUnWait();
+
+	MUTEX_EXIT(&rx_freePktQ_lock);
+	USERPRI;
+    }
+}
+#endif /* RX_ENABLE_TSFPQ */
 
 int
 rxi_FreeDataBufsNoLock(struct rx_packet *p, int first)
@@ -517,6 +727,45 @@ rxi_FreeDataBufsNoLock(struct rx_packet *p, int first)
     return 0;
 }
 
+#ifdef RX_ENABLE_TSFPQ
+int
+rxi_FreeDataBufsTSFPQ(struct rx_packet *p, int first, int flush_global)
+{
+    struct iovec *iov, *end;
+    register struct rx_ts_info_t * rx_ts_info;
+
+    RX_TS_INFO_GET(rx_ts_info);
+
+    if (first != 1)		/* MTUXXX */
+	osi_Panic("FreeDataBufs 1: first must be 1");
+    iov = &p->wirevec[1];
+    end = iov + (p->niovecs - 1);
+    if (iov->iov_base != (caddr_t) p->localdata)	/* MTUXXX */
+	osi_Panic("FreeDataBufs 2: vec 1 must be localdata");
+    for (iov++; iov < end; iov++) {
+	if (!iov->iov_base)
+	    osi_Panic("FreeDataBufs 3: vecs 2-niovecs must not be NULL");
+	RX_TS_FPQ_CHECKIN(rx_ts_info,RX_CBUF_TO_PACKET(iov->iov_base, p));
+    }
+    p->length = 0;
+    p->niovecs = 0;
+
+    if (flush_global && (rx_ts_info->_FPQ.len > rx_TSFPQLocalMax)) {
+        NETPRI;
+	MUTEX_ENTER(&rx_freePktQ_lock);
+
+	RX_TS_FPQ_LTOG(rx_ts_info);
+
+	/* Wakeup anyone waiting for packets */
+	rxi_PacketsUnWait();
+
+	MUTEX_EXIT(&rx_freePktQ_lock);
+	USERPRI;
+    }
+    return 0;
+}
+#endif /* RX_ENABLE_TSFPQ */
+
 int rxi_nBadIovecs = 0;
 
 /* rxi_RestoreDataBufs 
@@ -530,10 +779,7 @@ rxi_RestoreDataBufs(struct rx_packet *p)
     int i;
     struct iovec *iov = &p->wirevec[2];
 
-    p->wirevec[0].iov_base = (char *)(p->wirehead);
-    p->wirevec[0].iov_len = RX_HEADER_SIZE;
-    p->wirevec[1].iov_base = (char *)(p->localdata);
-    p->wirevec[1].iov_len = RX_FIRSTBUFFERSIZE;
+    RX_PACKET_IOV_INIT(p);
 
     for (i = 2, iov = &p->wirevec[2]; i < p->niovecs; i++, iov++) {
 	if (!iov->iov_base) {
@@ -545,6 +791,53 @@ rxi_RestoreDataBufs(struct rx_packet *p)
     }
 }
 
+#ifdef RX_ENABLE_TSFPQ
+int
+rxi_TrimDataBufs(struct rx_packet *p, int first)
+{
+    int length;
+    struct iovec *iov, *end;
+    register struct rx_ts_info_t * rx_ts_info;
+    SPLVAR;
+
+    if (first != 1)
+	osi_Panic("TrimDataBufs 1: first must be 1");
+
+    /* Skip over continuation buffers containing message data */
+    iov = &p->wirevec[2];
+    end = iov + (p->niovecs - 2);
+    length = p->length - p->wirevec[1].iov_len;
+    for (; iov < end && length > 0; iov++) {
+	if (!iov->iov_base)
+	    osi_Panic("TrimDataBufs 3: vecs 1-niovecs must not be NULL");
+	length -= iov->iov_len;
+    }
+
+    /* iov now points to the first empty data buffer. */
+    if (iov >= end)
+	return 0;
+
+    RX_TS_INFO_GET(rx_ts_info);
+    for (; iov < end; iov++) {
+	if (!iov->iov_base)
+	    osi_Panic("TrimDataBufs 4: vecs 2-niovecs must not be NULL");
+	RX_TS_FPQ_CHECKIN(rx_ts_info,RX_CBUF_TO_PACKET(iov->iov_base, p));
+	p->niovecs--;
+    }
+    if (rx_ts_info->_FPQ.len > rx_TSFPQLocalMax) {
+        NETPRI;
+        MUTEX_ENTER(&rx_freePktQ_lock);
+
+	RX_TS_FPQ_LTOG(rx_ts_info);
+        rxi_PacketsUnWait();
+
+        MUTEX_EXIT(&rx_freePktQ_lock);
+	USERPRI;
+    }
+
+    return 0;
+}
+#else /* RX_ENABLE_TSFPQ */
 int
 rxi_TrimDataBufs(struct rx_packet *p, int first)
 {
@@ -585,9 +878,18 @@ rxi_TrimDataBufs(struct rx_packet *p, int first)
 
     return 0;
 }
+#endif /* RX_ENABLE_TSFPQ */
 
 /* Free the packet p.  P is assumed not to be on any queue, i.e.
  * remove it yourself first if you call this routine. */
+#ifdef RX_ENABLE_TSFPQ
+void
+rxi_FreePacket(struct rx_packet *p)
+{
+    rxi_FreeDataBufsTSFPQ(p, 1, 0);
+    rxi_FreePacketTSFPQ(p, RX_TS_FPQ_FLUSH_GLOBAL);
+}
+#else /* RX_ENABLE_TSFPQ */
 void
 rxi_FreePacket(struct rx_packet *p)
 {
@@ -604,12 +906,78 @@ rxi_FreePacket(struct rx_packet *p)
     MUTEX_EXIT(&rx_freePktQ_lock);
     USERPRI;
 }
-
+#endif /* RX_ENABLE_TSFPQ */
 
 /* rxi_AllocPacket sets up p->length so it reflects the number of 
  * bytes in the packet at this point, **not including** the header.
  * The header is absolutely necessary, besides, this is the way the
  * length field is usually used */
+#ifdef RX_ENABLE_TSFPQ
+struct rx_packet *
+rxi_AllocPacketNoLock(int class)
+{
+    register struct rx_packet *p;
+    register struct rx_ts_info_t * rx_ts_info;
+
+    RX_TS_INFO_GET(rx_ts_info);
+
+#ifdef KERNEL
+    if (rxi_OverQuota(class)) {
+	rxi_NeedMorePackets = TRUE;
+	MUTEX_ENTER(&rx_stats_mutex);
+	switch (class) {
+	case RX_PACKET_CLASS_RECEIVE:
+	    rx_stats.receivePktAllocFailures++;
+	    break;
+	case RX_PACKET_CLASS_SEND:
+	    rx_stats.sendPktAllocFailures++;
+	    break;
+	case RX_PACKET_CLASS_SPECIAL:
+	    rx_stats.specialPktAllocFailures++;
+	    break;
+	case RX_PACKET_CLASS_RECV_CBUF:
+	    rx_stats.receiveCbufPktAllocFailures++;
+	    break;
+	case RX_PACKET_CLASS_SEND_CBUF:
+	    rx_stats.sendCbufPktAllocFailures++;
+	    break;
+	}
+	MUTEX_EXIT(&rx_stats_mutex);
+	return (struct rx_packet *)0;
+    }
+#endif /* KERNEL */
+
+    MUTEX_ENTER(&rx_stats_mutex);
+    rx_stats.packetRequests++;
+    MUTEX_EXIT(&rx_stats_mutex);
+
+    if (queue_IsEmpty(&rx_ts_info->_FPQ)) {
+
+#ifdef KERNEL
+        if (queue_IsEmpty(&rx_freePacketQueue))
+	    osi_Panic("rxi_AllocPacket error");
+#else /* KERNEL */
+        if (queue_IsEmpty(&rx_freePacketQueue))
+	    rxi_MorePacketsNoLock(rx_initSendWindow);
+#endif /* KERNEL */
+
+
+	RX_TS_FPQ_GTOL(rx_ts_info);
+    }
+
+    RX_TS_FPQ_CHECKOUT(rx_ts_info,p);
+
+    dpf(("Alloc %lx, class %d\n", (unsigned long)p, class));
+
+
+    /* have to do this here because rx_FlushWrite fiddles with the iovs in
+     * order to truncate outbound packets.  In the near future, may need 
+     * to allocate bufs from a static pool here, and/or in AllocSendPacket
+     */
+    RX_PACKET_IOV_FULLINIT(p);
+    return p;
+}
+#else /* RX_ENABLE_TSFPQ */
 struct rx_packet *
 rxi_AllocPacketNoLock(int class)
 {
@@ -655,28 +1023,70 @@ rxi_AllocPacketNoLock(int class)
 
     rx_nFreePackets--;
     p = queue_First(&rx_freePacketQueue, rx_packet);
-    if (!(p->flags & RX_PKTFLAG_FREE))
-	osi_Panic("rxi_AllocPacket: packet not free\n");
+    queue_Remove(p);
+    RX_FPQ_MARK_USED(p);
 
     dpf(("Alloc %lx, class %d\n", (unsigned long)p, class));
 
-    queue_Remove(p);
-    p->flags = 0;		/* clear RX_PKTFLAG_FREE, initialize the rest */
-    p->header.flags = 0;
 
     /* have to do this here because rx_FlushWrite fiddles with the iovs in
      * order to truncate outbound packets.  In the near future, may need 
      * to allocate bufs from a static pool here, and/or in AllocSendPacket
      */
-    p->wirevec[0].iov_base = (char *)(p->wirehead);
-    p->wirevec[0].iov_len = RX_HEADER_SIZE;
-    p->wirevec[1].iov_base = (char *)(p->localdata);
-    p->wirevec[1].iov_len = RX_FIRSTBUFFERSIZE;
-    p->niovecs = 2;
-    p->length = RX_FIRSTBUFFERSIZE;
+    RX_PACKET_IOV_FULLINIT(p);
     return p;
 }
+#endif /* RX_ENABLE_TSFPQ */
 
+#ifdef RX_ENABLE_TSFPQ
+struct rx_packet *
+rxi_AllocPacketTSFPQ(int class, int pull_global)
+{
+    register struct rx_packet *p;
+    register struct rx_ts_info_t * rx_ts_info;
+
+    RX_TS_INFO_GET(rx_ts_info);
+
+    MUTEX_ENTER(&rx_stats_mutex);
+    rx_stats.packetRequests++;
+    MUTEX_EXIT(&rx_stats_mutex);
+
+    if (pull_global && queue_IsEmpty(&rx_ts_info->_FPQ)) {
+        MUTEX_ENTER(&rx_freePktQ_lock);
+
+        if (queue_IsEmpty(&rx_freePacketQueue))
+            rxi_MorePacketsNoLock(rx_initSendWindow);
+
+	RX_TS_FPQ_GTOL(rx_ts_info);
+
+        MUTEX_EXIT(&rx_freePktQ_lock);
+    } else if (queue_IsEmpty(&rx_ts_info->_FPQ)) {
+        return NULL;
+    }
+
+    RX_TS_FPQ_CHECKOUT(rx_ts_info,p);
+
+    dpf(("Alloc %lx, class %d\n", (unsigned long)p, class));
+
+    /* have to do this here because rx_FlushWrite fiddles with the iovs in
+     * order to truncate outbound packets.  In the near future, may need 
+     * to allocate bufs from a static pool here, and/or in AllocSendPacket
+     */
+    RX_PACKET_IOV_FULLINIT(p);
+    return p;
+}
+#endif /* RX_ENABLE_TSFPQ */
+
+#ifdef RX_ENABLE_TSFPQ
+struct rx_packet *
+rxi_AllocPacket(int class)
+{
+    register struct rx_packet *p;
+
+    p = rxi_AllocPacketTSFPQ(class, RX_TS_FPQ_PULL_GLOBAL);
+    return p;
+}
+#else /* RX_ENABLE_TSFPQ */
 struct rx_packet *
 rxi_AllocPacket(int class)
 {
@@ -687,6 +1097,7 @@ rxi_AllocPacket(int class)
     MUTEX_EXIT(&rx_freePktQ_lock);
     return p;
 }
+#endif /* RX_ENABLE_TSFPQ */
 
 /* This guy comes up with as many buffers as it {takes,can get} given
  * the MTU for this call. It also sets the packet length before
@@ -705,6 +1116,28 @@ rxi_AllocSendPacket(register struct rx_call *call, int want)
     delta =
 	rx_GetSecurityHeaderSize(rx_ConnectionOf(call)) +
 	rx_GetSecurityMaxTrailerSize(rx_ConnectionOf(call));
+
+#ifdef RX_ENABLE_TSFPQ
+    if ((p = rxi_AllocPacketTSFPQ(RX_PACKET_CLASS_SEND, 0))) {
+        want += delta;
+	want = MIN(want, mud);
+
+	if ((unsigned)want > p->length)
+	    (void)rxi_AllocDataBuf(p, (want - p->length),
+				   RX_PACKET_CLASS_SEND_CBUF);
+
+	if ((unsigned)p->length > mud)
+            p->length = mud;
+
+	if (delta >= p->length) {
+	    rxi_FreePacket(p);
+	    p = NULL;
+	} else {
+	    p->length -= delta;
+	}
+	return p;
+    }
+#endif /* RX_ENABLE_TSFPQ */
 
     while (!(call->error)) {
 	MUTEX_ENTER(&rx_freePktQ_lock);
@@ -1487,7 +1920,6 @@ rxi_SendDebugPacket(struct rx_packet *apacket, osi_socket asocket,
 	} else
 	    nbytes -= apacket->wirevec[i].iov_len;
     }
-    AFS_RXGUNLOCK();
 #ifdef KERNEL
 #ifdef RX_KERNEL_TRACE
     if (ICL_SETACTIVE(afs_iclSetp)) {
@@ -1519,7 +1951,6 @@ rxi_SendDebugPacket(struct rx_packet *apacket, osi_socket asocket,
 	AFS_GLOCK();
 #endif
 #endif
-    AFS_RXGLOCK();
     if (saven) {		/* means we truncated the packet above. */
 	apacket->wirevec[i - 1].iov_len = savelen;
 	apacket->niovecs = saven;
@@ -1605,7 +2036,6 @@ rxi_SendPacket(struct rx_call *call, struct rx_connection *conn,
 	 * blocking socket, but unfortunately the interface doesn't
 	 * allow us to have the socket block in send mode, and not
 	 * block in receive mode */
-	AFS_RXGUNLOCK();
 #ifdef KERNEL
 	waslocked = ISAFS_GLOCK();
 #ifdef RX_KERNEL_TRACE
@@ -1656,7 +2086,6 @@ rxi_SendPacket(struct rx_call *call, struct rx_connection *conn,
 	    AFS_GLOCK();
 #endif
 #endif
-	AFS_RXGLOCK();
 #ifdef RXDEBUG
     }
     dpf(("%c %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %lx resend %d.%0.3d len %d", deliveryType, p->header.serial, rx_packetTypes[p->header.type - 1], peer->host, peer->port, p->header.serial, p->header.epoch, p->header.cid, p->header.callNumber, p->header.seq, p->header.flags, (unsigned long)p, p->retryTime.sec, p->retryTime.usec / 1000, p->length));
@@ -1799,7 +2228,6 @@ rxi_SendPacketList(struct rx_call *call, struct rx_connection *conn,
 	 * blocking socket, but unfortunately the interface doesn't
 	 * allow us to have the socket block in send mode, and not
 	 * block in receive mode */
-	AFS_RXGUNLOCK();
 #if	defined(AFS_SUN5_ENV) && defined(KERNEL)
 	waslocked = ISAFS_GLOCK();
 	if (!istack && waslocked)
@@ -1832,7 +2260,6 @@ rxi_SendPacketList(struct rx_call *call, struct rx_connection *conn,
 	if (!istack && waslocked)
 	    AFS_GLOCK();
 #endif
-	AFS_RXGLOCK();
 #ifdef RXDEBUG
     }
 

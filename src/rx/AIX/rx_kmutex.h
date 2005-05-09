@@ -68,15 +68,6 @@ typedef tid_t afs_kcondvar_t;
 					      __LINE__), \
 				simple_unlock((void *)(a))
 
-
-#define RXObtainWriteLock(a)    simple_lock((void *)(a)), \
-				rxdb_grablock((void *)(a), thread_self(),rxdb_fileID,\
-					      __LINE__)
-
-#define RXReleaseWriteLock(a)	rxdb_droplock((void *)(a), thread_self(), rxdb_fileID,\
-					      __LINE__), \
-				simple_unlock((void *)(a))
-
 #define CV_WAIT(_cv, _lck) \
     do { \
 	int haveGlock = ISAFS_GLOCK(); \
@@ -112,8 +103,6 @@ typedef tid_t afs_kcondvar_t;
 #define MUTEX_ENTER(a) 		simple_lock((void *)(a))
 #define MUTEX_TRYENTER(a)	simple_lock_try((void *)(a))
 #define MUTEX_EXIT(a) 		simple_unlock((void *)(a))
-#define RXObtainWriteLock(a) 	simple_lock((void *)(a))
-#define RXReleaseWriteLock(a)	simple_unlock((void *)(a))
 
 #define CV_WAIT(_cv, _lck) \
     do { \

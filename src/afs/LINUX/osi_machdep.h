@@ -179,6 +179,15 @@ typedef struct uio {
 /* Get/set the inode in the osifile struct. */
 #define FILE_INODE(F) (F)->f_dentry->d_inode
 
+#ifdef AFS_LINUX24_ENV
+#define OSIFILE_INODE(a) FILE_INODE((a)->filp)
+#else
+#define OSIFILE_INODE(a) FILE_INODE(&(a)->file)
+#endif
+
+#if defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV)
+#define NEED_IOCTL32
+#endif
 
 /* page offset is obtained and stored here during module initialization 
  * We need a variable to do this because, the PAGE_OFFSET macro defined in
@@ -190,7 +199,7 @@ extern unsigned long afs_linux_page_offset;
 /* function to help with the page offset stuff */
 #define afs_linux_page_address(page) (afs_linux_page_offset + PAGE_SIZE * (page - mem_map))
 
-#if defined(__KERNEL__) && defined(CONFIG_SMP)
+#if defined(__KERNEL__)
 #include "../h/sched.h"
 #include "linux/wait.h"
 
@@ -222,10 +231,6 @@ do { \
 #define AFS_GUNLOCK()
 #define ISAFS_GLOCK() 1
 #define AFS_ASSERT_GLOCK()
-#define AFS_ASSERT_RXGLOCK()
 #endif
 
-#define AFS_RXGLOCK()
-#define AFS_RXGUNLOCK()
-#define ISAFS_RXGLOCK() 1
 #endif /* OSI_MACHDEP_H_ */

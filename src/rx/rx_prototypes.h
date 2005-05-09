@@ -335,7 +335,7 @@ extern int rxi_GetIFInfo(void);
 extern int rxk_FreeSocket(register struct socket *asocket);
 #endif
 #ifndef AFS_NT40_ENV
-extern struct osi_socket *rxk_NewSocket(short aport);
+extern osi_socket *rxk_NewSocket(short aport);
 #endif
 #endif
 extern int rxk_ReadPacket(osi_socket so, struct rx_packet *p, int *host,
@@ -354,7 +354,7 @@ extern void osi_StopListener(void);
 
 
 /* ARCH/rx_kmutex.c */
-#if defined(CONFIG_SMP) || defined(CONFIG_PREEMPT)
+#if defined(KERNEL) && defined(AFS_LINUX20_ENV)
 extern void afs_mutex_init(afs_kmutex_t * l);
 extern void afs_mutex_enter(afs_kmutex_t * l);
 extern int afs_mutex_tryenter(afs_kmutex_t * l);

@@ -15,7 +15,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/UKERNEL/afs_usrops.c,v 1.27.2.2 2005/03/11 06:50:46 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/UKERNEL/afs_usrops.c,v 1.27.2.3 2005/04/14 02:31:42 shadow Exp $");
 
 
 #ifdef	UKERNEL
@@ -459,15 +459,11 @@ afs_osi_Sleep(void *x)
 {
     int index;
     osi_wait_t *waitp;
-    int rxGlockOwner = ISAFS_RXGLOCK();
     int glockOwner = ISAFS_GLOCK();
 
     usr_mutex_lock(&osi_waitq_lock);
     if (glockOwner) {
 	AFS_GUNLOCK();
-    }
-    if (rxGlockOwner) {
-	AFS_RXGUNLOCK();
     }
     index = WAITHASH(x);
     if (osi_waithash_avail == NULL) {
@@ -494,9 +490,6 @@ afs_osi_Sleep(void *x)
     usr_mutex_unlock(&osi_waitq_lock);
     if (glockOwner) {
 	AFS_GLOCK();
-    }
-    if (rxGlockOwner) {
-	AFS_RXGLOCK();
     }
 }
 
@@ -533,7 +526,6 @@ afs_osi_Wait(afs_int32 msec, struct afs_osi_WaitHandle *handle, int intok)
     osi_wait_t *waitp;
     struct timespec tv;
     int ret;
-    int rxGlockOwner = ISAFS_RXGLOCK();
     int glockOwner = ISAFS_GLOCK();
 
     tv.tv_sec = msec / 1000;
@@ -542,24 +534,15 @@ afs_osi_Wait(afs_int32 msec, struct afs_osi_WaitHandle *handle, int intok)
 	if (glockOwner) {
 	    AFS_GUNLOCK();
 	}
-	if (rxGlockOwner) {
-	    AFS_RXGUNLOCK();
-	}
 	usr_thread_sleep(&tv);
 	ret = 0;
 	if (glockOwner) {
 	    AFS_GLOCK();
 	}
-	if (rxGlockOwner) {
-	    AFS_RXGLOCK();
-	}
     } else {
 	usr_mutex_lock(&osi_waitq_lock);
 	if (glockOwner) {
 	    AFS_GUNLOCK();
-	}
-	if (rxGlockOwner) {
-	    AFS_RXGUNLOCK();
 	}
 	index = WAITHASH((caddr_t) handle);
 	if (osi_waithash_avail == NULL) {
@@ -592,9 +575,6 @@ afs_osi_Wait(afs_int32 msec, struct afs_osi_WaitHandle *handle, int intok)
 	usr_mutex_unlock(&osi_waitq_lock);
 	if (glockOwner) {
 	    AFS_GLOCK();
-	}
-	if (rxGlockOwner) {
-	    AFS_RXGLOCK();
 	}
     }
     return ret;

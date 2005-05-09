@@ -39,7 +39,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_vcache.c,v 1.65.2.15 2005/04/04 04:01:14 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_vcache.c,v 1.65.2.18 2005/04/24 00:58:04 shadow Exp $");
 
 #include "afs/sysincludes.h"	/*Standard vendor system headers */
 #include "afsincludes.h"	/*AFS-based standard headers */
@@ -814,7 +814,9 @@ restart:
 	struct vnode *vp;
 
 	AFS_GUNLOCK();
-#ifdef AFS_FBSD50_ENV
+#if defined(AFS_FBSD60_ENV)
+	if (getnewvnode(MOUNT_AFS, afs_globalVFS, &afs_vnodeops, &vp))
+#elif defined(AFS_FBSD50_ENV)
 	if (getnewvnode(MOUNT_AFS, afs_globalVFS, afs_vnodeop_p, &vp))
 #else
 	if (getnewvnode(VT_AFS, afs_globalVFS, afs_vnodeop_p, &vp))
@@ -933,9 +935,13 @@ restart:
 #ifdef STRUCT_INODE_HAS_I_SB_LIST
 	list_add(&ip->i_sb_list, &ip->i_sb->s_inodes);
 #endif
-#ifdef STRUCT_INODE_HAS_INOTIFY_LOCK
+#if defined(STRUCT_INODE_HAS_INOTIFY_LOCK) || defined(STRUCT_INODE_HAS_INOTIFY_SEM)
 	INIT_LIST_HEAD(&ip->inotify_watches); 
+#if defined(STRUCT_INODE_HAS_INOTIFY_SEM) 
+	sema_init(&ip->inotify_sem, 1); 
+#else
 	spin_lock_init(&ip->inotify_lock); 
+#endif 
 #endif 
     }
 #endif
@@ -1703,11 +1709,6 @@ afs_GetVCache(register struct VenusFid *afid, struct vrequest *areq,
 	return tvc;
     }
 #endif /* AFS_OSF_ENV */
-#ifdef AFS_OBSD_ENV
-    VOP_LOCK(AFSTOV(tvc), LK_EXCLUSIVE | LK_RETRY, curproc);
-    uvm_vnp_uncache(AFSTOV(tvc));
-    VOP_UNLOCK(AFSTOV(tvc), 0, curproc);
-#endif
 #if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
     /*
      * XXX - I really don't like this.  Should try to understand better.
@@ -1721,19 +1722,10 @@ afs_GetVCache(register struct VenusFid *afid, struct vrequest *areq,
      * to vinvalbuf; otherwise, we leave it alone.
      */
     {
-	struct vnode *vp;
+	struct vnode *vp = AFSTOV(tvc);
 	int iheldthelock;
 
-	vp = AFSTOV(tvc);
-#ifdef AFS_FBSD50_ENV
-	iheldthelock = VOP_ISLOCKED(vp, curthread);
-	if (!iheldthelock)
-	    vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, curthread);
-	vinvalbuf(vp, V_SAVE, osi_curcred(), curthread, PINOD, 0);
-	if (!iheldthelock)
-	    VOP_UNLOCK(vp, LK_EXCLUSIVE, curthread);
-#else
-#ifdef AFS_DARWIN_ENV
+#if defined(AFS_DARWIN_ENV)
 	iheldthelock = VOP_ISLOCKED(vp);
 	if (!iheldthelock)
 	    vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, current_proc());
@@ -1747,14 +1739,34 @@ afs_GetVCache(register struct VenusFid *afid, struct vrequest *areq,
 	  ObtainWriteLock(&tvc->lock, 954);
 	if (!iheldthelock)
 	    VOP_UNLOCK(vp, LK_EXCLUSIVE, current_proc());
-#else
+#elif defined(AFS_FBSD60_ENV)
+	iheldthelock = VOP_ISLOCKED(vp, curthread);
+	if (!iheldthelock)
+	    vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, curthread);
+	vinvalbuf(vp, V_SAVE, curthread, PINOD, 0);
+	if (!iheldthelock)
+	    VOP_UNLOCK(vp, LK_EXCLUSIVE, curthread);
+#elif defined(AFS_FBSD50_ENV)
+	iheldthelock = VOP_ISLOCKED(vp, curthread);
+	if (!iheldthelock)
+	    vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, curthread);
+	vinvalbuf(vp, V_SAVE, osi_curcred(), curthread, PINOD, 0);
+	if (!iheldthelock)
+	    VOP_UNLOCK(vp, LK_EXCLUSIVE, curthread);
+#elif defined(AFS_FBSD40_ENV)
 	iheldthelock = VOP_ISLOCKED(vp, curproc);
 	if (!iheldthelock)
 	    vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, curproc);
 	vinvalbuf(vp, V_SAVE, osi_curcred(), curproc, PINOD, 0);
 	if (!iheldthelock)
 	    VOP_UNLOCK(vp, LK_EXCLUSIVE, curproc);
-#endif
+#elif defined(AFS_OBSD_ENV)
+	iheldthelock = VOP_ISLOCKED(vp, curproc);
+	if (!iheldthelock)
+	    VOP_LOCK(vp, LK_EXCLUSIVE | LK_RETRY, curproc);
+	uvm_vnp_uncache(vp);
+	if (!iheldthelock)
+	    VOP_UNLOCK(vp, 0, curproc);
 #endif
     }
 #endif
