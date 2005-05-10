@@ -53,11 +53,6 @@ lose;
   ac_cv_linux_config_modversions=no)])
   AC_MSG_RESULT($ac_cv_linux_config_modversions)
   AC_MSG_CHECKING(which kernel modules to build)
-  if false; then
-      MPS="MP SP"
-  elif test "x$ac_cv_linux_config_modversions" = "xno" -a "$AFS_SYSKVERS" -lt 26; then
-      MPS="MP SP"
-  else
   AC_CACHE_VAL(ac_cv_linux_config_smp, [
   AC_TRY_COMPILE(
 [#include <linux/config.h>
