@@ -1,0 +1,15 @@
+#!/unix
+*
+* $Locker:  $
+*
+* EXPORT exports
+*
+import_kfunc
+import_kvar
+*
+* Overwrite vanilla system calls
+*
+okioctl32	syscall
+
+
+
