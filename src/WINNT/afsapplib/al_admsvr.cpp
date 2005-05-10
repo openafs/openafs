@@ -25,7 +25,7 @@ static struct
    {
    BOOL fUseAdminServer;
    DWORD idAdminServerClient;
-   } l;
+   } l = {0, 0};
 
 
 /*

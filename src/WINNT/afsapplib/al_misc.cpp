@@ -213,7 +213,8 @@ BOOL CALLBACK AfsAppLib_TranslateErrorFunc (LPTSTR pszText, ULONG code, LANGID i
       ULONG status;
       return asc_ErrorCodeTranslate (idClient, code, idLanguage, pszText, &status);
       }
-   else if (OpenUtilLibrary())
+   else
+       if (OpenUtilLibrary())
       {
       const char *pszTextA = NULL;
       afs_status_t status;
@@ -463,7 +464,8 @@ BOOL AfsAppLib_GetLocalCell (LPTSTR pszCell, ULONG *pStatus)
          {
          rc = asc_LocalCellGet (idClient, szCell, &status);
          }
-      else if (OpenClientLibrary())
+      else 
+          if (OpenClientLibrary())
          {
          char szCellNameA[ MAX_PATH ];
          if ((rc = afsclient_LocalCellGet (szCellNameA, (afs_status_p)&status)) == TRUE)
