@@ -1,9 +1,41 @@
 Since 1.3.82:
+ * Windows Crash Reporting does not get triggered for afsd_service.exe
+   because it provides its own top level exception handler.  This patch 
+   places an explicit call to ReportCrash() on platforms which support 
+   it.  (XP and above.)
+
+   If you configure Crash Reporting via AD Policy to capture crash
+   reports within the domain, then you will receive this output.
+
+ * Generate MiniDumps independent of the Windows Crash Reporting.
+ 
+   (a) If an exception occurs,a minidump will be generated at the path
+       %TEMP%\afsd.dmp. The type of minidump defaults to Normal but 
+       can be set to any other type via use of the
+       registry.      
+
+       [HKLM\SOFTWARE\OpenAFS\Client]  MiniDumpType (DWORD)
+
+   (b) MiniDumps can be generated at any time using the "fs minidump"
+       command.   This allows you to generate a minidump without 
+       stopping the process or even requiring the use of a debugger
+       on the system.
+
+  * an RX connection which reports bad ticket now treats it the same way
+    the expired ticket is treated.   The ticket is removed from the 
+    connection and a new anonymous connection is established.
+
+  * fs memdump now requires that the caller be in the AFS Client Admins
+    group
+
+  * additional debugging information is provided in cm_Analyze when the
+    error code is ignored.
+
   * Fix a regression introduced into the pioctl() client code which
     will cause a crash in winlogon.exe, explorer.exe and fs.exe if
-    MIT KFW is not installed.
+    MIT KFW is not installed. (1.3.82a)
 
-  * Remove AFS Gateway option from OpenAFS Control Panel
+  * Remove AFS Gateway option from OpenAFS Control Panel (1.3.82a)
 
 Since 1.3.81:
   * Fix a race condition in cm_EndCallbackGrantingCall() that 
