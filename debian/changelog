@@ -7,6 +7,11 @@ openafs (1.3.82-1) unstable; urgency=low
   * In all cases, only build the module appropriate to the kernel we're
     building against.  Building an SMP module against a non-SMP kernel
     fails due to missing defines.  (Closes: #225907)
+  * README.modules: Add documentation for module-assistant and recommend
+    it when using Debian kernels.  Mention divergences from upstream in
+    module naming.  (Closes: #253168)  Emphasize that the kernel source
+    tree used for make-kpkg must be identically configured to the kernel
+    the module will be used with.
 
  --
 
@@ -18,11 +23,6 @@ openafs (1.3.81-5) unstable; urgency=low
     or ext3 and that XFS and ReiserFS will not work.  upserver and
     upclient are now provided.  Provide some information about why
     kaserver is not provided.  (Closes: #249315)
-  * README.modules: Add documentation for module-assistant and recommend
-    it when using Debian kernels.  Mention divergences from upstream in
-    module naming.  (Closes: #253168)  Emphasize that the kernel source
-    tree used for make-kpkg must be identically configured to the kernel
-    the module will be used with.
   * Overhaul the module build rules.
     - Use debhelper to build the module binary package.
     - Let debhelper handle the module postinst and prerm control scripts.
