@@ -354,6 +354,14 @@ afsd_ServiceControlHandlerEx(
                 }   
             }
         }
+        break;
+    case SERVICE_CONTROL_CUSTOM_DUMP: 
+        {
+            afsi_log("SERVICE_CONTROL_CUSTOM_DUMP"); 
+            GenerateMiniDump(NULL);
+			dwRet = NO_ERROR;
+        }
+        break;
     }		/* end switch(ctrlCode) */                                                        
     return dwRet;   
 }
@@ -1050,7 +1058,7 @@ afsd_Main(DWORD argc, LPTSTR *argv)
     ServiceStatus.dwCheckPoint = 1;
     ServiceStatus.dwWaitHint = 30000;
     /* accept Power Events */
-    ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN | SERVICE_ACCEPT_POWEREVENT;
+    ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN | SERVICE_ACCEPT_POWEREVENT | SERVICE_ACCEPT_PARAMCHANGE;
     SetServiceStatus(StatusHandle, &ServiceStatus);
 #endif
 
@@ -1138,7 +1146,7 @@ afsd_Main(DWORD argc, LPTSTR *argv)
             ServiceStatus.dwCheckPoint = 2;
             ServiceStatus.dwWaitHint = 20000;
             /* accept Power Events */
-            ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN | SERVICE_ACCEPT_POWEREVENT;
+            ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN | SERVICE_ACCEPT_POWEREVENT | SERVICE_ACCEPT_PARAMCHANGE;
             SetServiceStatus(StatusHandle, &ServiceStatus);
         }
     }
@@ -1241,7 +1249,7 @@ afsd_Main(DWORD argc, LPTSTR *argv)
         ServiceStatus.dwWaitHint = 0;
 
         /* accept Power events */
-        ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN | SERVICE_ACCEPT_POWEREVENT;
+        ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN | SERVICE_ACCEPT_POWEREVENT | SERVICE_ACCEPT_PARAMCHANGE;
         SetServiceStatus(StatusHandle, &ServiceStatus);
 #endif  
         {
