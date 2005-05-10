@@ -10,18 +10,6 @@
 # Appropriate source files for each object will be symlinked into ${KDIR}
 # EXTRA_CFLAGS will be set to ${CFLAGS} ${COMMON_INCLUDE}
 
-#!/usr/bin/perl
-# make_kbuild_makefile.pl
-# Generate a Makefile for use with the Linux 2.6+ kernel build system
-#
-# Usage: make_kbuild_makefile.pl ${KDIR} ${TARG} Makefiles...
-#
-# The specified makefiles will be scanned for variable values
-# The module ${TARG} will be built in ${TOP_SRCDIR}/src/libafs/${KDIR}.
-# It will include objects listed in ${AFSAOBJS} and ${AFSNONFSOBJS}
-# Appropriate source files for each object will be symlinked into ${KDIR}
-# EXTRA_CFLAGS will be set to ${CFLAGS} ${COMMON_INCLUDE}
-
 # Produces ${KDIR}/Makefile, suitable for use with kbuild
 
 use IO::File;

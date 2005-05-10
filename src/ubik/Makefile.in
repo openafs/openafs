@@ -34,8 +34,6 @@ depinstall: \
 $(PICTARGET):
 	mkdir -p $(PICTARGET)
 
-
-
 utst_server: utst_server.o utst_int.ss.o utst_int.xdr.o libubik.a 
 	${CC} ${CFLAGS} -o utst_server utst_server.o utst_int.ss.o utst_int.xdr.o libubik.a $(LIBS)
 
@@ -102,7 +100,7 @@ uerrors.c ubik.h: uerrors.et ubik.p.h
 	$(RM) -f ubik.h uerrors.c
 	${COMPILE_ET} -p ${srcdir} uerrors -h ubik
 
-libubik.a: ${LIBOBJS} AFS_component_version_number.o 
+libubik.a: ${LIBOBJS} AFS_component_version_number.o
 	-$(RM) -f $@
 	$(AR) crc $@ ${LIBOBJS} AFS_component_version_number.o
 	$(RANLIB) $@
@@ -176,6 +174,10 @@ ${DESTDIR}${includedir}/ubik_int.h: ubik_int.h
 
 ${TOP_INCDIR}/ubik_int.h: ubik_int.h
 	${INSTALL} $? $@
+
+${DESTDIR}${bindir}/udebug: udebug
+	${INSTALL} $? $@
+
 ${DESTDIR}${afssrvbindir}/udebug: udebug
 	${INSTALL} $? $@
 

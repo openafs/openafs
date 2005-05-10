@@ -71,8 +71,6 @@ $(PICTARGET)/%.o: %.c $(PICTARGET)
 $(PICTARGET):
 	mkdir -p $(PICTARGET)
 
-
-
 test tests: all
 	cd test; $(MAKE)
 

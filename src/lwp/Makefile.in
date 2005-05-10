@@ -20,15 +20,12 @@ PICOBJS = $(patsubst %.o,$(PICTARGET)/%.o,$(LIBOBJS))
 $(PICTARGET)/%.o: %.c $(PICTARGET)
 	$(CC) -c $(PAM_CFLAGS) $(CFLAGS) $< -o $@
 
-
 all: ${TOP_LIBDIR}/liblwp.a ${TOP_INCDIR}/lock.h ${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/preempt.h ${TOP_INCDIR}/timer.h $(PICOBJS)
-
 
 $(PICTARGET):
 	mkdir -p $(PICTARGET)
 
 depinstall: ${TOP_INCDIR}/lock.h ${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/preempt.h ${TOP_INCDIR}/timer.h
-
 
 #
 # Build rules

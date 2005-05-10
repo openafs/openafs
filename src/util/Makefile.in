@@ -65,7 +65,7 @@ dirpath.h: ${srcdir}/dirpath.hin Makefile
 		${srcdir}/dirpath.hin >dirpath.h.tmp && \
 		mv dirpath.h.tmp dirpath.h )
 
-util.a: ${objects} AFS_component_version_number.o 
+util.a: ${objects} AFS_component_version_number.o
 	$(RM) -f util.a
 	$(AR) crv util.a ${objects} AFS_component_version_number.o
 	$(RANLIB) util.a

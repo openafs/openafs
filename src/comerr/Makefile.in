@@ -31,7 +31,6 @@ $(PICTARGET)/%.o: %.c $(PICTARGET)
 $(PICTARGET):
 	mkdir -p $(PICTARGET)
 
-
 libcom_err.a: error_msg.o et_name.o com_err.o AFS_component_version_number.o $(PICOBJS)
 	$(RM) -f $@
 	$(AR) crv $@ error_msg.o et_name.o com_err.o AFS_component_version_number.o

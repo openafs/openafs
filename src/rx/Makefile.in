@@ -96,7 +96,7 @@ xdr_refernce.o: xdr_refernce.c xdr.h xdr_prototypes.h
 rxperf: rxperf.o librx.a
 	${CC} -o $@ rxperf.o ${LIBS}
 
-librx.a: ${LIBOBJS} RX_component_version_number.o 
+librx.a: ${LIBOBJS} RX_component_version_number.o
 	-$(RM) -f $@
 	$(AR) crv $@ ${LIBOBJS} RX_component_version_number.o
 	$(RANLIB) $@
@@ -199,7 +199,6 @@ install: \
 	${DESTDIR}${includedir}/rx/rx_null.h \
 	${DESTDIR}${includedir}/rx/xdr.h \
 	${DESTDIR}${includedir}/rx/xdr_prototypes.h
-
 
 ${DESTDIR}${libdir}/librx.a: librx.a
 	${INSTALL} $? $@

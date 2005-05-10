@@ -26,10 +26,12 @@ PICTARGET =../pic/auth
 PICOBJS = $(patsubst %.o,$(PICTARGET)/%.o,$(OBJS))
 $(PICTARGET)/%.o: %.c $(PICTARGET)
 	$(CC) -c $(PAM_CFLAGS) $(CFLAGS) $< -o $@
-all: ${TOP_LIBDIR}/libauth.a ${TOP_LIBDIR}/libauth.krb.a depinstall copyauth setkey  $(PICOBJS)
+
+all: ${TOP_LIBDIR}/libauth.a ${TOP_LIBDIR}/libauth.krb.a depinstall copyauth setkey $(PICOBJS)
 
 $(PICTARGET):
 	mkdir -p $(PICTARGET)
+
 depinstall: ${TOP_INCDIR}/afs/keys.h ${TOP_INCDIR}/afs/cellconfig.h ${TOP_INCDIR}/afs/auth.h
 
 cellconfig.o: cellconfig.c ${INCLS}

@@ -80,7 +80,6 @@ afssyscalls.o: afssyscalls.c afssyscalls.h
 
 rmtsysnet.o rmtsysc.o rmtsyss.o rmtsysd.o: rmtsys.h
 $(PICTARGET)/rmtsysnet.o $(PICTARGET)/rmtsysc.o: rmtsys.h
-
 rmtsysd: AFS_component_version_number.o afs.exp afsl.exp
 
 rmtsys.cs.c: rmtsys.xg
