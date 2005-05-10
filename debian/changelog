@@ -12,6 +12,7 @@ openafs (1.3.82-1) unstable; urgency=low
     module naming.  (Closes: #253168)  Emphasize that the kernel source
     tree used for make-kpkg must be identically configured to the kernel
     the module will be used with.
+  * Simplify clean target.  Upstream make distclean is now better.
 
  --
 
