@@ -818,7 +818,6 @@ int afsd_InitCM(char **reasonP)
                             (BYTE *) &traceOnPanic, &dummyLen);
     if (code != ERROR_SUCCESS)
         traceOnPanic = 1;              /* log */
-    }
     afsi_log("Set to %s on panic", traceOnPanic ? "trap" : "not trap");
 
     dummyLen = sizeof(reportSessionStartups);

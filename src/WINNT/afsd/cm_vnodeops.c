@@ -1635,8 +1635,8 @@ long cm_EvaluateSymLink(cm_scache_t *dscp, cm_scache_t *linkScp,
                      CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW | CM_FLAG_DIRSEARCH,
                      userp, NULL, reqp, outScpp);
 
-	if (code == CM_ERROR_NOSUCHFILE)
-		code = CM_ERROR_NOSUCHPATH;
+    if (code == CM_ERROR_NOSUCHFILE)
+        code = CM_ERROR_NOSUCHPATH;
 
     /* this stuff is allocated no matter what happened on the namei call,
      * so free it */

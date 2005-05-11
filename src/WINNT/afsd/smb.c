@@ -1546,7 +1546,7 @@ int smb_FindShare(smb_vc_t *vcp, smb_user_t *uidp, char *shareName,
         /* Get the full name for this cell */
         code = cm_SearchCellFile(p, temp, 0, 0);
 #ifdef AFS_AFSDB_ENV
-		if (code && cm_dnsEnabled) {
+        if (code && cm_dnsEnabled) {
             int ttl;
             code = cm_SearchCellByDNS(p, temp, &ttl, 0, 0);
         }
@@ -1680,7 +1680,8 @@ void smb_ReleaseDirSearchNoLock(smb_dirSearch_t *dsp)
         lock_ReleaseMutex(&dsp->mx);
     }
     /* do this now to avoid spurious locking hierarchy creation */
-    if (scp) cm_ReleaseSCache(scp);
+    if (scp) 
+        cm_ReleaseSCache(scp);
 }       
 
 void smb_ReleaseDirSearch(smb_dirSearch_t *dsp)
@@ -4780,7 +4781,7 @@ smb_Rename(smb_vc_t *vcp, smb_packet_t *inp, char * oldPathp, char * newPathp, i
                 else 
                     code = CM_ERROR_EXISTS;
                 cm_ReleaseSCache(tmpscp2);
-				tmpscp2 = NULL;
+                tmpscp2 = NULL;
             } else {
                 code = CM_ERROR_NOSUCHFILE;
             }
