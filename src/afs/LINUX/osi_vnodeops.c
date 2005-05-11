@@ -867,7 +867,7 @@ afs_linux_dentry_revalidate(struct dentry *dp)
     cred_t *credp = NULL;
     struct vrequest treq;
     int code, bad_dentry;
-    struct vcache *vcp, *parentvcp;
+    struct vcache *vcp, *pvcp;
 
 #ifdef AFS_LINUX24_ENV
     lock_kernel();
@@ -875,11 +875,17 @@ afs_linux_dentry_revalidate(struct dentry *dp)
     AFS_GLOCK();
 
     vcp = ITOAFS(dp->d_inode);
-    parentvcp = ITOAFS(dp->d_parent->d_inode);		/* dget_parent()? */
+    pvcp = ITOAFS(dp->d_parent->d_inode);		/* dget_parent()? */
 
     /* If it's a negative dentry, it's never valid */
-    if (!vcp || !parentvcp) {
+    if (!vcp || !pvcp) {
 	bad_dentry = 1;
+	goto done;
+    }
+
+    /* parent's DataVersion changed? */
+    if (hgetlo(pvcp->m.DataVersion) > dp->d_time) {
+	bad_dentry = 11;
 	goto done;
     }
 
@@ -1024,6 +1030,7 @@ afs_linux_create(struct inode *dip, struct dentry *dp, int mode)
 #endif
 
 	dp->d_op = &afs_dentry_operations;
+	dp->d_time = hgetlo(ITOAFS(dip)->m.DataVersion);
 	d_instantiate(dp, ip);
     }
 
@@ -1095,6 +1102,7 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
 #endif
     }
     dp->d_op = &afs_dentry_operations;
+    dp->d_time = hgetlo(ITOAFS(dip)->m.DataVersion);
     d_add(dp, AFSTOI(vcp));
 
 #if defined(AFS_LINUX26_ENV)
@@ -1185,8 +1193,10 @@ afs_linux_unlink(struct inode *dip, struct dentry *dp)
 	}
 	AFS_GUNLOCK();
 
-	if (!code)
+	if (!code) {
+	    __dp->d_time = hgetlo(ITOAFS(dip)->m.DataVersion);
 	    d_move(dp, __dp);
+	}
 	dput(__dp);
 
 	goto out;
@@ -1252,6 +1262,7 @@ afs_linux_mkdir(struct inode *dip, struct dentry *dp, int mode)
 	tvcp->v.v_fop = &afs_dir_fops;
 #endif
 	dp->d_op = &afs_dentry_operations;
+	dp->d_time = hgetlo(ITOAFS(dip)->m.DataVersion);
 	d_instantiate(dp, AFSTOI(tvcp));
     }
 

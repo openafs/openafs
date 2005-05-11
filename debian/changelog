@@ -4,6 +4,8 @@ openafs (1.3.82-1) unstable; urgency=low
     - Proper locking for preempt kernels.  This bug manifested as an
       inability to shut down AFS cleanly.  (Closes: #308399, #304040)
     - Correctly handle the inotify semaphore.  (Closes: #303495)
+  * Apply patch from Chas Williams to fix stale cache data from deleted
+    files introduced in 1.3.82.
   * In all cases, only build the module appropriate to the kernel we're
     building against.  Building an SMP module against a non-SMP kernel
     fails due to missing defines.  (Closes: #225907)
