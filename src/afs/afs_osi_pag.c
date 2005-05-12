@@ -241,6 +241,12 @@ afs_setpag(void)
 	code = AddPag(genpag(), &credp);
 	crfree(credp);
     }
+#elif defined(AFS_DARWIN80_ENV)
+    {
+	struct ucred *credp = kauth_cred_dup(proc_ucred(p));
+	code = AddPag(p, genpag(), &credp);
+	kauth_cred_rele(credp);
+    }
 #elif defined(AFS_DARWIN_ENV)
     {
 	struct ucred *credp = crdup(p->p_cred->pc_ucred);

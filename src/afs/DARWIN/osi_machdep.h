@@ -29,9 +29,9 @@ typedef unsigned short etap_event_t;
 #include <kern/locks.h>
 #else
 #include <sys/lock.h>
+#include <sys/user.h>
 #endif
 #include <kern/thread.h>
-#include <sys/user.h>
 
 #ifdef AFS_DARWIN80_ENV
 #define getpid()                proc_selfpid()
@@ -48,10 +48,35 @@ typedef unsigned short etap_event_t;
 /* vcexcl - used only by afs_create */
 enum vcexcl { EXCL, NONEXCL };
 
+#ifndef AFS_DARWIN80_ENV
+#define ifaddr_address_family(x) (x)->ifa_addr->sa_family
+#define ifaddr_address(x, y, z) memcpy(y, (x)->ifa_addr, z)
+#define ifaddr_netmask(x, y, z) memcpy(y, (x)->ifa_netmask, z)
+#define ifaddr_dstaddress(x, y, z) memcpy(y, (x)->ifa_dstaddr, z)
+#define ifaddr_ifnet(x) (x?(x)->ifa_ifp:0)
+#define ifnet_flags(x) (x?(x)->if_flags:0)
+#define ifnet_metric(x) (x?(x)->if_data.ifi_metric:0)
+#endif
+
 #ifdef AFS_DARWIN80_ENV
 #define vrele vnode_rele
 #define vput vnode_put
 #define vref vnode_ref
+#define vattr vnode_attr
+
+#define SetAfsVnode(vn)         /* nothing; done in getnewvnode() */
+/* vnode_vfsfsprivate is not declared, so no macro for us */
+extern void * afs_fsprivate_data;
+static inline int IsAfsVnode(vnode_t vn) {
+   mount_t mp;
+   int res = 0;
+   mp = vnode_mount(vn);
+   if (mp) {
+      res = (vfs_fsprivate(mp) == &afs_fsprivate_data);
+      vfs_mountrelease(mp);
+   }
+   return res;
+}
 #endif
 
 /* 
@@ -60,7 +85,15 @@ enum vcexcl { EXCL, NONEXCL };
 #ifndef AFS_DARWIN60_ENV
 extern struct timeval time;
 #endif
+#ifdef AFS_DARWIN80_ENV
+static inline time_t osi_Time(void) {
+    struct timeval _now;
+    microtime(&_now);
+    return _now.tv_sec;
+}
+#else
 #define osi_Time() (time.tv_sec)
+#endif
 #define afs_hz      hz
 
 #define PAGESIZE 8192
@@ -133,13 +166,17 @@ extern struct lock__bsd__ afs_global_lock;
 #define AFS_APPL_UFS_CACHE 1
 #define AFS_APPL_HFS_CACHE 2
 
-extern ino_t VnodeToIno(vnode_t * vp);
-extern dev_t VnodeToDev(vnode_t * vp);
+extern ino_t VnodeToIno(struct vnode * vp);
+extern dev_t VnodeToDev(struct vnode * vp);
 
 #define osi_curproc() current_proc()
 
 /* FIXME */
 #define osi_curcred() &afs_osi_cred 
+
+#ifdef AFS_DARWIN80_ENV
+uio_t afsio_darwin_partialcopy(uio_t auio, int size);
+#endif
 
 #endif /* KERNEL */
 

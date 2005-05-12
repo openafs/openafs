@@ -274,7 +274,7 @@ afs_CheckLocks(void)
 		if (VREFCOUNT(tvc) > 1)
 #else /* AFS_OSF_ENV */
 #ifdef AFS_DARWIN80_ENV
-		if (vnode_isinuse(AFSTOV(tvc)))
+		if (vnode_isinuse(AFSTOV(tvc), 0))
 #else
 		if (VREFCOUNT(tvc))
 #endif

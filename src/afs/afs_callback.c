@@ -152,7 +152,7 @@ SRXAFSCB_GetCE(struct rx_call *a_call, afs_int32 a_index,
     a_result->callback = afs_data_pointer_to_int32(tvc->callback);	/* XXXX Now a pointer; change it XXXX */
     a_result->cbExpires = tvc->cbExpires;
 #ifdef AFS_DARWIN80_ENV
-    a_result->refCount = vnode_isinuse(AFSTOV(tvc))?1:0; /* XXX fix */
+    a_result->refCount = vnode_isinuse(AFSTOV(tvc),0)?1:0; /* XXX fix */
 #else
     a_result->refCount = VREFCOUNT(tvc);
 #endif
@@ -235,7 +235,7 @@ SRXAFSCB_GetCE64(struct rx_call *a_call, afs_int32 a_index,
     a_result->callback = afs_data_pointer_to_int32(tvc->callback);	/* XXXX Now a pointer; change it XXXX */
     a_result->cbExpires = tvc->cbExpires;
 #ifdef AFS_DARWIN80_ENV
-    a_result->refCount = vnode_isinuse(AFSTOV(tvc))?1:0; /* XXX fix */
+    a_result->refCount = vnode_isinuse(AFSTOV(tvc),0)?1:0; /* XXX fix */
 #else
     a_result->refCount = VREFCOUNT(tvc);
 #endif

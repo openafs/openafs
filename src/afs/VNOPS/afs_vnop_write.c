@@ -105,8 +105,13 @@ afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio,
     volatile
 #endif
     afs_int32 error;
+#ifdef AFS_DARWIN80_ENV
+    uio_t tuiop;
+#else
     struct uio tuio;
+    struct uio *tuiop = &tuio;
     struct iovec *tvec;		/* again, should have define */
+#endif
     register afs_int32 code;
     struct vrequest treq;
 
@@ -253,13 +258,20 @@ afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio,
 	     * as will fit */
 	    len = max - offset;
 	}
+
+#ifdef  AFS_DARWIN80_ENV
+	trimlen = len;
+	tuiop = afsio_darwin_partialcopy(auio, trimlen);
+	uio_setoffset(tuiop, offset);
+#else
 	/* mung uio structure to be right for this transfer */
 	afsio_copy(auio, &tuio, tvec);
 	trimlen = len;
 	afsio_trim(&tuio, trimlen);
 	tuio.afsio_offset = offset;
+#endif
 
-	code = afs_MemWriteUIO(tdc->f.inode, &tuio);
+	code = afs_MemWriteUIO(tdc->f.inode, tuiop);
 	if (code) {
 	    void *mep;		/* XXX in prototype world is struct memCacheEntry * */
 	    error = code;
@@ -274,7 +286,7 @@ afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio,
 	    break;
 	}
 	/* otherwise we've written some, fixup length, etc and continue with next seg */
-	len = len - tuio.afsio_resid;	/* compute amount really transferred */
+	len = len - AFS_UIO_RESID(tuiop);	/* compute amount really transferred */
 	tlen = len;
 	afsio_skip(auio, tlen);	/* advance auio over data written */
 	/* compute new file size */
@@ -322,7 +334,11 @@ afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio,
 	avc->vc_error = error;
     if (!noLock)
 	ReleaseWriteLock(&avc->lock);
+#ifdef AFS_DARWIN80_ENV
+    uio_free(tuiop);
+#else
     osi_FreeSmallSpace(tvec);
+#endif
     error = afs_CheckCode(error, &treq, 6);
     return error;
 }
@@ -346,8 +362,13 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
     volatile
 #endif
     afs_int32 error;
+#ifdef AFS_DARWIN80_ENV
+    uio_t tuiop;
+#else
     struct uio tuio;
+    struct uio *tuiop = &tuio;
     struct iovec *tvec;		/* again, should have define */
+#endif
     struct osi_file *tfile;
     register afs_int32 code;
     struct vrequest treq;
@@ -392,7 +413,12 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
 #if     defined(AFS_SUN56_ENV)
 	auio->uio_loffset = 0;
 #endif
-	filePos = auio->afsio_offset = avc->m.Length;
+	filePos = avc->m.Length;
+#ifdef AFS_DARWIN80_ENV
+	uio_setoffset(auio, avc->m.Length);
+#else
+	auio->afsio_offset = avc->m.Length;
+#endif
     }
 #endif
     /*
@@ -426,7 +452,9 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
     afs_FakeOpen(avc);
 #endif
     avc->states |= CDirty;
+#ifndef AFS_DARWIN80_ENV
     tvec = (struct iovec *)osi_AllocSmallSpace(sizeof(struct iovec));
+#endif
     while (totalLength > 0) {
 	/* 
 	 *  The following line is necessary because afs_GetDCache with
@@ -498,11 +526,19 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
 	     * as will fit */
 	    len = max - offset;
 	}
+
+#ifdef  AFS_DARWIN80_ENV
+	trimlen = len;
+	tuiop = afsio_darwin_partialcopy(auio, trimlen);
+	uio_setoffset(tuiop, offset);
+#else
 	/* mung uio structure to be right for this transfer */
 	afsio_copy(auio, &tuio, tvec);
 	trimlen = len;
 	afsio_trim(&tuio, trimlen);
 	tuio.afsio_offset = offset;
+#endif
+
 #if defined(AFS_AIX41_ENV)
 	AFS_GUNLOCK();
 	code =
@@ -562,6 +598,10 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
 	AFS_GUNLOCK();
 	code = osi_rdwr(tfile, &tuio, UIO_WRITE);
 	AFS_GLOCK();
+#elif defined(AFS_DARWIN80_ENV)
+	AFS_GUNLOCK();
+	code = VOP_WRITE(tfile->vnode, tuiop, 0, afs_osi_ctxtp);
+	AFS_GLOCK();
 #elif defined(AFS_DARWIN_ENV)
 	AFS_GUNLOCK();
 	VOP_LOCK(tfile->vnode, LK_EXCLUSIVE, current_proc());
@@ -599,7 +639,7 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
 	    break;
 	}
 	/* otherwise we've written some, fixup length, etc and continue with next seg */
-	len = len - tuio.afsio_resid;	/* compute amount really transferred */
+	len = len - AFS_UIO_RESID(tuiop);	/* compute amount really transferred */
 	tlen = len;
 	afsio_skip(auio, tlen);	/* advance auio over data written */
 	/* compute new file size */
@@ -650,7 +690,11 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
 	avc->vc_error = error;
     if (!noLock)
 	ReleaseWriteLock(&avc->lock);
+#ifdef AFS_DARWIN80_ENV
+    uio_free(tuiop);
+#else
     osi_FreeSmallSpace(tvec);
+#endif
 #ifndef	AFS_VM_RDWR_ENV
     /*
      * If write is implemented via VM, afs_fsync() is called from the high-level

@@ -286,6 +286,7 @@ afs_osi_Invisible(void)
     curproc->p_flag |= SSYS;
 #elif defined(AFS_HPUX101_ENV) && !defined(AFS_HPUX1123_ENV)
     set_system_proc(u.u_procp);
+#elif defined(AFS_DARWIN80_ENV)
 #elif defined(AFS_DARWIN_ENV)
     /* maybe call init_process instead? */
     current_proc()->p_flag |= P_SYSTEM;
@@ -767,7 +768,7 @@ afs_osi_TraverseProcTable(void)
 }
 #endif
 
-#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if (defined(AFS_DARWIN_ENV) && !defined(AFS_DARWIN80_ENV)) || defined(AFS_FBSD_ENV)
 void
 afs_osi_TraverseProcTable(void)
 {
@@ -990,6 +991,25 @@ afs_osi_proc2cred(AFS_PROC * pr)
 	rv = pr->p_rcred;
 
     return rv;
+}
+#elif defined(AFS_DARWIN80_ENV) 
+const struct AFS_UCRED *
+afs_osi_proc2cred(AFS_PROC * pr)
+{
+    struct AFS_UCRED *rv = NULL;
+    static struct AFS_UCRED cr;
+    struct ucred *pcred;
+
+    if (pr == NULL) {
+	return NULL;
+    }
+    pcred = proc_ucred(pr);
+    cr.cr_ref = 1;
+    cr.cr_uid = pcred->cr_uid;
+    cr.cr_ngroups = pcred->cr_ngroups;
+    memcpy(cr.cr_groups, pcred->cr_groups,
+           NGROUPS * sizeof(gid_t));
+    return &cr;
 }
 #elif defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 const struct AFS_UCRED *
