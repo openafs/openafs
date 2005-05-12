@@ -1,5 +1,0 @@
-# Microsoft Developer Studio Generated Dependency File, included by GetWebDll.mak
-
-.\GetWebDll.cpp : \
-	".\GetWebDll.h"\
-	".\GetWebDllFun.h"\

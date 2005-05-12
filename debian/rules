@@ -40,6 +40,24 @@ moduledir = debian/$(modulepkg)/lib/modules/$(KVERS)/fs
 
 LINTIAN_PACKAGES = openafs-dbserver openafs-client openafs-fileserver
 
+# These variable is used only by get-orig-source, which will normally only be
+# run by maintainers.
+VERSION   = 1.3.82
+UPSTREAM  = /afs/grand.central.org/software/openafs/$(VERSION)
+
+# Download the upstream source and do the repackaging that we have to do for
+# DFSG reasons.  This assumes AFS is mounted, as it's generally only used by
+# the package maintainers.
+get-orig-source:
+	cp $(UPSTREAM)/openafs-$(VERSION)-src.tar.gz .
+	tar xzf openafs-$(VERSION)-src.tar.gz
+	rm openafs-$(VERSION)-src.tar.gz
+	rm -r openafs-$(VERSION)/src/packaging/MacOS
+	rm -r openafs-$(VERSION)/src/WINNT
+	tar cf openafs_$(VERSION).orig.tar openafs-$(VERSION)
+	rm -r openafs-$(VERSION)
+	gzip -9 openafs_$(VERSION).orig.tar
+
 configure: configure-stamp
 configure-stamp:
 	dh_testdir
