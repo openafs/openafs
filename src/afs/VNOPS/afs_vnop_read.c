@@ -474,7 +474,7 @@ afs_UFSRead(register struct vcache *avc, struct uio *auio,
     uio_t tuiop;
 #else
     struct uio tuio;
-    struct uio *tuio = &tuio;
+    struct uio *tuiop = &tuio;
     struct iovec *tvec;
 #endif
     struct osi_file *tfile;
