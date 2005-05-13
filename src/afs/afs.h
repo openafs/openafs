@@ -557,13 +557,20 @@ struct SimpleLocks {
 #define vrefCount   v.v_count
 #endif /* AFS_XBSD_ENV */
 
-#if defined(AFS_LINUX24_ENV)
+/* VREFCOUNT_GT works on vnodes, not vcaches. maybe this is bad? */
+#if defined(AFS_DARWIN80_ENV)
+#define VREFCOUNT_GT(v, y)	vnode_isinuse(AFSTOV(v), y)
+#elif defined(AFS_XBSD_ENV) || defined(AFS_DARWIN_ENV)
+#define VREFCOUNT_GT(v, y)   (AFSTOV(v)->v_usecount>y?1:0)
+#elif defined(AFS_LINUX24_ENV)
 #define VREFCOUNT(v)		atomic_read(&((vnode_t *) v)->v_count)
+#define VREFCOUNT_GT(v, y)	((atomic_read(&((vnode_t *) v)->v_count)>y)?1:0)
 #define VREFCOUNT_SET(v, c)	atomic_set(&((vnode_t *) v)->v_count, c)
 #define VREFCOUNT_DEC(v)	atomic_dec(&((vnode_t *) v)->v_count)
 #define VREFCOUNT_INC(v)	atomic_inc(&((vnode_t *) v)->v_count)
 #else
 #define VREFCOUNT(v)		((v)->vrefCount)
+#define VREFCOUNT_GT(v,y)	((v).v_count>y?1:0)
 #define VREFCOUNT_SET(v, c)	(v)->vrefCount = c;
 #define VREFCOUNT_DEC(v)	(v)->vrefCount--;
 #define VREFCOUNT_INC(v)	(v)->vrefCount++;
@@ -594,12 +601,11 @@ struct vtodc {
 extern afs_uint32 afs_stampValue;	/* stamp for pair's usage */
 #define	MakeStamp()	(++afs_stampValue)
 
-#if defined(AFS_XBSD_ENV) || defined(AFS_DARWIN_ENV)
-#ifdef AFS_DARWIN80_ENV
+#if defined(AFS_DARWIN_ENV)
 #define VTOAFS(v) ((struct vcache *)vnode_fsnode((v)))
-#else
+#define AFSTOV(vc) ((vc)->v)
+#elif defined(AFS_XBSD_ENV)
 #define VTOAFS(v) ((struct vcache *)(v)->v_data)
-#endif
 #define AFSTOV(vc) ((vc)->v)
 #else
 #define VTOAFS(V) ((struct vcache *)(V))

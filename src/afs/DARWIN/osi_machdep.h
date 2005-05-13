@@ -58,6 +58,20 @@ enum vcexcl { EXCL, NONEXCL };
 #define ifnet_metric(x) (x?(x)->if_data.ifi_metric:0)
 #endif
 
+#ifndef AFS_DARWIN80_ENV
+#define ifaddr_address_family(x) (x)->ifa_addr->sa_family
+#define ifaddr_address(x, y, z) memcpy(y, (x)->ifa_addr, z)
+#define ifaddr_netmask(x, y, z) memcpy(y, (x)->ifa_netmask, z)
+#define ifaddr_dstaddress(x, y, z) memcpy(y, (x)->ifa_dstaddr, z)
+#define ifaddr_ifnet(x) (x?(x)->ifa_ifp:0)
+#define ifnet_flags(x) (x?(x)->if_flags:0)
+#define ifnet_metric(x) (x?(x)->if_data.ifi_metric:0)
+
+#define vnode_clearfsnode(x) ((x)->v_data = 0)
+#define vnode_fsnode(x) (x)->v_data
+#define vnode_lock(x) vn_lock(x, LK_EXCLUSIVE | LK_RETRY, current_proc());
+#endif
+
 #ifdef AFS_DARWIN80_ENV
 #define vrele vnode_rele
 #define vput vnode_put

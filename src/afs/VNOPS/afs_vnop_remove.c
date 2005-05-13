@@ -375,15 +375,12 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
     if (tvc)
 #ifndef AFS_DARWIN80_ENV
 	Ttvcr = VREFCOUNT(tvc);
+#endif
 #ifdef	AFS_AIX_ENV
     if (tvc && (VREFCOUNT(tvc) > 2) && tvc->opens > 0
 	&& !(tvc->states & CUnlinked))
 #else
-    if (tvc && (VREFCOUNT(tvc) > 1) && tvc->opens > 0
-	&& !(tvc->states & CUnlinked))
-#endif
-#else
-    if (tvc && (vnode_isinuse(AFSTOV(tvc))) && tvc->opens > 0
+    if (tvc && (VREFCOUNT_GT(tvc), 1) && tvc->opens > 0
 	&& !(tvc->states & CUnlinked))
 #endif
     {
