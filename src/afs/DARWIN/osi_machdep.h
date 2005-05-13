@@ -70,6 +70,7 @@ enum vcexcl { EXCL, NONEXCL };
 #define vnode_clearfsnode(x) ((x)->v_data = 0)
 #define vnode_fsnode(x) (x)->v_data
 #define vnode_lock(x) vn_lock(x, LK_EXCLUSIVE | LK_RETRY, current_proc());
+#define vnode_isvroot(x) (((x)->v_flag & VROOT)?1:0)
 #endif
 
 #ifdef AFS_DARWIN80_ENV
@@ -77,6 +78,14 @@ enum vcexcl { EXCL, NONEXCL };
 #define vput vnode_put
 #define vref vnode_ref
 #define vattr vnode_attr
+
+#define va_size va_data_size
+#define va_atime va_access_time
+#define va_mtime va_modify_time
+#define va_ctime va_change_time
+#define va_bytes va_total_alloc 
+#define va_blocksize va_iosize
+#define va_nodeid va_fileid
 
 #define SetAfsVnode(vn)         /* nothing; done in getnewvnode() */
 /* vnode_vfsfsprivate is not declared, so no macro for us */

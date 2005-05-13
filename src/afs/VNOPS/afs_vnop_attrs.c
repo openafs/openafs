@@ -93,6 +93,8 @@ afs_CopyOutAttrs(register struct vcache *avc, register struct vattr *attrs)
     attrs->va_fsid = avc->v.v_vfsp->vfs_fsid.val[0];
 #elif defined(AFS_OSF_ENV)
     attrs->va_fsid = avc->v.v_mount->m_stat.f_fsid.val[0];
+#elif defined(AFS_DARWIN80_ENV)
+    VATTR_RETURN(attrs, va_fsid, vfs_statfs(vnode_mount(AFSTOV(avc)))->f_fsid.val[0]);
 #elif defined(AFS_DARWIN70_ENV)
     attrs->va_fsid = avc->v->v_mount->mnt_stat.f_fsid.val[0];
 #else /* ! AFS_DARWIN70_ENV */
@@ -156,26 +158,19 @@ afs_CopyOutAttrs(register struct vcache *avc, register struct vattr *attrs)
      * Below return 0 (and not 1) blocks if the file is zero length. This conforms
      * better with the other filesystems that do return 0.      
      */
-#if !defined(AFS_OSF_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_XBSD_ENV)
-#if !defined(AFS_HPUX_ENV)
-#ifdef	AFS_SUN5_ENV
-    attrs->va_nblocks =
-	(attrs->va_size ? ((attrs->va_size + 1023) >> 10) << 1 : 0);
+#ifdef AFS_HPUX_ENV
+    attrs->va_blocks = (attrs->va_size ? ((attrs->va_size + 1023) >> 10) : 0);
 #elif defined(AFS_SGI_ENV)
     attrs->va_blocks = BTOBB(attrs->va_size);
-#else
-    attrs->va_blocks =
-	(attrs->va_size ? ((attrs->va_size + 1023) >> 10) << 1 : 0);
-#endif
-#else /* !defined(AFS_HPUX_ENV) */
-    attrs->va_blocks = (attrs->va_size ? ((attrs->va_size + 1023) >> 10) : 0);
-#endif /* !defined(AFS_HPUX_ENV) */
-#else /* ! AFS_OSF_ENV && !AFS_DARWIN_ENV && !AFS_XBSD_ENV */
+#elif defined(AFS_XBSD_ENV) || defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV)
     attrs->va_bytes = (attrs->va_size ? (attrs->va_size + 1023) : 1024);
 #ifdef	va_bytes_rsv
     attrs->va_bytes_rsv = -1;
 #endif
-#endif /* ! AFS_OSF_ENV && !AFS_DARWIN_ENV && !AFS_XBSD_ENV */
+#else
+    attrs->va_blocks =
+	(attrs->va_size ? ((attrs->va_size + 1023) >> 10) << 1 : 0);
+#endif
 
 #ifdef AFS_LINUX22_ENV
     /* And linux has its own stash as well. */
@@ -301,9 +296,13 @@ afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, struct AFS_UCRED *acred)
 			attrs->va_nodeid = ip->i_ino;
 		    }
 #else
-		    if (AFSTOV(avc)->v_flag & VROOT) {
+		    if (vnode_isvroot(AFSTOV(avc))) {
 			struct vnode *vp = AFSTOV(avc);
 
+#ifdef AFS_DARWIN80_ENV
+			/* XXX vp = vnode_mount(vp)->mnt_vnodecovered; */
+			vp = 0;
+#else
 			vp = vp->v_vfsp->vfs_vnodecovered;
 			if (vp) {	/* Ignore weird failures */
 #ifdef AFS_SGI62_ENV
@@ -316,6 +315,7 @@ afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, struct AFS_UCRED *acred)
 				attrs->va_nodeid = ip->i_number;
 #endif
 			}
+#endif
 		    }
 #endif /* AFS_LINUX22_ENV */
 		}
