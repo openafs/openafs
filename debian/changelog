@@ -7,6 +7,8 @@ openafs (1.3.82-1) unstable; urgency=medium
   * Repackage upstream to remove MacOS-specific files covered by the APSL.
     Remove the WINNT directory to save space since we have to repackage
     anyway.  Provide a get-orig-source target to do the repackaging.
+  * libpam-openafs-kaserver: Fix compilation so that the PAM module isn't
+    missing symbols and therefore unusable.  (Closes: #308844)
   * Apply patch from Chas Williams to fix stale cache data from deleted
     files, a bug introduced in 1.3.82.
   * In all cases, only build the module appropriate to the kernel we're

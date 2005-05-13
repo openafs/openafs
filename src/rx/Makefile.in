@@ -41,14 +41,14 @@ BASICINCLS=${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/lock.h \
 LIBS=librx.a ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/libcmd.a \
 	       ${TOP_LIBDIR}/util.a
 
-all: \
-	includes \
-	${TOP_LIBDIR}/librx.a $(PICOBJS)
-
 PICTARGET =../pic/rx
 PICOBJS = $(patsubst %.o,$(PICTARGET)/%.o,$(LIBOBJS))
 $(PICTARGET)/%.o: %.c $(PICTARGET)
 	$(CC) -c $(PAM_CFLAGS) $(CFLAGS) $< -o $@
+
+all: \
+	includes \
+	${TOP_LIBDIR}/librx.a $(PICOBJS)
 
 depinstall: includes
 

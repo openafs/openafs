@@ -51,6 +51,13 @@ KLIBS=${TOP_LIBDIR}/libubik.a \
 OBJS=kauth.xdr.o kauth.cs.o kaaux.o client.o authclient.o token.o kautils.o kalocalcell.o kaerrors.o user.o krb_tf.o 
 KOBJS=kauth.xdr.o kauth.cs.o kaaux.o client.o authclient.o token.o kautils.o kalocalcell.o kaerrors.o user.krb.o krb_tf.o
 
+PICTARGET =../pic/kauth
+PICOBJS = $(patsubst %.o,$(PICTARGET)/%.o,$(OBJS))
+$(PICTARGET)/%.o: %.c $(PICTARGET)
+	$(CC) -c $(PAM_CFLAGS) $(CFLAGS) $< -o $@
+
+$(PICTARGET):
+	mkdir -p $(PICTARGET)
 
 all: kaserver kas kpwvalid klog klog.krb knfs kpasswd rebuild kdb \
 	${TOP_LIBDIR}/libkauth.a \
@@ -62,14 +69,6 @@ depinstall: \
 	${TOP_INCDIR}/afs/kautils.h \
 	${TOP_INCDIR}/afs/kauth.h \
 	${TOP_INCDIR}/afs/kaport.h 
-
-PICTARGET =../pic/kauth
-PICOBJS = $(patsubst %.o,$(PICTARGET)/%.o,$(OBJS))
-$(PICTARGET)/%.o: %.c $(PICTARGET)
-	$(CC) -c $(PAM_CFLAGS) $(CFLAGS) $< -o $@
-
-$(PICTARGET):
-	mkdir -p $(PICTARGET)
 
 test tests: all
 	cd test; $(MAKE)
