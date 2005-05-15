@@ -557,11 +557,11 @@ struct SimpleLocks {
 #define vrefCount   v.v_count
 #endif /* AFS_XBSD_ENV */
 
-/* VREFCOUNT_GT works on vnodes, not vcaches. maybe this is bad? */
 #if defined(AFS_DARWIN80_ENV)
-#define VREFCOUNT_GT(v, y)	vnode_isinuse(AFSTOV(v), y)
+#define VREFCOUNT_GT(v, y)	vnode_isinuse(AFSTOV(v), (y))
 #elif defined(AFS_XBSD_ENV) || defined(AFS_DARWIN_ENV)
-#define VREFCOUNT_GT(v, y)   (AFSTOV(v)->v_usecount>y?1:0)
+#define VREFCOUNT(v)		((v)->vrefCount)
+#define VREFCOUNT_GT(v, y)	(AFSTOV(v)->v_usecount > (y))
 #elif defined(AFS_LINUX24_ENV)
 #define VREFCOUNT(v)		atomic_read(&((vnode_t *) v)->v_count)
 #define VREFCOUNT_GT(v, y)	((atomic_read(&((vnode_t *) v)->v_count)>y)?1:0)
@@ -570,7 +570,7 @@ struct SimpleLocks {
 #define VREFCOUNT_INC(v)	atomic_inc(&((vnode_t *) v)->v_count)
 #else
 #define VREFCOUNT(v)		((v)->vrefCount)
-#define VREFCOUNT_GT(v,y)	((v).v_count>y?1:0)
+#define VREFCOUNT_GT(v,y)	((v)->vrefCount > (y))
 #define VREFCOUNT_SET(v, c)	(v)->vrefCount = c;
 #define VREFCOUNT_DEC(v)	(v)->vrefCount--;
 #define VREFCOUNT_INC(v)	(v)->vrefCount++;

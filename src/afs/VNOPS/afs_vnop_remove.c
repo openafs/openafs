@@ -377,13 +377,12 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
 	Ttvcr = VREFCOUNT(tvc);
 #endif
 #ifdef	AFS_AIX_ENV
-    if (tvc && (VREFCOUNT(tvc) > 2) && tvc->opens > 0
-	&& !(tvc->states & CUnlinked))
+    if (tvc && VREFCOUNT_GT(tvc, 2) && tvc->opens > 0
+	&& !(tvc->states & CUnlinked)) {
 #else
-    if (tvc && (VREFCOUNT_GT(tvc), 1) && tvc->opens > 0
-	&& !(tvc->states & CUnlinked))
+    if (tvc && VREFCOUNT_GT(tvc, 1) && tvc->opens > 0
+	&& !(tvc->states & CUnlinked)) {
 #endif
-    {
 	char *unlname = afs_newname();
 
 	ReleaseWriteLock(&adp->lock);
