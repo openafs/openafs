@@ -400,13 +400,11 @@ cm_ValidateMappedMemory(char * cachePath)
     if (!cm_IsCacheValid()) {
         fprintf(stderr,"Cache file fails validation test\n");
         UnmapViewOfFile(config_data_p);
-        CloseHandle(hm);
         return CM_ERROR_INVAL;
     }
 
     fprintf(stderr,"Cache passes validation test\n");
     UnmapViewOfFile(config_data_p);
-    CloseHandle(hm);
     return 0;
 }
 
