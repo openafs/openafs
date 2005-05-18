@@ -7,7 +7,7 @@
 
 # make compiler warnings fatal
 
-AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -WX
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -WX -I..\afsd -I..\client_config -I..\kfw\inc\krb5 
 
 # allow the resource compiler to search the dest\include tree
 
@@ -93,6 +93,11 @@ VCLIBS =\
 	shell32.lib
 
 EXELIBS = \
+	$(DESTDIR)\lib\afsauthent.lib \
+	$(DESTDIR)\lib\libafsconf.lib \
+        $(DESTDIR)\lib\afsrxkad.lib \
+        $(DESTDIR)\lib\afsdes.lib \
+        $(DESTDIR)\lib\afskfw.lib \
 	$(DESTDIR)\lib\afs\AfsClass.lib \
 	$(DESTDIR)\lib\afs\TaAfsAppLib.lib
 
