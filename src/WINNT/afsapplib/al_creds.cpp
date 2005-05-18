@@ -68,7 +68,8 @@ BOOL AfsAppLib_CrackCredentials (PVOID hCreds, LPTSTR pszCell, LPTSTR pszUser, L
       {
       rc = asc_CredentialsCrack (idClient, hCreds, pszCell, pszUser, pst, &status);
       }
-   else if (OpenClientLibrary())
+   else 
+       if (OpenClientLibrary())
       {
       char szUserA[ cchRESOURCE ], szUser2A[ cchRESOURCE ];
       char szCellA[ cchRESOURCE ];
@@ -102,7 +103,8 @@ PVOID AfsAppLib_GetCredentials (LPCTSTR pszCell, ULONG *pStatus)
       {
       hCreds = asc_CredentialsGet (idClient, pszCell, &status);
       }
-   else if (OpenClientLibrary())
+   else
+       if (OpenClientLibrary())
       {
       LPSTR pszCellA = StringToAnsi (pszCell);
 
@@ -128,7 +130,8 @@ PVOID AfsAppLib_SetCredentials (LPCTSTR pszCell, LPCTSTR pszUser, LPCTSTR pszPas
       {
       hCreds = asc_CredentialsSet (idClient, pszCell, pszUser, pszPassword, &status);
       }
-   else if (OpenClientLibrary())
+   else
+       if (OpenClientLibrary())
       {
       char szCellA[ cchRESOURCE ];
       char szUserA[ cchRESOURCE ];
@@ -903,6 +906,9 @@ void OnExpiredCredentials (WPARAM wp, LPARAM lp)
 
 BOOL AfsAppLib_IsUserAdmin (PVOID hCreds, LPTSTR pszUser)
 {
+#ifndef USE_KASERVER
+    return TRUE;
+#else
    BOOL rc = FALSE;
    afs_status_t status;
 
@@ -969,5 +975,6 @@ BOOL AfsAppLib_IsUserAdmin (PVOID hCreds, LPTSTR pszUser)
       }
 
    return rc;
+#endif /* USE_KASERVER */
 }
 

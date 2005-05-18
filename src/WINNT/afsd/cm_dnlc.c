@@ -54,6 +54,7 @@ static int cm_debugDnlc = 0;	/* debug dnlc */
 #define dnlcNotify(x,debug)
 #endif /* !DJGPP */
 
+/* Must be called with cm_dnlcLock write locked */
 static cm_nc_t * 
 GetMeAnEntry() 
 {
@@ -332,8 +333,8 @@ RemoveEntry (tnc, key)
 	tnc->next->prev = tnc->prev;
     }
 
-    tnc->prev = (cm_nc_t *) 0; /* everything not in hash table has 0 prev */
-    tnc->key = 0; /* just for safety's sake */
+    memset(tnc, 0, sizeof(cm_nc_t));
+    tnc->magic = CM_DNLC_MAGIC;
     return 0;	  /* success */
 }
 
@@ -368,7 +369,6 @@ cm_dnlcRemove ( adp, aname)
 	if ( (tnc->dirp == adp) && (tnc->key == key) 
 			&& !strcmp(tnc->name,aname) )
 	{
-	    tnc->dirp = (cm_scache_t *) 0; /* now it won't match anything */
 	    tmp = tnc->next;
     	    error = RemoveEntry(tnc, skey);
 	    if ( error )
@@ -376,7 +376,7 @@ cm_dnlcRemove ( adp, aname)
 
 	    tnc->next = cm_data.ncfreelist; /* insert entry into freelist */
 	    cm_data.ncfreelist = tnc;
-	    found = 1;		/* found atleast one entry */
+	    found = 1;		/* found at least one entry */
 
 	    tnc = tmp;		/* continue down the linked list */
 	}
@@ -426,13 +426,16 @@ cm_dnlcPurgedp (adp)
     {
 	if (cm_data.nameCache[i].dirp == adp ) 
 	{
-	    cm_data.nameCache[i].dirp = cm_data.nameCache[i].vp = (cm_scache_t *) 0;
-	    if (cm_data.nameCache[i].prev && !err) 
-	    {
-		err = RemoveEntry(&cm_data.nameCache[i], cm_data.nameCache[i].key & (NHSIZE-1));
-		cm_data.nameCache[i].next = cm_data.ncfreelist;
-		cm_data.ncfreelist = &cm_data.nameCache[i];
-	    }
+	    if (cm_data.nameCache[i].prev) {
+                err = RemoveEntry(&cm_data.nameCache[i], cm_data.nameCache[i].key & (NHSIZE-1));
+                if (!err)
+                {
+                    cm_data.nameCache[i].next = cm_data.ncfreelist;
+                    cm_data.ncfreelist = &cm_data.nameCache[i];
+                }
+	    } else {
+                cm_data.nameCache[i].dirp = cm_data.nameCache[i].vp = (cm_scache_t *) 0;
+            }
 	}
     }
     lock_ReleaseWrite(&cm_dnlcLock);
@@ -461,15 +464,16 @@ cm_dnlcPurgevp ( avc )
     {
    	if (cm_data.nameCache[i].vp == avc) 
 	{
-	    cm_data.nameCache[i].dirp = cm_data.nameCache[i].vp = (cm_scache_t *) 0;
-	    /* can't simply break; because of hard links -- might be two */
-	    /* different entries with same vnode */ 
-	    if (!err && cm_data.nameCache[i].prev) 
-	    {
-		err=RemoveEntry(&cm_data.nameCache[i], cm_data.nameCache[i].key & (NHSIZE-1));
-		cm_data.nameCache[i].next = cm_data.ncfreelist;
-		cm_data.ncfreelist = &cm_data.nameCache[i];
-	    }
+	    if (cm_data.nameCache[i].prev) {
+                err = RemoveEntry(&cm_data.nameCache[i], cm_data.nameCache[i].key & (NHSIZE-1));
+                if (!err)
+                {
+                    cm_data.nameCache[i].next = cm_data.ncfreelist;
+                    cm_data.ncfreelist = &cm_data.nameCache[i];
+                }
+	    } else {
+                cm_data.nameCache[i].dirp = cm_data.nameCache[i].vp = (cm_scache_t *) 0;
+            }
 	}
     }
     lock_ReleaseWrite(&cm_dnlcLock);
@@ -494,10 +498,11 @@ void cm_dnlcPurge(void)
     cm_data.ncfreelist = (cm_nc_t *) 0;
     memset (cm_data.nameCache, 0, sizeof(cm_nc_t) * NCSIZE);
     memset (cm_data.nameHash, 0, sizeof(cm_nc_t *) * NHSIZE);
-    for (i=0; i<NCSIZE; i++) 
+    for (i=0; i<NCSIZE; i++)
     {
-	cm_data.nameCache[i].next = cm_data.ncfreelist;
-	cm_data.ncfreelist = &cm_data.nameCache[i];
+        cm_data.nameCache[i].magic = CM_DNLC_MAGIC;
+        cm_data.nameCache[i].next = cm_data.ncfreelist;
+        cm_data.ncfreelist = &cm_data.nameCache[i];
     }
     lock_ReleaseWrite(&cm_dnlcLock);
    
@@ -519,40 +524,41 @@ cm_dnlcPurgeVol( fidp )
 long
 cm_dnlcValidate(void)
 {
-    int i;
+    int i, purged = 0;
     cm_nc_t * ncp;
-    
+
+  retry:
     // are all nameCache entries marked with the magic bit?
     for (i=0; i<NCSIZE; i++)
     {
         if (cm_data.nameCache[i].magic != CM_DNLC_MAGIC) {
             afsi_log("cm_dnlcValidate failure: cm_data.nameCache[%d].magic != CM_DNLC_MAGIC", i);
             fprintf(stderr, "cm_dnlcValidate failure: cm_data.nameCache[%d].magic != CM_DNLC_MAGIC\n", i);
-            return -1;
+            goto purge;
         }
         if (cm_data.nameCache[i].next &&
             cm_data.nameCache[i].next->magic != CM_DNLC_MAGIC) {
             afsi_log("cm_dnlcValidate failure: cm_data.nameCache[%d].next->magic != CM_DNLC_MAGIC", i);
             fprintf(stderr, "cm_dnlcValidate failure: cm_data.nameCache[%d].next->magic != CM_DNLC_MAGIC\n", i);
-            return -2;
+            goto purge;
         }
         if (cm_data.nameCache[i].prev &&
             cm_data.nameCache[i].prev->magic != CM_DNLC_MAGIC) {
             afsi_log("cm_dnlcValidate failure: cm_data.nameCache[%d].prev->magic != CM_DNLC_MAGIC", i);
             fprintf(stderr, "cm_dnlcValidate failure: cm_data.nameCache[%d].prev->magic != CM_DNLC_MAGIC\n", i);
-            return -3;
+            goto purge;
         }
         if (cm_data.nameCache[i].dirp &&
             cm_data.nameCache[i].dirp->magic != CM_SCACHE_MAGIC) {
             afsi_log("cm_dnlcValidate failure: cm_data.nameCache[%d].dirp->magic != CM_SCACHE_MAGIC", i);
             fprintf(stderr, "cm_dnlcValidate failure: cm_data.nameCache[%d].dirp->magic != CM_SCACHE_MAGIC\n", i);
-            return -4;
+            goto purge;
         }
         if (cm_data.nameCache[i].vp &&
             cm_data.nameCache[i].vp->magic != CM_SCACHE_MAGIC) {
             afsi_log("cm_dnlcValidate failure: cm_data.nameCache[%d].vp->magic != CM_SCACHE_MAGIC", i);
             fprintf(stderr, "cm_dnlcValidate failure: cm_data.nameCache[%d].vp->magic != CM_SCACHE_MAGIC\n", i);
-            return -5;
+            goto purge;
         }
     }
 
@@ -563,54 +569,82 @@ cm_dnlcValidate(void)
             if (ncp->magic != CM_DNLC_MAGIC) {
                 afsi_log("cm_dnlcValidate failure: ncp->magic != CM_DNLC_MAGIC");
                 fprintf(stderr, "cm_dnlcValidate failure: ncp->magic != CM_DNLC_MAGIC\n");
-                return -6;
+                goto purge;
             }
             if (ncp->prev && ncp->prev->magic != CM_DNLC_MAGIC) {
                 afsi_log("cm_dnlcValidate failure: ncp->prev->magic != CM_DNLC_MAGIC");
                 fprintf(stderr, "cm_dnlcValidate failure: ncp->prev->magic != CM_DNLC_MAGIC\n");
-                return -7;
+                goto purge;
             }
             if (ncp->dirp && ncp->dirp->magic != CM_SCACHE_MAGIC) {
                 afsi_log("cm_dnlcValidate failure: ncp->dirp->magic != CM_DNLC_MAGIC");
                 fprintf(stderr, "cm_dnlcValidate failure: ncp->dirp->magic != CM_DNLC_MAGIC\n");
-                return -8;
+                goto purge;
             }
             if (ncp->vp && ncp->vp->magic != CM_SCACHE_MAGIC) {
                 afsi_log("cm_dnlcValidate failure: ncp->vp->magic != CM_DNLC_MAGIC");
                 fprintf(stderr, "cm_dnlcValidate failure: ncp->vp->magic != CM_DNLC_MAGIC\n");
-                return -9;
+                goto purge;
             }
         }
     }
 
     // is the freelist stable?
     if ( cm_data.ncfreelist ) {
-        for (ncp = cm_data.ncfreelist; ncp; 
-             ncp = ncp->next != cm_data.ncfreelist ? ncp->next : NULL) {
+        for (ncp = cm_data.ncfreelist, i = 0; ncp && i < NCSIZE; 
+             ncp = ncp->next != cm_data.ncfreelist ? ncp->next : NULL, i++) {
             if (ncp->magic != CM_DNLC_MAGIC) {
                 afsi_log("cm_dnlcValidate failure: ncp->magic != CM_DNLC_MAGIC");
                 fprintf(stderr, "cm_dnlcValidate failure: ncp->magic != CM_DNLC_MAGIC\n");
-                return -10;
+                goto purge;
             }
-            if (ncp->prev && ncp->prev->magic != CM_DNLC_MAGIC) {
-                afsi_log("cm_dnlcValidate failure: ncp->prev->magic != CM_DNLC_MAGIC");
-                fprintf(stderr, "cm_dnlcValidate failure: ncp->prev->magic != CM_DNLC_MAGIC\n");
-                return -11;
+            if (ncp->prev) {
+                afsi_log("cm_dnlcValidate failure: ncp->prev != NULL");
+                fprintf(stderr, "cm_dnlcValidate failure: ncp->prev != NULL\n");
+                goto purge;
             }
-            if (ncp->dirp && ncp->dirp->magic != CM_SCACHE_MAGIC) {
-                afsi_log("cm_dnlcValidate failure: ncp->dirp->magic != CM_DNLC_MAGIC");
-                fprintf(stderr, "cm_dnlcValidate failure: ncp->dirp->magic != CM_DNLC_MAGIC\n");
-               return -12;
+            if (ncp->key) {
+                afsi_log("cm_dnlcValidate failure: ncp->key != 0");
+                fprintf(stderr, "cm_dnlcValidate failure: ncp->key != 0\n");
+                goto purge;
             }
-            if (ncp->vp && ncp->vp->magic != CM_SCACHE_MAGIC) {
-                afsi_log("cm_dnlcValidate failure: ncp->vp->magic != CM_DNLC_MAGIC");
-                fprintf(stderr, "cm_dnlcValidate failure: ncp->vp->magic != CM_DNLC_MAGIC\n");
-                return -13;
+            if (ncp->dirp) {
+                afsi_log("cm_dnlcValidate failure: ncp->dirp != NULL");
+                fprintf(stderr, "cm_dnlcValidate failure: ncp->dirp != NULL\n");
+               goto purge;
+            }
+            if (ncp->vp) {
+                afsi_log("cm_dnlcValidate failure: ncp->vp != NULL");
+                fprintf(stderr, "cm_dnlcValidate failure: ncp->vp != NULL\n");
+                goto purge;
             }
         }
-    }
 
+        if ( i == NCSIZE && ncp ) {
+            afsi_log("cm_dnlcValidate failure: dnlc freeList corrupted");
+            fprintf(stderr, "cm_dnlcValidate failure: dnlc freeList corrupted\n");
+            goto purge;
+        }
+    }
     return 0;
+
+  purge:
+    if ( purged )
+        return -1;
+
+    afsi_log("cm_dnlcValidate information: purging");
+    fprintf(stderr, "cm_dnlcValidate information: purging\n");
+    cm_data.ncfreelist = (cm_nc_t *) 0;
+    memset (cm_data.nameCache, 0, sizeof(cm_nc_t) * NCSIZE);
+    memset (cm_data.nameHash, 0, sizeof(cm_nc_t *) * NHSIZE);
+    for (i=0; i<NCSIZE; i++)
+    {
+        cm_data.nameCache[i].magic = CM_DNLC_MAGIC;
+        cm_data.nameCache[i].next = cm_data.ncfreelist;
+        cm_data.ncfreelist = &cm_data.nameCache[i];
+    }
+    purged = 1;
+    goto retry;
 }
 
 void 

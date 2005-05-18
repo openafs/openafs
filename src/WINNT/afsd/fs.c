@@ -60,6 +60,7 @@ extern struct cmd_syndesc *cmd_CreateSyntax();
 
 static int MemDumpCmd(struct cmd_syndesc *asp, char *arock);
 static int CSCPolicyCmd(struct cmd_syndesc *asp, char *arock);
+static int MiniDumpCmd(struct cmd_syndesc *asp, char *arock);
 
 extern afs_int32 VL_GetEntryByNameO();
 
@@ -3619,21 +3620,26 @@ MemDumpCmd(struct cmd_syndesc *asp, char *arock)
 {
     long code;
     struct ViceIoctl blob;
-    long inValue;
+    long inValue = 0;
     long outValue;
-  
+
+    if ( !IsAdmin() ) {
+        fprintf (stderr,"Permission denied: requires AFS Client Administrator access.\n");
+        return EACCES;
+    }
+
     if ((asp->parms[0].items && asp->parms[1].items)) {
         fprintf(stderr, "%s trace: must use at most one of '-begin' or '-end'\n", pn);
         return EINVAL;
     }
-  
+
     /* determine if we're turning this tracing on or off */
-    inValue = 0;
     if (asp->parms[0].items)
         inValue = 1;            /* begin */
-    else if (asp->parms[1].items) 
+    else if (asp->parms[1].items)
         inValue = 0;            /* end */
-  
+
+
     blob.in_size = sizeof(long);
     blob.in = (char *) &inValue;
     blob.out_size = sizeof(long);
@@ -3645,10 +3651,55 @@ MemDumpCmd(struct cmd_syndesc *asp, char *arock)
         return code;
     }
 
-    if (outValue) printf("AFS memdump begin.\n");
-    else printf("AFS memdump end.\n");
+    if (outValue) { 
+        printf("AFS memdump created.\n");
+        return 0;
+    } else {
+        printf("AFS memdump failed.\n");
+        return -1;
+    }
+}
 
-    return 0;
+static int
+MiniDumpCmd(struct cmd_syndesc *asp, char *arock)
+{
+    long code;
+    BOOL success = 0;
+    SERVICE_STATUS status;
+    SC_HANDLE hManager = NULL;
+    SC_HANDLE hService = NULL;
+
+    if ( !IsAdmin() ) {
+        fprintf (stderr,"Permission denied: requires AFS Client Administrator access.\n");
+        return EACCES;
+    }
+
+    hManager = OpenSCManager(NULL, NULL, SC_MANAGER_CONNECT);
+    if (!hManager)
+        goto failure;
+
+    hService = OpenService(hManager, "TransarcAFSDaemon", SERVICE_USER_DEFINED_CONTROL);
+    if (!hService)
+        goto failure;
+
+    success = ControlService(hService, SERVICE_CONTROL_CUSTOM_DUMP, &status);
+
+    if (success) {
+        CloseServiceHandle(hService);
+        CloseServiceHandle(hManager);
+
+        printf("AFS minidump generated.\n");
+        return 0;
+    }
+
+  failure: 
+    if (hService)
+        CloseServiceHandle(hService);
+    if (hManager)
+        CloseServiceHandle(hManager);
+
+    printf("AFS minidump failed.\n");
+    return -1;
 }
 
 static int
@@ -3657,6 +3708,11 @@ CSCPolicyCmd(struct cmd_syndesc *asp, char *arock)
     struct cmd_item *ti;
     char *share = NULL;
     HKEY hkCSCPolicy;
+
+    if ( !IsAdmin() ) {
+        fprintf (stderr,"Permission denied: requires AFS Client Administrator access.\n");
+        return EACCES;
+    }
 
     for(ti=asp->parms[0].items; ti;ti=ti->next) {
         share = ti->data;
@@ -4351,6 +4407,8 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-programs", CMD_FLAG, CMD_OPTIONAL, "automatic caching of programs and documents");
     cmd_AddParm(ts, "-documents", CMD_FLAG, CMD_OPTIONAL, "automatic caching of documents");
     cmd_AddParm(ts, "-disable", CMD_FLAG, CMD_OPTIONAL, "disable caching");
+
+    ts = cmd_CreateSyntax("minidump", MiniDumpCmd, 0, "Generate MiniDump of current service state");
 
     code = cmd_Dispatch(argc, argv);
 

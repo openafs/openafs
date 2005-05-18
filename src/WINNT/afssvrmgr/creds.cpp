@@ -18,6 +18,7 @@ extern "C" {
 #include "time.h"
 #include "subset.h"
 
+#include <afs\afskfw.h>
 
 /*
  * OPENCELL DIALOG ____________________________________________________________
@@ -91,28 +92,53 @@ void OpenCellDlg_Hook_OnOK (HWND hDlg, LPOPENCELLDLG_PARAMS lpp)
    TCHAR szPassword[ cchRESOURCE ];
    GetDlgItemText (hDlg, IDC_OPENCELL_PASSWORD, szPassword, cchNAME);
 
-   ULONG status;
-   if ((lpp->hCreds = AfsAppLib_SetCredentials (lpp->szCell, szUser, szPassword, &status)) == NULL)
-      {
-      ErrorDialog (status, IDS_SVR_ERROR_BAD_CREDENTIALS);
-      }
-   else
-      {
-      // See if those credentials are sufficient
-      //
-      CHECKCREDS_PARAMS pp;
-      memset (&pp, 0x00, sizeof(pp));
-      memcpy (&pp.bcdp, &lpp->bcdp, sizeof(BADCREDSDLG_PARAMS));
-      pp.bcdp.hParent = hDlg;
-      pp.hCreds = lpp->hCreds;
-      pp.fShowWarning = TRUE;
+    ULONG status;
 
-      if ((rc = AfsAppLib_CheckCredentials (&pp)) == FALSE)
-         {
-         SetDlgItemText (hDlg, IDC_OPENCELL_ID, TEXT("admin"));
-         PostMessage (hDlg, WM_NEXTDLGCTL, (WPARAM)GetDlgItem(hDlg,IDC_OPENCELL_PASSWORD), TRUE);
-         }
-      }
+    if ( KFW_is_available() ) {
+        // KFW_AFS_get_cred() parses the szNameA field as complete 
+        // princial including potentially
+        // a different realm then the specified cell name.
+        char *Result = NULL;
+        
+        char szCellA[ 256 ];
+        CopyStringToAnsi (szCellA, lpp->szCell);
+
+        char szUserA[ 256 ];
+        CopyStringToAnsi (szUserA, szUser);
+
+        char szPasswordA[ 256 ];
+        CopyStringToAnsi (szPasswordA, szPassword);
+
+        rc = !KFW_AFS_get_cred(szUserA, szCellA, szPasswordA, 0, NULL, &Result);
+        if (rc) {
+            if ((lpp->hCreds = AfsAppLib_GetCredentials (lpp->szCell, &status)) == NULL) {
+                ErrorDialog (status, IDS_SVR_ERROR_BAD_CREDENTIALS);
+            }
+        }
+    } else {
+        if ((lpp->hCreds = AfsAppLib_SetCredentials (lpp->szCell, szUser, szPassword, &status)) == NULL)
+        {
+            ErrorDialog (status, IDS_SVR_ERROR_BAD_CREDENTIALS);
+        }
+        else
+        {
+            // See if those credentials are sufficient
+            //
+            CHECKCREDS_PARAMS pp;
+            memset (&pp, 0x00, sizeof(pp));
+            memcpy (&pp.bcdp, &lpp->bcdp, sizeof(BADCREDSDLG_PARAMS));
+            pp.bcdp.hParent = hDlg;
+            pp.hCreds = lpp->hCreds;
+            pp.fShowWarning = TRUE;
+
+            if ((rc = AfsAppLib_CheckCredentials (&pp)) == FALSE)
+            {
+                SetDlgItemText (hDlg, IDC_OPENCELL_ID, TEXT("admin"));
+                PostMessage (hDlg, WM_NEXTDLGCTL, (WPARAM)GetDlgItem(hDlg,IDC_OPENCELL_PASSWORD), TRUE);
+            }
+        }
+
+    }
 
    if (rc)
       {

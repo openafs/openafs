@@ -19,6 +19,7 @@
 #include <locale.h>
 #include <mbctype.h>
 #include <winsock2.h>
+#include <ErrorRep.h>
 
 #include <osi.h>
 #include "afsd.h"
@@ -135,7 +136,7 @@ void afsd_initUpperCaseTable()
 void
 afsi_start()
 {
-    char wd[100];
+    char wd[256];
     char t[100], u[100], *p, *path;
     int zilch;
     int code;
@@ -815,13 +816,9 @@ int afsd_InitCM(char **reasonP)
     dummyLen = sizeof(traceOnPanic);
     code = RegQueryValueEx(parmKey, "TrapOnPanic", NULL, NULL,
                             (BYTE *) &traceOnPanic, &dummyLen);
-    if (code == ERROR_SUCCESS)
-        afsi_log("Set to %s on panic",
-                  traceOnPanic ? "trap" : "not trap");
-    else {  
-        traceOnPanic = 0;
-        /* Don't log */
-    }
+    if (code != ERROR_SUCCESS)
+        traceOnPanic = 1;              /* log */
+    afsi_log("Set to %s on panic", traceOnPanic ? "trap" : "not trap");
 
     dummyLen = sizeof(reportSessionStartups);
     code = RegQueryValueEx(parmKey, "ReportSessionStartups", NULL, NULL,
@@ -1390,12 +1387,104 @@ static DWORD *afsd_crtDbgBreakCurrent = NULL;
 static DWORD afsd_crtDbgBreaks[256];
 #endif
 
+static EFaultRepRetVal (WINAPI *pReportFault)(LPEXCEPTION_POINTERS pep, DWORD dwMode) = NULL;
+static BOOL (WINAPI *pMiniDumpWriteDump)(HANDLE hProcess,DWORD ProcessId,HANDLE hFile,
+                                  MINIDUMP_TYPE DumpType,
+                                  PMINIDUMP_EXCEPTION_INFORMATION ExceptionParam,
+                                  PMINIDUMP_USER_STREAM_INFORMATION UserStreamParam,
+                                  PMINIDUMP_CALLBACK_INFORMATION CallbackParam) = NULL;
+
+
+static HANDLE
+OpenDumpFile(void)
+{
+    char wd[256];
+
+    if (getenv("TEMP"))
+    {
+        StringCbCopyA(wd, sizeof(wd), getenv("TEMP"));
+    }
+    else
+    {
+        if (!GetWindowsDirectory(wd, sizeof(wd)))
+            return NULL;
+    }
+    StringCbCatA(wd, sizeof(wd), "\\afsd.dmp");
+    return CreateFile( wd, GENERIC_WRITE, FILE_SHARE_READ, NULL,
+                            CREATE_ALWAYS, FILE_FLAG_WRITE_THROUGH, NULL);
+}
+
+void 
+GenerateMiniDump(PEXCEPTION_POINTERS ep)
+{
+    if (ep == NULL) 
+    {
+        // Generate exception to get proper context in dump
+        __try 
+        {
+            RaiseException(DBG_CONTINUE, 0, 0, NULL);
+        } 
+        __except(GenerateMiniDump(GetExceptionInformation()), EXCEPTION_CONTINUE_EXECUTION) 
+        {
+        }
+    } 
+    else
+    {
+        MINIDUMP_EXCEPTION_INFORMATION eInfo;
+        HANDLE hFile = NULL;
+        HMODULE hDbgHelp = NULL;
+
+        hDbgHelp = LoadLibrary("Dbghelp.dll");
+        if ( hDbgHelp == NULL )
+            return;
+
+        (FARPROC) pMiniDumpWriteDump = GetProcAddress(hDbgHelp, "MiniDumpWriteDump");
+        if ( pMiniDumpWriteDump == NULL ) {
+            FreeLibrary(hDbgHelp);
+            return;
+        }
+
+        hFile = OpenDumpFile();
+
+        if ( hFile ) {
+            HKEY parmKey;
+            DWORD dummyLen;
+            DWORD dwValue;
+            DWORD code;
+            DWORD dwMiniDumpType = MiniDumpNormal;
+
+            code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_OPENAFS_SUBKEY,
+                                 0, KEY_QUERY_VALUE, &parmKey);
+            if (code == ERROR_SUCCESS) {
+                dummyLen = sizeof(DWORD);
+                code = RegQueryValueEx(parmKey, "MiniDumpType", NULL, NULL,
+                                        (BYTE *) &dwValue, &dummyLen);
+                if (code == ERROR_SUCCESS)
+                    dwMiniDumpType = dwValue ? 1 : 0;
+                RegCloseKey (parmKey);
+            }
+
+            eInfo.ThreadId = GetCurrentThreadId();
+            eInfo.ExceptionPointers = ep;
+            eInfo.ClientPointers = FALSE;
+
+            pMiniDumpWriteDump( GetCurrentProcess(), GetCurrentProcessId(),
+                                hFile, dwMiniDumpType, ep ? &eInfo : NULL,
+                                NULL, NULL);
+
+            CloseHandle(hFile);
+        }
+        FreeLibrary(hDbgHelp);
+    }
+}
+
 LONG __stdcall afsd_ExceptionFilter(EXCEPTION_POINTERS *ep)
 {
     CONTEXT context;
 #ifdef _DEBUG  
     BOOL allocRequestBrk = FALSE;
 #endif 
+    HMODULE hLib = NULL;
   
     afsi_log("UnhandledException : code : 0x%x, address: 0x%x\n", 
              ep->ExceptionRecord->ExceptionCode, 
@@ -1414,7 +1503,17 @@ LONG __stdcall afsd_ExceptionFilter(EXCEPTION_POINTERS *ep)
     context = *ep->ContextRecord;
 	   
     afsd_printStack(GetCurrentThread(), &context);
-	   
+
+    GenerateMiniDump(ep);
+
+    hLib = LoadLibrary("Faultrep.dll");
+    if ( hLib ) {
+        (FARPROC) pReportFault = GetProcAddress(hLib, "ReportFault");
+        if ( pReportFault )
+            pReportFault(ep, 0);
+        FreeLibrary(hLib);
+    }
+
     if (ep->ExceptionRecord->ExceptionCode == EXCEPTION_BREAKPOINT)
     {
         afsi_log("\nEXCEPTION_BREAKPOINT - continue execution ...\n");

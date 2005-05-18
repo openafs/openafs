@@ -378,7 +378,8 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
         if ( timeLeft > 2 )
             retry = 1;
     }
-    else if (errorCode == RXKADEXPIRED) {
+    else if (errorCode == RXKADEXPIRED || 
+             errorCode == RXKADBADTICKET) {
         if (!dead_session) {
             lock_ObtainMutex(&userp->mx);
             ucellp = cm_GetUCell(userp, serverp->cellp);
@@ -393,8 +394,26 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
                 retry = 1;
         }
     } else {
-        if (errorCode)
-            osi_Log1(afsd_logp, "cm_Analyze: ignoring error code 0x%x", errorCode);
+        if (errorCode) {
+            char * s = "unknown error";
+            switch ( errorCode ) {
+            case RXKADINCONSISTENCY: s = "RXKADINCONSISTENCY"; break;
+            case RXKADPACKETSHORT  : s = "RXKADPACKETSHORT  "; break;
+            case RXKADLEVELFAIL    : s = "RXKADLEVELFAIL    "; break;
+            case RXKADTICKETLEN    : s = "RXKADTICKETLEN    "; break;
+            case RXKADOUTOFSEQUENCE: s = "RXKADOUTOFSEQUENCE"; break;
+            case RXKADNOAUTH       : s = "RXKADNOAUTH       "; break;
+            case RXKADBADKEY       : s = "RXKADBADKEY       "; break;
+            case RXKADBADTICKET    : s = "RXKADBADTICKET    "; break;
+            case RXKADUNKNOWNKEY   : s = "RXKADUNKNOWNKEY   "; break;
+            case RXKADEXPIRED      : s = "RXKADEXPIRED      "; break;
+            case RXKADSEALEDINCON  : s = "RXKADSEALEDINCON  "; break;
+            case RXKADDATALEN      : s = "RXKADDATALEN      "; break;
+            case RXKADILLEGALLEVEL : s = "RXKADILLEGALLEVEL "; break;
+            }
+            osi_Log2(afsd_logp, "cm_Analyze: ignoring error code 0x%x (%s)", 
+                     errorCode, s);
+        }
     }
 
     if (retry && dead_session)

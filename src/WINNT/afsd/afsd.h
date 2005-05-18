@@ -147,4 +147,6 @@ typedef BOOL ( APIENTRY * AfsdDaemonHook )(void);
 typedef BOOL ( APIENTRY * AfsdStoppingHook )(void);
 #define AFSD_STOPPED_HOOK "AfsdStoppedHook"
 typedef BOOL ( APIENTRY * AfsdStoppedHook )(void);
+
+#define SERVICE_CONTROL_CUSTOM_DUMP 128
 #endif /* AFSD_H_ENV */
