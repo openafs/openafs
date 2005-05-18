@@ -844,6 +844,17 @@ Function: Shortcut_FixStartup
   user value is checked first; if it does not exist the local machine
   value is checked.
 
+  The following subset of the command line options are appropriate for
+  use in this registry setting:
+
+    -A = autoinit 
+    -M = renew drive maps 
+    -N = ip address change detection 
+    -Q = quiet mode.  do not display start service dialog
+         if afsd_service is not already running
+    -S = show tokens dialog on startup
+    -Z = unmap drives
+
 
 Regkey:
 [HKCU\SOFTWARE\OpenAFS\Client]

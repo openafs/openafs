@@ -1,4 +1,17 @@
 Since 1.3.82:
+ * A race condition in the rx library was fixed that resulted in 
+   a deadlock in rx_NewCall when the RX_CONN_MAKECALL_WAITING flag
+   was cleared when threads were still waiting to use the 
+   connection.   Also, fixed a potential case in which the 
+   connection could be destroyed while threads were waiting to use it.
+
+ * The DNLC freelist has been seen to become corrupted with still 
+   active entries being stored on the freelist.  Changes were made
+   to perform a better job of cleaning entries before placing them
+   onto the freelist; marking them with the correct magic value when
+   purging the list; and allowing the list to be purged on startup
+   if the cache validation fails.
+
  * Windows Crash Reporting does not get triggered for afsd_service.exe
    because it provides its own top level exception handler.  This patch 
    places an explicit call to ReportCrash() on platforms which support 

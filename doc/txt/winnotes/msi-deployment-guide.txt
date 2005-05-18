@@ -85,7 +85,7 @@ OpenAFS for Windows
        
        (edit the openafs-modified.msi to include the necessary changes)
 
-       > msitran -g openafs-modified.msi openafs.msi openafs-transform.mst
+       > msitran -g openafs.msi openafs-modified.msi openafs-transform.mst
 
        (generates openafs-transform.mst, which is the transform)
 
@@ -687,7 +687,7 @@ OpenAFS for Windows
     MSI package is 'openafs-en_US.msi'.  Generates transform
     'openafs-transform.mst')
 
-    > msitran.exe -g openafs-en_US.msi openafs-en_US_new.msi openafs-transform.mst glpruw
+    > msitran.exe -g openafs-en_US.msi openafs-en_US_new.msi openafs-transform.mst
 
     See the Platform SDK documentation for information on command line
     options for MSITRAN.EXE.
