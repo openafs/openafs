@@ -1073,14 +1073,32 @@ rx_NewCall(register struct rx_connection *conn)
      * If so, let them go first to avoid starving them.
      * This is a fairly simple scheme, and might not be
      * a complete solution for large numbers of waiters.
+     * 
+     * makeCallWaiters keeps track of the number of 
+     * threads waiting to make calls and the 
+     * RX_CONN_MAKECALL_WAITING flag bit is used to 
+     * indicate that there are indeed calls waiting.
+     * The flag is set when the waiter is incremented.
+     * It is only cleared in rx_EndCall when 
+     * makeCallWaiters is 0.  This prevents us from 
+     * accidently destroying the connection while it
+     * is potentially about to be used.
      */
+    MUTEX_ENTER(&conn->conn_data_lock);
     if (conn->makeCallWaiters) {
+	conn->flags |= RX_CONN_MAKECALL_WAITING;
+	conn->makeCallWaiters++;
+        MUTEX_EXIT(&conn->conn_data_lock);
+
 #ifdef	RX_ENABLE_LOCKS
-	CV_WAIT(&conn->conn_call_cv, &conn->conn_call_lock);
+        CV_WAIT(&conn->conn_call_cv, &conn->conn_call_lock);
 #else
-	osi_rxSleep(conn);
+        osi_rxSleep(conn);
 #endif
-    }
+	MUTEX_ENTER(&conn->conn_data_lock);
+	conn->makeCallWaiters--;
+    } 
+    MUTEX_EXIT(&conn->conn_data_lock);
 
     for (;;) {
 	for (i = 0; i < RX_MAXCALLS; i++) {
@@ -1103,15 +1121,17 @@ rx_NewCall(register struct rx_connection *conn)
 	}
 	MUTEX_ENTER(&conn->conn_data_lock);
 	conn->flags |= RX_CONN_MAKECALL_WAITING;
+	conn->makeCallWaiters++;
 	MUTEX_EXIT(&conn->conn_data_lock);
 
-	conn->makeCallWaiters++;
 #ifdef	RX_ENABLE_LOCKS
 	CV_WAIT(&conn->conn_call_cv, &conn->conn_call_lock);
 #else
 	osi_rxSleep(conn);
 #endif
+	MUTEX_ENTER(&conn->conn_data_lock);
 	conn->makeCallWaiters--;
+	MUTEX_EXIT(&conn->conn_data_lock);
     }
     /*
      * Wake up anyone else who might be giving us a chance to
@@ -1876,6 +1896,9 @@ rx_EndCall(register struct rx_call *call, afs_int32 rc)
 	 * rx_NewCall is in a stable state. Otherwise, rx_NewCall may
 	 * have checked this call, found it active and by the time it
 	 * goes to sleep, will have missed the signal.
+         *
+         * Do not clear the RX_CONN_MAKECALL_WAITING flag as long as
+         * there are threads waiting to use the conn object.
 	 */
 	MUTEX_EXIT(&call->lock);
 	MUTEX_ENTER(&conn->conn_call_lock);
@@ -1883,7 +1906,8 @@ rx_EndCall(register struct rx_call *call, afs_int32 rc)
 	MUTEX_ENTER(&conn->conn_data_lock);
 	conn->flags |= RX_CONN_BUSY;
 	if (conn->flags & RX_CONN_MAKECALL_WAITING) {
-	    conn->flags &= (~RX_CONN_MAKECALL_WAITING);
+            if (conn->makeCallWaiters == 0)
+                conn->flags &= (~RX_CONN_MAKECALL_WAITING);
 	    MUTEX_EXIT(&conn->conn_data_lock);
 #ifdef	RX_ENABLE_LOCKS
 	    CV_BROADCAST(&conn->conn_call_cv);
@@ -2169,7 +2193,7 @@ rxi_FreeCall(register struct rx_call *call)
      * If someone else destroys a connection, they either have no
      * call lock held or are going through this section of code.
      */
-    if (conn->flags & RX_CONN_DESTROY_ME) {
+    if (conn->flags & RX_CONN_DESTROY_ME && !(conn->flags & RX_CONN_MAKECALL_WAITING)) {
 	MUTEX_ENTER(&conn->conn_data_lock);
 	conn->refCount++;
 	MUTEX_EXIT(&conn->conn_data_lock);
