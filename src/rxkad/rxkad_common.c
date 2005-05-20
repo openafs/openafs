@@ -32,7 +32,7 @@ RCSID
 #ifdef	AFS_AIX_ENV
 #include "h/systm.h"
 #endif
-#ifdef AFS_DARWIN60_ENV
+#if defined(AFS_DARWIN60_ENV) || defined(AFS_OBSD_ENV)
 #include "h/kernel.h"
 #endif
 #include "h/types.h"
