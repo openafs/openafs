@@ -5328,6 +5328,8 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         fidflags |= SMB_FID_OPENREAD;
     if (desiredAccess & AFS_ACCESS_WRITE)
         fidflags |= SMB_FID_OPENWRITE;
+    if (createOptions & FILE_DELETE_ON_CLOSE)
+        fidflags |= SMB_FID_DELONCLOSE;
 
     code = 0;
 
@@ -5989,6 +5991,8 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
         fidflags |= SMB_FID_OPENREAD;
     if (desiredAccess & AFS_ACCESS_WRITE)
         fidflags |= SMB_FID_OPENWRITE;
+    if (createOptions & FILE_DELETE_ON_CLOSE)
+        fidflags |= SMB_FID_DELONCLOSE;
 
     dscp = NULL;
     code = 0;
