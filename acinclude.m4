@@ -251,6 +251,9 @@ else
 		i?86-*-openbsd3.6)
 			AFS_SYSNAME="i386_obsd36"
 			;;
+		i?86-*-openbsd3.7)
+			AFS_SYSNAME="i386_obsd37"
+			;;
 		i?86-*-freebsd4.2*)
 			AFS_SYSNAME="i386_fbsd_42"
 			;;
@@ -280,6 +283,12 @@ else
 			;;
 		i?86-*-freebsd5.3*)
 			AFS_SYSNAME="i386_fbsd_53"
+			;;
+		i?86-*-freebsd5.4*)
+			AFS_SYSNAME="i386_fbsd_54"
+			;;
+		i?86-*-freebsd6.0*)
+			AFS_SYSNAME="i386_fbsd_60"
 			;;
 		i?86-*-netbsd*1.5*)
 			AFS_PARAM_COMMON=param.nbsd15.h
