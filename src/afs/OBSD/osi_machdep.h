@@ -69,7 +69,6 @@ extern struct simplelock afs_rxglobal_lock;
 #define p_rcred         p_ucred
 
 /* time */
-extern struct timeval time;
 #define	afs_hz		hz
 #define osi_GetTime(x)	microtime(x)
 #define osi_Time()	(time.tv_sec)
