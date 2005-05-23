@@ -128,3 +128,14 @@ AC_TRY_COMPILE(
   ac_cv_linux_kernel_page_follow_link=no)])
 AC_MSG_RESULT($ac_cv_linux_kernel_page_follow_link)
 CPPFLAGS="$save_CPPFLAGS"])
+
+AC_DEFUN([LINUX_KERNEL_LINUX_SEQ_FILE_H],[
+  AC_MSG_CHECKING(for linux/seq_file.h in kernel)
+  if test -f "${LINUX_KERNEL_PATH}/include/linux/seq_file.h"; then
+    ac_linux_seq_file=yes
+    AC_MSG_RESULT($ac_linux_seq_file)
+  else
+    ac_linux_seq_file=no
+    AC_MSG_RESULT($ac_linux_seq_file)
+  fi
+])
