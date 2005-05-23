@@ -48,6 +48,10 @@ RCSID
  * rather than an explicit lock.
  */
 
+#ifdef AFS_FBSD60_ENV
+#define VOP_GETVOBJECT(vp, objp) (*(objp) = (vp)->v_object)
+#endif
+
 #ifdef AFS_FBSD50_ENV
 #define	lock_vnode(v)	vn_lock((v), LK_EXCLUSIVE | LK_RETRY, curthread)
 #define unlock_vnode(v)	VOP_UNLOCK((v), 0, curthread)
