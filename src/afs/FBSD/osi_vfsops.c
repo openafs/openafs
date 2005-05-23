@@ -72,16 +72,6 @@ afs_start(struct mount *mp, int flags, THREAD_OR_PROC)
     return (0);			/* nothing to do. ? */
 }
 
-#ifdef AFS_FBSD53_ENV
-int
-afs_mount(struct mount *mp, struct thread *td)
-{
-    int afs_omount(struct mount *mp, char *path, caddr_t data, struct thread *p);
-
-    return afs_omount(mp, NULL, NULL, td);
-}
-#endif
-
 int
 #ifdef AFS_FBSD53_ENV
 afs_omount(struct mount *mp, char *path, caddr_t data, struct thread *p)
@@ -110,17 +100,27 @@ afs_omount(struct mount *mp, char *path, caddr_t data, struct nameidata *ndp,
     vfs_getnewfsid(mp);
     mp->mnt_stat.f_iosize = 8192;
 
-    if (path)
-	(void) copyinstr(path, mp->mnt_stat.f_mntonname, MNAMELEN - 1, &size);
+    if (path != NULL)
+	copyinstr(path, mp->mnt_stat.f_mntonname, MNAMELEN - 1, &size);
+    else
+	bcopy("/afs", mp->mnt_stat.f_mntonname, size = 4);
     memset(mp->mnt_stat.f_mntonname + size, 0, MNAMELEN - size);
     memset(mp->mnt_stat.f_mntfromname, 0, MNAMELEN);
     strcpy(mp->mnt_stat.f_mntfromname, "AFS");
     /* null terminated string "AFS" will fit, just leave it be. */
     strcpy(mp->mnt_stat.f_fstypename, "afs");
     AFS_GUNLOCK();
-    (void)afs_statfs(mp, &mp->mnt_stat, p);
+    afs_statfs(mp, &mp->mnt_stat, p);
     return 0;
 }
+
+#ifdef AFS_FBSD53_ENV
+int
+afs_mount(struct mount *mp, struct thread *td)
+{
+    return afs_omount(mp, NULL, NULL, td);
+}
+#endif
 
 #ifdef AFS_FBSD60_ENV
 static int
