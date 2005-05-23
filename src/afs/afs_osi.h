@@ -381,9 +381,13 @@ typedef struct timeval osi_timeval_t;
 #ifdef AFS_DARWIN80_ENV
 #define AFS_UIO_OFFSET(uio) uio_offset(uio)
 #define AFS_UIO_RESID(uio) uio_resid(uio)
+#define AFS_UIO_SETOFFSET(uio, off) uio_setoffset(uio, off)
+#define AFS_UIO_SETRESID(uio, val) uio_setresid(uio, val)
 #else
 #define AFS_UIO_OFFSET(uio) (uio)->uio_offset
 #define AFS_UIO_RESID(uio) (uio)->uio_resid
+#define AFS_UIO_SETOFFSET(uio, off) (uio)->uio_offset = off
+#define AFS_UIO_SETRESID(uio, val) (uio)->uio_resid = val
 #endif
 
 

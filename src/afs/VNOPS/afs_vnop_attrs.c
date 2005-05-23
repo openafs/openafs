@@ -296,7 +296,13 @@ afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, struct AFS_UCRED *acred)
 			attrs->va_nodeid = ip->i_ino;
 		    }
 #else
-		    if (vnode_isvroot(AFSTOV(avc))) {
+		    if (
+#ifdef AFS_DARWIN_ENV		    
+			vnode_isvroot(AFSTOV(avc))
+#else
+			AFSTOV(avc)->v_flag & VROOT
+#endif
+			) {
 			struct vnode *vp = AFSTOV(avc);
 
 #ifdef AFS_DARWIN80_ENV

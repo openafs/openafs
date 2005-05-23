@@ -155,6 +155,7 @@ afs_osi_fullSigMask()
 {
     struct uthread *user_thread = (struct uthread *)get_bsdthread_info(current_act());
        
+#ifndef AFS_DARWIN80_ENV
     /* Protect original sigmask */
     if (!user_thread->uu_oldmask) {
 	/* Back up current sigmask */
@@ -162,6 +163,7 @@ afs_osi_fullSigMask()
 	/* Mask all signals */
 	user_thread->uu_sigmask = ~(sigset_t)0;
     }
+#endif
 }
 
 void 
@@ -169,6 +171,7 @@ afs_osi_fullSigRestore()
 {
     struct uthread *user_thread = (struct uthread *)get_bsdthread_info(current_act());
        
+#ifndef AFS_DARWIN80_ENV
     /* Protect original sigmask */
     if (user_thread->uu_oldmask) {
 	/* Restore original sigmask */
@@ -176,6 +179,7 @@ afs_osi_fullSigRestore()
 	/* Clear the oldmask */
 	user_thread->uu_oldmask = (sigset_t)0;
     }
+#endif
 }
 
 int

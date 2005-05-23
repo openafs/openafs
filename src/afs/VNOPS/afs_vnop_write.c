@@ -123,8 +123,8 @@ afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio,
     if ((code = afs_InitReq(&treq, acred)))
 	return code;
     /* otherwise we read */
-    totalLength = auio->afsio_resid;
-    filePos = auio->afsio_offset;
+    totalLength = AFS_UIO_RESID(auio);
+    filePos = AFS_UIO_OFFSET(auio);
     error = 0;
     transferLength = 0;
     afs_Trace4(afs_iclSetp, CM_TRACE_WRITE, ICL_TYPE_POINTER, avc,
@@ -146,8 +146,8 @@ afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio,
 	 */
 	osi_Assert(filePos <= avc->m.Length);
 	diff = avc->m.Length - filePos;
-	auio->afsio_resid = MIN(totalLength, diff);
-	totalLength = auio->afsio_resid;
+	AFS_UIO_SETRESID(auio, MIN(totalLength, diff));
+	totalLength = AFS_UIO_RESID(auio);
     }
 #else
     if (aio & IO_APPEND) {
@@ -155,7 +155,8 @@ afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio,
 #if	defined(AFS_SUN56_ENV)
 	auio->uio_loffset = 0;
 #endif
-	filePos = auio->afsio_offset = avc->m.Length;
+	filePos = avc->m.Length;
+	AFS_UIO_SETOFFSET(auio, filePos);
     }
 #endif
     /*
@@ -189,7 +190,9 @@ afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio,
     afs_FakeOpen(avc);
 #endif
     avc->states |= CDirty;
+#ifndef AFS_DARWIN80_ENV
     tvec = (struct iovec *)osi_AllocSmallSpace(sizeof(struct iovec));
+#endif
     while (totalLength > 0) {
 	/* Read the cached info. If we call GetDCache while the cache
 	 * truncate daemon is running we risk overflowing the disk cache.
@@ -262,14 +265,13 @@ afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio,
 #ifdef  AFS_DARWIN80_ENV
 	trimlen = len;
 	tuiop = afsio_darwin_partialcopy(auio, trimlen);
-	uio_setoffset(tuiop, offset);
 #else
 	/* mung uio structure to be right for this transfer */
 	afsio_copy(auio, &tuio, tvec);
 	trimlen = len;
 	afsio_trim(&tuio, trimlen);
-	tuio.afsio_offset = offset;
 #endif
+	AFS_UIO_SETOFFSET(tuiop, offset);
 
 	code = afs_MemWriteUIO(tdc->f.inode, tuiop);
 	if (code) {
@@ -381,8 +383,8 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
     if ((code = afs_InitReq(&treq, acred)))
 	return code;
     /* otherwise we read */
-    totalLength = auio->afsio_resid;
-    filePos = auio->afsio_offset;
+    totalLength = AFS_UIO_RESID(auio);
+    filePos = AFS_UIO_OFFSET(auio);
     error = 0;
     transferLength = 0;
     afs_Trace4(afs_iclSetp, CM_TRACE_WRITE, ICL_TYPE_POINTER, avc,
@@ -404,8 +406,8 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
 	 */
 	osi_Assert(filePos <= avc->m.Length);
 	diff = avc->m.Length - filePos;
-	auio->afsio_resid = MIN(totalLength, diff);
-	totalLength = auio->afsio_resid;
+	AFS_UIO_SETRESID(auio, MIN(totalLength, diff));
+	totalLength = AFS_UIO_RESID(auio);
     }
 #else
     if (aio & IO_APPEND) {
@@ -414,11 +416,7 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
 	auio->uio_loffset = 0;
 #endif
 	filePos = avc->m.Length;
-#ifdef AFS_DARWIN80_ENV
-	uio_setoffset(auio, avc->m.Length);
-#else
-	auio->afsio_offset = avc->m.Length;
-#endif
+	AFS_UIO_SETOFFSET(auio, avc->m.Length);
     }
 #endif
     /*
@@ -530,14 +528,13 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
 #ifdef  AFS_DARWIN80_ENV
 	trimlen = len;
 	tuiop = afsio_darwin_partialcopy(auio, trimlen);
-	uio_setoffset(tuiop, offset);
 #else
 	/* mung uio structure to be right for this transfer */
 	afsio_copy(auio, &tuio, tvec);
 	trimlen = len;
 	afsio_trim(&tuio, trimlen);
-	tuio.afsio_offset = offset;
 #endif
+	AFS_UIO_SETOFFSET(tuiop, offset);
 
 #if defined(AFS_AIX41_ENV)
 	AFS_GUNLOCK();
@@ -600,7 +597,7 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
 	AFS_GLOCK();
 #elif defined(AFS_DARWIN80_ENV)
 	AFS_GUNLOCK();
-	code = VOP_WRITE(tfile->vnode, tuiop, 0, afs_osi_ctxtp);
+	code = VOP_WRITE(tfile->vnode, tuiop, 0, afs_osi_credp);
 	AFS_GLOCK();
 #elif defined(AFS_DARWIN_ENV)
 	AFS_GUNLOCK();

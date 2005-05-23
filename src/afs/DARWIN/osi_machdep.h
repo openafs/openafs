@@ -27,16 +27,23 @@ typedef unsigned short etap_event_t;
 
 #ifdef AFS_DARWIN80_ENV
 #include <kern/locks.h>
+#include <sys/mount.h>
+#include <h/vnode.h>
 #else
 #include <sys/lock.h>
 #include <sys/user.h>
+#include <sys/vnode.h>
 #endif
 #include <kern/thread.h>
 
 #ifdef AFS_DARWIN80_ENV
+#define ctx_proc vfs_context_proc(ap->a_context)
+#define ctx_cred vfs_context_ucred(ap->a_context)
 #define getpid()                proc_selfpid()
 #define getppid()               proc_selfppid()
 #else
+#define ctx_proc cnp->cn_proc;
+#define ctx_cred cnp->cn_cred;
 #define getpid()                current_proc()->p_pid
 #define getppid()               current_proc()->p_pptr->p_pid
 #endif
@@ -49,24 +56,6 @@ typedef unsigned short etap_event_t;
 enum vcexcl { EXCL, NONEXCL };
 
 #ifndef AFS_DARWIN80_ENV
-#define ifaddr_address_family(x) (x)->ifa_addr->sa_family
-#define ifaddr_address(x, y, z) memcpy(y, (x)->ifa_addr, z)
-#define ifaddr_netmask(x, y, z) memcpy(y, (x)->ifa_netmask, z)
-#define ifaddr_dstaddress(x, y, z) memcpy(y, (x)->ifa_dstaddr, z)
-#define ifaddr_ifnet(x) (x?(x)->ifa_ifp:0)
-#define ifnet_flags(x) (x?(x)->if_flags:0)
-#define ifnet_metric(x) (x?(x)->if_data.ifi_metric:0)
-#endif
-
-#ifndef AFS_DARWIN80_ENV
-#define ifaddr_address_family(x) (x)->ifa_addr->sa_family
-#define ifaddr_address(x, y, z) memcpy(y, (x)->ifa_addr, z)
-#define ifaddr_netmask(x, y, z) memcpy(y, (x)->ifa_netmask, z)
-#define ifaddr_dstaddress(x, y, z) memcpy(y, (x)->ifa_dstaddr, z)
-#define ifaddr_ifnet(x) (x?(x)->ifa_ifp:0)
-#define ifnet_flags(x) (x?(x)->if_flags:0)
-#define ifnet_metric(x) (x?(x)->if_data.ifi_metric:0)
-
 #define vnode_clearfsnode(x) ((x)->v_data = 0)
 #define vnode_fsnode(x) (x)->v_data
 #define vnode_lock(x) vn_lock(x, LK_EXCLUSIVE | LK_RETRY, current_proc());
@@ -86,6 +75,8 @@ enum vcexcl { EXCL, NONEXCL };
 #define va_bytes va_total_alloc 
 #define va_blocksize va_iosize
 #define va_nodeid va_fileid
+
+//afs_osi_ctxp
 
 #define SetAfsVnode(vn)         /* nothing; done in getnewvnode() */
 /* vnode_vfsfsprivate is not declared, so no macro for us */
@@ -118,6 +109,9 @@ static inline time_t osi_Time(void) {
 #define osi_Time() (time.tv_sec)
 #endif
 #define afs_hz      hz
+#ifdef AFS_DARWIN80_ENV
+extern int hz;
+#endif
 
 #define PAGESIZE 8192
 

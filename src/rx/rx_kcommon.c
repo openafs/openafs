@@ -392,7 +392,11 @@ rxi_InitPeerParams(register struct rx_peer *pp)
 	pp->ifMTU = RX_REMOTE_PACKET_SIZE;
     }
 #else /* AFS_USERSPACE_IP_ADDR */
+#ifdef AFS_DARWIN80_ENV
+    ifnet_t ifn;
+#else
     struct ifnet *ifn;
+#endif
 
 #if !defined(AFS_SGI62_ENV)
     if (numMyNetAddrs == 0)
@@ -405,7 +409,7 @@ rxi_InitPeerParams(register struct rx_peer *pp)
 	/* pp->timeout.usec = 0; */
 	pp->ifMTU = MIN(RX_MAX_PACKET_SIZE, rx_MyMaxSendSize);
 #ifdef IFF_POINTOPOINT
-	if (ifn->if_flags & IFF_POINTOPOINT) {
+	if (ifnet_flags(ifn) & IFF_POINTOPOINT) {
 	    /* wish we knew the bit rate and the chunk size, sigh. */
 	    pp->timeout.sec = 4;
 	    pp->ifMTU = RX_PP_PACKET_SIZE;
@@ -413,8 +417,8 @@ rxi_InitPeerParams(register struct rx_peer *pp)
 #endif /* IFF_POINTOPOINT */
 	/* Diminish the packet size to one based on the MTU given by
 	 * the interface. */
-	if (ifn->if_mtu > (RX_IPUDP_SIZE + RX_HEADER_SIZE)) {
-	    rxmtu = ifn->if_mtu - RX_IPUDP_SIZE;
+	if (ifnet_mtu(ifn) > (RX_IPUDP_SIZE + RX_HEADER_SIZE)) {
+	    rxmtu = ifnet_mtu(ifn) - RX_IPUDP_SIZE;
 	    if (rxmtu < pp->ifMTU)
 		pp->ifMTU = rxmtu;
 	}
@@ -615,16 +619,53 @@ rxi_GetIFInfo(void)
     int i = 0;
     int different = 0;
 
-    register struct ifnet *ifn;
     register int rxmtu, maxmtu;
     afs_uint32 addrs[ADDRSPERSITE];
     int mtus[ADDRSPERSITE];
-    struct ifaddr *ifad;	/* ifnet points to a if_addrlist of ifaddrs */
     afs_uint32 ifinaddr;
+#if defined(AFS_DARWIN80_ENV)
+    errno_t t;
+    int cnt=0;
+    ifaddr_t *ifads, ifad;
+    register ifnet_t ifn;
+    struct sockaddr sout;
+    struct sockaddr_in *sin;
+#else
+    struct ifaddr *ifad;	/* ifnet points to a if_addrlist of ifaddrs */
+    register struct ifnet *ifn;
+#endif
 
     memset(addrs, 0, sizeof(addrs));
     memset(mtus, 0, sizeof(mtus));
 
+#if defined(AFS_DARWIN80_ENV)
+    t = ifnet_get_address_list_family(NULL, &ifads, AF_INET);
+    if (t == 0) {
+	rxmtu = ifnet_mtu(ifn) - RX_IPUDP_SIZE;
+	while((ifads[cnt] != NULL) && cnt < ADDRSPERSITE) {
+	    t = ifaddr_address(ifads[cnt], &sout, sizeof(sout));
+	    sin = (struct sockaddr_in *)&sout;
+	    ifinaddr = ntohl(sin->sin_addr.s_addr);
+	    if (myNetAddrs[i] != ifinaddr) {
+		different++;
+	    }
+	    mtus[i] = rxmtu;
+	    rxmtu = rxi_AdjustIfMTU(rxmtu);
+	    maxmtu =
+		rxmtu * rxi_nRecvFrags +
+		((rxi_nRecvFrags - 1) * UDP_HDR_SIZE);
+	    maxmtu = rxi_AdjustMaxMTU(rxmtu, maxmtu);
+	    addrs[i++] = ifinaddr;
+	    if ((ifinaddr != 0x7f000001) && (maxmtu > rx_maxReceiveSize)) {
+		rx_maxReceiveSize = MIN(RX_MAX_PACKET_SIZE, maxmtu);
+		rx_maxReceiveSize =
+		    MIN(rx_maxReceiveSize, rx_maxReceiveSizeUser);
+	    }
+	    cnt++;
+	}
+	ifnet_free_address_list(ifads);
+    }
+#else
 #if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
     TAILQ_FOREACH(ifn, &ifnet, if_link) {
 	if (i >= ADDRSPERSITE)
@@ -670,6 +711,7 @@ rxi_GetIFInfo(void)
 	    }
 	}
     }
+#endif
 
     rx_maxJumboRecvSize =
 	RX_HEADER_SIZE + rxi_nDgramPackets * RX_JUMBOBUFFERSIZE +
@@ -688,19 +730,39 @@ rxi_GetIFInfo(void)
 
 #if defined(AFS_DARWIN60_ENV) || defined(AFS_XBSD_ENV)
 /* Returns ifnet which best matches address */
+#ifdef AFS_DARWIN80_ENV
+ifnet_t
+#else
 struct ifnet *
+#endif
 rxi_FindIfnet(afs_uint32 addr, afs_uint32 * maskp)
 {
-    struct sockaddr_in s;
+    struct sockaddr_in s, sr;
+#ifdef AFS_DARWIN80_ENV
+    ifaddr_t ifad;
+#else
     struct ifaddr *ifad;
+#endif
 
     s.sin_family = AF_INET;
     s.sin_addr.s_addr = addr;
+#ifdef AFS_DARWIN80_ENV
+    ifad = ifaddr_withnet((struct sockaddr *)&s);
+#else
     ifad = ifa_ifwithnet((struct sockaddr *)&s);
+#endif
 
+#ifdef AFS_DARWIN80_ENV
+    if (ifad && maskp) {
+	ifaddr_netmask(ifad, (struct sockaddr *)&sr, sizeof(sr));
+	*maskp = sr.sin_addr.s_addr;
+    }
+    return (ifad ? ifaddr_ifnet(ifad) : NULL);
+#else
     if (ifad && maskp)
 	*maskp = ((struct sockaddr_in *)ifad->ifa_netmask)->sin_addr.s_addr;
     return (ifad ? ifad->ifa_ifp : NULL);
+#endif
 }
 
 #else /* DARWIN60 || XBSD */
@@ -1133,7 +1195,9 @@ rxk_Listener(void)
 #ifdef AFS_XBSD_ENV
     rxk_ListenerPid = curproc->p_pid;
 #endif /* AFS_FBSD_ENV */
-#if defined(AFS_DARWIN_ENV)
+#ifdef AFS_DARWIN80_ENV
+    rxk_ListenerPid = proc_selfpid();
+#elif defined(AFS_DARWIN_ENV)
     rxk_ListenerPid = current_proc()->p_pid;
 #endif
 #if defined(RX_ENABLE_LOCKS) && !defined(AFS_SUN5_ENV)

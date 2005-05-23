@@ -17,23 +17,28 @@ RCSID
 #include "afsincludes.h"
 #include <sys/namei.h>
 
+#ifndef PATHBUFLEN
+#define PATHBUFLEN 256
+#endif
+
 #ifdef AFS_DARWIN80_ENV
 int
 osi_lookupname(char *aname, enum uio_seg seg, int followlink,
 	       struct vnode **vpp) {
   vfs_context_t ctx;
   char tname[PATHBUFLEN];
-  int len, code, flags;
+  int code, flags;
+  size_t len;
 
   if (seg == AFS_UIOUSER) { /* XXX 64bit */
-     AFS_COPYINSTR(aname, tname, PATHBUFLEN, code);
+     AFS_COPYINSTR(aname, tname, sizeof(tname), &len, code);
      if (code)
        return code;
      aname=tname;
   }
-  flags = 0
+  flags = 0;
   if (!followlink)
-	flag |= VNODE_LOOKUP_NOFOLLOW;
+	flags |= VNODE_LOOKUP_NOFOLLOW;
   ctx=vfs_context_create(NULL);
   code = vnode_lookup(aname, flags, vpp, ctx);
   vfs_context_rele(ctx);
@@ -73,7 +78,7 @@ afs_suser(void *credp)
     int error;
     struct proc *p = current_proc();
 
-#if AFS_DARWIN80_ENV
+#ifdef AFS_DARWIN80_ENV
     return proc_suser(p);
 #else
     if ((error = suser(p->p_ucred, &p->p_acflag)) == 0) {
@@ -86,9 +91,9 @@ afs_suser(void *credp)
 #ifdef AFS_DARWIN80_ENV
 uio_t afsio_darwin_partialcopy(uio_t auio, int size) {
    uio_t res;
-   int index;
+   int i;
    user_addr_t iovaddr;
-   user_size_r iovsize;
+   user_size_t iovsize;
 
    /* XXX 64 bit userspaace? */
    res = uio_create(uio_iovcnt(auio), uio_offset(auio),
@@ -96,7 +101,7 @@ uio_t afsio_darwin_partialcopy(uio_t auio, int size) {
                     uio_rw(auio));
 
    for (i = 0;i < uio_iovcnt(auio) && size > 0;i++) {
-       if (uio_getiov(auio, index, &iovaddr, &iovsize))
+       if (uio_getiov(auio, i, &iovaddr, &iovsize))
            break;
        if (iovsize > size)
           iovsize = size;

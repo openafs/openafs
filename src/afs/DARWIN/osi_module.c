@@ -39,7 +39,9 @@ afs_modload(struct kmod_info *ki, void *data)
 	printf("AFS: vfsconf_add failed. aborting\n");
 	return KERN_FAILURE;
     }
+#ifndef AFS_DARWIN80_ENV
     sysent[SYS_setgroups].sy_call = Afs_xsetgroups;
+#endif
 #if 0
     sysent[SYS_ioctl].sy_call = afs_xioctl;
 #endif
@@ -67,7 +69,9 @@ afs_modunload(struct kmod_info * ki, void *data)
 #if 0
     sysent[SYS_ioctl].sy_call = ioctl;
 #endif
+#ifndef AFS_DARWIN80_ENV
     sysent[SYS_setgroups].sy_call = setgroups;
+#endif
     /* give up the stolen syscall entry */
     sysent[AFS_SYSCALL].sy_narg = 0;
     sysent[AFS_SYSCALL].sy_call = nosys;

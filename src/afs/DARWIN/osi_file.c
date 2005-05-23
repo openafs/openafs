@@ -32,6 +32,9 @@ afs_InitDualFSCacheOps(struct vnode *vp)
 {
     int code;
     static int inited = 0;
+#ifdef AFS_DARWIN80_ENV
+    char *buffer = (char*)malloc(MFSNAMELEN);
+#endif
 
     if (inited)
 	return;
@@ -39,24 +42,42 @@ afs_InitDualFSCacheOps(struct vnode *vp)
 
     if (vp == NULL)
 	return;
+#ifdef AFS_DARWIN80_ENV
+    vfs_name(vnode_mount(vp), buffer);
+    if (strncmp("hfs", buffer, 3) == 0)
+#else
     if (strncmp("hfs", vp->v_mount->mnt_vfc->vfc_name, 3) == 0)
+#endif
 	afs_CacheFSType = AFS_APPL_HFS_CACHE;
+#ifdef AFS_DARWIN80_ENV
+    else if (strncmp("ufs", buffer, 3) == 0)
+#else
     else if (strncmp("ufs", vp->v_mount->mnt_vfc->vfc_name, 3) == 0)
+#endif
 	afs_CacheFSType = AFS_APPL_UFS_CACHE;
     else
 	osi_Panic("Unknown cache vnode type\n");
+#ifdef AFS_DARWIN80_ENV
+    free(buffer);
+#endif
 }
 
 ino_t
+#ifdef AFS_DARWIN80_ENV
+VnodeToIno(vnode_t avp)
+#else
 VnodeToIno(vnode_t * avp)
+#endif
 {
     unsigned long ret;
 
+#ifndef AFS_DARWIN80_ENV
     if (afs_CacheFSType == AFS_APPL_UFS_CACHE) {
 	struct inode *ip = VTOI(avp);
 	ret = ip->i_number;
     } else if (afs_CacheFSType == AFS_APPL_HFS_CACHE) {
-#ifndef VTOH
+#endif
+#if !defined(AFS_DARWIN80_ENV) && !defined(VTOH)
 	struct vattr va;
 	if (VOP_GETATTR(avp, &va, &afs_osi_cred, current_proc()))
 	    osi_Panic("VOP_GETATTR failed in VnodeToIno\n");
@@ -65,22 +86,28 @@ VnodeToIno(vnode_t * avp)
 	struct hfsnode *hp = VTOH(avp);
 	ret = H_FILEID(hp);
 #endif
+#ifndef AFS_DARWIN80_ENV
     } else
 	osi_Panic("VnodeToIno called before cacheops initialized\n");
+#endif
     return ret;
 }
 
 
 dev_t
+#ifdef AFS_DARWIN80_ENV
+VnodeToDev(vnode_t avp)
+#else
 VnodeToDev(vnode_t * avp)
+#endif
 {
-
-
+#ifndef AFS_DARWIN80_ENV
     if (afs_CacheFSType == AFS_APPL_UFS_CACHE) {
 	struct inode *ip = VTOI(avp);
 	return ip->i_dev;
     } else if (afs_CacheFSType == AFS_APPL_HFS_CACHE) {
-#ifndef VTOH			/* slow, but works */
+#endif
+#if !defined(AFS_DARWIN80_ENV) && !defined(VTOH)
 	struct vattr va;
 	if (VOP_GETATTR(avp, &va, &afs_osi_cred, current_proc()))
 	    osi_Panic("VOP_GETATTR failed in VnodeToDev\n");
@@ -89,15 +116,22 @@ VnodeToDev(vnode_t * avp)
 	struct hfsnode *hp = VTOH(avp);
 	return H_DEV(hp);
 #endif
+#ifndef AFS_DARWIN80_ENV
     } else
 	osi_Panic("VnodeToDev called before cacheops initialized\n");
+#endif
 }
 
 void *
 osi_UFSOpen(afs_int32 ainode)
 {
+#ifdef AFS_DARWIN80_ENV
+    vnode_t vp;
+    struct vattr va;
+#else
     struct vnode *vp;
     struct vattr va;
+#endif
     register struct osi_file *afile = NULL;
     extern int cacheDiskType;
     afs_int32 code = 0;
@@ -195,10 +229,22 @@ osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
 }
 
 void
+#ifdef AFS_DARWIN80_ENV
+osi_DisableAtimes(vnode_t avp)
+#else
 osi_DisableAtimes(struct vnode *avp)
+#endif
 {
+#ifdef AFS_DARWIN80_ENV
+    struct vnode_attr vap;
+    vfs_context_t ctx;
 
-
+    VATTR_INIT(&vap);
+    VATTR_CLEAR_SUPPORTED(&vap, va_access_time);
+    ctx=vfs_context_create(NULL);
+    vnode_setattr2(avp, &vap, ctx);
+    vfs_context_rele(ctx);
+#else
     if (afs_CacheFSType == AFS_APPL_UFS_CACHE) {
 	struct inode *ip = VTOI(avp);
 	ip->i_flag &= ~IN_ACCESS;
@@ -208,6 +254,7 @@ osi_DisableAtimes(struct vnode *avp)
 	struct hfsnode *hp = VTOH(avp);
 	hp->h_nodeflags &= ~IN_ACCESS;
     }
+#endif
 #endif
 }
 

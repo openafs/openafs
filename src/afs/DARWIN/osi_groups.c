@@ -17,6 +17,8 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
+/* We should be doing something better anyway */
+#ifndef AFS_DARWIN80_ENV
 RCSID
     ("$Header$");
 
@@ -159,3 +161,4 @@ afs_setgroups(struct proc *proc, struct ucred **cred, int ngroups,
     crfree(oldcr);
     return (0);
 }
+#endif

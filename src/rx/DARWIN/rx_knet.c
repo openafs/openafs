@@ -19,8 +19,14 @@ int
 osi_NetReceive(osi_socket so, struct sockaddr_in *addr, struct iovec *dvec,
 	       int nvecs, int *alength)
 {
+#ifdef AFS_DARWIN80_ENV
+    socket_t asocket = (socket_t)so;
+    uio_t up;
+#else
     struct socket *asocket = (struct socket *)so;
     struct uio u;
+    struct uio *up = &u;
+#endif
     int i;
     struct iovec iov[RX_MAXIOVECS];
     struct sockaddr *sa = NULL;
@@ -32,6 +38,16 @@ osi_NetReceive(osi_socket so, struct sockaddr_in *addr, struct iovec *dvec,
     if (nvecs > RX_MAXIOVECS)
 	osi_Panic("osi_NetReceive: %d: Too many iovecs.\n", nvecs);
 
+#ifdef AFS_DARWIN80_ENV
+    up = uio_create(nvecs, 0, UIO_SYSSPACE, UIO_READ);
+    for (i = 0; i < nvecs; i++) {
+	/* is (user_addr_t) needed? */
+	code = uio_addiov(up, (user_addr_t) dvec[i].iov_base, dvec[i].iov_len);
+	if (code)
+	    return code;
+    }
+
+#else
     for (i = 0; i < nvecs; i++)
 	iov[i] = dvec[i];
 
@@ -42,14 +58,15 @@ osi_NetReceive(osi_socket so, struct sockaddr_in *addr, struct iovec *dvec,
     u.uio_segflg = UIO_SYSSPACE;
     u.uio_rw = UIO_READ;
     u.uio_procp = NULL;
+#endif
 
     if (haveGlock)
 	AFS_GUNLOCK();
-#if defined(AFS_DARWIN_ENV) && defined(KERNEL_FUNNEL)
+#if defined(KERNEL_FUNNEL)
     thread_funnel_switch(KERNEL_FUNNEL, NETWORK_FUNNEL);
 #endif
-    code = soreceive(asocket, &sa, &u, NULL, NULL, NULL);
-#if defined(AFS_DARWIN_ENV) && defined(KERNEL_FUNNEL)
+    code = soreceive(asocket, &sa, up, NULL, NULL, NULL);
+#if defined(KERNEL_FUNNEL)
     thread_funnel_switch(NETWORK_FUNNEL, KERNEL_FUNNEL);
 #endif
     if (haveGlock)
@@ -57,7 +74,7 @@ osi_NetReceive(osi_socket so, struct sockaddr_in *addr, struct iovec *dvec,
 
     if (code)
 	return code;
-    *alength -= u.uio_resid;
+    *alength -= AFS_UIO_RESID(up);
     if (sa) {
 	if (sa->sa_family == AF_INET) {
 	    if (addr)
@@ -75,11 +92,11 @@ osi_StopListener(void)
 {
     struct proc *p;
 
-#if defined(AFS_DARWIN_ENV) && defined(KERNEL_FUNNEL)
+#if defined(KERNEL_FUNNEL)
     thread_funnel_switch(KERNEL_FUNNEL, NETWORK_FUNNEL);
 #endif
     soclose(rx_socket);
-#if defined(AFS_DARWIN_ENV) && defined(KERNEL_FUNNEL)
+#if defined(KERNEL_FUNNEL)
     thread_funnel_switch(NETWORK_FUNNEL, KERNEL_FUNNEL);
 #endif
     p = pfind(rxk_ListenerPid);
@@ -88,19 +105,35 @@ osi_StopListener(void)
 }
 
 int
-osi_NetSend(osi_socket asocket, struct sockaddr_in *addr, struct iovec *dvec,
+osi_NetSend(osi_socket so, struct sockaddr_in *addr, struct iovec *dvec,
 	    int nvecs, afs_int32 alength, int istack)
 {
+#ifdef AFS_DARWIN80_ENV
+    socket_t asocket = (socket_t)so;
+    uio_t up;
+#else
+    struct socket *asocket = (struct socket *)so;
+    struct uio u;
+    struct uio *up = &u;
+#endif
     register afs_int32 code;
     int i;
     struct iovec iov[RX_MAXIOVECS];
-    struct uio u;
     int haveGlock = ISAFS_GLOCK();
 
     AFS_STATCNT(osi_NetSend);
     if (nvecs > RX_MAXIOVECS)
 	osi_Panic("osi_NetSend: %d: Too many iovecs.\n", nvecs);
 
+#ifdef AFS_DARWIN80_ENV
+    up = uio_create(nvecs, 0, UIO_SYSSPACE, UIO_WRITE);
+    for (i = 0; i < nvecs; i++) {
+	/* is (user_addr_t) needed? */
+	code = uio_addiov(up, (user_addr_t) dvec[i].iov_base, dvec[i].iov_len);
+	if (code)
+	    return code;
+    }
+#else
     for (i = 0; i < nvecs; i++)
 	iov[i] = dvec[i];
 
@@ -111,16 +144,17 @@ osi_NetSend(osi_socket asocket, struct sockaddr_in *addr, struct iovec *dvec,
     u.uio_segflg = UIO_SYSSPACE;
     u.uio_rw = UIO_WRITE;
     u.uio_procp = NULL;
+#endif
 
     addr->sin_len = sizeof(struct sockaddr_in);
 
     if (haveGlock)
 	AFS_GUNLOCK();
-#if defined(AFS_DARWIN_ENV) && defined(KERNEL_FUNNEL)
+#if defined(KERNEL_FUNNEL)
     thread_funnel_switch(KERNEL_FUNNEL, NETWORK_FUNNEL);
 #endif
-    code = sosend(asocket, (struct sockaddr *)addr, &u, NULL, NULL, 0);
-#if defined(AFS_DARWIN_ENV) && defined(KERNEL_FUNNEL)
+    code = sosend(asocket, (struct sockaddr *)addr, up, NULL, NULL, 0);
+#if defined(KERNEL_FUNNEL)
     thread_funnel_switch(NETWORK_FUNNEL, KERNEL_FUNNEL);
 #endif
     if (haveGlock)
