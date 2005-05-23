@@ -1,4 +1,7 @@
 Since 1.3.82:
+ * Enforce the delete on close flag specified by the NTCreateX()
+   operation.
+
  * A race condition in the rx library was fixed that resulted in 
    a deadlock in rx_NewCall when the RX_CONN_MAKECALL_WAITING flag
    was cleared when threads were still waiting to use the 
