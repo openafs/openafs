@@ -1139,43 +1139,24 @@ afsi_SetServerIPRank(struct srvAddr *sa, struct in_ifaddr *ifa)
 void
 afsi_SetServerIPRank(sa, ifa)
      struct srvAddr *sa;
-#ifdef AFS_DARWIN80_ENV
-     ifaddr_t ifa;
-#else
      struct ifaddr *ifa;
-#endif
 {
-    struct sockaddr sout;
     struct sockaddr_in *sin;
     int t;
 
     afs_uint32 subnetmask, myAddr, myNet, myDstaddr, mySubnet, netMask;
     afs_uint32 serverAddr;
 
-    if (ifaddr_address_family(ifa) != AF_INET)
+    if (ifa->ifa_addr->sa_family != AF_INET)
 	return;
-    t = ifaddr_address(ifa, &sout, sizeof(sout));
-    if (t == 0) {
-	sin = (struct sockaddr_in *)&sout;
-	myAddr = ntohl(sin->sin_addr.s_addr);	/* one of my IP addr in host order */
-    } else {
-	myAddr = 0;
-    }
+    sin = (struct sockaddr_in *)ifa->ifa_addr;
+    myAddr = ntohl(sin->sin_addr.s_addr);	/* one of my IP addr in host order */
     serverAddr = ntohl(sa->sa_ip);	/* server's IP addr in host order */
-    t = ifaddr_netmask(ifa, &sout, sizeof(sout));
-    if (t == 0) {
-	sin = (struct sockaddr_in *)&sout;
-	subnetmask = ntohl(sin->sin_addr.s_addr);	/* subnet mask in host order */
-    } else {
-	subnetmask = 0;
-    }
-    t = ifaddr_dstaddress(ifa, &sout, sizeof(sout));
-    if (t == 0) {
-	sin = (struct sockaddr_in *)&sout;
+    sin = (struct sockaddr_in *)ifa->ifa_netmask;
+    subnetmask = ntohl(sin->sin_addr.s_addr);	/* subnet mask in host order */
+    sin = (struct sockaddr_in *)ifa->ifa_dstaddr;
+    if (sin)
 	myDstaddr = sin->sin_addr.s_addr;
-    } else {
-	myDstaddr = 0;
-    }
 
     if (IN_CLASSA(myAddr))
 	netMask = IN_CLASSA_NET;
@@ -1194,20 +1175,20 @@ afsi_SetServerIPRank(sa, ifa)
 	    if (serverAddr == myAddr) {	/* same machine */
 		sa->sa_iprank = afs_min(sa->sa_iprank, TOPR);
 	    } else {		/* same subnet */
-		sa->sa_iprank = afs_min(sa->sa_iprank, HI + ifnet_metric(ifaddr_ifnet(ifa)));
+		sa->sa_iprank = afs_min(sa->sa_iprank, HI + ifa->ifa_metric);
 	    }
 	} else {		/* same net */
-	    sa->sa_iprank = afs_min(sa->sa_iprank, MED + ifnet_metric(ifaddr_ifnet(ifa)));
+	    sa->sa_iprank = afs_min(sa->sa_iprank, MED + ifa->ifa_metric);
 	}
     }
 #ifdef  IFF_POINTTOPOINT
     /* check for case #4 -- point-to-point link */
-    if ((ifnet_flags(ifaddr_ifnet(ifa)) & IFF_POINTOPOINT)
+    if ((ifa->ia_ifp->if_flags & IFF_POINTOPOINT)
 	&& (myDstaddr == serverAddr)) {
-	if (ifnet_metric(ifaddr_ifnet(ifa)) >= (MAXDEFRANK - MED) / PPWEIGHT)
+	if (ifa->ia_ifp->if_metric >= (MAXDEFRANK - MED) / PPWEIGHT)
 	    t = MAXDEFRANK;
 	else
-	    t = MED + (PPWEIGHT << ifnet_metric(ifaddr_ifnet(ifa)));
+	    t = MED + (PPWEIGHT << ifa->->ifa_metric);
 	if (sa->sa_iprank > t)
 	    sa->sa_iprank = t;
 	}
@@ -1380,20 +1361,6 @@ static int afs_SetServerPrefs(struct srvAddr *sa) {
 #ifdef AFS_SGI62_ENV
     (void)hash_enum(&hashinfo_inaddr, afsi_enum_set_rank, HTF_INET, NULL,
 		    (caddr_t) sa, NULL);
-#elif defined(AFS_DARWIN80_ENV)
-    {
-	errno_t t;
-	int cnt=0;
-	ifaddr_t *addresses, address;
-	t = ifnet_get_address_list_family(NULL, &addresses, AF_INET);
-	if (t == 0) {
-	    while(addresses[cnt] != NULL) {
-		afsi_SetServerIPRank(sa, address);
-		cnt++;
-	    }
-	    ifnet_free_address_list(addresses);
-	}
-    }
 #elif defined(AFS_DARWIN60_ENV)
     {
 	struct ifnet *ifn;

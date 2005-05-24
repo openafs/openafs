@@ -82,58 +82,13 @@
 #define CV_BROADCAST(cv)        thread_wakeup((event_t)(cv))
 #endif
 
-#ifdef AFS_DARWIN80_ENV
-typedef struct {
-    lck_mtx_t *lock;
-    thread_t owner;
-} afs_kmutex_t;
-typedef int afs_kcondvar_t;
-
-extern lck_grp_t * openafs_lck_grp;
-
-#define MUTEX_SETUP() rx_kmutex_setup()
-#define MUTEX_FINISH() rx_kmutex_finish()
-#define LOCKINIT(a) \
-    do { \
-        lck_attr_t * openafs_lck_attr = lck_attr_alloc_init(); \
-        (a) = lck_mtx_alloc_init(openafs_lck_grp, openafs_lck_attr); \
-        lck_attr_free(openafs_lck_attr); \
-    } while(0);
-#define MUTEX_INIT(a,b,c,d) \
-    do { \
-        lck_attr_t * openafs_lck_attr = lck_attr_alloc_init(); \
-        (a)->lock = lck_mtx_alloc_init(openafs_lck_grp, openafs_lck_attr); \
-        lck_attr_free(openafs_lck_attr); \
-	(a)->owner = (thread_t)0; \
-    } while(0);
-#define MUTEX_DESTROY(a) \
-    do { \
-        lck_mtx_destroy((a)->lock, openafs_lck_grp); \
-	(a)->owner = (thread_t)-1; \
-    } while(0);
-#define MUTEX_ENTER(a) \
-    do { \
-        lck_mtx_lock(&(a)->lock); \
-	osi_Assert((a)->owner == (thread_t)0); \
-	(a)->owner = current_thread(); \
-    } while(0);
-#define MUTEX_TRYENTER(a) \
-        (lck_mtx_try_lock(&(a)->lock) ? ((a)->owner = current_thread(), 1) : 0)
-#define MUTEX_EXIT(a) \
-    do { \
-	osi_Assert((a)->owner == current_thread()); \
-	(a)->owner = (thread_t)0; \
-        lck_mtx_unlock(&(a)->lock); \
-    } while(0);
-
-#undef MUTEX_ISMINE
-#define MUTEX_ISMINE(a) (((afs_kmutex_t *)(a))->owner == current_thread())
-#else
 typedef struct {
     struct lock__bsd__ lock;
     thread_t owner;
 } afs_kmutex_t;
 typedef int afs_kcondvar_t;
+
+#define osi_rxWakeup(cv)        thread_wakeup((event_t)(cv))
 
 #define LOCK_INIT(a,b) \
     do { \
@@ -157,6 +112,8 @@ typedef int afs_kcondvar_t;
     } while(0);
 #define MUTEX_TRYENTER(a) \
     ( lockmgr(&(a)->lock, LK_EXCLUSIVE|LK_NOWAIT, 0, current_proc()) ? 0 : ((a)->owner = current_thread(), 1) )
+#define xMUTEX_TRYENTER(a) \
+    ( osi_Assert((a)->owner == (thread_t)0), (a)->owner = current_thread(), 1)
 #define MUTEX_EXIT(a) \
     do { \
 	osi_Assert((a)->owner == current_thread()); \
@@ -166,7 +123,6 @@ typedef int afs_kcondvar_t;
 
 #undef MUTEX_ISMINE
 #define MUTEX_ISMINE(a) (((afs_kmutex_t *)(a))->owner == current_thread())
-#endif
 
 #undef osirx_AssertMine
 extern void osirx_AssertMine(afs_kmutex_t * lockaddr, char *msg);

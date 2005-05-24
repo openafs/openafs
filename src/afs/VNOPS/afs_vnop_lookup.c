@@ -1177,7 +1177,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
 	*avcp = tvc;
 	code = (tvc ? 0 : ENOENT);
 	hit = 1;
-	if (tvc && !VREFCOUNT_GT(tvc, 0)) {
+	if (tvc && !VREFCOUNT(tvc)) {
 	    osi_Panic("TT1");
 	}
 	if (code) {
@@ -1213,7 +1213,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
 	code = 0;
 	*avcp = tvc = adp;
 	hit = 1;
-	if (adp && !VREFCOUNT_GT(adp, 0)) {
+	if (adp && !VREFCOUNT(adp)) {
 	    osi_Panic("TT2");
 	}
 	goto done;
@@ -1497,7 +1497,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
 		}
 	    }
 	*avcp = tvc;
-	if (tvc && !VREFCOUNT_GT(tvc, 0)) {
+	if (tvc && !VREFCOUNT(tvc)) {
 	    osi_Panic("TT3");
 	}
 	code = 0;

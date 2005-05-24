@@ -532,9 +532,7 @@ extern int afsio_skip(struct uio *auio, afs_int32 asize);
 
 
 /* ARCH/osi_misc.c */
-#ifdef AFS_LINUX20_ENV
 extern void osi_iput(struct inode *ip);
-#endif
 extern void afs_osi_SetTime(osi_timeval_t * atv);
 
 /* LINUX/osi_misc.c */

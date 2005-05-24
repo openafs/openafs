@@ -101,6 +101,4 @@ extern kmutex_t afs_rxglobal_lock;
 #define AfsLargeFileSize(pos, off) ( ((offset_t)(pos)+(offset_t)(off) > (offset_t)0x7fffffff)?1:0)
 #endif
 
-/* for afs/VNOPS/afs_vnop_attrs.c */
-#define va_blocks va_nblocks
 #endif /* _OSI_MACHDEP_H_ */

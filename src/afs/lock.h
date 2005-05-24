@@ -107,11 +107,7 @@ extern tid_t thread_self();
 #define MyPidxx current->pid
 #else
 #if defined(AFS_DARWIN_ENV)
-#if defined(AFS_DARWIN80_ENV)
-#define MyPidxx (proc_selfpid())
-#else
 #define MyPidxx (current_proc()->p_pid )
-#endif
 #else
 #if defined(AFS_FBSD_ENV)
 #define MyPidxx (curproc->p_pid )

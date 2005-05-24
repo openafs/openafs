@@ -86,7 +86,7 @@ osi_VM_FlushVCache(struct vcache *avc, int *slept)
 {
     struct vm_object *obj;
     struct vnode *vp;
-    if (VREFCOUNT_GT(avc, 1))
+    if (VREFCOUNT(avc) > 1)
 	return EBUSY;
 
     if (avc->opens)

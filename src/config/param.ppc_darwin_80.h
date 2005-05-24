@@ -39,7 +39,7 @@
 #define AFSBIG_ENDIAN   1
 #define AFS_HAVE_FFS    1	/* Use system's ffs. */
 
-#define AFS_GCPAGS               0
+#define AFS_GCPAGS                1	/* if nonzero, garbage collect PAGs */
 #define RXK_LISTENER_ENV         1
 
 #ifdef KERNEL
@@ -66,7 +66,10 @@
 #define va_nodeid       va_fileid
 #define vfs_vnodecovered mnt_vnodecovered
 #define direct          dirent
+#define vnode_t         struct vnode
 
+//#define VN_RELE(vp)     vrele(((struct vnode *)(vp)))
+//#define VN_HOLD(vp)     VREF(((struct vnode *)(vp)))
 #define BIND_8_COMPAT
 
 #endif

@@ -123,19 +123,21 @@ struct afs_osi_WaitHandle {
 /*
  * Vnode related macros
  */
-#if defined(AFS_DARWIN80_ENV)
-#define vType(vc)               vnode_vtype(AFSTOV(vc))
-#elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 #define vSetVfsp(vc, vfsp)      AFSTOV(vc)->v_mount = (vfsp)
 #define vSetType(vc, type)      AFSTOV(vc)->v_type = (type)
 #define vType(vc)               AFSTOV(vc)->v_type
-extern int (**afs_vnodeop_p) ();
-#define IsAfsVnode(v)      ((v)->v_op == afs_vnodeop_p)
-#define SetAfsVnode(v)     /* nothing; done in getnewvnode() */
 #else
 #define	vType(vc)	    (vc)->v.v_type
 #define	vSetType(vc,type)   (vc)->v.v_type = (type)
 #define	vSetVfsp(vc,vfsp)   (vc)->v.v_vfsp = (vfsp)
+#endif
+
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+extern int (**afs_vnodeop_p) ();
+#define IsAfsVnode(v)      ((v)->v_op == afs_vnodeop_p)
+#define SetAfsVnode(v)     /* nothing; done in getnewvnode() */
+#else
 extern struct vnodeops *afs_ops;
 #define	IsAfsVnode(v)	    ((v)->v_op == afs_ops)
 #define	SetAfsVnode(v)	    (v)->v_op = afs_ops
@@ -302,18 +304,6 @@ typedef struct timeval osi_timeval_t;
 		AFS_GLOCK();					\
 	} while(0)
 
-#if defined(AFS_DARWIN80_ENV)
-#define AFS_UIOMOVE(SRC,LEN,RW,UIO,CODE)			\
-	do {							\
-	    int haveGlock = ISAFS_GLOCK();			\
-	    if (haveGlock)					\
-		AFS_GUNLOCK();					\
-	    uio_setrw((UIO),(RW));				\
-	    CODE = uiomove((SRC),(LEN),(UIO));			\
-	    if (haveGlock)					\
-		AFS_GLOCK();					\
-	} while(0)
-#else
 #if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 #define AFS_UIOMOVE(SRC,LEN,RW,UIO,CODE)			\
 	do {							\
@@ -336,7 +326,6 @@ typedef struct timeval osi_timeval_t;
 		AFS_GLOCK();					\
 	} while(0)
 #endif
-#endif /* AFS_DARWIN80_ENV */
 
 #else /* AFS_GLOBAL_SUNLOCK */
 
@@ -355,13 +344,6 @@ typedef struct timeval osi_timeval_t;
 	    CODE = copyout((SRC),(DST),(LEN));			\
 	} while(0)
 
-#if defined(AFS_DARWIN80_ENV)
-#define AFS_UIOMOVE(SRC,LEN,RW,UIO,CODE)			\
-	do {							\
-	    uio_setrw((UIO),(RW));				\
-	    CODE = uiomove((SRC),(LEN),(UIO));			\
-	} while(0)
-#else /* AFS_OSF_ENV || AFS_FBSD_ENV */
 #if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 #define AFS_UIOMOVE(SRC,LEN,RW,UIO,CODE)			\
 	do {							\
@@ -374,18 +356,8 @@ typedef struct timeval osi_timeval_t;
 	    CODE = uiomove((SRC),(LEN),(RW),(UIO));		\
 	} while(0)
 #endif /* AFS_OSF_ENV || AFS_FBSD_ENV */
-#endif /* AFS_DARWIN80_ENV */
 
 #endif /* AFS_GLOBAL_SUNLOCK */
-
-#ifdef AFS_DARWIN80_ENV
-#define AFS_UIO_OFFSET(uio) uio_offset(uio)
-#define AFS_UIO_RESID(uio) uio_resid(uio)
-#else
-#define AFS_UIO_OFFSET(uio) (uio)->uio_offset
-#define AFS_UIO_RESID(uio) (uio)->uio_resid
-#endif
-
 
 /*
  * encapsulation of kernel data structure accesses

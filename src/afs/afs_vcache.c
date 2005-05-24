@@ -187,12 +187,8 @@ afs_FlushVCache(struct vcache *avc, int *slept)
     /* OK, there are no internal vrefCounts, so there shouldn't
      * be any more refs here. */
     if (avc->v) {
-#ifdef AFS_DARWIN_ENV
-	vnode_clearfsnode(AFSTOV(avc));
-#else
 	avc->v->v_data = NULL;	/* remove from vnode */
-#endif
-	AFSTOV(avc) = NULL;		/* also drop the ptr to vnode */
+	avc->v = NULL;		/* also drop the ptr to vnode */
     }
 #endif
     afs_FreeAllAxs(&(avc->Access));
@@ -235,7 +231,7 @@ afs_FlushVCache(struct vcache *avc, int *slept)
     /* This should put it back on the vnode free list since usecount is 1 */
     afs_vcount--;
     vSetType(avc, VREG);
-    if (VREFCOUNT_GT(avc,0)) {
+    if (VREFCOUNT(avc) > 0) {
 	VN_UNLOCK(AFSTOV(avc));
 	AFS_RELE(AFSTOV(avc));
     } else {
@@ -619,11 +615,10 @@ afs_NewVCache(struct VenusFid *afid, struct server *serverp)
 		refpanic("Exceeded pool of AFS vnodes(VLRU cycle?)");
 	    else if (QNext(uq) != tq)
 		refpanic("VLRU inconsistent");
-	    else if (!VREFCOUNT_GT(tvc,0)) 
-                refpanic("refcnt 0 on VLRU");
-  
-	    if (VREFCOUNT_GT(tvc,0) && !VREFCOUNT_GT(tvc,1) &&
-		tvc->opens == 0
+	    else if (VREFCOUNT(tvc) < 1)
+		refpanic("refcnt 0 on VLRU");
+
+	    if (VREFCOUNT(tvc) == 1 && tvc->opens == 0
 		&& (tvc->states & CUnlinkedDel) == 0) {
 		code = afs_FlushVCache(tvc, &fv_slept);
 		if (code == 0) {
@@ -716,13 +711,12 @@ restart:
 	    }
 #endif
 
-  
-           if (!VREFCOUNT_GT(tvc,0)
-#if defined(AFS_DARWIN_ENV) && !defined(UKERNEL) && !defined(AFS_DARWIN80_ENV)
-	       || ((VREFCOUNT(tvc) == 1) && 
-		   (UBCINFOEXISTS(AFSTOV(tvc))))
+	    if (((VREFCOUNT(tvc) == 0) 
+#if defined(AFS_DARWIN_ENV) && !defined(UKERNEL) 
+		 || ((VREFCOUNT(tvc) == 1) && 
+		     (UBCINFOEXISTS(AFSTOV(tvc))))
 #endif
-               && tvc->opens == 0 && (tvc->states & CUnlinkedDel) == 0) {
+		 ) && tvc->opens == 0 && (tvc->states & CUnlinkedDel) == 0) {
 #if defined (AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 		/*
 		 * vgone() reclaims the vnode, which calls afs_FlushVCache(),
@@ -813,11 +807,7 @@ restart:
     AFS_GUNLOCK();
     afs_darwin_getnewvnode(tvc);	/* includes one refcount */
     AFS_GLOCK();
-#ifdef AFS_DARWIN80_ENV
-    LOCKINIT(tvc->rwlock);
-#else
     lockinit(&tvc->rwlock, PINOD, "vcache", 0, 0);
-#endif
 #endif
 #ifdef AFS_FBSD_ENV
     {
@@ -1178,7 +1168,7 @@ afs_FlushActiveVcaches(register afs_int32 doflocks)
 		/*
 		 * That's because if we come in via the CUnlinkedDel bit state path we'll be have 0 refcnt
 		 */
-		osi_Assert(VREFCOUNT_GT(tvc,0));
+		osi_Assert(VREFCOUNT(tvc) > 0);
 		AFS_RWLOCK((vnode_t *) tvc, VRWLOCK_WRITE);
 #endif
 		ObtainWriteLock(&tvc->lock, 52);
@@ -1738,7 +1728,7 @@ afs_GetVCache(register struct VenusFid *afid, struct vrequest *areq,
 #if defined(AFS_DARWIN_ENV)
 	iheldthelock = VOP_ISLOCKED(vp);
 	if (!iheldthelock)
-	    vnode_lock(vp);
+	    vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, current_proc());
 	/* this is messy. we can call fsync which will try to reobtain this */
 	if (VTOAFS(vp) == tvc) 
 	  ReleaseWriteLock(&tvc->lock);
@@ -1748,11 +1738,7 @@ afs_GetVCache(register struct VenusFid *afid, struct vrequest *areq,
 	if (VTOAFS(vp) == tvc) 
 	  ObtainWriteLock(&tvc->lock, 954);
 	if (!iheldthelock)
-#ifdef AFS_DARWIN80_ENV
-	    vnode_unlock(vp);
-#else
 	    VOP_UNLOCK(vp, LK_EXCLUSIVE, current_proc());
-#endif
 #elif defined(AFS_FBSD60_ENV)
 	iheldthelock = VOP_ISLOCKED(vp, curthread);
 	if (!iheldthelock)
@@ -2853,7 +2839,7 @@ shutdown_vcache(void)
 		    vms_delete(tvc->segid);
 		    AFS_GLOCK();
 		    tvc->segid = tvc->vmh = NULL;
-		    if (VREFCOUNT_GT(tvc,0))
+		    if (VREFCOUNT(tvc))
 			osi_Panic("flushVcache: vm race");
 		}
 		if (tvc->credp) {
