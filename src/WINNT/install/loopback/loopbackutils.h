@@ -41,6 +41,7 @@ void SetMsiReporter(LPCSTR strAction, LPCSTR strDesc, DWORD h);
 
 #define DRIVER_DESC "Microsoft Loopback Adapter"
 #define DRIVER _T("loopback")
+#define DRIVERHWID _T("*msloop")
 #define MANUFACTURE _T("microsoft")
 #define DEFAULT_NAME _T("AFS")
 #define DEFAULT_IP _T("10.254.254.253")
