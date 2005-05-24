@@ -237,6 +237,10 @@ extern "C" DWORD InstallLoopBack(LPCTSTR pConnectionName, LPCTSTR ip, LPCTSTR ma
     BOOL found = FALSE;
     BOOL registered = FALSE;
     BOOL destroyList = FALSE;
+    PSP_DRVINFO_DETAIL_DATA pDriverInfoDetail;
+    DWORD detailBuf[2048];    // for our purposes, 8k buffer is more
+			      // than enough to obtain the hardware ID
+			      // of the loopback driver.
 
     HKEY hkey = NULL;
     DWORD cbSize;
@@ -294,21 +298,43 @@ extern "C" DWORD InstallLoopBack(LPCTSTR pConnectionName, LPCTSTR ip, LPCTSTR ma
     destroyList = TRUE;
 
     // enumerate the driver info list
-    while (SetupDiEnumDriverInfo(hDeviceInfo, &DeviceInfoData,
-                                 SPDIT_CLASSDRIVER, index, &DriverInfoData))
+    while (TRUE)
     {
-        // if the manufacture is microsoft
-        if (_tcsicmp(DriverInfoData.MfgName, MANUFACTURE) == 0)
-        {
-            // case insensitive search for loopback
-            _tcscpy(temp, DriverInfoData.Description);
-            _tcslwr(temp);
-            if( _tcsstr(temp, DRIVER))
-            {
-                found = TRUE;
-                break;
-            }
-        }
+        BOOL ret;
+
+	ret = SetupDiEnumDriverInfo(hDeviceInfo, &DeviceInfoData,
+				  SPDIT_CLASSDRIVER, index, &DriverInfoData);
+
+	// if the function failed and GetLastError() returned
+	// ERROR_NO_MORE_ITEMS, then we have reached the end of the
+	// list.  Othewise there was something wrong with this
+	// particular driver.
+	if(!ret) {
+	  if(GetLastError() == ERROR_NO_MORE_ITEMS)
+	    break;
+	  else {
+	    index++;
+	    continue;
+	  }
+	}
+
+	pDriverInfoDetail = (PSP_DRVINFO_DETAIL_DATA) detailBuf;
+	pDriverInfoDetail->cbSize = sizeof(SP_DRVINFO_DETAIL_DATA);
+
+	// if we successfully find the hardware ID and it turns out to
+	// be the one for the loopback driver, then we are done.
+	if(SetupDiGetDriverInfoDetail(hDeviceInfo,
+				      &DeviceInfoData,
+				      &DriverInfoData,
+				      pDriverInfoDetail,
+				      sizeof(detailBuf),
+				      NULL) &&
+	   !_tcsicmp(pDriverInfoDetail->HardwareID, DRIVERHWID)) {
+
+	  found = TRUE;
+	  break;
+	}
+
         index++;
     }
 
