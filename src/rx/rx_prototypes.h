@@ -535,9 +535,6 @@ extern int rx_WritevProc(struct rx_call *call, struct iovec *iov, int nio,
 extern void rxi_FlushWrite(register struct rx_call *call);
 extern void rx_FlushWrite(struct rx_call *call);
 
-/* rx_stream.c */
-
-
 /* rx_trace.c */
 
 
