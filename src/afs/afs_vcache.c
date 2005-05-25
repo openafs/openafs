@@ -69,6 +69,7 @@ struct afs_q VLRU;		/*vcache LRU */
 afs_int32 vcachegen = 0;
 unsigned int afs_paniconwarn = 0;
 struct vcache *afs_vhashT[VCSIZE];
+struct vcache *afs_vhashTV[VCSIZE];
 static struct afs_cbr *afs_cbrHashT[CBRSIZE];
 afs_int32 afs_bulkStatsLost;
 int afs_norefpanic = 0;
@@ -129,8 +130,8 @@ int
 afs_FlushVCache(struct vcache *avc, int *slept)
 {				/*afs_FlushVCache */
 
-    register afs_int32 i, code;
-    register struct vcache **uvc, *wvc;
+    afs_int32 i, code, j;
+    struct vcache **uvc, *wvc, **uvc2, *wvc2;
 
     *slept = 0;
     AFS_STATCNT(afs_FlushVCache);
@@ -174,7 +175,18 @@ afs_FlushVCache(struct vcache *avc, int *slept)
 	    break;
 	}
     }
-    if (!wvc)
+
+    /* remove entry from the volume hash table */
+    j = VCHashV(&avc->fid);
+    uvc2 = &afs_vhashTV[j];
+    for (wvc2 = *uvc2; wvc2; uvc2 = &wvc2->vhnext, wvc2 = *uvc2) {
+        if (avc == wvc2) {
+            *uvc2 = avc->vhnext;
+            avc->vhnext = (struct vcache *)NULL;
+            break;
+        }
+    }
+    if (!wvc || !wvc2)
 	osi_Panic("flushvcache");	/* not in correct hash bucket */
     if (avc->mvid)
 	osi_FreeSmallSpace(avc->mvid);
@@ -576,7 +588,7 @@ struct vcache *
 afs_NewVCache(struct VenusFid *afid, struct server *serverp)
 {
     struct vcache *tvc;
-    afs_int32 i;
+    afs_int32 i, j;
     afs_int32 anumber = VCACHE_FREE;
 #ifdef	AFS_AIX_ENV
     struct gnode *gnodepnt;
@@ -1074,9 +1086,12 @@ restart:
     memset((char *)&(tvc->callsort), 0, sizeof(struct afs_q));
     tvc->slocks = NULL;
     i = VCHash(afid);
+    j = VCHashV(afid);
 
     tvc->hnext = afs_vhashT[i];
-    afs_vhashT[i] = tvc;
+    tvc->vhnext = afs_vhashTV[j];
+    afs_vhashT[i] = afs_vhashTV[j] = tvc;
+
     if ((VLRU.next->prev != &VLRU) || (VLRU.prev->next != &VLRU)) {
 	refpanic("NewVCache VLRU inconsistent");
     }
@@ -2861,7 +2876,7 @@ shutdown_vcache(void)
 
 		afs_FreeAllAxs(&(tvc->Access));
 	    }
-	    afs_vhashT[i] = 0;
+	    afs_vhashT[i] = afs_vhashTV[i] = 0;
 	}
     }
     /*

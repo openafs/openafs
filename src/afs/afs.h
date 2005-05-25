@@ -620,6 +620,7 @@ struct vcache {
     struct afs_q vlruq;		/* lru q next and prev */
     struct vcache *nextfree;	/* next on free list (if free) */
     struct vcache *hnext;	/* Hash next */
+    struct vcache *vhnext; /* vol hash next */
     struct VenusFid fid;
     struct mstat {
 	afs_size_t Length;
@@ -1065,6 +1066,8 @@ struct memCacheEntry {
 /* don't hash on the cell, our callback-breaking code sometimes fails to compute
     the cell correctly, and only scans one hash bucket */
 #define	VCHash(fid)	(((fid)->Fid.Volume + (fid)->Fid.Vnode) & (VCSIZE-1))
+/* Hash only on volume to speed up volume callbacks. */
+#define VCHashV(fid) ((fid)->Fid.Volume & (VCSIZE-1))
 
 extern struct dcache **afs_indexTable;	/*Pointers to in-memory dcache entries */
 extern afs_int32 *afs_indexUnique;	/*dcache entry Fid.Unique */
@@ -1074,6 +1077,7 @@ extern afs_int32 afs_cacheFiles;	/*Size of afs_indexTable */
 extern afs_int32 afs_cacheBlocks;	/*1K blocks in cache */
 extern afs_int32 afs_cacheStats;	/*Stat entries in cache */
 extern struct vcache *afs_vhashT[VCSIZE];	/*Stat cache hash table */
+extern struct vcache *afs_vhashTV[VCSIZE]; /* cache hash table on volume */
 extern afs_int32 afs_initState;	/*Initialization state */
 extern afs_int32 afs_termState;	/* Termination state */
 extern struct VenusFid afs_rootFid;	/*Root for whole file system */
