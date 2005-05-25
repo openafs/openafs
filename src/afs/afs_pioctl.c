@@ -2543,8 +2543,8 @@ DECL_PIOCTL(PFlushVolumeData)
      * the vcaches associated with the volume.
      */
     ObtainReadLock(&afs_xvcache);
-    for (i = 0; i < VCSIZE; i++) {
-	for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
+    i = VCHashV(&avc->fid);
+    for (tvc = afs_vhashT[i]; tvc; tvc = tvc->vhnext) {
 	    if (tvc->fid.Fid.Volume == volume && tvc->fid.Cell == cell) {
 #if	defined(AFS_SGI_ENV) || defined(AFS_OSF_ENV)  || defined(AFS_SUN5_ENV)  || defined(AFS_HPUX_ENV) || defined(AFS_LINUX20_ENV)
 		VN_HOLD(AFSTOV(tvc));
@@ -2577,7 +2577,6 @@ DECL_PIOCTL(PFlushVolumeData)
 		AFS_FAST_RELE(tvc);
 	    }
 	}
-    }
     ReleaseReadLock(&afs_xvcache);
 
 
