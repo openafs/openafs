@@ -162,7 +162,9 @@ typedef struct rx_ts_info_t {
         
         /* FPQ stats */
         int checkin_ops;
+        int checkin_xfer;
         int checkout_ops;
+        int checkout_xfer;
         int gtol_ops;
         int gtol_xfer;
         int ltog_ops;
@@ -170,6 +172,7 @@ typedef struct rx_ts_info_t {
         int alloc_ops;
         int alloc_xfer;
     } _FPQ;
+    struct rx_packet * local_special_packet;
 } rx_ts_info_t;
 EXT struct rx_ts_info_t * rx_ts_info_init();   /* init function for thread-specific data struct */
 #define RX_TS_INFO_GET(ts_info_p) \
@@ -216,6 +219,7 @@ EXT struct rx_queue rx_freePacketQueue;
 	(p)->niovecs = 2; \
 	(p)->length = RX_FIRSTBUFFERSIZE; \
     } while(0)
+
 #ifdef RX_ENABLE_LOCKS
 EXT afs_kmutex_t rx_freePktQ_lock;
 #endif /* RX_ENABLE_LOCKS */
@@ -329,6 +333,22 @@ EXT void rxi_FlushLocalPacketsTSFPQ(void); /* flush all thread-local packets to 
         RX_FPQ_MARK_USED(p); \
         (rx_ts_info_p)->_FPQ.len--; \
         (rx_ts_info_p)->_FPQ.checkout_ops++; \
+        (rx_ts_info_p)->_FPQ.checkout_xfer++; \
+    } while(0)
+/* checkout multiple packets from the thread-specific free packet queue */
+#define RX_TS_FPQ_CHECKOUT2(rx_ts_info_p,num_transfer,q) \
+    do { \
+        register int i; \
+        register struct rx_packet *p; \
+        for (i=0, p=queue_First(&((rx_ts_info_p)->_FPQ), rx_packet); \
+             i < (num_transfer); \
+             i++, p=queue_Next(p, rx_packet)) { \
+            RX_FPQ_MARK_USED(p); \
+        } \
+        queue_SplitBeforeAppend(&((rx_ts_info_p)->_FPQ),(q),p); \
+        (rx_ts_info_p)->_FPQ.len -= (num_transfer); \
+        (rx_ts_info_p)->_FPQ.checkout_ops++; \
+        (rx_ts_info_p)->_FPQ.checkout_xfer += (num_transfer); \
     } while(0)
 /* check a packet into the thread-specific free packet queue */
 #define RX_TS_FPQ_CHECKIN(rx_ts_info_p,p) \
@@ -337,6 +357,22 @@ EXT void rxi_FlushLocalPacketsTSFPQ(void); /* flush all thread-local packets to 
         RX_FPQ_MARK_FREE(p); \
         (rx_ts_info_p)->_FPQ.len++; \
         (rx_ts_info_p)->_FPQ.checkin_ops++; \
+        (rx_ts_info_p)->_FPQ.checkin_xfer++; \
+    } while(0)
+/* check multiple packets into the thread-specific free packet queue */
+/* num_transfer must equal length of (q); it is not a means of checking 
+ * in part of (q).  passing num_transfer just saves us instructions 
+ * since caller already knows length of (q) for other reasons */
+#define RX_TS_FPQ_CHECKIN2(rx_ts_info_p,num_transfer,q) \
+    do { \
+        register struct rx_packet *p, *np; \
+        for (queue_Scan((q), p, np, rx_packet)) { \
+            RX_FPQ_MARK_FREE(p); \
+        } \
+        queue_SplicePrepend(&((rx_ts_info_p)->_FPQ),(q)); \
+        (rx_ts_info_p)->_FPQ.len += (num_transfer); \
+        (rx_ts_info_p)->_FPQ.checkin_ops++; \
+        (rx_ts_info_p)->_FPQ.checkin_xfer += (num_transfer); \
     } while(0)
 #endif /* AFS_PTHREAD_ENV */
 

@@ -1929,17 +1929,14 @@ rx_EndCall(register struct rx_call *call, afs_int32 rc)
      * kernel version, and may interrupt the macros rx_Read or
      * rx_Write, which run at normal priority for efficiency. */
     if (call->currentPacket) {
-	rxi_FreePacket(call->currentPacket);
+	queue_Prepend(&call->iovq, call->currentPacket);
 	call->currentPacket = (struct rx_packet *)0;
-	call->nLeft = call->nFree = call->curlen = 0;
-    } else
-	call->nLeft = call->nFree = call->curlen = 0;
+    }
+	
+    call->nLeft = call->nFree = call->curlen = 0;
 
     /* Free any packets from the last call to ReadvProc/WritevProc */
-    for (queue_Scan(&call->iovq, tp, nxp, rx_packet)) {
-	queue_Remove(tp);
-	rxi_FreePacket(tp);
-    }
+    rxi_FreePackets(0, &call->iovq);
 
     CALL_RELE(call, RX_CALL_REFCOUNT_BEGIN);
     MUTEX_EXIT(&call->lock);
@@ -4111,8 +4108,6 @@ rxi_SetAcksInTransmitQueue(register struct rx_call *call)
     int someAcked = 0;
 
     for (queue_Scan(&call->tq, p, tp, rx_packet)) {
-	if (!p)
-	    break;
 	p->flags |= RX_PKTFLAG_ACKED;
 	someAcked = 1;
     }
@@ -4147,8 +4142,6 @@ rxi_ClearTransmitQueue(register struct rx_call *call, register int force)
     if (!force && (call->flags & RX_CALL_TQ_BUSY)) {
 	int someAcked = 0;
 	for (queue_Scan(&call->tq, p, tp, rx_packet)) {
-	    if (!p)
-		break;
 	    p->flags |= RX_PKTFLAG_ACKED;
 	    someAcked = 1;
 	}
@@ -4158,12 +4151,7 @@ rxi_ClearTransmitQueue(register struct rx_call *call, register int force)
 	}
     } else {
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
-	for (queue_Scan(&call->tq, p, tp, rx_packet)) {
-	    if (!p)
-		break;
-	    queue_Remove(p);
-	    rxi_FreePacket(p);
-	}
+	rxi_FreePackets(0, &call->tq);
 #ifdef	AFS_GLOBAL_RXLOCK_KERNEL
 	call->flags &= ~RX_CALL_TQ_CLEARME;
     }
@@ -4188,15 +4176,8 @@ rxi_ClearTransmitQueue(register struct rx_call *call, register int force)
 void
 rxi_ClearReceiveQueue(register struct rx_call *call)
 {
-    register struct rx_packet *p, *tp;
     if (queue_IsNotEmpty(&call->rq)) {
-	for (queue_Scan(&call->rq, p, tp, rx_packet)) {
-	    if (!p)
-		break;
-	    queue_Remove(p);
-	    rxi_FreePacket(p);
-	    rx_packetReclaims++;
-	}
+	rx_packetReclaims += rxi_FreePackets(0, &call->rq);
 	call->flags &= ~(RX_CALL_RECEIVE_DONE | RX_CALL_HAVE_LAST);
     }
     if (call->state == RX_STATE_PRECALL) {
@@ -4524,6 +4505,9 @@ rxi_SendAck(register struct rx_call *call,
     register struct rx_packet *p;
     u_char offset;
     afs_int32 templ;
+#ifdef RX_ENABLE_TSFPQ
+    struct rx_ts_info_t * rx_ts_info;
+#endif
 
     /*
      * Open the receive window once a thread starts reading packets
@@ -4541,24 +4525,41 @@ rxi_SendAck(register struct rx_call *call,
     if (p) {
 	rx_computelen(p, p->length);	/* reset length, you never know */
     } /* where that's been...         */
+#ifdef RX_ENABLE_TSFPQ
+    else {
+        RX_TS_INFO_GET(rx_ts_info);
+        if ((p = rx_ts_info->local_special_packet)) {
+            rx_computelen(p, p->length);
+        } else if ((p = rxi_AllocPacket(RX_PACKET_CLASS_SPECIAL))) {
+            rx_ts_info->local_special_packet = p;
+        } else { /* We won't send the ack, but don't panic. */
+            return optionalPacket;
+        }
+    }
+#else
     else if (!(p = rxi_AllocPacket(RX_PACKET_CLASS_SPECIAL))) {
 	/* We won't send the ack, but don't panic. */
 	return optionalPacket;
     }
+#endif
 
     templ =
 	rx_AckDataSize(call->rwind) + 4 * sizeof(afs_int32) -
 	rx_GetDataSize(p);
     if (templ > 0) {
-	if (rxi_AllocDataBuf(p, templ, RX_PACKET_CLASS_SPECIAL)) {
+	if (rxi_AllocDataBuf(p, templ, RX_PACKET_CLASS_SPECIAL) > 0) {
+#ifndef RX_ENABLE_TSFPQ
 	    if (!optionalPacket)
 		rxi_FreePacket(p);
+#endif
 	    return optionalPacket;
 	}
 	templ = rx_AckDataSize(call->rwind) + 2 * sizeof(afs_int32);
 	if (rx_Contiguous(p) < templ) {
+#ifndef RX_ENABLE_TSFPQ
 	    if (!optionalPacket)
 		rxi_FreePacket(p);
+#endif
 	    return optionalPacket;
 	}
     }
@@ -4586,8 +4587,10 @@ rxi_SendAck(register struct rx_call *call,
     for (offset = 0, queue_Scan(&call->rq, rqp, nxp, rx_packet)) {
 	if (!rqp || !call->rq.next
 	    || (rqp->header.seq > (call->rnext + call->rwind))) {
+#ifndef RX_ENABLE_TSFPQ
 	    if (!optionalPacket)
 		rxi_FreePacket(p);
+#endif
 	    rxi_CallError(call, RX_CALL_DEAD);
 	    return optionalPacket;
 	}
@@ -4597,8 +4600,10 @@ rxi_SendAck(register struct rx_call *call,
 	ap->acks[offset++] = RX_ACK_TYPE_ACK;
 
 	if ((offset > (u_char) rx_maxReceiveWindow) || (offset > call->rwind)) {
+#ifndef RX_ENABLE_TSFPQ
 	    if (!optionalPacket)
 		rxi_FreePacket(p);
+#endif
 	    rxi_CallError(call, RX_CALL_DEAD);
 	    return optionalPacket;
 	}
@@ -4678,8 +4683,10 @@ rxi_SendAck(register struct rx_call *call,
     MUTEX_ENTER(&rx_stats_mutex);
     rx_stats.ackPacketsSent++;
     MUTEX_EXIT(&rx_stats_mutex);
+#ifndef RX_ENABLE_TSFPQ
     if (!optionalPacket)
 	rxi_FreePacket(p);
+#endif
     return optionalPacket;	/* Return packet for re-use by caller */
 }
 
