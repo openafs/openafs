@@ -883,21 +883,14 @@ afs_linux_dentry_revalidate(struct dentry *dp)
 	goto done;
     }
 
-    /* parent's DataVersion changed? */
-    if (hgetlo(pvcp->m.DataVersion) > dp->d_time) {
-	bad_dentry = 11;
-	goto done;
-    }
-
-    /* If it's @sys, perhaps it has been changed */
-    if (!afs_ENameOK(dp->d_name.name)) {
-	bad_dentry = 10;
-	goto done;
-    }
-
     /* If it's the AFS root no chance it needs revalidating */
     if (vcp == afs_globalVp)
 	goto good_dentry;
+
+    /* parent's DataVersion changed? */
+    if (hgetlo(pvcp->m.DataVersion) > dp->d_time) {
+	vcp->states &= ~CStatd; /* force afs_VerifyVCache() to go to the server */
+    }
 
     /* Get a validated vcache entry */
     credp = crref();
