@@ -38,7 +38,7 @@ static void
 PrintRxkadStats()
 {
     printf("New Objects client %d, server %d.  Destroyed objects %d.\n",
-	   rxkad_stats_clientObjects, rxkad_stats_serverObjects,
+	   rxkad_stats.clientObjects, rxkad_stats.serverObjects,
 	   rxkad_stats.destroyObject);
     printf("client conns: %d %d %d, destroyed client %d.\n",
 	   rxkad_stats.connections[0], rxkad_stats.connections[1],

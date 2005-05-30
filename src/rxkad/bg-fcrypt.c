@@ -74,6 +74,7 @@ RCSID
 #include "rxkad.h"
 #include "fcrypt.h"
 #include "private_data.h"
+#include <des/stats.h>
 
 #undef WORDS_BIGENDIAN
 #ifdef AFSBIG_ENDIAN
@@ -507,9 +508,7 @@ afs_int32
 fc_ecb_encrypt(afs_uint32 * in, afs_uint32 * out, fc_KeySchedule sched,
 	       int encrypt)
 {
-    LOCK_RXKAD_STATS;
-    rxkad_stats.fc_encrypts[encrypt]++;
-    UNLOCK_RXKAD_STATS;
+    INC_RXKAD_STATS(fc_encrypts[encrypt]);
     if (encrypt)
 	fc_ecb_enc(in[0], in[1], out, sched);
     else
@@ -669,9 +668,7 @@ fc_keysched(void *key_, fc_KeySchedule sched)
     ROT56R(hi, lo, 11);
     *sched++ = EFF_NTOHL(lo);
 #endif
-    LOCK_RXKAD_STATS;
-    rxkad_stats.fc_key_scheds++;
-    UNLOCK_RXKAD_STATS;
+    INC_RXKAD_STATS(fc_key_scheds);
     return 0;
 }
 
@@ -692,9 +689,7 @@ rxkad_EncryptPacket(const struct rx_connection * rx_connection_not_used,
 
     obj = rx_SecurityObjectOf(rx_connection_not_used);
     tp = (struct rxkad_cprivate *)obj->privateData;
-    LOCK_RXKAD_STATS;
-    rxkad_stats.bytesEncrypted[rxkad_TypeIndex(tp->type)] += len;
-    UNLOCK_RXKAD_STATS;
+    ADD_RXKAD_STATS(bytesEncrypted[rxkad_TypeIndex(tp->type)],len);
     {
 	/* What is this good for?
 	 * It turns out that the security header for auth_enc is of
@@ -730,9 +725,7 @@ rxkad_DecryptPacket(const struct rx_connection * rx_connection_not_used,
 
     obj = rx_SecurityObjectOf(rx_connection_not_used);
     tp = (struct rxkad_cprivate *)obj->privateData;
-    LOCK_RXKAD_STATS;
-    rxkad_stats.bytesDecrypted[rxkad_TypeIndex(tp->type)] += len;
-    UNLOCK_RXKAD_STATS;
+    ADD_RXKAD_STATS(bytesDecrypted[rxkad_TypeIndex(tp->type)],len);
     memcpy(ivec, iv, sizeof(ivec));	/* Must use copy of iv */
     for (frag = &packet->wirevec[1]; len > 0; frag++) {
 	int iov_len = frag->iov_len;

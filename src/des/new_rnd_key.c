@@ -257,9 +257,7 @@ des_generate_random_block(des_cblock block)
 {
     int i;
 
-    LOCK_RXKAD_STATS;
-    rxkad_stats.des_randoms++;
-    UNLOCK_RXKAD_STATS;
+    INC_RXKAD_STATS(des_randoms);
     /*
      * Encrypt the sequence number to get the new random block:
      */

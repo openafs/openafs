@@ -153,7 +153,6 @@ static unsigned int rxi_rpc_process_stat_cnt;
  */
 
 extern pthread_mutex_t rx_stats_mutex;
-extern pthread_mutex_t rxkad_stats_mutex;
 extern pthread_mutex_t des_init_mutex;
 extern pthread_mutex_t des_random_mutex;
 extern pthread_mutex_t rx_clock_mutex;
@@ -207,8 +206,6 @@ rxi_InitPthread(void)
 	   (&rxkad_client_uid_mutex, (const pthread_mutexattr_t *)0) == 0);
     assert(pthread_mutex_init
 	   (&rxkad_random_mutex, (const pthread_mutexattr_t *)0) == 0);
-    assert(pthread_mutex_init
-	   (&rxkad_stats_mutex, (const pthread_mutexattr_t *)0) == 0);
     assert(pthread_mutex_init(&rx_debug_mutex, (const pthread_mutexattr_t *)0)
 	   == 0);
 
@@ -218,6 +215,8 @@ rxi_InitPthread(void)
 	   == 0);
     assert(pthread_key_create(&rx_thread_id_key, NULL) == 0);
     assert(pthread_key_create(&rx_ts_info_key, NULL) == 0);
+ 
+    rxkad_global_stats_init();
 }
 
 pthread_once_t rx_once_init = PTHREAD_ONCE_INIT;

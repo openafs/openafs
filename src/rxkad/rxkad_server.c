@@ -36,6 +36,7 @@ RCSID
 #include <rx/xdr.h>
 #include <des.h>
 #include <afs/afsutil.h>
+#include <des/stats.h>
 #include "private_data.h"
 #define XPRT_RXKAD_SERVER
 
@@ -160,9 +161,7 @@ rxkad_NewServerSecurityObject(rxkad_level level, char *get_key_rock,
     tsp->user_ok = user_ok;	/* to inform server of client id. */
     init_random_int32();
 
-    LOCK_RXKAD_STATS;
-    rxkad_stats_serverObjects++;
-    UNLOCK_RXKAD_STATS;
+    INC_RXKAD_STATS(serverObjects);
     return tsc;
 }
 
@@ -238,9 +237,7 @@ rxkad_GetChallenge(struct rx_securityClass *aobj, struct rx_connection *aconn,
     rx_packetwrite(apacket, 0, challengeSize, challenge);
     rx_SetDataSize(apacket, challengeSize);
     sconn->tried = 1;
-    LOCK_RXKAD_STATS;
-    rxkad_stats.challengesSent++;
-    UNLOCK_RXKAD_STATS;
+    INC_RXKAD_STATS(challengesSent);
     return 0;
 }
 
@@ -405,9 +402,7 @@ rxkad_CheckResponse(struct rx_securityClass *aobj,
 	return RXKADLEVELFAIL;
     sconn->level = level;
     rxkad_SetLevel(aconn, sconn->level);
-    LOCK_RXKAD_STATS;
-    rxkad_stats.responses[rxkad_LevelIndex(sconn->level)]++;
-    UNLOCK_RXKAD_STATS;
+    INC_RXKAD_STATS(responses[rxkad_LevelIndex(sconn->level)]);
     /* now compute endpoint-specific info used for computing 16 bit checksum */
     rxkad_DeriveXORInfo(aconn, sconn->keysched, sconn->ivec, sconn->preSeq);
 
