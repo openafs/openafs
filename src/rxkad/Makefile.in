@@ -23,6 +23,7 @@ fc_test_OBJS=fc_test.o
 
 fc_test_LIBS=\
 	${TOP_LIBDIR}/librxkad.a \
+	${TOP_LIBDIR}/libdes.a \
 	${TOP_LIBDIR}/librx.a \
 	${TOP_LIBDIR}/liblwp.a \
 	${TOP_LIBDIR}/libsys.a \

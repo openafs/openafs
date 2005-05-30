@@ -52,7 +52,7 @@ struct rxkad_stats {
     struct rxkad_stats_t * prev;
 } rxkad_stats_t;			/* put these here for convenience */
 #else /* AFS_PTHREAD_ENV */
-} rxkad_stats;			/* put these here for convenience */
+};
 #endif /* AFS_PTHREAD_ENV */
 
 
