@@ -90,52 +90,6 @@ typedef char rxkad_level;
 #define rxkad_TypeIndex(type) \
     ((((type) == 1) || ((type) == 2)) ? (type) : 0)
 
-struct rxkad_stats {
-    afs_uint32 connections[3];	/* client side only */
-    afs_uint32 destroyObject;	/* client security objects */
-    afs_uint32 destroyClient;	/* client connections */
-    afs_uint32 destroyUnused;	/* unused server conn */
-    afs_uint32 destroyUnauth;	/* unauthenticated server conn */
-    afs_uint32 destroyConn[3];	/* server conn per level */
-    afs_uint32 expired;		/* server packets rejected */
-    afs_uint32 challengesSent;	/* server challenges sent */
-    afs_uint32 challenges[3];	/* challenges seen by client */
-    afs_uint32 responses[3];	/* responses seen by server */
-    afs_uint32 preparePackets[6];
-    afs_uint32 checkPackets[6];
-    afs_uint32 bytesEncrypted[2];	/* index just by type */
-    afs_uint32 bytesDecrypted[2];
-    afs_uint32 fc_encrypts[2];	/* DECRYPT==0, ENCRYPT==1 */
-    afs_uint32 fc_key_scheds;	/* key schedule creations */
-    afs_uint32 des_encrypts[2];	/* DECRYPT==0, ENCRYPT==1 */
-    afs_uint32 des_key_scheds;	/* key schedule creations */
-    afs_uint32 des_randoms;	/* random blocks generated */
-    long spares[10];
-};
-
-#if defined(AFS_NT40_ENV) && defined(AFS_PTHREAD_ENV)
-#ifndef RXKAD_STATS_DECLSPEC
-#define RXKAD_STATS_DECLSPEC __declspec(dllimport) extern
-#endif
-#else
-#define RXKAD_STATS_DECLSPEC extern
-#endif
-RXKAD_STATS_DECLSPEC struct rxkad_stats rxkad_stats;
-#ifdef AFS_PTHREAD_ENV
-#include <pthread.h>
-#include <assert.h>
-extern pthread_mutex_t rxkad_stats_mutex;
-#define LOCK_RXKAD_STATS assert(pthread_mutex_lock(&rxkad_stats_mutex)==0)
-#define UNLOCK_RXKAD_STATS assert(pthread_mutex_unlock(&rxkad_stats_mutex)==0)
-#else
-#define LOCK_RXKAD_STATS
-#define UNLOCK_RXKAD_STATS
-#endif
-
-
-/* gak! using up spares already! */
-#define rxkad_stats_clientObjects (rxkad_stats.spares[0])
-#define rxkad_stats_serverObjects (rxkad_stats.spares[1])
 
 extern int rxkad_EpochWasSet;	/* TRUE => we called rx_SetEpoch */
 

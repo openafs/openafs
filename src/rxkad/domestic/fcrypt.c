@@ -55,7 +55,7 @@ RCSID
 #include "sboxes.h"
 #include "fcrypt.h"
 #include "rxkad.h"
-
+#include <des/stats.h>
 
 #ifdef TCRYPT
 int ROUNDS = 16;
@@ -102,9 +102,7 @@ fc_keysched(struct ktc_encryptionKey *key, fc_KeySchedule schedule)
 	kword[1] = (kword[1] >> 11) | (temp << (56 - 32 - 11));
 	schedule[i] = kword[0];
     }
-    LOCK_RXKAD_STATS;
-    rxkad_stats.fc_key_scheds++;
-    UNLOCK_RXKAD_STATS;
+    INC_RXKAD_STATS(fc_key_scheds);
     return 0;
 }
 
@@ -140,9 +138,7 @@ fc_ecb_encrypt(void * clear, void * cipher,
 #endif
 
     if (encrypt) {
-	LOCK_RXKAD_STATS;
-	rxkad_stats.fc_encrypts[ENCRYPT]++;
-	UNLOCK_RXKAD_STATS;
+	INC_RXKAD_STATS(fc_encrypts[ENCRYPT]);
 	for (i = 0; i < (ROUNDS / 2); i++) {
 	    S = *schedule++ ^ R;	/* xor R with key bits from schedule */
 	    Pchar[Byte2] = sbox0[Schar[Byte0]];	/* do 8-bit S Box subst. */
@@ -160,9 +156,7 @@ fc_ecb_encrypt(void * clear, void * cipher,
 	    R ^= P;
 	}
     } else {
-	LOCK_RXKAD_STATS;
-	rxkad_stats.fc_encrypts[DECRYPT]++;
-	UNLOCK_RXKAD_STATS;
+	INC_RXKAD_STATS(fc_encrypts[DECRYPT]);
 	schedule = &schedule[ROUNDS - 1];	/* start at end of key schedule */
 	for (i = 0; i < (ROUNDS / 2); i++) {
 	    S = *schedule-- ^ L;	/* xor R with key bits from schedule */

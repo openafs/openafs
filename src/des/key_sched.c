@@ -66,9 +66,7 @@ des_key_sched(register des_cblock k, des_key_schedule schedule)
     n = 0;
     p_char = k_char;
 
-    LOCK_RXKAD_STATS;
-    rxkad_stats.des_key_scheds++;
-    UNLOCK_RXKAD_STATS;
+    INC_RXKAD_STATS(des_key_scheds);
 #ifdef lint
     n = n;			/* fool it in case of VAXASM */
 #endif

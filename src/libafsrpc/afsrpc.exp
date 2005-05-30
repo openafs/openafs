@@ -79,7 +79,9 @@ xdrrx_create
 xdr_afsuuid
 xdr_int64
 hton_syserr_conv
-rxkad_stats
+rxkad_global_stats
+rxkad_global_stats_lock
+rxkad_stats_key
 _et_list
 et_list_mutex
 com_err
