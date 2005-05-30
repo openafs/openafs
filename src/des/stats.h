@@ -60,7 +60,7 @@ struct rxkad_stats {
 struct rxkad_global_stats {
     rxkad_stats_t * first;
     rxkad_stats_t * last;
-} rxkad_global_stats;
+};
 
 #include <pthread.h>
 #include <assert.h>
