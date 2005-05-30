@@ -739,6 +739,9 @@ FlagMsg()
     strcat(buffer, "[-rxpck <number of rx extra packets>] ");
     strcat(buffer, "[-rxdbg (enable rx debugging)] ");
     strcat(buffer, "[-rxdbge (enable rxevent debugging)] ");
+#if AFS_PTHREAD_ENV
+    strcat(buffer, "[-vattachpar <number of volume attach threads>] ");
+#endif
 #ifdef	AFS_AIX32_ENV
     strcat(buffer, "[-m <min percentage spare in partition>] ");
 #endif
@@ -934,6 +937,14 @@ ParseArgs(int argc, char *argv[])
 		return -1; 
 	    }
 	    rxpackets = atoi(argv[++i]);
+#ifdef AFS_PTHREAD_ENV
+	} else if (!strcmp(argv[i], "-vattachpar")) {
+            if ((i + 1) >= argc) {
+		fprintf(stderr, "missing argument for -vattachpar\n"); 
+		return -1; 
+	    }
+	    vol_attach_threads = atoi(argv[++i]);
+#endif /* AFS_PTHREAD_ENV */
 	} else if (!strcmp(argv[i], "-s")) {
 	    Sawsmall = 1;
             if ((i + 1) >= argc) {
