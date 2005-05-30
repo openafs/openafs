@@ -282,7 +282,7 @@ install: install_headers install_objs $(CONF_DLLFILE) \
         $(EXEDIR)\afsdacl.exe \
 	$(LOGON_DLLFILE) \
 	$(EXEDIR)\afsshare.exe \
-	$(DESTDIR)\bin\kpasswd.exe $(EXEDIR)\cmdebug.exe
+	$(DESTDIR)\bin\kpasswd.exe $(EXEDIR)\cmdebug.exe $(EXEDIR)\afscpcc.exe
 
 install9X: install_headers $(CONF_DLLFILE) \
 	$(EXEDIR)\klog.exe \
@@ -353,6 +353,12 @@ $(EXEDIR)\tokens.exe: $(OUT)\ctokens.obj $(OUT)\tokens.res $(EXELIBS)
 $(EXEDIR)\unlog.exe: $(OUT)\cunlog.obj $(OUT)\unlog.res $(EXELIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
 	$(EXEPREP)
+
+# afscpcc.exe
+$(EXEDIR)\afscpcc.exe: $(OUT)\afscpcc.obj $(OUT)\afscpcc.res $(LOGON_DLLLIBS)
+	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
+	$(EXEPREP)
+
 
 # afsd.exe
 AFSD_EXEFILE = $(EXEDIR)\afsd.exe
@@ -471,6 +477,8 @@ $(OUT)\klog.res: klog.rc AFS_component_version_number.h
 $(OUT)\tokens.res: tokens.rc AFS_component_version_number.h
 
 $(OUT)\unlog.res: unlog.rc AFS_component_version_number.h
+
+$(OUT)\afscpcc.res: afscpcc.rc AFS_component_version_number.h
 
 afsd_eventmessages.rc: afsd_eventmessages.h
 

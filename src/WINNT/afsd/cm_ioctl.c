@@ -2317,6 +2317,7 @@ long cm_IoctlMemoryDump(struct smb_ioctl *ioctlp, struct cm_user *userp)
     HANDLE hLogFile;
     char logfileName[MAX_PATH+1];
     char *cookie;
+    DWORD dwSize;
   
 #ifdef _DEBUG  
     static _CrtMemState memstate;
@@ -2325,12 +2326,8 @@ long cm_IoctlMemoryDump(struct smb_ioctl *ioctlp, struct cm_user *userp)
     cm_SkipIoctlPath(ioctlp);
     memcpy(&inValue, ioctlp->inDatap, sizeof(long));
   
-    if (getenv("TEMP"))
-    {
-        strncpy(logfileName, getenv("TEMP"), MAX_PATH);
-        logfileName[MAX_PATH] = '\0';
-    }
-    else
+    dwSize = GetEnvironmentVariable("TEMP", logfileName, sizeof(logfileName));
+    if ( dwSize == 0 || dwSize > sizeof(logfileName) )
     {
         GetWindowsDirectory(logfileName, sizeof(logfileName));
     }

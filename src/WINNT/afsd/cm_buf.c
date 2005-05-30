@@ -592,7 +592,7 @@ void buf_Recycle(cm_buf_t *bp)
         }
 
         /* we better find it */
-        osi_assertx(tbp != NULL, "buf_GetNewLocked: hash table screwup");
+        osi_assertx(tbp != NULL, "buf_Recycle: hash table screwup");
 
         *lbpp = bp->hashp;	/* hash out */
 
@@ -806,9 +806,7 @@ long buf_GetNew(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bufpp)
     pageOffset.HighPart = offsetp->HighPart;
     pageOffset.LowPart = offsetp->LowPart & ~(cm_data.buf_blockSize-1);
     while (1) {
-        lock_ObtainWrite(&buf_globalLock);
-        bp = buf_LockedFind(scp, &pageOffset);
-        lock_ReleaseWrite(&buf_globalLock);
+        bp = buf_Find(scp, &pageOffset);
         if (bp) {
             /* lock it and break out */
             lock_ObtainMutex(&bp->mx);
@@ -848,6 +846,7 @@ long buf_GetNew(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bufpp)
 }
 
 /* get a page, returning it held but unlocked.  Make sure it is complete */
+/* The scp must be unlocked when passed to this function */
 long buf_Get(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bufpp)
 {
     cm_buf_t *bp;
@@ -869,9 +868,7 @@ long buf_Get(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bufpp)
         buf_ValidateBufQueues();
 #endif /* TESTING */
 
-        lock_ObtainWrite(&buf_globalLock);
-        bp = buf_LockedFind(scp, &pageOffset);
-        lock_ReleaseWrite(&buf_globalLock);
+        bp = buf_Find(scp, &pageOffset);
         if (bp) {
             /* lock it and break out */
             lock_ObtainMutex(&bp->mx);

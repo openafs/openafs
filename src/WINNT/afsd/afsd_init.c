@@ -146,11 +146,8 @@ afsi_start()
     DWORD maxLogSize = 100 * 1024;
 
     afsi_file = INVALID_HANDLE_VALUE;
-    if (getenv("TEMP"))
-    {
-        StringCbCopyA(wd, sizeof(wd), getenv("TEMP"));
-    }
-    else
+    code = GetEnvironmentVariable("TEMP", wd, sizeof(wd));
+    if ( code == 0 || code > sizeof(wd) )
     {
         code = GetWindowsDirectory(wd, sizeof(wd));
         if (code == 0) 
@@ -186,10 +183,13 @@ afsi_start()
     WriteFile(afsi_file, t, strlen(t), &zilch, NULL);
     WriteFile(afsi_file, u, strlen(u), &zilch, NULL);
     p = "PATH=";
-    path = getenv("PATH");
+    code = GetEnvironmentVariable("PATH", NULL, 0);
+    path = malloc(code);
+    code = GetEnvironmentVariable("PATH", path, code);
     WriteFile(afsi_file, p, strlen(p), &zilch, NULL);
     WriteFile(afsi_file, path, strlen(path), &zilch, NULL);
     WriteFile(afsi_file, "\n", 1, &zilch, NULL);
+    free(path);
 
     /* Initialize C RTL Code Page conversion functions */
     /* All of the path info obtained from the SMB client is in the OEM code page */
@@ -1399,12 +1399,10 @@ static HANDLE
 OpenDumpFile(void)
 {
     char wd[256];
+    DWORD code;
 
-    if (getenv("TEMP"))
-    {
-        StringCbCopyA(wd, sizeof(wd), getenv("TEMP"));
-    }
-    else
+    code = GetEnvironmentVariable("TEMP", wd, sizeof(wd));
+    if ( code == 0 || code > sizeof(wd) )
     {
         if (!GetWindowsDirectory(wd, sizeof(wd)))
             return NULL;

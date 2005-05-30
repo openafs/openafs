@@ -727,7 +727,9 @@ long cm_SetupStoreBIOD(cm_scache_t *scp, osi_hyper_t *inOffsetp, long inSize,
             break;
 
         /* try to lock it, and quit if we can't (simplifies locking) */
+        lock_ReleaseMutex(&scp->mx);
         code = lock_TryMutex(&bufp->mx);
+        lock_ObtainMutex(&scp->mx);
         if (code == 0) {
             buf_Release(bufp);
             break;
@@ -781,7 +783,9 @@ long cm_SetupStoreBIOD(cm_scache_t *scp, osi_hyper_t *inOffsetp, long inSize,
             break;
 
         /* try to lock it, and quit if we can't (simplifies locking) */
+        lock_ReleaseMutex(&scp->mx);
         code = lock_TryMutex(&bufp->mx);
+        lock_ObtainMutex(&scp->mx);
         if (code == 0) {
             buf_Release(bufp);
             break;
@@ -890,26 +894,26 @@ long cm_SetupFetchBIOD(cm_scache_t *scp, osi_hyper_t *offsetp,
      * sequence at a time.
      */
 
+    // lock_ObtainMutex(&cm_bufGetMutex);
     /* first hold all buffers, since we can't hold any locks in buf_Get */
     while (1) {
         /* stop at chunk boundary */
-        if (collected >= cm_chunkSize) break;
+        if (collected >= cm_chunkSize) 
+            break;
                 
         /* see if the next page would be past EOF */
-        if (LargeIntegerGreaterThanOrEqualTo(pageBase, fileSize)) break;
-
-        lock_ObtainMutex(&cm_bufGetMutex);
+        if (LargeIntegerGreaterThanOrEqualTo(pageBase, fileSize)) 
+            break;
 
         code = buf_Get(scp, &pageBase, &tbp);
         if (code) {
             lock_ReleaseMutex(&cm_bufGetMutex);
             lock_ObtainMutex(&scp->mx);
+            cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
             return code;
         }
                 
         buf_Release(tbp);
-
-        lock_ReleaseMutex(&cm_bufGetMutex);
 
         toffset.HighPart = 0;
         toffset.LowPart = cm_data.buf_blockSize;
@@ -919,6 +923,8 @@ long cm_SetupFetchBIOD(cm_scache_t *scp, osi_hyper_t *offsetp,
 
     /* reserve a chunk's worth of buffers if possible */
     reserving = buf_TryReserveBuffers(cm_chunkSize / cm_data.buf_blockSize);
+
+    // lock_ReleaseMutex(&cm_bufGetMutex);
 
     pageBase = *offsetp;
     collected = pageBase.LowPart & (cm_chunkSize - 1);
@@ -1376,6 +1382,9 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *up,
     code = cm_MapRPCError(code, reqp);
 
     lock_ObtainMutex(&scp->mx);
+    
+    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_FETCHSTATUS);
+
     /* we know that no one else has changed the buffer, since we still have
      * the fetching flag on the buffers, and we have the scp locked again.
      * Copy in the version # into the buffer if we got code 0 back from the

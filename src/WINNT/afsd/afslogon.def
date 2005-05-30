@@ -11,5 +11,7 @@ EXPORTS
     AFS_Startup_Event
     AFS_Logoff_Event
     AFS_Logon_Event
+    KFW_Logon_Event
+
 
 
