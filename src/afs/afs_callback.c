@@ -392,10 +392,9 @@ ClearCallBack(register struct rx_connection *a_conn,
 		for (tvc = afs_vhashTV[i]; tvc; tvc = tvc->vhnext) {
 		    if (tvc->fid.Fid.Volume == a_fid->Volume) {
 			tvc->callback = NULL;
-			tvc->quick.stamp = 0;
 			if (!localFid.Cell)
 			    localFid.Cell = tvc->fid.Cell;
-			tvc->h1.dchint = NULL;	/* invalidate hints */
+			tvc->dchint = NULL;	/* invalidate hints */
 			ObtainWriteLock(&afs_xcbhash, 449);
 			afs_DequeueCallback(tvc);
 			tvc->states &= ~(CStatd | CUnique | CBulkFetching);
@@ -444,8 +443,7 @@ ClearCallBack(register struct rx_connection *a_conn,
 		    && tvc->fid.Fid.Volume == a_fid->Volume
 		    && tvc->fid.Fid.Unique == a_fid->Unique) {
 		    tvc->callback = NULL;
-		    tvc->quick.stamp = 0;
-		    tvc->h1.dchint = NULL;	/* invalidate hints */
+		    tvc->dchint = NULL;	/* invalidate hints */
 		    ObtainWriteLock(&afs_xcbhash, 450);
 		    afs_DequeueCallback(tvc);
 		    tvc->states &= ~(CStatd | CUnique | CBulkFetching);

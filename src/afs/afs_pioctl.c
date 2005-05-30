@@ -1669,7 +1669,6 @@ DECL_PIOCTL(PFlush)
     /* now find the disk cache entries */
     afs_TryToSmush(avc, *acred, 1);
     osi_dnlc_purgedp(avc);
-    afs_symhint_inval(avc);
     if (avc->linkData && !(avc->states & CCore)) {
 	afs_osi_Free(avc->linkData, strlen(avc->linkData) + 1);
 	avc->linkData = NULL;
@@ -3561,7 +3560,6 @@ DECL_PIOCTL(PFlushMount)
     /* now find the disk cache entries */
     afs_TryToSmush(tvc, *acred, 1);
     osi_dnlc_purgedp(tvc);
-    afs_symhint_inval(tvc);
     if (tvc->linkData && !(tvc->states & CCore)) {
 	afs_osi_Free(tvc->linkData, strlen(tvc->linkData) + 1);
 	tvc->linkData = NULL;

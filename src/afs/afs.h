@@ -580,20 +580,6 @@ struct SimpleLocks {
 
 extern afs_int32 vmPageHog;	/* counter for # of vnodes which are page hogs. */
 
-/*
- * Fast map from vcache to dcache
- */
-struct vtodc {
-    struct dcache *dc;
-    afs_uint32 stamp;
-    struct osi_file *f;
-    afs_offs_t minLoc;		/* smallest offset into dc. */
-    afs_offs_t len;		/* largest offset into dc. */
-};
-
-extern afs_uint32 afs_stampValue;	/* stamp for pair's usage */
-#define	MakeStamp()	(++afs_stampValue)
-
 #if defined(AFS_XBSD_ENV) || defined(AFS_DARWIN_ENV)
 #define VTOAFS(v) ((struct vcache *)(v)->v_data)
 #define AFSTOV(vc) ((vc)->v)
@@ -690,12 +676,7 @@ struct vcache {
 #if	defined(AFS_SUN5_ENV)
     afs_uint32 vstates;		/* vstate bits */
 #endif				/* defined(AFS_SUN5_ENV) */
-    struct vtodc quick;
-    afs_uint32 symhintstamp;
-    union {
-	struct vcache *symhint;
-	struct dcache *dchint;
-    } h1;
+    struct dcache *dchint;
 #ifdef AFS_LINUX22_ENV
     u_short mapcnt;		/* Number of mappings of this file. */
 #endif
@@ -722,9 +703,6 @@ struct vcache {
     short multiPage;		/* count of multi-page getpages in progress */
 #endif
 };
-
-#define afs_symhint_inval(avc)
-
 
 #define	DONT_CHECK_MODE_BITS	0
 #define	CHECK_MODE_BITS		1
@@ -963,7 +941,6 @@ struct dcache {
     char dflags;		/* Data flags */
     char mflags;		/* Meta flags */
     struct fcache f;		/* disk image */
-    afs_int32 stamp;		/* used with vtodc struct for hints */
     afs_int32 bucket;           /* which bucket these dcache entries are in */
     /*
      * Locking rules:
@@ -983,10 +960,6 @@ struct dcache {
      * Note that dcache.lock(W) gives you the right to update mflags,
      * as dcache.mflock(W) can only be held with dcache.lock(R).
      *
-     * dcache.stamp is protected by the associated vcache lock, because
-     * it's only purpose is to establish correspondence between vcache
-     * and dcache entries.
-     *
      * dcache.index, dcache.f.fid, dcache.f.chunk and dcache.f.inode are
      * write-protected by afs_xdcache and read-protected by refCount.
      * Once an entry is referenced, these values cannot change, and if
@@ -996,8 +969,6 @@ struct dcache {
      * ensuring noone else has a refCount on it).
      */
 };
-/* this is obsolete and should be removed */
-#define ihint stamp
 
 /* afs_memcache.c */
 struct memCacheEntry {
