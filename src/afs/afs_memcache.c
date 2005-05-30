@@ -103,9 +103,8 @@ afs_MemCacheOpen(afs_int32 blkno)
 	osi_Panic("afs_MemCacheOpen: invalid block #");
     }
     mep = (memCache + blkno);
-    afs_Trace4(afs_iclSetp, CM_TRACE_MEMOPEN, ICL_TYPE_INT32, blkno,
-	       ICL_TYPE_POINTER, mep, ICL_TYPE_POINTER, mep->data,
-	       ICL_TYPE_STRING, mep->data);
+    afs_Trace3(afs_iclSetp, CM_TRACE_MEMOPEN, ICL_TYPE_INT32, blkno,
+	       ICL_TYPE_POINTER, mep, ICL_TYPE_POINTER, mep ? mep->data : 0);
     return (void *)mep;
 }
 
