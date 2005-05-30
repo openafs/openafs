@@ -1,4 +1,17 @@
 Since 1.3.82:
+ * The OpenAFS integrated logon obtains Kerberos 5 tickets as part of 
+   the process of producing AFS tokens.  The tokens are stored within
+   the AFS Client Service but the Kerberos 5 tickets have been discarded.
+   New functionality has been added to temporarily copy the tickets to
+   a file ccache during the short window between the NPLogonNotify and
+   WinLogon Logon Event.  The Logon Event handler starts a process as
+   user, afscpcc.exe, that copies the tickets into the default ccache.
+   The file ccache is then destroyed by the event handler.
+
+ * During synchronization operations on stat cache entries, if threads
+   are forced to sleep it was possible that the threads would not be
+   woken under heavy load.
+
  * Enforce the delete on close flag specified by the NTCreateX()
    operation.
 

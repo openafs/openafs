@@ -584,6 +584,20 @@ entries are present and that they refer to the dll "rpcrt4.dll":
    HKLM "SOFTWARE\Microsoft\RPC\ClientProtocols" "ncacn_ip_tcp"
    HKLM "SOFTWARE\Microsoft\RPC\ClientProtocols" "ncadg_ip_udp"
 
+
+41. Starting in 1.3.83, when Integrated Logon is used in conjunction
+with KFW, the Kerberos 5 tickets obtained during the process of 
+generating AFS tokens are preserved and stored into the default
+ccache within the user logon session.
+
+
+42. 1.3.83 adds a new command, "fs minidump".  This command can 
+be used at any time to generate a mini dump file containing the
+current stack of the afsd_service.exe process.   This output can
+be very helpful when debugging the AFS Client Service when it is
+unresponsive to SMB/CIFS requests.
+
+
 ------------------------------------------------------------------------
 
 Reporting Bugs:
@@ -591,10 +605,10 @@ Reporting Bugs:
 Bug reports should be sent to openafs-bugs@openafs.org.  Please include as 
 much information as possible about the issue.  If you are reporting a crash, 
 please install the debugging symbols by re-running the installer.  If a dump 
-file is available for the problem include it along with the AFS Client Trace 
-file  %WINDIR%\TEMP\afsd.log.  The AFS Client startup log is 
-%WINDIR%\TEMP\afsd_init.log.  Send the last continuous block of log 
-information from this file.
+file is available for the problem, %WINDIR%\TEMP\afsd.dmp, include it along 
+with the AFS Client Trace file  %WINDIR%\TEMP\afsd.log.  The AFS Client 
+startup log is %WINDIR%\TEMP\afsd_init.log.  Send the last continuous block 
+of log information from this file.
 
 Configuring DrWatson to generate dump files for crashes:
 
