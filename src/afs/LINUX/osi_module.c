@@ -737,6 +737,7 @@ cleanup_module(void)
 }
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
+MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 module_init(afs_init);
 module_exit(afs_cleanup);
 #endif
