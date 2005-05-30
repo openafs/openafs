@@ -229,7 +229,6 @@ static int ioctl32_done;
 static int
 afsproc_init(void)
 {
-    struct proc_dir_entry *entry2;
     struct proc_dir_entry *entry1;
     struct proc_dir_entry *entry2;
 
