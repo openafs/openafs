@@ -47,6 +47,7 @@ void KFW_initialize(void);
 void KFW_cleanup(void);
 int  KFW_is_available(void);
 int  KFW_AFS_destroy_tickets_for_cell(char *);
+int  KFW_AFS_destroy_tickets_for_principal(char *);
 int  KFW_AFS_renew_expiring_tokens(void);
 int  KFW_AFS_get_cred( char * username, 
                         char * cell,
@@ -61,6 +62,10 @@ BOOL KFW_probe_kdc(struct afsconf_cell *);
 int  KFW_AFS_get_cellconfig(char *, struct afsconf_cell *, char *);
 void KFW_import_windows_lsa(void);
 BOOL KFW_AFS_get_lsa_principal(char *, DWORD *);
+
+/* These functions are only to be used in the afslogon.dll */
+void KFW_AFS_copy_cache_to_system_file(char *, char *);
+int  KFW_AFS_copy_system_file_to_default_cache(char *);
 
 /* From afs/krb_prot.h */
 /* values for kerb error codes */

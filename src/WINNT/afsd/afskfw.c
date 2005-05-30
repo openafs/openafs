@@ -1080,7 +1080,7 @@ KFW_import_ccache_data(void)
                     code = pkrb5_cc_close(ctx,cc);
                     cc = 0;
                     code = pkrb5_cc_close(ctx,oldcc);
-                    cc = 0;
+                    oldcc = 0;
                     KRB5_error(code, "krb5_cc_copy_creds", 0, NULL, NULL);
                     continue;
                 }
@@ -1370,7 +1370,7 @@ KFW_AFS_destroy_tickets_for_cell(char * cell)
         return 0;
 
     if ( IsDebuggerPresent() ) {
-        OutputDebugString("KFW_AFS_destroy_ticets_for_cell: ");
+        OutputDebugString("KFW_AFS_destroy_tickets_for_cell: ");
         OutputDebugString(cell);
         OutputDebugString("\n");
     }
@@ -1418,6 +1418,60 @@ KFW_AFS_destroy_tickets_for_cell(char * cell)
         }
         free(principals);
     }
+    pkrb5_free_context(ctx);
+    return 0;
+}
+
+int 
+KFW_AFS_destroy_tickets_for_principal(char * user)
+{
+    krb5_context		ctx = 0;
+    krb5_error_code		code;
+    int count;
+    char ** cells = NULL;
+    krb5_principal      princ = 0;
+    krb5_ccache			cc  = 0;
+
+    if (!pkrb5_init_context)
+        return 0;
+
+    if ( IsDebuggerPresent() ) {
+        OutputDebugString("KFW_AFS_destroy_tickets_for_user: ");
+        OutputDebugString(user);
+        OutputDebugString("\n");
+    }
+
+    code = pkrb5_init_context(&ctx);
+    if (code) ctx = 0;
+
+    code = pkrb5_parse_name(ctx, user, &princ);
+    if (code) goto loop_cleanup;
+
+    code = KFW_get_ccache(ctx, princ, &cc);
+    if (code) goto loop_cleanup;
+
+    code = pkrb5_cc_destroy(ctx, cc);
+    if (!code) cc = 0;
+
+  loop_cleanup:
+    if ( cc ) {
+        pkrb5_cc_close(ctx, cc);
+        cc = 0;
+    }
+    if ( princ ) {
+        pkrb5_free_principal(ctx, princ);
+        princ = 0;
+    }
+
+    count = KFW_AFS_find_cells_for_princ(ctx, user, &cells, TRUE);
+    if ( count >= 1 ) {
+        while ( count-- ) {
+            KFW_AFS_update_cell_princ_map(ctx, cells[count], user, FALSE);
+            free(cells[count]);
+        }
+        free(cells);
+    }
+
     pkrb5_free_context(ctx);
     return 0;
 }
@@ -3454,4 +3508,171 @@ KFW_AFS_get_lsa_principal(char * szUser, DWORD *dwSize)
     if (ctx)
         pkrb5_free_context(ctx);
     return success;
+}
+
+#define AFS_LOGON_EVENT_NAME TEXT("AFS Logon")
+
+static void DebugEvent0(char *a) 
+{
+    HANDLE h; char *ptbuf[1];
+    h = RegisterEventSource(NULL, AFS_LOGON_EVENT_NAME);
+    ptbuf[0] = a;
+    ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 0, NULL, 1, 0, (const char **)ptbuf, NULL);
+    DeregisterEventSource(h);
+}
+
+#define MAXBUF_ 512
+static void DebugEvent(char *b,...) 
+{
+    HANDLE h; char *ptbuf[1],buf[MAXBUF_+1];
+    va_list marker;
+    h = RegisterEventSource(NULL, AFS_LOGON_EVENT_NAME);
+    va_start(marker,b);
+    vsprintf(buf, b, marker);
+    buf[MAXBUF_] = '\0';
+    ptbuf[0] = buf;
+    ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 0, NULL, 1, 0, (const char **)ptbuf, NULL);
+    DeregisterEventSource(h);
+    va_end(marker);
+}
+
+
+void
+KFW_AFS_copy_cache_to_system_file(char * user, char * szLogonId)
+{
+    char filename[256];
+    DWORD count;
+    char cachename[264] = "FILE:";
+    krb5_context		ctx = 0;
+    krb5_error_code		code;
+    krb5_principal              princ = 0;
+    krb5_ccache			cc  = 0;
+    krb5_ccache                 ncc = 0;
+
+    if (!pkrb5_init_context)
+        return;
+
+    count = GetEnvironmentVariable("TEMP", filename, sizeof(filename));
+    if ( count > sizeof(filename) || count == 0 ) {
+        GetWindowsDirectory(filename, sizeof(filename));
+    }
+
+    if ( strlen(filename) + strlen(szLogonId) + 2 > sizeof(filename) )
+        return;
+
+    strcat(filename, "\\");
+    strcat(filename, szLogonId);    
+
+    strcat(cachename, filename);
+
+    DebugEvent("Copy2File %s", filename);
+
+    DeleteFile(filename);
+
+    code = pkrb5_init_context(&ctx);
+    if (code) ctx = 0;
+
+    code = pkrb5_parse_name(ctx, user, &princ);
+    if (code) goto cleanup;
+
+    code = KFW_get_ccache(ctx, princ, &cc);
+    if (code) goto cleanup;
+
+    code = pkrb5_cc_resolve(ctx, cachename, &ncc);
+    if (code) goto cleanup;
+
+    code = pkrb5_cc_initialize(ctx, ncc, princ);
+    if (code) goto cleanup;
+
+    DebugEvent0("Copy2File copying");
+
+    code = pkrb5_cc_copy_creds(ctx,cc,ncc);
+
+    DebugEvent("Copy2File copy_creds=%d", code);
+
+  cleanup:
+    if ( cc ) {
+        pkrb5_cc_close(ctx, cc);
+        cc = 0;
+    }
+    if ( ncc ) {
+        pkrb5_cc_close(ctx, ncc);
+        ncc = 0;
+    }
+    if ( princ ) {
+        pkrb5_free_principal(ctx, princ);
+        princ = 0;
+    }
+
+    if (ctx)
+        pkrb5_free_context(ctx);
+}
+
+int
+KFW_AFS_copy_system_file_to_default_cache(char * filename)
+{
+    DWORD count;
+    char cachename[264] = "FILE:";
+    HANDLE hFile;
+    krb5_context		ctx = 0;
+    krb5_error_code		code;
+    krb5_principal              princ = 0;
+    krb5_ccache			cc  = 0;
+    krb5_ccache                 ncc = 0;
+    int retval = 1;
+
+    if (!pkrb5_init_context)
+        return 1;
+
+    if ( strlen(filename) + 6 > sizeof(cachename) )
+        return 1;
+
+    strcat(cachename, filename);
+
+    DebugEvent("Copy2Cache %s", cachename);
+
+    code = pkrb5_init_context(&ctx);
+    if (code) ctx = 0;
+
+    code = pkrb5_cc_resolve(ctx, cachename, &cc);
+    if (code) goto cleanup;
+    
+    DebugEvent("Copy2Cache resolve=%d", code);
+
+    code = pkrb5_cc_get_principal(ctx, cc, &princ);
+
+    code = pkrb5_cc_default(ctx, &ncc);
+    DebugEvent("Copy2Cache default=%d", code);
+
+    if (!code) {
+        code = pkrb5_cc_initialize(ctx, ncc, princ);
+        DebugEvent("Copy2Cache initialize=%d", code);
+
+        code = pkrb5_cc_copy_creds(ctx,cc,ncc);
+        DebugEvent("Copy2Cache copy_creds=%d", code);
+    }
+    if ( ncc ) {
+        pkrb5_cc_close(ctx, ncc);
+        ncc = 0;
+    }
+
+    retval=0;   /* success */
+
+  cleanup:
+    if ( cc ) {
+        pkrb5_cc_close(ctx, cc);
+        cc = 0;
+    }
+
+    DeleteFile(filename);
+
+    if ( princ ) {
+        pkrb5_free_principal(ctx, princ);
+        princ = 0;
+    }
+
+    if (ctx)
+        pkrb5_free_context(ctx);
+
+    return 0;
 }

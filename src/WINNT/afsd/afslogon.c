@@ -41,8 +41,10 @@ WSADATA WSAjunk;
 void DebugEvent0(char *a) 
 {
     HANDLE h; char *ptbuf[1];
+    
     if (!ISLOGONTRACE(TraceOption))
         return;
+    
     h = RegisterEventSource(NULL, AFS_LOGON_EVENT_NAME);
     ptbuf[0] = a;
     ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 0, NULL, 1, 0, (const char **)ptbuf, NULL);
@@ -651,6 +653,7 @@ DWORD APIENTRY NPLogonNotify(
     char logonDomain[MAX_DOMAIN_LENGTH]="";
     char cell[256]="<non-integrated logon>";
     char homePath[MAX_PATH]="";
+    char szLogonId[128] = "";
 
     MSV1_0_INTERACTIVE_LOGON *IL;
 
@@ -675,15 +678,33 @@ DWORD APIENTRY NPLogonNotify(
     int retryInterval;
     int sleepInterval;
 
+    (void) RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY,
+                         0, KEY_QUERY_VALUE, &NPKey);
+    LSPsize=sizeof(TraceOption);
+    RegQueryValueEx(NPKey, REG_CLIENT_TRACE_OPTION_PARM, NULL,
+                     &LSPtype, (LPBYTE)&TraceOption, &LSPsize);
+
+    RegCloseKey (NPKey);
+
+    DebugEvent("NPLogonNotify - LoginId(%d,%d)", lpLogonId->HighPart, lpLogonId->LowPart);
+
     /* Make sure the AFS Libraries are initialized */
     AfsLogonInit();
 
     /* Initialize Logon Script to none */
     *lpLogonScript=NULL;
     
-    /* TODO: We should check the value of lpAuthentInfoType before assuming that it is
-       MSV1_0_INTERACTIVE_LOGON though for our purposes KERB_INTERACTIVE_LOGON is
-       co-incidentally equivalent. */
+    /* MSV1_0_INTERACTIVE_LOGON and KERB_INTERACTIVE_LOGON are equivalent for
+     * our purposes */
+
+    if ( wcscmp(lpAuthentInfoType,L"MSV1_0:Interactive") && 
+         wcscmp(lpAuthentInfoType,L"Kerberos:Interactive") )
+    {
+        DebugEvent("Unsupported Authentication Info Type: %S",
+                   lpAuthentInfoType);
+        return 0;
+    }
+
     IL = (MSV1_0_INTERACTIVE_LOGON *) lpAuthentInfo;
 
     /* Are we interactive? */
@@ -707,14 +728,6 @@ DWORD APIENTRY NPLogonNotify(
             break;
         }
     }
-
-    (void) RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY,
-                         0, KEY_QUERY_VALUE, &NPKey);
-    LSPsize=sizeof(TraceOption);
-    RegQueryValueEx(NPKey, REG_CLIENT_TRACE_OPTION_PARM, NULL,
-                     &LSPtype, (LPBYTE)&TraceOption, &LSPsize);
-
-    RegCloseKey (NPKey);
 
     /*
      * Get Logon options
@@ -873,9 +886,15 @@ DWORD APIENTRY NPLogonNotify(
     }
 
     DebugEvent("while loop exited");
-    /* remove any kerberos 5 tickets currently held by the SYSTEM account */
-    if ( KFW_is_available() )
-        KFW_AFS_destroy_tickets_for_cell(cell);
+    /* remove any kerberos 5 tickets currently held by the SYSTEM account
+     * for this user 
+     */
+    if ( KFW_is_available() ) {
+        sprintf(szLogonId,"%d.%d",lpLogonId->HighPart, lpLogonId->LowPart);
+        KFW_AFS_copy_cache_to_system_file(uname, szLogonId);
+
+        KFW_AFS_destroy_tickets_for_principal(uname);
+    }
 
     if (code) {
         char msg[128];
@@ -1040,26 +1059,24 @@ VOID AFS_Logoff_Event( PWLX_NOTIFICATION_INFO pInfo )
 
 VOID AFS_Logon_Event( PWLX_NOTIFICATION_INFO pInfo )
 {
-    DWORD code;
     TCHAR profileDir[1024] = TEXT("");
     DWORD  len = 1024;
     PTOKEN_USER  tokenUser = NULL;
     DWORD  retLen;
-    HANDLE hToken;
-
     WCHAR szUserW[128] = L"";
     char  szUserA[128] = "";
     char  szClient[MAX_PATH];
     char szPath[MAX_PATH] = "";
     NETRESOURCE nr;
     DWORD res;
-    DWORD gle;
     DWORD dwSize;
 
     /* Make sure the AFS Libraries are initialized */
     AfsLogonInit();
 
     DebugEvent0("AFS_Logon_Event - Start");
+
+    DebugEvent("AFS_Logon_Event Process ID: %d",GetCurrentProcessId());
 
     if (!GetTokenInformation(pInfo->hToken, TokenUser, NULL, 0, &retLen))
     {
@@ -1121,5 +1138,119 @@ VOID AFS_Logon_Event( PWLX_NOTIFICATION_INFO pInfo )
         LocalFree(tokenUser);
 
     DebugEvent0("AFS_Logon_Event - End");
+}
+
+static BOOL
+GetSecurityLogonSessionData(HANDLE hToken, PSECURITY_LOGON_SESSION_DATA * ppSessionData)
+{
+    NTSTATUS Status = 0;
+    HANDLE  TokenHandle;
+    TOKEN_STATISTICS Stats;
+    DWORD   ReqLen;
+    BOOL    Success;
+
+    if (!ppSessionData)
+        return FALSE;
+    *ppSessionData = NULL;
+
+#if 0
+    Success = OpenProcessToken( HANDLE GetCurrentProcess(), TOKEN_QUERY, &TokenHandle );
+    if ( !Success )
+        return FALSE;
+#endif
+
+    Success = GetTokenInformation( hToken, TokenStatistics, &Stats, sizeof(TOKEN_STATISTICS), &ReqLen );
+#if 0
+    CloseHandle( TokenHandle );
+#endif
+    if ( !Success )
+        return FALSE;
+
+    Status = LsaGetLogonSessionData( &Stats.AuthenticationId, ppSessionData );
+    if ( FAILED(Status) || !ppSessionData )
+        return FALSE;
+
+    return TRUE;
+}
+
+VOID KFW_Logon_Event( PWLX_NOTIFICATION_INFO pInfo )
+{
+    DWORD code;
+
+    WCHAR szUserW[128] = L"";
+    char  szUserA[128] = "";
+    char  szClient[MAX_PATH];
+    char szPath[MAX_PATH] = "";
+    char szLogonId[128] = "";
+    NETRESOURCE nr;
+    DWORD res;
+    DWORD gle;
+    DWORD dwSize;
+    DWORD dwDisp;
+    DWORD dwType;
+    DWORD count;
+    VOID * ticketData;
+    char filename[256];
+    char commandline[512];
+    STARTUPINFO startupinfo;
+    PROCESS_INFORMATION procinfo;
+
+    LUID LogonId = {0, 0};
+    PSECURITY_LOGON_SESSION_DATA pLogonSessionData = NULL;
+
+    HKEY hKey1 = NULL, hKey2 = NULL;
+
+    /* Make sure the KFW Libraries are initialized */
+    AfsLogonInit();
+
+    DebugEvent0("KFW_Logon_Event - Start");
+
+    GetSecurityLogonSessionData( pInfo->hToken, &pLogonSessionData );
+
+    if ( pLogonSessionData ) {
+        LogonId = pLogonSessionData->LogonId;
+        DebugEvent("KFW_Logon_Event - LogonId(%d,%d)", LogonId.HighPart, LogonId.LowPart);
+
+        sprintf(szLogonId,"%d.%d",LogonId.HighPart, LogonId.LowPart);
+        LsaFreeReturnBuffer( pLogonSessionData );
+    } else {
+        DebugEvent0("KFW_Logon_Event - Unable to determine LogonId");
+        return;
+    }
+
+    count = GetEnvironmentVariable("TEMP", filename, sizeof(filename));
+    if ( count > sizeof(filename) || count == 0 ) {
+        GetWindowsDirectory(filename, sizeof(filename));
+    }
+
+    if ( strlen(filename) + strlen(szLogonId) + 2 <= sizeof(filename) ) {
+        strcat(filename, "\\");
+        strcat(filename, szLogonId);    
+
+        sprintf(commandline, "afscpcc.exe \"%s\"", filename);
+
+        GetStartupInfo(&startupinfo);
+        if (CreateProcessAsUser( pInfo->hToken,
+                             "afscpcc.exe",
+                             commandline,
+                             NULL,
+                             NULL,
+                             FALSE,
+                             CREATE_NEW_PROCESS_GROUP | DETACHED_PROCESS,
+                             NULL,
+                             NULL,
+                             &startupinfo,
+                             &procinfo)) 
+        {
+            WaitForSingleObject(procinfo.hProcess, 30000);
+
+            CloseHandle(procinfo.hThread);
+            CloseHandle(procinfo.hProcess);
+        }
+    }
+
+    DeleteFile(filename);
+
+    DebugEvent0("KFW_Logon_Event - End");
 }
 

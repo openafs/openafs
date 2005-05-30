@@ -546,6 +546,7 @@ Section "AFS Client" secClient
   
   SetOutPath "$SYSDIR"
   !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afslogon.dll" "$SYSDIR\afslogon.dll" "$INSTDIR"
+  File "${AFS_CLIENT_BUILDDIR}\afscpcc.exe"
    
    Call AFSLangFiles
 
@@ -725,6 +726,11 @@ skipremove:
   WriteRegStr HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" "Logon" "AFS_Logon_Event"
   WriteRegStr HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" "Logoff" "AFS_Logoff_Event"
   WriteRegStr HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" "Startup" "AFS_Startup_Event"
+
+  WriteRegDWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\KFWLogon" "Asynchronous" 0
+  WriteRegDWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\KFWLogon" "Impersonate"  0
+  WriteRegStr HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\KFWLogon" "DLLName" "afslogon.dll"
+  WriteRegStr HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\KFWLogon" "Logon" "KFW_Logon_Event"
 
   SetRebootFlag true
   
@@ -1800,10 +1806,12 @@ StartRemove:
   Delete /REBOOTOK "$SYSDIR\afsserver.cpl"
   Delete /REBOOTOK "$SYSDIR\afs_cpa.cpl"
   Delete /REBOOTOK "$SYSDIR\afslogon.dll"
+  Delete /REBOOTOK "$SYSDIR\afscpcc.exe"
 
   Delete /REBOOTOK "$SYSDIR\afsserver.pdb"
   Delete /REBOOTOK "$SYSDIR\afs_cpa.pdb"
   Delete /REBOOTOK "$SYSDIR\afslogon.pdb"
+  Delete /REBOOTOK "$SYSDIR\afscpcc.pdb"
 
   RMDir /r "$INSTDIR\Documentation\html\CmdRef"
   RMDir /r "$INSTDIR\Documentation\html\InstallGd"
