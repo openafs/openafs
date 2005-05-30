@@ -1158,17 +1158,6 @@ afs_GetDownDSlot(int anumber)
 #endif
 	    }
 
-	    tdc->stamp = 0;
-#ifdef IHINT
-	    if (tdc->ihint) {
-		struct osi_file *f = (struct osi_file *)tdc->ihint;
-		tdc->ihint = 0;
-		afs_UFSClose(f);
-		nihints--;
-	    }
-#endif /* IHINT */
-
-
 	    /* finally put the entry in the free list */
 	    afs_indexTable[ix] = NULL;
 	    afs_indexFlags[ix] &= ~IFEverUsed;
@@ -1622,14 +1611,8 @@ void
 updateV2DC(int lockVc, struct vcache *v, struct dcache *d, int src)
 {
     if (!lockVc || 0 == NBObtainWriteLock(&v->lock, src)) {
-	if (hsame(v->m.DataVersion, d->f.versionNo) && v->callback) {
-	    v->quick.dc = d;
-	    v->quick.stamp = d->stamp = MakeStamp();
-	    v->quick.minLoc = AFS_CHUNKTOBASE(d->f.chunk);
-	    /* Don't think I need these next two lines forever */
-	    v->quick.len = d->f.chunkBytes;
-	    v->h1.dchint = d;
-	}
+	if (hsame(v->m.DataVersion, d->f.versionNo) && v->callback)
+	    v->dchint = d;
 	if (lockVc)
 	    ReleaseWriteLock(&v->lock);
     }
@@ -1721,7 +1704,7 @@ afs_GetDCache(register struct vcache *avc, afs_size_t abyte,
     shortcut = 0;
 
     /* check hints first! (might could use bcmp or some such...) */
-    if ((tdc = avc->h1.dchint)) {
+    if ((tdc = avc->dchint)) {
 	int dcLocked;
 
 	/*
@@ -2184,20 +2167,7 @@ afs_GetDCache(register struct vcache *avc, afs_size_t abyte,
 	 * fetch the whole file.
 	 */
 	DZap(tdc);	/* pages in cache may be old */
-#ifdef  IHINT
-	if (file = tdc->ihint) {
-	    if (tdc->f.inode == file->inum)
-		usedihint++;
-	    else {
-		tdc->ihint = 0;
-		afs_UFSClose(file);
-		file = 0;
-		nihints--;
-		file = osi_UFSOpen(tdc->f.inode);
-	    }
-	} else
-#endif /* IHINT */
-	    file = afs_CFileOpen(tdc->f.inode);
+	file = afs_CFileOpen(tdc->f.inode);
 	afs_RemoveVCB(&avc->fid);
 	tdc->f.states |= DWriting;
 	tdc->dflags |= DFFetching;
@@ -2961,7 +2931,6 @@ afs_UFSGetDSlot(register afs_int32 aslot, register struct dcache *tmpdc)
     } else {
 	tdc = tmpdc;
 	tdc->f.states = 0;
-	tdc->ihint = 0;
     }
 
     /*

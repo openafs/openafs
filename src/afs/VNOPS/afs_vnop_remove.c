@@ -126,8 +126,6 @@ afsremove(register struct vcache *adp, register struct dcache *tdc,
 	      SHARED_LOCK, NULL));
 
     osi_dnlc_remove(adp, aname, tvc);
-    if (tvc)
-	afs_symhint_inval(tvc);	/* XXX: don't really need to be so extreme */
 
     if (code) {
 	if (tdc) {
@@ -362,8 +360,6 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
     }
 
     osi_dnlc_remove(adp, aname, tvc);
-    if (tvc)
-	afs_symhint_inval(tvc);
 
     Tadp1 = adp;
     Tadpr = VREFCOUNT(adp);

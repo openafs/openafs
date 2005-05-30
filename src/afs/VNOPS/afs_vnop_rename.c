@@ -120,8 +120,6 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
 
     osi_dnlc_remove(aodp, aname1, 0);
     osi_dnlc_remove(andp, aname2, 0);
-    afs_symhint_inval(aodp);
-    afs_symhint_inval(andp);
 
     /*
      * Make sure that the data in the cache is current. We may have

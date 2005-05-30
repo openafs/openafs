@@ -286,10 +286,9 @@ afs_rmdir(OSI_VC_DECL(adp), char *aname, struct AFS_UCRED *acred)
     }
 
 
-    if (tvc) {
+    if (tvc)
 	osi_dnlc_purgedp(tvc);	/* get rid of any entries for this directory */
-	afs_symhint_inval(tvc);
-    } else
+    else
 	osi_dnlc_remove(adp, aname, 0);
 
     if (tvc) {
