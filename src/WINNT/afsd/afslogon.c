@@ -657,7 +657,7 @@ DWORD APIENTRY NPLogonNotify(
 
     MSV1_0_INTERACTIVE_LOGON *IL;
 
-    DWORD code;
+    DWORD code, code2;
 
     int pw_exp;
     char *reason;
@@ -817,9 +817,9 @@ DWORD APIENTRY NPLogonNotify(
 
                         p = opt.theseCells;
                         while ( *p ) {
-                            code = KFW_AFS_get_cred(principal, p, 0, 0, opt.smbName, &reason);
+                            code2 = KFW_AFS_get_cred(principal, p, 0, 0, opt.smbName, &reason);
                             DebugEvent("KFW_AFS_get_cred  uname=[%s] smbname=[%s] cell=[%s] code=[%d]",
-                                        principal,opt.smbName,p,code);
+                                        principal,opt.smbName,p,code2);
                             p += strlen(p) + 1;
                         }
                         
