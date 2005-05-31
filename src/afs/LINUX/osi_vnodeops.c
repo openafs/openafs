@@ -864,10 +864,10 @@ static int
 afs_linux_dentry_revalidate(struct dentry *dp)
 #endif
 {
-    cred_t *credp = NULL;
     struct vrequest treq;
-    int code, bad_dentry;
-    struct vcache *vcp, *pvcp;
+    cred_t *credp = NULL;
+    struct vcache *vcp, *pvcp, *tvc = NULL;
+    int valid;
 
 #ifdef AFS_LINUX24_ENV
     lock_kernel();
@@ -877,61 +877,77 @@ afs_linux_dentry_revalidate(struct dentry *dp)
     vcp = ITOAFS(dp->d_inode);
     pvcp = ITOAFS(dp->d_parent->d_inode);		/* dget_parent()? */
 
-    /* If it's a negative dentry, it's never valid */
-    if (!vcp || !pvcp) {
-	bad_dentry = 1;
-	goto done;
-    }
+    if (vcp) {
 
-    /* If it's the AFS root no chance it needs revalidating */
-    if (vcp == afs_globalVp)
-	goto good_dentry;
+	/* If it's the AFS root no chance it needs revalidating */
+	if (vcp == afs_globalVp)
+	    goto good_dentry;
 
-    /* parent's DataVersion changed? */
-    if (hgetlo(pvcp->m.DataVersion) > dp->d_time) {
-	vcp->states &= ~CStatd; /* force afs_VerifyVCache() to go to the server */
-    }
+	/* check_bad_parent()? */
 
-    /* Get a validated vcache entry */
-    credp = crref();
-    code = afs_InitReq(&treq, credp);
-    if (code) {
-	bad_dentry = 2;
-	goto done;
-    }
-    code = afs_VerifyVCache(vcp, &treq);
-    if (code) {
-	bad_dentry = 3;
-	goto done;
-    }
+#ifdef notdef
+	/* If the last looker changes, we should make sure the current
+	 * looker still has permission to examine this file.  This would
+	 * always require a crref() which would be "slow".
+	 */
+	if (vcp->last_looker != treq.uid) {
+	    if (!afs_AccessOK(vcp, (vType(vcp) == VREG) ? PRSFS_READ : PRSFS_LOOKUP, &treq, CHECK_MODE_BITS))
+		goto bad_dentry;
 
-    /* If we aren't the last looker, verify access */
-    if (vcp->last_looker != treq.uid) {
-	if (!afs_AccessOK(vcp, (vType(vcp) == VREG) ? PRSFS_READ : PRSFS_LOOKUP, &treq, CHECK_MODE_BITS)) {
-	    bad_dentry = 5;
-	    goto done;
+	    vcp->last_looker = treq.uid;
+	}
+#endif
+
+	/* If the parent's DataVersion has changed or the vnode
+	 * is longer valid, we need to do a full lookup.  VerifyVCache
+	 * isn't enough since the vnode may have been renamed.
+	 */
+	if (hgetlo(pvcp->m.DataVersion) > dp->d_time || !(vcp->states & CStatd)) {
+
+	    credp = crref();
+	    if (afs_InitReq(&treq, credp))
+		goto bad_dentry;
+	    afs_lookup(pvcp, dp->d_name.name, &tvc, credp);
+	    if (!tvc || tvc != vcp)
+		goto bad_dentry;
+	    if (afs_VerifyVCache(vcp, &treq))	/* update inode attributes */
+		goto bad_dentry;
+
+	    dp->d_time = hgetlo(pvcp->m.DataVersion);
 	}
 
-	vcp->last_looker = treq.uid;
+    } else {
+	if (hgetlo(pvcp->m.DataVersion) > dp->d_time)
+	    goto bad_dentry;
+
+	/* No change in parent's DataVersion so this negative
+	 * lookup is still valid.
+	 */
     }
 
   good_dentry:
-    bad_dentry = 0;
+    valid = 1;
 
   done:
     /* Clean up */
+    if (tvc)
+	afs_PutVCache(tvc);
     AFS_GUNLOCK();
-    if (bad_dentry) {
+    if (credp)
+	crfree(credp);
+
+    if (!valid) {
 	shrink_dcache_parent(dp);
 	d_drop(dp);
     }
 #ifdef AFS_LINUX24_ENV
     unlock_kernel();
 #endif
-    if (credp)
-	crfree(credp);
+    return valid;
 
-    return !bad_dentry;
+  bad_dentry:
+    valid = 0;
+    goto done;
 }
 
 #if !defined(AFS_LINUX26_ENV)
