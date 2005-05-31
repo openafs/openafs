@@ -3510,33 +3510,6 @@ KFW_AFS_get_lsa_principal(char * szUser, DWORD *dwSize)
     return success;
 }
 
-#define AFS_LOGON_EVENT_NAME TEXT("AFS Logon")
-
-static void DebugEvent0(char *a) 
-{
-    HANDLE h; char *ptbuf[1];
-    h = RegisterEventSource(NULL, AFS_LOGON_EVENT_NAME);
-    ptbuf[0] = a;
-    ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 0, NULL, 1, 0, (const char **)ptbuf, NULL);
-    DeregisterEventSource(h);
-}
-
-#define MAXBUF_ 512
-static void DebugEvent(char *b,...) 
-{
-    HANDLE h; char *ptbuf[1],buf[MAXBUF_+1];
-    va_list marker;
-    h = RegisterEventSource(NULL, AFS_LOGON_EVENT_NAME);
-    va_start(marker,b);
-    vsprintf(buf, b, marker);
-    buf[MAXBUF_] = '\0';
-    ptbuf[0] = buf;
-    ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 0, NULL, 1, 0, (const char **)ptbuf, NULL);
-    DeregisterEventSource(h);
-    va_end(marker);
-}
-
-
 void
 KFW_AFS_copy_cache_to_system_file(char * user, char * szLogonId)
 {
@@ -3565,8 +3538,6 @@ KFW_AFS_copy_cache_to_system_file(char * user, char * szLogonId)
 
     strcat(cachename, filename);
 
-    DebugEvent("Copy2File %s", filename);
-
     DeleteFile(filename);
 
     code = pkrb5_init_context(&ctx);
@@ -3584,11 +3555,7 @@ KFW_AFS_copy_cache_to_system_file(char * user, char * szLogonId)
     code = pkrb5_cc_initialize(ctx, ncc, princ);
     if (code) goto cleanup;
 
-    DebugEvent0("Copy2File copying");
-
     code = pkrb5_cc_copy_creds(ctx,cc,ncc);
-
-    DebugEvent("Copy2File copy_creds=%d", code);
 
   cleanup:
     if ( cc ) {
@@ -3629,27 +3596,20 @@ KFW_AFS_copy_system_file_to_default_cache(char * filename)
 
     strcat(cachename, filename);
 
-    DebugEvent("Copy2Cache %s", cachename);
-
     code = pkrb5_init_context(&ctx);
     if (code) ctx = 0;
 
     code = pkrb5_cc_resolve(ctx, cachename, &cc);
     if (code) goto cleanup;
     
-    DebugEvent("Copy2Cache resolve=%d", code);
-
     code = pkrb5_cc_get_principal(ctx, cc, &princ);
 
     code = pkrb5_cc_default(ctx, &ncc);
-    DebugEvent("Copy2Cache default=%d", code);
-
     if (!code) {
         code = pkrb5_cc_initialize(ctx, ncc, princ);
-        DebugEvent("Copy2Cache initialize=%d", code);
 
-        code = pkrb5_cc_copy_creds(ctx,cc,ncc);
-        DebugEvent("Copy2Cache copy_creds=%d", code);
+        if (!code)
+            code = pkrb5_cc_copy_creds(ctx,cc,ncc);
     }
     if ( ncc ) {
         pkrb5_cc_close(ctx, ncc);
