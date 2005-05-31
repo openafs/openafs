@@ -670,6 +670,7 @@ long cm_SetupStoreBIOD(cm_scache_t *scp, osi_hyper_t *inOffsetp, long inSize,
                 osi_assertx(!(bufp->flags & CM_BUF_WRITING),
                             "WRITING w/o CMSTORING in SetupStoreBIOD");
                 bufp->flags |= CM_BUF_WRITING;
+                cm_SyncOpDone(scp, bufp, flags);
                 break;
             }
 
