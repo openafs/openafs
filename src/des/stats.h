@@ -53,6 +53,9 @@ struct rxkad_stats {
 } rxkad_stats_t;			/* put these here for convenience */
 #else /* AFS_PTHREAD_ENV */
 };
+#ifdef AFS_NT40_ENV
+struct rxkad_stats rxkad_stats;         /* put this here for convenience */
+#endif 
 #endif /* AFS_PTHREAD_ENV */
 
 
