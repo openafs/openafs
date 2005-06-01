@@ -1,0 +1,276 @@
+#
+#    Translators, if you are not familiar with the PO format, gettext
+#    documentation is worth reading, especially sections dedicated to
+#    this format, e.g. by running:
+#         info -n '(gettext)PO Files'
+#         info -n '(gettext)Header Entry'
+#
+#    Some information specific to po-debconf are available at
+#            /usr/share/doc/po-debconf/README-trans
+#         or http://www.debian.org/intl/l10n/po-debconf/README-trans
+#
+#    Developers do not need to manually edit POT or PO files.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: openafs 1.3.81-4\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2004-05-21 00:27-0400\n"
+"PO-Revision-Date: 2005-05-24 21:36+0200\n"
+"Last-Translator: Martin Sin <martin.sin@seznam.cz>\n"
+"Language-Team: Czech <debian-l10n-czech@lists.debian.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=ISO-8859-2\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Type: string
+#. Description
+#: ../openafs-client.templates:3
+msgid "What hosts are DB servers for your home cell?"
+msgstr "Které poèítaèe jsou DB servery pro va¹i domovskou buòku?"
+
+#. Type: string
+#. Description
+#: ../openafs-client.templates:3
+msgid ""
+"AFS uses the file /etc/openafs/CellServDB to hold the list of servers that "
+"should be contacted to find parts of a cell.  The cell you claim this "
+"workstation belongs to is not in that file.  Enter the host names of the "
+"database servers separated by spaces. IMPORTANT: If you are creating a new "
+"cell and this machine is to be a database server in that cell, only enter "
+"this machine's name; add the other servers later after they are functioning. "
+"Also, do not enable the AFS client to start at boot on this server until the "
+"cell is configured.  When you are ready you can edit /etc/openafs/afs.conf."
+"client to enable the client."
+msgstr ""
+"AFS pou¾ívá k uchovávání seznamu serverù, které mají být kontaktovány pøi "
+"hledání èástí buòky, soubor /etc/openafs/CellServDB. Buòka, do které tato "
+"stanice patøí, není ve zmínìném souboru uvedena. Zadejte mezerami oddìlená "
+"jména databázových serverù. DÙLE®ITÉ: pokud vytváøíte novou buòku a tento "
+"poèítaè bude databázovým serverem této buòky, pak staèí pouze zadat jméno "
+"poèítaèe; ostatní servery pøidejte pozdìji a¾ po jejich zprovoznìní. Dokud "
+"nebude buòka nastavena, tak na tomto serveru nepovolujte spu¹tìní AFS "
+"klienta pøi startu serveru. A¾ budete pøipraveni, mù¾ete klienta povolit "
+"úpravou souboru /etc/openafs/afs.conf.client."
+
+#. Type: string
+#. Description
+#: ../openafs-client.templates:16
+msgid "What AFS cell does this workstation belong to?"
+msgstr "Ke které buòce AFS bude tento poèítaè nále¾et?"
+
+#. Type: string
+#. Description
+#: ../openafs-client.templates:16
+msgid ""
+"AFS filespace is organized into cells or administrative domains. Each "
+"workstation belongs to one cell.  Usually the cell is the DNS domain name of "
+"the site."
+msgstr ""
+"Souborový prostor systému AFS je uspoøádán do bunìk nebo administrativních "
+"domén. Ka¾dá stanice patøí jedné buòce. Obvykle je buòkou doménové jméno "
+"skupiny."
+
+#. Type: string
+#. Description
+#: ../openafs-client.templates:24
+msgid "How large is your AFS cache (kB)?"
+msgstr "Jak velká je va¹e cache AFS (v kB)?"
+
+#. Type: string
+#. Description
+#: ../openafs-client.templates:24
+msgid ""
+"AFS uses an  area of the disk to cache remote files for faster access.  This "
+"cache will be mounted on /var/cache/openafs.  It is important that the cache "
+"not overfill the partition it is located on.  Often, people find it useful "
+"to dedicate a partition to their AFS cache."
+msgstr ""
+"AFS pou¾ívá urèitý prostor na disku pro cachování vzdálených souborù, aby k "
+"nim mìl rychlej¹í pøístup. Tato cache bude pøipojena do /var/cache/openafs. "
+"Je dùle¾ité, aby cache nepøeplnila oblast na které je umístìna. Èasto je "
+"u¾iteèné umístit cache AFS do své vlastní diskové oblasti."
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:34
+msgid "Run Openafs client now and at boot?"
+msgstr "Spustit klienta Openafs nyní a pøi zavádìní poèítaèe?"
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:34
+msgid ""
+"Should the Openafs filesystem be started and mounted at boot? Normally, most "
+"users who install the openafs-client package expect to run it at boot.  "
+"However, if you are planning on setting up a new cell or are on a laptop, "
+"you may not want it started at boot time. If you choose not to start AFS at "
+"boot , run /etc/init.d/openafs-client force-start  to start the client when "
+"you wish to run it."
+msgstr ""
+"Má být souborový systém Openafs spu¹tìn a pøipojen pøi startu poèítaèe? "
+"Vìt¹ina u¾ivatelù, kteøí instalují balíèek openafs-client, oèekává, ¾e se "
+"AFS spustí hned pøi startu poèítaèe. Samozøejmì, pokud plánujete nastavení "
+"nové buòky, nebo pokud pou¾íváte laptop, pak byste zøejmì AFS pøi startu "
+"spou¹tìt nechtìli. Zvolíte-li mo¾nost nespou¹tìt AFS pøi startu poèítaèe, "
+"mù¾ete klienta spustit ruènì pøíkazem /etc/init.d/openafs-client force-start."
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:45
+msgid "Look up AFS cells in DNS?"
+msgstr "Hledat buòky AFS v DNS?"
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:45
+msgid ""
+"In order to contact an AFS cell, you need the IP addresses of the cell's "
+"database servers.  Normally, this information is read from /etc/openafs/"
+"CellServDB.  However, if Openafs cannot find a cell in that file it can use "
+"DNS to look for AFSDB records that contain the information."
+msgstr ""
+"Pro kontaktování buòky AFS potøebujete znát IP adresu databázového serveru "
+"buòky. Obvykle lze tuto informaci pøeèíst ze souboru /etc/openafs/"
+"CellServDB. Nicménì pokud Openafs nemù¾e najít buòku v tomto souboru, mù¾e "
+"pou¾ít DNS pro vyhledání AFSDB záznamù, které obsahují po¾adované informace."
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:55
+msgid "Encrypt authenticated traffic with AFS fileserver?"
+msgstr "©ifrovat autentikovaný provoz se souborovým serverem AFS?"
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:55
+msgid ""
+"AFS provides a weak form of encryption that can optionally be used between a "
+"client and the fileservers.  While this encryption is weaker than DES and "
+"thus is not sufficient for highly confidential data, it does provide some "
+"confidentiality and is likely to make the job of a casual attacker "
+"significantly more difficult."
+msgstr ""
+"AFS poskytuje slabou formu ¹ifrování, která mù¾e být nepovinnì pou¾ita mezi "
+"klientem a souborovým serverem. Pøesto¾e je toto ¹ifrování slab¹í ne¾ DES a "
+"tedy není dostateèné pro velmi dùvìrná data, poskytuje urèitou formu utajení "
+"a urèitì tak ztí¾í práci náhodnému útoèníkovi."
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:65
+msgid "Dynamically generate the contents of /afs?"
+msgstr "Vygenerovat obsah /afs dynamicky?"
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:65
+msgid ""
+"/afs generally contains an entry for each cell that a client can talk to. "
+"Traditionally, these entries were generated by servers in the client's home "
+"cell.  However, OpenAFS clients can generate the contents of /afs "
+"dynamically based on the contents of /etc/openafs/CellServDB and DNS."
+msgstr ""
+"/afs obvykle obsahuje záznam pro ka¾dou buòku, se kterou mù¾e klient "
+"hovoøit. Tradiènì jsou tyto záznamy vytváøeny servery v mateøské buòce "
+"klienta. Klienti OpenAFS v¹ak mohou generovat obsah adresáøe /afs dynamicky "
+"na základì souboru /etc/openafs/CellServDB a systému DNS."
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:65
+msgid ""
+"If you generate /afs dynamically, you may need to create /etc/openafs/"
+"CellAlias to include aliases for common cells. DO NOT SELECT THIS OPTION IF "
+"THIS MACHINE IS THE FIRST DATABASE SERVER IN A NEW CELL ."
+msgstr ""
+"Pokud vytváøíte /afs dynamicky, mo¾ná budete muset vytvoøit /etc/openafs/"
+"CellAlias pro zaèlenìní aliasù bì¾ných bunìk. NEVYBÍREJTE SI TUTO MO®NOST, "
+"POKUD JE TENTO POÈÍTAÈ PRVNÍM DATABÁZOVÝM SERVEREM V NOVÉ BUÒCE."
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:78
+msgid "Use fakestat to avoid hangs when listing /afs?"
+msgstr "Pou¾ít fakestat pro obejití zatuhnutí pøi výpisu /afs?"
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:78
+msgid ""
+"Because AFS is a global file space, operations on the /afs directory can "
+"generate significant network traffic.  If some AFS cells are unavailable "
+"then looking at /afs using ls or a graphical file browser may hang your "
+"machine for minutes.  AFS has an option to simulate answers to these "
+"operations locally to avoid these hangs.  You want this option under most "
+"circumstances."
+msgstr ""
+"Proto¾e je AFS globální souborový prostor, mohou operace na adresáøi /afs "
+"výzraznì zvý¹it provoz na síti. Pokud jsou nìkteré buòky AFS nedosa¾itelné, "
+"pak mù¾e prohlí¾ení /afs pomocí pøíkazu ls nebo grafického prohlí¾eèe "
+"zpùsobit zatuhnutí poèítaèe na dobu nìkolika minut. AFS má volbu, která "
+"simuluje odpovìdi pro tyto operace a tak se sna¾í vyhnout popsaným výpadkùm. "
+"Tuto volbu budete chtít pou¾ít ve vìt¹inì pøípadù."
+
+#. Type: string
+#. Description
+#: ../openafs-fileserver.templates:3
+msgid "What cell does this server serve files for?"
+msgstr "Kterým buòkám má tento server poskytovat soubory?"
+
+#. Type: string
+#. Description
+#: ../openafs-fileserver.templates:3
+msgid ""
+"AFS fileservers belong to a cell.  They have the key for that cell's "
+"Kerberos service and serve volumes into that cell.  Normally, this cell is "
+"the same cell as the workstation's client belongs to."
+msgstr ""
+"Souborové servery AFS nále¾í buòce. Servery mají klíè ke slu¾bì Kerberos "
+"dané buòky a v rámci buòky nabízejí souborové svazky. Tato buòka je obvykle "
+"shodná s buòkou, ke které patøí klient na pracovní stanici."
+
+#. Type: boolean
+#. Description
+#: ../openafs-fileserver.templates:11
+msgid "Upgrading will move files to new locations; continue?"
+msgstr "Upgradování pøesune soubory do nového umístìní; pokraèovat?"
+
+#. Type: boolean
+#. Description
+#: ../openafs-fileserver.templates:11
+msgid ""
+"Between Openafs 1.1 and Openafs 1.2, several files moved.  In particular,  "
+"files in /etc/openafs/server-local have been distributed to other "
+"locations.  The BosConfig file is now located in /etc/openafs and the other "
+"files are located in /var/lib/openafs.  If you continue with this upgrade, "
+"these files will be moved. You should use the bos restart command to  reload "
+"your servers.  Any configuration changes made before you do so will be lost."
+msgstr ""
+"Verze Openafs 1.1 a Openafs 1.2 mají pøesunuty nìkteré soubory. Pøesnìji "
+"øeèeno: soubory z /etc/openafs/server-local byly pøesunuty jinam. "
+"Konfiguraèní soubor BosConfig je nyní umístìn v /etc/openafs, ostatní "
+"soubory jsou ulo¾eny v adresáøi /var/lib/openafs. Pokud budete pokraèovat v "
+"aktualizaci, budou tyto soubory pøesunuty. K opìtovnému naètení va¹ich "
+"serverù mù¾ete pou¾ít pøikaz bos, který provede restart. Jakákoliv zmìna "
+"konfigurace provedená pøed tímto restartem bude ztracena."
+
+#. Type: note
+#. Description
+#: ../openafs-fileserver.templates:22
+msgid "OpenAFS Fileserv Probably does not work!"
+msgstr "Souborový server OpenAFS pravdìpodobnì nepracuje!"
+
+#. Type: note
+#. Description
+#: ../openafs-fileserver.templates:22
+msgid ""
+"You are running the OpenAFS file server package on an alpha.  This probably "
+"doesn't work; the DES code is flaky on the alpha, along with the threaded "
+"file server.  Likely, the fileserver will simply fail to start, but if it "
+"does load, data corruption may result.  You have been warned."
+msgstr ""
+"Souborový server OpenAFS bì¾í na Aplha systému, co¾ pravdìpodobnì nebude "
+"fungovat; DES kód se ve spojení s vlákny na souborovém serveru chová "
+"podivnì. Souborový server nejpravdìpodobnìji vùbec nespustí nespustí, ale "
+"pokud nabìhne, mù¾e dojít ke ztrátì dat. Byli jste varováni."
