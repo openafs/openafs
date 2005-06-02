@@ -112,9 +112,9 @@ fc_ecb_encrypt(void * clear, void * cipher,
 	       fc_KeySchedule schedule, int encrypt)
 {
     afs_uint32 L, R;
-    afs_uint32 S, P;
-    unsigned char *Pchar = (unsigned char *)&P;
-    unsigned char *Schar = (unsigned char *)&S;
+    volatile afs_uint32 S, P;
+    volatile unsigned char *Pchar = (unsigned char *)&P;
+    volatile unsigned char *Schar = (unsigned char *)&S;
     int i;
 
 #if defined(vax) || (defined(mips) && defined(MIPSEL)) || defined(AFSLITTLE_ENDIAN)

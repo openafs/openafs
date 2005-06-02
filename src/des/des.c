@@ -92,7 +92,7 @@ des_ecb_encrypt(void * clear, void * cipher,
 #endif
 #endif
     afs_uint32 P_temp;
-    register unsigned char *P_temp_p = (unsigned char *)&P_temp;
+    volatile unsigned char *P_temp_p = (unsigned char *)&P_temp;
 #ifdef BITS16
     sbox_out S_out;
     afs_uint32 *S_out_p = (afs_uint32 *) & S_out;
