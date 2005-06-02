@@ -338,6 +338,10 @@ else
 			AFS_PARAM_COMMON=param.nbsd30.h
 			AFS_SYSNAME="i386_nbsd30"
 			;;
+		i?86-*-netbsd*3.99*)
+			AFS_PARAM_COMMON=param.nbsd30.h
+			AFS_SYSNAME="i386_nbsd30"
+			;;
 		hppa*-hp-hpux11.0*)
 			AFS_SYSNAME="hp_ux110"
 			;;
