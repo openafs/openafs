@@ -667,7 +667,6 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *up, cm_req_t *reqp,
             }
             if (bufp && (bufp->cmFlags & (CM_BUF_CMFETCHING | CM_BUF_CMSTORING))) {
                 osi_Log2(afsd_logp, "CM SyncOp scp 0x%x bufp 0x%x is BUF_CMFETCHING|BUF_CMSTORING want FETCHDATA", scp, bufp);
-                sleepOnBuf = 1;
                 goto sleep;
             }
         }
@@ -680,7 +679,6 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *up, cm_req_t *reqp,
             }
             if (bufp && (bufp->cmFlags & (CM_BUF_CMFETCHING | CM_BUF_CMSTORING))) {
                 osi_Log2(afsd_logp, "CM SyncOp scp 0x%x bufp 0x%x is BUF_CMFETCHING|BUF_CMSTORING want STOREDATA", scp, bufp);
-                sleepOnBuf = 1;
                 goto sleep;
             }
         }
@@ -744,7 +742,6 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *up, cm_req_t *reqp,
             }
             if (bufp && ((bufp->cmFlags & (CM_BUF_CMFETCHING | CM_BUF_CMFULLYFETCHED)) == CM_BUF_CMFETCHING)) {
                 osi_Log2(afsd_logp, "CM SyncOp scp 0x%x bufp 0x%x is BUF_CMFETCHING want READ", scp, bufp);
-                sleepOnBuf = 1;
                 goto sleep;
             }
         }
@@ -759,7 +756,6 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *up, cm_req_t *reqp,
             }
             if (bufp && (bufp->cmFlags & (CM_BUF_CMFETCHING | CM_BUF_CMSTORING))) {
                 osi_Log2(afsd_logp, "CM SyncOp scp 0x%x bufp 0x%x is BUF_CMFETCHING|BUF_CMSTORING want WRITE", scp, bufp);
-                sleepOnBuf = 1;
                 goto sleep;
             }
         }
