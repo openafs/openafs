@@ -130,6 +130,10 @@ typedef struct cm_scache {
         afs_uint16 openWrites;		/* open for writing */
         afs_uint16 openShares;		/* open for read excl */
         afs_uint16 openExcls;		/* open for exclusives */
+
+        /* syncop state */
+        afs_uint32 waitCount;           /* number of threads waiting */
+        afs_uint32 waitRequests;        /* num of thread wait requests */
 } cm_scache_t;
 
 /* mask field - tell what has been modified */

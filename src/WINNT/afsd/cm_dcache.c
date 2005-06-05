@@ -379,9 +379,7 @@ int cm_HaveBuffer(cm_scache_t *scp, cm_buf_t *bufp, int isBufLocked)
     int code;
     if (!cm_HaveCallback(scp))
         return 0;
-    if ((bufp->cmFlags
-          & (CM_BUF_CMFETCHING | CM_BUF_CMFULLYFETCHED))
-         == (CM_BUF_CMFETCHING | CM_BUF_CMFULLYFETCHED))
+    if ((bufp->cmFlags & (CM_BUF_CMFETCHING | CM_BUF_CMFULLYFETCHED)) == (CM_BUF_CMFETCHING | CM_BUF_CMFULLYFETCHED))
         return 1;
     if (bufp->dataVersion == scp->dataVersion)
         return 1;
@@ -443,8 +441,7 @@ long cm_CheckFetchRange(cm_scache_t *scp, osi_hyper_t *startBasep, long length,
         bp = buf_Find(scp, &tbase);
         /* We cheat slightly by not locking the bp mutex. */
         if (bp) {
-            if ((bp->cmFlags
-                  & (CM_BUF_CMFETCHING | CM_BUF_CMSTORING)) == 0
+            if ((bp->cmFlags & (CM_BUF_CMFETCHING | CM_BUF_CMSTORING)) == 0
                  && bp->dataVersion != scp->dataVersion)
                 stop = 1;
             buf_Release(bp);
@@ -907,7 +904,7 @@ long cm_SetupFetchBIOD(cm_scache_t *scp, osi_hyper_t *offsetp,
 
         code = buf_Get(scp, &pageBase, &tbp);
         if (code) {
-            lock_ReleaseMutex(&cm_bufGetMutex);
+            //lock_ReleaseMutex(&cm_bufGetMutex);
             lock_ObtainMutex(&scp->mx);
             cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
             return code;
@@ -1097,9 +1094,10 @@ void cm_ReleaseBIOD(cm_bulkIO_t *biop, int isStore)
         /* turn off writing and wakeup users */
         if (isStore) {
             if (bufp->flags & CM_BUF_WAITING) {
+                osi_Log1(afsd_logp, "cm_ReleaseBIOD Waking bp 0x%x", bufp);
                 osi_Wakeup((long) bufp);
             }
-            bufp->flags &= ~(CM_BUF_WAITING | CM_BUF_WRITING | CM_BUF_DIRTY);
+            bufp->flags &= ~(CM_BUF_WRITING | CM_BUF_DIRTY);
         }
 
         lock_ReleaseMutex(&bufp->mx);
@@ -1125,7 +1123,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *up,
     AFSCallBack callback;
     AFSVolSync volSync;
     char *bufferp;
-    cm_buf_t *tbufp;		/* buf we're filling */
+    cm_buf_t *tbufp;		        /* buf we're filling */
     osi_queueData_t *qdp;		/* q element we're scanning */
     AFSFid tfid;
     struct rx_call *callp;
@@ -1319,7 +1317,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *up,
                 tbufp->cmFlags |= CM_BUF_CMFULLYFETCHED;
                 lock_ObtainMutex(&scp->mx);
                 if (scp->flags & CM_SCACHEFLAG_WAITING) {
-                    scp->flags &= ~CM_SCACHEFLAG_WAITING;
+                    osi_Log1(afsd_logp, "CM GetBuffer Waking scp 0x%x", scp);
                     osi_Wakeup((long) &scp->flags);
                 }
                 if (cpffp && !*cpffp && !osi_QPrev(&qdp->q)) {
@@ -1412,5 +1410,6 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *up,
 
     if (code == 0) 
         cm_MergeStatus(scp, &afsStatus, &volSync, up, 0);
+    
     return code;
 }

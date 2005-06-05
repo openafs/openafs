@@ -128,7 +128,6 @@ char cm_LegalChars[256] = {
 int cm_Is8Dot3(char *namep)
 {
     int sawDot = 0;
-    int sawUpper = 0, sawLower = 0;
     unsigned char tc;
     int charCount = 0;
         
@@ -153,10 +152,6 @@ int cm_Is8Dot3(char *namep)
         }
         if (cm_LegalChars[tc] == 0)
             return 0;
-        if (tc >= 'A' && tc <= 'Z')
-            sawUpper = 1;
-        else if (tc >= 'a' && tc <= 'z')
-            sawLower = 1;
         charCount++;
         if (!sawDot && charCount > 8)
             /* more than 8 chars in name */
@@ -165,14 +160,6 @@ int cm_Is8Dot3(char *namep)
             /* more than 3 chars in extension */
             return 0;
     }
-    /*
-     * Used to check that all characters were the same case.
-     * This doesn't help 16-bit apps, and meanwhile it causes the
-     * MS-DOS Command Prompt to misbehave; see Sybase defect 10709.
-     *
-     if (sawUpper && sawLower)
-         return 0;
-     */
     return 1;
 }
 
