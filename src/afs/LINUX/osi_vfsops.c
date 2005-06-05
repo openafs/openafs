@@ -287,6 +287,14 @@ afs_write_inode(struct inode *ip)
 #endif
 }
 
+#if defined(AFS_LINUX26_ENV)
+static void
+afs_drop_inode(struct inode *ip)
+{
+	generic_delete_inode(ip);
+	AFS_GUNLOCK();		/* locked by afs_delete_inode() */
+}
+#endif
 
 static void
 afs_destroy_inode(struct inode *ip)
@@ -305,13 +313,15 @@ afs_destroy_inode(struct inode *ip)
 static void
 afs_delete_inode(struct inode *ip)
 {
-#ifdef AFS_LINUX26_ENV
+#if defined(AFS_LINUX26_ENV)
+    AFS_GLOCK();		/* after spin_unlock(inode_lock) */
     put_inode_on_dummy_list(ip);
-#endif
-
+    osi_clear_inode(ip);
+#else
     AFS_GLOCK();
     osi_clear_inode(ip);
     AFS_GUNLOCK();
+#endif
 }
 
 
@@ -404,7 +414,7 @@ afs_umount_begin(struct super_block *sbp)
 
 struct super_operations afs_sops = {
 #if defined(AFS_LINUX26_ENV)
-  .drop_inode =		generic_delete_inode,
+  .drop_inode =		afs_drop_inode,
   .destroy_inode =	afs_destroy_inode,
 #endif
   .delete_inode =	afs_delete_inode,
