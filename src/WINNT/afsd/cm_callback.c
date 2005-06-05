@@ -1701,8 +1701,9 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
 
         /* now check to see if we got an error */
         if (code) {
-            osi_Log4(afsd_logp, "GetCallback Failed code 0x%x scp 0x%x cell %d vol %d", 
-                     code, scp, scp->fid.cell, scp->fid.volume);
+            osi_Log2(afsd_logp, "GetCallback Failed code 0x%x scp 0x%x -->",code, scp);
+            osi_Log4(afsd_logp, "            cell %d vol %d vn %d uniq %d",
+                     scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique);
             return code;
         }
     }

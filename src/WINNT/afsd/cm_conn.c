@@ -303,8 +303,8 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
     }
 
     /* special codes:  missing volumes */
-    else if (errorCode == VNOVOL || errorCode == VMOVED || errorCode == VOFFLINE
-         || errorCode == VSALVAGE || errorCode == VNOSERVICE) 
+    else if (errorCode == VNOVOL || errorCode == VMOVED || errorCode == VOFFLINE ||
+             errorCode == VSALVAGE || errorCode == VNOSERVICE || errorCode == VIO) 
     {       
         /* Log server being offline for this volume */
         osi_Log4(afsd_logp, "cm_Analyze found server %d.%d.%d.%d marked offline for a volume",
@@ -398,21 +398,37 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
             char * s = "unknown error";
             switch ( errorCode ) {
             case RXKADINCONSISTENCY: s = "RXKADINCONSISTENCY"; break;
-            case RXKADPACKETSHORT  : s = "RXKADPACKETSHORT  "; break;
-            case RXKADLEVELFAIL    : s = "RXKADLEVELFAIL    "; break;
-            case RXKADTICKETLEN    : s = "RXKADTICKETLEN    "; break;
+            case RXKADPACKETSHORT  : s = "RXKADPACKETSHORT";   break;
+            case RXKADLEVELFAIL    : s = "RXKADLEVELFAIL";     break;
+            case RXKADTICKETLEN    : s = "RXKADTICKETLEN";     break;
             case RXKADOUTOFSEQUENCE: s = "RXKADOUTOFSEQUENCE"; break;
-            case RXKADNOAUTH       : s = "RXKADNOAUTH       "; break;
-            case RXKADBADKEY       : s = "RXKADBADKEY       "; break;
-            case RXKADBADTICKET    : s = "RXKADBADTICKET    "; break;
-            case RXKADUNKNOWNKEY   : s = "RXKADUNKNOWNKEY   "; break;
-            case RXKADEXPIRED      : s = "RXKADEXPIRED      "; break;
-            case RXKADSEALEDINCON  : s = "RXKADSEALEDINCON  "; break;
-            case RXKADDATALEN      : s = "RXKADDATALEN      "; break;
-            case RXKADILLEGALLEVEL : s = "RXKADILLEGALLEVEL "; break;
+            case RXKADNOAUTH       : s = "RXKADNOAUTH";        break;
+            case RXKADBADKEY       : s = "RXKADBADKEY";        break;
+            case RXKADBADTICKET    : s = "RXKADBADTICKET";     break;
+            case RXKADUNKNOWNKEY   : s = "RXKADUNKNOWNKEY";    break;
+            case RXKADEXPIRED      : s = "RXKADEXPIRED";       break;
+            case RXKADSEALEDINCON  : s = "RXKADSEALEDINCON";   break;
+            case RXKADDATALEN      : s = "RXKADDATALEN";       break;
+            case RXKADILLEGALLEVEL : s = "RXKADILLEGALLEVEL";  break;
+            case VSALVAGE          : s = "VSALVAGE";           break;
+            case VNOVNODE          : s = "VNOVNODE";           break;
+            case VNOVOL            : s = "VNOVOL";             break;
+            case VVOLEXISTS        : s = "VVOLEXISTS";         break;
+            case VNOSERVICE        : s = "VNOSERVICE";         break;
+            case VOFFLINE          : s = "VOFFLINE";           break;
+            case VONLINE           : s = "VONLINE";            break;
+            case VDISKFULL         : s = "VDISKFULL";          break;
+            case VOVERQUOTA        : s = "VOVERQUOTA";         break;
+            case VBUSY             : s = "VBUSY";              break;
+            case VMOVED            : s = "VMOVED";             break;
+            case VIO               : s = "VIO";                break;
+            case VRESTRICTED       : s = "VRESTRICTED";        break;
+            case VRESTARTING       : s = "VRESTARTING";        break;
+            case VREADONLY         : s = "VREADONLY";          break;
             }
             osi_Log2(afsd_logp, "cm_Analyze: ignoring error code 0x%x (%s)", 
                      errorCode, s);
+            retry = 0;
         }
     }
 

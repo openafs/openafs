@@ -95,6 +95,10 @@ typedef struct cm_buf {
 #ifdef DISKCACHE95
     cm_diskcache_t *dcp;        /* diskcache structure */
 #endif /* DISKCACHE95 */
+
+    /* syncop state */
+    afs_uint32 waitCount;           /* number of threads waiting */
+    afs_uint32 waitRequests;        /* num of thread wait requests */
 } cm_buf_t;
 
 /* values for cmFlags */
@@ -140,7 +144,7 @@ extern void buf_Release(cm_buf_t *);
 
 extern void buf_Hold(cm_buf_t *);
 
-extern void buf_WaitIO(cm_buf_t *);
+extern void buf_WaitIO(cm_scache_t *, cm_buf_t *);
 
 extern void buf_LockedRelease(cm_buf_t *);
 
@@ -162,7 +166,7 @@ extern long buf_GetNew(struct cm_scache *, osi_hyper_t *, cm_buf_t **);
 
 extern void buf_CleanAsync(cm_buf_t *, cm_req_t *);
 
-extern void buf_CleanWait(cm_buf_t *);
+extern void buf_CleanWait(cm_scache_t *, cm_buf_t *);
 
 extern void buf_SetDirty(cm_buf_t *);
 

@@ -2250,8 +2250,51 @@ void smb_SendPacket(smb_vc_t *vcp, smb_packet_t *inp)
     code = Netbios(ncbp, dos_ncb);
 #endif /* !DJGPP */
         
-    if (code != 0)
-        osi_Log1(smb_logp, "SendPacket failure code %d", code);
+    if (code != 0) {
+        char * s;
+        switch ( code ) {
+        case 0x01: s = "llegal buffer length                     "; break; 
+        case 0x03: s = "illegal command                          "; break; 
+        case 0x05: s = "command timed out                        "; break; 
+        case 0x06: s = "message incomplete, issue another command"; break; 
+        case 0x07: s = "illegal buffer address                   "; break; 
+        case 0x08: s = "session number out of range              "; break; 
+        case 0x09: s = "no resource available                    "; break; 
+        case 0x0a: s = "session closed                           "; break; 
+        case 0x0b: s = "command cancelled                        "; break; 
+        case 0x0d: s = "duplicate name                           "; break; 
+        case 0x0e: s = "name table full                          "; break; 
+        case 0x0f: s = "no deletions, name has active sessions   "; break; 
+        case 0x11: s = "local session table full                 "; break; 
+        case 0x12: s = "remote session table full                "; break; 
+        case 0x13: s = "illegal name number                      "; break; 
+        case 0x14: s = "no callname                              "; break; 
+        case 0x15: s = "cannot put * in NCB_NAME                 "; break; 
+        case 0x16: s = "name in use on remote adapter            "; break; 
+        case 0x17: s = "name deleted                             "; break; 
+        case 0x18: s = "session ended abnormally                 "; break; 
+        case 0x19: s = "name conflict detected                   "; break; 
+        case 0x21: s = "interface busy, IRET before retrying     "; break; 
+        case 0x22: s = "too many commands outstanding, retry later"; break;
+        case 0x23: s = "ncb_lana_num field invalid               "; break; 
+        case 0x24: s = "command completed while cancel occurring "; break; 
+        case 0x26: s = "command not valid to cancel              "; break; 
+        case 0x30: s = "name defined by anther local process     "; break; 
+        case 0x34: s = "environment undefined. RESET required    "; break; 
+        case 0x35: s = "required OS resources exhausted          "; break; 
+        case 0x36: s = "max number of applications exceeded      "; break; 
+        case 0x37: s = "no saps available for netbios            "; break; 
+        case 0x38: s = "requested resources are not available    "; break; 
+        case 0x39: s = "invalid ncb address or length > segment  "; break; 
+        case 0x3B: s = "invalid NCB DDID                         "; break; 
+        case 0x3C: s = "lock of user area failed                 "; break; 
+        case 0x3f: s = "NETBIOS not loaded                       "; break; 
+        case 0x40: s = "system error                             "; break;                 
+        default:
+            s = "unknown error";
+        }
+        osi_Log2(smb_logp, "SendPacket failure code %d \"%s\"", code, s);
+    }
 
     if (localNCB)
         FreeNCB(ncbp);
@@ -5519,14 +5562,10 @@ long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count, char *op,
     lock_ObtainMutex(&scp->mx);
 
     /* start by looking up the file's end */
-    osi_Log1(smb_logp, "smb_WriteData fid %d calling cm_SyncOp NEEDCALLBACK|SETSTATUS|GETSTATUS",
-              fidp->fid);
     code = cm_SyncOp(scp, NULL, userp, &req, 0,
                       CM_SCACHESYNC_NEEDCALLBACK
                       | CM_SCACHESYNC_SETSTATUS
                       | CM_SCACHESYNC_GETSTATUS);
-    osi_Log2(smb_logp, "smb_WriteData fid %d calling cm_SyncOp NEEDCALLBACK|SETSTATUS|GETSTATUS returns %d",
-              fidp->fid,code);
     if (code) 
         goto done;
         
@@ -5606,14 +5645,10 @@ long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count, char *op,
 
             /* now get the data in the cache */
             while (1) {
-                osi_Log1(smb_logp, "smb_WriteData fid %d calling cm_SyncOp NEEDCALLBACK|WRITE|BUFLOCKED",
-                          fidp->fid);
                 code = cm_SyncOp(scp, bufferp, userp, &req, 0,
                                   CM_SCACHESYNC_NEEDCALLBACK
                                   | CM_SCACHESYNC_WRITE
                                   | CM_SCACHESYNC_BUFLOCKED);
-                osi_Log2(smb_logp, "smb_WriteData fid %d calling cm_SyncOp NEEDCALLBACK|WRITE|BUFLOCKED returns %d",
-                          fidp->fid,code);
                 if (code) 
                     goto done;
 

@@ -309,6 +309,9 @@ long buf_Init(int newFile, cm_buf_ops_t *opsp, long nbuffers)
             for (i=0; i<cm_data.buf_nbuffers; i++) {
                 lock_InitializeMutex(&bp->mx, "Buffer mutex");
                 bp->userp = NULL;
+                bp->waitCount = 0;
+                bp->waitRequests = 0;
+                bp->flags &= ~CM_BUF_WAITING;
                 bp++;
             }       
         }
@@ -426,8 +429,10 @@ void buf_Release(cm_buf_t *bp)
 /* wait for reading or writing to clear; called with write-locked
  * buffer, and returns with locked buffer.
  */
-void buf_WaitIO(cm_buf_t *bp)
+void buf_WaitIO(cm_scache_t * scp, cm_buf_t *bp)
 {
+    if (scp)
+        osi_assert(scp->magic == CM_SCACHE_MAGIC);
     osi_assert(bp->magic == CM_BUF_MAGIC);
 
     while (1) {
@@ -439,20 +444,40 @@ void buf_WaitIO(cm_buf_t *bp)
          * the I/O already.  Wait for that guy to figure out what happened,
          * and then check again.
          */
-        if ( bp->flags & CM_BUF_WAITING ) 
+        if ( bp->flags & CM_BUF_WAITING ) {
+            bp->waitCount++;
+            bp->waitRequests++;
             osi_Log1(buf_logp, "buf_WaitIO CM_BUF_WAITING already set for 0x%x", bp);
-
-        bp->flags |= CM_BUF_WAITING;
+        } else {
+            osi_Log1(buf_logp, "buf_WaitIO CM_BUF_WAITING set for 0x%x", bp);
+            bp->flags |= CM_BUF_WAITING;
+            bp->waitCount = bp->waitRequests = 1;
+        }
         osi_SleepM((long) bp, &bp->mx);
         lock_ObtainMutex(&bp->mx);
         osi_Log1(buf_logp, "buf_WaitIO conflict wait done for 0x%x", bp);
+        bp->waitCount--;
+        if (bp->waitCount == 0) {
+            osi_Log1(afsd_logp, "buf_WaitIO CM_BUF_WAITING reset for 0x%x", bp);
+            bp->flags &= ~CM_BUF_WAITING;
+            bp->waitRequests = 0;
+        }
+
+        if ( scp ) {
+            lock_ObtainMutex(&scp->mx);
+            if (scp->flags & CM_SCACHEFLAG_WAITING) {
+                osi_Log1(buf_logp, "buf_WaitIO waking scp 0x%x", scp);
+                osi_Wakeup(&scp->flags);
+                lock_ReleaseMutex(&scp->mx);
+            }
+        }
     }
         
     /* if we get here, the IO is done, but we may have to wakeup people waiting for
      * the I/O to complete.  Do so.
      */
     if (bp->flags & CM_BUF_WAITING) {
-        bp->flags &= ~CM_BUF_WAITING;
+        osi_Log1(buf_logp, "buf_WaitIO Waking bp 0x%x", bp);
         osi_Wakeup((long) bp);
     }
     osi_Log1(buf_logp, "WaitIO finished wait for bp 0x%x", (long) bp);
@@ -550,7 +575,7 @@ void buf_LockedCleanAsync(cm_buf_t *bp, cm_req_t *reqp)
      */
     if (bp->flags & CM_BUF_WAITING) {
         /* turn off flags and wakeup users */
-        bp->flags &= ~CM_BUF_WAITING;
+        osi_Log1(buf_logp, "buf_WaitIO Waking bp 0x%x", bp);
         osi_Wakeup((long) bp);
     }
 }
@@ -833,7 +858,7 @@ long buf_GetNew(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bufpp)
 
     /* wait for reads */
     if (bp->flags & CM_BUF_READING)
-        buf_WaitIO(bp);
+        buf_WaitIO(scp, bp);
 
     /* once it has been read once, we can unlock it and return it, still
      * with its refcount held.
@@ -933,7 +958,7 @@ long buf_Get(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bufpp)
                 bp->flags |= CM_BUF_ERROR;
                 bp->flags &= ~CM_BUF_READING;
                 if (bp->flags & CM_BUF_WAITING) {
-                    bp->flags &= ~CM_BUF_WAITING;
+                    osi_Log1(buf_logp, "buf_Get Waking bp 0x%x", bp);
                     osi_Wakeup((long) bp);
                 }
                 lock_ReleaseMutex(&bp->mx);
@@ -956,7 +981,7 @@ long buf_Get(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bufpp)
             }
             bp->flags &= ~CM_BUF_READING;
             if (bp->flags & CM_BUF_WAITING) {
-                bp->flags &= ~CM_BUF_WAITING;
+                osi_Log1(buf_logp, "buf_Get Waking bp 0x%x", bp);
                 osi_Wakeup((long) bp);
             }
         }
@@ -967,7 +992,7 @@ long buf_Get(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bufpp)
      * else started.  We don't care if we return a buffer being cleaned.
      */
     if (bp->flags & CM_BUF_READING)
-        buf_WaitIO(bp);
+        buf_WaitIO(scp, bp);
 
     /* once it has been read once, we can unlock it and return it, still
      * with its refcount held.
@@ -1030,13 +1055,13 @@ void buf_CleanAsync(cm_buf_t *bp, cm_req_t *reqp)
 }       
 
 /* wait for a buffer's cleaning to finish */
-void buf_CleanWait(cm_buf_t *bp)
+void buf_CleanWait(cm_scache_t * scp, cm_buf_t *bp)
 {
     osi_assert(bp->magic == CM_BUF_MAGIC);
 
     lock_ObtainMutex(&bp->mx);
     if (bp->flags & CM_BUF_WRITING) {
-        buf_WaitIO(bp);
+        buf_WaitIO(scp, bp);
     }
     lock_ReleaseMutex(&bp->mx);
 }       
@@ -1096,7 +1121,7 @@ long buf_CleanAndReset(void)
                 /* now no locks are held; clean buffer and go on */
                 cm_InitReq(&req);
                 buf_CleanAsync(bp, &req);
-                buf_CleanWait(bp);
+                buf_CleanWait(NULL, bp);
 
                 /* relock and release buffer */
                 lock_ObtainWrite(&buf_globalLock);
@@ -1207,7 +1232,7 @@ long buf_Truncate(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp,
 
         if (cm_FidCmp(&bufp->fid, &scp->fid) == 0 &&
              LargeIntegerLessThan(*sizep, bufEnd)) {
-            buf_WaitIO(bufp);
+            buf_WaitIO(scp, bufp);
         }
         lock_ObtainMutex(&scp->mx);
 	
@@ -1316,7 +1341,7 @@ long buf_FlushCleanPages(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
 
             /* start cleaning the buffer, and wait for it to finish */
             buf_LockedCleanAsync(bp, reqp);
-            buf_WaitIO(bp);
+            buf_WaitIO(scp, bp);
             lock_ReleaseMutex(&bp->mx);
 
             code = (*cm_buf_opsp->Stabilizep)(scp, userp, reqp);
@@ -1387,7 +1412,7 @@ long buf_CleanVnode(struct cm_scache *scp, cm_user_t *userp, cm_req_t *reqp)
                 lock_ReleaseMutex(&bp->mx);
             }   
             buf_CleanAsync(bp, reqp);
-            buf_CleanWait(bp);
+            buf_CleanWait(scp, bp);
             lock_ObtainMutex(&bp->mx);
             if (bp->flags & CM_BUF_ERROR) {
                 if (code == 0 || code == -1) 
