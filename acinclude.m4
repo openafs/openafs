@@ -970,10 +970,10 @@ if test "$enable_tivoli_tsm" = "yes"; then
 	XBSADIR1=/usr/tivoli/tsm/client/api/bin/xopen
 	XBSADIR2=/opt/tivoli/tsm/client/api/bin/xopen
 
-	if test -e "$XBSADIR1/xbsa.h"; then
+	if test -r "$XBSADIR1/xbsa.h"; then
 		XBSA_CFLAGS="-Dxbsa -I$XBSADIR1"
 		AC_MSG_RESULT([yes, $XBSA_CFLAGS])
-	elif test -e "$XBSADIR2/xbsa.h"; then
+	elif test -r "$XBSADIR2/xbsa.h"; then
 		XBSA_CFLAGS="-Dxbsa -I$XBSADIR2"
 		AC_MSG_RESULT([yes, $XBSA_CFLAGS])
 	else
