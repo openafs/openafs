@@ -17,11 +17,20 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-/* We should be doing something better anyway */
-#ifndef AFS_DARWIN80_ENV
 RCSID
     ("$Header$");
-
+/* We should be doing something better anyway */
+#ifdef AFS_DARWIN80_ENV
+int
+setpag(proc, cred, pagvalue, newpag, change_parent)
+     struct proc *proc;
+     struct ucred **cred;
+     afs_uint32 pagvalue;
+     afs_uint32 *newpag;
+     afs_uint32 change_parent;
+{ return -1;
+}
+#else
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
 #include "afs/afs_stats.h"	/* statistics */
@@ -77,14 +86,6 @@ Afs_xsetgroups(p, args, retval)
 }
 
 
-int
-setpag(proc, cred, pagvalue, newpag, change_parent)
-     struct proc *proc;
-     struct ucred **cred;
-     afs_uint32 pagvalue;
-     afs_uint32 *newpag;
-     afs_uint32 change_parent;
-{
     gid_t gidset[NGROUPS];
     int ngroups, code;
     int j;

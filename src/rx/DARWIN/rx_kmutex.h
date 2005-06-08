@@ -16,7 +16,11 @@
 #ifndef _RX_KMUTEX_H_
 #define _RX_KMUTEX_H_
 
+#ifdef AFS_DARWIN80_ENV
+#include <kern/locks.h>
+#else
 #include <sys/lock.h>
+#endif
 #include <kern/thread.h>
 #include <sys/vm.h>
 
@@ -32,30 +36,48 @@
  * 
  * XXX in darwin, both mach and bsd facilities are available. Should really
  * stick to one or the other (but mach locks don't have a _try.....)
+ *
+ * in darwin 8.0, the bsd lock facility is no longer available, and only one
+ * sleep variant is available. Still no lock_try, but we can work around that.
+ * We can't pass the mutex into msleep, even if we didn't need the two mutex 
+ * hack for lock_try emulation, since msleep won't fixup the owner variable
+ * and we'll panic.
  */
 #define CV_INIT(cv,a,b,c)
 #define CV_DESTROY(cv)
 #ifdef AFS_DARWIN14_ENV
-#define CV_WAIT(cv, lck)    { \
+#ifdef AFS_DARWIN80_ENV
+#define VFSSLEEP(cv) msleep(cv, NULL, PVFS, "afs_CV_WAIT", NULL)
+#define VFSTSLEEP(cv,t) do { \
+   struct timespec ts; \
+   ts.ts_sec = t; \
+   ts.ts_nsec = 0; \
+   msleep(cv, NULL, PVFS, "afs_CV_TIMEDWAIT", &ts); \
+} while(0)
+#else
+#define VFSSLEEP(cv) sleep(cv, PVFS)
+#define VFSTSLEEP(cv, t) tsleep(cv,PVFS, "afs_CV_TIMEDWAIT",t)
+#endif
+#define CV_WAIT(cv, lck)    do { \
 	                        int isGlockOwner = ISAFS_GLOCK(); \
 	                        if (isGlockOwner) AFS_GUNLOCK();  \
 	                        MUTEX_EXIT(lck);        \
-	                        sleep(cv, PVFS);                \
+	                        VFSSLEEP(cv);                \
 	                        if (isGlockOwner) AFS_GLOCK();  \
 	                        MUTEX_ENTER(lck); \
-	                    }
+	                    } while(0)
 
-#define CV_TIMEDWAIT(cv,lck,t)  { \
+#define CV_TIMEDWAIT(cv,lck,t)  do { \
 	                        int isGlockOwner = ISAFS_GLOCK(); \
 	                        if (isGlockOwner) AFS_GUNLOCK();  \
 	                        MUTEX_EXIT(lck);        \
-	                        tsleep(cv,PVFS, "afs_CV_TIMEDWAIT",t);  \
+	                        VFSTSLEEP(cv,t);  \
 	                        if (isGlockOwner) AFS_GLOCK();  \
 	                        MUTEX_ENTER(lck);       \
-                            }
+                            } while(0)
 
-#define CV_SIGNAL(cv)           wakeup_one(cv)
-#define CV_BROADCAST(cv)        wakeup(cv)
+#define CV_SIGNAL(cv)           wakeup_one((void *)(cv))
+#define CV_BROADCAST(cv)        wakeup((void *)(cv))
 #else
 #define CV_WAIT(cv, lck)    { \
 	                        int isGlockOwner = ISAFS_GLOCK(); \
@@ -84,6 +106,8 @@
 
 #ifdef AFS_DARWIN80_ENV
 typedef struct {
+    lck_mtx_t *meta;
+    int waiters; /* also includes anyone holding the lock */
     lck_mtx_t *lock;
     thread_t owner;
 } afs_kmutex_t;
@@ -95,36 +119,62 @@ extern lck_grp_t * openafs_lck_grp;
 #define MUTEX_FINISH() rx_kmutex_finish()
 #define LOCKINIT(a) \
     do { \
-        lck_attr_t * openafs_lck_attr = lck_attr_alloc_init(); \
+        lck_attr_t *openafs_lck_attr = lck_attr_alloc_init(); \
         (a) = lck_mtx_alloc_init(openafs_lck_grp, openafs_lck_attr); \
         lck_attr_free(openafs_lck_attr); \
-    } while(0);
+    } while(0)
 #define MUTEX_INIT(a,b,c,d) \
     do { \
-        lck_attr_t * openafs_lck_attr = lck_attr_alloc_init(); \
+        lck_attr_t *openafs_lck_attr = lck_attr_alloc_init(); \
+        (a)->meta = lck_mtx_alloc_init(openafs_lck_grp, openafs_lck_attr); \
         (a)->lock = lck_mtx_alloc_init(openafs_lck_grp, openafs_lck_attr); \
         lck_attr_free(openafs_lck_attr); \
+	(a)->waiters = 0; \
 	(a)->owner = (thread_t)0; \
-    } while(0);
+    } while(0)
 #define MUTEX_DESTROY(a) \
     do { \
         lck_mtx_destroy((a)->lock, openafs_lck_grp); \
+        lck_mtx_destroy((a)->meta, openafs_lck_grp); \
 	(a)->owner = (thread_t)-1; \
-    } while(0);
+    } while(0)
 #define MUTEX_ENTER(a) \
     do { \
-        lck_mtx_lock(&(a)->lock); \
+	lck_mtx_lock((a)->meta); \
+	(a)->waiters++; \
+	lck_mtx_unlock((a)->meta); \
+	lck_mtx_lock((a)->lock); \
 	osi_Assert((a)->owner == (thread_t)0); \
 	(a)->owner = current_thread(); \
-    } while(0);
-#define MUTEX_TRYENTER(a) \
-        (lck_mtx_try_lock(&(a)->lock) ? ((a)->owner = current_thread(), 1) : 0)
+    } while(0)
+
+/* acquire main lock before releasing meta lock, so we don't race */
+#define MUTEX_TRYENTER(a) ({ \
+    int _ret; \
+    lck_mtx_lock((a)->meta); \
+    if ((a)->waiters) { \
+       lck_mtx_unlock((a)->meta); \
+       _ret = 0; \
+    } else { \
+       (a)->waiters++; \
+       lck_mtx_lock((a)->lock); \
+       lck_mtx_unlock((a)->meta); \
+       osi_Assert((a)->owner == (thread_t)0); \
+       (a)->owner = current_thread(); \
+       _ret = 1; \
+    } \
+    _ret; \
+})
+
 #define MUTEX_EXIT(a) \
     do { \
 	osi_Assert((a)->owner == current_thread()); \
 	(a)->owner = (thread_t)0; \
-        lck_mtx_unlock(&(a)->lock); \
-    } while(0);
+	lck_mtx_unlock((a)->lock); \
+	lck_mtx_lock((a)->meta); \
+	(a)->waiters--; \
+	lck_mtx_unlock((a)->meta); \
+    } while(0)
 
 #undef MUTEX_ISMINE
 #define MUTEX_ISMINE(a) (((afs_kmutex_t *)(a))->owner == current_thread())

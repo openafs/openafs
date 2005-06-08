@@ -41,6 +41,10 @@ osi_lookupname(char *aname, enum uio_seg seg, int followlink,
 	flags |= VNODE_LOOKUP_NOFOLLOW;
   ctx=vfs_context_create(NULL);
   code = vnode_lookup(aname, flags, vpp, ctx);
+  if (!code) { /* get a usecount */
+    vnode_ref(*vpp);
+    vnode_put(*vpp);
+  }
   vfs_context_rele(ctx);
   return code;
 }
@@ -79,7 +83,10 @@ afs_suser(void *credp)
     struct proc *p = current_proc();
 
 #ifdef AFS_DARWIN80_ENV
-    return proc_suser(p);
+    if ((error = proc_suser(p)) == 0) {
+	return (1);
+    }
+    return (0);
 #else
     if ((error = suser(p->p_ucred, &p->p_acflag)) == 0) {
 	return (1);
@@ -111,4 +118,106 @@ uio_t afsio_darwin_partialcopy(uio_t auio, int size) {
    }
    return res;
 }
+
+vfs_context_t afs_osi_ctxtp;
+int afs_osi_ctxtp_initialized;
+static thread_t vfs_context_owner;
+#define RECURSIVE_VFS_CONTEXT 1
+#if RECURSIVE_VFS_CONTEXT
+static proc_t vfs_context_curproc;
+int vfs_context_ref;
+#else 
+#define vfs_context_ref 1
+#endif
+void get_vfs_context(void) {
+  int isglock = ISAFS_GLOCK();
+
+  if (!isglock)
+     AFS_GLOCK();
+  if (afs_osi_ctxtp_initialized) {
+     if (!isglock)
+        AFS_GUNLOCK();
+      return;
+  }
+  osi_Assert(vfs_context_owner != current_thread());
+#if RECURSIVE_VFS_CONTEXT
+  if (afs_osi_ctxtp && current_proc() == vfs_context_curproc) {
+     vfs_context_ref++;
+     vfs_context_owner = current_thread();
+     if (!isglock)
+        AFS_GUNLOCK();
+     return;
+  }
+#endif
+  while (afs_osi_ctxtp && vfs_context_ref) {
+     printf("[%d] waiting for afs_osi_ctxtp\n", proc_selfpid());
+     afs_osi_Sleep(&afs_osi_ctxtp);
+     if (afs_osi_ctxtp_initialized) {
+       printf("[%d] ok\n", proc_selfpid());
+       if (!isglock)
+          AFS_GUNLOCK();
+       return;
+     }
+     if (!afs_osi_ctxtp || !vfs_context_ref)
+        printf("[%d] ok\n", proc_selfpid());
+  }
+#if RECURSIVE_VFS_CONTEXT
+  vfs_context_rele(afs_osi_ctxtp);
+  vfs_context_ref=1;
+#else
+  osi_Assert(vfs_context_owner == (thread_t)0);
+#endif
+  afs_osi_ctxtp = vfs_context_create(NULL);
+  vfs_context_owner = current_thread();
+  vfs_context_curproc = current_proc();
+  if (!isglock)
+     AFS_GUNLOCK();
+}
+
+void put_vfs_context(void) {
+  int isglock = ISAFS_GLOCK();
+
+  if (!isglock)
+     AFS_GLOCK();
+  if (afs_osi_ctxtp_initialized) {
+     if (!isglock)
+        AFS_GUNLOCK();
+      return;
+  }
+#if RECURSIVE_VFS_CONTEXT
+  if (vfs_context_owner == current_thread())
+      vfs_context_owner = (thread_t)0;
+  vfs_context_ref--;
+#else
+  osi_Assert(vfs_context_owner == current_thread());
+  vfs_context_rele(afs_osi_ctxtp);
+  afs_osi_ctxtp = NULL;
+  vfs_context_owner = (thread_t)0;
+#endif
+  afs_osi_Wakeup(&afs_osi_ctxtp);
+     if (!isglock)
+        AFS_GUNLOCK();
+}
+
+extern int afs3_syscall();
+
+int afs_cdev_nop_openclose(dev_t dev, int flags, int devtype,struct proc *p) {
+  return 0;
+}
+int
+afs_cdev_ioctl(dev_t dev, u_long cmd, caddr_t data, int fflag, struct proc *p) {
+   int retval=0;
+   struct afssysargs *a = data;
+   if (proc_is64bit(p))
+     return EINVAL;
+
+  if (cmd != VIOC_SYSCALL) {
+     printf("ioctl mismatch 0x%lx (wanted 0x%lx)\n", cmd, VIOC_SYSCALL);
+     /*return EINVAL;*/
+  }
+
+ afs3_syscall(p, (struct afssysargs *)data, &retval);
+ return retval; 
+}
+
 #endif

@@ -732,7 +732,11 @@ restart:
 		 * XXX assume FreeBSD is the same for now.
 		 */
 	        AFS_GUNLOCK();
+#ifdef AFS_DARWIN80_ENV
+		vnode_recycle(AFSTOV(tvc));
+#else
 		vgone(AFSTOV(tvc));
+#endif
 		AFS_GLOCK();
 		code = fv_slept = 0;
 #else
@@ -859,7 +863,11 @@ restart:
     tvc->execsOrWriters = 0;
     tvc->flockCount = 0;
     tvc->anyAccess = 0;
+#ifdef AFS_DARWIN80_ENV
+    tvc->states = CDeadVnode;
+#else
     tvc->states = 0;
+#endif
     tvc->last_looker = 0;
     tvc->fid = *afid;
     tvc->asynchrony = -1;
@@ -1719,6 +1727,10 @@ afs_GetVCache(register struct VenusFid *afid, struct vrequest *areq,
 	return tvc;
     }
 #endif /* AFS_OSF_ENV */
+#ifdef AFS_DARWIN80_ENV
+/* Darwin 8.0 only has bufs in nfs, so we shouldn't have to worry about them.
+   What about ubc? */
+#else
 #if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
     /*
      * XXX - I really don't like this.  Should try to understand better.
@@ -1738,7 +1750,7 @@ afs_GetVCache(register struct VenusFid *afid, struct vrequest *areq,
 #if defined(AFS_DARWIN_ENV)
 	iheldthelock = VOP_ISLOCKED(vp);
 	if (!iheldthelock)
-	    vnode_lock(vp);
+	    vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, current_proc());
 	/* this is messy. we can call fsync which will try to reobtain this */
 	if (VTOAFS(vp) == tvc) 
 	  ReleaseWriteLock(&tvc->lock);
@@ -1748,11 +1760,7 @@ afs_GetVCache(register struct VenusFid *afid, struct vrequest *areq,
 	if (VTOAFS(vp) == tvc) 
 	  ObtainWriteLock(&tvc->lock, 954);
 	if (!iheldthelock)
-#ifdef AFS_DARWIN80_ENV
-	    vnode_unlock(vp);
-#else
 	    VOP_UNLOCK(vp, LK_EXCLUSIVE, current_proc());
-#endif
 #elif defined(AFS_FBSD60_ENV)
 	iheldthelock = VOP_ISLOCKED(vp, curthread);
 	if (!iheldthelock)
@@ -1783,6 +1791,7 @@ afs_GetVCache(register struct VenusFid *afid, struct vrequest *areq,
 	    VOP_UNLOCK(vp, 0, curproc);
 #endif
     }
+#endif
 #endif
 
     ObtainWriteLock(&afs_xcbhash, 464);
@@ -2499,7 +2508,9 @@ afs_FindVCache(struct VenusFid *afid, afs_int32 * retry, afs_int32 flag)
     afs_int32 i;
 
     AFS_STATCNT(afs_FindVCache);
-
+#ifdef AFS_DARWIN80_ENV
+findloop:
+#endif
     i = VCHash(afid);
     for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
 	if (FidMatches(afid, tvc)) {
@@ -2512,6 +2523,31 @@ afs_FindVCache(struct VenusFid *afid, afs_int32 * retry, afs_int32 flag)
 	    if (vg)
 		continue;
 #endif /* AFS_OSF_ENV */
+#ifdef  AFS_DARWIN80_ENV
+	    int vg;
+            /* wait for the vnode to be replaced by afs_darwin_finalizevnode
+               or reclaimed. locks must be released so reclaim doesn't block */
+            if (tvc->flags & CDeadVnode) {
+               int lock;
+               lock = CheckLock(&afs_vcache);
+               if (lock > 0)
+                  ReleaseReadLock(&afs_vcache);
+               else
+                  ReleaseSharedLock(&afs_vcache);
+               osi_TimedSleep(&tvc->v, 500, 0);
+               if (lock > 0)
+                  ObtainReadLock(&afs_vcache);
+               else
+                  ObtainSharedLock(&afs_vcache, 344);
+               goto findloop;
+            }
+	    AFS_GUNLOCK();
+	    vg = vnode_get(AFSTOV(tvc));
+	    AFS_GLOCK();
+	    if (vg)
+		continue;
+           
+#endif
 	    break;
 	}
     }
@@ -2520,12 +2556,12 @@ afs_FindVCache(struct VenusFid *afid, afs_int32 * retry, afs_int32 flag)
     if (tvc) {
 	if (retry)
 	    *retry = 0;
-#if !defined(AFS_OSF_ENV)
+#if !defined(AFS_OSF_ENV) && !defined(AFS_DARWIN80_ENV)
 	osi_vnhold(tvc, retry);	/* already held, above */
 	if (retry && *retry)
 	    return 0;
 #endif
-#ifdef AFS_DARWIN_ENV
+#if defined(AFS_DARWIN_ENV) && !defined(AFS_DARWIN80_ENV)
 	tvc->states |= CUBCinit;
 	AFS_GUNLOCK();
 	if (UBCINFOMISSING(AFSTOV(tvc)) ||

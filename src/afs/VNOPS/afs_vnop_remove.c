@@ -443,7 +443,7 @@ afs_remunlink(register struct vcache *avc, register int doit)
 	    cred = avc->uncred;
 	    avc->uncred = NULL;
 
-#ifdef AFS_DARWIN_ENV
+#if defined(AFS_DARWIN_ENV) && !defined(AFS_DARWIN80_ENV)
 	    VREF(AFSTOV(avc));
 #else
 	    VN_HOLD(AFSTOV(avc));

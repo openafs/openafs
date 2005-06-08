@@ -32,7 +32,7 @@ RCSID
 #include "h/kernel.h"
 #endif
 #endif
-#if	defined(AFS_SUN56_ENV) || defined(AFS_HPUX_ENV)
+#if	defined(AFS_SUN56_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_DARWIN80_ENV)
 #include "afs/sysincludes.h"
 #endif
 #if defined(AFS_FBSD_ENV)

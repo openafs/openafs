@@ -41,6 +41,13 @@ extern int osi_utoa(char *buf, size_t len, unsigned long val);
 #define	osi_YieldIfPossible()
 #define	osi_WakeupAndYieldIfPossible(x)	    rx_Wakeup(x)
 
+#ifndef AFS_DARWIN80_ENV
+#define ifnet_mtu(x) (x)->if_mtu
+#define AFS_IFNET_T struct ifnet *
+#else
+#define AFS_IFNET_T ifnet_t
+#endif
+
 #include "afs/longc_procs.h"
 
 #endif /* __RX_KERNEL_INCL_ */

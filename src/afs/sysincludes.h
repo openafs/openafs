@@ -252,10 +252,10 @@ struct vop_getwritemount_args;
 #  include <sys/mount.h>
 #  include <sys/namei.h>
 #ifdef AFS_DARWIN80_ENV
-#  include <h/vnode.h>
-#else
-#  include <sys/vnode.h>
+#  include <sys/kauth.h>
+#include <string.h>
 #endif
+#  include <sys/vnode.h>
 #  include <sys/queue.h>
 #  include <sys/malloc.h>
 #ifndef AFS_FBSD_ENV

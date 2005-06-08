@@ -13,12 +13,19 @@ RCSID
 #include <sys/malloc.h>
 #include <sys/namei.h>
 #include <sys/conf.h>
+#ifndef AFS_DARWIN80_ENV
 #include <sys/syscall.h>
+#endif
 #include <sys/sysctl.h>
 #include "../afs/sysctl.h"
 
+#ifndef M_UFSMNT
+#define M_UFSMNT M_TEMP /* DARWIN80 MALLOC doesn't look at the type anyway */
+#endif
+
 struct vcache *afs_globalVp = 0;
 struct mount *afs_globalVFS = 0;
+int afs_vfs_typenum;
 
 int
 afs_quotactl()
@@ -45,63 +52,102 @@ afs_vptofh(vp, fhp)
     return (EINVAL);
 }
 
+#ifdef AFS_DARWIN80_ENV
+#define CTX_TYPE vfs_context_t
+#define CTX_PROC_CONVERT(C) vfs_context_proc((C))
+#define STATFS_TYPE struct vfsstatfs
+#else
+#define CTX_TYPE struct proc *
+#define CTX_PROC_CONVERT(C) (C)
+#define STATFS_TYPE struct statfs
+#define vfs_statfs(VFS) &(VFS)->mnt_stat
+#endif
+#define PROC_DECL(out,in) struct proc *out = CTX_PROC_CONVERT(in)
+
 int
 afs_start(mp, flags, p)
      struct mount *mp;
      int flags;
-     struct proc *p;
+     CTX_TYPE p;
 {
     return (0);			/* nothing to do. ? */
 }
 
+int
+afs_statfs(struct mount *mp, STATFS_TYPE *abp, CTX_TYPE ctx);
+#ifdef AFS_DARWIN80_ENV
+int
+afs_mount(mp, devvp, data, ctx)
+     register struct mount *mp;
+     vnode_t *devvp;
+     user_addr_t data;
+     vfs_context_t ctx;
+#else
 int
 afs_mount(mp, path, data, ndp, p)
      register struct mount *mp;
      char *path;
      caddr_t data;
      struct nameidata *ndp;
-     struct proc *p;
+     CTX_TYPE ctx;
+#endif
 {
     /* ndp contains the mounted-from device.  Just ignore it.
      * we also don't care about our proc struct. */
     size_t size;
     int error;
+#ifdef AFS_DARWIN80_ENV
+    struct vfsioattr ioattr;
+    /* vfs_statfs advertised as RO, but isn't */
+    /* new api will be needed to initialize this information (nfs needs to
+       set mntfromname too) */
+#endif
+    STATFS_TYPE *mnt_stat = vfs_statfs(mp); 
 
-    if (mp->mnt_flag & MNT_UPDATE)
+    if (vfs_isupdate(mp))
 	return EINVAL;
 
     AFS_GLOCK();
     AFS_STATCNT(afs_mount);
 
-    if (data == NULL && afs_globalVFS) {	/* Don't allow remounts. */
+    if (data == 0 && afs_globalVFS) {	/* Don't allow remounts. */
 	AFS_GUNLOCK();
 	return (EBUSY);
     }
 
     afs_globalVFS = mp;
+#ifdef AFS_DARWIN80_ENV
+    vfs_ioattr(mp, &ioattr);
+    ioattr.io_devblocksize = 8192;
+    vfs_setioattr(mp, &ioattr);
+    /* f_iosize is handled in VFS_GETATTR */
+#else
     mp->vfs_bsize = 8192;
-    vfs_getnewfsid(mp);
     mp->mnt_stat.f_iosize = 8192;
+#endif
+    vfs_getnewfsid(mp);
 
+#ifndef AFS_DARWIN80_ENV
     (void)copyinstr(path, mp->mnt_stat.f_mntonname, MNAMELEN - 1, &size);
     memset(mp->mnt_stat.f_mntonname + size, 0, MNAMELEN - size);
-    memset(mp->mnt_stat.f_mntfromname, 0, MNAMELEN);
+#endif
+    memset(mnt_stat->f_mntfromname, 0, MNAMELEN);
 
-    if (data == NULL) {
-	strcpy(mp->mnt_stat.f_mntfromname, "AFS");
+    if (data == 0) {
+	strcpy(mnt_stat->f_mntfromname, "AFS");
 	/* null terminated string "AFS" will fit, just leave it be. */
-	mp->mnt_data = (qaddr_t) NULL;
+	vfs_setfsprivate(mp, NULL);
     } else {
 	struct VenusFid *rootFid = NULL;
 	struct volume *tvp;
 	char volName[MNAMELEN];
 
-	(void)copyinstr((char *)data, volName, MNAMELEN - 1, &size);
+	(void)copyinstr(data, volName, MNAMELEN - 1, &size);
 	memset(volName + size, 0, MNAMELEN - size);
 
 	if (volName[0] == 0) {
-	    strcpy(mp->mnt_stat.f_mntfromname, "AFS");
-	    mp->mnt_data = (qaddr_t) & afs_rootFid;
+	    strcpy(mnt_stat->f_mntfromname, "AFS");
+	    vfs_setfsprivate(mp, &afs_rootFid);
 	} else {
 	    struct cell *localcell = afs_GetPrimaryCell(READ_LOCK);
 	    if (localcell == NULL) {
@@ -110,7 +156,7 @@ afs_mount(mp, path, data, ndp, p)
 	    }
 
 	    /* Set the volume identifier to "AFS:volume.name" */
-	    snprintf(mp->mnt_stat.f_mntfromname, MNAMELEN - 1, "AFS:%s",
+	    snprintf(mnt_stat->f_mntfromname, MNAMELEN - 1, "AFS:%s",
 		     volName);
 	    tvp =
 		afs_GetVolumeByName(volName, localcell->cellNum, 1,
@@ -129,29 +175,33 @@ afs_mount(mp, path, data, ndp, p)
 		return ENODEV;
 	    }
 
-	    mp->mnt_data = (qaddr_t) rootFid;
+	    vfs_setfsprivate(mp, &rootFid);
 	}
     }
+#ifdef AFS_DARWIN80_ENV
+    afs_vfs_typenum=vfs_typenum(mp);
+#else
     strcpy(mp->mnt_stat.f_fstypename, "afs");
+#endif
     AFS_GUNLOCK();
-    (void)afs_statfs(mp, &mp->mnt_stat, p);
+    (void)afs_statfs(mp, mnt_stat, ctx);
     return 0;
 }
 
 int
-afs_unmount(mp, flags, p)
+afs_unmount(mp, flags, ctx)
      struct mount *mp;
      int flags;
-     struct proc *p;
+     CTX_TYPE ctx;
 {
-
+    void *mdata = vfs_fsprivate(mp);
     AFS_GLOCK();
     AFS_STATCNT(afs_unmount);
 
-    if (mp->mnt_data != (qaddr_t) - 1) {
-	if (mp->mnt_data != NULL) {
-	    FREE(mp->mnt_data, M_UFSMNT);
-	    mp->mnt_data = (qaddr_t) - 1;
+    if (mdata != (qaddr_t) - 1) {
+	if (mdata != NULL) {
+	    vfs_setfsprivate(mp, (qaddr_t) - 1);
+	    FREE(mdata, M_UFSMNT);
 	} else {
 	    if (flags & MNT_FORCE) {
                 if (afs_globalVp) {
@@ -174,7 +224,7 @@ afs_unmount(mp, flags, p)
 		return EBUSY;
 	    }
 	}
-	mp->mnt_flag &= ~MNT_LOCAL;
+	vfs_clearflags(mp, MNT_LOCAL);
     }
 
     AFS_GUNLOCK();
@@ -182,40 +232,51 @@ afs_unmount(mp, flags, p)
     return 0;
 }
 
+#ifdef AFS_DARWIN80_ENV
+int
+afs_root(struct mount *mp, struct vnode **vpp, vfs_context_t ctx)
+#else
 int
 afs_root(struct mount *mp, struct vnode **vpp)
+#endif
 {
+    void *mdata = vfs_fsprivate(mp);
     int error;
     struct vrequest treq;
     register struct vcache *tvp = 0;
+#ifdef AFS_DARWIN80_ENV
+    struct ucred *cr = vfs_context_ucred(ctx);
+#else
     struct proc *p = current_proc();
-    struct ucred cr;
+    struct ucred _cr;
+    struct ucred *cr =&_cr;
 
     pcred_readlock(p);
     cr = *p->p_cred->pc_ucred;
     pcred_unlock(p);
+#endif
     AFS_GLOCK();
     AFS_STATCNT(afs_root);
-    if (mp->mnt_data == NULL && afs_globalVp
+    if (mdata == NULL && afs_globalVp
 	&& (afs_globalVp->states & CStatd)) {
 	tvp = afs_globalVp;
 	error = 0;
-    } else if (mp->mnt_data == (qaddr_t) - 1) {
+    } else if (mdata == (qaddr_t) - 1) {
 	error = ENOENT;
     } else {
-	struct VenusFid *rootFid = (mp->mnt_data == NULL)
-	    ? &afs_rootFid : (struct VenusFid *)mp->mnt_data;
+	struct VenusFid *rootFid = (mdata == NULL)
+	    ? &afs_rootFid : (struct VenusFid *)mdata;
 
 	if (afs_globalVp) {
 	    afs_PutVCache(afs_globalVp);
 	    afs_globalVp = NULL;
 	}
 
-	if (!(error = afs_InitReq(&treq, &cr)) && !(error = afs_CheckInit())) {
+	if (!(error = afs_InitReq(&treq, cr)) && !(error = afs_CheckInit())) {
 	    tvp = afs_GetVCache(rootFid, &treq, NULL, NULL);
 	    /* we really want this to stay around */
 	    if (tvp) {
-		if (mp->mnt_data == NULL)
+		if (mdata == NULL)
 		    afs_globalVp = tvp;
 	    } else
 		error = ENOENT;
@@ -224,14 +285,20 @@ afs_root(struct mount *mp, struct vnode **vpp)
     if (tvp) {
 	osi_vnhold(tvp, 0);
 	AFS_GUNLOCK();
+#ifdef AFS_DARWIN80_ENV
+        afs_darwin_finalizevnode(tvp, NULL, NULL, 1);
+#else
 	vn_lock(AFSTOV(tvp), LK_EXCLUSIVE | LK_RETRY, p);
+#endif
 	AFS_GLOCK();
-	if (mp->mnt_data == NULL) {
+	if (mdata == NULL) {
 	    afs_globalVFS = mp;
 	}
 	*vpp = AFSTOV(tvp);
+#ifndef AFS_DARWIN80_ENV /* XXX VROOT can only be set in vnode_create */
 	AFSTOV(tvp)->v_flag |= VROOT;
 	AFSTOV(tvp)->v_vfsp = mp;
+#endif
     }
 
     afs_Trace2(afs_iclSetp, CM_TRACE_VFSROOT, ICL_TYPE_POINTER, *vpp,
@@ -240,6 +307,7 @@ afs_root(struct mount *mp, struct vnode **vpp)
     return error;
 }
 
+#if 0 /* vget never had this prototype AFAIK */
 int
 afs_vget(mp, lfl, vp)
      struct mount *mp;
@@ -261,18 +329,36 @@ afs_vget(mp, lfl, vp)
 	insmntque(vp, mp);	/* take off free list */
     return error;
 }
+#else
+
+#ifdef AFS_DARWIN80_ENV
+int afs_vget(struct mount *mp, ino64_t ino, struct vnode **vpp,
+             vfs_context_t ctx)
+#else
+int afs_vget(struct mount *mp, void *ino, struct vnode **vpp)
+#endif
+{
+   return ENOENT; /* cannot implement */
+}
+
+#endif
 
 int
-afs_statfs(struct mount *mp, struct statfs *abp, struct proc *p)
+afs_statfs(struct mount *mp, STATFS_TYPE *abp, CTX_TYPE ctx)
 {
+    STATFS_TYPE *sysstat = vfs_statfs(mp);
     AFS_GLOCK();
     AFS_STATCNT(afs_statfs);
 
 #if 0
     abp->f_type = MOUNT_AFS;
 #endif
+#ifdef AFS_DARWIN80_ENV
+    abp->f_bsize = abp->f_iosize = vfs_devblocksize(mp);
+#else
     abp->f_bsize = mp->vfs_bsize;
     abp->f_iosize = mp->vfs_bsize;
+#endif
 
     /* Fake a high number below to satisfy programs that use the statfs call
      * to make sure that there's enough space in the device partition before
@@ -281,34 +367,111 @@ afs_statfs(struct mount *mp, struct statfs *abp, struct proc *p)
     abp->f_blocks = abp->f_bfree = abp->f_bavail = abp->f_files =
 	abp->f_ffree = 2000000;
 
-    abp->f_fsid.val[0] = mp->mnt_stat.f_fsid.val[0];
-    abp->f_fsid.val[1] = mp->mnt_stat.f_fsid.val[1];
-    if (abp != &mp->mnt_stat) {
-	abp->f_type = mp->mnt_vfc->vfc_typenum;
+    if (abp != sysstat) {
+        abp->f_fsid.val[0] = sysstat->f_fsid.val[0];
+        abp->f_fsid.val[1] = sysstat->f_fsid.val[1];
+#ifndef AFS_DARWIN80_ENV
+	abp->f_type = vfs_typenum(mp);
+#endif
 	memcpy((caddr_t) & abp->f_mntonname[0],
-	       (caddr_t) mp->mnt_stat.f_mntonname, MNAMELEN);
+	       (caddr_t) sysstat->f_mntonname, MNAMELEN);
 	memcpy((caddr_t) & abp->f_mntfromname[0],
-	       (caddr_t) mp->mnt_stat.f_mntfromname, MNAMELEN);
+	       (caddr_t) sysstat->f_mntfromname, MNAMELEN);
     }
 
     AFS_GUNLOCK();
     return 0;
 }
 
+#ifdef AFS_DARWIN80_ENV
+int
+afs_vfs_getattr(struct mount *mp, struct vfs_attr *outattrs,
+                vfs_context_t context)
+{
+    VFSATTR_RETURN(outattrs, f_bsize, vfs_devblocksize(mp));
+    VFSATTR_RETURN(outattrs, f_iosize, vfs_devblocksize(mp));
+    VFSATTR_RETURN(outattrs, f_blocks, 2000000);
+    VFSATTR_RETURN(outattrs, f_bfree, 2000000);
+    VFSATTR_RETURN(outattrs, f_bavail, 2000000);
+    VFSATTR_RETURN(outattrs, f_files, 2000000);
+    VFSATTR_RETURN(outattrs, f_ffree, 2000000);
+    if ( VFSATTR_IS_ACTIVE(outattrs, f_capabilities) )
+    {
+         vol_capabilities_attr_t *vcapattrptr;
+         vcapattrptr = &outattrs->f_capabilities;
+         vcapattrptr->capabilities[VOL_CAPABILITIES_FORMAT] =
+                   VOL_CAP_FMT_SYMBOLICLINKS |
+                   VOL_CAP_FMT_HARDLINKS |
+                   VOL_CAP_FMT_ZERO_RUNS |
+                   VOL_CAP_FMT_CASE_SENSITIVE |
+                   VOL_CAP_FMT_CASE_PRESERVING |
+                   VOL_CAP_FMT_FAST_STATFS;
+         vcapattrptr->capabilities[VOL_CAPABILITIES_INTERFACES] = 
+                   VOL_CAP_INT_ADVLOCK | 
+                   VOL_CAP_INT_FLOCK;
+         vcapattrptr->capabilities[VOL_CAPABILITIES_RESERVED1] = 0;
+         vcapattrptr->capabilities[VOL_CAPABILITIES_RESERVED2] = 0;
+
+         /* Capabilities we know about: */
+         vcapattrptr->valid[VOL_CAPABILITIES_FORMAT] =
+                 VOL_CAP_FMT_PERSISTENTOBJECTIDS |
+                 VOL_CAP_FMT_SYMBOLICLINKS |
+                 VOL_CAP_FMT_HARDLINKS |
+                 VOL_CAP_FMT_JOURNAL |
+                 VOL_CAP_FMT_JOURNAL_ACTIVE |
+                 VOL_CAP_FMT_NO_ROOT_TIMES |
+                 VOL_CAP_FMT_SPARSE_FILES |
+                 VOL_CAP_FMT_ZERO_RUNS |
+                 VOL_CAP_FMT_CASE_SENSITIVE |
+                 VOL_CAP_FMT_CASE_PRESERVING |
+                 VOL_CAP_FMT_FAST_STATFS;
+         vcapattrptr->valid[VOL_CAPABILITIES_INTERFACES] =
+                 VOL_CAP_INT_SEARCHFS |
+                 VOL_CAP_INT_ATTRLIST |
+                 VOL_CAP_INT_NFSEXPORT |
+                 VOL_CAP_INT_READDIRATTR |
+                 VOL_CAP_INT_EXCHANGEDATA |
+                 VOL_CAP_INT_COPYFILE |
+                 VOL_CAP_INT_ALLOCATE |
+                 VOL_CAP_INT_VOL_RENAME |
+                 VOL_CAP_INT_ADVLOCK |
+                 VOL_CAP_INT_FLOCK;
+         vcapattrptr->valid[VOL_CAPABILITIES_RESERVED1] = 0;
+         vcapattrptr->valid[VOL_CAPABILITIES_RESERVED2] = 0;
+             
+         VFSATTR_SET_SUPPORTED(outattrs, f_capabilities);
+    }
+    return 0;
+}
+#endif
+
+#ifdef AFS_DARWIN80_ENV
+int
+afs_sync(mp, waitfor, ctx)
+     struct mount *mp;
+     int waitfor;
+     CTX_TYPE ctx;
+#else
 int
 afs_sync(mp, waitfor, cred, p)
      struct mount *mp;
      int waitfor;
      struct ucred *cred;
-     struct prioc *p;
+     struct proc *p;
+#endif
 {
     return 0;
 }
 
 u_int32_t afs_darwin_realmodes = 0;
 
+#ifdef AFS_DARWIN80_ENV
+int afs_sysctl(int *name, u_int namelen, user_addr_t oldp, size_t *oldlenp, 
+	       user_addr_t newp, size_t newlen, vfs_context_t context)
+#else
 int afs_sysctl(int *name, u_int namelen, void *oldp, size_t *oldlenp, 
 	       void *newp, size_t newlen, struct proc *p)
+#endif
 {
     int error;
 
@@ -323,8 +486,13 @@ int afs_sysctl(int *name, u_int namelen, void *oldp, size_t *oldlenp,
 	case AFS_SC_DARWIN_ALL:
 	    switch (name[2]) {
 	    case AFS_SC_DARWIN_ALL_REALMODES:
+#ifdef AFS_DARWIN80_ENV
+               newlen;
+               /* XXX complicated */
+#else
 	        return sysctl_int(oldp, oldlenp, newp, newlen,
 				  &afs_darwin_realmodes);
+#endif
 	    }
 	    break;
 	    /* darwin version specific sysctl's goes here */
@@ -340,6 +508,7 @@ extern struct vnodeopv_desc afs_vnodeop_opv_desc;
 int
 afs_init(struct vfsconf *vfc)
 {
+#ifndef AFS_DARWIN80_ENV /* vfs_fsadd does all this junk */
     int j;
     int (**opv_desc_vector) ();
     struct vnodeopv_entry_desc *opve_descp;
@@ -401,19 +570,34 @@ afs_init(struct vfsconf *vfc)
     for (j = 0; j < vfs_opv_numops; j++)
 	if (opv_desc_vector[j] == NULL)
 	    opv_desc_vector[j] = opv_desc_vector[VOFFSET(vop_default)];
+#endif
+    return 0;
 }
 
 struct vfsops afs_vfsops = {
-    afs_mount,
-    afs_start,
-    afs_unmount,
-    afs_root,
-    afs_quotactl,
-    afs_statfs,
-    afs_sync,
-    afs_vget,
-    afs_fhtovp,
-    afs_vptofh,
-    afs_init,
-    afs_sysctl
+   afs_mount,
+   afs_start,
+   afs_unmount,
+   afs_root,
+#ifdef AFS_DARWIN80_ENV
+   0,
+   afs_vfs_getattr,
+#else
+   afs_quotactl,
+   afs_statfs,
+#endif
+   afs_sync,
+#ifdef AFS_DARWIN80_ENV
+   0,0,0,
+#else
+   afs_vget,
+   afs_fhtovp,
+   afs_vptofh,
+#endif
+   afs_init,
+   afs_sysctl, 
+#ifdef AFS_DARWIN80_ENVX
+   0 /*setattr */,
+   {0}
+#endif
 };

@@ -36,58 +36,23 @@ getinode(fs, dev, inode, vpp, perror)
      ino_t inode;
      int *perror;
 {
-#if 0
     struct vnode *vp;
     int code;
     vfs_context_t ctx;
+    char volfspath[64];
 
     *vpp = 0;
     *perror = 0;
-    if (!fs) {
-	register struct ufsmount *ump;
-#ifdef VFSTOHFS
-	register struct hfsmount *hmp;
-#endif
-	register vnode_t vp;
-	register mount_t mp;
-	mount_t rootfs = vfs_getvfs_by_mntonname("/");
-	if (mp = rootfs)
-	    do {
-		/*
-		 * XXX Also do the test for MFS 
-		 */
-		if (!strcmp(mp->mnt_vfc->vfc_name, "ufs")) {
-		    ump = VFSTOUFS(mp);
-		    if (ump->um_fs == NULL)
-			break;
-		    if (ump->um_dev == dev) {
-			fs = ump->um_mountp;
-		    }
-		}
-#ifdef VFSTOHFS
-		if (!strcmp(mp->mnt_vfc->vfc_name, "hfs")) {
-		    hmp = VFSTOHFS(mp);
 #if 0
-		    if (hmp->hfs_mp == NULL)
-			break;
-#endif
-		    if (hmp->hfs_raw_dev == dev) {
-			fs = hmp->hfs_mp;
-		    }
-		}
-#endif
-
-		mp = CIRCLEQ_NEXT(mp, mnt_list);
-	    } while (mp != rootfs);
+    if (!fs) {
+        fs = vfs_getvfs(&dev);
 	if (!fs)
 	    return (ENXIO);
     }
-#ifdef AFS_DARWIN80_ENV
-    ctx=vfs_context_create(NULL);
-    code = VFS_VGET(fs, (void *)inode, &vp, ctx);
-    vfs_context_rele(ctx);
+    code = VFS_VGET(fs, inode, &vp, afs_osi_ctxtp);
 #else
-    code = VFS_VGET(fs, (void *)inode, &vp);
+    sprintf(volfspath, "/.vol/%d/%d", dev, inode);
+    code = vnode_open(volfspath, O_RDWR, 0, 0, &vp, afs_osi_ctxtp);
 #endif
     if (code) {
 	*perror = BAD_IGET;
@@ -96,7 +61,6 @@ getinode(fs, dev, inode, vpp, perror)
 	*vpp = vp;
 	return (0);
     }
-#endif
 }
 
 igetinode(vfsp, dev, inode, vpp, va, perror)
@@ -118,25 +82,33 @@ igetinode(vfsp, dev, inode, vpp, va, perror)
 	return (code);
     }
     if (vnode_vtype(vp) != VREG && vnode_vtype(vp) != VDIR && vnode_vtype(vp) != VLNK) {
-	vput(vp);
+	vnode_close(vp, O_RDWR, afs_osi_ctxtp);
 	printf("igetinode: bad type %d\n", vnode_vtype(vp));
 	return (ENOENT);
     }
-    VOP_GETATTR(vp, va, &afs_osi_cred, current_proc());
+    VATTR_INIT(va);
+    VATTR_WANTED(va, va_mode);
+    VATTR_WANTED(va, va_nlink);
+    VATTR_WANTED(va, va_size);
+    code = vnode_getattr(vp, va, afs_osi_ctxtp);
+    if (code) {
+	vnode_close(vp, O_RDWR, afs_osi_ctxtp);
+       return code;
+    }
+    if (!VATTR_ALL_SUPPORTED(va)) {
+	vnode_close(vp, O_RDWR, afs_osi_ctxtp);
+       return ENOENT;
+    }
     if (va->va_mode == 0) {
-	vput(vp);
+	vnode_close(vp, O_RDWR, afs_osi_ctxtp);
 	/* Not an allocated inode */
 	return (ENOENT);
     }
-    if (vfsp && afs_CacheFSType == AFS_APPL_HFS_CACHE && va->va_nlink == 0) {
-	printf("igetinode: hfs nlink 0\n");
-    }
     if (va->va_nlink == 0) {
-	vput(vp);
+	vnode_close(vp, O_RDWR, afs_osi_ctxtp);
 	return (ENOENT);
     }
 
-    VOP_UNLOCK(vp, 0, current_proc());
     *vpp = vp;
     return (0);
 }

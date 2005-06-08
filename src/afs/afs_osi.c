@@ -76,6 +76,11 @@ osi_Init(void)
 #endif /* AFS_HPUX_ENV */
 
     if (!afs_osicred_initialized) {
+#if defined(AFS_DARWIN80_ENV)
+        afs_osi_ctxtp_initialized = 0;
+        afs_osi_ctxtp = NULL; /* initialized in afs_Daemon since it has
+                                  a proc reference that cannot be changed */
+#endif
 #if defined(AFS_XBSD_ENV)
 	/* Can't just invent one, must use crget() because of mutex */
 	afs_osi_credp = crdup(osi_curcred());
@@ -84,7 +89,12 @@ osi_Init(void)
 #if defined(AFS_LINUX26_ENV)
         afs_osi_cred.cr_group_info = groups_alloc(0);
 #endif
+#if defined(AFS_DARWIN80_ENV)
+        afs_osi_cred.cr_ref = 1; /* kauth_cred_get_ref needs 1 existing ref */
+#else
 	crhold(&afs_osi_cred);	/* don't let it evaporate */
+#endif
+
 	afs_osi_credp = &afs_osi_cred;
 #endif
 	afs_osicred_initialized = 1;
@@ -336,9 +346,11 @@ afs_osi_SetTime(osi_timeval_t * atv)
     stime(&sta);
     AFS_GLOCK();
 #elif defined(AFS_DARWIN_ENV)
+#ifndef AFS_DARWIN80_ENV
     AFS_GUNLOCK();
     setthetime(atv);
     AFS_GLOCK();
+#endif
 #else
     /* stolen from kern_time.c */
 #ifndef	AFS_AUX_ENV
@@ -563,6 +575,13 @@ void
 shutdown_osi(void)
 {
     AFS_STATCNT(shutdown_osi);
+#ifdef AFS_DARWIN80_ENV
+    if (afs_osi_ctxtp_initialized && afs_osi_ctxtp) {
+       vfs_context_rele(afs_osi_ctxtp);
+       afs_osi_ctxtp = NULL;
+       afs_osi_ctxtp_initialized = 0;
+    }
+#endif
     if (afs_cold_shutdown) {
 	LOCK_INIT(&afs_ftf, "afs_ftf");
     }

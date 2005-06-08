@@ -125,6 +125,11 @@ struct afs_osi_WaitHandle {
  */
 #if defined(AFS_DARWIN80_ENV)
 #define vType(vc)               vnode_vtype(AFSTOV(vc))
+#define vSetVfsp(vc, vfsp)      
+#define vSetType(vc, type)      (vc)->m.Type = (type)
+extern int afs_vfs_typenum;
+#define SetAfsVnode(vn)         /* nothing; done in getnewvnode() */
+#define IsAfsVnode(v) (vfs_typenum(vnode_mount((v))) == afs_vfs_typenum)
 #elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 #define vSetVfsp(vc, vfsp)      AFSTOV(vc)->v_mount = (vfsp)
 #define vSetType(vc, type)      AFSTOV(vc)->v_type = (type)
@@ -270,6 +275,11 @@ typedef struct timeval osi_timeval_t;
  * and kernel space. Call these to avoid taking page faults while
  * holding the global lock.
  */
+#ifdef CAST_USER_ADDR_T
+#define __U(X) CAST_USER_ADDR_T((X))
+#else
+#define __U(X) (X)
+#endif
 #ifdef AFS_GLOBAL_SUNLOCK
 
 #define AFS_COPYIN(SRC,DST,LEN,CODE)				\
@@ -277,7 +287,7 @@ typedef struct timeval osi_timeval_t;
 	    int haveGlock = ISAFS_GLOCK();			\
 	    if (haveGlock)					\
 		AFS_GUNLOCK();					\
-	    CODE = copyin((SRC),(DST),(LEN));			\
+	    CODE = copyin(__U((SRC)),(DST),(LEN));			\
 	    if (haveGlock)					\
 		AFS_GLOCK();					\
 	} while(0)
@@ -287,7 +297,7 @@ typedef struct timeval osi_timeval_t;
 	    int haveGlock = ISAFS_GLOCK();			\
 	    if (haveGlock)					\
 		AFS_GUNLOCK();					\
-	    CODE = copyinstr((SRC),(DST),(LEN),(CNT));		\
+	    CODE = copyinstr(__U((SRC)),(DST),(LEN),(CNT));		\
 	    if (haveGlock)					\
 		AFS_GLOCK();					\
 	} while(0)
@@ -297,7 +307,7 @@ typedef struct timeval osi_timeval_t;
 	    int haveGlock = ISAFS_GLOCK();			\
 	    if (haveGlock)					\
 		AFS_GUNLOCK();					\
-	    CODE = copyout((SRC),(DST),(LEN));			\
+	    CODE = copyout((SRC),__U((DST)),(LEN));			\
 	    if (haveGlock)					\
 		AFS_GLOCK();					\
 	} while(0)
@@ -342,17 +352,17 @@ typedef struct timeval osi_timeval_t;
 
 #define AFS_COPYIN(SRC,DST,LEN,CODE)				\
 	do {							\
-	    CODE = copyin((SRC),(DST),(LEN));			\
+	    CODE = copyin(__U((SRC)),(DST),(LEN));			\
 	} while(0)
 
 #define AFS_COPYINSTR(SRC,DST,LEN,CNT,CODE)			\
 	do {							\
-	    CODE = copyinstr((SRC),(DST),(LEN),(CNT));		\
+	    CODE = copyinstr(__U((SRC)),(DST),(LEN),(CNT));		\
 	} while(0)
 
 #define AFS_COPYOUT(SRC,DST,LEN,CODE)				\
 	do {							\
-	    CODE = copyout((SRC),(DST),(LEN));			\
+	    CODE = copyout((SRC),__U((DST)),(LEN));			\
 	} while(0)
 
 #if defined(AFS_DARWIN80_ENV)

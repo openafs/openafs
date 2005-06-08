@@ -314,7 +314,30 @@ iwrite(int dev, int inode, int inode_p1, unsigned int offset, char *cbuf,
 
 #endif /* AFS_NAMEI_ENV */
 
-#ifdef AFS_LINUX20_ENV
+#if defined(AFS_DARWIN80_ENV)
+int ioctl_afs_syscall(long syscall, long param1, long param2, long param3, 
+		     long param4, long param5, long param6, int *rval) {
+  struct afssysargs syscall_data;
+  int fd = open(SYSCALL_DEV_FNAME, O_RDWR);
+  if(fd < 0)
+    return -1;
+
+  syscall_data.syscall = syscall;
+  syscall_data.param1 = param1;
+  syscall_data.param2 = param2;
+  syscall_data.param3 = param3;
+  syscall_data.param4 = param4;
+  syscall_data.param4 = param5;
+  syscall_data.param4 = param6;
+
+  *rval = ioctl(fd, VIOC_SYSCALL, &syscall_data);
+
+  close(fd);
+
+  return 0;
+}
+#endif
+#if defined(AFS_LINUX20_ENV)
 int proc_afs_syscall(long syscall, long param1, long param2, long param3, 
 		     long param4, int *rval) {
   struct afsprocdata syscall_data;
@@ -343,11 +366,14 @@ lsetpag(void)
 {
     int errcode, rval;
 
-#ifdef AFS_LINUX20_ENV
+#if defined(AFS_LINUX20_ENV)
     rval = proc_afs_syscall(AFSCALL_SETPAG,0,0,0,0,&errcode);
     
     if(rval)
       errcode = syscall(AFS_SYSCALL, AFSCALL_SETPAG);
+#elif defined(AFS_DARWIN80_ENV)
+    if (ioctl_afs_syscall(AFSCALL_SETPAG,0,0,0,0,0,0,&errcode))
+        errcode=ENOSYS;
 #else
     errcode = syscall(AFS_SYSCALL, AFSCALL_SETPAG);
 #endif
@@ -360,11 +386,14 @@ lpioctl(char *path, int cmd, char *cmarg, int follow)
 {
     int errcode, rval;
 
-#ifdef AFS_LINUX20_ENV
+#if defined(AFS_LINUX20_ENV)
     rval = proc_afs_syscall(AFSCALL_PIOCTL, (long)path, cmd, (long)cmarg, follow, &errcode);
 
     if(rval)
     errcode = syscall(AFS_SYSCALL, AFSCALL_PIOCTL, path, cmd, cmarg, follow);
+#elif defined(AFS_DARWIN80_ENV)
+    if (ioctl_afs_syscall(AFSCALL_SETPAG,(long)path,(long)cmarg,follow,0,0,0,&errcode))
+        errcode=ENOSYS;
 #else
     errcode = syscall(AFS_SYSCALL, AFSCALL_PIOCTL, path, cmd, cmarg, follow);
 #endif

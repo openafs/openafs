@@ -66,9 +66,13 @@ osi_VM_StoreAllSegments(struct vcache *avc)
     struct vnode *vp = AFSTOV(avc);
     ReleaseWriteLock(&avc->lock);
     AFS_GUNLOCK();
+#ifdef AFS_DARWIN80_ENV
+    ubc_sync_range(vp, 0, ubc_getsize(vp), UBC_SYNC|UBC_PUSHDIRTY);
+#else
     if (UBCINFOEXISTS(vp)) {
 	ubc_pushdirty(vp);
     }
+#endif
     AFS_GLOCK();
     ObtainWriteLock(&avc->lock, 94);
 }
@@ -92,12 +96,16 @@ osi_VM_TryToSmush(struct vcache *avc, struct AFS_UCRED *acred, int sync)
 
     ReleaseWriteLock(&avc->lock);
     AFS_GUNLOCK();
+#ifdef AFS_DARWIN80_ENV
+    ubc_sync_range(vp, 0, ubc_getsize(vp), UBC_INVALIDATE);
+#else
     if (UBCINFOEXISTS(vp)) {
 	size = ubc_getsize(vp);
 	kret = ubc_invalidate(vp, 0, size);
 	if (kret != 1)		/* should be KERN_SUCCESS */
 	    printf("TryToSmush: invalidate failed (error = %d)\n", kret);
     }
+#endif
     AFS_GLOCK();
     ObtainWriteLock(&avc->lock, 59);
 }
@@ -116,6 +124,12 @@ osi_VM_FlushPages(struct vcache *avc, struct AFS_UCRED *credp)
     void *object;
     kern_return_t kret;
     off_t size;
+#ifdef AFS_DARWIN80_ENV
+    ubc_sync_range(vp, 0, ubc_getsize(vp), UBC_INVALIDATE);
+	/* XXX what about when not CStatd */
+    if (avc->states & CStatd && size != avc->m.Length)
+       ubc_setsize(vp, avc->m.Length);
+#else
     if (UBCINFOEXISTS(vp)) {
 	size = ubc_getsize(vp);
 	kret = ubc_invalidate(vp, 0, size);
@@ -126,6 +140,7 @@ osi_VM_FlushPages(struct vcache *avc, struct AFS_UCRED *credp)
 	  if (UBCISVALID(vp))
 	    ubc_setsize(vp, avc->m.Length);
     }
+#endif
 }
 
 /* Purge pages beyond end-of-file, when truncating a file.
@@ -138,9 +153,13 @@ void
 osi_VM_Truncate(struct vcache *avc, int alen, struct AFS_UCRED *acred)
 {
     struct vnode *vp = AFSTOV(avc);
+#ifdef AFS_DARWIN80_ENV
+    ubc_setsize(vp, alen);
+#else
     if (UBCINFOEXISTS(vp) && UBCISVALID(vp)) {
 	ubc_setsize(vp, alen);
     }
+#endif
 }
 
 void
@@ -167,6 +186,7 @@ osi_VM_Setup(struct vcache *avc, int force)
     int error;
     struct vnode *vp = AFSTOV(avc);
 
+#ifndef AFS_DARWIN80_ENV
     if (UBCISVALID(vp) && ((avc->states & CStatd) || force)) {
 	if (!UBCINFOEXISTS(vp)) {
 	    osi_vnhold(avc, 0);
@@ -186,5 +206,6 @@ osi_VM_Setup(struct vcache *avc, int force)
 	    ubc_setsize(vp, avc->m.Length);
 	}
     }
+#endif
     return 0;
 }

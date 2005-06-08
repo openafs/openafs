@@ -2144,6 +2144,9 @@ afs_syscall(call, parm0, parm1, parm2, parm3, parm4, parm5, parm6)
     __asm__ __volatile__("mov	%o0, %i0; ret; restore");
 #endif
 #else
+#ifdef AFS_DARWIN80_ENV
+    code = ioctl_afs_syscall(call, parm0, parm1, parm2, parm3, parm4);
+#else
 #if !defined(AFS_SGI_ENV) && !defined(AFS_AIX32_ENV)
     code = syscall(AFS_SYSCALL, call, parm0, parm1, parm2, parm3, parm4);
 #else
@@ -2151,6 +2154,7 @@ afs_syscall(call, parm0, parm1, parm2, parm3, parm4, parm5, parm6)
     code = syscall(AFS_ICL, call, parm0, parm1, parm2, parm3, parm4);	/* XXX */
 #else
     code = syscall(AFSCALL_ICL, parm0, parm1, parm2, parm3, parm4);
+#endif
 #endif
 #endif
 #endif /* AFS_LINUX20_ENV */

@@ -526,10 +526,14 @@ struct SimpleLocks {
 #ifdef	AFS_OSF_ENV
 #define CWired		0x00000800	/* OSF hack only */
 #else
+#ifdef AFS_DARWIN80_ENV
+#define CDeadVnode        0x00000800
+#else
 #ifdef AFS_DARWIN_ENV
 #define CUBCinit        0x00000800
 #else
 #define CWRITE_IGN	0x00000800	/* Next OS hack only */
+#endif
 #endif
 #endif
 #define CUnique		0x00001000	/* vc's uniquifier - latest unifiquier for fid */
@@ -639,7 +643,11 @@ struct vcache {
 	afs_uint32 Group;
 	afs_uint16 Mode;	/* XXXX Should be afs_int32 XXXX */
 	afs_uint16 LinkCount;
+#ifdef AFS_DARWIN80_ENV
+        afs_uint16 Type;
+#else
 	/* vnode type is in v.v_type */
+#endif
     } m;
     afs_rwlock_t lock;		/* The lock on the vcache contents. */
 #if	defined(AFS_SUN5_ENV)

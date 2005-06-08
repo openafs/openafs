@@ -45,6 +45,11 @@ static int myNetMTUs[ADDRSPERSITE];
 static int numMyNetAddrs = 0;
 #endif
 
+#if defined(AFS_DARWIN80_ENV)
+#define sobind sock_bind
+#define soclose sock_close
+#endif
+
 /* add a port to the monitored list, port # is in network order */
 static int
 rxk_AddPort(u_short aport, char *arock)
@@ -827,7 +832,11 @@ osi_socket *
 rxk_NewSocketHost(afs_uint32 ahost, short aport)
 {
     register afs_int32 code;
+#ifdef AFS_DARWIN80_ENV
+    socket_t newSocket;
+#else
     struct socket *newSocket;
+#endif
 #if (!defined(AFS_HPUX1122_ENV) && !defined(AFS_FBSD50_ENV))
     struct mbuf *nam;
 #endif
@@ -876,6 +885,8 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
 		    afs_osi_credp, curthread);
 #elif defined(AFS_FBSD40_ENV)
     code = socreate(AF_INET, &newSocket, SOCK_DGRAM, IPPROTO_UDP, curproc);
+#elif defined(AFS_DARWIN80_ENV)
+    code = sock_socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP, NULL, NULL, &newSocket);
 #else
     code = socreate(AF_INET, &newSocket, SOCK_DGRAM, 0);
 #endif /* AFS_HPUX102_ENV */
@@ -911,12 +922,30 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
 
     freeb(bindnam);
 #else /* AFS_HPUX110_ENV */
+#if defined(AFS_DARWIN80_ENV)
+    { 
+       int buflen = 50000;
+       int i,code2;
+       for (i=0;i<2;i++) {
+           code = sock_setsockopt(newSocket, SOL_SOCKET, SO_SNDBUF,
+                                  &buflen, sizeof(buflen));
+           code2 = sock_setsockopt(newSocket, SOL_SOCKET, SO_RCVBUF,
+                                  &buflen, sizeof(buflen));
+           if (!code && !code2)
+               break;
+           if (i == 2)
+	      osi_Panic("osi_NewSocket: last attempt to reserve 32K failed!\n");
+           buflen = 32766;
+       }
+    }
+#else
     code = soreserve(newSocket, 50000, 50000);
     if (code) {
 	code = soreserve(newSocket, 32766, 32766);
 	if (code)
 	    osi_Panic("osi_NewSocket: last attempt to reserve 32K failed!\n");
     }
+#endif
 #if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 #if defined(AFS_FBSD50_ENV)
     code = sobind(newSocket, (struct sockaddr *)&myaddr, curthread);
@@ -1203,7 +1232,7 @@ rxk_Listener(void)
 #if defined(RX_ENABLE_LOCKS) && !defined(AFS_SUN5_ENV)
     AFS_GUNLOCK();
 #endif /* RX_ENABLE_LOCKS && !AFS_SUN5_ENV */
-
+printf("rxk_Listener starting...\n");
     while (afs_termState != AFSOP_STOP_RXK_LISTENER) {
 	if (rxp) {
 	    rxi_RestoreDataBufs(rxp);
@@ -1213,6 +1242,7 @@ rxk_Listener(void)
 		osi_Panic("rxk_Listener: No more Rx buffers!\n");
 	}
 	if (!(code = rxk_ReadPacket(rx_socket, rxp, &host, &port))) {
+            printf(".");
 	    rxp = rxi_ReceivePacket(rxp, rx_socket, host, port, 0, 0);
 	}
     }

@@ -597,7 +597,7 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
 	AFS_GLOCK();
 #elif defined(AFS_DARWIN80_ENV)
 	AFS_GUNLOCK();
-	code = VOP_WRITE(tfile->vnode, tuiop, 0, afs_osi_credp);
+	code = VNOP_WRITE(tfile->vnode, tuiop, 0, afs_osi_ctxtp);
 	AFS_GLOCK();
 #elif defined(AFS_DARWIN_ENV)
 	AFS_GUNLOCK();

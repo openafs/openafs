@@ -34,7 +34,10 @@ KDEFS=
 DBUG = 
 DEFINES= -D_KERNEL -DKERNEL -DKERNEL_PRIVATE -DDIAGNOSTIC -DUSE_SELECT -DMACH_USER_API -DMACH_KERNEL
 <ppc_darwin_80>
-KOPTS=-static -g -nostdinc -nostdlib -no-cpp-precomp -fno-builtin -finline -fno-keep-inline-functions -msoft-float -fsigned-bitfields -arch ppc -Dppc -DPPC -D__PPC__ -DPAGE_SIZE_FIXED -O2 -mcpu=750 -mmultiple -fschedule-insns
+KOPTS=-static -g -nostdinc -nostdlib -no-cpp-precomp -fno-builtin -finline -fno-keep-inline-functions -msoft-float -mlong-branch -fsigned-bitfields -arch ppc -Dppc -DPPC -D__PPC__ -DPAGE_SIZE_FIXED -O2 -mcpu=750 -mmultiple -fschedule-insns
+MODLD=$(CC) $(KOPTS)
+<all -ppc_darwin_80>
+MODLD=$(LD)
 <ppc_darwin_70>
 KOPTS=-static -fno-common -finline -fno-keep-inline-functions -force_cpusubtype_ALL -msoft-float -mlong-branch 
 <ppc_darwin_60>
@@ -100,7 +103,7 @@ dest_libafs: $(LIBAFSNONFS) ;
 
 
 ${LIBAFS}: $(AFSAOBJS) $(AFSNFSOBJS)
-	$(LD) -r -o ${LIBAFS} ${AFSAOBJS} ${AFSNFSOBJS} -lcc_kext
+	$(MODLD) -r -o ${LIBAFS} ${AFSAOBJS} ${AFSNFSOBJS} -lcc_kext
 
 ${LIBAFSNONFS}:  $(AFSAOBJS) $(AFSNONFSOBJS)
-	$(LD) -r -o ${LIBAFSNONFS} ${AFSAOBJS} ${AFSNONFSOBJS} -lcc_kext
+	$(MODLD) -r -o ${LIBAFSNONFS} ${AFSAOBJS} ${AFSNONFSOBJS} -lcc_kext

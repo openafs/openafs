@@ -179,7 +179,9 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 		    code = EACCES;
 		    goto done;
 		}
-#if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
+#if defined(AFS_DARWIN80_ENV)
+		if ((amode & VWRITE) || VATTR_IS_ACTIVE(attrs, va_data_size))
+#elif defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
 		if ((amode & VWRITE) || (attrs->va_mask & AT_SIZE))
 #else
 		if ((amode & VWRITE) || len != 0xffffffff)
@@ -196,7 +198,9 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 			goto done;
 		    }
 		}
-#if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
+#if defined(AFS_DARWIN80_ENV)
+		if (VATTR_IS_ACTIVE(attrs, va_data_size))
+#elif defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
 		if (attrs->va_mask & AT_SIZE)
 #else
 		if (len != 0xffffffff)
@@ -208,7 +212,11 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 			goto done;
 		    }
 		    /* do a truncate */
-#if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
+#if defined(AFS_DARWIN80_ENV)
+		    VATTR_INIT(attrs);
+		    VATTR_SET_SUPPORTED(attrs, va_data_size);
+		    VATTR_SET_ACTIVE(attrs, va_data_size);
+#elif defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
 		    attrs->va_mask = AT_SIZE;
 #else
 		    VATTR_NULL(attrs);

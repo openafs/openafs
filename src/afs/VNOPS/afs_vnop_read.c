@@ -833,13 +833,7 @@ afs_UFSRead(register struct vcache *avc, struct uio *auio,
 	    AFS_GLOCK();
 #elif defined(AFS_DARWIN80_ENV)
 	    AFS_GUNLOCK();
-	    code = VOP_READ(tfile->vnode, tuiop, 0, afs_osi_credp);
-	    AFS_GLOCK();
-#elif defined(AFS_DARWIN_ENV)
-	    AFS_GUNLOCK();
-	    VOP_LOCK(tfile->vnode, LK_EXCLUSIVE, current_proc());
-	    code = VOP_READ(tfile->vnode, &tuio, 0, afs_osi_credp);
-	    VOP_UNLOCK(tfile->vnode, 0, current_proc());
+	    code = VNOP_READ(tfile->vnode, tuiop, 0, afs_osi_ctxtp);
 	    AFS_GLOCK();
 #elif defined(AFS_DARWIN_ENV)
 	    AFS_GUNLOCK();

@@ -430,7 +430,7 @@ afs_ioctl(OSI_VN_DECL(tvc), int cmd, void *arg, int flag, cred_t * cr,
    interface call.
    */
 /* AFS_HPUX102 and up uses VNODE ioctl instead */
-#ifndef AFS_HPUX102_ENV
+#if !defined(AFS_HPUX102_ENV) && !defined(AFS_DARWIN80_ENV)
 #if !defined(AFS_SGI_ENV)
 #ifdef	AFS_AIX32_ENV
 #ifdef AFS_AIX51_ENV
@@ -817,9 +817,15 @@ afs_pioctl(p, args, retval)
     } *uap = (struct a *)args;
 
     AFS_STATCNT(afs_pioctl);
+#ifdef AFS_DARWIN80_ENV
+    return (afs_syscall_pioctl
+	    (uap->path, uap->cmd, uap->cmarg, uap->follow,
+	     kauth_cred_get()));
+#else
     return (afs_syscall_pioctl
 	    (uap->path, uap->cmd, uap->cmarg, uap->follow,
 	     p->p_cred->pc_ucred));
+#endif
 }
 
 #endif
@@ -1453,8 +1459,10 @@ DECL_PIOCTL(PSetTokens)
 #else
 	struct proc *p = curproc;	/* XXX */
 #endif
+#ifndef AFS_DARWIN80_ENV
 	uprintf("Process %d (%s) tried to change pags in PSetTokens\n",
 		p->p_pid, p->p_comm);
+#endif
 	if (!setpag(p, acred, -1, &pag, 1)) {
 #else
 #ifdef	AFS_OSF_ENV
