@@ -241,7 +241,7 @@ OpenLog(const char *fileName)
     }
 
     /* Support named pipes as logs by not rotating them */
-    if ((fstat(fileName, &statbuf) == 0)  && (S_ISFIFO(statbuf.st_mode))) {
+    if ((lstat(fileName, &statbuf) == 0)  && (S_ISFIFO(statbuf.st_mode))) {
 	isfifo = 1;
     }
 #endif
@@ -314,7 +314,7 @@ ReOpenLog(const char *fileName)
     }
 
     /* Support named pipes as logs by not rotating them */
-    if ((fstat(fileName, &statbuf) == 0)  && (S_ISFIFO(statbuf.st_mode))) {
+    if ((lstat(fileName, &statbuf) == 0)  && (S_ISFIFO(statbuf.st_mode))) {
 	isfifo = 1;
     }
 #endif
