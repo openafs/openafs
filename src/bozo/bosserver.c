@@ -870,8 +870,8 @@ main(int argc, char **argv, char **envp)
 
     if ((!DoSyslog)
 #ifndef AFS_NT40_ENV
-	&& (!(fstat(AFSDIR_BOZLOG_FILE, &sb) == 0) && 
-	(S_ISFIFO(sb.st_mode)))
+	&& ((lstat(AFSDIR_BOZLOG_FILE, &sb) == 0) && 
+	!(S_ISFIFO(sb.st_mode)))
 #endif
 	) {
 	strcpy(namebuf, AFSDIR_BOZLOG_FILE);
