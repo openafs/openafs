@@ -136,7 +136,7 @@ load_client() {
 	fi
     
 	if [ ! -f "$MODLOADDIR/$LIBAFS" ] ; then
-                echo <<EOF
+                cat <<EOF
 AFS module $MODLOADDIR/$LIBAFS does not exist.
 Not starting AFS.  Please consider building kernel modules using
 instructions in /usr/share/doc/openafs-client/README.modules
