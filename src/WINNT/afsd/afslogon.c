@@ -781,8 +781,8 @@ DWORD APIENTRY NPLogonNotify(
     }
 
     /* loop until AFS is started. */
-    while (TRUE) {
-        DebugEvent("while(TRUE) LogonOption[%x], Service AutoStart[%d]",
+    while (afsWillAutoStart) {
+        DebugEvent("while(autostart) LogonOption[%x], Service AutoStart[%d]",
                     opt.LogonOption,afsWillAutoStart);
 
         if (ISADREALM(opt.flags)) {
@@ -847,14 +847,14 @@ DWORD APIENTRY NPLogonNotify(
             * client is set to autostart (and therefore it makes sense for
             * us to wait for it to start) then sleep a while and try again. 
             * If the error was something else, then give up. */
-            if (code != KTC_NOCM && code != KTC_NOCMRPC || !afsWillAutoStart)
+            if (code != KTC_NOCM && code != KTC_NOCMRPC)
                 break;
         }
         else {  
             /*JUST check to see if its running*/
             if (IsServiceRunning())
                 break;
-            if (afsWillAutoStart && !IsServiceStartPending()) {
+            if (!IsServiceStartPending()) {
                 code = KTC_NOCMRPC;
                 reason = "AFS Service start failed";
                 break;
