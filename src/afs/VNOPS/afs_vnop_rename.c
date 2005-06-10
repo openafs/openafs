@@ -358,7 +358,7 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
 
 int
 #if defined(AFS_SGI_ENV)
-afs_rename(OSI_VC_DECL(aodp), char *aname1, struct vcache *andp, achar *name2, struct pathname *npnp, struct AFS_UCRED *acred)
+afs_rename(OSI_VC_DECL(aodp), char *aname1, struct vcache *andp, char *aname2, struct pathname *npnp, struct AFS_UCRED *acred)
 #else
 afs_rename(OSI_VC_DECL(aodp), char *aname1, struct vcache *andp, char *aname2, struct AFS_UCRED *acred)
 #endif
