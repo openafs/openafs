@@ -1027,15 +1027,19 @@ void cm_MergeStatus(cm_scache_t *scp, AFSFetchStatus *statusp, AFSVolSync *volp,
     if (!(flags & CM_MERGEFLAG_FORCE)
          && statusp->DataVersion < (unsigned long) scp->dataVersion) {
         struct cm_cell *cellp;
-        struct cm_volume *volp;
 
         cellp = cm_FindCellByID(scp->fid.cell);
-        cm_GetVolumeByID(cellp, scp->fid.volume, userp,
-                          (cm_req_t *) NULL, &volp);
-        if (scp->cbServerp)
+        if (scp->cbServerp) {
+            struct cm_volume *volp = NULL;
+
+            cm_GetVolumeByID(cellp, scp->fid.volume, userp,
+                              (cm_req_t *) NULL, &volp);
             osi_Log2(afsd_logp, "old data from server %x volume %s",
                       scp->cbServerp->addr.sin_addr.s_addr,
-                      volp->namep);
+                      volp ? volp->namep : "(unknown)");
+            if (volp)
+                cm_PutVolume(volp);
+        }
         osi_Log3(afsd_logp, "Bad merge, scp %x, scp dv %d, RPC dv %d",
                   scp, scp->dataVersion, statusp->DataVersion);
         /* we have a number of data fetch/store operations running

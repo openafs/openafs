@@ -143,14 +143,15 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
            cm_serverRef_t * serversp,
            cm_callbackRequest_t *cbrp, long errorCode)
 {
-    cm_server_t *serverp = 0;
-    cm_serverRef_t **serverspp = 0;
+    cm_server_t *serverp = NULL;
+    cm_serverRef_t **serverspp = NULL;
     cm_serverRef_t *tsrp;
     cm_ucell_t *ucellp;
     int retry = 0;
     int free_svr_list = 0;
     int dead_session;
     long timeUsed, timeLeft;
+    long code;
         
     osi_Log2(afsd_logp, "cm_Analyze connp 0x%x, code 0x%x",
              (long) connp, errorCode);
@@ -226,15 +227,18 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
         if (timeLeft > 7) {
             osi_Log0(afsd_logp, "cm_Analyze passed CM_ERROR_ALLOFFLINE.");
             thrd_Sleep(5000);
+            
             /* cm_ForceUpdateVolume marks all servers as non_busy */
             /* No it doesn't and it won't do anything if all of the 
              * the servers are marked as DOWN.  So clear the DOWN
              * flag and reset the busy state as well.
              */
             if (!serversp) {
-                cm_GetServerList(fidp, userp, reqp, &serverspp);
-                serversp = *serverspp;
-                free_svr_list = 1;
+                code = cm_GetServerList(fidp, userp, reqp, &serverspp);
+                if (code == 0) {
+                    serversp = *serverspp;
+                    free_svr_list = 1;
+                }
             }
             if (serversp) {
                 lock_ObtainWrite(&cm_serverLock);
@@ -253,6 +257,8 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 
             if (fidp != NULL)   /* Not a VLDB call */
                 cm_ForceUpdateVolume(fidp, userp, reqp);
+			else
+				retry = 0;
         }
     }
 
@@ -261,9 +267,11 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
         if (timeLeft > 7) {
             thrd_Sleep(5000);
             if (!serversp) {
-                cm_GetServerList(fidp, userp, reqp, &serverspp);
-                serversp = *serverspp;
-                free_svr_list = 1;
+                code = cm_GetServerList(fidp, userp, reqp, &serverspp);
+                if (code == 0) {
+                    serversp = *serverspp;
+                    free_svr_list = 1;
+                }
             }
             lock_ObtainWrite(&cm_serverLock);
             for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
@@ -282,9 +290,11 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
     /* special codes:  VBUSY and VRESTARTING */
     else if (errorCode == VBUSY || errorCode == VRESTARTING) {
         if (!serversp) {
-            cm_GetServerList(fidp, userp, reqp, &serverspp);
-            serversp = *serverspp;
-            free_svr_list = 1;
+            code = cm_GetServerList(fidp, userp, reqp, &serverspp);
+            if (code == 0) {
+                serversp = *serverspp;
+                free_svr_list = 1;
+            }
         }
         lock_ObtainWrite(&cm_serverLock);
         for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
@@ -332,9 +342,11 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 
         /* Mark server offline for this volume */
         if (!serversp) {
-            cm_GetServerList(fidp, userp, reqp, &serverspp);
-            serversp = *serverspp;
-            free_svr_list = 1;
+            code = cm_GetServerList(fidp, userp, reqp, &serverspp);
+            if (code == 0) {
+                serversp = *serverspp;
+                free_svr_list = 1;
+            }
         }
         for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
             if (tsrp->server == serverp)

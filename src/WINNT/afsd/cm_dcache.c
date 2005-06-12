@@ -1089,7 +1089,6 @@ void cm_ReleaseBIOD(cm_bulkIO_t *biop, int isStore)
         lock_ObtainMutex(&bufp->mx);
         lock_ObtainMutex(&scp->mx);
         cm_SyncOpDone(scp, bufp, flags);
-        lock_ReleaseMutex(&scp->mx);
                 
         /* turn off writing and wakeup users */
         if (isStore) {
@@ -1100,6 +1099,7 @@ void cm_ReleaseBIOD(cm_bulkIO_t *biop, int isStore)
             bufp->flags &= ~(CM_BUF_WRITING | CM_BUF_DIRTY);
         }
 
+        lock_ReleaseMutex(&scp->mx);
         lock_ReleaseMutex(&bufp->mx);
         buf_Release(bufp);
     }

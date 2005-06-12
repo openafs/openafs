@@ -2433,7 +2433,11 @@ void smb_MapNTError(long code, unsigned long *NTStatusp)
     } 
     else if (code == CM_ERROR_ALLBUSY) {
         NTStatus = 0xC00000BFL; /* Network Busy */
-    } else {
+    } 
+    else if (code == CM_ERROR_ALLOFFLINE) {
+        NTStatus = 0xC0000350L; /* Remote Host Down */
+    } 
+    else {
         NTStatus = 0xC0982001L;	/* SMB non-specific error */
     }
 
