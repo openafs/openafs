@@ -463,6 +463,9 @@ void buf_WaitIO(cm_scache_t * scp, cm_buf_t *bp)
             bp->waitRequests = 0;
         }
 
+        if ( !scp ) {
+            scp = cm_FindSCache(&bp->fid);
+        }
         if ( scp ) {
             lock_ObtainMutex(&scp->mx);
             if (scp->flags & CM_SCACHEFLAG_WAITING) {
