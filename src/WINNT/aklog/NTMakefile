@@ -15,11 +15,16 @@ RELDIR=WINNT\aklog
 # BUILD TARGETS
 #
 
-EXEFILE = $(DESTDIR)\root.client\usr\vice\etc\aklog.exe
+AKLOG = $(DESTDIR)\root.client\usr\vice\etc\aklog.exe
 
-EXEOBJS = \
+AKLOGOBJS = \
 	$(OUT)\aklog.obj \
 	$(OUT)\linked_list.obj
+
+ASETKEY = $(DESTDIR)\root.server\usr\afs\bin\asetkey.exe
+
+ASETKEYOBJS = \
+	$(OUT)\asetkey.obj
 
 EXELIBS = \
 	$(DESTDIR)\lib\afs\afspioctl.lib \
@@ -29,20 +34,28 @@ EXELIBS = \
 OTHERLIBS = \
     ..\kfw\lib\i386\krbv4w32.lib \
     ..\kfw\lib\i386\krb5_32.lib \
+    ..\kfw\lib\i386\comerr32.lib \
     dnsapi.lib mpr.lib
 
 afscflags = -I..\kfw\inc\krb5 -I..\kfw\inc\krb4 $(afscflags)
 
-$(EXEOBJS): $$(@B).c
+$(AKLOGOBJS): $$(@B).c
+	$(C2OBJ) $**
+
+$(ASETKEYOBJS): $$(@B).c
 	$(C2OBJ) $**
 
 ############################################################################
 
-$(EXEFILE) : $(EXEOBJS) $(EXELIBS) $(OUT)\aklog.res
+$(AKLOG) : $(AKLOGOBJS) $(EXELIBS) $(OUT)\aklog.res
 	$(EXECONLINK) $(EXELIBS) $(OTHERLIBS)
 	$(EXEPREP) 
 
-install : $(COPYHEADERS) $(EXEFILE)
+$(ASETKEY) : $(ASETKEYOBJS) $(EXELIBS) $(OUT)\asetkey.res
+	$(EXECONLINK) $(EXELIBS) $(OTHERLIBS)
+	$(EXEPREP) 
+
+install : $(COPYHEADERS) $(AKLOG) $(ASETKEY)
 
 ############################################################################
 #
@@ -51,9 +64,12 @@ install : $(COPYHEADERS) $(EXEFILE)
 
 $(OUT)\aklog.res : aklog.rc AFS_component_version_number.h
 
+$(OUT)\asetkey.res : asetkey.rc AFS_component_version_number.h
+
 mkdir:
 	-mkdir $(OUT)\lang
 	cd lang
 	nmake /nologo /f ntmakefile SRC=$(SRC) OBJ=$(OBJ) mkdir
 	cd ..
 
+                                             
