@@ -279,7 +279,7 @@ BOOL IsServiceStartPending (void)
         CloseServiceHandle (hManager);
     }
     DebugEvent("AFS AfsLogon - Test Service Start Pending","Return Code[%x] ?Start Pending[%d]",Status.dwCurrentState,(Status.dwCurrentState == SERVICE_START_PENDING));
-    return (Status.dwCurrentState == SERVICE_RUNNING);
+    return (Status.dwCurrentState == SERVICE_START_PENDING);
 }   
 
 /* LOOKUPKEYCHAIN: macro to look up the value in the list of keys in order until it's found
@@ -781,7 +781,7 @@ DWORD APIENTRY NPLogonNotify(
     }
 
     /* loop until AFS is started. */
-    while (afsWillAutoStart) {
+    while (IsServiceRunning() || IsServiceStartPending()) {
         DebugEvent("while(autostart) LogonOption[%x], Service AutoStart[%d]",
                     opt.LogonOption,afsWillAutoStart);
 
