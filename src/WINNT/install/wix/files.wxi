@@ -32,6 +32,11 @@
             <Component Id="efl_replace_afs_CMD" Guid="C9C93F3E-EEBA-4056-9669-5EF78D748D50">
                <File Id="filreplace_afs_CMD" Name="replafs.cmd" LongName="replace_afs.cmd" KeyPath="yes" DiskId="1" src="$(var.SrcDir)\WINNT\install\wix\replace_afs.cmd" />
             </Component>
+	    <Component Id="efl_uninstall_EXE" Guid="8B99B979-03F4-4AB5-9CE8-1DA97DB6613A">
+		<File Id="filuninstall_EXE" Name="uninst.exe" LongName="uninstall.exe" KeyPath="yes" DiskId="1" src="$(var.ClientDir)\uninstall.exe">
+			<Shortcut Id="scUninstall" Directory="dirShortCut" Name="Uninst.lnk" LongName="Uninstall OpenAFS.lnk" Description="$(loc.StrUninstallDesc)" Icon="ico_OpenAFS" IconIndex="0" Show="normal" />
+                </File>
+	    </Component>
             <Directory Id="dirCommon" Name="Common">
                 <Component Id="cmp_CommonDir" Guid="C86B03A1-AE97-48B1-A77B-1B2395F1E117" KeyPath="yes">
                     <Environment Id="envCommon" Name="PATH" Action="create" System="yes" Permanent="no" Part="last" Separator=";" Value="[AFSDIR]Common" />
@@ -1219,6 +1224,9 @@
 									<Shortcut Id="scSvrCfgWizard" Directory="dirShortCut" Name="SvrCfgWz.lnk" LongName="Server Configuration Wizard.lnk" Description="$(loc.StrCfgWzdDesc)" Arguments="/wizard" Icon="ico_afssvrcfg" IconIndex="0" Show="normal" WorkingDirectory="dirCommon" />
                                 </File>
                             </Component>
+                            <Component Id="cmf_asetkey_EXE" Guid="9B7694A2-DCAE-4DBA-84F2-09DC796C20B2">
+                                <File Id="fileasetkey_EXE" Name="asetk.exe" LongName="asetkey.exe" KeyPath="yes" DiskId="1" />
+                            </Component>
                             <Component Id="cmf_bosctlsvc_EXE" Guid="8F6F62A8-BB6D-46C1-BA80-4F207AA24F0D">
                                 <File Id="filebosctlsvc_EXE" Name="bosct.exe" LongName="bosctlsvc.exe" KeyPath="yes" DiskId="1" />
                                 <ServiceControl Id="TransarcAFSServer" Name="TransarcAFSServer" Stop="both" Remove="both" Wait="yes" />
@@ -1277,6 +1285,7 @@
                                 <File Id="filevolserver_PDB" Name="volse.pdb" LongName="volserver.pdb" DiskId="1" />
                                 <File Id="fileafskill_PDB" Name="afski.pdb" LongName="afskill.pdb" DiskId="1" />
                                 <File Id="fileafssvrcfg_PDB" Name="afssv.pdb" LongName="afssvrcfg.pdb" DiskId="1" />
+                                <File Id="fileasetkey_PDB" Name="asetk.pdb" LongName="asetkey.pdb" DiskId="1" />
                                 <File Id="filebosctlsvc_PDB" Name="bosct.pdb" LongName="bosctlsvc.pdb" DiskId="1" />
                                 <File Id="filebosserver_PDB" Name="bosse.pdb" LongName="bosserver.pdb" DiskId="1" />
                                 <File Id="filebuserver_PDB" Name="buser.pdb" LongName="buserver.pdb" DiskId="1" />

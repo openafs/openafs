@@ -54,5 +54,5 @@
 	<String Id="ActRemoveNsisInstallation">Removing existing installation of OpenAFS</String>
 	
 	<String Id="StrNsisAbortReason">Installation of OpenAFS for Windows was prematurely terminated because OpenAFS [NSISVERSION] was already installed.</String>
-	
+	<String Id="StrUninstallDesc">Uninstall OpenAFS from the local machine.</String>
 </WixLocalization>

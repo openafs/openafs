@@ -1,3 +1,10 @@
+# Copyright 2004, OpenAFS.ORG and others.
+# All Rights Reserved.
+#
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
 RELDIR=WINNT\install\wix
 !INCLUDE ..\..\..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\..\..\config\NTMakefile.version
@@ -32,12 +39,17 @@ languages:
 
 lang:: lang_clean $(MSIFILE)
 
+uninst: 
+        $(CD) uninstall
+        $(MAKE) /f NTMakefile /nologo install
+        $(CD) ..
+
 customactions:
 	$(CD) custom
 	$(MAKE) /f NTMakefile /nologo install
 	$(CD) ..
 
-install: customactions languages
+install: uninst customactions languages 
 
 $(MSIFILE): $(WIXOBJ)
 	light -nologo -out $(MSIFILE) \
@@ -65,6 +77,9 @@ clean::
 	for %l in ( $(LANGUAGES) ) do \
 		$(MAKE) /f NTMakefile /nologo LANG=%l lang_clean
 	$(CD) custom
+	$(MAKE) /f NTMakefile /nologo clean
+	$(CD) ..
+	$(CD) uninstall
 	$(MAKE) /f NTMakefile /nologo clean
 	$(CD) ..
 	

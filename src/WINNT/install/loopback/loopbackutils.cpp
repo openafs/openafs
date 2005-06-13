@@ -57,7 +57,6 @@ extern "C" DWORD UnInstallLoopBack(void)
     GUID netGuid;
     HDEVINFO hDeviceInfo = INVALID_HANDLE_VALUE;
     SP_DEVINFO_DATA DeviceInfoData;
-    TCHAR* deviceDesc;
     DWORD index = 0;
     BOOL found = FALSE;
     DWORD size = 0;
@@ -74,45 +73,80 @@ extern "C" DWORD UnInstallLoopBack(void)
     if (hDeviceInfo == INVALID_HANDLE_VALUE)
         return GetLastError();
 
-    deviceDesc = (TCHAR *)malloc(MAX_PATH*sizeof(TCHAR));
     // enumerate the driver info list
-    while (SetupDiEnumDeviceInfo(hDeviceInfo, index, &DeviceInfoData))
+    while (TRUE)
     {
+        TCHAR * deviceHwid;
+
+        ok = SetupDiEnumDeviceInfo(hDeviceInfo, index, &DeviceInfoData);
+
+	if(!ok) 
+	{
+	  if(GetLastError() == ERROR_NO_MORE_ITEMS)
+	      break;
+	  else 
+	  {
+   	      index++;
+	      continue;
+	  }
+	}
+
         // try to get the DeviceDesc registry property
-        ok = SetupDiGetDeviceRegistryProperty(hDeviceInfo, &DeviceInfoData,
-                                              SPDRP_DEVICEDESC,
-                                              NULL, (PBYTE)deviceDesc,
-                                              MAX_PATH * sizeof(TCHAR), &size);
+        ok = SetupDiGetDeviceRegistryProperty(hDeviceInfo, 
+					      &DeviceInfoData,
+                                              SPDRP_HARDWAREID,
+                                              NULL,
+					      NULL,
+                                              0, 
+					      &size);
         if (!ok)
         {
             ret = GetLastError();
-            if (ret != ERROR_INSUFFICIENT_BUFFER)
-                break;
-            // if the buffer is too small, reallocate
-            free(deviceDesc);
-            deviceDesc = (TCHAR *)malloc(size);
+            if (ret != ERROR_INSUFFICIENT_BUFFER) {
+                index++;
+                continue;
+	    }
+
+            deviceHwid = (TCHAR *)malloc(size);
             ok = SetupDiGetDeviceRegistryProperty(hDeviceInfo,
                                                   &DeviceInfoData,
-                                                  SPDRP_DEVICEDESC,
-                                                  NULL, (PBYTE)deviceDesc,
-                                                  size, NULL);
-            if (!ok)
-                break;
-        }
+                                                  SPDRP_HARDWAREID,
+                                                  NULL, 
+						  (PBYTE)deviceHwid,
+                                                  size, 
+						  NULL);
+            if (!ok) {
+	        free(deviceHwid);
+	        deviceHwid = NULL;
+	        index++;
+	        continue;
+	    }
+        } else {
+	    // something is wrong.  This shouldn't have worked with a NULL buffer
+	    ReportMessage(0, "GetDeviceRegistryProperty succeeded with a NULL buffer", NULL,  NULL, 0);
+	    index++;
+	    continue;
+	}
 
-        // case insensitive comparison
-        _tcslwr(deviceDesc);
-        if( _tcsstr(deviceDesc, DRIVER))
-        {
-            found = TRUE;
+	for (TCHAR *t = deviceHwid; t && *t && t < &deviceHwid[size / sizeof(TCHAR)]; t += _tcslen(t) + 1)
+	{
+	    if(!_tcsicmp(DRIVERHWID, t)) {
+	        found = TRUE;
+		break;
+	    }
+	}
+
+	if (deviceHwid) {
+	    free(deviceHwid);
+	    deviceHwid = NULL;
+	}
+
+	if (found)
             break;
-        }
-
+	
         index++;
     }
 
-    free(deviceDesc);
-    
     if (found == FALSE)
     {
         ret = GetLastError();
@@ -126,12 +160,15 @@ extern "C" DWORD UnInstallLoopBack(void)
         ret = GetLastError();
         goto cleanup;
     }
+
     ok = SetupDiCallClassInstaller(DIF_REMOVE, hDeviceInfo, &DeviceInfoData);
     if (!ok)
     {
         ret = GetLastError();
         goto cleanup;
     }
+
+    ret = 0;
 
 cleanup:
     // clean up the device info set
@@ -143,7 +180,6 @@ cleanup:
 
 BOOL IsLoopbackInstalled(void)
 {
-    TCHAR * hwid = _T("*MSLOOP");
     HDEVINFO DeviceInfoSet;
     SP_DEVINFO_DATA DeviceInfoData;
     DWORD i,err;
@@ -163,11 +199,21 @@ BOOL IsLoopbackInstalled(void)
     //
     found = FALSE;
     DeviceInfoData.cbSize = sizeof(SP_DEVINFO_DATA);
-    for (i=0; SetupDiEnumDeviceInfo(DeviceInfoSet,i,&DeviceInfoData); i++)
+    for (i=0; ;i++)
     {
+        BOOL ok;
         DWORD DataT;
         TCHAR *p, *buffer = NULL;
         DWORD buffersize = 0;
+
+	ok = SetupDiEnumDeviceInfo(DeviceInfoSet, i, &DeviceInfoData);
+
+	if(!ok) {
+	  if(GetLastError() == ERROR_NO_MORE_ITEMS)
+	    break;
+	  else
+	    continue;
+	}
         
         //
         // We won't know the size of the HardwareID buffer until we call
@@ -175,7 +221,13 @@ BOOL IsLoopbackInstalled(void)
         // use the required buffer size to Alloc the nessicary space.
         // Keep calling we have success or an unknown failure.
         //
-        while (!SetupDiGetDeviceRegistryProperty(DeviceInfoSet,&DeviceInfoData,SPDRP_HARDWAREID,&DataT,(PBYTE)buffer,buffersize,&buffersize))
+        while (!SetupDiGetDeviceRegistryProperty(DeviceInfoSet,
+						 &DeviceInfoData,
+						 SPDRP_HARDWAREID,
+						 &DataT,
+						 (PBYTE)buffer,
+						 buffersize,
+						 &buffersize))
         {
             if (GetLastError() == ERROR_INVALID_DATA)
             {
@@ -191,25 +243,32 @@ BOOL IsLoopbackInstalled(void)
             }
             else
             {
+	        if (buffer)
+                    LocalFree(buffer);
                 goto cleanup_DeviceInfo;
-            }            
+            }
         }
         
-        if (GetLastError() == ERROR_INVALID_DATA) 
+        if (GetLastError() == ERROR_INVALID_DATA) {
+	    if (buffer)
+                LocalFree(buffer);
             continue;
+	}
         
         // Compare each entry in the buffer multi-sz list with our hwid.
         for (p=buffer; *p && (p < &buffer[buffersize]); p += _tcslen(p)+1)
         {
-            if (!_tcsicmp(hwid,p))
+            if (!_tcsicmp(DRIVERHWID,p))
             {
                 found = TRUE;
                 break;
             }
         }
         
-        if (buffer) LocalFree(buffer);
-        if (found) break;
+        if (buffer)
+	    LocalFree(buffer);
+        if (found) 
+	    break;
     }
     
     //  Cleanup.
@@ -323,16 +382,28 @@ extern "C" DWORD InstallLoopBack(LPCTSTR pConnectionName, LPCTSTR ip, LPCTSTR ma
 
 	// if we successfully find the hardware ID and it turns out to
 	// be the one for the loopback driver, then we are done.
-	if(SetupDiGetDriverInfoDetail(hDeviceInfo,
+	if (SetupDiGetDriverInfoDetail(hDeviceInfo,
 				      &DeviceInfoData,
 				      &DriverInfoData,
 				      pDriverInfoDetail,
 				      sizeof(detailBuf),
-				      NULL) &&
-	   !_tcsicmp(pDriverInfoDetail->HardwareID, DRIVERHWID)) {
+				      NULL)) {
+            TCHAR * t;
 
-	  found = TRUE;
-	  break;
+	    // pDriverInfoDetail->HardwareID is a MULTISZ string.  Go through the
+	    // whole list and see if there is a match somewhere.
+	    t = pDriverInfoDetail->HardwareID;
+	    while (t && *t && t < (TCHAR *) &detailBuf[sizeof(detailBuf)/sizeof(detailBuf[0])]) {
+	      if (!_tcsicmp(t, DRIVERHWID))
+		break;
+
+	      t += _tcslen(t) + 1;
+	    }
+
+	    if (t && *t && t < (TCHAR *) &detailBuf[sizeof(detailBuf)/sizeof(detailBuf[0])]) {
+	      found = TRUE;
+	      break;
+	    }
 	}
 
         index++;

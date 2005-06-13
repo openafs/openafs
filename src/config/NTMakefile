@@ -359,6 +359,9 @@ idirs: doclink
 !	IF (!EXIST($(OJT)\WINNT\install\wix\custom))
 		$(MKDIR) $(OJT)\WINNT\install\wix\custom
 !	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\install\wix\uninstall))
+		$(MKDIR) $(OJT)\WINNT\install\wix\uninstall
+!	ENDIF
 !	IF (!EXIST($(OJT)\WINNT\install\Win9x))
 		$(MKDIR) $(OJT)\WINNT\install\Win9x
 !	ENDIF

@@ -5,6 +5,7 @@
             Title="OpenAFS">
            <ComponentRef Id="efl_desktop_INI" />
            <ComponentRef Id="efl_replace_afs_CMD" />
+           <ComponentRef Id="efl_uninstall_EXE" />
             <Feature Id="feaClient" AllowAdvertise="no" Description="$(loc.StrAFSClientLongDesc)" Display="expand"
                 InstallDefault="followParent" Level="30" Title="$(loc.StrAFSClientDesc)">
                 
@@ -124,6 +125,7 @@
                 <ComponentRef Id="cmf_volserver_EXE" />
                 <ComponentRef Id="cmf_afskill_EXE" />
                 <ComponentRef Id="cmf_afssvrcfg_EXE" />
+                <ComponentRef Id="cmf_asetkey_EXE" />
                 <ComponentRef Id="cmf_bosctlsvc_EXE" />
                 <ComponentRef Id="cmf_bosserver_EXE" />
                 <ComponentRef Id="cmf_buserver_EXE" />
