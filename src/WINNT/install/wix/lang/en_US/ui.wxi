@@ -1084,4 +1084,5 @@
     <Icon Id="ico_Help" src="Icon\ico_Help.ico" />
     <Icon Id="ico_ServerManager" src="Icon\ico_ServerManager.ico" />
     <Icon Id="ico_afssvrcfg" src="Icon\ico_afssvrcfg.ico" />
+    <Icon Id="ico_OpenAFS" src="Icon\ico_OpenAFS.ico" />
 </Include>
