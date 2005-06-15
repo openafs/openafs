@@ -66,7 +66,7 @@ RCSID
 #include <pioctl_nt.h>
 #include <WINNT/afsreg.h>
 #include <lanahelper.h>
-#include <WINNT/afsrdr/kif.h>
+#include <../WINNT/afsrdr/kif.h>
 
 #include <loadfuncs-krb5.h>
 #include <krb5.h>
@@ -824,7 +824,6 @@ fs_GetFullPath(char *pathp, char *outPathp, long outSize)
     /* now get the absolute path to the current wdir in this drive */
     GetCurrentDirectory(sizeof(tpath), tpath);
     if (tpath[1] == ':')
-#ifndef AFSIFS
         strcpy(outPathp, tpath + 2);	/* skip drive letter */
     else if ( tpath[0] == '\\' && tpath[1] == '\\') {
         /* UNC path - strip off the server and sharename */
@@ -839,26 +838,6 @@ fs_GetFullPath(char *pathp, char *outPathp, long outSize)
         } else {
             strcpy(outPathp,&tpath[--i]);
         }
-#else
-		{
-		HANDLE rootDir;
-
-        strcpy(outPathp, tpath);
-
-		sprintf(outPathp, "%c:\\", tpath[0]);
-		rootDir = CreateFile(outPathp, 0, 0, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
-
-		if (!DeviceIoControl(rootDir, IOCTL_AFSRDR_GET_PATH, NULL, 0, absRoot_w, 100*sizeof(wchar_t), &length, NULL))
-			{
-			CloseHandle(rootDir);
-			return CM_ERROR_NOSUCHPATH;
-			}
-		CloseHandle(rootDir);
-
-		ifs_ConvertFileName(absRoot_w, length/sizeof(wchar_t), absRoot, 100);
-
-		}
-#endif
     } else {
         /* this should never happen */
         strcpy(outPathp, tpath);

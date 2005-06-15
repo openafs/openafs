@@ -42,7 +42,7 @@
 #include "cm_rpc.h"
 #include <strsafe.h>
 #include <winioctl.h>
-#include <WINNT\afsrdr\kif.h>
+#include <..\afsrdr\kif.h>
 
 #ifdef _DEBUG
 #include <crtdbg.h>
