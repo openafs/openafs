@@ -6,6 +6,30 @@
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
  */
+/* copyright (c) 2005
+ * the regents of the university of michigan
+ * all rights reserved
+ * 
+ * permission is granted to use, copy, create derivative works and
+ * redistribute this software and such derivative works for any purpose,
+ * so long as no fee is charged, and so long as the copyright notice
+ * above, this grant of permission, and the disclaimer below appear
+ * in all copies made; and so long as the name of the university of
+ * michigan is not used in any advertising or publicity pertaining
+ * to the use or distribution of this software without specific, written
+ * prior authorization.
+ * 
+ * this software is provided as is, without representation from the
+ * university of michigan as to its fitness for any purpose, and without
+ * warranty by the university of michigan of any kind, either express
+ * or implied, including without limitation the implied warranties of
+ * merchantability and fitness for a particular purpose.  the regents
+ * of the university of michigan shall not be liable for nay damages,
+ * including special, indirect, incidental, or consequential damages,
+ * with respect to ant claim arising out of or in connection with the
+ * use of the software, even if it has been or is hereafter advised
+ * of the possibility of such damages.
+ */
 
 extern "C" {
 #include <afs/param.h>
@@ -314,9 +338,16 @@ BOOL SubmountToPath (PDRIVEMAPLIST pList, LPTSTR pszPath, LPTSTR pszSubmount, BO
 
    // Otherwise, look up our list of submounts.
    //
+#ifdef AFSIFS
+  AdjustAfsPath (pszPath, pszSubmount, TRUE, TRUE);
+#endif
    for (size_t ii = 0; ii < pList->cSubmounts; ++ii)
       {
+#ifndef AFSIFS
       if (!lstrcmpi (pList->aSubmounts[ii].szSubmount, pszSubmount))
+#else
+      if (!lstrcmpi (pList->aSubmounts[ii].szMapping, pszPath))
+#endif
          {
          if (fMarkInUse)
             pList->aSubmounts[ii].fInUse = TRUE;
@@ -815,7 +846,11 @@ BOOL ActivateDriveMap (TCHAR chDrive, LPTSTR pszMapping, LPTSTR pszSubmountReq, 
       }
 
    // We now have a submount name and drive letter--map the network drive.
+#ifndef AFSIFS
    DWORD rc=MountDOSDrive(chDrive,szSubmount,fPersistent,NULL);
+#else
+   DWORD rc=MountDOSDrive(chDrive,/*szSubmount*/pszMapping,fPersistent,NULL);
+#endif
    if (rc == NO_ERROR)
       return TRUE;
 
@@ -931,10 +966,25 @@ BOOL GetDriveSubmount (TCHAR chDrive, LPTSTR pszSubmountNow)
       //           <AuthID>: Authentication ID, 16 char hex.
       //           <netbiosname>: Netbios name of server
       //
+#ifndef AFSIFS
       if (_tcsnicmp(szMapping, cszLANMANDEVICE, _tcslen(cszLANMANDEVICE)))
+#else
+   const TCHAR ker_sub_path[] = "\\Device\\afsrdr\\";
+      if (_tcsnicmp(szMapping, ker_sub_path, _tcslen(ker_sub_path)))
+#endif
          return FALSE;
+#ifndef AFSIFS
       pszSubmount = &szMapping[ _tcslen(cszLANMANDEVICE) ];
+#else
+      pszSubmount = &szMapping[ _tcslen(ker_sub_path) ];
+#endif
 
+#ifdef AFSIFS
+		if (*(pszSubmount) < '0' ||
+			*(pszSubmount) > '9')
+			return FALSE;
+		++pszSubmount;
+#else
       if (IsWindows2000())
 	  {
           if (*(pszSubmount) != TEXT(';'))
@@ -970,6 +1020,7 @@ BOOL GetDriveSubmount (TCHAR chDrive, LPTSTR pszSubmountNow)
          return FALSE;
 
        pszSubmount += _tcslen(szNetBiosName);
+#endif
       }
    else // (!IsWindowsNT())
       {
@@ -991,7 +1042,12 @@ BOOL GetDriveSubmount (TCHAR chDrive, LPTSTR pszSubmountNow)
    if (!pszSubmount || !*pszSubmount)
       return FALSE;
 
+#ifndef AFSIFS
    lstrcpy (pszSubmountNow, pszSubmount);
+#else
+   lstrcpy (pszSubmountNow, "\\afs");
+   lstrcat (pszSubmountNow, pszSubmount);
+#endif
    return TRUE;
 }
 
@@ -1358,9 +1414,43 @@ BOOL GlobalMountDrive()
 
 DWORD MountDOSDrive(char chDrive,const char *szSubmount,BOOL bPersistent,const char * pUsername)
 {
-    TCHAR szPath[MAX_PATH];
+    DWORD err;
+	BOOL succ;
+	TCHAR szPath[MAX_PATH], szTokens[MAX_PATH], *tok;
     TCHAR szClient[MAX_PATH];
     TCHAR szDrive[3] = TEXT("?:");
+
+#ifdef AFSIFS
+	int pathCount, currPos, lastPos, x;
+    
+	pathCount = 0;
+
+	pathCount = 0;
+	strcpy(szTokens, szSubmount);
+	tok = strtok(szTokens, "/\\");
+	strcpy(szPath, "");
+	while (tok)
+		{
+		if (pathCount || stricmp(tok, "afs"))
+			{
+			strcat(szPath, "\\");
+			strcat(szPath, tok);
+			pathCount++;
+			}
+		tok = strtok(NULL, "/\\");
+		}
+
+	sprintf(szDrive,"%c:",chDrive);
+	strcpy(szTokens, szPath);
+	sprintf(szPath,"\\Device\\afsrdr\\%d%s",pathCount,szTokens);
+	//succ = DefineDosDevice(DDD_RAW_TARGET_PATH, "J:", "\\Device\\afsrdr\\2\\ericjw\\test");
+	succ = DefineDosDevice(DDD_RAW_TARGET_PATH, szDrive, szPath);
+	err = GetLastError();
+
+	return succ ? NO_ERROR : ERROR_DEVICE_IN_USE;
+
+#else
+
     sprintf(szDrive,"%c:",chDrive);
     GetClientNetbiosName (szClient);
     sprintf(szPath,"\\\\%s\\%s",szClient,szSubmount);
@@ -1375,11 +1465,19 @@ DWORD MountDOSDrive(char chDrive,const char *szSubmount,BOOL bPersistent,const c
                   (bPersistent)?"Persistant" : "NonPresistant",
                   szDrive,szPath,pUsername?pUsername:"NULL",res);
     return res;
+#endif
 }
 
 DWORD DisMountDOSDriveFull(const char *szPath,BOOL bForce)
 {
+#ifndef AFSIFS
     DWORD res=WNetCancelConnection(szPath,bForce);
+#else
+    DWORD res;
+	res = ERROR_DEVICE_IN_USE;
+	// must handle drive letters and afs paths
+	//DDD_REMOVE_DEFINITION
+#endif
     DEBUG_EVENT3("AFS DriveMap","%sDismount Remote[%s]=%x",
                   bForce ? "Forced " : "",szPath,res);
     return (res==ERROR_NOT_CONNECTED)?NO_ERROR:res;
@@ -1398,6 +1496,13 @@ DWORD DisMountDOSDrive(const char *pSubmount,BOOL bForce)
 DWORD DisMountDOSDrive(const char chDrive,BOOL bForce)
 {
     TCHAR szPath[MAX_PATH];
-    sprintf(szPath,"%c:",chDrive);
+	DWORD succ;
+
+	sprintf(szPath,"%c:",chDrive);
+#ifdef AFSIFS
+	succ = DefineDosDevice(DDD_REMOVE_DEFINITION, szPath, NULL);
+	return (!succ) ? GetLastError() : 0;
+#else
     return DisMountDOSDriveFull(szPath,bForce);
+#endif
 }

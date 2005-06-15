@@ -13,6 +13,8 @@
 
 int main(int argc, char *argv[])
 {
+	DWORD type, start;
+
    if(argc<3)
    {
       printf("Insufficient arguments: Service ServiceName ServicePath DisplayName.\n");
@@ -31,11 +33,21 @@ int main(int argc, char *argv[])
 
    if(*argv[1]!='u' && *argv[1]!='U')
    {
+		if (!stricmp(argv[2] + strlen(argv[2]) - 3, "sys"))
+			{
+			type = SERVICE_FILE_SYSTEM_DRIVER;
+			start = SERVICE_DEMAND_START;
+			}
+		else
+			{
+			type = SERVICE_WIN32_OWN_PROCESS;
+			start = SERVICE_AUTO_START;
+			}
 		hService = CreateService(hSCM, argv[1],
 		_T(argv[3]),
 		SERVICE_ALL_ACCESS,
-		SERVICE_WIN32_OWN_PROCESS,
-		SERVICE_AUTO_START,
+		type,
+		start,
 		SERVICE_ERROR_IGNORE,
 		argv[2],
 		NULL,NULL,NULL, NULL, NULL );

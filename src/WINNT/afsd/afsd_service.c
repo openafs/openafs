@@ -6,6 +6,30 @@
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
  */
+/* copyright (c) 2005
+ * the regents of the university of michigan
+ * all rights reserved
+ * 
+ * permission is granted to use, copy, create derivative works and
+ * redistribute this software and such derivative works for any purpose,
+ * so long as the name of the university of michigan is not used in
+ * any advertising or publicity pertaining to the use or distribution
+ * of this software without specific, written prior authorization.  if
+ * the above copyright notice or any other identification of the
+ * university of michigan is included in any copy of any portion of
+ * this software, then the disclaimer below must also be included.
+ * 
+ * this software is provided as is, without representation from the
+ * university of michigan as to its fitness for any purpose, and without
+ * warranty by the university of michigan of any kind, either express 
+ * or implied, including without limitation the implied warranties of
+ * merchantability and fitness for a particular purpose.  the regents
+ * of the university of michigan shall not be liable for any damages,   
+ * including special, indirect, incidental, or consequential damages, 
+ * with respect to any claim arising out or in connection with the use
+ * of the software, even if it has been or is hereafter advised of the
+ * possibility of such damages.
+ */
 
 #include <afs/param.h>
 #include <afs/stds.h>
@@ -31,6 +55,7 @@
 #ifdef _DEBUG
 #include <crtdbg.h>
 #endif
+#include "afsdifs.h"
 
 //#define REGISTER_POWER_NOTIFICATIONS 1
 #include "afsd_flushvol.h"
@@ -41,8 +66,11 @@ static SERVICE_STATUS		ServiceStatus;
 static SERVICE_STATUS_HANDLE	StatusHandle;
 
 HANDLE hAFSDMainThread = NULL;
+#ifdef AFSIFS
+HANDLE hAFSDWorkerThread[WORKER_THREADS];
+#endif
 
-HANDLE WaitToTerminate;
+HANDLE WaitToTerminate, DoTerminate;
 
 int GlobalStatus;
 
@@ -64,6 +92,7 @@ static void afsd_notifier(char *msgp, char *filep, long line)
     char tbuffer[512];
     char *ptbuf[1];
     HANDLE h;
+	int i;
 
     if (filep)
         sprintf(tbuffer, "Error at file %s, line %d: %s",
@@ -96,7 +125,14 @@ static void afsd_notifier(char *msgp, char *filep, long line)
     DebugBreak();	
 #endif
 
-    SetEvent(WaitToTerminate);
+#ifndef AFSIFS
+	SetEvent(WaitToTerminate);
+#else
+	SetEvent(DoTerminate);
+	WaitForMultipleObjects(WORKER_THREADS, hAFSDWorkerThread, TRUE, INFINITE);
+	for (i = 0; i < WORKER_THREADS; i++)
+		CloseHandle(hAFSDWorkerThread[i]);
+#endif
 
 #ifdef JUMP
     if (GetCurrentThreadId() == MainThreadId)
@@ -201,7 +237,11 @@ afsd_ServiceControlHandler(DWORD ctrlCode)
         }
 
       doneTrace:
+#ifndef AFSIFS
         SetEvent(WaitToTerminate);
+#else
+		SetEvent(DoTerminate);
+#endif
         break;
 
     case SERVICE_CONTROL_INTERROGATE:
@@ -269,7 +309,11 @@ afsd_ServiceControlHandlerEx(
         }
 
       doneTrace:
+#ifndef AFSIFS
         SetEvent(WaitToTerminate);
+#else
+		SetEvent(DoTerminate);
+#endif
         dwRet = NO_ERROR;
         break;
 
@@ -403,6 +447,7 @@ static void MountGlobalDrives(void)
             }
         }
 
+#ifndef AFSIFS
         for ( ; dwRetry < MAX_RETRIES; dwRetry++)
 		{
 		    NETRESOURCE nr;
@@ -429,6 +474,9 @@ static void MountGlobalDrives(void)
             /* Disconnect any previous mappings */
             dwResult = WNetCancelConnection2(szDriveToMapTo, 0, TRUE);
         }
+#else
+	/* FIXFIX */
+#endif
     }        
 
     RegCloseKey(hKey);
@@ -453,7 +501,8 @@ static void DismountGlobalDrives()
     if (dwResult != ERROR_SUCCESS)
         return;
 
-    while (1) {
+#ifndef AFSIFS    
+	while (1) {
         dwDriveSize = sizeof(szDriveToMapTo);
         dwSubMountSize = sizeof(szSubMount);
         dwResult = RegEnumValue(hKey, dwIndex++, szDriveToMapTo, &dwDriveSize, 0, &dwType, szSubMount, &dwSubMountSize);
@@ -472,6 +521,9 @@ static void DismountGlobalDrives()
         
         afsi_log("Disconnect from GlobalAutoMap of %s to %s %s", szDriveToMapTo, szSubMount, dwResult ? "succeeded" : "failed");
     }        
+#else
+	/* FIXFIX */
+#endif
 
     RegCloseKey(hKey);
 }
@@ -1015,6 +1067,7 @@ afsd_Main(DWORD argc, LPTSTR *argv)
 #endif /* JUMP */
     HMODULE hHookDll;
     HMODULE hAdvApi32;
+	int cnt;
 
 #ifdef _DEBUG
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF /*| _CRTDBG_CHECK_ALWAYS_DF*/ | 
@@ -1031,6 +1084,12 @@ afsd_Main(DWORD argc, LPTSTR *argv)
     WaitToTerminate = CreateEvent(NULL, TRUE, FALSE, TEXT("afsd_service_WaitToTerminate"));
     if ( GetLastError() == ERROR_ALREADY_EXISTS )
         afsi_log("Event Object Already Exists: %s", TEXT("afsd_service_WaitToTerminate"));
+
+#ifdef AFSIFS
+	DoTerminate = CreateEvent(NULL, TRUE, FALSE, TEXT("afsd_service_DoTerminate"));
+    if ( GetLastError() == ERROR_ALREADY_EXISTS )
+        afsi_log("Event Object Already Exists: %s", TEXT("afsd_service_DoTerminate"));
+#endif
 
 #ifndef NOTSERVICE
     hAdvApi32 = LoadLibrary("advapi32.dll");
@@ -1207,11 +1266,22 @@ afsd_Main(DWORD argc, LPTSTR *argv)
         ServiceStatus.dwWaitHint -= 5000;
         SetServiceStatus(StatusHandle, &ServiceStatus);
 #endif
+
+#ifndef AFSIFS
         code = afsd_InitSMB(&reason, MessageBox);
         if (code != 0) {
             afsi_log("afsd_InitSMB failed: %s (code = %d)", reason, code);
             osi_panic(reason, __FILE__, __LINE__);
         }
+#else
+		code = ifs_Init(&reason);
+		if (code != 0) {
+			afsi_log("ifs_Init failed: %s (code = %d)", reason, code);
+			osi_panic(reason, __FILE__, __LINE__);
+          }
+		for (cnt = 0; cnt < WORKER_THREADS; cnt++)
+			hAFSDWorkerThread[cnt] = CreateThread(NULL, 0, ifs_MainLoop, 0, 0, NULL);
+#endif
 
         /* allow an exit to be called post smb initialization */
         hHookDll = LoadLibrary(AFSD_HOOK_DLL);
@@ -1288,7 +1358,13 @@ afsd_Main(DWORD argc, LPTSTR *argv)
         }
     }
 
-    WaitForSingleObject(WaitToTerminate, INFINITE);
+#ifndef AFSIFS
+	WaitForSingleObject(WaitToTerminate, INFINITE);
+#else
+	WaitForMultipleObjects(WORKER_THREADS, hAFSDWorkerThread, TRUE, INFINITE);
+	for (cnt = 0; cnt < WORKER_THREADS; cnt++)
+		CloseHandle(hAFSDWorkerThread[cnt]);
+#endif
 
     afsi_log("Received Termination Signal, Stopping Service");
 
@@ -1429,7 +1505,11 @@ main(int argc, char * argv[])
 		
             printf("Hit <Enter> to terminate OpenAFS Client Service\n");
             getchar();  
+#ifndef AFSIFS
             SetEvent(WaitToTerminate);
+#else
+            SetEvent(DoTerminate);
+#endif
         }
     }
 

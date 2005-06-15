@@ -91,6 +91,12 @@ void cm_RecordRacingRevoke(cm_fid_t *fidp, long cancelFlags)
     lock_ReleaseWrite(&cm_callbackLock);
 }
 
+#ifdef AFSIFS
+#define BUF_FILEHASH(fidp)				((((fidp)->vnode+((fidp)->unique << 13) + ((fidp)->unique >> (32-13))	\
+										+(fidp)->volume+(fidp)->cell)			\
+										/*& 0xffffffff*/))
+#endif
+
 /*
  * When we lose a callback, may have to send change notification replies.
  * Do not call with a lock on the scp.
@@ -123,10 +129,14 @@ void cm_CallbackNotifyChange(cm_scache_t *scp)
         Sleep(dwDelay);
 
     if (scp->fileType == CM_SCACHETYPE_DIRECTORY) {
+#ifndef AFSIFS
         if (scp->flags & CM_SCACHEFLAG_ANYWATCH)
             smb_NotifyChange(0,
                              FILE_NOTIFY_GENERIC_DIRECTORY_FILTER,
                              scp, NULL, NULL, TRUE);
+#else
+		dc_break_callback(BUF_FILEHASH(&scp->fid));
+#endif
     } else {
         cm_fid_t tfid;
         cm_scache_t *dscp;
@@ -136,11 +146,16 @@ void cm_CallbackNotifyChange(cm_scache_t *scp)
         tfid.vnode = scp->parentVnode;
         tfid.unique = scp->parentUnique;
         dscp = cm_FindSCache(&tfid);
+#ifndef AFSIFS
         if ( dscp &&
              dscp->flags & CM_SCACHEFLAG_ANYWATCH )
             smb_NotifyChange( 0,
                               FILE_NOTIFY_GENERIC_FILE_FILTER,
                               dscp,   NULL, NULL, TRUE);
+#else
+		if (dscp)
+			dc_break_callback(BUF_FILEHASH(&dscp->fid));
+#endif
         if (dscp) 
             cm_ReleaseSCache(dscp);
     }

@@ -545,7 +545,20 @@ long cm_ApplyDir(cm_scache_t *scp, cm_DirFuncp_t funcp, void *parmp,
                 break;
             }
 
-            lock_ObtainMutex(&bufferp->mx);
+#ifdef AFSIFS
+			lock_ObtainMutex(&scp->mx);
+			if ((scp->flags & CM_SCACHEFLAG_BULKSTATTING) == 0
+				&& (scp->bulkStatProgress.QuadPart <= thyper.QuadPart))
+				{
+				scp->flags |= CM_SCACHEFLAG_BULKSTATTING;
+				cm_TryBulkStat(scp, &thyper, userp, reqp);
+				scp->flags &= ~CM_SCACHEFLAG_BULKSTATTING;
+				scp->bulkStatProgress = thyper;
+				}
+			lock_ReleaseMutex(&scp->mx);
+#endif
+
+			lock_ObtainMutex(&bufferp->mx);
             bufferOffset = thyper;
 
             /* now get the data in the cache */

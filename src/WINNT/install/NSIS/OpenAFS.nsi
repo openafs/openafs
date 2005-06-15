@@ -49,7 +49,7 @@ VIAddVersionKey "CompanyName" "OpenAFS.org"
 VIAddVersionKey "ProductVersion" ${AFS_VERSION}
 VIAddVersionKey "FileVersion" ${AFS_VERSION}
 VIAddVersionKey "FileDescription" "OpenAFS for Windows Installer"
-VIAddVersionKey "LegalCopyright" "(C)2000-2004"
+VIAddVersionKey "LegalCopyright" "(C)2000-2005"
 !ifdef DEBUG
 VIAddVersionKey "PrivateBuild" "Checked/Debug"
 !endif               ; End DEBUG
@@ -64,10 +64,18 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
 !define REPLACEDLL_NOREGISTER
 
   ;General
+!ifndef AFSIFS
 !ifndef DEBUG
   OutFile "${AFS_DESTDIR}\WinInstall\OpenAFSforWindows.exe"
 !else
   OutFile "${AFS_DESTDIR}\WinInstall\OpenAFSforWindows-DEBUG.exe"
+!endif
+!else
+!ifndef DEBUG
+  OutFile "${AFS_DESTDIR}\WinInstall\OpenAFSforWindows-IFS.exe"
+!else
+  OutFile "${AFS_DESTDIR}\WinInstall\OpenAFSforWindows-IFS-DEBUG.exe"
+!endif
 !endif
   SilentInstall normal
   SetCompressor lzma
@@ -483,6 +491,7 @@ var REG_VALUE
 var REG_DATA_1
 var REG_DATA_2
 var REG_DATA_3
+var REG_DATA_4
 
 
 ;--------------------------------
@@ -547,6 +556,13 @@ Section "AFS Client" secClient
   SetOutPath "$SYSDIR"
   !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afslogon.dll" "$SYSDIR\afslogon.dll" "$INSTDIR"
   File "${AFS_CLIENT_BUILDDIR}\afscpcc.exe"
+!ifdef AFSIFS
+!ifndef DEBUG
+  !insertmacro ReplaceDLL "..\..\afsrdr\objfre_w2K_x86\i386\afsrdr.sys" "$SYSDIR\DRIVERS\afsrdr.sys" "$INSTDIR"
+!else
+  !insertmacro ReplaceDLL "..\..\afsrdr\objchk_w2K_x86\i386\afsrdr.sys" "$SYSDIR\DRIVERS\afsrdr.sys" "$INSTDIR"
+!endif
+!endif
    
    Call AFSLangFiles
 
@@ -660,6 +676,7 @@ Section "AFS Client" secClient
   SetOutPath "$INSTDIR\Common"
   File "${AFS_WININSTALL_DIR}\Service.exe"
   nsExec::Exec "net stop TransarcAFSDaemon"
+  nsExec::Exec "net stop AfsRdr"
   ;IMPORTANT!  If we are not refreshing the config files, do NOT remove the service
   ;Don't re-install because it must be present or we wouldn't have passed the Reg check
  
@@ -667,6 +684,10 @@ Section "AFS Client" secClient
   StrCmp $R2 "" +1 skipremove
   nsExec::Exec '$INSTDIR\Common\Service.exe u TransarcAFSDaemon'
   nsExec::Exec '$INSTDIR\Common\Service.exe TransarcAFSDaemon "$INSTDIR\Client\Program\afsd_service.exe" "OpenAFS Client Service"'
+  nsExec::Exec '$INSTDIR\Common\Service.exe u AfsRdr'
+!ifdef AFSIFS
+  nsExec::Exec '$INSTDIR\Common\Service.exe AfsRdr "$SYSDIR\DRIVERS\afsrdr.sys" "AFS Redirector"'
+!endif
 skipremove:
   Delete "$INSTDIR\Common\service.exe"
 
@@ -711,13 +732,28 @@ skipremove:
   strcpy $REG_DATA_1  "PNP_TDI"
   strcpy $REG_DATA_2  ""
   strcpy $REG_DATA_3  ""
+  strcpy $REG_DATA_4  ""
   Call RegWriteMultiStr
   strcpy $REG_SUB_KEY "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon" 
   strcpy $REG_VALUE   "DependOnService" 
   strcpy $REG_DATA_1  "Tcpip"
   strcpy $REG_DATA_2  "NETBIOS"
   strcpy $REG_DATA_3  "RpcSs"
+!ifdef AFSIFS
+  strcpy $REG_DATA_4  "AfsRdr"
+!else
+  strcpy $REG_DATA_4  ""
+!endif
   Call RegWriteMultiStr
+!ifdef AFSIFS
+  strcpy $REG_SUB_KEY "SYSTEM\CurrentControlSet\Services\AfsRdr" 
+  strcpy $REG_VALUE   "DependOnService" 
+  strcpy $REG_DATA_1  "Tcpip"
+  strcpy $REG_DATA_2  ""
+  strcpy $REG_DATA_3  ""
+  strcpy $REG_DATA_4  ""
+  Call RegWriteMultiStr
+!endif
 
   ; WinLogon Event Notification
   WriteRegDWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" "Asynchronous" 0
@@ -3772,6 +3808,12 @@ Function RegWriteMultiStr
     StrLen $9 '$REG_DATA_3'                 ; Length of third string
     IntOp $9 $9 + 1                         ; Plus null
     System::Call "*$2(&t$9 '$REG_DATA_3')"  ; Place the string
+    IntOp $2 $2 + $9                        ; Advance to the next position
+
+    StrCmp '$REG_DATA_4' "" terminate
+    StrLen $9 '$REG_DATA_4'                 ; Length of third string
+    IntOp $9 $9 + 1                         ; Plus null
+    System::Call "*$2(&t$9 '$REG_DATA_4')"  ; Place the string
     IntOp $2 $2 + $9                        ; Advance to the next position
 
   terminate:

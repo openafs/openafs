@@ -83,12 +83,24 @@ goto usage
 :checked
 set AFSBLD_TYPE=CHECKED
 set AFSDEV_CRTDEBUG=1
-goto args_done
+goto ifs_arg
 
 :free
 set AFSBLD_TYPE=FREE
 set AFSDEV_CRTDEBUG=0
+goto ifs_arg
+
+:ifs_arg
+
+set AFSIFS=
+if "%2"=="ifs" goto is_ifs
+if "%2"=="IFS" goto is_ifs
+
 goto args_done
+
+:is_ifs
+
+set AFSIFS=TRUE
 
 :args_done
 

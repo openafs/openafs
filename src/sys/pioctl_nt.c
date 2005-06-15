@@ -6,6 +6,30 @@
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
  */
+/* copyright (c) 2005
+ * the regents of the university of michigan
+ * all rights reserved
+ * 
+ * permission is granted to use, copy, create derivative works and
+ * redistribute this software and such derivative works for any purpose,
+ * so long as the name of the university of michigan is not used in
+ * any advertising or publicity pertaining to the use or distribution
+ * of this software without specific, written prior authorization.  if
+ * the above copyright notice or any other identification of the
+ * university of michigan is included in any copy of any portion of
+ * this software, then the disclaimer below must also be included.
+ * 
+ * this software is provided as is, without representation from the
+ * university of michigan as to its fitness for any purpose, and without
+ * warranty by the university of michigan of any kind, either express
+ * or implied, including without limitation the implied warranties of
+ * merchantability and fitness for a particular purpose.  the regents
+ * of the university of michigan shall not be liable for any damages,
+ * including special, indirect, incidental, or consequential damages, 
+ * with respect to any claim arising out or in connection with the use
+ * of the software, even if it has been or is hereafter advised of the
+ * possibility of such damages.
+ */
 
 #include <afsconfig.h>
 #include <afs/param.h>
@@ -42,6 +66,7 @@ RCSID
 #include <pioctl_nt.h>
 #include <WINNT/afsreg.h>
 #include <lanahelper.h>
+#include <WINNT/afsrdr/kif.h>
 
 #include <loadfuncs-krb5.h>
 #include <krb5.h>
@@ -315,6 +340,7 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
     DWORD gle;
     DWORD dwSize = sizeof(szUser);
 
+#ifndef AFSIFS
     if (fileNamep) {
         drivep = strchr(fileNamep, ':');
         if (drivep && (drivep - fileNamep) >= 1) {
@@ -365,14 +391,25 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
         lana_GetNetbiosName(netbiosName,LANA_NETBIOS_NAME_FULL);
         sprintf(tbuffer,"\\\\%s\\all%s",netbiosName,SMB_IOCTL_FILENAME);
     }
+#else
+	sprintf(tbuffer,"\\\\.\\afscom\\ioctl");
+#endif 
 
     fflush(stdout);
     /* now open the file */
     fh = CreateFile(tbuffer, GENERIC_READ | GENERIC_WRITE,
 		    FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
 		    FILE_FLAG_WRITE_THROUGH, NULL);
-    fflush(stdout);
-    if (fh == INVALID_HANDLE_VALUE) {
+
+	fflush(stdout);
+
+#ifdef AFSIFS
+	if (fh == INVALID_HANDLE_VALUE) {
+		return -1;
+		}
+#endif
+	
+	if (fh == INVALID_HANDLE_VALUE) {
         int  gonext = 0;
 
         gle = GetLastError();
@@ -593,6 +630,7 @@ Transceive(HANDLE handle, fs_ioctlRequest_t * reqp)
     long rcount;
     long ioCount;
     DWORD gle;
+	char *data;
 
     rcount = reqp->mp - reqp->data;
     if (rcount <= 0) {
@@ -601,7 +639,8 @@ Transceive(HANDLE handle, fs_ioctlRequest_t * reqp)
 	return EINVAL;		/* not supposed to happen */
     }
 
-    if (!WriteFile(handle, reqp->data, rcount, &ioCount, NULL)) {
+#ifndef AFSIFS
+	if (!WriteFile(handle, reqp->data, rcount, &ioCount, NULL)) {
 	/* failed to write */
 	gle = GetLastError();
 
@@ -618,6 +657,17 @@ Transceive(HANDLE handle, fs_ioctlRequest_t * reqp)
             fprintf(stderr, "pioctl Transceive ReadFile failed: 0x%X\r\n",gle);
         return gle;
     }
+#else
+	/* ioctl completes as one operation, so copy input to a new buffer, and use as output buffer */
+	data = malloc(rcount);
+	memcpy(data, reqp->data, rcount);
+	if (!DeviceIoControl(handle, IOCTL_AFSRDR_IOCTL, data, rcount, reqp->data, sizeof(reqp->data), &ioCount, NULL))
+		{
+		free(data);
+		return GetLastError();
+		}
+	free(data);
+#endif
 
     reqp->nbytes = ioCount;	/* set # of bytes available */
     reqp->mp = reqp->data;	/* restart marshalling */
@@ -691,6 +741,34 @@ fs_GetFullPath(char *pathp, char *outPathp, long outSize)
     int pathHasDrive;
     int doSwitch;
     char newPath[3];
+	HANDLE rootDir;
+	wchar_t *wpath;
+	unsigned long length;
+
+#ifdef AFSIFS
+	if (!pathp)
+		return CM_ERROR_NOSUCHPATH;
+
+	//sprintf(tpath, "%c:\\", pathp[0]);
+	rootDir = CreateFile(pathp, 0, 0, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+	if (rootDir == INVALID_HANDLE_VALUE)
+		return CM_ERROR_NOSUCHPATH;
+
+	wpath = tpath;
+	length = 0;
+	if (!DeviceIoControl(rootDir, IOCTL_AFSRDR_GET_PATH, NULL, 0, wpath, 1000, &length, NULL))
+		{
+		CloseHandle(rootDir);
+		return CM_ERROR_NOSUCHPATH;
+		}
+	CloseHandle(rootDir);
+
+	code = WideCharToMultiByte(CP_UTF8, 0/*WC_NO_BEST_FIT_CHARS*/, wpath, length/sizeof(wchar_t), outPathp, outSize/sizeof(wchar_t), NULL, NULL);
+
+//    strcpy(outPathp, tpath);
+	return 0;
+#endif
+
 
     if (pathp[0] != 0 && pathp[1] == ':') {
 	/* there's a drive letter there */
@@ -746,6 +824,7 @@ fs_GetFullPath(char *pathp, char *outPathp, long outSize)
     /* now get the absolute path to the current wdir in this drive */
     GetCurrentDirectory(sizeof(tpath), tpath);
     if (tpath[1] == ':')
+#ifndef AFSIFS
         strcpy(outPathp, tpath + 2);	/* skip drive letter */
     else if ( tpath[0] == '\\' && tpath[1] == '\\') {
         /* UNC path - strip off the server and sharename */
@@ -760,6 +839,26 @@ fs_GetFullPath(char *pathp, char *outPathp, long outSize)
         } else {
             strcpy(outPathp,&tpath[--i]);
         }
+#else
+		{
+		HANDLE rootDir;
+
+        strcpy(outPathp, tpath);
+
+		sprintf(outPathp, "%c:\\", tpath[0]);
+		rootDir = CreateFile(outPathp, 0, 0, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+
+		if (!DeviceIoControl(rootDir, IOCTL_AFSRDR_GET_PATH, NULL, 0, absRoot_w, 100*sizeof(wchar_t), &length, NULL))
+			{
+			CloseHandle(rootDir);
+			return CM_ERROR_NOSUCHPATH;
+			}
+		CloseHandle(rootDir);
+
+		ifs_ConvertFileName(absRoot_w, length/sizeof(wchar_t), absRoot, 100);
+
+		}
+#endif
     } else {
         /* this should never happen */
         strcpy(outPathp, tpath);

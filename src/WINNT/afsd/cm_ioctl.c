@@ -41,6 +41,8 @@
 
 #include "cm_rpc.h"
 #include <strsafe.h>
+#include <winioctl.h>
+#include <WINNT\afsrdr\kif.h>
 
 #ifdef _DEBUG
 #include <crtdbg.h>
@@ -141,9 +143,11 @@ void TranslateExtendedChars(char *str)
 long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
 	cm_scache_t **scpp)
 {
-    long code;
+    long code, length;
     cm_scache_t *substRootp;
-    char * relativePath = ioctlp->inDatap;
+    char * relativePath = ioctlp->inDatap, absRoot[100];
+	wchar_t absRoot_w[100];
+	HANDLE rootDir;
 
     /* This is usually the file name, but for StatMountPoint it is the path. */
     /* ioctlp->inDatap can be either of the form:
@@ -154,7 +158,47 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
      */
     TranslateExtendedChars(relativePath);
 
-    if (relativePath[0] == relativePath[1] &&
+#ifdef AFSIFS
+	/* we have passed the whole path, including the afs prefix (pioctl_nt.c modified) */
+	/*_asm int 3;
+	sprintf(absRoot, "%c:", relativePath[0]);
+	rootDir = CreateFile(absRoot, 0, 0, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+
+	if (!DeviceIoControl(rootDir, IOCTL_AFSRDR_GET_PATH, NULL, 0, absRoot_w, 100*sizeof(wchar_t), &length, NULL))
+		{
+		CloseHandle(rootDir);
+		return CM_ERROR_NOSUCHPATH;
+		}
+	CloseHandle(rootDir);
+
+	ifs_ConvertFileName(absRoot_w, length/sizeof(wchar_t), absRoot, 100);*/
+
+#if 0
+	switch (relativePath[0])					/* FIXFIX */
+		{
+		case 'y':
+		case 'Y':
+			absRoot = "\\ericjw\\test";			/* should use drivemap */
+		}
+#endif
+	code = cm_NameI(cm_data.rootSCachep, relativePath,
+                        CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
+                        userp, ""/*absRoot*//*ioctlp->tidPathp*/, reqp, scpp);
+
+	if (code)
+		return code;
+
+	/* # of bytes of path */
+    code = strlen(ioctlp->inDatap) + 1;
+    ioctlp->inDatap += code;
+
+    /* This is usually nothing, but for StatMountPoint it is the file name. */
+    TranslateExtendedChars(ioctlp->inDatap);
+
+	return 0;
+#endif
+
+	if (relativePath[0] == relativePath[1] &&
          relativePath[1] == '\\' && 
          !_strnicmp(cm_NetbiosName,relativePath+2,strlen(cm_NetbiosName))) 
     {
@@ -1787,7 +1831,8 @@ long cm_IoctlSetToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
         uname = tp;
         tp += strlen(tp) + 1;
 
-        if (flags & PIOCTL_LOGON) {
+#ifndef AFSIFS			/* no SMB username */
+		if (flags & PIOCTL_LOGON) {
             /* SMB user name with which to associate tokens */
             smbname = tp;
             osi_Log2(smb_logp,"cm_IoctlSetToken for user [%s] smbname [%s]",
@@ -1798,6 +1843,7 @@ long cm_IoctlSetToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
             osi_Log1(smb_logp,"cm_IoctlSetToken for user [%s]",
                      osi_LogSaveString(smb_logp,uname));
         }
+#endif
 
 #ifndef DJGPP   /* for win95, session key is back in pioctl */
 		/* uuid */

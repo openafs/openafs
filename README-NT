@@ -13,6 +13,18 @@ prior to Windows 2000 are not being supported.  The InstallShield
 installer is still in the source tree but is no longer supported.
 A new open source installer based on NSIS 2.0 replaces it.
 
+NOTE:
+In this release, there are two clients offered: an SMB version (as was
+included in all previous versions), and an IFS version (newly released).
+To build the IFS version, follow the directions below, but note that
+only the NSIS installer script can be correctly configured; the Wix
+installer will not work correctly.  Also, the kernel module associated
+with the IFS version must be built separately, using the IFS kit or DDK
+build environment.  While in the DDK build environment, enter into the
+afsrdr source directory, and execute 'build'.  This will create the
+module to be packaged by the installer.
+
+
 ***********   Windows 2000/XP/2003 Build Process ****************
 
 Building OpenAFS for Windows requires configuring a Windows
@@ -232,7 +244,7 @@ STEP F. Begin the build
 
 (3) Configure the environment variables:
 
-    For a release build:
+    For a release build (SMB version):
 
     (a) Execute the VCVARS32.BAT or VSVARS32.BAT file which part of the
         Visual Studio environment you installed.
@@ -241,7 +253,16 @@ STEP F. Begin the build
 
     (c) Execute the NTBUILD.BAT file with the parameter "free"
 
-    For a debug build:
+    For a release build (IFS version):
+
+    (a) Execute the VCVARS32.BAT or VSVARS32.BAT file which part of the
+        Visual Studio environment you installed.
+
+    (b) Execute the SETENV.BAT file with the parameters "/2000 /RETAIL"
+
+    (c) Execute the NTBUILD.BAT file with the parameter "free ifs"
+
+    For a debug build (SMB version):
 
     (a) Execute the VCVARS32.BAT or VSVARS32.BAT file which part of the
         Visual Studio environment you installed.
@@ -249,6 +270,15 @@ STEP F. Begin the build
     (b) Execute the SETENV.BAT file with the parameters "/2000 /DEBUG"
 
     (c) Execute the NTBUILD.BAT file with the parameter "checked"
+
+    For a debug build (IFS version):
+
+    (a) Execute the VCVARS32.BAT or VSVARS32.BAT file which part of the
+        Visual Studio environment you installed.
+
+    (b) Execute the SETENV.BAT file with the parameters "/2000 /DEBUG"
+
+    (c) Execute the NTBUILD.BAT file with the parameter "checked ifs"
 
 (4) Clean the work area:
 

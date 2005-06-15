@@ -132,6 +132,8 @@ extern HANDLE WaitToTerminate;
 #define LOG_PACKET 1
 #undef  NOTSERVICE
 
+#define WORKER_THREADS 10
+
 #define AFSD_HOOK_DLL  "afsdhook.dll"
 #define AFSD_INIT_HOOK "AfsdInitHook"
 typedef BOOL ( APIENTRY * AfsdInitHook )(void);
