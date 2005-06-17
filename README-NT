@@ -3,26 +3,24 @@ License.  For details, see the LICENSE file in the top-level source
 directory or on-line at http://www.openafs.org/dl/license10.html
 
 The document now provides a step by step procedure that takes the user 
-from a basic Windows 2000/XP workstation to an OpenAFS development 
+from a basic Windows 2000/XP/2003 workstation to an OpenAFS development 
 environment.   Details are provided so that a 'beginning' windows 
 developer can build an OpenAFS installable package for Windows 2000/XP/2003.
 
-NOTE:
+NOTE 1:
 As of the OpenAFS 1.3 release series, Windows platforms released
 prior to Windows 2000 are not being supported.  The InstallShield
 installer is still in the source tree but is no longer supported.
 A new open source installer based on NSIS 2.0 replaces it.
 
-NOTE:
-In this release, there are two clients offered: an SMB version (as was
-included in all previous versions), and an IFS version (newly released).
+NOTE 2:
+In this release, in addition to the production quality CIFS-AFS 
+gateway based client service there also exists an experimental
+implementation of an Installable File System (IFS).
 To build the IFS version, follow the directions below, but note that
-only the NSIS installer script can be correctly configured; the Wix
-installer will not work correctly.  Also, the kernel module associated
-with the IFS version must be built separately, using the IFS kit or DDK
-build environment.  While in the DDK build environment, enter into the
-afsrdr source directory, and execute 'build'.  This will create the
-module to be packaged by the installer.
+only the NSIS installer script has been updated to support it.
+Also, the IFS kernel module must be built separately, using the IFS/DDK
+build environment.
 
 
 ***********   Windows 2000/XP/2003 Build Process ****************
