@@ -80,7 +80,7 @@ LIB = $(AFSDEV_LIB)
 #define used in WinNT/2000 installation and program version display
 AFSPRODUCT_VER_MAJOR=1
 AFSPRODUCT_VER_MINOR=3
-AFSPRODUCT_VER_PATCH=8400
+AFSPRODUCT_VER_PATCH=8401
 AFSPRODUCT_VER_BUILD=0
 
 # For MSI installer, each major release should have a different GUID
@@ -249,11 +249,15 @@ afscflags = $(afscflags) /GX
 !ENDIF
 
 !IF ("$(AFSVER_CL)"!="1200")
-afscdefs = $(afscdefs) /GT /GS
+afscflags = $(afscflags) /GT /GS
 #/Wp64
 !IF ("$(AFSVER_CL)"!="1400")
-afscdefs = $(afscdefs) /G7
+afscflags = $(afscflags) /G7
 !ENDIF
+!ENDIF
+
+!IF ("$(AFSIFS)" == "TRUE")
+afscdefs = $(afscdefs) -DAFSIFS
 !ENDIF
 
 !IF ("$(AFSDEV_BUILDTYPE)" == "FREE")

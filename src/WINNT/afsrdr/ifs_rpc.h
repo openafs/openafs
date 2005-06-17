@@ -38,29 +38,29 @@
 #endif
 
 /* upcalls */
-#define RPC_NAMEI			0x10
+#define RPC_NAMEI		0x10
 #define RPC_CHECK_ACCESS	0x11
-#define RPC_CREATE			0x12
-#define RPC_STAT			0x13
-#define RPC_READ			0x14
-#define RPC_WRITE			0x15
-#define RPC_TRUNC			0x16
-#define RPC_SETINFO			0x17
-#define RPC_READDIR			0x18
-#define RPC_CLOSE			0x19
-#define RPC_UNLINK			0x1A
+#define RPC_CREATE		0x12
+#define RPC_STAT		0x13
+#define RPC_READ		0x14
+#define RPC_WRITE		0x15
+#define RPC_TRUNC		0x16
+#define RPC_SETINFO		0x17
+#define RPC_READDIR		0x18
+#define RPC_CLOSE		0x19
+#define RPC_UNLINK		0x1A
 #define RPC_IOCTL_WRITE		0x1B
 #define RPC_IOCTL_READ		0x1C
-#define RPC_RENAME			0x1D
+#define RPC_RENAME		0x1D
 #define RPC_READ_BULK		0x1E
 #define RPC_WRITE_BULK		0x1F
 
 /* downcalls */
 #define RPC_BREAK_CALLBACK	0x80
 
-#define TRANSFER_CHUNK_SIZE		(1024*1024)
-#define RPC_TIMEOUT_SHORT		0
-#define RPC_TIMEOUT_LONG		1
+#define TRANSFER_CHUNK_SIZE	(1024*1024)
+#define RPC_TIMEOUT_SHORT	0
+#define RPC_TIMEOUT_LONG	1
 
 /* internal data struct for both client and server */
 struct rpc

@@ -1,3 +1,17 @@
+Since 1.3.84:
+ * Eric William's IFS redirector has been checked into the source
+   tree.  This code is experimental at the current time and is not
+   being incorporated into binary releases.  Instructions for building
+   from sources are found in the top-level README-NT file.
+
+ * Modify integrated login so that it does not enter an infinite
+   loop if the service is not set to auto start.
+
+ * Added asetkey.exe used to set a Kerberos 5 key for use by the
+   AFS server daemons
+
+ * Added uninstall.exe to Wix installation
+
 Since 1.3.83:
 
  * Changes to the algorithms used to wake threads when they are

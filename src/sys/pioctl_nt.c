@@ -6,7 +6,7 @@
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
  */
-/* copyright (c) 2005
+/* AFSIFS portions copyright (c) 2005
  * the regents of the university of michigan
  * all rights reserved
  * 
@@ -391,8 +391,8 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
         lana_GetNetbiosName(netbiosName,LANA_NETBIOS_NAME_FULL);
         sprintf(tbuffer,"\\\\%s\\all%s",netbiosName,SMB_IOCTL_FILENAME);
     }
-#else
-	sprintf(tbuffer,"\\\\.\\afscom\\ioctl");
+#else   
+    sprintf(tbuffer,"\\\\.\\afscom\\ioctl");
 #endif 
 
     fflush(stdout);
@@ -404,9 +404,9 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
 	fflush(stdout);
 
 #ifdef AFSIFS
-	if (fh == INVALID_HANDLE_VALUE) {
-		return -1;
-		}
+    if (fh == INVALID_HANDLE_VALUE) {
+        return -1;
+    }
 #endif
 	
 	if (fh == INVALID_HANDLE_VALUE) {
@@ -640,7 +640,7 @@ Transceive(HANDLE handle, fs_ioctlRequest_t * reqp)
     }
 
 #ifndef AFSIFS
-	if (!WriteFile(handle, reqp->data, rcount, &ioCount, NULL)) {
+    if (!WriteFile(handle, reqp->data, rcount, &ioCount, NULL)) {
 	/* failed to write */
 	gle = GetLastError();
 
@@ -658,15 +658,15 @@ Transceive(HANDLE handle, fs_ioctlRequest_t * reqp)
         return gle;
     }
 #else
-	/* ioctl completes as one operation, so copy input to a new buffer, and use as output buffer */
-	data = malloc(rcount);
-	memcpy(data, reqp->data, rcount);
-	if (!DeviceIoControl(handle, IOCTL_AFSRDR_IOCTL, data, rcount, reqp->data, sizeof(reqp->data), &ioCount, NULL))
-		{
-		free(data);
-		return GetLastError();
-		}
-	free(data);
+    /* ioctl completes as one operation, so copy input to a new buffer, and use as output buffer */
+    data = malloc(rcount);
+    memcpy(data, reqp->data, rcount);
+    if (!DeviceIoControl(handle, IOCTL_AFSRDR_IOCTL, data, rcount, reqp->data, sizeof(reqp->data), &ioCount, NULL))
+    {
+        free(data);
+        return GetLastError();
+    }
+    free(data);
 #endif
 
     reqp->nbytes = ioCount;	/* set # of bytes available */
@@ -746,29 +746,28 @@ fs_GetFullPath(char *pathp, char *outPathp, long outSize)
 	unsigned long length;
 
 #ifdef AFSIFS
-	if (!pathp)
-		return CM_ERROR_NOSUCHPATH;
+    if (!pathp)
+        return CM_ERROR_NOSUCHPATH;
 
-	//sprintf(tpath, "%c:\\", pathp[0]);
-	rootDir = CreateFile(pathp, 0, 0, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
-	if (rootDir == INVALID_HANDLE_VALUE)
-		return CM_ERROR_NOSUCHPATH;
+    //sprintf(tpath, "%c:\\", pathp[0]);
+    rootDir = CreateFile(pathp, 0, 0, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+    if (rootDir == INVALID_HANDLE_VALUE)
+        return CM_ERROR_NOSUCHPATH;
 
-	wpath = tpath;
-	length = 0;
-	if (!DeviceIoControl(rootDir, IOCTL_AFSRDR_GET_PATH, NULL, 0, wpath, 1000, &length, NULL))
-		{
-		CloseHandle(rootDir);
-		return CM_ERROR_NOSUCHPATH;
-		}
-	CloseHandle(rootDir);
+    wpath = tpath;
+    length = 0;
+    if (!DeviceIoControl(rootDir, IOCTL_AFSRDR_GET_PATH, NULL, 0, wpath, 1000, &length, NULL))
+    {
+        CloseHandle(rootDir);
+        return CM_ERROR_NOSUCHPATH;
+    }
+    CloseHandle(rootDir);
 
-	code = WideCharToMultiByte(CP_UTF8, 0/*WC_NO_BEST_FIT_CHARS*/, wpath, length/sizeof(wchar_t), outPathp, outSize/sizeof(wchar_t), NULL, NULL);
+    code = WideCharToMultiByte(CP_UTF8, 0/*WC_NO_BEST_FIT_CHARS*/, wpath, length/sizeof(wchar_t), outPathp, outSize/sizeof(wchar_t), NULL, NULL);
 
 //    strcpy(outPathp, tpath);
-	return 0;
+    return 0;
 #endif
-
 
     if (pathp[0] != 0 && pathp[1] == ':') {
 	/* there's a drive letter there */

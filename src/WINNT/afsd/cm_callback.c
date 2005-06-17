@@ -92,9 +92,9 @@ void cm_RecordRacingRevoke(cm_fid_t *fidp, long cancelFlags)
 }
 
 #ifdef AFSIFS
-#define BUF_FILEHASH(fidp)				((((fidp)->vnode+((fidp)->unique << 13) + ((fidp)->unique >> (32-13))	\
-										+(fidp)->volume+(fidp)->cell)			\
-										/*& 0xffffffff*/))
+#define BUF_FILEHASH(fidp)	((((fidp)->vnode+((fidp)->unique << 13) + ((fidp)->unique >> (32-13))	\
+                                    +(fidp)->volume+(fidp)->cell)			\
+                                   /*& 0xffffffff*/))
 #endif
 
 /*
@@ -135,7 +135,7 @@ void cm_CallbackNotifyChange(cm_scache_t *scp)
                              FILE_NOTIFY_GENERIC_DIRECTORY_FILTER,
                              scp, NULL, NULL, TRUE);
 #else
-		dc_break_callback(BUF_FILEHASH(&scp->fid));
+        dc_break_callback(BUF_FILEHASH(&scp->fid));
 #endif
     } else {
         cm_fid_t tfid;
@@ -153,8 +153,8 @@ void cm_CallbackNotifyChange(cm_scache_t *scp)
                               FILE_NOTIFY_GENERIC_FILE_FILTER,
                               dscp,   NULL, NULL, TRUE);
 #else
-		if (dscp)
-			dc_break_callback(BUF_FILEHASH(&dscp->fid));
+        if (dscp)
+            dc_break_callback(BUF_FILEHASH(&dscp->fid));
 #endif
         if (dscp) 
             cm_ReleaseSCache(dscp);

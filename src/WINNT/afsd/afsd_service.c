@@ -449,20 +449,20 @@ static void MountGlobalDrives(void)
 
 #ifndef AFSIFS
         for ( ; dwRetry < MAX_RETRIES; dwRetry++)
-		{
-		    NETRESOURCE nr;
-		    memset (&nr, 0x00, sizeof(NETRESOURCE));
- 
-		    sprintf(szAfsPath,"\\\\%s\\%s",cm_NetbiosName,szSubMount);
-		    
-		    nr.dwScope = RESOURCE_GLOBALNET;              /* ignored parameter */
-		    nr.dwType=RESOURCETYPE_DISK;
-		    nr.lpLocalName=szDriveToMapTo;
-		    nr.lpRemoteName=szAfsPath;
-		    nr.dwDisplayType = RESOURCEDISPLAYTYPE_SHARE; /* ignored parameter */
-		    nr.dwUsage = RESOURCEUSAGE_CONNECTABLE;       /* ignored parameter */
+        {
+            NETRESOURCE nr;
+            memset (&nr, 0x00, sizeof(NETRESOURCE));
 
-		    dwResult = WNetAddConnection2(&nr,NULL,NULL,0);
+            sprintf(szAfsPath,"\\\\%s\\%s",cm_NetbiosName,szSubMount);
+
+            nr.dwScope = RESOURCE_GLOBALNET;              /* ignored parameter */
+            nr.dwType=RESOURCETYPE_DISK;
+            nr.lpLocalName=szDriveToMapTo;
+            nr.lpRemoteName=szAfsPath;
+            nr.dwDisplayType = RESOURCEDISPLAYTYPE_SHARE; /* ignored parameter */
+            nr.dwUsage = RESOURCEUSAGE_CONNECTABLE;       /* ignored parameter */
+
+            dwResult = WNetAddConnection2(&nr,NULL,NULL,0);
             afsi_log("GlobalAutoMap of %s to %s %s (%d)", szDriveToMapTo, szSubMount, 
                      (dwResult == NO_ERROR) ? "succeeded" : "failed", dwResult);
             if (dwResult == NO_ERROR) {

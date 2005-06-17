@@ -71,7 +71,7 @@ The following Microsoft SDK is required:
 
 The following Microsoft DDK is required:
 
-    Microsoft Windows Server 2003 DDK
+    Microsoft Windows Server 2003 SP1 DDK
       available via a MSDN subscription or via free CD
       http://www.microsoft.com/whdc/devtools/ddk/orderddkcd.mspx
 
@@ -180,6 +180,11 @@ These files come from the following Microsoft DDKs/SDKs:
    netcfgn.h, netcfgx.h:
         Windows XP/2003 DDK - inc/wxp/
 
+If you are interested in experimenting with the IFS you must purchase from
+Microsoft a copy of the Windows 2003 SP1 IFS Kit.
+
+  http://www.microsoft.com/whdc/devtools/ifskit/default.mspx
+
 
 STEP D. Configure NTBUILD.BAT.
 
@@ -200,7 +205,8 @@ must be defined to match your configuration:
 
   NTDDKDIR: Set the short name of the directory containing the npapi.h file
 
-  AFSROOT: Set to the short name of the OpenAFS Base directory
+  AFSROOT: Set to the short name of the OpenAFS Base directory.  This
+           cannot be set to a UNC path.
 
 
 STEP E. Set version and installation options (optional)
@@ -211,7 +217,7 @@ from:
 	http://grand.central.org/dl/cellservdb/CellServDB
 then copy it to %AFSROOT%\src\WINNT\install\NSIS and name it afsdcell.ini
 
-Edit file %AFSROOT%\src\config\NTMakefile.i386_nt40
+Edit file %AFSROOT%\src\config\NTMakefile.i386_w2k
     AFSPRODUCT_VER_MAJOR - Version Major Number
     AFSPRODUCT_VER_MINOR - Version Minor Number
     AFSPRODUCT_VER_PATCH - Version Patch Number
@@ -284,7 +290,7 @@ STEP F. Begin the build
 
     nmake /f NTMakefile clean
 
-(5) Build the complete Windows NT/2000 development environment.
+(5) Build the complete Windows 2000/XP/2003 development environment.
 
     nmake /f NTMakefile install
 
@@ -292,6 +298,9 @@ While the build is running you will see many compile warnings. This
 behavior is normal; the build process is successful as long as the build
 process doesn't terminate with an error ("nmake.exe return code 0x2")
 and it displays 'Build Finished Successfully'.
+
+(6) [IFS only] Open a DDK/IFS Build Environment command window, change 
+    to the src\WINNT\afsrdr directory, and execute the "build" command.
 
 
 STEP G. Install NSIS 2.0 (optional).

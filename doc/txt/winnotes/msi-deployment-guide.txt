@@ -640,7 +640,7 @@ OpenAFS for Windows
 	Registry	: 'reg_freekey5'
 	Root		: 2
 	Key		: 'SOFTWARE\OpenAFS\Client\Freelance\Symlinks'
-	Name		: '0'
+	Name		: '1'
         Value           : '.athena:.athena.mit.edu.'
 	Component	: 'rcm_FreelanceKeys'
 

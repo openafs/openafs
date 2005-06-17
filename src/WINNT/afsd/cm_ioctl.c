@@ -159,46 +159,47 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
     TranslateExtendedChars(relativePath);
 
 #ifdef AFSIFS
-	/* we have passed the whole path, including the afs prefix (pioctl_nt.c modified) */
-	/*_asm int 3;
-	sprintf(absRoot, "%c:", relativePath[0]);
-	rootDir = CreateFile(absRoot, 0, 0, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
-
-	if (!DeviceIoControl(rootDir, IOCTL_AFSRDR_GET_PATH, NULL, 0, absRoot_w, 100*sizeof(wchar_t), &length, NULL))
-		{
-		CloseHandle(rootDir);
-		return CM_ERROR_NOSUCHPATH;
-		}
-	CloseHandle(rootDir);
-
-	ifs_ConvertFileName(absRoot_w, length/sizeof(wchar_t), absRoot, 100);*/
-
+    /* we have passed the whole path, including the afs prefix (pioctl_nt.c modified) */
 #if 0
-	switch (relativePath[0])					/* FIXFIX */
-		{
-		case 'y':
-		case 'Y':
-			absRoot = "\\ericjw\\test";			/* should use drivemap */
-		}
+    /*_asm int 3; */
+    sprintf(absRoot, "%c:", relativePath[0]);
+    rootDir = CreateFile(absRoot, 0, 0, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+
+    if (!DeviceIoControl(rootDir, IOCTL_AFSRDR_GET_PATH, NULL, 0, absRoot_w, 100*sizeof(wchar_t), &length, NULL))
+    {
+    CloseHandle(rootDir);
+    return CM_ERROR_NOSUCHPATH;
+    }
+    CloseHandle(rootDir);
+
+    ifs_ConvertFileName(absRoot_w, length/sizeof(wchar_t), absRoot, 100);
 #endif
-	code = cm_NameI(cm_data.rootSCachep, relativePath,
-                        CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
-                        userp, ""/*absRoot*//*ioctlp->tidPathp*/, reqp, scpp);
+#if 0
+    switch (relativePath[0])					/* FIXFIX */
+    {
+    case 'y':
+    case 'Y':
+        absRoot = "\\ericjw\\test";			/* should use drivemap */
+    }
+#endif
+    code = cm_NameI(cm_data.rootSCachep, relativePath,
+                     CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
+                     userp, ""/*absRoot*//*ioctlp->tidPathp*/, reqp, scpp);
 
-	if (code)
-		return code;
+    if (code)
+        return code;
 
-	/* # of bytes of path */
+    /* # of bytes of path */
     code = strlen(ioctlp->inDatap) + 1;
     ioctlp->inDatap += code;
 
     /* This is usually nothing, but for StatMountPoint it is the file name. */
     TranslateExtendedChars(ioctlp->inDatap);
 
-	return 0;
-#endif
+    return 0;
+#endif /* AFSIFS */
 
-	if (relativePath[0] == relativePath[1] &&
+    if (relativePath[0] == relativePath[1] &&
          relativePath[1] == '\\' && 
          !_strnicmp(cm_NetbiosName,relativePath+2,strlen(cm_NetbiosName))) 
     {
@@ -1832,7 +1833,7 @@ long cm_IoctlSetToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
         tp += strlen(tp) + 1;
 
 #ifndef AFSIFS			/* no SMB username */
-		if (flags & PIOCTL_LOGON) {
+        if (flags & PIOCTL_LOGON) {
             /* SMB user name with which to associate tokens */
             smbname = tp;
             osi_Log2(smb_logp,"cm_IoctlSetToken for user [%s] smbname [%s]",
