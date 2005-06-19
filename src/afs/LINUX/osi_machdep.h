@@ -82,7 +82,7 @@
 #define VN_HOLD(V) ((vnode_t *) V)->i_count++
 #endif
 
-#if defined(AFS_LINUX26_ENV)
+#if defined(AFS_LINUX24_ENV)
 #define VN_RELE(V) iput((struct inode *) V)
 #else
 #define VN_RELE(V) osi_iput((struct inode *) V)
