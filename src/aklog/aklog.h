@@ -15,6 +15,7 @@ static char *rcsid_aklog_h = "$Id$";
 #include <krb5.h>
 #include <kerberosIV/krb.h>
 #include "linked_list.h"
+#include <afsconfig.h>
 
 #ifdef __STDC__
 #define ARGS(x) x

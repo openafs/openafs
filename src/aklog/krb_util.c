@@ -17,6 +17,7 @@ static char rcsid_send_to_kdc_c[] =
 #if 0
 #include <kerberosIV/mit-copyright.h>
 #endif
+#include <afs/stds.h>
 #include <krb5.h>
 #include <kerberosIV/krb.h> 
 
