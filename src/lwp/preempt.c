@@ -28,8 +28,7 @@ int PRE_Block = 0;
 
 
 int
-PRE_InitPreempt(slice)
-     struct timeval *slice;
+PRE_InitPreempt(struct timeval *slice)
 {
     return LWP_SUCCESS;
 }
@@ -55,15 +54,10 @@ char PRE_Block = 0;		/* used in lwp.c and process.s */
 
 #if HAVE_SIGACTION && defined(SA_SIGINFO)
 static void
-AlarmHandler(sig, st, scp)
-     int sig;
-     siginfo_t *st;
-     ucontext_t *scp;
+AlarmHandler(int sig, siginfo_t *st, ucontext_t *scp)
 #else
 static void
-AlarmHandler(sig, code, scp)
-     int sig, code;
-     struct sigcontext *scp;
+AlarmHandler(int sig, int code, struct sigcontext *scp)
 #endif
 {
     if (PRE_Block == 0 && lwp_cpptr->level == 0) {
@@ -80,8 +74,7 @@ AlarmHandler(sig, code, scp)
 }
 
 int
-PRE_InitPreempt(slice)
-     struct timeval *slice;
+PRE_InitPreempt(struct timeval *slice)
 {
     struct itimerval itv;
 #if HAVE_SIGACTION && defined(SA_SIGINFO)
