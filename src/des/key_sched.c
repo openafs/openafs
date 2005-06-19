@@ -44,10 +44,6 @@ RCSID
 
 typedef char key[64];
 
-#ifndef AFS_PTHREAD_ENV 
-struct rxkad_stats rxkad_stats = { { 0 } }; 
-#endif
-
 /* the following are really void but cc86 doesnt allow it */
 static int make_key_sched();
 
