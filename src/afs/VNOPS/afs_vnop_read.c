@@ -61,7 +61,7 @@ afs_MemRead(register struct vcache *avc, struct uio *auio,
     struct dcache *tdc = 0;
     afs_int32 error, trybusy = 1;
 #ifdef AFS_DARWIN80_ENV
-    uio_t tuiop;
+    uio_t tuiop = NULL;
 #else
     struct uio tuio;
     struct uio *tuiop = &tuio;
@@ -378,7 +378,8 @@ afs_MemRead(register struct vcache *avc, struct uio *auio,
     if (!noLock)
 	ReleaseReadLock(&avc->lock);
 #ifdef AFS_DARWIN80_ENV
-    uio_free(tuiop);
+    if (tuiop)
+       uio_free(tuiop);
 #else
     osi_FreeSmallSpace(tvec);
 #endif
@@ -471,7 +472,7 @@ afs_UFSRead(register struct vcache *avc, struct uio *auio,
     struct dcache *tdc = 0;
     afs_int32 error;
 #ifdef AFS_DARWIN80_ENV
-    uio_t tuiop;
+    uio_t tuiop=NULL;
 #else
     struct uio tuio;
     struct uio *tuiop = &tuio;
@@ -900,7 +901,8 @@ afs_UFSRead(register struct vcache *avc, struct uio *auio,
 	ReleaseReadLock(&avc->lock);
 
 #ifdef AFS_DARWIN80_ENV
-    uio_free(tuiop);
+    if (tuiop)
+       uio_free(tuiop);
 #else
     osi_FreeSmallSpace(tvec);
 #endif

@@ -143,7 +143,12 @@ struct irix5_min_dirent {	/* miniature dirent structure */
 #else
 struct min_direct {		/* miniature direct structure */
     /* If struct direct changes, this must too */
-#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#if defined(AFS_DARWIN80_ENV)
+    ino_t d_fileno;
+    u_short d_reclen;
+    u_char d_type;
+    u_char d_namlen;
+#elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     afs_uint32 d_fileno;
     u_short d_reclen;
     u_char d_type;

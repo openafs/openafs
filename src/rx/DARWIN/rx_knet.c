@@ -27,6 +27,10 @@ osi_NetReceive(osi_socket so, struct sockaddr_in *addr, struct iovec *dvec,
     socket_t asocket = (socket_t)so;
     struct msghdr msg;
     struct sockaddr_storage ss;
+    int rlen;
+#if 1
+    mbuf_t m;
+#endif
 #else
     struct socket *asocket = (struct socket *)so;
     struct uio u;
@@ -35,7 +39,7 @@ osi_NetReceive(osi_socket so, struct sockaddr_in *addr, struct iovec *dvec,
     struct iovec iov[RX_MAXIOVECS];
     struct sockaddr *sa = NULL;
     int code;
-    size_t rlen;
+    size_t resid;
 
     int haveGlock = ISAFS_GLOCK();
     /*AFS_STATCNT(osi_NetReceive); */
@@ -51,6 +55,37 @@ osi_NetReceive(osi_socket so, struct sockaddr_in *addr, struct iovec *dvec,
     thread_funnel_switch(KERNEL_FUNNEL, NETWORK_FUNNEL);
 #endif
 #ifdef AFS_DARWIN80_ENV
+#if 1
+    resid = *alength;
+    memset(&msg, 0, sizeof(struct msghdr));
+    msg.msg_name = &ss;
+    msg.msg_namelen = sizeof(struct sockaddr_storage);
+    sa =(struct sockaddr *) &ss;
+    code = sock_receivembuf(asocket, &msg, &m, 0, alength);
+    if (!code) {
+        size_t offset=0,sz;
+        resid = *alength;
+        for (i=0;i<nvecs && resid;i++) {
+            sz=MIN(resid, iov[i].iov_len);
+            code = mbuf_copydata(m, offset, sz, iov[i].iov_base);
+            if (code)
+                break;
+            resid-=sz;
+            offset+=sz;
+        }
+    }
+    mbuf_freem(m);
+#else
+    resid = *alength;
+    printf("Want to read %d bytes...", resid);
+    for (i=0; i < nvecs && resid; i++) {
+       if (resid < iov[i].iov_len)
+          iov[0].iov_len = resid;
+       resid -= iov[i].iov_len;
+    }
+    printf("Using %d/%d iovs\n", i, nvecs);
+    nvecs = i;
+    rlen = 0;
     memset(&msg, 0, sizeof(struct msghdr));
     msg.msg_name = &ss;
     msg.msg_namelen = sizeof(struct sockaddr_storage);
@@ -58,6 +93,14 @@ osi_NetReceive(osi_socket so, struct sockaddr_in *addr, struct iovec *dvec,
     msg.msg_iovlen = nvecs;
     sa =(struct sockaddr_in *) &ss;
     code = sock_receive(asocket, &msg, 0, &rlen);
+    resid = *alength;
+    if (resid != rlen)
+    printf("recieved %d bytes\n", rlen);
+    if (resid > rlen)
+       resid -= rlen;
+    else
+       resid = 0;
+#endif
 #else
 
     u.uio_iov = &iov[0];
@@ -68,7 +111,7 @@ osi_NetReceive(osi_socket so, struct sockaddr_in *addr, struct iovec *dvec,
     u.uio_rw = UIO_READ;
     u.uio_procp = NULL;
     code = soreceive(asocket, &sa, &u, NULL, NULL, NULL);
-    rlen = u.uio_resid;
+    resid = u.uio_resid;
 #endif
 
 #if defined(KERNEL_FUNNEL)
@@ -79,7 +122,7 @@ osi_NetReceive(osi_socket so, struct sockaddr_in *addr, struct iovec *dvec,
 
     if (code)
 	return code;
-    *alength -= rlen;
+    *alength -= resid;
     if (sa) {
 	if (sa->sa_family == AF_INET) {
 	    if (addr)

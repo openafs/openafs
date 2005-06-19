@@ -1478,61 +1478,7 @@ cpytoiovec(mblk_t * mp, int off, int len, register struct iovec *iovs,
 #define m_cpytoc(a, b, c, d)  cpytoc(a, b, c, d)
 #define m_cpytoiovec(a, b, c, d, e) cpytoiovec(a, b, c, d, e)
 #else
-#if defined(AFS_DARWIN80_ENV)
-static int
-m_cpytoiovec(mbuf_t m, int off, int len, struct iovec iovs[], int niovs)
-{
-    caddr_t p1, p2;
-    unsigned int l1, l2, i, t;
-
-    if (m == NULL || off < 0 || len < 0 || iovs == NULL)
-	osi_Panic("m_cpytoiovec");	/* MTUXXX probably don't need this check */
-
-    while (off && m)
-	if (mbuf_len(m) <= off) {
-	    off -= mbuf_len(m);
-	    m = mbuf_next(m);
-	    continue;
-	} else
-	    break;
-
-    if (m == NULL)
-	return len;
-
-    
-    p1 = mbuf_data(m) + off;
-    l1 = mbuf_len(m) - off;
-    i = 0;
-    p2 = iovs[0].iov_base;
-    l2 = iovs[0].iov_len;
-
-    while (len) {
-	t = MIN(l1, MIN(l2, (unsigned int)len));
-	memcpy(p2, p1, t);
-	p1 += t;
-	p2 += t;
-	l1 -= t;
-	l2 -= t;
-	len -= t;
-	if (!l1) {
-	    m = mbuf_next(m);
-	    if (!m)
-		break;
-	    p1 = mbuf_data(m);
-	    l1 = mbuf_len(m);
-	}
-	if (!l2) {
-	    if (++i >= niovs)
-		break;
-	    p2 = iovs[i].iov_base;
-	    l2 = iovs[i].iov_len;
-	}
-
-    }
-
-    return len;
-}
-#elif !defined(AFS_LINUX20_ENV)
+#if !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN80_ENV)
 static int
 m_cpytoiovec(struct mbuf *m, int off, int len, struct iovec iovs[], int niovs)
 {

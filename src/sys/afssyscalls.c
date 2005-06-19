@@ -392,7 +392,7 @@ lpioctl(char *path, int cmd, char *cmarg, int follow)
     if(rval)
     errcode = syscall(AFS_SYSCALL, AFSCALL_PIOCTL, path, cmd, cmarg, follow);
 #elif defined(AFS_DARWIN80_ENV)
-    if (ioctl_afs_syscall(AFSCALL_SETPAG,(long)path,(long)cmarg,follow,0,0,0,&errcode))
+    if (ioctl_afs_syscall(AFSCALL_PIOCTL,(long)path,cmd,(long)cmarg,follow,0,0,&errcode))
         errcode=ENOSYS;
 #else
     errcode = syscall(AFS_SYSCALL, AFSCALL_PIOCTL, path, cmd, cmarg, follow);

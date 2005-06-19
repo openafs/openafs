@@ -213,13 +213,13 @@ struct afsprocdata32 {
 
 #ifdef AFS_DARWIN80_ENV
 struct afssysargs {
-     long syscall;
-     long param1;
-     long param2;
-     long param3;
-     long param4;
-     long param5;
-     long param6;
+     unsigned long syscall;
+     unsigned long param1;
+     unsigned long param2;
+     unsigned long param3;
+     unsigned long param4;
+     unsigned long param5;
+     unsigned long param6;
 };
 #define VIOC_SYSCALL_TYPE 'C' 
 #define VIOC_SYSCALL _IOW(VIOC_SYSCALL_TYPE,1,struct afssysargs)

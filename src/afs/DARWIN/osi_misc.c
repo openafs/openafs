@@ -207,16 +207,18 @@ int afs_cdev_nop_openclose(dev_t dev, int flags, int devtype,struct proc *p) {
 int
 afs_cdev_ioctl(dev_t dev, u_long cmd, caddr_t data, int fflag, struct proc *p) {
    int retval=0;
+   int code;
    struct afssysargs *a = data;
    if (proc_is64bit(p))
      return EINVAL;
 
   if (cmd != VIOC_SYSCALL) {
-     printf("ioctl mismatch 0x%lx (wanted 0x%lx)\n", cmd, VIOC_SYSCALL);
-     /*return EINVAL;*/
+     return EINVAL;
   }
 
- afs3_syscall(p, (struct afssysargs *)data, &retval);
+ code=afs3_syscall(p, (struct afssysargs *)data, &retval);
+ if (code)
+    return code;
  return retval; 
 }
 

@@ -239,6 +239,10 @@ darwin_vn_hold(struct vnode *vp)
 #ifndef AFS_DARWIN80_ENV
     tvc->states |= CUBCinit;
 #endif
+#ifdef AFS_DARWIN80_ENV
+    if (tvc->states & CDeadVnode)
+       osi_Assert(!vnode_isinuse(vp, 1));
+#endif
     if (haveGlock) AFS_GUNLOCK(); 
 
 #ifdef AFS_DARWIN80_ENV
@@ -284,26 +288,38 @@ afs_vop_lookup(ap)
     int lockparent;		/* 1 => lockparent flag is set */
     int wantparent;		/* 1 => wantparent or lockparent flag */
     struct proc *p;
+#ifdef AFS_DARWIN80_ENV
+    error = cache_lookup(ap->a_dvp, ap->a_vpp, ap->a_cnp);
+    if (error == -1) 
+       return 0;
+    if (error == ENOENT) 
+       return error;
+#endif
+
     GETNAME();
     p = vop_cn_proc;
 
     lockparent = flags & LOCKPARENT;
     wantparent = flags & (LOCKPARENT | WANTPARENT);
 
-    if (vnode_isdir(ap->a_dvp)) {
+    if (!vnode_isdir(ap->a_dvp)) {
 	*ap->a_vpp = 0;
 	DROPNAME();
 	return ENOTDIR;
     }
     dvp = ap->a_dvp;
+#ifndef AFS_DARWIN80_ENV
     if (flags & ISDOTDOT)
 	VOP_UNLOCK(dvp, 0, p);
+#endif
     AFS_GLOCK();
     error = afs_lookup(VTOAFS(dvp), name, &vcp, vop_cn_cred);
     AFS_GUNLOCK();
     if (error) {
+#ifndef AFS_DARWIN80_ENV
 	if (flags & ISDOTDOT)
 	    VOP_LOCK(dvp, LK_EXCLUSIVE | LK_RETRY, p);
+#endif
 	if ((cnp->cn_nameiop == CREATE || cnp->cn_nameiop == RENAME)
 	    && (flags & ISLASTCN) && error == ENOENT)
 	    error = EJUSTRETURN;
@@ -351,6 +367,7 @@ afs_vop_lookup(ap)
 	vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, p);
 	/* always return the child locked */
     }
+#endif
     *ap->a_vpp = vp;
 
 #ifndef AFS_DARWIN80_ENV
@@ -362,7 +379,6 @@ afs_vop_lookup(ap)
     DROPNAME();
     return error;
 }
-#endif
 
 int
 afs_vop_create(ap)
@@ -387,8 +403,10 @@ afs_vop_create(ap)
 		   &vcp, vop_cn_cred);
     AFS_GUNLOCK();
     if (error) {
+#ifndef AFS_DARWIN80_ENV
 	VOP_ABORTOP(dvp, cnp);
 	vput(dvp);
+#endif
 	DROPNAME();
 	return (error);
     }
@@ -413,8 +431,8 @@ afs_vop_create(ap)
 #ifndef AFS_DARWIN80_ENV
     if ((cnp->cn_flags & SAVESTART) == 0)
 	FREE_ZONE(cnp->cn_pnbuf, cnp->cn_pnlen, M_NAMEI);
-#endif
     vput(dvp);
+#endif
     DROPNAME();
     return error;
 }
@@ -430,8 +448,8 @@ afs_vop_mknod(ap)
 {
 #ifndef AFS_DARWIN80_ENV
     FREE_ZONE(ap->a_cnp->cn_pnbuf, ap->a_cnp->cn_pnlen, M_NAMEI);
-#endif
     vput(ap->a_dvp);
+#endif
     return (ENODEV);
 }
 
@@ -555,7 +573,7 @@ afs_vop_access(ap)
        bits |= PRSFS_READ;
     if (ap->a_action & KAUTH_VNODE_WRITE_ATTRIBUTES)
        bits |= PRSFS_WRITE;
-#if 0
+#if 0 /* no extended attributes */
     if (ap->a_action & KAUTH_VNODE_READ_EXTATTRIBUTES)
        bits |= PRSFS_READ;
     if (ap->a_action & KAUTH_VNODE_WRITE_EXTATTRIBUTES)
@@ -709,7 +727,6 @@ afs_vop_pagein(ap)
 
     int code;
     struct vcache *tvc = VTOAFS(vp);
-
 #ifndef AFS_DARWIN80_ENV
     if (UBCINVALID(vp)) {
 #if DIAGNOSTIC
@@ -771,12 +788,8 @@ afs_vop_pagein(ap)
     /* Zero out rest of last page if there wasn't enough data in the file */
     if (code == 0 && AFS_UIO_RESID(uio) > 0) {
 #ifdef AFS_DARWIN80_ENV
-        do {
-            int len = AFS_UIO_RESID(uio);
-            if (len > AFS_ZEROS)
-               len = AFS_ZEROS;
-            code = uiomove(afs_zeros, len, uio);
-        } while (code == 0 && AFS_UIO_RESID(uio) > 0);
+	memset(((caddr_t)ioaddr) + (size - AFS_UIO_RESID(uio)), 0,
+               AFS_UIO_RESID(uio));
 #else
 	memset(aiov.iov_base, 0, auio.uio_resid);
 #endif
@@ -860,7 +873,6 @@ afs_vop_pageout(ap)
 
     int code;
     struct vcache *tvc = VTOAFS(vp);
-
 #ifndef AFS_DARWIN80_ENV
     if (UBCINVALID(vp)) {
 #if DIAGNOSTIC
@@ -1123,10 +1135,10 @@ afs_vop_remove(ap)
     error = afs_remove(VTOAFS(dvp), name, vop_cn_cred);
     AFS_GUNLOCK();
     cache_purge(vp);
-    vput(dvp);
     if (!error) {
 #ifdef AFS_DARWIN80_ENV
         ubc_setsize(vp, (off_t)0);
+        vnode_recycle(vp);
 #else
         /* necessary so we don't deadlock ourselves in vclean */
         VOP_UNLOCK(vp, 0, cnp->cn_proc);
@@ -1136,10 +1148,13 @@ afs_vop_remove(ap)
 #endif
     }
 
+#ifndef AFS_DARWIN80_ENV
+    vput(dvp);
     if (dvp == vp)
 	vrele(vp);
     else
 	vput(vp);
+#endif
 
 #ifndef AFS_DARWIN80_ENV
     FREE_ZONE(cnp->cn_pnbuf, cnp->cn_pnlen, M_NAMEI);
@@ -1185,7 +1200,9 @@ afs_vop_link(ap)
 	VOP_UNLOCK(vp, 0, p);
 #endif
   out:
+#ifndef AFS_DARWIN80_ENV
     vput(dvp);
+#endif
     DROPNAME();
     return error;
 }
@@ -1229,6 +1246,10 @@ afs_vop_rename(ap)
     }
 #endif
 
+#ifdef AFS_DARWIN80_ENV
+   /* the generic code doesn't do this, so we really should, but all the
+      vrele's are wrong... */
+#else
     /*
      * if fvp == tvp, we're just removing one name of a pair of
      * directory entries for the same element.  convert call into rename.
@@ -1292,6 +1313,7 @@ afs_vop_rename(ap)
         vput(fvp);
         return (error);
     }
+#endif
 #if !defined(AFS_DARWIN80_ENV) 
     if (error = vn_lock(fvp, LK_EXCLUSIVE, p))
 	goto abortit;
@@ -1316,6 +1338,14 @@ afs_vop_rename(ap)
 #endif
     FREE(fname, M_TEMP);
     FREE(tname, M_TEMP);
+#ifdef AFS_DARWIN80_ENV
+    if (tvp) {
+       cache_purge(tvp);
+       if (!error) {
+          vnode_recycle(tvp);
+       }
+    }
+#else
     if (error)
 	goto abortit;		/* XXX */
     if (tdvp == tvp)
@@ -1326,6 +1356,7 @@ afs_vop_rename(ap)
 	vput(tvp);
     vrele(fdvp);
     vrele(fvp);
+#endif
     return error;
 }
 
@@ -1373,8 +1404,8 @@ afs_vop_mkdir(ap)
     DROPNAME();
 #ifndef AFS_DARWIN80_ENV
     FREE_ZONE(cnp->cn_pnbuf, cnp->cn_pnlen, M_NAMEI);
-#endif
     vput(dvp);
+#endif
     return error;
 }
 
@@ -1392,9 +1423,9 @@ afs_vop_rmdir(ap)
 
     GETNAME();
     if (dvp == vp) {
+#ifndef AFS_DARWIN80_ENV
 	vrele(dvp);
 	vput(vp);
-#ifndef AFS_DARWIN80_ENV
 	FREE_ZONE(cnp->cn_pnbuf, cnp->cn_pnlen, M_NAMEI);
 #endif
 	DROPNAME();
@@ -1405,8 +1436,10 @@ afs_vop_rmdir(ap)
     error = afs_rmdir(VTOAFS(dvp), name, vop_cn_cred);
     AFS_GUNLOCK();
     DROPNAME();
+#ifndef AFS_DARWIN80_ENV
     vput(dvp);
     vput(vp);
+#endif
     return error;
 }
 
@@ -1432,8 +1465,8 @@ afs_vop_symlink(ap)
     DROPNAME();
 #ifndef AFS_DARWIN80_ENV
     FREE_ZONE(cnp->cn_pnbuf, cnp->cn_pnlen, M_NAMEI);
-#endif
     vput(dvp);
+#endif
     return error;
 }
 
@@ -1521,14 +1554,14 @@ afs_vop_inactive(ap)
 				 * } */ *ap;
 {
     register struct vnode *vp = ap->a_vp;
-
+    struct vcache *tvc = VTOAFS(vp);
+    int haveGlock = ISAFS_GLOCK();
 #ifndef AFS_DARWIN80_ENV
     if (prtactive && vnode_isinuse(vp, 0) != 0)
 	vprint("afs_vop_inactive(): pushing active", vp);
 #endif
-
     AFS_GLOCK();
-    afs_InactiveVCache(VTOAFS(vp), 0);	/* decrs ref counts */
+    afs_InactiveVCache(tvc, 0);	/* decrs ref counts */
     AFS_GUNLOCK();
 #ifndef AFS_DARWIN80_ENV
     VOP_UNLOCK(vp, 0, ap->a_p);
@@ -1545,27 +1578,20 @@ afs_vop_reclaim(ap)
     int error = 0;
     int sl;
     register struct vnode *vp = ap->a_vp;
-    int haveGlock = ISAFS_GLOCK();
     struct vcache *tvc = VTOAFS(vp);
 
+    osi_Assert(!ISAFS_GLOCK())
     cache_purge(vp);		/* just in case... */
-    if (!haveGlock)
-	AFS_GLOCK();
+    AFS_GLOCK();
     ObtainWriteLock(&afs_xvcache, 335);
-    error = afs_FlushVCache(VTOAFS(vp), &sl);	/* toss our stuff from vnode */
+    error = afs_FlushVCache(tvc, &sl);	/* toss our stuff from vnode */
     ReleaseWriteLock(&afs_xvcache);
-    if (!haveGlock)
-	AFS_GUNLOCK();
-
+    AFS_GUNLOCK();
+    
     if (!error && vnode_fsnode(vp))
 	panic("afs_reclaim: vnode not cleaned");
     if (!error && (tvc->v != NULL)) 
         panic("afs_reclaim: vcache not cleaned");
-
-#ifdef AFS_DARWIN80_ENV
-    /* XXX do we need to call vnode_recycle here? */
-#endif
-
     return error;
 }
 
@@ -1838,20 +1864,34 @@ afs_darwin_getnewvnode(struct vcache *tvc)
 {
 #ifdef AFS_DARWIN80_ENV
     vnode_t vp;
-    int error;
+    int error, dead;
     struct vnode_fsparam par;
 
     memset(&par, 0, sizeof(struct vnode_fsparam));
+    AFS_GLOCK();
+    ObtainWriteLock(&avc->lock,342);
+    if (tvc->states & CStatd) { /* XXX markroot */
+       par.vnfs_vtype = avc->m.Type;
+       par.vnfs_vops = afs_vnodeop_p;
+       par.vnfs_filesize = avc->m.Length;
+       dead = 0;
+    } else {
+       par.vnfs_vtype = VNON;
+       par.vnfs_vops = afs_dead_vnodeop_p;
+       par.vnfs_flags = VNFS_NOCACHE|VNFS_CANTCACHE;
+       dead = 1;
+    }
     par.vnfs_mp = afs_globalVFS;
-    par.vnfs_vtype = VNON;
-    par.vnfs_vops = afs_dead_vnodeop_p;
     par.vnfs_fsnode = tvc;
-    par.vnfs_flags = VNFS_NOCACHE|VNFS_CANTCACHE;
     error = vnode_create(VNCREATE_FLAVOR, VCREATESIZE, &par, &vp);
     if (!error) {
+      vnode_addfsref(vp);
+      vnode_ref(vp);
       tvc->v = vp;
-      vnode_recycle(vp); /* terminate as soon as iocount drops */
-      tvc->states |= CDeadVnode;
+      if (dead) {
+         vnode_recycle(vp); /* terminate as soon as iocount drops */
+         tvc->states |= CDeadVnode;
+      }
     }
 #else
     while (getnewvnode(VT_AFS, afs_globalVFS, afs_vnodeop_p, &tvc->v)) {
@@ -1873,25 +1913,34 @@ afs_darwin_finalizevnode(struct vcache *avc, struct vnode *dvp, struct component
    if (!(avc->states & CDeadVnode) && vnode_vtype(ovp) != VNON) {
         ReleaseWriteLock(&avc->lock);
         AFS_GUNLOCK();
+        vnode_update_identity(ovp, dvp, cnp->cn_nameptr, cnp->cn_namelen,
+                              cnp->cn_hash,
+                              VNODE_UPDATE_PARENT|VNODE_UPDATE_NAME);
+        vnode_rele(ovp);
         return;
    }
+   if ((avc->states & CDeadVnode) && vnode_vtype(ovp) != VNON) 
+       panic("vcache %p should not be CDeadVnode", avc);
    AFS_GUNLOCK();
    memset(&par, 0, sizeof(struct vnode_fsparam));
    par.vnfs_mp = afs_globalVFS;
    par.vnfs_vtype = avc->m.Type;
    par.vnfs_vops = afs_vnodeop_p;
+   par.vnfs_filesize = avc->m.Length;
    par.vnfs_fsnode = avc;
    par.vnfs_dvp = dvp;
    par.vnfs_cnp = cnp;
-   par.vnfs_filesize = avc->m.Length;
    if (isroot)
        par.vnfs_markroot = 1;
    error = vnode_create(VNCREATE_FLAVOR, VCREATESIZE, &par, &nvp);
    if (!error) {
+     vnode_addfsref(nvp);
      avc->v = nvp;
      avc->states &=~ CDeadVnode;
      vnode_clearfsnode(ovp);
+     vnode_removefsref(ovp);
      vnode_put(ovp);
+     vnode_rele(ovp);
    }
    AFS_GLOCK();
    ReleaseWriteLock(&avc->lock);

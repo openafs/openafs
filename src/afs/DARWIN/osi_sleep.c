@@ -18,7 +18,7 @@ RCSID
 #include "afs/afs_stats.h"	/* afs statistics */
 
 
-static int osi_TimedSleep(char *event, afs_int32 ams, int aintok);
+int osi_TimedSleep(char *event, afs_int32 ams, int aintok);
 
 static char waitV;
 
@@ -202,18 +202,19 @@ afs_osi_SleepSig(void *event)
  *
  * Returns 0 if timeout and EINTR if signalled.
  */
-static int
+int
 osi_TimedSleep(char *event, afs_int32 ams, int aintok)
 {
     int code = 0;
     struct afs_event *evp;
-    int ticks, seq;
+    int seq;
     int prio;
 #ifdef AFS_DARWIN80_ENV
     struct timespec ts;
+#else
+    int ticks;
 #endif
 
-    ticks = (ams * afs_hz) / 1000;
 
 
     evp = afs_getevent(event);
@@ -228,6 +229,7 @@ osi_TimedSleep(char *event, afs_int32 ams, int aintok)
     ts.tv_nsec = (ams % 1000) * 1000000;
     code = msleep(event, NULL, prio, "afs_osi_TimedSleep", &ts);
 #else
+    ticks = (ams * afs_hz) / 1000;
 #ifdef AFS_DARWIN14_ENV
     /* this is probably safe for all versions, but testing is hard. */
     /* using tsleep instead of assert_wait/thread_set_timer/thread_block

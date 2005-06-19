@@ -180,6 +180,8 @@ afs_mount(mp, path, data, ndp, p)
     }
 #ifdef AFS_DARWIN80_ENV
     afs_vfs_typenum=vfs_typenum(mp);
+    vfs_setauthopaque(mp);
+    vfs_setauthopaqueaccess(mp);
 #else
     strcpy(mp->mnt_stat.f_fstypename, "afs");
 #endif
@@ -283,7 +285,9 @@ afs_root(struct mount *mp, struct vnode **vpp)
 	}
     }
     if (tvp) {
+#ifndef AFS_DARWIN80_ENV
 	osi_vnhold(tvp, 0);
+#endif
 	AFS_GUNLOCK();
 #ifdef AFS_DARWIN80_ENV
         afs_darwin_finalizevnode(tvp, NULL, NULL, 1);
@@ -292,10 +296,14 @@ afs_root(struct mount *mp, struct vnode **vpp)
 #endif
 	AFS_GLOCK();
 	if (mdata == NULL) {
+#ifdef AFS_DARWIN80_ENV /* afs_globalVp ref */
+            vnode_get(AFSTOV(tvp));
+	    osi_vnhold(tvp, 0);
+#endif
 	    afs_globalVFS = mp;
 	}
 	*vpp = AFSTOV(tvp);
-#ifndef AFS_DARWIN80_ENV /* XXX VROOT can only be set in vnode_create */
+#ifndef AFS_DARWIN80_ENV 
 	AFSTOV(tvp)->v_flag |= VROOT;
 	AFSTOV(tvp)->v_vfsp = mp;
 #endif
@@ -307,7 +315,7 @@ afs_root(struct mount *mp, struct vnode **vpp)
     return error;
 }
 
-#if 0 /* vget never had this prototype AFAIK */
+#ifndef AFS_DARWIN80_ENV /* vget vfsop never had this prototype AFAIK */
 int
 afs_vget(mp, lfl, vp)
      struct mount *mp;
@@ -320,23 +328,13 @@ afs_vget(mp, lfl, vp)
 	vprint("bad usecount", vp);
 	panic("afs_vget");
     }
-#ifdef AFS_DARWIN80_ENV
-    error = vnode_get(vp);
-#else
     error = vget(vp, lfl, current_proc());
-#endif
     if (!error)
 	insmntque(vp, mp);	/* take off free list */
     return error;
 }
-#else
 
-#ifdef AFS_DARWIN80_ENV
-int afs_vget(struct mount *mp, ino64_t ino, struct vnode **vpp,
-             vfs_context_t ctx)
-#else
-int afs_vget(struct mount *mp, void *ino, struct vnode **vpp)
-#endif
+int afs_vfs_vget(struct mount *mp, void *ino, struct vnode **vpp)
 {
    return ENOENT; /* cannot implement */
 }
@@ -590,13 +588,13 @@ struct vfsops afs_vfsops = {
 #ifdef AFS_DARWIN80_ENV
    0,0,0,
 #else
-   afs_vget,
+   afs_vfs_vget,
    afs_fhtovp,
    afs_vptofh,
 #endif
    afs_init,
    afs_sysctl, 
-#ifdef AFS_DARWIN80_ENVX
+#ifdef AFS_DARWIN80_ENV
    0 /*setattr */,
    {0}
 #endif

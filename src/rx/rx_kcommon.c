@@ -1232,7 +1232,6 @@ rxk_Listener(void)
 #if defined(RX_ENABLE_LOCKS) && !defined(AFS_SUN5_ENV)
     AFS_GUNLOCK();
 #endif /* RX_ENABLE_LOCKS && !AFS_SUN5_ENV */
-printf("rxk_Listener starting...\n");
     while (afs_termState != AFSOP_STOP_RXK_LISTENER) {
 	if (rxp) {
 	    rxi_RestoreDataBufs(rxp);
@@ -1242,7 +1241,6 @@ printf("rxk_Listener starting...\n");
 		osi_Panic("rxk_Listener: No more Rx buffers!\n");
 	}
 	if (!(code = rxk_ReadPacket(rx_socket, rxp, &host, &port))) {
-            printf(".");
 	    rxp = rxi_ReceivePacket(rxp, rx_socket, host, port, 0, 0);
 	}
     }

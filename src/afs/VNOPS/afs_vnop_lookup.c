@@ -873,6 +873,9 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
     ReleaseReadLock(&afs_xvcache);	/* could be read lock */
     if (retry)
 	goto reskip;
+#ifdef AFS_DARWIN80_ENV
+    vnode_get(AFSTOV(lruvcp));
+#endif
 
     /* otherwise, merge in the info.  We have to be quite careful here,
      * since we need to ensure that we don't merge old info over newer
@@ -1074,7 +1077,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 }
 
 /* was: (AFS_DEC_ENV) || defined(AFS_OSF30_ENV) || defined(AFS_NCR_ENV) */
-static int AFSDOBULK = 1;
+static int AFSDOBULK = 0;
 
 int
 #ifdef AFS_OSF_ENV
@@ -1210,6 +1213,9 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
 	ObtainReadLock(&afs_xvcache);
 	osi_vnhold(adp, 0);
 	ReleaseReadLock(&afs_xvcache);
+#ifdef AFS_DARWIN80_ENV
+        vnode_get(AFSTOV(adp));
+#endif
 	code = 0;
 	*avcp = tvc = adp;
 	hit = 1;

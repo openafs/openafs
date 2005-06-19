@@ -125,7 +125,8 @@ osi_VM_FlushPages(struct vcache *avc, struct AFS_UCRED *credp)
     kern_return_t kret;
     off_t size;
 #ifdef AFS_DARWIN80_ENV
-    ubc_sync_range(vp, 0, ubc_getsize(vp), UBC_INVALIDATE);
+    size = ubc_getsize(vp);
+    ubc_sync_range(vp, 0, size, UBC_INVALIDATE);
 	/* XXX what about when not CStatd */
     if (avc->states & CStatd && size != avc->m.Length)
        ubc_setsize(vp, avc->m.Length);

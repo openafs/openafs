@@ -82,11 +82,14 @@ enum vcexcl { EXCL, NONEXCL };
 
 #ifdef AFS_DARWIN80_ENV
 #define vrele vnode_rele
-#define vput(v) do { vnode_put((v)); vnode_rele((v)); } while(0)
+#define vput vnode_rele
 #define vref vnode_ref
 #define vattr vnode_attr
+#if 0
+#define vn_lock(v, unused1, unused2) vnode_get((v))
 #define VOP_LOCK(v, unused1, unused2) vnode_get((v))
 #define VOP_UNLOCK(v, unused1, unused2) vnode_put((v))
+#endif
 
 #define va_size va_data_size
 #define va_atime va_access_time
