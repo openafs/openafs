@@ -594,7 +594,10 @@ GetRights(struct client *client, struct acl_accessList *ACL,
 	*anyrights = 0;
     }
     *rights = 0;
+
+    ObtainWriteLock(&client->lock);
     acl_CheckRights(ACL, &client->CPS, rights);
+    ReleaseWriteLock(&client->lock);
 
     /* wait if somebody else is already doing the getCPS call */
     H_LOCK;
