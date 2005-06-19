@@ -70,7 +70,7 @@ static pthread_mutex_t serverLogMutex;
 #define O_NONBLOCK 0
 #endif
 
-char *(*threadNameProgram) ();
+static char *(*threadNameProgram) () = NULL;
 
 static int serverLogFD = -1;
 
@@ -83,8 +83,15 @@ char *serverLogSyslogTag = 0;
 #include <stdarg.h>
 int LogLevel;
 int mrafsStyleLogs = 0;
+static int threadIdLogs = 0;
 int printLocks = 0;
 static char ourName[MAXPATHLEN];
+
+void
+SetLogThreadNameProgram(char *(*func) () )
+{
+    threadNameProgram = func;
+}
 
 void
 WriteLogBuffer(char *buf, afs_uint32 len)
@@ -110,11 +117,13 @@ vFSLog(const char *format, va_list args)
     timeStamp[24] = ' ';	/* ts[24] is the newline, 25 is the null */
     info = &timeStamp[25];
 
-    if (mrafsStyleLogs) {
+    if (mrafsStyleLogs || threadIdLogs) {
 	name = (*threadNameProgram) ();
+        if (name) {
 	(void)afs_snprintf(info, (sizeof tbuffer) - strlen(tbuffer), "[%s] ",
 			   name);
 	info += strlen(info);
+    }
     }
 
     (void)afs_vsnprintf(info, (sizeof tbuffer) - strlen(tbuffer), format,
@@ -171,8 +180,20 @@ SetDebug_Signal(int signo)
 
     if (LogLevel > 0) {
 	LogLevel *= 5;
+
+#if defined(AFS_PTHREAD_ENV)
+        if (LogLevel > 999 && threadNameProgram != NULL && 
+            threadIdLogs == 0) {
+            threadIdLogs = 1;
+        }
+#endif
     } else {
 	LogLevel = 1;
+
+#if defined(AFS_PTHREAD_ENV)
+        if (threadIdLogs == 1)
+            threadIdLogs = 0;
+#endif
     }
     printLocks = 2;
 #if defined(AFS_PTHREAD_ENV)
@@ -203,6 +224,10 @@ ResetDebug_Signal(int signo)
 						 * this signal handler
 						 * needs to be set
 						 * again */
+#if defined(AFS_PTHREAD_ENV)
+    if (threadIdLogs == 1)
+        threadIdLogs = 0;
+#endif
     if (mrafsStyleLogs)
 	OpenLog((char *)&ourName);
 }				/*ResetDebug_Signal */
@@ -247,8 +272,9 @@ OpenLog(const char *fileName)
 #endif
 
     if (mrafsStyleLogs) {
-        time_t t = Start.tv_sec;
+        time_t t;
 	TM_GetTimeOfDay(&Start, 0);
+        t = Start.tv_sec;	
 	TimeFields = localtime(&t);
 	if (fileName) {
 	    if (strncmp(fileName, (char *)&ourName, strlen(fileName)))
