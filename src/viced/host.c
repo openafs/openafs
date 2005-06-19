@@ -1452,6 +1452,7 @@ h_FindClient_r(struct rx_connection *tcon)
     if (!client) {
 	host = h_GetHost_r(tcon);	/* Returns it h_Held */
 
+    retryfirstclient:
 	/* First try to find the client structure */
 	for (client = host->FirstClient; client; client = client->next) {
 	    if (!client->deleted && (client->sid == rxr_CidOf(tcon))
@@ -1485,6 +1486,15 @@ h_FindClient_r(struct rx_connection *tcon)
 
 	/* Still no client structure - get one */
 	if (!client) {
+	    h_Lock_r(host);
+	    /* Retry to find the client structure */
+	    for (client = host->FirstClient; client; client = client->next) {
+		if (!client->deleted && (client->sid == rxr_CidOf(tcon))
+		    && (client->VenusEpoch == rxr_GetEpoch(tcon))) {
+		    h_Unlock_r(host);
+		    goto retryfirstclient;
+		}
+	    }
 	    client = GetCE();
 	    ObtainWriteLock(&client->lock);
 	    client->refCount = 1;
@@ -1501,6 +1511,7 @@ h_FindClient_r(struct rx_connection *tcon)
 	    client->VenusEpoch = rxr_GetEpoch(tcon);
 	    client->CPS.prlist_val = 0;
 	    client->CPS.prlist_len = 0;
+	    h_Unlock_r(host);
 	    CurrentConnections++;	/* increment number of connections */
 	}
     }
