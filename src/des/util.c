@@ -20,11 +20,6 @@ RCSID
 #include <sys/types.h>
 #include <des.h>
 #include "des_prototypes.h"
-#include "stats.h"
-
-#ifndef AFS_PTHREAD_ENV 
-struct rxkad_stats rxkad_stats = { { 0 } }; 
-#endif
 
 int
 des_cblock_print_file(des_cblock * x, FILE * fp)
