@@ -3,6 +3,7 @@ util/afs_atomlist.c
 util/uuid.c
 util/unified_afs.*
 dir/dir.c
+des/stats.h
 fsint/afsaux.c
 fsint/K*.[ch]
 fsint/*.xg
