@@ -70,9 +70,8 @@ struct tokenInfo {
 };
 
 
-CommandProc(as, arock)
-     char *arock;
-     struct cmd_syndesc *as;
+int 
+CommandProc(struct cmd_syndesc *as, char *arock)
 {
 #define	MAXCELLS 20		/* XXX */
     struct cmd_item *itp;
@@ -102,10 +101,8 @@ CommandProc(as, arock)
 
 #include "AFS_component_version_number.c"
 
-main(argc, argv)
-     int argc;
-     char *argv[];
-
+int
+main(int argc, char *argv[])
 {				/*Main routine */
     struct cmd_syndesc *ts;
     register afs_int32 code;
@@ -143,9 +140,8 @@ main(argc, argv)
  *           then re-register the good ones.  Ugly, but it works.
  */
 
-unlog_ForgetCertainTokens(list, listSize)
-     char **list;
-     int listSize;
+int
+unlog_ForgetCertainTokens(char **list, int listSize)
 {
     unsigned count, index, index2;
     afs_int32 code;
@@ -212,10 +208,8 @@ unlog_ForgetCertainTokens(list, listSize)
 /*
  * 0 if not in list, 1 if in list
  */
-unlog_CheckUnlogList(list, count, principal)
-     char **list;
-     int count;
-     struct ktc_principal *principal;
+int
+unlog_CheckUnlogList(char **list, int count, struct ktc_principal *principal)
 {
     do {
 	if (strcmp(*list, principal->cell) == 0)
@@ -232,9 +226,8 @@ unlog_CheckUnlogList(list, count, principal)
  *         because it assumes it isn't a problem.
  */
 
-unlog_NormalizeCellNames(list, size)
-     char **list;
-     int size;
+int
+unlog_NormalizeCellNames(char **list, int size)
 {
     char *newCellName, *lcstring();
     unsigned index;
@@ -279,11 +272,8 @@ unlog_NormalizeCellNames(list, size)
  * check given list to assure tokens were held for specified cells
  * prints warning messages for those cells without such entries.
  */
-unlog_VerifyUnlog(cellList, cellListSize, tokenList, tokenListSize)
-     char **cellList;
-     int cellListSize;
-     struct tokenInfo *tokenList;
-     int tokenListSize;
+int
+unlog_VerifyUnlog(char **cellList, int cellListSize, struct tokenInfo *tokenList, int tokenListSize)
 {
     int index;
 
