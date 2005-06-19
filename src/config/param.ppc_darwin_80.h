@@ -22,7 +22,8 @@
 #define AFS_NONFSTRANS
 #define AFS_SYSCALL             230
 #define AFS_NAMEI_ENV 1
-#define DARWIN_REFBASE 3
+
+#define AFS_BOZONLOCK_ENV 1
 
 /* File system entry (used if mount.h doesn't define MOUNT_AFS */
 #define AFS_MOUNT_AFS    "afs"
