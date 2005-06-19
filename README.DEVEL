@@ -4,10 +4,6 @@ Notes on Coding Standards/Requirements for OpenAFS Source
 Do not use $< in any cross-platform dir as it requires a reasonable
 make that is not available on all systems.
 
-Be careful with prototypes/ANSI-C in code that will be compiled for
-kernel source.  In general, avoid them until we have figured out
-exactly when/where they can be used safely.
-
 Do not have build rules that build multiple targets. Make doesn't seem able
 to handle this, and it interferes with -j builds. (In particular, build the
 rxgen targets individually and not using the flags for building all the files
