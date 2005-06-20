@@ -6,7 +6,7 @@
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
  */
-/* copyright (c) 2005
+/* AFSIFS Portions copyright (c) 2005
  * the regents of the university of michigan
  * all rights reserved
  * 
@@ -124,25 +124,25 @@ int WINAPI WinMain(
 #endif 
 
     if (!InitClass(hInstance))
-		return (FALSE);
+        return (FALSE);
 
-	if (!InitInstance(hInstance, nCmdShow))
-		return (FALSE);
+    if (!InitInstance(hInstance, nCmdShow))
+        return (FALSE);
 
-	while (GetMessage(&msg, NULL, 0, 0)) {
-		TranslateMessage(&msg);
-		DispatchMessage(&msg);
-	}
+    while (GetMessage(&msg, NULL, 0, 0)) {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+    }
 
 #ifdef AFSIFS
-	WaitForMultipleObjects(WORKER_THREADS, hAFSDWorkerThread, TRUE, INFINITE);
-	for (i = 0; i < WORKER_THREADS; i++)
-		CloseHandle(hAFSDWorkerThread[i]);
-	//CloseHandle(hAFSDMainThread);
-	RpcMgmtStopServerListening(NULL);
+    WaitForMultipleObjects(WORKER_THREADS, hAFSDWorkerThread, TRUE, INFINITE);
+    for (i = 0; i < WORKER_THREADS; i++)
+        CloseHandle(hAFSDWorkerThread[i]);
+    //CloseHandle(hAFSDMainThread);
+    RpcMgmtStopServerListening(NULL);
 #endif
 
-	return (msg.wParam);
+    return (msg.wParam);
 }
 
 
@@ -224,20 +224,20 @@ BOOL InitInstance(
 		osi_panic(reason, __FILE__, __LINE__);
 
 #ifndef AFSIFS
-	code = afsd_InitSMB(&reason, MessageBox);
+        code = afsd_InitSMB(&reason, MessageBox);
 #else
 	code = ifs_Init(&reason);
 #endif
 
 	if (code != 0)
-		osi_panic(reason, __FILE__, __LINE__);
+            osi_panic(reason, __FILE__, __LINE__);
 
 #ifdef AFSIFS
 	DoTerminate = CreateEvent(NULL, TRUE, FALSE, TEXT("afsd_service_DoTerminate"));
-    if ( GetLastError() == ERROR_ALREADY_EXISTS )
-        afsi_log("Event Object Already Exists: %s", TEXT("afsd_service_DoTerminate"));
+        if ( GetLastError() == ERROR_ALREADY_EXISTS )
+            afsi_log("Event Object Already Exists: %s", TEXT("afsd_service_DoTerminate"));
 	for (cnt = 0; cnt < WORKER_THREADS; cnt++)
-		hAFSDWorkerThread[cnt] = CreateThread(NULL, 0, ifs_MainLoop, 0, 0, NULL);
+            hAFSDWorkerThread[cnt] = CreateThread(NULL, 0, ifs_MainLoop, 0, 0, NULL);
 #endif
 
 	ShowWindow(hWnd, SW_SHOWMINNOACTIVE);

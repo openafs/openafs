@@ -6,7 +6,7 @@
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
  */
-/* copyright (c) 2005
+/* AFSIFS portions copyright (c) 2005
  * the regents of the university of michigan
  * all rights reserved
  * 
@@ -126,12 +126,12 @@ static void afsd_notifier(char *msgp, char *filep, long line)
 #endif
 
 #ifndef AFSIFS
-	SetEvent(WaitToTerminate);
+    SetEvent(WaitToTerminate);
 #else
-	SetEvent(DoTerminate);
-	WaitForMultipleObjects(WORKER_THREADS, hAFSDWorkerThread, TRUE, INFINITE);
-	for (i = 0; i < WORKER_THREADS; i++)
-		CloseHandle(hAFSDWorkerThread[i]);
+    SetEvent(DoTerminate);
+    WaitForMultipleObjects(WORKER_THREADS, hAFSDWorkerThread, TRUE, INFINITE);
+    for (i = 0; i < WORKER_THREADS; i++)
+        CloseHandle(hAFSDWorkerThread[i]);
 #endif
 
 #ifdef JUMP
@@ -240,7 +240,7 @@ afsd_ServiceControlHandler(DWORD ctrlCode)
 #ifndef AFSIFS
         SetEvent(WaitToTerminate);
 #else
-		SetEvent(DoTerminate);
+        SetEvent(DoTerminate);
 #endif
         break;
 
@@ -312,7 +312,7 @@ afsd_ServiceControlHandlerEx(
 #ifndef AFSIFS
         SetEvent(WaitToTerminate);
 #else
-		SetEvent(DoTerminate);
+        SetEvent(DoTerminate);
 #endif
         dwRet = NO_ERROR;
         break;
@@ -502,7 +502,7 @@ static void DismountGlobalDrives()
         return;
 
 #ifndef AFSIFS    
-	while (1) {
+    while (1) {
         dwDriveSize = sizeof(szDriveToMapTo);
         dwSubMountSize = sizeof(szSubMount);
         dwResult = RegEnumValue(hKey, dwIndex++, szDriveToMapTo, &dwDriveSize, 0, &dwType, szSubMount, &dwSubMountSize);
@@ -1086,7 +1086,7 @@ afsd_Main(DWORD argc, LPTSTR *argv)
         afsi_log("Event Object Already Exists: %s", TEXT("afsd_service_WaitToTerminate"));
 
 #ifdef AFSIFS
-	DoTerminate = CreateEvent(NULL, TRUE, FALSE, TEXT("afsd_service_DoTerminate"));
+    DoTerminate = CreateEvent(NULL, TRUE, FALSE, TEXT("afsd_service_DoTerminate"));
     if ( GetLastError() == ERROR_ALREADY_EXISTS )
         afsi_log("Event Object Already Exists: %s", TEXT("afsd_service_DoTerminate"));
 #endif
@@ -1274,14 +1274,14 @@ afsd_Main(DWORD argc, LPTSTR *argv)
             osi_panic(reason, __FILE__, __LINE__);
         }
 #else
-		code = ifs_Init(&reason);
-		if (code != 0) {
-			afsi_log("ifs_Init failed: %s (code = %d)", reason, code);
-			osi_panic(reason, __FILE__, __LINE__);
-          }
-		for (cnt = 0; cnt < WORKER_THREADS; cnt++)
-			hAFSDWorkerThread[cnt] = CreateThread(NULL, 0, ifs_MainLoop, 0, 0, NULL);
-#endif
+        code = ifs_Init(&reason);
+        if (code != 0) {
+            afsi_log("ifs_Init failed: %s (code = %d)", reason, code);
+            osi_panic(reason, __FILE__, __LINE__);
+        }     
+        for (cnt = 0; cnt < WORKER_THREADS; cnt++)
+            hAFSDWorkerThread[cnt] = CreateThread(NULL, 0, ifs_MainLoop, 0, 0, NULL);
+#endif  
 
         /* allow an exit to be called post smb initialization */
         hHookDll = LoadLibrary(AFSD_HOOK_DLL);
@@ -1359,11 +1359,11 @@ afsd_Main(DWORD argc, LPTSTR *argv)
     }
 
 #ifndef AFSIFS
-	WaitForSingleObject(WaitToTerminate, INFINITE);
+    WaitForSingleObject(WaitToTerminate, INFINITE);
 #else
-	WaitForMultipleObjects(WORKER_THREADS, hAFSDWorkerThread, TRUE, INFINITE);
-	for (cnt = 0; cnt < WORKER_THREADS; cnt++)
-		CloseHandle(hAFSDWorkerThread[cnt]);
+    WaitForMultipleObjects(WORKER_THREADS, hAFSDWorkerThread, TRUE, INFINITE);
+    for (cnt = 0; cnt < WORKER_THREADS; cnt++)
+        CloseHandle(hAFSDWorkerThread[cnt]);
 #endif
 
     afsi_log("Received Termination Signal, Stopping Service");
