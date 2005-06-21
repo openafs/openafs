@@ -118,7 +118,7 @@ pinstall: config
 procmgmt: pinstall
 	${COMPILE_PART1} procmgmt ${COMPILE_PART2}
 
-util: procmgmt
+util: procmgmt des
 	${COMPILE_PART1} util ${COMPILE_PART2}
 
 audit: util rx rxkad
