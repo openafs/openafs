@@ -47,7 +47,6 @@
 #define AFSOP_BASIC_INIT	 36	/* used to be part of START_AFS */
 #define AFSOP_SET_BACKUPTREE	 37	/* enable backup tree support */
 #define AFSOP_SET_RXPCK		 38	/*set rx_extraPackets*/
-#define AFSOP_BUCKETPCT          39     /* bucket percentage */
 
 /* The range 20-30 is reserved for AFS system offsets in the afs_syscall */
 #define	AFSCALL_PIOCTL		20

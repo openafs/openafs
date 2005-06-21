@@ -802,14 +802,10 @@ struct afs_stats_CMPerf {
     afs_uint32 cbloops;
     afs_uint32 osiread_efaults;
     afs_int32 cacheBlocksDiscarded;	/*# cache blocks free but not truncated */
-    afs_int32 cacheBucket0_Discarded;  
-    afs_int32 cacheBucket1_Discarded;  
-    afs_int32 cacheBucket2_Discarded;  
-
     /*
      * Spares for future expansion.
      */
-    afs_int32 spare[10];	/*Spares */
+    afs_int32 spare[13];	/*Spares */
 };
 
 

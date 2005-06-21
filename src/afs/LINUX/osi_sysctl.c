@@ -20,11 +20,6 @@
 extern afs_int32 hm_retry_RO;
 extern afs_int32 hm_retry_RW;
 extern afs_int32 hm_retry_int;
-extern afs_int32 afs_blocksUsed_0;
-extern afs_int32 afs_blocksUsed_1;
-extern afs_int32 afs_blocksUsed_2;
-extern afs_int32 afs_pct1;
-extern afs_int32 afs_pct2;
 
 #ifdef CONFIG_SYSCTL
 static struct ctl_table_header *afs_sysctl = NULL;
@@ -52,34 +47,6 @@ static ctl_table afs_sysctl_table[] = {
     ,
     {6, "bkVolPref",
      &afs_bkvolpref, sizeof(afs_int32), 0644, NULL,
-     &proc_dointvec}
-    ,
-    {7, "afs_blocksUsed",
-     &afs_blocksUsed, sizeof(afs_int32), 0444, NULL,
-     &proc_dointvec}
-    ,
-    {8, "afs_blocksUsed_0",
-     &afs_blocksUsed_0, sizeof(afs_int32), 0644, NULL,
-     &proc_dointvec}
-    ,
-    {9, "afs_blocksUsed_1",
-     &afs_blocksUsed_1, sizeof(afs_int32), 0644, NULL,
-     &proc_dointvec}
-    ,
-    {10, "afs_blocksUsed_2",
-     &afs_blocksUsed_2, sizeof(afs_int32), 0644, NULL,
-     &proc_dointvec}
-    ,
-    {11, "afs_pct1",
-     &afs_pct1, sizeof(afs_int32), 0644, NULL,
-     &proc_dointvec}
-    ,
-    {12, "afs_pct2",
-     &afs_pct2, sizeof(afs_int32), 0644, NULL,
-     &proc_dointvec}
-    ,
-    {13, "afs_cacheBlocks",
-     &afs_cacheBlocks, sizeof(afs_int32), 0644, NULL,
      &proc_dointvec}
     ,
     {0}

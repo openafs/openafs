@@ -517,18 +517,6 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 	DInit(temp);
 	afs_rootFid.Fid.Volume = 0;
 	code = 0;
-    } else if (parm == AFSOP_BUCKETPCT) {
-	/* need to enable this now, will disable again before GO
-	   if we don't have 100% */
-	splitdcache = 1;
-	switch (parm2) {
-	case 1:
-	    afs_tpct1 = parm3;
-	    break;
-	case 2:
-	    afs_tpct2 = parm3;
-	    break;
-	}           
     } else if (parm == AFSOP_ADDCELL) {
 	/* add a cell.  Parameter 2 is 8 hosts (in net order),  parm 3 is the null-terminated
 	 * name.  Parameter 4 is the length of the name, including the null.  Parm 5 is the
@@ -705,13 +693,6 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 	    afs_osi_Sleep(&afs_initState);
 	afs_initState = 101;
 	afs_setTime = parm2;
-	if (afs_tpct1 + afs_tpct2 != 100) {
-	    afs_tpct1 = 0;
-	    afs_tpct2 = 0;
-	    splitdcache = 0;
-	} else {        
-	    splitdcache = 1;
-	}
 	afs_osi_Wakeup(&afs_initState);
 #if	(!defined(AFS_NONFSTRANS)) || defined(AFS_AIX_IAUTH_ENV)
 	afs_nfsclient_init();

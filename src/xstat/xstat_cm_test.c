@@ -755,10 +755,6 @@ PrintOverallPerfInfo(a_ovP)
     printf("\t%10d srvMaxChainLengthHWM\n", a_ovP->srvMaxChainLengthHWM);
     printf("\t%10d srvRecordsHWM\n", a_ovP->srvRecordsHWM);
 
-    printf("\t%10d cacheBucket0_Discarded\n",  a_ovP->cacheBucket0_Discarded);
-    printf("\t%10d cacheBucket1_Discarded\n",  a_ovP->cacheBucket1_Discarded);
-    printf("\t%10d cacheBucket2_Discarded\n",  a_ovP->cacheBucket2_Discarded);
-
     printf("\t%10d sysName_ID\n", a_ovP->sysName_ID);
 
     printf("\tFile Server up/downtimes, same cell:\n");

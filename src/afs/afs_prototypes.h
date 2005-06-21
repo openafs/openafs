@@ -297,7 +297,6 @@ extern afs_int32 afs_blocksUsed;
 extern afs_int32 afs_blocksDiscarded;
 extern int afs_WaitForCacheDrain;
 extern int cacheDiskType;
-extern afs_uint32 afs_tpct1, afs_tpct2, splitdcache;
 extern unsigned char *afs_indexFlags;
 extern struct afs_cacheOps *afs_cacheType;
 extern ino_t cacheInode;

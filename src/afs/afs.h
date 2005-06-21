@@ -814,9 +814,6 @@ struct cm_initparams {
 
 #define	NULLIDX	    (-1)	/* null index definition */
 /* struct dcache states bits */
-#define DRO         1
-#define DBackup     2
-#define DRW         4
 #define	DWriting    8		/* file being written (used for cache validation) */
 
 /* dcache data flags */
@@ -941,7 +938,7 @@ struct dcache {
     char dflags;		/* Data flags */
     char mflags;		/* Meta flags */
     struct fcache f;		/* disk image */
-    afs_int32 bucket;           /* which bucket these dcache entries are in */
+
     /*
      * Locking rules:
      *
