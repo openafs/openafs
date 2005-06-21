@@ -9,6 +9,7 @@
 static char *rcsid = "$Id$";
 #endif /* lint || SABER */
 
+#include <afs/stds.h>
 #include "aklog.h"
 #include <stdio.h>
 #include <sys/types.h>
@@ -107,7 +108,7 @@ static int get_cred(context, name, inst, realm, c, creds)
     increds.client = client_principal;
     increds.times.endtime = 0;
 	/* Ask for DES since that is what V4 understands */
-    /* increds.keyblock.enctype = ENCTYPE_DES_CBC_CRC; */
+    increds.keyblock.enctype = ENCTYPE_DES_CBC_CRC;
 
     r = krb5_get_credentials(context, 0, _krb425_ccache, &increds, creds);
     if (r)

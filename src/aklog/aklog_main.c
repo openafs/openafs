@@ -1608,3 +1608,15 @@ void aklog(argc, argv, a_params)
 
     params.exitprog(status);
 }
+
+#ifndef HAVE_ADD_TO_ERROR_TABLE
+#include <afs/error_table.h>
+
+void add_error_table (const struct error_table *);
+
+void
+add_to_error_table(struct et_list *new_table)
+{
+	add_error_table(new_table->table);
+}
+#endif /* HAVE_ADD_TO_ERROR_TABLE */

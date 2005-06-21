@@ -9,6 +9,7 @@
 static char *rcsid = "$Id$";
 #endif /* lint || SABER */
 
+#include <afs/stds.h>
 #include "aklog.h"
 
 #ifndef WINDOWS
