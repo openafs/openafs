@@ -321,6 +321,7 @@ VAllocVnode_r(Error * ec, Volume * vp, VnodeType type)
 	return NULL;
     vnodeNumber = bitNumberToVnodeNumber(bitNumber, class);
 
+ vnrehash:
     VNLog(2, 1, vnodeNumber);
     /* Prepare to move it to the new hash chain */
     newHash = VNODE_HASH(vp, vnodeNumber);
@@ -349,6 +350,8 @@ VAllocVnode_r(Error * ec, Volume * vp, VnodeType type)
 	    VOL_UNLOCK;
 	    ObtainWriteLock(&vnp->lock);
 	    VOL_LOCK;
+	    if (vnp->volumePtr->cacheCheck != vnp->cacheCheck)
+		goto vnrehash;
 	}
 #ifdef AFS_PTHREAD_ENV
 	vnp->writer = pthread_self();
