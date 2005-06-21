@@ -287,19 +287,17 @@ afs_write_inode(struct inode *ip)
 #endif
 }
 
-#if defined(AFS_LINUX26_ENV)
-static void
-afs_drop_inode(struct inode *ip)
-{
-	generic_delete_inode(ip);
-	AFS_GUNLOCK();		/* locked by afs_delete_inode() */
-}
-#endif
-
 static void
 afs_destroy_inode(struct inode *ip)
 {
+    cred_t *credp = crref();
+
+    /* locked by clear_inode() */
+    put_inode_on_dummy_list(ip);
     ip->i_state = 0;
+    afs_InactiveVCache(ITOAFS(ip), credp); /* afs_FlushVCache()? */
+    AFS_GUNLOCK();
+    crfree(credp);
 }
 
 
@@ -310,20 +308,21 @@ afs_destroy_inode(struct inode *ip)
  * That will trigger the call to delete routine.
  */
 
+#if defined(AFS_LINUX24_ENV)
+static void
+afs_clear_inode(struct inode *ip)
+{
+    AFS_GLOCK();       /* unlocked by destroy_inode() */
+}
+#else
 static void
 afs_delete_inode(struct inode *ip)
 {
-#if defined(AFS_LINUX26_ENV)
     AFS_GLOCK();		/* after spin_unlock(inode_lock) */
-    put_inode_on_dummy_list(ip);
-    osi_clear_inode(ip);
-#else
-    AFS_GLOCK();
     osi_clear_inode(ip);
     AFS_GUNLOCK();
-#endif
 }
-
+#endif
 
 /* afs_put_super
  * Called from unmount to release super_block. */
@@ -413,11 +412,12 @@ afs_umount_begin(struct super_block *sbp)
 }
 
 struct super_operations afs_sops = {
-#if defined(AFS_LINUX26_ENV)
-  .drop_inode =		afs_drop_inode,
+#if defined(AFS_LINUX24_ENV)
   .destroy_inode =	afs_destroy_inode,
+  .clear_inode =        afs_clear_inode,
+#else
+  .delete_inode =       afs_delete_inode,
 #endif
-  .delete_inode =	afs_delete_inode,
   .write_inode =	afs_write_inode,
   .put_super =		afs_put_super,
   .statfs =		afs_statfs,

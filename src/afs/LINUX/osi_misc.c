@@ -363,22 +363,16 @@ osi_linux_free_inode_pages(void)
     }
 }
 
+#if !defined(AFS_LINUX24_ENV)
 void
 osi_clear_inode(struct inode *ip)
 {
     cred_t *credp = crref();
     struct vcache *vcp = ITOAFS(ip);
 
-#if defined(AFS_LINUX24_ENV)
-    if (atomic_read(&ip->i_count) > 1)
-	printf("afs_put_inode: ino %ld (0x%lx) has count %ld\n",
-	       (long)ip->i_ino, (unsigned long)ip,
-	       (long)atomic_read(&ip->i_count));
-#else
     if (ip->i_count > 1)
 	printf("afs_put_inode: ino %ld (0x%lx) has count %ld\n",
 	       (long)ip->i_ino, (unsigned long)ip, (long)ip->i_count);
-#endif
 
     afs_InactiveVCache(vcp, credp);
     ObtainWriteLock(&vcp->lock, 504);
@@ -390,7 +384,6 @@ osi_clear_inode(struct inode *ip)
     crfree(credp);
 }
 
-#if !defined(AFS_LINUX26_ENV)
 /* iput an inode. Since we still have a separate inode pool, we don't want
  * to call iput on AFS inodes, since they would then end up on Linux's
  * inode_unsed list.
