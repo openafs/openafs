@@ -6,16 +6,14 @@ dnl
 
 AC_DEFUN([OPENAFS_KRB5CONF],[
 
-AC_ARG_VAR(KRB5CFLAGS, [C flags to compile Kerberos 5 programs])
-AC_ARG_VAR(KRB5LIBS, [Libraries and flags to compile Kerberos 5 programs])
-AC_ARG_VAR(KRB5_CONFIG, [Location of krb5-config script])
+dnl AC_ARG_VAR(KRB5CFLAGS, [C flags to compile Kerberos 5 programs])
+dnl AC_ARG_VAR(KRB5LIBS, [Libraries and flags to compile Kerberos 5 programs])
+dnl AC_ARG_VAR(KRB5_CONFIG, [Location of krb5-config script])
 
-AC_ARG_WITH([krb5-conf],
-	AC_HELP_STRING([--with-krb5-config[=krb5-config-location]],
-		       [Use a krb5-config script to configure Kerberos]),
-	[if test X$withval != Xno; then
+AC_ARG_WITH([krb5-conf],[--with-krb5-config[=krb5-config-location]    Use a krb5-config script to configure Kerberos])
+if test X$with_krb5_conf != X; then
 		conf_krb5=YES
-		if test X$withval = Xyes; then
+		if test X$with_krb5_conf = Xyes; then
 			AC_PATH_PROG(KRB5_CONFIG, krb5-config, not_found)
 			if test X$KRB5_CONFIG = Xnot_found; then
 				AC_MSG_ERROR([cannot find krb5-config script, you must configure Kerberos manually])
@@ -35,12 +33,12 @@ AC_ARG_WITH([krb5-conf],
 		fi
 		AC_MSG_RESULT([Adding $KRB5CFLAGS to KRB5CFLAGS])
 		AC_MSG_RESULT([Adding $KRB5LIBS to KRB5LIBS])
-	fi])
+fi
 
-AC_ARG_WITH([krb5],
-	AC_HELP_STRING([--with-krb5],
-		       [Support for Kerberos 5 (manual configuration)]),
-	[if test X$conf_krb5 = XYES; then
+AC_ARG_WITH([krb5], [--with-krb5 Support for Kerberos 5 (manual configuration)])
+
+if test X$with_krb5 = Xyes; then
+        if test X$conf_krb5 = XYES; then
 		AC_MSG_ERROR([--with-krb5-config and --with-krb5 are mutually exclusive, choose only one])
 	fi
 	if test "X$KRB5CFLAGS" = X; then
@@ -49,7 +47,8 @@ AC_ARG_WITH([krb5],
 	if test "X$KRB5LIBS" = X; then
 		AC_MSG_WARN([KRB5LIBS is not set])
 	fi
-	conf_krb5=YES])
+	conf_krb5=YES
+fi
 
 BUILD_KRB5=no
 if test X$conf_krb5 = XYES; then
