@@ -34,6 +34,7 @@ RCSID
 #include <unistd.h>
 #endif
 #include <signal.h>
+#include <afs/afsutil.h>
 #include <time.h>
 
 #include <lock.h>
@@ -93,11 +94,10 @@ CommandProc(struct cmd_syndesc *as, char *arock)
 {
     char *hostName, *portName, *times;
     afs_int32 hostAddr;
-    struct in_addr inhostAddr;
     register afs_int32 i, j, code;
     short port;
     int int32p;
-    time_t now, diff, newtime;
+    time_t now, then, diff, newtime;
     struct hostent *th;
     struct rx_connection *tconn;
     struct rx_securityClass *sc;
@@ -161,11 +161,11 @@ CommandProc(struct cmd_syndesc *as, char *arock)
 	exit(0);
     }
     now = time(0);
+    then = udebug.now;
 
     /* now print the main info */
-    times = ctime((time_t *) & udebug.now);
+    times = ctime(&then);
     times[24] = 0;
-    inhostAddr.s_addr = hostAddr;
     if (!oldServer) {
 	printf("Host's addresses are: ");
 	for (j = 0; udebug.interfaceAddr[j] && (j < UBIK_MAX_INTERFACE_ADDR);
@@ -173,7 +173,7 @@ CommandProc(struct cmd_syndesc *as, char *arock)
 	    printf("%s ", afs_inet_ntoa(htonl(udebug.interfaceAddr[j])));
 	printf("\n");
     }
-    printf("Host's %s time is %s\n", inet_ntoa(inhostAddr), times);
+    printf("Host's %s time is %s\n", afs_inet_ntoa(hostAddr), times);
 
     times = ctime(&now);
     times[24] = 0;
@@ -196,10 +196,9 @@ CommandProc(struct cmd_syndesc *as, char *arock)
     if (udebug.lastYesHost == 0xffffffff) {
 	printf("Last yes vote not cast yet \n");
     } else {
-	inhostAddr.s_addr = htonl(udebug.lastYesHost);
 	diff = udebug.now - udebug.lastYesTime;
 	printf("Last yes vote for %s was %d secs ago (%ssync site); \n",
-	       inet_ntoa(inhostAddr), diff,
+	       afs_inet_ntoa(htonl(udebug.lastYesHost)), diff,
 	       ((udebug.lastYesState) ? "" : "not "));
 
 	diff = udebug.now - udebug.lastYesClaim;
@@ -236,14 +235,14 @@ CommandProc(struct cmd_syndesc *as, char *arock)
 	    printf("I am a clone and never can become sync site\n");
 	else
 	    printf("I am not sync site\n");
-	inhostAddr.s_addr = htonl(udebug.lowestHost);
 	diff = udebug.now - udebug.lowestTime;
-	printf("Lowest host %s was set %d secs ago\n", inet_ntoa(inhostAddr),
+	printf("Lowest host %s was set %d secs ago\n",
+	       afs_inet_ntoa(htonl(udebug.lowestHost)),
 	       diff);
 
-	inhostAddr.s_addr = htonl(udebug.syncHost);
 	diff = udebug.now - udebug.syncTime;
-	printf("Sync host %s was set %d secs ago\n", inet_ntoa(inhostAddr),
+	printf("Sync host %s was set %d secs ago\n",
+	       afs_inet_ntoa(htonl(udebug.syncHost)),
 	       diff);
     }
 
@@ -293,7 +292,6 @@ CommandProc(struct cmd_syndesc *as, char *arock)
 		printf("error code %d from VOTE_SDebug\n", code);
 		break;
 	    }
-	    inhostAddr.s_addr = htonl(usdebug.addr);
 	    /* otherwise print the structure */
 	    printf("\nServer (%s", afs_inet_ntoa(htonl(usdebug.addr)));
 	    for (j = 0;
