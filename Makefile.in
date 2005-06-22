@@ -283,7 +283,7 @@ bozo: cmd comerr audit
 vfsck:	vol
 	set -x; \
 	case ${SYS_NAME} in \
-	sgi_* | *linux* | rs_aix42 | *_darwin* | hp_ux* | ia64_hpux* | *fbsd* | *_obsd* | *_nbsd* | sun*_4* | rs_aix5* ) \
+	sgi_* | *linux* | rs_aix42 | *_darwin* | ia64_hpux* | *fbsd* | *_obsd* | *_nbsd* | sun*_4* | rs_aix5* ) \
 		echo skip vfsck for ${SYS_NAME} ;; \
 	 * ) \
 		${COMPILE_PART1} vfsck ${COMPILE_PART2} ;; \
