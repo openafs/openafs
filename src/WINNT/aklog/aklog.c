@@ -196,6 +196,7 @@ void ViceIDToUsername(char *username, char *realm_of_user, char *realm_of_cell,
     if (dflag)
         printf("About to resolve name %s to id\n", username);
 
+#ifdef COMMENT
     /*
     * Talk about DUMB!  It turns out that there is a bug in
     * pr_Initialize -- even if you give a different cell name
@@ -215,6 +216,7 @@ void ViceIDToUsername(char *username, char *realm_of_user, char *realm_of_cell,
             confname[i + 1] = '\0';
         }
     }
+#endif
 
     strcpy(lastcell, aserver->cell);
 
