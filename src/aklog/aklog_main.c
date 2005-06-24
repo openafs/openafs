@@ -63,15 +63,10 @@ u_long ntohl(u_long x)
 
 #ifdef WINDOWS
 
-#ifdef PRE_AFS35
-#include "afs_tokens.h"
-#include "rxkad.h"
-#else /* !PRE_AFS35 */
 #include <afs/stds.h>
 #include <afs/auth.h>
 #include <rx/rxkad.h>
 #include <afs/dirpath.h>
-#endif /* PRE_AFS35 */
 
 #else /* !WINDOWS */
 #include <afs/stds.h>
@@ -96,7 +91,7 @@ u_long ntohl(u_long x)
 #define AFSINST ""
 
 #ifndef AFS_TRY_FULL_PRINC
-#define AFS_TRY_FULL_PRINC 0
+#define AFS_TRY_FULL_PRINC 1
 #endif /* AFS_TRY_FULL_PRINC */
 
 #define AKLOG_SUCCESS 0
@@ -138,6 +133,7 @@ typedef struct {
 struct afsconf_cell ak_cellconfig; /* General information about the cell */
 static char linkedcell[MAXCELLCHARS+1];
 static char linkedcell2[MAXCELLCHARS+1];
+static krb5_ccache  _krb425_ccache = NULL;
 
 #ifdef WINDOWS
 
@@ -153,22 +149,6 @@ static long cm_SearchCellFile_CallBack();
  * Why doesn't AFS provide these prototypes?
  */
 
-#ifdef AFS_INT32
-typedef afs_int32 int32 ;
-#endif
-
-extern int afsconf_GetLocalCell(struct afsconf_dir *, char *, afs_int32);
-extern int afsconf_GetCellInfo(struct afsconf_dir *, char *, char *,
-			       struct afsconf_cell *);
-extern int afsconf_Close(struct afsconf_dir *);
-extern int ktc_GetToken(struct ktc_principal *, struct ktc_token *, int,
-			struct ktc_principal *);
-extern int ktc_SetToken(struct ktc_principal *, struct ktc_token *,
-			struct ktc_principal *, int);
-extern afs_int32 pr_Initialize(afs_int32, char *, char *, afs_int32);
-extern int pr_SNameToId(char *, afs_int32 *);
-extern int pr_CreateUser(char *, afs_int32 *);
-extern int pr_End();
 extern int pioctl(char *, afs_int32, struct ViceIoctl *, afs_int32);
 
 /*
@@ -176,6 +156,10 @@ extern int pioctl(char *, afs_int32, struct ViceIoctl *, afs_int32);
  */
 
 extern char *afs_realm_of_cell(krb5_context, struct afsconf_cell *);
+static int isdir(char *, unsigned char *);
+static krb5_error_code get_credv5(krb5_context context, char *, char *,
+				  char *, krb5_creds **);
+static int get_user_realm(krb5_context, char *);
 
 #endif /* WINDOWS */
 
@@ -188,8 +172,6 @@ extern char *sys_errlist[];
 #define strerror(x) sys_errlist[x]
 #endif /* HAVE_STRERROR */
 
-static aklog_params params;	/* Various aklog functions */
-static char msgbuf[BUFSIZ];	/* String for constructing error messages */
 static char *progname = NULL;	/* Name of this program */
 static int dflag = FALSE;	/* Give debugging information */
 static int noauth = FALSE;	/* If true, don't try to get tokens */
@@ -199,6 +181,7 @@ static int noprdb = FALSE;	/* Skip resolving name to id? */
 static int linked = FALSE;  /* try for both AFS nodes */
 static int afssetpag = FALSE; /* setpag for AFS */
 static int force = FALSE;	/* Bash identical tokens? */
+static int do524 = FALSE;	/* Should we do 524 instead of rxkad2b? */
 static linked_list zsublist;	/* List of zephyr subscriptions */
 static linked_list hostlist;	/* List of host addresses */
 static linked_list authedcells;	/* List of cells already logged to */
@@ -208,12 +191,7 @@ static linked_list authedcells;	/* List of cells already logged to */
 /* maybe needed in the krb524d module as well */
 /* extern unsigned long krb_life_to_time(); */
 
-#ifdef __STDC__
 static char *copy_cellinfo(cellinfo_t *cellinfo)
-#else
-static char *copy_cellinfo(cellinfo)
-  cellinfo_t *cellinfo;
-#endif /* __STDC__ */
 {
     cellinfo_t *new_cellinfo;
 
@@ -224,12 +202,7 @@ static char *copy_cellinfo(cellinfo)
 }
 
 
-#ifdef __STDC__
 static char *copy_string(char *string)    
-#else
-static char *copy_string(string)
-  char *string;
-#endif /* __STDC__ */
 {
     char *new_string;
 
@@ -240,21 +213,11 @@ static char *copy_string(string)
 }
 
 
-#ifdef __STDC__
 static int get_cellconfig(char *cell, struct afsconf_cell *cellconfig, char *local_cell, char *linkedcell)
-#else
-static int get_cellconfig(cell, cellconfig, local_cell, linkedcell)
-    char *cell;
-    struct afsconf_cell *cellconfig;
-    char *local_cell;
-	char *linkedcell;
-#endif /* __STDC__ */
 {
     int status = AKLOG_SUCCESS;
     struct afsconf_dir *configdir;
-#ifndef PRE_AFS35
     char *dirpath;
-#endif /* ! PRE_AFS35 */
 
     memset(local_cell, 0, sizeof(local_cell));
     memset((char *)cellconfig, 0, sizeof(*cellconfig));
@@ -262,17 +225,15 @@ static int get_cellconfig(cell, cellconfig, local_cell, linkedcell)
 #ifndef WINDOWS
 
     if (!(configdir = afsconf_Open(AFSDIR_CLIENT_ETC_DIRPATH))) {
-	sprintf(msgbuf, 
+	fprintf(stderr, 
 		"%s: can't get afs configuration (afsconf_Open(%s))\n",
 		progname, AFSDIR_CLIENT_ETC_DIRPATH);
-	params.pstderr(msgbuf);
-	params.exitprog(AKLOG_AFS);
+	exit(AKLOG_AFS);
     }
 
     if (afsconf_GetLocalCell(configdir, local_cell, MAXCELLCHARS)) {
-	sprintf(msgbuf, "%s: can't determine local cell.\n", progname);
-	params.pstderr(msgbuf);
-	params.exitprog(AKLOG_AFS);
+	fprintf(stderr, "%s: can't determine local cell.\n", progname);
+	exit(AKLOG_AFS);
     }
 
     if ((cell == NULL) || (cell[0] == 0))
@@ -280,9 +241,8 @@ static int get_cellconfig(cell, cellconfig, local_cell, linkedcell)
 
 	linkedcell[0] = '\0';
     if (afsconf_GetCellInfo(configdir, cell, NULL, cellconfig)) {
-	sprintf(msgbuf, "%s: Can't get information about cell %s.\n",
+	fprintf(stderr, "%s: Can't get information about cell %s.\n",
 		progname, cell);
-	params.pstderr(msgbuf);
 	status = AKLOG_AFS;
     }
 	if (cellconfig->linkedCell) 
@@ -296,9 +256,8 @@ static int get_cellconfig(cell, cellconfig, local_cell, linkedcell)
      * of the afsconf_cell structure as we can.
      */
     if (cm_GetRootCellName(local_cell)) {
-	sprintf(msgbuf, "%s: can't get local cellname\n", progname);
-	params.pstderr(msgbuf);
-	params.exitprog(AKLOG_AFS);
+	fprintf(stderr, "%s: can't get local cellname\n", progname);
+	exit(AKLOG_AFS);
     }
 
     if ((cell == NULL) || (cell[0] == 0))
@@ -317,11 +276,7 @@ static int get_cellconfig(cell, cellconfig, local_cell, linkedcell)
      * Get servers of cell. cm_SearchCellFile_CallBack() gets call with
      * each server.
      */
-#ifdef PRE_AFS35
-    status = (int) cm_SearchCellFile(cell, &cm_SearchCellFile_CallBack,
-#else
     status = (int) cm_SearchCellFile(cell, NULL, &cm_SearchCellFile_CallBack,
-#endif
 				     cellconfig /* rock */);
 
     switch(status) {
@@ -329,32 +284,31 @@ static int get_cellconfig(cell, cellconfig, local_cell, linkedcell)
 	break;
 
     case -1:
-	sprintf(msgbuf, "%s: GetWindowsDirectory() failed.\n", progname);
+	fprintf(stderr, "%s: GetWindowsDirectory() failed.\n", progname);
 	break;
 
     case -2:
-	sprintf(msgbuf, "%s: Couldn't open afsdcells.ini for reading\n",
+	fprintf(stderr, "%s: Couldn't open afsdcells.ini for reading\n",
 		progname);
 	break;
 
     case -3:
-	sprintf(msgbuf, "%s: Couldn't find any servers for cell %s\n",
+	fprintf(stderr, "%s: Couldn't find any servers for cell %s\n",
 		progname, cell);
 	break;
 
     case -4:
-	sprintf(msgbuf, "%s: Badly formatted line in afsdcells.ini (does not begin with a \">\" or contain \"#\"\n",
+	fprintf(stderr, "%s: Badly formatted line in afsdcells.ini (does not begin with a \">\" or contain \"#\"\n",
 		progname);
 	break;
 
     default:
-	sprintf(msgbuf, "%s cm_SearchCellFile returned unknown error %d\n",
+	fprintf(stderr, "%s cm_SearchCellFile returned unknown error %d\n",
 		status);
     }
 
     if (status) {
-	params.pstderr(msgbuf);
-	params.exitprog(AKLOG_AFS);
+	exit(AKLOG_AFS);
     }
 
     status = AKLOG_SUCCESS;
@@ -423,7 +377,6 @@ static int auth_to_cell(context, cell, realm)
     static char confname[512] = { 0 };
 #endif
     krb5_creds *v5cred = NULL;
-    CREDENTIALS c;
     struct ktc_principal aserver;
     struct ktc_principal aclient;
     struct ktc_token atoken, btoken;
@@ -455,9 +408,8 @@ static int auth_to_cell(context, cell, realm)
 
     if (ll_string(&authedcells, ll_s_check, cell_to_use)) {
 	if (dflag) {
-	    sprintf(msgbuf, "Already authenticated to %s (or tried to)\n", 
-		    cell_to_use);
-	    params.pstdout(msgbuf);
+	    printf("Already authenticated to %s (or tried to)\n", 
+		   cell_to_use);
 	}
 	return(AKLOG_SUCCESS);
     }
@@ -477,25 +429,22 @@ static int auth_to_cell(context, cell, realm)
      * are in -noauth mode.
      */
     if (ll_string(&zsublist, ll_s_add, cell_to_use) == LL_FAILURE) {
-	sprintf(msgbuf, 
+	fprintf(stderr, 
 		"%s: failure adding cell %s to zephyr subscriptions list.\n",
 		progname, cell_to_use);
-	params.pstderr(msgbuf);
-	params.exitprog(AKLOG_MISC);
+	exit(AKLOG_MISC);
     }
     if (ll_string(&zsublist, ll_s_add, local_cell) == LL_FAILURE) {
-	sprintf(msgbuf, 
+	fprintf(stderr, 
 		"%s: failure adding cell %s to zephyr subscriptions list.\n",
 		progname, local_cell);
-	params.pstderr(msgbuf);
-	params.exitprog(AKLOG_MISC);
+	exit(AKLOG_MISC);
     }
 
     if (!noauth) {
 	if (dflag) {
-	    sprintf(msgbuf, "Authenticating to cell %s (server %s).\n",
-		    cell_to_use, ak_cellconfig.hostName[0]);
-	    params.pstdout(msgbuf);
+	    printf("Authenticating to cell %s (server %s).\n",
+		   cell_to_use, ak_cellconfig.hostName[0]);
 	}
 
 	/*
@@ -507,28 +456,24 @@ static int auth_to_cell(context, cell, realm)
 	if (realm && realm[0]) {
 	    strcpy(realm_of_cell, realm);
 	    if (dflag) {
-		sprintf(msgbuf, "We were told to authenticate to realm %s.\n",
-			realm);
-		params.pstdout(msgbuf);
+		printf("We were told to authenticate to realm %s.\n", realm);
 	    }
 	}
 	else {
 	    char *realm = afs_realm_of_cell(context, &ak_cellconfig);
 
 	    if (!realm) {
-		sprintf(msgbuf, 
+		fprintf(stderr, 
 			"%s: Couldn't figure out realm for cell %s.\n",
 			progname, cell_to_use);
-		params.pstderr(msgbuf);
-		params.exitprog(AKLOG_MISC);
+		exit(AKLOG_MISC);
 	    }
 
 	    strcpy(realm_of_cell, realm);
 
 	    if (dflag) {
-		sprintf(msgbuf, "We've deduced that we need to authenticate to"
-			" realm %s.\n", realm_of_cell);
-		params.pstdout(msgbuf);
+		printf("We've deduced that we need to authenticate to"
+		       " realm %s.\n", realm_of_cell);
 	    }
 	}
 
@@ -580,44 +525,34 @@ static int auth_to_cell(context, cell, realm)
 	 *	afs/<cell>@<realm> i.e. allow for single name with "."
 	 * 	afs@<realm>
 	 */
-#if 0
-	if (dflag) {
-		dee_gettokens(); /* DEBUG */
-	}
-#endif
 
 	if (dflag) {
-	    sprintf(msgbuf, "Getting tickets: %s/%s@%s\n", name,
-		    primary_instance, realm_of_cell);
-	    params.pstdout(msgbuf);
+	    printf("Getting tickets: %s/%s@%s\n", name,
+		   primary_instance, realm_of_cell);
 	}
 
-	status = params.get_cred(context, name, primary_instance, realm_of_cell,
-			 &c, &v5cred);
+	status = get_credv5(context, name, primary_instance, realm_of_cell,
+			    &v5cred);
 
 	if (status == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN) {
 	    if (try_secondary) {
 		if (dflag) {
-		    sprintf(msgbuf, "Principal not found, trying alternate "
-			    "service name: %s/%s@%s\n", name,
+		    printf("Principal not found, trying alternate "
+			   "service name: %s/%s@%s\n", name,
 			    secondary_instance, realm_of_cell);
-		    params.pstdout(msgbuf);
 		}
-		status = params.get_cred(context, name, secondary_instance,
-					 realm_of_cell, &c, &v5cred);
+		status = get_credv5(context, name, secondary_instance,
+				    realm_of_cell, &v5cred);
 	    }
 	}
 
 	if (status != KSUCCESS) {
 	    if (dflag) {
-		sprintf(msgbuf, 
-			"Kerberos error code returned by get_cred: %d\n",
+		printf("Kerberos error code returned by get_cred: %d\n",
 			status);
-		params.pstdout(msgbuf);
 	    }
-	    sprintf(msgbuf, "%s: Couldn't get %s AFS tickets:\n",
+	    fprintf(stderr, "%s: Couldn't get %s AFS tickets:\n",
 		    progname, cell_to_use);
-	    params.pstderr(msgbuf);
 		com_err(progname, status, "while getting AFS tickets");
 	    return(AKLOG_KERBEROS);
 	}
@@ -626,26 +561,77 @@ static int auth_to_cell(context, cell, realm)
 	strncpy(aserver.instance, AFSINST, MAXKTCNAMELEN - 1);
 	strncpy(aserver.cell, cell_to_use, MAXKTCREALMLEN - 1);
 
-	strcpy (username, c.pname);
-	if (c.pinst[0]) {
-	    strcat (username, ".");
-	    strcat (username, c.pinst);
-	}
-
-	atoken.kvno = c.kvno;
-	atoken.startTime = c.issue_date;
 	/*
-	 * It seems silly to go through a bunch of contortions to
-	 * extract the expiration time, when the v5 credentials already
-	 * has the exact time!  Let's use that instead.
-	 *
-	 * Note that this isn't a security hole, as the expiration time
-	 * is also contained in the encrypted token
+ 	 * The default is to use rxkad2b, which means we put in a full
+	 * V5 ticket.  If the user specifies -524, we talk to the
+	 * 524 ticket converter.
 	 */
-	atoken.endTime = v5cred->times.endtime;
-	memcpy(&atoken.sessionKey, c.session, 8);
-	atoken.ticketLen = c.ticket_st.length;
-	memcpy(atoken.ticket, c.ticket_st.dat, atoken.ticketLen);
+
+	if (! do524) {
+	    char *p;
+	    int len;
+
+	    if (dflag)
+	    	printf("Using Kerberos V5 ticket natively\n");
+
+	    len = min(v5cred->client->data[0].length,
+	    	      v5cred->client->length > 1 ? MAXKTCNAMELEN - 2 :
+		      MAXKTCNAMELEN - 1);
+	    strncpy(username, v5cred->client->data[0].data, len);
+	    username[len] = '\0';
+
+	    if (v5cred->client->length > 1) {
+	    	strcat(username, ".");
+		p = username + strlen(username);
+		len = min(v5cred->client->data[1].length,
+			  MAXKTCNAMELEN - strlen(username) - 1);
+		strncpy(p, v5cred->client->data[1].data, len);
+		p[len] = '\0';
+	    }
+
+	    memset(&atoken, 0, sizeof(atoken));
+	    atoken.kvno = RXKAD_TKT_TYPE_KERBEROS_V5;
+	    atoken.startTime = v5cred->times.starttime;;
+	    atoken.endTime = v5cred->times.endtime;
+	    memcpy(&atoken.sessionKey, v5cred->keyblock.contents,
+		   v5cred->keyblock.length);
+	    atoken.ticketLen = v5cred->ticket.length;
+	    memcpy(atoken.ticket, v5cred->ticket.data, atoken.ticketLen);
+	} else {
+    	    CREDENTIALS cred;
+
+	    if (dflag)
+	    	printf("Using Kerberos 524 translator service\n");
+
+	    status = krb5_524_convert_creds(context, v5cred, &cred);
+
+	    if (status) {
+		com_err(progname, status, "while converting tickets "
+			"to Kerberos V4 format");
+		return(AKLOG_KERBEROS);
+	    }
+
+	    strcpy (username, cred.pname);
+	    if (cred.pinst[0]) {
+		strcat (username, ".");
+		strcat (username, cred.pinst);
+	    }
+
+	    atoken.kvno = cred.kvno;
+	    atoken.startTime = cred.issue_date;
+	    /*
+	     * It seems silly to go through a bunch of contortions to
+	     * extract the expiration time, when the v5 credentials already
+	     * has the exact time!  Let's use that instead.
+	     *
+	     * Note that this isn't a security hole, as the expiration time
+	     * is also contained in the encrypted token
+	     */
+	    atoken.endTime = v5cred->times.endtime;
+	    memcpy(&atoken.sessionKey, cred.session, 8);
+	    atoken.ticketLen = cred.ticket_st.length;
+	    memcpy(atoken.ticket, cred.ticket_st.dat, atoken.ticketLen);
+	}
 	
 	if (!force &&
 	    !ktc_GetToken(&aserver, &btoken, sizeof(btoken), &aclient) &&
@@ -655,8 +641,7 @@ static int auth_to_cell(context, cell, realm)
 	    !memcmp(atoken.ticket, btoken.ticket, atoken.ticketLen)) {
 
 	    if (dflag) {
-		sprintf(msgbuf, "Identical tokens already exist; skipping.\n");
-		params.pstdout(msgbuf);
+		printf("Identical tokens already exist; skipping.\n");
 	    }
 	    return 0;
 	}
@@ -669,17 +654,15 @@ static int auth_to_cell(context, cell, realm)
 	if (noprdb) {
 #endif
 	    if (dflag) {
-		sprintf(msgbuf, "Not resolving name %s to id (-noprdb set)\n",
+		printf("Not resolving name %s to id (-noprdb set)\n",
 			username);
-		params.pstdout(msgbuf);
 	    }
 #ifndef WINDOWS
 	}
 	else {
-	    if ((status = params.get_user_realm(context, realm_of_user)) != KSUCCESS) {
-		sprintf(msgbuf, "%s: Couldn't determine realm of user:)",
+	    if ((status = get_user_realm(context, realm_of_user)) != KSUCCESS) {
+		fprintf(stderr, "%s: Couldn't determine realm of user:)",
 			progname);
-		params.pstderr(msgbuf);
 		com_err(progname, status, " while getting realm");
 		return(AKLOG_KERBEROS);
 	    }
@@ -689,9 +672,8 @@ static int auth_to_cell(context, cell, realm)
 	    }
 
 	    if (dflag) {
-		sprintf(msgbuf, "About to resolve name %s to id in cell %s.\n", 
+		printf("About to resolve name %s to id in cell %s.\n", 
 			username, aserver.cell);
-		params.pstdout(msgbuf);
 	    }
 
 	    strcpy(lastcell, aserver.cell);
@@ -701,10 +683,9 @@ static int auth_to_cell(context, cell, realm)
 	    
 	    if (dflag) {
 		if (status) 
-		    sprintf(msgbuf, "Error %d\n", status);
+		    printf("Error %d\n", status);
 		else
-		    sprintf(msgbuf, "Id %d\n", (int) viceId);
-		params.pstdout(msgbuf);
+		    printf("Id %d\n", (int) viceId);
 	    }
 	    
 		/*
@@ -732,18 +713,16 @@ static int auth_to_cell(context, cell, realm)
 #ifdef ALLOW_REGISTER
 	    } else if (strcmp(realm_of_user, realm_of_cell) != 0) {
 		if (dflag) {
-		    sprintf(msgbuf, "doing first-time registration of %s "
+		    printf("doing first-time registration of %s "
 			    "at %s\n", username, cell_to_use);
-		    params.pstdout(msgbuf);
 		}
 		id = 0;
 		strncpy(aclient.name, username, MAXKTCNAMELEN - 1);
 		strcpy(aclient.instance, "");
-		strncpy(aclient.cell, c.realm, MAXKTCREALMLEN - 1);
+		strncpy(aclient.cell, realm_of_user, MAXKTCREALMLEN - 1);
 		if ((status = ktc_SetToken(&aserver, &atoken, &aclient, 0))) {
-		    sprintf(msgbuf, "%s: unable to obtain tokens for cell %s "
+		    fprintf(stderr, "%s: unable to obtain tokens for cell %s "
 			    "(status: %d).\n", progname, cell_to_use, status);
-		    params.pstderr(msgbuf);
 		    status = AKLOG_TOKEN;
 		}
 
@@ -755,20 +734,17 @@ static int auth_to_cell(context, cell, realm)
 		 */
 
 		if ((status = pr_Initialize(1L, confname, aserver.cell, 0))) {
-		    sprintf(msgbuf, "Error %d\n", status);
-		    params.pstdout(msgbuf);
+		    printf("Error %d\n", status);
 		}
 
 		if ((status = pr_CreateUser(username, &id))) {
-		    sprintf(msgbuf, "%s: %s so unable to create remote PTS "
+		    fprintf(stderr, "%s: %s so unable to create remote PTS "
 			    "user %s in cell %s (status: %d).\n", progname,
 			    error_message(status), username, cell_to_use,
 			    status);
-		    params.pstdout(msgbuf);
 		} else {
-		    sprintf(msgbuf, "created cross-cell entry for %s at %s\n",
-			    username, cell_to_use);
-		    params.pstdout(msgbuf);
+		    printf("created cross-cell entry for %s at %s\n",
+			   username, cell_to_use);
 		    sprintf(username, "AFS ID %d", (int) id);
 		}
 	    }
@@ -779,8 +755,7 @@ static int auth_to_cell(context, cell, realm)
 #endif /* !WINDOWS */
 
 	if (dflag) {
-	    sprintf(msgbuf, "Set username to %s\n", username);
-	    params.pstdout(msgbuf);
+	    fprintf(stdout, "Set username to %s\n", username);
 	}
 
 	/* Reset the "aclient" structure before we call ktc_SetToken.
@@ -789,12 +764,11 @@ static int auth_to_cell(context, cell, realm)
 	 */
 	strncpy(aclient.name, username, MAXKTCNAMELEN - 1);
 	strcpy(aclient.instance, "");
-	strncpy(aclient.cell, c.realm, MAXKTCREALMLEN - 1);
+	strncpy(aclient.cell, realm_of_user, MAXKTCREALMLEN - 1);
 
 	if (dflag) {
-	    sprintf(msgbuf, "Setting tokens. %s / %s @ %s \n",
-			aclient.name, aclient.instance, aclient.cell );
-	    params.pstdout(msgbuf);
+	    printf("Setting tokens. %s / %s @ %s \n",
+		    aclient.name, aclient.instance, aclient.cell );
 	}
 	/* on AIX 4.1.4 with AFS 3.4a+ if a write is not done before 
 	 * this routine, it will not add the token. It is not clear what 
@@ -803,47 +777,40 @@ static int auth_to_cell(context, cell, realm)
 	write(2,"",0); /* dummy write */
 #ifndef WINDOWS
 	if ((status = ktc_SetToken(&aserver, &atoken, &aclient, afssetpag))) {
-	    sprintf(msgbuf, 
+	    fprintf(stderr, 
 		    "%s: unable to obtain tokens for cell %s (status: %d).\n",
 		    progname, cell_to_use, status);
-	    params.pstderr(msgbuf);
 	    status = AKLOG_TOKEN;
 	}
 #else /* WINDOWS */
 	/* Note switched 2nd and 3rd args */
-#ifdef PRE_AFS35
-	if ((status = ktc_SetToken(&aserver, &aclient, &atoken, afssetpag))) {
-#else
 	if ((status = ktc_SetToken(&aserver, &atoken, &aclient, afssetpag))) {
-#endif
 	    switch(status) {
 	    case KTC_INVAL:
-		sprintf(msgbuf, "%s: Bad ticket length", progname);
+		fprintf(stderr, "%s: Bad ticket length", progname);
 		break;
 	    case KTC_PIOCTLFAIL:
-		sprintf(msgbuf, "%s: Unknown error contacting AFS service",
+		fprintf(stderr, "%s: Unknown error contacting AFS service",
 			progname);
 		break;
 	    case KTC_NOCELL:
-		sprintf(msgbuf, "%s: Cell name (%s) not recognized by AFS service",
+		fprintf(stderr, "%s: Cell name (%s) not recognized by AFS service",
 			progname, realm_of_cell);
 		break;
 	    case KTC_NOCM:
-		sprintf(msgbuf, "%s: AFS service is unavailable", progname);
+		fprintf(stderr, "%s: AFS service is unavailable", progname);
 		break;
 	    default:
-		sprintf(msgbuf, "%s: Undocumented error (%d) contacting AFS service", progname, status);
+		fprintf(stderr, "%s: Undocumented error (%d) contacting AFS service", progname, status);
 		break;	
 	    }
-	    params.pstderr(msgbuf);
 	    status = AKLOG_TOKEN;	    
 	}
 #endif /* !WINDOWS */
     }
     else
 	if (dflag) {
-	    sprintf(msgbuf, "Noauth mode; not authenticating.\n");
-	    params.pstdout(msgbuf);
+	    printf("Noauth mode; not authenticating.\n");
 	}
 	
     return(status);
@@ -959,12 +926,11 @@ static char *next_path(origpath)
 	    ? elast_comp - last_comp : strlen(last_comp);
 	strncat(pathtocheck, last_comp, len);
 	memset(linkbuf, 0, sizeof(linkbuf));
-	if ((link = (params.readlink(pathtocheck, linkbuf, 
-				    sizeof(linkbuf)) > 0))) {
+	if ((link = readlink(pathtocheck, linkbuf, 
+				    sizeof(linkbuf))) > 0) {
 	    if (++symlinkcount > MAXSYMLINKS) {
-		sprintf(msgbuf, "%s: %s\n", progname, strerror(ELOOP));
-		params.pstderr(msgbuf);
-		params.exitprog(AKLOG_BADPATH);
+		fprintf(stderr, "%s: %s\n", progname, strerror(ELOOP));
+		exit(AKLOG_BADPATH);
 	    }
 	    memset(tmpbuf, 0, sizeof(tmpbuf));
 	    if (elast_comp)
@@ -1063,8 +1029,7 @@ static void add_hosts(file)
     vio.out = outbuf;
 
     if (dflag) {
-	sprintf(msgbuf, "Getting list of hosts for %s\n", file);
-	params.pstdout(msgbuf);
+	printf("Getting list of hosts for %s\n", file);
     }
     /* Don't worry about errors. */
     if (!pioctl(file, VIOCWHEREIS, &vio, 1)) {
@@ -1090,15 +1055,13 @@ static void add_hosts(file)
 	    if (hosts) {
 		in.s_addr = phosts[i];
 		if (dflag) {
-		    sprintf(msgbuf, "Got host %s\n", inet_ntoa(in));
-		    params.pstdout(msgbuf);
+		    printf("Got host %s\n", inet_ntoa(in));
 		}
 		ll_string(&hostlist, ll_s_add, (char *)inet_ntoa(in));
 	    }
 	    if (zsubs && (hp=gethostbyaddr((char *) &phosts[i],sizeof(long),AF_INET))) {
 		if (dflag) {
-		    sprintf(msgbuf, "Got host %s\n", hp->h_name);
-		    params.pstdout(msgbuf);
+		    printf("Got host %s\n", hp->h_name);
 		}
 		ll_string(&zsublist, ll_s_add, hp->h_name);
 	    }
@@ -1132,20 +1095,17 @@ static int auth_to_path(context, path)
     char *cell;
     char *endofcell;
 
-    u_char isdir;
+    u_char isdirectory;
 
     /* Initialize */
     if (path[0] == DIR)
 	strcpy(pathtocheck, path);
     else {
-	if (params.getwd(pathtocheck) == NULL) {
-	    sprintf(msgbuf, "Unable to find current working directory:\n");
-	    params.pstderr(msgbuf);
-	    sprintf(msgbuf, "%s\n", pathtocheck);
-	    params.pstderr(msgbuf);
-	    sprintf(msgbuf, "Try an absolute pathname.\n");
-	    params.pstderr(msgbuf);
-	    params.exitprog(AKLOG_BADPATH);
+	if (getwd(pathtocheck) == NULL) {
+	    fprintf(stderr, "Unable to find current working directory:\n");
+	    fprintf(stderr, "%s\n", pathtocheck);
+	    fprintf(stderr, "Try an absolute pathname.\n");
+	    exit(AKLOG_BADPATH);
 	}
 	else {
 	    strcat(pathtocheck, DIRSTRING);
@@ -1158,8 +1118,7 @@ static int auth_to_path(context, path)
     while ((nextpath = next_path(NULL))) {
 	strcpy(pathtocheck, nextpath);
 	if (dflag) {
-	    sprintf(msgbuf, "Checking directory %s\n", pathtocheck);
-	    params.pstdout(msgbuf);
+	    printf("Checking directory %s\n", pathtocheck);
 	}
 	/* 
 	 * If this is an afs mountpoint, determine what cell from 
@@ -1185,21 +1144,19 @@ static int auth_to_path(context, path)
 	    }
 	}
 	else {
-	    if (params.isdir(pathtocheck, &isdir) < 0) {
+	    if (isdir(pathtocheck, &isdirectory) < 0) {
 		/*
 		 * If we've logged and still can't stat, there's
 		 * a problem... 
 		 */
-		sprintf(msgbuf, "%s: stat(%s): %s\n", progname, 
+		fprintf(stderr, "%s: stat(%s): %s\n", progname, 
 			pathtocheck, strerror(errno));
-		params.pstderr(msgbuf);
 		return(AKLOG_BADPATH);
 	    }
-	    else if (! isdir) {
+	    else if (! isdirectory) {
 		/* Allow only directories */
-		sprintf(msgbuf, "%s: %s: %s\n", progname, pathtocheck,
+		fprintf(stderr, "%s: %s: %s\n", progname, pathtocheck,
 			strerror(ENOTDIR));
-		params.pstderr(msgbuf);
 		return(AKLOG_BADPATH);
 	    }
 	}
@@ -1219,50 +1176,30 @@ static void usage(void)
 static void usage()
 #endif /* __STDC__ */
 {
-    sprintf(msgbuf, "\nUsage: %s %s%s%s\n", progname,
+    fprintf(stderr, "\nUsage: %s %s%s%s\n", progname,
 	    "[-d] [[-cell | -c] cell [-k krb_realm]] ",
 	    "[[-p | -path] pathname]\n",
-	    "    [-zsubs] [-hosts] [-noauth] [-noprdb] [-force] [-setpag] [-linked]\n");
-    params.pstderr(msgbuf);
-    sprintf(msgbuf, "    -d gives debugging information.\n");
-    params.pstderr(msgbuf);
-    sprintf(msgbuf, "    krb_realm is the kerberos realm of a cell.\n");
-    params.pstderr(msgbuf);
-    sprintf(msgbuf, "    pathname is the name of a directory to which ");
-    params.pstderr(msgbuf);
-    sprintf(msgbuf, "you wish to authenticate.\n");
-    params.pstderr(msgbuf);
-    sprintf(msgbuf, "    -zsubs gives zephyr subscription information.\n");
-    params.pstderr(msgbuf);
-    sprintf(msgbuf, "    -hosts gives host address information.\n");
-    params.pstderr(msgbuf);
-    sprintf(msgbuf, "    -noauth does not attempt to get tokens.\n");
-    params.pstderr(msgbuf);
-    sprintf(msgbuf, "    -noprdb means don't try to determine AFS ID.\n");
-    params.pstderr(msgbuf);
-    sprintf(msgbuf, "    -force means replace identical tickets. \n");
-    params.pstderr(msgbuf);
-    sprintf(msgbuf, "    -linked means if AFS node is linked, try both. \n");
-    params.pstderr(msgbuf);
-    sprintf(msgbuf, "    -setpag set the AFS process authentication group.\n");
-    params.pstderr(msgbuf);
-    sprintf(msgbuf, "    No commandline arguments means ");
-    params.pstderr(msgbuf);
-    sprintf(msgbuf, "authenticate to the local cell.\n");
-    params.pstderr(msgbuf);
-    sprintf(msgbuf, "\n");
-    params.pstderr(msgbuf);
-    params.exitprog(AKLOG_USAGE);
+	    "    [-zsubs] [-hosts] [-noauth] [-noprdb] [-force] [-setpag] \n"
+	    "    [-linked] [-524]\n");
+    fprintf(stderr, "    -d gives debugging information.\n");
+    fprintf(stderr, "    krb_realm is the kerberos realm of a cell.\n");
+    fprintf(stderr, "    pathname is the name of a directory to which ");
+    fprintf(stderr, "you wish to authenticate.\n");
+    fprintf(stderr, "    -zsubs gives zephyr subscription information.\n");
+    fprintf(stderr, "    -hosts gives host address information.\n");
+    fprintf(stderr, "    -noauth does not attempt to get tokens.\n");
+    fprintf(stderr, "    -noprdb means don't try to determine AFS ID.\n");
+    fprintf(stderr, "    -force means replace identical tickets. \n");
+    fprintf(stderr, "    -linked means if AFS node is linked, try both. \n");
+    fprintf(stderr, "    -setpag set the AFS process authentication group.\n");
+    fprintf(stderr, "    -524 means use the 524 converter instead of V5 directly\n");
+    fprintf(stderr, "    No commandline arguments means ");
+    fprintf(stderr, "authenticate to the local cell.\n");
+    fprintf(stderr, "\n");
+    exit(AKLOG_USAGE);
 }
 
-#ifdef __STDC__
-void aklog(int argc, char *argv[], aklog_params *a_params)
-#else
-void aklog(argc, argv, a_params)
-  int argc;
-  char *argv[];
-  aklog_params *a_params;
-#endif /* __STDC__ */
+void aklog(int argc, char *argv[])
 {
 	krb5_context context;
     int status = AKLOG_SUCCESS;
@@ -1309,8 +1246,6 @@ void aklog(argc, argv, a_params)
 	initialize_ktc_error_table ();
 #endif
 
-    memcpy((char *)&params, (char *)a_params, sizeof(aklog_params));
-
     /* Initialize list of cells to which we have authenticated */
     (void)ll_init(&authedcells);
 
@@ -1330,6 +1265,8 @@ void aklog(argc, argv, a_params)
 		linked++;
 	else if (strcmp(argv[i], "-force") == 0)
 	    force++;
+	else if (strcmp(argv[i], "-524") == 0)
+	    do524++;
     else if (strcmp(argv[i], "-setpag") == 0)
 	    afssetpag++;
 	else if (((strcmp(argv[i], "-cell") == 0) ||
@@ -1351,9 +1288,8 @@ void aklog(argc, argv, a_params)
 		usage();
 #else /* WINDOWS */
 	{
-	    sprintf(msgbuf, "%s: path mode not supported.\n", progname);
-	    params.pstderr(msgbuf);
-	    params.exitprog(AKLOG_MISC);
+	    fprintf(stderr, "%s: path mode not supported.\n", progname);
+	    exit(AKLOG_MISC);
 	}
 #endif /* WINDOWS */
 	    
@@ -1366,9 +1302,8 @@ void aklog(argc, argv, a_params)
 		pmode++;
 		strcpy(path, argv[i]);
 #else /* WINDOWS */
-		sprintf(msgbuf, "%s: path mode not supported.\n", progname);
-		params.pstderr(msgbuf);
-		params.exitprog(AKLOG_MISC);
+		fprintf(stderr, "%s: path mode not supported.\n", progname);
+		exit(AKLOG_MISC);
 #endif /* WINDOWS */
 	    }
 	    else { 
@@ -1395,17 +1330,15 @@ void aklog(argc, argv, a_params)
 		if ((new_cellinfo = copy_cellinfo(&cellinfo)))
 		    ll_add_data(cur_node, new_cellinfo);
 		else {
-		    sprintf(msgbuf, 
+		    fprintf(stderr, 
 			    "%s: failure copying cellinfo.\n", progname);
-		    params.pstderr(msgbuf);
-		    params.exitprog(AKLOG_MISC);
+		    exit(AKLOG_MISC);
 		}
 	    }
 	    else {
-		sprintf(msgbuf, "%s: failure adding cell to cells list.\n",
+		fprintf(stderr, "%s: failure adding cell to cells list.\n",
 			progname);
-		params.pstderr(msgbuf);
-		params.exitprog(AKLOG_MISC);
+		exit(AKLOG_MISC);
 	    }
 	    memset(&cellinfo, 0, sizeof(cellinfo));
 	    cmode = FALSE;
@@ -1420,17 +1353,15 @@ void aklog(argc, argv, a_params)
 		if ((new_path = copy_string(path)))
 		    ll_add_data(cur_node, new_path);
 		else {
-		    sprintf(msgbuf, "%s: failure copying path name.\n",
+		    fprintf(stderr, "%s: failure copying path name.\n",
 			    progname);
-		    params.pstderr(msgbuf);
-		    params.exitprog(AKLOG_MISC);
+		    exit(AKLOG_MISC);
 		}
 	    }
 	    else {
-		sprintf(msgbuf, "%s: failure adding path to paths list.\n",
+		fprintf(stderr, "%s: failure adding path to paths list.\n",
 			progname);
-		params.pstderr(msgbuf);
-		params.exitprog(AKLOG_MISC);
+		exit(AKLOG_MISC);
 	    }
 	    pmode = FALSE;
 	    memset(path, 0, sizeof(path));
@@ -1482,9 +1413,7 @@ void aklog(argc, argv, a_params)
 		if (!status && linked && linkedcell[0]) {
 				strncpy(linkedcell2,linkedcell,MAXCELLCHARS);
 			    if (dflag) {
-			        sprintf(msgbuf, "Linked cell: %s\n",
-			            linkedcell);
-			        params.pstdout(msgbuf);
+			        printf("Linked cell: %s\n", linkedcell);
 			    }
 				status = auth_to_cell(context, linkedcell2, NULL);
 		}
@@ -1508,9 +1437,8 @@ void aklog(argc, argv, a_params)
 			((f = fopen(xlog_path, "r")) != NULL)) {
 
 			if (dflag) {
-			    sprintf(msgbuf, "Reading %s for cells to "
+			    printf("Reading %s for cells to "
 				    "authenticate to.\n", xlog_path);
-			    params.pstdout(msgbuf);
 			}
 
 			while (fgets(fcell, 100, f) != NULL) {
@@ -1519,9 +1447,8 @@ void aklog(argc, argv, a_params)
 			    fcell[strlen(fcell) - 1] = '\0';
 
 			    if (dflag) {
-				sprintf(msgbuf, "Found cell %s in %s.\n",
+				printf("Found cell %s in %s.\n",
 					fcell, xlog_path);
-				params.pstdout(msgbuf);
 			    }
 
 			    auth_status = auth_to_cell(context, fcell, NULL);
@@ -1544,9 +1471,8 @@ void aklog(argc, argv, a_params)
 			if (linked && linkedcell[0]) {
 				strncpy(linkedcell2,linkedcell,MAXCELLCHARS);
                 if (dflag) {
-                    sprintf(msgbuf, "Linked cell: %s\n",
+                    printf("Linked cell: %s\n",
                         linkedcell);
-                    params.pstdout(msgbuf);
                 }
 				if ((status = auth_to_cell(context,linkedcell2,
 							 cellinfo.realm)))
@@ -1575,18 +1501,16 @@ void aklog(argc, argv, a_params)
     /* If we are keeping track of zephyr subscriptions, print them. */
     if (zsubs) 
 	for (cur_node = zsublist.first; cur_node; cur_node = cur_node->next) {
-	    sprintf(msgbuf, "zsub: %s\n", cur_node->data);
-	    params.pstdout(msgbuf);
+	    printf("zsub: %s\n", cur_node->data);
 	}
 
     /* If we are keeping track of host information, print it. */
     if (hosts)
 	for (cur_node = hostlist.first; cur_node; cur_node = cur_node->next) {
-	    sprintf(msgbuf, "host: %s\n", cur_node->data);
-	    params.pstdout(msgbuf);
+	    printf("host: %s\n", cur_node->data);
 	}
 
-    params.exitprog(status);
+    exit(status);
 }
 
 #ifndef HAVE_ADD_TO_ERROR_TABLE
@@ -1600,3 +1524,75 @@ add_to_error_table(struct et_list *new_table)
 	add_error_table(new_table->table);
 }
 #endif /* HAVE_ADD_TO_ERROR_TABLE */
+
+static int isdir(char *path, unsigned char *val)
+{
+    struct stat statbuf;
+
+    if (lstat(path, &statbuf) < 0)
+	return (-1);
+    else {
+	if ((statbuf.st_mode & S_IFMT) == S_IFDIR) 
+	    *val = TRUE;
+	else
+	    *val = FALSE;
+	return (0);
+    }  
+}
+
+static krb5_error_code get_credv5(krb5_context context, 
+			char *name, char *inst, char *realm,
+			krb5_creds **creds)
+{
+    krb5_creds increds;
+    krb5_error_code r;
+    static krb5_principal client_principal = 0;
+
+    memset((char *)&increds, 0, sizeof(increds));
+/* ANL - instance may be ptr to a null string. Pass null then */
+    if ((r = krb5_build_principal(context, &increds.server,
+                     strlen(realm), realm,
+                     name,
+           (inst && strlen(inst)) ? inst : (void *) NULL,
+                     (void *) NULL))) {
+        return r;
+    }
+
+    if (!_krb425_ccache) {
+        r = krb5_cc_default(context, &_krb425_ccache);
+	if (r)
+	    return r;
+    }
+    if (!client_principal) {
+        r = krb5_cc_get_principal(context, _krb425_ccache, &client_principal);
+	if (r)
+	    return r;
+    }
+
+    increds.client = client_principal;
+    increds.times.endtime = 0;
+	/* Ask for DES since that is what V4 understands */
+    increds.keyblock.enctype = ENCTYPE_DES_CBC_CRC;
+
+    r = krb5_get_credentials(context, 0, _krb425_ccache, &increds, creds);
+
+    return r;
+}
+
+
+static int get_user_realm(krb5_context context, char *realm)
+{
+    static krb5_principal client_principal = 0;
+    int i;
+
+    if (!_krb425_ccache)
+        krb5_cc_default(context, &_krb425_ccache);
+    if (!client_principal)
+        krb5_cc_get_principal(context, _krb425_ccache, &client_principal);
+
+    i = krb5_princ_realm(context, client_principal)->length;
+    if (i > REALM_SZ-1) i = REALM_SZ-1;
+    strncpy(realm,krb5_princ_realm(context, client_principal)->data,i);
+    realm[i] = 0;
+    return(KSUCCESS);
+}

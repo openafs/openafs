@@ -35,7 +35,7 @@ typedef struct {
     void (*exitprog)ARGS((char));
 } aklog_params;
 
-void aklog ARGS((int, char *[], aklog_params *));
+void aklog ARGS((int, char *[]));
 void aklog_init_params ARGS((aklog_params *));
 
 #ifdef WINDOWS
