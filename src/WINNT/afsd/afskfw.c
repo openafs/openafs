@@ -2544,8 +2544,12 @@ ViceIDToUsername(char *username,
 
     strcpy(lastcell, aserver->cell);
 
-    if (!pr_Initialize (0, confname, aserver->cell))
-        status = pr_SNameToId (username, &viceId);
+    if (!pr_Initialize (0, confname, aserver->cell)) {
+        char sname[PR_MAXNAMELEN];
+        strncpy(sname, username, PR_MAXNAMELEN);
+        sname[PR_MAXNAMELEN-1] = '\0';    
+        status = pr_SNameToId (sname, &viceId);
+    }
 
     /*
      * This is a crock, but it is Transarc's crock, so
@@ -2948,7 +2952,8 @@ KFW_AFS_klog(
         strcpy(aclient.cell, realm_of_cell);
 
         len = min(k5creds->client->realm.length,strlen(realm_of_cell));
-        if ( strncmp(realm_of_cell, k5creds->client->realm.data, len) ) {
+        /* For Khimaira, always append the realm name */
+        if ( 1 /* strncmp(realm_of_cell, k5creds->client->realm.data, len) */ ) {
             char * p;
             strcat(aclient.name, "@");
             p = aclient.name + strlen(aclient.name);

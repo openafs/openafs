@@ -220,8 +220,12 @@ void ViceIDToUsername(char *username, char *realm_of_user, char *realm_of_cell,
 
     strcpy(lastcell, aserver->cell);
 
-    if (!pr_Initialize (0, confname, aserver->cell))
-        *status = pr_SNameToId (username, &viceId);
+	if (!pr_Initialize (0, confname, aserver->cell)) {
+		char sname[PR_MAXNAMELEN];
+		strncpy(sname, username, PR_MAXNAMELEN);
+		sname[PR_MAXNAMELEN-1] = '\0';
+        *status = pr_SNameToId (sname, &viceId);
+	}
 
     if (dflag)
     {
@@ -763,7 +767,8 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
             }
         }
 
-        if (strcmp(realm_of_user, realm_of_cell))
+        /* For Khimaira we want to always append the realm to the name */
+        if (1 /* strcmp(realm_of_user, realm_of_cell) */)
         {
             strcat(username, "@");
             strcat(username, realm_of_user);
