@@ -1,5 +1,5 @@
-;OpenAFS Install Script for NSIS
-;                             This version compiles with NSIS v2.0
+; OpenAFS Install Script for NSIS
+; This version compiles with NSIS v2.07
 ;
 ; Originally written by Rob Murawski <rsm4@ieee.org>
 ;
@@ -78,7 +78,7 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
 !endif
 !endif
   SilentInstall normal
-  SetCompressor lzma
+  SetCompressor /solid lzma
   !define MUI_ICON "..\..\client_config\afs_config.ico"
   !define MUI_UNICON "..\..\client_config\afs_config.ico"
   !define AFS_COMPANY_NAME "OpenAFS"
@@ -499,7 +499,7 @@ var REG_DATA_4
 
 ;----------------------
 ; OpenAFS CLIENT
-Section "AFS Client" secClient
+Section "!AFS Client" secClient
 
   SetShellVarContext all
 
@@ -771,6 +771,7 @@ skipremove:
   SetRebootFlag true
   
   WriteUninstaller "$INSTDIR\Uninstall.exe"
+  WriteRegStr HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\OpenAFS" "DisplayIcon" "$INSTDIR\Uninstall.exe,0"  
   Call CreateDesktopIni
   
 SectionEnd
@@ -778,7 +779,7 @@ SectionEnd
 
 
 ; MS Loopback adapter
-Section "MS Loopback Adapter" secLoopback
+Section "!MS Loopback Adapter" secLoopback
 
 Call afs.InstallMSLoopback
 
@@ -787,7 +788,7 @@ SectionEnd
 
 ;------------------------
 ; OpenAFS SERVER  
-Section "AFS Server" secServer
+Section /o "AFS Server" secServer
 
   SetShellVarContext all
 
@@ -910,13 +911,14 @@ SkipStartup:
   
   
   WriteUninstaller "$INSTDIR\Uninstall.exe"
+  WriteRegStr HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\OpenAFS" "DisplayIcon" "$INSTDIR\Uninstall.exe,0"  
 
 SectionEnd
 
 
 ;----------------------------
 ; OpenAFS Control Center
-Section "AFS Control Center" secControl
+Section /o "AFS Control Center" secControl
 
   SetShellVarContext all
 
@@ -956,13 +958,14 @@ Section "AFS Control Center" secControl
   CreateShortCut "$SMPROGRAMS\OpenAFS\Control Center\Server Manager.lnk" "$INSTDIR\Control Center\TaAfsServerManager.exe"
   
   WriteUninstaller "$INSTDIR\Uninstall.exe"
+  WriteRegStr HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\OpenAFS" "DisplayIcon" "$INSTDIR\Uninstall.exe,0"  
 
 SectionEnd   
 
 
 ;----------------------------
 ; OpenAFS Supplemental Documentation
-Section "Supplemental Documentation" secDocs
+Section /o "Supplemental Documentation" secDocs
   SetShellVarContext all
 
    StrCmp $LANGUAGE ${LANG_ENGLISH} DoEnglish
@@ -1112,12 +1115,13 @@ DoneLanguage:
   
   
   WriteUninstaller "$INSTDIR\Uninstall.exe"
+  WriteRegStr HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\OpenAFS" "DisplayIcon" "$INSTDIR\Uninstall.exe,0"  
   CreateShortCut "$SMPROGRAMS\OpenAFS\Uninstall OpenAFS.lnk" "$INSTDIR\Uninstall.exe"
   Call AFSCommon.Install
 SectionEnd  
   
 
-Section "Software Development Kit (SDK)" secSDK
+Section /o "Software Development Kit (SDK)" secSDK
 
     SetOutPath "$INSTDIR\Client\Program\lib"
     File /r "${AFS_CLIENT_LIBDIR}\*.*"
@@ -1141,15 +1145,17 @@ Section "Software Development Kit (SDK)" secSDK
   WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS SDK\${AFS_VERSION}" "PatchLevel" ${AFS_PATCHLEVEL}
 
   WriteUninstaller "$INSTDIR\Uninstall.exe"
+  WriteRegStr HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\OpenAFS" "DisplayIcon" "$INSTDIR\Uninstall.exe,0"  
+
   SetOutPath "$SMPROGRAMS\OpenAFS"
   CreateShortCut "$SMPROGRAMS\OpenAFS\Uninstall OpenAFS.lnk" "$INSTDIR\Uninstall.exe"
 
-   Call AFSCommon.Install
+  Call AFSCommon.Install
 SectionEnd
 
 
-Section "Debug symbols" secDebug
-  	SectionGetFlags ${secClient} $R0
+Section /o "Debug symbols" secDebug
+   SectionGetFlags ${secClient} $R0
    IntOp $R0 $R0 & ${SF_SELECTED}
    IntCmp $R0 ${SF_SELECTED} +1 DoServer
   
@@ -1184,7 +1190,7 @@ Section "Debug symbols" secDebug
   File "${AFS_CLIENT_BUILDDIR}\afslogon.pdb"
   
 DoServer:
-  	SectionGetFlags ${secServer} $R0
+   SectionGetFlags ${secServer} $R0
    IntOp $R0 $R0 & ${SF_SELECTED}
    IntCmp $R0 ${SF_SELECTED} +1 DoControl
 
@@ -1220,7 +1226,7 @@ DoServer:
 
    ; Do control center components
 DoControl:
-  	SectionGetFlags ${secControl} $R0
+   SectionGetFlags ${secControl} $R0
    IntOp $R0 $R0 & ${SF_SELECTED}
    IntCmp $R0 ${SF_SELECTED} +1 DoCommon
 
@@ -1296,6 +1302,25 @@ Function .onInit
    
 contInstall:
 
+   ; Set Install Type text
+   InstTypeSetText 0 "AFS Client"
+   InstTypeSetText 1 "AFS Administrator"
+   InstTypeSetText 2 "AFS Server"
+   InstTypeSetText 3 "AFS Developer Tools"
+
+   ; Set sections in each install type
+   SectionSetInstTypes 0 15		; AFS Client
+   SectionSetInstTypes 1 15		; Loopback adapter
+   SectionSetInstTypes 2 4              ; AFS Server
+   SectionSetInstTypes 3 6              ; AFS Control Center
+   SectionSetInstTypes 4 14		; Documentation
+   SectionSetInstTypes 5 8		; SDK
+!ifndef DEBUG
+   SectionSetInstTypes 6 8		; Debug symbols
+!else
+   SectionSetInstTypes 6 15		; Debug symbols
+!endif
+
    ; Check that RPC functions are installed (I believe any one of these can be present for
    ; OpenAFS to work)
    ReadRegStr $R0 HKLM "SOFTWARE\Microsoft\RPC\ClientProtocols" "ncacn_np"
@@ -1310,7 +1335,6 @@ contInstall:
 
 
 contInstall2:
-DoLoop:
    ; If the Loopback is already installed, we mark the option OFF and Read Only
    ; so the user can not select it.
    Call afs.isLoopbackInstalled
@@ -1319,6 +1343,8 @@ DoLoop:
    IntOp $0 $0 & ${SECTION_OFF}
    IntOp $0 $0 | ${SF_RO}
    SectionSetFlags ${secLoopback} $0
+   ; And disable the loopback in the types
+   SectionSetInstTypes 1 0		; Loopback adapter
    
 SkipLoop:
    ; Never install debug symbols unless explicitly selected, except in DEBUG mode
@@ -1401,10 +1427,10 @@ skipClient:
    StrCmp $R2 "2" UpgradeServer
    StrCmp $R2 "3" DowngradeServer
    
-	SectionGetFlags ${secServer} $0
-	IntOp $0 $0 | ${SF_SELECTED}
-	SectionSetFlags ${secServer} $0
-	;# !insertmacro UnselectSection ${secServer}
+   SectionGetFlags ${secServer} $0
+   IntOp $0 $0 | ${SF_SELECTED}
+   SectionSetFlags ${secServer} $0
+   ;# !insertmacro UnselectSection ${secServer}
    goto skipServer
 
 UpgradeServer:
@@ -1429,10 +1455,10 @@ DowngradeServer:
    goto skipServer
    
 NoServer:
-	SectionGetFlags ${secServer} $0
-	IntOp $0 $0 & ${SECTION_OFF}
-	SectionSetFlags ${secServer} $0
-	;# !insertmacro UnselectSection ${secServer}
+   SectionGetFlags ${secServer} $0
+   IntOp $0 $0 & ${SECTION_OFF}
+   SectionSetFlags ${secServer} $0
+   ;# !insertmacro UnselectSection ${secServer}
    goto skipServer
    
 skipServer:
@@ -1441,31 +1467,31 @@ skipServer:
    Pop $R2
    StrCmp $R2 "0" NoControl
 
-	SectionGetFlags ${secControl} $0
-	IntOp $0 $0 | ${SF_SELECTED}
-	SectionSetFlags ${secControl} $0
+   SectionGetFlags ${secControl} $0
+   IntOp $0 $0 | ${SF_SELECTED}
+   SectionSetFlags ${secControl} $0
    goto CheckDocs
    
 NoControl:   
-	SectionGetFlags ${secControl} $0
-	IntOp $0 $0 & ${SECTION_OFF}
-	SectionSetFlags ${secControl} $0
-	;# !insertmacro UnselectSection ${secControl}
+   SectionGetFlags ${secControl} $0
+   IntOp $0 $0 & ${SECTION_OFF}
+   SectionSetFlags ${secControl} $0
+   ;# !insertmacro UnselectSection ${secControl}
 
 CheckDocs:
    ; Check Documentation
    Call IsDocumentationInstalled
    Pop $R2
    StrCmp $R2 "0" NoDocs
-	SectionGetFlags ${secDocs} $0
-	IntOp $0 $0 | ${SF_SELECTED}
-	SectionSetFlags ${secDocs} $0
+   SectionGetFlags ${secDocs} $0
+   IntOp $0 $0 | ${SF_SELECTED}
+   SectionSetFlags ${secDocs} $0
    goto CheckSDK
    
 NoDocs:
-	SectionGetFlags ${secDocs} $0
-	IntOp $0 $0 & ${SECTION_OFF}
-	SectionSetFlags ${secDocs} $0
+   SectionGetFlags ${secDocs} $0
+   IntOp $0 $0 & ${SECTION_OFF}
+   SectionSetFlags ${secDocs} $0
    goto CheckSDK
    
 ; To check the SDK, we simply look to see if the files exist.  If they do,
@@ -1486,26 +1512,26 @@ NoSDK:
    
 DefaultOptions:
    ; Client Selected
-	SectionGetFlags ${secClient} $0
-	IntOp $0 $0 | ${SF_SELECTED}
-	SectionSetFlags ${secClient} $0
+   SectionGetFlags ${secClient} $0
+   IntOp $0 $0 | ${SF_SELECTED}
+   SectionSetFlags ${secClient} $0
 
    ; Server NOT selected
-	SectionGetFlags ${secServer} $0
-	IntOp $0 $0 & ${SECTION_OFF}
-	SectionSetFlags ${secServer} $0
+   SectionGetFlags ${secServer} $0
+   IntOp $0 $0 & ${SECTION_OFF}
+   SectionSetFlags ${secServer} $0
    
    ; Control Center NOT selected
-	SectionGetFlags ${secControl} $0
-	IntOp $0 $0 & ${SECTION_OFF}
-	SectionSetFlags ${secControl} $0
-	;# !insertmacro UnselectSection ${secControl}
+   SectionGetFlags ${secControl} $0
+   IntOp $0 $0 & ${SECTION_OFF}
+   SectionSetFlags ${secControl} $0
+   ;# !insertmacro UnselectSection ${secControl}
 
-   ; Documentation selected
-	SectionGetFlags ${secDocs} $0
-	IntOp $0 $0 | ${SF_SELECTED}
-	SectionSetFlags ${secDocs} $0
-	;# !insertmacro UnselectSection ${secDocs}
+   ; Documentation NOT selected
+   SectionGetFlags ${secDocs} $0
+   IntOp $0 $0 & ${SECTION_OFF}
+   SectionSetFlags ${secDocs} $0
+   ;# !insertmacro UnselectSection ${secDocs}
    
    ; SDK not selected
    SectionGetFlags ${secSDK} $0
@@ -1516,7 +1542,7 @@ DefaultOptions:
    goto end
 
 end:
-	Pop $0
+   Pop $0
   
    Push $R0
   
@@ -1573,9 +1599,6 @@ Nope:
   ;File /oname=$1 ConfigURL.ini
   
 FunctionEnd
-
-
-
 
 
 ;--------------------------------
@@ -2655,6 +2678,7 @@ end:
 FunctionEnd
 
 
+!ifdef USE_GETPARAMETERS
 ; GetParameters
 ; input, none
 ; output, top of stack (replaces, with e.g. whatever)
@@ -2684,6 +2708,7 @@ Function GetParameters
   Pop $R1
   Exch $R0
 FunctionEnd
+!endif
 
 
 ;Check to see if any AFS component is installed
