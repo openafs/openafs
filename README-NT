@@ -11,7 +11,7 @@ NOTE 1:
 As of the OpenAFS 1.3 release series, Windows platforms released
 prior to Windows 2000 are not being supported.  The InstallShield
 installer is still in the source tree but is no longer supported.
-A new open source installer based on NSIS 2.0 replaces it.
+A new open source installer based on NSIS 2.07 replaces it.
 
 NOTE 2:
 In this release, in addition to the production quality CIFS-AFS 
@@ -41,7 +41,7 @@ The following steps describe how to configure Windows 2000/XP:
    D. Configure NTBUILD.BAT
    E. Set program version Level
    F. Build Win2000 binaries
-   G. Install NSIS 2.0
+   G. Install NSIS 2.07
    H. Build NSIS Install Package
    I. Install Wix 2.0
    J. Build Wix MSI Install Package
@@ -76,7 +76,7 @@ The following Microsoft DDK is required:
 The NSIS installer requires about 14 MB of storage. The following 
 version is supported:
 
-    Nullsoft Scriptable Installation System 2.0 
+    Nullsoft Scriptable Installation System 2.07
       http://nsis.sourceforge.net/home/
 
 The WiX installer requires about 18 MB of storage.  The following 
@@ -301,9 +301,9 @@ and it displays 'Build Finished Successfully'.
     to the src\WINNT\afsrdr directory, and execute the "build" command.
 
 
-STEP G. Install NSIS 2.0 (optional).
+STEP G. Install NSIS 2.07 (optional).
 
-Download the Nullsoft Scriptable Installation System (NSIS) 2.0 from
+Download the Nullsoft Scriptable Installation System (NSIS) 2.07 from
 
     http://nsis.sourceforge.net/home/
 
