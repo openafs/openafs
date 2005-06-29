@@ -1,8 +1,21 @@
 Since 1.3.84:
- * Eric William's IFS redirector has been checked into the source
-   tree.  This code is experimental at the current time and is not
-   being incorporated into binary releases.  Instructions for building
-   from sources are found in the top-level README-NT file.
+ * Update the NSIS install scripts to use 2.07.   This release adds 
+   recommended installation categories: AFS Client, AFS Administrator,
+   AFS Server, AFS Development Kit.  Each category includes a different 
+   default subset of the OpenAFS components.
+
+   The OpenAFS logo is now associated with the NSIS uninstall entry
+   in the Add/Remove Programs control panel.
+
+ * The user name associated with AFS tokens when obtained with
+   integrated login, the afs systray tool, or aklog will always
+   include the full Kerberos 5 user principal name regardless of 
+   whether or not the cell is local to the realm.
+
+ * Eric William's IFS redirector has been checked onto the CVS head.
+   This code is experimental at the current time and is not being 
+   incorporated into the 1-4 branch releases.  Instructions for 
+   building from sources are found in the top-level README-NT file.
 
  * Modify integrated login so that it does not enter an infinite
    loop if the service is not set to auto start.
@@ -11,6 +24,8 @@ Since 1.3.84:
    AFS server daemons
 
  * Added uninstall.exe to Wix installation
+
+ * More modifications to algorithms used to wake sleeping threads.
 
 Since 1.3.83:
 
