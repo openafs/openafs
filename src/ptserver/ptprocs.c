@@ -1523,7 +1523,7 @@ SPR_ListEntry(call, aid, aentry)
     afs_int32 code;
     afs_int32 cid = ANONYMOUSID;
 
-    code = listEntry(call, aid, aentry, cid);
+    code = listEntry(call, aid, aentry, &cid);
     osi_auditU(call, PTS_LstEntEvent, code, AUD_LONG, aid, AUD_END);
     ViceLog(125, ("PTS_ListEntry: code %d cid %d aid %d", code, cid, aid));
     return code;
