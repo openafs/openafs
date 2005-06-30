@@ -1,5 +1,8 @@
 Since 1.3.84:
- * Update the NSIS install scripts to use 2.07.   This release adds 
+ * Added a new registry key, "LogoffPreserveTokens" (see registry.txt),
+   that can be used to force the preservation of user tokens upon logout.
+
+ * Update the NSIS install scripts to use NSIS 2.07.   This release adds 
    recommended installation categories: AFS Client, AFS Administrator,
    AFS Server, AFS Development Kit.  Each category includes a different 
    default subset of the OpenAFS components.

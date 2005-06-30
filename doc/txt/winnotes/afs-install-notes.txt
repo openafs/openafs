@@ -1,5 +1,5 @@
 OpenAFS for Windows 1.3.8500 Installation Notes
----------------------------------------------
+-----------------------------------------------
 
 The OpenAFS for Windows product was very poorly maintained throughout the 
 1.2.x release cycle.  While the Unix version was being enhanced and its 
@@ -13,6 +13,7 @@ fit the usage model of today's users.  Several items standout.
 
 0. The default AFSCache file is approximately 100MB.  This space is required 
 in addition to the space allocated to OpenAFS binaries.
+
 
 1. The Kerberos 4 infrastructure on which the 1.2 series is reliant is no 
 longer secure.  Cross-realm Kerberos is very important in the AFS context and 
@@ -61,11 +62,12 @@ When the MLA is installed, UNC paths of the form \\AFS\cellname\path may be used
 The MLA is installed with a binding to "Client for Microsoft Networks" but not 
 to "File and Printer Sharing for Microsoft Networks".  If you fail to bind 
 "Client Microsoft Networks" you will not be able to access the AFS Client 
-Service when the machine is disconnect from the network.  If you bind "File 
-and Printer Sharing ..." there will be a conflict between the name "AFS" and 
-the name of the machine on the published IP Address.  This will result in a 
-failure to be able to access files in AFS.  The "NET VIEW" command will return 
-a "System Error 52" message when this conflict exists.  To correct the problem:
+Service when the machine is disconnected from the network.  If you bind "File 
+and Printer Sharing ..." there will be a service type collision between the 
+name "AFS" and the name of the machine on the published IP Address.  This will 
+result in a failure to be able to access files in AFS.  The "NET VIEW" command 
+will return a "System Error 52" message when this conflict exists.  To correct 
+the problem:
 
  * stop the AFS Client Service
  * bind the "Client for Microsoft Networks" to the MLA
@@ -125,7 +127,7 @@ The symlinks are stored in the registry at:
 
 4. The OpenAFS for Windows client will use AFSDB DNS records to 
 discover cell information when it is not located in the local CellServDB file 
-(\Program Files\OpenAFS\Client\CellServDB).
+(\%PROGRAMFILES%\OpenAFS\Client\CellServDB).
 
 
 5. OpenAFS for Windows 1.3.72 only supports Windows 2000, Windows XP, and 
@@ -161,13 +163,13 @@ you must log off to obtain new tokens.  Do not use external tools such as
 Authenticated SMB connections which removes the need for High Security mode. 
 DO NOT USE IT!!!!! 
 
+Starting in 1.3.83, when Integrated Logon is used in conjunction
+with KFW, the Kerberos 5 tickets obtained during the process of 
+generating AFS tokens are preserved and stored into the default
+ccache within the user logon session.
+
 What Integrated Logon does not do:
- (a) Integrated Logon does not have the ability to obtain Kerberos 5
-     tickets for use during the Windows Session.  At the current time there
-     is no mechanism by which a Kerberos 5 CCAPI credentials cache can
-     be constructed during the logon process such that it will exist in 
-     the user's logon session.
- (b) Integrated Logon does not have the ability to cache the user's 
+ (a) Integrated Logon does not have the ability to cache the user's 
      username and password for the purpose of obtaining tokens if the
      Kerberos KDC is inaccessible at logon time.
 
@@ -179,9 +181,9 @@ options:
     -E = force existing afscreds to exit
     -I = install startup shortcut
     -M = renew drive maps 
-    -N = ip address change detection 
+    -N = IP address change detection 
     -Q = quiet mode.  do not display start service dialog
-             if afsd_service is not already running
+         if afsd_service is not already running
     -S = show tokens dialog on startup
     -U = uninstall startup shortcut
     -X = test and do map share
@@ -192,7 +194,7 @@ autoinit will result in automated attempts to acquire AFS tokens when
 afscreds.exe is started.  afscreds.exe will attempt to utilize tickets stored
 in the MSLSA credentials cache; any existing CCAPI credentials cache; and
 finally display an Obtain Tokens dialog to the user.  When used in combination 
-with ip address change detection, afscreds.exe will attempt to acquire AFS 
+with IP address change detection, afscreds.exe will attempt to acquire AFS 
 tokens whenever the IP address list changes and the Kerberos KDC is 
 accessible.
 
@@ -211,7 +213,7 @@ authorization group called "AFS Client Admins".  This group is used in
 place of the "Administrators" group to determine which users are allowed
 to modify the AFS Client Service configuration via either afs_config.exe
 or fs.exe.  For example, the following fs.exe commands are now restricted 
-to members of the "AFS Client Admin" group:
+to members of the "AFS Client Admins" group:
 
     - checkservers with a non-zero timer value
     - setcachesize
@@ -228,10 +230,14 @@ to members of the "AFS Client Admin" group:
 Setting the default sysname for a machine should be done via the registry and 
 not via "fs sysname".
 
-The local "SYSTEM" account is always a member of the "AFS Client Admin" group.
+The local "SYSTEM" account is always a member of the "AFS Client Admins" group.
 
-The initial membership of the "AFS Client Admin" group when created by the 
-installer is equivalent to the local "Administrators" group.
+The initial membership of the "AFS Client Admins" group when created by the 
+installer is equivalent to the local "Administrators" group.  If a user is 
+added to the "Administrators" group after the creation of the "AFS Client 
+Admin" group, that user will not be an AFS Client Administrator.  Only users
+that are members of the "AFS Client Admins" group are AFS Client 
+Administrators.
 
 
 9. The AFS Client should support UNC paths everywhere.  Power users that make
@@ -283,7 +289,8 @@ debug symbols are installed by default; and whether additional debug
 statements were compiled into the binaries.
 
 
-13. OpenAFS for Windows does not support files larger than 2GB.  
+13. OpenAFS for Windows does not support files larger than 2GB.  This is
+due to the lack of support for the Unicode version of the SMB/CIFS protocol.
 
 
 14. Local RPC is used as the default RPC mechanism for setting 
@@ -291,21 +298,17 @@ tokens.  TCP RPC is required to be installed and is used for debugging
 and other functions.
 
 
-15. OpenAFS for Windows automatically open ports in the Windows 
-Internet Connection Firewall.
-
-
-16. The OpenAFS for Windows installer by default activates a weak form of 
+15. The OpenAFS for Windows installer by default activates a weak form of 
 encrypted data transfer between the AFS client and the AFS servers.  This
 is often referred to as "fcrypt" mode.
 
 
-17. OpenAFS 1.3.71 adds support for authenticated SMB connections using 
+16. OpenAFS 1.3.71 adds support for authenticated SMB connections using 
 either NTLM or GSS SPNEGO (NTLM, Kerberos 5, ...).  In previous versions
 of OpenAFS the SMB connections were unauthenticated which left open the
 door for several security holes which could be used to obtain access to
-the use of other user's tokens on shared machines.  With the introduction
-of authenticated SMB connections the so called High Security mode should
+other user's tokens on shared machines.  With the introduction of
+authenticated SMB connections the so called High Security mode should
 no longer be used.  
 
 When GSS SPNEGO results in a Kerberos 5 authentication, the Windows SMB
@@ -323,7 +326,7 @@ add these service principals to the list of principals to be maintained
 for each host.
 
 
-18. As of 1.3.70, INI files are no longer used for the storage of AFS 
+17. As of 1.3.70, INI files are no longer used for the storage of AFS 
 configuration data.  No longer are there any AFS related files stored in the
 %WINDIR% directory.  The CellServDB file is no longer called "afsdsbmt.ini"
 and it is stored in the OpenAFS\Client directory.  The afs_freelance.ini
@@ -334,7 +337,7 @@ data will be automatically migrated; there is no mechanism for automatic
 migration of Submounts, Drive Mappings, Active Maps, and CSCPolicy data.
 
 
-19. As of 1.3.70, the OpenAFS Client is compatible with Windows XP SP2
+18. As of 1.3.70, the OpenAFS Client is compatible with Windows XP SP2
 and Windows 2003 SP1.  The Internet Connection Firewall will be 
 automatically adjusted to allow the receipt of incoming callback messages 
 from the AFS file server.  In addition, the appropriate Back Connection 
@@ -342,35 +345,38 @@ entries are added to the registry to allow SMB authentication to be
 performed across the loopback connection.
 
 
-20. As of 1.3.70, the OpenAFS Client Service supports the CIFS Remote
+19. As of 1.3.70, the OpenAFS Client Service supports the CIFS Remote
 Admin Protocol which provides browsing of server and share information.
 This significantly enhances the interoperability of AFS volumes within the
 Explorer Shell and Microsoft Office applications.
 
 
-21. OpenAFS will now automatically forget a user's tokens upon Logoff
+20. OpenAFS will now automatically forget a user's tokens upon Logoff
 unless the user's profile was loaded from an AFS volume.  In this situation
 there is no mechanism to determine when the profile has been successfully
 written back to the network.  It is therefore unsafe to release the user's
 tokens.  Whether or not the profile has been loaded from the registry can
 be determined for Local Accounts, Active Directory accounts and NT4 
 accounts.
+
+If there is a need to disable this functionality, the LogoffPreserveTokens
+registry value (see registry.txt) can be used.
                                                    
 
-22. Terminal Server installations.
-When installing under Terminal Server, you must execute the NSIS installer
-(.exe) from within the Add/Remove Programs Control Panel.  Failure to do so 
-will result in AFS not running properly.  The AFS Server should not 
+21. Terminal Server installations.
+When installing the NSIS (.exe) installer under Terminal Server, you must 
+execute it from within the Add/Remove Programs Control Panel.  Failure to 
+do so will result in AFS not running properly.  The AFS Server should not 
 be installed on a machine with Terminal Server installed.
 
 
-23. AFS is a Unix native file system.  As such the OpenAFS client attempts
+22. AFS is a Unix native file system.  As such the OpenAFS client attempts
 to treat the files stored in AFS as they would be on Unix.  File and directory
 names beginning with a "." are automatically given the Hidden attribute so
 they will not normally be displayed.
 
 
-24. Some organizations which have AFS cell names and Kerberos realm names
+23. Some organizations which have AFS cell names and Kerberos realm names
 which differ by more then just lower and upper case rely on a modification
 to krb524d which maps a Kerberos 5 ticket from realm FOO to a Kerberos 4
 ticket in realm BAR.  This allows user@FOO to appear to be user@bar for
@@ -397,7 +403,7 @@ the availability of this option should only be used by individuals until
 such time as their organizations can provide a more permanent solution.
 
 
-25. The Status Cache (AFS Config Control Panel: Advanced Page) is defined
+24. The Status Cache (AFS Config Control Panel: Advanced Page) is defined
 to have a maximum number of entries.  Each entry represents a single file
 or directory entry accessed within the AFS file system.  When the maximum
 number of entries are allocated, entries will begin to be reused according
@@ -412,13 +418,13 @@ maximum number of Status Cache entries.  Each entry requires approximately
 to 10,000 starting in 1.3.80.
 
 
-26. "Netbios over TCP/IP" must be active on the machine in order for
+25. "Netbios over TCP/IP" must be active on the machine in order for
 communication with the AFS Client Service to succeed.  If "Netbios over
 TCP/IP" is disabled on the machine, then communication with the AFS Client
 Service will be impossible.
 
 
-27. The AFS Client Service and related binaries are digitally signed by
+26. The AFS Client Service and related binaries are digitally signed by
 "Secure Endpoints Inc." beginning with the 1.3.7400 release of OpenAFS
 for Windows.  Starting in the 1.3.7500 release, the AFS Client Service
 will perform a run-time verification check to ensure that all AFS related
@@ -434,7 +440,7 @@ value which can be used to disable the signature check.  The file version
 check cannot be disabled.
 
 
-28. The maximum cache size is approximately 1.3GB.  This is the largest
+27. The maximum cache size is approximately 1.3GB.  This is the largest
 contiguous block of memory in the 2GB process address space which can be
 used for the memory mapped file.  Due to fragmentation of the process 
 spaced caused by the digital signature verification code, any attempt to
@@ -442,7 +448,7 @@ specify a cache size greater then 700MB will result in the automatic
 disabling of the signature check.
 
 
-29. OpenAFS for Windows implements an SMB server which is used as a
+28. OpenAFS for Windows implements an SMB server which is used as a
 gateway to the AFS filesystem.  Because of the use of SMB, Windows 
 stores all files into AFS using the OEM code pages such as CP437 (United 
 States) or CP850 (Western Europe).  These code pages are incompatible 
@@ -493,7 +499,7 @@ from being able to access filenames containing the above characters which
 were created without this setting.
 
 
-30. There is a known issue with storing Windows Roaming Profiles when
+29. There is a known issue with storing Windows Roaming Profiles when
 the profile contains either directories or files with names which cannot
 be represented in the local OEM character set.  In this case, attempts
 to write the profile back to AFS will fail.  OpenAFS for Windows does
@@ -502,18 +508,18 @@ logoff scripts (assigned by group policy) which rename all files to use
 only the supported characters for the locale.
 
 
-31. As of 1.3.80 the AFS Cache file is stored by default at %TEMP%\AFSCache
+30. As of 1.3.80 the AFS Cache file is stored by default at %TEMP%\AFSCache
 in a persistent file marked with the Hidden and System attributes.  The 
 persistent nature of the data stored in the cache file improves the 
 performance of OpenAFS by reducing the number of times data must be read
 from the AFS file servers.
 
 
-32. Integrated Login (as of 1.3.80) supports the ability to obtain tokens
+31. Integrated Login (as of 1.3.80) supports the ability to obtain tokens
 for multiple cells.  See the "TheseCells" value in registry.txt.
 
 
-33. New command line tool:
+32. New command line tool:
 
     afsdacl : Set or reset the DACL to allow starting or stopping
          the afsd service by any ordinary user.
@@ -523,18 +529,18 @@ for multiple cells.  See the "TheseCells" value in registry.txt.
           -reset : Reset the DACL
           -show  : Show current DACL (SDSF)
 
-34. As of 1.3.80, the default @sys name list has been changed to 
+33. As of 1.3.80, the default @sys name list has been changed to 
 "x86_win32 i386_w2k i386_nt40" for 32-bit x86 systems.  The default 
 for itanium will be "ia64_win64" and "amd64_win64" for amd 64-bit 
 processors.
 
 
-35. As of 1.3.80, symlinks to \\AFS[\all]\... will now be treated
+34. As of 1.3.80, symlinks to \\AFS[\all]\... will now be treated
 the same as symlinks to /afs/...  However, please use /afs/... as
 the Windows UNC form will not work on Unix.
 
 
-36. As of 1.3.80, OpenAFS for Windows implements the Cache Manager
+35. As of 1.3.80, OpenAFS for Windows implements the Cache Manager
 Debugging RPC Interface.  The CM debugger can be queried with 
 cmdebug.exe.
 
@@ -544,19 +550,20 @@ Where: -long   print all info
        -addrs  print only host interfaces
        -cache  print only cache configuration
 
-37.  If you are a site which utilizes MIT/Heimdal Kerberos principals
+
+36.  If you are a site which utilizes MIT/Heimdal Kerberos principals
 to logon to Windows via a cross-realm relationship with a multi-domain
 Windows forest, you must enable Windows logon caching unless the 
 workstation is Longhorn Beta 1 or later.
 
 
-38. VLDB and File Server Preferences can now be provided initial 
+37. VLDB and File Server Preferences can now be provided initial 
 values using registry keys.  This is useful for managed machines in a
 Windows domain which are centrally located (e.g., in a computing
 lab.)  See registry.txt for details on the "Server Preferences" keys.
 
 
-39. As of 1.3.81, timestamps on file stored in AFS are reported to 
+38. As of 1.3.81, timestamps on files stored in AFS are reported to 
 Windows in UTC all year round.  Previously, in locales with daylight
 savings time, the time reported by AFS to Windows when DST is active
 was UTC+1.  This was done to preserve the relative local time for the
@@ -576,27 +583,140 @@ timestamp from the Windows explorer.  During DST, these two times will
 no longer agree even though they are in fact describing the same time.
 
 
-40. If the installer refuses to install and complains about an RPC
+39. If the installer refuses to install and complains about an RPC
 configuration error, check to ensure that the following registry
 entries are present and that they refer to the dll "rpcrt4.dll":
 
    HKLM "SOFTWARE\Microsoft\RPC\ClientProtocols" "ncacn_np"
    HKLM "SOFTWARE\Microsoft\RPC\ClientProtocols" "ncacn_ip_tcp"
    HKLM "SOFTWARE\Microsoft\RPC\ClientProtocols" "ncadg_ip_udp"
+   HKLM "SOFTWARE\Microsoft\RPC\ClientProtocols" "ncadg_ip_http"
 
 
-41. Starting in 1.3.83, when Integrated Logon is used in conjunction
-with KFW, the Kerberos 5 tickets obtained during the process of 
-generating AFS tokens are preserved and stored into the default
-ccache within the user logon session.
-
-
-42. 1.3.83 adds a new command, "fs minidump".  This command can 
+40. 1.3.83 adds a new command, "fs minidump".  This command can 
 be used at any time to generate a mini dump file containing the
 current stack of the afsd_service.exe process.   This output can
 be very helpful when debugging the AFS Client Service when it is
 unresponsive to SMB/CIFS requests.
 
+
+------------------------------------------------------------------------
+
+How to Debug Problems with OpenAFS for Windows:
+
+OpenAFS for Windows provides a wide range of tools to assist you in 
+debugging problems.  The techniques available to you are varied because
+of the wide range of issues that have been discovered over the years.
+
+* pioctl debugging (IoctlDebug registry key)
+
+  pioctl (path-based ioctl) calls are used by various tools to 
+  communicate with the AFS Client Service.  Some of the operations performed
+  include:
+
+  - setting/querying tokens  (tokens.exe, aklog.exe, afscreds.exe)
+  - setting/querying ACLs 
+  - setting/querying cache parameters
+  - flushing files or volumes
+  - setting/querying server preferences
+  - querying path location
+  - checking the status of servers and volumes
+  - setting/querying the sysname list
+
+  pioctl calls are implemented by writing to a special UNC path that
+  is processed by the AFS Client Service.   If there is a failure to 
+  communicate with the AFS Client Service via SMB/CIFS, it will be 
+  impossible to perform any of the above operations.   
+
+  To assist in debugging these problems, the registry value:
+
+        [HKLM\SOFTWARE\OpenAFS\Client]
+        REG_DWORD:  IoctlDebug   = 0x01
+
+  should be set.  Then any of the commands that perform pioctl calls should
+  be executed from the command prompt.  With this key set the pioctl library
+  will generate debugging output to stderr.  The output will contain the
+  Win32 API calls executed along with their most important parameters and 
+  their return code.   The MSDN Library and the Microsoft KnowledgeBase can
+  be used as a reference to help you determine the configuration probem with
+  your system.
+
+
+* afsd_service initialization log (%WinDir%\TEMP\afsd_init.log)
+
+  Every time the AFS Client Service starts it appends data about its progress
+  and configuration to a file.  This file provides information crucial to
+  determining why the service cannot start when there are problems.  When
+  the process terminates due to a panic condition it will write to this 
+  file the source code file and line number of the error.  In many cases 
+  the panic condition is due to a misconfiguration of the machine.  In other
+  cases it might be due to a programming error in the software.  
+  A quick review of the location in the source code will quickly reveal 
+  the reason for the termination.
+
+
+* afsd_service debug logs (fs trace {-on, -off, -dump} -> 
+  %WinDir%\TEMP\afsd.log)
+
+  When attempting to debug the behavior of the SMB/CIFS Server and the
+  Cache Manager it is often useful to examine a log of the operations
+  being performed.  While running the AFS Client Service keeps an in memory
+  log of many of its actions.   The default number of actions preserved
+  at any one time is 5000.  This can be adjusted with the registry value:
+
+    [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]
+    REG_DWORD  TraceBufferSize 
+
+  A restart of the service is necessary when adjusting this value.   
+  Execute "fs trace -on" to clear to the log and "fs trace -dump" to
+  output the contents of the log to the file.
+
+
+* Microsoft MiniDumps (fs minidump -> %WinDir%\TEMP\afsd.dmp)
+
+  If the AFS Client Service become unresponsive to any form of communication
+  there may be a serious error that can only be debugged by someone with 
+  access to the source code and a debugger.   The "fs minidump" command can
+  be used to force the generation of a MiniDump file containing the state
+  of all of the threads in the AFS Client Service process.
+
+
+* Integrated Logon debugging (TraceOption registry key)
+
+  If you are having trouble with the Integrated Logon operations 
+  it is often useful to be able to obtain a log of what it is attempting
+  to do.   The registry value:
+
+    [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]
+    REG_DWORD   TraceOption = 0x01
+
+  will instruct the Integrated Logon Network Provider and Event Handlers
+  to log information to the Windows Event Log: Application under the name
+  "AFS Logon".
+
+
+* RX (AFS RPC) debugging (rxdebug)
+
+  The rxdebug.exe tool can be used to query a variety of information 
+  about the AFS services installed on a given machine.  The port for
+  the AFS Cache Manager is 7001.  
+
+
+* Cache Manager debugging (cmdebug)
+
+  The cmdebug.exe tool can be used to query the state of the AFS Cache
+  Manager on a given machine.
+
+
+* Persistent Cache consistency check
+
+  The persistent cache is stored in a Hidden System file at 
+  %WinDir%\TEMP\AFSCache.  If there is a problem with the persistent 
+  cache that prevent the AFS Client Service from being able to start
+  a validation check on the file can be performed.
+
+    afsd_service.exe --validate-cache <cache-path>
+  
 
 ------------------------------------------------------------------------
 
@@ -650,6 +770,6 @@ User questions should be sent to the openafs-info@openafs.org mailing list.
 
   https://lists.openafs.org/mailman/listinfo/openafs-info
 
-You must join mailing lists if you wish to post to the list without incurring 
-a moderation delay.
+You must join the mailing lists if you wish to post to the list without 
+incurring a moderation delay.
 
