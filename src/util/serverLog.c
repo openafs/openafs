@@ -182,7 +182,7 @@ SetDebug_Signal(int signo)
 	LogLevel *= 5;
 
 #if defined(AFS_PTHREAD_ENV)
-        if (LogLevel > 999 && threadNameProgram != NULL && 
+        if (LogLevel > 1 && threadNameProgram != NULL && 
             threadIdLogs == 0) {
             threadIdLogs = 1;
         }
