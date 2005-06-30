@@ -18,8 +18,8 @@ static char rcsid_send_to_kdc_c[] =
 #include <kerberosIV/mit-copyright.h>
 #endif
 #include <afs/stds.h>
+#include "aklog.h"
 #include <krb5.h>
-#include <kerberosIV/krb.h> 
 
 #ifndef MAX_HSTNM
 #define MAX_HSTNM 100

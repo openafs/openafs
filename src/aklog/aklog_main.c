@@ -161,6 +161,48 @@ static krb5_error_code get_credv5(krb5_context context, char *, char *,
 				  char *, krb5_creds **);
 static int get_user_realm(krb5_context, char *);
 
+#if defined(HAVE_KRB5_PRINC_SIZE) || defined(krb5_princ_size)
+
+#define get_princ_str(c, p, n) krb5_princ_component(c, p, n)->data
+#define get_princ_len(c, p, n) krb5_princ_component(c, p, n)->length
+#define second_comp(c, p) (krb5_princ_size(c, p) > 1)
+#define realm_data(c, p) krb5_princ_realm(c, p)->data
+#define realm_len(c, p) krb5_princ_realm(c, p)->length
+
+#elif defined(HAVE_KRB5_PRINCIPAL_GET_COMP_STRING)
+
+#define get_princ_str(c, p, n) krb5_principal_get_comp_string(c, p, n)
+#define get_princ_len(c, p, n) strlen(krb5_principal_get_comp_string(c, p, n))
+#define second_comp(c, p) (krb5_principal_get_comp_string(c, p, 1) != NULL)
+#define realm_data(c, p) krb5_realm_data(krb5_principal_get_realm(c, p))
+#define realm_len(c, p) krb5_realm_length(krb5_principal_get_realm(c, p))
+
+#else
+#error "Must have either krb5_princ_size or krb5_principal_get_comp_string"
+#endif
+
+#if defined(HAVE_KRB5_CREDS_KEYBLOCK)
+
+#define get_cred_keydata(c) c->keyblock.contents
+#define get_cred_keylen(c) c->keyblock.length
+#define get_creds_enctype(c) c->keyblock.enctype
+
+#elif defined(HAVE_KRB5_CREDS_SESSION)
+
+#define get_cred_keydata(c) c->session.keyvalue.data
+#define get_cred_keylen(c) c->session.keyvalue.length
+#define get_creds_enctype(c) c->session.keytype
+
+#else
+#error "Must have either keyblock or session member of krb5_creds
+#endif
+
+#if !defined(HAVE_KRB5_524_CONVERT_CREDS) && defined(HAVE_KRB524_CONVERT_CREDS_KDC)
+#define krb5_524_convert_creds krb524_convert_creds_kdc
+#elif !defined(HAVE_KRB5_524_CONVERT_CREDS) && !defined(HAVE_KRB524_CONVERT_CREDS_KDC)
+#error "You must have one of krb5_524_convert_creds or krb5_524_convert_creds_kdc available"
+#endif
+
 #endif /* WINDOWS */
 
 /*
@@ -546,7 +588,7 @@ static int auth_to_cell(context, cell, realm)
 	    }
 	}
 
-	if (status != KSUCCESS) {
+	if (status) {
 	    if (dflag) {
 		printf("Kerberos error code returned by get_cred: %d\n",
 			status);
@@ -574,18 +616,18 @@ static int auth_to_cell(context, cell, realm)
 	    if (dflag)
 	    	printf("Using Kerberos V5 ticket natively\n");
 
-	    len = min(v5cred->client->data[0].length,
-	    	      v5cred->client->length > 1 ? MAXKTCNAMELEN - 2 :
-		      MAXKTCNAMELEN - 1);
-	    strncpy(username, v5cred->client->data[0].data, len);
+	    len = min(get_princ_len(context, v5cred->client, 0),
+	    	      second_comp(context, v5cred->client) ?
+					MAXKTCNAMELEN - 2 : MAXKTCNAMELEN - 1);
+	    strncpy(username, get_princ_str(context, v5cred->client, 0), len);
 	    username[len] = '\0';
 
-	    if (v5cred->client->length > 1) {
+	    if (second_comp(context, v5cred->client) > 1) {
 	    	strcat(username, ".");
 		p = username + strlen(username);
-		len = min(v5cred->client->data[1].length,
+		len = min(get_princ_len(context, v5cred->client, 1),
 			  MAXKTCNAMELEN - strlen(username) - 1);
-		strncpy(p, v5cred->client->data[1].data, len);
+		strncpy(p, get_princ_str(context, v5cred->client, 1), len);
 		p[len] = '\0';
 	    }
 
@@ -593,8 +635,8 @@ static int auth_to_cell(context, cell, realm)
 	    atoken.kvno = RXKAD_TKT_TYPE_KERBEROS_V5;
 	    atoken.startTime = v5cred->times.starttime;;
 	    atoken.endTime = v5cred->times.endtime;
-	    memcpy(&atoken.sessionKey, v5cred->keyblock.contents,
-		   v5cred->keyblock.length);
+	    memcpy(&atoken.sessionKey, get_cred_keydata(v5cred),
+		   get_cred_keylen(v5cred));
 	    atoken.ticketLen = v5cred->ticket.length;
 	    memcpy(atoken.ticket, v5cred->ticket.data, atoken.ticketLen);
 	} else {
@@ -660,7 +702,7 @@ static int auth_to_cell(context, cell, realm)
 #ifndef WINDOWS
 	}
 	else {
-	    if ((status = get_user_realm(context, realm_of_user)) != KSUCCESS) {
+	    if ((status = get_user_realm(context, realm_of_user))) {
 		fprintf(stderr, "%s: Couldn't determine realm of user:)",
 			progname);
 		com_err(progname, status, " while getting realm");
@@ -1514,14 +1556,19 @@ void aklog(int argc, char *argv[])
 }
 
 #ifndef HAVE_ADD_TO_ERROR_TABLE
-#include <afs/error_table.h>
 
+#define error_table error_table_compat
+#include <afs/error_table.h>
+#undef error_table
+
+#ifndef HAVE_ADD_ERROR_TABLE
 void add_error_table (const struct error_table *);
+#endif /* !HAVE_ADD_ERROR_TABLE */
 
 void
 add_to_error_table(struct et_list *new_table)
 {
-	add_error_table(new_table->table);
+	add_error_table((struct error_table *) new_table->table);
 }
 #endif /* HAVE_ADD_TO_ERROR_TABLE */
 
@@ -1572,7 +1619,7 @@ static krb5_error_code get_credv5(krb5_context context,
     increds.client = client_principal;
     increds.times.endtime = 0;
 	/* Ask for DES since that is what V4 understands */
-    increds.keyblock.enctype = ENCTYPE_DES_CBC_CRC;
+    get_creds_enctype((&increds)) = ENCTYPE_DES_CBC_CRC;
 
     r = krb5_get_credentials(context, 0, _krb425_ccache, &increds, creds);
 
@@ -1590,9 +1637,10 @@ static int get_user_realm(krb5_context context, char *realm)
     if (!client_principal)
         krb5_cc_get_principal(context, _krb425_ccache, &client_principal);
 
-    i = krb5_princ_realm(context, client_principal)->length;
+    i = realm_len(context, client_principal);
     if (i > REALM_SZ-1) i = REALM_SZ-1;
-    strncpy(realm,krb5_princ_realm(context, client_principal)->data,i);
+    strncpy(realm,realm_data(context, client_principal), i);
     realm[i] = 0;
-    return(KSUCCESS);
+
+    return(0);
 }

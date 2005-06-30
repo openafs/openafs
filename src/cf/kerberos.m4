@@ -54,12 +54,14 @@ BUILD_KRB5=no
 if test X$conf_krb5 = XYES; then
 	AC_MSG_RESULT([Configuring support for Kerberos 5 utilities])
 	BUILD_KRB5=yes
-	save_CFLAGS="$CFLAGS"
-	CFLAGS="$CFLAGS KRB5CFLAGS"
+	save_CPPFLAGS="$CPPFLAGS"
+	CPPFLAGS="$CPPFLAGS $KRB5CFLAGS"
 	save_LIBS="$LIBS"
 	LIBS="$LIBS $KRB5LIBS"
-	AC_CHECK_FUNCS([add_to_error_table])
-	CFLAGS="$save_CFLAGS"
+	AC_CHECK_FUNCS([add_to_error_table add_error_table krb5_princ_size krb5_principal_get_comp_string krb5_524_convert_creds krb524_convert_creds_kdc])
+	AC_CHECK_HEADERS([kerberosIV/krb.h])
+	AC_CHECK_MEMBERS([krb5_creds.keyblock, krb5_creds.session],,, [#include <krb5.h>])
+	CPPFLAGS="$save_CPPFLAGS"
 	LIBS="$save_LIBS"
 fi
 AC_SUBST(BUILD_KRB5)
