@@ -64,23 +64,13 @@ Variable: cm_initParams.nStatCaches
 
   Cache configuration.
 
-Value	: LogoffTokenTransfer
+Value	: LogoffPreserveTokens
 Type	: DWORD {1,0}
-Default : 1
-Variable: smb_LogoffTokenTransfer
+Default : 0
 
-  If enabled (set to 1), activates functionality where the user's
-  tokens are kept intact until smb_LogoffTokenTransferTimeout seconds
-  elapse after user logs off.  If roaming profiles are used and the
-  roaming profile takes a long time to be written back, this ensures
-  that the tokens remain valid until the profile save is complete.
-
-Value	: LogoffTokenTransferTimeout
-Type	: DWORD
-Default : 10
-Variable: smb_LogoffTokenTransferTimeout
-
-  See LogoffTokenTransfer above.
+  If enabled (set to 1), the Logoff Event handler will not attempt
+  to delete the user's tokens if the user's profile is stored outside
+  of AFS.
 
 Value	: RootVolume
 Type	: REG_SZ
