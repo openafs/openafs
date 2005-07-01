@@ -2542,30 +2542,14 @@ ViceIDToUsername(char *username,
         confname[sizeof(confname) - 2] = '\0';
     }
 
-    /*
-     * Talk about DUMB!  It turns out that there is a bug in
-     * pr_Initialize -- even if you give a different cell name
-     * to it, it still uses a connection to a previous AFS server
-     * if one exists.  The way to fix this is to change the
-     * _filename_ argument to pr_Initialize - that forces it to
-     * re-initialize the connection.  We do this by adding and
-     * removing a "/" on the end of the configuration directory name.
-     */
-
-    if (lastcell[0] != '\0' && (strcmp(lastcell, aserver->cell) != 0)) {
-        int i = strlen(confname);
-        if (confname[i - 1] == '/') {
-            confname[i - 1] = '\0';
-        } else {
-            confname[i] = '/';
-            confname[i + 1] = '\0';
-        }
-    }
-
     strcpy(lastcell, aserver->cell);
 
-    if (!pr_Initialize (0, confname, aserver->cell))
-        status = pr_SNameToId (username, &viceId);
+    if (!pr_Initialize (0, confname, aserver->cell)) {
+        char sname[PR_MAXNAMELEN];
+        strncpy(sname, username, PR_MAXNAMELEN);
+        sname[PR_MAXNAMELEN-1] = '\0';    
+        status = pr_SNameToId (sname, &viceId);
+    }
 
     /*
      * This is a crock, but it is Transarc's crock, so
@@ -2602,14 +2586,6 @@ ViceIDToUsername(char *username,
             strncpy(aclient->cell, realm_of_user, MAXKTCREALMLEN - 1);
             if (status = ktc_SetToken(aserver, atoken, aclient, 0))
                 return status;
-
-            /*                                    
-             * In case you're wondering, we don't need to change the
-             * filename here because we're still connecting to the
-             * same cell -- we're just using a different authentication
-             * level
-             */
-
             if (status = pr_Initialize(1L, confname, aserver->cell))
                 return status;
             if (status = pr_CreateUser(username, &id))
@@ -2976,7 +2952,8 @@ KFW_AFS_klog(
         strcpy(aclient.cell, realm_of_cell);
 
         len = min(k5creds->client->realm.length,strlen(realm_of_cell));
-        if ( strncmp(realm_of_cell, k5creds->client->realm.data, len) ) {
+        /* For Khimaira, always append the realm name */
+        if ( 1 /* strncmp(realm_of_cell, k5creds->client->realm.data, len) */ ) {
             char * p;
             strcat(aclient.name, "@");
             p = aclient.name + strlen(aclient.name);
