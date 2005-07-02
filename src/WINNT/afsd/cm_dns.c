@@ -702,82 +702,88 @@ int getAFSServer(char *cellName, int *cellHostAddrs, char cellHostNames[][MAXHOS
   else
     return 0;
 #else /* DNSAPI_ENV */
-	PDNS_RECORD pDnsCell, pDnsIter, pDnsVol,pDnsVolIter, pDnsCIter;
-	DWORD i;
+    PDNS_RECORD pDnsCell, pDnsIter, pDnsVol,pDnsVolIter, pDnsCIter;
+    DWORD i;
     struct sockaddr_in vlSockAddr;
+    char query[1024];
 
     *numServers = 0; 
     *ttl = 0;
 
     /* query the AFSDB records of cell */
-	if (DnsQuery_A(cellName, DNS_TYPE_AFSDB, DNS_QUERY_STANDARD, NULL, &pDnsCell, NULL) == ERROR_SUCCESS) {
+    strncpy(query, cellName, 1024);
+    query[1023] = 0;
+    if (query[strlen(query)-1] != '.') {
+        strncat(query,".",1024);
+        query[1023] = 0;
+    }
 
-		memset((void*) &vlSockAddr, 0, sizeof(vlSockAddr));
+    if (DnsQuery_A(query, DNS_TYPE_AFSDB, DNS_QUERY_STANDARD, NULL, &pDnsCell, NULL) == ERROR_SUCCESS) {
+        memset((void*) &vlSockAddr, 0, sizeof(vlSockAddr));
 		
-		/* go through the returned records */
-		for (pDnsIter = pDnsCell;pDnsIter; pDnsIter = pDnsIter->pNext) {
-			/* if we find an AFSDB record with Preference set to 1, we found a volserver */
-			if (pDnsIter->wType == DNS_TYPE_AFSDB && pDnsIter->Data.Afsdb.wPreference == 1) {
-				strncpy(cellHostNames[*numServers], pDnsIter->Data.Afsdb.pNameExchange, MAXHOSTCHARS);
+        /* go through the returned records */
+        for (pDnsIter = pDnsCell;pDnsIter; pDnsIter = pDnsIter->pNext) {
+            /* if we find an AFSDB record with Preference set to 1, we found a volserver */
+            if (pDnsIter->wType == DNS_TYPE_AFSDB && pDnsIter->Data.Afsdb.wPreference == 1) {
+                strncpy(cellHostNames[*numServers], pDnsIter->Data.Afsdb.pNameExchange, MAXHOSTCHARS);
                 cellHostNames[*numServers][MAXHOSTCHARS-1]='\0';
-				(*numServers)++;
+                (*numServers)++;
                 
-				if (!*ttl) 
+                if (!*ttl) 
                     *ttl = pDnsIter->dwTtl;
-				if (*numServers == AFSMAXCELLHOSTS) 
+                if (*numServers == AFSMAXCELLHOSTS) 
                     break;
-			}
-		}
+            }
+        }
 
-		for (i=0;i<*numServers;i++) 
+        for (i=0;i<*numServers;i++) 
             cellHostAddrs[i] = 0;
 
-		/* now check if there are any A records in the results */
-		for (pDnsIter = pDnsCell; pDnsIter; pDnsIter = pDnsIter->pNext) {
-			if(pDnsIter->wType == DNS_TYPE_A)
-				/* check if its for one of the volservers */
-				for (i=0;i<*numServers;i++)
-					if(stricmp(pDnsIter->pName, cellHostNames[i]) == 0)
-						cellHostAddrs[i] = pDnsIter->Data.A.IpAddress;
-		}
+        /* now check if there are any A records in the results */
+        for (pDnsIter = pDnsCell; pDnsIter; pDnsIter = pDnsIter->pNext) {
+            if(pDnsIter->wType == DNS_TYPE_A)
+                /* check if its for one of the volservers */
+                for (i=0;i<*numServers;i++)
+                    if(stricmp(pDnsIter->pName, cellHostNames[i]) == 0)
+                        cellHostAddrs[i] = pDnsIter->Data.A.IpAddress;
+        }       
 
-		for (i=0;i<*numServers;i++) {
-			/* if we don't have an IP yet, then we should try resolving the volserver hostname
-			   in a separate query. */
-			if (!cellHostAddrs[i]) {
-				if (DnsQuery_A(cellHostNames[i], DNS_TYPE_A, DNS_QUERY_STANDARD, NULL, &pDnsVol, NULL) == ERROR_SUCCESS) {
-					for (pDnsVolIter = pDnsVol; pDnsVolIter; pDnsVolIter=pDnsVolIter->pNext) {
-						/* if we get an A record, keep it */
-						if (pDnsVolIter->wType == DNS_TYPE_A && stricmp(cellHostNames[i], pDnsVolIter->pName)==0) {
-							cellHostAddrs[i] = pDnsVolIter->Data.A.IpAddress;
-							break;
-						}
-						/* if we get a CNAME, look for a corresponding A record */
-						if (pDnsVolIter->wType == DNS_TYPE_CNAME && stricmp(cellHostNames[i], pDnsVolIter->pName)==0) {
-							for (pDnsCIter=pDnsVolIter; pDnsCIter; pDnsCIter=pDnsCIter->pNext) {
-								if (pDnsCIter->wType == DNS_TYPE_A && stricmp(pDnsVolIter->Data.CNAME.pNameHost, pDnsCIter->pName)==0) {
-									cellHostAddrs[i] = pDnsCIter->Data.A.IpAddress;
-									break;
-								}
-							}
-							if (cellHostAddrs[i]) 
+        for (i=0;i<*numServers;i++) {
+            /* if we don't have an IP yet, then we should try resolving the volserver hostname
+            in a separate query. */
+            if (!cellHostAddrs[i]) {
+                if (DnsQuery_A(cellHostNames[i], DNS_TYPE_A, DNS_QUERY_STANDARD, NULL, &pDnsVol, NULL) == ERROR_SUCCESS) {
+                    for (pDnsVolIter = pDnsVol; pDnsVolIter; pDnsVolIter=pDnsVolIter->pNext) {
+                        /* if we get an A record, keep it */
+                        if (pDnsVolIter->wType == DNS_TYPE_A && stricmp(cellHostNames[i], pDnsVolIter->pName)==0) {
+                            cellHostAddrs[i] = pDnsVolIter->Data.A.IpAddress;
+                            break;
+                        }
+                        /* if we get a CNAME, look for a corresponding A record */
+                        if (pDnsVolIter->wType == DNS_TYPE_CNAME && stricmp(cellHostNames[i], pDnsVolIter->pName)==0) {
+                            for (pDnsCIter=pDnsVolIter; pDnsCIter; pDnsCIter=pDnsCIter->pNext) {
+                                if (pDnsCIter->wType == DNS_TYPE_A && stricmp(pDnsVolIter->Data.CNAME.pNameHost, pDnsCIter->pName)==0) {
+                                    cellHostAddrs[i] = pDnsCIter->Data.A.IpAddress;
+                                    break;
+                                }
+                            }
+                            if (cellHostAddrs[i]) 
                                 break;
-							/* TODO: if the additional section is missing, then do another lookup for the CNAME */
-						}
-					}
-					/* we are done with the volserver lookup */
-					DnsRecordListFree(pDnsVol, DnsFreeRecordListDeep);
-				}
-			}
-		}
-		DnsRecordListFree(pDnsCell, DnsFreeRecordListDeep);
-	}
+                            /* TODO: if the additional section is missing, then do another lookup for the CNAME */
+                        }
+                    }
+                    /* we are done with the volserver lookup */
+                    DnsRecordListFree(pDnsVol, DnsFreeRecordListDeep);
+                }
+            }
+        }
+        DnsRecordListFree(pDnsCell, DnsFreeRecordListDeep);
+    }
 
     if ( *numServers > 0 )
         return 0;
-    else
+    else        
         return -1;
 #endif /* DNSAPI_ENV */
 }
-
 #endif /* AFS_AFSDB_ENV */
