@@ -150,10 +150,6 @@ afs_FlushVCache(struct vcache *avc, int *slept)
 	code = EBUSY;
 	goto bad;
     }
-    if (avc->states & CVInit) {
-	code = EBUSY;
-	goto bad;
-    }
     if (avc->nextfree || !avc->vlruq.prev || !avc->vlruq.next) {	/* qv afs.h */
 	refpanic("LRU vs. Free inconsistency");
     }
@@ -879,14 +875,14 @@ restart:
     lockinit(&tvc->rwlock, PINOD, "vcache", 0, 0);
 #endif
 #ifdef AFS_DARWIN_ENV
-#ifdef AFS_DARWIN80_ENV
-    LOCKINIT(tvc->rwlock);
-#else
     ReleaseWriteLock(&afs_xvcache);
     AFS_GUNLOCK();
     afs_darwin_getnewvnode(tvc);	/* includes one refcount */
     AFS_GLOCK();
     ObtainWriteLock(&afs_xvcache,338);
+#ifdef AFS_DARWIN80_ENV
+    LOCKINIT(tvc->rwlock);
+#else
     lockinit(&tvc->rwlock, PINOD, "vcache", 0, 0);
 #endif
 #endif
@@ -1170,6 +1166,11 @@ afs_FlushActiveVcaches(register afs_int32 doflocks)
     for (i = 0; i < VCSIZE; i++) {
 	for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
             if (tvc->states & CVInit) continue;
+#ifdef AFS_DARWIN80_ENV
+            if (tvc->states & CDeadVnode &&
+                (tvc->states & (CCore|CUnlinkedDel) ||
+                 tvc->flockCount)) panic("Dead vnode has core/unlinkedel/flock");
+#endif
 	    if (doflocks && tvc->flockCount != 0) {
 		/* if this entry has an flock, send a keep-alive call out */
 		osi_vnhold(tvc, 0);
@@ -1196,8 +1197,13 @@ afs_FlushActiveVcaches(register afs_int32 doflocks)
 			  AFS_STATS_FS_RPCIDX_EXTENDLOCK, SHARED_LOCK, NULL));
 
 		ReleaseWriteLock(&tvc->lock);
+#ifdef AFS_DARWIN80_ENV
+		AFS_FAST_RELE(tvc);
+		ObtainReadLock(&afs_xvcache);
+#else
 		ObtainReadLock(&afs_xvcache);
 		AFS_FAST_RELE(tvc);
+#endif
 	    }
 	    didCore = 0;
 	    if ((tvc->states & CCore) || (tvc->states & CUnlinkedDel)) {
@@ -1265,6 +1271,15 @@ afs_FlushActiveVcaches(register afs_int32 doflocks)
 #if defined(AFS_SGI_ENV)
 		AFS_RWUNLOCK((vnode_t *) tvc, VRWLOCK_WRITE);
 #endif
+#ifdef AFS_DARWIN80_ENV
+		AFS_FAST_RELE(tvc);
+		if (didCore) {
+		    AFS_RELE(AFSTOV(tvc));
+		    /* Matches write code setting CCore flag */
+		    crfree(cred);
+		}
+		ObtainReadLock(&afs_xvcache);
+#else
 		ObtainReadLock(&afs_xvcache);
 		AFS_FAST_RELE(tvc);
 		if (didCore) {
@@ -1272,6 +1287,7 @@ afs_FlushActiveVcaches(register afs_int32 doflocks)
 		    /* Matches write code setting CCore flag */
 		    crfree(cred);
 		}
+#endif
 	    }
 	}
     }
@@ -1720,10 +1736,10 @@ afs_GetVCache(register struct VenusFid *afid, struct vrequest *areq,
 	goto loop;
 #endif
     }
-
     if (tvc) {
 	if (cached)
 	    *cached = 1;
+	osi_Assert((tvc->states & CVInit) == 0);
 	if (tvc->states & CStatd) {
 	    ReleaseSharedLock(&afs_xvcache);
 	    return tvc;
@@ -1747,7 +1763,6 @@ afs_GetVCache(register struct VenusFid *afid, struct vrequest *areq,
 #ifdef AFS_LINUX22_ENV
 	vcache2inode(tvc);
 #endif
-        osi_Assert(tvc->states & CVInit == 0);
 	ReleaseWriteLock(&tvc->lock);
 	return tvc;
     }
@@ -1869,22 +1884,11 @@ afs_GetVCache(register struct VenusFid *afid, struct vrequest *areq,
 	    code = afs_FetchStatus(tvc, afid, areq, &OutStatus);
 	}
     }
-#ifdef AFS_DARWIN80_ENV
-    if (tvc->states & CVInit) {
-       AFS_GUNLOCK();
-       afs_darwin_getnewvnode(tvc); /* instantiate, now that we might have a
-                                       filetype */
-       AFS_GLOCK();
-       tvc->states &=~ CVInit;
-    }
-#endif
 
     if (code) {
 	ReleaseWriteLock(&tvc->lock);
 
-	ObtainReadLock(&afs_xvcache);
-	AFS_FAST_RELE(tvc);
-	ReleaseReadLock(&afs_xvcache);
+	afs_PutVCache(tvc);
 	return NULL;
     }
 
@@ -1941,8 +1945,8 @@ afs_LookupVCache(struct VenusFid *afid, struct vrequest *areq,
 	tvc->states &= ~CUnique;
 
 	ReleaseReadLock(&tvc->lock);
+	afs_PutVCache(tvc);
 	ObtainReadLock(&afs_xvcache);
-	AFS_FAST_RELE(tvc);
     }
     /* if (tvc) */
     ReleaseReadLock(&afs_xvcache);
@@ -2014,18 +2018,7 @@ afs_LookupVCache(struct VenusFid *afid, struct vrequest *areq,
 	if (tvp)
 	    afs_PutVolume(tvp, READ_LOCK);
 	ReleaseWriteLock(&tvc->lock);
-#ifdef AFS_DARWIN80_ENV
-    if (tvc->states & CVInit) {
-       AFS_GUNLOCK();
-       afs_darwin_getnewvnode(tvc); /* instantiate, now that we might have a
-                                       filetype */
-       AFS_GLOCK();
-       tvc->states &=~ CVInit;
-    }
-#endif
-	ObtainReadLock(&afs_xvcache);
-	AFS_FAST_RELE(tvc);
-	ReleaseReadLock(&afs_xvcache);
+	afs_PutVCache(tvc);
 	return NULL;
     }
 
@@ -2064,15 +2057,6 @@ afs_LookupVCache(struct VenusFid *afid, struct vrequest *areq,
     afs_ProcessFS(tvc, &OutStatus, areq);
 
     ReleaseWriteLock(&tvc->lock);
-#ifdef AFS_DARWIN80_ENV
-    if (tvc->states & CVInit) {
-       AFS_GUNLOCK();
-       afs_darwin_getnewvnode(tvc); /* instantiate, now that we might have a
-                                       filetype */
-       AFS_GLOCK();
-       tvc->states &=~ CVInit;
-    }
-#endif
     return tvc;
 
 }
@@ -2146,7 +2130,7 @@ rootvc_loop:
 	    int vg;
             if (tvc->states & CDeadVnode) {
                ReleaseSharedLock(&afs_xvcache);
-               osi_TimedSleep(&tvc->v, 500, 0);
+               afs_osi_Sleep(&tvc->states);
                goto rootvc_loop;
             }
 	    AFS_GUNLOCK();
@@ -2272,9 +2256,7 @@ rootvc_loop:
 	if ((tvc->states & CForeign) || (tvc->fid.Fid.Vnode & 1))
 	    osi_dnlc_purgedp(tvc);	/* if it (could be) a directory */
 	ReleaseWriteLock(&tvc->lock);
-	ObtainReadLock(&afs_xvcache);
-	AFS_FAST_RELE(tvc);
-	ReleaseReadLock(&afs_xvcache);
+	afs_PutVCache(tvc);
 	return NULL;
     }
 
@@ -2554,14 +2536,16 @@ void
 afs_PutVCache(register struct vcache *avc)
 {
     AFS_STATCNT(afs_PutVCache);
+#ifdef AFS_DARWIN80_ENV
+    vnode_put(AFSTOV(avc));
+    AFS_FAST_RELE(avc);
+#else
     /*
      * Can we use a read lock here?
      */
     ObtainReadLock(&afs_xvcache);
     AFS_FAST_RELE(avc);
     ReleaseReadLock(&afs_xvcache);
-#ifdef AFS_DARWIN80_ENV
-    vnode_put(AFSTOV(avc));
 #endif
 }				/*afs_PutVCache */
 
@@ -2592,13 +2576,11 @@ afs_FindVCache(struct VenusFid *afid, afs_int32 * retry, afs_int32 flag)
     afs_int32 i;
 
     AFS_STATCNT(afs_FindVCache);
-#ifdef AFS_DARWIN80_ENV
 findloop:
-#endif
     i = VCHash(afid);
     for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
 	if (FidMatches(afid, tvc)) {
-            while (tvc->states & CVInit) {
+            if (tvc->states & CVInit) {
                   int lock;
                   lock = CheckLock(&afs_xvcache);
                   if (lock > 0)
@@ -2610,6 +2592,7 @@ findloop:
                      ObtainReadLock(&afs_xvcache);
                   else
                      ObtainSharedLock(&afs_xvcache, 341);
+                  goto findloop;
             }
 #ifdef  AFS_OSF_ENV
 	    /* Grab this vnode, possibly reactivating from the free list */
@@ -2622,6 +2605,20 @@ findloop:
 #endif /* AFS_OSF_ENV */
 #ifdef  AFS_DARWIN80_ENV
 	    int vg;
+            if (tvc->states & CDeadVnode) {
+                  int lock;
+                  lock = CheckLock(&afs_xvcache);
+                  if (lock > 0)
+                     ReleaseReadLock(&afs_xvcache);
+                  else
+                     ReleaseSharedLock(&afs_xvcache);
+                  afs_osi_Sleep(&tvc->states);
+                  if (lock > 0)
+                     ObtainReadLock(&afs_xvcache);
+                  else
+                     ObtainSharedLock(&afs_xvcache, 341);
+                  goto findloop;
+            }
 	    AFS_GUNLOCK();
 	    vg = vnode_get(AFSTOV(tvc));
 	    AFS_GLOCK();
@@ -2734,9 +2731,7 @@ afs_NFSFindVCache(struct vcache **avcp, struct VenusFid *afid)
 
     AFS_STATCNT(afs_FindVCache);
 
-#if defined(AFS_SGI_ENV) && !defined(AFS_SGI53_ENV)
   loop:
-#endif
 
     ObtainSharedLock(&afs_xvcache, 331);
 
@@ -2747,18 +2742,11 @@ afs_NFSFindVCache(struct vcache **avcp, struct VenusFid *afid)
 	    && (tvc->fid.Fid.Volume == afid->Fid.Volume)
 	    && ((tvc->fid.Fid.Unique & 0xffffff) == afid->Fid.Unique)
 	    && (tvc->fid.Cell == afid->Cell)) {
-            while (tvc->states & CVInit) {
+            if (tvc->states & CVInit) {
                   int lock;
-                  lock = CheckLock(&afs_xvcache);
-                  if (lock > 0)
-                     ReleaseReadLock(&afs_xvcache);
-                  else
-                     ReleaseSharedLock(&afs_xvcache);
+                  ReleaseSharedLock(&afs_xvcache);
                   afs_osi_Sleep(&tvc->states);
-                  if (lock > 0)
-                     ObtainReadLock(&afs_xvcache);
-                  else
-                     ObtainSharedLock(&afs_xvcache, 341);
+                  goto loop;
             }
 #ifdef  AFS_OSF_ENV
 	    /* Grab this vnode, possibly reactivating from the free list */
@@ -2772,8 +2760,12 @@ afs_NFSFindVCache(struct vcache **avcp, struct VenusFid *afid)
 	    }
 #endif /* AFS_OSF_ENV */
 #ifdef  AFS_DARWIN80_ENV
-	    /* Grab this vnode, possibly reactivating from the free list */
 	    int vg;
+            if (tvc->states & CDeadVnode) {
+               ReleaseSharedLock(&afs_xvcache);
+               afs_osi_Sleep(&tvc->states);
+               goto loop;
+            }
 	    AFS_GUNLOCK();
 	    vg = vnode_get(AFSTOV(tvc));
 	    AFS_GLOCK();
@@ -2792,7 +2784,7 @@ afs_NFSFindVCache(struct vcache **avcp, struct VenusFid *afid)
 #endif
 		afs_duplicate_nfs_fids++;
 		ReleaseSharedLock(&afs_xvcache);
-#ifdef AFS_OSF_ENV
+#ifdef AFS_DARWIN80_ENV
 		/* Drop our reference counts. */
 		vnode_put(AFSTOV(tvc));
 		vnode_put(AFSTOV(found_tvc));

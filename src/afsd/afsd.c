@@ -2350,6 +2350,8 @@ call_syscall(param1, param2, param3, param4, param5, param6, param7)
     } else {
        error = -1;
     }
+    if (!error)
+      error=syscall_data.retval;
 #else
     error =
 	syscall(AFS_SYSCALL, AFSCALL_CALL, param1, param2, param3, param4,

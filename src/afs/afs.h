@@ -549,6 +549,7 @@ struct SimpleLocks {
 #define CDCLock		0x02000000	/* Vnode lock held over call to GetDownD */
 #define CBulkFetching	0x04000000	/* stats are being fetched by bulk stat */
 #define CExtendedFile	0x08000000	/* extended file via ftruncate call. */
+#define CVInit		0x10000000	/* being initialized */
 
 /* vcache vstate bits */
 #define VRevokeWait   0x1

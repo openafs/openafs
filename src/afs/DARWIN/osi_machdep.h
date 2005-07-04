@@ -156,7 +156,8 @@ extern thread_t afs_global_owner;
 extern lck_mtx_t  *afs_global_lock;
 #define AFS_GLOCK() \
     do { \
-        lck_mtx_lock(afs_global_lock); \
+	osi_Assert(afs_global_owner != current_thread()); \
+	lck_mtx_lock(afs_global_lock); \
 	osi_Assert(afs_global_owner == 0); \
 	afs_global_owner = current_thread(); \
     } while (0)

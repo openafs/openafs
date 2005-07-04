@@ -318,6 +318,7 @@ iwrite(int dev, int inode, int inode_p1, unsigned int offset, char *cbuf,
 int ioctl_afs_syscall(long syscall, long param1, long param2, long param3, 
 		     long param4, long param5, long param6, int *rval) {
   struct afssysargs syscall_data;
+  int code;
   int fd = open(SYSCALL_DEV_FNAME, O_RDWR);
   if(fd < 0)
     return -1;
@@ -327,13 +328,15 @@ int ioctl_afs_syscall(long syscall, long param1, long param2, long param3,
   syscall_data.param2 = param2;
   syscall_data.param3 = param3;
   syscall_data.param4 = param4;
-  syscall_data.param4 = param5;
-  syscall_data.param4 = param6;
+  syscall_data.param5 = param5;
+  syscall_data.param6 = param6;
 
-  *rval = ioctl(fd, VIOC_SYSCALL, &syscall_data);
+  code = ioctl(fd, VIOC_SYSCALL, &syscall_data);
 
   close(fd);
-
+  if (code)
+     return code;
+  *rval=syscall_data.retval;
   return 0;
 }
 #endif

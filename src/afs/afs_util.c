@@ -270,6 +270,7 @@ afs_CheckLocks(void)
 
 	for (i = 0; i < VCSIZE; i++) {
 	    for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
+                if (tvc->states & CVInit) continue;
 #ifdef	AFS_OSF_ENV
 		if (VREFCOUNT(tvc) > 1)
 #else /* AFS_OSF_ENV */

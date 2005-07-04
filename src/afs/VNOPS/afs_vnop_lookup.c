@@ -253,7 +253,7 @@ afs_InitFakeStat(struct afs_fakestat_state *state)
  *
  * Only issues RPCs if canblock is non-zero.
  */
-int
+static int
 afs_EvalFakeStat_int(struct vcache **avcp, struct afs_fakestat_state *state,
 		     struct vrequest *areq, int canblock)
 {
@@ -309,6 +309,14 @@ afs_EvalFakeStat_int(struct vcache **avcp, struct afs_fakestat_state *state,
 	    code = canblock ? ENOENT : 0;
 	    goto done;
 	}
+#ifdef AFS_DARWIN80_ENV
+        root_vp->m.Type = VDIR;
+        AFS_GUNLOCK();
+        code = afs_darwin_finalizevnode(root_vp, NULL, NULL, 0);
+        AFS_GLOCK();
+        if (code) goto done;
+        vnode_ref(AFSTOV(root_vp));
+#endif
 	if (tvolp) {
 	    /* Is this always kosher?  Perhaps we should instead use
 	     * NBObtainWriteLock to avoid potential deadlock.
@@ -567,6 +575,9 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
     int flagIndex = 0;		/* First file with bulk fetch flag set */
     int inlinebulk = 0;		/* Did we use InlineBulk RPC or not? */
     XSTATS_DECLS;
+#ifdef AFS_DARWIN80_ENV
+    panic("bulkstatus doesn't work on AFS_DARWIN80_ENV. don't call it");
+#endif
     /* first compute some basic parameters.  We dont want to prefetch more
      * than a fraction of the cache in any given call, and we want to preserve
      * a portion of the LRU queue in any event, so as to avoid thrashing
@@ -712,6 +723,15 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	    if (!tvcp)
 		goto done;	/* can't happen at present, more's the pity */
 
+#ifdef AFS_DARWIN80_ENV
+            if (tvcp->states & CVInit) {
+                 /* XXX don't have status yet, so creating the vnode is
+                    not yet useful. we would get CDeadVnode set, and the
+                    upcoming PutVCache will cause the vcache to be flushed &
+                    freed, which in turn means the bulkstatus results won't 
+                    be used */
+            }
+#endif
 	    /* WARNING: afs_DoBulkStat uses the Length field to store a
 	     * sequence number for each bulk status request. Under no
 	     * circumstances should afs_DoBulkStat store a sequence number
@@ -1077,7 +1097,11 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 }
 
 /* was: (AFS_DEC_ENV) || defined(AFS_OSF30_ENV) || defined(AFS_NCR_ENV) */
-static int AFSDOBULK = 0;
+#ifdef AFS_DARWIN80_ENV
+#define AFSDOBULK 0
+#else
+static int AFSDOBULK = 1;
+#endif
 
 int
 #ifdef AFS_OSF_ENV

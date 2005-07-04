@@ -2550,10 +2550,23 @@ DECL_PIOCTL(PFlushVolumeData)
      * Clear stat'd flag from all vnodes from this volume; this will invalidate all
      * the vcaches associated with the volume.
      */
+loop:
     ObtainReadLock(&afs_xvcache);
     for (i = 0; i < VCSIZE; i++) {
 	for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
 	    if (tvc->fid.Fid.Volume == volume && tvc->fid.Cell == cell) {
+                if (tvc->states & CVInit) {
+                    ReleaseReadLock(&afs_xvcache);
+                    afs_osi_Sleep(&tvc->states);
+                    goto loop;
+                }
+#ifdef AFS_DARWIN80_ENV
+                if (tvc->states & CDeadVnode) {
+                    ReleaseReadLock(&afs_xvcache);
+                    afs_osi_Sleep(&tvc->states);
+                    goto loop;
+                }
+#endif
 #if	defined(AFS_SGI_ENV) || defined(AFS_OSF_ENV)  || defined(AFS_SUN5_ENV)  || defined(AFS_HPUX_ENV) || defined(AFS_LINUX20_ENV)
 		VN_HOLD(AFSTOV(tvc));
 #else
@@ -2580,9 +2593,15 @@ DECL_PIOCTL(PFlushVolumeData)
 #ifdef AFS_BOZONLOCK_ENV
 		afs_BozonUnlock(&tvc->pvnLock, tvc);
 #endif
+#ifdef AFS_DARWIN80_ENV
+		/* our tvc ptr is still good until now */
+		AFS_FAST_RELE(tvc);
+		ObtainReadLock(&afs_xvcache);
+#else
 		ObtainReadLock(&afs_xvcache);
 		/* our tvc ptr is still good until now */
 		AFS_FAST_RELE(tvc);
+#endif
 	    }
 	}
     }

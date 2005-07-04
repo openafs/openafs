@@ -2145,7 +2145,8 @@ afs_syscall(call, parm0, parm1, parm2, parm3, parm4, parm5, parm6)
 #endif
 #else
 #ifdef AFS_DARWIN80_ENV
-    code = ioctl_afs_syscall(call, parm0, parm1, parm2, parm3, parm4);
+    code = ioctl_afs_syscall(call, parm0, parm1, parm2, parm3, parm4, parm5, &rval);
+    if (!code) code = rval;
 #else
 #if !defined(AFS_SGI_ENV) && !defined(AFS_AIX32_ENV)
     code = syscall(AFS_SYSCALL, call, parm0, parm1, parm2, parm3, parm4);

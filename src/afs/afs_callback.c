@@ -151,11 +151,15 @@ SRXAFSCB_GetCE(struct rx_call *a_call, afs_int32 a_index,
     a_result->DataVersion = hgetlo(tvc->m.DataVersion);
     a_result->callback = afs_data_pointer_to_int32(tvc->callback);	/* XXXX Now a pointer; change it XXXX */
     a_result->cbExpires = tvc->cbExpires;
+    if (tvc->states & CVInit) {
+        a_result->refCount = 1;
+    } else {
 #ifdef AFS_DARWIN80_ENV
     a_result->refCount = vnode_isinuse(AFSTOV(tvc),0)?1:0; /* XXX fix */
 #else
     a_result->refCount = VREFCOUNT(tvc);
 #endif
+    }
     a_result->opens = tvc->opens;
     a_result->writers = tvc->execsOrWriters;
     a_result->mvstat = tvc->mvstat;
@@ -234,11 +238,15 @@ SRXAFSCB_GetCE64(struct rx_call *a_call, afs_int32 a_index,
     a_result->DataVersion = hgetlo(tvc->m.DataVersion);
     a_result->callback = afs_data_pointer_to_int32(tvc->callback);	/* XXXX Now a pointer; change it XXXX */
     a_result->cbExpires = tvc->cbExpires;
+    if (tvc->states & CVInit) {
+        a_result->refCount = 1;
+    } else {
 #ifdef AFS_DARWIN80_ENV
     a_result->refCount = vnode_isinuse(AFSTOV(tvc),0)?1:0; /* XXX fix */
 #else
     a_result->refCount = VREFCOUNT(tvc);
 #endif
+    }
     a_result->opens = tvc->opens;
     a_result->writers = tvc->execsOrWriters;
     a_result->mvstat = tvc->mvstat;
@@ -413,7 +421,8 @@ ClearCallBack(register struct rx_connection *a_conn,
 			else
 			    afs_evenCBs++;
 			ReleaseWriteLock(&afs_xcbhash);
-			if (tvc->fid.Fid.Vnode & 1 || (vType(tvc) == VDIR))
+			if (!(tvc->states & CVInit) &&
+			    (tvc->fid.Fid.Vnode & 1 || (vType(tvc) == VDIR)))
 			    osi_dnlc_purgedp(tvc);
 			afs_Trace3(afs_iclSetp, CM_TRACE_CALLBACK,
 				   ICL_TYPE_POINTER, tvc, ICL_TYPE_INT32,
@@ -458,7 +467,8 @@ ClearCallBack(register struct rx_connection *a_conn,
 		    afs_DequeueCallback(tvc);
 		    tvc->states &= ~(CStatd | CUnique | CBulkFetching);
 		    ReleaseWriteLock(&afs_xcbhash);
-		    if (a_fid->Vnode & 1 || (vType(tvc) == VDIR))
+		    if (!(tvc->states & CVInit) &&
+		        (tvc->fid.Fid.Vnode & 1 || (vType(tvc) == VDIR)))
 			osi_dnlc_purgedp(tvc);
 		    afs_Trace3(afs_iclSetp, CM_TRACE_CALLBACK,
 			       ICL_TYPE_POINTER, tvc, ICL_TYPE_INT32,

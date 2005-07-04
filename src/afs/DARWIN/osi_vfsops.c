@@ -207,13 +207,13 @@ afs_unmount(mp, flags, ctx)
 	} else {
 	    if (flags & MNT_FORCE) {
                 if (afs_globalVp) {
-                    AFS_GUNLOCK();
 #ifdef AFS_DARWIN80_ENV
-                    vnode_rele(AFSTOV(afs_globalVp));
+                    afs_PutVCache(afs_globalVp);
 #else
+                    AFS_GUNLOCK();
                     vrele(AFSTOV(afs_globalVp));
-#endif
                     AFS_GLOCK();
+#endif
                 }
 		afs_globalVp = NULL;
 		AFS_GUNLOCK();
@@ -248,6 +248,7 @@ afs_root(struct mount *mp, struct vnode **vpp)
     register struct vcache *tvp = 0;
 #ifdef AFS_DARWIN80_ENV
     struct ucred *cr = vfs_context_ucred(ctx);
+    int needref=0;
 #else
     struct proc *p = current_proc();
     struct ucred _cr;
@@ -263,43 +264,60 @@ afs_root(struct mount *mp, struct vnode **vpp)
 	&& (afs_globalVp->states & CStatd)) {
 	tvp = afs_globalVp;
 	error = 0;
+#ifdef AFS_DARWIN80_ENV
+        needref=1;
+#endif
     } else if (mdata == (qaddr_t) - 1) {
 	error = ENOENT;
     } else {
 	struct VenusFid *rootFid = (mdata == NULL)
 	    ? &afs_rootFid : (struct VenusFid *)mdata;
 
-	if (afs_globalVp) {
-	    afs_PutVCache(afs_globalVp);
-	    afs_globalVp = NULL;
-	}
-
 	if (!(error = afs_InitReq(&treq, cr)) && !(error = afs_CheckInit())) {
 	    tvp = afs_GetVCache(rootFid, &treq, NULL, NULL);
+#ifdef AFS_DARWIN80_ENV
+            if (tvp) {
+	        AFS_GUNLOCK();
+                error = afs_darwin_finalizevnode(tvp, NULL, NULL, 1);
+	        AFS_GLOCK();
+                if (error)
+                   tvp = NULL;
+                else 
+                   /* re-acquire the usecount that finalizevnode disposed of */
+                   vnode_ref(AFSTOV(tvp));
+            }
+#endif
 	    /* we really want this to stay around */
 	    if (tvp) {
-		if (mdata == NULL)
+		if (mdata == NULL) {
+		    if (afs_globalVp) {
+			afs_PutVCache(afs_globalVp);
+			afs_globalVp = NULL;
+		    }
 		    afs_globalVp = tvp;
+#ifdef AFS_DARWIN80_ENV
+                    needref=1;
+#endif
+                }
 	    } else
 		error = ENOENT;
 	}
     }
     if (tvp) {
-#ifndef AFS_DARWIN80_ENV
+#ifndef AFS_DARWIN80_ENV /* DARWIN80 caller does not need a usecount reference */
 	osi_vnhold(tvp, 0);
-#endif
 	AFS_GUNLOCK();
-#ifdef AFS_DARWIN80_ENV
-        afs_darwin_finalizevnode(tvp, NULL, NULL, 1);
-#else
 	vn_lock(AFSTOV(tvp), LK_EXCLUSIVE | LK_RETRY, p);
-#endif
 	AFS_GLOCK();
-	if (mdata == NULL) {
-#ifdef AFS_DARWIN80_ENV /* afs_globalVp ref */
-            vnode_get(AFSTOV(tvp));
-	    osi_vnhold(tvp, 0);
 #endif
+#ifdef AFS_DARWIN80_ENV
+        if (needref) /* this iocount is for the caller. the initial iocount
+                        is for the eventual afs_PutVCache. for mdata != null,
+                        there will not be a PutVCache, so the caller gets the
+                        initial (from GetVCache or finalizevnode) iocount*/
+           vnode_get(AFSTOV(tvp));
+#endif
+	if (mdata == NULL) {
 	    afs_globalVFS = mp;
 	}
 	*vpp = AFSTOV(tvp);

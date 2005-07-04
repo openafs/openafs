@@ -1270,7 +1270,7 @@ afs3_syscall(p, args, retval)
      struct proc *p;
 #endif
      void *args;
-     int *retval;
+     long *retval;
 {
     register struct a {
 	long syscall;
@@ -1394,6 +1394,7 @@ Afs_syscall()
 #endif
 #if defined(AFS_DARWIN80_ENV)
     get_vfs_context();
+    osi_Assert(*retval == 0);
 #endif
 #if defined(AFS_HPUX_ENV)
     /*

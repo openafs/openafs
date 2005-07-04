@@ -18,7 +18,7 @@ RCSID
 #include "afs/afs_stats.h"	/* afs statistics */
 
 
-int osi_TimedSleep(char *event, afs_int32 ams, int aintok);
+static int osi_TimedSleep(char *event, afs_int32 ams, int aintok);
 
 static char waitV;
 
@@ -202,7 +202,7 @@ afs_osi_SleepSig(void *event)
  *
  * Returns 0 if timeout and EINTR if signalled.
  */
-int
+static int
 osi_TimedSleep(char *event, afs_int32 ams, int aintok)
 {
     int code = 0;

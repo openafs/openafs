@@ -204,11 +204,13 @@ extern int afs3_syscall();
 int afs_cdev_nop_openclose(dev_t dev, int flags, int devtype,struct proc *p) {
   return 0;
 }
+extern int afs3_syscall(struct proc *p, void *data, unsigned long *retval);
+
 int
 afs_cdev_ioctl(dev_t dev, u_long cmd, caddr_t data, int fflag, struct proc *p) {
-   int retval=0;
+   unsigned long retval=0;
    int code;
-   struct afssysargs *a = data;
+   struct afssysargs *a = (struct afssysargs *)data;
    if (proc_is64bit(p))
      return EINVAL;
 
@@ -216,10 +218,12 @@ afs_cdev_ioctl(dev_t dev, u_long cmd, caddr_t data, int fflag, struct proc *p) {
      return EINVAL;
   }
 
- code=afs3_syscall(p, (struct afssysargs *)data, &retval);
+ code=afs3_syscall(p, data, &retval);
  if (code)
     return code;
- return retval; 
+ if (retval && a->syscall != AFSCALL_CALL && a->param1 != AFSOP_CACHEINODE) { printf("SSCall(%d,%d) is returning non-error value %d\n", a->syscall, a->param1, retval); }
+ a->retval = retval;
+ return 0; 
 }
 
 #endif

@@ -319,6 +319,7 @@ afs_CheckRootVolume(void)
 	    afs_rootFid.Cell = localcell;
 	    if (afs_rootFid.Fid.Volume && afs_rootFid.Fid.Volume != volid
 		&& afs_globalVp) {
+		struct vcache *tvc = afs_globalVp;
 		/* If we had a root fid before and it changed location we reset
 		 * the afs_globalVp so that it will be reevaluated.
 		 * Just decrement the reference count. This only occurs during
@@ -326,8 +327,12 @@ afs_CheckRootVolume(void)
 		 * count to zero and fs checkv is executed when the current
 		 * directory is /afs.
 		 */
-		AFS_FAST_RELE(afs_globalVp);
 		afs_globalVp = 0;
+#ifdef AFS_DARWIN80_ENV
+		afs_PutVCache(tvc);
+#else
+		AFS_FAST_RELE(tvc);
+#endif
 	    }
 	    afs_rootFid.Fid.Volume = volid;
 	    afs_rootFid.Fid.Vnode = 1;

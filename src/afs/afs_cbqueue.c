@@ -223,8 +223,9 @@ afs_CheckCallbacks(unsigned int secs)
 			    QRemove(tq);
 			    tq->prev = tq->next = NULL;
 			    tvc->states &= ~(CStatd | CMValid | CUnique);
-			    if ((tvc->fid.Fid.Vnode & 1)
-				|| (vType(tvc) == VDIR))
+                            if (!(tvc->states & CVInit) &&
+                                (tvc->fid.Fid.Vnode & 1 ||
+                                 (vType(tvc) == VDIR)))
 				osi_dnlc_purgedp(tvc);
 			    tvc->quick.stamp = 0;
 			    tvc->h1.dchint = NULL;	/*invalidate em */
@@ -241,7 +242,8 @@ afs_CheckCallbacks(unsigned int secs)
 		QRemove(tq);
 		tq->prev = tq->next = NULL;
 		tvc->states &= ~(CStatd | CMValid | CUnique);
-		if ((tvc->fid.Fid.Vnode & 1) || (vType(tvc) == VDIR))
+                if (!(tvc->states & CVInit) &&
+                    (tvc->fid.Fid.Vnode & 1 || (vType(tvc) == VDIR)))
 		    osi_dnlc_purgedp(tvc);
 	    }
 	}
@@ -312,9 +314,10 @@ afs_FlushCBs(void)
 	    tvc->quick.stamp = 0;
 	    tvc->h1.dchint = NULL;	/* invalidate hints */
 	    tvc->states &= ~(CStatd);
-	    if ((tvc->fid.Fid.Vnode & 1) || (vType(tvc) == VDIR))
-		osi_dnlc_purgedp(tvc);
 	    tvc->callsort.prev = tvc->callsort.next = NULL;
+	    if (!(tvc->states & CVInit) &&
+                ((tvc->fid.Fid.Vnode & 1) || (vType(tvc) == VDIR)))
+		osi_dnlc_purgedp(tvc);
 	}
 
     afs_InitCBQueue(0);
@@ -342,7 +345,8 @@ afs_FlushServerCBs(struct server *srvp)
 		tvc->quick.stamp = 0;
 		tvc->h1.dchint = NULL;	/* invalidate hints */
 		tvc->states &= ~(CStatd);
-		if ((tvc->fid.Fid.Vnode & 1) || (vType(tvc) == VDIR)) {
+		if (!(tvc->states & CVInit) &&
+                    ((tvc->fid.Fid.Vnode & 1) || (vType(tvc) == VDIR))) {
 		    osi_dnlc_purgedp(tvc);
 		}
 		afs_DequeueCallback(tvc);

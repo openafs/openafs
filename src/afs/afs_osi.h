@@ -389,8 +389,8 @@ typedef struct timeval osi_timeval_t;
 #endif /* AFS_GLOBAL_SUNLOCK */
 
 #ifdef AFS_DARWIN80_ENV
-#define AFS_UIO_OFFSET(uio) uio_offset(uio)
-#define AFS_UIO_RESID(uio) uio_resid(uio)
+#define AFS_UIO_OFFSET(uio) (int)uio_offset(uio)
+#define AFS_UIO_RESID(uio) (int)uio_resid(uio)
 #define AFS_UIO_SETOFFSET(uio, off) uio_setoffset(uio, off)
 #define AFS_UIO_SETRESID(uio, val) uio_setresid(uio, val)
 #else

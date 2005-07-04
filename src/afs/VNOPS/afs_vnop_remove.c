@@ -408,6 +408,7 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
 	code = afsremove(adp, tdc, tvc, aname, acred, &treq);
     }
     afs_PutFakeStat(&fakestate);
+    osi_Assert(!WriteLocked(&adp->lock) || !(adp->lock.pid_writer != MyPidxx));
     return code;
 }
 

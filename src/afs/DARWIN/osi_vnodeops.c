@@ -242,6 +242,7 @@ darwin_vn_hold(struct vnode *vp)
 #ifdef AFS_DARWIN80_ENV
     if (tvc->states & CDeadVnode)
        osi_Assert(!vnode_isinuse(vp, 1));
+     osi_Assert((tvc->states & CVInit) == 0);
 #endif
     if (haveGlock) AFS_GUNLOCK(); 
 
@@ -332,7 +333,10 @@ afs_vop_lookup(ap)
 	return (error);
     }
 #ifdef AFS_DARWIN80_ENV
-    afs_darwin_finalizevnode(vcp, ap->a_dvp, ap->a_cnp, 0);
+    if ((error=afs_darwin_finalizevnode(vcp, ap->a_dvp, ap->a_cnp, 0))) {
+	*ap->a_vpp = 0;
+	return error;
+    }
 #endif
     vp = AFSTOV(vcp);		/* always get a node if no error */
 #ifndef AFS_DARWIN80_ENV /* XXX needed for multi-mount thing, but can't have it yet */
@@ -413,7 +417,10 @@ afs_vop_create(ap)
 
     if (vcp) {
 #ifdef AFS_DARWIN80_ENV
-        afs_darwin_finalizevnode(vcp, ap->a_dvp, ap->a_cnp, 0);
+        if ((error=afs_darwin_finalizevnode(vcp, ap->a_dvp, ap->a_cnp, 0))) {
+             *ap->a_vpp=0;
+             return error;
+        }
 #endif
 	*ap->a_vpp = AFSTOV(vcp);
 #ifndef AFS_DARWIN80_ENV /* XXX needed for multi-mount thing, but can't have it yet */
@@ -519,6 +526,8 @@ afs_vop_close(ap)
 }
 
 #ifdef AFS_DARWIN80_ENV
+extern int afs_fakestat_enable;
+
 int
 afs_vop_access(ap)
      struct VOPPROT(access_args)        /* {
@@ -535,18 +544,22 @@ afs_vop_access(ap)
     AFS_GLOCK();
     afs_InitFakeStat(&fakestate);
     if ((code = afs_InitReq(&treq, vop_cred)))
-        goto fail2;
+        goto out2;
 
-    code = afs_EvalFakeStat(&tvc, &fakestate, &treq);
+    code = afs_TryEvalFakeStat(&tvc, &fakestate, &treq);
     if (code) {
         code = afs_CheckCode(code, &treq, 55);
-        goto fail;
+        goto out;
     }
 
     code = afs_VerifyVCache(tvc, &treq);
     if (code) {
         code = afs_CheckCode(code, &treq, 56);
-        goto fail;
+        goto out;
+    }
+    if (afs_fakestat_enable && tvc->mvstat && !(tvc->states & CStatd)) {
+        code = 0;
+        goto out;
     }
     if (vnode_isdir(ap->a_vp)) {
        if (ap->a_action & KAUTH_VNODE_LIST_DIRECTORY)
@@ -597,9 +610,9 @@ afs_vop_access(ap)
     } else {
         code = afs_CheckCode(EACCES, &treq, 57);        /* failure code */
     }
-fail:
+out:
      afs_PutFakeStat(&fakestate);
-fail2:
+out2:
     AFS_GUNLOCK();
     return code;
 }
@@ -1130,6 +1143,15 @@ afs_vop_remove(ap)
     register struct vnode *vp = ap->a_vp;
     register struct vnode *dvp = ap->a_dvp;
 
+#ifdef AFS_DARWIN80_ENV
+    if (ap->a_flags & VNODE_REMOVE_NODELETEBUSY) {
+            /* Caller requested Carbon delete semantics */
+            if (vnode_isinuse(vp, 0)) {
+                    return EBUSY;
+            }
+    }
+#endif
+
     GETNAME();
     AFS_GLOCK();
     error = afs_remove(VTOAFS(dvp), name, vop_cn_cred);
@@ -1339,12 +1361,17 @@ afs_vop_rename(ap)
     FREE(fname, M_TEMP);
     FREE(tname, M_TEMP);
 #ifdef AFS_DARWIN80_ENV
+    cache_purge(fdvp);
+    cache_purge(fvp);
+    cache_purge(tdvp);
     if (tvp) {
        cache_purge(tvp);
        if (!error) {
           vnode_recycle(tvp);
        }
     }
+    if (!error)
+       cache_enter(tdvp, fvp, tcnp);
 #else
     if (error)
 	goto abortit;		/* XXX */
@@ -1436,6 +1463,8 @@ afs_vop_rmdir(ap)
     error = afs_rmdir(VTOAFS(dvp), name, vop_cn_cred);
     AFS_GUNLOCK();
     DROPNAME();
+    cache_purge(dvp);
+    cache_purge(vp);
 #ifndef AFS_DARWIN80_ENV
     vput(dvp);
     vput(vp);
@@ -1555,14 +1584,15 @@ afs_vop_inactive(ap)
 {
     register struct vnode *vp = ap->a_vp;
     struct vcache *tvc = VTOAFS(vp);
-    int haveGlock = ISAFS_GLOCK();
 #ifndef AFS_DARWIN80_ENV
     if (prtactive && vnode_isinuse(vp, 0) != 0)
 	vprint("afs_vop_inactive(): pushing active", vp);
 #endif
-    AFS_GLOCK();
-    afs_InactiveVCache(tvc, 0);	/* decrs ref counts */
-    AFS_GUNLOCK();
+    if (tvc) {
+       AFS_GLOCK();
+       afs_InactiveVCache(tvc, 0);	/* decrs ref counts */
+       AFS_GUNLOCK();
+    }
 #ifndef AFS_DARWIN80_ENV
     VOP_UNLOCK(vp, 0, ap->a_p);
 #endif
@@ -1580,18 +1610,23 @@ afs_vop_reclaim(ap)
     register struct vnode *vp = ap->a_vp;
     struct vcache *tvc = VTOAFS(vp);
 
-    osi_Assert(!ISAFS_GLOCK())
+    osi_Assert(!ISAFS_GLOCK());
     cache_purge(vp);		/* just in case... */
-    AFS_GLOCK();
-    ObtainWriteLock(&afs_xvcache, 335);
-    error = afs_FlushVCache(tvc, &sl);	/* toss our stuff from vnode */
-    ReleaseWriteLock(&afs_xvcache);
-    AFS_GUNLOCK();
-    
-    if (!error && vnode_fsnode(vp))
-	panic("afs_reclaim: vnode not cleaned");
-    if (!error && (tvc->v != NULL)) 
-        panic("afs_reclaim: vcache not cleaned");
+    if (tvc) {
+       AFS_GLOCK();
+       ObtainWriteLock(&afs_xvcache, 335);
+       error = afs_FlushVCache(tvc, &sl);	/* toss our stuff from vnode */
+       if (tvc->states & (CVInit | CDeadVnode)) {
+          tvc->states &= ~(CVInit | CDeadVnode);
+          afs_osi_Wakeup(&tvc->states);
+       }
+       ReleaseWriteLock(&afs_xvcache);
+       AFS_GUNLOCK();
+       if (!error && vnode_fsnode(vp))
+	   panic("afs_reclaim: vnode not cleaned");
+       if (!error && (tvc->v != NULL)) 
+           panic("afs_reclaim: vcache not cleaned");
+    }
     return error;
 }
 
@@ -1859,8 +1894,8 @@ afs_vop_cmap(ap)
 }
 #endif
 
-void
-afs_darwin_getnewvnode(struct vcache *tvc)
+int
+afs_darwin_getnewvnode(struct vcache *avc)
 {
 #ifdef AFS_DARWIN80_ENV
     vnode_t vp;
@@ -1868,12 +1903,15 @@ afs_darwin_getnewvnode(struct vcache *tvc)
     struct vnode_fsparam par;
 
     memset(&par, 0, sizeof(struct vnode_fsparam));
+#if 0
     AFS_GLOCK();
     ObtainWriteLock(&avc->lock,342);
-    if (tvc->states & CStatd) { /* XXX markroot */
+    if (avc->states & CStatd) { 
        par.vnfs_vtype = avc->m.Type;
        par.vnfs_vops = afs_vnodeop_p;
        par.vnfs_filesize = avc->m.Length;
+       if (!ac->cnp)
+           par.vnfs_flags = VNFS_NOCACHE;
        dead = 0;
     } else {
        par.vnfs_vtype = VNON;
@@ -1881,28 +1919,53 @@ afs_darwin_getnewvnode(struct vcache *tvc)
        par.vnfs_flags = VNFS_NOCACHE|VNFS_CANTCACHE;
        dead = 1;
     }
+    ReleaseWriteLock(&avc->lock);
+    AFS_GUNLOCK();
+    par.vnfs_dvp = ac->dvp;
+    par.vnfs_cnp = ac->cnp;
+    par.vnfs_markroot = ac->markroot;
+#else
+    par.vnfs_vtype = VNON;
+    par.vnfs_vops = afs_dead_vnodeop_p;
+    par.vnfs_flags = VNFS_NOCACHE|VNFS_CANTCACHE;
+#endif
     par.vnfs_mp = afs_globalVFS;
-    par.vnfs_fsnode = tvc;
+    par.vnfs_fsnode = avc;
+
     error = vnode_create(VNCREATE_FLAVOR, VCREATESIZE, &par, &vp);
     if (!error) {
       vnode_addfsref(vp);
       vnode_ref(vp);
-      tvc->v = vp;
+      avc->v = vp;
+#if 0
       if (dead) {
          vnode_recycle(vp); /* terminate as soon as iocount drops */
-         tvc->states |= CDeadVnode;
+         avc->states |= CDeadVnode;
+      } else if (!ac->markroot && !ac->cnp) {
+       /* the caller doesn't know anything about this vnode. if markroot
+          should have been set and wasn't, bad things may happen, so encourage
+          it to recycle */
+          vnode_recycle(vp);
       }
-    }
 #else
-    while (getnewvnode(VT_AFS, afs_globalVFS, afs_vnodeop_p, &tvc->v)) {
+      vnode_recycle(vp); /* terminate as soon as iocount drops */
+      avc->states |= CDeadVnode;
+#endif
+    }
+    return error;
+#else
+    while (getnewvnode(VT_AFS, afs_globalVFS, afs_vnodeop_p, &avc->v)) {
         /* no vnodes available, force an alloc (limits be damned)! */
 	printf("failed to get vnode\n");
     }
-    tvc->v->v_data = (void *)tvc;
+    avc->v->v_data = (void *)avc;
+    return 0;
 #endif
 }
 #ifdef AFS_DARWIN80_ENV
-void 
+/* if this fails, then tvc has been unrefed and may have been freed. 
+   Don't touch! */
+int 
 afs_darwin_finalizevnode(struct vcache *avc, struct vnode *dvp, struct componentname *cnp, int isroot) {
    vnode_t ovp = AFSTOV(avc);
    vnode_t nvp;
@@ -1913,11 +1976,14 @@ afs_darwin_finalizevnode(struct vcache *avc, struct vnode *dvp, struct component
    if (!(avc->states & CDeadVnode) && vnode_vtype(ovp) != VNON) {
         ReleaseWriteLock(&avc->lock);
         AFS_GUNLOCK();
+#if 0 /* unsupported */
+        if (dvp && cnp)
         vnode_update_identity(ovp, dvp, cnp->cn_nameptr, cnp->cn_namelen,
                               cnp->cn_hash,
                               VNODE_UPDATE_PARENT|VNODE_UPDATE_NAME);
+#endif
         vnode_rele(ovp);
-        return;
+        return 0;
    }
    if ((avc->states & CDeadVnode) && vnode_vtype(ovp) != VNON) 
        panic("vcache %p should not be CDeadVnode", avc);
@@ -1939,12 +2005,14 @@ afs_darwin_finalizevnode(struct vcache *avc, struct vnode *dvp, struct component
      avc->states &=~ CDeadVnode;
      vnode_clearfsnode(ovp);
      vnode_removefsref(ovp);
-     vnode_put(ovp);
-     vnode_rele(ovp);
    }
    AFS_GLOCK();
    ReleaseWriteLock(&avc->lock);
-   afs_osi_Wakeup(&avc->v);
+   if (!error)
+      afs_osi_Wakeup(&avc->states);
    AFS_GUNLOCK();
+   vnode_put(ovp);
+   vnode_rele(ovp);
+   return error;
 }
 #endif

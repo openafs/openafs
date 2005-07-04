@@ -722,7 +722,7 @@ afs_GetDownD(int anumber, int *aneedSpace, afs_int32 buckethint)
 			MReleaseWriteLock(&afs_xdcache);
 		    }
 
-		    AFS_FAST_RELE(tvc);
+		    afs_PutVCache(tvc);
 		    MObtainWriteLock(&afs_xdcache, 528);
 		    if (afs_indexFlags[tdc->index] &
 			(IFDataMod | IFDirtyPages | IFAnyPages))

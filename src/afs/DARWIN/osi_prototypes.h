@@ -27,14 +27,13 @@ extern void put_vfs_context(void);
 /* osi_sleep.c */
 extern void afs_osi_fullSigMask(void);
 extern void afs_osi_fullSigRestore(void);
-extern int osi_TimedSleep(char *event, afs_int32 ams, int aintok);
 
 /* osi_vm.c */
 extern void osi_VM_NukePages(struct vnode *vp, off_t offset, off_t size);
 extern int osi_VM_Setup(struct vcache *avc, int force);
 
 /* osi_vnodeops.c */
-extern void afs_darwin_getnewvnode(struct vcache *avc);
-extern void afs_darwin_finalizevnode(struct vcache *avc, struct vnode *parent, 
+extern int afs_darwin_getnewvnode(struct vcache *avc);
+extern int afs_darwin_finalizevnode(struct vcache *avc, struct vnode *parent, 
                                      struct componentname *cnp, int isroot);
 #endif /* _OSI_PROTO_H_ */
