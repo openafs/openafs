@@ -13,9 +13,10 @@
 RCSID
     ("$Header$");
 
+#include <fcntl.h>
+#include <sys/stat.h>
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
-#include <fcntl.h>
 #include <WINNT/afsevent.h>
 #else
 #include <netinet/in.h>
@@ -74,6 +75,14 @@ buServerConfP globalConfPtr = &globalConf;
 char dbDir[AFSDIR_PATH_MAX], cellConfDir[AFSDIR_PATH_MAX];
 /* debugging control */
 int debugging = 0;
+
+#if defined(AFS_PTHREAD_ENV)
+char *
+threadNum(void)
+{
+    return pthread_getspecific(rx_thread_id_key);
+}
+#endif
 
 /* check whether caller is authorized to manage RX statistics */
 int
@@ -159,6 +168,9 @@ initializeArgHandler()
     cmd_AddParm(cptr, "-ubikbuffers", CMD_SINGLE, CMD_OPTIONAL,
 		"the number of ubik buffers");
 
+    cmd_AddParm(cptr, "-auditlog", CMD_SINGLE, CMD_OPTIONAL,
+		"audit log path");
+
 }
 
 int
@@ -211,6 +223,36 @@ argHandler(as, arock)
 	ubik_nBuffers = atoi(as->parms[6].items->data);
     else
 	ubik_nBuffers = 0;
+
+    if (as->parms[7].items != 0) {
+	int tempfd, flags;
+	FILE *auditout;
+	char oldName[MAXPATHLEN];
+	char *fileName = as->parms[7].items->data;
+#ifndef AFS_NT40_ENV
+	struct stat statbuf;
+
+	if ((lstat(fileName, &statbuf) == 0) 
+	    && (S_ISFIFO(statbuf.st_mode))) {
+	    flags = O_WRONLY | O_NONBLOCK;
+	} else 
+#endif
+	{
+	    strcpy(oldName, fileName);
+	    strcat(oldName, ".old");
+	    renamefile(fileName, oldName);
+	    flags = O_WRONLY | O_TRUNC | O_CREAT;
+	}
+	tempfd = open(fileName, flags, 0666);
+	if (tempfd > -1) {
+	    auditout = fdopen(tempfd, "a");
+	    if (auditout) {
+		osi_audit_file(auditout);
+	    } else
+		printf("Warning: auditlog %s not writable, ignored.\n", fileName);
+	} else
+	    printf("Warning: auditlog %s not writable, ignored.\n", fileName);
+    }
 
     return 0;
 }
@@ -388,6 +430,10 @@ main(argc, argv)
 */
 
     srandom(1);
+
+#ifdef AFS_PTHREAD_ENV
+    SetLogThreadNumProgram( threadNum );
+#endif
 
     /* process the user supplied args */
     helpOption = 1;

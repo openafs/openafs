@@ -71,7 +71,7 @@ EXPORTS
 	com_err					@75
 	error_message				@76
 	rx_socket				@77 DATA
-	AssertionFailed				@79
+;	AssertionFailed				@79
 	afs_winsockInit				@80
 	rxevent_debugFile			@81 DATA
 	rx_debugFile				@82 DATA

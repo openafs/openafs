@@ -32,7 +32,7 @@ extern int serverLogSyslogFacility;
 extern char *serverLogSyslogTag;
 #endif
 extern void vFSLog(const char *format, va_list args);
-extern void SetLogThreadNameProgram(char *(*func) () );
+extern void SetLogThreadNumProgram(int (*func) () );
 
 /*@printflike@*/ extern void FSLog(const char *format, ...);
 #define ViceLog(level, str)  if ((level) <= LogLevel) (FSLog str)
