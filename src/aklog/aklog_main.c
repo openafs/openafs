@@ -200,7 +200,7 @@ static int get_user_realm(krb5_context, char *);
 #if !defined(HAVE_KRB5_524_CONVERT_CREDS) && defined(HAVE_KRB524_CONVERT_CREDS_KDC)
 #define krb5_524_convert_creds krb524_convert_creds_kdc
 #elif !defined(HAVE_KRB5_524_CONVERT_CREDS) && !defined(HAVE_KRB524_CONVERT_CREDS_KDC)
-#error "You must have one of krb5_524_convert_creds or krb5_524_convert_creds_kdc available"
+#error "You must have one of krb5_524_convert_creds or krb524_convert_creds_kdc available"
 #endif
 
 #endif /* WINDOWS */
