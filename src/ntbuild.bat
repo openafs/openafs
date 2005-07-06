@@ -20,8 +20,8 @@ REM ########################################################################
 REM ########################################################################
 REM General required definitions:
 REM     SYS_NAME = AFS system name
-REM Choose one of "i386_win95" or "i386_nt40"
-SET SYS_NAME=i386_nt40
+REM Choose one of "i386_w2k", "amd64_w2k", or "i64_w2k"
+SET SYS_NAME=i386_w2k
 
 REM Specify the targeted version of Windows and IE: 0x400 for Win9x/NT4 
 REM and above; 0x500 for Windows 2000 and above
@@ -83,12 +83,24 @@ goto usage
 :checked
 set AFSBLD_TYPE=CHECKED
 set AFSDEV_CRTDEBUG=1
-goto args_done
+goto ifs_arg
 
 :free
 set AFSBLD_TYPE=FREE
 set AFSDEV_CRTDEBUG=0
+goto ifs_arg
+
+:ifs_arg
+
+set AFSIFS=
+if "%2"=="ifs" goto is_ifs
+if "%2"=="IFS" goto is_ifs
+
 goto args_done
+
+:is_ifs
+
+set AFSIFS=TRUE
 
 :args_done
 
