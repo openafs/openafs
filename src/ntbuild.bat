@@ -20,8 +20,8 @@ REM ########################################################################
 REM ########################################################################
 REM General required definitions:
 REM     SYS_NAME = AFS system name
-REM Choose one of "i386_win95" or "i386_nt40"
-SET SYS_NAME=i386_nt40
+REM Choose one of "i386_w2k", "amd64_w2k", or "i64_w2k"
+SET SYS_NAME=i386_w2k
 
 REM Specify the targeted version of Windows and IE: 0x400 for Win9x/NT4 
 REM and above; 0x500 for Windows 2000 and above
