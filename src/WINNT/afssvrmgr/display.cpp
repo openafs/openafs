@@ -146,7 +146,8 @@ void Display_AddActOnDone (HWND hWnd, WORD wAct, LPIDENT lpiSelectOnDone)
       }
    EnterCriticalSection (pcsWindowActOnDone);
 
-   for (size_t ii = 0; ii < cWindowActOnDone; ++ii)
+   size_t ii;
+   for (ii = 0; ii < cWindowActOnDone; ++ii)
       {
       if (aWindowActOnDone[ ii ].hWnd == hWnd)
          break;
@@ -228,7 +229,8 @@ void UpdateDisplay (LPDISPLAYREQUEST pdr, BOOL fWait)
 
    EnterCriticalSection (pcsDisplayQueue);
 
-   for (size_t idq = 0; idq < cDisplayQueue; ++idq)
+   size_t idq;
+   for (idq = 0; idq < cDisplayQueue; ++idq)
       {
       if (!aDisplayQueue[idq].hChild)
          break;
@@ -329,7 +331,8 @@ DWORD WINAPI DisplayQueue_ThreadProc (PVOID lp)
          }
       else
          {
-         for (size_t idq = 0; idq < cDisplayQueue; ++idq)
+         size_t idq;
+         for (idq = 0; idq < cDisplayQueue; ++idq)
             {
             if (aDisplayQueue[idq].hChild)
                {

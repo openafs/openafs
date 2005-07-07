@@ -69,7 +69,8 @@ extern BOOL CALLBACK Binding_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 
 static DWORD log2 (DWORD dwValue)
 {
-   for (DWORD dwLog = 0; (DWORD)(1<<dwLog) < dwValue; ++dwLog)
+   DWORD dwLog;
+   for (dwLog = 0; (DWORD)(1<<dwLog) < dwValue; ++dwLog)
       ;
    return dwLog;
 }

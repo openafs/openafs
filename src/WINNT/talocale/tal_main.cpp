@@ -182,7 +182,8 @@ void TaLocale_SpecifyModule (HINSTANCE hInstance, WORD wSearchPriority)
    // so, remove it (its priority may be changing, or we may actually
    // have been asked to remove it).
    //
-   for (size_t iModule = 0; iModule < l_cModules; ++iModule)
+   size_t iModule;
+   for (iModule = 0; iModule < l_cModules; ++iModule)
       {
       if (l_aModules[ iModule ].wPriority == 0)  // end of list?
          break;
@@ -211,7 +212,8 @@ void TaLocale_SpecifyModule (HINSTANCE hInstance, WORD wSearchPriority)
             break;
          }
 
-      for (size_t iTarget = iModule; iTarget < l_cModules; ++iTarget)
+      size_t iTarget;
+      for (iTarget = iModule; iTarget < l_cModules; ++iTarget)
          {
          if (l_aModules[ iTarget ].wPriority == 0)  // end of list?
             break;

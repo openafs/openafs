@@ -158,7 +158,8 @@ void SERVER::FreeServices (void)
 
 void SERVER::SendDeleteNotifications (void)
 {
-   for (LPENUM pEnum = m_lAggregates->FindFirst(); pEnum; pEnum = pEnum->FindNext())
+   LPENUM pEnum;
+   for (pEnum = m_lAggregates->FindFirst(); pEnum; pEnum = pEnum->FindNext())
       {
       LPAGGREGATE lpAggregate = (LPAGGREGATE)(pEnum->GetObject());
       lpAggregate->SendDeleteNotifications ();
@@ -372,7 +373,8 @@ BOOL SERVER::RefreshAggregates (BOOL fNotify, ULONG *pStatus)
          // First thing is to forget about what aggregates we think we have
          // now.
          //
-         for (LPENUM pEnum = m_lAggregates->FindLast(); pEnum; pEnum = pEnum->FindPrevious())
+         LPENUM pEnum;
+         for (pEnum = m_lAggregates->FindLast(); pEnum; pEnum = pEnum->FindPrevious())
             {
             LPAGGREGATE lpAggregate = (LPAGGREGATE)(pEnum->GetObject());
             lpAggregate->SendDeleteNotifications();
@@ -465,7 +467,8 @@ BOOL SERVER::RefreshServices (BOOL fNotify, ULONG *pStatus)
 
          // First thing is to forget about what services we think we have now.
          //
-         for (LPENUM pEnum = m_lServices->FindLast(); pEnum; pEnum = pEnum->FindPrevious())
+         LPENUM pEnum;
+         for (pEnum = m_lServices->FindLast(); pEnum; pEnum = pEnum->FindPrevious())
             {
             LPSERVICE lpService = (LPSERVICE)(pEnum->GetObject());
             lpService->SendDeleteNotifications();
@@ -939,7 +942,8 @@ BOOL SERVER::CanTalkToServer (ULONG *pStatus)
    AfsClass_InitRefreshSections();
    EnterCriticalSection (pcsRefSec);
 
-   for (int idSection = 0; idSection < (int)cRefSec; ++idSection)
+   int idSection;
+   for (idSection = 0; idSection < (int)cRefSec; ++idSection)
       {
       if (!aRefSec[ idSection ].fInUse)
          break;
@@ -994,7 +998,8 @@ BOOL SERVER::CanTalkToServer (ULONG *pStatus)
    // Wait for that thread to terminate, or for our
    // newly-allocated RefSec entry to be marked Canceled.
    //
-   for (DWORD dw = STILL_ACTIVE; dw == STILL_ACTIVE; )
+   DWORD dw;
+   for (dw = STILL_ACTIVE; dw == STILL_ACTIVE; )
       {
       EnterCriticalSection (pcsRefSec);
 
@@ -1072,7 +1077,8 @@ BOOL SERVER::RefreshAll (ULONG *pStatus, double dInit, double dFactor)
             size_t nAggregates = 0;
             size_t iAggregate = 0;
             HENUM hEnum;
-            for (LPAGGREGATE lpAggregate = AggregateFindFirst (&hEnum); lpAggregate; lpAggregate = AggregateFindNext (&hEnum))
+            LPAGGREGATE lpAggregate;
+            for (lpAggregate = AggregateFindFirst (&hEnum); lpAggregate; lpAggregate = AggregateFindNext (&hEnum))
                {
                ++nAggregates;
                lpAggregate->Close();
@@ -1103,7 +1109,8 @@ BOOL SERVER::RefreshAll (ULONG *pStatus, double dInit, double dFactor)
             size_t nServices = 0;
             size_t iService = 0;
             HENUM hEnum;
-            for (LPSERVICE lpService = ServiceFindFirst (&hEnum); lpService; lpService = ServiceFindNext (&hEnum))
+            LPSERVICE lpService;
+            for (lpService = ServiceFindFirst (&hEnum); lpService; lpService = ServiceFindNext (&hEnum))
                {
                ++nServices;
                lpService->Close();

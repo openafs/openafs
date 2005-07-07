@@ -108,7 +108,8 @@ void AfsAdmSvr_SetCellRefreshRate (ASID idCell, ULONG cminRefreshRate)
    AfsAdmSvr_PrepCellRefresh();
    EnterCriticalSection (l.pcsRefreshThreads);
 
-   for (size_t iThread = 0; iThread < l.cRefreshThreads; ++iThread)
+   size_t iThread;
+   for (iThread = 0; iThread < l.cRefreshThreads; ++iThread)
       {
       LPREFRESHTHREAD pThread = &l.aRefreshThreads[ iThread ];
       if (pThread->idCell == idCell)
@@ -119,7 +120,7 @@ void AfsAdmSvr_SetCellRefreshRate (ASID idCell, ULONG cminRefreshRate)
       }
    if (iThread == l.cRefreshThreads)
       {
-      for (size_t iThread = 0; iThread < l.cRefreshThreads; ++iThread)
+      for (iThread = 0; iThread < l.cRefreshThreads; ++iThread)
          {
          LPREFRESHTHREAD pThread = &l.aRefreshThreads[ iThread ];
          if (pThread->idCell == 0)

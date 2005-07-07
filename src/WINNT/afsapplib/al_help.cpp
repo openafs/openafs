@@ -56,7 +56,8 @@ void AfsAppLib_RegisterHelpFile (LPTSTR pszFilename)
 
 void AfsAppLib_RegisterHelp (int idd, DWORD *adwContext, int idhOverview)
 {
-   for (size_t ih = 0; ih < g_cdh; ++ih)
+   size_t ih;
+   for (ih = 0; ih < g_cdh; ++ih)
       {
       if (!g_adh[ ih ].fInUse)
          continue;

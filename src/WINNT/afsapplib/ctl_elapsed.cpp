@@ -167,7 +167,8 @@ BOOL CALLBACK ElapsedProc (HWND hElapsed, UINT msg, WPARAM wp, LPARAM lp)
 
    if (msg == WM_CREATE)
       {
-      for (size_t iElapsed = 0; iElapsed < cElapsed; ++iElapsed)
+      size_t iElapsed;
+      for (iElapsed = 0; iElapsed < cElapsed; ++iElapsed)
          {
          if (aElapsed[ iElapsed ].hElapsed == NULL)
             break;

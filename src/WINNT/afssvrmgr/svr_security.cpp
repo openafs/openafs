@@ -347,7 +347,8 @@ void Server_Lists_OnAddEntry (HWND hDlg, LPSVR_SECURITY_PARAMS lpp)
 
    AfsAppLib_FreeCellList (pp.lpcl);
 
-   for (size_t iEntry = 0; iEntry < lpp->lpAdmList->cEntries; ++iEntry)
+   size_t iEntry;
+   for (iEntry = 0; iEntry < lpp->lpAdmList->cEntries; ++iEntry)
       {
       LPADMINLISTENTRY pEntry = &lpp->lpAdmList->aEntries[ iEntry ];
       if (pEntry->szAdmin[0] == TEXT('\0'))
@@ -624,7 +625,8 @@ void Server_Keys_OnDelKey (HWND hDlg, LPSVR_SECURITY_PARAMS lpp)
 
 void FormatServerKey (LPTSTR psz, LPENCRYPTIONKEY pKey)
 {
-   for (size_t ii = 0; ii < ENCRYPTIONKEY_LEN; ++ii)
+   size_t ii;
+   for (ii = 0; ii < ENCRYPTIONKEY_LEN; ++ii)
       {
       if (pKey->key[ii])
          break;
@@ -650,7 +652,8 @@ void FormatServerKey (LPTSTR psz, LPENCRYPTIONKEY pKey)
 
 BOOL ScanServerKey (LPENCRYPTIONKEY pKey, LPTSTR psz)
 {
-   for (size_t ich = 0; psz && *psz; )
+   size_t ich;
+   for (ich = 0; psz && *psz; )
       {
       if (ich == ENCRYPTIONKEY_LEN)
          return FALSE;

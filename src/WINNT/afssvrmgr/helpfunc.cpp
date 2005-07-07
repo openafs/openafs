@@ -220,7 +220,8 @@ LPTSTR Help_FindCommand_Search (UNIXUTIL *puu, LPTSTR pszKeyword)
          ++pszKeyword;
 
       // find the end of this word
-      for (LPTSTR pszNext = pszKeyword; *pszNext && !iswhite(*pszNext); )
+      LPTSTR pszNext;
+      for (pszNext = pszKeyword; *pszNext && !iswhite(*pszNext); )
          ++pszNext;
       if (!*pszNext)  // last word?  Gotta use it.
          break;
@@ -542,14 +543,16 @@ void Help_About_OnSysCommand (HWND hDlg, int &cmd)
    GetDlgItemText (hDlg, 0x051F, szSys, cchRESOURCE);
    if ((dw = NextSearch (cmd)) != 0)
       {
-      for (LPTSTR psz = &szSys[ lstrlen(szSys)-1 ]; *(psz-1) != TEXT('\n'); --psz);
+      LPTSTR psz;
+      for (psz = &szSys[ lstrlen(szSys)-1 ]; *(psz-1) != TEXT('\n'); --psz);
       lstrcpy (szSys2, psz);
       wsprintf (psz, TEXT("%c%s"), (TCHAR)dw, szSys2);
       SetDlgItemText (hDlg, 0x051F, szSys);
       }
    else // (dw == 0)
       {
-      for (LPTSTR psz = szSys; *psz && (*psz != TEXT('\n')); ++psz);
+      LPTSTR psz;
+      for (psz = szSys; *psz && (*psz != TEXT('\n')); ++psz);
       wsprintf (szSys2, TEXT("%s\n"), 1+psz);
       SetDlgItemText (hDlg, 0x051F, szSys2);
       }

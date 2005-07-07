@@ -238,7 +238,8 @@ void AfsClass_ParseRecurringTime (BOOL *pfEver, LPSYSTEMTIME pst, LPTSTR pszTime
 
       TCHAR szComponent[ cchRESOURCE ];
       lstrcpy (szComponent, pszTime);
-      for (LPTSTR pch = szComponent; isdigit(*pch); ++pch)
+      LPTSTR pch;
+      for (pch = szComponent; isdigit(*pch); ++pch)
          ;
       *pch = TEXT('\0');
 

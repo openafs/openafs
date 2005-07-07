@@ -79,16 +79,16 @@ extern osi_fdType_t *osi_RegisterFDType(char *, osi_fdOps_t *, void *);
 
 extern long osi_UnregisterFDType(char *);
 
-extern osi_AddFDFormatInfo(osi_fdType_t *typep, long region, long index,
+extern int osi_AddFDFormatInfo(osi_fdType_t *typep, long region, long index,
 	char *labelp, long format);
 
-extern osi_InitFD(void);
+extern int osi_InitFD(void);
 
 extern osi_fd_t *osi_AllocFD(char *);
 
 extern osi_fd_t *osi_FindFD(long);
 
-extern osi_CloseFD(osi_fd_t *);
+extern int osi_CloseFD(osi_fd_t *);
 
 extern long osi_FDTypeCreate(osi_fdType_t *, osi_fd_t **);
 

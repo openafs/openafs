@@ -48,8 +48,9 @@ NOTIFYCALLBACK::NOTIFYCALLBACK (NOTIFYCALLBACKPROC procUser, LPARAM lpUser)
 {
    procSupplied = procUser;
    lpSupplied = lpUser;
+   size_t iNotify;
 
-   for (size_t iNotify = 0; iNotify < nNotifyList; ++iNotify)
+   for (iNotify = 0; iNotify < nNotifyList; ++iNotify)
       {
       if (aNotifyList[ iNotify ] == NULL)
          break;

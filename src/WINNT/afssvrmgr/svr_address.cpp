@@ -291,7 +291,8 @@ void ChangeAddr_OnChange (HWND hDlg, LPSVR_CHANGEADDR_PARAMS lpp)
             // First see if the new IP address is already in the server's
             // list of IP addresses--if so, just delete the old address.
             //
-            for (size_t iAddr = 0; iAddr < lpp->ssOld.nAddresses; ++iAddr)
+            size_t iAddr;
+            for (iAddr = 0; iAddr < lpp->ssOld.nAddresses; ++iAddr)
                {
                int OldAddrInt;
                AfsClass_AddressToInt (&OldAddrInt, &lpp->ssOld.aAddresses[iAddr]);

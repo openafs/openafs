@@ -131,7 +131,8 @@ void AfsAppLib_RegisterModelessDialog (HWND hDlg)
 
    EnterCriticalSection (pcsPump);
 
-   for (size_t ii = 0; ii < cModeless; ++ii)
+   size_t ii;
+   for (ii = 0; ii < cModeless; ++ii)
       {
       if (aModeless[ ii ] == hDlg)
          break;
@@ -227,7 +228,8 @@ size_t GetWindowDataField (LPTSTR pszField)
       }
    EnterCriticalSection (pcsData);
 
-   for (size_t ii = 0; ii < cFields; ++ii)
+   size_t ii;
+   for (ii = 0; ii < cFields; ++ii)
       {
       if (!lstrcmpi (aFields[ ii ].szField, pszField))
          break;
@@ -302,7 +304,8 @@ DWORD SetWindowData (HWND hWnd, LPTSTR pszField, DWORD dwNewData)
    size_t iField;
    if ((iField = GetWindowDataField (pszField)) != (size_t)-1)
       {
-      for (size_t ii = 0; ii < cWindows; ++ii)
+      size_t ii;
+      for (ii = 0; ii < cWindows; ++ii)
          {
          if (aWindows[ ii ].hWnd == hWnd)
             {

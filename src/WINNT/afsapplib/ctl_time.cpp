@@ -166,7 +166,8 @@ BOOL CALLBACK TimeProc (HWND hTime, UINT msg, WPARAM wp, LPARAM lp)
 
    if (msg == WM_CREATE)
       {
-      for (size_t iTime = 0; iTime < cTime; ++iTime)
+      size_t iTime;
+      for (iTime = 0; iTime < cTime; ++iTime)
          {
          if (aTime[ iTime ].hTime == NULL)
             break;

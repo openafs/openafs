@@ -139,7 +139,8 @@ void Alert_EndUpdate (LPIDENT lpi, LPSERVER lpServer)
          BOOL fNeedBadCredsWarning = FALSE;
          BOOL fHaveBadCredsWarning = FALSE;
 
-         for (size_t iAlert = 0; iAlert < lpoaServer->nAlerts; ++iAlert)
+         size_t iAlert;
+         for (iAlert = 0; iAlert < lpoaServer->nAlerts; ++iAlert)
             {
             if (lpoaServer->aAlerts[ iAlert ].alert == alertSECONDARY)
                {
@@ -226,7 +227,8 @@ void Alert_RemoveSecondary (LPIDENT lpiChild)
    LPOBJECTALERTS lpoa;
    if ((lpoa = Alert_GetObjectAlerts (lpiChild, TRUE)) != NULL)
       {
-      for (size_t iAlert = 0; iAlert < lpoa->nAlerts; )
+      size_t iAlert;
+      for (iAlert = 0; iAlert < lpoa->nAlerts; )
          {
          if ( (lpoa->aAlerts[ iAlert ].alert == alertSECONDARY) &&
               (lpoa->aAlerts[ iAlert ].aiSECONDARY.lpiSecondary == lpiChild) )
@@ -342,7 +344,8 @@ void Alert_Scout_ServerStatus (LPIDENT lpi, ULONG status)
          if (lpoa->nAlerts && (lpoa->aAlerts[0].alert == alertBADCREDS))
             iInsert = 1;
 
-         for (size_t iHole = iInsert; iHole < lpoa->nAlerts; ++iHole)
+         size_t iHole;
+         for (iHole = iInsert; iHole < lpoa->nAlerts; ++iHole)
             {
             if (lpoa->aAlerts[ iHole ].alert == alertINVALID)
                break;

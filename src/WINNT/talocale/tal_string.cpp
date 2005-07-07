@@ -12,6 +12,8 @@ extern "C" {
 #include <afs/stds.h>
 }
 
+#include <windows.h>
+#include <windowsx.h>
 #include <WINNT/talocale.h>
 #include <stdlib.h>
 
@@ -371,7 +373,8 @@ LPTSTR cdecl vFormatString (LONG pszSource, LPCTSTR pszFmt, va_list arg)
       if ((psz = (LPTSTR)lstrchr (&szFmt[1], TEXT('%'))) != NULL)
          *psz = 0;
 
-      for (int ii = 1; szFmt[ii] == TEXT('-') || szFmt[ii] == TEXT(','); ii++)
+      int ii;
+      for (ii = 1; szFmt[ii] == TEXT('-') || szFmt[ii] == TEXT(','); ii++)
          ;
       cchMin = _ttol (&szFmt[ii]);
 
@@ -962,7 +965,8 @@ void FormatBytes (LPTSTR pszTarget, LPTSTR pszFormatUser, double cb)
       {
       lstrcpy (szFormat, pszFormatUser);
 
-      for (LPTSTR pch = &szFormat[1]; *pch; ++pch)
+      LPTSTR pch;
+      for (pch = &szFormat[1]; *pch; ++pch)
          {
          if (!isfmtgarbage(*pch))
             {
@@ -988,8 +992,8 @@ void FormatBytes (LPTSTR pszTarget, LPTSTR pszFormatUser, double cb)
             // Cheesy bit: if all we have are 0's and "."'s, just
             // make the number read "0".
             //
-
-   for (TCHAR *pch = szJustTheNumber; *pch; ++pch)
+   TCHAR * pch;
+   for (pch = szJustTheNumber; *pch; ++pch)
       {
       if (*pch != TEXT('0') && *pch != TEXT('.'))
          break;
@@ -1654,7 +1658,8 @@ LPTSTR FixFormatString (LPTSTR pszFormat)
       {
       lstrcpy (szFormat, pszFormat);
 
-      for (LPTSTR pch = &szFormat[1]; *pch; ++pch)
+      LPTSTR pch;
+      for (pch = &szFormat[1]; *pch; ++pch)
          {
          if (!isfmtgarbage(*pch))
             {

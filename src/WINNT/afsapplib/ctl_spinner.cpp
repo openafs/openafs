@@ -183,7 +183,8 @@ BOOL CreateSpinner (HWND hBuddy,
 
    EnterCriticalSection (&csSpinners);
 
-   for (size_t ii = 0; ii < cSpinners; ++ii)
+   size_t ii;
+   for (ii = 0; ii < cSpinners; ++ii)
       {
       if (!aSpinners[ ii ].hSpinner)
          break;

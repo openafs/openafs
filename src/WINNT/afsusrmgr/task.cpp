@@ -625,7 +625,8 @@ BOOL Task_User_GroupList_Set_Do (LPUSER_GROUPLIST_SET_PARAMS lpp, ULONG *pStatus
    // test it for inclusion of a particular group.
    //
    LPHASHLIST pGroupsAllow = New (HASHLIST);
-   for (size_t iGroup = 0; iGroup < lpp->pGroups->cEntries; ++iGroup)
+   size_t iGroup;
+   for (iGroup = 0; iGroup < lpp->pGroups->cEntries; ++iGroup)
       pGroupsAllow->AddUnique ((PVOID)(lpp->pGroups->aEntries[ iGroup ].idObject));
 
    // We'll have to do this next bit for each user in the supplied user-list
@@ -1182,7 +1183,8 @@ BOOL Task_Group_Members_Set_Do (LPGROUP_MEMBERS_SET_PARAMS lpp, ULONG *pStatus)
    // test it to see if a particular member should remain in a group.
    //
    LPHASHLIST pMembersAllow = New (HASHLIST);
-   for (size_t iMember = 0; iMember < lpp->pMembers->cEntries; ++iMember)
+   size_t iMember;
+   for (iMember = 0; iMember < lpp->pMembers->cEntries; ++iMember)
       pMembersAllow->AddUnique ((PVOID)(lpp->pMembers->aEntries[ iMember ].idObject));
 
    // We'll have to do this next bit for each group in the supplied group-list
@@ -1357,7 +1359,8 @@ BOOL Task_Group_Owned_Set_Do (LPGROUP_OWNED_SET_PARAMS lpp, ULONG *pStatus)
    // quickly test it for inclusion of a particular group.
    //
    LPHASHLIST pGroupsAllow = New (HASHLIST);
-   for (size_t iGroup = 0; iGroup < lpp->pOwnedGroups->cEntries; ++iGroup)
+   size_t iGroup;
+   for (iGroup = 0; iGroup < lpp->pOwnedGroups->cEntries; ++iGroup)
       pGroupsAllow->AddUnique ((PVOID)(lpp->pOwnedGroups->aEntries[ iGroup ].idObject));
 
    // Obtain the current list-of-groups-owned for this group

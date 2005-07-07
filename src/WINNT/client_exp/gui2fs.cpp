@@ -418,7 +418,7 @@ char *SkipLine (register char *astr)
 }
 
 /* tell if a name is 23 or -45 (digits or minus digits), which are bad names we must prune */
-static BadName(register char *aname)
+static int BadName(register char *aname)
 {
     register int tc;
 
@@ -813,7 +813,8 @@ BOOL SaveACL(const CString& strCellName, const CString& strDir, const CStringArr
     pAcl = EmptyAcl(strCellName);
 
     // Set its normal rights
-    for (int i = 0; i < normal.GetSize(); i += 2) {
+    int i;
+    for (i = 0; i < normal.GetSize(); i += 2) {
         rights = Convert(normal[i + 1], 0, &rtype);
         ChangeList(pAcl, TRUE, normal[i], rights);
     }
@@ -878,7 +879,8 @@ BOOL CopyACL(const CString& strToDir, const CStringArray& normal, const CStringA
     enum rtype rtype;
 
     // Set normal rights
-    for (int i = 0; i < normal.GetSize(); i += 2) {
+    int i;
+    for (i = 0; i < normal.GetSize(); i += 2) {
         LONG rights = Convert(normal[i + 1], 0, &rtype);
         ChangeList(pToAcl, TRUE, normal[i], rights);
     }

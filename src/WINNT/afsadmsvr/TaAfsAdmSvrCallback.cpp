@@ -77,7 +77,8 @@ void AfsAdmSvr_CallbackManager (void)
       AfsAdmSvr_Enter();
 
       LPHASHLIST pList = New (HASHLIST);
-      for (LPENUM pEnum = l.pListCallbacks->FindFirst(); pEnum; pEnum = pEnum->FindNext())
+      LPENUM pEnum;
+      for (pEnum = l.pListCallbacks->FindFirst(); pEnum; pEnum = pEnum->FindNext())
          {
          LPCALLBACKDATA pData = (LPCALLBACKDATA)( pEnum->GetObject() );
          pList->Add (pData);

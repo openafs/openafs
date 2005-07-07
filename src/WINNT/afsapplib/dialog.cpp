@@ -140,7 +140,8 @@ BOOL CALLBACK PropTab_HookProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 
    if (IsWindow (hTab))
       {
-      for (size_t ii = 0; ii < cPropSheets; ++ii)
+      size_t ii;
+      for (ii = 0; ii < cPropSheets; ++ii)
          {
          if (aPropSheets[ii].fInUse && (aPropSheets[ii].hSheet == hSheet))
             break;
@@ -158,7 +159,8 @@ BOOL CALLBACK PropTab_HookProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
          }
       if (ii < cPropSheets)
          {
-         for (size_t iTab = 0; iTab < aPropSheets[ii].psh->cTabs; ++iTab)
+         size_t iTab;
+         for (iTab = 0; iTab < aPropSheets[ii].psh->cTabs; ++iTab)
             {
             if (aPropSheets[ii].psh->aTabs[iTab].hDlg == hDlg)
                break;
@@ -346,7 +348,8 @@ BOOL CALLBACK PropSheet_HookProc (HWND hSheet, UINT msg, WPARAM wp, LPARAM lp)
 
 LPARAM PropSheet_FindTabParam (HWND hTab)
 {
-   for (size_t ii = 0; ii < cPropSheets; ++ii)
+   size_t ii;
+   for (ii = 0; ii < cPropSheets; ++ii)
       {
       if (aPropSheets[ii].fInUse && (aPropSheets[ii].hSheet == hTab))
          return aPropSheets[ii].psh->lpUser;
@@ -440,7 +443,8 @@ HWND PropSheet_ShowModeless (LPPROPSHEET psh, int nCmdShow)
    // Otherwise, we'd have to wait until the WM_INITDIALOG/IDINIT
    // messages were finished.
    //
-   for (size_t ii = 0; ii < cPropSheets; ++ii)
+   size_t ii;
+   for (ii = 0; ii < cPropSheets; ++ii)
       {
       if (!aPropSheets[ ii ].fInUse)
          break;
@@ -789,7 +793,8 @@ HLISTITEM cdecl FL_AddItem (HWND hList, LPVIEWINFO lpvi, LPARAM lp, int iImage1,
    va_start (arg, iImage1);
 
    LPTSTR apszColumns[ nCOLUMNS_MAX ];
-   for (size_t iColumn = 0; iColumn < lpvi->nColsAvail; ++iColumn)
+   size_t iColumn;
+   for (iColumn = 0; iColumn < lpvi->nColsAvail; ++iColumn)
       {
       apszColumns[ iColumn ] = va_arg (arg, LPTSTR);
       }
@@ -828,7 +833,8 @@ HLISTITEM cdecl FL_AddItem (HWND hList, LPVIEWINFO lpvi, LPARAM lp, int iImage1,
 
 BOOL FL_HitTestForHeaderBar (HWND hList, POINT ptClient)
 {
-   for (HWND hHeader = GetWindow (hList, GW_CHILD);
+   HWND hHeader;
+   for (hHeader = GetWindow (hList, GW_CHILD);
         hHeader != NULL;
         hHeader = GetWindow (hHeader, GW_HWNDNEXT))
       {
@@ -1163,7 +1169,8 @@ BOOL CALLBACK LV_SortView_Alphabetic (LPARAM lp1, LPARAM lp2, LPARAM lpSort)
 
 void LV_SortView (HWND hList, LPVIEWINFO lpvi)
 {
-   for (size_t iColSort = 0; iColSort < lpvi->nColsShown; ++iColSort)
+   size_t iColSort;
+   for (iColSort = 0; iColSort < lpvi->nColsShown; ++iColSort)
       {
       if ((lpvi->iSort & (~COLUMN_SORTREV)) == lpvi->aColumns[ iColSort ])
          break;
@@ -1191,7 +1198,8 @@ void cdecl LV_AddItem (HWND hList, LPVIEWINFO lpvi, int index, LPARAM lp, int iI
    va_start (arg, iImage);
 
    LPTSTR apszColumns[ nCOLUMNS_MAX ];
-   for (size_t iColumn = 0; iColumn < lpvi->nColsAvail; ++iColumn)
+   size_t iColumn;
+   for (iColumn = 0; iColumn < lpvi->nColsAvail; ++iColumn)
       {
       apszColumns[ iColumn ] = va_arg (arg, LPTSTR);
       }
@@ -1232,7 +1240,8 @@ void cdecl LV_AddItem (HWND hList, LPVIEWINFO lpvi, int index, LPARAM lp, int iI
 
 BOOL LV_HitTestForHeaderBar (HWND hList, POINT ptClient)
 {
-   for (HWND hHeader = GetWindow (hList, GW_CHILD);
+   HWND hHeader;
+   for (hHeader = GetWindow (hList, GW_CHILD);
         hHeader != NULL;
         hHeader = GetWindow (hHeader, GW_HWNDNEXT))
       {
@@ -1546,8 +1555,9 @@ BOOL CALLBACK ListBox_HScrollHook (HWND hList, UINT msg, WPARAM wp, LPARAM lp)
          int iItemSkip = (int)wp;
          int iItemMax = SendMessage (hList, LB_GETCOUNT, 0, 0);
          int cchMax = 0;
+         int iItem;
 
-         for (int iItem = 0; iItem < iItemMax; iItem++)
+         for (iItem = 0; iItem < iItemMax; iItem++)
             {
             if (iItem == iItemSkip)
                continue;

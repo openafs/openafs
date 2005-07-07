@@ -3826,7 +3826,8 @@ void FastList_PerformSelectTest (LPFASTLIST pfl, HLISTITEM hItem)
          if (fLevel)
             {
             size_t iLevelItem = 0;
-            for (HLISTITEM hParent = hItem->hTreeParent; hParent; hParent = hParent->hTreeParent)
+            HLISTITEM hParent;
+            for (hParent = hItem->hTreeParent; hParent; hParent = hParent->hTreeParent)
                ++iLevelItem;
 
             size_t iLevelSelected = 0;
@@ -3840,7 +3841,8 @@ void FastList_PerformSelectTest (LPFASTLIST pfl, HLISTITEM hItem)
          if (fSibling)
             {
             BOOL fFound = FALSE;
-            for (HLISTITEM hSearch = hItem->hTreePrevious; !fFound && hSearch; hSearch = hSearch->hTreePrevious)
+            HLISTITEM hSearch;
+            for (hSearch = hItem->hTreePrevious; !fFound && hSearch; hSearch = hSearch->hTreePrevious)
                {
                if (hSearch == pfl->hSelectFirst)
                   fFound = TRUE;

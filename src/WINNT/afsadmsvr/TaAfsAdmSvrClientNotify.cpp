@@ -193,11 +193,13 @@ HASHVALUE CALLBACK ListenersKeyObject_HashData (LPHASHLISTKEY pKey, PVOID pData)
 BOOL SetActionNotification (HWND hNotify, BOOL fSet)
 {
    BOOL rc = TRUE;
+   size_t ii = 0;
+
    asc_Enter();
 
    if (!fSet)
       {
-      for (size_t ii = 0; ii < l.chActionListeners; ++ii)
+      for (ii = 0; ii < l.chActionListeners; ++ii)
          {
          if (l.ahActionListeners[ ii ] == hNotify)
             l.ahActionListeners[ ii ] = NULL;
@@ -205,7 +207,7 @@ BOOL SetActionNotification (HWND hNotify, BOOL fSet)
       }
    else // (fSet)
       {
-      for (size_t ii = 0; ii < l.chActionListeners; ++ii)
+      for (ii = 0; ii < l.chActionListeners; ++ii)
          {
          if (l.ahActionListeners[ ii ] == NULL)
             break;

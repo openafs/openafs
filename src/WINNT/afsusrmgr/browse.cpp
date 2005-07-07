@@ -341,6 +341,7 @@ void Browse_OnOK (HWND hDlg)
 void Browse_OnEndTask_EnumObjects (HWND hDlg, LPTASKPACKET ptp)
 {
    LPBROWSE_PARAMS lpp;
+   size_t ii;
    if ((lpp = (LPBROWSE_PARAMS)GetWindowLong (hDlg, DWL_USER)) != NULL)
       {
       HWND hList = GetDlgItem (hDlg, IDC_BROWSE_LIST);
@@ -359,7 +360,7 @@ void Browse_OnEndTask_EnumObjects (HWND hDlg, LPTASKPACKET ptp)
             {
             LPHASHLIST pListToSkip = New (HASHLIST);
 
-            for (size_t ii = 0; ii < lpp->pObjectsToSkip->cEntries; ++ii)
+            for (ii = 0; ii < lpp->pObjectsToSkip->cEntries; ++ii)
                pListToSkip->AddUnique ((PVOID)(lpp->pObjectsToSkip->aEntries[ii].idObject));
 
             for (ii = 0; ii < TASKDATA(ptp)->pAsidList->cEntries; )
@@ -376,7 +377,7 @@ void Browse_OnEndTask_EnumObjects (HWND hDlg, LPTASKPACKET ptp)
 
       // OK, we're ready to go--populate that list!
       //
-      for (size_t ii = 0; ii < TASKDATA(ptp)->pAsidList->cEntries; ++ii)
+      for (ii = 0; ii < TASKDATA(ptp)->pAsidList->cEntries; ++ii)
          {
          ULONG status;
          ASOBJPROP Properties;

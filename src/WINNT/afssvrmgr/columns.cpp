@@ -250,9 +250,11 @@ void Columns_OnSelect (HWND hDlg)
    hList = GetDlgItem (hDlg, IDC_COL_AVAIL);
    LB_StartChange (hList);
 
-   for (size_t iAvail = 0; iAvail < lpvi->nColsAvail; ++iAvail)
+   size_t iAvail;
+   size_t iShown;
+   for (iAvail = 0; iAvail < lpvi->nColsAvail; ++iAvail)
       {
-      for (size_t iShown = 0; iShown < lpvi->nColsShown; ++iShown)
+      for (iShown = 0; iShown < lpvi->nColsShown; ++iShown)
          {
          if (lpvi->aColumns[ iShown ] == iAvail)
             break;
@@ -271,7 +273,7 @@ void Columns_OnSelect (HWND hDlg)
    hList = GetDlgItem (hDlg, IDC_COL_SHOWN);
    LB_StartChange (hList);
 
-   for (size_t iShown = 0; iShown < lpvi->nColsShown; ++iShown)
+   for (iShown = 0; iShown < lpvi->nColsShown; ++iShown)
       {
       iAvail = lpvi->aColumns[ iShown ];
       LB_AddItem (hList, lpvi->idsColumns[ iAvail ], (LPARAM)iAvail);

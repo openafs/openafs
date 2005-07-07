@@ -128,7 +128,8 @@ BOOL AfsAdmSvr_fIsValidClient (DWORD idClient)
 BOOL AfsAdmSvr_AttachClient (LPCTSTR pszName, DWORD *pidClient, ULONG *pStatus)
 {
    AfsAdmSvr_Enter();
-   for (size_t iClient = 0; iClient < l.cClientsAllocated; ++iClient)
+   size_t iClient;
+   for (iClient = 0; iClient < l.cClientsAllocated; ++iClient)
       {
       if (!l.aClients[ iClient ])
          break;
@@ -160,7 +161,8 @@ BOOL AfsAdmSvr_AttachClient (LPCTSTR pszName, DWORD *pidClient, ULONG *pStatus)
 void AfsAdmSvr_DetachClient (DWORD idClient)
 {
    AfsAdmSvr_Enter();
-   for (size_t iClient = 0; iClient < l.cClientsAllocated; ++iClient)
+   size_t iClient;
+   for (iClient = 0; iClient < l.cClientsAllocated; ++iClient)
       {
       if (idClient == (DWORD)(l.aClients[ iClient ]))
          break;
@@ -464,7 +466,8 @@ size_t AfsAdmSvr_BeginOperation (DWORD idClient, LPASACTION pAction)
 
    ++l.cOperations;
 
-   for (size_t iOp = 0; iOp < l.cOperationsAllocated; ++iOp)
+   size_t iOp;
+   for (iOp = 0; iOp < l.cOperationsAllocated; ++iOp)
       {
       if (!l.aOperations[ iOp ].fInUse)
          break;
