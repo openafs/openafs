@@ -444,6 +444,17 @@ DumpFunction(struct rx_call *call, char *filename)
     return (error);
 }
 
+#if SIZEOF_TIME_T!=4
+static char *
+vos_ctime(afs_int32 *timep)
+{
+    time_t *foo = timep;
+    return ctime(foo);
+}
+#else
+#define vos_ctime ctime
+#endif
+
 static void
 DisplayFormat(pntr, server, part, totalOK, totalNotOK, totalBusy, fast,
 	      longlist, disp)
@@ -486,24 +497,24 @@ DisplayFormat(pntr, server, part, totalOK, totalNotOK, totalBusy, fast,
 		    (unsigned long)pntr->backupID);
 	    fprintf(STDOUT, "    MaxQuota %10d K \n", pntr->maxquota);
 	    fprintf(STDOUT, "    Creation    %s",
-		    ctime((time_t *) & pntr->creationDate));
+		    vos_ctime(& pntr->creationDate));
 #ifdef FULL_LISTVOL_SWITCH
 	    fprintf(STDOUT, "    Copy        %s",
-		    ctime((time_t *) & pntr->copyDate));
+		    vos_ctime( & pntr->copyDate));
 	    if (!pntr->backupDate)
 		fprintf(STDOUT, "    Backup      Never\n");
 	    else
 		fprintf(STDOUT, "    Backup      %s",
-			ctime((time_t *) & pntr->backupDate));
+			vos_ctime( & pntr->backupDate));
 	    if (pntr->accessDate)
 		fprintf(STDOUT, "    Last Access %s",
-			ctime((time_t *) & pntr->accessDate));
+			vos_ctime( & pntr->accessDate));
 #endif
 	    if (!pntr->updateDate)
 		fprintf(STDOUT, "    Last Update Never\n");
 	    else {
 		fprintf(STDOUT, "    Last Update %s",
-			ctime((time_t *) & pntr->updateDate));
+			vos_ctime( & pntr->updateDate));
 		fprintf(STDOUT,
 			"    %d accesses in the past day (i.e., vnode references)\n",
 			pntr->dayUse);
@@ -643,24 +654,24 @@ XDisplayFormat(a_xInfoP, a_servID, a_partID, a_totalOKP, a_totalNotOKP,
 		    (unsigned long)a_xInfoP->backupID);
 	    fprintf(STDOUT, "    MaxQuota %10d K \n", a_xInfoP->maxquota);
 	    fprintf(STDOUT, "    Creation    %s",
-		    ctime((time_t *) & a_xInfoP->creationDate));
+		    vos_ctime( & a_xInfoP->creationDate));
 #ifdef FULL_LISTVOL_SWITCH
 	    fprintf(STDOUT, "    Copy        %s",
-		    ctime((time_t *) & a_xInfoP->copyDate));
+		    vos_ctime( & a_xInfoP->copyDate));
 	    if (!a_xInfoP->backupDate)
 		fprintf(STDOUT, "    Backup      Never\n");
 	    else
 		fprintf(STDOUT, "    Backup      %s",
-			ctime((time_t *) & a_xInfoP->backupDate));
+			vos_ctime( & a_xInfoP->backupDate));
 	    if (a_xInfoP->accessDate)
 		fprintf(STDOUT, "    Last Access %s",
-			ctime((time_t *) & a_xInfoP->accessDate));
+			vos_ctime( & a_xInfoP->accessDate));
 #endif
 	    if (!a_xInfoP->updateDate)
 		fprintf(STDOUT, "    Last Update Never\n");
 	    else {
 		fprintf(STDOUT, "    Last Update %s",
-			ctime((time_t *) & a_xInfoP->updateDate));
+			vos_ctime( & a_xInfoP->updateDate));
 		fprintf(STDOUT,
 			"    %d accesses in the past day (i.e., vnode references)\n",
 			a_xInfoP->dayUse);
@@ -906,15 +917,15 @@ XDisplayFormat2(a_xInfoP, a_servID, a_partID, a_totalOKP, a_totalNotOKP,
 			break;
 		}
 		fprintf(STDOUT, "creationDate\t%-9lu\t%s", a_xInfoP->creationDate,
-			ctime(&a_xInfoP->creationDate));
+			vos_ctime(&a_xInfoP->creationDate));
 		fprintf(STDOUT, "accessDate\t%-9lu\t%s", a_xInfoP->accessDate,
-			ctime(&a_xInfoP->accessDate));
+			vos_ctime(&a_xInfoP->accessDate));
 		fprintf(STDOUT, "updateDate\t%-9lu\t%s", a_xInfoP->updateDate,
-			ctime(&a_xInfoP->updateDate));
+			vos_ctime(&a_xInfoP->updateDate));
 		fprintf(STDOUT, "backupDate\t%-9lu\t%s", a_xInfoP->backupDate,
-			ctime(&a_xInfoP->backupDate));
+			vos_ctime(&a_xInfoP->backupDate));
 		fprintf(STDOUT, "copyDate\t%-9lu\t%s", a_xInfoP->copyDate,
-			ctime(&a_xInfoP->copyDate));
+			vos_ctime(&a_xInfoP->copyDate));
 		
 		fprintf(STDOUT, "diskused\t%u\n", a_xInfoP->size);
 		fprintf(STDOUT, "maxquota\t%u\n", a_xInfoP->maxquota);
@@ -1058,15 +1069,15 @@ DisplayFormat2(server, partition, pntr)
 	break;
     }
     fprintf(STDOUT, "creationDate\t%-9lu\t%s", pntr->creationDate,
-	    ctime(&pntr->creationDate));
+	    vos_ctime(&pntr->creationDate));
     fprintf(STDOUT, "accessDate\t%-9lu\t%s", pntr->accessDate,
-	    ctime(&pntr->accessDate));
+	    vos_ctime(&pntr->accessDate));
     fprintf(STDOUT, "updateDate\t%-9lu\t%s", pntr->updateDate,
-	    ctime(&pntr->updateDate));
+	    vos_ctime(&pntr->updateDate));
     fprintf(STDOUT, "backupDate\t%-9lu\t%s", pntr->backupDate,
-	    ctime(&pntr->backupDate));
+	    vos_ctime(&pntr->backupDate));
     fprintf(STDOUT, "copyDate\t%-9lu\t%s", pntr->copyDate,
-	    ctime(&pntr->copyDate));
+	    vos_ctime(&pntr->copyDate));
     fprintf(STDOUT, "flags\t\t%#lx\t(Optional)\n", pntr->flags);
     fprintf(STDOUT, "diskused\t%u\n", pntr->size);
     fprintf(STDOUT, "maxquota\t%u\n", pntr->maxquota);
@@ -3937,7 +3948,7 @@ VolserStatus(as)
 	/*print out the relevant info */
 	fprintf(STDOUT, "--------------------------------------\n");
 	fprintf(STDOUT, "transaction: %lu  created: %s",
-		(unsigned long)pntr->tid, ctime((time_t *) & pntr->time));
+		(unsigned long)pntr->tid, vos_ctime( & pntr->time));
 	if (pntr->returnCode) {
 	    fprintf(STDOUT, "returnCode: %lu\n",
 		    (unsigned long)pntr->returnCode);
