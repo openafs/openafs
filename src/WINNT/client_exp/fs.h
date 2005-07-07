@@ -23,6 +23,6 @@ extern int CleanAcl(struct Acl *);
 
 extern void Die(int, char *);
 
-static SetVolCmd(struct cmd_syndesc *);
+static int SetVolCmd(struct cmd_syndesc *);
 
 #endif /* FS_H_ENV */

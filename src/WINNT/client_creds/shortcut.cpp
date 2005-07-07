@@ -65,8 +65,8 @@ BOOL Shortcut_Create (LPTSTR pszTarget, LPCTSTR pszSource, LPTSTR pszDesc, LPTST
                    rc = ppf->Save (pszTarget, TRUE);
 #else
                    WORD wsz[ MAX_PATH ];
-                   MultiByteToWideChar (CP_ACP, 0, pszTarget, -1, wsz, MAX_PATH);
-                   rc = ppf->Save (wsz, TRUE);
+                   MultiByteToWideChar (CP_ACP, 0, pszTarget, -1, (LPWSTR)wsz, MAX_PATH);
+                   rc = ppf->Save ((LPCOLESTR)wsz, TRUE);
 #endif
                    }
                }

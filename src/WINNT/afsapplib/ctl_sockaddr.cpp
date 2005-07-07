@@ -164,7 +164,8 @@ BOOL CALLBACK SockAddrProc (HWND hSockAddr, UINT msg, WPARAM wp, LPARAM lp)
 
    if (msg == WM_CREATE)
       {
-      for (size_t iSockAddr = 0; iSockAddr < cSockAddr; ++iSockAddr)
+      size_t iSockAddr;
+      for (iSockAddr = 0; iSockAddr < cSockAddr; ++iSockAddr)
          {
          if (aSockAddr[ iSockAddr ].hSockAddr == NULL)
             break;

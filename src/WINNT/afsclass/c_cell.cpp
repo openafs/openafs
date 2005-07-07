@@ -135,7 +135,8 @@ void CELL::FreeServers (BOOL fNotify)
 
 void CELL::FreeUsers (BOOL fNotify)
 {
-   for (LPENUM pEnum = m_lGroups->FindLast(); pEnum; pEnum = pEnum->FindPrevious())
+   LPENUM pEnum;
+   for (pEnum = m_lGroups->FindLast(); pEnum; pEnum = pEnum->FindPrevious())
       {
       LPPTSGROUP lpGroup = (LPPTSGROUP)(pEnum->GetObject());
       if (fNotify)
@@ -590,7 +591,8 @@ BOOL CELL::RefreshServerList (BOOL fNotify, ULONG *pStatus)
          }
 
       size_t cServers = 0;
-      for (LPENUM pEnum = m_lServers->FindFirst(); pEnum; pEnum = pEnum->FindNext())
+      LPENUM pEnum;
+      for (pEnum = m_lServers->FindFirst(); pEnum; pEnum = pEnum->FindNext())
          ++cServers;
 
       if (cServers)
@@ -1873,7 +1875,8 @@ BOOL CELL::RefreshUsers (BOOL fNotify, ULONG *pStatus)
       //
       if (fNotify)
          {
-         for (LPENUM pEnum = m_lGroups->FindFirst(); pEnum; pEnum = pEnum->FindNext())
+         LPENUM pEnum;
+         for (pEnum = m_lGroups->FindFirst(); pEnum; pEnum = pEnum->FindNext())
             {
             LPPTSGROUP lpGroup = (LPPTSGROUP)(pEnum->GetObject());
             NOTIFYCALLBACK::SendNotificationToAll (evtCreate, lpGroup->GetIdentifier());

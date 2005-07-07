@@ -465,7 +465,8 @@ void QueryDriveMapList_ReadSubmounts (PDRIVEMAPLIST pList)
             if ( submountPath[0] != TEXT('\0') ) {
                 AdjustAfsPath (Submount.szMapping, submountPath, FALSE, TRUE);
 
-                for (size_t ii = 0; ii < pList->cSubmounts; ++ii)
+                size_t ii;
+                for (ii = 0; ii < pList->cSubmounts; ++ii)
                 {
                     if (!pList->aSubmounts[ii].szSubmount[0])
                         break;

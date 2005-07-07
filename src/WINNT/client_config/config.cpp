@@ -43,7 +43,8 @@ extern "C" {
 
 static DWORD log2 (DWORD dwValue)
 {
-   for (DWORD dwLog = 0; (DWORD)(1<<dwLog) < dwValue; ++dwLog)
+   DWORD dwLog;
+   for (dwLog = 0; (DWORD)(1<<dwLog) < dwValue; ++dwLog)
       ;
    return dwLog;
 }
@@ -349,7 +350,8 @@ BOOL Config_SetTrayIconFlag (BOOL fFlag, ULONG *pStatus)
 {
    Config_WriteUserNum (TEXT("ShowTrayIcon"), fFlag);
 
-   for (HWND hSearch = GetWindow (GetDesktopWindow(), GW_CHILD);
+   HWND hSearch;
+   for (hSearch = GetWindow (GetDesktopWindow(), GW_CHILD);
         hSearch && IsWindow(hSearch);
         hSearch = GetWindow (hSearch, GW_HWNDNEXT))
       {
@@ -434,7 +436,8 @@ BOOL Config_SetServerPrefs (PSERVERPREFS pPrefs, ULONG *pStatus)
    if (pPrefs)
       {
       size_t cChanged = 0;
-      for (size_t ii = 0; ii < pPrefs->cPrefs; ++ii)
+      size_t ii;
+      for (ii = 0; ii < pPrefs->cPrefs; ++ii)
          {
          if (pPrefs->aPrefs[ ii ].fChanged)
             ++cChanged;

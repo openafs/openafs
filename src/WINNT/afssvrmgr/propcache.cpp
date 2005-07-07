@@ -36,7 +36,8 @@ void PropCache_Add (PropCache pcType, PVOID pv, HWND hDialog)
 {
    if (!PropCache_Search (pcType, pv))
       {
-      for (size_t iEntry = 0; iEntry < PropCache_nEntries; ++iEntry)
+      size_t iEntry;
+      for (iEntry = 0; iEntry < PropCache_nEntries; ++iEntry)
          {
          if (!PropCache_apce[ iEntry ].fInUse)
             break;

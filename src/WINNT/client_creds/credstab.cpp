@@ -90,7 +90,8 @@ void Creds_OnCheckRemind (HWND hDlg)
 {
    LPTSTR pszCell = (LPTSTR)GetWindowLong (hDlg, DWL_USER);
    lock_ObtainMutex(&g.credsLock);
-   for (size_t iCreds = 0; iCreds < g.cCreds; ++iCreds)
+   size_t iCreds;
+   for (iCreds = 0; iCreds < g.cCreds; ++iCreds)
       {
       if (!lstrcmpi (g.aCreds[ iCreds ].szCell, pszCell))
          break;
@@ -118,7 +119,8 @@ void Creds_OnUpdate (HWND hDlg)
       }
 
    lock_ObtainMutex(&g.credsLock);
-   for (size_t iCreds = 0; iCreds < g.cCreds; ++iCreds)
+   size_t iCreds;
+   for (iCreds = 0; iCreds < g.cCreds; ++iCreds)
       {
       if (!lstrcmpi (g.aCreds[ iCreds ].szCell, pszCell))
          break;
@@ -305,7 +307,8 @@ void NewCreds_OnInitDialog (HWND hDlg)
       }
 
    lock_ObtainMutex(&g.credsLock);
-   for (size_t iCreds = 0; iCreds < g.cCreds; ++iCreds)
+   size_t iCreds;
+   for (iCreds = 0; iCreds < g.cCreds; ++iCreds)
       {
       if (*pszCell && !lstrcmpi (g.aCreds[ iCreds ].szCell, pszCell))
          break;
@@ -413,6 +416,6 @@ void NewCreds_OnCancel (HWND hDlg)
 
       if (hChildDlg)
          CheckDlgButton (hChildDlg, IDC_CREDS_REMIND, FALSE);
-	  }
+      }
 }
 

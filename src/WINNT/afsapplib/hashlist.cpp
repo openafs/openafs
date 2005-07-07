@@ -436,7 +436,8 @@ LPHASHLISTKEY HASHLIST::CreateKey (LPCTSTR pszKeyName, LPHASHFUNC_COMPAREOBJECTD
    LPHASHLISTKEY pKey = NULL;
    Enter();
 
-   for (size_t iKey = 0; iKey < m_cpKeys; ++iKey)
+   size_t iKey;
+   for (iKey = 0; iKey < m_cpKeys; ++iKey)
       {
       if (m_apKeys[ iKey ] == NULL)
          break;
@@ -855,7 +856,8 @@ void HASHLISTKEY::Resize (void)
       m_aBuckets[ iBucket ].iLast = iINVALID;
       }
 
-   for (size_t iObject = 0; ; ++iObject)
+   size_t iObject;
+   for (iObject = 0; ; ++iObject)
       {
       LPHASHLISTENTRY pEntry;
       if ((pEntry = GetEntry(m_aObjects,iObject)) == NULL)
@@ -903,7 +905,8 @@ LPHASHLISTKEYDEBUGINFO HASHLISTKEY::GetDebugInfo (void)
    //
    REALLOC (pInfo->aBuckets, pInfo->cBuckets, m_cBuckets, 1);
 
-   for (size_t iBucket = 0; iBucket < pInfo->cBuckets; ++iBucket)
+   size_t iBucket;
+   for (iBucket = 0; iBucket < pInfo->cBuckets; ++iBucket)
       {
       for (size_t iObject = m_aBuckets[ iBucket ].iFirst;
            iObject != iINVALID;
@@ -1085,7 +1088,8 @@ HASHVALUE HashAnsiString (LPCSTR pszStringA)
 {
    HASHVALUE hv = 0;
 
-   for (size_t cch = lstrlenA(pszStringA); cch >= 4; pszStringA += 4, cch -= 4)
+   size_t cch;
+   for (cch = lstrlenA(pszStringA); cch >= 4; pszStringA += 4, cch -= 4)
       hv += *(DWORD *)pszStringA;
 
    for (; cch; pszStringA++, cch--)
@@ -1098,7 +1102,8 @@ HASHVALUE HashUnicodeString (LPWSTR pszStringW)
 {
    HASHVALUE hv = 0;
 
-   for (size_t cch = lstrlenW(pszStringW); cch >= 2; pszStringW += 2, cch -= 2)
+   size_t cch;
+   for (cch = lstrlenW(pszStringW); cch >= 2; pszStringW += 2, cch -= 2)
       {
       hv += *(DWORD *)pszStringW;   // since HIBYTE(*psz) is usually zero,
       hv = (hv >> 24) | (hv << 8);  // rotate {hv} high-ward by 8 bits

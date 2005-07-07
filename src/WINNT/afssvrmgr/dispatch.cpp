@@ -494,7 +494,8 @@ void NotifyMe (NOTIFYWHEN when, LPIDENT lpiObject, HWND hWnd, LPARAM lpUser)
 {
    EnterCriticalSection (&csDispatch);
 
-   for (size_t iDispatch = 0; iDispatch < nDispatchList; ++iDispatch)
+   size_t iDispatch;
+   for (iDispatch = 0; iDispatch < nDispatchList; ++iDispatch)
       {
       if ( (aDispatchList[ iDispatch ].hWnd == hWnd) &&
            (aDispatchList[ iDispatch ].when == when) &&

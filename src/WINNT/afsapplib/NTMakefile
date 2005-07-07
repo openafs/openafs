@@ -84,6 +84,11 @@ DLLLIBS = \
 
 DLLFILE = $(DESTDIR)\root.server\usr\afs\bin\TaAfsAppLib.dll
 
+!IF ("$(AFSVER_CL)"<"1400")
+DEFFILE = TaAfsAppLib.def
+!ELSE
+DEFFILE = TaAfsAppLib2005.def
+!ENDIF
 
 # Since AfsAppLib links with TaAfsAdmSvrClient.lib--and both need stuff
 # like the HashList code--we'll get lots of unnecessary 4049 warnings from
@@ -93,7 +98,7 @@ LOCALLINKFLAGS = -IGNORE:4049
 
 # AfsAppLib needs to use an explicit .DEF file to get its entry points public
 
-LOCALLINKFLAGS = $(LOCALLINKFLAGS) /DEF:TaAfsAppLib.def
+LOCALLINKFLAGS = $(LOCALLINKFLAGS) /DEF:$(DEFFILE)
 
 # Also, AfsAppLib has a specific DLL entry-point which should be used
 

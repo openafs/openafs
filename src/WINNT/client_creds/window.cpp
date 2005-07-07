@@ -333,7 +333,8 @@ void Main_OnCheckMenuRemind (void)
 {
    BOOL fRemind = FALSE;
    lock_ObtainMutex(&g.credsLock);
-   for (size_t iCreds = 0; iCreds < g.cCreds; ++iCreds)
+   size_t iCreds;
+   for (iCreds = 0; iCreds < g.cCreds; ++iCreds)
       {
       if (g.aCreds[ iCreds ].fRemind)
          fRemind = TRUE;
@@ -498,7 +499,8 @@ void Main_RepopulateTabs (BOOL fDestroyInvalid)
 
       size_t nCreds = 0;
       lock_ObtainMutex(&g.credsLock);
-      for (size_t iCreds = 0; iCreds < g.cCreds; ++iCreds)
+      size_t iCreds;
+      for (iCreds = 0; iCreds < g.cCreds; ++iCreds)
          {
          if (g.aCreds[ iCreds ].szCell[0])
             ++nCreds;
@@ -531,7 +533,8 @@ void Main_RepopulateTabs (BOOL fDestroyInvalid)
          {
          if (g.aCreds[ iCreds ].szCell[0])
             {
-            for (size_t ii = 0; ii < iTabOut; ++ii)
+            size_t ii;
+            for (ii = 0; ii < iTabOut; ++ii)
                {
                if (!ISCELLTAB (aTabs[ii]))
                   continue;

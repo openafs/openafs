@@ -307,7 +307,8 @@ int rwFindOrAddWnd (HWND hWnd, rwWindowData *awd)
 {
             // Is the window handle listed in awl[] already?
             //
-   for (int ii = 0; ii < (int)cwl; ii++)
+   int ii;
+   for (ii = 0; ii < (int)cwl; ii++)
       {
       if (awl[ii].hWnd == hWnd)
          {

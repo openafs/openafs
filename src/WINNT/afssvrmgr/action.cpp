@@ -793,7 +793,8 @@ BOOL Action_CompareNotifyParams (PNOTIFYPARAMS pParams1, PNOTIFYPARAMS pParams2)
 
 PACTION Action_Begin (ACTIONTYPE Type, PNOTIFYPARAMS pParams)
 {
-   for (size_t ii = 0; ii < l.cActions; ++ii)
+   size_t ii;
+   for (ii = 0; ii < l.cActions; ++ii)
       {
       if (!l.aActions[ii])
          break;

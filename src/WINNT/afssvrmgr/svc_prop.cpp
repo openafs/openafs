@@ -256,7 +256,8 @@ void Services_General_OnEndTask_InitDialog (HWND hDlg, LPTASKPACKET ptp)
       SetDlgItemText (hDlg, IDC_SVC_TYPE, szText);
 
       LPTSTR pszParams = CloneString (TASKDATA(ptp)->cs.szParams);
-      for (LPTSTR pch = pszParams; pch && *pch; ++pch)
+      LPTSTR pch;
+      for (pch = pszParams; pch && *pch; ++pch)
          {
          if (*pch == TEXT('\r') || *pch == TEXT('\t') || *pch == TEXT('\n'))
             *pch = TEXT(' ');

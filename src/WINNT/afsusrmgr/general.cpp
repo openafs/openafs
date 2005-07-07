@@ -156,7 +156,8 @@ void GetLocalSystemTime (LPSYSTEMTIME pst)
 
 void FormatServerKey (LPTSTR psz, PBYTE pKey)
 {
-   for (size_t ii = 0; ii < ENCRYPTIONKEYLENGTH; ++ii)
+   size_t ii;
+   for (ii = 0; ii < ENCRYPTIONKEYLENGTH; ++ii)
       {
       if (pKey[ii])
          break;
@@ -182,7 +183,8 @@ void FormatServerKey (LPTSTR psz, PBYTE pKey)
 
 BOOL ScanServerKey (PBYTE pKey, LPTSTR psz)
 {
-   for (size_t ich = 0; psz && *psz; )
+   size_t ich;
+   for (ich = 0; psz && *psz; )
       {
       if (ich == ENCRYPTIONKEYLENGTH)
          return FALSE;

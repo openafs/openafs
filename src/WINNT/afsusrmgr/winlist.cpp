@@ -43,7 +43,8 @@ void WindowList_Add (HWND hWnd, WINDOWLISTTYPE wlt, ASID idObject)
 {
    // See if this window is already in the list
    //
-   for (size_t ii = 0; ii < cWindowList; ++ii)
+   size_t ii;
+   for (ii = 0; ii < cWindowList; ++ii)
       {
       if (aWindowList[ ii ].hWnd == hWnd)
          return;

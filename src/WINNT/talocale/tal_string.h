@@ -104,7 +104,5 @@ extern void lstrzcpy (LPTSTR pszTarget, LPCTSTR pszSource, size_t cchMax);
 
 extern void lsplitpath (LPCTSTR pszSource,
                  LPTSTR pszDrive, LPTSTR pszPath, LPTSTR pszBase, LPTSTR pszExt);
-
-
 #endif
 

@@ -82,7 +82,8 @@ BOOL AfsClass_GetServerLogFile (LPIDENT lpiServer, LPTSTR pszLocal, LPTSTR pszRe
             //
             for (LPTSTR psz = wp.wpBosLogGet.pszLogData; psz && *psz; )
                {
-               for (LPTSTR pszNext = psz; *pszNext && (*pszNext != TEXT('\r')) && (*pszNext != TEXT('\n')); ++pszNext)
+               LPTSTR pszNext;
+               for (pszNext = psz; *pszNext && (*pszNext != TEXT('\r')) && (*pszNext != TEXT('\n')); ++pszNext)
                   ;
                DWORD cbWrite;
                DWORD cbWrote;
@@ -2495,7 +2496,8 @@ size_t AfsClass_AdminList_AddEntry (LPADMINLIST lpList, LPTSTR pszAdmin)
 
    if (lpList)
       {
-      for (size_t iEntry = 0; iEntry < lpList->cEntries; ++iEntry)
+      size_t iEntry;
+      for (iEntry = 0; iEntry < lpList->cEntries; ++iEntry)
          {
          if (!lpList->aEntries[ iEntry ].szAdmin[0])
             break;
@@ -3610,7 +3612,8 @@ size_t AfsClass_HostList_AddEntry (LPHOSTLIST lpList, LPTSTR pszHost)
 
    if (lpList)
       {
-      for (size_t iEntry = 0; iEntry < lpList->cEntries; ++iEntry)
+      size_t iEntry;
+      for (iEntry = 0; iEntry < lpList->cEntries; ++iEntry)
          {
          if (!lpList->aEntries[ iEntry ].szHost[0])
             break;

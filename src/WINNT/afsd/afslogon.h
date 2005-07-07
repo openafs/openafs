@@ -29,6 +29,7 @@ SOFTWARE.
 #include <windows.h>
 #include <npapi.h>
 #include <ntsecapi.h>
+#include <tchar.h>
 #include <strsafe.h>
 
 

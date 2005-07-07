@@ -162,7 +162,8 @@ BOOL CALLBACK DateProc (HWND hDate, UINT msg, WPARAM wp, LPARAM lp)
 
    if (msg == WM_CREATE)
       {
-      for (size_t iDate = 0; iDate < cDate; ++iDate)
+      size_t iDate;
+      for (iDate = 0; iDate < cDate; ++iDate)
          {
          if (aDate[ iDate ].hDate == NULL)
             break;

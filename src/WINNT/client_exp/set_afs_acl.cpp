@@ -99,7 +99,8 @@ BOOL CSetAfsAcl::OnInitDialog()
 	m_NormalRights.SetTabStops(58);
 	m_NegativeRights.SetTabStops(58);
 
-	for (int i = 0; i < m_Normal.GetSize(); i += 2)
+        int i;
+	for (i = 0; i < m_Normal.GetSize(); i += 2)
 		m_NormalRights.AddString(m_Normal[i + 1] + "\t" + m_Normal[i]);
 
 	for (i = 0; i < m_Negative.GetSize(); i += 2)

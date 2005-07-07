@@ -281,7 +281,8 @@ LPCELLLIST AfsAppLib_GetCellList (HKEY hkBase, LPTSTR pszRegPath)
    TCHAR szDefCell[ cchNAME ];
    if (AfsAppLib_GetLocalCell (szDefCell))
       {
-      for (size_t iclDef = 0; iclDef < lpcl->nCells; ++iclDef)
+      size_t iclDef;
+      for (iclDef = 0; iclDef < lpcl->nCells; ++iclDef)
          {
          if (lpcl->aCells[ iclDef ] == NULL)
             continue;

@@ -463,7 +463,8 @@ void PrefsTab_OnImport (HWND hDlg)
                   // and the ranking.
                   //
                   TCHAR szServer[ MAX_PATH ];
-                  for (LPTSTR pszOut = szServer; *pszStart && !iswhite(*pszStart); )
+                  LPTSTR pszOut;
+                  for (pszOut = szServer; *pszStart && !iswhite(*pszStart); )
                      *pszOut++ = *pszStart++;
                   *pszOut = TEXT('\0');
 
@@ -502,7 +503,8 @@ void PrefsTab_MergeServerPrefs (PSERVERPREFS pGlobal, PSERVERPREFS pAdd)
    LPHASHLIST pList = New (HASHLIST);
    LPHASHLISTKEY pKey = pList->CreateKey (TEXT("IP Address"), IPKey_Compare, IPKey_HashObject, IPKey_HashData);
 
-   for (size_t ii = 0; ii < pGlobal->cPrefs; ++ii)
+   size_t ii;
+   for (ii = 0; ii < pGlobal->cPrefs; ++ii)
       {
       if (!pGlobal->aPrefs[ ii ].ipServer)
          continue;
@@ -544,7 +546,8 @@ void PrefsTab_AddItem (HWND hDlg, PSERVERPREF pPref, BOOL fSelect)
    BOOL fVLServers = IsDlgButtonChecked (hDlg, IDC_SHOW_VLS);
    PSERVERPREFS pPrefs = (fVLServers) ? g.Configuration.pVLServers : g.Configuration.pFServers;
 
-   for (size_t ii = 0; ii < pPrefs->cPrefs; ++ii)
+   size_t ii;
+   for (ii = 0; ii < pPrefs->cPrefs; ++ii)
       {
       if (pPrefs->aPrefs[ ii ].ipServer == pPref->ipServer)
          break;

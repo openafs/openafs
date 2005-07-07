@@ -119,7 +119,8 @@ BOOL REGEXP::Compile (LPCTSTR pszExpr)
 
    // Start stripping characters from the expression
    //
-   for (BOOL rc = TRUE; rc; )
+   BOOL rc;
+   for (rc = TRUE; rc; )
       {
       TCHAR ch;
 

@@ -227,7 +227,8 @@ static BOOL AreWeLastDBServer(BOOL& bLast, afs_status_t& nStatus)
 
 	char *psz = pszCellServDB;
 
-	for (int i = 0; *psz; psz += strlen(psz) + 1)
+        int i;
+	for (i = 0; *psz; psz += strlen(psz) + 1)
 		i++;
 
 	if (i == 1) {
@@ -430,7 +431,7 @@ static void ShowMsg(UINT uiMsgID)
 
 static void NextStep(UINT uiMsgID)
 {
-	static nCurStep = 1;
+	static int nCurStep = 1;
 
 	if (bCancel)
 		return;

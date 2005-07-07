@@ -271,7 +271,8 @@ void Server_Hosts_OnAddEntry (HWND hDlg, LPSVR_HOSTS_PARAMS lpp)
 
    if (ModalDialogParam (IDD_SVR_ADDHOST, hDlg, (DLGPROC)Server_AddHost_DlgProc, (LPARAM)pAdd) == IDOK)
       {
-      for (size_t iEntry = 0; iEntry < lpp->lpList->cEntries; ++iEntry)
+      size_t iEntry;
+      for (iEntry = 0; iEntry < lpp->lpList->cEntries; ++iEntry)
          {
          LPHOSTLISTENTRY pEntry = &lpp->lpList->aEntries[ iEntry ];
          if (pEntry->szHost[0] == TEXT('\0'))

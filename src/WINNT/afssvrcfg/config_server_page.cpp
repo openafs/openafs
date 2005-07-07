@@ -119,37 +119,37 @@ BOOL CALLBACK ConfigServerPageDlgProc(HWND hwndDlg, UINT msg, WPARAM wp, LPARAM 
 #define IF_WIZ(x)	{ if (g_pWiz) (x); }
 
 // Global variables
-static HWND			m_hDlg =			0;		// Window handle of this dialog
-static BOOL			m_bConfiguring =	FALSE;	// TRUE if configuring
-static BOOL			m_bConfigured =		FALSE;	// TRUE if configuration was successful
-static BOOL			m_bConfigFailed =	FALSE;	// TRUE if configuration failed
-static BOOL			m_bCheckCancel =	FALSE;	// TRUE if user pressed cancel - we will ask for confirmation
-static BOOL			m_bCancel =			FALSE;	// TRUE if user confirmed cancel - we will cancel configuration
-static void*		m_hvosServer =		0;		// vos library server handle
-static const		MAX_STEPS =			34;		// Max number of config steps
-static afs_status_t	m_nStatus;					// Error code if a cfg library function fails
-static int			m_nResult;					// Boolean return code from cfg library calls
-static int			m_nNumSteps;				// Number of config steps that will be performed
-static BOOL			m_bDbServersRestarted;		// TRUE if all Database servers were restarted
-static BOOL			m_bMustChangeClientCell;	// TRUE if client is in different cell than server
+static HWND		m_hDlg =		0;	// Window handle of this dialog
+static BOOL		m_bConfiguring =	FALSE;	// TRUE if configuring
+static BOOL		m_bConfigured =		FALSE;	// TRUE if configuration was successful
+static BOOL		m_bConfigFailed =	FALSE;	// TRUE if configuration failed
+static BOOL		m_bCheckCancel =	FALSE;	// TRUE if user pressed cancel - we will ask for confirmation
+static BOOL		m_bCancel =		FALSE;	// TRUE if user confirmed cancel - we will cancel configuration
+static void*		m_hvosServer =		0;	// vos library server handle
+static const int	MAX_STEPS =		34;	// Max number of config steps
+static afs_status_t	m_nStatus;			// Error code if a cfg library function fails
+static int		m_nResult;			// Boolean return code from cfg library calls
+static int		m_nNumSteps;			// Number of config steps that will be performed
+static BOOL		m_bDbServersRestarted;		// TRUE if all Database servers were restarted
+static BOOL		m_bMustChangeClientCell;	// TRUE if client is in different cell than server
 static HANDLE		m_hCellServDBUpdateEvent;
-static LPCTSTR      m_pszCellServDBUpdateEventName = TEXT("CellServDBUpdateEvent");
-static const 		m_CallBackID = 6;
-static UINT			m_nPartitionID = INVALID_PARTITION_ID;
-static BOOL			m_bCellServDbUpdateErr = FALSE;
+static LPCTSTR          m_pszCellServDBUpdateEventName = TEXT("CellServDBUpdateEvent");
+static const int	m_CallBackID = 6;
+static UINT		m_nPartitionID = INVALID_PARTITION_ID;
+static BOOL		m_bCellServDbUpdateErr = FALSE;
 static TCHAR		m_szCellServDbUpdateErrMsg[cchRESOURCE];
-static LONG			m_nServerUpdates = 0;
+static LONG		m_nServerUpdates = 0;
 static char *		m_pszCellDbHosts = 0;
-static BOOL			m_bNoAuthMode = TRUE;
+static BOOL		m_bNoAuthMode = TRUE;
 static char 		m_szVicepName[9];
-static BOOL			m_bMustExit;
-static BOOL			m_bCfgInfoInvalidated;
-static BOOL			m_bUnconfiguringLastDBServer;
-static BOOL         m_bClientTokensSet;
-static BOOL         m_bRootAfsDriveMappingCreated;
-static char         m_szDriveToMapTo[3];
-static BOOL         m_bWeCreatedRootAfs;
-static BOOL         m_bWeCreatedRootCell;
+static BOOL		m_bMustExit;
+static BOOL		m_bCfgInfoInvalidated;
+static BOOL		m_bUnconfiguringLastDBServer;
+static BOOL             m_bClientTokensSet;
+static BOOL             m_bRootAfsDriveMappingCreated;
+static char             m_szDriveToMapTo[3];
+static BOOL             m_bWeCreatedRootAfs;
+static BOOL             m_bWeCreatedRootCell;
 
 static CRITICAL_SECTION m_CritSec;
 

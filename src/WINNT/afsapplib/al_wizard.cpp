@@ -260,7 +260,8 @@ void WIZARD::SetState (int stNew, BOOL fForce)
       {
       if (stOriginal <= stNew)
          {
-         for (int st = stNew+1; st < (int)m_cStates; ++st)
+         int st;
+         for (st = stNew+1; st < (int)m_cStates; ++st)
             {
             LPWIZARD_STATE pState;
             if ((pState = FindState (st)) != NULL)
@@ -277,7 +278,8 @@ void WIZARD::SetState (int stNew, BOOL fForce)
          }
       else // (moving backwards?)
          {
-         for (int st = stNew-1; st >= 0; --st)
+         int st;
+         for (st = stNew-1; st >= 0; --st)
             {
             LPWIZARD_STATE pState;
             if ((pState = FindState (st)) != NULL)
@@ -574,7 +576,8 @@ void WIZARD::GeneratePalette (LPRGBQUAD argb)
       pPal->palVersion = 0x300;
       pPal->palNumEntries = 256;
 
-      for (size_t ii = 0; ii < 256; ++ii)
+      size_t ii;
+      for (ii = 0; ii < 256; ++ii)
          {
          pPal->palPalEntry[ ii ].peRed   = (argb) ? argb[ ii ].rgbRed : 0;
          pPal->palPalEntry[ ii ].peGreen = (argb) ? argb[ ii ].rgbGreen : 0;
@@ -583,8 +586,8 @@ void WIZARD::GeneratePalette (LPRGBQUAD argb)
          }
 
       for (COLORREF clr = clrWASH_DARKEST; clr <= clrWASH_BRIGHTEST; clr += clrWASH_INCREMENT)
-         {
-         for (size_t ii = 0; ii < 256; ++ii)
+         {            
+         for (ii = 0; ii < 256; ++ii)
             {
             if ( (pPal->palPalEntry[ ii ].peRed   == GetRValue (clr)) &&
                  (pPal->palPalEntry[ ii ].peGreen == GetGValue (clr)) &&
@@ -593,7 +596,7 @@ void WIZARD::GeneratePalette (LPRGBQUAD argb)
             }
          if (ii == 256)
             {
-            for (size_t ii = 10; ii < 246; ++ii)
+            for (ii = 10; ii < 246; ++ii)
                {
                if ( (pPal->palPalEntry[ ii ].peRed == 0) &&
                     (pPal->palPalEntry[ ii ].peGreen == 0) &&

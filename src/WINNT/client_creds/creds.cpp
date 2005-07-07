@@ -312,7 +312,8 @@ int GetCurrentCredentials (void)
          // credentials within a certain cell under the certain name.
          // Stick that knowledge in our g.aCreds array.
          //
-         for (size_t iCreds = 0; iCreds < g.cCreds; ++iCreds)
+         size_t iCreds;
+         for (iCreds = 0; iCreds < g.cCreds; ++iCreds)
             {
             if (!lstrcmpi (g.aCreds[ iCreds ].szCell, szCell))
                break;

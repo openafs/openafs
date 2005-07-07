@@ -74,7 +74,8 @@ void cdecl CommandLineHelp (int ids, LPTSTR pszFormat = NULL, ...);
 
 CMDLINEOP ParseCommandLine (LPTSTR pszCmdLine)
 {
-   for (size_t ii = 0; ii < nSWITCHES; ++ii)
+   size_t ii;
+   for (ii = 0; ii < nSWITCHES; ++ii)
       aSWITCHES[ ii ].fPresent = FALSE;
 
    // Search through pszCmdLine for switches; each switch must be
@@ -121,7 +122,8 @@ CMDLINEOP ParseCommandLine (LPTSTR pszCmdLine)
          {
          TCHAR szCopy[ cchRESOURCE ];
          lstrcpy (szCopy, pszCmdLine);
-         for (LPTSTR pch = szCopy;
+         LPTSTR pch;
+         for (pch = szCopy;
               *pch && !iswhite(*pch) && !(*pch == TEXT('/')) && !(*pch == TEXT(':'));
               ++pch)
             ;
@@ -161,7 +163,8 @@ CMDLINEOP ParseCommandLine (LPTSTR pszCmdLine)
             return opCLOSEAPP;
             }
          BOOL fQuoted = FALSE;
-         for (LPTSTR pszTarget = aSWITCHES[ ii ].szValue;
+         LPTSTR pszTarget;
+         for (pszTarget = aSWITCHES[ ii ].szValue;
               *pszCmdLine && !(*pszCmdLine == TEXT('/') && !fQuoted)
                           && !(iswhite(*pszCmdLine) && !fQuoted); )
             {

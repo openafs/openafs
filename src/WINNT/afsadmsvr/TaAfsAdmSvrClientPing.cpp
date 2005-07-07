@@ -51,7 +51,8 @@ void StartPingThread (DWORD idClient)
 {
    asc_Enter();
 
-   for (size_t ii = 0; ii < l.cdwClients; ++ii)
+   size_t ii;
+   for (ii = 0; ii < l.cdwClients; ++ii)
       {
       if (!l.adwClients[ ii ])
          break;

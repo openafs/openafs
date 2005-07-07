@@ -93,7 +93,8 @@ size_t nTargets = 0;
 
 BOOL Subclass_AddHook (HWND hTarget, PVOID wndProc)
 {
-   for (size_t iTarget = 0; iTarget < nTargets; ++iTarget)
+   size_t iTarget;
+   for (iTarget = 0; iTarget < nTargets; ++iTarget)
       {
       if (aTargets[ iTarget ].hTarget == hTarget)
          break;
@@ -114,8 +115,8 @@ BOOL Subclass_AddHook (HWND hTarget, PVOID wndProc)
 
    aTargets[ iTarget ].hTarget = hTarget;
 
-
-   for (size_t iHook = 0; iHook < aTargets[iTarget].nHooks; ++iHook)
+   size_t iHook;
+   for (iHook = 0; iHook < aTargets[iTarget].nHooks; ++iHook)
       {
       if (aTargets[ iTarget ].aHooks[ iHook ].wndProc == wndProc)
          break;
@@ -150,14 +151,16 @@ BOOL Subclass_AddHook (HWND hTarget, PVOID wndProc)
 
 void Subclass_RemoveHook (HWND hTarget, PVOID wndProc)
 {
-   for (size_t iTarget = 0; iTarget < nTargets; ++iTarget)
+   size_t iTarget;
+   for (iTarget = 0; iTarget < nTargets; ++iTarget)
       {
       if (aTargets[ iTarget ].hTarget == hTarget)
          break;
       }
    if (iTarget < nTargets)
       {
-      for (size_t iHook = 0; iHook < aTargets[iTarget].nHooks; ++iHook)
+      size_t iHook;
+      for (iHook = 0; iHook < aTargets[iTarget].nHooks; ++iHook)
          {
          if (aTargets[ iTarget ].aHooks[ iHook ].wndProc == wndProc)
             break;
@@ -183,7 +186,8 @@ void Subclass_RemoveHook (HWND hTarget, PVOID wndProc)
 
 PVOID Subclass_FindNextHook (HWND hTarget, PVOID wndProc)
 {
-   for (size_t iTarget = 0; iTarget < nTargets; ++iTarget)
+   size_t iTarget;
+   for (iTarget = 0; iTarget < nTargets; ++iTarget)
       {
       if (aTargets[ iTarget ].hTarget == hTarget)
          break;
@@ -191,7 +195,8 @@ PVOID Subclass_FindNextHook (HWND hTarget, PVOID wndProc)
    if (iTarget >= nTargets)
       return NULL;
 
-   for (size_t iHook = 0; iHook < aTargets[iTarget].nHooks; ++iHook)
+   size_t iHook;
+   for (iHook = 0; iHook < aTargets[iTarget].nHooks; ++iHook)
       {
       if (aTargets[ iTarget ].aHooks[ iHook ].wndProc == wndProc)
          break;
@@ -211,7 +216,8 @@ PVOID Subclass_FindNextHook (HWND hTarget, PVOID wndProc)
 
 LONG CALLBACK Subclass_WndProc (HWND hTarget, UINT msg, WPARAM wp, LPARAM lp)
 {
-   for (size_t iTarget = 0; iTarget < nTargets; ++iTarget)
+   size_t iTarget;
+   for (iTarget = 0; iTarget < nTargets; ++iTarget)
       {
       if (aTargets[ iTarget ].hTarget == hTarget)
          break;
@@ -219,7 +225,8 @@ LONG CALLBACK Subclass_WndProc (HWND hTarget, UINT msg, WPARAM wp, LPARAM lp)
    if (iTarget >= nTargets)
       return DefWindowProc (hTarget, msg, wp, lp);
 
-   for (size_t iHook = 0; iHook < aTargets[iTarget].nHooks; ++iHook)
+   size_t iHook;
+   for (iHook = 0; iHook < aTargets[iTarget].nHooks; ++iHook)
       {
       if (aTargets[ iTarget ].aHooks[ iHook ].wndProc != NULL)
          break;

@@ -53,7 +53,8 @@ LONG *FindLongByWindow (HWND hWnd)
 
    EnterCriticalSection (pcsWindowList);
 
-   for (size_t ii = 0; !lpdw && ii < cWindowList; ++ii)
+   size_t ii;
+   for (ii = 0; !lpdw && ii < cWindowList; ++ii)
       {
       if (aWindowList[ ii ].hWnd == hWnd)
          lpdw = &aWindowList[ ii ].dw;
