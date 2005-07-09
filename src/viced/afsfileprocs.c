@@ -814,7 +814,7 @@ Check_PermissionRights(Vnode * targetptr, struct client *client,
 #endif
 	} else {		/*  !VanillaUser(client) && !FetchData */
 
-	    osi_audit(PrivilegeEvent, 0, AUD_INT,
+	    osi_audit(PrivilegeEvent, 0, AUD_ID,
 		      (client ? client->ViceId : 0), AUD_INT, CallingRoutine,
 		      AUD_END);
 	}
@@ -832,13 +832,13 @@ Check_PermissionRights(Vnode * targetptr, struct client *client,
 		else if (VanillaUser(client))
 		    return (EPERM);	/* Was EACCES */
 		else
-		    osi_audit(PrivilegeEvent, 0, AUD_INT,
+		    osi_audit(PrivilegeEvent, 0, AUD_ID,
 			      (client ? client->ViceId : 0), AUD_INT,
 			      CallingRoutine, AUD_END);
 	    }
 	} else {
 	    if (CallingRoutine != CHK_STOREDATA && !VanillaUser(client)) {
-		osi_audit(PrivilegeEvent, 0, AUD_INT,
+		osi_audit(PrivilegeEvent, 0, AUD_ID,
 			  (client ? client->ViceId : 0), AUD_INT,
 			  CallingRoutine, AUD_END);
 	    } else {
@@ -858,7 +858,7 @@ Check_PermissionRights(Vnode * targetptr, struct client *client,
 			else if (VanillaUser(client))
 			    return (EPERM);	/* Was EACCES */
 			else
-			    osi_audit(PrivilegeEvent, 0, AUD_INT,
+			    osi_audit(PrivilegeEvent, 0, AUD_ID,
 				      (client ? client->ViceId : 0), AUD_INT,
 				      CallingRoutine, AUD_END);
 		    }
@@ -874,7 +874,7 @@ Check_PermissionRights(Vnode * targetptr, struct client *client,
 			if (VanillaUser(client))
 			    return (EACCES);
 			else
-			    osi_audit(PrivSetID, 0, AUD_INT,
+			    osi_audit(PrivSetID, 0, AUD_ID,
 				      (client ? client->ViceId : 0), AUD_INT,
 				      CallingRoutine, AUD_END);
 		    }
@@ -914,7 +914,7 @@ Check_PermissionRights(Vnode * targetptr, struct client *client,
 			    if (VanillaUser(client))
 				return (EACCES);
 			    else
-				osi_audit(PrivilegeEvent, 0, AUD_INT,
+				osi_audit(PrivilegeEvent, 0, AUD_ID,
 					  (client ? client->ViceId : 0),
 					  AUD_INT, CallingRoutine, AUD_END);
 			}
@@ -1502,12 +1502,12 @@ Update_TargetVnodeStatus(Vnode * targetptr, afs_uint32 Caller,
 	    targetptr->disk.modeBits = modebits;
 	    switch (Caller) {
 	    case TVS_SDATA:
-		osi_audit(PrivSetID, 0, AUD_INT, client->ViceId, AUD_INT,
+		osi_audit(PrivSetID, 0, AUD_ID, client->ViceId, AUD_INT,
 			  CHK_STOREDATA, AUD_END);
 		break;
 	    case TVS_CFILE:
 	    case TVS_SSTATUS:
-		osi_audit(PrivSetID, 0, AUD_INT, client->ViceId, AUD_INT,
+		osi_audit(PrivSetID, 0, AUD_ID, client->ViceId, AUD_INT,
 			  CHK_STORESTATUS, AUD_END);
 		break;
 	    default:
@@ -2081,7 +2081,7 @@ common_FetchData64(struct rx_call *acall, struct AFSFid *Fid,
     struct client *client;	/* pointer to the client data */
     struct rx_connection *tcon;	/* the connection we're part of */
     afs_int32 rights, anyrights;	/* rights for this and any user */
-    struct client *t_client;	/* tmp ptr to client data */
+    struct client *t_client = NULL;	/* tmp ptr to client data */
     struct in_addr logHostAddr;	/* host ip holder for inet_ntoa */
 #if FS_STATS_DETAILED
     struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
@@ -2288,7 +2288,9 @@ common_FetchData64(struct rx_call *acall, struct AFSFid *Fid,
     }
 #endif /* FS_STATS_DETAILED */
 
-    osi_auditU(acall, FetchDataEvent, errorCode, AUD_FID, Fid, AUD_END);
+    osi_auditU(acall, FetchDataEvent, errorCode, 
+               AUD_ID, t_client ? t_client->ViceId : 0,
+               AUD_FID, Fid, AUD_END);
     return (errorCode);
 
 }				/*SRXAFS_FetchData */
@@ -2298,12 +2300,8 @@ SRXAFS_FetchData(struct rx_call * acall, struct AFSFid * Fid, afs_int32 Pos,
 		 afs_int32 Len, struct AFSFetchStatus * OutStatus,
 		 struct AFSCallBack * CallBack, struct AFSVolSync * Sync)
 {
-    int code;
-
-    code =
-	common_FetchData64(acall, Fid, Pos, Len, OutStatus, CallBack, Sync,
-			   0);
-    return code;
+    return common_FetchData64(acall, Fid, Pos, Len, OutStatus, CallBack, 
+                              Sync, 0);
 }
 
 afs_int32
@@ -2346,7 +2344,7 @@ SRXAFS_FetchACL(struct rx_call * acall, struct AFSFid * Fid,
     struct client *client;	/* pointer to the client data */
     afs_int32 rights, anyrights;	/* rights for this and any user */
     struct rx_connection *tcon = rx_ConnectionOf(acall);
-    struct client *t_client;	/* tmp ptr to client data */
+    struct client *t_client = NULL;	/* tmp ptr to client data */
     struct in_addr logHostAddr;	/* host ip holder for inet_ntoa */
 #if FS_STATS_DETAILED
     struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
@@ -2441,7 +2439,9 @@ SRXAFS_FetchACL(struct rx_call * acall, struct AFSFid * Fid,
     }
 #endif /* FS_STATS_DETAILED */
 
-    osi_auditU(acall, FetchACLEvent, errorCode, AUD_FID, Fid, AUD_END);
+    osi_auditU(acall, FetchACLEvent, errorCode, 
+               AUD_ID, t_client ? t_client->ViceId : 0,
+               AUD_FID, Fid, AUD_END);
     return errorCode;
 }				/*SRXAFS_FetchACL */
 
@@ -2462,7 +2462,7 @@ SAFSS_FetchStatus(struct rx_call *acall, struct AFSFid *Fid,
     Volume *volptr = 0;		/* pointer to the volume */
     struct client *client;	/* pointer to the client data */
     afs_int32 rights, anyrights;	/* rights for this and any user */
-    struct client *t_client;	/* tmp ptr to client data */
+    struct client *t_client = NULL;	/* tmp ptr to client data */
     struct in_addr logHostAddr;	/* host ip holder for inet_ntoa */
     struct rx_connection *tcon = rx_ConnectionOf(acall);
 
@@ -2539,6 +2539,7 @@ SRXAFS_BulkStatus(struct rx_call * acall, struct AFSCBFids * Fids,
     afs_int32 rights, anyrights;	/* rights for this and any user */
     register struct AFSFid *tfid;	/* file id we're dealing with now */
     struct rx_connection *tcon = rx_ConnectionOf(acall);
+    struct client *t_client = NULL;     /* tmp pointer to the client data */
 #if FS_STATS_DETAILED
     struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
     struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
@@ -2640,6 +2641,8 @@ SRXAFS_BulkStatus(struct rx_call * acall, struct AFSCBFids * Fids,
 			   volptr);
     errorCode = CallPostamble(tcon, errorCode);
 
+    t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
+
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
     if (errorCode == 0) {
@@ -2660,8 +2663,9 @@ SRXAFS_BulkStatus(struct rx_call * acall, struct AFSCBFids * Fids,
 
   Audit_and_Return:
     ViceLog(2, ("SAFS_BulkStatus	returns	%d\n", errorCode));
-    osi_auditU(acall, BulkFetchStatusEvent, errorCode, AUD_FIDS, Fids,
-	       AUD_END);
+    osi_auditU(acall, BulkFetchStatusEvent, errorCode, 
+               AUD_ID, t_client ? t_client->ViceId : 0,
+               AUD_FIDS, Fids, AUD_END);
     return errorCode;
 
 }				/*SRXAFS_BulkStatus */
@@ -2682,6 +2686,7 @@ SRXAFS_InlineBulkStatus(struct rx_call * acall, struct AFSCBFids * Fids,
     afs_int32 rights, anyrights;	/* rights for this and any user */
     register struct AFSFid *tfid;	/* file id we're dealing with now */
     struct rx_connection *tcon;
+    struct client *t_client = NULL;	/* tmp ptr to client data */
     AFSFetchStatus *tstatus;
 #if FS_STATS_DETAILED
     struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
@@ -2799,6 +2804,8 @@ SRXAFS_InlineBulkStatus(struct rx_call * acall, struct AFSCBFids * Fids,
 			   volptr);
     errorCode = CallPostamble(tcon, errorCode);
 
+    t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
+
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
     if (errorCode == 0) {
@@ -2819,8 +2826,9 @@ SRXAFS_InlineBulkStatus(struct rx_call * acall, struct AFSCBFids * Fids,
 
   Audit_and_Return:
     ViceLog(2, ("SAFS_InlineBulkStatus	returns	%d\n", errorCode));
-    osi_auditU(acall, InlineBulkFetchStatusEvent, errorCode, AUD_FIDS, Fids,
-	       AUD_END);
+    osi_auditU(acall, InlineBulkFetchStatusEvent, errorCode, 
+               AUD_ID, t_client ? t_client->ViceId : 0,
+               AUD_FIDS, Fids, AUD_END);
     return 0;
 
 }				/*SRXAFS_InlineBulkStatus */
@@ -2833,6 +2841,7 @@ SRXAFS_FetchStatus(struct rx_call * acall, struct AFSFid * Fid,
 {
     afs_int32 code;
     struct rx_connection *tcon;
+    struct client *t_client = NULL;	/* tmp ptr to client data */
 #if FS_STATS_DETAILED
     struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
     struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
@@ -2857,6 +2866,8 @@ SRXAFS_FetchStatus(struct rx_call * acall, struct AFSFid * Fid,
   Bad_FetchStatus:
     code = CallPostamble(tcon, code);
 
+    t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
+
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
     if (code == 0) {
@@ -2875,7 +2886,9 @@ SRXAFS_FetchStatus(struct rx_call * acall, struct AFSFid * Fid,
     }
 #endif /* FS_STATS_DETAILED */
 
-    osi_auditU(acall, FetchStatusEvent, code, AUD_FID, Fid, AUD_END);
+    osi_auditU(acall, FetchStatusEvent, code, 
+               AUD_ID, t_client ? t_client->ViceId : 0,
+               AUD_FID, Fid, AUD_END);
     return code;
 
 }				/*SRXAFS_FetchStatus */
@@ -2895,7 +2908,7 @@ common_StoreData64(struct rx_call *acall, struct AFSFid *Fid,
     Volume *volptr = 0;		/* pointer to the volume header */
     struct client *client;	/* pointer to client structure */
     afs_int32 rights, anyrights;	/* rights for this and any user */
-    struct client *t_client;	/* tmp ptr to client data */
+    struct client *t_client = NULL;	/* tmp ptr to client data */
     struct in_addr logHostAddr;	/* host ip holder for inet_ntoa */
     struct rx_connection *tcon;
 #if FS_STATS_DETAILED
@@ -3094,10 +3107,10 @@ common_StoreData64(struct rx_call *acall, struct AFSFid *Fid,
 	FS_UNLOCK;
     }
 #endif /* FS_STATS_DETAILED */
-
-    osi_auditU(acall, StoreDataEvent, errorCode, AUD_FID, Fid, AUD_END);
+    osi_auditU(acall, StoreDataEvent, errorCode, 
+               AUD_ID, t_client ? t_client->ViceId : 0,
+               AUD_FID, Fid, AUD_END);
     return (errorCode);
-
 }				/*common_StoreData64 */
 
 afs_int32
@@ -3106,13 +3119,8 @@ SRXAFS_StoreData(struct rx_call * acall, struct AFSFid * Fid,
 		 afs_uint32 Length, afs_uint32 FileLength,
 		 struct AFSFetchStatus * OutStatus, struct AFSVolSync * Sync)
 {
-    int code;
-
-    code =
-	common_StoreData64(acall, Fid, InStatus, Pos, Length, FileLength,
-			   OutStatus, Sync);
-    return code;
-
+    return common_StoreData64(acall, Fid, InStatus, Pos, Length, FileLength,
+	                      OutStatus, Sync);
 }				/*SRXAFS_StoreData */
 
 afs_int32
@@ -3162,7 +3170,7 @@ SRXAFS_StoreACL(struct rx_call * acall, struct AFSFid * Fid,
     struct client *client;	/* pointer to client structure */
     afs_int32 rights, anyrights;	/* rights for this and any user */
     struct rx_connection *tcon;
-    struct client *t_client;	/* tmp ptr to client data */
+    struct client *t_client = NULL;	/* tmp ptr to client data */
     struct in_addr logHostAddr;	/* host ip holder for inet_ntoa */
 #if FS_STATS_DETAILED
     struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
@@ -3256,7 +3264,9 @@ SRXAFS_StoreACL(struct rx_call * acall, struct AFSFid * Fid,
     }
 #endif /* FS_STATS_DETAILED */
 
-    osi_auditU(acall, StoreACLEvent, errorCode, AUD_FID, Fid, AUD_END);
+    osi_auditU(acall, StoreACLEvent, errorCode, 
+               AUD_ID, t_client ? t_client->ViceId : 0,
+               AUD_FID, Fid, AUD_ACL, AccessList->AFSOpaque_val, AUD_END);
     return errorCode;
 
 }				/*SRXAFS_StoreACL */
@@ -3277,7 +3287,7 @@ SAFSS_StoreStatus(struct rx_call *acall, struct AFSFid *Fid,
     Volume *volptr = 0;		/* pointer to the volume header */
     struct client *client;	/* pointer to client structure */
     afs_int32 rights, anyrights;	/* rights for this and any user */
-    struct client *t_client;	/* tmp ptr to client data */
+    struct client *t_client = NULL;	/* tmp ptr to client data */
     struct in_addr logHostAddr;	/* host ip holder for inet_ntoa */
     struct rx_connection *tcon = rx_ConnectionOf(acall);
 
@@ -3353,6 +3363,7 @@ SRXAFS_StoreStatus(struct rx_call * acall, struct AFSFid * Fid,
 {
     afs_int32 code;
     struct rx_connection *tcon;
+    struct client *t_client = NULL;	/* tmp ptr to client data */
 #if FS_STATS_DETAILED
     struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
     struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
@@ -3377,6 +3388,8 @@ SRXAFS_StoreStatus(struct rx_call * acall, struct AFSFid * Fid,
   Bad_StoreStatus:
     code = CallPostamble(tcon, code);
 
+    t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
+
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
     if (code == 0) {
@@ -3395,7 +3408,9 @@ SRXAFS_StoreStatus(struct rx_call * acall, struct AFSFid * Fid,
     }
 #endif /* FS_STATS_DETAILED */
 
-    osi_auditU(acall, StoreStatusEvent, code, AUD_FID, Fid, AUD_END);
+    osi_auditU(acall, StoreStatusEvent, code, 
+               AUD_ID, t_client ? t_client->ViceId : 0,
+               AUD_FID, Fid, AUD_END);
     return code;
 
 }				/*SRXAFS_StoreStatus */
@@ -3509,6 +3524,7 @@ SRXAFS_RemoveFile(struct rx_call * acall, struct AFSFid * DirFid, char *Name,
 {
     afs_int32 code;
     struct rx_connection *tcon;
+    struct client *t_client = NULL;	/* tmp ptr to client data */
 #if FS_STATS_DETAILED
     struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
     struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
@@ -3533,6 +3549,8 @@ SRXAFS_RemoveFile(struct rx_call * acall, struct AFSFid * DirFid, char *Name,
   Bad_RemoveFile:
     code = CallPostamble(tcon, code);
 
+    t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
+
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
     if (code == 0) {
@@ -3551,8 +3569,9 @@ SRXAFS_RemoveFile(struct rx_call * acall, struct AFSFid * DirFid, char *Name,
     }
 #endif /* FS_STATS_DETAILED */
 
-    osi_auditU(acall, RemoveFileEvent, code, AUD_FID, DirFid, AUD_STR, Name,
-	       AUD_END);
+    osi_auditU(acall, RemoveFileEvent, code, 
+               AUD_ID, t_client ? t_client->ViceId : 0,
+               AUD_FID, DirFid, AUD_STR, Name, AUD_END);
     return code;
 
 }				/*SRXAFS_RemoveFile */
@@ -3671,6 +3690,7 @@ SRXAFS_CreateFile(struct rx_call * acall, struct AFSFid * DirFid, char *Name,
 {
     afs_int32 code;
     struct rx_connection *tcon;
+    struct client *t_client = NULL;	/* tmp ptr to client data */
 #if FS_STATS_DETAILED
     struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
     struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
@@ -3697,6 +3717,8 @@ SRXAFS_CreateFile(struct rx_call * acall, struct AFSFid * DirFid, char *Name,
   Bad_CreateFile:
     code = CallPostamble(tcon, code);
 
+    t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
+
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
     if (code == 0) {
@@ -3715,8 +3737,9 @@ SRXAFS_CreateFile(struct rx_call * acall, struct AFSFid * DirFid, char *Name,
     }
 #endif /* FS_STATS_DETAILED */
 
-    osi_auditU(acall, CreateFileEvent, code, AUD_FID, DirFid, AUD_STR, Name,
-	       AUD_END);
+    osi_auditU(acall, CreateFileEvent, code, 
+               AUD_ID, t_client ? t_client->ViceId : 0,
+               AUD_FID, DirFid, AUD_STR, Name, AUD_END);
     return code;
 
 }				/*SRXAFS_CreateFile */
@@ -4156,6 +4179,7 @@ SRXAFS_Rename(struct rx_call * acall, struct AFSFid * OldDirFid,
 {
     afs_int32 code;
     struct rx_connection *tcon;
+    struct client *t_client = NULL;	/* tmp ptr to client data */
 #if FS_STATS_DETAILED
     struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
     struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
@@ -4182,6 +4206,8 @@ SRXAFS_Rename(struct rx_call * acall, struct AFSFid * OldDirFid,
   Bad_Rename:
     code = CallPostamble(tcon, code);
 
+    t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
+
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
     if (code == 0) {
@@ -4200,8 +4226,10 @@ SRXAFS_Rename(struct rx_call * acall, struct AFSFid * OldDirFid,
     }
 #endif /* FS_STATS_DETAILED */
 
-    osi_auditU(acall, RenameFileEvent, code, AUD_FID, OldDirFid, AUD_STR,
-	       OldName, AUD_FID, NewDirFid, AUD_STR, NewName, AUD_END);
+    osi_auditU(acall, RenameFileEvent, code, 
+               AUD_ID, t_client ? t_client->ViceId : 0,
+               AUD_FID, OldDirFid, AUD_STR, OldName, 
+               AUD_FID, NewDirFid, AUD_STR, NewName, AUD_END);
     return code;
 
 }				/*SRXAFS_Rename */
@@ -4356,6 +4384,7 @@ SRXAFS_Symlink(acall, DirFid, Name, LinkContents, InStatus, OutFid,
 {
     afs_int32 code;
     struct rx_connection *tcon;
+    struct client *t_client = NULL;	/* tmp ptr to client data */
 #if FS_STATS_DETAILED
     struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
     struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
@@ -4382,6 +4411,8 @@ SRXAFS_Symlink(acall, DirFid, Name, LinkContents, InStatus, OutFid,
   Bad_Symlink:
     code = CallPostamble(tcon, code);
 
+    t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
+
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
     if (code == 0) {
@@ -4400,8 +4431,10 @@ SRXAFS_Symlink(acall, DirFid, Name, LinkContents, InStatus, OutFid,
     }
 #endif /* FS_STATS_DETAILED */
 
-    osi_auditU(acall, SymlinkEvent, code, AUD_FID, DirFid, AUD_STR, Name,
-	       AUD_END);
+    osi_auditU(acall, SymlinkEvent, code, 
+               AUD_ID, t_client ? t_client->ViceId : 0, 
+               AUD_FID, DirFid, AUD_STR, Name,
+	       AUD_FID, OutFid, AUD_STR, LinkContents, AUD_END);
     return code;
 
 }				/*SRXAFS_Symlink */
@@ -4551,6 +4584,7 @@ SRXAFS_Link(struct rx_call * acall, struct AFSFid * DirFid, char *Name,
 {
     afs_int32 code;
     struct rx_connection *tcon;
+    struct client *t_client = NULL;	/* tmp ptr to client data */
 #if FS_STATS_DETAILED
     struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
     struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
@@ -4577,6 +4611,8 @@ SRXAFS_Link(struct rx_call * acall, struct AFSFid * DirFid, char *Name,
   Bad_Link:
     code = CallPostamble(tcon, code);
 
+    t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
+
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
     if (code == 0) {
@@ -4595,7 +4631,9 @@ SRXAFS_Link(struct rx_call * acall, struct AFSFid * DirFid, char *Name,
     }
 #endif /* FS_STATS_DETAILED */
 
-    osi_auditU(acall, LinkEvent, code, AUD_FID, DirFid, AUD_STR, Name,
+    osi_auditU(acall, LinkEvent, code, 
+               AUD_ID, t_client ? t_client->ViceId : 0,
+               AUD_FID, DirFid, AUD_STR, Name,
 	       AUD_FID, ExistingFid, AUD_END);
     return code;
 
@@ -4746,6 +4784,7 @@ SRXAFS_MakeDir(struct rx_call * acall, struct AFSFid * DirFid, char *Name,
 {
     afs_int32 code;
     struct rx_connection *tcon;
+    struct client *t_client = NULL;	/* tmp ptr to client data */
 #if FS_STATS_DETAILED
     struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
     struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
@@ -4771,6 +4810,8 @@ SRXAFS_MakeDir(struct rx_call * acall, struct AFSFid * DirFid, char *Name,
   Bad_MakeDir:
     code = CallPostamble(tcon, code);
 
+    t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
+
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
     if (code == 0) {
@@ -4789,8 +4830,10 @@ SRXAFS_MakeDir(struct rx_call * acall, struct AFSFid * DirFid, char *Name,
     }
 #endif /* FS_STATS_DETAILED */
 
-    osi_auditU(acall, MakeDirEvent, code, AUD_FID, DirFid, AUD_STR, Name,
-	       AUD_END);
+    osi_auditU(acall, MakeDirEvent, code, 
+               AUD_ID, t_client ? t_client->ViceId : 0,
+               AUD_FID, DirFid, AUD_STR, Name,
+	       AUD_FID, OutFid, AUD_END);
     return code;
 
 }				/*SRXAFS_MakeDir */
@@ -4903,6 +4946,7 @@ SRXAFS_RemoveDir(struct rx_call * acall, struct AFSFid * DirFid, char *Name,
 {
     afs_int32 code;
     struct rx_connection *tcon;
+    struct client *t_client = NULL;	/* tmp ptr to client data */
 #if FS_STATS_DETAILED
     struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
     struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
@@ -4927,6 +4971,8 @@ SRXAFS_RemoveDir(struct rx_call * acall, struct AFSFid * DirFid, char *Name,
   Bad_RemoveDir:
     code = CallPostamble(tcon, code);
 
+    t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
+
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
     if (code == 0) {
@@ -4945,8 +4991,9 @@ SRXAFS_RemoveDir(struct rx_call * acall, struct AFSFid * DirFid, char *Name,
     }
 #endif /* FS_STATS_DETAILED */
 
-    osi_auditU(acall, RemoveDirEvent, code, AUD_FID, DirFid, AUD_STR, Name,
-	       AUD_END);
+    osi_auditU(acall, RemoveDirEvent, code, 
+               AUD_ID, t_client ? t_client->ViceId : 0,
+               AUD_FID, DirFid, AUD_STR, Name, AUD_END);
     return code;
 
 }				/*SRXAFS_RemoveDir */
@@ -5021,7 +5068,6 @@ SRXAFS_OldSetLock(struct rx_call * acall, struct AFSFid * Fid,
 		  ViceLockType type, struct AFSVolSync * Sync)
 {
     return SRXAFS_SetLock(acall, Fid, type, Sync);
-
 }				/*SRXAFS_OldSetLock */
 
 
@@ -5031,6 +5077,7 @@ SRXAFS_SetLock(struct rx_call * acall, struct AFSFid * Fid, ViceLockType type,
 {
     afs_int32 code;
     struct rx_connection *tcon;
+    struct client *t_client = NULL;	/* tmp ptr to client data */
 #if FS_STATS_DETAILED
     struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
     struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
@@ -5055,6 +5102,8 @@ SRXAFS_SetLock(struct rx_call * acall, struct AFSFid * Fid, ViceLockType type,
   Bad_SetLock:
     code = CallPostamble(tcon, code);
 
+    t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
+
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
     if (code == 0) {
@@ -5073,10 +5122,10 @@ SRXAFS_SetLock(struct rx_call * acall, struct AFSFid * Fid, ViceLockType type,
     }
 #endif /* FS_STATS_DETAILED */
 
-    osi_auditU(acall, SetLockEvent, code, AUD_FID, Fid, AUD_LONG, type,
-	       AUD_END);
+    osi_auditU(acall, SetLockEvent, code, 
+               AUD_ID, t_client ? t_client->ViceId : 0, 
+               AUD_FID, Fid, AUD_LONG, type, AUD_END);
     return code;
-
 }				/*SRXAFS_SetLock */
 
 
@@ -5144,7 +5193,6 @@ SRXAFS_OldExtendLock(struct rx_call * acall, struct AFSFid * Fid,
 		     struct AFSVolSync * Sync)
 {
     return SRXAFS_ExtendLock(acall, Fid, Sync);
-
 }				/*SRXAFS_OldExtendLock */
 
 
@@ -5154,6 +5202,7 @@ SRXAFS_ExtendLock(struct rx_call * acall, struct AFSFid * Fid,
 {
     afs_int32 code;
     struct rx_connection *tcon;
+    struct client *t_client = NULL;	/* tmp ptr to client data */
 #if FS_STATS_DETAILED
     struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
     struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
@@ -5178,6 +5227,8 @@ SRXAFS_ExtendLock(struct rx_call * acall, struct AFSFid * Fid,
   Bad_ExtendLock:
     code = CallPostamble(tcon, code);
 
+    t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
+
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
     if (code == 0) {
@@ -5196,7 +5247,9 @@ SRXAFS_ExtendLock(struct rx_call * acall, struct AFSFid * Fid,
     }
 #endif /* FS_STATS_DETAILED */
 
-    osi_auditU(acall, ExtendLockEvent, code, AUD_FID, Fid, AUD_END);
+    osi_auditU(acall, ExtendLockEvent, code, 
+               AUD_ID, t_client ? t_client->ViceId : 0,
+               AUD_FID, Fid, AUD_END);
     return code;
 
 }				/*SRXAFS_ExtendLock */
@@ -5275,7 +5328,6 @@ SRXAFS_OldReleaseLock(struct rx_call * acall, struct AFSFid * Fid,
 		      struct AFSVolSync * Sync)
 {
     return SRXAFS_ReleaseLock(acall, Fid, Sync);
-
 }				/*SRXAFS_OldReleaseLock */
 
 
@@ -5285,6 +5337,7 @@ SRXAFS_ReleaseLock(struct rx_call * acall, struct AFSFid * Fid,
 {
     afs_int32 code;
     struct rx_connection *tcon;
+    struct client *t_client = NULL;	/* tmp ptr to client data */
 #if FS_STATS_DETAILED
     struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
     struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
@@ -5309,6 +5362,8 @@ SRXAFS_ReleaseLock(struct rx_call * acall, struct AFSFid * Fid,
   Bad_ReleaseLock:
     code = CallPostamble(tcon, code);
 
+    t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
+
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
     if (code == 0) {
@@ -5327,7 +5382,9 @@ SRXAFS_ReleaseLock(struct rx_call * acall, struct AFSFid * Fid,
     }
 #endif /* FS_STATS_DETAILED */
 
-    osi_auditU(acall, ReleaseLockEvent, code, AUD_FID, Fid, AUD_END);
+    osi_auditU(acall, ReleaseLockEvent, code, 
+               AUD_ID, t_client ? t_client->ViceId : 0, 
+               AUD_FID, Fid, AUD_END);
     return code;
 
 }				/*SRXAFS_ReleaseLock */
@@ -5413,7 +5470,8 @@ afs_int32
 SRXAFS_GetStatistics(struct rx_call *acall, struct ViceStatistics *Statistics)
 {
     afs_int32 code;
-    struct rx_connection *tcon;
+    struct rx_connection *tcon = rx_ConnectionOf(acall);
+    struct client *t_client = NULL;	/* tmp ptr to client data */
 #if FS_STATS_DETAILED
     struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
     struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
@@ -5445,6 +5503,8 @@ SRXAFS_GetStatistics(struct rx_call *acall, struct ViceStatistics *Statistics)
   Bad_GetStatistics:
     code = CallPostamble(tcon, code);
 
+    t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
+
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
     if (code == 0) {
@@ -5463,8 +5523,9 @@ SRXAFS_GetStatistics(struct rx_call *acall, struct ViceStatistics *Statistics)
     }
 #endif /* FS_STATS_DETAILED */
 
+    osi_auditU(acall, GetStatisticsEvent, code, 
+               AUD_ID, t_client ? t_client->ViceId : 0, AUD_END);
     return code;
-
 }				/*SRXAFS_GetStatistics */
 
 
@@ -5492,6 +5553,8 @@ afs_int32
 SRXAFS_XStatsVersion(struct rx_call * a_call, afs_int32 * a_versionP)
 {				/*SRXAFS_XStatsVersion */
 
+    struct client *t_client = NULL;	/* tmp ptr to client data */
+    struct rx_connection *tcon;
 #if FS_STATS_DETAILED
     struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
     struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
@@ -5510,6 +5573,8 @@ SRXAFS_XStatsVersion(struct rx_call * a_call, afs_int32 * a_versionP)
 
     *a_versionP = AFS_XSTAT_VERSION;
 
+    t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
+
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
     fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
@@ -5525,8 +5590,10 @@ SRXAFS_XStatsVersion(struct rx_call * a_call, afs_int32 * a_versionP)
     (opP->numSuccesses)++;
     FS_UNLOCK;
 #endif /* FS_STATS_DETAILED */
-    return (0);
 
+    osi_auditU(a_call, XStatsVersionEvent, 0, 
+               AUD_ID, t_client ? t_client->ViceId : 0, AUD_END);
+    return (0);
 }				/*SRXAFS_XStatsVersion */
 
 
@@ -6232,6 +6299,7 @@ SRXAFS_GetVolumeStatus(struct rx_call * acall, afs_int32 avolid,
     afs_int32 rights, anyrights;	/* rights for this and any user */
     AFSFid dummyFid;
     struct rx_connection *tcon;
+    struct client *t_client = NULL;	/* tmp ptr to client data */
 #if FS_STATS_DETAILED
     struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
     struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
@@ -6294,6 +6362,8 @@ SRXAFS_GetVolumeStatus(struct rx_call * acall, afs_int32 avolid,
     }
     errorCode = CallPostamble(tcon, errorCode);
 
+    t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
+
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
     if (errorCode == 0) {
@@ -6311,6 +6381,10 @@ SRXAFS_GetVolumeStatus(struct rx_call * acall, afs_int32 avolid,
 	FS_UNLOCK;
     }
 #endif /* FS_STATS_DETAILED */
+
+    osi_auditU(acall, GetVolumeStatusEvent, errorCode, 
+               AUD_ID, t_client ? t_client->ViceId : 0,
+               AUD_LONG, avolid, AUD_STR, *Name, AUD_END);
     return (errorCode);
 
 }				/*SRXAFS_GetVolumeStatus */
@@ -6329,6 +6403,7 @@ SRXAFS_SetVolumeStatus(struct rx_call * acall, afs_int32 avolid,
     afs_int32 rights, anyrights;	/* rights for this and any user */
     AFSFid dummyFid;
     struct rx_connection *tcon = rx_ConnectionOf(acall);
+    struct client *t_client = NULL;	/* tmp ptr to client data */
 #if FS_STATS_DETAILED
     struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
     struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
@@ -6383,6 +6458,8 @@ SRXAFS_SetVolumeStatus(struct rx_call * acall, afs_int32 avolid,
     ViceLog(2, ("SAFS_SetVolumeStatus returns %d\n", errorCode));
     errorCode = CallPostamble(tcon, errorCode);
 
+    t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
+
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
     if (errorCode == 0) {
@@ -6401,10 +6478,10 @@ SRXAFS_SetVolumeStatus(struct rx_call * acall, afs_int32 avolid,
     }
 #endif /* FS_STATS_DETAILED */
 
-    osi_auditU(acall, SetVolumeStatusEvent, errorCode, AUD_LONG, avolid,
-	       AUD_STR, Name, AUD_END);
+    osi_auditU(acall, SetVolumeStatusEvent, errorCode, 
+               AUD_ID, t_client ? t_client->ViceId : 0,
+               AUD_LONG, avolid, AUD_STR, Name, AUD_END);
     return (errorCode);
-
 }				/*SRXAFS_SetVolumeStatus */
 
 #define	DEFAULTVOLUME	"root.afs"
