@@ -46,10 +46,8 @@ RCSID
 
 #include "AFS_component_version_number.c"
 
-main(argc, argv)
-     int argc;
-     char **argv;
-
+int
+main(int argc, char **argv)
 {				/*Main program */
     int cellNum;		/*Cell entry number */
     int rc;			/*Return value from U_CellGetLocalTokens */
