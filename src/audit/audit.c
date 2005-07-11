@@ -63,6 +63,8 @@ audmakebuf(char *audEvent, va_list vaList)
     while (vaEntry != AUD_END) {
 	switch (vaEntry) {
 	case AUD_STR:		/* String */
+        case AUD_NAME:          /* Name */
+        case AUD_ACL:           /* ACL */
 	    vaStr = (char *)va_arg(vaList, int);
 	    if (vaStr) {
 		strcpy(bufferPtr, vaStr);
@@ -73,6 +75,7 @@ audmakebuf(char *audEvent, va_list vaList)
 	    }
 	    break;
 	case AUD_INT:		/* Integer */
+        case AUD_ID:            /* ViceId */
 	    vaInt = va_arg(vaList, int);
 	    *(int *)bufferPtr = vaInt;
 	    bufferPtr += sizeof(vaInt);
@@ -144,13 +147,14 @@ printbuf(FILE *out, int rec, char *audEvent, afs_int32 errCode, va_list vaList)
     struct AFSFid *vaFid;
     struct AFSCBFids *vaFids;
     int num = LogThreadNum();
+    struct in_addr hostAddr;
 
     /* Don't print the thread id if we recursed */
     if ((num > -1) && (rec == 0))
 	fprintf(out, "[%d]:", num);
     
     if (strcmp(audEvent, "VALST") != 0)
-	fprintf(out,  "%s %d ", audEvent, errCode);
+	fprintf(out,  "EVENT %s CODE %d ", audEvent, errCode);
 
     vaEntry = va_arg(vaList, int);
     while (vaEntry != AUD_END) {
@@ -158,22 +162,44 @@ printbuf(FILE *out, int rec, char *audEvent, afs_int32 errCode, va_list vaList)
 	case AUD_STR:		/* String */
 	    vaStr = (char *)va_arg(vaList, int);
 	    if (vaStr)
-		fprintf(out,  "%s ", vaStr);
+		fprintf(out,  "STR %s ", vaStr);
 	    else
-		fprintf(out,  "<null>");
+		fprintf(out,  "STR <null>");
+	    break;
+	case AUD_NAME:		/* Name */
+	    vaStr = (char *)va_arg(vaList, int);
+	    if (vaStr)
+		fprintf(out,  "NAME %s ", vaStr);
+	    else
+		fprintf(out,  "NAME <null>");
+	    break;
+	case AUD_ACL:		/* ACL */
+	    vaStr = (char *)va_arg(vaList, int);
+	    if (vaStr)
+		fprintf(out,  "ACL %s ", vaStr);
+	    else
+		fprintf(out,  "ACL <null>");
 	    break;
 	case AUD_INT:		/* Integer */
 	    vaInt = va_arg(vaList, int);
-	    fprintf(out,  "%d ", vaInt);
+	    fprintf(out,  "INT %d ", vaInt);
+	    break;
+	case AUD_ID:		/* ViceId */
+	    vaInt = va_arg(vaList, int);
+	    fprintf(out,  "ID %d ", vaInt);
 	    break;
 	case AUD_DATE:		/* Date    */
+	    vaLong = va_arg(vaList, afs_int32);
+	    fprintf(out, "DATE %u ", vaLong);
+	    break;
 	case AUD_HOST:		/* Host ID */
 	    vaLong = va_arg(vaList, afs_int32);
-	    fprintf(out, "%u ", vaLong);
+            hostAddr.s_addr = vaLong;
+	    fprintf(out, "HOST %s ", inet_ntoa(hostAddr));
 	    break;
 	case AUD_LONG:		/* afs_int32    */
 	    vaLong = va_arg(vaList, afs_int32);
-	    fprintf(out, "%d ", vaLong);
+	    fprintf(out, "LONG %d ", vaLong);
 	    break;
 	case AUD_LST:		/* Ptr to another list */
 	    vaLst = (char *)va_arg(vaList, int);
@@ -182,22 +208,32 @@ printbuf(FILE *out, int rec, char *audEvent, afs_int32 errCode, va_list vaList)
 	case AUD_FID:		/* AFSFid - contains 3 entries */
 	    vaFid = (struct AFSFid *)va_arg(vaList, int);
 	    if (vaFid)
-		fprintf(out, "%u:%u:%u ", vaFid->Volume, vaFid->Vnode,
+		fprintf(out, "FID %u:%u:%u ", vaFid->Volume, vaFid->Vnode,
 		       vaFid->Unique);
 	    else
-		fprintf(out, "%u:%u:%u ", 0, 0, 0);
+		fprintf(out, "FID %u:%u:%u ", 0, 0, 0);
 	    break;
 	case AUD_FIDS:		/* array of Fids */
 	    vaFids = (struct AFSCBFids *)va_arg(vaList, int);
 	    vaFid = NULL;
 
-	    if (vaFids)
-		vaFid = vaFids->AFSCBFids_val;
-	    if (vaFid)
-		fprintf(out, "%u %u:%u:%u ", vaFids->AFSCBFids_len, vaFid->Volume,
-		       vaFid->Vnode, vaFid->Unique);
-	    else
-		fprintf(out, "0 0:0:0 ");
+	    if (vaFids) {
+                int i;
+                if (vaFid)
+                    fprintf(out, "FIDS %u FID %u:%u:%u ", vaFids->AFSCBFids_len, vaFid->Volume,
+                             vaFid->Vnode, vaFid->Unique);
+                else
+                    fprintf(out, "FIDS 0 FID 0:0:0 ");
+
+                for ( i = 1; i < vaFids->AFSCBFids_len; i++ ) {
+                    vaFid = vaFids->AFSCBFids_val;
+                    if (vaFid)
+                        fprintf(out, "FID %u:%u:%u ", vaFid->Volume,
+                                 vaFid->Vnode, vaFid->Unique);
+                    else
+                        fprintf(out, "FID 0:0:0 ");
+                }
+            }
 	    break;
 	default:
 	    fprintf(out, "--badval-- ");
@@ -331,7 +367,7 @@ osi_auditU(struct rx_call *call, char *audEvent, int errCode, ...)
     if (call) {
 	conn = rx_ConnectionOf(call);	/* call -> conn) */
 	if (conn) {
-	    secClass = rx_SecurityClassOf(conn);	/* conn -> securityIndex */
+            secClass = rx_SecurityClassOf(conn);	/* conn -> securityIndex */
 	    if (secClass == 0) {	/* unauthenticated */
 		osi_audit("AFS_Aud_Unauth", (-1), AUD_STR, audEvent, AUD_END);
 		strcpy(afsName, "--UnAuth--");
@@ -346,8 +382,7 @@ osi_auditU(struct rx_call *call, char *audEvent, int errCode, ...)
 		    rxkad_GetServerInfo(conn, NULL, NULL, name, inst, tcell,
 					NULL);
 		if (code) {
-		    osi_audit("AFS_Aud_NoAFSId", (-1), AUD_STR, audEvent,
-			      AUD_END);
+		    osi_audit("AFS_Aud_NoAFSId", (-1), AUD_STR, audEvent, AUD_END);
 		    strcpy(afsName, "--NoName--");
 		} else {
                     strncpy(vname, name, sizeof(vname));
@@ -358,7 +393,7 @@ osi_auditU(struct rx_call *call, char *audEvent, int errCode, ...)
                         strcat(vname, inst);
                     }
                     if ((clen = strlen(tcell))) {
-#if     defined(AFS_ATHENA_STDENV) || defined(AFS_KERBREALM_ENV)
+#if defined(AFS_ATHENA_STDENV) || defined(AFS_KERBREALM_ENV)
                         static char local_realm[AFS_REALM_SZ] = "";
                         if (!local_realm[0]) {
                             if (afs_krb_get_lrealm(local_realm, 0) != 0 /*KSUCCESS*/)
@@ -371,13 +406,12 @@ osi_auditU(struct rx_call *call, char *audEvent, int errCode, ...)
                             strcat(vname, tcell);
                         }
 #endif
-                        strcpy(afsName, vname);
                     }
+                    strcpy(afsName, vname);
                 }
 	    } else {		/* Unauthenticated & unknown */
-
-		osi_audit("AFS_Aud_UnknSec", (-1), AUD_STR, audEvent,
-			  AUD_END);
+		osi_audit("AFS_Aud_UnknSec", (-1), AUD_STR, audEvent, AUD_END);
+                strcpy(afsName, "--Unknown--");
 	    }
 	done:
 	    peer = rx_PeerOf(conn);	/* conn -> peer */
@@ -386,17 +420,14 @@ osi_auditU(struct rx_call *call, char *audEvent, int errCode, ...)
 	    else
 		osi_audit("AFS_Aud_NoHost", (-1), AUD_STR, audEvent, AUD_END);
 	} else {		/* null conn */
-
 	    osi_audit("AFS_Aud_NoConn", (-1), AUD_STR, audEvent, AUD_END);
 	}
     } else {			/* null call */
-
 	osi_audit("AFS_Aud_NoCall", (-1), AUD_STR, audEvent, AUD_END);
     }
-
     va_start(vaList, errCode);
-    osi_audit(audEvent, errCode, AUD_STR, afsName, AUD_HOST, hostId, AUD_LST,
-	      vaList, AUD_END);
+    osi_audit(audEvent, errCode, AUD_NAME, afsName, AUD_HOST, hostId, 
+              AUD_LST, vaList, AUD_END);
 
     return 0;
 }

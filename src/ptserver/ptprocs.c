@@ -232,8 +232,8 @@ SPR_INewEntry(call, aname, aid, oid)
     afs_int32 cid = ANONYMOUSID;
 
     code = iNewEntry(call, aname, aid, oid, &cid);
-    osi_auditU(call, PTS_INewEntEvent, code, AUD_LONG, aid, AUD_STR, aname,
-	       AUD_LONG, oid, AUD_END);
+    osi_auditU(call, PTS_INewEntEvent, code, AUD_ID, aid, AUD_STR, aname,
+	       AUD_ID, oid, AUD_END);
     ViceLog(25, ("PTS_INewEntry: code %d cid %d aid %d aname %s oid %d", code, cid, aid, aname, oid));
     return code;
 }
@@ -312,8 +312,8 @@ SPR_NewEntry(call, aname, flag, oid, aid)
     afs_int32 cid = ANONYMOUSID;
 
     code = newEntry(call, aname, flag, oid, aid, &cid);
-    osi_auditU(call, PTS_NewEntEvent, code, AUD_LONG, *aid, AUD_STR, aname,
-	       AUD_LONG, oid, AUD_END);
+    osi_auditU(call, PTS_NewEntEvent, code, AUD_ID, *aid, AUD_STR, aname,
+	       AUD_ID, oid, AUD_END);
     ViceLog(25, ("PTS_NewEntry: code %d cid %d aid %d aname %s oid %d", code, cid, *aid, aname, oid));
     return code;
 }
@@ -384,7 +384,7 @@ SPR_WhereIsIt(call, aid, apos)
     afs_int32 cid = ANONYMOUSID;
 
     code = whereIsIt(call, aid, apos, &cid);
-    osi_auditU(call, PTS_WheIsItEvent, code, AUD_LONG, aid, AUD_LONG, *apos,
+    osi_auditU(call, PTS_WheIsItEvent, code, AUD_ID, aid, AUD_LONG, *apos,
 	       AUD_END);
     ViceLog(125, ("PTS_WhereIsIt: code %d cid %d aid %d apos %d", code, cid, aid, *apos));
     return code;
@@ -502,7 +502,7 @@ SPR_AddToGroup(call, aid, gid)
     afs_int32 cid = ANONYMOUSID;
 
     code = addToGroup(call, aid, gid, &cid);
-    osi_auditU(call, PTS_AdToGrpEvent, code, AUD_LONG, gid, AUD_LONG, aid,
+    osi_auditU(call, PTS_AdToGrpEvent, code, AUD_ID, gid, AUD_ID, aid,
 	       AUD_END);
     ViceLog(5, ("PTS_AddToGroup: code %d cid %d gid %d aid %d", code, cid, gid, aid));
     return code;
@@ -597,7 +597,7 @@ SPR_NameToID(call, aname, aid)
 
     code = nameToID(call, aname, aid);
     osi_auditU(call, PTS_NmToIdEvent, code, AUD_END);
-    ViceLog(125, ("PTS_NameToID: code %d aname %s aid %d", code, aname, aid));
+    ViceLog(125, ("PTS_NameToID: code %d", code));
     return code;
 }
 
@@ -644,6 +644,11 @@ nameToID(call, aname, aid)
 	code = NameToID(tt, aname->namelist_val[i], &aid->idlist_val[i]);
 	if (code != PRSUCCESS)
 	    aid->idlist_val[i] = ANONYMOUSID;
+        osi_audit(PTS_NmToIdEvent, code, AUD_STR,
+		   aname->namelist_val[i], AUD_ID, aid->idlist_val[i], 
+		   AUD_END);
+	ViceLog(125, ("PTS_NameToID: code %d aname %s aid %d", code,
+		      aname->namelist_val[i], aid->idlist_val[i]));
 	if (count++ > 50)
 	    IOMGR_Poll(), count = 0;
     }
@@ -669,8 +674,8 @@ SPR_IDToName(call, aid, aname)
     afs_int32 code;
 
     code = idToName(call, aid, aname);
-    osi_auditU(call, PTS_IdToNmEvent, code, AUD_LONG, aid, AUD_END);
-    ViceLog(125, ("PTS_IDToName: code %d aid %d aname %s", code, aid, aname));
+    osi_auditU(call, PTS_IdToNmEvent, code, AUD_END);
+    ViceLog(125, ("PTS_IDToName: code %d", code));
     return code;
 }
 
@@ -718,6 +723,10 @@ idToName(call, aid, aname)
 	code = IDToName(tt, aid->idlist_val[i], aname->namelist_val[i]);
 	if (code != PRSUCCESS)
 	    sprintf(aname->namelist_val[i], "%d", aid->idlist_val[i]);
+        osi_audit(PTS_IdToNmEvent, code, AUD_ID, aid->idlist_val[i],
+		  AUD_STR, aname->namelist_val[i], AUD_END);
+	ViceLog(125, ("PTS_idToName: code %d aid %d aname %s", code,
+		      aid->idlist_val[i], aname->namelist_val[i]));
 	if (count++ > 50)
 	    IOMGR_Poll(), count = 0;
     }
@@ -738,7 +747,7 @@ SPR_Delete(call, aid)
     afs_int32 cid = ANONYMOUSID;
 
     code = Delete(call, aid, &cid);
-    osi_auditU(call, PTS_DelEvent, code, AUD_LONG, aid, AUD_END);
+    osi_auditU(call, PTS_DelEvent, code, AUD_ID, aid, AUD_END);
     ViceLog(25, ("PTS_Delete: code %d cid %d aid %d", code, cid, aid));
     return code;
 }
@@ -980,7 +989,7 @@ SPR_UpdateEntry(call, aid, name, uentry)
     afs_int32 cid = ANONYMOUSID;
 
     code = UpdateEntry(call, aid, name, uentry, &cid);
-    osi_auditU(call, PTS_UpdEntEvent, code, AUD_LONG, aid, AUD_STR, name, AUD_END);
+    osi_auditU(call, PTS_UpdEntEvent, code, AUD_ID, aid, AUD_STR, name, AUD_END);
     ViceLog(5, ("PTS_UpdateEntry: code %d cid %d aid %d name %s", code, cid, aid, name));
     return code;
 }
@@ -1077,7 +1086,7 @@ SPR_RemoveFromGroup(call, aid, gid)
     afs_int32 cid = ANONYMOUSID;
 
     code = removeFromGroup(call, aid, gid, &cid);
-    osi_auditU(call, PTS_RmFmGrpEvent, code, AUD_LONG, gid, AUD_LONG, aid,
+    osi_auditU(call, PTS_RmFmGrpEvent, code, AUD_ID, gid, AUD_ID, aid,
 	       AUD_END);
     ViceLog(5, ("PTS_RemoveFromGroup: code %d cid %d gid %d aid %d", code, cid, gid, aid));
     return code;
@@ -1167,7 +1176,7 @@ SPR_GetCPS(call, aid, alist, over)
     afs_int32 cid = ANONYMOUSID;
 
     code = getCPS(call, aid, alist, over, &cid);
-    osi_auditU(call, PTS_GetCPSEvent, code, AUD_LONG, aid, AUD_END);
+    osi_auditU(call, PTS_GetCPSEvent, code, AUD_ID, aid, AUD_END);
     ViceLog(125, ("PTS_GetCPS: code %d cid %d aid %d", code, cid, aid));
     return code;
 }
@@ -1255,7 +1264,7 @@ SPR_GetCPS2(call, aid, ahost, alist, over)
     afs_int32 cid = ANONYMOUSID;
 
     code = getCPS2(call, aid, ahost, alist, over, &cid);
-    osi_auditU(call, PTS_GetCPS2Event, code, AUD_LONG, aid, AUD_HOST, ahost,
+    osi_auditU(call, PTS_GetCPS2Event, code, AUD_ID, aid, AUD_HOST, ahost,
 	       AUD_END);
     ViceLog(125, ("PTS_GetCPS2: code %d cid %d aid %d ahost %d", code, cid, aid, ahost));
     return code;
@@ -1471,7 +1480,7 @@ SPR_SetMax(call, aid, gflag)
     afs_int32 cid = ANONYMOUSID;
 
     code = setMax(call, aid, gflag, &cid);
-    osi_auditU(call, PTS_SetMaxEvent, code, AUD_LONG, aid, AUD_LONG, gflag,
+    osi_auditU(call, PTS_SetMaxEvent, code, AUD_ID, aid, AUD_LONG, gflag,
 	       AUD_END);
     ViceLog(125, ("PTS_SetMax: code %d cid %d aid %d gflag %d", code, cid, aid, gflag));
     return code;
@@ -1528,7 +1537,7 @@ SPR_ListEntry(call, aid, aentry)
     afs_int32 cid = ANONYMOUSID;
 
     code = listEntry(call, aid, aentry, &cid);
-    osi_auditU(call, PTS_LstEntEvent, code, AUD_LONG, aid, AUD_END);
+    osi_auditU(call, PTS_LstEntEvent, code, AUD_ID, aid, AUD_END);
     ViceLog(125, ("PTS_ListEntry: code %d cid %d aid %d", code, cid, aid));
     return code;
 }
@@ -1748,7 +1757,7 @@ SPR_ChangeEntry(call, aid, name, oid, newid)
     afs_int32 cid = ANONYMOUSID;
 
     code = changeEntry(call, aid, name, oid, newid, &cid);
-    osi_auditU(call, PTS_ChgEntEvent, code, AUD_LONG, aid, AUD_STR, name,
+    osi_auditU(call, PTS_ChgEntEvent, code, AUD_ID, aid, AUD_STR, name,
 	       AUD_LONG, oid, AUD_LONG, newid, AUD_END);
     ViceLog(5, ("PTS_ChangeEntry: code %d cid %d aid %d name %s oid %d newid %d", code, cid, aid, name, oid, newid));
     return code;
@@ -1818,7 +1827,7 @@ SPR_SetFieldsEntry(call, id, mask, flags, ngroups, nusers, spare1, spare2)
     code =
 	setFieldsEntry(call, id, mask, flags, ngroups, nusers, spare1,
 		       spare2, &cid);
-    osi_auditU(call, PTS_SetFldEntEvent, code, AUD_LONG, id, AUD_END);
+    osi_auditU(call, PTS_SetFldEntEvent, code, AUD_ID, id, AUD_END);
     ViceLog(5, ("PTS_SetFieldsEntry: code %d cid %d id %d", code, cid, id));
     return code;
 }
@@ -1920,7 +1929,7 @@ SPR_ListElements(call, aid, alist, over)
     afs_int32 cid = ANONYMOUSID;
 
     code = listElements(call, aid, alist, over, &cid);
-    osi_auditU(call, PTS_LstEleEvent, code, AUD_LONG, aid, AUD_END);
+    osi_auditU(call, PTS_LstEleEvent, code, AUD_ID, aid, AUD_END);
     ViceLog(125, ("PTS_ListElements: code %d cid %d aid %d", code, cid, aid));
     return code;
 }
@@ -1989,7 +1998,7 @@ SPR_ListSuperGroups(call, aid, alist, over)
     afs_int32 cid = ANONYMOUSID;
 
     code = listSuperGroups(call, aid, alist, over, &cid);
-    osi_auditU(call, "PTS_LstSGrps", code, AUD_LONG, aid, AUD_END);
+    osi_auditU(call, PTS_LstSGrps, code, AUD_ID, aid, AUD_END);
     ViceLog(125, ("PTS_ListSuperGroups: code %d cid %d aid %d", code, cid, aid));
     return code;
 #else
@@ -2069,7 +2078,7 @@ SPR_ListOwned(call, aid, alist, lastP)
     afs_int32 cid = ANONYMOUSID;
 
     code = listOwned(call, aid, alist, lastP, &cid);
-    osi_auditU(call, PTS_LstOwnEvent, code, AUD_LONG, aid, AUD_END);
+    osi_auditU(call, PTS_LstOwnEvent, code, AUD_ID, aid, AUD_END);
     ViceLog(125, ("PTS_ListOwned: code %d cid %d aid %d", code, cid, aid));
     return code;
 }
