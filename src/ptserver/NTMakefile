@@ -83,9 +83,15 @@ $(PTSERVER): $(PTSERVER_EXEOBJS) $(RXKADOBJS) $(PTSERVER_EXELIBS)
 # build pts.exe
 
 PTS = $(DESTDIR)\bin\pts.exe
+PTCLIENT = $(DESTDIR)\bin\ptclient.exe
 
 PTS_EXEOBJS =\
 	$(OUT)\pts.obj \
+	$(OUT)\pts.res
+
+PTCLIENT_EXEOBJS =\
+	$(OUT)\ptclient.obj \
+        $(OUT)\display.obj \
 	$(OUT)\pts.res
 
 PTS_EXELIBS =\
@@ -105,6 +111,10 @@ PTS_EXELIBS =\
 	$(DESTDIR)\lib\cm_dns.obj
 
 $(PTS): $(PTS_EXEOBJS) $(PTS_EXELIBS) 
+	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
+	$(EXEPREP) 
+
+$(PTCLIENT): $(PTCLIENT_EXEOBJS) $(PTS_EXELIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
 	$(EXEPREP) 
 
@@ -137,9 +147,10 @@ pterror.h pterror.c: pterror.et
 ############################################################################
 # install pts, ptserver and afsprot.lib
 
-install: $(INCFILES) ptint.ss.c ptint.cs.c ptint.xdr.c $(LIBFILE) $(PTSERVER) $(PTS) $(OUT)\readgroup.exe \
+install: $(INCFILES) ptint.ss.c ptint.cs.c ptint.xdr.c $(LIBFILE) $(PTSERVER) $(PTS) $(PTCLIENT) $(OUT)\readgroup.exe \
 	$(OUT)\readpwd.exe  $(OUT)\testpt.exe $(OUT)\db_verify.exe  \
 	$(DESTDIR)\root.server\usr\afs\bin\pts.exe \
+	$(DESTDIR)\root.server\usr\afs\bin\ptclient.exe \
 	$(INCFILEDIR)\afs\prserver.h $(INCFILEDIR)\afs\print.h \
 	$(INCFILEDIR)\afs\prerror.h $(INCFILEDIR)\afs\prclient.h
 
@@ -153,6 +164,9 @@ install_libutils: $(INCFILES) $(LIBFILE) $(PTS)
 # install various exe's and header files
 $(DESTDIR)\root.server\usr\afs\bin\pts.exe: $(PTS)
 	$(COPY) $(PTS) $(DESTDIR)\root.server\usr\afs\bin\pts.exe
+
+$(DESTDIR)\root.server\usr\afs\bin\ptclient.exe: $(PTCLIENT)
+	$(COPY) $(PTCLIENT) $(DESTDIR)\root.server\usr\afs\bin\ptclient.exe
 
 $(INCFILEDIR)\afs\prserver.h: $(INCFILEDIR)\afs\ptserver.h
 	$(COPY)	$(INCFILEDIR)\afs\ptserver.h $(INCFILEDIR)\afs\prserver.h
