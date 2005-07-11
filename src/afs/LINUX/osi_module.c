@@ -686,7 +686,7 @@ int
 init_module(void)
 #endif
 {
-    int e;
+    int err;
     RWLOCK_INIT(&afs_xosi, "afs_xosi");
 
 #if !defined(AFS_LINUX24_ENV)
@@ -704,8 +704,12 @@ init_module(void)
 
     osi_Init();
 
-    e = osi_syscall_init();
-    if (e) return e;
+    err = osi_syscall_init();
+    if (err)
+	return err;
+    err = afs_init_inodecache();
+    if (err)
+	return err;
     register_filesystem(&afs_fs_type);
     osi_sysctl_init();
 #ifdef AFS_LINUX24_ENV
@@ -727,7 +731,7 @@ cleanup_module(void)
     osi_syscall_clean();
     unregister_filesystem(&afs_fs_type);
 
-    osi_linux_free_inode_pages();	/* Invalidate all pages using AFS inodes. */
+    afs_destroy_inodecache();
     osi_linux_free_afs_memory();
 
 #ifdef AFS_LINUX24_ENV

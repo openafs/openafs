@@ -581,6 +581,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_COMPLETION_H_EXISTS
 		 LINUX_DEFINES_FOR_EACH_PROCESS
 		 LINUX_DEFINES_PREV_TASK
+		 LINUX_FS_STRUCT_SUPER_HAS_ALLOC_INODE
 	         LINUX_FS_STRUCT_ADDRESS_SPACE_HAS_PAGE_LOCK
 	         LINUX_FS_STRUCT_ADDRESS_SPACE_HAS_GFP_MASK
 		 LINUX_FS_STRUCT_INODE_HAS_I_ALLOC_SEM
@@ -638,7 +639,8 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
                             linux_syscall_method=kallsyms_symbol
                          fi
                          if test "x$linux_syscall_method" = "xnone"; then
-                        AC_MSG_ERROR([no available sys_call_table access method])
+			    AC_MSG_WARN([no available sys_call_table access method -- guessing scan])
+                            linux_syscall_method=scan
                          fi
                    fi
                  fi
@@ -686,6 +688,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 fi
 		 if test "x$ac_cv_linux_func_write_inode_returns_int" = "xyes" ; then
 		  AC_DEFINE(WRITE_INODE_NOT_VOID, 1, [define if your sops.write_inode returns non-void])
+		 fi
+		 if test "x$ac_cv_linux_fs_struct_super_has_alloc_inode" = "xyes" ; then
+		  AC_DEFINE(STRUCT_SUPER_HAS_ALLOC_INODE, 1, [define if your struct super_operations has alloc_inode])
 		 fi
 		 if test "x$ac_cv_linux_fs_struct_address_space_has_page_lock" = "xyes"; then 
 		  AC_DEFINE(STRUCT_ADDRESS_SPACE_HAS_PAGE_LOCK, 1, [define if your struct address_space has page_lock])

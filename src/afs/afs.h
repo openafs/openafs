@@ -558,10 +558,10 @@ struct SimpleLocks {
 #endif /* AFS_XBSD_ENV */
 
 #if defined(AFS_LINUX24_ENV)
-#define VREFCOUNT(v)		atomic_read(&((vnode_t *) v)->v_count)
-#define VREFCOUNT_SET(v, c)	atomic_set(&((vnode_t *) v)->v_count, c)
-#define VREFCOUNT_DEC(v)	atomic_dec(&((vnode_t *) v)->v_count)
-#define VREFCOUNT_INC(v)	atomic_inc(&((vnode_t *) v)->v_count)
+#define VREFCOUNT(v)		atomic_read(&(AFSTOV(v)->v_count))
+#define VREFCOUNT_SET(v, c)	atomic_set(&(AFSTOV(v)->v_count), c)
+#define VREFCOUNT_DEC(v)	atomic_dec(&(AFSTOV(v)->v_count))
+#define VREFCOUNT_INC(v)	atomic_inc(&(AFSTOV(v)->v_count))
 #else
 #define VREFCOUNT(v)		((v)->vrefCount)
 #define VREFCOUNT_SET(v, c)	(v)->vrefCount = c;
@@ -580,7 +580,7 @@ struct SimpleLocks {
 
 extern afs_int32 vmPageHog;	/* counter for # of vnodes which are page hogs. */
 
-#if defined(AFS_XBSD_ENV) || defined(AFS_DARWIN_ENV)
+#if defined(AFS_XBSD_ENV) || defined(AFS_DARWIN_ENV) || (defined(AFS_LINUX22_ENV) && !defined(STRUCT_SUPER_HAS_ALLOC_INODE))
 #define VTOAFS(v) ((struct vcache *)(v)->v_data)
 #define AFSTOV(vc) ((vc)->v)
 #else
@@ -588,25 +588,22 @@ extern afs_int32 vmPageHog;	/* counter for # of vnodes which are page hogs. */
 #define AFSTOV(V) (&(V)->v)
 #endif
 
-#ifdef AFS_LINUX22_ENV
-#define ITOAFS(V) ((struct vcache*)(V))
-#define AFSTOI(V) (struct inode *)(&(V)->v)
-#endif
-
 /* INVARIANTs: (vlruq.next != NULL) == (vlruq.prev != NULL)
  *             nextfree => !vlruq.next && ! vlruq.prev
  * !(avc->nextfree) && !avc->vlruq.next => (FreeVCList == avc->nextfree)
  */
 struct vcache {
-#if defined(AFS_XBSD_ENV)||defined(AFS_DARWIN_ENV)
+#if defined(AFS_XBSD_ENV) || defined(AFS_DARWIN_ENV) || (defined(AFS_LINUX22_ENV) && !defined(STRUCT_SUPER_HAS_ALLOC_INODE))
     struct vnode *v;
 #else
     struct vnode v;		/* Has reference count in v.v_count */
 #endif
     struct afs_q vlruq;		/* lru q next and prev */
+#if !defined(AFS_LINUX22_ENV)
     struct vcache *nextfree;	/* next on free list (if free) */
+#endif
     struct vcache *hnext;	/* Hash next */
-    struct vcache *vhnext; /* vol hash next */
+    struct vcache *vhnext;	/* vol hash next */
     struct VenusFid fid;
     struct mstat {
 	afs_size_t Length;
@@ -1069,11 +1066,6 @@ extern struct brequest afs_brs[NBRS];	/* request structures */
  * GetVCache incantation, and could eliminate even this code from afs_UFSRead 
  * by making intentionally invalidating quick.stamp in the various callbacks
  * expiration/breaking code */
-#ifdef AFS_LINUX20_ENV
-#define afs_VerifyVCache(avc, areq)  \
-  (((avc)->states & CStatd) ? (vcache2inode(avc), 0) : \
-   afs_VerifyVCache2((avc),areq))
-#else
 #ifdef AFS_DARWIN_ENV
 #define afs_VerifyVCache(avc, areq)  \
   (((avc)->states & CStatd) ? (osi_VM_Setup(avc, 0), 0) : \
@@ -1081,7 +1073,6 @@ extern struct brequest afs_brs[NBRS];	/* request structures */
 #else
 #define afs_VerifyVCache(avc, areq)  \
   (((avc)->states & CStatd) ? 0 : afs_VerifyVCache2((avc),areq))
-#endif
 #endif
 
 #define DO_STATS 1		/* bits used by FindVCache */
