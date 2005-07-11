@@ -622,7 +622,7 @@ static int auth_to_cell(context, cell, realm)
 	    strncpy(username, get_princ_str(context, v5cred->client, 0), len);
 	    username[len] = '\0';
 
-	    if (second_comp(context, v5cred->client) > 1) {
+	    if (second_comp(context, v5cred->client)) {
 	    	strcat(username, ".");
 		p = username + strlen(username);
 		len = min(get_princ_len(context, v5cred->client, 1),
