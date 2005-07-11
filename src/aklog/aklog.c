@@ -22,10 +22,7 @@ main(argc, argv)
   char *argv[];
 #endif /* __STDC__ */
 {
-    aklog_params params;
-
-    aklog_init_params(&params);
-    aklog(argc, argv, &params);
+    aklog(argc, argv);
 }
 
 #else /* WINDOWS */
