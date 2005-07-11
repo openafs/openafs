@@ -3420,7 +3420,7 @@ defect 3069
     cmd_AddParm(ts, "-crypt", CMD_SINGLE, 0, "on or off");
 
     ts = cmd_CreateSyntax("getcrypt", GetCryptCmd, 0,
-			  "set cache manager encryption flag");
+			  "get cache manager encryption flag");
 
     ts = cmd_CreateSyntax("rxstatproc", RxStatProcCmd, 0,
 			  "Manage per process RX statistics");
