@@ -74,13 +74,16 @@
  */
 #ifndef _LINUX_CODA_FS_I
 #define _LINUX_CODA_FS_I
-#endif
+#define _CODA_HEADER_
 #define _CFS_HEADER_
 struct coda_inode_info {
 };
+#endif
+#ifndef _LINUX_XFS_FS_I
 #define _LINUX_XFS_FS_I
 struct xfs_inode_info {
 };
+#endif
 #include <asm/uaccess.h>
 #include <linux/list.h>
 #include <linux/dcache.h>
