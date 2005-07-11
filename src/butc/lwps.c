@@ -2418,7 +2418,7 @@ readVolumeHeader(buffer, bufloc, header)
 
 {
     struct volumeHeader vhptr, *tempvhptr;
-    afs_int32 firstSplice = (afs_int32) & vhptr.pad - (afs_int32) & vhptr;
+    afs_int32 firstSplice = (afs_int32) ((char*)& vhptr.pad - (char*) & vhptr);
     int padLen = sizeof(vhptr.pad);	/* pad to achieve 4 byte alignment */
     int nextSplice = sizeof(struct volumeHeader) - firstSplice - padLen;
 

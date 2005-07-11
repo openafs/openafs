@@ -14,7 +14,13 @@ RCSID
     ("$Header$");
 
 #include <afs/stds.h>
+#if defined(AFS_LINUX24_ENV)
+#define _REGEX_RE_COMP
+#endif
 #include <sys/types.h>
+#if defined(AFS_LINUX24_ENV)
+#include <regex.h>
+#endif
 #include <afs/cmd.h>
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
