@@ -9,39 +9,24 @@
 
 /*
  * Linux interpretations of vnode and vfs structs.
- *
- * The Linux "inode" has been abstracted to the fs independent part to avoid
- * wasting 100+bytes per vnode.
  */
 
 #ifndef OSI_VFS_H_
 #define OSI_VFS_H_
 
-#if !defined(AFS_LINUX26_ENV)
-/* The vnode should match the current implementation of the fs independent
- * part of the Linux inode.
- */
-/* The first cut is to continue to use a separate vnode pool. */
-/* LINUX VNODE INCLUDED BELOW -- DO NOT MODIFY */
-
-typedef struct vnode vnode_t;
-#else
 typedef struct inode vnode_t;
 #define vnode inode
-#endif
 
-/* Map vnode fields to inode fields. */
+/* Map vnode fields to inode fields */
 #define i_number	i_ino
 #define v_count		i_count
 #define v_op		i_op
-#if defined(AFS_LINUX24_ENV)
 #define v_fop           i_fop
-#endif
 #define v_type		i_mode
 #define v_vfsp		i_sb
-#define vfs_vnodecovered s_covered
+#define v_data		u.generic_ip
 
-/* v_type bits map to mode bits: */
+/* v_type bits map to mode bits */
 #define VNON 0
 #define VREG S_IFREG
 #define VDIR S_IFDIR
@@ -58,14 +43,11 @@ enum vcexcl { EXCL, NONEXCL } ;
 #define FWRITE	O_WRONLY|O_RDWR|O_APPEND
 #define FTRUNC	O_TRUNC
 
-
 #define IO_APPEND O_APPEND
 #define FSYNC O_SYNC
 
-#define VTOI(V)  ((struct inode*)V)
+#define VTOI(V)	(V)
 #define VFS_STATFS(V, S) ((V)->s_op->statfs)((V), (S), sizeof(*(S)))
-
-
 
 /* Various mode bits */
 #define VWRITE	S_IWUSR
@@ -73,7 +55,6 @@ enum vcexcl { EXCL, NONEXCL } ;
 #define VEXEC	S_IXUSR
 #define VSUID	S_ISUID
 #define VSGID	S_ISGID
-
 
 #define vfs super_block
 
@@ -96,8 +77,5 @@ typedef struct vattr {
 } vattr_t;
 
 #define VATTR_NULL(A) memset(A, 0, sizeof(struct vattr))
-
-
-#define vnodeops inode_operations
 
 #endif /* OSI_VFS_H_ */
