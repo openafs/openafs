@@ -39,23 +39,8 @@ if test "x$enable_redhat_buildsys" = "xyes"; then
 else
   save_CPPFLAGS="$CPPFLAGS"
   CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $RHCONFIG_SP $CPPFLAGS"
-  AC_MSG_CHECKING(if kernel uses MODVERSIONS)
-  AC_CACHE_VAL(ac_cv_linux_config_modversions,[
-  AC_TRY_COMPILE(
-[#include <linux/version.h>
-#include <linux/config.h>
-],
-[#if !defined(CONFIG_MODVERSIONS)
-lose;
-#endif
-],
-  ac_cv_linux_config_modversions=yes,
-  ac_cv_linux_config_modversions=no)])
-  AC_MSG_RESULT($ac_cv_linux_config_modversions)
   AC_MSG_CHECKING(which kernel modules to build)
   if test "x$ac_linux_rhconfig" = "xyes"; then
-      MPS="MP SP"
-  elif test "x$ac_cv_linux_config_modversions" = "xno" -a "$AFS_SYSKVERS" -lt 26; then
       MPS="MP SP"
   else
   AC_CACHE_VAL(ac_cv_linux_config_smp, [
