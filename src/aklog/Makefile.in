@@ -5,7 +5,7 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
-CFLAGS += @KRB5CFLAGS@ -DALLOW_REGISTER
+OPTMZ += @KRB5CFLAGS@ -DALLOW_REGISTER
 LIBS += @KRB5LIBS@
 AFSLIBS = ${TOP_LIBDIR}/libprot.a ${TOP_LIBDIR}/libubik.a \
 	  ${TOP_LIBDIR}/libauth.a ${TOP_LIBDIR}/librxkad.a \

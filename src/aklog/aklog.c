@@ -43,7 +43,6 @@ WinMain(HINSTANCE hinst, HINSTANCE hprevinstance, LPSTR cmdline, int noshow)
 
 	parse_cmdline(cmdline, &argv, &argc);
 
-    aklog_init_params(&params);
     aklog(argc, argv, &params);
 
 	return 0;
