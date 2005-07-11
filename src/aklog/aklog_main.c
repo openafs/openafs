@@ -194,7 +194,7 @@ static int get_user_realm(krb5_context, char *);
 #define get_creds_enctype(c) c->session.keytype
 
 #else
-#error "Must have either keyblock or session member of krb5_creds
+#error "Must have either keyblock or session member of krb5_creds"
 #endif
 
 #if !defined(HAVE_KRB5_524_CONVERT_CREDS) && defined(HAVE_KRB524_CONVERT_CREDS_KDC)
