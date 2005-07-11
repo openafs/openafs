@@ -15,7 +15,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: openafs_1.2.10-1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-05-21 00:27-0400\n"
+"POT-Creation-Date: 2005-07-10 17:32-0700\n"
 "PO-Revision-Date: 2003-08-31 13:28-0300\n"
 "Last-Translator: André Luís Lopes <andrelop@debian.org>\n"
 "Language-Team: Debian-BR Project <debian-l10n-portuguese@lists.debian.org>\n"
@@ -85,7 +85,7 @@ msgstr "Qual o tamanho de seu cache AFS (em kb) ?"
 #: ../openafs-client.templates:24
 #, fuzzy
 msgid ""
-"AFS uses an  area of the disk to cache remote files for faster access.  This "
+"AFS uses an area of the disk to cache remote files for faster access.  This "
 "cache will be mounted on /var/cache/openafs.  It is important that the cache "
 "not overfill the partition it is located on.  Often, people find it useful "
 "to dedicate a partition to their AFS cache."
@@ -192,7 +192,7 @@ msgstr ""
 msgid ""
 "If you generate /afs dynamically, you may need to create /etc/openafs/"
 "CellAlias to include aliases for common cells. DO NOT SELECT THIS OPTION IF "
-"THIS MACHINE IS THE FIRST DATABASE SERVER IN A NEW CELL ."
+"THIS MACHINE IS THE FIRST DATABASE SERVER IN A NEW CELL."
 msgstr ""
 "Caso você gere o /afs dinamicamente, você pode precisar criar o /etc/openafs/"
 "CellAlias para incluir apelidos (aliases) para células comuns. NÂO SELECIONE "
@@ -252,11 +252,11 @@ msgstr "Atualizar irá mover arquivo para novos locais. Continuar ?"
 #. Description
 #: ../openafs-fileserver.templates:11
 msgid ""
-"Between Openafs 1.1 and Openafs 1.2, several files moved.  In particular,  "
+"Between Openafs 1.1 and Openafs 1.2, several files moved.  In particular, "
 "files in /etc/openafs/server-local have been distributed to other "
 "locations.  The BosConfig file is now located in /etc/openafs and the other "
 "files are located in /var/lib/openafs.  If you continue with this upgrade, "
-"these files will be moved. You should use the bos restart command to  reload "
+"these files will be moved.  You should use the bos restart command to reload "
 "your servers.  Any configuration changes made before you do so will be lost."
 msgstr ""
 "Entre as versões do OpenAFS 1.1 e do OpenAFS 1.2, diversos arquivos foram "
@@ -271,7 +271,8 @@ msgstr ""
 #. Type: note
 #. Description
 #: ../openafs-fileserver.templates:22
-msgid "OpenAFS Fileserv Probably does not work!"
+#, fuzzy
+msgid "OpenAFS file server probably does not work!"
 msgstr "Servidor de Arquivo OpenAFS provavelmente não funciona !"
 
 #. Type: note

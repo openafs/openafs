@@ -9,17 +9,17 @@ Template: openafs-fileserver/bosconfig_moved
 Type: boolean
 Default: true
 _Description: Upgrading will move files to new locations; continue?
- Between Openafs 1.1 and Openafs 1.2, several files moved.  In particular, 
+ Between Openafs 1.1 and Openafs 1.2, several files moved.  In particular,
  files in /etc/openafs/server-local have been distributed to other
  locations.  The BosConfig file is now located in /etc/openafs and the
  other files are located in /var/lib/openafs.  If you continue with this
- upgrade, these files will be moved. You should use the bos restart command
- to  reload your servers.  Any configuration changes made before you do so
- will be lost.
+ upgrade, these files will be moved.  You should use the bos restart
+ command to reload your servers.  Any configuration changes made before
+ you do so will be lost.
 
 Template: openafs-fileserver/alpha-broken
 Type: note
-_Description: OpenAFS Fileserv Probably does not work!
+_Description: OpenAFS file server probably does not work!
  You are running the OpenAFS file server package on an alpha.  This
  probably doesn't work; the DES code is flaky on the alpha, along with the
  threaded file server.  Likely, the fileserver will simply fail to start,

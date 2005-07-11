@@ -22,7 +22,7 @@ Template: openafs-client/cachesize
 Type: string
 Default: 50000
 _Description:  How large is your AFS cache (kB)?
- AFS uses an  area of the disk to cache remote files for faster
+ AFS uses an area of the disk to cache remote files for faster
  access.  This cache will be mounted on /var/cache/openafs.  It is
  important that the cache not overfill the partition it is located
  on.  Often, people find it useful to dedicate a partition to their
@@ -70,7 +70,7 @@ _Description: Dynamically generate the contents of /afs?
  .
  If you generate /afs dynamically, you may need to create
  /etc/openafs/CellAlias to include aliases for common cells. DO NOT SELECT
- THIS OPTION IF THIS MACHINE IS THE FIRST DATABASE SERVER IN A NEW CELL .
+ THIS OPTION IF THIS MACHINE IS THE FIRST DATABASE SERVER IN A NEW CELL.
 
 Template: openafs-client/fakestat
 Type: boolean
