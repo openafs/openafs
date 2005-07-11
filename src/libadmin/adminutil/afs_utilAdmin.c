@@ -450,7 +450,7 @@ util_AdminServerAddressGetFromName(const char *serverName, int *serverAddress,
 	server = gethostbyname(serverName);
 	if (server != NULL) {
 	    memcpy((void *)serverAddress, (const void *)server->h_addr,
-		   sizeof(serverAddress));
+		   sizeof(int));
 	    *serverAddress = ntohl(*serverAddress);
 	} else {
 	    tst = ADMUTILCANTGETSERVERNAME;
