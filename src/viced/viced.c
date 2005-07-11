@@ -28,8 +28,8 @@ RCSID
 #include <sys/types.h>
 #include <afs/procmgmt.h>	/* signal(), kill(), wait(), etc. */
 #include <sys/stat.h>
-#ifdef AFS_NT40_ENV
 #include <fcntl.h>
+#ifdef AFS_NT40_ENV
 #include <io.h>
 #include <windows.h>
 #include <WINNT/afsevent.h>
@@ -317,14 +317,9 @@ ResetCheckDescriptors(void)
 
 #if defined(AFS_PTHREAD_ENV)
 char *
-threadName(void)
+threadNum(void)
 {
-    char threadid[16];
-    if (LogLevel > 999) {
-	afs_snprintf(threadid, 16, "%d", pthread_getspecific(rx_thread_id_key));
-	return threadid;
-    } else 
-	return NULL;
+    return pthread_getspecific(rx_thread_id_key);
 }
 #endif
 
@@ -717,6 +712,7 @@ FlagMsg()
     /* default supports help flag */
 
     strcpy(buffer, "Usage: fileserver ");
+    strcpy(buffer, "[-auditlog <log path>] ");
     strcat(buffer, "[-d <debug level>] ");
     strcat(buffer, "[-p <number of processes>] ");
     strcat(buffer, "[-spare <number of spare blocks>] ");
@@ -1094,6 +1090,36 @@ ParseArgs(int argc, char *argv[])
 	    rx_enablePeerRPCStats();
 	} else if (!strcmp(argv[i], "-enable_process_stats")) {
 	    rx_enableProcessRPCStats();
+	}
+	else if (strcmp(argv[i], "-auditlog") == 0) {
+	    int tempfd, flags;
+	    FILE *auditout;
+	    char oldName[MAXPATHLEN];
+	    char *fileName = argv[++i];
+	    
+#ifndef AFS_NT40_ENV
+	    struct stat statbuf;
+	    
+	    if ((lstat(fileName, &statbuf) == 0) 
+		&& (S_ISFIFO(statbuf.st_mode))) {
+		flags = O_WRONLY | O_NONBLOCK;
+	    } else 
+#endif
+	    {
+		strcpy(oldName, fileName);
+		strcat(oldName, ".old");
+		renamefile(fileName, oldName);
+		flags = O_WRONLY | O_TRUNC | O_CREAT;
+	    }
+	    tempfd = open(fileName, flags, 0666);
+	    if (tempfd > -1) {
+		auditout = fdopen(tempfd, "a");
+		if (auditout) {
+		    osi_audit_file(auditout);
+		} else
+		    printf("Warning: auditlog %s not writable, ignored.\n", fileName);
+	    } else
+		printf("Warning: auditlog %s not writable, ignored.\n", fileName);
 	}
 #ifndef AFS_NT40_ENV
 	else if (strcmp(argv[i], "-syslog") == 0) {
@@ -1730,7 +1756,7 @@ main(int argc, char *argv[])
     }
 
 #ifdef AFS_PTHREAD_ENV
-    SetLogThreadNameProgram( threadName );
+    SetLogThreadNumProgram( threadNum );
 #endif
 
     /* initialize libacl routines */

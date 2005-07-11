@@ -811,17 +811,49 @@ main(int argc, char **argv, char **envp)
 	    bozo_isrestricted = 1;
 	}
 #endif
+	else if (strcmp(argv[code], "-auditlog") == 0) {
+	    int tempfd, flags;
+	    FILE *auditout;
+	    char oldName[MAXPATHLEN];
+	    char *fileName = argv[++code];
+
+#ifndef AFS_NT40_ENV
+	    struct stat statbuf;
+	    
+	    if ((lstat(fileName, &statbuf) == 0) 
+		&& (S_ISFIFO(statbuf.st_mode))) {
+		flags = O_WRONLY | O_NONBLOCK;
+	    } else 
+#endif
+	    {
+		strcpy(oldName, fileName);
+		strcat(oldName, ".old");
+		renamefile(fileName, oldName);
+		flags = O_WRONLY | O_TRUNC | O_CREAT;
+	    }
+	    tempfd = open(fileName, flags, 0666);
+	    if (tempfd > -1) {
+		auditout = fdopen(tempfd, "a");
+		if (auditout) {
+		    osi_audit_file(auditout);
+		} else
+		    printf("Warning: auditlog %s not writable, ignored.\n", fileName);
+	    } else
+		printf("Warning: auditlog %s not writable, ignored.\n", fileName);
+	}
 	else {
 
 	    /* hack to support help flag */
 
 #ifndef AFS_NT40_ENV
 	    printf("Usage: bosserver [-noauth] [-log] "
+		   "[-auditlog <log path>] "
 		   "[-syslog[=FACILITY]] "
 		   "[-enable_peer_stats] [-enable_process_stats] "
 		   "[-nofork] " "[-help]\n");
 #else
 	    printf("Usage: bosserver [-noauth] [-log] "
+		   "[-auditlog <log path>] "
 		   "[-enable_peer_stats] [-enable_process_stats] "
 		   "[-help]\n");
 #endif

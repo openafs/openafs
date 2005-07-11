@@ -48,6 +48,7 @@ RCSID
 #include <lock.h>
 #include <afs/afsutil.h>
 #include <ubik.h>
+#include <sys/stat.h>
 #include "kauth.h"
 #include "kautils.h"
 #include "kaserver.h"
@@ -200,6 +201,7 @@ main(argc, argv)
     if (argc == 0) {
       usage:
 	printf("Usage: kaserver [-noAuth] [-fastKeys] [-database <dbpath>] "
+	       "[-auditlog <log path>] "
 	       "[-localfiles <lclpath>] [-minhours <n>] [-servers <serverlist>] "
 	       "[-crossrealm]"
 	       /*" [-enable_peer_stats] [-enable_process_stats] " */
@@ -243,6 +245,36 @@ main(argc, argv)
 	    dbpath = argv[++a];
 	    if (strcmp(lclpath, default_lclpath) == 0)
 		lclpath = dbpath;
+	}
+	else if (strncmp(arg, "-auditlog", arglen) == 0) {
+	    int tempfd, flags;
+	    FILE *auditout;
+	    char oldName[MAXPATHLEN];
+	    char *fileName = argv[++a];
+	    
+#ifndef AFS_NT40_ENV
+	    struct stat statbuf;
+	    
+	    if ((lstat(fileName, &statbuf) == 0) 
+		&& (S_ISFIFO(statbuf.st_mode))) {
+		flags = O_WRONLY | O_NONBLOCK;
+	    } else 
+#endif
+	    {
+		strcpy(oldName, fileName);
+		strcat(oldName, ".old");
+		renamefile(fileName, oldName);
+		flags = O_WRONLY | O_TRUNC | O_CREAT;
+	    }
+	    tempfd = open(fileName, flags, 0666);
+	    if (tempfd > -1) {
+		auditout = fdopen(tempfd, "a");
+		if (auditout) {
+		    osi_audit_file(auditout);
+		} else
+		    printf("Warning: auditlog %s not writable, ignored.\n", fileName);
+	    } else
+		printf("Warning: auditlog %s not writable, ignored.\n", fileName);
 	} else if (strcmp(arg, "-localfiles") == 0)
 	    lclpath = argv[++a];
 	else if (strcmp(arg, "-servers") == 0)

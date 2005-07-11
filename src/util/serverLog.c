@@ -70,7 +70,12 @@ static pthread_mutex_t serverLogMutex;
 #define O_NONBLOCK 0
 #endif
 
-static char *(*threadNameProgram) () = NULL;
+static int
+dummyThreadNum(void)
+{
+    return -1;
+}
+static int (*threadNumProgram) () = dummyThreadNum;
 
 static int serverLogFD = -1;
 
@@ -88,9 +93,9 @@ int printLocks = 0;
 static char ourName[MAXPATHLEN];
 
 void
-SetLogThreadNameProgram(char *(*func) () )
+SetLogThreadNumProgram(int (*func) () )
 {
-    threadNameProgram = func;
+    threadNumProgram = func;
 }
 
 void
@@ -102,6 +107,12 @@ WriteLogBuffer(char *buf, afs_uint32 len)
     UNLOCK_SERVERLOG();
 }
 
+int
+LogThreadNum(void) 
+{
+  return (*threadNumProgram) ();
+}
+
 void
 vFSLog(const char *format, va_list args)
 {
@@ -109,7 +120,7 @@ vFSLog(const char *format, va_list args)
     char *timeStamp;
     char tbuffer[1024];
     char *info;
-    int len;
+    int len, num;
     char *name;
 
     currenttime = time(0);
@@ -118,10 +129,10 @@ vFSLog(const char *format, va_list args)
     info = &timeStamp[25];
 
     if (mrafsStyleLogs || threadIdLogs) {
-	name = (*threadNameProgram) ();
-        if (name) {
-	(void)afs_snprintf(info, (sizeof tbuffer) - strlen(tbuffer), "[%s] ",
-			   name);
+	num = (*threadNumProgram) ();
+        if (num > -1) {
+	(void)afs_snprintf(info, (sizeof tbuffer) - strlen(tbuffer), "[%d] ",
+			   num);
 	info += strlen(info);
     }
     }
@@ -182,7 +193,7 @@ SetDebug_Signal(int signo)
 	LogLevel *= 5;
 
 #if defined(AFS_PTHREAD_ENV)
-        if (LogLevel > 1 && threadNameProgram != NULL && 
+        if (LogLevel > 1 && threadNumProgram != NULL && 
             threadIdLogs == 0) {
             threadIdLogs = 1;
         }

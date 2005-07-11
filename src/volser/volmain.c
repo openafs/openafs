@@ -59,6 +59,8 @@ RCSID
 #include <afs/cellconfig.h>
 #include <afs/keys.h>
 #include <ubik.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 
 #include "volser.h"
 #include <errno.h>
@@ -99,6 +101,13 @@ int Testing = 0;		/* for ListViceInodes */
 			  exit(code);                             \
 		       }
 
+#if defined(AFS_PTHREAD_ENV)
+char *
+threadNum(void)
+{
+    return pthread_getspecific(rx_thread_id_key);
+}
+#endif
 
 static afs_int32
 MyBeforeProc(struct rx_call *acall)
@@ -284,6 +293,36 @@ main(int argc, char **argv)
 		       lwps, MAXLWP);
 		lwps = MAXLWP;
 	    }
+	} else if (strcmp(argv[code], "-auditlog") == 0) {
+	    int tempfd, flags;
+	    FILE *auditout;
+	    char oldName[MAXPATHLEN];
+	    char *fileName = argv[++code];
+
+#ifndef AFS_NT40_ENV
+	    struct stat statbuf;
+	    
+	    if ((lstat(fileName, &statbuf) == 0) 
+		&& (S_ISFIFO(statbuf.st_mode))) {
+		flags = O_WRONLY | O_NONBLOCK;
+	    } else 
+#endif
+	    {
+		strcpy(oldName, fileName);
+		strcat(oldName, ".old");
+		renamefile(fileName, oldName);
+		flags = O_WRONLY | O_TRUNC | O_CREAT;
+	    }
+	    tempfd = open(fileName, flags, 0666);
+	    if (tempfd > -1) {
+		auditout = fdopen(tempfd, "a");
+		if (auditout) {
+		    osi_audit_file(auditout);
+		    osi_audit(VS_StartEvent, 0, AUD_END);
+		} else
+		    printf("Warning: auditlog %s not writable, ignored.\n", fileName);
+	    } else
+		printf("Warning: auditlog %s not writable, ignored.\n", fileName);
 	} else if (strcmp(argv[code], "-nojumbo") == 0) {
 	    rxJumbograms = 0;
 	} else if (strcmp(argv[code], "-sleep") == 0) {
@@ -324,12 +363,14 @@ main(int argc, char **argv)
 	  usage:
 #ifndef AFS_NT40_ENV
 	    printf("Usage: volserver [-log] [-p <number of processes>] "
+		   "[-auditlog <log path>] "
 		   "[-udpsize <size of socket buffer in bytes>] "
 		   "[-syslog[=FACILITY]] "
 		   "[-enable_peer_stats] [-enable_process_stats] "
 		   "[-help]\n");
 #else
 	    printf("Usage: volserver [-log] [-p <number of processes>] "
+		   "[-auditlog <log path>] "
 		   "[-udpsize <size of socket buffer in bytes>] "
 		   "[-enable_peer_stats] [-enable_process_stats] "
 		   "[-help]\n");
@@ -345,6 +386,10 @@ main(int argc, char **argv)
     }
 #endif
     InitErrTabs();
+
+#ifdef AFS_PTHREAD_ENV
+    SetLogThreadNumProgram( threadNum );
+#endif
 
 #ifdef AFS_NT40_ENV
     if (afs_winsockInit() < 0) {

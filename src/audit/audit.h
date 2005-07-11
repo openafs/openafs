@@ -284,3 +284,4 @@
 /* prototypes for audit functions */
 int osi_audit(char *audEvent, afs_int32 errCode, ...);
 int osi_auditU(struct rx_call *call, char *audEvent, int errCode, ...);
+int osi_audit_file(FILE *out);

@@ -26,7 +26,8 @@ DLLLIBS =\
 	$(DESTDIR)\lib\afs\afsadminutil.lib \
 	$(DESTDIR)\lib\afsauthent.lib \
 	$(DESTDIR)\lib\afsrpc.lib \
-	$(DESTDIR)\lib\afspthread.lib
+	$(DESTDIR)\lib\afspthread.lib \
+        $(DESTDIR)\lib\afs\afsutil.lib
 
 $(DLLFILE): $(DLLOBJS) $(DLLLIBS)
 	$(DLLCONLINK) /DEF:clientadmin.def
