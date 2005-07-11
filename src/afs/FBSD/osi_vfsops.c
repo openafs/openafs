@@ -155,7 +155,9 @@ afs_unmount(struct mount *mp, int flags, THREAD_OR_PROC)
 }
 
 int
-#ifdef AFS_FBSD53_ENV
+#if defined(AFS_FBSD60_ENV)
+afs_root(struct mount *mp, int flags, struct vnode **vpp, struct thread *td)
+#elif defined(AFS_FBSD53_ENV)
 afs_root(struct mount *mp, struct vnode **vpp, struct thread *td)
 #else
 afs_root(struct mount *mp, struct vnode **vpp)
@@ -224,7 +226,7 @@ tryagain:
 	*vpp = vp;
     }
 
-    afs_Trace2(afs_iclSetp, CM_TRACE_VFSROOT, ICL_TYPE_POINTER, *vpp,
+    afs_Trace2(afs_iclSetp, CM_TRACE_VFSROOT, ICL_TYPE_POINTER, tvp ? AFSTOV(tvp) : NULL,
 	       ICL_TYPE_INT32, error);
     AFS_GUNLOCK();
     crfree(cr);

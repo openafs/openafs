@@ -101,6 +101,8 @@ extern void psignal(unsigned int sig, char *s);
 extern int util_isint(char *str);
 
 /* kreltime.c */
+struct ktime;
+struct ktime_date;
 extern afs_int32 ktimeRelDate_ToInt32(struct ktime_date *kdptr);
 extern int Int32To_ktimeRelDate(afs_int32 int32Date,
 				struct ktime_date *kdptr);
