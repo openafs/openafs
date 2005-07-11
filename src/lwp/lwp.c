@@ -145,9 +145,7 @@ int lwp_nextindex;
 int lwp_MinStackSize = 0;
 
 static int
-lwp_remove(p, q)
-     register PROCESS p;
-     register struct QUEUE *q;
+lwp_remove(register PROCESS p, register struct QUEUE *q)
 {
     /* Special test for only element on queue */
     if (q->count == 1)
@@ -166,9 +164,7 @@ lwp_remove(p, q)
 }
 
 static int
-insert(p, q)
-     register PROCESS p;
-     register struct QUEUE *q;
+insert(register PROCESS p, register struct QUEUE *q)
 {
     if (q->head == NULL) {	/* Queue is empty */
 	q->head = p;
@@ -184,9 +180,7 @@ insert(p, q)
 }
 
 static int
-move(p, from, to)
-     PROCESS p;
-     struct QUEUE *from, *to;
+move(PROCESS p, struct QUEUE *from, struct QUEUE *to)
 {
 
     lwp_remove(p, from);
@@ -248,8 +242,7 @@ LWP_QWait(void)
 }
 
 int
-LWP_QSignal(pid)
-     register PROCESS pid;
+LWP_QSignal(register PROCESS pid)
 {
     if (pid->status == QWAITING) {
 	pid->status = READY;
