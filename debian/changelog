@@ -2,6 +2,9 @@ openafs (1.3.82-2) unstable; urgency=low
 
   * Output error messages from heredocs in the init script with cat rather
     than echo.  Thanks, Reid Barton.  (Closes: #311729)
+  * Make bosserver less picky about permissions and remove the attempt to
+    set /etc/openafs/server-local not-world-readable since dh_fixperms was
+    overridding it anyway.  (Closes: #312921)
   * Fix some spacing and capitalization errors in the debconf templates.
     Thanks, Clytie Siddall.  (Closes: Bug#316597)
   * Initial Czech translation, thanks Martin Sin.  (Closes: #310699)

@@ -138,9 +138,6 @@ install: build
 	find debian/libopenafs-dev/usr/include -type f -print | \
 	    xargs chmod a-x
 
-	# bosserver gets annoyed at loose perms on /etc/openafs/server-local
-	chmod 700 debian/openafs-fileserver/etc/openafs/server-local
-
 # Build architecture-independent files here.  Pass -i to all debhelper
 # commands in this target to reduce clutter.
 binary-indep: DH_OPTIONS=-i

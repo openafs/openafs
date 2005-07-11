@@ -1324,12 +1324,12 @@ SBOZO_EnumerateInstance(acall, anum, ainstance)
 
 struct bozo_bosEntryStats bozo_bosEntryStats[] = {
     {NULL, 1, 1, 0755, 02},	/* AFSDIR_SERVER_AFS_DIRPATH    */
-    {NULL, 1, 1, 0755, 02},	/* AFSDIR_SERVER_ETC_DIRPATH    */
+    {NULL, 1, 1, 0700, 02},	/* AFSDIR_SERVER_ETC_DIRPATH    */
     {NULL, 1, 1, 0755, 02},	/* AFSDIR_SERVER_BIN_DIRPATH    */
     {NULL, 1, 1, 0755, 02},	/* AFSDIR_SERVER_LOGS_DIRPATH   */
     {NULL, 1, 0, 0700, 07},	/* AFSDIR_SERVER_BACKUP_DIRPATH */
     {NULL, 1, 1, 0700, 07},	/* AFSDIR_SERVER_DB_DIRPATH     */
-    {NULL, 1, 1, 0700, 07},	/* AFSDIR_SERVER_LOCAL_DIRPATH  */
+    {NULL, 1, 1, 0700, 02},	/* AFSDIR_SERVER_LOCAL_DIRPATH  */
     {NULL, 0, 1, 0600, 07},	/* AFSDIR_SERVER_KEY_FILEPATH   */
     {NULL, 0, 1, 0600, 03}
 };				/* AFSDIR_SERVER_ULIST_FILEPATH */
