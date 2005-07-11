@@ -1210,10 +1210,6 @@ getCPS(call, aid, alist, over, cid)
     if (code)
 	ABORT_WITH(tt, code);
 
-    code = WhoIsThis(call, tt, cid);
-    if (code)
-	ABORT_WITH(tt, PRPERM);
-
     temp = FindByID(tt, aid);
     if (!temp)
 	ABORT_WITH(tt, PRNOENT);
