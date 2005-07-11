@@ -694,26 +694,6 @@ static int auth_to_cell(context, cell, realm)
 		params.pstdout(msgbuf);
 	    }
 
-	    /*
-	     * Talk about DUMB!  It turns out that there is a bug in
-	     * pr_Initialize -- even if you give a different cell name
-	     * to it, it still uses a connection to a previous AFS server
-	     * if one exists.  The way to fix this is to change the
-	     * _filename_ argument to pr_Initialize - that forces it to
-	     * re-initialize the connection.  We do this by adding and
-	     * removing a "/" on the end of the configuration directory name.
-	     */
-
-	    if (lastcell[0] != '\0' && (strcmp(lastcell, aserver.cell) != 0)) {
-		int i = strlen(confname);
-		if (confname[i - 1] == '/') {
-		    confname[i - 1] = '\0';
-		} else {
-		    confname[i] = '/';
-		    confname[i + 1] = '\0';
-		}
-	    }
-
 	    strcpy(lastcell, aserver.cell);
 
 	    if (!pr_Initialize (0, confname, aserver.cell, 0))

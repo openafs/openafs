@@ -73,6 +73,7 @@ pr_Initialize(IN afs_int32 secLevel, IN char *confDir, IN char *cell)
     struct rx_securityClass *sc[3];
     static struct afsconf_dir *tdir = 0;	/* only do this once */
     static char tconfDir[100];
+    static char tcell[64];
     struct ktc_token ttoken;
     afs_int32 scIndex;
     static struct afsconf_cell info;
@@ -84,7 +85,24 @@ pr_Initialize(IN afs_int32 secLevel, IN char *confDir, IN char *cell)
     initialize_ACFG_error_table();
     initialize_KTC_error_table();
 
-    if (strcmp(confDir, tconfDir)) {
+#if defined(UKERNEL)
+    if (!cell) {
+        cell = afs_LclCellName;
+    }
+#else /* defined(UKERNEL) */
+    if (!cell) {
+        code = afsconf_GetLocalCell(tdir, cellstr, sizeof(cellstr));
+        if (code) {
+            fprintf(stderr,
+                     "vos: can't get local cell name - check %s/%s\n",
+                     confDir, AFSDIR_THISCELL_FILE);
+            exit(1);
+        }
+        cell = cellstr;
+    }
+#endif /* defined(UKERNEL) */
+
+    if (strcmp(confDir, tconfDir) || strcmp(cell, tcell)) {
 	/*
 	 * Different conf dir; force re-evaluation.
 	 */
@@ -93,13 +111,13 @@ pr_Initialize(IN afs_int32 secLevel, IN char *confDir, IN char *cell)
 	tdir = (struct afsconf_dir *)0;
 	pruclient = (struct ubik_client *)0;
     }
+
     if (tdir == 0) {
 	strncpy(tconfDir, confDir, sizeof(tconfDir));
+        strncpy(tcell, cell, sizeof(tcell));
+
 #if defined(UKERNEL)
 	tdir = afs_cdir;
-	if (!cell) {
-	    cell = afs_LclCellName;
-	}
 #else /* defined(UKERNEL) */
 	tdir = afsconf_Open(confDir);
 	if (!tdir) {
@@ -108,17 +126,6 @@ pr_Initialize(IN afs_int32 secLevel, IN char *confDir, IN char *cell)
 			"libprot: Could not open configuration directory: %s.\n",
 			confDir);
 	    return -1;
-	}
-
-	if (!cell) {
-	    code = afsconf_GetLocalCell(tdir, cellstr, sizeof(cellstr));
-	    if (code) {
-		fprintf(stderr,
-			"vos: can't get local cell name - check %s/%s\n",
-			confDir, AFSDIR_THISCELL_FILE);
-		exit(1);
-	    }
-	    cell = cellstr;
 	}
 #endif /* defined(UKERNEL) */
 
