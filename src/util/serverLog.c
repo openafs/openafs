@@ -228,7 +228,7 @@ ResetDebug_Signal(int signo)
 #if defined(AFS_PTHREAD_ENV)
     DebugOn(LogLevel);
 #else /* AFS_PTHREAD_ENV */
-    IOMGR_SoftSig(DebugOn, (void *)LogLevel);
+    IOMGR_SoftSig(DebugOn, LogLevel);
 #endif /* AFS_PTHREAD_ENV */
 
     (void)signal(signo, ResetDebug_Signal);	/* on some platforms,

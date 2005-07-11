@@ -26,6 +26,7 @@ RCSID
 #include "gtxobjects.h"
 #include "gtxtextobj.h"
 #include "gtxlightobj.h"
+#include "gtxkeymap.h"
 #include "gtxframe.h"
 
 struct gtx_frame *frameA, *frameB;

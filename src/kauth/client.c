@@ -18,6 +18,9 @@ RCSID
     ("$Header$");
 
 #if defined(UKERNEL)
+#ifdef HAVE_UNISTD_H
+#define __USE_XOPEN
+#endif
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
 #include "afs/stds.h"
