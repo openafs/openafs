@@ -148,10 +148,21 @@ printbuf(FILE *out, int rec, char *audEvent, afs_int32 errCode, va_list vaList)
     struct AFSCBFids *vaFids;
     int num = LogThreadNum();
     struct in_addr hostAddr;
+    time_t currenttime;
+    char *timeStamp;
+    char tbuffer[26];
+    
+    /* Don't print the timestamp or thread id if we recursed */
+    if (rec == 0) {
+	currenttime = time(0);
+	timeStamp = afs_ctime(&currenttime, tbuffer,
+			      sizeof(tbuffer));
+	timeStamp[24] = ' ';   /* ts[24] is the newline, 25 is the null */
+	fprintf(out, timeStamp);
 
-    /* Don't print the thread id if we recursed */
-    if ((num > -1) && (rec == 0))
-	fprintf(out, "[%d]:", num);
+	if (num > -1)
+	    fprintf(out, "[%d] ", num);
+    }
     
     if (strcmp(audEvent, "VALST") != 0)
 	fprintf(out,  "EVENT %s CODE %d ", audEvent, errCode);
