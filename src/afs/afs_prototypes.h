@@ -815,8 +815,6 @@ extern afs_int32 afs_vcount;
 extern int afsvnumbers;
 extern afs_rwlock_t afs_xvcache;
 extern afs_lock_t afs_xvcb;
-extern struct vcache *freeVCList;
-extern struct vcache *Initial_freeVCList;
 extern struct afs_q VLRU;
 extern afs_int32 vcachegen;
 extern unsigned int afs_paniconwarn;
