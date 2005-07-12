@@ -4,7 +4,7 @@ Priority: optional
 Maintainer: Sam Hartman <hartmans@debian.org>
 Uploaders: Russ Allbery <rra@stanford.edu>
 Build-Depends: debhelper (>= 4.1.16), libncurses5-dev, libpam0g-dev, bison, docbook-to-man, flex, perl, comerr-dev
-Standards-Version: 3.6.1
+Standards-Version: 3.6.2
 
 Package: openafs-client
 Architecture: i386 powerpc sparc alpha s390 ia64 hppa amd64
