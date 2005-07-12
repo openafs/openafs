@@ -6,7 +6,7 @@ openafs (1.3.82-2) unstable; urgency=low
     set /etc/openafs/server-local not-world-readable since dh_fixperms was
     overridding it anyway.  (Closes: #312921)
   * Fix some spacing and capitalization errors in the debconf templates.
-    Thanks, Clytie Siddall.  (Closes: Bug#316597)
+    Thanks, Clytie Siddall.  (Closes: #316597)
   * Initial Czech translation, thanks Martin Sin.  (Closes: #310699)
   * New Vietnamese translation, thanks Clytie Siddall.  (Closes: #316598)
   * Update standards version to 3.6.2 (no changes required).
