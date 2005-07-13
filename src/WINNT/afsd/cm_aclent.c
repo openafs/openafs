@@ -127,7 +127,9 @@ static cm_aclent_t *GetFreeACLEnt(cm_scache_t * scp)
 
     if (aclp->backp && scp != aclp->backp) {
         ascp = aclp->backp;
+        lock_ReleaseWrite(&cm_aclLock);
         lock_ObtainMutex(&ascp->mx);
+        lock_ObtainWrite(&cm_aclLock);
     }
     CleanupACLEnt(aclp);
 

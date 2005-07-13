@@ -1,3 +1,8 @@
+Since 1.3.85:
+ * Fixed a deadlock caused by the holder of cm_aclLock attempting to 
+   obtain a mutex lock on a cm_scache_t object whose lock is held by
+   a thread attempting to obtain the cm_aclLock.
+
 Since 1.3.84:
  * Added a new registry key, "LogoffPreserveTokens" (see registry.txt),
    that can be used to force the preservation of user tokens upon logout.
