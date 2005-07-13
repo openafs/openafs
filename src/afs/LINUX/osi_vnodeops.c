@@ -793,7 +793,6 @@ check_bad_parent(struct dentry *dp)
     struct vcache *pvc = VTOAFS(dp->d_parent->d_inode);
 
     if (vcp->mvid->Fid.Volume != pvc->fid.Fid.Volume) {	/* bad parent */
-printk("check_bad_parent(%s): bad parent vcp->mvid->Fid.Volume != pvc->fid.Fid.Volume\n", dp->d_name.name);
 	credp = crref();
 
 	/* force a lookup, so vcp->mvid is fixed up */
