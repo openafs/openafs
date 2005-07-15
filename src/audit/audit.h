@@ -98,6 +98,7 @@
 #define PTS_LstOwnEvent    "AFS_PTS_LstOwn"
 #define PTS_IsMemOfEvent   "AFS_PTS_IsMemOf"
 #define PTS_UpdEntEvent    "AFS_PTS_UpdEnt"
+#define PTS_LstSGrps       "AFS_PTS_LstSGrps"
 
 #define BUDB_StartEvent    "AFS_BUDB_Start"
 #define BUDB_FinishEvent   "AFS_BUDB_Finish"
