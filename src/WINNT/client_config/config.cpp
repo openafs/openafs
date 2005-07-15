@@ -780,11 +780,30 @@ BOOL Config_GetCacheInUse (ULONG *pckCacheInUse, ULONG *pStatus)
 void Config_GetCachePath (LPTSTR pszCachePath)
 {
     if (!Config_ReadGlobalString (TEXT("CachePath"), pszCachePath, MAX_PATH)) {
-        TCHAR szPath[MAX_PATH];
-        GetWindowsDirectory(szPath, sizeof(szPath));
-        szPath[2] = 0;	/* get drive letter only */
-        strcat(szPath, "\\AFSCache");
+        HKEY hk;
+        TCHAR szPath[ MAX_PATH ] = TEXT("");
 
+        if (RegOpenKeyEx (HKEY_LOCAL_MACHINE, TEXT("System\\CurrentControlSet\\Control\\Session Manager\\Environment"), 0, KEY_QUERY_VALUE, &hk) == ERROR_SUCCESS)
+        {
+            DWORD dwSize = sizeof(szPath);
+            DWORD dwType = 0; 
+
+            if (RegQueryValueEx (hk, TEXT("TEMP"), NULL, &dwType, (PBYTE)szPath, &dwSize) == ERROR_SUCCESS)
+            {
+                if ( dwType == REG_EXPAND_SZ ) {
+                    TCHAR szTemp[ MAX_PATH ];
+                    lstrcpy(szTemp, szPath);
+                    ExpandEnvironmentStrings(szTemp, szPath, MAX_PATH);
+                }
+            }
+            RegCloseKey (hk);
+            lstrcat(szPath, "\\AFSCache");
+        }
+
+        if ( !szPath[0] ) {
+            GetWindowsDirectory(szPath, sizeof(szPath));
+            lstrcat(szPath, "\\TEMP\\AFSCache");
+        }
         lstrcpy (pszCachePath, szPath);
     }
 }        
