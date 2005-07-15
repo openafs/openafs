@@ -86,14 +86,25 @@ PrintCacheConfig(struct rx_connection *aconn)
     }
 }
 
+#ifndef CAPABILITY_BITS
+#define CAPABILITY_ERRORTRANS (1<<0)
+#define CAPABILITY_BITS 1
+#endif
+
 static int
 PrintInterfaces(struct rx_connection *aconn)
 {
+    Capabilities caps;
     struct interfaceAddr addr;
     char * p;
     int i, code;
 
-    code = RXAFSCB_WhoAreYou(aconn, &addr);
+    caps.Capabilities_val = NULL;
+    caps.Capabilities_len = 0;
+
+    code = RXAFSCB_TellMeAboutYourself(aconn, &addr, &caps);
+    if (code == RXGEN_OPCODE)
+        code = RXAFSCB_WhoAreYou(aconn, &addr);
     if (code) {
 	printf("cmdebug: error checking interfaces: %s\n",
 	       error_message(code));
@@ -113,6 +124,19 @@ PrintInterfaces(struct rx_connection *aconn)
 	    printf(", MTU %d", addr.mtu[i]);
 	printf("\n");
     }
+
+    if (caps.Capabilities_val) {
+        printf("Capabilities:\n");
+        if (caps.Capabilities_val[0] & CAPABILITY_ERRORTRANS) {
+            printf("Error Translation\n");  
+        }
+        printf("\n");
+    }
+
+    if (caps.Capabilities_val)
+	free(caps.Capabilities_val);
+    caps.Capabilities_val = NULL;
+    caps.Capabilities_len = 0;
 
     return 0;
 }
