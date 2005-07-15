@@ -14,15 +14,11 @@ static char *rcsid = "$Id$";
 
 #ifndef WINDOWS
 
-#ifdef __STDC__
+int
 main(int argc, char *argv[])
-#else
-main(argc, argv)
-  int argc;
-  char *argv[];
-#endif /* __STDC__ */
 {
     aklog(argc, argv);
+    exit(0);
 }
 
 #else /* WINDOWS */

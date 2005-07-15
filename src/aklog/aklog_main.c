@@ -81,6 +81,7 @@ u_long ntohl(u_long x)
 #include <afs/vice.h>
 #include <afs/venus.h>
 #include <afs/ptserver.h>
+#include <afs/ptuser.h>
 #include <afs/dirpath.h>
 #endif /* WINDOWS */
 
@@ -259,7 +260,6 @@ static int get_cellconfig(char *cell, struct afsconf_cell *cellconfig, char *loc
 {
     int status = AKLOG_SUCCESS;
     struct afsconf_dir *configdir;
-    char *dirpath;
 
     memset(local_cell, 0, sizeof(local_cell));
     memset((char *)cellconfig, 0, sizeof(*cellconfig));
@@ -392,19 +392,11 @@ cm_SearchCellFile_CallBack(void *rock /* cellconfig */,
  * doing anything.  Otherwise, log to it and mark that it has been logged
  * to.
  */
-#ifdef __STDC__
 static int auth_to_cell(krb5_context context, char *cell, char *realm)
-#else
-static int auth_to_cell(context, cell, realm)
-
-  krb5_context context;
-  char *cell;
-  char *realm;
-#endif /* __STDC__ */
 {
     int status = AKLOG_SUCCESS;
     char username[BUFSIZ];	/* To hold client username structure */
-    long viceId;		/* AFS uid of user */
+    afs_int32 viceId;		/* AFS uid of user */
 
     char name[ANAME_SZ];	/* Name of afs key */
     char primary_instance[INST_SZ];	/* Instance of afs key */
@@ -720,7 +712,7 @@ static int auth_to_cell(context, cell, realm)
 
 	    strcpy(lastcell, aserver.cell);
 
-	    if (!pr_Initialize (0, confname, aserver.cell, 0))
+	    if (!pr_Initialize (0, confname, aserver.cell))
 		    status = pr_SNameToId (username, &viceId);
 	    
 	    if (dflag) {
@@ -775,7 +767,7 @@ static int auth_to_cell(context, cell, realm)
 		 * level
 		 */
 
-		if ((status = pr_Initialize(1L, confname, aserver.cell, 0))) {
+		if ((status = pr_Initialize(1L, confname, aserver.cell))) {
 		    printf("Error %d\n", status);
 		}
 
@@ -860,14 +852,7 @@ static int auth_to_cell(context, cell, realm)
 
 #ifndef WINDOWS /* struct ViceIoctl missing */
 
-#ifdef __STDC__
 static int get_afs_mountpoint(char *file, char *mountpoint, int size)
-#else
-static int get_afs_mountpoint(file, mountpoint, size)
-  char *file;
-  char *mountpoint;
-  int size;
-#endif /* __STDC__ */
 {
 #ifdef AFS_SUN_ENV
 	char V ='V'; /* AFS has problem on Sun with pioctl */
@@ -924,12 +909,7 @@ static int get_afs_mountpoint(file, mountpoint, size)
  * to be descended.  After that, it should be called with the arguemnt
  * NULL.
  */
-#ifdef __STDC__
 static char *next_path(char *origpath)
-#else
-static char *next_path(origpath)
-  char *origpath;
-#endif /* __STDC__ */
 {
     static char path[MAXPATHLEN + 1];
     static char pathtocheck[MAXPATHLEN + 1];
@@ -1047,12 +1027,7 @@ int dee_gettokens()
 
 #ifndef WINDOWS /* struct ViceIoctl missing */
 
-#ifdef __STDC__
 static void add_hosts(char *file)
-#else
-static void add_hosts(file)
-  char *file;
-#endif /* __STDC__ */
 {
 #ifdef AFS_SUN_ENV
 	char V = 'V'; /* AFS has problem on SunOS */
@@ -1119,13 +1094,7 @@ static void add_hosts(file)
  * This routine descends through a path to a directory, logging to 
  * every cell it encounters along the way.
  */
-#ifdef __STDC__
 static int auth_to_path(krb5_context context, char *path)
-#else
-static int auth_to_path(context, path)
-  krb5_context context;
-  char *path;			/* The path to which we try to authenticate */
-#endif /* __STDC__ */
 {
     int status = AKLOG_SUCCESS;
     int auth_to_cell_status = AKLOG_SUCCESS;
@@ -1143,7 +1112,7 @@ static int auth_to_path(context, path)
     if (path[0] == DIR)
 	strcpy(pathtocheck, path);
     else {
-	if (getwd(pathtocheck) == NULL) {
+	if (getcwd(pathtocheck, sizeof(pathtocheck)) == NULL) {
 	    fprintf(stderr, "Unable to find current working directory:\n");
 	    fprintf(stderr, "%s\n", pathtocheck);
 	    fprintf(stderr, "Try an absolute pathname.\n");
@@ -1212,11 +1181,7 @@ static int auth_to_path(context, path)
 
 
 /* Print usage message and exit */
-#ifdef __STDC__
 static void usage(void)
-#else
-static void usage()
-#endif /* __STDC__ */
 {
     fprintf(stderr, "\nUsage: %s %s%s%s\n", progname,
 	    "[-d] [[-cell | -c] cell [-k krb_realm]] ",
