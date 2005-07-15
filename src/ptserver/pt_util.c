@@ -119,7 +119,6 @@ main(int argc, char **argv)
 		"display only system data");
     cmd_AddParm(cs, "-xtra", CMD_FLAG, CMD_OPTIONAL,
 		"display extra users/groups");
-    cmd_Seek(cs, 10);
     cmd_AddParm(cs, "-prdb", CMD_SINGLE, CMD_OPTIONAL, "prdb file");
     cmd_AddParm(cs, "-datafile", CMD_SINGLE, CMD_OPTIONAL, "data file");
     code = cmd_Dispatch(argc, argv);
