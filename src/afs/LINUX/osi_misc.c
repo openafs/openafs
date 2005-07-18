@@ -141,7 +141,7 @@ osi_InitCacheInfo(char *aname)
 int
 osi_rdwr(struct osi_file *osifile, uio_t * uiop, int rw)
 {
-#ifdef AFS_LINUX24_ENV
+#ifdef AFS_LINUX26_ENV
     struct file *filp = osifile->filp;
 #else
     struct file *filp = &osifile->file;

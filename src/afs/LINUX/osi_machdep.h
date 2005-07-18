@@ -183,7 +183,7 @@ typedef struct uio {
 /* Get/set the inode in the osifile struct. */
 #define FILE_INODE(F) (F)->f_dentry->d_inode
 
-#ifdef AFS_LINUX24_ENV
+#ifdef AFS_LINUX26_ENV
 #define OSIFILE_INODE(a) FILE_INODE((a)->filp)
 #else
 #define OSIFILE_INODE(a) FILE_INODE(&(a)->file)
