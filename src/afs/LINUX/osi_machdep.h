@@ -74,22 +74,39 @@
 #undef gop_lookupname
 #define gop_lookupname osi_lookupname
 
-#define osi_vnhold(V, N) do { VN_HOLD(AFSTOV(V)); } while (0)
-#define VN_HOLD(V) osi_Assert(igrab((V)) == (V))
-#define VN_RELE(V) iput((V))
+#define osi_vnhold(v, n) do { VN_HOLD(AFSTOV(v)); } while (0)
+
+#if defined(AFS_LINUX24_ENV)
+#define VN_HOLD(V) atomic_inc(&((vnode_t *) V)->i_count)
+#else
+#define VN_HOLD(V) ((vnode_t *) V)->i_count++
+#endif
+
+#if defined(AFS_LINUX24_ENV)
+#define VN_RELE(V) iput((struct inode *) V)
+#else
+#define VN_RELE(V) osi_iput((struct inode *) V)
+#endif
+
+#define osi_AllocSmall afs_osi_Alloc
+#define osi_FreeSmall afs_osi_Free
 
 #define afs_suser(x) capable(CAP_SYS_ADMIN)
 #define wakeup afs_osi_Wakeup
 
 #undef vType
-#define vType(V) ((AFSTOV((V)))->i_mode & S_IFMT)
-#undef vSetType
-#define vSetType(V, type) AFSTOV((V))->i_mode = ((type) | (AFSTOV((V))->i_mode & ~S_IFMT))	/* preserve mode */
+#define vType(V) ((( vnode_t *)V)->v_type & S_IFMT)
 
+/* IsAfsVnode relies on the fast that there is only one vnodeop table for AFS.
+ * Use the same type of test as other OS's for compatibility.
+ */
 #undef IsAfsVnode
-#define IsAfsVnode(V) ((V)->i_sb == afs_globalVFS)	/* test superblock instead */
+extern struct vnodeops afs_file_iops, afs_dir_iops, afs_symlink_iops;
+#define IsAfsVnode(v) (((v)->v_op == &afs_file_iops) ? 1 : \
+			((v)->v_op == &afs_dir_iops) ? 1 : \
+			((v)->v_op == &afs_symlink_iops))
 #undef SetAfsVnode
-#define SetAfsVnode(V)					/* unnecessary */
+#define SetAfsVnode(v)
 
 /* We often need to pretend we're in user space to get memory transfers
  * right for the kernel calls we use.
@@ -166,7 +183,7 @@ typedef struct uio {
 /* Get/set the inode in the osifile struct. */
 #define FILE_INODE(F) (F)->f_dentry->d_inode
 
-#ifdef AFS_LINUX26_ENV
+#ifdef AFS_LINUX24_ENV
 #define OSIFILE_INODE(a) FILE_INODE((a)->filp)
 #else
 #define OSIFILE_INODE(a) FILE_INODE(&(a)->file)

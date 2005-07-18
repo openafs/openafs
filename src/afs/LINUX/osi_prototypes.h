@@ -37,6 +37,7 @@ extern int osi_InitCacheInfo(char *aname);
 extern int osi_rdwr(struct osi_file *osifile, uio_t * uiop, int rw);
 extern void afs_osi_SetTime(osi_timeval_t * tvp);
 extern void osi_linux_free_inode_pages(void);
+extern void check_bad_parent(struct dentry *dp);
 
 /* osi_probe.c */
 extern void *osi_find_syscall_table(int which);
@@ -60,11 +61,12 @@ extern void osi_VM_Truncate(struct vcache *avc, int alen,
 			    struct AFS_UCRED *acred);
 
 /* osi_vfsops.c */
+extern void set_inode_cache(struct inode *ip, struct vattr *vp);
+extern void put_inode_on_dummy_list(struct inode *ip);
 extern void vattr2inode(struct inode *ip, struct vattr *vp);
-extern int afs_init_inodecache(void);
-extern void afs_destroy_inodecache(void);
 
 /* osi_vnodeops.c */
-extern void afs_fill_inode(struct inode *ip, struct vattr *vattr);
+extern int afs_linux_writepage_sync(struct inode *ip, struct page *pp,
+				    unsigned long offset, unsigned int count);
 
 #endif /* _OSI_PROTO_H_ */

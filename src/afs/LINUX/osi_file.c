@@ -31,13 +31,30 @@ extern struct vfsmount *afs_cacheMnt;
 #endif
 extern struct super_block *afs_cacheSBp;
 
-#if defined(AFS_LINUX26_ENV) 
+/*#if defined(AFS_LINUX26_ENV) && (defined(CONFIG_EXPORTFS) || defined(CONFIG_EXPORTFS_MODULE))
+#define HAS_UFSOPEN
+extern struct export_operations export_op_default;
+
+#define CALL(ops,fun) ((ops->fun)?(ops->fun):export_op_default.fun)
+
+XXX something based on encode_fh / find_exported_dentry 
+This would require us to store an inode -> fh mapping (acquired by
+afs_InitCacheFile or lookupname), but probably solves the resiserfs issue.
+#elif... */
+
+#if defined(AFS_LINUX24_ENV) && !defined(HAS_UFSOPEN)
+#define HAS_UFSOPEN
 void *
 osi_UFSOpen(afs_int32 ainode)
 {
     register struct osi_file *afile = NULL;
     extern int cacheDiskType;
     struct inode *tip = NULL;
+#ifndef AFS_LINUX26_ENV
+    afs_int32 code = 0;
+    struct list_head *lp = NULL;
+    struct dentry *tdp = NULL;
+#endif
     struct dentry *dp = NULL;
     struct file *filp = NULL;
     AFS_STATCNT(osi_UFSOpen);
@@ -62,11 +79,33 @@ osi_UFSOpen(afs_int32 ainode)
 	osi_Panic("Can't get inode %d\n", ainode);
     tip->i_flags |= MS_NOATIME;	/* Disable updating access times. */
 
+#ifdef AFS_LINUX26_ENV
     dp = d_alloc_anon(tip);
+#else
+    spin_lock(&dcache_lock);
+    for (lp = tip->i_dentry.next;  lp != &tip->i_dentry; lp = lp->next) {
+        tdp = list_entry(lp, struct dentry, d_alias);
+        if ( !(tdp->d_flags & DCACHE_NFSD_DISCONNECTED)) {
+             dget_locked(tdp);
+             dp=tdp;
+             break;
+        }
+    }
+    if (tdp && !dp) {
+             dget_locked(tdp);
+             dp=tdp;
+    }
+    tdp = NULL;
+    spin_unlock(&dcache_lock);
+    if (!dp)
+           dp = d_alloc_root(tip);
+    iput(tip);
+#endif
     if (!dp) 
            osi_Panic("Can't get dentry for inode %d\n", ainode);          
 
     filp = dentry_open(dp, mntget(afs_cacheMnt), O_RDWR);
+
     if (IS_ERR(filp))
 	osi_Panic("Can't open inode %d\n", ainode);
     afile->filp = filp;
@@ -77,7 +116,9 @@ osi_UFSOpen(afs_int32 ainode)
     afile->inum = ainode;	/* for hint validity checking */
     return (void *)afile;
 }
-#else
+#endif
+
+#if !defined(HAS_UFSOPEN)
 void *
 osi_UFSOpen(afs_int32 ainode)
 {
@@ -111,6 +152,9 @@ osi_UFSOpen(afs_int32 ainode)
     FILE_INODE(filp) = tip;
     tip->i_flags |= MS_NOATIME;	/* Disable updating access times. */
     filp->f_flags = O_RDWR;
+#if defined(AFS_LINUX26_ENV)
+    filp->f_mapping = tip->i_mapping;
+#endif
 #if defined(AFS_LINUX24_ENV)
     filp->f_mode = FMODE_READ|FMODE_WRITE;
     filp->f_op = fops_get(tip->i_fop);
@@ -150,14 +194,14 @@ afs_osi_Stat(register struct osi_file *afile, register struct osi_stat *astat)
     return code;
 }
 
-#ifdef AFS_LINUX26_ENV
+#ifdef AFS_LINUX24_ENV
 int
 osi_UFSClose(register struct osi_file *afile)
 {
     AFS_STATCNT(osi_Close);
     if (afile) {
 	if (OSIFILE_INODE(afile)) {
-	    filp_close(afile->filp, NULL);
+             filp_close(afile->filp, NULL);
 	}
     }
 

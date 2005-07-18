@@ -47,7 +47,7 @@ RCSID
 #include "afs/afs_cbqueue.h"
 #include "afs/afs_osidnlc.h"
 
-#if defined(AFS_OSF_ENV) || defined(AFS_LINUX22_ENV)
+#ifdef AFS_OSF_ENV
 afs_int32 afs_maxvcount = 0;	/* max number of vcache entries */
 afs_int32 afs_vcount = 0;	/* number of vcache in use now */
 #endif /* AFS_OSF_ENV */
@@ -63,10 +63,8 @@ char *makesname();
 /* Exported variables */
 afs_rwlock_t afs_xvcache;	/*Lock: alloc new stat cache entries */
 afs_lock_t afs_xvcb;		/*Lock: fids on which there are callbacks */
-#if !defined(AFS_LINUX22_ENV)
-static struct vcache *freeVCList;	/*Free list for stat cache entries */
-static struct vcache *Initial_freeVCList;	/*Initial list for above */
-#endif
+struct vcache *freeVCList;	/*Free list for stat cache entries */
+struct vcache *Initial_freeVCList;	/*Initial list for above */
 struct afs_q VLRU;		/*vcache LRU */
 afs_int32 vcachegen = 0;
 unsigned int afs_paniconwarn = 0;
@@ -153,11 +151,9 @@ afs_FlushVCache(struct vcache *avc, int *slept)
 	code = EBUSY;
 	goto bad;
     }
-#if !defined(AFS_LINUX22_ENV)
     if (avc->nextfree || !avc->vlruq.prev || !avc->vlruq.next) {	/* qv afs.h */
 	refpanic("LRU vs. Free inconsistency");
     }
-#endif
     avc->states |= CVFlushed;
     /* pull the entry out of the lruq and put it on the free list */
     QRemove(&avc->vlruq);
@@ -235,36 +231,32 @@ afs_FlushVCache(struct vcache *avc, int *slept)
     else
 	afs_evenZaps++;
 
-#if !defined(AFS_OSF_ENV) && !defined(AFS_LINUX22_ENV)
+#if	!defined(AFS_OSF_ENV)
     /* put the entry in the free list */
     avc->nextfree = freeVCList;
     freeVCList = avc;
     if (avc->vlruq.prev || avc->vlruq.next) {
 	refpanic("LRU vs. Free inconsistency");
     }
-    avc->states |= CVFlushed;
 #else
     /* This should put it back on the vnode free list since usecount is 1 */
     afs_vcount--;
     vSetType(avc, VREG);
     if (VREFCOUNT(avc) > 0) {
-#if defined(AFS_OSF_ENV)
 	VN_UNLOCK(AFSTOV(avc));
-#endif
 	AFS_RELE(AFSTOV(avc));
     } else {
 	if (afs_norefpanic) {
 	    printf("flush vc refcnt < 1");
 	    afs_norefpanic++;
-#if defined(AFS_OSF_ENV)
 	    (void)vgone(avc, VX_NOSLEEP, NULL);
 	    AFS_GLOCK();
 	    VN_UNLOCK(AFSTOV(avc));
-#endif
 	} else
 	    osi_Panic("flush vc refcnt < 1");
     }
 #endif /* AFS_OSF_ENV */
+    avc->states |= CVFlushed;
     return 0;
 
   bad:
@@ -607,9 +599,9 @@ afs_NewVCache(struct VenusFid *afid, struct server *serverp)
     int code, fv_slept;
 
     AFS_STATCNT(afs_NewVCache);
-#if defined(AFS_OSF_ENV) || defined(AFS_LINUX22_ENV)
-#if defined(AFS_OSF30_ENV) || defined(AFS_LINUX22_ENV)
-    if (afs_vcount >= afs_maxvcount)
+#ifdef	AFS_OSF_ENV
+#ifdef	AFS_OSF30_ENV
+    if (afs_vcount >= afs_maxvcount) {
 #else
     /*
      * If we are using > 33 % of the total system vnodes for AFS vcache
@@ -618,9 +610,8 @@ afs_NewVCache(struct VenusFid *afid, struct server *serverp)
      * our usage is > afs_maxvcount, set elsewhere to 0.5*nvnode,
      * we _must_ free some -- no choice).
      */
-    if (((3 * afs_vcount) > nvnode) || (afs_vcount >= afs_maxvcount))
+    if (((3 * afs_vcount) > nvnode) || (afs_vcount >= afs_maxvcount)) {
 #endif
-    {
 	struct afs_q *tq, *uq;
 	int i;
 	char *panicstr;
@@ -629,59 +620,14 @@ afs_NewVCache(struct VenusFid *afid, struct server *serverp)
 	for (tq = VLRU.prev; tq != &VLRU && anumber > 0; tq = uq) {
 	    tvc = QTOV(tq);
 	    uq = QPrev(tq);
-	    if (tvc->states & CVFlushed) {
+	    if (tvc->states & CVFlushed)
 		refpanic("CVFlushed on VLRU");
-	    } else if (i++ > afs_maxvcount) {
+	    else if (i++ > afs_maxvcount)
 		refpanic("Exceeded pool of AFS vnodes(VLRU cycle?)");
-	    } else if (QNext(uq) != tq) {
+	    else if (QNext(uq) != tq)
 		refpanic("VLRU inconsistent");
-	    } else if (VREFCOUNT(tvc) < 1) {
+	    else if (VREFCOUNT(tvc) < 1)
 		refpanic("refcnt 0 on VLRU");
-	    }
-
-#if defined(AFS_LINUX22_ENV)
-	    if (tvc != afs_globalVp && VREFCOUNT(tvc) > 1 && tvc->opens == 0) {
-                struct dentry *dentry;
-                struct list_head *cur, *head;
-                AFS_FAST_HOLD(tvc);
-                AFS_GUNLOCK();
-#if defined(AFS_LINUX24_ENV)
-                spin_lock(&dcache_lock);
-#endif
-		head = &(AFSTOV(tvc))->i_dentry;
-
-restart:
-                cur = head;
-                while ((cur = cur->next) != head) {
-                    dentry = list_entry(cur, struct dentry, d_alias);
-
-		    if (d_unhashed(dentry))
-			continue;
-
-		    dget_locked(dentry);
-
-#if defined(AFS_LINUX24_ENV)
-		    spin_unlock(&dcache_lock);
-#endif
-		    if (d_invalidate(dentry) == -EBUSY) {
-			dput(dentry);
-			/* perhaps lock and try to continue? (use cur as head?) */
-			goto inuse;
-		    }
-		    dput(dentry);
-#if defined(AFS_LINUX24_ENV)
-		    spin_lock(&dcache_lock);
-#endif
-		    goto restart;
-		}		    
-#if defined(AFS_LINUX24_ENV)
-		spin_unlock(&dcache_lock);
-#endif
-	    inuse:
-		AFS_GLOCK();
-		AFS_FAST_RELE(tvc);
-	    }
-#endif
 
 	    if (VREFCOUNT(tvc) == 1 && tvc->opens == 0
 		&& (tvc->states & CUnlinkedDel) == 0) {
@@ -709,24 +655,6 @@ restart:
 	}
     }
 
-#if defined(AFS_LINUX22_ENV)
-{
-    struct inode *ip;
-
-    AFS_GUNLOCK();
-    ip = new_inode(afs_globalVFS);
-    if (!ip)
-	osi_Panic("afs_NewVCache: no more inodes");
-    AFS_GLOCK();
-#if defined(STRUCT_SUPER_HAS_ALLOC_INODE)
-    tvc = VTOAFS(ip);
-#else
-    tvc = afs_osi_Alloc(sizeof(struct vcache));
-    ip->u.generic_ip = tvc;
-    tvc->v = ip;
-#endif
-}
-#else
     AFS_GUNLOCK();
     if (getnewvnode(MOUNT_AFS, &Afs_vnodeops, &nvc)) {
 	/* What should we do ???? */
@@ -736,7 +664,6 @@ restart:
 
     tvc = nvc;
     tvc->nextfree = NULL;
-#endif
     afs_vcount++;
 #else /* AFS_OSF_ENV */
     /* pull out a free cache entry */
@@ -755,6 +682,45 @@ restart:
 	    } else if (QNext(uq) != tq) {
 		refpanic("VLRU inconsistent");
 	    }
+#if defined(AFS_LINUX22_ENV)
+	    if (tvc != afs_globalVp && VREFCOUNT(tvc) && tvc->opens == 0) {
+                struct dentry *dentry;
+                struct list_head *cur, *head = &(AFSTOI(tvc))->i_dentry;
+                AFS_FAST_HOLD(tvc);
+                AFS_GUNLOCK();
+
+restart:
+#if defined(AFS_LINUX24_ENV)
+                spin_lock(&dcache_lock);
+#endif
+                cur = head;
+                while ((cur = cur->next) != head) {
+                    dentry = list_entry(cur, struct dentry, d_alias);
+
+		    if (d_unhashed(dentry))
+			continue;
+
+		    dget_locked(dentry);
+
+#if defined(AFS_LINUX24_ENV)
+		    spin_unlock(&dcache_lock);
+#endif
+		    if (d_invalidate(dentry) == -EBUSY) {
+			dput(dentry);
+			/* perhaps lock and try to continue? (use cur as head?) */
+			goto inuse;
+		    }
+		    dput(dentry);
+		    goto restart;
+		}		    
+#if defined(AFS_LINUX24_ENV)
+		spin_unlock(&dcache_lock);
+#endif
+	    inuse:
+		AFS_GLOCK();
+		AFS_FAST_RELE(tvc);
+	    }
+#endif
 
 	    if (((VREFCOUNT(tvc) == 0) 
 #if defined(AFS_DARWIN_ENV) && !defined(UKERNEL) 
@@ -831,7 +797,7 @@ restart:
 	panic("afs_NewVCache(): free vcache with vnode attached");
 #endif
 
-#if !defined(AFS_SGI_ENV) && !defined(AFS_OSF_ENV) && !defined(AFS_LINUX22_ENV)
+#if !defined(AFS_SGI_ENV) && !defined(AFS_OSF_ENV)
     memset((char *)tvc, 0, sizeof(struct vcache));
 #else
     tvc->uncred = 0;
@@ -905,8 +871,92 @@ restart:
     hzero(tvc->mapDV);
     tvc->truncPos = AFS_NOTRUNC;	/* don't truncate until we need to */
     hzero(tvc->m.DataVersion);	/* in case we copy it into flushDV */
+#if defined(AFS_LINUX22_ENV)
+    {
+	struct inode *ip = AFSTOI(tvc);
+#if defined(AFS_LINUX24_ENV)
+	struct address_space *mapping = &ip->i_data;
+#endif
 
-#if defined(AFS_OSF_ENV) || defined(AFS_LINUX22_ENV)
+#if defined(AFS_LINUX26_ENV)
+	inode_init_once(ip);
+#else
+	sema_init(&ip->i_sem, 1);
+	INIT_LIST_HEAD(&ip->i_hash);
+	INIT_LIST_HEAD(&ip->i_dentry);
+#if defined(AFS_LINUX24_ENV)
+	sema_init(&ip->i_zombie, 1);
+	init_waitqueue_head(&ip->i_wait);
+	spin_lock_init(&ip->i_data.i_shared_lock);
+#ifdef STRUCT_ADDRESS_SPACE_HAS_PAGE_LOCK
+	spin_lock_init(&ip->i_data.page_lock);
+#endif
+	INIT_LIST_HEAD(&ip->i_data.clean_pages);
+	INIT_LIST_HEAD(&ip->i_data.dirty_pages);
+	INIT_LIST_HEAD(&ip->i_data.locked_pages);
+	INIT_LIST_HEAD(&ip->i_dirty_buffers);
+#ifdef STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS
+	INIT_LIST_HEAD(&ip->i_dirty_data_buffers);
+#endif
+#ifdef STRUCT_INODE_HAS_I_DEVICES
+	INIT_LIST_HEAD(&ip->i_devices);
+#endif
+#ifdef STRUCT_INODE_HAS_I_TRUNCATE_SEM
+	init_rwsem(&ip->i_truncate_sem);
+#endif
+#ifdef STRUCT_INODE_HAS_I_ALLOC_SEM
+	init_rwsem(&ip->i_alloc_sem);
+#endif
+
+#else /* AFS_LINUX22_ENV */
+	sema_init(&ip->i_atomic_write, 1);
+	init_waitqueue(&ip->i_wait);
+#endif
+#endif
+
+#if defined(AFS_LINUX24_ENV)
+	mapping->host = ip;
+	ip->i_mapping = mapping;
+#ifdef STRUCT_ADDRESS_SPACE_HAS_GFP_MASK
+	ip->i_data.gfp_mask = GFP_HIGHUSER;
+#endif
+#if defined(AFS_LINUX26_ENV)
+	mapping_set_gfp_mask(mapping, GFP_HIGHUSER);
+	{
+	    extern struct backing_dev_info afs_backing_dev_info;
+
+	    mapping->backing_dev_info = &afs_backing_dev_info;
+	}
+#endif
+#endif
+
+#if !defined(AFS_LINUX26_ENV)
+	if (afs_globalVFS)
+	    ip->i_dev = afs_globalVFS->s_dev;
+#else
+#ifdef STRUCT_INODE_HAS_I_SECURITY
+	ip->i_security = NULL;
+	if (security_inode_alloc(ip))
+	    panic("Cannot allocate inode security");
+#endif
+#endif
+	ip->i_sb = afs_globalVFS;
+	put_inode_on_dummy_list(ip);
+#ifdef STRUCT_INODE_HAS_I_SB_LIST
+	list_add(&ip->i_sb_list, &ip->i_sb->s_inodes);
+#endif
+#if defined(STRUCT_INODE_HAS_INOTIFY_LOCK) || defined(STRUCT_INODE_HAS_INOTIFY_SEM)
+	INIT_LIST_HEAD(&ip->inotify_watches); 
+#if defined(STRUCT_INODE_HAS_INOTIFY_SEM) 
+	sema_init(&ip->inotify_sem, 1); 
+#else
+	spin_lock_init(&ip->inotify_lock); 
+#endif 
+#endif 
+    }
+#endif
+
+#ifdef	AFS_OSF_ENV
     /* Hold it for the LRU (should make count 2) */
     VN_HOLD(AFSTOV(tvc));
 #else /* AFS_OSF_ENV */
@@ -990,9 +1040,7 @@ restart:
 	tvc->mvstat = 2;
     if (afs_globalVFS == 0)
 	osi_Panic("afs globalvfs");
-#if !defined(AFS_LINUX22_ENV)
     vSetVfsp(tvc, afs_globalVFS);
-#endif
     vSetType(tvc, VREG);
 #ifdef	AFS_AIX_ENV
     tvc->v.v_vfsnext = afs_globalVFS->vfs_vnodes;	/* link off vfs */
@@ -1528,6 +1576,10 @@ afs_ProcessFS(register struct vcache *avc,
 	else			/* not found, add a new one if possible */
 	    afs_AddAxs(avc->Access, areq->uid, astat->CallerAccess);
     }
+#ifdef AFS_LINUX22_ENV
+    vcache2inode(avc);		/* Set the inode attr cache */
+#endif
+
 }				/*afs_ProcessFS */
 
 
@@ -1657,6 +1709,9 @@ afs_GetVCache(register struct VenusFid *afid, struct vrequest *areq,
     ObtainWriteLock(&tvc->lock, 54);
 
     if (tvc->states & CStatd) {
+#ifdef AFS_LINUX22_ENV
+	vcache2inode(tvc);
+#endif
 	ReleaseWriteLock(&tvc->lock);
 	return tvc;
     }
@@ -2517,6 +2572,10 @@ afs_FindVCache(struct VenusFid *afid, afs_int32 * retry, afs_int32 flag)
 	else
 	    afs_stats_cmperf.vremoteAccesses++;
     }
+#ifdef AFS_LINUX22_ENV
+    if (tvc && (tvc->states & CStatd))
+	vcache2inode(tvc);	/* mainly to reset i_nlink */
+#endif
     return tvc;
 }				/*afs_FindVCache */
 
@@ -2671,11 +2730,9 @@ afs_vcacheInit(int astatSize)
 {
     register struct vcache *tvp;
     int i;
-#if defined(AFS_OSF_ENV) || defined(AFS_LINUX22_ENV)
+#if	defined(AFS_OSF_ENV)
     if (!afs_maxvcount) {
-#if defined(AFS_LINUX22_ENV)
-	afs_maxvcount = astatSize;	/* no particular limit on linux? */
-#elif defined(AFS_OSF30_ENV)
+#if	defined(AFS_OSF30_ENV)
 	afs_maxvcount = max_vnodes / 2;	/* limit ourselves to half the total */
 #else
 	afs_maxvcount = nvnode / 2;	/* limit ourselves to half the total */
@@ -2691,7 +2748,18 @@ afs_vcacheInit(int astatSize)
     RWLOCK_INIT(&afs_xvcache, "afs_xvcache");
     LOCK_INIT(&afs_xvcb, "afs_xvcb");
 
-#if !defined(AFS_OSF_ENV) && !defined(AFS_LINUX22_ENV)
+#if	!defined(AFS_OSF_ENV)
+#ifdef AFS_LINUX26_ENV
+    printf("old style would have needed %d contiguous bytes\n", astatSize *
+	   sizeof(struct vcache));
+    Initial_freeVCList = freeVCList = tvp = (struct vcache *)
+	afs_osi_Alloc(sizeof(struct vcache));
+    for (i = 0; i < astatSize; i++) {
+	tvp->nextfree = (struct vcache *) afs_osi_Alloc(sizeof(struct vcache));
+	tvp = tvp->nextfree;
+    }
+    tvp->nextfree = NULL;
+#else
     /* Allocate and thread the struct vcache entries */
     tvp = (struct vcache *)afs_osi_Alloc(astatSize * sizeof(struct vcache));
     memset((char *)tvp, 0, sizeof(struct vcache) * astatSize);
@@ -2704,6 +2772,7 @@ afs_vcacheInit(int astatSize)
     tvp[astatSize - 1].nextfree = NULL;
 #ifdef  KERNEL_HAVE_PIN
     pin((char *)tvp, astatSize * sizeof(struct vcache));	/* XXX */
+#endif
 #endif
 #endif
 
@@ -2815,14 +2884,26 @@ shutdown_vcache(void)
     }
     afs_cbrSpace = 0;
 
+#ifdef AFS_LINUX26_ENV
+    {
+	struct vcache *tvp = Initial_freeVCList;
+	while (tvp) {
+	    struct vcache *next = tvp->nextfree;
+	    
+	    afs_osi_Free(tvp, sizeof(struct vcache));
+	    tvp = next;
+	}
+    }
+#else
 #ifdef  KERNEL_HAVE_PIN
     unpin(Initial_freeVCList, afs_cacheStats * sizeof(struct vcache));
 #endif
-#if !defined(AFS_OSF_ENV) && !defined(AFS_LINUX22_ENV)
+#if	!defined(AFS_OSF_ENV)
     afs_osi_Free(Initial_freeVCList, afs_cacheStats * sizeof(struct vcache));
 #endif
+#endif
 
-#if !defined(AFS_OSF_ENV) && !defined(AFS_LINUX22_ENV)
+#if	!defined(AFS_OSF_ENV)
     freeVCList = Initial_freeVCList = 0;
 #endif
     RWLOCK_INIT(&afs_xvcache, "afs_xvcache");

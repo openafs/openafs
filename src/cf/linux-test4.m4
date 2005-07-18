@@ -467,18 +467,3 @@ ac_cv_linux_sched_struct_task_struct_has_exit_state=yes,
 ac_cv_linux_sched_struct_task_struct_has_exit_state=no)])
 AC_MSG_RESULT($ac_cv_linux_sched_struct_task_struct_has_exit_state)
 CPPFLAGS="$save_CPPFLAGS"])
-
-AC_DEFUN([LINUX_FS_STRUCT_SUPER_HAS_ALLOC_INODE], [
-AC_MSG_CHECKING(for alloc_inode in struct super_operations)
-save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
-AC_CACHE_VAL(ac_cv_linux_fs_struct_super_has_alloc_inode, 
-[
-AC_TRY_COMPILE(
-[#include <linux/fs.h>],
-[struct super_operations _super;
-printf("%p\n", _super.alloc_inode);], 
-ac_cv_linux_fs_struct_super_has_alloc_inode=yes,
-ac_cv_linux_fs_struct_super_has_alloc_inode=no)])
-AC_MSG_RESULT($ac_cv_linux_fs_struct_super_has_alloc_inode)
-CPPFLAGS="$save_CPPFLAGS"])

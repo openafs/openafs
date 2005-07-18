@@ -31,6 +31,10 @@ RCSID
 
 extern struct DirEntry *afs_dir_GetBlob();
 
+#ifdef AFS_LINUX22_ENV
+extern struct inode_operations afs_symlink_iops, afs_dir_iops;
+#endif
+
 
 afs_int32 afs_bkvolpref = 0;
 afs_int32 afs_bulkStatsDone;
@@ -970,8 +974,12 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	 * We only do this if the entry looks clear.
 	 */
 	afs_ProcessFS(tvcp, &statsp[i], areqp);
-#if defined(AFS_LINUX22_ENV)
-	afs_fill_inode(AFSTOV(tvcp), NULL);	/* reset inode operations */
+#ifdef AFS_LINUX22_ENV
+	/* overwrite the ops if it's a directory or symlink. */
+	if (vType(tvcp) == VDIR)
+	    tvcp->v.v_op = &afs_dir_iops;
+	else if (vType(tvcp) == VLNK)
+	    tvcp->v.v_op = &afs_symlink_iops;
 #endif
 
 	/* do some accounting for bulk stats: mark this entry as

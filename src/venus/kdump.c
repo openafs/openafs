@@ -2885,7 +2885,7 @@ print_vcache(kmem, vep, ptr, pnt)
 	    printf("\n");
 #ifdef	AFS33
 	printf("%lx: refC=%d, pv=%d, pu=%d, flushDv=%d.%d, mapDV=%d.%d, ",
-	       ptr, VREFCOUNT(vep), vep->parentVnode, vep->parentUnique,
+	       ptr, vep->vrefCount, vep->parentVnode, vep->parentUnique,
 	       vep->flushDV.high, vep->flushDV.low, vep->mapDV.high,
 	       vep->mapDV.low);
 #ifdef AFS_64BIT_CLIENT
