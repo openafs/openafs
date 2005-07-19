@@ -1236,6 +1236,7 @@ BOOL IsMountPoint(const char * name)
     char lsbuffer[1024];
     register char *tp;
     char szCurItem[1024];
+
     strcpy(szCurItem, name);
 	
     tp = (char *)strrchr(szCurItem, '\\');
@@ -1274,6 +1275,7 @@ BOOL RemoveMount(CStringArray& files)
     char tbuffer[1024];
     char lsbuffer[1024];
     register char *tp;
+    char szCurItem[1024];
     BOOL error = FALSE;
     CStringArray results;
     CString str;
@@ -1289,6 +1291,20 @@ BOOL RemoveMount(CStringArray& files)
             else
                 results.Add(GetMessageString(IDS_ERROR, GetAfsError(errno, StripPath(files[i]))));
             continue;	// don't bother trying
+        }
+
+        strcpy(szCurItem, files[i]);
+	
+        tp = (char *)strrchr(szCurItem, '\\');
+        if (tp) {
+            strncpy(tbuffer, szCurItem, code = tp - szCurItem + 1);  /* the dir name */
+            tbuffer[code] = 0;
+            tp++;   /* skip the slash */
+        } else {
+            fs_ExtractDriveLetter(szCurItem, tbuffer);
+            strcat(tbuffer, ".");
+            tp = szCurItem;
+            fs_StripDriveLetter(tp, tp, 0);
         }
 
         blob.out_size = 0;
