@@ -948,8 +948,8 @@ static char *next_path(char *origpath)
 	    ? elast_comp - last_comp : strlen(last_comp);
 	strncat(pathtocheck, last_comp, len);
 	memset(linkbuf, 0, sizeof(linkbuf));
-	if ((link = readlink(pathtocheck, linkbuf, 
-				    sizeof(linkbuf))) > 0) {
+	if (link = (readlink(pathtocheck, linkbuf, 
+				    sizeof(linkbuf)) > 0)) {
 	    if (++symlinkcount > MAXSYMLINKS) {
 		fprintf(stderr, "%s: %s\n", progname, strerror(ELOOP));
 		exit(AKLOG_BADPATH);
