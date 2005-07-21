@@ -172,7 +172,7 @@ FSYNC_clientInit(void)
 	if (!*timeout)
 	    break;
 	if (!(*timeout & 1))
-	    Log(0, ("FSYNC_clientInit temporary failure (will retry)"));
+	    Log("FSYNC_clientInit temporary failure (will retry)");
 	FSYNC_clientFinis();
 	sleep(*timeout++);
     }
