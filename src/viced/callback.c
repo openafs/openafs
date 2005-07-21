@@ -2070,8 +2070,8 @@ MultiBreakCallBackAlternateAddress_r(struct host *host,
 
 
 /*
-** try multiRX probes to host. 
-** return 0 on success, non-zero on failure
+** try multi_RX probes to host. 
+** return 0 on success, non-0 on failure
 */
 int
 MultiProbeAlternateAddress_r(struct host *host)
@@ -2141,7 +2141,33 @@ MultiProbeAlternateAddress_r(struct host *host)
 		     afs_inet_ntoa_r(addr[multi_i], hoststr)));
 	    H_UNLOCK;
 	    multi_Abort;
-	}
+	} else {
+	    ViceLog(125,
+		    ("multiprobe failure with addr %s\n",
+		     afs_inet_ntoa_r(addr[multi_i], hoststr)));
+            
+            /* This is less than desirable but its the best we can do.
+             * The AFS Cache Manager will return either 0 for a Uuid  
+             * match and a 1 for a non-match.   If the error is 1 we 
+             * therefore know that our mapping of IP address to Uuid 
+             * is wrong.   We should attempt to find the correct
+             * Uuid and fix the host tables.
+             */
+            if (multi_error == 1) {
+                struct host * newhost;
+
+                /* remove the current alternate address from this host */
+                H_LOCK;
+                for (i = 0, j = 0; i < host->interface->numberOfInterfaces; i++) {
+                    if (addr[multi_i] != host->interface->addr[i]) {
+                        host->interface->addr[j] = host->interface->addr[i];
+                        j++;
+                    }
+                }
+                host->interface->numberOfInterfaces--;
+                H_UNLOCK;
+            }
+        }
     }
     multi_End_Ignore;
     H_LOCK;
