@@ -2716,7 +2716,7 @@ DECL_PIOCTL(PSetSysName)
     register struct unixuser *au;
     register afs_int32 pag, error;
     int t, count, num = 0;
-    char **sysnamelist[MAXSYSNAME];
+    char **sysnamelist[MAXNUMSYSNAMES];
 
     AFS_STATCNT(PSetSysName);
     if (!afs_globalVFS) {
