@@ -193,8 +193,10 @@ afs_osi_SleepSig(void *event)
 	AFS_GUNLOCK();
 	schedule();
 #ifdef AFS_LINUX26_ENV
+#ifdef CONFIG_PF
 	if (current->flags & PF_FREEZE)
 	    refrigerator(PF_FREEZE);
+#endif
 #endif
 	AFS_GLOCK();
 	if (signal_pending(current)) {
@@ -275,8 +277,10 @@ osi_TimedSleep(char *event, afs_int32 ams, int aintok)
     } else
 	schedule_timeout(ticks);
 #ifdef AFS_LINUX26_ENV
+#ifdef CONFIG_PF
     if (current->flags & PF_FREEZE)
 	refrigerator(PF_FREEZE);
+#endif
 #endif
 
     AFS_GLOCK();
