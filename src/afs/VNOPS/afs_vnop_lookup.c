@@ -432,7 +432,7 @@ Check_AtSys(register struct vcache *avc, const char *aname,
 	    struct sysname_info *state, struct vrequest *areq)
 {
     int num = 0;
-    char **sysnamelist[MAXSYSNAME];
+    char **sysnamelist[MAXNUMSYSNAMES];
 
     if (AFS_EQ_ATSYS(aname)) {
 	state->offset = 0;
@@ -453,7 +453,7 @@ Next_AtSys(register struct vcache *avc, struct vrequest *areq,
 	   struct sysname_info *state)
 {
     int num = afs_sysnamecount;
-    char **sysnamelist[MAXSYSNAME];
+    char **sysnamelist[MAXNUMSYSNAMES];
 
     if (state->index == -1)
 	return 0;		/* No list */
