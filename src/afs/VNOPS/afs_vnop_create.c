@@ -414,6 +414,8 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	    }
 	    ReleaseWriteLock(&afs_xcbhash);
 	    afs_ProcessFS(tvc, &OutFidStatus, &treq);
+	    tvc->parentVnode = adp->fid.Fid.Vnode;
+	    tvc->parentUnique = adp->fid.Fid.Unique;
 	    ReleaseWriteLock(&tvc->lock);
 	    *avcp = tvc;
 	    code = 0;
