@@ -146,6 +146,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
     cm_server_t *serverp = NULL;
     cm_serverRef_t **serverspp = NULL;
     cm_serverRef_t *tsrp;
+    cm_cell_t  *cellp = NULL;
     cm_ucell_t *ucellp;
     int retry = 0;
     int free_svr_list = 0;
@@ -200,7 +201,16 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
     if (errorCode == CM_ERROR_TIMEDOUT) {
         if (timeLeft > 5 ) {
             thrd_Sleep(3000);
-            cm_CheckServers(CM_FLAG_CHECKDOWNSERVERS, NULL);
+            if (cellp == NULL && serverp)
+                cellp = serverp->cellp;
+            if (cellp == NULL && serversp) {
+                struct cm_serverRef * refp;
+                for ( refp=serversp ; cellp == NULL && refp != NULL; refp=refp->next) {
+                    if ( refp->server )
+                        cellp = refp->server->cellp;
+                }
+            }
+            cm_CheckServers(CM_FLAG_CHECKDOWNSERVERS, cellp);
             retry = 1;
         }
     } 
