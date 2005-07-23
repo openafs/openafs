@@ -4783,6 +4783,15 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     return 0;
 }       
 
+/* The file locking code is incomplete and that which is implemented in cm_Lock()
+ * is broken.  What exists functions only because it is rarely if ever called.
+ * The tests activated by FULL_LOCKS_ONLY ensure that cm_Lock() is only called
+ * if the lock covers the entire file.  Therefore, RXAFS_SetLock is only called 
+ * rarely.   That means that AFS locks are ignored by Windows clients.
+ * When cm_Lock is re-written, undefine or better yet remove, the FULL_LOCKS_ONLY
+ * code.
+ */
+#define FULL_LOCKS_ONLY
 long smb_ReceiveV3LockingX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
     cm_req_t req;
@@ -4807,6 +4816,7 @@ long smb_ReceiveV3LockingX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
     fidp = smb_FindFID(vcp, fid, 0);
     if (!fidp || (fidp->flags & SMB_FID_IOCTL)) {
+        osi_Log0(smb_logp, "smb_ReceiveV3Locking BadFD");
         return CM_ERROR_BADFD;
     }
     /* set inp->fid so that later read calls in same msg can find fid */
@@ -4821,8 +4831,10 @@ long smb_ReceiveV3LockingX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
                       CM_SCACHESYNC_NEEDCALLBACK
 			 | CM_SCACHESYNC_GETSTATUS
 			 | CM_SCACHESYNC_LOCK);
-    if (code) 
+    if (code) {
+        osi_Log1(smb_logp, "smb_ReceiveV3Locking SyncOp failure code 0x%x", code);
         goto doneSync;
+    }
 
     LockType = smb_GetSMBParm(inp, 3) & 0xff;
     Timeout = (smb_GetSMBParm(inp, 5) << 16) + smb_GetSMBParm(inp, 4);
@@ -4848,8 +4860,13 @@ long smb_ReceiveV3LockingX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
             LLength.LowPart = *((DWORD *)(op + 6));
             op += 10;
         }
-        if (LargeIntegerNotEqualToZero(LOffset))
+#ifdef FULL_LOCKS_ONLY
+        if (LargeIntegerNotEqualToZero(LOffset)) {
+            osi_Log2(smb_logp, "smb_ReceiveV3Locking Unlock %d offset 0x%x != Zero",
+                     i, (long)LOffset.QuadPart);
             continue;
+        }
+#endif /* FULL_LOCKS_ONLY */
         /* Do not check length -- length check done in cm_Unlock */
 
         code = cm_Unlock(scp, LockType, LOffset, LLength, userp, &req);
@@ -4873,11 +4890,18 @@ long smb_ReceiveV3LockingX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
             LLength.LowPart = *((DWORD *)(op + 6));
             op += 10;
         }
-        if (LargeIntegerNotEqualToZero(LOffset))
+#ifdef FULL_LOCKS_ONLY
+        if (LargeIntegerNotEqualToZero(LOffset)) {
+            osi_Log2(smb_logp, "smb_ReceiveV3Locking Lock %d offset 0x%x != Zero",
+                     i, (long)LOffset.QuadPart);
             continue;
-        if (LargeIntegerLessThan(LOffset, scp->length))
+        }
+        if (LargeIntegerLessThan(LOffset, scp->length)) {
+            osi_Log3(smb_logp, "smb_ReceiveV3Locking Unlock %d offset 0x%x < 0x%x",
+                     i, (long)LOffset.QuadPart, (long)scp->length.QuadPart);
             continue;
-
+        }
+#endif /* FULL_LOCKS_ONLY */
         code = cm_Lock(scp, LockType, LOffset, LLength, Timeout,
                         userp, &req, &lockp);
         if (code == CM_ERROR_WOULDBLOCK && Timeout != 0) {
@@ -4896,13 +4920,19 @@ long smb_ReceiveV3LockingX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
             lock_ReleaseWrite(&smb_globalLock);
             /* don't send reply immediately */
             outp->flags |= SMB_PACKETFLAG_NOSEND;
+            osi_Log1(smb_logp, "smb_ReceiveV3Locking WaitingLock created 0x%x",
+                     (long) waitingLock);
+            continue;
         }
-        if (code) 
+        if (code) {
+            osi_Log1(smb_logp, "smb_ReceiveV3Locking cm_Lock failure code 0x%x", code);
             break;
+        }
     }           
 
     if (code) {
         /* release any locks acquired before the failure */
+        osi_Log0(smb_logp, "smb_ReceiveV3Locking - failure; should be releasing locks but don't!!!!");
     }
     else
         smb_SetSMBDataLength(outp, 0);

@@ -200,11 +200,12 @@ void cm_fakeSCacheInit(int newFile)
 long
 cm_ValidateSCache(void)
 {
-    cm_scache_t * scp;
+    cm_scache_t * scp, *lscp;
     long i;
 
-    for ( scp = cm_data.scacheLRUFirstp; scp;
-          scp = (cm_scache_t *) osi_QNext(&scp->q) ) {
+    for ( scp = cm_data.scacheLRUFirstp, lscp = NULL, i = 0; 
+          scp;
+          lscp = scp, scp = (cm_scache_t *) osi_QNext(&scp->q), i++ ) {
         if (scp->magic != CM_SCACHE_MAGIC) {
             afsi_log("cm_ValidateSCache failure: scp->magic != CM_SCACHE_MAGIC");
             fprintf(stderr, "cm_ValidateSCache failure: scp->magic != CM_SCACHE_MAGIC\n");
@@ -225,10 +226,20 @@ cm_ValidateSCache(void)
             fprintf(stderr, "cm_ValidateSCache failure: scp->volp->magic != CM_VOLUME_MAGIC\n");
             return -4;
         }
+        if (i > cm_data.currentSCaches ) {
+            afsi_log("cm_ValidateSCache failure: LRU First queue loops");
+            fprintf(stderr, "cm_ValidateSCache failure: LUR First queue loops\n");
+            return -13;
+        }
+        if (lscp != (cm_scache_t *) osi_QPrev(&scp->q)) {
+            afsi_log("cm_ValidateSCache failure: QPrev(scp) != previous");
+            fprintf(stderr, "cm_ValidateSCache failure: QPrev(scp) != previous\n");
+            return -15;
+        }
     }
 
-    for ( scp = cm_data.scacheLRULastp; scp;
-          scp = (cm_scache_t *) osi_QPrev(&scp->q) ) {
+    for ( scp = cm_data.scacheLRULastp, lscp = NULL, i = 0; scp;
+          lscp = scp, scp = (cm_scache_t *) osi_QPrev(&scp->q), i++ ) {
         if (scp->magic != CM_SCACHE_MAGIC) {
             afsi_log("cm_ValidateSCache failure: scp->magic != CM_SCACHE_MAGIC");
             fprintf(stderr, "cm_ValidateSCache failure: scp->magic != CM_SCACHE_MAGIC\n");
@@ -248,6 +259,16 @@ cm_ValidateSCache(void)
             afsi_log("cm_ValidateSCache failure: scp->volp->magic != CM_VOLUME_MAGIC");
             fprintf(stderr, "cm_ValidateSCache failure: scp->volp->magic != CM_VOLUME_MAGIC\n");
             return -8;
+        }
+        if (i > cm_data.currentSCaches ) {
+            afsi_log("cm_ValidateSCache failure: LRU Last queue loops");
+            fprintf(stderr, "cm_ValidateSCache failure: LUR Last queue loops\n");
+            return -14;
+        }
+        if (lscp != (cm_scache_t *) osi_QNext(&scp->q)) {
+            afsi_log("cm_ValidateSCache failure: QNext(scp) != next");
+            fprintf(stderr, "cm_ValidateSCache failure: QNext(scp) != next\n");
+            return -16;
         }
     }
 
