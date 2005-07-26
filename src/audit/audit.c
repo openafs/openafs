@@ -56,7 +56,7 @@ audmakebuf(char *audEvent, va_list vaList)
     int vaInt;
     afs_int32 vaLong;
     char *vaStr;
-    char *vaLst;
+    va_list vaLst;
     struct AFSFid *vaFid;
 
     vaEntry = va_arg(vaList, int);
@@ -65,7 +65,7 @@ audmakebuf(char *audEvent, va_list vaList)
 	case AUD_STR:		/* String */
         case AUD_NAME:          /* Name */
         case AUD_ACL:           /* ACL */
-	    vaStr = (char *)va_arg(vaList, int);
+	    vaStr = (char *)va_arg(vaList, char *);
 	    if (vaStr) {
 		strcpy(bufferPtr, vaStr);
 		bufferPtr += strlen(vaStr) + 1;
@@ -88,11 +88,11 @@ audmakebuf(char *audEvent, va_list vaList)
 	    bufferPtr += sizeof(vaLong);
 	    break;
 	case AUD_LST:		/* Ptr to another list */
-	    vaLst = (char *)va_arg(vaList, int);
+	    vaLst = (va_list)va_arg(vaList, va_list);
 	    audmakebuf(audEvent, vaLst);
 	    break;
 	case AUD_FID:		/* AFSFid - contains 3 entries */
-	    vaFid = (struct AFSFid *)va_arg(vaList, int);
+	    vaFid = (struct AFSFid *)va_arg(vaList, struct AFSFid *);
 	    if (vaFid) {
 		memcpy(bufferPtr, vaFid, sizeof(struct AFSFid));
 	    } else {
@@ -108,7 +108,7 @@ audmakebuf(char *audEvent, va_list vaList)
 	    {
 		struct AFSCBFids *Fids;
 
-		Fids = (struct AFSCBFids *)va_arg(vaList, int);
+		Fids = (struct AFSCBFids *)va_arg(vaList, struct AFSCBFids *);
 		if (Fids && Fids->AFSCBFids_len) {
 		    *((u_int *) bufferPtr) = Fids->AFSCBFids_len;
 		    bufferPtr += sizeof(u_int);
@@ -143,7 +143,7 @@ printbuf(FILE *out, int rec, char *audEvent, afs_int32 errCode, va_list vaList)
     int vaInt;
     afs_int32 vaLong;
     char *vaStr;
-    char *vaLst;
+    va_list vaLst;
     struct AFSFid *vaFid;
     struct AFSCBFids *vaFids;
     int num = LogThreadNum();
@@ -171,21 +171,21 @@ printbuf(FILE *out, int rec, char *audEvent, afs_int32 errCode, va_list vaList)
     while (vaEntry != AUD_END) {
 	switch (vaEntry) {
 	case AUD_STR:		/* String */
-	    vaStr = (char *)va_arg(vaList, int);
+	    vaStr = (char *)va_arg(vaList, char *);
 	    if (vaStr)
 		fprintf(out,  "STR %s ", vaStr);
 	    else
 		fprintf(out,  "STR <null>");
 	    break;
 	case AUD_NAME:		/* Name */
-	    vaStr = (char *)va_arg(vaList, int);
+	    vaStr = (char *)va_arg(vaList, char *);
 	    if (vaStr)
 		fprintf(out,  "NAME %s ", vaStr);
 	    else
 		fprintf(out,  "NAME <null>");
 	    break;
 	case AUD_ACL:		/* ACL */
-	    vaStr = (char *)va_arg(vaList, int);
+	    vaStr = (char *)va_arg(vaList, char *);
 	    if (vaStr)
 		fprintf(out,  "ACL %s ", vaStr);
 	    else
@@ -213,11 +213,11 @@ printbuf(FILE *out, int rec, char *audEvent, afs_int32 errCode, va_list vaList)
 	    fprintf(out, "LONG %d ", vaLong);
 	    break;
 	case AUD_LST:		/* Ptr to another list */
-	    vaLst = (char *)va_arg(vaList, int);
+	    vaLst = va_arg(vaList, va_list);
 	    printbuf(out, 1, "VALST", 0, vaLst);
 	    break;
 	case AUD_FID:		/* AFSFid - contains 3 entries */
-	    vaFid = (struct AFSFid *)va_arg(vaList, int);
+	    vaFid = va_arg(vaList, struct AFSFid *);
 	    if (vaFid)
 		fprintf(out, "FID %u:%u:%u ", vaFid->Volume, vaFid->Vnode,
 		       vaFid->Unique);
@@ -225,7 +225,7 @@ printbuf(FILE *out, int rec, char *audEvent, afs_int32 errCode, va_list vaList)
 		fprintf(out, "FID %u:%u:%u ", 0, 0, 0);
 	    break;
 	case AUD_FIDS:		/* array of Fids */
-	    vaFids = (struct AFSCBFids *)va_arg(vaList, int);
+	    vaFids = va_arg(vaList, struct AFSCBFids *);
 	    vaFid = NULL;
 
 	    if (vaFids) {
