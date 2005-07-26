@@ -132,7 +132,18 @@ afs_read_super(struct super_block *sb, void *data, int silent)
     sb->s_magic = AFS_VFSMAGIC;
     sb->s_op = &afs_sops;	/* Super block (vfs) ops */
 #if defined(MAX_NON_LFS)
+#ifdef AFS_64BIT_CLIENT
+#if !defined(MAX_LFS_FILESIZE)
+#if BITS_PER_LONG==32
+#define MAX_LFS_FILESIZE (((u64)PAGE_CACHE_SIZE << (BITS_PER_LONG-1))-1) 
+#elif BITS_PER_LONG==64
+#define MAX_LFS_FILESIZE 0x7fffffffffffffff
+#endif
+#endif
+    sb->s_maxbytes = MAX_LFS_FILESIZE;
+#else
     sb->s_maxbytes = MAX_NON_LFS;
+#endif
 #endif
     code = afs_root(sb);
     if (code) {
