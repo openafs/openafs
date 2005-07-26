@@ -73,50 +73,10 @@ afs_linux_read(struct file *fp, char *buf, size_t count, loff_t * offp)
     if (code)
 	code = -code;
     else {
-#ifdef AFS_64BIT_CLIENT
-	if (*offp + count > afs_vmMappingEnd) {
-	    uio_t tuio;
-	    struct iovec iov;
-	    afs_int32 xfered = 0;
-
-	    if (*offp < afs_vmMappingEnd) {
-		/* special case of a buffer crossing the VM mapping end */
-		afs_int32 tcount = afs_vmMappingEnd - *offp;
-		count -= tcount;
-		osi_FlushPages(vcp, credp);	/* ensure stale pages are gone */
-		AFS_GUNLOCK();
-		code = generic_file_read(fp, buf, tcount, offp);
-		AFS_GLOCK();
-		if (code != tcount) {
-		    goto done;
-		}
-		xfered = tcount;
-	    }
-	    setup_uio(&tuio, &iov, buf + xfered, (afs_offs_t) * offp, count,
-		      UIO_READ, AFS_UIOSYS);
-	    code = afs_read(vcp, &tuio, credp, 0, 0, 0);
-	    xfered += count - tuio.uio_resid;
-	    if (code != 0) {
-		afs_Trace4(afs_iclSetp, CM_TRACE_READOP, ICL_TYPE_POINTER,
-			   vcp, ICL_TYPE_OFFSET, offp, ICL_TYPE_INT32, -1,
-			   ICL_TYPE_INT32, code);
-		code = xfered;
-		*offp += count - tuio.uio_resid;
-	    } else {
-		code = xfered;
-		*offp += count;
-	    }
-	  done:
-		;
-	} else {
-#endif /* AFS_64BIT_CLIENT */
 	    osi_FlushPages(vcp, credp);	/* ensure stale pages are gone */
 	    AFS_GUNLOCK();
 	    code = generic_file_read(fp, buf, count, offp);
 	    AFS_GLOCK();
-#ifdef AFS_64BIT_CLIENT
-	}
-#endif /* AFS_64BIT_CLIENT */
     }
 
     afs_Trace4(afs_iclSetp, CM_TRACE_READOP, ICL_TYPE_POINTER, vcp,
@@ -141,7 +101,6 @@ afs_linux_write(struct file *fp, const char *buf, size_t count, loff_t * offp)
     struct vcache *vcp = VTOAFS(fp->f_dentry->d_inode);
     struct vrequest treq;
     cred_t *credp = crref();
-    afs_offs_t toffs;
 
     AFS_GLOCK();
 
@@ -161,69 +120,9 @@ afs_linux_write(struct file *fp, const char *buf, size_t count, loff_t * offp)
     if (code)
 	code = -code;
     else {
-#ifdef AFS_64BIT_CLIENT
-	toffs = *offp;
-	if (fp->f_flags & O_APPEND)
-	    toffs += vcp->m.Length;
-	if (toffs + count > afs_vmMappingEnd) {
-	    uio_t tuio;
-	    struct iovec iov;
-	    afs_size_t oldOffset = *offp;
-	    afs_int32 xfered = 0;
-
-	    if (toffs < afs_vmMappingEnd) {
-		/* special case of a buffer crossing the VM mapping end */
-		afs_int32 tcount = afs_vmMappingEnd - *offp;
-		count -= tcount;
-		AFS_GUNLOCK();
-		code = generic_file_write(fp, buf, tcount, offp);
-		AFS_GLOCK();
-		if (code != tcount) {
-		    goto done;
-		}
-		xfered = tcount;
-		toffs += tcount;
-	    }
-	    setup_uio(&tuio, &iov, buf + xfered, (afs_offs_t) toffs, count,
-		      UIO_WRITE, AFS_UIOSYS);
-	    code = afs_write(vcp, &tuio, fp->f_flags, credp, 0);
-	    xfered += count - tuio.uio_resid;
-	    if (code != 0) {
-		code = xfered;
-		*offp += count - tuio.uio_resid;
-	    } else {
-		/* Purge dirty chunks of file if there are too many dirty chunks.
-		 * Inside the write loop, we only do this at a chunk boundary.
-		 * Clean up partial chunk if necessary at end of loop.
-		 */
-		if (AFS_CHUNKBASE(tuio.afsio_offset) !=
-		    AFS_CHUNKBASE(oldOffset)) {
-		    ObtainWriteLock(&vcp->lock, 402);
-		    code = afs_DoPartialWrite(vcp, &treq);
-		    vcp->states |= CDirty;
-		    ReleaseWriteLock(&vcp->lock);
-		}
-		code = xfered;
-		*offp += count;
-		toffs += count;
-		ObtainWriteLock(&vcp->lock, 400);
-		vcp->m.Date = osi_Time();	/* Set file date (for ranlib) */
-		/* extend file */
-		if (!(fp->f_flags & O_APPEND) && toffs > vcp->m.Length) {
-		    vcp->m.Length = toffs;
-		}
-		ReleaseWriteLock(&vcp->lock);
-	    }
-	  done:
-		;
-	} else {
-#endif /* AFS_64BIT_CLIENT */
 	    AFS_GUNLOCK();
 	    code = generic_file_write(fp, buf, count, offp);
 	    AFS_GLOCK();
-#ifdef AFS_64BIT_CLIENT
-	}
-#endif /* AFS_64BIT_CLIENT */
     }
 
     ObtainWriteLock(&vcp->lock, 530);
