@@ -323,71 +323,6 @@ static long afs_unlocked_xioctl(struct file *fp, unsigned int com,
 }
 #endif
 
-/* We need to detect unmap's after close. To do that, we need our own
- * vm_operations_struct's. And we need to set them up for both the
- * private and shared mappings. The fun part is that these are all static
- * so we'll have to initialize on the fly!
- */
-static struct vm_operations_struct afs_private_mmap_ops;
-static int afs_private_mmap_ops_inited = 0;
-static struct vm_operations_struct afs_shared_mmap_ops;
-static int afs_shared_mmap_ops_inited = 0;
-
-static void
-afs_linux_vma_close(struct vm_area_struct *vmap)
-{
-    struct vcache *vcp;
-    cred_t *credp;
-    int need_unlock = 0;
-
-    if (!vmap->vm_file)
-	return;
-
-    vcp = VTOAFS(FILE_INODE(vmap->vm_file));
-    if (!vcp)
-	return;
-
-    AFS_GLOCK();
-    afs_Trace4(afs_iclSetp, CM_TRACE_VM_CLOSE, ICL_TYPE_POINTER, vcp,
-	       ICL_TYPE_INT32, vcp->mapcnt, ICL_TYPE_INT32, vcp->opens,
-	       ICL_TYPE_INT32, vcp->execsOrWriters);
-    if ((&vcp->lock)->excl_locked == 0 || (&vcp->lock)->pid_writer == MyPidxx) {
-	ObtainWriteLock(&vcp->lock, 532);
-	need_unlock = 1;
-    } else
-	printk("AFS_VMA_CLOSE(%d): Skipping Already locked vcp=%p vmap=%p\n",
-	       MyPidxx, &vcp, &vmap);
-    if (vcp->mapcnt) {
-	vcp->mapcnt--;
-	if (need_unlock)
-	    ReleaseWriteLock(&vcp->lock);
-	if (!vcp->mapcnt) {
-	    if (need_unlock && vcp->execsOrWriters < 2) {
-		credp = crref();
-		(void)afs_close(vcp, vmap->vm_file->f_flags, credp);
-		/* only decrement the execsOrWriters flag if this is not a
-		 * writable file. */
-		if (!(vcp->states & CRO) )
-		    if (! (vmap->vm_file->f_flags & (FWRITE | FTRUNC)))
-			vcp->execsOrWriters--;
-		vcp->states &= ~CMAPPED;
-		crfree(credp);
-	    } else if ((vmap->vm_file->f_flags & (FWRITE | FTRUNC)))
-		vcp->execsOrWriters--;
-	    /* If we did not have the lock */
-	    if (!need_unlock) {
-		vcp->mapcnt++;
-		if (!vcp->execsOrWriters)
-		    vcp->execsOrWriters = 1;
-	    }
-	}
-    } else {
-	if (need_unlock)
-	    ReleaseWriteLock(&vcp->lock);
-    }
-
-    AFS_GUNLOCK();
-}
 
 static int
 afs_linux_mmap(struct file *fp, struct vm_area_struct *vmap)
@@ -411,59 +346,29 @@ afs_linux_mmap(struct file *fp, struct vm_area_struct *vmap)
 
     /* get a validated vcache entry */
     code = afs_InitReq(&treq, credp);
-    if (!code)
-	code = afs_VerifyVCache(vcp, &treq);
-
-    if (!code && (vcp->states & CRO) && 
-	(vmap->vm_file->f_flags & (FWRITE | FTRUNC)))
-	code = EACCES;
-
     if (code)
-	code = -code;
-    else {
-	osi_FlushPages(vcp, credp);	/* ensure stale pages are gone */
+	goto out_err;
 
-	AFS_GUNLOCK();
-	code = generic_file_mmap(fp, vmap);
-	AFS_GLOCK();
-    }
+    code = afs_VerifyVCache(vcp, &treq);
+    if (code)
+	goto out_err;
 
-    if (code == 0) {
-	ObtainWriteLock(&vcp->lock, 531);
-	/* Set out vma ops so we catch the close. The following test should be
-	 * the same as used in generic_file_mmap.
-	 */
-	if ((vmap->vm_flags & VM_SHARED) && (vmap->vm_flags & VM_MAYWRITE)) {
-	    if (!afs_shared_mmap_ops_inited) {
-		afs_shared_mmap_ops_inited = 1;
-		afs_shared_mmap_ops = *vmap->vm_ops;
-		afs_shared_mmap_ops.close = afs_linux_vma_close;
-	    }
-	    vmap->vm_ops = &afs_shared_mmap_ops;
-	} else {
-	    if (!afs_private_mmap_ops_inited) {
-		afs_private_mmap_ops_inited = 1;
-		afs_private_mmap_ops = *vmap->vm_ops;
-		afs_private_mmap_ops.close = afs_linux_vma_close;
-	    }
-	    vmap->vm_ops = &afs_private_mmap_ops;
-	}
+    osi_FlushPages(vcp, credp);	/* ensure stale pages are gone */
 
+    AFS_GUNLOCK();
+    code = generic_file_mmap(fp, vmap);
+    AFS_GLOCK();
+    if (!code)
+	vcp->states |= CMAPPED;
 
-	/* Add an open reference on the first mapping. */
-	if (vcp->mapcnt == 0) {
-	    if (!(vcp->states & CRO))
-		vcp->execsOrWriters++;
-	    vcp->opens++;
-	    vcp->states |= CMAPPED;
-	}
-	ReleaseWriteLock(&vcp->lock);
-	vcp->mapcnt++;
-    }
-
+out:
     AFS_GUNLOCK();
     crfree(credp);
     return code;
+
+out_err:
+    code = -code;
+    goto out;
 }
 
 static int
