@@ -127,11 +127,7 @@ osi_Panic(msg, a1, a2, a3)
 	msg = "Unknown AFS panic";
 
     printf(msg, a1, a2, a3);
-#ifdef AFS_LINUX20_ENV
-    *((char *)0xffffffff) = 42;
-#else
     panic(msg);
-#endif
 }
 
 /*
