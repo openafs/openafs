@@ -1042,7 +1042,7 @@ extern afs_int32 *afs_indexUnique;	/*dcache entry Fid.Unique */
 extern afs_int32 *afs_dvnextTbl;	/*Dcache hash table links */
 extern afs_int32 *afs_dcnextTbl;	/*Dcache hash table links */
 extern afs_int32 afs_cacheFiles;	/*Size of afs_indexTable */
-extern afs_int32 afs_cacheBlocks;	/*1K blocks in cache */
+extern afs_size_t afs_cacheBlocks;	/*1K blocks in cache */
 extern afs_int32 afs_cacheStats;	/*Stat entries in cache */
 extern struct vcache *afs_vhashT[VCSIZE];	/*Stat cache hash table */
 extern struct vcache *afs_vhashTV[VCSIZE]; /* cache hash table on volume */
@@ -1115,11 +1115,15 @@ extern struct brequest afs_brs[NBRS];	/* request structures */
 #define CM_CACHESIZEDRAINEDPCT	95	/* wakeup processes when down to here. */
 #define CM_WAITFORDRAINPCT	98	/* sleep if cache is this full. */
 
+#define PERCENT(p, v) \
+    ( (p)*128/100*(v) / 128 )
+
 #define afs_CacheIsTooFull() \
     (afs_blocksUsed - afs_blocksDiscarded > \
-	(CM_DCACHECOUNTFREEPCT*afs_cacheBlocks)/100 || \
+        PERCENT(CM_DCACHECOUNTFREEPCT, afs_cacheBlocks) || \
      afs_freeDCCount - afs_discardDCCount < \
-	((100-CM_DCACHECOUNTFREEPCT)*afs_cacheFiles)/100)
+        PERCENT(100-CM_DCACHECOUNTFREEPCT, afs_cacheFiles))
+
 
 /* Handy max length of a numeric string. */
 #define	CVBS	12		/* max afs_int32 is 2^32 ~ 4*10^9, +1 for NULL, +luck */

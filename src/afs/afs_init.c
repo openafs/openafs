@@ -174,7 +174,7 @@ afs_CacheInit(afs_int32 astatSize, afs_int32 afiles, afs_int32 ablocks,
 void
 afs_ComputeCacheParms(void)
 {
-    register afs_int32 i;
+    register afs_size_t i;
     afs_int32 afs_maxCacheDirty;
 
     /*
