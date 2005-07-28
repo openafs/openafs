@@ -350,8 +350,10 @@ VAllocVnode_r(Error * ec, Volume * vp, VnodeType type)
 	    VOL_UNLOCK;
 	    ObtainWriteLock(&vnp->lock);
 	    VOL_LOCK;
-	    if (vnp->volumePtr->cacheCheck != vnp->cacheCheck)
+	    if (vnp->volumePtr->cacheCheck != vnp->cacheCheck) {
+		ReleaseWriteLock(&vnp->lock);
 		goto vnrehash;
+	    }
 	}
 #ifdef AFS_PTHREAD_ENV
 	vnp->writer = pthread_self();
