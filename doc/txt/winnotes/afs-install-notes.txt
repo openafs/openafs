@@ -1,19 +1,30 @@
-OpenAFS for Windows 1.3.8500 Installation Notes
+OpenAFS for Windows 1.3.8600 Installation Notes
 -----------------------------------------------
 
-The OpenAFS for Windows product was very poorly maintained throughout the 
-1.2.x release cycle.  While the Unix version was being enhanced and its 
-quality was improving the Windows version stagnated.  The IBM AFS 3.6 product 
-was not designed for the Windows 2000/XP/2003 operating system nor was it 
-architected with highly disconnected environments in mind.
+OpenAFS for Windows 1.3.8600 is the best client available for 
+Microsoft Windows operating systems.  It can be installed either as
+a new installation or an upgrade from previous versions of OpenAFS
+for Windows or IBM AFS for Windows.  Installers are provided in two
+forms:
 
-The 1.3.x series of releases not only fixes a large number of bugs in the 1.2 
-series but also attempts to enhance the functionality of the product to better 
-fit the usage model of today's users.  Several items standout.  
+  * an executable (.exe) that is based upon the Nullsoft Scriptable
+    Installation System, or
 
-0. The default AFSCache file is approximately 100MB.  This space is required 
-in addition to the space allocated to OpenAFS binaries.
+  * a Windows Installer package (.msi) that is built using WiX and
+    can be customized for organizations via the use of MSI Transforms
+    (see msi-deployment-guide.txt)
 
+System Requirements:
+
+Operating System: Windows 2000, 2000 Server, XP Home, XP Pro, 2003 Server
+64-bit versions of Windows are not supported in this release.
+
+Disk Space: up to 60mb required for the OpenAFS binaries plus 100MB 
+for the default AFSCache file.   (The size of the AFSCache file may
+be adjusted via the Registry after installation.)
+
+Additional Softare:  MIT Kerberos for Windows 2.6.x if Kerberos 5 
+authentication support is desired.
 
 1. The Kerberos 4 infrastructure on which the 1.2 series is reliant is no 
 longer secure.  Cross-realm Kerberos is very important in the AFS context and 

@@ -1,9 +1,22 @@
 Since 1.3.85:
+ * Optimize calls to cm_CheckServer from cm_Analyze.  Only check
+   down servers for the current cell not all cells.
+
+ * If the scache LRU list becomes corrupted, the AFS Client Service
+   might enter an infinite loop at startup.   Detect the corruption
+   and discard the cache contents in this case.
+
+ * Fixed the Explorer Shell's remove mountpoint functionality.
+
  * Fixed a deadlock caused by the holder of cm_aclLock attempting to 
    obtain a mutex lock on a cm_scache_t object whose lock is held by
    a thread attempting to obtain the cm_aclLock.
 
 Since 1.3.84:
+ * Really fixed DNS AFSDB queries to ensure that "csail" cannot be
+   misinterpretted as "csail.mit.edu" when the resolver 
+   is configured to append ".mit.edu" to failed DNS queries.
+
  * Added a new registry key, "LogoffPreserveTokens" (see registry.txt),
    that can be used to force the preservation of user tokens upon logout.
 
