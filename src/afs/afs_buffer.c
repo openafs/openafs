@@ -130,7 +130,7 @@ DInit(int abuffers)
 #endif
 	/* Fill in each buffer with an empty indication. */
 	tb = &Buffers[i];
-	tb->fid = 0;
+	tb->fid = NULLIDX;
 	tb->inode = 0;
 	tb->accesstime = 0;
 	tb->lockers = 0;
@@ -226,7 +226,7 @@ DRead(register struct dcache *adc, register int page)
     MReleaseWriteLock(&afs_bufferLock);
     tb->lockers++;
     if (page * AFS_BUFFER_PAGESIZE >= adc->f.chunkBytes) {
-	tb->fid = 0;
+	tb->fid = NULLIDX;
 	tb->inode = 0;
 	tb->lockers--;
 	MReleaseWriteLock(&tb->lock);
@@ -238,7 +238,7 @@ DRead(register struct dcache *adc, register int page)
 		      AFS_BUFFER_PAGESIZE);
     afs_CFileClose(tfile);
     if (code < AFS_BUFFER_PAGESIZE) {
-	tb->fid = 0;
+	tb->fid = NULLIDX;
 	tb->inode = 0;
 	tb->lockers--;
 	MReleaseWriteLock(&tb->lock);
@@ -450,7 +450,7 @@ DZap(struct dcache *adc)
 	for (tb = phTable[pHash(adc->index, i)]; tb; tb = tb->hashNext)
 	    if (tb->fid == adc->index) {
 		MObtainWriteLock(&tb->lock, 262);
-		tb->fid = 0;
+		tb->fid = NULLIDX;
 		tb->inode = 0;
 		tb->dirty = 0;
 		MReleaseWriteLock(&tb->lock);
