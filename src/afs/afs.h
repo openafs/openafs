@@ -329,6 +329,7 @@ struct conn {
  */
 #define	QTOV(e)	    ((struct vcache *)(((char *) (e)) - (((char *)(&(((struct vcache *)(e))->vlruq))) - ((char *)(e)))))
 #define	QTOC(e)	    ((struct cell *)((char *) (e)))
+#define	QTOVH(e)   ((struct vcache *)(((char *) (e)) - (((char *)(&(((struct vcache *)(e))->vhashq))) - ((char *)(e)))))
 
 #define	SRVADDR_MH	1
 #define	SRVADDR_ISDOWN	0x20	/* same as SRVR_ISDOWN */
@@ -603,7 +604,7 @@ struct vcache {
     struct vcache *nextfree;	/* next on free list (if free) */
 #endif
     struct vcache *hnext;	/* Hash next */
-    struct vcache *vhnext;	/* vol hash next */
+    struct afs_q vhashq;	/* Hashed per-volume list */
     struct VenusFid fid;
     struct mstat {
 	afs_size_t Length;
@@ -1045,7 +1046,7 @@ extern afs_int32 afs_cacheFiles;	/*Size of afs_indexTable */
 extern afs_size_t afs_cacheBlocks;	/*1K blocks in cache */
 extern afs_int32 afs_cacheStats;	/*Stat entries in cache */
 extern struct vcache *afs_vhashT[VCSIZE];	/*Stat cache hash table */
-extern struct vcache *afs_vhashTV[VCSIZE]; /* cache hash table on volume */
+extern struct afs_q afs_vhashTV[VCSIZE]; /* cache hash table on volume */
 extern afs_int32 afs_initState;	/*Initialization state */
 extern afs_int32 afs_termState;	/* Termination state */
 extern struct VenusFid afs_rootFid;	/*Root for whole file system */

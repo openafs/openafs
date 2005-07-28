@@ -324,7 +324,7 @@ afs_clear_inode(struct inode *ip)
 
     if (vcp->vlruq.prev || vcp->vlruq.next)
 	osi_Panic("inode freed while on LRU");
-    if (vcp->hnext || vcp->vhnext)
+    if (vcp->hnext)
 	osi_Panic("inode freed while still hashed");
 
 #if !defined(STRUCT_SUPER_HAS_ALLOC_INODE)
