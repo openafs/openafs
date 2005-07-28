@@ -115,17 +115,14 @@ afs_osi_Sleep(void *event)
 {
     AFS_ASSERT_GLOCK();
     AFS_GUNLOCK();
-    tsleep(event, PVFS, "afs", 0);
+    tsleep(event, PVFS, "afsslp", 0);
     AFS_GLOCK();
 }
 
 int
 afs_osi_SleepSig(void *event)
 {
-    AFS_ASSERT_GLOCK();
-    AFS_GUNLOCK();
-    tsleep(event, PVFS, "afs", 0);
-    AFS_GLOCK();
+    afs_osi_Sleep(event);
     return 0;
 }
 
