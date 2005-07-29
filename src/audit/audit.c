@@ -88,7 +88,7 @@ audmakebuf(char *audEvent, va_list vaList)
 	    bufferPtr += sizeof(vaLong);
 	    break;
 	case AUD_LST:		/* Ptr to another list */
-	    vaLst = (va_list)va_arg(vaList, va_list);
+	    vaLst = va_arg(vaList, va_list);
 	    audmakebuf(audEvent, vaLst);
 	    break;
 	case AUD_FID:		/* AFSFid - contains 3 entries */
