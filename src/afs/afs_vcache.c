@@ -594,6 +594,7 @@ afs_NewVCache(struct VenusFid *afid, struct server *serverp)
 #ifdef	AFS_OSF_ENV
     struct vcache *nvc;
 #endif /* AFS_OSF_ENV */
+    struct afs_q *tq, *uq;
     int code, fv_slept;
 
     AFS_STATCNT(afs_NewVCache);
@@ -611,7 +612,6 @@ afs_NewVCache(struct VenusFid *afid, struct server *serverp)
     if (((3 * afs_vcount) > nvnode) || (afs_vcount >= afs_maxvcount))
 #endif
     {
-	struct afs_q *tq, *uq;
 	int i;
 	char *panicstr;
 
