@@ -913,6 +913,7 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
     if (res) {
 	if (d_unhashed(res))
 	    d_rehash(res);
+	iput(ip);
     } else
 #endif
     d_add(dp, ip);
