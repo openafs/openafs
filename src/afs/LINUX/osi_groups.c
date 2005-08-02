@@ -172,6 +172,7 @@ setpag(cred_t ** cr, afs_uint32 pagvalue, afs_uint32 * newpag,
     
     for (i = 0; i < group_info->ngroups; ++i)
       GROUP_AT(tmp, i + need_space) = GROUP_AT(group_info, i);
+    put_group_info(group_info);
     group_info = tmp;
 
     *newpag = (pagvalue == -1 ? genpag() : pagvalue);
