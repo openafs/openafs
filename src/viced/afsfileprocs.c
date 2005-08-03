@@ -4249,7 +4249,7 @@ SAFSS_Symlink(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
     Vnode *targetptr = 0;	/* vnode of the new link */
     Vnode *parentwhentargetnotdir = 0;	/* parent for use in SetAccessList */
     int errorCode = 0;		/* error code */
-    int code = 0;
+    int len, code = 0;
     DirHandle dir;		/* Handle for dir package I/O */
     Volume *volptr = 0;		/* pointer to the volume header */
     struct client *client;	/* pointer to client structure */
@@ -4340,8 +4340,9 @@ SAFSS_Symlink(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
     /* Write the contents of the symbolic link name into the target inode */
     fdP = IH_OPEN(targetptr->handle);
     assert(fdP != NULL);
-    assert(FDH_WRITE(fdP, (char *)LinkContents, strlen((char *)LinkContents))
-	   == strlen((char *)LinkContents));
+    len = strlen((char *) LinkContents);
+     code = (len == FDH_WRITE(fdP, (char *) LinkContents, len)) ? 0 : VDISKFULL;
+     if (code) ViceLog(0, ("SAFSS_Symlink FDH_WRITE failed for len=%d, Fid=%u.%d.%d\n", len, OutFid->Volume, OutFid->Vnode, OutFid->Unique));
     FDH_CLOSE(fdP);
     /*
      * Set up and return modified status for the parent dir and new symlink
@@ -4363,7 +4364,7 @@ SAFSS_Symlink(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
 			   volptr);
     FidZap(&dir);
     ViceLog(2, ("SAFS_Symlink returns %d\n", errorCode));
-    return errorCode;
+    return ( errorCode ? errorCode : code );
 
 }				/*SAFSS_Symlink */
 
