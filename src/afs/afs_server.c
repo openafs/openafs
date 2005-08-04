@@ -603,7 +603,7 @@ afs_CheckServers(int adown, struct cell *acellp)
 	multi_RXAFS_GetTime(&tv.tv_sec, &tv.tv_usec);
 	tc = conns[multi_i];
 	sa = tc->srvr;
-	if (conntimer[multi_i] == 0)
+	if (conntimer[multi_i] == 1)
 	  rx_SetConnDeadTime(tc->id, afs_rx_deadtime);
 	end = osi_Time();
 	results[multi_i]=multi_error;
