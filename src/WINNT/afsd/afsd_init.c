@@ -139,7 +139,7 @@ afsi_start()
     char wd[256];
     char t[100], u[100], *p, *path;
     int zilch;
-    int code;
+    DWORD code;
     DWORD dwLow, dwHigh;
     HKEY parmKey;
     DWORD dummyLen;

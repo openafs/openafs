@@ -1214,15 +1214,16 @@ long cm_IoctlGetWsCell(smb_ioctl_t *ioctlp, cm_user_t *userp)
 	long code = 0;
 
 	if (cm_freelanceEnabled) {
-	    StringCbCopyA(ioctlp->outDatap, 999999, "Freelance.Local.Root");
-		ioctlp->outDatap += strlen(ioctlp->outDatap) +1;
+            if (cm_GetRootCellName(ioctlp->outDatap))
+                StringCbCopyA(ioctlp->outDatap, 999999, "Freelance.Local.Root");
+            ioctlp->outDatap += strlen(ioctlp->outDatap) +1;
 	} else if (cm_data.rootCellp) {
 	    /* return the default cellname to the caller */
 	    StringCbCopyA(ioctlp->outDatap, 999999, cm_data.rootCellp->name);
 	    ioctlp->outDatap += strlen(ioctlp->outDatap) +1;
 	} else {
 	    /* if we don't know our default cell, return failure */
-		code = CM_ERROR_NOSUCHCELL;
+            code = CM_ERROR_NOSUCHCELL;
     }
 
     return code;

@@ -271,6 +271,22 @@ InAFS(char *apath)
     return 1;
 }
 
+static int 
+IsFreelanceRoot(char *apath)
+{
+    struct ViceIoctl blob;
+    afs_int32 code;
+
+    blob.in_size = 0;
+    blob.out_size = MAXSIZE;
+    blob.out = space;
+
+    code = pioctl(apath, VIOC_FILE_CELL_NAME, &blob, 1);
+    if (code == 0)
+        return !strcmp("Freelance.Local.Root",space);
+    return 1;   /* assume it is because it is more restrictive that way */
+}
+
 /* return a static pointer to a buffer */
 static char *
 Parent(char *apath)
@@ -690,9 +706,27 @@ AclToString(struct Acl *acl)
     return mydata;
 }
 
+static DWORD IsFreelance(void)
+{
+    HKEY  parmKey;
+    DWORD code;
+    DWORD dummyLen;
+    DWORD enabled = 0;
+
+    code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY,
+                         0, KEY_QUERY_VALUE, &parmKey);
+    if (code == ERROR_SUCCESS) {
+        dummyLen = sizeof(cm_freelanceEnabled);
+        code = RegQueryValueEx(parmKey, "FreelanceClient", NULL, NULL,
+                            (BYTE *) &enabled, &dummyLen);
+        RegCloseKey (parmKey);
+    }
+    return enabled;
+}
+
 #define AFSCLIENT_ADMIN_GROUPNAME "AFS Client Admins"
 
-BOOL IsAdmin (void)
+static BOOL IsAdmin (void)
 {
     static BOOL fAdmin = FALSE;
     static BOOL fTested = FALSE;
@@ -1750,6 +1784,7 @@ MakeMountCmd(struct cmd_syndesc *as, char *arock)
     struct vldbentry vldbEntry;
 #endif /* not WIN32 */
     struct ViceIoctl blob;
+    char * parent;
 
     /*
 
@@ -1786,8 +1821,14 @@ MakeMountCmd(struct cmd_syndesc *as, char *arock)
         volName = ++tmpName;
     }
 
-    if (!InAFS(Parent(as->parms[0].items->data))) {
+    parent = Parent(as->parms[0].items->data);
+    if (!InAFS(parent)) {
 	fprintf(stderr,"%s: mount points must be created within the AFS file system\n", pn);
+	return 1;
+    }
+
+    if ( IsFreelanceRoot(parent) && !IsAdmin() ) {
+	fprintf(stderr,"%s: Only AFS Client Administrators may alter the root.afs volume\n", pn);
 	return 1;
     }
 
@@ -1901,7 +1942,14 @@ RemoveMountCmd(struct cmd_syndesc *as, char *arock) {
             error = 1;
 	    continue;	/* don't bother trying */
 	}
-	blob.out_size = 0;
+
+        if ( IsFreelanceRoot(Parent(tp)) && !IsAdmin() ) {
+            fprintf(stderr,"%s: Only AFS Client Administrators may alter the root.afs volume\n", pn);
+            error = 1;
+            continue;   /* skip */
+        }
+
+        blob.out_size = 0;
 	blob.in = tp;
 	blob.in_size = strlen(tp)+1;
 	code = pioctl(tbuffer, VIOC_AFS_DELETE_MT_PT, &blob, 0);
