@@ -7748,7 +7748,7 @@ void smb_NetbiosInit()
         ncbp->ncb_length = sizeof(lana_list);
         code = Netbios(ncbp);
         if (code != 0) {
-            osi_Log1(smb_logp, "Netbios NCBENUM error code %d", code);
+            afsi_log("Netbios NCBENUM error code %d", code);
             osi_panic(s, __FILE__, __LINE__);
         }
     }
@@ -7769,10 +7769,10 @@ void smb_NetbiosInit()
         if (code == 0) 
             code = ncbp->ncb_retcode;
         if (code != 0) {
-            osi_Log2(smb_logp, "Netbios NCBRESET lana %d error code %d", lana_list.lana[i], code);
+            afsi_log("Netbios NCBRESET lana %d error code %d", lana_list.lana[i], code);
             lana_list.lana[i] = 255;  /* invalid lana */
         } else {
-            osi_Log1(smb_logp, "Netbios NCBRESET lana %d succeeded", lana_list.lana[i]);
+            afsi_log("Netbios NCBRESET lana %d succeeded", lana_list.lana[i]);
         }
     }
 #else
@@ -7794,7 +7794,7 @@ void smb_NetbiosInit()
     len=lstrlen(smb_localNamep);
     memset(smb_sharename,' ',NCBNAMSZ);
     memcpy(smb_sharename,smb_localNamep,len);
-    osi_Log1(smb_logp, "lana_list.length %d", lana_list.length);
+    afsi_log("lana_list.length %d", lana_list.length);
 
     /* Keep the name so we can unregister it later */
     for (l = 0; l < lana_list.length; l++) {
@@ -7809,18 +7809,18 @@ void smb_NetbiosInit()
         code = Netbios(ncbp, dos_ncb);
 #endif /* !DJGPP */
           
-        osi_Log4(smb_logp, "Netbios NCBADDNAME lana=%d code=%d retcode=%d complete=%d",
+        afsi_log("Netbios NCBADDNAME lana=%d code=%d retcode=%d complete=%d",
                  lana, code, ncbp->ncb_retcode, ncbp->ncb_cmd_cplt);
         {
             char name[NCBNAMSZ+1];
             name[NCBNAMSZ]=0;
             memcpy(name,ncbp->ncb_name,NCBNAMSZ);
-            osi_Log1(smb_logp, "Netbios NCBADDNAME added new name >%s<",osi_LogSaveString(smb_logp, name));
+            afsi_log("Netbios NCBADDNAME added new name >%s<",name);
         }
 
         if (code == 0) code = ncbp->ncb_retcode;
         if (code == 0) {
-            osi_Log1(smb_logp, "Netbios NCBADDNAME succeeded on lana %d\n", lana);
+            afsi_log("Netbios NCBADDNAME succeeded on lana %d\n", lana);
 #ifdef DJGPP
             /* we only use one LANA with djgpp */
             lana_list.lana[0] = lana;
@@ -7828,13 +7828,13 @@ void smb_NetbiosInit()
 #endif	  
         }
         else {
-            osi_Log2(smb_logp, "Netbios NCBADDNAME lana %d error code %d", lana, code);
+            afsi_log("Netbios NCBADDNAME lana %d error code %d", lana, code);
             if (code == NRC_BRIDGE) {    /* invalid LANA num */
                 lana_list.lana[l] = 255;
                 continue;
             }
             else if (code == NRC_DUPNAME) {
-                osi_Log0(smb_logp, "Name already exists; try to delete it");
+                afsi_log("Name already exists; try to delete it");
                 memset(ncbp, 0, sizeof(*ncbp));
                 ncbp->ncb_command = NCBDELNAME;
                 memcpy(ncbp->ncb_name,smb_sharename,NCBNAMSZ);
@@ -7847,7 +7847,7 @@ void smb_NetbiosInit()
                 if (code == 0) 
                     code = ncbp->ncb_retcode;
                 else {
-                    osi_Log2(smb_logp, "Netbios NCBDELNAME lana %d error code %d\n", lana, code);
+                    afsi_log("Netbios NCBDELNAME lana %d error code %d\n", lana, code);
                 }
                 if (code != 0 || delname_tried) {
                     lana_list.lana[l] = 255;
@@ -7861,7 +7861,7 @@ void smb_NetbiosInit()
                 }
             }
             else {
-                osi_Log2(smb_logp, "Netbios NCBADDNAME lana %d error code %d", lana, code);
+                afsi_log("Netbios NCBADDNAME lana %d error code %d", lana, code);
                 lana_list.lana[l] = 255;  /* invalid lana */
                 osi_panic(s, __FILE__, __LINE__);
             }
@@ -8192,11 +8192,10 @@ void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
                     sprintf(message,"MsV1_0SetProcessOption failure: nts 0x%x ntsEx 0x%x",
                                        nts, ntsEx);
                     OutputDebugString(message);
-                    osi_Log2(smb_logp,"MsV1_0SetProcessOption failure: nts 0x%x ntsEx 0x%x",
-                              nts, ntsEx);
+                    afsi_log(message);
                 } else {
                     OutputDebugString("MsV1_0SetProcessOption success");
-                    osi_Log0(smb_logp,"MsV1_0SetProcessOption success");
+                    afsi_log("MsV1_0SetProcessOption success");
                 }
                 /* END - code from Larry */
 
