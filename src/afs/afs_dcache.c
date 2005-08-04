@@ -1815,7 +1815,8 @@ afs_GetDCache(register struct vcache *avc, afs_size_t abyte,
 	       ICL_HANDLE_OFFSET(Position));
     if ((aflags & 4) && (hiszero(avc->m.DataVersion)))
 	doAdjustSize = 1;
-    if ((aflags & 4) && (abyte == Position) && (tlen >= size))
+    if ((AFS_CHUNKTOBASE(chunk) >= avc->m.Length) ||
+	 ((aflags & 4) && (abyte == Position) && (tlen >= size)))
 	overWriteWholeChunk = 1;
     if (doAdjustSize || overWriteWholeChunk) {
 #if	defined(AFS_AIX32_ENV) || defined(AFS_SGI_ENV)
