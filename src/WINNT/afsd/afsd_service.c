@@ -70,6 +70,9 @@ HANDLE hAFSDMainThread = NULL;
 HANDLE hAFSDWorkerThread[WORKER_THREADS];
 #endif
 
+/* for the IFS version, set the event DoTerminate, on which all
+   worker threads wait.  they will exit, and then everything else
+   can uninitialize. */
 HANDLE WaitToTerminate, DoTerminate;
 
 int GlobalStatus;
@@ -475,7 +478,7 @@ static void MountGlobalDrives(void)
             dwResult = WNetCancelConnection2(szDriveToMapTo, 0, TRUE);
         }
 #else
-	/* FIXFIX */
+	/* FIXFIX: implement */
 #endif
     }        
 
@@ -522,7 +525,7 @@ static void DismountGlobalDrives()
         afsi_log("Disconnect from GlobalAutoMap of %s to %s %s", szDriveToMapTo, szSubMount, dwResult ? "succeeded" : "failed");
     }        
 #else
-	/* FIXFIX */
+	/* FIXFIX: implement */
 #endif
 
     RegCloseKey(hKey);
@@ -1165,6 +1168,14 @@ afsd_Main(DWORD argc, LPTSTR *argv)
         ServiceStatus.dwWaitHint = 0;
         ServiceStatus.dwControlsAccepted = 0;
         SetServiceStatus(StatusHandle, &ServiceStatus);
+
+		{       
+		HANDLE h; char *ptbuf[1];
+		h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);
+		ptbuf[0] = "Incorrect module versions loaded";
+		ReportEvent(h, EVENTLOG_ERROR_TYPE, 0, 0, NULL, 1, 0, ptbuf, NULL);
+		DeregisterEventSource(h);
+		}
                        
         /* exit if initialization failed */
         return;
@@ -1267,6 +1278,9 @@ afsd_Main(DWORD argc, LPTSTR *argv)
         SetServiceStatus(StatusHandle, &ServiceStatus);
 #endif
 
+/* the following ifdef chooses the mode of operation for the service.  to enable
+ * a runtime flag (instead of compile-time), pioctl() would need to dynamically
+ * determine the mode, in order to use the correct ioctl special-file path. */
 #ifndef AFSIFS
         code = afsd_InitSMB(&reason, MessageBox);
         if (code != 0) {
@@ -1422,8 +1436,10 @@ afsd_Main(DWORD argc, LPTSTR *argv)
     rx_Finalize();                       
     afsi_log("rx finalization complete");
                                          
-    smb_Shutdown();                      
+#ifndef AFSIFS
+	smb_Shutdown();                      
     afsi_log("smb shutdown complete");   
+#endif
                                          
     RpcShutdown();                       
 
@@ -1509,6 +1525,7 @@ main(int argc, char * argv[])
             SetEvent(WaitToTerminate);
 #else
             SetEvent(DoTerminate);
+			dc_release_hooks();
 #endif
         }
     }

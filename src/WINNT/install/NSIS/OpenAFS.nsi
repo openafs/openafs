@@ -686,7 +686,7 @@ Section "!AFS Client" secClient
   nsExec::Exec '$INSTDIR\Common\Service.exe TransarcAFSDaemon "$INSTDIR\Client\Program\afsd_service.exe" "OpenAFS Client Service"'
   nsExec::Exec '$INSTDIR\Common\Service.exe u AfsRdr'
 !ifdef AFSIFS
-  nsExec::Exec '$INSTDIR\Common\Service.exe AfsRdr "$SYSDIR\DRIVERS\afsrdr.sys" "AFS Redirector"'
+  nsExec::Exec '$INSTDIR\Common\Service.exe AfsRdr "System32\DRIVERS\afsrdr.sys" "AFS Redirector"'
 !endif
 skipremove:
   Delete "$INSTDIR\Common\service.exe"

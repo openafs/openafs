@@ -40,7 +40,6 @@
 struct AfsRdrExtension
 {
 struct ComExtension *com;
-KMUTEX protectMutex;
 PNOTIFY_SYNC notifyList;
 LIST_ENTRY listHead;
 NPAGED_LOOKASIDE_LIST fcbMemList;
@@ -55,7 +54,6 @@ struct ComExtension
 struct AfsRdrExtension *rdr;
 LIST_ENTRY outReqList;
 KSPIN_LOCK outLock;
-RTL_GENERIC_TABLE inTable;
 FAST_MUTEX inLock;
 KEVENT outEvent, cancelEvent;
 };

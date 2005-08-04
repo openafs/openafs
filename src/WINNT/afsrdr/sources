@@ -23,7 +23,7 @@
 # * possibility of such damages.
 # */
 
-SOURCES= afsrdr.c ifs_rpc.c
+SOURCES= afsrdr.c ifs_rpc.c afsrdr.rc
 TARGETNAME=afsrdr
 TARGETPATH=obj
 TARGETTYPE=DRIVER

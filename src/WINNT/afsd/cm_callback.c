@@ -27,6 +27,7 @@
 #include "afsd.h"
 #include <WINNT/syscfg.h>
 #include <WINNT/afsreg.h>
+#include <../afsrdr/kif.h>
 
 /*extern void afsi_log(char *pattern, ...);*/
 
@@ -91,12 +92,6 @@ void cm_RecordRacingRevoke(cm_fid_t *fidp, long cancelFlags)
     lock_ReleaseWrite(&cm_callbackLock);
 }
 
-#ifdef AFSIFS
-#define BUF_FILEHASH(fidp)	((((fidp)->vnode+((fidp)->unique << 13) + ((fidp)->unique >> (32-13))	\
-                                    +(fidp)->volume+(fidp)->cell)			\
-                                   /*& 0xffffffff*/))
-#endif
-
 /*
  * When we lose a callback, may have to send change notification replies.
  * Do not call with a lock on the scp.
@@ -107,7 +102,8 @@ void cm_CallbackNotifyChange(cm_scache_t *scp)
     HKEY  hKey;
     DWORD dummyLen;
 
-    if (RegOpenKeyEx( HKEY_LOCAL_MACHINE, 
+    /* why does this have to query the registry each time? */
+	if (RegOpenKeyEx( HKEY_LOCAL_MACHINE, 
                       AFSREG_CLT_OPENAFS_SUBKEY,
                       0,
                       KEY_READ|KEY_QUERY_VALUE,
@@ -128,16 +124,18 @@ void cm_CallbackNotifyChange(cm_scache_t *scp)
     if (dwDelay)
         Sleep(dwDelay);
 
-    if (scp->fileType == CM_SCACHETYPE_DIRECTORY) {
+    /* for directories, this sends a change notification on the dir itself */
+	if (scp->fileType == CM_SCACHETYPE_DIRECTORY) {
 #ifndef AFSIFS
         if (scp->flags & CM_SCACHEFLAG_ANYWATCH)
             smb_NotifyChange(0,
                              FILE_NOTIFY_GENERIC_DIRECTORY_FILTER,
                              scp, NULL, NULL, TRUE);
 #else
-        dc_break_callback(BUF_FILEHASH(&scp->fid));
+        dc_break_callback(FID_HASH_FN(&scp->fid));
 #endif
     } else {
+	/* and for files, this sends a change notification on the file's parent dir */
         cm_fid_t tfid;
         cm_scache_t *dscp;
 
@@ -154,7 +152,7 @@ void cm_CallbackNotifyChange(cm_scache_t *scp)
                               dscp,   NULL, NULL, TRUE);
 #else
         if (dscp)
-            dc_break_callback(BUF_FILEHASH(&dscp->fid));
+            dc_break_callback(FID_HASH_FN(&dscp->fid));
 #endif
         if (dscp) 
             cm_ReleaseSCache(dscp);

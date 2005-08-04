@@ -60,25 +60,23 @@ rpc_wait(rpc_t *rpc, BOOLEAN long_op);
 rpc_send_mdl(rpc_t *rpc, char *out_buf);
 #endif
 
-/* internal timing functions (not used) */
-#ifdef RPC_KERN
-#define TIMING_START()		LARGE_INTEGER start, stop; \
-                                start.QuadPart = KeQueryInterruptTime();
-#define TIMING_END(name)	stop.QuadPart = KeQueryInterruptTime(); \
-				rpt5((name, "%s %d", name, (ULONG)(stop.QuadPart - start.QuadPart)));
-#endif
 
-
-/* rpc security kernel functions */
+/****** rpc security kernel functions ******/
+/* before making an upcall from kernel code, set the security context by
+ * passing the access_token to rpc_set_context.  remove the context after all
+ * upcalls are done.  the rpc library automatically checks and sets this
+ * same context on the other end. */
 #ifdef RPC_KERN
 struct rpc_cred_map_entry
 {
     void *token;
     PETHREAD thread;
+    int refs;
 };
 
-struct rpc_cred_map_entry cred_map[20];
+struct rpc_cred_map_entry cred_map[MAX_CRED_MAPS];
 rpc_t *rpc_list_head = NULL;
+long num_rpcs = 0;
 
 rpc_set_context(void *context)
 {
@@ -89,14 +87,16 @@ rpc_set_context(void *context)
     empty = -1;
     ret = 0;
 
-    // LOCKLOCK
-    for (x = 0; x < 20; x++)
+    ifs_lock_rpcs();
+    for (x = 0; x < MAX_CRED_MAPS; x++)
     {
         if (cred_map[x].thread == NULL)
             empty = x;
         if (cred_map[x].thread == thd)
         {
-            cred_map[x].token = context;
+            //////FIX///ASSERT(cred_map[x].token == context);
+	    cred_map[x].refs++;
+	    //cred_map[x].token = context;
             goto done;
         }
     }
@@ -104,12 +104,13 @@ rpc_set_context(void *context)
     {
         cred_map[empty].thread = thd;
         cred_map[empty].token = context;
+	cred_map[empty].refs = 1;
     }
     else
         ret = -1;
 
   done:
-    // UNLOCKUNLOCK
+    ifs_unlock_rpcs();
     return ret;
 }
 
@@ -121,7 +122,7 @@ void *rpc_get_context()
     thd = PsGetCurrentThread();
 
     // no lock
-    for (x = 0; x < 20; x++)
+    for (x = 0; x < MAX_CRED_MAPS; x++)
         if (cred_map[x].thread == thd)
             return cred_map[x].token;
     // no unlock
@@ -134,22 +135,30 @@ rpc_remove_context()
     PETHREAD thd;
 
     thd = PsGetCurrentThread();
-    // no lock
-    for (x = 0; x < 20; x++)
+    ifs_lock_rpcs();
+    for (x = 0; x < MAX_CRED_MAPS; x++)
         if (cred_map[x].thread == thd)
         {
-            cred_map[x].token = NULL;
-            cred_map[x].thread = NULL;
+	    if (cred_map[x].refs > 1)
+		{
+	        cred_map[x].refs--;
+		}
+	    else
+		{
+		cred_map[x].token = NULL;
+		cred_map[x].thread = NULL;
+		}
+	    ifs_unlock_rpcs();
             return 0;
         }
 
-    // no unlock
+    ifs_unlock_rpcs();
     return -1;
 }
 #endif
 
 
-/* rpc internal functions for kernel */
+/* rpc stubs in kernel */
 #ifdef RPC_KERN
 rpc_t *rpc_create(int size_hint)
 {
@@ -162,6 +171,7 @@ rpc_t *rpc_create(int size_hint)
     NTSTATUS status;
     HANDLE token;
 
+    /* get user's identification from auth token*/
     token = rpc_get_context();
     ASSERT(token);
     status = SeQueryAuthenticationIdToken(token, &auth_id);
@@ -173,10 +183,11 @@ rpc_t *rpc_create(int size_hint)
 
     if (!(rpc = rpc_upgrade(NULL, 0, 1)))
     {
-        size = sizeof(rpc_t) + 4096*10;
+        size = sizeof(rpc_t) + 2*RPC_BUF_SIZE;
         rpc = ExAllocatePoolWithTag(NonPagedPool, size, 0x1234);
         if (!rpc)
-            _asm int 3;
+            return NULL;
+	num_rpcs++;
         memset(rpc, 0, size);
         rpc->next = rpc_list_head;
         rpc_list_head = rpc;
@@ -184,23 +195,23 @@ rpc_t *rpc_create(int size_hint)
     }
 
     rpc->out_buf = rpc->out_pos = (char*)(rpc+1);
-    rpc->in_buf = rpc->in_pos = ((char*)(rpc+1))+2048*10;
+    rpc->in_buf = rpc->in_pos = ((char*)(rpc+1))+RPC_BUF_SIZE;
 
     rpc->key = rand() + 10;
     rpc_marshal_long(rpc, rpc->key);
     rpc->bulk_out_len = (ULONG*)rpc->out_pos;
     rpc_marshal_long(rpc, 0);
 
-    /*SeCaptureSubjectContext(&subj_context);
+#if 0
+    /* another way of obtaining credentials, with different effects */
+    SeCaptureSubjectContext(&subj_context);
     acc_token = SeQuerySubjectContextToken(&subj_context);
-    status = SeQueryAuthenticationIdToken(acc_token, &auth_id);*/
-    /**token = rpc_get_context();
-    ASSERT(token);
-    status = SeQueryAuthenticationIdToken(token, &auth_id);
+    status = SeQueryAuthenticationIdToken(acc_token, &auth_id);
 
     user_id.LowPart = auth_id.LowPart;
     user_id.HighPart = auth_id.HighPart;
-    SeReleaseSubjectContext(&subj_context);*/
+    SeReleaseSubjectContext(&subj_context);
+#endif
 
     rpc_marshal_longlong(rpc, user_id);
 
@@ -214,7 +225,6 @@ void rpc_destroy(rpc_t *rpc)
     rpc_t *curr;
     int count;
 
-    /*ExFreePoolWithTag(rpc, 0x1234);*/
     ifs_lock_rpcs();
 
     if (rpc_upgrade(rpc, -1, 0))
@@ -233,14 +243,14 @@ rpc_t *rpc_create(int size_hint)
     rpc_t *rpc;
     ULONG status;
 
-    size = sizeof(rpc_t) + 4096;
+    size = sizeof(rpc_t) + 2*RPC_BUF_SIZE;
     rpc = malloc(size);
     if (!rpc)
-        _asm int 3;
+	osi_panic("ifs_rpc: alloc buffer", __FILE__, __LINE__);
     memset(rpc, 0, size);
 
     rpc->out_buf = rpc->out_pos = (char*)(rpc+1);
-    rpc->in_buf = rpc->in_pos = ((char*)(rpc+1))+2048;
+    rpc->in_buf = rpc->in_pos = ((char*)(rpc+1)) + RPC_BUF_SIZE;
 
     rpc->key = rand() + 10;
     rpc_marshal_long(rpc, rpc->key);
@@ -252,7 +262,6 @@ void rpc_destroy(rpc_t *rpc)
 {
     if (!rpc)
         return;
-    //_asm int 3;
 
     free(rpc);
 }
@@ -269,7 +278,7 @@ rpc_transact(rpc_t *rpc)
 
     header_len = rpc->out_pos - rpc->out_buf;
 
-    read = 2048;
+    read = RPC_BUF_SIZE;
     return ifs_TransactRpc(rpc->out_buf, header_len, rpc->in_buf, &read);
 }
 #endif
@@ -282,10 +291,12 @@ uc_namei(WCHAR *name, ULONG *fid)
     rpc_t *rpc;
     ULONG status;
     MDL *mdl;
-    TIMING_START();
-    /* put namei cache here */
+
+	/* consider putting namei cache here */
 
     rpc = rpc_create(0);
+	if (!rpc)
+		return IFSL_MEMORY;
 
     rpc_marshal_long(rpc, RPC_NAMEI);
     rpc_marshal_long(rpc, wcslen(name));
@@ -303,7 +314,6 @@ uc_namei(WCHAR *name, ULONG *fid)
     rpc_unmarshal_long(rpc, fid);
 
     rpc_destroy(rpc);
-    TIMING_END("namei");
     return status;
 }
 
@@ -311,9 +321,10 @@ uc_check_access(ULONG fid, ULONG access, ULONG *granted)
 {
     rpc_t *rpc;
     ULONG status;
-    TIMING_START();
 
     rpc = rpc_create(0);
+	if (!rpc)
+		return IFSL_MEMORY;
 
     rpc_marshal_long(rpc, RPC_CHECK_ACCESS);
     rpc_marshal_long(rpc, fid);
@@ -331,7 +342,6 @@ uc_check_access(ULONG fid, ULONG access, ULONG *granted)
     rpc_unmarshal_long(rpc, granted);
 
     rpc_destroy(rpc);
-    TIMING_END("access");
     return status;
 }
 
@@ -339,9 +349,10 @@ uc_create(WCHAR *name, ULONG attribs, LARGE_INTEGER alloc, ULONG access, ULONG *
 {
     rpc_t *rpc;
     ULONG status;
-    TIMING_START();
 
     rpc = rpc_create(0);
+	if (!rpc)
+		return IFSL_MEMORY;
 
     rpc_marshal_long(rpc, RPC_CREATE);
     rpc_marshal_long(rpc, attribs);
@@ -361,7 +372,6 @@ uc_create(WCHAR *name, ULONG attribs, LARGE_INTEGER alloc, ULONG access, ULONG *
     rpc_unmarshal_long(rpc, fid);
 
     rpc_destroy(rpc);
-    TIMING_END("create");
     return status;
 }
 
@@ -369,9 +379,10 @@ uc_stat(ULONG fid, ULONG *attribs, LARGE_INTEGER *size, LARGE_INTEGER *creation,
 {
     rpc_t *rpc;
     ULONG status;
-    TIMING_START();
 
     rpc = rpc_create(0);
+	if (!rpc)
+		return IFSL_MEMORY;
 
     rpc_marshal_long(rpc, RPC_STAT);
     rpc_marshal_long(rpc, fid);
@@ -393,7 +404,6 @@ uc_stat(ULONG fid, ULONG *attribs, LARGE_INTEGER *size, LARGE_INTEGER *creation,
     rpc_unmarshal_longlong(rpc, written);
 
     rpc_destroy(rpc);
-    TIMING_END("stat");
     return status;
 }
 
@@ -401,9 +411,10 @@ uc_setinfo(ULONG fid, ULONG attribs, LARGE_INTEGER creation, LARGE_INTEGER acces
 {
     rpc_t *rpc;
     ULONG status;
-    TIMING_START();
 
     rpc = rpc_create(0);
+	if (!rpc)
+		return IFSL_MEMORY;
 
     rpc_marshal_long(rpc, RPC_SETINFO);
     rpc_marshal_long(rpc, fid);
@@ -425,7 +436,6 @@ uc_setinfo(ULONG fid, ULONG attribs, LARGE_INTEGER creation, LARGE_INTEGER acces
     rpc_unmarshal_long(rpc, &status);
 
     rpc_destroy(rpc);
-    TIMING_END("setinfo");
     return status;
 }
 
@@ -433,9 +443,10 @@ uc_trunc(ULONG fid, LARGE_INTEGER size)
 {
     rpc_t *rpc;
     ULONG status;
-    TIMING_START();
 
     rpc = rpc_create(0);
+	if (!rpc)
+		return IFSL_MEMORY;
 
     rpc_marshal_long(rpc, RPC_TRUNC);
     rpc_marshal_long(rpc, fid);
@@ -452,7 +463,6 @@ uc_trunc(ULONG fid, LARGE_INTEGER size)
     rpc_unmarshal_long(rpc, &status);
 
     rpc_destroy(rpc);
-    TIMING_END("trunc");
     return status;
 }
 
@@ -460,9 +470,10 @@ uc_read(ULONG fid, LARGE_INTEGER offset, ULONG length, ULONG *read, char *data)
 {
     rpc_t *rpc;
     ULONG status;
-    TIMING_START();
 
     rpc = rpc_create(0);
+	if (!rpc)
+		return IFSL_MEMORY;
 
     rpc_marshal_long(rpc, RPC_READ);
     rpc_marshal_long(rpc, fid);
@@ -481,46 +492,17 @@ uc_read(ULONG fid, LARGE_INTEGER offset, ULONG length, ULONG *read, char *data)
     rpc_unmarshal_long(rpc, read);
 
     rpc_destroy(rpc);
-    TIMING_END("read");
     return status;
 }
-
-/*uc_read_mdl(ULONG fid, LARGE_INTEGER offset, ULONG length, ULONG *read, MDL *data)
-{
-    rpc_t *rpc;
-    ULONG status;
-    TIMING_START();
-
-    rpc = rpc_create(0);
-
-    rpc_marshal_long(rpc, RPC_READ_BULK);
-    rpc_marshal_long(rpc, fid);
-    rpc_marshal_longlong(rpc, offset);
-    rpc_marshal_long(rpc, length);
-
-    rpc_queue_bulk_mdl(rpc, data);
-    if (!rpc_wait(rpc, 1))
-    {
-        rpc_cancel(rpc);
-        rpt0(("cancel", "cancel read mdl"));
-        return IFSL_RPC_TIMEOUT;
-    }
-
-    rpc_unmarshal_long(rpc, &status);
-    rpc_unmarshal_long(rpc, read);
-
-    rpc_destroy(rpc);
-    TIMING_END("read_mdl");
-    return status;
-}*/
 
 uc_write(ULONG fid, LARGE_INTEGER offset, ULONG length, ULONG *written, char *data)
 {
     rpc_t *rpc;
     ULONG status;
-    TIMING_START();
 
     rpc = rpc_create(0);
+	if (!rpc)
+		return IFSL_MEMORY;
 
     rpc_marshal_long(rpc, RPC_WRITE);
     rpc_marshal_long(rpc, fid);
@@ -539,46 +521,17 @@ uc_write(ULONG fid, LARGE_INTEGER offset, ULONG length, ULONG *written, char *da
     rpc_unmarshal_long(rpc, written);
 
     rpc_destroy(rpc);
-    TIMING_END("write");
     return status;
 }
-
-/*uc_write_mdl(ULONG fid, LARGE_INTEGER offset, ULONG length, ULONG *written, MDL *data)
-{
-    rpc_t *rpc;
-    ULONG status;
-    TIMING_START();
-
-    rpc = rpc_create(0);
-
-    rpc_marshal_long(rpc, RPC_WRITE_BULK);
-    rpc_marshal_long(rpc, fid);
-    rpc_marshal_longlong(rpc, offset);
-    rpc_marshal_long(rpc, length);
-
-    rpc_queue_bulk_mdl(rpc, data);
-    if (!rpc_wait(rpc, 1))
-    {
-        rpc_cancel(rpc);
-        rpt0(("cancel", "cancel write mdl"));
-        return IFSL_RPC_TIMEOUT;
-    }
-
-    rpc_unmarshal_long(rpc, &status);
-    rpc_unmarshal_long(rpc, written);
-
-    rpc_destroy(rpc);
-    TIMING_END("write_mdl");
-    return status;
-}*/
 
 uc_readdir(ULONG fid, LARGE_INTEGER cookie_in, WCHAR *filter, ULONG *count, char *data, ULONG *len)
 {
     rpc_t *rpc;
     ULONG status;
-    TIMING_START();
 
     rpc = rpc_create(0);
+	if (!rpc)
+		return IFSL_MEMORY;
 
     rpc_marshal_long(rpc, RPC_READDIR);
     rpc_marshal_long(rpc, fid);
@@ -599,7 +552,6 @@ uc_readdir(ULONG fid, LARGE_INTEGER cookie_in, WCHAR *filter, ULONG *count, char
     rpc_unmarshal_long(rpc, len);
 
     rpc_destroy(rpc);
-    TIMING_END("readdir");
     return status;
 }
 
@@ -607,9 +559,10 @@ uc_close(ULONG fid)
 {
     rpc_t *rpc;
     ULONG status;
-    TIMING_START();
 
     rpc = rpc_create(0);
+	if (!rpc)
+		return IFSL_MEMORY;
 
     rpc_marshal_long(rpc, RPC_CLOSE);
     rpc_marshal_long(rpc, fid);
@@ -625,7 +578,6 @@ uc_close(ULONG fid)
     rpc_unmarshal_long(rpc, &status);
 
     rpc_destroy(rpc);
-    TIMING_END("close");
     return status;
 }
 
@@ -633,9 +585,10 @@ uc_unlink(WCHAR *name)
 {
     rpc_t *rpc;
     ULONG status;
-    TIMING_START();
 
     rpc = rpc_create(0);
+	if (!rpc)
+		return IFSL_MEMORY;
 
     rpc_marshal_long(rpc, RPC_UNLINK);
     rpc_marshal_wstr(rpc, name);
@@ -651,7 +604,6 @@ uc_unlink(WCHAR *name)
     rpc_unmarshal_long(rpc, &status);
 
     rpc_destroy(rpc);
-    TIMING_END("unlink");
     return status;
 }
 
@@ -659,9 +611,10 @@ uc_ioctl_write(ULONG length, char *data, ULONG *key)
 {
     rpc_t *rpc;
     ULONG status;
-    TIMING_START();
 
     rpc = rpc_create(0);
+	if (!rpc)
+		return IFSL_MEMORY;
 
     rpc_marshal_long(rpc, RPC_IOCTL_WRITE);
     rpc_marshal_long(rpc, length);
@@ -678,7 +631,6 @@ uc_ioctl_write(ULONG length, char *data, ULONG *key)
     rpc_unmarshal_long(rpc, key);
 
     rpc_destroy(rpc);
-    TIMING_END("ioctl_write");
     return status;
 }
 
@@ -686,9 +638,10 @@ uc_ioctl_read(ULONG key, ULONG *length, char *data)
 {
     rpc_t *rpc;
     ULONG status;
-    TIMING_START();
 
     rpc = rpc_create(0);
+	if (!rpc)
+		return IFSL_MEMORY;
 
     rpc_marshal_long(rpc, RPC_IOCTL_READ);
     rpc_marshal_long(rpc, key);
@@ -705,7 +658,6 @@ uc_ioctl_read(ULONG key, ULONG *length, char *data)
     rpc_unmarshal_long(rpc, length);
 
     rpc_destroy(rpc);
-    TIMING_END("ioctl_read");
     return status;
 }
 
@@ -713,9 +665,10 @@ uc_rename(ULONG fid, WCHAR *curr, WCHAR *new_dir, WCHAR *new_name, ULONG *new_fi
 {
     rpc_t *rpc;
     ULONG status;
-    TIMING_START();
 
     rpc = rpc_create(0);
+    if (!rpc)
+	return IFSL_MEMORY;
 
     rpc_marshal_long(rpc, RPC_RENAME);
     rpc_marshal_long(rpc, fid);
@@ -735,7 +688,32 @@ uc_rename(ULONG fid, WCHAR *curr, WCHAR *new_dir, WCHAR *new_name, ULONG *new_fi
     rpc_unmarshal_long(rpc, new_fid);
 
     rpc_destroy(rpc);
-    TIMING_END("rename");
+    return status;
+}
+
+uc_flush(ULONG fid)
+{
+    rpc_t *rpc;
+    ULONG status;
+
+    rpc = rpc_create(0);
+    if (!rpc)
+	return IFSL_MEMORY;
+
+    rpc_marshal_long(rpc, RPC_FLUSH);
+    rpc_marshal_long(rpc, fid);
+
+    rpc_queue(rpc);
+    if (!rpc_wait(rpc, RPC_TIMEOUT_LONG))
+    {
+        rpc_cancel(rpc);
+        rpt0(("cancel", "cancel flush"));
+        return IFSL_RPC_TIMEOUT;
+    }
+
+    rpc_unmarshal_long(rpc, &status);
+
+    rpc_destroy(rpc);
     return status;
 }
 #endif
@@ -749,9 +727,31 @@ dc_break_callback(ULONG fid)
     ULONG status;
 
     rpc = rpc_create(0);
+	if (!rpc)
+		return IFSL_MEMORY;
 
     rpc_marshal_long(rpc, RPC_BREAK_CALLBACK);
     rpc_marshal_long(rpc, fid);
+    if (!rpc_transact(rpc))
+    {
+        rpc_destroy(rpc);
+        return IFSL_GENERIC_FAILURE;
+    }
+    rpc_unmarshal_long(rpc, &status);
+    rpc_destroy(rpc);
+    return status;
+}
+
+dc_release_hooks()
+{
+    rpc_t *rpc;
+    ULONG status;
+
+    rpc = rpc_create(0);
+	if (!rpc)
+		return IFSL_MEMORY;
+
+    rpc_marshal_long(rpc, RPC_RELEASE_HOOKS);
     if (!rpc_transact(rpc))
     {
         rpc_destroy(rpc);
@@ -824,6 +824,7 @@ rpc_t *rpc_find(int id)
     curr = rpc_list_head;
     while (curr)
     {
+        /* dead rpc structs should not be returned */
         if (curr->key == id && curr->status != 0)
             return curr;
         curr = curr->next;
@@ -880,13 +881,6 @@ rpc_queue(rpc_t *rpc)
 rpc_cancel(rpc_t *rpc)
 {
     rpc_destroy(rpc);
-    //ExAcquireFastMutex(&ext->inLock);
-    /*ifs_lock_rpcs();
-    if (rpc_upgrade(rpc, -1, 0))
-    rpc_destroy(rpc);
-    ifs_unlock_rpcs();*/
-    //RtlDeleteElementGenericTable(&ext->inTable, (void*)&rpc);
-    //ExReleaseFastMutex(&ext->inLock);
 }
 
 rpc_shutdown()
@@ -900,6 +894,7 @@ rpc_shutdown()
     {
         next = curr->next;
         ExFreePoolWithTag(curr, 0x1234);
+	num_rpcs--;
         curr = next;
     }
     rpc_list_head = NULL;
@@ -911,25 +906,27 @@ rpc_wait(rpc_t *rpc, BOOLEAN long_op)
 {
     NTSTATUS ret;
     LARGE_INTEGER timeout;
-    //p->FsContext = (ULONG)&ev;
 
     if (long_op)
-        timeout.QuadPart = -600000000L;		/* 60 seconds 60L*1000000L */
+        timeout.QuadPart = -600000000L;		/* 60 seconds 60L*10000000L */
     else
-        timeout.QuadPart = -200000000L;		/* 20 seconds 20L*1000000L */
+        timeout.QuadPart = -200000000L;		/* 20 seconds 20L*10000000L */
 
     do
         ret = KeWaitForSingleObject(&rpc->ev, Executive, KernelMode, FALSE, &timeout);
-    while (ret != STATUS_SUCCESS);// && ret != STATUS_TIMEOUT);
+    while (ret != STATUS_SUCCESS && ret != STATUS_TIMEOUT);
 
-    /*if (KeReadStateEvent(&rpc->ev) == 0)
-    _asm int 3;*/
-    if (rpc->status == 5)
+    ifs_lock_rpcs();
+    if (rpc->status == 2 ||			/* still queued */
+	rpc->status == 5)			/* send cancelled by library */
+	{
+	ifs_unlock_rpcs();
         return 0;
+	}
 
+    ifs_unlock_rpcs();    
     if (ret == STATUS_SUCCESS)
         return 1;
-    _asm int 3;
     return 0;
 }
 
@@ -941,14 +938,6 @@ rpc_queue_bulk(rpc_t *rpc, char *out_bulk, ULONG out_len, char *in_bulk, ULONG i
     rpc->bulk_in_max = in_len;
     return rpc_queue(rpc);
 }
-
-/*rpc_queue_bulk_mdl(rpc_t *rpc, MDL *bulk)
-{
-    rpc->bulk_mdl = bulk;
-    *rpc->bulk_out_len = 0xFFFFFFFC;
-    rpc->bulk_in = 0;
-    return rpc_queue(rpc);
-}*/
 
 rpc_get_len(rpc_t *rpc)
 {
@@ -977,104 +966,23 @@ rpc_send(char *out_buf, int out_len, int *out_written)
 
     if (rpc_get_len(rpc) > out_len)
     {
-        //_asm int 3;
         ifs_unlock_rpcs();
         rpt0(("cancel", "cancel on send"));
         rpc_upgrade(rpc, -1, 5);
-        KeSetEvent(&rpc->ev, IO_NO_INCREMENT, FALSE);	/* move to rpc_ fn */
-        //rpc_cancel(rpc);
-        goto restart;//return 0;
+        KeSetEvent(&rpc->ev, IO_NETWORK_INCREMENT, FALSE);
+        goto restart;
     }
-
-
-
-    /*mdl = (*rpc->bulk_out_len == 0xFFFFFFFC);
-
-    if (mdl)
-    *rpc->bulk_out_len = 0;*/
 
     header_len = rpc->out_pos - rpc->out_buf;
     RtlCopyMemory(out_buf, rpc->out_buf, header_len);
 
-    //if (!mdl)
-    {
-        if (*rpc->bulk_out_len && rpc->bulk_out)
-            RtlCopyMemory(out_buf + header_len, rpc->bulk_out, *rpc->bulk_out_len);
-        *out_written = header_len + *rpc->bulk_out_len;
-    }
-#if 0
-    else
-    {
-        if (rpc->bulk_mdl)
-        {
-            void *ptr;
-            //_asm int 3;
-#if 0
-            try
-            {
-                _asm int 3;
-                MmProbeAndLockPages(rpc->bulk_mdl, UserMode, IoModifyAccess);
-            }
-            except (EXCEPTION_EXECUTE_HANDLER)
-            {
-                _asm int 3;
-            }
-#endif
-            try
-            {
-                rpc->bulk_out = MmMapLockedPagesSpecifyCache(rpc->bulk_mdl, UserMode, MmNonCached, NULL, FALSE, NormalPagePriority);
-            }
-            except (EXCEPTION_EXECUTE_HANDLER)
-            {
-                PMDL remap;
-                void *ptr;
-                _asm int 3;
-                ptr = ExAllocatePool(PagedPool, MmGetMdlByteCount(rpc->bulk_mdl));
-                remap = IoAllocateMdl(ptr, MmGetMdlByteCount(rpc->bulk_mdl), FALSE, TRUE, NULL);
-                MmProbeAndLockPages(remap, UserMode, IoModifyAccess);
-                rpc->bulk_out = MmMapLockedPagesSpecifyCache(remap, KernelMode, MmNonCached, NULL, FALSE, NormalPagePriority);
-                _asm int 3;
-                rpc->bulk_out = MmGetSystemAddressForMdlSafe(rpc->bulk_mdl, NormalPagePriority);
-                MmUnmapLockedPages(rpc->bulk_out, rpc->bulk_mdl);
-                rpc->bulk_out = MmMapLockedPagesSpecifyCache(rpc->bulk_mdl, UserMode, MmNonCached, NULL, FALSE, NormalPagePriority);
-
-                remap = IoAllocateMdl(rpc->bulk_out, MmGetMdlByteCount(rpc->bulk_mdl), FALSE, TRUE, NULL);
-                remap->Process = (void*)PsGetCurrentProcess();
-                MmBuildMdlForNonPagedPool(remap);
-                //MmProbeAndLockPages(remap, UserMode, IoModifyAccess);
-                rpc->bulk_out = MmMapLockedPagesSpecifyCache(remap, UserMode, MmNonCached, (void*)0x01111111, FALSE, NormalPagePriority);
-                /*ifs_unlock_rpcs();
-                rpc_upgrade(rpc, -1, 5);
-                KeSetEvent(&rpc->ev, IO_NO_INCREMENT, FALSE);
-                //rpc_cancel(rpc);
-                goto restart;//return 0;*/
-            }
-            ptr = rpc->bulk_out;
-            RtlCopyMemory(out_buf + header_len, &ptr, sizeof(ptr));
-        }
-
-        *rpc->bulk_out_len = 0xFFFFFFFC;
-        *out_written = header_len + sizeof(void*);
-    }
-#endif
+    if (*rpc->bulk_out_len && rpc->bulk_out)
+        RtlCopyMemory(out_buf + header_len, rpc->bulk_out, *rpc->bulk_out_len);
+    *out_written = header_len + *rpc->bulk_out_len;
 
     ifs_unlock_rpcs();
     return (*out_written != 0);
 }
-
-#if 0
-rpc_send_reg(rpc_t *rpc, char *out_buf)
-{
-    ULONG header_len;
-
-    header_len = rpc->out_pos - rpc->out_buf;
-    RtlCopyMemory(out_buf, rpc->out_buf, header_len);
-
-    if (rpc->bulk_out_len && rpc->bulk_out)
-        RtlCopyMemory(out_buf + header_len, rpc->bulk_out, *rpc->bulk_out_len);
-    return header_len + *rpc->bulk_out_len;
-}
-#endif
 #endif
 
 
@@ -1089,20 +997,11 @@ rpc_recv(char *in_buf, ULONG len)
     ifs_lock_rpcs();
 
     rpc = rpc_find(*(ULONG*)in_buf);
-    if (!rpc)
+    if (!rpc)				/* rpc was cancelled while waiting */
     {
-        //_asm int 3;
         ifs_unlock_rpcs();
         return -1;
     }
-
-    //_asm int 3;
-    /*if (*rpc->bulk_out_len == 0xFFFFFFFC)
-    {
-    ASSERT(rpc->bulk_out);
-    MmUnmapLockedPages(rpc->bulk_out, rpc->bulk_mdl);
-    //	MmUnlockPages(rpc->bulk_mdl);
-    }*/
 
     alloc = rpc->in_buf;
     rpc->in_buf = rpc->in_pos = in_buf;
@@ -1112,19 +1011,16 @@ rpc_recv(char *in_buf, ULONG len)
 
     rpc->in_buf = rpc->in_pos = alloc;
     header_size = len - rpc->bulk_in_len;
-    ASSERT(header_size < 4096);
+    ASSERT(header_size < RPC_BUF_SIZE);
+
     RtlCopyMemory(rpc->in_buf, in_buf + 2*sizeof(ULONG), header_size - 2*sizeof(ULONG));
-    //if (*rpc->bulk_out_len != 0xFFFFFFFC)
+    if (rpc->bulk_in_len && rpc->bulk_in)
     {
-        if (rpc->bulk_in_len && rpc->bulk_in)
-        {
-            ASSERT(rpc->bulk_in_len <= rpc->bulk_in_max);
-            //_asm int 3;
-            RtlCopyMemory(rpc->bulk_in, in_buf + header_size, rpc->bulk_in_len);//len - header_size - 2*sizeof(ULONG));
-        }
+        ASSERT(rpc->bulk_in_len <= rpc->bulk_in_max);
+        RtlCopyMemory(rpc->bulk_in, in_buf + header_size, rpc->bulk_in_len);
     }
 
-    KeSetEvent(&rpc->ev, IO_NO_INCREMENT, FALSE);
+    KeSetEvent(&rpc->ev, IO_NETWORK_INCREMENT, FALSE);		/* priority boost for waiting thread */
     ifs_unlock_rpcs();
     return 0;
 }
@@ -1151,10 +1047,12 @@ rpc_call(ULONG in_len, char *in_buf, ULONG out_max, char *out_buf, ULONG *out_le
         status = dc_break_callback(fid);
         rpc_marshal_long(&rpc, status);
         break;
+    case RPC_RELEASE_HOOKS:
+        status = dc_release_hooks();
+        break;
     }
     *out_len = rpc.out_pos - rpc.out_buf;
     return 0;
-    //ifs_ImpersonateClient(user_id);
 }
 #endif
 
@@ -1256,21 +1154,6 @@ rpc_parse(rpc_t *rpc)
             *rpc->bulk_out_len = read;
         }
         break;
-	/*	case RPC_READ_BULK:
-        {
-        ULONG fid, length, read;
-        LARGE_INTEGER offset;
-        char *data, *save;
-        rpc_unmarshal_long(rpc, &fid);
-        rpc_unmarshal_longlong(rpc, &offset);
-        rpc_unmarshal_long(rpc, &length);
-        data = *((char**)rpc->in_pos);
-        status = uc_read(fid, offset, length, &read, data);
-        rpc_marshal_long(rpc, status);
-        rpc_marshal_long(rpc, read);
-        *rpc->bulk_out_len = 0;
-        }
-        break;*/
     case RPC_WRITE:
         {
             ULONG fid, length, written;
@@ -1285,21 +1168,6 @@ rpc_parse(rpc_t *rpc)
             rpc_marshal_long(rpc, written);
         }
         break;
-	/*	case RPC_WRITE_BULK:
-        {
-        ULONG fid, length, written;
-        LARGE_INTEGER offset;
-        char *data;
-        //_asm int 3;
-        rpc_unmarshal_long(rpc, &fid);
-        rpc_unmarshal_longlong(rpc, &offset);
-        rpc_unmarshal_long(rpc, &length);
-        data = *((char**)rpc->in_pos);
-        status = uc_write(fid, offset, length, &written, data);
-        rpc_marshal_long(rpc, status);
-        rpc_marshal_long(rpc, written);
-        }
-        break;*/
     case RPC_TRUNC:
         {
             ULONG fid;
@@ -1400,6 +1268,14 @@ rpc_parse(rpc_t *rpc)
             status = uc_rename(fid, curr, new_dir, new_name, &new_fid);
             rpc_marshal_long(rpc, status);
             rpc_marshal_long(rpc, new_fid);
+        }
+        break;
+    case RPC_FLUSH:
+        {
+            ULONG fid;
+            rpc_unmarshal_long(rpc, &fid);
+            status = uc_flush(fid);
+            rpc_marshal_long(rpc, status);
         }
         break;
     }

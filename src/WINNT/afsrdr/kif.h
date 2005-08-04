@@ -28,6 +28,28 @@
  * 03-jun 2005 (eric williams) entered into versioning
  */
 
+
+/* this is based on BUF_FILEHASH, but we were not getting unique hashes */
+#define FID_HASH_FN(fidp)		((((fidp)->vnode + \
+					   ((fidp)->unique << 13) + ((fidp)->unique >> (32-13))	+ \
+					   (fidp)->volume + \
+					   (fidp)->cell)))
+
+
+/* dirent information */
+struct readdir_data
+	{
+	LARGE_INTEGER cookie;
+	long offset;
+	LARGE_INTEGER creation, access, write, change, size;
+	ULONG attribs, name_length;			/* chars */
+	CCHAR short_name_length;			/* chars */
+	WCHAR short_name[14];
+	WCHAR name[];
+	};
+typedef struct readdir_data readdir_data_t;
+
+
 /* error codes */
 #define IFSL_SUCCESS_BASE			0x00000000
 #define IFSL_FAIL_BASE				0x80000000
@@ -57,11 +79,12 @@
 #define IFSL_NOT_EMPTY				(IFSL_FAIL_BASE + 22)
 #define IFSL_RPC_TIMEOUT			(IFSL_FAIL_BASE + 23)
 #define IFSL_OVERQUOTA				(IFSL_FAIL_BASE + 24)
-#define IFSL_UNSPEC		   		(IFSL_FAIL_BASE + 25)
+#define IFSL_MEMORY					(IFSL_FAIL_BASE + 25)
+#define IFSL_UNSPEC					(IFSL_FAIL_BASE + 26)
 
 
 /* ioctl codes */
-#define IOCTL_AFSRDR_IOCTL	CTL_CODE(IOCTL_DISK_BASE, 0x007, METHOD_OUT_DIRECT, FILE_ANY_ACCESS)
+#define IOCTL_AFSRDR_IOCTL		CTL_CODE(IOCTL_DISK_BASE, 0x007, METHOD_OUT_DIRECT, FILE_ANY_ACCESS)
 #define IOCTL_AFSRDR_DOWNCALL	CTL_CODE(IOCTL_DISK_BASE, 0x008, METHOD_OUT_DIRECT, FILE_ANY_ACCESS)
 #define IOCTL_AFSRDR_GET_PATH	CTL_CODE(IOCTL_DISK_BASE, 0x009, METHOD_OUT_DIRECT, FILE_ANY_ACCESS)
 
@@ -75,16 +98,15 @@ uc_setinfo(ULONG fid, ULONG attribs, LARGE_INTEGER creation, LARGE_INTEGER acces
 uc_trunc(ULONG fid, LARGE_INTEGER size);
 uc_read(ULONG fid, LARGE_INTEGER offset, ULONG length, ULONG *read, char *data);
 uc_write(ULONG fid, LARGE_INTEGER offset, ULONG length, ULONG *written, char *data);
-/*#ifdef RPC_KERN
-uc_read_mdl(ULONG fid, LARGE_INTEGER offset, ULONG length, ULONG *read, MDL *data);
-uc_write_mdl(ULONG fid, LARGE_INTEGER offset, ULONG length, ULONG *written, MDL *mdl);
-#endif*/
 uc_readdir(ULONG fid, LARGE_INTEGER cookie_in, WCHAR *filter, ULONG *count, char *data, ULONG *len);
 uc_close(ULONG fid);
 uc_unlink(WCHAR *name);
 uc_ioctl_write(ULONG length, char *data, ULONG *key);
 uc_ioctl_read(ULONG key, ULONG *length, char *data);
 uc_rename(ULONG fid, WCHAR *curr, WCHAR *new_dir, WCHAR *new_name, ULONG *new_fid);
+uc_flush(ULONG fid);
+
 
 /* downcalls */
 dc_break_callback(ULONG fid);
+dc_release_hooks();

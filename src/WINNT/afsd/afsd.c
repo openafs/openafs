@@ -276,11 +276,10 @@ LONG APIENTRY MainWndProc(
 		break;
 
 	    case WM_DESTROY:
-#ifndef AFSIFS
-		RpcMgmtStopServerListening(NULL);
-#else
+#ifdef AFSIFS
 		SetEvent(DoTerminate);
 #endif
+		RpcMgmtStopServerListening(NULL);
 		PostQuitMessage(0);
 		break;
 

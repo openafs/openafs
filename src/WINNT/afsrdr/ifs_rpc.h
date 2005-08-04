@@ -37,6 +37,21 @@
 #include <winioctl.h>
 #endif
 
+
+/* maximum number of users, based on SID, that can access AFS at one time */
+#define MAX_AFS_USERS			20
+
+/* maximum number of threads that can make simultaneous calls into afsrdr,
+   because we maintain a credential set for each thread in a single table. */
+#define MAX_CRED_MAPS			32
+
+/* size if outgoing/incoming RPC buffer (for parameters only, not bulk data) */
+#define RPC_BUF_SIZE			2048
+
+/* max. chunk size for RPC transfers */
+#define TRANSFER_CHUNK_SIZE	(1024*1024)
+
+
 /* upcalls */
 #define RPC_NAMEI		0x10
 #define RPC_CHECK_ACCESS	0x11
@@ -52,15 +67,18 @@
 #define RPC_IOCTL_WRITE		0x1B
 #define RPC_IOCTL_READ		0x1C
 #define RPC_RENAME		0x1D
-#define RPC_READ_BULK		0x1E
-#define RPC_WRITE_BULK		0x1F
+#define RPC_FLUSH		0x1E
+
 
 /* downcalls */
 #define RPC_BREAK_CALLBACK	0x80
+#define RPC_RELEASE_HOOKS	0x81
 
-#define TRANSFER_CHUNK_SIZE	(1024*1024)
+
+/* internal module flags */
 #define RPC_TIMEOUT_SHORT	0
 #define RPC_TIMEOUT_LONG	1
+
 
 /* internal data struct for both client and server */
 struct rpc
@@ -99,15 +117,3 @@ rpc_parse(rpc_t *rpc);
 #endif
 
 
-/* extended information */
-struct readdir_data
-	{
-	LARGE_INTEGER cookie;
-	long offset;
-	LARGE_INTEGER creation, access, write, change, size;
-	ULONG attribs, name_length;			/* chars */
-	CCHAR short_name_length;			/* chars */
-	WCHAR short_name[14];
-	WCHAR name[];
-	};
-typedef struct readdir_data readdir_data_t;

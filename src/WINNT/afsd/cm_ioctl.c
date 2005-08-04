@@ -145,8 +145,8 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
 {
     long code, length;
     cm_scache_t *substRootp;
-    char * relativePath = ioctlp->inDatap, absRoot[100];
-	wchar_t absRoot_w[100];
+    char * relativePath = ioctlp->inDatap, absRoot[MAX_PATH];
+	wchar_t absRoot_w[MAX_PATH];
 	HANDLE rootDir;
 
     /* This is usually the file name, but for StatMountPoint it is the path. */
@@ -159,32 +159,13 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
     TranslateExtendedChars(relativePath);
 
 #ifdef AFSIFS
-    /* we have passed the whole path, including the afs prefix (pioctl_nt.c modified) */
-#if 0
-    /*_asm int 3; */
-    sprintf(absRoot, "%c:", relativePath[0]);
-    rootDir = CreateFile(absRoot, 0, 0, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
-
-    if (!DeviceIoControl(rootDir, IOCTL_AFSRDR_GET_PATH, NULL, 0, absRoot_w, 100*sizeof(wchar_t), &length, NULL))
-    {
-    CloseHandle(rootDir);
-    return CM_ERROR_NOSUCHPATH;
-    }
-    CloseHandle(rootDir);
-
-    ifs_ConvertFileName(absRoot_w, length/sizeof(wchar_t), absRoot, 100);
-#endif
-#if 0
-    switch (relativePath[0])					/* FIXFIX */
-    {
-    case 'y':
-    case 'Y':
-        absRoot = "\\ericjw\\test";			/* should use drivemap */
-    }
-#endif
+    /* we have passed the whole path, including the afs prefix.
+	   when the pioctl call is made, we perform an ioctl to afsrdr
+	   and it returns the correct (full) path.  therefore, there is
+	   no drive letter, and the path is absolute. */
     code = cm_NameI(cm_data.rootSCachep, relativePath,
                      CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
-                     userp, ""/*absRoot*//*ioctlp->tidPathp*/, reqp, scpp);
+                     userp, "", reqp, scpp);
 
     if (code)
         return code;
@@ -213,7 +194,7 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
          * since it had better expand into the value of ioctl->tidPathp
          */
         char * p;
-        p = relativePath + 2 + strlen(cm_NetbiosName) + 1;
+        p = relativePath + 2 + strlen(cm_NetbiosName) + 1;			/* buffer overflow vuln.? */
         if ( !_strnicmp("all", p, 3) )
             p += 4;
 
@@ -1833,7 +1814,7 @@ long cm_IoctlSetToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
         uname = tp;
         tp += strlen(tp) + 1;
 
-#ifndef AFSIFS			/* no SMB username */
+#ifndef AFSIFS			/* no SMB username, so we cannot log based on this */
         if (flags & PIOCTL_LOGON) {
             /* SMB user name with which to associate tokens */
             smbname = tp;

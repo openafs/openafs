@@ -685,6 +685,14 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bu
             }
         }
 
+	/* does this fix the problem below?  it's a simple solution. */
+	if (!cm_data.buf_freeListEndp)
+	    {
+	    lock_ReleaseWrite(&buf_globalLock);
+	    Sleep(200);
+	    goto retry;
+	    }
+
         /* for debugging, assert free list isn't empty, although we
          * really should try waiting for a running tranasction to finish
          * instead of this; or better, we should have a transaction

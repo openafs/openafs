@@ -68,9 +68,10 @@ struct afs_fcb
     ERESOURCE _resource;		/* pointed to by fcb_header->Resource */
     ERESOURCE _pagingIoResource;
     unsigned long fid;			/* a courtesy from the userland daemon (a good hash function) */
-    UCHAR delPending;			/* 3 types: FIX */
+    UCHAR delPending;
     struct afs_ccb *ccb_list;		/* list of open instances */
     SHARE_ACCESS share_access;		/* common access control */
+    PFILE_LOCK lock;
 };
 typedef struct afs_fcb afs_fcb_t;
 
@@ -136,7 +137,7 @@ struct ComExtension *comExt;
 		COMPLETE; \
 		return st; \
 		}
-#define SYNC_FAIL_RPC_TIMEOUT	SYNC_FAIL(STATUS_NETWORK_BUSY)
+#define SYNC_FAIL_RPC_TIMEOUT		SYNC_FAIL(STATUS_NETWORK_BUSY)
 
 #define LOCK_FCB_LIST			FsRtlEnterFileSystem(); ExAcquireFastMutex(&rdrExt->fcbLock);
 #define UNLOCK_FCB_LIST			ExReleaseFastMutex(&rdrExt->fcbLock); FsRtlExitFileSystem();
@@ -158,9 +159,8 @@ struct ComExtension *comExt;
 #define COMM_DOWNCALL			(void*)0x02
 #define COMM_UPCALLHOOK			(void*)0x03
 
-/*#define ACC_READ			(STANDARD_RIGHTS_READ | FILE_READ_DATA | FILE_LIST_DIRECTORY
-#define ACC_WRITE			(STANDARD_RIGHTS_WRITE | FILE_WRITE_DATA)*
-
+/* flag to use caching kernel service.  needs to handle cache invalidation in more places.  */
+#define EXPLICIT_CACHING
 
 /* dates from afs are time_t style -- seconds since 1970 */		/* 11644505691.6384 */
 #define AfsTimeToWindowsTime(x)		(((x)+11644505692L)*10000000L)	/*(1970L-1601L)*365.242199*24L*3600L)*/
@@ -246,12 +246,12 @@ afs_fcb_t *find_fcb(ULONG fid)
 NTSTATUS AfsRdrCreate(DEVICE_OBJECT *DeviceObject, IRP *Irp, IO_STACK_LOCATION *IrpSp, afs_fcb_t *_fcb)
 {
     afs_fcb_t *pfcb, *fcb, **fcbp;
-    afs_ccb_t *ccb, *pccb;
+    afs_ccb_t *ccb, *pccb, *curr_ccb;
     ULONG len;
     LONG x, y;
     wchar_t *str, *ptr;
     ULONG fid, access, granted, disp;
-    LARGE_INTEGER size, creation, accesst, change, written, zero;
+    LARGE_INTEGER size, creation, accesst, change, written, zero, wait;
     ULONG attribs;
     ULONG share;
     CC_FILE_SIZES sizes;
@@ -262,7 +262,10 @@ NTSTATUS AfsRdrCreate(DEVICE_OBJECT *DeviceObject, IRP *Irp, IO_STACK_LOCATION *
     /* set rpc security context for current thread */
     acc_token = SeQuerySubjectContextToken(&IrpSp->Parameters.Create.SecurityContext->AccessState->SubjectSecurityContext);
     ASSERT(acc_token);
-    rpc_set_context(acc_token);
+
+    wait.QuadPart = -1000;
+    while (rpc_set_context(acc_token) != 0)				/* if there are no open thread spots... */
+        KeDelayExecutionThread(KernelMode, FALSE, &wait);		/* ...wait */
 
     /* attempt to open afs volume directly */
     if (IrpSp->FileObject->FileName.Length == 0)
@@ -339,7 +342,8 @@ NTSTATUS AfsRdrCreate(DEVICE_OBJECT *DeviceObject, IRP *Irp, IO_STACK_LOCATION *
     size.QuadPart = 0;
     created = 0;
 
-    /* check for file existance.  we jump to creating it if needed */ 
+  open:
+	/* check for file existance.  we jump to creating it if needed */ 
     if (disp == FILE_OPEN || disp == FILE_OPEN_IF || disp == FILE_OVERWRITE ||
          disp == FILE_OVERWRITE_IF || disp == FILE_SUPERSEDE)
     {
@@ -418,9 +422,9 @@ NTSTATUS AfsRdrCreate(DEVICE_OBJECT *DeviceObject, IRP *Irp, IO_STACK_LOCATION *
         }
 
 	/* check for previous open instance(s) of file.  it will be in the fcb chain.
-         * when we have this locked, we cannot make upcalls -- running at APC_LEVEL.
+	 * when we have this locked, we cannot make upcalls -- running at APC_LEVEL.
 	 * lock here (not later) to prevent possible truncation races. 
-         */
+	 */
 	LOCK_FCB_LIST;
 	fcb = find_fcb(fid);
 	if (fcb)
@@ -507,7 +511,16 @@ NTSTATUS AfsRdrCreate(DEVICE_OBJECT *DeviceObject, IRP *Irp, IO_STACK_LOCATION *
                 if (fcb)
                 {
                     fcb->AllocationSize = fcb->FileSize = fcb->ValidDataLength = size;
-                    CcSetFileSizes(IrpSp->FileObject, (CC_FILE_SIZES*)&fcb->AllocationSize);
+		    curr_ccb = fcb->ccb_list;
+		    while (curr_ccb && curr_ccb->fo)
+			{
+			if (CcIsFileCached(curr_ccb->fo))
+			    {
+			    CcSetFileSizes(curr_ccb->fo, (CC_FILE_SIZES*)&fcb->AllocationSize);
+			    break;
+			    }
+			curr_ccb = curr_ccb->next;
+			}
                 }
             }
             if (Irp->Overlay.AllocationSize.QuadPart)
@@ -525,7 +538,16 @@ NTSTATUS AfsRdrCreate(DEVICE_OBJECT *DeviceObject, IRP *Irp, IO_STACK_LOCATION *
                 if (fcb)
                 {
                     fcb->AllocationSize = fcb->FileSize = fcb->ValidDataLength = size;
-                    CcSetFileSizes(IrpSp->FileObject, (CC_FILE_SIZES*)&fcb->AllocationSize);
+		    curr_ccb = fcb->ccb_list;
+		    while (curr_ccb && curr_ccb->fo)
+			{
+			if (CcIsFileCached(curr_ccb->fo))
+			    {
+			    CcSetFileSizes(curr_ccb->fo, (CC_FILE_SIZES*)&fcb->AllocationSize);
+			    break;
+			    }
+			curr_ccb = curr_ccb->next;
+			}
                 }
             }
         }
@@ -573,8 +595,18 @@ NTSTATUS AfsRdrCreate(DEVICE_OBJECT *DeviceObject, IRP *Irp, IO_STACK_LOCATION *
          */
 	LOCK_FCB_LIST;
 	fcb = find_fcb(fid);
-	if (fcb)
-            _asm int 3;
+	if (fcb)				/* none of these should happen */
+		if (disp == FILE_CREATE)
+			{
+			UNLOCK_FCB_LIST;
+			SYNC_FAIL2(STATUS_OBJECT_NAME_COLLISION, FILE_EXISTS);
+			}
+		else
+			{
+			fcb = NULL;
+			UNLOCK_FCB_LIST;
+			goto open;
+			}
 
 	if (size.QuadPart != 0)
         {
@@ -606,7 +638,6 @@ NTSTATUS AfsRdrCreate(DEVICE_OBJECT *DeviceObject, IRP *Irp, IO_STACK_LOCATION *
     /* OS passed unexpected disposition */
     ExFreePoolWithTag(str, AFS_RDR_TAG);
     SYNC_FAIL(STATUS_NOT_IMPLEMENTED);
-     /*SYNC_FAIL2(STATUS_OBJECT_NAME_NOT_FOUND, FILE_DOES_NOT_EXIST);*/
 
 
     /* allocate nonpaged struct to track this file and all open instances */
@@ -618,7 +649,7 @@ NTSTATUS AfsRdrCreate(DEVICE_OBJECT *DeviceObject, IRP *Irp, IO_STACK_LOCATION *
     fcb->fid = fid;
     /*fcb->refs = 0;*/
     fcb->ccb_list = NULL;
-    fcb->IsFastIoPossible = FastIoIsNotPossible;
+    fcb->IsFastIoPossible = FastIoIsPossible;
 
     ExInitializeResourceLite(&fcb->_resource);
     ExInitializeResourceLite(&fcb->_pagingIoResource);
@@ -633,6 +664,7 @@ NTSTATUS AfsRdrCreate(DEVICE_OBJECT *DeviceObject, IRP *Irp, IO_STACK_LOCATION *
     fcb->AllocationSize = fcb->FileSize = fcb->ValidDataLength = size;
 
     IoSetShareAccess(access, share, IrpSp->FileObject, &fcb->share_access);
+    fcb->lock = NULL;
 
     /* we store a pointer to the fcb.  the table would want to store a copy otherwise. */
     fcbp = &fcb;
@@ -666,7 +698,6 @@ NTSTATUS AfsRdrCreate(DEVICE_OBJECT *DeviceObject, IRP *Irp, IO_STACK_LOCATION *
     ccb->token = acc_token;	
     /*ObOpenObjectByPointer(acc_token, OBJ_KERNEL_HANDLE, NULL, TOKEN_QUERY, NULL, KernelMode, &ccb->token);*/
 
-    /*fcb->refs++;*/
     if (!fcb->ccb_list)
     {
         ccb->next = NULL;
@@ -681,24 +712,14 @@ NTSTATUS AfsRdrCreate(DEVICE_OBJECT *DeviceObject, IRP *Irp, IO_STACK_LOCATION *
     UNLOCK_PAGING_FCB;
     UNLOCK_FCB_LIST;
 
-    /* how we pack (as it is expected): a) fscontext same for all open instances of a file,
-     * b) fscontext2 unique among each instance, c) private cache map pointer set by cache
-     * manager upon caching, d) so pointers are per-file, as in (a). 
+    /* how we pack (what the cache manager needs): a) fscontext same for all open instances
+     * of a file, b) fscontext2 unique among each instance, c) private cache map pointer set
+     * by cache manager upon caching, d) so pointers are per-file, as in (a). 
      */
     IrpSp->FileObject->FsContext = fcb;
     IrpSp->FileObject->FsContext2 = ccb;
     IrpSp->FileObject->PrivateCacheMap = NULL;
     IrpSp->FileObject->SectionObjectPointer = &(fcb->sectionPtrs);
-
-    /* explicitly start caching on a data file.  caching will still happen upon
-     * paging i/o even if commented out below.  the other option is to cache upon
-     * the first read/write operation.  that code is also in place. 
-     */
-    if (!(attribs & FILE_ATTRIBUTE_DIRECTORY))
-    {
-        /*CcInitializeCacheMap(IrpSp->FileObject, (CC_FILE_SIZES*)&fcb->AllocationSize, FALSE, &rdrExt->callbacks, IrpSp->FileObject->FsContext);//(PVOID)din->Context1);*/
-        /*CcSetAdditionalCacheAttributes(IrpSp->FileObject, TRUE, TRUE);*/
-    }
 
     /* customize returns; semantics largely derived from output of ifstest.exe */
     switch (disp)
@@ -730,14 +751,9 @@ NTSTATUS AfsRdrCreate(DEVICE_OBJECT *DeviceObject, IRP *Irp, IO_STACK_LOCATION *
     case FILE_CREATE:
         SYNC_FAIL2(STATUS_SUCCESS, FILE_CREATED);
     }
-    _asm int 3;
     return 0;
 }
 
-/* experimental; does not work.  need to handle filesizes
- * and cache invalidation in more places. 
- */
-#define EXPLICIT_CACHING
 
 /**********************************************************
  * AfsRdrRead
@@ -759,15 +775,17 @@ NTSTATUS AfsRdrRead(DEVICE_OBJECT *DeviceObject, IRP *Irp, IO_STACK_LOCATION *Ir
     if (IsDeviceFile(IrpSp->FileObject) || (ccb->attribs & FILE_ATTRIBUTE_DIRECTORY))
 	SYNC_FAIL(STATUS_INVALID_DEVICE_REQUEST);
 
-/* the second line disables read ahead and write behind.  since our data is
-   already cached in userland, and there are read-ahead parameters there,
-   we do not use this service. */
+/* the second line enables read ahead and disables write behind.  since our data is
+ * already cached in userland, and there are read-ahead parameters there, these are
+ * not strictly necessary for decent performance.  also, writes-behind may happen on
+ * handles that do not have write access, because the i/o manager picks some handle,
+ * not necessarily the same one that writing was originally done with. */
 #ifdef EXPLICIT_CACHING
     if (!IrpSp->FileObject->PrivateCacheMap)
     {
         CcInitializeCacheMap(IrpSp->FileObject, (CC_FILE_SIZES*)&fcb->AllocationSize, FALSE, &rdrExt->callbacks, IrpSp->FileObject->FsContext);//(PVOID)din->Context1);
         CcSetAdditionalCacheAttributes(IrpSp->FileObject, FALSE, TRUE);
-        //CcSetReadAheadGranularity
+        /* could do a call to CcSetReadAheadGranularity here */
     }
 #endif
 
@@ -780,20 +798,39 @@ NTSTATUS AfsRdrRead(DEVICE_OBJECT *DeviceObject, IRP *Irp, IO_STACK_LOCATION *Ir
     offset = IrpSp->Parameters.Read.ByteOffset;
     length = IrpSp->Parameters.Read.Length;
 
-    /* FIX: lock here, before finding end-of-file */
+    FsRtlEnterFileSystem();
+    SLOCK_FCB;
+    if (!(Irp->Flags & IRP_PAGING_IO) && fcb->lock)
+	{
+	if (!FsRtlCheckLockForReadAccess(fcb->lock, Irp))
+	    {
+	    UNLOCK_FCB;
+	    FsRtlExitFileSystem();
+	    SYNC_FAIL(STATUS_FILE_LOCK_CONFLICT);
+	    }
+	}
 
     /* fast out for reads starting beyond eof */
     if (offset.QuadPart > fcb->ValidDataLength.QuadPart)
+	{
+	UNLOCK_FCB;
+	FsRtlExitFileSystem();
 	SYNC_FAIL(STATUS_END_OF_FILE);
+	}
+
     /* pre-truncate reads */
     if (offset.QuadPart + length > fcb->ValidDataLength.QuadPart)
- 	length = (ULONG)(fcb->ValidDataLength.QuadPart - offset.QuadPart);
+	length = (ULONG)(fcb->ValidDataLength.QuadPart - offset.QuadPart);
+    UNLOCK_FCB;
+    FsRtlExitFileSystem();
 
     outPtr = MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority);
     if (!outPtr)
 	SYNC_FAIL(STATUS_INSUFFICIENT_RESOURCES);
 
 #ifdef EXPLICIT_CACHING
+	/* this block is used only when a) caching functionality is compiled in, 
+	 * b) this is not a paging i/o request, and c) this is not a no_cache req. */
     if (!(Irp->Flags & (IRP_NOCACHE | IRP_PAGING_IO)))
     {
 	FsRtlEnterFileSystem();
@@ -807,13 +844,15 @@ NTSTATUS AfsRdrRead(DEVICE_OBJECT *DeviceObject, IRP *Irp, IO_STACK_LOCATION *Ir
                 FsRtlExitFileSystem();
                 SYNC_FAIL(STATUS_UNSUCCESSFUL);
             }
-            // KdPrint(("read  %x at %x cache done %x\n", length, (ULONG)offset.QuadPart, Irp->IoStatus.Information));
             ttlread = Irp->IoStatus.Information;
         }
 	except (EXCEPTION_EXECUTE_HANDLER)
         {
             STATUS(STATUS_UNSUCCESSFUL, 0);
         }
+	/* update byteoffset when this is not a paging or async request */
+	if (Irp->IoStatus.Status != STATUS_UNSUCCESSFUL && IoIsOperationSynchronous(Irp) && !(Irp->Flags & IRP_PAGING_IO))
+	    IrpSp->FileObject->CurrentByteOffset.QuadPart = offset.QuadPart + ttlread;
 	UNLOCK_PAGING_FCB;
 	FsRtlExitFileSystem();
 	if (Irp->IoStatus.Status == STATUS_UNSUCCESSFUL)
@@ -830,8 +869,8 @@ NTSTATUS AfsRdrRead(DEVICE_OBJECT *DeviceObject, IRP *Irp, IO_STACK_LOCATION *Ir
             toread = (toread > TRANSFER_CHUNK_SIZE) ? TRANSFER_CHUNK_SIZE : toread;
             curroff.QuadPart = offset.QuadPart + currpos;
             status = uc_read(fcb->fid, curroff, toread, &read, outPtr);
-            // KdPrint(("read  %x at %x done %x\n", length, (ULONG)offset.QuadPart, read));
-            if (status == 0)
+
+	    if (status == 0)
             {
                 ttlread += read;
                 currpos += read;
@@ -850,15 +889,14 @@ NTSTATUS AfsRdrRead(DEVICE_OBJECT *DeviceObject, IRP *Irp, IO_STACK_LOCATION *Ir
             }
         }
       end:
+	/* update byteoffset when this is not a paging or async request */
+	if (IoIsOperationSynchronous(Irp) && !(Irp->Flags & IRP_PAGING_IO))
+	    IrpSp->FileObject->CurrentByteOffset.QuadPart = offset.QuadPart + ttlread;
 	UNLOCK_FCB;
 	FsRtlExitFileSystem();
     }
 
-    /* update byteoffset when this is not a paging or async request */
-    if (IoIsOperationSynchronous(Irp) && !(Irp->Flags & IRP_PAGING_IO))
-        IrpSp->FileObject->CurrentByteOffset.QuadPart += ttlread;
-
-    if (ttlread == 0 /* was < length*/) {
+    if (ttlread == 0) {
 	SYNC_FAIL2(STATUS_END_OF_FILE, ttlread);
     } else {
         SYNC_FAIL2(STATUS_SUCCESS, ttlread);
@@ -888,7 +926,7 @@ NTSTATUS AfsRdrWrite(DEVICE_OBJECT *DeviceObject, IRP *Irp, IO_STACK_LOCATION *I
     if (IsDeviceFile(IrpSp->FileObject) || (ccb->attribs & FILE_ATTRIBUTE_DIRECTORY))
 	SYNC_FAIL(STATUS_INVALID_DEVICE_REQUEST);
 
-    /* since we will be performing io on this instance, start caching. */
+    /* since we will be performing io on this instance, start caching (see above). */
 #ifdef EXPLICIT_CACHING
     if (!IrpSp->FileObject->PrivateCacheMap)
     {
@@ -904,21 +942,34 @@ NTSTATUS AfsRdrWrite(DEVICE_OBJECT *DeviceObject, IRP *Irp, IO_STACK_LOCATION *I
     if (!IrpSp->Parameters.Write.Length)
 	SYNC_FAIL(STATUS_SUCCESS);
 
+    if (!(outPtr = AfsFindBuffer(Irp)))
+	SYNC_FAIL(STATUS_INSUFFICIENT_RESOURCES);
+
+    FsRtlEnterFileSystem();
+    SLOCK_FCB;
+
+    if (!(Irp->Flags & IRP_PAGING_IO) && fcb->lock)
+	{
+	if (!FsRtlCheckLockForWriteAccess(fcb->lock, Irp))
+	    {
+	    UNLOCK_FCB;
+	    FsRtlExitFileSystem();
+	    SYNC_FAIL(STATUS_FILE_LOCK_CONFLICT);
+	    }
+	}
+
     if (IrpSp->Parameters.Write.ByteOffset.HighPart == 0xffffffff &&
          IrpSp->Parameters.Write.ByteOffset.LowPart == FILE_WRITE_TO_END_OF_FILE)
 	offset.QuadPart = fcb->FileSize.QuadPart;
     else
 	offset = IrpSp->Parameters.Write.ByteOffset;
     length = IrpSp->Parameters.Write.Length;
-
-    if (!(outPtr = AfsFindBuffer(Irp)))
-	SYNC_FAIL(STATUS_INSUFFICIENT_RESOURCES);
+    UNLOCK_FCB;
 
 #ifdef EXPLICIT_CACHING
     if (!(Irp->Flags & (IRP_NOCACHE | IRP_PAGING_IO)))
     {
 	/* extend file for cached writes */
-	FsRtlEnterFileSystem();
 	LOCK_PAGING_FCB;
 	if (offset.QuadPart + length > fcb->FileSize.QuadPart)
         {
@@ -932,23 +983,28 @@ NTSTATUS AfsRdrWrite(DEVICE_OBJECT *DeviceObject, IRP *Irp, IO_STACK_LOCATION *I
 	try
         {
             if (!CcCopyWrite(IrpSp->FileObject, &offset, length, TRUE, outPtr))
+		{
+		UNLOCK_PAGING_FCB;
+		FsRtlExitFileSystem();
                 SYNC_FAIL(STATUS_UNSUCCESSFUL);
+		}
         }
 	except (EXCEPTION_EXECUTE_HANDLER)
         {
             STATUS(STATUS_UNSUCCESSFUL, 0);
         }
-        // KdPrint(("write %x at %x cache done\n", length, (ULONG)offset.QuadPart));
+
+	ttlwritten = written = length;
+	if (Irp->IoStatus.Status != STATUS_UNSUCCESSFUL && IoIsOperationSynchronous(Irp) && !(Irp->Flags & IRP_PAGING_IO))
+	    IrpSp->FileObject->CurrentByteOffset.QuadPart = offset.QuadPart + ttlwritten;
 	UNLOCK_PAGING_FCB;
 	FsRtlExitFileSystem();
-	ttlwritten = written = length;
 	if (Irp->IoStatus.Status == STATUS_UNSUCCESSFUL)
             SYNC_FAIL(STATUS_UNSUCCESSFUL);
     }
     else
 #endif
     {
-	FsRtlEnterFileSystem();
 	while (1)
         {
             if (offset.QuadPart + length > fcb->FileSize.QuadPart)
@@ -962,39 +1018,26 @@ NTSTATUS AfsRdrWrite(DEVICE_OBJECT *DeviceObject, IRP *Irp, IO_STACK_LOCATION *I
             if (paging_lock)
                 LOCK_PAGING_FCB;
             LOCK_FCB;
-            if (offset.QuadPart + length > fcb->FileSize.QuadPart)
+            if (change)
             {
                 if (Irp->Flags & IRP_PAGING_IO)
                 {
                     /* the input buffer and length is for a full page.  ignore this. */
                     if (offset.QuadPart > fcb->FileSize.QuadPart)
                     {
-                        if (paging_lock)
-                        {
-                            _asm int 3;
-                            UNLOCK_PAGING_FCB;
-                        }
+			/* paging lock cannot be held here, so no need to release */
                         UNLOCK_FCB;
                         FsRtlExitFileSystem();
                         SYNC_FAIL2(STATUS_SUCCESS, length);
                     }
                     length = (ULONG)(fcb->FileSize.QuadPart - offset.QuadPart);
-                    if (paging_lock)
-                    {
-                        _asm int 3;
-                        UNLOCK_PAGING_FCB;
-                    }
                     break;
                 }
                 else
                 {
                     if (!change)
                     {
-                        if (paging_lock)
-                        {
-                            _asm int 3;
-                            UNLOCK_PAGING_FCB;
-                        }
+			/* paging lock cannot be held here, so no need to release */
                         UNLOCK_FCB;
                         continue;
                     }
@@ -1008,7 +1051,6 @@ NTSTATUS AfsRdrWrite(DEVICE_OBJECT *DeviceObject, IRP *Irp, IO_STACK_LOCATION *I
             }
             else
             {
-                //UNLOCK_FCB;
                 if (paging_lock)
                     UNLOCK_PAGING_FCB;
                 break;
@@ -1021,7 +1063,6 @@ NTSTATUS AfsRdrWrite(DEVICE_OBJECT *DeviceObject, IRP *Irp, IO_STACK_LOCATION *I
             towrite = (towrite > TRANSFER_CHUNK_SIZE) ? TRANSFER_CHUNK_SIZE : towrite;
             curroff.QuadPart = offset.QuadPart + currpos;
             status = uc_write(fcb->fid, curroff, towrite, &written, outPtr);
-            // KdPrint(("write %x at %x done\n", length, (ULONG)offset.QuadPart));
             if (status == 0)
             {
                 ttlwritten += written;
@@ -1041,16 +1082,14 @@ NTSTATUS AfsRdrWrite(DEVICE_OBJECT *DeviceObject, IRP *Irp, IO_STACK_LOCATION *I
             }
         }
       end:
+	if (IoIsOperationSynchronous(Irp) && !(Irp->Flags & IRP_PAGING_IO))
+	    IrpSp->FileObject->CurrentByteOffset.QuadPart = offset.QuadPart + ttlwritten;
 	UNLOCK_FCB;
 	FsRtlExitFileSystem();
     }
 
-    if (IoIsOperationSynchronous(Irp) && !(Irp->Flags & IRP_PAGING_IO))
-	IrpSp->FileObject->CurrentByteOffset.QuadPart += ttlwritten;
-
     /* if we failed a write, we would not be here.  so, we must
-     * tell the vmm that all data was written. 
-     */
+     * tell the vmm that all data was written. */
     if (Irp->Flags & IRP_PAGING_IO)
 	SYNC_FAIL2(STATUS_SUCCESS, IrpSp->Parameters.Write.Length);
     SYNC_FAIL2(STATUS_SUCCESS, ttlwritten);
@@ -1096,7 +1135,7 @@ NTSTATUS AfsRdrDirCtrl(DEVICE_OBJECT *DeviceObject, IRP *Irp, IO_STACK_LOCATION 
 	ccb->str.Buffer =			ccb->name;
 
 	FsRtlEnterFileSystem();
-	LOCK_FCB;				/* FIX: shared lock? */
+	LOCK_FCB;
 	FsRtlNotifyFullChangeDirectory(rdrExt->notifyList, &rdrExt->listHead,
                                         ccb,
                                         (STRING*)&ccb->str,
@@ -1117,7 +1156,6 @@ NTSTATUS AfsRdrDirCtrl(DEVICE_OBJECT *DeviceObject, IRP *Irp, IO_STACK_LOCATION 
          IrpSp->Parameters.QueryDirectory.FileInformationClass != FileDirectoryInformation &&
          IrpSp->Parameters.QueryDirectory.FileInformationClass != FileNamesInformation)
     {
-	_asm int 3;
 	rpt0(("enum", "enum class %d not supported", IrpSp->Parameters.QueryDirectory.FileInformationClass));
 	SYNC_FAIL(STATUS_NOT_IMPLEMENTED);
     }
@@ -1142,10 +1180,15 @@ NTSTATUS AfsRdrDirCtrl(DEVICE_OBJECT *DeviceObject, IRP *Irp, IO_STACK_LOCATION 
 	ccb->cookie.QuadPart = 0;
 	if (ccb->filter && ccb->filter != SEARCH_MATCH_ALL)
             ExFreePoolWithTag(ccb->filter, AFS_RDR_TAG);
-	buf_size = IrpSp->Parameters.QueryDirectory.FileName->Length+6;
-	ccb->filter = ExAllocatePoolWithTag(NonPagedPool, buf_size, AFS_RDR_TAG);
-	RtlCopyMemory(ccb->filter, IrpSp->Parameters.QueryDirectory.FileName->Buffer, buf_size);
-	ccb->filter[IrpSp->Parameters.QueryDirectory.FileName->Length / sizeof(WCHAR)] = L'\0';
+	if (IrpSp->Parameters.QueryDirectory.FileName)
+	    {
+	    buf_size = IrpSp->Parameters.QueryDirectory.FileName->Length+6;
+	    ccb->filter = ExAllocatePoolWithTag(NonPagedPool, buf_size, AFS_RDR_TAG);
+	    RtlCopyMemory(ccb->filter, IrpSp->Parameters.QueryDirectory.FileName->Buffer, buf_size);
+	    ccb->filter[IrpSp->Parameters.QueryDirectory.FileName->Length / sizeof(WCHAR)] = L'\0';
+	    }
+	else
+	    ccb->filter = SEARCH_MATCH_ALL;
     }
 
     if (IrpSp->Flags & SL_RETURN_SINGLE_ENTRY)
@@ -1174,7 +1217,7 @@ NTSTATUS AfsRdrDirCtrl(DEVICE_OBJECT *DeviceObject, IRP *Irp, IO_STACK_LOCATION 
         info_size = sizeof(FILE_NAMES_INFORMATION);
         break;
     default:
-        KeBugCheckEx(0x12345, 0x98, 0x0, 0x0, 0x0);
+        SYNC_FAIL(STATUS_NOT_IMPLEMENTED);
     }
 
     info = (FILE_BOTH_DIR_INFORMATION *)outPtr;
@@ -1500,7 +1543,11 @@ NTSTATUS AfsRdrSetInfo(DEVICE_OBJECT *DeviceObject, IRP *Irp, IO_STACK_LOCATION 
         if (infoDisp->DeleteFile)
         {
             if (!MmFlushImageSection(&(fcb->sectionPtrs), MmFlushForDelete))
+		{
+		UNLOCK_FCB;
+		FsRtlExitFileSystem();
                 SYNC_FAIL(STATUS_ACCESS_DENIED);
+		}
             fcb->delPending |= 0x1;
         }
         else
@@ -1556,13 +1603,12 @@ NTSTATUS AfsRdrSetInfo(DEVICE_OBJECT *DeviceObject, IRP *Irp, IO_STACK_LOCATION 
             fcbt = FindFcb(IrpSp->Parameters.SetFile.FileObject);			
 
         //null-terminate all strings into uc_rename?
-        //FIX/one rename case not working
 
         if (IrpSp->Parameters.SetFile.FileObject == NULL &&
              infoRename->RootDirectory == NULL)
         {
-            WCHAR fname[300];			/* FIX: uc_rename needs null-terminated string */
-            StringCchCopyNW(fname, 300-1, infoRename->FileName, infoRename->FileNameLength/sizeof(WCHAR));
+            WCHAR fname[MAX_PATH];
+            StringCchCopyNW(fname, MAX_PATH-1, infoRename->FileName, infoRename->FileNameLength/sizeof(WCHAR));
             uc_rename(fcb->fid, ccb->name+2, NULL, fname, &new_fid);
             fcb->fid = new_fid;
         }
@@ -1576,9 +1622,10 @@ NTSTATUS AfsRdrSetInfo(DEVICE_OBJECT *DeviceObject, IRP *Irp, IO_STACK_LOCATION 
         }
         else
         {
-            _asm int 3;
-            /*fcbt = FindFcb(IrpSp->Parameters.SetFile.FileObject);
+			/* FIXFIX: implement this case, although we have never seen it called */
+			SYNC_RET(STATUS_UNSUCCESSFUL);
 
+			/*fcbt = FindFcb(IrpSp->Parameters.SetFile.FileObject);
             p->CurrNameOff = 0;
             StringCbCopyW(buf, size, fcb->name);
             p->NewNameOff = wcslen(buf)+1;
@@ -1625,18 +1672,6 @@ dc_break_callback(ULONG fid)
     }
 
     ASSERT(fcb->ccb_list);
-#if 0
-    pos = wcslen(fcb->ccb_list->name);
-    if (fcb->ccb_list->name[pos-1] == L'\\')
-        pos--;
-    ASSERT(pos);
-    while (pos > 0)
-    {
-        if (fcb->ccb_list->name[pos-1] == L'\\')
-            break;
-        pos--;
-    } 
-    #endif /* 0 */
 
     len = (wcslen(fcb->ccb_list->name) + 10) * sizeof(wchar_t);
     s = ExAllocatePool(NonPagedPool, sizeof(UNICODE_STRING)+len+sizeof(wchar_t));
@@ -1644,11 +1679,14 @@ dc_break_callback(ULONG fid)
     s->MaximumLength = len + sizeof(wchar_t);
     s->Buffer = (PWSTR)(s+1);
 
+    /* we are making a bogus change notification for now, because
+     * it does what we need.
+     */
     StringCbCopyW((PWSTR)(s+1), len, fcb->ccb_list->name);
     if (s->Buffer[wcslen(s->Buffer) - 1] != L'\\')
 	StringCbCatW(s->Buffer, len, L"\\");
     pos = wcslen(s->Buffer);
-    StringCbCatW(s->Buffer, len, L"jj");	        /* FIX: make bogus change notification */
+    StringCbCatW(s->Buffer, len, L"jj");
 
     KdPrint(("break callback on %d %ws %ws\n", fid, fcb->ccb_list->name, fcb->ccb_list->name+pos));
 
@@ -1659,6 +1697,11 @@ dc_break_callback(ULONG fid)
     ExFreePool(s);
     UNLOCK_FCB_LIST;
     return 0;
+}
+
+dc_release_hooks()
+{
+    KeSetEvent(&comExt->cancelEvent, 0, FALSE);
 }
 
 /**********************************************************
@@ -1675,6 +1718,7 @@ NTSTATUS AfsRdrDeviceControl(DEVICE_OBJECT *DeviceObject, IRP *Irp, IO_STACK_LOC
     UNICODE_STRING nm;
     void *outPtr;
     ULONG key, code, length;
+    LARGE_INTEGER wait;
 
     /* utility ioctls */
     if (DeviceObject == ComDevice &&
@@ -1683,12 +1727,14 @@ NTSTATUS AfsRdrDeviceControl(DEVICE_OBJECT *DeviceObject, IRP *Irp, IO_STACK_LOC
     {
 	outPtr = MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority);
 	if (!outPtr)
-            _asm int 3;
+            SYNC_FAIL(STATUS_INSUFFICIENT_RESOURCES);
 
-	rpc_set_context(IrpSp->FileObject->FsContext);
+	wait.QuadPart = -1000;
+	while (rpc_set_context(IrpSp->FileObject->FsContext) != 0)	/* if there are no open thread spots... */
+	    KeDelayExecutionThread(KernelMode, FALSE, &wait);		/* ...wait */
 	code = uc_ioctl_write(IrpSp->Parameters.DeviceIoControl.InputBufferLength,
-                               Irp->AssociatedIrp.SystemBuffer,
-                               (ULONG*)&key);
+                              Irp->AssociatedIrp.SystemBuffer,
+                              (ULONG*)&key);
 	length = IrpSp->Parameters.DeviceIoControl.OutputBufferLength;
 	if (!code)		
             code = uc_ioctl_read(key, &length, outPtr);
@@ -1711,9 +1757,11 @@ NTSTATUS AfsRdrDeviceControl(DEVICE_OBJECT *DeviceObject, IRP *Irp, IO_STACK_LOC
     {       
 	outPtr = MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority);
 	if (!outPtr)
-            _asm int 3;
+            SYNC_FAIL(STATUS_INSUFFICIENT_RESOURCES);
 
-	rpc_set_context(IrpSp->FileObject->FsContext);
+	wait.QuadPart = -1000;
+	while (rpc_set_context(IrpSp->FileObject->FsContext) != 0)	/* if there are no open thread spots... */
+	    KeDelayExecutionThread(KernelMode, FALSE, &wait);		/* ...wait */
 	code = rpc_call(IrpSp->Parameters.DeviceIoControl.InputBufferLength,
                          Irp->AssociatedIrp.SystemBuffer,
                          IrpSp->Parameters.DeviceIoControl.OutputBufferLength,
@@ -1730,12 +1778,13 @@ NTSTATUS AfsRdrDeviceControl(DEVICE_OBJECT *DeviceObject, IRP *Irp, IO_STACK_LOC
             break;
         }
     }
+    /* ioctl to get full file afs path (used by pioctl) */
     else if (DeviceObject == RdrDevice &&
               IrpSp->Parameters.DeviceIoControl.IoControlCode == IOCTL_AFSRDR_GET_PATH)
     {       
 	outPtr = MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority);
 	if (!outPtr)
-            _asm int 3;
+            SYNC_FAIL(STATUS_INSUFFICIENT_RESOURCES);
 
 	StringCbCopyW(outPtr, IrpSp->Parameters.DeviceIoControl.OutputBufferLength, fcb->ccb_list->name+2);
 
@@ -1748,7 +1797,7 @@ NTSTATUS AfsRdrDeviceControl(DEVICE_OBJECT *DeviceObject, IRP *Irp, IO_STACK_LOC
     }
 
     ret = Irp->IoStatus.Status;
-    COMPLETE;
+    COMPLETE;	/* complete with priority boost */
     return ret;
 }
 
@@ -1766,8 +1815,6 @@ NTSTATUS AfsRdrCleanup(DEVICE_OBJECT *DeviceObject, IRP *Irp, IO_STACK_LOCATION 
 #if 0
     try {
 #endif
-        IrpSp = IoGetCurrentIrpStackLocation(Irp);
-
         if (IrpSp->FileObject->FileName.Length == 0)
             SYNC_FAIL(STATUS_SUCCESS);
 
@@ -1778,16 +1825,23 @@ NTSTATUS AfsRdrCleanup(DEVICE_OBJECT *DeviceObject, IRP *Irp, IO_STACK_LOCATION 
         LOCK_FCB;
 
         FsRtlNotifyCleanup(ext->notifyList, &ext->listHead, IrpSp->FileObject->FsContext2);
- 
-        CcFlushCache(IrpSp->FileObject->SectionObjectPointer, NULL, 0, NULL);
- 
-        if (fcb->delPending && !MmFlushImageSection(&(fcb->sectionPtrs), MmFlushForDelete))
-            /* yes, moot at this point */
-            STATUS(STATUS_ACCESS_DENIED, 0);
-        else
-            STATUS(STATUS_SUCCESS, 0);
 
-        MmFlushImageSection(IrpSp->FileObject->SectionObjectPointer, MmFlushForWrite);
+	IoRemoveShareAccess(IrpSp->FileObject, &fcb->share_access);
+
+        CcFlushCache(IrpSp->FileObject->SectionObjectPointer, NULL, 0, NULL);
+
+        if (fcb->delPending)
+	    {
+	    if (!MmFlushImageSection(&(fcb->sectionPtrs), MmFlushForDelete))
+		/* yes, moot at this point */
+		STATUS(STATUS_ACCESS_DENIED, 0);
+	    }
+        else
+	    {
+	    MmFlushImageSection(IrpSp->FileObject->SectionObjectPointer, MmFlushForWrite);
+            STATUS(STATUS_SUCCESS, 0);
+	    }
+
         CcPurgeCacheSection(IrpSp->FileObject->SectionObjectPointer, NULL, 0, TRUE);
         CcUninitializeCacheMap(IrpSp->FileObject, NULL, NULL);
 
@@ -1798,7 +1852,6 @@ NTSTATUS AfsRdrCleanup(DEVICE_OBJECT *DeviceObject, IRP *Irp, IO_STACK_LOCATION 
 #if 0
     } except(EXCEPTION_EXECUTE_HANDLER)
     {
-	_asm int 3;
 	STATUS(STATUS_UNSUCCESSFUL, 0);
 	ExReleaseResourceLite(&ext->fcbLock);
 	FsRtlExitFileSystem();
@@ -1831,8 +1884,6 @@ NTSTATUS AfsRdrClose(DEVICE_OBJECT *DeviceObject, IRP *Irp, IO_STACK_LOCATION *I
     ccb = IrpSp->FileObject->FsContext2;
     LOCK_FCB_LIST;
 
-    /* set share correctly so future opens can succeed */
-    IoRemoveShareAccess(IrpSp->FileObject, &fcb->share_access);
     ObDereferenceObject(ccb->token);
 
     curr = fcb->ccb_list;
@@ -1856,6 +1907,8 @@ NTSTATUS AfsRdrClose(DEVICE_OBJECT *DeviceObject, IRP *Irp, IO_STACK_LOCATION *I
         {
             uc_unlink(ccb->name+2);
         }
+	if (fcb->lock)
+	    FsRtlFreeFileLock(fcb->lock);
 	ExDeleteResourceLite(&fcb->_resource);
 	ExDeleteResourceLite(&fcb->_pagingIoResource);
 	RtlDeleteElementGenericTable(&rdrExt->fcbTable, &fcb);
@@ -1879,9 +1932,9 @@ NTSTATUS AfsRdrClose(DEVICE_OBJECT *DeviceObject, IRP *Irp, IO_STACK_LOCATION *I
  **********************************************************/
 NTSTATUS AfsRdrShutdown(DEVICE_OBJECT *DeviceObject, IRP *Irp, IO_STACK_LOCATION *IrpSp)
 {
-    _asm int 3;
     STATUS(STATUS_SUCCESS, 0);
     COMPLETE;
+    return 0;
 }
 
 
@@ -1894,21 +1947,17 @@ NTSTATUS AfsRdrFlushFile(DEVICE_OBJECT *DeviceObject, IRP *Irp, IO_STACK_LOCATIO
     NTSTATUS ret;
     afs_ccb_t *ccb;
 
-    /*TRY*/
-    IrpSp = IoGetCurrentIrpStackLocation(Irp);
-
-    if (IrpSp->FileObject->FileName.Length == 0)
+    if (IsDeviceFile(IrpSp->FileObject))
 	SYNC_RET(STATUS_INVALID_DEVICE_REQUEST);
 
     ccb = IrpSp->FileObject->FsContext2;
 
     CcFlushCache(&fcb->sectionPtrs, NULL, 0, &Irp->IoStatus);
+    uc_flush(fcb->fid);
 
-    //SYNC_FAIL2(/*STATUS_LOCK_NOT_GRANTED*//*STATUS_NOT_IMPLEMENTED*/STATUS_SUCCESS, 0);
-
-    /*EXCEPT(STATUS_UNSUCCESSFUL, 0);*/
+    ret = Irp->IoStatus.Status;
     COMPLETE;
-    return Irp->IoStatus.Status;
+    return ret;
 }
 
 
@@ -1920,9 +1969,6 @@ NTSTATUS AfsRdrLockCtrl(DEVICE_OBJECT *DeviceObject, IRP *Irp, IO_STACK_LOCATION
 {
     NTSTATUS ret;
 
-    /*TRY*/
-    IrpSp = IoGetCurrentIrpStackLocation(Irp);
-
     /* complete lock on control device object without processing, as directed */
     if (IrpSp->FileObject->FileName.Length == 0)
     {
@@ -1930,6 +1976,28 @@ NTSTATUS AfsRdrLockCtrl(DEVICE_OBJECT *DeviceObject, IRP *Irp, IO_STACK_LOCATION
 	SYNC_FAIL(STATUS_SUCCESS);
     }
 
+    switch (IrpSp->MinorFunction)
+    {
+	case IRP_MN_LOCK:
+	case IRP_MN_UNLOCK_ALL:
+	case IRP_MN_UNLOCK_ALL_BY_KEY:
+	case IRP_MN_UNLOCK_SINGLE:
+	    FsRtlEnterFileSystem();
+	    LOCK_PAGING_FCB;
+	    LOCK_FCB;
+	    if (!fcb->lock)
+		{
+		fcb->lock = FsRtlAllocateFileLock(NULL, NULL);
+		}
+	    UNLOCK_FCB;
+	    UNLOCK_PAGING_FCB;
+	    FsRtlExitFileSystem();
+	    FsRtlProcessFileLock(fcb->lock, Irp, NULL);
+	    fcb->IsFastIoPossible = fcb->lock->FastIoIsQuestionable ? FastIoIsQuestionable : FastIoIsPossible;
+	    return STATUS_PENDING;
+	default:
+	    SYNC_FAIL2(STATUS_NOT_IMPLEMENTED, 0);
+    }
     SYNC_FAIL2(/*STATUS_LOCK_NOT_GRANTED*//*STATUS_NOT_IMPLEMENTED*/STATUS_SUCCESS, 0);
 
     /*EXCEPT(STATUS_UNSUCCESSFUL, 0);*/
@@ -1988,7 +2056,8 @@ NTSTATUS AfsRdrQueryVol(DEVICE_OBJECT *DeviceObject, IRP *Irp, IO_STACK_LOCATION
 	case FileFsSizeInformation:
             infoSize = (FILE_FS_SIZE_INFORMATION*)Irp->AssociatedIrp.SystemBuffer;
             memset(infoSize, 0, sizeof(FILE_FS_SIZE_INFORMATION));
-            infoSize->TotalAllocationUnits.QuadPart =		0x00000000F0000000;		//FIX
+			/* this data needs to come from an upcall */
+            infoSize->TotalAllocationUnits.QuadPart =		0x00000000F0000000;
             infoSize->AvailableAllocationUnits.QuadPart =	0x00000000E0000000;
             infoSize->SectorsPerAllocationUnit = 1;
             infoSize->BytesPerSector = 1;
@@ -1999,15 +2068,15 @@ NTSTATUS AfsRdrQueryVol(DEVICE_OBJECT *DeviceObject, IRP *Irp, IO_STACK_LOCATION
 	case FileFsVolumeInformation:
             infoVolume = (FILE_FS_VOLUME_INFORMATION*)Irp->AssociatedIrp.SystemBuffer;
             memset(infoVolume, 0, sizeof(FILE_FS_VOLUME_INFORMATION));
-            infoVolume->VolumeCreationTime.QuadPart = AfsTimeToWindowsTime(1080000000);//0x43218765);		//TODO:fix
-            infoVolume->VolumeSerialNumber = 0x12345678;				//TODO:fix
+			/* this data needs to come from an upcall */
+            infoVolume->VolumeCreationTime.QuadPart = AfsTimeToWindowsTime(1080000000);
+            infoVolume->VolumeSerialNumber = 0x12345678;
             infoVolume->SupportsObjects = FALSE;
             //StringCbCopyLen(infoVolume->VolumeLabel, IrpSp->Parameters.QueryVolume.Length-sizeof(*infoVolume)-2, L"AfsRed", &infoVolume->VolumeLabelLength);
             //IrpSp->Parameters.QueryVolume.Length = 0;
             if (sizeof(*infoVolume) + 12 > IrpSp->Parameters.QueryVolume.Length)
             {
                 infoVolume->VolumeLabelLength = 0;
-                rpt0(("vol", "overflowing buffer %d", IrpSp->Parameters.QueryVolume.Length));
                 SYNC_FAIL2(STATUS_BUFFER_OVERFLOW, sizeof(*infoVolume));
             }
             else
@@ -2017,8 +2086,6 @@ NTSTATUS AfsRdrQueryVol(DEVICE_OBJECT *DeviceObject, IRP *Irp, IO_STACK_LOCATION
                 SYNC_FAIL2(STATUS_SUCCESS, sizeof(*infoVolume) + (infoVolume->VolumeLabelLength - sizeof(WCHAR)));
             }		
             break;
-	//case FileFsFullSizeInformation:
-            //TODO:
 	}
 
     EXCEPT(STATUS_UNSUCCESSFUL, 0);
@@ -2046,10 +2113,6 @@ VOID AfsRdrUnload(DRIVER_OBJECT *DriverObject)
 
     IoDeleteDevice(ComDevice);
     IoDeleteDevice(RdrDevice);
-
-#ifdef RPT_ENA
-    rptCliClose(REPORT);
-#endif
 
     KdPrint(("RdrUnload exiting.\n"));
 }
@@ -2085,6 +2148,7 @@ NTSTATUS ComDispatch(DEVICE_OBJECT *DeviceObject, IRP *Irp)
     ULONG len;
     ULONG code, read;
     PACCESS_TOKEN acc_token;
+    PVOID waitPair[2];
 
     ext = (struct ComExtension *)DeviceObject->DeviceExtension;
     IrpSp = IoGetCurrentIrpStackLocation(Irp);
@@ -2124,7 +2188,6 @@ NTSTATUS ComDispatch(DEVICE_OBJECT *DeviceObject, IRP *Irp)
 
     case IRP_MJ_WRITE:
         /* we only process MDL writes */
-        //_asm int 3;
         if (!Irp->MdlAddress ||
              !(ptr = MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority)))	/* should be LowPagePriority */
             SYNC_FAIL(STATUS_INSUFFICIENT_RESOURCES);
@@ -2143,25 +2206,31 @@ NTSTATUS ComDispatch(DEVICE_OBJECT *DeviceObject, IRP *Irp)
         break;
     case IRP_MJ_READ:
         if (!Irp->MdlAddress || !(ptr = MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority)))	// should be LowPagePriority
-            _asm int 3;
+            SYNC_FAIL(STATUS_INSUFFICIENT_RESOURCES);
 
         if (IrpSp->FileObject->FsContext2 == COMM_UPCALLHOOK)
         {
-            /*timeout.QuadPart = -10000000L;*/
+	    KeClearEvent(&comExt->cancelEvent);
+
             timeout.QuadPart = -100000000L;
-            KeWaitForSingleObject(&comExt->outEvent, Executive, KernelMode, FALSE, &timeout);
+	    waitPair[0] = &comExt->outEvent;
+	    waitPair[1] = &comExt->cancelEvent;
+            ret = KeWaitForMultipleObjects(2, waitPair, WaitAny, Executive, KernelMode, FALSE, &timeout, NULL);
+
+	    if (ret == STATUS_WAIT_1)
+		SYNC_FAIL(STATUS_UNSUCCESSFUL);
 
             if (!rpc_send(ptr, IrpSp->Parameters.Read.Length, &read))
             {
                 KeClearEvent(&comExt->outEvent);
-                KeWaitForSingleObject(&comExt->outEvent, Executive, KernelMode/*UserMode*/, FALSE, &timeout);
+	        ret = KeWaitForMultipleObjects(2, waitPair, WaitAny, Executive, KernelMode, FALSE, &timeout, NULL);
                 if (!rpc_send(ptr, IrpSp->Parameters.Read.Length, &read))
                 {
                     KeClearEvent(&comExt->outEvent);
                     SYNC_FAIL(STATUS_UNSUCCESSFUL);
                 }
             }
-            SYNC_FAIL2(STATUS_SUCCESS, read);
+            SYNC_RET2(STATUS_SUCCESS, read);			/* complete with priority boost */
         }
         else
             STATUS(STATUS_INVALID_DEVICE_REQUEST, 0);
@@ -2174,18 +2243,19 @@ NTSTATUS ComDispatch(DEVICE_OBJECT *DeviceObject, IRP *Irp)
     }
 
     ret = Irp->IoStatus.Status;
-    COMPLETE;
+    COMPLETE;							/* complete with priority boost */
     return ret;
 }
 
 
-// handles all irp's for primary (fs) device
+/* handles all irp's for primary (fs) device */
 NTSTATUS Dispatch(DEVICE_OBJECT *DeviceObject, IRP *Irp)
 {
     IO_STACK_LOCATION *IrpSp;
     NTSTATUS ret;
     afs_fcb_t *fcb;
     afs_ccb_t *ccb;
+    LARGE_INTEGER wait;
 
     if (DeviceObject->DeviceType == FILE_DEVICE_DATALINK)
 	return ComDispatch(DeviceObject, Irp);
@@ -2194,14 +2264,16 @@ NTSTATUS Dispatch(DEVICE_OBJECT *DeviceObject, IRP *Irp)
 
     rpt4(("irp", "%s min %d on %d (%ws) %x %x", IrpMjFuncDesc[IrpSp->MajorFunction], IrpSp->MinorFunction, 0/*ExtractFid(IrpSp->FileObject->FsContext)*/, IrpSp->FileObject->FileName.Buffer, IrpSp->Flags, IrpSp->Parameters.Create.Options));
 
-    fcb = IrpSp->FileObject->FsContext;//FindFcb(IrpSp->FileObject);
+    fcb = IrpSp->FileObject->FsContext;
     if (IrpSp->MajorFunction != IRP_MJ_CREATE)
 	 ASSERT(fcb);
 
     if (IrpSp->FileObject && IrpSp->FileObject->FsContext2)
     {
 	ccb = IrpSp->FileObject->FsContext2;
-	rpc_set_context(ccb->token);
+	wait.QuadPart = -1000;
+	while (rpc_set_context(ccb->token) != 0)			/* if there are no open thread spots... */
+	    KeDelayExecutionThread(KernelMode, FALSE, &wait);		/* ...wait */
     }
 
     switch (IrpSp->MajorFunction)
@@ -2269,6 +2341,35 @@ NTSTATUS Dispatch(DEVICE_OBJECT *DeviceObject, IRP *Irp)
     return ret;
 }
 
+
+BOOLEAN
+fastIoCheck (
+    IN struct _FILE_OBJECT *FileObject,
+    IN PLARGE_INTEGER FileOffset,
+    IN ULONG Length,
+    IN BOOLEAN Wait,
+    IN ULONG LockKey,
+    IN BOOLEAN CheckForReadOperation,
+    OUT PIO_STATUS_BLOCK IoStatus,
+    IN struct _DEVICE_OBJECT *DeviceObject
+    )
+{
+afs_fcb_t *fcb;
+LARGE_INTEGER temp;
+
+fcb = FileObject->FsContext;
+ASSERT(fcb);
+
+if (!fcb->lock)
+    return TRUE;
+
+temp.QuadPart = Length;
+if (CheckForReadOperation)
+    return FsRtlFastCheckLockForRead(fcb->lock, FileOffset, &temp, LockKey, FileObject, IoGetCurrentProcess());
+return FsRtlFastCheckLockForWrite(fcb->lock, FileOffset, &temp, LockKey, FileObject, IoGetCurrentProcess());
+}
+
+
 BOOLEAN
 fastIoRead (
     IN struct _FILE_OBJECT *FileObject,
@@ -2284,12 +2385,25 @@ fastIoRead (
     BOOLEAN ret;
     ULONG adj_len;
     afs_fcb_t *fcb;
+    LARGE_INTEGER temp;
 
     fcb = FileObject->FsContext;
     ASSERT(fcb);
 
     FsRtlEnterFileSystem();
     LOCK_PAGING_FCB;
+
+    if (fcb->lock)
+    {
+	temp.QuadPart = Length;
+	if (!FsRtlFastCheckLockForRead(fcb->lock, FileOffset, &temp, LockKey, FileObject, IoGetCurrentProcess()))
+	{
+	    UNLOCK_PAGING_FCB;
+	    FsRtlExitFileSystem();
+	    return FALSE;
+	}
+    }
+
     adj_len = Length;
     if (FileOffset->QuadPart > fcb->FileSize.QuadPart)
     {
@@ -2305,11 +2419,8 @@ fastIoRead (
     try
     {
 	ret = CcCopyRead(FileObject, FileOffset, adj_len, Wait, Buffer, IoStatus);
-	/*if (IoStatus->Status == STATUS_SUCCESS &&
-        (adj_len < Length))
-        IoStatus->Status = STATUS_END_OF_FILE;*/
-        // KdPrint(("read  %x at %x fast done %x\n", Length, (ULONG)FileOffset->QuadPart, IoStatus->Information));
-	FileObject->CurrentByteOffset.QuadPart += IoStatus->Information;
+
+	FileObject->CurrentByteOffset.QuadPart = FileOffset->QuadPart + IoStatus->Information;
 	UNLOCK_PAGING_FCB;
 	FsRtlExitFileSystem();
     }
@@ -2337,6 +2448,7 @@ fastIoWrite (
     BOOLEAN ret;
     LARGE_INTEGER adj_end;
     afs_fcb_t *fcb;
+    LARGE_INTEGER temp;
 
     fcb = FileObject->FsContext;
     ASSERT(fcb);
@@ -2344,9 +2456,21 @@ fastIoWrite (
     FsRtlEnterFileSystem();
     LOCK_PAGING_FCB;
 
+    if (fcb->lock)
+    {
+	temp.QuadPart = Length;
+	if (!FsRtlFastCheckLockForWrite(fcb->lock, FileOffset, &temp, LockKey, FileObject, IoGetCurrentProcess()))
+	{
+	    UNLOCK_PAGING_FCB;
+	    FsRtlExitFileSystem();
+	    return FALSE;
+	}
+    }
+
+
     if (FileOffset->QuadPart + Length > fcb->FileSize.QuadPart)
     {
-	adj_end.QuadPart = fcb->FileSize.QuadPart + Length;
+	adj_end.QuadPart = FileOffset->QuadPart + Length;
 	fcb->AllocationSize = fcb->FileSize = fcb->ValidDataLength = adj_end;
 	LOCK_FCB;
 	try
@@ -2368,8 +2492,8 @@ fastIoWrite (
 	ret = CcCopyWrite(FileObject, FileOffset, Length, Wait, Buffer);
 	IoStatus->Status = ret?STATUS_SUCCESS:STATUS_UNSUCCESSFUL;
 	IoStatus->Information = ret?Length:0;
-        // KdPrint(("write %x at %x fast done\n", Length, (ULONG)FileOffset->QuadPart));
-	FileObject->CurrentByteOffset.QuadPart += IoStatus->Information;
+
+	FileObject->CurrentByteOffset.QuadPart = FileOffset->QuadPart + IoStatus->Information;
 	UNLOCK_PAGING_FCB;
 	FsRtlExitFileSystem();
     }
@@ -2444,14 +2568,7 @@ NTSTATUS DriverEntry(DRIVER_OBJECT *DriverObject, UNICODE_STRING *RegistryPath)
     IO_STATUS_BLOCK status;
     FAST_IO_DISPATCH *fastIoDispatch;
 
-    //_asm int 3;
-
     //try {
-#ifdef RPT_ENA
-    REPORT = rptOpen(NULL, "afskern");
-#endif
-    rpt0(("init", "rpt initialized at %x", REPORT));
-
     RtlInitUnicodeString(&rdrName, L"\\Device\\afsrdr");
     RtlInitUnicodeString(&comName, L"\\Device\\afscom");
 
@@ -2462,8 +2579,9 @@ NTSTATUS DriverEntry(DRIVER_OBJECT *DriverObject, UNICODE_STRING *RegistryPath)
     IoAllocateDriverObjectExtension(DriverObject, (void *)0x394389f7, sizeof(FAST_IO_DISPATCH), &fastIoDispatch);
     RtlZeroMemory(fastIoDispatch, sizeof(FAST_IO_DISPATCH));
     fastIoDispatch->SizeOfFastIoDispatch = sizeof(FAST_IO_DISPATCH);
-    fastIoDispatch->FastIoRead = fastIoRead;
-    fastIoDispatch->FastIoWrite = fastIoWrite;
+    fastIoDispatch->FastIoCheckIfPossible = fastIoCheck;
+    fastIoDispatch->FastIoRead = /*FsRtlCopyRead;*/fastIoRead;
+    fastIoDispatch->FastIoWrite = /*FsRtlCopyWrite;*/fastIoWrite;
     DriverObject->FastIoDispatch = fastIoDispatch;
 
     for (x = 0; x < IRP_MJ_MAXIMUM_FUNCTION; x++)
@@ -2501,12 +2619,10 @@ NTSTATUS DriverEntry(DRIVER_OBJECT *DriverObject, UNICODE_STRING *RegistryPath)
     comExt = ((struct ComExtension*)ComDevice->DeviceExtension);
     RtlZeroMemory(comExt, sizeof(struct ComExtension));
 
-    //ExInitializeNPagedLookasideList(&comExt->outMemList, NULL, NULL, 0, sizeof(struct KOutEntry)+100, AFS_RDR_TAG, 0);
     InitializeListHead(&comExt->outReqList);
     KeInitializeSpinLock(&comExt->outLock);
     ExInitializeFastMutex(&comExt->inLock);
-    RtlInitializeGenericTable(&comExt->inTable, ReqCompareRoutine, AllocateRoutine, FreeRoutine, NULL);
-    KeInitializeEvent(&comExt->outEvent, NotificationEvent, TRUE);
+    KeInitializeEvent(&comExt->outEvent, SynchronizationEvent/*NotificationEvent*/, TRUE);
     KeInitializeEvent(&comExt->cancelEvent, NotificationEvent, TRUE);
 
     comExt->rdr = rdrExt;
@@ -2521,8 +2637,6 @@ NTSTATUS DriverEntry(DRIVER_OBJECT *DriverObject, UNICODE_STRING *RegistryPath)
 
     /*} except(EXCEPTION_EXECUTE_HANDLER)
     {
-    _asm int 3;
-    //logerror();
     return -1;
     }*/
 

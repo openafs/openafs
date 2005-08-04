@@ -1,0 +1,59 @@
+/*
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
+
+/* Define VERSIONINFO resource */
+
+#define  AFS_VERINFO_FILE_DESCRIPTION "AFS Network Redirector Driver"
+#define AFS_VERINFO_NAME "afsrdr"
+#define AFS_VERINFO_FILENAME "afsrdr.sys"
+
+#include "..\afsd\AFS_component_version_number.h"
+
+#include <winver.h>
+
+1 VERSIONINFO
+    FILEVERSION AFS_VERINFO_FILEVER
+    PRODUCTVERSION AFS_VERINFO_FILEVER
+    FILEOS VOS_NT
+#ifdef AFS_VERINFO_DLL
+    FILETYPE VFT_DLL
+#else
+    FILETYPE VFT_APP
+#endif
+BEGIN
+    BLOCK "StringFileInfo"
+    /* FileVersion must be specified or data won't appear on properties tab */
+    /* Internalname and originalfilename must be specified or explorer won't
+       show version and description */
+    BEGIN
+        BLOCK "000004E4"
+        BEGIN
+            VALUE "CompanyName",        "OpenAFS Project", "\0"
+            VALUE "LegalCopyright",     "Copyright \251 the Regents of the University of Michigan, 2005.", "\0"
+            VALUE "ProductName",        "OpenAFS for Windows", "\0"
+            VALUE "ProductVersion",     "1.0", "\0"
+            VALUE "FileVersion",        "1.0", "\0"
+            VALUE "FileDescription",    AFS_VERINFO_FILE_DESCRIPTION, "\0"
+            VALUE "Build",              AFS_VERINFO_BUILD, "\0"
+            VALUE "InternalName",       AFS_VERINFO_NAME, "\0"
+            VALUE "OriginalFilename",   AFS_VERINFO_FILENAME, "\0"
+        END
+    END
+    /* files in msi's are supposed to have language codes attached to them.
+       this is how they get populated automatically */
+    BLOCK "VarFileInfo"
+    BEGIN
+#ifdef AFS_VERINFO_LANG_CODE
+        VALUE "Translation", AFS_VERINFO_LANG_CODE, AFS_VERINFO_CHARSET
+#else
+/* default to 0, 1252 */
+        VALUE "Translation", 0, 0x4e4
+#endif
+    END
+END
