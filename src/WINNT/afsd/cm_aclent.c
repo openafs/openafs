@@ -190,6 +190,13 @@ long cm_ValidateACLCache(void)
     long count;
     cm_aclent_t * aclp;
 
+    if ( cm_data.aclLRUp == NULL && cm_data.aclLRUEndp != NULL ||
+         cm_data.aclLRUp != NULL && cm_data.aclLRUEndp == NULL) {
+        afsi_log("cm_ValidateACLCache failure: inconsistent LRU pointers");
+        fprintf(stderr, "cm_ValidateACLCache failure: inconsistent LRU pointers\n");
+        return -9;
+    }
+
     for ( aclp = cm_data.aclLRUp, count = 0; aclp;
           aclp = (cm_aclent_t *) osi_QNext(&aclp->q), count++ ) {
         if (aclp->magic != CM_ACLENT_MAGIC) {

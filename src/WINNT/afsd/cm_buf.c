@@ -156,6 +156,13 @@ buf_ValidateBuffers(void)
     cm_buf_t * bp, *bpf, *bpa, *bpb;
     afs_uint32 countb = 0, countf = 0, counta = 0;
 
+    if (cm_data.buf_freeListp == NULL && cm_data.buf_freeListEndp != NULL ||
+         cm_data.buf_freeListp != NULL && cm_data.buf_freeListEndp == NULL) {
+        afsi_log("cm_ValidateBuffers failure: inconsistent free list pointers");
+        fprintf(stderr, "cm_ValidateBuffers failure: inconsistent free list pointers\n");
+        return -9;                  
+    }
+
     for (bp = cm_data.buf_freeListEndp; bp; bp=(cm_buf_t *) osi_QPrev(&bp->q)) { 
         if (bp->magic != CM_BUF_MAGIC) {
             afsi_log("cm_ValidateBuffers failure: bp->magic != CM_BUF_MAGIC");
@@ -470,7 +477,7 @@ void buf_WaitIO(cm_scache_t * scp, cm_buf_t *bp)
             lock_ObtainMutex(&scp->mx);
             if (scp->flags & CM_SCACHEFLAG_WAITING) {
                 osi_Log1(buf_logp, "buf_WaitIO waking scp 0x%x", scp);
-                osi_Wakeup(&scp->flags);
+                osi_Wakeup((long)&scp->flags);
                 lock_ReleaseMutex(&scp->mx);
             }
         }
