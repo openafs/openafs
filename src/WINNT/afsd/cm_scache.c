@@ -203,6 +203,13 @@ cm_ValidateSCache(void)
     cm_scache_t * scp, *lscp;
     long i;
 
+    if ( cm_data.scacheLRUFirstp == NULL && cm_data.scacheLRULastp != NULL ||
+         cm_data.scacheLRUFirstp != NULL && cm_data.scacheLRULastp == NULL) {
+        afsi_log("cm_ValidateSCache failure: inconsistent LRU pointers");
+        fprintf(stderr, "cm_ValidateSCache failure: inconsistent LRU pointers\n");
+        return -17;
+    }
+
     for ( scp = cm_data.scacheLRUFirstp, lscp = NULL, i = 0; 
           scp;
           lscp = scp, scp = (cm_scache_t *) osi_QNext(&scp->q), i++ ) {
