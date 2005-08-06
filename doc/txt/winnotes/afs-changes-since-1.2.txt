@@ -1,3 +1,16 @@
+Since 1.3.86:
+ * "fs wscell" when executed in freelance mode will return the
+   name of the cell configured in the registry.  The root.afs
+   volume is not loaded from this cell, but it is used for the
+   default for aklog and integrated login.
+
+ * "fs mkmount, fs rmmount, symlink make, symlink remove" will
+   no longer work on \\AFS\all when freelance is being used 
+   unless the user is a member of the "AFS Client Admins" Windows
+   Security group.
+
+ * some more checks performed during persistent cache validation.
+
 Since 1.3.85:
  * Optimize calls to cm_CheckServer from cm_Analyze.  Only check
    down servers for the current cell not all cells.

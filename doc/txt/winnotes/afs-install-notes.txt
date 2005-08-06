@@ -1,7 +1,7 @@
-OpenAFS for Windows 1.3.8600 Installation Notes
+OpenAFS for Windows 1.3.8700 Installation Notes
 -----------------------------------------------
 
-OpenAFS for Windows 1.3.8600 is the best client available for 
+OpenAFS for Windows 1.3.8700 is the best client available for 
 Microsoft Windows operating systems.  It can be installed either as
 a new installation or an upgrade from previous versions of OpenAFS
 for Windows or IBM AFS for Windows.  Installers are provided in two
