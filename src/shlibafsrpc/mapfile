@@ -110,6 +110,7 @@
 	RXSTATS_QueryRPCStatsVersion;
 	RXSTATS_ClearProcessRPCStats;
 	RXSTATS_ClearPeerRPCStats;
+	TM_GetTimeOfDay;
 
     local:
 	*;
