@@ -1376,6 +1376,16 @@ afs_linux_writepage_sync(struct inode *ip, struct page *pp,
     ip->i_size = vcp->m.Length;
     ip->i_blocks = ((vcp->m.Length + 1023) >> 10) << 1;
 
+    if (!code
+	&& afs_stats_cmperf.cacheCurrDirtyChunks >
+	afs_stats_cmperf.cacheMaxDirtyChunks) {
+	struct vrequest treq;
+
+	ObtainWriteLock(&vcp->lock, 533);
+	if (!afs_InitReq(&treq, credp))
+	    code = afs_DoPartialWrite(vcp, &treq);
+	ReleaseWriteLock(&vcp->lock);
+    }
     code = code ? -code : count - tuio.uio_resid;
 
     afs_Trace4(afs_iclSetp, CM_TRACE_UPDATEPAGE, ICL_TYPE_POINTER, vcp,
