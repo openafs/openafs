@@ -28,7 +28,7 @@ VOLSEROBJS=volmain.o volprocs.o physio.o voltrans.o volerr.o volint.cs.o dumpstu
 
 VLSERVEROBJS=#vldbint.cs.o vldbint.xdr.o
 
-LWPOBJS=lock.o fasttime.o threadname.o
+LWPOBJS=lock.o threadname.o
 
 LIBACLOBJS=aclprocs.o netprocs.o
 
@@ -97,9 +97,6 @@ softsig.o: ${UTIL}/softsig.c
 	${COMPILE}
 
 lock.o: ${LWP}/lock.c
-	${COMPILE}
-
-fasttime.o: ${LWP}/fasttime.c
 	${COMPILE}
 
 threadname.o: ${LWP}/threadname.c

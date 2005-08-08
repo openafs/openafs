@@ -27,6 +27,7 @@ DES = ${srcdir}/../des
 COMERR = ${srcdir}/../comerr
 UTIL = ${srcdir}/../util
 SYS = ${srcdir}/../sys
+LWP = ${srcdir}/../lwp
 
 SYSOBJS =\
 	syscall.o
@@ -110,6 +111,9 @@ DESOBJS =\
 
 CRYPT_OBJ = crypt.o
 
+LWPOBJS = \
+	fasttime.o
+
 LIBOBJS = \
 	${RXOBJS} \
 	${DESOBJS} \
@@ -120,6 +124,7 @@ LIBOBJS = \
 	${SYSOBJS} \
 	${CRYPT_OBJ} \
 	${RXSTATOBJS} \
+	${LWPOBJS} \
 	${FSINTOBJS}
 
 all: ${TOP_LIBDIR}/libafsrpc.a
@@ -342,6 +347,9 @@ assert.o: ${UTIL}/assert.c
 
 base64.o: ${UTIL}/base64.c
 	${CCRULE} ${UTIL}/base64.c
+
+fasttime.o: ${LWP}/fasttime.c
+	${CCRULE} ${LWP}/fasttime.c
 
 syscall.o: ${SYS}/syscall.s
 	case "$(SYS_NAME)" in \
