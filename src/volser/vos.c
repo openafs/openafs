@@ -448,8 +448,8 @@ DumpFunction(struct rx_call *call, char *filename)
 static char *
 vos_ctime(afs_int32 *timep)
 {
-    time_t *foo = timep;
-    return ctime(foo);
+    time_t foo = *timep;
+    return ctime(&foo);
 }
 #else
 #define vos_ctime ctime
