@@ -358,8 +358,6 @@ afs_put_inode(struct inode *ip)
 static void
 afs_put_super(struct super_block *sbp)
 {
-    int code = 0;
-
     AFS_GLOCK();
     AFS_STATCNT(afs_unmount);
 
@@ -382,14 +380,12 @@ afs_put_super(struct super_block *sbp)
     osi_linux_verify_alloced_memory();
     AFS_GUNLOCK();
 
-    if (!code) {
-	sbp->s_dev = 0;
+    sbp->s_dev = 0;
 #if defined(AFS_LINUX26_ENV)
-	module_put(THIS_MODULE);
+    module_put(THIS_MODULE);
 #else
-	MOD_DEC_USE_COUNT;
+    MOD_DEC_USE_COUNT;
 #endif
-    }
 }
 
 
@@ -436,12 +432,6 @@ afs_statfs(struct super_block *sbp, struct statfs *__statp, int size)
     return 0;
 }
 
-void
-afs_umount_begin(struct super_block *sbp)
-{
-    afs_shuttingdown = 1;
-}
-
 struct super_operations afs_sops = {
 #if defined(STRUCT_SUPER_HAS_ALLOC_INODE)
   .alloc_inode =	afs_alloc_inode,
@@ -451,7 +441,6 @@ struct super_operations afs_sops = {
   .put_inode =		afs_put_inode,
   .put_super =		afs_put_super,
   .statfs =		afs_statfs,
-  .umount_begin =	afs_umount_begin
 #if !defined(AFS_LINUX24_ENV)
   .notify_change =	afs_notify_change,
 #endif
