@@ -20,7 +20,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/util/serverLog.c,v 1.22.2.5 2005/04/19 05:14:40 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/util/serverLog.c,v 1.22.2.10 2005/07/11 19:29:39 shadow Exp $");
 
 #include <stdio.h>
 #ifdef AFS_NT40_ENV
@@ -70,7 +70,12 @@ static pthread_mutex_t serverLogMutex;
 #define O_NONBLOCK 0
 #endif
 
-char *(*threadNameProgram) ();
+static int
+dummyThreadNum(void)
+{
+    return -1;
+}
+static int (*threadNumProgram) () = dummyThreadNum;
 
 static int serverLogFD = -1;
 
@@ -83,8 +88,15 @@ char *serverLogSyslogTag = 0;
 #include <stdarg.h>
 int LogLevel;
 int mrafsStyleLogs = 0;
+static int threadIdLogs = 0;
 int printLocks = 0;
 static char ourName[MAXPATHLEN];
+
+void
+SetLogThreadNumProgram(int (*func) () )
+{
+    threadNumProgram = func;
+}
 
 void
 WriteLogBuffer(char *buf, afs_uint32 len)
@@ -95,6 +107,12 @@ WriteLogBuffer(char *buf, afs_uint32 len)
     UNLOCK_SERVERLOG();
 }
 
+int
+LogThreadNum(void) 
+{
+  return (*threadNumProgram) ();
+}
+
 void
 vFSLog(const char *format, va_list args)
 {
@@ -102,7 +120,7 @@ vFSLog(const char *format, va_list args)
     char *timeStamp;
     char tbuffer[1024];
     char *info;
-    int len;
+    int len, num;
     char *name;
 
     currenttime = time(0);
@@ -110,11 +128,13 @@ vFSLog(const char *format, va_list args)
     timeStamp[24] = ' ';	/* ts[24] is the newline, 25 is the null */
     info = &timeStamp[25];
 
-    if (mrafsStyleLogs) {
-	name = (*threadNameProgram) ();
-	(void)afs_snprintf(info, (sizeof tbuffer) - strlen(tbuffer), "[%s] ",
-			   name);
+    if (mrafsStyleLogs || threadIdLogs) {
+	num = (*threadNumProgram) ();
+        if (num > -1) {
+	(void)afs_snprintf(info, (sizeof tbuffer) - strlen(tbuffer), "[%d] ",
+			   num);
 	info += strlen(info);
+    }
     }
 
     (void)afs_vsnprintf(info, (sizeof tbuffer) - strlen(tbuffer), format,
@@ -171,8 +191,20 @@ SetDebug_Signal(int signo)
 
     if (LogLevel > 0) {
 	LogLevel *= 5;
+
+#if defined(AFS_PTHREAD_ENV)
+        if (LogLevel > 1 && threadNumProgram != NULL && 
+            threadIdLogs == 0) {
+            threadIdLogs = 1;
+        }
+#endif
     } else {
 	LogLevel = 1;
+
+#if defined(AFS_PTHREAD_ENV)
+        if (threadIdLogs == 1)
+            threadIdLogs = 0;
+#endif
     }
     printLocks = 2;
 #if defined(AFS_PTHREAD_ENV)
@@ -196,13 +228,17 @@ ResetDebug_Signal(int signo)
 #if defined(AFS_PTHREAD_ENV)
     DebugOn(LogLevel);
 #else /* AFS_PTHREAD_ENV */
-    IOMGR_SoftSig(DebugOn, (void *)LogLevel);
+    IOMGR_SoftSig(DebugOn, LogLevel);
 #endif /* AFS_PTHREAD_ENV */
 
     (void)signal(signo, ResetDebug_Signal);	/* on some platforms,
 						 * this signal handler
 						 * needs to be set
 						 * again */
+#if defined(AFS_PTHREAD_ENV)
+    if (threadIdLogs == 1)
+        threadIdLogs = 0;
+#endif
     if (mrafsStyleLogs)
 	OpenLog((char *)&ourName);
 }				/*ResetDebug_Signal */
@@ -241,14 +277,15 @@ OpenLog(const char *fileName)
     }
 
     /* Support named pipes as logs by not rotating them */
-    if ((fstat(fileName, &statbuf) == 0)  && (S_ISFIFO(statbuf.st_mode))) {
+    if ((lstat(fileName, &statbuf) == 0)  && (S_ISFIFO(statbuf.st_mode))) {
 	isfifo = 1;
     }
 #endif
 
     if (mrafsStyleLogs) {
-        time_t t = Start.tv_sec;
+        time_t t;
 	TM_GetTimeOfDay(&Start, 0);
+        t = Start.tv_sec;	
 	TimeFields = localtime(&t);
 	if (fileName) {
 	    if (strncmp(fileName, (char *)&ourName, strlen(fileName)))
@@ -314,7 +351,7 @@ ReOpenLog(const char *fileName)
     }
 
     /* Support named pipes as logs by not rotating them */
-    if ((fstat(fileName, &statbuf) == 0)  && (S_ISFIFO(statbuf.st_mode))) {
+    if ((lstat(fileName, &statbuf) == 0)  && (S_ISFIFO(statbuf.st_mode))) {
 	isfifo = 1;
     }
 #endif

@@ -65,8 +65,6 @@
 #endif
 #endif
 #define AFS_GLOBAL_SUNLOCK
-extern unsigned long __per_cpu_offset[NR_CPUS];
-extern SYSCALLTYPE sys_call_table_emu[] __attribute__((weak));
 #endif /* __KERNEL__  && !DUMP_KERNEL */
 
 #include <afs/afs_sysnames.h>

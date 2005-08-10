@@ -1,0 +1,121 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 4//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3672/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 3 Oct 2000 at 16:18:30                -->
+<META HTTP-EQUIV="updated" CONTENT="Tue, 03 Oct 2000 16:18:29">
+<META HTTP-EQUIV="review" CONTENT="Wed, 03 Oct 2001 16:18:29">
+<META HTTP-EQUIV="expires" CONTENT="Thu, 03 Oct 2002 16:18:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf207.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf209.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRPAGSH" HREF="auarf002.htm#ToC_222">pagsh</A></H2>
+<A NAME="IDX5213"></A>
+<A NAME="IDX5214"></A>
+<A NAME="IDX5215"></A>
+<A NAME="IDX5216"></A>
+<P><STRONG>Purpose</STRONG>
+<P>Creates a new PAG
+<P><STRONG>Synopsis</STRONG>
+<PRE><B>pagsh</B>
+</PRE>
+<P><STRONG>Description</STRONG>
+<P>The <B>pagsh</B> command creates a new command shell (owned by the
+issuer of the command) and associates a new <I>process authentication
+group</I> (PAG) with the shell and the user. A PAG is a number
+guaranteed to identify the issuer of commands in the new shell uniquely to the
+local Cache Manager. The PAG is used, instead of the issuer's UNIX
+UID, to identify the issuer in the credential structure that the Cache Manager
+creates to track each user.
+<P>Any tokens acquired subsequently (presumably for other cells) become
+associated with the PAG, rather than with the user's UNIX UID.
+This method for distinguishing users has two advantages.
+<UL>
+<P><LI>It means that processes spawned by the user inherit the PAG and so share
+the token; thus they gain access to AFS as the authenticated user.
+In many environments, for example, printer and other daemons run under
+identities (such as the local superuser <B>root</B>) that the AFS server
+processes recognize only as <B>anonymous</B>. Unless PAGs are used,
+such daemons cannot access files in directories whose access control lists
+(ACLs) do not extend permissions to the <B>system:anyuser</B>
+group.
+<P><LI>It closes a potential security loophole: UNIX allows anyone already
+logged in as the local superuser <B>root</B> on a machine to assume any
+other identity by issuing the UNIX <B>su</B> command. If the
+credential structure is identified by a UNIX UID rather than a PAG, then the
+local superuser <B>root</B> can assume a UNIX UID and use any tokens
+associated with that UID. Use of a PAG as an identifier eliminates that
+possibility.
+</UL>
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Note:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">The <B>pagsh.krb</B> version of this command is intended for use
+by sites that employ standard Kerberos authentication for their
+clients. The <B>pagsh.krb</B> command provides all the
+functionality of the <B>pagsh</B> command. In addition, it defines
+the environment variable KRBTKFILE (which specifies the storage location of
+Kerberos tickets) to be the <B>/tmp/tktp</B><VAR>X</VAR> file (where
+<VAR>X</VAR> is the number of the user's PAG). The functionality of
+this command supports the placement of Kerberos tickets by the
+<B>klog.krb</B> command and Kerberized AFS-modified login utilities
+in the file specified by the environment variable KRBTKFILE.
+</TD></TR></TABLE>
+<P><STRONG>Cautions</STRONG>
+<P>Each PAG created uses two of the memory slots that the kernel uses to
+record the UNIX groups associated with a user. If none of these slots
+are available, the <B>pagsh</B> command fails. This is not a
+problem with most operating systems, which make at least 16 slots available
+per user.
+<P>In cells that do not use an AFS-modified login utility, use this command to
+obtain a PAG before issuing the <B>klog</B> command (or include the
+<B>-setpag</B> argument to the <B>klog</B> command). If a PAG
+is not acquired, the Cache Manager stores the token in a credential structure
+identified by local UID rather than PAG. This creates the potential
+security exposure described in the <B>Description</B> section.
+<P>If users of NFS client machines for which AFS is supported are to issue
+this command as part of authenticating with AFS, do not use the <B>fs
+exportafs</B> command's <B>-uidcheck on</B> argument to enable UID
+checking on NFS/AFS Translator machines. Enabling UID checking prevents
+this command from succeeding. See the reference page for the
+<B>klog</B> command.
+<P>If UID checking is not enabled on Translator machines, then by default it
+is possible to issue this command on a properly configured NFS client machine
+that is accessing AFS via the NFS/AFS Translator, assuming that the NFS client
+machine is a supported system type. The <B>pagsh</B> binary
+accessed by the NFS client must be owned by, and grant setuid privilege to,
+the local superuser <B>root</B>. The complete set of mode bits must
+be <B>-rwsr-xr-x</B>. This is not a requirement when the command is
+issued on AFS client machines.
+<P>However, if the translator machine's administrator has enabled UID
+checking by including the <B>-uidcheck on</B> argument to the <B>fs
+exportafs</B> command, the command fails with an error message similar to
+the following:
+<PRE>   
+   Warning: Remote setpag to <VAR>translator_machine</VAR>  has failed (err=8). . . 
+   setpag: Exec format error
+</PRE>
+<P><STRONG>Examples</STRONG>
+<P>In the following example, the issuer invokes the C shell instead of the
+default Bourne shell:
+<PRE>   # <B>pagsh -c /bin/csh</B>
+   
+</PRE>
+<P><STRONG>Privilege Required</STRONG>
+<P>None
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf139.htm#HDRFS_EXPORTAFS">fs exportafs</A>
+<P><A HREF="auarf200.htm#HDRKLOG">klog</A>
+<P><A HREF="auarf235.htm#HDRTOKENS">tokens</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf207.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf209.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

@@ -38,6 +38,12 @@
 /* The number of bytes in a long.  */
 #undef SIZEOF_LONG
 
+/* Define if you have the add_error_table function.  */
+#undef HAVE_ADD_ERROR_TABLE
+
+/* Define if you have the add_to_error_table function.  */
+#undef HAVE_ADD_TO_ERROR_TABLE
+
 /* Define if you have the connect function.  */
 #undef HAVE_CONNECT
 
@@ -52,6 +58,18 @@
 
 /* Define if you have the getprogname function.  */
 #undef HAVE_GETPROGNAME
+
+/* Define if you have the krb524_convert_creds_kdc function.  */
+#undef HAVE_KRB524_CONVERT_CREDS_KDC
+
+/* Define if you have the krb5_524_convert_creds function.  */
+#undef HAVE_KRB5_524_CONVERT_CREDS
+
+/* Define if you have the krb5_princ_size function.  */
+#undef HAVE_KRB5_PRINC_SIZE
+
+/* Define if you have the krb5_principal_get_comp_string function.  */
+#undef HAVE_KRB5_PRINCIPAL_GET_COMP_STRING
 
 /* Define if you have the mkstemp function.  */
 #undef HAVE_MKSTEMP
@@ -118,6 +136,9 @@
 
 /* Define if you have the <io.h> header file.  */
 #undef HAVE_IO_H
+
+/* Define if you have the <kerberosIV/krb.h> header file.  */
+#undef HAVE_KERBEROSIV_KRB_H
 
 /* Define if you have the <malloc.h> header file.  */
 #undef HAVE_MALLOC_H
@@ -287,6 +308,9 @@
 /* define if your sops.write_inode returns non-void */
 #undef WRITE_INODE_NOT_VOID
 
+/* define if your struct super_operations has alloc_inode */
+#undef STRUCT_SUPER_HAS_ALLOC_INODE
+
 /* define if your struct address_space has page_lock */
 #undef STRUCT_ADDRESS_SPACE_HAS_PAGE_LOCK
 
@@ -331,6 +355,9 @@
 
 /* define if your linux kernel has linux/syscall.h */
 #undef HAVE_KERNEL_LINUX_SYSCALL_H
+
+/* define if your linux kernel has linux/seq_file.h */
+#undef HAVE_KERNEL_LINUX_SEQ_FILE_H
 
 /* define if your struct task_struct has parent */
 #undef STRUCT_TASK_STRUCT_HAS_PARENT
@@ -407,6 +434,12 @@
 /* define if irix has memcpy and friends */
 #undef IRIX_HAS_MEM_FUNCS
 
+/* define if krb5_creds has keyblock */
+#undef HAVE_KRB5_CREDS_KEYBLOCK
+
+/* define if krb5_creds has session */
+#undef HAVE_KRB5_CREDS_SESSION
+
 #undef PACKAGE
 #undef VERSION
 #define RCSID(msg) \
@@ -457,6 +490,7 @@ static /**/const char *const rcsid[] = { (char *)rcsid, "\100(#)" msg }
 #undef STRUCT_TASK_STRUCT_HAS_SIGHAND
 #undef STRUCT_TASK_STRUCT_HAS_SIGMASK_LOCK
 #undef ssize_t
+#undef SIZEOF_TIME_T
 #undef HAVE_STRUCT_BUF
 #undef HAVE_ARPA_NAMESER_COMPAT_H
 /* glue for RedHat kernel bug */

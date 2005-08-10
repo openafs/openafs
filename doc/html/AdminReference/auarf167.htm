@@ -1,0 +1,74 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 4//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3672/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 3 Oct 2000 at 16:18:30                -->
+<META HTTP-EQUIV="updated" CONTENT="Tue, 03 Oct 2000 16:18:29">
+<META HTTP-EQUIV="review" CONTENT="Wed, 03 Oct 2001 16:18:29">
+<META HTTP-EQUIV="expires" CONTENT="Thu, 03 Oct 2002 16:18:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf166.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf168.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRFS_WHICHCELL" HREF="auarf002.htm#ToC_181">fs whichcell</A></H2>
+<A NAME="IDX5008"></A>
+<A NAME="IDX5009"></A>
+<A NAME="IDX5010"></A>
+<A NAME="IDX5011"></A>
+<A NAME="IDX5012"></A>
+<A NAME="IDX5013"></A>
+<A NAME="IDX5014"></A>
+<P><STRONG>Purpose</STRONG>
+<P>Returns the name of the cell to which a file or directory belongs
+<P><STRONG>Synopsis</STRONG>
+<PRE><B>fs whichcell</B> [<B>-path</B> &lt;<VAR>dir/file&nbsp;path</VAR>><SUP>+</SUP>]  [<B>-help</B>]
+   
+<B>fs whi </B> [<B>-p</B> &lt;<VAR>dir/file&nbsp;path</VAR>><SUP>+</SUP>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>Description</STRONG>
+<P>The <B>fs whichcell</B> command returns the name of the cell in which
+the volume that houses each indicated directory or file resides.
+<P>To display the file server machine on which the volume housing a directory
+or file resides, use the <B>fs whichcell</B> command. To display
+the cell membership of the local machine, use the <B>fs wscell</B>
+command.
+<P><STRONG>Options</STRONG>
+<DL>
+<P><DT><B>-path
+</B><DD>Names each AFS file or directory for which to return the cell
+membership. Partial pathnames are interpreted relative to the current
+working directory, which is also the default value if this argument is
+omitted.
+<P><DT><B>-help
+</B><DD>Prints the online help for this command. All other valid options
+are ignored.
+</DL>
+<P><STRONG>Output</STRONG>
+<P>The output includes a line for each directory or file, naming the cell to
+which the volume that houses the directory or file resides.
+<P><STRONG>Examples</STRONG>
+<P>The following example shows that the current working directory resides in a
+volume in the ABC Corporation cell:
+<PRE>   % <B>fs whichcell</B>
+   File . lives in cell 'abc.com'
+   
+</PRE>
+<P><STRONG>Privilege Required</STRONG>
+<P>None
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf168.htm#HDRFS_WSCELL">fs wscell</A>
+<P><A HREF="auarf166.htm#HDRFS_WHEREIS">fs whereis</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf166.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf168.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

@@ -11,12 +11,19 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/audit/audit.c,v 1.8 2003/07/15 23:14:38 shadow Exp $");
+    ("$Header: /cvs/openafs/src/audit/audit.c,v 1.8.2.6 2005/07/29 14:32:10 shadow Exp $");
 
 #include <fcntl.h>
 #include <stdarg.h>
+#include <string.h>
 #ifdef AFS_AIX32_ENV
 #include <sys/audit.h>
+#else
+#define AUDIT_OK 0
+#define AUDIT_FAIL 1
+#define AUDIT_FAIL_AUTH 2
+#define AUDIT_FAIL_ACCESS 3
+#define AUDIT_FAIL_PRIV 4
 #endif /* AFS_AIX32_ENV */
 #include <errno.h>
 
@@ -35,35 +42,30 @@ int bufferLen;
 int osi_audit_all = (-1);	/* Not determined yet */
 int osi_echo_trail = (-1);
 
-#ifdef AFS_AIX_ENV /** all these functions are only defined for AIX */
+FILE *auditout = NULL;
 
-#ifndef	AFS_OSF_ENV
-/*
- * These variadic functions work under AIX, and not all systems (osf1)
- */
-/* ************************************************************************** */
-/* AIX requires a buffer filled with values to record with each audit event.
- * aixmakebuf creates that buffer from the variable list of values we are given.
- * ************************************************************************** */
-static
-aixmakebuf(audEvent, vaList)
-     char *audEvent;
-     char *vaList;
+int osi_audit_check();
+
+static void
+audmakebuf(char *audEvent, va_list vaList)
 {
+#ifdef AFS_AIX32_ENV
     int code;
+#endif
     int vaEntry;
     int vaInt;
     afs_int32 vaLong;
     char *vaStr;
-    char *vaLst;
-    char hname[20];
+    va_list vaLst;
     struct AFSFid *vaFid;
 
     vaEntry = va_arg(vaList, int);
     while (vaEntry != AUD_END) {
 	switch (vaEntry) {
 	case AUD_STR:		/* String */
-	    vaStr = (char *)va_arg(vaList, int);
+        case AUD_NAME:          /* Name */
+        case AUD_ACL:           /* ACL */
+	    vaStr = (char *)va_arg(vaList, char *);
 	    if (vaStr) {
 		strcpy(bufferPtr, vaStr);
 		bufferPtr += strlen(vaStr) + 1;
@@ -73,6 +75,7 @@ aixmakebuf(audEvent, vaList)
 	    }
 	    break;
 	case AUD_INT:		/* Integer */
+        case AUD_ID:            /* ViceId */
 	    vaInt = va_arg(vaList, int);
 	    *(int *)bufferPtr = vaInt;
 	    bufferPtr += sizeof(vaInt);
@@ -85,11 +88,11 @@ aixmakebuf(audEvent, vaList)
 	    bufferPtr += sizeof(vaLong);
 	    break;
 	case AUD_LST:		/* Ptr to another list */
-	    vaLst = (char *)va_arg(vaList, int);
-	    aixmakebuf(audEvent, vaLst);
+	    vaLst = va_arg(vaList, va_list);
+	    audmakebuf(audEvent, vaLst);
 	    break;
 	case AUD_FID:		/* AFSFid - contains 3 entries */
-	    vaFid = (struct AFSFid *)va_arg(vaList, int);
+	    vaFid = (struct AFSFid *)va_arg(vaList, struct AFSFid *);
 	    if (vaFid) {
 		memcpy(bufferPtr, vaFid, sizeof(struct AFSFid));
 	    } else {
@@ -105,14 +108,13 @@ aixmakebuf(audEvent, vaList)
 	    {
 		struct AFSCBFids *Fids;
 
-		Fids = (struct AFSCBFids *)va_arg(vaList, int);
+		Fids = (struct AFSCBFids *)va_arg(vaList, struct AFSCBFids *);
 		if (Fids && Fids->AFSCBFids_len) {
 		    *((u_int *) bufferPtr) = Fids->AFSCBFids_len;
 		    bufferPtr += sizeof(u_int);
 		    memcpy(bufferPtr, Fids->AFSCBFids_val,
 			   sizeof(struct AFSFid));
 		} else {
-		    struct AFSFid dummy;
 		    *((u_int *) bufferPtr) = 0;
 		    bufferPtr += sizeof(u_int);
 		    memset(bufferPtr, 0, sizeof(struct AFSFid));
@@ -134,106 +136,126 @@ aixmakebuf(audEvent, vaList)
     }				/* end while */
 }
 
-static
-printbuf(audEvent, errCode, vaList)
-     char *audEvent;
-     afs_int32 errCode;
-     char *vaList;
+static void
+printbuf(FILE *out, int rec, char *audEvent, afs_int32 errCode, va_list vaList)
 {
     int vaEntry;
     int vaInt;
     afs_int32 vaLong;
     char *vaStr;
-    char *vaLst;
-    char hname[20];
+    va_list vaLst;
     struct AFSFid *vaFid;
     struct AFSCBFids *vaFids;
+    int num = LogThreadNum();
+    struct in_addr hostAddr;
+    time_t currenttime;
+    char *timeStamp;
+    char tbuffer[26];
+    
+    /* Don't print the timestamp or thread id if we recursed */
+    if (rec == 0) {
+	currenttime = time(0);
+	timeStamp = afs_ctime(&currenttime, tbuffer,
+			      sizeof(tbuffer));
+	timeStamp[24] = ' ';   /* ts[24] is the newline, 25 is the null */
+	fprintf(out, timeStamp);
 
-    if (osi_echo_trail < 0)
-	osi_audit_check();
-    if (!osi_echo_trail)
-	return;
-
+	if (num > -1)
+	    fprintf(out, "[%d] ", num);
+    }
+    
     if (strcmp(audEvent, "VALST") != 0)
-	printf("%s %d ", audEvent, errCode);
+	fprintf(out,  "EVENT %s CODE %d ", audEvent, errCode);
 
     vaEntry = va_arg(vaList, int);
     while (vaEntry != AUD_END) {
 	switch (vaEntry) {
 	case AUD_STR:		/* String */
-	    vaStr = (char *)va_arg(vaList, int);
+	    vaStr = (char *)va_arg(vaList, char *);
 	    if (vaStr)
-		printf("%s ", vaStr);
+		fprintf(out,  "STR %s ", vaStr);
 	    else
-		printf("<null>", vaStr);
+		fprintf(out,  "STR <null>");
+	    break;
+	case AUD_NAME:		/* Name */
+	    vaStr = (char *)va_arg(vaList, char *);
+	    if (vaStr)
+		fprintf(out,  "NAME %s ", vaStr);
+	    else
+		fprintf(out,  "NAME <null>");
+	    break;
+	case AUD_ACL:		/* ACL */
+	    vaStr = (char *)va_arg(vaList, char *);
+	    if (vaStr)
+		fprintf(out,  "ACL %s ", vaStr);
+	    else
+		fprintf(out,  "ACL <null>");
 	    break;
 	case AUD_INT:		/* Integer */
 	    vaInt = va_arg(vaList, int);
-	    printf("%d ", vaInt);
+	    fprintf(out,  "INT %d ", vaInt);
+	    break;
+	case AUD_ID:		/* ViceId */
+	    vaInt = va_arg(vaList, int);
+	    fprintf(out,  "ID %d ", vaInt);
 	    break;
 	case AUD_DATE:		/* Date    */
+	    vaLong = va_arg(vaList, afs_int32);
+	    fprintf(out, "DATE %u ", vaLong);
+	    break;
 	case AUD_HOST:		/* Host ID */
 	    vaLong = va_arg(vaList, afs_int32);
-	    printf("%u ", vaLong);
+            hostAddr.s_addr = vaLong;
+	    fprintf(out, "HOST %s ", inet_ntoa(hostAddr));
 	    break;
 	case AUD_LONG:		/* afs_int32    */
 	    vaLong = va_arg(vaList, afs_int32);
-	    printf("%d ", vaLong);
+	    fprintf(out, "LONG %d ", vaLong);
 	    break;
 	case AUD_LST:		/* Ptr to another list */
-	    vaLst = (char *)va_arg(vaList, int);
-	    printbuf("VALST", 0, vaLst);
+	    vaLst = va_arg(vaList, va_list);
+	    printbuf(out, 1, "VALST", 0, vaLst);
 	    break;
 	case AUD_FID:		/* AFSFid - contains 3 entries */
-	    vaFid = (struct AFSFid *)va_arg(vaList, int);
+	    vaFid = va_arg(vaList, struct AFSFid *);
 	    if (vaFid)
-		printf("%u:%u:%u ", vaFid->Volume, vaFid->Vnode,
+		fprintf(out, "FID %u:%u:%u ", vaFid->Volume, vaFid->Vnode,
 		       vaFid->Unique);
 	    else
-		printf("%u:%u:%u ", 0, 0, 0);
+		fprintf(out, "FID %u:%u:%u ", 0, 0, 0);
 	    break;
 	case AUD_FIDS:		/* array of Fids */
-	    vaFids = (struct AFSCBFids *)va_arg(vaList, int);
+	    vaFids = va_arg(vaList, struct AFSCBFids *);
 	    vaFid = NULL;
 
-	    if (vaFids)
-		vaFid = vaFids->AFSCBFids_val;
-	    if (vaFid)
-		printf("%u %u:%u:%u ", vaFids->AFSCBFids_len, vaFid->Volume,
-		       vaFid->Vnode, vaFid->Unique);
-	    else
-		printf("0 0:0:0 ");
+	    if (vaFids) {
+                int i;
+                if (vaFid)
+                    fprintf(out, "FIDS %u FID %u:%u:%u ", vaFids->AFSCBFids_len, vaFid->Volume,
+                             vaFid->Vnode, vaFid->Unique);
+                else
+                    fprintf(out, "FIDS 0 FID 0:0:0 ");
+
+                for ( i = 1; i < vaFids->AFSCBFids_len; i++ ) {
+                    vaFid = vaFids->AFSCBFids_val;
+                    if (vaFid)
+                        fprintf(out, "FID %u:%u:%u ", vaFid->Volume,
+                                 vaFid->Vnode, vaFid->Unique);
+                    else
+                        fprintf(out, "FID 0:0:0 ");
+                }
+            }
 	    break;
 	default:
-	    printf("--badval-- ");
+	    fprintf(out, "--badval-- ");
 	    break;
 	}			/* end switch */
 	vaEntry = va_arg(vaList, int);
     }				/* end while */
 
     if (strcmp(audEvent, "VALST") != 0)
-	printf("\n");
+	fprintf(out, "\n");
 }
-#else
-static
-aixmakebuf(audEvent, vaList)
-     char *audEvent;
-     va_list vaList;
-{
-    return;
-}
-
-static
-printbuf(audEvent, errCode, vaList)
-     char *audEvent;
-     long errCode;
-     va_list vaList;
-{
-    return;
-}
-
-#endif
-
 
 /* ************************************************************************** */
 /* The routine that acually does the audit call.
@@ -246,9 +268,11 @@ osi_audit(char *audEvent,	/* Event name (15 chars or less) */
 #ifdef AFS_AIX32_ENV
     afs_int32 code;
     afs_int32 err;
+#endif
     int result;
 
     va_list vaList;
+#ifdef AFS_AIX32_ENV
     static struct Lock audbuflock = { 0, 0, 0, 0,
 #ifdef AFS_PTHREAD_ENV
 	PTHREAD_MUTEX_INITIALIZER,
@@ -257,11 +281,12 @@ osi_audit(char *audEvent,	/* Event name (15 chars or less) */
 #endif /* AFS_PTHREAD_ENV */
     };
     static char BUFFER[32768];
+#endif
 
-    if (osi_audit_all < 0)
+    if ((osi_audit_all < 0) || (osi_echo_trail < 0))
 	osi_audit_check();
-    if (!osi_audit_all)
-	return;
+    if (!osi_audit_all && !auditout)
+	return 0;
 
     switch (errCode) {
     case 0:
@@ -278,7 +303,6 @@ osi_audit(char *audEvent,	/* Event name (15 chars or less) */
 	break;
     case VL_PERM:		/* vlserver.h  */
     case BUDB_NOTPERMITTED:	/* budb_errs.h */
-/*  case KRB_RD_AP_UNAUTHOR : */
     case BZACCESS:		/* bnode.h     */
     case VOLSERBAD_ACCESS:	/* volser.h    */
 	result = AUDIT_FAIL_PRIV;
@@ -288,6 +312,7 @@ osi_audit(char *audEvent,	/* Event name (15 chars or less) */
 	break;
     }
 
+#ifdef AFS_AIX32_ENV
     ObtainWriteLock(&audbuflock);
     bufferPtr = BUFFER;
 
@@ -296,11 +321,15 @@ osi_audit(char *audEvent,	/* Event name (15 chars or less) */
     bufferPtr += sizeof(errCode);
 
     va_start(vaList, errCode);
-    aixmakebuf(audEvent, vaList);
+    audmakebuf(audEvent, vaList);
+#endif
 
-    va_start(vaList, errCode);
-    printbuf(audEvent, errCode, vaList);
+    if (osi_echo_trail) {
+	va_start(vaList, errCode);
+	printbuf(stdout, 0, audEvent, errCode, vaList);
+    }
 
+#ifdef AFS_AIX32_ENV
     bufferLen = (int)((afs_int32) bufferPtr - (afs_int32) & BUFFER[0]);
     code = auditlog(audEvent, result, BUFFER, bufferLen);
 #ifdef notdef
@@ -312,7 +341,15 @@ osi_audit(char *audEvent,	/* Event name (15 chars or less) */
     }
 #endif /* notdef */
     ReleaseWriteLock(&audbuflock);
+#else
+    if (auditout) {
+	va_start(vaList, errCode);
+	printbuf(auditout, 0, audEvent, errCode, vaList);
+	fflush(auditout);
+    }
 #endif
+
+    return 0;
 }
 
 /* ************************************************************************** */
@@ -330,11 +367,10 @@ osi_auditU(struct rx_call *call, char *audEvent, int errCode, ...)
     afs_int32 hostId;
     va_list vaList;
 
-
     if (osi_audit_all < 0)
 	osi_audit_check();
-    if (!osi_audit_all)
-	return;
+    if (!osi_audit_all && !auditout)
+	return 0;
 
     strcpy(afsName, "--Unknown--");
     hostId = 0;
@@ -342,42 +378,69 @@ osi_auditU(struct rx_call *call, char *audEvent, int errCode, ...)
     if (call) {
 	conn = rx_ConnectionOf(call);	/* call -> conn) */
 	if (conn) {
-	    secClass = rx_SecurityClassOf(conn);	/* conn -> securityIndex */
+            secClass = rx_SecurityClassOf(conn);	/* conn -> securityIndex */
 	    if (secClass == 0) {	/* unauthenticated */
 		osi_audit("AFS_Aud_Unauth", (-1), AUD_STR, audEvent, AUD_END);
 		strcpy(afsName, "--UnAuth--");
 	    } else if (secClass == 2) {	/* authenticated */
-		code =
-		    rxkad_GetServerInfo(conn, NULL, NULL, afsName, NULL, NULL,
+                char tcell[MAXKTCREALMLEN];
+                char name[MAXKTCNAMELEN];
+                char inst[MAXKTCNAMELEN];
+                char vname[256];
+                int  ilen, clen;
+
+                code =
+		    rxkad_GetServerInfo(conn, NULL, NULL, name, inst, tcell,
 					NULL);
 		if (code) {
-		    osi_audit("AFS_Aud_NoAFSId", (-1), AUD_STR, audEvent,
-			      AUD_END);
+		    osi_audit("AFS_Aud_NoAFSId", (-1), AUD_STR, audEvent, AUD_END);
 		    strcpy(afsName, "--NoName--");
-		}
+		} else {
+                    strncpy(vname, name, sizeof(vname));
+                    if ((ilen = strlen(inst))) {
+                        if (strlen(vname) + 1 + ilen >= sizeof(vname))
+                            goto done;
+                        strcat(vname, ".");
+                        strcat(vname, inst);
+                    }
+                    if ((clen = strlen(tcell))) {
+#if defined(AFS_ATHENA_STDENV) || defined(AFS_KERBREALM_ENV)
+                        static char local_realm[AFS_REALM_SZ] = "";
+                        if (!local_realm[0]) {
+                            if (afs_krb_get_lrealm(local_realm, 0) != 0 /*KSUCCESS*/)
+                                strncpy(local_realm, "UNKNOWN.LOCAL.REALM", AFS_REALM_SZ);
+                        }
+                        if (strcasecmp(local_realm, tcell)) {
+                            if (strlen(vname) + 1 + clen >= sizeof(vname))
+                                goto done;
+                            strcat(vname, "@");
+                            strcat(vname, tcell);
+                        }
+#endif
+                    }
+                    strcpy(afsName, vname);
+                }
 	    } else {		/* Unauthenticated & unknown */
-
-		osi_audit("AFS_Aud_UnknSec", (-1), AUD_STR, audEvent,
-			  AUD_END);
+		osi_audit("AFS_Aud_UnknSec", (-1), AUD_STR, audEvent, AUD_END);
+                strcpy(afsName, "--Unknown--");
 	    }
-
+	done:
 	    peer = rx_PeerOf(conn);	/* conn -> peer */
 	    if (peer)
 		hostId = rx_HostOf(peer);	/* peer -> host */
 	    else
 		osi_audit("AFS_Aud_NoHost", (-1), AUD_STR, audEvent, AUD_END);
 	} else {		/* null conn */
-
 	    osi_audit("AFS_Aud_NoConn", (-1), AUD_STR, audEvent, AUD_END);
 	}
     } else {			/* null call */
-
 	osi_audit("AFS_Aud_NoCall", (-1), AUD_STR, audEvent, AUD_END);
     }
-
     va_start(vaList, errCode);
-    osi_audit(audEvent, errCode, AUD_STR, afsName, AUD_HOST, hostId, AUD_LST,
-	      vaList, AUD_END);
+    osi_audit(audEvent, errCode, AUD_NAME, afsName, AUD_HOST, hostId, 
+              AUD_LST, vaList, AUD_END);
+
+    return 0;
 }
 
 /* ************************************************************************** */
@@ -418,21 +481,13 @@ osi_audit_check()
 
     /* Now set whether we audit all events from here on out */
     osi_audit_all = onoff;
-}
 
-
-#else /* ! AFS_AIX_ENV */
-
-int
-osi_audit(char *audEvent, afs_int32 errCode, ...)
-{
     return 0;
 }
 
 int
-osi_auditU(struct rx_call *call, char *audEvent, int errCode, ...)
+osi_audit_file(FILE *out)
 {
+    auditout = out;
     return 0;
 }
-
-#endif

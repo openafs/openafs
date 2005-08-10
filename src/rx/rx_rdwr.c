@@ -15,7 +15,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_rdwr.c,v 1.21.2.4 2005/04/14 02:31:44 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_rdwr.c,v 1.21.2.5 2005/05/30 03:41:45 jaltman Exp $");
 
 #ifdef KERNEL
 #ifndef UKERNEL
@@ -107,18 +107,15 @@ rxi_ReadProc(register struct rx_call *call, register char *buf,
 {
     register struct rx_packet *cp = call->currentPacket;
     register struct rx_packet *rp;
-    register struct rx_packet *nxp;	/* Next packet pointer, for queue_Scan */
     register int requestCount;
     register unsigned int t;
+
 /* XXXX took out clock_NewTime from here.  Was it needed? */
     requestCount = nbytes;
 
     /* Free any packets from the last call to ReadvProc/WritevProc */
-    if (!queue_IsEmpty(&call->iovq)) {
-	for (queue_Scan(&call->iovq, rp, nxp, rx_packet)) {
-	    queue_Remove(rp);
-	    rxi_FreePacket(rp);
-	}
+    if (queue_IsNotEmpty(&call->iovq)) {
+        rxi_FreePackets(0, &call->iovq);
     }
 
     do {
@@ -310,12 +307,7 @@ rx_ReadProc(struct rx_call *call, char *buf, int nbytes)
      * ReadvProc/WritevProc.
      */
     if (!queue_IsEmpty(&call->iovq)) {
-	register struct rx_packet *rp;
-	register struct rx_packet *nxp;
-	for (queue_Scan(&call->iovq, rp, nxp, rx_packet)) {
-	    queue_Remove(rp);
-	    rxi_FreePacket(rp);
-	}
+        rxi_FreePackets(0, &call->iovq);
     }
 
     /*
@@ -362,12 +354,7 @@ rx_ReadProc32(struct rx_call *call, afs_int32 * value)
      * ReadvProc/WritevProc.
      */
     if (!queue_IsEmpty(&call->iovq)) {
-	register struct rx_packet *rp;
-	register struct rx_packet *nxp;
-	for (queue_Scan(&call->iovq, rp, nxp, rx_packet)) {
-	    queue_Remove(rp);
-	    rxi_FreePacket(rp);
-	}
+	rxi_FreePackets(0, &call->iovq);
     }
 
     /*
@@ -570,7 +557,6 @@ rxi_ReadvProc(struct rx_call *call, struct iovec *iov, int *nio, int maxio,
 	      int nbytes)
 {
     struct rx_packet *rp;
-    struct rx_packet *nxp;	/* Next packet pointer, for queue_Scan */
     int requestCount;
     int nextio;
 
@@ -578,9 +564,8 @@ rxi_ReadvProc(struct rx_call *call, struct iovec *iov, int *nio, int maxio,
     nextio = 0;
 
     /* Free any packets from the last call to ReadvProc/WritevProc */
-    for (queue_Scan(&call->iovq, rp, nxp, rx_packet)) {
-	queue_Remove(rp);
-	rxi_FreePacket(rp);
+    if (queue_IsNotEmpty(&call->iovq)) {
+        rxi_FreePackets(0, &call->iovq);
     }
 
     if (call->mode == RX_MODE_SENDING) {
@@ -657,17 +642,12 @@ rxi_WriteProc(register struct rx_call *call, register char *buf,
 {
     struct rx_connection *conn = call->conn;
     register struct rx_packet *cp = call->currentPacket;
-    register struct rx_packet *tp;	/* Temporary packet pointer */
-    register struct rx_packet *nxp;	/* Next packet pointer, for queue_Scan */
     register unsigned int t;
     int requestCount = nbytes;
 
     /* Free any packets from the last call to ReadvProc/WritevProc */
-    if (!queue_IsEmpty(&call->iovq)) {
-	for (queue_Scan(&call->iovq, tp, nxp, rx_packet)) {
-	    queue_Remove(tp);
-	    rxi_FreePacket(tp);
-	}
+    if (queue_IsNotEmpty(&call->iovq)) {
+	rxi_FreePackets(0, &call->iovq);
     }
 
     if (call->mode != RX_MODE_SENDING) {
@@ -833,13 +813,8 @@ rx_WriteProc(struct rx_call *call, char *buf, int nbytes)
      * RX_CALL_IOVEC_WAIT is always cleared before returning from
      * ReadvProc/WritevProc.
      */
-    if (!queue_IsEmpty(&call->iovq)) {
-	register struct rx_packet *rp;
-	register struct rx_packet *nxp;
-	for (queue_Scan(&call->iovq, rp, nxp, rx_packet)) {
-	    queue_Remove(rp);
-	    rxi_FreePacket(rp);
-	}
+    if (queue_IsNotEmpty(&call->iovq)) {
+	rxi_FreePackets(0, &call->iovq);
     }
 
     /*
@@ -885,13 +860,8 @@ rx_WriteProc32(register struct rx_call *call, register afs_int32 * value)
      * RX_CALL_IOVEC_WAIT is always cleared before returning from
      * ReadvProc/WritevProc.
      */
-    if (!queue_IsEmpty(&call->iovq)) {
-	register struct rx_packet *rp;
-	register struct rx_packet *nxp;
-	for (queue_Scan(&call->iovq, rp, nxp, rx_packet)) {
-	    queue_Remove(rp);
-	    rxi_FreePacket(rp);
-	}
+    if (queue_IsNotEmpty(&call->iovq)) {
+	rxi_FreePackets(0, &call->iovq);
     }
 
     /*
@@ -938,8 +908,6 @@ rxi_WritevAlloc(struct rx_call *call, struct iovec *iov, int *nio, int maxio,
 {
     struct rx_connection *conn = call->conn;
     struct rx_packet *cp = call->currentPacket;
-    struct rx_packet *tp;	/* temporary packet pointer */
-    struct rx_packet *nxp;	/* Next packet pointer, for queue_Scan */
     int requestCount;
     int nextio;
     /* Temporary values, real work is done in rxi_WritevProc */
@@ -952,9 +920,8 @@ rxi_WritevAlloc(struct rx_call *call, struct iovec *iov, int *nio, int maxio,
     nextio = 0;
 
     /* Free any packets from the last call to ReadvProc/WritevProc */
-    for (queue_Scan(&call->iovq, tp, nxp, rx_packet)) {
-	queue_Remove(tp);
-	rxi_FreePacket(tp);
+    if (queue_IsNotEmpty(&call->iovq)) {
+        rxi_FreePackets(0, &call->iovq);
     }
 
     if (call->mode != RX_MODE_SENDING) {
@@ -1066,8 +1033,6 @@ int
 rxi_WritevProc(struct rx_call *call, struct iovec *iov, int nio, int nbytes)
 {
     struct rx_packet *cp = call->currentPacket;
-    register struct rx_packet *tp;	/* Temporary packet pointer */
-    register struct rx_packet *nxp;	/* Next packet pointer, for queue_Scan */
     int nextio;
     int requestCount;
     struct rx_queue tmpq;
@@ -1092,14 +1057,11 @@ rxi_WritevProc(struct rx_call *call, struct iovec *iov, int nio, int nbytes)
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
 
     if (call->error) {
-	for (queue_Scan(&call->iovq, tp, nxp, rx_packet)) {
-	    queue_Remove(tp);
-	    rxi_FreePacket(tp);
-	}
 	if (cp) {
-	    rxi_FreePacket(cp);
+	    queue_Prepend(&call->iovq, cp);
 	    cp = call->currentPacket = NULL;
 	}
+	rxi_FreePackets(0, &call->iovq);
 	return 0;
     }
 
@@ -1126,10 +1088,7 @@ rxi_WritevProc(struct rx_call *call, struct iovec *iov, int nio, int nbytes)
 		if (queue_IsEmpty(&call->iovq)) {
 		    call->error = RX_PROTOCOL_ERROR;
 		    cp = call->currentPacket = NULL;
-		    for (queue_Scan(&tmpq, tp, nxp, rx_packet)) {
-			queue_Remove(tp);
-			rxi_FreePacket(tp);
-		    }
+		    rxi_FreePackets(0, &tmpq);
 		    return 0;
 		}
 		cp = queue_First(&call->iovq, rx_packet);
@@ -1150,14 +1109,11 @@ rxi_WritevProc(struct rx_call *call, struct iovec *iov, int nio, int nbytes)
 	    if (iov[nextio].iov_base != call->curpos
 		|| iov[nextio].iov_len > (int)call->curlen) {
 		call->error = RX_PROTOCOL_ERROR;
-		for (queue_Scan(&tmpq, tp, nxp, rx_packet)) {
-		    queue_Remove(tp);
-		    rxi_FreePacket(tp);
-		}
 		if (cp) {
-		    rxi_FreePacket(cp);
+		    queue_Prepend(&tmpq, cp);
 		    call->currentPacket = NULL;
 		}
+		rxi_FreePackets(0, &tmpq);
 		return 0;
 	    }
 	    nbytes -= iov[nextio].iov_len;
@@ -1178,10 +1134,7 @@ rxi_WritevProc(struct rx_call *call, struct iovec *iov, int nio, int nbytes)
 
     /* Move the packets from the temporary queue onto the transmit queue.
      * We may end up with more than call->twind packets on the queue. */
-    for (queue_Scan(&tmpq, tp, nxp, rx_packet)) {
-	queue_Remove(tp);
-	queue_Append(&call->tq, tp);
-    }
+    queue_SpliceAppend(&call->tq, &tmpq);
 
     if (!(call->flags & (RX_CALL_FAST_RECOVER | RX_CALL_FAST_RECOVER_WAIT))) {
 	rxi_Start(0, call, 0, 0);
@@ -1231,13 +1184,10 @@ void
 rxi_FlushWrite(register struct rx_call *call)
 {
     register struct rx_packet *cp = call->currentPacket;
-    register struct rx_packet *tp;	/* Temporary packet pointer */
-    register struct rx_packet *nxp;	/* Next packet pointer, for queue_Scan */
 
     /* Free any packets from the last call to ReadvProc/WritevProc */
-    for (queue_Scan(&call->iovq, tp, nxp, rx_packet)) {
-	queue_Remove(tp);
-	rxi_FreePacket(tp);
+    if (queue_IsNotEmpty(&call->iovq)) {
+	rxi_FreePackets(0, &call->iovq);
     }
 
     if (call->mode == RX_MODE_SENDING) {

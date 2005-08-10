@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/log/tokens.c,v 1.6 2003/07/15 23:15:41 shadow Exp $");
+    ("$Header: /cvs/openafs/src/log/tokens.c,v 1.6.2.1 2005/07/11 19:46:16 shadow Exp $");
 
 #include <stdio.h>
 #ifdef	AFS_AIX32_ENV
@@ -46,10 +46,8 @@ RCSID
 
 #include "AFS_component_version_number.c"
 
-main(argc, argv)
-     int argc;
-     char **argv;
-
+int
+main(int argc, char **argv)
 {				/*Main program */
     int cellNum;		/*Cell entry number */
     int rc;			/*Return value from U_CellGetLocalTokens */

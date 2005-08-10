@@ -1,0 +1,166 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 4//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3672/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 3 Oct 2000 at 16:18:30                -->
+<META HTTP-EQUIV="updated" CONTENT="Tue, 03 Oct 2000 16:18:29">
+<META HTTP-EQUIV="review" CONTENT="Wed, 03 Oct 2001 16:18:29">
+<META HTTP-EQUIV="expires" CONTENT="Thu, 03 Oct 2002 16:18:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf267.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf269.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRVOS_MOVE" HREF="auarf002.htm#ToC_282">vos move</A></H2>
+<A NAME="IDX5766"></A>
+<A NAME="IDX5767"></A>
+<A NAME="IDX5768"></A>
+<A NAME="IDX5769"></A>
+<A NAME="IDX5770"></A>
+<A NAME="IDX5771"></A>
+<A NAME="IDX5772"></A>
+<A NAME="IDX5773"></A>
+<A NAME="IDX5774"></A>
+<P><STRONG>Purpose</STRONG>
+<P>Moves a read/write volume to another site
+<P><STRONG>Synopsis</STRONG>
+<PRE><B>vos move -id</B> &lt;<VAR>volume&nbsp;name&nbsp;or&nbsp;ID</VAR>>  <B>-fromserver</B> &lt;<VAR>machine&nbsp;name&nbsp;on&nbsp;source</VAR>> 
+         <B>-frompartition</B> &lt;<VAR>partition&nbsp;name&nbsp;on&nbsp;source</VAR>> 
+         <B>-toserver</B> &lt;<VAR>machine&nbsp;name&nbsp;on&nbsp;destination</VAR>>  
+         <B>-topartition</B> &lt;<VAR>partition&nbsp;name&nbsp;on&nbsp;destination</VAR>> 
+         [<B>-cell</B> &lt;<VAR>cell&nbsp;name</VAR>>]  [<B>-noauth</B>]  [<B>-localauth</B>]  [<B>-verbose</B>]  [<B>-help</B>] 
+    
+<B>vos m -i</B> &lt;<VAR>volume&nbsp;name&nbsp;or&nbsp;ID</VAR>>  <B>-froms</B> &lt;<VAR>machine&nbsp;name&nbsp;on&nbsp;source</VAR>> 
+      <B>-fromp</B> &lt;<VAR>partition&nbsp;name&nbsp;on&nbsp;source</VAR>>  <B>-tos</B> &lt;<VAR>machine&nbsp;name&nbsp;on&nbsp;destination</VAR>> 
+      <B>-top</B> &lt;<VAR>partition&nbsp;name&nbsp;on&nbsp;destination</VAR>>  [<B>-c</B> &lt;<VAR>cell&nbsp;name</VAR>>]  
+      [<B>-n</B>]  [<B>-l</B>]  [<B>-v</B>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>Description</STRONG>
+<P>The <B>vos move</B> command moves the indicated read/write volume from
+its current site (specified with the <B>-fromserver</B> and
+<B>-frompartition</B> arguments) to the destination site (specified with
+the <B>-toserver</B> and <B>-topartition</B> arguments). This
+command automatically removes the backup copy from the current site, if it
+exists. To create a new backup volume at the destination site, use the
+<B>vos backup</B> command.
+<P>This command works on read/write volumes only. To move a read-only
+volume, use the <B>vos addsite</B> and <B>vos release</B> commands to
+define a new read-only site and release the volume contents to it, and then
+use the <B>vos remove</B> command to remove the previous read-only
+volume's definition from the Volume Location Database (VLDB) and data
+from the partition. To move a backup volume, use this command to move
+its read/write source and then issue the <B>vos backup</B> command.
+<P>Before executing this command, the <B>vos</B> command interpreter
+initiates a check that the destination partition contains enough space to
+house the volume being moved. If there is not enough space, the move
+operation is not attempted and the following message appears:
+<PRE>   vos: no space on target partition <VAR>dest_part</VAR> to move volume <VAR>volume</VAR>
+   
+</PRE>
+<P><STRONG>Cautions</STRONG>
+<P>Unless there is a compelling reason, do not interrupt a <B>vos move</B>
+command in progress. Interrupting a move can result in one or more of
+the following inconsistent states:
+<UL>
+<P><LI>There are two versions of the volume, one at the source site and one at
+the destination site. (If this happens, retain the version identified
+by the VLDB and use the <B>vos zap</B> command to remove the other
+version.)
+<P><LI>The backup version of the volume is stranded at the old site. (If
+this happens, use the <B>vos zap</B> command to remove it.)
+<P><LI>The volume is off-line. (If this happens, run the <B>bos
+salvage</B> command to bring it back on line.)
+</UL>
+<P>If the &lt;<B>Ctrl-c</B>> interrupt signal is pressed while a <B>vos
+move</B> operation is executing, the following message warns of the
+consequences and requests confirmation of the kill signal:
+<PRE>   SIGINT handler: vos move operation in progress
+   WARNING: may leave AFS storage and metadata in indeterminate state
+   enter second control-c to exit
+   
+</PRE>
+<P>To confirm termination of the operation, press &lt;<B>Ctrl-c</B>> a
+second time; press any other key to continue the operation.
+<P><STRONG>Options</STRONG>
+<DL>
+<P><DT><B>-id
+</B><DD>Specifies either the complete name or volume ID number of a read/write
+volume.
+<P><DT><B>-fromserver
+</B><DD>Identifies the file server machine where the volume currently
+resides. Provide the machine's IP address or its host name (either
+fully qualified or using an unambiguous abbreviation). For details, see
+the introductory reference page for the <B>vos</B> command suite.
+<P><DT><B>-frompartition
+</B><DD>Names the partition where the volume currently resides. Provide the
+full partition name (for, example, <B>/vicepa</B>) or one of the
+abbreviated forms described on the introductory <B>vos</B> reference
+page.
+<P><DT><B>-toserver
+</B><DD>Identifies the file server machine to which to move the volume.
+Provide the machine's IP address or its host name (either fully qualified
+or using an unambiguous abbreviation). For details, see the
+introductory reference page for the <B>vos</B> command suite.
+<P><DT><B>-topartition
+</B><DD>Names the partition to which to move the volume. Provide the full
+partition name (for, example, <B>/vicepa</B>) or one of the abbreviated
+forms described on the introductory <B>vos</B> reference page.
+<P><DT><B>-cell
+</B><DD>Names the cell in which to run the command. Do not combine this
+argument with the <B>-localauth</B> flag. For more details, see the
+introductory <B>vos</B> reference page.
+<P><DT><B>-noauth
+</B><DD>Assigns the unprivileged identity <B>anonymous</B> to the
+issuer. Do not combine this flag with the <B>-localauth</B>
+flag. For more details, see the introductory <B>vos</B> reference
+page.
+<P><DT><B>-localauth
+</B><DD>Constructs a server ticket using a key from the local
+<B>/usr/afs/etc/KeyFile</B> file. The <B>vos</B> command
+interpreter presents it to the Volume Server and Volume Location Server during
+mutual authentication. Do not combine this flag with the
+<B>-cell</B> argument or <B>-noauth</B> flag. For more details,
+see the introductory <B>vos</B> reference page.
+<P><DT><B>-verbose
+</B><DD>Produces on the standard output stream a detailed trace of the
+command's execution. If this argument is omitted, only warnings
+and error messages appear.
+<P><DT><B>-help
+</B><DD>Prints the online help for this command. All other valid options
+are ignored.
+</DL>
+<P><STRONG>Examples</STRONG>
+<P>The following example moves the volume <B>user.smith</B> from
+the <B>/vicepb</B> partition on the file server machine
+<B>fs3.abc.com</B> to the <B>/vicepg</B> partition on
+the file server machine <B>fs7.abc.com</B>.
+<PRE>   % <B>vos move -id user.smith -fromserver fs3.abc.com -frompartition b</B>  \
+              <B>-toserver fs7.abc.com -topartition g</B>
+   
+</PRE>
+<P><STRONG>Privilege Required</STRONG>
+<P>The issuer must be listed in the <B>/usr/afs/etc/UserList</B> file on
+the machines specified with the <B>-toserver</B> and
+<B>-fromserver</B> arguments and on each database server machine.
+If the <B>-localauth</B> flag is included, the issuer must instead be
+logged on to a server machine as the local superuser <B>root</B>.
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf252.htm#HDRVOS_INTRO">vos</A>
+<P><A HREF="auarf253.htm#HDRVOS_ADDSITE">vos addsite</A>
+<P><A HREF="auarf255.htm#HDRVOS_BACKUP">vos backup</A>
+<P><A HREF="auarf270.htm#HDRVOS_RELEASE">vos release</A>
+<P><A HREF="auarf266.htm#HDRVOS_LISTVOL">vos listvol</A>
+<P><A HREF="auarf271.htm#HDRVOS_REMOVE">vos remove</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf267.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf269.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

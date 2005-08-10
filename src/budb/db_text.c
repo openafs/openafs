@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/budb/db_text.c,v 1.10.2.1 2005/04/03 18:15:44 shadow Exp $");
+    ("$Header: /cvs/openafs/src/budb/db_text.c,v 1.10.2.2 2005/07/11 19:29:34 shadow Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
@@ -441,7 +441,7 @@ SaveText(call, lockHandle, textType, offset, flags, charListPtr)
 
 	    /* now have to update the previous block's link */
 	    linkOffset =
-		(afs_int32) & diskBlock.h.next - (afs_int32) & diskBlock;
+		(afs_int32) ((char*)& diskBlock.h.next - (char*)& diskBlock);
 	    linkValue = htonl(diskBlockAddr);
 
 	    code =

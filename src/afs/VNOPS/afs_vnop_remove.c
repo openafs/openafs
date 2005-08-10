@@ -21,7 +21,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_remove.c,v 1.31.2.8 2005/04/04 04:01:19 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_remove.c,v 1.31.2.9 2005/05/30 04:05:44 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -126,8 +126,6 @@ afsremove(register struct vcache *adp, register struct dcache *tdc,
 	      SHARED_LOCK, NULL));
 
     osi_dnlc_remove(adp, aname, tvc);
-    if (tvc)
-	afs_symhint_inval(tvc);	/* XXX: don't really need to be so extreme */
 
     if (code) {
 	if (tdc) {
@@ -362,8 +360,6 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
     }
 
     osi_dnlc_remove(adp, aname, tvc);
-    if (tvc)
-	afs_symhint_inval(tvc);
 
     Tadp1 = adp;
     Tadpr = VREFCOUNT(adp);

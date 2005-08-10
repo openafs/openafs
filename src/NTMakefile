@@ -469,7 +469,21 @@ license: talocale
 	$(NTMAKE)
 	$(CD) ..\..\..
 
-afsadmsvr: license
+client_osi: license
+     echo ***** $@
+	$(DOCD) $(SRC)\WINNT\$@
+	$(CD) $(SRC)\WINNT\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+afsd: client_osi
+     echo ***** $@
+	$(DOCD) $(SRC)\WINNT\$@
+	$(CD) $(SRC)\WINNT\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+afsadmsvr: afsd
      echo ***** $@
 	$(DOCD) $(SRC)\WINNT\$@
 	$(CD) $(SRC)\WINNT\$@
@@ -511,21 +525,7 @@ client_talocale: afssvrcpa
 	$(NTMAKE)
 	$(CD) ..\..\..
 
-client_osi: client_talocale
-     echo ***** $@
-	$(DOCD) $(SRC)\WINNT\$@
-	$(CD) $(SRC)\WINNT\$@
-	$(NTMAKE)
-	$(CD) ..\..\..
-
-afsd: client_osi
-     echo ***** $@
-	$(DOCD) $(SRC)\WINNT\$@
-	$(CD) $(SRC)\WINNT\$@
-	$(NTMAKE)
-	$(CD) ..\..\..
-
-client_cpa: afsd
+client_cpa: client_talocale
      echo ***** $@
 	$(DOCD) $(SRC)\WINNT\$@
 	$(CD) $(SRC)\WINNT\$@

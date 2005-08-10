@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/pam/afs_auth.c,v 1.12 2003/07/15 23:15:56 shadow Exp $");
+    ("$Header: /cvs/openafs/src/pam/afs_auth.c,v 1.12.2.1 2005/05/30 03:37:48 shadow Exp $");
 
 #include <syslog.h>
 #include <stdlib.h>
@@ -190,7 +190,7 @@ pam_sm_authenticate(pam_handle_t * pamh, int flags, int argc,
 	RET(PAM_AUTH_ERR);
     }
 #else
-#if     defined(AFS_LINUX20_ENV) || defined(AFS_FBSD_ENV)
+#if     defined(AFS_LINUX20_ENV) || defined(AFS_FBSD_ENV) || defined(AFS_NBSD_ENV)
     upwd = getpwnam(user);
 #else
     upwd = getpwnam_r(user, &unix_pwd, upwd_buf, sizeof(upwd_buf));

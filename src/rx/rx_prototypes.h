@@ -439,7 +439,6 @@ extern afs_int32 rx_SlowReadPacket(struct rx_packet *packet,
 				   unsigned int offset, int resid, char *out);
 extern afs_int32 rx_SlowWritePacket(struct rx_packet *packet, int offset,
 				    int resid, char *in);
-extern void rxi_freeCBuf(struct rx_packet *c);
 extern int rxi_RoundUpPacket(struct rx_packet *p, unsigned int nb);
 extern int rxi_AllocDataBuf(struct rx_packet *p, int nb, int cla_ss);
 extern void rxi_MorePackets(int apackets);
@@ -453,6 +452,8 @@ extern int rxi_TrimDataBufs(struct rx_packet *p, int first);
 extern void rxi_FreePacket(struct rx_packet *p);
 extern struct rx_packet *rxi_AllocPacketNoLock(int cla_ss);
 extern struct rx_packet *rxi_AllocPacket(int cla_ss);
+extern int rxi_AllocPackets(int cla_ss, int num_pkts, struct rx_queue *q);
+extern int rxi_FreePackets(int num_pkts, struct rx_queue *q);
 extern struct rx_packet *rxi_AllocSendPacket(register struct rx_call *call,
 					     int want);
 extern int rxi_ReadPacket(int socket, register struct rx_packet *p,
@@ -534,9 +535,6 @@ extern int rx_WritevProc(struct rx_call *call, struct iovec *iov, int nio,
 			 int nbytes);
 extern void rxi_FlushWrite(register struct rx_call *call);
 extern void rx_FlushWrite(struct rx_call *call);
-
-/* rx_stream.c */
-
 
 /* rx_trace.c */
 

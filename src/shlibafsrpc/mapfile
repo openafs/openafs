@@ -54,7 +54,9 @@
 	tkt_MakeTicket;
 	xdrrx_create;
 	hton_syserr_conv;
-	rxkad_stats;
+	rxkad_global_stats;
+	rxkad_global_stats_lock;
+	rxkad_stats_key;
 	com_err;
 	error_message;
 	rx_socket;
@@ -108,6 +110,7 @@
 	RXSTATS_QueryRPCStatsVersion;
 	RXSTATS_ClearProcessRPCStats;
 	RXSTATS_ClearPeerRPCStats;
+	TM_GetTimeOfDay;
 
     local:
 	*;

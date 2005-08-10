@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/gtx/gtxtest.c,v 1.6 2003/07/15 23:15:12 shadow Exp $");
+    ("$Header: /cvs/openafs/src/gtx/gtxtest.c,v 1.6.2.1 2005/07/11 19:29:37 shadow Exp $");
 
 
 #ifdef HAVE_STRING_H
@@ -26,6 +26,7 @@ RCSID
 #include "gtxobjects.h"
 #include "gtxtextobj.h"
 #include "gtxlightobj.h"
+#include "gtxkeymap.h"
 #include "gtxframe.h"
 
 struct gtx_frame *frameA, *frameB;

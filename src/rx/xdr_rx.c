@@ -19,7 +19,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/xdr_rx.c,v 1.10.2.2 2005/04/03 18:15:51 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/xdr_rx.c,v 1.10.2.3 2005/05/24 23:14:44 shadow Exp $");
 
 #ifdef KERNEL
 #ifndef UKERNEL
@@ -141,7 +141,7 @@ static struct xdr_ops xdrrx_ops = {
 
 /*
  * Initialize an rx xdr handle, for a given rx call.  op must be XDR_ENCODE or XDR_DECODE.
- * Call must have been returned by rx_MakeCall or rx_GetCall.  Stream should be a pointer to a local rx_stream structure.
+ * Call must have been returned by rx_MakeCall or rx_GetCall.
  */
 void
 xdrrx_create(register XDR * xdrs, register struct rx_call *call,

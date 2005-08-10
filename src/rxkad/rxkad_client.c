@@ -19,7 +19,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rxkad/rxkad_client.c,v 1.18.2.1 2004/08/25 07:09:42 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rxkad/rxkad_client.c,v 1.18.2.2 2005/05/30 04:57:37 shadow Exp $");
 
 #ifdef KERNEL
 #include "afs/stds.h"
@@ -63,6 +63,7 @@ RCSID
 #endif /* AFS_PTHREAD_ENV */
 #endif /* KERNEL */
 
+#include <des/stats.h>
 #include "private_data.h"
 #define XPRT_RXKAD_CLIENT
 
@@ -207,9 +208,7 @@ rxkad_NewClientSecurityObject(rxkad_level level,
     }
     memcpy(tcp->ticket, ticket, ticketLen);
 
-    LOCK_RXKAD_STATS;
-    rxkad_stats_clientObjects++;
-    UNLOCK_RXKAD_STATS;
+    INC_RXKAD_STATS(clientObjects);
     return tsc;
 }
 
@@ -255,9 +254,7 @@ rxkad_GetResponse(struct rx_securityClass *aobj, struct rx_connection *aconn,
 
     if (level > tcp->level)
 	return RXKADLEVELFAIL;
-    LOCK_RXKAD_STATS;
-    rxkad_stats.challenges[rxkad_LevelIndex(tcp->level)]++;
-    UNLOCK_RXKAD_STATS;
+    INC_RXKAD_STATS(challenges[rxkad_LevelIndex(tcp->level)]);
     if (v2) {
 	int i;
 	afs_uint32 xor[2];

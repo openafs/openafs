@@ -1,0 +1,201 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 4//EN">
+<HTML><HEAD>
+<TITLE>User Guide</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3629/auusg000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 2 Oct 2000 at 14:38:44                -->
+<META HTTP-EQUIV="updated" CONTENT="Mon, 02 Oct 2000 14:38:42">
+<META HTTP-EQUIV="review" CONTENT="Tue, 02 Oct 2001 14:38:42">
+<META HTTP-EQUIV="expires" CONTENT="Wed, 02 Oct 2002 14:38:42">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>User Guide</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auusg002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auusg009.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auusg011.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auusg013.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<HR><H1><A NAME="HDRWQ80" HREF="auusg002.htm#ToC_158">Appendix A. Using the NFS/AFS Translator</A></H1>
+<P>
+<A NAME="IDX1135"></A>
+<A NAME="IDX1136"></A>
+<A NAME="IDX1137"></A>
+<A NAME="IDX1138"></A>
+Some cells use the Network File System (NFS) in addition to AFS. If you
+work on an NFS client machine, your system administrator can configure it to
+access the AFS filespace through a program called the <I>NFS/AFS
+Translator</I><SUP>TM</SUP>. If you have an AFS account, you can
+access AFS as an authenticated user while working on your NFS client
+machine. Otherwise, you access AFS as the <B>anonymous</B>
+user.
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Note:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">Acceptable NFS/AFS Translator performance requires that NFS is functioning
+correctly.
+</TD></TR></TABLE>
+<HR><H2><A NAME="HDRWQ81" HREF="auusg002.htm#ToC_159">Requirements for Using the NFS/AFS Translator</A></H2>
+<P>
+<A NAME="IDX1139"></A>
+<A NAME="IDX1140"></A>
+For you to use the NFS/AFS Translator, your system administrator must
+configure the following types of machines as indicated:
+<UL>
+<P><LI>An <I>NFS/AFS translator machine</I> is an AFS client machine that
+also acts as an NFS server machine. Its Cache Manager acts as the
+surrogate Cache Manager for your NFS client machine. Ask your system
+administrator which translator machines you can use.
+<P><LI>Your NFS client machine must have an NFS mount to a translator
+machine. Most often, your system administrator mounts the translator
+machine's <B>/afs</B> directory and names the mount <B>/afs</B>
+as well. This enables you to access the entire AFS filespace using
+standard AFS pathnames. It is also possible to create mounts directly
+to subdirectories of <B>/afs</B>, and to give NFS mounts different names
+on the NFS client machine.
+</UL>
+<P>Your access to AFS is much more extensive if you have an AFS user
+account. If you do not, the AFS servers recognize you as the
+<B>anonymous</B> user and only grant you the access available to members
+of the <B>system:anyuser</B> group.
+<P>If your NFS client machine uses an operating system that AFS supports, your
+system administrator can configure it to enable you to issue many AFS commands
+on the machine. Ask him or her about the configuration and which
+commands you can issue.
+<HR><H2><A NAME="Header_160" HREF="auusg002.htm#ToC_160">Accessing AFS via the Translator</A></H2>
+<A NAME="IDX1141"></A>
+<P>If you do not have an AFS account or choose not to access AFS as an
+authenticated user, then all you do to access AFS is provide the pathname of
+the relevant file. Its ACL must grant the necessary permissions to the
+<B>system:anyuser</B> group.
+<P>If you have an AFS account and want to access AFS as an authenticated user,
+the best method depends on whether your NFS machine is a supported
+type. If it is, use the instructions in <A HREF="#HDRWQ82">To Authenticate on a Supported Operating System</A>. If it is not a supported type, use the
+instructions in <A HREF="#HDRWQ83">To Authenticate on an Unsupported Operating System</A>.
+<P><H3><A NAME="HDRWQ82" HREF="auusg002.htm#ToC_161">To Authenticate on a Supported Operating System</A></H3>
+<OL TYPE=1>
+<P><LI>Log into the NFS client machine using your NFS username.
+<P><LI>Issue the <B>klog</B> command. For complete instructions, see <A HREF="auusg005.htm#HDRWQ29">To Authenticate with AFS</A>.
+<PRE>   % <B>klog -setpag</B>
+</PRE>
+</OL>
+<P><H3><A NAME="HDRWQ83" HREF="auusg002.htm#ToC_162">To Authenticate on an Unsupported Operating System</A></H3>
+<OL TYPE=1>
+<P><LI>Log onto the NFS client machine using your NFS username.
+<P><LI><A NAME="LINFS-TELNET"></A>Establish a connection to the NFS/AFS translator machine
+you are using (for example, using the <B>telnet</B> utility) and log onto
+it using your AFS username (which is normally the same as your NFS
+username).
+<P><LI>If the NFS/AFS translator machine uses an AFS-modified login utility, then
+you obtained AFS tokens in Step <A HREF="#LINFS-TELNET">2</A>. To check, issue the <B>tokens</B> command, which
+is described fully in <A HREF="auusg005.htm#HDRWQ30">To Display Your Tokens</A>. 
+<PRE>   % <B>tokens</B>
+</PRE>If you do not have tokens, issue the <B>klog</B> command, which is
+described fully in <A HREF="auusg005.htm#HDRWQ29">To Authenticate with AFS</A>. 
+<PRE>   % <B>klog -setpag</B>
+</PRE>
+<P><LI><A NAME="LINFS-KNFS"></A>Issue the <B>knfs</B> command to associate your AFS
+tokens with your UNIX UID on the NFS client machine where you are
+working. This enables the Cache Manager on the translator machine to
+use the tokens properly when you access AFS from the NFS client
+machine. 
+<P>If your NFS client machine is a system type for which AFS defines a system
+name, it can make sense to add the <B>-sysname</B> argument. This
+argument helps the Cache Manager access binaries specific to your NFS client
+machine, if your system administrator has used the <I>@sys</I> variable in
+pathnames. Ask your system administrator if this argument is useful for
+you.
+<A NAME="IDX1142"></A>
+<A NAME="IDX1143"></A>
+<PRE>   % <B>knfs</B> &lt;<VAR>host&nbsp;name</VAR>> [&lt;<VAR>user&nbsp;ID&nbsp;(decimal)</VAR>>]  \
+          [<B>-sysname</B> &lt;<VAR>host's '@sys' value</VAR>>]
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B><VAR>host name</VAR>
+</B><DD>Specifies the fully-qualified hostname of your NFS client machine (such as
+<B>nfs52.abc.com</B>).
+<P><DT><B><VAR>user ID</VAR>
+</B><DD>Specifies your UNIX UID or equivalent (not your username) on the NFS
+client machine. If your system administrator has followed the
+conventional practice, then your UNIX and AFS UIDs are the same. If you
+do not know your local UID on the NFS machine, ask your system administrator
+for assistance. Your system administrator can also explain the issues
+you need to be aware of if your two UIDs do not match, or if you omit this
+argument.
+<P><DT><B>-sysname
+</B><DD>Specifies your NFS client machine's system type name.
+</DL>
+<P><LI><A NAME="LINFS-LOGOUT"></A>(<B>Optional</B>) Log out from the translator machine,
+but do not unauthenticate.
+<P><LI>Work on the NFS client machine, accessing AFS as necessary.
+<P><LI>When you are finished accessing AFS, issue the <B>knfs</B> command on
+the translator machine again. Provide the same <VAR>host name</VAR> and
+<VAR>user ID</VAR> arguments as in Step <A HREF="#LINFS-KNFS">4</A>, and add the <B>-unlog</B> flag to destroy your
+tokens. If you logged out from the translator machine in Step <A HREF="#LINFS-LOGOUT">5</A>, then you must first reestablish a connection to the
+translator machine as in Step <A HREF="#LINFS-TELNET">2</A>. 
+<PRE>   % <B>knfs</B> &lt;<VAR>host&nbsp;name</VAR>> [&lt;<VAR>user&nbsp;ID&nbsp;(decimal)</VAR>>] <B>-unlog</B>
+</PRE>
+</OL>
+<HR><H2><A NAME="HDRWQ84" HREF="auusg002.htm#ToC_163">Troubleshooting the NFS/AFS Translator</A></H2>
+<P>Acceptable performance by the NFS/AFS translator depends for
+the most part on NFS. Sometimes, problems that appear to be AFS file
+server outages, broken connections, or inaccessible files are actually caused
+by NFS outages.
+<P>This section describes some common problems and their possible
+causes. If other problems arise, contact your system administrator, who
+can ask the AFS Product Support group for assistance if necessary.
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Note:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">To avoid degrading AFS performance, the Cache Manager on the translator
+machine does not immediately send changes made on NFS client machines to the
+File Server. Instead, it checks every 60 seconds for such changes and
+sends them then. It can take longer for changes made on an NFS client
+machine to be saved than for changes made on an AFS client machine. The
+save operation must complete before the changes are visible on NFS client
+machines that are using a different translator machine or on AFS client
+machines.
+</TD></TR></TABLE>
+<P><H3><A NAME="HDRWQ85" HREF="auusg002.htm#ToC_164">Your NFS Client Machine is Frozen</A></H3>
+<P>If your system administrator has used the recommended options
+when creating an NFS mount to an NFS/AFS translator machine, then the mount is
+both <I>hard</I> and <I>interruptible</I>:
+<UL>
+<P><LI>A hard mount means that the NFS client retries its requests if it does not
+receive a response within the expected time frame. This is useful
+because requests have to pass through both the NFS and AFS client software,
+which can sometimes take longer than the NFS client expects. However,
+it means that if the NFS/AFS translator machine actually becomes inaccessible,
+your NFS client machine can become inoperative (<I>freeze</I> or
+<I>hang</I>).
+<P><LI>If the NFS mount is interruptible, then in the case of an NFS/AFS
+translator machine outage you can press &lt;<B>Ctrl-c</B>> or another
+interrupt signal to halt the NFS client's repeated attempts to access
+AFS. You can then continue to work locally, or can NFS-mount another
+translator machine. If the NFS mount is not interruptible, you must
+actually remove the mount to the inaccessible translator machine.
+</UL>
+<P><H3><A NAME="Header_165" HREF="auusg002.htm#ToC_165">NFS/AFS Translator Reboots</A></H3>
+<P>If you have authenticated to AFS and your translator machine reboots,
+you must issue the <B>klog</B> command (and <B>knfs</B> command, if
+appropriate) to reauthenticate. If you used the <B>knfs</B>
+command's <B>-sysname</B> argument to define your NFS client
+machine's system name, use it again.
+<P><H3><A NAME="Header_166" HREF="auusg002.htm#ToC_166">System Error Messages</A></H3>
+<P>This section explains possible meanings for NFS error messages you
+receive while accessing AFS filespace.
+<P><TT>stale NFS client</TT>
+<P><TT>Getpwd: can't read</TT>
+<P>Both messages possibly means that your translator machine was rebooted and
+cannot determine the pathname to the current working directory. To
+reestablish the path, change directory and specify the complete pathname
+starting with <B>/afs</B>.
+<P><TT>NFS server <VAR>translator_machine</VAR> is not responding still
+trying</TT>.
+<P>The NFS client is not getting a response from the NFS/AFS translator
+machine. If the NFS mount to the translator machine is a hard mount,
+your NFS client continues retrying the request until it gets a response (see <A HREF="#HDRWQ85">Your NFS Client Machine is Frozen</A>). If the NFS mount to the translator machine is a
+soft mount, the NFS client stops retrying after a certain number of attempts
+(three by default).
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auusg002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auusg009.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auusg011.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auusg013.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

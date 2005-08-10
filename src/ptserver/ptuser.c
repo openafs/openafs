@@ -15,7 +15,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/ptserver/ptuser.c,v 1.16.2.2 2005/01/31 03:58:39 shadow Exp $");
+    ("$Header: /cvs/openafs/src/ptserver/ptuser.c,v 1.16.2.6 2005/07/11 19:28:43 shadow Exp $");
 
 #if defined(UKERNEL)
 #include "afs/sysincludes.h"
@@ -71,54 +71,83 @@ pr_Initialize(IN afs_int32 secLevel, IN char *confDir, IN char *cell)
     afs_int32 code;
     struct rx_connection *serverconns[MAXSERVERS];
     struct rx_securityClass *sc[3];
-    static struct afsconf_dir *tdir = 0;	/* only do this once */
-    static char tconfDir[100];
+    static struct afsconf_dir *tdir = (struct afsconf_dir *)0;	/* only do this once */
+    static char tconfDir[100] = "";
+    static char tcell[64] = "";
     struct ktc_token ttoken;
     afs_int32 scIndex;
     static struct afsconf_cell info;
     afs_int32 i;
     char cellstr[64];
+    afs_int32 gottdir = 0;
+    afs_int32 refresh = 0;
 
     initialize_PT_error_table();
     initialize_RXK_error_table();
     initialize_ACFG_error_table();
     initialize_KTC_error_table();
 
-    if (strcmp(confDir, tconfDir)) {
-	/*
-	 * Different conf dir; force re-evaluation.
-	 */
-	if (tdir) 
-	    afsconf_Close(tdir);
-	tdir = (struct afsconf_dir *)0;
-	pruclient = (struct ubik_client *)0;
-    }
-    if (tdir == 0) {
-	strncpy(tconfDir, confDir, sizeof(tconfDir));
 #if defined(UKERNEL)
-	tdir = afs_cdir;
-	if (!cell) {
-	    cell = afs_LclCellName;
-	}
+    if (!cell) {
+        cell = afs_LclCellName;
+    }
 #else /* defined(UKERNEL) */
-	tdir = afsconf_Open(confDir);
+    if (!cell) {
+        if (!tdir) 
+            tdir = afsconf_Open(confDir);
 	if (!tdir) {
 	    if (confDir && strcmp(confDir, ""))
 		fprintf(stderr,
 			"libprot: Could not open configuration directory: %s.\n",
 			confDir);
+            else
+		fprintf(stderr,
+			"libprot: No configuration directory specified.\n");
 	    return -1;
 	}
+        gottdir = 1;
 
-	if (!cell) {
-	    code = afsconf_GetLocalCell(tdir, cellstr, sizeof(cellstr));
-	    if (code) {
+        code = afsconf_GetLocalCell(tdir, cellstr, sizeof(cellstr));
+        if (code) {
+            fprintf(stderr,
+                     "libprot: Could not get local cell. [%d]\n", code);
+            return code;
+        }
+        cell = cellstr;
+    }
+#endif /* defined(UKERNEL) */
+
+    if (tdir == 0 || strcmp(confDir, tconfDir) || strcmp(cell, tcell)) {
+	/*
+	 * force re-evaluation.  we either don't have an afsconf_dir,
+         * the directory has changed or the cell has changed.
+	 */
+	if (tdir && !gottdir) {
+	    afsconf_Close(tdir);
+            tdir = (struct afsconf_dir *)0;
+        }
+	pruclient = (struct ubik_client *)0;
+        refresh = 1;
+    }
+
+    if (refresh) {
+	strncpy(tconfDir, confDir, sizeof(tconfDir));
+        strncpy(tcell, cell, sizeof(tcell));
+
+#if defined(UKERNEL)
+	tdir = afs_cdir;
+#else /* defined(UKERNEL) */
+        if (!gottdir)
+            tdir = afsconf_Open(confDir);
+	if (!tdir) {
+	    if (confDir && strcmp(confDir, ""))
 		fprintf(stderr,
-			"vos: can't get local cell name - check %s/%s\n",
-			confDir, AFSDIR_THISCELL_FILE);
-		exit(1);
-	    }
-	    cell = cellstr;
+			"libprot: Could not open configuration directory: %s.\n",
+			confDir);
+            else
+		fprintf(stderr,
+			"libprot: No configuration directory specified.\n");
+	    return -1;
 	}
 #endif /* defined(UKERNEL) */
 

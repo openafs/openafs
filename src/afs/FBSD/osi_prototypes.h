@@ -24,6 +24,8 @@ extern void *osi_fbsd_alloc(size_t size, int dropglobal);
 extern void osi_fbsd_free(void *p);
 
 /* osi_vfsops.c */
+int afs_init(struct vfsconf *vfc);
+int afs_uninit(struct vfsconf *vfc);
 #ifdef AFS_FBSD50_ENV
 extern int afs_statfs(struct mount *mp, struct statfs *abp, struct thread *th);
 #else

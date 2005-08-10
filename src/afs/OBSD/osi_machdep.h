@@ -16,7 +16,7 @@
  * afs_osi.h.
  */
 
-/* $Id: osi_machdep.h,v 1.16.2.4 2005/04/24 23:40:44 shadow Exp $ */
+/* $Id: osi_machdep.h,v 1.16.2.5 2005/05/23 21:17:29 shadow Exp $ */
 
 #ifndef _OSI_MACHDEP_H_
 #define _OSI_MACHDEP_H_
@@ -69,7 +69,6 @@ extern struct simplelock afs_rxglobal_lock;
 #define p_rcred         p_ucred
 
 /* time */
-extern struct timeval time;
 #define	afs_hz		hz
 #define osi_GetTime(x)	microtime(x)
 #define osi_Time()	(time.tv_sec)

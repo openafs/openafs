@@ -82,6 +82,8 @@
 	pr_SNameToId;
 	afs_get_pag_from_groups;
 	setpag;
+	afs_snprintf;
+	LogThreadNum;
 
     local:
 	*;

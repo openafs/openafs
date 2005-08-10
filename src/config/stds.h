@@ -57,7 +57,7 @@ typedef long long afs_int64;
 typedef unsigned long long afs_uint64;
 #endif
 #define ZeroInt64(a)       (a) = 0
-#define AssignInt64(a, b)   *(a) = (b)
+#define AssignInt64(a, b) *(b) = (a) 
 #define AddInt64(a,b,c) *(c) = (afs_int64)(a) + (afs_int64)(b)
 #define AddUInt64(a,b,c) *(c) = (afs_uint64)(a) + (afs_uint64)(b)
 #define SubtractInt64(a,b,c) *(c) = (afs_int64)(a) - (afs_int64)(b)

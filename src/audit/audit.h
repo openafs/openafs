@@ -7,7 +7,7 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#define AUD_END  0		/* End           of veriable list */
+#define AUD_END  0		/* End           of variable list */
 #define AUD_STR  1		/* String        in variable list */
 #define AUD_INT  2		/* int           in variable list */
 #define AUD_LST  3		/* Variable list in a variable list */
@@ -16,6 +16,9 @@
 #define AUD_DATE 6		/* date (unsigned long)           */
 #define AUD_FID  7		/* File ID                        */
 #define AUD_FIDS 8		/* array of Fids                  */
+#define AUD_NAME 9              /* Name */
+#define AUD_ID   10             /* Id (Vice, PTS, ...) */
+#define AUD_ACL  11             /* ACL */
 /* next 3 lines on behalf of MR-AFS */
 #define AUD_RESID 20		/* resid         in variable list */
 #define AUD_RSSIZERANGE 21	/* rssizerange   in variable list */
@@ -94,6 +97,8 @@
 #define PTS_LstEleEvent    "AFS_PTS_LstEle"
 #define PTS_LstOwnEvent    "AFS_PTS_LstOwn"
 #define PTS_IsMemOfEvent   "AFS_PTS_IsMemOf"
+#define PTS_UpdEntEvent    "AFS_PTS_UpdEnt"
+#define PTS_LstSGrps       "AFS_PTS_LstSGrps"
 
 #define BUDB_StartEvent    "AFS_BUDB_Start"
 #define BUDB_FinishEvent   "AFS_BUDB_Finish"
@@ -171,6 +176,7 @@
 #define SetLockEvent		"AFS_SRX_SetLock"
 #define ExtendLockEvent		"AFS_SRX_ExtLock"
 #define ReleaseLockEvent	"AFS_SRX_RelLock"
+#define GetVolumeStatusEvent    "AFS_SRX_GetVolS"
 #define SetVolumeStatusEvent    "AFS_SRX_SetVolS"
 #define FlushCPSEvent           "AFS_SRX_FlusCPS"
 #define InlineBulkFetchStatusEvent     "AFS_SRX_BIFchSt"
@@ -182,6 +188,8 @@
 #define ImportResidenciesEvent  "AFS_SRX_Import"
 #define GetExtendedVolumeAttributesEvent "AFS_SRX_GetVA"
 #define SetExtendedVolumeAttributesEvent "AFS_SRX_SetVA"
+#define GetStatisticsEvent      "AFS_SRX_GetStats"
+#define XStatsVersionEvent      "AFS_SRX_XStatsVer"
 
 #define NoAuthEvent             "AFS_RunNoAuth"
 #define NoAuthDisableEvent      "AFS_NoAuthDsbl"
@@ -283,3 +291,4 @@
 /* prototypes for audit functions */
 int osi_audit(char *audEvent, afs_int32 errCode, ...);
 int osi_auditU(struct rx_call *call, char *audEvent, int errCode, ...);
+int osi_audit_file(FILE *out);

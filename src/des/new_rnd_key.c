@@ -19,7 +19,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/des/new_rnd_key.c,v 1.13.2.1 2004/08/25 07:09:37 shadow Exp $");
+    ("$Header: /cvs/openafs/src/des/new_rnd_key.c,v 1.13.2.2 2005/05/30 04:57:34 shadow Exp $");
 
 #ifndef KERNEL
 #include <stdio.h>
@@ -257,9 +257,7 @@ des_generate_random_block(des_cblock block)
 {
     int i;
 
-    LOCK_RXKAD_STATS;
-    rxkad_stats.des_randoms++;
-    UNLOCK_RXKAD_STATS;
+    INC_RXKAD_STATS(des_randoms);
     /*
      * Encrypt the sequence number to get the new random block:
      */

@@ -118,7 +118,7 @@ pinstall: config
 procmgmt: pinstall
 	${COMPILE_PART1} procmgmt ${COMPILE_PART2}
 
-util: procmgmt
+util: procmgmt des
 	${COMPILE_PART1} util ${COMPILE_PART2}
 
 audit: util rx rxkad
@@ -283,7 +283,7 @@ bozo: cmd comerr audit
 vfsck:	vol
 	set -x; \
 	case ${SYS_NAME} in \
-	sgi_* | *linux* | rs_aix42 | *_darwin* | hp_ux* | ia64_hpux* | *fbsd* | *_obsd* | *_nbsd* | sun*_4* | rs_aix5* ) \
+	sgi_* | *linux* | rs_aix42 | *_darwin* | ia64_hpux* | *fbsd* | *_obsd* | *_nbsd* | sun*_4* | rs_aix5* ) \
 		echo skip vfsck for ${SYS_NAME} ;; \
 	 * ) \
 		${COMPILE_PART1} vfsck ${COMPILE_PART2} ;; \
@@ -324,7 +324,15 @@ sgistuff: cmd comerr kauth rxkad
 		echo Skipping sgistuff for ${SYS_NAME} ;; \
 	esac
 
-login: cmd comerr kauth rxkad pam sia tsm41 sgistuff
+aklog: comerr ptserver
+	set -x; \
+	if test "@BUILD_KRB5@" = "yes"; then \
+		${COMPILE_PART1} aklog ${COMPILE_PART2} ; \
+	else \
+		echo Skipping aklog for ${SYS_NAME} ; \
+	fi
+
+login: cmd comerr kauth rxkad pam sia tsm41 sgistuff aklog
 	set -x; \
 	if test "@BUILD_LOGIN@" = "yes"; then \
 		${COMPILE_PART1} login ${COMPILE_PART2} ; \
@@ -378,6 +386,9 @@ kauth_depinstall: pinstall rxgen comerr
 
 ptserver_depinstall: pinstall rxgen comerr
 	${COMPILE_PART1} ptserver ${COMPILE_DEPINSTALL}
+
+${DEST}/bin/dedebug: dedebug
+	${INSTALL} -s $? $@
 
 
 #
@@ -630,6 +641,7 @@ clean2:
 	-${COMPILE_PART1} sgistuff ${COMPILE_CLEAN}
 	-${COMPILE_PART1} tsm41 ${COMPILE_CLEAN}
 	-${COMPILE_PART1} sia ${COMPILE_CLEAN}
+	-${COMPILE_PART1} aklog ${COMPILE_CLEAN}
 	-${COMPILE_PART1} login ${COMPILE_CLEAN}
 	-${COMPILE_PART1} pam ${COMPILE_CLEAN}
 	-${COMPILE_PART1} afsweb ${COMPILE_CLEAN}
@@ -684,6 +696,7 @@ distclean: clean
 	src/afsd/afs.ppc_darwin.plist \
 	src/afsmonitor/Makefile \
 	src/afsweb/Makefile \
+	src/aklog/Makefile \
 	src/audit/Makefile \
 	src/auth/test/Makefile \
 	src/auth/Makefile \

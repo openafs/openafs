@@ -1,5 +1,5 @@
 AC_INIT(src/config/stds.h)
-AM_INIT_AUTOMAKE(openafs,1.3.82)
+AM_INIT_AUTOMAKE(openafs,1.3.87)
 AC_CONFIG_HEADER(src/config/afsconfig.h)
 
 AC_PROG_CC
@@ -11,45 +11,46 @@ src/afs/Makefile \
 src/afsd/Makefile \
 src/afsmonitor/Makefile \
 src/afsweb/Makefile \
+src/aklog/Makefile \
 src/audit/Makefile \
-src/auth/test/Makefile \
 src/auth/Makefile \
-src/bozo/test/Makefile \
+src/auth/test/Makefile \
 src/bozo/Makefile \
+src/bozo/test/Makefile \
 src/bu_utils/Makefile \
 src/bubasics/Makefile \
 src/bucoord/Makefile \
 src/budb/Makefile \
 src/butc/Makefile \
 src/butm/Makefile \
-src/cmd/test/Makefile \
 src/cmd/Makefile \
-src/comerr/test/Makefile \
+src/cmd/test/Makefile \
 src/comerr/Makefile \
+src/comerr/test/Makefile \
 src/config/Makefile \
 src/config/Makefile.config \
 src/config/Makefile.version-NOCML \
 src/dauth/Makefile \
-src/des/test/Makefile \
 src/des/Makefile \
+src/des/test/Makefile \
 src/des_stub/Makefile \
-src/dir/test/Makefile \
 src/dir/Makefile \
+src/dir/test/Makefile \
 src/export/Makefile \
 src/finale/Makefile \
 src/fsint/Makefile \
 src/fsprobe/Makefile \
 src/gtx/Makefile \
 src/JAVA/libjafs/Makefile \
-src/kauth/test/Makefile \
 src/kauth/Makefile \
-src/libacl/test/Makefile \
+src/kauth/test/Makefile \
 src/libacl/Makefile \
+src/libacl/test/Makefile \
 src/libadmin/adminutil/Makefile \
 src/libadmin/Makefile \
 src/libadmin/bos/Makefile \
-src/libadmin/cfg/test/Makefile \
 src/libadmin/cfg/Makefile \
+src/libadmin/cfg/test/Makefile \
 src/libadmin/client/Makefile \
 src/libadmin/kas/Makefile \
 src/libadmin/pts/Makefile \
@@ -63,17 +64,17 @@ src/libafsauthent/Makefile \
 src/libafsrpc/Makefile \
 src/libuafs/Makefile.common \
 src/libuafs/MakefileProto.${MKAFS_OSTYPE} \
-src/log/test/Makefile \
 src/log/Makefile \
+src/log/test/Makefile \
 src/login/Makefile \
-src/lwp/test/Makefile \
 src/lwp/Makefile \
+src/lwp/test/Makefile \
 src/mpp/Makefile \
 src/null/Makefile \
 src/package/Makefile \
 src/pam/Makefile \
-src/pinstall/test/Makefile \
 src/pinstall/Makefile \
+src/pinstall/test/Makefile \
 src/procmgmt/Makefile \
 src/procmgmt/test/Makefile \
 src/ptserver/Makefile \
@@ -108,8 +109,8 @@ src/usd/Makefile \
 src/uss/Makefile \
 src/util/Makefile \
 src/util/test/Makefile \
-src/venus/test/Makefile \
 src/venus/Makefile \
+src/venus/test/Makefile \
 src/vfsck/Makefile \
 src/viced/Makefile \
 src/vlserver/Makefile \

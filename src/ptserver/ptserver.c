@@ -112,7 +112,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/ptserver/ptserver.c,v 1.21.2.1 2005/04/15 19:40:43 shadow Exp $");
+    ("$Header: /cvs/openafs/src/ptserver/ptserver.c,v 1.21.2.2 2005/07/11 19:08:49 shadow Exp $");
 
 #include <afs/stds.h>
 #ifdef	AFS_AIX32_ENV
@@ -120,6 +120,8 @@ RCSID
 #endif
 #include <sys/types.h>
 #include <stdio.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
 #include <WINNT/afsevent.h>
@@ -315,12 +317,44 @@ main(int argc, char **argv)
 	    serverLogSyslogFacility = atoi(arg + 8);
 	}
 #endif
+	else if (strncmp(arg, "-auditlog", alen) == 0) {
+	    int tempfd, flags;
+	    FILE *auditout;
+	    char oldName[MAXPATHLEN];
+	    char *fileName = argv[++a];
+
+#ifndef AFS_NT40_ENV
+	    struct stat statbuf;
+
+	    if ((lstat(fileName, &statbuf) == 0) 
+		&& (S_ISFIFO(statbuf.st_mode))) {
+		flags = O_WRONLY | O_NONBLOCK;
+	    } else 
+#endif
+	    {
+		strcpy(oldName, fileName);
+		strcat(oldName, ".old");
+		renamefile(fileName, oldName);
+		flags = O_WRONLY | O_TRUNC | O_CREAT;
+	    }
+	    tempfd = open(fileName, flags, 0666);
+	    if (tempfd > -1) {
+		auditout = fdopen(tempfd, "a");
+		if (auditout) {
+		    osi_audit_file(auditout);
+		    osi_audit(PTS_StartEvent, 0, AUD_END);
+		} else
+		    printf("Warning: auditlog %s not writable, ignored.\n", fileName);
+	    } else
+		printf("Warning: auditlog %s not writable, ignored.\n", fileName);
+	}
 	else if (*arg == '-') {
 	    /* hack in help flag support */
 
 #if defined(SUPERGROUPS)
 #ifndef AFS_NT40_ENV
 	    printf("Usage: ptserver [-database <db path>] "
+		   "[-auditlog <log path>] "
 		   "[-syslog[=FACILITY]] "
 		   "[-p <number of processes>] [-rebuild] "
 		   "[-groupdepth <depth>] "
@@ -330,6 +364,7 @@ main(int argc, char **argv)
 		   "[-help]\n");
 #else /* AFS_NT40_ENV */
 	    printf("Usage: ptserver [-database <db path>] "
+		   "[-auditlog <log path>] "
 		   "[-p <number of processes>] [-rebuild] "
 		   "[-default_access default_user_access default_group_access] "
 		   "[-restricted] "
@@ -338,6 +373,7 @@ main(int argc, char **argv)
 #else
 #ifndef AFS_NT40_ENV
 	    printf("Usage: ptserver [-database <db path>] "
+		   "[-auditlog <log path>] "
 		   "[-syslog[=FACILITY]] "
 		   "[-p <number of processes>] [-rebuild] "
 		   "[-enable_peer_stats] [-enable_process_stats] "
@@ -346,6 +382,7 @@ main(int argc, char **argv)
 		   "[-help]\n");
 #else /* AFS_NT40_ENV */
 	    printf("Usage: ptserver [-database <db path>] "
+		   "[-auditlog <log path>] "
 		   "[-default_access default_user_access default_group_access] "
 		   "[-restricted] "
 		   "[-p <number of processes>] [-rebuild] " "[-help]\n");

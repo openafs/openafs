@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/kauth/test/test_getticket.c,v 1.7 2003/07/15 23:15:18 shadow Exp $");
+    ("$Header: /cvs/openafs/src/kauth/test/test_getticket.c,v 1.7.2.1 2005/05/30 04:57:34 shadow Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -64,7 +64,7 @@ static void
 PrintRxkadStats()
 {
     printf("New Objects client %d, server %d.  Destroyed objects %d.\n",
-	   rxkad_stats_clientObjects, rxkad_stats_serverObjects,
+	   rxkad_stats.clientObjects, rxkad_stats.serverObjects,
 	   rxkad_stats.destroyObject);
     printf("client conns: %d %d %d, destroyed client %d.\n",
 	   rxkad_stats.connections[0], rxkad_stats.connections[1],

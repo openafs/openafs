@@ -23,7 +23,7 @@
 #define INCLUDE_RXKAD_PRIVATE_DECLS
 
 RCSID
-    ("$Header: /cvs/openafs/src/rxkad/rxkad_common.c,v 1.20.2.3 2005/03/11 07:03:35 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rxkad/rxkad_common.c,v 1.20.2.7 2005/05/31 21:12:59 shadow Exp $");
 
 #ifdef KERNEL
 #ifndef UKERNEL
@@ -32,7 +32,7 @@ RCSID
 #ifdef	AFS_AIX_ENV
 #include "h/systm.h"
 #endif
-#ifdef AFS_DARWIN60_ENV
+#if defined(AFS_DARWIN60_ENV) || defined(AFS_OBSD_ENV)
 #include "h/kernel.h"
 #endif
 #include "h/types.h"
@@ -71,6 +71,7 @@ RCSID
 
 #endif /* KERNEL */
 
+#include <des/stats.h>
 #include "private_data.h"
 #define XPRT_RXKAD_COMMON
 
@@ -83,7 +84,116 @@ RCSID
 #endif
 /* variable initialization for the benefit of darwin compiler; if it causes
    problems elsewhere, conditionalize for darwin or fc_test compile breaks */
-struct rxkad_stats rxkad_stats = { { 0 } };
+#ifdef AFS_PTHREAD_ENV
+struct rxkad_global_stats rxkad_global_stats = { 0 };
+pthread_mutex_t rxkad_global_stats_lock;
+pthread_key_t rxkad_stats_key;
+#else /* AFS_PTHREAD_ENV */
+#if defined(KERNEL) && !defined(UKERNEL)
+struct rxkad_stats rxkad_stats = { { 0 } }; 
+#else
+/* Move delaration of this to des/key_sched.c */
+#endif
+#endif /* AFS_PTHREAD_ENV */
+
+#ifdef AFS_PTHREAD_ENV
+/* rxkad_stats related stuff */
+
+/*
+ * Macro to insert an element at the tail of a doubly linked list
+ */
+#define DLL_INSERT_TAIL(ptr,head,tail,next,prev) \
+    do {					 \
+	(ptr)->next = NULL;			 \
+        (ptr)->prev = (tail);			 \
+	(tail) = (ptr);				 \
+	if ((ptr)->prev) 			 \
+	    (ptr)->prev->next = (ptr);		 \
+	else					 \
+	    (head) = (ptr);			 \
+	assert((head) && ((head)->prev == NULL)); \
+    } while(0)
+
+void rxkad_global_stats_init() {
+    assert(pthread_mutex_init(&rxkad_global_stats_lock, (const pthread_mutexattr_t *)0) == 0);
+    assert(pthread_key_create(&rxkad_stats_key, NULL) == 0);
+    memset(&rxkad_global_stats, 0, sizeof(rxkad_global_stats));
+}
+
+rxkad_stats_t * 
+rxkad_thr_stats_init() {
+    rxkad_stats_t * rxkad_stats;
+    rxkad_stats = (rxkad_stats_t *)malloc(sizeof(rxkad_stats_t));
+    assert(rxkad_stats != NULL && pthread_setspecific(rxkad_stats_key,rxkad_stats) == 0);
+    memset(rxkad_stats,0,sizeof(rxkad_stats_t));
+    RXKAD_GLOBAL_STATS_LOCK;
+    DLL_INSERT_TAIL(rxkad_stats, rxkad_global_stats.first, rxkad_global_stats.last, next, prev);
+    RXKAD_GLOBAL_STATS_UNLOCK;
+    return rxkad_stats;
+}
+
+int rxkad_stats_agg(rxkad_stats_t * rxkad_stats) {
+    rxkad_stats_t * thr_stats;
+    assert(rxkad_stats != NULL);
+    memset(rxkad_stats, 0, sizeof(rxkad_stats_t));
+    RXKAD_GLOBAL_STATS_LOCK;
+    for (thr_stats = rxkad_global_stats.first; thr_stats != NULL; thr_stats = thr_stats->next) {
+        rxkad_stats->connections[0] += thr_stats->connections[0];
+	rxkad_stats->connections[1] += thr_stats->connections[1];
+	rxkad_stats->connections[2] += thr_stats->connections[2];
+	rxkad_stats->destroyObject += thr_stats->destroyObject;
+	rxkad_stats->destroyClient += thr_stats->destroyClient;
+	rxkad_stats->destroyUnused += thr_stats->destroyUnused;
+	rxkad_stats->destroyUnauth += thr_stats->destroyUnauth;
+	rxkad_stats->destroyConn[0] += thr_stats->destroyConn[0];
+	rxkad_stats->destroyConn[1] += thr_stats->destroyConn[1];
+	rxkad_stats->destroyConn[2] += thr_stats->destroyConn[2];
+	rxkad_stats->expired += thr_stats->expired;
+	rxkad_stats->challengesSent += thr_stats->challengesSent;
+	rxkad_stats->challenges[0] += thr_stats->challenges[0];
+	rxkad_stats->challenges[1] += thr_stats->challenges[1];
+	rxkad_stats->challenges[2] += thr_stats->challenges[2];
+	rxkad_stats->responses[0] += thr_stats->responses[0];
+	rxkad_stats->responses[1] += thr_stats->responses[1];
+	rxkad_stats->responses[2] += thr_stats->responses[2];
+	rxkad_stats->preparePackets[0] += thr_stats->preparePackets[0];
+	rxkad_stats->preparePackets[1] += thr_stats->preparePackets[1];
+	rxkad_stats->preparePackets[2] += thr_stats->preparePackets[2];
+	rxkad_stats->preparePackets[3] += thr_stats->preparePackets[3];
+	rxkad_stats->preparePackets[4] += thr_stats->preparePackets[4];
+	rxkad_stats->preparePackets[5] += thr_stats->preparePackets[5];
+	rxkad_stats->checkPackets[0] += thr_stats->checkPackets[0];
+	rxkad_stats->checkPackets[1] += thr_stats->checkPackets[1];
+	rxkad_stats->checkPackets[2] += thr_stats->checkPackets[2];
+	rxkad_stats->checkPackets[3] += thr_stats->checkPackets[3];
+	rxkad_stats->checkPackets[4] += thr_stats->checkPackets[4];
+	rxkad_stats->checkPackets[5] += thr_stats->checkPackets[5];
+	rxkad_stats->bytesEncrypted[0] += thr_stats->bytesEncrypted[0];
+	rxkad_stats->bytesEncrypted[1] += thr_stats->bytesEncrypted[1];
+	rxkad_stats->bytesDecrypted[0] += thr_stats->bytesDecrypted[0];
+	rxkad_stats->bytesDecrypted[1] += thr_stats->bytesDecrypted[1];
+	rxkad_stats->fc_encrypts[0] += thr_stats->fc_encrypts[0];
+	rxkad_stats->fc_encrypts[1] += thr_stats->fc_encrypts[1];
+	rxkad_stats->fc_key_scheds += thr_stats->fc_key_scheds;
+	rxkad_stats->des_encrypts[0] += thr_stats->des_encrypts[0];
+	rxkad_stats->des_encrypts[1] += thr_stats->des_encrypts[1];
+	rxkad_stats->des_key_scheds += thr_stats->des_key_scheds;
+	rxkad_stats->des_randoms += thr_stats->des_randoms;
+	rxkad_stats->spares[0] += thr_stats->spares[0];
+	rxkad_stats->spares[1] += thr_stats->spares[1];
+	rxkad_stats->spares[2] += thr_stats->spares[2];
+	rxkad_stats->spares[3] += thr_stats->spares[3];
+	rxkad_stats->spares[4] += thr_stats->spares[4];
+	rxkad_stats->spares[5] += thr_stats->spares[5];
+	rxkad_stats->spares[6] += thr_stats->spares[6];
+	rxkad_stats->spares[7] += thr_stats->spares[7];
+	rxkad_stats->spares[8] += thr_stats->spares[8];
+	rxkad_stats->spares[9] += thr_stats->spares[9];
+    }
+    RXKAD_GLOBAL_STATS_UNLOCK;
+    return 0;
+}
+#endif /* AFS_PTHREAD_ENV */
 
 /* static prototypes */
 static afs_int32 ComputeSum(struct rx_packet *apacket,
@@ -207,9 +317,7 @@ FreeObject(struct rx_securityClass *aobj)
     } else {
 	return RXKADINCONSISTENCY;
     }				/* unknown type */
-    LOCK_RXKAD_STATS;
-    rxkad_stats.destroyObject++;
-    UNLOCK_RXKAD_STATS;
+    INC_RXKAD_STATS(destroyObject);
     return 0;
 }
 
@@ -251,9 +359,7 @@ rxkad_NewConnection(struct rx_securityClass *aobj,
 	rxkad_SetLevel(aconn, tcp->level);	/* set header and trailer sizes */
 	rxkad_AllocCID(aobj, aconn);	/* CHANGES cid AND epoch!!!! */
 	rxkad_DeriveXORInfo(aconn, tcp->keysched, tcp->ivec, tccp->preSeq);
-	LOCK_RXKAD_STATS;
-	rxkad_stats.connections[rxkad_LevelIndex(tcp->level)]++;
-	UNLOCK_RXKAD_STATS;
+	INC_RXKAD_STATS(connections[rxkad_LevelIndex(tcp->level)]);
     }
 
     aobj->refCount++;		/* attached connection */
@@ -272,20 +378,16 @@ rxkad_DestroyConnection(struct rx_securityClass *aobj,
 	sconn = (struct rxkad_sconn *)aconn->securityData;
 	if (sconn) {
 	    aconn->securityData = 0;
-	    LOCK_RXKAD_STATS;
 	    if (sconn->authenticated)
-		rxkad_stats.destroyConn[rxkad_LevelIndex(sconn->level)]++;
+		INC_RXKAD_STATS(destroyConn[rxkad_LevelIndex(sconn->level)]);
 	    else
-		rxkad_stats.destroyUnauth++;
-	    UNLOCK_RXKAD_STATS;
+		INC_RXKAD_STATS(destroyUnauth);
 	    rock = sconn->rock;
 	    if (rock)
 		rxi_Free(rock, sizeof(struct rxkad_serverinfo));
 	    rxi_Free(sconn, sizeof(struct rxkad_sconn));
 	} else {
-	    LOCK_RXKAD_STATS;
-	    rxkad_stats.destroyUnused++;
-	    UNLOCK_RXKAD_STATS;
+	    INC_RXKAD_STATS(destroyUnused);
 	}
     } else {			/* client */
 	struct rxkad_cconn *cconn;
@@ -298,9 +400,7 @@ rxkad_DestroyConnection(struct rx_securityClass *aobj,
 	    aconn->securityData = 0;
 	    rxi_Free(cconn, sizeof(struct rxkad_cconn));
 	}
-	LOCK_RXKAD_STATS;
-	rxkad_stats.destroyClient++;
-	UNLOCK_RXKAD_STATS;
+	INC_RXKAD_STATS(destroyClient);
     }
     aobj->refCount--;		/* decrement connection counter */
     if (aobj->refCount <= 0) {
@@ -341,17 +441,13 @@ rxkad_CheckPacket(struct rx_securityClass *aobj, struct rx_call *acall,
 	if (sconn && sconn->authenticated
 	    && (osi_Time() < sconn->expirationTime)) {
 	    level = sconn->level;
-	    LOCK_RXKAD_STATS;
-	    rxkad_stats.checkPackets[rxkad_StatIndex(rxkad_server, level)]++;
-	    UNLOCK_RXKAD_STATS;
+	    INC_RXKAD_STATS(checkPackets[rxkad_StatIndex(rxkad_server, level)]);
 	    sconn->stats.packetsReceived++;
 	    sconn->stats.bytesReceived += len;
 	    schedule = (fc_KeySchedule *) sconn->keysched;
 	    ivec = (fc_InitializationVector *) sconn->ivec;
 	} else {
-	    LOCK_RXKAD_STATS;
-	    rxkad_stats.expired++;
-	    UNLOCK_RXKAD_STATS;
+	    INC_RXKAD_STATS(expired);
 	    return RXKADEXPIRED;
 	}
 	preSeq = sconn->preSeq;
@@ -366,9 +462,7 @@ rxkad_CheckPacket(struct rx_securityClass *aobj, struct rx_call *acall,
 	if (!(tcp->type & rxkad_client))
 	    return RXKADINCONSISTENCY;
 	level = tcp->level;
-	LOCK_RXKAD_STATS;
-	rxkad_stats.checkPackets[rxkad_StatIndex(rxkad_client, level)]++;
-	UNLOCK_RXKAD_STATS;
+	INC_RXKAD_STATS(checkPackets[rxkad_StatIndex(rxkad_client, level)]);
 	cconn->stats.packetsReceived++;
 	cconn->stats.bytesReceived += len;
 	preSeq = cconn->preSeq;
@@ -434,18 +528,13 @@ rxkad_PreparePacket(struct rx_securityClass *aobj, struct rx_call *acall,
 	if (sconn && sconn->authenticated
 	    && (osi_Time() < sconn->expirationTime)) {
 	    level = sconn->level;
-	    LOCK_RXKAD_STATS;
-	    rxkad_stats.
-		preparePackets[rxkad_StatIndex(rxkad_server, level)]++;
-	    UNLOCK_RXKAD_STATS;
+	    INC_RXKAD_STATS(preparePackets[rxkad_StatIndex(rxkad_server, level)]);
 	    sconn->stats.packetsSent++;
 	    sconn->stats.bytesSent += len;
 	    schedule = (fc_KeySchedule *) sconn->keysched;
 	    ivec = (fc_InitializationVector *) sconn->ivec;
 	} else {
-	    LOCK_RXKAD_STATS;
-	    rxkad_stats.expired++;	/* this is a pretty unlikely path... */
-	    UNLOCK_RXKAD_STATS;
+	    INC_RXKAD_STATS(expired);	/* this is a pretty unlikely path... */
 	    return RXKADEXPIRED;
 	}
 	preSeq = sconn->preSeq;
@@ -457,9 +546,7 @@ rxkad_PreparePacket(struct rx_securityClass *aobj, struct rx_call *acall,
 	if (!(tcp->type & rxkad_client))
 	    return RXKADINCONSISTENCY;
 	level = tcp->level;
-	LOCK_RXKAD_STATS;
-	rxkad_stats.preparePackets[rxkad_StatIndex(rxkad_client, level)]++;
-	UNLOCK_RXKAD_STATS;
+	INC_RXKAD_STATS(preparePackets[rxkad_StatIndex(rxkad_client, level)]);
 	cconn->stats.packetsSent++;
 	cconn->stats.bytesSent += len;
 	preSeq = cconn->preSeq;

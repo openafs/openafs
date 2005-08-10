@@ -17,7 +17,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vol/vnode.c,v 1.19.2.2 2005/04/24 14:21:36 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vol/vnode.c,v 1.19.2.4 2005/07/28 21:11:19 shadow Exp $");
 
 #include <errno.h>
 #include <stdio.h>
@@ -321,6 +321,7 @@ VAllocVnode_r(Error * ec, Volume * vp, VnodeType type)
 	return NULL;
     vnodeNumber = bitNumberToVnodeNumber(bitNumber, class);
 
+ vnrehash:
     VNLog(2, 1, vnodeNumber);
     /* Prepare to move it to the new hash chain */
     newHash = VNODE_HASH(vp, vnodeNumber);
@@ -349,6 +350,10 @@ VAllocVnode_r(Error * ec, Volume * vp, VnodeType type)
 	    VOL_UNLOCK;
 	    ObtainWriteLock(&vnp->lock);
 	    VOL_LOCK;
+	    if (vnp->volumePtr->cacheCheck != vnp->cacheCheck) {
+		ReleaseWriteLock(&vnp->lock);
+		goto vnrehash;
+	    }
 	}
 #ifdef AFS_PTHREAD_ENV
 	vnp->writer = pthread_self();

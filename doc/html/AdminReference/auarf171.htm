@@ -1,0 +1,65 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 4//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3672/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 3 Oct 2000 at 16:18:30                -->
+<META HTTP-EQUIV="updated" CONTENT="Tue, 03 Oct 2000 16:18:29">
+<META HTTP-EQUIV="review" CONTENT="Wed, 03 Oct 2001 16:18:29">
+<META HTTP-EQUIV="expires" CONTENT="Thu, 03 Oct 2002 16:18:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf170.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf172.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRFSTRACE_CLEAR" HREF="auarf002.htm#ToC_185">fstrace clear</A></H2>
+<P><STRONG>Purpose</STRONG>
+<P>Clears the trace log
+<P><STRONG>Synopsis</STRONG>
+<PRE><B>fstrace clear</B> [<B>-set</B> &lt;<VAR>set_name</VAR>><SUP>+</SUP>]  [<B>-log</B> &lt;<VAR>log_name</VAR>><SUP>+</SUP>]  [<B>-help</B>] 
+           
+<B>fstrace c</B> [<B>-s</B> &lt;<VAR>set_name</VAR>><SUP>+</SUP>]  [<B>-l</B> &lt;<VAR>log_name</VAR>><SUP>+</SUP>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>Description</STRONG>
+<P>The <B>fstrace clear</B> command erases the contents of the trace log
+from kernel memory, but leaves kernel memory allocated for the log.
+<P><STRONG>Options</STRONG>
+<DL>
+<P><DT><B>-set
+</B><DD>Names the event set for which to clear the associated trace log.
+The only acceptable value is <B>cm</B> (for which the associated trace log
+is <B>cmfx</B>). Provide either this argument or the
+<B>-log</B> argument, or omit both to clear the <B>cmfx</B> log by
+default.
+<P><DT><B>-log
+</B><DD>Names the trace log to clear. The only acceptable value is
+<B>cmfx</B>. Provide either this argument or the <B>-set</B>
+argument, or omit both to clear the <B>cmfx</B> log by default.
+<P><DT><B>-help
+</B><DD>Prints the online help for this command. All other valid options
+are ignored.
+</DL>
+<P><STRONG>Examples</STRONG>
+<P>The following command clears the <B>cmfx</B> trace log on the local
+machine:
+<PRE>   # <B>fstrace clear</B>
+   
+</PRE>
+<P><STRONG>Privilege Required</STRONG>
+<P>The issuer must be logged in as the local superuser <B>root</B>.
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf169.htm#HDRFSTRACE_INTRO">fstrace</A>
+<P><A HREF="auarf174.htm#HDRFSTRACE_LSLOG">fstrace lslog</A>
+<P><A HREF="auarf175.htm#HDRFSTRACE_LSSET">fstrace lsset</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf170.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf172.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>
