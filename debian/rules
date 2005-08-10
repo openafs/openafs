@@ -42,16 +42,19 @@ LINTIAN_PACKAGES = openafs-dbserver openafs-client openafs-fileserver
 
 # These variable is used only by get-orig-source, which will normally only be
 # run by maintainers.
-VERSION   = 1.3.82
+VERSION   = 1.3.87
 UPSTREAM  = /afs/grand.central.org/software/openafs/$(VERSION)
 
 # Download the upstream source and do the repackaging that we have to do for
 # DFSG reasons.  This assumes AFS is mounted, as it's generally only used by
 # the package maintainers.
 get-orig-source:
-	cp $(UPSTREAM)/openafs-$(VERSION)-src.tar.gz .
-	tar xzf openafs-$(VERSION)-src.tar.gz
-	rm openafs-$(VERSION)-src.tar.gz
+	cp $(UPSTREAM)/openafs-$(VERSION)-src.tar.bz2 .
+	tar xjf openafs-$(VERSION)-src.tar.bz2
+	rm openafs-$(VERSION)-src.tar.bz2
+	cp $(UPSTREAM)/openafs-$(VERSION)-doc.tar.bz2 .
+	tar xjf openafs-$(VERSION)-doc.tar.bz2
+	rm openafs-$(VERSION)-doc.tar.bz2
 	rm -r openafs-$(VERSION)/src/packaging/MacOS
 	rm -r openafs-$(VERSION)/src/WINNT
 	tar cf openafs_$(VERSION).orig.tar openafs-$(VERSION)
