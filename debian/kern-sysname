@@ -77,6 +77,16 @@ ppc)
         ;;
     esac
     ;;
+ppc64)
+    case $KVERS in
+    2.4*)
+        echo ppc64_linux24
+        ;;
+    2.6*)
+        echo ppc64_linux26
+        ;;
+    esac
+    ;;
 s390)
     echo s390_linux24
     ;;

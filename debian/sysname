@@ -24,6 +24,9 @@ ia64)
 powerpc)
     echo ppc_linux24
     ;;
+ppc64)
+    echo ppc64_linux24
+    ;;
 s390)
     echo s390_linux24
     ;;
