@@ -52,9 +52,6 @@ get-orig-source:
 	cp $(UPSTREAM)/openafs-$(VERSION)-src.tar.bz2 .
 	tar xjf openafs-$(VERSION)-src.tar.bz2
 	rm openafs-$(VERSION)-src.tar.bz2
-	cp $(UPSTREAM)/openafs-$(VERSION)-doc.tar.bz2 .
-	tar xjf openafs-$(VERSION)-doc.tar.bz2
-	rm openafs-$(VERSION)-doc.tar.bz2
 	rm -r openafs-$(VERSION)/src/packaging/MacOS
 	rm -r openafs-$(VERSION)/src/WINNT
 	tar cf openafs_$(VERSION).orig.tar openafs-$(VERSION)
