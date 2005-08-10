@@ -611,6 +611,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_RLIM
 		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIGNAL_RLIM
 		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_EXIT_STATE
+		 LINUX_REFRIGERATOR
 		 LINUX_WHICH_MODULES
                  if test "x$ac_cv_linux_config_modversions" = "xno" -o $AFS_SYSKVERS -ge 26; then
                    AC_MSG_WARN([Cannot determine sys_call_table status. assuming it isn't exported])
