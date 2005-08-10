@@ -17,7 +17,7 @@ msgstr ""
 "Project-Id-Version: openafs 1.2.9-2\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2005-07-10 17:32-0700\n"
-"PO-Revision-Date: 2005-04-17 08:52+0200\n"
+"PO-Revision-Date: 2005-07-17 08:47+0200\n"
 "Last-Translator: Christian Perrier <bubulle@debian.org>\n"
 "Language-Team: French <debian-l10n-french@lists.debian.org>\n"
 "MIME-Version: 1.0\n"
@@ -276,9 +276,8 @@ msgstr ""
 #. Type: note
 #. Description
 #: ../openafs-fileserver.templates:22
-#, fuzzy
 msgid "OpenAFS file server probably does not work!"
-msgstr "Le serveur OpenAFS ne fonctionne probablement pas"
+msgstr "Le serveur de fichiers OpenAFS ne fonctionne probablement pas"
 
 #. Type: note
 #. Description

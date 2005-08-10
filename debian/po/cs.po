@@ -13,21 +13,21 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: openafs 1.3.81-4\n"
+"Project-Id-Version: openafs 1.3.82-2_\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2005-07-10 17:32-0700\n"
-"PO-Revision-Date: 2005-05-24 21:36+0200\n"
+"PO-Revision-Date: 2005-07-24 15:09+0200\n"
 "Last-Translator: Martin Sin <martin.sin@seznam.cz>\n"
 "Language-Team: Czech <debian-l10n-czech@lists.debian.org>\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=ISO-8859-2\n"
+"Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Type: string
 #. Description
 #: ../openafs-client.templates:3
 msgid "What hosts are DB servers for your home cell?"
-msgstr "Které poèítaèe jsou DB servery pro va¹i domovskou buòku?"
+msgstr "KterÃ© poÄÃ­taÄe jsou DB servery pro vaÅ¡i domovskou buÅˆku?"
 
 #. Type: string
 #. Description
@@ -43,21 +43,21 @@ msgid ""
 "cell is configured.  When you are ready you can edit /etc/openafs/afs.conf."
 "client to enable the client."
 msgstr ""
-"AFS pou¾ívá k uchovávání seznamu serverù, které mají bıt kontaktovány pøi "
-"hledání èástí buòky, soubor /etc/openafs/CellServDB. Buòka, do které tato "
-"stanice patøí, není ve zmínìném souboru uvedena. Zadejte mezerami oddìlená "
-"jména databázovıch serverù. DÙLE®ITÉ: pokud vytváøíte novou buòku a tento "
-"poèítaè bude databázovım serverem této buòky, pak staèí pouze zadat jméno "
-"poèítaèe; ostatní servery pøidejte pozdìji a¾ po jejich zprovoznìní. Dokud "
-"nebude buòka nastavena, tak na tomto serveru nepovolujte spu¹tìní AFS "
-"klienta pøi startu serveru. A¾ budete pøipraveni, mù¾ete klienta povolit "
-"úpravou souboru /etc/openafs/afs.conf.client."
+"AFS pouÅ¾Ã­vÃ¡ k uchovÃ¡vÃ¡nÃ­ seznamu serverÅ¯, kterÃ© majÃ­ bÃ½t kontaktovÃ¡ny pÅ™i "
+"hledÃ¡nÃ­ ÄÃ¡stÃ­ buÅˆky, soubor /etc/openafs/CellServDB. BuÅˆka, do kterÃ© tato "
+"stanice patÅ™Ã­, nenÃ­ ve zmÃ­nÄ›nÃ©m souboru uvedena. Zadejte mezerami oddÄ›lenÃ¡ "
+"jmÃ©na databÃ¡zovÃ½ch serverÅ¯. DÅ®LEÅ½ITÃ‰: pokud vytvÃ¡Å™Ã­te novou buÅˆku a tento "
+"poÄÃ­taÄ bude databÃ¡zovÃ½m serverem tÃ©to buÅˆky, pak staÄÃ­ pouze zadat jmÃ©no "
+"poÄÃ­taÄe; ostatnÃ­ servery pÅ™idejte pozdÄ›ji aÅ¾ po jejich zprovoznÄ›nÃ­. Dokud "
+"nebude buÅˆka nastavena, tak na tomto serveru nepovolujte spuÅ¡tÄ›nÃ­ AFS "
+"klienta pÅ™i startu serveru. AÅ¾ budete pÅ™ipraveni, mÅ¯Å¾ete klienta povolit "
+"Ãºpravou souboru /etc/openafs/afs.conf.client."
 
 #. Type: string
 #. Description
 #: ../openafs-client.templates:16
 msgid "What AFS cell does this workstation belong to?"
-msgstr "Ke které buòce AFS bude tento poèítaè nále¾et?"
+msgstr "Ke kterÃ© buÅˆce AFS bude tento poÄÃ­taÄ nÃ¡leÅ¾et?"
 
 #. Type: string
 #. Description
@@ -67,15 +67,15 @@ msgid ""
 "workstation belongs to one cell.  Usually the cell is the DNS domain name of "
 "the site."
 msgstr ""
-"Souborovı prostor systému AFS je uspoøádán do bunìk nebo administrativních "
-"domén. Ka¾dá stanice patøí jedné buòce. Obvykle je buòkou doménové jméno "
+"SouborovÃ½ prostor systÃ©mu AFS je uspoÅ™Ã¡dÃ¡n do bunÄ›k nebo administrativnÃ­ch "
+"domÃ©n. KaÅ¾dÃ¡ stanice patÅ™Ã­ jednÃ© buÅˆce. Obvykle je buÅˆkou domÃ©novÃ© jmÃ©no "
 "skupiny."
 
 #. Type: string
 #. Description
 #: ../openafs-client.templates:24
 msgid "How large is your AFS cache (kB)?"
-msgstr "Jak velká je va¹e cache AFS (v kB)?"
+msgstr "Jak velkÃ¡ je vaÅ¡e cache AFS (v kB)?"
 
 #. Type: string
 #. Description
@@ -86,16 +86,16 @@ msgid ""
 "not overfill the partition it is located on.  Often, people find it useful "
 "to dedicate a partition to their AFS cache."
 msgstr ""
-"AFS pou¾ívá urèitı prostor na disku pro cachování vzdálenıch souborù, aby k "
-"nim mìl rychlej¹í pøístup. Tato cache bude pøipojena do /var/cache/openafs. "
-"Je dùle¾ité, aby cache nepøeplnila oblast na které je umístìna. Èasto je "
-"u¾iteèné umístit cache AFS do své vlastní diskové oblasti."
+"AFS pouÅ¾Ã­vÃ¡ urÄitÃ½ prostor na disku pro cachovÃ¡nÃ­ vzdÃ¡lenÃ½ch souborÅ¯, aby k "
+"nim mÄ›l rychlejÅ¡Ã­ pÅ™Ã­stup. Tato cache bude pÅ™ipojena do /var/cache/openafs. "
+"Je dÅ¯leÅ¾itÃ©, aby cache nepÅ™eplnila oblast na kterÃ© je umÃ­stÄ›na. ÄŒasto je "
+"uÅ¾iteÄnÃ© umÃ­stit cache AFS do svÃ© vlastnÃ­ diskovÃ© oblasti."
 
 #. Type: boolean
 #. Description
 #: ../openafs-client.templates:34
 msgid "Run Openafs client now and at boot?"
-msgstr "Spustit klienta Openafs nyní a pøi zavádìní poèítaèe?"
+msgstr "Spustit klienta Openafs nynÃ­ a pÅ™i zavÃ¡dÄ›nÃ­ poÄÃ­taÄe?"
 
 #. Type: boolean
 #. Description
@@ -108,18 +108,18 @@ msgid ""
 "boot , run /etc/init.d/openafs-client force-start  to start the client when "
 "you wish to run it."
 msgstr ""
-"Má bıt souborovı systém Openafs spu¹tìn a pøipojen pøi startu poèítaèe? "
-"Vìt¹ina u¾ivatelù, kteøí instalují balíèek openafs-client, oèekává, ¾e se "
-"AFS spustí hned pøi startu poèítaèe. Samozøejmì, pokud plánujete nastavení "
-"nové buòky, nebo pokud pou¾íváte laptop, pak byste zøejmì AFS pøi startu "
-"spou¹tìt nechtìli. Zvolíte-li mo¾nost nespou¹tìt AFS pøi startu poèítaèe, "
-"mù¾ete klienta spustit ruènì pøíkazem /etc/init.d/openafs-client force-start."
+"MÃ¡ bÃ½t souborovÃ½ systÃ©m Openafs spuÅ¡tÄ›n a pÅ™ipojen pÅ™i startu poÄÃ­taÄe? "
+"VÄ›tÅ¡ina uÅ¾ivatelÅ¯, kteÅ™Ã­ instalujÃ­ balÃ­Äek openafs-client, oÄekÃ¡vÃ¡, Å¾e se "
+"AFS spustÃ­ hned pÅ™i startu poÄÃ­taÄe. SamozÅ™ejmÄ›, pokud plÃ¡nujete nastavenÃ­ "
+"novÃ© buÅˆky, nebo pokud pouÅ¾Ã­vÃ¡te laptop, pak byste zÅ™ejmÄ› AFS pÅ™i startu "
+"spouÅ¡tÄ›t nechtÄ›li. ZvolÃ­te-li moÅ¾nost nespouÅ¡tÄ›t AFS pÅ™i startu poÄÃ­taÄe, "
+"mÅ¯Å¾ete klienta spustit ruÄnÄ› pÅ™Ã­kazem /etc/init.d/openafs-client force-start."
 
 #. Type: boolean
 #. Description
 #: ../openafs-client.templates:45
 msgid "Look up AFS cells in DNS?"
-msgstr "Hledat buòky AFS v DNS?"
+msgstr "Hledat buÅˆky AFS v DNS?"
 
 #. Type: boolean
 #. Description
@@ -130,16 +130,16 @@ msgid ""
 "CellServDB.  However, if Openafs cannot find a cell in that file it can use "
 "DNS to look for AFSDB records that contain the information."
 msgstr ""
-"Pro kontaktování buòky AFS potøebujete znát IP adresu databázového serveru "
-"buòky. Obvykle lze tuto informaci pøeèíst ze souboru /etc/openafs/"
-"CellServDB. Nicménì pokud Openafs nemù¾e najít buòku v tomto souboru, mù¾e "
-"pou¾ít DNS pro vyhledání AFSDB záznamù, které obsahují po¾adované informace."
+"Pro kontaktovÃ¡nÃ­ buÅˆky AFS potÅ™ebujete znÃ¡t IP adresu databÃ¡zovÃ©ho serveru "
+"buÅˆky. Obvykle lze tuto informaci pÅ™eÄÃ­st ze souboru /etc/openafs/"
+"CellServDB. NicmÃ©nÄ› pokud Openafs nemÅ¯Å¾e najÃ­t buÅˆku v tomto souboru, mÅ¯Å¾e "
+"pouÅ¾Ã­t DNS pro vyhledÃ¡nÃ­ AFSDB zÃ¡znamÅ¯, kterÃ© obsahujÃ­ poÅ¾adovanÃ© informace."
 
 #. Type: boolean
 #. Description
 #: ../openafs-client.templates:55
 msgid "Encrypt authenticated traffic with AFS fileserver?"
-msgstr "©ifrovat autentikovanı provoz se souborovım serverem AFS?"
+msgstr "Å ifrovat autentikovanÃ½ provoz se souborovÃ½m serverem AFS?"
 
 #. Type: boolean
 #. Description
@@ -151,10 +151,10 @@ msgid ""
 "confidentiality and is likely to make the job of a casual attacker "
 "significantly more difficult."
 msgstr ""
-"AFS poskytuje slabou formu ¹ifrování, která mù¾e bıt nepovinnì pou¾ita mezi "
-"klientem a souborovım serverem. Pøesto¾e je toto ¹ifrování slab¹í ne¾ DES a "
-"tedy není dostateèné pro velmi dùvìrná data, poskytuje urèitou formu utajení "
-"a urèitì tak ztí¾í práci náhodnému útoèníkovi."
+"AFS poskytuje slabou formu Å¡ifrovÃ¡nÃ­, kterÃ¡ mÅ¯Å¾e bÃ½t nepovinnÄ› pouÅ¾ita mezi "
+"klientem a souborovÃ½m serverem. PÅ™estoÅ¾e je toto Å¡ifrovÃ¡nÃ­ slabÅ¡Ã­ neÅ¾ DES a "
+"tedy nenÃ­ dostateÄnÃ© pro velmi dÅ¯vÄ›rnÃ¡ data, poskytuje urÄitou formu utajenÃ­ "
+"a urÄitÄ› tak ztÃ­Å¾Ã­ prÃ¡ci nÃ¡hodnÃ©mu ÃºtoÄnÃ­kovi."
 
 #. Type: boolean
 #. Description
@@ -171,10 +171,10 @@ msgid ""
 "cell.  However, OpenAFS clients can generate the contents of /afs "
 "dynamically based on the contents of /etc/openafs/CellServDB and DNS."
 msgstr ""
-"/afs obvykle obsahuje záznam pro ka¾dou buòku, se kterou mù¾e klient "
-"hovoøit. Tradiènì jsou tyto záznamy vytváøeny servery v mateøské buòce "
-"klienta. Klienti OpenAFS v¹ak mohou generovat obsah adresáøe /afs dynamicky "
-"na základì souboru /etc/openafs/CellServDB a systému DNS."
+"/afs obvykle obsahuje zÃ¡znam pro kaÅ¾dou buÅˆku, se kterou mÅ¯Å¾e klient "
+"hovoÅ™it. TradiÄnÄ› jsou tyto zÃ¡znamy vytvÃ¡Å™eny servery v mateÅ™skÃ© buÅˆce "
+"klienta. Klienti OpenAFS vÅ¡ak mohou generovat obsah adresÃ¡Å™e /afs dynamicky "
+"na zÃ¡kladÄ› souboru /etc/openafs/CellServDB a systÃ©mu DNS."
 
 #. Type: boolean
 #. Description
@@ -184,15 +184,15 @@ msgid ""
 "CellAlias to include aliases for common cells. DO NOT SELECT THIS OPTION IF "
 "THIS MACHINE IS THE FIRST DATABASE SERVER IN A NEW CELL."
 msgstr ""
-"Pokud vytváøíte /afs dynamicky, mo¾ná budete muset vytvoøit /etc/openafs/"
-"CellAlias pro zaèlenìní aliasù bì¾nıch bunìk. NEVYBÍREJTE SI TUTO MO®NOST, "
-"POKUD JE TENTO POÈÍTAÈ PRVNÍM DATABÁZOVİM SERVEREM V NOVÉ BUÒCE."
+"Pokud vytvÃ¡Å™Ã­te /afs dynamicky, moÅ¾nÃ¡ budete muset vytvoÅ™it /etc/openafs/"
+"CellAlias pro zaÄlenÄ›nÃ­ aliasÅ¯ bÄ›Å¾nÃ½ch bunÄ›k. NEVYBÃREJTE SI TUTO MOÅ½NOST, "
+"POKUD JE TENTO POÄŒÃTAÄŒ PRVNÃM DATABÃZOVÃM SERVEREM V NOVÃ‰ BUÅ‡CE."
 
 #. Type: boolean
 #. Description
 #: ../openafs-client.templates:78
 msgid "Use fakestat to avoid hangs when listing /afs?"
-msgstr "Pou¾ít fakestat pro obejití zatuhnutí pøi vıpisu /afs?"
+msgstr "PouÅ¾Ã­t fakestat pro obejitÃ­ zatuhnutÃ­ pÅ™i vÃ½pisu /afs?"
 
 #. Type: boolean
 #. Description
@@ -205,18 +205,18 @@ msgid ""
 "operations locally to avoid these hangs.  You want this option under most "
 "circumstances."
 msgstr ""
-"Proto¾e je AFS globální souborovı prostor, mohou operace na adresáøi /afs "
-"vızraznì zvı¹it provoz na síti. Pokud jsou nìkteré buòky AFS nedosa¾itelné, "
-"pak mù¾e prohlí¾ení /afs pomocí pøíkazu ls nebo grafického prohlí¾eèe "
-"zpùsobit zatuhnutí poèítaèe na dobu nìkolika minut. AFS má volbu, která "
-"simuluje odpovìdi pro tyto operace a tak se sna¾í vyhnout popsanım vıpadkùm. "
-"Tuto volbu budete chtít pou¾ít ve vìt¹inì pøípadù."
+"ProtoÅ¾e je AFS globÃ¡lnÃ­ souborovÃ½ prostor, mohou operace na adresÃ¡Å™i /afs "
+"vÃ½zraznÄ› zvÃ½Å¡it provoz na sÃ­ti. Pokud jsou nÄ›kterÃ© buÅˆky AFS nedosaÅ¾itelnÃ©, "
+"pak mÅ¯Å¾e prohlÃ­Å¾enÃ­ /afs pomocÃ­ pÅ™Ã­kazu ls nebo grafickÃ©ho prohlÃ­Å¾eÄe "
+"zpÅ¯sobit zatuhnutÃ­ poÄÃ­taÄe na dobu nÄ›kolika minut. AFS mÃ¡ volbu, kterÃ¡ "
+"simuluje odpovÄ›di pro tyto operace a tak se snaÅ¾Ã­ vyhnout popsanÃ½m vÃ½padkÅ¯m. "
+"Tuto volbu budete chtÃ­t pouÅ¾Ã­t ve vÄ›tÅ¡inÄ› pÅ™Ã­padÅ¯."
 
 #. Type: string
 #. Description
 #: ../openafs-fileserver.templates:3
 msgid "What cell does this server serve files for?"
-msgstr "Kterım buòkám má tento server poskytovat soubory?"
+msgstr "KterÃ½m buÅˆkÃ¡m mÃ¡ tento server poskytovat soubory?"
 
 #. Type: string
 #. Description
@@ -226,15 +226,15 @@ msgid ""
 "Kerberos service and serve volumes into that cell.  Normally, this cell is "
 "the same cell as the workstation's client belongs to."
 msgstr ""
-"Souborové servery AFS nále¾í buòce. Servery mají klíè ke slu¾bì Kerberos "
-"dané buòky a v rámci buòky nabízejí souborové svazky. Tato buòka je obvykle "
-"shodná s buòkou, ke které patøí klient na pracovní stanici."
+"SouborovÃ© servery AFS nÃ¡leÅ¾Ã­ buÅˆce. Servery majÃ­ klÃ­Ä ke sluÅ¾bÄ› Kerberos "
+"danÃ© buÅˆky a v rÃ¡mci buÅˆky nabÃ­zejÃ­ souborovÃ© svazky. Tato buÅˆka je obvykle "
+"shodnÃ¡ s buÅˆkou, ke kterÃ© patÅ™Ã­ klient na pracovnÃ­ stanici."
 
 #. Type: boolean
 #. Description
 #: ../openafs-fileserver.templates:11
 msgid "Upgrading will move files to new locations; continue?"
-msgstr "Upgradování pøesune soubory do nového umístìní; pokraèovat?"
+msgstr "UpgradovÃ¡nÃ­ pÅ™esune soubory do novÃ©ho umÃ­stÄ›nÃ­; pokraÄovat?"
 
 #. Type: boolean
 #. Description
@@ -247,20 +247,19 @@ msgid ""
 "these files will be moved.  You should use the bos restart command to reload "
 "your servers.  Any configuration changes made before you do so will be lost."
 msgstr ""
-"Verze Openafs 1.1 a Openafs 1.2 mají pøesunuty nìkteré soubory. Pøesnìji "
-"øeèeno: soubory z /etc/openafs/server-local byly pøesunuty jinam. "
-"Konfiguraèní soubor BosConfig je nyní umístìn v /etc/openafs, ostatní "
-"soubory jsou ulo¾eny v adresáøi /var/lib/openafs. Pokud budete pokraèovat v "
-"aktualizaci, budou tyto soubory pøesunuty. K opìtovnému naètení va¹ich "
-"serverù mù¾ete pou¾ít pøikaz bos, kterı provede restart. Jakákoliv zmìna "
-"konfigurace provedená pøed tímto restartem bude ztracena."
+"Verze Openafs 1.1 a Openafs 1.2 majÃ­ pÅ™esunuty nÄ›kterÃ© soubory. PÅ™esnÄ›ji "
+"Å™eÄeno: soubory z /etc/openafs/server-local byly pÅ™esunuty jinam. "
+"KonfiguraÄnÃ­ soubor BosConfig je nynÃ­ umÃ­stÄ›n v /etc/openafs, ostatnÃ­ "
+"soubory jsou uloÅ¾eny v adresÃ¡Å™i /var/lib/openafs. Pokud budete pokraÄovat v "
+"aktualizaci, budou tyto soubory pÅ™esunuty. K opÄ›tovnÃ©mu naÄtenÃ­ vaÅ¡ich "
+"serverÅ¯ mÅ¯Å¾ete pouÅ¾Ã­t pÅ™ikaz bos, kterÃ½ provede restart. JakÃ¡koliv zmÄ›na "
+"konfigurace provedenÃ¡ pÅ™ed tÃ­mto restartem bude ztracena."
 
 #. Type: note
 #. Description
 #: ../openafs-fileserver.templates:22
-#, fuzzy
 msgid "OpenAFS file server probably does not work!"
-msgstr "Souborovı server OpenAFS pravdìpodobnì nepracuje!"
+msgstr "SouborovÃ½ server OpenAFS pravdÄ›podobnÄ› nepracuje!"
 
 #. Type: note
 #. Description
@@ -271,7 +270,7 @@ msgid ""
 "file server.  Likely, the fileserver will simply fail to start, but if it "
 "does load, data corruption may result.  You have been warned."
 msgstr ""
-"Souborovı server OpenAFS bì¾í na Aplha systému, co¾ pravdìpodobnì nebude "
-"fungovat; DES kód se ve spojení s vlákny na souborovém serveru chová "
-"podivnì. Souborovı server nejpravdìpodobnìji vùbec nespustí nespustí, ale "
-"pokud nabìhne, mù¾e dojít ke ztrátì dat. Byli jste varováni."
+"SouborovÃ½ server OpenAFS bÄ›Å¾Ã­ na Aplha systÃ©mu, coÅ¾ pravdÄ›podobnÄ› nebude "
+"fungovat; DES kÃ³d se ve spojenÃ­ s vlÃ¡kny na souborovÃ©m serveru chovÃ¡ "
+"podivnÄ›. SouborovÃ½ server nejpravdÄ›podobnÄ›ji vÅ¯bec nespustÃ­ nespustÃ­, ale "
+"pokud nabÄ›hne, mÅ¯Å¾e dojÃ­t ke ztrÃ¡tÄ› dat. Byli jste varovÃ¡ni."

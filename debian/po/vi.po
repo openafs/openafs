@@ -4,10 +4,10 @@
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: openafs 1.3.82-1\n"
+"Project-Id-Version: openafs 1.3.82-2\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2005-07-10 17:32-0700\n"
-"PO-Revision-Date: 2005-07-02 15:32+0930\n"
+"PO-Revision-Date: 2005-07-24 17:50+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <gnomevi-list@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -259,9 +259,8 @@ msgstr ""
 #. Type: note
 #. Description
 #: ../openafs-fileserver.templates:22
-#, fuzzy
 msgid "OpenAFS file server probably does not work!"
-msgstr "Rất có thể là dịch vụ tập tin của OpenAFS không hoạt động."
+msgstr "Rất có thể là trình phục vụ tập tin OpenAFS không hoạt động."
 
 #. Type: note
 #. Description

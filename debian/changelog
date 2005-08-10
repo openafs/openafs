@@ -6,6 +6,10 @@ openafs (1.3.87-1) unstable; urgency=low
     they occur normally when doing the regular package build and are just
     confusing.  Instead, print an error in kern-sysname and abort if the
     kernel version could not be determined.
+  * Translation updates.
+    - French, thanks Christian Perrier.  (Closes: #318807)
+    - Vietnamese, thanks Clytie Siddall.  (Closes: #319705)
+    - Czech, thanks Martin Sin.  (Closes: #319940)
 
  --
 
