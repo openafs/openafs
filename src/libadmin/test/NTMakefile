@@ -22,6 +22,7 @@ AFSCP_EXELIBS =\
 	$(DESTDIR)\lib\afs\afsptsadmin.lib \
 	$(DESTDIR)\lib\afsauthent.lib \
 	$(DESTDIR)\lib\afsrpc.lib \
+        $(DESTDIR)\lib\afs\afsutil.lib \
 	$(DESTDIR)\lib\afs\afscmd.lib  # static library
 
 AFSCP_EXEOBJS =\

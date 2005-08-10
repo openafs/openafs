@@ -57,7 +57,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/afsd/afsd.c,v 1.43.2.7 2005/04/24 14:28:40 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afsd/afsd.c,v 1.43.2.10 2005/06/21 20:13:52 shadow Exp $");
 
 #define VFS 1
 
@@ -2055,7 +2055,10 @@ mainproc(as, arock)
 	if (afsd_verbose)
 	    printf("%s: Mounting the AFS root on '%s', flags: %d.\n", rn,
 		   cacheMountDir, mountFlags);
-#ifdef AFS_FBSD_ENV
+#if defined(AFS_FBSD60_ENV)
+	/* data must be non-NULL but is otherwise ignored */
+	if ((mount(MOUNT_AFS, cacheMountDir, mountFlags, rn)) < 0) {
+#elif defined(AFS_FBSD_ENV)
 	if ((mount("AFS", cacheMountDir, mountFlags, (caddr_t) 0)) < 0) {
 #elif defined(AFS_AIX_ENV)
 	if (aix_vmount()) {
@@ -2065,8 +2068,7 @@ mainproc(as, arock)
 	if ((mount("AFS", cacheMountDir, mountFlags, "afs", NULL, 0)) < 0) {
 #elif defined(AFS_SGI_ENV)
 	mountFlags = MS_FSS;
-	if ((mount(MOUNT_AFS, cacheMountDir, mountFlags, (caddr_t) MOUNT_AFS))
-	    < 0) {
+	if ((mount(MOUNT_AFS, cacheMountDir, mountFlags, (caddr_t) MOUNT_AFS)) < 0) {
 #elif defined(AFS_LINUX20_ENV)
 	if ((mount("AFS", cacheMountDir, MOUNT_AFS, 0, NULL)) < 0) {
 #else

@@ -1,5 +1,5 @@
 /* 
- * $Id: linked_list.c,v 1.1.2.1 2004/12/07 05:51:24 shadow Exp $
+ * $Id: linked_list.c,v 1.1.2.2 2005/07/15 16:11:24 rra Exp $
  * 
  * This file contains general linked list routines.
  * 
@@ -8,10 +8,12 @@
  */
 
 #if !defined(lint) && !defined(SABER)
-static char *rcsid_list_c = "$Id: linked_list.c,v 1.1.2.1 2004/12/07 05:51:24 shadow Exp $";
+static char *rcsid_list_c = "$Id: linked_list.c,v 1.1.2.2 2005/07/15 16:11:24 rra Exp $";
 #endif /* lint || SABER */
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "linked_list.h"
 
 #ifndef NULL
@@ -26,9 +28,6 @@ static char *rcsid_list_c = "$Id: linked_list.c,v 1.1.2.1 2004/12/07 05:51:24 sh
 #define FALSE 0
 #endif
 
-char *calloc();
-
-#ifdef __STDC__
 void ll_init(linked_list *list)
   /* 
    * Requires:
@@ -40,10 +39,6 @@ void ll_init(linked_list *list)
    *   Initializes the list to be one with no elements.  If list is
    *   NULL, prints an error message and causes the program to crash.
    */
-#else
-void ll_init(list)
-  linked_list *list;
-#endif /* __STDC__ */
 {
     if (list == NULL) {
 	fprintf(stderr, "Error: calling ll_init with null pointer.\n");
@@ -58,7 +53,6 @@ void ll_init(list)
 #endif /* WINDOWS */
 }
 
-#ifdef __STDC__
 ll_node *ll_add_node(linked_list *list, ll_end which_end)
   /*
    * Modifies:
@@ -70,11 +64,6 @@ ll_node *ll_add_node(linked_list *list, ll_end which_end)
    *   list.h.  If there is not enough memory to allocate a node, 
    *   the program returns NULL.
    */
-#else
-ll_node *ll_add_node(list, which_end)
-  linked_list *list;
-  ll_end which_end;
-#endif /* __STDC__ */
 {
     ll_node *node = NULL;
     
@@ -110,7 +99,6 @@ ll_node *ll_add_node(list, which_end)
 }
 
 
-#ifdef __STDC__
 int ll_delete_node(linked_list *list, ll_node *node)
   /* 
    * Modifies: 
@@ -122,11 +110,6 @@ int ll_delete_node(linked_list *list, ll_node *node)
    *   this routine frees node, after the routine is called, "node"
    *   won't point to valid data.
    */
-#else
-int ll_delete_node(list, node)
-  linked_list *list;
-  ll_node *node;
-#endif /* __STDC__ */
 {
     int status = LL_SUCCESS;
     ll_node *cur_node = NULL;
@@ -166,14 +149,7 @@ int ll_delete_node(list, node)
 /* ll_add_data is a macro defined in linked_list.h */
 
 /* This routine maintains a list of strings preventing duplication. */
-#ifdef __STDC__
 int ll_string(linked_list *list, ll_s_action action, char *string)
-#else
-int ll_string(list, action, string)
-  linked_list *list;
-  ll_s_action action;
-  char *string;
-#endif /* __STDC__ */
 {
     int status = LL_SUCCESS;
     ll_node *cur_node;

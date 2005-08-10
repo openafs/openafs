@@ -18,7 +18,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_rename.c,v 1.16.2.5 2005/04/03 18:15:40 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_rename.c,v 1.16.2.7 2005/06/10 21:11:49 jaltman Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -120,8 +120,6 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
 
     osi_dnlc_remove(aodp, aname1, 0);
     osi_dnlc_remove(andp, aname2, 0);
-    afs_symhint_inval(aodp);
-    afs_symhint_inval(andp);
 
     /*
      * Make sure that the data in the cache is current. We may have
@@ -360,7 +358,7 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
 
 int
 #if defined(AFS_SGI_ENV)
-afs_rename(OSI_VC_DECL(aodp), char *aname1, struct vcache *andp, achar *name2, struct pathname *npnp, struct AFS_UCRED *acred)
+afs_rename(OSI_VC_DECL(aodp), char *aname1, struct vcache *andp, char *aname2, struct pathname *npnp, struct AFS_UCRED *acred)
 #else
 afs_rename(OSI_VC_DECL(aodp), char *aname1, struct vcache *andp, char *aname2, struct AFS_UCRED *acred)
 #endif

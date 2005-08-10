@@ -11,11 +11,12 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vlserver/vlserver.c,v 1.18 2003/12/07 22:49:42 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/vlserver/vlserver.c,v 1.18.2.1 2005/07/11 19:08:50 shadow Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
 #include <signal.h>
+#include <sys/stat.h>
 #ifdef HAVE_FCNTL_H
 #include <fcntl.h>
 #endif
@@ -182,6 +183,35 @@ main(argc, argv)
 	    extern char rxi_tracename[80];
 	    strcpy(rxi_tracename, argv[++index]);
 
+       } else if (strcmp(argv[index], "-auditlog") == 0) {
+	   int tempfd, flags;
+           FILE *auditout;
+           char oldName[MAXPATHLEN];
+           char *fileName = argv[++index];
+
+#ifndef AFS_NT40_ENV
+           struct stat statbuf;
+
+           if ((lstat(fileName, &statbuf) == 0) 
+               && (S_ISFIFO(statbuf.st_mode))) {
+               flags = O_WRONLY | O_NONBLOCK;
+           } else 
+#endif
+           {
+               strcpy(oldName, fileName);
+               strcat(oldName, ".old");
+               renamefile(fileName, oldName);
+               flags = O_WRONLY | O_TRUNC | O_CREAT;
+           }
+           tempfd = open(fileName, flags, 0666);
+           if (tempfd > -1) {
+               auditout = fdopen(tempfd, "a");
+               if (auditout) {
+                   osi_audit_file(auditout);
+               } else
+                   printf("Warning: auditlog %s not writable, ignored.\n", fileName);
+           } else
+               printf("Warning: auditlog %s not writable, ignored.\n", fileName);
 	} else if (strcmp(argv[index], "-enable_peer_stats") == 0) {
 	    rx_enablePeerRPCStats();
 	} else if (strcmp(argv[index], "-enable_process_stats") == 0) {
@@ -198,11 +228,13 @@ main(argc, argv)
 	    /* support help flag */
 #ifndef AFS_NT40_ENV
 	    printf("Usage: vlserver [-p <number of processes>] [-nojumbo] "
+		   "[-auditlog <log path>] "
 		   "[-syslog[=FACILITY]] "
 		   "[-enable_peer_stats] [-enable_process_stats] "
 		   "[-help]\n");
 #else
 	    printf("Usage: vlserver [-p <number of processes>] [-nojumbo] "
+		   "[-auditlog <log path>] "
 		   "[-enable_peer_stats] [-enable_process_stats] "
 		   "[-help]\n");
 #endif

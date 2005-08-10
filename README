@@ -33,31 +33,23 @@ A. Creating the proper directory structure.
       alpha_dux40
       alpha_dux50 (only tested on 5.0A, does not work with 5.1)
       i386_fbsd_42, i386_fbsd_43, i386_fbsd_44, i386_fbsd_45,
-	      i386_fbsd_46, i386_fbsd_47, i386_fbsd_50, i386_fbsd_51,
-	      i386_fbsd_52, i386_fbsd_53
-      i386_linux22
-      i386_linux24
-      i386_linux26
-      i386_umlinux22
-      i386_umlinux24
+         i386_fbsd_46, i386_fbsd_47, i386_fbsd_50, i386_fbsd_51,
+         i386_fbsd_52, i386_fbsd_53, i386_fbsd_60
+      i386_linux22, i386_linux24, i386_linux26
+      i386_umlinux22, i386_umlinux24
       i386_obsd31, i386_obsd32, i386_obsd33, i386_obsd34, i386_obsd35,
-	      i386_obsd36
+         i386_obsd36
       rs_aix42
       sgi_65 (file server not tested)
       sun4_413 (No client support, no fileserver support, db servers only)
       sun4x_56, sun4x_57, sun4x_58, sun4x_59 (logging UFS not supported 
-	      for mixed-use partitions containing client cache)
+         for mixed-use partitions containing client cache)
       ppc_darwin_70
-      ppc_linux22
-      ppc_linux24
-      alpha_linux22 
-      alpha_linux24 
-      ia64_linux24
-      ia64_linux26
-      sparc_linux22
-      sparc_linux24
-      sparc64_linux22
-      sparc64_linux24
+      ppc_linux22, ppc_linux24
+      alpha_linux22, alpha_linux24 
+      ia64_linux24, ia64_linux26
+      sparc_linux22, sparc_linux24
+      sparc64_linux22, sparc64_linux24
       hp_ux110 (See notes below for information on getting missing header)
       hp_ux102 (Client port possible, but db servers and utilities work)
 
@@ -65,16 +57,9 @@ A. Creating the proper directory structure.
       AFS system type, providing the necessary flags:
       % ./configure --with-afs-sysname=sun4x_58 --enable-transarc-paths
 
-      For Linux systems you need also provide the path in which your
-      kernel headers for your configured kernel can be found. This should
-      be the path of the directory containing a child directory named
-      "include". So if your version file was 
-      /usr/src/linux/include/linux/version.h you would invoke:
-      % ./configure --with-afs-sysname=i386_linux24 --with-linux-kernel-headers=/usr/src/linux
-
-      Currently you can build for only one Linux kernel at a time,
-      and the version is extracted from the kernel headers in the root
-      you specify.
+      For some systems you need also provide the path in which your kernel
+      headers for your configured kernel can be found.  See the
+      system-specific Notes sections below for details.
 
       Be prepared to provide the switches --enable-obsolete and
       --enable-insecure if you require the use of any bundled but obsolete
@@ -135,9 +120,20 @@ C  Problems
 
 D  Linux Notes
 
+   For Linux systems you need also provide the path in which your
+   kernel headers for your configured kernel can be found. This should
+   be the path of the directory containing a child directory named
+   "include". So if your version file was 
+   /usr/src/linux/include/linux/version.h you would invoke:
+   % ./configure --with-afs-sysname=i386_linux24 --with-linux-kernel-headers=/usr/src/linux
+
+   Currently you can build for only one Linux kernel at a time,
+   and the version is extracted from the kernel headers in the root
+   you specify.
+
    To build for another Linux kernel version:
    the system type defined in step A1.
-      % ./configure --with-afs-sysname=i386_linux22 --with-linux-kernel-headers=/usr/src/linux-2.2.19-i686
+      % ./configure --with-afs-sysname=i386_linux24 --with-linux-kernel-headers=/usr/src/linux-2.2.19-i686
       % make 
 
    Your dest tree will now include an additional kernel module for your

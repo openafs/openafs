@@ -51,7 +51,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/ptserver/ptprocs.c,v 1.21.2.2 2005/04/27 01:55:54 shadow Exp $");
+    ("$Header: /cvs/openafs/src/ptserver/ptprocs.c,v 1.21.2.7 2005/07/11 19:54:50 shadow Exp $");
 
 #include <afs/stds.h>
 #include <ctype.h>
@@ -229,26 +229,28 @@ SPR_INewEntry(call, aname, aid, oid)
      afs_int32 oid;
 {
     afs_int32 code;
+    afs_int32 cid = ANONYMOUSID;
 
-    code = iNewEntry(call, aname, aid, oid);
-    osi_auditU(call, PTS_INewEntEvent, code, AUD_LONG, aid, AUD_STR, aname,
-	       AUD_LONG, oid, AUD_END);
+    code = iNewEntry(call, aname, aid, oid, &cid);
+    osi_auditU(call, PTS_INewEntEvent, code, AUD_ID, aid, AUD_STR, aname,
+	       AUD_ID, oid, AUD_END);
+    ViceLog(25, ("PTS_INewEntry: code %d cid %d aid %d aname %s oid %d", code, cid, aid, aname, oid));
     return code;
 }
 
 afs_int32
-iNewEntry(call, aname, aid, oid)
+iNewEntry(call, aname, aid, oid, cid)
      struct rx_call *call;
      char aname[PR_MAXNAMELEN];
      afs_int32 aid;
      afs_int32 oid;
+     afs_int32 * cid;
 {
     /* used primarily for conversion - not intended to be used as usual means
      * of entering people into the database. */
     struct ubik_trans *tt;
     register afs_int32 code;
     afs_int32 gflag = 0;
-    afs_int32 cid;
     int admin;
 
     stolower(aname);
@@ -265,10 +267,10 @@ iNewEntry(call, aname, aid, oid)
     if (code)
 	ABORT_WITH(tt, code);
 
-    code = WhoIsThis(call, tt, &cid);
+    code = WhoIsThis(call, tt, cid);
     if (code)
 	ABORT_WITH(tt, PRPERM);
-    admin = IsAMemberOf(tt, cid, SYSADMINID);
+    admin = IsAMemberOf(tt, *cid, SYSADMINID);
 
     /* first verify the id is good */
     if (aid == 0)
@@ -283,10 +285,10 @@ iNewEntry(call, aname, aid, oid)
 	ABORT_WITH(tt, PRIDEXIST);
 
     /* check a few other things */
-    if (!CreateOK(tt, cid, oid, gflag, admin))
+    if (!CreateOK(tt, *cid, oid, gflag, admin))
 	ABORT_WITH(tt, PRPERM);
 
-    code = CreateEntry(tt, aname, &aid, 1, gflag, oid, cid);
+    code = CreateEntry(tt, aname, &aid, 1, gflag, oid, *cid);
     if (code != PRSUCCESS)
 	ABORT_WITH(tt, code);
 
@@ -307,24 +309,26 @@ SPR_NewEntry(call, aname, flag, oid, aid)
      afs_int32 *aid;
 {
     afs_int32 code;
+    afs_int32 cid = ANONYMOUSID;
 
-    code = newEntry(call, aname, flag, oid, aid);
-    osi_auditU(call, PTS_NewEntEvent, code, AUD_LONG, *aid, AUD_STR, aname,
-	       AUD_LONG, oid, AUD_END);
+    code = newEntry(call, aname, flag, oid, aid, &cid);
+    osi_auditU(call, PTS_NewEntEvent, code, AUD_ID, *aid, AUD_STR, aname,
+	       AUD_ID, oid, AUD_END);
+    ViceLog(25, ("PTS_NewEntry: code %d cid %d aid %d aname %s oid %d", code, cid, *aid, aname, oid));
     return code;
 }
 
 afs_int32
-newEntry(call, aname, flag, oid, aid)
+newEntry(call, aname, flag, oid, aid, cid)
      struct rx_call *call;
      char aname[PR_MAXNAMELEN];
      afs_int32 flag;
      afs_int32 oid;
      afs_int32 *aid;
+     afs_int32 *cid;
 {
     register afs_int32 code;
     struct ubik_trans *tt;
-    afs_int32 cid;
     int admin;
     extern afs_int32 WhoIsThisWithName();
     char cname[PR_MAXNAMELEN];
@@ -346,19 +350,19 @@ newEntry(call, aname, flag, oid, aid)
      * SPR_INewEntry because we want self-registration to only do 
      * automatic id assignment.
      */
-    code = WhoIsThisWithName(call, tt, &cid, cname);
+    code = WhoIsThisWithName(call, tt, cid, cname);
     if (code != 2) {		/* 2 specifies that this is a foreign cell request */
 	if (code)
 	    ABORT_WITH(tt, PRPERM);
-	admin = IsAMemberOf(tt, cid, SYSADMINID);
+	admin = IsAMemberOf(tt, *cid, SYSADMINID);
     } else {
-	admin = ((!restricted && !strcmp(aname, cname))) || IsAMemberOf(tt, cid, SYSADMINID);
-	oid = cid = SYSADMINID;
+	admin = ((!restricted && !strcmp(aname, cname))) || IsAMemberOf(tt, *cid, SYSADMINID);
+	oid = *cid = SYSADMINID;
     }
-    if (!CreateOK(tt, cid, oid, flag, admin))
+    if (!CreateOK(tt, *cid, oid, flag, admin))
 	ABORT_WITH(tt, PRPERM);
 
-    code = CreateEntry(tt, aname, aid, 0, flag, oid, cid);
+    code = CreateEntry(tt, aname, aid, 0, flag, oid, *cid);
     if (code != PRSUCCESS)
 	ABORT_WITH(tt, code);
 
@@ -377,18 +381,21 @@ SPR_WhereIsIt(call, aid, apos)
      afs_int32 *apos;
 {
     afs_int32 code;
+    afs_int32 cid = ANONYMOUSID;
 
-    code = whereIsIt(call, aid, apos);
-    osi_auditU(call, PTS_WheIsItEvent, code, AUD_LONG, aid, AUD_LONG, *apos,
+    code = whereIsIt(call, aid, apos, &cid);
+    osi_auditU(call, PTS_WheIsItEvent, code, AUD_ID, aid, AUD_LONG, *apos,
 	       AUD_END);
+    ViceLog(125, ("PTS_WhereIsIt: code %d cid %d aid %d apos %d", code, cid, aid, *apos));
     return code;
 }
 
 afs_int32
-whereIsIt(call, aid, apos)
+whereIsIt(call, aid, apos, cid)
      struct rx_call *call;
      afs_int32 aid;
      afs_int32 *apos;
+     afs_int32 *cid;
 {
     register afs_int32 code;
     struct ubik_trans *tt;
@@ -406,6 +413,10 @@ whereIsIt(call, aid, apos)
     code = read_DbHeader(tt);
     if (code)
 	ABORT_WITH(tt, code);
+
+    code = WhoIsThis(call, tt, cid);
+    if (code)
+	ABORT_WITH(tt, PRPERM);
 
     temp = FindByID(tt, aid);
     if (!temp)
@@ -425,20 +436,22 @@ SPR_DumpEntry(call, apos, aentry)
      struct prdebugentry *aentry;
 {
     afs_int32 code;
+    afs_int32 cid = ANONYMOUSID;
 
-    code = dumpEntry(call, apos, aentry);
+    code = dumpEntry(call, apos, aentry, &cid);
     osi_auditU(call, PTS_DmpEntEvent, code, AUD_LONG, apos, AUD_END);
+    ViceLog(125, ("PTS_DumpEntry: code %d cid %d apos %d", code, cid, apos));
     return code;
 }
 
 afs_int32
-dumpEntry(call, apos, aentry)
+dumpEntry(call, apos, aentry, cid)
      struct rx_call *call;
      afs_int32 apos;
      struct prdebugentry *aentry;
+     afs_int32 *cid;
 {
     register afs_int32 code;
-    afs_int32 cid;
     struct ubik_trans *tt;
 
     code = Initdb();
@@ -454,14 +467,14 @@ dumpEntry(call, apos, aentry)
     if (code)
 	ABORT_WITH(tt, code);
 
-    code = WhoIsThis(call, tt, &cid);
+    code = WhoIsThis(call, tt, cid);
     if (code)
 	ABORT_WITH(tt, PRPERM);
     code = pr_ReadEntry(tt, 0, apos, aentry);
     if (code)
 	ABORT_WITH(tt, code);
 
-    if (!AccessOK(tt, cid, 0, PRP_STATUS_MEM, 0))
+    if (!AccessOK(tt, *cid, 0, PRP_STATUS_MEM, 0))
 	ABORT_WITH(tt, PRPERM);
 
     /* Since prdebugentry is in the form of a prentry not a coentry, we will
@@ -486,18 +499,21 @@ SPR_AddToGroup(call, aid, gid)
      afs_int32 gid;
 {
     afs_int32 code;
+    afs_int32 cid = ANONYMOUSID;
 
-    code = addToGroup(call, aid, gid);
-    osi_auditU(call, PTS_AdToGrpEvent, code, AUD_LONG, gid, AUD_LONG, aid,
+    code = addToGroup(call, aid, gid, &cid);
+    osi_auditU(call, PTS_AdToGrpEvent, code, AUD_ID, gid, AUD_ID, aid,
 	       AUD_END);
+    ViceLog(5, ("PTS_AddToGroup: code %d cid %d gid %d aid %d", code, cid, gid, aid));
     return code;
 }
 
 afs_int32
-addToGroup(call, aid, gid)
+addToGroup(call, aid, gid, cid)
      struct rx_call *call;
      afs_int32 aid;
      afs_int32 gid;
+     afs_int32 *cid;
 {
     register afs_int32 code;
     struct ubik_trans *tt;
@@ -505,7 +521,6 @@ addToGroup(call, aid, gid)
     afs_int32 tempg;
     struct prentry tentry;
     struct prentry uentry;
-    afs_int32 cid;
 
     code = Initdb();
     if (code != PRSUCCESS)
@@ -524,7 +539,7 @@ addToGroup(call, aid, gid)
     if (code)
 	ABORT_WITH(tt, code);
 
-    code = WhoIsThis(call, tt, &cid);
+    code = WhoIsThis(call, tt, cid);
     if (code)
 	ABORT_WITH(tt, PRPERM);
     tempu = FindByID(tt, aid);
@@ -550,7 +565,7 @@ addToGroup(call, aid, gid)
     /* make sure that this is a group */
     if (!(tentry.flags & PRGRP))
 	ABORT_WITH(tt, PRNOTGROUP);
-    if (!AccessOK(tt, cid, &tentry, PRP_ADD_MEM, PRP_ADD_ANY))
+    if (!AccessOK(tt, *cid, &tentry, PRP_ADD_MEM, PRP_ADD_ANY))
 	ABORT_WITH(tt, PRPERM);
 
     code = AddToEntry(tt, &tentry, tempg, aid);
@@ -582,6 +597,7 @@ SPR_NameToID(call, aname, aid)
 
     code = nameToID(call, aname, aid);
     osi_auditU(call, PTS_NmToIdEvent, code, AUD_END);
+    ViceLog(125, ("PTS_NameToID: code %d", code));
     return code;
 }
 
@@ -628,6 +644,11 @@ nameToID(call, aname, aid)
 	code = NameToID(tt, aname->namelist_val[i], &aid->idlist_val[i]);
 	if (code != PRSUCCESS)
 	    aid->idlist_val[i] = ANONYMOUSID;
+        osi_audit(PTS_NmToIdEvent, code, AUD_STR,
+		   aname->namelist_val[i], AUD_ID, aid->idlist_val[i], 
+		   AUD_END);
+	ViceLog(125, ("PTS_NameToID: code %d aname %s aid %d", code,
+		      aname->namelist_val[i], aid->idlist_val[i]));
 	if (count++ > 50)
 	    IOMGR_Poll(), count = 0;
     }
@@ -653,7 +674,8 @@ SPR_IDToName(call, aid, aname)
     afs_int32 code;
 
     code = idToName(call, aid, aname);
-    osi_auditU(call, PTS_IdToNmEvent, code, AUD_LONG, aid, AUD_END);
+    osi_auditU(call, PTS_IdToNmEvent, code, AUD_END);
+    ViceLog(125, ("PTS_IDToName: code %d", code));
     return code;
 }
 
@@ -701,6 +723,10 @@ idToName(call, aid, aname)
 	code = IDToName(tt, aid->idlist_val[i], aname->namelist_val[i]);
 	if (code != PRSUCCESS)
 	    sprintf(aname->namelist_val[i], "%d", aid->idlist_val[i]);
+        osi_audit(PTS_IdToNmEvent, code, AUD_ID, aid->idlist_val[i],
+		  AUD_STR, aname->namelist_val[i], AUD_END);
+	ViceLog(125, ("PTS_idToName: code %d aid %d aname %s", code,
+		      aid->idlist_val[i], aname->namelist_val[i]));
 	if (count++ > 50)
 	    IOMGR_Poll(), count = 0;
     }
@@ -718,20 +744,22 @@ SPR_Delete(call, aid)
      afs_int32 aid;
 {
     afs_int32 code;
+    afs_int32 cid = ANONYMOUSID;
 
-    code = Delete(call, aid);
-    osi_auditU(call, PTS_DelEvent, code, AUD_LONG, aid, AUD_END);
+    code = Delete(call, aid, &cid);
+    osi_auditU(call, PTS_DelEvent, code, AUD_ID, aid, AUD_END);
+    ViceLog(25, ("PTS_Delete: code %d cid %d aid %d", code, cid, aid));
     return code;
 }
 
 afs_int32
-Delete(call, aid)
+Delete(call, aid, cid)
      struct rx_call *call;
      afs_int32 aid;
+     afs_int32 *cid;
 {
     register afs_int32 code;
     struct ubik_trans *tt;
-    afs_int32 cid;
     struct prentry tentry;
     afs_int32 loc, nptr;
     int count;
@@ -754,7 +782,7 @@ Delete(call, aid)
     if (code)
 	ABORT_WITH(tt, code);
 
-    code = WhoIsThis(call, tt, &cid);
+    code = WhoIsThis(call, tt, cid);
     if (code)
 	ABORT_WITH(tt, PRPERM);
 
@@ -767,8 +795,8 @@ Delete(call, aid)
 	ABORT_WITH(tt, PRDBFAIL);
 
     /* Do some access checking */
-    if (tentry.owner != cid && !IsAMemberOf(tt, cid, SYSADMINID)
-	&& !IsAMemberOf(tt, cid, tentry.owner) && !pr_noAuth)
+    if (tentry.owner != *cid && !IsAMemberOf(tt, *cid, SYSADMINID)
+	&& !IsAMemberOf(tt, *cid, tentry.owner) && !pr_noAuth)
 	ABORT_WITH(tt, PRPERM);
 
     /* Delete each continuation block as a separate transaction so that no one
@@ -957,9 +985,25 @@ SPR_UpdateEntry(call, aid, name, uentry)
      char *name;
      struct PrUpdateEntry *uentry;
 {
+    afs_int32 code;
+    afs_int32 cid = ANONYMOUSID;
+
+    code = UpdateEntry(call, aid, name, uentry, &cid);
+    osi_auditU(call, PTS_UpdEntEvent, code, AUD_ID, aid, AUD_STR, name, AUD_END);
+    ViceLog(5, ("PTS_UpdateEntry: code %d cid %d aid %d name %s", code, cid, aid, name));
+    return code;
+}
+
+afs_int32
+UpdateEntry(call, aid, name, uentry, cid)
+     struct rx_call *call;
+     afs_int32 aid;
+     char *name;
+     struct PrUpdateEntry *uentry;
+     afs_int32 *cid;
+{
     register afs_int32 code;
     struct ubik_trans *tt;
-    afs_int32 cid;
     struct prentry tentry;
     afs_int32 loc;
     int id = 0;
@@ -985,10 +1029,10 @@ SPR_UpdateEntry(call, aid, name, uentry)
     if (code)
 	ABORT_WITH(tt, code);
 
-    code = WhoIsThis(call, tt, &cid);
+    code = WhoIsThis(call, tt, cid);
     if (code)
 	ABORT_WITH(tt, PRPERM);
-    code = IsAMemberOf(tt, cid, SYSADMINID);
+    code = IsAMemberOf(tt, *cid, SYSADMINID);
     if (!code && !pr_noAuth)
 	ABORT_WITH(tt, PRPERM);
 
@@ -1039,18 +1083,21 @@ SPR_RemoveFromGroup(call, aid, gid)
      afs_int32 gid;
 {
     afs_int32 code;
+    afs_int32 cid = ANONYMOUSID;
 
-    code = removeFromGroup(call, aid, gid);
-    osi_auditU(call, PTS_RmFmGrpEvent, code, AUD_LONG, gid, AUD_LONG, aid,
+    code = removeFromGroup(call, aid, gid, &cid);
+    osi_auditU(call, PTS_RmFmGrpEvent, code, AUD_ID, gid, AUD_ID, aid,
 	       AUD_END);
+    ViceLog(5, ("PTS_RemoveFromGroup: code %d cid %d gid %d aid %d", code, cid, gid, aid));
     return code;
 }
 
 afs_int32
-removeFromGroup(call, aid, gid)
+removeFromGroup(call, aid, gid, cid)
      struct rx_call *call;
      afs_int32 aid;
      afs_int32 gid;
+     afs_int32 *cid;
 {
     register afs_int32 code;
     struct ubik_trans *tt;
@@ -1058,7 +1105,6 @@ removeFromGroup(call, aid, gid)
     afs_int32 tempg;
     struct prentry uentry;
     struct prentry gentry;
-    afs_int32 cid;
 
     code = Initdb();
     if (code != PRSUCCESS)
@@ -1073,7 +1119,7 @@ removeFromGroup(call, aid, gid)
     if (code)
 	ABORT_WITH(tt, code);
 
-    code = WhoIsThis(call, tt, &cid);
+    code = WhoIsThis(call, tt, cid);
     if (code)
 	ABORT_WITH(tt, PRPERM);
     tempu = FindByID(tt, aid);
@@ -1096,7 +1142,7 @@ removeFromGroup(call, aid, gid)
     if (uentry.flags & PRGRP)
 	ABORT_WITH(tt, PRNOTUSER);
 #endif
-    if (!AccessOK(tt, cid, &gentry, PRP_REMOVE_MEM, 0))
+    if (!AccessOK(tt, *cid, &gentry, PRP_REMOVE_MEM, 0))
 	ABORT_WITH(tt, PRPERM);
     code = RemoveFromEntry(tt, aid, gid);
     if (code != PRSUCCESS)
@@ -1127,23 +1173,25 @@ SPR_GetCPS(call, aid, alist, over)
      afs_int32 *over;
 {
     afs_int32 code;
+    afs_int32 cid = ANONYMOUSID;
 
-    code = getCPS(call, aid, alist, over);
-    osi_auditU(call, PTS_GetCPSEvent, code, AUD_LONG, aid, AUD_END);
+    code = getCPS(call, aid, alist, over, &cid);
+    osi_auditU(call, PTS_GetCPSEvent, code, AUD_ID, aid, AUD_END);
+    ViceLog(125, ("PTS_GetCPS: code %d cid %d aid %d", code, cid, aid));
     return code;
 }
 
 afs_int32
-getCPS(call, aid, alist, over)
+getCPS(call, aid, alist, over, cid)
      struct rx_call *call;
      afs_int32 aid;
      prlist *alist;
      afs_int32 *over;
+     afs_int32 *cid;
 {
     register afs_int32 code;
     struct ubik_trans *tt;
     afs_int32 temp;
-    afs_int32 cid;
     struct prentry tentry;
 
     *over = 0;
@@ -1170,8 +1218,8 @@ getCPS(call, aid, alist, over)
 	ABORT_WITH(tt, code);
 
     /* afs does authenticate now */
-    code = WhoIsThis(call, tt, &cid);
-    if (code || !AccessOK(tt, cid, &tentry, PRP_MEMBER_MEM, PRP_MEMBER_ANY))
+    code = WhoIsThis(call, tt, cid);
+    if (code || !AccessOK(tt, *cid, &tentry, PRP_MEMBER_MEM, PRP_MEMBER_ANY))
 	ABORT_WITH(tt, PRPERM);
 
     code = GetList(tt, &tentry, alist, 1);
@@ -1209,25 +1257,27 @@ SPR_GetCPS2(call, aid, ahost, alist, over)
      afs_int32 *over;
 {
     afs_int32 code;
+    afs_int32 cid = ANONYMOUSID;
 
-    code = getCPS2(call, aid, ahost, alist, over);
-    osi_auditU(call, PTS_GetCPS2Event, code, AUD_LONG, aid, AUD_HOST, ahost,
+    code = getCPS2(call, aid, ahost, alist, over, &cid);
+    osi_auditU(call, PTS_GetCPS2Event, code, AUD_ID, aid, AUD_HOST, ahost,
 	       AUD_END);
+    ViceLog(125, ("PTS_GetCPS2: code %d cid %d aid %d ahost %d", code, cid, aid, ahost));
     return code;
 }
 
 afs_int32
-getCPS2(call, aid, ahost, alist, over)
+getCPS2(call, aid, ahost, alist, over, cid)
      struct rx_call *call;
      afs_int32 aid;
      afs_int32 ahost;
      prlist *alist;
      afs_int32 *over;
+     afs_int32 *cid;
 {
     register afs_int32 code;
     struct ubik_trans *tt;
     afs_int32 temp;
-    afs_int32 cid;
     struct prentry tentry;
     struct prentry host_tentry;
     afs_int32 hostid;
@@ -1263,9 +1313,9 @@ getCPS2(call, aid, ahost, alist, over)
 	    ABORT_WITH(tt, code);
 
 	/* afs does authenticate now */
-	code = WhoIsThis(call, tt, &cid);
+	code = WhoIsThis(call, tt, cid);
 	if (code
-	    || !AccessOK(tt, cid, &tentry, PRP_MEMBER_MEM, PRP_MEMBER_ANY))
+	    || !AccessOK(tt, *cid, &tentry, PRP_MEMBER_MEM, PRP_MEMBER_ANY))
 	    ABORT_WITH(tt, PRPERM);
     }
     code = NameToID(tt, inet_ntoa(iaddr), &hostid);
@@ -1307,6 +1357,7 @@ SPR_GetHostCPS(call, ahost, alist, over)
 
     code = getHostCPS(call, ahost, alist, over);
     osi_auditU(call, PTS_GetHCPSEvent, code, AUD_HOST, ahost, AUD_END);
+    ViceLog(125, ("PTS_GetHostCPS: code %d ahost %d", code, ahost));
     return code;
 }
 
@@ -1379,6 +1430,7 @@ SPR_ListMax(call, uid, gid)
 
     code = listMax(call, uid, gid);
     osi_auditU(call, PTS_LstMaxEvent, code, AUD_END);
+    ViceLog(125, ("PTS_ListMax: code %d", code));
     return code;
 }
 
@@ -1421,22 +1473,24 @@ SPR_SetMax(call, aid, gflag)
      afs_int32 gflag;
 {
     afs_int32 code;
+    afs_int32 cid = ANONYMOUSID;
 
-    code = setMax(call, aid, gflag);
-    osi_auditU(call, PTS_SetMaxEvent, code, AUD_LONG, aid, AUD_LONG, gflag,
+    code = setMax(call, aid, gflag, &cid);
+    osi_auditU(call, PTS_SetMaxEvent, code, AUD_ID, aid, AUD_LONG, gflag,
 	       AUD_END);
+    ViceLog(125, ("PTS_SetMax: code %d cid %d aid %d gflag %d", code, cid, aid, gflag));
     return code;
 }
 
 afs_int32
-setMax(call, aid, gflag)
+setMax(call, aid, gflag, cid)
      struct rx_call *call;
      afs_int32 aid;
      afs_int32 gflag;
+     afs_int32 *cid;
 {
     register afs_int32 code;
     struct ubik_trans *tt;
-    afs_int32 cid;
 
     code = Initdb();
     if (code != PRSUCCESS)
@@ -1451,10 +1505,10 @@ setMax(call, aid, gflag)
     if (code)
 	ABORT_WITH(tt, code);
 
-    code = WhoIsThis(call, tt, &cid);
+    code = WhoIsThis(call, tt, cid);
     if (code)
 	ABORT_WITH(tt, PRPERM);
-    if (!AccessOK(tt, cid, 0, 0, 0))
+    if (!AccessOK(tt, *cid, 0, 0, 0))
 	ABORT_WITH(tt, PRPERM);
     if (((gflag & PRGRP) && (aid > 0)) || (!(gflag & PRGRP) && (aid < 0)))
 	ABORT_WITH(tt, PRBADARG);
@@ -1476,21 +1530,23 @@ SPR_ListEntry(call, aid, aentry)
      struct prcheckentry *aentry;
 {
     afs_int32 code;
+    afs_int32 cid = ANONYMOUSID;
 
-    code = listEntry(call, aid, aentry);
-    osi_auditU(call, PTS_LstEntEvent, code, AUD_LONG, aid, AUD_END);
+    code = listEntry(call, aid, aentry, &cid);
+    osi_auditU(call, PTS_LstEntEvent, code, AUD_ID, aid, AUD_END);
+    ViceLog(125, ("PTS_ListEntry: code %d cid %d aid %d", code, cid, aid));
     return code;
 }
 
 afs_int32
-listEntry(call, aid, aentry)
+listEntry(call, aid, aentry, cid)
      struct rx_call *call;
      afs_int32 aid;
      struct prcheckentry *aentry;
+     afs_int32 *cid;
 {
     register afs_int32 code;
     struct ubik_trans *tt;
-    afs_int32 cid;
     afs_int32 temp;
     struct prentry tentry;
 
@@ -1507,7 +1563,7 @@ listEntry(call, aid, aentry)
     if (code)
 	ABORT_WITH(tt, code);
 
-    code = WhoIsThis(call, tt, &cid);
+    code = WhoIsThis(call, tt, cid);
     if (code)
 	ABORT_WITH(tt, PRPERM);
     temp = FindByID(tt, aid);
@@ -1516,7 +1572,7 @@ listEntry(call, aid, aentry)
     code = pr_ReadEntry(tt, 0, temp, &tentry);
     if (code != 0)
 	ABORT_WITH(tt, code);
-    if (!AccessOK(tt, cid, &tentry, PRP_STATUS_MEM, PRP_STATUS_ANY))
+    if (!AccessOK(tt, *cid, &tentry, PRP_STATUS_MEM, PRP_STATUS_ANY))
 	ABORT_WITH(tt, PRPERM);
 
     aentry->flags = tentry.flags >> PRIVATE_SHIFT;
@@ -1549,23 +1605,25 @@ SPR_ListEntries(call, flag, startindex, bulkentries, nextstartindex)
      afs_int32 *nextstartindex;
 {
     afs_int32 code;
+    afs_int32 cid = ANONYMOUSID;
 
-    code = listEntries(call, flag, startindex, bulkentries, nextstartindex);
+    code = listEntries(call, flag, startindex, bulkentries, nextstartindex, &cid);
     osi_auditU(call, PTS_LstEntsEvent, code, AUD_LONG, flag, AUD_END);
+    ViceLog(125, ("PTS_ListEntries: code %d cid %d flag %d", code, cid, flag));
     return code;
 }
 
 afs_int32
-listEntries(call, flag, startindex, bulkentries, nextstartindex)
+listEntries(call, flag, startindex, bulkentries, nextstartindex, cid)
      struct rx_call *call;
      afs_int32 flag;
      afs_int32 startindex;
      prentries *bulkentries;
      afs_int32 *nextstartindex;
+     afs_int32 *cid;
 {
     afs_int32 code;
     struct ubik_trans *tt;
-    afs_int32 cid;
     afs_int32 i, eof, pos, maxentries, f;
     struct prentry tentry;
     afs_int32 pollcount = 0;
@@ -1590,10 +1648,10 @@ listEntries(call, flag, startindex, bulkentries, nextstartindex)
     /* Make sure we are an authenticated caller and that we are on the
      * SYSADMIN list.
      */
-    code = WhoIsThis(call, tt, &cid);
+    code = WhoIsThis(call, tt, cid);
     if (code)
 	ABORT_WITH(tt, PRPERM);
-    code = IsAMemberOf(tt, cid, SYSADMINID);
+    code = IsAMemberOf(tt, *cid, SYSADMINID);
     if (!code && !pr_noAuth)
 	ABORT_WITH(tt, PRPERM);
 
@@ -1692,25 +1750,27 @@ SPR_ChangeEntry(call, aid, name, oid, newid)
      afs_int32 newid;
 {
     afs_int32 code;
+    afs_int32 cid = ANONYMOUSID;
 
-    code = changeEntry(call, aid, name, oid, newid);
-    osi_auditU(call, PTS_ChgEntEvent, code, AUD_LONG, aid, AUD_STR, name,
+    code = changeEntry(call, aid, name, oid, newid, &cid);
+    osi_auditU(call, PTS_ChgEntEvent, code, AUD_ID, aid, AUD_STR, name,
 	       AUD_LONG, oid, AUD_LONG, newid, AUD_END);
+    ViceLog(5, ("PTS_ChangeEntry: code %d cid %d aid %d name %s oid %d newid %d", code, cid, aid, name, oid, newid));
     return code;
 }
 
 afs_int32
-changeEntry(call, aid, name, oid, newid)
+changeEntry(call, aid, name, oid, newid, cid)
      struct rx_call *call;
      afs_int32 aid;
      char *name;
      afs_int32 oid;
      afs_int32 newid;
+     afs_int32 *cid;
 {
     register afs_int32 code;
     struct ubik_trans *tt;
     afs_int32 pos;
-    afs_int32 cid;
 
     if (!name)
 	return PRPERM;
@@ -1734,14 +1794,14 @@ changeEntry(call, aid, name, oid, newid)
     if (code)
 	ABORT_WITH(tt, code);
 
-    code = WhoIsThis(call, tt, &cid);
+    code = WhoIsThis(call, tt, cid);
     if (code)
 	ABORT_WITH(tt, PRPERM);
     pos = FindByID(tt, aid);
     if (!pos)
 	ABORT_WITH(tt, PRNOENT);
     /* protection check in changeentry */
-    code = ChangeEntry(tt, aid, cid, name, oid, newid);
+    code = ChangeEntry(tt, aid, *cid, name, oid, newid);
     if (code != PRSUCCESS)
 	ABORT_WITH(tt, code);
 
@@ -1758,26 +1818,28 @@ SPR_SetFieldsEntry(call, id, mask, flags, ngroups, nusers, spare1, spare2)
      afs_int32 spare1, spare2;
 {
     afs_int32 code;
+    afs_int32 cid = ANONYMOUSID;
 
     code =
 	setFieldsEntry(call, id, mask, flags, ngroups, nusers, spare1,
-		       spare2);
-    osi_auditU(call, PTS_SetFldEntEvent, code, AUD_LONG, id, AUD_END);
+		       spare2, &cid);
+    osi_auditU(call, PTS_SetFldEntEvent, code, AUD_ID, id, AUD_END);
+    ViceLog(5, ("PTS_SetFieldsEntry: code %d cid %d id %d", code, cid, id));
     return code;
 }
 
 afs_int32
-setFieldsEntry(call, id, mask, flags, ngroups, nusers, spare1, spare2)
+setFieldsEntry(call, id, mask, flags, ngroups, nusers, spare1, spare2, cid)
      struct rx_call *call;
      afs_int32 id;
      afs_int32 mask;		/* specify which fields to update */
      afs_int32 flags, ngroups, nusers;
      afs_int32 spare1, spare2;
+     afs_int32 *cid;
 {
     register afs_int32 code;
     struct ubik_trans *tt;
     afs_int32 pos;
-    afs_int32 cid;
     struct prentry tentry;
     afs_int32 tflags;
 
@@ -1800,7 +1862,7 @@ setFieldsEntry(call, id, mask, flags, ngroups, nusers, spare1, spare2)
     if (code)
 	ABORT_WITH(tt, code);
 
-    code = WhoIsThis(call, tt, &cid);
+    code = WhoIsThis(call, tt, cid);
     if (code)
 	ABORT_WITH(tt, PRPERM);
     pos = FindByID(tt, id);
@@ -1812,13 +1874,13 @@ setFieldsEntry(call, id, mask, flags, ngroups, nusers, spare1, spare2)
     tflags = tentry.flags;
 
     if (mask & (PR_SF_NGROUPS | PR_SF_NUSERS)) {
-	if (!AccessOK(tt, cid, 0, 0, 0))
+	if (!AccessOK(tt, *cid, 0, 0, 0))
 	    ABORT_WITH(tt, PRPERM);
 	if ((tflags & PRQUOTA) == 0) {	/* default if only setting one */
 	    tentry.ngroups = tentry.nusers = 20;
 	}
     } else {
-	if (!AccessOK(tt, cid, &tentry, 0, 0))
+	if (!AccessOK(tt, *cid, &tentry, 0, 0))
 	    ABORT_WITH(tt, PRPERM);
     }
 
@@ -1860,22 +1922,24 @@ SPR_ListElements(call, aid, alist, over)
      afs_int32 *over;
 {
     afs_int32 code;
+    afs_int32 cid = ANONYMOUSID;
 
-    code = listElements(call, aid, alist, over);
-    osi_auditU(call, PTS_LstEleEvent, code, AUD_LONG, aid, AUD_END);
+    code = listElements(call, aid, alist, over, &cid);
+    osi_auditU(call, PTS_LstEleEvent, code, AUD_ID, aid, AUD_END);
+    ViceLog(125, ("PTS_ListElements: code %d cid %d aid %d", code, cid, aid));
     return code;
 }
 
 afs_int32
-listElements(call, aid, alist, over)
+listElements(call, aid, alist, over, cid)
      struct rx_call *call;
      afs_int32 aid;
      prlist *alist;
      afs_int32 *over;
+     afs_int32 *cid;
 {
     register afs_int32 code;
     struct ubik_trans *tt;
-    afs_int32 cid;
     afs_int32 temp;
     struct prentry tentry;
 
@@ -1896,7 +1960,7 @@ listElements(call, aid, alist, over)
     if (code)
 	ABORT_WITH(tt, code);
 
-    code = WhoIsThis(call, tt, &cid);
+    code = WhoIsThis(call, tt, cid);
     if (code)
 	ABORT_WITH(tt, PRPERM);
 
@@ -1906,7 +1970,7 @@ listElements(call, aid, alist, over)
     code = pr_ReadEntry(tt, 0, temp, &tentry);
     if (code)
 	ABORT_WITH(tt, code);
-    if (!AccessOK(tt, cid, &tentry, PRP_MEMBER_MEM, PRP_MEMBER_ANY))
+    if (!AccessOK(tt, *cid, &tentry, PRP_MEMBER_MEM, PRP_MEMBER_ANY))
 	ABORT_WITH(tt, PRPERM);
 
     code = GetList(tt, &tentry, alist, 0);
@@ -1927,9 +1991,11 @@ SPR_ListSuperGroups(call, aid, alist, over)
 {
 #if defined(SUPERGROUPS)
     afs_int32 code;
+    afs_int32 cid = ANONYMOUSID;
 
-    code = listSuperGroups(call, aid, alist, over);
-    osi_auditU(call, "PTS_LstSGrps", code, AUD_LONG, aid, AUD_END);
+    code = listSuperGroups(call, aid, alist, over, &cid);
+    osi_auditU(call, PTS_LstSGrps, code, AUD_ID, aid, AUD_END);
+    ViceLog(125, ("PTS_ListSuperGroups: code %d cid %d aid %d", code, cid, aid));
     return code;
 #else
     return RXGEN_OPCODE;
@@ -1938,15 +2004,15 @@ SPR_ListSuperGroups(call, aid, alist, over)
 
 #if defined(SUPERGROUPS)
 afs_int32
-listSuperGroups(call, aid, alist, over)
+listSuperGroups(call, aid, alist, over, cid)
      struct rx_call *call;
      afs_int32 aid;
      prlist *alist;
      afs_int32 *over;
+     afs_int32 *cid;
 {
     register afs_int32 code;
     struct ubik_trans *tt;
-    afs_int32 cid;
     afs_int32 temp;
     struct prentry tentry;
 
@@ -1962,7 +2028,7 @@ listSuperGroups(call, aid, alist, over)
     code = ubik_SetLock(tt, 1, 1, LOCKREAD);
     if (code)
 	ABORT_WITH(tt, code);
-    code = WhoIsThis(call, tt, &cid);
+    code = WhoIsThis(call, tt, cid);
     if (code)
 	ABORT_WITH(tt, PRPERM);
 
@@ -1972,7 +2038,7 @@ listSuperGroups(call, aid, alist, over)
     code = pr_ReadEntry(tt, 0, temp, &tentry);
     if (code)
 	ABORT_WITH(tt, code);
-    if (!AccessOK(tt, cid, &tentry, PRP_MEMBER_MEM, PRP_MEMBER_ANY))
+    if (!AccessOK(tt, *cid, &tentry, PRP_MEMBER_MEM, PRP_MEMBER_ANY))
 	ABORT_WITH(tt, PRPERM);
 
     code = GetSGList(tt, &tentry, alist);
@@ -2005,22 +2071,24 @@ SPR_ListOwned(call, aid, alist, lastP)
      afs_int32 *lastP;
 {
     afs_int32 code;
+    afs_int32 cid = ANONYMOUSID;
 
-    code = listOwned(call, aid, alist, lastP);
-    osi_auditU(call, PTS_LstOwnEvent, code, AUD_LONG, aid, AUD_END);
+    code = listOwned(call, aid, alist, lastP, &cid);
+    osi_auditU(call, PTS_LstOwnEvent, code, AUD_ID, aid, AUD_END);
+    ViceLog(125, ("PTS_ListOwned: code %d cid %d aid %d", code, cid, aid));
     return code;
 }
 
 afs_int32
-listOwned(call, aid, alist, lastP)
+listOwned(call, aid, alist, lastP, cid)
      struct rx_call *call;
      afs_int32 aid;
      prlist *alist;
      afs_int32 *lastP;
+     afs_int32 *cid;
 {
     register afs_int32 code;
     struct ubik_trans *tt;
-    afs_int32 cid;
     struct prentry tentry;
     afs_int32 head = 0;
     afs_int32 start;
@@ -2046,7 +2114,7 @@ listOwned(call, aid, alist, lastP)
     if (code)
 	ABORT_WITH(tt, code);
 
-    code = WhoIsThis(call, tt, &cid);
+    code = WhoIsThis(call, tt, cid);
     if (code)
 	ABORT_WITH(tt, PRPERM);
 
@@ -2065,11 +2133,11 @@ listOwned(call, aid, alist, lastP)
 	    if (code)
 		ABORT_WITH(tt, code);
 
-	    if (!AccessOK(tt, cid, &tentry, -1, PRP_OWNED_ANY))
+	    if (!AccessOK(tt, *cid, &tentry, -1, PRP_OWNED_ANY))
 		ABORT_WITH(tt, PRPERM);
 	    head = tentry.owned;
 	} else {
-	    if (!AccessOK(tt, cid, 0, 0, 0))
+	    if (!AccessOK(tt, *cid, 0, 0, 0))
 		ABORT_WITH(tt, PRPERM);
 	    head = ntohl(cheader.orphan);
 	}
@@ -2095,19 +2163,22 @@ SPR_IsAMemberOf(call, uid, gid, flag)
      afs_int32 *flag;
 {
     afs_int32 code;
+    afs_int32 cid = ANONYMOUSID;
 
-    code = isAMemberOf(call, uid, gid, flag);
+    code = isAMemberOf(call, uid, gid, flag, &cid);
     osi_auditU(call, PTS_IsMemOfEvent, code, AUD_LONG, uid, AUD_LONG, gid,
 	       AUD_END);
+    ViceLog(125, ("PTS_IsAMemberOf: code %d cid %d uid %d gid %d", code, cid, uid, gid));
     return code;
 }
 
 afs_int32
-isAMemberOf(call, uid, gid, flag)
+isAMemberOf(call, uid, gid, flag, cid)
      struct rx_call *call;
      afs_int32 uid;
      afs_int32 gid;
      afs_int32 *flag;
+     afs_int32 *cid;
 {
     register afs_int32 code;
     struct ubik_trans *tt;
@@ -2126,14 +2197,13 @@ isAMemberOf(call, uid, gid, flag)
 	ABORT_WITH(tt, code);
 
     {
-	afs_int32 cid;
 	afs_int32 uloc = FindByID(tt, uid);
 	afs_int32 gloc = FindByID(tt, gid);
 	struct prentry uentry, gentry;
 
 	if (!uloc || !gloc)
 	    ABORT_WITH(tt, PRNOENT);
-	code = WhoIsThis(call, tt, &cid);
+	code = WhoIsThis(call, tt, cid);
 	if (code)
 	    ABORT_WITH(tt, PRPERM);
 	code = pr_ReadEntry(tt, 0, uloc, &uentry);
@@ -2149,8 +2219,8 @@ isAMemberOf(call, uid, gid, flag)
 	if (!(gentry.flags & PRGRP))
 	    ABORT_WITH(tt, PRBADARG);
 #endif
-	if (!AccessOK(tt, cid, &uentry, 0, PRP_MEMBER_ANY)
-	    && !AccessOK(tt, cid, &gentry, PRP_MEMBER_MEM, PRP_MEMBER_ANY))
+	if (!AccessOK(tt, *cid, &uentry, 0, PRP_MEMBER_ANY)
+	    && !AccessOK(tt, *cid, &gentry, PRP_MEMBER_MEM, PRP_MEMBER_ANY))
 	    ABORT_WITH(tt, PRPERM);
     }
 

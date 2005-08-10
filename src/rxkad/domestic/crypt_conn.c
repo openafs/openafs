@@ -19,7 +19,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rxkad/domestic/crypt_conn.c,v 1.11.2.1 2004/08/25 07:17:01 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rxkad/domestic/crypt_conn.c,v 1.11.2.2 2005/05/30 04:57:38 shadow Exp $");
 
 #ifdef KERNEL
 #include "afs/stds.h"
@@ -42,6 +42,7 @@ RCSID
 #endif
 #endif /* KERNEL */
 
+#include <des/stats.h>
 #include "private_data.h"
 #define XPRT_RXKAD_CRYPT
 
@@ -61,9 +62,7 @@ rxkad_DecryptPacket(const struct rx_connection *conn,
 
     obj = rx_SecurityObjectOf(conn);
     tp = (struct rxkad_cprivate *)obj->privateData;
-    LOCK_RXKAD_STATS;
-    rxkad_stats.bytesDecrypted[rxkad_TypeIndex(tp->type)] += len;
-    UNLOCK_RXKAD_STATS;
+    ADD_RXKAD_STATS(bytesDecrypted[rxkad_TypeIndex(tp->type)],len);
     memcpy((void *)xor, (void *)ivec, sizeof(xor));
     for (i = 0; len; i++) {
 	data = rx_data(packet, i, tlen);
@@ -97,9 +96,7 @@ rxkad_EncryptPacket(const struct rx_connection * conn,
 
     obj = rx_SecurityObjectOf(conn);
     tp = (struct rxkad_cprivate *)obj->privateData;
-    LOCK_RXKAD_STATS;
-    rxkad_stats.bytesEncrypted[rxkad_TypeIndex(tp->type)] += len;
-    UNLOCK_RXKAD_STATS;
+    ADD_RXKAD_STATS(bytesEncrypted[rxkad_TypeIndex(tp->type)],len);
     /*
      * afs_int32 cksum;
      * cksum = htonl(0);                

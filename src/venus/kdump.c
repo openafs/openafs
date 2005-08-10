@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/venus/kdump.c,v 1.33.2.3 2005/04/04 07:36:32 shadow Exp $");
+    ("$Header: /cvs/openafs/src/venus/kdump.c,v 1.33.2.5 2005/07/11 19:30:02 shadow Exp $");
 
 #include <stdio.h>
 #include <errno.h>
@@ -2885,7 +2885,7 @@ print_vcache(kmem, vep, ptr, pnt)
 	    printf("\n");
 #ifdef	AFS33
 	printf("%lx: refC=%d, pv=%d, pu=%d, flushDv=%d.%d, mapDV=%d.%d, ",
-	       ptr, vep->vrefCount, vep->parentVnode, vep->parentUnique,
+	       ptr, VREFCOUNT(vep), vep->parentVnode, vep->parentUnique,
 	       vep->flushDV.high, vep->flushDV.low, vep->mapDV.high,
 	       vep->mapDV.low);
 #ifdef AFS_64BIT_CLIENT
@@ -2903,12 +2903,8 @@ print_vcache(kmem, vep, ptr, pnt)
 #ifdef	AFS_SUN5_ENV
 	printf("vstates=x%x, ", vep->vstates);
 #endif /* AFS_SUN5_ENV */
-	printf("dchint=%x, anyA=0x%x\n", vep->h1.dchint, vep->anyAccess);
+	printf("dchint=%x, anyA=0x%x\n", vep->dchint, vep->anyAccess);
 #ifdef AFS_64BIT_CLIENT
-	printf("\tquick[dc=%x, stamp=%x, f=%x, min=%d, len=(0x%x, 0x%x)]\n",
-	       vep->quick.dc, vep->quick.stamp, vep->quick.f,
-	       vep->quick.minLoc, (int)(vep->quick.len >> 32),
-	       (int)(vep->quick.len & 0xffffffff));
 	printf
 	    ("\tmstat[len=(0x%x, 0x%x), DV=%d.%d, Date=%d, Owner=%d, Group=%d, Mode=0%o, linkc=%d]\n",
 	     (int)(vep->m.Length >> 32), (int)(vep->m.Length & 0xffffffff),
@@ -3024,17 +3020,15 @@ print_dcache(kmem, dcp, dp, pnt)
 #endif
 #ifdef AFS_SGI62_ENV
     printf
-	("\tf.chunk=%d, f.inode=%lld, f.chunkBytes=%d, f.states=%x, stamp=%x\n",
-	 dcp->f.chunk, dcp->f.inode, dcp->f.chunkBytes, dcp->f.states,
-	 dcp->stamp);
+	("\tf.chunk=%d, f.inode=%lld, f.chunkBytes=%d, f.states=%x",
+	 dcp->f.chunk, dcp->f.inode, dcp->f.chunkBytes, dcp->f.states);
 #else
     printf
-	("\tf.chunk=%d, f.inode=%d, f.chunkBytes=%d, f.states=%x, stamp=%x\n",
-	 dcp->f.chunk, dcp->f.inode, dcp->f.chunkBytes, dcp->f.states,
-	 dcp->stamp);
+	("\tf.chunk=%d, f.inode=%d, f.chunkBytes=%d, f.states=%x\n",
+	 dcp->f.chunk, dcp->f.inode, dcp->f.chunkBytes, dcp->f.states);
 #endif
-    printf("\tlruq.prev=%lx, lruq.next=%lx, index=%d, ihint=%x\n",
-	   dcp->lruq.prev, dcp->lruq.next, dcp->index, dcp->ihint);
+    printf("\tlruq.prev=%lx, lruq.next=%lx, index=%d\n",
+	   dcp->lruq.prev, dcp->lruq.next, dcp->index);
 }
 
 void

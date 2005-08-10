@@ -14,7 +14,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/venus/fstrace.c,v 1.16.2.3 2005/04/03 18:15:53 shadow Exp $");
+    ("$Header: /cvs/openafs/src/venus/fstrace.c,v 1.16.2.4 2005/07/11 19:29:40 shadow Exp $");
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -1491,7 +1491,11 @@ dce1_error_inq_text(status_to_convert, error_text, status)
     char nls_filename[11];
     char alt_filename[80];
     char *message;
+#if defined(AFS_64BITPOINTER_ENV)
+    long J;
+#else
     int J;
+#endif
     static char *facility_names[] = {
 	"xxx",
 	"afs"
@@ -1558,7 +1562,11 @@ dce1_error_inq_text(status_to_convert, error_text, status)
     catd = (nl_catd) catopen1(nls_filename, 0);
 #endif
 #else
+#if defined(AFS_64BITPOINTER_ENV)
+    J = (long)catopen(nls_filename, 0);
+#else
     J = (int)catopen(nls_filename, 0);
+#endif
     catd = (nl_catd) J;
 #endif
     if (catd == (nl_catd) - 1) {
@@ -1581,7 +1589,11 @@ dce1_error_inq_text(status_to_convert, error_text, status)
 	catd = (nl_catd) catopen1(alt_filename, 0);
 #endif
 #else
+#if defined(AFS_64BITPOINTER_ENV)
+        J = (long)catopen(alt_filename, 0);
+#else
 	J = (int)catopen(alt_filename, 0);
+#endif
 	catd = (nl_catd) J;
 #endif
 	if (catd == (nl_catd) - 1) {

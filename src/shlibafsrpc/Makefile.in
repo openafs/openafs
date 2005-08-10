@@ -31,7 +31,8 @@ FSINT = ../fsint
 DES = ../des
 COMERR = ../comerr
 UTIL = ../util
-SYS = ${srcdir}/../sys
+SYS = ../sys
+LWP = ../lwp
 
 SYSOBJS =\
 	syscall.o
@@ -113,6 +114,9 @@ DESOBJS =\
 
 CRYPT_OBJ = crypt.o
 
+LWPOBJS = \
+	fasttime.o
+
 LIBOBJS = \
 	${RXOBJS} \
 	${DESOBJS} \
@@ -123,6 +127,7 @@ LIBOBJS = \
 	${SYSOBJS} \
 	${CRYPT_OBJ} \
 	${RXSTATOBJS} \
+	${LWPOBJS} \
 	${FSINTOBJS}
 
 LIBAFSRPC = libafsrpc.${SHLIB_SUFFIX}.${LIBAFSRPCMAJOR}.${LIBAFSRPCMINOR}
@@ -274,7 +279,7 @@ xdr_afsuuid.o: ${RX}/xdr_afsuuid.c
 #
 #   $ what /opt/langtools/bin/pxdb32
 #   /opt/langtools/bin/pxdb32:
-#           HP92453-02 A.10.0A HP-UX SYMBOLIC DEBUGGER (PXDB) $Revision: 1.15.2.3 $
+#           HP92453-02 A.10.0A HP-UX SYMBOLIC DEBUGGER (PXDB) $Revision: 1.15.2.4 $
 #
 # The problem occurs when -g and -O are both used when compiling des.c.
 # The simplest way to work around the problem is to leave out either -g or -O.
@@ -349,6 +354,9 @@ assert.o: ${UTIL}/assert.c
 
 base64.o: ${UTIL}/base64.c
 	${CCRULE}
+
+fasttime.o: ${LWP}/fasttime.c
+	${CCRULE} ${LWP}/fasttime.c
 
 syscall.o: ${SYS}/syscall.s
 	case "$(SYS_NAME)" in \

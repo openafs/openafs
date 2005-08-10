@@ -1,0 +1,261 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 4//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3672/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 3 Oct 2000 at 16:18:30                -->
+<META HTTP-EQUIV="updated" CONTENT="Tue, 03 Oct 2000 16:18:29">
+<META HTTP-EQUIV="review" CONTENT="Wed, 03 Oct 2001 16:18:29">
+<META HTTP-EQUIV="expires" CONTENT="Thu, 03 Oct 2002 16:18:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf184.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf186.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRKAS_EXAMINE" HREF="auarf002.htm#ToC_199">kas examine</A></H2>
+<A NAME="IDX5082"></A>
+<A NAME="IDX5083"></A>
+<A NAME="IDX5084"></A>
+<A NAME="IDX5085"></A>
+<A NAME="IDX5086"></A>
+<A NAME="IDX5087"></A>
+<A NAME="IDX5088"></A>
+<A NAME="IDX5089"></A>
+<A NAME="IDX5090"></A>
+<A NAME="IDX5091"></A>
+<A NAME="IDX5092"></A>
+<A NAME="IDX5093"></A>
+<A NAME="IDX5094"></A>
+<A NAME="IDX5095"></A>
+<A NAME="IDX5096"></A>
+<A NAME="IDX5097"></A>
+<A NAME="IDX5098"></A>
+<A NAME="IDX5099"></A>
+<A NAME="IDX5100"></A>
+<P><STRONG>Purpose</STRONG>
+<P>Displays information from an Authentication Database entry
+<P><STRONG>Synopsis</STRONG>
+<PRE><B>kas examine -name</B> &lt;<VAR>name&nbsp;of&nbsp;user</VAR>> [<B>-showkey</B>] 
+            [<B>-admin_username</B> &lt;<VAR>admin&nbsp;principal&nbsp;to&nbsp;use&nbsp;for&nbsp;authentication</VAR>>]  
+            [<B>-password_for_admin</B> &lt;<VAR>admin&nbsp;password</VAR>>]  [<B>-cell</B> &lt;<VAR>cell&nbsp;name</VAR>>] 
+            [<B>-servers</B> &lt;<VAR>explicit&nbsp;list&nbsp;of&nbsp;authentication&nbsp;servers</VAR>><SUP>+</SUP>]  
+            [<B>-noauth</B>]  [<B>-help</B>] 
+    
+<B>kas e -na</B> &lt;<VAR>name&nbsp;of&nbsp;user</VAR>>  [<B>-sh</B>] 
+      [<B>-a</B> &lt;<VAR>admin&nbsp;principal&nbsp;to&nbsp;use&nbsp;for&nbsp;authentication</VAR>>] 
+      [<B>-p</B> &lt;<VAR>admin&nbsp;password</VAR>>]  [<B>-c</B> &lt;<VAR>cell&nbsp;name</VAR>>] 
+      [<B>-se</B> &lt;<VAR>explicit&nbsp;list&nbsp;of&nbsp;authentication&nbsp;servers</VAR>><SUP>+</SUP>]  [<B>-no</B>]  [<B>-h</B>]  
+</PRE>
+<P><STRONG>Description</STRONG>
+<P>The <B>kas examine</B> command formats and displays information from
+the Authentication Database entry of the user named by the <B>-name</B>
+argument.
+<P>To alter the settings displayed with this command, issue the <B>kas
+setfields</B> command.
+<P><STRONG>Cautions</STRONG>
+<P>Displaying actual keys on the standard output stream by including the
+<B>-showkey</B> flag constitutes a security exposure. For most
+purposes, it is sufficient to display a checksum.
+<P><STRONG>Options</STRONG>
+<DL>
+<P><DT><B>-name
+</B><DD>Names the Authentication Database entry from which to display
+information.
+<P><DT><B><B>-showkey</B>
+</B><DD>Displays the octal digits that constitute the key. The issuer must
+have the <TT>ADMIN</TT> flag on his or her Authentication Database
+entry.
+<P><DT><B>-admin_username
+</B><DD>Specifies the user identity under which to authenticate with the
+Authentication Server for execution of the command. For more details,
+see the introductory <B>kas</B> reference page.
+<P><DT><B>-password_for_admin
+</B><DD>Specifies the password of the command's issuer. If it is
+omitted (as recommended), the <B>kas</B> command interpreter prompts for
+it and does not echo it visibly. For more details, see the introductory
+<B>kas</B> reference page.
+<P><DT><B>-cell
+</B><DD>Names the cell in which to run the command. For more details, see
+the introductory <B>kas</B> reference page.
+<P><DT><B>-servers
+</B><DD>Names each machine running an Authentication Server with which to
+establish a connection. For more details, see the introductory
+<B>kas</B> reference page.
+<P><DT><B>-noauth
+</B><DD>Assigns the unprivileged identity <B>anonymous</B> to the
+issuer. For more details, see the introductory <B>kas</B> reference
+page.
+<P><DT><B>-help
+</B><DD>Prints the online help for this command. All other valid options
+are ignored.
+</DL>
+<P><STRONG>Output</STRONG>
+<P>The output includes:
+<UL>
+<P><LI>The entry name, following the string <TT>User data for</TT>.
+<P><LI>One or more status flags in parentheses; they appear only if an
+administrator has used the <B>kas setfields</B> command to change them
+from their default values. A plus sign (<TT>+</TT>) separates the
+flags if there is more than one. The nondefault values that can appear,
+and their meanings, are as follows: 
+<DL>
+<P><DT><B><TT>ADMIN</TT>
+</B><DD>Enables the user to issue privileged <B>kas</B> commands (default is
+<TT>NOADMIN</TT>)
+<P><DT><B><TT>NOTGS</TT>
+</B><DD>Prevents the user from obtaining tickets from the Authentication
+Server's Ticket Granting Service (default is <TT>TGS</TT>)
+<P><DT><B><TT>NOSEAL</TT>
+</B><DD>Prevents the Ticket Granting Service from using the entry's key field
+as an encryption key (default is <TT>SEAL</TT>)
+<P><DT><B><TT>NOCPW</TT>
+</B><DD>Prevents the user from changing his or her password (default is
+<TT>CPW</TT>)
+</DL>
+<A NAME="IDX5101"></A>
+<A NAME="IDX5102"></A>
+<A NAME="IDX5103"></A>
+<P><LI>The key version number, in parentheses, following the word <TT>key</TT>,
+then one of the following. 
+<UL>
+<P><LI>A checksum equivalent of the key, following the string <TT>cksum
+is</TT>, if the <B>-showkey</B> flag is not included. The checksum
+is a decimal number derived by encrypting a constant with the key. In
+the case of the <B><B>afs</B></B> entry, this number must match the
+checksum with the corresponding key version number in the output of the
+<B>bos listkeys</B> command; if not, follow the instructions in the
+<I>IBM AFS Administration Guide</I> for creating a new server encryption
+key.
+<P><LI>The actual key, following a colon, if the <B>-showkey</B> flag is
+included. The key consists of eight octal numbers, each represented as
+a backslash followed by three decimal digits.
+</UL>
+<P><LI>The date the user last changed his or her own password, following the
+string <TT>last cpw</TT> (which stands for "last change of
+password").
+<P><LI>The string <TT>password will never expire</TT> indicates that the
+associated password never expires; the string <TT>password will
+expire</TT> is followed by the password's expiration date. After
+the indicated date, the user cannot authenticate, but has 30 days after it in
+which to use the <B>kpasswd</B> or <B>kas setpassword</B> command to
+set a new password. After 30 days, only an administrator (one whose
+account is marked with the <TT>ADMIN</TT> flag) can change the password by
+using the <B>kas setpassword</B> command. To set the password
+expiration date, use the <B>kas setfields</B> command's
+<B>-pwexpires</B> argument.
+<P><LI>The number of times the user can fail to provide the correct password
+before the account locks, followed by the string <TT>consecutive unsuccessful
+authentications are permitted</TT>, or the string <TT>An unlimited number of
+unsuccessful authentications is permitted</TT> to indicate that there is no
+limit. To set the limit, use the <B>kas setfields</B>
+command's <B>-attempts</B> argument. To unlock a locked
+account, use the <B>kas unlock</B> command. The <B>kas
+setfields</B> reference page discusses how the implementation of the lockout
+feature interacts with this setting.
+<P><LI>The number of minutes for which the Authentication Server refuses the
+user's login attempts after the limit on consecutive unsuccessful
+authentication attempts is exceeded, following the string <TT>The lock time
+for this user is</TT>. Use the <B>kas</B> command's
+<B>-locktime</B> argument to set the lockout time. This line
+appears only if a limit on the number of unsuccessful authentication attempts
+has been set with the the <B>kas setfields</B> command's
+<B>-attempts</B> argument.
+<P><LI>An indication of whether the Authentication Server is currently refusing
+the user's login attempts. The string <TT>User is not
+locked</TT> indicates that authentication can succeed, whereas the string
+<TT>User is locked until</TT> <VAR>time</VAR> indicates that the user cannot
+authenticate until the indicated time. Use the <B>kas unlock</B>
+command to enable a user to attempt authentication. This line appears
+only if a limit on the number of unsuccessful authentication attempts has been
+set with the <B>kas setfields</B> command's <B>-attempts</B>
+argument.
+<P><LI>The date on which the Authentication Server entry expires, or the string
+<TT>entry never expires</TT> to indicate that the entry does not
+expire. A user becomes unable to authenticate when his or her entry
+expires. Use the <B>kas setfields</B> command's
+<B>-expiration</B> argument to set the expiration date.
+<P><LI>The maximum possible lifetime of the tokens that the Authentication Server
+grants the user. This value interacts with several others to determine
+the actual lifetime of the token, as described on the <B>klog</B>
+reference page. Use the <B>kas setfields</B> command's
+<B>-lifetime</B> argument to set this value.
+<P><LI>The date on which the entry was last modified, following the string
+<TT>last mod on</TT> and the user name of the administrator who modified
+it. The date on which a user changed his or her own password is
+recorded on the second line of output as <TT>last cpw</TT> instead.
+<P><LI>An indication of whether the user can reuse one of his or her last twenty
+passwords when issuing the <B>kpasswd</B>, <B>kas setpassword</B>, or
+<B>kas setkey</B> commands. Use the <B>kas setfields</B>
+command's <B>-reuse</B> argument to set this restriction.
+</UL>
+<P><STRONG>Examples</STRONG>
+<P>The following example command shows the user <B>smith</B> displaying
+her own Authentication Database entry. Note the <TT>ADMIN</TT> flag,
+which shows that <B>smith</B> is privileged.
+<PRE>   % <B>kas examine smith</B>
+   Password for smith:
+   User data for smith (ADMIN)
+    key (0) cksum is 3414844392,  last cpw: Thu Mar 25 16:05:44 1999
+    password will expire:  Fri Apr 30 20:44:36 1999
+    5 consecutive unsuccessful authentications are permitted.
+    The lock time for this user is 25.5 minutes.
+    User is not locked.
+    entry never expires. Max ticket lifetime 100.00 hours.
+    last mod on Tue Jan 5 08:22:29 1999 by admin
+    permit password reuse
+   
+</PRE>
+<P>In the following example, the user <B>pat</B> examines his
+Authentication Database entry to determine when the account lockout currently
+in effect will end.
+<PRE>   % <B>kas examine pat</B>
+   Password for pat:
+   User data for pat
+    key (0) cksum is 73829292912,  last cpw: Wed Apr 7 11:23:01 1999
+    password will expire:  Fri  Jun 11 11:23:01 1999
+    5 consecutive unsuccessful authentications are permitted.
+    The lock time for this user is 25.5 minutes.
+    User is locked until Tue Sep 21 12:25:07 1999
+    entry expires on never. Max ticket lifetime 100.00 hours.
+    last mod on Thu Feb 4 08:22:29 1999 by admin
+    permit password reuse
+   
+</PRE>
+<P>In the following example, an administrator logged in as <B>admin</B>
+uses the <B>-showkey</B> flag to display the octal digits that constitute
+the key in the <B>afs</B> entry.
+<PRE>   % <B>kas examine -name afs -showkey</B>
+   Password for admin: <VAR>admin_password</VAR>
+   User data for afs
+    key (12): \357\253\304\352\234\236\253\352, last cpw: no date 
+    entry never expires. Max ticket lifetime 100.00 hours.
+    last mod on Thu Mar 25 14:53:29 1999 by admin
+    permit password reuse
+   
+</PRE>
+<P><STRONG>Privilege Required</STRONG>
+<P>A user can examine his or her own entry. To examine others'
+entries or to include the <B>-showkey</B> flag, the issuer must have the
+<TT>ADMIN</TT> flag set in his or her Authentication Database entry.
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf095.htm#HDRBOS_ADDKEY">bos addkey</A>
+<P><A HREF="auarf107.htm#HDRBOS_LISTKEYS">bos listkeys</A>
+<P><A HREF="auarf115.htm#HDRBOS_SETAUTH">bos setauth</A>
+<P><A HREF="auarf181.htm#HDRKAS_INTRO">kas</A>
+<P><A HREF="auarf193.htm#HDRKAS_SETFIELDS">kas setfields</A>
+<P><A HREF="auarf194.htm#HDRKAS_SETPASSWORD">kas setpassword</A>
+<P><A HREF="auarf197.htm#HDRKAS_UNLOCK">kas unlock</A>
+<P><A HREF="auarf200.htm#HDRKLOG">klog</A>
+<P><A HREF="auarf202.htm#HDRKPASSWD">kpasswd</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf184.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf186.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

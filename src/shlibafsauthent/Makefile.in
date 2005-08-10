@@ -63,6 +63,8 @@ UTILOBJS = \
 	pthread_glock.o \
 	get_krbrlm.o \
 	dirpath.o \
+	serverLog.o \
+	snprintf.o \
 	fileutil.o
 
 RXKADOBJS = \
@@ -191,6 +193,12 @@ get_krbrlm.o: ${UTIL}/get_krbrlm.c
 	${CCRULE}
 
 dirpath.o: ${UTIL}/dirpath.c
+	${CCRULE}
+
+serverLog.o: ${UTIL}/serverLog.c
+	${CCRULE}
+
+snprintf.o: ${UTIL}/snprintf.c
 	${CCRULE}
 
 fileutil.o: ${UTIL}/fileutil.c

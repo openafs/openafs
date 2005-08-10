@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/viced/host.c,v 1.57.2.3 2005/04/03 20:19:22 shadow Exp $");
+    ("$Header: /cvs/openafs/src/viced/host.c,v 1.57.2.5 2005/07/28 20:52:21 shadow Exp $");
 
 #include <stdio.h>
 #include <errno.h>
@@ -1163,24 +1163,55 @@ h_GetHost_r(struct rx_connection *tcon)
 		H_LOCK;
 	    } else if (code == 0) {
 		oldHost = h_LookupUuid_r(&identP->uuid);
+                if (oldHost) {
+                    int probefail = 0;
+
+		    if (!(held = h_Held_r(oldHost)))
+			h_Hold_r(oldHost);
+		    h_Lock_r(oldHost);
+
+                    if (oldHost->interface) {
+			afsUUID uuid = oldHost->interface->uuid;
+                        cb_conn = host->callback_rxcon;
+                        rx_GetConnection(cb_conn);
+			H_UNLOCK;
+			code = RXAFSCB_ProbeUuid(cb_conn, &uuid);
+                        rx_PutConnection(cb_conn);
+                        cb_conn=NULL;
+			H_LOCK;
+			if (code && MultiProbeAlternateAddress_r(oldHost)) {
+                            probefail = 1;
+                        }
+                    } else {
+                        probefail = 1;
+                    }
+
+                    if (probefail) {
+                        /* The old host is either does not have a Uuid,
+                         * is not responding to Probes, 
+                         * or does not have a matching Uuid. 
+                         * Delete it! */
+                        oldHost->hostFlags |= HOSTDELETED;
+                        h_Unlock_r(oldHost);
+                        h_Release_r(oldHost);
+                        oldHost = NULL;
+                    }
+                }
 		if (oldHost) {
 		    /* This is a new address for an existing host. Update
 		     * the list of interfaces for the existing host and
 		     * delete the host structure we just allocated. */
-		    if (!(held = h_Held_r(oldHost)))
-			h_Hold_r(oldHost);
-		    h_Lock_r(oldHost);
 		    ViceLog(25,
 			    ("CB: new addr %s:%d for old host %s:%d\n",
 			     afs_inet_ntoa_r(host->host, hoststr),
 			     ntohs(host->port), afs_inet_ntoa_r(oldHost->host,
 								hoststr2),
 			     ntohs(oldHost->port)));
+		    addInterfaceAddr_r(oldHost, haddr);
 		    host->hostFlags |= HOSTDELETED;
 		    h_Unlock_r(host);
 		    h_Release_r(host);
 		    host = oldHost;
-		    addInterfaceAddr_r(host, haddr);
 		} else {
 		    /* This really is a new host */
 		    hashInsertUuid_r(&identP->uuid, host);
@@ -1218,7 +1249,7 @@ h_GetHost_r(struct rx_connection *tcon)
 	    host->hostFlags |= HERRORTRANS;
 	else
 	    host->hostFlags &= ~(HERRORTRANS);
-	host->hostFlags |= ALTADDR;	/* host structure iniatilisation complete */
+	host->hostFlags |= ALTADDR;	/* host structure initialization complete */
 	h_Unlock_r(host);
     }
     if (caps.Capabilities_val)
@@ -1452,6 +1483,7 @@ h_FindClient_r(struct rx_connection *tcon)
     if (!client) {
 	host = h_GetHost_r(tcon);	/* Returns it h_Held */
 
+    retryfirstclient:
 	/* First try to find the client structure */
 	for (client = host->FirstClient; client; client = client->next) {
 	    if (!client->deleted && (client->sid == rxr_CidOf(tcon))
@@ -1485,6 +1517,15 @@ h_FindClient_r(struct rx_connection *tcon)
 
 	/* Still no client structure - get one */
 	if (!client) {
+	    h_Lock_r(host);
+	    /* Retry to find the client structure */
+	    for (client = host->FirstClient; client; client = client->next) {
+		if (!client->deleted && (client->sid == rxr_CidOf(tcon))
+		    && (client->VenusEpoch == rxr_GetEpoch(tcon))) {
+		    h_Unlock_r(host);
+		    goto retryfirstclient;
+		}
+	    }
 	    client = GetCE();
 	    ObtainWriteLock(&client->lock);
 	    client->refCount = 1;
@@ -1501,6 +1542,7 @@ h_FindClient_r(struct rx_connection *tcon)
 	    client->VenusEpoch = rxr_GetEpoch(tcon);
 	    client->CPS.prlist_val = 0;
 	    client->CPS.prlist_len = 0;
+	    h_Unlock_r(host);
 	    CurrentConnections++;	/* increment number of connections */
 	}
     }

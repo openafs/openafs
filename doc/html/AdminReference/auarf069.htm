@@ -1,0 +1,93 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 4//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3672/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 3 Oct 2000 at 16:18:30                -->
+<META HTTP-EQUIV="updated" CONTENT="Tue, 03 Oct 2000 16:18:29">
+<META HTTP-EQUIV="review" CONTENT="Wed, 03 Oct 2001 16:18:29">
+<META HTTP-EQUIV="expires" CONTENT="Thu, 03 Oct 2002 16:18:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf068.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf070.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRBK_DELHOST" HREF="auarf002.htm#ToC_83">backup delhost</A></H2>
+<A NAME="IDX4280"></A>
+<A NAME="IDX4281"></A>
+<A NAME="IDX4282"></A>
+<A NAME="IDX4283"></A>
+<A NAME="IDX4284"></A>
+<P><STRONG>Purpose</STRONG>
+<P>Deletes a Tape Coordinator entry from the Backup Database
+<P><STRONG>Synopsis</STRONG>
+<PRE><B>backup delhost -tapehost</B> &lt;<VAR>tape&nbsp;machine&nbsp;name</VAR>> [<B>-portoffset</B> &lt;<VAR>TC&nbsp;port&nbsp;offset</VAR>>]
+               [<B>-localauth</B>]  [<B>-cell</B> &lt;<VAR>cell&nbsp;name</VAR>>]  [<B>-help</B>]
+   
+<B>backup delh -t</B> &lt;<VAR>tape&nbsp;machine&nbsp;name</VAR>>  [<B>-p</B> &lt;<VAR>TC&nbsp;port&nbsp;offset</VAR>>]
+            [<B>-l</B>]  [<B>-c</B> &lt;<VAR>cell&nbsp;name</VAR>>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>Description</STRONG>
+<P>The <B>backup delhost</B> command deletes the indicated Tape
+Coordinator entry from the Backup Database. It is then impossible to
+submit backup operations to that Tape Coordinator, even if it is still
+running. To keep configuration information consistent, also remove the
+corresponding entry from the <B>/usr/afs/backup/tapeconfig</B> file on the
+Tape Coordinator machine.
+<P>To list the Tape Coordinator machines and port offsets defined in the
+Backup Database, issue the <B>backup listhosts</B> command.
+<P><STRONG>Options</STRONG>
+<DL>
+<P><DT><B>-tapehost
+</B><DD>Specifies the hostname of the machine housing the Tape Coordinator to
+delete.
+<P><DT><B>-portoffset
+</B><DD>Specifies the port offset number of the Tape Coordinator to delete.
+If omitted, it defaults to <B>0</B>. If provided, it is an integer
+between <B>0</B> (zero) and <B>58510</B>, and must match the port
+offset number assigned to the same combination of Tape Coordinator and tape
+device or file in the <B>/usr/afs/backup/tapeconfig</B> file on the Tape
+Coordinator machine indicated by the <B>-tapehost</B> argument.
+<P><DT><B>-localauth
+</B><DD>Constructs a server ticket using a key from the local
+<B>/usr/afs/etc/KeyFile</B> file. The <B>backup</B> command
+interpreter presents it to the Backup Server, Volume Server and VL Server
+during mutual authentication. Do not combine this flag with the
+<B>-cell</B> argument. For more details, see the introductory
+<B>backup</B> reference page.
+<P><DT><B>-cell
+</B><DD>Names the cell in which to run the command. Do not combine this
+argument with the <B>-localauth</B> flag. For more details, see the
+introductory <B>backup</B> reference page.
+<P><DT><B>-help
+</B><DD>Prints the online help for this command. All other valid options
+are ignored.
+</DL>
+<P><STRONG>Examples</STRONG>
+<P>The following command deletes the Backup Database entry for the Tape
+Coordinator with port offset 2 on the Tape Coordinator machine
+<B>backup3.abc.com</B>:
+<PRE>   % <B>backup delhost -tapehost backup3.abc.com -portoffset 2</B>
+   
+</PRE>
+<P><STRONG>Privilege Required</STRONG>
+<P>The issuer must be listed in the <B>/usr/afs/etc/UserList</B> file on
+every machine where the Backup Server is running, or must be logged onto a
+server machine as the local superuser <B>root</B> if the
+<B>-localauth</B> flag is included.
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf060.htm#HDRBK_INTRO">backup</A>
+<P><A HREF="auarf062.htm#HDRBK_ADDHOST">backup addhost</A>
+<P><A HREF="auarf081.htm#HDRBK_LISTHOSTS">backup listhosts</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf068.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf070.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

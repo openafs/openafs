@@ -23,7 +23,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_osi_pag.c,v 1.21.2.3 2005/01/31 04:19:20 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_osi_pag.c,v 1.21.2.4 2005/05/23 21:09:37 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -141,39 +141,40 @@ getpag(void)
 
 static int afs_pag_sleepcnt = 0;
 
-static int 
-afs_pag_sleep(struct AFS_UCRED **acred) 
+static int
+afs_pag_sleep(struct AFS_UCRED **acred)
 {
-  int rv = 0;
-  if(!afs_suser(acred)) {
-    if(osi_Time() - pag_epoch < pagCounter) {
-      rv = 1;
-    }
-  }
+    int rv = 0;
 
-  return rv;
+    if (!afs_suser(acred)) {
+	if(osi_Time() - pag_epoch < pagCounter) {
+	    rv = 1;
+	}
+    }
+
+    return rv;
 }
 
-static int 
+static int
 afs_pag_wait(struct AFS_UCRED **acred)
 {
-  if(afs_pag_sleep(acred)) {
-    if(!afs_pag_sleepcnt) {
-      printf("%s() PAG throttling triggered, pid %d... sleeping.  sleepcnt %d\n",
-	     "afs_pag_wait", getpid(), afs_pag_sleepcnt);
-    }
-    
-    afs_pag_sleepcnt++;
-    
-    do {
-      /* XXX spins on EINTR */
-      afs_osi_Wait(1000, (struct afs_osi_WaitHandle *)0, 0);
-    } while(afs_pag_sleep(acred));
-    
-    afs_pag_sleepcnt--;
-  }
+    if (afs_pag_sleep(acred)) {
+	if (!afs_pag_sleepcnt) {
+	    printf("%s() PAG throttling triggered, pid %d... sleeping.  sleepcnt %d\n",
+		   "afs_pag_wait", osi_getpid(), afs_pag_sleepcnt);
+	}
 
-  return 0;
+	afs_pag_sleepcnt++;
+
+	do {
+	    /* XXX spins on EINTR */
+	    afs_osi_Wait(1000, (struct afs_osi_WaitHandle *)0, 0);
+	} while (afs_pag_sleep(acred));
+
+	afs_pag_sleepcnt--;
+    }
+
+    return 0;
 }
 
 int

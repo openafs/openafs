@@ -145,7 +145,7 @@ error_table 2 ZCM
 	ec	CM_TRACE_MEMFETCH, "MemFetch: vp 0x%lx  mceP 0x%lx offset (0x%x, 0x%x) length 0x%x"
 	ec	CM_TRACE_VMWRITE3, "afs_vm_rdwr: vp 0x%lx code %d"
 	ec	CM_TRACE_STOREALL2, "StoreAll 2 vp 0x%lx chunk 0x%x index %d inode %d"
-	ec	CM_TRACE_MEMOPEN, "MemOpen blkno %d mceP 0x%x data 0x%x = %s"
+	ec	CM_TRACE_MEMOPEN, "MemOpen blkno %d mceP 0x%x data 0x%x"
 	ec	CM_TRACE_VCACHE2INODE, "vcache2inode: avc 0x%x event %d"
 	ec	CM_TRACE_STOREDATA64, "StoreData64: fid (%d:%d.%d.%d) offs (0x%x, 0x%x) len (0x%x, 0x%x) file length (0x%x, 0x%x)"
 	ec	CM_TRACE_RESIDCMD, "ResidencyCmd tvc 0x%x command %d fid (%d:%d.%d.%d)"

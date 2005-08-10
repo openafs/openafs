@@ -293,6 +293,7 @@ struct rx_packet {
 
 #ifdef KERNEL
 #define rxi_OverQuota(packetclass) (rx_nFreePackets - 1 < rx_packetQuota[packetclass])
+#define rxi_OverQuota2(packetclass,num_alloc) (rx_nFreePackets - (num_alloc) < rx_packetQuota[packetclass])
 #endif /* KERNEL */
 
 /* this returns an afs_int32 from byte offset o in packet p.  offset must

@@ -20,7 +20,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/viced/viced.c,v 1.58.2.4 2005/04/15 18:25:01 shadow Exp $");
+    ("$Header: /cvs/openafs/src/viced/viced.c,v 1.58.2.7 2005/07/11 19:08:50 shadow Exp $");
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,8 +28,8 @@ RCSID
 #include <sys/types.h>
 #include <afs/procmgmt.h>	/* signal(), kill(), wait(), etc. */
 #include <sys/stat.h>
-#ifdef AFS_NT40_ENV
 #include <fcntl.h>
+#ifdef AFS_NT40_ENV
 #include <io.h>
 #include <windows.h>
 #include <WINNT/afsevent.h>
@@ -88,7 +88,6 @@ RCSID
 #include "host.h"
 #ifdef AFS_PTHREAD_ENV
 #include "softsig.h"
-char *(*threadNameProgram) ();
 #endif
 #if defined(AFS_SGI_ENV)
 #include "sys/schedctl.h"
@@ -318,14 +317,9 @@ ResetCheckDescriptors(void)
 
 #if defined(AFS_PTHREAD_ENV)
 char *
-threadName(void)
+threadNum(void)
 {
-    char threadid[16];
-    if (LogLevel > 999) {
-	afs_snprintf(threadid, 16, "%d", pthread_getspecific(rx_thread_id_key));
-	return threadid;
-    } else 
-	return NULL;
+    return pthread_getspecific(rx_thread_id_key);
 }
 #endif
 
@@ -718,6 +712,7 @@ FlagMsg()
     /* default supports help flag */
 
     strcpy(buffer, "Usage: fileserver ");
+    strcpy(buffer, "[-auditlog <log path>] ");
     strcat(buffer, "[-d <debug level>] ");
     strcat(buffer, "[-p <number of processes>] ");
     strcat(buffer, "[-spare <number of spare blocks>] ");
@@ -739,6 +734,9 @@ FlagMsg()
     strcat(buffer, "[-rxpck <number of rx extra packets>] ");
     strcat(buffer, "[-rxdbg (enable rx debugging)] ");
     strcat(buffer, "[-rxdbge (enable rxevent debugging)] ");
+#if AFS_PTHREAD_ENV
+    strcat(buffer, "[-vattachpar <number of volume attach threads>] ");
+#endif
 #ifdef	AFS_AIX32_ENV
     strcat(buffer, "[-m <min percentage spare in partition>] ");
 #endif
@@ -934,6 +932,14 @@ ParseArgs(int argc, char *argv[])
 		return -1; 
 	    }
 	    rxpackets = atoi(argv[++i]);
+#ifdef AFS_PTHREAD_ENV
+	} else if (!strcmp(argv[i], "-vattachpar")) {
+            if ((i + 1) >= argc) {
+		fprintf(stderr, "missing argument for -vattachpar\n"); 
+		return -1; 
+	    }
+	    vol_attach_threads = atoi(argv[++i]);
+#endif /* AFS_PTHREAD_ENV */
 	} else if (!strcmp(argv[i], "-s")) {
 	    Sawsmall = 1;
             if ((i + 1) >= argc) {
@@ -1085,6 +1091,36 @@ ParseArgs(int argc, char *argv[])
 	} else if (!strcmp(argv[i], "-enable_process_stats")) {
 	    rx_enableProcessRPCStats();
 	}
+	else if (strcmp(argv[i], "-auditlog") == 0) {
+	    int tempfd, flags;
+	    FILE *auditout;
+	    char oldName[MAXPATHLEN];
+	    char *fileName = argv[++i];
+	    
+#ifndef AFS_NT40_ENV
+	    struct stat statbuf;
+	    
+	    if ((lstat(fileName, &statbuf) == 0) 
+		&& (S_ISFIFO(statbuf.st_mode))) {
+		flags = O_WRONLY | O_NONBLOCK;
+	    } else 
+#endif
+	    {
+		strcpy(oldName, fileName);
+		strcat(oldName, ".old");
+		renamefile(fileName, oldName);
+		flags = O_WRONLY | O_TRUNC | O_CREAT;
+	    }
+	    tempfd = open(fileName, flags, 0666);
+	    if (tempfd > -1) {
+		auditout = fdopen(tempfd, "a");
+		if (auditout) {
+		    osi_audit_file(auditout);
+		} else
+		    printf("Warning: auditlog %s not writable, ignored.\n", fileName);
+	    } else
+		printf("Warning: auditlog %s not writable, ignored.\n", fileName);
+	}
 #ifndef AFS_NT40_ENV
 	else if (strcmp(argv[i], "-syslog") == 0) {
 	    /* set syslog logging flag */
@@ -1094,6 +1130,10 @@ ParseArgs(int argc, char *argv[])
 	    serverLogSyslogFacility = atoi(argv[i] + 8);
 	}
 #endif
+	else if (strcmp(argv[i], "-mrafslogs") == 0) {
+	    /* set syslog logging flag */
+	    mrafsStyleLogs = 1;
+	} 
 	else {
 	    return (-1);
 	}
@@ -1715,8 +1755,8 @@ main(int argc, char *argv[])
 	V_BreakVolumeCallbacks = BreakVolumeCallBacksLater;
     }
 
-#if defined(AFS_PTHREAD_ENV)
-    threadNameProgram = threadName;
+#ifdef AFS_PTHREAD_ENV
+    SetLogThreadNumProgram( threadNum );
 #endif
 
     /* initialize libacl routines */

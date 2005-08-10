@@ -1,4 +1,4 @@
-/* $Id: pt_util.c,v 1.9.2.1 2005/04/15 19:40:43 shadow Exp $ */
+/* $Id: pt_util.c,v 1.9.2.2 2005/07/15 19:19:36 shadow Exp $ */
 
 /*
  *
@@ -23,7 +23,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/ptserver/pt_util.c,v 1.9.2.1 2005/04/15 19:40:43 shadow Exp $");
+    ("$Header: /cvs/openafs/src/ptserver/pt_util.c,v 1.9.2.2 2005/07/15 19:19:36 shadow Exp $");
 
 #include <afs/cmd.h>		/*Command line parsing */
 #include <errno.h>
@@ -119,7 +119,6 @@ main(int argc, char **argv)
 		"display only system data");
     cmd_AddParm(cs, "-xtra", CMD_FLAG, CMD_OPTIONAL,
 		"display extra users/groups");
-    cmd_Seek(cs, 10);
     cmd_AddParm(cs, "-prdb", CMD_SINGLE, CMD_OPTIONAL, "prdb file");
     cmd_AddParm(cs, "-datafile", CMD_SINGLE, CMD_OPTIONAL, "data file");
     code = cmd_Dispatch(argc, argv);

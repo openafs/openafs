@@ -50,8 +50,8 @@ DEFINES = $(COMMON_DEFINES)
 CCFLAGS = $(COMMON_KERN_CFLAGS) @P5PLUS_KOPTS@
 DEFINES = $(COMMON_DEFINES) -DCPU=586
 
-<amd64_linux24>
-CCFLAGS = $(COMMON_KERN_CFLAGS) -mcmodel=kernel
+<amd64_linux24 amd64_linux26>
+CCFLAGS = $(COMMON_KERN_CFLAGS) -mcmodel=kernel -mno-red-zone
 DEFINES = $(COMMON_DEFINES) 
 
 <i386_umlinux22 i386_umlinux24 i386_umlinux26>
@@ -61,11 +61,11 @@ DEFINES = $(COMMON_DEFINES) -DCPU=586
 <i386_umlinux26>
 EXTRA_CFLAGS = -I$(LINUX_KERNEL_PATH)/arch/um/include -I$(LINUX_KERNEL_PATH)/arch/um/kernel/tt/include -I$(LINUX_KERNEL_PATH)/arch/um/kernel/skas/include
 
-<alpha_linux_22 alpha_linux_24>
+<alpha_linux_22 alpha_linux_24 alpha_linux_26>
 CCFLAGS = $(COMMON_KERN_CFLAGS) -mno-fp-regs -ffixed-8
 DEFINES = $(COMMON_DEFINES)
 
-<s390_linux22 s390_linux24>
+<s390_linux22 s390_linux24 s390_linux26>
 CCFLAGS = $(COMMON_KERN_CFLAGS) -fsigned-char
 DEFINES = $(COMMON_DEFINES) -D__s390__ 
 

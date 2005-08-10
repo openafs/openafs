@@ -20,7 +20,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vol/volume.c,v 1.35.2.3 2005/04/14 02:00:36 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vol/volume.c,v 1.35.2.6 2005/05/30 10:50:04 jaltman Exp $");
 
 #include <rx/xdr.h>
 #include <afs/afsint.h>
@@ -152,6 +152,7 @@ pthread_mutex_t vol_fsync_mutex;
 pthread_mutex_t vol_trans_mutex;
 pthread_cond_t vol_put_volume_cond;
 pthread_cond_t vol_sleep_cond;
+int vol_attach_threads = 1;
 #endif /* AFS_PTHREAD_ENV */
 
 #ifdef	AFS_OSF_ENV
@@ -209,6 +210,20 @@ ffs(x)
 }
 #endif /* !AFS_HAVE_FFS */
 
+#ifdef AFS_PTHREAD_ENV
+#include "rx/rx_queue.h"
+typedef struct diskpartition_queue_t {
+    struct rx_queue queue;
+    struct DiskPartition * diskP;
+} diskpartition_queue_t;
+typedef struct vinitvolumepackage_thread_t {
+    struct rx_queue queue;
+    pthread_cond_t thread_done_cv;
+    int n_threads_complete;
+} vinitvolumepackage_thread_t;
+static void * VInitVolumePackageThread(void * args);
+#endif /* AFS_PTHREAD_ENV */
+
 struct Lock vol_listLock;	/* Lock obtained when listing volumes:  prevents a volume from being missed if the volume is attached during a list volumes */
 
 extern struct Lock FSYNC_handler_lock;
@@ -229,7 +244,8 @@ int VInit;			/* 0 - uninitialized,
 bit32 VolumeCacheCheck;		/* Incremented everytime a volume goes on line--
 				 * used to stamp volume headers and in-core
 				 * vnodes.  When the volume goes on-line the
-				 * vnode will be invalidated */
+				 * vnode will be invalidated
+				 * access only with VOL_LOCK held */
 
 int VolumeCacheSize = 200, VolumeGets = 0, VolumeReplacements = 0, Vlooks = 0;
 
@@ -284,10 +300,48 @@ VInitVolumePackage(ProgramType pt, int nLargeVnodes, int nSmallVnodes,
 	return -1;
 
     if (programType == fileServer) {
+	struct DiskPartition *diskP;
+#ifdef AFS_PTHREAD_ENV
+	struct vinitvolumepackage_thread_t params;
+	struct diskpartition_queue_t * dpq;
+	int i, len;
+	pthread_t tid;
+	pthread_attr_t attrs;
+
+	assert(pthread_cond_init(&params.thread_done_cv,NULL) == 0);
+	queue_Init(&params);
+	params.n_threads_complete = 0;
+
+	/* create partition work queue */
+	for (len=0, diskP = DiskPartitionList; diskP; diskP = diskP->next, len++) {
+	    dpq = (diskpartition_queue_t *) malloc(sizeof(struct diskpartition_queue_t));
+	    assert(dpq != NULL);
+	    dpq->diskP = diskP;
+	    queue_Prepend(&params,dpq);
+	}
+
+	assert(pthread_attr_init(&attrs) == 0);
+	assert(pthread_attr_setdetachstate(&attrs, PTHREAD_CREATE_DETACHED) == 0);
+
+	len = MIN(len, vol_attach_threads);
+	
+	VOL_LOCK;
+	for (i=0; i < len; i++) {
+	    assert(pthread_create
+		   (&tid, &attrs, &VInitVolumePackageThread,
+		    &params) == 0);
+	}
+
+	while(params.n_threads_complete < len) {
+  	    pthread_cond_wait(&params.thread_done_cv,&vol_glock_mutex);
+	}
+	VOL_UNLOCK;
+
+	assert(pthread_cond_destroy(&params.thread_done_cv) == 0);
+
+#else /* AFS_PTHREAD_ENV */
 	DIR *dirp;
 	struct dirent *dp;
-	struct DiskPartition *diskP;
-
 
 	/* Attach all the volumes in this partition */
 	for (diskP = DiskPartitionList; diskP; diskP = diskP->next) {
@@ -319,6 +373,7 @@ VInitVolumePackage(ProgramType pt, int nLargeVnodes, int nSmallVnodes,
 	    Log("Partition %s: attached %d volumes; %d volumes not attached\n", diskP->name, nAttached, nUnattached);
 	    closedir(dirp);
 	}
+#endif /* AFS_PTHREAD_ENV */
     }
 
     VInit = 2;			/* Initialized, and all volumes have been attached */
@@ -331,6 +386,67 @@ VInitVolumePackage(ProgramType pt, int nLargeVnodes, int nSmallVnodes,
     }
     return 0;
 }
+
+#ifdef AFS_PTHREAD_ENV
+static void *
+VInitVolumePackageThread(void * args) {
+    int errors = 0;		/* Number of errors while finding vice partitions. */
+
+    DIR *dirp;
+    struct dirent *dp;
+    struct DiskPartition *diskP;
+    struct vinitvolumepackage_thread_t * params;
+    struct diskpartition_queue_t * dpq;
+
+    params = (vinitvolumepackage_thread_t *) args;
+
+
+    VOL_LOCK;
+    /* Attach all the volumes in this partition */
+    while (queue_IsNotEmpty(params)) {
+        int nAttached = 0, nUnattached = 0;
+
+        dpq = queue_First(params,diskpartition_queue_t);
+	queue_Remove(dpq);
+	VOL_UNLOCK;
+	diskP = dpq->diskP;
+	free(dpq);
+
+	Log("Partition %s: attaching volumes\n", diskP->name);
+	dirp = opendir(VPartitionPath(diskP));
+	assert(dirp);
+	while ((dp = readdir(dirp))) {
+	    char *p;
+	    p = strrchr(dp->d_name, '.');
+	    if (p != NULL && strcmp(p, VHDREXT) == 0) {
+	        Error error;
+		Volume *vp;
+		vp = VAttachVolumeByName(&error, diskP->name, dp->d_name,
+					 V_VOLUPD);
+		(*(vp ? &nAttached : &nUnattached))++;
+		if (error == VOFFLINE)
+		    Log("Volume %d stays offline (/vice/offline/%s exists)\n", VolumeNumber(dp->d_name), dp->d_name);
+		else if (LogLevel >= 5) {
+		    Log("Partition %s: attached volume %d (%s)\n",
+			diskP->name, VolumeNumber(dp->d_name),
+			dp->d_name);
+		}
+		if (vp) {
+		    VPutVolume(vp);
+		}
+	    }
+	}
+	Log("Partition %s: attached %d volumes; %d volumes not attached\n", diskP->name, nAttached, nUnattached);
+	closedir(dirp);
+	VOL_LOCK;
+    }
+
+    params->n_threads_complete++;
+    pthread_cond_signal(&params->thread_done_cv);
+    VOL_UNLOCK;
+    return NULL;
+}
+#endif /* AFS_PTHREAD_ENV */
 
 /* This must be called by any volume utility which needs to run while the
    file server is also running.  This is separated from VInitVolumePackage so
@@ -725,6 +841,7 @@ attach2(Error * ec, char *path, register struct VolumeHeader * header,
     register Volume *vp;
 
     VOL_UNLOCK;
+
     vp = (Volume *) calloc(1, sizeof(Volume));
     assert(vp != NULL);
     vp->specialStatus = (byte) (isbusy ? VBUSY : 0);
@@ -737,18 +854,21 @@ attach2(Error * ec, char *path, register struct VolumeHeader * header,
     IH_INIT(vp->diskDataHandle, partp->device, header->parent,
 	    header->volumeInfo);
     IH_INIT(vp->linkHandle, partp->device, header->parent, header->linkTable);
+    vp->shuttingDown = 0;
+    vp->goingOffline = 0;
+    vp->nUsers = 1;
+
+    VOL_LOCK;
     vp->cacheCheck = ++VolumeCacheCheck;
     /* just in case this ever rolls over */
     if (!vp->cacheCheck)
 	vp->cacheCheck = ++VolumeCacheCheck;
-    vp->shuttingDown = 0;
-    vp->goingOffline = 0;
-    vp->nUsers = 1;
-    VOL_LOCK;
     GetVolumeHeader(vp);
     VOL_UNLOCK;
+
     (void)ReadHeader(ec, V_diskDataHandle(vp), (char *)&V_disk(vp),
 		     sizeof(V_disk(vp)), VOLUMEINFOMAGIC, VOLUMEINFOVERSION);
+
     VOL_LOCK;
     if (*ec) {
 	Log("VAttachVolume: Error reading diskDataHandle vol header %s; error=%u\n", path, *ec);
@@ -1060,7 +1180,7 @@ VGetVolume_r(Error * ec, VolId volumeId)
 		    Log("Volume %u: couldn't reread volume header\n",
 			vp->hashid);
 		FreeVolume(vp);
-		vp = 0;
+		vp = NULL;
 		break;
 	    }
 	}
@@ -1068,7 +1188,7 @@ VGetVolume_r(Error * ec, VolId volumeId)
 	if (vp->shuttingDown) {
 	    V8++;
 	    *ec = VNOVOL;
-	    vp = 0;
+	    vp = NULL;
 	    break;
 	}
 	if (programType == fileServer) {
@@ -1811,11 +1931,11 @@ GetVolumeHeader(register Volume * vp)
     int old;
     static int everLogged = 0;
 
-    old = (vp->header != 0);	/* old == volume already has a header */
+    old = (vp->header != NULL);	/* old == volume already has a header */
     if (programType != fileServer) {
 	if (!vp->header) {
 	    hd = (struct volHeader *)calloc(1, sizeof(*vp->header));
-	    assert(hd != 0);
+	    assert(hd != NULL);
 	    vp->header = hd;
 	    hd->back = vp;
 	}
@@ -1946,3 +2066,4 @@ VPrintCacheStats(void)
     VPrintCacheStats_r();
     VOL_UNLOCK;
 }
+

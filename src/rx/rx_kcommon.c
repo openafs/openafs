@@ -15,7 +15,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_kcommon.c,v 1.44.2.3 2005/04/15 18:37:14 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_kcommon.c,v 1.44.2.5 2005/08/08 15:01:40 shadow Exp $");
 
 #include "rx/rx_kcommon.h"
 
@@ -127,8 +127,8 @@ osi_Panic(msg, a1, a2, a3)
 	msg = "Unknown AFS panic";
 
     printf(msg, a1, a2, a3);
-#ifdef AFS_LINUX20_ENV
-    *((char *)0xffffffff) = 42;
+#ifdef AFS_LINUX24_ENV
+    BUG();
 #else
     panic(msg);
 #endif

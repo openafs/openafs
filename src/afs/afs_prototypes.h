@@ -546,8 +546,6 @@ extern void setup_uio(uio_t * uiop, struct iovec *iovecp, const char *buf,
 		      uio_seg_t seg);
 extern int uiomove(char *dp, int length, uio_flag_t rw, uio_t * uiop);
 extern void osi_linux_free_inode_pages(void);
-extern void osi_clear_inode(struct inode *ip);
-extern void check_bad_parent(struct dentry *dp);
 #endif
 extern void osi_linux_mask(void);
 extern void osi_linux_unmask(void);
@@ -816,8 +814,6 @@ extern afs_int32 afs_vcount;
 extern int afsvnumbers;
 extern afs_rwlock_t afs_xvcache;
 extern afs_lock_t afs_xvcb;
-extern struct vcache *freeVCList;
-extern struct vcache *Initial_freeVCList;
 extern struct afs_q VLRU;
 extern afs_int32 vcachegen;
 extern unsigned int afs_paniconwarn;

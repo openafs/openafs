@@ -67,11 +67,11 @@ EXPORTS
 	xdrrec_skiprecord			@71
 	xdrrx_create				@72
 	hton_syserr_conv			@73
-	rxkad_stats				@74 DATA
+	rxkad_global_stats			@74 DATA
 	com_err					@75
 	error_message				@76
 	rx_socket				@77 DATA
-	AssertionFailed				@79
+;	AssertionFailed				@79
 	afs_winsockInit				@80
 	rxevent_debugFile			@81 DATA
 	rx_debugFile				@82 DATA
@@ -213,5 +213,7 @@ EXPORTS
         StartRXAFS_FetchData64                  @218
         StartRXAFS_StoreData64                  @219
         rx_StartClientThread                    @220
+	rxkad_global_stats_lock			@221 DATA
+	rxkad_stats_key				@222 DATA
 
 

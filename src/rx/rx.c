@@ -17,7 +17,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx.c,v 1.58.2.17 2005/04/20 21:23:47 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx.c,v 1.58.2.20 2005/05/30 04:57:36 shadow Exp $");
 
 #ifdef KERNEL
 #include "afs/sysincludes.h"
@@ -153,7 +153,6 @@ static unsigned int rxi_rpc_process_stat_cnt;
  */
 
 extern pthread_mutex_t rx_stats_mutex;
-extern pthread_mutex_t rxkad_stats_mutex;
 extern pthread_mutex_t des_init_mutex;
 extern pthread_mutex_t des_random_mutex;
 extern pthread_mutex_t rx_clock_mutex;
@@ -207,8 +206,6 @@ rxi_InitPthread(void)
 	   (&rxkad_client_uid_mutex, (const pthread_mutexattr_t *)0) == 0);
     assert(pthread_mutex_init
 	   (&rxkad_random_mutex, (const pthread_mutexattr_t *)0) == 0);
-    assert(pthread_mutex_init
-	   (&rxkad_stats_mutex, (const pthread_mutexattr_t *)0) == 0);
     assert(pthread_mutex_init(&rx_debug_mutex, (const pthread_mutexattr_t *)0)
 	   == 0);
 
@@ -218,6 +215,8 @@ rxi_InitPthread(void)
 	   == 0);
     assert(pthread_key_create(&rx_thread_id_key, NULL) == 0);
     assert(pthread_key_create(&rx_ts_info_key, NULL) == 0);
+ 
+    rxkad_global_stats_init();
 }
 
 pthread_once_t rx_once_init = PTHREAD_ONCE_INIT;
@@ -1073,14 +1072,32 @@ rx_NewCall(register struct rx_connection *conn)
      * If so, let them go first to avoid starving them.
      * This is a fairly simple scheme, and might not be
      * a complete solution for large numbers of waiters.
+     * 
+     * makeCallWaiters keeps track of the number of 
+     * threads waiting to make calls and the 
+     * RX_CONN_MAKECALL_WAITING flag bit is used to 
+     * indicate that there are indeed calls waiting.
+     * The flag is set when the waiter is incremented.
+     * It is only cleared in rx_EndCall when 
+     * makeCallWaiters is 0.  This prevents us from 
+     * accidently destroying the connection while it
+     * is potentially about to be used.
      */
+    MUTEX_ENTER(&conn->conn_data_lock);
     if (conn->makeCallWaiters) {
+	conn->flags |= RX_CONN_MAKECALL_WAITING;
+	conn->makeCallWaiters++;
+        MUTEX_EXIT(&conn->conn_data_lock);
+
 #ifdef	RX_ENABLE_LOCKS
-	CV_WAIT(&conn->conn_call_cv, &conn->conn_call_lock);
+        CV_WAIT(&conn->conn_call_cv, &conn->conn_call_lock);
 #else
-	osi_rxSleep(conn);
+        osi_rxSleep(conn);
 #endif
-    }
+	MUTEX_ENTER(&conn->conn_data_lock);
+	conn->makeCallWaiters--;
+    } 
+    MUTEX_EXIT(&conn->conn_data_lock);
 
     for (;;) {
 	for (i = 0; i < RX_MAXCALLS; i++) {
@@ -1103,15 +1120,17 @@ rx_NewCall(register struct rx_connection *conn)
 	}
 	MUTEX_ENTER(&conn->conn_data_lock);
 	conn->flags |= RX_CONN_MAKECALL_WAITING;
+	conn->makeCallWaiters++;
 	MUTEX_EXIT(&conn->conn_data_lock);
 
-	conn->makeCallWaiters++;
 #ifdef	RX_ENABLE_LOCKS
 	CV_WAIT(&conn->conn_call_cv, &conn->conn_call_lock);
 #else
 	osi_rxSleep(conn);
 #endif
+	MUTEX_ENTER(&conn->conn_data_lock);
 	conn->makeCallWaiters--;
+	MUTEX_EXIT(&conn->conn_data_lock);
     }
     /*
      * Wake up anyone else who might be giving us a chance to
@@ -1876,6 +1895,9 @@ rx_EndCall(register struct rx_call *call, afs_int32 rc)
 	 * rx_NewCall is in a stable state. Otherwise, rx_NewCall may
 	 * have checked this call, found it active and by the time it
 	 * goes to sleep, will have missed the signal.
+         *
+         * Do not clear the RX_CONN_MAKECALL_WAITING flag as long as
+         * there are threads waiting to use the conn object.
 	 */
 	MUTEX_EXIT(&call->lock);
 	MUTEX_ENTER(&conn->conn_call_lock);
@@ -1883,7 +1905,8 @@ rx_EndCall(register struct rx_call *call, afs_int32 rc)
 	MUTEX_ENTER(&conn->conn_data_lock);
 	conn->flags |= RX_CONN_BUSY;
 	if (conn->flags & RX_CONN_MAKECALL_WAITING) {
-	    conn->flags &= (~RX_CONN_MAKECALL_WAITING);
+            if (conn->makeCallWaiters == 0)
+                conn->flags &= (~RX_CONN_MAKECALL_WAITING);
 	    MUTEX_EXIT(&conn->conn_data_lock);
 #ifdef	RX_ENABLE_LOCKS
 	    CV_BROADCAST(&conn->conn_call_cv);
@@ -1905,17 +1928,14 @@ rx_EndCall(register struct rx_call *call, afs_int32 rc)
      * kernel version, and may interrupt the macros rx_Read or
      * rx_Write, which run at normal priority for efficiency. */
     if (call->currentPacket) {
-	rxi_FreePacket(call->currentPacket);
+	queue_Prepend(&call->iovq, call->currentPacket);
 	call->currentPacket = (struct rx_packet *)0;
-	call->nLeft = call->nFree = call->curlen = 0;
-    } else
-	call->nLeft = call->nFree = call->curlen = 0;
+    }
+	
+    call->nLeft = call->nFree = call->curlen = 0;
 
     /* Free any packets from the last call to ReadvProc/WritevProc */
-    for (queue_Scan(&call->iovq, tp, nxp, rx_packet)) {
-	queue_Remove(tp);
-	rxi_FreePacket(tp);
-    }
+    rxi_FreePackets(0, &call->iovq);
 
     CALL_RELE(call, RX_CALL_REFCOUNT_BEGIN);
     MUTEX_EXIT(&call->lock);
@@ -2169,7 +2189,7 @@ rxi_FreeCall(register struct rx_call *call)
      * If someone else destroys a connection, they either have no
      * call lock held or are going through this section of code.
      */
-    if (conn->flags & RX_CONN_DESTROY_ME) {
+    if (conn->flags & RX_CONN_DESTROY_ME && !(conn->flags & RX_CONN_MAKECALL_WAITING)) {
 	MUTEX_ENTER(&conn->conn_data_lock);
 	conn->refCount++;
 	MUTEX_EXIT(&conn->conn_data_lock);
@@ -4087,8 +4107,6 @@ rxi_SetAcksInTransmitQueue(register struct rx_call *call)
     int someAcked = 0;
 
     for (queue_Scan(&call->tq, p, tp, rx_packet)) {
-	if (!p)
-	    break;
 	p->flags |= RX_PKTFLAG_ACKED;
 	someAcked = 1;
     }
@@ -4123,8 +4141,6 @@ rxi_ClearTransmitQueue(register struct rx_call *call, register int force)
     if (!force && (call->flags & RX_CALL_TQ_BUSY)) {
 	int someAcked = 0;
 	for (queue_Scan(&call->tq, p, tp, rx_packet)) {
-	    if (!p)
-		break;
 	    p->flags |= RX_PKTFLAG_ACKED;
 	    someAcked = 1;
 	}
@@ -4134,12 +4150,7 @@ rxi_ClearTransmitQueue(register struct rx_call *call, register int force)
 	}
     } else {
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
-	for (queue_Scan(&call->tq, p, tp, rx_packet)) {
-	    if (!p)
-		break;
-	    queue_Remove(p);
-	    rxi_FreePacket(p);
-	}
+	rxi_FreePackets(0, &call->tq);
 #ifdef	AFS_GLOBAL_RXLOCK_KERNEL
 	call->flags &= ~RX_CALL_TQ_CLEARME;
     }
@@ -4164,15 +4175,8 @@ rxi_ClearTransmitQueue(register struct rx_call *call, register int force)
 void
 rxi_ClearReceiveQueue(register struct rx_call *call)
 {
-    register struct rx_packet *p, *tp;
     if (queue_IsNotEmpty(&call->rq)) {
-	for (queue_Scan(&call->rq, p, tp, rx_packet)) {
-	    if (!p)
-		break;
-	    queue_Remove(p);
-	    rxi_FreePacket(p);
-	    rx_packetReclaims++;
-	}
+	rx_packetReclaims += rxi_FreePackets(0, &call->rq);
 	call->flags &= ~(RX_CALL_RECEIVE_DONE | RX_CALL_HAVE_LAST);
     }
     if (call->state == RX_STATE_PRECALL) {
@@ -4500,6 +4504,9 @@ rxi_SendAck(register struct rx_call *call,
     register struct rx_packet *p;
     u_char offset;
     afs_int32 templ;
+#ifdef RX_ENABLE_TSFPQ
+    struct rx_ts_info_t * rx_ts_info;
+#endif
 
     /*
      * Open the receive window once a thread starts reading packets
@@ -4517,24 +4524,41 @@ rxi_SendAck(register struct rx_call *call,
     if (p) {
 	rx_computelen(p, p->length);	/* reset length, you never know */
     } /* where that's been...         */
+#ifdef RX_ENABLE_TSFPQ
+    else {
+        RX_TS_INFO_GET(rx_ts_info);
+        if ((p = rx_ts_info->local_special_packet)) {
+            rx_computelen(p, p->length);
+        } else if ((p = rxi_AllocPacket(RX_PACKET_CLASS_SPECIAL))) {
+            rx_ts_info->local_special_packet = p;
+        } else { /* We won't send the ack, but don't panic. */
+            return optionalPacket;
+        }
+    }
+#else
     else if (!(p = rxi_AllocPacket(RX_PACKET_CLASS_SPECIAL))) {
 	/* We won't send the ack, but don't panic. */
 	return optionalPacket;
     }
+#endif
 
     templ =
 	rx_AckDataSize(call->rwind) + 4 * sizeof(afs_int32) -
 	rx_GetDataSize(p);
     if (templ > 0) {
-	if (rxi_AllocDataBuf(p, templ, RX_PACKET_CLASS_SPECIAL)) {
+	if (rxi_AllocDataBuf(p, templ, RX_PACKET_CLASS_SPECIAL) > 0) {
+#ifndef RX_ENABLE_TSFPQ
 	    if (!optionalPacket)
 		rxi_FreePacket(p);
+#endif
 	    return optionalPacket;
 	}
 	templ = rx_AckDataSize(call->rwind) + 2 * sizeof(afs_int32);
 	if (rx_Contiguous(p) < templ) {
+#ifndef RX_ENABLE_TSFPQ
 	    if (!optionalPacket)
 		rxi_FreePacket(p);
+#endif
 	    return optionalPacket;
 	}
     }
@@ -4562,8 +4586,10 @@ rxi_SendAck(register struct rx_call *call,
     for (offset = 0, queue_Scan(&call->rq, rqp, nxp, rx_packet)) {
 	if (!rqp || !call->rq.next
 	    || (rqp->header.seq > (call->rnext + call->rwind))) {
+#ifndef RX_ENABLE_TSFPQ
 	    if (!optionalPacket)
 		rxi_FreePacket(p);
+#endif
 	    rxi_CallError(call, RX_CALL_DEAD);
 	    return optionalPacket;
 	}
@@ -4573,8 +4599,10 @@ rxi_SendAck(register struct rx_call *call,
 	ap->acks[offset++] = RX_ACK_TYPE_ACK;
 
 	if ((offset > (u_char) rx_maxReceiveWindow) || (offset > call->rwind)) {
+#ifndef RX_ENABLE_TSFPQ
 	    if (!optionalPacket)
 		rxi_FreePacket(p);
+#endif
 	    rxi_CallError(call, RX_CALL_DEAD);
 	    return optionalPacket;
 	}
@@ -4654,8 +4682,10 @@ rxi_SendAck(register struct rx_call *call,
     MUTEX_ENTER(&rx_stats_mutex);
     rx_stats.ackPacketsSent++;
     MUTEX_EXIT(&rx_stats_mutex);
+#ifndef RX_ENABLE_TSFPQ
     if (!optionalPacket)
 	rxi_FreePacket(p);
+#endif
     return optionalPacket;	/* Return packet for re-use by caller */
 }
 

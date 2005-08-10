@@ -18,7 +18,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vol/vol-info.c,v 1.18.2.2 2005/03/11 02:55:49 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vol/vol-info.c,v 1.18.2.3 2005/05/08 06:10:27 shadow Exp $");
 
 #include <ctype.h>
 #include <errno.h>
@@ -256,7 +256,7 @@ handleit(struct cmd_syndesc *as)
     if ((ti = as->parms[5].items))
 	partName = ti->data;
     if ((ti = as->parms[6].items))
-	volumeId = atoi(ti->data);
+	volumeId = strtoul(ti->data, NULL, 10);
     if (as->parms[7].items)
 	dheader = 1;
     else
@@ -499,7 +499,7 @@ HandleVolume(struct DiskPartition *dp, char *name)
 		printf("\tVolId\t= %u\n", header.id);
 	    }
 
-	    IH_INIT(ih, dp->device, header.id, header.volumeInfo);
+	    IH_INIT(ih, dp->device, header.parent, header.volumeInfo);
 	    fdP = IH_OPEN(ih);
 	    if (fdP == NULL) {
 		perror("opening volume info");
@@ -519,7 +519,7 @@ HandleVolume(struct DiskPartition *dp, char *name)
 		       PrintInode(NULL, header.volumeInfo), code);
 	    }
 
-	    IH_INIT(ih, dp->device, header.id, header.smallVnodeIndex);
+	    IH_INIT(ih, dp->device, header.parent, header.smallVnodeIndex);
 	    fdP = IH_OPEN(ih);
 	    if (fdP == NULL) {
 		perror("opening small vnode index");
@@ -538,7 +538,7 @@ HandleVolume(struct DiskPartition *dp, char *name)
 		       PrintInode(NULL, header.smallVnodeIndex), code);
 	    }
 
-	    IH_INIT(ih, dp->device, header.id, header.largeVnodeIndex);
+	    IH_INIT(ih, dp->device, header.parent, header.largeVnodeIndex);
 	    fdP = IH_OPEN(ih);
 	    if (fdP == NULL) {
 		perror("opening large vnode index");
@@ -560,7 +560,7 @@ HandleVolume(struct DiskPartition *dp, char *name)
 #endif
 	    }
 #ifdef AFS_NAMEI_ENV
-	    IH_INIT(ih, dp->device, header.id, header.linkTable);
+	    IH_INIT(ih, dp->device, header.parent, header.linkTable);
 	    fdP = IH_OPEN(ih);
 	    if (fdP == NULL) {
 		perror("opening link table index");
@@ -612,6 +612,8 @@ HandleVolume(struct DiskPartition *dp, char *name)
 	       Vauxsize_k, Vvnodesize_k, totvolsize, totvolsize - Vdiskused,
 	       V_name(vp));
     }
+    free(vp->header);
+    free(vp);
 }
 
 int

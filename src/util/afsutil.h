@@ -25,12 +25,15 @@
 #include <stdio.h>
 #include <stdarg.h>
 extern int LogLevel;
+extern int mrafsStyleLogs;
 #ifndef AFS_NT40_ENV
 extern int serverLogSyslog;
 extern int serverLogSyslogFacility;
 extern char *serverLogSyslogTag;
 #endif
 extern void vFSLog(const char *format, va_list args);
+extern void SetLogThreadNumProgram(int (*func) () );
+
 /*@printflike@*/ extern void FSLog(const char *format, ...);
 #define ViceLog(level, str)  if ((level) <= LogLevel) (FSLog str)
 #define vViceLog(level, str) if ((level) <= LogLevel) (vFSLog str)

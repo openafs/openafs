@@ -74,43 +74,28 @@
 #undef gop_lookupname
 #define gop_lookupname osi_lookupname
 
-#define osi_vnhold(v, n) do { VN_HOLD(AFSTOV(v)); } while (0)
-
-#if defined(AFS_LINUX24_ENV)
-#define VN_HOLD(V) atomic_inc(&((vnode_t *) V)->i_count)
-#else
-#define VN_HOLD(V) ((vnode_t *) V)->i_count++
-#endif
-
-#if defined(AFS_LINUX26_ENV)
-#define VN_RELE(V) iput((struct inode *) V)
-#else
-#define VN_RELE(V) osi_iput((struct inode *) V)
-#endif
-
-#define osi_AllocSmall afs_osi_Alloc
-#define osi_FreeSmall afs_osi_Free
+#define osi_vnhold(V, N) do { VN_HOLD(AFSTOV(V)); } while (0)
+#define VN_HOLD(V) osi_Assert(igrab((V)) == (V))
+#define VN_RELE(V) iput((V))
 
 #define afs_suser(x) capable(CAP_SYS_ADMIN)
 #define wakeup afs_osi_Wakeup
 
 #undef vType
-#define vType(V) ((( vnode_t *)V)->v_type & S_IFMT)
+#define vType(V) ((AFSTOV((V)))->i_mode & S_IFMT)
+#undef vSetType
+#define vSetType(V, type) AFSTOV((V))->i_mode = ((type) | (AFSTOV((V))->i_mode & ~S_IFMT))	/* preserve mode */
 
-/* IsAfsVnode relies on the fast that there is only one vnodeop table for AFS.
- * Use the same type of test as other OS's for compatibility.
- */
 #undef IsAfsVnode
-extern struct vnodeops afs_file_iops, afs_dir_iops, afs_symlink_iops;
-#define IsAfsVnode(v) (((v)->v_op == &afs_file_iops) ? 1 : \
-			((v)->v_op == &afs_dir_iops) ? 1 : \
-			((v)->v_op == &afs_symlink_iops))
+#define IsAfsVnode(V) ((V)->i_sb == afs_globalVFS)	/* test superblock instead */
 #undef SetAfsVnode
-#define SetAfsVnode(v)
+#define SetAfsVnode(V)					/* unnecessary */
 
 /* We often need to pretend we're in user space to get memory transfers
  * right for the kernel calls we use.
  */
+#include <asm/uaccess.h>
+
 #ifdef KERNEL_SPACE_DECL
 #undef KERNEL_SPACE_DECL
 #undef TO_USER_SPACE
@@ -120,14 +105,16 @@ extern struct vnodeops afs_file_iops, afs_dir_iops, afs_symlink_iops;
 #define TO_USER_SPACE() { _fs_space_decl = get_fs(); set_fs(get_ds()); }
 #define TO_KERNEL_SPACE() set_fs(_fs_space_decl)
 
-/* Backwards compatibilty macros - copyin/copyout are redone because macro
- * inside parentheses is not evalutated.
- */
-#define memcpy_fromfs copy_from_user
-#define memcpy_tofs copy_to_user
-#define copyin(F, T, C)  (copy_from_user ((char*)(T), (char*)(F), (C)), 0)
-#define copyinstr(F, T, C, L) (copyin(F, T, C), *(L)=strlen(T), 0)
-#define copyout(F, T, C) (copy_to_user ((char*)(T), (char*)(F), (C)), 0)
+#define copyin(F, T, C)  (copy_from_user ((char*)(T), (char*)(F), (C)) > 0 ? EFAULT : 0)
+static inline long copyinstr(char *from, char *to, int count, int *length) {
+    long tmp;
+    tmp = strncpy_from_user(to, from, count);
+    if (tmp < 0)
+            return EFAULT;
+    *length = tmp;
+    return 0;
+}
+#define copyout(F, T, C) (copy_to_user ((char*)(T), (char*)(F), (C)) > 0 ? EFAULT : 0)
 
 /* kernel print statements */
 #define printf printk
@@ -179,7 +166,7 @@ typedef struct uio {
 /* Get/set the inode in the osifile struct. */
 #define FILE_INODE(F) (F)->f_dentry->d_inode
 
-#ifdef AFS_LINUX24_ENV
+#ifdef AFS_LINUX26_ENV
 #define OSIFILE_INODE(a) FILE_INODE((a)->filp)
 #else
 #define OSIFILE_INODE(a) FILE_INODE(&(a)->file)

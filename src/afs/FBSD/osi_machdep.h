@@ -72,13 +72,14 @@ extern struct simplelock afs_rxglobal_lock;
 extern struct vop_vector afs_vnodeops;
 #endif
 
+#undef osi_getpid
 #if defined(AFS_FBSD50_ENV)
 #define VT_AFS		"afs"
 #define VROOT		VV_ROOT
 #define v_flag		v_vflag
 #define osi_curcred()	(curthread->td_ucred)
 #define afs_suser(x)	(!suser(curthread))
-#define getpid()	(curthread->td_proc->p_pid)
+#define osi_getpid()	(curthread->td_proc->p_pid)
 #define simple_lock(x)	mtx_lock(x)
 #define simple_unlock(x) mtx_unlock(x)
 #define        gop_rdwr(rw,gp,base,len,offset,segflg,unit,cred,aresid) \
@@ -93,7 +94,7 @@ extern struct lock afs_global_lock;
 
 #define osi_curcred()	(curproc->p_cred->pc_ucred)
 #define afs_suser(x)	(!suser(curproc))
-#define getpid()	(curproc->p_pid)
+#define osi_getpid()	(curproc->p_pid)
 #define        gop_rdwr(rw,gp,base,len,offset,segflg,unit,cred,aresid) \
   vn_rdwr((rw),(gp),(base),(len),(offset),(segflg),(unit),(cred),(aresid), curproc)
 extern struct proc *afs_global_owner;

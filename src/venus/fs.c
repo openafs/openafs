@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/venus/fs.c,v 1.24.2.1 2004/10/18 07:12:20 shadow Exp $");
+    ("$Header: /cvs/openafs/src/venus/fs.c,v 1.24.2.3 2005/07/11 19:03:42 shadow Exp $");
 
 #include <afs/afs_args.h>
 #include <rx/xdr.h>
@@ -110,6 +110,13 @@ struct AclEntry {
     struct AclEntry *next;
     char name[MAXNAME];
     afs_int32 rights;
+};
+
+struct vcxstat2 {
+    afs_int32 callerAccess;
+    afs_int32 cbExpires;
+    afs_int32 anyAccess;
+    char mvstat;
 };
 
 static void
@@ -1184,6 +1191,33 @@ ListACLCmd(struct cmd_syndesc *as, char *arock)
 	if (ti->next)
 	    printf("\n");
 	ZapAcl(ta);
+    }
+    return error;
+}
+
+static int
+GetCallerAccess(struct cmd_syndesc *as, char *arock)
+{
+    struct cmd_item *ti;
+    int error = 0;
+
+    SetDotDefault(&as->parms[0].items);
+    for (ti = as->parms[0].items; ti; ti = ti->next) {
+        afs_int32 code;
+        struct ViceIoctl blob;
+        struct vcxstat2 stat;
+        blob.out_size = sizeof(struct vcxstat2);
+        blob.in_size = 0;
+        blob.out = &stat;
+        code = pioctl(ti->data, VIOC_GETVCXSTATUS2, &blob, 1);
+        if (code) {
+            Die(errno, ti->data);
+            error = 1;
+            continue;
+        }
+        printf("Callers access to %s is ", ti->data);
+        PRights(stat.callerAccess, 0);
+        printf("\n");
     }
     return error;
 }
@@ -3172,6 +3206,11 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-if", CMD_FLAG, CMD_OPTIONAL, "initial file acl");
     cmd_CreateAlias(ts, "la");
 
+    ts = cmd_CreateSyntax("getcalleraccess", GetCallerAccess, 0,
+            "list callers access");
+    cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
+    cmd_CreateAlias(ts, "gca");
+
     ts = cmd_CreateSyntax("cleanacl", CleanACLCmd, 0,
 			  "clean up access control list");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
@@ -3381,7 +3420,7 @@ defect 3069
     cmd_AddParm(ts, "-crypt", CMD_SINGLE, 0, "on or off");
 
     ts = cmd_CreateSyntax("getcrypt", GetCryptCmd, 0,
-			  "set cache manager encryption flag");
+			  "get cache manager encryption flag");
 
     ts = cmd_CreateSyntax("rxstatproc", RxStatProcCmd, 0,
 			  "Manage per process RX statistics");

@@ -251,6 +251,9 @@ else
 		i?86-*-openbsd3.6)
 			AFS_SYSNAME="i386_obsd36"
 			;;
+		i?86-*-openbsd3.7)
+			AFS_SYSNAME="i386_obsd37"
+			;;
 		i?86-*-freebsd4.2*)
 			AFS_SYSNAME="i386_fbsd_42"
 			;;
@@ -280,6 +283,12 @@ else
 			;;
 		i?86-*-freebsd5.3*)
 			AFS_SYSNAME="i386_fbsd_53"
+			;;
+		i?86-*-freebsd5.4*)
+			AFS_SYSNAME="i386_fbsd_54"
+			;;
+		i?86-*-freebsd6.0*)
+			AFS_SYSNAME="i386_fbsd_60"
 			;;
 		i?86-*-netbsd*1.5*)
 			AFS_PARAM_COMMON=param.nbsd15.h
@@ -326,6 +335,10 @@ else
 			AFS_SYSNAME="i386_nbsd30"
 			;;
 		i?86-*-netbsd*3.0*)
+			AFS_PARAM_COMMON=param.nbsd30.h
+			AFS_SYSNAME="i386_nbsd30"
+			;;
+		i?86-*-netbsd*3.99*)
 			AFS_PARAM_COMMON=param.nbsd30.h
 			AFS_SYSNAME="i386_nbsd30"
 			;;
@@ -565,6 +578,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_COMPLETION_H_EXISTS
 		 LINUX_DEFINES_FOR_EACH_PROCESS
 		 LINUX_DEFINES_PREV_TASK
+		 LINUX_FS_STRUCT_SUPER_HAS_ALLOC_INODE
 	         LINUX_FS_STRUCT_ADDRESS_SPACE_HAS_PAGE_LOCK
 	         LINUX_FS_STRUCT_ADDRESS_SPACE_HAS_GFP_MASK
 		 LINUX_FS_STRUCT_INODE_HAS_I_ALLOC_SEM
@@ -580,6 +594,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 	  	 LINUX_IOP_NAMEIDATA
 	  	 LINUX_AOP_WRITEBACK_CONTROL
 		 LINUX_KERNEL_LINUX_SYSCALL_H
+		 LINUX_KERNEL_LINUX_SEQ_FILE_H
 		 LINUX_KERNEL_SELINUX
 		 LINUX_KERNEL_SOCK_CREATE
 		 LINUX_KERNEL_PAGE_FOLLOW_LINK
@@ -621,7 +636,8 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
                             linux_syscall_method=kallsyms_symbol
                          fi
                          if test "x$linux_syscall_method" = "xnone"; then
-                        AC_MSG_ERROR([no available sys_call_table access method])
+			    AC_MSG_WARN([no available sys_call_table access method -- guessing scan])
+                            linux_syscall_method=scan
                          fi
                    fi
                  fi
@@ -670,6 +686,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 if test "x$ac_cv_linux_func_write_inode_returns_int" = "xyes" ; then
 		  AC_DEFINE(WRITE_INODE_NOT_VOID, 1, [define if your sops.write_inode returns non-void])
 		 fi
+		 if test "x$ac_cv_linux_fs_struct_super_has_alloc_inode" = "xyes" ; then
+		  AC_DEFINE(STRUCT_SUPER_HAS_ALLOC_INODE, 1, [define if your struct super_operations has alloc_inode])
+		 fi
 		 if test "x$ac_cv_linux_fs_struct_address_space_has_page_lock" = "xyes"; then 
 		  AC_DEFINE(STRUCT_ADDRESS_SPACE_HAS_PAGE_LOCK, 1, [define if your struct address_space has page_lock])
 		 fi
@@ -714,6 +733,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 fi
 		 if test "x$ac_linux_syscall" = "xyes" ; then
 		  AC_DEFINE(HAVE_KERNEL_LINUX_SYSCALL_H, 1, [define if your linux kernel has linux/syscall.h])
+		 fi
+		 if test "x$ac_linux_seq_file" = "xyes" ; then
+		  AC_DEFINE(HAVE_KERNEL_LINUX_SEQ_FILE_H, 1, [define if your linux kernel has linux/seq_file.h])
 		 fi
 		 if test "x$ac_cv_linux_sched_struct_task_struct_has_parent" = "xyes"; then 
 		  AC_DEFINE(STRUCT_TASK_STRUCT_HAS_PARENT, 1, [define if your struct task_struct has parent])
@@ -953,10 +975,10 @@ if test "$enable_tivoli_tsm" = "yes"; then
 	XBSADIR1=/usr/tivoli/tsm/client/api/bin/xopen
 	XBSADIR2=/opt/tivoli/tsm/client/api/bin/xopen
 
-	if test -e "$XBSADIR1/xbsa.h"; then
+	if test -r "$XBSADIR1/xbsa.h"; then
 		XBSA_CFLAGS="-Dxbsa -I$XBSADIR1"
 		AC_MSG_RESULT([yes, $XBSA_CFLAGS])
-	elif test -e "$XBSADIR2/xbsa.h"; then
+	elif test -r "$XBSADIR2/xbsa.h"; then
 		XBSA_CFLAGS="-Dxbsa -I$XBSADIR2"
 		AC_MSG_RESULT([yes, $XBSA_CFLAGS])
 	else
@@ -1009,6 +1031,21 @@ fi
 	
 AC_CHECK_TYPE(ssize_t, int)
 AC_SIZEOF_TYPE(long)
+
+AC_MSG_CHECKING(size of time_t)
+AC_CACHE_VAL(ac_cv_sizeof_time_t,
+[AC_TRY_RUN([#include <stdio.h>
+#include <time.h>
+main()
+{
+  FILE *f=fopen("conftestval", "w");
+  if (!f) exit(1);
+  fprintf(f, "%d\n", sizeof(time_t));
+  exit(0);
+}], ac_cv_sizeof_time_t=`cat conftestval`, ac_cv_sizeof_time_t=0)
+])
+AC_MSG_RESULT($ac_cv_sizeof_time_t)
+AC_DEFINE_UNQUOTED(SIZEOF_TIME_T, $ac_cv_sizeof_time_t)
 
 AC_CHECK_FUNCS(timegm)
 AC_CHECK_FUNCS(daemon)
@@ -1074,6 +1111,7 @@ AC_SUBST(DARWIN_INFOFILE)
 AC_SUBST(IRIX_BUILD_IP35)
 
 OPENAFS_OSCONF
+OPENAFS_KRB5CONF
 
 TOP_SRCDIR="${srcdir}/src"
 dnl
@@ -1099,5 +1137,6 @@ HELPER_SPLINTCFG="${TOP_SRCDIR}/splint.cfg"
 AC_SUBST(HELPER_SPLINT)
 AC_SUBST(HELPER_SPLINTCFG)
 
+mkdir -p ${TOP_OBJDIR}/src/JAVA/libjafs
 
 ])

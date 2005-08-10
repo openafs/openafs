@@ -39,19 +39,6 @@ if test "x$enable_redhat_buildsys" = "xyes"; then
 else
   save_CPPFLAGS="$CPPFLAGS"
   CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $RHCONFIG_SP $CPPFLAGS"
-  AC_MSG_CHECKING(if kernel uses MODVERSIONS)
-  AC_CACHE_VAL(ac_cv_linux_config_modversions,[
-  AC_TRY_COMPILE(
-[#include <linux/version.h>
-#include <linux/config.h>
-],
-[#if !defined(CONFIG_MODVERSIONS)
-lose;
-#endif
-],
-  ac_cv_linux_config_modversions=yes,
-  ac_cv_linux_config_modversions=no)])
-  AC_MSG_RESULT($ac_cv_linux_config_modversions)
   AC_MSG_CHECKING(which kernel modules to build)
   if false; then
       MPS="MP SP"
@@ -126,3 +113,14 @@ AC_TRY_COMPILE(
   ac_cv_linux_kernel_page_follow_link=no)])
 AC_MSG_RESULT($ac_cv_linux_kernel_page_follow_link)
 CPPFLAGS="$save_CPPFLAGS"])
+
+AC_DEFUN([LINUX_KERNEL_LINUX_SEQ_FILE_H],[
+  AC_MSG_CHECKING(for linux/seq_file.h in kernel)
+  if test -f "${LINUX_KERNEL_PATH}/include/linux/seq_file.h"; then
+    ac_linux_seq_file=yes
+    AC_MSG_RESULT($ac_linux_seq_file)
+  else
+    ac_linux_seq_file=no
+    AC_MSG_RESULT($ac_linux_seq_file)
+  fi
+])

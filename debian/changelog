@@ -1,3 +1,9 @@
+openafs (1.3.87-1) unstable; urgency=low
+
+  * New upstream version.
+
+ --
+
 openafs (1.3.82-2) unstable; urgency=low
 
   * Output error messages from heredocs in the init script with cat rather

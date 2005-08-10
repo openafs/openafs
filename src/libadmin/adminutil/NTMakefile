@@ -138,7 +138,9 @@ ILIBDIR = $(DESTDIR)\lib\afs
 DLLLIBS =\
 	$(DESTDIR)\lib\afspthread.lib \
 	$(DESTDIR)\lib\afsrpc.lib \
-	$(DESTDIR)\lib\afsauthent.lib
+        $(DESTDIR)\lib\afs\afsutil.lib \
+	$(DESTDIR)\lib\afsauthent.lib \
+        $(DESTDIR)\lib\afs\afsreg.lib
 
 $(DLLFILE): $(DLLOBJS) $(DLLLIBS)
 	$(DLLCONLINK) /DEF:afsadminutil.def

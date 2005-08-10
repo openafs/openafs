@@ -15,7 +15,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_packet.c,v 1.35.2.14 2005/04/20 21:23:47 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_packet.c,v 1.35.2.15 2005/05/30 03:41:45 jaltman Exp $");
 
 #ifdef KERNEL
 #if defined(UKERNEL)
@@ -107,6 +107,8 @@ struct rx_packet *rx_mallocedP = 0;
 
 extern char cml_version_number[];
 extern int (*rx_almostSent) ();
+
+static int AllocPacketBufs(int class, int num_pkts, struct rx_queue *q);
 
 static void rxi_SendDebugPacket(struct rx_packet *apacket, osi_socket asocket,
 				afs_int32 ahost, short aport,
@@ -244,39 +246,63 @@ rx_SlowWritePacket(struct rx_packet * packet, int offset, int resid, char *in)
     return (resid ? (r - resid) : r);
 }
 
-#ifdef RX_ENABLE_TSFPQ
-static struct rx_packet *
-allocCBuf(int class)
+int
+rxi_AllocPackets(int class, int num_pkts, struct rx_queue * q)
 {
-    struct rx_packet *c;
+    register struct rx_packet *p, *np;
+
+    num_pkts = AllocPacketBufs(class, num_pkts, q);
+
+    for (queue_Scan(q, p, np, rx_packet)) {
+        RX_PACKET_IOV_FULLINIT(p);
+    }
+
+    return num_pkts;
+}
+
+#ifdef RX_ENABLE_TSFPQ
+static int
+AllocPacketBufs(int class, int num_pkts, struct rx_queue * q)
+{
+    register struct rx_packet *c;
     register struct rx_ts_info_t * rx_ts_info;
+    int transfer, alloc;
     SPLVAR;
 
     RX_TS_INFO_GET(rx_ts_info);
 
-    if (queue_IsEmpty(&rx_ts_info->_FPQ)) {
+    transfer = num_pkts - rx_ts_info->_FPQ.len;
+    if (transfer > 0) {
         NETPRI;
         MUTEX_ENTER(&rx_freePktQ_lock);
-
-	if (queue_IsEmpty(&rx_freePacketQueue)) {
-	    rxi_MorePacketsNoLock(rx_initSendWindow);
+	
+	if ((transfer + rx_TSFPQGlobSize) <= rx_nFreePackets) {
+	    transfer += rx_TSFPQGlobSize;
+	} else if (transfer <= rx_nFreePackets) {
+	    transfer = rx_nFreePackets;
+	} else {
+	    /* alloc enough for us, plus a few globs for other threads */
+	    alloc = transfer + (3 * rx_TSFPQGlobSize) - rx_nFreePackets;
+	    rxi_MorePacketsNoLock(MAX(alloc, rx_initSendWindow));
+	    transfer += rx_TSFPQGlobSize;
 	}
 
-	RX_TS_FPQ_GTOL(rx_ts_info);
+	RX_TS_FPQ_GTOL2(rx_ts_info, transfer);
 
 	MUTEX_EXIT(&rx_freePktQ_lock);
 	USERPRI;
     }
 
-    RX_TS_FPQ_CHECKOUT(rx_ts_info, c);
+    RX_TS_FPQ_CHECKOUT2(rx_ts_info, num_pkts, q);
 
-    return c;
+    return num_pkts;
 }
 #else /* RX_ENABLE_TSFPQ */
-static struct rx_packet *
-allocCBuf(int class)
+static int
+AllocPacketBufs(int class, int num_pkts, struct rx_queue * q)
 {
     struct rx_packet *c;
+    int i, overq = 0;
     SPLVAR;
 
     NETPRI;
@@ -284,8 +310,10 @@ allocCBuf(int class)
     MUTEX_ENTER(&rx_freePktQ_lock);
 
 #ifdef KERNEL
-    if (rxi_OverQuota(class)) {
-	c = NULL;
+    for (; (num_pkts > 0) && (rxi_OverQuota2(class,num_pkts)); 
+	 num_pkts--, overq++);
+
+    if (overq) {
 	rxi_NeedMorePackets = TRUE;
 	MUTEX_ENTER(&rx_stats_mutex);
 	switch (class) {
@@ -306,27 +334,30 @@ allocCBuf(int class)
 	    break;
 	}
 	MUTEX_EXIT(&rx_stats_mutex);
-	goto done;
     }
 
-    if (queue_IsEmpty(&rx_freePacketQueue)) {
-	c = NULL;
+    if (rx_nFreePackets < num_pkts)
+        num_pkts = rx_nFreePackets;
+
+    if (!num_pkts) {
 	rxi_NeedMorePackets = TRUE;
 	goto done;
     }
 #else /* KERNEL */
-    if (queue_IsEmpty(&rx_freePacketQueue)) {
-	rxi_MorePacketsNoLock(rx_initSendWindow);
+    if (rx_nFreePackets < num_pkts) {
+        rxi_MorePacketsNoLock(MAX((num_pkts-rx_nFreePackets), rx_initSendWindow));
     }
 #endif /* KERNEL */
 
-    rx_nFreePackets--;
-    c = queue_First(&rx_freePacketQueue, rx_packet);
-    queue_Remove(c);
-    if (!(c->flags & RX_PKTFLAG_FREE))
-	osi_Panic("rxi_AllocPacket: packet not free\n");
-    c->flags = 0;		/* clear RX_PKTFLAG_FREE, initialize the rest */
-    c->header.flags = 0;
+    for (i=0, c=queue_First(&rx_freePacketQueue, rx_packet);
+	 i < num_pkts; 
+	 i++, c=queue_Next(c, rx_packet)) {
+        RX_FPQ_MARK_USED(c);
+    }
+
+    queue_SplitBeforeAppend(&rx_freePacketQueue,q,c);
+
+    rx_nFreePackets -= num_pkts;
 
 #ifdef KERNEL
   done:
@@ -334,7 +365,7 @@ allocCBuf(int class)
     MUTEX_EXIT(&rx_freePktQ_lock);
 
     USERPRI;
-    return c;
+    return num_pkts;
 }
 #endif /* RX_ENABLE_TSFPQ */
 
@@ -342,15 +373,22 @@ allocCBuf(int class)
  * Free a packet currently used as a continuation buffer
  */
 #ifdef RX_ENABLE_TSFPQ
-void
-rxi_freeCBuf(struct rx_packet *c)
+/* num_pkts=0 means queue length is unknown */
+int
+rxi_FreePackets(int num_pkts, struct rx_queue * q)
 {
     register struct rx_ts_info_t * rx_ts_info;
-    register int i;
+    register struct rx_packet *c, *nc;
     SPLVAR;
 
+    if (!num_pkts) {
+	queue_Count(q, c, nc, rx_packet, num_pkts);
+	if (!num_pkts)
+	    return 0;
+    }
+
     RX_TS_INFO_GET(rx_ts_info);
-    RX_TS_FPQ_CHECKIN(rx_ts_info,c);
+    RX_TS_FPQ_CHECKIN2(rx_ts_info, num_pkts, q);
 
     if (rx_ts_info->_FPQ.len > rx_TSFPQLocalMax) {
         NETPRI;
@@ -364,22 +402,42 @@ rxi_freeCBuf(struct rx_packet *c)
 	MUTEX_EXIT(&rx_freePktQ_lock);
 	USERPRI;
     }
+
+    return num_pkts;
 }
 #else /* RX_ENABLE_TSFPQ */
-void
-rxi_freeCBuf(struct rx_packet *c)
+/* num_pkts=0 means queue length is unknown */
+int
+rxi_FreePackets(int num_pkts, struct rx_queue *q)
 {
+    register struct rx_packet *p, *np;
     SPLVAR;
+
+    if (!num_pkts) {
+        for (queue_Scan(q, p, np, rx_packet), num_pkts++) {
+            RX_FPQ_MARK_FREE(p);
+	}
+	if (!num_pkts)
+	    return 0;
+    } else {
+        for (queue_Scan(q, p, np, rx_packet)) {
+            RX_FPQ_MARK_FREE(p);
+	}
+    }
 
     NETPRI;
     MUTEX_ENTER(&rx_freePktQ_lock);
 
-    rxi_FreePacketNoLock(c);
+    queue_SpliceAppend(&rx_freePacketQueue, q);
+    rx_nFreePackets += num_pkts;
+
     /* Wakeup anyone waiting for packets */
     rxi_PacketsUnWait();
 
     MUTEX_EXIT(&rx_freePktQ_lock);
     USERPRI;
+
+    return num_pkts;
 }
 #endif /* RX_ENABLE_TSFPQ */
 
@@ -414,24 +472,38 @@ rxi_RoundUpPacket(struct rx_packet *p, unsigned int nb)
  * returns the number of bytes >0 which it failed to come up with.
  * Don't need to worry about locking on packet, since only
  * one thread can manipulate one at a time. Locking on continution
- * packets is handled by allocCBuf */
+ * packets is handled by AllocPacketBufs */
 /* MTUXXX don't need to go throught the for loop if we can trust niovecs */
 int
 rxi_AllocDataBuf(struct rx_packet *p, int nb, int class)
 {
-    int i;
+    int i, nv;
+    struct rx_queue q;
+    register struct rx_packet *cb, *ncb;
 
-    for (i = p->niovecs; nb > 0 && i < RX_MAXWVECS; i++) {
-	register struct rx_packet *cb;
-	if ((cb = allocCBuf(class))) {
-	    p->wirevec[i].iov_base = (caddr_t) cb->localdata;
-	    p->wirevec[i].iov_len = RX_CBUFFERSIZE;
-	    nb -= RX_CBUFFERSIZE;
-	    p->length += RX_CBUFFERSIZE;
-	    p->niovecs++;
-	} else
-	    break;
+    /* compute the number of cbuf's we need */
+    nv = nb / RX_CBUFFERSIZE;
+    if ((nv * RX_CBUFFERSIZE) < nb)
+        nv++;
+    if ((nv + p->niovecs) > RX_MAXWVECS)
+        nv = RX_MAXWVECS - p->niovecs;
+    if (nv < 1)
+        return nb;
+
+    /* allocate buffers */
+    queue_Init(&q);
+    nv = AllocPacketBufs(class, nv, &q);
+
+    /* setup packet iovs */
+    for (i = p->niovecs, queue_Scan(&q, cb, ncb, rx_packet), i++) {
+        queue_Remove(cb);
+        p->wirevec[i].iov_base = (caddr_t) cb->localdata;
+        p->wirevec[i].iov_len = RX_CBUFFERSIZE;
     }
+
+    nb -= (nv * RX_CBUFFERSIZE);
+    p->length += (nv * RX_CBUFFERSIZE);
+    p->niovecs += nv;
 
     return nb;
 }
@@ -2455,10 +2527,18 @@ rxi_PrepareSendPacket(register struct rx_call *call,
     if (len > 0) {
 	osi_Panic("PrepareSendPacket 1\n");	/* MTUXXX */
     } else {
+        struct rx_queue q;
+       int nb;
+
+	queue_Init(&q);
+
 	/* Free any extra elements in the wirevec */
-	for (j = MAX(2, i); j < p->niovecs; j++) {
-	    rxi_freeCBuf(RX_CBUF_TO_PACKET(p->wirevec[j].iov_base, p));
+	for (j = MAX(2, i), nb = j - p->niovecs; j < p->niovecs; j++) {
+	    queue_Append(&q,RX_CBUF_TO_PACKET(p->wirevec[j].iov_base, p));
 	}
+	if (nb)
+	    rxi_FreePackets(nb, &q);
+
 	p->niovecs = i;
 	p->wirevec[i - 1].iov_len += len;
     }

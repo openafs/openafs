@@ -48,7 +48,7 @@ struct osi_stat {
 
 struct osi_file {
     afs_int32 size;		/* file size in bytes XXX Must be first field XXX */
-#ifdef AFS_LINUX24_ENV
+#ifdef AFS_LINUX26_ENV
     struct file *filp;		/* May need this if we really open the file. */
 #else
 #ifdef AFS_LINUX22_ENV
@@ -123,7 +123,7 @@ struct afs_osi_WaitHandle {
 /*
  * Vnode related macros
  */
-#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV) || defined(AFS_LINUX22_ENV)
 #define vSetVfsp(vc, vfsp)      AFSTOV(vc)->v_mount = (vfsp)
 #define vSetType(vc, type)      AFSTOV(vc)->v_type = (type)
 #define vType(vc)               AFSTOV(vc)->v_type
@@ -189,6 +189,8 @@ typedef struct {
 #else
 typedef struct timeval osi_timeval_t;
 #endif /* AFS_SGI61_ENV */
+
+#define osi_getpid() 		getpid()
 
 /*
  * osi_ThreadUnique() should yield a value that can be found in ps
@@ -261,7 +263,7 @@ typedef struct timeval osi_timeval_t;
    calling VREF does not */
 #define AFS_FAST_HOLD(vp) osi_vnhold((vp),0)
 #else
-#define AFS_FAST_HOLD(vp) VN_HOLD(&(vp)->v)
+#define AFS_FAST_HOLD(vp) VN_HOLD(AFSTOV(vp))
 #endif
 #define AFS_FAST_RELE(vp) AFS_RELE(AFSTOV(vp))
 

@@ -62,8 +62,8 @@ extern int base32_to_int(char *s);
  * early in name.
  */
 #ifdef AFS_64BIT_ENV
-#define int32_to_flipbase64(S, A) int64_to_flipbase64(S, (afs_int64)(A))
-extern char *int64_to_flipbase64(lb64_string_t s, afs_int64 a);
+#define int32_to_flipbase64(S, A) int64_to_flipbase64(S, (afs_uint64)(A))
+extern char *int64_to_flipbase64(lb64_string_t s, afs_uint64 a);
 extern afs_int64 flipbase64_to_int64(char *s);
 #else
 #define int32_to_flipbase64(S, A) int64_to_flipbase64(S, (u_int64_t)(A))
@@ -101,6 +101,8 @@ extern void psignal(unsigned int sig, char *s);
 extern int util_isint(char *str);
 
 /* kreltime.c */
+struct ktime;
+struct ktime_date;
 extern afs_int32 ktimeRelDate_ToInt32(struct ktime_date *kdptr);
 extern int Int32To_ktimeRelDate(afs_int32 int32Date,
 				struct ktime_date *kdptr);
@@ -157,6 +159,7 @@ extern void ResetDebug_Signal(int signo);
 extern void SetupLogSignals(void);
 extern int OpenLog(const char *fileName);
 extern int ReOpenLog(const char *fileName);
+extern int LogThreadNum();
 
 /* snprintf.c */
 

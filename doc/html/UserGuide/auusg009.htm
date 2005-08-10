@@ -1,0 +1,219 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 4//EN">
+<HTML><HEAD>
+<TITLE>User Guide</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3629/auusg000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 2 Oct 2000 at 14:38:44                -->
+<META HTTP-EQUIV="updated" CONTENT="Mon, 02 Oct 2000 14:38:42">
+<META HTTP-EQUIV="review" CONTENT="Tue, 02 Oct 2001 14:38:42">
+<META HTTP-EQUIV="expires" CONTENT="Wed, 02 Oct 2002 14:38:42">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>User Guide</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auusg002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auusg008.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auusg010.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auusg013.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<HR><H1><A NAME="HDRWQ76" HREF="auusg002.htm#ToC_151">Troubleshooting</A></H1>
+<P>This chapter explains how to investigate and solve some
+problems you can sometimes encounter when working with AFS files. To
+use the instructions, find the heading that describes your problem or matches
+the error message you received.
+<HR><H2><A NAME="HDRWQ77" HREF="auusg002.htm#ToC_152">Problem:  Cannot Access, Copy, or Save File</A></H2>
+<P>
+<A NAME="IDX1120"></A>
+<A NAME="IDX1121"></A>
+<A NAME="IDX1122"></A>
+<A NAME="IDX1123"></A>
+<A NAME="IDX1124"></A>
+<A NAME="IDX1125"></A>
+<OL TYPE=1>
+<P><LI><A NAME="LINOSAVE-TOKENS"></A>Issue the <B>tokens</B> command to verify that you
+have valid tokens. For complete instructions, see <A HREF="auusg005.htm#HDRWQ30">To Display Your Tokens</A>.
+<PRE>   % <B>tokens</B>
+</PRE>
+<UL>
+<P><LI>If your tokens are valid, proceed to Step <A HREF="#LINOSAVE-FSCHECKS">2</A>.
+<P><LI>If your do not have tokens for the relevant cell, or they are expired,
+issue the <B>klog</B> command to authenticate. For complete
+instructions, see <A HREF="auusg005.htm#HDRWQ29">To Authenticate with AFS</A>. Then try accessing or saving the file again.
+If you are not successful, proceed to Step <A HREF="#LINOSAVE-FSCHECKS">2</A>.
+<PRE>   % <B>klog</B>
+</PRE>
+</UL>
+<P><LI><A NAME="LINOSAVE-FSCHECKS"></A>Issue the <B>fs checkservers</B> command to check
+the status of file server machines. For complete instructions, see <A HREF="auusg006.htm#HDRWQ41">Checking the Status of Server Machines</A>. 
+<PRE>   % <B>fs checkservers &amp;</B>
+</PRE> 
+<UL>
+<P><LI>If the following message appears, proceed to Step <A HREF="#LINOSAVE-PERMS">3</A>.
+<PRE>   All servers are running.
+</PRE>
+<P><LI>Output like the following indicates that your Cache Manager cannot reach
+the indicated file server machines.
+<PRE>   These servers unavailable due to network or server problem:  
+   <VAR>list&nbsp;of&nbsp;machines</VAR>.
+</PRE> 
+<P>Issue the <B>fs whereis</B> command to check if the file you are
+attempting to access or save is stored on one of the inaccessible file server
+machines. For complete instructions, see <A HREF="auusg006.htm#HDRWQ40">Locating Files and Directories</A>.
+<PRE>   % <B>fs whereis</B> &lt;<VAR>dir/file&nbsp;path</VAR>>
+</PRE>
+<P>If your file is stored on an inaccessible machine, then you cannot access
+the file or save it back to the File Server until the machine is again
+accessible. If your file is on a machine that is not listed as
+inaccessible, proceed to Step <A HREF="#LINOSAVE-PERMS">3</A>.
+</UL>
+<P><LI><A NAME="LINOSAVE-PERMS"></A>Issue the <B>fs listacl</B> command to verify that
+you have the permissions you need for accessing, copying, or saving the
+file. For complete instructions, see <A HREF="auusg007.htm#HDRWQ53">To display an ACL</A>.
+<PRE>   % <B>fs listacl</B> &lt;<VAR>dir/file&nbsp;path</VAR>>
+</PRE>
+<P>You need the indicated permissions:
+<UL>
+<P><LI>To access, copy, or save a file, you must have the <B>l</B>
+(<B>lookup</B>) permission on the directory and on all directories above
+it in the pathname.
+<P><LI>To save changes to an existing file, you must in addition have the
+<B>w</B> (<B>write</B>) permission. To create a new file, you
+must in addition have the <B>i</B> (<B>insert</B>) and <B>w</B>
+permissions.
+<P><LI>To copy a file between two directories, you must in addition have the
+<B>r</B> (<B>read</B>) permission on the source directory and the
+<B>i</B> permission on the destination directory.
+</UL>
+<P>If you do not have the necessary permissions but own the directory, you
+always have the <B>a</B> (<B>administer</B>) permission even if you do
+not appear on the ACL. Issue the <B>fs setacl</B> command to grant
+yourself the necessary permissions. For complete instructions, see <A HREF="auusg007.htm#HDRWQ54">Changing an ACL</A>.
+<PRE>   % <B>fs setacl  -dir</B> &lt;<VAR>directory</VAR>><SUP>+</SUP> <B>-acl</B> &lt;<VAR>access&nbsp;list&nbsp;entries</VAR>><SUP>+</SUP>
+</PRE>
+<P>If you do not have the necessary permissions and do not own the directory,
+ask the owner or a system administrator to grant them to you. If they
+add you to a group that has the required permissions, you must issue the
+<B>klog</B> command to reauthenticate before you can exercise them.
+<P>If you still cannot access the file even though you have the necessary
+permissions, contact your system administrator for help in investigating
+further possible causes of your problem. If you still cannot copy or
+save the file even though you have the necessary permissions, proceed to Step <A HREF="#LINOSAVE-QUOTA">4</A>.
+<P><LI><A NAME="LINOSAVE-QUOTA"></A>If copying a file, issue the <B>fs listquota</B>
+command to check whether the volume into which you are copying it, or the
+partition that houses that volume, is almost full. For saving, check
+the volume and partition that contain the directory into which you are saving
+the file. For complete instructions, see <A HREF="auusg006.htm#HDRWQ39">Displaying Volume Quota</A>.
+<PRE>   % <B>fs listquota</B>  &lt;<VAR>dir/file&nbsp;path</VAR>>
+</PRE>
+<P>The command produces output as in the following example:
+<PRE>   % <B>fs listquota /afs/abc.com/usr/terry</B>
+   Volume Name     Quota    Used    % Used   Partition 
+   user.terry      10000    3400       34%         86% 
+</PRE>
+<UL>
+<P><LI>If the value in the <TT>Partition</TT> field is not close to 100%, the
+partition is not almost full. Check the value in the <TT>% Used</TT>
+field. If it is close to 100%, then the volume is almost full.
+If possible, delete files from the volume that are no longer needed, or ask
+your system administrator to increase the volume's quota.
+<P>If the value in the <TT>% Used</TT> field is not close to 100% (is, say,
+90% or less), then it is unlikely that you are exceeding the volume's
+quota, unless the file is very large or the volume's quota is
+small. Contact your system administrator for help in investigating
+further possible causes of your problem.
+<P><LI>If the value in the <TT>Partition</TT> field is very close to 100%, the
+partition is possibly nearly full. However, server machine partitions
+are usually very large and can still have enough space for an average file
+when nearly full. You can either ask your system administrator about
+the partition's status, or issue the <B>fs examine</B>
+command. The final line in its output reports how many kilobyte blocks
+are still available on the partition. For complete instructions, see <A HREF="auusg006.htm#HDRWQ39">Displaying Volume Quota</A>. 
+<PRE>   % <B>fs examine</B>  &lt;<VAR>dir/file&nbsp;path</VAR>>
+</PRE>
+<P>If there is enough free space on the partition but you still cannot save
+the file, ask your system administrator for help in investigating further
+possible causes of your problem.
+</UL>
+</OL>
+<HR><H2><A NAME="HDRWQ78" HREF="auusg002.htm#ToC_153">Problem:  Accidentally Removed Your Entry from an ACL</A></H2>
+<P>
+<A NAME="IDX1126"></A>
+<A NAME="IDX1127"></A>
+<OL TYPE=1>
+<P><LI>If you own the directory from which you have accidentally removed your ACL
+entry, then you actually still have the <B>a</B> (<B>administer</B>)
+permission even if it does not appear on the ACL. You normally own your
+home directory and all of its subdirectories, for instance. Issue the
+<B>fs setacl</B> command to grant yourself all other permissions.
+For complete instructions, see <A HREF="auusg007.htm#HDRWQ55">To Add, Remove, or Edit Normal ACL Permissions</A>.
+<PRE>   % <B>fs setacl  -dir</B> &lt;<VAR>directory</VAR>> <B>-acl &lt;</B><VAR>your_username</VAR>> <B>all</B>
+</PRE> 
+<P>For <VAR>directory</VAR>, provide the complete pathname to the directory (for
+example, <B>/afs/abc.com/usr/</B><VAR>your_username</VAR>).
+This is necessary because AFS cannot interpret pathname abbreviations if you
+do not have the <B>l</B> (<B>lookup</B>) permission.
+<P><LI>If you do not own the directory, issue the <B>fs listacl</B> to check
+if any remaining entries grant you the permissions you need (perhaps you
+belong to one or more groups that appear on the ACL). For complete
+instructions, see <A HREF="auusg007.htm#HDRWQ53">To display an ACL</A>. 
+<PRE>   % <B>fs listacl</B> &lt;<VAR>dir/file&nbsp;path</VAR>>
+</PRE>
+<UL>
+<P><LI>The following message displays the directory's ACL. If you
+need permissions that no entry currently grants you, ask the directory's
+owner or your system administrator for help. 
+<PRE>   Access list for &lt;<VAR>dir/file&nbsp;path</VAR>> is
+   Normal rights
+   <VAR>list of entries</VAR>
+</PRE>
+<P><LI>If the command returns the following error message instead of an ACL, then
+you do not have the <B>l</B> permission. 
+<PRE>   fs: You don't have the required access rights on '<VAR>dir/file&nbsp;path</VAR>'
+</PRE>
+<P>Ask the directory's owner or your system administrator to grant you
+the permissions you need. If they add you to a group that has the
+required permissions, you must issue the <B>klog</B> command to
+reauthenticate before you can exercise them.
+</UL>
+</OL>
+<HR><H2><A NAME="HDRWQ79" HREF="auusg002.htm#ToC_154">Error Message: "afs: Lost contact with fileserver"</A></H2>
+<A NAME="IDX1128"></A>
+<A NAME="IDX1129"></A>
+<A NAME="IDX1130"></A>
+<P>Issue the <B>fs checkservers</B> command to check the status of file
+server machines. For complete instructions, see <A HREF="auusg006.htm#HDRWQ41">Checking the Status of Server Machines</A>.
+<PRE>   % <B>fs checkservers &amp;</B>
+</PRE>
+<UL>
+<P><LI>If the following message appears, ask your system administrator for
+assistance in diagnosing the cause of the <TT>Lost contact</TT> error
+message.
+<PRE>   All servers are running.
+</PRE>
+<P><LI>Output like the following indicates that your Cache Manager cannot reach
+the indicated file server machines. You must wait until they are again
+accessible before continuing to work with the files that are stored on
+them. 
+<PRE>   These servers unavailable due to network or server problem: 
+   <VAR>list_of_machines</VAR>.
+</PRE>
+</UL>
+<A NAME="IDX1131"></A>
+<HR><H2><A NAME="Header_155" HREF="auusg002.htm#ToC_155">Error Message: "<VAR>command</VAR>: Connection timed out"</A></H2>
+<P>Issue the <B>fs checkservers</B> command as described in <A HREF="#HDRWQ79">Error Message:  afs: Lost contact with fileserver</A>.
+<A NAME="IDX1132"></A>
+<HR><H2><A NAME="Header_156" HREF="auusg002.htm#ToC_156">Error Message: "fs:  You don't have the required access rights on '<VAR>file</VAR>'"</A></H2>
+<P>You do not have the ACL permissions you need to perform the operation
+you are attempting. If you own the directory and have accidentally
+removed yourself from the ACL, see <A HREF="#HDRWQ78">Problem:  Accidentally Removed Your Entry from an ACL</A>. Otherwise, ask the directory's owner or your
+system administrator to grant you the appropriate permissions.
+<A NAME="IDX1133"></A>
+<A NAME="IDX1134"></A>
+<HR><H2><A NAME="Header_157" HREF="auusg002.htm#ToC_157">Error Message:  "afs:  failed to store file"</A></H2>
+<P>Follow the instructions in <A HREF="#HDRWQ77">Problem:  Cannot Access, Copy, or Save File</A>.
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auusg002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auusg008.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auusg010.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auusg013.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

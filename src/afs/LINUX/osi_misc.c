@@ -15,7 +15,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_misc.c,v 1.34.2.8 2005/04/28 03:11:51 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_misc.c,v 1.34.2.10 2005/07/11 19:29:56 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
@@ -141,7 +141,7 @@ osi_InitCacheInfo(char *aname)
 int
 osi_rdwr(struct osi_file *osifile, uio_t * uiop, int rw)
 {
-#ifdef AFS_LINUX24_ENV
+#ifdef AFS_LINUX26_ENV
     struct file *filp = osifile->filp;
 #else
     struct file *filp = &osifile->file;
@@ -324,154 +324,28 @@ afs_osi_SetTime(osi_timeval_t * tvp)
 #endif
 }
 
-/* Free all the pages on any of the vnodes in the vlru. Must be done before
- * freeing all memory.
+/* osi_linux_free_inode_pages
+ *
+ * Free all vnodes remaining in the afs hash.  Must be done before
+ * shutting down afs and freeing all memory.
  */
 void
 osi_linux_free_inode_pages(void)
 {
     int i;
-    struct vcache *tvc;
-    struct inode *ip;
+    struct vcache *tvc, *nvc;
     extern struct vcache *afs_vhashT[VCSIZE];
 
     for (i = 0; i < VCSIZE; i++) {
-	for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
-	    ip = AFSTOI(tvc);
-#if defined(AFS_LINUX24_ENV)
-	    if (ip->i_data.nrpages) {
-#else
-	    if (ip->i_nrpages) {
-#endif
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
-		truncate_inode_pages(&ip->i_data, 0);
-#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2,2,15)
-		truncate_inode_pages(ip, 0);
-#else
-		invalidate_inode_pages(ip);
-#endif
-#if defined(AFS_LINUX24_ENV)
-		if (ip->i_data.nrpages) {
-#else
-		if (ip->i_nrpages) {
-#endif
-		    printf("Failed to invalidate all pages on inode 0x%lx\n",
-			   (unsigned long)ip);
-		}
-	    }
+	for (tvc = afs_vhashT[i]; tvc; ) {
+	    int slept;
+	
+	    nvc = tvc->hnext;
+	    if (afs_FlushVCache(tvc, &slept))		/* slept always 0 for linux? */
+		printf("Failed to invalidate all pages on inode 0x%p\n", tvc);
+	    tvc = nvc;
 	}
     }
-}
-
-void
-osi_clear_inode(struct inode *ip)
-{
-    cred_t *credp = crref();
-    struct vcache *vcp = ITOAFS(ip);
-
-#if defined(AFS_LINUX24_ENV)
-    if (atomic_read(&ip->i_count) > 1)
-	printf("afs_put_inode: ino %ld (0x%lx) has count %ld\n",
-	       (long)ip->i_ino, (unsigned long)ip,
-	       (long)atomic_read(&ip->i_count));
-#else
-    if (ip->i_count > 1)
-	printf("afs_put_inode: ino %ld (0x%lx) has count %ld\n",
-	       (long)ip->i_ino, (unsigned long)ip, (long)ip->i_count);
-#endif
-
-    afs_InactiveVCache(vcp, credp);
-    ObtainWriteLock(&vcp->lock, 504);
-    ip->i_nlink = 0;		/* iput checks this after calling this routine. */
-#ifdef I_CLEAR
-    ip->i_state = I_CLEAR;
-#endif
-    ReleaseWriteLock(&vcp->lock);
-    crfree(credp);
-}
-
-#if !defined(AFS_LINUX26_ENV)
-/* iput an inode. Since we still have a separate inode pool, we don't want
- * to call iput on AFS inodes, since they would then end up on Linux's
- * inode_unsed list.
- */
-void
-osi_iput(struct inode *ip)
-{
-    extern struct vfs *afs_globalVFS;
-
-    AFS_GLOCK();
-
-    if (afs_globalVFS && ip->i_sb != afs_globalVFS)
-	osi_Panic("IPUT Not an afs inode\n");
-
-#if defined(AFS_LINUX24_ENV)
-    if (atomic_read(&ip->i_count) == 0)
-#else
-    if (ip->i_count == 0)
-#endif
-	osi_Panic("IPUT Bad refCount %d on inode 0x%x\n",
-#if defined(AFS_LINUX24_ENV)
-		  atomic_read(&ip->i_count),
-#else
-		  ip->i_count,
-#endif
-				ip);
-
-#if defined(AFS_LINUX24_ENV)
-    if (atomic_dec_and_test(&ip->i_count))
-#else
-    if (!--ip->i_count)
-#endif
-					   {
-	osi_clear_inode(ip);
-	ip->i_state = 0;
-    }
-    AFS_GUNLOCK();
-}
-#endif
-
-/* check_bad_parent() : Checks if this dentry's vcache is a root vcache
- * that has its mvid (parent dir's fid) pointer set to the wrong directory
- * due to being mounted in multiple points at once. If so, check_bad_parent()
- * calls afs_lookup() to correct the vcache's mvid, as well as the volume's
- * dotdotfid and mtpoint fid members.
- * Parameters:
- *  dp - dentry to be checked.
- * Return Values:
- *  None.
- * Sideeffects:
- *   This dentry's vcache's mvid will be set to the correct parent directory's
- *   fid.
- *   This root vnode's volume will have its dotdotfid and mtpoint fids set
- *    to the correct parent and mountpoint fids.
- */
-
-void
-check_bad_parent(struct dentry *dp)
-{
-    cred_t *credp;
-    struct vcache *vcp = ITOAFS(dp->d_inode), *avc = NULL;
-    struct vcache *pvc = ITOAFS(dp->d_parent->d_inode);
-
-    if (vcp->mvid->Fid.Volume != pvc->fid.Fid.Volume) {	/* bad parent */
-	credp = crref();
-
-
-	/* force a lookup, so vcp->mvid is fixed up */
-	afs_lookup(pvc, dp->d_name.name, &avc, credp);
-	if (!avc || vcp != avc) {	/* bad, very bad.. */
-	    afs_Trace4(afs_iclSetp, CM_TRACE_TMP_1S3L, ICL_TYPE_STRING,
-		       "check_bad_parent: bad pointer returned from afs_lookup origvc newvc dentry",
-		       ICL_TYPE_POINTER, vcp, ICL_TYPE_POINTER, avc,
-		       ICL_TYPE_POINTER, dp);
-	}
-	if (avc)
-	    AFS_RELE(avc);
-	crfree(credp);
-    }
-    /* if bad parent */
-    return;
 }
 
 struct task_struct *rxk_ListenerTask;

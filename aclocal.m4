@@ -263,6 +263,9 @@ else
 		i?86-*-openbsd3.6)
 			AFS_SYSNAME="i386_obsd36"
 			;;
+		i?86-*-openbsd3.7)
+			AFS_SYSNAME="i386_obsd37"
+			;;
 		i?86-*-freebsd4.2*)
 			AFS_SYSNAME="i386_fbsd_42"
 			;;
@@ -292,6 +295,12 @@ else
 			;;
 		i?86-*-freebsd5.3*)
 			AFS_SYSNAME="i386_fbsd_53"
+			;;
+		i?86-*-freebsd5.4*)
+			AFS_SYSNAME="i386_fbsd_54"
+			;;
+		i?86-*-freebsd6.0*)
+			AFS_SYSNAME="i386_fbsd_60"
 			;;
 		i?86-*-netbsd*1.5*)
 			AFS_PARAM_COMMON=param.nbsd15.h
@@ -338,6 +347,10 @@ else
 			AFS_SYSNAME="i386_nbsd30"
 			;;
 		i?86-*-netbsd*3.0*)
+			AFS_PARAM_COMMON=param.nbsd30.h
+			AFS_SYSNAME="i386_nbsd30"
+			;;
+		i?86-*-netbsd*3.99*)
 			AFS_PARAM_COMMON=param.nbsd30.h
 			AFS_SYSNAME="i386_nbsd30"
 			;;
@@ -577,6 +590,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_COMPLETION_H_EXISTS
 		 LINUX_DEFINES_FOR_EACH_PROCESS
 		 LINUX_DEFINES_PREV_TASK
+		 LINUX_FS_STRUCT_SUPER_HAS_ALLOC_INODE
 	         LINUX_FS_STRUCT_ADDRESS_SPACE_HAS_PAGE_LOCK
 	         LINUX_FS_STRUCT_ADDRESS_SPACE_HAS_GFP_MASK
 		 LINUX_FS_STRUCT_INODE_HAS_I_ALLOC_SEM
@@ -592,6 +606,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 	  	 LINUX_IOP_NAMEIDATA
 	  	 LINUX_AOP_WRITEBACK_CONTROL
 		 LINUX_KERNEL_LINUX_SYSCALL_H
+		 LINUX_KERNEL_LINUX_SEQ_FILE_H
 		 LINUX_KERNEL_SELINUX
 		 LINUX_KERNEL_SOCK_CREATE
 		 LINUX_KERNEL_PAGE_FOLLOW_LINK
@@ -633,7 +648,8 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
                             linux_syscall_method=kallsyms_symbol
                          fi
                          if test "x$linux_syscall_method" = "xnone"; then
-                        AC_MSG_ERROR([no available sys_call_table access method])
+			    AC_MSG_WARN([no available sys_call_table access method -- guessing scan])
+                            linux_syscall_method=scan
                          fi
                    fi
                  fi
@@ -682,6 +698,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 if test "x$ac_cv_linux_func_write_inode_returns_int" = "xyes" ; then
 		  AC_DEFINE(WRITE_INODE_NOT_VOID, 1, [define if your sops.write_inode returns non-void])
 		 fi
+		 if test "x$ac_cv_linux_fs_struct_super_has_alloc_inode" = "xyes" ; then
+		  AC_DEFINE(STRUCT_SUPER_HAS_ALLOC_INODE, 1, [define if your struct super_operations has alloc_inode])
+		 fi
 		 if test "x$ac_cv_linux_fs_struct_address_space_has_page_lock" = "xyes"; then 
 		  AC_DEFINE(STRUCT_ADDRESS_SPACE_HAS_PAGE_LOCK, 1, [define if your struct address_space has page_lock])
 		 fi
@@ -726,6 +745,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 fi
 		 if test "x$ac_linux_syscall" = "xyes" ; then
 		  AC_DEFINE(HAVE_KERNEL_LINUX_SYSCALL_H, 1, [define if your linux kernel has linux/syscall.h])
+		 fi
+		 if test "x$ac_linux_seq_file" = "xyes" ; then
+		  AC_DEFINE(HAVE_KERNEL_LINUX_SEQ_FILE_H, 1, [define if your linux kernel has linux/seq_file.h])
 		 fi
 		 if test "x$ac_cv_linux_sched_struct_task_struct_has_parent" = "xyes"; then 
 		  AC_DEFINE(STRUCT_TASK_STRUCT_HAS_PARENT, 1, [define if your struct task_struct has parent])
@@ -965,10 +987,10 @@ if test "$enable_tivoli_tsm" = "yes"; then
 	XBSADIR1=/usr/tivoli/tsm/client/api/bin/xopen
 	XBSADIR2=/opt/tivoli/tsm/client/api/bin/xopen
 
-	if test -e "$XBSADIR1/xbsa.h"; then
+	if test -r "$XBSADIR1/xbsa.h"; then
 		XBSA_CFLAGS="-Dxbsa -I$XBSADIR1"
 		AC_MSG_RESULT([yes, $XBSA_CFLAGS])
-	elif test -e "$XBSADIR2/xbsa.h"; then
+	elif test -r "$XBSADIR2/xbsa.h"; then
 		XBSA_CFLAGS="-Dxbsa -I$XBSADIR2"
 		AC_MSG_RESULT([yes, $XBSA_CFLAGS])
 	else
@@ -1021,6 +1043,21 @@ fi
 	
 AC_CHECK_TYPE(ssize_t, int)
 AC_SIZEOF_TYPE(long)
+
+AC_MSG_CHECKING(size of time_t)
+AC_CACHE_VAL(ac_cv_sizeof_time_t,
+[AC_TRY_RUN([#include <stdio.h>
+#include <time.h>
+main()
+{
+  FILE *f=fopen("conftestval", "w");
+  if (!f) exit(1);
+  fprintf(f, "%d\n", sizeof(time_t));
+  exit(0);
+}], ac_cv_sizeof_time_t=`cat conftestval`, ac_cv_sizeof_time_t=0)
+])
+AC_MSG_RESULT($ac_cv_sizeof_time_t)
+AC_DEFINE_UNQUOTED(SIZEOF_TIME_T, $ac_cv_sizeof_time_t)
 
 AC_CHECK_FUNCS(timegm)
 AC_CHECK_FUNCS(daemon)
@@ -1086,6 +1123,7 @@ AC_SUBST(DARWIN_INFOFILE)
 AC_SUBST(IRIX_BUILD_IP35)
 
 OPENAFS_OSCONF
+OPENAFS_KRB5CONF
 
 TOP_SRCDIR="${srcdir}/src"
 dnl
@@ -1111,6 +1149,7 @@ HELPER_SPLINTCFG="${TOP_SRCDIR}/splint.cfg"
 AC_SUBST(HELPER_SPLINT)
 AC_SUBST(HELPER_SPLINTCFG)
 
+mkdir -p ${TOP_OBJDIR}/src/JAVA/libjafs
 
 ])
 
@@ -2266,8 +2305,10 @@ AC_MSG_CHECKING(whether to build osi_vfs.h)
 configdir=ifelse([$1], ,[src/config],$1)
 outputdir=ifelse([$2], ,[src/afs/LINUX],$2)
 tmpldir=ifelse([$3], ,[src/afs/LINUX],$3)
-chmod +x $configdir/make_vnode.pl
-$configdir/make_vnode.pl -i $LINUX_KERNEL_PATH -t ${tmpldir} -o $outputdir
+mkdir -p $outputdir
+cp  $tmpldir/osi_vfs.hin $outputdir/osi_vfs.h
+# chmod +x $configdir/make_vnode.pl
+# $configdir/make_vnode.pl -i $LINUX_KERNEL_PATH -t ${tmpldir} -o $outputdir
 ])
 
 AC_DEFUN([LINUX_COMPLETION_H_EXISTS], [
@@ -2740,6 +2781,21 @@ ac_cv_linux_sched_struct_task_struct_has_exit_state=no)])
 AC_MSG_RESULT($ac_cv_linux_sched_struct_task_struct_has_exit_state)
 CPPFLAGS="$save_CPPFLAGS"])
 
+AC_DEFUN([LINUX_FS_STRUCT_SUPER_HAS_ALLOC_INODE], [
+AC_MSG_CHECKING(for alloc_inode in struct super_operations)
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+AC_CACHE_VAL(ac_cv_linux_fs_struct_super_has_alloc_inode, 
+[
+AC_TRY_COMPILE(
+[#include <linux/fs.h>],
+[struct super_operations _super;
+printf("%p\n", _super.alloc_inode);], 
+ac_cv_linux_fs_struct_super_has_alloc_inode=yes,
+ac_cv_linux_fs_struct_super_has_alloc_inode=no)])
+AC_MSG_RESULT($ac_cv_linux_fs_struct_super_has_alloc_inode)
+CPPFLAGS="$save_CPPFLAGS"])
+
 AC_DEFUN([LINUX_INODE_SETATTR_RETURN_TYPE],[
 AC_MSG_CHECKING(for inode_setattr return type)
 save_CPPFLAGS="$CPPFLAGS"
@@ -2905,19 +2961,6 @@ if test "x$enable_redhat_buildsys" = "xyes"; then
 else
   save_CPPFLAGS="$CPPFLAGS"
   CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $RHCONFIG_SP $CPPFLAGS"
-  AC_MSG_CHECKING(if kernel uses MODVERSIONS)
-  AC_CACHE_VAL(ac_cv_linux_config_modversions,[
-  AC_TRY_COMPILE(
-[#include <linux/version.h>
-#include <linux/config.h>
-],
-[#if !defined(CONFIG_MODVERSIONS)
-lose;
-#endif
-],
-  ac_cv_linux_config_modversions=yes,
-  ac_cv_linux_config_modversions=no)])
-  AC_MSG_RESULT($ac_cv_linux_config_modversions)
   AC_MSG_CHECKING(which kernel modules to build)
   if false; then
       MPS="MP SP"
@@ -2992,6 +3035,17 @@ AC_TRY_COMPILE(
   ac_cv_linux_kernel_page_follow_link=no)])
 AC_MSG_RESULT($ac_cv_linux_kernel_page_follow_link)
 CPPFLAGS="$save_CPPFLAGS"])
+
+AC_DEFUN([LINUX_KERNEL_LINUX_SEQ_FILE_H],[
+  AC_MSG_CHECKING(for linux/seq_file.h in kernel)
+  if test -f "${LINUX_KERNEL_PATH}/include/linux/seq_file.h"; then
+    ac_linux_seq_file=yes
+    AC_MSG_RESULT($ac_linux_seq_file)
+  else
+    ac_linux_seq_file=no
+    AC_MSG_RESULT($ac_linux_seq_file)
+  fi
+])
 
 AC_DEFUN([AC_FUNC_RES_SEARCH], [
   ac_cv_func_res_search=no
@@ -4011,6 +4065,107 @@ if test "$ac_cv_irix_sys_systm_h_has_mem_funcs" = "yes"; then
 fi
 AC_MSG_RESULT($ac_cv_irix_sys_systm_h_has_mem_funcs)
 ])
+
+dnl
+dnl $Id: kerberos.m4,v 1.1.2.7 2005/07/11 19:16:42 shadow Exp $
+dnl
+dnl Kerberos autoconf glue
+dnl
+
+AC_DEFUN([OPENAFS_KRB5CONF],[
+
+dnl AC_ARG_VAR(KRB5CFLAGS, [C flags to compile Kerberos 5 programs])
+dnl AC_ARG_VAR(KRB5LIBS, [Libraries and flags to compile Kerberos 5 programs])
+dnl AC_ARG_VAR(KRB5_CONFIG, [Location of krb5-config script])
+
+AC_ARG_WITH([krb5-conf],[--with-krb5-conf[=krb5-config-location]    Use a krb5-config script to configure Kerberos])
+if test X$with_krb5_conf != X; then
+		conf_krb5=YES
+		if test X$with_krb5_conf = Xyes; then
+			AC_PATH_PROG(KRB5_CONFIG, krb5-config, not_found)
+			if test X$KRB5_CONFIG = Xnot_found; then
+				AC_MSG_ERROR([cannot find krb5-config script, you must configure Kerberos manually])
+			fi
+		else
+			KRB5_CONFIG=$withval
+		fi
+		KRB5CFLAGS=`$KRB5_CONFIG --cflags krb5`
+		retval=$?
+		if test $retval -ne 0; then
+			AC_MSG_ERROR([$KRB5_CONFIG failed with an error code of $retval])
+		fi
+		KRB5LIBS=`$KRB5_CONFIG --libs krb5`
+		retval=$?
+		if test $retval -ne 0; then
+			AC_MSG_ERROR([$KRB5_CONFIG failed with an error code of $retval])
+		fi
+		AC_MSG_RESULT([Adding $KRB5CFLAGS to KRB5CFLAGS])
+		AC_MSG_RESULT([Adding $KRB5LIBS to KRB5LIBS])
+fi
+
+AC_ARG_WITH([krb5], [--with-krb5 Support for Kerberos 5 (manual configuration)])
+
+if test X$with_krb5 = Xyes; then
+        if test X$conf_krb5 = XYES; then
+		AC_MSG_ERROR([--with-krb5-config and --with-krb5 are mutually exclusive, choose only one])
+	fi
+	if test "X$KRB5CFLAGS" = X; then
+		AC_MSG_WARN([KRB5CFLAGS is not set])
+	fi
+	if test "X$KRB5LIBS" = X; then
+		AC_MSG_WARN([KRB5LIBS is not set])
+	fi
+	conf_krb5=YES
+fi
+
+BUILD_KRB5=no
+if test X$conf_krb5 = XYES; then
+	AC_MSG_RESULT([Configuring support for Kerberos 5 utilities])
+	BUILD_KRB5=yes
+	save_CPPFLAGS="$CPPFLAGS"
+	CPPFLAGS="$CPPFLAGS $KRB5CFLAGS"
+	save_LIBS="$LIBS"
+	LIBS="$LIBS $KRB5LIBS"
+	AC_CHECK_FUNCS([add_to_error_table add_error_table krb5_princ_size krb5_principal_get_comp_string krb5_524_convert_creds krb524_convert_creds_kdc])
+	AC_CHECK_HEADERS([kerberosIV/krb.h])
+
+AC_MSG_CHECKING(for krb5_creds.keyblock existence)
+AC_CACHE_VAL(ac_cv_krb5_creds_keyblock_exists,
+[
+AC_TRY_COMPILE(
+[#include <krb5.h>],
+[krb5_creds _c;
+printf("%x\n", _c.keyblock);], 
+ac_cv_krb5_creds_keyblock_exists=yes,
+ac_cv_krb5_creds_keyblock_exists=no)])
+AC_MSG_RESULT($ac_cv_krb5_creds_keyblock_exists)
+	
+AC_MSG_CHECKING(for krb5_creds.session existence)
+AC_CACHE_VAL(ac_cv_krb5_creds_session_exists,
+[
+AC_TRY_COMPILE(
+[#include <krb5.h>],
+[krb5_creds _c;
+printf("%x\n", _c.session);], 
+ac_cv_krb5_creds_session_exists=yes,
+ac_cv_krb5_creds_session_exists=no)])
+AC_MSG_RESULT($ac_cv_krb5_creds_session_exists)
+
+if test "x$ac_cv_krb5_creds_keyblock_exists" = "xyes"; then
+	AC_DEFINE(HAVE_KRB5_CREDS_KEYBLOCK, 1, [define if krb5_creds has keyblock])
+fi
+if test "x$ac_cv_krb5_creds_session_exists" = "xyes"; then
+	AC_DEFINE(HAVE_KRB5_CREDS_SESSION, 1, [define if krb5_creds has session])
+fi
+	
+dnl	AC_CHECK_MEMBERS([krb5_creds.keyblock, krb5_creds.session],,, [#include <krb5.h>])
+	CPPFLAGS="$save_CPPFLAGS"
+	LIBS="$save_LIBS"
+fi
+AC_SUBST(BUILD_KRB5)
+AC_SUBST(KRB5CFLAGS)
+AC_SUBST(KRB5LIBS)
+])dnl
 
 # Do all the work for Automake.  This macro actually does too much --
 # some checks are only needed if your package does certain things.

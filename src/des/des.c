@@ -37,7 +37,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/des/des.c,v 1.11.2.2 2004/10/18 17:43:56 shadow Exp $");
+    ("$Header: /cvs/openafs/src/des/des.c,v 1.11.2.4 2005/06/02 05:21:57 shadow Exp $");
 
 #ifndef KERNEL
 #include <stdio.h>
@@ -64,10 +64,6 @@ RCSID
 #else
 #define DBG_PRINT(s)
 #endif
-
-#ifdef AFS_PTHREAD_ENV
-pthread_mutex_t rxkad_stats_mutex;
-#endif /* AFS_PTHREAD_ENV */
 
 /* encrypt == 0  ==> decrypt, else encrypt */
 
@@ -96,7 +92,7 @@ des_ecb_encrypt(void * clear, void * cipher,
 #endif
 #endif
     afs_uint32 P_temp;
-    register unsigned char *P_temp_p = (unsigned char *)&P_temp;
+    volatile unsigned char *P_temp_p = (unsigned char *)&P_temp;
 #ifdef BITS16
     sbox_out S_out;
     afs_uint32 *S_out_p = (afs_uint32 *) & S_out;
@@ -105,12 +101,10 @@ des_ecb_encrypt(void * clear, void * cipher,
 #ifdef DEBUG
     afs_uint32 dbg_tmp[2];
 #endif
-    LOCK_RXKAD_STATS;
     if (encrypt)
-	rxkad_stats.des_encrypts[DES_ENCRYPT]++;
+	INC_RXKAD_STATS(des_encrypts[DES_ENCRYPT]);
     else
-	rxkad_stats.des_encrypts[DES_DECRYPT]++;
-    UNLOCK_RXKAD_STATS;
+	INC_RXKAD_STATS(des_encrypts[DES_DECRYPT]);
     /*
      * Use L1,R1 and L2,R2 as two sets of "64-bit" registers always
      * work from L1,R1 input to L2,R2 output; initialize the cleartext

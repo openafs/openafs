@@ -17,7 +17,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_callback.c,v 1.27 2004/06/24 16:56:20 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_callback.c,v 1.27.2.2 2005/05/30 04:05:40 shadow Exp $");
 
 #include "afs/sysincludes.h"	/*Standard vendor system headers */
 #include "afsincludes.h"	/*AFS-based standard headers */
@@ -388,14 +388,13 @@ ClearCallBack(register struct rx_connection *a_conn,
 	     * Clear callback for the whole volume.  Zip through the
 	     * hash chain, nullifying entries whose volume ID matches.
 	     */
-	    for (i = 0; i < VCSIZE; i++)
-		for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
+		i = VCHashV(&localFid);
+		for (tvc = afs_vhashTV[i]; tvc; tvc = tvc->vhnext) {
 		    if (tvc->fid.Fid.Volume == a_fid->Volume) {
 			tvc->callback = NULL;
-			tvc->quick.stamp = 0;
 			if (!localFid.Cell)
 			    localFid.Cell = tvc->fid.Cell;
-			tvc->h1.dchint = NULL;	/* invalidate hints */
+			tvc->dchint = NULL;	/* invalidate hints */
 			ObtainWriteLock(&afs_xcbhash, 449);
 			afs_DequeueCallback(tvc);
 			tvc->states &= ~(CStatd | CUnique | CBulkFetching);
@@ -444,8 +443,7 @@ ClearCallBack(register struct rx_connection *a_conn,
 		    && tvc->fid.Fid.Volume == a_fid->Volume
 		    && tvc->fid.Fid.Unique == a_fid->Unique) {
 		    tvc->callback = NULL;
-		    tvc->quick.stamp = 0;
-		    tvc->h1.dchint = NULL;	/* invalidate hints */
+		    tvc->dchint = NULL;	/* invalidate hints */
 		    ObtainWriteLock(&afs_xcbhash, 450);
 		    afs_DequeueCallback(tvc);
 		    tvc->states &= ~(CStatd | CUnique | CBulkFetching);
