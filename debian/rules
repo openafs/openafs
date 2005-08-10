@@ -21,22 +21,22 @@ else
 endif
 
 # The AFS sysname is determined by a script
-KVERS=`perl -e '$$_ = <>; $$_ =~ m/"(.+)"/; print "$$1\n";' < $(KSRC)/include/linux/version.h`
-SYS_NAME=$(shell KVERS=$(KVERS) sh debian/sysname)
+SYS_NAME := $(shell KVERS=$(KVERS) sh debian/sysname)
 ifndef KSRC
     KSRC = /usr/src/linux
 endif
 ifndef KPKG_DEST_DIR
     KPKG_DEST_DIR = ..
 endif
+KVERS := `perl -e '$$_ = <>; $$_ =~ m/"(.+)"/; print "$$1\n";' $(KSRC)/include/linux/version.h 2> /dev/null`
 export KSRC 
 export KVERS
 export KPKG_DEST_DIR
 
 package   = openafs
 srcpkg    = openafs-modules-source
-modulepkg = $(shell echo openafs-modules-$(KVERS)${INT_SUBARCH})
-moduledir = debian/$(modulepkg)/lib/modules/$(KVERS)/fs
+modulepkg := $(shell echo openafs-modules-$(KVERS)${INT_SUBARCH})
+moduledir := debian/$(modulepkg)/lib/modules/$(KVERS)/fs
 
 LINTIAN_PACKAGES = openafs-dbserver openafs-client openafs-fileserver
 
@@ -60,6 +60,7 @@ get-orig-source:
 
 configure: configure-stamp
 configure-stamp:
+	@if test x"$(SYS_NAME)" = x"UNKNOWN" ; then exit 1 ; fi
 	dh_testdir
 	-ln -s @sys/dest dest
 	-ln -s $(SYS_NAME) @sys
@@ -233,6 +234,7 @@ kdist_clean:
 
 configure-modules: configure-modules-stamp
 configure-modules-stamp:
+	@if test x"$(SYS_NAME)" = x"UNKNOWN" ; then exit 1 ; fi
 ifeq ($(KERNEL_DEPENDS),y)
 	sh debian/prep-modules $(KSRC) debian/control.module > debian/control
 else

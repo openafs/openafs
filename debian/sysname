@@ -31,6 +31,7 @@ sparc|sparc64)
     echo sparc_linux24
     ;;
 *)
-    echo ERROr:  sysname not yet known
+    echo "ERROR: unsupported architecture" >&2
+    echo UNKNOWN
     exit 1
 esac

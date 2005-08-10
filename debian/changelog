@@ -1,6 +1,11 @@
 openafs (1.3.87-1) unstable; urgency=low
 
   * New upstream version.
+  * Diagnose unsupported architectures earlier and with a clearer error.
+  * Suppress error messages from a missing kernel version header since
+    they occur normally when doing the regular package build and are just
+    confusing.  Instead, print an error in kern-sysname and abort if the
+    kernel version could not be determined.
 
  --
 
