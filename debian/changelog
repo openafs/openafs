@@ -3,6 +3,9 @@ openafs (1.3.87-1) unstable; urgency=low
   * New upstream version.
   * Add support for ppc64, thanks Andreas Jochens.  (Closes: #322020)
   * Improve the openafs-client init script.
+    - Update the default client options based on the cache tuning synopsis
+      by Jeffrey Hutzelman, including setting a larger chunksize for all
+      default option sets.  (Closes: #303944)
     - Choose the client options based on the cache size by default.
     - Move the code to build the options string to the init script from
       afs.conf so that afs.conf is pure configuration.
