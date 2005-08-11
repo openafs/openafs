@@ -2,6 +2,16 @@ openafs (1.3.87-1) unstable; urgency=low
 
   * New upstream version.
   * Add support for ppc64, thanks Andreas Jochens.  (Closes: #322020)
+  * Improve the openafs-client init script.
+    - Choose the client options based on the cache size by default.
+    - Move the code to build the options string to the init script from
+      afs.conf so that afs.conf is pure configuration.
+    - Improve the readability of the output on start.
+    - Significantly improve the comments in afs.conf.
+    - Remove the code to set -nosettime as it's now the default.
+  * Move the openafs-client init script and afs.conf file we use into the
+    debian directory rather than patching the upstream version.  We've
+    diverged so much that there's no point in continuing to merge changes.
   * Diagnose unsupported architectures earlier and with a clearer error.
   * Suppress error messages from a missing kernel version header since
     they occur normally when doing the regular package build and are just

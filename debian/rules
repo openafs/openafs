@@ -89,7 +89,7 @@ clean:
 	rm -f build-stamp configure-stamp configure-modules-stamp
 	rm -f build-modules-stamp
 	-$(MAKE) -ki distclean
-	-rm -rf dest $(SYS_NAME) @sys debian/openafs-client.init src/pic
+	-rm -rf dest $(SYS_NAME) @sys src/pic
 	dh_clean
 
 install: DH_OPTIONS=
@@ -114,9 +114,7 @@ install: build
 	    debian/libpam-openafs-kaserver/lib/security/pam_afs.so
 	install -m 644 -c debian/CellServDB \
 	    debian/openafs-client/usr/share/openafs
-	install -m 755 -c dest/root.client/usr/vice/etc/afs.rc \
-	    debian/openafs-client.init
-	install -m 644 -c dest/root.client/usr/vice/etc/afs.conf \
+	install -m 644 -c debian/afs.conf \
 	    debian/openafs-client/etc/openafs/afs.conf
 
 	install -d debian/openafs-dbserver/usr/share/man/man8

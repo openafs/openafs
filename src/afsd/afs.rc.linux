@@ -1,5 +1,4 @@
 #! /bin/sh
-# Modified by Sam Hartman <hartmans@mit.edu> for Debian
 # Copyright 2000, International Business Machines Corporation and others.
 # All Rights Reserved.
 # 
@@ -10,29 +9,84 @@
 # AFS	Start and stop AFS components
 # 
 # 
-# chkconfig: 345 60 20
+# chkconfig: 35 60 20
 # description:  AFS is a distributed file system which provides location
 #		transparency, caching and secure authentication.
 #		Additional configuration can be done in the /etc/sysconfig/afs
 #		file. Read the documentation in that file for more information.
 #
+# The following section is used at least by SuSE insserv(8)
+### BEGIN INIT INFO
+# Provides: afs
+# Required-Start: $network
+# Required-Stop: $network
+# Default-Start: 3 5
+# Default-Stop: 0 1 2 6
+# Description:  AFS is a distributed file system which provides location
+#              transparency, caching and secure authentication.
+#              Additional configuration can be done in the /etc/sysconfig/afs
+#              file. Read the documentation in that file for more information.
+### END INIT INFO
+#
 # Note that AFS does not use a pid file in /var/run. It is turned off by
 # unmounting /afs.
 
-exec 3>/dev/null
-exec </dev/null
 
+# check for special bootup functions
+if [ -f /etc/rc.d/init.d/functions ] ; then
+	. /etc/rc.d/init.d/functions
+	afs_rh=1
+else
+	# special (RedHat) functions not available...
+	# so I provide neccessary replacements (e.g. for SuSE)
 
-# Gather up options and post startup script name, if present
-if [ -f /etc/openafs/afs.conf ]; then
-	. /etc/openafs/afs.conf
+	function echo_failure () { echo -n " - failed." ; }
+
+	function echo_success () { echo -n " - successful." ; }
+
+	# these are hopefully all functions I use...
 fi
 
-# is_on returns 1 if value of arg is "true"
+runcmd() {
+   echo -n "$1 "
+   shift
+   if [ "$BOOTUP" = "color" ]; then
+      $* && echo_success || echo_failure
+   else
+      $*
+   fi
+   echo
+}
+
+SYSCNF=/etc/sysconfig/afs
+KERNEL_VERSION=`uname -r`
+
+# Gather up options and post startup script name, if present
+if [ -f $SYSCNF ] ; then
+	. $SYSCNF
+fi
+
+CACHEINFO=${CACHEINFO:-/usr/vice/etc/cacheinfo}
+CACHE=${CACHEDIR:-/usr/vice/cache}
+AFS=${AFSDIR:-/afs}
+
+# is_on returns 1 if value of arg is "on"
 is_on() {
-	if  test "$1" = "true" ; then return 0
+	if  test "$1" = "on" ; then return 0
 	else return 1
-	fi
+        fi
+}
+
+on_network() {
+    ADDRS=`LANG=C ifconfig -a | grep 'inet addr' | grep -v 127.0.0.1 | wc -l`
+    if [ "$ADDRS" = "" ]; then
+       echo afs: No interfaces with IP address 1>&2
+       return 1
+    elif [ $ADDRS = 0 ]; then
+       echo afs: No interfaces with IP address 1>&2
+       return 1
+    fi
+    return 0
 }
 
 # If choose_client can't correctly determine which client to use, set
@@ -51,24 +105,14 @@ choose_client() {
 	esac
 
 	# For now, just use uname -r to get the module version. 
-	VERSION=`uname -r`
-
-        # The Debian OpenAFS packages do not add the .mp by default as of 1.3,
-        # but modules obtained from other sources may.  If a module with the
-        # .mp exists and this is an SMP system, use it; otherwise, use the
-        # default value.  Unset $MP if not using it so that we can use it
-        # later in the call to modprobe.
-        if [ -n "$MP" -a -f "$MODLOADDIR/openafs${MP}.o" ] ; then
-                LIBAFS=openafs${MP}.o
-        elif [ -n "$MP" -a -f "$MODLOADDIR/openafs${MP}.ko" ] ; then
-                LIBAFS=openafs${MP}.ko
-        elif [ -f "$MODLOADDIR/openafs.ko" ] ; then
-                MP=
-                LIBAFS=openafs.ko
-        else
-                MP=
-                LIBAFS=openafs.o
-        fi
+	case $KERNEL_VERSION in
+	  [1-2].[0-5].*)
+		LIBAFS=libafs-$KERNEL_VERSION$MP.o
+		;;
+	  *)
+		LIBAFS=libafs-$KERNEL_VERSION$MP.ko
+		;;
+	esac
 }
 
 #
@@ -79,8 +123,14 @@ choose_client() {
 # unregister_filesystem_Rsmp_b240cad8 is a typcial SMP version string from
 # a kernel built from ftp.kernel.org
 #
-
-KSYMS_FILE=/proc/ksyms
+case $KERNEL_VERSION in
+  [1-2].[0-5].*)
+	KSYMS_FILE=/proc/ksyms
+	;;
+  *)
+	KSYMS_FILE=/proc/kallsyms
+	;;
+esac
 SEARCH_STR="unregister_filesystem"
 DEFAULT_SMP_PREFIX="smp_" # Redhat kernels need "smp" instead
 PREFIX="" # none needed for UP with <= 1Gig memory
@@ -91,8 +141,16 @@ set_prefix()
 	h8="$h$h$h$h$h$h$h$h"
 	prefix_set=0
 
-	set X `fgrep $SEARCH_STR $KSYMS_FILE 2> /dev/null`; shift
-	str=$2
+	set X `egrep "\<$SEARCH_STR" $KSYMS_FILE 2> /dev/null`; shift
+	
+	case $KERNEL_VERSION in
+	  [1-2].[0-5].*)
+		str=$2
+		;;
+	  *)
+		str=$3
+		;;
+	esac
 	case $str in
 	${SEARCH_STR}_R$h8)
 		# No prefix required
@@ -125,8 +183,7 @@ set_prefix()
 	esac
 }
 
-
-MODLOADDIR=/lib/modules/`uname -r`/fs
+MODLOADDIR=/usr/vice/etc/modload
 # load_client loads the AFS client module if it's not already loaded. 
 load_client() {
 	# If LIBAFS is set, use it.
@@ -136,38 +193,83 @@ load_client() {
 	fi
     
 	if [ ! -f "$MODLOADDIR/$LIBAFS" ] ; then
-                cat <<EOF
-AFS module $MODLOADDIR/$LIBAFS does not exist.
-Not starting AFS.  Please consider building kernel modules using
-instructions in /usr/share/doc/openafs-client/README.modules
-EOF
-		exit 0
+		echo AFS module $MODLOADDIR/$LIBAFS does not exist. Not starting AFS.
+		exit 1
 	fi
 
-	# use the prefix command if required
-#	set_prefix
-	LOADED=`/sbin/lsmod | fgrep openafs`
-	if [ -z "$LOADED" ] ; then
-                modprobe openafs${MP}
+	if [ -f $KSYMS_FILE ]; then
+		# use the prefix command if required
+		case $KERNEL_VERSION in
+		  [1-2].[0-5].*)
+			set_prefix
+			/sbin/insmod ${PREFIX:+-P $PREFIX} -f -m $MODLOADDIR/$LIBAFS > $MODLOADDIR/libafs.map 2>&1
+			;;
+		  *)
+			/sbin/insmod $MODLOADDIR/$LIBAFS > $MODLOADDIR/libafs.map 2>&1
+			;;
+		esac
+	else
+		/sbin/insmod $MODLOADDIR/$LIBAFS > $MODLOADDIR/libafs.map 2>&1
 	fi
 }
 
-# start_client() -- run afsd
-start_client() {
-    		if pidof /usr/sbin/afsd >/dev/null ; then : 
-		    else
-		    start-stop-daemon --start --quiet --exec /usr/sbin/afsd \
-			-- ${OPTIONS}
-		    echo -n " afsd"
-		    fi
-		if [ x$AFS_CRYPT = xtrue ] ; then
-		    fs setcrypt on
-		    fi
+generate_cacheinfo() {
+    if [ "$CACHESIZE" = "AUTOMATIC" ]; then
+	LINE=`df -k $CACHE | tail -1`
+	PART=`echo $LINE | awk '{ if ( ($NF != "/usr")  && ($NF != "/") ) print $NF; else print "NONE";}'`
+	if [ "$PART" = "NONE" ]; then
+	    echo "$CACHE or /usr/vice is not a separate partition"
+	    echo "you have to change the cachesize in $SYSCNF by hand"
+	    echo "AFS will be started with a VERY small cache of 8Mb."
+	    CACHESIZE=8000
+	else
+	    # Check to see if df has pretty-printed for long dev (i.e. LVM)
+            FCHAR=`echo $LINE | cut -c 1`
+            if [ "$FCHAR" = "/" ]; then
+                PARTSIZE=`echo $LINE | awk '{print $2}'`
+            else
+                PARTSIZE=`echo $LINE | awk '{print $1}'`
+	    fi
+	    CACHESIZE=`echo $PARTSIZE | awk '{printf "%d",int(($1*.8)/1000)*1000}'`
+	fi
+    fi
+    if [ "x$CACHESIZE" != "x" ]; then
+	echo $AFS:$CACHE:$CACHESIZE >$CACHEINFO
+	chmod 0644 $CACHEINFO
+    else
+	CACHESIZE=`awk -F: '{print $3}' < $CACHEINFO`
+    fi
 }
 
+choose_afsdoptions() {
+	if [ -z "$OPTIONS" -o "$OPTIONS" = "AUTOMATIC" ]; then
+		if [ $CACHESIZE -lt 131072 ]; then
+			OPTIONS=$SMALL
+		elif [ $CACHESIZE -lt 524288 ]; then
+			OPTIONS=$MEDIUM
+		elif [ $CACHESIZE -lt 1048576 ]; then
+			OPTIONS=$LARGE
+		elif [ $CACHESIZE -lt 2097152 ]; then
+			OPTIONS=$XLARGE
+		else
+			OPTIONS=$XXLARGE
+		fi
+	fi
+	AFSD_OPTIONS="$OPTIONS $VERBOSE"
+	if is_on $ENABLE_AFSDB; then
+		AFSD_OPTIONS="$AFSD_OPTIONS -afsdb"
+	fi
+	if is_on $ENABLE_DYNROOT; then
+		AFSD_OPTIONS="$AFSD_OPTIONS -dynroot"
+	fi
+}
 
 case "$1" in 
   start)
+    if [ ! "$afs_rh" -o ! -f /var/lock/subsys/afs ]; then
+        if [ `echo "$OPTIONS" | grep -c dynroot` = 0 ]; then
+            on_network || exit 1
+        fi
 	# Load kernel extensions
 	if  load_client  ; then :
 	else
@@ -175,59 +277,64 @@ case "$1" in
 		exit 1
 	fi
 
-	# Start AFS client
-	if  is_on $AFS_CLIENT && test -x /usr/sbin/afsd  ; then
-	    echo -n "Starting AFS services: "
-	start_client
-		echo "."
-		$AFS_POST_INIT
+	echo "Starting AFS services..... "
+	# Start bosserver, it if exists
+	if  is_on $AFS_SERVER && test -x /usr/afs/bin/bosserver  ; then
+		/usr/afs/bin/bosserver 
+		test "$afs_rh" && touch /var/lock/subsys/afs
 	fi
 
+	# Start AFS client
+	if  is_on $AFS_CLIENT && test -x /usr/vice/etc/afsd  ; then
+		generate_cacheinfo
+		choose_afsdoptions
+		/usr/vice/etc/afsd ${AFSD_OPTIONS}
+		test "$afs_rh" && touch /var/lock/subsys/afs
+		$AFS_POST_INIT
+	fi
+    fi
 	;;
 
-force-start)
-	# Load kernel extensions
-	if  load_client  ; then :
-	else
-		echo Failed to load AFS client, not starting AFS services.
-		exit 1
-	fi
-
-	# Start AFS client
-	if test -x /usr/sbin/afsd  ; then
-	    echo -n "Starting AFS services: "
-	start_client
-		echo "."
-		$AFS_POST_INIT
-	fi
-    	;;
-  stop|force-stop)
+  stop)
+    if [ ! "$afs_rh" -o -f /var/lock/subsys/afs ]; then
 	# Stop AFS
-	echo -n "Stopping AFS services: "
+	echo "Stopping AFS services..... "
 
-	if  mount |grep -q \^AFS  ; then
+	if  is_on $AFS_CLIENT  ; then
+		if [ -x /usr/vice/etc/killafs ] ; then
+			runcmd "Sending all processes using /afs the TERM signal ..." /usr/vice/etc/killafs TERM
+			runcmd "Sending all processes using /afs the KILL signal ..." /usr/vice/etc/killafs KILL
+		fi
 		umount /afs
-		echo -n " afsd"
 	fi
-	pidof /usr/sbin/afsd >/dev/null &&afsd -shutdown
 
-	LIBAFS=`/sbin/lsmod | fgrep openafs`
+	if  is_on $AFS_SERVER && test -x /usr/bin/bos ; then
+		echo "Stopping AFS bosserver"
+		/usr/bin/bos shutdown localhost -localauth -wait
+		killall -HUP bosserver
+	fi
+
+	LIBAFS=`/sbin/lsmod | fgrep libafs`
 	if [ -n "$LIBAFS" ] ; then
 		LIBAFS=`echo $LIBAFS | awk 'BEGIN { FS = " " } { print $1 }'`
 		/sbin/rmmod $LIBAFS
-		echo -n " libafs"
 	fi
-	echo "."
 
+	rm -f /var/lock/subsys/afs
+    fi
 	;;
 
-  restart|force-reload)
-	"$0" stop
-	"$0" start
+  restart)
+	# Restart AFS
+	$0 stop
+	$0 start
 	;;
 
   *)
-	echo Usage: 'openafs-client <start|stop>'
+	echo Usage: 'afs <start|stop|restart>'
 
 esac
 
+exit 0
+
+action fool the Red Hat initscripts

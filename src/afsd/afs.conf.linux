@@ -1,4 +1,4 @@
-
+#! /bin/sh
 # Copyright 2000, International Business Machines Corporation and others.
 # All Rights Reserved.
 # 
@@ -6,29 +6,66 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+############################################################################
+# On most linuces copy this file to
+#        /etc/sysconfig/afs
+# so afs.rc can use it as config file.
+############################################################################
+
 # Configuration information for AFS client
 
 # AFS_CLIENT and AFS_SERVER determine if we should start the client and or
-# the bosserver. Possible values are true and false.
-# These are loaded from files written by debconf
-# AFS_NOSETTIME is currently defaulted to auto because we believe  this is a reasonable default
-AFS_NOSETTIME=auto
-test -f /etc/openafs/afs.conf.client && . /etc/openafs/afs.conf.client
-
+# the bosserver. Possible values are on and off.
+AFS_CLIENT=on
 AFS_SERVER=off
 
 # ENABLE_AFSDB and ENABLE_DYNROOT determine whether AFSDB support and
 # Dynroot support (dynamically generated /afs), respectively, should be
 # enabled in the AFS client.
 ENABLE_AFSDB=on
-ENABLE_DYNROOT=off
+ENABLE_DYNROOT=on
 
 # AFS client configuration options:
-XXLARGE="-stat 4000 -dcache 4000 -daemons 6 -volumes 256 -files 50000"
-XLARGE="-stat 3600 -dcache 3600 -daemons 5 -volumes 196 -files 50000"
-LARGE="-stat 2800 -dcache 2400 -daemons 5 -volumes 128"
-MEDIUM="-stat 2000 -dcache 800 -daemons 3 -volumes 70"
-SMALL="-stat 300 -dcache 100 -daemons 2 -volumes 50"
+# ---------------------------------------------------------------------------
+# possible AFS client afsd configuration options (from 1.3.74) are
+#      -blocks     The number of blocks available in the workstation cache.
+#      -files      The target number of files in the workstation cache (Default:
+#                  1000).
+#      -rootvol            The name of the root volume to use.
+#      -stat       The number of stat cache entries.
+#      -hosts      List of servers to check for volume location info FOR THE
+#                  HOME CELL.
+#      -memcache   Use an in-memory cache rather than disk.
+#      -cachedir    The base directory for the workstation cache.
+#      -mountdir   The directory on which the AFS is to be mounted.
+#      -confdir    The configuration directory .
+#      -nosettime  Don't keep checking the time to avoid drift.
+#      -verbose     Be chatty.
+#      -debug     Print out additional debugging info.
+#      -kerndev    [OBSOLETE] The kernel device for AFS.
+#      -dontfork   [OBSOLETE] Don't fork off as a new process.
+#      -daemons   The number of background daemons to start (Default: 2).
+#      -rmtsys    Also fires up an afs remote sys call (e.g. pioctl, setpag)
+#                 support daemon
+#      -chunksize [n]   2^n is the chunksize to be used.  0 is default.
+#      -dcache    The number of data cache entries.
+#      -biods     Number of bkg I/O daemons (AIX3.1 only)
+#      -prealloc  Number of preallocated "small" memory blocks
+#      -pininodes Number of inodes which can be spared from inode[] for
+#                 pointing at Vfiles.  If this is set too high, you may have
+#                 system problems, which can only be ameliorated by changing
+#                 NINODE (or equivalent) and rebuilding the kernel.
+#                 This option is now disabled.
+#      -logfile   Place where to put the logfile (default in <cache>/etc/AFSLog.
+#      -waitclose make close calls always synchronous (slows em down, tho)
+#      -files_per_subdir [n]   number of files per cache subdir. (def=2048)
+#      -shutdown  Shutdown afs daemons
+# ---------------------------------------------------------------------------
+XXLARGE="-fakestat -stat 4000 -dcache 4000 -daemons 6 -volumes 256 -files 50000"
+XLARGE="-fakestat -stat 3600 -dcache 3600 -daemons 5 -volumes 196 -files 50000"
+LARGE="-fakestat -stat 2800 -dcache 2400 -daemons 5 -volumes 128"
+MEDIUM="-fakestat -stat 2000 -dcache 800 -daemons 3 -volumes 70"
+SMALL="-fakestat -stat 300 -dcache 100 -daemons 2 -volumes 50"
 
 # cachesize and according options are set by /afs/rc.d/init.d/afs
 #   * if you set CACHESIZE to "AUTOMATIC", it will automatically be chosen
@@ -37,45 +74,19 @@ SMALL="-stat 300 -dcache 100 -daemons 2 -volumes 50"
 #     of options based on the cache size
 # otherwise the values specified here will be used. So be careful!
 # Note: if you leave these as-is, no changes are made.
-CACHESIZE=
-OPTIONS=$MEDIUM
+CACHESIZE=AUTOMATIC
+#CACHESIZE=50000
+OPTIONS=AUTOMATIC
+#OPTIONS=$SMALL
 
-# if we're looking for ntp, what files do we look for?
-TIME_SBIN_PROGS="ntptime ntpd   chronyd"
-
-# Should we support afsdb?
-if [ "x$AFS_AFSDB" = "xtrue" ] ; then
-    AFSDB="-afsdb"
-    else AFSDB=""
-    fi
-if [ "x$AFS_DYNROOT" = "xtrue" ] ; then
-    DYNROOT="-dynroot"
-    else DYNROOT=""
-    fi
-if [ "x$AFS_FAKESTAT" = "xtrue" ] ; then
-    FAKESTAT="-fakestat"
-    else FAKESTAT=""
-    fi
-if [ "x$AFS_NOSETTIME" = "xtrue" ] ; then
-    NOSETTIME="-nosettime"
-  elif [ "x$AFS_NOSETTIME" = "xauto" ] ; then
-    for f in $TIME_SBIN_PROGS; do
-       test -e "/usr/sbin/$f" && {
-           NOSETTIME="-nosettime"
-           break
-       }
-    done
-  else
-    NOSETTIME=""
-  fi
+# you should never need to change these settings
+AFSDIR=/afs
+CACHEDIR=/usr/vice/cache
+CACHEINFO=/usr/vice/etc/cacheinfo
 
 # Set to "-verbose" for a lot of debugging information from afsd. Only
 # useful for debugging as it prints _a lot_ of information.
 VERBOSE=
-
-# OPTIONS are the options passed to afsd.
-OPTIONS="$OPTIONS $VERBOSE $DYNROOT $FAKESTAT $AFSDB $NOSETTIME"
-
 
 # Sample server preferences function. Set server preferences using this.
 # afs_serverprefs() {
