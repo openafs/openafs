@@ -281,6 +281,11 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
 #endif
 	}
 
+	if ((code = rx_Init(0)) != 0) {
+	    pam_afs_syslog(LOG_ERR, PAMAFS_KAERROR, code);
+	    RET(PAM_AUTH_ERR);
+	}
+
 	if (flags & PAM_REFRESH_CRED) {
 	    if (use_klog) {
 		auth_ok = !do_klog(user, password, "00:00:01", cell_ptr);

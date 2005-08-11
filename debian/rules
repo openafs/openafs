@@ -112,6 +112,8 @@ install: build
 	    debian/openafs-client/usr/bin/pagsh.openafs
 	install -m 644 -c dest/lib/pam_afs.so.1 \
 	    debian/libpam-openafs-kaserver/lib/security/pam_afs.so
+	install -m 644 -c dest/lib/pam_afs.krb.so.1 \
+	    debian/libpam-openafs-kaserver/lib/security/pam_afs.krb.so
 	install -m 644 -c debian/CellServDB \
 	    debian/openafs-client/usr/share/openafs
 	install -m 644 -c debian/afs.conf \

@@ -25,28 +25,31 @@ LDFLAGS = ${SHLIB_LDFLAGS}
 	  afs_pam_msg.o afs_message.o AFS_component_version_number.o
    OBJS = $(SHOBJS) test_pam.o
 INCLUDES=-I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} 
-CFLAGS =  ${DEBUG} ${INCLUDES} ${PAM_CFLAGS}
+CFLAGS =  ${DEBUG} ${INCLUDES} ${PAM_CFLAGS} ${MT_CFLAGS}
 
-all: test_pam ${TOP_LIBDIR}/pam_afs.so.1 
+all: test_pam ${TOP_LIBDIR}/pam_afs.so.1 ${TOP_LIBDIR}/pam_afs.krb.so.1
 
 afs_setcred.o: afs_setcred.c afs_pam_msg.h afs_message.h afs_util.h
-	${CC} ${CFLAGS} $(PAM_CFLAGS) -c ${srcdir}/afs_setcred.c -o afs_setcred.o
+	${CC} ${CFLAGS} -c ${srcdir}/afs_setcred.c -o afs_setcred.o
 
 afs_setcred_krb.o: afs_setcred.c afs_pam_msg.h afs_message.h afs_util.h
-	${CC} ${CFLAGS} $(PAM_CFLAGS)  -DAFS_KERBEROS_ENV -c ${srcdir}/afs_setcred.c -o afs_setcred_krb.o
+	${CC} ${CFLAGS} -DAFS_KERBEROS_ENV -c ${srcdir}/afs_setcred.c -o afs_setcred_krb.o
 
 afs_auth.o: afs_auth.c afs_pam_msg.h afs_message.h afs_util.h
-	${CC} ${CFLAGS}  $(PAM_CFLAGS)  -c ${srcdir}/afs_auth.c -o afs_auth.o
+	${CC} ${CFLAGS} -c ${srcdir}/afs_auth.c -o afs_auth.o
 
 afs_auth_krb.o: afs_auth.c afs_pam_msg.h afs_message.h afs_util.h
-	${CC} ${CFLAGS} $(PAM_CFLAGS)  -DAFS_KERBEROS_ENV  -c ${srcdir}/afs_auth.c -o afs_auth_krb.o
+	${CC} ${CFLAGS} -DAFS_KERBEROS_ENV  -c ${srcdir}/afs_auth.c -o afs_auth_krb.o
 
 afs_util.o: afs_util.c afs_pam_msg.h afs_message.h afs_util.h
-	${CC} ${CFLAGS} $(PAM_CFLAGS) -c ${srcdir}/afs_util.c -o afs_util.o
+	${CC} ${CFLAGS} -c ${srcdir}/afs_util.c -o afs_util.o
 
 
 afs_util_krb.o: afs_util.c afs_pam_msg.h afs_message.h afs_util.h
-	${CC} ${CFLAGS} $(PAM_CFLAGS) -DAFS_KERBEROS_ENV -c ${srcdir}/afs_util.c -o afs_util_krb.o
+	${CC} ${CFLAGS} -DAFS_KERBEROS_ENV -c ${srcdir}/afs_util.c -o afs_util_krb.o
+
+ktc.o: ${srcdir}/../auth/ktc.c
+	${CC} ${CFLAGS} -DAFS_KERBEROS_ENV -c ${srcdir}/../auth/ktc.c
 
 pam_afs.so.1: $(SHOBJS) afs_setcred.o afs_auth.o afs_util.o
 	set -x; \
@@ -61,7 +64,9 @@ pam_afs.so.1: $(SHOBJS) afs_setcred.o afs_auth.o afs_util.o
 			$(SHOBJS) $(LIBS) ;; \
 	*linux*) \
 		$(CC) $(LDFLAGS) $(PAM_CFLAGS) -o $@ afs_setcred.o \
-			afs_auth.o afs_util.o $(SHOBJS)   `find ../pic/ -name "*.o" | grep -v AFS_compo`  -lpam -lresolv;;\
+			afs_auth.o afs_util.o $(SHOBJS) \
+			../shlibafsauthent/[a-z]*.o ../shlibafsrpc/[a-z]*.o \
+			$(MT_LIBS) -lpam -lresolv;;\
 	*fbsd*| *nbsd*) \
 		$(CC) $(LDFLAGS) -o $@ afs_setcred.o \
 			afs_auth.o afs_util.o $(SHOBJS) $(LIBS) ;;\
@@ -69,7 +74,7 @@ pam_afs.so.1: $(SHOBJS) afs_setcred.o afs_auth.o afs_util.o
 		echo No link line for system $(SYS_NAME). ;; \
 	esac
 
-pam_afs.krb.so.1: $(SHOBJS) afs_setcred_krb.o afs_auth_krb.o afs_util_krb.o
+pam_afs.krb.so.1: $(SHOBJS) afs_setcred_krb.o afs_auth_krb.o afs_util_krb.o ktc.o
 	set -x; \
 	case "$(SYS_NAME)" in \
 	hp_ux* | ia64_hpux*) \
@@ -82,7 +87,10 @@ pam_afs.krb.so.1: $(SHOBJS) afs_setcred_krb.o afs_auth_krb.o afs_util_krb.o
 			$(SHOBJS) $(LDFLAGS) $(KLIBS) ;; \
 	*linux*) \
 		$(CC) $(LDFLAGS) -o $@ afs_setcred_krb.o \
-			afs_auth_krb.o afs_util_krb.o $(SHOBJS) $(KLIBS) ;;\
+			afs_auth_krb.o afs_util_krb.o ktc.o $(SHOBJS) \
+			`echo ../shlibafsauthent/[a-z]*.o | grep -v ktc.o` \
+			../shlibafsrpc/[a-z]*.o \
+			$(MT_LIBS) -lpam -lresolv;;\
 	*fbsd*| *nbsd*) \
 		$(CC) $(LDFLAGS) -o $@ afs_setcred_krb.o \
 			afs_auth_krb.o afs_util_krb.o $(SHOBJS) $(KLIBS) ;;\
@@ -154,5 +162,5 @@ ${TOP_LIBDIR}/pam_afs.krb.so.1: pam_afs.krb.so.1
 		${INSTALL} $? $@ ;; \
 	esac
 
-dest:  ${DEST}/lib/pam_afs.so.1
+dest: ${DEST}/lib/pam_afs.so.1 ${DEST}/lib/pam_afs.krb.so.1
 

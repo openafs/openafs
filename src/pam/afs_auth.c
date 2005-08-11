@@ -314,6 +314,10 @@ pam_sm_authenticate(pam_handle_t * pamh, int flags, int argc,
 	    if (cpid <= 0) {	/* The child process */
 		if (logmask && LOG_MASK(LOG_DEBUG))
 		    syslog(LOG_DEBUG, "in child");
+		if ((code = rx_Init(0)) != 0) {
+		    pam_afs_syslog(LOG_ERR, PAMAFS_KAERROR, code);
+		    exit(0);
+		}
 		if (refresh_token || set_token)
 		    code = ka_UserAuthenticateGeneral(KA_USERAUTH_VERSION, user,	/* kerberos name */
 						      NULL,	/* instance */
@@ -363,6 +367,10 @@ pam_sm_authenticate(pam_handle_t * pamh, int flags, int argc,
 	    pam_afs_syslog(LOG_ERR, PAMAFS_PAMERROR, errno);
 	}
     } else {			/* dont_fork, used by httpd */
+	if ((code = rx_Init(0)) != 0) {
+	    pam_afs_syslog(LOG_ERR, PAMAFS_KAERROR, code);
+	    RET(PAM_AUTH_ERR);
+	}
 	if (logmask && LOG_MASK(LOG_DEBUG))
 	    syslog(LOG_DEBUG, "dont_fork");
 	if (refresh_token || set_token)

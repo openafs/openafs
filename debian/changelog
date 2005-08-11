@@ -21,6 +21,11 @@ openafs (1.3.87-1) unstable; urgency=low
     they occur normally when doing the regular package build and are just
     confusing.  Instead, print an error in kern-sysname and abort if the
     kernel version could not be determined.
+  * Rework how PAM modules are handled.
+    - Build against the pthread-aware libraries.  (Closes: #297804)
+    - Use the shared library objects instead of building separate PIC
+      objects, eliminating the need for many Makefile modifications.
+    - Include pam_afs.krb.so as well.  (Closes: #165972)
   * Don't include the empty /usr/src/modules directory in
     openafs-modules-source, only the tarball, to match how other kernel
     module source packages behave.  (Closes: #244685)
@@ -30,7 +35,7 @@ openafs (1.3.87-1) unstable; urgency=low
     - Vietnamese, thanks Clytie Siddall.  (Closes: #319705)
     - Czech, thanks Martin Sin.  (Closes: #319940)
 
- -- Russ Allbery <rra@stanford.edu>  Wed, 10 Aug 2005 19:39:37 -0700
+ --
 
 openafs (1.3.82-2) unstable; urgency=low
 
