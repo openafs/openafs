@@ -206,7 +206,7 @@ binary-source:
 	chmod 775 debian/$(srcpkg)/usr/src/modules
 	cd debian/$(srcpkg)/usr/src && \
 	    tar cf $(package).tar modules && \
-	    rm -r modules/$(package)
+	    rm -r modules
 	gzip -9 debian/$(srcpkg)/usr/src/$(package).tar
 	chmod 644 debian/$(srcpkg)/usr/src/$(package).tar.gz
 
