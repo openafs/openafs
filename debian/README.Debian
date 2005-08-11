@@ -1,30 +1,37 @@
 OpenAFS for Debian
 ------------------
 
-* AFS users may be confused by the directory layout.  The files that
-  normally go in /usr/vice/etc go in /etc/openafs.  The cache should be
-  mounted on /var/cache/openafs.
+* Long-time AFS users may be confused by the directory layout.  The files
+  that normally go in /usr/vice/etc go in /etc/openafs.  The cache should
+  be mounted on /var/cache/openafs.
 
 * The AFS client cache must be on an ext2 or ext3 partition.  Other file
   systems often do not support the semantics required by the AFS kernel
   module and will cause kernel faults.  In particular, XFS and ReiserFS
   will NOT work.
 
-* No manual pages are included.  I need to find out if versions exist
-  that are OK for copyright reasons.
+* Read /etc/openafs/afs.conf to understand the client configuration
+  options.  The openafs-client package will attempt to guess at a good
+  cache configuration based on the size of your cache, but you may want
+  to tune it further.  There are also other options configured in that
+  file you may want to consider.
+
+* No manual pages are included.  Work is underway upstream to write man
+  pages for all of the commands based on the old HTML reference manual,
+  but that work is not complete yet.
 
 * Documentation can be found at http://www.openafs.org.  If want to
   set up a new cell, read the docs there and then look at the example
   session in configuration-transcript.txt.gz in this directory.  You
   should also read README.servers.  The procedure outlined in these two
-  files is much simpler and more secure than the one in the Openafs
-  documentation, but the Openafs documentation provides useful background.
+  files is much simpler and more secure than the one in the OpenAFS
+  documentation, but the OpenAFS documentation provides useful background.
 
 * The libopenafs-dev package only includes static libraries because
   the shared libraries built by AFS are not compatible with Debian policy.
-  They include non-PIC code and do not have a stable ABI.
+  They do not have a stable ABI or an appropriate SONAME.
 
 * kaserver is not included.  New AFS cells should use Kerberos v5 rather
   than the old K4-based kaserver KDC.
 
- -- Russ Allbery <rra@stanford.edu>, Sat Apr 30 11:15:25 2005
+ -- Russ Allbery <rra@stanford.edu>, Thu Aug 11 10:37:50 2005
