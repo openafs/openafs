@@ -23,6 +23,7 @@ openafs (1.3.87-1) unstable; urgency=low
   * Don't include the empty /usr/src/modules directory in
     openafs-modules-source, only the tarball, to match how other kernel
     module source packages behave.  (Closes: #244685)
+  * Update config.guess and config.sub.
   * Translation updates.
     - French, thanks Christian Perrier.  (Closes: #318807)
     - Vietnamese, thanks Clytie Siddall.  (Closes: #319705)
