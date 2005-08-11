@@ -10,6 +10,11 @@ openafs (1.3.87-1) unstable; urgency=low
     - Choose the client options based on the cache size by default.
     - Move the code to build the options string to the init script from
       afs.conf so that afs.conf is pure configuration.
+    - Add an AFS_PRE_SHUTDOWN hook called before shutting down the client.
+    - Provide a shutdown hook, disabled by default, that kills all
+      processes with files open in /afs.  Enabling this ensures a more
+      reliable clean shutdown and umounting of the cache partition, but
+      may not always be what the admin wants.
     - Improve the readability of the output on start.
     - Significantly improve the comments in afs.conf.
     - Remove the code to set -nosettime as it's now the default.

@@ -139,6 +139,34 @@ start_client() {
     fi
 }
 
+# Kill all processes that are accessing AFS.  Not enabled by default, and
+# normally called via kill_all_afs.  Warns and does nothing if lsof is not
+# installed.
+kill_afs() {
+    signal=$1
+    pids=`/usr/bin/lsof -Fp /afs | sed 's/p//'`
+    if [ -n "$pids" ] ; then
+        kill -$signal $pids > /dev/null 2>&1
+        sleep 1
+    fi
+}
+
+# Repeatedly call kill_afs for a series of signals to give AFS-using processes
+# a hope of shutting down cleanly.  Not enabled by default.  Enable this in
+# /etc/openafs/afs.conf (but see the warning in that file).
+kill_all_afs() {
+    if [ -x /usr/bin/lsof ] ; then
+        echo -n "Killing processes with AFS files open: "
+        kill_afs HUP
+        kill_afs TERM
+        kill_afs ABRT
+        kill_afs KILL
+        echo "done."
+    else
+        echo '/usr/bin/lsof not found, not killing processes' >&2
+    fi
+}
+
 
 case "$1" in 
 start)
@@ -170,6 +198,7 @@ force-start)
     ;;
 
 stop|force-stop)
+    $AFS_PRE_SHUTDOWN
     echo -n "Stopping AFS services:"
     if mount | grep -q '^AFS' ; then
         umount /afs
