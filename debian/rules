@@ -21,7 +21,6 @@ else
 endif
 
 # The AFS sysname is determined by a script
-SYS_NAME := $(shell KVERS=$(KVERS) sh debian/sysname)
 ifndef KSRC
     KSRC = /usr/src/linux
 endif
@@ -29,6 +28,7 @@ ifndef KPKG_DEST_DIR
     KPKG_DEST_DIR = ..
 endif
 KVERS := `perl -e '$$_ = <>; $$_ =~ m/"(.+)"/; print "$$1\n";' $(KSRC)/include/linux/version.h 2> /dev/null`
+SYS_NAME := $(shell KVERS=$(KVERS) sh debian/sysname)
 export KSRC 
 export KVERS
 export KPKG_DEST_DIR
