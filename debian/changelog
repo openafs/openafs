@@ -408,7 +408,7 @@ openafs (1.2.7-2) unstable; urgency=low
 
 openafs (1.2.7-1) unstable; urgency=low
 
-  * Fix typo in templates, Closes: #150356fg
+  * Fix typo in templates, Closes: #150356
   
   * New upstream version
 
@@ -724,11 +724,9 @@ openafs (1.0.1-2) unstable; urgency=medium
   * Only run init script once; confusion with DH_OPTIONS
   * Fix bosserver to look in /usr/openafs/lib so it restarts correctly every Sunday.
   * Upload to Debian (Gloses: BUG#69336)
+  * Do not generate .map file for module; depmod complains.
+
  -- Sam Hartman <hartmans@debian.org>  Wed,  6 Dec 2000 11:21:53 -0500
-
-Do not generate .map file for module; depmod complains.  * 
-
- --
 
 openafs (1.0.1-1) unstable; urgency=low
 
