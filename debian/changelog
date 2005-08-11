@@ -1,6 +1,7 @@
 openafs (1.3.87-1) unstable; urgency=low
 
   * New upstream version.
+    - Fixes build problems with 2.6.12.3 and later.  (Closes: #320099)
   * Add support for ppc64, thanks Andreas Jochens.  (Closes: #322020)
   * Improve the openafs-client init script.
     - Update the default client options based on the cache tuning synopsis
@@ -29,7 +30,7 @@ openafs (1.3.87-1) unstable; urgency=low
     - Vietnamese, thanks Clytie Siddall.  (Closes: #319705)
     - Czech, thanks Martin Sin.  (Closes: #319940)
 
- --
+ -- Russ Allbery <rra@stanford.edu>  Wed, 10 Aug 2005 19:39:37 -0700
 
 openafs (1.3.82-2) unstable; urgency=low
 
