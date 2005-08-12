@@ -52,7 +52,7 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
     int refresh_token = 0;
     int set_expires = 0;	/* the default is to not to set the env variable */
     int use_klog = 0;
-    int i;
+    int i, code;
     struct pam_conv *pam_convp = NULL;
     char my_password_buf[256];
     char *cell_ptr = NULL;
