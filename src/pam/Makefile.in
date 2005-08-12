@@ -88,7 +88,7 @@ pam_afs.krb.so.1: $(SHOBJS) afs_setcred_krb.o afs_auth_krb.o afs_util_krb.o ktc.
 	*linux*) \
 		$(CC) $(LDFLAGS) -o $@ afs_setcred_krb.o \
 			afs_auth_krb.o afs_util_krb.o ktc.o $(SHOBJS) \
-			`echo ../shlibafsauthent/[a-z]*.o | grep -v ktc.o` \
+			`ls ../shlibafsauthent/[a-z]*.o | grep -v ktc.o` \
 			../shlibafsrpc/[a-z]*.o \
 			$(MT_LIBS) -lpam -lresolv;;\
 	*fbsd*| *nbsd*) \
@@ -162,5 +162,5 @@ ${TOP_LIBDIR}/pam_afs.krb.so.1: pam_afs.krb.so.1
 		${INSTALL} $? $@ ;; \
 	esac
 
-dest: ${DEST}/lib/pam_afs.so.1 ${DEST}/lib/pam_afs.krb.so.1
+dest:  ${DEST}/lib/pam_afs.so.1 ${DEST}/lib/pam_afs.krb.so.1
 
