@@ -254,6 +254,9 @@ else
 		i?86-*-openbsd3.7)
 			AFS_SYSNAME="i386_obsd37"
 			;;
+		i?86-*-openbsd3.8)
+			AFS_SYSNAME="i386_obsd38"
+			;;
 		i?86-*-freebsd4.2*)
 			AFS_SYSNAME="i386_fbsd_42"
 			;;
@@ -1019,7 +1022,7 @@ fi
 AC_SUBST(BUILD_LOGIN)
 
 AC_CHECK_FUNCS(utimes random srandom getdtablesize snprintf strlcat strlcpy re_comp re_exec)
-AC_CHECK_FUNCS(setprogname getprogname sigaction mkstemp vsnprintf strerror)
+AC_CHECK_FUNCS(setprogname getprogname sigaction mkstemp vsnprintf strerror strcasestr)
 
 AC_CHECK_FUNCS(regcomp regexec regerror)
 AC_MSG_CHECKING([for POSIX regex library])
