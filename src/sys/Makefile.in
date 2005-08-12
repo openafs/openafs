@@ -14,20 +14,10 @@ CFLAGS=-I. -I${srcdir} ${DBUG} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR}  ${XCF
 SFLAGS=-P -I${TOP_INCDIR}
 LIBS=libsys.a ${TOP_LIBDIR}/librx.a libsys.a ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/util.a ${XLIBS}
 
-PICTARGET =../pic/sys
-PICOBJS = $(patsubst %.o,$(PICTARGET)/%.o,$(OBJS))
-$(PICTARGET)/%.o: %.c $(PICTARGET)
-	$(CC) -c $(PAM_CFLAGS) ${CFLAGS} $< -o $@
-
-$(PICTARGET):
-	mkdir -p $(PICTARGET)
-
-OBJS = afssyscalls.o $(RMTOBJS)
-
 OBJECTS= afssyscalls.o syscall.o
 RMTOBJS=rmtsysnet.o rmtsysc.o rmtsys.cs.o rmtsys.xdr.o rmtsys.ss.o rmtsyss.o 
 
-all: $(PICOBJS) \
+all: \
 	rmtsysd \
 	pagsh \
 	pagsh.krb \
@@ -79,7 +69,6 @@ afssyscalls.o: afssyscalls.c afssyscalls.h
 	${CCOBJ} ${CFLAGS} -c ${srcdir}/afssyscalls.c
 
 rmtsysnet.o rmtsysc.o rmtsyss.o rmtsysd.o: rmtsys.h
-$(PICTARGET)/rmtsysnet.o $(PICTARGET)/rmtsysc.o: rmtsys.h
 rmtsysd: AFS_component_version_number.o afs.exp afsl.exp
 
 rmtsys.cs.c: rmtsys.xg
@@ -282,4 +271,4 @@ clean:
 	$(RM) -f *.o libsys.a xfsinode iinc idec icreate iopen istat core \
 	rmtsysc rmtsyss *.o rmtsys.ss.c rmtsys.cs.c rmtsys.xdr.c rmtsys.h \
 	rmtsysd AFS_component_version_number.c pagsh pagsh.krb \
-	afs.exp afsl.exp $(PICOBJS)
+	afs.exp afsl.exp

@@ -16,14 +16,6 @@ objects = assert.o base64.o casestrcpy.o ktime.o volparse.o hostparse.o \
 	 afs_atomlist.o afs_lhash.o snprintf.o strlcat.o strlcpy.o \
 	 daemon.o rxkstats.o ${REGEX_OBJ}
 
-PICTARGET =../pic/util
-PICOBJS = $(patsubst %.o,$(PICTARGET)/%.o,$(objects)) 
-$(PICTARGET)/%.o: %.c $(PICTARGET)
-	$(CC) -c $(PAM_CFLAGS) $(CFLAGS) $< -o $@
-
-$(PICTARGET):
-	mkdir -p $(PICTARGET)
-
 includes = \
 	${TOP_INCDIR}/afs/dirpath.h \
 	${TOP_INCDIR}/afs/pthread_nosigs.h \
@@ -46,7 +38,7 @@ includes = \
 all: ${includes} \
 	${TOP_LIBDIR}/util.a \
 	${TOP_LIBDIR}/libafsutil.a \
-	sys $(PICOBJS)
+	sys
 
 depinstall: ${includes}
 
@@ -363,7 +355,7 @@ ${DEST}/bin/sys: sys
 
 clean:
 	$(RM) -f ${objects} sys dirpath.h
-	$(RM) -f util.a *.o core AFS_component_version_number.c $(PICTARGET)/*.o
+	$(RM) -f util.a *.o core AFS_component_version_number.c
 
 test:
 	cd test; $(MAKE)

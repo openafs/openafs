@@ -22,15 +22,7 @@ KSRCS=auth.h
 UKSRCS=${KSRCS} cellconfig.h acfg_errors.c keys.h cellconfig.c \
        ktc.c authcon.c ktc_errors.c
 
-PICTARGET =../pic/auth
-PICOBJS = $(patsubst %.o,$(PICTARGET)/%.o,$(OBJS))
-$(PICTARGET)/%.o: %.c $(PICTARGET)
-	$(CC) -c $(PAM_CFLAGS) $(CFLAGS) $< -o $@
-
-all: ${TOP_LIBDIR}/libauth.a ${TOP_LIBDIR}/libauth.krb.a depinstall copyauth setkey $(PICOBJS)
-
-$(PICTARGET):
-	mkdir -p $(PICTARGET)
+all: ${TOP_LIBDIR}/libauth.a ${TOP_LIBDIR}/libauth.krb.a depinstall copyauth setkey
 
 depinstall: ${TOP_INCDIR}/afs/keys.h ${TOP_INCDIR}/afs/cellconfig.h ${TOP_INCDIR}/afs/auth.h
 
@@ -105,7 +97,7 @@ test:
 
 clean:
 	$(RM) -f *.o *.a copyauth setkey auth.h cellconfig.h acfg_errors.c ktc_errors.c core\
-	AFS_component_version_number.c $(PICTARGET)/*.o
+	AFS_component_version_number.c
 
 include ../config/Makefile.version
 ${DESTDIR}${libdir}/afs/libauth.a: libauth.a

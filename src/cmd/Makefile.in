@@ -11,18 +11,6 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 LIBOBJS=cmd_errors.o cmd.o 
 LIB64OBJS=cmd_errors64.o cmd64.o 
 
-PICTARGET =../pic/cmd
-PICOBJS = $(patsubst %.o,$(PICTARGET)/%.o,$(LIBOBJS))
-PIC64OBJS = $(patsubst %.o,$(PICTARGET)/%.o,$(LIB64OBJS))
-$(PICTARGET)/%.o: %.c $(PICTARGET)
-	$(CC) -c $(PAM_CFLAGS) $(CFLAGS) $< -o $@
-
-$(PICTARGET)/%64.o: %.c $(PICTARGET)
-	$(CC) -c $(PAM_CFLAGS) $(CFLAGS)${XCFLAGS64} $< -o $@
-
-$(PICTARGET):
-	mkdir -p $(PICTARGET)
-
 all: ${TOP_LIBDIR}/libcmd.a ${TOP_INCDIR}/afs/cmd.h
 
 all64: all ${TOP_LIBDIR}/libcmd64.a
@@ -44,12 +32,12 @@ cmd64.o: cmd.c cmd.h
 	${CC} ${OPTMZ} -I. -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS64} -c -o cmd64.o ${srcdir}/cmd.c
 
 
-libcmd64.a: ${LIB64OBJS} AFS_component_version_number64.o 
+libcmd64.a: ${LIB64OBJS} AFS_component_version_number64.o
 	-$(RM) -f $@
 	$(AR) crv $@ ${LIB64OBJS} AFS_component_version_number64.o
 	$(RANLIB) $@
 
-libcmd.a: ${LIBOBJS} AFS_component_version_number.o $(PICOBJS)
+libcmd.a: ${LIBOBJS} AFS_component_version_number.o
 	-$(RM) -f $@
 	$(AR) crv $@ ${LIBOBJS} AFS_component_version_number.o
 	$(RANLIB) $@
@@ -80,7 +68,7 @@ test tests:
 	(cd test; $(MAKE) )
 
 clean:
-	$(RM) -f  *.a *.o ctest dtest cmd.h cmd_errors.c core AFS_component_version_number.c $(PICTARGET)/*.o
+	$(RM) -f  *.a *.o ctest dtest cmd.h cmd_errors.c core AFS_component_version_number.c
 
 include ../config/Makefile.version
 ${DESTDIR}${libdir}/afs/libcmd.a: libcmd.a

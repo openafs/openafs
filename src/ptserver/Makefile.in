@@ -38,18 +38,8 @@ LIBS=${TOP_LIBDIR}/libubik.a \
 	${TOP_LIBDIR}/libsys.a \
 	${TOP_LIBDIR}/libafsutil.a
 
-LIBOBJS = ptuser.o pterror.o ptint.cs.o ptint.xdr.o 
-
-PICTARGET =../pic/ptserver
-PICOBJS = $(patsubst %.o,$(PICTARGET)/%.o,$(LIBOBJS))
-$(PICTARGET)/%.o: %.c $(PICTARGET)
-	$(CC) -c $(PAM_CFLAGS) $(CFLAGS) $< -o $@
-
 all: ptserver pts pt_util db_verify ${TOP_LIBDIR}/libprot.a \
-	depinstall readgroup readpwd testpt $(PICOBJS)
-
-$(PICTARGET):
-	mkdir -p $(PICTARGET)
+	depinstall readgroup readpwd testpt
 
 depinstall: \
 	ptint.cs.c ptint.xdr.c \
@@ -233,7 +223,7 @@ ${DEST}/include/afs/ptuser.h: ptuser.h
 clean:
 	$(RM) -f *.a *.o ptserver ptint.cs.c ptint.ss.c ptclient ptint.xdr.c ptint.h \
 	libprot.a pts readgroup readpwd db_verify testpt pt_util pterror.h pterror.c \
-	core AFS_component_version_number.c Kptint.cs.c Kptint.h Kptint.xdr.c $(PICTARGET)/*.o
+	core AFS_component_version_number.c Kptint.cs.c Kptint.h Kptint.xdr.c
 
 include ../config/Makefile.version
 ${DESTDIR}${afssrvlibexecdir}/ptserver: ptserver

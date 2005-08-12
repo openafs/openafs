@@ -15,15 +15,7 @@ CFLAGS=${LWP_DBG} ${LWP_OPTMZ} ${XCFLAGS} ${COMMON_INCL}
 LIBOBJS=lwp.o process.o lock.o iomgr.o timer.o fasttime.o preempt.o \
 	waitkey.o threadname.o AFS_component_version_number.o
 
-PICTARGET =../pic/lwp
-PICOBJS = $(patsubst %.o,$(PICTARGET)/%.o,$(LIBOBJS))
-$(PICTARGET)/%.o: %.c $(PICTARGET)
-	$(CC) -c $(PAM_CFLAGS) $(CFLAGS) $< -o $@
-
-all: ${TOP_LIBDIR}/liblwp.a ${TOP_INCDIR}/lock.h ${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/preempt.h ${TOP_INCDIR}/timer.h $(PICOBJS)
-
-$(PICTARGET):
-	mkdir -p $(PICTARGET)
+all: ${TOP_LIBDIR}/liblwp.a ${TOP_INCDIR}/lock.h ${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/preempt.h ${TOP_INCDIR}/timer.h
 
 depinstall: ${TOP_INCDIR}/lock.h ${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/preempt.h ${TOP_INCDIR}/timer.h
 
@@ -149,7 +141,7 @@ ${DEST}/include/timer.h: timer.h
 # Misc. targets
 #
 clean:
-	$(RM) -f *.o *.a core AFS_component_version_number.c $(PICTARGET)/*.o
+	$(RM) -f *.o *.a core AFS_component_version_number.c
 
 include ../config/Makefile.version
 ${DESTDIR}${libdir}/liblwp.a: liblwp.a

@@ -41,19 +41,11 @@ BASICINCLS=${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/lock.h \
 LIBS=librx.a ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/libcmd.a \
 	       ${TOP_LIBDIR}/util.a
 
-PICTARGET =../pic/rx
-PICOBJS = $(patsubst %.o,$(PICTARGET)/%.o,$(LIBOBJS))
-$(PICTARGET)/%.o: %.c $(PICTARGET)
-	$(CC) -c $(PAM_CFLAGS) $(CFLAGS) $< -o $@
-
 all: \
 	includes \
-	${TOP_LIBDIR}/librx.a $(PICOBJS)
+	${TOP_LIBDIR}/librx.a
 
 depinstall: includes
-
-$(PICTARGET):
-	mkdir -p $(PICTARGET)
 
 install-djgpp: \
 	includes \
@@ -317,6 +309,6 @@ ${DEST}/include/rx/xdr_prototypes.h: xdr_prototypes.h
 # Misc. targets
 #
 clean:
-	$(RM) -f *.o *.a core *_component_version_number.c $(PICTARGET)/*.o
+	$(RM) -f *.o *.a core *_component_version_number.c
 
 include ../config/Makefile.version

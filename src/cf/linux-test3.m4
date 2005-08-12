@@ -40,7 +40,7 @@ else
   save_CPPFLAGS="$CPPFLAGS"
   CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $RHCONFIG_SP $CPPFLAGS"
   AC_MSG_CHECKING(which kernel modules to build)
-  if false; then
+  if test "x$ac_linux_rhconfig" = "xyes"; then
       MPS="MP SP"
   else
   AC_CACHE_VAL(ac_cv_linux_config_smp, [

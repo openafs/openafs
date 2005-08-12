@@ -37,11 +37,9 @@ libaudit.a: audit.o AFS_component_version_number.o
 
 audit.o: audit.c audit.h 
 	${CC} ${CFLAGS} -c ${srcdir}/audit.c
-	-mkdir -p ../pic/audit
-	${CC} ${CFLAGS} -c audit.c -fPIC -o ../pic/audit/audit.o
 
 clean:
-	$(RM) -f *.a *.o core AFS_component_version_number.c $(PICTARGET)/*.o ../pic/audit/audit.o
+	$(RM) -f *.a *.o core AFS_component_version_number.c
 
 include ../config/Makefile.version
 ${DESTDIR}${libdir}/afs/libaudit.a: libaudit.a

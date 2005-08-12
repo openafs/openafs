@@ -21,17 +21,7 @@ compile_et:	compile_et.o error_table.o
 	${CC} ${CFLAGS} -o compile_et compile_et.o error_table.o -L${TOP_LIBDIR} -lafsutil -ll;; \
 	esac
 
-OBJS = error_msg.o et_name.o com_err.o
-
-PICTARGET =../pic/comerr
-PICOBJS = $(patsubst %.o,$(PICTARGET)/%.o,$(OBJS))
-$(PICTARGET)/%.o: %.c $(PICTARGET)
-	$(CC) -c $(PAM_CFLAGS) $(CFLAGS) $< -o $@
-
-$(PICTARGET):
-	mkdir -p $(PICTARGET)
-
-libcom_err.a: error_msg.o et_name.o com_err.o AFS_component_version_number.o $(PICOBJS)
+libcom_err.a: error_msg.o et_name.o com_err.o AFS_component_version_number.o
 	$(RM) -f $@
 	$(AR) crv $@ error_msg.o et_name.o com_err.o AFS_component_version_number.o
 	$(RANLIB) $@
@@ -60,7 +50,7 @@ clean:
 		*.cp *.fn *.ky *.log *.pg *.tp *.vr *.o libcom_err.a \
 		com_err.o compile_et et.ar TAGS y.tab.c lex.yy.c error_table.c \
 		et_lex.lex.c test1.h test1.c test2.h test2.c \
-		eddep makedep core AFS_component_version_number.c $(PICTARGET)/*.o
+		eddep makedep core AFS_component_version_number.c
 
 test:
 	cd test; $(MAKE)

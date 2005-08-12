@@ -20,17 +20,12 @@ LIBS=${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/liblwp.a \
      ${TOP_LIBDIR}/libcom_err.a ${TOP_LIBDIR}/libcmd.a \
      ${TOP_LIBDIR}/util.a ${TOP_LIBDIR}/libsys.a ${XLIBS}
 
-PICTARGET =../pic/ubik
-PICOBJS = $(patsubst %.o,$(PICTARGET)/%.o,$(LIBOBJS))
-$(PICTARGET)/%.o: %.c $(PICTARGET)
-	$(CC) -c $(PAM_CFLAGS) $(CFLAGS) $< -o $@
+all: depinstall ${TOP_LIBDIR}/libubik.a udebug utst_server utst_client
+
 depinstall: \
 	ubik_int.cs.c ubik_int.xdr.c \
 	${TOP_INCDIR}/ubik.h \
 	${TOP_INCDIR}/ubik_int.h
-
-$(PICTARGET):
-	mkdir -p $(PICTARGET)
 
 utst_server: utst_server.o utst_int.ss.o utst_int.xdr.o libubik.a 
 	${CC} ${CFLAGS} -o utst_server utst_server.o utst_int.ss.o utst_int.xdr.o libubik.a $(LIBS)
@@ -150,7 +145,7 @@ ${DEST}/include/ubik_int.h: ubik_int.h
 #
 clean:
 	$(RM) -f *.o utst_server utst_client udebug *.a *.cs.c *.ss.c *.xdr.c
-	$(RM) -f utst_int.h ubik_int.h uerrors.c ubik.h core AFS_component_version_number.c Kubik_int.h $(PICTARGET)/*.o
+	$(RM) -f utst_int.h ubik_int.h uerrors.c ubik.h core AFS_component_version_number.c Kubik_int.h
 
 include ../config/Makefile.version
 
