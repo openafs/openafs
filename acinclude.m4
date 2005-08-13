@@ -233,29 +233,11 @@ if test "x$with_afs_sysname" != "x"; then
 else
 	AC_MSG_CHECKING(your AFS sysname)
 	case $host in
-		i?86-*-openbsd3.1)
-			AFS_SYSNAME="i386_obsd31"
-			;;
-		i?86-*-openbsd3.2)
-			AFS_SYSNAME="i386_obsd32"
-			;;
-		i?86-*-openbsd3.3)
-			AFS_SYSNAME="i386_obsd33"
-			;;
-		i?86-*-openbsd3.4)
-			AFS_SYSNAME="i386_obsd34"
-			;;
-		i?86-*-openbsd3.5)
-			AFS_SYSNAME="i386_obsd35"
-			;;
-		i?86-*-openbsd3.6)
-			AFS_SYSNAME="i386_obsd36"
-			;;
-		i?86-*-openbsd3.7)
-			AFS_SYSNAME="i386_obsd37"
-			;;
-		i?86-*-openbsd3.8)
-			AFS_SYSNAME="i386_obsd38"
+		i?86-*-openbsd?.?)
+			v=${host#*openbsd}
+			vM=${v%.*}
+			vm=${v#*.}
+			AFS_SYSNAME="i386_obsd${vM}${vm}"
 			;;
 		i?86-*-freebsd4.2*)
 			AFS_SYSNAME="i386_fbsd_42"
