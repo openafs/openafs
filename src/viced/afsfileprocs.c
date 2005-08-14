@@ -2441,7 +2441,8 @@ SRXAFS_FetchACL(struct rx_call * acall, struct AFSFid * Fid,
 
     osi_auditU(acall, FetchACLEvent, errorCode, 
                AUD_ID, t_client ? t_client->ViceId : 0,
-               AUD_FID, Fid, AUD_END);
+               AUD_FID, Fid, 
+               AUD_ACL, AccessList->AFSOpaque_val, AUD_END);
     return errorCode;
 }				/*SRXAFS_FetchACL */
 
