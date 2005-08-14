@@ -113,7 +113,7 @@ test_pam: test_pam.o
 		echo No link line for system $(SYS_NAME). ;; \
 	esac
 
-install:  ${DESTDIR}${libdir}/pam_afs.so.1 
+install:  ${DESTDIR}${libdir}/pam_afs.so.1 ${DESTDIR}${libdir}/pam_afs.krb.so.1
 
 ${DEST}/lib/pam_afs.so.1: pam_afs.so.1
 	${INSTALL} $? $@

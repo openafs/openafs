@@ -38,6 +38,7 @@ LIBS=${TOP_LIBDIR}/libubik.a \
 	${TOP_LIBDIR}/libsys.a \
 	${TOP_LIBDIR}/libafsutil.a
 
+
 all: ptserver pts pt_util db_verify ${TOP_LIBDIR}/libprot.a \
 	depinstall readgroup readpwd testpt
 

@@ -51,6 +51,7 @@ KLIBS=${TOP_LIBDIR}/libubik.a \
 OBJS=kauth.xdr.o kauth.cs.o kaaux.o client.o authclient.o token.o kautils.o kalocalcell.o kaerrors.o user.o krb_tf.o 
 KOBJS=kauth.xdr.o kauth.cs.o kaaux.o client.o authclient.o token.o kautils.o kalocalcell.o kaerrors.o user.krb.o krb_tf.o
 
+
 all: kaserver kas kpwvalid klog klog.krb knfs kpasswd rebuild kdb \
 	${TOP_LIBDIR}/libkauth.a \
 	${TOP_LIBDIR}/libkauth.krb.a \
