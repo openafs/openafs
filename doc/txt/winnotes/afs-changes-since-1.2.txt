@@ -1,3 +1,15 @@
+Since 1.3.87:
+ * afscreds.exe would display an Obtain Creds dialog when
+   the expired credentials reminder was triggered even 
+   if there was no network path to the KDC.  This is prevented
+   by adding KDC probe logic to the reminder thread.  
+
+ * afscreds.exe would display expired tokens no differently
+   than unexpired ones.  This would make it difficult for the
+   user to distiguish when the tokens were expired.  For the 
+   English build added a new resource string "(expired) that
+   is displayed instead of the expiration time. 
+
 Since 1.3.86:
  * "fs wscell" when executed in freelance mode will return the
    name of the cell configured in the registry.  The root.afs
