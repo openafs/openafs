@@ -40,7 +40,7 @@ openafs (1.3.87-1) unstable; urgency=low
     - Vietnamese, thanks Clytie Siddall.  (Closes: #319705)
     - Czech, thanks Martin Sin.  (Closes: #319940)
 
- --
+ -- Russ Allbery <rra@stanford.edu>  Sun, 14 Aug 2005 14:41:48 -0700
 
 openafs (1.3.82-2) unstable; urgency=low
 
