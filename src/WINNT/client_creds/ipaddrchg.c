@@ -295,10 +295,12 @@ ObtainTokensFromUserIfNeeded(HWND hWnd)
     }
 
     rootcell = (char *)GlobalAlloc(GPTR,MAXCELLCHARS+1);
-    if ( !rootcell ) goto cleanup;
+    if (!rootcell) 
+        goto cleanup;
 
     code = KFW_AFS_get_cellconfig(cell, (void*)&cellconfig, rootcell);
-    if ( code ) goto cleanup;
+    if (code) 
+        goto cleanup;
 
     memset(&aserver, '\0', sizeof(aserver));
     strcpy(aserver.name, "afs");
@@ -330,7 +332,7 @@ ObtainTokensFromUserIfNeeded(HWND hWnd)
 #ifdef USE_FSPROBE
     serverReachable = cellPing(NULL);
 #else
-    if ( use_kfw ) {
+    if (use_kfw) {
         // If we can't use the FSProbe interface we can attempt to forge
         // a kinit and if we can back an invalid user error we know the
         // kdc is at least reachable

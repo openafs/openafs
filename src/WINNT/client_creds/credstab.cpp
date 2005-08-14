@@ -162,7 +162,24 @@ void Creds_OnUpdate (HWND hDlg)
       SYSTEMTIME stGMT;
       FileTimeToSystemTime (&ftGMT, &stGMT);
 
-      LPTSTR pszCreds = FormatString (IDS_CREDS, TEXT("%s%t"), g.aCreds[ iCreds ].szUser, &stGMT);
+      SYSTEMTIME stNow;
+      GetLocalTime (&stNow);
+
+      FILETIME ftNow;
+      SystemTimeToFileTime (&stNow, &ftNow);
+
+      LONGLONG llNow = (((LONGLONG)ftNow.dwHighDateTime) << 32) + (LONGLONG)(ftNow.dwLowDateTime);
+      LONGLONG llExpires = (((LONGLONG)ftLocal.dwHighDateTime) << 32) + (LONGLONG)(ftLocal.dwLowDateTime);
+
+      llNow /= c100ns1SECOND;
+      llExpires /= c100ns1SECOND;
+
+      LPTSTR pszCreds = NULL;
+      if (llExpires <= (llNow + (LONGLONG)cminREMIND_WARN * csec1MINUTE))
+          pszCreds = FormatString (IDS_CREDS_EXPIRED, TEXT("%s"), g.aCreds[ iCreds ].szUser);
+
+      if (!pszCreds || !pszCreds[0])
+          pszCreds = FormatString (IDS_CREDS, TEXT("%s%t"), g.aCreds[ iCreds ].szUser, &stGMT);
       SetDlgItemText (hDlg, IDC_CREDS_INFO, pszCreds);
       FreeString (pszCreds);
       }
@@ -228,10 +245,10 @@ void ShowObtainCreds (BOOL fExpiring, LPTSTR pszCell)
                                     oc, 0, &threadID);
     if (thread != NULL)
         CloseHandle(thread);
-	else {
-		free(oc->cell);
-		free(oc);
-	}
+    else {
+        free(oc->cell);
+        free(oc);
+    }
 }
 
 

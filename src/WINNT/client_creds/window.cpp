@@ -376,13 +376,58 @@ void Main_OnRemindTimer (void)
    // dialog. Make sure we never display a warning more than once.
    //
    size_t iExpired;
-   if ((iExpired = Main_FindExpiredCreds()) != -1)
-      {
-      if (InterlockedIncrement (&g.fShowingMessage) != 1)
-         InterlockedDecrement (&g.fShowingMessage);
-      else
-         ShowObtainCreds (TRUE, g.aCreds[ iExpired ].szCell);
-      }
+   if ((iExpired = Main_FindExpiredCreds()) != -1) {
+       if (InterlockedIncrement (&g.fShowingMessage) != 1) {
+           InterlockedDecrement (&g.fShowingMessage);
+       } else { 
+           char * rootcell = NULL;
+           char   password[PROBE_PASSWORD_LEN+1];
+           struct afsconf_cell cellconfig;
+           BOOL   serverReachable = FALSE;
+           DWORD  code;
+
+           rootcell = (char *)GlobalAlloc(GPTR,MAXCELLCHARS+1);
+           if (!rootcell) 
+               goto cleanup;
+
+           code = KFW_AFS_get_cellconfig(g.aCreds[ iExpired ].szCell, 
+                                         (afsconf_cell*)&cellconfig, rootcell);
+           if (code) 
+               goto cleanup;
+
+           if (KFW_is_available()) {
+               // If we can't use the FSProbe interface we can attempt to forge
+               // a kinit and if we can back an invalid user error we know the
+               // kdc is at least reachable
+               serverReachable = KFW_probe_kdc(&cellconfig);
+           } else {
+               int i;
+
+               for ( i=0 ; i<PROBE_PASSWORD_LEN ; i++ )
+                   password[i] = 'x';
+
+               code = ObtainNewCredentials(rootcell, PROBE_USERNAME, password, TRUE);
+               switch ( code ) {
+               case INTK_BADPW:
+               case KERB_ERR_PRINCIPAL_UNKNOWN:
+               case KERB_ERR_SERVICE_EXP:
+               case RD_AP_TIME:
+                   serverReachable = TRUE;
+                   break;
+               default:
+                   serverReachable = FALSE;
+               }
+           }
+         cleanup:
+           if (rootcell)
+               GlobalFree(rootcell);
+
+           if (serverReachable)
+               ShowObtainCreds (TRUE, g.aCreds[ iExpired ].szCell);
+           else
+               InterlockedDecrement (&g.fShowingMessage);
+       }
+   }
 }
 
 

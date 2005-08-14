@@ -558,6 +558,7 @@ BEGIN
     IDS_BADSUB_TITLE_95     "Error - AFS Light"
     IDS_BADSUB_DESC         "The drive letter description you entered cannot be used.\n\nA drive letter description may have no more than 12 characters, and may not contain spaces or tabs."
     IDS_TITLE_95            "AFS Light"
+    IDS_CREDS_EXPIRED       "%1   (expired)"
 END
 #endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////
