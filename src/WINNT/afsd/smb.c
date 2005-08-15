@@ -2313,7 +2313,11 @@ void smb_MapNTError(long code, unsigned long *NTStatusp)
         NTStatus = 0xC000000FL;	/* No such file */
     }
     else if (code == CM_ERROR_TIMEDOUT) {
+#ifdef COMMENT
         NTStatus = 0xC00000CFL;	/* Sharing Paused */
+#else
+        NTStatus = 0x00000102L; /* Timeout */
+#endif
     }
     else if (code == CM_ERROR_RETRY) {
         NTStatus = 0xC000022DL;	/* Retry */
@@ -2431,12 +2435,22 @@ void smb_MapNTError(long code, unsigned long *NTStatusp)
     else if (code == CM_ERROR_PATH_NOT_COVERED) {
         NTStatus = 0xC0000257L; /* Path Not Covered */
     } 
+#ifdef COMMENT
     else if (code == CM_ERROR_ALLBUSY) {
         NTStatus = 0xC00000BFL; /* Network Busy */
     } 
     else if (code == CM_ERROR_ALLOFFLINE) {
         NTStatus = 0xC0000350L; /* Remote Host Down */
     } 
+#else
+    /* we do not want to be telling the SMB/CIFS client that
+     * the AFS Client Service is busy or down.  
+     */
+    else if (code == CM_ERROR_ALLBUSY || 
+             code == CM_ERROR_ALLOFFLINE) {
+        NTStatus = 0xC00000BEL; /* Bad Network Path */
+    }
+#endif
     else {
         NTStatus = 0xC0982001L;	/* SMB non-specific error */
     }
