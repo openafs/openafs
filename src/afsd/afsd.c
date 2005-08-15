@@ -461,7 +461,7 @@ int PartSizeOverflow(char *path, int cs)
 	totalblks /= (1024 / bsize);
     }
 
-    mint = totalblks - ((totalblks * 5) / 100);
+    mint = totalblks / 100 * 95;
     if (cs > mint) {
 	printf
 	    ("Cache size (%d) must be less than 95%% of partition size (which is %d). Lower cache size\n",

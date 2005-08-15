@@ -1116,11 +1116,15 @@ extern struct brequest afs_brs[NBRS];	/* request structures */
 #define CM_CACHESIZEDRAINEDPCT	95	/* wakeup processes when down to here. */
 #define CM_WAITFORDRAINPCT	98	/* sleep if cache is this full. */
 
+/* when afs_cacheBlocks is large, settle for slightly decreased precision */
+#define PERCENT(p, v) \
+    ((afs_cacheBlocks & 0xffe00000) ? ((v) / 100 * (p)) : ((p) * (v) / 100))
+
 #define afs_CacheIsTooFull() \
     (afs_blocksUsed - afs_blocksDiscarded > \
-	(CM_DCACHECOUNTFREEPCT*afs_cacheBlocks)/100 || \
+	PERCENT(CM_DCACHECOUNTFREEPCT, afs_cacheBlocks) || \
      afs_freeDCCount - afs_discardDCCount < \
-	((100-CM_DCACHECOUNTFREEPCT)*afs_cacheFiles)/100)
+	PERCENT(100 - CM_DCACHECOUNTFREEPCT, afs_cacheFiles))
 
 /* Handy max length of a numeric string. */
 #define	CVBS	12		/* max afs_int32 is 2^32 ~ 4*10^9, +1 for NULL, +luck */

@@ -227,8 +227,8 @@ afs_DCWhichBucket(afs_int32 phase, afs_int32 bucket)
     if (!splitdcache) 
 	return 0;
 
-    afs_pct1 = afs_blocksUsed_1*100/afs_cacheBlocks;    
-    afs_pct2 = afs_blocksUsed_2*100/afs_cacheBlocks;
+    afs_pct1 = afs_blocksUsed_1 / (afs_cacheBlocks / 100);
+    afs_pct2 = afs_blocksUsed_2 / (afs_cacheBlocks / 100);
 
     /* Short cut: if we don't know about it, try to kill it */
     if (phase < 2 && afs_blocksUsed_0) 
@@ -346,16 +346,14 @@ afs_CacheTruncateDaemon(void)
     u_int counter;
     u_int cb_lowat;
     u_int dc_hiwat =
-	(100 - CM_DCACHECOUNTFREEPCT +
-	 CM_DCACHEEXTRAPCT) * afs_cacheFiles / 100;
+	PERCENT((100 - CM_DCACHECOUNTFREEPCT + CM_DCACHEEXTRAPCT), afs_cacheFiles);
     afs_min_cache =
 	(((10 * AFS_CHUNKSIZE(0)) + afs_fsfragsize) & ~afs_fsfragsize) >> 10;
 
     osi_GetuTime(&CTD_stats.CTD_afterSleep);
     afs_TruncateDaemonRunning = 1;
     while (1) {
-	cb_lowat = ((CM_DCACHESPACEFREEPCT - CM_DCACHEEXTRAPCT)
-		    * afs_cacheBlocks) / 100;
+	cb_lowat = PERCENT((CM_DCACHESPACEFREEPCT - CM_DCACHEEXTRAPCT), afs_cacheBlocks);
 	MObtainWriteLock(&afs_xdcache, 266);
 	if (afs_CacheTooFull) {
 	    int space_needed, slots_needed;
@@ -916,7 +914,7 @@ afs_FlushDCache(register struct dcache *adc)
 
     if (afs_WaitForCacheDrain) {
 	if (afs_blocksUsed <=
-	    (CM_CACHESIZEDRAINEDPCT * afs_cacheBlocks) / 100) {
+	    PERCENT(CM_CACHESIZEDRAINEDPCT, afs_cacheBlocks)) {
 	    afs_WaitForCacheDrain = 0;
 	    afs_osi_Wakeup(&afs_WaitForCacheDrain);
 	}
@@ -949,7 +947,7 @@ afs_FreeDCache(register struct dcache *adc)
 
     if (afs_WaitForCacheDrain) {
 	if ((afs_blocksUsed - afs_blocksDiscarded) <=
-	    (CM_CACHESIZEDRAINEDPCT * afs_cacheBlocks) / 100) {
+	    PERCENT(CM_CACHESIZEDRAINEDPCT, afs_cacheBlocks)) {
 	    afs_WaitForCacheDrain = 0;
 	    afs_osi_Wakeup(&afs_WaitForCacheDrain);
 	}
@@ -999,7 +997,7 @@ afs_DiscardDCache(register struct dcache *adc)
 
     if (afs_WaitForCacheDrain) {
 	if ((afs_blocksUsed - afs_blocksDiscarded) <=
-	    (CM_CACHESIZEDRAINEDPCT * afs_cacheBlocks) / 100) {
+	    PERCENT(CM_CACHESIZEDRAINEDPCT, afs_cacheBlocks)) {
 	    afs_WaitForCacheDrain = 0;
 	    afs_osi_Wakeup(&afs_WaitForCacheDrain);
 	}
@@ -1084,7 +1082,7 @@ afs_MaybeFreeDiscardedDCache(void)
 
     while (afs_blocksDiscarded
 	   && (afs_blocksUsed >
-	       (CM_WAITFORDRAINPCT * afs_cacheBlocks) / 100)) {
+	       PERCENT(CM_WAITFORDRAINPCT, afs_cacheBlocks))) {
 	afs_FreeDiscardedDCache();
     }
     return 0;
@@ -2118,7 +2116,7 @@ afs_GetDCache(register struct vcache *avc, afs_size_t abyte,
 	/* Sleep here when cache needs to be drained. */
 	if (setLocks && !slowPass
 	    && (afs_blocksUsed >
-		(CM_WAITFORDRAINPCT * afs_cacheBlocks) / 100)) {
+		PERCENT(CM_WAITFORDRAINPCT, afs_cacheBlocks))) {
 	    /* Make sure truncate daemon is running */
 	    afs_MaybeWakeupTruncateDaemon();
 	    ObtainWriteLock(&tdc->tlock, 614);
@@ -2127,7 +2125,7 @@ afs_GetDCache(register struct vcache *avc, afs_size_t abyte,
 	    ReleaseWriteLock(&tdc->lock);
 	    ReleaseReadLock(&avc->lock);
 	    while ((afs_blocksUsed - afs_blocksDiscarded) >
-		   (CM_WAITFORDRAINPCT * afs_cacheBlocks) / 100) {
+		   PERCENT(CM_WAITFORDRAINPCT, afs_cacheBlocks)) {
 		afs_WaitForCacheDrain = 1;
 		afs_osi_Sleep(&afs_WaitForCacheDrain);
 	    }

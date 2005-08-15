@@ -197,7 +197,7 @@ afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio,
 	    if (tdc)
 		ObtainWriteLock(&tdc->lock, 653);
 	} else if (afs_blocksUsed >
-		   (CM_WAITFORDRAINPCT * afs_cacheBlocks) / 100) {
+		   PERCENT(CM_WAITFORDRAINPCT, afs_cacheBlocks)) {
 	    tdc = afs_FindDCache(avc, filePos);
 	    if (tdc) {
 		ObtainWriteLock(&tdc->lock, 654);
@@ -211,10 +211,10 @@ afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio,
 	    if (!tdc) {
 		afs_MaybeWakeupTruncateDaemon();
 		while (afs_blocksUsed >
-		       (CM_WAITFORDRAINPCT * afs_cacheBlocks) / 100) {
+		       PERCENT(CM_WAITFORDRAINPCT, afs_cacheBlocks)) {
 		    ReleaseWriteLock(&avc->lock);
 		    if (afs_blocksUsed - afs_blocksDiscarded >
-			(CM_WAITFORDRAINPCT * afs_cacheBlocks) / 100) {
+			PERCENT(CM_WAITFORDRAINPCT, afs_cacheBlocks)) {
 			afs_WaitForCacheDrain = 1;
 			afs_osi_Sleep(&afs_WaitForCacheDrain);
 		    }
@@ -441,7 +441,7 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
 	    if (tdc)
 		ObtainWriteLock(&tdc->lock, 657);
 	} else if (afs_blocksUsed >
-		   (CM_WAITFORDRAINPCT * afs_cacheBlocks) / 100) {
+		   PERCENT(CM_WAITFORDRAINPCT, afs_cacheBlocks)) {
 	    tdc = afs_FindDCache(avc, filePos);
 	    if (tdc) {
 		ObtainWriteLock(&tdc->lock, 658);
@@ -455,10 +455,10 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
 	    if (!tdc) {
 		afs_MaybeWakeupTruncateDaemon();
 		while (afs_blocksUsed >
-		       (CM_WAITFORDRAINPCT * afs_cacheBlocks) / 100) {
+		       PERCENT(CM_WAITFORDRAINPCT, afs_cacheBlocks)) {
 		    ReleaseWriteLock(&avc->lock);
 		    if (afs_blocksUsed - afs_blocksDiscarded >
-			(CM_WAITFORDRAINPCT * afs_cacheBlocks) / 100) {
+			PERCENT(CM_WAITFORDRAINPCT, afs_cacheBlocks)) {
 			afs_WaitForCacheDrain = 1;
 			afs_osi_Sleep(&afs_WaitForCacheDrain);
 		    }

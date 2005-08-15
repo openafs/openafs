@@ -762,9 +762,9 @@ afs_nfsrdwr(avc, auio, arw, ioflag, acred)
      */
     afs_MaybeWakeupTruncateDaemon();
     while ((arw == UIO_WRITE)
-	   && (afs_blocksUsed > (CM_WAITFORDRAINPCT * afs_cacheBlocks) / 100)) {
+	   && (afs_blocksUsed > PERCENT(CM_WAITFORDRAINPCT, afs_cacheBlocks))) {
 	if (afs_blocksUsed - afs_blocksDiscarded >
-	    (CM_WAITFORDRAINPCT * afs_cacheBlocks) / 100) {
+	    PERCENT(CM_WAITFORDRAINPCT, afs_cacheBlocks)) {
 	    afs_WaitForCacheDrain = 1;
 	    afs_osi_Sleep(&afs_WaitForCacheDrain);
 	}
