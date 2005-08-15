@@ -847,9 +847,6 @@ XDisplayFormat2(a_xInfoP, a_servID, a_partID, a_totalOKP, a_totalNotOKP,
      int a_showProblems;
 
 {				/*XDisplayFormat */
-
-    char pname[10];
-
     if (a_fast) {
 	/*
 	 * Short & sweet.
@@ -880,9 +877,8 @@ XDisplayFormat2(a_xInfoP, a_servID, a_partID, a_totalOKP, a_totalNotOKP,
 		if (a_partID != partition_cache) {
 			MapPartIdIntoName(a_partID, pname);
 			partition_cache = a_partID;
-		} else {
-			pname[0] = '\0';
 		}
+
 		fprintf(STDOUT, "name\t\t%s\n", a_xInfoP->name);
 		fprintf(STDOUT, "id\t\t%lu\n", a_xInfoP->volid);
 		fprintf(STDOUT, "serv\t\t%s\t%s\n", address, hostname);
@@ -1029,8 +1025,6 @@ DisplayFormat2(server, partition, pntr)
     if (partition != partition_cache) {
 	MapPartIdIntoName(partition, pname);
 	partition_cache = partition;
-    } else {
-        pname[0] = '\0';
     }
     fprintf(STDOUT, "name\t\t%s\n", pntr->name);
     fprintf(STDOUT, "id\t\t%lu\n", pntr->volid);
