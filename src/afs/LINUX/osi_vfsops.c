@@ -341,16 +341,14 @@ afs_clear_inode(struct inode *ip)
 static void
 afs_put_inode(struct inode *ip)
 {
-    cred_t *credp = crref();
     struct vcache *vcp = VTOAFS(ip);
 
-    AFS_GLOCK();
-    ObtainReadLock(&vcp->lock);
-    if (VREFCOUNT(vcp) == 2)
-	afs_InactiveVCache(vcp, credp);
-    ReleaseReadLock(&vcp->lock);
-    AFS_GUNLOCK();
-    crfree(credp);
+    if (VREFCOUNT(vcp) == 2) {
+	AFS_GLOCK();
+	if (VREFCOUNT(vcp) == 2)
+	    afs_InactiveVCache(vcp, NULL);
+	AFS_GUNLOCK();
+    }
 }
 
 /* afs_put_super
