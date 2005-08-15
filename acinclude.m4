@@ -239,41 +239,11 @@ else
 			vm=${v#*.}
 			AFS_SYSNAME="i386_obsd${vM}${vm}"
 			;;
-		i?86-*-freebsd4.2*)
-			AFS_SYSNAME="i386_fbsd_42"
-			;;
-		i?86-*-freebsd4.3*)
-			AFS_SYSNAME="i386_fbsd_43"
-			;;
-		i?86-*-freebsd4.4*)
-			AFS_SYSNAME="i386_fbsd_44"
-			;;
-		i?86-*-freebsd4.5*)
-			AFS_SYSNAME="i386_fbsd_45"
-			;;
-		i?86-*-freebsd4.6*)
-			AFS_SYSNAME="i386_fbsd_46"
-			;;
-		i?86-*-freebsd4.7*)
-			AFS_SYSNAME="i386_fbsd_47"
-			;;
-		i?86-*-freebsd5.0*)
-			AFS_SYSNAME="i386_fbsd_50"
-			;;
-		i?86-*-freebsd5.1*)
-			AFS_SYSNAME="i386_fbsd_51"
-			;;
-		i?86-*-freebsd5.2*)
-			AFS_SYSNAME="i386_fbsd_52"
-			;;
-		i?86-*-freebsd5.3*)
-			AFS_SYSNAME="i386_fbsd_53"
-			;;
-		i?86-*-freebsd5.4*)
-			AFS_SYSNAME="i386_fbsd_54"
-			;;
-		i?86-*-freebsd6.0*)
-			AFS_SYSNAME="i386_fbsd_60"
+		i?86-*-freebsd?.*)
+			v=${host#*freebsd}
+			vM=${v%.*}
+			vm=${v#*.}
+			AFS_SYSNAME="i386_fbsd_${vM}${vm}"
 			;;
 		i?86-*-netbsd*1.5*)
 			AFS_PARAM_COMMON=param.nbsd15.h
