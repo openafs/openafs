@@ -28,6 +28,8 @@ extern osi_hyper_t hzero;
 
 /* File locks */
 osi_queue_t *cm_allFileLocks;
+osi_queue_t *cm_freeFileLocks;
+unsigned long cm_lockRefreshCycle;
 
 /* lock for globals */
 osi_rwlock_t cm_scacheLock;
@@ -133,6 +135,13 @@ cm_scache_t *cm_GetNewSCache(void)
             memset(&scp->mountRootFid, 0, sizeof(cm_fid_t));
             memset(&scp->dotdotFid, 0, sizeof(cm_fid_t));
 
+            /* reset locking info */
+            scp->fileLocksH = NULL;
+            scp->fileLocksT = NULL;
+            scp->serverLock = (-1);
+            scp->exclusiveLocks = 0;
+            scp->sharedLocks = 0;
+
             /* not locked, but there can be no references to this guy
              * while we hold the global refcount lock.
              */
@@ -157,6 +166,7 @@ cm_scache_t *cm_GetNewSCache(void)
     scp->magic = CM_SCACHE_MAGIC;
     lock_InitializeMutex(&scp->mx, "cm_scache_t mutex");
     lock_InitializeRWLock(&scp->bufCreateLock, "cm_scache_t bufCreateLock");
+    scp->serverLock = -1;
 
     /* and put it in the LRU queue */
     osi_QAdd((osi_queue_t **) &cm_data.scacheLRUFirstp, &scp->q);
@@ -195,7 +205,7 @@ void cm_fakeSCacheInit(int newFile)
         cm_data.fakeSCache.refCount = 1;
     }
     lock_InitializeMutex(&cm_data.fakeSCache.mx, "cm_scache_t mutex");
-}       
+}
 
 long
 cm_ValidateSCache(void)
@@ -347,7 +357,12 @@ void cm_InitSCache(int newFile, long maxSCaches)
 
                 scp->cbServerp = NULL;
                 scp->cbExpires = 0;
-                scp->fileLocks = NULL;
+                scp->fileLocksH = NULL;
+                scp->fileLocksT = NULL;
+                scp->serverLock = (-1);
+                scp->lastRefreshCycle = 0;
+                scp->exclusiveLocks = 0;
+                scp->sharedLocks = 0;
                 scp->openReads = 0;
                 scp->openWrites = 0;
                 scp->openShares = 0;
@@ -357,6 +372,8 @@ void cm_InitSCache(int newFile, long maxSCaches)
             }
         }
         cm_allFileLocks = NULL;
+        cm_freeFileLocks = NULL;
+        cm_lockRefreshCycle = 0;
         cm_fakeSCacheInit(newFile);
         cm_dnlcInit(newFile);
         osi_EndOnce(&once);

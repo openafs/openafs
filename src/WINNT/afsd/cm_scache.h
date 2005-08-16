@@ -31,30 +31,61 @@ typedef struct cm_accessCache {
 } cm_accessCache_t;
 #endif
 
+/* Key used for byte range locking.  Each unique key identifies a
+   unique client per cm_scache_t for the purpose of locking. */
+typedef afs_uint64 cm_key_t;
+
+typedef struct cm_range {
+    afs_int64 offset;
+    afs_int64 length;
+} cm_range_t;
+
+/* forward dcls */
+struct cm_scache;
+typedef struct cm_scache cm_scache_t;
+
 typedef struct cm_file_lock {
-	osi_queue_t q;			/* list of all locks */
-	osi_queue_t fileq;		/* per-file list of locks */
-	cm_user_t *userp;
-	LARGE_INTEGER LOffset;
-	LARGE_INTEGER LLength;
-	cm_fid_t fid;
-	unsigned char LockType;
-	unsigned char flags;
+    osi_queue_t q;              /* list of all locks [protected by
+                                   cm_scacheLock] */
+    osi_queue_t fileq;		/* per-file list of locks [protected
+                                   by scp->mx]*/
+    
+    cm_user_t *userp;           /* The user to which this lock belongs
+                                   to [immutable; held] */
+    cm_scache_t *scp;           /* The scache to which this lock
+                                   applies to [immutable; held] */
+#ifdef DEBUG
+    cm_fid_t   fid;
+#endif
+
+    cm_range_t range;           /* Range for the lock [immutable] */
+    cm_key_t key;               /* Key for the lock [immutable] */
+    unsigned char lockType;     /* LockRead or LockWrite [immutable] */
+    unsigned char flags;        /* combination of CM_FILELOCK_FLAG__*
+                                 * [protected by cm_scacheLock] */
+    time_t lastUpdate;          /* time of last assertion with
+                                 * server. [protected by
+                                 * cm_scacheLock] */
 } cm_file_lock_t;
 
-#define CM_FILELOCK_FLAG_INVALID	0x1
-#define CM_FILELOCK_FLAG_WAITING	0x2
+#define CM_FILELOCK_FLAG_DELETED         0x01
+#define CM_FILELOCK_FLAG_LOST            0x02
+
+/* the following are mutually exclusive */
+#define CM_FILELOCK_FLAG_WAITLOCK        0x04
+#define CM_FILELOCK_FLAG_WAITUNLOCK      0x0C
+
+#define CM_FILELOCK_FLAG_CLIENTONLY      0x100
 
 typedef struct cm_prefetch {		/* last region scanned for prefetching */
 	osi_hyper_t base;		/* start of region */
         osi_hyper_t end;		/* first char past region */
 } cm_prefetch_t;
 
-
 #define CM_SCACHE_MAGIC ('S' | 'C'<<8 | 'A'<<16 | 'C'<<24)
 
 typedef struct cm_scache {
-	osi_queue_t q;			/* lru queue; cm_scacheLock */
+    osi_queue_t q;              /* lru queue; cm_scacheLock */
         afs_uint32      magic;
         struct cm_scache *nextp;	/* next in hash; cm_scacheLock */
 	cm_fid_t fid;
@@ -116,8 +147,21 @@ typedef struct cm_scache {
         long anyAccess;			/* anonymous user's access */
         struct cm_aclent *randomACLp;	/* access cache entries */
 
-	/* file locks */
-	osi_queue_t *fileLocks;
+    /* file locks */
+    afs_int32    serverLock;    /* current lock we have acquired on
+                                 * this file.  One of (-1), LockRead
+                                 * or LockWrite. [protected by
+                                 * scp->mx]
+                                 */
+    unsigned long lastRefreshCycle; /* protected with cm_scacheLock
+                                     * for all scaches. */
+    osi_queue_t *fileLocksH;    /* queue of locks (head) */
+    osi_queue_t *fileLocksT;    /* queue of locks (tail) */
+    afs_uint32   sharedLocks;   /* number of shared locks on
+                                 * ::fileLocks */
+    afs_uint32   exclusiveLocks; /* number of exclusive locks on
+                                  * ::fileLocks
+                                  */
 	
 	/* volume info */
         struct cm_volume *volp;		/* volume info; held reference */
@@ -265,6 +309,10 @@ extern cm_scache_t *cm_FindSCache(cm_fid_t *fidp);
 extern osi_rwlock_t cm_scacheLock;
 
 extern osi_queue_t *cm_allFileLocks;
+
+extern osi_queue_t *cm_freeFileLocks;
+
+extern unsigned long cm_lockRefreshCycle;
 
 extern void cm_DiscardSCache(cm_scache_t *scp);
 
