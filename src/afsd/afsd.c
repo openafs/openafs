@@ -336,7 +336,8 @@ static int HandleMTab();
   *	Sets globals.
   *---------------------------------------------------------------------------*/
 
-int ParseCacheInfoFile(void)
+int
+ParseCacheInfoFile(void)
 {
     static char rn[] = "ParseCacheInfoFile";	/*This routine's name */
     FILE *cachefd;		/*Descriptor for cache info file */
@@ -399,7 +400,7 @@ int ParseCacheInfoFile(void)
 	     tmd, tbd, tCacheBlocks);
     }
     if (!(cacheFlags & AFSCALL_INIT_MEMCACHE)) {
-	return(PartSizeOverflow(tbd, cacheBlocks));
+	return (PartSizeOverflow(tbd, cacheBlocks));
     }
 
     return (0);
@@ -415,7 +416,8 @@ int ParseCacheInfoFile(void)
  *	0 if everything went well,
  *	1 otherwise.
  */
-int PartSizeOverflow(char *path, int cs)
+int
+PartSizeOverflow(char *path, int cs)
 {
     int bsize = -1, totalblks, mint;
 #if AFS_HAVE_STATVFS
@@ -431,10 +433,10 @@ int PartSizeOverflow(char *path, int cs)
     totalblks = statbuf.f_blocks;
     bsize = statbuf.f_frsize;
 #if AFS_AIX51_ENV
-    if(strcmp(statbuf.f_basetype, "jfs")) {
-        fprintf(stderr, "Cache filesystem '%s' must be jfs (now %s)\n",
-                path, statbuf.f_basetype);
-        return 1;
+    if (strcmp(statbuf.f_basetype, "jfs")) {
+	fprintf(stderr, "Cache filesystem '%s' must be jfs (now %s)\n",
+		path, statbuf.f_basetype);
+	return 1;
     }
 #endif /* AFS_AIX51_ENV */
 
@@ -466,7 +468,7 @@ int PartSizeOverflow(char *path, int cs)
 	printf
 	    ("Cache size (%d) must be less than 95%% of partition size (which is %d). Lower cache size\n",
 	     cs, mint);
-        return 1;
+	return 1;
     }
 
     return 0;
@@ -1071,7 +1073,7 @@ CheckCacheBaseDir(char *dir)
 	}
 	if (statfsbuf.f_type == 0x52654973) {	/* REISERFS_SUPER_MAGIC */
 	    return "cannot use reiserfs as cache partition";
-	} else if  (statfsbuf.f_type == 0x58465342) { /* XFS_SUPER_MAGIC */
+	} else if (statfsbuf.f_type == 0x58465342) {	/* XFS_SUPER_MAGIC */
 	    return "cannot use xfs as cache partition";
 	}
     }
@@ -1405,7 +1407,8 @@ mainproc(as, arock)
 	/* -chunksize */
 	chunkSize = atoi(as->parms[12].items->data);
 	if (chunkSize < 0 || chunkSize > 30) {
-	    printf("afsd:invalid chunk size (not in range 0-30), using default\n");
+	    printf
+		("afsd:invalid chunk size (not in range 0-30), using default\n");
 	    chunkSize = 0;
 	}
     }
@@ -1523,36 +1526,37 @@ mainproc(as, arock)
 	enable_rxbind = 1;
     }
     if (as->parms[32].items) {
-       /* -settime */
-       cacheSetTime = TRUE;
+	/* -settime */
+	cacheSetTime = TRUE;
     }
 
     /* set rx_extraPackets */
     if (as->parms[33].items) {
 	/* -rxpck */
 	int rxpck = atoi(as->parms[33].items->data);
-	printf("afsd: set rxpck = %d\n",rxpck);
+	printf("afsd: set rxpck = %d\n", rxpck);
 	code = call_syscall(AFSOP_SET_RXPCK, rxpck);
 	if (code) {
-	printf("afsd: failed to set rxpck\n");
-	exit(1);
+	    printf("afsd: failed to set rxpck\n");
+	    exit(1);
 	}
     }
     if (as->parms[34].items) {
 	char *c;
 	if (!as->parms[34].items->data ||
-	    ((c = strchr(as->parms[34].items->data, '/')) == NULL)) 
-           printf("ignoring splitcache (specify as RW/RO percentages: 60/40)\n"); 
-       else {
-           ropct = atoi((char *)c+1);
-	   *c = '\0'; 
-           rwpct = atoi((char *)as->parms[30].items->data);
-           if ((rwpct != 0) && (ropct != 0) && (ropct+rwpct == 100)) {
-               /* -splitcache */
-               enable_splitcache = 1;
-	   }
-       }
-    }    
+	    ((c = strchr(as->parms[34].items->data, '/')) == NULL))
+	    printf
+		("ignoring splitcache (specify as RW/RO percentages: 60/40)\n");
+	else {
+	    ropct = atoi((char *)c + 1);
+	    *c = '\0';
+	    rwpct = atoi((char *)as->parms[30].items->data);
+	    if ((rwpct != 0) && (ropct != 0) && (ropct + rwpct == 100)) {
+		/* -splitcache */
+		enable_splitcache = 1;
+	    }
+	}
+    }
     /*
      * Pull out all the configuration info for the workstation's AFS cache and
      * the cellular community we're willing to let our users see.
@@ -1696,7 +1700,8 @@ mainproc(as, arock)
     sprintf(fullpn_VFile, "%s/", cacheBaseDir);
     vFilePtr = fullpn_VFile + strlen(fullpn_VFile);
 
-    if  (!(cacheFlags & AFSCALL_INIT_MEMCACHE) && (fsTypeMsg = CheckCacheBaseDir(cacheBaseDir))) {
+    if (!(cacheFlags & AFSCALL_INIT_MEMCACHE)
+	&& (fsTypeMsg = CheckCacheBaseDir(cacheBaseDir))) {
 	printf("%s: WARNING: Cache dir check failed (%s)\n", rn, fsTypeMsg);
     }
 #if 0
@@ -1796,7 +1801,7 @@ mainproc(as, arock)
 	     */
 	    if (daemon(0, 0) == -1) {
 		printf("Error starting AFSDB lookup handler: %s\n",
-			strerror(errno));
+		       strerror(errno));
 		exit(1);
 	    }
 	    AfsdbLookupHandler();
@@ -1998,7 +2003,7 @@ mainproc(as, arock)
 	printf("%s: Calling AFSOP_VOLUMEINFO: volume info file is '%s'\n", rn,
 	       fullpn_VolInfoFile);
     /* once again, meaningless for a memory-based cache. */
-    if (!(cacheFlags & AFSCALL_INIT_MEMCACHE)) 
+    if (!(cacheFlags & AFSCALL_INIT_MEMCACHE))
 	call_syscall(AFSOP_VOLUMEINFO, fullpn_VolInfoFile);
 
     /*
@@ -2092,7 +2097,8 @@ mainproc(as, arock)
 	if ((mount("AFS", cacheMountDir, mountFlags, "afs", NULL, 0)) < 0) {
 #elif defined(AFS_SGI_ENV)
 	mountFlags = MS_FSS;
-	if ((mount(MOUNT_AFS, cacheMountDir, mountFlags, (caddr_t) MOUNT_AFS)) < 0) {
+	if ((mount(MOUNT_AFS, cacheMountDir, mountFlags, (caddr_t) MOUNT_AFS))
+	    < 0) {
 #elif defined(AFS_LINUX20_ENV)
 	if ((mount("AFS", cacheMountDir, MOUNT_AFS, 0, NULL)) < 0) {
 #else
@@ -2200,11 +2206,13 @@ main(argc, argv)
     cmd_AddParm(ts, "-nomount", CMD_FLAG, CMD_OPTIONAL, "Do not mount AFS");
     cmd_AddParm(ts, "-backuptree", CMD_FLAG, CMD_OPTIONAL,
 		"Prefer backup volumes for mointpoints in backup volumes");
-    cmd_AddParm(ts, "-rxbind", CMD_FLAG, CMD_OPTIONAL, "Bind the Rx socket (one interface only)");
-    cmd_AddParm(ts, "-settime", CMD_FLAG, CMD_OPTIONAL,
-               "don't set the time");
-    cmd_AddParm(ts, "-rxpck", CMD_SINGLE, CMD_OPTIONAL, "set rx_extraPackets to this value");
-    cmd_AddParm(ts, "-splitcache", CMD_SINGLE, CMD_OPTIONAL, "Percentage RW versus RO in cache (specify as 60/40)");
+    cmd_AddParm(ts, "-rxbind", CMD_FLAG, CMD_OPTIONAL,
+		"Bind the Rx socket (one interface only)");
+    cmd_AddParm(ts, "-settime", CMD_FLAG, CMD_OPTIONAL, "don't set the time");
+    cmd_AddParm(ts, "-rxpck", CMD_SINGLE, CMD_OPTIONAL,
+		"set rx_extraPackets to this value");
+    cmd_AddParm(ts, "-splitcache", CMD_SINGLE, CMD_OPTIONAL,
+		"Percentage RW versus RO in cache (specify as 60/40)");
 
     return (cmd_Dispatch(argc, argv));
 }
@@ -2308,9 +2316,9 @@ call_syscall(param1, param2, param3, param4, param5, param6, param7)
 #ifdef AFS_LINUX20_ENV
     long eparm[4];
     struct afsprocdata syscall_data;
-    int fd = open(PROC_SYSCALL_FNAME,O_RDWR);
+    int fd = open(PROC_SYSCALL_FNAME, O_RDWR);
     if (fd < 0)
-	fd = open(PROC_SYSCALL_ARLA_FNAME,O_RDWR);
+	fd = open(PROC_SYSCALL_ARLA_FNAME, O_RDWR);
     eparm[0] = param4;
     eparm[1] = param5;
     eparm[2] = param6;
@@ -2323,11 +2331,10 @@ call_syscall(param1, param2, param3, param4, param5, param6, param7)
     syscall_data.param2 = param2;
     syscall_data.param3 = param3;
     syscall_data.param4 = param4;
-    if(fd > 0) {
-       error = ioctl(fd, VIOC_SYSCALL, &syscall_data);
-       close(fd);
-    }
-    else
+    if (fd > 0) {
+	error = ioctl(fd, VIOC_SYSCALL, &syscall_data);
+	close(fd);
+    } else
 #endif
     error =
 	syscall(AFS_SYSCALL, AFSCALL_CALL, param1, param2, param3, param4,
