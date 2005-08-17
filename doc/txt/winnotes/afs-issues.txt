@@ -1,6 +1,6 @@
-This file is a rough list of known issues with the 1.3.87 release of OpenAFS
-on Windows.  This list is not complete.  There are probably other issues 
-which can be found in the RT database or on the mailing list.
+This file is a rough list of known issues with the 1.4.0000 release of OpenAFS 
+on Windows.  This list is not complete.  There are probably other issues which 
+can be found in the RT database or on the mailing list.
 
 
 (1) File/Directory access is not integrated with windows security 

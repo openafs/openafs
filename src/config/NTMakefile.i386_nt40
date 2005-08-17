@@ -79,8 +79,8 @@ LIB = $(AFSDEV_LIB)
 
 #define used in WinNT/2000 installation and program version display
 AFSPRODUCT_VER_MAJOR=1
-AFSPRODUCT_VER_MINOR=3
-AFSPRODUCT_VER_PATCH=8700
+AFSPRODUCT_VER_MINOR=4
+AFSPRODUCT_VER_PATCH=0000
 AFSPRODUCT_VER_BUILD=0
 
 # For MSI installer, each major release should have a different GUID
