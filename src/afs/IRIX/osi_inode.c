@@ -438,7 +438,7 @@ xfs_icreatename64(struct vfs *vfsp, int datap, int datalen,
 	AFS_COPYINSTR((char *)datap, name, AFS_PNAME_SIZE - 1, &junk, unused);
 	strcat(name, "/.");
 	strcat(name, int_to_base64(stmp1, rw_vno));
-	code = gop_lookupname(name, AFS_UIOSYS, FOLLOW, NULL, &dvp);
+	code = gop_lookupname(name, AFS_UIOSYS, FOLLOW, &dvp);
 	if (!code) {
 	    /* Use old name format. */
 	    strcpy(path, name);
@@ -456,7 +456,7 @@ xfs_icreatename64(struct vfs *vfsp, int datap, int datalen,
 	if (code) {
 	    if (code == EEXIST) {
 		/* someone beat us to it? */
-		code = gop_lookupname(path, AFS_UIOSYS, 0, NULL, &dvp);
+		code = gop_lookupname(path, AFS_UIOSYS, NO_FOLLOW, &dvp);
 	    }
 	    if (code) {
 		AFS_UNLOCK_VOL_CREATE();
