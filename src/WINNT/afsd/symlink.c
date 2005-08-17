@@ -471,7 +471,7 @@ register struct cmd_syndesc *as; {
 	    continue;	/* don't bother trying */
 	}
 
-        if ( IsFreelanceRoot(Parent(tp)) && !IsAdmin() ) {
+        if ( IsFreelanceRoot(Parent(ti->data)) && !IsAdmin() ) {
             fprintf(stderr,"symlink: Only AFS Client Administrators may alter the root.afs volume\n");
             code = 1;
             continue;   /* skip */

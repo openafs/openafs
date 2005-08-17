@@ -1943,7 +1943,7 @@ RemoveMountCmd(struct cmd_syndesc *as, char *arock) {
 	    continue;	/* don't bother trying */
 	}
 
-        if ( IsFreelanceRoot(Parent(tp)) && !IsAdmin() ) {
+        if ( IsFreelanceRoot(Parent(ti->data)) && !IsAdmin() ) {
             fprintf(stderr,"%s: Only AFS Client Administrators may alter the root.afs volume\n", pn);
             error = 1;
             continue;   /* skip */
