@@ -1,3 +1,5 @@
+(This document is current as of release 1.4.000)
+
 How to determine if OpenAFS is installed?
 
 When the OpenAFS Client Service is installed there will be several 

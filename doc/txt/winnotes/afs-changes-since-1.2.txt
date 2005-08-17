@@ -1,4 +1,4 @@
-Since 1.3.87:
+Since 1.3.87: 1.4.0 rc1 released (17 Aug 2005)
  * When the cache manager reports ALLBUSY or ALLOFFLINE for
    a resource we should not be returning status codes such
    as Network Busy or Remote Host Down because these errors
