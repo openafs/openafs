@@ -128,7 +128,7 @@ extern HANDLE WaitToTerminate;
 #define CAPABILITY_ERRORTRANS (1<<0)
 #define CAPABILITY_BITS 1
 
-#define DFS_SUPPORT 1
+#undef  DFS_SUPPORT 1
 #define LOG_PACKET 1
 #undef  NOTSERVICE
 
