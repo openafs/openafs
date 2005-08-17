@@ -1,7 +1,7 @@
-OpenAFS for Windows 1.4.0000 Installation Notes
+OpenAFS for Windows 1.5.0000 Installation Notes
 -----------------------------------------------
 
-OpenAFS for Windows 1.4.0000 is the best client available for 
+OpenAFS for Windows 1.5.0000 is an unstable development client available for 
 Microsoft Windows operating systems.  It can be installed either as
 a new installation or an upgrade from previous versions of OpenAFS
 for Windows or IBM AFS for Windows.  Installers are provided in two

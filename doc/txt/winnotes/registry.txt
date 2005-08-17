@@ -1,5 +1,5 @@
 Registry keys and Environment Variables used in the Windows AFS Client
-as of release 1.4.0000
+as of release 1.5.0000
 ======================================================================
 
 REGISTRY KEYS:
