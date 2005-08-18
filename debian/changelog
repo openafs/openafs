@@ -5,6 +5,8 @@ openafs (1.3.87-2) unstable; urgency=low
     dynroot.  afs-newcell generates the server CellServDB directly to work
     around oddities with bos addhost.  Thanks to Fahemm Mitha and Sergio
     Gelato for analysis and patches.  (Closes: #322638)
+  * Redo how library object files are found for the PAM module build to
+    avoid assuming C locale character set behavior.  (Closes: #323582)
 
  --
 

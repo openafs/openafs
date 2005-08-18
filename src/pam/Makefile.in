@@ -27,6 +27,16 @@ LDFLAGS = ${SHLIB_LDFLAGS}
 INCLUDES=-I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} 
 CFLAGS =  ${DEBUG} ${INCLUDES} ${PAM_CFLAGS} ${MT_CFLAGS}
 
+# For Debian, we link directly with the object files that would have gone
+# into the libafsrpc and libafsauthent shared libraries.  The shared libraries
+# themselves cannot be used because the interface isn't stable and they have
+# no SONAME, but this is the easiest way of getting PIC objects built with the
+# pthread API.
+SHLIB_OBJS	:= `ls ../shlibafsauthent/*.o | grep -v version_num` \
+		   `ls ../shlibafsrpc/*.o | grep -v version_num`
+KRB_SHLIB_OBJS	:= `ls ../shlibafsauthent/*.o | egrep -v 'version_num|ktc.o'` \
+		   `ls ../shlibafsrpc/*.o | grep -v version_num`
+
 all: test_pam ${TOP_LIBDIR}/pam_afs.so.1 ${TOP_LIBDIR}/pam_afs.krb.so.1
 
 afs_setcred.o: afs_setcred.c afs_pam_msg.h afs_message.h afs_util.h
@@ -64,8 +74,7 @@ pam_afs.so.1: $(SHOBJS) afs_setcred.o afs_auth.o afs_util.o
 			$(SHOBJS) $(LIBS) ;; \
 	*linux*) \
 		$(CC) $(LDFLAGS) $(PAM_CFLAGS) -o $@ afs_setcred.o \
-			afs_auth.o afs_util.o $(SHOBJS) \
-			../shlibafsauthent/[a-z]*.o ../shlibafsrpc/[a-z]*.o \
+			afs_auth.o afs_util.o $(SHOBJS) $(SHLIB_OBJS) \
 			$(MT_LIBS) -lpam -lresolv;;\
 	*fbsd*| *nbsd*) \
 		$(CC) $(LDFLAGS) -o $@ afs_setcred.o \
@@ -88,9 +97,7 @@ pam_afs.krb.so.1: $(SHOBJS) afs_setcred_krb.o afs_auth_krb.o afs_util_krb.o ktc.
 	*linux*) \
 		$(CC) $(LDFLAGS) -o $@ afs_setcred_krb.o \
 			afs_auth_krb.o afs_util_krb.o ktc.o $(SHOBJS) \
-			`ls ../shlibafsauthent/[a-z]*.o | grep -v ktc.o` \
-			../shlibafsrpc/[a-z]*.o \
-			$(MT_LIBS) -lpam -lresolv;;\
+			$(KRB_SHLIB_OBJS) $(MT_LIBS) -lpam -lresolv;;\
 	*fbsd*| *nbsd*) \
 		$(CC) $(LDFLAGS) -o $@ afs_setcred_krb.o \
 			afs_auth_krb.o afs_util_krb.o $(SHOBJS) $(KLIBS) ;;\
