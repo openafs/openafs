@@ -125,13 +125,15 @@ if ($dynroot) {
 run("fs sa $rootmnt system:anyuser rl");
 
 # Scan CellServDB and create the cell mount points for every cell found there.
+# Force these commands to succeed, since it's possible to end up with
+# duplicate entries in CellServDB (and the second fs mkm will fail).
 open(CELLSERVDB, "/etc/openafs/CellServDB")
     or die "Unable to open /etc/openafs/CellServDB: $!\n";
 while (<CELLSERVDB>) {
     chomp;
     if (/^>\s*([a-z0-9_\-.]+)/) {
-        run("fs mkm $rootmnt/$1 root.cell -cell $1 -fast");
-        unwind("fs rmm $rootmnt/$1");
+        run("fs mkm $rootmnt/$1 root.cell -cell $1 -fast || true");
+        unwind("fs rmm $rootmnt/$1 || true");
     }
 }
 
