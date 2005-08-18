@@ -39,7 +39,6 @@ RCSID
 
 #include "des.h"
 #include "key_perm.h"
-#include "stats.h"
 #include "des_prototypes.h"
 
 typedef char key[64];
@@ -66,7 +65,6 @@ des_key_sched(register des_cblock k, des_key_schedule schedule)
     n = 0;
     p_char = k_char;
 
-    INC_RXKAD_STATS(des_key_scheds);
 #ifdef lint
     n = n;			/* fool it in case of VAXASM */
 #endif
