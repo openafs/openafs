@@ -792,7 +792,7 @@ afs_dentry_iput(struct dentry *dp, struct inode *ip)
 
     AFS_GLOCK();
     if (vcp->states & CUnlinked)
-	(void) afs_remunlink(vcp, 1);		/* perhaps afs_InactiveVCache() instead */
+	(void) afs_InactiveVCache(vcp, NULL);
     AFS_GUNLOCK();
 
     iput(ip);
@@ -974,7 +974,7 @@ afs_linux_unlink(struct inode *dip, struct dentry *dp)
 #if defined(AFS_LINUX26_ENV)
     lock_kernel();
 #endif
-    if (((VREFCOUNT(tvc) > 0) && tvc->opens > 0)
+    if (VREFCOUNT(tvc) > 1 && tvc->opens > 0
 				&& !(tvc->states & CUnlinked)) {
 	struct dentry *__dp;
 	char *__name;
