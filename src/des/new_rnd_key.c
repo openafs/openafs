@@ -38,7 +38,6 @@ RCSID
 #include <strings.h>
 #endif
 #endif
-#include "stats.h"
 
 static afs_int32 des_set_sequence_number(des_cblock new_sequence_number);
 static afs_int32 des_generate_random_block(des_cblock block);
@@ -257,7 +256,6 @@ des_generate_random_block(des_cblock block)
 {
     int i;
 
-    INC_RXKAD_STATS(des_randoms);
     /*
      * Encrypt the sequence number to get the new random block:
      */
