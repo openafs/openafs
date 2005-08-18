@@ -16,7 +16,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-07-10 17:32-0700\n"
+"POT-Creation-Date: 2005-08-18 12:47-0700\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -89,8 +89,8 @@ msgid ""
 "Should the Openafs filesystem be started and mounted at boot? Normally, most "
 "users who install the openafs-client package expect to run it at boot.  "
 "However, if you are planning on setting up a new cell or are on a laptop, "
-"you may not want it started at boot time. If you choose not to start AFS at "
-"boot , run /etc/init.d/openafs-client force-start  to start the client when "
+"you may not want it started at boot time.  If you choose not to start AFS at "
+"boot, run /etc/init.d/openafs-client force-start to start the client when "
 "you wish to run it."
 msgstr ""
 
@@ -106,7 +106,7 @@ msgstr ""
 msgid ""
 "In order to contact an AFS cell, you need the IP addresses of the cell's "
 "database servers.  Normally, this information is read from /etc/openafs/"
-"CellServDB.  However, if Openafs cannot find a cell in that file it can use "
+"CellServDB.  However, if Openafs cannot find a cell in that file, it can use "
 "DNS to look for AFSDB records that contain the information."
 msgstr ""
 
@@ -148,19 +148,20 @@ msgstr ""
 #: ../openafs-client.templates:65
 msgid ""
 "If you generate /afs dynamically, you may need to create /etc/openafs/"
-"CellAlias to include aliases for common cells. DO NOT SELECT THIS OPTION IF "
-"THIS MACHINE IS THE FIRST DATABASE SERVER IN A NEW CELL."
+"CellAlias to include aliases for common cells.  (The syntax of this file is "
+"one line per alias, with the cell name, a space, and then the alias for that "
+"cell.)"
 msgstr ""
 
 #. Type: boolean
 #. Description
-#: ../openafs-client.templates:78
+#: ../openafs-client.templates:79
 msgid "Use fakestat to avoid hangs when listing /afs?"
 msgstr ""
 
 #. Type: boolean
 #. Description
-#: ../openafs-client.templates:78
+#: ../openafs-client.templates:79
 msgid ""
 "Because AFS is a global file space, operations on the /afs directory can "
 "generate significant network traffic.  If some AFS cells are unavailable "

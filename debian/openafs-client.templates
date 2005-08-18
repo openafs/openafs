@@ -35,8 +35,8 @@ _Description: Run Openafs client now and at boot?
  Should the Openafs filesystem be started and mounted at boot? Normally,
  most users who install the openafs-client package expect to run it at
  boot.  However, if you are planning on setting up a new cell or are on a
- laptop, you may not want it started at boot time. If you choose not
- to start AFS at boot , run /etc/init.d/openafs-client force-start  to
+ laptop, you may not want it started at boot time.  If you choose not
+ to start AFS at boot, run /etc/init.d/openafs-client force-start to
  start the client when you wish to run it.
 
 Template: openafs-client/afsdb
@@ -46,7 +46,7 @@ _Description: Look up AFS cells in DNS?
  In order to contact an AFS cell, you need the IP addresses of the cell's
  database servers.  Normally, this information is read from
  /etc/openafs/CellServDB.  However, if Openafs cannot find a cell in that
- file it can use DNS to look for AFSDB records that contain the
+ file, it can use DNS to look for AFSDB records that contain the
  information.
 
 Template: openafs-client/crypt
@@ -69,8 +69,9 @@ _Description: Dynamically generate the contents of /afs?
  dynamically based on the contents of /etc/openafs/CellServDB and DNS.
  .
  If you generate /afs dynamically, you may need to create
- /etc/openafs/CellAlias to include aliases for common cells. DO NOT SELECT
- THIS OPTION IF THIS MACHINE IS THE FIRST DATABASE SERVER IN A NEW CELL.
+ /etc/openafs/CellAlias to include aliases for common cells.  (The syntax
+ of this file is one line per alias, with the cell name, a space, and then
+ the alias for that cell.)
 
 Template: openafs-client/fakestat
 Type: boolean
