@@ -225,7 +225,8 @@ unless ($afs_running) {
     print "Please fix whatever problem kept it from running.\n";
     exit(1);
 }
-print "Now, get tokens as $admin in the $cell cell.\n"
+print "\n";
+print "Now, get tokens as $admin in the $cell cell.\n";
 print "Then, run afs-rootvol.\n";
 
 # Success, so clear the unwind commands.
