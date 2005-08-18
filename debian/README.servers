@@ -1,47 +1,356 @@
-		 Setting up a Debian OpenAFS Server
+                    Setting up a Debian OpenAFS Server
 
-These packages include binaries with FHS-compatible path names.  Here
-is a map from AFS paths to FHS paths:
+Introduction
 
-/usr/afs/etc		/etc/openafs/server
-/usr/afs/local		/etc/openafs/server-local
-/usr/afs/db		/var/lib/openafs/db
-/usr/afs/logs		/var/log/openafs
-/usr/afs/bin		/usr/lib/openafs
+  This document describes how to set up an OpenAFS server using the Debian
+  packages.  If you are not already familiar with the basic concepts of
+  OpenAFS, you should review the documentation at:
 
+      <http://www.openafs.org/doc/index.htm>
 
-Scripts are provided to configure a single database/file server.  The
-afs-newcell script sets up the initial databases and configures
-bosserver.  After running this script, get tokens in the cell and run
-the afs-rootvol script to populate the root volume and root.cell.  A
-sample transcript of configuring an AFS cell can be found in
-/usr/share/doc/openafs-dbserver/configuration-transcript.txt.gz.  This
-transcript assumes you are using MIT Kerberos and the openafs-krb5
-package.  Similar steps could be taken with Heimdal.
+  particularly the AFS Administrator's Guide.  This documentation is
+  somewhat out of date (it doesn't talk about how to use a Kerberos v5 KDC
+  instead of the AFS kaserver, for example), but it's a good introduction
+  to the basic concepts and servers you will need to run.
 
-Another issue is upgrades.  It is likely that future versions of this
-package will install for example /usr/lib/openafs/fileserver.package
-instead of /usr/lib/openafs/fileserver.  The postinst script will
-create links the actual binaries.  Upgrades will not replace the old
-binaries, but a script will be provided to roll the links forward to
-the new versions.  The intent is that people could install the new
-package on all their servers and then quickly move the links before
-restarting the bosserver.
+  The Debian OpenAFS packages follow the FHS and therefore use different
+  paths than the standard AFS documentation or the paths that experienced
+  AFS administrators may be used to.  In the first column below are the
+  traditional paths, and in the second column, the Debian paths:
 
-		      Adding Additional Servers
+      /usr/afs/etc        /etc/openafs/server
+      /usr/afs/local      /etc/openafs/server-local
+      /usr/afs/db         /var/lib/openafs/db
+      /usr/afs/logs       /var/log/openafs
+      /usr/afs/bin        /usr/lib/openafs
+      /usr/vice/etc       /etc/openafs
 
-If you decide one server is not enough, here is roughly what needs to
-happen:
+  The AFS kaserver (a Kerberos v4 KDC) is not packaged for Debian.  Any
+  new OpenAFS installation should use Kerberos v5 for authentication in
+  conjunction with either the tools packaged in the openafs-krb5 package
+  or the Heimdal KDC.  When setting up a new cell, you should therefore
+  not set up a kaserver as described in the AFS Administrator's Guide, and
+  you will need to follow a slightly different method of setting the cell
+  key.
 
-1) Copy securely (using scp , encrypted Kerberized rcp or some other
-   secure method) /etc/openafs/server to the new server.
+Creating a New Cell
 
-2) Start a bosserver.
+  For documentation on adding a server to an existing cell, see below.
 
-3) If the machine is to be a file server, create an fs instance using
-   bos create.  For file servers this is all you need to do.
+  These instructions assume that you are using MIT Kerberos and the
+  openafs-krb5 package.  If you are using Heimdal instead, some of the
+  steps will be slightly different (Heimdal can write the AFS KeyFile
+  directly, for example, so you don't have to use asetkey).  The
+  afs-newcell and afs-rootvol scripts are the same, however.
 
-4) For database servers, you also need to do a bos addhost on all
-   servers (including the new server) to add the new server to
-   /etc/openafs/server/CellServDB.  Then create ptserver and vlserver
-   instances.
+  /usr/share/doc/openafs-dbserver/configuration-transcript.txt.gz has a
+  transcript of the results of these directions, which you may want to
+  follow along with as you do this.
+
+  1.  If you do not already have a Kerberos KDC (Key Distribution Center,
+      the daemon that handles Kerberos authentication) configured, do so.
+      You can run the KDC on the same system as your OpenAFS db server,
+      although if you plan on using Kerberos for other things, you may
+      eventually want to use separate systems.  If you do not have a
+      Kerberos realm set up already, you can do so in Debian with:
+
+          apt-get install krb5-admin-server
+          krb5_newrealm
+
+      This will install a KDC and kadmind server (the server that handles
+      password changes and account creations) on the local system.  Please
+      be aware that the security of everything that uses Kerberos for
+      authentication, including AFS, depends on the security of the KDC.
+
+      The name of your Kerberos realm should, for various reasons, be in
+      all uppercase and be a domain name that you control, although
+      neither is technically required.
+
+  2.  It is traditional (and recommended) in AFS (and for Kerberos) to
+      give administrators two separate Kerberos principals, one regular
+      principal to use for regular purposes and a separate admin principal
+      to use for privileged actions.  This is similar to the distinction
+      between a regular user and the root user in Unix, except that
+      everyone can have their own separate root identity.  Kerberos
+      recommends username/admin as the admin principal for username, and
+      this will work for AFS as well.
+
+      If you have not already created such an admin principal for yourself
+      in your Kerberos realm, do so now (using kadmin.local on your KDC,
+      unless you have a local method that you prefer).  Also create a
+      regular (non-admin) principal for yourself if you have not already;
+      this is the identity that you'll use for regular operations, like
+      storing files or reading mail.
+
+      If the KDC is not on the same system that the OpenAFS db server will
+      be on, you will also need to give your admin principal the rights to
+      download the afs keytab in /etc/krb5kdc/kadm5.acl by adding a lines
+      like:
+
+          username/admin@REALM    *
+
+      where REALM is your Kerberos realm and username/admin is the admin
+      principal that you created.  That line gives you full admin access
+      to the Kerberos v5 realm.  You can be more restrictive if you want;
+      see the kadmind man page for the syntax.
+
+  3.  Install the OpenAFS db server package on an appropriate system with:
+
+          apt-get install openafs-dbserver openafs-krb5
+
+      The openafs-krb5 package will be used to create the AFS KeyFile.
+
+      As part of this installation, you will need to configure
+      openafs-client with the cell you are creating as the local cell name
+      and the server on which you're working as the db server.  This name
+      is technically arbitrary but should, for various reasons, be a valid
+      domain name that you control; unlike Kerberos realms, it should be
+      in all lowercase.  Enter the name of the local system when prompted
+      for the names of your OpenAFS db servers.  Don't start the client;
+      that will happen below.  For right now, say that you don't want it
+      to start at boot.  You can change that later with dpkg-reconfigure
+      openafs-client.
+
+      If you have already installed openafs-client and configured it for
+      some other cell, you do need to configure it to point to your new
+      cell for these instructions to work.  Stop the AFS client on the
+      system with /etc/init.d/openafs-client stop and then run:
+
+           dpkg-reconfigure openafs-client
+
+      pointing it to the new cell you're about to create instead.
+      Remember, your cell name should be in lowercase.  If you have had to
+      do this several times, double-check /etc/openafs/CellServDB when
+      you're done and make sure that there is only one entry for your new
+      cell at the top of that file and that it lists the correct IP
+      address for your new db server.
+
+      In order to complete the AFS installation, you will also need a
+      working AFS client installed on that system, which means that you
+      need to install an OpenAFS kernel module.  Please see:
+
+          /usr/share/doc/openafs-client/README.modules
+
+      for information on how to do that.
+
+  4.  Create an AFS principal in Kerberos.  This is the AFS service
+      principal, used by clients to authenticate to AFS and for AFS
+      servers to authenticate to each other.  It *must* be a DES key; AFS
+      does not support any other encryption type.  Run kadmin.local on
+      your KDC and then, at the kadmin.local prompt, run:
+
+          addprinc -randkey -e des-cbc-crc:v4 afs
+
+      If your Kerberos realm name does not match your AFS cell name (if,
+      for instance, you have one Kerberos realm with multiple AFS cells),
+      use "afs/cell.name" as the name of the principal above instead of
+      just "afs", where cell.name is the name of your new AFS cell.
+
+  5.  On the db server, download this key into a keytab.  If this is the
+      same system as the KDC, you can use kadmin.local again.  If not, you
+      should use kadmin (make sure that krb5-user is installed), and you
+      may need to pass -p username/admin to kadmin to tell it what
+      principal to authenticate as.  Whichever way you get into kadmin,
+      run:
+
+          ktadd -k /tmp/afs.keytab -e des-cbc-crc:v4 afs
+
+      (or afs/cell.name if you used that instead).  In the message that
+      results, note the kvno number reported, since you'll need it later
+      (it will normally be 3).
+
+      Don't forgoet the -e des-cbc-crc:v4 to force the afs key to be DES.
+      You can verify this with:
+
+          getprinc afs
+
+      and checking to be sure that the only key listed is a DES key.  If
+      there are multiple keys listed, delprinc the afs principal, delete
+      the /tmp/afs.keytab file, and then start over with addprinc, making
+      sure not to forget the -e option.
+
+  6.  Create the AFS KeyFile with:
+
+          asetkey add <kvno> /tmp/afs.keytab afs
+
+      (or afs/cell.name if you used that instead).  <kvno> should be
+      replaced by the kvno number reported by kadmin.  This tells AFS the
+      Kerberos key that it should use, making it match the key in the
+      Kerberos KDC.
+
+  7.  If the name of your Kerberos realm does not match the name of your
+      AFS cell, tell AFS what Kerberos realm to use with:
+
+          echo REALM > /etc/openafs/server/krb.conf
+
+      where REALM is the name of your Kerberos realm.  If your AFS cell
+      and Kerberos realm have the same name, this is unnecessary.
+
+  7.  Create some space to use for AFS volumes.  You can set up a separate
+      AFS file server on a different system from the Kerberos KDC and AFS
+      db server, and for a larger cell you will want to do so, but when
+      getting started you can make the db server a file server as well.
+      For a production cell, you will want to create a separate partition
+      devoted to AFS and mount it as /vicepa (and may want to make
+      multiple partitions mounted as /vicepb, /vicepc, etc.), but for
+      testing purposes, you can use the commands below to create a
+      zero-filled file, create a file system in it, and then mount it:
+
+          dd if=/dev/zero of=/var/lib/openafs/vicepa bs=1024k count=32
+          mke2fs /var/lib/openafs/vicepa
+          mkdir /vicepa
+          mount -oloop /var/lib/openafs/vicepa /vicepa
+
+      mke2fs will ask you if you're sure you want to create a file system
+      on a non-block device; say yes.
+
+  8.  Run afs-newcell.  This will prompt you to be sure that the above
+      steps have been complete and will ask you for the Kerberos principal
+      to use for AFS administrative access.  You should use the
+      username/admin principal discussed above.
+
+      At the completion of this step, you should see bosserver and several
+      other AFS server processes running, and you should be able to see
+      the status of those procesess with:
+
+          bos status localhost -local
+
+      Now, you should be able to run:
+
+          kinit username/admin@REALM
+          aklog cell.name -k REALM
+
+      where username/admin is the admin principal discussed above, REALM
+      is the name of your Kerberos realm, and cell.name is the name of
+      your AFS cell.  This will obtain Kerberos tickets and AFS tokens in
+      your Kerberos realm and new AFS cell.  You should be able to see
+      your AFS tokens by running:
+
+          tokens
+
+      Finally, you should be able to see the status of the AFS server
+      processes with:
+
+          bos status <hostname>
+
+      where <hostname> is the hostname of the local system, once you've
+      done the above.  This tests authenticated bos access as your admin
+      principal (rather than using the local KeyFile to authenticate).
+
+  9.  Run afs-rootvol.  This creates the basic AFS volume structure for
+      your new cell.  It will prompt you to be sure that the above steps
+      are complete and then will ask you what file server and partition to
+      create the volume on.  If you were following the above instructions,
+      use the local hostname and "a" as the partition (without the
+      quotes), which will use /vicepa.
+
+      After this command completes, you should be able to /bin/ls /afs and
+      see your local cell (and, if you aren't using dynroot, mount points
+      for several other cells).  Note that if you're not using dynroot,
+      run /bin/ls rather than just ls to be sure that ls isn't aliased to
+      ls -F, ls --color, or some other option that would stat each file in
+      /afs, since this would require contacting lots of foreign cells and
+      could take a very long time.
+
+      You should now be able to cd to /afs/cell.name where cell.name is
+      the AFS cell name that you used.  Currently, there isn't anything in
+      your cell.  To make modifications, cd to /afs/.cell.name (note the
+      leading period) and make changes there.  To make those changes show
+      up at /afs/cell.name, run vos release root.cell.  For more details
+      on what you can do now, see the AFS Administrator's Reference.
+
+  10. While this is optional, you probably want to add AFSDB records to
+      DNS for your new AFS cell.  These special DNS records let AFS
+      clients find the db servers for your cell without requiring local
+      configuration.  To do this, create a DNS record like:
+
+          <cell>.        3600    IN      AFSDB   1 <server>.
+
+      where <cell> is the name of your AFS cell and <server> is the name
+      of your db server.  Note the trailing periods to prevent the DNS
+      server from appending the origin.  You can, of course, choose what
+      you prefer for the lifetime.  The 1 is not a priority; it's a
+      special indicator saying that this record is for an AFS database
+      server.
+
+      If you have multiple db servers (see below for adding new ones), you
+      should create multiple records of this type, one per db server.
+
+  Congratulations!  You now have an AFS cell.  If any of the above steps
+  failed, please check the steps carefully and make sure that you've done
+  them all in order.  If that doesn't reveal the cause of the problem,
+  please feel free to submit a bug report with reportbug.  Include as many
+  details as possible on exactly what you typed and exactly what you saw
+  as a result, particularly any error messages.
+
+Adding Additional Servers
+
+  If you decide one server is not enough, or if you're adding a server to
+  an existing cell, here is roughly what you should do:
+
+  1.  Copy securely (using scp, encrypted Kerberos rcp, or some other
+      secure method) all of /etc/openafs/server to the new server.
+
+  2.  Install the openafs-fileserver package on the new server.
+
+  3.  If the machine is to be a file server, create an fs instance using
+      bos create:
+
+          bos create <host> fs fs -cmd /usr/lib/openafs/fileserver \
+              -cmd /usr/lib/openafs/volserver \
+              -cmd /usr/lib/openafs/salvager -localauth
+
+      For a file server, this is all you have to do.
+
+  4.  For database servers, also install openafs-dbserver and then use bos
+      addhost to add the new server to /etc/openafs/server/CellServDB:
+
+          bos addhost <server> <new-server>
+
+      for each db server <server> in your cell (including the new one).
+      Then, create ptserver and vlserver instances on the new server:
+
+          bos create <host> ptserver simple /usr/lib/openafs/ptserver \
+              -localauth
+          bos create <host> vlserver simple /usr/lib/openafs/vlserver \
+              -localauth
+
+      The existing servers should then propagate the database to the new
+      server.  Note that you do not need to run a file server on a db
+      server if you don't want to (and larger sites probably will not want
+      to), but you always need to have the openafs-fileserver package
+      installed on db servers.  It contains the bosserver binary and some
+      of the shared infrastructure.
+
+  5.  If you added a new db server, configure your clients to use it.  If
+      you are using AFSDB records in DNS, you can just add a new record
+      (see point 10 in the instructions for creating a new cell).
+      Otherwise, clients will need to have the new server IP address added
+      to their /etc/openafs/CellServDB file (or /usr/vice/etc/CellServDB
+      for non-Debian clients using the standard AFS paths), and the client
+      will have to be restarted before it will know about the new db
+      server.
+
+  The standard rule of thumb is that all of your database servers and file
+  servers should ideally be running the same version of OpenAFS.  However,
+  in practice OpenAFS is fairly good at backward compatibility and you can
+  generally mix and match different versions.  Be careful, though, to
+  ensure that all of your database servers are built the same when it
+  comes to options like --enable-supergroups (enabled in the Debian
+  packages).
+
+Upgrades
+
+  Currently, during an upgrade of the openafs-fileserver package, all
+  services will be stopped and restarted.  If openafs-dbserver is upgraded
+  without upgrading openafs-fileserver, those server binaries will not be
+  stopped and restarted; that restart will have to be done by hand.
+
+  It is possible that future versions of this package will install for
+  example /usr/lib/openafs/fileserver.package instead of
+  /usr/lib/openafs/fileserver and then create links to the actual binaries
+  in postinst.  Upgrades would then not replace the old binaries, but
+  instead a script will be provided to roll the links forward to the new
+  versions.  The intent is that people could install the new package on
+  all their servers and then quickly move the links before restarting the
+  bosserver.  This has not yet been implemented.
