@@ -121,6 +121,21 @@ choose_afsd_options() {
     fi
 }
 
+# Make sure that the cache file system type is ext2 or ext3.  No other file
+# system is supported for the cache, and generally bad things happen if a
+# different one is used.
+check_cache_fstype() {
+    CACHEPATH=`awk -F: '{print $2}' < /etc/openafs/cacheinfo`
+    FSTYPE=`stat -f -c '%T' "$CACHEPATH"`
+    if [ x"$FSTYPE" != x"ext2/ext3" ] ; then
+        echo ""
+        echo "ERROR: AFS cache at $CACHEPATH is on a $FSTYPE file system" >&2
+        echo "ERROR: Only ext2 or ext3 may be used for an AFS cache" >&2
+        echo "Aborting startup of AFS" >&2
+        exit 1
+    fi
+}
+
 # Start afsd.  Be careful not to start it if another one is already running,
 # as that has a bad tendency to hang the system.
 start_client() {
@@ -128,6 +143,7 @@ start_client() {
         echo "."
     else
         choose_afsd_options
+        check_cache_fstype
         echo " afsd."
         start-stop-daemon --start --quiet --exec /usr/sbin/afsd \
             -- $AFSD_OPTIONS
