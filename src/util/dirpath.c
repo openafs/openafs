@@ -641,7 +641,7 @@ ConstructLocalPath(const char *cpath, const char *relativeTo,
 int
 ConstructLocalBinPath(const char *cpath, char **fullPathBufp)
 {
-    return ConstructLocalPath(cpath, AFSDIR_CANONICAL_SERVER_BIN_DIRPATH,
+    return ConstructLocalPath(cpath, AFSDIR_SERVER_BIN_DIRPATH,
 			      fullPathBufp);
 }
 
@@ -654,6 +654,6 @@ ConstructLocalBinPath(const char *cpath, char **fullPathBufp)
 int
 ConstructLocalLogPath(const char *cpath, char **fullPathBufp)
 {
-    return ConstructLocalPath(cpath, AFSDIR_CANONICAL_SERVER_LOGS_DIRPATH,
+    return ConstructLocalPath(cpath, AFSDIR_SERVER_LOGS_DIRPATH,
 			      fullPathBufp);
 }
