@@ -7,6 +7,7 @@ openafs (1.3.87-2) unstable; urgency=low
     Gelato for analysis and patches.  (Closes: #322638)
   * Detect AFS caches on non-ext2/ext3 file systems and abort AFS client
     initialization.  (Closes: #249315)
+  * Don't create the unused /etc/openafs/AFSLog file.  (Closes: #120097)
   * Redo how library object files are found for the PAM module build to
     avoid assuming C locale character set behavior.  (Closes: #323582)
   * Remove the openafs-client warning against dynroot for the first system
