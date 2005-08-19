@@ -176,7 +176,7 @@ open(PRDB, "| pt_util -p /var/lib/openafs/db/prdb.DB0 -w")
     or die "Unable to start pt_util: $!\n";
 print PRDB "$afs_admin 128/20 1 -204 -204\n";
 print PRDB "system:administrators 130/20 -204 -204 -204\n";
-print PRDB" $afs_admin 1\n";
+print PRDB " $afs_admin 1\n";
 close PRDB;
 unwind("rm /var/lib/openafs/db/prdb*");
 
