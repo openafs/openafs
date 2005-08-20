@@ -16,7 +16,7 @@ msgstr ""
 "Project-Id-Version: openafs 1.3.82-2_\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2005-08-18 12:47-0700\n"
-"PO-Revision-Date: 2005-07-24 15:09+0200\n"
+"PO-Revision-Date: 2005-08-19 08:01+0200\n"
 "Last-Translator: Martin Sin <martin.sin@seznam.cz>\n"
 "Language-Team: Czech <debian-l10n-czech@lists.debian.org>\n"
 "MIME-Version: 1.0\n"
@@ -100,7 +100,6 @@ msgstr "Spustit klienta Openafs nyní a při zavádění počítače?"
 #. Type: boolean
 #. Description
 #: ../openafs-client.templates:34
-#, fuzzy
 msgid ""
 "Should the Openafs filesystem be started and mounted at boot? Normally, most "
 "users who install the openafs-client package expect to run it at boot.  "
@@ -125,7 +124,6 @@ msgstr "Hledat buňky AFS v DNS?"
 #. Type: boolean
 #. Description
 #: ../openafs-client.templates:45
-#, fuzzy
 msgid ""
 "In order to contact an AFS cell, you need the IP addresses of the cell's "
 "database servers.  Normally, this information is read from /etc/openafs/"
@@ -181,7 +179,6 @@ msgstr ""
 #. Type: boolean
 #. Description
 #: ../openafs-client.templates:65
-#, fuzzy
 msgid ""
 "If you generate /afs dynamically, you may need to create /etc/openafs/"
 "CellAlias to include aliases for common cells.  (The syntax of this file is "
@@ -189,8 +186,10 @@ msgid ""
 "cell.)"
 msgstr ""
 "Pokud vytváříte /afs dynamicky, možná budete muset vytvořit /etc/openafs/"
-"CellAlias pro začlenění aliasů běžných buněk. NEVYBÍREJTE SI TUTO MOŽNOST, "
-"POKUD JE TENTO POČÍTAČ PRVNÍM DATABÁZOVÝM SERVEREM V NOVÉ BUŇCE."
+"CellAlias pro začlenění aliasů běžných buněk. (Syntaxe tohoto souboru je "
+"jeden řádek na alias, který se skládá ze jména buňky, mezery a pak následuje "
+"alias pro tuto buňku.)"
+
 
 #. Type: boolean
 #. Description
