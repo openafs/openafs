@@ -326,29 +326,52 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
     else if (errorCode == VNOVOL || errorCode == VMOVED || errorCode == VOFFLINE ||
              errorCode == VSALVAGE || errorCode == VNOSERVICE || errorCode == VIO) 
     {       
-        /* Log server being offline for this volume */
-        osi_Log4(afsd_logp, "cm_Analyze found server %d.%d.%d.%d marked offline for a volume",
-                  ((serverp->addr.sin_addr.s_addr & 0xff)),
-                  ((serverp->addr.sin_addr.s_addr & 0xff00)>> 8),
-                  ((serverp->addr.sin_addr.s_addr & 0xff0000)>> 16),
-                  ((serverp->addr.sin_addr.s_addr & 0xff000000)>> 24));
-        /* Create Event Log message */ 
-        {
-            HANDLE h;
-            char *ptbuf[1];
-            char s[100];
-            h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);
-            sprintf(s, "cm_Analyze: Server %d.%d.%d.%d reported volume %d as missing.",
-                     ((serverp->addr.sin_addr.s_addr & 0xff)),
-                     ((serverp->addr.sin_addr.s_addr & 0xff00)>> 8),
-                     ((serverp->addr.sin_addr.s_addr & 0xff0000)>> 16),
-                     ((serverp->addr.sin_addr.s_addr & 0xff000000)>> 24),
-                     fidp->volume);
-            ptbuf[0] = s;
-            ReportEvent(h, EVENTLOG_WARNING_TYPE, 0, 1009, NULL,
-                         1, 0, ptbuf, NULL);
-            DeregisterEventSource(h);
+#ifndef DJGPP
+        HANDLE h;
+        char *ptbuf[1];
+        char s[100];
+#endif
+        char addr[16];
+        char *format;
+
+        switch ( errorCode ) {
+        case VNOVOL:
+            format = "Server %s reported volume %d as not attached.";
+            break;
+        case VMOVED:
+            format = "Server %s reported volume %d as moved.";
+            break;
+        case VOFFLINE:
+            format = "Server %s reported volume %d as offline.";
+            break;
+        case VSALVAGE:
+            format = "Server %s reported volume %d as needs salvage.";
+            break;
+        case VNOSERVICE:
+            format = "Server %s reported volume %d as not in service.";
+            break;
+        case VIO:
+            format = "Server %s reported volume %d as temporarily unaccessible.";
+            break;
         }
+
+        /* Log server being offline for this volume */
+        sprintf(addr, "%d.%d.%d.%d", 
+                 ((serverp->addr.sin_addr.s_addr & 0xff)),
+                 ((serverp->addr.sin_addr.s_addr & 0xff00)>> 8),
+                 ((serverp->addr.sin_addr.s_addr & 0xff0000)>> 16),
+                 ((serverp->addr.sin_addr.s_addr & 0xff000000)>> 24)); 
+        osi_Log2(afsd_logp, format, osi_LogSaveString(afsd_logp,addr), fidp->volume);
+        
+#ifndef DJGPP
+        /* Create Event Log message */
+        h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);
+        sprintf(s, format, addr, fidp->volume);
+        ptbuf[0] = s;
+        ReportEvent(h, EVENTLOG_WARNING_TYPE, 0, 1009, NULL,
+                     1, 0, ptbuf, NULL);
+        DeregisterEventSource(h);
+#endif
 
         /* Mark server offline for this volume */
         if (!serversp) {
