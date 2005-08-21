@@ -190,7 +190,7 @@ Creating a New Cell
       where REALM is the name of your Kerberos realm.  If your AFS cell
       and Kerberos realm have the same name, this is unnecessary.
 
-  7.  Create some space to use for AFS volumes.  You can set up a separate
+  8.  Create some space to use for AFS volumes.  You can set up a separate
       AFS file server on a different system from the Kerberos KDC and AFS
       db server, and for a larger cell you will want to do so, but when
       getting started you can make the db server a file server as well.
@@ -208,7 +208,7 @@ Creating a New Cell
       mke2fs will ask you if you're sure you want to create a file system
       on a non-block device; say yes.
 
-  8.  Run afs-newcell.  This will prompt you to be sure that the above
+  9.  Run afs-newcell.  This will prompt you to be sure that the above
       steps have been complete and will ask you for the Kerberos principal
       to use for AFS administrative access.  You should use the
       username/admin principal discussed above.
@@ -241,7 +241,7 @@ Creating a New Cell
       done the above.  This tests authenticated bos access as your admin
       principal (rather than using the local KeyFile to authenticate).
 
-  9.  Run afs-rootvol.  This creates the basic AFS volume structure for
+  10. Run afs-rootvol.  This creates the basic AFS volume structure for
       your new cell.  It will prompt you to be sure that the above steps
       are complete and then will ask you what file server and partition to
       create the volume on.  If you were following the above instructions,
@@ -250,7 +250,7 @@ Creating a New Cell
 
       After this command completes, you should be able to /bin/ls /afs and
       see your local cell (and, if you aren't using dynroot, mount points
-      for several other cells).  Note that if you're not using dynroot,
+      for several other cells).  Note that if you're not using fakestat,
       run /bin/ls rather than just ls to be sure that ls isn't aliased to
       ls -F, ls --color, or some other option that would stat each file in
       /afs, since this would require contacting lots of foreign cells and
@@ -258,12 +258,13 @@ Creating a New Cell
 
       You should now be able to cd to /afs/cell.name where cell.name is
       the AFS cell name that you used.  Currently, there isn't anything in
-      your cell.  To make modifications, cd to /afs/.cell.name (note the
+      your cell except two volumes, user and service, created by
+      afs-rootvol.  To make modifications, cd to /afs/.cell.name (note the
       leading period) and make changes there.  To make those changes show
       up at /afs/cell.name, run vos release root.cell.  For more details
       on what you can do now, see the AFS Administrator's Reference.
 
-  10. While this is optional, you probably want to add AFSDB records to
+  11. While this is optional, you probably want to add AFSDB records to
       DNS for your new AFS cell.  These special DNS records let AFS
       clients find the db servers for your cell without requiring local
       configuration.  To do this, create a DNS record like:
