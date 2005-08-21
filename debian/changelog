@@ -14,6 +14,7 @@ openafs (1.3.87-2) unstable; urgency=low
     in a cell now that afs-rootvol can cope.  Provide some basic
     documentation of the CellAlias syntax in that message until we have a
     real man page.
+  * Suggest openafs-doc.
   * Translation updates.
     - Czech, thanks Martin Sin.
     - Vietnamese, thanks Clytie Siddall.

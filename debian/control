@@ -9,6 +9,7 @@ Standards-Version: 3.6.2
 Package: openafs-client
 Architecture: i386 powerpc sparc alpha s390 ia64 hppa amd64 ppc64
 Depends: ${shlibs:Depends}, ${misc:Depends}, openafs-modules-source (>= 1.2.9) | openafs-modules2
+Suggests: openafs-doc
 Conflicts: arla, openafs-modules1
 Description: The AFS distributed filesystem- client support
  AFS is a distributed filesystem allowing cross-platform sharing of
@@ -37,6 +38,7 @@ Package: openafs-fileserver
 Architecture: i386 powerpc sparc alpha s390 ia64 hppa amd64 ppc64
 Depends: ${shlibs:Depends}, ${misc:Depends}, openafs-client
 Recommends: ntp
+Suggests: openafs-doc
 Description: The AFS distributed filesystem- file server
  AFS is a distributed filesystem allowing cross-platform sharing of
  files among multiple computers.  Facilities are provided for access
@@ -48,6 +50,7 @@ Description: The AFS distributed filesystem- file server
 Package: openafs-dbserver
 Architecture: i386 powerpc sparc alpha s390 ia64 hppa amd64 ppc64
 Depends: ${shlibs:Depends}, ${perl:Depends}, openafs-fileserver, openafs-client
+Suggests: openafs-doc
 Conflicts: openafs-ptutil
 Replaces: openafs-ptutil
 Provides: openafs-ptutil
@@ -64,8 +67,9 @@ Package: libopenafs-dev
 Section: libdevel
 Architecture: i386 powerpc sparc alpha s390 ia64 hppa amd64 ppc64
 Priority: extra
-Conflicts: arla-dev
 Depends: ${shlibs:Depends}
+Suggests: openafs-doc
+Conflicts: arla-dev
 Description: The AFS distributed filesystem- development libraries
  AFS is a distributed filesystem allowing cross-platform sharing of
  files among multiple computers.  Facilities are provided for access
