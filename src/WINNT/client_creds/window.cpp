@@ -679,9 +679,18 @@ void Main_EnableRemindTimer (BOOL fEnable)
 size_t Main_FindExpiredCreds (void)
 {
    size_t retval = (size_t) -1;
+   static bool expirationCheck = false;
    lock_ObtainMutex(&g.expirationCheckLock);
+   if (expirationCheck) {
+       lock_ReleaseMutex(&g.expirationCheckLock);
+       return -1;
+   }
+   expirationCheck = true;
+   lock_ReleaseMutex(&g.expirationCheckLock);
+
    if ( KFW_is_available() )
        KFW_AFS_renew_expiring_tokens();
+   
    lock_ObtainMutex(&g.credsLock);
    for (size_t iCreds = 0; iCreds < g.cCreds; ++iCreds)
       {
@@ -716,6 +725,9 @@ size_t Main_FindExpiredCreds (void)
       }
    
    lock_ReleaseMutex(&g.credsLock);
+
+   lock_ObtainMutex(&g.expirationCheckLock);
+   expirationCheck = false;
    lock_ReleaseMutex(&g.expirationCheckLock);
 
    return retval;
