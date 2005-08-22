@@ -154,6 +154,9 @@ E  HP-UX 11.0 Notes
 
 F  OpenBSD Notes
 
+   We recommend you build with --enable-namei-fileserver and
+   --enable-largefile-fileserver options.
+
    You need kernel source installed to build OpenAFS.  Use the
    --with-bsd-kernel-headers= configure option if your kernel source is not
    in /usr/src/sys.
@@ -177,6 +180,9 @@ G  FreeBSD Notes
 
    The FreeBSD client is very new and untested.  Do not trust it for
    production work.
+
+   We recommend you build with --enable-namei-fileserver and
+   --enable-largefile-fileserver options.
 
    You need kernel source installed to build OpenAFS.  Use the
    --with-bsd-kernel-headers= configure option if your kernel source is not
