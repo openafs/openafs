@@ -26,7 +26,7 @@ KAFSLIBS=${TOP_LIBDIR}/libkauth.krb.a ${TOP_LIBDIR}/libprot.a ${LIBDIR}/libubik.
 	  ${TOP_LIBDIR}/libauth.krb.a ${TOP_LIBDIR}/librxkad.a ${TOP_LIBDIR}/libsys.a \
 	  ${TOP_LIBDIR}/libdes.a ${LIBDIR}/librx.a ${LIBDIR}/liblwp.a \
           ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/libcom_err.a ${TOP_LIBDIR}/util.a
-AUTHFILES=../inetd/ta-rauth.o ../rsh/rcmd.o ../rsh/herror.o
+AUTHFILES=ta-rauth.o rcmd.o herror.o
 AUTHLIBS=afsauthlib.so afskauthlib.so
 TARGETS=$(AUTHLIBS) 
 
@@ -43,14 +43,14 @@ afsauthlib.so: sgi_auth.o ${AFSLIBS} ${AUTHFILES}
 afskauthlib.so: sgi_auth.o ${KAFSLIBS} ${AUTHFILES}
 	$(LD) ${LDFLAGS} -shared -all -o afskauthlib.so sgi_auth.o $(KAFSLIBS) ${AUTHFILES}
 
-../inetd/ta-rauth.o: ../inetd/ta-rauth.c
-	(cd ../inetd ; $(MAKE) ta-rauth.o )
+ta-rauth.o: ta-rauth.c
+	${CC} ${CFLAGS} -c ta-rauth.c
 
-../rsh/rcmd.o: ../rsh/rcmd.c
-	(cd ../rsh ; $(MAKE) rcmd.o )
+rcmd.o: rcmd.c
+	${CC} ${CFLAGS} -c rcmd.c
 
-../rsh/herror.o: ../rsh/herror.c
-	(cd ../rsh ; $(MAKE) herror.o )
+herror.o: herror.c
+	${CC} ${CFLAGS} -c herror.c
 
 sgi_auth.o: sgi_auth.c
 	${CC} ${CFLAGS} -c sgi_auth.c
