@@ -147,6 +147,29 @@ open(CELL, "/etc/openafs/server/ThisCell")
 my $cell = <CELL>;
 chomp $cell;
 
+# Make sure the new cell is configured in the client CellServDB.
+open(CELLSERVDB, "/etc/openafs/CellServDB")
+    or die "Cannot open /etc/openafs/CellServDB: $!\n";
+my $found = 0;
+while (<CELLSERVDB>) {
+    next unless /^>\Q$cell\E\s/;
+    while (<CELLSERVDB>) {
+        last if /^>/;
+        my ($dbserver) = split ' ';
+        if ($dbserver eq $ip) {
+            $found = 1;
+            last;
+        }
+    }
+    last;
+}
+unless ($found) {
+    print "The new cell $cell is not configured in /etc/openafs/CellServDB\n";
+    print "Add configuration like:\n\n>$cell\n$ip\n\nto that file before"
+        . " continuing.\n";
+    exit(1);
+}
+
 # Write out a new CellServDB for the local cell containing only this server.
 if (-f "/etc/openafs/server/CellServDB") {
     print "/etc/openafs/server/CellServDB already exists, renaming to .old\n";
