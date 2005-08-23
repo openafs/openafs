@@ -14,7 +14,7 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: openafs 1.2.9-2\n"
+"Project-Id-Version: openafs 1.4rc1-1\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2005-08-18 12:47-0700\n"
 "PO-Revision-Date: 2005-08-22 15:11+0200\n"
