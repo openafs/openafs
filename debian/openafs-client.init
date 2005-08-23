@@ -153,6 +153,11 @@ start_client() {
     if is_on $AFS_CRYPT ; then
         fs setcrypt on
     fi
+
+    # From /etc/openafs/afs.conf, set a sysname list if one was configured.
+    if [ -n "$AFS_SYSNAME" ] ; then
+        fs sysname $AFS_SYSNAME
+    fi
 }
 
 # Kill all processes that are accessing AFS.  Not enabled by default, and
