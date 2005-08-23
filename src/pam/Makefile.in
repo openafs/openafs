@@ -126,13 +126,7 @@ ${DEST}/lib/pam_afs.so.1: pam_afs.so.1
 	${INSTALL} $? $@
 
 ${DEST}/lib/pam_afs.krb.so.1: pam_afs.krb.so.1
-	set -x; \
-	case "$(SYS_NAME)" in \
-	parisc*_linux*) \
-		echo Skipping install of $@. ;; \
-	*) \
-		${INSTALL} $? $@ ;; \
-	esac
+	${INSTALL} $? $@
 
 afs_pam_msg.o: afs_pam_msg.c afs_pam_msg.h afs_message.h
 afs_message.o: afs_message.c afs_message.h
@@ -152,22 +146,10 @@ ${TOP_LIBDIR}/pam_afs.so.1: pam_afs.so.1
 	${INSTALL} $? $@
 
 ${DESTDIR}${libdir}/pam_afs.krb.so.1: pam_afs.krb.so.1
-	set -x; \
-	case "$(SYS_NAME)" in \
-	parisc*_linux*) \
-		echo Skipping install of $@. ;; \
-	*) \
-		${INSTALL} $? $@ ;; \
-	esac
+	${INSTALL} $? $@
 
 ${TOP_LIBDIR}/pam_afs.krb.so.1: pam_afs.krb.so.1
-	set -x; \
-	case "$(SYS_NAME)" in \
-	parisc*_linux*) \
-		echo Skipping install of $@. ;; \
-	*) \
-		${INSTALL} $? $@ ;; \
-	esac
+	${INSTALL} $? $@
 
 dest:  ${DEST}/lib/pam_afs.so.1 ${DEST}/lib/pam_afs.krb.so.1
 
