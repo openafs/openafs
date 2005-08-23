@@ -17,7 +17,7 @@ msgstr ""
 "Project-Id-Version: openafs 1.2.9-2\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2005-08-18 12:47-0700\n"
-"PO-Revision-Date: 2005-07-17 08:47+0200\n"
+"PO-Revision-Date: 2005-08-22 15:11+0200\n"
 "Last-Translator: Christian Perrier <bubulle@debian.org>\n"
 "Language-Team: French <debian-l10n-french@lists.debian.org>\n"
 "MIME-Version: 1.0\n"
@@ -107,7 +107,6 @@ msgstr "Lancer le client AFS maintenant, puis à chaque démarrage ?"
 #. Type: boolean
 #. Description
 #: ../openafs-client.templates:34
-#, fuzzy
 msgid ""
 "Should the Openafs filesystem be started and mounted at boot? Normally, most "
 "users who install the openafs-client package expect to run it at boot.  "
@@ -134,7 +133,6 @@ msgstr "Faut-il chercher les cellules AFS dans le DNS ?"
 #. Type: boolean
 #. Description
 #: ../openafs-client.templates:45
-#, fuzzy
 msgid ""
 "In order to contact an AFS cell, you need the IP addresses of the cell's "
 "database servers.  Normally, this information is read from /etc/openafs/"
@@ -151,8 +149,7 @@ msgstr ""
 #. Description
 #: ../openafs-client.templates:55
 msgid "Encrypt authenticated traffic with AFS fileserver?"
-msgstr ""
-"Faut-il chiffrer le trafic authentifié avec le serveur de fichiers AFS ?"
+msgstr "Faut-il chiffrer le trafic authentifié avec le serveur de fichiers AFS ?"
 
 #. Type: boolean
 #. Description
@@ -194,7 +191,6 @@ msgstr ""
 #. Type: boolean
 #. Description
 #: ../openafs-client.templates:65
-#, fuzzy
 msgid ""
 "If you generate /afs dynamically, you may need to create /etc/openafs/"
 "CellAlias to include aliases for common cells.  (The syntax of this file is "
@@ -202,16 +198,13 @@ msgid ""
 "cell.)"
 msgstr ""
 "Si vous créez /afs de manière dynamique, vous aurez peut-être à créer /etc/"
-"openafs/CellAlias pour inclure les alias des cellules communes. NE "
-"CHOISISSEZ PAS CETTE OPTION si cette machine est le premier serveur de bases "
-"de données d'une nouvelle cellule."
+"openafs/CellAlias pour inclure les alias des cellules communes. Ce fichier comporte une ligne par alias, avec le nom de la cellule, un espace et l'alias utilisé pour la cellule."
 
 #. Type: boolean
 #. Description
 #: ../openafs-client.templates:79
 msgid "Use fakestat to avoid hangs when listing /afs?"
-msgstr ""
-"Utiliser fakestat pour éviter les erreurs à l'affichage du contenu de /afs ?"
+msgstr "Utiliser fakestat pour éviter les erreurs à l'affichage du contenu de /afs ?"
 
 #. Type: boolean
 #. Description
@@ -254,8 +247,7 @@ msgstr ""
 #. Description
 #: ../openafs-fileserver.templates:11
 msgid "Upgrading will move files to new locations; continue?"
-msgstr ""
-"Faut-il procéder au déplacement de fichiers requis pour la mise à jour ?"
+msgstr "Faut-il procéder au déplacement de fichiers requis pour la mise à jour ?"
 
 #. Type: boolean
 #. Description
@@ -297,3 +289,4 @@ msgstr ""
 "ces plateformes de même que le serveur de fichiers à processus légers. Il "
 "est probable que le serveur refusera tout simplement de démarrer. Cependant, "
 "s'il démarre quand même, des corruptions de données peuvent avoir lieu."
+
