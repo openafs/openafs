@@ -275,6 +275,9 @@
 /* define if your aops.writepage takes a struct writeback_control argument */
 #undef AOP_WRITEPAGE_TAKES_WRITEBACK_CONTROL
 
+/* define if your refrigerator takes PF_FREEZE */
+#undef LINUX_REFRIGERATOR_TAKES_PF_FREEZE
+
 /* define if you have in_systm.h header file */
 #undef HAVE_IN_SYSTM_H
 

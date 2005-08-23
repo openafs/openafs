@@ -1,7 +1,8 @@
-openafs (1.3.87-2) unstable; urgency=low
+openafs (1.4rc1-1) unstable; urgency=low
 
-  * Also install pam_afs.krb.so on hppa.  I believe the new PAM module
-    build process fixes the issue that was being worked around before.
+  * New upstream version.
+  * Install pam_afs.krb.so on hppa.  I believe the new PAM module build
+    process fixes the issue that was being worked around before.
   * Improve the documentation and scripts for setting up new servers or a
     new cell.  afs-rootvol can now be run from a client configured to use
     dynroot.  afs-newcell generates the server CellServDB directly to work

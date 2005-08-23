@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/libadmin/kas/afs_kasAdmin.c,v 1.9.2.2 2004/12/13 19:39:18 shadow Exp $");
+    ("$Header: /cvs/openafs/src/libadmin/kas/afs_kasAdmin.c,v 1.9.2.3 2005/08/16 18:48:34 shadow Exp $");
 
 #include <stdio.h>
 
@@ -716,7 +716,7 @@ GetPrincipalLockStatus(const kas_server_p kaserver, const kas_identity_p who,
 	locked = 0;
 	tst =
 	    ubik_CallIter(KAM_LockStatus, kaserver->servers, UPUBIKONLY,
-			  &count, who->principal, who->instance, &locked, 0,
+			  &count, (long)who->principal, (long)who->instance, (long)&locked, 0,
 			  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 	if (tst == 0) {
 	    if (locked) {
@@ -1273,8 +1273,8 @@ kas_PrincipalUnlock(const void *cellHandle, const void *serverHandle,
     do {
 	tst =
 	    ubik_CallIter(KAM_Unlock, kaserver.servers, 0, &count,
-			  who->principal, who->instance, 0, 0, 0, 0, 0, 0,
-			  0, 0, 0, 0, 0, 0, 0, 0);
+			  (long)who->principal, (long)who->instance, 0, 0, 0,
+			  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 	if (tst && (tst != UNOSERVERS)) {
 	    if (save_tst == 0) {
 		save_tst = tst;	/* save the first failure */

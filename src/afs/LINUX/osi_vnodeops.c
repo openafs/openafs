@@ -22,7 +22,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vnodeops.c,v 1.81.2.33 2005/08/08 15:04:38 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vnodeops.c,v 1.81.2.35 2005/08/19 15:33:28 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
@@ -792,7 +792,7 @@ afs_dentry_iput(struct dentry *dp, struct inode *ip)
 
     AFS_GLOCK();
     if (vcp->states & CUnlinked)
-	(void) afs_remunlink(vcp, 1);		/* perhaps afs_InactiveVCache() instead */
+	(void) afs_InactiveVCache(vcp, NULL);
     AFS_GUNLOCK();
 
     iput(ip);
@@ -974,7 +974,7 @@ afs_linux_unlink(struct inode *dip, struct dentry *dp)
 #if defined(AFS_LINUX26_ENV)
     lock_kernel();
 #endif
-    if (((VREFCOUNT(tvc) > 0) && tvc->opens > 0)
+    if (VREFCOUNT(tvc) > 1 && tvc->opens > 0
 				&& !(tvc->states & CUnlinked)) {
 	struct dentry *__dp;
 	char *__name;
@@ -1098,9 +1098,8 @@ afs_linux_rmdir(struct inode *dip, struct dentry *dp)
     cred_t *credp = crref();
     const char *name = dp->d_name.name;
 
-#if defined(AFS_LINUX26_ENV)
-    lock_kernel();
-#endif
+    /* locking kernel conflicts with glock? */
+
     AFS_GLOCK();
     code = afs_rmdir(VTOAFS(dip), name, credp);
     AFS_GUNLOCK();
@@ -1117,9 +1116,6 @@ afs_linux_rmdir(struct inode *dip, struct dentry *dp)
 	d_drop(dp);
     }
 
-#if defined(AFS_LINUX26_ENV)
-    unlock_kernel();
-#endif
     crfree(credp);
     return -code;
 }

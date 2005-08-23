@@ -16,7 +16,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vfsops.c,v 1.29.2.9 2005/08/09 13:42:12 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vfsops.c,v 1.29.2.10 2005/08/19 17:51:50 shadow Exp $");
 
 #define __NO_VERSION__		/* don't define kernel_version in module.h */
 #include <linux/module.h> /* early to avoid printf->printk mapping */
@@ -341,16 +341,14 @@ afs_clear_inode(struct inode *ip)
 static void
 afs_put_inode(struct inode *ip)
 {
-    cred_t *credp = crref();
     struct vcache *vcp = VTOAFS(ip);
 
-    AFS_GLOCK();
-    ObtainReadLock(&vcp->lock);
-    if (VREFCOUNT(vcp) == 2)
-	afs_InactiveVCache(vcp, credp);
-    ReleaseReadLock(&vcp->lock);
-    AFS_GUNLOCK();
-    crfree(credp);
+    if (VREFCOUNT(vcp) == 2) {
+	AFS_GLOCK();
+	if (VREFCOUNT(vcp) == 2)
+	    afs_InactiveVCache(vcp, NULL);
+	AFS_GUNLOCK();
+    }
 }
 
 /* afs_put_super

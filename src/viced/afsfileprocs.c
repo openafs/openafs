@@ -29,7 +29,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/viced/afsfileprocs.c,v 1.81.2.10 2005/08/03 04:46:48 shadow Exp $");
+    ("$Header: /cvs/openafs/src/viced/afsfileprocs.c,v 1.81.2.11 2005/08/14 02:11:38 jaltman Exp $");
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -2441,7 +2441,8 @@ SRXAFS_FetchACL(struct rx_call * acall, struct AFSFid * Fid,
 
     osi_auditU(acall, FetchACLEvent, errorCode, 
                AUD_ID, t_client ? t_client->ViceId : 0,
-               AUD_FID, Fid, AUD_END);
+               AUD_FID, Fid, 
+               AUD_ACL, AccessList->AFSOpaque_val, AUD_END);
     return errorCode;
 }				/*SRXAFS_FetchACL */
 

@@ -42,8 +42,8 @@ LINTIAN_PACKAGES = openafs-dbserver openafs-client openafs-fileserver
 
 # These variable is used only by get-orig-source, which will normally only be
 # run by maintainers.
-VERSION   = 1.3.87
-UPSTREAM  = /afs/grand.central.org/software/openafs/$(VERSION)
+VERSION   = 1.4.0-rc1
+UPSTREAM  = /afs/grand.central.org/software/openafs/candidate/$(VERSION)
 
 # Download the upstream source and do the repackaging that we have to do for
 # DFSG reasons.  This assumes AFS is mounted, as it's generally only used by
