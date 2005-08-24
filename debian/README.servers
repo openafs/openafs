@@ -163,7 +163,7 @@ Creating a New Cell
       results, note the kvno number reported, since you'll need it later
       (it will normally be 3).
 
-      Don't forgoet the -e des-cbc-crc:v4 to force the afs key to be DES.
+      Don't forget the -e des-cbc-crc:v4 to force the afs key to be DES.
       You can verify this with:
 
           getprinc afs
@@ -215,7 +215,7 @@ Creating a New Cell
 
       At the completion of this step, you should see bosserver and several
       other AFS server processes running, and you should be able to see
-      the status of those procesess with:
+      the status of those processes with:
 
           bos status localhost -local
 
