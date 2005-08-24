@@ -223,7 +223,7 @@ print "done.\n";
 
 # Past this point we want to control when bos shutdown happens.
 $shutdown_needed = 0;
-unwind("bos shutdown $server -localauth");
+unwind("bos shutdown $server -localauth -wait");
 run("vos create $server a root.afs -localauth");
 
 # We should now be able to bring up the client (it may need root.afs to exist
@@ -258,6 +258,6 @@ print "Then, run afs-rootvol.\n";
 # If we fail before all the instances are created, we need to back out of
 # everything we did as much as possible.
 END {
-    system("bos shutdown $server -localauth") if $shutdown_needed;
+    system("bos shutdown $server -localauth -wait") if $shutdown_needed;
     run(pop @unwinds) while @unwinds;
 }
