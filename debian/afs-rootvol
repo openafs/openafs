@@ -178,5 +178,8 @@ unwind("vos remove $server $part root.afs.readonly -localauth");
 # If we fail before all the instances are created, we need to back out of
 # everything we did as much as possible.
 END {
+    if (@unwinds) {
+        print "\nRoot volume setup failed, ABORTING\n";
+    }
     run(pop @unwinds) while @unwinds;
 }

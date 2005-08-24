@@ -120,6 +120,7 @@ $server = `hostname -f`;
 chomp $server;
 my $ip = gethostbyname $server;
 if (inet_ntoa($ip) eq '127.0.0.1') {
+    print "\n";
     print "Your hostname $server resolves to 127.0.0.1, which AFS cannot\n";
     print "cope with.  Make sure your hostname resolves to a non-loopback\n";
     print "IP address.  (Check /etc/hosts and make sure that your hostname\n";
@@ -164,6 +165,7 @@ while (<CELLSERVDB>) {
     last;
 }
 unless ($found) {
+    print "\n";
     print "The new cell $cell is not configured in /etc/openafs/CellServDB\n";
     print "Add configuration like:\n\n>$cell\n$ip\n\nto that file before"
         . " continuing.\n";
@@ -193,7 +195,12 @@ unwind("bos removeuser $server $afs_admin -localauth");
 # the standard mechanism of starting the cell in noauth mode until the first
 # user has been created.
 if (-f "/var/lib/openafs/db/prdb.DB0") {
-    die "Protection database already exists; cell already partially created\n";
+    warn "ERROR: Protection database already exists; cell already partially"
+        . " created\n";
+    warn "ERROR: If you do not want the current database, remove all files
+        . " in\n";
+    warn "ERROR: /var/lib/openafs/db and then run this program again.\n";
+    exit(1);
 }
 open(PRDB, "| pt_util -p /var/lib/openafs/db/prdb.DB0 -w")
     or die "Unable to start pt_util: $!\n";
@@ -230,22 +237,22 @@ run("vos create $server a root.afs -localauth");
 # if not using dynroot).  We override whatever default cell was configured for
 # the client, just in case it was pointing to some other cell.
 open(THIS, "> /etc/openafs/ThisCell")
-    or die "Cannot create /etc/openafs/ThisCell: $!\n";
+    or die "ERROR: Cannot create /etc/openafs/ThisCell: $!\n";
 print THIS "$cell\n";
-close THIS or die "Cannot write to /etc/openafs/ThisCell: $!\n";
+close THIS or die "ERROR: Cannot write to /etc/openafs/ThisCell: $!\n";
 run("/etc/init.d/openafs-client force-start");
 
 # Verify that AFS has managed to start.
 my $afs_running = 0;
-open(MOUNT, "mount |") or die "Failed to run mount: $!\n";
+open(MOUNT, "mount |") or die "ERROR: Failed to run mount: $!\n";
 while(<MOUNT>) {
     if (m:^AFS:) {
         $afs_running = 1;
     }
 }
 unless ($afs_running) {
-    print "The AFS client failed to start.\n";
-    print "Please fix whatever problem kept it from running.\n";
+    print "ERROR: The AFS client failed to start.\n";
+    print "ERROR: Please fix whatever problem kept it from running.\n";
     exit(1);
 }
 print "\n";
@@ -258,6 +265,9 @@ print "Then, run afs-rootvol.\n";
 # If we fail before all the instances are created, we need to back out of
 # everything we did as much as possible.
 END {
+    if ($shutdown_needed || @unwinds) {
+        print "\nCell setup failed, ABORTING\n";
+    }
     system("bos shutdown $server -localauth -wait") if $shutdown_needed;
     run(pop @unwinds) while @unwinds;
 }
