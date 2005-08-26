@@ -31,6 +31,7 @@ root.afs.
 Sam Hartman <hartmans@debian.org>
 
 =cut
+#'# cperl-mode
 
 # This subroutine creates a volume, mounts it and then sets the access
 # to allow read by anyuser.  The volume is scheduled for deletion in
@@ -104,6 +105,14 @@ eotext
 unless ($part) {
     $part = $rl->readline("What partition? [a] ");
     $part = "a" unless $part;
+}
+print "\n";
+
+# Make sure the user has tokens.  Forgetting to do this is a common error.
+my $status = system("tokens | grep Expires > /dev/null");
+if ($status != 0) {
+    die "You appear to not have AFS tokens.  Obtain tokens (with aklog,\n"
+        . "for example) and then run this script again.\n";
 }
 
 # Figure out where root.afs is.  There are two possibilities: either we aren't
