@@ -84,7 +84,14 @@ Creating a New Cell
       unless you have a local method that you prefer).  Also create a
       regular (non-admin) principal for yourself if you have not already;
       this is the identity that you'll use for regular operations, like
-      storing files or reading mail.
+      storing files or reading mail.  To do this with kadmin.local, run
+      that program and then run the commands:
+
+          addprinc username/admin
+          addprinc username
+
+      at the kadmin prompt.  You'll be prompted for passwords for both
+      accounts.
 
       If the KDC is not on the same system that the OpenAFS db server will
       be on, you will also need to give your admin principal the rights to
