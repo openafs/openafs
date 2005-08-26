@@ -22,6 +22,8 @@ openafs (1.4rc1-1) unstable; urgency=low
     documentation of the CellAlias syntax in that message until we have a
     real man page.
   * Suggest openafs-doc.
+  * Update standards version to 3.6.2 for the kernel module packages (no
+    changes required).
   * Translation updates.
     - Czech, thanks Martin Sin.
     - Vietnamese, thanks Clytie Siddall.
