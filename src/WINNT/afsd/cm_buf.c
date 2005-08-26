@@ -19,6 +19,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <strsafe.h>
+#include <math.h>
 
 #include "afsd.h"
 #include "cm_memmap.h"
@@ -109,7 +110,7 @@ void buf_IncrSyncer(long parm)
     bp = cm_data.buf_allp;
     bp->refCount++;
     lock_ReleaseWrite(&buf_globalLock);
-    nAtOnce = cm_data.buf_nbuffers / 10;
+    nAtOnce = (long)sqrt(cm_data.buf_nbuffers);
     while (buf_ShutdownFlag == 0) {
 #ifndef DJGPP
         i = SleepEx(5000, 1);
@@ -562,9 +563,11 @@ void buf_LockedCleanAsync(cm_buf_t *bp, cm_req_t *reqp)
     while ((bp->flags & CM_BUF_DIRTY) == CM_BUF_DIRTY) {
         lock_ReleaseMutex(&bp->mx);
 
+	osi_Log1(buf_logp, "buf_LockedCleanAsync starts I/O on 0x%x", bp);
         code = (*cm_buf_opsp->Writep)(&bp->fid, &bp->offset,
                                        cm_data.buf_blockSize, 0, bp->userp,
                                        reqp);
+	osi_Log2(buf_logp, "buf_LockedCleanAsync I/O on 0x%x, done=%d", bp, code);
                 
         lock_ObtainMutex(&bp->mx);
         if (code) 
@@ -578,7 +581,6 @@ void buf_LockedCleanAsync(cm_buf_t *bp, cm_req_t *reqp)
     };
 
     /* do logging after call to GetLastError, or else */
-    osi_Log2(buf_logp, "buf_CleanAsync starts I/O on 0x%x, done=%d", bp, code);
         
     /* if someone was waiting for the I/O that just completed or failed,
      * wake them up.
