@@ -1,1 +1,18 @@
-* Get bos restrict working
+* Get bos restrict working.
+
+* The configuration transcript and the README.servers file would be best
+  read together, but preferrably with some nicer formatting (such as HTML
+  with a style sheet to set off the transcript in a different background
+  color).
+
+* The way the module packages are generated could stand to be simplified
+  considerably.  Much of what prep-modules does is not actually necessary
+  and just makes the script hard to read.  Also, rethink whether both
+  control.module and control.module-image are needed, and try to use
+  substvars to handle the control.module variables rather than dynamically
+  generating the control file.
+
+* Include some of the other random useful AFS programs in openafs-client
+  (scout, vlclient, fstrace, up).
+
+* Consider including the kdump executable in the kernel module package.
