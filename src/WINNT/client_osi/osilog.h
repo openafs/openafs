@@ -91,6 +91,7 @@ extern char *osi_HexifyString(char *s);
 #define osi_Log2(l,f,a,b)	osi_LogAdd((l), (f), (long) (a), (long) (b), 0, 0)
 #define osi_Log3(l,f,a,b,c)	osi_LogAdd((l), (f), (long) (a), (long) (b), (long) (c), 0)
 #define osi_Log4(l,f,a,b,c,d)	osi_LogAdd((l), (f), (long) (a), (long) (b), (long) (c), (long) (d))
+#define osi_Log5(l,f,a,b,c,d,e)	osi_LogAdd((l), (f), (long) (a), (long) (b), (long) (c), (long) (d), (long) (e))
 
 #ifdef DEBUG_VERBOSE
 #define DEBUG_EVENT1(a,b,c) {HANDLE h; char *ptbuf[1],buf[132];\

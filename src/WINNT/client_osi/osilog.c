@@ -37,6 +37,14 @@ osi_log_t *osi_allLogsp;	/* all logs known; for use during panic */
 unsigned long osi_logFreq;	/* 0, or frequency of high perf counter */
 unsigned long osi_logTixToMicros;	/* mult. correction factor */
 
+#define TRACE_OPTION_EVENT 2
+#define TRACE_OPTION_DEBUGLOG 4
+
+#define ISCLIENTTRACE(v) ( ((v) & TRACE_OPTION_EVENT)==TRACE_OPTION_EVENT)
+#define ISCLIENTDEBUGLOG(v) (((v) & TRACE_OPTION_DEBUGLOG)==TRACE_OPTION_DEBUGLOG)
+
+DWORD osi_TraceOption=0;
+
 osi_fdOps_t osi_logFDOps = {
 	osi_LogFDCreate,
 #ifndef DJGPP
@@ -94,9 +102,9 @@ osi_log_t *osi_LogCreate(char *namep, long size)
         logp->datap = malloc(size * sizeof(osi_logEntry_t));
 
 	/* init strings array */
-	logp->maxstringindex = size/5;
+	logp->maxstringindex = size/3;
 	logp->stringindex = 0;
-	logp->stringsp = malloc((size/5) * OSI_LOG_STRINGSIZE);
+	logp->stringsp = malloc(logp->maxstringindex * OSI_LOG_STRINGSIZE);
  
         /* and sync */
         thrd_InitCrit(&logp->cs);
@@ -208,17 +216,28 @@ void osi_LogAdd(osi_log_t *logp, char *formatp, long p0, long p1, long p2, long 
         lep->parms[3] = p3;
 
 #ifdef NOTSERVICE
-		printf( "%9ld:", lep->micros );
-		printf( formatp, p0, p1, p2, p3);
-		printf( "\n" );
+        printf( "%9ld:", lep->micros );
+        printf( formatp, p0, p1, p2, p3);
+        printf( "\n" );
 #endif
+
+        if(ISCLIENTDEBUGLOG(osi_TraceOption)) {
+	    char wholemsg[1024], msg[1000];
+
+	    snprintf(msg, sizeof(msg), formatp,
+		     p0, p1, p2, p3);
+	    snprintf(wholemsg, sizeof(wholemsg), 
+		     "tid[%d] %s\n",
+		     lep->tid, msg);
+            OutputDebugStringA(wholemsg);
+        }
 
 	thrd_LeaveCrit(&logp->cs);
 }
 
 void osi_LogPrint(osi_log_t *logp, FILE_HANDLE handle)
 {
-	char wholemsg[1000], msg[1000];
+	char wholemsg[1024], msg[1000];
 	int i, ix, ioCount;
 	osi_logEntry_t *lep;
 
@@ -230,10 +249,11 @@ void osi_LogPrint(osi_log_t *logp, FILE_HANDLE handle)
 	     i < logp->nused;
 	     i++, ix++, (ix >= logp->alloc ? ix -= logp->alloc : 0)) {
 		lep = logp->datap + ix;		/* pointer arithmetic */
-		sprintf(msg, lep->formatp,
+		snprintf(msg, sizeof(msg), lep->formatp,
 			lep->parms[0], lep->parms[1],
 			lep->parms[2], lep->parms[3]);
-		sprintf(wholemsg, "time %d.%06d, pid %d %s\n",
+		snprintf(wholemsg, sizeof(wholemsg),
+			 "time %d.%06d, tid %d %s\n",
 			lep->micros / 1000000,
 			lep->micros % 1000000,
 			lep->tid, msg);
@@ -251,9 +271,13 @@ void osi_LogPrint(osi_log_t *logp, FILE_HANDLE handle)
 
 char *osi_LogSaveString(osi_log_t *logp, char *s)
 {
-	char *saveplace = logp->stringsp[logp->stringindex];
+	char *saveplace;
 
 	if (s == NULL) return NULL;
+
+        thrd_EnterCrit(&logp->cs);
+
+        saveplace = logp->stringsp[logp->stringindex];
 
 	if (strlen(s) >= OSI_LOG_STRINGSIZE)
 		sprintf(saveplace, "...%s",
@@ -261,8 +285,11 @@ char *osi_LogSaveString(osi_log_t *logp, char *s)
 	else
 		strcpy(saveplace, s);
 	logp->stringindex++;
+
 	if (logp->stringindex >= logp->maxstringindex)
 	    logp->stringindex = 0;
+
+        thrd_LeaveCrit(&logp->cs);
 
 	return saveplace;
 }
@@ -341,11 +368,6 @@ void osi_LogDisable(osi_log_t *logp)
 	if (logp)
 		logp->enabled = 0;
 }
-
-#define TRACE_OPTION_EVENT 2
-#define ISCLIENTTRACE(v) ( ((v) & TRACE_OPTION_EVENT)==TRACE_OPTION_EVENT)
-
-DWORD osi_TraceOption=0;
 
 void osi_InitTraceOption()
 {
