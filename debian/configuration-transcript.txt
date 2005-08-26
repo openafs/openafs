@@ -131,13 +131,13 @@ WARNING: no policy specified for faheem/admin@DULCI.BIOSTAT.DUKE.EDU; defaulting
 Enter password for principal "faheem/admin@DULCI.BIOSTAT.DUKE.EDU": 
 Re-enter password for principal "faheem/admin@DULCI.BIOSTAT.DUKE.EDU": 
 Principal "faheem/admin@DULCI.BIOSTAT.DUKE.EDU" created.
-kadmin.local:  addprinc faheem/admin
+kadmin.local:  addprinc faheem
 WARNING: no policy specified for faheem@DULCI.BIOSTAT.DUKE.EDU; defaulting to no policy
 Enter password for principal "faheem@DULCI.BIOSTAT.DUKE.EDU": 
 Re-enter password for principal "faheem@DULCI.BIOSTAT.DUKE.EDU": 
 Principal "faheem@DULCI.BIOSTAT.DUKE.EDU" created.
 kadmin.local:  exit
-riverside:/home/faheem#  apt-get install openafs-dbserver openafs-krb5
+riverside:/home/faheem# apt-get install openafs-dbserver openafs-krb5
 ...
 The following extra packages will be installed:
    openafs-client openafs-fileserver
