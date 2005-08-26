@@ -105,9 +105,8 @@ close MOUNT;
 
 # Make sure there is a keyfile.
 unless ( -f "/etc/openafs/server/KeyFile") {
-    print "You do not have an AFS keyfile.  Please create this using asetkey"
-        . " from openafs-krb5\n";
-    print "or the bos addkey command\n";
+    print "You do not have an AFS keyfile.  Please create this using\n";
+    print "asetkey from openafs-krb5 or the bos addkey command\n";
     exit(1);
 }
 
@@ -167,8 +166,10 @@ while (<CELLSERVDB>) {
 unless ($found) {
     print "\n";
     print "The new cell $cell is not configured in /etc/openafs/CellServDB\n";
-    print "Add configuration like:\n\n>$cell\n$ip\n\nto that file before"
-        . " continuing.\n";
+    print "Add configuration like:\n\n";
+    print ">$cell\n";
+    print "$ip\n\n";
+    print "to that file before continuing.\n";
     exit(1);
 }
 
@@ -195,13 +196,15 @@ unwind("bos removeuser $server $afs_admin -localauth");
 # the standard mechanism of starting the cell in noauth mode until the first
 # user has been created.
 if (-f "/var/lib/openafs/db/prdb.DB0") {
-    warn "ERROR: Protection database already exists; cell already partially"
-        . " created\n";
-    warn "ERROR: If you do not want the current database, remove all files
-        . " in\n";
-    warn "ERROR: /var/lib/openafs/db and then run this program again.\n";
+    warn "ERROR: Protection database already exists; cell already partially\n";
+    warn "ERROR: created.   If you do not want the current database, remove\n";
+    warn "ERROR: all files in /var/lib/openafs/db and then run this program\n";
+    warn "ERROR: again.\n";
     exit(1);
 }
+print "\nCreating initial protection database.  This will print some errors\n";
+print "about an id already existing and a bad ubik magic.  These errors can\n";
+print "be safely ignored.\n\n";
 open(PRDB, "| pt_util -p /var/lib/openafs/db/prdb.DB0 -w")
     or die "Unable to start pt_util: $!\n";
 print PRDB "$afs_admin 128/20 1 -204 -204\n";
@@ -209,6 +212,7 @@ print PRDB "system:administrators 130/20 -204 -204 -204\n";
 print PRDB " $afs_admin 1\n";
 close PRDB;
 unwind("rm /var/lib/openafs/db/prdb*");
+print "\n";
 
 # We should now be able to start ptserver and vlserver.
 run("bos create $server ptserver simple /usr/lib/openafs/ptserver -localauth");
@@ -232,6 +236,7 @@ print "done.\n";
 $shutdown_needed = 0;
 unwind("bos shutdown $server -localauth -wait");
 run("vos create $server a root.afs -localauth");
+unwind("vos remove $server a root.afs -localauth");
 
 # We should now be able to bring up the client (it may need root.afs to exist
 # if not using dynroot).  We override whatever default cell was configured for
