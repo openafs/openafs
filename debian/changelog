@@ -6,8 +6,11 @@ openafs (1.4rc1-1) unstable; urgency=low
   * Improve the documentation and scripts for setting up new servers or a
     new cell.  afs-rootvol can now be run from a client configured to use
     dynroot.  afs-newcell generates the server CellServDB directly to work
-    around oddities with bos addhost.  Thanks to Fahemm Mitha and Sergio
-    Gelato for analysis and patches.  (Closes: #322638)
+    around oddities with bos addhost.  There are many other, more minor
+    improvements as well.  Thanks to Faheem Mitha and Sergio Gelato for
+    analysis and patches.  (Closes: #322638)
+  * Update the configuration transcript to reflect the current packages,
+    messages, and instructions.  Thanks, Faheem Mitha.
   * Fill in the server CellServDB with information about the local cell,
     if available in the client CellServDB, rather than always initializing
     it to contain just the name of the cell.
