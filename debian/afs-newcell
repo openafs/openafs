@@ -157,7 +157,7 @@ while (<CELLSERVDB>) {
     while (<CELLSERVDB>) {
         last if /^>/;
         my ($dbserver) = split ' ';
-        if ($dbserver eq $ip) {
+        if ($dbserver eq inet_ntoa($ip)) {
             $found = 1;
             last;
         }
