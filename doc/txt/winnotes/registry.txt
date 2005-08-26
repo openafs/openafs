@@ -284,13 +284,15 @@ Variable: HardDeadtimeout
 
 
 Value  : TraceOption
-Type   : DWORD {0, 1, 2, 3}
+Type   : DWORD {0-7}
 Default : 0
 
   Enables logging of debug output to the Windows Event Log.
   Bit 0 enables logging of "Logon Events" processed by the Network Provider
   and Winlogon Event Notification Handler.  
   Bit 1 enables logging of events captured by the AFS Client Service.
+  Bit 2 enables real-time viewing of "fs trace" logging with DbgView 
+  or similar tools.
 
 Value   : AllSubmount
 Type    : DWORD {0, 1}

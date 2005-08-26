@@ -638,7 +638,7 @@ int afsd_InitCM(char **reasonP)
     dummyLen = sizeof(TraceOption);
     code = RegQueryValueEx(parmKey, "TraceOption", NULL, NULL,
                             (BYTE *) &TraceOption, &dummyLen);
-    afsi_log("Event Log Tracing = %lX", TraceOption);
+    afsi_log("Trace Options = %lX", TraceOption);
 
     dummyLen = sizeof(traceBufSize);
     code = RegQueryValueEx(parmKey, "TraceBufferSize", NULL, NULL,
