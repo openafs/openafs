@@ -50,8 +50,8 @@ unless ($requirements_met) {
 In order to set up a new AFS cell, you must meet the following:
 
 1) You need a working Kerberos realm with Kerberos4 support.  You
-   should install Heimdal with Kth-kerberos compatibility or MIT
-   Kerberos5.
+   should install Heimdal with KTH Kerberos compatibility or MIT
+   Kerberos 5.
 
 2) You need to create the single-DES AFS key and load it into
    /etc/openafs/server/KeyFile.  If your cell's name is the same as
@@ -70,8 +70,8 @@ In order to set up a new AFS cell, you must meet the following:
    realm.  This principal will be added to susers and
    system:administrators and thus will be able to run administrative
    commands.  Generally the user is a root or admin instance of some
-   administravie user.  For example if jruser is an administrator then
-   it would be reasonable to create jruser/root (or jruser/admin) and
+   administrative user.  For example if jruser is an administrator then
+   it would be reasonable to create jruser/admin (or jruser/root) and
    specify that as the user to be added in this script.
 
 5) The AFS client must not be running on this workstation.  It will be
