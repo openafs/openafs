@@ -78,6 +78,7 @@ In order to set up a new AFS cell, you must meet the following:
    at the end of this script.
 
 eoreqs
+#'# cperl-mode
 
     $_ = $rl->readline("Do you meet these requirements? [y/n] ");
     unless (/^y/i ) {
@@ -168,7 +169,7 @@ unless ($found) {
     print "The new cell $cell is not configured in /etc/openafs/CellServDB\n";
     print "Add configuration like:\n\n";
     print ">$cell\n";
-    print "$ip\n\n";
+    print inet_ntoa($ip), "\n\n";
     print "to that file before continuing.\n";
     exit(1);
 }
