@@ -218,13 +218,20 @@ Creating a New Cell
   9.  Run afs-newcell.  This will prompt you to be sure that the above
       steps have been complete and will ask you for the Kerberos principal
       to use for AFS administrative access.  You should use the
-      username/admin principal discussed above.
+      username/admin principal discussed above.  afs-newcell sets up the
+      initial protection database (which stores users and groups),
+      configures the AFS database and file server daemons, and creates the
+      root volume for AFS clients.
 
       At the completion of this step, you should see bosserver and several
       other AFS server processes running, and you should be able to see
       the status of those processes with:
 
           bos status localhost -local
+
+      bosserver is a master server that starts and monitors all the
+      individual AFS servers, and bos is the program used to send it
+      commands.
 
       Now, you should be able to run:
 
@@ -249,7 +256,9 @@ Creating a New Cell
       principal (rather than using the local KeyFile to authenticate).
 
   10. Run afs-rootvol.  This creates the basic AFS volume structure for
-      your new cell.  It will prompt you to be sure that the above steps
+      your new cell, including the top-level volume, the mount point for
+      your cell in the AFS root volume, and the mount points for all known
+      public cells.  It will prompt you to be sure that the above steps
       are complete and then will ask you what file server and partition to
       create the volume on.  If you were following the above instructions,
       use the local hostname and "a" as the partition (without the
