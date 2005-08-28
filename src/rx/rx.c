@@ -2602,6 +2602,24 @@ rxi_ReceivePacket(register struct rx_packet *np, osi_socket socket,
 	    clock_GetTime(&call->queueTime);
 	    hzero(call->bytesSent);
 	    hzero(call->bytesRcvd);
+	    /*
+	     * If the number of queued calls exceeds the overload
+	     * threshold then abort this call.
+	     */
+	    if ((rx_BusyThreshold > 0) && (rx_nWaiting > rx_BusyThreshold)) {
+		struct rx_packet *tp;
+		
+		rxi_CallError(call, rx_BusyError);
+		tp = rxi_SendCallAbort(call, np, 1, 0);
+		MUTEX_EXIT(&call->lock);
+		MUTEX_ENTER(&conn->conn_data_lock);
+		conn->refCount--;
+		MUTEX_EXIT(&conn->conn_data_lock);
+		MUTEX_ENTER(&rx_stats_mutex);
+		rx_stats.nBusies++;
+		MUTEX_EXIT(&rx_stats_mutex);
+		return tp;
+	    }
 	    rxi_KeepAliveOn(call);
 	} else if (np->header.callNumber != currentCallNumber) {
 	    /* Wait until the transmit queue is idle before deciding
