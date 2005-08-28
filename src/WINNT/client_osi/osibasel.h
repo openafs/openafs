@@ -31,6 +31,7 @@ typedef struct osi_mutex {
 	char type;			/* for all types; type 0 uses atomic count */
 	char flags;			/* flags for base type */
 	unsigned short atomicIndex;	/* index of lock for low-level sync */
+        thread_t tid;			/* tid of thread that owns the lock */
 	unsigned short waiters;		/* waiters */
         unsigned short pad;
 	union {

@@ -192,6 +192,7 @@ void lock_ObtainMutex(struct osi_mutex *lockp)
 		/* if we're here, all clear to set the lock */
 		lockp->flags |= OSI_LOCKFLAG_EXCL;
 	}
+        lockp->tid = thrd_Current();
 	LeaveCriticalSection(csp);
 }
 
@@ -212,6 +213,7 @@ void lock_ReleaseMutex(struct osi_mutex *lockp)
 	osi_assertx(lockp->flags & OSI_LOCKFLAG_EXCL, "mutex not held");
 	
 	lockp->flags &= ~OSI_LOCKFLAG_EXCL;
+        lockp->tid = 0;
 	if (!osi_TEmpty(&lockp->d.turn)) {
 		osi_TSignalForMLs(&lockp->d.turn, 0, csp);
 	}
@@ -411,6 +413,7 @@ void lock_InitializeMutex(osi_mutex_t *mp, char *namep)
 	 */
 	mp->type = 0;
 	mp->flags = 0;
+        mp->tid = 0;
 	mp->atomicIndex = osi_MUTEXHASH(mp);
         osi_TInit(&mp->d.turn);
 	return;
