@@ -5,8 +5,8 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
-OPTMZ += @KRB5CFLAGS@ -DALLOW_REGISTER
-LIBS += @KRB5LIBS@
+OPTMZ = @KRB5CFLAGS@ -DALLOW_REGISTER
+AKLIBS = ${LIBS} @KRB5LIBS@
 AFSLIBS = ${TOP_LIBDIR}/libprot.a ${TOP_LIBDIR}/libubik.a \
 	  ${TOP_LIBDIR}/libauth.a ${TOP_LIBDIR}/librxkad.a \
 	  ${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/liblwp.a \
@@ -19,8 +19,7 @@ OBJS=   aklog.o aklog_main.o krb_util.o linked_list.o
 all: aklog
 
 aklog:	${OBJS} ${AFSLIBS}
-	${CC} -o $@ ${CFLAGS} ${OBJS} ${LIBS} ${AFSLIBS} ${XLIBS}
-
+	${CC} -o $@ ${CFLAGS} ${OBJS} ${AKLIBS} ${AFSLIBS} ${XLIBS}
 
 #
 # Installation targets
