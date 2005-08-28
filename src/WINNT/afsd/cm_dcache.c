@@ -134,8 +134,8 @@ long cm_BufWrite(void *vfidp, osi_hyper_t *offsetp, long length, long flags,
         callp = rx_NewCall(rxconnp);
         rx_PutConnection(rxconnp);
 
-        osi_Log3(afsd_logp, "CALL StoreData scp 0x%x, off 0x%x, size 0x%x",
-                 (long) scp, biod.offset.LowPart, nbytes);
+        osi_Log4(afsd_logp, "CALL StoreData scp 0x%x, offset 0x%x:%08x, length 0x%x",
+                 (long) scp, biod.offset.HighPart, biod.offset.LowPart, nbytes);
 
         code = StartRXAFS_StoreData(callp, &tfid, &inStatus,
                                     biod.offset.LowPart, nbytes, truncPos);
@@ -158,22 +158,22 @@ long cm_BufWrite(void *vfidp, osi_hyper_t *offsetp, long length, long flags,
                 /* write out wbytes of data from bufferp */
                 temp = rx_Write(callp, bufferp, wbytes);
                 if (temp != wbytes) {
-                    osi_Log2(afsd_logp, "rx_Write failed %d != %d",temp,wbytes);
+                    osi_Log3(afsd_logp, "rx_Write failed bp 0x%x, %d != %d",bufp,temp,wbytes);
                     code = -1;
                     break;
                 } else {
-                    osi_Log1(afsd_logp, "rx_Write succeeded %d",temp);
+                    osi_Log2(afsd_logp, "rx_Write succeeded bp 0x%x, %d",bufp,temp);
                 }       
                 nbytes -= wbytes;
             }	/* while more bytes to write */
         }		/* if RPC started successfully */
         else {
-            osi_Log1(afsd_logp, "StartRXAFS_StoreData failed (%lX)",code);
+            osi_Log2(afsd_logp, "StartRXAFS_StoreData scp 0x%x failed (%lX)",scp,code);
         }
         if (code == 0) {
             code = EndRXAFS_StoreData(callp, &outStatus, &volSync);
             if (code)
-                osi_Log1(afsd_logp, "EndRXAFS_StoreData failed (%lX)",code);
+                osi_Log2(afsd_logp, "EndRXAFS_StoreData scp 0x%x failed (%lX)",scp,code);
         }
         code = rx_EndCall(callp, code);
                 
@@ -181,9 +181,9 @@ long cm_BufWrite(void *vfidp, osi_hyper_t *offsetp, long length, long flags,
     code = cm_MapRPCError(code, reqp);
         
     if (code)
-        osi_Log1(afsd_logp, "CALL StoreData FAILURE, code 0x%x", code);
+        osi_Log2(afsd_logp, "CALL StoreData FAILURE scp 0x%x, code 0x%x", scp, code);
     else
-        osi_Log0(afsd_logp, "CALL StoreData SUCCESS");
+        osi_Log1(afsd_logp, "CALL StoreData SUCCESS scp 0x%x", scp);
 
     /* now, clean up our state */
     lock_ObtainMutex(&scp->mx);
@@ -492,7 +492,7 @@ void cm_BkgStore(cm_scache_t *scp, long p1, long p2, long p3, long p4,
     toffset.HighPart = p2;
     length = p3;
 
-    osi_Log2(afsd_logp, "Starting BKG store vp 0x%x, base 0x%x", scp, p1);
+    osi_Log4(afsd_logp, "Starting BKG store scp 0x%x, offset 0x%x:%08x, length 0x%x", scp, p2, p1, p3);
 
     cm_BufWrite(&scp->fid, &toffset, length, /* flags */ 0, userp, &req);
 
@@ -536,7 +536,7 @@ void cm_BkgPrefetch(cm_scache_t *scp, long p1, long p2, long p3, long p4,
     base.HighPart = p2;
     length = p3;
         
-    osi_Log2(afsd_logp, "Starting BKG prefetch vp 0x%x, base 0x%x", scp, p1);
+    osi_Log2(afsd_logp, "Starting BKG prefetch scp 0x%x, base 0x%x", scp, p1);
 
     code = buf_Get(scp, &base, &bp);
 
@@ -1093,7 +1093,7 @@ void cm_ReleaseBIOD(cm_bulkIO_t *biop, int isStore)
         /* turn off writing and wakeup users */
         if (isStore) {
             if (bufp->flags & CM_BUF_WAITING) {
-                osi_Log1(afsd_logp, "cm_ReleaseBIOD Waking bp 0x%x", bufp);
+                osi_Log2(afsd_logp, "cm_ReleaseBIOD Waking [scp 0x%x] bp 0x%x", scp, bufp);
                 osi_Wakeup((long) bufp);
             }
             bufp->flags &= ~(CM_BUF_WRITING | CM_BUF_DIRTY);
