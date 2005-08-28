@@ -653,7 +653,13 @@ int afsd_InitCM(char **reasonP)
     /* setup and enable debug log */
     afsd_logp = osi_LogCreate("afsd", traceBufSize);
     afsi_log("osi_LogCreate log addr %x", (int)afsd_logp);
-    osi_LogEnable(afsd_logp);
+    if ((TraceOption & 0x8)
+#ifdef DEBUG
+	 || 1
+#endif
+	 ) {
+	osi_LogEnable(afsd_logp);
+    }
     logReady = 1;
 
     osi_Log0(afsd_logp, "Log init");
