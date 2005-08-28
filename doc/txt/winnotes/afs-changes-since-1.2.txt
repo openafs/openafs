@@ -1,3 +1,18 @@
+Since 1.4.0 rc1: 1.4.0 rc2 released (28 Aug 2005)
+
+ * Removed trace log messages that were hampering performance.
+
+ * Fixed a deadlock that was being triggered by editing Word 
+   documents stored within AFS with WinWord 2003.
+
+ * Bit 3 of the TraceOption registry value is now used to set the
+   default for "fs trace" in the non-Debug builds.  The new default
+   is off for release builds and on for debug builds.
+
+ * Bit 2 of the TraceOption registry value can be used to turn on
+   real-time output of debug log entries to the Windows Debug
+   Output monitor interface.  This data can be viewed with tools
+   such as Sysinternal's DbgView.
 
 New development series 1.5.0 begun (17 Aug 2005)
 
