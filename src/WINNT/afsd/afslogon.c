@@ -657,7 +657,7 @@ DWORD APIENTRY NPLogonNotify(
 
     MSV1_0_INTERACTIVE_LOGON *IL;
 
-    DWORD code, code2;
+    DWORD code = 0, code2;
 
     int pw_exp;
     char *reason;
