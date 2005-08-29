@@ -370,6 +370,8 @@ case $AFS_SYSNAME in
 		;;
 
 	*_obsd*)
+		KRB5CFLAGS="-I/usr/include/kerberosV"
+		KRB5LIBS="-lkrb5"
 		LEX="flex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-pthread"
