@@ -724,6 +724,27 @@ static DWORD IsFreelance(void)
     return enabled;
 }
 
+static const char * NetbiosName(void)
+{
+    static char buffer[1024] = "AFS";
+    HKEY  parmKey;
+    DWORD code;
+    DWORD dummyLen;
+    DWORD enabled = 0;
+
+    code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY,
+                         0, KEY_QUERY_VALUE, &parmKey);
+    if (code == ERROR_SUCCESS) {
+        dummyLen = sizeof(buffer);
+        code = RegQueryValueEx(parmKey, "NetbiosName", NULL, NULL,
+			       buffer, &dummyLen);
+        RegCloseKey (parmKey);
+    } else {
+	strcpy(buffer, "AFS");
+    }
+    return buffer;
+}
+
 #define AFSCLIENT_ADMIN_GROUPNAME "AFS Client Admins"
 
 static BOOL IsAdmin (void)
@@ -1728,6 +1749,20 @@ ListMountCmd(struct cmd_syndesc *as, char *arock)
 	    strncpy(parent_dir, true_name, last_component - true_name + 1);
 	    parent_dir[last_component - true_name + 1] = 0;
 	    last_component++;   /*Skip the slash*/
+#ifdef WIN32
+	    if (!InAFS(parent_dir)) {
+		const char * nbname = NetbiosName();
+		int len = strlen(nbname);
+
+		if (parent_dir[0] == '\\' && parent_dir[1] == '\\' &&
+		    parent_dir[len+2] == '\\' &&
+		    parent_dir[len+3] == '\0' &&
+		    !strnicmp(nbname,&parent_dir[2],len))
+		{
+		    sprintf(parent_dir,"\\\\%s\\all\\", nbname);
+		}
+	    }
+#endif
 	} else {
 	    /*
 	     * No slash appears in the given file name.  Set parent_dir to the current
@@ -1778,23 +1813,13 @@ MakeMountCmd(struct cmd_syndesc *as, char *arock)
     afs_int32 code;
     char *cellName, *volName, *tmpName;
 #ifdef WIN32
-    char localCellName[1000];
-#else /* not WIN32 */
+    char localCellName[128];
+#endif
+    char path[1024] = "";
     struct afsconf_cell info;
     struct vldbentry vldbEntry;
-#endif /* not WIN32 */
     struct ViceIoctl blob;
     char * parent;
-
-    /*
-
-    defect #3069
-
-    if (as->parms[5].items && !as->parms[2].items) {
-	fprintf(stderr,"%s: must provide cell when creating cellular mount point.\n", pn);
-	return 1;
-    }
-    */
 
     if (as->parms[2].items)	/* cell name specified */
 	cellName = as->parms[2].items->data;
@@ -1823,29 +1848,56 @@ MakeMountCmd(struct cmd_syndesc *as, char *arock)
 
     parent = Parent(as->parms[0].items->data);
     if (!InAFS(parent)) {
-	fprintf(stderr,"%s: mount points must be created within the AFS file system\n", pn);
-	return 1;
-    }
-
-    if ( IsFreelanceRoot(parent) && !IsAdmin() ) {
-	fprintf(stderr,"%s: Only AFS Client Administrators may alter the root.afs volume\n", pn);
-	return 1;
-    }
-
-    if (!cellName) {
-	blob.in_size = 0;
-	blob.out_size = MAXSIZE;
-	blob.out = space;
-	code = pioctl(Parent(as->parms[0].items->data), VIOC_FILE_CELL_NAME, &blob, 1);
-    }
-
 #ifdef WIN32
-    strcpy(localCellName, (cellName? cellName : space));
-#else /* not win32 */
+	const char * nbname = NetbiosName();
+	int len = strlen(nbname);
+
+	if (parent[0] == '\\' && parent[1] == '\\' &&
+	    parent[len+2] == '\\' &&
+	    parent[len+3] == '\0' &&
+	    !strnicmp(nbname,&parent[2],len))
+	{
+	    sprintf(path,"%sall\\%s", parent, &as->parms[0].items->data[strlen(parent)]);
+	    parent = Parent(path);
+	    if (!InAFS(parent)) {
+		fprintf(stderr,"%s: mount points must be created within the AFS file system\n", pn);
+		return 1;
+	    }
+	} else 
+#endif
+	{
+	    fprintf(stderr,"%s: mount points must be created within the AFS file system\n", pn);
+	    return 1;
+	}
+    }
+
+    if ( strlen(path) == 0 )
+	strcpy(path, as->parms[0].items->data);
+
+    if ( IsFreelanceRoot(parent) ) {
+	if ( !IsAdmin() ) {
+	    fprintf(stderr,"%s: Only AFS Client Administrators may alter the root.afs volume\n", pn);
+	    return 1;
+	}
+
+	if (!cellName) {
+	    blob.in_size = 0;
+	    blob.out_size = sizeof(localCellName);
+	    blob.out = localCellName;
+	    code = pioctl(parent, VIOC_GET_WS_CELL, &blob, 1);
+	    if (!code)
+		cellName = localCellName;
+	}
+    } else {
+	if (!cellName)
+	    GetCell(parent,space);
+    }
+
     code = GetCellName(cellName?cellName:space, &info);
     if (code) {
 	return 1;
     }
+#ifndef WIN32
     if (!(as->parms[4].items)) {
       /* not fast, check which cell the mountpoint is being created in */
       code = 0;
@@ -1869,11 +1921,7 @@ MakeMountCmd(struct cmd_syndesc *as, char *arock)
 	strcpy(space, "#");
     if (cellName) {
 	/* cellular mount point, prepend cell prefix */
-#ifdef WIN32
-	strcat(space, localCellName);
-#else /* not WIN32 */
 	strcat(space, info.name);
-#endif /* not WIN32 */
 	strcat(space, ":");
     }
     strcat(space, volName);	/* append volume name */
@@ -1886,12 +1934,12 @@ MakeMountCmd(struct cmd_syndesc *as, char *arock)
     blob.in_size = 1 + strlen(space);
     blob.in = space;
     blob.out = NULL;
-    code = pioctl(as->parms[0].items->data, VIOC_AFS_CREATE_MT_PT, &blob, 0);
+    code = pioctl(path, VIOC_AFS_CREATE_MT_PT, &blob, 0);
 #else /* not WIN32 */
-    code = symlink(space, as->parms[0].items->data);
+    code = symlink(space, path);
 #endif /* not WIN32 */
     if (code) {
-	Die(errno, as->parms[0].items->data);
+	Die(errno, path);
 	return 1;
     }
     return 0;
@@ -1922,6 +1970,21 @@ RemoveMountCmd(struct cmd_syndesc *as, char *arock) {
 	    strncpy(tbuffer, ti->data, code=tp-ti->data+1);  /* the dir name */
             tbuffer[code] = 0;
 	    tp++;   /* skip the slash */
+
+#ifdef WIN32
+	    if (!InAFS(tbuffer)) {
+		const char * nbname = NetbiosName();
+		int len = strlen(nbname);
+
+		if (tbuffer[0] == '\\' && tbuffer[1] == '\\' &&
+		    tbuffer[len+2] == '\\' &&
+		    tbuffer[len+3] == '\0' &&
+		    !strnicmp(nbname,&tbuffer[2],len))
+		{
+		    sprintf(tbuffer,"\\\\%s\\all\\", nbname);
+		}
+	    }
+#endif
 	} else {
 	    fs_ExtractDriveLetter(ti->data, tbuffer);
 	    strcat(tbuffer, ".");
@@ -1943,7 +2006,7 @@ RemoveMountCmd(struct cmd_syndesc *as, char *arock) {
 	    continue;	/* don't bother trying */
 	}
 
-        if ( IsFreelanceRoot(Parent(ti->data)) && !IsAdmin() ) {
+        if ( IsFreelanceRoot(tbuffer) && !IsAdmin() ) {
             fprintf(stderr,"%s: Only AFS Client Administrators may alter the root.afs volume\n", pn);
             error = 1;
             continue;   /* skip */
@@ -3711,7 +3774,6 @@ MemDumpCmd(struct cmd_syndesc *asp, char *arock)
 static int
 MiniDumpCmd(struct cmd_syndesc *asp, char *arock)
 {
-    long code;
     BOOL success = 0;
     SERVICE_STATUS status;
     SC_HANDLE hManager = NULL;
@@ -4322,7 +4384,7 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell to check");
     cmd_AddParm(ts, "-all", CMD_FLAG, CMD_OPTIONAL, "check all cells");
     cmd_AddParm(ts, "-fast", CMD_FLAG, CMD_OPTIONAL, "just list, don't check");
-	cmd_AddParm(ts,"-interval",CMD_SINGLE,CMD_OPTIONAL,"seconds between probes");
+    cmd_AddParm(ts,"-interval",CMD_SINGLE,CMD_OPTIONAL,"seconds between probes");
     
     ts = cmd_CreateSyntax("checkvolumes", CheckVolumesCmd,0, "check volumeID/name mappings");
     cmd_CreateAlias(ts, "checkbackups");

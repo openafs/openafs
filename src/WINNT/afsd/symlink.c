@@ -22,6 +22,7 @@
 
 #include <osi.h>
 #include <afsint.h>
+#include <WINNT\afsreg.h>
 
 #include "fs_utils.h"
 #include "cmd.h"
@@ -89,6 +90,27 @@ IsFreelanceRoot(char *apath)
     if (code == 0)
         return !strcmp("Freelance.Local.Root",space);
     return 1;   /* assume it is because it is more restrictive that way */
+}
+
+static const char * NetbiosName(void)
+{
+    static char buffer[1024] = "AFS";
+    HKEY  parmKey;
+    DWORD code;
+    DWORD dummyLen;
+    DWORD enabled = 0;
+
+    code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY,
+                         0, KEY_QUERY_VALUE, &parmKey);
+    if (code == ERROR_SUCCESS) {
+        dummyLen = sizeof(buffer);
+        code = RegQueryValueEx(parmKey, "NetbiosName", NULL, NULL,
+			       buffer, &dummyLen);
+        RegCloseKey (parmKey);
+    } else {
+	strcpy(buffer, "AFS");
+    }
+    return buffer;
 }
 
 #define AFSCLIENT_ADMIN_GROUPNAME "AFS Client Admins"
@@ -338,6 +360,21 @@ register struct cmd_syndesc *as; {
 	    strncpy(parent_dir, true_name, last_component - true_name + 1);
 	    parent_dir[last_component - true_name + 1] = 0;
 	    last_component++;   /*Skip the slash*/
+
+#ifdef WIN32
+	    if (!InAFS(parent_dir)) {
+		const char * nbname = NetbiosName();
+		int len = strlen(nbname);
+
+		if (parent_dir[0] == '\\' && parent_dir[1] == '\\' &&
+		    parent_dir[len+2] == '\\' &&
+		    parent_dir[len+3] == '\0' &&
+		    !strnicmp(nbname,&parent_dir[2],len))
+		{
+		    sprintf(parent_dir,"\\\\%s\\all\\", nbname);
+		}
+	    }
+#endif
 	}
 	else {
 	    /*
@@ -388,36 +425,51 @@ register struct cmd_syndesc *as; {
     register afs_int32 code;
     struct ViceIoctl blob;
     char * parent;
+    char path[1024] = "";
 
-    parent = Parent(as->parms[0].items->data);
+    strcpy(path, as->parms[0].items->data);
+    parent = Parent(path);
 
     if (!InAFS(parent)) {
-	fprintf(stderr,"%s: symlinks must be created within the AFS file system\n", pn);
-	return 1;
+#ifdef WIN32
+	const char * nbname = NetbiosName();
+	int len = strlen(nbname);
+
+	if (parent[0] == '\\' && parent[1] == '\\' &&
+	    parent[len+2] == '\\' &&
+	    parent[len+3] == '\0' &&
+	    !strnicmp(nbname,&parent[2],len))
+	{
+	    sprintf(path,"%sall\\%s", parent, &as->parms[0].items->data[strlen(parent)]);
+	    parent = Parent(path);
+	    if (!InAFS(parent)) {
+		fprintf(stderr,"%s: symlinks must be created within the AFS file system\n", pn);
+		return 1;
+	    }
+	} else 
+#endif
+	{
+	    fprintf(stderr,"%s: symlinks must be created within the AFS file system\n", pn);
+	    return 1;
+	}
     }
 
+#ifdef WIN32
     if ( IsFreelanceRoot(parent) && !IsAdmin() ) {
 	fprintf(stderr,"%s: Only AFS Client Administrators may alter the root.afs volume\n", pn);
 	return 1;
     }
 
-    strcpy(space, as->parms[1].items->data);
-#ifdef WIN32
     /* create symlink with a special pioctl for Windows NT, since it doesn't
      * have a symlink system call.
      */
-
-    /* TODO: Code needs to go here to prevent the creation of symlinks
-     * in \\AFS\all when not in the "AFS Client Admins" group.
-     */
-
     blob.out_size = 0;
-    blob.in_size = 1 + strlen(space);
-    blob.in = space;
+    blob.in_size = 1 + strlen(as->parms[1].items->data);
+    blob.in = as->parms[1].items->data;
     blob.out = NULL;
-    code = pioctl(as->parms[0].items->data, VIOC_SYMLINK, &blob, 0);
+    code = pioctl(path, VIOC_SYMLINK, &blob, 0);
 #else /* not WIN32 */
-    code = symlink(space, as->parms[0].items->data);
+    code = symlink(as->parms[1].items->data, path);
 #endif /* not WIN32 */
     if (code) {
 	Die(errno, as->parms[0].items->data);
@@ -450,6 +502,21 @@ register struct cmd_syndesc *as; {
 	    strncpy(tbuffer, ti->data, code=tp-ti->data+1);  /* the dir name */
             tbuffer[code] = 0;
 	    tp++;   /* skip the slash */
+
+#ifdef WIN32
+	    if (!InAFS(tbuffer)) {
+		const char * nbname = NetbiosName();
+		int len = strlen(nbname);
+
+		if (tbuffer[0] == '\\' && tbuffer[1] == '\\' &&
+		     tbuffer[len+2] == '\\' &&
+		     tbuffer[len+3] == '\0' &&
+		     !strnicmp(nbname,&tbuffer[2],len))
+		{
+		    sprintf(tbuffer,"\\\\%s\\all\\", nbname);
+		}
+	    }
+#endif
 	}
 	else {
 	    fs_ExtractDriveLetter(ti->data, tbuffer);
@@ -471,7 +538,7 @@ register struct cmd_syndesc *as; {
 	    continue;	/* don't bother trying */
 	}
 
-        if ( IsFreelanceRoot(Parent(ti->data)) && !IsAdmin() ) {
+        if ( IsFreelanceRoot(tbuffer) && !IsAdmin() ) {
             fprintf(stderr,"symlink: Only AFS Client Administrators may alter the root.afs volume\n");
             code = 1;
             continue;   /* skip */
@@ -529,8 +596,9 @@ char **argv; {
     cmd_AddParm(ts, "-name", CMD_SINGLE, 0, "name");
     cmd_AddParm(ts, "-to", CMD_SINGLE, 0, "target");
 
-    ts = cmd_CreateSyntax("rm", RemoveLinkCmd, 0, "remove symlink");
+    ts = cmd_CreateSyntax("remove", RemoveLinkCmd, 0, "remove symlink");
     cmd_AddParm(ts, "-name", CMD_LIST, 0, "name");
+    cmd_CreateAlias(ts, "rm");
 
     code = cmd_Dispatch(argc, argv);
 
