@@ -237,6 +237,8 @@ WMIEnableStatic(
     BSTR InstancePath = 0;
     BSTR MethodName = 0; // needs to be BSTR for ExecMethod()
 
+    BOOL comInitialized = FALSE;
+
     VARIANT v_ip_list;
     VariantInit(&v_ip_list);
 
@@ -261,8 +263,13 @@ WMIEnableStatic(
 
     // Initialize COM and connect up to CIMOM
 
+    ReportMessage(0, "Intializing COM", NULL, NULL, 0);
     hr = CoInitializeEx(0, COINIT_MULTITHREADED);
-    CLEANUP_ON_FAILURE(hr);
+    if (hr == S_OK || hr == S_FALSE) {
+        comInitialized = TRUE;
+    } else {
+        goto cleanup;
+    }
 
     /* When called from an MSI this will generally fail.  This should only be called once
 	   per process and not surprisingly MSI beats us to it.  So ignore return value and
@@ -271,12 +278,15 @@ WMIEnableStatic(
                               RPC_C_AUTHN_LEVEL_CONNECT,
                               RPC_C_IMP_LEVEL_IMPERSONATE,
                               NULL, EOAC_NONE, 0);
+
     /* CLEANUP_ON_FAILURE(hr); */
 
+    ReportMessage(0, "Creating Wbem Locator object", NULL, NULL, 0);
     hr = CoCreateInstance(CLSID_WbemLocator, 0, CLSCTX_INPROC_SERVER,
                           IID_IWbemLocator, (LPVOID *) &pLocator);
     CLEANUP_ON_FAILURE(hr);
 
+    ReportMessage(0, "Connecting to WMI", NULL, NULL, 0);
     hr = pLocator->ConnectServer(NamespacePath, NULL, NULL, NULL, 0,
                                  NULL, NULL, &pNamespace);
     CLEANUP_ON_FAILURE(hr);
@@ -400,6 +410,7 @@ WMIEnableStatic(
     VariantClear(&v_ip_list);
     VariantClear(&v_mask_list);
 
+    // SysFreeString is NULL safe
     SysFreeString(NamespacePath);
     SysFreeString(ClassPath);
     SysFreeString(InstancePath);
@@ -412,7 +423,9 @@ WMIEnableStatic(
     if (pLocator) pLocator->Release();
     if (pNamespace) pNamespace->Release();
 
-    CoUninitialize();
+    if (comInitialized)
+        CoUninitialize();
+
     return hr;
 }
 
@@ -507,8 +520,9 @@ extern "C" HRESULT LoopbackBindings (LPCWSTR loopback_guid)
                         }                        
                         
                         if ( !_wcsicmp(swId, L"ms_netbios")  || 
-                            !_wcsicmp(swId, L"ms_tcpip")    ||
-                            !_wcsicmp(swId, L"ms_netbt")      )
+                             !_wcsicmp(swId, L"ms_tcpip")    ||
+                             !_wcsicmp(swId, L"ms_netbt")    ||
+                             !_wcsicmp(swId, L"ms_msclient"))
                         {
                             if (pPath->IsEnabled()!=S_OK)
                             {
@@ -517,7 +531,6 @@ extern "C" HRESULT LoopbackBindings (LPCWSTR loopback_guid)
                                 if (hr==S_OK) ReportMessage(1,"success",0,0,0); else ReportMessage(0,"Proto failed",0,0,hr);
                                 bConfigChanged=TRUE;
                             }
-                            
                             
                         }
                         else //if (!_wcsicmp(swId, L"ms_server") || (!_wcsicmp(swId, L"ms_msclient")) 
