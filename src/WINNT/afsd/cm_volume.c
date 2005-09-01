@@ -168,11 +168,11 @@ long cm_UpdateVolume(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *reqp,
 #endif
     {
         /* now we have volume structure locked and held; make RPC to fill it */
+	osi_Log2(afsd_logp, "CALL VL_GetEntryByName{UNO} name %s:%s", volp->cellp->name, volp->namep);
         do {
             code = cm_ConnByMServers(cellp->vlServersp, userp, reqp, &connp);
             if (code) 
                 continue;
-            osi_Log1(afsd_logp, "CALL VL_GetEntryByName{UNO} name %s", volp->namep);
 #ifdef MULTIHOMED
             code = VL_GetEntryByNameU(connp->callp, volp->namep, &uvldbEntry);
             type = 2;
@@ -188,6 +188,12 @@ long cm_UpdateVolume(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *reqp,
             }
         } while (cm_Analyze(connp, userp, reqp, NULL, NULL, cellp->vlServersp, NULL, code));
         code = cm_MapVLRPCError(code, reqp);
+	if ( code )
+	    osi_Log3(afsd_logp, "CALL VL_GetEntryByName{UNO} name %s:%s FAILURE, code 0x%x", 
+		      volp->cellp->name, volp->namep, code);
+	else
+	    osi_Log2(afsd_logp, "CALL VL_GetEntryByName{UNO} name %s:%s SUCCESS", 
+		      volp->cellp->name, volp->namep);
     }
     if (code == 0) {
         afs_int32 flags;

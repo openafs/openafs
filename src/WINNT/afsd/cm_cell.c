@@ -70,10 +70,10 @@ cm_cell_t *cm_UpdateCell(cm_cell_t * cp)
 #ifdef AFS_FREELANCE_CLIENT
           && !(cp->flags & CM_CELLFLAG_FREELANCE)
 #endif
-          )
+          ) || (time(0) > cp->timeout)
 #ifdef AFS_AFSDB_ENV
         || (cm_dnsEnabled && (cp->flags & CM_CELLFLAG_DNS) &&
-         ((cp->flags & CM_CELLFLAG_VLSERVER_INVALID) || (time(0) > cp->timeout)))
+         ((cp->flags & CM_CELLFLAG_VLSERVER_INVALID)))
 #endif
             ) {
         /* must empty cp->vlServersp */
@@ -92,6 +92,7 @@ cm_cell_t *cm_UpdateCell(cm_cell_t * cp)
                 if (code == 0) {   /* got cell from DNS */
                     cp->flags |= CM_CELLFLAG_DNS;
                     cp->flags &= ~CM_CELLFLAG_VLSERVER_INVALID;
+		    cp->timeout = time(0) + ttl;
 #ifdef DEBUG
                     fprintf(stderr, "cell %s: ttl=%d\n", cp->name, ttl);
 #endif
@@ -107,9 +108,10 @@ cm_cell_t *cm_UpdateCell(cm_cell_t * cp)
             {
                 cp = NULL;          /* return NULL to indicate failure */
             }
-        }
+        } else {
+	    cp->timeout = time(0) + 7200;
+	}	
     }
-
     return cp;
 }
 
@@ -169,13 +171,16 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, long flags)
                     cp->flags &= ~CM_CELLFLAG_VLSERVER_INVALID;
                     cp->timeout = time(0) + ttl;
                 }
-            } else 
+            } else {
 #endif
-            {   
                 cp = NULL;
                 goto done;
-            }
-        }
+#ifdef AFS_AFSDB_ENV
+	    }
+#endif
+        } else {
+	    cp->timeout = time(0) + 7200;	/* two hour timeout */
+	}
 
         /* randomise among those vlservers having the same rank*/ 
         cm_RandomizeServer(&cp->vlServersp);
@@ -207,8 +212,6 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, long flags)
 cm_cell_t *cm_FindCellByID(long cellID)
 {
     cm_cell_t *cp;
-    int ttl;
-    int code;
 
     lock_ObtainWrite(&cm_cellLock);
     for (cp = cm_data.allCellsp; cp; cp=cp->nextp) {

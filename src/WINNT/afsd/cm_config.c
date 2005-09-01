@@ -125,55 +125,79 @@ BOOL WINAPI DllMain (HANDLE hModule, DWORD fdwReason, LPVOID lpReserved)
 
 static long cm_ParsePair(char *lineBufferp, char *leftp, char *rightp)
 {
-	char *tp;
+    char *tp;
     char tc;
     int sawEquals;
-	int sawBracket;
+    int sawBracket;
         
     sawEquals = 0;
-	sawBracket = 0;
+    sawBracket = 0;
     for(tp = lineBufferp; *tp; tp++) {
         tc = *tp;
 
-		if (sawBracket) {
-			if (tc == ']')
-				sawBracket = 0;
-			continue;
-		}
+	if (sawBracket) {
+	    if (tc == ']')
+		sawBracket = 0;
+	    continue;
+	}
 
-		/* comment or line end */
+	/* comment or line end */
         if (tc == '#' || tc == '\r' || tc == '\n') 
             break;
 
-		/* square bracket comment -- look for closing delim */
-		if (tc == '[') {
+	/* square bracket comment -- look for closing delim */
+	if (tc == '[') {
             sawBracket = 1; 
             continue;
-        }
+        }	
 
-		/* space or tab */
+	/* space or tab */
         if (tc == ' ' || tc == '\t') 
             continue;
 
         if (tc == '=') {
             sawEquals = 1;
             continue;
-		}
-                
+	}
+
         /* now we have a real character, put it in the appropriate bucket */
         if (sawEquals == 0) {
-			*leftp++ = tc;
-        }
-        else {
-			*rightp++ = tc;
+	    *leftp++ = tc;
+        }	
+        else {	
+	    *rightp++ = tc;
         }
     }
 
-	/* null terminate the strings */
-	*leftp = 0;
+    /* null terminate the strings */
+    *leftp = 0;
     *rightp = 0;
 
     return 0;	/* and return success */
+}
+
+static int
+IsWindowsModule(const char * name)
+{
+    char * p;
+    int i;
+
+    /* Do not perform searches for probable Windows modules */
+    for (p = name, i=0; *p; p++) {
+	if ( *p == '.' )
+	    i++;
+    }
+    p = strrchr(name, '.');
+    if (p) {
+	if (i == 1 && 
+	    (!stricmp(p,".dll") ||
+	     !stricmp(p,".exe") ||
+	     !stricmp(p,".ini") ||
+	     !stricmp(p,".db") ||
+	     !stricmp(p,".drv")))
+	    return 1;
+    }
+    return 0;
 }
 
 /* search for a cell, and either return an error code if we don't find it,
@@ -198,11 +222,14 @@ long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
     int inRightCell;
     int foundCell = 0;
     long code;
-	int tracking = 1, partial = 0;
+    int tracking = 1, partial = 0;
 #if defined(DJGPP) || defined(AFS_WIN95_ENV)
     char *afsconf_path;
     DWORD dwSize;
 #endif
+
+    if ( IsWindowsModule(cellNamep) )
+	return -3;
 
     cm_GetCellServDB(wdir);
     tfilep = fopen(wdir, "r");
@@ -226,7 +253,8 @@ long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
         strcat(wdir, AFS_CELLSERVDB);
         /*fprintf(stderr, "opening cellservdb file %s\n", wdir);*/
         tfilep = fopen(wdir, "r");
-        if (!tfilep) return -2;
+        if (!tfilep) 
+	    return -2;
     }
 #else
     /* If we are NT or higher, we don't do DJGPP, So just fail */
@@ -234,40 +262,40 @@ long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
         return -2;
 #endif
 
-	bestp = fopen(wdir, "r");
+    bestp = fopen(wdir, "r");
     
 #ifdef DEBUG
     DebugEvent_local("AFS- cm_searchfile fopen", "Handle[%x], wdir[%s]", bestp, wdir);
 #endif
 
-	/* have we seen the cell line for the guy we're looking for? */
-	inRightCell = 0;
-	while (1) {
+    /* have we seen the cell line for the guy we're looking for? */
+    inRightCell = 0;
+    while (1) {
         tp = fgets(lineBuffer, sizeof(lineBuffer), tfilep);
         if (tracking)
-			(void) fgets(lineBuffer, sizeof(lineBuffer), bestp);
-        if (tp == NULL) {
-			if (feof(tfilep)) {
-				/* hit EOF */
-				if (partial) {
-					/*
-					 * found partial match earlier;
-					 * now go back to it
-					 */
-					tempp = bestp;
-					bestp = tfilep;
-					tfilep = tempp;
-					inRightCell = 1;
-					partial = 0;
-					continue;
-				}
-				else {
-					fclose(tfilep);
-					fclose(bestp);
-					return (foundCell? 0 : -3);
-				}
-			}
-        }
+	    (void) fgets(lineBuffer, sizeof(lineBuffer), bestp);
+        if (	tp == NULL) {
+	    if (feof(tfilep)) {
+		/* hit EOF */
+		if (partial) {
+		    /*
+		     * found partial match earlier;
+		     * now go back to it
+		     */
+		    tempp = bestp;
+		    bestp = tfilep;
+		    tfilep = tempp;
+		    inRightCell = 1;
+		    partial = 0;
+		    continue;
+		}
+		else {
+		    fclose(tfilep);
+		    fclose(bestp);
+		    return (foundCell? 0 : -3);
+		}
+	    }
+        }	
 
         /* turn trailing cr or lf into null */
         tp = strchr(lineBuffer, '\r');
@@ -275,11 +303,11 @@ long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
         tp = strchr(lineBuffer, '\n');
         if (tp) *tp = 0;
 
-		/* skip blank lines */
+	/* skip blank lines */
         if (lineBuffer[0] == 0) continue;
 
         if (lineBuffer[0] == '>') {
-			/* trim off at white space or '#' chars */
+	    /* trim off at white space or '#' chars */
             tp = strchr(lineBuffer, ' ');
             if (tp) *tp = 0;
             tp = strchr(lineBuffer, '\t');
@@ -287,54 +315,55 @@ long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
             tp = strchr(lineBuffer, '#');
             if (tp) *tp = 0;
 
-			/* now see if this is the right cell */
+	    /* now see if this is the right cell */
             if (stricmp(lineBuffer+1, cellNamep) == 0) {
-				/* found the cell we're looking for */
-				if (newCellNamep)
-					strcpy(newCellNamep, lineBuffer+1);
+		/* found the cell we're looking for */
+		if (newCellNamep)
+		    strcpy(newCellNamep, lineBuffer+1);
                 inRightCell = 1;
-				tracking = 0;
+		tracking = 0;
 #ifdef DEBUG
                 DebugEvent_local("AFS- cm_searchfile is cell", "inRightCell[%x], linebuffer[%s]", 
-                                 inRightCell, lineBuffer);
+				 inRightCell, lineBuffer);
 #endif
-			}
-			else if (strnicmp(lineBuffer+1, cellNamep,
-                               strlen(cellNamep)) == 0) {
-				/* partial match */
-				if (partial) {	/* ambiguous */
-					fclose(tfilep);
-					fclose(bestp);
-					return -5;
-				}
-				if (newCellNamep)
-					strcpy(newCellNamep, lineBuffer+1);
-				inRightCell = 0;
-				tracking = 0;
-				partial = 1;
-			}
+	    }
+	    else if (strnicmp(lineBuffer+1, cellNamep,
+			       strlen(cellNamep)) == 0) {
+		/* partial match */
+		if (partial) {	/* ambiguous */
+		    fclose(tfilep);
+		    fclose(bestp);
+		    return -5;
+		}
+		if (newCellNamep)
+		    strcpy(newCellNamep, lineBuffer+1);
+		inRightCell = 0;
+		tracking = 0;
+		partial = 1;
+	    }
             else inRightCell = 0;
         }
         else {
 #if !defined(DJGPP) && !defined(AFS_WIN95_ENV)
             valuep = strchr(lineBuffer, '#');
-			if (valuep == NULL) {
-				fclose(tfilep);
-				fclose(bestp);
-				return -4;
-			}
+	    if (valuep == NULL) {
+		fclose(tfilep);
+		fclose(bestp);
+		return -4;
+	    }
             valuep++;	/* skip the "#" */
 
             valuep += strspn(valuep, " \t"); /* skip SP & TAB */
             /* strip spaces and tabs in the end. They should not be there according to CellServDB format
-            so do this just in case                        */
+             * so do this just in case                        
+	     */
             while (valuep[strlen(valuep) - 1] == ' ' || valuep[strlen(valuep) - 1] == '\t') 
                 valuep[strlen(valuep) - 1] = '\0';
 
 #endif /* !DJGPP */
-			if (inRightCell) {
+	    if (inRightCell) {
 #if !defined(DJGPP) && !defined(AFS_WIN95_ENV)
-				/* add the server to the VLDB list */
+		/* add the server to the VLDB list */
                 WSASetLastError(0);
                 thp = gethostbyname(valuep);
 #ifdef DEBUG
@@ -346,25 +375,25 @@ long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
                 }
 #endif
                 if (thp) {
-					memcpy(&vlSockAddr.sin_addr.s_addr, thp->h_addr,
+		    memcpy(&vlSockAddr.sin_addr.s_addr, thp->h_addr,
                             sizeof(long));
                     vlSockAddr.sin_family = AF_INET;
                     /* sin_port supplied by connection code */
-					if (procp)
-						(*procp)(rockp, &vlSockAddr, valuep);
+		    if (procp)
+			(*procp)(rockp, &vlSockAddr, valuep);
                     foundCell = 1;
-				}
+		}
 #else
                 thp = 0;
 #endif /* !DJGPP */
                 if (!thp) {
                     long ip_addr;
-					int c1, c2, c3, c4;
-					char aname[241] = "";                    
+		    int c1, c2, c3, c4;
+		    char aname[241] = "";                    
                     
                     /* Since there is no gethostbyname() data 
-                     * available we will read the IP address
-                     * stored in the CellServDB file
+		     * available we will read the IP address
+		     * stored in the CellServDB file
                      */
                     code = sscanf(lineBuffer, "%d.%d.%d.%d #%s",
                                    &c1, &c2, &c3, &c4, aname);
@@ -403,6 +432,9 @@ long cm_SearchCellByDNS(char *cellNamep, char *newCellNamep, int *ttl,
 #ifdef DEBUG
     DebugEvent_local("AFS SearchCellDNS-","Doing search for [%s]", cellNamep);
 #endif
+
+    if ( IsWindowsModule(cellNamep) )
+	return -1;
     rc = getAFSServer(cellNamep, cellHostAddrs, cellHostNames, &numServers, ttl);
     if (rc == 0 && numServers > 0) {     /* found the cell */
         for (i = 0; i < numServers; i++) {
@@ -420,7 +452,7 @@ long cm_SearchCellByDNS(char *cellNamep, char *newCellNamep, int *ttl,
     else
        return -1;  /* not found */
 #else
-	return -1;  /* not found */
+    return -1;  /* not found */
 #endif /* AFS_AFSDB_ENV */
 }
 
