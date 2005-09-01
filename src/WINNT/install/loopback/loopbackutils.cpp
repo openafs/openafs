@@ -544,7 +544,7 @@ extern "C" DWORD InstallLoopBack(LPCTSTR pConnectionName, LPCTSTR ip, LPCTSTR ma
     ret = SetIpAddress(pCfgGuidString, ip, mask);
     if (ret)
     {
-        ReportMessage(0,"Could not set the ip address and network mask",NULL,NULL,0);
+        ReportMessage(0,"Could not set the ip address and network mask",NULL,NULL,ret);
         goto cleanup;
     }
     ret = LoopbackBindings(pCfgGuidString);
