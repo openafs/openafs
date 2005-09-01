@@ -79,8 +79,8 @@ LIB = $(AFSDEV_LIB)
 
 #define used in WinNT/2000 installation and program version display
 AFSPRODUCT_VER_MAJOR=1
-AFSPRODUCT_VER_MINOR=4
-AFSPRODUCT_VER_PATCH=0001
+AFSPRODUCT_VER_MINOR=5
+AFSPRODUCT_VER_PATCH=0000
 AFSPRODUCT_VER_BUILD=0
 
 # For MSI installer, each major release should have a different GUID
@@ -256,6 +256,10 @@ afscflags = $(afscflags) /G7
 !ENDIF
 !ENDIF
 
+!IF ("$(AFSIFS)" == "TRUE")
+afscdefs = $(afscdefs) -DAFSIFS
+!ENDIF
+
 !IF ("$(AFSDEV_BUILDTYPE)" == "FREE")
 
 afscflags = $(afscflags) /Ox /Zi
@@ -267,11 +271,9 @@ NODEBUG=1
 cdebug = $(cdebug:-Z7=-Zi)  # avoid annoying override warning (D4025)
 
 !IF ("$(AFSVER_CL)"=="1200")
-afscdefs = $(afscdefs) -DDEBUG
-afscflags = $(afscflags) /GZ
+afscdefs = $(afscdefs) -DDEBUG /GZ
 !ELSE 
-afscdefs = $(afscdefs) -DDEBUG
-afscflags = $(afscflags) /RTCs /RTCu
+afscdefs = $(afscdefs) -DDEBUG /RTCs /RTCu
 !ENDIF
 
 !IFDEF _CRTDBG_MAP_ALLOC
