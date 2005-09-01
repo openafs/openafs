@@ -125,6 +125,8 @@
 #define IDS_UNABLE_TO_SET_CURRENT_DIRECTORY    133
 #define IDS_CURRENT_DIRECTORY_PATH_TOO_LONG    134
 #define IDS_CLEANACL_ERROR                     135
+#define IDS_MAKE_LNK_NOT_AFS_ERROR             136
+#define IDS_NOT_AFS_CLIENT_ADMIN_ERROR         137
                                            
 #define IDM_AUTHENTICATION                    0
 #define IDM_ACL_SET                           1
