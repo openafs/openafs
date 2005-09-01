@@ -656,7 +656,9 @@ BEGIN
     IDS_UNABLE_TO_CREATE_SYMBOLIC_LINK    "Unable to create symbolic link: %o."
     IDS_UNABLE_TO_SET_CURRENT_DIRECTORY   "Unable to set current directory."
     IDS_CURRENT_DIRECTORY_PATH_TOO_LONG   "Current directory pathname is too long."
-    IDS_CLEANACL_ERROR                    "Error Cleaning ACL(s)"
+    IDS_CLEANACL_ERROR                    "Error Cleaning ACL(s)."
+    IDS_MAKE_LNK_NOT_AFS_ERROR            "Symlinks must be created within the AFS file system."
+    IDS_NOT_AFS_CLIENT_ADMIN_ERROR        "Must be AFS Client Administrators to modify the root.afs volume."
 END
 
 STRINGTABLE DISCARDABLE 

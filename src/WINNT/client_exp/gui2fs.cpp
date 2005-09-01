@@ -31,6 +31,7 @@ extern "C" {
 #include "fs_utils.h"
 #include <afsint.h>
 #include <afs/auth.h>
+#include <WINNT\afsreg.h>
 }
 
 
@@ -65,7 +66,6 @@ static char tspace[1024];
 #ifdef	LOGGING_ON
 static char *szLogFileName = "afsguilog.txt";
 #endif
-
 
 FILE *OpenFile(char *file, char *rwp)
 {
@@ -937,6 +937,228 @@ CString ParseMountPoint(const CString strFile, CString strMountPoint)
     return strMountPointInfo;
 }       
 
+BOOL IsPathInAfs(const CHAR *strPath)
+{
+    struct ViceIoctl blob;
+    int code;
+
+    HOURGLASS hourglass;
+
+    blob.in_size = 0;
+    blob.out_size = MAXSIZE;
+    blob.out = space;
+
+    code = pioctl((LPTSTR)((LPCTSTR)strPath), VIOC_FILE_CELL_NAME, &blob, 1);
+    if (code)
+        return FALSE;
+    return TRUE;
+}
+
+static int 
+IsFreelanceRoot(char *apath)
+{
+    struct ViceIoctl blob;
+    afs_int32 code;
+
+    blob.in_size = 0;
+    blob.out_size = MAXSIZE;
+    blob.out = space;
+
+    code = pioctl(apath, VIOC_FILE_CELL_NAME, &blob, 1);
+    if (code == 0)
+        return !strcmp("Freelance.Local.Root",space);
+    return 1;   /* assume it is because it is more restrictive that way */
+}
+
+const char * NetbiosName(void)
+{
+    static char buffer[1024] = "AFS";
+    HKEY  parmKey;
+    DWORD code;
+    DWORD dummyLen;
+    DWORD enabled = 0;
+
+    code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY,
+                         0, KEY_QUERY_VALUE, &parmKey);
+    if (code == ERROR_SUCCESS) {
+        dummyLen = sizeof(buffer);
+        code = RegQueryValueEx(parmKey, "NetbiosName", NULL, NULL,
+			       (LPBYTE)buffer, &dummyLen);
+        RegCloseKey (parmKey);
+    } else {
+	strcpy(buffer, "AFS");
+    }
+    return buffer;
+}
+
+#define AFSCLIENT_ADMIN_GROUPNAME "AFS Client Admins"
+
+static BOOL IsAdmin (void)
+{
+    static BOOL fAdmin = FALSE;
+    static BOOL fTested = FALSE;
+
+    if (!fTested)
+    {
+        /* Obtain the SID for the AFS client admin group.  If the group does
+         * not exist, then assume we have AFS client admin privileges.
+         */
+        PSID psidAdmin = NULL;
+        DWORD dwSize, dwSize2;
+        char pszAdminGroup[ MAX_COMPUTERNAME_LENGTH + sizeof(AFSCLIENT_ADMIN_GROUPNAME) + 2 ];
+        char *pszRefDomain = NULL;
+        SID_NAME_USE snu = SidTypeGroup;
+
+        dwSize = sizeof(pszAdminGroup);
+
+        if (!GetComputerName(pszAdminGroup, &dwSize)) {
+            /* Can't get computer name.  We return false in this case.
+               Retain fAdmin and fTested. This shouldn't happen.*/
+            return FALSE;
+        }
+
+        dwSize = 0;
+        dwSize2 = 0;
+
+        strcat(pszAdminGroup,"\\");
+        strcat(pszAdminGroup, AFSCLIENT_ADMIN_GROUPNAME);
+
+        LookupAccountName(NULL, pszAdminGroup, NULL, &dwSize, NULL, &dwSize2, &snu);
+        /* that should always fail. */
+
+        if (GetLastError() != ERROR_INSUFFICIENT_BUFFER) {
+            /* if we can't find the group, then we allow the operation */
+            fAdmin = TRUE;
+            return TRUE;
+        }
+
+        if (dwSize == 0 || dwSize2 == 0) {
+            /* Paranoia */
+            fAdmin = TRUE;
+            return TRUE;
+        }
+
+        psidAdmin = (PSID)malloc(dwSize); memset(psidAdmin,0,dwSize);
+        pszRefDomain = (char *)malloc(dwSize2);
+
+        if (!LookupAccountName(NULL, pszAdminGroup, psidAdmin, &dwSize, pszRefDomain, &dwSize2, &snu)) {
+            /* We can't lookup the group now even though we looked it up earlier.  
+               Could this happen? */
+            fAdmin = TRUE;
+        } else {
+            /* Then open our current ProcessToken */
+            HANDLE hToken;
+
+            if (OpenProcessToken (GetCurrentProcess(), TOKEN_QUERY, &hToken))
+            {
+
+                if (!CheckTokenMembership(hToken, psidAdmin, &fAdmin)) {
+                    /* We'll have to allocate a chunk of memory to store the list of
+                     * groups to which this user belongs; find out how much memory
+                     * we'll need.
+                     */
+                    DWORD dwSize = 0;
+                    PTOKEN_GROUPS pGroups;
+
+                    GetTokenInformation (hToken, TokenGroups, NULL, dwSize, &dwSize);
+
+                    pGroups = (PTOKEN_GROUPS)malloc(dwSize);
+
+                    /* Allocate that buffer, and read in the list of groups. */
+                    if (GetTokenInformation (hToken, TokenGroups, pGroups, dwSize, &dwSize))
+                    {
+                        /* Look through the list of group SIDs and see if any of them
+                         * matches the AFS Client Admin group SID.
+                         */
+                        size_t iGroup = 0;
+                        for (; (!fAdmin) && (iGroup < pGroups->GroupCount); ++iGroup)
+                        {
+                            if (EqualSid (psidAdmin, pGroups->Groups[ iGroup ].Sid)) {
+                                fAdmin = TRUE;
+                            }
+                        }
+                    }
+
+                    if (pGroups)
+                        free(pGroups);
+                }
+
+                /* if do not have permission because we were not explicitly listed
+                 * in the Admin Client Group let's see if we are the SYSTEM account
+                 */
+                if (!fAdmin) {
+                    PTOKEN_USER pTokenUser;
+                    SID_IDENTIFIER_AUTHORITY SIDAuth = SECURITY_NT_AUTHORITY;
+                    PSID pSidLocalSystem = 0;
+                    DWORD gle;
+
+                    GetTokenInformation(hToken, TokenUser, NULL, 0, &dwSize);
+
+                    pTokenUser = (PTOKEN_USER)malloc(dwSize);
+
+                    if (!GetTokenInformation(hToken, TokenUser, pTokenUser, dwSize, &dwSize))
+                        gle = GetLastError();
+
+                    if (AllocateAndInitializeSid( &SIDAuth, 1,
+                                                  SECURITY_LOCAL_SYSTEM_RID,
+                                                  0, 0, 0, 0, 0, 0, 0,
+                                                  &pSidLocalSystem))
+                    {
+                        if (EqualSid(pTokenUser->User.Sid, pSidLocalSystem)) {
+                            fAdmin = TRUE;
+                        }
+
+                        FreeSid(pSidLocalSystem);
+                    }
+
+                    if ( pTokenUser )
+                        free(pTokenUser);
+                }
+            }
+        }
+
+        free(psidAdmin);
+        free(pszRefDomain);
+
+        fTested = TRUE;
+    }
+
+    return fAdmin;
+}
+
+/* return a static pointer to a buffer */
+static char *Parent(char *apath)
+{
+    register char *tp;
+
+    strcpy(tspace, apath);
+    tp = strrchr(tspace, '\\');
+    if (tp) {
+        *(tp+1) = 0;	/* lv trailing slash so Parent("k:\foo") is "k:\" not "k:" */
+    }
+    else {
+        fs_ExtractDriveLetter(apath, tspace);
+    	strcat(tspace, ".");
+    }
+    
+    return tspace;
+}
+
+static afs_int32
+GetCell(char *fname, char *cellname)
+{
+    afs_int32 code;
+    struct ViceIoctl blob;
+
+    blob.in_size = 0;
+    blob.out_size = MAXCELLCHARS;
+    blob.out = cellname;
+
+    code = pioctl(fname, VIOC_FILE_CELL_NAME, &blob, 1);
+    return code ? errno : 0;
+}
+
+
 BOOL ListMount(CStringArray& files)
 {
     register LONG code;
@@ -968,6 +1190,19 @@ BOOL ListMount(CStringArray& files)
             strncpy(parent_dir, true_name, last_component - true_name + 1);
             parent_dir[last_component - true_name + 1] = 0;
             last_component++;   /* Skip the slash */
+
+	    if (!IsPathInAfs(parent_dir)) {
+		const char * nbname = NetbiosName();
+		int len = strlen(nbname);
+
+		if (parent_dir[0] == '\\' && parent_dir[1] == '\\' &&
+		    parent_dir[len+2] == '\\' &&
+		    parent_dir[len+3] == '\0' &&
+		    !strnicmp(nbname,&parent_dir[2],len))
+		{
+		    sprintf(parent_dir,"\\\\%s\\all\\", nbname);
+		}
+	    }
         }
         else {
             /*
@@ -1008,80 +1243,73 @@ BOOL ListMount(CStringArray& files)
     return !error;
 }
 
-BOOL IsPathInAfs(const CHAR *strPath)
-{
-    struct ViceIoctl blob;
-    int code;
-
-    HOURGLASS hourglass;
-
-    blob.in_size = 0;
-    blob.out_size = MAXSIZE;
-    blob.out = space;
-
-    code = pioctl((LPTSTR)((LPCTSTR)strPath), VIOC_FILE_CELL_NAME, &blob, 1);
-    if (code)
-        return FALSE;
-    return TRUE;
-}
-
-/* return a static pointer to a buffer */
-static char *Parent(char *apath)
-{
-    register char *tp;
-
-    strcpy(tspace, apath);
-    tp = strrchr(tspace, '\\');
-    if (tp) {
-        *(tp+1) = 0;	/* lv trailing slash so Parent("k:\foo") is "k:\" not "k:" */
-    }
-    else {
-        fs_ExtractDriveLetter(apath, tspace);
-    	strcat(tspace, ".");
-    }
-    
-    return tspace;
-}
-
 BOOL MakeMount(const CString& strDir, const CString& strVolName, const CString& strCellName, BOOL bRW)
 {
     register LONG code;
     register char *cellName;
-    char localCellName[1000];
+    char localCellName[128];
+    struct afsconf_cell info;
     struct ViceIoctl blob;
+    char * parent;
+    char path[1024] = "";
 
     HOURGLASS hourglass;
 
     ASSERT(strVolName.GetLength() < 64);
-
-    /*
-
-    defect #3069
-
-    if (as->parms[5].items && !as->parms[2].items) {
-	fprintf(stderr,"fs: must provide cell when creating cellular mount point.\n");
-	return FALSE;
-    }
-    */
 
     if (strCellName.GetLength() > 0)	/* cell name specified */
         cellName = PCCHAR(strCellName);
     else
         cellName = (char *) 0;
 
-    if (!IsPathInAfs(Parent(PCCHAR(strDir)))) {
-        ShowMessageBox(IDS_MAKE_MP_NOT_AFS_ERROR, MB_ICONEXCLAMATION, IDS_MAKE_MP_NOT_AFS_ERROR);
-        return FALSE;
+    parent = Parent(PCCHAR(strDir));
+    if (!IsPathInAfs(parent)) {
+	const char * nbname = NetbiosName();
+	int len = strlen(nbname);
+
+	if (parent[0] == '\\' && parent[1] == '\\' &&
+	    parent[len+2] == '\\' &&
+	    parent[len+3] == '\0' &&
+	    !strnicmp(nbname,&parent[2],len))
+	{
+	    sprintf(path,"%sall\\%s", parent, &(PCCHAR(strDir)[strlen(parent)]));
+	    parent = Parent(path);
+	    if (!IsPathInAfs(parent)) {
+		ShowMessageBox(IDS_MAKE_MP_NOT_AFS_ERROR, MB_ICONEXCLAMATION, IDS_MAKE_MP_NOT_AFS_ERROR);
+		return FALSE;
+	    }
+	} else {
+	    ShowMessageBox(IDS_MAKE_MP_NOT_AFS_ERROR, MB_ICONEXCLAMATION, IDS_MAKE_MP_NOT_AFS_ERROR);
+	    return FALSE;
+	}
     }
 
-    if (cellName) {
-        blob.in_size = 0;
-        blob.out_size = MAXSIZE;
-        blob.out = space;
-        code = pioctl(Parent(PCCHAR(strDir)), VIOC_FILE_CELL_NAME, &blob, 1);
-    }   
+    if ( strlen(path) == 0 )
+	strcpy(path, PCCHAR(strDir));
 
-    strcpy(localCellName, (cellName? cellName : space));
+    if ( IsFreelanceRoot(parent) ) {
+	if ( !IsAdmin() ) {
+	    ShowMessageBox(IDS_NOT_AFS_CLIENT_ADMIN_ERROR, MB_ICONEXCLAMATION, IDS_NOT_AFS_CLIENT_ADMIN_ERROR);
+	    return FALSE;
+	}
+
+	if (!cellName) {
+	    blob.in_size = 0;
+	    blob.out_size = sizeof(localCellName);
+	    blob.out = localCellName;
+	    code = pioctl(parent, VIOC_GET_WS_CELL, &blob, 1);
+	    if (!code)
+		cellName = localCellName;
+	}
+    } else {
+	if (!cellName)
+	    GetCell(parent,space);
+    }
+
+    code = GetCellName(cellName?cellName:space, &info);
+    if (code) {
+	return FALSE;
+    }
 
     if (bRW)	/* if -rw specified */
         strcpy(space, "%");
@@ -1090,7 +1318,7 @@ BOOL MakeMount(const CString& strDir, const CString& strVolName, const CString& 
 
     /* If cellular mount point, prepend cell prefix */
     if (cellName) {
-        strcat(space, localCellName);
+        strcat(space, info.name);
         strcat(space, ":");
     }   
 
@@ -1104,7 +1332,7 @@ BOOL MakeMount(const CString& strDir, const CString& strVolName, const CString& 
     blob.in_size = 1 + strlen(space);
     blob.in = space;
     blob.out = NULL;
-    code = pioctl(PCCHAR(strDir), VIOC_AFS_CREATE_MT_PT, &blob, 0);
+    code = pioctl(path, VIOC_AFS_CREATE_MT_PT, &blob, 0);
 
     if (code) {
         ShowMessageBox(IDS_MOUNT_POINT_ERROR, MB_ICONEXCLAMATION, IDS_MOUNT_POINT_ERROR, GetAfsError(errno, strDir));
@@ -1165,6 +1393,19 @@ BOOL RemoveSymlink(const char * linkName)
         strncpy(tbuffer, linkName, code=tp-linkName+1);  /* the dir name */
         tbuffer[code] = 0;
         tp++;   /* skip the slash */
+
+	if (!IsPathInAfs(tbuffer)) {
+	    const char * nbname = NetbiosName();
+	    int len = strlen(nbname);
+
+	    if (tbuffer[0] == '\\' && tbuffer[1] == '\\' &&
+		 tbuffer[len+2] == '\\' &&
+		 tbuffer[len+3] == '\0' &&
+		 !strnicmp(nbname,&tbuffer[2],len))
+	    {
+		sprintf(tbuffer,"\\\\%s\\all\\", nbname);
+	    }
+	}
     }
     else {
         fs_ExtractDriveLetter(linkName, tbuffer);
@@ -1172,6 +1413,12 @@ BOOL RemoveSymlink(const char * linkName)
         fs_StripDriveLetter(tp, tpbuffer, 0);
         tp=tpbuffer;
     }
+
+    if ( IsFreelanceRoot(tbuffer) && !IsAdmin() ) {
+	ShowMessageBox(IDS_NOT_AFS_CLIENT_ADMIN_ERROR, MB_ICONEXCLAMATION, IDS_NOT_AFS_CLIENT_ADMIN_ERROR);
+	return FALSE;
+    }
+
     blob.in = tp;
     blob.in_size = strlen(tp)+1;
     blob.out = lsbuffer;
@@ -1206,6 +1453,19 @@ BOOL IsSymlink(const char * true_name)
         strncpy(parent_dir, true_name, last_component - true_name + 1);
         parent_dir[last_component - true_name + 1] = 0;
         last_component++;   /*Skip the slash*/
+
+	if (!IsPathInAfs(parent_dir)) {
+	    const char * nbname = NetbiosName();
+	    int len = strlen(nbname);
+
+	    if (parent_dir[0] == '\\' && parent_dir[1] == '\\' &&
+		 parent_dir[len+2] == '\\' &&
+		 parent_dir[len+3] == '\0' &&
+		 !strnicmp(nbname,&parent_dir[2],len))
+	    {
+		sprintf(parent_dir,"\\\\%s\\all\\", nbname);
+	    }
+	}
     }
     else {
         /*
@@ -1244,6 +1504,19 @@ BOOL IsMountPoint(const char * name)
         strncpy(tbuffer, szCurItem, code = tp - szCurItem + 1);  /* the dir name */
         tbuffer[code] = 0;
         tp++;   /* skip the slash */
+
+	if (!IsPathInAfs(tbuffer)) {
+	    const char * nbname = NetbiosName();
+	    int len = strlen(nbname);
+
+	    if (tbuffer[0] == '\\' && tbuffer[1] == '\\' &&
+		 tbuffer[len+2] == '\\' &&
+		 tbuffer[len+3] == '\0' &&
+		 !strnicmp(nbname,&tbuffer[2],len))
+	    {
+		sprintf(tbuffer,"\\\\%s\\all\\", nbname);
+	    }
+	}
     } else {
         fs_ExtractDriveLetter(szCurItem, tbuffer);
         strcat(tbuffer, ".");
@@ -1300,11 +1573,30 @@ BOOL RemoveMount(CStringArray& files)
             strncpy(tbuffer, szCurItem, code = tp - szCurItem + 1);  /* the dir name */
             tbuffer[code] = 0;
             tp++;   /* skip the slash */
+
+	    if (!IsPathInAfs(tbuffer)) {
+		const char * nbname = NetbiosName();
+		int len = strlen(nbname);
+
+		if (tbuffer[0] == '\\' && tbuffer[1] == '\\' &&
+		    tbuffer[len+2] == '\\' &&
+		    tbuffer[len+3] == '\0' &&
+		    !strnicmp(nbname,&tbuffer[2],len))
+		{
+		    sprintf(tbuffer,"\\\\%s\\all\\", nbname);
+		}
+	    }
         } else {
             fs_ExtractDriveLetter(szCurItem, tbuffer);
             strcat(tbuffer, ".");
             tp = szCurItem;
             fs_StripDriveLetter(tp, tp, 0);
+        }
+
+	if ( IsFreelanceRoot(tbuffer) && !IsAdmin() ) {
+	    results.Add(GetMessageString(IDS_NOT_AFS_CLIENT_ADMIN_ERROR, StripPath(files[i])));
+            error = TRUE;
+            continue;   /* skip */
         }
 
         blob.out_size = 0;
@@ -1602,17 +1894,53 @@ BOOL GetTokenInfo(CStringArray& tokenInfo)
     return TRUE;
 }
 
-UINT MakeSymbolicLink(const char *strName ,const char *strDir)
+UINT MakeSymbolicLink(const char *strName, const char *strDir)
 {
     struct ViceIoctl blob;
     char space[MAXSIZE];
+    char * parent;
+    char path[1024] = "";
     UINT code;
 
     HOURGLASS hourglass;
+    static char message[2048];
+
+    strcpy(path, strDir);
+    parent = Parent(path);
+
+    sprintf(message,"MakeSymbolicLink: path = %s parent = %s\n",path,parent);
+    OutputDebugString(message);
 
     /*lets confirm its a good symlink*/
-    if (!IsPathInAfs(strDir))
-        return 1;
+    if (!IsPathInAfs(path)) {
+	const char * nbname = NetbiosName();
+	int len = strlen(nbname);
+
+	if (parent[0] == '\\' && parent[1] == '\\' &&
+	    parent[len+2] == '\\' &&
+	    parent[len+3] == '\0' &&
+	    !strnicmp(nbname,&parent[2],len))
+	{
+	    sprintf(path,"%sall\\%s", parent, &strDir[strlen(parent)]);
+	    parent = Parent(path);
+	    sprintf(message,"MakeSymbolicLink: new path = %s parent = %s\n",path,parent);
+	    OutputDebugString(message);
+
+	    if (!IsPathInAfs(parent)) {
+		ShowMessageBox(IDS_MAKE_LNK_NOT_AFS_ERROR, MB_ICONEXCLAMATION, IDS_MAKE_LNK_NOT_AFS_ERROR);
+		return TRUE;
+	    }
+	} else {
+	    ShowMessageBox(IDS_MAKE_LNK_NOT_AFS_ERROR, MB_ICONEXCLAMATION, IDS_MAKE_LNK_NOT_AFS_ERROR);
+	    return TRUE;
+	}
+    }
+
+    if ( IsFreelanceRoot(parent) && !IsAdmin() ) {
+	ShowMessageBox(IDS_NOT_AFS_CLIENT_ADMIN_ERROR, MB_ICONEXCLAMATION, IDS_NOT_AFS_CLIENT_ADMIN_ERROR);
+	return FALSE;
+    }
+
     LPTSTR lpsz = new TCHAR[strlen(strDir)+1];
     _tcscpy(lpsz, strName);
     strcpy(space, strDir);
@@ -1620,9 +1948,11 @@ UINT MakeSymbolicLink(const char *strName ,const char *strDir)
     blob.in_size = 1 + strlen(space);
     blob.in = space;
     blob.out = NULL;
-    if ((code=pioctl(lpsz, VIOC_SYMLINK, &blob, 0))!=0)
+    code=pioctl(lpsz, VIOC_SYMLINK, &blob, 0);
+    delete lpsz;
+    if (code != 0)
         return code;
-    return 0;
+    return FALSE;
 }
 
 void ListSymbolicLinkPath(const char *strName,char *strPath,UINT nlenPath)
@@ -1639,20 +1969,33 @@ void ListSymbolicLinkPath(const char *strName,char *strPath,UINT nlenPath)
 
     strcpy(orig_name, strName);
     strcpy(true_name, orig_name);
-	/*
-	 * Find rightmost slash, if any.
-	 */
+    /*
+     * Find rightmost slash, if any.
+     */
     last_component = (char *) strrchr(true_name, '\\');
     if (!last_component)
         last_component = (char *) strrchr(true_name, '/');
     if (last_component) {
-	    /*
-	     * Found it.  Designate everything before it as the parent directory,
-	     * everything after it as the final component.
-	     */
+	/*
+	 * Found it.  Designate everything before it as the parent directory,
+	 * everything after it as the final component.
+	 */
         strncpy(parent_dir, true_name, last_component - true_name + 1);
         parent_dir[last_component - true_name + 1] = 0;
         last_component++;   /*Skip the slash*/
+
+	if (!IsPathInAfs(parent_dir)) {
+	    const char * nbname = NetbiosName();
+	    int len = strlen(nbname);
+
+	    if (parent_dir[0] == '\\' && parent_dir[1] == '\\' &&
+		 parent_dir[len+2] == '\\' &&
+		 parent_dir[len+3] == '\0' &&
+		 !strnicmp(nbname,&parent_dir[2],len))
+	    {
+		sprintf(parent_dir,"\\\\%s\\all\\", nbname);
+	    }
+	}
     }
     else {
         /*
