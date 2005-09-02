@@ -78,7 +78,6 @@ INCLUDE = $(AFSDEV_INCLUDE)
 LIB = $(AFSDEV_LIB)
 
 #define used in WinNT/2000 installation and program version display
-<<<<<<< NTMakefile.i386_w2k
 AFSPRODUCT_VER_MINOR=4
 AFSPRODUCT_VER_PATCH=0002
 AFSPRODUCT_VER_BUILD=0
