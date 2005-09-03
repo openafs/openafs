@@ -31,8 +31,8 @@ FSINT = ../fsint
 DES = ../des
 COMERR = ../comerr
 UTIL = ../util
-SYS = ../sys
-LWP = ../lwp
+SYS = ${srcdir}/../sys
+LWP = ${srcdir}/../lwp
 
 SYSOBJS =\
 	syscall.o
