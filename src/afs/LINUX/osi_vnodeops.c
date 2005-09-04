@@ -631,6 +631,7 @@ afs_linux_revalidate(struct dentry *dp)
 #endif
     AFS_GLOCK();
 
+#ifdef notyet
     /* Make this a fast path (no crref), since it's called so often. */
     if (vcp->states & CStatd) {
 
@@ -643,6 +644,7 @@ afs_linux_revalidate(struct dentry *dp)
 #endif
 	return 0;
     }
+#endif
 
     credp = crref();
     code = afs_getattr(vcp, &vattr, credp);
