@@ -673,6 +673,13 @@ range of issues that have been discovered over the years.
   Execute "fs trace -on" to clear to the log and "fs trace -dump" to
   output the contents of the log to the file.
 
+  An alternatve option to the use of "fs trace" is to use a tool such as
+  Sysinternal's DbgView to capture real-time debugging output.  Set Bit 2
+  of the TraceOption value in the registry to activate.
+
+    [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]
+    REG_DWORD   TraceOption = 0x04
+
 
 * Microsoft MiniDumps (fs minidump -> %WinDir%\TEMP\afsd.dmp)
 
@@ -687,7 +694,7 @@ range of issues that have been discovered over the years.
 
   If you are having trouble with the Integrated Logon operations 
   it is often useful to be able to obtain a log of what it is attempting
-  to do.   The registry value:
+  to do.   Setting Bit 0 of the registry value:
 
     [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]
     REG_DWORD   TraceOption = 0x01
