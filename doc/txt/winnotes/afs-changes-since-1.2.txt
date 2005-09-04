@@ -1,3 +1,30 @@
+Since 1.4.0 rc2: 1.4.0 rc3 released (4 Sep 2005)
+
+ * add support for '/' instead of '\' in pioctl() calls
+
+ * Apply AFS Client Admins group protect to AFS Shell Extension
+
+ * Add support for \\afs\<name> to most AFS Shell Extension 
+   commands except the symlink methods. 
+
+ * when installing the Microsoft Loopback Adapter, enable
+   MS Client for Networks and prevent an install failure 
+   by not calling CoInitialize twice in the same thread.
+
+ * reload cell vldb values from the CellServDB every two
+   hours in case it changes
+
+ * When updating cell information from DNS, be sure to set 
+   a new timeout.
+
+ * Add support to allow use of \\AFS\<foo> where <foo> is 
+   either a mount point or symlink.   As <foo> is normally 
+   treated as a share name, we transform it into \\AFS\all\<foo> 
+   for processing.
+
+ * Init 'code' to prevent false errors when integrated logon 
+   is disabled and the service is not running
+
 Since 1.4.0 rc1: 1.4.0 rc2 released (28 Aug 2005)
 
  * Removed trace log messages that were hampering performance.
