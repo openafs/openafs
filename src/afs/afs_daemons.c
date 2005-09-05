@@ -309,8 +309,12 @@ afs_CheckRootVolume(void)
 		 * count to zero and fs checkv is executed when the current
 		 * directory is /afs.
 		 */
+#ifdef AFS_LINUX20_ENV
+		printk("afs_CheckVolume():  afs_root changed.\n");
+#else
 		AFS_FAST_RELE(afs_globalVp);
 		afs_globalVp = 0;
+#endif
 	    }
 	    afs_rootFid.Fid.Volume = volid;
 	    afs_rootFid.Fid.Vnode = 1;
