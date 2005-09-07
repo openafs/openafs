@@ -59,6 +59,8 @@ extern long cm_IoctlGetFileCellName(smb_ioctl_t *ioctlp, cm_user_t *userp);
 
 extern long cm_IoctlSetACL(smb_ioctl_t *ioctlp, cm_user_t *userp);
 
+extern long cm_IoctlFlushAllVolumes(smb_ioctl_t *ioctlp, cm_user_t *userp);
+
 extern long cm_IoctlFlushVolume(smb_ioctl_t *ioctlp, cm_user_t *userp);
 
 extern long cm_IoctlFlushFile(smb_ioctl_t *ioctlp, cm_user_t *userp);

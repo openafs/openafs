@@ -80,6 +80,7 @@ long cm_FlushFile(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
     lock_ReleaseMutex(&scp->mx);
 
     lock_ReleaseWrite(&scp->bufCreateLock);
+    afsi_log("cm_FlushFile scp 0x%x returns error: [%x]",scp, code);
     return code;
 }
 
@@ -556,6 +557,33 @@ long cm_IoctlSetACL(struct smb_ioctl *ioctlp, struct cm_user *userp)
     return code;
 }
 
+long cm_IoctlFlushAllVolumes(struct smb_ioctl *ioctlp, struct cm_user *userp)
+{
+    long code;
+    cm_scache_t *scp;
+    unsigned long volume;
+    int i;
+    cm_req_t req;
+
+    cm_InitReq(&req);
+
+    lock_ObtainWrite(&cm_scacheLock);
+    for (i=0; i<cm_data.hashTableSize; i++) {
+        for (scp = cm_data.hashTablep[i]; scp; scp = scp->nextp) {
+	    cm_HoldSCacheNoLock(scp);
+	    lock_ReleaseWrite(&cm_scacheLock);
+
+	    /* now flush the file */
+	    code = cm_FlushFile(scp, userp, &req);
+	    lock_ObtainWrite(&cm_scacheLock);
+	    cm_ReleaseSCacheNoLock(scp);
+        }
+    }
+    lock_ReleaseWrite(&cm_scacheLock);
+
+    return code;
+}
+
 long cm_IoctlFlushVolume(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
     long code;
@@ -581,8 +609,6 @@ long cm_IoctlFlushVolume(struct smb_ioctl *ioctlp, struct cm_user *userp)
 
                 /* now flush the file */
                 code = cm_FlushFile(scp, userp, &req);
-                if ( code )
-                    afsi_log("cm_FlushFile returns error: [%x]",code);
                 lock_ObtainWrite(&cm_scacheLock);
                 cm_ReleaseSCacheNoLock(scp);
             }

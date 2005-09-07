@@ -1,3 +1,6 @@
+ * add "fs flushall" command that forces all data buffers
+   to be flushed.
+
 Since 1.4.0 rc2: 1.4.0 rc3 released (4 Sep 2005)
 
  * add support for '/' instead of '\' in pioctl() calls
