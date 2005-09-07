@@ -1344,6 +1344,22 @@ ListACLCmd(struct cmd_syndesc *as, char *arock)
 }
 
 static int
+FlushAllCmd(struct cmd_syndesc *as, char *arock)
+{
+    afs_int32 code;
+    struct ViceIoctl blob;
+    struct cmd_item *ti;
+
+    blob.in_size = blob.out_size = 0;
+    code = pioctl(NULL, VIOC_FLUSHALL, &blob, 0);
+    if (code) {
+	fprintf(stderr, "Error flushing all ");
+	return 1;
+    }
+    return 0;
+}
+
+static int
 FlushVolumeCmd(struct cmd_syndesc *as, char *arock)
 {
     afs_int32 code;
@@ -4456,7 +4472,9 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-cell", CMD_LIST, 0, "cell name");
     cmd_AddParm(ts, "-suid", CMD_FLAG, CMD_OPTIONAL, "allow setuid programs");
     cmd_AddParm(ts, "-nosuid", CMD_FLAG, CMD_OPTIONAL, "disallow setuid programs");
-    
+
+    ts = cmd_CreateSyntax("flushall", FlushAllCmd, 0, "flush all data");
+
     ts = cmd_CreateSyntax("flushvolume", FlushVolumeCmd, 0, "flush all data in volume");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
 
