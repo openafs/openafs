@@ -603,6 +603,15 @@ afsd_service.exe process.   This output can be very helpful when debugging the
 AFS Client Service when it is unresponsive to SMB/CIFS requests.
 
 
+41. The Windows AFS client implements Universally Unique Identifiers (UUIDs).
+They are used to provide the server with a method of identifying the client
+that is independent of IP address.  The UUID is generated when the AFSCache
+file is created and is maintained as long as the contents of the AFSCache
+file are kept intact.  The UUID is stored in the AFSCache file.   When 
+cloning machines that have Windows AFS client installed, the AFSCache files
+must be deleted as part of the cloning process.
+
+
 ------------------------------------------------------------------------
 
 How to Debug Problems with OpenAFS for Windows:
