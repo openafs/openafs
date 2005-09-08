@@ -194,7 +194,13 @@ afs_osi_SleepSig(void *event)
 	schedule();
 #ifdef AFS_LINUX26_ENV
 #ifdef CONFIG_PM
-	if (current->flags & PF_FREEZE)
+	if (
+#ifdef PF_FREEZE
+	    current->flags & PF_FREEZE
+#else
+	    !current->todo
+#endif
+	    )
 #ifdef LINUX_REFRIGERATOR_TAKES_PF_FREEZE
 	    refrigerator(PF_FREEZE);
 #else
