@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/sys/pioctl_nt.c,v 1.18.2.10 2005/04/29 19:57:19 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/sys/pioctl_nt.c,v 1.18.2.11 2005/09/02 17:28:36 jaltman Exp $");
 
 #include <afs/stds.h>
 #include <windows.h>
@@ -322,14 +322,16 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
             tbuffer[1] = ':';
             strcpy(tbuffer + 2, SMB_IOCTL_FILENAME);
         } else if (fileNamep[0] == fileNamep[1] && 
-			       fileNamep[0] == '\\')
+		   (fileNamep[0] == '\\' || fileNamep[0] == '/'))
         {
             int count = 0, i = 0;
 
             while (count < 4 && fileNamep[i]) {
                 tbuffer[i] = fileNamep[i];
-                if ( tbuffer[i++] == '\\' )
+                if ( tbuffer[i] == '\\' ||
+		     tbuffer[i] == '/')
                     count++;
+		i++;
             }
             if (fileNamep[i] == 0)
                 tbuffer[i++] = '\\';
@@ -344,14 +346,16 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
                 tbuffer[1] = ':';
                 strcpy(tbuffer + 2, SMB_IOCTL_FILENAME);
             } else if (curdir[0] == curdir[1] &&
-                       curdir[0] == '\\') 
+                       (curdir[0] == '\\' || curdir[0] == '/')) 
             {
                 int count = 0, i = 0;
 
                 while (count < 4 && curdir[i]) {
                     tbuffer[i] = curdir[i];
-                    if ( tbuffer[i++] == '\\' )
-                        count++;
+		    if ( tbuffer[i] == '\\' ||
+			 tbuffer[i] == '/')
+			count++;
+		    i++;
                 }
                 if (tbuffer[i] == 0)
                     tbuffer[i++] = '\\';
@@ -691,6 +695,7 @@ fs_GetFullPath(char *pathp, char *outPathp, long outSize)
     int pathHasDrive;
     int doSwitch;
     char newPath[3];
+    char *p;
 
     if (pathp[0] != 0 && pathp[1] == ':') {
 	/* there's a drive letter there */
@@ -701,7 +706,8 @@ fs_GetFullPath(char *pathp, char *outPathp, long outSize)
 	pathHasDrive = 0;
     }
 
-    if ( firstp[0] == '\\' && firstp[1] == '\\') {
+    if ( firstp[0] == '\\' && firstp[1] == '\\' || 
+	 firstp[0] == '/' && firstp[1] == '/') {
         /* UNC path - strip off the server and sharename */
         int i, count;
         for ( i=2,count=2; count < 4 && firstp[i]; i++ ) {
@@ -714,10 +720,18 @@ fs_GetFullPath(char *pathp, char *outPathp, long outSize)
         } else {
             strcpy(outPathp,&firstp[--i]);
         }
+	for (p=outPathp ;*p; p++) {
+	    if (*p == '/')
+		*p = '\\';
+	}
         return 0;
     } else if (firstp[0] == '\\' || firstp[0] == '/') {
         /* already an absolute pathname, just copy it back */
         strcpy(outPathp, firstp);
+	for (p=outPathp ;*p; p++) {
+	    if (*p == '/')
+		*p = '\\';
+	}
         return 0;
     }
 
@@ -747,7 +761,8 @@ fs_GetFullPath(char *pathp, char *outPathp, long outSize)
     GetCurrentDirectory(sizeof(tpath), tpath);
     if (tpath[1] == ':')
         strcpy(outPathp, tpath + 2);	/* skip drive letter */
-    else if ( tpath[0] == '\\' && tpath[1] == '\\') {
+    else if ( tpath[0] == '\\' && tpath[1] == '\\'||
+	      tpath[0] == '/' && tpath[1] == '/') {
         /* UNC path - strip off the server and sharename */
         int i, count;
         for ( i=2,count=2; count < 4 && tpath[i]; i++ ) {
@@ -778,6 +793,10 @@ fs_GetFullPath(char *pathp, char *outPathp, long outSize)
 	SetCurrentDirectory(origPath);
     }
 
+    for (p=outPathp ;*p; p++) {
+	if (*p == '/')
+	    *p = '\\';
+    }
     return 0;
 }
 
