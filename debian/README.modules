@@ -1,93 +1,92 @@
                          Building Kernel Modules
-                         -----------------------
 
-The easiest way to get AFS modules is to install prebuilt modules.  For
-example, if you are running kernel 2.4.27-2-686-smp, you might try:
+Introduction
 
-    apt-get install openafs-modules-2.4.27-2-686-smp
+  The easiest way to get AFS modules is to install prebuilt modules.  For
+  example, if you are running kernel 2.4.27-2-686-smp, you might try:
 
-Pre-built modules are not provided with Debian, but many organizations
-that use OpenAFS build their own and provide them locally.
+      apt-get install openafs-modules-2.4.27-2-686-smp
 
-If this doesn't work, you will need to build your own modules.  There are
-two methods for doing this.
+  Pre-built modules are not provided with Debian, but many organizations
+  that use OpenAFS build their own and provide them locally.
 
-When following either method, be aware that the Debian package creates a
-module named openafs, not libafs as is used by upstream.  It also prefers
-not to add the .mp extension for modules built for SMP kernels; the
-indication of whether the module is for an SMP kernel should go into the
-package name via something like --append_to_version, not into the file
-name of the module.
+  If this doesn't work, you will need to build your own modules.  There
+  are two methods for doing this.
+
+  When following either method, be aware that the Debian package creates a
+  module named openafs, not libafs as is used by upstream.  It also
+  prefers not to add the .mp extension for modules built for SMP kernels;
+  the indication of whether the module is for an SMP kernel should go into
+  the package name via something like --append_to_version, not into the
+  file name of the module.
 
 module-assistant
-----------------
 
-This method is the best one to use when using the kernels that come with
-Debian, since module-assistant knows how to get the right header files to
-build modules for your currently running kernel.
+  This method is the best one to use when using the kernels that come with
+  Debian, since module-assistant knows how to get the right header files
+  to build modules for your currently running kernel.
 
-First, install module-assistant and then prepare the kernel headers and
-install openafs-modules-source:
+  First, install module-assistant and then prepare the kernel headers and
+  install openafs-modules-source:
 
-    apt-get install module-assistant
-    module-assistant prepare openafs-modules
+      apt-get install module-assistant
+      module-assistant prepare openafs-modules
 
-(If you want to build modules for a different kernel than your currently
-running one, pass the -l flag to module-assistant.  See the man page.)
-module-assistant may be able to find the right packages itself or it may
-tell you to install particular packages.  Once you've finished with that,
-build the module with:
+  (If you want to build modules for a different kernel than your currently
+  running one, pass the -l flag to module-assistant.  See the man page.)
+  module-assistant may be able to find the right packages itself or it may
+  tell you to install particular packages.  Once you've finished with
+  that, build the module with:
 
-    module-assistant auto-build openafs-modules
+      module-assistant auto-build openafs-modules
 
-You may prefer to pass module-assistant the -t flag to get more
-conventional output.  If everything works correctly, the openafs-modules
-deb should be created in /usr/src.  You can use dpkg -i to install it.
+  You may prefer to pass module-assistant the -t flag to get more
+  conventional output.  If everything works correctly, the openafs-modules
+  deb should be created in /usr/src.  You can use dpkg -i to install it.
 
-module-assistant will take care of naming the openafs-modules package
-correctly so that it matches the name of the kernel-image package and
-installs its modules into the correct directory.
+  module-assistant will take care of naming the openafs-modules package
+  correctly so that it matches the name of the kernel-image package and
+  installs its modules into the correct directory.
 
 make-kpkg
----------
 
-This method works well when you're also building your own kernel, rather
-than using the pre-packaged Debian one.
+  This method works well when you're also building your own kernel, rather
+  than using the pre-packaged Debian one.
 
-Install a kernel source package and untar it in /usr/src.  Then, install
-openafs-modules-source.
+  Install a kernel source package and untar it in /usr/src.  Then, install
+  openafs-modules-source.
 
-    apt-get install openafs-modules-source
+      apt-get install openafs-modules-source
 
-Next, unpack openafs-modules-source:
+  Next, unpack openafs-modules-source:
 
-    cd /usr/src
-    tar xzf openafs.tar.gz
+      cd /usr/src
+      tar xzf openafs.tar.gz
 
-Now, change into your kernel source tree.  You should then create a
-.config file; the easiest way to do this is to run make menuconfig or to
-copy in a kernel configuration from the same version of the kernel.
-Debian kernel packages store a copy of their kernel configuration in
-/boot/config.version_number.
+  Now, change into your kernel source tree.  You should then create a
+  .config file; the easiest way to do this is to run make menuconfig or to
+  copy in a kernel configuration from the same version of the kernel.
+  Debian kernel packages store a copy of their kernel configuration in
+  /boot/config.version_number.
 
-The kernel configuration needs to be identical to the configuration that
-produced the kernel that you're using.  Ideally, you would build the
-kernel image you're going to use with make-kpkg kernel_image and install
-that along with the module image, although as long as the configuration is
-identical, you may be able to get away with using a pre-built kernel.  (A
-better approach, if you're using pre-built kernels, may be to use
-module-assistant as described above.)
+  The kernel configuration needs to be identical to the configuration that
+  produced the kernel that you're using.  Ideally, you would build the
+  kernel image you're going to use with make-kpkg kernel_image and install
+  that along with the module image, although as long as the configuration
+  is identical, you may be able to get away with using a pre-built kernel.
+  (A better approach, if you're using pre-built kernels, may be to use
+  module-assistant as described above.)
 
-Finally, build the modules:
+  Finally, build the modules:
 
-    make-kpkg modules_image
+      make-kpkg modules_image
 
-You may need to use the --append_to_version switch to add version suffixes
-like -686 or -smp to match your kernel and install the OpenAFS module into
-a directory like /lib/modules/version-686.  Be aware that the Debian
-OpenAFS packages build either a regular module or an SMP module, not both,
-so the generated package will only work with a kernel with the same SMP
-configuration.
+  You may need to use the --append_to_version switch to add version
+  suffixes like -686 or -smp to match your kernel and install the OpenAFS
+  module into a directory like /lib/modules/version-686.  Be aware that
+  the Debian OpenAFS packages build either a regular module or an SMP
+  module, not both, so the generated package will only work with a kernel
+  with the same SMP configuration.
 
-An openafs-modules deb should be created in /usr/src.  Use dpkg -i to
-install this version.
+  An openafs-modules deb should be created in /usr/src.  Use dpkg -i to
+  install this package.
