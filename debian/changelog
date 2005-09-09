@@ -4,6 +4,9 @@ openafs (1.4rc3-1) unstable; urgency=low
   * When kill_all_afs is enabled in /etc/openafs/afs.conf, only kill AFS
     processes if the runlevel is 0 or 6.  You really only want this when
     the system is shutting down.  (Closes: #325347)
+  * Remove the init script check of the cache file system and instead
+    improve the check in afsd.  The init script check used stat, which is
+    in /usr/bin and therefore not fair game for init scripts.
   * Translation updates.
     - Portuguese (Brazil), thanks André Luís Lopes.
 
