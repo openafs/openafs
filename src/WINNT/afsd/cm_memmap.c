@@ -1,4 +1,5 @@
 #include <windows.h>
+#include <tchar.h>
 #include "afsd.h"
 #include "cm_memmap.h"
 
@@ -408,6 +409,179 @@ cm_ValidateMappedMemory(char * cachePath)
     return 0;
 }
 
+DWORD 
+GetVolSerialNumber(char * cachePath)
+{
+    char rootpath[128];
+    int  i = 0;
+    DWORD serial = 0;
+
+    if ( cachePath[0] == '\\' && cachePath[1] == '\\' ||
+	 cachePath[0] == '/' && cachePath[1] == '/' ) 
+    {
+	rootpath[0]=rootpath[1]='\\';
+	for ( i=2; cachePath[i]; i++ ) {
+	    rootpath[i] = cachePath[i];
+	    if ( cachePath[i] == '\\' || cachePath[i] == '/' ) {
+		i++;
+		break;
+	    }
+	}
+    } else if ( cachePath[1] == ':' ) {
+	rootpath[0] = cachePath[0];
+	rootpath[1] = ':';
+	i = 2;
+    }
+
+    for ( ; cachePath[i]; i++ ) {
+	rootpath[i] = cachePath[i];
+	if ( cachePath[i] == '\\' || cachePath[i] == '/' ) {
+	    i++;
+	    break;
+	}
+    }
+    rootpath[i] = '\0';
+
+    GetVolumeInformation(rootpath, NULL, 0, &serial, NULL, NULL, NULL, 0);
+    return serial;
+}
+
+BOOL GetTextualSid( PSID pSid, PBYTE TextualSid, LPDWORD lpdwBufferLen )
+{
+    PSID_IDENTIFIER_AUTHORITY psia;
+    DWORD dwSubAuthorities;
+    DWORD dwSidRev=SID_REVISION;
+    DWORD dwCounter;
+    DWORD dwSidSize;
+
+    // Validate the binary SID.
+    if(!IsValidSid(pSid)) 
+	return FALSE;
+
+    // Get the identifier authority value from the SID.
+
+    psia = GetSidIdentifierAuthority(pSid);
+
+    // Get the number of subauthorities in the SID.
+
+    dwSubAuthorities = *GetSidSubAuthorityCount(pSid);
+
+    // Compute the buffer length.
+    // S-SID_REVISION- + IdentifierAuthority- + subauthorities- + NULL
+
+    dwSidSize=(15 + 12 + (12 * dwSubAuthorities) + 1);
+
+    // Check input buffer length.
+    // If too small, indicate the proper size and set the last error.
+
+    if (*lpdwBufferLen < dwSidSize)
+    {
+        *lpdwBufferLen = dwSidSize;
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        return FALSE;
+    }
+
+    // Add 'S' prefix and revision number to the string.
+    dwSidSize=sprintf(TextualSid, "S-%lu-", dwSidRev );
+
+    // Add a SID identifier authority to the string.
+    if ( (psia->Value[0] != 0) || (psia->Value[1] != 0) )
+    {
+        dwSidSize+=sprintf(TextualSid + strlen(TextualSid),
+                    "0x%02hx%02hx%02hx%02hx%02hx%02hx",
+                    (USHORT)psia->Value[0],
+                    (USHORT)psia->Value[1],
+                    (USHORT)psia->Value[2],
+                    (USHORT)psia->Value[3],
+                    (USHORT)psia->Value[4],
+                    (USHORT)psia->Value[5]);
+    }
+    else
+    {
+        dwSidSize+=sprintf(TextualSid + strlen(TextualSid),
+                    "%lu",
+                    (ULONG)(psia->Value[5]      )   +
+                    (ULONG)(psia->Value[4] <<  8)   +
+                    (ULONG)(psia->Value[3] << 16)   +
+                    (ULONG)(psia->Value[2] << 24)   );
+    }
+
+    // Add SID subauthorities to the string.
+    //
+    for (dwCounter=0 ; dwCounter < dwSubAuthorities ; dwCounter++)
+    {
+        dwSidSize+=sprintf(TextualSid + dwSidSize, "-%lu",
+                    *GetSidSubAuthority(pSid, dwCounter) );
+    }
+
+    return TRUE;
+}
+
+PBYTE 
+IsSubAuthValid( PBYTE SidData, DWORD SidLength )
+{
+    PBYTE	sidPtr;
+
+    sidPtr = NULL;
+    if ( SidLength % sizeof(DWORD) == 0 )  {
+	for ( sidPtr = SidData + SidLength - 5*sizeof(DWORD); 
+	      sidPtr >= SidData; 
+	      sidPtr -= sizeof(DWORD) )
+	    if ( ((PDWORD)sidPtr)[1] == 0x05000000 &&  
+		 ((PDWORD)sidPtr)[2] == 0x00000015 )
+		break;
+	if ( sidPtr < SidData )
+	    sidPtr = NULL;
+    }
+    return sidPtr;
+}
+
+BOOL
+GetMachineSid(PBYTE SidBuffer, DWORD SidSize)
+{
+    HKEY  	hKey;
+    PBYTE 	vData;
+    DWORD 	dwType;
+    DWORD 	dwLen;
+    PBYTE 	pSid;
+    DWORD 	dwStatus;
+
+    if (!SidBuffer)
+	return FALSE;
+
+    //
+    // Read the last subauthority of the current computer SID
+    //
+    if( RegOpenKey( HKEY_LOCAL_MACHINE, "SECURITY\\SAM\\Domains\\Account", 
+		    &hKey) != ERROR_SUCCESS ) {
+	return FALSE;
+    }
+    dwLen = 0;
+    vData = NULL;
+    RegQueryValueEx( hKey, "V", NULL, &dwType, vData, &dwLen );
+    vData = (PBYTE) malloc( dwLen );
+    dwStatus = RegQueryValueEx( hKey, "V", NULL, &dwType, vData, &dwLen );
+    RegCloseKey( hKey );
+    if( dwStatus != ERROR_SUCCESS ) {
+	return FALSE;
+    }
+
+    //
+    // Make sure that we're dealing with a SID we understand
+    //
+    pSid = IsSubAuthValid( vData, dwLen );
+
+    if( !pSid || SidSize < dwLen - (pSid - vData)) {
+	free(vData);
+	return FALSE;
+    }
+
+    memset(SidBuffer, 0, SidSize);
+    memcpy(SidBuffer, pSid, dwLen - (pSid - vData) );
+    free(vData);
+    return TRUE;
+}
+
 int
 cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD chunkSize, DWORD cacheBlocks)
 {
@@ -417,9 +591,16 @@ cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD chu
     DWORD mappingSize;
     DWORD maxVols = stats/2;
     DWORD maxCells = stats/4;
+    DWORD volumeSerialNumber = 0;
+    DWORD sidStringSize = 0;
+    DWORD rc;
+    CHAR  machineSid[6 * sizeof(DWORD)]="";
     char * baseAddress = NULL;
     cm_config_data_t * config_data_p;
     char * p;
+
+    volumeSerialNumber = GetVolSerialNumber(cachePath);
+    GetMachineSid(machineSid, sizeof(machineSid));
 
     mappingSize = ComputeSizeOfMappingFile(stats, maxVols, maxCells, chunkSize, cacheBlocks, CM_CONFIGDEFAULT_BLOCKSIZE);
 
@@ -644,10 +825,52 @@ cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD chu
         cm_data.bufDataBaseAddress = (char *) baseAddress;
         baseAddress += ComputeSizeOfDataBuffers(cacheBlocks, CM_CONFIGDEFAULT_BLOCKSIZE);
         cm_data.bufEndOfData = (char *) baseAddress;
-
         cm_data.fakeDirVersion = 0x8;
-
         UuidCreate((UUID *)&cm_data.Uuid);
+	cm_data.volSerialNumber = volumeSerialNumber;
+	memcpy(cm_data.Sid, machineSid, sizeof(machineSid));
+    } else {
+	int gennew = 0;
+
+	if ( volumeSerialNumber == 0 || volumeSerialNumber != cm_data.volSerialNumber ) {
+	    gennew = 1;
+	    afsi_log("Volume serial number change, generating new UUID");
+	    afsi_log("Old volume Serial Number: 0x%x", cm_data.volSerialNumber);
+	} else if ( machineSid[0] && memcmp(machineSid, cm_data.Sid, sizeof(machineSid))) {
+	    gennew = 1;
+	    afsi_log("Machine Sid changed, generating new UUID");
+	    GetTextualSid( (PSID)cm_data.Sid, NULL, &sidStringSize );
+	    if (sidStringSize) {
+		p = malloc(sidStringSize * sizeof(TCHAR));
+		if (p) {
+		    rc = GetTextualSid( (PSID)cm_data.Sid, p, &sidStringSize );
+		    afsi_log("Old Machine SID: %s", rc ? p : "unknown");
+		    free(p);
+		}
+	    } else {
+		afsi_log("Old Machine SID: unknown");
+	    }
+	}
+
+	if (gennew) {
+	    UuidCreate((UUID *)&cm_data.Uuid);
+	    cm_data.volSerialNumber = volumeSerialNumber;
+	    memcpy(cm_data.Sid, machineSid, sizeof(machineSid));
+	}
+    }
+
+    afsi_log("Volume Serial Number: 0x%x", cm_data.volSerialNumber);
+
+    GetTextualSid( (PSID)cm_data.Sid, NULL, &sidStringSize );
+    if (sidStringSize) {
+	p = malloc(sidStringSize * sizeof(TCHAR));
+	if (p) {
+	    rc = GetTextualSid( (PSID)cm_data.Sid, p, &sidStringSize );
+	    afsi_log("Machine SID: %s", rc ? p : "unknown");
+	    free(p);
+	}
+    } else {
+	afsi_log("Machine SID: unknown");
     }
 
     UuidToString((UUID *)&cm_data.Uuid, &p);

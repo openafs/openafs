@@ -78,6 +78,8 @@ typedef struct cm_config_data {
 
     time_t              mountRootGen;
     afsUUID             Uuid;
+    DWORD 		volSerialNumber;
+    CHAR 		Sid[6 * sizeof(DWORD)];
 } cm_config_data_t;
 
 extern cm_config_data_t cm_data;
@@ -93,7 +95,7 @@ DWORD ComputeSizeOfDNLCache(void);
 DWORD ComputeSizeOfDataBuffers(DWORD cacheBlocks, DWORD blockSize);
 DWORD ComputeSizeOfDataHT(void);
 DWORD ComputeSizeOfDataHeaders(DWORD cacheBlocks);
-DWORD ComputeSizeOfMappingFile(DWORD stats, DWORD chunkSize, DWORD cacheBlocks, DWORD blockSize);
+DWORD ComputeSizeOfMappingFile(DWORD stats, DWORD maxVols, DWORD maxCells, DWORD chunkSize, DWORD cacheBlocks, DWORD blockSize);
 PSECURITY_ATTRIBUTES CreateCacheFileSA();
 VOID  FreeCacheFileSA(PSECURITY_ATTRIBUTES psa);
 int   cm_ShutdownMappedMemory(void);
