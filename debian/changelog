@@ -12,6 +12,7 @@ openafs (1.4rc3-1) unstable; urgency=low
     running.
   * Expand README.Debian and include information about PAM configuration.
   * Link libpam-openafs-kaserver's doc directory to openafs-client.
+  * Make the short descriptions shorter.
   * Translation updates.
     - Portuguese (Brazil), thanks André Luís Lopes.
 
