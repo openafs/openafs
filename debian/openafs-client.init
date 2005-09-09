@@ -173,18 +173,20 @@ kill_afs() {
 }
 
 # Repeatedly call kill_afs for a series of signals to give AFS-using processes
-# a hope of shutting down cleanly.  Not enabled by default.  Enable this in
-# /etc/openafs/afs.conf (but see the warning in that file).
+# a hope of shutting down cleanly if the system is shutting down.  Not enabled
+# by default.  Enable this in /etc/openafs/afs.conf.
 kill_all_afs() {
-    if [ -x /usr/bin/lsof ] ; then
-        echo -n "Killing processes with AFS files open: "
-        kill_afs HUP
-        kill_afs TERM
-        kill_afs ABRT
-        kill_afs KILL
-        echo "done."
-    else
-        echo '/usr/bin/lsof not found, not killing processes' >&2
+    if [ "$RUNLEVEL" -eq 0 ] || [ "$RUNLEVEL" -eq 6 ] ; then
+        if [ -x /usr/bin/lsof ] ; then
+            echo -n "Killing processes with AFS files open: "
+            kill_afs HUP
+            kill_afs TERM
+            kill_afs ABRT
+            kill_afs KILL
+            echo "done."
+        else
+            echo '/usr/bin/lsof not found, not killing processes' >&2
+        fi
     fi
 }
 

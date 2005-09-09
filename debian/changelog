@@ -1,6 +1,9 @@
 openafs (1.4rc3-1) unstable; urgency=low
 
   * New upstream version.
+  * When kill_all_afs is enabled in /etc/openafs/afs.conf, only kill AFS
+    processes if the runlevel is 0 or 6.  You really only want this when
+    the system is shutting down.  (Closes: #325347)
   * Translation updates.
     - Portuguese (Brazil), thanks André Luís Lopes.
 
