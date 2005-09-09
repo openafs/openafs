@@ -1,37 +1,115 @@
-OpenAFS for Debian
-------------------
+                            OpenAFS for Debian
 
-* Long-time AFS users may be confused by the directory layout.  The files
-  that normally go in /usr/vice/etc go in /etc/openafs.  The cache should
-  be mounted on /var/cache/openafs.
+Introduction
 
-* The AFS client cache must be on an ext2 or ext3 partition.  Other file
+  For an OpenAFS client system, install openafs-client and a kernel
+  module.  See README.modules for information on how to build the kernel
+  module for your system.  Then, read /etc/openafs/afs.conf to understand
+  the client configuration options.  The openafs-client package will
+  attempt to guess at a good cache configuration based on the size of your
+  cache, but you may want to tune it further.  There are also other
+  options configured in that file you may want to consider.
+
+  The AFS client cache must be on an ext2 or ext3 partition.  Other file
   systems often do not support the semantics required by the AFS kernel
-  module and will cause kernel faults.  In particular, XFS and ReiserFS
-  will NOT work.
+  module and will cause afsd to abort (to avoid kernel panics).  In
+  particular, XFS, ReiserFS, and tmpfs will NOT work.
 
-* Read /etc/openafs/afs.conf to understand the client configuration
-  options.  The openafs-client package will attempt to guess at a good
-  cache configuration based on the size of your cache, but you may want
-  to tune it further.  There are also other options configured in that
-  file you may want to consider.
+  For information on how to set up an OpenAFS server, read README.servers.
+  You will want the openafs-fileserver package for a file server and,
+  additionally, the openafs-dbserver package for a database server.
 
-* No manual pages are included.  Work is underway upstream to write man
+Documentation
+
+  For the complete OpenAFS manual, install openafs-doc.  This is the same
+  documentation as found at <http://www.openafs.org/>, and is
+  unfortunately outdated in several respects, but it's the best that we
+  have at present.  The Administrative Reference manual is one of the most
+  useful, as it contains man-page-like pages on most of the AFS commands.
+
+  No manual pages are included.  Work is underway upstream to write man
   pages for all of the commands based on the old HTML reference manual,
   but that work is not complete yet.
 
-* Documentation can be found at http://www.openafs.org.  If want to
-  set up a new cell, read the docs there and then look at the example
-  session in configuration-transcript.txt.gz in this directory.  You
-  should also read README.servers.  The procedure outlined in these two
-  files is much simpler and more secure than the one in the OpenAFS
-  documentation, but the OpenAFS documentation provides useful background.
+  If want to set up a new cell, read README.servers and then look at the
+  example session in configuration-transcript.txt.gz in this directory.
+  The procedure outlined in these two files is much simpler and more
+  secure than the one in the OpenAFS documentation, but the OpenAFS
+  documentation provides useful background.
 
-* The libopenafs-dev package only includes static libraries because
-  the shared libraries built by AFS are not compatible with Debian policy.
-  They do not have a stable ABI or an appropriate SONAME.
+Changes Relative to Stock OpenAFS
 
-* kaserver is not included.  New AFS cells should use Kerberos v5 rather
+  Long-time AFS users may be confused by the directory layout.  The files
+  that normally go in /usr/vice/etc go in /etc/openafs.  The cache should
+  be mounted on /var/cache/openafs.  The server files have been moved
+  around even more; see README.servers for the details.
+
+  The OpenAFS kernel module is named openafs, not libafs, to better match
+  normal Linux kernel module naming standards.  The Debian source package
+  only builds one kernel module that matches the kernel source tree it is
+  built against and does not attempt to build separate SMP and non-SMP
+  modules against the same tree.  Doing so does not work on all platforms.
+  To distinguish between an SMP and a non-SMP kernel module package, use
+  --append_to_version; see README.modules for more information.
+
+  The libopenafs-dev package only includes static libraries and there are
+  no shared library packages.  The shared libraries built by AFS are not
+  compatible with Debian policy.  They do not have a stable ABI or an
+  appropriate SONAME.
+
+  kaserver is not included.  New AFS cells should use Kerberos v5 rather
   than the old K4-based kaserver KDC.
 
- -- Russ Allbery <rra@stanford.edu>, Thu Aug 11 10:37:50 2005
+  The OpenAFS PAM modules have been built with pthreads rather than the
+  standard LWP AFS libraries for compatibility with a threaded sshd.
+
+PAM Authentication
+
+  Any new OpenAFS cell is strongly encouraged to use Kerberos v5 for
+  authentication.  If you want PAM to automatically obtain AFS credentials
+  and you are using Kerberos v5, you will want to install the libpam-krb5
+  and libpam-openafs-session packages and then put something like the
+  following in /etc/pam.d/common-auth:
+
+      auth    [success=ok default=1]  pam_krb5.so
+      auth    [default=done]          pam_openafs_session.so
+      auth    required                pam_unix.so nullok_secure try_first_pass
+
+  and something like the following in /etc/pam.d/common-session:
+
+      session optional        pam_krb5.so
+      session optional        pam_openafs_session.so
+      session required        pam_unix.so
+
+  You'll probably also want the following in /etc/pam.d/common-account:
+
+      account sufficient      pam_krb5.so
+      account required        pam_unix.so
+
+  There are, of course, many variations depending on what different
+  mechanism you want to use and how you want to handle fallbacks.
+
+  If you are still using Kerberos v4 and the OpenAFS kaserver (or a KDC
+  that understands the same protocol) for authentication, you can instead
+  use the libpam-openafs-kaserver package and a configuration like:
+
+      auth    sufficient      pam_afs.so ignore_root
+      auth    required        pam_unix.so nullok_secure try_first_pass
+
+  in /etc/pam.d/common-auth and:
+
+      session optional        pam_afs.so
+      session required        pam_unix.so
+
+  in /etc/pam.d/common-session.  Use pam_afs.krb.so instead of pam_afs.so
+  if you also want the PAM module to acquire a ticket cache for you.  If
+  using this configuration with sshd, you may need to disable privilege
+  separation to get everything working properly.  I've had mixed results
+  with that.  Obviously, converting to Kerberos v5 authentication is
+  strongly preferred.
+
+  If you are using the kaserver as your KDC, you may also want to install
+  the openafs-kpasswd package to get the administrative utilities for
+  managing those Kerberos accounts.
+
+ -- Russ Allbery <rra@stanford.edu>, Fri Sep  9 14:53:22 2005

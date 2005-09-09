@@ -38,7 +38,14 @@ srcpkg    = openafs-modules-source
 modulepkg := $(shell echo openafs-modules-$(KVERS)${INT_SUBARCH})
 moduledir := debian/$(modulepkg)/lib/modules/$(KVERS)/fs
 
+# These packages have lintian overrides.
 LINTIAN_PACKAGES = openafs-dbserver openafs-client openafs-fileserver
+
+# The /usr/share/doc directory for these packages should be a symlink to
+# /usr/share/doc/openafs-client.  Any package on this list must depend on
+# openafs-client.
+DOC_PACKAGES = libpam-openafs-kaserver openafs-dbserver openafs-fileserver \
+	openafs-kpasswd
 
 # These variable is used only by get-orig-source, which will normally only be
 # run by maintainers.
@@ -100,13 +107,13 @@ install: build
 	dh_installdirs
 	dh_install
 
-	for foo in $(LINTIAN_PACKAGES) ; do \
-	    install -d debian/$$foo/usr/share/lintian/overrides || exit 1 ; \
-	    install -m 644 -c debian/$$foo.lintian \
-	        debian/$$foo/usr/share/lintian/overrides/$$foo || exit 1 ; \
+	set -e; for pkg in $(LINTIAN_PACKAGES) ; do \
+	    install -d debian/$$pkg/usr/share/lintian/overrides; \
+	    install -m 644 -c debian/$$pkg.lintian \
+	        debian/$$pkg/usr/share/lintian/overrides/$$pkg; \
 	done
-	for pkg in openafs-dbserver openafs-fileserver openafs-kpasswd ; do \
-	    ln -s openafs-client debian/$$pkg/usr/share/doc/$$pkg || exit 1 ; \
+	set -e; for pkg in $(DOC_PACKAGES) ; do \
+	    ln -s openafs-client debian/$$pkg/usr/share/doc/$$pkg; \
 	done
 	mv debian/openafs-client/usr/bin/pagsh \
 	    debian/openafs-client/usr/bin/pagsh.openafs

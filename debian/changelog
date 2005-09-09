@@ -7,6 +7,11 @@ openafs (1.4rc3-1) unstable; urgency=low
   * Remove the init script check of the cache file system and instead
     improve the check in afsd.  The init script check used stat, which is
     in /usr/bin and therefore not fair game for init scripts.
+  * libpam-openafs-kaserver must depend on openafs-client, not just
+    recommend it, since acquiring tokens requires that the client be
+    running.
+  * Expand README.Debian and include information about PAM configuration.
+  * Link libpam-openafs-kaserver's doc directory to openafs-client.
   * Translation updates.
     - Portuguese (Brazil), thanks André Luís Lopes.
 

@@ -91,8 +91,7 @@ Description: The AFS distributed filesystem- Module Sources
 
 Package: libpam-openafs-kaserver
 Priority: extra
-Depends: ${shlibs:Depends}
-Recommends: openafs-client
+Depends: ${shlibs:Depends}, openafs-client
 Architecture: i386 powerpc sparc alpha s390 ia64 hppa amd64 ppc64
 Description: The AFS distributed filesystem- kaserver PAM module
  AFS is a distributed filesystem allowing cross-platform sharing of
@@ -101,4 +100,4 @@ Description: The AFS distributed filesystem- kaserver PAM module
  .
  This package provides a PAM module for existing  sites using the AFS
  kaserver for authentication.  New sites should use a Kerberos 5
- implementation,  a Kerberos PAM module and libpam-openafs-session.
+ implementation, a Kerberos v5 PAM module, and libpam-openafs-session.
