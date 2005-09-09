@@ -150,6 +150,8 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
 	wchar_t absRoot_w[MAX_PATH];
 	HANDLE rootDir;
 
+    osi_Log1(afsd_logp, "cm_ParseIoctlPath %s", osi_LogSaveString(afsd_logp,relativePath));
+
     /* This is usually the file name, but for StatMountPoint it is the path. */
     /* ioctlp->inDatap can be either of the form:
      *    \path\.
