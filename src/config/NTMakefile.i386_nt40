@@ -80,7 +80,7 @@ LIB = $(AFSDEV_LIB)
 #define used in WinNT/2000 installation and program version display
 AFSPRODUCT_VER_MAJOR=1
 AFSPRODUCT_VER_MINOR=4
-AFSPRODUCT_VER_PATCH=0000
+AFSPRODUCT_VER_PATCH=0002
 AFSPRODUCT_VER_BUILD=0
 
 # For MSI installer, each major release should have a different GUID
@@ -249,11 +249,15 @@ afscflags = $(afscflags) /GX
 !ENDIF
 
 !IF ("$(AFSVER_CL)"!="1200")
-afscflags = $(afscflags) /GT /GS
+afscdefs = $(afscdefs) /GT /GS
 #/Wp64
 !IF ("$(AFSVER_CL)"!="1400")
-afscflags = $(afscflags) /G7
+afscdefs = $(afscdefs) /G7
 !ENDIF
+!ENDIF
+
+!IF ("$(AFSIFS)" == "TRUE")
+afscdefs = $(afscdefs) -DAFSIFS
 !ENDIF
 
 !IF ("$(AFSDEV_BUILDTYPE)" == "FREE")
@@ -267,15 +271,15 @@ NODEBUG=1
 cdebug = $(cdebug:-Z7=-Zi)  # avoid annoying override warning (D4025)
 
 !IF ("$(AFSVER_CL)"=="1200")
-afscdefs = $(afscdefs) -DDEBUG
+afscdefs = $(afscdefs) -DDEBUG 
 afscflags = $(afscflags) /GZ
 !ELSE 
-afscdefs = $(afscdefs) -DDEBUG
+afscdefs = $(afscdefs) -DDEBUG 
 afscflags = $(afscflags) /RTCs /RTCu
 !ENDIF
 
 !IFDEF _CRTDBG_MAP_ALLOC
-afscflags = $(afscflags) -D_DEBUG -D_CRTDBG_MAP_ALLOC
+afscdefs = $(afscdefs) -D_DEBUG -D_CRTDBG_MAP_ALLOC
 !ENDIF
 
 !UNDEF NODEBUG
@@ -298,7 +302,7 @@ AFSDEV_WARNLEVEL = 3
 afscflags = $(afscflags) /W$(AFSDEV_WARNLEVEL)
 
 # C/C++ compilation macros
-C2OBJ   = $(cc) /Fo$@ /Fd$*.pdb $(cflags) $(cdebug) $(cvarsdll) $(afscflags) $(afscdefs) /c  
+C2OBJ   = $(cc) /Fo$@ /Fd$*.pdb $(cflags) $(cdebug) $(dafsifs) $(cvarsdll) $(afscflags) $(afscdefs) /c  
 CPP2OBJ = $(C2OBJ)
 # Inference rules for building and installing targets
 # Compile .c files, from current directory to defined by OUT
