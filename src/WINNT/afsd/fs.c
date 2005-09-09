@@ -1348,7 +1348,6 @@ FlushAllCmd(struct cmd_syndesc *as, char *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
-    struct cmd_item *ti;
 
     blob.in_size = blob.out_size = 0;
     code = pioctl(NULL, VIOC_FLUSHALL, &blob, 0);
@@ -1833,7 +1832,9 @@ MakeMountCmd(struct cmd_syndesc *as, char *arock)
 #endif
     char path[1024] = "";
     struct afsconf_cell info;
+#ifndef WIN32
     struct vldbentry vldbEntry;
+#endif
     struct ViceIoctl blob;
     char * parent;
 
