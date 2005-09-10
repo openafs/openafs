@@ -12,6 +12,8 @@
 # The upstream init script assumes Red Hat paths and uses insmod to load the
 # module directly rather than using modprobe.
 
+PATH=/bin:/usr/bin:/sbin:/usr/sbin
+
 CACHEINFO=${CACHEINFO:-/etc/openafs/cacheinfo}
 MODULEDIR=${MODULEDIR:-/lib/modules/`uname -r`/fs}
 
@@ -160,7 +162,8 @@ kill_afs() {
 # a hope of shutting down cleanly if the system is shutting down.  Not enabled
 # by default.  Enable this in /etc/openafs/afs.conf.
 kill_all_afs() {
-    if [ "$RUNLEVEL" -eq 0 ] || [ "$RUNLEVEL" -eq 6 ] ; then
+    runlevel=`runlevel | sed 's/^. //'`
+    if [ "$runlevel" -eq 0 ] || [ "$runlevel" -eq 6 ] ; then
         if [ -x /usr/bin/lsof ] ; then
             echo -n "Killing processes with AFS files open: "
             kill_afs HUP
