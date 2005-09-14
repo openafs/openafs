@@ -72,7 +72,7 @@ afs_mutex_exit(afs_kmutex_t * l)
 int
 afs_cv_wait(afs_kcondvar_t * cv, afs_kmutex_t * l, int sigok)
 {
-    int isAFSGlocked = ISAFS_GLOCK();
+    int seq, isAFSGlocked = ISAFS_GLOCK();
     sigset_t saved_set;
 #ifdef DECLARE_WAITQUEUE
     DECLARE_WAITQUEUE(wait, current);
@@ -80,8 +80,10 @@ afs_cv_wait(afs_kcondvar_t * cv, afs_kmutex_t * l, int sigok)
     struct wait_queue wait = { current, NULL };
 #endif
 
-    add_wait_queue(cv, &wait);
+    seq = cv->seq;
+    
     set_current_state(TASK_INTERRUPTIBLE);
+    add_wait_queue(&cv->waitq, &wait);
 
     if (isAFSGlocked)
 	AFS_GUNLOCK();
@@ -95,8 +97,13 @@ afs_cv_wait(afs_kcondvar_t * cv, afs_kmutex_t * l, int sigok)
 	SIG_UNLOCK(current);
     }
 
-    schedule();
-    remove_wait_queue(cv, &wait);
+    while(seq == cv->seq) {
+	schedule();
+	/* should we refrigerate? */
+    }
+
+    remove_wait_queue(&cv->waitq, &wait);
+    set_current_state(TASK_RUNNING);
 
     if (!sigok) {
 	SIG_LOCK(current);
@@ -115,23 +122,30 @@ afs_cv_wait(afs_kcondvar_t * cv, afs_kmutex_t * l, int sigok)
 void
 afs_cv_timedwait(afs_kcondvar_t * cv, afs_kmutex_t * l, int waittime)
 {
-    int isAFSGlocked = ISAFS_GLOCK();
+    int seq, isAFSGlocked = ISAFS_GLOCK();
     long t = waittime * HZ / 1000;
 #ifdef DECLARE_WAITQUEUE
     DECLARE_WAITQUEUE(wait, current);
 #else
     struct wait_queue wait = { current, NULL };
 #endif
+    seq = cv->seq;
 
-    add_wait_queue(cv, &wait);
     set_current_state(TASK_INTERRUPTIBLE);
+    add_wait_queue(&cv->waitq, &wait);
 
     if (isAFSGlocked)
 	AFS_GUNLOCK();
     MUTEX_EXIT(l);
 
-    t = schedule_timeout(t);
-    remove_wait_queue(cv, &wait);
+    while(seq == cv->seq) {
+	t = schedule_timeout(t);
+	if (!t)         /* timeout */
+	    break;
+    }
+    
+    remove_wait_queue(&cv->waitq, &wait);
+    set_current_state(TASK_RUNNING);
 
     if (isAFSGlocked)
 	AFS_GLOCK();
