@@ -2602,6 +2602,9 @@ rxi_ReceivePacket(register struct rx_packet *np, osi_socket socket,
 	    call = rxi_NewCall(conn, channel);
 	    MUTEX_EXIT(&conn->conn_call_lock);
 	    *call->callNumber = np->header.callNumber;
+	    if (np->header.callNumber == 0) 
+		dpf(("RecPacket call 0 %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %lx resend %d.%0.3d len %d", np->header.serial, rx_packetTypes[np->header.type - 1], conn->peer->host, conn->peer->port, np->header.serial, np->header.epoch, np->header.cid, np->header.callNumber, np->header.seq, np->header.flags, (unsigned long)np, np->retryTime.sec, np->retryTime.usec / 1000, np->length));
+
 	    call->state = RX_STATE_PRECALL;
 	    clock_GetTime(&call->queueTime);
 	    hzero(call->bytesSent);
@@ -2659,6 +2662,9 @@ rxi_ReceivePacket(register struct rx_packet *np, osi_socket socket,
 	    }
 	    rxi_ResetCall(call, 0);
 	    *call->callNumber = np->header.callNumber;
+	    if (np->header.callNumber == 0) 
+		dpf(("RecPacket call 0 %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %lx resend %d.%0.3d len %d", np->header.serial, rx_packetTypes[np->header.type - 1], conn->peer->host, conn->peer->port, np->header.serial, np->header.epoch, np->header.cid, np->header.callNumber, np->header.seq, np->header.flags, (unsigned long)np, np->retryTime.sec, np->retryTime.usec / 1000, np->length));
+
 	    call->state = RX_STATE_PRECALL;
 	    clock_GetTime(&call->queueTime);
 	    hzero(call->bytesSent);

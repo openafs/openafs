@@ -2500,6 +2500,11 @@ rxi_PrepareSendPacket(register struct rx_call *call,
     p->header.cid = (conn->cid | call->channel);
     p->header.serviceId = conn->serviceId;
     p->header.securityIndex = conn->securityIndex;
+
+    /* No data packets on call 0. Where do these come from? */
+    if (*call->callNumber == 0)
+	*call->callNumber = 1;
+
     p->header.callNumber = *call->callNumber;
     p->header.seq = call->tnext++;
     p->header.epoch = conn->epoch;
