@@ -1170,11 +1170,17 @@ rx_NewCall(register struct rx_connection *conn)
     MUTEX_ENTER(&call->lock);
     while (call->flags & RX_CALL_TQ_BUSY) {
 	call->flags |= RX_CALL_TQ_WAIT;
+	call->tqWaiters++;
 #ifdef RX_ENABLE_LOCKS
+	osirx_AssertMine(&call->lock, "rxi_Start lock4");
 	CV_WAIT(&call->cv_tq, &call->lock);
 #else /* RX_ENABLE_LOCKS */
 	osi_rxSleep(&call->tq);
 #endif /* RX_ENABLE_LOCKS */
+	call->tqWaiters--;
+	if (call->tqWaiters == 0) {
+	    call->flags &= ~RX_CALL_TQ_WAIT;
+	}
     }
     if (call->flags & RX_CALL_TQ_CLEARME) {
 	rxi_ClearTransmitQueue(call, 0);
@@ -2638,11 +2644,16 @@ rxi_ReceivePacket(register struct rx_packet *np, osi_socket socket,
 	    while ((call->state == RX_STATE_ACTIVE)
 		   && (call->flags & RX_CALL_TQ_BUSY)) {
 		call->flags |= RX_CALL_TQ_WAIT;
+		call->tqWaiters++;
 #ifdef RX_ENABLE_LOCKS
+		osirx_AssertMine(&call->lock, "rxi_Start lock3");
 		CV_WAIT(&call->cv_tq, &call->lock);
 #else /* RX_ENABLE_LOCKS */
 		osi_rxSleep(&call->tq);
 #endif /* RX_ENABLE_LOCKS */
+		call->tqWaiters--;
+		if (call->tqWaiters == 0)
+		    call->flags &= ~RX_CALL_TQ_WAIT;
 	    }
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
 	    /* If the new call cannot be taken right now send a busy and set
@@ -3802,11 +3813,16 @@ rxi_ReceiveAckPacket(register struct rx_call *call, struct rx_packet *np,
 	call->flags |= RX_CALL_FAST_RECOVER_WAIT;
 	while (call->flags & RX_CALL_TQ_BUSY) {
 	    call->flags |= RX_CALL_TQ_WAIT;
+	    call->tqWaiters++;
 #ifdef RX_ENABLE_LOCKS
+	    osirx_AssertMine(&call->lock, "rxi_Start lock2");
 	    CV_WAIT(&call->cv_tq, &call->lock);
 #else /* RX_ENABLE_LOCKS */
 	    osi_rxSleep(&call->tq);
 #endif /* RX_ENABLE_LOCKS */
+	    call->tqWaiters--;
+	    if (call->tqWaiters == 0)
+		call->flags &= ~RX_CALL_TQ_WAIT;
 	}
 	MUTEX_ENTER(&peer->peer_lock);
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
@@ -4340,7 +4356,7 @@ rxi_CallError(register struct rx_call *call, afs_int32 error)
     if (call->error)
 	error = call->error;
 #ifdef RX_GLOBAL_RXLOCK_KERNEL
-    if (!(call->flags & RX_CALL_TQ_BUSY)) {
+    if (!((call->flags & RX_CALL_TQ_BUSY) || (call->tqWaiters > 0))) {
 	rxi_ResetCall(call, 0);
     }
 #else
@@ -4416,7 +4432,7 @@ rxi_ResetCall(register struct rx_call *call, register int newcall)
     flags = call->flags;
     rxi_ClearReceiveQueue(call);
 #ifdef	AFS_GLOBAL_RXLOCK_KERNEL
-    if (call->flags & RX_CALL_TQ_BUSY) {
+    if (flags & RX_CALL_TQ_BUSY) {
 	call->flags = RX_CALL_TQ_CLEARME | RX_CALL_TQ_BUSY;
 	call->flags |= (flags & RX_CALL_TQ_WAIT);
     } else
@@ -4424,7 +4440,18 @@ rxi_ResetCall(register struct rx_call *call, register int newcall)
     {
 	rxi_ClearTransmitQueue(call, 0);
 	queue_Init(&call->tq);
+	if (call->tqWaiters || (flags & RX_CALL_TQ_WAIT)) {
+	    dpf(("rcall %x has %d waiters and flags %d\n", call, call->tqWaiters, call->flags));
+	}
 	call->flags = 0;
+	while (call->tqWaiters) {
+#ifdef RX_ENABLE_LOCKS
+	    CV_BROADCAST(&call->cv_tq);
+#else /* RX_ENABLE_LOCKS */
+	    osi_rxWakeup(&call->tq);
+#endif /* RX_ENABLE_LOCKS */
+	    call->tqWaiters--;
+	}
     }
     queue_Init(&call->rq);
     call->error = 0;
@@ -4977,11 +5004,16 @@ rxi_Start(struct rxevent *event, register struct rx_call *call,
 	call->flags |= RX_CALL_FAST_RECOVER_WAIT;
 	while (call->flags & RX_CALL_TQ_BUSY) {
 	    call->flags |= RX_CALL_TQ_WAIT;
+	    call->tqWaiters++;
 #ifdef RX_ENABLE_LOCKS
+	    osirx_AssertMine(&call->lock, "rxi_Start lock1");
 	    CV_WAIT(&call->cv_tq, &call->lock);
 #else /* RX_ENABLE_LOCKS */
 	    osi_rxSleep(&call->tq);
 #endif /* RX_ENABLE_LOCKS */
+	    call->tqWaiters--;
+	    if (call->tqWaiters == 0)
+		call->flags &= ~RX_CALL_TQ_WAIT;
 	}
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
 	call->flags &= ~RX_CALL_FAST_RECOVER_WAIT;
@@ -5137,14 +5169,15 @@ rxi_Start(struct rxevent *event, register struct rx_call *call,
 		 */
 		if (call->flags & RX_CALL_FAST_RECOVER_WAIT) {
 		    call->flags &= ~RX_CALL_TQ_BUSY;
-		    if (call->flags & RX_CALL_TQ_WAIT) {
-			call->flags &= ~RX_CALL_TQ_WAIT;
-#ifdef RX_ENABLE_LOCKS
-			CV_BROADCAST(&call->cv_tq);
-#else /* RX_ENABLE_LOCKS */
-			osi_rxWakeup(&call->tq);
-#endif /* RX_ENABLE_LOCKS */
+		    if (call->tqWaiters || (call->flags & RX_CALL_TQ_WAIT)) {
+			dpf(("call %x has %d waiters and flags %d\n", call, call->tqWaiters, call->flags));
 		    }
+#ifdef RX_ENABLE_LOCKS
+		    osirx_AssertMine(&call->lock, "rxi_Start start");
+		    CV_BROADCAST(&call->cv_tq);
+#else /* RX_ENABLE_LOCKS */
+		    osi_rxWakeup(&call->tq);
+#endif /* RX_ENABLE_LOCKS */
 		    return;
 		}
 		if (call->error) {
@@ -5156,14 +5189,15 @@ rxi_Start(struct rxevent *event, register struct rx_call *call,
 		    rx_tq_debug.rxi_start_aborted++;
 		    MUTEX_EXIT(&rx_stats_mutex);
 		    call->flags &= ~RX_CALL_TQ_BUSY;
-		    if (call->flags & RX_CALL_TQ_WAIT) {
-			call->flags &= ~RX_CALL_TQ_WAIT;
-#ifdef RX_ENABLE_LOCKS
-			CV_BROADCAST(&call->cv_tq);
-#else /* RX_ENABLE_LOCKS */
-			osi_rxWakeup(&call->tq);
-#endif /* RX_ENABLE_LOCKS */
+		    if (call->tqWaiters || (call->flags & RX_CALL_TQ_WAIT)) {
+			dpf(("call %x has %d waiters and flags %d\n", call, call->tqWaiters, call->flags));
 		    }
+#ifdef RX_ENABLE_LOCKS
+		    osirx_AssertMine(&call->lock, "rxi_Start middle");
+		    CV_BROADCAST(&call->cv_tq);
+#else /* RX_ENABLE_LOCKS */
+		    osi_rxWakeup(&call->tq);
+#endif /* RX_ENABLE_LOCKS */
 		    rxi_CallError(call, call->error);
 		    return;
 		}
@@ -5243,14 +5277,15 @@ rxi_Start(struct rxevent *event, register struct rx_call *call,
 	     * protected by the global lock.
 	     */
 	    call->flags &= ~RX_CALL_TQ_BUSY;
-	    if (call->flags & RX_CALL_TQ_WAIT) {
-		call->flags &= ~RX_CALL_TQ_WAIT;
-#ifdef RX_ENABLE_LOCKS
-		CV_BROADCAST(&call->cv_tq);
-#else /* RX_ENABLE_LOCKS */
-		osi_rxWakeup(&call->tq);
-#endif /* RX_ENABLE_LOCKS */
+	    if (call->tqWaiters || (call->flags & RX_CALL_TQ_WAIT)) {
+		dpf(("call %x has %d waiters and flags %d\n", call, call->tqWaiters, call->flags));
 	    }
+#ifdef RX_ENABLE_LOCKS
+	    osirx_AssertMine(&call->lock, "rxi_Start end");
+	    CV_BROADCAST(&call->cv_tq);
+#else /* RX_ENABLE_LOCKS */
+	    osi_rxWakeup(&call->tq);
+#endif /* RX_ENABLE_LOCKS */
 	} else {
 	    call->flags |= RX_CALL_NEED_START;
 	}
