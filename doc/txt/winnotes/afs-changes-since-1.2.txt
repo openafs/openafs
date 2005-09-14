@@ -1,3 +1,10 @@
+Since 1.4.0 rc3: 1.4.0 rc4 released (14 Sep 2005)
+
+ * The AFSCache file has been modified to store both the
+   serial number of the volume on which the file resides
+   and the SID of the local machine.   If either change,
+   a new UUID is generated.
+
  * add "fs flushall" command that forces all data buffers
    to be flushed.
 
