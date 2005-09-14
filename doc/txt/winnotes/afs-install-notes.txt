@@ -594,7 +594,7 @@ present and that they refer to the dll "rpcrt4.dll":
    HKLM "SOFTWARE\Microsoft\RPC\ClientProtocols" "ncacn_np"
    HKLM "SOFTWARE\Microsoft\RPC\ClientProtocols" "ncacn_ip_tcp"
    HKLM "SOFTWARE\Microsoft\RPC\ClientProtocols" "ncadg_ip_udp"
-   HKLM "SOFTWARE\Microsoft\RPC\ClientProtocols" "ncadg_ip_http"
+   HKLM "SOFTWARE\Microsoft\RPC\ClientProtocols" "ncacn_http"
 
 
 40. 1.3.83 adds a new command, "fs minidump".  This command can be used at any 
@@ -611,6 +611,13 @@ file are kept intact.  The UUID is stored in the AFSCache file.   When
 cloning machines that have Windows AFS client installed, the AFSCache files
 must be deleted as part of the cloning process.
 
+
+42. The performance of the AFS Client Service is significantly affected by
+the access times associated with the AFSCache paging file.   When given the
+choice, the AFSCache file should be placed on a fast disk, preferably NTFS,
+the file should not be compressed and should consist of as few fragments as
+possible.   Significant performance gains can be achieved by defragmenting
+the AFSCache file with Sysinternal's Contig utility.
 
 ------------------------------------------------------------------------
 
