@@ -169,7 +169,7 @@ rx_getAllAddr(afs_int32 buffer[], int maxSize)
     while (next < lim) {
 	ifm = (struct if_msghdr *)next;
 	if (ifm->ifm_type != RTM_IFINFO) {
-	    printf("out of sync parsing NET_RT_IFLIST\n");
+	    dpf(("out of sync parsing NET_RT_IFLIST\n"));
 	    free(buf);
 	    return 0;
 	}
@@ -204,8 +204,8 @@ rx_getAllAddr(afs_int32 buffer[], int maxSize)
 	    a = info.rti_info[RTAX_IFA];
 
 	    if (count >= maxSize)	/* no more space */
-		printf("Too many interfaces..ignoring 0x%x\n",
-		       a->sin_addr.s_addr);
+		dpf(("Too many interfaces..ignoring 0x%x\n",
+		       a->sin_addr.s_addr));
 	    else
 		buffer[count++] = a->sin_addr.s_addr;
 	    addrcount--;
@@ -253,7 +253,7 @@ rxi_getAllAddrMaskMtu(afs_int32 addrBuffer[], afs_int32 maskBuffer[],
     while (next < lim) {
 	ifm = (struct if_msghdr *)next;
 	if (ifm->ifm_type != RTM_IFINFO) {
-	    printf("out of sync parsing NET_RT_IFLIST\n");
+	    dpf(("out of sync parsing NET_RT_IFLIST\n"));
 	    free(buf);
 	    return 0;
 	}
@@ -286,8 +286,8 @@ rxi_getAllAddrMaskMtu(afs_int32 addrBuffer[], afs_int32 maskBuffer[],
 
 	    if (a->sin_addr.s_addr != htonl(0x7f000001) ) {
 		if (count >= maxSize) {	/* no more space */
-		    printf("Too many interfaces..ignoring 0x%x\n",
-			   a->sin_addr.s_addr);
+		    dpf(("Too many interfaces..ignoring 0x%x\n",
+			   a->sin_addr.s_addr));
 		} else {
 		    struct ifreq ifr;
 		    
@@ -381,8 +381,8 @@ rx_getAllAddr_internal(afs_int32 buffer[], int maxSize, int loopbacks)
 		    continue;	/* skip aliased loopbacks as well. */
 	    }
 	    if (count >= maxSize)	/* no more space */
-		printf("Too many interfaces..ignoring 0x%x\n",
-		       a->sin_addr.s_addr);
+		dpf(("Too many interfaces..ignoring 0x%x\n",
+		       a->sin_addr.s_addr));
 	    else
 		buffer[count++] = a->sin_addr.s_addr;
 	}
@@ -462,8 +462,8 @@ rxi_getAllAddrMaskMtu(afs_int32 addrBuffer[], afs_int32 maskBuffer[],
                 continue;   /* skip loopback address as well. */
 
 	    if (count >= maxSize) {	/* no more space */
-		printf("Too many interfaces..ignoring 0x%x\n",
-		       a->sin_addr.s_addr);
+		dpf("Too many interfaces..ignoring 0x%x\n",
+		       a->sin_addr.s_addr));
 		continue;
 	    }
 

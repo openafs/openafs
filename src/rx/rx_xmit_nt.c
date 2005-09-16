@@ -139,12 +139,15 @@ sendmsg(int socket, struct msghdr *msgP, int flags)
 	case WSAEWOULDBLOCK:
 	    errno = WSAEWOULDBLOCK;
 	    break;
+	case WSAEHOSTUNREACH:
+		errno = WSAEHOSTUNREACH;
+		break;
 	default:
 	    errno = EIO;
 	    break;
 	}
 	code = -1;
-    }
+    } else
 #endif /* AFS_NT40_ENV */
 
     if (code < size) {

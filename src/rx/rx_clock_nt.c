@@ -47,7 +47,7 @@ void
 clock_Init(void)
 {
     if (!QueryPerformanceFrequency(&rxi_clockFreq)) {
-	printf("No High Performance clock, exiting.\n");
+	OutputDebugString("No High Performance clock, exiting.\n");
 	exit(1);
     }
 
