@@ -222,8 +222,8 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
      * until the timeout period expires.
      */
     else if (errorCode == CM_ERROR_NOSUCHVOLUME) {
+	osi_Log0(afsd_logp, "cm_Analyze passed CM_ERROR_NOSUCHVOLUME.");
         if (timeLeft > 7) {
-            osi_Log0(afsd_logp, "cm_Analyze passed CM_ERROR_NOSUCHVOLUME.");
             thrd_Sleep(5000);
             
             retry = 1;
@@ -234,46 +234,15 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
     }
 
     else if (errorCode == CM_ERROR_ALLOFFLINE) {
-        if (timeLeft > 7) {
-            osi_Log0(afsd_logp, "cm_Analyze passed CM_ERROR_ALLOFFLINE.");
-            thrd_Sleep(5000);
-            
-            /* cm_ForceUpdateVolume marks all servers as non_busy */
-            /* No it doesn't and it won't do anything if all of the 
-             * the servers are marked as DOWN.  So clear the DOWN
-             * flag and reset the busy state as well.
-             */
-            if (!serversp) {
-                code = cm_GetServerList(fidp, userp, reqp, &serverspp);
-                if (code == 0) {
-                    serversp = *serverspp;
-                    free_svr_list = 1;
-                }
-            }
-            if (serversp) {
-                lock_ObtainWrite(&cm_serverLock);
-                for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
-                    tsrp->server->flags &= ~CM_SERVERFLAG_DOWN;
-                    if (tsrp->status == busy)
-                        tsrp->status = not_busy;
-                }
-                lock_ReleaseWrite(&cm_serverLock);
-                if (free_svr_list) {
-                    cm_FreeServerList(&serversp);
-                    *serverspp = serversp;
-                }
-                retry = 1;
-            }
-
-            if (fidp != NULL)   /* Not a VLDB call */
-                cm_ForceUpdateVolume(fidp, userp, reqp);
-			else
-				retry = 0;
-        }
+	osi_Log0(afsd_logp, "cm_Analyze passed CM_ERROR_ALLOFFLINE.");
+	/* Servers marked DOWN will be restored by the background daemon
+	 * thread as they become available.
+	 */
     }
 
     /* if all servers are busy, mark them non-busy and start over */
     else if (errorCode == CM_ERROR_ALLBUSY) {
+	osi_Log0(afsd_logp, "cm_Analyze passed CM_ERROR_ALLBUSY.");
         if (timeLeft > 7) {
             thrd_Sleep(5000);
             if (!serversp) {
