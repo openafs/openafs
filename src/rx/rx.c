@@ -6035,17 +6035,22 @@ rxi_DebugPrint(char *format, int a1, int a2, int a3, int a4, int a5, int a6,
 {
 #ifdef AFS_NT40_ENV
     char msg[512];
+    char tformat[256];
     int len;
 
-    len = _snprintf(msg, sizeof(msg)-2, 
-		    format, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, 
-		    a11, a12, a13, a14, a15);
+    len = _snprintf(tformat, sizeof(tformat), "tid[%d] %s", GetCurrentThreadId(), format);
+
     if (len > 0) {
-	if (msg[len-1] != '\n') {
-	    msg[len] = '\n';
-	    msg[len+1] = '\0';
+	len = _snprintf(msg, sizeof(msg)-2, 
+			tformat, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, 
+			a11, a12, a13, a14, a15);
+	if (len > 0) {
+	    if (msg[len-1] != '\n') {
+		msg[len] = '\n';
+		msg[len+1] = '\0';
+	    }
+	    OutputDebugString(msg);
 	}
-	OutputDebugString(msg);
     }
 #else
     struct clock now;
