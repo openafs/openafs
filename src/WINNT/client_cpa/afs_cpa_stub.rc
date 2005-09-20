@@ -15,5 +15,5 @@
 #include "AFS_component_version_number.h"
 #include "..\..\config\NTVersioninfo.rc"
 
-IDI_AFSD                ICON    DISCARDABLE     "afs_conf.ico"
-IDI_CCENTER		        ICON	DISCARDABLE	    "afs_ccenter.ico"
+IDI_AFSD                ICON    DISCARDABLE     "OpenAFS.ico"
+IDI_CCENTER		ICON	DISCARDABLE	"afs_ccenter.ico"

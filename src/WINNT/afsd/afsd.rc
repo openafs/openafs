@@ -18,7 +18,7 @@ BEGIN
 	END
 END
 
-AFSDIcon	ICON	afsd.ico
+AFSDIcon	ICON	OpenAFS.ico
 /* Define VERSIONINFO resource */
 
 #define  AFS_VERINFO_FILE_DESCRIPTION "AFS Client Driver Application"

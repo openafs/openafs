@@ -15,4 +15,4 @@
 #include "AFS_component_version_number.h"
 #include "..\..\config\NTVersioninfo.rc"
 
-IDI_MAIN                ICON    DISCARDABLE     "afs_config.ico"
+IDI_MAIN                ICON    DISCARDABLE     "OpenAFS.ico"
