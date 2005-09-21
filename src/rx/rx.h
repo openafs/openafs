@@ -540,6 +540,7 @@ struct rx_call {
     struct clock startTime;	/* time call was started */
     afs_hyper_t bytesSent;	/* Number bytes sent */
     afs_hyper_t bytesRcvd;	/* Number bytes received */
+    u_short tqWaiters;
 };
 
 #ifndef KDUMP_RX_LOCK

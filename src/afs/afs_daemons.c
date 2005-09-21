@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_daemons.c,v 1.28.2.5 2005/04/03 18:18:54 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_daemons.c,v 1.28.2.7 2005/09/07 17:43:25 shadow Exp $");
 
 #ifdef AFS_AIX51_ENV
 #define __FULL_PROTO
@@ -309,8 +309,55 @@ afs_CheckRootVolume(void)
 		 * count to zero and fs checkv is executed when the current
 		 * directory is /afs.
 		 */
+#ifdef AFS_LINUX20_ENV
+		{
+		    struct vrequest treq;
+		    struct vattr vattr;
+		    cred_t *credp;
+		    struct dentry *dp;
+		    struct vcache *vcp;
+		    
+		    afs_rootFid.Fid.Volume = volid;
+		    afs_rootFid.Fid.Vnode = 1;
+		    afs_rootFid.Fid.Unique = 1;
+		    
+		    credp = crref();
+		    if (afs_InitReq(&treq, credp))
+			goto out;
+		    vcp = afs_GetVCache(&afs_rootFid, &treq, NULL, NULL);
+		    if (!vcp)
+			goto out;
+		    afs_getattr(vcp, &vattr, credp);
+		    afs_fill_inode(AFSTOV(vcp), &vattr);
+		    
+		    dp = d_find_alias(AFSTOV(afs_globalVp));
+		    
+#if defined(AFS_LINUX24_ENV)
+		    spin_lock(&dcache_lock);
+#if defined(AFS_LINUX26_ENV)
+		    spin_lock(&dp->d_lock);
+#endif
+#endif
+		    list_del_init(&dp->d_alias);
+		    list_add(&dp->d_alias, &(AFSTOV(vcp)->i_dentry));
+		    dp->d_inode = AFSTOV(vcp);
+#if defined(AFS_LINUX24_ENV)
+#if defined(AFS_LINUX26_ENV)
+		    spin_unlock(&dp->d_lock);
+#endif
+		    spin_unlock(&dcache_lock);
+#endif
+		    dput(dp);
+		    
+		    AFS_FAST_RELE(afs_globalVp);
+		    afs_globalVp = vcp;
+		out:
+		    crfree(credp);
+		}
+#else
 		AFS_FAST_RELE(afs_globalVp);
 		afs_globalVp = 0;
+#endif
 	    }
 	    afs_rootFid.Fid.Volume = volid;
 	    afs_rootFid.Fid.Vnode = 1;
