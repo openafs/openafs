@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_sleep.c,v 1.22.2.6 2005/08/10 19:23:19 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_sleep.c,v 1.22.2.7 2005/09/08 18:53:45 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -194,7 +194,13 @@ afs_osi_SleepSig(void *event)
 	schedule();
 #ifdef AFS_LINUX26_ENV
 #ifdef CONFIG_PM
-	if (current->flags & PF_FREEZE)
+	if (
+#ifdef PF_FREEZE
+	    current->flags & PF_FREEZE
+#else
+	    !current->todo
+#endif
+	    )
 #ifdef LINUX_REFRIGERATOR_TAKES_PF_FREEZE
 	    refrigerator(PF_FREEZE);
 #else

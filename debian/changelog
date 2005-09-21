@@ -1,6 +1,9 @@
-openafs (1.4rc3-1) unstable; urgency=low
+openafs (1.4rc4-1) unstable; urgency=low
 
   * New upstream version.
+    - Correctly handle root.afs becoming replicated after the client
+      starts.  This should resolve the problems with AFS eventually
+      failing on the first system using a new cell.  (Closes: #88906)
   * When kill_all_afs is enabled in /etc/openafs/afs.conf, only kill AFS
     processes if the runlevel is 0 or 6.  You really only want this when
     the system is shutting down.  (Closes: #325347)
