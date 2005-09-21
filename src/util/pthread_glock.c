@@ -26,7 +26,7 @@ RCSID
 
 pthread_recursive_mutex_t grmutex;
 
-static int glock_init;
+static int glock_init = 0;
 static pthread_once_t glock_init_once = PTHREAD_ONCE_INIT;
 
 static void

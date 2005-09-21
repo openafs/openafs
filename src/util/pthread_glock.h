@@ -16,9 +16,9 @@
 
 typedef struct {
     pthread_mutex_t mut;
-    pthread_t owner;
-    unsigned int locked;
-    unsigned int times_inside;
+    volatile pthread_t owner;
+    volatile unsigned int locked;
+    volatile unsigned int times_inside;
 } pthread_recursive_mutex_t, *pthread_recursive_mutex_p;
 
 #if defined(AFS_NT40_ENV) && defined(AFS_PTHREAD_ENV)
