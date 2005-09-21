@@ -33,7 +33,8 @@ RCSID
  * the pthreads for solaris requires the socket call to be mapped.
  */
 #include "rx.h"
-#endif
+#include "rx_globals.h"
+#endif /* AFS_NT40_ENV */
 #else /* KERNEL */
 #ifdef UKERNEL
 #include "rx/rx_kcommon.h"
@@ -462,7 +463,7 @@ rxi_getAllAddrMaskMtu(afs_int32 addrBuffer[], afs_int32 maskBuffer[],
                 continue;   /* skip loopback address as well. */
 
 	    if (count >= maxSize) {	/* no more space */
-		dpf("Too many interfaces..ignoring 0x%x\n",
+		dpf(("Too many interfaces..ignoring 0x%x\n",
 		       a->sin_addr.s_addr));
 		continue;
 	    }
