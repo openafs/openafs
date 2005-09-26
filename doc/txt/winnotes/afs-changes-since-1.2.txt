@@ -1,3 +1,16 @@
+Since 1.4.0 rc4: 1.4.0 rc5 released (25 Sep 2005)
+
+ * New OpenAFS for Windows HTML Release Notes installed
+   as part of the documentation set.
+
+ * Add thread id to rx debugging messages
+
+ * When all servers are offline, return a bad network path error
+   immediately.  This is necessary to allow Explorer to do the 
+   right thing and not hang.   The background daemon thread will
+   check the down servers every 30 seconds to see if they are
+   back up.  
+
 Since 1.4.0 rc3: 1.4.0 rc4 released (14 Sep 2005)
 
  * The AFSCache file has been modified to store both the
