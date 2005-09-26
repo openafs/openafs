@@ -398,6 +398,13 @@
                             <File Id="filetop_GIF_$(var.Language)" Name="top.gif" LongName="top.gif" DiskId="1" />
                             <File Id="file$(var.Language)_RTF" Name="$(var.Language).rtf" LongName="$(var.Language).rtf" KeyPath="yes" DiskId="1" src="$(var.SrcDir)\WINNT\license\lang\$(var.Language).rtf"/>
                         </Component>
+                        <Directory Id="dirindex_files_$(var.Language)" Name="index" LongName="index_files" src="$(var.SrcDir)\WINNT\doc\install\Documentation\$(var.Language)\html\index_files\">
+                            <Component Id="cmp_index_files_$(var.Language)" Guid="$(var.DocHtmlIndexFilesGuid)">
+                                <File Id="filefilelist_XML_$(var.Language)" Name="filelist.xml" LongName="filelist.xml" DiskId="1" />
+                                <File Id="fileimage001_JPG_$(var.Language)" Name="image001.jpg" LongName="image001.jpg" DiskId="1" />
+                                <File Id="fileimage002_JPG_$(var.Language)" Name="image002.jpg" LongName="image002.jpg" DiskId="1" />
+                            </Component>
+                        </Directory>
                         <Directory Id="dirCmdRef_$(var.Language)" Name="CmdRef" src="$(var.SrcDir)\WINNT\doc\install\Documentation\$(var.Language)\html\CmdRef\">
                             <Component Id="cmp_Cmd_Ref_$(var.Language)" Guid="$(var.DocHtmlCmdRefGuid)">
                                 <File Id="fileauarf000_HTM_$(var.Language)" Name="auarf000.htm" LongName="auarf000.htm" KeyPath="yes" DiskId="1" />
@@ -742,7 +749,25 @@
                                 <File Id="fileawrns005_HTM_$(var.Language)" Name="awrns~5.htm" LongName="awrns005.htm" DiskId="1" />
                                 <File Id="fileawrns006_HTM_$(var.Language)" Name="awrns~6.htm" LongName="awrns006.htm" DiskId="1" />
                                 <File Id="fileawrns007_HTM_$(var.Language)" Name="awrns~7.htm" LongName="awrns007.htm" DiskId="1" />
+                                <File Id="fileframes_HTM_$(var.Language)" Name="frames.htm" LongName="frames.htm" DiskId="1" />
+                                <File Id="filelogo_HTM_$(var.Language)" Name="logo.htm" LongName="logo.htm" DiskId="1" />
+                                <File Id="filerelnotes_HTM_$(var.Language)" Name="relnotes.htm" LongName="relnotes.htm" DiskId="1" />
+                                <File Id="filetoc_HTM_$(var.Language)" Name="toc.htm" LongName="toc.htm" DiskId="1" />
                             </Component>
+                            <Directory Id="dirrelnotes_files_$(var.Language)" Name="relnotes" LongName="relnotes_files" src="$(var.SrcDir)\WINNT\doc\install\Documentation\$(var.Language)\html\ReleaseNotes\relnotes_files\">
+                                <Component Id="cmp_relnotes_files_$(var.Language)" Guid="$(var.DocHtmlRelnotesFilesGuid)">
+                                    <File Id="filernfilelist_XML_$(var.Language)" Name="filelist.xml" LongName="filelist.xml" DiskId="1"/>
+                                    <File Id="filernheader_HTM_$(var.Language)" Name="header.htm" LongName="header.htm" DiskId="1"/>
+                                    <File Id="filernpreview_WMF_$(var.Language)" Name="preview.wmf" LongName="preview.wmf" DiskId="1"/>
+                                </Component>
+                            </Directory> <!-- relnotes_files -->
+                            <Directory Id="dirlogo_files_$(var.Language)" Name="logo" LongName="logo_files" src="$(var.SrcDir)\WINNT\doc\install\Documentation\$(var.Language)\html\ReleaseNotes\logo_files\">
+                                <Component Id="cmp_logo_files_$(var.Language)" Guid="$(var.DocHtmlLogoFilesGuid)">
+                                    <File Id="filelffilelist_XML_$(var.Language)" Name="filelist.xml" LongName="filelist.xml" DiskId="1"/>
+                                    <File Id="filelfimage001_JPG_$(var.Language)" Name="image001.jpg" LongName="image001.jpg" DiskId="1"/>
+                                    <File Id="filelfimage002_JPG_$(var.Language)" Name="image002.jpg" LongName="image002.jpg" DiskId="1"/>
+                                </Component>
+                            </Directory> <!-- logo_files -->
                         </Directory> <!-- Release Notes -->
                     </Directory> <!-- Html -->
                 </Directory> <!-- $(var.Language) -->

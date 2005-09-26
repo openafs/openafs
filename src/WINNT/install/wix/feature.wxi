@@ -6,6 +6,13 @@
            <ComponentRef Id="efl_desktop_INI" />
            <ComponentRef Id="efl_replace_afs_CMD" />
            <ComponentRef Id="efl_uninstall_EXE" />
+
+           <ComponentRef Id="cmp_Release_Notes_en_US" />
+           <ComponentRef Id="cmp_relnotes_files_en_US"/>
+           <ComponentRef Id="cmf_index2_HTM_en_US" />
+           <ComponentRef Id="cmp_index_files_en_US" />
+           <ComponentRef Id="cmp_logo_files_en_US" />
+
             <Feature Id="feaClient" AllowAdvertise="no" Description="$(loc.StrAFSClientLongDesc)" Display="expand"
                 InstallDefault="followParent" Level="30" Title="$(loc.StrAFSClientDesc)">
                 
@@ -235,15 +242,14 @@
 				<ComponentRef Id="rcm_Documentation" />
                 
                 <ComponentRef Id="efl_Readme_TXT_$(var.Language)" />                
-                <ComponentRef Id="cmf_index2_HTM_en_US" />
-				<ComponentRef Id="efl_DocHtml_en_US" />
-				<ComponentRef Id="cmp_Cmd_Ref_en_US" />
-				<ComponentRef Id="cmp_Install_Guide_en_US" />
-				<ComponentRef Id="cmp_Sys_Admin_Guide_en_US" />
-				<ComponentRef Id="cmp_Release_Notes_en_US" />
-				<ComponentRef Id="cmf_afs_nt_HLP_en_US" />
-				<ComponentRef Id="cmp_Lang_en_US" />
-				
+                <ComponentRef Id="efl_DocHtml_en_US" />
+                <ComponentRef Id="cmp_Cmd_Ref_en_US" />
+                <ComponentRef Id="cmp_Install_Guide_en_US" />
+                <ComponentRef Id="cmp_Sys_Admin_Guide_en_US" />
+
+                <ComponentRef Id="cmf_afs_nt_HLP_en_US" />
+                <ComponentRef Id="cmp_Lang_en_US" />
+		
             </Feature>
         </Feature>
 </Include>

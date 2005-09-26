@@ -39,6 +39,9 @@
     <?define DocHtmlInstallGuid="921E151E-9FD2-49A8-B297-0222E22ECAC7"?>
     <?define DocHtmlSysAdminGuid="F82AD828-C412-4211-88D7-DF18D5C79DBA"?>
     <?define DocHtmlRelNotesGuid="CC369D09-B786-412F-B832-720AC06CC3BC"?>
+    <?define DocHtmlRelnotesFilesGuid="D39E1662-F475-4D33-A6B5-CBC7B77891D0"?>
+    <?define DocHtmlLogoFilesGuid="24E7F4AF-5D41-4D7B-B9DF-FA5787BAC787"?>
+    <?define DocHtmlIndexFilesGuid="EEEA73B6-36CD-4471-BF5C-9317B90CA3CC"?>
 
 	<!-- other language specific strings are defined in the strings.wxl file -->	
 
