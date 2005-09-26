@@ -40,16 +40,7 @@ in smb_Listener() thread.
 (12c) If network is not available must store the username and password 
       somewhere until such time as the network starts.
 
-(13) Loopback adapter is not always installed without bindings to "File and 
-     Printer Sharing for Microsoft Networks" and with bindings to "Client for Microsoft 
-     Networks".   If these are not bound correct then SMB names will successfully
-     be published to a list of zero which causes the AFS not to function.
-     We need a way to test whether the Loopback adapter is properly bound
-     so we know if it is safe to use.  Actually, it is worse.  Even with
-     the bindings on Win2000 the loopback adapter frequently fails to publish
-     SMB names.  Of course, the error messages report nothing.
-
-(14) If a drive mapping is "in use", then afscreds cannot be used to Modify
+(13) If a drive mapping is "in use", then afscreds cannot be used to Modify
      or Delete the Mapping.  If a map to "H:" to \afs\cell\foo" with 
      description "home" is modified to point to \afs\cell\bar, then the 
      description must be unique.  "home" cannot be reused.  We need a way 
@@ -57,38 +48,36 @@ in smb_Listener() thread.
 
      [Actually, an end user should not be able to modify the submount list]
 
-(16) No support for Unicode CIFS/SMB data structures.  OEM Code Pages prevent
+(14) No support for Unicode CIFS/SMB data structures.  OEM Code Pages prevent
      the use of interoperable file names; force the use of paths no longer 
      than 256 characters; force share names to be no longer than 13 
      characters; restrict authentication to ASCII only names and passwords;
      etc.
 
-(17) No auto-restart on service failure
+(15) No auto-restart on service failure
 
-(18) Better EventLog handling
+(16) Better EventLog handling
 
-(19) Named Pipes Support [requires modifications to AFS servers to support]
+(17) Named Pipes Support [requires modifications to AFS servers to support]
 
-(20) Memory Mapped File support
+(18) Memory Mapped File support
 
-(21) Large file support [both SMB/CIFS and AFS]
+(19) Large file support [both SMB/CIFS and AFS]
 
-(22) Implement persistent disk based cache which survives restarts
-
-(23) NSIS Installer issues
+(20) NSIS Installer issues
      (a) integration with KFW install script
      (b) Optional removal of AFS Server volumes
 
-(24) The User Interface needs to be re-designed to separate the per-user
+(21) The User Interface needs to be re-designed to separate the per-user
      and per-machine settings.  All of the new registry items need to 
      be added to the UI
 
-(25) CIFS Remote Administration Protocol implementation is incomplete.
+(22) CIFS Remote Administration Protocol implementation is incomplete.
      Notifications are not made to requestors when the view of a file
      or folder changes due to token acquisition; token expiration; or
      token destruction
 
-(26) Remove submount creation as a side effect of AFS drive mapping.
+(23) Remove submount creation as a side effect of AFS drive mapping.
      
      The AFS Submount is effectively a server side alias for a path 
      located in the AFS space.  This alias is exported by the AFS 
@@ -105,7 +94,7 @@ in smb_Listener() thread.
      or by the new AFS Client Service Administration tool when executed 
      by an authorized user.
 
-(27) No support for byte range locking (or locking at all)  
+(24) No support for byte range locking (or locking at all)  
 
 -------------------------------------------------------------------------
 List of unfunded projects:
@@ -150,8 +139,6 @@ List of unfunded projects:
   11. Large File support (> 2GB) in SMB/CIFS client
   12. Integrate KFW installation into the NSIS and MSI installers
   13. Add support for byte range locking to AFS (requires changes to the servers)
-  13a.  Simulate support for byte range locking at the client; use full locks 
-        on the server.
   14. Unicode enable the SMB/CIFS server.  OEM Code Pages: 
       1. prevent the use of interoperable file names
       2. force the use of paths no longer than 256 characters
