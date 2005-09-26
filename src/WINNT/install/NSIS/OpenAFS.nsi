@@ -979,119 +979,71 @@ Section /o "Supplemental Documentation" secDocs
    
    
 DoEnglish:
-   SetOutPath "$INSTDIR\Documentation\html"
-   File "..\..\doc\install\Documentation\en_US\html\*"
    SetOutPath "$INSTDIR\Documentation\html\CmdRef"
    File "..\..\doc\install\Documentation\en_US\html\CmdRef\*"
-   SetOutPath "$INSTDIR\Documentation\html\InstallGd"
-   File "..\..\doc\install\Documentation\en_US\html\InstallGd\*"
-   SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes"
-   File "..\..\doc\install\Documentation\en_US\html\ReleaseNotes\*"
    SetOutPath "$INSTDIR\Documentation\html\SysAdminGd"
    File "..\..\doc\install\Documentation\en_US\html\SysAdminGd\*"
    goto DoneLanguage
    
 DoGerman:
-   SetOutPath "$INSTDIR\Documentation"
-   File "..\..\doc\install\Documentation\de_DE\README.TXT"
    SetOutPath "$INSTDIR\Documentation\html"
    File "..\..\doc\install\Documentation\de_DE\html\*"
    SetOutPath "$INSTDIR\Documentation\html\CmdRef"
    ;File "..\..\doc\install\Documentation\de_DE\html\CmdRef\*"
-   SetOutPath "$INSTDIR\Documentation\html\InstallGd"
-   File "..\..\doc\install\Documentation\de_DE\html\InstallGd\*"
-   ;SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes"
-   ;File "..\..\doc\install\Documentation\de_DE\html\ReleaseNotes\*"
    ;SetOutPath "$INSTDIR\Documentation\html\SysAdminGd"
    ;File "..\..\doc\install\Documentation\de_DE\html\SysAdminGd\*"
    goto DoneLanguage
    
 DoSpanish:
-   SetOutPath "$INSTDIR\Documentation"
-   File "..\..\doc\install\Documentation\es_ES\README.TXT"
    SetOutPath "$INSTDIR\Documentation\html"
    File "..\..\doc\install\Documentation\es_ES\html\*"
    SetOutPath "$INSTDIR\Documentation\html\CmdRef"
    ;File "..\..\doc\install\Documentation\es_ES\html\CmdRef\*"
-   SetOutPath "$INSTDIR\Documentation\html\InstallGd"
-   ;File "..\..\doc\install\Documentation\es_ES\html\InstallGd\*"
-   SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes"
-   ;File "..\..\doc\install\Documentation\es_ES\html\ReleaseNotes\*"
    SetOutPath "$INSTDIR\Documentation\html\SysAdminGd"
    ;File "..\..\doc\install\Documentation\es_ES\html\SysAdminGd\*"
    goto DoneLanguage
 
 DoJapanese:
-   SetOutPath "$INSTDIR\Documentation"
-   File "..\..\doc\install\Documentation\ja_JP\README.TXT"
    SetOutPath "$INSTDIR\Documentation\html"
    File "..\..\doc\install\Documentation\ja_JP\html\*"
    SetOutPath "$INSTDIR\Documentation\html\CmdRef"
    File "..\..\doc\install\Documentation\ja_JP\html\CmdRef\*"
-   SetOutPath "$INSTDIR\Documentation\html\InstallGd"
-   File "..\..\doc\install\Documentation\ja_JP\html\InstallGd\*"
-   SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes"
-   ;File "..\..\doc\install\Documentation\ja_JP\html\ReleaseNotes\*"
    SetOutPath "$INSTDIR\Documentation\html\SysAdminGd"
    ;File "..\..\doc\install\Documentation\ja_JP\html\SysAdminGd\*"
    goto DoneLanguage
    
 DoKorean:
-   SetOutPath "$INSTDIR\Documentation"
-   File "..\..\doc\install\Documentation\ko_KR\README.TXT"
    SetOutPath "$INSTDIR\Documentation\html"
    File "..\..\doc\install\Documentation\ko_KR\html\*"
    ;SetOutPath "$INSTDIR\Documentation\html\CmdRef"
    ;File "..\..\doc\install\Documentation\ko_KR\html\CmdRef\*"
-   SetOutPath "$INSTDIR\Documentation\html\InstallGd"
-   File "..\..\doc\install\Documentation\ko_KR\html\InstallGd\*"
-   SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes"
-   File "..\..\doc\install\Documentation\ko_KR\html\ReleaseNotes\*"
    SetOutPath "$INSTDIR\Documentation\html\SysAdminGd"
    File "..\..\doc\install\Documentation\ko_KR\html\SysAdminGd\*"
    goto DoneLanguage
    
 DoPortugueseBR:
-   SetOutPath "$INSTDIR\Documentation"
-   File "..\..\doc\install\Documentation\pt_BR\README.TXT"
    SetOutPath "$INSTDIR\Documentation\html"
    File "..\..\doc\install\Documentation\pt_BR\html\*"
    ;SetOutPath "$INSTDIR\Documentation\html\CmdRef"
    ;File "..\..\doc\install\Documentation\pt_BR\html\CmdRef\*"
-   SetOutPath "$INSTDIR\Documentation\html\InstallGd"
-   File "..\..\doc\install\Documentation\pt_BR\html\InstallGd\*"
-   SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes"
-   File "..\..\doc\install\Documentation\pt_BR\html\ReleaseNotes\*"
    ;SetOutPath "$INSTDIR\Documentation\html\SysAdminGd"
    ;File "..\..\doc\install\Documentation\pt_BR\html\SysAdminGd\*"
    goto DoneLanguage
 
 DoSimpChinese:
-   SetOutPath "$INSTDIR\Documentation"
-   File "..\..\doc\install\Documentation\zh_CN\README.TXT"
    SetOutPath "$INSTDIR\Documentation\html"
    File "..\..\doc\install\Documentation\zh_CN\html\*"
    ;SetOutPath "$INSTDIR\Documentation\html\CmdRef"
    ;File "..\..\doc\install\Documentation\zh_CN\html\CmdRef\*"
-   SetOutPath "$INSTDIR\Documentation\html\InstallGd"
-   File "..\..\doc\install\Documentation\zh_CN\html\InstallGd\*"
-   SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes"
-   File "..\..\doc\install\Documentation\zh_CN\html\ReleaseNotes\*"
    ;SetOutPath "$INSTDIR\Documentation\html\SysAdminGd"
    ;File "..\..\doc\install\Documentation\zh_CN\html\SysAdminGd\*"
    goto DoneLanguage
    
 DoTradChinese:
-   SetOutPath "$INSTDIR\Documentation"
-   File "..\..\doc\install\Documentation\zh_TW\README.TXT"
    SetOutPath "$INSTDIR\Documentation\html"
    File "..\..\doc\install\Documentation\zh_TW\html\*"
    ;SetOutPath "$INSTDIR\Documentation\html\CmdRef"
    ;File "..\..\doc\install\Documentation\zh_TW\html\CmdRef\*"
-   SetOutPath "$INSTDIR\Documentation\html\InstallGd"
-   File "..\..\doc\install\Documentation\zh_TW\html\InstallGd\*"
-   SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes"
-   File "..\..\doc\install\Documentation\zh_TW\html\ReleaseNotes\*"
    ;SetOutPath "$INSTDIR\Documentation\html\SysAdminGd"
    ;File "..\..\doc\install\Documentation\zh_TW\html\SysAdminGd\*"
    goto DoneLanguage
@@ -1679,9 +1631,11 @@ StartRemove:
   ; Delete documentation
   Delete "$INSTDIR\Documentation\README.TXT"
   Delete "$INSTDIR\Documentation\html\*"
+  Delete "$INSTDIR\Documentation\html\index_files\*"
   Delete "$INSTDIR\Documentation\html\CmdRef\*"
   Delete "$INSTDIR\Documentation\html\InstallGd\*"
   Delete "$INSTDIR\Documentation\html\ReleaseNotes\*"
+  Delete "$INSTDIR\Documentation\html\ReleaseNotes\logo_files\*"
   Delete "$INSTDIR\Documentation\html\SysAdminGd\*"
 
    Delete /REBOOTOK "$INSTDIR\Common\afs_config.exe"
@@ -2880,6 +2834,16 @@ DoEnglish:
 
    SetOutPath "$INSTDIR\Documentation"
    File "..\..\doc\install\Documentation\en_US\README.TXT"
+   SetOutPath "$INSTDIR\Documentation\html"
+   File "..\..\doc\install\Documentation\en_US\html\*"
+   SetOutPath "$INSTDIR\Documentation\html\index_files"
+   File "..\..\doc\install\Documentation\en_US\html\index_files*"
+   SetOutPath "$INSTDIR\Documentation\html\InstallGd"
+   File "..\..\doc\install\Documentation\en_US\html\InstallGd\*"
+   SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes"
+   File "..\..\doc\install\Documentation\en_US\html\ReleaseNotes\*"
+   SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes\logo_files"
+   File "..\..\doc\install\Documentation\en_US\html\ReleaseNotes\logo_files\*"
 
    SetOutPath "$INSTDIR\Client\Program"
    !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afscreds_1033.dll"    "$INSTDIR\Client\Program\afscreds_1033.dll" "$INSTDIR"
@@ -2928,6 +2892,16 @@ DoGerman:
 
    SetOutPath "$INSTDIR\Documentation"
    File "..\..\doc\install\Documentation\de_DE\README.TXT"
+   SetOutPath "$INSTDIR\Documentation\html"
+   File "..\..\doc\install\Documentation\de_DE\html\*"
+   SetOutPath "$INSTDIR\Documentation\html\index_files"
+   File "..\..\doc\install\Documentation\de_DE\html\index_files\*"
+   SetOutPath "$INSTDIR\Documentation\html\InstallGd"
+   File "..\..\doc\install\Documentation\de_DE\html\InstallGd\*"
+   ;SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes"
+   ;File "..\..\doc\install\Documentation\de_DE\html\ReleaseNotes\*"
+   ;SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes\logo_files"
+   ;File "..\..\doc\install\Documentation\de_DE\html\ReleaseNotes\logo_files\*"
 
    SetOutPath "$INSTDIR\Client\Program"
   !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afscreds_1032.dll"                      "$INSTDIR\Client\Program\afscreds_1032.dll" "$INSTDIR"
@@ -2976,6 +2950,16 @@ DoSpanish:
 
    SetOutPath "$INSTDIR\Documentation"
    File "..\..\doc\install\Documentation\es_ES\README.TXT"
+   SetOutPath "$INSTDIR\Documentation\html"
+   ;File "..\..\doc\install\Documentation\es_ES\html\*"
+   SetOutPath "$INSTDIR\Documentation\html\index_html"
+   ;File "..\..\doc\install\Documentation\es_ES\html\index_files\*"
+   SetOutPath "$INSTDIR\Documentation\html\InstallGd"
+   ;File "..\..\doc\install\Documentation\es_ES\html\InstallGd\*"
+   SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes"
+   ;File "..\..\doc\install\Documentation\es_ES\html\ReleaseNotes\*"
+   SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes\logo_files"
+   ;File "..\..\doc\install\Documentation\es_ES\html\ReleaseNotes\logo_files\*"
 
    SetOutPath "$INSTDIR\Client\Program"
    !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afscreds_1034.dll"     "$INSTDIR\Client\Program\afscreds_1034.dll" "$INSTDIR" 
@@ -3024,6 +3008,16 @@ DoJapanese:
 
    SetOutPath "$INSTDIR\Documentation"
    File "..\..\doc\install\Documentation\ja_JP\README.TXT"
+   SetOutPath "$INSTDIR\Documentation\html"
+   File "..\..\doc\install\Documentation\ja_JP\html\*"
+   SetOutPath "$INSTDIR\Documentation\html\index_files"
+   File "..\..\doc\install\Documentation\ja_JP\html\index_files\*"
+   SetOutPath "$INSTDIR\Documentation\html\InstallGd"
+   File "..\..\doc\install\Documentation\ja_JP\html\InstallGd\*"
+   SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes"
+   ;File "..\..\doc\install\Documentation\ja_JP\html\ReleaseNotes\*"
+   SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes\logo_files"
+   ;File "..\..\doc\install\Documentation\ja_JP\html\ReleaseNotes\logo_files\*"
 
    SetOutPath "$INSTDIR\Client\Program"
    !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afscreds_1041.dll"  "$INSTDIR\Client\Program\afscreds_1041.dll" "$INSTDIR"  
@@ -3072,6 +3066,16 @@ DoKorean:
 
    SetOutPath "$INSTDIR\Documentation"
    File "..\..\doc\install\Documentation\ko_KR\README.TXT"
+   SetOutPath "$INSTDIR\Documentation\html"
+   File "..\..\doc\install\Documentation\ko_KR\html\*"
+   SetOutPath "$INSTDIR\Documentation\html\index_files"
+   File "..\..\doc\install\Documentation\ko_KR\html\index_files\*"
+   SetOutPath "$INSTDIR\Documentation\html\InstallGd"
+   File "..\..\doc\install\Documentation\ko_KR\html\InstallGd\*"
+   SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes"
+   File "..\..\doc\install\Documentation\ko_KR\html\ReleaseNotes\*"
+   SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes\logo_files"
+   File "..\..\doc\install\Documentation\ko_KR\html\ReleaseNotes\logo_files\*"
 
    SetOutPath "$INSTDIR\Client\Program"
    !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afscreds_1042.dll"  "$INSTDIR\Client\Program\afscreds_1042.dll" "$INSTDIR"   
@@ -3121,6 +3125,16 @@ DoPortugueseBR:
 
    SetOutPath "$INSTDIR\Documentation"
    File "..\..\doc\install\Documentation\pt_BR\README.TXT"
+   SetOutPath "$INSTDIR\Documentation\html"
+   File "..\..\doc\install\Documentation\pt_BR\html\*"
+   SetOutPath "$INSTDIR\Documentation\html\index_files"
+   File "..\..\doc\install\Documentation\pt_BR\html\index_files\*"
+   SetOutPath "$INSTDIR\Documentation\html\InstallGd"
+   File "..\..\doc\install\Documentation\pt_BR\html\InstallGd\*"
+   SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes"
+   File "..\..\doc\install\Documentation\pt_BR\html\ReleaseNotes\*"
+   SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes\logo_files"
+   File "..\..\doc\install\Documentation\pt_BR\html\ReleaseNotes\logo_files\*"
 
    SetOutPath "$INSTDIR\Client\Program"
    !insertmacro ReplaceDLL  "${AFS_CLIENT_BUILDDIR}\afscreds_1046.dll"  "$INSTDIR\Client\Program\afscreds_1046.dll" "$INSTDIR"    
@@ -3169,6 +3183,16 @@ DoSimpChinese:
 
    SetOutPath "$INSTDIR\Documentation"
    File "..\..\doc\install\Documentation\zh_CN\README.TXT"
+   SetOutPath "$INSTDIR\Documentation\html"
+   File "..\..\doc\install\Documentation\zh_CN\html\*"
+   SetOutPath "$INSTDIR\Documentation\html\index_files"
+   File "..\..\doc\install\Documentation\zh_CN\html\index_files\*"
+   SetOutPath "$INSTDIR\Documentation\html\InstallGd"
+   File "..\..\doc\install\Documentation\zh_CN\html\InstallGd\*"
+   SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes"
+   File "..\..\doc\install\Documentation\zh_CN\html\ReleaseNotes\*"
+   SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes\logo_files"
+   File "..\..\doc\install\Documentation\zh_CN\html\ReleaseNotes\logo_files\*"
 
    SetOutPath "$INSTDIR\Client\Program"
    !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afscreds_2052.dll"   "$INSTDIR\Client\Program\afscreds_2052.dll" "$INSTDIR"     
@@ -3217,6 +3241,16 @@ DoTradChinese:
 
    SetOutPath "$INSTDIR\Documentation"
    File "..\..\doc\install\Documentation\zh_TW\README.TXT"
+   SetOutPath "$INSTDIR\Documentation\html"
+   File "..\..\doc\install\Documentation\zh_TW\html\*"
+   SetOutPath "$INSTDIR\Documentation\html\index_files"
+   File "..\..\doc\install\Documentation\zh_TW\html\index_files\*"
+   SetOutPath "$INSTDIR\Documentation\html\InstallGd"
+   File "..\..\doc\install\Documentation\zh_TW\html\InstallGd\*"
+   SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes"
+   File "..\..\doc\install\Documentation\zh_TW\html\ReleaseNotes\*"
+   SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes\logo_files"
+   File "..\..\doc\install\Documentation\zh_TW\html\ReleaseNotes\logo_files\*"
 
    SetOutPath "$INSTDIR\Client\Program"
    !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afscreds_1028.dll"  "$INSTDIR\Client\Program\_1028.dll" "$INSTDIR"      
