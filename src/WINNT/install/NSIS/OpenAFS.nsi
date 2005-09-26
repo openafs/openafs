@@ -2837,7 +2837,7 @@ DoEnglish:
    SetOutPath "$INSTDIR\Documentation\html"
    File "..\..\doc\install\Documentation\en_US\html\*"
    SetOutPath "$INSTDIR\Documentation\html\index_files"
-   File "..\..\doc\install\Documentation\en_US\html\index_files*"
+   File "..\..\doc\install\Documentation\en_US\html\index_files\*"
    SetOutPath "$INSTDIR\Documentation\html\InstallGd"
    File "..\..\doc\install\Documentation\en_US\html\InstallGd\*"
    SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes"
