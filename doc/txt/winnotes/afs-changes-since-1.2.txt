@@ -1,5 +1,11 @@
 Since 1.4.0 rc4: 1.4.0 rc5 released (25 Sep 2005)
 
+ * New Product Code GUIDs issues for 1.4 and 1.5 branches.  Separate
+   GUIDs for each platform.
+
+ * Documentation directory structure and default installation rules
+   for MSI 
+
  * New OpenAFS for Windows HTML Release Notes installed
    as part of the documentation set.
 
