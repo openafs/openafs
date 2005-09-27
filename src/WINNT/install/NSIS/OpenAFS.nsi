@@ -1026,11 +1026,6 @@ DoneLanguage:
   WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Supplemental Documentation\${AFS_VERSION}" "MinorVersion" ${AFS_MINORVERSION}
   WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Supplemental Documentation\${AFS_VERSION}" "PatchLevel" ${AFS_PATCHLEVEL}
 
-  ; Write start menu shortcut
-  SetOutPath "$SMPROGRAMS\OpenAFS"
-  CreateShortCut "$SMPROGRAMS\OpenAFS\Documentation.lnk" "$INSTDIR\Documentation\html\index.htm"
-  
-  
   WriteUninstaller "$INSTDIR\Uninstall.exe"
   WriteRegStr HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\OpenAFS" "DisplayIcon" "$INSTDIR\Uninstall.exe,0"  
   CreateShortCut "$SMPROGRAMS\OpenAFS\Uninstall OpenAFS.lnk" "$INSTDIR\Uninstall.exe"
@@ -3261,6 +3256,12 @@ DoTradChinese:
    goto done
    
 done:
+
+  ; Write start menu shortcut
+  SetOutPath "$SMPROGRAMS\OpenAFS"
+  CreateShortCut "$SMPROGRAMS\OpenAFS\Documentation.lnk" "$INSTDIR\Documentation\html\index.htm"
+  
+
 FunctionEnd
 
 
