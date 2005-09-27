@@ -380,7 +380,6 @@
 
             <Directory Id="dirDocumentation" Name="Docum" LongName="Documentation" SourceName="Docs">
 				<!-- The following directory and everything below it is language dependent. -->
-                <Directory Id="dirDoc_$(var.Language)" Name="$(var.Language)">
                     <Directory Id="dirHtml_$(var.Language)" Name="Html" src="$(var.SrcDir)\WINNT\doc\install\Documentation\$(var.Language)\html\">
                         <Component Id="cmf_index2_HTM_$(var.Language)" Guid="$(var.DocHtmlIndexGuid)">
                             <File Id="fileindex2_HTM_$(var.Language)" Name="index.htm" LongName="index.htm" KeyPath="yes" DiskId="1">
@@ -770,7 +769,6 @@
                             </Directory> <!-- logo_files -->
                         </Directory> <!-- Release Notes -->
                     </Directory> <!-- Html -->
-                </Directory> <!-- $(var.Language) -->
             </Directory> <!-- Documentation -->
 
             <Directory Id="dirClient" Name="Client">
