@@ -563,7 +563,6 @@ long cm_IoctlFlushAllVolumes(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
     long code;
     cm_scache_t *scp;
-    unsigned long volume;
     int i;
     cm_req_t req;
 
@@ -782,6 +781,64 @@ long cm_IoctlGetVolumeStatus(struct smb_ioctl *ioctlp, struct cm_user *userp)
 
     /* return new size */
     ioctlp->outDatap = cp;
+
+    return 0;
+}
+
+long cm_IoctlGetFid(struct smb_ioctl *ioctlp, struct cm_user *userp)
+{
+    cm_scache_t *scp;
+    register long code;
+    register char *cp;
+    cm_fid_t fid;
+    cm_req_t req;
+
+    cm_InitReq(&req);
+
+    code = cm_ParseIoctlPath(ioctlp, userp, &req, &scp);
+    if (code) return code;
+
+    memset(&fid, 0, sizeof(cm_fid_t));
+    fid.volume = scp->fid.volume;
+    fid.vnode  = scp->fid.vnode;
+    fid.unique = scp->fid.unique;
+
+    cm_ReleaseSCache(scp);
+
+    /* Copy all this junk into msg->im_data, keeping track of the lengths. */
+    cp = ioctlp->outDatap;
+    memcpy(cp, (char *)&fid, sizeof(cm_fid_t));
+    cp += sizeof(cm_fid_t);
+
+    /* return new size */
+    ioctlp->outDatap = cp;
+
+    return 0;
+}
+
+long cm_IoctlGetOwner(struct smb_ioctl *ioctlp, struct cm_user *userp)
+{
+    cm_scache_t *scp;
+    register long code;
+    register char *cp;
+    cm_req_t req;
+
+    cm_InitReq(&req);
+
+    code = cm_ParseIoctlPath(ioctlp, userp, &req, &scp);
+    if (code) return code;
+
+    /* Copy all this junk into msg->im_data, keeping track of the lengths. */
+    cp = ioctlp->outDatap;
+    memcpy(cp, (char *)&scp->owner, sizeof(afs_uint32));
+    cp += sizeof(afs_uint32);
+    memcpy(cp, (char *)&scp->group, sizeof(afs_uint32));
+    cp += sizeof(afs_uint32);
+
+    /* return new size */
+    ioctlp->outDatap = cp;
+
+    cm_ReleaseSCache(scp);
 
     return 0;
 }

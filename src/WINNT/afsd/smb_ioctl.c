@@ -79,6 +79,8 @@ void smb_InitIoctl(void)
 	smb_ioctlProcsp[VIOC_TRACEMEMDUMP] = cm_IoctlMemoryDump;
 	smb_ioctlProcsp[VIOC_ISSYMLINK] = cm_IoctlIslink;
         smb_ioctlProcsp[VIOC_FLUSHALL] = cm_IoctlFlushAllVolumes;
+        smb_ioctlProcsp[VIOCGETFID] = cm_IoctlGetFid;
+        smb_ioctlProcsp[VIOCGETOWNER] = cm_IoctlGetOwner;
 }
 
 /* called to make a fid structure into an IOCTL fid structure */
