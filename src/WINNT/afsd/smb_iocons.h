@@ -92,4 +92,6 @@ typedef struct cm_cacheParms {
 #define VIOC_TRACEMEMDUMP               0x29
 #define VIOC_SHUTDOWN                   0x2a
 #define VIOC_FLUSHALL                   0x2b
+#define VIOCGETFID                      0x2c
+#define VIOCGETOWNER                    0x2d
 #endif /*  __SMB_IOCONS_H_ENV_ */

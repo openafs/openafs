@@ -69,6 +69,10 @@ extern long cm_IoctlSetVolumeStatus(smb_ioctl_t *ioctlp, cm_user_t *userp);
 
 extern long cm_IoctlGetVolumeStatus(smb_ioctl_t *ioctlp, cm_user_t *userp);
 
+extern long cm_IoctlGetFid(smb_ioctl_t *ioctlp, cm_user_t *userp);
+
+extern long cm_IoctlGetOwner(smb_ioctl_t *ioctlp, cm_user_t *userp);
+
 extern long cm_IoctlWhereIs(smb_ioctl_t *ioctlp, cm_user_t *userp);
 
 extern long cm_IoctlStatMountPoint(smb_ioctl_t *ioctlp, cm_user_t *userp);

@@ -1504,13 +1504,41 @@ ExamineCmd(struct cmd_syndesc *as, char *arock)
     
     SetDotDefault(&as->parms[0].items);
     for(ti=as->parms[0].items; ti; ti=ti->next) {
-#ifndef WIN32
-        struct VenusFid vfid;
-#endif /* WIN32 */
+        cm_fid_t fid;
+	afs_uint32 owner[2];
+	char cell[MAXCELLCHARS];
+
+	code = GetCell(ti->data, cell);
+	if (code) {
+	    Die(errno, ti->data);
+	    error = 1;
+	    continue;
+	}
+
 	/* once per file */
-	blob.out_size = MAXSIZE;
 	blob.in_size = 0;
+
+        blob.out_size = sizeof(cm_fid_t);
+        blob.out = (char *) &fid;
+        if (0 == pioctl(ti->data, VIOCGETFID, &blob, 1)) {
+            printf("File %s (%u.%u.%u) contained in cell %s\n",
+                    ti->data, fid.volume, fid.vnode, fid.unique,
+                    cell);
+        }
+
+	blob.out_size = 2 * sizeof(afs_uint32);
+        blob.out = (char *) &owner;
+	if (0 == pioctl(ti->data, VIOCGETOWNER, &blob, 1)) {
+	    char oname[PR_MAXNAMELEN] = "(unknown)";
+
+	    /* Go to the PRDB and see if this all number username is valid */
+	    pr_Initialize(1, AFSDIR_CLIENT_ETC_DIRPATH, cell);
+	    pr_SIdToName(owner[0], oname);
+	    printf("Owner %s (%u) Group %u\n", oname, owner[0], owner[1]);
+        }
+	
 	blob.out = space;
+	blob.out_size = MAXSIZE;
 	code = pioctl(ti->data, VIOCGETVOLSTAT, &blob, 1);
 	if (code) {
 	    Die(errno, ti->data);
@@ -1522,15 +1550,6 @@ ExamineCmd(struct cmd_syndesc *as, char *arock)
 	offmsg = name + strlen(name) + 1;
 	motd = offmsg + strlen(offmsg) + 1;
 
-#ifndef WIN32
-        blob.out_size = sizeof(struct VenusFid);
-        blob.out = (char *) &vfid;
-        if (0 == pioctl(ti->data, VIOCGETFID, &blob, 1)) {
-            printf("File %s (%u.%u.%u) contained in volume %u\n",
-                    ti->data, vfid.Fid.Volume, vfid.Fid.Vnode, vfid.Fid.Unique,
-                    vfid.Fid.Volume);
-        }
-#endif /* WIN32 */
 	PrintStatus(status, name, motd, offmsg);
     }
     return error;
