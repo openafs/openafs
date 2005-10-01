@@ -171,11 +171,11 @@ BOOL CALLBACK Main_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
                      }
                   lock_ReleaseMutex(&g.credsLock);
                   CheckMenuItem (hm, M_REMIND, MF_BYCOMMAND | ((fRemind) ? MF_CHECKED : MF_UNCHECKED));
-
+		  SetForegroundWindow(hDlg);
                   TrackPopupMenu (GetSubMenu (hmDummy, 0),
                                   TPM_RIGHTALIGN | TPM_RIGHTBUTTON,
                                   pt.x, pt.y, NULL, hDlg, NULL);
-
+		  PostMessage(hDlg, WM_NULL, 0, 0);
                   DestroyMenu (hmDummy);
                   }
                break;
