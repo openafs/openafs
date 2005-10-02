@@ -276,7 +276,8 @@ install_headers: $(IDLFILES) $(INCFILES)
 install: install_headers install_objs $(CONF_DLLFILE) \
 	$(EXEDIR)\klog.exe \
 	$(EXEDIR)\tokens.exe \
-	$(EXEDIR)\unlog.exe $(EXEDIR)\afsd.exe $(EXEDIR)\afsd_service.exe \
+	$(EXEDIR)\unlog.exe \
+	$(EXEDIR)\afsd_service.exe \
 	$(EXEDIR)\fs.exe \
         $(EXEDIR)\symlink.exe \
         $(EXEDIR)\afsdacl.exe \
@@ -287,7 +288,7 @@ install: install_headers install_objs $(CONF_DLLFILE) \
 install9X: install_headers $(CONF_DLLFILE) \
 	$(EXEDIR)\klog.exe \
 	$(EXEDIR)\tokens.exe \
-	$(EXEDIR)\unlog.exe $(EXEDIR)\afsd_service.exe \
+	$(EXEDIR)\unlog.exe $(EXEDIR)\afsd.exe $(EXEDIR)\afsd_service.exe \
 	$(EXEDIR)\fs.exe $(EXEDIR)\symlink.exe \
 	$(LOGON_DLLFILE) $(LOG95_DLLFILE) \
 	$(EXEDIR)\afsshare.exe \
@@ -380,7 +381,6 @@ AFSD_SDKLIBS =\
 AFSD_EXELIBS =\
 	$(DESTDIR)\lib\libosi.lib \
 	$(DESTDIR)\lib\afsrpc.lib \
-        $(DESTDIR)\lib\afsrx.lib \
 	$(DESTDIR)\lib\afsauthent.lib \
 	$(DESTDIR)\lib\afs\mtafsvldb.lib \
 	$(DESTDIR)\lib\afs\mtafsint.lib \
