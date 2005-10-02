@@ -215,5 +215,11 @@ EXPORTS
         rx_StartClientThread                    @220
 	rxkad_global_stats_lock			@221 DATA
 	rxkad_stats_key				@222 DATA
-
+	rx_enableProcessRPCStats                @223
+	rx_disableProcessRPCStats               @224
+	rx_clearProcessRPCStats                 @225
+	rx_enablePeerRPCStats                	@226
+	rx_disablePeerRPCStats               	@227
+	rx_clearPeerRPCStats                 	@228
+        
 
