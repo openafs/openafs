@@ -536,6 +536,8 @@ int afsd_InitCM(char **reasonP)
     DWORD cacheSize;
     long logChunkSize;
     DWORD stats;
+    DWORD rx_enable_peer_stats = 0;
+    DWORD rx_enable_process_stats = 0;
     long traceBufSize;
     long maxcpus;
     long ltt, ltto;
@@ -987,6 +989,24 @@ int afsd_InitCM(char **reasonP)
     if (rx_mtu != -1)
         afsi_log("RX maximum MTU is %d", rx_mtu);
 
+    dummyLen = sizeof(rx_enable_peer_stats);
+    code = RegQueryValueEx(parmKey, "RxEnablePeerStats", NULL, NULL,
+                           (BYTE *) &rx_enable_peer_stats, &dummyLen);
+    if (code != ERROR_SUCCESS) {
+        rx_enable_peer_stats = 0;
+    }
+    if (rx_enable_peer_stats)
+        afsi_log("RX Peer Statistics gathering is enabled");
+
+    dummyLen = sizeof(rx_enable_process_stats);
+    code = RegQueryValueEx(parmKey, "RxEnableProcessStats", NULL, NULL,
+                           (BYTE *) &rx_enable_process_stats, &dummyLen);
+    if (code != ERROR_SUCCESS) {
+        rx_enable_process_stats = 0;
+    }
+    if (rx_enable_process_stats)
+        afsi_log("RX Process Statistics gathering is enabled");
+
     dummyLen = sizeof(ConnDeadtimeout);
     code = RegQueryValueEx(parmKey, "ConnDeadTimeout", NULL, NULL,
                            (BYTE *) &ConnDeadtimeout, &dummyLen);
@@ -1122,6 +1142,12 @@ int afsd_InitCM(char **reasonP)
     /* start server threads, *not* donating this one to the pool */
     rx_StartServer(0);
     afsi_log("rx_StartServer");
+
+    if (rx_enable_peer_stats)
+	rx_enablePeerRPCStats();
+
+    if (rx_enable_process_stats)
+	rx_enableProcessRPCStats();
 
     code = cm_GetRootCellName(rootCellName);
     afsi_log("cm_GetRootCellName code %d, cm_freelanceEnabled= %d, rcn= %s", 

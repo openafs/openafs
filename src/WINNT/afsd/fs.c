@@ -4197,6 +4197,7 @@ FlushMountCmd(struct cmd_syndesc *as, char *arock)
     }
     return error;
 }
+#endif /* WIN32 */
 
 static int
 RxStatProcCmd(struct cmd_syndesc *as, char *arock)
@@ -4267,7 +4268,6 @@ RxStatPeerCmd(struct cmd_syndesc *as, char *arock)
 
     return 0;
 }
-#endif /* WIN32 */
 
 #ifndef WIN32
 #include "AFS_component_version_number.c"
@@ -4521,7 +4521,6 @@ main(int argc, char **argv)
 
     ts = cmd_CreateSyntax("getcrypt", GetCryptCmd, 0, "get cache manager encryption flag");
 
-#ifndef WIN32
     ts = cmd_CreateSyntax("rxstatproc", RxStatProcCmd, 0,
 			  "Manage per process RX statistics");
     cmd_AddParm(ts, "-enable", CMD_FLAG, CMD_OPTIONAL, "Enable RX stats");
@@ -4534,6 +4533,7 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-disable", CMD_FLAG, CMD_OPTIONAL, "Disable RX stats");
     cmd_AddParm(ts, "-clear", CMD_FLAG, CMD_OPTIONAL, "Clear RX stats");
 
+#ifndef WIN32
     ts = cmd_CreateSyntax("setcbaddr", CallBackRxConnCmd, 0, "configure callback connection address");
     cmd_AddParm(ts, "-addr", CMD_SINGLE, CMD_OPTIONAL, "host name or address");
 #endif

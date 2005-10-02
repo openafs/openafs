@@ -2395,6 +2395,49 @@ long cm_IoctlSetRxkcrypt(smb_ioctl_t *ioctlp, cm_user_t *userp)
     return 0;
 }
 
+long cm_IoctlRxStatProcess(struct smb_ioctl *ioctlp, struct cm_user *userp)
+{
+    afs_int32 flags;
+    int code = 0;
+
+    memcpy((char *)&flags, ioctlp->inDatap, sizeof(afs_int32));
+    if (!(flags & AFSCALL_RXSTATS_MASK) || (flags & ~AFSCALL_RXSTATS_MASK)) {
+        return -1;
+    }
+    if (flags & AFSCALL_RXSTATS_ENABLE) {
+        rx_enableProcessRPCStats();
+    }
+    if (flags & AFSCALL_RXSTATS_DISABLE) {
+        rx_disableProcessRPCStats();
+    }
+    if (flags & AFSCALL_RXSTATS_CLEAR) {
+        rx_clearProcessRPCStats(AFS_RX_STATS_CLEAR_ALL);
+    }
+    return 0;
+}
+
+long cm_IoctlRxStatPeer(struct smb_ioctl *ioctlp, struct cm_user *userp)
+{
+    afs_int32 flags;
+    int code = 0;
+
+    memcpy((char *)&flags, ioctlp->inDatap, sizeof(afs_int32));
+
+    if (!(flags & AFSCALL_RXSTATS_MASK) || (flags & ~AFSCALL_RXSTATS_MASK)) {
+	return -1;
+    }
+    if (flags & AFSCALL_RXSTATS_ENABLE) {
+        rx_enablePeerRPCStats();
+    }
+    if (flags & AFSCALL_RXSTATS_DISABLE) {
+        rx_disablePeerRPCStats();
+    }
+    if (flags & AFSCALL_RXSTATS_CLEAR) {
+        rx_clearPeerRPCStats(AFS_RX_STATS_CLEAR_ALL);
+    }
+    return 0;
+}
+
 #ifdef DJGPP
 extern int afsd_shutdown(int);
 extern int afs_shutdown;
