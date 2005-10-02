@@ -1546,7 +1546,6 @@ BOOL RemoveMount(CStringArray& files)
     register LONG code = 0;
     struct ViceIoctl blob;
     char tbuffer[1024];
-    char lsbuffer[1024];
     register char *tp;
     char szCurItem[1024];
     BOOL error = FALSE;
@@ -1739,30 +1738,24 @@ BOOL CheckServers(const CString& strCellName, WHICH_CELLS nCellsToCheck, BOOL bF
 
     blob.out_size = MAXSIZE;
     blob.out = space;
-    memset(space, 0, sizeof(LONG));	/* so we assure zero when nothing is copied back */
+    memset(space, 0, sizeof(afs_int32));	/* so we assure zero when nothing is copied back */
 
-    /* prepare flags for checkservers command */
-    if (nCellsToCheck == LOCAL_CELL)
-        temp = 2;	/* default to checking local cell only */
-    else if (nCellsToCheck == ALL_CELLS)
-        temp &= ~2;	/* turn off local cell check */
-
+    if (nCellsToCheck == SPECIFIC_CELL) {
+	temp = 2;
+        GetCellName(PCCHAR(strCellName), &info);
+        strcpy(checkserv.tbuffer,info.name);
+        checkserv.tsize = strlen(info.name) + 1;
+    } else {
+	if (nCellsToCheck != ALL_CELLS)
+	    temp = 2;
+        strcpy(checkserv.tbuffer, "\0");
+        checkserv.tsize = 0;
+    }
     if (bFast)
         temp |= 1;	/* set fast flag */
     
     checkserv.magic = 0x12345678;	/* XXX */
     checkserv.tflags = temp;
-
-    /* now copy in optional cell name, if specified */
-    if (nCellsToCheck == SPECIFIC_CELL) {
-        GetCellName(PCCHAR(strCellName), &info);
-        strcpy(checkserv.tbuffer,info.name);
-        checkserv.tsize = strlen(info.name) + 1;
-    } else {
-        strcpy(checkserv.tbuffer, "\0");
-        checkserv.tsize = 0;
-    }
-
     checkserv.tinterval = -1;	/* don't change current interval */
 
     code = pioctl(0, VIOCCKSERV, &blob, 1);
