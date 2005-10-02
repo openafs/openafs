@@ -84,9 +84,16 @@ STDAPI DllCanUnloadNow(void)
 {
 	AFX_MANAGE_STATE(AfxGetStaticModuleState());
 
+#ifdef COMMENT
+    // This test is correct and we really do want to allow the extension to be loaded and 
+    // unloaded as needed.   Unfortunately, the extension is being unloaded and never loaded
+    // again which is disconcerting for many folks.  For now we will prevent the unloading 
+    // until someone has time to figure out how to debug this.   
+    // Jeffrey Altman - 2 Oct 2005
+
 	if (!nCMRefCount && !nSERefCount && !nICRefCount && !nTPRefCount && !nXPRefCount)
 		return S_OK;
-
+#endif
 	return S_FALSE;
 }
 
