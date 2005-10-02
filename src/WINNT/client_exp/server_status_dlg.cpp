@@ -34,7 +34,7 @@ CServerStatusDlg::CServerStatusDlg() : CDialog()
 
 	//{{AFX_DATA_INIT(CServerStatusDlg)
 	m_bFast = FALSE;
-	m_nCell = -1;
+	m_nCell = LOCAL_CELL;
 	//}}AFX_DATA_INIT
 }
 
@@ -76,7 +76,7 @@ BOOL CServerStatusDlg::OnInitDialog()
 	CDialog::OnInitDialog();
 
 	m_CellName.EnableWindow(FALSE);
-	m_nCell = 0;
+	m_nCell = LOCAL_CELL;
 
 	UpdateData(FALSE);
 
@@ -93,19 +93,21 @@ void CServerStatusDlg::OnShowStatus()
 
 void CServerStatusDlg::OnSpecifiedCell() 
 {
-	m_CellName.EnableWindow(TRUE);	
-
+        m_nCell = SPECIFIC_CELL;
+        m_CellName.EnableWindow(TRUE);	
 	CheckEnableShowStatus();
 }
 
 void CServerStatusDlg::OnLocalCell() 
 {
+        m_nCell = LOCAL_CELL;
 	m_CellName.EnableWindow(FALSE);
 	m_ShowStatus.EnableWindow(TRUE);
 }
 
 void CServerStatusDlg::OnAllCells() 
 {
+        m_nCell = ALL_CELLS;
 	m_CellName.EnableWindow(FALSE);
 	m_ShowStatus.EnableWindow(TRUE);
 }
