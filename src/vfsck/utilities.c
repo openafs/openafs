@@ -62,7 +62,11 @@ RCSID
 #include <sys/ino.h>
 #include <sys/signal.h>
 #define	DIRSIZ_MACRO
+#ifdef HAVE_USR_OLD_USR_INCLUDE_NDIR_H
+#include </usr/old/usr/include/ndir.h>
+#else
 #include <ndir.h>
+#endif
 #else
 #include <sys/dir.h>
 #endif
