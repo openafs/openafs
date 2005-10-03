@@ -79,6 +79,10 @@ CACHESIZE=AUTOMATIC
 OPTIONS=AUTOMATIC
 #OPTIONS=$SMALL
 
+# force startup script to wait for salvage to finish before proceeding
+# with machine boot
+WAIT_FOR_SALVAGE=no
+
 # you should never need to change these settings
 AFSDIR=/afs
 CACHEDIR=/usr/vice/cache
