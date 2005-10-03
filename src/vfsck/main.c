@@ -70,7 +70,11 @@ RCSID
 #include <sys/sysmacros.h>
 #include <sys/ino.h>
 #define	DIRSIZ_MACRO
+#ifdef HAVE_USR_OLD_USR_INCLUDE_NDIR_H
+#include </usr/old/usr/include/ndir.h>
+#else
 #include <ndir.h>
+#endif
 #else
 #define KERNEL
 #include <sys/dir.h>

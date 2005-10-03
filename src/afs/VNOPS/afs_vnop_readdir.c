@@ -580,8 +580,9 @@ afs_readdir(OSI_VC_ARG(avc), auio, acred)
 #if defined(AFS_SGI53_ENV)
     afs_int32 use64BitDirent, dirsiz;
 #endif /* defined(AFS_SGI53_ENV) */
+#ifndef	AFS_HPUX_ENV
     OSI_VC_CONVERT(avc);
-#ifdef	AFS_HPUX_ENV
+#else
     /*
      * XXX All the hacks for alloced sdirEntry and inlining of afs_readdir_move instead of calling
      * it is necessary for hpux due to stack problems that seem to occur when coming thru the nfs
