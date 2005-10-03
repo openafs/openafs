@@ -105,9 +105,9 @@ STYLE WS_CHILD
 FONT 9, "MS Shell Dlg"
 BEGIN
     LTEXT           "Cell:     ",IDC_STATIC,7,9,24,8
-    LTEXT           "(none)",IDC_CREDS_CELL,51,9,193,8
+    LTEXT           "(none)",IDC_CREDS_CELL,51,9,282,8
     LTEXT           "Tokens:",IDC_STATIC,7,26,27,8
-    LTEXT           "(none)",IDC_CREDS_INFO,51,26,193,8
+    LTEXT           "(none)",IDC_CREDS_INFO,51,26,282,8
     CONTROL         "&Show a warning before these tokens expire",
                     IDC_CREDS_REMIND,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
                     51,43,193,10
