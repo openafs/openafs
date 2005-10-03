@@ -537,7 +537,6 @@ long cm_IoctlFlushAllVolumes(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
     long code;
     cm_scache_t *scp;
-    unsigned long volume;
     int i;
     cm_req_t req;
 
@@ -564,6 +563,7 @@ long cm_IoctlFlushVolume(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
     long code;
     cm_scache_t *scp;
+    unsigned long volume;
     int i;
     cm_req_t req;
 
