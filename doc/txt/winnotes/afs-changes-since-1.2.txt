@@ -1,3 +1,22 @@
+Since 1.4.0 rc5: 1.4.0 rc6 released (2 Oct 2005)
+
+ * Fixed several AFS Shell Extension issues:
+   - Checking Server Status would only work if a specific cell was
+     specified.
+   - If servers were down, the Server Down dialog would write to 
+     invalid memory and cause explorer.exe to crash
+   - Default Push Buttons were not specified for many dialogs
+   - The extension would be unloaded by the Explorer Shell and
+     never be reloaded under some circumstances. 
+
+ * Fixed the AFS System Tray menu to disappear if another Window
+   was selected before a menu item was selected
+
+ * Added volume owner and group information to "fs examine" output
+
+ * Added fs and registry support for enabling/disabling/clearing 
+   rx statistics gathering.
+
 Since 1.4.0 rc4: 1.4.0 rc5 released (25 Sep 2005)
 
  * New Product Code GUIDs issues for 1.4 and 1.5 branches.  Separate
