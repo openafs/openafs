@@ -2400,6 +2400,8 @@ long cm_IoctlRxStatProcess(struct smb_ioctl *ioctlp, struct cm_user *userp)
     afs_int32 flags;
     int code = 0;
 
+    cm_SkipIoctlPath(ioctlp);
+
     memcpy((char *)&flags, ioctlp->inDatap, sizeof(afs_int32));
     if (!(flags & AFSCALL_RXSTATS_MASK) || (flags & ~AFSCALL_RXSTATS_MASK)) {
         return -1;
@@ -2421,8 +2423,9 @@ long cm_IoctlRxStatPeer(struct smb_ioctl *ioctlp, struct cm_user *userp)
     afs_int32 flags;
     int code = 0;
 
-    memcpy((char *)&flags, ioctlp->inDatap, sizeof(afs_int32));
+    cm_SkipIoctlPath(ioctlp);
 
+    memcpy((char *)&flags, ioctlp->inDatap, sizeof(afs_int32));
     if (!(flags & AFSCALL_RXSTATS_MASK) || (flags & ~AFSCALL_RXSTATS_MASK)) {
 	return -1;
     }
