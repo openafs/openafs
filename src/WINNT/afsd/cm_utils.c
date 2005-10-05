@@ -58,18 +58,18 @@ long cm_MapRPCError(long error, cm_req_t *reqp)
         error = CM_ERROR_NOTDIR;
     else if (error == 2) 
         error = CM_ERROR_NOSUCHFILE;
-    else if (error == 11		/* EAGAIN, most servers */
+    else if (error == 11        /* EAGAIN, most servers */
              || error == 35)	/* EAGAIN, Digital UNIX */
         error = CM_ERROR_WOULDBLOCK;
     else if (error == VDISKFULL
-              || error == 28)        /* ENOSPC */ 
+              || error == 28)   /* ENOSPC */ 
         error = CM_ERROR_SPACE;
     else if (error == VOVERQUOTA
-              || error == 49         /* EDQUOT on Solaris */
-              || error == 88		/* EDQUOT on AIX */
-              || error == 69	        /* EDQUOT on Digital UNIX and HPUX */
-              || error == 122        /* EDQUOT on Linux */
-              || error == 1133)      /* EDQUOT on Irix  */
+              || error == 49    /* EDQUOT on Solaris */
+              || error == 88    /* EDQUOT on AIX */
+              || error == 69    /* EDQUOT on Digital UNIX and HPUX */
+              || error == 122   /* EDQUOT on Linux */
+              || error == 1133) /* EDQUOT on Irix  */
         error = CM_ERROR_QUOTA;
     else if (error == VNOVNODE) 
         error = CM_ERROR_BADFD;

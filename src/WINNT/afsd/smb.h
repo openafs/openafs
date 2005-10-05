@@ -346,6 +346,14 @@ typedef struct smb_fid {
 #define SMB_FID_LOOKSLIKECOPY	(SMB_FID_LENGTHSETDONE | SMB_FID_MTIMESETDONE)
 #define SMB_FID_NTOPEN			0x100	/* have dscp and pathp */
 
+#define SMB_FID_SHARE_READ              0x1000
+#define SMB_FID_SHARE_WRITE             0x2000
+
+#define SMB_FID_QLOCK_HIGH              0x0fe00000
+#define SMB_FID_QLOCK_LOW               0x00000000
+#define SMB_FID_QLOCK_LENGTH            1
+#define SMB_FID_QLOCK_PID               0
+
 /*
  * SMB file attributes (32-bit)
  */
@@ -406,17 +414,33 @@ typedef struct smb_dirListPatch {
  * Note: will not be set if smb_hideDotFiles is false 
  */
 
-/* waiting lock list elements */
+/* individual lock on a waiting lock request */
 typedef struct smb_waitingLock {
-    osi_queue_t q;
-    smb_vc_t *vcp;
-    smb_packet_t *inp;
-    smb_packet_t *outp;
-    time_t timeRemaining;
-    void *lockp;
+    osi_queue_t      q;
+    cm_key_t         key;
+    LARGE_INTEGER    LOffset;
+    LARGE_INTEGER    LLength;
+    cm_file_lock_t * lockp;
+    int              state;
 } smb_waitingLock_t;
 
-extern smb_waitingLock_t *smb_allWaitingLocks;
+#define SMB_WAITINGLOCKSTATE_WAITING 0
+#define SMB_WAITINGLOCKSTATE_DONE    1
+#define SMB_WAITINGLOCKSTATE_ERROR   2
+
+/* waiting lock request */
+typedef struct smb_waitingLockRequest {
+    osi_queue_t   q;
+    smb_vc_t *    vcp;
+    cm_scache_t * scp;
+    smb_packet_t *inp;
+    smb_packet_t *outp;
+    int           lockType;
+    time_t        timeRemaining;
+    smb_waitingLock_t * locks;
+} smb_waitingLockRequest_t;
+
+extern smb_waitingLockRequest_t *smb_allWaitingLocks;
 
 typedef long (smb_proc_t)(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp);
 

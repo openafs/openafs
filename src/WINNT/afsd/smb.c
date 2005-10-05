@@ -175,7 +175,7 @@ smb_vc_t *smb_allVCsp;
 
 smb_username_t *usernamesp = NULL;
 
-smb_waitingLock_t *smb_allWaitingLocks;
+smb_waitingLockRequest_t *smb_allWaitingLocks;
 
 /* forward decl */
 void smb_DispatchPacket(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
@@ -860,6 +860,11 @@ smb_vc_t *smb_FindVC(unsigned short lsn, int flags, int lana)
         }
         else
             memset(vcp->encKey, 0, MSV1_0_CHALLENGE_LENGTH);
+
+        if (numVCs >= CM_SESSION_RESERVED) {
+            numVCs = 0;
+            osi_Log0(smb_logp, "WARNING: numVCs wrapping around");
+        }
     }
     lock_ReleaseWrite(&smb_rctLock);
     return vcp;
@@ -1141,7 +1146,7 @@ int smb_SUser(cm_user_t *userp)
     return 1;
 }
 
-/* find a file ID.  If we pass in 0 we select an used File ID.
+/* find a file ID.  If we pass in 0 we select an unused File ID.
  * If the SMB_FLAG_CREATE flag is set, we allocate a new  
  * smb_fid_t data structure if desired File ID cannot be found.
  */
@@ -1173,6 +1178,7 @@ smb_fid_t *smb_FindFID(smb_vc_t *vcp, unsigned short fid, int flags)
             break;
         }
     }
+
     if (!fidp && (flags & SMB_FLAG_CREATE)) {
         char eventName[MAX_PATH];
         EVENT_HANDLE event;
@@ -1203,6 +1209,7 @@ smb_fid_t *smb_FindFID(smb_vc_t *vcp, unsigned short fid, int flags)
                 vcp->fidCounter = 1;
         }
     }
+
     lock_ReleaseWrite(&smb_rctLock);
     return fidp;
 }
@@ -2327,7 +2334,7 @@ void smb_MapNTError(long code, unsigned long *NTStatusp)
     }
     else if (code == CM_ERROR_READONLY) {
         NTStatus = 0xC00000A2L;	/* Write protected */
-    }	
+    }
     else if (code == CM_ERROR_NOSUCHFILE) {
         NTStatus = 0xC000000FL;	/* No such file */
     }
@@ -2406,6 +2413,12 @@ void smb_MapNTError(long code, unsigned long *NTStatusp)
     }
     else if (code == CM_ERROR_WOULDBLOCK) {
         NTStatus = 0xC0000055L;	/* Lock not granted */
+    }
+    else if (code == CM_ERROR_SHARING_VIOLATION) {
+        NTStatus = 0xC0000043L; /* Sharing violation */
+    }
+    else if (code == CM_ERROR_LOCK_CONFLICT) {
+        NTStatus = 0xC0000054L; /* Lock conflict */
     }
     else if (code == CM_ERROR_PARTIALWRITE) {
         NTStatus = 0xC000007FL;	/* Disk full */
@@ -2594,6 +2607,14 @@ void smb_MapCoreError(long code, smb_vc_t *vcp, unsigned short *scodep,
         class = 1;
         error = 33;	/* lock conflict */
     }
+    else if (code == CM_ERROR_LOCK_CONFLICT) {
+        class = 1;
+        error = 33;     /* lock conflict */
+    }
+    else if (code == CM_ERROR_SHARING_VIOLATION) {
+        class = 1;
+        error = 33;     /* lock conflict */
+    }
     else if (code == CM_ERROR_NOFILES) {
         class = 1;
         error = 18;	/* no files in search */
@@ -2652,6 +2673,7 @@ long smb_ReceiveCoreReadRaw(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp
     osi_hyper_t offset;
     long count, minCount, finalCount;
     unsigned short fd;
+    unsigned pid;
     smb_fid_t *fidp;
     long code = 0;
     cm_user_t *userp = NULL;
@@ -2679,6 +2701,26 @@ long smb_ReceiveCoreReadRaw(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp
     fidp = smb_FindFID(vcp, fd, 0);
     if (!fidp)
         goto send1;
+
+    pid = ((smb_t *) inp)->pid;
+    {
+        LARGE_INTEGER LOffset, LLength;
+        cm_key_t key;
+
+        key = cm_GenerateKey(vcp->vcID, pid, fd);
+
+        LOffset.HighPart = 0;
+        LOffset.LowPart = offset.LowPart;
+        LLength.HighPart = 0;
+        LLength.LowPart = count;
+
+        lock_ObtainMutex(&fidp->scp->mx);
+        code = cm_LockCheckRead(fidp->scp, LOffset, LLength, key);
+        lock_ReleaseMutex(&fidp->scp->mx);
+    }    
+    if (code) {
+        goto send1a;
+    }
 
     lock_ObtainMutex(&smb_RawBufLock);
     if (smb_RawBufs) {
@@ -3057,7 +3099,8 @@ void smb_Daemon(void *parmp)
 
 void smb_WaitingLocksDaemon()
 {
-    smb_waitingLock_t *wL, *nwL;
+    smb_waitingLockRequest_t *wlRequest, *nwlRequest;
+    smb_waitingLock_t *wl, *wlNext;
     int first;
     smb_vc_t *vcp;
     smb_packet_t *inp, *outp;
@@ -3066,8 +3109,8 @@ void smb_WaitingLocksDaemon()
 
     while (smbShutdownFlag == 0) {
         lock_ObtainWrite(&smb_globalLock);
-        nwL = smb_allWaitingLocks;
-        if (nwL == NULL) {
+        nwlRequest = smb_allWaitingLocks;
+        if (nwlRequest == NULL) {
             osi_SleepW((long)&smb_allWaitingLocks, &smb_globalLock);
             thrd_Sleep(1000);
             continue;
@@ -3079,23 +3122,76 @@ void smb_WaitingLocksDaemon()
                 first = 0;
             else
                 lock_ObtainWrite(&smb_globalLock);
-            wL = nwL;
-            nwL = (smb_waitingLock_t *) osi_QNext(&wL->q);
+
+            wlRequest = nwlRequest;
+            nwlRequest = (smb_waitingLockRequest_t *) osi_QNext(&wlRequest->q);
             lock_ReleaseWrite(&smb_globalLock);
-            code = cm_RetryLock((cm_file_lock_t *) wL->lockp,
-                                 wL->vcp->flags & SMB_VCFLAG_ALREADYDEAD);
+
+            code = 0;
+
+            for (wl = wlRequest->locks; wl; wl = (smb_waitingLock_t *) osi_QNext(&wl->q)) {
+                if (wl->state == SMB_WAITINGLOCKSTATE_DONE)
+                    continue;
+                
+                /* wl->state is either _DONE or _WAITING.  _ERROR
+                   would no longer be on the queue. */
+                code = cm_RetryLock( wl->lockp,
+                                     !!(wlRequest->vcp->flags & SMB_VCFLAG_ALREADYDEAD) );
+
+                if (code == 0) {
+                    wl->state = SMB_WAITINGLOCKSTATE_DONE;
+                } else if (code != CM_ERROR_WOULDBLOCK) {
+                    wl->state = SMB_WAITINGLOCKSTATE_ERROR;
+                    break;
+                }
+            }
+
             if (code == CM_ERROR_WOULDBLOCK) {
+
                 /* no progress */
-                if (wL->timeRemaining != 0xffffffff
-                     && (wL->timeRemaining -= 1000) < 0)
+                if (wlRequest->timeRemaining != 0xffffffff
+                     && (wlRequest->timeRemaining -= 1000) < 0)
                     goto endWait;
+
                 continue;
             }
 
           endWait:
-            vcp = wL->vcp;
-            inp = wL->inp;
-            outp = wL->outp;
+
+            if (code != 0) {
+                cm_scache_t * scp;
+                cm_req_t req;
+
+                scp = wlRequest->scp;
+
+                cm_InitReq(&req);
+
+                lock_ObtainMutex(&scp->mx);
+
+                for (wl = wlRequest->locks; wl; wl = wlNext) {
+                    wlNext = (smb_waitingLock_t *) osi_QNext(&wl->q);
+                    
+                    cm_Unlock(scp, wlRequest->lockType, wl->LOffset, 
+                              wl->LLength, wl->key, NULL, &req);
+
+                    osi_QRemove((osi_queue_t **) &wlRequest->locks, &wl->q);
+
+                    free(wl);
+                }
+                
+                lock_ReleaseMutex(&scp->mx);
+
+            } else {
+                for (wl = wlRequest->locks; wl; wl = wlNext) {
+                    wlNext = (smb_waitingLock_t *) osi_QNext(&wl->q);
+                    osi_QRemove((osi_queue_t **) &wlRequest->locks, &wl->q);
+                    free(wl);
+                }
+            }
+
+            vcp = wlRequest->vcp;
+            inp = wlRequest->inp;
+            outp = wlRequest->outp;
             ncbp = GetNCB();
             ncbp->ncb_length = inp->ncb_length;
             inp->spacep = cm_GetSpace();
@@ -3103,7 +3199,7 @@ void smb_WaitingLocksDaemon()
             /* Remove waitingLock from list */
             lock_ObtainWrite(&smb_globalLock);
             osi_QRemove((osi_queue_t **)&smb_allWaitingLocks,
-                         &wL->q);
+                         &wlRequest->q);
             lock_ReleaseWrite(&smb_globalLock);
 
             /* Resume packet processing */
@@ -3119,9 +3215,10 @@ void smb_WaitingLocksDaemon()
             smb_FreePacket(inp);
             smb_FreePacket(outp);
             smb_ReleaseVC(vcp);
+            cm_ReleaseSCache(wlRequest->scp);
             FreeNCB(ncbp);
-            free(wL);
-        } while (nwL && smbShutdownFlag == 0);
+            free(wlRequest);
+        } while (nwlRequest && smbShutdownFlag == 0);
         thrd_Sleep(1000);
     }
 }
@@ -5345,6 +5442,40 @@ long smb_ReceiveCoreClose(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     else 
         code = 0;
 
+    /* unlock any pending locks */
+    if (!(fidp->flags & SMB_FID_IOCTL) && fidp->scp &&
+        fidp->scp->fileType == CM_SCACHETYPE_FILE) {
+        cm_key_t key;
+        unsigned pid;
+        cm_scache_t * scp;
+        long tcode;
+
+        pid = ((smb_t *) inp)->pid;
+        key = cm_GenerateKey(vcp->vcID, pid, fid);
+        scp = fidp->scp;
+        cm_HoldSCache(scp);
+        lock_ObtainMutex(&scp->mx);
+
+        tcode = cm_SyncOp(scp, NULL, userp, &req, 0,
+                          CM_SCACHESYNC_NEEDCALLBACK
+                          | CM_SCACHESYNC_GETSTATUS
+                          | CM_SCACHESYNC_LOCK);
+
+        if (tcode) {
+            osi_Log1(smb_logp, "smb CoreClose SyncOp failure code 0x%x", tcode);
+            goto post_syncopdone;
+        }
+
+        cm_UnlockByKey(scp, key, CM_UNLOCK_BY_FID, userp, &req);
+
+        cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_LOCK);
+
+    post_syncopdone:
+
+        lock_ReleaseMutex(&scp->mx);
+        cm_ReleaseSCache(scp);
+    }
+
     if (fidp->flags & SMB_FID_DELONCLOSE) {
         cm_scache_t *dscp = fidp->NTopen_dscp;
         char *pathp = fidp->NTopen_pathp;
@@ -5423,7 +5554,7 @@ long smb_ReadData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count, char *op,
         }
         if (fidp->curr_chunk == fidp->prev_chunk + 1)
             sequential = 1;
-    }       
+    }
 
     /* start by looking up the file's end */
     code = cm_SyncOp(scp, NULL, userp, &req, 0,
@@ -5789,6 +5920,7 @@ long smb_ReceiveCoreWrite(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     osi_hyper_t offset;
     long count, written = 0, total_written = 0;
     unsigned short fd;
+    unsigned pid;
     smb_fid_t *fidp;
     long code = 0;
     cm_user_t *userp;
@@ -5818,7 +5950,7 @@ long smb_ReceiveCoreWrite(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         
     userp = smb_GetUser(vcp, inp);
 
-	/* special case: 0 bytes transferred means truncate to this position */
+    /* special case: 0 bytes transferred means truncate to this position */
     if (count == 0) {
         cm_req_t req;
 
@@ -5834,6 +5966,27 @@ long smb_ReceiveCoreWrite(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         smb_SetSMBDataLength(outp, 0);
         fidp->flags |= SMB_FID_LENGTHSETDONE;
         goto done;
+    }
+
+    {
+        cm_key_t key;
+        LARGE_INTEGER LOffset;
+        LARGE_INTEGER LLength;
+
+        pid = ((smb_t *) inp)->pid;
+        key = cm_GenerateKey(vcp->vcID, pid, fd);
+
+        LOffset.HighPart = offset.HighPart;
+        LOffset.LowPart = offset.LowPart;
+        LLength.HighPart = 0;
+        LLength.LowPart = count;
+
+        lock_ObtainMutex(&fidp->scp->mx);
+        code = cm_LockCheckWrite(fidp->scp, LOffset, LLength, key);
+        lock_ReleaseMutex(&fidp->scp->mx);
+
+        if (code)
+            goto done;
     }
 
     /*
@@ -5987,6 +6140,30 @@ long smb_ReceiveCoreWriteRaw(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
     if (!fidp) {
         return CM_ERROR_BADFD;
     }
+
+    {
+        unsigned pid;
+        cm_key_t key;
+        LARGE_INTEGER LOffset;
+        LARGE_INTEGER LLength;
+
+        pid = ((smb_t *) inp)->pid;
+        key = cm_GenerateKey(vcp->vcID, pid, fd);
+
+        LOffset.HighPart = offset.HighPart;
+        LOffset.LowPart = offset.LowPart;
+        LLength.HighPart = 0;
+        LLength.LowPart = count;
+
+        lock_ObtainMutex(&fidp->scp->mx);
+        code = cm_LockCheckWrite(fidp->scp, LOffset, LLength, key);
+        lock_ReleaseMutex(&fidp->scp->mx);
+
+        if (code) {
+            smb_ReleaseFID(fidp);
+            return code;
+        }
+    }
         
     userp = smb_GetUser(vcp, inp);
 
@@ -6081,6 +6258,7 @@ long smb_ReceiveCoreRead(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     osi_hyper_t offset;
     long count, finalCount;
     unsigned short fd;
+    unsigned pid;
     smb_fid_t *fidp;
     long code = 0;
     cm_user_t *userp;
@@ -6102,6 +6280,27 @@ long smb_ReceiveCoreRead(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         
     if (fidp->flags & SMB_FID_IOCTL) {
         return smb_IoctlRead(fidp, vcp, inp, outp);
+    }
+
+    {
+        LARGE_INTEGER LOffset, LLength;
+        cm_key_t key;
+
+        pid = ((smb_t *) inp)->pid;
+        key = cm_GenerateKey(vcp->vcID, pid, fd);
+
+        LOffset.HighPart = 0;
+        LOffset.LowPart = offset.LowPart;
+        LLength.HighPart = 0;
+        LLength.LowPart = count;
+        
+        lock_ObtainMutex(&fidp->scp->mx);
+        code = cm_LockCheckRead(fidp->scp, LOffset, LLength, key);
+        lock_ReleaseMutex(&fidp->scp->mx);
+    }
+    if (code) {
+        smb_ReleaseFID(fidp);
+        return code;
     }
         
     userp = smb_GetUser(vcp, inp);
