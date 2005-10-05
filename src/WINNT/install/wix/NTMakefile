@@ -65,7 +65,6 @@ $(WIXOBJ): openafs.wxs $(WIXINCLUDES)
 		-dVersionMajor=$(AFSPRODUCT_VER_MAJOR)	\
 		-dVersionMinor=$(AFSPRODUCT_VER_MINOR)	\
 		-dVersionPatch=$(AFSPRODUCT_VER_PATCH)	\
-		-dProductCode=$(AFSPRODUCT_VER_GUID)	\
 		"-dDestDir=$(DESTDIR)\\" \
 		-dCellDbFile=CellServDB \
 		-v0 \
