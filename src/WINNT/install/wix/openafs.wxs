@@ -7,8 +7,14 @@
     <!-- See language_config for localization options. -->
     <?include language_config.wxi?>
 
+    <!--
+      We autogenerate a new product code for each build.  According to MSDN we have
+      to change the product code whenever we change the name of the MSI file.  Each
+      version of OpenAFS has a different MSI name.  Thus, each version needs a
+      unique product code.
+      -->
     <Product 
-        Id="$(var.ProductCode)"
+        Id="????????-????-????-????-????????????"
         Codepage="$(var.Codepage)"
         Language="$(var.LanguageCode)"
         Manufacturer="$(var.Manufacturer)"
