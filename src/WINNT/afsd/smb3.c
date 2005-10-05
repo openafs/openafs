@@ -5954,7 +5954,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
             cm_ReleaseUser(userp);
             free(realPathp);
             
-            return CM_ERROR_SHARING_VIOLATION;
+            return code;
         }
     }
 
