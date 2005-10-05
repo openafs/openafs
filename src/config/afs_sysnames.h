@@ -58,6 +58,7 @@
 #define SYS_NAME_ID_ppc_darwin_14        505
 #define SYS_NAME_ID_ppc_darwin_60        506
 #define SYS_NAME_ID_ppc_darwin_70        507
+#define SYS_NAME_ID_ppc_darwin_80        508
 
 #define SYS_NAME_ID_next_mach20		 601
 #define SYS_NAME_ID_next_mach30		 602

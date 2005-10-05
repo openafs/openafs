@@ -583,7 +583,7 @@ afs_GetDownD(int anumber, int *aneedSpace)
 			MReleaseWriteLock(&afs_xdcache);
 		    }
 
-		    AFS_FAST_RELE(tvc);
+		    afs_PutVCache(tvc); /*XXX was AFS_FAST_RELE?*/
 		    MObtainWriteLock(&afs_xdcache, 528);
 		    if (afs_indexFlags[tdc->index] &
 			(IFDataMod | IFDirtyPages | IFAnyPages))

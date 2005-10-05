@@ -39,7 +39,7 @@
 #define AFSBIG_ENDIAN   1
 #define AFS_HAVE_FFS    1	/* Use system's ffs. */
 
-#define AFS_GCPAGS                1	/* if nonzero, garbage collect PAGs */
+#define AFS_GCPAGS               0
 #define RXK_LISTENER_ENV         1
 
 #ifdef KERNEL
@@ -57,8 +57,8 @@
 #define AFS_UIOUSER     UIO_USERSPACE
 #define AFS_CLBYTES     CLBYTES
 #define osi_GetTime(x)  microtime(x)
-#define AFS_KALLOC(x)   kalloc(x)
-#define AFS_KFREE(x,y)  kfree(x,y)
+#define AFS_KALLOC(x)   _MALLOC(x, M_TEMP, M_WAITOK)
+#define AFS_KFREE(x,y)  _FREE(x,M_TEMP)
 #define v_count         v_usecount
 #define v_vfsp          v_mount
 #define vfs_bsize       mnt_stat.f_bsize
@@ -66,10 +66,7 @@
 #define va_nodeid       va_fileid
 #define vfs_vnodecovered mnt_vnodecovered
 #define direct          dirent
-#define vnode_t         struct vnode
 
-//#define VN_RELE(vp)     vrele(((struct vnode *)(vp)))
-//#define VN_HOLD(vp)     VREF(((struct vnode *)(vp)))
 #define BIND_8_COMPAT
 
 #endif

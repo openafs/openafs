@@ -123,7 +123,14 @@ struct afs_osi_WaitHandle {
 /*
  * Vnode related macros
  */
-#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV) || defined(AFS_LINUX22_ENV)
+#if defined(AFS_DARWIN80_ENV)
+#define vType(vc)               vnode_vtype(AFSTOV(vc))
+#define vSetVfsp(vc, vfsp)      
+#define vSetType(vc, type)      (vc)->m.Type = (type)
+extern int afs_vfs_typenum;
+#define SetAfsVnode(vn)         /* nothing; done in getnewvnode() */
+#define IsAfsVnode(v) (vfs_typenum(vnode_mount((v))) == afs_vfs_typenum)
+#elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV) || defined(AFS_LINUX22_ENV)
 #define vSetVfsp(vc, vfsp)      AFSTOV(vc)->v_mount = (vfsp)
 #define vSetType(vc, type)      AFSTOV(vc)->v_type = (type)
 #define vType(vc)               AFSTOV(vc)->v_type
@@ -189,6 +196,8 @@ typedef struct {
 #else
 typedef struct timeval osi_timeval_t;
 #endif /* AFS_SGI61_ENV */
+
+#define osi_getpid() 		getpid()
 
 #define osi_getpid() 		getpid()
 
@@ -272,6 +281,11 @@ typedef struct timeval osi_timeval_t;
  * and kernel space. Call these to avoid taking page faults while
  * holding the global lock.
  */
+#ifdef CAST_USER_ADDR_T
+#define __U(X) CAST_USER_ADDR_T((X))
+#else
+#define __U(X) (X)
+#endif
 #ifdef AFS_GLOBAL_SUNLOCK
 
 #define AFS_COPYIN(SRC,DST,LEN,CODE)				\
@@ -279,7 +293,7 @@ typedef struct timeval osi_timeval_t;
 	    int haveGlock = ISAFS_GLOCK();			\
 	    if (haveGlock)					\
 		AFS_GUNLOCK();					\
-	    CODE = copyin((SRC),(DST),(LEN));			\
+	    CODE = copyin(__U((SRC)),(DST),(LEN));			\
 	    if (haveGlock)					\
 		AFS_GLOCK();					\
 	} while(0)
@@ -289,7 +303,7 @@ typedef struct timeval osi_timeval_t;
 	    int haveGlock = ISAFS_GLOCK();			\
 	    if (haveGlock)					\
 		AFS_GUNLOCK();					\
-	    CODE = copyinstr((SRC),(DST),(LEN),(CNT));		\
+	    CODE = copyinstr(__U((SRC)),(DST),(LEN),(CNT));		\
 	    if (haveGlock)					\
 		AFS_GLOCK();					\
 	} while(0)
@@ -299,11 +313,23 @@ typedef struct timeval osi_timeval_t;
 	    int haveGlock = ISAFS_GLOCK();			\
 	    if (haveGlock)					\
 		AFS_GUNLOCK();					\
-	    CODE = copyout((SRC),(DST),(LEN));			\
+	    CODE = copyout((SRC),__U((DST)),(LEN));			\
 	    if (haveGlock)					\
 		AFS_GLOCK();					\
 	} while(0)
 
+#if defined(AFS_DARWIN80_ENV)
+#define AFS_UIOMOVE(SRC,LEN,RW,UIO,CODE)			\
+	do {							\
+	    int haveGlock = ISAFS_GLOCK();			\
+	    if (haveGlock)					\
+		AFS_GUNLOCK();					\
+	    uio_setrw((UIO),(RW));				\
+	    CODE = uiomove((SRC),(LEN),(UIO));			\
+	    if (haveGlock)					\
+		AFS_GLOCK();					\
+	} while(0)
+#else
 #if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 #define AFS_UIOMOVE(SRC,LEN,RW,UIO,CODE)			\
 	do {							\
@@ -326,24 +352,32 @@ typedef struct timeval osi_timeval_t;
 		AFS_GLOCK();					\
 	} while(0)
 #endif
+#endif /* AFS_DARWIN80_ENV */
 
 #else /* AFS_GLOBAL_SUNLOCK */
 
 #define AFS_COPYIN(SRC,DST,LEN,CODE)				\
 	do {							\
-	    CODE = copyin((SRC),(DST),(LEN));			\
+	    CODE = copyin(__U((SRC)),(DST),(LEN));			\
 	} while(0)
 
 #define AFS_COPYINSTR(SRC,DST,LEN,CNT,CODE)			\
 	do {							\
-	    CODE = copyinstr((SRC),(DST),(LEN),(CNT));		\
+	    CODE = copyinstr(__U((SRC)),(DST),(LEN),(CNT));		\
 	} while(0)
 
 #define AFS_COPYOUT(SRC,DST,LEN,CODE)				\
 	do {							\
-	    CODE = copyout((SRC),(DST),(LEN));			\
+	    CODE = copyout((SRC),__U((DST)),(LEN));			\
 	} while(0)
 
+#if defined(AFS_DARWIN80_ENV)
+#define AFS_UIOMOVE(SRC,LEN,RW,UIO,CODE)			\
+	do {							\
+	    uio_setrw((UIO),(RW));				\
+	    CODE = uiomove((SRC),(LEN),(UIO));			\
+	} while(0)
+#else /* AFS_OSF_ENV || AFS_FBSD_ENV */
 #if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 #define AFS_UIOMOVE(SRC,LEN,RW,UIO,CODE)			\
 	do {							\
@@ -356,8 +390,22 @@ typedef struct timeval osi_timeval_t;
 	    CODE = uiomove((SRC),(LEN),(RW),(UIO));		\
 	} while(0)
 #endif /* AFS_OSF_ENV || AFS_FBSD_ENV */
+#endif /* AFS_DARWIN80_ENV */
 
 #endif /* AFS_GLOBAL_SUNLOCK */
+
+#ifdef AFS_DARWIN80_ENV
+#define AFS_UIO_OFFSET(uio) (int)uio_offset(uio)
+#define AFS_UIO_RESID(uio) (int)uio_resid(uio)
+#define AFS_UIO_SETOFFSET(uio, off) uio_setoffset(uio, off)
+#define AFS_UIO_SETRESID(uio, val) uio_setresid(uio, val)
+#else
+#define AFS_UIO_OFFSET(uio) (uio)->uio_offset
+#define AFS_UIO_RESID(uio) (uio)->uio_resid
+#define AFS_UIO_SETOFFSET(uio, off) (uio)->uio_offset = off
+#define AFS_UIO_SETRESID(uio, val) (uio)->uio_resid = val
+#endif
+
 
 /*
  * encapsulation of kernel data structure accesses

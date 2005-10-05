@@ -143,7 +143,12 @@ struct irix5_min_dirent {	/* miniature dirent structure */
 #else
 struct min_direct {		/* miniature direct structure */
     /* If struct direct changes, this must too */
-#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#if defined(AFS_DARWIN80_ENV)
+    ino_t d_fileno;
+    u_short d_reclen;
+    u_char d_type;
+    u_char d_namlen;
+#elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     afs_uint32 d_fileno;
     u_short d_reclen;
     u_char d_type;
@@ -626,7 +631,7 @@ afs_readdir(OSI_VC_ARG(avc), auio, acred)
 	*eofp = 0;
 #endif
     if (AfsLargeFileUio(auio)	/* file is large than 2 GB */
-	||AfsLargeFileSize(auio->uio_offset, auio->uio_resid))
+	||AfsLargeFileSize(AFS_UIO_OFFSET(auio), AFS_UIO_RESID(auio)))
 	return EFBIG;
 
     if ((code = afs_InitReq(&treq, acred))) {
@@ -710,7 +715,7 @@ afs_readdir(OSI_VC_ARG(avc), auio, acred)
     auio->uio_fpflags = 0;
 #endif
     while (code == 0) {
-	origOffset = auio->afsio_offset;
+	origOffset = AFS_UIO_OFFSET(auio);
 	/* scan for the next interesting entry scan for in-use blob otherwise up point at
 	 * this blob note that ode, if non-zero, also represents a held dir page */
 	if (!(us = BlobScan(tdc, (origOffset >> 5)))
@@ -722,7 +727,7 @@ afs_readdir(OSI_VC_ARG(avc), auio, acred)
 		sdirEntry->d_fileno =
 		    (avc->fid.Fid.Volume << 16) + ntohl(ode->fid.vnode);
 		FIXUPSTUPIDINODE(sdirEntry->d_fileno);
-		sdirEntry->d_reclen = rlen = auio->afsio_resid;
+		sdirEntry->d_reclen = rlen = AFS_UIO_RESID(auio);
 		sdirEntry->d_namlen = o_slen;
 #if defined(AFS_SUN5_ENV) || defined(AFS_AIX32_ENV) || defined(AFS_HPUX100_ENV)
 		sdirEntry->d_off = origOffset;
@@ -752,11 +757,11 @@ afs_readdir(OSI_VC_ARG(avc), auio, acred)
 #if defined(AFS_SUN5_ENV)
 					len, origOffset);
 #else
-					auio->afsio_resid, origOffset);
+					AFS_UIO_RESID(auio), origOffset);
 #endif
 #endif /* AFS_HPUX_ENV */
 #if !defined(AFS_SUN5_ENV)
-		auio->afsio_resid = 0;
+		AFS_UIO_SETRESID(auio, 0);
 #endif
 	    } else {
 		/* nothin to hand over */
@@ -780,9 +785,9 @@ afs_readdir(OSI_VC_ARG(avc), auio, acred)
 #ifdef	AFS_SGI53_ENV
 	dirsiz =
 	    use64BitDirent ? DIRENTSIZE(n_slen) : IRIX5_DIRENTSIZE(n_slen);
-	if (dirsiz >= (auio->afsio_resid - len)) {
+	if (dirsiz >= (AFS_UIO_RESID(auio) - len)) {
 #else
-	if (DIRSIZ_LEN(n_slen) >= (auio->afsio_resid - len)) {
+	if (DIRSIZ_LEN(n_slen) >= (AFS_UIO_RESID(auio) - len)) {
 #endif /* AFS_SGI53_ENV */
 	    /* No can do no more now; ya know... at this time */
 	    DRelease((struct buffer *)nde, 0);	/* can't use this one. */
@@ -791,7 +796,7 @@ afs_readdir(OSI_VC_ARG(avc), auio, acred)
 		sdirEntry->d_fileno =
 		    (avc->fid.Fid.Volume << 16) + ntohl(ode->fid.vnode);
 		FIXUPSTUPIDINODE(sdirEntry->d_fileno);
-		sdirEntry->d_reclen = rlen = auio->afsio_resid;
+		sdirEntry->d_reclen = rlen = AFS_UIO_RESID(auio);
 		sdirEntry->d_namlen = o_slen;
 #if defined(AFS_SUN5_ENV) || defined(AFS_AIX32_ENV) || defined(AFS_HPUX100_ENV)
 		sdirEntry->d_off = origOffset;
@@ -819,12 +824,12 @@ afs_readdir(OSI_VC_ARG(avc), auio, acred)
 #else /* AFS_HPUX_ENV */
 		code =
 		    afs_readdir_move(ode, avc, auio, o_slen,
-				     auio->afsio_resid, origOffset);
+				     AFS_UIO_RESID(auio), origOffset);
 #endif /* AFS_HPUX_ENV */
 		/* this next line used to be AFSVFS40 or AIX 3.1, but is
 		 * really generic */
-		auio->afsio_offset = origOffset;
-		auio->afsio_resid = 0;
+		AFS_UIO_SETOFFSET(auio, origOffset);
+		AFS_UIO_SETRESID(auio, 0);
 	    } else {		/* trouble, can't give anything to the user! */
 		/* even though he has given us a buffer, 
 		 * even though we have something to give us,
@@ -885,8 +890,7 @@ afs_readdir(OSI_VC_ARG(avc), auio, acred)
 	if (ode)
 	    DRelease((struct buffer *)ode, 0);
 	ode = nde;
-	auio->afsio_offset =
-	    (afs_int32) ((us + afs_dir_NameBlobs(nde->name)) << 5);
+	AFS_UIO_SETOFFSET(auio, (afs_int32) ((us + afs_dir_NameBlobs(nde->name)) << 5));
     }
     if (ode)
 	DRelease((struct buffer *)ode, 0);
@@ -1000,7 +1004,7 @@ afs1_readdir(avc, auio, acred)
     auio->uio_fpflags = 0;
 #endif
     while (code == 0) {
-	origOffset = auio->afsio_offset;
+	origOffset = AFS_UIO_OFFSET(auio);
 
 	/* scan for the next interesting entry scan for in-use blob otherwise up point at
 	 * this blob note that ode, if non-zero, also represents a held dir page */
@@ -1013,7 +1017,7 @@ afs1_readdir(avc, auio, acred)
 		sdirEntry->d_fileno =
 		    (avc->fid.Fid.Volume << 16) + ntohl(ode->fid.vnode);
 		FIXUPSTUPIDINODE(sdirEntry->d_fileno);
-		sdirEntry->d_reclen = rlen = auio->afsio_resid;
+		sdirEntry->d_reclen = rlen = AFS_UIO_RESID(auio);
 		sdirEntry->d_namlen = o_slen;
 		sdirEntry->d_off = origOffset;
 		AFS_UIOMOVE((char *)sdirEntry, sizeof(*sdirEntry), UIO_READ,
@@ -1040,9 +1044,9 @@ afs1_readdir(avc, auio, acred)
 #else
 		code =
 		    afs_readdir_move(ode, avc, auio, o_slen,
-				     auio->afsio_resid, origOffset);
+				     AFS_UIO_RESID(auio), origOffset);
 #endif /* AFS_HPUX_ENV */
-		auio->afsio_resid = 0;
+		AFS_UIO_SETRESID(auio, 0);
 	    } else {
 		/* nothin to hand over */
 	    }
@@ -1062,7 +1066,7 @@ afs1_readdir(avc, auio, acred)
 #else
 	n_slen = strlen(nde->name);
 #endif
-	if (NDIRSIZ_LEN(n_slen) >= (auio->afsio_resid - len)) {
+	if (NDIRSIZ_LEN(n_slen) >= (AFS_UIO_RESID(auio) - len)) {
 	    /* No can do no more now; ya know... at this time */
 	    DRelease(nde, 0);	/* can't use this one. */
 	    if (len) {
@@ -1070,7 +1074,7 @@ afs1_readdir(avc, auio, acred)
 		sdirEntry->d_fileno =
 		    (avc->fid.Fid.Volume << 16) + ntohl(ode->fid.vnode);
 		FIXUPSTUPIDINODE(sdirEntry->d_fileno);
-		sdirEntry->d_reclen = rlen = auio->afsio_resid;
+		sdirEntry->d_reclen = rlen = AFS_UIO_RESID(auio);
 		sdirEntry->d_namlen = o_slen;
 		sdirEntry->d_off = origOffset;
 		AFS_UIOMOVE((char *)sdirEntry, sizeof(*sdirEntry), UIO_READ,
@@ -1096,11 +1100,11 @@ afs1_readdir(avc, auio, acred)
 #else
 		code =
 		    afs_readdir_move(ode, avc, auio, o_slen,
-				     auio->afsio_resid, origOffset);
+				     AFS_UIO_RESID(auio), origOffset);
 #endif /* AFS_HPUX_ENV */
 		/* this next line used to be AFSVFS40 or AIX 3.1, but is really generic */
-		auio->afsio_offset = origOffset;
-		auio->afsio_resid = 0;
+		AFS_UIO_SETOFFSET(auio, origOffset);
+		AFS_UIO_SETRESID(auio, 0);
 	    } else {		/* trouble, can't give anything to the user! */
 		/* even though he has given us a buffer, 
 		 * even though we have something to give us,
@@ -1153,7 +1157,7 @@ afs1_readdir(avc, auio, acred)
 	if (ode)
 	    DRelease(ode, 0);
 	ode = nde;
-	auio->afsio_offset = ((us + afs_dir_NameBlobs(nde->name)) << 5);
+	AFS_UIO_OFFSET(auio) = ((us + afs_dir_NameBlobs(nde->name)) << 5);
     }
     if (ode)
 	DRelease(ode, 0);

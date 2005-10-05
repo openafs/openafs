@@ -61,8 +61,12 @@ long afs_global_owner;
 simple_lock_data_t afs_global_lock;
 #endif
 
-#if defined(AFS_DARWIN_ENV)
+#if defined(AFS_DARWIN_ENV) 
+#ifdef AFS_DARWIN80_ENV
+lck_mtx_t  *afs_global_lock;
+#else
 struct lock__bsd__ afs_global_lock;
+#endif
 #endif
 
 #if defined(AFS_XBSD_ENV) && !defined(AFS_FBSD50_ENV)
@@ -374,6 +378,9 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 #endif
     }
     AFS_GLOCK();
+#ifdef AFS_DARWIN80_ENV
+    put_vfs_context();
+#endif
 #if defined(AFS_LINUX24_ENV) && defined(COMPLETION_H_EXISTS) && !defined(UKERNEL)
     if (parm < AFSOP_ADDCELL || parm == AFSOP_RXEVENT_DAEMON
 	|| parm == AFSOP_RXLISTENER_DAEMON) {
@@ -642,11 +649,17 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 	while (afs_initState < AFSOP_START_BKG)
 	    afs_osi_Sleep(&afs_initState);
 
+#ifdef AFS_DARWIN80_ENV
+    get_vfs_context();
+#endif
 	/* do it by inode */
 #ifdef AFS_SGI62_ENV
 	ainode = (ainode << 32) | (parm3 & 0xffffffff);
 #endif
 	code = afs_InitCacheFile(NULL, ainode);
+#ifdef AFS_DARWIN80_ENV
+    put_vfs_context();
+#endif
     } else if (parm == AFSOP_ROOTVOLUME) {
 	/* wait for basic init */
 	while (afs_initState < AFSOP_START_BKG)
@@ -673,6 +686,9 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 	if (!code) {
 	    tbuffer[AFS_SMALLOCSIZ - 1] = '\0';	/* null-terminate the name */
 	    /* We have the cache dir copied in.  Call the cache init routine */
+#ifdef AFS_DARWIN80_ENV
+    get_vfs_context();
+#endif
 	    if (parm == AFSOP_CACHEFILE)
 		code = afs_InitCacheFile(tbuffer, 0);
 	    else if (parm == AFSOP_CACHEINFO)
@@ -681,6 +697,9 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 		code = afs_InitVolumeInfo(tbuffer);
 	    else if (parm == AFSOP_CELLINFO)
 		code = afs_InitCellInfo(tbuffer);
+#ifdef AFS_DARWIN80_ENV
+    put_vfs_context();
+#endif
 	}
 	osi_FreeSmallSpace(tbuffer);
     } else if (parm == AFSOP_GO) {
@@ -821,10 +840,10 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 	i = rxi_Findcbi(parm2);
 	mtu = ((i == -1) ? htonl(1500) : afs_cb_interface.mtu[i]);
 #else /* AFS_USERSPACE_IP_ADDR */
-	struct ifnet *tifnp;
+	AFS_IFNET_T tifnp;
 
 	tifnp = rxi_FindIfnet(parm2, NULL);	/*  make iterative */
-	mtu = (tifnp ? tifnp->if_mtu : htonl(1500));
+	mtu = (tifnp ? ifnet_mtu(tifnp) : htonl(1500));
 #endif /* else AFS_USERSPACE_IP_ADDR */
 #endif /* !AFS_SUN5_ENV */
 	if (!code)
@@ -858,7 +877,7 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 	    code = -1;
 	}
 #else /* AFS_USERSPACE_IP_ADDR */
-	struct ifnet *tifnp;
+	AFS_IFNET_T tifnp;
 
 	tifnp = rxi_FindIfnet(parm2, &mask);	/* make iterative */
 	if (!tifnp)
@@ -911,6 +930,9 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 	code = EINVAL;
 
   out:
+#ifdef AFS_DARWIN80_ENV /* to balance the put in afs3_syscall() */
+    get_vfs_context();
+#endif
     AFS_GUNLOCK();
 #ifdef AFS_LINUX20_ENV
     return -code;
@@ -1229,7 +1251,7 @@ afs3_syscall(p, args, retval)
      struct proc *p;
 #endif
      void *args;
-     int *retval;
+     long *retval;
 {
     register struct a {
 	long syscall;
@@ -1351,7 +1373,10 @@ Afs_syscall()
 	uap->parm6 = 0;
     }
 #endif
-
+#if defined(AFS_DARWIN80_ENV)
+    get_vfs_context();
+    osi_Assert(*retval == 0);
+#endif
 #if defined(AFS_HPUX_ENV)
     /*
      * There used to be code here (duplicated from osi_Init()) for
@@ -1398,6 +1423,10 @@ Afs_syscall()
 	code =
 	    afs_syscall_pioctl(uap->parm1, uap->parm2, uap->parm3, uap->parm4,
 			       p->td_ucred);
+#elif defined(AFS_DARWIN80_ENV)
+	code =
+	    afs_syscall_pioctl(uap->parm1, uap->parm2, uap->parm3, uap->parm4,
+			       kauth_cred_get());
 #elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 	code =
 	    afs_syscall_pioctl(uap->parm1, uap->parm2, uap->parm3, uap->parm4,
@@ -1486,6 +1515,9 @@ Afs_syscall()
 #endif
     }
 
+#if defined(AFS_DARWIN80_ENV)
+    put_vfs_context();
+#endif
 #ifdef AFS_LINUX20_ENV
     code = -code;
     unlock_kernel();

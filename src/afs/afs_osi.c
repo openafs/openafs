@@ -60,7 +60,9 @@ osi_Init(void)
 #elif defined(AFS_FBSD50_ENV)
     mtx_init(&afs_global_mtx, "AFS global lock", NULL, MTX_DEF);
 #elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#if !defined(AFS_DARWIN80_ENV)
     lockinit(&afs_global_lock, PLOCK, "afs global lock", 0, 0);
+#endif
     afs_global_owner = 0;
 #elif defined(AFS_AIX41_ENV)
     lock_alloc((void *)&afs_global_lock, LOCK_ALLOC_PIN, 1, 1);
@@ -74,6 +76,11 @@ osi_Init(void)
 #endif /* AFS_HPUX_ENV */
 
     if (!afs_osicred_initialized) {
+#if defined(AFS_DARWIN80_ENV)
+        afs_osi_ctxtp_initialized = 0;
+        afs_osi_ctxtp = NULL; /* initialized in afs_Daemon since it has
+                                  a proc reference that cannot be changed */
+#endif
 #if defined(AFS_XBSD_ENV)
 	/* Can't just invent one, must use crget() because of mutex */
 	afs_osi_credp = crdup(osi_curcred());
@@ -82,7 +89,12 @@ osi_Init(void)
 #if defined(AFS_LINUX26_ENV)
         afs_osi_cred.cr_group_info = groups_alloc(0);
 #endif
+#if defined(AFS_DARWIN80_ENV)
+        afs_osi_cred.cr_ref = 1; /* kauth_cred_get_ref needs 1 existing ref */
+#else
 	crhold(&afs_osi_cred);	/* don't let it evaporate */
+#endif
+
 	afs_osi_credp = &afs_osi_cred;
 #endif
 	afs_osicred_initialized = 1;
@@ -284,6 +296,7 @@ afs_osi_Invisible(void)
     curproc->p_flag |= SSYS;
 #elif defined(AFS_HPUX101_ENV) && !defined(AFS_HPUX1123_ENV)
     set_system_proc(u.u_procp);
+#elif defined(AFS_DARWIN80_ENV)
 #elif defined(AFS_DARWIN_ENV)
     /* maybe call init_process instead? */
     current_proc()->p_flag |= P_SYSTEM;
@@ -333,9 +346,11 @@ afs_osi_SetTime(osi_timeval_t * atv)
     stime(&sta);
     AFS_GLOCK();
 #elif defined(AFS_DARWIN_ENV)
+#ifndef AFS_DARWIN80_ENV
     AFS_GUNLOCK();
     setthetime(atv);
     AFS_GLOCK();
+#endif
 #else
     /* stolen from kern_time.c */
 #ifndef	AFS_AUX_ENV
@@ -560,6 +575,13 @@ void
 shutdown_osi(void)
 {
     AFS_STATCNT(shutdown_osi);
+#ifdef AFS_DARWIN80_ENV
+    if (afs_osi_ctxtp_initialized && afs_osi_ctxtp) {
+       vfs_context_rele(afs_osi_ctxtp);
+       afs_osi_ctxtp = NULL;
+       afs_osi_ctxtp_initialized = 0;
+    }
+#endif
     if (afs_cold_shutdown) {
 	LOCK_INIT(&afs_ftf, "afs_ftf");
     }
@@ -765,7 +787,7 @@ afs_osi_TraverseProcTable(void)
 }
 #endif
 
-#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if (defined(AFS_DARWIN_ENV) && !defined(AFS_DARWIN80_ENV)) || defined(AFS_FBSD_ENV)
 void
 afs_osi_TraverseProcTable(void)
 {
@@ -988,6 +1010,25 @@ afs_osi_proc2cred(AFS_PROC * pr)
 	rv = pr->p_rcred;
 
     return rv;
+}
+#elif defined(AFS_DARWIN80_ENV) 
+const struct AFS_UCRED *
+afs_osi_proc2cred(AFS_PROC * pr)
+{
+    struct AFS_UCRED *rv = NULL;
+    static struct AFS_UCRED cr;
+    struct ucred *pcred;
+
+    if (pr == NULL) {
+	return NULL;
+    }
+    pcred = proc_ucred(pr);
+    cr.cr_ref = 1;
+    cr.cr_uid = pcred->cr_uid;
+    cr.cr_ngroups = pcred->cr_ngroups;
+    memcpy(cr.cr_groups, pcred->cr_groups,
+           NGROUPS * sizeof(gid_t));
+    return &cr;
 }
 #elif defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 const struct AFS_UCRED *

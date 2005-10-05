@@ -10,13 +10,7 @@
 #ifndef	_XDR_PROTOTYPES_H
 #define _XDR_PROTOTYPES_H
 
-/* I don't like this, but some of these defs depend on rx.h */
-#if defined(KERNEL) && defined(UKERNEL)
-#include "afs/sysincludes.h"
-#include "rx/rx.h"
-#else
-#include "rx/rx.h"
-#endif
+struct rx_call;
 
 /* xdr_afsuuid.c */
 extern int xdr_afsUUID(XDR * xdrs, afsUUID * objp);

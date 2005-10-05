@@ -103,7 +103,12 @@ afs_CheckServerDaemon(void)
     }
     afs_CheckServerDaemonStarted = 0;
 }
-
+#define RECURSIVE_VFS_CONTEXT 1
+#if RECURSIVE_VFS_CONTEXT
+extern int vfs_context_ref;
+#else
+#define vfs_context_ref 1
+#endif
 void
 afs_Daemon(void)
 {
@@ -123,6 +128,18 @@ afs_Daemon(void)
     while (afs_initState < 101)
 	afs_osi_Sleep(&afs_initState);
 
+#ifdef AFS_DARWIN80_ENV
+    if (afs_osi_ctxtp_initialized)
+        osi_Panic("vfs context already initialized");
+    while (afs_osi_ctxtp && vfs_context_ref)
+        afs_osi_Sleep(&afs_osi_ctxtp);
+#if RECURSIVE_VFS_CONTEXT
+    if (afs_osi_ctxtp && !vfs_context_ref)
+       vfs_context_rele(afs_osi_ctxtp);
+#endif
+    afs_osi_ctxtp = vfs_context_create(NULL);
+    afs_osi_ctxtp_initialized = 1;
+#endif
     now = osi_Time();
     lastCBSlotBump = now;
 
@@ -302,6 +319,7 @@ afs_CheckRootVolume(void)
 	    afs_rootFid.Cell = localcell;
 	    if (afs_rootFid.Fid.Volume && afs_rootFid.Fid.Volume != volid
 		&& afs_globalVp) {
+		struct vcache *tvc = afs_globalVp;
 		/* If we had a root fid before and it changed location we reset
 		 * the afs_globalVp so that it will be reevaluated.
 		 * Just decrement the reference count. This only occurs during
@@ -355,7 +373,11 @@ afs_CheckRootVolume(void)
 		    crfree(credp);
 		}
 #else
+#ifdef AFS_DARWIN80_ENV
+		afs_PutVCache(afs_globalVp);
+#else
 		AFS_FAST_RELE(afs_globalVp);
+#endif
 		afs_globalVp = 0;
 #endif
 	    }

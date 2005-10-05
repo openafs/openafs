@@ -352,6 +352,8 @@ afs_InitCacheInfo(register char *afile)
 	struct statvfs st;
 #elif defined(AFS_DUX40_ENV)
 	struct nstatfs st;
+#elif defined(AFS_DARWIN80_ENV)
+	struct vfsstatfs st;
 #else
 	struct statfs st;
 #endif /* SUN56 */
@@ -381,6 +383,9 @@ afs_InitCacheInfo(register char *afile)
 	    VFS_STATFS(filevp->v_vfsp, &st);
 	    TO_KERNEL_SPACE();
 	}
+#elif defined(AFS_DARWIN80_ENV)
+        afs_cacheVfsp = vnode_mount(filevp);
+	if (afs_cacheVfsp && ((st = *(vfs_statfs(afs_cacheVfsp))),1))
 #elif defined(AFS_DARWIN_ENV)
 	if (!VFS_STATFS(filevp->v_mount, &st, current_proc()))
 #elif defined(AFS_FBSD50_ENV)
@@ -413,7 +418,9 @@ afs_InitCacheInfo(register char *afile)
 #endif
     cacheInode = afs_vnodeToInumber(filevp);
     cacheDev.dev = afs_vnodeToDev(filevp);
+#ifndef AFS_DARWIN80_ENV
     afs_cacheVfsp = filevp->v_vfsp;
+#endif
 #endif /* AFS_LINUX20_ENV */
     AFS_RELE(filevp);
 #endif /* AFS_LINUX22_ENV */

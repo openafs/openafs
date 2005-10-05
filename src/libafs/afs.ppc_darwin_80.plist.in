@@ -22,10 +22,12 @@
 	<string>1.3.82</string>
 	<key>OSBundleLibraries</key>
 	<dict>
-		<key>com.apple.kernel.bsd</key>
+		<key>com.apple.kpi.bsd</key>
 		<string>8.0.0</string>
-		<key>com.apple.kernel.mach</key>
+		<key>com.apple.kpi.mach</key>
 		<string>8.0.0</string>
+		<key>com.apple.kpi.libkern</key>
+		<string>8.0</string>
 	</dict>
 </dict>
 </plist>

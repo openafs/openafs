@@ -154,6 +154,9 @@ void set_staticaddrs(void);
 #include <sys/resource.h>
 #endif
 #ifdef AFS_DARWIN_ENV
+#ifdef AFS_DARWIN80_ENV
+#include <sys/ioctl.h>
+#endif
 #include <mach/mach.h>
 /* Symbols from the DiskArbitration framework */
 kern_return_t DiskArbStart(mach_port_t *);
@@ -1789,8 +1792,10 @@ mainproc(as, arock)
 #endif
 
     code = call_syscall(AFSOP_BASIC_INIT, 1);
-    if (code)
+    if (code) {
 	printf("%s: Error %d in basic initialization.\n", rn, code);
+        exit(1);
+    }
 
     /*
      * Tell the kernel some basic information about the workstation's cache.
@@ -2303,9 +2308,29 @@ call_syscall(param1, param2, param3, param4, param5, param6, param7)
     }
     else
 #endif
+#ifdef AFS_DARWIN80_ENV
+    struct afssysargs syscall_data;
+    int fd = open(SYSCALL_DEV_FNAME,O_RDWR);
+    syscall_data.syscall = AFSCALL_CALL;
+    syscall_data.param1 = param1;
+    syscall_data.param2 = param2;
+    syscall_data.param3 = param3;
+    syscall_data.param4 = param4;
+    syscall_data.param5 = param5;
+    syscall_data.param6 = param6;
+    if(fd >= 0) {
+       error = ioctl(fd, VIOC_SYSCALL, &syscall_data);
+       close(fd);
+    } else {
+       error = -1;
+    }
+    if (!error)
+      error=syscall_data.retval;
+#else
     error =
 	syscall(AFS_SYSCALL, AFSCALL_CALL, param1, param2, param3, param4,
 		param5, param6, param7);
+#endif
 
     if (afsd_verbose)
 	printf("SScall(%d, %d, %d)=%d ", AFS_SYSCALL, AFSCALL_CALL, param1,

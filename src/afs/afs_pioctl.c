@@ -430,7 +430,7 @@ afs_ioctl(OSI_VN_DECL(tvc), int cmd, void *arg, int flag, cred_t * cr,
    interface call.
    */
 /* AFS_HPUX102 and up uses VNODE ioctl instead */
-#ifndef AFS_HPUX102_ENV
+#if !defined(AFS_HPUX102_ENV) && !defined(AFS_DARWIN80_ENV)
 #if !defined(AFS_SGI_ENV)
 #ifdef	AFS_AIX32_ENV
 #ifdef AFS_AIX51_ENV
@@ -817,9 +817,15 @@ afs_pioctl(p, args, retval)
     } *uap = (struct a *)args;
 
     AFS_STATCNT(afs_pioctl);
+#ifdef AFS_DARWIN80_ENV
+    return (afs_syscall_pioctl
+	    (uap->path, uap->cmd, uap->cmarg, uap->follow,
+	     kauth_cred_get()));
+#else
     return (afs_syscall_pioctl
 	    (uap->path, uap->cmd, uap->cmarg, uap->follow,
 	     p->p_cred->pc_ucred));
+#endif
 }
 
 #endif
@@ -1453,8 +1459,10 @@ DECL_PIOCTL(PSetTokens)
 #else
 	struct proc *p = curproc;	/* XXX */
 #endif
+#ifndef AFS_DARWIN80_ENV
 	uprintf("Process %d (%s) tried to change pags in PSetTokens\n",
 		p->p_pid, p->p_comm);
+#endif
 	if (!setpag(p, acred, -1, &pag, 1)) {
 #else
 #ifdef	AFS_OSF_ENV
@@ -2541,11 +2549,24 @@ DECL_PIOCTL(PFlushVolumeData)
      * Clear stat'd flag from all vnodes from this volume; this will invalidate all
      * the vcaches associated with the volume.
      */
+ loop:
     ObtainReadLock(&afs_xvcache);
     i = VCHashV(&avc->fid);
     for (tvc = afs_vhashT[i]; tvc; tvc = tvc->vhnext) {
 	    if (tvc->fid.Fid.Volume == volume && tvc->fid.Cell == cell) {
-#if	defined(AFS_SGI_ENV) || defined(AFS_OSF_ENV)  || defined(AFS_SUN5_ENV)  || defined(AFS_HPUX_ENV) || defined(AFS_LINUX20_ENV)
+                if (tvc->states & CVInit) {
+                    ReleaseReadLock(&afs_xvcache);
+                    afs_osi_Sleep(&tvc->states);
+                    goto loop;
+                }
+#ifdef AFS_DARWIN80_ENV
+                if (tvc->states & CDeadVnode) {
+                    ReleaseReadLock(&afs_xvcache);
+                    afs_osi_Sleep(&tvc->states);
+                    goto loop;
+                }
+#endif
+#if	defined(AFS_SGI_ENV) || defined(AFS_OSF_ENV)  || defined(AFS_SUN5_ENV)  || defined(AFS_HPUX_ENV) || defined(AFS_LINUX20_ENV) 
 		VN_HOLD(AFSTOV(tvc));
 #else
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
@@ -2571,9 +2592,15 @@ DECL_PIOCTL(PFlushVolumeData)
 #ifdef AFS_BOZONLOCK_ENV
 		afs_BozonUnlock(&tvc->pvnLock, tvc);
 #endif
+#ifdef AFS_DARWIN80_ENV
+		/* our tvc ptr is still good until now */
+		AFS_FAST_RELE(tvc);
+		ObtainReadLock(&afs_xvcache);
+#else
 		ObtainReadLock(&afs_xvcache);
 		/* our tvc ptr is still good until now */
 		AFS_FAST_RELE(tvc);
+#endif
 	    }
 	}
     ReleaseReadLock(&afs_xvcache);

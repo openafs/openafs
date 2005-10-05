@@ -1551,7 +1551,7 @@ cpytoiovec(mblk_t * mp, int off, int len, register struct iovec *iovs,
 #define m_cpytoc(a, b, c, d)  cpytoc(a, b, c, d)
 #define m_cpytoiovec(a, b, c, d, e) cpytoiovec(a, b, c, d, e)
 #else
-#if !defined(AFS_LINUX20_ENV)
+#if !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN80_ENV)
 static int
 m_cpytoiovec(struct mbuf *m, int off, int len, struct iovec iovs[], int niovs)
 {
@@ -1607,7 +1607,7 @@ m_cpytoiovec(struct mbuf *m, int off, int len, struct iovec iovs[], int niovs)
 #endif /* LINUX */
 #endif /* AFS_SUN5_ENV */
 
-#if !defined(AFS_LINUX20_ENV)
+#if !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN80_ENV)
 int
 rx_mb_to_packet(amb, free, hdr_len, data_len, phandle)
 #if defined(AFS_SUN5_ENV) || defined(AFS_HPUX110_ENV)
