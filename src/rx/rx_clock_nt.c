@@ -14,7 +14,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_clock_nt.c,v 1.9.2.1 2004/08/25 07:09:41 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_clock_nt.c,v 1.9.2.2 2005/09/16 02:28:50 jaltman Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <stdio.h>
@@ -47,7 +47,7 @@ void
 clock_Init(void)
 {
     if (!QueryPerformanceFrequency(&rxi_clockFreq)) {
-	printf("No High Performance clock, exiting.\n");
+	OutputDebugString("No High Performance clock, exiting.\n");
 	exit(1);
     }
 

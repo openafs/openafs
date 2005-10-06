@@ -282,6 +282,14 @@ case "$1" in
 	if  is_on $AFS_SERVER && test -x /usr/afs/bin/bosserver  ; then
 		/usr/afs/bin/bosserver 
 		test "$afs_rh" && touch /var/lock/subsys/afs
+		if is_on $WAIT_FOR_SALVAGE; then
+			# wait for fileserver to finish salvaging
+			sleep 10
+			while /usr/bin/bos status localhost fs 2>&1 | grep 'Auxiliary.*salvaging'; do
+				echo "Waiting for salvager to finish..... "
+				sleep 10
+			done
+		fi
 	fi
 
 	# Start AFS client

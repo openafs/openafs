@@ -180,6 +180,9 @@ case $system in
         *-hpux*)
 		MKAFS_OSTYPE=HPUX
                 AC_MSG_RESULT(hp_ux)
+		if test -f "/usr/old/usr/include/ndir.h"; then
+		 AC_DEFINE(HAVE_USR_OLD_USR_INCLUDE_NDIR_H, 1, [define if you have old ndir.h])
+		fi
                 ;;
         *-irix*)
 		if test -d /usr/include/sys/SN/SN1; then
@@ -901,6 +904,11 @@ if test "x$PTHREAD_LIBS" = xerror; then
 fi
 if test "x$PTHREAD_LIBS" = xerror; then
         AC_CHECK_FUNC(pthread_attr_init, PTHREAD_LIBS="")
+fi
+if test "x$PTHREAD_LIBS" = xerror; then
+        # pthread_attr_init is a macro under HPUX 11.0 and 11.11
+        AC_CHECK_LIB(pthread, pthread_attr_destroy,
+                PTHREAD_LIBS="-lpthread")
 fi
 if test "x$PTHREAD_LIBS" = xerror; then
         AC_MSG_WARN(*** Unable to locate working posix thread library ***)

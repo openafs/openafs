@@ -260,6 +260,9 @@
 /* define if struct fs has fs_rolled */
 #undef STRUCT_FS_HAS_FS_ROLLED
 
+/* define if you have old ndir.h */
+#undef HAVE_USR_OLD_USR_INCLUDE_NDIR_H
+
 /* define if your iops.create takes a nameidata argument */
 #undef IOP_CREATE_TAKES_NAMEIDATA
 
