@@ -5,6 +5,7 @@ openafs (1.4rc6-1) unstable; urgency=low
   * Install afsd in /sbin rather than /usr/sbin.  While putting /usr in
     AFS isn't as common as it once was, no reason to make it harder than
     it needs to be.
+  * Remove the unused and uninstalled make-links script.
 
  --
 
