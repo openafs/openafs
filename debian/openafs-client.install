@@ -18,4 +18,4 @@ dest/etc/backup                         usr/sbin
 dest/etc/butc                           usr/sbin
 dest/etc/fms                            usr/sbin
 
-dest/root.client/usr/vice/etc/afsd      usr/sbin
+dest/root.client/usr/vice/etc/afsd      sbin

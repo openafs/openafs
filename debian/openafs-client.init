@@ -124,15 +124,15 @@ choose_afsd_options() {
 }
 
 # Start afsd.  Be careful not to start it if another one is already running,
-# as that has a bad tendency to hang the system.
+# as that has a bad tendency to hang the system.  Earlier versions of the
+# openafs-client package put afsd in /usr/sbin.
 start_client() {
-    if pidof /usr/sbin/afsd >/dev/null ; then
+    if pidof /sbin/afsd >/dev/null || pidof /usr/sbin/afsd >/dev/null ; then
         echo "."
     else
         choose_afsd_options
         echo " afsd."
-        start-stop-daemon --start --quiet --exec /usr/sbin/afsd \
-            -- $AFSD_OPTIONS
+        start-stop-daemon --start --quiet --exec /sbin/afsd -- $AFSD_OPTIONS
     fi
 
     # From /etc/openafs/afs.conf.client, whether to enable fcrypt encryption.
@@ -180,7 +180,7 @@ kill_all_afs() {
 
 case "$1" in 
 start)
-    if is_on $AFS_CLIENT && test -x /usr/sbin/afsd ; then
+    if is_on $AFS_CLIENT && test -x /sbin/afsd ; then
         echo -n "Starting AFS services:"
         if load_client ; then
             start_client
@@ -194,7 +194,7 @@ start)
     ;;
 
 force-start)
-    if test -x /usr/sbin/afsd ; then
+    if test -x /sbin/afsd ; then
         echo -n "Starting AFS services:"
         if load_client ; then
             start_client
@@ -215,6 +215,7 @@ stop|force-stop)
         echo -n " afsd"
     fi
     pidof /usr/sbin/afsd >/dev/null && afsd -shutdown
+    pidof /sbin/afsd >/dev/null && afsd -shutdown
 
     LIBAFS=`/sbin/lsmod | awk 'BEGIN { FS = " " } /openafs/ { print $1 }'`
     if [ -n "$LIBAFS" ] ; then
