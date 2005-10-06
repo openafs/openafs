@@ -3878,20 +3878,14 @@ long cm_Unlock(cm_scache_t *scp,
         
         lock_ReleaseRead(&cm_scacheLock);
 
-        return CM_ERROR_WOULDBLOCK; /* how is this an appropriate error code? */
+        /* The lock didn't exist anyway. *shrug* */
+        return 0;
     }
 
     /* discard lock record */
     if (scp->fileLocksT == q)
         scp->fileLocksT = osi_QPrev(q);
     osi_QRemove(&scp->fileLocksH, q);
-
-    if(IS_LOCK_ACCEPTED(fileLock)) {
-        if(fileLock->lockType == LockRead)
-            scp->sharedLocks--;
-        else
-            scp->exclusiveLocks--;
-    }
 
     lock_ReleaseRead(&cm_scacheLock);
 
@@ -3901,6 +3895,14 @@ long cm_Unlock(cm_scache_t *scp,
      */
 
     lock_ObtainWrite(&cm_scacheLock);
+
+    if(IS_LOCK_ACCEPTED(fileLock)) {
+        if(fileLock->lockType == LockRead)
+            scp->sharedLocks--;
+        else
+            scp->exclusiveLocks--;
+    }
+
     fileLock->flags |= CM_FILELOCK_FLAG_DELETED;
     if (userp != NULL) {
         cm_ReleaseUser(fileLock->userp);
@@ -4082,6 +4084,11 @@ static void cm_LockMarkSCacheLost(cm_scache_t * scp)
             (cm_file_lock_t *)((char *) q - offsetof(cm_file_lock_t, fileq));
 
         if(IS_LOCK_ACTIVE(fileLock)) {
+            if (fileLock->lockType == LockRead)
+                scp->sharedLocks--;
+            else
+                scp->exclusiveLocks--;
+
             fileLock->flags |= CM_FILELOCK_FLAG_LOST;
         }
     }
@@ -4368,7 +4375,16 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int client_is_dead)
        the lock as either ACTIVE or WAITLOCK depending on the
        serverLock. */
 
-    oldFileLock->flags &= ~CM_FILELOCK_FLAG_WAITUNLOCK;
+    /* First, promote the WAITUNLOCK to a WAITLOCK */
+    if (IS_LOCK_WAITUNLOCK(oldFileLock)) {
+        if (oldFileLock->lockType == LockRead)
+            scp->sharedLocks++;
+        else
+            scp->exclusiveLocks++;
+
+        oldFileLock->flags &= ~CM_FILELOCK_FLAG_WAITUNLOCK;
+        oldFileLock->flags |= CM_FILELOCK_FLAG_WAITLOCK;
+    }
 
     if (scp->serverLock == oldFileLock->lockType ||
         (oldFileLock->lockType == LockRead && 
@@ -4384,8 +4400,6 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int client_is_dead)
     } else {
         cm_fid_t cfid;
         cm_user_t * userp;
-
-        oldFileLock->flags |= CM_FILELOCK_FLAG_WAITLOCK;
 
         cm_InitReq(&req);
 
