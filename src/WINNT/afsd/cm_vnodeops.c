@@ -18,6 +18,7 @@
 #include <malloc.h>
 #include <string.h>
 #include <stdlib.h>
+#include <errno.h>
 
 #include <osi.h>
 
@@ -4212,7 +4213,8 @@ void cm_CheckLocks()
 
                     if (code) {
                         osi_Log1(afsd_logp, "CALL ExtendLock FAILURE, code 0x%x", code);
-                        cm_LockMarkSCacheLost(scp);
+			if (code == EINVAL || code == CM_ERROR_INVAL)
+			    cm_LockMarkSCacheLost(scp);
                     } else {
                         osi_Log0(afsd_logp, "CALL ExtendLock SUCCESS");
                     }
