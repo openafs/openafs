@@ -49,7 +49,7 @@ DOC_PACKAGES = libpam-openafs-kaserver openafs-dbserver openafs-fileserver \
 
 # These variable is used only by get-orig-source, which will normally only be
 # run by maintainers.
-VERSION   = 1.4.0-rc4
+VERSION   = 1.4.0-rc6
 UPSTREAM  = /afs/grand.central.org/software/openafs/candidate/$(VERSION)
 
 # Download the upstream source and do the repackaging that we have to do for

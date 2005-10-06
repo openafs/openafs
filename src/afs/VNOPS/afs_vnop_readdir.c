@@ -23,7 +23,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_readdir.c,v 1.24.2.5 2005/04/03 18:15:39 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_readdir.c,v 1.24.2.6 2005/10/03 02:46:32 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -580,8 +580,9 @@ afs_readdir(OSI_VC_ARG(avc), auio, acred)
 #if defined(AFS_SGI53_ENV)
     afs_int32 use64BitDirent, dirsiz;
 #endif /* defined(AFS_SGI53_ENV) */
+#ifndef	AFS_HPUX_ENV
     OSI_VC_CONVERT(avc);
-#ifdef	AFS_HPUX_ENV
+#else
     /*
      * XXX All the hacks for alloced sdirEntry and inlining of afs_readdir_move instead of calling
      * it is necessary for hpux due to stack problems that seem to occur when coming thru the nfs

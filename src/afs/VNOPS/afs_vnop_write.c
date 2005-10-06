@@ -21,7 +21,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_write.c,v 1.36.2.5 2005/04/24 20:11:15 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_write.c,v 1.36.2.6 2005/10/03 02:55:33 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -186,12 +186,13 @@ afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio,
     avc->states |= CDirty;
     tvec = (struct iovec *)osi_AllocSmallSpace(sizeof(struct iovec));
     while (totalLength > 0) {
-	/* Read the cached info. If we call GetDCache while the cache
-	 * truncate daemon is running we risk overflowing the disk cache.
-	 * Instead we check for an existing cache slot. If we cannot
-	 * find an existing slot we wait for the cache to drain
-	 * before calling GetDCache.
+	/* 
+	 *  The following line is necessary because afs_GetDCache with
+	 *  flag == 4 expects the length field to be filled. It decides
+	 *  from this whether it's necessary to fetch data into the chunk
+	 *  before writing or not (when the whole chunk is overwritten!).
 	 */
+	len = totalLength;	/* write this amount by default */
 	if (noLock) {
 	    tdc = afs_FindDCache(avc, filePos);
 	    if (tdc)

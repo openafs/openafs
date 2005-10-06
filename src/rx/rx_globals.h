@@ -507,7 +507,11 @@ EXT FILE *rx_debugFile;		/* Set by the user to a stdio file for debugging output
 EXT FILE *rxevent_debugFile;	/* Set to an stdio descriptor for event logging to that file */
 
 #define rx_Log rx_debugFile
+#ifdef AFS_NT40_ENV
+#define dpf(args) rxi_DebugPrint args; 
+#else
 #define dpf(args) if (rx_debugFile) rxi_DebugPrint args; else
+#endif
 #define rx_Log_event rxevent_debugFile
 
 EXT char *rx_packetTypes[RX_N_PACKET_TYPES] INIT(RX_PACKET_TYPES);	/* Strings defined in rx.h */

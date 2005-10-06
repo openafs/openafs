@@ -15,7 +15,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_kcommon.c,v 1.44.2.5 2005/08/08 15:01:40 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_kcommon.c,v 1.44.2.7 2005/09/16 18:15:09 jaltman Exp $");
 
 #include "rx/rx_kcommon.h"
 
@@ -126,7 +126,7 @@ osi_Panic(msg, a1, a2, a3)
     if (!msg)
 	msg = "Unknown AFS panic";
 
-    printf(msg, a1, a2, a3);
+    dpf((msg, a1, a2, a3));
 #ifdef AFS_LINUX24_ENV
     BUG();
 #else
@@ -316,7 +316,7 @@ MyPacketProc(char **ahandle, int asize)
 	rx_stats.bogusPacketOnRead++;
 	MUTEX_EXIT(&rx_stats_mutex);
 	/* I DON"T LIKE THIS PRINTF -- PRINTFS MAKE THINGS VERY VERY SLOOWWW */
-	printf("rx: packet dropped: bad ulen=%d\n", asize);
+	dpf(("rx: packet dropped: bad ulen=%d\n", asize));
 	tp = NULL;
     }
 
@@ -495,7 +495,7 @@ shutdown_rxkernel(void)
 	    rxk_shutdownPorts();
 	    return;
 	}
-    printf("shutdown_rxkernel: no udp proto");
+    dpf(("shutdown_rxkernel: no udp proto"));
 }
 #endif /* !AIX && !SUN && !NCR  && !UKERNEL */
 
@@ -864,7 +864,7 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
     code = sobind(newSocket, (struct sockaddr *)&myaddr);
 #endif
     if (code) {
-	printf("sobind fails (%d)\n", (int)code);
+	dpf(("sobind fails (%d)\n", (int)code));
 	soclose(newSocket);
 	AFS_GLOCK();
 	goto bad;
@@ -891,7 +891,7 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
     code = sobind(newSocket, nam);
 #endif
     if (code) {
-	printf("sobind fails (%d)\n", (int)code);
+	dpf(("sobind fails (%d)\n", (int)code));
 	soclose(newSocket);
 #ifndef AFS_SGI65_ENV
 	m_freem(nam);
