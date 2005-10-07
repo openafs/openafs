@@ -251,4 +251,6 @@ int RXAFS_Lookup (struct rx_connection *,
 #define CM_ERROR_TIDIPC                 (CM_ERROR_BASE+44)
 #define CM_ERROR_TOO_MANY_SYMLINKS      (CM_ERROR_BASE+45)
 #define CM_ERROR_PATH_NOT_COVERED       (CM_ERROR_BASE+46)
+/* 47 and 48 are reserved for the byte range lock support */
+#define CM_ERROR_ALLDOWN                (CM_ERROR_BASE+49)
 #endif /*  __CM_H_ENV__ */
