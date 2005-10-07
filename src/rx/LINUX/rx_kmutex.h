@@ -65,9 +65,9 @@ MUTEX_ISMINE(afs_kmutex_t * l)
 #define MUTEX_EXIT		afs_mutex_exit
 
 #if defined(AFS_LINUX24_ENV)
-#define CV_INIT(cv,b,c,d)      do { (cv)->seq = 0; init_waitqueue_head(&(cv)->waitq); } while (0)
+#define CV_INIT(cv,b,c,d)       do { (cv)->seq = 0; init_waitqueue_head(&(cv)->waitq); } while (0)
 #else
-#define CV_INIT(cv,b,c,d)	init_waitqueue((struct wait_queue**)(cv))
+#define CV_INIT(cv,b,c,d)	do { (cv)->seq = 0; init_waitqueue(&(cv)->waitq); } while (0)
 #endif
 #define CV_DESTROY(cv)
 #define CV_WAIT_SIG(cv, m)	afs_cv_wait(cv, m, 1)
