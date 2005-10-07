@@ -221,6 +221,14 @@ acl2_to_afs_call(int which, caddr_t * args, fhandle_t ** fhpp)
 	    fhp = &sargs->fh;
 	    break;
 	}
+#if defined(AFS_SUN510_ENV) 
+    case ACLPROC2_GETXATTRDIR:
+	{
+	    struct GETXATTRDIR2args *sargs = (struct GETXATTRDIR2args *)args;
+	    fhp = &sargs->fh;
+	    break;
+	}
+#endif
     default:
 	return NULL;
     }
@@ -685,12 +693,34 @@ afs_acl2_access(char *args, char *xp, char *exp, char *rp, char *crp)
     return;
 }
 
+#if defined(AFS_SUN510_ENV) 
+void
+afs_acl2_getxattrdir(char *args, char *xp, char *exp, char *rp, char *crp)
+{
+    u_int call;
+    struct cred *svcred = curthread->t_cred;
+    curthread->t_cred = (struct cred *)crp;
+    call =
+	afs_nfs2_dispatcher(1, ACLPROC2_GETXATTRDIR, (char *)args, &exp, rp, crp);
+    if (call > 1)
+	afs_nfs2_noaccess((struct afs_nfs2_resp *)xp);
+    else
+	(*afs_acl_disp_tbl[ACLPROC2_GETXATTRDIR].orig_proc) (args, xp, exp, rp,
+							crp);
+    curthread->t_cred = svcred;
+    return;
+}
+#endif
+
 struct afs_nfs_disp_tbl afs_acl_disp_tbl[5] = {
     {afs_nfs2_null},
     {afs_acl2_getacl},
     {afs_acl2_setacl},
     {afs_acl2_getattr},
-    {afs_acl2_access}
+    {afs_acl2_access},
+#if defined(AFS_SUN510_ENV) 
+    {afs_acl2_getxattrdir}
+#endif
 };
 
 /* Munge the dispatch tables to link us in first */
@@ -814,51 +844,84 @@ nfs3_to_afs_call(int which, caddr_t * args, nfs_fh3 ** fhpp, nfs_fh3 ** fh2pp)
     case NFSPROC3_CREATE:
 	{
 	    CREATE3args *arg = (CREATE3args *) args;
+#ifdef AFS_SUN58_ENV
+	    fhp1 = (nfs_fh3 *) arg->where.dirp;
+#else
 	    fhp1 = (nfs_fh3 *) & arg->where.dir;
+#endif
 	    break;
 	}
     case NFSPROC3_MKDIR:
 	{
 	    MKDIR3args *arg = (MKDIR3args *) args;
+#ifdef AFS_SUN58_ENV
+	    fhp1 = (nfs_fh3 *) arg->where.dirp;
+#else
 	    fhp1 = (nfs_fh3 *) & arg->where.dir;
+#endif
 	    break;
 	}
     case NFSPROC3_SYMLINK:
 	{
 	    SYMLINK3args *arg = (SYMLINK3args *) args;
+#ifdef AFS_SUN58_ENV
+	    fhp1 = (nfs_fh3 *) arg->where.dirp;
+#else
 	    fhp1 = (nfs_fh3 *) & arg->where.dir;
+#endif
 	    break;
 	}
     case NFSPROC3_MKNOD:
 	{
 	    MKNOD3args *arg = (MKNOD3args *) args;
+#ifdef AFS_SUN58_ENV
+	    fhp1 = (nfs_fh3 *) arg->where.dirp;
+#else
 	    fhp1 = (nfs_fh3 *) & arg->where.dir;
+#endif
 	    break;
 	}
     case NFSPROC3_REMOVE:
 	{
 	    REMOVE3args *arg = (REMOVE3args *) args;
+#ifdef AFS_SUN58_ENV
+	    fhp1 = (nfs_fh3 *) arg->object.dirp;
+#else
 	    fhp1 = (nfs_fh3 *) & arg->object.dir;
+#endif
 	    break;
 	}
     case NFSPROC3_RMDIR:
 	{
 	    RMDIR3args *arg = (RMDIR3args *) args;
+#ifdef AFS_SUN58_ENV
+	    fhp1 = (nfs_fh3 *) arg->object.dirp;
+#else
 	    fhp1 = (nfs_fh3 *) & arg->object.dir;
+#endif
 	    break;
 	}
     case NFSPROC3_RENAME:
 	{
 	    RENAME3args *arg = (RENAME3args *) args;
+#ifdef AFS_SUN58_ENV
+	    fhp1 = (nfs_fh3 *) arg->from.dirp;
+	    fhp2 = (nfs_fh3 *) arg->to.dirp;
+#else
 	    fhp1 = (nfs_fh3 *) & arg->from.dir;
 	    fhp2 = (nfs_fh3 *) & arg->to.dir;
+#endif
 	    break;
 	}
     case NFSPROC3_LINK:
 	{
 	    LINK3args *arg = (LINK3args *) args;
 	    fhp1 = (nfs_fh3 *) & arg->file;
+#ifdef AFS_SUN58_ENV
+	    fhp2 = (nfs_fh3 *) arg->link.dirp;
+#else
 	    fhp2 = (nfs_fh3 *) & arg->link.dir;
+#endif
 	    break;
 	}
     case NFSPROC3_READDIR:
@@ -933,6 +996,14 @@ acl3_to_afs_call(int which, caddr_t * args, nfs_fh3 ** fhpp)
 	    fhp = &sargs->fh;
 	    break;
 	}
+#if defined(AFS_SUN510_ENV) 
+    case ACLPROC3_GETXATTRDIR:
+	{
+	    struct GETXATTRDIR3args *sargs = (struct GETXATTRDIR3args *)args;
+	    fhp = &sargs->fh;
+	    break;
+	}
+#endif
     default:
 	return NULL;
     }
@@ -961,6 +1032,9 @@ afs_nfs3_dispatcher(int type, afs_int32 which, char *argp,
 	return 2;
 
     sa = (struct sockaddr *)svc_getrpccaller(rp->rq_xprt)->buf;
+    if (sa == NULL) 
+	return;
+
     if (sa->sa_family == AF_INET)
 	client = ((struct sockaddr_in *)sa)->sin_addr.s_addr;
 
@@ -1518,10 +1592,32 @@ afs_acl3_setacl(char *args, char *xp, char *exp, char *rp, char *crp)
     return;
 }
 
+#if defined(AFS_SUN510_ENV) 
+void
+afs_acl3_getxattrdir(char *args, char *xp, char *exp, char *rp, char *crp)
+{
+    u_int call;
+    struct cred *svcred = curthread->t_cred;
+    curthread->t_cred = (struct cred *)crp;
+    call =
+	afs_nfs3_dispatcher(1, ACLPROC3_GETXATTRDIR, (char *)args, &exp, rp, crp);
+    if (call > 1)
+	afs_nfs3_noaccess((struct afs_nfs3_resp *)xp);
+    else
+	(*afs_acl3_disp_tbl[ACLPROC3_GETXATTRDIR].orig_proc) (args, xp, exp, rp,
+							 crp);
+    curthread->t_cred = svcred;
+    return;
+}
+#endif
+
 struct afs_nfs_disp_tbl afs_acl3_disp_tbl[3] = {
     {afs_nfs2_null},
     {afs_acl3_getacl},
     {afs_acl3_setacl},
+#if defined(AFS_SUN510_ENV) 
+    {afs_acl3_getxattrdir},
+#endif
 };
 
 /* Munge the dispatch tables to link us in first */
