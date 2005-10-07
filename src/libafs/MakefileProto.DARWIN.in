@@ -46,7 +46,7 @@ KOPTS=-no-cpp-precomp -static -fno-common -finline -fno-keep-inline-functions -f
 KOPTS=-no-precomp -static -fno-common -finline -fno-keep-inline-functions -force_cpusubtype_ALL -msoft-float -mlong-branch 
 <all>
 CFLAGS=${KINCLUDES} -I. -I.. -I${TOP_OBJDIR}/src/config $(DEFINES) $(KDEFS) $(KOPTS) ${DBUG} ${OPTMZ}
-KINCLUDES=-I${KROOT}/System/Library/Frameworks/Kernel.Framework/Headers
+KINCLUDES=-I${KROOT}/System/Library/Frameworks/Kernel.framework/Headers
 
 
 # Name of directory to hold object files and libraries.
@@ -65,15 +65,9 @@ setup:
 	ln -fs ../Makefile $(KOBJ)/Makefile
 	ln -fs ../Makefile.common $(KOBJ)/Makefile.common
 	ln -fs ../config $(KOBJ)/config
-	-$(RM) -f  h net netinet rpc ufs nfs  machine sys vm mach kern
-	-ln -fs $(KROOT)/System/Library/Frameworks/Kernel.framework/Headers/net net
-	-ln -fs $(KROOT)/System/Library/Frameworks/Kernel.framework/Headers/machine machine
-	-ln -fs $(KROOT)/System/Library/Frameworks/Kernel.framework/Headers/netinet netinet
-	-ln -fs $(KROOT)/System/Library/Frameworks/Kernel.framework/Headers/nfs nfs
-	-ln -fs /usr/include/rpc rpc
-	-ln -fs $(KROOT)/System/Library/Frameworks/Kernel.framework/Headers/sys sys
-	-ln -fs $(KROOT)/System/Library/Frameworks/Kernel.framework/Headers/ufs ufs
+	-$(RM) -f  h rpc
 	-ln -fs $(KROOT)/System/Library/Frameworks/Kernel.framework/Headers/sys h
+	-ln -fs /usr/include/rpc rpc
 
 
 # Below this line are targets when in the COMMON directory:

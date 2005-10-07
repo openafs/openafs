@@ -774,7 +774,7 @@ case $AFS_SYSNAME in
 		DARWIN_PLIST=src/libafs/afs.${AFS_SYSNAME}.plist
 		DARWIN_INFOFILE=afs.${AFS_SYSNAME}.plist
                 dnl the test below fails on darwin, even if the CPPFLAGS below
-                dnl are added. the headers from Kernel.Framework must be used
+                dnl are added. the headers from Kernel.framework must be used
                 dnl when KERNEL is defined.
 
                 dnl really, such a thing isn't guaranteed to work on any 
