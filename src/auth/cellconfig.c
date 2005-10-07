@@ -1107,6 +1107,12 @@ afsconf_IntGetKeys(struct afsconf_dir *adir)
 	return 0;
     }
 
+    if (code < sizeof(afs_int32) + (tstr->nkeys*sizeof(struct afsconf_key))) {
+	tstr->nkeys = 0;
+	UNLOCK_GLOBAL_MUTEX;
+	return 0;
+    }
+
     /* convert key structure to host order */
     tstr->nkeys = ntohl(tstr->nkeys);
     for (fd = 0; fd < tstr->nkeys; fd++)
