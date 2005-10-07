@@ -880,9 +880,6 @@ restart:
     tvc->fid = *afid;
     tvc->asynchrony = -1;
     tvc->vc_error = 0;
-#ifndef UKERNEL
-    afs_symhint_inval(tvc);
-#endif
 #ifdef AFS_TEXT_ENV
     tvc->flushDV.low = tvc->flushDV.high = AFS_MAXDV;
 #endif
