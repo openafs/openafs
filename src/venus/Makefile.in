@@ -66,6 +66,8 @@ ${DEST}/etc/fstrace: fstrace
 ${DEST}/bin/cmdebug: cmdebug
 	${INSTALL} -s $? $@
 
+${DEST}/bin/dedebug: dedebug
+	${INSTALL} -s $? $@
 
 
 up.o: up.c AFS_component_version_number.c
@@ -122,6 +124,11 @@ cmdebug.o: cmdebug.c ${INCLS} AFS_component_version_number.c
 
 cmdebug: cmdebug.o ${CMLIBS}
 	$(CC) -o cmdebug cmdebug.o ${CFLAGS} ${CMLIBS} ${XLIBS}
+
+dedebug.o: dedebug.c ${INCLS} AFS_component_version_number.c
+
+dedebug: dedebug.o ${CMLIBS}
+	$(CC) -o dedebug dedebug.o ${CFLAGS} ${CMLIBS} ${XLIBS}
 
 
 
@@ -320,7 +327,7 @@ install: \
 #
 
 clean:
-	$(RM) -f *.o *.a up fs kdump-* kdump kdump64 core cmdebug AFS_component_version_number.c fstrace gcpags livesys
+	$(RM) -f *.o *.a up fs kdump-* kdump kdump64 core cmdebug AFS_component_version_number.c fstrace gcpags livesys dedebug
 
 test:
 	cd test; $(MAKE)
@@ -343,6 +350,9 @@ ${DESTDIR}${sbindir}/fstrace: fstrace
 	${INSTALL} -s $? $@
 
 ${DESTDIR}${bindir}/cmdebug: cmdebug
+	${INSTALL} -s $? $@
+
+${DESTDIR}${bindir}/dedebug: dedebug
 	${INSTALL} -s $? $@
 
 ${DESTDIR}${sbindir}/kdump: kdump-build

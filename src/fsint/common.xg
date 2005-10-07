@@ -75,6 +75,22 @@ struct AFSDBLock {
     struct AFSDBLockDesc lock;
 };
 
+struct AFSDEntry {
+    afs_int32 addr;
+    afs_int32 cell;				/*Cell part of the fid*/
+    AFSFid netFid;			/*Network part of the fid*/
+    afs_int32 Length;
+    afs_int32 DataVersion;
+    struct AFSDBLockDesc lock;
+    afs_int32 callback;
+    afs_int32 cbExpires;
+    short refCount;
+    short opens;
+    short writers;
+    char mvstat;
+    char states;
+};
+
 /*
  * Callback types.
  */
