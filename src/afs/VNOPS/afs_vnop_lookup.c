@@ -1434,6 +1434,14 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
 		ReleaseWriteLock(&tvc->lock);
 
 		if (code) {
+#if defined(AFS_SUN510_ENV)
+		    /* reset code and volumeError so afs_CheckCode will not change to ENODEV */
+		    /* Solaris 10 dogetcwd chokes on ENODEV, but not ENOENT */
+		    if (code == ENODEV && treq.volumeError == VOLMISSING ) {
+			treq.volumeError = 0;
+			code = ENOENT;
+		    }
+#endif
 		    afs_PutVCache(tvc);
 		    if (tvolp)
 			afs_PutVolume(tvolp, WRITE_LOCK);
