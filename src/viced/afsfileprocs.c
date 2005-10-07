@@ -6759,14 +6759,17 @@ FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
     TM_GetTimeOfDay(&StartTime, 0);
     ihP = targetptr->handle;
     fdP = IH_OPEN(ihP);
-    if (fdP == NULL)
+    if (fdP == NULL) {
+	VTakeOffline(volptr);
 	return EIO;
+    }
     optSize = sendBufSize;
     tlen = FDH_SIZE(fdP);
     ViceLog(25,
 	    ("FetchData_RXStyle: file size %llu\n", (afs_uintmax_t) tlen));
     if (tlen < 0) {
 	FDH_CLOSE(fdP);
+	VTakeOffline(volptr);
 	return EIO;
     }
     if (Pos > tlen) {
@@ -6804,6 +6807,7 @@ FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
 	if (errorCode != wlen) {
 	    FDH_CLOSE(fdP);
 	    FreeSendBuffer((struct afs_buffer *)tbuffer);
+	    VTakeOffline(volptr);
 	    return EIO;
 	}
 	errorCode = rx_Write(Call, tbuffer, wlen);
@@ -6811,12 +6815,14 @@ FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
 	errorCode = rx_WritevAlloc(Call, tiov, &tnio, RX_MAXIOVECS, wlen);
 	if (errorCode <= 0) {
 	    FDH_CLOSE(fdP);
+	    VTakeOffline(volptr);
 	    return EIO;
 	}
 	wlen = errorCode;
 	errorCode = FDH_READV(fdP, tiov, tnio);
 	if (errorCode != wlen) {
 	    FDH_CLOSE(fdP);
+	    VTakeOffline(volptr);
 	    return EIO;
 	}
 	errorCode = rx_Writev(Call, tiov, tnio, wlen);
@@ -6988,6 +6994,7 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 	    return ENOENT;
 	if (GetLinkCountAndSize(volptr, fdP, &linkCount, &DataLength) < 0) {
 	    FDH_CLOSE(fdP);
+	    VTakeOffline(volptr);
 	    return EIO;
 	}
 
