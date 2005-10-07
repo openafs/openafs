@@ -253,4 +253,5 @@ int RXAFS_Lookup (struct rx_connection *,
 #define CM_ERROR_PATH_NOT_COVERED       (CM_ERROR_BASE+46)
 #define CM_ERROR_LOCK_CONFLICT          (CM_ERROR_BASE+47)
 #define CM_ERROR_SHARING_VIOLATION      (CM_ERROR_BASE+48)
+#define CM_ERROR_ALLDOWN                (CM_ERROR_BASE+49)
 #endif /*  __CM_H_ENV__ */
