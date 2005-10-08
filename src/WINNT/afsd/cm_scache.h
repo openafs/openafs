@@ -75,6 +75,7 @@ typedef struct cm_file_lock {
 #define CM_FILELOCK_FLAG_WAITLOCK        0x04
 #define CM_FILELOCK_FLAG_WAITUNLOCK      0x0C
 
+/* the following is only to be used for locks on non-RO volumes */
 #define CM_FILELOCK_FLAG_CLIENTONLY      0x100
 
 typedef struct cm_prefetch {		/* last region scanned for prefetching */
