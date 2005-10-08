@@ -1263,7 +1263,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *up,
         callp = rx_NewCall(rxconnp);
         rx_PutConnection(rxconnp);
 
-        osi_Log3(afsd_logp, "CALL FetchData vp %x, off 0x%x, size 0x%x",
+        osi_Log3(afsd_logp, "CALL FetchData scp 0x%x, off 0x%x, size 0x%x",
                   (long) scp, biod.offset.LowPart, biod.length);
 
         code = StartRXAFS_FetchData(callp, &tfid, biod.offset.LowPart,
