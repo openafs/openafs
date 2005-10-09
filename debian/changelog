@@ -1,4 +1,4 @@
-openafs (1.4rc6-1) unstable; urgency=low
+openafs (1.4rc6-1) UNRELEASED; urgency=low
 
   * New upstream version.
     - Builds correctly with 2.6.13 kernels and software suspend.
@@ -8,7 +8,7 @@ openafs (1.4rc6-1) unstable; urgency=low
   * Add a watch file.
   * Remove the unused and uninstalled make-links script.
 
- --
+ --  <hartmans@luminous.suchdamage.org>  Sun,  9 Oct 2005 15:17:36 -0400
 
 openafs (1.4rc4-1) unstable; urgency=low
 
