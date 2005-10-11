@@ -1215,7 +1215,7 @@ KFW_AFS_get_cred( char * username,
     krb5_principal principal = 0;
     char * pname = 0;
     krb5_error_code code;
-	char local_cell[MAXCELLCHARS+1];
+    char local_cell[MAXCELLCHARS+1];
     char **cells = NULL;
     int  cell_count=0;
     struct afsconf_cell cellconfig;
@@ -1300,7 +1300,7 @@ KFW_AFS_get_cred( char * username,
         KFW_AFS_update_princ_ccache_data(ctx, cc, FALSE);
     }
 
-    code = KFW_AFS_klog(ctx, cc, "afs", cell, realm, lifetime,smbname);
+    code = KFW_AFS_klog(ctx, cc, "afs", cell, realm, lifetime, smbname);
     if ( IsDebuggerPresent() ) {
         char message[256];
         sprintf(message,"KFW_AFS_klog() returns: %d\n",code);
@@ -1331,7 +1331,7 @@ KFW_AFS_get_cred( char * username,
                     OutputDebugString("\n");
                 }
                 
-                code = KFW_AFS_klog(ctx, cc, "afs", cells[cell_count], realm, lifetime,smbname);
+                code = KFW_AFS_klog(ctx, cc, "afs", cells[cell_count], realm, lifetime, smbname);
                 if ( IsDebuggerPresent() ) {
                     char message[256];
                     sprintf(message,"KFW_AFS_klog() returns: %d\n",code);
@@ -1549,7 +1549,7 @@ KFW_AFS_renew_expiring_tokens(void)
                         OutputDebugString(realm);
                         OutputDebugString("\n");
                     }
-                    code = KFW_AFS_klog(ctx, cc, "afs", cells[cell_count], (char *)realm, pLeash_get_default_lifetime(),NULL);
+                    code = KFW_AFS_klog(ctx, cc, "afs", cells[cell_count], (char *)realm, 0, NULL);
                     if ( IsDebuggerPresent() ) {
                         char message[256];
                         sprintf(message,"KFW_AFS_klog() returns: %d\n",code);
@@ -1667,7 +1667,7 @@ KFW_AFS_renew_token_for_cell(char * cell)
             }
 #endif /* COMMENT */
 
-            code = KFW_AFS_klog(ctx, cc, "afs", cell, (char *)realm, pLeash_get_default_lifetime(),NULL);
+            code = KFW_AFS_klog(ctx, cc, "afs", cell, (char *)realm, 0,NULL);
             if ( IsDebuggerPresent() ) {
                 char message[256];
                 sprintf(message,"KFW_AFS_klog() returns: %d\n",code);
@@ -1874,19 +1874,18 @@ KFW_kinit( krb5_context alt_ctx,
 
     code = pkrb5_parse_name(ctx, principal_name, &me);
     if (code) 
-		goto cleanup;
+	goto cleanup;
 
     code = pkrb5_unparse_name(ctx, me, &name);
     if (code) 
-		goto cleanup;
+	goto cleanup;
 
     if (lifetime == 0)
         lifetime = pLeash_get_default_lifetime();
-    else
-        lifetime *= 5*60;
+    lifetime *= 60;
 
-	if (renew_life > 0)
-		renew_life *= 5*60;
+    if (renew_life > 0)
+	renew_life *= 60;
 
     if (lifetime)
         pkrb5_get_init_creds_opt_set_tkt_life(&options, lifetime);
@@ -1899,7 +1898,7 @@ KFW_kinit( krb5_context alt_ctx,
     if (addressless)
         pkrb5_get_init_creds_opt_set_address_list(&options,NULL);
     else {
-		if (publicIP)
+	if (publicIP)
         {
             // we are going to add the public IP address specified by the user
             // to the list provided by the operating system
@@ -1968,15 +1967,15 @@ KFW_kinit( krb5_context alt_ctx,
                                        0, // service name
                                        &options);
     if (code) 
-		goto cleanup;
+	goto cleanup;
 
     code = pkrb5_cc_initialize(ctx, cc, me);
     if (code) 
-		goto cleanup;
+	goto cleanup;
 
     code = pkrb5_cc_store_cred(ctx, cc, &my_creds);
     if (code) 
-		goto cleanup;
+	goto cleanup;
 
  cleanup:
     if ( addrs ) {
@@ -2608,7 +2607,7 @@ KFW_AFS_klog(
     char *service,
     char *cell,
     char *realm,
-    int LifeTime,
+    int  lifetime,  	/* unused parameter */
     char *smbname
     )
 {
