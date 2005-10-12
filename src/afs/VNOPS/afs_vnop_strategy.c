@@ -80,12 +80,13 @@ afs_ustrategy(abp)
 	tuio.afsio_iovcnt = 1;
 #if	defined(AFS_OSF_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_XBSD_ENV)
 #ifdef AFS_64BIT_CLIENT
+#ifdef AFS_SUN5_ENV
+	tuio.afsio_offset = (afs_offs_t) ldbtob(abp->b_lblkno);
+#else
 	tuio.afsio_offset = (afs_offs_t) dbtob(abp->b_blkno);
+#endif
 #else /* AFS_64BIT_CLIENT */
 	tuio.afsio_offset = (u_int) dbtob(abp->b_blkno);
-#if	defined(AFS_SUN5_ENV)
-	tuio._uio_offset._p._u = 0;
-#endif
 #endif /* AFS_64BIT_CLIENT */
 #else
 	tuio.afsio_offset = DEV_BSIZE * abp->b_blkno;
@@ -138,12 +139,13 @@ afs_ustrategy(abp)
 	tuio.afsio_iovcnt = 1;
 #if	defined(AFS_OSF_ENV) || defined(AFS_SUN5_ENV)
 #ifdef AFS_64BIT_CLIENT
+#ifdef AFS_SUN5_ENV
+	tuio.afsio_offset = (afs_offs_t) ldbtob(abp->b_lblkno);
+#else
 	tuio.afsio_offset = (afs_offs_t) dbtob(abp->b_blkno);
+#endif
 #else /* AFS_64BIT_CLIENT */
 	tuio.afsio_offset = (u_int) dbtob(abp->b_blkno);
-#ifdef	AFS_SUN5_ENV
-	tuio._uio_offset._p._u = 0;
-#endif
 #endif /* AFS_64BIT_CLIENT */
 #ifdef	AFS_SUN5_ENV
 #ifdef	AFS_SUN59_ENV

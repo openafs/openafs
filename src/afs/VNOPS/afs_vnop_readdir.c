@@ -625,9 +625,11 @@ afs_readdir(OSI_VC_ARG(avc), auio, acred)
     if (eofp)
 	*eofp = 0;
 #endif
+#ifndef AFS_64BIT_CLIENT
     if (AfsLargeFileUio(auio)	/* file is large than 2 GB */
 	||AfsLargeFileSize(auio->uio_offset, auio->uio_resid))
 	return EFBIG;
+#endif
 
     if ((code = afs_InitReq(&treq, acred))) {
 #ifdef	AFS_HPUX_ENV

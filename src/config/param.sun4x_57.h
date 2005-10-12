@@ -30,6 +30,7 @@
 #define AFS_BOZONLOCK_ENV       1
 
 #define AFS_64BIT_ENV		1	/* Defines afs_int32 as int, not long. */
+#define AFS_64BIT_CLIENT	1
 
 #define AFS_HAVE_FLOCK_SYSID    1
 
@@ -73,7 +74,7 @@
 /*#define	AFS_USEBUFFERS	1*/
 #define	afsio_iov		uio_iov
 #define	afsio_iovcnt	uio_iovcnt
-#define	afsio_offset	uio_offset
+#define	afsio_offset	uio_loffset
 #define	afsio_seg		uio_segflg
 #define	afsio_fmode	uio_fmode
 #define	afsio_resid	uio_resid

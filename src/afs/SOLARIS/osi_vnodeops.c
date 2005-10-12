@@ -457,7 +457,11 @@ afs_GetOnePage(vp, off, alen, protp, pl, plsz, seg, addr, rw, acred)
 	    buf = pageio_setup(page, PAGESIZE, vp, B_READ);	/* allocate a buf structure */
 	    buf->b_edev = 0;
 	    buf->b_dev = 0;
+#if defined(AFS_SUN56_ENV)
+	    buf->b_lblkno = lbtodb(toffset);
+#else
 	    buf->b_blkno = btodb(toffset);
+#endif
 	    bp_mapin(buf);	/* map it in to our address space */
 
 	    AFS_GLOCK();
@@ -685,7 +689,11 @@ afs_putapage(struct vnode *vp, struct page *pages,
 	    return (ENOMEM);
 
 	tbuf->b_dev = 0;
+#if defined(AFS_SUN56_ENV)
+	tbuf->b_lblkno = lbtodb(pages->p_offset);
+#else
 	tbuf->b_blkno = btodb(pages->p_offset);
+#endif
 	bp_mapin(tbuf);
 	AFS_GLOCK();
 	afs_Trace4(afs_iclSetp, CM_TRACE_PAGEOUTONE, ICL_TYPE_LONG, avc,
@@ -743,7 +751,7 @@ afs_nfsrdwr(avc, auio, arw, ioflag, acred)
 
     afs_Trace4(afs_iclSetp, CM_TRACE_VMRW, ICL_TYPE_POINTER, (afs_int32) avc,
 	       ICL_TYPE_LONG, (arw == UIO_WRITE ? 1 : 0), ICL_TYPE_OFFSET,
-	       ICL_HANDLE_OFFSET(auio->uio_offset), ICL_TYPE_OFFSET,
+	       ICL_HANDLE_OFFSET(auio->uio_loffset), ICL_TYPE_OFFSET,
 	       ICL_HANDLE_OFFSET(auio->uio_resid));
 
 #ifndef AFS_64BIT_CLIENT
@@ -782,12 +790,13 @@ afs_nfsrdwr(avc, auio, arw, ioflag, acred)
 
     /* adjust parameters when appending files */
     if ((ioflag & IO_APPEND) && arw == UIO_WRITE) {
-#if	defined(AFS_SUN56_ENV)
-	auio->uio_loffset = 0;
-#endif
+#if defined(AFS_SUN56_ENV)
+	auio->uio_loffset = avc->m.Length;	/* write at EOF position */
+#else
 	auio->uio_offset = avc->m.Length;	/* write at EOF position */
+#endif
     }
-    if (auio->uio_offset < 0 || (auio->uio_offset + auio->uio_resid) < 0) {
+    if (auio->afsio_offset < 0 || (auio->afsio_offset + auio->uio_resid) < 0) {
 	ReleaseWriteLock(&avc->lock);
 	afs_BozonUnlock(&avc->pvnLock, avc);
 	return EINVAL;
@@ -1233,7 +1242,13 @@ afs_seek(vnp, ooff, noffp)
 {
     register int code = 0;
 
-    if ((*noffp < 0 || *noffp > MAXOFF_T))
+#ifndef AFS_64BIT_CLIENT
+# define __MAXOFF_T MAXOFF_T
+#else
+# define __MAXOFF_T MAXOFFSET_T
+#endif
+
+    if ((*noffp < 0 || *noffp > __MAXOFF_T))
 	code = EINVAL;
     return code;
 }

@@ -99,7 +99,7 @@ afsio_skip(register struct uio *auio, register afs_int32 asize)
 	tv->iov_base = (char *)(tv->iov_base) + cnt;
 	tv->iov_len -= cnt;
 	auio->uio_resid -= cnt;
-	auio->uio_offset += cnt;
+	auio->afsio_offset += cnt;
 	asize -= cnt;
     }
     return 0;
