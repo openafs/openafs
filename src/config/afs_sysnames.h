@@ -215,6 +215,7 @@
 #define SYS_NAME_ID_i386_obsd35		2604
 #define SYS_NAME_ID_i386_obsd36		2605
 #define SYS_NAME_ID_i386_obsd37		2606
+#define SYS_NAME_ID_i386_obsd38		2607
 
 #define SYS_NAME_ID_amd64_linux2        2700
 #define SYS_NAME_ID_amd64_linux22       2701

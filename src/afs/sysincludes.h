@@ -39,7 +39,9 @@
 #include <ufs/ffs/fs.h>
 #include <ufs/ufs/quota.h>
 #include <ufs/ufs/inode.h>
+#ifndef AFS_OBSD38_ENV
 #include <ufs/ufs/extattr.h>
+#endif
 #include <ufs/ufs/ufsmount.h>
 #ifndef MLEN
 #include <sys/mbuf.h>
