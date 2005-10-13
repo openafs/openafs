@@ -400,12 +400,15 @@ ClearCallBack(register struct rx_connection *a_conn,
      */
     if (a_fid->Volume != 0) {
 	if (a_fid->Vnode == 0) {
+		struct afs_q *tq, *uq;
 	    /*
 	     * Clear callback for the whole volume.  Zip through the
 	     * hash chain, nullifying entries whose volume ID matches.
 	     */
 		i = VCHashV(&localFid);
-		for (tvc = afs_vhashTV[i]; tvc; tvc = tvc->vhnext) {
+		for (tq = afs_vhashTV[i].prev; tq != &afs_vhashTV[i]; tq = uq) {
+		    uq = QPrev(tq);
+		    tvc = QTOVH(tq);      
 		    if (tvc->fid.Fid.Volume == a_fid->Volume) {
 			tvc->callback = NULL;
 			if (!localFid.Cell)

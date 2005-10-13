@@ -817,7 +817,7 @@ extern afs_lock_t afs_xvcb;
 extern struct afs_q VLRU;
 extern afs_int32 vcachegen;
 extern unsigned int afs_paniconwarn;
-extern struct vcache *afs_vhashT[VCSIZE];
+extern struct afs_q afs_vhashTV[VCSIZE];
 extern afs_int32 afs_bulkStatsLost;
 extern int afs_norefpanic;
 

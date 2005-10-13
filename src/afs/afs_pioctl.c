@@ -2535,6 +2535,7 @@ DECL_PIOCTL(PFlushVolumeData)
     register struct vcache *tvc;
     register struct volume *tv;
     afs_int32 cell, volume;
+    struct afs_q *tq, *uq;
 
     AFS_STATCNT(PFlushVolumeData);
     if (!avc)
@@ -2552,7 +2553,9 @@ DECL_PIOCTL(PFlushVolumeData)
  loop:
     ObtainReadLock(&afs_xvcache);
     i = VCHashV(&avc->fid);
-    for (tvc = afs_vhashT[i]; tvc; tvc = tvc->vhnext) {
+    for (tq = afs_vhashTV[i].prev; tq != &afs_vhashTV[i]; tq = uq) {
+	    uq = QPrev(tq);
+	    tvc = QTOVH(tq);
 	    if (tvc->fid.Fid.Volume == volume && tvc->fid.Cell == cell) {
                 if (tvc->states & CVInit) {
                     ReleaseReadLock(&afs_xvcache);
