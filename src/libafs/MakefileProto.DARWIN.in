@@ -33,6 +33,11 @@ AFS_OS_NONFSOBJS = osi_vfsops.o
 KDEFS=
 DBUG = 
 DEFINES= -D_KERNEL -DKERNEL -DKERNEL_PRIVATE -DDIAGNOSTIC -DUSE_SELECT -DMACH_USER_API -DMACH_KERNEL
+<ppc_darwin_80>
+KOPTS=-static -g -nostdinc -nostdlib -no-cpp-precomp -fno-builtin -finline -fno-keep-inline-functions -msoft-float -mlong-branch -fsigned-bitfields -arch ppc -Dppc -DPPC -D__PPC__ -DPAGE_SIZE_FIXED -O2 -mcpu=750 -mmultiple -fschedule-insns
+MODLD=$(CC) $(KOPTS)
+<all -ppc_darwin_80>
+MODLD=$(LD)
 <ppc_darwin_70>
 KOPTS=-static -fno-common -finline -fno-keep-inline-functions -force_cpusubtype_ALL -msoft-float -mlong-branch 
 <ppc_darwin_60>
@@ -41,7 +46,7 @@ KOPTS=-no-cpp-precomp -static -fno-common -finline -fno-keep-inline-functions -f
 KOPTS=-no-precomp -static -fno-common -finline -fno-keep-inline-functions -force_cpusubtype_ALL -msoft-float -mlong-branch 
 <all>
 CFLAGS=${KINCLUDES} -I. -I.. -I${TOP_OBJDIR}/src/config $(DEFINES) $(KDEFS) $(KOPTS) ${DBUG} ${OPTMZ}
-KINCLUDES=-I${KROOT}/System/Library/Frameworks/Kernel.Framework/Headers
+KINCLUDES=-I${KROOT}/System/Library/Frameworks/Kernel.framework/Headers
 
 
 # Name of directory to hold object files and libraries.
@@ -60,15 +65,9 @@ setup:
 	ln -fs ../Makefile $(KOBJ)/Makefile
 	ln -fs ../Makefile.common $(KOBJ)/Makefile.common
 	ln -fs ../config $(KOBJ)/config
-	-$(RM) -f  h net netinet rpc ufs nfs  machine sys vm mach kern
-	-ln -fs $(KROOT)/System/Library/Frameworks/Kernel.framework/Headers/net net
-	-ln -fs $(KROOT)/System/Library/Frameworks/Kernel.framework/Headers/machine machine
-	-ln -fs $(KROOT)/System/Library/Frameworks/Kernel.framework/Headers/netinet netinet
-	-ln -fs $(KROOT)/System/Library/Frameworks/Kernel.framework/Headers/nfs nfs
-	-ln -fs /usr/include/rpc rpc
-	-ln -fs $(KROOT)/System/Library/Frameworks/Kernel.framework/Headers/sys sys
-	-ln -fs $(KROOT)/System/Library/Frameworks/Kernel.framework/Headers/ufs ufs
+	-$(RM) -f  h rpc
 	-ln -fs $(KROOT)/System/Library/Frameworks/Kernel.framework/Headers/sys h
+	-ln -fs /usr/include/rpc rpc
 
 
 # Below this line are targets when in the COMMON directory:
@@ -98,7 +97,7 @@ dest_libafs: $(LIBAFSNONFS) ;
 
 
 ${LIBAFS}: $(AFSAOBJS) $(AFSNFSOBJS)
-	$(LD) -r -o ${LIBAFS} ${AFSAOBJS} ${AFSNFSOBJS} -lcc_kext
+	$(MODLD) -r -o ${LIBAFS} ${AFSAOBJS} ${AFSNFSOBJS} -lcc_kext
 
 ${LIBAFSNONFS}:  $(AFSAOBJS) $(AFSNONFSOBJS)
-	$(LD) -r -o ${LIBAFSNONFS} ${AFSAOBJS} ${AFSNONFSOBJS} -lcc_kext
+	$(MODLD) -r -o ${LIBAFSNONFS} ${AFSAOBJS} ${AFSNONFSOBJS} -lcc_kext

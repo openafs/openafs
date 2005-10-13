@@ -362,20 +362,23 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
     osi_dnlc_remove(adp, aname, tvc);
 
     Tadp1 = adp;
+#ifndef AFS_DARWIN80_ENV
     Tadpr = VREFCOUNT(adp);
+#endif
     Ttvc = tvc;
     Tnam = aname;
     Tnam1 = 0;
     if (tvc)
+#ifndef AFS_DARWIN80_ENV
 	Ttvcr = VREFCOUNT(tvc);
-#ifdef	AFS_AIX_ENV
-    if (tvc && (VREFCOUNT(tvc) > 2) && tvc->opens > 0
-	&& !(tvc->states & CUnlinked))
-#else
-    if (tvc && (VREFCOUNT(tvc) > 1) && tvc->opens > 0
-	&& !(tvc->states & CUnlinked))
 #endif
-    {
+#ifdef	AFS_AIX_ENV
+    if (tvc && VREFCOUNT_GT(tvc, 2) && tvc->opens > 0
+	&& !(tvc->states & CUnlinked)) {
+#else
+    if (tvc && VREFCOUNT_GT(tvc, 1) && tvc->opens > 0
+	&& !(tvc->states & CUnlinked)) {
+#endif
 	char *unlname = afs_newname();
 
 	ReleaseWriteLock(&adp->lock);
@@ -401,6 +404,7 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
 	code = afsremove(adp, tdc, tvc, aname, acred, &treq);
     }
     afs_PutFakeStat(&fakestate);
+    osi_Assert(!WriteLocked(&adp->lock) || !(adp->lock.pid_writer != MyPidxx));
     return code;
 }
 
@@ -436,7 +440,7 @@ afs_remunlink(register struct vcache *avc, register int doit)
 	    cred = avc->uncred;
 	    avc->uncred = NULL;
 
-#ifdef AFS_DARWIN_ENV
+#if defined(AFS_DARWIN_ENV) && !defined(AFS_DARWIN80_ENV)
 	    VREF(AFSTOV(avc));
 #else
 	    VN_HOLD(AFSTOV(avc));

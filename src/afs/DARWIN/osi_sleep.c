@@ -138,12 +138,16 @@ afs_osi_Sleep(void *event)
     while (seq == evp->seq) {
 	AFS_ASSERT_GLOCK();
 	AFS_GUNLOCK();
+#ifdef AFS_DARWIN80_ENV
+        msleep(event, NULL, PVFS, "afs_osi_Sleep", NULL);
+#else
 #ifdef AFS_DARWIN14_ENV
 	/* this is probably safe for all versions, but testing is hard */
 	sleep(event, PVFS);
 #else
 	assert_wait((event_t) event, 0);
 	thread_block(0);
+#endif
 #endif
 	AFS_GLOCK();
     }
@@ -153,6 +157,7 @@ afs_osi_Sleep(void *event)
 void 
 afs_osi_fullSigMask()
 {
+#ifndef AFS_DARWIN80_ENV
     struct uthread *user_thread = (struct uthread *)get_bsdthread_info(current_act());
        
     /* Protect original sigmask */
@@ -162,11 +167,13 @@ afs_osi_fullSigMask()
 	/* Mask all signals */
 	user_thread->uu_sigmask = ~(sigset_t)0;
     }
+#endif
 }
 
 void 
 afs_osi_fullSigRestore()
 {
+#ifndef AFS_DARWIN80_ENV
     struct uthread *user_thread = (struct uthread *)get_bsdthread_info(current_act());
        
     /* Protect original sigmask */
@@ -176,6 +183,7 @@ afs_osi_fullSigRestore()
 	/* Clear the oldmask */
 	user_thread->uu_oldmask = (sigset_t)0;
     }
+#endif
 }
 
 int
@@ -199,15 +207,29 @@ osi_TimedSleep(char *event, afs_int32 ams, int aintok)
 {
     int code = 0;
     struct afs_event *evp;
-    int ticks, seq;
+    int seq;
     int prio;
+#ifdef AFS_DARWIN80_ENV
+    struct timespec ts;
+#else
+    int ticks;
+#endif
 
-    ticks = (ams * afs_hz) / 1000;
 
 
     evp = afs_getevent(event);
     seq = evp->seq;
     AFS_GUNLOCK();
+#ifdef AFS_DARWIN80_ENV
+    if (aintok)
+        prio = PCATCH | PPAUSE;
+    else
+        prio = PVFS;
+    ts.tv_sec = ams / 1000;
+    ts.tv_nsec = (ams % 1000) * 1000000;
+    code = msleep(event, NULL, prio, "afs_osi_TimedSleep", &ts);
+#else
+    ticks = (ams * afs_hz) / 1000;
 #ifdef AFS_DARWIN14_ENV
     /* this is probably safe for all versions, but testing is hard. */
     /* using tsleep instead of assert_wait/thread_set_timer/thread_block
@@ -227,6 +249,7 @@ osi_TimedSleep(char *event, afs_int32 ams, int aintok)
     thread_set_timer(ticks, NSEC_PER_SEC / hz);
     thread_block(0);
     code = 0;
+#endif
 #endif
     AFS_GLOCK();
     if (seq == evp->seq)

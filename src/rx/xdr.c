@@ -58,6 +58,7 @@ RCSID
 #include <stdio.h>
 #endif
 #include "xdr.h"
+#include "rx.h"
 
 /*
  * constants specific to the xdr "protocol"

@@ -348,6 +348,10 @@ extern void rxk_ListenerProc(void);
 extern void rxk_Listener(void);
 #ifndef UKERNEL
 extern void afs_rxevent_daemon(void);
+#endif
+#if defined(AFS_DARWIN80_ENV) && defined(KERNEL)
+extern ifnet_t rxi_FindIfnet(afs_uint32 addr, afs_uint32 * maskp);
+#else
 extern struct ifnet *rxi_FindIfnet(afs_uint32 addr, afs_uint32 * maskp);
 #endif
 extern void osi_StopListener(void);

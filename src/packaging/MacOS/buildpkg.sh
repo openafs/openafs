@@ -32,7 +32,8 @@ else
 fi
 
 if [ -x /usr/bin/curl ]; then
-    /usr/bin/curl -f -O http://www.central.org/dl/cellservdb/CellServDB
+#    /usr/bin/curl -f -O http://www.central.org/dl/cellservdb/CellServDB
+    /usr/bin/curl -f -O http://dl.central.org/dl/cellservdb/CellServDB
 fi
 
 if [ ! -f CellServDB ]; then
@@ -82,6 +83,8 @@ cp $BINDEST/root.client/usr/vice/etc/StartupParameters.plist  $PKGROOT/Library/S
 chown -R root${SEP}admin $PKGROOT/Library
 chmod -R o-w $PKGROOT/Library
 chmod -R g+w $PKGROOT/Library
+chown -R root${SEP}wheel $PKGROOT/Library/StartupItems
+chmod -R og-w $PKGROOT/Library/StartupItems
 chown -R root${SEP}wheel $PKGROOT/Library/OpenAFS/Tools
 chmod -R og-w $PKGROOT/Library/OpenAFS/Tools
 
@@ -111,7 +114,7 @@ chmod  og-rx $PKGROOT/private/var/db/openafs/cache
 
 mkdir $PKGROOT/usr $PKGROOT/usr/bin $PKGROOT/usr/sbin
 
-BINLIST="fs klog klog.krb pagsh pagsh.krb pts sys tokens tokens.krb unlog unlog.krb"
+BINLIST="fs klog klog.krb pagsh pagsh.krb pts sys tokens tokens.krb unlog unlog.krb aklog"
 
 # Should these be linked into /usr too?
 OTHER_BINLIST="bos cmdebug rxgen translate_et udebug xstat_cm_test xstat_fs_test"
@@ -131,7 +134,10 @@ if [ $majorvers -ge 7 ]; then
     cp OpenAFS.post_install $PKGRES/postinstall
     cp OpenAFS.pre_upgrade $PKGRES/preupgrade
     cp OpenAFS.post_install $PKGRES/postupgrade
-    chmod a+x $PKGRES/postinstall $PKGRES/postupgrade $PKGRES/preupgrade
+    cp InstallationCheck $PKGRES
+    mkdir $PKGRES/English.lproj
+    cp InstallationCheck $PKGRES/English.lproj
+    chmod a+x $PKGRES/postinstall $PKGRES/postupgrade $PKGRES/preupgrade $PKGRES/InstallationCheck
 else
     cp OpenAFS.post_install OpenAFS.pre_upgrade $PKGRES
     cp OpenAFS.post_install $PKGRES/OpenAFS.post_upgrade

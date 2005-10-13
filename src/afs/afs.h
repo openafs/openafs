@@ -527,10 +527,14 @@ struct SimpleLocks {
 #ifdef	AFS_OSF_ENV
 #define CWired		0x00000800	/* OSF hack only */
 #else
+#ifdef AFS_DARWIN80_ENV
+#define CDeadVnode        0x00000800
+#else
 #ifdef AFS_DARWIN_ENV
 #define CUBCinit        0x00000800
 #else
 #define CWRITE_IGN	0x00000800	/* Next OS hack only */
+#endif
 #endif
 #endif
 #define CUnique		0x00001000	/* vc's uniquifier - latest unifiquier for fid */
@@ -546,6 +550,7 @@ struct SimpleLocks {
 #define CDCLock		0x02000000	/* Vnode lock held over call to GetDownD */
 #define CBulkFetching	0x04000000	/* stats are being fetched by bulk stat */
 #define CExtendedFile	0x08000000	/* extended file via ftruncate call. */
+#define CVInit          0x10000000      /* being initialized */
 
 /* vcache vstate bits */
 #define VRevokeWait   0x1
@@ -558,13 +563,20 @@ struct SimpleLocks {
 #define vrefCount   v.v_count
 #endif /* AFS_XBSD_ENV */
 
-#if defined(AFS_LINUX24_ENV)
+#if defined(AFS_DARWIN80_ENV)
+#define VREFCOUNT_GT(v, y)    vnode_isinuse(AFSTOV(v), (y))
+#elif defined(AFS_XBSD_ENV) || defined(AFS_DARWIN_ENV)
+#define VREFCOUNT(v)          ((v)->vrefCount)
+#define VREFCOUNT_GT(v, y)    (AFSTOV(v)->v_usecount > (y))
+#elif defined(AFS_LINUX24_ENV)
 #define VREFCOUNT(v)		atomic_read(&(AFSTOV(v)->v_count))
+#define VREFCOUNT_GT(v, y)    ((atomic_read(&((vnode_t *) v)->v_count)>y)?1:0)
 #define VREFCOUNT_SET(v, c)	atomic_set(&(AFSTOV(v)->v_count), c)
 #define VREFCOUNT_DEC(v)	atomic_dec(&(AFSTOV(v)->v_count))
 #define VREFCOUNT_INC(v)	atomic_inc(&(AFSTOV(v)->v_count))
 #else
 #define VREFCOUNT(v)		((v)->vrefCount)
+#define VREFCOUNT_GT(v,y)     ((v)->vrefCount > (y))
 #define VREFCOUNT_SET(v, c)	(v)->vrefCount = c;
 #define VREFCOUNT_DEC(v)	(v)->vrefCount--;
 #define VREFCOUNT_INC(v)	(v)->vrefCount++;
@@ -581,7 +593,10 @@ struct SimpleLocks {
 
 extern afs_int32 vmPageHog;	/* counter for # of vnodes which are page hogs. */
 
-#if defined(AFS_XBSD_ENV) || defined(AFS_DARWIN_ENV) || (defined(AFS_LINUX22_ENV) && !defined(STRUCT_SUPER_HAS_ALLOC_INODE))
+#if defined(AFS_DARWIN80_ENV)
+#define VTOAFS(v) ((struct vcache *)vnode_fsnode((v)))
+#define AFSTOV(vc) ((vc)->v)
+#elif defined(AFS_XBSD_ENV) || defined(AFS_DARWIN_ENV) || (defined(AFS_LINUX22_ENV) && !defined(STRUCT_SUPER_HAS_ALLOC_INODE))
 #define VTOAFS(v) ((struct vcache *)(v)->v_data)
 #define AFSTOV(vc) ((vc)->v)
 #else
@@ -614,7 +629,11 @@ struct vcache {
 	afs_uint32 Group;
 	afs_uint16 Mode;	/* XXXX Should be afs_int32 XXXX */
 	afs_uint16 LinkCount;
+#ifdef AFS_DARWIN80_ENV
+        afs_uint16 Type;
+#else
 	/* vnode type is in v.v_type */
+#endif
     } m;
     afs_rwlock_t lock;		/* The lock on the vcache contents. */
 #if	defined(AFS_SUN5_ENV)
@@ -642,7 +661,9 @@ struct vcache {
 #ifdef AFS_AIX_ENV
     int ownslock;		/* pid of owner of excl lock, else 0 - defect 3083 */
 #endif
-#ifdef AFS_DARWIN_ENV
+#ifdef AFS_DARWIN80_ENV
+    lck_mtx_t *rwlock;
+#elif defined(AFS_DARWIN_ENV)
     struct lock__bsd__ rwlock;
 #endif
 #ifdef AFS_XBSD_ENV

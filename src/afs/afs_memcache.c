@@ -180,13 +180,13 @@ afs_MemReadUIO(ino_t blkno, struct uio *uioP)
 {
     register struct memCacheEntry *mceP =
 	(struct memCacheEntry *)afs_MemCacheOpen(blkno);
-    int length = mceP->size - uioP->uio_offset;
+    int length = mceP->size - AFS_UIO_OFFSET(uioP);
     afs_int32 code;
 
     AFS_STATCNT(afs_MemReadUIO);
     MObtainReadLock(&mceP->afs_memLock);
-    length = (length < uioP->uio_resid) ? length : uioP->uio_resid;
-    AFS_UIOMOVE(mceP->data + uioP->uio_offset, length, UIO_READ, uioP, code);
+    length = (length < AFS_UIO_RESID(uioP)) ? length : AFS_UIO_RESID(uioP);
+    AFS_UIOMOVE(mceP->data + AFS_UIO_OFFSET(uioP), length, UIO_READ, uioP, code);
     MReleaseReadLock(&mceP->afs_memLock);
     return code;
 }
@@ -281,25 +281,25 @@ afs_MemWriteUIO(ino_t blkno, struct uio *uioP)
 
     AFS_STATCNT(afs_MemWriteUIO);
     MObtainWriteLock(&mceP->afs_memLock, 312);
-    if (uioP->uio_resid + uioP->uio_offset > mceP->dataSize) {
+    if (AFS_UIO_RESID(uioP) + AFS_UIO_OFFSET(uioP) > mceP->dataSize) {
 	char *oldData = mceP->data;
 
-	mceP->data = afs_osi_Alloc(uioP->uio_resid + uioP->uio_offset);
+	mceP->data = afs_osi_Alloc(AFS_UIO_RESID(uioP) + AFS_UIO_OFFSET(uioP));
 
 	AFS_GUNLOCK();
 	memcpy(mceP->data, oldData, mceP->size);
 	AFS_GLOCK();
 
 	afs_osi_Free(oldData, mceP->dataSize);
-	mceP->dataSize = uioP->uio_resid + uioP->uio_offset;
+	mceP->dataSize = AFS_UIO_RESID(uioP) + AFS_UIO_OFFSET(uioP);
     }
-    if (mceP->size < uioP->uio_offset)
+    if (mceP->size < AFS_UIO_OFFSET(uioP))
 	memset(mceP->data + mceP->size, 0,
-	       (int)(uioP->uio_offset - mceP->size));
-    AFS_UIOMOVE(mceP->data + uioP->uio_offset, uioP->uio_resid, UIO_WRITE,
+	       (int)(AFS_UIO_OFFSET(uioP) - mceP->size));
+    AFS_UIOMOVE(mceP->data + AFS_UIO_OFFSET(uioP), AFS_UIO_RESID(uioP), UIO_WRITE,
 		uioP, code);
-    if (uioP->uio_offset > mceP->size)
-	mceP->size = uioP->uio_offset;
+    if (AFS_UIO_OFFSET(uioP) > mceP->size)
+	mceP->size = AFS_UIO_OFFSET(uioP);
 
     MReleaseWriteLock(&mceP->afs_memLock);
     return code;

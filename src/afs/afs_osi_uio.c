@@ -25,6 +25,7 @@ RCSID
  * UIO routines
  */
 
+#ifndef AFS_DARWIN80_ENV
 /* routine to make copy of uio structure in ainuio, using aoutvec for space */
 int
 afsio_copy(struct uio *ainuio, struct uio *aoutuio,
@@ -76,6 +77,7 @@ afsio_trim(register struct uio *auio, register afs_int32 asize)
     }
     return 0;
 }
+#endif
 
 /* skip asize bytes in the current uio structure */
 int
@@ -85,6 +87,9 @@ afsio_skip(register struct uio *auio, register afs_int32 asize)
     register int cnt;
 
     AFS_STATCNT(afsio_skip);
+#ifdef AFS_DARWIN80_ENV
+    uio_update(auio, asize);
+#else
     /* It isn't guaranteed that multiple iovecs work ok (hasn't been tested!) */
     while (asize > 0 && auio->afsio_resid) {
 	tv = auio->afsio_iov;
@@ -102,5 +107,6 @@ afsio_skip(register struct uio *auio, register afs_int32 asize)
 	auio->afsio_offset += cnt;
 	asize -= cnt;
     }
+#endif
     return 0;
 }

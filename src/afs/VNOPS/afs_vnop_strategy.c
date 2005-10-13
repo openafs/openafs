@@ -18,7 +18,7 @@
 RCSID
     ("$Header$");
 
-#if !defined(AFS_HPUX_ENV) && !defined(AFS_SGI_ENV) && !defined(AFS_LINUX20_ENV)
+#if !defined(AFS_HPUX_ENV) && !defined(AFS_SGI_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN80_ENV)
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -40,6 +40,8 @@ afs_ustrategy(abp)
 {
     register afs_int32 code;
     struct uio tuio;
+    struct uio *tuiop = &tuio;
+    struct iovec tiovec[1];
     register struct vcache *tvc = VTOAFS(abp->b_vp);
     register afs_int32 len = abp->b_bcount;
 #if	!defined(AFS_SUN5_ENV) && !defined(AFS_OSF_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_XBSD_ENV)
@@ -49,7 +51,6 @@ afs_ustrategy(abp)
     struct AFS_UCRED *credp = u.u_cred;
 #endif
 #endif
-    struct iovec tiovec[1];
 
     AFS_STATCNT(afs_ustrategy);
 #ifdef	AFS_AIX41_ENV

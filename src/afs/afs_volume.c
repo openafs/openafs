@@ -284,6 +284,7 @@ afs_CheckVolumeNames(int flags)
 
     /* next ensure all mt points are re-evaluated */
     if (nvols || (flags & (AFS_VOLCHECK_FORCE | AFS_VOLCHECK_MTPTS))) {
+loop:
 	ObtainReadLock(&afs_xvcache);
 	for (i = 0; i < VCSIZE; i++) {
 	    for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
@@ -306,6 +307,18 @@ afs_CheckVolumeNames(int flags)
 		    && (inVolList(&tvc->fid, nvols, volumeID, cellID)
 			|| (flags & AFS_VOLCHECK_FORCE))) {
 
+                    if (tvc->states & CVInit) {
+                        ReleaseReadLock(&afs_xvcache);
+			afs_osi_Sleep(&tvc->states);
+                        goto loop;
+                    }
+#ifdef AFS_DARWIN80_ENV
+                    if (tvc->states & CDeadVnode) {
+                        ReleaseReadLock(&afs_xvcache);
+			afs_osi_Sleep(&tvc->states);
+                        goto loop;
+                    }
+#endif
 		    AFS_FAST_HOLD(tvc);
 		    ReleaseReadLock(&afs_xvcache);
 
@@ -317,10 +330,16 @@ afs_CheckVolumeNames(int flags)
 		    if (tvc->fid.Fid.Vnode & 1 || (vType(tvc) == VDIR))
 			osi_dnlc_purgedp(tvc);
 
+#ifdef AFS_DARWIN80_ENV
+		    /* our tvc ptr is still good until now */
+		    AFS_FAST_RELE(tvc);
+		    ObtainReadLock(&afs_xvcache);
+#else
 		    ObtainReadLock(&afs_xvcache);
 
 		    /* our tvc ptr is still good until now */
 		    AFS_FAST_RELE(tvc);
+#endif
 		}
 	    }
 	}

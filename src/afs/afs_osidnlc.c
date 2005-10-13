@@ -242,6 +242,9 @@ osi_dnlc_lookup(struct vcache *adp, char *aname, int locktype)
 #ifdef	AFS_OSF_ENV
 	VN_HOLD((vnode_t *) tvc);
 #else
+#ifdef AFS_DARWIN80_ENV
+        vnode_get(tvc->v);
+#endif
 	osi_vnhold(tvc, 0);
 #endif
 	ReleaseReadLock(&afs_xvcache);
