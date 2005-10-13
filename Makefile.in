@@ -234,7 +234,7 @@ tviced: cmd comerr viced vlserver libafsrpc libafsauthent
 volser: cmd comerr tviced usd kauth audit
 	${COMPILE_PART1} volser ${COMPILE_PART2}
 
-tvolser: project tviced usd libafsrpc libafsauthent
+tvolser: project tviced usd libafsrpc libafsauthent volser
 	case ${SYS_NAME} in                                             \
 	alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*)   \
 		${COMPILE_PART1} tvolser  ${COMPILE_PART2} ;;           \
@@ -277,7 +277,7 @@ scout: cmd comerr gtx fsprobe
 uss: des kauth cmd comerr rx vlserver vol volser
 	${COMPILE_PART1} uss ${COMPILE_PART2}
 
-bozo: cmd comerr audit
+bozo: cmd comerr audit auth kauth volser
 	${COMPILE_PART1} bozo ${COMPILE_PART2}
 
 vfsck:	vol
