@@ -3557,9 +3557,10 @@ szWildCardMatchFileName(PSZ pattern, PSZ name, int casefold)
     while (*name) {
         switch (*pattern) {
         case '?':
-            if (*name == '.') 
-                return FALSE;
-            ++pattern, ++name;
+	    ++pattern;
+            if (*name == '.')
+		continue;
+            ++name;
             break;
          case '*':
             ++pattern;
@@ -3581,10 +3582,12 @@ szWildCardMatchFileName(PSZ pattern, PSZ name, int casefold)
         } /* endswitch */
     } /* endwhile */ 
 
-    if (*pattern == '\0' || *pattern == '*' && *(pattern+1) == '\0')
-        return TRUE;
-    else 
-        return FALSE;
+    /* if all we have left are wildcards, then we match */
+    for (;*pattern; pattern++) {
+	if (*pattern != '*' && *pattern != '?')
+	    return FALSE;
+    }
+    return TRUE;
 }
 
 /* do a case-folding search of the star name mask with the name in namep.
