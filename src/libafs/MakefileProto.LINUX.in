@@ -140,15 +140,21 @@ setup:
 
 ${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
 	$(RM) -f h 
-	ln -fs ${LINUX_KERNEL_PATH}/include/linux h 
+	$(RM) -f sys
+	$(RM) -f netinet 
+	if [ -d ${LINUX_KERNEL_PATH}/include2 ] ; then                  \
+	    ln -fs ${LINUX_KERNEL_PATH}/include2/asm/../linux h       ; \
+	    ln -fs ${LINUX_KERNEL_PATH}/include2/asm/../linux sys     ; \
+	    ln -fs ${LINUX_KERNEL_PATH}/include2/asm/../linux netinet ; \
+	else                                                            \
+	    ln -fs ${LINUX_KERNEL_PATH}/include/linux h               ; \
+	    ln -fs ${LINUX_KERNEL_PATH}/include/linux sys             ; \
+	    ln -fs ${LINUX_KERNEL_PATH}/include/linux netinet         ; \
+	fi
 	$(RM) -f linux 
 	ln -fs ${LINUX_KERNEL_PATH}/include/linux linux 
 	$(RM) -f net 
 	ln -fs ${LINUX_KERNEL_PATH}/include/net net 
-	$(RM) -f netinet 
-	ln -fs ${LINUX_KERNEL_PATH}/include/linux netinet 
-	$(RM) -f sys
-	ln -fs ${LINUX_KERNEL_PATH}/include/linux sys
 	$(RM) -f asm-generic
 	ln -fs ${LINUX_KERNEL_PATH}/include/asm-generic asm-generic
 	$(RM) -f asm
