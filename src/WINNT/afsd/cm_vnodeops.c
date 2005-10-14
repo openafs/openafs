@@ -4122,6 +4122,8 @@ void cm_CheckLocks()
     struct rx_connection * callp;
     cm_scache_t * scp;
 
+    cm_InitReq(&req);
+
     lock_ObtainWrite(&cm_scacheLock);
 
     cm_lockRefreshCycle++;
@@ -4194,8 +4196,6 @@ void cm_CheckLocks()
                 if(scp->serverLock != -1) {
                     cm_fid_t cfid;
                     cm_user_t * userp;
-
-                    cm_InitReq(&req);
 
                     tfid.Volume = scp->fid.volume;
                     tfid.Vnode = scp->fid.vnode;
@@ -4291,6 +4291,8 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int client_is_dead)
     cm_req_t req;
     struct rx_connection * callp;
     int newLock = -1;
+
+    cm_InitReq(&req);
 
     if (client_is_dead) {
         code = CM_ERROR_TIMEDOUT;
@@ -4413,8 +4415,6 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int client_is_dead)
     } else {
         cm_fid_t cfid;
         cm_user_t * userp;
-
-        cm_InitReq(&req);
 
         code = cm_SyncOp(scp, NULL, oldFileLock->userp, &req, 0,
                          CM_SCACHESYNC_NEEDCALLBACK
