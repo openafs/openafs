@@ -4839,17 +4839,6 @@ smb_Rename(smb_vc_t *vcp, smb_packet_t *inp, char * oldPathp, char * newPathp, i
     spacep = inp->spacep;
     smb_StripLastComponent(spacep->data, &oldLastNamep, oldPathp);
 
-    /*
-     * Changed to use CASEFOLD always.  This enables us to rename Foo/baz when
-     * what actually exists is foo/baz.  I don't know why the code used to be
-     * the way it was.  1/29/96
-     *
-     *     	caseFold = ((vcp->flags & SMB_VCFLAG_USEV3) ? 0: CM_FLAG_CASEFOLD);
-     *
-     * Changed to use CM_FLAG_FOLLOW.  7/24/96
-     *
-     *	caseFold = CM_FLAG_CASEFOLD;
-     */
     caseFold = CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD;
     code = cm_NameI(cm_data.rootSCachep, spacep->data, caseFold,
                     userp, tidPathp, &req, &oldDscp);
@@ -4962,6 +4951,7 @@ smb_Rename(smb_vc_t *vcp, smb_packet_t *inp, char * oldPathp, char * newPathp, i
     thyper.HighPart = 0;
 
     code = cm_ApplyDir(oldDscp, smb_RenameProc, &rock, &thyper, userp, &req, NULL);
+    osi_Log1(smb_logp, "smb_RenameProc returns %ld", code);
 
     if (code == CM_ERROR_STOPNOW)
         code = 0;
