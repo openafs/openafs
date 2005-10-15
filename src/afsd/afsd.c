@@ -47,7 +47,8 @@
   *                system problems, which can only be ameliorated by changing
   *                NINODE (or equivalent) and rebuilding the kernel.
   *		   This option is now disabled.
-  *	-logfile   Place where to put the logfile (default in <cache>/etc/AFSLog.
+  *	-logfile   [OBSOLETE] Place where to put the logfile (default in
+  *                <cache>/etc/AFSLog.
   *	-waitclose make close calls always synchronous (slows em down, tho)
   *	-files_per_subdir [n]	number of files per cache subdir. (def=2048)
   *	-shutdown  Shutdown afs daemons
@@ -188,7 +189,6 @@ kern_return_t DiskArbDiskAppearedWithMountpointPing_auto(char *, unsigned int,
 
 
 #define CACHEINFOFILE   "cacheinfo"
-#define	AFSLOGFILE	"AFSLog"
 #define	DCACHEFILE	"CacheItems"
 #define	VOLINFOFILE	"VolumeItems"
 #define CELLINFOFILE	"CellItems"
@@ -242,7 +242,6 @@ char confDir[1024];		/*Where the workstation AFS configuration lives */
 char fullpn_DCacheFile[1024];	/*Full pathname of DCACHEFILE */
 char fullpn_VolInfoFile[1024];	/*Full pathname of VOLINFOFILE */
 char fullpn_CellInfoFile[1024];	/*Full pathanem of CELLINFOFILE */
-char fullpn_AFSLogFile[1024];	/*Full pathname of AFSLOGFILE */
 char fullpn_CacheInfo[1024];	/*Full pathname of CACHEINFO */
 char fullpn_VFile[1024];	/*Full pathname of data cache files */
 char *vFilePtr;			/*Ptr to the number part of above pathname */
@@ -1439,10 +1438,9 @@ mainproc(struct cmd_syndesc *as, char *arock)
 	strcpy(confDir, as->parms[17].items->data);
     }
     sprintf(fullpn_CacheInfo, "%s/%s", confDir, CACHEINFOFILE);
-    sprintf(fullpn_AFSLogFile, "%s/%s", confDir, AFSLOGFILE);
     if (as->parms[18].items) {
 	/* -logfile */
-	strcpy(fullpn_AFSLogFile, as->parms[18].items->data);
+        printf("afsd: Ignoring obsolete -logfile flag\n");
     }
     if (as->parms[19].items) {
 	/* -waitclose */
@@ -1573,18 +1571,6 @@ mainproc(struct cmd_syndesc *as, char *arock)
     if (ParseCacheInfoFile()) {
 	exit(1);
     }
-
-    if ((logfd = fopen(fullpn_AFSLogFile, "r+")) == 0) {
-	if (afsd_verbose)
-	    printf("%s: Creating '%s'\n", rn, fullpn_AFSLogFile);
-	if (CreateCacheFile(fullpn_AFSLogFile, NULL)) {
-	    printf
-		("%s: Can't create '%s' (You may want to use the -logfile option)\n",
-		 rn, fullpn_AFSLogFile);
-	    exit(1);
-	}
-    } else
-	fclose(logfd);
 
     /* do some random computations in memcache case to get things to work
      * reasonably no matter which parameters you set.
@@ -2063,21 +2049,6 @@ mainproc(struct cmd_syndesc *as, char *arock)
     /* once again, meaningless for a memory-based cache. */
     if (!(cacheFlags & AFSCALL_INIT_MEMCACHE))
 	call_syscall(AFSOP_VOLUMEINFO, fullpn_VolInfoFile);
-
-    /*
-     * Pass the kernel the name of the afs logging file holding the volume
-     * information.
-     */
-    if (afsd_debug)
-	printf("%s: Calling AFSOP_AFSLOG: volume info file is '%s'\n", rn,
-	       fullpn_AFSLogFile);
-#if defined(AFS_SGI_ENV)
-    /* permit explicit -logfile argument to enable logging on memcache systems */
-    if (!(cacheFlags & AFSCALL_INIT_MEMCACHE) || as->parms[18].items)
-#else
-    if (!(cacheFlags & AFSCALL_INIT_MEMCACHE))	/* ... nor this ... */
-#endif
-	call_syscall(AFSOP_AFSLOG, fullpn_AFSLogFile);
 
     /*
      * Give the kernel the names of the AFS files cached on the workstation's
