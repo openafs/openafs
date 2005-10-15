@@ -132,22 +132,23 @@ LIBOBJS = \
 
 LIBAFSRPC = libafsrpc.${SHLIB_SUFFIX}.${LIBAFSRPCMAJOR}.${LIBAFSRPCMINOR}
 
-all: ${TOP_LIBDIR}/${LIBAFSRPC} ${TOP_LIBDIR}/libafsrpc.${SHLIB_SUFFIX}
+all: ${TOP_LIBDIR}/${LIBAFSRPC}
 
-install: ${DESTDIR}${libdir}/${LIBAFSRPC} ${DESTDIR}${libdir}/libafsrpc.${SHLIB_SUFFIX}
+install: ${DESTDIR}${libdir}/${LIBAFSRPC}
 
 ${DEST}/lib/${LIBAFSRPC}: ${LIBAFSRPC}
 	${INSTALL} ${LIBAFSRPC} ${DEST}/lib/${LIBAFSRPC}
-
-${DEST}/lib/libafsrpc.${SHLIB_SUFFIX}: ${DEST}/lib/${LIBAFSRPC}
 	-ln -f -s ${LIBAFSRPC} ${DEST}/lib/libafsrpc.${SHLIB_SUFFIX}
+	-ln -f -s ${LIBAFSRPC} ${DEST}/lib/libafsrpc.${SHLIB_SUFFIX}.${LIBAFSRPCMAJOR}
 
 ${LIBAFSRPC}: ${LIBOBJS}
 	case ${SYS_NAME} in \
 	rs_aix4* | rs_aix5*) \
 		${SHLIB_LINKER} -o ${LIBAFSRPC} ${LIBOBJS} -bE:${srcdir}/afsrpc.exp ${MT_LIBS};; \
 	sun*_5*) \
-		${SHLIB_LINKER} -h ${LIBAFSRPC} -o ${LIBAFSRPC} ${LIBOBJS} ${MT_LIBS};; \
+		${SHLIB_LINKER} -h libafsrpc.${SHLIB_SUFFIX}.${LIBAFSRPCMAJOR} -o ${LIBAFSRPC} ${LIBOBJS} ${MT_LIBS};; \
+	*_linux*) \
+		${SHLIB_LINKER} -Wl,-h,libafsrpc.${SHLIB_SUFFIX}.${LIBAFSRPCMAJOR} -Wl,--version-script=mapfile -o ${LIBAFSRPC} ${LIBOBJS} ${MT_LIBS};; \
 	*) \
 		${SHLIB_LINKER} -o ${LIBAFSRPC} ${LIBOBJS} ${MT_LIBS};; \
 	esac
@@ -410,15 +411,13 @@ clean:
 
 ${DESTDIR}${libdir}/${LIBAFSRPC}: ${LIBAFSRPC}
 	${INSTALL} ${LIBAFSRPC} ${DESTDIR}${libdir}/${LIBAFSRPC}
-
-${DESTDIR}${libdir}/libafsrpc.${SHLIB_SUFFIX}: ${DESTDIR}${libdir}/${LIBAFSRPC}
 	-ln -f -s ${LIBAFSRPC} ${DESTDIR}${libdir}/libafsrpc.${SHLIB_SUFFIX}
+	-ln -f -s ${LIBAFSRPC} ${DESTDIR}${libdir}/libafsrpc.${SHLIB_SUFFIX}.${LIBAFSRPCMAJOR}
 
 ${TOP_LIBDIR}/${LIBAFSRPC}: ${LIBAFSRPC}
 	${INSTALL} ${LIBAFSRPC} ${TOP_LIBDIR}/${LIBAFSRPC}
-
-${TOP_LIBDIR}/libafsrpc.${SHLIB_SUFFIX}: ${TOP_LIBDIR}/${LIBAFSRPC}
 	-ln -f -s ${LIBAFSRPC} ${TOP_LIBDIR}/libafsrpc.${SHLIB_SUFFIX}
+	-ln -f -s ${LIBAFSRPC} ${TOP_LIBDIR}/libafsrpc.${SHLIB_SUFFIX}.${LIBAFSRPCMAJOR}
 
-dest: ${DEST}/lib/${LIBAFSRPC} ${DEST}/lib/libafsrpc.${SHLIB_SUFFIX}
+dest: ${DEST}/lib/${LIBAFSRPC}
 
