@@ -617,7 +617,6 @@ afs_BQueue(register short aopcode, register struct vcache *avc,
     }
 }
 
-#ifdef	AFS_AIX32_ENV
 #ifdef AFS_AIX41_ENV
 /* AIX 4.1 has a much different sleep/wakeup mechanism available for use. 
  * The modifications here will work for either a UP or MP machine.
@@ -641,9 +640,9 @@ afs_int32 afs_biodcnt = 0;
  * This function obtains, and returns, a pointer to a buffer for
  * processing by a daemon.  It sleeps until such a buffer is available.
  * The source of buffers for it is the list afs_asyncbuf (see also 
- * naix_vm_strategy).  This function may be invoked concurrently by
+ * afs_gn_strategy).  This function may be invoked concurrently by
  * several processes, that is, several instances of the same daemon.
- * naix_vm_strategy, which adds buffers to the list, runs at interrupt
+ * afs_gn_strategy, which adds buffers to the list, runs at interrupt
  * level, while get_bioreq runs at process level.
  *
  * Since AIX 4.1 can wake just one process at a time, the separate sleep
@@ -653,7 +652,7 @@ afs_int32 afs_biodcnt = 0;
  * process and interrupts.
  */
 Simple_lock afs_asyncbuf_lock;
-/*static*/ struct buf *
+struct buf *
 afs_get_bioreq()
 {
     struct buf *bp = NULL;
@@ -869,7 +868,7 @@ afs_BioDaemon(afs_int32 nbiods)
 
 	/*
 	 * buffer may be linked with other buffers via the b_work field.
-	 * See also naix_vm_strategy.  For each buffer in the chain (including
+	 * See also afs_gn_strategy.  For each buffer in the chain (including
 	 * bp) notify all users of the buffer that the daemon is finished
 	 * using it by calling iodone.  
 	 * assumes iodone can modify the b_work field.
@@ -891,355 +890,7 @@ afs_BioDaemon(afs_int32 nbiods)
     }				/* infinite loop (unless we're interrupted) */
 }				/* end of afs_BioDaemon() */
 
-#else /* AFS_AIX41_ENV */
-
-
-#define	squeue afs_q
-struct afs_bioqueue {
-    struct squeue lruq;
-    int sleeper;
-    int cnt;
-};
-struct afs_bioqueue afs_bioqueue;
-struct buf *afs_busyq = NULL;
-struct buf *afs_asyncbuf;
-afs_int32 afs_biodcnt = 0;
-
-/* in implementing this, I assumed that all external linked lists were
- * null-terminated.  
- *
- * Several places in this code traverse a linked list.  The algorithm
- * used here is probably unfamiliar to most people.  Careful examination
- * will show that it eliminates an assignment inside the loop, as compared
- * to the standard algorithm, at the cost of occasionally using an extra
- * variable.
- */
-
-/* get_bioreq()
- *
- * This function obtains, and returns, a pointer to a buffer for
- * processing by a daemon.  It sleeps until such a buffer is available.
- * The source of buffers for it is the list afs_asyncbuf (see also 
- * naix_vm_strategy).  This function may be invoked concurrently by
- * several processes, that is, several instances of the same daemon.
- * naix_vm_strategy, which adds buffers to the list, runs at interrupt
- * level, while get_bioreq runs at process level.
- *
- * The common kernel paradigm of sleeping and waking up, in which all the
- * competing processes sleep waiting for wakeups on one address, is not
- * followed here.  Instead, the following paradigm is used:  when a daemon
- * goes to sleep, it checks for other sleeping daemons.  If there aren't any,
- * it sleeps on the address of variable afs_asyncbuf.  But if there is
- * already a daemon sleeping on that address, it threads its own unique
- * address onto a list, and sleeps on that address.  This way, every 
- * sleeper is sleeping on a different address, and every wakeup wakes up
- * exactly one daemon.  This prevents a whole bunch of daemons from waking
- * up and then immediately having to go back to sleep.  This provides a
- * performance gain and makes the I/O scheduling a bit more deterministic.
- * The list of sleepers is variable afs_bioqueue.  The unique address
- * on which to sleep is passed to get_bioreq as its parameter.
- */
-/*static*/ struct buf *
-afs_get_bioreq(self)
-     struct afs_bioqueue *self;	/* address on which to sleep */
-
-{
-    struct buf *bp = NULL;
-    struct buf *bestbp;
-    struct buf **bestlbpP, **lbpP;
-    int bestage, stop;
-    struct buf *t1P, *t2P;	/* temp pointers for list manipulation */
-    int oldPriority;
-    afs_uint32 wait_ret;
-    struct afs_bioqueue *s;
-
-    /* ??? Does the forward pointer of the returned buffer need to be NULL?
-     */
-
-    /* Disable interrupts from the strategy function, and save the 
-     * prior priority level
-     */
-    oldPriority = i_disable(INTMAX);
-
-    /* Each iteration of following loop either pulls
-     * a buffer off afs_asyncbuf, or sleeps.  
-     */
-    while (1) {			/* inner loop */
-	if (afs_asyncbuf) {
-	    /* look for oldest buffer */
-	    bp = bestbp = afs_asyncbuf;
-	    bestage = (int)bestbp->av_back;
-	    bestlbpP = &afs_asyncbuf;
-	    while (1) {
-		lbpP = &bp->av_forw;
-		bp = *lbpP;
-		if (!bp)
-		    break;
-		if ((int)bp->av_back - bestage < 0) {
-		    bestbp = bp;
-		    bestlbpP = lbpP;
-		    bestage = (int)bp->av_back;
-		}
-	    }
-	    bp = bestbp;
-	    *bestlbpP = bp->av_forw;
-	    break;
-	} else {
-	    int interrupted;
-
-	    /* If afs_asyncbuf is null, it is necessary to go to sleep.
-	     * There are two possibilities:  either there is already a
-	     * daemon that is sleeping on the address of afs_asyncbuf,
-	     * or there isn't. 
-	     */
-	    if (afs_bioqueue.sleeper) {
-		/* enqueue */
-		QAdd(&(afs_bioqueue.lruq), &(self->lruq));
-		interrupted = sleep((caddr_t) self, PCATCH | (PZERO + 1));
-		if (self->lruq.next != &self->lruq) {	/* XXX ##3 XXX */
-		    QRemove(&(self->lruq));	/* dequeue */
-		}
-		self->cnt++;
-		afs_bioqueue.sleeper = FALSE;
-		if (interrupted) {
-		    /* re-enable interrupts from strategy */
-		    i_enable(oldPriority);
-		    return (NULL);
-		}
-		continue;
-	    } else {
-		afs_bioqueue.sleeper = TRUE;
-		interrupted =
-		    sleep((caddr_t) & afs_asyncbuf, PCATCH | (PZERO + 1));
-		afs_bioqueue.sleeper = FALSE;
-		if (interrupted) {
-		    /*
-		     * We need to wakeup another daemon if present
-		     * since we were waiting on afs_asyncbuf.
-		     */
-#ifdef	notdef			/* The following doesn't work as advertised */
-		    if (afs_bioqueue.lruq.next != &afs_bioqueue.lruq) {
-			struct squeue *bq = afs_bioqueue.lruq.next;
-			QRemove(bq);
-			wakeup(bq);
-		    }
-#endif
-		    /* re-enable interrupts from strategy */
-		    i_enable(oldPriority);
-		    return (NULL);
-		}
-		continue;
-	    }
-
-	}			/* end of "else asyncbuf is empty" */
-    }				/* end of "inner loop" */
-
-    /*assert (bp); */
-
-    i_enable(oldPriority);	/* re-enable interrupts from strategy */
-
-    /* For the convenience of other code, replace the gnodes in
-     * the b_vp field of bp and the other buffers on the b_work
-     * chain with the corresponding vnodes.   
-     *
-     * ??? what happens to the gnodes?  They're not just cut loose,
-     * are they?
-     */
-    for (t1P = bp;;) {
-	t2P = (struct buf *)t1P->b_work;
-	t1P->b_vp = ((struct gnode *)t1P->b_vp)->gn_vnode;
-	if (!t2P)
-	    break;
-
-	t1P = (struct buf *)t2P->b_work;
-	t2P->b_vp = ((struct gnode *)t2P->b_vp)->gn_vnode;
-	if (!t1P)
-	    break;
-    }
-
-    /* If the buffer does not specify I/O, it may immediately
-     * be returned to the caller.  This condition is detected
-     * by examining the buffer's flags (the b_flags field).  If
-     * the B_PFPROT bit is set, the buffer represents a protection
-     * violation, rather than a request for I/O.  The remainder
-     * of the outer loop handles the case where the B_PFPROT bit is clear.
-     */
-    if (bp->b_flags & B_PFPROT) {
-	return (bp);
-    }
-
-    /* wake up another process to handle the next buffer, and return
-     * bp to the caller.
-     */
-    oldPriority = i_disable(INTMAX);
-
-    /* determine where to find the sleeping process. 
-     * There are two cases: either it is sleeping on
-     * afs_asyncbuf, or it is sleeping on its own unique
-     * address.  These cases are distinguished by examining
-     * the sleeper field of afs_bioqueue.
-     */
-    if (afs_bioqueue.sleeper) {
-	wakeup(&afs_asyncbuf);
-    } else {
-	if (afs_bioqueue.lruq.next == &afs_bioqueue.lruq) {
-	    /* queue is empty, what now? ??? */
-	    /* Should this be impossible, or does    */
-	    /* it just mean that nobody is sleeping? */ ;
-	} else {
-	    struct squeue *bq = afs_bioqueue.lruq.next;
-	    QRemove(bq);
-	    QInit(bq);
-	    wakeup(bq);
-	    afs_bioqueue.sleeper = TRUE;
-	}
-    }
-    i_enable(oldPriority);	/* re-enable interrupts from strategy */
-    return (bp);
-
-}				/* end of function get_bioreq() */
-
-
-/* afs_BioDaemon
- *
- * This function is the daemon.  It is called from the syscall
- * interface.  Ordinarily, a script or an administrator will run a
- * daemon startup utility, specifying the number of I/O daemons to
- * run.  The utility will fork off that number of processes,
- * each making the appropriate syscall, which will cause this
- * function to be invoked.
- */
-static int afs_initbiod = 0;	/* this is self-initializing code */
-int DOvmlock = 0;
-afs_BioDaemon(nbiods)
-     afs_int32 nbiods;
-{
-    struct afs_bioqueue *self;
-    afs_int32 code, s, pflg = 0;
-    label_t jmpbuf;
-    struct buf *bp, *bp1, *tbp1, *tbp2;	/* temp pointers only */
-    caddr_t tmpaddr;
-    struct vnode *vp;
-    struct vcache *vcp;
-    char tmperr;
-    if (!afs_initbiod) {
-	/* XXX ###1 XXX */
-	afs_initbiod = 1;
-	/* Initialize the queue of waiting processes, afs_bioqueue.  */
-	QInit(&(afs_bioqueue.lruq));
-    }
-
-    /* establish ourself as a kernel process so shutdown won't kill us */
-/*    u.u_procp->p_flag |= SKPROC;*/
-
-    /* Initialize a token (self) to use in the queue of sleeping processes.   */
-    self = (struct afs_bioqueue *)afs_osi_Alloc(sizeof(struct afs_bioqueue));
-    pin(self, sizeof(struct afs_bioqueue));	/* fix in memory */
-    memset(self, 0, sizeof(*self));
-    QInit(&(self->lruq));	/* initialize queue entry pointers */
-
-
-    /* Ignore HUP signals... */
-    SIGDELSET(u.u_procp->p_sig, SIGHUP);
-    SIGADDSET(u.u_procp->p_sigignore, SIGHUP);
-    SIGDELSET(u.u_procp->p_sigcatch, SIGHUP);
-    /* Main body starts here -- this is an intentional infinite loop, and
-     * should NEVER exit 
-     *
-     * Now, the loop will exit if get_bioreq() returns NULL, indicating 
-     * that we've been interrupted.
-     */
-    while (1) {
-	bp = afs_get_bioreq(self);
-	if (!bp)
-	    break;		/* we were interrupted */
-	if (code = setjmpx(&jmpbuf)) {
-	    /* This should not have happend, maybe a lack of resources  */
-	    s = splimp();
-	    for (bp1 = bp; bp; bp = bp1) {
-		if (bp1)
-		    bp1 = bp1->b_work;
-		bp->b_actf = 0;
-		bp->b_error = code;
-		bp->b_flags |= B_ERROR;
-		iodone(bp);
-	    }
-	    splx(s);
-	    continue;
-	}
-	vcp = VTOAFS(bp->b_vp);
-	if (bp->b_flags & B_PFSTORE) {
-	    ObtainWriteLock(&vcp->lock, 210);
-	    if (vcp->v.v_gnode->gn_mwrcnt) {
-		afs_offs_t newlength =
-		    (afs_offs_t) dbtob(bp->b_blkno) + bp->b_bcount;
-		if (vcp->m.Length < newlength) {
-		    afs_Trace4(afs_iclSetp, CM_TRACE_SETLENGTH,
-			       ICL_TYPE_STRING, __FILE__, ICL_TYPE_LONG,
-			       __LINE__, ICL_TYPE_OFFSET,
-			       ICL_HANDLE_OFFSET(vcp->m.Length),
-			       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(newlength));
-		    vcp->m.Length = newlength;
-		}
-	    }
-	    ReleaseWriteLock(&vcp->lock);
-	}
-	/* If the buffer represents a protection violation, rather than
-	 * an actual request for I/O, no special action need be taken.  
-	 */
-	if (bp->b_flags & B_PFPROT) {
-	    iodone(bp);		/* Notify all users of the buffer that we're done */
-	    continue;
-	}
-	if (DOvmlock)
-	    ObtainWriteLock(&vcp->pvmlock, 558);
-	/*
-	 * First map its data area to a region in the current address space
-	 * by calling vm_att with the subspace identifier, and a pointer to
-	 * the data area.  vm_att returns  a new data area pointer, but we
-	 * also want to hang onto the old one.
-	 */
-	tmpaddr = bp->b_baddr;
-	bp->b_baddr = vm_att(bp->b_xmemd.subspace_id, tmpaddr);
-	tmperr = afs_ustrategy(bp);	/* temp variable saves offset calculation */
-	if (tmperr) {		/* in non-error case */
-	    bp->b_flags |= B_ERROR;	/* should other flags remain set ??? */
-	    bp->b_error = tmperr;
-	}
-
-	/* Unmap the buffer's data area by calling vm_det.  Reset data area
-	 * to the value that we saved above.
-	 */
-	vm_det(bp->b_un.b_addr);
-	bp->b_baddr = tmpaddr;
-
-	/*
-	 * buffer may be linked with other buffers via the b_work field.
-	 * See also naix_vm_strategy.  For each buffer in the chain (including
-	 * bp) notify all users of the buffer that the daemon is finished
-	 * using it by calling iodone.  
-	 * assumes iodone can modify the b_work field.
-	 */
-	for (tbp1 = bp;;) {
-	    tbp2 = (struct buf *)tbp1->b_work;
-	    iodone(tbp1);
-	    if (!tbp2)
-		break;
-
-	    tbp1 = (struct buf *)tbp2->b_work;
-	    iodone(tbp2);
-	    if (!tbp1)
-		break;
-	}
-	if (DOvmlock)
-	    ReleaseWriteLock(&vcp->pvmlock);	/* Unlock the vnode.  */
-	clrjmpx(&jmpbuf);
-    }				/* infinite loop (unless we're interrupted) */
-    unpin(self, sizeof(struct afs_bioqueue));
-    afs_osi_Free(self, sizeof(struct afs_bioqueue));
-}				/* end of afs_BioDaemon() */
 #endif /* AFS_AIX41_ENV */
-#endif /* AFS_AIX32_ENV */
 
 
 int afs_nbrs = 0;
@@ -1341,16 +992,10 @@ shutdown_daemons(void)
 	memset((char *)afs_brs, 0, sizeof(afs_brs));
 	memset((char *)&afs_xbrs, 0, sizeof(afs_lock_t));
 	afs_brsWaiters = 0;
-#ifdef AFS_AIX32_ENV
 #ifdef AFS_AIX41_ENV
 	lock_free(&afs_asyncbuf_lock);
 	unpin(&afs_asyncbuf, sizeof(struct buf *));
 	unpin(&afs_asyncbuf_cv, sizeof(afs_int32));
-#else /* AFS_AIX41_ENV */
-	afs_busyq = NULL;
-	afs_biodcnt = 0;
-	memset((char *)&afs_bioqueue, 0, sizeof(struct afs_bioqueue));
-#endif
 	afs_initbiod = 0;
 #endif
     }

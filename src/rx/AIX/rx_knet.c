@@ -19,15 +19,14 @@ RCSID
 static struct protosw parent_proto;	/* udp proto switch */
 
 static void
-rxk_input(am, hlen)
-     register struct mbuf *am;
+rxk_input(struct mbuf *am, int hlen)
 {
-    register unsigned short *tsp;
+    unsigned short *tsp;
     int hdr;
     struct udphdr *tu;
-    register struct ip *ti;
+    struct ip *ti;
     struct udpiphdr *tvu;
-    register int i;
+    int i;
     char *phandle;
     long code;
     struct sockaddr_in taddr;
@@ -80,8 +79,7 @@ static struct ifqueue rxk_q;	/* RXKluge queue        */
 static struct arpcom rxk_bogosity;
 
 /* rxk_kpork -	send pkt over to netwerk kporc for processing */
-rxk_kpork(m)
-     register struct mbuf *m;
+rxk_kpork(struct mbuf *m)
 {
     find_input_type(0xdead, m, &rxk_bogosity, 0);
 }
@@ -108,8 +106,8 @@ void
 ip_stripoptions(struct mbuf *m, STRIP_ARG2_TYPE mopt)
 {
     struct ip *ip = mtod(m, struct ip *);
-    register int i;
-    register caddr_t opts;
+    int i;
+    caddr_t opts;
     int olen;
 
     olen = (ip->ip_hl << 2) - sizeof(struct ip);
@@ -123,16 +121,15 @@ ip_stripoptions(struct mbuf *m, STRIP_ARG2_TYPE mopt)
 }
 
 /* rxk_RX_input -	RX pkt input process */
-rxk_RX_input(am)
-     register struct mbuf *am;
+rxk_RX_input(struct mbuf *am)
 {
-    register unsigned short *tsp;
+    unsigned short *tsp;
     int hdr;
     struct udphdr *tu;
-    register struct ip *ti;
+    struct ip *ti;
     struct udpiphdr *tvu;
-    register int i;
-    char *phandle;
+    int i;
+    struct rx_packet *phandle;
     long code;
     struct sockaddr_in taddr;
     int tlen;
@@ -245,7 +242,7 @@ rxk_RX_input(am)
 static
 rxk_isr()
 {
-    register struct mbuf *m;
+    struct mbuf *m;
     IFQ_LOCK_DECL();		/* silly macro has trailing ';'.  Sigh. */
     while (1) {
 	IF_DEQUEUE(&rxk_q, m);
@@ -263,7 +260,7 @@ rxk_isr()
 static void
 rxk_fasttimo(void)
 {
-    int (*tproc) ();
+    void (*tproc) (void);
     struct clock temp;
 
     /* do rx fasttimo processing here */
@@ -276,7 +273,7 @@ rxk_fasttimo(void)
 void
 rxk_init(void)
 {
-    register struct protosw *pr;
+    struct protosw *pr;
     extern struct protosw *pffindproto();
 
     if (!rxk_initDone && (pr = pffindproto(AF_INET, IPPROTO_UDP, SOCK_DGRAM))) {
@@ -307,8 +304,8 @@ rxk_init(void)
 void
 shutdown_rxkernel(void)
 {
-    register struct protosw *pr;
-    register int i;
+    struct protosw *pr;
+    int i;
     extern struct protosw *pffindproto();
 
     if (rxk_initDone && (pr = pffindproto(AF_INET, IPPROTO_UDP, SOCK_DGRAM))) {
@@ -347,10 +344,10 @@ int
 osi_NetSend(osi_socket asocket, struct sockaddr_in *addr, struct iovec *dvec,
 	    int nvec, afs_int32 asize, int istack)
 {
-    register struct mbuf *tm, *um;
-    register afs_int32 code;
+    struct mbuf *tm, *um;
+    afs_int32 code;
     struct mbuf *top = 0;
-    register struct mbuf *m, **mp;
+    struct mbuf *m, **mp;
     int len, mlen;
     char *tdata;
     caddr_t tpa;

@@ -144,7 +144,7 @@ devtovfs(dev_t dev)
 
     a.dev = dev;
     a.ans = NULL;
-    vfs_search(devtovfs_func, &a);
+    vfs_search(devtovfs_func, (caddr_t) &a);
     return a.ans;
 }
 

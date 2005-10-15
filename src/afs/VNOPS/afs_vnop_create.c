@@ -500,9 +500,9 @@ afs_LocalHero(register struct vcache *avc, register struct dcache *adc,
 	hset(avc->m.DataVersion, avers);
 #ifdef AFS_64BIT_CLIENT
 	FillInt64(avc->m.Length, astat->Length_hi, astat->Length);
-#else /* AFS_64BIT_ENV */
+#else /* AFS_64BIT_CLIENT */
 	avc->m.Length = astat->Length;
-#endif /* AFS_64BIT_ENV */
+#endif /* AFS_64BIT_CLIENT */
 	avc->m.Date = astat->ClientModTime;
     }
     if (ok) {
