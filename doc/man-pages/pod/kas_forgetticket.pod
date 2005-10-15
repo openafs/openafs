@@ -1,0 +1,59 @@
+=head1 NAME
+
+kas forgetticket - Discards all tickets for the issuer
+
+=head1 SYNOPSIS
+
+kas forgetticket [B<-all>]  [B<-help>]
+
+kas f [B<-a>]  [B<-h>]
+
+=head1 DESCRIPTION
+
+The C<kas forgetticket> command discards all of the issuer's tickets
+stored in the local machine's kernel memory. This includes the AFS
+server ticket from each cell in which the user has authenticated, and
+any tickets that the user have acquired during the current kas session
+(either when entering the session or by using the C<kas getticket>
+command).
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-all>
+
+Discards all tickets. This argument explicitly invokes the
+command's default behavior.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid
+options are ignored.
+
+=back
+
+=head1 EXAMPLES
+
+The following command discards all of the issuer's tickets.
+
+B<    kas forgetticket>
+
+
+=head1 PRIVILEGE REQUIRED
+
+None, and no password is required.
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+Converted from html to pod by Alf Wachsmann <alfw@slac.stanford.edu>, 2003,
+and Elizabeth Cassell <e_a_c@mailsnare.net>, 2004,
+Stanford Linear Accelerator Center, a department of Stanford University.
+
+=head1 SEE ALSO
+
+L<kas(1)>
+
+=cut

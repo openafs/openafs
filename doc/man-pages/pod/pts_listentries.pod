@@ -1,0 +1,124 @@
+=head1 NAME
+
+pts listentries - Displays all user or group entries in the Protection Database
+
+=head1 SYNOPSIS
+
+pts listentries [B<-users>]  [B<-groups>]  [B<-cell> I<cell name>]
+[B<-noauth>]  [B<-force>]  [B<-help>]
+
+pts liste [B<-u>]  [B<-g>]  [B<-c> I<cell name>]  [B<-n>]  [B<-f>]  [B<-h>]
+
+=head1 DESCRIPTION
+
+The C<pts listentries> command displays the name and AFS ID of all
+Protection Database entries of the indicated type. It also displays
+the AFS ID of each entry's owner and creator.
+To display all user and machine entries, either include the B<-users>
+flag or omit both it and the B<-groups> flag. To display all group
+entries, include the B<-groups> flag. To display all entries, provide
+both flags.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-users>
+
+Displays user and machine entries.
+
+=item B<-groups>
+
+Displays group entries.
+
+=item B<-cell> I<cell name>
+
+Names the cell in which to run the command. For more details,
+see the introductory L<pts(1)> reference page.
+
+=item B<-noauth>
+
+Assigns the unprivileged identity anonymous to the issuer. For
+more details, see the introductory L<pts(1)> reference page.
+
+=item B<-force>
+
+Enables the command to continue executing as far as possible
+when errors or other problems occur, rather than halting
+execution at the first error.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid
+options are ignored.
+
+==back
+
+=head1 OUTPUT
+
+The output includes a line for each entry, with information in four
+columns that have the following headers:
+
+=over 4
+
+=item Name
+
+The entry's name
+
+=item ID
+
+The entry's AFS ID (AFS UID for a user or machine, negative AFS
+GID for a group)
+
+=item Owner
+
+The AFS ID of the user or group that owns the entry
+
+=item Creator
+
+The AFS ID of the user who created the entry (the
+system:administrators group is listed as the creator of the
+entry for anonymous and the system groups, but it is not
+otherwise possible for a group to create groups)
+
+=back
+
+In general, the entries appear in the order in which they were
+created.
+
+=head1 EXAMPLES
+
+The following example displays both user and group entries.
+
+    pts listentries -users -groups
+
+    Name                          ID  Owner Creator
+    system:administrators       -204   -204    -204
+    system:anyuser              -101   -204    -204
+    system:authuser             -102   -204    -204
+    anonymous                  32766   -204    -204
+    admin                          1   -204   32766
+    pat                          100   -204       1
+    smith                        101   -204       1
+    pat:friends                 -206    100     100
+    staff                       -207   -204       1
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must belong to the system:administrators group.
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+Converted from html to pod by Alf Wachsmann <alfw@slac.stanford.edu>, 2003,
+Stanford Linear Accelerator Center, a department of Stanford University.
+
+=head1 SEE ALSO
+
+L<pts(1)>,
+L<pts_creategroup(1)>,
+L<pts_createuser(1)>,
+L<pts_examine(1)>
+
+=cut

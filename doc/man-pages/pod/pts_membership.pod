@@ -1,0 +1,166 @@
+=head1 NAME
+
+pts membership - Displays the membership list for a user or group
+
+=head1 SYNOPSIS
+
+pts membership B<-nameorid> I<user or group name or id>
+[I<user or group name or id> ...]
+[B<-cell> I<cell name>]
+[B<-noauth>]  [B<-force>]  [B<-help>]
+
+pts m B<-na> I<user or group name or id>
+[I<user or group name or id> ...]
+[B<-c> I<cell name>]  [B<-no>]  [B<-f>]  [B<-h>]
+
+pts groups B<-na> I<user or group name or id>
+[I<user or group name or id> ...]
+[B<-c> I<cell name>]
+[B<-no>] [B<-f>]  [B<-h>]
+
+pts g B<-na> I<user or group name or id>
+[I<user or group name or id> ...]
+[B<-c> I<cell name>]  [B<-no>]  [B<-f>]  [B<-h>]
+
+=head1 DESCRIPTION
+
+The C<pts membership> command lists the groups to which each user or
+machine specified by the B<-nameorid> argument belongs, or lists the
+users and machines that belong to each group specified by the
+B<-nameorid> argument.
+It is not possible to list the members of the system:anyuser or
+system:authuser groups, and they do not appear in the list of groups
+to which a user belongs.
+To add users or machine to groups, use the pts adduser command; to
+remove them, use the pts removeuser command.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-nameorid> I<user or group name or id> [I<user or group name or id> ...]
+
+Specifies the name or AFS UID of each user entry, the IP
+address (complete or wildcard-style) or AFS UID of each machine
+entry, or the name or AFS GID of each group, for which to list
+group membership. It is acceptable to mix users, machines, and
+groups on the same command line, as well as names and IDs.
+Precede the GID of each group with a hyphen to indicate that it
+is negative.
+
+=item B<-cell> I<cell name>
+
+Names the cell in which to run the command. For more details,
+see the introductory L<pts(1)> reference page.
+
+=item B<-noauth>
+
+Assigns the unprivileged identity anonymous to the issuer. For
+more details, see the introductory L<pts(1)> reference page.
+
+=item B<-force>
+
+Enables the command to continue executing as far as possible
+when errors or other problems occur, rather than halting
+execution at the first error.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid
+options are ignored.
+
+==back
+
+=head1 OUTPUT
+
+For each user and machine, the output begins with the following header
+line, followed by a list of the groups to which the user or machine
+belongs:
+
+Groups name (id: AFS UID) is a member of:
+
+For each group, the output begins with the following header line,
+followed by a list of the users and machines who belong to the group:
+
+Members of group_name (id: AFS GID) are:
+
+=head1 EXAMPLES
+
+The following example lists the groups to which the user pat belongs
+and the members of the group smith:friends. Note that third privacy
+flag for the pat entry was changed from the default hyphen to enable a
+non-administrative user to obtain this listing.
+
+    pts membership pat smith:friends
+
+    Groups pat (id: 1144) is a member of:
+    smith:friends
+    staff
+    johnson:project-team
+    Members of smith:friends (id: -562) are:
+    pat
+    terry
+    jones
+    richard
+    thompson
+
+=head1 PRIVILEGE REQUIRED
+
+The required privilege depends on the setting of the third privacy
+flag in the Protection Database entry of each user or group indicated
+by the B<-nameorid> argument (use the pts examine command to display the
+flags):
+
+=over 4
+
+=item *
+
+If it is the hyphen and the B<-nameorid> argument specifies a user,
+only the associated user and members of the system:administrators
+group can list the groups to which the user belongs.
+
+=item *
+
+If it is the hyphen and the B<-nameorid> argument specifies a
+machine, only the members of the system:administrators group can
+list the groups to which the machine belongs.
+
+=item *
+
+If it is the hyphen and the B<-nameorid> argument specifies a group,
+only the owner of the group and members of the
+system:administrators group can list the members of the group.
+
+=item *
+
+If it is lowercase m and the B<-nameorid> argument specifies a user
+or machine entry, the meaning is equivalent to the hyphen.
+
+=item *
+
+If it is lowercase m and the B<-nameorid> argument specifies a group,
+members of the group can also list the other members.
+
+=item *
+
+If it is uppercase M, anyone who can access the cell's database
+server machines can list group memberships.
+
+=back
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+Converted from html to pod by Alf Wachsmann <alfw@slac.stanford.edu>, 2003,
+Stanford Linear Accelerator Center, a department of Stanford University.
+
+=head1 SEE ALSO
+
+L<pts(1)>,
+L<pts_adduser(1)>,
+L<pts_examine(1)>,
+L<pts_removeuser(1)>,
+L<pts_setfields(1)>
+
+=cut

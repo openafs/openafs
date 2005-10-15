@@ -1,0 +1,68 @@
+=head1 NAME
+
+fs rmmount - Removes a mount point
+
+=head1 SYNOPSIS
+
+fs rmmount B<-dir> I<directory> [I<directory> ...]  [B<-help>]
+
+fs rm B<-d> I<directory> [I<directory> ...]  [B<-h>]
+
+=head1 DESCRIPTION
+
+The C<fs rmmount> command removes the mount point named by the B<-dir>
+argument from the file system. The corresponding volume remains on its
+host partition or partitions, but is inaccessible if there are no
+other mount points for it.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-dir> I<directory> [I<directory> ...]
+
+Names the mount point to delete from the file system. The last
+element in the pathname must be an actual name, not a shorthand
+notation such as "dot" (.) or "dot dot" (..).
+
+Specify the read/write path to the directory, to avoid the
+failure that results from attempting to delete a mount point
+from a read-only volume. By convention, the read/write path is
+indicated by placing a period before the cell name at the
+pathname's second level (for example, B</afs/.abc.com>). For
+further discussion of the concept of read/write and read-only
+paths through the filespace, see the L<fs_mkmount(1)> reference page.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid
+options are ignored.
+
+=back
+
+=head1 EXAMPLES
+
+The following command removes the mount points B<jones> and B<terry> from
+the current working directory (the B</afs/abc.com/usr> directory).
+
+    fs rmmount jones terry
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must have the B<d> (B<delete>) permission on the ACL of the
+directory that houses each mount point.
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+Converted from html to pod by Alf Wachsmann <alfw@slac.stanford.edu>, 2003,
+and Elizabeth Cassell <e_a_c@mailsnare.net>, 2004,
+Stanford Linear Accelerator Center, a department of Stanford University.
+
+=head1 SEE ALSO
+
+L<fs_lsmount(1)>,
+L<fs_mkmount(1)>
+
+=cut

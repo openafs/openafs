@@ -1,0 +1,199 @@
+# Makefile for AFS man pages
+
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
+
+MAN1 = \
+	afs_intro.1		\
+	fs.1			\
+	fs_apropos.1		\
+	fs_checkservers.1	\
+	fs_checkvolumes.1	\
+	fs_cleanacl.1		\
+	fs_copyacl.1		\
+	fs_diskfree.1		\
+	fs_examine.1		\
+	fs_exportafs.1		\
+	fs_flush.1		\
+	fs_flushmount.1		\
+	fs_flushvolume.1	\
+	fs_getcacheparms.1	\
+	fs_getcellstatus.1	\
+	fs_getclientaddrs.1	\
+	fs_getserverprefs.1	\
+	fs_help.1		\
+	fs_listacl.1		\
+	fs_listcells.1		\
+	fs_listquota.1		\
+	fs_lsmount.1		\
+	fs_messages.1		\
+	fs_mkmount.1		\
+	fs_newcell.1		\
+	fs_quota.1		\
+	fs_rmmount.1		\
+	fs_setacl.1		\
+	fs_setcachesize.1	\
+	fs_setcell.1		\
+	fs_setclientaddrs.1	\
+	fs_setquota.1		\
+	fs_setserverprefs.1	\
+	fs_setvol.1		\
+	fs_storebehind.1	\
+	fs_sysname.1		\
+	fs_whereis.1		\
+	fs_whichcell.1		\
+	fs_wscell.1		\
+	klog.1			\
+	kpasswd.1		\
+	kpwvalid.1		\
+	pts.1			\
+	pts_adduser.1		\
+	pts_apropos.1		\
+	pts_chown.1		\
+	pts_creategroup.1	\
+	pts_createuser.1	\
+	pts_delete.1		\
+	pts_examine.1		\
+	pts_help.1		\
+	pts_listentries.1	\
+	pts_listmax.1		\
+	pts_listowned.1		\
+	pts_membership.1	\
+	pts_removeuser.1	\
+	pts_rename.1		\
+	pts_setfields.1		\
+	pts_setmax.1
+
+MAN8 = \
+	afsd.8			\
+	afsmonitor.8		\
+	backup.8		\
+	backup_adddump.8	\
+	backup_addhost.8	\
+	backup_addvolentry.8	\
+	backup_addvolset.8	\
+	backup_apropos.8	\
+	backup_dbverify.8	\
+	backup_deldump.8	\
+	backup_deletedump.8	\
+	backup_delhost.8	\
+	backup_delvolentry.8	\
+	backup_delvolset.8	\
+	backup_diskrestore.8	\
+	backup_dump.8		\
+	backup_dumpinfo.8	\
+	backup_help.8		\
+	backup_interactive.8	\
+	backup_jobs.8		\
+	backup_kill.8		\
+	backup_labeltape.8	\
+	backup_listdumps.8	\
+	backup_listhosts.8	\
+	backup_listvolsets.8	\
+	backup_quit.8		\
+	backup_readlabel.8	\
+	backup_restoredb.8	\
+	backup_savedb.8		\
+	backup_scantape.8	\
+	backup_setexp.8		\
+	backup_status.8		\
+	backup_volinfo.8	\
+	backup_volrestore.8	\
+	backup_volsetrestore.8	\
+	bos.8			\
+	bos_addhost.8		\
+	bos_addkey.8		\
+	bos_adduser.8		\
+	bos_apropos.8		\
+	bos_create.8		\
+	bos_delete.8		\
+	bos_exec.8		\
+	bos_getdate.8		\
+	bos_getlog.8		\
+	bos_getrestart.8	\
+	bos_help.8		\
+	bos_install.8		\
+	bos_listhosts.8		\
+	bos_listkeys.8		\
+	bos_listusers.8		\
+	bos_prune.8		\
+	bos_removehost.8	\
+	bos_removekey.8		\
+	bos_removeuser.8	\
+	bos_restart.8		\
+	bos_salvage.8		\
+	bos_setauth.8		\
+	bos_setcellname.8	\
+	bos_setrestart.8	\
+	bos_shutdown.8		\
+	bos_start.8		\
+	bos_startup.8		\
+	bos_status.8		\
+	bos_stop.8		\
+	bos_uninstall.8		\
+	bosserver.8		\
+	buserver.8		\
+	butc.8			\
+	dlog.8			\
+	dpass.8			\
+	fileserver.8		\
+	fms.8			\
+	fstrace.8		\
+	fstrace_apropos.8	\
+	fstrace_clear.8		\
+	fstrace_dump.8		\
+	fstrace_help.8		\
+	fstrace_lslog.8		\
+	fstrace_lsset.8		\
+	fstrace_setlog.8	\
+	fstrace_setset.8	\
+	kadb_check.8		\
+	kas.8			\
+	kas_apropos.8		\
+	kas_create.8		\
+	kas_delete.8		\
+	kas_examine.8		\
+	kas_forgetticket.8	\
+	kas_help.8		\
+	kas_interactive.8	\
+	kas_list.8		\
+	kas_listtickets.8	\
+	kas_noauthentication.8	\
+	kas_quit.8		\
+	kas_setfields.8		\
+	kas_setpassword.8	\
+	kas_statistics.8	\
+	kas_stringtokey.8	\
+	kas_unlock.8		\
+	kaserver.8		\
+	kdb.8			\
+	knfs.8
+
+all: $(MAN1) $(MAN8)
+
+%.1: $(srcdir)/pod/%.pod
+	pod2man -c 'AFS Command Reference' -r 'OpenAFS' -s 1 $< $@
+
+%.8: $(srcdir)/pod/%.pod
+	pod2man -c 'AFS Command Reference' -r 'OpenAFS' -s 8 $< $@
+
+clean:
+	rm -f *.1 *.8
+
+dest: $(MAN1) $(MAN8)
+	mkdir -p $(DEST)/man/man1 $(DEST)/man/man8
+	set -e; for M in $(MAN1) ; do \
+	    $(INSTALL) -c -m 0644 $$M $(DEST)/man/man1/$$M ; \
+	done
+	set -e; for M in $(MAN8) ; do \
+	    $(INSTALL) -c -m 0644 $$M $(DEST)/man/man8/$$M ; \
+	done
+
+install: $(MAN1) $(MAN8)
+	mkdir -p $(DESTDIR)$(mandir)/man1 $(DESTDIR)$(mandir)/man8
+	set -e; for M in $(MAN1) ; do \
+	    $(INSTALL) -c -m 0644 $$M $(DESTDIR)$(mandir)/man1/$$M ; \
+	done
+	set -e; for M in $(MAN8) ; do \
+	    $(INSTALL) -c -m 0644 $$M $(DESTDIR)$(mandir)/man8/$$M ; \
+	done

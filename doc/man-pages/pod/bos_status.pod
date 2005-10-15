@@ -1,0 +1,277 @@
+=head1 NAME
+
+bos status - Displays the status of server processes
+
+=head1 SYNOPSIS
+
+bos status B<-server> I<machine name>  [B<-instance> I<server process name> [I<server process name> ...]]
+[B<-long>]  [B<-cell> I<cell name>]  [B<-noauth>]  [B<-localauth>]  [B<-help>]
+
+bos stat B<-s> I<machine name>  [B<-i> I<server process name> [I<server process name> ...]]
+[B<-lon>]  [B<-c> I<cell name>]  [B<-n>]  [B<-loc>]  [B<-h>]
+
+=head1 DESCRIPTION
+
+The C<bos status> command reports the status of processes on the server
+machine named by the B<-server> argument, either
+
+=over
+
+=item *
+
+All of the AFS server processes listed in the
+B</usr/afs/local/BosConfig> file
+
+=item *
+
+Only these processes named by the B<-instance> argument
+
+=back
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-server> I<machine name>
+
+Indicates the server machine for which to report server process
+status. Identify the machine by IP address or its host name
+(either fully-qualified or abbreviated unambiguously). For
+details, see the introductory reference page for the C<bos>
+command suite.
+
+=item B<-instance> I<server process name> [I<server process name> ...]
+
+Names each process for which to report status. Use the process
+name assigned with the B<-instance> argument to the C<bos> command.
+The output from the C<bos status> command lists the names.
+
+=item B<-long>
+
+Produces more detailed status information.
+
+=item B<-cell> I<cell name>
+
+Names the cell in which to run the command. Do not combine this
+argument with the B<-localauth> flag. For more details, see the
+introductory L<bos(1)> reference page.
+
+=item B<-noauth>
+
+Assigns the unprivileged identity B<anonymous> to the issuer. Do
+not combine this flag with the B<-localauth> flag. For more
+details, see the introductory L<bos(1)> reference page.
+
+=item B<-localauth>
+
+Constructs a server ticket using a key from the local
+B</usr/afs/etc/KeyFile> file. The C<bos> command interpreter presents
+the ticket to the BOS Server during mutual authentication. Do
+not combine this flag with the B<-cell> or B<-noauth> options. For
+more details, see the introductory L<bos(1)> reference page.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid
+options are ignored.
+
+=back
+
+=head1 OUTPUT
+
+The output for a process includes at least one line, which reports one
+of the following as the process's current status:
+
+=over
+
+=item *
+
+C<currently running normally>. The process's status flag in the
+B<BosConfig> file is C<Run>. For B<cron> entries, this message indicates
+only that the command is scheduled to run, not necessarily that it
+was executing when the C<bos status> command was issued.
+
+=item *
+
+C<disabled>. The process is not running, and its B<BosConfig> status
+flag is C<NotRun>.
+
+=item *
+
+C<temporarily disabled>. The process is not running although its
+status flag in the B<BosConfig> file is C<Run>. Either an administrator
+used the C<bos shutdown> command to stop it, or the
+BOS Server stopped trying to restart it after numerous failed
+attempts. In the second case, the auxiliary message is C<stopped for
+too many errors>.
+
+=item *
+
+C<temporarily enabled>. The process is running although its status
+flag in the B<BosConfig> file is C<NotRun>. An administrator has used
+the C<bos startup> command to start it.
+
+=back
+
+If one of the following special circumstances applies to the process,
+the indicated message appears in its entry:
+
+=over
+
+=item *
+
+C<has core file>. The process failed and created a core file in the
+B</usr/afs/logs> directory. If the BOS Server was able to restart the
+process after the failure, the primary status is C<currently running
+normally>.
+
+=item *
+
+C<stopped for too many errors>. The reason for the primary status
+C<temporarily disabled> is that the BOS Server's attempts to restart
+the process all failed.
+
+=back
+
+The entry for the B<fs> process always includes a second line to report
+the process's C<Auxiliary status>, which is one of the following:
+
+=over
+
+=item *
+
+C<file server running>. The File Server and Volume Server components
+of the File Server process are running normally.
+
+=item *
+
+C<salvaging file system>. The Salvager is running, so the File Server
+and Volume Server are temporarily disabled. The BOS Server
+restarts them as soon as the Salvager is finished.
+
+=back
+
+The entry for a B<cron> process includes an C<Auxiliary status> that reports
+when the command will next execute.
+
+If the B<-long> flag is used, each entry includes the following
+additional information:
+
+=over
+
+=item *
+
+The process's type (C<simple>, C<fs>, or C<cron>).
+
+=item *
+
+The day and time the process last started or restarted.
+
+=item *
+
+The number of C<proc starts>, which is how many times the BOS Server
+has started or restarted the process since it started itself.
+
+=item *
+
+The C<Last exit> time when the process (or one of the component
+processes in the B<fs> process) last terminated. This line does not
+appear if the process has not terminated since the BOS Server
+started.
+
+=item *
+
+The C<Last error exit> time when the process (or one of the component
+processes in the B<fs> process) last failed due to an error. A
+further explanation such as C<due to shutdown request> sometimes
+appears. This line does not appear if the process has not failed
+since the BOS Server started.
+
+=item *
+
+Each command that the BOS Server invokes to start the process, as
+specified by the B<-cmd> argument to the C<bos create> command.
+
+=item *
+
+The pathname of the notifier program that the BOS Server invokes
+when the process terminates (if any), as specified by the
+B<-notifier> argument to the C<bos create> command.
+
+=back
+
+If the B<-long> flag is provided and the BOS Server discovers that the
+mode bits on files and subdirectories in the local B</usr/afs> directory
+differ from the expected values, it prints the following warning
+message:
+
+   Bosserver reports inappropriate access on server directories
+
+The following chart summarizes the expected mode bit settings. A
+question mark indicates that the BOS Server does not check that bit.
+
+ /usr/afs                 drwxr?xr-x
+ /usr/afs/backup          drwx???---
+ /usr/afs/bin             drwxr?xr-x
+ /usr/afs/db              drwx???---
+ /usr/afs/etc             drwxr?xr-x
+ /usr/afs/etc/KeyFile     -rw????---
+ /usr/afs/etc/UserList    -rw?????--
+ /usr/afs/local           drwx???---
+ /usr/afs/logs            drwxr?xr-x
+
+=head1 EXAMPLES
+
+The following example command displays the status of processes on the
+machine fs3.abc.com:
+
+    bos status fs3.abc.com
+   Instance buserver, currently running normally.
+   Instance kaserver, currently running normally.
+   Instance ptserver, currently running normally.
+   Instance vlserver, currently running normally.
+   Instance fs, has core file, currently running normally.
+       Auxiliary status is: file server running.
+   Instance upserver, currently running normally.
+   Instance runntp, currently running normally.
+
+The following example command displays a detailed status report for
+the fs and ptserver processes on the machine fs1.abc.com.
+
+    bos status -server fs1.abc.com -instance fs ptserver -long
+   Instance fs, (type is fs), currently running normally.
+       Auxiliary status is: file server running.
+       Process last started at Wed Jan 7 5:34:49 1998 (3 proc starts)
+       Last exit at Wed Jan 7 5:34:49 1998
+       Last error exit at Wed Jan 7 5:34:49 1998, due to shutdown
+           request
+       Command 1 is '/usr/afs/bin/fileserver'
+       Command 2 is '/usr/afs/bin/volserver'
+       Command 3 is '/usr/afs/bin/salvager'
+   Instance ptserver, (type is simple) currently running normally.
+       Process last started at Tue Jan 6 8:29:19 1998 (1 proc starts)
+       Command 1 is '/usr/afs/bin/ptserver'
+
+=head1 PRIVILEGE REQUIRED
+
+None
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+Converted from html to pod by Alf Wachsmann <alfw@slac.stanford.edu>, 2003,
+and Elizabeth Cassell <e_a_c@mailsnare.net>, 2004,
+Stanford Linear Accelerator Center, a department of Stanford University.
+
+=head1 SEE ALSO
+
+L<BosConfig(1)>,
+L<KeyFile(1)>,
+L<bos(1)>,
+L<bos_create(1)>,
+L<bos_shutdown(1)>,
+L<bos_startup(1)>,
+L<bos_status(1)>
+
+=cut

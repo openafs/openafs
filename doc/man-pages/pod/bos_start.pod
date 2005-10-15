@@ -1,0 +1,103 @@
+=head1 NAME
+
+bos start - Starts a process after setting its status flag in the
+B</usr/afs/local/BosConfig> file
+
+=head1 SYNOPSIS
+
+bos start B<-server> I<machine name>  B<-instance> I<server process name> [I<server process name> ...]
+[B<-cell> I<cell name>]  [B<-noauth>]  [B<-localauth>]  [B<-help>]
+
+bos start B<-s> I<machine name>  B<-i> I<server process name> [I<server process name> ...]
+[B<-c> I<cell name>]  [B<-n>]  [B<-l>]  [B<-h>]
+
+=head1 DESCRIPTION
+
+The C<bos start> command sets the status flag for each process specified
+by the B<-instance> argument to Run in the B</usr/afs/local/BosConfig> file
+and in the BOS Server's memory on the server machine named by the
+B<-server> argument, then starts it. If the process is already running,
+the command's only effect is to guarantee that the status flag is Run;
+it does not restart the process.
+
+To start a process without changing its status flag in the B<BosConfig>
+file, use the C<bos startup> command instead.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-server> I<machine name>
+
+Indicates the server machine on which to start processes.
+Identify the machine by IP address or its host name (either
+fully-qualified or abbreviated unambiguously). For details, see
+the introductory reference page for the C<bos> command suite.
+
+=item B<-instance> I<server process name> [I<server process name> ...]
+
+Names each process to start. Use the process name assigned with
+the B<-instance> argument to the C<bos create> command. The output
+from the C<bos status> command lists the names.
+
+=item B<-cell> I<cell name>
+
+Names the cell in which to run the command. Do not combine this
+argument with the B<-localauth> flag. For more details, see the
+introductory L<bos(1)> reference page.
+
+=item B<-noauth>
+
+Assigns the unprivileged identity B<anonymous> to the issuer. Do
+not combine this flag with the B<-localauth> flag. For more
+details, see the introductory L<bos(1)> reference page.
+
+=item B<-localauth>
+
+Constructs a server ticket using a key from the local
+B</usr/afs/etc/KeyFile> file. The C<bos> command interpreter presents
+the ticket to the BOS Server during mutual authentication. Do
+not combine this flag with the B<-cell> or B<-noauth> options. For
+more details, see the introductory L<bos(1)> reference page.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid
+options are ignored.
+
+=back
+
+=head1 EXAMPLES
+
+The following command changes the status flag for the B<upclientbin> and
+B<upclientetc> processes to C<Run> in the B<BosConfig> file on the machine
+B<fs6.abc.com> and starts them running.
+
+    bos start -server fs6.abc.com -instance upclientbin upclientetc
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be listed in the B</usr/afs/etc/UserList> file on the
+machine named by the B<-server> argument, or must be logged onto a server
+machine as the local superuser B<root> if the B<-localauth> flag is
+included.
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+Converted from html to pod by Alf Wachsmann <alfw@slac.stanford.edu>, 2003,
+and Elizabeth Cassell <e_a_c@mailsnare.net>, 2004,
+Stanford Linear Accelerator Center, a department of Stanford University.
+
+=head1 SEE ALSO
+
+L<BosConfig(1)>,
+L<KeyFile(1)>,
+L<UserList(1)>,
+L<bos(1)>,
+L<bos_create(1)>,
+L<bos_startup(1)>,
+L<bos_status(1)>
+
+=cut

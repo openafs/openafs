@@ -1,0 +1,82 @@
+=head1 NAME
+
+pts listmax - Displays the max user id and max group id counters
+
+=head1 SYNOPSIS
+
+pts listmax [B<-cell> I<cell name>]  [B<-noauth>]  [B<-force>]  [B<-help>]
+
+pts listm  [B<-c> I<cell name>]  [B<-n>]  [B<-f>]  [B<-h>]
+
+=head1 DESCRIPTION
+
+The C<pts listmax> command displays the values of the max user id and max
+group id counters, which the Protection Server uses to track the AFS
+user IDs (AFS UIDs) it allocates to new users or machines, and the AFS
+group IDs (AFS GIDs) it allocates to new groups, respectively. When an
+administrator next issues the pts createuser command and does not
+include the B<-id> argument, the new user or machine receives an AFS UID
+one greater than the max user id counter, and when a user issues the
+pts creategroup command and does not include the B<-id> argument, the new
+group receives an AFS UID one less (more negative) than the max group
+id counter.
+To reset one or both counters, members of the system:administrators
+group can issue the pts setmax command.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-cell> I<cell name>
+
+Names the cell in which to run the command. For more details,
+see the introductory L<pts(1)> reference page.
+
+=item B<-noauth>
+
+Assigns the unprivileged identity anonymous to the issuer. For
+more details, see the introductory L<pts(1)> reference page.
+
+=item B<-force>
+
+Enables the command to continue executing as far as possible
+when errors or other problems occur, rather than halting
+execution at the first error.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid
+options are ignored.
+
+==back
+
+=head1 OUTPUT
+
+The command displays the counters in the following format:
+Max user id is user_counter and max group id is group_counter.
+
+=head1 EXAMPLES
+
+The following example displays the output of this command:
+
+    pts listmax
+
+    Max user name is 1271 and max group id is -382.
+
+=head1 PRIVILEGE REQUIRED
+
+None
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+Converted from html to pod by Alf Wachsmann <alfw@slac.stanford.edu>, 2003,
+Stanford Linear Accelerator Center, a department of Stanford University.
+
+=head1 SEE ALSO
+
+L<pts(1)>,
+L<pts_setmax(1)>
+
+=cut

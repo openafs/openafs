@@ -1,0 +1,72 @@
+=head1 NAME
+
+backup apropos - Displays each help entry containing a keyword string
+
+=head1 SYNOPSIS
+
+backup apropos B<-topic> I<help string>  [B<-help>]
+
+backup ap B<-t> I<help string>  [B<-h>]
+
+=head1 DESCRIPTION
+
+The C<backup apropos> command displays the first line of the online help
+entry for any C<backup> command that has in its name or short description
+the string specified by the B<-topic> argument.
+
+To display the syntax for a command, use the C<backup help> command.
+
+=head1 OPTIONS
+
+=over 4
+
+
+=item B<-topic> I<help string>
+
+Specifies the keyword string to match, in lowercase letters
+only. If the string is more than a single word, surround it
+with double quotes (" ") or other delimiters.
+
+
+=item B<-help>
+
+Prints the online help for this command. All other valid
+options are ignored.
+
+=back
+
+=head1 OUTPUT
+
+The first line of a command's online help entry names it and briefly
+describes its function. This command displays the first line for any
+C<backup> command where the string specified with the B<-topic> argument is
+part of the command name or first line.
+
+=head1 EXAMPLES
+
+The following example lists all C<backup> commands that include the word
+B<tape> in their names or short descriptions:
+
+   backup apropos tape
+   labeltape: label a tape
+   readlabel: read the label on tape
+   scantape: dump information recovery from tape
+   status: get tape coordinator status
+
+=head1 PRIVILEGE REQUIRED
+
+None
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+Converted from html to pod by Alf Wachsmann <alfw@slac.stanford.edu>, 2003,
+Stanford Linear Accelerator Center, a department of Stanford University.
+
+=head1 SEE ALSO
+
+L<backup(1)>,
+L<backup_help(1)>
+
+=cut

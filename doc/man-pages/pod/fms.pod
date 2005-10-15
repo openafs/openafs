@@ -1,0 +1,145 @@
+=head1 NAME
+
+fms - Determine a tape's capacity and a tape device's filemark size
+
+=head1 SYNOPSIS
+
+fms B<-tape> I<tape special file>  [B<-help>]
+
+fms  B<-t> I<tape special file>  [B<-h>]
+
+=head1 DESCRIPTION
+
+The C<fms> command determines the capacity of the tape currently in the
+tape device identified by the B<-tape> argument, along with the size of
+the filemark for the device. The filemark is also referred to as the
+device's end-of-file (EOF) marker, and can differ for each combination
+of tape and tape device.
+
+As the Tape Coordinator writes a dump, it writes a filemark between
+the data included from each volume and also tracks the amount of space
+left before the end of the tape (EOT). For some tape devices, the
+filemark is large enough (multiple megabytes) that failure to consider
+it leads the Tape Coordinator significantly to overestimate the
+available space.
+
+The intended use of this command is to determine tape capacity and
+filemark size values that can be specified in a tape device's entry in
+the B</usr/afs/backup/tapeconfig> file. For certain types of tape drives,
+the Tape Coordinator operates more efficiently when the B<tapeconfig>
+file lists accurate values. For further discussion, see the IBM AFS
+Administration Guide chapter on configuring the Backup System.
+
+Insert a tape in the drive before issuing this command.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-tape> I<tape special file>
+
+Specifies the UNIX device name of the tape device for which to
+determine filemark size and the capacity of the tape it
+currently contains. The format varies on different system
+types, but usually begins with B</dev>; an example is B</dev/sd0a>.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid
+options are ignored.
+
+=back
+
+=head1 OUTPUT
+
+The command generates output both on the standard output stream and in
+the B<fms.log> file that it creates in the current working directory. The
+output reports the capacity of the tape in the device and the device's
+filemark size.
+
+The first few lines of output include status information about the
+execution of the command, including such information as the number of
+blocks and the number of file marks written to the tape by the
+command. The last two lines of both screen and file output provide the
+following information:
+
+=over
+
+=item *
+
+C<Tape capacity is> I<number> C<bytes>: specifies the size, in bytes, of
+the tape in the device.
+
+=item *
+
+C<File marks are> I<number> C<bytes>: specifies the device's filemark size
+in bytes.
+
+=back
+
+The following message indicates that the C<fms> command interpreter
+cannot access the tape device. The command halts.
+
+Can't open tape drive I<device>
+
+The following message indicates that the command interpreter cannot
+create the B<fms.log> log file. Again, the command halts.
+
+Can't open log file
+
+=head1 EXAMPLES
+
+The following command illustrates the output for the device called
+B</dev/rmt1h>:
+
+    fms /dev/rmt1h
+   wrote block: 130408
+   Finished data capacity test - rewinding
+   wrote 1109 blocks, 1109 file marks
+   Finished file mark test
+   Tape capacity is 2136604672 bytes
+   File marks are 1910205 bytes
+
+The following appears in the B<fms.log> file:
+
+   fms test started
+   wrote 9230 blocks
+   Finished file mark test
+   Tape capacity is 151224320 bytes
+   File marks are 2375680 bytes
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be able to insert and write to files in the currently
+working directory, if the B<fms.log> file does not already exist. If it
+already exists, the issuer need only be able to write to it.
+
+=head1 CAVEATS
+
+Do not use this command on compressing tape devices in compression
+mode or with tape devices that handle tapes of multigigabyte (or
+multiterabyte) capacity. It does not produce accurate results in those
+cases. For alternate suggestions on the values to record in the
+B<tapeconfig> file for compressing drives, see the IBM AFS Administration
+Guide chapter on configuring the Backup System.
+
+Running the command completely overwrites the tape, so use a blank one
+or one that can be recycled.
+
+Because it writes filemarks to the complete length of the tape, the
+command can take from several hours to more than a day to complete.
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+Converted from html to pod by Alf Wachsmann <alfw@slac.stanford.edu>, 2003,
+and Elizabeth Cassell <e_a_c@mailsnare.net>, 2004,
+Stanford Linear Accelerator Center, a department of Stanford University.
+
+=head1 SEE ALSO
+
+L<fms.log(1)>,
+L<tapeconfig(1)>
+
+=cut

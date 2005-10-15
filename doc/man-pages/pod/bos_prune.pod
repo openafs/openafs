@@ -1,0 +1,144 @@
+=head1 NAME
+
+bos prune - Removes obsolete versions of files from the B</usr/afs/bin> and
+B</usr/afs/logs> directories
+
+=head1 SYNOPSIS
+
+bos prune B<-server> I<machine name>  [B<-bak>]  [B<-old>]  [B<-core>]  [B<-all>]
+[B<-cell> I<cell name>]  [B<-noauth>]  [B<-localauth>]  [B<-help>]
+
+bos p B<-s> I<machine name>  [B<-b>]  [B<-o>]  [B<-co>]  [B<-a>]
+[B<-ce> I<cell name>]  [B<-n>]  [B<-l>]  [B<-h>]
+
+=head1 DESCRIPTION
+
+The C<bos prune> command removes files from the local disk of the server
+machine named by the B<-server> argument, as specified by one or more of
+the following flags provided on the command line:
+
+=over
+
+=item *
+
+The B<-bak> flag removes all files from the B</usr/afs/bin> directory
+that have a C<.BAK> extension.
+
+=item *
+
+The B<-old> flag removes all files from the B</usr/afs/bin> directory
+that have a C<.OLD> extension.
+
+=item *
+
+The B<-core> flag removes all files from the B</usr/afs/logs> directory
+that have a C<core.> prefix.
+
+=item *
+
+The B<-all> flag removes all three types of files at once.
+
+=back
+
+(If none of these flags are included, the command appears to succeed,
+but removes no files at all.)
+
+To display the timestamp on the current, C<.BAK>, and C<.OLD> versions of
+one or more files, use the C<bos getdate> command.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-server> I<machine name>
+
+Indicates the server machine from which to remove files.
+Identify the machine by IP address or its host name (either
+fully-qualified or abbreviated unambiguously). For details, see
+the introductory reference page for the C<bos> command suite.
+
+=item B<-bak>
+
+Removes all files from the B</usr/afs/bin> directory that have a
+C<.BAK> extension. Do not combine this flag and the B<-all> flag.
+
+=item B<-old>
+
+Removes all files from the B</usr/afs/bin> directory that have a
+C<.OLD> extension. Do not combine this flag and the B<-all> flag.
+
+=item B<-core>
+
+Removes all files from the B</usr/afs/logs> directory that have a
+C<core.> prefix. Do not combine this flag and the B<-all> flag.
+
+=item B<-all>
+
+Combines the effect of the B<-bak>, B<-old>, and B<-core> flags. Do not
+combine this flag with any of those three.
+
+=item B<-cell> I<cell name>
+
+Names the cell in which to run the command. Do not combine this
+argument with the B<-localauth> flag. For more details, see the
+introductory L<bos(1)> reference page.
+
+=item B<-noauth>
+
+Assigns the unprivileged identity B<anonymous> to the issuer. Do
+not combine this flag with the B<-localauth> flag. For more
+details, see the introductory L<bos(1)> reference page.
+
+=item B<-localauth>
+
+Constructs a server ticket using a key from the local
+B</usr/afs/etc/KeyFile> file. The C<bos> command interpreter presents
+the ticket to the BOS Server during mutual authentication. Do
+not combine this flag with the B<-cell> or B<-noauth> options. For
+more details, see the introductory L<bos(1)> reference page.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid
+options are ignored.
+
+=back
+
+=head1 EXAMPLES
+
+The following example removes all files from the B</usr/afs/bin>
+directory on the machine B<fs3.abc.com> that have a C<.BAK> or C<.OLD>
+extension.
+
+    bos prune -server fs3.abc.com -bak -old
+
+The following example removes all files from the B</usr/afs/bin>
+directory on the machine B<db2.abc.com> that have a C<.BAK> or C<.OLD>
+extension, and all files from the B</usr/afs/logs> directory that have a
+C<core.> prefix.
+
+    bos prune -server db2.abc.com -all
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be listed in the B</usr/afs/etc/UserList> file on the
+machine named by the B<-server> argument, or must be logged onto a server
+machine as the local superuser B<root> if the B<-localauth> flag is
+included.
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+Converted from html to pod by Alf Wachsmann <alfw@slac.stanford.edu>, 2003,
+and Elizabeth Cassell <e_a_c@mailsnare.net>, 2004,
+Stanford Linear Accelerator Center, a department of Stanford University.
+
+=head1 SEE ALSO
+
+L<KeyFile(1)>,
+L<UserList(1)>,
+L<bos(1)>,
+L<bos_getdate(1)>
+
+=cut
