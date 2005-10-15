@@ -967,6 +967,19 @@ afs_syscall_pioctl(path, com, cmarg, follow)
     } else
 	vp = NULL;
 
+#if defined(AFS_SUN510_ENV)
+    if (vp && !IsAfsVnode(vp)) {
+	struct vnode *realvp;
+	
+	if (VOP_REALVP(vp, &realvp) == 0) {
+	    struct vnode *oldvp = vp;
+	    
+	    VN_HOLD(realvp);
+	    vp = realvp;
+	    AFS_RELE(oldvp);
+	}
+    }
+#endif
     /* now make the call if we were passed no file, or were passed an AFS file */
     if (!vp || IsAfsVnode(vp)) {
 #if defined(AFS_SUN5_ENV)
