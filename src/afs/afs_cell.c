@@ -132,7 +132,7 @@ afs_GetCellHostsAFSDB(char *acellName, afs_int32 * acellHosts, int *timeout,
     ObtainWriteLock(&afsdb_req.lock, 686);
 
     *acellHosts = 0;
-    afsdb_req.cellname = acellName;
+    afsdb_req.cellname = afs_strdup(acellName);
     afsdb_req.cellhosts = acellHosts;
     afsdb_req.timeout = timeout;
     afsdb_req.realname = realName;
@@ -147,6 +147,8 @@ afs_GetCellHostsAFSDB(char *acellName, afs_int32 * acellHosts, int *timeout,
 	afs_osi_Sleep(&afsdb_req);
 	ObtainReadLock(&afsdb_req.lock);
     };
+
+    afs_osi_FreeStr(afsdb_req.cellname);
     ReleaseReadLock(&afsdb_req.lock);
     ReleaseWriteLock(&afsdb_client_lock);
 
@@ -161,24 +163,41 @@ void
 afs_LookupAFSDB(char *acellName)
 {
 #ifdef AFS_AFSDB_ENV
-    afs_int32 cellHosts[MAXCELLHOSTS];
-    char *realName = NULL;
-    int code, timeout;
+    afs_int32 *cellHosts;
+    char **realName=NULL;
+    int code;
+    int *timeout=NULL;
 
-    code = afs_GetCellHostsAFSDB(acellName, cellHosts, &timeout, &realName);
+    if(!(cellHosts = afs_osi_Alloc(MAXCELLHOSTS * sizeof(afs_int32))))
+	goto done;
+
+    if(!(realName = afs_osi_Alloc(sizeof(char *))))
+	goto done;
+    *realName = NULL;
+
+    if(!(timeout = afs_osi_Alloc(sizeof(int))))
+	goto done;
+
+    code = afs_GetCellHostsAFSDB(acellName, cellHosts, timeout, realName);
     if (code)
 	goto done;
-    code = afs_NewCell(realName, cellHosts, CNoSUID, NULL, 0, 0, timeout);
+    code = afs_NewCell(*realName, cellHosts, CNoSUID, NULL, 0, 0, *timeout);
     if (code && code != EEXIST)
 	goto done;
 
     /* If we found an alias, create it */
-    if (afs_strcasecmp(acellName, realName))
-	afs_NewCellAlias(acellName, realName);
+    if (afs_strcasecmp(acellName, *realName))
+	afs_NewCellAlias(acellName, *realName);
 
   done:
-    if (realName)
-	afs_osi_FreeStr(realName);
+    if(timeout)
+	afs_osi_Free(timeout, sizeof(int));
+    if (realName && *realName)
+	afs_osi_FreeStr(*realName);
+    if(realName)
+	afs_osi_Free(realName, sizeof(char *));
+    if(cellHosts)
+	afs_osi_Free(cellHosts, MAXCELLHOSTS * sizeof(afs_int32));
 #endif
 }
 
