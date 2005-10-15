@@ -268,6 +268,10 @@ else
 			AFS_PARAM_COMMON=param.nbsd20.h
 			AFS_SYSNAME="i386_nbsd20"
 			;;
+		amd64-*-netbsd*2.0*)
+			AFS_PARAM_COMMON=param.nbsd20.h
+			AFS_SYSNAME="amd64_nbsd20"
+			;;
 		powerpc-*-netbsd*2.0*)
 			AFS_PARAM_COMMON=param.nbsd20.h
 			AFS_SYSNAME="ppc_nbsd20"
