@@ -93,8 +93,8 @@
 #endif /* AFS_PPC_LINUX20_ENV */
 #endif /* AFS_PARISC_LINUX24_ENV */
 #else
-#if defined(AFS_DARWIN_ENV) && defined(AFS_PPC_ENV)
-#include "conf-ppc-darwin.h"
+#if defined(AFS_DARWIN_ENV)
+#include "conf-darwin.h"
 #else
 Sorry,
     you lose.

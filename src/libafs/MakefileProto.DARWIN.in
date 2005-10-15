@@ -33,10 +33,13 @@ AFS_OS_NONFSOBJS = osi_vfsops.o
 KDEFS=
 DBUG = 
 DEFINES= -D_KERNEL -DKERNEL -DKERNEL_PRIVATE -DDIAGNOSTIC -DUSE_SELECT -DMACH_USER_API -DMACH_KERNEL
+<x86_darwin_80>
+KOPTS=-static -g -nostdinc -nostdlib -no-cpp-precomp -fno-builtin -finline -fno-keep-inline-functions -msoft-float -mlong-branch -fsigned-bitfields -arch i386 -Di386 -DI386 -D__I386__ -DPAGE_SIZE_FIXED -march=i686 -mpreferred-stack-boundary=2 -falign-functions=4
+MODLD=$(CC) $(KOPTS)
 <ppc_darwin_80>
 KOPTS=-static -g -nostdinc -nostdlib -no-cpp-precomp -fno-builtin -finline -fno-keep-inline-functions -msoft-float -mlong-branch -fsigned-bitfields -arch ppc -Dppc -DPPC -D__PPC__ -DPAGE_SIZE_FIXED -O2 -mcpu=750 -mmultiple -fschedule-insns
 MODLD=$(CC) $(KOPTS)
-<all -ppc_darwin_80>
+<all -ppc_darwin_80 -x86_darwin_80>
 MODLD=$(LD)
 <ppc_darwin_70>
 KOPTS=-static -fno-common -finline -fno-keep-inline-functions -force_cpusubtype_ALL -msoft-float -mlong-branch 

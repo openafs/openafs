@@ -442,7 +442,7 @@ case $AFS_SYSNAME in
 		EXTRA_VLIBOBJS="fstab.o"
 		;;
 
-	ppc_darwin_80)
+	*_darwin_80)
 		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration"
 		LEX="lex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -D_REENTRANT ${XCFLAGS}'

@@ -210,9 +210,13 @@ case $system in
 		fi
 		AC_SUBST([HEADER_RT])
                 ;;
-        *-darwin*)
+        powerpc-*-darwin*)
 		MKAFS_OSTYPE=DARWIN
                 AC_MSG_RESULT(ppc_darwin)
+                ;;
+        i386-*-darwin*)
+		MKAFS_OSTYPE=DARWIN
+                AC_MSG_RESULT(x86_darwin)
                 ;;
 	*-freebsd*)
 		MKAFS_OSTYPE=FBSD
@@ -381,6 +385,12 @@ else
 			;;
 		powerpc-apple-darwin8.0*)
 			AFS_SYSNAME="ppc_darwin_80"
+			;;
+		powerpc-apple-darwin8.*)
+			AFS_SYSNAME="ppc_darwin_80"
+			;;
+		i386-apple-darwin8.*)
+			AFS_SYSNAME="x86_darwin_80"
 			;;
 		sparc-sun-solaris2.5*)
 			AFS_SYSNAME="sun4x_55"
