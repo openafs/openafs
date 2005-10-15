@@ -24,7 +24,7 @@ AC_ARG_ENABLE( bos-restricted-mode,
 AC_ARG_ENABLE( bos-new-config,
 [  --enable-bos-new-config	 	enable bosserver pickup of BosConfig.new on restarts],, enable_bos_new_config="no")
 AC_ARG_ENABLE( largefile-fileserver,
-[  --enable-largefile-fileserver        enable large file support in fileserver],, enable_largefile_fileserver="no")
+[  --disable-largefile-fileserver       disable large file support in fileserver],, enable_largefile_fileserver="yes")
 AC_ARG_ENABLE( namei-fileserver,
 [  --enable-namei-fileserver 		force compilation of namei fileserver in preference to inode fileserver],, enable_namei_fileserver="no")
 AC_ARG_ENABLE( supergroups,
