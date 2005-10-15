@@ -45,7 +45,6 @@
 #define CV_BROADCAST(_cv)	e_wakeup(_cv)
 typedef simple_lock_data afs_kmutex_t;
 typedef tid_t afs_kcondvar_t;
-#define	osi_rxWakeup(cv)	e_wakeup(cv)
 
 
 #define	LOCK_INIT(a, b)		lock_alloc((void*)(a), LOCK_ALLOC_PIN, 1, 1), \

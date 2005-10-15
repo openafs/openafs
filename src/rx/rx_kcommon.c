@@ -26,8 +26,8 @@ RCSID
 #include "afsint.h"
 
 #ifndef RXK_LISTENER_ENV
-int (*rxk_PacketArrivalProc) (register struct rx_packet * ahandle, register struct sockaddr_in * afrom, char *arock, afs_int32 asize);	/* set to packet allocation procedure */
-int (*rxk_GetPacketProc) (char **ahandle, int asize);
+int (*rxk_PacketArrivalProc) (struct rx_packet * ahandle, struct sockaddr_in * afrom, struct socket *arock, afs_int32 asize);	/* set to packet allocation procedure */
+int (*rxk_GetPacketProc) (struct rx_packet **ahandle, int asize);
 #endif
 
 osi_socket *rxk_NewSocketHost(afs_uint32 ahost, short aport);
@@ -289,9 +289,9 @@ rx_ServerProc(void)
 #ifndef RXK_LISTENER_ENV
 /* asize includes the Rx header */
 static int
-MyPacketProc(char **ahandle, int asize)
+MyPacketProc(struct rx_packet **ahandle, int asize)
 {
-    register struct rx_packet *tp;
+    struct rx_packet *tp;
 
     /* If this is larger than we expected, increase rx_maxReceiveDataSize */
     /* If we can't scrounge enough cbufs, then we have to drop the packet,
@@ -328,20 +328,21 @@ MyPacketProc(char **ahandle, int asize)
     if (!tp)
 	return -1;
     /* otherwise we have a packet, set appropriate values */
-    *ahandle = (char *)tp;
+    *ahandle = tp;
     return 0;
 }
 
 static int
-MyArrivalProc(register struct rx_packet *ahandle,
-	      register struct sockaddr_in *afrom, char *arock,
+MyArrivalProc(struct rx_packet *ahandle,
+	      struct sockaddr_in *afrom,
+	      struct socket *arock,
 	      afs_int32 asize)
 {
     /* handle basic rx packet */
     ahandle->length = asize - RX_HEADER_SIZE;
     rxi_DecodePacketHeader(ahandle);
     ahandle =
-	rxi_ReceivePacket(ahandle, (struct socket *)arock,
+	rxi_ReceivePacket(ahandle, arock,
 			  afrom->sin_addr.s_addr, afrom->sin_port, NULL,
 			  NULL);
 

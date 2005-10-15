@@ -3,7 +3,7 @@
 * $Locker$
 *
 *
-* Exports for the AFS kernel extension for AIX 3.1
+* Exports for the AFS kernel extension for AIX 5
 *
 icreate		syscall
 syscall		syscall
@@ -54,7 +54,6 @@ afs_marinerHost
 * afs_marinerPort
 afs_mariner
 cacheInfoModTime
-freeVCList
 afs_freeDCList
 afs_freeDCCount
 afs_freeDSList
