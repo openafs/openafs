@@ -709,15 +709,24 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	    } while (tvcp && retry);
 	    if (!tvcp) {	/* otherwise, create manually */
 		tvcp = afs_NewVCache(&tfid, hostp);
-		ObtainWriteLock(&tvcp->lock, 505);
-		ReleaseWriteLock(&afs_xvcache);
-		afs_RemoveVCB(&tfid);
-		ReleaseWriteLock(&tvcp->lock);
+		if (tvcp)
+		{
+			ObtainWriteLock(&tvcp->lock, 505);
+			ReleaseWriteLock(&afs_xvcache);
+			afs_RemoveVCB(&tfid);
+			ReleaseWriteLock(&tvcp->lock);
+		} else {
+			ReleaseWriteLock(&afs_xvcache);
+		}
 	    } else {
 		ReleaseWriteLock(&afs_xvcache);
 	    }
 	    if (!tvcp)
-		goto done;	/* can't happen at present, more's the pity */
+	    {
+		ReleaseReadLock(&dcp->lock);
+		ReleaseReadLock(&adp->lock);
+		goto done;	/* can happen if afs_NewVCache fails */
+	    }
 
 #ifdef AFS_DARWIN80_ENV
             if (tvcp->states & CVInit) {

@@ -695,12 +695,11 @@ restart:
 		break;
 	}
 	if (anumber == VCACHE_FREE) {
-	    printf("NewVCache: warning none freed, using %d of %d\n",
+	    printf("afs_NewVCache: warning none freed, using %d of %d\n",
 		   afs_vcount, afs_maxvcount);
 	    if (afs_vcount >= afs_maxvcount) {
-		osi_Panic("NewVCache - none freed");
-		/* XXX instead of panicing, should do afs_maxvcount++
-		 * and magic up another one */
+	    	printf("afs_NewVCache - none freed\n");
+		return NULL;
 	    }
 	}
     }
@@ -1697,6 +1696,12 @@ afs_GetVCache(register struct VenusFid *afid, struct vrequest *areq,
 	newvcache = 1;
 
 	ConvertWToSLock(&afs_xvcache);
+	if (!tvc)
+	{
+		ReleaseSharedLock(&afs_xvcache);
+		return NULL;
+	}
+
 	afs_stats_cmperf.vcacheMisses++;
     }
 
@@ -1921,6 +1926,11 @@ afs_LookupVCache(struct VenusFid *afid, struct vrequest *areq,
 	tvc = afs_NewVCache(&nfid, serverp);
 	newvcache = 1;
 	ConvertWToSLock(&afs_xvcache);
+	if (!tvc)
+	{
+		ReleaseSharedLock(&afs_xvcache);
+		return NULL;
+	}
     }
 
     ReleaseSharedLock(&afs_xvcache);
@@ -2104,6 +2114,11 @@ afs_GetRootVCache(struct VenusFid *afid, struct vrequest *areq,
 	UpgradeSToWLock(&afs_xvcache, 23);
 	/* no cache entry, better grab one */
 	tvc = afs_NewVCache(afid, NULL);
+	if (!tvc)
+	{
+		ReleaseWriteLock(&afs_xvcache);
+		return NULL;
+	}
 	newvcache = 1;
 	afs_stats_cmperf.vcacheMisses++;
     } else {
@@ -2374,6 +2389,11 @@ afs_StuffVcache(register struct VenusFid *afid,
 	tvc = afs_NewVCache(afid, NULL);
 	newvcache = 1;
 	ConvertWToSLock(&afs_xvcache);
+	if (!tvc)
+	{
+		ReleaseSharedLock(&afs_xvcache);
+		return NULL;
+	}
     }
 
     ReleaseSharedLock(&afs_xvcache);
