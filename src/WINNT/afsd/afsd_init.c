@@ -567,6 +567,7 @@ int afsd_InitCM(char **reasonP)
     WSAStartup(0x0101, &WSAjunk);
 
     afsd_initUpperCaseTable();
+    init_et_to_sys_error();
 
     /* setup osidebug server at RPC slot 1000 */
     osi_LongToUID(1000, &debugID);

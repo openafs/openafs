@@ -116,7 +116,10 @@ CMtoUNIXerror(int cm_code)
     case CM_ERROR_TOOMANYBUFS:
 	return EFBIG;		/* hack */
     default:
-	return ENOTTY;
+	if (cm_code > 0 && cm_code < EILSEQ)
+	    return cm_code;
+	else
+	    return ENOTTY;
     }
 }
 

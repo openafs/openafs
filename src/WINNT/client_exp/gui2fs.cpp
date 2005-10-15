@@ -32,6 +32,7 @@ extern "C" {
 #include <afsint.h>
 #include <afs/auth.h>
 #include <WINNT\afsreg.h>
+#include <cm.h>
 }
 
 
@@ -298,9 +299,53 @@ void WhereIs(CStringArray& files)
     dlg.DoModal();
 }       
 
+static int
+CMtoUNIXerror(int cm_code)
+{
+    switch (cm_code) {
+    case CM_ERROR_TIMEDOUT:
+	return ETIMEDOUT;
+    case CM_ERROR_NOACCESS:
+	return EACCES;
+    case CM_ERROR_NOSUCHFILE:
+	return ENOENT;
+    case CM_ERROR_INVAL:
+	return EINVAL;
+    case CM_ERROR_BADFD:
+	return EBADF;
+    case CM_ERROR_EXISTS:
+	return EEXIST;
+    case CM_ERROR_CROSSDEVLINK:
+	return EXDEV;
+    case CM_ERROR_NOTDIR:
+	return ENOTDIR;
+    case CM_ERROR_ISDIR:
+	return EISDIR;
+    case CM_ERROR_READONLY:
+	return EROFS;
+    case CM_ERROR_WOULDBLOCK:
+	return EWOULDBLOCK;
+    case CM_ERROR_NOSUCHCELL:
+	return ESRCH;		/* hack */
+    case CM_ERROR_NOSUCHVOLUME:
+	return EPIPE;		/* hack */
+    case CM_ERROR_NOMORETOKENS:
+	return EDOM;		/* hack */
+    case CM_ERROR_TOOMANYBUFS:
+	return EFBIG;		/* hack */
+    default:
+	if (cm_code > 0 && cm_code < EILSEQ)
+	    return cm_code;
+	else
+	    return ENOTTY;
+    }
+}
+
 CString GetAfsError(int code, const char *filename)
 {
     CString strMsg;
+
+    code = CMtoUNIXerror(code);
 
     if (code == EINVAL) {
         if (filename)
