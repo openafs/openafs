@@ -775,7 +775,10 @@ check_proc(definition * defp, token * tokp, int noname)
     scan4(TOK_SPLIT, TOK_MULTI, TOK_EQUAL, TOK_SEMICOLON, &tok);
     if (tok.kind == TOK_MULTI) {
 	proc_multi = 1;
+	defp->pc.multi_flag = 1;
 	scan2(TOK_EQUAL, TOK_SEMICOLON, &tok);
+    } else {
+	defp->pc.multi_flag = 0;
     }
     if (tok.kind == TOK_SPLIT) {
 	proc_split = 1;
