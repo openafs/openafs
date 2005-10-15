@@ -1,0 +1,90 @@
+=head1 NAME
+
+fstrace lsset - Reports the status of an event set
+
+=head1 SYNOPSIS
+
+fstrace lsset [B<-set> I<set_name> [I<set_name> ...]]  [B<-help>]
+
+fstrace lss [B<-s> I<set_name> [I<set_name> ...]]  [B<-h>]
+
+=head1 DESCRIPTION
+
+The C<fstrace lsset> command displays a list of the available event sets
+and reports their current status (active, inactive, or dormant).
+
+To change an event set's status, use the C<fstrace setset> command.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-set> I<set_name> [I<set_name> ...]
+
+Names the event set for which to display the status. The only
+acceptable value is B<cm>, which is also the default if this
+argument is omitted.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid
+options are ignored.
+
+=back
+
+=head1 OUTPUT
+
+The output lists the available event sets and the status of each, in
+the following format:
+
+   Available sets:
+   cm {active | inactive | dormant}
+
+where
+
+=over
+
+=item B<active>
+
+Indicates that tracing is enabled for the event set, and kernel
+memory allocated for the corresponding trace log.
+
+=item B<inactive>
+
+Indicates that tracing is temporarily disabled for the event
+set, but kernel memory still allocated for the corresponding
+trace log.
+
+=item B<dormant>
+
+Indicates that tracing is disabled for the event set, and no
+kernel memory allocated for the corresponding trace log.
+
+=back
+
+=head1 EXAMPLES
+
+The following example displays the available event set and its status:
+
+    fstrace lsset
+   Available sets:
+   cm active
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be logged in as the local superuser B<root>.
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+Converted from html to pod by Alf Wachsmann <alfw@slac.stanford.edu>, 2003,
+and Elizabeth Cassell <e_a_c@mailsnare.net>, 2004,
+Stanford Linear Accelerator Center, a department of Stanford University.
+
+=head1 SEE ALSO
+
+L<fstrace(1)>,
+L<fstrace_setset(1)>
+
+=cut

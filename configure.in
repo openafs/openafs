@@ -5,8 +5,15 @@ AC_CONFIG_HEADER(src/config/afsconfig.h)
 AC_PROG_CC
 OPENAFS_CONFIGURE_COMMON
 
+if test -d 'doc/man-pages' ; then
+    MAN_MAKEFILE=doc/man-pages/Makefile
+else
+    MAN_MAKEFILE=
+fi
+
 AC_OUTPUT(             \
 Makefile               \
+${MAN_MAKEFILE} \
 src/afs/Makefile \
 src/afsd/Makefile \
 src/afsmonitor/Makefile \

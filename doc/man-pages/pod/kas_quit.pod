@@ -1,0 +1,55 @@
+=head1 NAME
+
+kas quit - Leaves interactive mode
+
+=head1 SYNOPSIS
+
+quit  [B<-help>]
+
+q  [B<-h>]
+
+=head1 DESCRIPTION
+
+The C<kas quit> command ends interactive mode, severing the authenticated
+connection to one or more Authentication Server processes and
+returning the issuer to the normal shell prompt.
+
+This command is operative only during interactive mode, so omit the
+C<kas> command suite name from the command line.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-help>
+
+Prints the online help for this command. All other valid
+options are ignored.
+
+=back
+
+=head1 EXAMPLES
+
+The following example demonstrates how the normal command shell prompt
+returns when the issuer leaves interactive mode.
+
+ka> B<quit>
+
+=head1 PRIVILEGE REQUIRED
+
+None, and no password is required.
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+Converted from html to pod by Alf Wachsmann <alfw@slac.stanford.edu>, 2003,
+and Elizabeth Cassell <e_a_c@mailsnare.net>, 2004,
+Stanford Linear Accelerator Center, a department of Stanford University.
+
+=head1 SEE ALSO
+
+L<kas(1)>,
+L<kas_interactive(1)>
+
+=cut

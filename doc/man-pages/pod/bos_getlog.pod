@@ -1,0 +1,154 @@
+=head1 NAME
+
+bos getlog - Prints a server process's log file
+
+=head1 SYNOPSIS
+
+bos getlog B<-server> I<machine name>  B<-file> I<log file to examine>
+[B<-cell> I<cell name>]  [B<-noauth>]  [B<-localauth>]  [B<-help>]
+
+bos getl B<-s> I<machine name>  B<-f> I<log file to examine>  [B<-c> I<cell name>]
+[B<-n>]  [B<-l>]  [B<-h>]
+
+=head1 DESCRIPTION
+
+The C<bos getlog> command displays on the standard output stream the
+specified log file from the machine named by the B<-server> argument. The
+BOS Server fetches the log file from the B</usr/afs/logs> directory
+unless an alternate pathname is provided as part of the B<-file>
+argument.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-server> I<machine name>
+
+Indicates the server machine from which to retrieve the log
+file. Identify the machine by IP address or its host name
+(either fully-qualified or abbreviated unambiguously). For
+details, see the introductory reference page for the C<bos>
+command suite.
+
+=item B<-file> I<log file to examine>
+
+Names the log file to display. If a filename only is provided,
+the BOS Server fetches the log file from the B</usr/afs/logs>
+directory; the standard values are:
+
+=over
+
+=item B<AuthLog>
+
+The Authentication Server (B<kaserver>) log file
+
+=item B<BackupLog>
+
+The Backup Server (B<buserver>) log file
+
+=item B<BosLog>
+
+The BOS Server (B<bosserver>) log file
+
+=item B<FileLog>
+
+The File Server (B<fileserver>) log file
+
+=item B<SalvageLog>
+
+The Salvager (B<salvager>) log file
+
+=item B<VLLog>
+
+The Volume Location (VL) Server (B<vlserver>) log file
+
+=item B<VolserLog>
+
+The Volume Server (B<volserver>) log file
+
+=back
+
+If a pathname and filename are provided, the log file is
+retrieved from the indicated directory. Partial pathnames are
+interpreted relative to the B</usr/afs/logs> directory.
+
+=item B<-cell> I<cell name>
+
+Names the cell in which to run the command. Do not combine this
+argument with the B<-localauth> flag. For more details, see the
+introductory L<bos(1)> reference page.
+
+=item B<-noauth>
+
+Assigns the unprivileged identity B<anonymous> to the issuer. Do
+not combine this flag with the B<-localauth> flag. For more
+details, see the introductory L<bos(1)> reference page.
+
+=item B<-localauth>
+
+Constructs a server ticket using a key from the local
+B</usr/afs/etc/KeyFile> file. The C<bos> command interpreter presents
+the ticket to the BOS Server during mutual authentication. Do
+not combine this flag with the B<-cell> or B<-noauth> options. For
+more details, see the introductory L<bos(1)> reference page.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid
+options are ignored.
+
+=back
+
+=head1 OUTPUT
+
+The output is preceded by the line
+
+Fetching log file 'I<filename>'...
+
+The remainder of the output depends on the particular log file.
+
+=head1 EXAMPLES
+
+The following example displays the B<FileLog> file from the machine
+B<fs3.abc.com>:
+
+    bos getlog -server fs3.abc.com -file FileLog
+   Fetching log file 'FileLog'...
+   Sun Nov 8 04:00:34 1998 File server starting
+   Sun Nov 8 04:00:39 1998 Partition /vicepa:  attached 21 volumes;
+                           0 volumes not attached
+   Sun Nov 8 04:00:40 1998 File Server started Sun Nov 8 04:00:40
+                           1998
+   Mon Nov 9 21:45:06 1998 CB: RCallBack (zero fid probe in host.c)
+                           failed for host 28cf37c0.22811
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be listed in the B</usr/afs/etc/UserList> file on the
+machine named by the B<-server> argument, or must be logged onto a server
+machine as the local superuser B<root> if the B<-localauth> flag is
+included.
+
+=head1 CAVEATS
+
+Log files can grow quite large, especially for the database server
+processes. To keep them to a manageable size, periodically either use
+the UNIX B<rm> command to truncate each log file, or use the C<bos restart>
+command to restart each process.
+
+It can take up to five minutes after the file is removed or process
+restarted for the space occupied by a log file to become available.
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+Converted from html to pod by Alf Wachsmann <alfw@slac.stanford.edu>, 2003,
+and Elizabeth Cassell <e_a_c@mailsnare.net>, 2004,
+Stanford Linear Accelerator Center, a department of Stanford University.
+
+=head1 SEE ALSO
+
+L<bos(1)>
+
+=cut

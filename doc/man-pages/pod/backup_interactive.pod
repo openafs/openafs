@@ -1,0 +1,121 @@
+=head1 NAME
+
+backup interactive - Enters interactive mode
+
+=head1 SYNOPSIS
+
+backup [interactive]  [B<-localauth>]  [B<-cell> I<cell name>]  [B<-help>]
+
+backup [i]  [B<-l>]  [B<-c> I<cell name>]  [B<-h>]
+
+=head1 DESCRIPTION
+
+The C<backup interactive> initiates an interactive session for issuing
+C<backup> commands. As indicated in the syntax statement, the operation
+code (C<interactive>) is optional.
+
+Several features of interactive mode distinguish it from regular mode:
+
+=over
+
+=item *
+
+In interactive mode, the C<backupE<gt>> prompt replaces the system
+(shell) prompt. The operator enters only a command's operation
+code (omitting the command suite name, C<backup>).
+
+=item *
+
+If the B<-localauth> flag or the B<-cell> argument is included on the
+C<backup (interactive)> command, the settings apply to all commands
+issued during that interactive session. The issuer does not need
+to type them on every command. Another consequence is that the
+flag and argument do not appear in the syntax statement generated
+by the C<help> subcommand or B<-help> flag on an individual command
+issued at the C<backupE<gt>> prompt.
+
+=item *
+
+The C<(backup) jobs> and C<(backup) kill> commands are available only in
+interactive mode. It is not possible to track and terminate backup
+operations as cleanly in non-interactive mode.
+
+=item *
+
+It is not necessary to enclose strings that include metacharacters
+in double quotes or other delimiters.
+
+=item *
+
+The C<backup> command interpreter establishes a connection to the
+Backup Server, Volume Server and Volume Location (VL) Server
+processes as it enters interactive mode, and uses the same
+connection for all commands during the session. Execution time can
+therefore be faster than in non-interactive mode, in which the
+command interpreter must establish a new connection for each
+command.
+
+=back
+
+To exit an interactive session, issue the C<(backup) quit> command.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-localauth> 
+
+Constructs a server ticket using a key from the local
+B</usr/afs/etc/KeyFile> file. The C<backup> command interpreter
+presents it to the Backup Server, Volume Server and VL Server
+during mutual authentication. Do not combine this flag with the
+B<-cell> argument. For more details, see the introductory L<backup(1)> reference page.
+
+=item B<-cell> I<cell name>
+
+Names the cell in which to run the command. Do not combine this
+argument with the B<-localauth> flag. For more details, see the
+introductory L<backup(1)> reference page.
+
+=item B<-help> 
+
+Prints the online help for this command. All other valid
+options are ignored.
+
+=back
+
+=head1 EXAMPLES
+
+The following example shows how the B<-localauth> flag and B<-cell> argument
+do not appear when the C<help dump> subcommand is issued in interactive
+mode.
+
+    backup
+   backup> help dump
+   dump: start dump
+   Usage: dump [-volumeset <volume set name>] [-dump <dump level name>]
+   [-portoffset <TC port offset>] [-at <Date/time to start dump>+]
+   [-append ] [-n ] [-file <load file>] [-help ]
+
+=head1 PRIVILEGE REQUIRED
+
+None. However, C<backup> commands that require privilege in regular mode
+still require it in interactive mode.
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+Converted from html to pod by Alf Wachsmann <alfw@slac.stanford.edu>, 2003,
+and Elizabeth Cassell <e_a_c@mailsnare.net>, 2004,
+Stanford Linear Accelerator Center, a department of Stanford University.
+
+=head1 SEE ALSO
+
+L<backup(1)>,
+L<backup_jobs(1)>,
+L<backup_kill(1)>,
+L<backup_quit(1)>,
+L<butc(1)>
+
+=cut

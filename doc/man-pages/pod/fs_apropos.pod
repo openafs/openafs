@@ -1,0 +1,71 @@
+=head1 NAME
+
+fs apropos - Displays each help entry containing a keyword string
+
+=head1 SYNOPSIS
+
+fs apropos B<-topic> I<help string>  [B<-help>]
+
+fs ap B<-t> I<help string>  [B<-h>]
+
+=head1 DESCRIPTION
+
+The C<fs apropos> command displays the first line of the online help
+entry for any C<fs> command that has in its name or short description the
+string specified by the B<-topic> argument.
+
+To display the syntax for a command, use the C<fs help> command.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-topic> I<help string>
+
+Specifies the keyword string to match, in lowercase letters
+only. If the string is more than a single word, surround it
+with double quotes ("") or other delimiters.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid
+options are ignored.
+
+=back
+
+=head1 OUTPUT
+
+The first line of a command's online help entry names it and briefly
+describes its function. This command displays the first line for any
+C<fs> command where the string specified with the B<-topic> argument is part
+of the command name or first line.
+
+=head1 EXAMPLES
+
+The following command lists all C<fs> commands that include the word
+B<cache> in their names or short online descriptions:
+
+    fs apropos cache
+   setcachesize: set cache size
+   flush: flush file from cache
+   getcacheparms: get cache usage info
+   monitor: set cache monitor host address
+
+=head1 PRIVILEGE REQUIRED
+
+None
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+Converted from html to pod by Alf Wachsmann <alfw@slac.stanford.edu>, 2003,
+and Elizabeth Cassell <e_a_c@mailsnare.net>, 2004,
+Stanford Linear Accelerator Center, a department of Stanford University.
+
+=head1 SEE ALSO
+
+L<fs(1)>,
+L<fs_help(1)>
+
+=cut

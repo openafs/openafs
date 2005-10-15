@@ -1,0 +1,104 @@
+=head1 NAME
+
+fs setcell - Allows or disallows running of setuid programs from specified cells
+
+=head1 SYNOPSIS
+
+fs setcell B<-cell> I<cell name> [I<cell name> ...]  [B<-suid>]  [B<-nosuid>]  [B<-help>]
+
+fs setce B<-c> I<cell name> [I<cell name> ...]  [B<-s>]  [B<-n>]  [B<-h>]
+
+=head1 DESCRIPTION
+
+The C<fs setcell> command sets whether the Cache Manager allows programs
+(and other executable files) from each cell named by the B<-cell>
+argument to run with setuid permission. By default, the Cache Manager
+allows programs from its home cell to run with setuid permission, but
+not programs from any foreign cells. A program belongs to the same
+cell as the file server machine that houses the volume in which the
+program's binary file resides, as specified in the file server
+machine's B</usr/afs/etc/ThisCell> file. The Cache Manager determines its
+own home cell by reading the B</usr/vice/etc/ThisCell> file at
+initialization.
+
+To enable programs from each specified cell to run with setuid
+permission, include the B<-suid> flag. To prohibit programs from running
+with setuid permission, include the B<-nosuid> flag, or omit both flags.
+
+The C<fs setcell> command directly alters a cell's setuid status as
+recorded in kernel memory, so rebooting the machine is unnecessary.
+However, non-default settings do not persist across reboots of the
+machine unless the appropriate C<fs setcell> command appears in the
+machine's AFS initialization file.
+
+To display a cell's setuid status, issue the C<fs getcellstatus> command.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-cell> I<cell name> [I<cell name> ...]
+
+Names each cell for which to set setuid status. Provide the
+fully qualified domain name, or a shortened form that
+disambiguates it from the other cells listed in the local
+B</usr/vice/etc/CellServDB> file.
+
+=item B<-suid>
+
+Allows programs from each specified cell to run with setuid
+privilege. Provide it or the B<-nosuid> flag, or omit both flags
+to disallow programs from running with setuid privilege.
+
+=item B<-nosuid>
+
+Prevents programs from each specified cell from running with
+setuid privilege. Provide it or the B<-suid> flag, or omit both
+flags to disallow programs form running with setuid privilege.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid
+options are ignored.
+
+=back
+
+=head1 EXAMPLES
+
+The following command enables executable files from the State
+University cell to run with setuid privilege on the local machine:
+
+    fs setcell -cell stateu.edu -suid
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be logged in as the local superuser B<root>.
+
+=head1 CAVEATS
+
+AFS does not recognize effective UID: if a setuid program accesses AFS
+files and directories, it does so using the current AFS identity of
+the AFS user who initialized the program, not of the program's owner.
+Only the local file system recognizes effective UID.
+
+Only members of the B<system:administrators> group can turn on the setuid
+mode bit on an AFS file or directory.
+
+When the setuid mode bit is turned on, the UNIX C<ls -l> command displays
+the third user mode bit as an s instead of an x. However, the s does
+not appear on an AFS file or directory unless setuid permission is
+enabled for the cell in which the file resides.
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+Converted from html to pod by Alf Wachsmann <alfw@slac.stanford.edu>, 2003,
+and Elizabeth Cassell <e_a_c@mailsnare.net>, 2004,
+Stanford Linear Accelerator Center, a department of Stanford University.
+
+=head1 SEE ALSO
+
+L<fs_getcellstatus(1)>
+
+=cut

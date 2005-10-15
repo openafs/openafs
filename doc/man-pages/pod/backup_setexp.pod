@@ -1,0 +1,175 @@
+=head1 NAME
+
+backup setexp - Sets the expiration date for existing dump levels.
+
+=head1 SYNOPSIS
+
+backup setexp B<-dump> I<dump level name> [I<dump level name> ...]  [B<-expires> I<expiration date> ...]
+[B<-localauth>]  [B<-cell> I<cell name>]  [B<-help>]
+
+backup se B<-d> I<dump level name> [I<dump level name> ...]  [B<-e> I<expiration date> ...]
+[B<-l>]  [B<-c> I<cell name>]  [B<-h>]
+
+=head1 DESCRIPTION
+
+The C<backup setexp> command sets or changes the expiration date
+associated with each specified dump level, which must already exist in
+the dump hierarchy.
+
+Use the B<-expires> argument to associate an expiration date with each
+dump level. When the Backup System subsequently creates a dump at the
+dump level, it uses the specified value to derive the dump's
+expiration date, which it records on the label of the tape (or backup
+data file). The Backup System refuses to overwrite a tape until after
+the latest expiration date of any dump that the tape contains, unless
+the C<backup labeltape> command is used to relabel the tape. If a dump
+level does not have an expiration date, the Backup System treats dumps
+created at the level as expired as soon as it creates them.
+
+(Note that the Backup System does not automatically remove a dump's
+record from the Backup Database when the dump reaches its expiration
+date, but only if the tape that contains the dump is recycled or
+relabeled. To remove expired and other obsolete dump records, use the
+C<backup deletedump> command.)
+
+Define either an absolute or relative expiration date:
+
+=over
+
+=item *
+
+An absolute expiration date defines the month/day/year (and,
+optionally, hour and minutes) at which a dump expires. If the
+expiration date predates the dump creation time, the Backup System
+immediately treats the dump as expired.
+
+=item *
+
+A relative date defines the number of years, months, or days (or a
+combination of the three) after the dump's creation that it
+expires. When the Backup System creates a dump at the dump level,
+it calculates an actual expiration date by adding the relative
+date to the start time of the dump operation.
+
+=back
+
+If the command is used to change an existing expiration date
+associated with a dump level, the new date applies only to dumps
+created after the change. Existing dumps retain the expiration date
+assigned at the time they were created.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-dump> I<dump level name> [I<dump level name> ...]
+
+Specifies the full pathname of each dump level to assign the
+expiration date specified by the B<-expires> argument.
+
+=item B<-expires> I<expiration date> ...
+
+Defines the absolute or relative expiration date to associate
+with each dump level named by the B<-dump> argument. Absolute
+expiration dates have the following format:
+
+[B<at>] {B<NEVER> | I<mm>/I<dd>/I<yyyy> [I<hh>:I<MM>] }
+
+where the optional word C<at> is followed either by the string
+C<NEVER>, which indicates that dumps created at the dump level
+never expire, or by a date value with a required portion (I<mm>
+for month, I<dd> for day, and I<yyyy> for year) and an optional
+portion (I<hh> for hours and I<MM> for minutes).
+
+Omit the I<hh>:I<MM> portion to use the default of midnight (00:00
+hours), or provide a value in 24-hour format (for example,
+B<20:30> is 8:30 p.m.). Valid values for the year range from B<1970>
+to B<2037>; higher values are not valid because the latest
+possible date in the standard UNIX representation is in
+February 2038. The command interpreter automatically reduces
+later dates to the maximum value.
+
+Relative expiration dates have the following format:
+
+[B<in>] [I<years>B<y>] [I<months>B<m>] [I<days>B<d>]
+
+where the optional word C<in> is followed by at least one of a
+number of years (maximum B<9999>) followed by the letter C<y>, a
+number of months (maximum B<12>) followed by the letter C<m>, or a
+number of days (maximum B<31>) followed by the letter C<d>. If
+providing more than one of the three, list them in the
+indicated order. If the date that results from adding the
+relative expiration value to a dump's creation time is later
+than the latest possible date in the UNIX time representation,
+the Backup System automatically reduces it to that date.
+
+=over
+
+=item B<Note:>
+
+A ... follows this argument in the command's syntax
+statement because it accepts a multiword value which does not need to
+be enclosed in double quotes or other delimiters, not because it
+accepts multiple dates. Provide only one date (and optionally, time)
+definition to be associated with each dump level specified by the
+B<-dump> argument.
+
+=back
+
+=item B<-localauth>
+
+Constructs a server ticket using a key from the local
+B</usr/afs/etc/KeyFile> file. The C<backup> command interpreter
+presents it to the Backup Server, Volume Server and VL Server
+during mutual authentication. Do not combine this flag with the
+B<-cell> argument. For more details, see the introductory L<backup(1)>
+reference page.
+
+=item B<-cell> I<cell name>
+
+Names the cell in which to run the command. Do not combine this
+argument with the B<-localauth> flag. For more details, see the
+introductory L<backup(1)> reference page.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid
+options are ignored.
+
+=back
+
+=head1 EXAMPLES
+
+The following example associates an absolute expiration date of 10:00
+p.m. on 31 December 1999 with the dump level B</1998/december>:
+
+    backup setexp -dump B</1998/december> -expires at 12/31/1999 22:00
+
+The following example associates a relative expiration date of 7 days
+with the two dump levels B</monthly/week1> and B</monthly/week2>:
+
+    backup setexp -dump B</monthly/week1> B</monthly/week> -expires 7d
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be listed in the B</usr/afs/etc/UserList> file on every
+machine where the Backup Server is running, or must be logged onto a
+server machine as the local superuser B<root> if the B<-localauth> flag is
+included.
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+Converted from html to pod by Alf Wachsmann <alfw@slac.stanford.edu>, 2003,
+and Elizabeth Cassell <e_a_c@mailsnare.net>, 2004,
+Stanford Linear Accelerator Center, a department of Stanford University.
+
+=head1 SEE ALSO
+
+L<backup(1)>,
+L<backup_adddump(1)>,
+L<backup_deldump(1)>,
+L<backup_listdumps(1)>
+
+=cut

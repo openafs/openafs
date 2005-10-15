@@ -1,0 +1,280 @@
+=head1 NAME
+
+backup diskrestore - Restores the entire contents of a partition
+
+=head1 SYNOPSIS
+
+backup diskrestore B<-server> I<machine to restore>
+B<-partition> I<partition to restore>
+[B<-portoffset> I<TC port offset> [I<TC port offset> ...]]
+[B<-newserver> I<destination machine>]
+[B<-newpartition> I<destination partition>]
+[B<-extension> I<new volume name extension>]
+[B<-n>]  [B<-localauth>]  [B<-cell> I<cell name>]  [B<-help>]
+
+backup di B<-s> I<machine to restore> B<-pa> I<partition to restore>
+[B<-po> I<TC port offset> [I<TC port offset> ...]]  [B<-news> I<destination machine>]
+[B<-newp> I<destination partition>]  [B<-e> I<new volume name extension>]
+[B<-n>]  [B<-l>]  [B<-c> I<cell name>]  [B<-h>]
+
+=head1 DESCRIPTION
+
+The C<backup diskrestore> command restores all of the volumes for which
+the Volume Location Database (VLDB) lists a read/write site on the
+partition specified with the B<-server> and B<-partition> arguments. It is
+useful if a disk or machine failure corrupts or destroys the data on
+an entire partition. (To restore any read-only or backup volumes that
+resided on the partition, use the C<vos release> and C<vos backup> commands,
+respectively, after restoring the read/write version.)
+
+If restoring only selected volumes to a single site, it is usually
+more efficient to use the C<backup volrestore> command. To restore
+multiple volumes to many different sites, use the C<backup volsetrestore> command.
+
+(If the B<FILE YES> instruction appears in the
+B</usr/afs/backup/CFG>I<_device_name> file on the Tape Coordinator machine
+associated with the specified port offset, then the Backup System
+restores data from the backup data file listed for that port offset in
+the Tape Coordinator's B</usr/afs/backup/tapeconfig> file, instead of
+from tape. For the sake of clarity, the following text refers to tapes
+only, but the Backup System handles backup data files in much the same
+way.)
+
+The Backup System determines whether the read/write or backup version
+of each volume was dumped more recently, and restores the dumps of
+that version, starting with the most recent full dump. It resets the
+creation timestamp of each restored volume to the date and time at
+which it begins restoring the volume (the creation timestamp appears
+in the Creation field of the output from the C<vos examine> and C<vos
+listvol> commands).
+
+If all of the full and incremental dumps of all relevant volumes were
+not written on compatible tape devices, use the B<-portoffset> argument
+to list multiple port offset numbers in the order in which the tapes
+are needed (first list the port offset for the full dump, second the
+port offset for the level 1 incremental dump, and so on). This implies
+that the full dumps of all relevant volumes must have been written to
+a type of tape that the first Tape Coordinator can read, the level 1
+incremental dumps to a type of tape the second Tape Coordinator can
+read, and so on. If dumps are on multiple incompatible tape types, use
+the C<backup volrestore> command to restore individual volumes, or the
+C<backup volsetrestore> command after defining groups of volumes that
+were dumped to compatible tape types. For further discussion, see the
+IBM AFS Administration Guide.
+
+By default, the Backup System restores the contents of the specified
+partition to that same partition. To restore the contents to an
+alternate site, combine the following options as indicated. The Backup
+System removes each volume from the original site, if it still exists,
+and records the change of site in the VLDB.
+
+=over
+
+=item *
+
+To restore to a different partition on the same file server
+machine, provide the B<-newpartition> argument.
+
+=item *
+
+To restore to the partition with the same name on a different file
+server machine, provide the B<-newserver> argument.
+
+=item *
+
+To restore to a completely different site, combine the B<-newserver>
+and B<-newpartition> arguments.
+
+=back
+
+By default, the Backup System overwrites the contents of existing
+volumes with the restored data. To create a new volume to house the
+restored data instead, use the B<-extension> argument. The Backup System
+creates the new volume at the site designated by the B<-newserver> and
+B<-newpartition> arguments if they are used or the B<-server> and B<-partition>
+arguments otherwise. It derives the volume name by adding the
+extension to the read/write base name listed in the VLDB, and creates
+a new VLDB entry. The command does not affect the existing volume in
+any way. However, if a volume with the specified extension also
+already exists, the command overwrites it.
+
+To print out a list of the tapes containing the needed dumps, without
+actually performing the restore operation, include the B<-n> flag along
+with the other options to be used on the actual command.
+
+The Tape Coordinator's default response to this command is to access
+the first tape it needs by invoking the B<MOUNT> instruction in the local
+B<CFG>I<_device_name> file, or by prompting the backup operator to insert
+the tape if there is no B<MOUNT> instruction. However, if the B<AUTOQUERY
+NO> instruction appears in the B<CFG>I<_device_name> file, or if the issuer
+of the C<butc> command included the B<-noautoquery> flag, the Tape
+Coordinator instead expects the tape to be in the device already. If
+it is not, or is the wrong tape, the Tape Coordinator invokes the
+B<MOUNT> instruction or prompts the operator. It also invokes the B<MOUNT>
+instruction or prompts for any additional tapes needed to complete the
+restore operation; the backup operator must arrange to provide them.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-server> I<machine to restore>
+
+Names the file server machine that the VLDB lists as the site
+of the volumes that need to be restored.
+
+=item B<-partition> I<partition to restore>
+
+Names the partition that the VLDB lists as the site of the
+volumes that need to be restored.
+
+=item B<-portoffset> I<TC port offset> [I<TC port offset> ...]
+
+Specifies one or more port offset numbers (up to a maximum of
+128), each corresponding to a Tape Coordinator to use in the
+operation. If there is more than one value, the Backup System
+uses the first one when restoring the full dump of each volume,
+the second one when restoring the level 1 incremental dump of
+each volume, and so on. It uses the final value in the list
+when restoring dumps at the corresponding depth in the dump
+hierarchy and at all lower levels.
+
+Provide this argument unless the default value of 0 (zero) is
+appropriate for all dumps. If B<0> is just one of the values in
+the list, provide it explicitly in the appropriate order.
+
+=item B<-newserver> I<destination machine>
+
+Names an alternate file server machine to which to restore the
+volumes. If this argument is omitted, the volumes are restored
+to the file server machine named by the B<-server> argument.
+
+=item B<-newpartition> I<destination partition>
+
+Names an alternate partition to which to restore the data. If
+this argument is omitted, the volumes are restored to the
+partition named by the B<-partition> argument.
+
+=item B<-extension> I<new volume name extension>
+
+Creates a new volume for each volume being restored, to house
+the restored data. The Backup System derives the new volume's
+name by appending the specified string to the read/write base
+name listed in the VLDB, and creates a new VLDB volume entry.
+The Backup System preserves the contents of the volumes on the
+partition, if any still exist. Any string other than B<.readonly>
+or B<.backup> is acceptable, but the combination of the base name
+and extension cannot exceed 22 characters in length. To use a
+period to separate the extension from the name, specify it as
+the first character of the string (as in B<.rst>, for example).
+
+=item B<-n>
+
+Displays a list of the tapes necessary to perform the requested
+restore, without actually performing the operation.
+
+=item B<-localauth>
+
+Constructs a server ticket using a key from the local
+B</usr/afs/etc/KeyFile> file. The C<backup> command interpreter
+presents it to the Backup Server, Volume Server and VL Server
+during mutual authentication. Do not combine this flag with the
+B<-cell> argument. For more details, see the introductory L<backup(1)> reference page.
+
+=item B<-cell>
+
+Names the cell in which to run the command. Do not combine this
+argument with the B<-localauth> flag. For more details, see the
+introductory L<backup(1)> reference page.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid
+options are ignored.
+
+=back
+
+=head1 OUTPUT
+
+If a tape error occurs during the restore operation, the Tape
+Coordinator displays the following messages:
+
+   Restore operation on volume name failed due to tape error
+   Do you want to continue (y/n)?
+
+where I<name> is the name of the volume that was being restored when the
+tape error occurred. Enter the value B<y> to continue the operation
+without restoring the indicated volume or the value B<n> to terminate the
+operation. In the latter case, the operator can then attempt to
+determine the cause of the tape error.
+
+If the issuer includes the B<-n> flag with the command, the following
+string appears at the head of the list of the tapes necessary to
+perform the restore operation:
+
+   Tapes needed:
+
+=head1 EXAMPLES
+
+The following command restores the volumes for which the VLDB lists a
+read/write site on the B</vicepd> partition of the machine B<fs5.abc.com>.
+The Tape Coordinator associated with port offset 3 performs the
+operation.
+
+   backup diskrestore -server fs5.abc.com -partition /vicepd -portoffset 3
+
+The following command restores the volumes for which the VLDB lists a
+read/write site on the B</vicepb> partition of the machine B<fs1.abc.com> to
+a new site: the B</vicepa> partition on the machine B<fs3.abc.com>. The Tape
+Coordinator associated with port offset 0 performs the operation. (The
+command appears here on two lines only for legibility.)
+
+   backup diskrestore  -server fs1.abc.com -partition /vicepb   \
+                       -newserver fs3.abc.com -newpartition /vicepa
+
+The following command lists the tapes required to restore the volumes
+for which the VLDB lists a read/write site on the B</vicepm> partition of
+the machine B<fs4.abc.com>:
+
+   backup diskrestore -server fs4.abc.com -partition /vicepm -n
+   Tapes needed:
+   user.sunday1.1
+   user.sunday1.2
+   user.monday1.1
+   user.tuesday1.1
+   user.wednesday1.1
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be listed in the B</usr/afs/etc/UserList> file on every
+machine where the Backup Server or Volume Location (VL) Server is
+running, and on every file server machine that houses an affected
+volume. If the B<-localauth> flag is included, the issuer must instead be
+logged on to a server machine as the local superuser B<root>.
+
+=head1 CAVEATS
+
+If issuing this command to recover data after a disk crash or other
+damage, be sure not to issue the C<vos syncserv> command first. Doing so
+destroys the VLDB record of the volumes that resided on the partition.
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+Converted from html to pod by Alf Wachsmann <alfw@slac.stanford.edu>, 2003,
+Stanford Linear Accelerator Center, a department of Stanford University.
+
+=head1 SEE ALSO
+
+L<backup(1)>,
+L<backup_dump(1)>,
+L<backup_volrestore(1)>,
+L<backup_volsetrestore(1)>,
+L<butc(1)>,
+L<vos_backup(1)>,
+L<vos_examine(1)>,
+L<vos_listvol(1)>,
+L<vos_release(1)>
+
+=cut

@@ -1,0 +1,98 @@
+=head1 NAME
+
+bos listusers - Lists the privileged users from the B</usr/afs/etc/UserList> file
+
+=head1 SYNOPSIS
+
+bos listusers B<-server> I<machine name>  [B<-cell> I<cell name>]
+[B<-noauth>]   [B<-localauth>]   [B<-help>]
+
+bos listu B<-s> I<machine name>  [B<-c> I<cell name>]  [B<-n>]  [B<-l>]  [B<-h>]
+
+=head1 DESCRIPTION
+
+The C<bos listusers> command lists the user names from the
+B</usr/afs/etc/UserList> file on the file server machine named by the
+B<-server> argument. The users are authorized to issue privileged C<bos> and
+C<vos> commands.
+
+To edit the list of users, use the C<bos adduser> and C<bos removeuser>
+commands.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-server> I<machine name>
+
+Indicates the server machine from which to display the B<UserList>
+file. Identify the machine by IP address or its host name
+(either fully-qualified or abbreviated unambiguously). For
+details, see the introductory reference page for the C<bos>
+command suite.
+
+For consistent performance in the cell, the output must be the
+same on every server machine. The L<bos_adduser(1)> reference page
+explains how to keep the machines synchronized.
+
+=item B<-cell> I<cell name>
+
+Names the cell in which to run the command. Do not combine this
+argument with the B<-localauth> flag. For more details, see the
+introductory L<bos(1)> reference page.
+
+=item B<-noauth>
+
+Assigns the unprivileged identity B<anonymous> to the issuer. Do
+not combine this flag with the B<-localauth> flag. For more
+details, see the introductory L<bos(1)> reference page.
+
+=item B<-localauth>
+
+Constructs a server ticket using a key from the local
+B</usr/afs/etc/KeyFile> file. The C<bos> command interpreter presents
+the ticket to the BOS Server during mutual authentication. Do
+not combine this flag with the B<-cell> or B<-noauth> options. For
+more details, see the introductory L<bos(1)> reference page.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid
+options are ignored.
+
+=back
+
+=head1 OUTPUT
+
+The output lists the user name of each user entitled to issue
+privileged C<bos> and C<vos> commands.
+
+=head1 EXAMPLES
+
+The following example lists the users from B<UserList> file on the
+machine B<fs4.abc.com>.
+
+    bos listusers fs4.abc.com
+   SUsers are: pat smith jones terry
+
+=head1 PRIVILEGE REQUIRED
+
+None
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+Converted from html to pod by Alf Wachsmann <alfw@slac.stanford.edu>, 2003,
+and Elizabeth Cassell <e_a_c@mailsnare.net>, 2004,
+Stanford Linear Accelerator Center, a department of Stanford University.
+
+=head1 SEE ALSO
+
+L<KeyFile(1)>,
+L<UserList(1)>,
+L<bos(1)>,
+L<bos_adduser(1)>,
+L<bos_removeuser(1)>
+
+=cut

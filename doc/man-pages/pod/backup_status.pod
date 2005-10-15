@@ -1,0 +1,198 @@
+=head1 NAME
+
+backup status - Reports a Tape Coordinator's status
+
+=head1 SYNOPSIS
+
+backup status [B<-portoffset> I<TC port offset>]
+[B<-localauth>]  [B<-cell> I<cell name>]  [B<-help>]
+
+backup st [B<-p> I<TC port offset>]  [B<-l>]  [B<-c> I<cell name>]  [B<-h>]
+
+=head1 DESCRIPTION
+
+The C<backup status> command displays which operation, if any, the
+indicated Tape Coordinator is currently executing.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-portoffset> I<TC port offset>
+
+Specifies the port offset number of the Tape Coordinator for
+which to report the status.
+
+=item B<-localauth>
+
+Constructs a server ticket using a key from the local
+B</usr/afs/etc/KeyFile> file. The C<backup> command interpreter
+presents it to the Backup Server, Volume Server and VL Server
+during mutual authentication. Do not combine this flag with the
+B<-cell> argument. For more details, see the introductory L<backup(1)>
+reference page.
+
+=item B<-cell> I<cell name>
+
+Names the cell in which to run the command. Do not combine this
+argument with the B<-localauth> flag. For more details, see the
+introductory L<backup(1)> reference page.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid
+options are ignored.
+
+=back
+
+=head1 OUTPUT
+
+The following message indicates that the Tape Coordinator is not
+currently performing an operation:
+
+Tape coordinator is idle
+
+Otherwise, the output includes a message of the following format for
+each running or pending operation:
+
+Task I<task_ID>:  I<operation>:   I<status>
+
+where
+
+=over
+
+=item B<I<task_ID>>
+
+Is a task identification number assigned by the Tape
+Coordinator. It begins with the Tape Coordinator's port offset
+number.
+
+=item B<I<operation>>
+
+Identifies the operation the Tape Coordinator is performing,
+which is initiated by the indicated command:
+
+=over
+
+=item *
+
+Dump (the C<backup dump> command)
+
+=item *
+
+Restore (the backup diskrestore, backup volrestore, or C<backup
+volsetrestore> commands)
+
+=item *
+
+Labeltape (the C<backup labeltape> command)
+
+=item *
+
+Scantape (the C<backup scantape> command)
+
+=item *
+
+SaveDb (the C<backup savedb> command)
+
+=item *
+
+RestoreDb (the C<backup restoredb> command)
+
+=back
+
+=item B<I<status>>
+
+Indicates the job's current status in one of the following
+messages.
+
+=over
+
+=item B<I<number> Kbytes transferred, volume I<volume_name>>
+
+For a running dump operation, indicates the number of
+kilobytes copied to tape or a backup data file so far,
+and the volume currently being dumped.
+
+=item B<I<number> Kbytes, restore.volume>
+
+For a running restore operation, indicates the number of
+kilobytes copied into AFS from a tape or a backup data
+file so far.
+
+=item B<[abort requested]>
+
+The C<(backup) kill> command was issued, but the termination
+signal has yet to reach the Tape Coordinator.
+
+=item B<[abort sent]>
+
+The operation is canceled by the C<(backup) kill> command.
+Once the Backup System removes an operation from the
+queue or stops it from running, it no longer appears at
+all in the output from the command.
+
+=item B<[butc contact lost]>
+
+The C<backup> command interpreter cannot reach the Tape
+Coordinator. The message can mean either that the Tape
+Coordinator handling the operation was terminated or
+failed while the operation was running, or that the
+connection to the Tape Coordinator timed out.
+
+=item B<[done]>
+
+The Tape Coordinator has finished the operation.
+
+=item B<[drive wait]>
+
+The operation is waiting for the specified tape drive to
+become free.
+
+=item B<[operator wait]>
+
+The Tape Coordinator is waiting for the backup operator
+to insert a tape in the drive.
+
+=back
+
+=back
+
+If the Tape Coordinator is communicating with an XBSA server (a
+third-party backup utility that implements the Open Group's Backup
+Service API [XBSA]), the following message appears last in the output:
+
+I<XBSA_program> Tape coordinator
+
+where I<XBSA_program> is the name of the XBSA-compliant program.
+
+=head1 EXAMPLES
+
+The following example shows that the Tape Coordinator with port offset
+4 has so far dumped about 1.5 MB of data for the current dump
+operation, and is currently dumping the volume named B<user.pat.backup>:
+
+    backup status -portoffset 4
+   Task 4001:  Dump:   1520 Kbytes transferred,  volume user.pat.backup
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be listed in the B</usr/afs/etc/UserList> file on every
+machine where the Backup Server is running, or must be logged onto a
+server machine as the local superuser B<root> if the B<-localauth> flag is
+included.
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+Converted from html to pod by Alf Wachsmann <alfw@slac.stanford.edu>, 2003,
+and Elizabeth Cassell <e_a_c@mailsnare.net>, 2004,
+Stanford Linear Accelerator Center, a department of Stanford University.
+
+=head1 SEE ALSO
+
+L<backup(1)>,
+L<butc(1)>
+
+=cut

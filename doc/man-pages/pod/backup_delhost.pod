@@ -1,0 +1,93 @@
+=head1 NAME
+
+backup delhost - Deletes a Tape Coordinator entry from the Backup Database
+
+=head1 SYNOPSIS
+
+backup delhost B<-tapehost> I<tape machine name> [B<-portoffset> I<TC port offset>]
+[B<-localauth>]  [B<-cell> I<cell name>]  [B<-help>]
+
+backup delh B<-t> I<tape machine name>  [B<-p> I<TC port offset>]
+[B<-l>]  [B<-c> I<cell name>]  [B<-h>]
+
+=head1 DESCRIPTION
+
+The C<backup delhost> command deletes the indicated Tape Coordinator
+entry from the Backup Database. It is then impossible to submit backup
+operations to that Tape Coordinator, even if it is still running. To
+keep configuration information consistent, also remove the
+corresponding entry from the B</usr/afs/backup/tapeconfig> file on the
+Tape Coordinator machine.
+
+To list the Tape Coordinator machines and port offsets defined in the
+Backup Database, issue the C<backup listhosts> command.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-tapehost> I<tape machine name>
+
+Specifies the hostname of the machine housing the Tape
+Coordinator to delete.
+
+=item B<-portoffset> I<TC port offset>
+
+Specifies the port offset number of the Tape Coordinator to
+delete. If omitted, it defaults to B<0>. If provided, it is an
+integer between B<0> (zero) and B<58510>, and must match the port
+offset number assigned to the same combination of Tape
+Coordinator and tape device or file in the
+B</usr/afs/backup/tapeconfig> file on the Tape Coordinator machine
+indicated by the B<-tapehost> argument.
+
+=item B<-localauth>
+
+Constructs a server ticket using a key from the local
+B</usr/afs/etc/KeyFile> file. The C<backup> command interpreter
+presents it to the Backup Server, Volume Server and VL Server
+during mutual authentication. Do not combine this flag with the
+B<-cell> argument. For more details, see the introductory L<backup(1)> reference page.
+
+=item B<-cell> I<cell name>
+
+Names the cell in which to run the command. Do not combine this
+argument with the B<-localauth> flag. For more details, see the
+introductory L<backup(1)> reference page.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid
+options are ignored.
+
+=back
+
+=head1 EXAMPLES
+
+The following command deletes the Backup Database entry for the Tape
+Coordinator with port offset 2 on the Tape Coordinator machine
+B<backup3.abc.com>:
+
+   backup delhost -tapehost backup3.abc.com -portoffset 2
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be listed in the B</usr/afs/etc/UserList> file on every
+machine where the Backup Server is running, or must be logged onto a
+server machine as the local superuser B<root> if the B<-localauth> flag is
+included.
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+Converted from html to pod by Alf Wachsmann <alfw@slac.stanford.edu>, 2003,
+Stanford Linear Accelerator Center, a department of Stanford University.
+
+=head1 SEE ALSO
+
+L<backup(1)>,
+L<backup_addhost(1)>,
+L<backup_listhosts(1)>
+
+=cut

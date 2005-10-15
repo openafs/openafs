@@ -1,0 +1,66 @@
+=head1 NAME
+
+fs getcacheparms - Displays the current size of the cache and the amount being used
+
+=head1 SYNOPSIS
+
+fs getcacheparms [B<-help>]
+
+fs getca [B<-h>]
+
+=head1 DESCRIPTION
+
+The C<fs getcacheparms> command displays the current size of the cache
+(which can be in memory or on disk), and the amount currently in use.
+
+The reported statistics are from kernel memory, so the reported size
+can differ from the setting specified in the B</usr/vice/etc/cacheinfo>
+file on a machine using a disk cache, if the C<fs setcachesize> command
+has been used to alter cache size.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-help>
+
+Prints the online help for this command. All other valid
+options are ignored.
+
+=back
+
+=head1 OUTPUT
+
+The output reports
+
+AFS using I<amount used> of the cache's available I<size> 1K byte blocks.
+
+where I<amount used> is the number of kilobyte blocks currently used to
+cache data and status information, and I<size> is the total current cache
+size.
+
+=head1 EXAMPLES
+
+The following example shows the output on a machine with a 25000
+kilobyte cache.
+
+    fs getcacheparms
+   AFS using 22876 of the cache's available 25000 1K byte blocks.
+
+=head1 PRIVILEGE REQUIRED
+
+None
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+Converted from html to pod by Alf Wachsmann <alfw@slac.stanford.edu>, 2003,
+and Elizabeth Cassell <e_a_c@mailsnare.net>, 2004,
+Stanford Linear Accelerator Center, a department of Stanford University.
+
+=head1 SEE ALSO
+
+L<fs_setcachesize(1)>
+
+=cut

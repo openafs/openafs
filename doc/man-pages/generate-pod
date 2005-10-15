@@ -1,0 +1,178 @@
+#!/usr/bin/perl -w
+#
+# Parser for files obtained via
+# lynx --dump http://www.openafs.org/pages/doc/AdminReference/auarf174.htm > fstrace_lslog.txt
+
+use strict;
+my $DEBUG = 0;
+my $RAW = 0;
+
+my %hash;
+my %options;
+
+######################################################################
+## Input Section:
+######################################################################
+
+my $del = $/;
+undef $/;
+my $text = <STDIN>;
+$/ = $del;
+
+my $sections = 'Purpose|Synopsis|Description|Cautions|Options|Output|Examples|Privilege\ Required|Related\ Information|References';
+
+$text =~ s/^.*\[7\]\s*(.+?)\n//xs;
+
+$hash{Command} = $1;
+my $Cmd_fam = "backup|bos|fs|kas|pts|uss|vos";
+$Cmd_fam .= '|' . (split(" ", $hash{Command}))[0];
+
+while ($text !~ /^\s+$/xs) {
+  $text =~ s/($sections)(.*?)(\n\s*(?:$sections)\n\s*|$)/$3/xs;
+  $hash{$1} = $2;
+}
+
+$hash{'Related Information'} =~ s/\s*(.+?)\s*___________.*$/$1/xs;
+
+
+
+if (! $RAW) {
+  ######################################################################
+  ## Clean-up Section:
+  ######################################################################
+
+  # make C<pts adduser> out of pts adduser:
+  $hash{Description} =~ s/\b($hash{Command})\b/C<$1>/g if ($hash{Description});
+  $hash{Options}     =~ s/\b($hash{Command})\b/C<$1>/g if ($hash{Options});
+
+  # strip leading and trailing whitespace:
+  my $pattern = '^\s*(.*?)\s*$';
+  foreach (keys(%hash)) {
+    $hash{$_} =~ s/$pattern/$1/sxg;
+    $hash{$_} =~ s/\n\ +/\n/sxg;
+    $hash{$_} =~ s/((?:$Cmd_fam)\s?\w*)(\s)reference(\s)page/L<$1(1)>$2reference$3page/g;
+    $hash{$_} =~ s/the(\s)(\w+(?:\s\w+)?)(\s)reference(\s)page/the$1L<$2(1)>$3reference$4page/g;
+    $hash{$_} =~ s/(\(?\b(?:$Cmd_fam)\)?\s?\w*)(\s)command/C<$1>$2command/g;
+    $hash{$_} =~ s/the(\s)(\w+)(\s)command/the$1C<$2>$3command/g;
+    $hash{$_} =~ s/\n\*\ /\n\n=item \*\n\n/g;
+    $hash{$_} =~ s/\n\+\ /\n\n=item \*\n\n/g;
+    $hash{$_} =~ s"(\s)((?:/\w+)+)"$1B<$2>"g if($_ ne "Synopsis");
+    $hash{$_} =~ s/(superuser\s)root/$1B<root>/g;
+    $hash{$_} =~ s/(unprivileged\s(?:identity|user)\s)anonymous/$1B<anonymous>/g;
+    $hash{$_} =~ s/system\:administrators/B<system:administrators>/g;
+    $hash{$_} =~ s/(\s)(\w)(\s)\((\w+)\)(\s)/$1B<$2>$3(B<$4>)$5/g;
+  }
+
+  ######################################################################
+  ## POD-ify Section:
+  ######################################################################
+
+  # Make B<-group> out of -group:
+  $hash{Synopsis}    =~ s/(\s|^|\[)(-\w+)\b/$1B<$2>/g if ($hash{Synopsis});
+  $hash{Description} =~ s/(\s|^)(-\w+)\b/$1B<$2>/g if ($hash{Description});
+  $hash{Options}     =~ s/(\s|^)(-\w+)\b/$1B<$2>/g if ($hash{Options});
+  $hash{Output}      =~ s/(\s|^)(-\w+)\b/$1B<$2>/g if ($hash{Output});
+  $hash{Cautions}      =~ s/(\s|^)(-\w+)\b/$1B<$2>/g if ($hash{Cautions});
+  $hash{'Privilege Required'}      =~ s/(\s|^)(-\w+)\b/$1B<$2>/g if ($hash{'Privilege Required'});
+
+  $hash{Description} =~ s/(\w*?(?:\.\w+)+)/B<$1>/g if ($hash{Description});
+  $hash{Options} =~ s/(\w*?(?:\.\w+)+)/B<$1>/g if ($hash{Options});
+  $hash{Output} =~ s/(\w*?(?:\.\w+)+)/B<$1>/g if ($hash{Output});
+  $hash{'Privilege Required'} =~ s/(\w*?(?:\.\w+)+)/B<$1>/g if ($hash{'Privilege Required'});
+  $hash{Cautions} =~ s/(\w*?(?:\.\w+)+)/B<$1>/g if ($hash{Cautions});
+
+  $hash{Synopsis} =~ s/<([^>]*?)>\^\+/I<$1> [I<$1> ...]/g if ($hash{Synopsis});
+  $hash{Synopsis} =~ s/( |\n)<(.*?)>/$1I<$2>/g if ($hash{Synopsis});
+  $text = $hash{Synopsis};
+  while ($text && $text =~ /B<-\w+> ?(I<.*?>(?: \[I<.*?> \.\.\.\])?)?/s) {
+    $text =~ s/B<(-\w+)> ?(I<.*?>(?: \[I<.*?> \.\.\.\])?)?//s;
+    if ($2) {
+      $options{$1} = ' '.$2;
+    } else {
+      $options{$1} = "";
+    }
+  }
+
+  $hash{Options} =~ s/(?:\n|^)B<([^>]*?)>\ \n/\n=item B<$1>$options{$1}\n\n/sxg if ($hash{Options});
+
+  $hash{Examples} =~ s/\n\s*%(.*?)(?:\n|$)/\n\nB<\ \ \ $1>\n/sxg if ($hash{Examples});
+
+  $hash{'Related Information'} =~ s/\[\d+\](.*?)\s*\n/L<$1(1)>,\n/msxg if ($hash{'Related Information'});
+  $hash{'Related Information'} =~ s/\[\d+\](.*)\s*/L<$1(1)>/msxg if ($hash{'Related Information'});
+  $hash{'Related Information'} =~ s/(\w+)\s+(\w+)/$1_$2/msxg if ($hash{'Related Information'});
+
+  foreach (keys(%hash)) {
+    $hash{$_} =~ s/((?:\n\n=item\ \*\n(?:\n.+$)+)+)/\n\n=over$1\n\n=back/mxg;
+  }
+
+
+};
+
+
+######################################################################
+## Output Section:
+######################################################################
+
+my $file;
+($file = $hash{Command} . ".pod") =~ s/\s/_/g;
+
+my $FH;
+if ($DEBUG) {
+  $FH = *STDOUT
+} else {
+  open(FILE, "> $file") || die("Could not open $file\n");
+  $FH = *FILE;
+}
+
+print $FH "=head1 NAME\n\n";
+print $FH "$hash{Command} - $hash{Purpose}\n\n";
+
+if (exists $hash{Synopsis}) {
+  print $FH "=head1 SYNOPSIS\n\n";
+  print $FH "$hash{Synopsis}\n\n";
+}
+
+print $FH "=head1 DESCRIPTION\n\n";
+print $FH "$hash{Description}\n\n";
+
+if (exists $hash{Options}) {
+  print $FH "=head1 OPTIONS\n\n";
+  print $FH "=over 4\n";
+  print $FH "$hash{Options}\n\n";
+  print $FH "=back\n\n";
+}
+
+if (exists $hash{Output}) {
+  print $FH "=head1 OUTPUT\n\n";
+  print $FH "$hash{Output}\n\n";
+}
+
+if (exists $hash{Examples}) {
+  print $FH "=head1 EXAMPLES\n\n";
+  print $FH "$hash{Examples}\n\n";
+}
+
+if (exists $hash{'Privilege Required'}) {
+  print $FH "=head1 PRIVILEGE REQUIRED\n\n";
+  print $FH "$hash{'Privilege Required'}\n\n";
+}
+
+if (exists $hash{Cautions}) {
+  print $FH "=head1 CAVEATS\n\n";
+  print $FH "$hash{Cautions}\n\n";
+}
+
+print $FH "=head1 COPYRIGHT\n\n";
+print $FH "IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.\n\n";
+print $FH "Converted from html to pod by Alf Wachsmann <alfw\@slac.stanford.edu>, 2003,\n";
+print $FH "and Elizabeth Cassell <e_a_c\@mailsnare.net>, 2004,\n";
+print $FH "Stanford Linear Accelerator Center, a department of Stanford University.\n\n";
+
+if (exists $hash{'Related Information'}) {
+  print $FH "=head1 SEE ALSO\n\n";
+  print $FH "$hash{'Related Information'}\n\n";
+  print $FH "=cut\n";
+}
+
+close(FILE) unless $DEBUG;
+

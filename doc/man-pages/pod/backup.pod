@@ -1,0 +1,306 @@
+=head1 NAME
+
+backup - Introduction to the C<backup> command suite
+
+=head1 DESCRIPTION
+
+The commands in the C<backup> command suite are the administrative
+interface to the AFS Backup System. There are several categories of
+commands in the suite:
+
+=over
+
+=item *
+
+Commands to copy data from AFS volumes to tape or a backup data
+file, and to restore it to the file system: C<backup diskrestore>,
+C<backup dump>, C<backup volrestore>, and C<backup volsetrestore>
+
+=item *
+
+Commands to administer the records in the Backup Database: C<backup
+adddump>, C<backup addhost>, C<backup addvolentry>, C<backup addvolset>,
+C<backup deldump>, C<backup deletedump>, C<backup delhost>, C<backup
+delvolentry>, C<backup delvolset>, C<backup dumpinfo>, C<backup listdumps>,
+C<backup listhosts>, C<backup listvolsets>, C<backup scantape>, C<backup
+setexp>, and C<backup volinfo>
+
+=item *
+
+Commands to write and read tape labels: C<backup labeltape> and
+C<backup readlabel>
+
+=item *
+
+Commands to list and change the status of backup operations and
+the machines performing them: C<(backup) jobs>, C<(backup) kill>, and
+C<backup status>
+
+=item *
+
+Commands to enter and leave interactive mode: C<backup (interactive)>
+and C<(backup) quit>
+
+=item *
+
+Commands to check for and repair corruption in the Backup
+Database: C<backup dbverify>, C<backup restoredb>, and C<backup savedb>
+
+=item *
+
+Commands to obtain help: C<backup apropos> and C<backup help>
+
+=back
+
+The C<backup> command interpreter interacts with two other processes:
+
+=over
+
+=item *
+
+The Backup Server (B<buserver>) process. It maintains the Backup
+Database, which stores most of the administrative information used
+by the Backup System. In the standard configuration, the Backup
+Server runs on each database server machine in the cell, and uses
+AFS's distributed database technology, Ubik, to synchronize its
+copy of the database with the copies on the other database server
+machines.
+
+=item *
+
+The Backup Tape Coordinator (B<butc>) process. A separate instance of
+the process controls each tape device or backup data file used to
+dump or restore data. The Tape Coordinator runs on a Tape
+Coordinator machine, which is an AFS server or client machine that
+has one or more tape devices attached, or has sufficient disk
+space to accommodate one or more backup data files on its local
+disk.
+
+Each Tape Coordinator must be registered in the Backup Database
+and in the B</usr/afs/backup/tapeconfig> configuration file on the
+Tape Coordinator machine's local disk, and information in the two
+places must be consistent for proper Backup System performance.
+The optional B</usr/afs/backup/CFG>I<_device_name> for each Tape
+Coordinator records information used to automate its operation.
+
+=back
+
+In addition to the standard command line interface, the C<backup> command
+suite provides an I<interactive> interface, which has several useful
+features described on the C<backup (interactive)> reference page. Three
+of the commands in the suite are available only in interactive mode:
+C<(backup) jobs>, C<(backup) kill>, and C<(backup) quit>.
+
+=head1 OPTIONS
+
+The following options are available on many commands in the C<backup>
+suite. The reference page for each command also lists them, but they
+are described here in greater detail.
+
+=over 4
+
+=item B<-cell> I<cell name> 
+
+Names the cell in which to run the command. It is acceptable to
+abbreviate the cell name to the shortest form that
+distinguishes it from the other entries in the
+B</usr/vice/etc/CellServDB> file on the local machine. If the
+B<-cell> argument is omitted, the command interpreter determines
+the name of the local cell by reading the following in order:
+
+=over
+
+=item 1.
+
+The value of the AFSCELL environment variable
+
+=item 2.
+
+The local B</usr/vice/etc/ThisCell> file
+
+=back
+
+Do not combine the B<-cell> and B<-localauth> options. A command on
+which the B<-localauth> flag is included always runs in the local
+cell (as defined in the server machine's local
+B</usr/afs/etc/ThisCell> file), whereas a command on which the
+B<-cell> argument is included runs in the specified foreign cell.
+
+The B<-cell> argument is not available on commands issued in
+interactive mode. The cell defined when the C<backup> command
+interpreter enters interactive mode applies to all commands
+issued during the interactive session.
+
+
+=item B<-help>
+
+Prints a command's online help message on the standard output
+stream. Do not combine this flag with any of the command's
+other options; when it is provided, the command interpreter
+ignores all other options, and only prints the help message.
+
+
+=item B<-localauth>
+
+Constructs a server ticket using the server encryption key with
+the highest key version number in the local
+B</usr/afs/etc/KeyFile> file. The C<backup> command interpreter
+presents the ticket, which never expires, to the Backup Server,
+Volume Server and Volume Location (VL) Server during mutual
+authentication.
+
+Use this flag only when issuing a command on a server machine;
+client machines do not usually have a B</usr/afs/etc/KeyFile>
+file. The issuer of a command that includes this flag must be
+logged on to the server machine as the local superuser B<root>.
+The flag is useful for commands invoked by an unattended
+application program, such as a process controlled by the UNIX
+B<cron> utility or by a cron entry in the machine's
+B</usr/afs/local/BosConfig> file. It is also useful if an
+administrator is unable to authenticate to AFS but is logged in
+as the local superuser B<root>.
+
+Do not combine the B<-cell> and B<-localauth> options. A command on
+which the B<-localauth> flag is included always runs in the local
+cell (as defined in the server machine's local
+B</usr/afs/etc/ThisCell> file), whereas a command on which the
+B<-cell> argument is included runs in the specified foreign cell.
+
+The B<-localauth> argument is not available on commands issued in
+interactive mode. The local identity and AFS tokens with which
+the C<backup> command interpreter enters interactive mode apply to
+all commands issued during the interactive session.
+
+=item B<-portoffset> I<TC port offset> 
+
+Specifies the port offset number of the Tape Coordinator that
+is to execute the C<backup> command. The port offset number
+uniquely identifies a pairing of a Tape Coordinator (B<butc>)
+process and tape device or C<backup> data file.
+
+The C<backup> command interpreter and Tape Coordinator process
+communicate via a UDP socket, or port. Before issuing a C<backup>
+command that involves reading or writing a tape, the backup
+operator must start a B<butc> process that controls the
+appropriate tape device and listens for requests sent to its
+port number. If a Backup System machine has multiple tape
+devices attached, they can perform backup operations
+simultaneously because each device has its own associated B<butc>
+process and port offset number.
+
+The Backup System associates a tape capacity and file mark size
+with each port offset (as defined in the B<tapeconfig> file). For
+a compressing tape device, the capacity and file mark values
+differ for compression and non-compression modes, so the two
+modes have distinct port offset numbers.
+
+The Backup Database can store up to 58,511 port offsets, so the
+legal values for this argument are the integers B<0> through
+B<58510>. If the issuer omits the argument, it defaults to B<0>. (The
+limit of 58,511 port offsets results from the fact that UDP
+socket numbers are identified by a 16-bit integer, and the
+lowest socket number used by the Backup System is 7025. The
+largest number that a 16-bit integer can represent is 65,535.
+Subtracting 7,025 yields 58,510. The addition of port offset 0
+(zero) increases the maximum to 58,511.)
+
+Although it is possible to define up to 58,511 port offset
+numbers for a cell, it is not possible to run 58,511 tape
+devices simultaneously, due to the following limits:
+
+
+=over
+
+=item *
+
+The maximum number of dump or restore operations that can run
+simultaneously is 64.
+
+=item *
+
+The maximum number of tape devices that can work together on
+a restore operation is 128 (that is the maximum number of
+values that can be provided for the B<-portoffset> argument to
+the C<backup diskrestore>, C<backup volrestore>, or C<backup
+volsetrestore> command).
+
+=back
+
+The Backup System does not reserve UDP sockets. If another
+application is already using the Tape Coordinator's socket when
+it tries to start, the B<butc> process fails and the following
+error message appears at the shell prompt:
+
+  bind: Address already in use
+  rxi_GetUDPSocket: bind failed
+
+=back
+
+=head1 PRIVILEGE REQUIRED
+
+To issue any C<backup> command that accesses the Backup Database only,
+the issuer must be listed in the B</usr/afs/etc/UserList> file on every
+machine where the Backup Server is running. To issue any C<backup> command 
+that accesses volume data, the issuer must appear in the
+B<UserList> file on every Backup Server machine, every Volume Location
+(VL) Server machine, and every file server machine that houses
+affected volumes. By convention, a common B<UserList> file is distributed
+to all database server and file server machines in the cell. See the
+chapter on privileged users in the IBM AFS Administration Guide for
+more information on this type of privilege.
+
+If the B<-localauth> flag is included, the user must instead be logged on
+as the local superuser root on the server machine where the C<backup> command is issued.
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+Converted from html to pod by Alf Wachsmann <alfw@slac.stanford.edu>, 2003,
+Stanford Linear Accelerator Center, a department of Stanford University.
+
+=head1 SEE ALSO
+
+L<BosConfig(1)>,
+L<CFG_device_name(1)>,
+L<CellServDB_client_version(1)>,
+L<KeyFile(1)>,
+L<ThisCell_client_version(1)>,
+L<ThisCell_server_version(1)>,
+L<UserList(1)>,
+L<tapeconfig(1)>,
+L<backup_adddump(1)>,
+L<backup_addhost(1)>,
+L<backup_addvolentry(1)>,
+L<backup_addvolset(1)>,
+L<backup_dbverify(1)>,
+L<backup_deldump(1)>,
+L<backup_deletedump(1)>,
+L<backup_delhost(1)>,
+L<backup_delvolentry(1)>,
+L<backup_delvolset(1)>,
+L<backup_diskrestore(1)>,
+L<backup_dump(1)>,
+L<backup_dumpinfo(1)>,
+L<backup_help(1)>,
+L<backup_interactive(1)>,
+L<backup_jobs(1)>,
+L<backup_kill(1)>,
+L<backup_labeltape(1)>,
+L<backup_listdumps(1)>,
+L<backup_listhosts(1)>,
+L<backup_listvolsets(1)>,
+L<backup_quit(1)>,
+L<backup_readlabel(1)>,
+L<backup_restoredb(1)>,
+L<backup_savedb(1)>,
+L<backup_scantape(1)>,
+L<backup_setexp(1)>,
+L<backup_status(1)>,
+L<backup_volinfo(1)>,
+L<backup_volrestore(1)>,
+L<backup_volsetrestore(1)>,
+L<buserver(1)>,
+L<butc(1)>
+
+=cut
