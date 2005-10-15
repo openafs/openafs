@@ -556,7 +556,7 @@ case $AFS_SYSNAME in
 
 	s390x_linux24|s390x_linux26)
 		CC="gcc"
-		CCOBJ="gcc"
+		CCOBJ="gcc -fPIC"
 		LD="ld"
 		KERN_OPTMZ=-O2
 		LEX="flex -l"

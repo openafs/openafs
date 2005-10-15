@@ -38,14 +38,14 @@
  * env      the Java environment
  * obj      the current Java object
  */
-JNIEXPORT void JNICALL
-Java_org_openafs_jafs_Token_initializeAdminClient(JNIEnv * env, jclass cls)
+JNIEXPORT void JNICALL 
+Java_org_openafs_jafs_Token_initializeAdminClient(JNIEnv *env, jclass cls)
 {
-    afs_status_t ast;
-    if (!afsclient_Init(&ast)) {
-	throwAFSException(env, ast);
-	return;
-    }
+  afs_status_t ast;
+  if( !afsclient_Init( &ast ) ) {
+    throwAFSException( env, ast );
+    return;
+  }
 }
 
 
@@ -60,73 +60,75 @@ Java_org_openafs_jafs_Token_initializeAdminClient(JNIEnv * env, jclass cls)
  * jpassword    the password of the user
  * returns a token representing the authentication
  */
-JNIEXPORT jint JNICALL
-Java_org_openafs_jafs_Token_getToken(JNIEnv * env, jobject obj,
-				     jstring jcellName, jstring juserName,
-				     jstring jpassword)
+JNIEXPORT jlong JNICALL 
+Java_org_openafs_jafs_Token_getToken
+  (JNIEnv *env, jobject obj, jstring jcellName, jstring juserName,
+   jstring jpassword)
 {
-    afs_status_t ast;
-    char *cellName;
-    char *userName;
-    char *password;
-    void *tokenHandle;
-    int rc;
+  afs_status_t ast;
+  const char *cellName;
+  const char *userName;
+  const char *password;
+  void *tokenHandle;
+  int rc;
 
-    // convert java strings
-    if (jcellName != NULL) {
-	cellName = getNativeString(env, jcellName);
-	if (!cellName) {
-	    throwAFSException(env, JAFSADMNOMEM);
-	    return 0;
-	}
-    } else {
-	cellName = NULL;
-    }
+  // convert java strings
+  if( jcellName != NULL ) { 
+      cellName = (*env)->GetStringUTFChars(env, jcellName, 0);
+      if( !cellName ) {
+	  throwAFSException( env, JAFSADMNOMEM );
+	  return 0;    
+      }
+  } else {
+      cellName = NULL;
+  }
+  if( juserName != NULL ) {
+      userName = (*env)->GetStringUTFChars(env, juserName, 0);
+      if( !userName ) {
+	  throwAFSException( env, JAFSADMNOMEM );
+	  return 0;    
+      }
+  } else {
+      userName = NULL;
+  }
+  if( jpassword != NULL ) {
+      password = (*env)->GetStringUTFChars(env, jpassword, 0);
+      if( !password ) {
+	  throwAFSException( env, JAFSADMNOMEM );
+	  return 0;    
+      }
+  } else {
+      password = NULL;
+  }
 
-    if (juserName != NULL) {
-	userName = getNativeString(env, juserName);
-	if (!userName) {
-	    if (cellName != NULL)
-		free(cellName);
-	    throwAFSException(env, JAFSADMNOMEM);
-	    return 0;
-	}
-    } else {
-	if (cellName != NULL)
-	    free(cellName);
-	throwAFSException(env, JAFSNULLUSER);
-	return 0;
-    }
+  if ( !(afsclient_TokenGetNew( cellName, userName, password, &tokenHandle, 
+				&ast) ) ) {
+    // release converted strings
+      if( cellName != NULL ) {
+	  (*env)->ReleaseStringUTFChars(env, jcellName, cellName);
+      }
+      if( userName != NULL ) {
+	  (*env)->ReleaseStringUTFChars(env, juserName, userName);
+      }
+      if( password != NULL ) {
+	  (*env)->ReleaseStringUTFChars(env, jpassword, password);
+      }
+      throwAFSException( env, ast );
+      return 0;
+  }
 
-    if (jpassword != NULL) {
-	password = getNativeString(env, jpassword);
-	if (!password) {
-	    if (cellName != NULL)
-		free(cellName);
-	    free(userName);
-	    throwAFSException(env, JAFSADMNOMEM);
-	    return 0;
-	}
-    } else {
-	if (cellName != NULL)
-	    free(cellName);
-	free(userName);
-	throwAFSException(env, JAFSNULLPASS);
-	return 0;
-    }
+  // release converted strings
+  if( cellName != NULL ) {
+      (*env)->ReleaseStringUTFChars(env, jcellName, cellName);
+  }
+  if( userName != NULL ) {
+      (*env)->ReleaseStringUTFChars(env, juserName, userName);
+  }
+  if( password != NULL ) {
+      (*env)->ReleaseStringUTFChars(env, jpassword, password);
+  }
 
-    if (!
-	(afsclient_TokenGetNew
-	 (cellName, userName, password, &tokenHandle, &ast))) {
-	throwAFSException(env, ast);
-    }
-
-    if (cellName != NULL)
-	free(cellName);
-    free(userName);
-    free(password);
-
-    return (jint) tokenHandle;
+  return (jlong) tokenHandle;
 }
 
 /**
@@ -136,14 +138,15 @@ Java_org_openafs_jafs_Token_getToken(JNIEnv * env, jobject obj,
  * obj      the current Java object
  * tokenHandle   the token to close
  */
-JNIEXPORT void JNICALL
-Java_org_openafs_jafs_Token_close(JNIEnv * env, jobject obj, jint tokenHandle)
+JNIEXPORT void JNICALL 
+Java_org_openafs_jafs_Token_close
+  (JNIEnv *env, jobject obj, jlong tokenHandle)
 {
     afs_status_t ast;
 
-    if (!afsclient_TokenClose((void *)tokenHandle, &ast)) {
-	throwAFSException(env, ast);
-	return;
+    if( !afsclient_TokenClose( (void *) tokenHandle, &ast ) ) {
+      throwAFSException( env, ast );
+      return;
     }
 }
 
@@ -158,32 +161,38 @@ Java_org_openafs_jafs_Token_close(JNIEnv * env, jobject obj, jint tokenHandle)
  * tokenHandle    a token handle previously returned by a call to getToken
  * returns a handle to the open cell
  */
-JNIEXPORT jint JNICALL
-Java_org_openafs_jafs_Cell_getCellHandle(JNIEnv * env, jobject obj,
-					 jstring jcellName, jint tokenHandle)
+JNIEXPORT jlong JNICALL 
+Java_org_openafs_jafs_Cell_getCellHandle
+  (JNIEnv *env, jobject obj, jstring jcellName, jlong tokenHandle)
 {
-    afs_status_t ast;
-    char *cellName;
-    void *cellHandle;
+  afs_status_t ast;
+  const char *cellName;
+  void *cellHandle;
 
-    if (jcellName != NULL) {
-	cellName = getNativeString(env, jcellName);
-	if (!cellName) {
-	    throwAFSException(env, JAFSADMNOMEM);
-	    return -1;
-	}
-    } else {
-	throwAFSException(env, JAFSNULLCELL);
-	return -1;
+  if( jcellName != NULL ) {
+    cellName = (*env)->GetStringUTFChars(env, jcellName, 0);
+    if( !cellName ) {
+	throwAFSException( env, JAFSADMNOMEM );
+	return;    
     }
+  } else {
+    cellName = NULL;
+  }
 
-    if (!afsclient_CellOpen(cellName, (void *)tokenHandle, &cellHandle, &ast)) {
-	throwAFSException(env, ast);
-    }
+  if( !afsclient_CellOpen( cellName, (void *) tokenHandle, 
+			   &cellHandle, &ast ) ) {
+    if( cellName != NULL ) {
+      (*env)->ReleaseStringUTFChars(env, jcellName, cellName);
+    }  
+    throwAFSException( env, ast );
+    return;
+  }
 
-    free(cellName);
+  if( cellName != NULL ) {
+      (*env)->ReleaseStringUTFChars(env, jcellName, cellName);
+  }  
 
-    return (jint) cellHandle;
+  return (jlong) cellHandle;
 }
 
 /**
@@ -193,16 +202,18 @@ Java_org_openafs_jafs_Cell_getCellHandle(JNIEnv * env, jobject obj,
  * obj      the current Java object
  * cellHandle   the cell handle to close
  */
-JNIEXPORT void JNICALL
-Java_org_openafs_jafs_Cell_closeCell(JNIEnv * env, jobject obj,
-				     jint cellHandle)
+JNIEXPORT void JNICALL 
+Java_org_openafs_jafs_Cell_closeCell (JNIEnv *env, jobject obj, 
+                                         jlong cellHandle)
 {
-    afs_status_t ast;
 
-    if (!afsclient_CellClose((void *)cellHandle, &ast)) {
-	throwAFSException(env, ast);
-	return;
+   afs_status_t ast;
+
+    if( !afsclient_CellClose( (void *) cellHandle, &ast ) ) {
+      throwAFSException( env, ast );
+      return;
     }
+
 }
 
 /**
@@ -218,34 +229,40 @@ Java_org_openafs_jafs_Cell_closeCell(JNIEnv * env, jobject obj,
  *                      a vos handle
  * returns a vos handle to the server
  */
-JNIEXPORT jint JNICALL
-Java_org_openafs_jafs_Server_getVosServerHandle(JNIEnv * env, jobject obj,
-						jint cellHandle,
-						jstring jserverName)
+JNIEXPORT jlong JNICALL 
+Java_org_openafs_jafs_Server_getVosServerHandle
+  (JNIEnv *env, jobject obj, jlong cellHandle, jstring jserverName)
 {
-    afs_status_t ast;
-    void *serverHandle;
-    char *serverName;
+  afs_status_t ast;
+  void *serverHandle;
+  // convert java string
+  const char *serverName;
 
-    if (jserverName != NULL) {
-	serverName = getNativeString(env, jserverName);
-	if (!serverName) {
-	    throwAFSException(env, JAFSADMNOMEM);
-	    return -1;
-	}
-    } else {
-	throwAFSException(env, JAFSNULLSERVER);
-	return -1;
-    }
+  if( jserverName != NULL ) {
+      serverName = (*env)->GetStringUTFChars(env, jserverName, 0);
+      if( !serverName ) {
+	  throwAFSException( env, JAFSADMNOMEM );
+	  return;    
+      }
+  } else {
+      serverName = NULL;
+  }
 
-    if (!vos_ServerOpen
-	((void *)cellHandle, serverName, (void **)&serverHandle, &ast)) {
-	throwAFSException(env, ast);
-    }
-    // release converted string
-    free(serverName);
+  if( !vos_ServerOpen( (void *) cellHandle, serverName, 
+		       (void **) &serverHandle, &ast ) ) {
+      if( serverName != NULL ) {
+	  (*env)->ReleaseStringUTFChars(env, jserverName, serverName);
+      }
+      throwAFSException( env, ast );
+      return 0;
+  }
 
-    return (jint) serverHandle;
+  // release converted string
+  if( serverName != NULL ) {
+      (*env)->ReleaseStringUTFChars(env, jserverName, serverName);
+  }
+
+  return (jlong) serverHandle;
 }
 
 /**
@@ -255,15 +272,15 @@ Java_org_openafs_jafs_Server_getVosServerHandle(JNIEnv * env, jobject obj,
  * obj      the current Java object
  * vosServerHandle   the vos server handle to close
  */
-JNIEXPORT void JNICALL
-Java_org_openafs_jafs_Server_closeVosServerHandle(JNIEnv * env, jobject obj,
-						  jint vosServerHandle)
+JNIEXPORT void JNICALL 
+Java_org_openafs_jafs_Server_closeVosServerHandle
+  (JNIEnv *env, jobject obj, jlong vosServerHandle)
 {
     afs_status_t ast;
 
-    if (!vos_ServerClose((void *)vosServerHandle, &ast)) {
-	throwAFSException(env, ast);
-	return;
+    if( !vos_ServerClose( (void *) vosServerHandle, &ast ) ) {
+      throwAFSException( env, ast );
+      return;
     }
 }
 
@@ -280,34 +297,40 @@ Java_org_openafs_jafs_Server_closeVosServerHandle(JNIEnv * env, jobject obj,
  *                      a bos handle
  * returns a bos handle to the server
  */
-JNIEXPORT jint JNICALL
-Java_org_openafs_jafs_Server_getBosServerHandle(JNIEnv * env, jobject obj,
-						jint cellHandle,
-						jstring jserverName)
+JNIEXPORT jlong JNICALL 
+Java_org_openafs_jafs_Server_getBosServerHandle
+  (JNIEnv *env, jobject obj, jlong cellHandle, jstring jserverName)
 {
-    afs_status_t ast;
-    void *serverHandle;
-    char *serverName;
+  afs_status_t ast;
+  void *serverHandle;
+  // convert java string
+  const char *serverName;
 
-    if (jserverName != NULL) {
-	serverName = getNativeString(env, jserverName);
-	if (!serverName) {
-	    throwAFSException(env, JAFSADMNOMEM);
-	    return;
-	}
-    } else {
-	throwAFSException(env, JAFSNULLSERVER);
-	return;
-    }
+  if( jserverName != NULL ) {
+      serverName = (*env)->GetStringUTFChars(env, jserverName, 0);
+      if( !serverName ) {
+	  throwAFSException( env, JAFSADMNOMEM );
+	  return;    
+      }
+  } else {
+      serverName = NULL;
+  }
 
-    if (!bos_ServerOpen
-	((void *)cellHandle, serverName, (void **)&serverHandle, &ast)) {
-	throwAFSException(env, ast);
-    }
-    // release converted string
-    free(serverName);
+  if( !bos_ServerOpen( (void *) cellHandle, serverName, 
+		       (void **) &serverHandle, &ast ) ) {
+      if( serverName != NULL ) {
+	  (*env)->ReleaseStringUTFChars(env, jserverName, serverName);
+      }
+      throwAFSException( env, ast );
+      return 0;
+  }
 
-    return (jint) serverHandle;
+  // release converted string
+  if( serverName != NULL ) {
+      (*env)->ReleaseStringUTFChars(env, jserverName, serverName);
+  }
+
+  return (jlong) serverHandle;
 }
 
 /**
@@ -317,15 +340,15 @@ Java_org_openafs_jafs_Server_getBosServerHandle(JNIEnv * env, jobject obj,
  * obj      the current Java object
  * bosServerHandle   the bos server handle to close
  */
-JNIEXPORT void JNICALL
-Java_org_openafs_jafs_Server_closeBosServerHandle(JNIEnv * env, jobject obj,
-						  jint bosServerHandle)
+JNIEXPORT void JNICALL 
+Java_org_openafs_jafs_Server_closeBosServerHandle
+  (JNIEnv *env, jobject obj, jlong bosServerHandle)
 {
     afs_status_t ast;
 
-    if (!bos_ServerClose((void *)bosServerHandle, &ast)) {
-	throwAFSException(env, ast);
-	return;
+    if( !bos_ServerClose( (void *) bosServerHandle, &ast ) ) {
+      throwAFSException( env, ast );
+      return;
     }
 }
 
@@ -339,45 +362,55 @@ Java_org_openafs_jafs_Server_closeBosServerHandle(JNIEnv * env, jobject obj,
  *                       to getToken
  * returns a long representing the UTC time for the token expiration
  */
-JNIEXPORT jlong JNICALL
-Java_org_openafs_jafs_Token_getExpiration(JNIEnv * env, jobject obj,
-					  jint tokenHandle)
+JNIEXPORT jlong JNICALL 
+Java_org_openafs_jafs_Token_getExpiration
+  (JNIEnv *env, jobject obj, jlong tokenHandle)
 {
     afs_status_t ast;
     unsigned long expTime;
-    char *prince = malloc(sizeof(char) * KAS_MAX_NAME_LEN);
-    char *inst = malloc(sizeof(char) * KAS_MAX_NAME_LEN);
-    char *cell = malloc(sizeof(char) * AFS_MAX_SERVER_NAME_LEN);
+    char *prince = malloc( sizeof(char)*KAS_MAX_NAME_LEN ); 
+    char *inst = malloc( sizeof(char)*KAS_MAX_NAME_LEN );    
+    char *cell = malloc( sizeof(char)*AFS_MAX_SERVER_NAME_LEN );    
     int hkt;
 
-    if (!prince || !inst || !cell) {
-	if (prince) {
-	    free(prince);
-	}
-	if (inst) {
-	    free(inst);
-	}
-	if (cell) {
-	    free(cell);
-	}
-	throwAFSException(env, JAFSADMNOMEM);
-	return;
+    if( !prince || !inst || !cell ) {
+      if( prince ) {
+        free( prince );
+      }
+      if( inst ) {
+        free( inst );
+      }
+      if( cell ) {
+        free( cell );
+      }
+      throwAFSException( env, JAFSADMNOMEM );
+      return;    
     }
 
-    if (!afsclient_TokenQuery
-	((void *)tokenHandle, &expTime, prince, inst, cell, &hkt, &ast)) {
-	throwAFSException(env, ast);
+    if( !afsclient_TokenQuery( (void *) tokenHandle, &expTime, prince, inst, 
+			       cell, &hkt, &ast ) ) {
+	free( prince );
+	free( inst );
+	free( cell );
+	throwAFSException( env, ast );
+	return 0;
     }
 
-    free(prince);
-    free(inst);
-    free(cell);
+    free( prince );
+    free( inst );
+    free( cell );
 
     return (jlong) expTime;
 }
 
 // reclaim global memory used by this portion
-JNIEXPORT void JNICALL
-Java_org_openafs_jafs_Token_reclaimAuthMemory(JNIEnv * env, jclass cls)
+JNIEXPORT void JNICALL 
+Java_org_openafs_jafs_Token_reclaimAuthMemory (JNIEnv *env, jclass cls)
 {
 }
+
+
+
+
+
+

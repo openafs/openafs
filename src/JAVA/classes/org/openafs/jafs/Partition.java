@@ -266,7 +266,7 @@ public class Partition implements Serializable, Comparable
   {
     Volume currVolume;
 
-    int iterationID = getVolumesBegin( cell.getCellHandle(), 
+    long iterationID = getVolumesBegin( cell.getCellHandle(), 
 				       server.getVosHandle(), getID() );
 
     volumes = new ArrayList();
@@ -288,7 +288,7 @@ public class Partition implements Serializable, Comparable
   {
     String currName;
 
-    int iterationID = getVolumesBegin( cell.getCellHandle(), 
+    long iterationID = getVolumesBegin( cell.getCellHandle(), 
 				       server.getVosHandle(), getID() );
 	
     volumeNames = new ArrayList();
@@ -486,7 +486,7 @@ public class Partition implements Serializable, Comparable
     Volume currVolume = new Volume( this );
     int i = 0;
 
-    int iterationID = getVolumesBeginAt( cell.getCellHandle(), 
+    long iterationID = getVolumesBeginAt( cell.getCellHandle(), 
 				       server.getVosHandle(), getID(), startIndex );
 
     while( getVolumesNext( iterationID, currVolume ) != 0 && i < length ) {
@@ -583,7 +583,7 @@ public class Partition implements Serializable, Comparable
     String currName;
     int i = 0;
 
-    int iterationID = getVolumesBeginAt( cell.getCellHandle(), 
+    long iterationID = getVolumesBeginAt( cell.getCellHandle(), 
 				       server.getVosHandle(), getID(), startIndex );
 
     while( ( currName = getVolumesNextString( iterationID ) ) != null && i < length ) {
@@ -778,7 +778,7 @@ public class Partition implements Serializable, Comparable
    *
    * @return a <code>String</code> representation of the <code>Partition</code>
    */
-  protected String getInfo()
+  public String getInfo()
   {
     String r;
     
@@ -812,7 +812,7 @@ public class Partition implements Serializable, Comparable
    * @return    a <code>String</code> representation of the volumes
    * @see       Volume#getInfo
    */
-  protected String getInfoVolumes() throws AFSException
+  public String getInfoVolumes() throws AFSException
   {
 	String r;
 
@@ -896,8 +896,8 @@ public class Partition implements Serializable, Comparable
    *                       fill in the information
    * @exception AFSException   If an error occurs in the native code
    */
-  protected static native void getPartitionInfo( int cellHandle, 
-						 int serverHandle, 
+  protected static native void getPartitionInfo( long cellHandle, 
+						 long serverHandle, 
 						 int partition, 
 						 Partition thePartition ) 
     throws AFSException;
@@ -915,8 +915,8 @@ public class Partition implements Serializable, Comparable
    * @see Cell#getCellHandle
    * @see Server#getVosServerHandle
    */
-  protected static native int getVolumeCount( int cellHandle, 
-					       int serverHandle, 
+  protected static native int getVolumeCount( long cellHandle, 
+					       long serverHandle, 
 					       int partition )
     throws AFSException;
 
@@ -935,8 +935,8 @@ public class Partition implements Serializable, Comparable
    * @return an iteration ID
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native int getVolumesBegin( int cellHandle, 
-					       int serverHandle, 
+  protected static native long getVolumesBegin( long cellHandle, 
+					       long serverHandle, 
 					       int partition )
     throws AFSException;
 
@@ -955,8 +955,8 @@ public class Partition implements Serializable, Comparable
    * @return an iteration ID
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native int getVolumesBeginAt( int cellHandle, 
-						 int serverHandle, 
+  protected static native long getVolumesBeginAt( long cellHandle, 
+						 long serverHandle, 
 						 int partition, int index )
     throws AFSException;
 
@@ -969,7 +969,7 @@ public class Partition implements Serializable, Comparable
    * @return the name of the next volume of the server
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native String getVolumesNextString( int iterationId )
+  protected static native String getVolumesNextString( long iterationId )
     throws AFSException;
 
   /**
@@ -983,7 +983,7 @@ public class Partition implements Serializable, Comparable
    * @return 0 if there are no more volumes, != 0 otherwise
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native int getVolumesNext( int iterationId, 
+  protected static native int getVolumesNext( long iterationId, 
 					      Volume theVolume )
     throws AFSException;
 
@@ -998,7 +998,7 @@ public class Partition implements Serializable, Comparable
    * @return 0 if there are no more volumes, != 0 otherwise
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native int getVolumesAdvanceTo( int iterationId, 
+  protected static native int getVolumesAdvanceTo( long iterationId, 
 						   Volume theVolume, 
 						   int advanceCount )
     throws AFSException;
@@ -1010,7 +1010,7 @@ public class Partition implements Serializable, Comparable
    * @see #getVolumesBegin
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native void getVolumesDone( int iterationId )
+  protected static native void getVolumesDone( long iterationId )
     throws AFSException;
 
   /**
@@ -1041,3 +1041,12 @@ public class Partition implements Serializable, Comparable
    */
   protected static native void reclaimPartitionMemory();
 }
+
+
+
+
+
+
+
+
+
