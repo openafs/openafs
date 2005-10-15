@@ -350,11 +350,20 @@ void CSetAfsAcl::EnablePermChanges(BOOL bEnable)
 
 void CSetAfsAcl::OnNothingSelected()
 {
-	m_NormalRights.SetSel(-1, FALSE);	// Unselect any selected normal rights
-	m_NegativeRights.SetSel(-1, FALSE);	// Unselect any selected negative rights
-	ShowRights("");						// Show no rights
-	EnablePermChanges(FALSE);			// Allow no rights changes
-	m_Remove.EnableWindow(FALSE);		// Disable remove button
+    //m_NormalRights.SetSel(-1,FALSE);	// Unselect any selected normal rights
+    //m_NegativeRights.SetSel(-1,FALSE);	// Unselect any selected negative rights
+
+    for (int i=0;i < m_NormalRights.GetCount();i++)
+    {
+	m_NormalRights.SetSel(i, FALSE);
+    }
+    for (int i=0;i < m_NegativeRights.GetCount();i++)
+    {
+	m_NegativeRights.SetSel(i, FALSE);
+    }
+    ShowRights("");				// Show no rights
+    EnablePermChanges(FALSE);		// Allow no rights changes
+    m_Remove.EnableWindow(FALSE);		// Disable remove button
 }
 
 void CSetAfsAcl::OnSelection()

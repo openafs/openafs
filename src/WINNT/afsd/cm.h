@@ -254,4 +254,6 @@ int RXAFS_Lookup (struct rx_connection *,
 #define CM_ERROR_LOCK_CONFLICT          (CM_ERROR_BASE+47)
 #define CM_ERROR_SHARING_VIOLATION      (CM_ERROR_BASE+48)
 #define CM_ERROR_ALLDOWN                (CM_ERROR_BASE+49)
+#define CM_ERROR_TOOFEWBUFS		(CM_ERROR_BASE+50)
+#define CM_ERROR_TOOMANYBUFS		(CM_ERROR_BASE+51)
 #endif /*  __CM_H_ENV__ */

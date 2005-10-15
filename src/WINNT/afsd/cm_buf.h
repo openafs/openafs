@@ -201,7 +201,4 @@ extern void buf_ForceTrace(BOOL flush);
 
 /* error codes */
 #define CM_BUF_EXISTS	1	/* buffer exists, and shouldn't */
-#define CM_ERROR_BASEBUF	0x33333333
-#define CM_ERROR_TOOFEWBUFS	(CM_ERROR_BASEBUF+0)
-#define CM_ERROR_TOOMANYBUFS	(CM_ERROR_BASEBUF+1)
 #endif /*  _BUF_H__ENV_ */
