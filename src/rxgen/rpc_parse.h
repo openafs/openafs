@@ -188,6 +188,7 @@ struct procedure_def {
 #define	INOUT	2
     short paramtypes[3];
     char split_flag;
+    char multi_flag;
     relation rel;
     proc1_list *plists;
 };

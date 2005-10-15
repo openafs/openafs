@@ -259,8 +259,9 @@ static void
 psprocdef(definition * defp)
 {
     int split_flag = defp->pc.split_flag;
+    int multi_flag = defp->pc.multi_flag;
 
-    if (split_flag) {
+    if (split_flag || multi_flag) {
 	psproc1(defp, 1, "int", "Start",
 		(1 << DEF_INPARAM) | (1 << DEF_INOUTPARAM));
 	psproc1(defp, 1, "int", "End",
