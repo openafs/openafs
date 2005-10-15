@@ -52,142 +52,141 @@ extern jfieldID process_stateBadFileAccessField;
  * processName      the name of the process for which to get the info
  * process      the Process object to populate with the info
  */
-void
-getProcessInfoChar(JNIEnv * env, void *serverHandle, const char *processName,
-		   jobject process)
-{
-    afs_status_t ast;
-    bos_ProcessType_t type;
-    bos_ProcessInfo_t infoEntry;
-    bos_ProcessExecutionState_t state;
-    char *auxStatus;
+void getProcessInfoChar( JNIEnv *env, void *serverHandle, 
+			 const char *processName, jobject process ) {
 
-    // get class fields if need be
-    if (processCls == 0) {
-	internal_getProcessClass(env, process);
-    }
+  afs_status_t ast;
+  bos_ProcessType_t type;
+  bos_ProcessInfo_t infoEntry;
+  bos_ProcessExecutionState_t state;
+  char *auxStatus;
 
-    if (!bos_ProcessInfoGet
-	(serverHandle, processName, &type, &infoEntry, &ast)) {
-	throwAFSException(env, ast);
-	return;
-    }
-    // set type variable
-    switch (type) {
-    case BOS_PROCESS_SIMPLE:
-	(*env)->SetIntField(env, process, process_typeField,
-			    org_openafs_jafs_Process_SIMPLE_PROCESS);
-	break;
-    case BOS_PROCESS_FS:
-	(*env)->SetIntField(env, process, process_typeField,
-			    org_openafs_jafs_Process_FS_PROCESS);
-	break;
-    case BOS_PROCESS_CRON:
-	(*env)->SetIntField(env, process, process_typeField,
-			    org_openafs_jafs_Process_CRON_PROCESS);
-	break;
-    default:
-	throwAFSException(env, type);
-	return;
-    }
+  // get class fields if need be
+  if( processCls == 0 ) {
+    internal_getProcessClass( env, process );
+  }
 
-    // set goal variable
-    switch (infoEntry.processGoal) {
-    case BOS_PROCESS_STOPPED:
-	(*env)->SetIntField(env, process, process_goalField,
-			    org_openafs_jafs_Process_STOPPED);
-	break;
-    case BOS_PROCESS_RUNNING:
-	(*env)->SetIntField(env, process, process_goalField,
-			    org_openafs_jafs_Process_RUNNING);
-	break;
-    case BOS_PROCESS_STOPPING:
-	(*env)->SetIntField(env, process, process_goalField,
-			    org_openafs_jafs_Process_STOPPING);
-	break;
-    case BOS_PROCESS_STARTING:
-	(*env)->SetIntField(env, process, process_goalField,
-			    org_openafs_jafs_Process_STARTING);
-	break;
-    default:
-	throwAFSException(env, infoEntry.processGoal);
-	return;
-    }
+  if( !bos_ProcessInfoGet( serverHandle, processName, &type, 
+			   &infoEntry, &ast ) ) {
+    throwAFSException( env, ast );
+    return;
+  }
 
-    // set state variable
-    auxStatus = (char *)malloc(sizeof(char) * BOS_MAX_NAME_LEN);
-    if (!auxStatus) {
-	throwAFSException(env, JAFSADMNOMEM);
-	return;
-    }
-    if (!bos_ProcessExecutionStateGet
-	((void *)serverHandle, processName, &state, auxStatus, &ast)) {
-	free(auxStatus);
-	throwAFSException(env, ast);
-	return;
-    }
-    free(auxStatus);
+  // set type variable
+  switch( type ) {
+  case BOS_PROCESS_SIMPLE :
+      (*env)->SetIntField(env, process, process_typeField, 
+			  org_openafs_jafs_Process_SIMPLE_PROCESS);
+      break;
+  case BOS_PROCESS_FS :
+      (*env)->SetIntField(env, process, process_typeField, 
+			  org_openafs_jafs_Process_FS_PROCESS);
+      break;
+  case BOS_PROCESS_CRON :
+      (*env)->SetIntField(env, process, process_typeField, 
+			  org_openafs_jafs_Process_CRON_PROCESS);
+      break;
+  default:
+      throwAFSException( env, type );
+      return;
+  }
 
-    switch (state) {
-    case BOS_PROCESS_STOPPED:
-	(*env)->SetIntField(env, process, process_stateField,
-			    org_openafs_jafs_Process_STOPPED);
-	break;
-    case BOS_PROCESS_RUNNING:
-	(*env)->SetIntField(env, process, process_stateField,
-			    org_openafs_jafs_Process_RUNNING);
-	break;
-    case BOS_PROCESS_STOPPING:
-	(*env)->SetIntField(env, process, process_stateField,
-			    org_openafs_jafs_Process_STOPPING);
-	break;
-    case BOS_PROCESS_STARTING:
-	(*env)->SetIntField(env, process, process_stateField,
-			    org_openafs_jafs_Process_STARTING);
-	break;
-    default:
-	throwAFSException(env, state);
-	return;
-    }
+  // set goal variable
+  switch( infoEntry.processGoal ) {
+  case BOS_PROCESS_STOPPED :
+      (*env)->SetIntField(env, process, process_goalField, 
+			  org_openafs_jafs_Process_STOPPED);
+      break;
+  case BOS_PROCESS_RUNNING :
+      (*env)->SetIntField(env, process, process_goalField, 
+			  org_openafs_jafs_Process_RUNNING);
+      break;
+  case BOS_PROCESS_STOPPING :
+      (*env)->SetIntField(env, process, process_goalField, 
+			  org_openafs_jafs_Process_STOPPING);
+      break;
+  case BOS_PROCESS_STARTING :
+      (*env)->SetIntField(env, process, process_goalField, 
+			  org_openafs_jafs_Process_STARTING);
+      break;
+  default:
+      throwAFSException( env, infoEntry.processGoal );
+      return;
+  }
 
-    // set longs
-    (*env)->SetLongField(env, process, process_startTimeField,
-			 infoEntry.processStartTime);
-    (*env)->SetLongField(env, process, process_numberStartsField,
-			 infoEntry.numberProcessStarts);
-    (*env)->SetLongField(env, process, process_exitTimeField,
-			 infoEntry.processExitTime);
-    (*env)->SetLongField(env, process, process_exitErrorTimeField,
-			 infoEntry.processExitErrorTime);
-    (*env)->SetLongField(env, process, process_errorCodeField,
-			 infoEntry.processErrorCode);
-    (*env)->SetLongField(env, process, process_errorSignalField,
-			 infoEntry.processErrorSignal);
+  // set state variable
+  auxStatus = (char *) malloc( sizeof(char)*BOS_MAX_NAME_LEN );
+  if( !auxStatus ) {
+    throwAFSException( env, JAFSADMNOMEM );
+    return;    
+  }
+  if( !bos_ProcessExecutionStateGet( (void *) serverHandle, processName, 
+				     &state, auxStatus, &ast ) ) {
+      free( auxStatus );
+      throwAFSException( env, ast );
+      return;
+  }
+  free( auxStatus );
+  switch( state ) {
+  case BOS_PROCESS_STOPPED :
+      (*env)->SetIntField(env, process, process_stateField, 
+			  org_openafs_jafs_Process_STOPPED);
+      break;
+  case BOS_PROCESS_RUNNING :
+      (*env)->SetIntField(env, process, process_stateField, 
+			  org_openafs_jafs_Process_RUNNING);
+      break;
+  case BOS_PROCESS_STOPPING :
+      (*env)->SetIntField(env, process, process_stateField, 
+			  org_openafs_jafs_Process_STOPPING);
+      break;
+  case BOS_PROCESS_STARTING :
+      (*env)->SetIntField(env, process, process_stateField, 
+			  org_openafs_jafs_Process_STARTING);
+      break;
+  default:
+      throwAFSException( env, state );
+      return;
+  }
 
-    // set stateOk to true if no core dump
-    if (infoEntry.state & BOS_PROCESS_CORE_DUMPED) {
-	(*env)->SetBooleanField(env, process, process_stateOkField, FALSE);
-    } else {
-	(*env)->SetBooleanField(env, process, process_stateOkField, TRUE);
-    }
+  // set longs
+  (*env)->SetLongField(env, process, process_startTimeField, 
+		       infoEntry.processStartTime );
+  (*env)->SetLongField(env, process, process_numberStartsField, 
+		       infoEntry.numberProcessStarts );
+  (*env)->SetLongField(env, process, process_exitTimeField, 
+		       infoEntry.processExitTime );
+  (*env)->SetLongField(env, process, process_exitErrorTimeField, 
+		       infoEntry.processExitErrorTime );
+  (*env)->SetLongField(env, process, process_errorCodeField, 
+		       infoEntry.processErrorCode );
+  (*env)->SetLongField(env, process, process_errorSignalField, 
+		       infoEntry.processErrorSignal );
 
-    // set stateTooManyErrors
-    if (infoEntry.state & BOS_PROCESS_TOO_MANY_ERRORS) {
-	(*env)->SetBooleanField(env, process, process_stateTooManyErrorsField,
-				TRUE);
-    } else {
-	(*env)->SetBooleanField(env, process, process_stateTooManyErrorsField,
-				FALSE);
-    }
+  // set stateOk to true if no core dump
+  if( infoEntry.state & BOS_PROCESS_CORE_DUMPED ) {
+    (*env)->SetBooleanField(env, process, process_stateOkField, FALSE );
+  } else {
+    (*env)->SetBooleanField(env, process, process_stateOkField, TRUE );
+  }
 
-    // set stateBadFileAccess
-    if (infoEntry.state & BOS_PROCESS_BAD_FILE_ACCESS) {
-	(*env)->SetBooleanField(env, process, process_stateBadFileAccessField,
-				TRUE);
-    } else {
-	(*env)->SetBooleanField(env, process, process_stateBadFileAccessField,
-				FALSE);
-    }
+  // set stateTooManyErrors
+  if( infoEntry.state & BOS_PROCESS_TOO_MANY_ERRORS ) {
+    (*env)->SetBooleanField(env, process, 
+			    process_stateTooManyErrorsField, TRUE );
+  } else {
+    (*env)->SetBooleanField(env, process, 
+			    process_stateTooManyErrorsField, FALSE );
+  }
+
+  // set stateBadFileAccess
+  if( infoEntry.state & BOS_PROCESS_BAD_FILE_ACCESS ) {
+    (*env)->SetBooleanField(env, process, 
+			    process_stateBadFileAccessField, TRUE );
+  } else {
+    (*env)->SetBooleanField(env, process, 
+			    process_stateBadFileAccessField, FALSE );
+  }
 
 }
 
@@ -202,32 +201,35 @@ getProcessInfoChar(JNIEnv * env, void *serverHandle, const char *processName,
  * process     the Process object in which to fill 
  *                    in the information
  */
-JNIEXPORT void JNICALL
-Java_org_openafs_jafs_Process_getProcessInfo(JNIEnv * env, jclass cls,
-					     jint serverHandle, jstring jname,
-					     jobject process)
-{
-    char *name;
+JNIEXPORT void JNICALL 
+Java_org_openafs_jafs_Process_getProcessInfo (JNIEnv *env, jclass cls, 
+						 jlong serverHandle, 
+						 jstring jname, 
+						 jobject process) {
 
-    if (jname != NULL) {
-	name = getNativeString(env, jname);
-	if (name == NULL) {
-	    throwAFSException(env, JAFSADMNOMEM);
-	    return;
-	}
-    } else {
-	throwAFSException(env, JAFSNULLPROCESS);
-	return;
+  const char *name;
+
+  if( jname != NULL ) {
+    name = (*env)->GetStringUTFChars(env, jname, 0);
+    if( !name ) {
+	throwAFSException( env, JAFSADMNOMEM );
+	return;    
     }
+  } else {
+    name = NULL;
+  }
 
-    getProcessInfoChar(env, (void *)serverHandle, name, process);
+  getProcessInfoChar( env, (void *) serverHandle, name, process );
 
-    // set name in case blank object
-    if (processCls == NULL) {
-	internal_getProcessClass(env, process);
+  // set name in case blank object
+  if( name != NULL ) {
+    if( processCls == 0 ) {
+      internal_getProcessClass( env, process );
     }
     (*env)->SetObjectField(env, process, process_nameField, jname);
-    free(name);
+    (*env)->ReleaseStringUTFChars(env, jname, name);
+  }
+
 }
 
 /**
@@ -255,42 +257,44 @@ Java_org_openafs_jafs_Process_getProcessInfo(JNIEnv * env, jclass cls,
  *                   be called when the process terminates.  Can be 
  *                   null
  */
-JNIEXPORT void JNICALL
-Java_org_openafs_jafs_Process_create(JNIEnv * env, jclass cls,
-				     jint serverHandle, jstring jname,
-				     jint jtype, jstring jpath,
-				     jstring jcronTime, jstring jnotifier)
-{
+JNIEXPORT void JNICALL 
+Java_org_openafs_jafs_Process_create (JNIEnv *env, jclass cls, 
+					 jlong serverHandle, jstring jname, 
+					 jint jtype, jstring jpath, 
+					 jstring jcronTime, 
+					 jstring jnotifier) {
+
     afs_status_t ast;
     bos_ProcessType_t type;
-    char *name;
-    char *path;
-    char *cronTime;
-    char *notifier;
+    const char *name;
+    const char *path;
+    const char *cronTime;
+    const char *notifier;
 
-    if (jname != NULL) {
-	name = getNativeString(env, jname);
-	if (name == NULL) {
-	    throwAFSException(env, JAFSADMNOMEM);
-	    return;
-	}
+    if( jname != NULL ) {
+      name = (*env)->GetStringUTFChars(env, jname, 0);
+      if( !name ) {
+	  throwAFSException( env, JAFSADMNOMEM );
+	  return;    
+      }
     } else {
-	throwAFSException(env, JAFSNULLPROCESS);
-	return;
+      name = NULL;
     }
 
-    if (jpath != NULL) {
-	path = getNativeString(env, jpath);
-	if (path == NULL) {
-	    free(name);
-	    throwAFSException(env, JAFSADMNOMEM);
-	    return;
+    if( jpath != NULL ) {
+      path = (*env)->GetStringUTFChars(env, jpath, 0);
+      if( !path ) {
+	if( name != NULL ) {
+	  (*env)->ReleaseStringUTFChars(env, jname, name);
 	}
+	throwAFSException( env, JAFSADMNOMEM );
+	return;    
+      }
     } else {
-	path = NULL;
+      path = NULL;
     }
 
-    switch (jtype) {
+    switch( jtype ) {
     case org_openafs_jafs_Process_SIMPLE_PROCESS:
 	type = BOS_PROCESS_SIMPLE;
 	break;
@@ -301,53 +305,85 @@ Java_org_openafs_jafs_Process_create(JNIEnv * env, jclass cls,
 	type = BOS_PROCESS_CRON;
 	break;
     default:
-	free(name);
-	if (path != NULL)
-	    free(path);
-	throwAFSException(env, jtype);
-	return;
+      if( name != NULL ) {
+	(*env)->ReleaseStringUTFChars(env, jname, name);
+      }
+      if( path != NULL ) {
+	(*env)->ReleaseStringUTFChars(env, jpath, path);
+      }
+      throwAFSException( env, jtype );
+      return;
     }
 
-    if (jcronTime != NULL) {
-	cronTime = getNativeString(env, jcronTime);
-	if (!cronTime) {
-	    free(name);
-	    if (path != NULL)
-		free(path);
-	    throwAFSException(env, JAFSADMNOMEM);
-	    return;
+    if( jcronTime != NULL ) {
+	cronTime = (*env)->GetStringUTFChars(env, jcronTime, 0);
+	if( !cronTime ) {
+	  if( name != NULL ) {
+	    (*env)->ReleaseStringUTFChars(env, jname, name);
+	  }
+	  if( path != NULL ) {
+	    (*env)->ReleaseStringUTFChars(env, jpath, path);
+	  }
+	  throwAFSException( env, JAFSADMNOMEM );
+	  return;    
 	}
     } else {
 	cronTime = NULL;
     }
 
-    if (jnotifier != NULL) {
-	notifier = getNativeString(env, jnotifier);
-	if (!notifier) {
-	    free(name);
-	    if (path != NULL)
-		free(path);
-	    if (cronTime != NULL)
-		free(cronTime);
-	    throwAFSException(env, JAFSADMNOMEM);
-	    return;
+    if( jnotifier != NULL ) {
+	notifier = (*env)->GetStringUTFChars(env, jnotifier, 0);
+	if( !notifier ) {
+	  if( name != NULL ) {
+	    (*env)->ReleaseStringUTFChars(env, jname, name);
+	  }
+	  if( path != NULL ) {
+	    (*env)->ReleaseStringUTFChars(env, jpath, path);
+	  }
+	  if( cronTime != NULL ) {
+	    (*env)->ReleaseStringUTFChars(env, jcronTime, cronTime);
+	  }
+	  throwAFSException( env, JAFSADMNOMEM );
+	  return;    
 	}
     } else {
 	notifier = NULL;
     }
 
-    if (!bos_ProcessCreate
-	((void *)serverHandle, name, type, path, cronTime, notifier, &ast)) {
-	throwAFSException(env, ast);
+    if( !bos_ProcessCreate( (void *) serverHandle, name, type, path, 
+			    cronTime, notifier, &ast ) ) {
+	// release strings
+	if( cronTime != NULL ) {
+	    (*env)->ReleaseStringUTFChars(env, jcronTime, cronTime);
+	}
+	if( notifier != NULL ) {
+	    (*env)->ReleaseStringUTFChars(env, jnotifier, notifier);
+	}
+	if( name != NULL ) {
+	  (*env)->ReleaseStringUTFChars(env, jname, name);
+	}
+	if( path != NULL ) {
+	  (*env)->ReleaseStringUTFChars(env, jpath, path);
+	}
+	throwAFSException( env, ast );
+	return;
     }
+
+
     // release strings
-    free(name);
-    if (path != NULL)
-	free(path);
-    if (cronTime != NULL)
-	free(cronTime);
-    if (notifier != NULL)
-	free(notifier);
+    if( cronTime != NULL ) {
+	(*env)->ReleaseStringUTFChars(env, jcronTime, cronTime);
+    }
+    if( notifier != NULL ) {
+	(*env)->ReleaseStringUTFChars(env, jnotifier, notifier);
+    }
+    if( name != NULL ) {
+      (*env)->ReleaseStringUTFChars(env, jname, name);
+    }
+    if( path != NULL ) {
+      (*env)->ReleaseStringUTFChars(env, jpath, path);
+    }
+
 }
 
 /**
@@ -359,29 +395,35 @@ Java_org_openafs_jafs_Process_create(JNIEnv * env, jclass cls,
  *                      belongs
  * jname   the name of the process to remove
  */
-JNIEXPORT void JNICALL
-Java_org_openafs_jafs_Process_delete(JNIEnv * env, jclass cls,
-				     jint serverHandle, jstring jname)
-{
+JNIEXPORT void JNICALL 
+Java_org_openafs_jafs_Process_delete (JNIEnv *env, jclass cls, 
+					 jlong serverHandle, jstring jname) {
+
     afs_status_t ast;
-    char *name;
+    const char *name;
 
-    if (jname != NULL) {
-	name = getNativeString(env, jname);
-	if (!name) {
-	    throwAFSException(env, JAFSADMNOMEM);
-	    return;
-	}
+    if( jname != NULL ) {
+      name = (*env)->GetStringUTFChars(env, jname, 0);
+      if( !name ) {
+	  throwAFSException( env, JAFSADMNOMEM );
+	  return;    
+      }
     } else {
-	throwAFSException(env, JAFSNULLPROCESS);
-	return;
+      name = NULL;
     }
 
-    if (!bos_ProcessDelete((void *)serverHandle, name, &ast)) {
-	throwAFSException(env, ast);
+    if( !bos_ProcessDelete( (void *) serverHandle, name, &ast ) ) {
+      if( name != NULL ) {
+	(*env)->ReleaseStringUTFChars(env, jname, name);
+      }
+      throwAFSException( env, ast );
+      return;
     }
 
-    free(name);
+    if( name != NULL ) {
+      (*env)->ReleaseStringUTFChars(env, jname, name);
+    }
+
 }
 
 /**
@@ -393,30 +435,36 @@ Java_org_openafs_jafs_Process_delete(JNIEnv * env, jclass cls,
  *                      belongs
  * jname   the name of the process to stop
  */
-JNIEXPORT void JNICALL
-Java_org_openafs_jafs_Process_stop(JNIEnv * env, jclass cls,
-				   jint serverHandle, jstring jname)
-{
+JNIEXPORT void JNICALL 
+Java_org_openafs_jafs_Process_stop (JNIEnv *env, jclass cls, 
+				       jlong serverHandle, jstring jname) {
+
     afs_status_t ast;
-    char *name;
+    const char *name;
 
-    if (jname != NULL) {
-	name = getNativeString(env, jname);
-	if (!name) {
-	    throwAFSException(env, JAFSADMNOMEM);
-	    return;
-	}
+    if( jname != NULL ) {
+      name = (*env)->GetStringUTFChars(env, jname, 0);
+      if( !name ) {
+	  throwAFSException( env, JAFSADMNOMEM );
+	  return;    
+      }
     } else {
-	throwAFSException(env, JAFSNULLPROCESS);
-	return;
+      name = NULL;
     }
 
-    if (!bos_ProcessExecutionStateSet
-	((void *)serverHandle, name, BOS_PROCESS_STOPPED, &ast)) {
-	throwAFSException(env, ast);
+    if( !bos_ProcessExecutionStateSet( (void *) serverHandle, name, 
+				       BOS_PROCESS_STOPPED, &ast ) ) {
+      if( name != NULL ) {
+	(*env)->ReleaseStringUTFChars(env, jname, name);
+      }
+      throwAFSException( env, ast );
+      return;
     }
 
-    free(name);
+    if( name != NULL ) {
+      (*env)->ReleaseStringUTFChars(env, jname, name);
+    }
+
 }
 
 /**
@@ -428,30 +476,36 @@ Java_org_openafs_jafs_Process_stop(JNIEnv * env, jclass cls,
  *                      belongs
  * jname   the name of the process to start
  */
-JNIEXPORT void JNICALL
-Java_org_openafs_jafs_Process_start(JNIEnv * env, jclass cls,
-				    jint serverHandle, jstring jname)
-{
+JNIEXPORT void JNICALL 
+Java_org_openafs_jafs_Process_start (JNIEnv *env, jclass cls, 
+					jlong serverHandle, jstring jname) {
+
     afs_status_t ast;
-    char *name;
+    const char *name;
 
-    if (jname != NULL) {
-	name = getNativeString(env, jname);
-	if (!name) {
-	    throwAFSException(env, JAFSADMNOMEM);
-	    return;
-	}
+    if( jname != NULL ) {
+      name = (*env)->GetStringUTFChars(env, jname, 0);
+      if( !name ) {
+	  throwAFSException( env, JAFSADMNOMEM );
+	  return;    
+      }
     } else {
-	throwAFSException(env, JAFSNULLPROCESS);
-	return;
+      name = NULL;
     }
 
-    if (!bos_ProcessExecutionStateSet
-	((void *)serverHandle, name, BOS_PROCESS_RUNNING, &ast)) {
-	throwAFSException(env, ast);
+    if( !bos_ProcessExecutionStateSet( (void *) serverHandle, name, 
+				       BOS_PROCESS_RUNNING, &ast ) ) {
+      if( name != NULL ) {
+	(*env)->ReleaseStringUTFChars(env, jname, name);
+      }
+      throwAFSException( env, ast );
+      return;
     }
 
-    free(name);
+    if( name != NULL ) {
+      (*env)->ReleaseStringUTFChars(env, jname, name);
+    }
+
 }
 
 /**
@@ -463,37 +517,51 @@ Java_org_openafs_jafs_Process_start(JNIEnv * env, jclass cls,
  *                      belongs
  * jname   the name of the process to restart
  */
-JNIEXPORT void JNICALL
-Java_org_openafs_jafs_Process_restart(JNIEnv * env, jclass cls,
-				      jint serverHandle, jstring jname)
-{
+JNIEXPORT void JNICALL 
+Java_org_openafs_jafs_Process_restart (JNIEnv *env, jclass cls, 
+					  jlong serverHandle, jstring jname) {
+
     afs_status_t ast;
-    char *name;
+    const char *name;
 
-    if (jname != NULL) {
-	name = getNativeString(env, jname);
-	if (!name) {
-	    throwAFSException(env, JAFSADMNOMEM);
-	    return;
-	}
+    if( jname != NULL ) {
+      name = (*env)->GetStringUTFChars(env, jname, 0);
+      if( !name ) {
+	  throwAFSException( env, JAFSADMNOMEM );
+	  return;    
+      }
     } else {
-	throwAFSException(env, JAFSNULLPROCESS);
-	return;
+      name = NULL;
     }
 
-    if (!bos_ProcessRestart((void *)serverHandle, name, &ast)) {
-	throwAFSException(env, ast);
+    if( !bos_ProcessRestart( (void *) serverHandle, name, &ast ) ) {
+      if( name != NULL ) {
+	(*env)->ReleaseStringUTFChars(env, jname, name);
+      }
+      throwAFSException( env, ast );
+      return;
     }
 
-    free(name);
+    if( name != NULL ) {
+      (*env)->ReleaseStringUTFChars(env, jname, name);
+    }
+
 }
 
 // reclaim global memory being used by this portion
 JNIEXPORT void JNICALL
-Java_org_openafs_jafs_Process_reclaimProcessMemory(JNIEnv * env, jclass cls)
-{
-    if (processCls) {
-	(*env)->DeleteGlobalRef(env, processCls);
-	processCls = 0;
-    }
+Java_org_openafs_jafs_Process_reclaimProcessMemory (JNIEnv *env, 
+						       jclass cls) {
+
+  if( processCls ) {
+      (*env)->DeleteGlobalRef(env, processCls);
+      processCls = 0;
+  }
+
 }
+
+
+
+
+
+

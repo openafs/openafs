@@ -115,7 +115,7 @@ public class Cell implements java.io.Serializable
   protected ArrayList serverNames;
 
   protected String name;
-  protected int cellHandle;
+  protected long cellHandle;
   protected Token token;
 
   protected int maxGroupID;
@@ -142,7 +142,7 @@ public class Cell implements java.io.Serializable
     this.name  = token.getCellName();
 
     cellHandle = getCellHandle( name, token.getHandle() );
-
+//System.out.println("cellHandle: " + cellHandle);
     users = null;
     userNames = null;
     groups = null;
@@ -270,7 +270,7 @@ public class Cell implements java.io.Serializable
 
   /**
    * Sets all the information fields of this <code>Cell</code> object, 
-   * such as max group and user ids, to their most current values.
+   * such as max group and user ids, to trheir most current values.
    *
    * @exception AFSException  If an error occurs in the native code     
    */
@@ -293,7 +293,7 @@ public class Cell implements java.io.Serializable
     users = new ArrayList();
 
     // get kas entries
-    int iterationId = getKasUsersBegin( cellHandle );
+    long iterationId = getKasUsersBegin( cellHandle );
 
     currUser = new User( this );
     boolean authorized = false;
@@ -310,13 +310,8 @@ public class Cell implements java.io.Serializable
         System.err.println("ERROR Cell::refreshUsers():kas (User: " 
 			   + currUser.getName() + ") -> " + e.getMessage());
         authorized = false;
-        if (org.openafs.jafs.ErrorTable.isPermissionDenied(e.getErrorCode())) {
-	  // Check to see if the user has failed more than 25 times,
-	  // if so it is most likely because they are not appropriately
-	  // authorized to list or examine users.  May want to check for
-	  // KAS admin attribute.
-	  if ( r++ > 25 ) r = 0;
-	}
+        //if (org.openafs.jafs.ErrorCodes.isPermissionDenied(e.getErrorCode())) 
+	//r = 0;
       }
     } 
     getKasUsersDone( iterationId );
@@ -339,13 +334,8 @@ public class Cell implements java.io.Serializable
         System.err.println("ERROR Cell::refreshUsers():pts (User: " 
 			   + currUser.getName() + ") -> " + e.getMessage());
         authorized = false;
-        if (org.openafs.jafs.ErrorTable.isPermissionDenied(e.getErrorCode())) {
-	  // Check to see if the user has failed more than 25 times,
-	  // if so it is most likely because they are not appropriately
-	  // authorized to list or examine users.  May want to check for
-	  // KAS admin attribute.
-	  if ( r++ > 25 ) r = 0;
-	}
+        //if (org.openafs.jafs.ErrorCodes.isPermissionDenied(e.getErrorCode())) 
+	// r = 0;
       }
     } 
     getPtsUsersDone( iterationId );
@@ -364,7 +354,7 @@ public class Cell implements java.io.Serializable
     userNames = new ArrayList();
 
     // get kas entries
-    int iterationId = getKasUsersBegin( cellHandle );
+    long iterationId = getKasUsersBegin( cellHandle );
     while( ( currName = getKasUsersNextString( iterationId )) != null ) {
       userNames.add( currName );
     } 
@@ -391,7 +381,7 @@ public class Cell implements java.io.Serializable
   {
     Group currGroup;
 
-    int iterationId = getGroupsBegin( cellHandle );
+    long iterationId = getGroupsBegin( cellHandle );
     
     groups = new ArrayList();
     
@@ -407,13 +397,13 @@ public class Cell implements java.io.Serializable
         r = getGroupsNext( cellHandle, iterationId, currGroup );
         authorized = true;
       } catch (AFSException e) {
-        System.err.println("ERROR Cell::refreshGroups() (Group: " 
-			   + currGroup.getName() + ") -> " + e.getMessage());
-        authorized = false;
-        if (org.openafs.jafs.ErrorTable.isPermissionDenied(e.getErrorCode())) {
-	  if ( r++ > 25 ) r = 0;
-	}
+	e.printStackTrace();
 
+//        System.err.println("ERROR Cell::refreshGroups() (Group: " 
+//			   + currGroup.getName() + ") -> " + e.getMessage());
+        authorized = false;
+        //if (org.openafs.jafs.ErrorCodes.isPermissionDenied(e.getErrorCode())) 
+	// r = 0;
       }
     } 
     Cell.getGroupsDone( iterationId );
@@ -428,7 +418,7 @@ public class Cell implements java.io.Serializable
   {
     String currName;
 
-    int iterationId = getGroupsBegin( cellHandle );
+    long iterationId = getGroupsBegin( cellHandle );
     
     groupNames = new ArrayList();
     while( ( currName = getGroupsNextString( iterationId ) ) != null ) {
@@ -446,7 +436,7 @@ public class Cell implements java.io.Serializable
   {
     Server currServer;
 
-    int iterationId = getServersBegin( cellHandle );
+    long iterationId = getServersBegin( cellHandle );
    
     servers = new ArrayList();
     
@@ -456,21 +446,20 @@ public class Cell implements java.io.Serializable
     while( r != 0 ) {
       try {
         if (authorized) {
-          System.out.println("[Java] Cell::refreshServers() -> adding server: " 
-			     + currServer.getName());
+          //System.out.println("[Java] Cell::refreshServers() -> adding server: " 
+		//	     + currServer.getName());
           servers.add( currServer );
           currServer = new Server( this );
         }
         r = getServersNext( cellHandle, iterationId, currServer );
-System.out.println("[Java] Cell::refreshServers() -> r: " + r);
+//System.out.println("[Java] Cell::refreshServers() -> r: " + r);
         authorized = true;
       } catch (AFSException e) {
         System.err.println("ERROR Cell::refreshServers() (Server: " 
 			   + currServer.getName() + ") -> " + e.getMessage());
         authorized = false;
-        if (org.openafs.jafs.ErrorTable.isPermissionDenied(e.getErrorCode())) {
-	  if ( r++ > 25 ) r = 0;
-	}
+        //if (e.getErrorCode() == org.openafs.jafs.ErrorCodes.PERMISSION_DENIED) 
+        // r = 0;
       }
     } 
     getServersDone( iterationId );
@@ -486,7 +475,7 @@ System.out.println("[Java] Cell::refreshServers() -> r: " + r);
   {
     String currName;
 
-    int iterationId = getServersBegin( cellHandle );
+    long iterationId = getServersBegin( cellHandle );
 
     serverNames = new ArrayList();
     while( ( currName = getServersNextString( iterationId ) ) != null ) {
@@ -658,7 +647,7 @@ System.out.println("[Java] Cell::refreshServers() -> r: " + r);
     User[] users  = new User[length];
     User currUser = new User( this );
     int ptsOnlyCount = getPtsOnlyUserCount(cellHandle);
-    int iterationID = 0;
+    long iterationID = 0;
     int indexPTS = 0;
     int indexKAS = 0;
 
@@ -800,7 +789,7 @@ System.out.println("[Java] Cell::refreshServers() -> r: " + r);
     String[] users  = new String[length];
     String currUser;
     int ptsOnlyCount = getPtsOnlyUserCount(cellHandle);
-    int iterationID = 0;
+    long iterationID = 0;
     int indexPTS = 0;
     int indexKAS = 0;
 
@@ -968,7 +957,7 @@ System.out.println("[Java] Cell::refreshServers() -> r: " + r);
     Group currGroup = new Group( this );
     int i = 0;
 
-    int iterationID = getGroupsBeginAt( cellHandle, startIndex );
+    long iterationID = getGroupsBeginAt( cellHandle, startIndex );
 
     while( getGroupsNext( cellHandle, iterationID, currGroup ) != 0 
 	   && i < length ) {
@@ -1065,7 +1054,7 @@ System.out.println("[Java] Cell::refreshServers() -> r: " + r);
     String currGroup;
     int i = 0;
 
-    int iterationID = getGroupsBeginAt( cellHandle, startIndex );
+    long iterationID = getGroupsBeginAt( cellHandle, startIndex );
 
     while( (currGroup = getGroupsNextString( iterationID )) != null &&
             i < length )
@@ -1216,7 +1205,7 @@ System.out.println("[Java] Cell::refreshServers() -> r: " + r);
    * @return the cell handle
    * @exception AFSException  If an error occurs in the native code
    */
-  public int getCellHandle() throws AFSException
+  public long getCellHandle() throws AFSException
   {
     return cellHandle;
   }
@@ -1266,7 +1255,7 @@ System.out.println("[Java] Cell::refreshServers() -> r: " + r);
    *
    * @return    a <code>String</code> representation of this <code>Cell</code>
    */
-  protected String getInfo()
+  public String getInfo()
   {
     String r = "Cell: " + name + "\n\n";
     try {
@@ -1320,7 +1309,7 @@ System.out.println("[Java] Cell::refreshServers() -> r: " + r);
    * @return    a <code>String</code> representation of the users
    * @see       User#getInfo
    */
-  protected String getInfoUsers() throws AFSException
+  public String getInfoUsers() throws AFSException
   {
     String r;
 
@@ -1342,7 +1331,7 @@ System.out.println("[Java] Cell::refreshServers() -> r: " + r);
    * @return    a <code>String</code> representation of the groups
    * @see       Group#getInfo
    */
-  protected String getInfoGroups() throws AFSException
+  public String getInfoGroups() throws AFSException
   {
     String r;
 
@@ -1363,7 +1352,7 @@ System.out.println("[Java] Cell::refreshServers() -> r: " + r);
    * @return    a <code>String</code> representation of the servers
    * @see       Server#getInfo
    */
-  protected String getInfoServers() 
+  public String getInfoServers() 
       throws AFSException
   {
     String r;
@@ -1412,7 +1401,7 @@ System.out.println("[Java] Cell::refreshServers() -> r: " + r);
    * @exception AFSException  If an error occurs in the native code
    * @see Cell#getCellHandle
    */
-  protected static native int getKasUserCount( int cellHandle )
+  protected static native int getKasUserCount( long cellHandle )
     throws AFSException;
 
   /**
@@ -1426,7 +1415,7 @@ System.out.println("[Java] Cell::refreshServers() -> r: " + r);
    * @return an iteration ID
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native int getKasUsersBegin( int cellHandle )
+  protected static native long getKasUsersBegin( long cellHandle )
     throws AFSException;
 
   /**
@@ -1442,7 +1431,7 @@ System.out.println("[Java] Cell::refreshServers() -> r: " + r);
    * @exception AFSException  If an error occurs in the native code
    * @see Cell#getCellHandle
    */
-  protected static native int getKasUsersBeginAt( int cellHandle,
+  protected static native long getKasUsersBeginAt( long cellHandle,
                                                   int startIndex )
     throws AFSException;
 
@@ -1456,7 +1445,7 @@ System.out.println("[Java] Cell::refreshServers() -> r: " + r);
    * @return the name of the next user of the cell
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native String getKasUsersNextString( int iterationId )
+  protected static native String getKasUsersNextString( long iterationId )
     throws AFSException;
 
   /**
@@ -1472,8 +1461,8 @@ System.out.println("[Java] Cell::refreshServers() -> r: " + r);
    * @return 0 if there are no more users, != 0 otherwise
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native int getKasUsersNext( int cellHandle,  
-					       int iterationId, 
+  protected static native int getKasUsersNext( long cellHandle,  
+					       long iterationId, 
 					       User theUser )
     throws AFSException;
 
@@ -1484,7 +1473,7 @@ System.out.println("[Java] Cell::refreshServers() -> r: " + r);
    * @see Cell#getKasUsersBegin
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native void getKasUsersDone( int iterationId )
+  protected static native void getKasUsersDone( long iterationId )
     throws AFSException;
 
   /**
@@ -1496,7 +1485,7 @@ System.out.println("[Java] Cell::refreshServers() -> r: " + r);
    * @exception AFSException  If an error occurs in the native code
    * @see Cell#getCellHandle
    */
-  protected static native int getPtsUserCount( int cellHandle )
+  protected static native int getPtsUserCount( long cellHandle )
     throws AFSException;
 
   /**
@@ -1508,7 +1497,7 @@ System.out.println("[Java] Cell::refreshServers() -> r: " + r);
    * @exception AFSException  If an error occurs in the native code
    * @see Cell#getCellHandle
    */
-  protected static native int getPtsOnlyUserCount( int cellHandle )
+  protected static native int getPtsOnlyUserCount( long cellHandle )
     throws AFSException;
 
   /**
@@ -1522,7 +1511,7 @@ System.out.println("[Java] Cell::refreshServers() -> r: " + r);
    * @return an iteration ID
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native int getPtsUsersBegin( int cellHandle )
+  protected static native long getPtsUsersBegin( long cellHandle )
     throws AFSException;
 
   /**
@@ -1534,7 +1523,7 @@ System.out.println("[Java] Cell::refreshServers() -> r: " + r);
    * @return the name of the next user of the cell
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native String getPtsUsersNextString( int iterationId )
+  protected static native String getPtsUsersNextString( long iterationId )
     throws AFSException;
 
   /**
@@ -1547,8 +1536,8 @@ System.out.println("[Java] Cell::refreshServers() -> r: " + r);
    * @return the name of the next pts user (not kas user) of the cell
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native String getPtsOnlyUsersNextString( int iterationId, 
-							    int cellHandle )
+  protected static native String getPtsOnlyUsersNextString( long iterationId, 
+							    long cellHandle )
     throws AFSException;
 
   /**
@@ -1564,7 +1553,7 @@ System.out.println("[Java] Cell::refreshServers() -> r: " + r);
    * @return 0 if there are no more users, != 0 otherwise
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native int getPtsUsersNext( int cellHandle, int iterationId,
+  protected static native int getPtsUsersNext( long cellHandle, long iterationId,
 					       User theUser )
     throws AFSException;
 
@@ -1581,8 +1570,8 @@ System.out.println("[Java] Cell::refreshServers() -> r: " + r);
    * @return 0 if there are no more users, != 0 otherwise
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native int getPtsOnlyUsersNext( int cellHandle, 
-						   int iterationId, 
+  protected static native int getPtsOnlyUsersNext( long cellHandle, 
+						   long iterationId, 
 						   User theUser )
     throws AFSException;
 
@@ -1593,7 +1582,7 @@ System.out.println("[Java] Cell::refreshServers() -> r: " + r);
    * @see Cell#getPtsUsersBegin
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native void getPtsUsersDone( int iterationId )
+  protected static native void getPtsUsersDone( long iterationId )
     throws AFSException;
 
   /**
@@ -1605,7 +1594,7 @@ System.out.println("[Java] Cell::refreshServers() -> r: " + r);
    * @exception AFSException  If an error occurs in the native code
    * @see Cell#getCellHandle
    */
-  protected static native int getGroupCount( int cellHandle )
+  protected static native int getGroupCount( long cellHandle )
     throws AFSException;
 
   /**
@@ -1619,7 +1608,7 @@ System.out.println("[Java] Cell::refreshServers() -> r: " + r);
    * @return an iteration ID
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native int getGroupsBegin( int cellHandle )
+  protected static native long getGroupsBegin( long cellHandle )
     throws AFSException;
 
   /**
@@ -1634,7 +1623,7 @@ System.out.println("[Java] Cell::refreshServers() -> r: " + r);
    * @exception AFSException  If an error occurs in the native code
    * @see Cell#getCellHandle
    */
-  protected static native int getGroupsBeginAt( int cellHandle, 
+  protected static native long getGroupsBeginAt( long cellHandle, 
                                                 int startIndex )
     throws AFSException;
 
@@ -1647,7 +1636,7 @@ System.out.println("[Java] Cell::refreshServers() -> r: " + r);
    * @return the name of the next user of the cell
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native String getGroupsNextString( int iterationId )
+  protected static native String getGroupsNextString( long iterationId )
     throws AFSException;
 
   /**
@@ -1663,7 +1652,7 @@ System.out.println("[Java] Cell::refreshServers() -> r: " + r);
    * @return 0 if there are no more users, != 0 otherwise
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native int getGroupsNext( int cellHandle, int iterationId, 
+  protected static native int getGroupsNext( long cellHandle, long iterationId, 
 					     Group theGroup )
     throws AFSException;
 
@@ -1674,7 +1663,7 @@ System.out.println("[Java] Cell::refreshServers() -> r: " + r);
    * @see Cell#getGroupsBegin
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native void getGroupsDone( int iterationId )
+  protected static native void getGroupsDone( long iterationId )
     throws AFSException;
 
   /**
@@ -1686,7 +1675,7 @@ System.out.println("[Java] Cell::refreshServers() -> r: " + r);
    * @exception AFSException  If an error occurs in the native code
    * @see Cell#getCellHandle
    */
-  protected static native int getServerCount( int cellHandle )
+  protected static native int getServerCount( long cellHandle )
     throws AFSException;
 
   /**
@@ -1699,7 +1688,7 @@ System.out.println("[Java] Cell::refreshServers() -> r: " + r);
    * @return an iteration ID
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native int getServersBegin( int cellHandle )
+  protected static native long getServersBegin( long cellHandle )
     throws AFSException;
 
   /**
@@ -1711,7 +1700,7 @@ System.out.println("[Java] Cell::refreshServers() -> r: " + r);
    * @return the name of the next server of the cell
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native String getServersNextString( int iterationId )
+  protected static native String getServersNextString( long iterationId )
     throws AFSException;
 
   /**
@@ -1727,7 +1716,7 @@ System.out.println("[Java] Cell::refreshServers() -> r: " + r);
    * @return 0 if there are no more servers, != 0 otherwise
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native int getServersNext( int cellHandle, int iterationId, 
+  protected static native int getServersNext( long cellHandle, long iterationId, 
 					      Server theServer )
     throws AFSException;
 
@@ -1738,7 +1727,7 @@ System.out.println("[Java] Cell::refreshServers() -> r: " + r);
    * @see Cell#getServersBegin
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native void getServersDone( int iterationId )
+  protected static native void getServersDone( long iterationId )
     throws AFSException;
 
   /**
@@ -1749,7 +1738,7 @@ System.out.println("[Java] Cell::refreshServers() -> r: " + r);
    * @return the name of the cell
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native String getCellName( int cellHandle )
+  protected static native String getCellName( long cellHandle )
     throws AFSException;
 
   /**
@@ -1764,7 +1753,7 @@ System.out.println("[Java] Cell::refreshServers() -> r: " + r);
    * @param forceCheck  whether or not to check if this volume name exists
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native void createMountPoint( int cellHandle, 
+  protected static native void createMountPoint( long cellHandle, 
 						 String directory, 
 						 String volumeName, 
 						 boolean readWrite, 
@@ -1803,7 +1792,7 @@ System.out.println("[Java] Cell::refreshServers() -> r: " + r);
    * @return an integer reresenting the max group id in a cell
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native int getMaxGroupID( int cellHandle )
+  protected static native int getMaxGroupID( long cellHandle )
     throws AFSException;
 
   /**
@@ -1815,7 +1804,7 @@ System.out.println("[Java] Cell::refreshServers() -> r: " + r);
    * @param maxID an integer reresenting the new max group id in a cell
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native void setMaxGroupID( int cellHandle, int maxID )
+  protected static native void setMaxGroupID( long cellHandle, int maxID )
     throws AFSException;
 
   /**
@@ -1828,7 +1817,7 @@ System.out.println("[Java] Cell::refreshServers() -> r: " + r);
    * @return an integer reresenting the max user id in a cell
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native int getMaxUserID( int cellHandle )
+  protected static native int getMaxUserID( long cellHandle )
     throws AFSException;
 
   /**
@@ -1840,7 +1829,7 @@ System.out.println("[Java] Cell::refreshServers() -> r: " + r);
    * @param maxID an integer reresenting the new max user id in a cell
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native void setMaxUserID( int cellHandle, int maxID )
+  protected static native void setMaxUserID( long cellHandle, int maxID )
     throws AFSException;
 
   /**
@@ -1865,7 +1854,7 @@ System.out.println("[Java] Cell::refreshServers() -> r: " + r);
    * @exception AFSException  If an error occurs in the native code
    * @see Token#getHandle
    */
-  protected static native int getCellHandle( String cellName, int tokenHandle )
+  protected static native long getCellHandle( String cellName, long tokenHandle )
 	throws AFSException;
  
   /**
@@ -1874,6 +1863,14 @@ System.out.println("[Java] Cell::refreshServers() -> r: " + r);
    * @param cellHandle   the cell handle to close
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native void closeCell( int cellHandle ) 
+  protected static native void closeCell( long cellHandle ) 
 	throws AFSException;
 }
+
+
+
+
+
+
+
+

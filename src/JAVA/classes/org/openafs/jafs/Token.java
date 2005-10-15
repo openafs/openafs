@@ -91,7 +91,7 @@ public class Token implements Serializable, Comparable
 {
   public static int ANYUSER_PAG_ID;
 
-  protected int tokenHandle;
+  protected long tokenHandle;
   protected int pagID = -1;
   protected int errno;
 
@@ -161,7 +161,7 @@ public class Token implements Serializable, Comparable
     this.password = password;
     this.cellName = cellName;
 
-System.out.println(username + ", " + cellName);
+//System.out.println(username + ", " + cellName);
     /* By default lets authenticate the user using libafsauthent.a */
     login();
   }
@@ -196,7 +196,7 @@ System.out.println(username + ", " + cellName);
    * @exception AFSException  If an error occurs in the native code
    * @return a token representing the authentication
    */
-  protected int getHandle()
+  protected long getHandle()
   {
     return tokenHandle;
   }
@@ -250,6 +250,7 @@ System.out.println(username + ", " + cellName);
   public void login() throws AFSException
   {
     this.tokenHandle = this.getToken(cellName, username, password);
+//System.out.println("Token handle -> " + tokenHandle);
   }
 
   /**
@@ -355,7 +356,7 @@ System.out.println(username + ", " + cellName);
    * @exception AFSException  If an error occurs in the native code
    * @return a token representing the authentication
    */
-  protected native int getToken( String cellName, String username, 
+  protected native long getToken( String cellName, String username, 
                                  String password ) 
 	throws AFSException;
 
@@ -365,7 +366,7 @@ System.out.println(username + ", " + cellName);
    * @param tokenHandle   the token to close
    * @exception AFSException  If an error occurs in the native code
    */
-  protected native void close( int tokenHandle ) throws AFSException;
+  protected native void close( long tokenHandle ) throws AFSException;
 
   /**
    *  Gets the expiration time for a given token.
@@ -376,7 +377,7 @@ System.out.println(username + ", " + cellName);
    * @return a long representing the UTC time for the token expiration
    * @exception AFSException  If an error occurs in the native code
    */
-  protected native long getExpiration( int tokenHandle )
+  protected native long getExpiration( long tokenHandle )
       throws AFSException;
 
   /**

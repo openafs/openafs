@@ -108,8 +108,8 @@ public class Server implements Serializable, Comparable
   protected String name;
   protected Cell cell;
 
-  protected int vosHandle;
-  protected int bosHandle;
+  protected long vosHandle;
+  protected long bosHandle;
 
   protected boolean database;
   protected boolean fileServer;
@@ -353,7 +353,7 @@ public class Server implements Serializable, Comparable
 
     Partition currPartition;
 
-    int iterationID = getPartitionsBegin( cell.getCellHandle(), 
+    long iterationID = getPartitionsBegin( cell.getCellHandle(), 
 					  getVosHandle() );
     
     partitions = new ArrayList();
@@ -384,7 +384,7 @@ public class Server implements Serializable, Comparable
 
     String currName;
 
-    int iterationID = getPartitionsBegin( cell.getCellHandle(), 
+    long iterationID = getPartitionsBegin( cell.getCellHandle(), 
 					  getVosHandle() );
     
     partitionNames = new ArrayList();
@@ -404,7 +404,7 @@ public class Server implements Serializable, Comparable
   {
     String currName;
 
-    int iterationID = getBosAdminsBegin( getBosHandle() );
+    long iterationID = getBosAdminsBegin( getBosHandle() );
     
     adminNames = new ArrayList();
     
@@ -424,7 +424,7 @@ public class Server implements Serializable, Comparable
   {
     User currUser;
 
-    int iterationID = getBosAdminsBegin( getBosHandle() );
+    long iterationID = getBosAdminsBegin( getBosHandle() );
 	
     admins = new ArrayList();
 	
@@ -446,7 +446,7 @@ public class Server implements Serializable, Comparable
   {
     Key currKey;
 
-    int iterationID = getKeysBegin( getBosHandle() );
+    long iterationID = getKeysBegin( getBosHandle() );
     
     keys = new ArrayList();
     
@@ -467,7 +467,7 @@ public class Server implements Serializable, Comparable
   {
     String currName;
 
-    int iterationID = getProcessesBegin( getBosHandle() );
+    long iterationID = getProcessesBegin( getBosHandle() );
     
     processNames = new ArrayList();
     
@@ -487,7 +487,7 @@ public class Server implements Serializable, Comparable
   {
     Process currProcess;
 
-    int iterationID = getProcessesBegin( getBosHandle() );
+    long iterationID = getProcessesBegin( getBosHandle() );
     
     processes = new ArrayList();
     
@@ -814,8 +814,11 @@ public class Server implements Serializable, Comparable
   public Partition[] getPartitions() throws AFSException
   {
     if ( partitions == null ) refreshPartitions();
-    return (Partition []) 
-	partitions.toArray( new Partition[partitions.size()] );
+    if ( partitions != null) {
+    	return (Partition []) partitions.toArray( new Partition[partitions.size()] );
+    } else {
+    	return null;
+    }
   }
 
   /**
@@ -977,7 +980,10 @@ public class Server implements Serializable, Comparable
   public Process[] getProcesses() throws AFSException
   {
     if ( processes == null ) refreshProcesses();
-    return (Process[]) processes.toArray( new Process[processes.size()] );
+    if ( processes != null) {
+    	return (Process[]) processes.toArray( new Process[processes.size()] );
+    }
+    return null;
   }
 
   /**
@@ -1197,7 +1203,7 @@ public class Server implements Serializable, Comparable
    * @return this server's vos handle
    * @exception AFSException  If an error occurs in the native code
    */
-  protected int getVosHandle() throws AFSException
+  protected long getVosHandle() throws AFSException
   {
     if ( vosHandle == 0 ) {
       vosHandle = getVosServerHandle( cell.getCellHandle(), name );
@@ -1211,7 +1217,7 @@ public class Server implements Serializable, Comparable
    * @return this server's bos handle
    * @exception AFSException  If an error occurs in the native code
    */
-  protected int getBosHandle() throws AFSException
+  protected long getBosHandle() throws AFSException
   {
     if ( bosHandle == 0 ) {
       bosHandle = getBosServerHandle( cell.getCellHandle(), name );
@@ -1260,7 +1266,7 @@ public class Server implements Serializable, Comparable
    *
    * @return a <code>String</code> representation of the <code>Server</code>
    */
-  protected String getInfo()
+  public String getInfo()
   {
     String r;
     try {
@@ -1322,7 +1328,7 @@ public class Server implements Serializable, Comparable
    * @return    a <code>String</code> representation of the partitions
    * @see       Partition#getInfo
    */
-  protected String getInfoPartitions() throws AFSException
+  public String getInfoPartitions() throws AFSException
   {
     String r;
     r = "Server: " + name + "\n\n";
@@ -1343,7 +1349,7 @@ public class Server implements Serializable, Comparable
    * @return    a <code>String</code> representation of the keys
    * @see       Key#getInfo
    */
-  protected String getInfoKeys() throws AFSException
+  public String getInfoKeys() throws AFSException
   {
     String r;
 
@@ -1366,7 +1372,7 @@ public class Server implements Serializable, Comparable
    * @return    a <code>String</code> representation of the processes
    * @see       Process#getInfo
    */
-  protected String getInfoProcesses() throws AFSException
+  public String getInfoProcesses() throws AFSException
   {
     String r;
 
@@ -1443,14 +1449,14 @@ public class Server implements Serializable, Comparable
    * methods as a means of identification.
    *
    * @param cellHandle    a cell handle previously returned by 
-   *                      a call to {@link Cell#getCellHandle}
+   *                      a call to {@link #getCellHandle}
    * @param serverName    the name of the server for which to retrieve 
    *                      a vos handle
    * @return a vos handle to the server
    * @exception AFSException  If an error occurs in the native code
-   * @see Cell#getCellHandle
+   * @see #getCellHandle
    */
-  protected static native int getVosServerHandle( int cellHandle, 
+  protected static native long getVosServerHandle( long cellHandle, 
 						  String serverName )
 	throws AFSException;
 
@@ -1460,7 +1466,7 @@ public class Server implements Serializable, Comparable
    * @param vosHandle   the vos server handle to close
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native void closeVosServerHandle( int vosHandle ) 
+  protected static native void closeVosServerHandle( long vosHandle ) 
 	throws AFSException; 
 
   /**
@@ -1469,14 +1475,14 @@ public class Server implements Serializable, Comparable
    * as a means of identification.
    *
    * @param cellHandle    a cell handle previously returned by a call 
-   *                      to {@link Cell#getCellHandle}
+   *                      to {@link #getCellHandle}
    * @param serverName    the name of the server for which to retrieve 
    *                      a bos handle
    * @return a bos handle to the server
    * @exception AFSException  If an error occurs in the native code
-   * @see Cell#getCellHandle
+   * @see #getCellHandle
    */
-  protected static native int getBosServerHandle( int cellHandle, 
+  protected static native long getBosServerHandle( long cellHandle, 
 						  String serverName )
 	throws AFSException;
 
@@ -1486,7 +1492,7 @@ public class Server implements Serializable, Comparable
    * @param bosHandle   the bos server handle to close
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native void closeBosServerHandle( int bosHandle ) 
+  protected static native void closeBosServerHandle( long bosHandle ) 
 	throws AFSException; 
 
   /**
@@ -1500,7 +1506,7 @@ public class Server implements Serializable, Comparable
    * @see Server
    * @exception AFSException   If an error occurs in the native code
    */
-  protected static native void getServerInfo( int cellHandle, String name, 
+  protected static native void getServerInfo( long cellHandle, String name, 
 					      Server server ) 
 	throws AFSException;
 
@@ -1516,8 +1522,8 @@ public class Server implements Serializable, Comparable
    * @see Cell#getCellHandle
    * @see #getVosServerHandle
    */
-  protected static native int getPartitionCount( int cellHandle, 
-						  int serverHandle )
+  protected static native int getPartitionCount( long cellHandle, 
+						  long serverHandle )
     throws AFSException;
 
   /**
@@ -1533,8 +1539,8 @@ public class Server implements Serializable, Comparable
    * @return an iteration ID
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native int getPartitionsBegin( int cellHandle, 
-						  int serverHandle )
+  protected static native long getPartitionsBegin( long cellHandle, 
+						  long serverHandle )
     throws AFSException;
 
   /**
@@ -1546,7 +1552,7 @@ public class Server implements Serializable, Comparable
    * @return the name of the next partition of the server
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native String getPartitionsNextString( int iterationId )
+  protected static native String getPartitionsNextString( long iterationId )
     throws AFSException;
 
   /**
@@ -1560,7 +1566,7 @@ public class Server implements Serializable, Comparable
    * @return 0 if there are no more servers, != 0 otherwise
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native int getPartitionsNext( int iterationId, 
+  protected static native int getPartitionsNext( long iterationId, 
 						 Partition thePartition )
     throws AFSException;
 
@@ -1571,7 +1577,7 @@ public class Server implements Serializable, Comparable
    * @see #getPartitionsBegin
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native void getPartitionsDone( int iterationId )
+  protected static native void getPartitionsDone( long iterationId )
     throws AFSException;
   
   /**
@@ -1584,7 +1590,7 @@ public class Server implements Serializable, Comparable
    * @exception AFSException  If an error occurs in the native code
    * @see #getVosServerHandle
    */
-  protected static native int getProcessCount( int serverHandle )
+  protected static native int getProcessCount( long serverHandle )
     throws AFSException;
 
   /**
@@ -1598,7 +1604,7 @@ public class Server implements Serializable, Comparable
    * @return an iteration ID
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native int getProcessesBegin( int serverHandle )
+  protected static native long getProcessesBegin( long serverHandle )
     throws AFSException;
 
   /**
@@ -1610,7 +1616,7 @@ public class Server implements Serializable, Comparable
    * @return the name of the next process of the cell
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native String getProcessesNextString( int iterationId )
+  protected static native String getProcessesNextString( long iterationId )
     throws AFSException;
 
   /**
@@ -1626,8 +1632,8 @@ public class Server implements Serializable, Comparable
    * @return 0 if there are no more processes, != otherwise
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native int getProcessesNext( int serverHandle, 
-						int iterationId, 
+  protected static native int getProcessesNext( long serverHandle, 
+						long iterationId, 
 						Process theProcess )
     throws AFSException;
 
@@ -1638,7 +1644,7 @@ public class Server implements Serializable, Comparable
    * @see #getProcessesBegin
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native void getProcessesDone( int iterationId )
+  protected static native void getProcessesDone( long iterationId )
     throws AFSException;
 
   /**
@@ -1651,7 +1657,7 @@ public class Server implements Serializable, Comparable
    * @exception AFSException  If an error occurs in the native code
    * @see #getVosServerHandle
    */
-  protected static native int getKeyCount( int serverHandle )
+  protected static native int getKeyCount( long serverHandle )
     throws AFSException;
 
   /**
@@ -1664,7 +1670,7 @@ public class Server implements Serializable, Comparable
    * @return an iteration ID
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native int getKeysBegin( int serverHandle )
+  protected static native long getKeysBegin( long serverHandle )
     throws AFSException;
 
   /**
@@ -1678,7 +1684,7 @@ public class Server implements Serializable, Comparable
    * @return 0 if there are no more keys, != 0 otherwise
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native int getKeysNext( int iterationId, Key theKey )
+  protected static native int getKeysNext( long iterationId, Key theKey )
     throws AFSException;
 
   /**
@@ -1688,7 +1694,7 @@ public class Server implements Serializable, Comparable
    * @see #getKeysBegin
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native void getKeysDone( int iterationId )
+  protected static native void getKeysDone( long iterationId )
     throws AFSException;
 
   /**
@@ -1701,7 +1707,7 @@ public class Server implements Serializable, Comparable
    * @exception AFSException  If an error occurs in the native code
    * @see #getVosServerHandle
    */
-  protected static native int getBosAdminCount( int serverHandle )
+  protected static native int getBosAdminCount( long serverHandle )
     throws AFSException;
 
   /**
@@ -1715,7 +1721,7 @@ public class Server implements Serializable, Comparable
    * @return an iteration ID
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native int getBosAdminsBegin( int serverHandle )
+  protected static native long getBosAdminsBegin( long serverHandle )
     throws AFSException;
 
   /**
@@ -1727,7 +1733,7 @@ public class Server implements Serializable, Comparable
    * @return the name of the next admin of the server
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native String getBosAdminsNextString( int iterationId )
+  protected static native String getBosAdminsNextString( long iterationId )
     throws AFSException;
 
   /**
@@ -1735,15 +1741,15 @@ public class Server implements Serializable, Comparable
    * are no more admins, != 0 otherwise.
    *
    * @param cellHandle    the handle of the cell to which these admins belong
-   * @see Cell#getCellHandle
+   * @see #getCellHandle
    * @param iterationId   the iteration ID of this iteration
    * @see #getBosAdminsBegin
    * @param theUser   the user object in which to fill the values of this admin
    * @return 0 if no more admins, != 0 otherwise
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native int getBosAdminsNext( int cellHandle, 
-						int iterationId, User theUser )
+  protected static native int getBosAdminsNext( long cellHandle, 
+						long iterationId, User theUser )
     throws AFSException;
 
   /**
@@ -1753,7 +1759,7 @@ public class Server implements Serializable, Comparable
    * @see #getBosAdminsBegin
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native void getBosAdminsDone( int iterationId )
+  protected static native void getBosAdminsDone( long iterationId )
     throws AFSException;
 
   /**
@@ -1765,7 +1771,7 @@ public class Server implements Serializable, Comparable
    * @param adminName   the name of the admin to add to the list
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native void addBosAdmin( int serverHandle, 
+  protected static native void addBosAdmin( long serverHandle, 
 					    String adminName )
     throws AFSException;
 
@@ -1779,7 +1785,7 @@ public class Server implements Serializable, Comparable
    * @param adminName   the name of the admin to remove from the list
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native void removeBosAdmin( int serverHandle, 
+  protected static native void removeBosAdmin( long serverHandle, 
 					       String adminName )
     throws AFSException;
 
@@ -1787,7 +1793,7 @@ public class Server implements Serializable, Comparable
    * Salvages (restores consistency to) a volume, partition, or server
    *
    * @param cellHandle    the handle of the cell to which the volume belongs
-   * @see Cell#getCellHandle
+   * @see #getCellHandle
    * @param serverHandle  the bos handle of the server on which the 
    *                      volume resides
    * @see #getBosServerHandle
@@ -1815,7 +1821,7 @@ public class Server implements Serializable, Comparable
    *                          one block at a time and skip badly damaged 
    *                          blocks.  Use if partition has disk errors
    */
-  protected static native void salvage( int cellHandle, int serverHandle, 
+  protected static native void salvage( long cellHandle, long serverHandle, 
 					String partitionName, String volName,
 					int numSalvagers, String tempDir, 
 					String logFile, 
@@ -1831,14 +1837,14 @@ public class Server implements Serializable, Comparable
    *  Synchronizes a particular server with the volume location database.
    *
    * @param cellHandle    the handle of the cell to which the server belongs
-   * @see Cell#getCellHandle
+   * @see #getCellHandle
    * @param serverHandle  the vos handle of the server     
    * @see #getVosServerHandle
    * @param partition   the id of the partition to sync, can be -1 to ignore
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native void syncServerWithVLDB( int cellHandle, 
-						   int serverHandle, 
+  protected static native void syncServerWithVLDB( long cellHandle, 
+						   long serverHandle, 
 						   int partition )
     throws AFSException;
 
@@ -1846,15 +1852,15 @@ public class Server implements Serializable, Comparable
    *  Synchronizes the volume location database with a particular server.
    *
    * @param cellHandle    the handle of the cell to which the server belongs
-   * @see Cell#getCellHandle
+   * @see #getCellHandle
    * @param serverHandle  the vos handle of the server     
    * @see #getVosServerHandle
    * @param partition   the id of the partition to sync, can be -1 to ignore
    * @param forceDeletion   whether or not to force the deletion of bad volumes
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native void syncVLDBWithServer( int cellHandle, 
-						   int serverHandle, 
+  protected static native void syncVLDBWithServer( long cellHandle, 
+						   long serverHandle, 
 						   int partition, 
 						   boolean forceDeletion )
     throws AFSException;
@@ -1869,7 +1875,7 @@ public class Server implements Serializable, Comparable
    * @param logLocation   the full path and name of the desired bos log
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native String getLog( int serverHandle, String logLocation )
+  protected static native String getLog( long serverHandle, String logLocation )
     throws AFSException;
 
   /**
@@ -1886,7 +1892,7 @@ public class Server implements Serializable, Comparable
    *                    the restart time fields
    * @exception AFSException  If an error occurs in the native code
    */
-  private static native void getRestartTime( int serverHandle, 
+  private static native void getRestartTime( long serverHandle, 
 					       int restartType, 
 					       ExecutableTime executableTime )
     throws AFSException;
@@ -1903,7 +1909,7 @@ public class Server implements Serializable, Comparable
    * @param theServer   the server object containing the desired information
    * @exception AFSException  If an error occurs in the native code
    */
-  private static native void setRestartTime( int serverHandle, 
+  private static native void setRestartTime( long serverHandle, 
 					       int restartType, 
 					       ExecutableTime executableTime )
     throws AFSException;
@@ -1916,7 +1922,7 @@ public class Server implements Serializable, Comparable
    * @see #getBosServerHandle
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native void startAllProcesses( int serverHandle )
+  protected static native void startAllProcesses( long serverHandle )
     throws AFSException;
 
   /**
@@ -1928,7 +1934,7 @@ public class Server implements Serializable, Comparable
    * @param restartBosServer   whether or not to restart the bos server as well
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native void restartAllProcesses( int serverHandle, 
+  protected static native void restartAllProcesses( long serverHandle, 
 						    boolean restartBosServer )
     throws AFSException;
 
@@ -1940,7 +1946,7 @@ public class Server implements Serializable, Comparable
    * @see #getBosServerHandle
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native void stopAllProcesses( int serverHandle )
+  protected static native void stopAllProcesses( long serverHandle )
     throws AFSException;
 
   /**

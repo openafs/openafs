@@ -329,7 +329,7 @@ public class Key implements Serializable, Comparable
    *
    * @return a <code>String</code> representation of the <code>Key</code>
    */
-  protected String getInfo()
+  public String getInfo()
   {
     String r;
     try {
@@ -417,7 +417,7 @@ public class Key implements Serializable, Comparable
    * @see Server
    * @exception AFSException   If an error occurs in the native code
    */
-  protected static native void getKeyInfo( int serverHandle, int version, 
+  protected static native void getKeyInfo( long serverHandle, int version, 
 					   Key key ) 
 	throws AFSException;
 
@@ -434,7 +434,7 @@ public class Key implements Serializable, Comparable
    *                      be encrypted
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native void create( int cellHandle, int serverHandle, int versionNumber, String keyString )
+  protected static native void create( long cellHandle, long serverHandle, int versionNumber, String keyString )
     throws AFSException;
 
   /**
@@ -445,7 +445,7 @@ public class Key implements Serializable, Comparable
    * @param versionNumber   the version number of the key to remove (0 to 255)
    * @exception AFSException  If an error occurs in the native code
    */
-  protected static native void delete( int serverHandle, int versionNumber )
+  protected static native void delete( long serverHandle, int versionNumber )
     throws AFSException;
 
   /**
@@ -457,3 +457,11 @@ public class Key implements Serializable, Comparable
   protected static native void reclaimKeyMemory();
 
 }
+
+
+
+
+
+
+
+
