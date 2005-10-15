@@ -9,7 +9,13 @@ Post 1.4.0 revisions:
    Shared file access modes, they require the ability to obtain locks in
    order to access files.
 
+Since 1.4.0 rc7: 1.4.0 rc8 released (15 Oct 2005)
+ * Fixed file name pattern matching.  Question marks can match nothing
+   if found at the end of a component.
+
 Since 1.4.0 rc6: 1.4.0 rc7 released (8 Oct 2005)
+ * Kerberos 5 ticket lifetimes should adhere to KFW Leash lifetimes
+
  * The MSI installer now has a new Product ID for each build.  This
    is to allow for automated upgrades.   The Upgrade ID is remaining
    constant.
