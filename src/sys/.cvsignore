@@ -1,7 +1,9 @@
 AFS_component_version_number.c
 Makefile
+libafssetpag.*
 pagsh
 pagsh.krb
+picobj
 rmtsys.cs.c
 rmtsys.h
 rmtsys.ss.c

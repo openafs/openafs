@@ -1,3 +1,8 @@
+# API version. When something changes, increment as appropriate. 
+# Ignore at your own risk.
+LIBAFSSETPAGMAJOR=1
+LIBAFSSETPAGMINOR=0
+
 # Copyright 2000, International Business Machines Corporation and others.
 # All Rights Reserved.
 # 
@@ -14,8 +19,11 @@ CFLAGS=-I. -I${srcdir} ${DBUG} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR}  ${XCF
 SFLAGS=-P -I${TOP_INCDIR}
 LIBS=libsys.a ${TOP_LIBDIR}/librx.a libsys.a ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/util.a ${XLIBS}
 
-OBJECTS= afssyscalls.o syscall.o
+OBJECTS= afssyscalls.o setpag.o glue.o syscall.o
+SHLIBOBJS = picobj/setpag.o picobj/glue.o syscall.o
 RMTOBJS=rmtsysnet.o rmtsysc.o rmtsys.cs.o rmtsys.xdr.o rmtsys.ss.o rmtsyss.o 
+
+LIBAFSSETPAG = libafssetpag.${SHLIB_SUFFIX}.${LIBAFSSETPAGMAJOR}.${LIBAFSSETPAGMINOR}
 
 all: \
 	rmtsysd \
@@ -26,6 +34,7 @@ all: \
 	${TOP_INCDIR}/afs/xfsattrs.h \
 	${TOP_LIBDIR}/afs.exp \
 	${TOP_LIBDIR}/libsys.a \
+	${TOP_LIBDIR}/${LIBAFSSETPAG} \
 	${KERNELDIR}/afs \
 	${KERNELDIR}/afs/xfsattrs.h \
 	${UKERNELDIR}/afs \
@@ -39,6 +48,22 @@ libsys.a: ${OBJECTS} ${RMTOBJS} afsl.exp AFS_component_version_number.o
 	case "${SYS_NAME}" in                   	\
 		rs_aix*) 			        \
 			$(AR) crv $@ afsl.exp;;         \
+	esac
+
+${LIBAFSSETPAG}: ${SHLIBOBJS}
+	case ${SYS_NAME} in \
+	*_linux*) \
+	    ${SHLIB_LINKER} -Wl,-h,libafssetpag.so.${LIBAFSSETPAGMAJOR} \
+	        -o ${LIBAFSSETPAG} -Wl,--version-script=afssetpag.map \
+	        ${SHLIBOBJS};; \
+	rs_aix4*) \
+	    ${SHLIB_LINKER} -o ${LIBAFSSETPAG} ${SHLIBOBJS} \
+	        -bE:afssetpag.exp;; \
+	sun*_5*) \
+	    ${SHLIB_LINKER} -h libafssetpag.so.${LIBAFSSETPAGMAJOR} \
+	        -Wl,-M afssetpag.map -o ${LIBAFSSETPAG} ${SHLIBOBJS};; \
+	*) \
+	    ${SHLIB_LINKER} -o ${LIBAFSSETPAG} ${SHLIBOBJS};; \
 	esac
 
 tests:	pagsh pagsh.krb fixit iinc idec icreate iopen istat rmtsysd
@@ -67,6 +92,26 @@ syscall.o: syscall.s
 
 afssyscalls.o: afssyscalls.c afssyscalls.h
 	${CCOBJ} ${CFLAGS} -c ${srcdir}/afssyscalls.c
+
+glue.o: glue.c afssyscalls.h
+	${CCOBJ} ${CFLAGS} -c ${srcdir}/glue.c
+
+setpag.o: setpag.c afssyscalls.h
+	${CCOBJ} ${CFLAGS} -c ${srcdir}/setpag.c
+
+picobj: afssyscalls.h
+	mkdir -p picobj
+	cp ${srcdir}/afssyscalls.h picobj/afssyscalls.h
+
+picobj/glue.o: picobj glue.c afssyscalls.h
+	rm -f picobj/glue.c
+	cp ${srcdir}/glue.c picobj/glue.c
+	cd picobj && ${CCOBJ} ${CFLAGS} ${SHLIB_CFLAGS} -c glue.c
+
+picobj/setpag.o: picobj setpag.c afssyscalls.h
+	rm -f picobj/setpag.c
+	cp ${srcdir}/setpag.c picobj/setpag.c
+	cd picobj && ${CCOBJ} ${CFLAGS} ${SHLIB_CFLAGS} -c setpag.c
 
 rmtsysnet.o rmtsysc.o rmtsyss.o rmtsysd.o: rmtsys.h
 rmtsysd: AFS_component_version_number.o afs.exp afsl.exp
@@ -128,6 +173,12 @@ xfsinode: xfsinode.c  AFS_component_version_number.c
 		sgi_62 | sgi_64 ) \
 		$(CC) -o xfsinode ${CFLAGS} ${srcdir}/xfsinode.c ${LIBS}
 	esac
+
+${TOP_LIBDIR}/${LIBAFSSETPAG}: ${LIBAFSSETPAG}
+	${INSTALL} ${LIBAFSSETPAG} ${TOP_LIBDIR}/${LIBAFSSETPAG}
+	-ln -f -s ${LIBAFSSETPAG} ${TOP_LIBDIR}/libafssetpag.${SHLIB_SUFFIX}
+	-ln -f -s ${LIBAFSSETPAG} ${TOP_LIBDIR}/libafssetpag.${SHLIB_SUFFIX}.${LIBAFSSETPAGMAJOR}
+ 
 
 afs.exp: ${srcdir}/afs4.exp ${srcdir}/afs5.exp
 	case ${SYS_NAME} in \
@@ -198,6 +249,7 @@ depinstall: \
 
 install: \
 	${DESTDIR}${libdir}/afs/libsys.a \
+	${DESTDIR}${libdir}/${LIBAFSSETPAG} \
 	${DESTDIR}${sbindir}/rmtsysd \
 	${DESTDIR}${includedir}/afs/afssyscalls.h \
 	${DESTDIR}${bindir}/pagsh \
@@ -207,6 +259,13 @@ install: \
 
 ${DESTDIR}${libdir}/afs/libsys.a: libsys.a
 	${INSTALL} $? $@
+
+${DESTDIR}${libdir}/${LIBAFSSETPAG}: ${LIBAFSSETPAG}
+	${INSTALL} ${LIBAFSSETPAG} ${DESTDIR}${libdir}/${LIBAFSSETPAG}
+	-ln -f -s ${LIBAFSSETPAG} \
+	    ${DESTDIR}${libdir}/libafssetpag.${SHLIB_SUFFIX}
+	-ln -f -s ${LIBAFSSETPAG} \
+	    ${DESTDIR}${libdir}/libafssetpag.${SHLIB_SUFFIX}.${LIBAFSSETPAGMAJOR}
 
 ${DESTDIR}${sbindir}/rmtsysd: rmtsysd
 	${INSTALL} -s $? $@
@@ -231,6 +290,7 @@ ${DESTDIR}${includedir}/afs/xfsattrs.h: xfsattrs.h
 
 dest: \
 	${DEST}/lib/afs/libsys.a \
+	${TOP_LIBDIR}/${LIBAFSSETPAG} \
 	${DEST}/etc/rmtsysd \
 	${DEST}/bin/pagsh \
 	${DEST}/bin/pagsh.krb \
@@ -271,4 +331,5 @@ clean:
 	$(RM) -f *.o libsys.a xfsinode iinc idec icreate iopen istat core \
 	rmtsysc rmtsyss *.o rmtsys.ss.c rmtsys.cs.c rmtsys.xdr.c rmtsys.h \
 	rmtsysd AFS_component_version_number.c pagsh pagsh.krb \
-	afs.exp afsl.exp
+	afs.exp afsl.exp libafssetpag.*
+	$(RM) -rf picobj

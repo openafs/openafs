@@ -59,7 +59,6 @@ static void check_iops(int index, char *fun, char *file, int line);
 #pragma weak xiinc = iinc
 #pragma weak xidec = idec
 #pragma weak xiopen = iopen
-#pragma weak xlsetpag = lsetpag
 #pragma weak xlpioctl = lpioctl
 #ifdef notdef
 #pragma weak xiread = iread
@@ -206,12 +205,6 @@ iwrite(int dev, int inode, int inode_p1, unsigned int offset, char *cbuf,
 #endif /* notdef */
 
 int
-lsetpag(void)
-{
-    return (syscall(AFS_SETPAG));
-}
-
-int
 lpioctl(char *path, int cmd, char *cmarg, int follow)
 {
     return (syscall(AFS_PIOCTL, path, cmd, cmarg, follow));
@@ -340,49 +333,6 @@ int ioctl_afs_syscall(long syscall, long param1, long param2, long param3,
   return 0;
 }
 #endif
-#if defined(AFS_LINUX20_ENV)
-int proc_afs_syscall(long syscall, long param1, long param2, long param3, 
-		     long param4, int *rval) {
-  struct afsprocdata syscall_data;
-  int fd = open(PROC_SYSCALL_FNAME, O_RDWR);
-  if(fd < 0)
-      fd = open(PROC_SYSCALL_ARLA_FNAME, O_RDWR);
-  if(fd < 0)
-    return -1;
-
-  syscall_data.syscall = syscall;
-  syscall_data.param1 = param1;
-  syscall_data.param2 = param2;
-  syscall_data.param3 = param3;
-  syscall_data.param4 = param4;
-
-  *rval = ioctl(fd, VIOC_SYSCALL, &syscall_data);
-
-  close(fd);
-
-  return 0;
-}
-#endif
-
-int
-lsetpag(void)
-{
-    int errcode, rval;
-
-#if defined(AFS_LINUX20_ENV)
-    rval = proc_afs_syscall(AFSCALL_SETPAG,0,0,0,0,&errcode);
-    
-    if(rval)
-      errcode = syscall(AFS_SYSCALL, AFSCALL_SETPAG);
-#elif defined(AFS_DARWIN80_ENV)
-    if (ioctl_afs_syscall(AFSCALL_SETPAG,0,0,0,0,0,0,&errcode))
-        errcode=ENOSYS;
-#else
-    errcode = syscall(AFS_SYSCALL, AFSCALL_SETPAG);
-#endif
-    
-    return (errcode);
-}
 
 int
 lpioctl(char *path, int cmd, char *cmarg, int follow)

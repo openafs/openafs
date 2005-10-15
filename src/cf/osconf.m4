@@ -402,6 +402,7 @@ case $AFS_SYSNAME in
 		LEX="lex -l"
 		REGEX_OBJ="regex.o"
 		XCFLAGS="-traditional-cpp"
+		SHLIB_LINKER="${MT_CC} -dynamiclib"
 		;;
 
 	ppc_darwin_13)
@@ -410,6 +411,7 @@ case $AFS_SYSNAME in
 		LWP_OPTMZ="-O2"
 		REGEX_OBJ="regex.o"
 		XCFLAGS="-no-cpp-precomp"
+		SHLIB_LINKER="${MT_CC} -dynamiclib"
 		;;
 
 	ppc_darwin_14)
@@ -418,6 +420,7 @@ case $AFS_SYSNAME in
 		LWP_OPTMZ="-O2"
 		REGEX_OBJ="regex.o"
 		XCFLAGS="-no-cpp-precomp"
+		SHLIB_LINKER="${MT_CC} -dynamiclib"
 		;;
 
 	ppc_darwin_60)
@@ -427,6 +430,7 @@ case $AFS_SYSNAME in
 		REGEX_OBJ="regex.o"
 		XCFLAGS="-no-cpp-precomp"
 		TXLIBS="-lncurses"
+		SHLIB_LINKER="${MT_CC} -dynamiclib"
 		;;
 
 	ppc_darwin_70)
@@ -440,6 +444,7 @@ case $AFS_SYSNAME in
 		XCFLAGS="-no-cpp-precomp"
 		TXLIBS="-lncurses"
 		EXTRA_VLIBOBJS="fstab.o"
+		SHLIB_LINKER="${MT_CC} -dynamiclib"
 		;;
 
 	*_darwin_80)
@@ -453,6 +458,7 @@ case $AFS_SYSNAME in
 		XCFLAGS="-no-cpp-precomp"
 		TXLIBS="-lncurses"
 		EXTRA_VLIBOBJS="fstab.o"
+		SHLIB_LINKER="${MT_CC} -dynamiclib"
 		;;
 
 	ppc_linux*)

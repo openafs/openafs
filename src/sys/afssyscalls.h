@@ -39,6 +39,12 @@ extern FILE *inode_debug_log;
 #define AFS_DEBUG_IOPS_LOG(F)
 #endif
 
+/* Glue layer. */
+#ifdef AFS_LINUX20_ENV
+int proc_afs_syscall(long syscall, long param1, long param2, long param3, 
+		     long param4, int *rval);
+#endif
+
 /* Declarations for inode system calls. */
 #ifdef AFS_SGI_XFS_IOPS_ENV
 extern uint64_t icreatename64(int dev, char *partname, int p0, int p1, int p2,
