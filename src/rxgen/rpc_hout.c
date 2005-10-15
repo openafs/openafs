@@ -270,7 +270,8 @@ psprocdef(definition * defp)
 	psproc1(defp, 0, "int", "", 0xFFFFFFFF);
     }
 
-    psproc1(defp, 1, "afs_int32", "S", 0xFFFFFFFF);
+    if (*ServerPrefix)
+	psproc1(defp, 1, "afs_int32", ServerPrefix, 0xFFFFFFFF);
 }
 
 
