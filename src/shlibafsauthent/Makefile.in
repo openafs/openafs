@@ -75,7 +75,9 @@ SYSOBJS = \
 	rmtsys.xdr.o \
 	rmtsys.cs.o \
 	afssyscalls.o \
-	rmtsysnet.o
+	rmtsysnet.o \
+	glue.o \
+	setpag.o
 
 PTSERVEROBJS = \
 	ptclient.o \
@@ -258,6 +260,12 @@ afssyscalls.o: ${SYS}/afssyscalls.c
 	${CCRULE}
 
 rmtsysnet.o: ${SYS}/rmtsysnet.c
+	${CCRULE}
+
+glue.o: ${SYS}/glue.c
+	${CCRULE}
+
+setpag.o: ${SYS}/setpag.c
 	${CCRULE}
 
 clean:
