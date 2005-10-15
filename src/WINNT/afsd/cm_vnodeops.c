@@ -4276,6 +4276,7 @@ void cm_CheckLocks()
     }
 
     lock_ReleaseWrite(&cm_scacheLock);
+    osi_Log1(afsd_logp, "cm_CheckLocks completes lock check cycle %d", cm_lockRefreshCycle);
 }
 
 /* NOT called with scp->mx held. */
