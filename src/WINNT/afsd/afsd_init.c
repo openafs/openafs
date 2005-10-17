@@ -32,7 +32,6 @@
 #include "cm_rpc.h"
 #include "lanahelper.h"
 #include <strsafe.h>
-#include "afsicf.h"
 #include "cm_memmap.h"
 
 extern int RXAFSCB_ExecuteRequest(struct rx_call *z_call);
@@ -1065,20 +1064,6 @@ int afsd_InitCM(char **reasonP)
     cm_initParams.setTime = 0;
     cm_initParams.memCache = 1;
 
-    /* Set RX parameters before initializing RX */
-    if ( rx_nojumbo ) {
-        rx_SetNoJumbo();
-        afsi_log("rx_SetNoJumbo successful");
-    }
-
-    if ( rx_mtu != -1 ) {
-        rx_SetMaxMTU(rx_mtu);
-        afsi_log("rx_SetMaxMTU %d successful", rx_mtu);
-    }
-
-    /* Open Microsoft Firewall to allow in port 7001 */
-    icf_CheckAndAddAFSPorts(AFS_PORTSET_CLIENT);
-
     /* Ensure the AFS Netbios Name is registered to allow loopback access */
     configureBackConnectionHostNames();
 
@@ -1109,6 +1094,17 @@ int afsd_InitCM(char **reasonP)
     afsi_log("cm_InitDNS %d", cm_dnsEnabled);
 #endif
 #endif
+
+    /* Set RX parameters before initializing RX */
+    if ( rx_nojumbo ) {
+        rx_SetNoJumbo();
+        afsi_log("rx_SetNoJumbo successful");
+    }
+
+    if ( rx_mtu != -1 ) {
+        rx_SetMaxMTU(rx_mtu);
+        afsi_log("rx_SetMaxMTU %d successful", rx_mtu);
+    }
 
     /* initialize RX, and tell it to listen to port 7001, which is used for
      * callback RPC messages.
