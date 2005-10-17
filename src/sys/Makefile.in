@@ -54,14 +54,14 @@ ${LIBAFSSETPAG}: ${SHLIBOBJS}
 	case ${SYS_NAME} in \
 	*_linux*) \
 	    ${SHLIB_LINKER} -Wl,-h,libafssetpag.so.${LIBAFSSETPAGMAJOR} \
-	        -o ${LIBAFSSETPAG} -Wl,--version-script=afssetpag.map \
+	        -o ${LIBAFSSETPAG} -Wl,--version-script=mapfile \
 	        ${SHLIBOBJS};; \
 	rs_aix4*) \
 	    ${SHLIB_LINKER} -o ${LIBAFSSETPAG} ${SHLIBOBJS} \
 	        -bE:afssetpag.exp;; \
 	sun*_5*) \
 	    ${SHLIB_LINKER} -h libafssetpag.so.${LIBAFSSETPAGMAJOR} \
-	        -Wl,-M afssetpag.map -o ${LIBAFSSETPAG} ${SHLIBOBJS};; \
+	        -o ${LIBAFSSETPAG} ${SHLIBOBJS};; \
 	*) \
 	    ${SHLIB_LINKER} -o ${LIBAFSSETPAG} ${SHLIBOBJS};; \
 	esac
