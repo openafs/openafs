@@ -24,6 +24,7 @@
 #include <rx/rx_prototypes.h>
 
 #include "afsd.h"
+#include "afsicf.h"
 
 long cm_daemonCheckInterval = 30;
 long cm_daemonTokenCheckInterval = 180;
@@ -113,6 +114,7 @@ void cm_Daemon(long parm)
     unsigned long code;
     struct hostent *thp;
     HMODULE hHookDll;
+    int firewallConfigured = 0;
 
     /* ping all file servers, up or down, with unauthenticated connection,
      * to find out whether we have all our callbacks from the server still.
@@ -142,9 +144,30 @@ void cm_Daemon(long parm)
     lastTokenCacheCheck = now - cm_daemonTokenCheckInterval/2 + (rand() % cm_daemonTokenCheckInterval);
 
     while (daemon_ShutdownFlag == 0) {
-        thrd_Sleep(30 * 1000);		/* sleep 30 seconds */
+	thrd_Sleep(30 * 1000);		/* sleep 30 seconds */
         if (daemon_ShutdownFlag == 1)
             return;
+
+	if (!firewallConfigured) {
+	    /* Open Microsoft Firewall to allow in port 7001 */
+	    switch (icf_CheckAndAddAFSPorts(AFS_PORTSET_CLIENT)) {
+	    case 0:
+		afsi_log("Windows Firewall Configuration succeeded");
+		firewallConfigured = 1;
+		break;
+	    case 1:
+		afsi_log("Invalid Windows Firewall Port Set");
+		break;
+	    case 2:
+		afsi_log("Unable to open Windows Firewall Profile");
+		break;
+	    case 3:
+		afsi_log("Unable to create/modify Windows Firewall Port entries");
+		break;
+	    default:
+		afsi_log("Unknown Windows Firewall Configuration error");
+	    }
+	}
 
         /* find out what time it is */
         now = osi_Time();
