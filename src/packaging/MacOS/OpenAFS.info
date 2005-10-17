@@ -1,5 +1,5 @@
 Title OpenAFS
-Version 1.4.0-rc7
+Version 1.4.0-rc8
 Description The OpenAFS distributed filesystem. This package installs an almost-ready-to-run client for OpenAFS. see http://www.openafs.org for more information.
 DefaultLocation /
 Diskname (null)
