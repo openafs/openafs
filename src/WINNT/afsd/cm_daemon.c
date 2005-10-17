@@ -100,6 +100,57 @@ void cm_QueueBKGRequest(cm_scache_t *scp, cm_bkgProc_t *procp, long p1, long p2,
     osi_Wakeup((long) &cm_bkgListp);
 }
 
+static int
+IsWindowsFirewallPresent(void)
+{
+    SC_HANDLE scm;
+    SC_HANDLE svc;
+    BOOLEAN flag;
+    BOOLEAN result = FALSE;
+    LPQUERY_SERVICE_CONFIG pConfig = NULL;
+    DWORD BufSize;
+    LONG status;
+
+    /* Open services manager */
+    scm = OpenSCManager(NULL, NULL, GENERIC_READ);
+    if (!scm) return FALSE;
+
+    /* Open Windows Firewall service */
+    svc = OpenService(scm, "SharedAccess", SERVICE_QUERY_CONFIG);
+    if (!svc)
+        goto close_scm;
+
+    /* Query Windows Firewall service config, first just to get buffer size */
+    /* Expected to fail, so don't test return value */
+    (void) QueryServiceConfig(svc, NULL, 0, &BufSize);
+    status = GetLastError();
+    if (status != ERROR_INSUFFICIENT_BUFFER)
+        goto close_svc;
+
+    /* Allocate buffer */
+    pConfig = (LPQUERY_SERVICE_CONFIG)GlobalAlloc(GMEM_FIXED,BufSize);
+    if (!pConfig)
+        goto close_svc;
+
+    /* Query Windows Firewall service config, this time for real */
+    flag = QueryServiceConfig(svc, pConfig, BufSize, &BufSize);
+    if (!flag)
+        goto free_pConfig;
+
+    /* Is it autostart? */
+    if (pConfig->dwStartType < SERVICE_DEMAND_START)
+        result = TRUE;
+
+  free_pConfig:
+    GlobalFree(pConfig);
+  close_svc:
+    CloseServiceHandle(svc);
+  close_scm:
+    CloseServiceHandle(scm);
+
+    return result;
+}
+
 /* periodic check daemon */
 void cm_Daemon(long parm)
 {
@@ -114,7 +165,7 @@ void cm_Daemon(long parm)
     unsigned long code;
     struct hostent *thp;
     HMODULE hHookDll;
-    int firewallConfigured = 0;
+    int configureFirewall = IsWindowsFirewallPresent();
 
     /* ping all file servers, up or down, with unauthenticated connection,
      * to find out whether we have all our callbacks from the server still.
@@ -148,12 +199,12 @@ void cm_Daemon(long parm)
         if (daemon_ShutdownFlag == 1)
             return;
 
-	if (!firewallConfigured) {
+	if (configureFirewall) {
 	    /* Open Microsoft Firewall to allow in port 7001 */
 	    switch (icf_CheckAndAddAFSPorts(AFS_PORTSET_CLIENT)) {
 	    case 0:
 		afsi_log("Windows Firewall Configuration succeeded");
-		firewallConfigured = 1;
+		configureFirewall = 0;
 		break;
 	    case 1:
 		afsi_log("Invalid Windows Firewall Port Set");
