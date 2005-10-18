@@ -13,6 +13,7 @@
 #ifndef DJGPP
 #include <windows.h>
 #include <winsock2.h>
+#include <iphlpapi.h>
 #else
 #include <netdb.h>
 #endif /* !DJGPP */
@@ -39,6 +40,22 @@ cm_bkgRequest_t *cm_bkgListp;		/* first elt in the list of requests */
 cm_bkgRequest_t *cm_bkgListEndp;	/* last elt in the list of requests */
 
 static int daemon_ShutdownFlag = 0;
+
+#ifndef DJGPP
+void cm_IpAddrDaemon(long parm)
+{
+    rx_StartClientThread();
+
+    while (daemon_ShutdownFlag == 0) {
+	DWORD Result = NotifyAddrChange(NULL,NULL);
+	if (Result == NO_ERROR && daemon_ShutdownFlag == 0) {
+	    osi_Log0(afsd_logp, "cm_IpAddrDaemon CheckDownServers");
+	    Sleep(2500);
+            cm_CheckServers(CM_FLAG_CHECKDOWNSERVERS, NULL);
+	}
+    }
+}
+#endif
 
 void cm_BkgDaemon(long parm)
 {
@@ -226,33 +243,41 @@ void cm_Daemon(long parm)
         /* check down servers */
         if (now > lastDownServerCheck + cm_daemonCheckInterval) {
             lastDownServerCheck = now;
+	    osi_Log0(afsd_logp, "cm_Daemon CheckDownServers");
             cm_CheckServers(CM_FLAG_CHECKDOWNSERVERS, NULL);
+	    now = osi_Time();
         }
 
         /* check up servers */
         if (now > lastUpServerCheck + 3600) {
             lastUpServerCheck = now;
+	    osi_Log0(afsd_logp, "cm_Daemon CheckUpServers");
             cm_CheckServers(CM_FLAG_CHECKUPSERVERS, NULL);
+	    now = osi_Time();
         }
 
         if (now > lastVolCheck + 3600) {
             lastVolCheck = now;
             cm_CheckVolumes();
+	    now = osi_Time();
         }
 
         if (now > lastCBExpirationCheck + 60) {
             lastCBExpirationCheck = now;
             cm_CheckCBExpiration();
+	    now = osi_Time();
         }
 
         if (now > lastLockCheck + 60) {
             lastLockCheck = now;
             cm_CheckLocks();
+	    now = osi_Time();
         }
 
         if (now > lastTokenCacheCheck + cm_daemonTokenCheckInterval) {
             lastTokenCacheCheck = now;
             cm_CheckTokenCache(now);
+	    now = osi_Time();
         }
 
         /* allow an exit to be called prior to stopping the service */
@@ -291,14 +316,22 @@ void cm_InitDaemon(int nDaemons)
     if (osi_Once(&once)) {
         lock_InitializeRWLock(&cm_daemonLock, "cm_daemonLock");
         osi_EndOnce(&once);
-                
+
+#ifndef DJGPP
+	/* creating IP Address Change monitor daemon */
+        phandle = thrd_Create((SecurityAttrib) 0, 0,
+                               (ThreadFunc) cm_IpAddrDaemon, 0, 0, &pid, "cm_IpAddrDaemon");
+        osi_assert(phandle != NULL);
+        thrd_CloseHandle(phandle);
+#endif /* DJGPP */
+
         /* creating pinging daemon */
         phandle = thrd_Create((SecurityAttrib) 0, 0,
                                (ThreadFunc) cm_Daemon, 0, 0, &pid, "cm_Daemon");
         osi_assert(phandle != NULL);
-
         thrd_CloseHandle(phandle);
-        for(i=0; i < nDaemons; i++) {
+
+	for(i=0; i < nDaemons; i++) {
             phandle = thrd_Create((SecurityAttrib) 0, 0,
                                    (ThreadFunc) cm_BkgDaemon, 0, 0, &pid,
                                    "cm_BkgDaemon");
