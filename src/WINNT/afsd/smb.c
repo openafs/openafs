@@ -2439,7 +2439,7 @@ void smb_MapNTError(long code, unsigned long *NTStatusp)
     else if (code == CM_ERROR_ALLBUSY) {
         NTStatus = 0xC00000BFL; /* Network Busy */
     } 
-    else if (code == CM_ERROR_ALLOFFLINE) {
+    else if (code == CM_ERROR_ALLOFFLINE || code == CM_ERROR_ALLDOWN) {
         NTStatus = 0xC0000350L; /* Remote Host Down */
     } 
 #else
@@ -2447,7 +2447,8 @@ void smb_MapNTError(long code, unsigned long *NTStatusp)
      * the AFS Client Service is busy or down.  
      */
     else if (code == CM_ERROR_ALLBUSY || 
-             code == CM_ERROR_ALLOFFLINE) {
+             code == CM_ERROR_ALLOFFLINE ||
+	     code == CM_ERROR_ALLDOWN) {
         NTStatus = 0xC00000BEL; /* Bad Network Path */
     }
 #endif
