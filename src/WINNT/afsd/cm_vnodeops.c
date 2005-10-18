@@ -300,8 +300,19 @@ long cm_CheckOpen(cm_scache_t *scp, int openMode, int trunc, cm_user_t *userp,
             if (code == CM_ERROR_NOACCESS &&
                 !(rights & PRSFS_WRITE))
                 code = 0;
-            else
-                code = CM_ERROR_SHARING_VIOLATION;
+            else {
+		switch (code) {
+		case CM_ERROR_ALLOFFLINE:
+		case CM_ERROR_ALLDOWN:
+		case CM_ERROR_ALLBUSY:
+		case CM_ERROR_TIMEDOUT:
+		case CM_ERROR_RETRY:
+		case CM_ERROR_WOULDBLOCK:
+		    break;
+		default:
+		    code = CM_ERROR_SHARING_VIOLATION;
+		}
+	    }
         }
     }
 
@@ -377,8 +388,19 @@ long cm_CheckNTOpen(cm_scache_t *scp, unsigned int desiredAccess,
             if (code == CM_ERROR_NOACCESS &&
                 !(rights & PRSFS_WRITE))
                 code = 0;
-            else
-                code = CM_ERROR_SHARING_VIOLATION;
+            else {
+		switch (code) {
+		case CM_ERROR_ALLOFFLINE:
+		case CM_ERROR_ALLDOWN:
+		case CM_ERROR_ALLBUSY:
+		case CM_ERROR_TIMEDOUT:
+		case CM_ERROR_RETRY:
+		case CM_ERROR_WOULDBLOCK:
+		    break;
+		default:
+		    code = CM_ERROR_SHARING_VIOLATION;
+		}
+	    }
         }
     }
 
