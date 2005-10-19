@@ -1,3 +1,23 @@
+Since 1.4.0 rc8: 1.4.0 final tagged (20 Oct 2005); released (31 Oct 2005)
+ * Allow the AFS Client Service to set the firewall configuration by 
+   retrying until after Windows determines the boot period is over.
+
+ * Do not attempt to configure the firewall on Windows 2000, XP pre-SP2,
+   or 2003 pre-SP1
+
+ * Add support for universal error codes.
+
+ * Detect IP address changes from within the AFS Client Service for the
+   purpose of checking down servers sooner
+
+ * If the file server or vldb server report RXKADUNKNOWNKEY, return 
+   SEC_E_NO_KERB_KEY to Windows.   This provides an indication to the 
+   user that there is a Kerberos key problem.  Previously the user would
+   receive no feedback when there was something wrong.
+
+ * Fix the large integer library support to properly handle values greater
+   than 32-bits
+
 Since 1.4.0 rc7: 1.4.0 rc8 released (15 Oct 2005)
  * Updated CellServDB
 
