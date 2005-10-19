@@ -2465,7 +2465,9 @@ void smb_MapNTError(long code, unsigned long *NTStatusp)
         NTStatus = 0xC00000BEL; /* Bad Network Path */
     }
 #endif
-    else {
+    else if (code == RXKADUNKNOWNKEY) {
+	NTStatus = 0xC0000322L; /* Bad Kerberos key */
+    } else {
         NTStatus = 0xC0982001L;	/* SMB non-specific error */
     }
 
