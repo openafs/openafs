@@ -1,0 +1,178 @@
+                  OpenAFS Release Notes - Version 1.4.0
+     _________________________________________________________________
+All systems: Major bugfixes, new functionality.
+     _________________________________________________________________
+
+Changes under UNIX (tm) and *nix Operating Systems
+
+* Increased Performance and Stability
+  - OpenAFS 1.4 servers now use POSIX threads on platforms where they
+    are available, and the Rx RPC subsystem now makes more efficient use
+    of threads, resulting in increased performance over the 1.2 release.
+
+  - Cache chunk locking has been refined
+
+  - The OpenAFS 1.4 client now uses the system vnode pool on Linux and
+    MacOS X, leading to improved stability, easier portability to new
+    operating system versions, and more efficient use of resources.
+
+  - The OpenAFS 1.4 client now supports files larger than 2GB on UNIX
+    operating system variants which support large files (large file 
+    support requires a large-file-enabled OpenAFS fileserver running
+    on an operating system with large file support).
+
+  - NTP, rlogind, rsh and other unnecessary and potentially insecure
+    components have been removed.
+
+* Increased Server Efficiency in Handling Mobile Clients
+  - Fileservers are now able to more efficiently probe nonresponsive
+    clients, reducing the time required for the server to determine
+    that a client is no longer on the network.
+
+  - OpenAFS 1.4 fileservers are now capable of notifying clients in
+    the background after a volume is moved or restored, freeing the
+    server to handle other administrative operations such as further
+    volume moves or restores.  This improves the speed and reliability
+    of volume maintenance operations.
+
+* Improved Administration
+  - All servers now include audit logging functionality and are capable
+    of loging directly to named pipes.  These features can be used to
+    improve the capabilities of existing online and offline server
+    monitoring and debugging tools.
+
+  - The OpenAFS 1.4 protection server allows groups to be members of
+    other groups, which introduces new levels of power and flexibility
+    to AFS's security and access control features.
+
+  - OpenAFS 1.4 includes additional tools for integration with existing
+    Kerberos 5 infrastructure, including the 'aklog' program and support
+    for larger tickets and additional encryption types.
+
+* Improved Build and Installation
+  - Function prototypes have been added for improved compile-time type
+    checking.
+
+  - The default settings for client cache manager tuning parameters,
+    have been updated to provide better performance in modern network
+    computing environments.
+
+* Other New Features
+  - The new 'vos copy' command allows an administrator to create a new
+    volume by making a direct copy of an existing one, without having
+    to copy the contents of the volume to his workstation and back.
+
+  - The new 'vos convertROtoRW' command allows an administrator to
+    "promote" an existing read-only volume replica to replace a
+    read/write volume located on a failed fileserver.
+
+  - The new '-vattachpar' fileserver option allows the fileserver to
+    attach volumes from multiple partitions in parallel, improving
+    fileserver startup time.
+
+
+
+
+ 
+Changes under Microsoft Windows (2000, XP, and 2003)
+
+Improved Performance
+Performance has been enhanced by support for a persistent cache. The
+default cache size is now 96 Megabytes with 10,000 cache entries.  The
+maximum cache size has been extended to 1.2 Gigabytes. Overall, the 1.4
+release is between 30% and 150% faster than the 1.2 release, depending
+on the mode of operation.
+
+Improved User Experience
+Integration into the Windows environment has been significantly enhanced
+with the addition of support for browsing of AFS servers, an AFS context
+senstive popup menu, an improved Systray icon, and enhancements to both
+the GUI and command line programs.
+
+Increased Security
+All of the known security problems present in 1.2.10 have been fixed.
+Compatibility with the Cisco IPSec VPN client has been added, and the
+AFS Client now communicates with Microsoft's integrated firewall to open
+ports as needed, allowing receipt of callback messages from the server
+without manual configuration.
+
+Enhanced Integration in Heterogeneous Environments
+AFS UNC paths are now supported, eliminating reliance on mapped drive
+letters and allowing for true worldwide path usage and cross platform
+filesystem links. By default, filenames beginning with a period are no
+longer displayed (reducing user confusion when viewing home directories
+shared by Unix environments). Also, the AFS Client now works correctly
+at sites using cross-realm trusts between a Unix based Kerberos realm
+(MIT/Heimdal) and multidomain Windows Forests. Multihomed file servers
+are now supported for use in complex network environments, and automatic
+failover to available server volumes added providing greater fault
+tolerance for large scale installations and mission critical applications.
+ 
+Simplified Installation
+Support for AFS records in DNS has been added, so that the locations of
+a site's AFS servers no longer need be specified in CellServDB files on
+individual machines. This means that users can access new cells without
+reconfiguring the client, and that changes in AFS server configurations
+can be propogated transparently to clients without touching individual
+workstations, and installation no longer requires inclusion of a site
+specific server list in a local file.
+ 
+Addition of Freelance Mode
+Freelance Mode allows users to start AFS on boot without access to their
+home AFS cell. The volume loaded at AFS Client is maintained locally in
+the registry without access to a cell. Whenever a user attempts to
+contact an AFS path in a previously unknown cell, mountpoints and
+symlinks are dynamically created and stored in the registry.
+ 
+Improved Network Support for Mobile Users
+Support for network events and power management have been added and
+enhanced. A Microsoft Loopback Adapter is now part of the installation,
+resulting in improved stability for users of dynamically configured
+networking devices, and allowing users to specify which network adapter
+to use with AFS. The AFS Client is aware of the current state of the
+network connection, and is able to start itself and prompt the user for
+tokens as needed. Laptop users can thus now move about freely or change
+network interfaces without having to reboot or restart the AFS service,
+and the "hangs" associated with brief interruptions in network
+connections eliminated.
+ 
+Enhanced Stability
+Support for SMB/CIFS messaging has been extended, reducing hangs and
+stalls in file transfers. File timestamps are reported entirely in UTC
+resulting in improved stability in backup and syncing operations. The
+Client Service now checks the versions of DLLs on startup to verify that
+the code is from the same version, resulting in fewer problems after
+upgrades. When an exception does occur, minidumps are created locally,
+and can be created as needed via the command line. Also, although the
+AFS client service provides crash reporting, the 1.4 release can also be
+configured through an Active Directory policy to report crashes within
+the domain for machines running XP and above.
+
+Enhanced Central Administration
+An AFS Client Admins group is now created by the AFS installation,
+allowing for the first time control over who can alter the configuration
+of the AFS Client Service. All configuration data except the contents of
+the CellServDB file (which is no longer required for access to sites
+supporting AFS service records in DNS) are now stored in the Registry,
+and are thus configurable via Active Directory Group Policies. An MSI is
+also available for those who wish to deploy AFS or customize existing
+installations for their users. Using integrated login, the network
+provider can be configured to have different behavior depending on the
+domain that the user logs into.
+ 
+
+
+Supported Platforms: (! == new)
+AIX    4.2, 4.3, 5.1!, 5,2!, 5.3!
+HP-UX  11i (pa-risc), 11.22 (pa-risc), 11.23 (ia64)!
+Solaris 7, 8, 9, 10!
+MacOS X 10.3
+Microsoft Windows 2000, XP!, 2003!, 2003 R2!
+Linux 2.4 kernel: x86, x86-uml, amd64, ia64, pa-risc!, ppc, ppc64!,
+                  s390, s390x,  sparc, sparc64
+Linux 2.6 kernel: x86!, x86-uml!, amd64!, ia64!, ppc!, ppc64!,
+                  s390x!, sparc64!
+OpenBSD (x86) 3.3, 3.4, 3.5, 3.6, 3.7, 3.8
+NetBSD (x86; server only) 1.5, 1.6, 2.0, 2.1, 3.0
+FreeBSD (x86; server only) 4.7, 5.3, 6.0-beta
+SGI Irix 6.5
