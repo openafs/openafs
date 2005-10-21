@@ -52,8 +52,12 @@ process.o	: process.s process.i386.s process.c
 		/lib/cpp -P -I${TOP_INCDIR} ${srcdir}/process.s390x.s >process.ss; \
 		${AS} -ahlns process.ss -o process.o >process.lst; \
 		$(RM) process.ss ;; \
-	*_darwin* ) \
+	ppc_darwin* ) \
 		$(CC) ${LWP_DBG} ${LWP_OPTMZ} -c ${XCFLAGS} -I${TOP_INCDIR} ${srcdir}/process.s;; \
+	x86_darwin*) \
+		/usr/bin/cpp -P -I${TOP_INCDIR} -I${srcdir} ${srcdir}/process.i386.s process.ss; \
+		${AS} process.ss -o process.o; \
+		$(RM) process.ss ;; \
 	i386_*bsd*) \
 		cp ${srcdir}/process.i386.s process.S ; \
 		${CCOBJ} -DIGNORE_STDS_H -E -I${srcdir} -I${TOP_INCDIR} process.S > process.ss ; \
