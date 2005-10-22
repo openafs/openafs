@@ -168,6 +168,11 @@ else
 fi
 
 rm -rf pkgroot pkgres
+mkdir dmg
+mv OpenAFS.pkg dmg
+rm -rf OpenAFS.dmg
+hdiutil create -srcfolder dmg -volname OpenAFS -anyowners OpenAFS.dmg
+rm -rf dmg
 # Unfortunately, sudo sets $USER to root, so I can't chown the 
 #.pkg dir back to myself
 #chown -R $USER OpenAFS.pkg
