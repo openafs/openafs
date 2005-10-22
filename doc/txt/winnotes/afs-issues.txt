@@ -1,4 +1,4 @@
-This file is a rough list of known issues with the 1.4.0000 release of OpenAFS 
+This file is a rough list of known issues with the 1.4.0050 release of OpenAFS 
 on Windows.  This list is not complete.  There are probably other issues which 
 can be found in the RT database or on the mailing list.
 
@@ -167,3 +167,7 @@ List of unfunded projects:
   22. Add support for storing Windows ACLs on files
   23. Remove submount creation as a side effect of drive creation
   24. Finish conversion from string.h to strsafe.h for VS.NET 2005
+  25. Implement RX Connection Pools in the Cache Manager allowing more than
+      four simultaneous requests to a single server to be processed at a time 
+      for a single user
+  

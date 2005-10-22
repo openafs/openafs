@@ -9,14 +9,17 @@ Post 1.4.0 revisions:
    Shared file access modes, they require the ability to obtain locks in
    order to access files.
 
+ * Implement error translation functions to convert Universal Error Codes
+   output by modern servers to local errno and winsock error values.
+   This fixes the error message problems using pioctl() calls from fs.exe 
+   and the AFS Shell Extension.
+
 Since 1.4.0 rc8: 1.4.0 final tagged (20 Oct 2005); released (31 Oct 2005)
  * Allow the AFS Client Service to set the firewall configuration by
    retrying until after Windows determines the boot period is over.
 
  * Do not attempt to configure the firewall on Windows 2000, XP pre-SP2,
    or 2003 pre-SP1
-
- * Add support for universal error codes.
 
  * Detect IP address changes from within the AFS Client Service for the
    purpose of checking down servers sooner
