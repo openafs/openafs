@@ -2938,6 +2938,66 @@ UV_XListOneVolume(struct rx_connection *server, afs_int32 a_partID,
 
 }				/*UV_XListOneVolume */
 
+/*------------------------------------------------------------------------
+ * EXPORTED UV_ListOneVolume
+ *
+ * Description:
+ *	List the volume information for a volume on a particular File
+ *	Server and partition.
+ *
+ * Arguments:
+ *	server	   : a handle to the server where the volume resides.
+ *	a_partID	   : Partition for which we want the extended
+ *				volume info.
+ *	a_volID		   : Volume ID for which we want the info.
+ *	a_resultPP	   : Ptr to the address of the area containing
+ *				the returned volume info.
+ *
+ * Returns:
+ *	0 on success,
+ *	Otherise, the return value of AFSVolXListOneVolume.
+ *
+ * Side Effects:
+ *	As advertised.
+ *------------------------------------------------------------------------*/
+
+int UV_ListOneVolume(struct rx_connection *server, afs_int32 a_partID,
+		  afs_int32 a_volID, struct volintInfo **a_resultPP,
+		  afs_status_p st)
+{
+	int rc = 0;
+    afs_status_t tst = 0;
+    volEntries volumeInfo;	/*Area for returned info */
+
+    /*
+     * Set the area we're in which we are returning
+     * the info.  Setting the val field to a null pointer tells the stub
+     * to allocate space for us.
+     */
+    *a_resultPP = (volintInfo *) 0;
+    volumeInfo.volEntries_val = (volintInfo *) 0;
+    volumeInfo.volEntries_len = 0;
+
+    tst = AFSVolListOneVolume(server, a_partID, a_volID, &volumeInfo);
+
+    if (tst) {
+	goto fail_UV_ListOneVolume;
+    } else {
+	/*
+	 * We got the info; pull out the pointer to where the results lie.
+	 */
+	*a_resultPP = volumeInfo.volEntries_val;
+    }
+    rc = 1;
+
+  fail_UV_ListOneVolume:
+
+    if (st != NULL) {
+	*st = tst;
+    }
+    return rc;
+}/*UV_ListOneVolume*/
+
 /*sync vldb with all the entries on <myQueue> on <aserver> and <apart>*/
 static afs_int32
 ProcessEntries(afs_cell_handle_p cellHandle, struct qHead *myQueue,

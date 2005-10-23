@@ -692,6 +692,7 @@ PrintHeader(register Volume * vp)
 	 V_dayUse(vp), V_weekUse(vp)[0], V_weekUse(vp)[1], V_weekUse(vp)[2],
 	 V_weekUse(vp)[3], V_weekUse(vp)[4], V_weekUse(vp)[5],
 	 V_weekUse(vp)[6], date(V_dayUseDate(vp)));
+    printf("volUpdateCounter = %u\n", V_volUpCounter(vp));
 }
 
 /* GetFileInfo

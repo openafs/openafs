@@ -248,7 +248,8 @@ typedef struct VolumeDiskData {
 				 * of measurement; week[6] is 7 days ago */
     Date dayUseDate;		/* Date the dayUse statistics refer to; the week use stats
 				 * are the preceding 7 days */
-    int reserved3[11];		/* Other stats here */
+    unsigned int volUpdateCounter; /*incremented at every update of volume*/
+    int reserved3[10];		/* Other stats here */
 
     /* Server supplied dates */
     Date creationDate;		/* Creation date for a read/write
@@ -402,6 +403,7 @@ struct volHeader {
 #define V_stat_dirSameAuthor(vp, idx)  (((vp)->header->diskstuff.stat_dirSameAuthor)[idx])
 #define V_stat_dirDiffAuthor(vp, idx)  (((vp)->header->diskstuff.stat_dirDiffAuthor)[idx])
 #endif /* OPENAFS_VOL_STATS */
+#define V_volUpCounter(vp)		((vp)->header->diskstuff.volUpdateCounter)
 
 /* File offset computations.  The offset values in the volume header are
    computed with these macros -- when the file is written only!! */

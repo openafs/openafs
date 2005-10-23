@@ -1715,6 +1715,10 @@ SetFields(as)
 	/* -clearuse */
 	info.dayUse = 0;
     }
+    if (as->parms[3].items) {
+	/* -clearVolUpCounter */
+	info.spare2 = 0;
+    }
     code = UV_SetVolumeInfo(aserver, apart, volid, &info);
     if (code)
 	fprintf(STDERR,
@@ -5895,6 +5899,7 @@ main(argc, argv)
     cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "volume name or ID");
     cmd_AddParm(ts, "-maxquota", CMD_SINGLE, CMD_OPTIONAL, "quota (KB)");
     cmd_AddParm(ts, "-clearuse", CMD_FLAG, CMD_OPTIONAL, "clear dayUse");
+    cmd_AddParm(ts, "-clearVolUpCounter", CMD_FLAG, CMD_OPTIONAL, "clear volUpdateCounter");
     COMMONPARMS;
 
     ts = cmd_CreateSyntax("offline", volOffline, 0, (char *)CMD_HIDDEN);

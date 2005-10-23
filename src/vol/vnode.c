@@ -15,6 +15,7 @@
  */
 #include <afsconfig.h>
 #include <afs/param.h>
+#define MAXINT     (~(1<<((sizeof(int)*8)-1)))
 
 RCSID
     ("$Header$");
@@ -719,7 +720,11 @@ VPutVnode_r(Error * ec, register Vnode * vnp)
 		vnp->disk.serverModifyTime = now;
 	    }
 	    if (vnp->changed_newTime)
+	    {
 		V_updateDate(vp) = vp->updateTime = now;
+		if(V_volUpCounter(vp)<MAXINT)
+			V_volUpCounter(vp)++;
+	    }
 
 	    /* The vnode has been changed. Write it out to disk */
 	    if (!V_inUse(vp)) {

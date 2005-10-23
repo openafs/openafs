@@ -1544,6 +1544,8 @@ VolSetInfo(struct rx_call *acid, afs_int32 atrans,
 	td->creationDate = astatus->creationDate;
     if (astatus->updateDate != -1)
 	td->updateDate = astatus->updateDate;
+    if (astatus->spare2 != -1)
+	td->volUpdateCounter = (unsigned int)astatus->spare2;
     VUpdateVolume(&error, tv);
     tt->rxCallPtr = (struct rx_call *)0;
     if (TRELE(tt))
@@ -1849,7 +1851,8 @@ VolListOneVolume(struct rx_call *acid, afs_int32 partid, afs_int32
 		(long)tv->header->diskstuff.weekUse[4] +
 		(long)tv->header->diskstuff.weekUse[5] +
 		(long)tv->header->diskstuff.weekUse[6];
-	    pntr->flags = pntr->spare2 = pntr->spare3 = (long)0;
+	    pntr->spare2 = V_volUpCounter(tv);
+	    pntr->flags = pntr->spare3 = (long)0;
 	    VDetachVolume(&error, tv);	/*free the volume */
 	    tv = (Volume *) 0;
 	    if (error) {
@@ -2224,7 +2227,8 @@ VolListVolumes(struct rx_call *acid, afs_int32 partid, afs_int32 flags,
 		(long)tv->header->diskstuff.weekUse[4] +
 		(long)tv->header->diskstuff.weekUse[5] +
 		(long)tv->header->diskstuff.weekUse[6];
-	    pntr->flags = pntr->spare2 = pntr->spare3 = (long)0;
+	    pntr->spare2 = V_volUpCounter(tv);
+	    pntr->flags = pntr->spare3 = (long)0;
 	    VDetachVolume(&error, tv);	/*free the volume */
 	    tv = (Volume *) 0;
 	    if (error) {

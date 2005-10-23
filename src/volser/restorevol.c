@@ -225,6 +225,7 @@ struct volumeHeader {
     int inService;
     int blessed;
     char message[1024];
+    afs_int32 volUpdateCounter;
 };
 
 afs_int32
@@ -350,6 +351,9 @@ ReadVolumeHeader(count)
 
 	case 'Z':
 	    vh.dayUse = ntohl(readvalue(4));
+	    break;
+	case 'V':
+            vh.volUpdateCounter = ntohl(readvalue(4));
 	    break;
 
 	default:

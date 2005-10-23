@@ -4404,7 +4404,9 @@ vos_VolumeQuotaChange(const void *cellHandle, const void *serverHandle,
 
     memset((void *)&tstatus, 0, sizeof(tstatus));
     tstatus.dayUse = -1;
+    tstatus.spare2 = -1;
     tstatus.maxquota = volumeQuota;
+
 
     tst =
 	AFSVolTransCreate(f_server->serv, volumeId, partition, ITBusy, &ttid);
@@ -4443,3 +4445,187 @@ vos_VolumeQuotaChange(const void *cellHandle, const void *serverHandle,
     }
     return rc;
 }
+/*
+ * vos_VolumeGet2 - get information about a particular volume.
+ *
+ * PARAMETERS
+ *
+ * IN cellHandle - a previously opened cellHandle that corresponds
+ * to the cell where the volume exists.
+ *
+ * IN serverHandle - a previously opened serverHandle that corresponds
+ * to the server where the volume exists.
+ *
+ * IN callBack - a call back function pointer that may be called to report
+ * status information.  Can be null.
+ *
+ * IN partition - the partition where the volume exists.
+ *
+ * IN volumeId - the volume id of the volume to be retrieved.
+ *
+ * OUT pinfo - upon successful completion, contains the information about the 
+ * specified volume.
+ *
+ * LOCKS
+ * 
+ * No locks are obtained or released by this function
+ *
+ * RETURN CODES
+ *
+ * Returns != 0 upon successful completion.
+ */
+
+int ADMINAPI
+vos_VolumeGet2(const void *cellHandle, const void *serverHandle,
+	      vos_MessageCallBack_t callBack, unsigned int partition,
+	      unsigned int volumeId, volintInfo* pinfo,
+	      afs_status_p st)
+{
+    int rc = 0;
+    afs_status_t tst = 0;
+    file_server_p f_server = (file_server_p) serverHandle;
+    volintInfo *pinfo_=0;
+
+    /*
+     * Validate arguments
+     */
+
+    if (!IsValidServerHandle(f_server, &tst)) {
+	goto fail_vos_VolumeGet2;
+    }
+
+    if (partition > VOLMAXPARTS) {
+	tst = ADMVOSPARTITIONIDTOOLARGE;
+	goto fail_vos_VolumeGet2;
+    }
+
+    if (pinfo == NULL) {
+	tst = ADMVOSVOLUMEPNULL;
+	goto fail_vos_VolumeGet2;
+    }
+
+    /*
+     * Retrieve the information for the volume
+     */
+
+    if (!UV_ListOneVolume(f_server->serv, partition, volumeId, &pinfo_,&tst)) {
+	goto fail_vos_VolumeGet2;
+    }
+
+
+    rc = 1;
+
+  fail_vos_VolumeGet2:
+
+    if (pinfo_ != NULL) {
+     memcpy(pinfo,pinfo_,sizeof(volintInfo));
+	free(pinfo_);
+    }
+
+    if (st != NULL) {
+	*st = tst;
+    }
+    return rc;
+}
+
+/*
+ * vos_ClearVolUpdateCounter - reset volUpdateCounter of a volume to zero
+ *
+ * PARAMETERS
+ *
+ * IN cellHandle - a previously opened cellHandle that corresponds
+ * to the cell where the volume exists.
+ *
+ * IN serverHandle - a previously opened serverHandle that corresponds
+ * to the server where the volume exists.
+ *
+ * IN partition - the partition where the volume exists.
+ *
+ * IN volumeId - the volume id of the volume to be retrieved.
+ *
+ * LOCKS
+ * 
+ * No locks are obtained or released by this function
+ *
+ * RETURN CODES
+ *
+ * Returns != 0 upon successful completion.
+ */
+
+int ADMINAPI
+vos_ClearVolUpdateCounter(const void *cellHandle,
+				  const void *serverHandle,
+				  unsigned int partition,
+				  unsigned int volumeId,
+				  afs_status_p st)
+{
+    int rc = 0;
+    afs_status_t tst = 0;
+    afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
+    file_server_p f_server = (file_server_p) serverHandle;
+    int ttid = 0;
+    int rcode = 0;
+    struct volintInfo tstatus;
+    int active_trans = 0;
+
+    /*
+     * Verify that the cellHandle is capable of making vos rpc's
+     */
+
+    if (!IsValidCellHandle(c_handle, &tst)) {
+	goto fail_vos_ClearVolUpdateCounter;
+    }
+
+    if (!IsValidServerHandle(f_server, &tst)) {
+	goto fail_vos_ClearVolUpdateCounter;
+    }
+
+    memset((void *)&tstatus, 0, sizeof(tstatus));
+    tstatus.maxquota = -1;
+    tstatus.dayUse = -1;
+    tstatus.creationDate = -1;
+    tstatus.updateDate = -1;
+    tstatus.flags = -1;
+    tstatus.spare0 = -1;
+    tstatus.spare1 = -1;
+    tstatus.spare2 = 0;
+    tstatus.spare3 = -1;
+    
+    tst =
+	AFSVolTransCreate(f_server->serv, volumeId, partition, ITBusy, &ttid);
+    if (tst) {
+	goto fail_vos_ClearVolUpdateCounter;
+    }
+    active_trans = 1;
+
+    tst = AFSVolSetInfo(f_server->serv, ttid, &tstatus);
+    if (tst) {
+	goto fail_vos_ClearVolUpdateCounter;
+    }
+    rc = 1;
+
+  fail_vos_ClearVolUpdateCounter:
+
+    if (active_trans) {
+	afs_status_t tst2 = 0;
+	tst2 = AFSVolEndTrans(f_server->serv, ttid, &rcode);
+	if (tst2) {
+	    if (tst == 0) {
+		tst = tst2;
+		rc = 0;
+	    }
+	}
+	if (rcode) {
+	    if (tst == 0) {
+		tst = rcode;
+		rc = 0;
+	    }
+	}
+    }
+
+    if (st != NULL) {
+	*st = tst;
+    }
+    return rc;
+}
+

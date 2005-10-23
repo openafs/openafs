@@ -13,6 +13,9 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#ifndef AFS_NT40_ENV
+#include <netdb.h>
+#endif
 
 RCSID
     ("$Header$");
@@ -1613,6 +1616,190 @@ DoVosVolumeQuotaChange(struct cmd_syndesc *as, char *arock)
     return 0;
 }
 
+/*
+ * Parse a server name/address and return the address in HOST BYTE order
+ */
+static afs_uint32
+GetServer(char *aname)
+{
+    register struct hostent *th;
+    afs_uint32 addr;
+    int b1, b2, b3, b4;
+    register afs_int32 code;
+    char hostname[MAXHOSTCHARS];
+
+    code = sscanf(aname, "%d.%d.%d.%d", &b1, &b2, &b3, &b4);
+    if (code == 4) {
+	addr = (b1 << 24) | (b2 << 16) | (b3 << 8) | b4;
+	addr = ntohl(addr);	/* convert to host order */
+    } else {
+	th = gethostbyname(aname);
+	if (!th)
+	    return 0;
+	memcpy(&addr, th->h_addr, sizeof(addr));
+    }
+
+    if (addr == htonl(0x7f000001)) {	/* local host */
+	code = gethostname(hostname, MAXHOSTCHARS);
+	if (code)
+	    return 0;
+	th = gethostbyname(hostname);	/* returns host byte order */
+	if (!th)
+	    return 0;
+	memcpy(&addr, th->h_addr, sizeof(addr));
+    }
+
+    return (addr);
+}
+
+static void
+Print_vos_volintInfo(afs_uint32 server, afs_uint32 partition, volintInfo* pinfo, const char *prefix)
+{
+    static afs_uint32 server_cache;
+    static int cache_valid = 0;
+    static char hostname[256], address[32];
+
+    if (!cache_valid || server != server_cache) {
+	struct in_addr s;
+
+	s.s_addr = server;
+	strcpy(hostname, hostutil_GetNameByINet(server));
+	strcpy(address, inet_ntoa(s));
+	server_cache = server;
+	cache_valid = 1;
+    }
+    
+    
+    printf("%sname\t\t%s\n",prefix, pinfo->name);
+    printf("%sid\t\t%lu\n",prefix, pinfo->volid);
+    printf("%sserv\t\t%s\t%s\n",prefix, address,hostname);
+    printf("%spart\t\t%u\n", prefix,partition);
+    
+    switch (pinfo->status) {
+    case 2: /* VOK */
+	printf("%sstatus\t\tOK\n",prefix);
+	break;
+    case 101: /* VBUSY */
+	printf("%sstatus\t\tBUSY\n",prefix);
+	return;
+    default:
+	printf("%sstatus\t\tUNATTACHABLE\n",prefix);
+	return;
+    }
+    printf("%sbackupID\t%lu\n",prefix, pinfo->backupID);
+    printf("%sparentID\t%lu\n",prefix, pinfo->parentID);
+    printf("%scloneID\t%lu\n",prefix, pinfo->cloneID);
+    printf("%sinUse\t\t%s\n",prefix, pinfo->inUse ? "Y" : "N");
+    printf("%sneedsSalvaged\t%s\n",prefix, pinfo->needsSalvaged ? "Y" : "N");
+    /* 0xD3 is from afs/volume.h since I had trouble including the file */
+    printf("%sdestroyMe\t%s\n",prefix, pinfo->destroyMe == 0xD3 ? "Y" : "N");
+    switch (pinfo->type) {
+    case 0:
+	printf("%stype\t\tRW\n",prefix);
+	break;
+    case 1:
+	printf("%stype\t\tRO\n",prefix);
+	break;
+    case 2:
+	printf("%stype\t\tBK\n",prefix);
+	break;
+    default:
+	printf("%stype\t\t?\n",prefix);
+	break;
+    }
+    printf("%screationDate\t%-9lu\n", prefix,pinfo->creationDate);
+    printf("%saccessDate\t%-9lu\n", prefix,pinfo->accessDate);
+    printf("%supdateDate\t%-9lu\n", prefix,pinfo->updateDate);
+    printf("%sbackupDate\t%-9lu\n", prefix,pinfo->backupDate);
+    printf("%scopyDate\t%-9lu\n", prefix,pinfo->copyDate);
+	    
+    printf("%sflags\t\t%#lx\t(Optional)\n",prefix, pinfo->flags);
+    printf("%sdiskused\t%u\n",prefix, pinfo->size);
+    printf("%smaxquota\t%u\n",prefix, pinfo->maxquota);
+    printf("%sminquota\t%lu\t(Optional)\n",prefix, pinfo->spare0);
+    printf("%sfilecount\t%u\n",prefix, pinfo->filecount);
+    printf("%sdayUse\t\t%u\n",prefix, pinfo->dayUse);
+    printf("%sweekUse\t%lu\t(Optional)\n",prefix, pinfo->spare1);
+    printf("%svolUpdateCounter\t\t%lu\t(Optional)\n",prefix, pinfo->spare2);
+    printf("%sspare3\t\t%lu\t(Optional)\n",prefix, pinfo->spare3);
+}
+
+int
+DoVosVolumeGet2(struct cmd_syndesc *as, char *arock)
+{
+    typedef enum { SERVER, PARTITION, VOLUME } DoVosVolumeGet_parm_t;
+    afs_status_t st = 0;
+    void *vos_server = NULL;
+    afs_uint32 partition_id;
+    afs_uint32 volume_id;
+
+	volintInfo info;
+	memset(&info, 0, sizeof(struct volintInfo));
+
+    if (as->parms[SERVER].items) {
+	if (!vos_ServerOpen
+	    (cellHandle, as->parms[SERVER].items->data, &vos_server, &st)) {
+	    ERR_ST_EXT("vos_ServerOpen", st);
+	}
+    }
+
+    if (as->parms[PARTITION].items) {
+	partition_id =
+	    GetPartitionIdFromString(as->parms[PARTITION].items->data);
+    }
+
+    if (as->parms[VOLUME].items) {
+	const char *volume = as->parms[VOLUME].items->data;
+	volume_id = GetVolumeIdFromString(volume);
+    }
+    
+
+	if (!vos_VolumeGet2
+	(cellHandle, vos_server, 0, partition_id, volume_id, &info, &st)) {
+	ERR_ST_EXT("vos_VolumeGet2", st);
+    }
+
+
+    Print_vos_volintInfo(GetServer(as->parms[SERVER].items->data),partition_id,&info," ");
+
+    return 0;
+}
+
+
+int
+DoVos_ClearVolUpdateCounter(struct cmd_syndesc *as, char *arock)
+{
+    typedef enum { SERVER, PARTITION, VOLUME } DoVosVolumeGet_parm_t;
+    afs_status_t st = 0;
+    void *vos_server = NULL;
+    unsigned int partition_id;
+    unsigned int volume_id;
+
+    if (as->parms[SERVER].items) {
+	if (!vos_ServerOpen
+	    (cellHandle, as->parms[SERVER].items->data, &vos_server, &st)) {
+	    ERR_ST_EXT("vos_ServerOpen", st);
+	}
+    }
+
+    if (as->parms[PARTITION].items) {
+	partition_id =
+	    GetPartitionIdFromString(as->parms[PARTITION].items->data);
+    }
+
+    if (as->parms[VOLUME].items) {
+	const char *volume = as->parms[VOLUME].items->data;
+	volume_id = GetVolumeIdFromString(volume);
+    }
+
+    if (!vos_ClearVolUpdateCounter
+	(cellHandle, vos_server,partition_id, volume_id, &st)) {
+	ERR_ST_EXT("vos_ClearVolUpdateCounter", st);
+    }
+
+    return 0;
+}
+
 void
 SetupVosAdminCmd(void)
 {
@@ -1898,4 +2085,25 @@ SetupVosAdminCmd(void)
 		"new quota in 1kb units");
     SetupCommonCmdArgs(ts);
 
+    ts = cmd_CreateSyntax("VosVolumeGet2", DoVosVolumeGet2, 0,
+			  "get a volume entry");
+    cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
+		"server that houses volume");
+    cmd_AddParm(ts, "-partition", CMD_SINGLE, CMD_REQUIRED,
+		"partition that houses volume");
+    cmd_AddParm(ts, "-volume", CMD_SINGLE, CMD_REQUIRED,
+		"volume to retrieve");
+    SetupCommonCmdArgs(ts);
+    
+    ts = cmd_CreateSyntax("ClearVolUpdateCounter", DoVos_ClearVolUpdateCounter, 0,
+			  "clear volUpdateCounter");
+    cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
+		"server that houses volume");
+    cmd_AddParm(ts, "-partition", CMD_SINGLE, CMD_REQUIRED,
+		"partition that houses volume");
+    cmd_AddParm(ts, "-volume", CMD_SINGLE, CMD_REQUIRED,
+		"volume");
+    SetupCommonCmdArgs(ts);
+
 }
+

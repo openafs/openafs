@@ -108,7 +108,7 @@ struct volintInfo {
     afs_int32 flags;		/* used by the backup system */
     afs_int32 spare0;		/* Used to hold the minquota value */
     afs_int32 spare1;		/* Used to hold the weekuse value */
-    afs_int32 spare2;
+    afs_int32 spare2;		/* Used to hold volUpdateCounter */
     afs_int32 spare3;
 };
 
