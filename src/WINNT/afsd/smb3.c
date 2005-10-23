@@ -5804,6 +5804,13 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
                   osi_LogSaveString(smb_logp, treeStartp));
         openAction = 2;		/* created directory */
 
+	/* if the request is to create the root directory 
+	 * it will appear as a directory name of the nul-string
+	 * and a code of CM_ERROR_NOSUCHFILE
+	 */
+	if ( !*treeStartp && code == CM_ERROR_NOSUCHFILE)
+	    code = CM_ERROR_EXISTS;
+
         setAttr.mask = CM_ATTRMASK_CLIENTMODTIME;
         setAttr.clientModTime = time(NULL);
 
