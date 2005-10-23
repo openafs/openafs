@@ -158,20 +158,20 @@ afs_CopyOutAttrs(register struct vcache *avc, register struct vattr *attrs)
      * Below return 0 (and not 1) blocks if the file is zero length. This conforms
      * better with the other filesystems that do return 0.      
      */
-#ifdef AFS_HPUX_ENV
-    attrs->va_blocks = (attrs->va_size ? ((attrs->va_size + 1023) >> 10) : 0);
-#elif defined(AFS_SGI_ENV)
-    attrs->va_blocks = BTOBB(attrs->va_size);
-#elif defined(AFS_XBSD_ENV) || defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV)
+#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     attrs->va_bytes = (attrs->va_size ? (attrs->va_size + 1023) : 1024);
 #ifdef	va_bytes_rsv
     attrs->va_bytes_rsv = -1;
 #endif
-#else
-    attrs->va_blocks =
-	(attrs->va_size ? ((attrs->va_size + 1023) >> 10) << 1 : 0);
+#elif defined(AFS_HPUX_ENV)
+    attrs->va_blocks = (attrs->va_size ? ((attrs->va_size + 1023)>>10) : 0);
+#elif defined(AFS_SGI_ENV)
+    attrs->va_blocks = BTOBB(attrs->va_size);
+#elif defined(AFS_SUN5_ENV)
+    attrs->va_nblocks = (attrs->va_size ? ((attrs->va_size + 1023)>>10)<<1:0);
+#else /* everything else */
+    attrs->va_blocks = (attrs->va_size ? ((attrs->va_size + 1023)>>10)<<1:0);
 #endif
-
     return 0;
 }
 
