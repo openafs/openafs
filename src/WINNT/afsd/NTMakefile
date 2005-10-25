@@ -88,15 +88,7 @@ $(RXOBJS): $(RX)\$$(@B).c
 $(IDLFILES):afsrpc.idl
 	midl $(MIDL_FLAGS) /no_robust $(AFSDEV_AUXMIDLFLAGS) /app_config $?
 
-RPCOBJS = $(OUT)\ifs_rpc.obj
-
-$(RPCOBJS):..\afsrdr\ifs_rpc.c
-	$(C2OBJ) ..\afsrdr\ifs_rpc.c
-
 AFSDOBJS=\
-        $(OUT)\ifs_rpc.obj \
-        $(OUT)\rawops.obj \
-        $(OUT)\afsdifs.obj \
 	$(OUT)\afsd_init.obj \
 	$(OUT)\cm_cell.obj \
 	$(OUT)\cm_server.obj \
@@ -138,6 +130,8 @@ $(OUT)\cm_conn.obj: cm_conn.c
 FSOBJS=$(OUT)\fs.obj $(OUT)\fs_utils.obj
 
 CMDBGOBJS=$(OUT)\cmdebug.obj
+
+$(CMDBGOBJS): $(AFSROOT)\src\venus\cmdebug.c
 
 SLOBJS=$(OUT)\symlink.obj $(OUT)\fs_utils.obj
 

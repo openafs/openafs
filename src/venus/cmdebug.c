@@ -15,9 +15,16 @@ RCSID
 
 
 #include <sys/types.h>
+#ifdef AFS_NT40_ENV
+#include <winsock2.h>
+#include <rpc.h>
+#else
+#ifdef HAVE_NETINET_IN_H
 #include <netinet/in.h>
+#endif
 #include <sys/socket.h>
 #include <netdb.h>
+#endif
 #include <stdio.h>
 #ifdef HAVE_STRING_H
 #include <string.h>
@@ -37,9 +44,8 @@ RCSID
 
 extern struct hostent *hostutil_GetHostByName();
 
-static
-PrintCacheConfig(aconn)
-     struct rx_connection *aconn;
+static int
+PrintCacheConfig(struct rx_connection *aconn)
 {
     struct cacheConfig c;
     afs_uint32 srv_ver, conflen;
@@ -80,19 +86,43 @@ PrintCacheConfig(aconn)
     }
 }
 
-static
-PrintInterfaces(aconn)
-     struct rx_connection *aconn;
+#ifndef CAPABILITY_BITS
+#define CAPABILITY_ERRORTRANS (1<<0)
+#define CAPABILITY_BITS 1
+#endif
+
+static int
+PrintInterfaces(struct rx_connection *aconn)
 {
+    Capabilities caps;
     struct interfaceAddr addr;
+#ifdef AFS_NT40_ENV
+    char * p;
+#else
+    char uuidstr[128];
+#endif
     int i, code;
 
-    code = RXAFSCB_WhoAreYou(aconn, &addr);
+    caps.Capabilities_val = NULL;
+    caps.Capabilities_len = 0;
+
+    code = RXAFSCB_TellMeAboutYourself(aconn, &addr, &caps);
+    if (code == RXGEN_OPCODE)
+        code = RXAFSCB_WhoAreYou(aconn, &addr);
     if (code) {
 	printf("cmdebug: error checking interfaces: %s\n",
 	       error_message(code));
 	return 0;
     }
+
+#ifdef AFS_NT40_ENV
+    UuidToString((UUID *)&addr.uuid, &p);
+    printf("UUID: %s\n",p);
+    RpcStringFree(&p);
+#else
+    afsUUID_to_string(&addr.uuid, uuidstr, sizeof(uuidstr));
+    printf("UUID: %s\n",uuidstr);
+#endif
 
     printf("Host interfaces:\n");
     for (i = 0; i < addr.numberOfInterfaces; i++) {
@@ -104,12 +134,24 @@ PrintInterfaces(aconn)
 	printf("\n");
     }
 
+    if (caps.Capabilities_val) {
+        printf("Capabilities:\n");
+        if (caps.Capabilities_val[0] & CAPABILITY_ERRORTRANS) {
+            printf("Error Translation\n");  
+        }
+        printf("\n");
+    }
+
+    if (caps.Capabilities_val)
+	free(caps.Capabilities_val);
+    caps.Capabilities_val = NULL;
+    caps.Capabilities_len = 0;
+
     return 0;
 }
 
-static
-IsLocked(alock)
-     register struct AFSDBLockDesc *alock;
+static int
+IsLocked(register struct AFSDBLockDesc *alock)
 {
     if (alock->waitStates || alock->exclLocked || alock->numWaiting
 	|| alock->readersReading)
@@ -117,9 +159,8 @@ IsLocked(alock)
     return 0;
 }
 
-static
-PrintLock(alock)
-     register struct AFSDBLockDesc *alock;
+static int
+PrintLock(register struct AFSDBLockDesc *alock)
 {
     printf("(");
     if (alock->waitStates) {
@@ -147,10 +188,8 @@ PrintLock(alock)
     return 0;
 }
 
-static
-PrintLocks(aconn, aint32)
-     int aint32;
-     register struct rx_connection *aconn;
+static int
+PrintLocks(register struct rx_connection *aconn, int aint32)
 {
     register int i;
     struct AFSDBLock lock;
@@ -246,7 +285,9 @@ PrintCacheEntries32(struct rx_connection *aconn, int aint32)
 	    continue;
 	}
 
-	if (!aint32 && !IsLocked(&centry.lock))
+	if (aint32 == 0 && !IsLocked(&centry.lock) ||
+            aint32 == 2 && centry.refCount == 0 ||
+            aint32 == 4 && centry.callback == 0)
 	    continue;
 
 	/* otherwise print this entry */
@@ -265,7 +306,7 @@ PrintCacheEntries32(struct rx_connection *aconn, int aint32)
 	    PrintLock(&centry.lock);
 	    printf("\n");
 	}
-	printf("    %d bytes\tDV %d refcnt %d\n", centry.Length,
+	printf("    %012d bytes  DV %012d  refcnt %05d\n", centry.Length,
 	       centry.DataVersion, centry.refCount);
 	printf("    callback %08x\texpires %u\n", centry.callback,
 	       centry.cbExpires);
@@ -279,6 +320,14 @@ PrintCacheEntries32(struct rx_connection *aconn, int aint32)
 	    printf("mount point");
 	else if (centry.mvstat == 2)
 	    printf("volume root");
+	else if (centry.mvstat == 3)	/* windows */
+	    printf("directory");
+	else if (centry.mvstat == 4)	/* windows */
+	    printf("symlink");
+	else if (centry.mvstat == 5)	/* windows */
+	    printf("microsoft dfs link");
+	else if (centry.mvstat == 6)	/* windows */
+	    printf("invalid link");
 	else
 	    printf("bogus mvstat %d", centry.mvstat);
 	printf("\n    states (0x%x)", centry.states);
@@ -328,7 +377,9 @@ PrintCacheEntries64(struct rx_connection *aconn, int aint32)
 	    continue;
 	}
 
-	if (!aint32 && !IsLocked(&centry.lock))
+	if (aint32 == 0 && !IsLocked(&centry.lock) ||
+            aint32 == 2 && centry.refCount == 0 ||
+            aint32 == 4 && centry.callback == 0)
 	    continue;
 
 	/* otherwise print this entry */
@@ -348,10 +399,10 @@ PrintCacheEntries64(struct rx_connection *aconn, int aint32)
 	    printf("\n");
 	}
 #ifdef AFS_64BIT_ENV
-	printf("    %lld bytes\tDV %d refcnt %d\n", centry.Length,
+	printf("    %012I64d bytes  DV %012d  refcnt %05d\n", centry.Length,
 	       centry.DataVersion, centry.refCount);
 #else
-	printf("    %d bytes\tDV %d refcnt %d\n", centry.Length,
+	printf("    %012d bytes  DV %012d  refcnt %05d\n", centry.Length,
 	       centry.DataVersion, centry.refCount);
 #endif
 	printf("    callback %08x\texpires %u\n", centry.callback,
@@ -366,7 +417,15 @@ PrintCacheEntries64(struct rx_connection *aconn, int aint32)
 	    printf("mount point");
 	else if (centry.mvstat == 2)
 	    printf("volume root");
-	else
+	else if (centry.mvstat == 3)
+	    printf("directory");
+	else if (centry.mvstat == 4)
+	    printf("symlink");
+	else if (centry.mvstat == 5)
+	    printf("microsoft dfs link");
+	else if (centry.mvstat == 6)
+	    printf("invalid link");
+        else
 	    printf("bogus mvstat %d", centry.mvstat);
 	printf("\n    states (0x%x)", centry.states);
 	if (centry.states & 1)
@@ -401,9 +460,8 @@ PrintCacheEntries(struct rx_connection *aconn, int aint32)
 	return PrintCacheEntries32(aconn, aint32);
 }
 
-static
-CommandProc(as)
-     struct cmd_syndesc *as;
+int
+CommandProc(struct cmd_syndesc *as, char *arock)
 {
     struct rx_connection *conn;
     register char *hostName;
@@ -431,30 +489,41 @@ CommandProc(as)
 	       hostName);
 	exit(1);
     }
-    if (as->parms[3].items) {
+    if (as->parms[5].items) {
 	/* -addrs */
 	PrintInterfaces(conn);
 	return 0;
     }
-    if (as->parms[4].items) {
+    if (as->parms[6].items) {
 	/* -cache */
 	PrintCacheConfig(conn);
 	return 0;
     }
     if (as->parms[2].items)
+        /* -long */
 	int32p = 1;
+    else if (as->parms[3].items)
+        /* -refcounts */
+        int32p = 2;
+    else if (as->parms[4].items)
+        /* -callbacks */
+        int32p = 4;
     else
 	int32p = 0;
-    PrintLocks(conn, int32p);
-    PrintCacheEntries(conn, int32p);
+
+    if (int32p == 0 || int32p == 1)
+        PrintLocks(conn, int32p);
+    if (int32p >= 0 || int32p <= 4)
+        PrintCacheEntries(conn, int32p);
     return 0;
 }
 
+#ifndef AFS_NT40_ENV
 #include "AFS_component_version_number.c"
+#endif
 
-main(argc, argv)
-     int argc;
-     char **argv;
+int
+main(int argc, char **argv)
 {
     register struct cmd_syndesc *ts;
 
@@ -472,12 +541,24 @@ main(argc, argv)
     nsa.sa_flags = SA_FULLDUMP;
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
+
+#ifdef AFS_NT40_ENV
+    if (afs_winsockInit() < 0) {
+        printf("%s: Couldn't initialize winsock. Exiting...\n", argv[0]);
+        return 1;
+    }
+#endif
+
     rx_Init(0);
 
     ts = cmd_CreateSyntax(NULL, CommandProc, 0, "probe unik server");
     cmd_AddParm(ts, "-servers", CMD_SINGLE, CMD_REQUIRED, "server machine");
     cmd_AddParm(ts, "-port", CMD_SINGLE, CMD_OPTIONAL, "IP port");
     cmd_AddParm(ts, "-long", CMD_FLAG, CMD_OPTIONAL, "print all info");
+    cmd_AddParm(ts, "-refcounts", CMD_FLAG, CMD_OPTIONAL, 
+                 "print only cache entries with positive reference counts");
+    cmd_AddParm(ts, "-callbacks", CMD_FLAG, CMD_OPTIONAL, 
+                 "print only cache entries with callbacks");
     cmd_AddParm(ts, "-addrs", CMD_FLAG, CMD_OPTIONAL,
 		"print only host interfaces");
     cmd_AddParm(ts, "-cache", CMD_FLAG, CMD_OPTIONAL,
