@@ -6798,8 +6798,8 @@ void smb_DispatchPacket(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
                 osi_LogEvent("AFS Dispatch %s",(myCrt_Dispatch(inp->inCom)),"vcp 0x%x lana %d lsn %d",(int)vcp,vcp->lana,vcp->lsn);
                 osi_Log4(smb_logp,"Dispatch %s vcp 0x%x lana %d lsn %d",myCrt_Dispatch(inp->inCom),vcp,vcp->lana,vcp->lsn);
                 code = (*(dp->procp)) (vcp, inp, outp);
-                osi_LogEvent("AFS Dispatch return",NULL,"Code 0x%x",(code==0)?0:code-CM_ERROR_BASE);
-                osi_Log4(smb_logp,"Dispatch return  code 0x%x vcp 0x%x lana %d lsn %d",(code==0)?0:code-CM_ERROR_BASE,vcp,vcp->lana,vcp->lsn);
+                osi_LogEvent("AFS Dispatch return",NULL,"Code 0x%x",code);
+                osi_Log4(smb_logp,"Dispatch return  code 0x%x vcp 0x%x lana %d lsn %d",code,vcp,vcp->lana,vcp->lsn);
 #ifdef LOG_PACKET
                 if ( code == CM_ERROR_BADSMB ||
                      code == CM_ERROR_BADOP )
