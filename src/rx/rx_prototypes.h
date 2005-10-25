@@ -309,6 +309,7 @@ extern afs_int32 rxi_getaddr(void);
 
 
 /* rx_kcommon.c */
+struct socket;
 extern int (*rxk_PacketArrivalProc) (struct rx_packet * ahandle,
 				     struct sockaddr_in * afrom,
 				     struct socket *arock,
