@@ -131,6 +131,8 @@ FSOBJS=$(OUT)\fs.obj $(OUT)\fs_utils.obj
 
 CMDBGOBJS=$(OUT)\cmdebug.obj
 
+$(CMDBGOBJS): $(AFSROOT)\src\venus\cmdebug.c
+
 SLOBJS=$(OUT)\symlink.obj $(OUT)\fs_utils.obj
 
 ILIBDIR = $(DESTDIR)\lib
