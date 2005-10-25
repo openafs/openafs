@@ -1380,6 +1380,8 @@ long smb_ReceiveV3Trans(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
             osi_LogEvent("AFS-Dispatch-RAP[%s]",myCrt_RapDispatch(rapOp),"vcp[%x] lana[%d] lsn[%d]",(int)vcp,vcp->lana,vcp->lsn);
             osi_Log4(smb_logp,"AFS Server - Dispatch-RAP %s vcp[%x] lana[%d] lsn[%d]",myCrt_RapDispatch(rapOp),vcp,vcp->lana,vcp->lsn);
             code = (*smb_rapDispatchTable[rapOp].procp)(vcp, asp, outp);
+            osi_LogEvent("AFS-Dispatch-RAP return",myCrt_RapDispatch(rapOp),"Code 0x%x",code);
+            osi_Log4(smb_logp,"AFS Server - Dispatch-RAP return  code 0x%x vcp[%x] lana[%d] lsn[%d]",code,vcp,vcp->lana,vcp->lsn);
         }
         else {
             osi_LogEvent("AFS-Dispatch-RAP [invalid]", NULL, "op[%x] vcp[%x] lana[%d] lsn[%d]", rapOp, vcp, vcp->lana, vcp->lsn);
@@ -6829,15 +6831,23 @@ long smb_ReceiveNTTransact(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         ((smb_t *)outp)->flg2 |= SMB_FLAGS2_IS_LONG_NAME;
         
     switch (function) {
-    case 6: 
-        return smb_ReceiveNTTranQuerySecurityDesc(vcp, inp, outp);
-    case 4: 
-        return smb_ReceiveNTTranNotifyChange(vcp, inp, outp);
     case 1: 
         return smb_ReceiveNTTranCreate(vcp, inp, outp);
-    default: 
-        return CM_ERROR_INVAL;
+    case 2:
+	osi_Log0(smb_logp, "SMB NT Transact Ioctl - not implemented");
+	break;
+    case 3:
+	osi_Log0(smb_logp, "SMB NT Transact SetSecurityDesc - not implemented");
+	break;
+    case 4:
+        return smb_ReceiveNTTranNotifyChange(vcp, inp, outp);
+    case 5:
+	osi_Log0(smb_logp, "SMB NT Transact Rename - not implemented");
+	break;
+    case 6:
+        return smb_ReceiveNTTranQuerySecurityDesc(vcp, inp, outp);
     }
+    return CM_ERROR_INVAL;
 }
 
 /*
