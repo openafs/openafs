@@ -15,12 +15,12 @@
 extern int VLDB_CreateEntry(afs_cell_handle_p cellHandle,
 			    struct nvldbentry *entryp, afs_status_p st);
 
-extern int VLDB_GetEntryByID(afs_cell_handle_p cellHandle, afs_int32 volid,
+extern int aVLDB_GetEntryByID(afs_cell_handle_p cellHandle, afs_int32 volid,
 			     afs_int32 voltype, struct nvldbentry *entryp,
 			     afs_status_p st);
 
 
-extern int VLDB_GetEntryByName(afs_cell_handle_p cellHandle,
+extern int aVLDB_GetEntryByName(afs_cell_handle_p cellHandle,
 			       const char *namep, struct nvldbentry *entryp,
 			       afs_status_p st);
 

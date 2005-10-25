@@ -239,7 +239,7 @@ UV_DeleteVolume(afs_cell_handle_p cellHandle, struct rx_connection *server,
     } else {
 	islocked = 1;
 
-	if (!VLDB_GetEntryByID(cellHandle, volumeId, avoltype, &entry, &tst)) {
+	if (!aVLDB_GetEntryByID(cellHandle, volumeId, avoltype, &entry, &tst)) {
 	    goto fail_UV_DeleteVolume;
 	}
 
@@ -427,7 +427,7 @@ UV_MoveVolume(afs_cell_handle_p cellHandle, afs_int32 afromvol,
     backupId = 0;
     newVol = 0;
 
-    if (!VLDB_GetEntryByID(cellHandle, afromvol, -1, &entry, &tst)) {
+    if (!aVLDB_GetEntryByID(cellHandle, afromvol, -1, &entry, &tst)) {
 	goto fail_UV_MoveVolume;
     }
 
@@ -443,7 +443,7 @@ UV_MoveVolume(afs_cell_handle_p cellHandle, afs_int32 afromvol,
     }
     islocked = 1;
 
-    if (!VLDB_GetEntryByID(cellHandle, afromvol, RWVOL, &entry, &tst)) {
+    if (!aVLDB_GetEntryByID(cellHandle, afromvol, RWVOL, &entry, &tst)) {
 	goto fail_UV_MoveVolume;
     }
 
@@ -890,7 +890,7 @@ UV_MoveVolume(afs_cell_handle_p cellHandle, afs_int32 afromvol,
 	AFSVolEndTrans(fromconn, fromtid, &rcode);
     }
 
-    if (!VLDB_GetEntryByID(cellHandle, afromvol, -1, &entry, &tst)) {
+    if (!aVLDB_GetEntryByID(cellHandle, afromvol, -1, &entry, &tst)) {
 	goto done;
     }
 
@@ -1005,7 +1005,7 @@ UV_BackupVolume(afs_cell_handle_p cellHandle, afs_int32 aserver,
 
     /* the calls to VLDB will succeed only if avolid is a RW volume,
      * since we are following the RW hash chain for searching */
-    if (!VLDB_GetEntryByID(cellHandle, avolid, RWVOL, &entry, &tst)) {
+    if (!aVLDB_GetEntryByID(cellHandle, avolid, RWVOL, &entry, &tst)) {
 	goto fail_UV_BackupVolume;
     }
 
@@ -1026,7 +1026,7 @@ UV_BackupVolume(afs_cell_handle_p cellHandle, afs_int32 aserver,
 	vldblocked = 1;
 
 	/* Reread the vldb entry */
-	if (!VLDB_GetEntryByID(cellHandle, avolid, RWVOL, &entry, &tst)) {
+	if (!aVLDB_GetEntryByID(cellHandle, avolid, RWVOL, &entry, &tst)) {
 	    goto fail_UV_BackupVolume;
 	}
     }
@@ -1503,7 +1503,7 @@ UV_ReleaseVolume(afs_cell_handle_p cellHandle, afs_int32 afromvol,
     islocked = 1;
 
     /* Get the vldb entry in readable format */
-    if (!VLDB_GetEntryByID(cellHandle, afromvol, RWVOL, &entry, &tst)) {
+    if (!aVLDB_GetEntryByID(cellHandle, afromvol, RWVOL, &entry, &tst)) {
 	goto fail_UV_ReleaseVolume;
     }
 
@@ -2118,7 +2118,7 @@ UV_DumpVolume(afs_cell_handle_p cellHandle, afs_int32 afromvol,
     fromcall = (struct rx_call *)0;
 
     islocked = 0;
-    if (!VLDB_GetEntryByID(cellHandle, afromvol, -1, &entry, &tst)) {
+    if (!aVLDB_GetEntryByID(cellHandle, afromvol, -1, &entry, &tst)) {
 	goto fail_UV_DumpVolume;
     }
 
@@ -2329,7 +2329,7 @@ UV_RestoreVolume(afs_cell_handle_p cellHandle, afs_int32 toserver,
     pvolid = tovolid;
     toconn = UV_Bind(cellHandle, toserver, AFSCONF_VOLUMEPORT);
     if (pvolid == 0) {		/*alot a new id if needed */
-	VLDB_GetEntryByName(cellHandle, tovolname, &entry, &tst);
+	aVLDB_GetEntryByName(cellHandle, tovolname, &entry, &tst);
 	if (tst == VL_NOENT) {
 	    tst =
 		ubik_Call(VL_GetNewVolumeId, cellHandle->vos, 0, 1, &pvolid);
@@ -2450,7 +2450,7 @@ UV_RestoreVolume(afs_cell_handle_p cellHandle, afs_int32 toserver,
 	/* Volume was restored on the file server, update the 
 	 * VLDB to reflect the change.
 	 */
-	VLDB_GetEntryByID(cellHandle, pvolid, RWVOL, &entry, &tst);
+	aVLDB_GetEntryByID(cellHandle, pvolid, RWVOL, &entry, &tst);
 	if (tst && tst != VL_NOENT && tst != VL_ENTDELETED) {
 	    goto fail_UV_RestoreVolume;
 	}
@@ -2613,7 +2613,7 @@ UV_AddSite(afs_cell_handle_p cellHandle, afs_int32 server, afs_int32 part,
     }
     islocked = 1;
 
-    if (!VLDB_GetEntryByID(cellHandle, volid, RWVOL, &entry, &tst)) {
+    if (!aVLDB_GetEntryByID(cellHandle, volid, RWVOL, &entry, &tst)) {
 	goto fail_UV_AddSite;
     }
     if (!ISNAMEVALID(entry.name)) {
@@ -2692,7 +2692,7 @@ UV_RemoveSite(afs_cell_handle_p cellHandle, afs_int32 server, afs_int32 part,
     }
     islocked = 1;
 
-    if (!VLDB_GetEntryByID(cellHandle, volid, RWVOL, &entry, &tst)) {
+    if (!aVLDB_GetEntryByID(cellHandle, volid, RWVOL, &entry, &tst)) {
 	goto fail_UV_RemoveSite;
     }
     if (!Lp_ROMatch(cellHandle, &entry, server, part, &tst)) {
@@ -3006,7 +3006,7 @@ ProcessEntries(afs_cell_handle_p cellHandle, struct qHead *myQueue,
 	    maxVolid += temp2;
 
 	}
-	VLDB_GetEntryByID(cellHandle, elem.ids[RWVOL], RWVOL, &entry, &tst);
+	aVLDB_GetEntryByID(cellHandle, elem.ids[RWVOL], RWVOL, &entry, &tst);
 	if (tst && (tst != VL_NOENT)) {
 	    noError = 0;
 	    totalCE++;
@@ -3495,7 +3495,7 @@ CheckVldb(afs_cell_handle_p cellHandle, struct nvldbentry *entry,
 	}
 	islocked = 1;
 
-	if (!VLDB_GetEntryByID
+	if (!aVLDB_GetEntryByID
 	    (cellHandle, entry->volumeId[RWVOL], RWVOL, entry, &tst)) {
 	    goto fail_CheckVldb;
 	}
