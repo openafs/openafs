@@ -62,6 +62,8 @@ ${LIBAFSSETPAG}: ${SHLIBOBJS}
 	sun*_5*) \
 	    ${SHLIB_LINKER} -h libafssetpag.so.${LIBAFSSETPAGMAJOR} \
 	        -o ${LIBAFSSETPAG} ${SHLIBOBJS};; \
+	*bsd*) \
+	    touch ${LIBAFSSETPAG};; \
 	*) \
 	    ${SHLIB_LINKER} -o ${LIBAFSSETPAG} ${SHLIBOBJS};; \
 	esac
