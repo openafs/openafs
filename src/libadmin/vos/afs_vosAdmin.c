@@ -1975,11 +1975,11 @@ vos_VLDBGet(const void *cellHandle, vos_MessageCallBack_t callBack,
 	if (!ValidateVolumeName(volumeName, &tst)) {
 	    goto fail_vos_VLDBGet;
 	}
-	if (!VLDB_GetEntryByName(c_handle, volumeName, &entry, &tst)) {
+	if (!aVLDB_GetEntryByName(c_handle, volumeName, &entry, &tst)) {
 	    goto fail_vos_VLDBGet;
 	}
     } else {
-	if (!VLDB_GetEntryByID(c_handle, *volumeId, -1, &entry, &tst)) {
+	if (!aVLDB_GetEntryByID(c_handle, *volumeId, -1, &entry, &tst)) {
 	    goto fail_vos_VLDBGet;
 	}
     }
@@ -2919,7 +2919,7 @@ vos_VolumeCreate(const void *cellHandle, const void *serverHandle,
      * Check that the volume doesn't already exist
      */
 
-    if (VLDB_GetEntryByName(c_handle, volumeName, &vinfo, &tst)) {
+    if (aVLDB_GetEntryByName(c_handle, volumeName, &vinfo, &tst)) {
 	tst = ADMVOSVOLUMENAMEDUP;
 	goto fail_vos_VolumeCreate;
     }
@@ -3067,7 +3067,7 @@ vos_VolumeRename(const void *cellHandle, vos_MessageCallBack_t callBack,
      * Retrieve the entry
      */
 
-    if (!VLDB_GetEntryByID(c_handle, readWriteVolumeId, -1, &entry, &tst)) {
+    if (!aVLDB_GetEntryByID(c_handle, readWriteVolumeId, -1, &entry, &tst)) {
 	goto fail_vos_VolumeRename;
     }
 
@@ -3261,7 +3261,7 @@ vos_VolumeRestore(const void *cellHandle, const void *serverHandle,
      */
 
     if (volumeId != NULL) {
-	if (!VLDB_GetEntryByID(c_handle, *volumeId, -1, &entry, &tst)) {
+	if (!aVLDB_GetEntryByID(c_handle, *volumeId, -1, &entry, &tst)) {
 	    goto fail_vos_VolumeRestore;
 	}
 	volid = *volumeId;
@@ -3289,7 +3289,7 @@ vos_VolumeRestore(const void *cellHandle, const void *serverHandle,
 	close(fd);
     }
 
-    if (!VLDB_GetEntryByName(c_handle, volumeName, &entry, &tst)) {
+    if (!aVLDB_GetEntryByName(c_handle, volumeName, &entry, &tst)) {
 	restoreflags = RV_FULLRST;
     } else if (Lp_GetRwIndex(c_handle, &entry, 0) == -1) {
 	restoreflags = RV_FULLRST;

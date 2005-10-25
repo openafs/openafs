@@ -133,7 +133,7 @@ VLDB_CreateEntry(afs_cell_handle_p cellHandle, struct nvldbentry *entryp,
 }
 
 int
-VLDB_GetEntryByID(afs_cell_handle_p cellHandle, afs_int32 volid,
+aVLDB_GetEntryByID(afs_cell_handle_p cellHandle, afs_int32 volid,
 		  afs_int32 voltype, struct nvldbentry *entryp,
 		  afs_status_p st)
 {
@@ -171,7 +171,7 @@ VLDB_GetEntryByID(afs_cell_handle_p cellHandle, afs_int32 volid,
 }
 
 int
-VLDB_GetEntryByName(afs_cell_handle_p cellHandle, const char *namep,
+aVLDB_GetEntryByName(afs_cell_handle_p cellHandle, const char *namep,
 		    struct nvldbentry *entryp, afs_status_p st)
 {
     struct vldbentry oentry;
@@ -412,7 +412,7 @@ GetVolumeInfo(afs_cell_handle_p cellHandle, unsigned int volid,
     afs_status_t tst;
     int i, index = -1;
 
-    if (!VLDB_GetEntryByID(cellHandle, volid, -1, rentry, &tst)) {
+    if (!aVLDB_GetEntryByID(cellHandle, volid, -1, rentry, &tst)) {
 	rc = 0;
 	goto fail_GetVolumeInfo;
     }
