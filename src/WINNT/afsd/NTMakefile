@@ -140,6 +140,7 @@ FSOBJS=$(OUT)\fs.obj $(OUT)\fs_utils.obj
 CMDBGOBJS=$(OUT)\cmdebug.obj
 
 $(CMDBGOBJS): $(AFSROOT)\src\venus\cmdebug.c
+	$(C2OBJ) -DAFS_PTHREAD_ENV /Fo$@ $**
 
 SLOBJS=$(OUT)\symlink.obj $(OUT)\fs_utils.obj
 
