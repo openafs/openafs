@@ -983,12 +983,12 @@ long cm_IoctlCheckServers(struct smb_ioctl *ioctlp, struct cm_user *userp)
         memcpy(&csi, tp, sizeof(csi));
         if (csi.tinterval >= 0) {
             cp = ioctlp->outDatap;
-            memcpy(cp, (char *)&cm_daemonCheckInterval, sizeof(long));
+            memcpy(cp, (char *)&cm_daemonCheckDownInterval, sizeof(long));
             ioctlp->outDatap += sizeof(long);
             if (csi.tinterval > 0) {
                 if (!smb_SUser(userp))
                     return CM_ERROR_NOACCESS;
-                cm_daemonCheckInterval = csi.tinterval;
+                cm_daemonCheckDownInterval = csi.tinterval;
             }
             return 0;
         }

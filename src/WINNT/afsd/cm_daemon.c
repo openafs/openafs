@@ -27,7 +27,12 @@
 #include "afsd.h"
 #include "afsicf.h"
 
-long cm_daemonCheckInterval = 30;
+/* in seconds */
+long cm_daemonCheckDownInterval = 180;
+long cm_daemonCheckUpInterval = 600;
+long cm_daemonCheckVolInterval = 3600;
+long cm_daemonCheckCBInterval = 60;
+long cm_daemonCheckLockInterval = 60;
 long cm_daemonTokenCheckInterval = 180;
 
 osi_rwlock_t cm_daemonLock;
@@ -204,11 +209,11 @@ void cm_Daemon(long parm)
     srand(ntohl(code));
 
     now = osi_Time();
-    lastVolCheck = now - 1800 + (rand() % 3600);
-    lastCBExpirationCheck = now - 60 + (rand() % 60);
-    lastLockCheck = now - 60 + (rand() % 60);
-    lastDownServerCheck = now - cm_daemonCheckInterval/2 + (rand() % cm_daemonCheckInterval);
-    lastUpServerCheck = now - 1800 + (rand() % 3600);
+    lastVolCheck = now - cm_daemonCheckVolInterval/2 + (rand() % cm_daemonCheckVolInterval);
+    lastCBExpirationCheck = now - cm_daemonCheckCBInterval/2 + (rand() % cm_daemonCheckCBInterval);
+    lastLockCheck = now - cm_daemonCheckLockInterval/2 + (rand() % cm_daemonCheckLockInterval);
+    lastDownServerCheck = now - cm_daemonCheckDownInterval/2 + (rand() % cm_daemonCheckDownInterval);
+    lastUpServerCheck = now - cm_daemonCheckUpInterval/2 + (rand() % cm_daemonCheckUpInterval);
     lastTokenCacheCheck = now - cm_daemonTokenCheckInterval/2 + (rand() % cm_daemonTokenCheckInterval);
 
     while (daemon_ShutdownFlag == 0) {
@@ -241,7 +246,7 @@ void cm_Daemon(long parm)
         now = osi_Time();
 
         /* check down servers */
-        if (now > lastDownServerCheck + cm_daemonCheckInterval) {
+        if (now > lastDownServerCheck + cm_daemonCheckDownInterval) {
             lastDownServerCheck = now;
 	    osi_Log0(afsd_logp, "cm_Daemon CheckDownServers");
             cm_CheckServers(CM_FLAG_CHECKDOWNSERVERS, NULL);
@@ -249,26 +254,26 @@ void cm_Daemon(long parm)
         }
 
         /* check up servers */
-        if (now > lastUpServerCheck + 3600) {
+        if (now > lastUpServerCheck + cm_daemonCheckUpInterval) {
             lastUpServerCheck = now;
 	    osi_Log0(afsd_logp, "cm_Daemon CheckUpServers");
             cm_CheckServers(CM_FLAG_CHECKUPSERVERS, NULL);
 	    now = osi_Time();
         }
 
-        if (now > lastVolCheck + 3600) {
+        if (now > lastVolCheck + cm_daemonCheckVolInterval) {
             lastVolCheck = now;
             cm_CheckVolumes();
 	    now = osi_Time();
         }
 
-        if (now > lastCBExpirationCheck + 60) {
+        if (now > lastCBExpirationCheck + cm_daemonCheckCBInterval) {
             lastCBExpirationCheck = now;
             cm_CheckCBExpiration();
 	    now = osi_Time();
         }
 
-        if (now > lastLockCheck + 60) {
+        if (now > lastLockCheck + cm_daemonCheckLockInterval) {
             lastLockCheck = now;
             cm_CheckLocks();
 	    now = osi_Time();

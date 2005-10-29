@@ -11,7 +11,12 @@
 #define __CM_DAEMON_H_ENV_ 1
 
 /* externs */
-extern long cm_daemonCheckInterval;
+extern long cm_daemonCheckDownInterval;
+extern long cm_daemonCheckUpInterval;
+extern long cm_daemonCheckVolInterval;
+extern long cm_daemonCheckCBInterval;
+extern long cm_daemonCheckLockInterval;
+extern long cm_daemonTokenCheckInterval;
 
 extern osi_rwlock_t cm_daemonLock;
 
