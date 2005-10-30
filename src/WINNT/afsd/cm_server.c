@@ -100,7 +100,7 @@ void cm_CheckServers(long flags, cm_cell_t *cellp)
             }	/* got an unauthenticated connection to this server */
 
             lock_ObtainMutex(&tsp->mx);
-            if (code == 0) {
+            if (code >= 0) {
                 /* mark server as up */
                 tsp->flags &= ~CM_SERVERFLAG_DOWN;
             }
