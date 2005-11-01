@@ -16,7 +16,7 @@ srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
 CFLAGS=-I. -I${srcdir} ${DBUG} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR}  ${XCFLAGS}
-SFLAGS=-P -I${TOP_INCDIR}
+SFLAGS=-I${TOP_INCDIR}
 LIBS=libsys.a ${TOP_LIBDIR}/librx.a libsys.a ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/util.a ${XLIBS}
 
 OBJECTS= afssyscalls.o setpag.o glue.o syscall.o
@@ -62,8 +62,6 @@ ${LIBAFSSETPAG}: ${SHLIBOBJS}
 	sun*_5*) \
 	    ${SHLIB_LINKER} -h libafssetpag.so.${LIBAFSSETPAGMAJOR} \
 	        -o ${LIBAFSSETPAG} ${SHLIBOBJS};; \
-	*bsd*) \
-	    touch ${LIBAFSSETPAG};; \
 	*) \
 	    ${SHLIB_LINKER} -o ${LIBAFSSETPAG} ${SHLIBOBJS};; \
 	esac
@@ -73,7 +71,7 @@ tests:	pagsh pagsh.krb fixit iinc idec icreate iopen istat rmtsysd
 syscall.o: syscall.s
 	case "$(SYS_NAME)" in \
 	 sun4c_51 | sun4c_52 | sun4m_51 | sun4m_52 | sun4c_53 | sun4m_53  | sun4_53 | sun4_52 | sun4_54 | sun4c_54 | sun4m_54 | sun4x_5? | sun4x_5?? | sunx86_5? | sunx86_5?? ) \
-		/usr/ccs/lib/cpp  ${SFLAGS} ${srcdir}/syscall.s syscall.ss; \
+		/usr/ccs/lib/cpp -P ${SFLAGS} ${srcdir}/syscall.s syscall.ss; \
 		as -o syscall.o syscall.ss;		\
 		$(RM) syscall.ss;;				\
 	 sgi_* |*_darwin* ) \
@@ -84,10 +82,12 @@ syscall.o: syscall.s
 		$(RM) -f syscall.ss syscall.i;; \
 	 hp_ux11? ) \
 		touch syscall.o;; \
-	amd64_fbsd*|i386_*bsd*|*nbsd*) \
-		touch syscall.o;; \
+	 amd64_fbsd*|i386_*bsd*|*nbsd*) \
+		${CCOBJ} -E ${SFLAGS} syscall.s > syscall.S ; \
+		${AS} syscall.S -o syscall.o ;  \
+		$(RM) -f syscall.S ;;\
 	 *) \
-		/lib/cpp  ${SFLAGS} ${srcdir}/syscall.s syscall.ss; \
+		/lib/cpp -P ${SFLAGS} ${srcdir}/syscall.s syscall.ss; \
 		as -o syscall.o syscall.ss;		\
 		$(RM) syscall.ss;;				\
 	esac
