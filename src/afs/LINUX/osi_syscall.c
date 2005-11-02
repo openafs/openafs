@@ -26,7 +26,7 @@ RCSID
 #include "h/mm.h"
 
 #ifdef AFS_AMD64_LINUX20_ENV
-#include "../asm/ia32_unistd.h"
+#include <asm/ia32_unistd.h>
 #endif
 
 #include <linux/proc_fs.h>
