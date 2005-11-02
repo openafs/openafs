@@ -2548,7 +2548,7 @@ rxi_PrepareSendPacket(register struct rx_call *call,
 	queue_Init(&q);
 
 	/* Free any extra elements in the wirevec */
-	for (j = MAX(2, i), nb = j - p->niovecs; j < p->niovecs; j++) {
+	for (j = MAX(2, i), nb = p->niovecs - j; j < p->niovecs; j++) {
 	    queue_Append(&q,RX_CBUF_TO_PACKET(p->wirevec[j].iov_base, p));
 	}
 	if (nb)
