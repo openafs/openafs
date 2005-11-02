@@ -453,11 +453,15 @@ PrintCacheEntries(struct rx_connection *aconn, int aint32)
     register afs_int32 code;
     struct AFSDBCacheEntry64 centry64;
 
+#ifdef AFS_OBSD_ENV
+    return PrintCacheEntries32(aconn, aint32);
+#else
     code = RXAFSCB_GetCE64(aconn, 0, &centry64);
     if (code != RXGEN_OPCODE)
 	return PrintCacheEntries64(aconn, aint32);
     else
 	return PrintCacheEntries32(aconn, aint32);
+#endif
 }
 
 int
