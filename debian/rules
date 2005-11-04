@@ -49,8 +49,8 @@ DOC_PACKAGES = libpam-openafs-kaserver openafs-dbserver openafs-fileserver \
 
 # These variable is used only by get-orig-source, which will normally only be
 # run by maintainers.
-VERSION   = 1.4.0-rc6
-UPSTREAM  = /afs/grand.central.org/software/openafs/candidate/$(VERSION)
+VERSION   = 1.4.0
+UPSTREAM  = /afs/grand.central.org/software/openafs/$(VERSION)
 
 # Download the upstream source and do the repackaging that we have to do for
 # DFSG reasons.  This assumes AFS is mounted, as it's generally only used by
@@ -152,7 +152,7 @@ binary-indep: DH_OPTIONS=-i
 binary-indep: build install binary-source
 	dh_testdir
 	dh_testroot
-	dh_installchangelogs   
+	dh_installchangelogs
 	dh_installdocs
 	dh_link
 	dh_compress
@@ -168,7 +168,7 @@ binary-arch: DH_OPTIONS=-a
 binary-arch: build install
 	dh_testdir
 	dh_testroot
-	dh_installchangelogs   
+	dh_installchangelogs
 	dh_installdocs
 	dh_installdebconf
 	DH_OPTIONS= dh_installinit -popenafs-client -r -- defaults 25 18

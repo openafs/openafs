@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/SOLARIS/osi_vnodeops.c,v 1.20.2.3 2005/09/29 20:35:45 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/SOLARIS/osi_vnodeops.c,v 1.20.2.3.2.1 2005/10/12 06:06:47 shadow Exp $");
 
 /*
  * SOLARIS/osi_vnodeops.c
@@ -1673,6 +1673,24 @@ gafs_rename(aodp, aname1, andp, aname2, acred)
 
     AFS_GLOCK();
     code = afs_rename(aodp, aname1, andp, aname2, acred);
+#ifdef AFS_SUN510_ENV
+    if (code == 0) {
+	struct vcache *avcp = NULL;
+	
+	(void) afs_lookup(andp, aname2, &avcp, NULL, 0, NULL, acred);
+	if (avcp) {
+	    struct vnode *vp = AFSTOV(avcp), *pvp = AFSTOV(andp);
+	    
+	    mutex_enter(&vp->v_lock);
+	    kmem_free(vp->v_path, strlen(vp->v_path) + 1);
+	    vp->v_path = NULL;
+	    mutex_exit(&vp->v_lock);
+	    VN_SETPATH(afs_globalVp, pvp, vp, aname2, strlen(aname2));
+	    
+	    AFS_RELE(avcp);
+	}
+    }
+#endif
     AFS_GUNLOCK();
     return (code);
 }

@@ -17,7 +17,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx.c,v 1.58.2.28 2005/09/17 20:00:39 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx.c,v 1.58.2.28.2.1 2005/10/08 04:01:00 jaltman Exp $");
 
 #ifdef KERNEL
 #include "afs/sysincludes.h"
@@ -5171,13 +5171,13 @@ rxi_Start(struct rxevent *event, register struct rx_call *call,
 		    call->flags &= ~RX_CALL_TQ_BUSY;
 		    if (call->tqWaiters || (call->flags & RX_CALL_TQ_WAIT)) {
 			dpf(("call %x has %d waiters and flags %d\n", call, call->tqWaiters, call->flags));
-		    }
 #ifdef RX_ENABLE_LOCKS
-		    osirx_AssertMine(&call->lock, "rxi_Start start");
-		    CV_BROADCAST(&call->cv_tq);
+			osirx_AssertMine(&call->lock, "rxi_Start start");
+			CV_BROADCAST(&call->cv_tq);
 #else /* RX_ENABLE_LOCKS */
-		    osi_rxWakeup(&call->tq);
+			osi_rxWakeup(&call->tq);
 #endif /* RX_ENABLE_LOCKS */
+		    }
 		    return;
 		}
 		if (call->error) {
@@ -5191,13 +5191,13 @@ rxi_Start(struct rxevent *event, register struct rx_call *call,
 		    call->flags &= ~RX_CALL_TQ_BUSY;
 		    if (call->tqWaiters || (call->flags & RX_CALL_TQ_WAIT)) {
 			dpf(("call %x has %d waiters and flags %d\n", call, call->tqWaiters, call->flags));
-		    }
 #ifdef RX_ENABLE_LOCKS
-		    osirx_AssertMine(&call->lock, "rxi_Start middle");
-		    CV_BROADCAST(&call->cv_tq);
+			osirx_AssertMine(&call->lock, "rxi_Start middle");
+			CV_BROADCAST(&call->cv_tq);
 #else /* RX_ENABLE_LOCKS */
-		    osi_rxWakeup(&call->tq);
+			osi_rxWakeup(&call->tq);
 #endif /* RX_ENABLE_LOCKS */
+		    }
 		    rxi_CallError(call, call->error);
 		    return;
 		}
@@ -5279,13 +5279,13 @@ rxi_Start(struct rxevent *event, register struct rx_call *call,
 	    call->flags &= ~RX_CALL_TQ_BUSY;
 	    if (call->tqWaiters || (call->flags & RX_CALL_TQ_WAIT)) {
 		dpf(("call %x has %d waiters and flags %d\n", call, call->tqWaiters, call->flags));
-	    }
 #ifdef RX_ENABLE_LOCKS
-	    osirx_AssertMine(&call->lock, "rxi_Start end");
-	    CV_BROADCAST(&call->cv_tq);
+		osirx_AssertMine(&call->lock, "rxi_Start end");
+		CV_BROADCAST(&call->cv_tq);
 #else /* RX_ENABLE_LOCKS */
-	    osi_rxWakeup(&call->tq);
+		osi_rxWakeup(&call->tq);
 #endif /* RX_ENABLE_LOCKS */
+	    }
 	} else {
 	    call->flags |= RX_CALL_NEED_START;
 	}
