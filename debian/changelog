@@ -5,10 +5,11 @@ openafs (1.4.0-1) UNRELEASED; urgency=low
   * Install afsd in /sbin rather than /usr/sbin.  While putting /usr in
     AFS isn't as common as it once was, no reason to make it harder than
     it needs to be.
+  * Install NEWS as an upstream changelog.
   * Add a watch file.
   * Remove the unused and uninstalled make-links script.
 
- -- Russ Allbery <rra@stanford.edu>  Fri,  4 Nov 2005 12:24:11 -0800
+ -- Russ Allbery <rra@stanford.edu>  Fri,  4 Nov 2005 13:06:23 -0800
 
 openafs (1.4rc4-1) unstable; urgency=low
 
