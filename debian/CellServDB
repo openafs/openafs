@@ -1,11 +1,11 @@
->grand.central.org      #GCO Public CellServDB 27 Jan 2005
+>grand.central.org      #GCO Public CellServDB 15 Oct 2005
 18.7.14.88                      #grand-opening.mit.edu
 128.2.191.224                   #penn.central.org
 130.237.48.87                   #andrew.e.kth.se
 >wu-wien.ac.at          #University of Economics, Vienna, Austria
 137.208.3.33                    #afsdb1.wu-wien.ac.at
-137.208.7.4                     #afsdb2.wu-wien.ac.at
-137.208.7.7                     #afsdb3.wu-wien.ac.at
+137.208.8.12                    #caesar.wu-wien.ac.at
+137.208.127.33                  #buddy.wu-wien.ac.at
 >hephy.at               #hephy-vienna
 193.170.243.10                  #mowgli.oeaw.ac.at
 193.170.243.12                  #baloo.oeaw.ac.at
@@ -21,6 +21,10 @@
 >ams.cern.ch            #AMS Experiment
 137.138.206.77                  #pcamsf2.cern.ch
 137.138.206.123                 #pcamsf4.cern.ch
+>epfl.ch                #Swiss Federal Institute of Technology at Lausanne
+128.178.2.6                     #kd1.epfl.ch
+128.178.2.7                     #kd2.epfl.ch
+128.178.2.8                     #kd3.epfl.ch
 >ethz.ch                #Swiss Federal Inst. of Tech. - Zurich, Switzerland
 129.132.97.19                   #amalthea.ethz.ch
 129.132.97.27                   #nethzafs-001.ethz.ch
@@ -40,8 +44,7 @@
 130.85.24.11                    #weasel
 130.85.24.13                    #straykitten
 >midnightlinux.com      #Midnight Linux, Pittsburgh PA
-66.93.62.18                     #romulus.midnihtlinux.com
-66.93.62.20                     #yar.midnightlinux.com
+208.10.142.82                   #outpost.midnightlinux.com
 >setfilepointer.com     #SetFilePointer.com
 63.224.10.2                     #hamlet.SetFilePointer.com
 63.224.10.4                     #troilus.SetFilePointer.com
@@ -119,6 +122,10 @@
 134.155.97.204                  #afsdb1.uni-mannheim.de
 134.155.97.205                  #afsdb2.uni-mannheim.de
 134.155.97.206                  #afsdb3.uni-mannheim.de
+>uni-paderborn.de       #University of Paderborn, Germany
+131.234.137.10                  #afsdb1.uni-paderborn.de
+131.234.137.11                  #afsdb2.uni-paderborn.de
+131.234.137.12                  #afsdb3.uni-paderborn.de
 >physik.uni-wuppertal.de #Physics department of Bergische Universität Wuppertal
 132.195.104.3                   #afs1.physik.uni-wuppertal.de
 132.195.104.230                 #afs2.physik.uni-wuppertal.de
@@ -146,8 +153,8 @@
 128.2.10.28                     #vice28.fs.andrew.cmu.edu
 128.2.32.44                     #new-vice12.fs.andrew.cmu.edu
 >club.cc.cmu.edu        #Carnegie Mellon University Computer Club
-128.2.4.132                     #zirconium.club.cc.cmu.edu
-128.2.4.181                     #yttrium.club.cc.cmu.edu
+128.237.157.11                  #sodium.club.cc.cmu.edu
+128.237.157.13                  #potassium.club.cc.cmu.edu
 >chem.cmu.edu           #Carnegie Mellon University - Chemistry Dept.
 128.2.40.134                    #afs.chem.cmu.edu
 128.2.40.140                    #afs2.chem.cmu.edu
@@ -165,8 +172,8 @@
 204.194.25.7                    #afs1.qatar.cmu.edu
 204.194.25.8                    #afs2.qatar.cmu.edu
 >sbp.ri.cmu.edu         #Carnegie Mellon University - Sensor Based Planning Lab
-128.2.105.174                   #voronoi.sbp.ri.cmu.edu
-128.2.105.175                   #nihao.sbp.ri.cmu.edu
+128.2.56.129                    #nihao.sbp.ri.cmu.edu
+128.2.56.136                    #youtheman.sbp.ri.cmu.edu
 >msc.cornell.edu        #Cornell University Materials Science Center
 128.84.231.242                  #miranda.ccmr.cornell.edu
 128.84.241.35                   #co.ccmr.cornell.edu
@@ -201,6 +208,10 @@
 18.181.0.19                     #reynelda.mit.edu.
 18.181.0.22                     #rosebud.mit.edu.
 18.181.0.23                     #ronald-ann.mit.edu.
+>soap.mit.edu           #MIT School Of Architecture & Planning
+18.89.1.204                     #crypt.mit.edu
+18.89.1.209                     #grotto.mit.edu
+18.89.2.156                     #ac.mit.edu
 >msu.edu                #Michigan State University Main Cell
 35.9.7.10                       #afsdb0.cl.msu.edu
 >nd.edu                 #University of Notre Dame
@@ -288,10 +299,6 @@
 141.211.211.53                  #gerow.lsa.umich.edu
 141.211.211.72                  #collines.lsa.umich.edu
 141.211.211.153                 #hodges.lsa.umich.edu
->math.lsa.umich.edu     #University of Michigan - Math Department
-141.211.61.40                   #ike.math.lsa.umich.edu
-141.211.61.41                   #clark.math.lsa.umich.edu
-141.211.61.42                   #nimitz.math.lsa.umich.edu
 >umr.edu                #University of Missouri - Rolla
 131.151.1.59                    #afsdb1.umr.edu
 131.151.1.70                    #afsdb3.umr.edu
@@ -318,11 +325,15 @@
 144.92.13.15                    #curly.cae.wisc.edu
 144.92.13.16                    #moe.cae.wisc.edu
 >hep.wisc.edu           #University of Wisconsin -- High Energy Physics
-128.104.28.219                  #anise.physics.wisc.edu
+128.104.28.219                  #anise.hep.wisc.edu
 >physics.wisc.edu       #Univ. of Wisconsin-Madison, Physics Department
 128.104.160.13                  #kendra.physics.wisc.edu
 128.104.160.14                  #fray.physics.wisc.edu
 128.104.160.15                  #buffy.physics.wisc.edu
+>ciemat.es              #Ciemat, Madrid, Spain
+130.206.11.42                   #afsdb1.ciemat.es
+130.206.11.217                  #afsdb2.ciemat.es
+130.206.11.247                  #afsdb3.ciemat.es
 >ifca.unican.es         #Instituto de Fisica de Cantabria (IFCA), Santander, Spain
 193.144.209.20                  #gridwall.ifca.unican.es
 >ific.uv.es             #Instituto de Fisica Corpuscular, Valencia, Spain
@@ -364,11 +375,20 @@
 128.55.128.252                  #alfred.nersc.gov
 128.55.128.254                  #lurch.nersc.gov
 >bme.hu                 #Budapest University of Technology and Economics
-152.66.241.81                   #dugo.iit.bme.hu
+152.66.241.6                    #afs.iit.bme.hu
+>kfki.hu                #Research Institute for Nuclear and Particle Physics - Budapest,H
+148.6.8.14                      #afs.kfki.hu
 >caspur.it              #CASPUR Inter-University Computing Consortium, Rome
 193.204.5.45                    #pomodoro.caspur.it
 193.204.5.46                    #banana.caspur.it
 193.204.5.50                    #maslo.caspur.it
+>enea.it                #ENEA New Tech. Energy & Environment Agency, Italy
+192.107.54.5                    #aixfs.frascati.enea.it
+192.107.54.11                   #rs2ced.frascati.enea.it
+192.107.54.12                   #43p.frascati.enea.it
+192.107.61.235                  #serverinfo02.bologna.enea.it
+192.107.71.6                    #glauco.casaccia.enea.it
+192.107.96.233                  #riscdb.trisaia.enea.it
 >fusione.it             #Assoz. FUSIONE/Euratom, ENEA, Frascati-Italy
 192.107.90.2                    #fusafs1.frascati.enea.it
 192.107.90.3                    #fusafs2.frascati.enea.it
@@ -376,9 +396,11 @@
 >icemb.it               #ICEMB, Universita' La Sapienza - Rome - Italy
 193.204.6.130                   #icembfs.caspur.it
 >infn.it                #Istituto Nazionale di Fisica Nucleare (INFN), Italia
-131.154.1.7                     #afs3.infn.it
-141.108.3.252                   #afs1.infn.it
-192.84.134.75                   #afs2.infn.it
+131.154.1.7                     #afscnaf.infn.it
+141.108.26.75                   #afsrm1.roma1.infn.it
+192.84.134.75                   #afsna.na.infn.it
+>ba.infn.it             #INFN, Sezione di Bari
+193.206.185.235                 #baafsserver.ba.infn.it
 >kloe.infn.it           #INFN, KLOE experiment at Laboratori di Frascati
 192.135.25.111                  #kloeafs1.lnf.infn.it
 192.135.25.112                  #kloeafs2.lnf.infn.it
@@ -401,8 +423,13 @@
 >ictp.trieste.it        #The Abdus Salam International Centre for Theoretical Physics (IC
 140.105.16.8                    #fs1.ictp.trieste.it
 140.105.16.9                    #fs2.ictp.trieste.it
+>math.unifi.it          #math.unifi.it
+150.217.34.182                  #xeno.math.unifi.it
 >ing.uniroma1.it        #Universita' La Sapienza, Fac. Ingeneria
 151.100.85.253                  #alfa.ing.uniroma1.it
+>dia.uniroma3.it        #University Roma Tre - DIA
+193.204.161.79                  #plm.dia.uniroma3.it
+193.204.161.118                 #afs.dia.uniroma3.it
 >vn.uniroma3.it         #University of Rome 3, Area Vasca Navale
 193.204.161.136                 #alfa.dia.uniroma3.it
 193.204.161.137                 #beta.dia.uniroma3.it
@@ -427,21 +454,22 @@
 66.92.236.139                   #afs.sinenomine.net
 >slackers.net           #The Slackers' Network
 63.201.48.27                    #alexandria.slackers.net
+>tproa.net              #The People's Republic of Ames
+209.234.76.70                   #service-3.tproa.net
 >nikhef.nl              #The Dutch National Institute for High Energy Physics
 192.16.185.26                   #afs1.nikhef.nl
 192.16.185.27                   #afs2.nikhef.nl
->1ts.org                #KCR/private Karl Ramm, Cambridge, MA
+>1ts.org                #1TS.ORG, Cambridge, MA
 4.36.43.102                     #dol-guldur.1ts.org
+69.25.196.51                    #pancake.1ts.org
 >bazquux.org            #Baz Quux Organization
 66.207.142.196                  #baxquux.org
 >coed.org               #Adam Pennington's Cell
 66.93.61.184                    #vice1.coed.org
-128.2.4.163                     #vice3.coed.org
+128.237.157.35                  #vice3.coed.org
 >dementia.org           #Dementia Unlimited
 128.2.12.45                     #alycia.dementia.org
 128.2.120.216                   #meredith.dementia.org
->firelion.org           #firelion.org
-24.28.77.209                    #sirius.firelion.org
 >hackish.org            #Hackish.org
 24.167.65.213                   #avatar.sys.hackish.org
 128.2.120.138                   #kurma.sys.hackish.org
@@ -454,10 +482,12 @@
 204.29.154.12                   #iota.nomh.org
 204.29.154.32                   #adversity.xi.nomh.org
 >oc7.org                #The OC7 Project
-128.2.6.107                     #vice3.oc7.org
-128.2.122.140                   #vice2.oc7.org
+128.2.122.140                   #knife.oc7.org
+207.22.77.170                   #spoon.oc7.org
 >openafs.org            #OpenAFS Project
-128.2.13.199                    #virtue.openafs.org
+18.7.14.88                      #grand-opening.mit.edu
+128.2.191.224                   #penn.central.org
+130.237.48.87                   #andrew.e.kth.se
 >e.kth.se               #Royal Institute of Technology, Elektro
 130.237.32.145                  #sonen.e.kth.se
 130.237.48.7                    #anden.e.kth.se

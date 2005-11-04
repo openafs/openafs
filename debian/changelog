@@ -1,15 +1,16 @@
-openafs (1.4.0-1) UNRELEASED; urgency=low
+openafs (1.4.0-1) unstable; urgency=low
 
   * New upstream version.
     - Builds correctly with 2.6.13 kernels and software suspend.
   * Install afsd in /sbin rather than /usr/sbin.  While putting /usr in
     AFS isn't as common as it once was, no reason to make it harder than
     it needs to be.
+  * Update CellServDB to the 2005-10-15 grand.central.org version.
   * Install NEWS as an upstream changelog.
   * Add a watch file.
   * Remove the unused and uninstalled make-links script.
 
- -- Russ Allbery <rra@stanford.edu>  Fri,  4 Nov 2005 13:06:23 -0800
+ --
 
 openafs (1.4rc4-1) unstable; urgency=low
 
