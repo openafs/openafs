@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/libadmin/vos/afs_vosAdmin.c,v 1.9 2003/12/07 22:49:32 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/libadmin/vos/afs_vosAdmin.c,v 1.9.10.2 2005/10/13 18:29:41 shadow Exp $");
 
 #include <afs/stds.h>
 #include <stdio.h>

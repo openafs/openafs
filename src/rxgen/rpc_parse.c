@@ -36,7 +36,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/rxgen/rpc_parse.c,v 1.18 2004/05/05 03:24:57 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/rxgen/rpc_parse.c,v 1.18.10.1 2005/10/15 01:21:21 shadow Exp $");
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -775,7 +775,10 @@ check_proc(definition * defp, token * tokp, int noname)
     scan4(TOK_SPLIT, TOK_MULTI, TOK_EQUAL, TOK_SEMICOLON, &tok);
     if (tok.kind == TOK_MULTI) {
 	proc_multi = 1;
+	defp->pc.multi_flag = 1;
 	scan2(TOK_EQUAL, TOK_SEMICOLON, &tok);
+    } else {
+	defp->pc.multi_flag = 0;
     }
     if (tok.kind == TOK_SPLIT) {
 	proc_split = 1;

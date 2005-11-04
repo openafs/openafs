@@ -22,7 +22,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/libadmin/vos/vsprocs.c,v 1.11 2003/11/29 22:08:14 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/libadmin/vos/vsprocs.c,v 1.11.10.2 2005/10/13 18:29:41 shadow Exp $");
 
 #include "vsprocs.h"
 #include "vosutils.h"

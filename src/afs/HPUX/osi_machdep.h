@@ -109,7 +109,9 @@ int afs_osi_Wakeup(void *event);
 #if !defined(AFS_HPUX110_ENV)
 extern caddr_t kmem_alloc();
 #endif
+#if defined(AFS_HPUX1111_ENV)
 #include <sys/kthread_iface.h>	/* for kt_cred() */
+#endif
 
 /* Expected to be available as a patch from HP */
 /* See section D of the top level README for details */

@@ -21,7 +21,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vol/partition.c,v 1.30.2.1 2004/08/25 07:14:19 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vol/partition.c,v 1.30.2.1.4.1 2005/10/17 20:48:29 shadow Exp $");
 
 #include <ctype.h>
 #ifdef AFS_NT40_ENV
@@ -346,12 +346,12 @@ VCheckPartition(char *part, char *devname)
 	Log("This program is compiled without AFS_NAMEI_ENV, but partition %s seems to contain volumes which use the namei-interface; aborting\n", part);
 	return -1;
     }
-#endif /* AFS_NAMEI_ENV */
-#endif
 
 #ifdef AFS_SGI_XFS_IOPS_ENV
     if (VerifyXFSInodeSize(part, status.st_fstype) < 0)
 	return -1;
+#endif
+#endif /* AFS_NAMEI_ENV */
 #endif
 
 #if defined(AFS_DUX40_ENV) && !defined(AFS_NAMEI_ENV)

@@ -1,11 +1,40 @@
 OpenAFS News -- history of user-visible changes.
 
-* Changes incorporated in OpenAFS 1.3
+* Changes incorporated in OpenAFS 1.4.0
+
+** Addition of pthreading support in volserver.
+
+** Threading optimization of RX libraries.
+
+** Windows 95/98 client desupported.
+
+** Digital UNIX/Tru64 desupported.
+
+** Windows XP/2003 client includes persistent (across boots) cache support.
+
+** Windows XP/2003 now supports a cache of up to 1.2gb.
+
+** Windows XP/2003 has various improvements to the included GUI and command 
+   line tools.
+
+** Windows XP/2003 now supports AFS UNC paths.
+
+** MacOS X (10.3) and Linux use system inodes instead of a private inode pool.
+
+** Files larger than 2gb are supported in Unix clients, and in servers if the 
+   --enable-largefile-fileserver switch is enabled at configure time.
+
+** Obsolete and insecure auxiliary network daemons (rcp, rsh, ftpd et al)
+   have been removed.
+
+** Fileserver optimizations have been made to improve timeout and callback 
+   breaking behavior to inaccessible clients or clients whose address has
+   changed.
+
+** Kerberos 5 support is integrated.
 
 ** -nosettime is now the default for afsd.  Use "-settime" to get the
    old behavior.
-
-** OpenBSD is now supported.
 
 ** Mountpoint directory information is now only faked for cross-cell
    mountpoints when using the -fakestat flag (e.g. for the directories
