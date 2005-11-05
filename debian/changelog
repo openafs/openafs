@@ -10,7 +10,7 @@ openafs (1.4.0-1) unstable; urgency=low
   * Add a watch file.
   * Remove the unused and uninstalled make-links script.
 
- --
+ -- Russ Allbery <rra@stanford.edu>  Fri,  4 Nov 2005 13:13:03 -0800
 
 openafs (1.4rc4-1) unstable; urgency=low
 
