@@ -100,7 +100,7 @@ AddEventSource()
 					0,			// must be zero 
 					REG_EXPAND_SZ,		// value type 
 					(LPBYTE) szBuf,		// pointer to value data 
-					strlen(szBuf) + 1))	// length of value data
+					(DWORD)strlen(szBuf) + 1))	// length of value data
 			{
 				bRet = FALSE;
 				break;

@@ -419,7 +419,7 @@ STDMETHODIMP CShellExt::XMenuExt::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
     return NOERROR;
 }
 
-STDMETHODIMP CShellExt::XMenuExt::GetCommandString(UINT idCmd, UINT uType,
+STDMETHODIMP CShellExt::XMenuExt::GetCommandString(UINT_PTR idCmd, UINT uType,
     UINT* pwReserved, LPSTR pszName, UINT cchMax)
 {
 	if (uType != GCS_HELPTEXT)

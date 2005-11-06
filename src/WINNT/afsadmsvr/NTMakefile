@@ -101,13 +101,10 @@ MIDL_FLAGS=/ms_ext \
            /app_config \
            /I $(INCFILEDIR) \
            /I . \
-           /env win32 \
-           /win32 \
            /align 8 \
            /pack 8 \
            /W3 \
            /WX \
-	   /no_robust \
            /nologo
 
 .SUFFIXES: .h .idl
@@ -148,6 +145,7 @@ afsclass_clean :
 
 $(EXEFILE) : $(EXEOBJS) $(EXELIBS)
 	$(EXECONLINK)  $(VCLIBS)
+        $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
 
 install : \

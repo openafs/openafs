@@ -62,9 +62,9 @@ BOOL WINAPI Server_Execute_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
    LPSVR_EXECUTE_PARAMS lpp;
 
    if (msg == WM_INITDIALOG)
-      SetWindowLong (hDlg, DWL_USER, lp);
+      SetWindowLongPtr (hDlg, DWLP_USER, lp);
 
-   if ((lpp = (LPSVR_EXECUTE_PARAMS)GetWindowLong(hDlg,DWL_USER)) != NULL)
+   if ((lpp = (LPSVR_EXECUTE_PARAMS)GetWindowLongPtr(hDlg,DWLP_USER)) != NULL)
       {
       switch (msg)
          {
@@ -104,7 +104,7 @@ BOOL WINAPI Server_Execute_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 
          case WM_DESTROY:
             Delete (lpp);
-            SetWindowLong (hDlg, DWL_USER, 0);
+            SetWindowLongPtr (hDlg, DWLP_USER, 0);
             PropCache_Delete (pcSVR_EXECUTE, NULL);
             break;
          }

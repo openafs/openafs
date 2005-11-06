@@ -24,8 +24,8 @@ main(argc, argv)
 {
 	int cellNum;
 	int rc;
-	int current_time;
-	int tokenExpireTime;
+        time_t current_time;
+        time_t tokenExpireTime;
 	char *expireString;
 	char userName[100];
 	struct ktc_principal serviceName, clientName;

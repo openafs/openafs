@@ -23,7 +23,7 @@
 #define OSI_LOG_MAXPARMS	4	/* max # of int parms */
 
 typedef struct osi_logEntry {
-	long tid;			/* thread ID */
+	size_t tid;			/* thread ID */
         unsigned long micros;		/* microsecond-based time stamp */
         char *formatp;			/* format string */
         long parms[OSI_LOG_MAXPARMS];	/* parms */
@@ -32,10 +32,10 @@ typedef struct osi_logEntry {
 typedef struct osi_log {
 	osi_queue_t q;			/* queue of all logs */
 	char *namep;			/* name */
-	long alloc;			/* allocated size */
+	size_t alloc;			/* allocated size */
         long nused;			/* number currently in use */
         long first;			/* index of first entry */
-        Crit_Sec cs;		/* use this, rather than a higher-level
+        Crit_Sec cs;			/* use this, rather than a higher-level
 					 * lock, so we can log stuff from
 					 * osi lock pkg */
         osi_logEntry_t *datap;		/* data for the log */
@@ -55,11 +55,11 @@ typedef struct osi_logFD {
 
 extern long osi_logSize;
 
-extern osi_log_t *osi_LogCreate(char *, long);
+extern osi_log_t *osi_LogCreate(char *, size_t);
 
 extern void osi_LogFree(osi_log_t *);
 
-extern void osi_LogAdd(osi_log_t *, char *, long, long, long, long);
+extern void osi_LogAdd(osi_log_t *, char *, size_t, size_t, size_t, size_t);
 
 extern void osi_LogReset(osi_log_t *);
 
@@ -75,7 +75,7 @@ extern void osi_LogEnable(osi_log_t *);
 
 extern void osi_LogDisable(osi_log_t *);
 
-extern void osi_LogPanic(char *filep, long line);
+extern void osi_LogPanic(char *filep, size_t line);
 
 extern void osi_LogPrint(osi_log_t *logp, FILE_HANDLE handle);
 
@@ -87,11 +87,11 @@ extern char *osi_HexifyString(char *s);
 
 /* define macros */
 #define osi_Log0(l,f)		osi_LogAdd((l), (f), 0, 0, 0, 0)
-#define osi_Log1(l,f,a)		osi_LogAdd((l), (f), (long) (a), 0, 0, 0)
-#define osi_Log2(l,f,a,b)	osi_LogAdd((l), (f), (long) (a), (long) (b), 0, 0)
-#define osi_Log3(l,f,a,b,c)	osi_LogAdd((l), (f), (long) (a), (long) (b), (long) (c), 0)
-#define osi_Log4(l,f,a,b,c,d)	osi_LogAdd((l), (f), (long) (a), (long) (b), (long) (c), (long) (d))
-#define osi_Log5(l,f,a,b,c,d,e)	osi_LogAdd((l), (f), (long) (a), (long) (b), (long) (c), (long) (d), (long) (e))
+#define osi_Log1(l,f,a)		osi_LogAdd((l), (f), (size_t) (a), 0, 0, 0)
+#define osi_Log2(l,f,a,b)	osi_LogAdd((l), (f), (size_t) (a), (size_t) (b), 0, 0)
+#define osi_Log3(l,f,a,b,c)	osi_LogAdd((l), (f), (size_t) (a), (size_t) (b), (size_t) (c), 0)
+#define osi_Log4(l,f,a,b,c,d)	osi_LogAdd((l), (f), (size_t) (a), (size_t) (b), (size_t) (c), (size_t) (d))
+#define osi_Log5(l,f,a,b,c,d,e)	osi_LogAdd((l), (f), (size_t) (a), (size_t) (b), (size_t) (c), (size_t) (d), (size_t) (e))
 
 #ifdef DEBUG_VERBOSE
 #define DEBUG_EVENT1(a,b,c) {HANDLE h; char *ptbuf[1],buf[132];\

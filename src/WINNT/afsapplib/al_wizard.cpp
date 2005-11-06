@@ -136,7 +136,7 @@ LPWIZARD WIZARD::GetWizard (HWND hWnd)
    LPWIZARD pWiz = NULL;
 
    try {
-      if ((pWiz = (LPWIZARD)GetWindowLong (hWnd, DWL_USER)) != NULL)
+      if ((pWiz = (LPWIZARD)GetWindowLongPtr (hWnd, DWLP_USER)) != NULL)
          {
          if ( (pWiz->m_hWnd != hWnd) && (pWiz->m_hBkg != hWnd) )
             pWiz = NULL;
@@ -649,9 +649,9 @@ BOOL WIZARD::SendStateCommand (int st, WIZARD_COMMAND wc)
 BOOL CALLBACK WIZARD::Template_DlgProc (HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 {
    if (msg == WM_INITDIALOG)
-      SetWindowLong (hWnd, DWL_USER, lp);
+      SetWindowLongPtr (hWnd, DWLP_USER, lp);
 
-   LPWIZARD pWiz = (LPWIZARD)GetWindowLong (hWnd, DWL_USER);
+   LPWIZARD pWiz = (LPWIZARD)GetWindowLongPtr (hWnd, DWLP_USER);
 
    switch (msg)
       {
@@ -928,9 +928,9 @@ void GetRectInParent (HWND hWnd, RECT *pr)
 BOOL CALLBACK WIZARD::Background_DlgProc (HWND hBkg, UINT msg, WPARAM wp, LPARAM lp)
 {
    if (msg == WM_INITDIALOG)
-      SetWindowLong (hBkg, DWL_USER, lp);
+      SetWindowLongPtr (hBkg, DWLP_USER, lp);
 
-   LPWIZARD pWiz = (LPWIZARD)GetWindowLong (hBkg, DWL_USER);
+   LPWIZARD pWiz = (LPWIZARD)GetWindowLongPtr (hBkg, DWLP_USER);
 
    switch (msg)
       {

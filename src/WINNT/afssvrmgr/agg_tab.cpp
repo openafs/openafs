@@ -64,7 +64,7 @@ BOOL CALLBACK Aggregates_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
          ResizeWindow (hDlg, awdAggregates, rwaMoveToHere, &rTab);
 
          FL_RestoreView (GetDlgItem (hDlg, IDC_AGG_LIST), &gr.viewAgg);
-         FastList_SetTextCallback (GetDlgItem (hDlg, IDC_AGG_LIST), GetItemText, (DWORD)&gr.viewAgg);
+         FastList_SetTextCallback (GetDlgItem (hDlg, IDC_AGG_LIST), GetItemText, &gr.viewAgg);
 
          Aggregates_SubclassList (hDlg);
          }
@@ -188,7 +188,7 @@ void Aggregates_OnNotifyFromDispatch (LPNOTIFYSTRUCT lpns)
 }
 
 
-static LONG procAggregatesList = 0;
+static UINT_PTR procAggregatesList = 0;
 
 LRESULT CALLBACK Aggregates_SubclassListProc (HWND hList, UINT msg, WPARAM wp, LPARAM lp)
 {
@@ -203,7 +203,7 @@ LRESULT CALLBACK Aggregates_SubclassListProc (HWND hList, UINT msg, WPARAM wp, L
       {
       case WM_DESTROY:
          if (procAggregatesList != 0)
-            SetWindowLong (hList, GWL_WNDPROC, procAggregatesList);
+            SetWindowLongPtr (hList, GWLP_WNDPROC, procAggregatesList);
          break;
 
       case WM_COMMAND:
@@ -221,8 +221,8 @@ LRESULT CALLBACK Aggregates_SubclassListProc (HWND hList, UINT msg, WPARAM wp, L
 void Aggregates_SubclassList (HWND hDlg)
 {
    HWND hList = GetDlgItem (hDlg, IDC_AGG_LIST);
-   procAggregatesList = GetWindowLong (hList, GWL_WNDPROC);
-   SetWindowLong (hList, GWL_WNDPROC, (LONG)Aggregates_SubclassListProc);
+   procAggregatesList = GetWindowLongPtr (hList, GWLP_WNDPROC);
+   SetWindowLongPtr (hList, GWLP_WNDPROC, (LONG_PTR)Aggregates_SubclassListProc);
 }
 
 

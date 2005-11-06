@@ -149,13 +149,13 @@ void ErasePreferences (LPTSTR pszCell, LPTSTR pszServer)
       else
          {
          TCHAR szFound[ MAX_PATH ];
-         for (size_t ii = 0; RegEnumKey (hk, ii, szFound, MAX_PATH) == 0; ++ii)
+         for (int ii = 0; RegEnumKey (hk, ii, szFound, MAX_PATH) == 0; ++ii)
             {
             if (lstrncmpi (szFound, pszDelete, lstrlen(pszDelete)))
                continue;
 
             if (RegDeltreeKey (hk, szFound))
-               ii = (size_t)-1; // restart search
+               ii = -1; // restart search
             }
          }
 

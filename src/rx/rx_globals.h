@@ -425,9 +425,9 @@ EXT u_short rx_port;
 #if !defined(KERNEL) && !defined(AFS_PTHREAD_ENV)
 /* 32-bit select Mask for rx_Listener. */
 EXT fd_set rx_selectMask;
-EXT int rx_maxSocketNumber;	/* Maximum socket number in the select mask. */
+EXT osi_socket rx_maxSocketNumber;	/* Maximum socket number in the select mask. */
 /* Minumum socket number in the select mask. */
-EXT int rx_minSocketNumber INIT(0x7fffffff);
+EXT osi_socket rx_minSocketNumber INIT(0x7fffffff);
 #endif
 
 /* This is actually the minimum number of packets that must remain free,
@@ -508,7 +508,12 @@ EXT FILE *rxevent_debugFile;	/* Set to an stdio descriptor for event logging to 
 
 #define rx_Log rx_debugFile
 #ifdef AFS_NT40_ENV
-#define dpf(args) rxi_DebugPrint args; 
+EXT int rxdebug_active;
+#if !defined(_WIN64)
+#define dpf(args) if (rxdebug_active) rxi_DebugPrint args;
+#else
+#define dpf(args)
+#endif
 #else
 #define dpf(args) if (rx_debugFile) rxi_DebugPrint args; else
 #endif

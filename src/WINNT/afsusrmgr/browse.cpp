@@ -77,7 +77,7 @@ BOOL ShowBrowseDialog (LPBROWSE_PARAMS lpp)
 BOOL CALLBACK Browse_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 {
    LPBROWSE_PARAMS lpp;
-   if ((lpp = (LPBROWSE_PARAMS)GetWindowLong (hDlg, DWL_USER)) != NULL)
+   if ((lpp = (LPBROWSE_PARAMS)GetWindowLongPtr (hDlg, DWLP_USER)) != NULL)
       {
       if (AfsAppLib_HandleHelp (lpp->iddForHelp, hDlg, msg, wp, lp))
          return FALSE;
@@ -86,7 +86,7 @@ BOOL CALLBACK Browse_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
    switch (msg)
       {
       case WM_INITDIALOG:
-         SetWindowLong (hDlg, DWL_USER, lp);
+         SetWindowLongPtr (hDlg, DWLP_USER, lp);
          Browse_OnInitDialog (hDlg);
          l.dwTickLastType = 0;
          break;
@@ -194,7 +194,7 @@ BOOL CALLBACK Browse_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 void Browse_OnInitDialog (HWND hDlg)
 {
    LPBROWSE_PARAMS lpp;
-   if ((lpp = (LPBROWSE_PARAMS)GetWindowLong (hDlg, DWL_USER)) != NULL)
+   if ((lpp = (LPBROWSE_PARAMS)GetWindowLongPtr (hDlg, DWLP_USER)) != NULL)
       {
       // First, the text of the dialog is woefully ugly right now. Put
       // in the strings which the caller supplied.
@@ -273,7 +273,7 @@ void Browse_OnInitDialog (HWND hDlg)
 void Browse_OnSelect (HWND hDlg)
 {
    LPBROWSE_PARAMS lpp;
-   if ((lpp = (LPBROWSE_PARAMS)GetWindowLong (hDlg, DWL_USER)) != NULL)
+   if ((lpp = (LPBROWSE_PARAMS)GetWindowLongPtr (hDlg, DWLP_USER)) != NULL)
       {
       if (!lpp->fQuerying)
          {
@@ -319,7 +319,7 @@ void Browse_OnSelect (HWND hDlg)
 void Browse_OnOK (HWND hDlg)
 {
    LPBROWSE_PARAMS lpp;
-   if ((lpp = (LPBROWSE_PARAMS)GetWindowLong (hDlg, DWL_USER)) != NULL)
+   if ((lpp = (LPBROWSE_PARAMS)GetWindowLongPtr (hDlg, DWLP_USER)) != NULL)
       {
       LPTSTR pszNames = GetEditText (GetDlgItem (hDlg, IDC_BROWSE_NAMED));
 
@@ -342,7 +342,7 @@ void Browse_OnEndTask_EnumObjects (HWND hDlg, LPTASKPACKET ptp)
 {
    LPBROWSE_PARAMS lpp;
    size_t ii;
-   if ((lpp = (LPBROWSE_PARAMS)GetWindowLong (hDlg, DWL_USER)) != NULL)
+   if ((lpp = (LPBROWSE_PARAMS)GetWindowLongPtr (hDlg, DWLP_USER)) != NULL)
       {
       HWND hList = GetDlgItem (hDlg, IDC_BROWSE_LIST);
       FastList_Begin (hList);
@@ -407,7 +407,7 @@ void Browse_OnEndTask_EnumObjects (HWND hDlg, LPTASKPACKET ptp)
 void Browse_OnEndTask_Translate (HWND hDlg, LPTASKPACKET ptp)
 {
    LPBROWSE_PARAMS lpp;
-   if ((lpp = (LPBROWSE_PARAMS)GetWindowLong (hDlg, DWL_USER)) != NULL)
+    if ((lpp = (LPBROWSE_PARAMS)GetWindowLongPtr (hDlg, DWLP_USER)) != NULL)
       {
       if (!ptp->rc || !TASKDATA(ptp)->pAsidList || !TASKDATA(ptp)->pAsidList->cEntries)
          {
@@ -440,7 +440,7 @@ void Browse_OnEndTask_Translate (HWND hDlg, LPTASKPACKET ptp)
 void Browse_UpdateDialog (HWND hDlg)
 {
    LPBROWSE_PARAMS lpp;
-   if ((lpp = (LPBROWSE_PARAMS)GetWindowLong (hDlg, DWL_USER)) != NULL)
+   if ((lpp = (LPBROWSE_PARAMS)GetWindowLongPtr (hDlg, DWLP_USER)) != NULL)
       {
       lpp->fQuerying ++;
 
@@ -499,7 +499,7 @@ ASOBJTYPE Browse_GetSelectedType (HWND hDlg)
       }
 
    LPBROWSE_PARAMS lpp;
-   if ((lpp = (LPBROWSE_PARAMS)GetWindowLong (hDlg, DWL_USER)) != NULL)
+   if ((lpp = (LPBROWSE_PARAMS)GetWindowLongPtr (hDlg, DWLP_USER)) != NULL)
       {
       return lpp->TypeToShow;
       }

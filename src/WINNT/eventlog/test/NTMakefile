@@ -13,6 +13,7 @@ test tests: elogtest.exe
 $(OUT)\elogtest.exe: $(OUT)\elogtest.obj \
 	$(DESTDIR)\lib\afs\afseventlog.lib $(DESTDIR)\lib\afs\afsreg.lib
 	$(EXECONLINK)
+        $(_VC_MANIFEST_EMBED_EXE)
 
 mkdir:
 	

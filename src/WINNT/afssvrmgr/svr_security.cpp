@@ -134,8 +134,8 @@ void Server_Security (LPIDENT lpiServer, BOOL fJumpToKeys)
       lpiServer->GetServerName (szServer);
       LPTSTR pszTitle = FormatString (IDS_SVR_SECURITY_TITLE, TEXT("%s"), szServer);
       LPPROPSHEET psh = PropSheet_Create (pszTitle, FALSE);
-      PropSheet_AddTab (psh, IDS_SVR_LIST_TAB, IDD_SVR_LISTS, (DLGPROC)Server_Lists_DlgProc, (LONG)lpp, TRUE, !fJumpToKeys);
-      PropSheet_AddTab (psh, IDS_SVR_KEY_TAB,  IDD_SVR_KEYS,  (DLGPROC)Server_Keys_DlgProc,  (LONG)lpp, TRUE,  fJumpToKeys);
+      PropSheet_AddTab (psh, IDS_SVR_LIST_TAB, IDD_SVR_LISTS, (DLGPROC)Server_Lists_DlgProc, (LONG_PTR)lpp, TRUE, !fJumpToKeys);
+      PropSheet_AddTab (psh, IDS_SVR_KEY_TAB,  IDD_SVR_KEYS,  (DLGPROC)Server_Keys_DlgProc,  (LONG_PTR)lpp, TRUE,  fJumpToKeys);
       PropSheet_ShowModeless (psh);
       FreeString (pszTitle);
       }
@@ -811,7 +811,7 @@ BOOL CreateKey_OnOK (HWND hDlg, LPKEY_CREATE_PARAMS lpp)
          return FALSE;
       }
 
-   lpp->keyVersion = SP_GetPos (GetDlgItem (hDlg, IDC_KEY_VERSION));
+   lpp->keyVersion = (int) SP_GetPos (GetDlgItem (hDlg, IDC_KEY_VERSION));
    return TRUE;
 }
 

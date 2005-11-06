@@ -16,8 +16,8 @@
  *
  */
 
-void StartPingThread (DWORD idClient);
-void StopPingThread (DWORD idClient);
+void StartPingThread (UINT_PTR idClient);
+void StopPingThread (UINT_PTR idClient);
 
 void StartCallbackThread (void);
 void StopCallbackThread (void);

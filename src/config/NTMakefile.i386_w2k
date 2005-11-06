@@ -37,6 +37,10 @@
 
 #sanity checks 
 
+!IF ("$(CPU)" != "i386")
+!ERROR Platform SDK not configured for i386
+!ENDIF
+
 !IF EXISTS("TOOLS.INI")
 !MESSAGE ************CAUTION TOOLS.INI IN EFFECT**********
 !ENDIF
@@ -212,12 +216,13 @@ afscdefs =\
 	-DSTRICT \
 	-D_WIN32_IE=0x0500 \
 	-D_WIN32_WINNT=0x0500 \
-    -DWINVER=0x0500 \
-    -DREGISTER_POWER_NOTIFICATIONS \
-    -DAFS_AFSDB_ENV \
-    -DAFS_FREELANCE_CLIENT \
-    -DAFS_64BIT_ENV \
+    	-DWINVER=0x0500 \
+    	-DREGISTER_POWER_NOTIFICATIONS \
+    	-DAFS_AFSDB_ENV \
+    	-DAFS_FREELANCE_CLIENT \
+    	-DAFS_64BIT_ENV \
 	-DAFS_64BIT_CLIENT \
+	-DAFS_LARGEFILE_ENV \
 	 $(AFSDEV_AUXCDEFINES)
 
 # Compiler switches (except include paths and preprocessor defines)
@@ -230,9 +235,11 @@ afscdefs =\
 # /Gy   enable function-level linking
 # /GX   enable C++ exceptions (assumes extern C funcs never throw exceptions)
 # /Os   favor small (over fast) code; seems to avoid 64-bit bugs in VC compiler
+# /Wp64 enable 64-bit porting warnings (conflicts with warnings as errors
+#         due to SDK mapping of Get/SetWindowLongPtr to Get/SetWindowLong
 
 afscflags =\
-    /Oy- \
+	/Oy- \
 	/GF \
 	/Gd \
 	/Gy \
@@ -440,9 +447,7 @@ NTLANG = $(DESTDIR)\bin\NTLang.bat
 
 ######### MIDL FLAGS
 
-!IFDEF OSISXP
-AFSDEV_AUXMIDLFLAGS=/Oi
-!ENDIF
+AFSDEV_AUXMIDLFLAGS=/env win32 /win32 /no_robust /Oicf 
 
 # Lex/Yacc macros
 LEX = flex -l

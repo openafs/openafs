@@ -33,7 +33,7 @@ extern "C" {
  *
  */
 
-BOOL ValidateBinding (RPC_NS_HANDLE hBind, DWORD *pidClient, ULONG *pStatus);
+BOOL ValidateBinding (RPC_NS_HANDLE hBind, UINT_PTR *pidClient, ULONG *pStatus);
 
 
 /*
@@ -41,7 +41,7 @@ BOOL ValidateBinding (RPC_NS_HANDLE hBind, DWORD *pidClient, ULONG *pStatus);
  *
  */
 
-BOOL ADMINAPI BindToAdminServer (LPCTSTR pszAddress, BOOL fWait, DWORD *pidClient, ULONG *pStatus)
+BOOL ADMINAPI BindToAdminServer (LPCTSTR pszAddress, BOOL fWait, UINT_PTR *pidClient, ULONG *pStatus)
 {
    RPC_STATUS status = 0;
 
@@ -103,7 +103,7 @@ BOOL ADMINAPI BindToAdminServer (LPCTSTR pszAddress, BOOL fWait, DWORD *pidClien
 }
 
 
-BOOL ADMINAPI UnbindFromAdminServer (DWORD idClient, ULONG *pStatus)
+BOOL ADMINAPI UnbindFromAdminServer (UINT_PTR idClient, ULONG *pStatus)
 {
    BOOL rc = TRUE;
    ULONG status = 0;
@@ -162,7 +162,7 @@ BOOL ADMINAPI ForkNewAdminServer (ULONG *pStatus)
 }
 
 
-BOOL ValidateBinding (RPC_NS_HANDLE hBind, DWORD *pidClient, ULONG *pStatus)
+BOOL ValidateBinding (RPC_NS_HANDLE hBind, UINT_PTR *pidClient, ULONG *pStatus)
 {
    RPC_NS_HANDLE hBindOld = hBindTaAfsAdminSvr;
    BOOL rc = FALSE;

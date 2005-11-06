@@ -89,10 +89,10 @@ BOOL CALLBACK Server_Salvage_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
       return TRUE;
 
    if (msg == WM_INITDIALOG)
-      SetWindowLong (hDlg, DWL_USER, lp);
+      SetWindowLongPtr (hDlg, DWLP_USER, lp);
 
    LPIDENT lpi;
-   if ((lpi = (LPIDENT)GetWindowLong (hDlg, DWL_USER)) != NULL)
+   if ((lpi = (LPIDENT)GetWindowLongPtr (hDlg, DWLP_USER)) != NULL)
       {
       switch (msg)
          {
@@ -326,7 +326,7 @@ void Server_Salvage_OnOK (HWND hDlg)
    lpp->fRebuildDirs = IsDlgButtonChecked (hDlg, IDC_SALVAGE_FIXDIRS);
    lpp->fReadBlocks = IsDlgButtonChecked (hDlg, IDC_SALVAGE_BLOCK);
    if (IsDlgButtonChecked (hDlg, IDC_SALVAGE_SIMUL))
-      lpp->nProcesses = SP_GetPos (GetDlgItem (hDlg, IDC_SALVAGE_NUM));
+      lpp->nProcesses = (int)SP_GetPos (GetDlgItem (hDlg, IDC_SALVAGE_NUM));
 
    lpp->lpiSalvage = NULL;
    if (!IsDlgButtonChecked (hDlg, IDC_FILESET_ALL))
@@ -415,10 +415,10 @@ BOOL CALLBACK Server_Salvage_Results_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LP
       return TRUE;
 
    if (msg == WM_INITDIALOG)
-      SetWindowLong (hDlg, DWL_USER, lp);
+      SetWindowLongPtr (hDlg, DWLP_USER, lp);
 
    LPIDENT lpi;
-   if ((lpi = (LPIDENT)GetWindowLong (hDlg, DWL_USER)) != NULL)
+   if ((lpi = (LPIDENT)GetWindowLongPtr (hDlg, DWLP_USER)) != NULL)
       {
       switch (msg)
          {
@@ -460,7 +460,7 @@ BOOL CALLBACK Server_Salvage_Results_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LP
             if ((HWND)lp == GetDlgItem (hDlg, IDC_SALVAGE_DETAILS))
                {
                SetBkColor ((HDC)wp, GetSysColor (COLOR_WINDOW));
-               return (BOOL)CreateSolidBrush (GetSysColor (COLOR_WINDOW));
+               return CreateSolidBrush (GetSysColor (COLOR_WINDOW))?TRUE:FALSE;
                }
             break;
          }

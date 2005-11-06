@@ -92,7 +92,7 @@ afsd_ServicePerformFlushVolumes()
         return FALSE;
     }
     pc = strrchr(pszShareName, SLASH);
-    if ((pc == NULL) || ((dwServerSize = pc - pszShareName) < 3))
+    if ((pc == NULL) || ((dwServerSize = (DWORD)(pc - pszShareName)) < 3))
     {
         LogEvent(EVENTLOG_ERROR_TYPE, MSG_FLUSH_BAD_SHARE_NAME,
                   pszShareName, NULL);

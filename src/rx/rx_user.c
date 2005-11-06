@@ -229,8 +229,8 @@ osi_Panic(char *msg, int a1, int a2, int a3)
 void
 osi_AssertFailU(const char *expr, const char *file, int line)
 {
-    osi_Panic("assertion failed: %s, file: %s, line: %d\n", (int)expr,
-	      (int)file, line);
+    osi_Panic("assertion failed: %s, file: %s, line: %d\n", expr,
+	      file, line);
 }
 
 #if defined(AFS_AIX32_ENV) && !defined(KERNEL)

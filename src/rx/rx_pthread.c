@@ -392,7 +392,7 @@ rxi_Listen(osi_socket sock)
  *
  */
 int
-rxi_Recvmsg(int socket, struct msghdr *msg_p, int flags)
+rxi_Recvmsg(osi_socket socket, struct msghdr *msg_p, int flags)
 {
     int ret;
     ret = recvmsg(socket, msg_p, flags);

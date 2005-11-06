@@ -68,14 +68,16 @@ RCSID
 #endif /* AFS_OSF_ENV */
 #else /* KERNEL */
 # include <sys/types.h>
-#ifndef AFS_NT40_ENV
+#ifdef AFS_NT40_ENV
+# include <winsock2.h>
+#else /* !AFS_NT40_ENV */
 # include <sys/socket.h>
 # include <sys/file.h>
 # include <netdb.h>
 # include <netinet/in.h>
 # include <sys/stat.h>
 # include <sys/time.h>
-#endif
+#endif /* !AFS_NT40_ENV */
 #ifdef HAVE_STRING_H
 #include <string.h>
 #else
@@ -369,14 +371,14 @@ rx_ReadProc32(struct rx_call *call, afs_int32 * value)
     if (!call->error && tcurlen > sizeof(afs_int32)
 	&& tnLeft > sizeof(afs_int32)) {
 	tcurpos = call->curpos;
-	if (!((long)tcurpos & (sizeof(afs_int32) - 1))) {
+	if (!((size_t)tcurpos & (sizeof(afs_int32) - 1))) {
 	    *value = *((afs_int32 *) (tcurpos));
 	} else {
 	    memcpy((char *)value, tcurpos, sizeof(afs_int32));
 	}
 	call->curpos = tcurpos + sizeof(afs_int32);
-	call->curlen = tcurlen - sizeof(afs_int32);
-	call->nLeft = tnLeft - sizeof(afs_int32);
+	call->curlen = tcurlen - (u_short)sizeof(afs_int32);
+	call->nLeft = tnLeft - (u_short)sizeof(afs_int32);
 	return sizeof(afs_int32);
     }
 
@@ -876,14 +878,14 @@ rx_WriteProc32(register struct rx_call *call, register afs_int32 * value)
     if (!call->error && tcurlen >= sizeof(afs_int32)
 	&& tnFree >= sizeof(afs_int32)) {
 	tcurpos = call->curpos;
-	if (!((long)tcurpos & (sizeof(afs_int32) - 1))) {
+	if (!((size_t)tcurpos & (sizeof(afs_int32) - 1))) {
 	    *((afs_int32 *) (tcurpos)) = *value;
 	} else {
 	    memcpy(tcurpos, (char *)value, sizeof(afs_int32));
 	}
 	call->curpos = tcurpos + sizeof(afs_int32);
-	call->curlen = tcurlen - sizeof(afs_int32);
-	call->nFree = tnFree - sizeof(afs_int32);
+	call->curlen = tcurlen - (u_short)sizeof(afs_int32);
+	call->nFree = tnFree - (u_short)sizeof(afs_int32);
 	return sizeof(afs_int32);
     }
 

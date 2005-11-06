@@ -59,6 +59,7 @@ EXELIBS = \
 
 $(EXEFILE): $(EXEOBJS) $(EXELIBS)
 	$(EXECONLINK)
+        $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
 
 ############################################################################
@@ -76,6 +77,7 @@ $(OUT)\cbd.obj: callback.c
 
 $(CBD): $(OUT)\cbd.obj 
 	$(EXECONLINK)
+        $(_VC_MANIFEST_EMBED_EXE)
 
 mkdir:
 	

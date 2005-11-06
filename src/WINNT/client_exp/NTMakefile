@@ -64,6 +64,7 @@ DLLLIBS =\
 
 $(DLLFILE): $(DLLOBJS) $(DLLLIBS)
 	$(DLLCONLINK) /DEF:afs_shl_ext.def $(DLLSDKLIBS)
+        $(_VC_MANIFEST_EMBED_DLL)
 	$(DLLPREP)
 
 ############################################################################

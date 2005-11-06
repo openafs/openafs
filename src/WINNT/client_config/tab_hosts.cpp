@@ -70,7 +70,7 @@ BOOL CALLBACK HostsTab_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
             {
             case IDAPPLY:
                if (!HostsTab_OnApply (hDlg))
-                  SetWindowLong (hDlg, DWL_MSGRESULT, TRUE);
+                  SetWindowLongPtr (hDlg, DWLP_MSGRESULT, TRUE);
                break;
 
             case IDC_ADD:
@@ -146,10 +146,10 @@ BOOL HostsTab_CommitChanges (BOOL fForce)
    if ((hDlg = PropSheet_FindTabWindow (g.psh, (DLGPROC)HostsTab_DlgProc)) == NULL)
       return TRUE;
    if (fForce)
-      SetWindowLong (hDlg, DWL_MSGRESULT, FALSE); // Make sure we try to apply
+      SetWindowLongPtr (hDlg, DWLP_MSGRESULT, FALSE); // Make sure we try to apply
    if (HostsTab_OnApply (hDlg))
       return TRUE;
-   SetWindowLong (hDlg, DWL_MSGRESULT, TRUE);
+   SetWindowLongPtr (hDlg, DWLP_MSGRESULT, TRUE);
    return FALSE;
 }
 
@@ -157,7 +157,7 @@ BOOL HostsTab_CommitChanges (BOOL fForce)
 BOOL HostsTab_OnApply (HWND hDlg)
 {
    // Don't try to do anything if we've already failed the apply
-   if (GetWindowLong (hDlg, DWL_MSGRESULT))
+   if (GetWindowLongPtr (hDlg, DWLP_MSGRESULT))
       return FALSE;
 
    if (!CSDB_WriteFile (&g.Configuration.CellServDB))
@@ -654,7 +654,7 @@ BOOL CALLBACK ServerEdit_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
    switch (msg)
       {
       case WM_INITDIALOG:
-         SetWindowLong (hDlg, DWL_USER, lp);
+         SetWindowLongPtr (hDlg, DWLP_USER, lp);
          ServerEdit_OnInitDialog (hDlg);
          break;
 
@@ -683,7 +683,7 @@ BOOL CALLBACK ServerEdit_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 
       case WM_HELP:
          PCELLDBLINE pLine;
-         pLine = (PCELLDBLINE)GetWindowLong (hDlg, DWL_USER);
+         pLine = (PCELLDBLINE)GetWindowLongPtr (hDlg, DWLP_USER);
 
          CELLDBLINEINFO Info;
          if (!CSDB_CrackLine (&Info, pLine->szLine))
@@ -699,7 +699,7 @@ BOOL CALLBACK ServerEdit_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 
 void ServerEdit_OnInitDialog (HWND hDlg)
 {
-   PCELLDBLINE pLine = (PCELLDBLINE)GetWindowLong (hDlg, DWL_USER);
+    PCELLDBLINE pLine = (PCELLDBLINE)GetWindowLongPtr (hDlg, DWLP_USER);
 
    TCHAR szTitle[ cchRESOURCE ];
    CELLDBLINEINFO Info;
@@ -725,7 +725,7 @@ void ServerEdit_OnInitDialog (HWND hDlg)
 
 BOOL ServerEdit_OnOK (HWND hDlg)
 {
-   PCELLDBLINE pLine = (PCELLDBLINE)GetWindowLong (hDlg, DWL_USER);
+   PCELLDBLINE pLine = (PCELLDBLINE)GetWindowLongPtr (hDlg, DWLP_USER);
 
    TCHAR szComment[ cchCELLDBLINE ];
    GetDlgItemText (hDlg, IDC_COMMENT, szComment, cchCELLDBLINE);

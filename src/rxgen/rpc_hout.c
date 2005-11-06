@@ -192,7 +192,7 @@ define_printed(proc_list * stop, version_list * start)
 	}
     }
     abort();
-    /* NOTREACHED */
+    return 0;/* NOTREACHED */
 }
 
 

@@ -44,7 +44,7 @@ char lwp_debug = 0;
 #ifdef DEBUG
 #define Debug(level, msg)\
 	 if (lwp_debug && lwp_debug >= level) {\
-	     printf("***LWP (0x%x): ", lwp_cpptr);\
+	     printf("***LWP (0x%p): ", lwp_cpptr);\
 	     printf msg;\
 	     putchar('\n');\
 	 }
@@ -178,7 +178,7 @@ int LWP_InitializeProcessSupport(int priority, PROCESS *pid)
 		"Main Process [created by LWP]");   
 
     lwp_cpptr = pcb;
-    Debug(10, ("Init: Insert 0x%x into runnable at priority %d\n", pcb, priority))
+    Debug(10, ("Init: Insert 0x%p into runnable at priority %d\n", pcb, priority))
     insert(pcb, &runnable[priority]);
 
     if ( ( value = getenv("AFS_LWP_STACK_SIZE")) == NULL )
@@ -236,10 +236,10 @@ int LWP_CreateProcess(int (*funP)(), int stacksize, int priority, void *argP,
 	free((void*)pcb);
 	return LWP_EINIT;
     }
-    Debug(0, ("Create: pcb=0x%x, funP=0x%x, argP=0x%x\n", pcb, funP, argP))
+    Debug(0, ("Create: pcb=0x%p, funP=0x%p, argP=0x%p\n", pcb, funP, argP))
     /* Fiber is now created, so fill in PCB */
     Initialize_PCB(pcb, priority, stacksize, funP, argP, name);
-    Debug(10, ("Create: Insert 0x%x into runnable at priority %d\n", pcb, priority))
+    Debug(10, ("Create: Insert 0x%p into runnable at priority %d\n", pcb, priority))
     insert(pcb, &runnable[priority]);
 
     LWPANCHOR.processcnt++;
@@ -284,7 +284,7 @@ int LWP_QSignal(PROCESS pid)
 {
     if (pid->status == QWAITING) {
 	pid->status = READY;
-	Debug(10, ("QSignal: Insert 0x%x into runnable at priority %d\n", pid, pid->priority))
+	Debug(10, ("QSignal: Insert 0x%p into runnable at priority %d\n", pid, pid->priority))
 	insert(pid, &runnable[pid->priority]);
 	return LWP_SUCCESS;
     }
@@ -355,7 +355,7 @@ static int Internal_Signal(char *event)
     int rc = LWP_ENOWAIT;
     int i;
 
-    Debug(0, ("Entered Internal_Signal [event id 0x%x]", event))
+    Debug(0, ("Entered Internal_Signal [event id 0x%p]", event))
     if (!lwp_init) return LWP_EINIT;
     if (event == NULL) return LWP_EBADEVENT;
     for_all_elts(temp, blocked, {
@@ -364,7 +364,7 @@ static int Internal_Signal(char *event)
 		if (temp -> eventlist[i] == event) {
 		    temp -> eventlist[i] = NULL;
 		    rc = LWP_SUCCESS;
-		    Debug(0, ("Signal satisfied for PCB 0x%x", temp))
+		    Debug(0, ("Signal satisfied for PCB 0x%p", temp))
 		    if (--temp->waitcnt == 0) {
 			temp -> status = READY;
 			temp -> wakevent = i+1;
@@ -505,7 +505,7 @@ static VOID WINAPI Enter_LWP(PVOID fiberData)
 /* next lines are new..... */
     lwp_cpptr = pcb;
 
-    Debug(2, ("Enter_LWP: pcb=0x%x, funP=0x%x, argP=0x%x\n", pcb, pcb->funP, pcb->argP))
+    Debug(2, ("Enter_LWP: pcb=0x%p, funP=0x%p, argP=0x%p\n", pcb, pcb->funP, pcb->argP))
 
     (*pcb->funP)(pcb->argP);
 
@@ -529,10 +529,10 @@ static void Dump_One_Process(PROCESS pid)
 {
     int i;
 
-    printf("***LWP: Process Control Block at 0x%x\n", pid);
+    printf("***LWP: Process Control Block at 0x%p\n", pid);
     printf("***LWP: Name: %s\n", pid->name);
     if (pid->funP != NULL)
-	printf("***LWP: Initial entry point: 0x%x\n", pid->funP);
+	printf("***LWP: Initial entry point: 0x%p\n", pid->funP);
     switch (pid->status) {
 	case READY:	printf("READY");     break;
 	case WAITING:	printf("WAITING");   break;
@@ -540,7 +540,7 @@ static void Dump_One_Process(PROCESS pid)
 	default:	printf("unknown");
     }
     putchar('\n');
-    printf("***LWP: Priority: %d \tInitial parameter: 0x%x\n",
+    printf("***LWP: Priority: %d \tInitial parameter: 0x%p\n",
 	    pid->priority, pid->argP);
     if (pid->stacksize != 0) {
 	printf("***LWP:  Stacksize: %d\n", pid->stacksize);
@@ -549,7 +549,7 @@ static void Dump_One_Process(PROCESS pid)
 	printf("***LWP: Number of events outstanding: %d\n", pid->waitcnt);
 	printf("***LWP: Event id list:");
 	for (i=0;i<pid->eventcnt;i++)
-	    printf(" 0x%x", pid->eventlist[i]);
+	    printf(" 0x%p", pid->eventlist[i]);
 	putchar('\n');
     }
     if (pid->wakevent>0)
@@ -600,7 +600,7 @@ static void Dispatcher(void)
 
 #ifdef DEBUG
     if (LWP_TraceProcesses > 0)
-	printf("Dispatch %d [PCB at 0x%x] \"%s\"\n", ++dispatch_count,
+	printf("Dispatch %d [PCB at 0x%p] \"%s\"\n", ++dispatch_count,
 	       runnable[i].head, runnable[i].head->name);
 #endif
 

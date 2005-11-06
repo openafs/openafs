@@ -112,6 +112,7 @@ BUTCLIBS=$(DESTDIR)\lib\afs\afsbudb.lib  \
 
 $(BUTCEXE): $(BUTCOBJS) $(BUTCLIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib
+        $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
 
 .c.$(OUT)\obj:

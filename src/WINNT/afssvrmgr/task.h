@@ -62,7 +62,7 @@ typedef struct
    TCHAR szCell[ cchNAME ];
    LPSUBSET sub;
    BOOL fCloseAppOnFail;
-   PVOID hCreds;
+   UINT_PTR hCreds;
    } OPENCELL_PACKET, *LPOPENCELL_PACKET;
 
 typedef struct

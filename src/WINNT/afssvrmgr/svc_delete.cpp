@@ -32,7 +32,7 @@ void Services_Delete_OnInitDialog (HWND hDlg, LPIDENT lpi);
 
 void Services_Delete (LPIDENT lpiService)
 {
-   int rc = ModalDialogParam (IDD_SVC_DELETE, GetActiveWindow(), (DLGPROC)Services_Delete_DlgProc, (LPARAM)lpiService);
+   INT_PTR rc = ModalDialogParam (IDD_SVC_DELETE, GetActiveWindow(), (DLGPROC)Services_Delete_DlgProc, (LPARAM)lpiService);
    if (rc == IDOK)
       {
       StartTask (taskSVC_DELETE, NULL, lpiService);

@@ -23,6 +23,7 @@ ITEST_EXEFILE = $(OUT)\itest.exe
 
 $(ITEST_EXEFILE): $(ITEST_EXEOBJS) 
 	$(EXECONLINK) $(EXELIBS)  
+        $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
 
 #build ctest.exe
@@ -33,6 +34,7 @@ CTEST_EXEFILE = $(OUT)\ctest.exe
 
 $(CTEST_EXEFILE): $(CTEST_EXEOBJS) 
 	$(EXECONLINK) $(EXELIBS)  
+        $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
 
 # build dtest.exe
@@ -43,6 +45,7 @@ DTEST_EXEFILE = $(OUT)\dtest.exe
 
 $(DTEST_EXEFILE): $(DTEST_EXEOBJS) 
 	$(EXECONLINK) $(EXELIBS)  
+        $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
 
 all: test

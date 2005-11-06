@@ -60,6 +60,7 @@ COMPILE_ET_EXELIBS =\
 
 $(COMPILE_ET_EXEFILE): $(COMPILE_ET_EXEOBJS) $(COMPILE_ET_EXELIBS)  
 	$(EXECONLINK)
+        $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
 
 ####################################################################

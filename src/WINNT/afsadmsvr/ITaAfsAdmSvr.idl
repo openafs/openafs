@@ -23,7 +23,7 @@ interface ITaAfsAdminSvr
    //
    int AfsAdmSvr_Connect (
       [in]      STRING szClientAddress,
-      [out]     DWORD *pidClient,
+      [out]     UINT_PTR *pidClient,
       [out]     ULONG *pStatus
    );
 
@@ -31,7 +31,7 @@ interface ITaAfsAdminSvr
    // ...releases and invalidates the cookie representing the calling process.
    //
    int AfsAdmSvr_Disconnect (
-      [in]      DWORD idClient,
+      [in]      UINT_PTR idClient,
       [out]     ULONG *pStatus
    );
 
@@ -43,7 +43,7 @@ interface ITaAfsAdminSvr
    //    library TaAfsAdmSvrClient.lib automatically handles this.)
    //
    int AfsAdmSvr_Ping (
-      [in]      DWORD idClient,
+      [in]      UINT_PTR idClient,
       [out]     ULONG *pStatus
    );
    const DWORD csecAFSADMSVR_CLIENT_PING = (2L * 60L);  // 2 minutes
@@ -53,8 +53,8 @@ interface ITaAfsAdminSvr
    // ...obtains information about the supplied credentials token.
    //
    int AfsAdmSvr_CrackCredentials (
-      [in]      DWORD idClient,
-      [in]      DWORD hCreds,
+      [in]      UINT_PTR idClient,
+      [in]      UINT_PTR hCreds,
       [out]     STRING pszCell,
       [out]     STRING pszUser,
       [out]     SYSTEMTIME *pstExpiration,
@@ -66,8 +66,8 @@ interface ITaAfsAdminSvr
    //    if the user already has credentials in the cell, returns a nonzero
    //    token {hCreds}, suitable for use in AfsAdmSvr_OpenCell().
    //
-   DWORD AfsAdmSvr_GetCredentials (
-      [in]      DWORD idClient,
+   UINT_PTR AfsAdmSvr_GetCredentials (
+      [in]      UINT_PTR idClient,
       [in]      STRING pszCell,
       [out]     ULONG *pStatus
    );
@@ -77,8 +77,8 @@ interface ITaAfsAdminSvr
    //    on behalf of the specified user. if successful, returns a nonzero
    //    token {hCreds}, suitable for use in AfsAdmSvr_OpenCell().
    //
-   DWORD AfsAdmSvr_SetCredentials (
-      [in]      DWORD idClient,
+   UINT_PTR AfsAdmSvr_SetCredentials (
+      [in]      UINT_PTR idClient,
       [in]      STRING pszCell,
       [in]      STRING pszUser,
       [in]      STRING pszPassword,
@@ -91,8 +91,8 @@ interface ITaAfsAdminSvr
    //    call with a Refresh request if necessary.
    //
    int AfsAdmSvr_PushCredentials (
-      [in]      DWORD idClient,
-      [in]      DWORD hCreds,
+      [in]      UINT_PTR idClient,
+      [in]      UINT_PTR hCreds,
       [in]      ASID idCell,
       [out]     ULONG *pStatus
    );
@@ -102,7 +102,7 @@ interface ITaAfsAdminSvr
    // ...obtains the name of the primary cell used by the admin server
    //
    int AfsAdmSvr_GetLocalCell (
-      [in]      DWORD idClient,
+      [in]      UINT_PTR idClient,
       [out]     STRING pszCellName,
       [out]     ULONG *pStatus
    );
@@ -112,7 +112,7 @@ interface ITaAfsAdminSvr
    // ...translates an error code into a readable string
    //
    int AfsAdmSvr_ErrorCodeTranslate (
-      [in]      DWORD idClient,
+      [in]      UINT_PTR idClient,
       [in]      ULONG code,
       [in]      LANGID idLanguage,    // pass 0 for default language at server
       [out]     STRING pszErrorText,
@@ -124,7 +124,7 @@ interface ITaAfsAdminSvr
    // ...returns information about a particular operation in progress.
    //
    int AfsAdmSvr_GetAction (
-      [in]      DWORD idClient,
+      [in]      UINT_PTR idClient,
       [in]      DWORD idAction,
       [out]     LPASACTION pAction,
       [out]     ULONG *pStatus
@@ -137,8 +137,8 @@ interface ITaAfsAdminSvr
    //    a particular client and/or performed in a particular cell.
    //
    int AfsAdmSvr_GetActions (
-      [in]      DWORD idClient,
-      [in]      DWORD idClientSearch,   // 0 to return for all clients
+      [in]      UINT_PTR idClient,
+      [in]      UINT_PTR idClientSearch,   // 0 to return for all clients
       [in]      ASID idCellSearch,      // 0 to return for all cells
       [out]     LPASACTIONLIST *ppList,
       [out]     ULONG *pStatus
@@ -149,8 +149,8 @@ interface ITaAfsAdminSvr
    // ...opens a cell for administration.
    //
    int AfsAdmSvr_OpenCell (
-      [in]      DWORD idClient,
-      [in]      DWORD hCreds,
+      [in]      UINT_PTR idClient,
+      [in]      UINT_PTR hCreds,
       [in]      STRING pszCellName,
       [in]      DWORD dwScopeFlags,
       [out]     ASID *pidCell,
@@ -163,7 +163,7 @@ interface ITaAfsAdminSvr
    // ...used by client to open a cell for administration.
    //
    int AfsAdmSvr_CloseCell (
-      [in]      DWORD idClient,
+      [in]      UINT_PTR idClient,
       [in]      ASID idCell,
       [out]     ULONG *pStatus
    );
@@ -184,7 +184,7 @@ interface ITaAfsAdminSvr
    //    users named "b*" within a cell.
    //
    int AfsAdmSvr_FindObject (
-      [in]      DWORD idClient,
+      [in]      UINT_PTR idClient,
       [in]      ASID idSearchScope,
       [in]      ASOBJTYPE ObjectType,
       [in]      AFSADMSVR_SEARCH_REFRESH SearchRefresh,
@@ -194,7 +194,7 @@ interface ITaAfsAdminSvr
    );
 
    int AfsAdmSvr_FindObjects (
-      [in]      DWORD idClient,
+      [in]      UINT_PTR idClient,
       [in]      ASID idSearchScope,
       [in]      ASOBJTYPE ObjectType,
       [in]      AFSADMSVR_SEARCH_REFRESH SearchRefresh,
@@ -211,17 +211,17 @@ interface ITaAfsAdminSvr
    //    objects).
    //
    int AfsAdmSvr_GetObject (
-      [in]      DWORD idClient,
+      [in]      UINT_PTR idClient,
       [in]      AFSADMSVR_GET_TYPE GetType,
       [in]      AFSADMSVR_GET_LEVEL GetLevel,
       [in]      ASID idObject,
-      [in]      DWORD verProperties,  // can be 0 if not RETURN_IF_OUT_OF_DATE
+      [in]      UINT_PTR verProperties,  // can be 0 if not RETURN_IF_OUT_OF_DATE
       [out]     LPASOBJPROP pProperties,
       [out]     ULONG *pStatus
    );
 
    int AfsAdmSvr_GetObjects (
-      [in]      DWORD idClient,
+      [in]      UINT_PTR idClient,
       [in]      AFSADMSVR_GET_TYPE GetType,
       [in]      AFSADMSVR_GET_LEVEL GetLevel,
       [in]      LPASIDLIST pListObjects,  // lParam used as verProperties
@@ -236,13 +236,13 @@ interface ITaAfsAdminSvr
    //    object or objects.
    //
    int AfsAdmSvr_RefreshObject (
-      [in]      DWORD idClient,
+      [in]      UINT_PTR idClient,
       [in]      ASID idObject,
       [out]     ULONG *pStatus
    );
 
    int AfsAdmSvr_RefreshObjects (
-      [in]      DWORD idClient,
+      [in]      UINT_PTR idClient,
       [in]      LPASIDLIST pListObjects,
       [out]     ULONG *pStatus
    );
@@ -271,7 +271,7 @@ interface ITaAfsAdminSvr
    // ...returns a randomly-generated 8-byte encryption key
    //
    int AfsAdmSvr_GetRandomKey (
-      [in]      DWORD idClient,
+      [in]      UINT_PTR idClient,
       [in]      ASID idCell,
       [out]     BYTE keyData[ ENCRYPTIONKEYLENGTH ],
       [out]     ULONG *pStatus
@@ -281,7 +281,7 @@ interface ITaAfsAdminSvr
    // ...changes a user account's properties.
    //
    int AfsAdmSvr_ChangeUser (
-      [in]      DWORD idClient,
+      [in]      UINT_PTR idClient,
       [in]      ASID idCell,
       [in]      ASID idUser,
       [in]      LPAFSADMSVR_CHANGEUSER_PARAMS pChange,
@@ -292,7 +292,7 @@ interface ITaAfsAdminSvr
    // ...retrieves the list of groups to which a user or group belongs
    //
    int AfsAdmSvr_GetGroupMembership (
-      [in]      DWORD idClient,
+      [in]      UINT_PTR idClient,
       [in]      ASID idCell,
       [in]      ASID idMember,
       [out]     LPASIDLIST *ppAsidList,
@@ -303,7 +303,7 @@ interface ITaAfsAdminSvr
    // ...retrieves the list of groups which a user or group owns
    //
    int AfsAdmSvr_GetGroupOwnership (
-      [in]      DWORD idClient,
+      [in]      UINT_PTR idClient,
       [in]      ASID idCell,
       [in]      ASID idOwner,
       [out]     LPASIDLIST *ppAsidList,
@@ -314,7 +314,7 @@ interface ITaAfsAdminSvr
    // ...changes a PTS group's properties.
    //
    int AfsAdmSvr_ChangeGroup (
-      [in]      DWORD idClient,
+      [in]      UINT_PTR idClient,
       [in]      ASID idCell,
       [in]      ASID idGroup,
       [in]      LPAFSADMSVR_CHANGEGROUP_PARAMS pChange,
@@ -325,7 +325,7 @@ interface ITaAfsAdminSvr
    // ...retrieves the list of users which belong to a group
    //
    int AfsAdmSvr_GetGroupMembers (
-      [in]      DWORD idClient,
+      [in]      UINT_PTR idClient,
       [in]      ASID idCell,
       [in]      ASID idGroup,
       [out]     LPASIDLIST *ppAsidList,
@@ -336,7 +336,7 @@ interface ITaAfsAdminSvr
    // ...adds a member to the specified group
    //
    int AfsAdmSvr_AddGroupMember (
-      [in]      DWORD idClient,
+      [in]      UINT_PTR idClient,
       [in]      ASID idCell,
       [in]      ASID idGroup,
       [in]      ASID idMember,
@@ -347,7 +347,7 @@ interface ITaAfsAdminSvr
    // ...removes a member from the specified group
    //
    int AfsAdmSvr_RemoveGroupMember (
-      [in]      DWORD idClient,
+      [in]      UINT_PTR idClient,
       [in]      ASID idCell,
       [in]      ASID idGroup,
       [in]      ASID idMember,
@@ -358,7 +358,7 @@ interface ITaAfsAdminSvr
    // ...changes a group's name
    //
    int AfsAdmSvr_RenameGroup (
-      [in]      DWORD idClient,
+      [in]      UINT_PTR idClient,
       [in]      ASID idCell,
       [in]      ASID idGroup,
       [in]      STRING szNewGroupName,
@@ -369,7 +369,7 @@ interface ITaAfsAdminSvr
    // ...creates a new PTS group
    //
    int AfsAdmSvr_CreateGroup (
-      [in]      DWORD idClient,
+      [in]      UINT_PTR idClient,
       [in]      ASID idCell,
       [in]      LPAFSADMSVR_CREATEGROUP_PARAMS pCreate,
       [out]     ASID *pidGroup,
@@ -380,7 +380,7 @@ interface ITaAfsAdminSvr
    // ...deletes a PTS group
    //
    int AfsAdmSvr_DeleteGroup (
-      [in]      DWORD idClient,
+      [in]      UINT_PTR idClient,
       [in]      ASID idCell,
       [in]      ASID idGroup,
       [out]     ULONG *pStatus
@@ -392,7 +392,7 @@ interface ITaAfsAdminSvr
    //    pass a valid encryption key in {keyData}.
    //
    int AfsAdmSvr_SetUserPassword (
-      [in]      DWORD idClient,
+      [in]      UINT_PTR idClient,
       [in]      ASID idCell,
       [in]      ASID idUser,
       [in]      int keyVersion,
@@ -405,7 +405,7 @@ interface ITaAfsAdminSvr
    // ...unlocks a user's account
    //
    int AfsAdmSvr_UnlockUser (
-      [in]      DWORD idClient,
+      [in]      UINT_PTR idClient,
       [in]      ASID idCell,
       [in]      ASID idUser,
       [out]     ULONG *pStatus
@@ -415,7 +415,7 @@ interface ITaAfsAdminSvr
    // ...creates a new user account
    //
    int AfsAdmSvr_CreateUser (
-      [in]      DWORD idClient,
+      [in]      UINT_PTR idClient,
       [in]      ASID idCell,
       [in]      LPAFSADMSVR_CREATEUSER_PARAMS pCreate,
       [out]     ASID *pidUser,
@@ -426,7 +426,7 @@ interface ITaAfsAdminSvr
    // ...deletes a user account
    //
    int AfsAdmSvr_DeleteUser (
-      [in]      DWORD idClient,
+      [in]      UINT_PTR idClient,
       [in]      ASID idCell,
       [in]      ASID idUser,
       [in]      LPAFSADMSVR_DELETEUSER_PARAMS pDelete,
@@ -437,7 +437,7 @@ interface ITaAfsAdminSvr
    // ...changes a cell's properties.
    //
    int AfsAdmSvr_ChangeCell (
-      [in]      DWORD idClient,
+      [in]      UINT_PTR idClient,
       [in]      ASID idCell,
       [in]      LPAFSADMSVR_CHANGECELL_PARAMS pChange,
       [out]     ULONG *pStatus
@@ -447,7 +447,7 @@ interface ITaAfsAdminSvr
    // ...changes the refresh rate for a specific cell
    //
    int AfsAdmSvr_SetRefreshRate (
-      [in]      DWORD idClient,
+      [in]      UINT_PTR idClient,
       [in]      ASID idCell,
       [in]      ULONG cminRefreshRate,
       [out]     ULONG *pStatus

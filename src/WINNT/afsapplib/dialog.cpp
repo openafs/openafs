@@ -172,7 +172,7 @@ BOOL CALLBACK PropTab_HookProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
          if (iTab < aPropSheets[ii].psh->cTabs)
             {
             aPropSheets[ii].psh->aTabs[iTab].hDlg = hDlg;
-            BOOL rc = CallWindowProc ((WNDPROC)(aPropSheets[ ii ].psh->aTabs[ iTab ].dlgproc), hDlg, msg, wp, lp);
+            BOOL rc = (CallWindowProc ((WNDPROC)(aPropSheets[ ii ].psh->aTabs[ iTab ].dlgproc), hDlg, msg, wp, lp)?TRUE:FALSE);
 
             switch (msg)
                {
@@ -258,9 +258,11 @@ BOOL PropSheet_AddTab (LPPROPSHEET psh, LONG idsTitle, int idd, DLGPROC dlgproc,
    if ((hp = CreatePropertySheetPage (&psp)) == 0)
       return FALSE;
 
-   if (!REALLOC( psh->sh.phpage, psh->sh.nPages, 1+psh->sh.nPages, 1))
+   size_t size = psh->sh.nPages;
+   if (!REALLOC( psh->sh.phpage, size, 1+psh->sh.nPages, 1))
       return FALSE;
 
+   psh->sh.nPages = (UINT) size;
    if (!REALLOC( psh->aTabs, psh->cTabs, psh->sh.nPages, 1))
       return FALSE;
 

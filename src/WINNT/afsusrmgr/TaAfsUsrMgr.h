@@ -87,9 +87,9 @@ typedef struct
    HACCEL hAccel;
    int rc;
 
-   DWORD idClient;
+   UINT_PTR idClient;
    ASID idCell;
-   PVOID hCreds;
+   UINT_PTR hCreds;
 
    TCHAR szPatternUsers[ cchNAME ];
    TCHAR szPatternGroups[ cchNAME ];
@@ -116,9 +116,9 @@ typedef struct
    BOOL fWarnBadCreds;
    BOOL fShowActions;
    BOOL fWindowsRegexp;
-   LONG cminRefreshRate;
+   DWORD cminRefreshRate;
 
-   int iTabLast;
+   size_t iTabLast;
 
    // What user preferences have been chosen?
    //

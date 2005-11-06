@@ -20,7 +20,7 @@ extern "C" {
  *
  */
 
-BOOL ADMINAPI asc_GroupChange (DWORD idClient, ASID idCell, ASID idGroup, LPAFSADMSVR_CHANGEGROUP_PARAMS pChange, ULONG *pStatus)
+BOOL ADMINAPI asc_GroupChange (UINT_PTR idClient, ASID idCell, ASID idGroup, LPAFSADMSVR_CHANGEGROUP_PARAMS pChange, ULONG *pStatus)
 {
    BOOL rc = TRUE;
    ULONG status = 0;
@@ -49,7 +49,7 @@ BOOL ADMINAPI asc_GroupChange (DWORD idClient, ASID idCell, ASID idGroup, LPAFSA
 }
 
 
-BOOL ADMINAPI asc_GroupMembersGet (DWORD idClient, ASID idCell, ASID idGroup, LPASIDLIST *ppAsidList, ULONG *pStatus)
+BOOL ADMINAPI asc_GroupMembersGet (UINT_PTR idClient, ASID idCell, ASID idGroup, LPASIDLIST *ppAsidList, ULONG *pStatus)
 {
    BOOL rc = TRUE;
    ULONG status = 0;
@@ -71,7 +71,7 @@ BOOL ADMINAPI asc_GroupMembersGet (DWORD idClient, ASID idCell, ASID idGroup, LP
 }
 
 
-BOOL ADMINAPI asc_GroupMemberAdd (DWORD idClient, ASID idCell, ASID idGroup, ASID idMember, ULONG *pStatus)
+BOOL ADMINAPI asc_GroupMemberAdd (UINT_PTR idClient, ASID idCell, ASID idGroup, ASID idMember, ULONG *pStatus)
 {
    BOOL rc = TRUE;
    ULONG status = 0;
@@ -93,7 +93,7 @@ BOOL ADMINAPI asc_GroupMemberAdd (DWORD idClient, ASID idCell, ASID idGroup, ASI
 }
 
 
-BOOL ADMINAPI asc_GroupMemberRemove (DWORD idClient, ASID idCell, ASID idGroup, ASID idMember, ULONG *pStatus)
+BOOL ADMINAPI asc_GroupMemberRemove (UINT_PTR idClient, ASID idCell, ASID idGroup, ASID idMember, ULONG *pStatus)
 {
    BOOL rc = TRUE;
    ULONG status = 0;
@@ -115,7 +115,7 @@ BOOL ADMINAPI asc_GroupMemberRemove (DWORD idClient, ASID idCell, ASID idGroup, 
 }
 
 
-BOOL ADMINAPI asc_GroupRename (DWORD idClient, ASID idCell, ASID idGroup, LPCTSTR pszNewName, ULONG *pStatus)
+BOOL ADMINAPI asc_GroupRename (UINT_PTR idClient, ASID idCell, ASID idGroup, LPCTSTR pszNewName, ULONG *pStatus)
 {
    BOOL rc = TRUE;
    ULONG status = 0;
@@ -147,7 +147,7 @@ BOOL ADMINAPI asc_GroupRename (DWORD idClient, ASID idCell, ASID idGroup, LPCTST
 }
 
 
-BOOL ADMINAPI asc_GroupMembershipGet (DWORD idClient, ASID idCell, ASID idMember, LPASIDLIST *ppAsidList, ULONG *pStatus)
+BOOL ADMINAPI asc_GroupMembershipGet (UINT_PTR idClient, ASID idCell, ASID idMember, LPASIDLIST *ppAsidList, ULONG *pStatus)
 {
    BOOL rc = TRUE;
    ULONG status = 0;
@@ -169,7 +169,7 @@ BOOL ADMINAPI asc_GroupMembershipGet (DWORD idClient, ASID idCell, ASID idMember
 }
 
 
-BOOL ADMINAPI asc_GroupOwnershipGet (DWORD idClient, ASID idCell, ASID idOwner, LPASIDLIST *ppAsidList, ULONG *pStatus)
+BOOL ADMINAPI asc_GroupOwnershipGet (UINT_PTR idClient, ASID idCell, ASID idOwner, LPASIDLIST *ppAsidList, ULONG *pStatus)
 {
    BOOL rc = TRUE;
    ULONG status = 0;
@@ -191,7 +191,7 @@ BOOL ADMINAPI asc_GroupOwnershipGet (DWORD idClient, ASID idCell, ASID idOwner, 
 }
 
 
-BOOL ADMINAPI asc_GroupCreate (DWORD idClient, ASID idCell, LPAFSADMSVR_CREATEGROUP_PARAMS pCreate, ASID *pidGroup, ULONG *pStatus)
+BOOL ADMINAPI asc_GroupCreate (UINT_PTR idClient, ASID idCell, LPAFSADMSVR_CREATEGROUP_PARAMS pCreate, ASID *pidGroup, ULONG *pStatus)
 {
    BOOL rc = TRUE;
    ULONG status = 0;
@@ -220,7 +220,7 @@ BOOL ADMINAPI asc_GroupCreate (DWORD idClient, ASID idCell, LPAFSADMSVR_CREATEGR
 }
 
 
-BOOL ADMINAPI asc_GroupDelete (DWORD idClient, ASID idCell, ASID idGroup, ULONG *pStatus)
+BOOL ADMINAPI asc_GroupDelete (UINT_PTR idClient, ASID idCell, ASID idGroup, ULONG *pStatus)
 {
    BOOL rc = TRUE;
    ULONG status = 0;

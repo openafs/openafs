@@ -28,66 +28,69 @@
 
 #define cszMultiStringNULL TEXT("---")  // added instead of "" in multistrings
 
+#ifndef EXPORTED
+#define EXPORTED __declspec(dllexport)
+#endif
 
 /*
  * PROTOTYPES _________________________________________________________________
  *
  */
 
-extern void GetString (LPTSTR pszTarget, int idsSource, int cchMax = cchRESOURCE);
-extern size_t GetStringLength (int ids);
+extern EXPORTED void GetString (LPTSTR pszTarget, int idsSource, int cchMax = cchRESOURCE);
+extern EXPORTED size_t GetStringLength (int ids);
 
-extern BOOL SearchMultiString (LPCTSTR pmsz, LPCTSTR pszString, BOOL fCaseSensitive = FALSE);
+extern EXPORTED BOOL SearchMultiString (LPCTSTR pmsz, LPCTSTR pszString, BOOL fCaseSensitive = FALSE);
 
-extern LPTSTR cdecl FormatString  (LPCTSTR pszTemplate, LPCTSTR pszFormat = NULL, ...);
-extern LPTSTR cdecl FormatString  (int idsTemplate,     LPCTSTR pszFormat = NULL, ...);
-extern LPTSTR cdecl vFormatString (LPCTSTR pszTemplate, LPCTSTR pszFormat, va_list arg);
-extern LPTSTR cdecl vFormatString (int idsTemplate,     LPCTSTR pszFormat, va_list arg);
+extern EXPORTED LPTSTR cdecl FormatString  (LPCTSTR pszTemplate, LPCTSTR pszFormat = NULL, ...);
+extern EXPORTED LPTSTR cdecl FormatString  (int idsTemplate,     LPCTSTR pszFormat = NULL, ...);
+extern EXPORTED LPTSTR cdecl vFormatString (LPCTSTR pszTemplate, LPCTSTR pszFormat, va_list arg);
+extern EXPORTED LPTSTR cdecl vFormatString (int idsTemplate,     LPCTSTR pszFormat, va_list arg);
 
-extern void cdecl FormatMultiString  (LPTSTR *ppszTarget, BOOL fAddHead, LPCTSTR pszTemplate, LPCTSTR pszFormat = NULL, ...);
-extern void cdecl FormatMultiString  (LPTSTR *ppszTarget, BOOL fAddHead, int idsTemplate,     LPCTSTR pszFormat = NULL, ...);
-extern void cdecl vFormatMultiString (LPTSTR *ppszTarget, BOOL fAddHead, LPCTSTR pszTemplate, LPCTSTR pszFormat, va_list arg);
-extern void cdecl vFormatMultiString (LPTSTR *ppszTarget, BOOL fAddHead, int idsTemplate,     LPCTSTR pszFormat, va_list arg);
+extern EXPORTED void cdecl FormatMultiString  (LPTSTR *ppszTarget, BOOL fAddHead, LPCTSTR pszTemplate, LPCTSTR pszFormat = NULL, ...);
+extern EXPORTED void cdecl FormatMultiString  (LPTSTR *ppszTarget, BOOL fAddHead, int idsTemplate,     LPCTSTR pszFormat = NULL, ...);
+extern EXPORTED void cdecl vFormatMultiString (LPTSTR *ppszTarget, BOOL fAddHead, LPCTSTR pszTemplate, LPCTSTR pszFormat, va_list arg);
+extern EXPORTED void cdecl vFormatMultiString (LPTSTR *ppszTarget, BOOL fAddHead, int idsTemplate,     LPCTSTR pszFormat, va_list arg);
 
-extern void FormatBytes (LPTSTR pszTarget, LPTSTR pszFormat, double cb);
-extern void FormatDouble (LPTSTR pszTarget, LPTSTR pszFormat, double lfValue);
-extern BOOL FormatTime (LPTSTR pszTarget, LPTSTR pszFormat, SYSTEMTIME *pst, BOOL fShowDate = TRUE, BOOL fShowTime = TRUE);
-extern BOOL FormatElapsed (LPTSTR pszTarget, LPTSTR pszFormat, SYSTEMTIME *pst);
-extern BOOL FormatError (LPTSTR pszTarget, LPTSTR pszFmt, DWORD dwError);
-extern void FormatSockAddr (LPTSTR pszTarget, LPTSTR pszFmt, SOCKADDR_IN *paddr);
-extern void FormatLargeInt (LPTSTR pszTarget, LPTSTR pszFormatUser, LARGE_INTEGER *pldw);
+extern EXPORTED void FormatBytes (LPTSTR pszTarget, LPTSTR pszFormat, double cb);
+extern EXPORTED void FormatDouble (LPTSTR pszTarget, LPTSTR pszFormat, double lfValue);
+extern EXPORTED BOOL FormatTime (LPTSTR pszTarget, LPTSTR pszFormat, SYSTEMTIME *pst, BOOL fShowDate = TRUE, BOOL fShowTime = TRUE);
+extern EXPORTED BOOL FormatElapsed (LPTSTR pszTarget, LPTSTR pszFormat, SYSTEMTIME *pst);
+extern EXPORTED BOOL FormatError (LPTSTR pszTarget, LPTSTR pszFmt, DWORD dwError);
+extern EXPORTED void FormatSockAddr (LPTSTR pszTarget, LPTSTR pszFmt, SOCKADDR_IN *paddr);
+extern EXPORTED void FormatLargeInt (LPTSTR pszTarget, LPTSTR pszFormatUser, LARGE_INTEGER *pldw);
 
 typedef BOOL (CALLBACK* LPERRORPROC)(LPTSTR psz, ULONG dwErr, LANGID idLanguage);
-extern void SetErrorTranslationFunction (LPERRORPROC pfnGetErrText);
+extern EXPORTED void SetErrorTranslationFunction (LPERRORPROC pfnGetErrText);
 
-extern LPCTSTR FindExtension (LPCTSTR pszToSearch);
-extern LPCTSTR FindBaseFileName (LPCTSTR pszToSearch);
-extern void ChangeExtension (LPTSTR pszTarget, LPCTSTR pszSource, LPCTSTR pszNewExt, BOOL fForce = TRUE);
-extern void CopyBaseFileName (LPTSTR pszTarget, LPCTSTR pszSource);
+extern EXPORTED LPCTSTR FindExtension (LPCTSTR pszToSearch);
+extern EXPORTED LPCTSTR FindBaseFileName (LPCTSTR pszToSearch);
+extern EXPORTED void ChangeExtension (LPTSTR pszTarget, LPCTSTR pszSource, LPCTSTR pszNewExt, BOOL fForce = TRUE);
+extern EXPORTED void CopyBaseFileName (LPTSTR pszTarget, LPCTSTR pszSource);
 
-extern void CopyUnicodeToAnsi (LPSTR pszTargetA, LPCWSTR pszOriginalW, size_t cchMax = (size_t)1024);
-extern void CopyUnicodeToString (LPTSTR pszTarget, LPCWSTR pszOriginalW, size_t cchMax = (size_t)1024);
-extern void CopyAnsiToUnicode (LPWSTR pszTargetW, LPCSTR pszOriginalA, size_t cchMax = (size_t)1024);
-extern void CopyAnsiToString (LPTSTR pszTarget, LPCSTR pszOriginalA, size_t cchMax = (size_t)1024);
-extern void CopyStringToUnicode (LPWSTR pszTargetW, LPCTSTR pszOriginal, size_t cchMax = (size_t)1024);
-extern void CopyStringToAnsi (LPSTR pszTargetA, LPCTSTR pszOriginal, size_t cchMax = (size_t)1024);
+extern EXPORTED void CopyUnicodeToAnsi (LPSTR pszTargetA, LPCWSTR pszOriginalW, size_t cchMax = (size_t)1024);
+extern EXPORTED void CopyUnicodeToString (LPTSTR pszTarget, LPCWSTR pszOriginalW, size_t cchMax = (size_t)1024);
+extern EXPORTED void CopyAnsiToUnicode (LPWSTR pszTargetW, LPCSTR pszOriginalA, size_t cchMax = (size_t)1024);
+extern EXPORTED void CopyAnsiToString (LPTSTR pszTarget, LPCSTR pszOriginalA, size_t cchMax = (size_t)1024);
+extern EXPORTED void CopyStringToUnicode (LPWSTR pszTargetW, LPCTSTR pszOriginal, size_t cchMax = (size_t)1024);
+extern EXPORTED void CopyStringToAnsi (LPSTR pszTargetA, LPCTSTR pszOriginal, size_t cchMax = (size_t)1024);
 
 #define AllocateAnsi(_cch)     ((LPSTR)Allocate ((max((_cch),cchRESOURCE)+1) * sizeof(CHAR)))
 #define AllocateUnicode(_cch) ((LPWSTR)Allocate ((max((_cch),cchRESOURCE)+1) * sizeof(WCHAR)))
 #define AllocateString(_cch)  ((LPTSTR)Allocate ((max((_cch),cchRESOURCE)+1) * sizeof(TCHAR)))
-extern void FreeString (LPCVOID pszString, LPCVOID pszOriginalString = NULL);
+extern EXPORTED void FreeString (LPCVOID pszString, LPCVOID pszOriginalString = NULL);
 
-extern LPSTR StringToAnsi (LPCTSTR pszOriginal);
-extern LPTSTR AnsiToString (LPCSTR pszOriginalA);
-extern LPWSTR StringToUnicode (LPCTSTR pszOriginal);
-extern LPTSTR UnicodeToString (LPCWSTR pszOriginalW);
-extern LPWSTR AnsiToUnicode (LPCSTR pszOriginalA);
-extern LPSTR UnicodeToAnsi (LPCWSTR pszOriginalW);
+extern EXPORTED LPSTR StringToAnsi (LPCTSTR pszOriginal);
+extern EXPORTED LPTSTR AnsiToString (LPCSTR pszOriginalA);
+extern EXPORTED LPWSTR StringToUnicode (LPCTSTR pszOriginal);
+extern EXPORTED LPTSTR UnicodeToString (LPCWSTR pszOriginalW);
+extern EXPORTED LPWSTR AnsiToUnicode (LPCSTR pszOriginalA);
+extern EXPORTED LPSTR UnicodeToAnsi (LPCWSTR pszOriginalW);
 
-extern LPTSTR CloneAnsi (LPSTR pszOriginalA);
-extern LPTSTR CloneUnicode (LPWSTR pszOriginalW);
-extern LPTSTR CloneString (LPTSTR pszOriginal);
-extern LPTSTR CloneMultiString (LPCSTR mszOriginal);
+extern EXPORTED LPTSTR CloneAnsi (LPSTR pszOriginalA);
+extern EXPORTED LPTSTR CloneUnicode (LPWSTR pszOriginalW);
+extern EXPORTED LPTSTR CloneString (LPTSTR pszOriginal);
+extern EXPORTED LPTSTR CloneMultiString (LPCSTR mszOriginal);
 
 
 /*
@@ -95,14 +98,14 @@ extern LPTSTR CloneMultiString (LPCSTR mszOriginal);
  *
  */
 
-extern void lstrupr (LPTSTR pszToChange);
-extern LPCTSTR lstrchr (LPCTSTR pszSearch, TCHAR chToSearchFor);
-extern LPCTSTR lstrrchr (LPCTSTR pszSearch, TCHAR chToSearchFor);
-extern int lstrncmpi (LPCTSTR pszA, LPCTSTR pszB, size_t cchMax);
-extern void lstrncpy (LPTSTR pszTarget, LPCTSTR pszSource, size_t cchMax);
-extern void lstrzcpy (LPTSTR pszTarget, LPCTSTR pszSource, size_t cchMax);
+extern EXPORTED void lstrupr (LPTSTR pszToChange);
+extern EXPORTED LPCTSTR lstrchr (LPCTSTR pszSearch, TCHAR chToSearchFor);
+extern EXPORTED LPCTSTR lstrrchr (LPCTSTR pszSearch, TCHAR chToSearchFor);
+extern EXPORTED int lstrncmpi (LPCTSTR pszA, LPCTSTR pszB, size_t cchMax);
+extern EXPORTED void lstrncpy (LPTSTR pszTarget, LPCTSTR pszSource, size_t cchMax);
+extern EXPORTED void lstrzcpy (LPTSTR pszTarget, LPCTSTR pszSource, size_t cchMax);
 
-extern void lsplitpath (LPCTSTR pszSource,
+extern EXPORTED void lsplitpath (LPCTSTR pszSource,
                  LPTSTR pszDrive, LPTSTR pszPath, LPTSTR pszBase, LPTSTR pszExt);
 #endif
 

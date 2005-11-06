@@ -76,6 +76,8 @@ BOOL APIENTRY About(HWND, unsigned int, unsigned int, long);
 
 void afs_exit();
 
+extern void afsi_log(char *pattern, ...);
+
 /* globals from the base afsd */
 
 extern int cm_logChunkSize;

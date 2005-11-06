@@ -798,7 +798,7 @@ long osi_StatFDGetInfo(osi_fd_t *ifdp, osi_remGetInfoParms_t *parmsp)
 
 		memset((void *) parmsp, 0, sizeof(*parmsp));
 		backMutexp = mp->qi.backp;
-		parmsp->idata[0] = (long) backMutexp;
+		parmsp->idata[0] = backMutexp;
 		parmsp->idata[1] = (backMutexp->flags & OSI_LOCKFLAG_EXCL)? 1 : 0;
 		/* reader count [2] is 0 */
 		parmsp->idata[3] = (backMutexp->waiters > 0)? 1 : 0;
@@ -816,7 +816,7 @@ long osi_StatFDGetInfo(osi_fd_t *ifdp, osi_remGetInfoParms_t *parmsp)
 
 		memset((void *) parmsp, 0, sizeof(*parmsp));
                 backRWLockp = rwp->qi.backp;
-		parmsp->idata[0] = (long) backRWLockp;
+		parmsp->idata[0] = backRWLockp;
 		parmsp->idata[1] = (backRWLockp->flags & OSI_LOCKFLAG_EXCL)? 1 : 0;
 		parmsp->idata[2] = backRWLockp->readers;
 		parmsp->idata[3] = (backRWLockp->waiters > 0)? 1 : 0;

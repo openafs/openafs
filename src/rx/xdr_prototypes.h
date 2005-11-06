@@ -96,4 +96,11 @@ extern bool_t xdr_vector(register XDR * xdrs, register char *basep,
 
 
 #endif
+
+#ifndef osi_alloc
+extern char *osi_alloc(afs_int32 x);
+#endif
+#ifndef osi_free
+extern int osi_free(char *x, afs_int32 size);
+#endif
 #endif /* _XDR_PROTOTYPES_H */

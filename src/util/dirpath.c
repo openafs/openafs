@@ -450,7 +450,7 @@ LocalizePathHead(const char **path, const char **relativeTo)
 {
     struct canonmapping *current;
     for (current = CanonicalTranslations; current->local != NULL; current++) {
-	int canonlength = strlen(current->canonical);
+	size_t canonlength = strlen(current->canonical);
 	if (strncmp(*path, current->canonical, canonlength) == 0) {
 	    (*path) += canonlength;
 	    if (**path == '/')

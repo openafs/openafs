@@ -664,13 +664,13 @@ void UserProp_General_OnApply (HWND hDlg)
    if (!IsDlgButtonChecked (hDlg, IDC_USER_PWEXPIRES))
       lpp->cdayPwExpires = 0;
    else
-      lpp->cdayPwExpires = SP_GetPos (GetDlgItem (hDlg, IDC_USER_PWEXPIRATION));
+      lpp->cdayPwExpires = (LONG) SP_GetPos (GetDlgItem (hDlg, IDC_USER_PWEXPIRATION));
    lpp->fPwExpires_Mixed = (IsDlgButtonChecked (hDlg, IDC_USER_PWEXPIRES) == BST_INDETERMINATE);
 
    if (!IsDlgButtonChecked (hDlg, IDC_USER_FAILLOCK))
       lpp->cFailLock = 0;
    else
-      lpp->cFailLock = SP_GetPos (GetDlgItem (hDlg, IDC_USER_FAILLOCK_COUNT));
+      lpp->cFailLock = (LONG) SP_GetPos (GetDlgItem (hDlg, IDC_USER_FAILLOCK_COUNT));
    lpp->fFailLock_Mixed = (IsDlgButtonChecked (hDlg, IDC_USER_FAILLOCK) == BST_INDETERMINATE);
 
    if (!IsDlgButtonChecked (hDlg, IDC_USER_FAILLOCK_FINITE))
@@ -1040,7 +1040,7 @@ void UserProp_Advanced_OnApply (HWND hDlg)
       if (!IsDlgButtonChecked (hDlg, IDC_USER_GROUP_HASQUOTA))
          lpp->cGroupQuota = cGROUPQUOTA_INFINITE;
       else // (IsDlgButtonChecked (hDlg, IDC_USER_GROUP_HASQUOTA))
-         lpp->cGroupQuota = SP_GetPos (GetDlgItem (hDlg, IDC_USER_GROUP_QUOTA));
+         lpp->cGroupQuota = (LONG) SP_GetPos (GetDlgItem (hDlg, IDC_USER_GROUP_QUOTA));
       lpp->fGroupQuota_Mixed = (IsDlgButtonChecked (hDlg, IDC_USER_GROUP_HASQUOTA) == BST_INDETERMINATE);
       }
 

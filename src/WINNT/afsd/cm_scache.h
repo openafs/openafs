@@ -87,66 +87,66 @@ typedef struct cm_prefetch {		/* last region scanned for prefetching */
 
 typedef struct cm_scache {
     osi_queue_t q;              /* lru queue; cm_scacheLock */
-        afs_uint32      magic;
-        struct cm_scache *nextp;	/* next in hash; cm_scacheLock */
-	cm_fid_t fid;
-        afs_uint32 flags;		/* flags; locked by mx */
+    afs_uint32      magic;
+    struct cm_scache *nextp;	/* next in hash; cm_scacheLock */
+    cm_fid_t fid;
+    afs_uint32 flags;		/* flags; locked by mx */
 
-	/* synchronization stuff */
-        osi_mutex_t mx;			/* mutex for this structure */
-        osi_rwlock_t bufCreateLock;	/* read-locked during buffer creation;
-        				 * write-locked to prevent buffers from
-                                         * being created during a truncate op, etc.
-                                         */
-        afs_uint32 refCount;		/* reference count; cm_scacheLock */
-        osi_queueData_t *bufReadsp;	/* queue of buffers being read */
-        osi_queueData_t *bufWritesp;	/* queue of buffers being written */
+    /* synchronization stuff */
+    osi_mutex_t mx;		/* mutex for this structure */
+    osi_rwlock_t bufCreateLock;	/* read-locked during buffer creation;
+        			 * write-locked to prevent buffers from
+                                 * being created during a truncate op, etc.
+                                 */
+    afs_uint32 refCount;		/* reference count; cm_scacheLock */
+    osi_queueData_t *bufReadsp;	/* queue of buffers being read */
+    osi_queueData_t *bufWritesp;	/* queue of buffers being written */
 
-	/* parent info for ACLs */
-        afs_uint32 parentVnode;		/* parent vnode for ACL callbacks */
-        afs_uint32 parentUnique;	/* for ACL callbacks */
+    /* parent info for ACLs */
+    afs_uint32 parentVnode;		/* parent vnode for ACL callbacks */
+    afs_uint32 parentUnique;	/* for ACL callbacks */
 
-	/* local modification stat */
-        afs_uint32 mask;		/* for clientModTime, length and
-					 * truncPos */
+    /* local modification stat */
+    afs_uint32 mask;		/* for clientModTime, length and
+                                 * truncPos */
 
-	/* file status */
-	afs_uint32 fileType;		/* file type */
-	time_t clientModTime;	        /* mtime */
-        time_t serverModTime;	        /* at server, for concurrent call
-					 * comparisons */
-        osi_hyper_t length;		/* file length */
-	cm_prefetch_t prefetch;		/* prefetch info structure */
-        afs_uint32 unixModeBits;	/* unix protection mode bits */
-        afs_uint32 linkCount;		/* link count */
-        afs_uint32 dataVersion;		/* data version */
-        afs_uint32 owner; 		/* file owner */
-        afs_uint32 group;		/* file owning group */
+    /* file status */
+    afs_uint32 fileType;		/* file type */
+    time_t clientModTime;	        /* mtime */
+    time_t serverModTime;	        /* at server, for concurrent call
+                                         * comparisons */
+    osi_hyper_t length;		/* file length */
+    cm_prefetch_t prefetch;		/* prefetch info structure */
+    afs_uint32 unixModeBits;	/* unix protection mode bits */
+    afs_uint32 linkCount;		/* link count */
+    afs_uint32 dataVersion;		/* data version */
+    afs_uint32 owner; 		/* file owner */
+    afs_uint32 group;		/* file owning group */
 
-	/* pseudo file status */
-	osi_hyper_t serverLength;	/* length known to server */
+    /* pseudo file status */
+    osi_hyper_t serverLength;	/* length known to server */
 
-	/* aux file status */
-        osi_hyper_t truncPos;		/* file size to truncate to before
-					 * storing data */
+    /* aux file status */
+    osi_hyper_t truncPos;	/* file size to truncate to before
+                                 * storing data */
 
-	/* symlink and mount point info */
-        char mountPointStringp[MOUNTPOINTLEN];	/* the string stored in a mount point;
-        				 * first char is type, then vol name.
+    /* symlink and mount point info */
+    char mountPointStringp[MOUNTPOINTLEN];	/* the string stored in a mount point;
+                                                 * first char is type, then vol name.
                                          * If this is a normal symlink, we store
 					 * the link contents here.
                                          */
-	cm_fid_t  mountRootFid;	        /* mounted on root */
-	time_t    mountRootGen;	        /* time to update mountRootFidp? */
-	cm_fid_t  dotdotFid;		/* parent of volume root */
+    cm_fid_t  mountRootFid;	        /* mounted on root */
+    time_t    mountRootGen;	        /* time to update mountRootFidp? */
+    cm_fid_t  dotdotFid;		/* parent of volume root */
 
-	/* callback info */
-        struct cm_server *cbServerp;	/* server granting callback */
-        time_t cbExpires;		/* time callback expires */
+    /* callback info */
+    struct cm_server *cbServerp;	/* server granting callback */
+    time_t cbExpires;		/* time callback expires */
 
-	/* access cache */
-        long anyAccess;			/* anonymous user's access */
-        struct cm_aclent *randomACLp;	/* access cache entries */
+    /* access cache */
+    long anyAccess;			/* anonymous user's access */
+    struct cm_aclent *randomACLp;	/* access cache entries */
 
     /* file locks */
     afs_int32    serverLock;    /* current lock we have acquired on
@@ -164,21 +164,21 @@ typedef struct cm_scache {
                                   * ::fileLocks
                                   */
 	
-	/* volume info */
-        struct cm_volume *volp;		/* volume info; held reference */
-  
-        /* bulk stat progress */
-        osi_hyper_t bulkStatProgress;	/* track bulk stats of large dirs */
+    /* volume info */
+    struct cm_volume *volp;		/* volume info; held reference */
 
-        /* open state */
-        afs_uint16 openReads;		/* open for reading */
-        afs_uint16 openWrites;		/* open for writing */
-        afs_uint16 openShares;		/* open for read excl */
-        afs_uint16 openExcls;		/* open for exclusives */
+    /* bulk stat progress */
+    osi_hyper_t bulkStatProgress;	/* track bulk stats of large dirs */
 
-        /* syncop state */
-        afs_uint32 waitCount;           /* number of threads waiting */
-        afs_uint32 waitRequests;        /* num of thread wait requests */
+    /* open state */
+    afs_uint16 openReads;		/* open for reading */
+    afs_uint16 openWrites;		/* open for writing */
+    afs_uint16 openShares;		/* open for read excl */
+    afs_uint16 openExcls;		/* open for exclusives */
+
+    /* syncop state */
+    afs_uint32 waitCount;           /* number of threads waiting */
+    afs_uint32 waitRequests;        /* num of thread wait requests */
 } cm_scache_t;
 
 /* mask field - tell what has been modified */

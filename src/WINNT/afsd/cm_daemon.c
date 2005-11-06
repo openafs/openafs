@@ -71,7 +71,7 @@ void cm_BkgDaemon(long parm)
     lock_ObtainWrite(&cm_daemonLock);
     while (daemon_ShutdownFlag == 0) {
         if (!cm_bkgListEndp) {
-            osi_SleepW((long) &cm_bkgListp, &cm_daemonLock);
+            osi_SleepW((LONG_PTR)&cm_bkgListp, &cm_daemonLock);
             lock_ObtainWrite(&cm_daemonLock);
             continue;
         }
@@ -119,7 +119,7 @@ void cm_QueueBKGRequest(cm_scache_t *scp, cm_bkgProc_t *procp, long p1, long p2,
         cm_bkgListEndp = rp;
     lock_ReleaseWrite(&cm_daemonLock);
 
-    osi_Wakeup((long) &cm_bkgListp);
+    osi_Wakeup((LONG_PTR) &cm_bkgListp);
 }
 
 static int
@@ -176,13 +176,13 @@ IsWindowsFirewallPresent(void)
 /* periodic check daemon */
 void cm_Daemon(long parm)
 {
-    unsigned long now;
-    unsigned long lastLockCheck;
-    unsigned long lastVolCheck;
-    unsigned long lastCBExpirationCheck;
-    unsigned long lastDownServerCheck;
-    unsigned long lastUpServerCheck;
-    unsigned long lastTokenCacheCheck;
+    time_t now;
+    time_t lastLockCheck;
+    time_t lastVolCheck;
+    time_t lastCBExpirationCheck;
+    time_t lastDownServerCheck;
+    time_t lastUpServerCheck;
+    time_t lastTokenCacheCheck;
     char thostName[200];
     unsigned long code;
     struct hostent *thp;

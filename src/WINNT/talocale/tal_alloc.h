@@ -83,6 +83,10 @@
 #define MEMMGR_CALLCONV _cdecl
 #endif
 
+#ifndef EXPORTED
+#define EXPORTED __declspec(dllexport)
+#endif
+
 /*
  * MACROS _____________________________________________________________________
  *
@@ -123,17 +127,17 @@
 
 #else /* DEBUG */
 
-void MEMMGR_CALLCONV ShowMemoryManager (void);
-void MEMMGR_CALLCONV WhileMemoryManagerShowing (void);
-BOOL MEMMGR_CALLCONV IsMemoryManagerMessage (MSG *pMsg);
+EXPORTED void MEMMGR_CALLCONV ShowMemoryManager (void);
+EXPORTED void MEMMGR_CALLCONV WhileMemoryManagerShowing (void);
+EXPORTED BOOL MEMMGR_CALLCONV IsMemoryManagerMessage (MSG *pMsg);
 
 #ifndef NO_DEBUG_ALLOC
 
-PVOID MEMMGR_CALLCONV MemMgr_AllocateMemory (size_t cb, LPSTR pszExpr, LPSTR pszFile, DWORD dwLine);
-void MEMMGR_CALLCONV MemMgr_FreeMemory (PVOID pData, LPSTR pszFile, DWORD dwLine);
+EXPORTED PVOID MEMMGR_CALLCONV MemMgr_AllocateMemory (size_t cb, LPSTR pszExpr, LPSTR pszFile, DWORD dwLine);
+EXPORTED void MEMMGR_CALLCONV MemMgr_FreeMemory (PVOID pData, LPSTR pszFile, DWORD dwLine);
 
-PVOID MEMMGR_CALLCONV MemMgr_TrackNew (PVOID pData, size_t cb, LPSTR pszExpr, LPSTR pszFile, DWORD dwLine);
-void MEMMGR_CALLCONV MemMgr_TrackDelete (PVOID pData, LPSTR pszFile, DWORD dwLine);
+EXPORTED PVOID MEMMGR_CALLCONV MemMgr_TrackNew (PVOID pData, size_t cb, LPSTR pszExpr, LPSTR pszFile, DWORD dwLine);
+EXPORTED void MEMMGR_CALLCONV MemMgr_TrackDelete (PVOID pData, LPSTR pszFile, DWORD dwLine);
 
 #endif /* NO_DEBUG_ALLOC */
 

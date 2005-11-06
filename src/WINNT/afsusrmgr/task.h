@@ -20,7 +20,7 @@ typedef struct
    {
    TCHAR szCell[ cchNAME ];
    BOOL fCloseAppOnFail;
-   PVOID hCreds;
+   UINT_PTR hCreds;
    } OPENCELL_PARAMS, *LPOPENCELL_PARAMS;
 
 typedef struct
@@ -48,7 +48,7 @@ typedef struct
    {
    LPTSTR mszNames;
    TCHAR szPassword[ cchRESOURCE ];
-   int idUser;
+   UINT_PTR idUser;
    AFSADMSVR_CHANGEUSER_PARAMS Properties;
    LPASIDLIST pGroupsMember;
    LPASIDLIST pGroupsOwner;
@@ -97,7 +97,7 @@ typedef struct
    {
    LPTSTR mszNames;
    TCHAR szOwner[ cchNAME ];
-   int idGroup;
+   UINT_PTR idGroup;
    AFSADMSVR_CHANGEGROUP_PARAMS Properties;
    LPASIDLIST pMembers;
    LPASIDLIST pGroupsOwner;
@@ -118,8 +118,8 @@ typedef struct
 typedef struct
    {
    ASID idCell;
-   int idUserMax;
-   int idGroupMax;
+   UINT_PTR idUserMax;
+   UINT_PTR idGroupMax;
    } CELL_CHANGE_PARAMS, *LPCELL_CHANGE_PARAMS;
 
 typedef enum

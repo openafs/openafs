@@ -12,9 +12,11 @@ test tests: $(OUT)\getifinfo.exe $(OUT)\regman.exe $(OUT)\dupkey.exe
 
 $(OUT)\getifinfo.exe: $(OUT)\getifinfo.obj $(DESTDIR)\lib\afs\afsreg.lib 
 	$(EXECONLINK)
+        $(_VC_MANIFEST_EMBED_EXE)
 
 $(OUT)\dupkey.exe: $(OUT)\dupkey.obj $(DESTDIR)\lib\afs\afsreg.lib
 	$(EXECONLINK)
+        $(_VC_MANIFEST_EMBED_EXE)
 
 REGMAN_EXELIBS =\
 	$(DESTDIR)\lib\afs\afsreg.lib \
@@ -24,6 +26,7 @@ REGMAN_EXELIBS =\
 
 $(OUT)\regman.exe: $(OUT)\regman.obj $(REGMAN_EXELIBS)
 	$(EXECONLINK)
+        $(_VC_MANIFEST_EMBED_EXE)
 
 mkdir:
 	

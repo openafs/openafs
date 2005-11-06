@@ -135,10 +135,10 @@ BOOL CALLBACK Columns_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
       return TRUE;
 
    if (msg == WM_INITDIALOG)
-      SetWindowLong (hDlg, DWL_USER, ((LPPROPSHEETPAGE)lp)->lParam);
+      SetWindowLongPtr (hDlg, DWLP_USER, ((LPPROPSHEETPAGE)lp)->lParam);
 
    ShowColumnsParams *pscp;
-   pscp = (ShowColumnsParams *)GetWindowLong (hDlg, DWL_USER);
+   pscp = (ShowColumnsParams *)GetWindowLongPtr (hDlg, DWLP_USER);
 
    switch (msg)
       {
@@ -306,7 +306,7 @@ void Columns_OnSelShown (HWND hDlg)
       }
    else
       {
-      int iAvail = LB_GetData (hList, ii);
+      int iAvail = (int) LB_GetData (hList, ii);
       EnableWindow (GetDlgItem (hDlg, IDC_COL_DELETE), (iAvail != 0));
 
       int ci = (int)SendMessage (hList, LB_GETCOUNT, 0, 0);

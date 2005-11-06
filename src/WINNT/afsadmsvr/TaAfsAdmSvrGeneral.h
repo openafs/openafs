@@ -31,22 +31,24 @@ void AfsAdmSvr_Startup (void);
 void AfsAdmSvr_Shutdown (void);
 
 void AfsAdmSvr_EnableAutoShutdown (BOOL fEnable);
-size_t AfsAdmSvr_BeginOperation (DWORD idClient, LPASACTION pAction = NULL);
+size_t AfsAdmSvr_BeginOperation (UINT_PTR idClient, LPASACTION pAction = NULL);
 void AfsAdmSvr_EndOperation (size_t iOp);
 BOOL AfsAdmSvr_GetOperation (DWORD idAction, LPASACTION pAction);
-LPASACTIONLIST AfsAdmSvr_GetOperations (DWORD idClientSearch = 0, ASID idCellSearch = 0);
+LPASACTIONLIST AfsAdmSvr_GetOperations (UINT_PTR idClientSearch = 0, ASID idCellSearch = 0);
 void AfsAdmSvr_Action_StartRefresh (ASID idScope);
 void AfsAdmSvr_Action_StopRefresh (ASID idScope);
 
-BOOL AfsAdmSvr_fIsValidClient (DWORD idClient);
-BOOL AfsAdmSvr_AttachClient (LPCTSTR pszName, DWORD *pidClient, ULONG *pStatus);
-void AfsAdmSvr_DetachClient (DWORD idClient);
-LPCTSTR AfsAdmSvr_GetClientName (DWORD idClient);
-LPSOCKADDR_IN AfsAdmSvr_GetClientAddress (DWORD idClient);
-void AfsAdmSvr_PingClient (DWORD idClient);
+BOOL AfsAdmSvr_fIsValidClient (UINT_PTR idClient);
+BOOL AfsAdmSvr_AttachClient (LPCTSTR pszName, PVOID *pidClient, ULONG *pStatus);
+void AfsAdmSvr_DetachClient (UINT_PTR idClient);
+LPCTSTR AfsAdmSvr_GetClientName (UINT_PTR idClient);
+LPSOCKADDR_IN AfsAdmSvr_GetClientAddress (UINT_PTR idClient);
+void AfsAdmSvr_PingClient (UINT_PTR idClient);
 
 BOOL FALSE_ (ULONG status, ULONG *pStatus, size_t iOp = (size_t)-2);
 BOOL Leave_FALSE_ (ULONG status, ULONG *pStatus, size_t iOp = (size_t)-2);
+PVOID NULL_ (ULONG status, ULONG *pStatus, size_t iOp = (size_t)-2);
+PVOID Leave_NULL_ (ULONG status, ULONG *pStatus, size_t iOp = (size_t)-2);
 BOOL TRUE_ (ULONG *pStatus, size_t iOp = (size_t)-2);
 BOOL Leave_TRUE_ (ULONG *pStatus, size_t iOp = (size_t)-2);
 

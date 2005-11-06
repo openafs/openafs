@@ -14,7 +14,7 @@
 
 typedef struct cm_callbackRequest {
     long callbackCount;		/* callback count at start of the request */
-    unsigned long startTime;	/* time when we started the call */
+    time_t startTime;	/* time when we started the call */
     struct cm_server *serverp;	/* server we really got the callback from */
 } cm_callbackRequest_t;
 

@@ -1,9 +1,8 @@
 <?xml version="1.0"?>
 <Include>
-    <Directory Id="SystemFolder" SourceName="System">
-        <Component Id="cmf_afslogon_DLL" Guid="123197FE-4F53-4035-8D51-FCFB6B50A777">
+    <Directory Id="$(var.PISystemFolder)" SourceName="System">
+        <Component Win64="$(var.Win64)" Id="cmf_afslogon_DLL" Guid="$(var.cmf_afslogon_DLL_guid)">
             <File Id="fileafslogon_DLL" Name="afslogon.dll" LongName="afslogon.dll" KeyPath="yes" DiskId="1" src="$(var.ClientDir)afslogon.dll" />
-            <File Id="fileafscpcc_EXE"  Name="afscpcc.exe"  LongName="afscpcc.exe"  DiskId="1" src="$(var.ClientDir)afscpcc.exe" />
             <Registry Id="reg_afslogon01" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" Action="createKeyAndRemoveKeyOnUninstall" />
             <Registry Id="reg_afslogon02" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" />
             <Registry Id="reg_afslogon03" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" Name="Asynchronous" Type="integer" Value="0" />
@@ -17,14 +16,17 @@
             <Registry Id="reg_afslogon11" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\KFWLogon" Name="DLLName" Type="string" Value="[#fileafslogon_DLL]" />
             <Registry Id="reg_afslogon13" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\KFWLogon" Name="Logon" Type="string" Value="KFW_Logon_Event" />
         </Component>
+        <Component Win64="$(var.Win64)" Id="cmf_afscpcc_EXE" Guid="$(var.cmf_afscpcc_EXE_guid)">
+            <File Id="fileafscpcc_EXE"  Name="afscpcc.exe"  LongName="afscpcc.exe"  DiskId="1" src="$(var.ClientDir)afscpcc.exe" KeyPath="yes"/>
+        </Component>
     <?ifdef DebugSyms?>
-        <Component Id="cmp_ClientSystemDebug" Guid="DD34DA09-D9DA-4A5A-9521-87B7738A7D53">
+        <Component Win64="$(var.Win64)" Id="cmp_ClientSystemDebug" Guid="$(var.cmp_ClientSystemDebug_guid)">
 			<File Id="fileafslogon_PDB" Name="afslogon.pdb" LongName="afslogon.pdb" KeyPath="yes" DiskId="1" src="$(var.ClientDir)afslogon.pdb" />
 			<File Id="fileafscpcc_PDB" Name="afscpcc.pdb" LongName="afscpcc.pdb" DiskId="1" src="$(var.ClientDir)afscpcc.pdb" />
         </Component>
     <?endif?>
     </Directory>
-    <Directory Id="ProgramFilesFolder">
+    <Directory Id="$(var.PIProgramFilesFolder)">
         <Directory Id="AFSDIR" Name="OpenAFS" SourceName=".">
 	    <Component Id="efl_desktop_INI" Guid="0ADB427F-3648-4BE0-983B-C454AA51895C">
 		<File Id="fildesktop_INI" Name="desktop.ini" KeyPath="yes" DiskId="1" src="$(var.SrcDir)WINNT\install\wix\afsdesktop.ini" Hidden="yes" System="yes" />
@@ -32,7 +34,7 @@
             <Component Id="efl_replace_afs_CMD" Guid="C9C93F3E-EEBA-4056-9669-5EF78D748D50">
                <File Id="filreplace_afs_CMD" Name="replafs.cmd" LongName="replace_afs.cmd" KeyPath="yes" DiskId="1" src="$(var.SrcDir)\WINNT\install\wix\replace_afs.cmd" />
             </Component>
-	    <Component Id="efl_uninstall_EXE" Guid="8B99B979-03F4-4AB5-9CE8-1DA97DB6613A">
+	    <Component Win64="$(var.Win64)" Id="efl_uninstall_EXE" Guid="$(var.efl_uninstall_EXE_guid)">
 		<File Id="filuninstall_EXE" Name="uninst.exe" LongName="uninstall.exe" KeyPath="yes" DiskId="1" src="$(var.ClientDir)\uninstall.exe">
 			<Shortcut Id="scUninstall" Directory="dirShortCut" Name="Uninst.lnk" LongName="Uninstall OpenAFS.lnk" Description="$(loc.StrUninstallDesc)" Icon="ico_OpenAFS" IconIndex="0" Show="normal" />
                 </File>
@@ -42,48 +44,48 @@
                     <Environment Id="envCommon" Name="PATH" Action="create" System="yes" Permanent="no" Part="last" Separator=";" Value="[AFSDIR]Common" />
                     <CreateFolder />
                 </Component>
-                <Component Id="cmf_afsbosadmin_DLL" Guid="B4E5799E-BC68-4C17-B924-7DA206DD88D7">
+                <Component Win64="$(var.Win64)" Id="cmf_afsbosadmin_DLL" Guid="$(var.cmf_afsbosadmin_DLL_guid)">
                     <File Id="fileafsbosadmin_DLL" Name="afsbosad.dll" LongName="afsbosadmin.dll" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\afsbosadmin.dll"/>
                 </Component>
-                <Component Id="cmf_afscfgadmin_DLL" Guid="2D5E8B3A-55F2-43CC-953B-7630FF0A7326">
+                <Component Win64="$(var.Win64)" Id="cmf_afscfgadmin_DLL" Guid="$(var.cmf_afscfgadmin_DLL_guid)">
                     <File Id="fileafscfgadmin_DLL" Name="afscfgad.dll" LongName="afscfgadmin.dll" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\afscfgadmin.dll"/>
                 </Component>
-                <Component Id="cmf_afsclientadmin_DLL" Guid="735F75B1-EBCF-4AE1-B401-D48A1DD160F2">
+                <Component Win64="$(var.Win64)" Id="cmf_afsclientadmin_DLL" Guid="$(var.cmf_afsclientadmin_DLL_guid)">
                     <File Id="fileafsclientadmin_DLL" Name="afscliad.dll" LongName="afsclientadmin.dll" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\afsclientadmin.dll"/>
                 </Component>
-                <Component Id="cmf_afskasadmin_DLL" Guid="2B4E37E4-ECEA-4435-8028-D60BAC9C647B">
+                <Component Win64="$(var.Win64)" Id="cmf_afskasadmin_DLL" Guid="$(var.cmf_afskasadmin_DLL_guid)">
                     <File Id="fileafskasadmin_DLL" Name="afskasad.dll" LongName="afskasadmin.dll" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\afskasadmin.dll"/>
                 </Component>
-                <Component Id="cmf_afsptsadmin_DLL" Guid="CC902A5A-5CEF-47D1-B4ED-F922EB8F7FF0">
+                <Component Win64="$(var.Win64)" Id="cmf_afsptsadmin_DLL" Guid="$(var.cmf_afsptsadmin_DLL_guid)">
                     <File Id="fileafsptsadmin_DLL" Name="afsptsad.dll" LongName="afsptsadmin.dll" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\afsptsadmin.dll"/>
                 </Component>
-                <Component Id="cmf_afsvosadmin_DLL" Guid="A97E0801-06A5-465C-99E1-E5F0E07166F0">
+                <Component Win64="$(var.Win64)" Id="cmf_afsvosadmin_DLL" Guid="$(var.cmf_afsvosadmin_DLL_guid)">
                     <File Id="fileafsvosadmin_DLL" Name="afsvosad.dll" LongName="afsvosadmin.dll" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\afsvosadmin.dll"/>
                 </Component>
-                <Component Id="cmf_afsadminutil_DLL" Guid="A9782D0F-768F-40F4-A600-A7240EFBEC8C">
+                <Component Win64="$(var.Win64)" Id="cmf_afsadminutil_DLL" Guid="$(var.cmf_afsadminutil_DLL_guid)">
                     <File Id="fileafsadminutil_DLL" Name="afsadmut.dll" LongName="afsadminutil.dll" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\afsadminutil.dll"/>
                 </Component>
-                <Component Id="cmf_afsrpc_DLL" Guid="E75E2FC0-D011-494A-8142-670B3286C5C2">
+                <Component Win64="$(var.Win64)" Id="cmf_afsrpc_DLL" Guid="$(var.cmf_afsrpc_DLL_guid)">
                     <File Id="fileafsrpc_DLL" Name="afsrpc.dll" LongName="afsrpc.dll" KeyPath="yes" DiskId="1" src="$(var.LibDir)\afsrpc.dll"/>
                 </Component>
-                <Component Id="cmf_afsauthent2_DLL" Guid="7B806F96-0542-4BCC-865B-E126CE3BCDA6">
+                <Component Win64="$(var.Win64)" Id="cmf_afsauthent2_DLL" Guid="$(var.cmf_afsauthent2_DLL_guid)">
                     <File Id="fileafsauthent2_DLL" Name="afsauth.dll" LongName="afsauthent.dll" KeyPath="yes" DiskId="1" src="$(var.LibDir)\afsauthent.dll"/>
                 </Component>
-                <Component Id="cmf_afspthread_DLL" Guid="77650315-9F19-47BF-A923-54B77DA5EA5C">
+                <Component Win64="$(var.Win64)" Id="cmf_afspthread_DLL" Guid="$(var.cmf_afspthread_DLL_guid)">
                     <File Id="fileafspthread_DLL" Name="afspthrd.dll" LongName="afspthread.dll" KeyPath="yes" DiskId="1" src="$(var.LibDir)\afspthread.dll"/>
                 </Component>
-                <Component Id="cmf_TaAfsAppLib_DLL" Guid="D6D8A744-2352-477D-9ECD-4859C475162B">
+                <Component Win64="$(var.Win64)" Id="cmf_TaAfsAppLib_DLL" Guid="$(var.cmf_TaAfsAppLib_DLL_guid)">
                     <File Id="fileTaAfsAppLib_DLL" Name="TaAfsApL.dll" LongName="TaAfsAppLib.dll" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\TaAfsAppLib.dll"/>
                 </Component>
-                <Component Id="cmf_afsprocmgmt_DLL" Guid="DAAA35B5-0E95-4DEF-9E87-A99A0A24B0BE">
+                <Component Win64="$(var.Win64)" Id="cmf_afsprocmgmt_DLL" Guid="$(var.cmf_afsprocmgmt_DLL_guid)">
                     <File Id="fileafsprocmgmt_DLL" Name="afsprcmg.dll" LongName="afsprocmgmt.dll" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\afsprocmgmt.dll"/>
                 </Component>
-                <Component Id="cmf_afs_config_EXE" Guid="3E73EA24-4B0D-4834-96C3-8AF38FDBCA6F">
+                <Component Win64="$(var.Win64)" Id="cmf_afs_config_EXE" Guid="$(var.cmf_afs_config_EXE_guid)">
                     <File Id="fileafs_config_EXE" Name="afs_cfg.exe" LongName="afs_config.exe" KeyPath="yes" DiskId="1" src="$(var.ClientDir)\afs_config.exe"/>
                 </Component>
                 
             <?ifdef DebugSyms?>
-                <Component Id="cmp_ServerCommonDebug" Guid="4132C211-5577-48DE-9C66-214EEC0E6BC4">
+                <Component Win64="$(var.Win64)" Id="cmp_ServerCommonDebug" Guid="$(var.cmp_ServerCommonDebug_guid)">
                     <File Id="fileafsbosadmin_PDB" Name="afsbosad.pdb" LongName="afsbosadmin.pdb" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\afsbosadmin.pdb"/>
                     <File Id="fileafscfgadmin_PDB" Name="afscfgad.pdb" LongName="afscfgadmin.pdb" DiskId="1" src="$(var.ServerDir)\afscfgadmin.pdb"/>
                     <File Id="fileafsclientadmin_PDB" Name="afscliad.pdb" LongName="afsclientadmin.pdb" DiskId="1" src="$(var.ServerDir)\afsclientadmin.pdb"/>
@@ -92,48 +94,48 @@
                     <File Id="fileafsvosadmin_PDB" Name="afsvosad.pdb" LongName="afsvosadmin.pdb" DiskId="1" src="$(var.ServerDir)\afsvosadmin.pdb"/>
                     <File Id="fileafsadminutil_PDB" Name="afsadmut.pdb" LongName="afsadminutil.pdb" DiskId="1" src="$(var.ServerDir)\afsadminutil.pdb"/>
                 </Component>
-                <Component Id="cmp_CommonCommonDebug" Guid="7F47902F-B92D-42A3-BDEF-AFFC79C66F0C">
+                <Component Win64="$(var.Win64)" Id="cmp_CommonCommonDebug" Guid="$(var.cmp_CommonCommonDebug_guid)">
                     <File Id="fileafsrpc_PDB" Name="afsrpc.pdb" LongName="afsrpc.pdb" KeyPath="yes" DiskId="1" src="$(var.LibDir)\afsrpc.pdb"/>
                     <File Id="fileafsauthent_PDB" Name="afsauth.pdb" LongName="afsauthent.pdb" DiskId="1" src="$(var.LibDir)\afsauthent.pdb"/>
                     <File Id="fileafspthread_PDB" Name="afspthrd.pdb" LongName="afspthread.pdb" DiskId="1" src="$(var.LibDir)\afspthread.pdb"/>
                     <File Id="fileTaAfsAppLib_PDB" Name="TaAfsApL.pdb" LongName="TaAfsAppLib.pdb" DiskId="1" src="$(var.ServerDir)\TaAfsAppLib.pdb"/>
                     <File Id="fileafsprocmgmt_PDB" Name="afsprcmg.pdb" LongName="afsprocmgmt.pdb" DiskId="1" src="$(var.ServerDir)\afsprocmgmt.pdb"/>
                 </Component>
-                <Component Id="cmp_ClientCommonDebug" Guid="BFA4097D-3013-46AD-86EB-2160376FB55C">
+                <Component Win64="$(var.Win64)" Id="cmp_ClientCommonDebug" Guid="$(var.cmp_ClientCommonDebug_guid)">
                     <File Id="fileafs_config_PDB" Name="afs_cfg.pdb" LongName="afs_config.pdb" KeyPath="yes" DiskId="1" src="$(var.ClientDir)\afs_config.pdb"/>
                 </Component>
             <?endif?>
 
                 <!-- <<LanguageSpecific:1033/en_US>> -->
             <?if $(var.Language) ="en_US"?>
-                <Component Id="cmf_afseventmsg_1033_DLL" Guid="2DBBE232-2DA5-421F-9C83-93278598634A">
+                <Component Win64="$(var.Win64)" Id="cmf_afseventmsg_1033_DLL" Guid="$(var.cmf_afseventmsg_1033_DLL_guid)">
                     <File Id="fileafseventmsg_1033_DLL" Name="afse1033.dll" LongName="afseventmsg_1033.dll" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\afseventmsg_1033.dll"/>
                 </Component>
-                <Component Id="cmf_afsserver_1033_DLL" Guid="2EC8BA3C-0A5C-48C5-A370-36265C43A93F">
+                <Component Win64="$(var.Win64)" Id="cmf_afsserver_1033_DLL" Guid="$(var.cmf_afsserver_1033_DLL_guid)">
                     <File Id="fileafsserver_1033_DLL" Name="afss1033.dll" LongName="afsserver_1033.dll" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\afsserver_1033.dll"/>
                 </Component>
-                <Component Id="cmf_afssvrcfg_1033_DLL" Guid="70F7B4AA-E89F-4786-A3F1-27725E613F53">
+                <Component Win64="$(var.Win64)" Id="cmf_afssvrcfg_1033_DLL" Guid="$(var.cmf_afssvrcfg_1033_DLL_guid)">
                     <File Id="fileafssvrcfg_1033_DLL" Name="afsv1033.dll" LongName="afssvrcfg_1033.dll" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\afssvrcfg_1033.dll"/>
                 </Component>
-                <Component Id="cmf_TaAfsAccountManager_1033_DLL" Guid="1BD9FA36-3DD8-4AA4-B7C0-9AC26D872068">
+                <Component Win64="$(var.Win64)" Id="cmf_TaAfsAccountManager_1033_DLL" Guid="$(var.cmf_TaAfsAccountManager_1033_DLL_guid)">
                     <File Id="fileTaAfsAccountManager_1033_DLL" Name="tacm1033.dll" LongName="TaAfsAccountManager_1033.dll" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\TaAfsAccountManager_1033.dll"/>
                 </Component>
-                <Component Id="cmf_TaAfsAppLib_1033_DLL" Guid="40989EC2-EB2B-495A-BA6D-5E22AB785457">
+                <Component Win64="$(var.Win64)" Id="cmf_TaAfsAppLib_1033_DLL" Guid="$(var.cmf_TaAfsAppLib_1033_DLL_guid)">
                     <File Id="fileTaAfsAppLib_1033_DLL" Name="taal1033.dll" LongName="TaAfsAppLib_1033.dll" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\TaAfsAppLib_1033.dll"/>
                 </Component>
-                <Component Id="cmf_TaAfsServerManager_1033_DLL" Guid="54876C77-299F-496B-A5D0-F89DF8759A40">
+                <Component Win64="$(var.Win64)" Id="cmf_TaAfsServerManager_1033_DLL" Guid="$(var.cmf_TaAfsServerManager_1033_DLL_guid)">
                     <File Id="fileTaAfsServerManager_1033_DLL" Name="tasm1033.dll" LongName="TaAfsServerManager_1033.dll" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\TaAfsServerManager_1033.dll"/>
                 </Component>
-                <Component Id="cmf_afscreds_1033_DLL" Guid="76AC935C-E558-4D1C-810D-47F3A8923429">
+                <Component Win64="$(var.Win64)" Id="cmf_afscreds_1033_DLL" Guid="$(var.cmf_afscreds_1033_DLL_guid)">
                     <File Id="fileafscreds_1033_DLL" Name="acrd1033.dll" LongName="afscreds_1033.dll" KeyPath="yes" DiskId="1" src="$(var.ClientDir)\afscreds_1033.dll"/>
                 </Component>
-                <Component Id="cmf_afs_config_1033_DLL" Guid="6DE08ED9-2B64-4D39-A50E-62FEAC91DF88">
+                <Component Win64="$(var.Win64)" Id="cmf_afs_config_1033_DLL" Guid="$(var.cmf_afs_config_1033_DLL_guid)">
                     <File Id="fileafs_config_1033_DLL" Name="acfg1033.dll" LongName="afs_config_1033.dll" KeyPath="yes" DiskId="1" src="$(var.ClientDir)\afs_config_1033.dll"/>
                 </Component>
-                <Component Id="cmf_afs_cpa_1033_DLL" Guid="12EE2B31-4320-4A6B-90F7-7A03ECF5A0DA">
+                <Component Win64="$(var.Win64)" Id="cmf_afs_cpa_1033_DLL" Guid="$(var.cmf_afs_cpa_1033_DLL_guid)">
                     <File Id="fileafs_cpa_1033_DLL" Name="acpa1033.dll" LongName="afs_cpa_1033.dll" KeyPath="yes" DiskId="1" src="$(var.ClientDir)\afs_cpa_1033.dll"/>
                 </Component>
-                <Component Id="cmf_afs_shl_ext_1033_DLL" Guid="9FF6C6CA-C731-4319-8777-E6DBAEFC3A4B">
+                <Component Win64="$(var.Win64)" Id="cmf_afs_shl_ext_1033_DLL" Guid="$(var.cmf_afs_shl_ext_1033_DLL_guid)">
                     <File Id="fileafs_shl_ext_1033_DLL" Name="ashl1033.dll" LongName="afs_shl_ext_1033.dll" KeyPath="yes" DiskId="1" src="$(var.ClientDir)\afs_shl_ext_1033.dll"/>
                 </Component>
 
@@ -163,6 +165,8 @@
 
                 <!-- Runtime libraries -->
           <?ifndef Debug?>
+			<!-- Note that for AFSVER_CL=1400, the runtime libraries are included via merge modules
+			     at the TARGETDIR level, since we use shared assemblies instead of private assemblies. -->
             <?if $(env.AFSVER_CL) = "1310"?>
 				<?ifdef comment?>
 					While we would love to just use the merge modules, they are unfortunately
@@ -222,15 +226,15 @@
                     <File Id="filemfc42_DLL" Name="mfc42.dll" LongName="mfc42.dll" KeyPath="yes" DiskId="1" src="$(var.SystemDir)mfc42.dll" />
                 </Component>
                 <?ifdef DebugSyms?>
-					<Component Id="cmp_VC1200msvcrtPDB" Guid="A702C2AB-C99F-443A-A420-063FFD866FBC">
-						<File Id="filemsvcrt_PDB" Name="msvcrt.pdb" LongName="msvcrt.pdb" KeyPath="yes" DiskId="1" src="$(var.SystemDir)msvcrt.pdb" />
-					</Component>
-					<Component Id="cmp_VC1200msvcp60PDB" Guid="56CCAE2C-0CAD-43B2-A7BD-F56E9E4F74E1">
-						<File Id="filemsvcp60_PDB" Name="msvcp60.pdb" LongName="msvcp60.pdb" KeyPath="yes" DiskId="1" src="$(var.SystemDir)msvcp60.pdb" />
-					</Component>
-					<Component Id="cmp_VC1200mfc42PDB" Guid="0B615363-EB3C-4785-A8E6-9AB42D85293D">
-						<File Id="filemfc42_PDB" Name="mfc42.pdb" LongName="mfc42.pdb" KeyPath="yes" DiskId="1" src="$(var.SystemDir)mfc42.pdb" />
-					</Component>
+		    <Component Id="cmp_VC1200msvcrtPDB" Guid="A702C2AB-C99F-443A-A420-063FFD866FBC">
+		    	<File Id="filemsvcrt_PDB" Name="msvcrt.pdb" LongName="msvcrt.pdb" KeyPath="yes" DiskId="1" src="$(var.SystemDir)msvcrt.pdb" />
+		    </Component>
+		    <Component Id="cmp_VC1200msvcp60PDB" Guid="56CCAE2C-0CAD-43B2-A7BD-F56E9E4F74E1">
+		    	<File Id="filemsvcp60_PDB" Name="msvcp60.pdb" LongName="msvcp60.pdb" KeyPath="yes" DiskId="1" src="$(var.SystemDir)msvcp60.pdb" />
+		    </Component>
+		    <Component Id="cmp_VC1200mfc42PDB" Guid="0B615363-EB3C-4785-A8E6-9AB42D85293D">
+		    	<File Id="filemfc42_PDB" Name="mfc42.pdb" LongName="mfc42.pdb" KeyPath="yes" DiskId="1" src="$(var.SystemDir)mfc42.pdb" />
+		    </Component>
                 <?endif?>
             <?endif?>
           <?else?> <!-- Debug -->
@@ -308,21 +312,21 @@
             </Directory> <!-- /common -->
             
             <Directory Id="dirControl_Center" Name="Contr" LongName="Control Center" SourceName="ControlC" LongSource="Control Center">
-                <Component Id="cmf_TaAfsServerManager_EXE" Guid="B890FB93-2EFD-44B6-8CB3-7A6AFABFF029">
+                <Component Win64="$(var.Win64)" Id="cmf_TaAfsServerManager_EXE" Guid="$(var.cmf_TaAfsServerManager_EXE_guid)">
                     <File Id="fileTaAfsServerManager_EXE" Name="TaAfsSvM.exe" LongName="TaAfsServerManager.exe" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\TaAfsServerManager.exe">
 						<Shortcut Id="scServerManager" Directory="dirShortCut" Name="SvrMgr.lnk" LongName="Server Manager.lnk" Description="$(loc.StrSvrMgrDesc)" Icon="ico_ServerManager" IconIndex="0" Show="normal" WorkingDirectory="dirCommon" />
                     </File>
                 </Component>
-                <Component Id="cmf_TaAfsAdmSvr_EXE" Guid="99E23413-8261-4007-9DC9-B2C7453EF1EE">
+                <Component Win64="$(var.Win64)" Id="cmf_TaAfsAdmSvr_EXE" Guid="$(var.cmf_TaAfsAdmSvr_EXE_guid)">
                     <File Id="fileTaAfsAdmSvr_EXE" Name="TaAfsAdS.exe" LongName="TaAfsAdmSvr.exe" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\TaAfsAdmSvr.exe"/>
                 </Component>
-                <Component Id="cmf_TaAfsAccountManager_EXE" Guid="BDFA5B64-2A69-41D5-8260-3DAB3CE9A10B">
+                <Component Win64="$(var.Win64)" Id="cmf_TaAfsAccountManager_EXE" Guid="$(var.cmf_TaAfsAccountManager_EXE_guid)">
                     <File Id="fileTaAfsAccountManager_EXE" Name="TaAfsAcM.exe" LongName="TaAfsAccountManager.exe" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\TaAfsAccountManager.exe">
 						<Shortcut Id="scAcctManager" Directory="dirShortCut" Name="AcctMgr.lnk" LongName="Account Manager.lnk" Description="$(loc.StrAcctMgrDesc)" Icon="ico_AcctManager" IconIndex="0" Show="normal" WorkingDirectory="dirCommon" />
                     </File>
                 </Component>
             <?ifdef DebugSyms?>
-                <Component Id="cmp_Control_CenterDebug" Guid="B14EEC50-8ADF-4FE4-B00F-431861A5620C">
+                <Component Win64="$(var.Win64)" Id="cmp_Control_CenterDebug" Guid="$(var.cmp_Control_CenterDebug_guid)">
                     <File Id="fileTaAfsServerManager_PDB" Name="TaAfsSvM.pdb" LongName="TaAfsServerManager.pdb" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\TaAfsServerManager.pdb"/>
                     <File Id="fileTaAfsAdmSvr_PDB" Name="TaAfsAdS.pdb" LongName="TaAfsAdmSvr.pdb" DiskId="1" src="$(var.ServerDir)\TaAfsAdmSvr.pdb"/>
                     <File Id="fileTaAfsAccountManager_PDB" Name="TaAfsAcM.pdb" LongName="TaAfsAccountManager.pdb" DiskId="1" src="$(var.ServerDir)\TaAfsAccountManager.pdb"/>
@@ -782,40 +786,40 @@
                     <Condition>OLDCELLSERVDB &lt;&gt; ""</Condition>
                 </Component>
                 <Directory Id="dirProgram" Name="Program" src="$(var.ClientDir)">
-                    <Component Id="cmf_afsshare_EXE" Guid="E972DA35-E950-4736-AE48-E6DDCE8C97D0">
+                    <Component Win64="$(var.Win64)" Id="cmf_afsshare_EXE" Guid="$(var.cmf_afsshare_EXE_guid)">
                         <File Id="fileafsshare_EXE" Name="afsshare.exe" LongName="afsshare.exe" KeyPath="yes" DiskId="1" />
                     </Component>
-                    <Component Id="cmf_libosi_DLL" Guid="0E10B3CC-533B-4EAC-AFC5-3D2B529385D7">
+                    <Component Win64="$(var.Win64)" Id="cmf_libosi_DLL" Guid="$(var.cmf_libosi_DLL_guid)">
                         <File Id="filelibosi_DLL" Name="libosi.dll" LongName="libosi.dll" KeyPath="yes" DiskId="1" />
                     </Component>
-                    <Component Id="cmf_libafsconf_DLL" Guid="D72DA435-878D-42BE-9383-69FB97D63624">
+                    <Component Win64="$(var.Win64)" Id="cmf_libafsconf_DLL" Guid="$(var.cmf_libafsconf_DLL_guid)">
                         <File Id="filelibafsconf_DLL" Name="libafscf.dll" LongName="libafsconf.dll" KeyPath="yes" DiskId="1" />
                     </Component>
-                    <Component Id="cmf_klog_EXE" Guid="DCE60DF8-6BB3-4090-B525-8CF8843C878B">
+                    <Component Win64="$(var.Win64)" Id="cmf_klog_EXE" Guid="$(var.cmf_klog_EXE_guid)">
                         <File Id="fileklog_EXE" Name="klog.exe" LongName="klog.exe" KeyPath="yes" DiskId="1" />
                     </Component>
-                    <Component Id="cmf_tokens_EXE" Guid="C6F79AAF-0EF4-4751-BB56-015B7E847D71">
+                    <Component Win64="$(var.Win64)" Id="cmf_tokens_EXE" Guid="$(var.cmf_tokens_EXE_guid)">
                         <File Id="filetokens_EXE" Name="tokens.exe" LongName="tokens.exe" KeyPath="yes" DiskId="1" />
                     </Component>
-                    <Component Id="cmf_unlog_EXE" Guid="D2C19113-8379-424D-9C90-BB4C955D8F17">
+                    <Component Win64="$(var.Win64)" Id="cmf_unlog_EXE" Guid="$(var.cmf_unlog_EXE_guid)">
                         <File Id="fileunlog_EXE" Name="unlog.exe" LongName="unlog.exe" KeyPath="yes" DiskId="1" />
                     </Component>
-                    <Component Id="cmf_fs_EXE" Guid="D19D5998-E8E1-424B-9D0D-655840DBC571">
+                    <Component Win64="$(var.Win64)" Id="cmf_fs_EXE" Guid="$(var.cmf_fs_EXE_guid)">
                         <File Id="filefs_EXE" Name="fs.exe" LongName="fs.exe" KeyPath="yes" DiskId="1" />
                     </Component>
-                    <Component Id="cmf_afsdacl_EXE" Guid="215DBC86-A5E8-4622-8A95-0E5830B04D0B">
+                    <Component Win64="$(var.Win64)" Id="cmf_afsdacl_EXE" Guid="$(var.cmf_afsdacl_EXE_guid)">
                         <File Id="fileafsdacl_EXE" Name="afsdacl.exe" KeyPath="yes" DiskId="1" />
                     </Component>
-                    <Component Id="cmf_afscreds_EXE" Guid="A17567CF-866E-49AF-A717-0B4F17CA88D4">
+                    <Component Win64="$(var.Win64)" Id="cmf_afscreds_EXE" Guid="$(var.cmf_afscreds_EXE_guid)">
                         <File Id="fileafscreds_EXE" Name="afscreds.exe" LongName="afscreds.exe" KeyPath="yes" DiskId="1">
 							<Shortcut Id="scAfsCreds" Directory="dirShortCut" Name="Auth.lnk" LongName="Authentication.lnk" Description="$(loc.StrAfsCredsDesc)" Arguments="[CREDSAUTOINIT] [CREDSRENEWDRMAP] [CREDSIPCHDET] [CREDSQUIET] [CREDSSHOW]" Icon="ico_afscreds" IconIndex="0" Show="normal" WorkingDirectory="dirCommon" />
                         </File>
                     </Component>
-                    <Component Id="cmp_credsStartup" Guid="3F40BA8D-16A2-4990-A74F-35AF3012E3F8">
+                    <Component Win64="$(var.Win64)" Id="cmp_credsStartup" Guid="$(var.cmp_credsStartup_guid)">
 						<Shortcut Id="scAfsCredsStart" Directory="StartupFolder" Name="AFSAuth.lnk" LongName="AFS Credentials.lnk" Description="$(loc.StrAfsCredsDesc)" Arguments="[CREDSAUTOINIT] [CREDSRENEWDRMAP] [CREDSIPCHDET] [CREDSQUIET] [CREDSSHOW]" Icon="ico_afscreds" IconIndex="0" Show="normal" WorkingDirectory="dirCommon" Target="[#fileafscreds_EXE]"/>
-						<Registry Root="HKLM" Key="SOFTWARE\OpenAFS\Client" Name="AutoStart" Type="integer" Value="1" Id="reg_CredsAutoStart" KeyPath="yes" />
+						<Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client\CurrentVersion" Name="StartupShortcutInstalled" Type="integer" Value="1" Id="reg_CredsAutoStart" KeyPath="yes" />
                     </Component>
-                    <Component Id="cmf_afs_shl_ext_DLL" Guid="E4C51111-F9ED-418D-9DE0-ED8777CED5C9">
+                    <Component Win64="$(var.Win64)" Id="cmf_afs_shl_ext_DLL" Guid="$(var.cmf_afs_shl_ext_DLL_guid)">
                         <File Id="fileafs_shl_ext_DLL" Name="afsshext.dll" LongName="afs_shl_ext.dll" KeyPath="yes" DiskId="1">
                             <Class Id="DC515C27-6CAC-11D1-BAE7-00C04FD140D2" Advertise="no" Context="InprocServer32" Description="$(loc.StrShlExtDesc)" ThreadingModel="apartment">
                                 <ProgId Id="AfsClientContextMenu.1" Description="$(loc.StrShlExtDesc)">
@@ -824,7 +828,7 @@
                             </Class>
                         </File>
                     </Component>
-                    <Component Id="cmf_afsd_service_EXE" Guid="37A90054-505D-4C57-B489-7EF4D97B86F6">
+                    <Component Win64="$(var.Win64)" Id="cmf_afsd_service_EXE" Guid="$(var.cmf_afsd_service_EXE_guid)">
                         <File Id="fileafsd_service_EXE" Name="afsd_svc.exe" LongName="afsd_service.exe" KeyPath="yes" DiskId="1" />
                         <ServiceControl Id="TransarcAFSDaemon" Name="TransarcAFSDaemon" Stop="both" Remove="both" Wait="yes" />
                         <ServiceInstall Id="svc_Client" Name="TransarcAFSDaemon" DisplayName="OpenAFS Client" Type="ownProcess" Start="auto" ErrorControl="normal" Description="Provides access to files and directories stored in AFS" Interactive="yes">
@@ -840,48 +844,50 @@
                         <Environment Id="envClient" Name="PATH" Action="create" System="yes" Permanent="no" Part="last" Separator=";" Value="[AFSDIR]Client\Program" />
                         <RemoveFile Id="removeCache" Directory="WindowsVolume" LongName="AFSCache" Name="AFSCache" On="uninstall" />
                     </Component>
-                    <Component Id="cmf_symlink_EXE" Guid="01513839-36E5-418D-8337-04B5D74337CD">
+                     <Component Win64="$(var.Win64)" Id="cmf_symlink_EXE" Guid="$(var.cmf_symlink_EXE_guid)">
                         <File Id="filesymlink_EXE" Name="symlink.exe" LongName="symlink.exe" KeyPath="yes" DiskId="1" />
                     </Component>
-                    <Component Id="cmf_kpasswd_EXE" Guid="D362743B-6BF3-49CD-8B58-8DE56BCB0143">
+                     <Component Win64="$(var.Win64)" Id="cmf_kpasswd_EXE" Guid="$(var.cmf_kpasswd_EXE_guid)">
                         <File Id="filekpasswd_EXE" Name="kpasswd.exe" LongName="kpasswd.exe" KeyPath="yes" DiskId="1" src="$(var.BinDir)kpasswd.exe" />
                     </Component>
-                    <Component Id="cmf_pts_EXE" Guid="DC65EE96-8C01-4985-B19A-87B710841CD7">
+                     <Component Win64="$(var.Win64)" Id="cmf_pts_EXE" Guid="$(var.cmf_pts_EXE_guid)">
                         <File Id="filepts_EXE" Name="pts.exe" LongName="pts.exe" KeyPath="yes" DiskId="1" src="$(var.BinDir)\pts.exe" />
                     </Component>
-                    <Component Id="cmf_bos_EXE" Guid="E3060710-F745-4958-A0C6-459B6CD0A5C3">
+                     <Component Win64="$(var.Win64)" Id="cmf_bos_EXE" Guid="$(var.cmf_bos_EXE_guid)">
                         <File Id="filebos_EXE" Name="bos.exe" LongName="bos.exe" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\bos.exe" />
                     </Component>
-                    <Component Id="cmf_kas_EXE" Guid="59ED3FE5-B818-4CE6-A278-F9C7B97B7973">
+                     <Component Win64="$(var.Win64)" Id="cmf_kas_EXE" Guid="$(var.cmf_kas_EXE_guid)">
                         <File Id="filekas_EXE" Name="kas.exe" LongName="kas.exe" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\kas.exe"/>
                     </Component>
-                    <Component Id="cmf_vos_EXE" Guid="854E4787-7C18-400B-9660-56F498DDC608">
+                     <Component Win64="$(var.Win64)" Id="cmf_vos_EXE" Guid="$(var.cmf_vos_EXE_guid)">
                         <File Id="filevos_EXE" Name="vos.exe" LongName="vos.exe" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\vos.exe"/>
                     </Component>
-                    <Component Id="cmf_udebug_EXE" Guid="EDD268D3-460C-4509-8933-F62AE72DEBC5">
+                     <Component Win64="$(var.Win64)" Id="cmf_udebug_EXE" Guid="$(var.cmf_udebug_EXE_guid)">
                         <File Id="fileudebug_EXE" Name="udebug.exe" LongName="udebug.exe" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\udebug.exe"/>
                     </Component>
-                    <Component Id="cmf_translate_et_EXE" Guid="539C313D-BD7F-4896-9AE3-E0E54C6CC1CA">
+                     <Component Win64="$(var.Win64)" Id="cmf_translate_et_EXE" Guid="$(var.cmf_translate_et_EXE_guid)">
                         <File Id="filetranslate_et_EXE" Name="translet.exe" LongName="translate_et.exe" KeyPath="yes" DiskId="1" src="$(var.BinDir)\translate_et.exe"/>
                     </Component>
-                    <Component Id="cmf_rxdebug_EXE" Guid="D9E85810-5E1D-433F-A17E-D961ABC58567">
+                     <Component Win64="$(var.Win64)" Id="cmf_rxdebug_EXE" Guid="$(var.cmf_rxdebug_EXE_guid)">
                         <File Id="filerxdebug_EXE" Name="rxdebug.exe" LongName="rxdebug.exe" KeyPath="yes" DiskId="1" src="$(var.EtcDir)\rxdebug.exe"/>
                     </Component>
-                    <Component Id="cmf_backup_EXE" Guid="A8B6C84E-115B-4317-9CAA-0797BFE50D02">
+                     <Component Win64="$(var.Win64)" Id="cmf_backup_EXE" Guid="$(var.cmf_backup_EXE_guid)">
                         <File Id="filebackup_EXE" Name="backup.exe" LongName="backup.exe" KeyPath="yes" DiskId="1" src="$(var.EtcDir)\backup.exe"/>
                     </Component>
-                    <Component Id="cmf_aklog_EXE" Guid="84FADCD9-AA0D-4D80-B374-A20A85F5957B">
-                        <File Id="fileaklog_EXE" Name="aklog.exe" LongName="aklog.exe" KeyPath="yes" DiskId="1" />
-                    </Component>
-                    <Component Id="cmf_cmdebug_EXE" Guid="CFACE5C6-A867-439F-8BEE-31C0ED399B41">
+	            <?if $(env.CPU) = "i386"?>
+	                    <Component Win64="$(var.Win64)" Id="cmf_aklog_EXE" Guid="$(var.cmf_aklog_EXE_guid)">
+                        	<File Id="fileaklog_EXE" Name="aklog.exe" LongName="aklog.exe" KeyPath="yes" DiskId="1" />
+	                    </Component>
+		    <?endif?>
+                     <Component Win64="$(var.Win64)" Id="cmf_cmdebug_EXE" Guid="$(var.cmf_cmdebug_EXE_guid)">
                         <File Id="filecmdebug_EXE" Name="cmdebug.exe" LongName="cmdebug.exe" KeyPath="yes" DiskId="1" />
                     </Component>
-		    <Component Id="cmf_afs_cpa_CPL" Guid="C83091EC-2967-4AC6-A34D-860CD7FEDA57">
+ 		    <Component Win64="$(var.Win64)" Id="cmf_afs_cpa_CPL" Guid="$(var.cmf_afs_cpa_CPL_guid)">
 		    	<File Id="fileafs_cpa_CPL" Name="afs_cpa.cpl" LongName="afs_cpa.cpl" KeyPath="yes" DiskId="1"/>
 		    <Registry Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Control Panel\Cpls" Name="AFS Client CPL" Type="string" Value="[#fileafs_cpa_CPL]" Id="reg_Full_Client11" />
 		    </Component>
                 <?ifdef DebugSyms?>
-                    <Component Id="cmp_ClientProgramDebug" Guid="A6A394F6-45D0-45A9-A7DD-C0997070EC14">
+                     <Component Win64="$(var.Win64)" Id="cmp_ClientProgramDebug" Guid="$(var.cmp_ClientProgramDebug_guid)">
                         <File Id="fileafsshare_PDB" Name="afsshare.pdb" LongName="afsshare.pdb" DiskId="1" />
                         <File Id="filelibosi_PDB" Name="libosi.pdb" LongName="libosi.pdb" DiskId="1" />
                         <File Id="filelibafsconf_PDB" Name="libafscf.pdb" LongName="libafsconf.pdb" DiskId="1" />
@@ -902,7 +908,9 @@
                         <File Id="filetranslate_et_PDB" Name="translet.pdb" LongName="translate_et.pdb" DiskId="1" src="$(var.BinDir)\translate_et.pdb"/>
                         <File Id="filerxdebug_PDB" Name="rxdebug.pdb" LongName="rxdebug.pdb" DiskId="1" src="$(var.EtcDir)\rxdebug.pdb"/>
                         <File Id="filebackup_PDB" Name="backup.pdb" LongName="backup.pdb" DiskId="1" src="$(var.EtcDir)\backup.pdb"/>
-                        <File Id="fileaklog_PDB" Name="aklog.pdb" LongName="aklog.pdb" DiskId="1" />
+			<?if $(env.CPU) = "i386"?>
+                        	<File Id="fileaklog_PDB" Name="aklog.pdb" LongName="aklog.pdb" DiskId="1" />
+			<?endif?>
                         <File Id="filecmdebug_PDB" Name="cmdebug.pdb" LongName="cmdebug.pdb" DiskId="1" />
 			<File Id="fileafs_cpa_PDB" Name="afs_cpa.pdb" LongName="afs_cpa.pdb" KeyPath="yes" DiskId="1"/>
                     </Component>
@@ -1164,7 +1172,7 @@
                         </Directory>
                     </Directory>
                     <Directory Id="dirLib" Name="lib">
-                        <Component Id="cmp_SDK_Lib" Guid="71BC1B4E-4C4C-4FF8-8DDA-C6AB2BE22142">
+                        <Component Win64="$(var.Win64)" Id="cmp_SDK_Lib" Guid="$(var.cmp_SDK_Lib_guid)">
                             <File Id="fileafsauthent_LIB" Name="AFSAUT~1.lib" LongName="afsauthent.lib" DiskId="1" src="$(var.LibDir)afsauthent.lib" /> 
                             <File Id="fileafsdes_LIB" Name="afsdes.lib" LongName="afsdes.lib" DiskId="1" src="$(var.LibDir)afsdes.lib" /> 
                             <File Id="fileafskfw_LIB" Name="afskfw.lib" LongName="afskfw.lib" DiskId="1" src="$(var.LibDir)afskfw.lib" /> 
@@ -1183,7 +1191,7 @@
                             <File Id="filecm_dns_OBJ" Name="cm_dns.obj" LongName="cm_dns.obj" DiskId="1" src="$(var.LibDir)cm_dns.obj" /> 
                         </Component>
                         <Directory Id="dirLibAfs" Name="afs">
-                            <Component Id="cmp_SDK_Lib_Afs" Guid="CD671A64-D491-4363-A7AD-645482B481BE">
+                            <Component Win64="$(var.Win64)" Id="cmp_SDK_Lib_Afs" Guid="$(var.cmp_SDK_Lib_Afs_guid)">
                                 <File Id="fileafsacl_LIB" Name="afsacl.lib" LongName="afsacl.lib" DiskId="1" src="$(var.LibDir)afs\afsacl.lib" /> 
                                 <File Id="fileafsadminutil_LIB" Name="AFSADM~1.lib" LongName="afsadminutil.lib" DiskId="1" src="$(var.LibDir)afs\afsadminutil.lib" /> 
                                 <File Id="fileafsaudit_LIB" Name="afsaudit.lib" LongName="afsaudit.lib" DiskId="1" src="$(var.LibDir)afs\afsaudit.lib" /> 
@@ -1230,27 +1238,29 @@
                 <Directory Id="dirusr" Name="usr">
                     <Directory Id="dirafs" Name="afs">
                         <Directory Id="dirbin" Name="bin" src="$(var.ServerDir)">
-                            <Component Id="cmf_vlserver_EXE" Guid="F6A43B78-EE17-4483-AA81-4B6C6957977D">
+                             <Component Win64="$(var.Win64)" Id="cmf_vlserver_EXE" Guid="$(var.cmf_vlserver_EXE_guid)">
                                 <File Id="filevlserver_EXE" Name="vlser.exe" LongName="vlserver.exe" KeyPath="yes" DiskId="1" />
                             </Component>
-                            <Component Id="cmf_volinfo_EXE" Guid="CED56F48-1049-403F-912B-3C186867B563">
+                             <Component Win64="$(var.Win64)" Id="cmf_volinfo_EXE" Guid="$(var.cmf_volinfo_EXE_guid)">
                                 <File Id="filevolinfo_EXE" Name="volin.exe" LongName="volinfo.exe" KeyPath="yes" DiskId="1" />
                             </Component>
-                            <Component Id="cmf_volserver_EXE" Guid="36A386A0-6DA9-40A7-A12D-6A521559933D">
+                             <Component Win64="$(var.Win64)" Id="cmf_volserver_EXE" Guid="$(var.cmf_volserver_EXE_guid)">
                                 <File Id="filevolserver_EXE" Name="volse.exe" LongName="volserver.exe" KeyPath="yes" DiskId="1" />
                             </Component>
-                            <Component Id="cmf_afskill_EXE" Guid="454AA25A-3C62-4AF9-AFE1-36A54A0E3F1A">
+                             <Component Win64="$(var.Win64)" Id="cmf_afskill_EXE" Guid="$(var.cmf_afskill_EXE_guid)">
                                 <File Id="fileafskill_EXE" Name="afski.exe" LongName="afskill.exe" KeyPath="yes" DiskId="1" />
                             </Component>
-                            <Component Id="cmf_afssvrcfg_EXE" Guid="39F6AB59-FD18-4647-8B83-CDEC59E2368F">
+                             <Component Win64="$(var.Win64)" Id="cmf_afssvrcfg_EXE" Guid="$(var.cmf_afssvrcfg_EXE_guid)">
                                 <File Id="fileafssvrcfg_EXE" Name="afssv.exe" LongName="afssvrcfg.exe" KeyPath="yes" DiskId="1">
 									<Shortcut Id="scSvrCfgWizard" Directory="dirShortCut" Name="SvrCfgWz.lnk" LongName="Server Configuration Wizard.lnk" Description="$(loc.StrCfgWzdDesc)" Arguments="/wizard" Icon="ico_afssvrcfg" IconIndex="0" Show="normal" WorkingDirectory="dirCommon" />
                                 </File>
                             </Component>
-                            <Component Id="cmf_asetkey_EXE" Guid="9B7694A2-DCAE-4DBA-84F2-09DC796C20B2">
-                                <File Id="fileasetkey_EXE" Name="asetk.exe" LongName="asetkey.exe" KeyPath="yes" DiskId="1" />
-                            </Component>
-                            <Component Id="cmf_bosctlsvc_EXE" Guid="8F6F62A8-BB6D-46C1-BA80-4F207AA24F0D">
+			    <?if $(env.CPU) = "i386"?>
+                                    <Component Win64="$(var.Win64)" Id="cmf_asetkey_EXE" Guid="$(var.cmf_asetkey_EXE_guid)">
+                                	<File Id="fileasetkey_EXE" Name="asetk.exe" LongName="asetkey.exe" KeyPath="yes" DiskId="1" />
+	                            </Component>
+			    <?endif?>
+                             <Component Win64="$(var.Win64)" Id="cmf_bosctlsvc_EXE" Guid="$(var.cmf_bosctlsvc_EXE_guid)">
                                 <File Id="filebosctlsvc_EXE" Name="bosct.exe" LongName="bosctlsvc.exe" KeyPath="yes" DiskId="1" />
                                 <ServiceControl Id="TransarcAFSServer" Name="TransarcAFSServer" Stop="both" Remove="both" Wait="yes" />
                                 <ServiceInstall Id="svc_Server" Name="TransarcAFSServer" DisplayName="OpenAFS Server" Type="ownProcess" Start="auto" ErrorControl="normal" Description="Manages AFS server processes" Interactive="yes">
@@ -1259,37 +1269,37 @@
                                     -->
                                 </ServiceInstall>
                             </Component>
-                            <Component Id="cmf_bosserver_EXE" Guid="0FF7D0AB-DEA0-429E-928C-588E838E2635">
+                            <Component Win64="$(var.Win64)" Id="cmf_bosserver_EXE" Guid="$(var.cmf_bosserver_EXE_guid)">
                                 <File Id="filebosserver_EXE" Name="bosse.exe" LongName="bosserver.exe" KeyPath="yes" DiskId="1" />
                             </Component>
-                            <Component Id="cmf_buserver_EXE" Guid="BF674F47-33A0-418D-B7A5-7CE778D747A5">
+                            <Component Win64="$(var.Win64)" Id="cmf_buserver_EXE" Guid="$(var.cmf_buserver_EXE_guid)">
                                 <File Id="filebuserver_EXE" Name="buser.exe" LongName="buserver.exe" KeyPath="yes" DiskId="1" />
                             </Component>
-                            <Component Id="cmf_fileserver_EXE" Guid="F8EF1067-5F55-426B-9258-EBC6CDCF0DDB">
+                            <Component Win64="$(var.Win64)" Id="cmf_fileserver_EXE" Guid="$(var.cmf_fileserver_EXE_guid)">
                                 <File Id="filefileserver_EXE" Name="files.exe" LongName="fileserver.exe" KeyPath="yes" DiskId="1" />
                             </Component>
-                            <Component Id="cmf_fms_EXE" Guid="250BF6D4-EAC3-4A2F-BD32-CA603CD15020">
+                            <Component Win64="$(var.Win64)" Id="cmf_fms_EXE" Guid="$(var.cmf_fms_EXE_guid)">
                                 <File Id="filefms_EXE" Name="fms.exe" LongName="fms.exe" KeyPath="yes" DiskId="1" src="$(var.EtcDir)\fms.exe"/>
                             </Component>
-                            <Component Id="cmf_butc_EXE" Guid="96DAC5A8-FD16-4FF5-8BD5-92F25880E557">
+                            <Component Win64="$(var.Win64)" Id="cmf_butc_EXE" Guid="$(var.cmf_butc_EXE_guid)">
                                 <File Id="filebutc_EXE" Name="butc.exe" LongName="butc.exe" KeyPath="yes" DiskId="1" src="$(var.EtcDir)\butc.exe"/>
                             </Component>
-                            <Component Id="cmf_kaserver_EXE" Guid="73117045-0BB8-4F57-8A75-909F35C2D723">
+                            <Component Win64="$(var.Win64)" Id="cmf_kaserver_EXE" Guid="$(var.cmf_kaserver_EXE_guid)">
                                 <File Id="filekaserver_EXE" Name="kaser.exe" LongName="kaserver.exe" KeyPath="yes" DiskId="1" />
                             </Component>
-                            <Component Id="cmf_ptserver_EXE" Guid="CDBDE41D-24DF-44E5-97D2-EFA71CDBEECB">
+                            <Component Win64="$(var.Win64)" Id="cmf_ptserver_EXE" Guid="$(var.cmf_ptserver_EXE_guid)">
                                 <File Id="fileptserver_EXE" Name="ptser.exe" LongName="ptserver.exe" KeyPath="yes" DiskId="1" />
                             </Component>
-                            <Component Id="cmf_salvager_EXE" Guid="E3F3ACE5-B556-4FEF-9DA2-78B194AA6639">
+                            <Component Win64="$(var.Win64)" Id="cmf_salvager_EXE" Guid="$(var.cmf_salvager_EXE_guid)">
                                 <File Id="filesalvager_EXE" Name="salva.exe" LongName="salvager.exe" KeyPath="yes" DiskId="1" />
                             </Component>
-                            <Component Id="cmf_upclient_EXE" Guid="321BB9BF-5FF0-4363-9927-41C60BD526E9">
+                            <Component Win64="$(var.Win64)" Id="cmf_upclient_EXE" Guid="$(var.cmf_upclient_EXE_guid)">
                                 <File Id="fileupclient_EXE" Name="upcli.exe" LongName="upclient.exe" KeyPath="yes" DiskId="1" />
                             </Component>
-                            <Component Id="cmf_upserver_EXE" Guid="3CBD2EF5-43BC-4CA2-B367-87E82DED1406">
+                            <Component Win64="$(var.Win64)" Id="cmf_upserver_EXE" Guid="$(var.cmf_upserver_EXE_guid)">
                                 <File Id="fileupserver_EXE" Name="upser.exe" LongName="upserver.exe" KeyPath="yes" DiskId="1" />
                             </Component>
-							<Component Id="cmf_afsserver_CPL" Guid="E270281E-9DB2-40A8-A418-55B4EC4A3FE7">
+							<Component Win64="$(var.Win64)" Id="cmf_afsserver_CPL" Guid="$(var.cmf_afsserver_CPL_guid)">
 								<File Id="fileafsserver_CPL" Name="afsserve.cpl" LongName="afsserver.cpl" KeyPath="yes" DiskId="1"/>
 						        <Registry Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Control Panel\Cpls" Name="AFS Server CPL" Type="string" Value="[#fileafsserver_CPL]" Id="reg_Server30" />
 							</Component>
@@ -1302,13 +1312,15 @@
                             </Component>
                             
                         <?ifdef DebugSyms?>
-                            <Component Id="cmp_Server_Program_Debug" Guid="5F7BA9F7-E9BD-4AC3-9232-5EFBF6B740F8">
+                            <Component Win64="$(var.Win64)" Id="cmp_Server_Program_Debug" Guid="$(var.cmp_Server_Program_Debug_guid)">
                                 <File Id="filevlserver_PDB" Name="vlser.pdb" LongName="vlserver.pdb" DiskId="1" />
                                 <File Id="filevolinfo_PDB" Name="volin.pdb" LongName="volinfo.pdb" DiskId="1" />
                                 <File Id="filevolserver_PDB" Name="volse.pdb" LongName="volserver.pdb" DiskId="1" />
                                 <File Id="fileafskill_PDB" Name="afski.pdb" LongName="afskill.pdb" DiskId="1" />
                                 <File Id="fileafssvrcfg_PDB" Name="afssv.pdb" LongName="afssvrcfg.pdb" DiskId="1" />
-                                <File Id="fileasetkey_PDB" Name="asetk.pdb" LongName="asetkey.pdb" DiskId="1" />
+				<?if $(env.CPU) = "i386"?>
+                                	<File Id="fileasetkey_PDB" Name="asetk.pdb" LongName="asetkey.pdb" DiskId="1" />
+				<?endif?>
                                 <File Id="filebosctlsvc_PDB" Name="bosct.pdb" LongName="bosctlsvc.pdb" DiskId="1" />
                                 <File Id="filebosserver_PDB" Name="bosse.pdb" LongName="bosserver.pdb" DiskId="1" />
                                 <File Id="filebuserver_PDB" Name="buser.pdb" LongName="buserver.pdb" DiskId="1" />
@@ -1341,4 +1353,46 @@
     <Directory Id="StartupFolder" Name="." />
     <Directory Id="WindowsVolume" Name="." />
     <Directory Id="WindowsFolder" Name="." />
+
+	<!-- Shared assembly runtime for VS 2005 -->
+	<?if $(env.AFSVER_CL) = "1400"?>
+		<?ifdef env.CommonProgramFiles6432?>
+		  <?define CPF="$(env.CommonProgramFiles)"?>
+		<?else?>
+		  <?define CPF="$(env.CommonProgramFiles(x86)"?>
+		<?endif?>
+		<?if $(var.Platform) = "x64" ?>
+			<?ifndef Debug?>
+				<Merge Id="MSVCRT8MEM" DiskId="1" Language="0" src="$(var.CPF)\Merge Modules\Microsoft_VC80_CRT_x86_x64.msm"/>
+				<Merge Id="MSVCRT8POL" DiskId="1" Language="0" src="$(var.CPF)\Merge Modules\policy_8_0_Microsoft_VC80_CRT_x86_x64.msm"/>
+				<Merge Id="MSVCRT8MFC" DiskId="1" Language="0" src="$(var.CPF)\Merge Modules\Microsoft_VC80_MFC_x86_x64.msm"/>
+				<Merge Id="MSVCRT8PFC" DiskId="1" Language="0" src="$(var.CPF)\Merge Modules\policy_8_0_Microsoft_VC80_MFC_x86_x64.msm"/>
+				<Merge Id="MSVCRT8MFL" DiskId="1" Language="0" src="$(var.CPF)\Merge Modules\Microsoft_VC80_MFCLOC_x86_x64.msm"/>
+				<Merge Id="MSVCRT8PFL" DiskId="1" Language="0" src="$(var.CPF)\Merge Modules\policy_8_0_Microsoft_VC80_MFCLOC_x86_x64.msm"/>
+			<?else?>
+				<Merge Id="MSVCRT8MEM" DiskId="1" Language="0" src="$(var.CPF)\Merge Modules\Microsoft_VC80_DebugCRT_x86_x64.msm"/>
+				<Merge Id="MSVCRT8POL" DiskId="1" Language="0" src="$(var.CPF)\Merge Modules\policy_8_0_Microsoft_VC80_DebugCRT_x86_x64.msm"/>
+				<Merge Id="MSVCRT8MFC" DiskId="1" Language="0" src="$(var.CPF)\Merge Modules\Microsoft_VC80_DebugMFC_x86_x64.msm"/>
+				<Merge Id="MSVCRT8PFC" DiskId="1" Language="0" src="$(var.CPF)\Merge Modules\policy_8_0_Microsoft_VC80_DebugMFC_x86_x64.msm"/>
+				<Merge Id="MSVCRT8MFL" DiskId="1" Language="0" src="$(var.CPF)\Merge Modules\Microsoft_VC80_MFCLOC_x86_x64.msm"/>
+				<Merge Id="MSVCRT8PFL" DiskId="1" Language="0" src="$(var.CPF)\Merge Modules\policy_8_0_Microsoft_VC80_MFCLOC_x86_x64.msm"/>
+			<?endif?>
+		<?else?>
+			<?ifndef Debug?>
+				<Merge Id="MSVCRT8MEM" DiskId="1" Language="0" src="$(var.CPF)\Merge Modules\Microsoft_VC80_CRT_x86.msm"/>
+				<Merge Id="MSVCRT8POL" DiskId="1" Language="0" src="$(var.CPF)\Merge Modules\policy_8_0_Microsoft_VC80_CRT_x86.msm"/>
+				<Merge Id="MSVCRT8MFC" DiskId="1" Language="0" src="$(var.CPF)\Merge Modules\Microsoft_VC80_MFC_x86.msm"/>
+				<Merge Id="MSVCRT8PFC" DiskId="1" Language="0" src="$(var.CPF)\Merge Modules\policy_8_0_Microsoft_VC80_MFC_x86.msm"/>
+				<Merge Id="MSVCRT8MFL" DiskId="1" Language="0" src="$(var.CPF)\Merge Modules\Microsoft_VC80_MFCLOC_x86.msm"/>
+				<Merge Id="MSVCRT8PFL" DiskId="1" Language="0" src="$(var.CPF)\Merge Modules\policy_8_0_Microsoft_VC80_MFCLOC_x86.msm"/>
+			<?else?>
+				<Merge Id="MSVCRT8MEM" DiskId="1" Language="0" src="$(var.CPF)\Merge Modules\Microsoft_VC80_DebugCRT_x86.msm"/>
+				<Merge Id="MSVCRT8POL" DiskId="1" Language="0" src="$(var.CPF)\Merge Modules\policy_8_0_Microsoft_VC80_DebugCRT_x86.msm"/>
+				<Merge Id="MSVCRT8MFC" DiskId="1" Language="0" src="$(var.CPF)\Merge Modules\Microsoft_VC80_DebugMFC_x86.msm"/>
+				<Merge Id="MSVCRT8PFC" DiskId="1" Language="0" src="$(var.CPF)\Merge Modules\policy_8_0_Microsoft_VC80_DebugMFC_x86.msm"/>
+				<Merge Id="MSVCRT8MFL" DiskId="1" Language="0" src="$(var.CPF)\Merge Modules\Microsoft_VC80_MFCLOC_x86.msm"/>
+				<Merge Id="MSVCRT8PFL" DiskId="1" Language="0" src="$(var.CPF)\Merge Modules\policy_8_0_Microsoft_VC80_MFCLOC_x86.msm"/>
+			<?endif?>
+		<?endif?>
+	<?endif?>
 </Include>

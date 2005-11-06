@@ -50,7 +50,7 @@ int cdecl main (int argc, char **argv)
 
    // Parse the command-line
    //
-   DWORD dwAutoScope = AFSADMSVR_SCOPE_VOLUMES | AFSADMSVR_SCOPE_USERS;
+   UINT_PTR dwAutoScope = AFSADMSVR_SCOPE_VOLUMES | AFSADMSVR_SCOPE_USERS;
 
    for (--argc,++argv; argc; --argc,++argv)
       {

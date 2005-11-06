@@ -87,7 +87,7 @@ BOOL CALLBACK Machines_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
          FastList_SetSortFunction (GetDlgItem (hDlg, IDC_MACHINES_LIST), General_ListSortFunction);
 
          FL_RestoreView (GetDlgItem (hDlg, IDC_MACHINES_LIST), &gr.viewMch);
-         FastList_SetTextCallback (GetDlgItem (hDlg, IDC_MACHINES_LIST), Display_GetItemText, (DWORD)&gr.viewMch);
+         FastList_SetTextCallback (GetDlgItem (hDlg, IDC_MACHINES_LIST), Display_GetItemText, &gr.viewMch);
          SetDlgItemText (hDlg, IDC_MACHINES_PATTERN, g.szPatternMachines);
          Machines_EnableButtons(hDlg);
          Display_PopulateMachineList();

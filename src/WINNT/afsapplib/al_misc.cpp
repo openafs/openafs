@@ -61,7 +61,7 @@ EXPORTED void AfsAppLib_SetAppInstance (HINSTANCE hInst)
 }
 
 
-extern "C" BOOLEAN _stdcall DllEntryPoint (HANDLE hInst, DWORD dwReason, PVOID pReserved)
+EXPORTED extern "C" BOOLEAN _stdcall DllEntryPoint (HANDLE hInst, DWORD dwReason, PVOID pReserved)
 {
    switch (dwReason)
       {

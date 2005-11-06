@@ -144,12 +144,15 @@ void TranslateExtendedChars(char *str)
 long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
 	cm_scache_t **scpp)
 {
-    long code, length;
+    long code;
     cm_scache_t *substRootp;
-    char * relativePath = ioctlp->inDatap, absRoot[MAX_PATH];
-	wchar_t absRoot_w[MAX_PATH];
-	HANDLE rootDir;
-
+    char * relativePath = ioctlp->inDatap;
+#ifdef AFSIFS
+    char * absRoot[MAX_PATH];
+    long length;
+    wchar_t absRoot_w[MAX_PATH];
+    HANDLE rootDir;
+#endif
     osi_Log1(afsd_logp, "cm_ParseIoctlPath %s", osi_LogSaveString(afsd_logp,relativePath));
 
     /* This is usually the file name, but for StatMountPoint it is the path. */
@@ -264,7 +267,7 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
     }
 
     /* # of bytes of path */
-    code = strlen(ioctlp->inDatap) + 1;
+    code = (long)strlen(ioctlp->inDatap) + 1;
     ioctlp->inDatap += code;
 
     /* This is usually nothing, but for StatMountPoint it is the file name. */
@@ -278,7 +281,7 @@ void cm_SkipIoctlPath(smb_ioctl_t *ioctlp)
 {
     long temp;
         
-    temp = strlen(ioctlp->inDatap) + 1;
+    temp = (long) strlen(ioctlp->inDatap) + 1;
     ioctlp->inDatap += temp;
 }       
 
@@ -425,7 +428,7 @@ long cm_ParseIoctlParent(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
     }
 
     /* # of bytes of path */
-    code = strlen(ioctlp->inDatap) + 1;
+    code = (long)strlen(ioctlp->inDatap) + 1;
     ioctlp->inDatap += code;
 
     /* and return success */
@@ -471,7 +474,7 @@ long cm_IoctlGetACL(smb_ioctl_t *ioctlp, cm_user_t *userp)
     if (code) return code;
 
     /* skip over return data */
-    tlen = strlen(ioctlp->outDatap) + 1;
+    tlen = (int)strlen(ioctlp->outDatap) + 1;
     ioctlp->outDatap += tlen;
 
     /* and return success */
@@ -538,7 +541,7 @@ long cm_IoctlSetACL(struct smb_ioctl *ioctlp, struct cm_user *userp)
     fid.Unique = scp->fid.unique;
     do {
         acl.AFSOpaque_val = ioctlp->inDatap;
-        acl.AFSOpaque_len = strlen(ioctlp->inDatap)+1;
+        acl.AFSOpaque_len = (u_int)strlen(ioctlp->inDatap)+1;
         code = cm_Conn(&scp->fid, userp, &req, &connp);
         if (code) continue;
 
@@ -1080,7 +1083,7 @@ long cm_IoctlCheckVolumes(struct smb_ioctl *ioctlp, struct cm_user *userp)
 
 long cm_IoctlSetCacheSize(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
-    long temp;
+    afs_uint64 temp;
     long code;
 
     cm_SkipIoctlPath(ioctlp);
@@ -1314,7 +1317,7 @@ long cm_IoctlSysName(struct smb_ioctl *ioctlp, struct cm_user *userp)
         cp2 = ioctlp->inDatap;
         for ( cp=ioctlp->inDatap, count = 0; count < setSysName; count++ ) {
             /* won't go past end of ioctlp->inDatap since maxsysname*num < ioctlp->inDatap length */
-            t = strlen(cp);
+            t = (int)strlen(cp);
             if (t >= MAXSYSNAME || t <= 0)
                 return EINVAL;
             /* check for names that can shoot us in the foot */
@@ -1326,7 +1329,7 @@ long cm_IoctlSysName(struct smb_ioctl *ioctlp, struct cm_user *userp)
 
         /* inname gets first entry in case we're being a translator */
         /* (we are never a translator) */
-        t = strlen(ioctlp->inDatap);
+        t = (int)strlen(ioctlp->inDatap);
         memcpy(inname, ioctlp->inDatap, t + 1);
         ioctlp->inDatap += t + 1;
         num = count;
@@ -1353,7 +1356,7 @@ long cm_IoctlSysName(struct smb_ioctl *ioctlp, struct cm_user *userp)
                 if (!cm_sysNameList[count])
                     osi_panic("cm_IoctlSysName: no cm_sysNameList entry to write\n",
                                __FILE__, __LINE__);
-                t = strlen(cp);
+                t = (int)strlen(cp);
                 StringCbCopyA(cm_sysNameList[count], MAXSYSNAME, cp);
                 cp += t + 1;
             }
@@ -1373,7 +1376,7 @@ long cm_IoctlSysName(struct smb_ioctl *ioctlp, struct cm_user *userp)
                 if ( !(*sysnamelist)[count] )
                     osi_panic("cm_IoctlSysName: no cm_sysNameList entry to read\n", 
                                __FILE__, __LINE__);
-                t = strlen((*sysnamelist)[count]);
+                t = (int)strlen((*sysnamelist)[count]);
                 if (t >= MAXSYSNAME)
                     osi_panic("cm_IoctlSysName: sysname entry garbled\n", 
                                __FILE__, __LINE__);
@@ -2262,7 +2265,7 @@ long cm_IoctlMakeSubmount(smb_ioctl_t *ioctlp, cm_user_t *userp)
                            (strlen(&afspath[strlen(cm_mountRoot)])) ?
                            &afspath[strlen(cm_mountRoot)]:"/",
                            (strlen(&afspath[strlen(cm_mountRoot)])) ?
-                           strlen(&afspath[strlen(cm_mountRoot)])+1:2);
+                           (DWORD)strlen(&afspath[strlen(cm_mountRoot)])+1:2);
 
             RegCloseKey( hkSubmounts );
             StringCbCopyA(ioctlp->outDatap, 999999, submountreqp);
@@ -2370,7 +2373,7 @@ long cm_IoctlMakeSubmount(smb_ioctl_t *ioctlp, cm_user_t *userp)
                    (strlen(&afspath[strlen(cm_mountRoot)])) ?
                    &afspath[strlen(cm_mountRoot)]:"/",
                    (strlen(&afspath[strlen(cm_mountRoot)])) ?
-                   strlen(&afspath[strlen(cm_mountRoot)])+1:2);
+                   (DWORD)strlen(&afspath[strlen(cm_mountRoot)])+1:2);
 
     ioctlp->outDatap += strlen(ioctlp->outDatap) +1;
     RegCloseKey(hkSubmounts);

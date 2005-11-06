@@ -59,10 +59,10 @@ BOOL CALLBACK Server_SyncVLDB_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp
       return TRUE;
 
    if (msg == WM_INITDIALOG)
-      SetWindowLong (hDlg, DWL_USER, lp);
+      SetWindowLongPtr (hDlg, DWLP_USER, lp);
 
    LPIDENT lpi;
-   if ((lpi = (LPIDENT)GetWindowLong (hDlg, DWL_USER)) != NULL)
+   if ((lpi = (LPIDENT)GetWindowLongPtr (hDlg, DWLP_USER)) != NULL)
       {
       switch (msg)
          {
@@ -163,7 +163,7 @@ void Server_SyncVLDB_OnEndTask_Init (HWND hDlg, LPTASKPACKET ptp)
 void Server_SyncVLDB_OnOK (HWND hDlg, LPIDENT lpi)
 {
    LPSVR_SYNCVLDB_PARAMS lpp = New (SVR_SYNCVLDB_PARAMS);
-   lpp->lpi = (LPIDENT)GetWindowLong (hDlg, DWL_USER);
+   lpp->lpi = (LPIDENT)GetWindowLongPtr (hDlg, DWLP_USER);
    lpp->fForce = TRUE;
    StartTask (taskSVR_SYNCVLDB, NULL, lpp);
 }

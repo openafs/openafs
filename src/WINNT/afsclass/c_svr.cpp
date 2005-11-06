@@ -760,7 +760,7 @@ void AfsClass_SkipRefresh (int idSection)
 
 DWORD WINAPI SERVER::CanTalkToServer_ThreadProc (PVOID lp)
 {
-   int idSection = (int)lp;
+   int idSection = PtrToInt(lp);
 
    // Until we post a notification saying that we've entered
    // a section, we don't need to worry about the aRefSec[] entry
@@ -984,7 +984,7 @@ BOOL SERVER::CanTalkToServer (ULONG *pStatus)
    //
    DWORD dwThreadID;
    HANDLE hThread;
-   if ((hThread = CreateThread (NULL, 0, (LPTHREAD_START_ROUTINE)CanTalkToServer_ThreadProc, (PVOID)idSection, 0, &dwThreadID)) == NULL)
+   if ((hThread = CreateThread (NULL, 0, (LPTHREAD_START_ROUTINE)CanTalkToServer_ThreadProc, IntToPtr(idSection), 0, &dwThreadID)) == NULL)
       {
       EnterCriticalSection (pcsRefSec);
       aRefSec[ idSection ].fInUse = FALSE;

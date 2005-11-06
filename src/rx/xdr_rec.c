@@ -201,7 +201,7 @@ xdrrec_getint32(XDR * xdrs, afs_int32 * lp)
 
     /* first try the inline, fast case */
     if ((rstrm->fbtbc >= sizeof(afs_int32))
-	&& (((int)rstrm->in_boundry - (int)buflp) >= sizeof(afs_int32))) {
+	&& (((int)((char *)rstrm->in_boundry - (char *)buflp)) >= sizeof(afs_int32))) {
 	*lp = ntohl(*buflp);
 	rstrm->fbtbc -= sizeof(afs_int32);
 	rstrm->in_finger += sizeof(afs_int32);
@@ -267,7 +267,7 @@ xdrrec_putbytes(XDR * xdrs, register caddr_t addr, register u_int len)
     register int current;
 
     while (len > 0) {
-	current = (u_int) rstrm->out_boundry - (u_int) rstrm->out_finger;
+	current = (u_int) (rstrm->out_boundry - rstrm->out_finger);
 	current = (len < current) ? len : current;
 	memcpy(rstrm->out_finger, addr, current);
 	rstrm->out_finger += current;
@@ -293,11 +293,11 @@ xdrrec_getpos(register XDR * xdrs)
 	switch (xdrs->x_op) {
 
 	case XDR_ENCODE:
-	    pos += rstrm->out_finger - rstrm->out_base;
+	    pos += (u_int)(rstrm->out_finger - rstrm->out_base);
 	    break;
 
 	case XDR_DECODE:
-	    pos -= rstrm->in_boundry - rstrm->in_finger;
+	    pos -= (u_int)(rstrm->in_boundry - rstrm->in_finger);
 	    break;
 
 	default:
@@ -437,13 +437,13 @@ xdrrec_endofrecord(XDR * xdrs, bool_t sendnow)
     register afs_uint32 len;	/* fragment length */
 
     if (sendnow || rstrm->frag_sent
-	|| ((afs_uint32) rstrm->out_finger + sizeof(afs_uint32) >=
+	|| ((afs_uint32) (rstrm->out_finger + sizeof(afs_uint32)) >=
 	    (afs_uint32) rstrm->out_boundry)) {
 	rstrm->frag_sent = FALSE;
 	return (flush_out(rstrm, TRUE));
     }
     len =
-	(afs_uint32) (rstrm->out_finger) - (afs_uint32) (rstrm->frag_header) -
+	(afs_uint32) (rstrm->out_finger - (caddr_t)rstrm->frag_header) -
 	sizeof(afs_uint32);
     *(rstrm->frag_header) = htonl(len | LAST_FRAG);
     rstrm->frag_header = (afs_uint32 *) rstrm->out_finger;
@@ -460,7 +460,7 @@ flush_out(register RECSTREAM * rstrm, bool_t eor)
 {
     register afs_uint32 eormask = (eor == TRUE) ? LAST_FRAG : 0;
     register afs_uint32 len =
-	(afs_uint32) (rstrm->out_finger) - (afs_uint32) (rstrm->frag_header) -
+	(afs_uint32) (rstrm->out_finger - (caddr_t)rstrm->frag_header) -
 	sizeof(afs_uint32);
 
     *(rstrm->frag_header) = htonl(len | eormask);
@@ -478,7 +478,7 @@ fill_input_buf(register RECSTREAM * rstrm)
 {
     register caddr_t where = rstrm->in_base;
     register int len = rstrm->in_size;
-    u_int adjust = (u_int) rstrm->in_boundry % BYTES_PER_XDR_UNIT;
+    u_int adjust = (u_int) ((size_t)rstrm->in_boundry % BYTES_PER_XDR_UNIT);
 
     /* Bump the current position out to the next alignment boundary */
     where += adjust;
@@ -499,7 +499,7 @@ get_input_bytes(register RECSTREAM * rstrm, register caddr_t addr,
     register int current;
 
     while (len > 0) {
-	current = (int)rstrm->in_boundry - (int)rstrm->in_finger;
+	current = (int)(rstrm->in_boundry - rstrm->in_finger);
 	if (current == 0) {
 	    if (!fill_input_buf(rstrm))
 		return (FALSE);
@@ -535,7 +535,7 @@ skip_input_bytes(register RECSTREAM * rstrm, int cnt)
     register int current;
 
     while (cnt > 0) {
-	current = (int)rstrm->in_boundry - (int)rstrm->in_finger;
+	current = (int)(rstrm->in_boundry - rstrm->in_finger);
 	if (current == 0) {
 	    if (!fill_input_buf(rstrm))
 		return (FALSE);

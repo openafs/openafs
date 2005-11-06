@@ -193,6 +193,7 @@ static void FreeStringMemory (LPTSTR pszString)
    Free (pszString);
 }
 
+#if 0
 static int lstrncmpi (LPCTSTR pszA, LPCTSTR pszB, size_t cch)
 {
    if (!pszA || !pszB)
@@ -214,7 +215,7 @@ static int lstrncmpi (LPCTSTR pszA, LPCTSTR pszB, size_t cch)
 
    return 0;  // no differences before told to stop comparing, so A==B
 }
-
+#endif
 
 /*
  * REALLOC ____________________________________________________________________

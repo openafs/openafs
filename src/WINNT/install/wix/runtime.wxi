@@ -1,5 +1,13 @@
 ﻿<?xml version="1.0"?> 
 <Include>
+    <?if $(env.AFSVER_CL) = "1400" ?>
+		<MergeRef Id="MSVCRT8MEM"/>
+		<MergeRef Id="MSVCRT8POL"/>
+		<MergeRef Id="MSVCRT8MFC"/>
+		<MergeRef Id="MSVCRT8PFC"/>
+		<MergeRef Id="MSVCRT8MFL"/>
+		<MergeRef Id="MSVCRT8PFL"/>
+    <?endif?>
 <?ifndef Debug?>
     <?if $(env.AFSVER_CL) = "1310" ?>
         <?ifdef comment?>

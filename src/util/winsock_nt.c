@@ -48,6 +48,7 @@ afs_winsockInit(void)
     return 0;
 }
 
+/* This function will begin to fail in the year 2038 */
 int
 afs_gettimeofday(struct timeval *tv, struct timezone *tz)
 {

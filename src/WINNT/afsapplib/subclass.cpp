@@ -141,8 +141,8 @@ BOOL Subclass_AddHook (HWND hTarget, PVOID wndProc)
 
    if (aTargets[ iTarget ].nHooksActive == 1)
       {
-      aTargets[ iTarget ].procOrig = (PVOID)GetWindowLong (hTarget, GWL_WNDPROC);
-      SetWindowLong (hTarget, GWL_WNDPROC, (LONG)Subclass_WndProc);
+      aTargets[ iTarget ].procOrig = (PVOID)GetWindowLongPtr (hTarget, GWLP_WNDPROC);
+      SetWindowLongPtr (hTarget, GWLP_WNDPROC, PtrToLong(Subclass_WndProc));
       }
 
    return TRUE;
@@ -177,7 +177,7 @@ void Subclass_RemoveHook (HWND hTarget, PVOID wndProc)
       aTargets[ iTarget ].nHooksActive --;
       if (aTargets[ iTarget ].nHooksActive == 0)
          {
-         SetWindowLong (aTargets[ iTarget ].hTarget, GWL_WNDPROC, (LONG)aTargets[ iTarget ].procOrig);
+         SetWindowLongPtr (aTargets[ iTarget ].hTarget, GWLP_WNDPROC, (LONG)aTargets[ iTarget ].procOrig);
          memset (&aTargets[ iTarget ], 0x00, sizeof(aTargets[ iTarget ]));
          }
       }

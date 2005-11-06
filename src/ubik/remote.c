@@ -456,7 +456,7 @@ SDISK_GetFile(rxcall, file, version)
     }
     length = ubikstat.size;
     tlen = htonl(length);
-    code = rx_Write(rxcall, &tlen, sizeof(afs_int32));
+    code = rx_Write(rxcall, (char *)&tlen, sizeof(afs_int32));
     if (code != sizeof(afs_int32)) {
 	DBRELE(dbase);
 	return BULK_ERROR;

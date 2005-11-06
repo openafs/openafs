@@ -3,7 +3,7 @@
     <!--
     This file will be included as a child of the root Directory tag.
     -->
-    <Component Id="rcm_Server" Guid="D30C980B-8284-49DF-88F5-C90BBFB3E80D">
+    <Component Id="rcm_Server" Guid="$(var.rcm_server_guid)" Win64="$(var.Win64)">
         <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\EventLog\Application\AFS Service" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Server"/>
         <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\EventLog\Application\AFS Service" Id="reg_Server3"/>
         <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\EventLog\Application\AFS Service" Name="TypesSupported" Type="integer" Value="7" Id="reg_Server4" />
@@ -34,7 +34,7 @@
         <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\EventLog\Application\AFS Service" Name="EventMessageFile" Type="string" Value="[AFSDIR]Common\afseventmsg_$(var.LanguageCode).dll" Id="reg_Server_$(var.LanguageCode)" />
     </Component>
 
-    <Component Id="rcm_Control_Center" Guid="2007844F-E101-4C99-81F5-EF9AEAD98821">
+    <Component Id="rcm_Control_Center" Guid="$(var.rcm_cc_guid)" Win64="$(var.Win64)">
         <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Control Center" KeyPath="yes" Id="reg_Control_Center2" />
         <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Control Center" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Control_Center" />
         <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Control Center\CurrentVersion" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Control_Center3" />
@@ -60,7 +60,7 @@
         <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Control Center\$(var.NumericVersion)" Name="InstallDateString" Type="string" Value="$(var.InstallTimestamp)" Id="reg_Control_Center26" />
         <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Control Center\$(var.NumericVersion)" Name="Description" Type="string" Value="$(loc.StrAFSCCDesc)" Id="reg_Control_Center27" />
     </Component>
-    <Component Id="rcm_Client" Guid="954679B0-547B-4F1E-9A3A-ABFB15B6C724">
+    <Component Id="rcm_Client" Guid="$(var.rcm_client_guid)" Win64="$(var.Win64)">
         <Registry Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved" Id="reg_Client_NoUninstall2" />
         <Registry Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved" Action="createKey" Id="reg_Client_NoUninstall" />
         <Registry Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved" Name="{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}" Type="string" Value="$(loc.StrShlExtDesc)" Id="reg_Client_NoUninstall3" />
@@ -126,19 +126,19 @@
         <Registry Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\IniFileMapping\afsdsbmt.ini" Name="AFS Mappings" Type="string" Value="USR:Software\OpenAFS\Client\mappings" Id="reg_Full_Client14" />
         <Registry Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\IniFileMapping\afsdsbmt.ini" Name="AFS Submounts" Type="string" Value="SYS:OpenAFS\Client\Submounts" Id="reg_Full_Client15" />
     </Component>
-    <Component Id="rcm_ClientCachePath" Guid="4080E08D-6649-4A06-B286-F5E737DF4D8A" Transitive="yes">
+    <Component Id="rcm_ClientCachePath" Guid="$(var.rcm_client_cache_path_guid)" Transitive="yes" Win64="$(var.Win64)">
         <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" Name="CachePath" Type="expandable" Value="[AFSCACHEPATH]" Id="reg_Full_Client16" KeyPath="yes" />
         <Condition>AFSCACHEPATH &lt;&gt; ""</Condition>
     </Component>
-    <Component Id="rcm_ClientCacheSize" Guid="F3A12290-920B-42E9-8E49-4958D7C0B6E2" Transitive="yes">
+    <Component Id="rcm_ClientCacheSize" Guid="$(var.rcm_client_cache_size_guid)" Transitive="yes" Win64="$(var.Win64)">
         <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" Name="CacheSize" Type="integer" Value="[AFSCACHESIZE]" Id="reg_Full_Client17" KeyPath="yes" />
         <Condition>AFSCACHESIZE &lt;&gt; ""</Condition>
     </Component>
-    <Component Id="rcm_StoreAnsiFilenames" Guid="EAC84AD6-CF90-4b28-AF32-6F96DF55C3C4" Transitive="yes">
+    <Component Id="rcm_StoreAnsiFilenames" Guid="$(var.rcm_store_ansi_guid)" Transitive="yes" Win64="$(var.Win64)">
         <Registry Root="HKLM" Key="SOFTWARE\OpenAFS\Client" Name="StoreAnsiFilenames" Type="integer" Value="[STOREANSIFILENAMES]" Id="reg_Full_Client18" KeyPath="yes" />
         <Condition>STOREANSIFILENAMES &lt;&gt; ""</Condition>
     </Component>
-    <Component Id="rcm_Documentation" Guid="97493526-4A5C-4C55-A1D6-EA38841B1B85">
+    <Component Id="rcm_Documentation" Guid="$(var.rcm_documentation_guid)" Win64="$(var.Win64)">
         <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Supplemental Documentation" KeyPath="yes" Id="reg_Docs2" />
         <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Supplemental Documentation" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Docs" />
         <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Supplemental Documentation\CurrentVersion" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Docs3" />
@@ -164,7 +164,7 @@
         <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Supplemental Documentation\$(var.NumericVersion)" Name="InstallDateString" Type="string" Value="$(var.InstallTimestamp)" Id="reg_Docs26" />
         <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Supplemental Documentation\$(var.NumericVersion)" Name="Description" Type="string" Value="$(loc.StrAFSDocDesc)" Id="reg_Docs27" />
     </Component>
-    <Component Id="rcm_SDK" Guid="648BE65B-C152-412C-A45C-1562512B52DC">
+    <Component Id="rcm_SDK" Guid="$(var.rcm_sdk_guid)" Win64="$(var.Win64)">
         <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS SDK" KeyPath="yes" Id="reg_SDK2" />
         <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS SDK" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_SDK" />
         <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS SDK\CurrentVersion" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_SDK3" />
@@ -192,7 +192,7 @@
     </Component>
 
     <!-- Work around bug KB30673.  Only for Windows 2000. -->    
-    <Component Id="rcm_KB301673" Guid="BAF01A13-445B-45BB-A832-DC2E7F98AE6A">
+    <Component Id="rcm_KB301673" Guid="$(var.rcm_kb301673_guid)" Win64="$(var.Win64)">
         <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\NetBT\Parameters" Name="SmbDeviceEnabled" Type="integer" Value="0" Id="reg_KB301673" KeyPath="yes" />
     </Component>
 
@@ -201,7 +201,7 @@
 	     its install state is set as NULL, instead of Local or Absent.  This prevents the feature from
 	     being removed when the product is uninstalled. This is just a flag component to add to the
 	     loopback feature so that it is not empty. -->
-    <Component Id="rcm_Loopback" Guid="9F9BBDA3-208C-4F93-B81F-313E031B6DDA">
+    <Component Id="rcm_Loopback" Guid="$(var.rcm_loopback_guid)" Win64="$(var.Win64)">
         <Registry Root="HKLM" Key="SOFTWARE\OpenAFS\Client" Name="LoopbackInstalled" Type="integer" Value="1" Id="reg_Loopback1" KeyPath="yes" />
     </Component>
     

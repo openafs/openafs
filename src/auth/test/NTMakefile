@@ -24,6 +24,7 @@ CELL_EXELIBS =\
 
 $(CELL_EXEFILE): $(CELL_EXEOBJS)  $(CELL_EXELIBS)
 	$(EXECONLINK)
+        $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
 
 ############################################################################
@@ -40,6 +41,7 @@ KTC_EXELIBS =\
 
 $(KTC_EXEFILE): $(KTC_EXEOBJS)  $(KTC_EXELIBS)
 	$(EXECONLINK)
+        $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
 
 test tests: $(CELL_EXEFILE) $(KTC_EXEFILE)

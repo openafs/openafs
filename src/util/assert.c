@@ -32,7 +32,7 @@ RCSID
 void
 afs_NTAbort(void)
 {
-    _asm int 3h;		/* always trap. */
+    DebugBreak();
 }
 #endif
 

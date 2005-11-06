@@ -24,7 +24,7 @@ extern "C" {
 static struct
    {
    BOOL fUseAdminServer;
-   DWORD idAdminServerClient;
+   UINT_PTR idAdminServerClient;
    } l = {0, 0};
 
 
@@ -68,7 +68,7 @@ void AfsAppLib_CloseAdminServer (void)
 }
 
 
-DWORD AfsAppLib_GetAdminServerClientID (void)
+UINT_PTR AfsAppLib_GetAdminServerClientID (void)
 {
    return (l.fUseAdminServer) ? l.idAdminServerClient : 0;
 }
@@ -190,159 +190,159 @@ EXPORTED BOOL ADMINAPI AfsAppLib_asc_ActionListFree (LPASACTIONLIST *ppList)
 }
 
 
-EXPORTED BOOL ADMINAPI AfsAppLib_asc_AdminServerOpen (LPCTSTR pszAddress, DWORD *pidClient, ULONG *pStatus)
+EXPORTED BOOL ADMINAPI AfsAppLib_asc_AdminServerOpen (LPCTSTR pszAddress, UINT_PTR *pidClient, ULONG *pStatus)
 {
    return asc_AdminServerOpen (pszAddress, pidClient, pStatus);
 }
 
-EXPORTED BOOL ADMINAPI AfsAppLib_asc_AdminServerClose (DWORD idClient, ULONG *pStatus)
+EXPORTED BOOL ADMINAPI AfsAppLib_asc_AdminServerClose (UINT_PTR idClient, ULONG *pStatus)
 {
    return asc_AdminServerClose (idClient, pStatus);
 }
 
 
-EXPORTED BOOL ADMINAPI AfsAppLib_asc_CredentialsCrack (DWORD idClient, PVOID hCreds, LPTSTR pszCell, LPTSTR pszUser, SYSTEMTIME *pstExpiration, ULONG *pStatus)
+EXPORTED BOOL ADMINAPI AfsAppLib_asc_CredentialsCrack (UINT_PTR idClient, PVOID hCreds, LPTSTR pszCell, LPTSTR pszUser, SYSTEMTIME *pstExpiration, ULONG *pStatus)
 {
    return asc_CredentialsCrack (idClient, hCreds, pszCell, pszUser, pstExpiration, pStatus);
 }
 
-EXPORTED PVOID ADMINAPI AfsAppLib_asc_CredentialsGet (DWORD idClient, LPCTSTR pszCell, ULONG *pStatus)
+EXPORTED UINT_PTR ADMINAPI AfsAppLib_asc_CredentialsGet (UINT_PTR idClient, LPCTSTR pszCell, ULONG *pStatus)
 {
    return asc_CredentialsGet (idClient, pszCell, pStatus);
 }
 
-EXPORTED PVOID ADMINAPI AfsAppLib_asc_CredentialsSet (DWORD idClient, LPCTSTR pszCell, LPCTSTR pszUser, LPCTSTR pszPassword, ULONG *pStatus)
+EXPORTED UINT_PTR ADMINAPI AfsAppLib_asc_CredentialsSet (UINT_PTR idClient, LPCTSTR pszCell, LPCTSTR pszUser, LPCTSTR pszPassword, ULONG *pStatus)
 {
    return asc_CredentialsSet (idClient, pszCell, pszUser, pszPassword, pStatus);
 }
 
-EXPORTED BOOL ADMINAPI AfsAppLib_asc_CredentialsPush (DWORD idClient, PVOID hCreds, ASID idCell, ULONG *pStatus)
+EXPORTED BOOL ADMINAPI AfsAppLib_asc_CredentialsPush (UINT_PTR idClient, PVOID hCreds, ASID idCell, ULONG *pStatus)
 {
    return asc_CredentialsPush (idClient, hCreds, idCell, pStatus);
 }
 
 
-EXPORTED BOOL ADMINAPI AfsAppLib_asc_LocalCellGet (DWORD idClient, LPTSTR pszCell, ULONG *pStatus)
+EXPORTED BOOL ADMINAPI AfsAppLib_asc_LocalCellGet (UINT_PTR idClient, LPTSTR pszCell, ULONG *pStatus)
 {
    return asc_LocalCellGet (idClient, pszCell, pStatus);
 }
 
-EXPORTED BOOL ADMINAPI AfsAppLib_asc_ErrorCodeTranslate (DWORD idClient, ULONG code, LANGID idLanguage, STRING pszErrorText, ULONG *pStatus)
+EXPORTED BOOL ADMINAPI AfsAppLib_asc_ErrorCodeTranslate (UINT_PTR idClient, ULONG code, LANGID idLanguage, STRING pszErrorText, ULONG *pStatus)
 {
    return asc_ErrorCodeTranslate (idClient, code, idLanguage, pszErrorText, pStatus);
 }
 
 
-EXPORTED BOOL ADMINAPI AfsAppLib_asc_ActionGet (DWORD idClient, DWORD idAction, LPASACTION pAction, ULONG *pStatus)
+EXPORTED BOOL ADMINAPI AfsAppLib_asc_ActionGet (UINT_PTR idClient, DWORD idAction, LPASACTION pAction, ULONG *pStatus)
 {
    return asc_ActionGet (idClient, idAction, pAction, pStatus);
 }
 
-EXPORTED BOOL ADMINAPI AfsAppLib_asc_ActionGetMultiple (DWORD idClient, DWORD idClientSearch, ASID idCellSearch, LPASACTIONLIST *ppList, ULONG *pStatus)
+EXPORTED BOOL ADMINAPI AfsAppLib_asc_ActionGetMultiple (UINT_PTR idClient, UINT_PTR idClientSearch, ASID idCellSearch, LPASACTIONLIST *ppList, ULONG *pStatus)
 {
    return asc_ActionGetMultiple (idClient, idClientSearch, idCellSearch, ppList, pStatus);
 }
 
-EXPORTED BOOL ADMINAPI AfsAppLib_asc_ActionListen (DWORD idClient, HWND hNotify, ULONG *pStatus)
+EXPORTED BOOL ADMINAPI AfsAppLib_asc_ActionListen (UINT_PTR idClient, HWND hNotify, ULONG *pStatus)
 {
    return asc_ActionListen (idClient, hNotify, pStatus);
 }
 
-EXPORTED BOOL ADMINAPI AfsAppLib_asc_ActionListenClear (DWORD idClient, HWND hNotify, ULONG *pStatus)
+EXPORTED BOOL ADMINAPI AfsAppLib_asc_ActionListenClear (UINT_PTR idClient, HWND hNotify, ULONG *pStatus)
 {
    return asc_ActionListenClear (idClient, hNotify, pStatus);
 }
 
 
-EXPORTED BOOL ADMINAPI AfsAppLib_asc_CellOpen (DWORD idClient, PVOID hCreds, LPCTSTR pszCell, DWORD dwScope, ASID *pidCell, ULONG *pStatus)
+EXPORTED BOOL ADMINAPI AfsAppLib_asc_CellOpen (UINT_PTR idClient, PVOID hCreds, LPCTSTR pszCell, DWORD dwScope, ASID *pidCell, ULONG *pStatus)
 {
    return asc_CellOpen (idClient, hCreds, pszCell, dwScope, pidCell, pStatus);
 }
 
-EXPORTED BOOL ADMINAPI AfsAppLib_asc_CellClose (DWORD idClient, ASID idCell, ULONG *pStatus)
+EXPORTED BOOL ADMINAPI AfsAppLib_asc_CellClose (UINT_PTR idClient, ASID idCell, ULONG *pStatus)
 {
    return asc_CellClose (idClient, idCell, pStatus);
 }
 
-EXPORTED BOOL ADMINAPI AfsAppLib_asc_CellChange (DWORD idClient, ASID idCell, LPAFSADMSVR_CHANGECELL_PARAMS pChange, ULONG *pStatus)
+EXPORTED BOOL ADMINAPI AfsAppLib_asc_CellChange (UINT_PTR idClient, ASID idCell, LPAFSADMSVR_CHANGECELL_PARAMS pChange, ULONG *pStatus)
 {
    return asc_CellChange (idClient, idCell, pChange, pStatus);
 }
 
-EXPORTED BOOL ADMINAPI AfsAppLib_asc_CellRefreshRateSet (DWORD idClient, ASID idCell, LONG cminRefreshRate, ULONG *pStatus)
+EXPORTED BOOL ADMINAPI AfsAppLib_asc_CellRefreshRateSet (UINT_PTR idClient, ASID idCell, LONG cminRefreshRate, ULONG *pStatus)
 {
    return asc_CellRefreshRateSet (idClient, idCell, cminRefreshRate, pStatus);
 }
 
 
-EXPORTED BOOL ADMINAPI AfsAppLib_asc_ObjectFind (DWORD idClient, ASID idSearchScope, ASOBJTYPE ObjectType, LPCTSTR pszName, ASID *pidObject, ULONG *pStatus)
+EXPORTED BOOL ADMINAPI AfsAppLib_asc_ObjectFind (UINT_PTR idClient, ASID idSearchScope, ASOBJTYPE ObjectType, LPCTSTR pszName, ASID *pidObject, ULONG *pStatus)
 {
    return asc_ObjectFind (idClient, idSearchScope, ObjectType, pszName, pidObject, pStatus);
 }
 
-EXPORTED BOOL ADMINAPI AfsAppLib_asc_ObjectFindMultiple (DWORD idClient, ASID idSearchScope, ASOBJTYPE ObjectType, LPCTSTR pszPattern, LPAFSADMSVR_SEARCH_PARAMS pSearchParams, LPASIDLIST *ppList, ULONG *pStatus)
+EXPORTED BOOL ADMINAPI AfsAppLib_asc_ObjectFindMultiple (UINT_PTR idClient, ASID idSearchScope, ASOBJTYPE ObjectType, LPCTSTR pszPattern, LPAFSADMSVR_SEARCH_PARAMS pSearchParams, LPASIDLIST *ppList, ULONG *pStatus)
 {
    return asc_ObjectFindMultiple (idClient, idSearchScope, ObjectType, pszPattern, pSearchParams, ppList, pStatus);
 }
 
-EXPORTED BOOL ADMINAPI AfsAppLib_asc_ObjectPropertiesGet (DWORD idClient, AFSADMSVR_GET_LEVEL GetLevel, ASID idCell, ASID idObject, LPASOBJPROP pProperties, ULONG *pStatus)
+EXPORTED BOOL ADMINAPI AfsAppLib_asc_ObjectPropertiesGet (UINT_PTR idClient, AFSADMSVR_GET_LEVEL GetLevel, ASID idCell, ASID idObject, LPASOBJPROP pProperties, ULONG *pStatus)
 {
    return asc_ObjectPropertiesGet (idClient, GetLevel, idCell, idObject, pProperties, pStatus);
 }
 
-EXPORTED BOOL ADMINAPI AfsAppLib_asc_ObjectPropertiesGetMultiple (DWORD idClient, AFSADMSVR_GET_LEVEL GetLevel, ASID idCell, LPASIDLIST pAsidList, LPASOBJPROPLIST *ppPropertiesList, ULONG *pStatus)
+EXPORTED BOOL ADMINAPI AfsAppLib_asc_ObjectPropertiesGetMultiple (UINT_PTR idClient, AFSADMSVR_GET_LEVEL GetLevel, ASID idCell, LPASIDLIST pAsidList, LPASOBJPROPLIST *ppPropertiesList, ULONG *pStatus)
 {
    return asc_ObjectPropertiesGetMultiple (idClient, GetLevel, idCell, pAsidList, ppPropertiesList, pStatus);
 }
 
 
-EXPORTED BOOL ADMINAPI AfsAppLib_asc_ObjectListen (DWORD idClient, ASID idCell, ASID idObject, HWND hNotify, ULONG *pStatus)
+EXPORTED BOOL ADMINAPI AfsAppLib_asc_ObjectListen (UINT_PTR idClient, ASID idCell, ASID idObject, HWND hNotify, ULONG *pStatus)
 {
    return asc_ObjectListen (idClient, idCell, idObject, hNotify, pStatus);
 }
 
-EXPORTED BOOL ADMINAPI AfsAppLib_asc_ObjectListenClear (DWORD idClient, HWND hNotify, ULONG *pStatus)
+EXPORTED BOOL ADMINAPI AfsAppLib_asc_ObjectListenClear (UINT_PTR idClient, HWND hNotify, ULONG *pStatus)
 {
    return asc_ObjectListenClear (idClient, hNotify, pStatus);
 }
 
-EXPORTED BOOL ADMINAPI AfsAppLib_asc_ObjectListenMultiple (DWORD idClient, ASID idCell, LPASIDLIST pAsidList, HWND hNotify, ULONG *pStatus)
+EXPORTED BOOL ADMINAPI AfsAppLib_asc_ObjectListenMultiple (UINT_PTR idClient, ASID idCell, LPASIDLIST pAsidList, HWND hNotify, ULONG *pStatus)
 {
    return asc_ObjectListenMultiple (idClient, idCell, pAsidList, hNotify, pStatus);
 }
 
 
-EXPORTED BOOL ADMINAPI AfsAppLib_asc_ObjectRefresh (DWORD idClient, ASID idCell, ASID idObject, ULONG *pStatus)
+EXPORTED BOOL ADMINAPI AfsAppLib_asc_ObjectRefresh (UINT_PTR idClient, ASID idCell, ASID idObject, ULONG *pStatus)
 {
    return asc_ObjectRefresh (idClient, idCell, idObject, pStatus);
 }
 
-EXPORTED BOOL ADMINAPI AfsAppLib_asc_ObjectRefreshMultiple (DWORD idClient, ASID idCell, LPASIDLIST pAsidList, ULONG *pStatus)
+EXPORTED BOOL ADMINAPI AfsAppLib_asc_ObjectRefreshMultiple (UINT_PTR idClient, ASID idCell, LPASIDLIST pAsidList, ULONG *pStatus)
 {
    return asc_ObjectRefreshMultiple (idClient, idCell, pAsidList, pStatus);
 }
 
-EXPORTED BOOL ADMINAPI AfsAppLib_asc_RandomKeyGet (DWORD idClient, ASID idCell, PBYTE pkey, ULONG *pStatus)
+EXPORTED BOOL ADMINAPI AfsAppLib_asc_RandomKeyGet (UINT_PTR idClient, ASID idCell, PBYTE pkey, ULONG *pStatus)
 {
    return asc_RandomKeyGet (idClient, idCell, pkey, pStatus);
 }
 
-EXPORTED BOOL ADMINAPI AfsAppLib_asc_CellNameGet_Fast (DWORD idClient, ASID idCell, LPTSTR pszCell, ULONG *pStatus)
+EXPORTED BOOL ADMINAPI AfsAppLib_asc_CellNameGet_Fast (UINT_PTR idClient, ASID idCell, LPTSTR pszCell, ULONG *pStatus)
 {
    return asc_CellNameGet_Fast (idClient, idCell, pszCell, pStatus);
 }
 
-EXPORTED BOOL ADMINAPI AfsAppLib_asc_ObjectNameGet_Fast (DWORD idClient, ASID idCell, ASID idObject, LPTSTR pszObject, ULONG *pStatus)
+EXPORTED BOOL ADMINAPI AfsAppLib_asc_ObjectNameGet_Fast (UINT_PTR idClient, ASID idCell, ASID idObject, LPTSTR pszObject, ULONG *pStatus)
 {
    return asc_ObjectNameGet_Fast (idClient, idCell, idObject, pszObject, pStatus);
 }
 
-EXPORTED BOOL ADMINAPI AfsAppLib_asc_ObjectTypeGet_Fast (DWORD idClient, ASID idCell, ASID idObject, ASOBJTYPE *pObjectType, ULONG *pStatus)
+EXPORTED BOOL ADMINAPI AfsAppLib_asc_ObjectTypeGet_Fast (UINT_PTR idClient, ASID idCell, ASID idObject, ASOBJTYPE *pObjectType, ULONG *pStatus)
 {
    return asc_ObjectTypeGet_Fast (idClient, idCell, idObject, pObjectType, pStatus);
 }
 
-EXPORTED BOOL ADMINAPI AfsAppLib_asc_ObjectPropertiesGet_Fast (DWORD idClient, ASID idCell, ASID idObject, LPASOBJPROP pProperties, ULONG *pStatus)
+EXPORTED BOOL ADMINAPI AfsAppLib_asc_ObjectPropertiesGet_Fast (UINT_PTR idClient, ASID idCell, ASID idObject, LPASOBJPROP pProperties, ULONG *pStatus)
 {
    return asc_ObjectPropertiesGet_Fast (idClient, idCell, idObject, pProperties, pStatus);
 }
@@ -364,72 +364,72 @@ EXPORTED LPCRITICAL_SECTION ADMINAPI AfsAppLib_asc_GetCriticalSection (void)
 }
 
 
-EXPORTED BOOL ADMINAPI AfsAppLib_asc_UserChange (DWORD idClient, ASID idCell, ASID idUser, LPAFSADMSVR_CHANGEUSER_PARAMS pChange, ULONG *pStatus)
+EXPORTED BOOL ADMINAPI AfsAppLib_asc_UserChange (UINT_PTR idClient, ASID idCell, ASID idUser, LPAFSADMSVR_CHANGEUSER_PARAMS pChange, ULONG *pStatus)
 {
    return asc_UserChange (idClient, idCell, idUser, pChange, pStatus);
 }
 
-EXPORTED BOOL ADMINAPI AfsAppLib_asc_UserPasswordSet (DWORD idClient, ASID idCell, ASID idUser, int keyVersion, LPCTSTR pkeyString, PBYTE pkeyData, ULONG *pStatus)
+EXPORTED BOOL ADMINAPI AfsAppLib_asc_UserPasswordSet (UINT_PTR idClient, ASID idCell, ASID idUser, int keyVersion, LPCTSTR pkeyString, PBYTE pkeyData, ULONG *pStatus)
 {
    return asc_UserPasswordSet (idClient, idCell, idUser, keyVersion, pkeyString, pkeyData, pStatus);
 }
 
-EXPORTED BOOL ADMINAPI AfsAppLib_asc_UserUnlock (DWORD idClient, ASID idCell, ASID idUser, ULONG *pStatus)
+EXPORTED BOOL ADMINAPI AfsAppLib_asc_UserUnlock (UINT_PTR idClient, ASID idCell, ASID idUser, ULONG *pStatus)
 {
    return asc_UserUnlock (idClient, idCell, idUser, pStatus);
 }
 
-EXPORTED BOOL ADMINAPI AfsAppLib_asc_UserCreate (DWORD idClient, ASID idCell, LPAFSADMSVR_CREATEUSER_PARAMS pCreate, ASID *pidUser, ULONG *pStatus)
+EXPORTED BOOL ADMINAPI AfsAppLib_asc_UserCreate (UINT_PTR idClient, ASID idCell, LPAFSADMSVR_CREATEUSER_PARAMS pCreate, ASID *pidUser, ULONG *pStatus)
 {
    return asc_UserCreate (idClient, idCell, pCreate, pidUser, pStatus);
 }
 
-EXPORTED BOOL ADMINAPI AfsAppLib_asc_UserDelete (DWORD idClient, ASID idCell, ASID idUser, LPAFSADMSVR_DELETEUSER_PARAMS pDelete, ULONG *pStatus)
+EXPORTED BOOL ADMINAPI AfsAppLib_asc_UserDelete (UINT_PTR idClient, ASID idCell, ASID idUser, LPAFSADMSVR_DELETEUSER_PARAMS pDelete, ULONG *pStatus)
 {
    return asc_UserDelete (idClient, idCell, idUser, pDelete, pStatus);
 }
 
-EXPORTED BOOL ADMINAPI AfsAppLib_asc_GroupChange (DWORD idClient, ASID idCell, ASID idGroup, LPAFSADMSVR_CHANGEGROUP_PARAMS pChange, ULONG *pStatus)
+EXPORTED BOOL ADMINAPI AfsAppLib_asc_GroupChange (UINT_PTR idClient, ASID idCell, ASID idGroup, LPAFSADMSVR_CHANGEGROUP_PARAMS pChange, ULONG *pStatus)
 {
    return asc_GroupChange (idClient, idCell, idGroup, pChange, pStatus);
 }
 
-EXPORTED BOOL ADMINAPI AfsAppLib_asc_GroupMembersGet (DWORD idClient, ASID idCell, ASID idGroup, LPASIDLIST *ppAsidList, ULONG *pStatus)
+EXPORTED BOOL ADMINAPI AfsAppLib_asc_GroupMembersGet (UINT_PTR idClient, ASID idCell, ASID idGroup, LPASIDLIST *ppAsidList, ULONG *pStatus)
 {
    return asc_GroupMembersGet (idClient, idCell, idGroup, ppAsidList, pStatus);
 }
 
-EXPORTED BOOL ADMINAPI AfsAppLib_asc_GroupMemberAdd (DWORD idClient, ASID idCell, ASID idGroup, ASID idMember, ULONG *pStatus)
+EXPORTED BOOL ADMINAPI AfsAppLib_asc_GroupMemberAdd (UINT_PTR idClient, ASID idCell, ASID idGroup, ASID idMember, ULONG *pStatus)
 {
    return asc_GroupMemberAdd (idClient, idCell, idGroup, idMember, pStatus);
 }
 
-EXPORTED BOOL ADMINAPI AfsAppLib_asc_GroupMemberRemove (DWORD idClient, ASID idCell, ASID idGroup, ASID idMember, ULONG *pStatus)
+EXPORTED BOOL ADMINAPI AfsAppLib_asc_GroupMemberRemove (UINT_PTR idClient, ASID idCell, ASID idGroup, ASID idMember, ULONG *pStatus)
 {
    return asc_GroupMemberRemove (idClient, idCell, idGroup, idMember, pStatus);
 }
 
-EXPORTED BOOL ADMINAPI AfsAppLib_asc_GroupRename (DWORD idClient, ASID idCell, ASID idGroup, LPCTSTR pszNewName, ULONG *pStatus)
+EXPORTED BOOL ADMINAPI AfsAppLib_asc_GroupRename (UINT_PTR idClient, ASID idCell, ASID idGroup, LPCTSTR pszNewName, ULONG *pStatus)
 {
    return asc_GroupRename (idClient, idCell, idGroup, pszNewName, pStatus);
 }
 
-EXPORTED BOOL ADMINAPI AfsAppLib_asc_GroupOwnershipGet (DWORD idClient, ASID idCell, ASID idMember, LPASIDLIST *ppAsidList, ULONG *pStatus)
+EXPORTED BOOL ADMINAPI AfsAppLib_asc_GroupOwnershipGet (UINT_PTR idClient, ASID idCell, ASID idMember, LPASIDLIST *ppAsidList, ULONG *pStatus)
 {
    return asc_GroupOwnershipGet (idClient, idCell, idMember, ppAsidList, pStatus);
 }
 
-EXPORTED BOOL ADMINAPI AfsAppLib_asc_GroupMembershipGet (DWORD idClient, ASID idCell, ASID idOwner, LPASIDLIST *ppAsidList, ULONG *pStatus)
+EXPORTED BOOL ADMINAPI AfsAppLib_asc_GroupMembershipGet (UINT_PTR idClient, ASID idCell, ASID idOwner, LPASIDLIST *ppAsidList, ULONG *pStatus)
 {
    return asc_GroupMembershipGet (idClient, idCell, idOwner, ppAsidList, pStatus);
 }
 
-EXPORTED BOOL ADMINAPI AfsAppLib_asc_GroupCreate (DWORD idClient, ASID idCell, LPAFSADMSVR_CREATEGROUP_PARAMS pCreate, ASID *pidGroup, ULONG *pStatus)
+EXPORTED BOOL ADMINAPI AfsAppLib_asc_GroupCreate (UINT_PTR idClient, ASID idCell, LPAFSADMSVR_CREATEGROUP_PARAMS pCreate, ASID *pidGroup, ULONG *pStatus)
 {
    return asc_GroupCreate (idClient, idCell, pCreate, pidGroup, pStatus);
 }
 
-EXPORTED BOOL ADMINAPI AfsAppLib_asc_GroupDelete (DWORD idClient, ASID idCell, ASID idGroup, ULONG *pStatus)
+EXPORTED BOOL ADMINAPI AfsAppLib_asc_GroupDelete (UINT_PTR idClient, ASID idCell, ASID idGroup, ULONG *pStatus)
 {
    return asc_GroupDelete (idClient, idCell, idGroup, pStatus);
 }

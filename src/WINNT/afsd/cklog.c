@@ -97,7 +97,7 @@ static int good_gets (s, max)
 	if (feof(stdin)) return EOF;	/* EOF on input, nothing read */
 	else return -2;			/* I don't think this can happen */
     }
-    l = strlen (s);
+    l = (int)strlen (s);
     if (l && (s[l-1] == '\n')) s[--l] = 0;
     return l;
 }

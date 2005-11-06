@@ -23,11 +23,11 @@
 /* compute how many 32 byte entries an AFS 3 dir requires for storing
  * the specified name.
  */
-cm_NameEntries(char *namep, size_t *lenp)
+long cm_NameEntries(char *namep, long *lenp)
 {
-	int i;
+    long i;
         
-        i = strlen(namep);
-	if (lenp) *lenp = i;
-        return 1+((i+16)>>5);
-}
+    i = (long)strlen(namep);
+    if (lenp) *lenp = i;
+    return 1+((i+16)>>5);
+}	

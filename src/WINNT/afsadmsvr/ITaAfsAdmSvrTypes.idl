@@ -18,7 +18,7 @@ const int ENCRYPTIONKEYLENGTH = 8;
       // ASID - Admin Server ID
       // ...Type used for unique object identifiers throughout these adm
       //
-typedef DWORD ASID, *LPASID;
+typedef UINT_PTR ASID, *LPASID;
 
 
       // ASOBJTYPE - Admin Server Object Type
@@ -159,7 +159,7 @@ typedef struct {
 typedef struct {
    ASACTIONTYPE Action;	// The operation in progress
    DWORD idAction;	// Unique action identifier
-   DWORD idClient;	// Client which initiated the operation
+   UINT_PTR idClient;	// Client which initiated the operation
    ASID idCell;	// Cell in which operation is occurring
    DWORD csecActive;	// Elapsed active time for operation
 
@@ -237,9 +237,9 @@ typedef struct {
 
 typedef struct {
    ULONG dwID;
-   ULONG ckStorageTotal;
-   ULONG ckStorageFree;
-   ULONG ckStorageAllocated;
+   UINT_PTR ckStorageTotal;
+   UINT_PTR ckStorageFree;
+   UINT_PTR ckStorageAllocated;
 } ASOBJPROP_PARTITION, *LPASOBJPROP_PARTITION;
 
 cpp_quote ("#ifndef AFSCLASS_H")
@@ -261,8 +261,8 @@ typedef struct {
    SYSTEMTIME timeLastBackup;
    SYSTEMTIME timeCopyCreation;
    ULONG nFiles;
-   ULONG ckQuota;
-   ULONG ckUsed;
+   UINT_PTR ckQuota;
+   UINT_PTR ckUsed;
    FILESETTYPE FilesetType;
    DWORD FilesetState;
 } ASOBJPROP_VOLUME, *LPASOBJPROP_VOLUME;
@@ -471,7 +471,7 @@ typedef struct
    STRING szName;
    STRING szInstance;
    STRING szPassword;
-   int idUser;
+   UINT_PTR idUser;
    BOOL fCreateKAS;
    BOOL fCreatePTS;
    } AFSADMSVR_CREATEUSER_PARAMS, *LPAFSADMSVR_CREATEUSER_PARAMS;

@@ -129,7 +129,7 @@ struct IoRequest {
     struct TM_Elem	timeout;
 
     /* Result of select call */
-    long			result;
+    size_t		result;
 
 #ifdef AFS_DJGPP_ENV
     NCB                  *ncbp;
@@ -228,7 +228,7 @@ fd_set *IOMGR_AllocFDSet(void)
     }
 }
 
-#define FreeRequest(x) ((x)->result = (long) iorFreeList, iorFreeList = (x))
+#define FreeRequest(x) ((x)->result = (size_t)iorFreeList, iorFreeList = (x))
 
 static struct IoRequest *NewRequest()
 {
@@ -918,7 +918,7 @@ int IOMGR_Select(fds, readfds, writefds, exceptfds, timeout)
      struct timeval *timeout;
 {
     register struct IoRequest *request;
-    int result;
+    size_t result;
 
 #ifndef AFS_NT40_ENV
     if(fds > FD_SETSIZE) {
@@ -1007,7 +1007,7 @@ again:
     result = request -> result;
 
     FreeRequest(request);
-    return (result > 1 ? 1 : result);
+    return (result > 1 ? 1 : (int)result);
 }
 
 int IOMGR_Cancel(PROCESS pid)

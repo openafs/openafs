@@ -213,7 +213,7 @@ BOOL TranslateFile (LPTSTR psz)
       return FALSE;
       }
 
-   size_t cbSource;
+   DWORD cbSource;
    if ((cbSource = GetFileSize (hFile, NULL)) != 0)
       {
       LPTSTR abSource = (LPTSTR)GlobalAlloc (GMEM_FIXED, cbSource + 5);
@@ -227,7 +227,7 @@ BOOL TranslateFile (LPTSTR psz)
       else
          {
          abSource[ dwRead ] = 0;
-         size_t cbTarget = dwRead * 4;
+         DWORD cbTarget = dwRead * 4;
          LPSTR abTarget = (LPSTR)GlobalAlloc (GMEM_FIXED, cbTarget);
          memset (abTarget, 0x00, cbTarget);
 

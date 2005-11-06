@@ -27,7 +27,7 @@ typedef struct cm_ucell {
     int ticketLen;			/* by mx */
     struct ktc_encryptionKey sessionKey;/* by mx */
     long kvno;			        /* key version in ticket */
-    long expirationTime;		/* when tix expire */
+    time_t expirationTime;		/* when tix expire */
     int gen;			        /* generation number */
     int iterator;			/* for use as ListTokens cookie */
     long flags;			        /* flags */
@@ -64,7 +64,7 @@ extern void cm_ReleaseUser(cm_user_t *up);
 
 extern void cm_ReleaseUserVCRef(cm_user_t *up);
 
-extern void cm_CheckTokenCache(long now);
+extern void cm_CheckTokenCache(time_t now);
 
 extern cm_user_t *cm_rootUserp;
 

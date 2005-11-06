@@ -28,8 +28,8 @@
 osi_rwlock_t cm_connLock;
 
 long RDRtimeout = CM_CONN_DEFAULTRDRTIMEOUT;
-long ConnDeadtimeout = CM_CONN_CONNDEADTIME;
-long HardDeadtimeout = CM_CONN_HARDDEADTIME;
+unsigned short ConnDeadtimeout = CM_CONN_CONNDEADTIME;
+unsigned short HardDeadtimeout = CM_CONN_HARDDEADTIME;
 
 #define LANMAN_WKS_PARAM_KEY "SYSTEM\\CurrentControlSet\\Services\\lanmanworkstation\\parameters"
 #define LANMAN_WKS_SESSION_TIMEOUT "SessTimeout"
@@ -154,8 +154,8 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
     long timeUsed, timeLeft;
     long code;
         
-    osi_Log2(afsd_logp, "cm_Analyze connp 0x%x, code 0x%x",
-             (long) connp, errorCode);
+    osi_Log2(afsd_logp, "cm_Analyze connp 0x%p, code 0x%x",
+             connp, errorCode);
 
     /* no locking required, since connp->serverp never changes after
      * creation */
@@ -714,7 +714,7 @@ long cm_ConnByServer(cm_server_t *serverp, cm_user_t *userp, cm_conn_t **connpp)
     lock_ReleaseMutex(&userp->mx);
 
     /* return this pointer to our caller */
-    osi_Log1(afsd_logp, "cm_ConnByServer returning conn 0x%x", (long) tcp);
+    osi_Log1(afsd_logp, "cm_ConnByServer returning conn 0x%p", tcp);
     *connpp = tcp;
 
     return 0;

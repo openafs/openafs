@@ -24,7 +24,7 @@ typedef struct cm_bulkIO {
 
 extern long cm_StoreMini(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp);
 
-extern int cm_InitDCache(int newFile, long chunkSize, long nbuffers);
+extern int cm_InitDCache(int newFile, long chunkSize, afs_uint64 nbuffers);
 
 extern int cm_HaveBuffer(struct cm_scache *, struct cm_buf *, int haveBufLocked);
 

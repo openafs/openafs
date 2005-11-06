@@ -204,7 +204,7 @@ void cm_RevokeCallback(struct rx_call *callp, AFSFid *fidp)
         {
             cm_HoldSCacheNoLock(scp);
             lock_ReleaseWrite(&cm_scacheLock);
-            osi_Log4(afsd_logp, "RevokeCallback Discarding SCache scp 0x%x vol %u vn %u uniq %u", 
+            osi_Log4(afsd_logp, "RevokeCallback Discarding SCache scp 0x%p vol %u vn %u uniq %u", 
                      scp, scp->fid.volume, scp->fid.vnode, scp->fid.unique);
             lock_ObtainMutex(&scp->mx);
             cm_DiscardSCache(scp);
@@ -252,7 +252,7 @@ void cm_RevokeVolumeCallback(struct rx_call *callp, AFSFid *fidp)
                 cm_HoldSCacheNoLock(scp);
                 lock_ReleaseWrite(&cm_scacheLock);
                 lock_ObtainMutex(&scp->mx);
-                osi_Log4(afsd_logp, "RevokeVolumeCallback Discarding SCache scp 0x%x vol %u vn %u uniq %u", 
+                osi_Log4(afsd_logp, "RevokeVolumeCallback Discarding SCache scp 0x%p vol %u vn %u uniq %u", 
                           scp, scp->fid.volume, scp->fid.vnode, scp->fid.unique);
                 cm_DiscardSCache(scp);
                 lock_ReleaseMutex(&scp->mx);
@@ -459,7 +459,7 @@ SRXAFSCB_InitCallBackState(struct rx_call *callp)
                 if (scp->cbExpires > 0 && scp->cbServerp != NULL) {
                     /* we have a callback, now decide if we should clear it */
                     if (scp->cbServerp == tsp || tsp == NULL) {
-                        osi_Log4(afsd_logp, "InitCallbackState Discarding SCache scp 0x%x vol %u vn %u uniq %u", 
+                        osi_Log4(afsd_logp, "InitCallbackState Discarding SCache scp 0x%p vol %u vn %u uniq %u", 
                                   scp, scp->fid.volume, scp->fid.vnode, scp->fid.unique);
                         cm_DiscardSCache(scp);
                         discarded = 1;
@@ -1397,9 +1397,15 @@ int SRXAFSCB_GetCacheConfig(struct rx_call *callp,
     afs_MarshallCacheConfig(callerVersion, &cm_initParams, t_config);
 
     *serverVersion = AFS_CLIENT_RETRIEVAL_FIRST_EDITION;
-    *configCount = allocsize;
+#ifdef DEBUG
+#ifndef SIZE_MAX
+#define SIZE_MAX sizeof(afs_int32)
+#endif
+    osi_assert(allocsize < SIZE_MAX);
+#endif
+    *configCount = (afs_uint32)allocsize;
     config->cacheConfig_val = t_config;
-    config->cacheConfig_len = allocsize/sizeof(afs_uint32);
+    config->cacheConfig_len = (*configCount)/sizeof(afs_uint32);
 
     MUTEX_EXIT(&callp->lock);
     return 0;
@@ -1571,7 +1577,7 @@ void cm_EndCallbackGrantingCall(cm_scache_t *scp, cm_callbackRequest_t *cbrp,
                   (revp->flags & CM_RACINGFLAG_CANCELALL))) {
             /* this one matches */
             osi_Log4(afsd_logp,
-                      "Racing revoke scp 0x%x old cbc %d rev cbc %d cur cbc %d",
+                      "Racing revoke scp 0x%p old cbc %d rev cbc %d cur cbc %d",
                       scp,
                       cbrp->callbackCount, revp->callbackCount,
                       cm_callbackCount);
@@ -1619,7 +1625,7 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
     cm_fid_t sfid;
     struct rx_connection * callp;
 
-    osi_Log4(afsd_logp, "GetCallback scp 0x%x cell %d vol %d flags %lX", 
+    osi_Log4(afsd_logp, "GetCallback scp 0x%p cell %d vol %d flags %lX", 
              scp, scp->fid.cell, scp->fid.volume, flags);
 
 #ifdef AFS_FREELANCE_CLIENT
@@ -1665,7 +1671,7 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
     cm_AFSFidFromFid(&tfid, &scp->fid);
     while (1) {
         if (!mustCall && cm_HaveCallback(scp)) {
-            osi_Log3(afsd_logp, "GetCallback Complete scp 0x%x cell %d vol %d", 
+            osi_Log3(afsd_logp, "GetCallback Complete scp 0x%p cell %d vol %d", 
                       scp, scp->fid.cell, scp->fid.volume);
             return 0;
         }
@@ -1681,8 +1687,8 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
         lock_ReleaseMutex(&scp->mx);
 		
         /* now make the RPC */
-        osi_Log4(afsd_logp, "CALL FetchStatus scp 0x%x cell %d vol %d uniq %d", 
-                 (long) scp, scp->fid.cell, scp->fid.volume, scp->fid.unique);
+        osi_Log4(afsd_logp, "CALL FetchStatus scp 0x%p cell %d vol %d uniq %d", 
+                 scp, scp->fid.cell, scp->fid.volume, scp->fid.unique);
         do {
             code = cm_Conn(&sfid, userp, reqp, &connp);
             if (code) 
@@ -1697,11 +1703,11 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
                             &cbr, code));
         code = cm_MapRPCError(code, reqp);
         if (code)
-            osi_Log4(afsd_logp, "CALL FetchStatus FAILURE code 0x%x scp 0x%x cell %d vol %d", 
-                     code, (long) scp, scp->fid.cell, scp->fid.volume);
+            osi_Log4(afsd_logp, "CALL FetchStatus FAILURE code 0x%x scp 0x%p cell %d vol %d", 
+                     code, scp, scp->fid.cell, scp->fid.volume);
         else
-            osi_Log4(afsd_logp, "CALL FetchStatus SUCCESS scp 0x%x cell %d vol %d uniq %d", 
-                     (long) scp, scp->fid.cell, scp->fid.volume, scp->fid.unique);
+            osi_Log4(afsd_logp, "CALL FetchStatus SUCCESS scp 0x%p cell %d vol %d uniq %d", 
+                     scp, scp->fid.cell, scp->fid.volume, scp->fid.unique);
 
         lock_ObtainMutex(&scp->mx);
         if (code == 0) {
@@ -1714,7 +1720,7 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
 
         /* now check to see if we got an error */
         if (code) {
-            osi_Log2(afsd_logp, "GetCallback Failed code 0x%x scp 0x%x -->",code, scp);
+            osi_Log2(afsd_logp, "GetCallback Failed code 0x%x scp 0x%p -->",code, scp);
             osi_Log4(afsd_logp, "            cell %d vol %d vn %d uniq %d",
                      scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique);
             return code;
@@ -1727,7 +1733,7 @@ void cm_CheckCBExpiration(void)
 {
     int i;
     cm_scache_t *scp;
-    unsigned long now;
+    time_t now;
         
     osi_Log0(afsd_logp, "CheckCBExpiration");
 
@@ -1738,7 +1744,7 @@ void cm_CheckCBExpiration(void)
             cm_HoldSCacheNoLock(scp);
             if (scp->cbExpires > 0 && (scp->cbServerp == NULL || now > scp->cbExpires)) {
                 lock_ReleaseWrite(&cm_scacheLock);
-                osi_Log4(afsd_logp, "Callback Expiration Discarding SCache scp 0x%x vol %u vn %u uniq %u", 
+                osi_Log4(afsd_logp, "Callback Expiration Discarding SCache scp 0x%p vol %u vn %u uniq %u", 
                           scp, scp->fid.volume, scp->fid.vnode, scp->fid.unique);
                 lock_ObtainMutex(&scp->mx);
                 cm_DiscardSCache(scp);

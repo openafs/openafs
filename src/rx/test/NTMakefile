@@ -24,15 +24,19 @@ tests: $(OUT)\testclient.exe $(OUT)\testserver.exe $(OUT)\tableGen.exe $(OUT)\ge
 
 $(OUT)\testclient.exe: $(OUT)\testclient.obj $(LIBS)
 	$(EXECONLINK)
+        $(_VC_MANIFEST_EMBED_EXE)
 
 $(OUT)\testserver.exe: $(OUT)\testserver.obj $(LIBS)
 	$(EXECONLINK)
+        $(_VC_MANIFEST_EMBED_EXE)
 
 $(OUT)\tableGen.exe: $(OUT)\tableGen.obj $(LIBS)
 	$(EXECONLINK)
+        $(_VC_MANIFEST_EMBED_EXE)
 
 $(OUT)\generator.exe: $(OUT)\generator.obj $(LIBS)
 	$(EXECONLINK)
+        $(_VC_MANIFEST_EMBED_EXE)
 
 $(RXTESTOBJS): ..\rx_clock.h ..\rx_queue.h ..\rx_event.h ..\rx.h
 

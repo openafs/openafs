@@ -79,7 +79,7 @@ void Server_Hosts (LPIDENT lpiServer)
       lpiServer->GetServerName (szServer);
       LPTSTR pszTitle = FormatString (IDS_SVR_HOSTS_TITLE, TEXT("%s"), szServer);
       LPPROPSHEET psh = PropSheet_Create (pszTitle, FALSE);
-      PropSheet_AddTab (psh, IDS_SVR_HOST_TAB, IDD_SVR_HOSTS, (DLGPROC)Server_Hosts_DlgProc, (LONG)lpp, TRUE);
+      PropSheet_AddTab (psh, IDS_SVR_HOST_TAB, IDD_SVR_HOSTS, (DLGPROC)Server_Hosts_DlgProc, (LONG_PTR)lpp, TRUE);
       PropSheet_ShowModeless (psh);
       FreeString (pszTitle);
       }
@@ -325,10 +325,10 @@ BOOL CALLBACK Server_AddHost_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
       return TRUE;
 
    if (msg == WM_INITDIALOG)
-      SetWindowLong (hDlg, DWL_USER, lp);
+      SetWindowLongPtr (hDlg, DWLP_USER, lp);
 
    LPSVR_ADDHOST_PARAMS lpp;
-   if ((lpp = (LPSVR_ADDHOST_PARAMS)GetWindowLong (hDlg, DWL_USER)) != NULL)
+   if ((lpp = (LPSVR_ADDHOST_PARAMS)GetWindowLongPtr (hDlg, DWLP_USER)) != NULL)
       {
       switch (msg)
          {

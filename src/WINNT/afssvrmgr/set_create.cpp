@@ -51,7 +51,7 @@ void Filesets_Create (LPIDENT lpiParent)
 
    // Show the Create dialog.
    //
-   int rc = ModalDialogParam (IDD_SET_CREATE, GetActiveWindow(), (DLGPROC)Filesets_Create_DlgProc, (LPARAM)pscp);
+   INT_PTR rc = ModalDialogParam (IDD_SET_CREATE, GetActiveWindow(), (DLGPROC)Filesets_Create_DlgProc, (LPARAM)pscp);
 
    if (rc != IDOK)
       {
@@ -89,7 +89,7 @@ BOOL CALLBACK Filesets_Create_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp
       switch (msg)
          {
          case WM_INITDIALOG:
-            FastList_SetTextCallback (GetDlgItem (hDlg, IDC_AGG_LIST), GetItemText, (DWORD)&gr.viewAggCreate);
+            FastList_SetTextCallback (GetDlgItem (hDlg, IDC_AGG_LIST), GetItemText, &gr.viewAggCreate);
             Filesets_Create_OnInitDialog (hDlg, pscp);
             break;
 
@@ -208,7 +208,7 @@ BOOL CALLBACK Filesets_Create_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp
 }
 
 
-static LONG procFilesetsCreateList = 0;
+static LONG_PTR procFilesetsCreateList = 0;
 
 LRESULT CALLBACK Filesets_Create_SubclassListProc (HWND hList, UINT msg, WPARAM wp, LPARAM lp)
 {
@@ -223,7 +223,7 @@ LRESULT CALLBACK Filesets_Create_SubclassListProc (HWND hList, UINT msg, WPARAM 
       {
       case WM_DESTROY:
          if (procFilesetsCreateList != 0)
-            SetWindowLong (hList, GWL_WNDPROC, procFilesetsCreateList);
+            SetWindowLongPtr (hList, GWLP_WNDPROC, procFilesetsCreateList);
          break;
 
       case WM_COMMAND: 
@@ -244,8 +244,8 @@ void Filesets_Create_OnInitDialog (HWND hDlg, LPSET_CREATE_PARAMS pscp)
 {
    HWND hList = GetDlgItem (hDlg, IDC_AGG_LIST);
    if (procFilesetsCreateList == 0)
-      procFilesetsCreateList = GetWindowLong (hList, GWL_WNDPROC);
-   SetWindowLong (hList, GWL_WNDPROC, (LONG)Filesets_Create_SubclassListProc);
+      procFilesetsCreateList = GetWindowLongPtr (hList, GWLP_WNDPROC);
+   SetWindowLongPtr (hList, GWLP_WNDPROC, (LONG_PTR)Filesets_Create_SubclassListProc);
 
    if (gr.viewAggCreate.lvsView == 0)  // never initialized this?
       {
@@ -302,7 +302,7 @@ void Filesets_Create_StartDisplay_Aggregates (HWND hDlg, LPIDENT *plpiTarget)
    if (*plpiTarget && ((*plpiTarget)->GetServer() != lpiServerNew))
       *plpiTarget = NULL;
 
-   SetWindowLong (hDlg, DWL_USER, (LONG)lpiServerNew);
+   SetWindowLongPtr (hDlg, DWLP_USER, (LONG_PTR)lpiServerNew);
 
    LPAGG_ENUM_TO_LISTVIEW_PACKET lpp = New (AGG_ENUM_TO_LISTVIEW_PACKET);
    lpp->lpiServer = lpiServerNew;
@@ -344,7 +344,7 @@ void Filesets_Create_OnEndTask_FindQuotaLimits (HWND hDlg, LPTASKPACKET ptp, LPS
    HWND hQuota = GetDlgItem (hDlg, IDC_SET_QUOTA);
    if (!fHasSpinner (hQuota))
       {
-      CreateSpinner (hQuota, 10, FALSE, cMin, cNow, cMax);
+      CreateSpinner (hQuota, 10, FALSE, (DWORD)cMin, (DWORD)cNow, (DWORD)cMax);
       }
    else
       {

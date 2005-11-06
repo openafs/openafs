@@ -97,7 +97,7 @@ BOOL CALLBACK PrefsTab_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
             {
             case IDAPPLY:
                if (!PrefsTab_OnApply (hDlg))
-                  SetWindowLong (hDlg, DWL_MSGRESULT, TRUE);
+                  SetWindowLongPtr (hDlg, DWLP_MSGRESULT, TRUE);
                break;
 
             case IDC_REFRESH:
@@ -195,10 +195,10 @@ BOOL PrefsTab_CommitChanges (BOOL fForce)
    if ((hDlg = PropSheet_FindTabWindow (g.psh, (DLGPROC)PrefsTab_DlgProc)) == NULL)
       return TRUE;
    if (fForce)
-      SetWindowLong (hDlg, DWL_MSGRESULT, FALSE); // Make sure we try to apply
+      SetWindowLongPtr (hDlg, DWLP_MSGRESULT, FALSE); // Make sure we try to apply
    if (PrefsTab_OnApply (hDlg))
       return TRUE;
-   SetWindowLong (hDlg, DWL_MSGRESULT, TRUE);
+   SetWindowLongPtr (hDlg, DWLP_MSGRESULT, TRUE);
    return FALSE;
 }
 
@@ -206,7 +206,7 @@ BOOL PrefsTab_CommitChanges (BOOL fForce)
 BOOL PrefsTab_OnApply (HWND hDlg)
 {
    // Don't try to do anything if we've already failed the apply
-   if (GetWindowLong (hDlg, DWL_MSGRESULT))
+   if (GetWindowLongPtr (hDlg, DWLP_MSGRESULT))
       return FALSE;
 
    if (g.Configuration.pFServers && g.Configuration.fChangedPrefs)
@@ -827,7 +827,7 @@ BOOL CALLBACK PrefsEdit_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
    switch (msg)
       {
       case WM_INITDIALOG:
-         SetWindowLong (hDlg, DWL_USER, lp);
+         SetWindowLongPtr (hDlg, DWLP_USER, lp);
          PrefsEdit_OnInitDialog (hDlg);
          PrefsEdit_Enable (hDlg);
          break;
@@ -864,7 +864,7 @@ BOOL CALLBACK PrefsEdit_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 
 void PrefsEdit_OnInitDialog (HWND hDlg)
 {
-   PSERVERPREF pPref = (PSERVERPREF)GetWindowLong (hDlg, DWL_USER);
+   PSERVERPREF pPref = (PSERVERPREF)GetWindowLongPtr (hDlg, DWLP_USER);
 
    if (pPref->ipServer)
       EnableWindow (GetDlgItem (hDlg, IDC_SERVER), FALSE);
@@ -884,7 +884,7 @@ void PrefsEdit_OnInitDialog (HWND hDlg)
 
 void PrefsEdit_OnOK (HWND hDlg)
 {
-   PSERVERPREF pPref = (PSERVERPREF)GetWindowLong (hDlg, DWL_USER);
+   PSERVERPREF pPref = (PSERVERPREF)GetWindowLongPtr (hDlg, DWLP_USER);
    pPref->iRank = SP_GetPos (GetDlgItem (hDlg, IDC_RANK));
 
    if (IsWindowEnabled (GetDlgItem (hDlg, IDC_SERVER)))

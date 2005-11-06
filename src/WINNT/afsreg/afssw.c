@@ -249,7 +249,7 @@ StringDataWrite(const char *keyName, const char *valueName, const char *data)
     if (status == ERROR_SUCCESS) {
 	status = RegSetValueEx(key,
 			       valueName,
-			       0, REG_SZ, data, strlen(data) + 1);
+			       0, REG_SZ, data, (DWORD)strlen(data) + 1);
 
 	(void)RegCloseKey(key);
     }

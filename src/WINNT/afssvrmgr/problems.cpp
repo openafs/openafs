@@ -43,9 +43,9 @@ BOOL CALLBACK Problems_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
       return TRUE;
 
    if (msg == WM_INITDIALOG)
-      SetWindowLong (hDlg, DWL_USER, ((LPPROPSHEETPAGE)lp)->lParam);
+      SetWindowLongPtr (hDlg, DWLP_USER, ((LPPROPSHEETPAGE)lp)->lParam);
 
-   LPIDENT lpi = (LPIDENT)GetWindowLong (hDlg, DWL_USER);
+   LPIDENT lpi = (LPIDENT)GetWindowLongPtr (hDlg, DWLP_USER);
 
    switch (msg)
       {
@@ -77,7 +77,7 @@ BOOL CALLBACK Problems_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
          if ((HWND)lp == GetDlgItem (hDlg, IDC_PROBLEM_TEXT))
             {
             SetBkColor ((HDC)wp, GetSysColor (COLOR_WINDOW));
-            return (BOOL)CreateSolidBrush (GetSysColor (COLOR_WINDOW));
+            return CreateSolidBrush (GetSysColor (COLOR_WINDOW))?TRUE:FALSE;
             }
          break;
 
@@ -230,7 +230,7 @@ void Problems_OnRefresh (HWND hDlg, LPIDENT lpi)
          si.cbSize = sizeof(si);
          si.fMask = SIF_RANGE | SIF_POS | SIF_PAGE;
          si.nMin = 0;
-         si.nMax = nAlerts-1;
+         si.nMax = (int)(nAlerts-1);
          si.nPage = 1;
          si.nPos = 0;
          si.nTrackPos = 0;

@@ -71,7 +71,7 @@ BOOL CALLBACK Services_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
          ResizeWindow (hDlg, awdServices, rwaMoveToHere, &rTab);
 
          FL_RestoreView (GetDlgItem (hDlg, IDC_SVC_LIST), &gr.viewSvc);
-         FastList_SetTextCallback (GetDlgItem (hDlg, IDC_SVC_LIST), GetItemText, (DWORD)&gr.viewSvc);
+         FastList_SetTextCallback (GetDlgItem (hDlg, IDC_SVC_LIST), GetItemText, &gr.viewSvc);
 
          Services_SubclassList (hDlg);
          Services_OnSelect (hDlg);
@@ -241,7 +241,7 @@ void Services_OnNotifyFromDispatch (LPNOTIFYSTRUCT lpns)
 }
 
 
-static LONG procServicesList = 0;
+static LONG_PTR procServicesList = 0;
 
 LRESULT CALLBACK Services_SubclassListProc (HWND hList, UINT msg, WPARAM wp, LPARAM lp)
 {
@@ -250,13 +250,13 @@ LRESULT CALLBACK Services_SubclassListProc (HWND hList, UINT msg, WPARAM wp, LPA
    if (procServicesList == 0)
       rc = DefWindowProc (hList, msg, wp, lp);
    else
-      rc = CallWindowProc ((WNDPROC)procServicesList, hList, msg, wp, lp);
+      rc = (LRESULT) CallWindowProc ((WNDPROC)procServicesList, hList, msg, wp, lp);
 
    switch (msg)
       {
       case WM_DESTROY:
          if (procServicesList != 0)
-            SetWindowLong (hList, GWL_WNDPROC, procServicesList);
+            SetWindowLongPtr (hList, GWLP_WNDPROC, procServicesList);
          break;
 
       case WM_COMMAND:
@@ -274,8 +274,8 @@ LRESULT CALLBACK Services_SubclassListProc (HWND hList, UINT msg, WPARAM wp, LPA
 void Services_SubclassList (HWND hDlg)
 {
    HWND hList = GetDlgItem (hDlg, IDC_SVC_LIST);
-   procServicesList = GetWindowLong (hList, GWL_WNDPROC);
-   SetWindowLong (hList, GWL_WNDPROC, (LONG)Services_SubclassListProc);
+   procServicesList = GetWindowLongPtr (hList, GWLP_WNDPROC);
+   SetWindowLongPtr (hList, GWLP_WNDPROC, (LONG_PTR)Services_SubclassListProc);
 }
 
 

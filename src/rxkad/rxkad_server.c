@@ -94,7 +94,7 @@ init_random_int32(void)
 
     gettimeofday(&key, NULL);
     LOCK_RM;
-    fc_keysched(&key, random_int32_schedule);
+    fc_keysched((struct ktc_encryptionKey*)&key, random_int32_schedule);
     UNLOCK_RM;
 }
 

@@ -90,6 +90,7 @@ VLSERVER_EXECLIBS = \
 	
 $(VLSERVER): $(VLSERVER_EXEOBJS) $(LIBFILE) $(VLSERVER_EXECLIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
+        $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
 
 ############################################################################
@@ -127,6 +128,7 @@ VLDB_CHECK_LIBS =\
 
 $(OUT)\vldb_check.exe: $(OUT)\vldb_check.obj $(VLDB_CHECK_LIBS)
 	$(EXECONLINK)
+        $(_VC_MANIFEST_EMBED_EXE)
 
 ############################################################################
 # build local vlclient
@@ -136,6 +138,7 @@ VLCLIENT_LIBS = \
 
 $(OUT)\vlclient.exe: $(OUT)\vlclient.obj  $(LIBFILE) $(VLSERVER_EXECLIBS) $(VLCLIENT_LIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
+        $(_VC_MANIFEST_EMBED_EXE)
 
 
 ############################################################################

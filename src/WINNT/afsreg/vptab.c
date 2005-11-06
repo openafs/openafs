@@ -245,7 +245,7 @@ vpt_AddEntry(const struct vptab *vptabp)
 	if (status == ERROR_SUCCESS) {
 	    /* write partition attributes */
 	    status = RegSetValueEx(vpKey, AFSREG_SVR_SVC_AFSTAB_DEVNAME_VALUE,
-				   0, REG_SZ, vpDev, strlen(vpDev) + 1);
+				   0, REG_SZ, vpDev, (DWORD)strlen(vpDev) + 1);
 
 	    RegCloseKey(vpKey);
 	}

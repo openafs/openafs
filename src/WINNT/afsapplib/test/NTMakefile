@@ -38,6 +38,7 @@ EXELIBS = \
 
 $(EXEFILE) : $(EXEOBJS) $(EXELIBS)
 	$(EXEGUILINK) comctl32.lib shell32.lib
+        $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
 
 test : $(EXEFILE)

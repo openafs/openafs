@@ -60,10 +60,10 @@ BOOL CALLBACK BrowseSet_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
       return TRUE;
 
    if (msg == WM_INITDIALOG)
-      SetWindowLong (hDlg, DWL_USER, lp);
+      SetWindowLongPtr (hDlg, DWLP_USER, lp);
 
    LPBROWSESETDLG_PARAMS lpp;
-   if ((lpp = (LPBROWSESETDLG_PARAMS)GetWindowLong (hDlg, DWL_USER)) != NULL)
+   if ((lpp = (LPBROWSESETDLG_PARAMS)GetWindowLongPtr (hDlg, DWLP_USER)) != NULL)
       {
       switch (msg)
          {

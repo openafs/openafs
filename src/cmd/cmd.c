@@ -56,8 +56,8 @@ SubString(register char *amain, register char *asub)
 {
     int mlen, slen;
     register int i, j;
-    mlen = strlen(amain);
-    slen = strlen(asub);
+    mlen = (int) strlen(amain);
+    slen = (int) strlen(asub);
     j = mlen - slen;
     if (j < 0)
 	return 0;		/* not a substring */

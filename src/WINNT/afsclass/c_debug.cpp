@@ -121,9 +121,9 @@ Debugstr & Debugstr::operator<< (void *addr)
 {
    char  szTemp[40];
    if (HIWORD(addr) == 0x0000)
-      wsprintf (szTemp, "0x%04X", (ushort)LOWORD(addr));
+      wsprintf (szTemp, "0x%04X", (ushort)LOWORD(PtrToLong(addr)));
    else
-      wsprintf (szTemp, "0x%08lX", (LONG)addr);
+      wsprintf (szTemp, "0x%08lX", PtrToLong(addr));
    return (*this << szTemp);
 }
 
@@ -146,7 +146,7 @@ Debugstr & Debugstr::operator<< (char ch)
 Debugstr & Debugstr::operator<< (size_t l)
 {
    char  szTemp[40];
-   _ltoa (l, szTemp, 10);
+   _ltoa ((LONG)l, szTemp, 10);
    return (*this << szTemp);
 }
 
@@ -463,7 +463,7 @@ void Debugstr::OutString (char *str, BOOL fRecord)
             gy = minY;
             gcY = 0;
 
-            GetTextExtentPoint (hdc, gdata[gcY], strlen(gdata[gcY]), &siz);
+            GetTextExtentPoint (hdc, gdata[gcY], (int)strlen(gdata[gcY]), &siz);
 
             r2.top = gy;
             r2.bottom = gy + tm.tmHeight;
@@ -483,7 +483,7 @@ void Debugstr::OutString (char *str, BOOL fRecord)
 
       if (fRecord)
          {
-         GetTextExtentPoint (hdc, gdata[gcY+1], strlen(gdata[gcY+1]), &siz);
+         GetTextExtentPoint (hdc, gdata[gcY+1], (int)strlen(gdata[gcY+1]), &siz);
 
          r2.top = gy +tm.tmHeight;
          r2.bottom = gy +tm.tmHeight +tm.tmHeight;
@@ -507,15 +507,15 @@ void Debugstr::Output (HDC hdc, char *psz, BOOL fRec)
 {
    SIZE   siz;
 
-   TextOut (hdc, gx, gy, psz, strlen(psz));
+   TextOut (hdc, gx, gy, psz, (int)strlen(psz));
 
    if (fRec)
       strcat (gdata[gcY], psz);
 
-   GetTextExtentPoint (hdc, psz, strlen(psz), &siz);
+   GetTextExtentPoint (hdc, psz, (int)strlen(psz), &siz);
 
    gx += (ushort)siz.cx;
-   gcX += strlen(psz);
+   gcX += (int)strlen(psz);
 }
 
 
@@ -530,7 +530,7 @@ void Debugstr::Output (HDC hdc, char *psz, BOOL fRec)
  *
  */
 
-LONG APIENTRY Debugstr::DebugWndProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+LRESULT APIENTRY Debugstr::DebugWndProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
    ushort   x, y, cX, cY;
 

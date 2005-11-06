@@ -531,19 +531,19 @@ long smb_AuthenticateUserLM(smb_vc_t *vcp, char * accountName, char * primaryDom
 	
     lmAuth.lmlogon.LogonDomainName.Buffer = lmAuth.primaryDomainW;
     mbstowcs(lmAuth.primaryDomainW, primaryDomain, P_LEN);
-    lmAuth.lmlogon.LogonDomainName.Length = wcslen(lmAuth.primaryDomainW) * sizeof(WCHAR);
+    lmAuth.lmlogon.LogonDomainName.Length = (USHORT)(wcslen(lmAuth.primaryDomainW) * sizeof(WCHAR));
     lmAuth.lmlogon.LogonDomainName.MaximumLength = P_LEN * sizeof(WCHAR);
 
     lmAuth.lmlogon.UserName.Buffer = lmAuth.accountNameW;
     mbstowcs(lmAuth.accountNameW, accountName, P_LEN);
-    lmAuth.lmlogon.UserName.Length = wcslen(lmAuth.accountNameW) * sizeof(WCHAR);
+    lmAuth.lmlogon.UserName.Length = (USHORT)(wcslen(lmAuth.accountNameW) * sizeof(WCHAR));
     lmAuth.lmlogon.UserName.MaximumLength = P_LEN * sizeof(WCHAR);
 
     lmAuth.lmlogon.Workstation.Buffer = lmAuth.workstationW;
     lmAuth.lmlogon.Workstation.MaximumLength = (MAX_COMPUTERNAME_LENGTH + 1) * sizeof(WCHAR);
     size = MAX_COMPUTERNAME_LENGTH + 1;
     GetComputerNameW(lmAuth.workstationW, &size);
-    lmAuth.lmlogon.Workstation.Length = wcslen(lmAuth.workstationW) * sizeof(WCHAR);
+    lmAuth.lmlogon.Workstation.Length = (USHORT)(wcslen(lmAuth.workstationW) * sizeof(WCHAR));
 
     memcpy(lmAuth.lmlogon.ChallengeToClient, vcp->encKey, MSV1_0_CHALLENGE_LENGTH);
 
@@ -563,8 +563,8 @@ long smb_AuthenticateUserLM(smb_vc_t *vcp, char * accountName, char * primaryDom
     lmAuth.tgroups.Groups[0].Sid = NULL;
     lmAuth.tgroups.Groups[0].Attributes = 0;
 
-    lmAuth.tsource.SourceIdentifier.HighPart = 0;
-    lmAuth.tsource.SourceIdentifier.LowPart = (DWORD) vcp;
+    lmAuth.tsource.SourceIdentifier.HighPart = (DWORD)((LONG_PTR)vcp << 32);
+    lmAuth.tsource.SourceIdentifier.LowPart = (DWORD)((LONG_PTR)vcp & _UI32_MAX);
     strcpy(lmAuth.tsource.SourceName,"OpenAFS"); /* 8 char limit */
 
     nts = LsaLogonUser( smb_lsaHandle,
@@ -869,8 +869,8 @@ long smb_ReceiveV3SessionSetupX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
         uidp = smb_FindUID(vcp, newUid, SMB_FLAG_CREATE);
         lock_ObtainMutex(&uidp->mx);
         uidp->unp = unp;
-        osi_LogEvent("AFS smb_ReceiveV3SessionSetupX",NULL,"MakeNewUser:VCP[%x],Lana[%d],lsn[%d],userid[%d],TicketKTCName[%s]",(int)vcp,vcp->lana,vcp->lsn,newUid,osi_LogSaveString(smb_logp, usern));
-        osi_Log4(smb_logp,"smb_ReceiveV3SessionSetupX MakeNewUser:VCP[%x],Lana[%d],lsn[%d],userid[%d]",vcp,vcp->lana,vcp->lsn,newUid);
+        osi_LogEvent("AFS smb_ReceiveV3SessionSetupX",NULL,"MakeNewUser:VCP[%p],Lana[%d],lsn[%d],userid[%d],TicketKTCName[%s]",vcp,vcp->lana,vcp->lsn,newUid,osi_LogSaveString(smb_logp, usern));
+        osi_Log4(smb_logp,"smb_ReceiveV3SessionSetupX MakeNewUser:VCP[%p],Lana[%d],lsn[%d],userid[%d]",vcp,vcp->lana,vcp->lsn,newUid);
         lock_ReleaseMutex(&uidp->mx);
         smb_ReleaseUID(uidp);
     }
@@ -1377,15 +1377,15 @@ long smb_ReceiveV3Trans(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         rapOp = asp->parmsp[0];
 
         if ( rapOp >= 0 && rapOp < SMB_RAP_NOPCODES && smb_rapDispatchTable[rapOp].procp) {
-            osi_LogEvent("AFS-Dispatch-RAP[%s]",myCrt_RapDispatch(rapOp),"vcp[%x] lana[%d] lsn[%d]",(int)vcp,vcp->lana,vcp->lsn);
-            osi_Log4(smb_logp,"AFS Server - Dispatch-RAP %s vcp[%x] lana[%d] lsn[%d]",myCrt_RapDispatch(rapOp),vcp,vcp->lana,vcp->lsn);
+            osi_LogEvent("AFS-Dispatch-RAP[%s]",myCrt_RapDispatch(rapOp),"vcp[%p] lana[%d] lsn[%d]",vcp,vcp->lana,vcp->lsn);
+            osi_Log4(smb_logp,"AFS Server - Dispatch-RAP %s vcp[%p] lana[%d] lsn[%d]",myCrt_RapDispatch(rapOp),vcp,vcp->lana,vcp->lsn);
             code = (*smb_rapDispatchTable[rapOp].procp)(vcp, asp, outp);
             osi_LogEvent("AFS-Dispatch-RAP return",myCrt_RapDispatch(rapOp),"Code 0x%x",code);
             osi_Log4(smb_logp,"AFS Server - Dispatch-RAP return  code 0x%x vcp[%x] lana[%d] lsn[%d]",code,vcp,vcp->lana,vcp->lsn);
         }
         else {
-            osi_LogEvent("AFS-Dispatch-RAP [invalid]", NULL, "op[%x] vcp[%x] lana[%d] lsn[%d]", rapOp, vcp, vcp->lana, vcp->lsn);
-            osi_Log4(smb_logp,"AFS Server - Dispatch-RAP [INVALID] op[%x] vcp[%x] lana[%d] lsn[%d]", rapOp, vcp, vcp->lana, vcp->lsn);
+            osi_LogEvent("AFS-Dispatch-RAP [invalid]", NULL, "op[%x] vcp[%p] lana[%d] lsn[%d]", rapOp, vcp, vcp->lana, vcp->lsn);
+            osi_Log4(smb_logp,"AFS Server - Dispatch-RAP [INVALID] op[%x] vcp[%p] lana[%d] lsn[%d]", rapOp, vcp, vcp->lana, vcp->lsn);
             code = CM_ERROR_BADOP;
         }
 
@@ -1551,7 +1551,7 @@ long smb_ReceiveRAPNetShareEnum(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_
 
     cm_ReleaseUser(userp);
 
-    nShares = rootShares.cShare + nRegShares + allSubmount;
+    nShares = (USHORT)(rootShares.cShare + nRegShares + allSubmount);
 
 #define REMARK_LEN 1
     outParmsTotal = 8; /* 4 dwords */
@@ -1574,7 +1574,7 @@ long smb_ReceiveRAPNetShareEnum(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_
 
     if (allSubmount) {
         strcpy( shares[cshare].shi1_netname, "all" );
-        shares[cshare].shi1_remark = cstrp - outp->datap;
+        shares[cshare].shi1_remark = (DWORD)(cstrp - outp->datap);
         /* type and pad are zero already */
         cshare++;
         cstrp+=REMARK_LEN;
@@ -1587,7 +1587,7 @@ long smb_ReceiveRAPNetShareEnum(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_
             if (rv == ERROR_SUCCESS && strlen(thisShare) && (!allSubmount || stricmp(thisShare,"all"))) {
                 strncpy(shares[cshare].shi1_netname, thisShare, sizeof(shares->shi1_netname)-1);
                 shares[cshare].shi1_netname[sizeof(shares->shi1_netname)-1] = 0; /* unfortunate truncation */
-                shares[cshare].shi1_remark = cstrp - outp->datap;
+                shares[cshare].shi1_remark = (DWORD)(cstrp - outp->datap);
                 cshare++;
                 cstrp+=REMARK_LEN;
             }
@@ -1612,7 +1612,7 @@ long smb_ReceiveRAPNetShareEnum(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_
         }
 
         strcpy(shares[cshare].shi1_netname, rootShares.shares[i].shi0_netname);
-        shares[cshare].shi1_remark = cstrp - outp->datap;
+        shares[cshare].shi1_remark = (DWORD)(cstrp - outp->datap);
         cshare++;
         cstrp+=REMARK_LEN;
     }
@@ -1622,7 +1622,7 @@ long smb_ReceiveRAPNetShareEnum(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_
     outp->parmsp[2] = cshare;
     outp->parmsp[3] = nShares;
 
-    outp->totalData = cstrp - outp->datap;
+    outp->totalData = (int)(cstrp - outp->datap);
     outp->totalParms = outParmsTotal;
 
     smb_SendTran2Packet(vcp, outp, op);
@@ -1717,16 +1717,16 @@ long smb_ReceiveRAPNetShareGetInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_pack
         smb_rap_share_info_1_t * info = (smb_rap_share_info_1_t *) outp->datap;
         strncpy(info->shi1_netname, shareName, sizeof(info->shi1_netname)-1);
         info->shi1_netname[sizeof(info->shi1_netname)-1] = 0;
-        info->shi1_remark = ((unsigned char *) (info + 1)) - outp->datap;
+        info->shi1_remark = (DWORD)(((unsigned char *) (info + 1)) - outp->datap);
         /* type and pad are already zero */
     } else { /* infoLevel==2 */
         smb_rap_share_info_2_t * info = (smb_rap_share_info_2_t *) outp->datap;
         strncpy(info->shi2_netname, shareName, sizeof(info->shi2_netname)-1);
         info->shi2_netname[sizeof(info->shi2_netname)-1] = 0;
-        info->shi2_remark = ((unsigned char *) (info + 1)) - outp->datap;
+        info->shi2_remark = (DWORD)(((unsigned char *) (info + 1)) - outp->datap);
         info->shi2_permissions = ACCESS_ALL;
         info->shi2_max_uses = (unsigned short) -1;
-        info->shi2_path = 1 + (((unsigned char *) (info + 1)) - outp->datap);
+        info->shi2_path = (DWORD)(1 + (((unsigned char *) (info + 1)) - outp->datap));
     }
 
     outp->totalData = totalData;
@@ -1906,7 +1906,7 @@ long smb_ReceiveRAPNetServerGetInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_pac
         cstrp += smb_ServerCommentLen;
     }
 
-    totalData = cstrp - outp->datap;
+    totalData = (DWORD)(cstrp - outp->datap);
     outp->totalData = min(bufsize,totalData); /* actual data size */
     outp->parmsp[0] = (outp->totalData == totalData)? 0 : ERROR_MORE_DATA;
     outp->parmsp[2] = totalData;
@@ -2017,13 +2017,13 @@ long smb_ReceiveV3Tran2A(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
         /* now dispatch it */
         if ( asp->opcode >= 0 && asp->opcode < 20 && smb_tran2DispatchTable[asp->opcode].procp) {
-            osi_LogEvent("AFS-Dispatch-2[%s]",myCrt_2Dispatch(asp->opcode),"vcp[%x] lana[%d] lsn[%d]",(int)vcp,vcp->lana,vcp->lsn);
-            osi_Log4(smb_logp,"AFS Server - Dispatch-2 %s vcp[%x] lana[%d] lsn[%d]",myCrt_2Dispatch(asp->opcode),vcp,vcp->lana,vcp->lsn);
+            osi_LogEvent("AFS-Dispatch-2[%s]",myCrt_2Dispatch(asp->opcode),"vcp[%p] lana[%d] lsn[%d]",vcp,vcp->lana,vcp->lsn);
+            osi_Log4(smb_logp,"AFS Server - Dispatch-2 %s vcp[%p] lana[%d] lsn[%d]",myCrt_2Dispatch(asp->opcode),vcp,vcp->lana,vcp->lsn);
             code = (*smb_tran2DispatchTable[asp->opcode].procp)(vcp, asp, outp);
         }
         else {
-            osi_LogEvent("AFS-Dispatch-2 [invalid]", NULL, "op[%x] vcp[%x] lana[%d] lsn[%d]", asp->opcode, vcp, vcp->lana, vcp->lsn);
-            osi_Log4(smb_logp,"AFS Server - Dispatch-2 [INVALID] op[%x] vcp[%x] lana[%d] lsn[%d]", asp->opcode, vcp, vcp->lana, vcp->lsn);
+            osi_LogEvent("AFS-Dispatch-2 [invalid]", NULL, "op[%x] vcp[%p] lana[%d] lsn[%d]", asp->opcode, vcp, vcp->lana, vcp->lsn);
+            osi_Log4(smb_logp,"AFS Server - Dispatch-2 [INVALID] op[%x] vcp[%p] lana[%d] lsn[%d]", asp->opcode, vcp, vcp->lana, vcp->lsn);
             code = CM_ERROR_BADOP;
         }
 
@@ -2949,7 +2949,7 @@ long smb_ReceiveTran2QFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
             name = fidp->NTopen_wholepathp;
         else
             name = "\\";	/* probably can't happen */
-        len = strlen(name);
+        len = (unsigned long)strlen(name);
         outp->totalData = (len*2) + 4;	/* this is actually what we want to return */
         *((u_long *)op) = len * 2; op += 4;
         mbstowcs((unsigned short *)op, name, len); op += (len * 2);
@@ -4301,7 +4301,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
                     strcpy(op + 70, shortName);
                     if (smb_StoreAnsiFilenames)
                         CharToOem(op + 70, op + 70);
-                    *(op + 68) = shortNameEnd - shortName;
+                    *(op + 68) = (char)(shortNameEnd - shortName);
                 }
             }
 
@@ -4971,8 +4971,8 @@ long smb_ReceiveV3LockingX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
             osi_QAdd((osi_queue_t **) &wlRequest->locks,
                      &wLock->q);
 
-            osi_Log1(smb_logp, "smb_ReceiveV3Locking WaitingLock created 0x%x",
-                     (long) wLock);
+            osi_Log1(smb_logp, "smb_ReceiveV3Locking WaitingLock created 0x%p",
+                     wLock);
 
             code = 0;
             continue;
@@ -5032,7 +5032,7 @@ long smb_ReceiveV3LockingX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
             lock_ObtainWrite(&smb_globalLock);
             osi_QAdd((osi_queue_t **)&smb_allWaitingLocks,
                      &wlRequest->q);
-            osi_Wakeup((long) &smb_allWaitingLocks);
+            osi_Wakeup((LONG_PTR)&smb_allWaitingLocks);
             lock_ReleaseWrite(&smb_globalLock);
 
             /* don't send reply immediately */
@@ -5826,10 +5826,10 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
             tp = strchr(pp, '\\');
             if (!tp) {
                 strcpy(cp,pp);
-                clen = strlen(cp);
+                clen = (int)strlen(cp);
                 isLast = 1; /* indicate last component.  the supplied path never ends in a slash */
             } else {
-                clen = tp - pp;
+                clen = (int)(tp - pp);
                 strncpy(cp,pp,clen);
                 *(cp + clen) = 0;
                 tp++;
@@ -6944,11 +6944,11 @@ void smb_NotifyChange(DWORD action, DWORD notifyFilter,
         if (filename == NULL)
             parmCount = 0;
         else {
-            nameLen = strlen(filename);
+            nameLen = (ULONG)strlen(filename);
             parmCount = 3*4 + nameLen*2;
             parmCount = (parmCount + 3) & ~3;	/* pad to 4 */
             if (twoEntries) {
-                otherNameLen = strlen(otherFilename);
+                otherNameLen = (ULONG)strlen(otherFilename);
                 oldParmCount = parmCount;
                 parmCount += 3*4 + otherNameLen*2;
                 parmCount = (parmCount + 3) & ~3; /* pad to 4 */

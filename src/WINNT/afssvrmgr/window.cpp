@@ -158,7 +158,7 @@ BOOL CALLBACK Main_DialogProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
          // and context-menu requests
          //
          Main_SubclassServers (hDlg);
-         FastList_SetTextCallback (GetDlgItem (hDlg, IDC_SERVERS), GetItemText, (DWORD)((gr.fPreview && !gr.fVert) ? &gr.diHorz.viewSvr : &gr.diVert.viewSvr));
+         FastList_SetTextCallback (GetDlgItem (hDlg, IDC_SERVERS), GetItemText, ((gr.fPreview && !gr.fVert) ? &gr.diHorz.viewSvr : &gr.diVert.viewSvr));
 
          // Create the preview pane and rearrange the children of this dialog.
          // This also fixes the Servers display--was it in Large Icons view?
@@ -254,7 +254,7 @@ BOOL CALLBACK Main_DialogProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
          break;
 
       case WM_REFRESHED_CREDENTIALS:
-         g.hCreds = (PVOID)lp;
+         g.hCreds = (UINT_PTR)lp;
          UpdateDisplay_Cell(FALSE);
          StartTask (taskREFRESH_CREDS, NULL, g.lpiCell);
          break;
@@ -527,7 +527,7 @@ DWORD WINAPI Main_OnOpenServers_ThreadProc (PVOID lp)
 
 DWORD WINAPI Main_Redraw_ThreadProc (PVOID lp)
 {
-   BOOL fInvalidate = (BOOL)lp;
+   BOOL fInvalidate = (BOOL)(UINT_PTR)lp;
    AfsClass_Enter();
 
    if (g.lpiCell == NULL)
@@ -694,7 +694,7 @@ void Main_OnServerView (int lvsNew)
       FL_RestoreView (hServers, &gr.diVert.viewSvr);
 
    Main_SetServerViewMenus();
-   FastList_SetTextCallback (GetDlgItem (g.hMain, IDC_SERVERS), GetItemText, (DWORD)((gr.fPreview && !gr.fVert) ? &gr.diHorz.viewSvr : &gr.diVert.viewSvr));
+   FastList_SetTextCallback (GetDlgItem (g.hMain, IDC_SERVERS), GetItemText, ((gr.fPreview && !gr.fVert) ? &gr.diHorz.viewSvr : &gr.diVert.viewSvr));
    UpdateDisplay_Servers (FALSE, NULL, 0);
 }
 
@@ -841,7 +841,7 @@ void Main_RearrangeChildren (BOOL fPreviewNew, BOOL fVertNew)
 
    // Now move the children to their new places!
    //
-   size_t nWindows = 1;
+   int nWindows = 1;
    if (GetDlgItem (g.hMain, IDC_COVERDLG))
       ++nWindows;
    if (GetDlgItem (g.hMain, IDC_TABS))
@@ -874,7 +874,7 @@ void Main_RearrangeChildren (BOOL fPreviewNew, BOOL fVertNew)
 
 
 
-static LONG procServers = 0;
+static LONG_PTR procServers = 0;
 
 LRESULT CALLBACK Main_SubclassServersProc (HWND hServers, UINT msg, WPARAM wp, LPARAM lp)
 {
@@ -883,13 +883,13 @@ LRESULT CALLBACK Main_SubclassServersProc (HWND hServers, UINT msg, WPARAM wp, L
    if (procServers == 0)
       rc = DefWindowProc (hServers, msg, wp, lp);
    else
-      rc = CallWindowProc ((WNDPROC)procServers, hServers, msg, wp, lp);
+      rc = (LRESULT) CallWindowProc ((WNDPROC)procServers, hServers, msg, wp, lp);
 
    switch (msg)
       {
       case WM_DESTROY:
          if (procServers != 0)
-            SetWindowLong (hServers, GWL_WNDPROC, procServers);
+            SetWindowLongPtr (hServers, GWLP_WNDPROC, procServers);
          break;
 
       case WM_COMMAND:
@@ -928,8 +928,8 @@ LRESULT CALLBACK Main_SubclassServersProc (HWND hServers, UINT msg, WPARAM wp, L
 void Main_SubclassServers (HWND hDlg)
 {
    HWND hServers = GetDlgItem (hDlg, IDC_SERVERS);
-   procServers = GetWindowLong (hServers, GWL_WNDPROC);
-   SetWindowLong (hServers, GWL_WNDPROC, (LONG)Main_SubclassServersProc);
+   procServers = GetWindowLongPtr (hServers, GWLP_WNDPROC);
+   SetWindowLongPtr (hServers, GWLP_WNDPROC, (LONG_PTR)Main_SubclassServersProc);
 }
 
 

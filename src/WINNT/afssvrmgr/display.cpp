@@ -74,7 +74,7 @@ BOOL DisplayQueueFilter (size_t idqVictim, size_t idqKiller);
  *
  */
 
-BOOL CALLBACK GetItemText (HWND hList, LPFLN_GETITEMTEXT_PARAMS pfln, DWORD dwCookie)
+BOOL CALLBACK GetItemText (HWND hList, LPFLN_GETITEMTEXT_PARAMS pfln, UINT_PTR dwCookie)
 { 
    LPVIEWINFO lpvi = (LPVIEWINFO)dwCookie;
    LPIDENT lpi = (LPIDENT)(pfln->item.lParam);
@@ -697,7 +697,7 @@ BOOL HandleColumnNotify (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp, LPVIEWINFO p
 {
    if (msg == WM_NOTIFY)
       {
-      HWND hList = GetDlgItem (hDlg, ((LPNMHDR)lp)->idFrom);
+      HWND hList = GetDlgItem (hDlg, (int)((LPNMHDR)lp)->idFrom);
       if (fIsFastList (hList))
          {
          switch (((LPNMHDR)lp)->code)

@@ -14,8 +14,8 @@
 #define CM_CONN_CONNDEADTIME		60
 #define CM_CONN_HARDDEADTIME        120
 
-extern long ConnDeadtimeout;
-extern long HardDeadtimeout;
+extern unsigned short ConnDeadtimeout;
+extern unsigned short HardDeadtimeout;
 
 typedef struct cm_conn {
 	struct cm_conn *nextp;		/* locked by cm_connLock */

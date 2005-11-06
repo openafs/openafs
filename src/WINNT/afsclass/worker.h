@@ -342,7 +342,7 @@ typedef union // WORKERPACKET
          PVOID hServer;	// [in] token from VosServerOpen()
          int idPartition;	// [in] partition ID
          LPTSTR pszVolume;	// [in] volume name
-         ULONG ckQuota;	// [in] initial quota
+         size_t ckQuota;	// [in] initial quota
          VOLUMEID idVolume;	// [out] volume ID
       } wpVosVolumeCreate;
 
@@ -454,7 +454,7 @@ typedef union // WORKERPACKET
          PVOID hServer;	// [in] token from VosServerOpen()
          int idPartition;	// [in] partition ID
          VOLUMEID idVolume;	// [in] id of read/write volume
-         ULONG ckQuota;	// [in] new quota
+         size_t ckQuota;	// [in] new quota
       } wpVosVolumeQuotaChange;
 
       struct {

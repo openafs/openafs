@@ -23,10 +23,10 @@
 #include <windns.h>
 #define DNSAPI_ENV
 #endif
+#include <errno.h>
 
 /*extern void afsi_log(char *pattern, ...);*/
 
-extern int errno;
 static char dns_addr[30];
 #ifdef DJGPP
 extern char cm_confDir[];

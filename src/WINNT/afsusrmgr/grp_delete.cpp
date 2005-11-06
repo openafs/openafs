@@ -52,7 +52,7 @@ BOOL CALLBACK Group_Delete_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
    switch (msg)
       {
       case WM_INITDIALOG:
-         SetWindowLong (hDlg, DWL_USER, lp);
+         SetWindowLongPtr (hDlg, DWLP_USER, lp);
          Group_Delete_OnInitDialog (hDlg);
          break;
 
@@ -81,7 +81,7 @@ BOOL CALLBACK Group_Delete_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 
 void Group_Delete_OnInitDialog (HWND hDlg)
 {
-   LPASIDLIST pGroupList = (LPASIDLIST)GetWindowLong (hDlg, DWL_USER);
+   LPASIDLIST pGroupList = (LPASIDLIST)GetWindowLongPtr (hDlg, DWLP_USER);
 
    // Fix the title of the dialog
    //
@@ -113,14 +113,14 @@ void Group_Delete_OnInitDialog (HWND hDlg)
 
 void Group_Delete_OnDestroy (HWND hDlg)
 {
-   LPASIDLIST pGroupList = (LPASIDLIST)GetWindowLong (hDlg, DWL_USER);
+   LPASIDLIST pGroupList = (LPASIDLIST)GetWindowLongPtr (hDlg, DWLP_USER);
    asc_AsidListFree (&pGroupList);
 }
 
 
 void Group_Delete_OnOK (HWND hDlg)
 {
-   LPASIDLIST pGroupList = (LPASIDLIST)GetWindowLong (hDlg, DWL_USER);
+   LPASIDLIST pGroupList = (LPASIDLIST)GetWindowLongPtr (hDlg, DWLP_USER);
 
    // Start a background task to do all the work.
    //

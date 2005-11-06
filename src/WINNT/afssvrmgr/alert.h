@@ -82,8 +82,8 @@ typedef struct
          } aiBADCREDS;
 
          struct {
-            ULONG ckAllocated;
-            ULONG ckCapacity;
+            size_t ckAllocated;
+            size_t ckCapacity;
          } aiOVERALLOC;
 
          struct {

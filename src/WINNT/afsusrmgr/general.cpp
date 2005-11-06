@@ -215,7 +215,7 @@ int CALLBACK General_ListSortFunction (HWND hList, HLISTITEM hItem1, LPARAM lpIt
    // we'll only gather this information when we start a sort
    //
    static TABTYPE tt;
-   static int iCol;
+   static LONG iCol;
    static BOOL fReverse;
    static COLUMNTYPE ct;
    static GetColumnFunction fnGetColumn = NULL;
@@ -239,11 +239,11 @@ int CALLBACK General_ListSortFunction (HWND hList, HLISTITEM hItem1, LPARAM lpIt
       switch (tt)
          {
          case ttUSERS:
-            iCol = gr.viewUsr.aColumns[ iColumn ];
+	    iCol = (LONG) gr.viewUsr.aColumns[ iColumn ];
             fnGetColumn = (GetColumnFunction)User_GetColumn;
             break;
          case ttGROUPS:
-            iCol = gr.viewGrp.aColumns[ iColumn ];
+            iCol = (LONG) gr.viewGrp.aColumns[ iColumn ];
             fnGetColumn = (GetColumnFunction)Group_GetColumn;
             break;
          }
@@ -310,7 +310,7 @@ LPTSTR GetEditText (HWND hEdit)
 {
    size_t cch = 1 + SendMessage (hEdit, EM_LINELENGTH, 0, 0);
    LPTSTR psz = AllocateString (cch);
-   cch = GetWindowText (hEdit, psz, cch);
+   cch = GetWindowText (hEdit, psz, (int)cch);
    psz[cch] = TEXT('\0');
    return psz;
 }

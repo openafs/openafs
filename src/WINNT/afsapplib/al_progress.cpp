@@ -54,7 +54,7 @@ PROGRESSDISPLAY::PROGRESSDISPLAY (HWND hParent, int iddTemplate, DLGPROC dlgproc
 PROGRESSDISPLAY::~PROGRESSDISPLAY (void)
 {
    m_fFinished = TRUE;
-   SetWindowLong (m_hWnd, DWL_USER, (LONG)0);
+   SetWindowLongPtr (m_hWnd, DWLP_USER, (LONG)0);
    DeleteCriticalSection (&m_cs);
    if (m_fCreatedWindow)
       DestroyWindow (m_hWnd);
@@ -63,7 +63,7 @@ PROGRESSDISPLAY::~PROGRESSDISPLAY (void)
 
 void PROGRESSDISPLAY::Init (HWND hWnd)
 {
-   SetWindowLong (hWnd, DWL_USER, (LONG)this);
+   SetWindowLongPtr (hWnd, DWLP_USER, (LONG)this);
    Subclass_AddHook (hWnd, PROGRESSDISPLAY::ProgressDisplay_HookProc);
 
    m_msgFinish = 0;
@@ -164,7 +164,7 @@ LPPROGRESSDISPLAY PROGRESSDISPLAY::GetProgressDisplay (HWND hWnd)
    LPPROGRESSDISPLAY ppd = NULL;
 
    try {
-      if ((ppd = (LPPROGRESSDISPLAY)(GetWindowLong (hWnd, DWL_USER))) != NULL) {
+      if ((ppd = (LPPROGRESSDISPLAY)(GetWindowLongPtr (hWnd, DWLP_USER))) != NULL) {
          if (ppd->m_hWnd != hWnd)
             ppd = NULL;
       }

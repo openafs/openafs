@@ -359,7 +359,7 @@ findstrconst(char **str, char **val)
 	error("unterminated string constant");
     }
     p++;
-    size = p - *str;
+    size = (int)(p - *str);
     *val = alloc(size + 1);
     (void)strncpy(*val, *str, size);
     (*val)[size] = 0;
@@ -383,7 +383,7 @@ findconst(char **str, char **val)
 	    p++;
 	} while (isdigit(*p));
     }
-    size = p - *str;
+    size = (int)(p - *str);
     *val = alloc(size + 1);
     (void)strncpy(*val, *str, size);
     (*val)[size] = 0;
@@ -442,7 +442,7 @@ findkind(char **mark, token * tokp)
 
     str = *mark;
     for (s = symbols; s->kind != TOK_EOF; s++) {
-	len = strlen(s->str);
+	len = (int)strlen(s->str);
 	if (strncmp(str, s->str, len) == 0) {
 	    if (!isalnum(str[len]) && str[len] != '_') {
 		tokp->kind = s->kind;

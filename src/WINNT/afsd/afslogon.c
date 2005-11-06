@@ -488,7 +488,7 @@ GetDomainLogonOptions( PLUID lpLogonId, char * username, char * domain, LogonOpt
         len ++;
 
         wuname = malloc(len * sizeof(WCHAR));
-        MultiByteToWideChar(CP_ACP,0,opt->smbName,-1,wuname,len*sizeof(WCHAR));
+        MultiByteToWideChar(CP_ACP,0,opt->smbName,-1,wuname,(int)(len*sizeof(WCHAR)));
 
         DebugEvent("Username is set for [%S]", wuname);
 
@@ -520,7 +520,7 @@ GetDomainLogonOptions( PLUID lpLogonId, char * username, char * domain, LogonOpt
         DebugEvent("After expanding env strings [%S]", regscript);
 
         if(wcsstr(regscript, L"%s")) {
-            dwSize += len * sizeof(WCHAR); /* make room for username expansion */
+            dwSize += (DWORD)(len * sizeof(WCHAR)); /* make room for username expansion */
             regexuscript = (WCHAR *) LocalAlloc(LMEM_FIXED, dwSize);
             hr = StringCbPrintfW(regexuscript, dwSize, regscript, wuname);
         } else {
@@ -1156,7 +1156,6 @@ static BOOL
 GetSecurityLogonSessionData(HANDLE hToken, PSECURITY_LOGON_SESSION_DATA * ppSessionData)
 {
     NTSTATUS Status = 0;
-    HANDLE  TokenHandle;
     TOKEN_STATISTICS Stats;
     DWORD   ReqLen;
     BOOL    Success;
@@ -1165,16 +1164,7 @@ GetSecurityLogonSessionData(HANDLE hToken, PSECURITY_LOGON_SESSION_DATA * ppSess
         return FALSE;
     *ppSessionData = NULL;
 
-#if 0
-    Success = OpenProcessToken( HANDLE GetCurrentProcess(), TOKEN_QUERY, &TokenHandle );
-    if ( !Success )
-        return FALSE;
-#endif
-
     Success = GetTokenInformation( hToken, TokenStatistics, &Stats, sizeof(TOKEN_STATISTICS), &ReqLen );
-#if 0
-    CloseHandle( TokenHandle );
-#endif
     if ( !Success )
         return FALSE;
 
@@ -1187,21 +1177,11 @@ GetSecurityLogonSessionData(HANDLE hToken, PSECURITY_LOGON_SESSION_DATA * ppSess
 
 VOID KFW_Logon_Event( PWLX_NOTIFICATION_INFO pInfo )
 {
-    DWORD code;
-
     WCHAR szUserW[128] = L"";
     char  szUserA[128] = "";
-    char  szClient[MAX_PATH];
     char szPath[MAX_PATH] = "";
     char szLogonId[128] = "";
-    NETRESOURCE nr;
-    DWORD res;
-    DWORD gle;
-    DWORD dwSize;
-    DWORD dwDisp;
-    DWORD dwType;
     DWORD count;
-    VOID * ticketData;
     char filename[256];
     char commandline[512];
     STARTUPINFO startupinfo;

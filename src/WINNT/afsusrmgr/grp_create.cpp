@@ -95,7 +95,7 @@ BOOL CALLBACK Group_Create_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
    switch (msg)
       {
       case WM_INITDIALOG:
-         SetWindowLong (hDlg, DWL_USER, lp);
+         SetWindowLongPtr (hDlg, DWLP_USER, lp);
          Group_Create_OnInitDialog (hDlg);
          break;
 
@@ -143,7 +143,7 @@ BOOL CALLBACK Group_Create_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 
 void Group_Create_OnInitDialog (HWND hDlg)
 {
-   LPCREATEGROUPDLG lpp = (LPCREATEGROUPDLG)GetWindowLong (hDlg, DWL_USER);
+   LPCREATEGROUPDLG lpp = (LPCREATEGROUPDLG)GetWindowLongPtr (hDlg, DWLP_USER);
 
    // Fix the title of the dialog
    //
@@ -205,7 +205,7 @@ void Group_Create_OnID (HWND hDlg)
 
 void Group_Create_OnAdvanced (HWND hDlg)
 {
-   LPCREATEGROUPDLG lpp = (LPCREATEGROUPDLG)GetWindowLong (hDlg, DWL_USER);
+   LPCREATEGROUPDLG lpp = (LPCREATEGROUPDLG)GetWindowLongPtr (hDlg, DWLP_USER);
    lpp->Advanced.pGroupList = NULL;
    lpp->Advanced.fDeleteMeOnClose = FALSE;
    lpp->Advanced.fShowModal = TRUE;
@@ -217,7 +217,7 @@ void Group_Create_OnAdvanced (HWND hDlg)
 
 BOOL Group_Create_OnOK (HWND hDlg)
 {
-   LPCREATEGROUPDLG lpp = (LPCREATEGROUPDLG)GetWindowLong (hDlg, DWL_USER);
+   LPCREATEGROUPDLG lpp = (LPCREATEGROUPDLG)GetWindowLongPtr (hDlg, DWLP_USER);
 
    // Start a background task to do all the work.
    //

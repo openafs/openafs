@@ -207,7 +207,7 @@ long smb_IoctlRead(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp,
 		return code;
         }
 
-	leftToCopy = (iop->outDatap - iop->outAllocp) - iop->outCopied;
+	leftToCopy = (long)((iop->outDatap - iop->outAllocp) - iop->outCopied);
         if (count > leftToCopy) count = leftToCopy;
         
         /* now set the parms for a read of count bytes */
@@ -329,7 +329,7 @@ long smb_IoctlV3Read(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp, smb_pack
 		return code;
     }
 
-	leftToCopy = (iop->outDatap - iop->outAllocp) - iop->outCopied;
+	leftToCopy = (long)((iop->outDatap - iop->outAllocp) - iop->outCopied);
     if (count > leftToCopy) count = leftToCopy;
         
 	/* 0 and 1 are reserved for request chaining, were setup by our caller,
@@ -428,7 +428,7 @@ long smb_IoctlReadRaw(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp,
 		return code;
 	}
 
-	leftToCopy = (iop->outDatap - iop->outAllocp) - iop->outCopied;
+	leftToCopy = (long)((iop->outDatap - iop->outAllocp) - iop->outCopied);
 
 	ncbp = outp->ncbp;
 	memset((char *)ncbp, 0, sizeof(NCB));

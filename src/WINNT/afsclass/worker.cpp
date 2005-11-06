@@ -670,7 +670,7 @@ DWORD Worker_PerformTask (WORKERTASK wtask, LPWORKERPACKET lpwp)
          {
          LPSTR pszVolumeA = StringToAnsi (lpwp->wpVosVolumeCreate.pszVolume);
 
-         if ((*lpVosVolumeCreate)(lpwp->wpVosVolumeCreate.hCell, lpwp->wpVosVolumeCreate.hServer, NULL, lpwp->wpVosVolumeCreate.idPartition, pszVolumeA, lpwp->wpVosVolumeCreate.ckQuota, (unsigned int *)&lpwp->wpVosVolumeCreate.idVolume, &status))
+         if ((*lpVosVolumeCreate)(lpwp->wpVosVolumeCreate.hCell, lpwp->wpVosVolumeCreate.hServer, NULL, lpwp->wpVosVolumeCreate.idPartition, pszVolumeA, (unsigned int)lpwp->wpVosVolumeCreate.ckQuota, (unsigned int *)&lpwp->wpVosVolumeCreate.idVolume, &status))
             status = 0;
 
          FreeString (pszVolumeA, lpwp->wpVosVolumeCreate.pszVolume);
@@ -812,7 +812,7 @@ DWORD Worker_PerformTask (WORKERTASK wtask, LPWORKERPACKET lpwp)
 
       case wtaskVosVolumeQuotaChange:
          {
-         if ((*lpVosVolumeQuotaChange)(lpwp->wpVosVolumeQuotaChange.hCell, lpwp->wpVosVolumeQuotaChange.hServer, NULL, lpwp->wpVosVolumeQuotaChange.idPartition, lpwp->wpVosVolumeQuotaChange.idVolume, lpwp->wpVosVolumeQuotaChange.ckQuota, &status))
+         if ((*lpVosVolumeQuotaChange)(lpwp->wpVosVolumeQuotaChange.hCell, lpwp->wpVosVolumeQuotaChange.hServer, NULL, lpwp->wpVosVolumeQuotaChange.idPartition, lpwp->wpVosVolumeQuotaChange.idVolume, (unsigned int)lpwp->wpVosVolumeQuotaChange.ckQuota, &status))
             status = 0;
          break;
          }

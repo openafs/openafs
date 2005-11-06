@@ -55,7 +55,7 @@ size_t Filesets_PickQuota (LPIDENT lpiFileset)
    memset (&ssp, 0x00, sizeof(ssp));
    ssp.lpiFileset = lpiFileset;
 
-   int rc = ModalDialogParam (IDD_SET_SETQUOTA, GetActiveWindow(), (DLGPROC)Filesets_SetQuota_DlgProc, (LPARAM)&ssp);
+   INT_PTR rc = ModalDialogParam (IDD_SET_SETQUOTA, GetActiveWindow(), (DLGPROC)Filesets_SetQuota_DlgProc, (LPARAM)&ssp);
    if (rc != IDOK)
       return 0;
    else
@@ -198,7 +198,7 @@ void Filesets_SetQuota_OnEndTask_InitDialog (HWND hDlg, LPTASKPACKET ptp, LPSET_
       EnableWindow (GetDlgItem (hDlg, IDC_SET_QUOTA), TRUE);
 
       if (!fBeenHereBefore)
-         CreateSpinner (GetDlgItem (hDlg, IDC_SET_QUOTA), 10, FALSE, cMin, cNow, cMax);
+         CreateSpinner (GetDlgItem (hDlg, IDC_SET_QUOTA), 10, FALSE, (int)cMin, (int)cNow, (int)cMax);
       else
          {
          SP_SetRange (GetDlgItem (hDlg, IDC_SET_QUOTA), cMin, cMax);

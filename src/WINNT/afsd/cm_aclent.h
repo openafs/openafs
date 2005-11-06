@@ -35,7 +35,7 @@ extern long cm_InitACLCache(int newFile, long size);
 
 extern long cm_FindACLCache(struct cm_scache *scp, struct cm_user *userp, long *rightsp);
 
-static cm_aclent_t *GetFreeACLEnt(void);
+static cm_aclent_t *GetFreeACLEnt(cm_scache_t * scp);
 
 extern long cm_AddACLCache(struct cm_scache *scp, struct cm_user *userp, long rights);
 

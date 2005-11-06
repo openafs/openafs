@@ -24,7 +24,11 @@
     <?define ProductComments="OpenAFS for Windows. Client and server components for using AFS."?>
 <?endif?>
     <?define Languages="$(var.LanguageCode)"?>
+<?if $(var.Platform) = "x64" ?>
+    <?define ProductName="OpenAFS for Windows (64-bit)"?>
+<?else?>
     <?define ProductName="OpenAFS for Windows"?>
+<?endif?>
     
     <!-- Localized packages should have different product codes -->
     <!-- Each product release should have a different product code -->

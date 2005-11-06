@@ -24,7 +24,7 @@ extern "C" {
       // AfsAdmSvr_ChangeUser
       // ...changes a user account's properties.
       //
-extern "C" int AfsAdmSvr_ChangeUser (DWORD idClient, ASID idCell, ASID idUser, LPAFSADMSVR_CHANGEUSER_PARAMS pChange, ULONG *pStatus)
+extern "C" int AfsAdmSvr_ChangeUser (UINT_PTR idClient, ASID idCell, ASID idUser, LPAFSADMSVR_CHANGEUSER_PARAMS pChange, ULONG *pStatus)
 {
    ASACTION Action;
    Action.Action = ACTION_USER_CHANGE;
@@ -113,7 +113,7 @@ extern "C" int AfsAdmSvr_ChangeUser (DWORD idClient, ASID idCell, ASID idUser, L
       //    string in {keyString} to encrypt the specified string; otherwise,
       //    pass a valid encryption key in {keyData}.
       //
-extern "C" int AfsAdmSvr_SetUserPassword (DWORD idClient, ASID idCell, ASID idUser, int keyVersion, STRING keyString, BYTE keyData[ ENCRYPTIONKEYLENGTH ], ULONG *pStatus)
+extern "C" int AfsAdmSvr_SetUserPassword (UINT_PTR idClient, ASID idCell, ASID idUser, int keyVersion, STRING keyString, BYTE keyData[ ENCRYPTIONKEYLENGTH ], ULONG *pStatus)
 {
    BOOL rc = TRUE;
    ULONG status = 0;
@@ -153,7 +153,7 @@ extern "C" int AfsAdmSvr_SetUserPassword (DWORD idClient, ASID idCell, ASID idUs
       // AfsAdmSvr_UnlockUser
       // ...unlocks a user's account
       //
-extern "C" int AfsAdmSvr_UnlockUser (DWORD idClient, ASID idCell, ASID idUser, ULONG *pStatus)
+extern "C" int AfsAdmSvr_UnlockUser (UINT_PTR idClient, ASID idCell, ASID idUser, ULONG *pStatus)
 {
    ASACTION Action;
    Action.Action = ACTION_USER_UNLOCK;
@@ -182,7 +182,7 @@ extern "C" int AfsAdmSvr_UnlockUser (DWORD idClient, ASID idCell, ASID idUser, U
       // AfsAdmSvr_CreateUser
       // ...creates a new user account
       //
-extern "C" int AfsAdmSvr_CreateUser (DWORD idClient, ASID idCell, LPAFSADMSVR_CREATEUSER_PARAMS pCreate, ASID *pidUser, ULONG *pStatus)
+extern "C" int AfsAdmSvr_CreateUser (UINT_PTR idClient, ASID idCell, LPAFSADMSVR_CREATEUSER_PARAMS pCreate, ASID *pidUser, ULONG *pStatus)
 {
    ASACTION Action;
    Action.Action = ACTION_USER_CREATE;
@@ -222,7 +222,7 @@ extern "C" int AfsAdmSvr_CreateUser (DWORD idClient, ASID idCell, LPAFSADMSVR_CR
       // AfsAdmSvr_DeleteUser
       // ...deletes a user's account
       //
-extern "C" int AfsAdmSvr_DeleteUser (DWORD idClient, ASID idCell, ASID idUser, LPAFSADMSVR_DELETEUSER_PARAMS pDelete, ULONG *pStatus)
+extern "C" int AfsAdmSvr_DeleteUser (UINT_PTR idClient, ASID idCell, ASID idUser, LPAFSADMSVR_DELETEUSER_PARAMS pDelete, ULONG *pStatus)
 {
    ASACTION Action;
    Action.Action = ACTION_USER_DELETE;

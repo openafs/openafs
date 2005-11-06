@@ -87,7 +87,7 @@ BOOL CALLBACK Groups_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
          FastList_SetSortFunction (GetDlgItem (hDlg, IDC_GROUPS_LIST), General_ListSortFunction);
 
          FL_RestoreView (GetDlgItem (hDlg, IDC_GROUPS_LIST), &gr.viewGrp);
-         FastList_SetTextCallback (GetDlgItem (hDlg, IDC_GROUPS_LIST), Display_GetItemText, (DWORD)&gr.viewGrp);
+         FastList_SetTextCallback (GetDlgItem (hDlg, IDC_GROUPS_LIST), Display_GetItemText, &gr.viewGrp);
          SetDlgItemText (hDlg, IDC_GROUPS_PATTERN, g.szPatternGroups);
          Groups_EnableButtons(hDlg);
          Display_PopulateGroupList();

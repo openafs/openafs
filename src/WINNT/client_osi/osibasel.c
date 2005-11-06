@@ -306,7 +306,7 @@ int lock_TryMutex(struct osi_mutex *lockp) {
 	return i;
 }
 
-void osi_SleepR(long sleepVal, struct osi_rwlock *lockp)
+void osi_SleepR(LONG_PTR sleepVal, struct osi_rwlock *lockp)
 {
 	long i;
         CRITICAL_SECTION *csp;
@@ -333,7 +333,7 @@ void osi_SleepR(long sleepVal, struct osi_rwlock *lockp)
 	osi_SleepSpin(sleepVal, csp);
 }
 
-void osi_SleepW(long sleepVal, struct osi_rwlock *lockp)
+void osi_SleepW(LONG_PTR sleepVal, struct osi_rwlock *lockp)
 {
 	long i;
         CRITICAL_SECTION *csp;
@@ -358,7 +358,7 @@ void osi_SleepW(long sleepVal, struct osi_rwlock *lockp)
 	osi_SleepSpin(sleepVal, csp);
 }
 
-void osi_SleepM(long sleepVal, struct osi_mutex *lockp)
+void osi_SleepM(LONG_PTR sleepVal, struct osi_mutex *lockp)
 {
 	long i;
         CRITICAL_SECTION *csp;

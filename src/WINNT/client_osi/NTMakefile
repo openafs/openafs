@@ -77,6 +77,7 @@ DLLLIBS =\
 
 $(DLLFILE): $(DLLOBJS) 
 	$(DLLGUILINK) $(DLLLIBS) -def:libosi.def
+        $(_VC_MANIFEST_EMBED_DLL)
 	$(DLLPREP)
 	$(COPY) $*.lib $(ILIBDIR)
 	$(DEL) $*.lib $*.exp
@@ -106,12 +107,13 @@ $(EXEOBJS) : osidebug.c
 
 $(EXEFILE) : $(EXEOBJS)
 	$(EXEGUILINK) $(EXELIBS)
+        $(_VC_MANIFEST_EMBED_EXE)
 
 ############################################################################
 # midl on dbrpc.idl
 
 dbrpc.h dbrpc_c.c dbrpc_s.c: dbrpc.idl
-	$(MIDL) $(AFSDEV_AUXMIDLFLAGS) -Zp4 -cpp_cmd $(cc) -cpp_opt "-E" /no_robust $**
+	$(MIDL) $(AFSDEV_AUXMIDLFLAGS) -Zp4 -cpp_cmd $(cc) -cpp_opt "-E" $**
 ############################################################################
 # generate versioninfo resources
 

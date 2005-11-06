@@ -67,7 +67,7 @@ extern cm_server_t *cm_NewServer(struct sockaddr_in *addrp, int type,
 
 extern cm_serverRef_t *cm_NewServerRef(struct cm_server *serverp);
 
-extern long cm_ChecksumServerList(cm_serverRef_t *serversp);
+extern LONG_PTR cm_ChecksumServerList(cm_serverRef_t *serversp);
 
 extern void cm_GetServer(cm_server_t *);
 

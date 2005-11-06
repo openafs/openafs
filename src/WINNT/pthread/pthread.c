@@ -433,7 +433,7 @@ static size_t terminate_thread_wakeup_list_size = 0;
 
 static DWORD WINAPI terminate_thread_routine(LPVOID param) {
     thread_p cur, next;
-    size_t native_thread_count;
+    DWORD native_thread_count;
     int should_terminate;
     int terminate_thread_wakeup_list_index;
 
@@ -838,7 +838,7 @@ int pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex) {
 int pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const struct timespec *abstime) {
     int rc = 0;
     struct _timeb now, then;
-    short n_milli, t_milli;
+    afs_uint32 n_milli, t_milli;
 
     if (abstime->tv_nsec < 1000000000) {
 
@@ -873,7 +873,7 @@ int pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const s
 		 * round up the wait time here.
 		 */
 		rc = cond_wait_internal(cond, mutex, 
-				 ((then.time * 1000) + (t_milli)));
+				 (DWORD)((then.time * 1000) + (t_milli)));
 	    } else {
 		rc = EINVAL;
 	    }

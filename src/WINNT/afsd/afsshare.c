@@ -17,7 +17,6 @@
 
 int
 main(int argc, char **argv) {
-    BOOL res;
     HKEY hkSubmounts;
     HKEY hkParameters;
     char mountRoot[64]="/afs";
@@ -67,7 +66,7 @@ main(int argc, char **argv) {
             else
                 mountstring = argv[2];
 
-            if (RegSetValueEx(hkSubmounts, argv[1], 0, REG_EXPAND_SZ, mountstring, strlen(mountstring)+1)) {
+            if (RegSetValueEx(hkSubmounts, argv[1], 0, REG_EXPAND_SZ, mountstring, (DWORD)strlen(mountstring)+1)) {
                 fprintf(stderr,"Submount Set failure for [%s]: %lX",
                          argv[1], GetLastError());
                 RegCloseKey(hkSubmounts);

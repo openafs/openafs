@@ -773,7 +773,7 @@ long cm_InitLocalMountPoints() {
             /* we are migrating to the registry */
             sprintf(szIndex,"%d",dwIndex++);
             dwType = REG_SZ;
-            dwSize = strlen(line) + 1;
+            dwSize = (DWORD)strlen(line) + 1;
             RegSetValueEx( hkFreelance, szIndex, 0, dwType, line, dwSize);
         }
 #endif 
@@ -1053,16 +1053,16 @@ long cm_FreelanceAddMount(char *filename, char *cellname, char *volume, int rw, 
             if (RegQueryValueEx( hkFreelance, szIndex, 0, &dwType, szMount, &dwSize) != ERROR_SUCCESS) {
                 /* found an unused value */
                 dwType = REG_SZ;
-                dwSize = strlen(line) + 1;
+                dwSize = (DWORD)strlen(line) + 1;
                 RegSetValueEx( hkFreelance, szIndex, 0, dwType, line, dwSize);
                 break;
             } else {
-                int len = strlen(filename);
+                int len = (int)strlen(filename);
                 if ( dwType == REG_SZ && !strncmp(filename, szMount, len) && 
                      (szMount[len] == '%' || szMount[len] == '#')) {
                     /* Replace the existing value */
                     dwType = REG_SZ;
-                    dwSize = strlen(line) + 1;
+                    dwSize = (DWORD)strlen(line) + 1;
                     RegSetValueEx( hkFreelance, szIndex, 0, dwType, line, dwSize);
                     break;
                 }
@@ -1288,15 +1288,15 @@ long cm_FreelanceAddSymlink(char *filename, char *destination, cm_fid_t *fidp)
             if (RegQueryValueEx( hkFreelanceSymlinks, szIndex, 0, &dwType, szLink, &dwSize) != ERROR_SUCCESS) {
                 /* found an unused value */
                 dwType = REG_SZ;
-                dwSize = strlen(line) + 1;
+                dwSize = (DWORD)strlen(line) + 1;
                 RegSetValueEx( hkFreelanceSymlinks, szIndex, 0, dwType, line, dwSize);
                 break;
             } else {
-                int len = strlen(filename);
+                int len = (int)strlen(filename);
                 if ( dwType == REG_SZ && !strncmp(filename, szLink, len) && szLink[len] == ':') {
                     /* Replace the existing value */
                     dwType = REG_SZ;
-                    dwSize = strlen(line) + 1;
+                    dwSize = (DWORD)strlen(line) + 1;
                     RegSetValueEx( hkFreelanceSymlinks, szIndex, 0, dwType, line, dwSize);
                     break;
                 }

@@ -64,7 +64,7 @@ struct readdir_context			/* temporary struct, allocated as necessary, for cm_App
 {
     char *matchString;			/* for matching against */
     char *buf, *buf_pos;		/* filling buffer to length, currently at buf_pos */
-    ULONG length;
+    ULONG_PTR length;
     ULONG count;			/* number of entries packed so far */
 };
 typedef struct readdir_context readdir_context_t;
@@ -243,7 +243,7 @@ cm_scache_t *ifs_FindScp(ULONG fid)		/* walk list to find scp<->fid mapping */
    unless network fails (it loops properly). */
 ifs_CheckAcl(cm_scache_t *scp, ULONG access, ULONG *granted)
 {
-    long outRights, code;
+    long code;
     cm_req_t req;
 
     cm_InitReq(&req);
@@ -416,7 +416,7 @@ uc_namei(WCHAR *name, ULONG *fid)	/* performs name<->fid mapping, and enters it 
 
     cm_InitReq(&req);
 
-    len = wcslen(name)+20;			/* characters *should* map 1<->1, but in case */
+    len = (short)wcslen(name)+20;			/* characters *should* map 1<->1, but in case */
     buffer = malloc(len);
     code = ifs_ConvertFileName(name, -1, buffer, len);
     if (code)
@@ -551,7 +551,7 @@ uc_create(WCHAR *name, ULONG attribs, LARGE_INTEGER alloc, ULONG access, ULONG *
 
     cm_InitReq(&req);
 
-    len = wcslen(name)+20;			/* characters *should* map 1<->1, but in case */
+    len = (short)wcslen(name)+20;			/* characters *should* map 1<->1, but in case */
     buffer = malloc(len);
     code = ifs_ConvertFileName(name, -1, buffer, len);
     if (code)
@@ -649,21 +649,20 @@ uc_setinfo(ULONG fid, ULONG attribs, LARGE_INTEGER creation, LARGE_INTEGER acces
 /* FIXFIX: this code may not catch over-quota errors, because the end
  * of the file is not written to the server by the time this returns. */
 /* truncate or extend file, in cache and on server */
-uc_trunc(ULONG fid, LARGE_INTEGER size)
+long uc_trunc(ULONG fid, LARGE_INTEGER size)
 {
-    ULONG code, gr;
+    ULONG code;
     cm_scache_t *scp;
     cm_req_t req;
-    osi_hyper_t oldLen, writePos;
-    long written;
+    osi_hyper_t oldLen;
 
     scp = ifs_FindScp(fid);
     if (!scp)
 	return IFSL_BAD_INPUT;
 
     /* we have already checked permissions in the kernel; but, if we do not
-	 * have access as this userp, code will fail in rpc layer.
-	 */
+     * have access as this userp, code will fail in rpc layer.
+     */
 
     cm_InitReq(&req);
     lock_ObtainMutex(&(scp->mx));
@@ -700,11 +699,10 @@ uc_trunc(ULONG fid, LARGE_INTEGER size)
 }
 
 /* read data from a file */
-uc_read(ULONG fid, LARGE_INTEGER offset, ULONG length, ULONG *read, char *data)
+long uc_read(ULONG fid, LARGE_INTEGER offset, ULONG length, ULONG *read, char *data)
 {
     ULONG code;
     cm_scache_t *scp;
-    cm_req_t req;
 
     *read = 0;
  
@@ -726,7 +724,7 @@ uc_read(ULONG fid, LARGE_INTEGER offset, ULONG length, ULONG *read, char *data)
 /* write data to a file */
 uc_write(ULONG fid, LARGE_INTEGER offset, ULONG length, ULONG *written, char *data)
 {
-    ULONG code, gr;
+    ULONG code;
     cm_scache_t *scp;
 
     scp = ifs_FindScp(fid);
@@ -745,13 +743,9 @@ uc_rename(ULONG fid, WCHAR *curr, WCHAR *new_dir, WCHAR *new_name, ULONG *new_fi
 {
     int code;
     cm_req_t req;
-    cm_attr_t attr;
-    wchar_t *buf;
     char *curdir, *curfile, *newdir, *newfile;
     cm_scache_t *dscp1, *dscp2, *scp;
     char b1[MAX_PATH], b2[MAX_PATH], b3[MAX_PATH];
-    ULONG fid2;
-
 
     code = !(scp = ifs_FindScp(fid));
     if (!code)
@@ -784,19 +778,18 @@ uc_rename(ULONG fid, WCHAR *curr, WCHAR *new_dir, WCHAR *new_name, ULONG *new_fi
             {
                 strcat(b3, "\\");
                 strcat(b3, b2);
+		// TODO: Must convert b3 to type WCHAR*
                 uc_namei(b3, new_fid);
             }
             else
             {
-                code = ifs_ConvertFileName(curr, -1, b1, MAX_PATH);
-                code = uc_namei(b1, new_fid);
+                code = uc_namei(curr, new_fid);
             }
             ifs_InternalClose(&dscp2);
         }
 	else
         {
-            code = ifs_ConvertFileName(curr, -1, b1, MAX_PATH);
-            code = uc_namei(b1, new_fid);
+            code = uc_namei(curr, new_fid);
         }
 	ifs_InternalClose(&dscp1);
     }
@@ -825,7 +818,7 @@ uc_flush(ULONG fid)
 ifs_ReaddirCallback(cm_scache_t *scp, cm_dirEntry_t *entry, void *param, osi_hyper_t *offset)
 {
     readdir_context_t *context;
-    ULONG name_len, gr;
+    ULONG name_len;
     readdir_data_t *info;
     char short_name[14], *endp;
     ULONG code;
@@ -836,7 +829,7 @@ ifs_ReaddirCallback(cm_scache_t *scp, cm_dirEntry_t *entry, void *param, osi_hyp
 
     context = param;
 
-    name_len = strlen(entry->name);
+    name_len = (ULONG) strlen(entry->name);
 
     info = (readdir_data_t *)context->buf_pos;
     if (context->length - (context->buf_pos - context->buf) < sizeof(readdir_data_t) + name_len * sizeof(WCHAR) + sizeof(LARGE_INTEGER))
@@ -894,7 +887,7 @@ ifs_ReaddirCallback(cm_scache_t *scp, cm_dirEntry_t *entry, void *param, osi_hyp
 
     cm_Gen8Dot3Name(entry, short_name, &endp);
     *endp = '\0';
-    info->short_name_length = sizeof(WCHAR)*((t=MultiByteToWideChar(CP_UTF8, 0, short_name, -1, info->short_name, 14))?t-1:0);
+    info->short_name_length = (CCHAR)sizeof(WCHAR)*((t=MultiByteToWideChar(CP_UTF8, 0, short_name, -1, info->short_name, 14))?t-1:0);
     info->name_length = sizeof(WCHAR)*((t=MultiByteToWideChar(CP_UTF8, 0, entry->name, -1, info->name, 600))?t-1:0);
 
     context->buf_pos = ((char*)info) + sizeof(readdir_data_t) + info->name_length;
@@ -906,7 +899,7 @@ ifs_ReaddirCallback(cm_scache_t *scp, cm_dirEntry_t *entry, void *param, osi_hyp
     return 0;
 }
 
-uc_readdir(ULONG fid, LARGE_INTEGER cookie_in, WCHAR *filter, ULONG *count, char *data, ULONG *len)
+long uc_readdir(ULONG fid, LARGE_INTEGER cookie_in, WCHAR *filter, ULONG *count, char *data, ULONG_PTR *len)
 {
     ULONG code;
     char buffer[2048];
@@ -956,7 +949,6 @@ uc_readdir(ULONG fid, LARGE_INTEGER cookie_in, WCHAR *filter, ULONG *count, char
 
 uc_close(ULONG fid)
 {
-    ULONG code;
     cm_scache_t *scp;
     cm_req_t req;
     scp_status_t *prev, *curr;
@@ -1000,11 +992,10 @@ uc_unlink(WCHAR *name)
 {
     char buffer[2048];
     long code;
-    cm_scache_t *scp, *dscp;
+    cm_scache_t *dscp;
     char *dirp, *filep;
     unsigned char removed;
     cm_req_t req;
-    scp_status_t *st;
 
     cm_InitReq(&req);
 
@@ -1029,10 +1020,8 @@ uc_unlink(WCHAR *name)
 }
 
 
-int uc_ioctl_write(ULONG length, char *data, ULONG *key)
+int uc_ioctl_write(ULONG length, char *data, ULONG_PTR *key)
 {
-    int code;
-    cm_req_t req;
     smb_ioctl_t *iop;
 
     iop = malloc(sizeof(smb_ioctl_t));
@@ -1041,15 +1030,13 @@ int uc_ioctl_write(ULONG length, char *data, ULONG *key)
 
     memcpy(iop->inDatap + iop->inCopied, data, length);
     iop->inCopied += length;
-    *key = (ULONG)iop;
+    *key = (ULONG_PTR)iop;
 
     return 0;
 }
 
-int uc_ioctl_read(ULONG key, ULONG *length, char *data)
+int uc_ioctl_read(ULONG_PTR key, ULONG *length, char *data)
 {
-    int code;
-    cm_req_t req;
     smb_ioctl_t *iop;
 
     iop = key;
@@ -1090,8 +1077,7 @@ int ifs_Init(char **reason)
 ifs_TransactRpc(char *outbuf, int outlen, char *inbuf, int *inlen)
 {
     HANDLE hf;
-    int ret;
-    DWORD err, read = 0;
+    DWORD read = 0;
     DWORD inmax;
 
     if (!outbuf || !inbuf)
@@ -1118,8 +1104,7 @@ DWORD WINAPI ifs_MainLoop(LPVOID param)
     HANDLE pipe;
     DWORD written;
     unsigned char *bufIn, *bufOut;
-    DWORD lenIn, lenOut, status;
-    DWORD err;
+    DWORD lenIn;
     rpc_t rpc;
     BOOL st;
 
@@ -1166,11 +1151,11 @@ DWORD WINAPI ifs_MainLoop(LPVOID param)
 	/* ...and write it back */
 	st = WriteFile(pipe, rpc.out_buf, rpc.out_pos - rpc.out_buf, &written, NULL);
 	if (!st)
-			if (GetLastError() == ERROR_INVALID_HANDLE)
-				break;
-			else
-				continue;
-	}
+	    if (GetLastError() == ERROR_INVALID_HANDLE)
+		break;
+	    else
+		continue;
+    }
 
-	return 1;
+    return (DWORD)1;
 }

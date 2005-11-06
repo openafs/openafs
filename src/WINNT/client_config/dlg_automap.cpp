@@ -377,7 +377,7 @@ BOOL CALLBACK AutoMapEdit_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
    switch (msg)
       {
       case WM_INITDIALOG:
-         SetWindowLong (hDlg, DWL_USER, lp);
+         SetWindowLongPtr (hDlg, DWLP_USER, lp);
          AutoMapEdit_OnInitDialog (hDlg);
          break;
 
@@ -412,7 +412,7 @@ BOOL CALLBACK AutoMapEdit_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 
 void AutoMapEdit_OnInitDialog (HWND hDlg)
 {
-   PDRIVEMAP pMap = (PDRIVEMAP)GetWindowLong (hDlg, DWL_USER);
+   PDRIVEMAP pMap = (PDRIVEMAP)GetWindowLongPtr (hDlg, DWLP_USER);
 
    DWORD dwDrives = GetLogicalDrives() | 0x07; // Always pretend A,B,C: are used
 
@@ -462,7 +462,7 @@ void AutoMapEdit_OnInitDialog (HWND hDlg)
 
 void AutoMapEdit_OnOK (HWND hDlg)
 {
-   PDRIVEMAP pMap = (PDRIVEMAP)GetWindowLong (hDlg, DWL_USER);
+   PDRIVEMAP pMap = (PDRIVEMAP)GetWindowLongPtr (hDlg, DWLP_USER);
 
    int iItem = SendDlgItemMessage (hDlg, IDC_DRIVE, CB_GETCURSEL, 0, 0);
    int iDrive = SendDlgItemMessage (hDlg, IDC_DRIVE, CB_GETITEMDATA, iItem, 0);

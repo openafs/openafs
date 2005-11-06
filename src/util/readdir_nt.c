@@ -59,7 +59,7 @@ opendir(const char *path)
 	     */
 	    {
 		struct stat status;
-		int len = strlen(tPath) - 1;
+		size_t len = strlen(tPath) - 1;
 		tPath[len] = '\0';
 		if (len >= 2 && tPath[len - 2] != ':') {
 		    tPath[len - 1] = '\0';

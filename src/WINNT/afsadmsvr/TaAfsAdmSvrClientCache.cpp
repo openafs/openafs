@@ -174,7 +174,7 @@ void UpdateCachedProperties (ASID idCell, ASID idObject, LPASOBJPROP pProperties
 }
 
 
-BOOL RefreshCachedProperties (DWORD idClient, ASID idCell, ASID idObject, AFSADMSVR_GET_LEVEL GetLevel, ULONG *pStatus)
+BOOL RefreshCachedProperties (UINT_PTR idClient, ASID idCell, ASID idObject, AFSADMSVR_GET_LEVEL GetLevel, ULONG *pStatus)
 {
    BOOL rc = TRUE;
    ULONG status = 0;
@@ -206,7 +206,7 @@ BOOL RefreshCachedProperties (DWORD idClient, ASID idCell, ASID idObject, AFSADM
 }
 
 
-BOOL RefreshCachedProperties (DWORD idClient, ASID idCell, LPASIDLIST pAsidList, AFSADMSVR_GET_LEVEL GetLevel, ULONG *pStatus)
+BOOL RefreshCachedProperties (UINT_PTR idClient, ASID idCell, LPASIDLIST pAsidList, AFSADMSVR_GET_LEVEL GetLevel, ULONG *pStatus)
 {
    BOOL rc = TRUE;
    ULONG status = 0;

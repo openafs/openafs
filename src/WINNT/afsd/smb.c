@@ -793,7 +793,11 @@ void smb_UnixTimeFromSearchTime(time_t *unixTimep, afs_uint32 searchTime)
 
 void smb_DosUTimeFromUnixTime(afs_uint32 *dosUTimep, time_t unixTime)
 {
-    *dosUTimep = unixTime - smb_localZero;
+    time_t diff_t = unixTime - smb_localZero;
+#if defined(DEBUG) && !defined(_USE_32BIT_TIME_T)
+    osi_assert(diff_t < _UI32_MAX);
+#endif
+    *dosUTimep = (afs_uint32)diff_t;
 }
 
 void smb_UnixTimeFromDosUTime(time_t *unixTimep, afs_uint32 dosTime)
@@ -980,8 +984,8 @@ smb_user_t *smb_FindUID(smb_vc_t *vcp, unsigned short uid, int flags)
     for(uidp = vcp->usersp; uidp; uidp = uidp->nextp) {
         if (uid == uidp->userID) {
             uidp->refCount++;
-            osi_LogEvent("AFS smb_FindUID (Find by UID)",NULL," VCP[%x] found-uid[%d] name[%s]",
-                          (int)vcp, uidp->userID, 
+            osi_LogEvent("AFS smb_FindUID (Find by UID)",NULL," VCP[0x%p] found-uid[%d] name[%s]",
+                          vcp, uidp->userID, 
                           osi_LogSaveString(smb_logp, (uidp->unp) ? uidp->unp->name : ""));
             break;
         }
@@ -996,7 +1000,7 @@ smb_user_t *smb_FindUID(smb_vc_t *vcp, unsigned short uid, int flags)
         vcp->usersp = uidp;
         lock_InitializeMutex(&uidp->mx, "user_t mutex");
         uidp->userID = uid;
-        osi_LogEvent("AFS smb_FindUID (Find by UID)",NULL,"VCP[%x] new-uid[%d] name[%s]",(int)vcp,uidp->userID,(uidp->unp ? uidp->unp->name : ""));
+        osi_LogEvent("AFS smb_FindUID (Find by UID)",NULL,"VCP[0x%p] new-uid[%d] name[%s]",vcp,uidp->userID,(uidp->unp ? uidp->unp->name : ""));
     }
     lock_ReleaseWrite(&smb_rctLock);
     return uidp;
@@ -1038,7 +1042,7 @@ smb_user_t *smb_FindUserByNameThisSession(smb_vc_t *vcp, char *usern)
             continue;
         if (stricmp(uidp->unp->name, usern) == 0) {
             uidp->refCount++;
-            osi_LogEvent("AFS smb_FindUserByNameThisSession",NULL,"VCP[%x] uid[%d] match-name[%s]",(int)vcp,uidp->userID,usern);
+            osi_LogEvent("AFS smb_FindUserByNameThisSession",NULL,"VCP[0x%x] uid[%d] match-name[%s]",vcp,uidp->userID,usern);
             break;
         } else
             continue;
@@ -1877,9 +1881,9 @@ smb_packet_t *smb_CopyPacket(smb_packet_t *pkt)
     smb_packet_t *tbp;
     tbp = GetPacket();
     memcpy(tbp, pkt, sizeof(smb_packet_t));
-    tbp->wctp = tbp->data + ((unsigned int)pkt->wctp - (unsigned int)pkt->data);
-	if (tbp->vcp)
-		smb_HoldVC(tbp->vcp);
+    tbp->wctp = tbp->data + (unsigned int)(pkt->wctp - pkt->data);
+    if (tbp->vcp)
+	smb_HoldVC(tbp->vcp);
     return tbp;
 }
 
@@ -2238,7 +2242,7 @@ void smb_SendPacket(smb_vc_t *vcp, smb_packet_t *inp)
     extra = 2 * (*inp->wctp);	/* space used by parms, in bytes */
     tp = inp->wctp + 1+ extra;	/* points to count of data bytes */
     extra += tp[0] + (tp[1]<<8);
-    extra += ((unsigned int)inp->wctp - (unsigned int)inp->data);	/* distance to last wct field */
+    extra += (unsigned int)(inp->wctp - inp->data);	/* distance to last wct field */
     extra += 3;			/* wct and length fields */
         
     ncbp->ncb_length = extra;	/* bytes to send */
@@ -2899,7 +2903,7 @@ long smb_ReceiveNegotiate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         }
 
         /* compute size of protocol entry */
-        entryLength = strlen(namep+1);
+        entryLength = (int)strlen(namep+1);
         entryLength += 2;	/* 0x02 bytes and null termination */
 
         /* advance over this protocol entry */
@@ -3114,7 +3118,7 @@ void smb_WaitingLocksDaemon()
         lock_ObtainWrite(&smb_globalLock);
         nwlRequest = smb_allWaitingLocks;
         if (nwlRequest == NULL) {
-            osi_SleepW((long)&smb_allWaitingLocks, &smb_globalLock);
+            osi_SleepW((LONG_PTR)&smb_allWaitingLocks, &smb_globalLock);
             thrd_Sleep(1000);
             continue;
         } else 
@@ -3981,10 +3985,10 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
             *op++ = resByte;
             memcpy(op, mask, 11); op += 11;
             *op++ = (char) dsp->cookie;	/* they say it must be non-zero */
-            *op++ = nextEntryCookie & 0xff;
-            *op++ = (nextEntryCookie>>8) & 0xff;
-            *op++ = (nextEntryCookie>>16) & 0xff;
-            *op++ = (nextEntryCookie>>24) & 0xff;
+            *op++ = (char)(nextEntryCookie & 0xff);
+            *op++ = (char)((nextEntryCookie>>8) & 0xff);
+            *op++ = (char)((nextEntryCookie>>16) & 0xff);
+            *op++ = (char)((nextEntryCookie>>24) & 0xff);
             memcpy(op, &clientCookie, 4); op += 4;
 
             /* now we emit the attribute.  This is sort of tricky,
@@ -4085,8 +4089,8 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
      */
     temp -= 3;		/* deduct vbl block info */
     osi_assert(temp == (43 * returnedNames));
-    origOp[1] = temp & 0xff;
-    origOp[2] = (temp>>8) & 0xff;
+    origOp[1] = (char)(temp & 0xff);
+    origOp[2] = (char)((temp>>8) & 0xff);
     if (returnedNames == 0) 
         smb_DeleteDirSearch(dsp);
     smb_ReleaseDirSearch(dsp);
@@ -6795,11 +6799,11 @@ void smb_DispatchPacket(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
                 code = smb_ReceiveCoreWriteRaw (vcp, inp, outp,
                                                  rwcp);
             else {
-                osi_LogEvent("AFS Dispatch %s",(myCrt_Dispatch(inp->inCom)),"vcp 0x%x lana %d lsn %d",(int)vcp,vcp->lana,vcp->lsn);
-                osi_Log4(smb_logp,"Dispatch %s vcp 0x%x lana %d lsn %d",myCrt_Dispatch(inp->inCom),vcp,vcp->lana,vcp->lsn);
+                osi_LogEvent("AFS Dispatch %s",(myCrt_Dispatch(inp->inCom)),"vcp 0x%p lana %d lsn %d",vcp,vcp->lana,vcp->lsn);
+                osi_Log4(smb_logp,"Dispatch %s vcp 0x%p lana %d lsn %d",myCrt_Dispatch(inp->inCom),vcp,vcp->lana,vcp->lsn);
                 code = (*(dp->procp)) (vcp, inp, outp);
                 osi_LogEvent("AFS Dispatch return",NULL,"Code 0x%x",code);
-                osi_Log4(smb_logp,"Dispatch return  code 0x%x vcp 0x%x lana %d lsn %d",code,vcp,vcp->lana,vcp->lsn);
+                osi_Log4(smb_logp,"Dispatch return  code 0x%x vcp 0x%p lana %d lsn %d",code,vcp,vcp->lana,vcp->lsn);
 #ifdef LOG_PACKET
                 if ( code == CM_ERROR_BADSMB ||
                      code == CM_ERROR_BADOP )
@@ -6954,7 +6958,7 @@ void smb_DispatchPacket(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
         /* tp now points to the new output record; go back and patch the
          * second parameter (off2) to point to the new record.
          */
-        temp = (unsigned int)tp - ((unsigned int) outp->data);
+        temp = (unsigned int)(tp - outp->data);
         outWctp[3] = (unsigned char) (temp & 0xff);
         outWctp[4] = (unsigned char) ((temp >> 8) & 0xff);
         outWctp[2] = 0;	/* padding */
@@ -7189,7 +7193,7 @@ void smb_ServerWaiter(void *parmp)
  */
 void smb_Server(VOID *parmp)
 {
-    int myIdx = (int) parmp;
+    INT_PTR myIdx = (INT_PTR) parmp;
     NCB *ncbp;
     NCB *outncbp;
     smb_packet_t *bufp;
@@ -7697,7 +7701,7 @@ void smb_Listener(void *parmp)
     dos_ptr dos_ncb;
     time_t now;
 #endif /* DJGPP */
-    int lana = (int) parmp;
+    INT_PTR lana = (INT_PTR) parmp;
 
     ncbp = GetNCB();
 #ifdef DJGPP
@@ -7717,14 +7721,14 @@ void smb_Listener(void *parmp)
         ncbp->ncb_sto = 0;	/* No send timeout */
 
         /* pad out with spaces instead of null termination */
-        len = strlen(smb_localNamep);
+        len = (long)strlen(smb_localNamep);
         strncpy(ncbp->ncb_name, smb_localNamep, NCBNAMSZ);
         for (i=len; i<NCBNAMSZ; i++) ncbp->ncb_name[i] = ' ';
         
         strcpy(ncbp->ncb_callname, "*");
         for (i=1; i<NCBNAMSZ; i++) ncbp->ncb_callname[i] = ' ';
         
-        ncbp->ncb_lana_num = lana;
+        ncbp->ncb_lana_num = (UCHAR)lana;
 
 #ifndef DJGPP
         code = Netbios(ncbp);
@@ -8099,7 +8103,7 @@ void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
 {
     thread_t phandle;
     int lpid;
-    int i;
+    INT_PTR i;
     int len;
     struct tm myTime;
 #ifdef DJGPP
@@ -8139,7 +8143,7 @@ void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
     smb_logp = logp;
         
     /* remember the name */
-    len = strlen(snamep);
+    len = (int)strlen(snamep);
     smb_localNamep = malloc(len+1);
     strcpy(smb_localNamep, snamep);
     afsi_log("smb_localNamep is >%s<", smb_localNamep);
@@ -8235,7 +8239,7 @@ void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
         smb_ServerShutdown[i] = thrd_CreateEvent(NULL, FALSE, FALSE, eventName);
         if ( GetLastError() == ERROR_ALREADY_EXISTS )
             afsi_log("Event Object Already Exists: %s", eventName);
-        InitNCBslot(i+1);
+        InitNCBslot((int)(i+1));
     }
     numNCBs = smb_NumServerThreads + 1;
 
@@ -8354,7 +8358,7 @@ void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
         LSA_OPERATIONAL_MODE dummy; /*junk*/
 
         afsProcessName.Buffer = "OpenAFSClientDaemon";
-        afsProcessName.Length = strlen(afsProcessName.Buffer);
+        afsProcessName.Length = (USHORT)strlen(afsProcessName.Buffer);
         afsProcessName.MaximumLength = afsProcessName.Length + 1;
 
         nts = LsaRegisterLogonProcess(&afsProcessName, &smb_lsaHandle, &dummy);
@@ -8363,7 +8367,7 @@ void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
             LSA_STRING packageName;
             /* we are registered. Find out the security package id */
             packageName.Buffer = MSV1_0_PACKAGE_NAME;
-            packageName.Length = strlen(packageName.Buffer);
+            packageName.Length = (USHORT)strlen(packageName.Buffer);
             packageName.MaximumLength = packageName.Length + 1;
             nts = LsaLookupAuthenticationPackage(smb_lsaHandle, &packageName , &smb_lsaSecPackage);
             if (nts == STATUS_SUCCESS) {
@@ -8406,10 +8410,10 @@ void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
                 /* END - code from Larry */
 
                 smb_lsaLogonOrigin.Buffer = "OpenAFS";
-                smb_lsaLogonOrigin.Length = strlen(smb_lsaLogonOrigin.Buffer);
+                smb_lsaLogonOrigin.Length = (USHORT)strlen(smb_lsaLogonOrigin.Buffer);
                 smb_lsaLogonOrigin.MaximumLength = smb_lsaLogonOrigin.Length + 1;
             } else {
-                afsi_log("Can't determine security package name for NTLM!! NTSTATUS=[%l]",nts);
+                afsi_log("Can't determine security package name for NTLM!! NTSTATUS=[%lX]",nts);
 
                 /* something went wrong. We report the error and revert back to no authentication
                 because we can't perform any auth requests without a successful lsa handle
@@ -8418,7 +8422,7 @@ void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
                 smb_authType = SMB_AUTH_NONE;
             }
         } else {
-            afsi_log("Can't register logon process!! NTSTATUS=[%l]",nts);
+            afsi_log("Can't register logon process!! NTSTATUS=[%lX]",nts);
 
             /* something went wrong. We report the error and revert back to no authentication
             because we can't perform any auth requests without a successful lsa handle
@@ -8540,7 +8544,7 @@ void smb_Shutdown(void)
         /*fprintf(stderr, "NCBHANGUP session %d LSN %d\n", i, LSNs[i]);*/
         ncbp->ncb_command = NCBHANGUP;
         ncbp->ncb_lana_num = lanas[i];  /*smb_LANadapter;*/
-        ncbp->ncb_lsn = LSNs[i];
+        ncbp->ncb_lsn = (UCHAR)LSNs[i];
 #ifndef DJGPP
         code = Netbios(ncbp);
 #else
@@ -8722,34 +8726,34 @@ int smb_DumpVCP(FILE *outputFile, char *cookie, int lock)
         lock_ObtainRead(&smb_rctLock);
   
     sprintf(output, "begin dumping smb_vc_t\n");
-    WriteFile(outputFile, output, strlen(output), &zilch, NULL);
+    WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
 
     for (vcp = smb_allVCsp; vcp; vcp=vcp->nextp) 
     {
         smb_fid_t *fidp;
       
-        sprintf(output, "%s vcp=0x%08X, refCount=%d, flags=%d, vcID=%d, lsn=%d, uidCounter=%d, tidCounter=%d, fidCounter=%d\n",
+        sprintf(output, "%s vcp=0x%p, refCount=%d, flags=%d, vcID=%d, lsn=%d, uidCounter=%d, tidCounter=%d, fidCounter=%d\n",
                  cookie, vcp, vcp->refCount, vcp->flags, vcp->vcID, vcp->lsn, vcp->uidCounter, vcp->tidCounter, vcp->fidCounter);
-        WriteFile(outputFile, output, strlen(output), &zilch, NULL);
+        WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
       
         sprintf(output, "begin dumping smb_fid_t\n");
-        WriteFile(outputFile, output, strlen(output), &zilch, NULL);
+        WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
 
         for (fidp = vcp->fidsp; fidp; fidp = (smb_fid_t *) osi_QNext(&fidp->q))
         {
-            sprintf(output, "%s -- smb_fidp=0x%08X, refCount=%d, fid=%d, vcp=0x%08X, scp=0x%08X, ioctlp=0x%08X, NTopen_pathp=%s, NTopen_wholepathp=%s\n", 
+            sprintf(output, "%s -- smb_fidp=0x%p, refCount=%d, fid=%d, vcp=0x%p, scp=0x%p, ioctlp=0x%p, NTopen_pathp=%s, NTopen_wholepathp=%s\n", 
                      cookie, fidp, fidp->refCount, fidp->fid, fidp->vcp, fidp->scp, fidp->ioctlp, 
                      fidp->NTopen_pathp ? fidp->NTopen_pathp : "NULL", 
                      fidp->NTopen_wholepathp ? fidp->NTopen_wholepathp : "NULL");
-            WriteFile(outputFile, output, strlen(output), &zilch, NULL);
+            WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
         }
       
         sprintf(output, "done dumping smb_fid_t\n");
-        WriteFile(outputFile, output, strlen(output), &zilch, NULL);
+        WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
     }
 
     sprintf(output, "done dumping smb_vc_t\n");
-    WriteFile(outputFile, output, strlen(output), &zilch, NULL);
+    WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
   
     if (lock)
         lock_ReleaseRead(&smb_rctLock);

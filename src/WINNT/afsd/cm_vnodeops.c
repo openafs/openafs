@@ -969,7 +969,7 @@ long cm_FollowMountPoint(cm_scache_t *scp, cm_scache_t *dscp, cm_user_t *userp,
     /* parse the volume name */
     mpNamep = scp->mountPointStringp;
     osi_assert(mpNamep[0]);
-    tlen = strlen(scp->mountPointStringp);
+    tlen = (int)strlen(scp->mountPointStringp);
     mtType = *scp->mountPointStringp;
     cellNamep = malloc(tlen);
     volNamep = malloc(tlen);
@@ -1225,7 +1225,7 @@ int cm_ExpandSysName(char *inp, char *outp, long outSize, unsigned int index)
         return -1;
 
     /* otherwise generate the properly expanded @sys name */
-    prefixCount = tp - inp;
+    prefixCount = (int)(tp - inp);
 
     strncpy(outp, inp, prefixCount);	/* copy out "a." from "a.@sys" */
     outp[prefixCount] = 0;		/* null terminate the "a." */
@@ -1303,7 +1303,7 @@ long cm_Unlink(cm_scache_t *dscp, char *namep, cm_user_t *userp, cm_req_t *reqp)
     afsFid.Vnode = dscp->fid.vnode;
     afsFid.Unique = dscp->fid.unique;
 
-    osi_Log1(afsd_logp, "CALL RemoveFile scp 0x%x", (long) dscp);
+    osi_Log1(afsd_logp, "CALL RemoveFile scp 0x%p", dscp);
     do {
         code = cm_Conn(&dscp->fid, userp, reqp, &connp);
         if (code) 
@@ -1427,7 +1427,7 @@ long cm_AssembleLink(cm_scache_t *linkScp, char *pathSuffixp,
         *newRootScpp = cm_data.rootSCachep;
         cm_HoldSCache(cm_data.rootSCachep);
     } else if (linkp[0] == '\\' && linkp[1] == '\\') {
-        if (!strnicmp(&linkp[2], cm_NetbiosName, (len = strlen(cm_NetbiosName)))) 
+        if (!strnicmp(&linkp[2], cm_NetbiosName, (len = (long)strlen(cm_NetbiosName)))) 
         {
             char * p = &linkp[len + 3];
             if (strnicmp(p, "all", 3) == 0)
@@ -1446,7 +1446,7 @@ long cm_AssembleLink(cm_scache_t *linkScp, char *pathSuffixp,
             *newRootScpp = NULL;
             code = CM_ERROR_PATH_NOT_COVERED;
         }
-    } else if ( !strnicmp(linkp, "msdfs:", (len = strlen("msdfs:"))) ) {
+    } else if ( !strnicmp(linkp, "msdfs:", (len = (long)strlen("msdfs:"))) ) {
         linkScp->fileType = CM_SCACHETYPE_DFSLINK;
         strcpy(tsp->data, linkp);
         *newRootScpp = NULL;
@@ -1723,7 +1723,7 @@ long cm_EvaluateSymLink(cm_scache_t *dscp, cm_scache_t *linkScp,
     cm_space_t *spacep;
     cm_scache_t *newRootScp;
 
-    osi_Log1(afsd_logp, "Evaluating symlink scp 0x%x", linkScp);
+    osi_Log1(afsd_logp, "Evaluating symlink scp 0x%p", linkScp);
 
     code = cm_AssembleLink(linkScp, "", &newRootScp, &spacep, userp, reqp);
     if (code) 
@@ -1874,7 +1874,7 @@ void cm_TryBulkStat(cm_scache_t *dscp, osi_hyper_t *offsetp, cm_user_t *userp,
     cm_fid_t tfid;
     struct rx_connection * callp;
 
-    osi_Log1(afsd_logp, "cm_TryBulkStat dir 0x%x", (long) dscp);
+    osi_Log1(afsd_logp, "cm_TryBulkStat dir 0x%p", dscp);
 
     /* should be on a buffer boundary */
     osi_assert((offsetp->LowPart & (cm_data.buf_blockSize - 1)) == 0);
@@ -2145,7 +2145,7 @@ long cm_SetAttr(cm_scache_t *scp, cm_attr_t *attrp, cm_user_t *userp,
         return code;
 
     /* now make the RPC */
-    osi_Log1(afsd_logp, "CALL StoreStatus scp 0x%x", (long) scp);
+    osi_Log1(afsd_logp, "CALL StoreStatus scp 0x%p", scp);
     do {
         code = cm_Conn(&scp->fid, userp, reqp, &connp);
         if (code) 
@@ -2222,7 +2222,7 @@ long cm_Create(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
     cm_StatusFromAttr(&inStatus, NULL, attrp);
 
     /* try the RPC now */
-    osi_Log1(afsd_logp, "CALL CreateFile scp 0x%x", (long) dscp);
+    osi_Log1(afsd_logp, "CALL CreateFile scp 0x%p", dscp);
     do {
         code = cm_Conn(&dscp->fid, userp, reqp, &connp);
         if (code) 
@@ -2350,7 +2350,7 @@ long cm_MakeDir(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
     cm_StatusFromAttr(&inStatus, NULL, attrp);
 
     /* try the RPC now */
-    osi_Log1(afsd_logp, "CALL MakeDir scp 0x%x", (long) dscp);
+    osi_Log1(afsd_logp, "CALL MakeDir scp 0x%p", dscp);
     do {
         code = cm_Conn(&dscp->fid, userp, reqp, &connp);
         if (code) 
@@ -2441,7 +2441,7 @@ long cm_Link(cm_scache_t *dscp, char *namep, cm_scache_t *sscp, long flags,
         return code;
 
     /* try the RPC now */
-    osi_Log1(afsd_logp, "CALL Link scp 0x%x", (long) dscp);
+    osi_Log1(afsd_logp, "CALL Link scp 0x%p", dscp);
     do {
         code = cm_Conn(&dscp->fid, userp, reqp, &connp);
         if (code) continue;
@@ -2509,7 +2509,7 @@ long cm_SymLink(cm_scache_t *dscp, char *namep, char *contentsp, long flags,
     cm_StatusFromAttr(&inStatus, NULL, attrp);
 
     /* try the RPC now */
-    osi_Log1(afsd_logp, "CALL Symlink scp 0x%x", (long) dscp);
+    osi_Log1(afsd_logp, "CALL Symlink scp 0x%p", dscp);
     do {
         code = cm_Conn(&dscp->fid, userp, reqp, &connp);
         if (code) 
@@ -2591,7 +2591,7 @@ long cm_RemoveDir(cm_scache_t *dscp, char *namep, cm_user_t *userp,
     didEnd = 0;
 
     /* try the RPC now */
-    osi_Log1(afsd_logp, "CALL RemoveDir scp 0x%x", (long) dscp);
+    osi_Log1(afsd_logp, "CALL RemoveDir scp 0x%p", dscp);
     do {
         code = cm_Conn(&dscp->fid, userp, reqp, &connp);
         if (code) 
@@ -2742,8 +2742,8 @@ long cm_Rename(cm_scache_t *oldDscp, char *oldNamep, cm_scache_t *newDscp,
     didEnd = 0;
 
     /* try the RPC now */
-    osi_Log2(afsd_logp, "CALL Rename old scp 0x%x new scp 0x%x", 
-              (long) oldDscp, (long) newDscp);
+    osi_Log2(afsd_logp, "CALL Rename old scp 0x%p new scp 0x%p", 
+              oldDscp, newDscp);
     do {
         code = cm_Conn(&oldDscp->fid, userp, reqp, &connp);
         if (code) 
@@ -3423,7 +3423,7 @@ long cm_Lock(cm_scache_t *scp, unsigned char sLockType,
 
                 lock_ReleaseMutex(&scp->mx);
 
-                osi_Log1(afsd_logp, "CALL ReleaseLock scp 0x%x", (long) scp);
+                osi_Log1(afsd_logp, "CALL ReleaseLock scp 0x%p", scp);
 
                 do {
                     code = cm_Conn(&cfid, userp, reqp, &connp);
@@ -3465,7 +3465,7 @@ long cm_Lock(cm_scache_t *scp, unsigned char sLockType,
 #else
             newLock = LockWrite;
 #endif
-            osi_Log3(afsd_logp, "CALL SetLock scp 0x%x from %d to %d", (long) scp, (int) scp->serverLock, newLock);
+            osi_Log3(afsd_logp, "CALL SetLock scp 0x%p from %d to %d", scp, (int) scp->serverLock, newLock);
 
             lock_ReleaseMutex(&scp->mx);
 
@@ -3497,8 +3497,8 @@ long cm_Lock(cm_scache_t *scp, unsigned char sLockType,
                 /* am I sane? */
                 osi_assert(newLock == LockRead);
                 
-                osi_Log3(afsd_logp, "CALL SetLock AGAIN scp 0x%x from %d to %d", 
-                         (long) scp, (int) scp->serverLock, newLock);
+                osi_Log3(afsd_logp, "CALL SetLock AGAIN scp 0x%p from %d to %d", 
+                         scp, (int) scp->serverLock, newLock);
 
                 do {
                     code = cm_Conn(&cfid, userp, reqp, &connp);
@@ -3594,8 +3594,8 @@ long cm_Lock(cm_scache_t *scp, unsigned char sLockType,
                 scp->exclusiveLocks++;
         }
 
-        osi_Log2(afsd_logp, "cm_Lock Lock added 0x%x flags 0x%x", (long) fileLock, fileLock->flags);
-        osi_Log4(afsd_logp, "   scp[0x%x] exclusives[%d] shared[%d] serverLock[%d]",
+        osi_Log2(afsd_logp, "cm_Lock Lock added 0x%p flags 0x%x", fileLock, fileLock->flags);
+        osi_Log4(afsd_logp, "   scp[0x%p] exclusives[%d] shared[%d] serverLock[%d]",
                  scp, scp->exclusiveLocks, scp->sharedLocks, (int)(signed char) scp->serverLock);
     }
 
@@ -3620,8 +3620,8 @@ long cm_UnlockByKey(cm_scache_t * scp,
     struct rx_connection * callp;
     int n_unlocks = 0;
 
-    osi_Log3(afsd_logp, "cm_UnlockByKey scp 0x%x key 0x%x:%x",
-             (long) scp, (unsigned long)(key >> 32), (unsigned long)(key & 0xffffffff));
+    osi_Log3(afsd_logp, "cm_UnlockByKey scp 0x%p key 0x%x:%x",
+             scp, (unsigned long)(key >> 32), (unsigned long)(key & 0xffffffff));
 
     lock_ObtainWrite(&cm_scacheLock);
 
@@ -3727,7 +3727,7 @@ long cm_UnlockByKey(cm_scache_t * scp,
 
         lock_ReleaseMutex(&scp->mx);
 
-        osi_Log1(afsd_logp, "CALL ReleaseLock scp 0x%x", (long) scp);
+        osi_Log1(afsd_logp, "CALL ReleaseLock scp 0x%p", scp);
 
         do {
             code = cm_Conn(&cfid, userp, reqp, &connp);
@@ -3762,7 +3762,7 @@ long cm_UnlockByKey(cm_scache_t * scp,
         tfid.Unique = scp->fid.unique;
         cfid = scp->fid;
 
-        osi_Log3(afsd_logp, "CALL SetLock scp 0x%x from %d to %d", (long) scp, (int) scp->serverLock, LockRead);
+        osi_Log3(afsd_logp, "CALL SetLock scp 0x%p from %d to %d", scp, (int) scp->serverLock, LockRead);
 
         lock_ReleaseMutex(&scp->mx);
 
@@ -3815,7 +3815,7 @@ long cm_UnlockByKey(cm_scache_t * scp,
 
         lock_ReleaseMutex(&scp->mx);
 
-        osi_Log1(afsd_logp, "CALL ReleaseLock scp 0x%x", (long) scp);
+        osi_Log1(afsd_logp, "CALL ReleaseLock scp 0x%p", scp);
 
         do {
             code = cm_Conn(&cfid, userp, reqp, &connp);
@@ -3867,8 +3867,8 @@ long cm_Unlock(cm_scache_t *scp,
     int release_userp = FALSE;
     struct rx_connection * callp;
 
-    osi_Log4(afsd_logp, "cm_Unlock scp 0x%x type 0x%x offset %d length %d",
-             (long) scp, sLockType, (unsigned long)LOffset.QuadPart, (unsigned long)LLength.QuadPart);
+    osi_Log4(afsd_logp, "cm_Unlock scp 0x%p type 0x%x offset %d length %d",
+             scp, sLockType, (unsigned long)LOffset.QuadPart, (unsigned long)LLength.QuadPart);
     osi_Log2(afsd_logp, "... key 0x%x:%x",
              (unsigned long) (key >> 32), (unsigned long) (key & 0xffffffff));
 
@@ -3970,7 +3970,7 @@ long cm_Unlock(cm_scache_t *scp,
 
         lock_ReleaseMutex(&scp->mx);
 
-        osi_Log1(afsd_logp, "CALL ReleaseLock scp 0x%x", (long) scp);
+        osi_Log1(afsd_logp, "CALL ReleaseLock scp 0x%p", scp);
 
         do {
             code = cm_Conn(&cfid, userp, reqp, &connp);
@@ -4006,7 +4006,7 @@ long cm_Unlock(cm_scache_t *scp,
         tfid.Unique = scp->fid.unique;
         cfid = scp->fid;
 
-        osi_Log3(afsd_logp, "CALL SetLock scp 0x%x from %d to %d", (long) scp, (int) scp->serverLock, LockRead);
+        osi_Log3(afsd_logp, "CALL SetLock scp 0x%p from %d to %d", scp, (int) scp->serverLock, LockRead);
 
         lock_ReleaseMutex(&scp->mx);
 
@@ -4059,7 +4059,7 @@ long cm_Unlock(cm_scache_t *scp,
 
         lock_ReleaseMutex(&scp->mx);
 
-        osi_Log1(afsd_logp, "CALL ReleaseLock scp 0x%x", (long) scp);
+        osi_Log1(afsd_logp, "CALL ReleaseLock scp 0x%p", scp);
 
         do {
             code = cm_Conn(&cfid, userp, reqp, &connp);
@@ -4225,9 +4225,9 @@ void cm_CheckLocks()
                     cfid = scp->fid;
                     userp = fileLock->userp;
                     
-                    osi_Log3(afsd_logp, "CALL ExtendLock lock 0x%x for scp=0x%x with lock %d", 
-                             (long) fileLock,
-                             (long) scp,
+                    osi_Log3(afsd_logp, "CALL ExtendLock lock 0x%p for scp=0x%p with lock %d", 
+                             fileLock,
+                             scp,
                              (int) scp->serverLock);
 
                     lock_ReleaseMutex(&scp->mx);
@@ -4464,7 +4464,7 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int client_is_dead)
         newLock = LockWrite;
 #endif
 
-        osi_Log1(afsd_logp, "CALL SetLock lock 0x%x", (long) oldFileLock);
+        osi_Log1(afsd_logp, "CALL SetLock lock 0x%p", oldFileLock);
 
         lock_ReleaseWrite(&cm_scacheLock);
         lock_ReleaseMutex(&scp->mx);

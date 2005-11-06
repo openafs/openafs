@@ -764,7 +764,7 @@ uppercase(char *str)
 {
     static char max_size[100];
     char *pnt;
-    int len = strlen(str);
+    int len = (int)strlen(str);
 
     for (pnt = max_size; len > 0; len--, str++) {
 	*pnt++ = (islower(*str) ? toupper(*str) : *str);

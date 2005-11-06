@@ -27,9 +27,9 @@ typedef struct osi_lockOps {
 	int (*TryReadProc)(struct osi_rwlock *);
 	int (*TryWriteProc)(struct osi_rwlock *);
 	int (*TryMutexProc)(struct osi_mutex *);
-	void (*SleepRProc)(long, struct osi_rwlock *);
-	void (*SleepWProc)(long, struct osi_rwlock *);
-	void (*SleepMProc)(long, struct osi_mutex *);
+	void (*SleepRProc)(LONG_PTR, struct osi_rwlock *);
+	void (*SleepWProc)(LONG_PTR, struct osi_rwlock *);
+	void (*SleepMProc)(LONG_PTR, struct osi_mutex *);
 	void (*InitializeMutexProc)(struct osi_mutex *, char *);
 	void (*InitializeRWLockProc)(struct osi_rwlock *, char *);
 	void (*FinalizeMutexProc)(struct osi_mutex *);

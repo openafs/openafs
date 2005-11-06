@@ -20,7 +20,7 @@ extern "C" {
  *
  */
 
-BOOL ADMINAPI asc_CellChange (DWORD idClient, ASID idCell, LPAFSADMSVR_CHANGECELL_PARAMS pChange, ULONG *pStatus)
+BOOL ADMINAPI asc_CellChange (UINT_PTR idClient, ASID idCell, LPAFSADMSVR_CHANGECELL_PARAMS pChange, ULONG *pStatus)
 {
    BOOL rc = TRUE;
    ULONG status = 0;
@@ -49,7 +49,7 @@ BOOL ADMINAPI asc_CellChange (DWORD idClient, ASID idCell, LPAFSADMSVR_CHANGECEL
 }
 
 
-BOOL ADMINAPI asc_CellRefreshRateSet (DWORD idClient, ASID idCell, ULONG cminRefreshRate, ULONG *pStatus)
+BOOL ADMINAPI asc_CellRefreshRateSet (UINT_PTR idClient, ASID idCell, ULONG cminRefreshRate, ULONG *pStatus)
 {
    BOOL rc = TRUE;
    ULONG status = 0;

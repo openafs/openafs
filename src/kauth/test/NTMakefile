@@ -24,28 +24,35 @@ EXELIBS = \
 
 $(OUT)\multiklog.exe: $(OUT)\multiklog.obj
 	$(EXECONLINK) $(EXELIBS)
-
+        $(_VC_MANIFEST_EMBED_EXE)
 
 $(OUT)\test_date.exe: $(OUT)\test_date.obj
 	$(EXECONLINK) $(EXELIBS)
+        $(_VC_MANIFEST_EMBED_EXE)
 
 $(OUT)\test_badtix.exe: $(OUT)\test_badtix.obj
 	$(EXECONLINK) $(EXELIBS)
+        $(_VC_MANIFEST_EMBED_EXE)
 
 $(OUT)\decode_ticket.exe: $(OUT)\decode_ticket.obj
 	$(EXECONLINK) $(EXELIBS)
+        $(_VC_MANIFEST_EMBED_EXE)
 
 $(OUT)\test_interim_ktc.exe: $(OUT)\test_interim_ktc.obj
 	$(EXECONLINK) $(EXELIBS)
+        $(_VC_MANIFEST_EMBED_EXE)
 
 $(OUT)\test_rxkad_free: test_rxkad_free.o 
 	$(EXECONLINK) $(EXELIBS)
+        $(_VC_MANIFEST_EMBED_EXE)
 
 $(OUT)\test_getticket.exe: $(OUT)\test_getticket.obj
 	$(EXECONLINK) $(EXELIBS)
+        $(_VC_MANIFEST_EMBED_EXE)
 
 $(OUT)\background.exe: $(OUT)\background.obj
 	$(EXECONLINK) $(EXELIBS)
+        $(_VC_MANIFEST_EMBED_EXE)
 
 
 test tests all: $(OUT)\multiklog.exe $(OUT)\test_date.exe $(OUT)\test_badtix.exe $(OUT)\decode_ticket.exe \

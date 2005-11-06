@@ -141,7 +141,7 @@ xdrmem_putbytes(register XDR * xdrs, caddr_t addr, register u_int len)
 static u_int
 xdrmem_getpos(register XDR * xdrs)
 {
-    return ((u_int) xdrs->x_private - (u_int) xdrs->x_base);
+    return ((u_int)(xdrs->x_private - xdrs->x_base));
 }
 
 static bool_t
@@ -150,10 +150,10 @@ xdrmem_setpos(register XDR * xdrs, u_int pos)
     register caddr_t newaddr = xdrs->x_base + pos;
     register caddr_t lastaddr = xdrs->x_private + xdrs->x_handy;
 
-    if ((afs_int32) newaddr > (afs_int32) lastaddr)
+    if (newaddr > lastaddr)
 	return (FALSE);
     xdrs->x_private = newaddr;
-    xdrs->x_handy = (int)lastaddr - (int)newaddr;
+    xdrs->x_handy = (int)(lastaddr - newaddr);
     return (TRUE);
 }
 

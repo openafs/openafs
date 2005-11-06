@@ -88,7 +88,7 @@ BOOL CALLBACK Users_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
          FastList_SetSortFunction (GetDlgItem (hDlg, IDC_USERS_LIST), General_ListSortFunction);
 
          FL_RestoreView (GetDlgItem (hDlg, IDC_USERS_LIST), &gr.viewUsr);
-         FastList_SetTextCallback (GetDlgItem (hDlg, IDC_USERS_LIST), Display_GetItemText, (DWORD)&gr.viewUsr);
+         FastList_SetTextCallback (GetDlgItem (hDlg, IDC_USERS_LIST), Display_GetItemText, &gr.viewUsr);
          SetDlgItemText (hDlg, IDC_USERS_PATTERN, g.szPatternUsers);
          Users_EnableButtons(hDlg);
          Display_PopulateUserList();

@@ -112,6 +112,7 @@ proc TellMeAboutYourself(
   OUT Capabilities *capabilities
 ) = 65538;
 
+/*
 proc GetDE(
   IN  afs_int32 index,
   OUT afs_int32 addr,
@@ -120,4 +121,5 @@ proc GetDE(
   OUT afs_int32 time,
   OUT string fileName<AFSNAMEMAX>
 ) = 65539;
+*/
 

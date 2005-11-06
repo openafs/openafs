@@ -91,9 +91,9 @@ BOOL CALLBACK Filesets_General_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM l
       return TRUE;
 
    if (msg == WM_INITDIALOG)
-      SetWindowLong (hDlg, DWL_USER, ((LPPROPSHEETPAGE)lp)->lParam);
+      SetWindowLongPtr (hDlg, DWLP_USER, ((LPPROPSHEETPAGE)lp)->lParam);
 
-   LPIDENT lpi = (LPIDENT)GetWindowLong (hDlg, DWL_USER);
+   LPIDENT lpi = (LPIDENT)GetWindowLongPtr (hDlg, DWLP_USER);
 
    switch (msg)
       {

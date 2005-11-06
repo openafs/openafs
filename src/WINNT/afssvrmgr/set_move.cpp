@@ -44,7 +44,7 @@ void Filesets_ShowMoveTo (LPIDENT lpiSource, LPIDENT lpiTarget)
    psmp->lpiSource = lpiSource;
    psmp->lpiTarget = lpiTarget;
 
-   int rc = ModalDialogParam (IDD_SET_MOVETO, GetActiveWindow(), (DLGPROC)Filesets_MoveTo_DlgProc, (LPARAM)psmp);
+   INT_PTR rc = ModalDialogParam (IDD_SET_MOVETO, GetActiveWindow(), (DLGPROC)Filesets_MoveTo_DlgProc, (LPARAM)psmp);
    if (rc != IDOK)
       {
       Delete (psmp);
@@ -77,7 +77,7 @@ BOOL CALLBACK Filesets_MoveTo_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp
       switch (msg)
          {
          case WM_INITDIALOG:
-            FastList_SetTextCallback (GetDlgItem (hDlg, IDC_AGG_LIST), GetItemText, (DWORD)&gr.viewAggMove);
+            FastList_SetTextCallback (GetDlgItem (hDlg, IDC_AGG_LIST), GetItemText, &gr.viewAggMove);
             Filesets_MoveTo_OnInitDialog (hDlg, psmp);
             StartTask (taskSET_MOVETO_INIT, hDlg, psmp->lpiSource);
             break;
@@ -169,7 +169,7 @@ BOOL CALLBACK Filesets_MoveTo_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp
 }
 
 
-static LONG procFilesetsMoveToList = 0;
+static LONG_PTR procFilesetsMoveToList = 0;
 
 LRESULT CALLBACK Filesets_MoveTo_SubclassListProc (HWND hList, UINT msg, WPARAM wp, LPARAM lp)
 {
@@ -178,13 +178,13 @@ LRESULT CALLBACK Filesets_MoveTo_SubclassListProc (HWND hList, UINT msg, WPARAM 
    if (procFilesetsMoveToList == 0)
       rc = DefWindowProc (hList, msg, wp, lp);
    else
-      rc = CallWindowProc ((WNDPROC)procFilesetsMoveToList, hList, msg, wp, lp);
+      rc = (LRESULT) CallWindowProc ((WNDPROC)procFilesetsMoveToList, hList, msg, wp, lp);
 
    switch (msg)
       {
       case WM_DESTROY:
          if (procFilesetsMoveToList != 0)
-            SetWindowLong (hList, GWL_WNDPROC, procFilesetsMoveToList);
+            SetWindowLongPtr (hList, GWLP_WNDPROC, procFilesetsMoveToList);
          break;
 
       case WM_COMMAND: 
@@ -205,8 +205,8 @@ void Filesets_MoveTo_OnInitDialog (HWND hDlg, LPSET_MOVE_PARAMS psmp)
 {
    HWND hList = GetDlgItem (hDlg, IDC_AGG_LIST);
    if (procFilesetsMoveToList == 0)
-      procFilesetsMoveToList = GetWindowLong (hList, GWL_WNDPROC);
-   SetWindowLong (hList, GWL_WNDPROC, (LONG)Filesets_MoveTo_SubclassListProc);
+      procFilesetsMoveToList = GetWindowLongPtr (hList, GWLP_WNDPROC);
+   SetWindowLongPtr (hList, GWLP_WNDPROC, (LONG_PTR)Filesets_MoveTo_SubclassListProc);
 
    if (gr.viewAggMove.lvsView == 0) // never initialized this?
       {
@@ -259,7 +259,7 @@ void Filesets_MoveTo_OnSelectServer (HWND hDlg, LPIDENT *plpiTarget)
 {
    LPIDENT lpiServerNew = (LPIDENT)CB_GetSelectedData (GetDlgItem (hDlg, IDC_MOVESET_SERVER));
 
-   SetWindowLong (hDlg, DWL_USER, (LONG)lpiServerNew);
+   SetWindowLongPtr (hDlg, DWLP_USER, (LONG_PTR)lpiServerNew);
 
    if (*plpiTarget && (*plpiTarget)->fIsServer())
       *plpiTarget = NULL;

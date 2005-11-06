@@ -20,7 +20,7 @@ typedef struct osi_remLockInfo {
 	long type;
 
 	/* the addr */
-	long lockAddr;
+	LONG_PTR lockAddr;
 
 	/* raw state */
 	long readers;
@@ -43,8 +43,8 @@ typedef struct osi_remLockInfo {
 
 /* mapped over remote debugging integer array */
 typedef struct osi_remSleepInfo {
-	long tid;		/* thread id of the blocked thread */
-	long sleepValue;	/* the value we're sleeping at */
+	thread_t tid;		/* thread id of the blocked thread */
+	LONG_PTR sleepValue;	/* the value we're sleeping at */
 } osi_remSleepInfo_t;
 
 #define OSI_MAXRPCCALLS 2	/* one for osidb, one for AFS RPC */

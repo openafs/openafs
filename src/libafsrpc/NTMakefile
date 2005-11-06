@@ -96,6 +96,7 @@ DLLLIBS =\
 
 $(LIBFILE): $(DLLOBJS) $(DLLLIBS)
 	$(DLLCONLINK) /DEF:afsrpc.def iphlpapi.lib
+        $(_VC_MANIFEST_EMBED_DLL)
 	$(DLLPREP)
 
 # Definitions for generating versioninfo resources

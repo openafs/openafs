@@ -126,6 +126,7 @@ KASERVER_EXELIBS =\
 
 $(KASERVER): $(KASERVER_OBJS) $(AFSLIBS) $(KASERVER_EXELIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
+        $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
 
 #build $(OUT)\kadatabase.obj
@@ -150,6 +151,7 @@ KAS_OBJS =\
 	
 $(KAS): $(KAS_OBJS) $(AFSLIBS) $(KAUTH_LIBFILE) $(TOKENLIB)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
+        $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
 
 ########### Misc Exes #######################################################
@@ -163,19 +165,23 @@ KPASSWD_OBJS =\
 
 $(KPASSWD_EXEFILE): $(KPASSWD_OBJS) $(AFSLIBS) $(KAUTH_LIBFILE) $(TOKENLIB)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
+        $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
 
 #kpwvalid.exe
 $(OUT)\kpwvalid.exe: $(OUT)\kpwvalid.obj $(AFSLIBS) $(KAUTH_LIBFILE)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
+        $(_VC_MANIFEST_EMBED_EXE)
 
 #kdb.exe - Not implemented for NT - because dbm not available on NT
 #kdb.exe: $(OUT)\kdb.obj $(AFSLIBS) $(KAUTH_LIBFILE) 
 #	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
+#       $(_VC_MANIFEST_EMBED_EXE)
 
 #rebuild.exe 
 $(OUT)\rebuild.exe: $(OUT)\rebuild.obj $(OUT)\kautils.obj $(AFSLIBS) 
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
+        $(_VC_MANIFEST_EMBED_EXE)
 
 ############################################################################
 # Definitions for generating versioninfo resources

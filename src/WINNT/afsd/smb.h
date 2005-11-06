@@ -386,7 +386,7 @@ typedef struct smb_dirSearch {
     unsigned long refCount;		/* reference count */
     long cookie;			/* value returned to the caller */
     struct cm_scache *scp;		/* vnode of the dir we're searching */
-    unsigned long lastTime;		/* last time we used this (osi_Time) */
+    time_t lastTime;			/* last time we used this (osi_Time) */
     long flags;			        /* flags (see below);
 					 * locked by smb_globalLock */
     unsigned short attribute;	        /* search attribute

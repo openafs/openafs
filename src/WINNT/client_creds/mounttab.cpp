@@ -350,7 +350,7 @@ BOOL CALLBACK Mapping_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
    switch (msg)
       {
       case WM_INITDIALOG:
-         SetWindowLong (hDlg, DWL_USER, lp);
+         SetWindowLongPtr (hDlg, DWLP_USER, lp);
          Mapping_OnInitDialog (hDlg);
          break;
 
@@ -385,7 +385,7 @@ BOOL CALLBACK Mapping_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 
 void Mapping_OnInitDialog (HWND hDlg)
 {
-   PDRIVEMAP pMap = (PDRIVEMAP)GetWindowLong (hDlg, DWL_USER);
+   PDRIVEMAP pMap = (PDRIVEMAP)GetWindowLongPtr (hDlg, DWLP_USER);
 
    // Fill in the combo box
    //
@@ -440,7 +440,7 @@ void Mapping_OnInitDialog (HWND hDlg)
 
 void Mapping_OnOK (HWND hDlg)
 {
-   PDRIVEMAP pMap = (PDRIVEMAP)GetWindowLong (hDlg, DWL_USER);
+   PDRIVEMAP pMap = (PDRIVEMAP)GetWindowLongPtr (hDlg, DWLP_USER);
 
    int iItem = SendDlgItemMessage (hDlg, IDC_MAP_LETTER, CB_GETCURSEL, 0, 0);
    int iDrive = SendDlgItemMessage (hDlg, IDC_MAP_LETTER, CB_GETITEMDATA, iItem, 0);

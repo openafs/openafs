@@ -166,7 +166,7 @@ rxi_ListenerProc(fd_set * rfds, int *tnop, struct rx_call **newcallp)
     afs_uint32 host;
     u_short port;
     register struct rx_packet *p = (struct rx_packet *)0;
-    int socket;
+    osi_socket socket;
     struct clock cv;
     afs_int32 nextPollTime;	/* time to next poll FD before sleeping */
     int lastPollWorked, doingPoll;	/* true iff last poll was useful */
@@ -224,10 +224,10 @@ rxi_ListenerProc(fd_set * rfds, int *tnop, struct rx_call **newcallp)
 	    nextPollTime = clock_Sec() + 4;	/* try again in 4 seconds no matter what */
 	    tv.tv_sec = tv.tv_usec = 0;	/* make sure we poll */
 	    tvp = &tv;
-	    code = select(rx_maxSocketNumber + 1, rfds, 0, 0, tvp);
+	    code = select((int)(rx_maxSocketNumber + 1), rfds, 0, 0, tvp);
 	} else {
 	    doingPoll = 0;
-	    code = IOMGR_Select(rx_maxSocketNumber + 1, rfds, 0, 0, tvp);
+	    code = IOMGR_Select((int)(rx_maxSocketNumber + 1), rfds, 0, 0, tvp);
 	}
 	lastPollWorked = 0;	/* default is that it didn't find anything */
 
@@ -324,7 +324,7 @@ static int
 rx_ListenerProc(void *dummy)
 {
     int threadID;
-    int sock;
+    osi_socket sock;
     struct rx_call *newcall;
     fd_set *rfds;
 
@@ -351,7 +351,7 @@ rx_ListenerProc(void *dummy)
 void
 rx_ServerProc(void)
 {
-    int sock;
+    osi_socket sock;
     int threadID;
     struct rx_call *newcall = NULL;
     fd_set *rfds;
@@ -424,9 +424,9 @@ rxi_Listen(osi_socket sock)
  * Recvmsg
  */
 int
-rxi_Recvmsg(int socket, struct msghdr *msg_p, int flags)
+rxi_Recvmsg(osi_socket socket, struct msghdr *msg_p, int flags)
 {
-    return recvmsg((int)socket, msg_p, flags);
+    return recvmsg(socket, msg_p, flags);
 }
 
 /*

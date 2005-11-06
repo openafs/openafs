@@ -344,7 +344,7 @@ Convert(char *arights, int dfs, enum rtype *rtypep)
 	*rtypep = destroy; /* Remove entire entry */
 	return 0;
     }
-    len = strlen(arights);
+    len = (int)strlen(arights);
     mode = 0;
     for(i=0;i<len;i++) {
         tc = *arights++;
@@ -955,7 +955,7 @@ SetACLCmd(struct cmd_syndesc *as, char *arock)
 	}
 	blob.in = AclToString(ta);
 	blob.out_size=0;
-	blob.in_size = 1+strlen(blob.in);
+	blob.in_size = 1+(long)strlen(blob.in);
 	code = pioctl(ti->data, VIOCSETAL, &blob, 1);
 	if (code) {
 	    if (errno == EINVAL) {
@@ -1080,7 +1080,7 @@ CopyACLCmd(struct cmd_syndesc *as, char *arock)
 	    ChangeList(ta, 0, tp->name, tp->rights);
 	blob.in = AclToString(ta);
 	blob.out_size=0;
-	blob.in_size = 1+strlen(blob.in);
+	blob.in_size = 1+(long)strlen(blob.in);
 	code = pioctl(ti->data, VIOCSETAL, &blob, 1);
 	if (code) {
 	    if (errno == EINVAL) {
@@ -1229,7 +1229,7 @@ CleanACLCmd(struct cmd_syndesc *as, char *arock)
 	if (changes) {
 	    /* now set the acl */
 	    blob.in=AclToString(ta);
-	    blob.in_size = strlen(blob.in)+1;
+	    blob.in_size = (long)strlen(blob.in)+1;
 	    blob.out_size = 0;
 	    code = pioctl(ti->data, VIOCSETAL, &blob, 1);
 	    if (code) {
@@ -1458,7 +1458,7 @@ SetVolCmd(struct cmd_syndesc *as, char *arock) {
                 continue;
             }
 	    strcpy(input,offmsg);
-	    blob.in_size += strlen(offmsg);
+	    blob.in_size += (long)strlen(offmsg);
 	    input += strlen(offmsg) + 1;
 	} else 
             *(input++) = '\0';
@@ -1469,7 +1469,7 @@ SetVolCmd(struct cmd_syndesc *as, char *arock) {
                 return code;
             }
 	    strcpy(input,motd);
-	    blob.in_size += strlen(motd);
+	    blob.in_size += (long)strlen(motd);
 	    input += strlen(motd) + 1;
 	} else 
             *(input++) = '\0';
@@ -1786,7 +1786,7 @@ ListMountCmd(struct cmd_syndesc *as, char *arock)
 #ifdef WIN32
 	    if (!InAFS(parent_dir)) {
 		const char * nbname = NetbiosName();
-		int len = strlen(nbname);
+		int len = (int)strlen(nbname);
 
 		if (parent_dir[0] == '\\' && parent_dir[1] == '\\' &&
 		    parent_dir[len+2] == '\\' &&
@@ -1816,7 +1816,7 @@ ListMountCmd(struct cmd_syndesc *as, char *arock)
 	}
 
 	blob.in = last_component;
-	blob.in_size = strlen(last_component)+1;
+	blob.in_size = (long)strlen(last_component)+1;
 	blob.out_size = MAXSIZE;
 	blob.out = space;
 	memset(space, 0, MAXSIZE);
@@ -1886,7 +1886,7 @@ MakeMountCmd(struct cmd_syndesc *as, char *arock)
     if (!InAFS(parent)) {
 #ifdef WIN32
 	const char * nbname = NetbiosName();
-	int len = strlen(nbname);
+	int len = (int)strlen(nbname);
 
 	if (parent[0] == '\\' && parent[1] == '\\' &&
 	    parent[len+2] == '\\' &&
@@ -1967,7 +1967,7 @@ MakeMountCmd(struct cmd_syndesc *as, char *arock)
      * have a symlink system call.
      */
     blob.out_size = 0;
-    blob.in_size = 1 + strlen(space);
+    blob.in_size = 1 + (long)strlen(space);
     blob.in = space;
     blob.out = NULL;
     code = pioctl(path, VIOC_AFS_CREATE_MT_PT, &blob, 0);
@@ -2003,14 +2003,14 @@ RemoveMountCmd(struct cmd_syndesc *as, char *arock) {
 	if (!tp)
 	    tp = (char *) strrchr(ti->data, '/');
 	if (tp) {
-	    strncpy(tbuffer, ti->data, code=tp-ti->data+1);  /* the dir name */
+	    strncpy(tbuffer, ti->data, code=(afs_int32)(tp-ti->data+1));  /* the dir name */
             tbuffer[code] = 0;
 	    tp++;   /* skip the slash */
 
 #ifdef WIN32
 	    if (!InAFS(tbuffer)) {
 		const char * nbname = NetbiosName();
-		int len = strlen(nbname);
+		int len = (int)strlen(nbname);
 
 		if (tbuffer[0] == '\\' && tbuffer[1] == '\\' &&
 		    tbuffer[len+2] == '\\' &&
@@ -2028,7 +2028,7 @@ RemoveMountCmd(struct cmd_syndesc *as, char *arock) {
             fs_StripDriveLetter(tp, tp, 0);
 	}
 	blob.in = tp;
-	blob.in_size = strlen(tp)+1;
+	blob.in_size = (long)strlen(tp)+1;
 	blob.out = lsbuffer;
 	blob.out_size = sizeof(lsbuffer);
 	code = pioctl(tbuffer, VIOC_AFS_STAT_MT_PT, &blob, 0);
@@ -2050,7 +2050,7 @@ RemoveMountCmd(struct cmd_syndesc *as, char *arock) {
 
         blob.out_size = 0;
 	blob.in = tp;
-	blob.in_size = strlen(tp)+1;
+	blob.in_size = (long)strlen(tp)+1;
 	code = pioctl(tbuffer, VIOC_AFS_DELETE_MT_PT, &blob, 0);
 	if (code) {
 	    Die(errno, ti->data);
@@ -2099,7 +2099,7 @@ CheckServersCmd(struct cmd_syndesc *as, char *arock)
 	    return 1;
 	}
 	strcpy(checkserv.tbuffer,info.name);
-	checkserv.tsize=strlen(info.name)+1;
+	checkserv.tsize=(int)strlen(info.name)+1;
     } else {
         strcpy(checkserv.tbuffer,"\0");
         checkserv.tsize=0;
@@ -2710,7 +2710,7 @@ SysNameCmd(struct cmd_syndesc *as, char *arock)
     input += sizeof(afs_int32);
     for (; ti; ti = ti->next) {
         setp++;
-        blob.in_size += strlen(ti->data) + 1;
+        blob.in_size += (long)strlen(ti->data) + 1;
         if (blob.in_size > MAXSIZE) {
             fprintf(stderr, "%s: sysname%s too long.\n", pn,
                      setp > 1 ? "s" : "");
@@ -2874,7 +2874,7 @@ GetCellCmd(struct cmd_syndesc *as, char *arock)
             error = 1;
 	    continue;
 	}
-	blob.in_size = 1+strlen(info.name);
+	blob.in_size = 1+(long)strlen(info.name);
 	blob.in = info.name;
 	code = pioctl(0, VIOC_GETCELLSTATUS, &blob, 1);
 	if (code) {
@@ -3037,7 +3037,7 @@ pokeServers(void)
     code = pioctl(0, VIOC_SETSPREFS, &gblob, 1);
 
     ssp = (cm_SSetPref_t *)space;
-    gblob.in_size = ((char *)&(ssp->servers[0])) - (char *)ssp;
+    gblob.in_size = (long)(((char *)&(ssp->servers[0])) - (char *)ssp);
     gblob.in = space;
     return code;
 }
@@ -3207,7 +3207,7 @@ SetPrefCmd(struct cmd_syndesc *as, char * arock)
     ssp = (cm_SSetPref_t *)space;
     ssp->flags = 0;
     ssp->num_servers = 0;
-    gblob.in_size = ((char*)&(ssp->servers[0])) - (char *)ssp;
+    gblob.in_size = (long)(((char*)&(ssp->servers[0])) - (char *)ssp);
     gblob.in = space;
     gblob.out = space;
     gblob.out_size = MAXSIZE;
@@ -3255,7 +3255,7 @@ SetPrefCmd(struct cmd_syndesc *as, char * arock)
         printf("now working on vlservers, code=%d, errno=%d\n",code,errno);
 
     ssp = (cm_SSetPref_t *)space;
-    gblob.in_size = ((char*)&(ssp->servers[0])) - (char *)ssp;
+    gblob.in_size = (long)(((char*)&(ssp->servers[0])) - (char *)ssp);
     gblob.in = space;
     ssp->flags = CM_SPREF_VLONLY;
     ssp->num_servers = 0;
@@ -3904,7 +3904,7 @@ CSCPolicyCmd(struct cmd_syndesc *asp, char *arock)
         if (asp->parms[4].items)
             policy = "disable";
 		
-        RegSetValueEx( hkCSCPolicy, share, 0, REG_SZ, policy, strlen(policy)+1);
+        RegSetValueEx( hkCSCPolicy, share, 0, REG_SZ, policy, (DWORD)strlen(policy)+1);
 		
         printf("CSC policy on share \"%s\" changed to \"%s\".\n\n", share, policy);
         printf("Close all applications that accessed files on this share or restart AFS Client for the change to take effect.\n"); 
@@ -4205,7 +4205,6 @@ RxStatProcCmd(struct cmd_syndesc *as, char *arock)
     afs_int32 code;
     afs_int32 flags = 0;
     struct ViceIoctl blob;
-    struct cmd_item *ti;
 
     if (as->parms[0].items) {	/* -enable */
 	flags |= AFSCALL_RXSTATS_ENABLE;
@@ -4240,7 +4239,6 @@ RxStatPeerCmd(struct cmd_syndesc *as, char *arock)
     afs_int32 code;
     afs_int32 flags = 0;
     struct ViceIoctl blob;
-    struct cmd_item *ti;
 
     if (as->parms[0].items) {	/* -enable */
 	flags |= AFSCALL_RXSTATS_ENABLE;

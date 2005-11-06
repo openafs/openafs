@@ -55,7 +55,7 @@ void Filesets_Restore (LPIDENT lpiParent)
    if (lpiParent && lpiParent->fIsFileset())
       lpiParent->GetFilesetName (psrp->szFileset);
 
-   int rc = ModalDialogParam (IDD_SET_RESTORE, GetActiveWindow(), (DLGPROC)Filesets_Restore_DlgProc, (LPARAM)psrp);
+   INT_PTR rc = ModalDialogParam (IDD_SET_RESTORE, GetActiveWindow(), (DLGPROC)Filesets_Restore_DlgProc, (LPARAM)psrp);
    if (rc != IDOK)
       {
       Delete (psrp);
@@ -96,7 +96,7 @@ BOOL CALLBACK Filesets_Restore_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM l
       switch (msg)
          {
          case WM_INITDIALOG:
-            FastList_SetTextCallback (GetDlgItem (hDlg, IDC_AGG_LIST), GetItemText, (DWORD)&gr.viewAggRestore);
+            FastList_SetTextCallback (GetDlgItem (hDlg, IDC_AGG_LIST), GetItemText, &gr.viewAggRestore);
             Filesets_Restore_OnInitDialog (hDlg, psrp);
             break;
 
@@ -192,7 +192,7 @@ BOOL CALLBACK Filesets_Restore_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM l
 }
 
 
-static LONG procFilesetsRestoreList = 0;
+static LONG_PTR procFilesetsRestoreList = 0;
 
 LRESULT CALLBACK Filesets_Restore_SubclassListProc (HWND hList, UINT msg, WPARAM wp, LPARAM lp)
 {
@@ -201,13 +201,13 @@ LRESULT CALLBACK Filesets_Restore_SubclassListProc (HWND hList, UINT msg, WPARAM
    if (procFilesetsRestoreList == 0)
       rc = DefWindowProc (hList, msg, wp, lp);
    else
-      rc = CallWindowProc ((WNDPROC)procFilesetsRestoreList, hList, msg, wp, lp);
+      rc = (LRESULT) CallWindowProc ((WNDPROC)procFilesetsRestoreList, hList, msg, wp, lp);
 
    switch (msg)
       {
       case WM_DESTROY:
          if (procFilesetsRestoreList != 0)
-            SetWindowLong (hList, GWL_WNDPROC, procFilesetsRestoreList);
+            SetWindowLongPtr (hList, GWLP_WNDPROC, procFilesetsRestoreList);
          break;
 
       case WM_COMMAND: 
@@ -228,8 +228,8 @@ void Filesets_Restore_OnInitDialog (HWND hDlg, LPSET_RESTORE_PARAMS psrp)
 {
    HWND hList = GetDlgItem (hDlg, IDC_AGG_LIST);
    if (procFilesetsRestoreList == 0)
-      procFilesetsRestoreList = GetWindowLong (hList, GWL_WNDPROC);
-   SetWindowLong (hList, GWL_WNDPROC, (LONG)Filesets_Restore_SubclassListProc);
+      procFilesetsRestoreList = GetWindowLongPtr (hList, GWLP_WNDPROC);
+   SetWindowLongPtr (hList, GWLP_WNDPROC, (LONG_PTR)Filesets_Restore_SubclassListProc);
 
    if (gr.viewAggRestore.lvsView == 0)  // never initialized this?
       {
@@ -272,7 +272,7 @@ void Filesets_Restore_OnSelectServer (HWND hDlg, LPSET_RESTORE_PARAMS psrp)
          lpiSelect = psrp->lpi->GetAggregate();
       }
 
-   SetWindowLong (hDlg, DWL_USER, (LONG)lpiServerNew);
+   SetWindowLongPtr (hDlg, DWLP_USER, (LONG_PTR)lpiServerNew);
 
    LPAGG_ENUM_TO_LISTVIEW_PACKET lpp = New (AGG_ENUM_TO_LISTVIEW_PACKET);
    lpp->lpiServer = lpiServerNew;

@@ -52,7 +52,7 @@ static size_t cFields = 0;
 static struct
    {
    HWND hWnd;
-   DWORD *adwData;
+   UINT_PTR *adwData;
    size_t cdwData;
    } *aWindows = NULL;
 static size_t cWindows = 0;
@@ -260,9 +260,9 @@ size_t GetWindowDataField (LPTSTR pszField)
 }
 
 
-DWORD GetWindowData (HWND hWnd, LPTSTR pszField)
+UINT_PTR GetWindowData (HWND hWnd, LPTSTR pszField)
 {
-   DWORD rc = 0;
+   UINT_PTR rc = 0;
 
    if (pcsData == NULL)
       {
@@ -290,9 +290,9 @@ DWORD GetWindowData (HWND hWnd, LPTSTR pszField)
 }
 
 
-DWORD SetWindowData (HWND hWnd, LPTSTR pszField, DWORD dwNewData)
+UINT_PTR SetWindowData (HWND hWnd, LPTSTR pszField, UINT_PTR dwNewData)
 {
-   DWORD rc = 0;
+   UINT_PTR rc = 0;
 
    if (pcsData == NULL)
       {

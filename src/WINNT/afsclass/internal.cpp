@@ -222,7 +222,7 @@ void AfsClass_ParseRecurringTime (BOOL *pfEver, LPSYSTEMTIME pst, LPTSTR pszTime
       //
       pst->wDayOfWeek = (WORD)(-1); // daily until proven otherwise
 
-      for (size_t ii = 0; ii < 7; ++ii)
+      for (WORD ii = 0; ii < 7; ++ii)
          {
          if (!lstrncmpi (apszDays[ii], pszTime, 3))
             {

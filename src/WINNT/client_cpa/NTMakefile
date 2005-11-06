@@ -28,6 +28,7 @@ DEFFILE = afs_cpa.def
 
 $(DLLFILE): $(DLLOBJS)
 	$(DLLGUILINK)  $(DLLLIBS) /DEF:$(DEFFILE)
+        $(_VC_MANIFEST_EMBED_DLL)
 	$(DLLPREP)
 
 

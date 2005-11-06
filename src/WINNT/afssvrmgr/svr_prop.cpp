@@ -81,9 +81,9 @@ BOOL CALLBACK Server_General_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
       return TRUE;
 
    if (msg == WM_INITDIALOG)
-      SetWindowLong (hDlg, DWL_USER, ((LPPROPSHEETPAGE)lp)->lParam);
+      SetWindowLongPtr (hDlg, DWLP_USER, ((LPPROPSHEETPAGE)lp)->lParam);
 
-   LPIDENT lpiServer = (LPIDENT)GetWindowLong (hDlg, DWL_USER);
+   LPIDENT lpiServer = (LPIDENT)GetWindowLongPtr (hDlg, DWLP_USER);
 
    switch (msg)
       {
@@ -101,7 +101,7 @@ BOOL CALLBACK Server_General_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
          break;
 
       case WM_DESTROY:
-         SetWindowLong (hDlg, DWL_USER, 0);
+         SetWindowLongPtr (hDlg, DWLP_USER, 0);
          break;
 
       case WM_ENDTASK:
@@ -139,7 +139,7 @@ BOOL CALLBACK Server_General_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
          if ((HWND)lp == GetDlgItem (hDlg, IDC_SVR_ADDRESSES))
             {
             SetBkColor ((HDC)wp, GetSysColor (COLOR_BTNFACE));
-            return (BOOL)CreateSolidBrush (GetSysColor (COLOR_BTNFACE));
+            return CreateSolidBrush (GetSysColor (COLOR_BTNFACE))?TRUE:FALSE;
             }
          break;
       }
@@ -241,9 +241,9 @@ BOOL CALLBACK Server_Scout_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
       return TRUE;
 
    if (msg == WM_INITDIALOG)
-      SetWindowLong (hDlg, DWL_USER, ((LPPROPSHEETPAGE)lp)->lParam);
+      SetWindowLongPtr (hDlg, DWLP_USER, ((LPPROPSHEETPAGE)lp)->lParam);
 
-   LPIDENT lpiServer = (LPIDENT)GetWindowLong (hDlg, DWL_USER);
+   LPIDENT lpiServer = (LPIDENT)GetWindowLongPtr (hDlg, DWLP_USER);
 
    switch (msg)
       {
@@ -327,7 +327,7 @@ void Server_Scout_OnInitDialog (HWND hDlg, LPIDENT lpiServer)
 
 void Server_Scout_OnEndTask_InitDialog (HWND hDlg, LPTASKPACKET ptp)
 {
-   LPIDENT lpiServer = (LPIDENT)GetWindowLong (hDlg, DWL_USER);
+   LPIDENT lpiServer = (LPIDENT)GetWindowLongPtr (hDlg, DWLP_USER);
 
    if (!ptp->rc)
       {
@@ -422,7 +422,7 @@ void Server_Scout_OnEndTask_Apply (HWND hDlg, LPTASKPACKET ptp)
 {
    if (!ptp->rc)
       {
-      LPIDENT lpiServer = (LPIDENT)GetWindowLong (hDlg, DWL_USER);
+      LPIDENT lpiServer = (LPIDENT)GetWindowLongPtr (hDlg, DWLP_USER);
 
       TCHAR szText[ cchNAME ];
       lpiServer->GetServerName (szText);

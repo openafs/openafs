@@ -177,7 +177,7 @@ typedef struct
    LPIDENT lpiCell;
 
    LPSUBSET sub;
-   PVOID hCreds;
+   UINT_PTR hCreds;
    } GLOBALS;
 
 typedef struct

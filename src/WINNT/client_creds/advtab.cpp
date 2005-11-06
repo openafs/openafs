@@ -164,9 +164,9 @@ void Advanced_OnServiceTimer (HWND hDlg)
    TestAndDoMapShare(Status.dwCurrentState);
    SetDlgItemText (hDlg, IDC_SERVICE_STATUS, szStatus);
 
-   if (fFinal && GetWindowLong (hDlg, DWL_USER))
+   if (fFinal && GetWindowLongPtr (hDlg, DWLP_USER))
       {
-      SetWindowLong (hDlg, DWL_USER, 0);
+      SetWindowLongPtr (hDlg, DWLP_USER, 0);
       Main_RepopulateTabs (FALSE);
       }
 
@@ -252,7 +252,7 @@ void Advanced_OnChangeService (HWND hDlg, WORD wCmd)
    if (fSuccess)
       {
       if (wCmd == IDC_SERVICE_STOP)
-         SetWindowLong (hDlg, DWL_USER, TRUE);
+         SetWindowLongPtr (hDlg, DWLP_USER, TRUE);
       Advanced_OnServiceTimer (hDlg);
       Advanced_StartTimer (hDlg);
 #ifdef USE_KFW

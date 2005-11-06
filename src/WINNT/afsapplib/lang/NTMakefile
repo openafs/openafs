@@ -44,6 +44,7 @@ DLLOBJS = $(RESFILE)
 
 $(DLLFILE) : $(DLLOBJS)
 	$(DLLRESLINK)
+        $(_VC_MANIFEST_EMBED_DLL)
 	$(DLLPREP) 
 
 install : $(DLLFILE)

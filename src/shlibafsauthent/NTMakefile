@@ -221,6 +221,7 @@ DLLLIBS =\
 
 $(LIBFILE): $(DLLOBJS) $(DLLLIBS)
 	$(DLLCONLINK) /DEF:afsauthent.def rpcrt4.lib
+        $(_VC_MANIFEST_EMBED_DLL)
 	$(DLLPREP)
 
 # Definitions for generating versioninfo resources

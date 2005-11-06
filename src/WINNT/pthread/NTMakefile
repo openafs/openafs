@@ -29,6 +29,7 @@ PTHR_DLLOBJS = \
 
 $(PTHR_DLLFILE): $(PTHR_DLLOBJS)
 	$(DLLCONLINK) /DEF:pthread.def
+        $(_VC_MANIFEST_EMBED_DLL)
 	$(DLLPREP)
 
 ############################################################################
@@ -42,6 +43,7 @@ PTHR95_DLLOBJS = \
 
 $(PTHR95_DLLFILE): $(PTHR95_DLLOBJS)
 	$(DLLCONLINK) /DEF:pthread.def
+        $(_VC_MANIFEST_EMBED_DLL)
 	$(DLLPREP)
 
 $(OUT)\pthread_95.obj: pthread.c

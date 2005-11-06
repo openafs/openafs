@@ -201,7 +201,7 @@ void Server_SelectServer (HWND hDlg, LPIDENT lpiNew, BOOL fForceRedraw)
    LPIDENT lpiOld = Server_GetServer (hDlg);
    if (lpiNew != lpiOld)
       {
-      SetWindowLong (hDlg, DWL_USER, (LONG)lpiNew);
+      SetWindowLongPtr (hDlg, DWLP_USER, (LONG_PTR)lpiNew);
 
       if (hDlg != g.hMain)
          {
@@ -231,7 +231,7 @@ void Server_SelectServer (HWND hDlg, LPIDENT lpiNew, BOOL fForceRedraw)
 
 LPIDENT Server_GetServer (HWND hDlg)
 {
-   return (LPIDENT)GetWindowLong (hDlg, DWL_USER);
+   return (LPIDENT)GetWindowLongPtr (hDlg, DWLP_USER);
 }
 
 LPIDENT Server_GetServerForChild (HWND hChild)
@@ -337,7 +337,7 @@ BOOL CALLBACK Server_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 }
 
 
-static LONG procTabControl = 0;
+static LONG_PTR procTabControl = 0;
 
 LRESULT CALLBACK Server_SubclassTabControlProc (HWND hTab, UINT msg, WPARAM wp, LPARAM lp)
 {
@@ -346,7 +346,7 @@ LRESULT CALLBACK Server_SubclassTabControlProc (HWND hTab, UINT msg, WPARAM wp, 
    if (procTabControl == 0)
       rc = DefWindowProc (hTab, msg, wp, lp);
    else
-      rc = CallWindowProc ((WNDPROC)procTabControl, hTab, msg, wp, lp);
+      rc = (LRESULT) CallWindowProc ((WNDPROC)procTabControl, hTab, msg, wp, lp);
 
    switch (msg)
       {
@@ -364,7 +364,7 @@ LRESULT CALLBACK Server_SubclassTabControlProc (HWND hTab, UINT msg, WPARAM wp, 
 
       case WM_DESTROY:
          if (procTabControl != 0)
-            SetWindowLong (hTab, GWL_WNDPROC, procTabControl);
+            SetWindowLongPtr (hTab, GWLP_WNDPROC, procTabControl);
          break;
       }
 
@@ -392,8 +392,8 @@ void Server_PrepareTabControl (HWND hTab)
    // subclass the TCN_ window, so that it will start sending WM_SIZE
    // messages to its child window.
    //
-   procTabControl = GetWindowLong (hTab, GWL_WNDPROC);
-   SetWindowLong (hTab, GWL_WNDPROC, (LONG)Server_SubclassTabControlProc);
+   procTabControl = GetWindowLongPtr (hTab, GWLP_WNDPROC);
+   SetWindowLongPtr (hTab, GWLP_WNDPROC, (LONG_PTR)Server_SubclassTabControlProc);
 
    // Since we just subclassed this control, our new wndproc wasn't around
    // when the window was created.  Any WM_CREATE processing we'd ordinarily

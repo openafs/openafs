@@ -103,7 +103,7 @@ BOOL CALLBACK Machine_Create_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
    switch (msg)
       {
       case WM_INITDIALOG:
-         SetWindowLong (hDlg, DWL_USER, lp);
+         SetWindowLongPtr (hDlg, DWLP_USER, lp);
          Machine_Create_OnInitDialog (hDlg);
          break;
 
@@ -151,7 +151,7 @@ BOOL CALLBACK Machine_Create_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 
 void Machine_Create_OnInitDialog (HWND hDlg)
 {
-   LPCREATEMACHINEDLG lpp = (LPCREATEMACHINEDLG)GetWindowLong (hDlg, DWL_USER);
+   LPCREATEMACHINEDLG lpp = (LPCREATEMACHINEDLG)GetWindowLongPtr (hDlg, DWLP_USER);
 
    // Fix the title of the dialog
    //
@@ -213,7 +213,7 @@ void Machine_Create_OnID (HWND hDlg)
 
 void Machine_Create_OnAdvanced (HWND hDlg)
 {
-   LPCREATEMACHINEDLG lpp = (LPCREATEMACHINEDLG)GetWindowLong (hDlg, DWL_USER);
+   LPCREATEMACHINEDLG lpp = (LPCREATEMACHINEDLG)GetWindowLongPtr (hDlg, DWLP_USER);
    lpp->Advanced.pUserList = NULL;
    lpp->Advanced.fDeleteMeOnClose = FALSE;
    lpp->Advanced.fShowModal = TRUE;
@@ -227,7 +227,7 @@ void Machine_Create_OnAdvanced (HWND hDlg)
 
 BOOL Machine_Create_OnOK (HWND hDlg)
 {
-   LPCREATEMACHINEDLG lpp = (LPCREATEMACHINEDLG)GetWindowLong (hDlg, DWL_USER);
+   LPCREATEMACHINEDLG lpp = (LPCREATEMACHINEDLG)GetWindowLongPtr (hDlg, DWLP_USER);
 
    // Start a background task to do all this work.
    //

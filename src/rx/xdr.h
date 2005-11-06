@@ -329,5 +329,4 @@ struct xdr_discrim {
 #define IXDR_PUT_U_SHORT(buf, v)	IXDR_PUT_INT32((buf), ((afs_int32)(v)))
 
 #include "xdr_prototypes.h"
-
 #endif /* __XDR_INCLUDE__ */

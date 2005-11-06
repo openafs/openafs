@@ -134,7 +134,7 @@ typedef struct cm_buf_ops {
 /* global locks */
 extern osi_rwlock_t buf_globalLock;
 
-extern long buf_Init(int newFile, cm_buf_ops_t *, long nbuffers);
+extern long buf_Init(int newFile, cm_buf_ops_t *, afs_uint64 nbuffers);
 
 extern void buf_Shutdown(void);
 
@@ -172,11 +172,11 @@ extern void buf_SetDirty(cm_buf_t *);
 
 extern long buf_CleanAndReset(void);
 
-extern void buf_ReserveBuffers(long);
+extern void buf_ReserveBuffers(afs_uint64);
 
-extern int buf_TryReserveBuffers(long);
+extern int buf_TryReserveBuffers(afs_uint64);
 
-extern void buf_UnreserveBuffers(long);
+extern void buf_UnreserveBuffers(afs_uint64);
 
 #ifdef TESTING
 extern void buf_ValidateBufQueues(void);
@@ -193,7 +193,7 @@ extern long buf_CleanVnode(struct cm_scache *scp, cm_user_t *userp,
 extern long buf_FlushCleanPages(cm_scache_t *scp, cm_user_t *userp,
 	cm_req_t *reqp);
 
-extern long buf_SetNBuffers(long nbuffers);
+extern long buf_SetNBuffers(afs_uint64 nbuffers);
 
 extern long buf_ValidateBuffers(void);
 

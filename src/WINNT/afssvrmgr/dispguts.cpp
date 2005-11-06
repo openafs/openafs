@@ -507,7 +507,7 @@ void Display_Aggregates_Internal_Clean (LPDISPLAYREQUEST pdr)
          {
          size_t iMax = SendMessage (pdr->hList, CB_GETCOUNT, 0, 0);
 
-         for (size_t iItem = 0; iItem < iMax; )
+         for (UINT iItem = 0; iItem < iMax; )
             {
             BOOL fDelete = FALSE;
 
@@ -773,7 +773,7 @@ void Display_Filesets_Internal_Clean (LPDISPLAYREQUEST pdr)
          {
          size_t iMax = SendMessage (pdr->hList, CB_GETCOUNT, 0, 0);
 
-         for (size_t iItem = 0; iItem < iMax; )
+         for (UINT iItem = 0; iItem < iMax; )
             {
             BOOL fDelete = FALSE;
 

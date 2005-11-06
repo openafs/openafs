@@ -193,7 +193,7 @@ void OpenCell_OnCellChange (HWND hDlg, BOOL fMoveCaret)
 {
    HWND hCombo = GetDlgItem (hDlg, IDC_MON_SUBSET);
    CB_StartChange (hCombo, TRUE);
-   int iSel = 0;
+   size_t iSel = 0;
    BOOL fAddedAny = FALSE;
 
    TCHAR szCell[ cchNAME ];
@@ -334,7 +334,7 @@ BOOL CALLBACK OpenCellDlg_Hook (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
          switch (LOWORD(wp))
             {
             case IDOK:
-               OpenCellDlg_Hook_OnOK (hDlg, (LPOPENCELLDLG_PARAMS)GetWindowLong (hDlg, DWL_USER));
+               OpenCellDlg_Hook_OnOK (hDlg, (LPOPENCELLDLG_PARAMS)GetWindowLongPtr (hDlg, DWLP_USER));
                return TRUE;
 
             case IDC_OPENCELL_CELL:

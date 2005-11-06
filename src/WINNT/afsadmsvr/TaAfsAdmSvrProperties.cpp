@@ -357,8 +357,8 @@ BOOL AfsAdmSvr_ObtainFullProperties (LPASOBJPROP pProperties, ULONG *pStatus)
                   memcpy (&pProperties->u.VolumeProperties.timeLastBackup, &fs.timeLastBackup, sizeof(SYSTEMTIME));
                   memcpy (&pProperties->u.VolumeProperties.timeCopyCreation, &fs.timeCopyCreation, sizeof(SYSTEMTIME));
                   pProperties->u.VolumeProperties.nFiles = fs.nFiles;
-                  pProperties->u.VolumeProperties.ckQuota = fs.ckQuota;
-                  pProperties->u.VolumeProperties.ckUsed = fs.ckUsed;
+                  pProperties->u.VolumeProperties.ckQuota = (UINT_PTR)fs.ckQuota;
+                  pProperties->u.VolumeProperties.ckUsed = (UINT_PTR)fs.ckUsed;
                   pProperties->u.VolumeProperties.FilesetType = fs.Type;
                   pProperties->u.VolumeProperties.FilesetState = fs.State;
                   }
@@ -613,13 +613,13 @@ LPASOBJPROP AfsAdmSvr_GetCurrentProperties (ASID idObject, ULONG *pStatus)
          break;
 
       default:
-         return (LPASOBJPROP)FALSE_(ERROR_INVALID_PARAMETER,pStatus);
+         return (LPASOBJPROP)NULL_(ERROR_INVALID_PARAMETER,pStatus);
       }
 
    LPASOBJPROP pCurrentProperties;
    if ((pCurrentProperties = (LPASOBJPROP)((LPIDENT)idObject)->GetUserParam()) == NULL)
       {
-      return (LPASOBJPROP)FALSE_(ERROR_NOT_ENOUGH_MEMORY,pStatus);
+      return (LPASOBJPROP)NULL_(ERROR_NOT_ENOUGH_MEMORY,pStatus);
       }
 
    return pCurrentProperties;

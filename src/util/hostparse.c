@@ -330,7 +330,11 @@ gettmpdir(void)
 	 * the buffer pointer values but we do NOT deallocate the
 	 * previously installed buffer, if any, in case it is in use.
 	 */
-	InterlockedExchange((LPLONG) & saveTmpDir, (LONG) dirp);
+#ifdef _WIN64
+	InterlockedExchange64((LONGLONG)(INT_PTR)&saveTmpDir, (LONGLONG) dirp);
+#else
+	InterlockedExchange((LONG) & saveTmpDir, (LONG) dirp);
+#endif
 
     }
     /* if (!saveTmpDir) */

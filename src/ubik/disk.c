@@ -134,7 +134,7 @@ udisk_LogOpcode(struct ubik_dbase *adbase, afs_int32 aopcode, int async)
     /* setup data and do write */
     aopcode = htonl(aopcode);
     code =
-	(*adbase->write) (adbase, LOGFILE, &aopcode, ustat.size,
+	(*adbase->write) (adbase, LOGFILE, (char *)&aopcode, ustat.size,
 			  sizeof(afs_int32));
     if (code != sizeof(afs_int32))
 	return UIOERROR;
@@ -167,7 +167,7 @@ udisk_LogEnd(struct ubik_dbase *adbase, struct ubik_version *aversion)
 
     /* do write */
     code =
-	(*adbase->write) (adbase, LOGFILE, data, ustat.size,
+	(*adbase->write) (adbase, LOGFILE, (char *)data, ustat.size,
 			  3 * sizeof(afs_int32));
     if (code != 3 * sizeof(afs_int32))
 	return UIOERROR;
@@ -198,7 +198,7 @@ udisk_LogTruncate(struct ubik_dbase *adbase, afs_int32 afile,
 
     /* do write */
     code =
-	(*adbase->write) (adbase, LOGFILE, data, ustat.size,
+	(*adbase->write) (adbase, LOGFILE, (char *)data, ustat.size,
 			  3 * sizeof(afs_int32));
     if (code != 3 * sizeof(afs_int32))
 	return UIOERROR;
@@ -229,7 +229,7 @@ udisk_LogWriteData(struct ubik_dbase *adbase, afs_int32 afile, char *abuffer,
 
     /* write header */
     code =
-	(*adbase->write) (adbase, LOGFILE, data, lpos, 4 * sizeof(afs_int32));
+	(*adbase->write) (adbase, LOGFILE, (char *)data, lpos, 4 * sizeof(afs_int32));
     if (code != 4 * sizeof(afs_int32))
 	return UIOERROR;
     lpos += 4 * sizeof(afs_int32);
@@ -518,7 +518,7 @@ DRelease(char *ap, int flag)
 
     if (!ap)
 	return;
-    index = (ap - (char *)BufferData) >> UBIK_LOGPAGESIZE;
+    index = (int)(ap - (char *)BufferData) >> UBIK_LOGPAGESIZE;
     bp = &(Buffers[index]);
     bp->lockers--;
     if (flag)

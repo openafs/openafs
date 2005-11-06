@@ -90,23 +90,23 @@ typedef struct readdir_data readdir_data_t;
 
 
 /* upcalls */
-uc_namei(WCHAR *name, ULONG *fid);
-uc_check_access(ULONG fid, ULONG access, ULONG *granted);
-uc_create(WCHAR *str, ULONG attribs, LARGE_INTEGER alloc, ULONG access, ULONG *granted, ULONG *fid);
-uc_stat(ULONG fid, ULONG *attribs, LARGE_INTEGER *size, LARGE_INTEGER *creation, LARGE_INTEGER *access, LARGE_INTEGER *change, LARGE_INTEGER *written);
-uc_setinfo(ULONG fid, ULONG attribs, LARGE_INTEGER creation, LARGE_INTEGER access, LARGE_INTEGER change, LARGE_INTEGER written);
-uc_trunc(ULONG fid, LARGE_INTEGER size);
-uc_read(ULONG fid, LARGE_INTEGER offset, ULONG length, ULONG *read, char *data);
-uc_write(ULONG fid, LARGE_INTEGER offset, ULONG length, ULONG *written, char *data);
-uc_readdir(ULONG fid, LARGE_INTEGER cookie_in, WCHAR *filter, ULONG *count, char *data, ULONG *len);
-uc_close(ULONG fid);
-uc_unlink(WCHAR *name);
-uc_ioctl_write(ULONG length, char *data, ULONG *key);
-uc_ioctl_read(ULONG key, ULONG *length, char *data);
-uc_rename(ULONG fid, WCHAR *curr, WCHAR *new_dir, WCHAR *new_name, ULONG *new_fid);
-uc_flush(ULONG fid);
+long uc_namei(WCHAR *name, ULONG *fid);
+long uc_check_access(ULONG fid, ULONG access, ULONG *granted);
+long uc_create(WCHAR *str, ULONG attribs, LARGE_INTEGER alloc, ULONG access, ULONG *granted, ULONG *fid);
+long uc_stat(ULONG fid, ULONG *attribs, LARGE_INTEGER *size, LARGE_INTEGER *creation, LARGE_INTEGER *access, LARGE_INTEGER *change, LARGE_INTEGER *written);
+long uc_setinfo(ULONG fid, ULONG attribs, LARGE_INTEGER creation, LARGE_INTEGER access, LARGE_INTEGER change, LARGE_INTEGER written);
+long uc_trunc(ULONG fid, LARGE_INTEGER size);
+long uc_read(ULONG fid, LARGE_INTEGER offset, ULONG length, ULONG *read, char *data);
+long uc_write(ULONG fid, LARGE_INTEGER offset, ULONG length, ULONG *written, char *data);
+long uc_readdir(ULONG fid, LARGE_INTEGER cookie_in, WCHAR *filter, ULONG *count, char *data, ULONG_PTR *len);
+long uc_close(ULONG fid);
+long uc_unlink(WCHAR *name);
+long uc_ioctl_write(ULONG length, char *data, ULONG_PTR *key);
+long uc_ioctl_read(ULONG_PTR key, ULONG *length, char *data);
+long uc_rename(ULONG fid, WCHAR *curr, WCHAR *new_dir, WCHAR *new_name, ULONG *new_fid);
+long uc_flush(ULONG fid);
 
 
 /* downcalls */
-dc_break_callback(ULONG fid);
-dc_release_hooks();
+long dc_break_callback(ULONG fid);
+long dc_release_hooks();

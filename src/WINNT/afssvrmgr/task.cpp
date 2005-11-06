@@ -646,7 +646,7 @@ void Task_ExportCell_LineAddr (HANDLE fh, LPTSTR eck, SOCKADDR_IN *pAddr)
    FreeString (pszLine);
 }
 
-void Task_ExportCell_LineInt (HANDLE fh, LPTSTR eck, int dw)
+void Task_ExportCell_LineInt (HANDLE fh, LPTSTR eck, size_t dw)
 {
    TCHAR szLine[256];
    wsprintf (szLine, TEXT("%lu"), dw);
@@ -823,7 +823,7 @@ void Task_OpenCell (LPTASKPACKET ptp)
    LPSUBSET subOld = g.sub;
    g.sub = lpp->sub;
 
-   if ((TASKDATA(ptp)->lpiCell = CELL::OpenCell (lpp->szCell, lpp->hCreds, &ptp->status)) == NULL)
+   if ((TASKDATA(ptp)->lpiCell = CELL::OpenCell (lpp->szCell, (PVOID)lpp->hCreds, &ptp->status)) == NULL)
       {
       ptp->rc = FALSE;
 
@@ -952,7 +952,7 @@ void Task_Refresh (LPTASKPACKET ptp, BOOL fNewCreds)
       else
          {
          if (fNewCreds)
-            lpCell->SetCurrentCredentials (g.hCreds);
+            lpCell->SetCurrentCredentials ((PVOID)g.hCreds);
 
          lpCell->Invalidate();
          if ((ptp->rc = lpCell->RefreshAll (&ptp->status)) != TRUE)
@@ -1207,7 +1207,7 @@ void Task_Svr_Scout_Apply (LPTASKPACKET ptp)
       if (!lpp->fIDC_SVR_AUTOREFRESH)
          lpsp->oa.cTickRefresh = 0;
       else
-         lpsp->oa.cTickRefresh = cmsec1MINUTE * lpp->dwIDC_SVR_AUTOREFRESH_MINUTES;
+         lpsp->oa.cTickRefresh = (DWORD)(cmsec1MINUTE * lpp->dwIDC_SVR_AUTOREFRESH_MINUTES);
 
       if (!Server_SavePreferences (lpp->lpiServer))
          {
@@ -2195,7 +2195,7 @@ void Task_Set_Create (LPTASKPACKET ptp)
    LPSET_CREATE_PARAMS lpp = (LPSET_CREATE_PARAMS)(ptp->lpUser);
 
    LPIDENT lpiFileset;
-   if ((lpiFileset = AfsClass_CreateFileset (lpp->lpiParent, lpp->szName, lpp->ckQuota, &ptp->status)) == NULL)
+   if ((lpiFileset = AfsClass_CreateFileset (lpp->lpiParent, lpp->szName, (ULONG)lpp->ckQuota, &ptp->status)) == NULL)
       ptp->rc = FALSE;
 
    if (ptp->rc && lpp->fCreateClone)

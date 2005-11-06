@@ -99,10 +99,10 @@ BOOL CALLBACK Services_ShowLog_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM l
       return TRUE;
 
    if (msg == WM_INITDIALOG)
-      SetWindowLong (hDlg, DWL_USER, lp);
+      SetWindowLongPtr (hDlg, DWLP_USER, lp);
 
    LPSVC_VIEWLOG_PACKET lpp;
-   if ((lpp = (LPSVC_VIEWLOG_PACKET)GetWindowLong (hDlg, DWL_USER)) != NULL)
+   if ((lpp = (LPSVC_VIEWLOG_PACKET)GetWindowLongPtr (hDlg, DWLP_USER)) != NULL)
       {
       switch (msg)
          {
@@ -118,7 +118,7 @@ BOOL CALLBACK Services_ShowLog_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM l
             if (lpp->szLocal[0] != TEXT('\0'))
                DeleteFile (lpp->szLocal);
             GetWindowRect (hDlg, &gr.rViewLog);
-            SetWindowLong (hDlg, DWL_USER, 0);
+            SetWindowLongPtr (hDlg, DWLP_USER, 0);
             Delete (lpp);
             break;
 
@@ -158,7 +158,7 @@ BOOL CALLBACK Services_ShowLog_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM l
             if ((HWND)lp == GetDlgItem (hDlg, IDC_VIEWLOG_TEXT))
                {
                SetBkColor ((HDC)wp, GetSysColor (COLOR_WINDOW));
-               return (BOOL)CreateSolidBrush (GetSysColor (COLOR_WINDOW));
+               return CreateSolidBrush (GetSysColor (COLOR_WINDOW))?TRUE:FALSE;
                }
             break;
          }
@@ -424,10 +424,10 @@ BOOL CALLBACK Services_PickLog_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM l
       return TRUE;
 
    if (msg == WM_INITDIALOG)
-      SetWindowLong (hDlg, DWL_USER, lp);
+      SetWindowLongPtr (hDlg, DWLP_USER, lp);
 
    LPSVC_VIEWLOG_PACKET lpp;
-   if ((lpp = (LPSVC_VIEWLOG_PACKET)GetWindowLong (hDlg, DWL_USER)) != NULL)
+   if ((lpp = (LPSVC_VIEWLOG_PACKET)GetWindowLongPtr (hDlg, DWLP_USER)) != NULL)
       {
       switch (msg)
          {

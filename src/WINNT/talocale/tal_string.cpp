@@ -185,7 +185,7 @@ void cdecl FormatMultiString (LPTSTR *ppszTarget, BOOL fAddHead, LPCTSTR pszTemp
    va_list arg;
    //if (pszFormat != NULL)
       va_start (arg, pszFormat);
-   vFormatMultiString (ppszTarget, fAddHead, (LONG)pszTemplate, pszFormat, arg);
+   vFormatMultiString (ppszTarget, fAddHead, PtrToLong(pszTemplate), pszFormat, arg);
 }
 
 void cdecl FormatMultiString (LPTSTR *ppszTarget, BOOL fAddHead, int idsTemplate, LPCTSTR pszFormat, ...)
@@ -198,7 +198,7 @@ void cdecl FormatMultiString (LPTSTR *ppszTarget, BOOL fAddHead, int idsTemplate
 
 void cdecl vFormatMultiString (LPTSTR *ppszTarget, BOOL fAddHead, LPCTSTR pszTemplate, LPCTSTR pszFormat, va_list arg)
 {
-   vFormatMultiString (ppszTarget, fAddHead, (LONG)pszTemplate, pszFormat, arg);
+   vFormatMultiString (ppszTarget, fAddHead, PtrToLong(pszTemplate), pszFormat, arg);
 }
 
 void cdecl vFormatMultiString (LPTSTR *ppszTarget, BOOL fAddHead, int idsTemplate, LPCTSTR pszFormat, va_list arg)
@@ -216,7 +216,7 @@ LPTSTR cdecl FormatString (LPCTSTR psz, LPCTSTR pszFmt, ...)
    va_list arg;
    //if (pszFmt != NULL)
       va_start (arg, pszFmt);
-   return vFormatString ((LONG)psz, pszFmt, arg);
+   return vFormatString (PtrToLong(psz), pszFmt, arg);
 }
 
 LPTSTR cdecl FormatString (int ids, LPCTSTR pszFmt, ...)
@@ -229,7 +229,7 @@ LPTSTR cdecl FormatString (int ids, LPCTSTR pszFmt, ...)
 
 LPTSTR cdecl vFormatString (LPCTSTR psz, LPCTSTR pszFmt, va_list arg)
 {
-   return vFormatString ((LONG)psz, pszFmt, arg);
+   return vFormatString (PtrToLong(psz), pszFmt, arg);
 }
 
 LPTSTR cdecl vFormatString (int ids, LPCTSTR pszFmt, va_list arg)
@@ -273,7 +273,7 @@ LPTSTR cdecl vFormatString (LONG pszSource, LPCTSTR pszFmt, va_list arg)
    LPTSTR   pszOut = NULL;
    LPTSTR   pchOut;
    LPTSTR   pszTemplate;
-   LONG     cch;
+   size_t   cch;
    int      nArgs;
    int      argno;
    TCHAR    szFmt[ cchRESOURCE ];
@@ -283,16 +283,16 @@ LPTSTR cdecl vFormatString (LONG pszSource, LPCTSTR pszFmt, va_list arg)
 
    if (HIWORD(pszSource) != 0)	// It's a string
       {
-      pszTemplate = (LPTSTR)pszSource;
+      pszTemplate = (LPTSTR)LongToPtr(pszSource);
       }
    else	// It's a message
       {
-      cch = GetStringLength ((int)pszSource);
+      cch = GetStringLength((INT)pszSource);
 
       if ((pszTemplate = AllocateString (1+cch)) == NULL)
          return NULL;
 
-      GetString (pszTemplate, (int)pszSource, cch);
+      GetString (pszTemplate, (int)pszSource, (INT)cch);
       }
 
             //
@@ -336,7 +336,7 @@ LPTSTR cdecl vFormatString (LONG pszSource, LPCTSTR pszFmt, va_list arg)
 
    if (apszArgs == NULL)
       {
-      if (pszSource != (LONG)pszTemplate)
+      if (pszSource != PtrToLong(pszTemplate))
          FreeString (pszTemplate);
       return NULL;
       }
@@ -349,7 +349,7 @@ LPTSTR cdecl vFormatString (LONG pszSource, LPCTSTR pszFmt, va_list arg)
 
    for (argno = 0; pszFmt && *pszFmt; argno++)
       {
-      LONG     cchMin;
+      size_t   cchMin;
       vartype  vt;
 
       double   arg_f;
@@ -547,7 +547,7 @@ LPTSTR cdecl vFormatString (LONG pszSource, LPCTSTR pszFmt, va_list arg)
                {
                if ((arg_psz = AllocateString (cch)) == NULL)
                   goto lblDONE;
-               GetString (arg_psz, arg_ids, cch);
+               GetString (arg_psz, arg_ids, (INT)cch);
                }
 
             cch = lstrlen(arg_psz);
@@ -1423,7 +1423,7 @@ void CopyUnicodeToAnsi (LPSTR pszTargetA, LPCWSTR pszOriginalW, size_t cchMax)
 
    UINT cpTarget = CP_ACP;
    BOOL fDefault = FALSE;
-   size_t cchOut = WideCharToMultiByte (cpTarget, 0, pszOriginalW, cchSource-1, pszTargetA, cchMax * 2, TEXT(" "), &fDefault);
+   size_t cchOut = WideCharToMultiByte (cpTarget, 0, pszOriginalW, (INT)cchSource-1, pszTargetA, (INT)cchMax * 2, TEXT(" "), &fDefault);
    pszTargetA[ cchOut ] = 0;
 }
 

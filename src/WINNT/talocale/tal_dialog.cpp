@@ -52,13 +52,13 @@ HWND ModelessDialogParam (int idd, HWND hWndParent, DLGPROC lpDialogFunc, LPARAM
 }
 
 
-int ModalDialog (int idd, HWND hWndParent, DLGPROC lpDialogFunc)
+INT_PTR ModalDialog (int idd, HWND hWndParent, DLGPROC lpDialogFunc)
 {
    return ModalDialogParam (idd, hWndParent, lpDialogFunc, 0);
 }
 
 
-int ModalDialogParam (int idd, HWND hWndParent, DLGPROC lpDialogFunc, LPARAM dwInitParam)
+INT_PTR ModalDialogParam (int idd, HWND hWndParent, DLGPROC lpDialogFunc, LPARAM dwInitParam)
 {
    HINSTANCE hInstFound;
    LPCDLGTEMPLATE pTemplate;
@@ -78,7 +78,7 @@ int cdecl Message (UINT type, LPCTSTR title, LPCTSTR text, LPCTSTR fmt, ...)
    va_list  arg;
    // if (fmt != NULL)
       va_start (arg, fmt);
-   return vMessage (type, (LONG)title, (LONG)text, fmt, arg);
+   return vMessage (type, PtrToLong(title), PtrToLong(text), fmt, arg);
 }
 
 
@@ -87,7 +87,7 @@ int cdecl Message (UINT type, LPCTSTR title, int text, LPCTSTR fmt, ...)
    va_list  arg;
    // if (fmt != NULL)
       va_start (arg, fmt);
-   return vMessage (type, (LONG)title, (LONG)text, fmt, arg);
+   return vMessage (type, PtrToLong(title), (LONG)text, fmt, arg);
 }
 
 
@@ -96,7 +96,7 @@ int cdecl Message (UINT type, int title, LPCTSTR text, LPCTSTR fmt, ...)
    va_list  arg;
    // if (fmt != NULL)
       va_start (arg, fmt);
-   return vMessage (type, (LONG)title, (LONG)text, fmt, arg);
+   return vMessage (type, (LONG)title, PtrToLong(text), fmt, arg);
 }
 
 
@@ -111,19 +111,19 @@ int cdecl Message (UINT type, int title, int text, LPCTSTR fmt, ...)
 
 int cdecl vMessage (UINT type, LPCTSTR title, LPCTSTR text, LPCTSTR fmt, va_list arg)
 {
-   return vMessage (type, (LONG)title, (LONG)text, fmt, arg);
+   return vMessage (type, PtrToLong(title), PtrToLong(text), fmt, arg);
 }
 
 
 int cdecl vMessage (UINT type, LPCTSTR title, int text, LPCTSTR fmt, va_list arg)
 {
-   return vMessage (type, (LONG)title, (LONG)text, fmt, arg);
+   return vMessage (type, PtrToLong(title), (LONG)text, fmt, arg);
 }
 
 
 int cdecl vMessage (UINT type, int title, LPCTSTR text, LPCTSTR fmt, va_list arg)
 {
-   return vMessage (type, (LONG)title, (LONG)text, fmt, arg);
+   return vMessage (type, (LONG)title, PtrToLong(text), fmt, arg);
 }
 
 

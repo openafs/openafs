@@ -35,6 +35,8 @@
     <String Id="StrCfgWzdDesc">Server Configuration Wizard</String>
 
     <String Id="StrLaunchCond">OpenAFS for Windows is currently only packaged for Windows 2000,XP and 2003</String>
+    <String Id="StrPlatform64">This build of OpenAFS for Windows is for 64-bit Windows versions.  Please install the 32-bit version on this operating system.</String>
+    <String Id="StrPlatformNot64">This build of OpenAFS for Windows is for 32-bit Windows versions.  Please install the 64-bit version on this operating system.</String>
     <String Id="AdminRequired">Installation of OpenAFS for Windows requires administrative privileges</String>
 
 	<String Id="ErrNPIFailed">Installation of Network Provider failed.  System error [2]</String>

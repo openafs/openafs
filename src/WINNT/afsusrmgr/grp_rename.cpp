@@ -56,7 +56,7 @@ BOOL CALLBACK Group_Rename_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
    switch (msg)
       {
       case WM_INITDIALOG:
-         SetWindowLong (hDlg, DWL_USER, lp);
+         SetWindowLongPtr (hDlg, DWLP_USER, lp);
          Group_Rename_OnInitDialog (hDlg);
          break;
 
@@ -97,7 +97,7 @@ BOOL CALLBACK Group_Rename_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 
 void Group_Rename_OnInitDialog (HWND hDlg)
 {
-   ASID idGroup = (ASID)GetWindowLong (hDlg, DWL_USER);
+   ASID idGroup = (ASID)GetWindowLongPtr (hDlg, DWLP_USER);
 
    // Indicate we want to know if anything changes with this group
    //
@@ -146,7 +146,7 @@ void Group_Rename_OnNewName (HWND hDlg)
 
 void Group_Rename_OnChangeOwner (HWND hDlg)
 {
-   ASID idGroup = (ASID)GetWindowLong (hDlg, DWL_USER);
+   ASID idGroup = (ASID)GetWindowLongPtr (hDlg, DWLP_USER);
 
    BROWSE_PARAMS pp;
    memset (&pp, 0x00, sizeof(pp));
@@ -185,7 +185,7 @@ void Group_Rename_OnChangeOwner (HWND hDlg)
 
 void Group_Rename_OnOK (HWND hDlg)
 {
-   ASID idGroup = (ASID)GetWindowLong (hDlg, DWL_USER);
+   ASID idGroup = (ASID)GetWindowLongPtr (hDlg, DWLP_USER);
 
    LPGROUP_RENAME_PARAMS lpp = New (GROUP_RENAME_PARAMS);
    memset (lpp, 0x00, sizeof(GROUP_RENAME_PARAMS));
@@ -198,7 +198,7 @@ void Group_Rename_OnOK (HWND hDlg)
 
 void Group_Rename_UpdateDialog (HWND hDlg)
 {
-   ASID idGroup = (ASID)GetWindowLong (hDlg, DWL_USER);
+   ASID idGroup = (ASID)GetWindowLongPtr (hDlg, DWLP_USER);
 
    // Get the current properties for this group
    //

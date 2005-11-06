@@ -13,12 +13,15 @@ test tests: ptest.exe tsd.exe native.exe
 
 $(OUT)\ptest.exe: $(OUT)\ptest.obj $(DESTDIR)/lib/afspthread.lib $(DESTDIR)/lib/afs/afsutil.lib
 	$(EXECONLINK)
+        $(_VC_MANIFEST_EMBED_EXE)
 
 $(OUT)\tsd.exe: $(OUT)\tsd.obj $(DESTDIR)/lib/afspthread.lib $(DESTDIR)/lib/afs/afsutil.lib
 	$(EXECONLINK)
+        $(_VC_MANIFEST_EMBED_EXE)
 
 $(OUT)\native.exe: $(OUT)\native.obj $(DESTDIR)/lib/afspthread.lib $(DESTDIR)/lib/afs/afsutil.lib
 	$(EXECONLINK)
+        $(_VC_MANIFEST_EMBED_EXE)
 
 clean::
 	$(DEL) $(DESTDIR)/lib/afspthread.lib

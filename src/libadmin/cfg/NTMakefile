@@ -59,6 +59,7 @@ DLLLIBS =\
 
 $(DLLFILE): $(DLLOBJS) $(DLLLIBS)
 	$(DLLCONLINK) /DEF:afscfgadmin.def
+        $(_VC_MANIFEST_EMBED_DLL)
 	$(DLLPREP)
 	$(COPY) $*.lib $(ILIBDIR)
 	$(DEL) $*.lib $*.exp

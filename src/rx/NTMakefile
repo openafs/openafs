@@ -89,6 +89,7 @@ $(OUT)\rxdebug.obj: rxdebug.c
 
 $(RXDEBUG): $(RXDOBJS) $(RXDLIBS)
 	$(EXECONLINK) iphlpapi.lib
+        $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
 
 install: $(LIBFILE) $(INCFILES) $(RXDEBUG)

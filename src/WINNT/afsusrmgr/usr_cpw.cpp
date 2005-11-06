@@ -57,7 +57,7 @@ BOOL CALLBACK User_Password_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
    switch (msg)
       {
       case WM_INITDIALOG:
-         SetWindowLong (hDlg, DWL_USER, lp);
+         SetWindowLongPtr (hDlg, DWLP_USER, lp);
          User_Password_OnInitDialog (hDlg);
          break;
 
@@ -111,7 +111,7 @@ BOOL CALLBACK User_Password_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 
 void User_Password_OnInitDialog (HWND hDlg)
 {
-   ASID idUser = (ASID)GetWindowLong (hDlg, DWL_USER);
+   ASID idUser = (ASID)GetWindowLongPtr (hDlg, DWLP_USER);
 
    // Get the current properties for this user
    //
@@ -194,14 +194,14 @@ void User_Password_OnRandom (HWND hDlg)
 
 BOOL User_Password_OnOK (HWND hDlg)
 {
-   ASID idUser = (ASID)GetWindowLong (hDlg, DWL_USER);
+   ASID idUser = (ASID)GetWindowLongPtr (hDlg, DWLP_USER);
 
    LPUSER_CPW_PARAMS lpp = New (USER_CPW_PARAMS);
    memset (lpp, 0x00, sizeof(USER_CPW_PARAMS));
    lpp->idUser = idUser;
 
    if (IsDlgButtonChecked (hDlg, IDC_CPW_VERSION_MANUAL))
-      lpp->keyVersion = SP_GetPos (GetDlgItem (hDlg, IDC_CPW_VERSION));
+      lpp->keyVersion = (int) SP_GetPos (GetDlgItem (hDlg, IDC_CPW_VERSION));
    else // (IsDlgButtonChecked (hDlg, IDC_CPW_VERSION_AUTO))
       lpp->keyVersion = 0;
 

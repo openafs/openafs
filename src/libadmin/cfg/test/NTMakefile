@@ -22,6 +22,7 @@ CFGTEST_EXELIBS =\
 
 $(OUT)\cfgtest.exe: $(OUT)\cfgtest.obj $(CFGTEST_EXELIBS)
 	$(EXECONLINK)
+        $(_VC_MANIFEST_EMBED_EXE)
 
 mkdir:
 	

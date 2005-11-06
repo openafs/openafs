@@ -43,6 +43,7 @@ USVR_OBJS = \
 
 $(UPSERVER):  $(USVR_OBJS) $(LIBS)
 	$(EXECONLINK) dnsapi.lib iphlpapi.lib
+        $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
 
 ############################################################################
@@ -58,6 +59,7 @@ UCLNT_OBJS = \
 
 $(UPCLIENT):  $(UCLNT_OBJS)  $(LIBS)
 	$(EXECONLINK) dnsapi.lib iphlpapi.lib
+        $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
 
 ############################################################################

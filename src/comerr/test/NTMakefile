@@ -18,6 +18,7 @@ EXELIBS =\
 
 $(EXEFILE): $(EXEOBJS)  # dependents built from predefined inference rules
 	$(EXECONLINK) $(EXELIBS) 
+        $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
 
 test1.c test1.h: test1.et 

@@ -1426,13 +1426,13 @@ void Action_Refresh_SetSection (HWND hDlg, BOOL fStart, int idSection)
 {
    // Are we ending a section that we don't care about?
    //
-   if ((!fStart) && (idSection != (int)GetWindowLong (hDlg, DWL_USER)))
+   if ((!fStart) && (idSection != (int)GetWindowLongPtr (hDlg, DWLP_USER)))
       return;
 
    if (!fStart)
       idSection = -1;  // ending a section means new section = -1 (invalid)
 
-   SetWindowLong (hDlg, DWL_USER, idSection);
+   SetWindowLongPtr (hDlg, DWLP_USER, idSection);
    EnableWindow (GetDlgItem (hDlg, IDC_REFRESH_SKIP), (idSection == -1) ? FALSE : TRUE);
 }
 
@@ -1440,7 +1440,7 @@ void Action_Refresh_SetSection (HWND hDlg, BOOL fStart, int idSection)
 void Action_Refresh_SkipSection (HWND hDlg)
 {
    int idSection;
-   if ((idSection = (int)GetWindowLong (hDlg, DWL_USER)) != -1)
+   if ((idSection = (int)GetWindowLongPtr (hDlg, DWLP_USER)) != -1)
       {
       AfsClass_SkipRefresh (idSection);
       Action_Refresh_SetSection (hDlg, FALSE, idSection);
@@ -1704,7 +1704,7 @@ BOOL CALLBACK Action_OpenCell_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp
    static int iFrameLast = 0;
 
    if (msg == WM_INITDIALOG)
-      SetWindowLong (hDlg, DWL_USER, lp);
+      SetWindowLongPtr (hDlg, DWLP_USER, lp);
 
    switch (msg)
       {

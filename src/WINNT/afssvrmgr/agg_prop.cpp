@@ -96,9 +96,9 @@ BOOL CALLBACK Aggregates_General_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM
       return TRUE;
 
    if (msg == WM_INITDIALOG)
-      SetWindowLong (hDlg, DWL_USER, ((LPPROPSHEETPAGE)lp)->lParam);
+      SetWindowLongPtr (hDlg, DWLP_USER, ((LPPROPSHEETPAGE)lp)->lParam);
 
-   LPIDENT lpi = (LPIDENT)GetWindowLong (hDlg, DWL_USER);
+   LPIDENT lpi = (LPIDENT)GetWindowLongPtr (hDlg, DWLP_USER);
 
    switch (msg)
       {
@@ -162,7 +162,7 @@ BOOL CALLBACK Aggregates_General_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM
 
 void Aggregates_General_OnInitDialog (HWND hDlg)
 {
-   LPIDENT lpi = (LPIDENT)GetWindowLong (hDlg, DWL_USER);
+   LPIDENT lpi = (LPIDENT)GetWindowLongPtr (hDlg, DWLP_USER);
 
    TCHAR szSvrName[ cchNAME ];
    TCHAR szAggName[ cchNAME ];
@@ -188,7 +188,7 @@ void Aggregates_General_OnApply (HWND hDlg)
    LPAGG_PROP_APPLY_PACKET lpp;
    if ((lpp = New (AGG_PROP_APPLY_PACKET)) != NULL)
       {
-      lpp->lpi = (LPIDENT)GetWindowLong (hDlg, DWL_USER);
+      lpp->lpi = (LPIDENT)GetWindowLongPtr (hDlg, DWLP_USER);
       lpp->fIDC_AGG_WARNALLOC = IsDlgButtonChecked (hDlg, IDC_AGG_WARNALLOC);
       lpp->fIDC_AGG_WARN = IsDlgButtonChecked (hDlg, IDC_AGG_WARN);
       lpp->fIDC_AGG_WARN_AGGFULL_DEF = IsDlgButtonChecked (hDlg, IDC_AGG_WARN_AGGFULL_DEF);
@@ -228,7 +228,7 @@ void Aggregates_General_OnWarnings (HWND hDlg)
 
 void Aggregates_General_OnEndTask_InitDialog (HWND hDlg, LPTASKPACKET ptp)
 {
-   LPIDENT lpi = (LPIDENT)GetWindowLong (hDlg, DWL_USER);
+   LPIDENT lpi = (LPIDENT)GetWindowLongPtr (hDlg, DWLP_USER);
 
    if (!ptp->rc)
       {
@@ -317,7 +317,7 @@ void Aggregates_General_OnEndTask_Apply (HWND hDlg, LPTASKPACKET ptp)
 {
    if (!ptp->rc)
       {
-      LPIDENT lpi = (LPIDENT)GetWindowLong (hDlg, DWL_USER);
+      LPIDENT lpi = (LPIDENT)GetWindowLongPtr (hDlg, DWLP_USER);
 
       TCHAR szSvrName[ cchNAME ];
       TCHAR szAggName[ cchNAME ];

@@ -94,6 +94,7 @@ VOLSERVER_EXELIBS = \
 
 $(VOLSERVER_EXEFILE): $(VOLSERVER_EXEOBJS) $(VOLSERVER_EXELIBS) $(EXEC_LIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
+        $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
 
 ############################################################################
@@ -119,6 +120,7 @@ VOS_EXELIBS = \
 
 $(RS_VOS_EXEFILE): $(VOS_EXEOBJS) $(VOS_EXELIBS) $(EXEC_LIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
+        $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
 
 $(CL_VOS_EXEFILE): $(RS_VOS_EXEFILE)

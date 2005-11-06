@@ -226,7 +226,7 @@ ProcessSignal(int signo)
 static DWORD WINAPI
 RemoteSignalThread(LPVOID param)
 {
-    int signo = (int)param;
+    int signo = (int)(intptr_t)param;
     DWORD rc = 0;
 
     if (SignalIsDefined(signo)) {
@@ -277,7 +277,7 @@ RemoteSignalListenerThread(LPVOID param)
 		 */
 		sigThreadHandle = CreateThread(NULL,	/* default security attr. */
 					       0,	/* default stack size */
-					       RemoteSignalThread, (LPVOID) signo,	/* thread argument */
+					       RemoteSignalThread, (LPVOID) (intptr_t)signo,	/* thread argument */
 					       0,	/* creation flags */
 					       &sigThreadId);	/* thread id */
 
@@ -548,7 +548,7 @@ StringArrayToString(char *strArray[])
 
     for (strCount = 0; strArray[strCount] != NULL; strCount++) {
 	/* sum all string lengths */
-	byteCount += strlen(strArray[strCount]);
+	byteCount += (int)strlen(strArray[strCount]);
     }
 
     /* put all strings into buffer; guarantee buffer is at least one char */
@@ -684,7 +684,7 @@ CreateChildDataBuffer(DWORD pid,	/* child pid */
 		      HANDLE * bufEventHandlep)
 {				/* buffer read event handle */
     BOOL fsuccess = FALSE;
-    DWORD bufMemSize = dataLen + sizeof(size_t);
+    DWORD bufMemSize = dataLen + (DWORD)sizeof(size_t);
     char bufMemName[sizeof(PMGT_DATA_MEM_PREFIX) + 20];
     char bufEventName[sizeof(PMGT_DATA_EVENT_PREFIX) + 20];
 
@@ -693,7 +693,7 @@ CreateChildDataBuffer(DWORD pid,	/* child pid */
 
     /* Create and initialize named shared memory and named event */
 
-    *bufMemHandlep = CreateFileMapping((HANDLE) 0xFFFFFFFF,	/* page-file backed */
+    *bufMemHandlep = CreateFileMapping(INVALID_HANDLE_VALUE,	/* page-file backed */
 				       NULL, PAGE_READWRITE, 0, bufMemSize,
 				       bufMemName);
 
@@ -803,7 +803,7 @@ ReadChildDataBuffer(void **datap,	/* allocated data buffer */
 static DWORD WINAPI
 ChildMonitorThread(LPVOID param)
 {
-    int tidx = (int)param;
+    int tidx = (int)(intptr_t)param;
     HANDLE childProcHandle;
     BOOL fsuccess;
     DWORD rc = -1;
@@ -1033,7 +1033,7 @@ pmgt_ProcessSpawnVEB(const char *spath, char *sargv[], char *senvp[],
      */
     monitorHandle = CreateThread(NULL,	/* default security attr. */
 				 0,	/* default stack size */
-				 ChildMonitorThread, (LPVOID) tidx,	/* thread argument */
+				 ChildMonitorThread, (LPVOID)(intptr_t) tidx,	/* thread argument */
 				 0,	/* creation flags */
 				 &monitorId);	/* thread id */
 

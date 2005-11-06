@@ -180,7 +180,7 @@ EXPORTED void AfsAppLib_CloseAdminServer (void);
          //    be used to obtain the client id which the administrative
          //    server has assigned to this process.
          //
-EXPORTED DWORD AfsAppLib_GetAdminServerClientID (void);
+EXPORTED UINT_PTR AfsAppLib_GetAdminServerClientID (void);
 
 
 /*
@@ -240,7 +240,7 @@ typedef struct
    int idsPrompt;	// [in] string ID for Edit prompt
    int idsNone;	// [in] string ID for checkbox (or 0)
    LPCELLLIST lpcl;	// [in] from AfsAppLib_GetCellList()
-   PVOID hCreds;	// [in] credentials for enumeration
+   UINT_PTR hCreds;	// [in] credentials for enumeration
    } BROWSEDLG_PARAMS, *LPBROWSEDLG_PARAMS;
 
 EXPORTED BOOL AfsAppLib_ShowBrowseDialog (LPBROWSEDLG_PARAMS lpp);
@@ -295,7 +295,7 @@ EXPORTED void AfsAppLib_Uncover (HWND hWnd);
          // ...obtains information about the specified credentials cookie.
          //    returns TRUE if the data could be successfully parsed.
          //
-EXPORTED BOOL AfsAppLib_CrackCredentials (PVOID hCreds, LPTSTR pszCell = NULL, LPTSTR pszUser = NULL, LPSYSTEMTIME pst = NULL, ULONG *pStatus = NULL);
+EXPORTED BOOL AfsAppLib_CrackCredentials (UINT_PTR hCreds, LPTSTR pszCell = NULL, LPTSTR pszUser = NULL, LPSYSTEMTIME pst = NULL, ULONG *pStatus = NULL);
 
          // AfsAppLib_GetCredentials
          // ...returns nonzero if the calling process has AFS credentials within
@@ -304,14 +304,14 @@ EXPORTED BOOL AfsAppLib_CrackCredentials (PVOID hCreds, LPTSTR pszCell = NULL, L
          //    a token handle which can be supplied to the AFS administrative
          //    functions.
          //
-EXPORTED PVOID AfsAppLib_GetCredentials (LPCTSTR pszCell = NULL, ULONG *pStatus = NULL);
+EXPORTED UINT_PTR AfsAppLib_GetCredentials (LPCTSTR pszCell = NULL, ULONG *pStatus = NULL);
 
          // AfsAppLib_SetCredentials
          // ...obtains new credentials for the calling process; performs no UI.
          //    If successful, returns a nonzero token handle which can be
          //    supplied to the AFS administrative functions.
          //
-EXPORTED PVOID AfsAppLib_SetCredentials (LPCTSTR pszCell, LPCTSTR pszUser, LPCTSTR pszPassword, ULONG *pStatus = NULL);
+EXPORTED UINT_PTR AfsAppLib_SetCredentials (LPCTSTR pszCell, LPCTSTR pszUser, LPCTSTR pszPassword, ULONG *pStatus = NULL);
 
          // AfsAppLib_IsUserAdmin
          // ...queries the KAS database for a particular cell to determine
@@ -319,7 +319,7 @@ EXPORTED PVOID AfsAppLib_SetCredentials (LPCTSTR pszCell, LPCTSTR pszUser, LPCTS
          //    The hCreds passed in should be for an admin, or for the user
          //    being queried.
          //
-EXPORTED BOOL AfsAppLib_IsUserAdmin (PVOID hCreds, LPTSTR pszUser);
+EXPORTED BOOL AfsAppLib_IsUserAdmin (UINT_PTR hCreds, LPTSTR pszUser);
 
          // AfsAppLib_ShowOpenCellDialog
          // ...presents a dialog which allows the user to select a cell,
@@ -349,7 +349,7 @@ typedef struct
    LPCELLLIST lpcl;	// [in] from AfsAppLib_GetCellList()
    BADCREDSDLG_PARAMS bcdp;	// [in] params for bad creds dialog
    TCHAR szCell[ cchNAME ];	// [out] selected cell
-   PVOID hCreds;	// [out] credentials in cell
+   UINT_PTR hCreds;	// [out] credentials in cell
    } OPENCELLDLG_PARAMS, *LPOPENCELLDLG_PARAMS;
 
 EXPORTED BOOL AfsAppLib_ShowOpenCellDialog (LPOPENCELLDLG_PARAMS lpp);
@@ -369,7 +369,7 @@ typedef struct
    BADCREDSDLG_PARAMS bcdp;	// [in] params for bad creds dialog
    TCHAR szIdentity[ cchNAME ];	// [out] current DCE identity in szCell
    TCHAR szPassword[ cchNAME ];	// [out] password entered (or "")
-   PVOID hCreds;	// [in out] credentials in cell
+   UINT_PTR hCreds;	// [in out] credentials in cell
    } CREDENTIALSDLG_PARAMS, *LPCREDENTIALSDLG_PARAMS;
 
 EXPORTED BOOL AfsAppLib_ShowCredentialsDialog (LPCREDENTIALSDLG_PARAMS lpp);
@@ -380,7 +380,7 @@ EXPORTED BOOL AfsAppLib_ShowCredentialsDialog (LPCREDENTIALSDLG_PARAMS lpp);
          //
 typedef struct
    {
-   PVOID hCreds;	// [in] credentials to query
+   UINT_PTR hCreds;	// [in] credentials to query
    BOOL fShowWarning;	// [in] TRUE to present warning dialog
    BADCREDSDLG_PARAMS bcdp;	// [in] params for bad creds dialog
    } CHECKCREDS_PARAMS, *LPCHECKCREDS_PARAMS;
@@ -549,8 +549,8 @@ EXPORTED void AfsAppLib_MainPump (void);
          //    the integer indices used by the Get/SetWindowLong routines,
          //    and can grow windows' data-space as necessary.
          //
-EXPORTED DWORD GetWindowData (HWND hWnd, LPTSTR pszField);
-EXPORTED DWORD SetWindowData (HWND hWnd, LPTSTR pszField, DWORD dwNewData);
+EXPORTED UINT_PTR GetWindowData (HWND hWnd, LPTSTR pszField);
+EXPORTED UINT_PTR SetWindowData (HWND hWnd, LPTSTR pszField, UINT_PTR dwNewData);
 
 
 /*

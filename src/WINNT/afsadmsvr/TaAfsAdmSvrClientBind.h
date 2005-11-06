@@ -16,8 +16,8 @@
  *
  */
 
-BOOL ADMINAPI BindToAdminServer (LPCTSTR pszAddress, BOOL fWait, DWORD *pidClient, ULONG *pStatus);
-BOOL ADMINAPI UnbindFromAdminServer (DWORD idClient, ULONG *pStatus);
+BOOL ADMINAPI BindToAdminServer (LPCTSTR pszAddress, BOOL fWait, UINT_PTR *pidClient, ULONG *pStatus);
+BOOL ADMINAPI UnbindFromAdminServer (UINT_PTR idClient, ULONG *pStatus);
 BOOL ADMINAPI ForkNewAdminServer (ULONG *pStatus);
 
 LPCTSTR ADMINAPI ResolveAddress (LPCTSTR pszAddress);

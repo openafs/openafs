@@ -93,9 +93,9 @@ BOOL CALLBACK Services_General_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM l
       return TRUE;
 
    if (msg == WM_INITDIALOG)
-      SetWindowLong (hDlg, DWL_USER, ((LPPROPSHEETPAGE)lp)->lParam);
+      SetWindowLongPtr (hDlg, DWLP_USER, ((LPPROPSHEETPAGE)lp)->lParam);
 
-   LPIDENT lpi = (LPIDENT)GetWindowLong (hDlg, DWL_USER);
+   LPIDENT lpi = (LPIDENT)GetWindowLongPtr (hDlg, DWLP_USER);
 
    switch (msg)
       {
@@ -217,7 +217,7 @@ void Services_General_OnInitDialog (HWND hDlg, LPIDENT lpi)
 
 void Services_General_OnEndTask_InitDialog (HWND hDlg, LPTASKPACKET ptp)
 {
-   LPIDENT lpi = (LPIDENT)GetWindowLong (hDlg, DWL_USER);
+   LPIDENT lpi = (LPIDENT)GetWindowLongPtr (hDlg, DWLP_USER);
 
    TCHAR szUnknown[ cchRESOURCE ];
    GetString (szUnknown, IDS_UNKNOWN);
@@ -338,7 +338,7 @@ void Services_General_OnEndTask_Apply (HWND hDlg, LPTASKPACKET ptp)
 {
    if (!ptp->rc)
       {
-      LPIDENT lpi = (LPIDENT)GetWindowLong (hDlg, DWL_USER);
+      LPIDENT lpi = (LPIDENT)GetWindowLongPtr (hDlg, DWLP_USER);
 
       TCHAR szSvrName[ cchNAME ];
       TCHAR szSvcName[ cchNAME ];
@@ -355,9 +355,9 @@ BOOL CALLBACK Services_BOS_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
       return TRUE;
 
    if (msg == WM_INITDIALOG)
-      SetWindowLong (hDlg, DWL_USER, ((LPPROPSHEETPAGE)lp)->lParam);
+      SetWindowLongPtr (hDlg, DWLP_USER, ((LPPROPSHEETPAGE)lp)->lParam);
 
-   LPIDENT lpi = (LPIDENT)GetWindowLong (hDlg, DWL_USER);
+   LPIDENT lpi = (LPIDENT)GetWindowLongPtr (hDlg, DWLP_USER);
 
    switch (msg)
       {

@@ -55,6 +55,7 @@ EXELIBS =\
 
 $(EXEFILE): $(EXEOBJS) $(EXELIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
+        $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
 
 ############################################################################
@@ -78,6 +79,7 @@ clean::
 # Auxiliary build targets not built by default; e.g. test programs
 $(OUT)\butc_test.exe: $(OUT)\test.obj
 	$(EXECONLINK)
+        $(_VC_MANIFEST_EMBED_EXE)
 
 mkdir:
 	

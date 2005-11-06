@@ -117,7 +117,7 @@ BOOL CALLBACK Main_DialogProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 
       case WM_EXPIRED_CREDENTIALS:
       case WM_REFRESHED_CREDENTIALS:
-         g.hCreds = (PVOID)lp;
+         g.hCreds = (UINT_PTR)lp;
          StartTask (taskUPD_CREDS);
          break;
 
@@ -259,7 +259,7 @@ LRESULT CALLBACK Main_TabHookProc (HWND hTab, UINT msg, WPARAM wp, LPARAM lp)
 }
 
 
-void Main_PrepareTabChild (int iTabNew)
+void Main_PrepareTabChild (size_t iTabNew)
 {
    HWND hTab = GetDlgItem (g.hMain, IDC_TAB);
    int iTabOld = TabCtrl_GetCurSel (hTab);

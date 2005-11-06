@@ -364,7 +364,7 @@ register struct cmd_syndesc *as; {
 #ifdef WIN32
 	    if (!InAFS(parent_dir)) {
 		const char * nbname = NetbiosName();
-		int len = strlen(nbname);
+		int len = (int)strlen(nbname);
 
 		if (parent_dir[0] == '\\' && parent_dir[1] == '\\' &&
 		    parent_dir[len+2] == '\\' &&
@@ -394,7 +394,7 @@ register struct cmd_syndesc *as; {
 	    continue;
 	}
 	blob.in = last_component;
-	blob.in_size = strlen(last_component)+1;
+	blob.in_size = (long)strlen(last_component)+1;
 	blob.out_size = MAXSIZE;
 	blob.out = space;
 	memset(space, 0, MAXSIZE);
@@ -433,7 +433,7 @@ register struct cmd_syndesc *as; {
     if (!InAFS(parent)) {
 #ifdef WIN32
 	const char * nbname = NetbiosName();
-	int len = strlen(nbname);
+	int len = (int)strlen(nbname);
 
 	if (parent[0] == '\\' && parent[1] == '\\' &&
 	    parent[len+2] == '\\' &&
@@ -464,7 +464,7 @@ register struct cmd_syndesc *as; {
      * have a symlink system call.
      */
     blob.out_size = 0;
-    blob.in_size = 1 + strlen(as->parms[1].items->data);
+    blob.in_size = 1 + (long)strlen(as->parms[1].items->data);
     blob.in = as->parms[1].items->data;
     blob.out = NULL;
     code = pioctl(path, VIOC_SYMLINK, &blob, 0);
@@ -499,14 +499,14 @@ register struct cmd_syndesc *as; {
 	if (!tp)
 	    tp = (char *) strrchr(ti->data, '/');
 	if (tp) {
-	    strncpy(tbuffer, ti->data, code=tp-ti->data+1);  /* the dir name */
+	    strncpy(tbuffer, ti->data, code=(afs_int32)(tp-ti->data+1));  /* the dir name */
             tbuffer[code] = 0;
 	    tp++;   /* skip the slash */
 
 #ifdef WIN32
 	    if (!InAFS(tbuffer)) {
 		const char * nbname = NetbiosName();
-		int len = strlen(nbname);
+		int len = (int)strlen(nbname);
 
 		if (tbuffer[0] == '\\' && tbuffer[1] == '\\' &&
 		     tbuffer[len+2] == '\\' &&
@@ -525,7 +525,7 @@ register struct cmd_syndesc *as; {
             fs_StripDriveLetter(tp, tp, 0);
 	}
 	blob.in = tp;
-	blob.in_size = strlen(tp)+1;
+	blob.in_size = (int)strlen(tp)+1;
 	blob.out = lsbuffer;
 	blob.out_size = sizeof(lsbuffer);
 	code = pioctl(tbuffer, VIOC_LISTSYMLINK, &blob, 0);
@@ -546,7 +546,7 @@ register struct cmd_syndesc *as; {
 
 	blob.out_size = 0;
 	blob.in = tp;
-	blob.in_size = strlen(tp)+1;
+	blob.in_size = (long)strlen(tp)+1;
 	code = pioctl(tbuffer, VIOC_DELSYMLINK, &blob, 0);
 	if (code) {
 	    Die(errno, ti->data);

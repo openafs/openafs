@@ -20,7 +20,7 @@ extern "C" {
  *
  */
 
-BOOL ADMINAPI asc_UserChange (DWORD idClient, ASID idCell, ASID idUser, LPAFSADMSVR_CHANGEUSER_PARAMS pChange, ULONG *pStatus)
+BOOL ADMINAPI asc_UserChange (UINT_PTR idClient, ASID idCell, ASID idUser, LPAFSADMSVR_CHANGEUSER_PARAMS pChange, ULONG *pStatus)
 {
    BOOL rc = TRUE;
    ULONG status = 0;
@@ -49,7 +49,7 @@ BOOL ADMINAPI asc_UserChange (DWORD idClient, ASID idCell, ASID idUser, LPAFSADM
 }
 
 
-BOOL ADMINAPI asc_UserPasswordSet (DWORD idClient, ASID idCell, ASID idUser, int keyVersion, LPCTSTR pkeyString, PBYTE pkeyData, ULONG *pStatus)
+BOOL ADMINAPI asc_UserPasswordSet (UINT_PTR idClient, ASID idCell, ASID idUser, int keyVersion, LPCTSTR pkeyString, PBYTE pkeyData, ULONG *pStatus)
 {
    BOOL rc = TRUE;
    ULONG status = 0;
@@ -90,7 +90,7 @@ BOOL ADMINAPI asc_UserPasswordSet (DWORD idClient, ASID idCell, ASID idUser, int
 }
 
 
-BOOL ADMINAPI asc_UserUnlock (DWORD idClient, ASID idCell, ASID idUser, ULONG *pStatus)
+BOOL ADMINAPI asc_UserUnlock (UINT_PTR idClient, ASID idCell, ASID idUser, ULONG *pStatus)
 {
    BOOL rc = TRUE;
    ULONG status = 0;
@@ -119,7 +119,7 @@ BOOL ADMINAPI asc_UserUnlock (DWORD idClient, ASID idCell, ASID idUser, ULONG *p
 }
 
 
-BOOL ADMINAPI asc_UserCreate (DWORD idClient, ASID idCell, LPAFSADMSVR_CREATEUSER_PARAMS pCreate, ASID *pidUser, ULONG *pStatus)
+BOOL ADMINAPI asc_UserCreate (UINT_PTR idClient, ASID idCell, LPAFSADMSVR_CREATEUSER_PARAMS pCreate, ASID *pidUser, ULONG *pStatus)
 {
    BOOL rc = TRUE;
    ULONG status = 0;
@@ -148,7 +148,7 @@ BOOL ADMINAPI asc_UserCreate (DWORD idClient, ASID idCell, LPAFSADMSVR_CREATEUSE
 }
 
 
-BOOL ADMINAPI asc_UserDelete (DWORD idClient, ASID idCell, ASID idUser, LPAFSADMSVR_DELETEUSER_PARAMS pDelete, ULONG *pStatus)
+BOOL ADMINAPI asc_UserDelete (UINT_PTR idClient, ASID idCell, ASID idUser, LPAFSADMSVR_DELETEUSER_PARAMS pDelete, ULONG *pStatus)
 {
    BOOL rc = TRUE;
    ULONG status = 0;

@@ -1205,7 +1205,7 @@ DECL_PIOCTL(PSetAcl)
     AFS_STATCNT(PSetAcl);
     if (!avc)
 	return EINVAL;
-    if ((acl.AFSOpaque_len = strlen(ain) + 1) > 1000)
+    if ((acl.AFSOpaque_len = strlen(ain) + 1) > 1024 /* AFSOPAQUEMAX */)
 	return EINVAL;
 
     acl.AFSOpaque_val = ain;

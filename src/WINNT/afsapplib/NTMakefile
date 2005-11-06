@@ -84,7 +84,7 @@ DLLLIBS = \
 
 DLLFILE = $(DESTDIR)\root.server\usr\afs\bin\TaAfsAppLib.dll
 
-!IF ("$(AFSVER_CL)"<"1400")
+!IF ($(AFSVER_CL) < 1400)
 DEFFILE = TaAfsAppLib.def
 !ELSE
 DEFFILE = TaAfsAppLib2005.def
@@ -98,7 +98,8 @@ LOCALLINKFLAGS = -IGNORE:4049
 
 # AfsAppLib needs to use an explicit .DEF file to get its entry points public
 
-LOCALLINKFLAGS = $(LOCALLINKFLAGS) /DEF:$(DEFFILE)
+#LOCALLINKFLAGS = $(LOCALLINKFLAGS) /DEF:$(DEFFILE)
+LOCALLINKFLAGS = $(LOCALLINKFLAGS)
 
 # Also, AfsAppLib has a specific DLL entry-point which should be used
 
@@ -126,6 +127,7 @@ primary : headers $(DLLFILE) lang
 
 $(DLLFILE) : $(DLLOBJS) $(DLLLIBS)
 	$(DLLGUILINK) $(LOCALLINKFLAGS) $(VCLIBS)
+        $(_VC_MANIFEST_EMBED_DLL)
 	$(DLLPREP)
 	$(COPY) $*.lib $(ILIBDIR)
 	$(DEL) $*.lib $*.exp

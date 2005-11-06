@@ -291,9 +291,9 @@ BOOL AGGREGATE::RefreshStatus (BOOL fNotify, ULONG *pStatus)
 }
 
 
-ULONG AGGREGATE::CalculateAllocation (BOOL fNotify)
+size_t AGGREGATE::CalculateAllocation (BOOL fNotify)
 {
-   ULONG ckAllocated = 0;
+   size_t ckAllocated = 0;
 
    for (LPENUM pEnum = m_lFilesets->FindFirst(); pEnum; pEnum = pEnum->FindNext())
       {

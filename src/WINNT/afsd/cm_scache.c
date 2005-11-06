@@ -491,7 +491,7 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
             scp->fileType = CM_SCACHETYPE_INVALID;
 
         lock_ObtainMutex(&cm_Freelance_Lock);
-        scp->length.LowPart = strlen(mp)+4;
+        scp->length.LowPart = (DWORD)strlen(mp)+4;
         strncpy(scp->mountPointStringp,mp,MOUNTPOINTLEN);
         scp->mountPointStringp[MOUNTPOINTLEN-1] = '\0';
         lock_ReleaseMutex(&cm_Freelance_Lock);
@@ -681,7 +681,7 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *up, cm_req_t *reqp,
              */
             if (scp->flags & (CM_SCACHEFLAG_FETCHING | CM_SCACHEFLAG_STORING
                                | CM_SCACHEFLAG_SIZESTORING | CM_SCACHEFLAG_GETCALLBACK)) {
-                osi_Log1(afsd_logp, "CM SyncOp scp 0x%x is FETCHING|STORING|SIZESTORING|GETCALLBACK want FETCHSTATUS", scp);
+                osi_Log1(afsd_logp, "CM SyncOp scp 0x%p is FETCHING|STORING|SIZESTORING|GETCALLBACK want FETCHSTATUS", scp);
                 goto sleep;
             }
         }
@@ -692,11 +692,11 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *up, cm_req_t *reqp,
              */
             if (scp->flags & (CM_SCACHEFLAG_FETCHING | CM_SCACHEFLAG_STORING |
                               CM_SCACHEFLAG_SIZESTORING | CM_SCACHEFLAG_GETCALLBACK)) {
-                osi_Log1(afsd_logp, "CM SyncOp scp 0x%x is FETCHING|STORING|SIZESTORING|GETCALLBACK want STORESIZE|STORESTATUS|SETSIZE|GETCALLBACK", scp);
+                osi_Log1(afsd_logp, "CM SyncOp scp 0x%p is FETCHING|STORING|SIZESTORING|GETCALLBACK want STORESIZE|STORESTATUS|SETSIZE|GETCALLBACK", scp);
                 goto sleep;
             }
             if (scp->bufReadsp || scp->bufWritesp) {
-                osi_Log1(afsd_logp, "CM SyncOp scp 0x%x is bufRead|bufWrite want STORESIZE|STORESTATUS|SETSIZE|GETCALLBACK", scp);
+                osi_Log1(afsd_logp, "CM SyncOp scp 0x%p is bufRead|bufWrite want STORESIZE|STORESTATUS|SETSIZE|GETCALLBACK", scp);
                 goto sleep;
             }
         }
@@ -707,11 +707,11 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *up, cm_req_t *reqp,
              */
             if (scp->flags & (CM_SCACHEFLAG_FETCHING | CM_SCACHEFLAG_STORING
                                | CM_SCACHEFLAG_SIZESTORING | CM_SCACHEFLAG_GETCALLBACK)) {
-                osi_Log1(afsd_logp, "CM SyncOp scp 0x%x is FETCHING|STORING|SIZESTORING|GETCALLBACK want FETCHDATA", scp);
+                osi_Log1(afsd_logp, "CM SyncOp scp 0x%p is FETCHING|STORING|SIZESTORING|GETCALLBACK want FETCHDATA", scp);
                 goto sleep;
             }
             if (bufp && (bufp->cmFlags & (CM_BUF_CMFETCHING | CM_BUF_CMSTORING))) {
-                osi_Log2(afsd_logp, "CM SyncOp scp 0x%x bufp 0x%x is BUF_CMFETCHING|BUF_CMSTORING want FETCHDATA", scp, bufp);
+                osi_Log2(afsd_logp, "CM SyncOp scp 0x%p bufp 0x%p is BUF_CMFETCHING|BUF_CMSTORING want FETCHDATA", scp, bufp);
                 goto sleep;
             }
         }
@@ -719,11 +719,11 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *up, cm_req_t *reqp,
             /* same as fetch data */
             if (scp->flags & (CM_SCACHEFLAG_FETCHING | CM_SCACHEFLAG_STORING
                                | CM_SCACHEFLAG_SIZESTORING | CM_SCACHEFLAG_GETCALLBACK)) {
-                osi_Log1(afsd_logp, "CM SyncOp scp 0x%x is FETCHING|STORING|SIZESTORING|GETCALLBACK want STOREDATA", scp);
+                osi_Log1(afsd_logp, "CM SyncOp scp 0x%p is FETCHING|STORING|SIZESTORING|GETCALLBACK want STOREDATA", scp);
                 goto sleep;
             }
             if (bufp && (bufp->cmFlags & (CM_BUF_CMFETCHING | CM_BUF_CMSTORING))) {
-                osi_Log2(afsd_logp, "CM SyncOp scp 0x%x bufp 0x%x is BUF_CMFETCHING|BUF_CMSTORING want STOREDATA", scp, bufp);
+                osi_Log2(afsd_logp, "CM SyncOp scp 0x%p bufp 0x%p is BUF_CMFETCHING|BUF_CMSTORING want STOREDATA", scp, bufp);
                 goto sleep;
             }
         }
@@ -731,7 +731,7 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *up, cm_req_t *reqp,
         if (flags & CM_SCACHESYNC_STOREDATA_EXCL) {
             /* Don't allow concurrent StoreData RPC's */
             if (scp->flags & CM_SCACHEFLAG_DATASTORING) {
-                osi_Log1(afsd_logp, "CM SyncOp scp 0x%x is DATASTORING want STOREDATA_EXCL", scp);
+                osi_Log1(afsd_logp, "CM SyncOp scp 0x%p is DATASTORING want STOREDATA_EXCL", scp);
                 goto sleep;
             }
         }
@@ -739,7 +739,7 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *up, cm_req_t *reqp,
         if (flags & CM_SCACHESYNC_ASYNCSTORE) {
             /* Don't allow more than one BKG store request */
             if (scp->flags & CM_SCACHEFLAG_ASYNCSTORING) {
-                osi_Log1(afsd_logp, "CM SyncOp scp 0x%x is ASYNCSTORING want ASYNCSTORE", scp);
+                osi_Log1(afsd_logp, "CM SyncOp scp 0x%p is ASYNCSTORING want ASYNCSTORE", scp);
                 goto sleep;
             }
         }
@@ -747,7 +747,7 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *up, cm_req_t *reqp,
         if (flags & CM_SCACHESYNC_LOCK) {
             /* Don't allow concurrent fiddling with lock lists */
             if (scp->flags & CM_SCACHEFLAG_LOCKING) {
-                osi_Log1(afsd_logp, "CM SyncOp scp 0x%x is LOCKING want LOCK", scp);
+                osi_Log1(afsd_logp, "CM SyncOp scp 0x%p is LOCKING want LOCK", scp);
                 goto sleep;
             }
         }
@@ -758,7 +758,7 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *up, cm_req_t *reqp,
              * bringing in new status.
              */
             if (scp->flags & (CM_SCACHEFLAG_FETCHING)) {
-                osi_Log1(afsd_logp, "CM SyncOp scp 0x%x is FETCHING want GETSTATUS", scp);
+                osi_Log1(afsd_logp, "CM SyncOp scp 0x%p is FETCHING want GETSTATUS", scp);
                 goto sleep;
             }
         }
@@ -772,7 +772,7 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *up, cm_req_t *reqp,
              * changing here.
              */
             if (scp->flags & (CM_SCACHEFLAG_FETCHING | CM_SCACHEFLAG_STORING | CM_SCACHEFLAG_SIZESTORING)) {
-                osi_Log1(afsd_logp, "CM SyncOp scp 0x%x is FETCHING|STORING|SIZESTORING want SETSTATUS", scp);
+                osi_Log1(afsd_logp, "CM SyncOp scp 0x%p is FETCHING|STORING|SIZESTORING want SETSTATUS", scp);
                 goto sleep;
             }
         }
@@ -782,11 +782,11 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *up, cm_req_t *reqp,
              * is OK to read while storing the data back.
              */
             if (scp->flags & CM_SCACHEFLAG_FETCHING) {
-                osi_Log1(afsd_logp, "CM SyncOp scp 0x%x is FETCHING want READ", scp);
+                osi_Log1(afsd_logp, "CM SyncOp scp 0x%p is FETCHING want READ", scp);
                 goto sleep;
             }
             if (bufp && ((bufp->cmFlags & (CM_BUF_CMFETCHING | CM_BUF_CMFULLYFETCHED)) == CM_BUF_CMFETCHING)) {
-                osi_Log2(afsd_logp, "CM SyncOp scp 0x%x bufp 0x%x is BUF_CMFETCHING want READ", scp, bufp);
+                osi_Log2(afsd_logp, "CM SyncOp scp 0x%p bufp 0x%p is BUF_CMFETCHING want READ", scp, bufp);
                 goto sleep;
             }
         }
@@ -796,11 +796,11 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *up, cm_req_t *reqp,
              */
             if (scp->flags & (CM_SCACHEFLAG_FETCHING | CM_SCACHEFLAG_STORING
                                | CM_SCACHEFLAG_SIZESTORING)) {
-                osi_Log1(afsd_logp, "CM SyncOp scp 0x%x is FETCHING|STORING|SIZESTORING want WRITE", scp);
+                osi_Log1(afsd_logp, "CM SyncOp scp 0x%p is FETCHING|STORING|SIZESTORING want WRITE", scp);
                 goto sleep;
             }
             if (bufp && (bufp->cmFlags & (CM_BUF_CMFETCHING | CM_BUF_CMSTORING))) {
-                osi_Log2(afsd_logp, "CM SyncOp scp 0x%x bufp 0x%x is BUF_CMFETCHING|BUF_CMSTORING want WRITE", scp, bufp);
+                osi_Log2(afsd_logp, "CM SyncOp scp 0x%p bufp 0x%p is BUF_CMFETCHING|BUF_CMSTORING want WRITE", scp, bufp);
                 goto sleep;
             }
         }
@@ -818,8 +818,8 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *up, cm_req_t *reqp,
 #endif /* AFS_FREELANCE_CLIENT */
              ) {
             if (!cm_HaveCallback(scp)) {
-                osi_Log1(afsd_logp, "CM SyncOp getting callback on scp %x",
-                          (long) scp);
+                osi_Log1(afsd_logp, "CM SyncOp getting callback on scp 0x%p",
+                          scp);
                 if (bufLocked) lock_ReleaseMutex(&bufp->mx);
                 code = cm_GetCallback(scp, up, reqp, 0);
                 if (bufLocked) {
@@ -869,28 +869,28 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *up, cm_req_t *reqp,
             return CM_ERROR_WOULDBLOCK;
 
         /* wait here, then try again */
-        osi_Log1(afsd_logp, "CM SyncOp sleeping scp 0x%x", scp);
+        osi_Log1(afsd_logp, "CM SyncOp sleeping scp 0x%p", scp);
         if ( scp->flags & CM_SCACHEFLAG_WAITING ) {
             scp->waitCount++;
             scp->waitRequests++;
-            osi_Log3(afsd_logp, "CM SyncOp CM_SCACHEFLAG_WAITING already set for 0x%x; %d threads; %d requests", 
+            osi_Log3(afsd_logp, "CM SyncOp CM_SCACHEFLAG_WAITING already set for 0x%p; %d threads; %d requests", 
                      scp, scp->waitCount, scp->waitRequests);
         } else {
-            osi_Log1(afsd_logp, "CM SyncOp CM_SCACHEFLAG_WAITING set for 0x%x", scp);
+            osi_Log1(afsd_logp, "CM SyncOp CM_SCACHEFLAG_WAITING set for 0x%p", scp);
             scp->flags |= CM_SCACHEFLAG_WAITING;
             scp->waitCount = scp->waitRequests = 1;
         }
         if (bufLocked) 
             lock_ReleaseMutex(&bufp->mx);
-        osi_SleepM((long) &scp->flags, &scp->mx);
+        osi_SleepM((LONG_PTR) &scp->flags, &scp->mx);
         if (bufLocked) 
             lock_ObtainMutex(&bufp->mx);
         lock_ObtainMutex(&scp->mx);
         scp->waitCount--;
-        osi_Log3(afsd_logp, "CM SyncOp woke! scp 0x%x; still waiting %d threads of %d requests", 
+        osi_Log3(afsd_logp, "CM SyncOp woke! scp 0x%p; still waiting %d threads of %d requests", 
                  scp, scp->waitCount, scp->waitRequests);
         if (scp->waitCount == 0) {
-            osi_Log1(afsd_logp, "CM SyncOp CM_SCACHEFLAG_WAITING reset for 0x%x", scp);
+            osi_Log1(afsd_logp, "CM SyncOp CM_SCACHEFLAG_WAITING reset for 0x%p", scp);
             scp->flags &= ~CM_SCACHEFLAG_WAITING;
             scp->waitRequests = 0;
         }
@@ -992,8 +992,8 @@ void cm_SyncOpDone(cm_scache_t *scp, cm_buf_t *bufp, long flags)
         if (bufp) {
             bufp->cmFlags &= ~(CM_BUF_CMFETCHING | CM_BUF_CMFULLYFETCHED);
             if (bufp->flags & CM_BUF_WAITING) {
-                osi_Log2(afsd_logp, "CM SyncOpDone Waking [scp 0x%x] bufp 0x%x", scp, bufp);
-                osi_Wakeup((long) &bufp);
+                osi_Log2(afsd_logp, "CM SyncOpDone Waking [scp 0x%p] bufp 0x%p", scp, bufp);
+                osi_Wakeup((LONG_PTR) &bufp);
             }
             buf_Release(bufp);
         }
@@ -1013,8 +1013,8 @@ void cm_SyncOpDone(cm_scache_t *scp, cm_buf_t *bufp, long flags)
         if (bufp) {
             bufp->cmFlags &= ~CM_BUF_CMSTORING;
             if (bufp->flags & CM_BUF_WAITING) {
-                osi_Log2(afsd_logp, "CM SyncOpDone Waking [scp 0x%x] bufp 0x%x", scp, bufp);
-                osi_Wakeup((long) &bufp);
+                osi_Log2(afsd_logp, "CM SyncOpDone Waking [scp 0x%p] bufp 0x%p", scp, bufp);
+                osi_Wakeup((LONG_PTR) &bufp);
             }
             buf_Release(bufp);
         }
@@ -1022,8 +1022,8 @@ void cm_SyncOpDone(cm_scache_t *scp, cm_buf_t *bufp, long flags)
 
     /* and wakeup anyone who is waiting */
     if (scp->flags & CM_SCACHEFLAG_WAITING) {
-        osi_Log1(afsd_logp, "CM SyncOpDone Waking scp 0x%x", scp);
-        osi_Wakeup((long) &scp->flags);
+        osi_Log1(afsd_logp, "CM SyncOpDone Waking scp 0x%p", scp);
+        osi_Wakeup((LONG_PTR) &scp->flags);
     }
 }       
 
@@ -1260,7 +1260,7 @@ int cm_DumpSCache(FILE *outputFile, char *cookie, int lock)
         lock_ObtainRead(&cm_scacheLock);
   
     sprintf(output, "%s - dumping scache - cm_data.currentSCaches=%d, cm_data.maxSCaches=%d\n", cookie, cm_data.currentSCaches, cm_data.maxSCaches);
-    WriteFile(outputFile, output, strlen(output), &zilch, NULL);
+    WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
   
     for (scp = cm_data.scacheLRULastp; scp; scp = (cm_scache_t *) osi_QPrev(&scp->q)) 
     {
@@ -1269,12 +1269,12 @@ int cm_DumpSCache(FILE *outputFile, char *cookie, int lock)
             sprintf(output, "%s fid (cell=%d, volume=%d, vnode=%d, unique=%d) refCount=%u\n", 
                     cookie, scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique, 
                     scp->refCount);
-            WriteFile(outputFile, output, strlen(output), &zilch, NULL);
+            WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
         }
     }
   
     sprintf(output, "%s - dumping cm_data.hashTable - cm_data.hashTableSize=%d\n", cookie, cm_data.hashTableSize);
-    WriteFile(outputFile, output, strlen(output), &zilch, NULL);
+    WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
   
     for (i = 0; i < cm_data.hashTableSize; i++)
     {
@@ -1282,16 +1282,16 @@ int cm_DumpSCache(FILE *outputFile, char *cookie, int lock)
         {
             if (scp->refCount != 0)
             {
-                sprintf(output, "%s scp=0x%08X, hash=%d, fid (cell=%d, volume=%d, vnode=%d, unique=%d) refCount=%u\n", 
-                         cookie, (void *)scp, i, scp->fid.cell, scp->fid.volume, scp->fid.vnode, 
+                sprintf(output, "%s scp=0x%p, hash=%d, fid (cell=%d, volume=%d, vnode=%d, unique=%d) refCount=%u\n", 
+                         cookie, scp, i, scp->fid.cell, scp->fid.volume, scp->fid.vnode, 
                          scp->fid.unique, scp->refCount);
-                WriteFile(outputFile, output, strlen(output), &zilch, NULL);
+                WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
             }
         }
     }
 
     sprintf(output, "%s - Done dumping scache.\n", cookie);
-    WriteFile(outputFile, output, strlen(output), &zilch, NULL);
+    WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
   
     if (lock)
         lock_ReleaseRead(&cm_scacheLock);       

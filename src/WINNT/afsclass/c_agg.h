@@ -19,9 +19,9 @@
 typedef struct
    {
    ULONG dwID;
-   ULONG ckStorageTotal;
-   ULONG ckStorageFree;
-   ULONG ckStorageAllocated;
+   size_t ckStorageTotal;
+   size_t ckStorageFree;
+   size_t ckStorageAllocated;
    } AGGREGATESTATUS, *LPAGGREGATESTATUS;
 
 class AGGREGATE
@@ -67,7 +67,7 @@ class AGGREGATE
       ~AGGREGATE (void);
       void SendDeleteNotifications (void);
 
-      ULONG CalculateAllocation (BOOL fNotify);
+      size_t CalculateAllocation (BOOL fNotify);
 
       static BOOL CALLBACK AGGREGATE::KeyFilesetName_Compare (LPHASHLISTKEY pKey, PVOID pObject, PVOID pData);
       static HASHVALUE CALLBACK AGGREGATE::KeyFilesetName_HashObject (LPHASHLISTKEY pKey, PVOID pObject);

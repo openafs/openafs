@@ -31,6 +31,7 @@ $(OUT)\afscustom.obj: afscustom.cpp
 $(DLLFILE): $(OUT)\afscustom.obj
 	$(LINK) -DLL $(DLLEXPORTS) \
 	  -OUT:$@ $** $(DLLLIBFILES)
+        $(_VC_MANIFEST_EMBED_DLL)
 
 install: $(DLLFILE)
 

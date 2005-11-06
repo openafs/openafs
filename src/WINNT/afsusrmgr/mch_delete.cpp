@@ -40,7 +40,7 @@ void Machine_Delete_OnOK (HWND hDlg);
 
 void Machine_ShowDelete (LPASIDLIST pMachineList)
 {
-   ModalDialogParam (IDD_MACHINE_DELETE, g.hMain, Machine_Delete_DlgProc, (LPARAM)pMachineList);
+   ModalDialogParam (IDD_MACHINE_DELETE, g.hMain, (DLGPROC)Machine_Delete_DlgProc, (LPARAM)pMachineList);
 }
 
 
@@ -52,7 +52,7 @@ BOOL CALLBACK Machine_Delete_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
    switch (msg)
       {
       case WM_INITDIALOG:
-         SetWindowLong (hDlg, DWL_USER, lp);
+         SetWindowLongPtr (hDlg, DWLP_USER, lp);
          Machine_Delete_OnInitDialog (hDlg);
          break;
 
@@ -81,7 +81,7 @@ BOOL CALLBACK Machine_Delete_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 
 void Machine_Delete_OnInitDialog (HWND hDlg)
 {
-   LPASIDLIST pMachineList = (LPASIDLIST)GetWindowLong (hDlg, DWL_USER);
+   LPASIDLIST pMachineList = (LPASIDLIST)GetWindowLongPtr (hDlg, DWLP_USER);
 
    // Fix the title of the dialog
    //
@@ -113,14 +113,14 @@ void Machine_Delete_OnInitDialog (HWND hDlg)
 
 void Machine_Delete_OnDestroy (HWND hDlg)
 {
-   LPASIDLIST pMachineList = (LPASIDLIST)GetWindowLong (hDlg, DWL_USER);
+   LPASIDLIST pMachineList = (LPASIDLIST)GetWindowLongPtr (hDlg, DWLP_USER);
    asc_AsidListFree (&pMachineList);
 }
 
 
 void Machine_Delete_OnOK (HWND hDlg)
 {
-   LPASIDLIST pMachineList = (LPASIDLIST)GetWindowLong (hDlg, DWL_USER);
+   LPASIDLIST pMachineList = (LPASIDLIST)GetWindowLongPtr (hDlg, DWLP_USER);
 
    // Start a background task to do all the work.
    //

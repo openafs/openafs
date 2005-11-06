@@ -108,7 +108,7 @@ BOOL CALLBACK Filesets_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
          ResizeWindow (hDlg, awdFilesets, rwaMoveToHere, &rTab);
 
          FL_RestoreView (GetDlgItem (hDlg, IDC_SET_LIST), &gr.viewSet);
-         FastList_SetTextCallback (GetDlgItem (hDlg, IDC_SET_LIST), GetItemText, (DWORD)&gr.viewSet);
+         FastList_SetTextCallback (GetDlgItem (hDlg, IDC_SET_LIST), GetItemText, &gr.viewSet);
 
          Filesets_SubclassList (hDlg);
 
@@ -381,7 +381,7 @@ void Filesets_OnNotifyFromDispatch (LPNOTIFYSTRUCT lpns)
 }
 
 
-static LONG procFilesetsList = 0;
+static LONG_PTR procFilesetsList = 0;
 
 LRESULT CALLBACK Filesets_SubclassListProc (HWND hList, UINT msg, WPARAM wp, LPARAM lp)
 {
@@ -390,13 +390,13 @@ LRESULT CALLBACK Filesets_SubclassListProc (HWND hList, UINT msg, WPARAM wp, LPA
    if (procFilesetsList == 0)
       rc = DefWindowProc (hList, msg, wp, lp);
    else
-      rc = CallWindowProc ((WNDPROC)procFilesetsList, hList, msg, wp, lp);
+      rc = (LRESULT) CallWindowProc ((WNDPROC)procFilesetsList, hList, msg, wp, lp);
 
    switch (msg)
       {
       case WM_DESTROY:
          if (procFilesetsList != 0)
-            SetWindowLong (hList, GWL_WNDPROC, procFilesetsList);
+            SetWindowLongPtr (hList, GWLP_WNDPROC, procFilesetsList);
          break;
 
       case WM_COMMAND: 
@@ -459,8 +459,8 @@ void Filesets_Subclass_OnCommand (HWND hList, UINT msg, WPARAM wp, LPARAM lp)
 void Filesets_SubclassList (HWND hDlg)
 {
    HWND hList = GetDlgItem (hDlg, IDC_SET_LIST);
-   procFilesetsList = GetWindowLong (hList, GWL_WNDPROC);
-   SetWindowLong (hList, GWL_WNDPROC, (LONG)Filesets_SubclassListProc);
+   procFilesetsList = GetWindowLongPtr (hList, GWLP_WNDPROC);
+   SetWindowLongPtr (hList, GWLP_WNDPROC, (LONG_PTR)Filesets_SubclassListProc);
 }
 
 
@@ -560,7 +560,7 @@ void Filesets_ContinueDrag (HWND hDlg)
 
          if (l.hItemTarget)
             {
-            DWORD dwFlags = FastList_GetItemFlags (l.hwndTarget, l.hItemTarget);
+            LPARAM dwFlags = FastList_GetItemFlags (l.hwndTarget, l.hItemTarget);
             FastList_SetItemFlags (l.hwndTarget, l.hItemTarget, dwFlags & (~FLIF_DROPHIGHLIGHT));
             l.hItemTarget = NULL;
             l.lpiTarget = NULL;
@@ -570,7 +570,7 @@ void Filesets_ContinueDrag (HWND hDlg)
             {
             l.hwndTarget = hTarget;
             l.hItemTarget = hItemTarget;
-            DWORD dwFlags = FastList_GetItemFlags (l.hwndTarget, l.hItemTarget);
+            LPARAM dwFlags = FastList_GetItemFlags (l.hwndTarget, l.hItemTarget);
             FastList_SetItemFlags (l.hwndTarget, l.hItemTarget, dwFlags | FLIF_DROPHIGHLIGHT);
             }
 
@@ -642,7 +642,7 @@ void Filesets_CancelDrag (HWND hDlg)
 {
    if (l.hItemTarget != NULL)
       {
-      DWORD dwFlags = FastList_GetItemFlags (l.hwndTarget, l.hItemTarget);
+      LPARAM dwFlags = FastList_GetItemFlags (l.hwndTarget, l.hItemTarget);
       FastList_SetItemFlags (l.hwndTarget, l.hItemTarget, dwFlags & (~FLIF_DROPHIGHLIGHT));
       l.hItemTarget = NULL;
       }

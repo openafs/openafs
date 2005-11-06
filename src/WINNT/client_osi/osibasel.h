@@ -31,7 +31,7 @@ typedef struct osi_mutex {
 	char type;			/* for all types; type 0 uses atomic count */
 	char flags;			/* flags for base type */
 	unsigned short atomicIndex;	/* index of lock for low-level sync */
-        thread_t tid;			/* tid of thread that owns the lock */
+        DWORD tid;			/* tid of thread that owns the lock */
 	unsigned short waiters;		/* waiters */
         unsigned short pad;
 	union {
@@ -82,15 +82,15 @@ extern int lock_TryWrite (struct osi_rwlock *);
 
 extern int lock_TryMutex (struct osi_mutex *);
 
-extern void osi_SleepR (long, struct osi_rwlock *);
+extern void osi_SleepR (LONG_PTR, struct osi_rwlock *);
 
-extern void osi_SleepW (long, struct osi_rwlock *);
+extern void osi_SleepW (LONG_PTR, struct osi_rwlock *);
 
-extern void osi_SleepM (long, struct osi_mutex *);
+extern void osi_SleepM (LONG_PTR, struct osi_mutex *);
 
-extern void osi_Sleep (long);
+extern void osi_Sleep (LONG_PTR);
 
-extern void osi_Wakeup (long);
+extern void osi_Wakeup (LONG_PTR);
 
 extern void lock_FinalizeRWLock(struct osi_rwlock *);
 

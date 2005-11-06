@@ -45,6 +45,7 @@ TESTLIBS = $(DESTDIR)\lib\afslwp.lib \
 
 $(OUT)\test_ftm.exe: $(OUT)\test_ftm.obj $(LIBFILE) $(TESTLIBS)
 	$(EXECONLINK)
+        $(_VC_MANIFEST_EMBED_EXE)
 
 mkdir:
 	

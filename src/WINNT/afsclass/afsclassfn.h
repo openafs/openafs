@@ -217,7 +217,7 @@ typedef struct
 #define MASK_USERPROP_aaGroupsOwned            0x00001000
 #define MASK_USERPROP_aaMembership             0x00002000
 
-LPIDENT AfsClass_CreateUser           (LPIDENT lpiCell, LPTSTR pszUserName, LPTSTR pszInstance, LPTSTR pszPassword, int idUser = 0, BOOL fCreateKAS = TRUE, BOOL fCreatePTS = TRUE, ULONG *pStatus = NULL);
+LPIDENT AfsClass_CreateUser           (LPIDENT lpiCell, LPTSTR pszUserName, LPTSTR pszInstance, LPTSTR pszPassword, UINT_PTR idUser = 0, BOOL fCreateKAS = TRUE, BOOL fCreatePTS = TRUE, ULONG *pStatus = NULL);
 BOOL    AfsClass_SetUserProperties    (LPIDENT lpiUser, LPUSERPROPERTIES pProperties, ULONG *pStatus = NULL);
 BOOL    AfsClass_SetUserPassword      (LPIDENT lpiUser, int keyVersion, LPTSTR pszPassword, ULONG *pStatus = NULL);
 BOOL    AfsClass_SetUserPassword      (LPIDENT lpiUser, int keyVersion, LPENCRYPTIONKEY pKey, ULONG *pStatus = NULL);

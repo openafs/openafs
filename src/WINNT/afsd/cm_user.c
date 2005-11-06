@@ -143,7 +143,7 @@ void cm_ReleaseUserVCRef(cm_user_t *userp)
  * This routine is called by the cm_Daemon() ie. the periodic daemon.
  * every cm_daemonTokenCheckInterval seconds 
  */
-void cm_CheckTokenCache(long now)
+void cm_CheckTokenCache(time_t now)
 {
     extern smb_vc_t *smb_allVCsp; /* global vcp list */
     smb_vc_t   *vcp;

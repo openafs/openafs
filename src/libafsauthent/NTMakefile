@@ -145,6 +145,7 @@ DLLLIBS =\
 
 $(LIBFILE): $(DLLOBJS) $(DLLLIBS) $(RXOBJS)
 	$(DLLCONLINK) /DEF:afsauthent.def rpcrt4.lib dnsapi.lib mpr.lib secur32.lib
+        $(_VC_MANIFEST_EMBED_DLL)
 	$(DLLPREP)
 
 # Definitions for generating versioninfo resources

@@ -101,9 +101,9 @@ BOOL CALLBACK GeneralTab_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
             {
             case IDAPPLY:
                if (!GeneralTab_OnApply (hDlg, FALSE, TRUE))
-                  SetWindowLong (hDlg, DWL_MSGRESULT, TRUE);
+                  SetWindowLongPtr (hDlg, DWLP_MSGRESULT, TRUE);
                else if (g.fIsWinNT && !GeneralTab_AskIfStopped (hDlg))
-                  SetWindowLong (hDlg, DWL_MSGRESULT, TRUE);
+                  SetWindowLongPtr (hDlg, DWLP_MSGRESULT, TRUE);
                break;
 
             case IDC_REFRESH:
@@ -228,7 +228,7 @@ BOOL GeneralTab_OnApply (HWND hDlg, BOOL fForce, BOOL fComplainIfInvalid)
    if (!fForce)
       {
       // Don't try to do anything if we've already failed the apply
-      if (GetWindowLong (hDlg, DWL_MSGRESULT))
+      if (GetWindowLongPtr (hDlg, DWLP_MSGRESULT))
          return FALSE;
       }
 

@@ -69,6 +69,7 @@ UDBG_EXELIBS =\
 
 $(RS_UDBG_EXEFILE): $(UDBG_EXEOBJS) $(UDBG_EXELIBS)  
 	$(EXECONLINK) iphlpapi.lib
+        $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)  
 
 $(CL_UDBG_EXEFILE): $(RS_UDBG_EXEFILE)
@@ -116,9 +117,11 @@ test tests: utst_server utst_client $(EXEFILE)
 
 utst_server: $(OUT)\utst_server.obj $(OUT)\utst_int.ss.obj $(OUT)\utst_int.xdr.obj  $(EXELIBS)
 	$(EXECONLINK) 
+        $(_VC_MANIFEST_EMBED_EXE)
 	
 utst_client: $(OUT)\utst_client.obj $(OUT)\utst_int.cs.obj $(OUT)\utst_int.xdr.obj $(EXELIBS)
 	$(EXECONLINK) 
+        $(_VC_MANIFEST_EMBED_EXE)
 	
 # rxgen on utst_int.xg
 utst_int.ss.c utst_int.cs.c utst_int.xdr.c utst_int.h: utst_int.xg

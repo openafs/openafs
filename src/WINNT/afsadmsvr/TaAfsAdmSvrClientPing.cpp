@@ -24,7 +24,7 @@ extern "C" {
 static struct
    {
    HANDLE hPingThread;
-   DWORD *adwClients;
+   UINT_PTR *adwClients;
    size_t cdwClients;
 
    HANDLE hCallbackThread;
@@ -47,7 +47,7 @@ DWORD WINAPI ClientCallbackThread (LPVOID lp);
  *
  */
 
-void StartPingThread (DWORD idClient)
+void StartPingThread (UINT_PTR idClient)
 {
    asc_Enter();
 
@@ -72,7 +72,7 @@ void StartPingThread (DWORD idClient)
 }
 
 
-void StopPingThread (DWORD idClient)
+void StopPingThread (UINT_PTR idClient)
 {
    asc_Enter();
 
@@ -96,7 +96,7 @@ DWORD WINAPI ClientPingThread (LPVOID lp)
 
       for (size_t ii = 0; ii < l.cdwClients; ++ii)
          {
-         DWORD idClient;
+         UINT_PTR idClient;
          if ((idClient = l.adwClients[ ii ]) == 0)
             continue;
 

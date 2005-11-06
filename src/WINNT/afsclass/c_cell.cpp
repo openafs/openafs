@@ -1459,7 +1459,7 @@ BOOL CELL::RefreshAll (ULONG *pStatus)
             }
          }
 
-      size_t nServersToRefresh = 0;
+      ULONG nServersToRefresh = 0;
 
       HENUM hEnum;
       for (LPSERVER lpServer = ServerFindFirst (&hEnum); lpServer; lpServer = ServerFindNext (&hEnum))

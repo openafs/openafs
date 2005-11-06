@@ -75,6 +75,7 @@ PTSERVER_EXELIBS =$(PTSERVER_EXELIBS) $(DESTDIR)\lib\afs\afsprocmgmt.lib
 
 $(PTSERVER): $(PTSERVER_EXEOBJS) $(RXKADOBJS) $(PTSERVER_EXELIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
+        $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
 
 
@@ -92,7 +93,7 @@ PTS_EXEOBJS =\
 PTCLIENT_EXEOBJS =\
 	$(OUT)\ptclient.obj \
         $(OUT)\display.obj \
-	$(OUT)\pts.res
+	$(OUT)\ptclient.res
 
 PTS_EXELIBS =\
 	$(DESTDIR)\lib\afsubik.lib \
@@ -112,10 +113,12 @@ PTS_EXELIBS =\
 
 $(PTS): $(PTS_EXEOBJS) $(PTS_EXELIBS) 
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
+        $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
 
 $(PTCLIENT): $(PTCLIENT_EXEOBJS) $(PTS_EXELIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
+        $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
 
 
@@ -126,6 +129,8 @@ $(PTCLIENT): $(PTCLIENT_EXEOBJS) $(PTS_EXELIBS)
 $(OUT)\ptserver.res: AFS_component_version_number.h
 
 $(OUT)\pts.res: AFS_component_version_number.h
+
+$(OUT)\ptclient.res: AFS_component_version_number.h
 
 ############################################################################
 # rxgen on pting.xg
@@ -185,10 +190,10 @@ $(INCFILEDIR)\afs\prclient.h: $(INCFILEDIR)\afs\ptclient.h
 # clean up
 
 clean::
-	$(DEL) ptint.cs.c ptint.ss.c ptclient ptint.xdr.c ptint.h
+	$(DEL) ptint.cs.c ptint.ss.c ptint.xdr.c ptint.h
 	$(DEL) $(OUT)\readgroup.exe $(OUT)\readpwd.exe $(OUT)\db_verify.exe $(OUT)\testpt.exe 
 	$(DEL) pterror.h pterror.c
-	$(DEL) $(PTS)
+	$(DEL) $(PTS) $(PTCLIENT)
 
 ############################################################################
 # tests?
@@ -196,15 +201,19 @@ TEST_LIBS = $(PTS_EXELIBS)
 
 $(OUT)\readgroup.exe: $(OUT)\readgroup.obj $(LIBFILE) $(TEST_LIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
+        $(_VC_MANIFEST_EMBED_EXE)
 
 $(OUT)\readpwd.exe: $(OUT)\readpwd.obj $(LIBFILE) $(TEST_LIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
+        $(_VC_MANIFEST_EMBED_EXE)
 
 $(OUT)\testpt.exe: $(OUT)\testpt.obj $(LIBFILE) $(TEST_LIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib 
+        $(_VC_MANIFEST_EMBED_EXE)
 
 $(OUT)\db_verify.exe: $(OUT)\db_verify.obj $(OUT)\pterror.obj $(OUT)\display.obj $(LIBFILE) $(TEST_LIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
+        $(_VC_MANIFEST_EMBED_EXE)
 
 mkdir:
 	

@@ -483,7 +483,7 @@ long cm_GetCellServDB(char *cellNamep)
         strcpy(cellNamep, AFSDIR_CLIENT_ETC_DIRPATH);
 
     /* add trailing backslash, if required */
-    tlen = strlen(cellNamep);
+    tlen = (int)strlen(cellNamep);
     if (cellNamep[tlen-1] != '\\') 
         strcat(cellNamep, "\\");
 #else
@@ -560,63 +560,63 @@ long cm_GetRootCellName(char *cellNamep)
 
 cm_configFile_t *cm_CommonOpen(char *namep, char *rwp)
 {
-	char wdir[256];
+    char wdir[256];
     long tlen;
     FILE *tfilep;
 
 #if !defined(DJGPP) && !defined(AFS_WIN95_ENV)
     strcpy(wdir, AFSDIR_CLIENT_ETC_DIRPATH);
         
-	/* add trailing backslash, if required */
-        tlen = strlen(wdir);
-        if (wdir[tlen-1] != '\\') strcat(wdir, "\\");
+    /* add trailing backslash, if required */
+    tlen = (long)(strlen(wdir));
+    if (wdir[tlen-1] != '\\') strcat(wdir, "\\");
 #else
 #ifdef DJGPP
-        strcpy(wdir,cm_confDir);
+    strcpy(wdir,cm_confDir);
 #else
-        DWORD dwSize;
-        char *afsconf_path;
+    DWORD dwSize;
+    char *afsconf_path;
     
-        dwSize = GetEnvironmentVariable("AFSCONF", NULL, 0);
-        afsconf_path = malloc(dwSize);
-        dwSize = GetEnvironmentVariable("AFSCONF", afsconf_path, dwSize);
+    dwSize = GetEnvironmentVariable("AFSCONF", NULL, 0);
+    afsconf_path = malloc(dwSize);
+    dwSize = GetEnvironmentVariable("AFSCONF", afsconf_path, dwSize);
 
-        if (!afsconf_path)
-            strcpy(wdir, AFSDIR_CLIENT_ETC_DIRPATH);
-        else {
-            strcpy(wdir, afsconf_path);
-            free(afsconf_path);
-        }
+    if (!afsconf_path)
+	strcpy(wdir, AFSDIR_CLIENT_ETC_DIRPATH);
+    else {
+	strcpy(wdir, afsconf_path);
+	free(afsconf_path);
+    }
 #endif /* !DJGPP */
-        strcat(wdir,"/");
+    strcat(wdir,"/");
 #endif /* DJGPP || WIN95 */
 
-        strcat(wdir, namep);
+    strcat(wdir, namep);
         
-        tfilep = fopen(wdir, rwp);
+    tfilep = fopen(wdir, rwp);
 
-	return ((cm_configFile_t *) tfilep);        
-}
+    return ((cm_configFile_t *) tfilep);        
+}	
 
 #ifndef DJGPP
 long cm_WriteConfigString(char *labelp, char *valuep)
 {
-	DWORD code, dummyDisp;
-	HKEY parmKey;
+    DWORD code, dummyDisp;
+    HKEY parmKey;
 
-	code = RegCreateKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY,
-				0, "container", 0, KEY_SET_VALUE, NULL,
-				&parmKey, &dummyDisp);
-	if (code != ERROR_SUCCESS)
-		return -1;
+    code = RegCreateKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY,
+			   0, "container", 0, KEY_SET_VALUE, NULL,
+			   &parmKey, &dummyDisp);
+    if (code != ERROR_SUCCESS)
+	return -1;
 
-	code = RegSetValueEx(parmKey, labelp, 0, REG_SZ,
-			     valuep, strlen(valuep) + 1);
-	RegCloseKey (parmKey);
-	if (code != ERROR_SUCCESS)
-		return -1;
+    code = RegSetValueEx(parmKey, labelp, 0, REG_SZ,
+			  valuep, (DWORD)strlen(valuep) + 1);
+    RegCloseKey (parmKey);
+    if (code != ERROR_SUCCESS)
+	return (long)-1;
 
-        return 0;
+    return (long)0;
 }
 #endif /* !DJGPP */
 
@@ -747,7 +747,7 @@ long cm_CloseCellFile(cm_configFile_t *filep)
     strcpy(wdir, AFSDIR_CLIENT_ETC_DIRPATH);
         
 	/* add trailing backslash, if required */
-    tlen = strlen(wdir);
+    tlen = (int)strlen(wdir);
     if (wdir[tlen-1] != '\\') strcat(wdir, "\\");
 #else
 #ifdef DJGPP
@@ -801,7 +801,7 @@ void cm_GetConfigDir(char *dir)
     strcpy(wdir, AFSDIR_CLIENT_ETC_DIRPATH);
         
 	/* add trailing backslash, if required */
-    tlen = strlen(wdir);
+    tlen = (int)strlen(wdir);
     if (wdir[tlen-1] != '\\') strcat(wdir, "\\");
 #else
 #ifdef DJGPP

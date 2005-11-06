@@ -116,13 +116,13 @@ afsi_log(char *pattern, ...)
         GetDateFormat(LOCALE_SYSTEM_DEFAULT, 0, NULL, NULL, d, sizeof(d));
         StringCbPrintfA(u, sizeof(u), "%s %s: %s\n", d, t, s);
         if (afsi_file != INVALID_HANDLE_VALUE)
-            WriteFile(afsi_file, u, strlen(u), &zilch, NULL);
+            WriteFile(afsi_file, u, (DWORD)strlen(u), &zilch, NULL);
 #ifdef NOTSERVICE
         printf("%s", u);
 #endif 
     } else {
         if (afsi_file != INVALID_HANDLE_VALUE)
-            WriteFile(afsi_file, s, strlen(s), &zilch, NULL);
+            WriteFile(afsi_file, s, (DWORD)strlen(s), &zilch, NULL);
     }
 }
 
@@ -179,15 +179,15 @@ afsi_start()
     GetTimeFormat(LOCALE_SYSTEM_DEFAULT, 0, NULL, NULL, u, sizeof(u));
     StringCbCatA(t, sizeof(t), ": Create log file\n");
     StringCbCatA(u, sizeof(u), ": Created log file\n");
-    WriteFile(afsi_file, t, strlen(t), &zilch, NULL);
-    WriteFile(afsi_file, u, strlen(u), &zilch, NULL);
+    WriteFile(afsi_file, t, (DWORD)strlen(t), &zilch, NULL);
+    WriteFile(afsi_file, u, (DWORD)strlen(u), &zilch, NULL);
     p = "PATH=";
     code = GetEnvironmentVariable("PATH", NULL, 0);
     path = malloc(code);
     code = GetEnvironmentVariable("PATH", path, code);
-    WriteFile(afsi_file, p, strlen(p), &zilch, NULL);
-    WriteFile(afsi_file, path, strlen(path), &zilch, NULL);
-    WriteFile(afsi_file, "\n", 1, &zilch, NULL);
+    WriteFile(afsi_file, p, (DWORD)strlen(p), &zilch, NULL);
+    WriteFile(afsi_file, path, (DWORD)strlen(path), &zilch, NULL);
+    WriteFile(afsi_file, "\n", (DWORD)1, &zilch, NULL);
     free(path);
 
     /* Initialize C RTL Code Page conversion functions */
@@ -293,7 +293,7 @@ configureBackConnectionHostNames(void)
         }
              
         if ( !bNameFound ) {
-            int size = strlen(cm_NetbiosName) + 2;
+            size_t size = strlen(cm_NetbiosName) + 2;
             if ( !pHostNames ) {
                 pHostNames = malloc(size);
                 dwSize = 1;
@@ -304,7 +304,7 @@ configureBackConnectionHostNames(void)
             *pName = '\0';  /* add a second nul terminator */
 
             dwType = REG_MULTI_SZ;
-            dwSize += strlen(cm_NetbiosName) + 1;
+            dwSize += (DWORD)strlen(cm_NetbiosName) + 1;
             RegSetValueEx( hkMSV10, "BackConnectionHostNames", 0, dwType, pHostNames, dwSize);
 
             if ( RegOpenKeyEx( HKEY_LOCAL_MACHINE, 
@@ -531,7 +531,7 @@ static void afsd_InitServerPreferences(void)
 int afsd_InitCM(char **reasonP)
 {
     osi_uid_t debugID;
-    DWORD cacheBlocks;
+    afs_uint64 cacheBlocks;
     DWORD cacheSize;
     long logChunkSize;
     DWORD stats;
@@ -654,7 +654,7 @@ int afsd_InitCM(char **reasonP)
 
     /* setup and enable debug log */
     afsd_logp = osi_LogCreate("afsd", traceBufSize);
-    afsi_log("osi_LogCreate log addr %x", (int)afsd_logp);
+    afsi_log("osi_LogCreate log addr %x", PtrToUlong(afsd_logp));
     if ((TraceOption & 0x8)
 #ifdef DEBUG
 	 || 1
@@ -766,7 +766,7 @@ int afsd_InitCM(char **reasonP)
                             cm_mountRoot, &cm_mountRootLen);
     if (code == ERROR_SUCCESS) {
         afsi_log("Mount root %s", cm_mountRoot);
-        cm_mountRootLen = strlen(cm_mountRoot);
+        cm_mountRootLen = (DWORD)strlen(cm_mountRoot);
     } else {
         StringCbCopyA(cm_mountRoot, sizeof(cm_mountRoot), "/afs");
         cm_mountRootLen = 4;
@@ -1038,7 +1038,7 @@ int afsd_InitCM(char **reasonP)
         osi_panic(buf, __FILE__, __LINE__);
     }
 
-    cacheBlocks = (cacheSize * 1024) / CM_CONFIGDEFAULT_BLOCKSIZE;
+    cacheBlocks = ((afs_uint64)cacheSize * 1024) / CM_CONFIGDEFAULT_BLOCKSIZE;
         
     /* get network related info */
     cm_noIPAddr = CM_MAXINTERFACE_ADDR;
@@ -1057,7 +1057,7 @@ int afsd_InitCM(char **reasonP)
      */
     cm_initParams.nChunkFiles = 0;
     cm_initParams.nStatCaches = stats;
-    cm_initParams.nDataCaches = cacheBlocks;
+    cm_initParams.nDataCaches = (afs_uint32)(cacheBlocks > 0xFFFFFFFF ? 0xFFFFFFFF : cacheBlocks);
     cm_initParams.nVolumeCaches = stats/2;
     cm_initParams.firstChunkSize = cm_chunkSize;
     cm_initParams.otherChunkSize = cm_chunkSize;
@@ -1121,7 +1121,7 @@ int afsd_InitCM(char **reasonP)
     nullServerSecurityClassp = rxnull_NewServerSecurityObject();
     serverp = rx_NewService(0, 1, "AFS", &nullServerSecurityClassp, 1,
                              RXAFSCB_ExecuteRequest);
-    afsi_log("rx_NewService addr %x", (int)serverp);
+    afsi_log("rx_NewService addr %x", PtrToUlong(serverp));
     if (serverp == NULL) {
         *reasonP = "unknown error";
         return -1;
@@ -1130,7 +1130,7 @@ int afsd_InitCM(char **reasonP)
     nullServerSecurityClassp = rxnull_NewServerSecurityObject();
     serverp = rx_NewService(0, RX_STATS_SERVICE_ID, "rpcstats",
                              &nullServerSecurityClassp, 1, RXSTATS_ExecuteRequest);
-    afsi_log("rx_NewService addr %x", (int)serverp);
+    afsi_log("rx_NewService addr %x", PtrToUlong(serverp));
     if (serverp == NULL) {
         *reasonP = "unknown error";
         return -1;
@@ -1160,7 +1160,7 @@ int afsd_InitCM(char **reasonP)
     if (code == 0 && !cm_freelanceEnabled) 
     {
         cm_data.rootCellp = cm_GetCell(rootCellName, CM_FLAG_CREATE);
-        afsi_log("cm_GetCell addr %x", (int)cm_data.rootCellp);
+        afsi_log("cm_GetCell addr %x", PtrToUlong(cm_data.rootCellp));
         if (cm_data.rootCellp == NULL) 
         {
             *reasonP = "can't find root cell in afsdcell.ini";
@@ -1270,9 +1270,14 @@ int afsd_InitSMB(char **reasonP, void *aMBfunc)
 
 void afsd_printStack(HANDLE hThread, CONTEXT *c)
 {
+#if defined(_X86_)
     HANDLE hProcess = GetCurrentProcess();
     int frameNum;
+#if defined(_AMD64_)
+    DWORD64 offset;
+#elif defined(_X86_)
     DWORD offset;
+#endif
     DWORD symOptions;
     char functionName[MAXNAMELEN];
   
@@ -1311,6 +1316,11 @@ void afsd_printStack(HANDLE hThread, CONTEXT *c)
 #if defined (_ALPHA_) || defined (_MIPS_) || defined (_PPC_)
 #error The STACKFRAME initialization in afsd_printStack() for this platform
 #error must be properly configured
+#elif defined(_AMD64_)
+    s.AddrPC.Offset = 0;
+    s.AddrPC.Mode = AddrModeFlat;
+    s.AddrFrame.Offset = 0;
+    s.AddrFrame.Mode = AddrModeFlat;
 #else
     s.AddrPC.Offset = c->Eip;
     s.AddrPC.Mode = AddrModeFlat;
@@ -1409,6 +1419,7 @@ void afsd_printStack(HANDLE hThread, CONTEXT *c)
   
     SymCleanup(hProcess);
     GlobalFree(pSym);
+#endif /* _X86_ */
 }
 
 #ifdef _DEBUG
@@ -1552,8 +1563,9 @@ LONG __stdcall afsd_ExceptionFilter(EXCEPTION_POINTERS *ep)
             _CrtSetBreakAlloc(*afsd_crtDbgBreakCurrent);
         }
 #endif         
-    
+#if defined(_X86)    
         ep->ContextRecord->Eip++;
+#endif
         return EXCEPTION_CONTINUE_EXECUTION;
     }
     else

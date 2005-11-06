@@ -28,6 +28,7 @@ EXELIBS = \
 
 $(EXEFILE) : $(EXEOBJS)
 	$(EXEGUILINK) $(EXELIBS)
+        $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
 
 ############################################################################

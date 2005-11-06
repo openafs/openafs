@@ -110,7 +110,7 @@ xdr_array(register XDR * xdrs, caddr_t * addrp, u_int * sizep, u_int maxsize,
 	case XDR_DECODE:
 	    if (c == 0)
 		return (TRUE);
-	    *addrp = target = osi_alloc(nodesize);
+	    *addrp = target = (caddr_t)osi_alloc(nodesize);
 	    if (target == NULL) {
 		return (FALSE);
 	    }

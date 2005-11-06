@@ -21,6 +21,7 @@
 #include "syscfg.h"
 
 static int IsLoopback(char * guid);
+int syscfg_GetIFInfo_2000(int *count, int *addrs, int *masks, int *mtus, int *flags);
 
 /* syscfg_GetIFInfo
  *
@@ -44,9 +45,6 @@ static int IsLoopback(char * guid);
 int syscfg_GetIFInfo(int *count, int *addrs, int *masks, int *mtus, int *flags)
 {
     PMIB_IPADDRTABLE pIpAddrTable = NULL;
-    ULONG            dwSize;
-    DWORD            code;
-    DWORD            index;
     DWORD            validAddrs = 0;
 
     int maxCount = *count;
@@ -390,7 +388,7 @@ static int GetIP(HKEY skey, char *ifname, int *addr, int *mask)
     DWORD dwLease;
     DWORD dwSize;
 
-    len = strlen(ifname) + 1 + sizeof(AFSREG_IPSRV_ADAPTER_PARAM_SUBKEY);
+    len = (int) strlen(ifname) + 1 + sizeof(AFSREG_IPSRV_ADAPTER_PARAM_SUBKEY);
     s = malloc(len);
     if (!s)
 	return -1;
@@ -405,7 +403,7 @@ static int GetIP(HKEY skey, char *ifname, int *addr, int *mask)
 
     dwSize = sizeof(DWORD);
     status = RegQueryValueEx(key, "EnableDHCP", NULL,
-			     &valType, &dwDHCP, &dwSize);
+			     &valType, (LPBYTE) &dwDHCP, &dwSize);
     if (status || (valType != REG_DWORD))
         dwDHCP = 0;
 
@@ -428,7 +426,7 @@ static int GetIP(HKEY skey, char *ifname, int *addr, int *mask)
 	/* adapter configured via DHCP; address/mask in alternate values */
         dwSize = sizeof(DWORD);
         status = RegQueryValueEx(key, "Lease", NULL,
-                                 &valType, &dwLease, &dwSize);
+                                 &valType, (LPBYTE)&dwLease, &dwSize);
         if (status || (valType != REG_DWORD) || dwLease == 0) {
             (void) RegCloseKey(key);
             return -1;

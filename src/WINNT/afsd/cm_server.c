@@ -41,7 +41,6 @@ void cm_CheckServers(long flags, cm_cell_t *cellp)
     long usecs;
     int doPing;
     int serverType;
-    unsigned long now;
     int wasDown;
     cm_conn_t *connp;
     struct rx_connection * callp;
@@ -53,9 +52,6 @@ void cm_CheckServers(long flags, cm_cell_t *cellp)
 
         /* now process the server */
         lock_ObtainMutex(&tsp->mx);
-
-        /* what time is it? */
-        now = osi_Time();
 
         serverType = tsp->type;
         doPing = 0;
@@ -283,9 +279,9 @@ cm_serverRef_t *cm_NewServerRef(cm_server_t *serverp)
     return tsrp;
 }
 
-long cm_ChecksumServerList(cm_serverRef_t *serversp)
+LONG_PTR cm_ChecksumServerList(cm_serverRef_t *serversp)
 {
-    long sum = 0;
+    LONG_PTR sum = 0;
     int first = 1;
     cm_serverRef_t *tsrp;
 
@@ -295,7 +291,7 @@ long cm_ChecksumServerList(cm_serverRef_t *serversp)
             first = 0;
         else
             sum <<= 1;
-        sum ^= (long) tsrp->server;
+        sum ^= (LONG_PTR) tsrp->server;
     }
 
     lock_ReleaseWrite(&cm_serverLock);

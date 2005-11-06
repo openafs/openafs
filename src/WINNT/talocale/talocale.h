@@ -43,9 +43,13 @@ typedef const STRINGTEMPLATE *LPCSTRINGTEMPLATE;
 #include <WINNT/tal_dialog.h>
 #include <WINNT/tal_alloc.h>
 
+#ifndef EXPORTED
+#define EXPORTED __declspec(dllexport)
+#endif
+
 #ifndef REALLOC
 #define REALLOC(_a,_c,_r,_i) TaLocaleReallocFunction ((LPVOID*)&_a,sizeof(*_a),&_c,_r,_i)
-extern BOOL TaLocaleReallocFunction (LPVOID *ppTarget, size_t cbElement, size_t *pcTarget, size_t cReq, size_t cInc);
+extern EXPORTED BOOL TaLocaleReallocFunction (LPVOID *ppTarget, size_t cbElement, size_t *pcTarget, size_t cReq, size_t cInc);
 #endif
 
 
@@ -66,7 +70,7 @@ extern BOOL TaLocaleReallocFunction (LPVOID *ppTarget, size_t cbElement, size_t 
 #define MODULE_PRIORITY_LOWEST  100	// Search this module last
 #define MODULE_PRIORITY_REMOVE    0	// Never search this module again
 
-extern void TaLocale_SpecifyModule (HINSTANCE hInstance = NULL, WORD wSearchPriority = MODULE_PRIORITY_NORMAL);
+extern EXPORTED void TaLocale_SpecifyModule (HINSTANCE hInstance = NULL, WORD wSearchPriority = MODULE_PRIORITY_NORMAL);
 
 
 /*
@@ -80,9 +84,9 @@ extern void TaLocale_SpecifyModule (HINSTANCE hInstance = NULL, WORD wSearchPrio
  *
  */
 
-extern HINSTANCE TaLocale_LoadCorrespondingModule (HINSTANCE hInstance = NULL, WORD wSearchPriority = MODULE_PRIORITY_BOOSTED);
+extern EXPORTED HINSTANCE TaLocale_LoadCorrespondingModule (HINSTANCE hInstance = NULL, WORD wSearchPriority = MODULE_PRIORITY_BOOSTED);
 
-extern HINSTANCE TaLocale_LoadCorrespondingModuleByName (HINSTANCE hInstance, LPTSTR pszFilename, WORD wSearchPriority = MODULE_PRIORITY_BOOSTED);
+extern EXPORTED HINSTANCE TaLocale_LoadCorrespondingModuleByName (HINSTANCE hInstance, LPTSTR pszFilename, WORD wSearchPriority = MODULE_PRIORITY_BOOSTED);
 
 
 /*
@@ -95,7 +99,7 @@ extern HINSTANCE TaLocale_LoadCorrespondingModuleByName (HINSTANCE hInstance, LP
  *
  */
 
-extern BOOL TaLocale_EnumModule (size_t iModule, HINSTANCE *phInstance = NULL, WORD *pwSearchPriority = NULL);
+extern EXPORTED BOOL TaLocale_EnumModule (size_t iModule, HINSTANCE *phInstance = NULL, WORD *pwSearchPriority = NULL);
 
 
 /*
@@ -110,8 +114,8 @@ extern BOOL TaLocale_EnumModule (size_t iModule, HINSTANCE *phInstance = NULL, W
  *
  */
 
-extern LANGID TaLocale_GetLanguage (void);
-extern void TaLocale_SetLanguage (LANGID lang);
+extern EXPORTED LANGID TaLocale_GetLanguage (void);
+extern EXPORTED void TaLocale_SetLanguage (LANGID lang);
 
 
 /*
@@ -127,9 +131,9 @@ extern void TaLocale_SetLanguage (LANGID lang);
  *
  */
 
-extern LANGID TaLocale_GetLanguageOverride (void);
-extern void TaLocale_SetLanguageOverride (LANGID lang);
-extern void TaLocale_RemoveLanguageOverride (void);
+extern EXPORTED LANGID TaLocale_GetLanguageOverride (void);
+extern EXPORTED void TaLocale_SetLanguageOverride (LANGID lang);
+extern EXPORTED void TaLocale_RemoveLanguageOverride (void);
 
 
 /*
@@ -147,7 +151,7 @@ extern void TaLocale_RemoveLanguageOverride (void);
  *
  */
 
-extern LPCVOID TaLocale_GetResource (LPCTSTR pszType, LPCTSTR pszRes, LANGID lang = LANG_USER_DEFAULT, HINSTANCE *phInstFound = NULL);
+extern EXPORTED LPCVOID TaLocale_GetResource (LPCTSTR pszType, LPCTSTR pszRes, LANGID lang = LANG_USER_DEFAULT, HINSTANCE *phInstFound = NULL);
 
 
 /*
@@ -161,8 +165,8 @@ extern LPCVOID TaLocale_GetResource (LPCTSTR pszType, LPCTSTR pszRes, LANGID lan
  *
  */
 
-extern LPCSTRINGTEMPLATE TaLocale_GetStringResource (int ids, HINSTANCE *phInstFound = NULL);
-extern LPCDLGTEMPLATE TaLocale_GetDialogResource (int idd, HINSTANCE *phInstFound = NULL);
+extern EXPORTED LPCSTRINGTEMPLATE TaLocale_GetStringResource (int ids, HINSTANCE *phInstFound = NULL);
+extern EXPORTED LPCDLGTEMPLATE TaLocale_GetDialogResource (int idd, HINSTANCE *phInstFound = NULL);
 
 
 /*
@@ -177,10 +181,10 @@ extern LPCDLGTEMPLATE TaLocale_GetDialogResource (int idd, HINSTANCE *phInstFoun
  *
  */
 
-extern HMENU TaLocale_LoadMenu (int idm);
-extern HANDLE TaLocale_LoadImage (int idi, UINT imageType, int cx, int cy, UINT imageFlags);
-extern HICON TaLocale_LoadIcon (int idi);
-extern HACCEL TaLocale_LoadAccelerators (int ida);
+extern EXPORTED HMENU TaLocale_LoadMenu (int idm);
+extern EXPORTED HANDLE TaLocale_LoadImage (int idi, UINT imageType, int cx, int cy, UINT imageFlags);
+extern EXPORTED HICON TaLocale_LoadIcon (int idi);
+extern EXPORTED HACCEL TaLocale_LoadAccelerators (int ida);
 
 
 #endif

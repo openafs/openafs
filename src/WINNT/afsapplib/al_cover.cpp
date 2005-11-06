@@ -35,7 +35,7 @@ rwWindowData awdCover[] = {
  *
  */
 
-#define dwCOVER_SIGNATURE  0xC0E0C0E0  // SetWindowLong(hDlgCover,DWL_USER,#)
+#define dwCOVER_SIGNATURE  0xC0E0C0E0  // SetWindowLongPtr(hDlgCover,DWLP_USER,#)
 
 typedef struct // COVERPARAMS
    {
@@ -130,7 +130,7 @@ void OnCoverWindow (WPARAM wp, LPARAM lp)
             {
             if (!lstrcmp (szClassName, TEXT("#32770"))) // WC_DIALOG
                {
-               if (GetWindowLong (hChild, DWL_USER) == dwCOVER_SIGNATURE)
+               if (GetWindowLongPtr (hChild, DWLP_USER) == dwCOVER_SIGNATURE)
                   {
                   DestroyWindow (hChild);
                   break;
@@ -147,7 +147,7 @@ void OnCoverWindow (WPARAM wp, LPARAM lp)
                                          (LPARAM)lp);
 
       ShowWindow (hCover, TRUE);
-      SetWindowLong (hCover, DWL_USER, dwCOVER_SIGNATURE);
+      SetWindowLongPtr (hCover, DWLP_USER, dwCOVER_SIGNATURE);
 
       FreeString (lpcp->pszDesc);
       FreeString (lpcp->pszButton);

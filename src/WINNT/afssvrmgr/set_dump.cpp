@@ -43,7 +43,7 @@ void Filesets_Dump (LPIDENT lpi)
    memset (psdp, 0x00, sizeof(SET_DUMP_PARAMS));
    psdp->lpi = lpi;
 
-   int rc = ModalDialogParam (IDD_SET_DUMP, NULL, (DLGPROC)Filesets_Dump_DlgProc, (LPARAM)psdp);
+   INT_PTR rc = ModalDialogParam (IDD_SET_DUMP, NULL, (DLGPROC)Filesets_Dump_DlgProc, (LPARAM)psdp);
 
    if (rc != IDOK)
       {

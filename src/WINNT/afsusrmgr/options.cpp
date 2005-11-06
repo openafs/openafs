@@ -87,7 +87,7 @@ void Options_OnInitDialog (HWND hDlg)
 
    CheckDlgButton (hDlg, IDC_REFRESH, (gr.cminRefreshRate != 0));
 
-   LONG cminShow = (gr.cminRefreshRate != 0) ? gr.cminRefreshRate : cminREFRESH_DEFAULT;
+   DWORD cminShow = (gr.cminRefreshRate != 0) ? gr.cminRefreshRate : cminREFRESH_DEFAULT;
    CreateSpinner (GetDlgItem (hDlg, IDC_REFRESH_RATE), 10, FALSE, cminREFRESH_MIN, cminShow, cminREFRESH_MAX);
 
    EnableWindow (GetDlgItem (hDlg, IDC_REFRESH_RATE), IsDlgButtonChecked (hDlg, IDC_REFRESH));
@@ -100,12 +100,12 @@ void Options_OnApply (HWND hDlg)
 
    gr.fWarnBadCreds = IsDlgButtonChecked (hDlg, IDC_WARN_BADCREDS);
 
-   LONG cminRateOld = gr.cminRefreshRate;
+   DWORD cminRateOld = gr.cminRefreshRate;
 
    if (!IsDlgButtonChecked (hDlg, IDC_REFRESH))
       gr.cminRefreshRate = 0;
    else
-      gr.cminRefreshRate = SP_GetPos (GetDlgItem (hDlg, IDC_REFRESH_RATE));
+      gr.cminRefreshRate = (DWORD) SP_GetPos (GetDlgItem (hDlg, IDC_REFRESH_RATE));
 
    if ((cminRateOld != gr.cminRefreshRate) && (g.idCell))
       {

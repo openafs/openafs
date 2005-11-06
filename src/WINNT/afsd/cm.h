@@ -25,22 +25,22 @@ int VL_GetEntryBYIDN(struct rx_connection *, afs_int32, afs_int32, struct nvldbe
 int VL_GetEntryByNameN(struct rx_connection *, char *, struct nvldbentry *);
 
 /* from .xg file */
-extern StartRXAFS_FetchData (struct rx_call *,
+int StartRXAFS_FetchData (struct rx_call *,
 	struct AFSFid *Fid,
 	afs_int32 Pos, 
 	afs_int32 Length);
-extern EndRXAFS_FetchData (struct rx_call *,
+int EndRXAFS_FetchData (struct rx_call *,
 	struct AFSFetchStatus *OutStatus, 
 	struct AFSCallBack *CallBack, 
 	struct AFSVolSync *Sync);
 
-extern RXAFS_FetchACL(struct rx_connection *,
+int RXAFS_FetchACL(struct rx_connection *,
 	struct AFSFid *Fid, 
 	struct AFSOpaque *AccessList, 
 	struct AFSFetchStatus *OutStatus, 
 	struct AFSVolSync *Sync);
 
-extern RXAFS_FetchStatus (struct rx_connection *,
+int RXAFS_FetchStatus (struct rx_connection *,
 	struct AFSFid *Fid, 
 	struct AFSFetchStatus *OutStatus, 
 	struct AFSCallBack *CallBack, 
@@ -56,6 +56,44 @@ int StartRXAFS_StoreData (struct rx_call *,
 int EndRXAFS_StoreData(struct rx_call *,
 	struct AFSFetchStatus *OutStatus, 
 	struct AFSVolSync *Sync);
+
+int StartRXAFS_FetchData64(struct rx_call *z_call,
+	struct AFSFid * Fid,
+	afs_int64 Pos,
+	afs_int64 Length);
+
+int EndRXAFS_FetchData64(struct rx_call *z_call,
+        struct AFSFetchStatus * OutStatus,
+	struct AFSCallBack * CallBack,
+	struct AFSVolSync * Sync);
+
+afs_int32 SRXAFS_FetchData64(struct rx_call *z_call,
+	struct AFSFid * Fid,
+	afs_int64 Pos,
+	afs_int64 Length,
+	struct AFSFetchStatus * OutStatus,
+	struct AFSCallBack * CallBack,
+	struct AFSVolSync * Sync);
+
+int StartRXAFS_StoreData64(struct rx_call *z_call,
+	struct AFSFid * Fid,
+	struct AFSStoreStatus * InStatus,
+	afs_uint64 Pos,
+	afs_uint64 Length,
+	afs_uint64 FileLength);
+
+int EndRXAFS_StoreData64(struct rx_call *z_call,
+	struct AFSFetchStatus * OutStatus,
+	struct AFSVolSync * Sync);
+
+afs_int32 SRXAFS_StoreData64(struct rx_call *z_call,
+	struct AFSFid * Fid,
+	struct AFSStoreStatus * InStatus,
+	afs_uint64 Pos,
+	afs_uint64 Length,
+	afs_uint64 FileLength,
+	struct AFSFetchStatus * OutStatus,
+	struct AFSVolSync * Sync);
 
 int RXAFS_StoreACL (struct rx_connection *,
 	struct AFSFid *Fid, 

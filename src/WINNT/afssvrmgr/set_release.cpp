@@ -59,10 +59,10 @@ BOOL CALLBACK Filesets_Release_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM l
       return TRUE;
 
    if (msg == WM_INITDIALOG)
-      SetWindowLong (hDlg, DWL_USER, lp);
+      SetWindowLongPtr (hDlg, DWLP_USER, lp);
 
    LPIDENT lpi;
-   if ((lpi = (LPIDENT)GetWindowLong (hDlg, DWL_USER)) != NULL)
+   if ((lpi = (LPIDENT)GetWindowLongPtr (hDlg, DWLP_USER)) != NULL)
       {
       switch (msg)
          {

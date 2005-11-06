@@ -95,7 +95,6 @@ static void afsd_notifier(char *msgp, char *filep, long line)
     char tbuffer[512];
     char *ptbuf[1];
     HANDLE h;
-	int i;
 
     if (filep)
         sprintf(tbuffer, "Error at file %s, line %d: %s",
@@ -1070,7 +1069,6 @@ afsd_Main(DWORD argc, LPTSTR *argv)
 #endif /* JUMP */
     HMODULE hHookDll;
     HMODULE hAdvApi32;
-	int cnt;
 
 #ifdef _DEBUG
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF /*| _CRTDBG_CHECK_ALWAYS_DF*/ | 

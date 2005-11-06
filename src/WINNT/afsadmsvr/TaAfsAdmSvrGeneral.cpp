@@ -42,7 +42,7 @@ typedef struct
 typedef struct
    {
    BOOL fInUse;
-   DWORD idClient;
+   UINT_PTR idClient;
    LPASACTION pAction;
    DWORD dwTickStart;
    } OPERATION, *LPOPERATION;
@@ -106,14 +106,14 @@ void AfsAdmSvr_Leave (void)
  *
  */
 
-BOOL AfsAdmSvr_fIsValidClient (DWORD idClient)
+BOOL AfsAdmSvr_fIsValidClient (UINT_PTR idClient)
 {
    BOOL rc = FALSE;
    AfsAdmSvr_Enter();
 
    for (size_t iClient = 0; !rc && iClient < l.cClientsAllocated; ++iClient)
       {
-      if (idClient == (DWORD)(l.aClients[ iClient ]))
+      if (idClient == (UINT_PTR)l.aClients[ iClient ])
          {
          if (l.aClients[ iClient ]->timeLastPing + cminREQ_CLIENT_PING > AfsAdmSvr_GetCurrentTime())
             rc = TRUE;
@@ -125,7 +125,7 @@ BOOL AfsAdmSvr_fIsValidClient (DWORD idClient)
 }
 
 
-BOOL AfsAdmSvr_AttachClient (LPCTSTR pszName, DWORD *pidClient, ULONG *pStatus)
+BOOL AfsAdmSvr_AttachClient (LPCTSTR pszName, PVOID *pidClient, ULONG *pStatus)
 {
    AfsAdmSvr_Enter();
    size_t iClient;
@@ -136,12 +136,12 @@ BOOL AfsAdmSvr_AttachClient (LPCTSTR pszName, DWORD *pidClient, ULONG *pStatus)
       }
    if (!REALLOC (l.aClients, l.cClientsAllocated, 1+iClient, cREALLOC_CLIENTS))
       {
-      *pidClient = 0;
+      *pidClient = NULL;
       return FALSE;
       }
    if ((l.aClients[ iClient ] = New (CLIENTINFO)) == NULL)
       {
-      *pidClient = 0;
+      *pidClient = NULL;
       return FALSE;
       }
    memset (l.aClients[ iClient ], 0x00, sizeof(CLIENTINFO));
@@ -152,19 +152,19 @@ BOOL AfsAdmSvr_AttachClient (LPCTSTR pszName, DWORD *pidClient, ULONG *pStatus)
    if (!AfsAdmSvr_ResolveName (&l.aClients[ iClient ]->ipAddress, l.aClients[ iClient ]->szName))
       memset (&l.aClients[ iClient ]->ipAddress, 0x00, sizeof(SOCKADDR_IN));
 
-   *pidClient = (DWORD)(l.aClients[ iClient ]);
+   *pidClient = (PVOID)(l.aClients[ iClient ]);
    AfsAdmSvr_Leave();
    return TRUE;
 }
 
 
-void AfsAdmSvr_DetachClient (DWORD idClient)
+void AfsAdmSvr_DetachClient (UINT_PTR idClient)
 {
    AfsAdmSvr_Enter();
    size_t iClient;
    for (iClient = 0; iClient < l.cClientsAllocated; ++iClient)
       {
-      if (idClient == (DWORD)(l.aClients[ iClient ]))
+      if (idClient == (UINT_PTR)(l.aClients[ iClient ]))
          break;
       }
    if (iClient < l.cClientsAllocated)
@@ -178,7 +178,7 @@ void AfsAdmSvr_DetachClient (DWORD idClient)
 }
 
 
-LPCTSTR AfsAdmSvr_GetClientName (DWORD idClient)
+LPCTSTR AfsAdmSvr_GetClientName (UINT_PTR idClient)
 {
    static TCHAR szName[ cchSTRING ];
    LPCTSTR pszName = NULL;
@@ -186,7 +186,7 @@ LPCTSTR AfsAdmSvr_GetClientName (DWORD idClient)
 
    for (size_t iClient = 0; !pszName && iClient < l.cClientsAllocated; ++iClient)
       {
-      if (idClient == (DWORD)(l.aClients[ iClient ]))
+      if (idClient == (UINT_PTR)(l.aClients[ iClient ]))
          {
          lstrcpy (szName, l.aClients[ iClient ]->szName);
          pszName = szName;
@@ -198,7 +198,7 @@ LPCTSTR AfsAdmSvr_GetClientName (DWORD idClient)
 }
 
 
-LPSOCKADDR_IN AfsAdmSvr_GetClientAddress (DWORD idClient)
+LPSOCKADDR_IN AfsAdmSvr_GetClientAddress (UINT_PTR idClient)
 {
    static SOCKADDR_IN ipAddress;
    LPSOCKADDR_IN pAddress = NULL;
@@ -206,7 +206,7 @@ LPSOCKADDR_IN AfsAdmSvr_GetClientAddress (DWORD idClient)
 
    for (size_t iClient = 0; !pAddress && iClient < l.cClientsAllocated; ++iClient)
       {
-      if (idClient == (DWORD)(l.aClients[ iClient ]))
+      if (idClient == (UINT_PTR)(l.aClients[ iClient ]))
          {
          memcpy (&ipAddress, &l.aClients[ iClient ]->ipAddress, sizeof(SOCKADDR_IN));
          pAddress = &ipAddress;
@@ -218,13 +218,13 @@ LPSOCKADDR_IN AfsAdmSvr_GetClientAddress (DWORD idClient)
 }
 
 
-void AfsAdmSvr_PingClient (DWORD idClient)
+void AfsAdmSvr_PingClient (UINT_PTR idClient)
 {
    AfsAdmSvr_Enter();
 
    for (size_t iClient = 0; iClient < l.cClientsAllocated; ++iClient)
       {
-      if (idClient == (DWORD)(l.aClients[ iClient ]))
+      if (idClient == (UINT_PTR)(l.aClients[ iClient ]))
          {
          l.aClients[ iClient ]->timeLastPing = AfsAdmSvr_GetCurrentTime();
          }
@@ -304,6 +304,25 @@ BOOL Leave_FALSE_ (ULONG status, ULONG *pStatus, size_t iOp)
    if (iOp != (size_t)-2)
       AfsAdmSvr_EndOperation (iOp);
    return FALSE;
+}
+
+PVOID NULL_ (ULONG status, ULONG *pStatus, size_t iOp)
+{
+   if (pStatus)
+      *pStatus = status;
+   if (iOp != (size_t)-2)
+      AfsAdmSvr_EndOperation (iOp);
+   return NULL;
+}
+
+PVOID Leave_NULL_ (ULONG status, ULONG *pStatus, size_t iOp)
+{
+   AfsAdmSvr_Leave();
+   if (pStatus)
+      *pStatus = status;
+   if (iOp != (size_t)-2)
+      AfsAdmSvr_EndOperation (iOp);
+   return NULL;
 }
 
 BOOL TRUE_ (ULONG *pStatus, size_t iOp)
@@ -393,7 +412,7 @@ DWORD WINAPI AfsAdmSvr_AutoShutdownThread (LPVOID lp)
          if (l.aClients[ iClient ]->timeLastPing + cminREQ_CLIENT_PING <= AfsAdmSvr_GetCurrentTime())
             {
             Print (dlCONNECTION, "Client 0x%08lX idle for too long; detaching", l.aClients[ iClient ]);
-            AfsAdmSvr_DetachClient ((DWORD)l.aClients[ iClient ]);
+            AfsAdmSvr_DetachClient ((UINT_PTR)l.aClients[ iClient ]);
             }
          }
 
@@ -460,7 +479,7 @@ void AfsAdmSvr_TestShutdown (void)
 }
 
 
-size_t AfsAdmSvr_BeginOperation (DWORD idClient, LPASACTION pAction)
+size_t AfsAdmSvr_BeginOperation (UINT_PTR idClient, LPASACTION pAction)
 {
    AfsAdmSvr_Enter();
 
@@ -592,18 +611,18 @@ BOOL AfsAdmSvr_GetOperation (DWORD idAction, LPASACTION pAction)
 }
 
 
-LPASACTIONLIST AfsAdmSvr_GetOperations (DWORD idClientSearch, ASID idCellSearch)
+LPASACTIONLIST AfsAdmSvr_GetOperations (UINT_PTR idClientSearch, ASID idCellSearch)
 {
    LPASACTIONLIST pList = AfsAdmSvr_CreateActionList();
    AfsAdmSvr_Enter();
 
-   for (size_t iOp = 0; iOp < l.cOperationsAllocated; ++iOp)
+   for (WORD iOp = 0; iOp < l.cOperationsAllocated; ++iOp)
       {
       if (!l.aOperations[ iOp ].fInUse)
          continue;
       if (!l.aOperations[ iOp ].pAction)
          continue;
-      if (idClientSearch && (idClientSearch != l.aOperations[ iOp ].pAction->idClient))
+      if (idClientSearch && ((UINT_PTR)idClientSearch != l.aOperations[ iOp ].pAction->idClient))
          continue;
       if (idCellSearch && (idCellSearch != l.aOperations[ iOp ].pAction->idCell))
          continue;
@@ -679,7 +698,7 @@ void AfsAdmSvr_Action_StopRefresh (ASID idScope)
 
 DWORD WINAPI AfsAdmSvr_AutoOpen_ThreadProc (PVOID lp)
 {
-   DWORD dwScope = (DWORD)lp;
+   DWORD dwScope = PtrToUlong(lp);
    ULONG status;
 
    if (!l.fOperational)

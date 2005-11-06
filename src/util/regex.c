@@ -339,7 +339,7 @@ advance(register char *lp, register char *ep)
 	    if (braelist[i = *ep++] == 0)
 		return (-1);
 	    curlp = lp;
-	    ct = braelist[i] - braslist[i];
+	    ct = (int)(braelist[i] - braslist[i]);
 	    while (backref(i, lp))
 		lp += ct;
 	    while (lp >= curlp) {

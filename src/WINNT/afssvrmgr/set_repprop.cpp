@@ -118,7 +118,7 @@ BOOL CALLBACK Filesets_RepSites_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM 
       return TRUE;
 
    if (msg == WM_INITDIALOG)
-      SetWindowLong (hDlg, DWL_USER, ((LPPROPSHEETPAGE)lp)->lParam);
+      SetWindowLongPtr (hDlg, DWLP_USER, ((LPPROPSHEETPAGE)lp)->lParam);
 
    if (msg == WM_INITDIALOG_SHEET)
       {
@@ -131,19 +131,19 @@ BOOL CALLBACK Filesets_RepSites_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM 
    else
       {
       LPSET_REPPROP_PARAMS prp;
-      if ((prp = (LPSET_REPPROP_PARAMS)GetWindowLong (hDlg, DWL_USER)) != NULL)
+      if ((prp = (LPSET_REPPROP_PARAMS)GetWindowLongPtr (hDlg, DWLP_USER)) != NULL)
          {
          switch (msg)
             {
             case WM_INITDIALOG:
-               FastList_SetTextCallback (GetDlgItem (hDlg, IDC_SET_REP_LIST), GetItemText, (DWORD)&gr.viewRep);
+               FastList_SetTextCallback (GetDlgItem (hDlg, IDC_SET_REP_LIST), GetItemText, &gr.viewRep);
                Filesets_RepSites_OnInitDialog (hDlg, prp);
                NotifyMe (WHEN_SETS_CHANGE, NULL, hDlg, 0);
                break;
 
             case WM_DESTROY:
                DontNotifyMeEver (hDlg);
-               SetWindowLong (hDlg, DWL_USER, 0);
+               SetWindowLongPtr (hDlg, DWLP_USER, 0);
                Delete (prp);
                break;
 
@@ -224,7 +224,7 @@ BOOL CALLBACK Filesets_RepSites_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM 
 }
 
 
-static LONG procRepSitesList = 0;
+static LONG_PTR procRepSitesList = 0;
 
 LRESULT CALLBACK Filesets_RepSites_SubclassListProc (HWND hList, UINT msg, WPARAM wp, LPARAM lp)
 {
@@ -239,7 +239,7 @@ LRESULT CALLBACK Filesets_RepSites_SubclassListProc (HWND hList, UINT msg, WPARA
       {
       case WM_DESTROY:
          if (procRepSitesList != 0)
-            SetWindowLong (hList, GWL_WNDPROC, procRepSitesList);
+            SetWindowLongPtr (hList, GWLP_WNDPROC, procRepSitesList);
          break;
 
       case WM_COMMAND: 
@@ -260,8 +260,8 @@ void Filesets_RepSites_OnInitDialog (HWND hDlg, LPSET_REPPROP_PARAMS prp)
 {
    HWND hList = GetDlgItem (hDlg, IDC_SET_REP_LIST);
    if (procRepSitesList == 0)
-      procRepSitesList = GetWindowLong (hList, GWL_WNDPROC);
-   SetWindowLong (hList, GWL_WNDPROC, (LONG)Filesets_RepSites_SubclassListProc);
+      procRepSitesList = GetWindowLongPtr (hList, GWLP_WNDPROC);
+   SetWindowLongPtr (hList, GWLP_WNDPROC, (LONG_PTR)Filesets_RepSites_SubclassListProc);
 
    TCHAR szServer[ cchNAME ];
    TCHAR szFileset[ cchNAME ];

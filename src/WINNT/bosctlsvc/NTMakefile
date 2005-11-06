@@ -31,6 +31,7 @@ EXESDKLIBS=\
 
 $(EXEFILE): $(EXEOBJS) $(EXELIBS)
 	$(EXECONLINK) $(EXESDKLIBS)
+        $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
 
 ############################################################################

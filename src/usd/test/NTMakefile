@@ -19,6 +19,7 @@ test tests: usd_test.exe
 # make usd_test.exe
 $(OUT)\usd_test.exe: $(OUT)\usd_test.obj $(LIBFILE) $(LIBUTIL)
 	$(EXECONLINK)
+        $(_VC_MANIFEST_EMBED_EXE)
 
 mkdir:
 	

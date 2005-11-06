@@ -2149,9 +2149,9 @@ MultiInputDialogProc( HWND hDialog, UINT message, WPARAM wParam, LPARAM lParam)
 static LPWORD 
 lpwAlign( LPWORD lpIn )
 {
-    ULONG ul;
+    ULONG_PTR ul;
 
-    ul = (ULONG) lpIn;
+    ul = (ULONG_PTR) lpIn;
     ul += 3;
     ul >>=2;
     ul <<=2;
@@ -2265,7 +2265,7 @@ MultiInputDialog( HINSTANCE hinst, HWND hwndOwner,
         lpdit->dwExtendedStyle = 0;
         lpdit->x  = 10; 
         lpdit->y  = 10 + i * 14;
-        lpdit->cx = strlen(ptext[i]) * 4 + 10; 
+        lpdit->cx = (short)strlen(ptext[i]) * 4 + 10; 
         lpdit->cy = 14;
         lpdit->id = ID_TEXT + i;  // text identifier
 
@@ -2281,8 +2281,9 @@ MultiInputDialog( HINSTANCE hinst, HWND hwndOwner,
     }
     
     for ( i=0, pwid = 0; i<tb_cnt; i++) {
-        if ( pwid < strlen(tb[i].label) )
-            pwid = strlen(tb[i].label);
+	int len = (int)strlen(tb[i].label);
+        if ( pwid < len )
+            pwid = len;
     }
 
     for ( i=0; i<tb_cnt; i++) {
@@ -2361,7 +2362,7 @@ MultiInputDialog( HINSTANCE hinst, HWND hwndOwner,
 static int
 multi_field_dialog(HWND hParent, char * preface, int n, struct textField tb[])
 {
-	HINSTANCE hInst = 0;
+    HINSTANCE hInst = 0;
     int maxwidth = 0;
     int numlines = 0;
     int len;
@@ -2381,16 +2382,16 @@ multi_field_dialog(HWND hParent, char * preface, int n, struct textField tb[])
             *p++ = '\0';
         } 
         if ( strlen(plines[numlines-1]) > maxwidth )
-            maxwidth = strlen(plines[numlines-1]);
+            maxwidth = (int)strlen(plines[numlines-1]);
     }
 
     for ( i=0;i<n;i++ ) {
-        len = strlen(tb[i].label) + 1 + (tb[i].len > 40 ? 40 : tb[i].len);
+        len = (int)strlen(tb[i].label) + 1 + (tb[i].len > 40 ? 40 : tb[i].len);
         if ( maxwidth < len )
             maxwidth = len;
     }
 
-    return(MultiInputDialog(hInst, hParent, plines, numlines, maxwidth, n, tb));
+    return(MultiInputDialog(hInst, hParent, plines, numlines, maxwidth, n, tb)?1:0);
 }
 
 static krb5_error_code KRB5_CALLCONV
@@ -2408,10 +2409,10 @@ KRB5_prompter( krb5_context context,
 	HWND hParent = (HWND)data;
 
     if (name)
-        nlen = strlen(name)+2;
+        nlen = (int)strlen(name)+2;
 
     if (banner)
-        blen = strlen(banner)+2;
+        blen = (int)strlen(banner)+2;
 
     tb = (struct textField *) malloc(sizeof(struct textField) * num_prompts);
     if ( tb != NULL ) {
@@ -2428,7 +2429,7 @@ KRB5_prompter( krb5_context context,
         ok = multi_field_dialog(hParent,(char *)banner,num_prompts,tb);
         if ( ok ) {
             for ( i=0; i < num_prompts; i++ )
-                prompts[i].reply->length = strlen(prompts[i].reply->data);
+                prompts[i].reply->length = (unsigned int)strlen(prompts[i].reply->data);
         } else
             errcode = -2;
     }
@@ -2757,7 +2758,7 @@ KFW_AFS_klog(
 
         /* First try service/cell@REALM */
         if (code = pkrb5_build_principal(ctx, &increds.server,
-                                          strlen(RealmName),
+                                          (int)strlen(RealmName),
                                           RealmName,
                                           ServiceName,
                                           CellName,
@@ -2793,7 +2794,7 @@ KFW_AFS_klog(
             pkrb5_free_principal(ctx,increds.server);
             increds.server = 0;
             code = pkrb5_build_principal(ctx, &increds.server,
-                                          strlen(RealmName),
+                                          (int)strlen(RealmName),
                                           RealmName,
                                           ServiceName,
                                           0);
@@ -2825,7 +2826,7 @@ KFW_AFS_klog(
             pkrb5_free_principal(ctx,increds.server);
             increds.server = 0;
             code = pkrb5_build_principal(ctx, &increds.server,
-                                         strlen(RealmName),
+                                         (int)strlen(RealmName),
                                          RealmName,
                                          ServiceName,
                                          CellName,
@@ -2856,7 +2857,7 @@ KFW_AFS_klog(
                 pkrb5_free_principal(ctx,increds.server);
                 increds.server = 0;
                 code = pkrb5_build_principal(ctx, &increds.server,
-                                              strlen(RealmName),
+                                              (int)strlen(RealmName),
                                               RealmName,
                                               ServiceName,
                                               0);
@@ -2942,7 +2943,7 @@ KFW_AFS_klog(
             char * p;
             strcat(aclient.name, ".");
             p = aclient.name + strlen(aclient.name);
-            len = min(k5creds->client->data[1].length,MAXKTCNAMELEN - strlen(aclient.name) - 1);
+            len = min(k5creds->client->data[1].length,MAXKTCNAMELEN - (int)strlen(aclient.name) - 1);
             strncpy(p, k5creds->client->data[1].data, len);
             p[len] = '\0';
         }
@@ -2950,13 +2951,13 @@ KFW_AFS_klog(
 
         strcpy(aclient.cell, realm_of_cell);
 
-        len = min(k5creds->client->realm.length,strlen(realm_of_cell));
+        len = min(k5creds->client->realm.length,(int)strlen(realm_of_cell));
         /* For Khimaira, always append the realm name */
         if ( 1 /* strncmp(realm_of_cell, k5creds->client->realm.data, len) */ ) {
             char * p;
             strcat(aclient.name, "@");
             p = aclient.name + strlen(aclient.name);
-            len = min(k5creds->client->realm.length,MAXKTCNAMELEN - strlen(aclient.name) - 1);
+            len = min(k5creds->client->realm.length,MAXKTCNAMELEN - (int)strlen(aclient.name) - 1);
             strncpy(p, k5creds->client->realm.data, len);
             p[len] = '\0';
         }
@@ -3384,7 +3385,7 @@ BOOL KFW_probe_kdc(struct afsconf_cell * cellconfig)
 
     realm = afs_realm_of_cell(ctx, cellconfig);  // do not free
 
-    code = pkrb5_build_principal(ctx, &principal, strlen(realm),
+    code = pkrb5_build_principal(ctx, &principal, (int)strlen(realm),
                                   realm, PROBE_USERNAME, NULL, NULL);
     if ( code ) goto cleanup;
 
@@ -3469,7 +3470,7 @@ KFW_AFS_get_lsa_principal(char * szUser, DWORD *dwSize)
         szUser[*dwSize-1] = '\0';
         success = 1;
     }
-    *dwSize = strlen(pname);
+    *dwSize = (DWORD)strlen(pname);
 
   cleanup:
     if (pname)
@@ -3554,9 +3555,7 @@ KFW_AFS_copy_cache_to_system_file(char * user, char * szLogonId)
 int
 KFW_AFS_copy_system_file_to_default_cache(char * filename)
 {
-    DWORD count;
     char cachename[264] = "FILE:";
-    HANDLE hFile;
     krb5_context		ctx = 0;
     krb5_error_code		code;
     krb5_principal              princ = 0;

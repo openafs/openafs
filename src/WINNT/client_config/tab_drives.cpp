@@ -373,7 +373,7 @@ BOOL CALLBACK DriveEdit_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
    switch (msg)
       {
       case WM_INITDIALOG:
-         SetWindowLong (hDlg, DWL_USER, lp);
+         SetWindowLongPtr (hDlg, DWLP_USER, lp);
          DriveEdit_OnInitDialog (hDlg);
          break;
 
@@ -407,7 +407,7 @@ BOOL CALLBACK DriveEdit_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 
 void DriveEdit_OnInitDialog (HWND hDlg)
 {
-   PDRIVEMAP pMap = (PDRIVEMAP)GetWindowLong (hDlg, DWL_USER);
+   PDRIVEMAP pMap = (PDRIVEMAP)GetWindowLongPtr (hDlg, DWLP_USER);
 
    // Fill in the combo box
    //
@@ -463,7 +463,7 @@ void DriveEdit_OnInitDialog (HWND hDlg)
 
 void DriveEdit_OnOK (HWND hDlg)
 {
-   PDRIVEMAP pMap = (PDRIVEMAP)GetWindowLong (hDlg, DWL_USER);
+   PDRIVEMAP pMap = (PDRIVEMAP)GetWindowLongPtr (hDlg, DWLP_USER);
 
    int iItem = SendDlgItemMessage (hDlg, IDC_DRIVE, CB_GETCURSEL, 0, 0);
    int iDrive = SendDlgItemMessage (hDlg, IDC_DRIVE, CB_GETITEMDATA, iItem, 0);
@@ -781,7 +781,7 @@ BOOL CALLBACK SubEdit_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
    switch (msg)
       {
       case WM_INITDIALOG:
-         SetWindowLong (hDlg, DWL_USER, lp);
+         SetWindowLongPtr (hDlg, DWLP_USER, lp);
          SubEdit_OnInitDialog (hDlg);
          SubEdit_Enable (hDlg);
          break;
@@ -820,7 +820,7 @@ BOOL CALLBACK SubEdit_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 void SubEdit_OnInitDialog (HWND hDlg)
 {
     CHAR msg[256], msgf[256];
-    PSUBMOUNT pSubmount = (PSUBMOUNT)GetWindowLong (hDlg, DWL_USER);
+    PSUBMOUNT pSubmount = (PSUBMOUNT)GetWindowLongPtr (hDlg, DWLP_USER);
     if (GetDlgItemText(hDlg,IDC_STATICSUBMOUNT,(LPSTR)msg,sizeof(msg)-1)>0)
     {
 		wsprintf(msgf,msg,cm_back_slash_mount_root,cm_back_slash_mount_root);
@@ -835,7 +835,7 @@ void SubEdit_OnInitDialog (HWND hDlg)
 
 void SubEdit_OnOK (HWND hDlg)
 {
-   PSUBMOUNT pSubmount = (PSUBMOUNT)GetWindowLong (hDlg, DWL_USER);
+   PSUBMOUNT pSubmount = (PSUBMOUNT)GetWindowLongPtr (hDlg, DWLP_USER);
    GetDlgItemText (hDlg, IDC_SUBMOUNT, pSubmount->szSubmount, MAX_PATH);
    GetDlgItemText (hDlg, IDC_MAPPING, pSubmount->szMapping, MAX_PATH);
    EndDialog (hDlg, IDOK);

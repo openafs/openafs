@@ -284,7 +284,7 @@ BOOL Help_FindCommand_OnOK (HWND hDlg)
 
    LPTSTR pszKeyword = Help_FindCommand_Search (&uu, szText);
 
-   for (size_t ii = 0; (iiDisplay == -1) && ii < nCOMMANDS; ++ii)
+   for (int ii = 0; (iiDisplay == -1) && ii < nCOMMANDS; ++ii)
       {
       TCHAR szCommand[ cchRESOURCE ];
       GetString (szCommand, aCOMMANDS[ ii ].ids);
@@ -464,7 +464,7 @@ void Help_FindError_Shrink (HWND hDlg, BOOL fShrink)
 BOOL CALLBACK Help_About_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp);
 void Help_About_OnInitDialog (HWND hDlg);
 void Help_About_OnSysCommand (HWND hDlg, int &cmd);
-LONG procAbout;
+LONG_PTR procAbout;
 
 void Help_About (void)
 {
@@ -519,15 +519,15 @@ BOOL CALLBACK Help_About_Proc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
          SetTimer (GetParent(hDlg), 1000, 1000/8, NULL);
          }
       }
-   return CallWindowProc ((WNDPROC)procAbout, hDlg, msg, wp, lp);
+   return CallWindowProc ((WNDPROC)procAbout, hDlg, msg, wp, lp)?TRUE:FALSE;
 }
 
 
 void Help_About_OnInitDialog (HWND hDlg)
 {
    HWND hAbout = GetDlgItem (hDlg, IDOK);
-   procAbout = (LONG)GetWindowLong (hAbout, GWL_WNDPROC);
-   SetWindowLong (hAbout, GWL_WNDPROC, (LONG)Help_About_Proc);
+   procAbout = GetWindowLongPtr (hAbout, GWLP_WNDPROC);
+   SetWindowLongPtr (hAbout, GWLP_WNDPROC, (LONG_PTR)Help_About_Proc);
 
    LPTSTR pszText = FormatString (IDS_HELPABOUT_DESC1);
    SetDlgItemText (hDlg, IDC_HELPABOUT_DESC, pszText);

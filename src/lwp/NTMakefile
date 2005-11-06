@@ -44,6 +44,7 @@ tests: $(OUT)\rw.exe
 
 $(OUT)\rw.exe: $(OUT)\rw.obj $(LIBFILE) $(DESTDIR)\lib\afs\afsutil.lib
 	$(EXECONLINK)
+        $(_VC_MANIFEST_EMBED_EXE)
 
 clean::
 	$(DEL) $(LIBFILE)

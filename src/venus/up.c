@@ -627,6 +627,11 @@ Copy(file1, file2, recursive, level)
 
 	    if (oldAcl) {
 		/* Get an old-style ACL and convert it */
+                if (verbose) {
+                    printf("  Getting old style acl\n");
+                    fflush(stdout);
+                }
+
 		for (i = 1; i < strlen(file1); i++)
 		    if (file1[i] == '/')
 			break;
@@ -643,6 +648,10 @@ Copy(file1, file2, recursive, level)
 		if (code < 0) {
 		    if (errno == EINVAL) {
 			setacl = false;
+                        if (verbose) {
+                            printf("  _VICEIOCTL(4) returns EINVAL\n");
+                            fflush(stdout);
+                        }
 		    } else {
 			return 1;
 		    }
@@ -655,10 +664,19 @@ Copy(file1, file2, recursive, level)
 	    } /*Grab and convert old-style ACL */
 	    else {
 		/* Get a new-style ACL */
+                if (verbose) {
+                    printf("  Getting new style acl\n");
+                    fflush(stdout);
+                }
+
 		code = pioctl(file1, _VICEIOCTL(2), &blob, 1);
 		if (code < 0) {
 		    if (errno == EINVAL) {
 			setacl = false;
+                        if (verbose) {
+                            printf("  _VICEIOCTL(2) returns EINVAL\n");
+                            fflush(stdout);
+                        }
 		    } else {
 			perror("getacl ");
 			return 1;
@@ -670,6 +688,10 @@ Copy(file1, file2, recursive, level)
 	     * Now, set the new-style ACL.
 	     */
 	    if (setacl == true) {
+                if (verbose) {
+                    printf("  Setting new style acl\n");
+                    fflush(stdout);
+                }
 		blob.out = aclspace;
 		blob.in = aclspace;
 		blob.out_size = 0;
@@ -678,6 +700,10 @@ Copy(file1, file2, recursive, level)
 		if (code) {
 		    if (errno == EINVAL) {
 			setacl = false;
+                        if (verbose) {
+                            printf("  _VICEIOCTL(1) returns EINVAL\n");
+                            fflush(stdout);
+                        }
 		    } else {
 			fprintf(stderr, "Couldn't set acls for %s\n", file2);
 			return 1;

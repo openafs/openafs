@@ -80,6 +80,7 @@
                 <ComponentRef Id="cmf_afs_shl_ext_DLL" />
                 <ComponentRef Id="cmf_afsd_service_EXE" />
                 <ComponentRef Id="cmf_afslogon_DLL" />
+                <ComponentRef Id="cmf_afscpcc_EXE" />
                 <ComponentRef Id="cmf_symlink_EXE" />
                 <ComponentRef Id="cmf_kpasswd_EXE" />
                 <ComponentRef Id="cmf_pts_EXE" />
@@ -90,7 +91,9 @@
                 <ComponentRef Id="cmf_translate_et_EXE" />
                 <ComponentRef Id="cmf_rxdebug_EXE" />
                 <ComponentRef Id="cmf_backup_EXE" />
-                <ComponentRef Id="cmf_aklog_EXE" />
+                <?if $(env.CPU) = "i386"?>
+            	    <ComponentRef Id="cmf_aklog_EXE" />
+	 	<?endif?>
                 <ComponentRef Id="cmf_cmdebug_EXE" />
                 
                 <!-- Runtime -->
@@ -132,7 +135,9 @@
                 <ComponentRef Id="cmf_volserver_EXE" />
                 <ComponentRef Id="cmf_afskill_EXE" />
                 <ComponentRef Id="cmf_afssvrcfg_EXE" />
-                <ComponentRef Id="cmf_asetkey_EXE" />
+		<?if $(env.CPU) = "i386"?>
+                	<ComponentRef Id="cmf_asetkey_EXE" />
+		<?endif?>
                 <ComponentRef Id="cmf_bosctlsvc_EXE" />
                 <ComponentRef Id="cmf_bosserver_EXE" />
                 <ComponentRef Id="cmf_buserver_EXE" />

@@ -77,36 +77,36 @@ BOOL ADMINAPI asc_ActionListFree (LPASACTIONLIST *ppList);
  *
  */
 
-BOOL ADMINAPI asc_AdminServerOpen (LPCTSTR pszAddress, DWORD *pidClient, ULONG *pStatus);
-BOOL ADMINAPI asc_AdminServerClose (DWORD idClient, ULONG *pStatus);
+BOOL ADMINAPI asc_AdminServerOpen (LPCTSTR pszAddress, UINT_PTR *pidClient, ULONG *pStatus);
+BOOL ADMINAPI asc_AdminServerClose (UINT_PTR idClient, ULONG *pStatus);
 
-BOOL ADMINAPI asc_CredentialsCrack (DWORD idClient, PVOID hCreds, LPTSTR pszCell, LPTSTR pszUser, SYSTEMTIME *pstExpiration, ULONG *pStatus);
-PVOID ADMINAPI asc_CredentialsGet (DWORD idClient, LPCTSTR pszCell, ULONG *pStatus);
-PVOID ADMINAPI asc_CredentialsSet (DWORD idClient, LPCTSTR pszCell, LPCTSTR pszUser, LPCTSTR pszPassword, ULONG *pStatus);
-BOOL ADMINAPI asc_CredentialsPush (DWORD idClient, PVOID hCreds, ASID idCel, ULONG *pStatus);
+BOOL ADMINAPI asc_CredentialsCrack (UINT_PTR idClient, PVOID hCreds, LPTSTR pszCell, LPTSTR pszUser, SYSTEMTIME *pstExpiration, ULONG *pStatus);
+UINT_PTR ADMINAPI asc_CredentialsGet (UINT_PTR idClient, LPCTSTR pszCell, ULONG *pStatus);
+UINT_PTR ADMINAPI asc_CredentialsSet (UINT_PTR idClient, LPCTSTR pszCell, LPCTSTR pszUser, LPCTSTR pszPassword, ULONG *pStatus);
+BOOL ADMINAPI asc_CredentialsPush (UINT_PTR idClient, PVOID hCreds, ASID idCel, ULONG *pStatus);
 
-BOOL ADMINAPI asc_LocalCellGet (DWORD idClient, LPTSTR pszCell, ULONG *pStatus);
-BOOL ADMINAPI asc_ErrorCodeTranslate (DWORD idClient, ULONG code, LANGID idLanguage, STRING pszErrorText, ULONG *pStatus);
+BOOL ADMINAPI asc_LocalCellGet (UINT_PTR idClient, LPTSTR pszCell, ULONG *pStatus);
+BOOL ADMINAPI asc_ErrorCodeTranslate (UINT_PTR idClient, ULONG code, LANGID idLanguage, STRING pszErrorText, ULONG *pStatus);
 
-BOOL ADMINAPI asc_CellOpen (DWORD idClient, PVOID hCreds, LPCTSTR pszCell, DWORD dwScope, ASID *pidCell, ULONG *pStatus);
-BOOL ADMINAPI asc_CellClose (DWORD idClient, ASID idCell, ULONG *pStatus);
-BOOL ADMINAPI asc_CellChange (DWORD idClient, ASID idCell, LPAFSADMSVR_CHANGECELL_PARAMS pChange, ULONG *pStatus);
-BOOL ADMINAPI asc_CellRefreshRateSet (DWORD idClient, ASID idCell, ULONG cminRefreshRate, ULONG *pStatus);
+BOOL ADMINAPI asc_CellOpen (UINT_PTR idClient, PVOID hCreds, LPCTSTR pszCell, DWORD dwScope, ASID *pidCell, ULONG *pStatus);
+BOOL ADMINAPI asc_CellClose (UINT_PTR idClient, ASID idCell, ULONG *pStatus);
+BOOL ADMINAPI asc_CellChange (UINT_PTR idClient, ASID idCell, LPAFSADMSVR_CHANGECELL_PARAMS pChange, ULONG *pStatus);
+BOOL ADMINAPI asc_CellRefreshRateSet (UINT_PTR idClient, ASID idCell, ULONG cminRefreshRate, ULONG *pStatus);
 
-BOOL ADMINAPI asc_ObjectFind (DWORD idClient, ASID idSearchScope, ASOBJTYPE ObjectType, LPCTSTR pszName, ASID *pidObject, ULONG *pStatus);
-BOOL ADMINAPI asc_ObjectFindMultiple (DWORD idClient, ASID idSearchScope, ASOBJTYPE ObjectType, LPCTSTR pszPattern, LPAFSADMSVR_SEARCH_PARAMS pSearchParams, LPASIDLIST *ppList, ULONG *pStatus);
-BOOL ADMINAPI asc_ObjectPropertiesGet (DWORD idClient, AFSADMSVR_GET_LEVEL GetLevel, ASID idCell, ASID idObject, LPASOBJPROP pProperties, ULONG *pStatus);
-BOOL ADMINAPI asc_ObjectPropertiesGetMultiple (DWORD idClient, AFSADMSVR_GET_LEVEL GetLevel, ASID idCell, LPASIDLIST pAsidList, LPASOBJPROPLIST *ppPropertiesList, ULONG *pStatus);
+BOOL ADMINAPI asc_ObjectFind (UINT_PTR idClient, ASID idSearchScope, ASOBJTYPE ObjectType, LPCTSTR pszName, ASID *pidObject, ULONG *pStatus);
+BOOL ADMINAPI asc_ObjectFindMultiple (UINT_PTR idClient, ASID idSearchScope, ASOBJTYPE ObjectType, LPCTSTR pszPattern, LPAFSADMSVR_SEARCH_PARAMS pSearchParams, LPASIDLIST *ppList, ULONG *pStatus);
+BOOL ADMINAPI asc_ObjectPropertiesGet (UINT_PTR idClient, AFSADMSVR_GET_LEVEL GetLevel, ASID idCell, ASID idObject, LPASOBJPROP pProperties, ULONG *pStatus);
+BOOL ADMINAPI asc_ObjectPropertiesGetMultiple (UINT_PTR idClient, AFSADMSVR_GET_LEVEL GetLevel, ASID idCell, LPASIDLIST pAsidList, LPASOBJPROPLIST *ppPropertiesList, ULONG *pStatus);
 
-BOOL ADMINAPI asc_ObjectRefresh (DWORD idClient, ASID idCell, ASID idObject, ULONG *pStatus);
-BOOL ADMINAPI asc_ObjectRefreshMultiple (DWORD idClient, ASID idCell, LPASIDLIST pAsidList, ULONG *pStatus);
+BOOL ADMINAPI asc_ObjectRefresh (UINT_PTR idClient, ASID idCell, ASID idObject, ULONG *pStatus);
+BOOL ADMINAPI asc_ObjectRefreshMultiple (UINT_PTR idClient, ASID idCell, LPASIDLIST pAsidList, ULONG *pStatus);
 
-BOOL ADMINAPI asc_RandomKeyGet (DWORD idClient, ASID idCell, PBYTE key, ULONG *pStatus);
+BOOL ADMINAPI asc_RandomKeyGet (UINT_PTR idClient, ASID idCell, PBYTE key, ULONG *pStatus);
 
-BOOL ADMINAPI asc_CellNameGet_Fast (DWORD idClient, ASID idCell, LPTSTR pszCell, ULONG *pStatus = NULL);
-BOOL ADMINAPI asc_ObjectNameGet_Fast (DWORD idClient, ASID idCell, ASID idObject, LPTSTR pszObjectName, ULONG *pStatus = NULL);
-BOOL ADMINAPI asc_ObjectTypeGet_Fast (DWORD idClient, ASID idCell, ASID idObject, ASOBJTYPE *pObjectType, ULONG *pStatus = NULL);
-BOOL ADMINAPI asc_ObjectPropertiesGet_Fast (DWORD idClient, ASID idCell, ASID idObject, LPASOBJPROP pProperties, ULONG *pStatus = NULL);
+BOOL ADMINAPI asc_CellNameGet_Fast (UINT_PTR idClient, ASID idCell, LPTSTR pszCell, ULONG *pStatus = NULL);
+BOOL ADMINAPI asc_ObjectNameGet_Fast (UINT_PTR idClient, ASID idCell, ASID idObject, LPTSTR pszObjectName, ULONG *pStatus = NULL);
+BOOL ADMINAPI asc_ObjectTypeGet_Fast (UINT_PTR idClient, ASID idCell, ASID idObject, ASOBJTYPE *pObjectType, ULONG *pStatus = NULL);
+BOOL ADMINAPI asc_ObjectPropertiesGet_Fast (UINT_PTR idClient, ASID idCell, ASID idObject, LPASOBJPROP pProperties, ULONG *pStatus = NULL);
 
 void ADMINAPI asc_Enter (void);
 void ADMINAPI asc_Leave (void);
@@ -118,14 +118,14 @@ LPCRITICAL_SECTION ADMINAPI asc_GetCriticalSection (void);
  *
  */
 
-BOOL ADMINAPI asc_ObjectListen (DWORD idClient, ASID idCell, ASID idObject, HWND hNotify, ULONG *pStatus);
-BOOL ADMINAPI asc_ObjectListenClear (DWORD idClient, HWND hNotify, ULONG *pStatus);
-BOOL ADMINAPI asc_ObjectListenMultiple (DWORD idClient, ASID idCell, LPASIDLIST pAsidList, HWND hNotify, ULONG *pStatus);
+BOOL ADMINAPI asc_ObjectListen (UINT_PTR idClient, ASID idCell, ASID idObject, HWND hNotify, ULONG *pStatus);
+BOOL ADMINAPI asc_ObjectListenClear (UINT_PTR idClient, HWND hNotify, ULONG *pStatus);
+BOOL ADMINAPI asc_ObjectListenMultiple (UINT_PTR idClient, ASID idCell, LPASIDLIST pAsidList, HWND hNotify, ULONG *pStatus);
 
-BOOL ADMINAPI asc_ActionGet (DWORD idClient, DWORD idAction, LPASACTION pAction, ULONG *pStatus);
-BOOL ADMINAPI asc_ActionGetMultiple (DWORD idClient, DWORD idClientSearch, ASID idCellSearch, LPASACTIONLIST *ppList, ULONG *pStatus);
-BOOL ADMINAPI asc_ActionListen (DWORD idClient, HWND hNotify, ULONG *pStatus);
-BOOL ADMINAPI asc_ActionListenClear (DWORD idClient, HWND hNotify, ULONG *pStatus);
+BOOL ADMINAPI asc_ActionGet (UINT_PTR idClient, DWORD idAction, LPASACTION pAction, ULONG *pStatus);
+BOOL ADMINAPI asc_ActionGetMultiple (UINT_PTR idClient, UINT_PTR idClientSearch, ASID idCellSearch, LPASACTIONLIST *ppList, ULONG *pStatus);
+BOOL ADMINAPI asc_ActionListen (UINT_PTR idClient, HWND hNotify, ULONG *pStatus);
+BOOL ADMINAPI asc_ActionListenClear (UINT_PTR idClient, HWND hNotify, ULONG *pStatus);
 
 
 /*
@@ -133,11 +133,11 @@ BOOL ADMINAPI asc_ActionListenClear (DWORD idClient, HWND hNotify, ULONG *pStatu
  *
  */
 
-BOOL ADMINAPI asc_UserChange (DWORD idClient, ASID idCell, ASID idUser, LPAFSADMSVR_CHANGEUSER_PARAMS pChange, ULONG *pStatus);
-BOOL ADMINAPI asc_UserPasswordSet (DWORD idClient, ASID idCell, ASID idUser, int keyVersion, LPCTSTR pkeyString, PBYTE pkeyData, ULONG *pStatus);
-BOOL ADMINAPI asc_UserUnlock (DWORD idClient, ASID idCell, ASID idUser, ULONG *pStatus);
-BOOL ADMINAPI asc_UserCreate (DWORD idClient, ASID idCell, LPAFSADMSVR_CREATEUSER_PARAMS pCreate, ASID *pidUser, ULONG *pStatus);
-BOOL ADMINAPI asc_UserDelete (DWORD idClient, ASID idCell, ASID idUser, LPAFSADMSVR_DELETEUSER_PARAMS pDelete, ULONG *pStatus);
+BOOL ADMINAPI asc_UserChange (UINT_PTR idClient, ASID idCell, ASID idUser, LPAFSADMSVR_CHANGEUSER_PARAMS pChange, ULONG *pStatus);
+BOOL ADMINAPI asc_UserPasswordSet (UINT_PTR idClient, ASID idCell, ASID idUser, int keyVersion, LPCTSTR pkeyString, PBYTE pkeyData, ULONG *pStatus);
+BOOL ADMINAPI asc_UserUnlock (UINT_PTR idClient, ASID idCell, ASID idUser, ULONG *pStatus);
+BOOL ADMINAPI asc_UserCreate (UINT_PTR idClient, ASID idCell, LPAFSADMSVR_CREATEUSER_PARAMS pCreate, ASID *pidUser, ULONG *pStatus);
+BOOL ADMINAPI asc_UserDelete (UINT_PTR idClient, ASID idCell, ASID idUser, LPAFSADMSVR_DELETEUSER_PARAMS pDelete, ULONG *pStatus);
 
 
 /*
@@ -145,15 +145,15 @@ BOOL ADMINAPI asc_UserDelete (DWORD idClient, ASID idCell, ASID idUser, LPAFSADM
  *
  */
 
-BOOL ADMINAPI asc_GroupChange (DWORD idClient, ASID idCell, ASID idGroup, LPAFSADMSVR_CHANGEGROUP_PARAMS pChange, ULONG *pStatus);
-BOOL ADMINAPI asc_GroupMembersGet (DWORD idClient, ASID idCell, ASID idGroup, LPASIDLIST *ppAsidList, ULONG *pStatus);
-BOOL ADMINAPI asc_GroupMemberAdd (DWORD idClient, ASID idCell, ASID idGroup, ASID idMember, ULONG *pStatus);
-BOOL ADMINAPI asc_GroupMemberRemove (DWORD idClient, ASID idCell, ASID idGroup, ASID idMember, ULONG *pStatus);
-BOOL ADMINAPI asc_GroupRename (DWORD idClient, ASID idCell, ASID idGroup, LPCTSTR pszNewName, ULONG *pStatus);
-BOOL ADMINAPI asc_GroupMembershipGet (DWORD idClient, ASID idCell, ASID idMember, LPASIDLIST *ppAsidList, ULONG *pStatus);
-BOOL ADMINAPI asc_GroupOwnershipGet (DWORD idClient, ASID idCell, ASID idOwner, LPASIDLIST *ppAsidList, ULONG *pStatus);
-BOOL ADMINAPI asc_GroupCreate (DWORD idClient, ASID idCell, LPAFSADMSVR_CREATEGROUP_PARAMS pCreate, ASID *pidGroup, ULONG *pStatus);
-BOOL ADMINAPI asc_GroupDelete (DWORD idClient, ASID idCell, ASID idGroup, ULONG *pStatus);
+BOOL ADMINAPI asc_GroupChange (UINT_PTR idClient, ASID idCell, ASID idGroup, LPAFSADMSVR_CHANGEGROUP_PARAMS pChange, ULONG *pStatus);
+BOOL ADMINAPI asc_GroupMembersGet (UINT_PTR idClient, ASID idCell, ASID idGroup, LPASIDLIST *ppAsidList, ULONG *pStatus);
+BOOL ADMINAPI asc_GroupMemberAdd (UINT_PTR idClient, ASID idCell, ASID idGroup, ASID idMember, ULONG *pStatus);
+BOOL ADMINAPI asc_GroupMemberRemove (UINT_PTR idClient, ASID idCell, ASID idGroup, ASID idMember, ULONG *pStatus);
+BOOL ADMINAPI asc_GroupRename (UINT_PTR idClient, ASID idCell, ASID idGroup, LPCTSTR pszNewName, ULONG *pStatus);
+BOOL ADMINAPI asc_GroupMembershipGet (UINT_PTR idClient, ASID idCell, ASID idMember, LPASIDLIST *ppAsidList, ULONG *pStatus);
+BOOL ADMINAPI asc_GroupOwnershipGet (UINT_PTR idClient, ASID idCell, ASID idOwner, LPASIDLIST *ppAsidList, ULONG *pStatus);
+BOOL ADMINAPI asc_GroupCreate (UINT_PTR idClient, ASID idCell, LPAFSADMSVR_CREATEGROUP_PARAMS pCreate, ASID *pidGroup, ULONG *pStatus);
+BOOL ADMINAPI asc_GroupDelete (UINT_PTR idClient, ASID idCell, ASID idGroup, ULONG *pStatus);
 
 
 #endif // TAAFSADMSVRCLIENT_H

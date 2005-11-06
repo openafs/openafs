@@ -66,7 +66,7 @@ void Filesets_OnEndTask_ShowRename (LPTASKPACKET ptp)
       memset (psrp, 0x00, sizeof(SET_RENAME_APPLY_PARAMS));
       psrp->lpiFileset = lpp->lpiRW;
 
-      int rc = ModalDialogParam (IDD_SET_RENAME, GetActiveWindow(), (DLGPROC)Filesets_Rename_DlgProc, (LPARAM)psrp);
+      INT_PTR rc = ModalDialogParam (IDD_SET_RENAME, GetActiveWindow(), (DLGPROC)Filesets_Rename_DlgProc, (LPARAM)psrp);
       if (rc != IDOK)
          {
          Delete (psrp);

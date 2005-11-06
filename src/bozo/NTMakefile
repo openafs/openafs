@@ -71,6 +71,7 @@ BOSSERVER_EXELIBS =\
 
 $(BOSSERVER_EXEFILE): $(BOSSERVER_EXEOBJS) $(BOSSERVER_EXELIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
+        $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
 
 
@@ -107,6 +108,7 @@ BOS_EXELIBS =\
 
 $(RS_BOS_EXEFILE): $(BOS_EXEOBJS) $(BOS_EXELIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
+        $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
 
 $(CL_BOS_EXEFILE): $(RS_BOS_EXEFILE)

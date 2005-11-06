@@ -90,18 +90,18 @@ typedef struct
 
 typedef struct
    {
-   LONG cAllocCpp;
-   LONG cAllocDyna;
-   LONG cAllocTotal;
-   LONG cAllocCppTared;
-   LONG cAllocDynaTared;
-   LONG cAllocTotalTared;
-   LONG cbAllocCpp;
-   LONG cbAllocDyna;
-   LONG cbAllocTotal;
-   LONG cbAllocCppTared;
-   LONG cbAllocDynaTared;
-   LONG cbAllocTotalTared;
+   size_t cAllocCpp;
+   size_t cAllocDyna;
+   size_t cAllocTotal;
+   size_t cAllocCppTared;
+   size_t cAllocDynaTared;
+   size_t cAllocTotalTared;
+   size_t cbAllocCpp;
+   size_t cbAllocDyna;
+   size_t cbAllocTotal;
+   size_t cbAllocCppTared;
+   size_t cbAllocDynaTared;
+   size_t cbAllocTotalTared;
    } STATISTICS;
 
 static struct l
@@ -248,12 +248,15 @@ typedef struct
 #define cyLABELS    15
 
 
-HWND MakeWindow (LPCTSTR pszClass, LPCTSTR pszTitle, DWORD dwStyle, RECT *prSource, HWND hParent, UINT idc, DWORD dwStyleEx = 0)
+HWND MakeWindow (LPCTSTR pszClass, LPCTSTR pszTitle, DWORD dwStyle, RECT *prSource, 
+                 HWND hParent, UINT idc, DWORD dwStyleEx = 0)
 {
    RECT rr = { 0, 0, 16, 16 };
    if (prSource)
       rr = *prSource;
-   HWND hWnd = CreateWindowEx (dwStyleEx, pszClass, pszTitle, dwStyle, rr.left, rr.top, rr.right - rr.left, rr.bottom - rr.top, hParent, (HMENU)idc, GetModuleHandle(0), 0);
+   HWND hWnd = CreateWindowEx (dwStyleEx, pszClass, pszTitle, dwStyle, 
+                               rr.left, rr.top, rr.right - rr.left, rr.bottom - rr.top, 
+                               hParent, (HMENU)UIntToPtr(idc), GetModuleHandle(0), 0);
    if (IsWindow (hWnd))
       SendMessage (hWnd, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), 1);
    return hWnd;
@@ -261,7 +264,8 @@ HWND MakeWindow (LPCTSTR pszClass, LPCTSTR pszTitle, DWORD dwStyle, RECT *prSour
 
 void SetWindowRect (HWND hWnd, RECT *pr)
 {
-   SetWindowPos (hWnd, 0, pr->left, pr->top, pr->right - pr->left, pr->bottom - pr->top, SWP_NOZORDER | SWP_NOACTIVATE);
+   SetWindowPos (hWnd, 0, pr->left, pr->top, pr->right - pr->left, 
+                 pr->bottom - pr->top, SWP_NOZORDER | SWP_NOACTIVATE);
 }
 
 void FormatBytes (LPTSTR pszText, double lfValue)
@@ -567,7 +571,7 @@ LPTSTR MemMgr_GetItemKey (HWND hList, int iItem)
          if (pChunk)
             {
             if (lr.iColSort == 0)
-               pszReturn = (LPTSTR)pChunk->dwTick;
+               pszReturn = (LPTSTR)UlongToPtr(pChunk->dwTick);
             else if (lr.iColSort == 4)
                pszReturn = (LPTSTR)pChunk->cbData;
             else // (lr.iColSort == 5)
@@ -674,7 +678,7 @@ void MemMgr_OnListAdd (PMEMCHUNK pCopy)
    LPTSTR pszKey = NULL;
    switch (lr.iColSort)
       {
-      case 0:  pszKey = (LPTSTR)pCopy->dwTick;  break;
+      case 0:  pszKey = (LPTSTR)UlongToPtr(pCopy->dwTick);  break;
       case 1:  pszKey = (LPTSTR)szFlags;        break;
       case 2:  pszKey = (LPTSTR)szExpr;         break;
       case 3:  pszKey = (LPTSTR)szLocation;     break;
@@ -854,10 +858,10 @@ void MemMgr_OnRefresh (void)
 {
    // Fill in the statistics at the top of the manager dialog
    //
-   SetDlgItemInt (l.hManager, IDC_VALUE_CPP_COUNT, l.Stats.cAllocCpp, TRUE);
-   SetDlgItemInt (l.hManager, IDC_VALUE_OTHER_COUNT, l.Stats.cAllocDyna, TRUE);
-   SetDlgItemInt (l.hManager, IDC_VALUE_TARED_COUNT, l.Stats.cAllocTotalTared, TRUE);
-   SetDlgItemInt (l.hManager, IDC_VALUE_TOTAL_COUNT, l.Stats.cAllocTotal, TRUE);
+   SetDlgItemInt (l.hManager, IDC_VALUE_CPP_COUNT, (INT)l.Stats.cAllocCpp, TRUE);
+   SetDlgItemInt (l.hManager, IDC_VALUE_OTHER_COUNT, (INT)l.Stats.cAllocDyna, TRUE);
+   SetDlgItemInt (l.hManager, IDC_VALUE_TARED_COUNT, (INT)l.Stats.cAllocTotalTared, TRUE);
+   SetDlgItemInt (l.hManager, IDC_VALUE_TOTAL_COUNT, (INT)l.Stats.cAllocTotal, TRUE);
 
    SetDlgItemBytes (l.hManager, IDC_VALUE_CPP_SIZE, (double)l.Stats.cbAllocCpp);
    SetDlgItemBytes (l.hManager, IDC_VALUE_OTHER_SIZE, (double)l.Stats.cbAllocDyna);
@@ -994,9 +998,9 @@ void MemMgr_OnPaint (void)
 
 void MemMgr_OnTimer (void)
 {
-   if (GetWindowLong (l.hManager, GWL_USERDATA))
+   if (GetWindowLongPtr (l.hManager, GWLP_USERDATA))
       {
-      SetWindowLong (l.hManager, GWL_USERDATA, 0);
+      SetWindowLongPtr (l.hManager, GWLP_USERDATA, 0);
       MemMgr_OnRefresh();
       }
 }
@@ -1004,7 +1008,7 @@ void MemMgr_OnTimer (void)
 
 void MemMgr_OnDelayedRefresh (void)
 {
-   SetWindowLong (l.hManager, GWL_USERDATA, 1);
+   SetWindowLongPtr (l.hManager, GWLP_USERDATA, 1);
 }
 
 
@@ -1166,7 +1170,7 @@ void MemMgr_TrackAllocation (PVOID pData, size_t cb, LPSTR pszExpr, LPSTR pszFil
             if ((pChunk = (PMEMCHUNK)l.pHeap->GetAt(iChunk)) == NULL)
                continue;
 
-            size_t iBucket = HASH(pChunk->pData,l.cBuckets);
+            size_t iBucket = HASH(PtrToUlong(pChunk->pData),l.cBuckets);
             if ((pChunk->iNext = l.aBuckets[iBucket].iFirst) != iINVALID)
                {
                PMEMCHUNK pNext;
@@ -1187,7 +1191,7 @@ void MemMgr_TrackAllocation (PVOID pData, size_t cb, LPSTR pszExpr, LPSTR pszFil
    // Prepare a MEMCHUNK entry and shove it in our array
    //
    size_t iChunk = l.cChunks;
-   size_t iBucket = HASH(pData,l.cBuckets);
+   size_t iBucket = HASH(PtrToUlong(pData),l.cBuckets);
    BOOL fLinkIn = TRUE;
 
    MEMCHUNK Chunk;
@@ -1274,7 +1278,7 @@ BOOL MemMgr_TrackDestruction (PVOID pData, LPSTR pszFile, DWORD dwLine)
       // Find the memchunk associated with this pData. That's what our
       // hash table is for.
       //
-      size_t iBucket = HASH(pData,l.cBuckets);
+      size_t iBucket = HASH(PtrToUlong(pData),l.cBuckets);
 
       PMEMCHUNK pChunk = NULL;
       for (size_t iChunk = l.aBuckets[iBucket].iFirst; iChunk != iINVALID; )
@@ -1408,7 +1412,7 @@ void MEMMGR_CALLCONV ShowMemoryManager (void)
          {
          MemMgr_RestoreSettings();
          l.hManager = MakeWindow (TEXT("Static"), cszTITLE, WS_OVERLAPPED | WS_THICKFRAME | WS_SYSMENU, &lr.rManager, 0, 0);
-         SetWindowLong (l.hManager, GWL_WNDPROC, (LONG)MemMgr_DlgProc);
+         SetWindowLongPtr (l.hManager, GWLP_WNDPROC, (LONG)PtrToUlong(MemMgr_DlgProc));
          PostMessage (l.hManager, WM_COMMAND, IDC_INITIALIZE, 0);
          ShowWindow (l.hManager, SW_SHOW);
          }

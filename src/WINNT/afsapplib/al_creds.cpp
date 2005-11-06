@@ -58,15 +58,15 @@ BOOL CALLBACK BadCreds_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp);
  *
  */
 
-BOOL AfsAppLib_CrackCredentials (PVOID hCreds, LPTSTR pszCell, LPTSTR pszUser, LPSYSTEMTIME pst, ULONG *pStatus)
+BOOL AfsAppLib_CrackCredentials (UINT_PTR hCreds, LPTSTR pszCell, LPTSTR pszUser, LPSYSTEMTIME pst, ULONG *pStatus)
 {
    BOOL rc = FALSE;
    ULONG status = 0;
 
-   DWORD idClient;
+   UINT_PTR idClient;
    if ((idClient = AfsAppLib_GetAdminServerClientID()) != 0)
       {
-      rc = asc_CredentialsCrack (idClient, hCreds, pszCell, pszUser, pst, &status);
+      rc = asc_CredentialsCrack (idClient, (PVOID) hCreds, pszCell, pszUser, pst, &status);
       }
    else 
        if (OpenClientLibrary())
@@ -76,7 +76,7 @@ BOOL AfsAppLib_CrackCredentials (PVOID hCreds, LPTSTR pszCell, LPTSTR pszUser, L
       unsigned long dateExpire;
       int fHasKasToken;
 
-      if (afsclient_TokenQuery (hCreds, &dateExpire, szUserA, szUser2A, szCellA, &fHasKasToken, (afs_status_p)&status))
+      if (afsclient_TokenQuery ((PVOID)hCreds, &dateExpire, szUserA, szUser2A, szCellA, &fHasKasToken, (afs_status_p)&status))
          {
          rc = TRUE;
          CopyAnsiToString (pszUser, szUserA);
@@ -93,12 +93,12 @@ BOOL AfsAppLib_CrackCredentials (PVOID hCreds, LPTSTR pszCell, LPTSTR pszUser, L
 }
 
 
-PVOID AfsAppLib_GetCredentials (LPCTSTR pszCell, ULONG *pStatus)
+UINT_PTR AfsAppLib_GetCredentials (LPCTSTR pszCell, ULONG *pStatus)
 {
-   PVOID hCreds = NULL;
+   UINT_PTR hCreds = 0;
    ULONG status = 0;
 
-   DWORD idClient;
+   UINT_PTR idClient;
    if ((idClient = AfsAppLib_GetAdminServerClientID()) != 0)
       {
       hCreds = asc_CredentialsGet (idClient, pszCell, &status);
@@ -108,7 +108,7 @@ PVOID AfsAppLib_GetCredentials (LPCTSTR pszCell, ULONG *pStatus)
       {
       LPSTR pszCellA = StringToAnsi (pszCell);
 
-      afsclient_TokenGetExisting (pszCellA, &hCreds, (afs_status_p)&status);
+      afsclient_TokenGetExisting (pszCellA, (PVOID *)&hCreds, (afs_status_p)&status);
 
       FreeString (pszCellA, pszCell);
       CloseClientLibrary();
@@ -120,12 +120,12 @@ PVOID AfsAppLib_GetCredentials (LPCTSTR pszCell, ULONG *pStatus)
 }
 
 
-PVOID AfsAppLib_SetCredentials (LPCTSTR pszCell, LPCTSTR pszUser, LPCTSTR pszPassword, ULONG *pStatus)
+UINT_PTR AfsAppLib_SetCredentials (LPCTSTR pszCell, LPCTSTR pszUser, LPCTSTR pszPassword, ULONG *pStatus)
 {
-   PVOID hCreds = NULL;
+   UINT_PTR hCreds = 0;
    ULONG status = 0;
 
-   DWORD idClient;
+   UINT_PTR idClient;
    if ((idClient = AfsAppLib_GetAdminServerClientID()) != 0)
       {
       hCreds = asc_CredentialsSet (idClient, pszCell, pszUser, pszPassword, &status);
@@ -140,7 +140,7 @@ PVOID AfsAppLib_SetCredentials (LPCTSTR pszCell, LPCTSTR pszUser, LPCTSTR pszPas
       CopyStringToAnsi (szUserA, pszUser);
       CopyStringToAnsi (szPasswordA, pszPassword);
 
-      afsclient_TokenGetNew (szCellA, szUserA, szPasswordA, &hCreds, (afs_status_p)&status);
+      afsclient_TokenGetNew (szCellA, szUserA, szPasswordA, (PVOID *)&hCreds, (afs_status_p)&status);
 
       CloseClientLibrary();
       }
@@ -187,9 +187,9 @@ BOOL CALLBACK OpenCell_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 {
    LPOPENCELLDLG_PARAMS lpp;
    if (msg == WM_INITDIALOG)
-      SetWindowLong (hDlg, DWL_USER, lp);
+      SetWindowLongPtr (hDlg, DWLP_USER, lp);
 
-   if ((lpp = (LPOPENCELLDLG_PARAMS)GetWindowLong (hDlg, DWL_USER)) != NULL)
+   if ((lpp = (LPOPENCELLDLG_PARAMS)GetWindowLongPtr (hDlg, DWLP_USER)) != NULL)
       {
       if (lpp->hookproc)
          {
@@ -363,8 +363,8 @@ DWORD WINAPI OpenCell_OnCell_ThreadProc (PVOID lp)
    LPOPENCELL_ONCELL_PARAMS lpp;
    if ((lpp = (LPOPENCELL_ONCELL_PARAMS)lp) != NULL)
       {
-      PVOID hCreds = AfsAppLib_GetCredentials (lpp->szCell);
-      lpp->fGotCreds = AfsAppLib_CrackCredentials (hCreds, lpp->szCell, lpp->szUser, &lpp->stExpire);
+      UINT_PTR hCreds = AfsAppLib_GetCredentials (lpp->szCell);
+      lpp->fGotCreds = AfsAppLib_CrackCredentials (hCreds, lpp->szCell, lpp->szUser, &lpp->stExpire)?TRUE:FALSE;
       lpp->fValidCreds = FALSE;
 
       if (lpp->fGotCreds && AfsAppLib_IsTimeInFuture (&lpp->stExpire))
@@ -490,9 +490,9 @@ BOOL CALLBACK NewCreds_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 {
    LPCREDENTIALSDLG_PARAMS lpp;
    if (msg == WM_INITDIALOG)
-      SetWindowLong (hDlg, DWL_USER, lp);
+      SetWindowLongPtr (hDlg, DWLP_USER, lp);
 
-   if ((lpp = (LPCREDENTIALSDLG_PARAMS)GetWindowLong (hDlg, DWL_USER)) != NULL)
+   if ((lpp = (LPCREDENTIALSDLG_PARAMS)GetWindowLongPtr (hDlg, DWLP_USER)) != NULL)
       {
       if (lpp->hookproc)
          {
@@ -699,6 +699,82 @@ void NewCreds_GetOutParams (HWND hDlg, LPCREDENTIALSDLG_PARAMS lpp)
  *
  */
 
+
+BOOL AfsAppLib_IsUserAdmin (UINT_PTR hCreds, LPTSTR pszUser)
+{
+#ifndef USE_KASERVER
+    return TRUE;
+#else
+   BOOL rc = FALSE;
+   afs_status_t status;
+
+   UINT_PTR idClient;
+   if ((idClient = AfsAppLib_GetAdminServerClientID()) != 0)
+      {
+      TCHAR szCell[ cchRESOURCE ];
+      TCHAR szUser[ cchRESOURCE ];
+      SYSTEMTIME stExpire;
+      if (asc_CredentialsCrack (idClient, hCreds, szCell, szUser, &stExpire, (ULONG*)&status))
+         {
+         ASID idCell;
+         if (asc_CellOpen (idClient, hCreds, szCell, AFSADMSVR_SCOPE_USERS, &idCell, (ULONG*)&status))
+            {
+            ASID idUser;
+            if (asc_ObjectFind (idClient, idCell, TYPE_USER, pszUser, &idUser, (ULONG*)&status))
+               {
+               ASOBJPROP Info;
+               if (asc_ObjectPropertiesGet (idClient, GET_ALL_DATA, idCell, idUser, &Info, (ULONG*)&status))
+                  {
+                  if (Info.u.UserProperties.fHaveKasInfo)
+                     {
+                     rc = Info.u.UserProperties.KASINFO.fIsAdmin;
+                     }
+                  }
+               }
+            asc_CellClose (idClient, idCell, (ULONG*)&status);
+            }
+         }
+      }
+   else if (OpenClientLibrary())
+      {
+      if (OpenKasLibrary())
+         {
+         char szUserA[ cchRESOURCE ], szUser2A[ cchRESOURCE ];
+         char szCellA[ cchRESOURCE ];
+         unsigned long dateExpire;
+         int fHasKasToken;
+
+         if (afsclient_TokenQuery (hCreds, &dateExpire, szUserA, szUser2A, szCellA, &fHasKasToken, (afs_status_p)&status))
+            {
+            PVOID hCell;
+            if (afsclient_CellOpen (szCellA, hCreds, &hCell, &status))
+               {
+               kas_identity_t Identity;
+               memset (&Identity, 0x00, sizeof(Identity));
+               CopyStringToAnsi (Identity.principal, pszUser);
+
+               kas_principalEntry_t Entry;
+               if (kas_PrincipalGet (hCell, NULL, &Identity, &Entry, &status))
+                  {
+                  if (Entry.adminSetting == KAS_ADMIN)
+                     rc = TRUE;
+                  }
+
+               afsclient_CellClose (hCell, (afs_status_p)&status);
+               }
+            }
+
+         CloseKasLibrary();
+         }
+
+      CloseClientLibrary();
+      }
+
+   return rc;
+#endif /* USE_KASERVER */
+}
+
+
 typedef struct
    {
    BADCREDSDLG_PARAMS bcdp;
@@ -776,8 +852,8 @@ BOOL CALLBACK BadCreds_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 {
    LPREALBADCREDSDLG_PARAMS lpp;
    if (msg == WM_INITDIALOG)
-      SetWindowLong (hDlg, DWL_USER, lp);
-   if ((lpp = (LPREALBADCREDSDLG_PARAMS)GetWindowLong (hDlg, DWL_USER)) != NULL) 
+      SetWindowLongPtr (hDlg, DWLP_USER, lp);
+   if ((lpp = (LPREALBADCREDSDLG_PARAMS)GetWindowLongPtr (hDlg, DWLP_USER)) != NULL) 
       {
       if (lpp->bcdp.hookproc)
          {
@@ -831,7 +907,7 @@ BOOL CALLBACK BadCreds_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 
 void AfsAppLib_CheckForExpiredCredentials (LPCREDENTIALSDLG_PARAMS lpp)
 {
-   static PVOID hCredsPrevious = NULL;
+   static UINT_PTR hCredsPrevious = 0;
    static BOOL fHadGoodCredentials;
 
    TCHAR szCell[ cchNAME ];
@@ -839,7 +915,7 @@ void AfsAppLib_CheckForExpiredCredentials (LPCREDENTIALSDLG_PARAMS lpp)
    SYSTEMTIME stExpire;
 
    BOOL fHaveCredentials;
-   fHaveCredentials = AfsAppLib_CrackCredentials (lpp->hCreds, szCell, szUser, &stExpire);
+   fHaveCredentials = AfsAppLib_CrackCredentials (lpp->hCreds, szCell, szUser, &stExpire)?TRUE:FALSE;
 
    if (hCredsPrevious && (hCredsPrevious != lpp->hCreds))
       {
@@ -903,78 +979,4 @@ void OnExpiredCredentials (WPARAM wp, LPARAM lp)
       }
 }
 
-
-BOOL AfsAppLib_IsUserAdmin (PVOID hCreds, LPTSTR pszUser)
-{
-#ifndef USE_KASERVER
-    return TRUE;
-#else
-   BOOL rc = FALSE;
-   afs_status_t status;
-
-   DWORD idClient;
-   if ((idClient = AfsAppLib_GetAdminServerClientID()) != 0)
-      {
-      TCHAR szCell[ cchRESOURCE ];
-      TCHAR szUser[ cchRESOURCE ];
-      SYSTEMTIME stExpire;
-      if (asc_CredentialsCrack (idClient, hCreds, szCell, szUser, &stExpire, (ULONG*)&status))
-         {
-         ASID idCell;
-         if (asc_CellOpen (idClient, hCreds, szCell, AFSADMSVR_SCOPE_USERS, &idCell, (ULONG*)&status))
-            {
-            ASID idUser;
-            if (asc_ObjectFind (idClient, idCell, TYPE_USER, pszUser, &idUser, (ULONG*)&status))
-               {
-               ASOBJPROP Info;
-               if (asc_ObjectPropertiesGet (idClient, GET_ALL_DATA, idCell, idUser, &Info, (ULONG*)&status))
-                  {
-                  if (Info.u.UserProperties.fHaveKasInfo)
-                     {
-                     rc = Info.u.UserProperties.KASINFO.fIsAdmin;
-                     }
-                  }
-               }
-            asc_CellClose (idClient, idCell, (ULONG*)&status);
-            }
-         }
-      }
-   else if (OpenClientLibrary())
-      {
-      if (OpenKasLibrary())
-         {
-         char szUserA[ cchRESOURCE ], szUser2A[ cchRESOURCE ];
-         char szCellA[ cchRESOURCE ];
-         unsigned long dateExpire;
-         int fHasKasToken;
-
-         if (afsclient_TokenQuery (hCreds, &dateExpire, szUserA, szUser2A, szCellA, &fHasKasToken, (afs_status_p)&status))
-            {
-            PVOID hCell;
-            if (afsclient_CellOpen (szCellA, hCreds, &hCell, &status))
-               {
-               kas_identity_t Identity;
-               memset (&Identity, 0x00, sizeof(Identity));
-               CopyStringToAnsi (Identity.principal, pszUser);
-
-               kas_principalEntry_t Entry;
-               if (kas_PrincipalGet (hCell, NULL, &Identity, &Entry, &status))
-                  {
-                  if (Entry.adminSetting == KAS_ADMIN)
-                     rc = TRUE;
-                  }
-
-               afsclient_CellClose (hCell, (afs_status_p)&status);
-               }
-            }
-
-         CloseKasLibrary();
-         }
-
-      CloseClientLibrary();
-      }
-
-   return rc;
-#endif /* USE_KASERVER */
-}
 

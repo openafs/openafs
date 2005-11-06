@@ -51,7 +51,7 @@ void Filesets_Clone (LPIDENT lpi)
    memset (pcsp, 0x00, sizeof(SET_CLONESYS_PARAMS));
    pcsp->lpi = (lpi == NULL) ? g.lpiCell : lpi;
 
-   int rc;
+   INT_PTR rc;
    if (pcsp->lpi && pcsp->lpi->fIsFileset())
       rc = ModalDialogParam (IDD_SET_CLONE, NULL, (DLGPROC)Filesets_Clone_DlgProc, (LPARAM)pcsp);
    else
@@ -81,9 +81,9 @@ BOOL CALLBACK Filesets_Clone_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
       return TRUE;
 
    if (msg == WM_INITDIALOG)
-      SetWindowLong (hDlg, DWL_USER, lp);
+      SetWindowLongPtr (hDlg, DWLP_USER, lp);
 
-   LPSET_CLONESYS_PARAMS pcsp = (LPSET_CLONESYS_PARAMS)GetWindowLong (hDlg, DWL_USER);
+   LPSET_CLONESYS_PARAMS pcsp = (LPSET_CLONESYS_PARAMS)GetWindowLongPtr (hDlg, DWLP_USER);
 
    if (pcsp != NULL)
       {
@@ -138,9 +138,9 @@ BOOL CALLBACK Filesets_Clonesys_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM 
       return TRUE;
 
    if (msg == WM_INITDIALOG)
-      SetWindowLong (hDlg, DWL_USER, lp);
+      SetWindowLongPtr (hDlg, DWLP_USER, lp);
 
-   LPSET_CLONESYS_PARAMS pcsp = (LPSET_CLONESYS_PARAMS)GetWindowLong (hDlg, DWL_USER);
+   LPSET_CLONESYS_PARAMS pcsp = (LPSET_CLONESYS_PARAMS)GetWindowLongPtr (hDlg, DWLP_USER);
 
    if (pcsp != NULL)
       {

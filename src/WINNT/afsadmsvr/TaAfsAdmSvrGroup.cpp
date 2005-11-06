@@ -24,7 +24,7 @@ extern "C" {
       // AfsAdmSvr_ChangeGroup
       // ...changes a group account's properties.
       //
-extern "C" int AfsAdmSvr_ChangeGroup (DWORD idClient, ASID idCell, ASID idGroup, LPAFSADMSVR_CHANGEGROUP_PARAMS pChange, ULONG *pStatus)
+extern "C" int AfsAdmSvr_ChangeGroup (UINT_PTR idClient, ASID idCell, ASID idGroup, LPAFSADMSVR_CHANGEGROUP_PARAMS pChange, ULONG *pStatus)
 {
    ASACTION Action;
    Action.Action = ACTION_GROUP_CHANGE;
@@ -101,7 +101,7 @@ extern "C" int AfsAdmSvr_ChangeGroup (DWORD idClient, ASID idCell, ASID idGroup,
       // AfsAdmSvr_GetGroupMembers
       // ...retrieves the list of users which belong to a group
       //
-extern "C" int AfsAdmSvr_GetGroupMembers (DWORD idClient, ASID idCell, ASID idGroup, LPASIDLIST *ppAsidList, ULONG *pStatus)
+extern "C" int AfsAdmSvr_GetGroupMembers (UINT_PTR idClient, ASID idCell, ASID idGroup, LPASIDLIST *ppAsidList, ULONG *pStatus)
 {
    size_t iOp = AfsAdmSvr_BeginOperation (idClient);
 
@@ -164,7 +164,7 @@ extern "C" int AfsAdmSvr_GetGroupMembers (DWORD idClient, ASID idCell, ASID idGr
       // AfsAdmSvr_GetGroupMembership
       // ...retrieves the list of groups to which a user or group belongs
       //
-extern "C" int AfsAdmSvr_GetGroupMembership (DWORD idClient, ASID idCell, ASID idMember, LPASIDLIST *ppAsidList, ULONG *pStatus)
+extern "C" int AfsAdmSvr_GetGroupMembership (UINT_PTR idClient, ASID idCell, ASID idMember, LPASIDLIST *ppAsidList, ULONG *pStatus)
 {
    size_t iOp = AfsAdmSvr_BeginOperation (idClient);
 
@@ -229,7 +229,7 @@ extern "C" int AfsAdmSvr_GetGroupMembership (DWORD idClient, ASID idCell, ASID i
       // AfsAdmSvr_GetGroupOwnership
       // ...retrieves the list of groups which a user owns
       //
-extern "C" int AfsAdmSvr_GetGroupOwnership (DWORD idClient, ASID idCell, ASID idOwner, LPASIDLIST *ppAsidList, ULONG *pStatus)
+extern "C" int AfsAdmSvr_GetGroupOwnership (UINT_PTR idClient, ASID idCell, ASID idOwner, LPASIDLIST *ppAsidList, ULONG *pStatus)
 {
    size_t iOp = AfsAdmSvr_BeginOperation (idClient);
 
@@ -294,7 +294,7 @@ extern "C" int AfsAdmSvr_GetGroupOwnership (DWORD idClient, ASID idCell, ASID id
       // AfsAdmSvr_AddGroupMember
       // ...adds a member to the specified group
       //
-extern "C" int AfsAdmSvr_AddGroupMember (DWORD idClient, ASID idCell, ASID idGroup, ASID idMember, ULONG *pStatus)
+extern "C" int AfsAdmSvr_AddGroupMember (UINT_PTR idClient, ASID idCell, ASID idGroup, ASID idMember, ULONG *pStatus)
 {
    ASACTION Action;
    Action.Action = ACTION_GROUP_MEMBER_ADD;
@@ -324,7 +324,7 @@ extern "C" int AfsAdmSvr_AddGroupMember (DWORD idClient, ASID idCell, ASID idGro
       // AfsAdmSvr_RemoveGroupMember
       // ...removes a member from the specified group
       //
-extern "C" int AfsAdmSvr_RemoveGroupMember (DWORD idClient, ASID idCell, ASID idGroup, ASID idMember, ULONG *pStatus)
+extern "C" int AfsAdmSvr_RemoveGroupMember (UINT_PTR idClient, ASID idCell, ASID idGroup, ASID idMember, ULONG *pStatus)
 {
    ASACTION Action;
    Action.Action = ACTION_GROUP_MEMBER_REMOVE;
@@ -354,7 +354,7 @@ extern "C" int AfsAdmSvr_RemoveGroupMember (DWORD idClient, ASID idCell, ASID id
       // AfsAdmSvr_RenameGroup
       // ...changes a group's name
       //
-extern "C" int AfsAdmSvr_RenameGroup (DWORD idClient, ASID idCell, ASID idGroup, STRING szNewGroupName, ULONG *pStatus)
+extern "C" int AfsAdmSvr_RenameGroup (UINT_PTR idClient, ASID idCell, ASID idGroup, STRING szNewGroupName, ULONG *pStatus)
 {
    ASACTION Action;
    Action.Action = ACTION_GROUP_RENAME;
@@ -384,7 +384,7 @@ extern "C" int AfsAdmSvr_RenameGroup (DWORD idClient, ASID idCell, ASID idGroup,
       // AfsAdmSvr_CreateGroup
       // ...creates a new PTS group
       //
-extern "C" int AfsAdmSvr_CreateGroup (DWORD idClient, ASID idCell, LPAFSADMSVR_CREATEGROUP_PARAMS pCreate, ASID *pidGroup, ULONG *pStatus)
+extern "C" int AfsAdmSvr_CreateGroup (UINT_PTR idClient, ASID idCell, LPAFSADMSVR_CREATEGROUP_PARAMS pCreate, ASID *pidGroup, ULONG *pStatus)
 {
    ASACTION Action;
    Action.Action = ACTION_GROUP_CREATE;
@@ -429,7 +429,7 @@ extern "C" int AfsAdmSvr_CreateGroup (DWORD idClient, ASID idCell, LPAFSADMSVR_C
       // AfsAdmSvr_DeleteGroup
       // ...deletes a PTS group
       //
-extern "C" int AfsAdmSvr_DeleteGroup (DWORD idClient, ASID idCell, ASID idGroup, ULONG *pStatus)
+extern "C" int AfsAdmSvr_DeleteGroup (UINT_PTR idClient, ASID idCell, ASID idGroup, ULONG *pStatus)
 {
    ASACTION Action;
    Action.Action = ACTION_GROUP_DELETE;

@@ -92,7 +92,7 @@ BOOL CALLBACK AdvancedTab_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
                static HBRUSH hbrStatic = CreateSolidBrush (GetSysColor (COLOR_WINDOW));
                SetTextColor ((HDC)wp, GetSysColor (COLOR_WINDOWTEXT));
                SetBkColor ((HDC)wp, GetSysColor (COLOR_WINDOW));
-               return (BOOL)hbrStatic;
+               return hbrStatic?TRUE:FALSE;
                }
             }
          break;
@@ -102,7 +102,7 @@ BOOL CALLBACK AdvancedTab_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
             {
             case IDAPPLY:
                if (!AdvancedTab_OnApply (hDlg))
-                  SetWindowLong (hDlg, DWL_MSGRESULT, TRUE);
+                  SetWindowLongPtr (hDlg, DWLP_MSGRESULT, TRUE);
                break;
 
             case IDC_REFRESH:
@@ -186,10 +186,10 @@ BOOL AdvancedTab_CommitChanges (BOOL fForce)
    if ((hDlg = PropSheet_FindTabWindow (g.psh, (DLGPROC)AdvancedTab_DlgProc)) == NULL)
       return TRUE;
    if (fForce)
-      SetWindowLong (hDlg, DWL_MSGRESULT, FALSE); // Make sure we try to apply
+      SetWindowLongPtr (hDlg, DWLP_MSGRESULT, FALSE); // Make sure we try to apply
    if (AdvancedTab_OnApply (hDlg))
       return TRUE;
-   SetWindowLong (hDlg, DWL_MSGRESULT, TRUE);
+   SetWindowLongPtr (hDlg, DWLP_MSGRESULT, TRUE);
    return FALSE;
 }
 
@@ -197,10 +197,10 @@ BOOL AdvancedTab_CommitChanges (BOOL fForce)
 BOOL AdvancedTab_OnApply (HWND hDlg)
 {
    // Don't try to do anything if we've already failed the apply
-   if (GetWindowLong (hDlg, DWL_MSGRESULT))
+   if (GetWindowLongPtr (hDlg, DWLP_MSGRESULT))
       return FALSE;
 
-   ULONG Value = SP_GetPos (GetDlgItem (hDlg, IDC_CACHE_SIZE));
+   ULONG_PTR Value = SP_GetPos (GetDlgItem (hDlg, IDC_CACHE_SIZE));
    if (Value != g.Configuration.ckCache)
       {
       if (!Config_SetCacheSize (Value))

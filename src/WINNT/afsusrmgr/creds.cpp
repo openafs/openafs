@@ -133,7 +133,7 @@ BOOL CALLBACK OpenCell_Hook (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
          switch (LOWORD(wp))
             {
             case IDOK:
-               OpenCell_Hook_OnOK (hDlg, (LPOPENCELLDLG_PARAMS)GetWindowLong (hDlg, DWL_USER));
+               OpenCell_Hook_OnOK (hDlg, (LPOPENCELLDLG_PARAMS)GetWindowLongPtr (hDlg, DWLP_USER));
                return TRUE;
             }
          break;

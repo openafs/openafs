@@ -1,5 +1,5 @@
-afspthread.dll                 0x61000000    0x00080000
-afsrpc.dll                     0x61080000    0x00080000
+afspthread.dll                 0x61000000    0x00040000
+afsrpc.dll                     0x61040000    0x000B0000
 afsauthent.dll                 0x61100000    0x00080000
 afspioctl.dll                  0x61200000    0x00080000
 afsprocmgmt.dll                0x61280000    0x00080000

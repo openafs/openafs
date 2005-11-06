@@ -309,7 +309,7 @@ GetLSAPrincipalName(char * szUser, DWORD *dwSize)
         szUser[*dwSize-1] = '\0';
         success = 1;
     }
-    *dwSize = strlen(pname);
+    *dwSize = (DWORD)strlen(pname);
 
   cleanup:
     if (pname)
@@ -637,9 +637,8 @@ Transceive(HANDLE handle, fs_ioctlRequest_t * reqp)
     long rcount;
     long ioCount;
     DWORD gle;
-	char *data;
 
-    rcount = reqp->mp - reqp->data;
+    rcount = (long)(reqp->mp - reqp->data);
     if (rcount <= 0) {
         if ( IoctlDebug() )
             fprintf(stderr, "pioctl Transceive rcount <= 0: %d\r\n",rcount);
@@ -715,7 +714,7 @@ MarshallString(fs_ioctlRequest_t * reqp, char *stringp)
     int count;
 
     if (stringp)
-	count = strlen(stringp) + 1;	/* space required including null */
+	count = (int)strlen(stringp) + 1;/* space required including null */
     else
 	count = 1;
 
@@ -748,9 +747,11 @@ fs_GetFullPath(char *pathp, char *outPathp, long outSize)
     int pathHasDrive;
     int doSwitch;
     char newPath[3];
+#ifdef AFSIFS
     HANDLE rootDir;
     wchar_t *wpath;
     unsigned long length;
+#endif
     char * p;
 
 #ifdef AFSIFS
@@ -862,7 +863,7 @@ fs_GetFullPath(char *pathp, char *outPathp, long outSize)
 
     /* if there is a non-null name after the drive, append it */
     if (*firstp != 0) {
-        int len = strlen(outPathp);
+        int len = (int)strlen(outPathp);
         if (outPathp[len-1] != '\\' && outPathp[len-1] != '/') 
             strcat(outPathp, "\\");
         strcat(outPathp, firstp);

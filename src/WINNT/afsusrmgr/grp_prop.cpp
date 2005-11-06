@@ -586,8 +586,8 @@ void GroupProp_Member_OnInitDialog (HWND hDlg)
    // If we've come in here with a valid set of groups to display,
    // copy those. We'll need the copies if the user cancels the dialog.
    //
-   SetWindowData (hDlg, GWD_ASIDLIST_MEMBER, (LPARAM)(lpp->pMembers));
-   SetWindowData (hDlg, GWD_ASIDLIST_OWNER,  (LPARAM)(lpp->pGroupsOwner));
+   SetWindowData (hDlg, GWD_ASIDLIST_MEMBER, (UINT_PTR)(lpp->pMembers));
+   SetWindowData (hDlg, GWD_ASIDLIST_OWNER,  (UINT_PTR)(lpp->pGroupsOwner));
 
    LPASIDLIST pList;
    if ((pList = lpp->pMembers) != NULL)

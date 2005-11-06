@@ -62,9 +62,9 @@ BOOL WINAPI Server_Uninstall_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
    LPSVR_UNINSTALL_PARAMS lpp;
 
    if (msg == WM_INITDIALOG)
-      SetWindowLong (hDlg, DWL_USER, lp);
+      SetWindowLongPtr (hDlg, DWLP_USER, lp);
 
-   if ((lpp = (LPSVR_UNINSTALL_PARAMS)GetWindowLong(hDlg,DWL_USER)) != NULL)
+   if ((lpp = (LPSVR_UNINSTALL_PARAMS)GetWindowLongPtr(hDlg,DWLP_USER)) != NULL)
       {
       switch (msg)
          {
@@ -103,7 +103,7 @@ BOOL WINAPI Server_Uninstall_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
             break;
 
          case WM_DESTROY:
-            SetWindowLong (hDlg, DWL_USER, 0);
+            SetWindowLongPtr (hDlg, DWLP_USER, 0);
             PropCache_Delete (pcSVR_UNINSTALL, NULL);
             Delete (lpp);
             break;

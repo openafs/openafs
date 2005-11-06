@@ -124,7 +124,7 @@ afsconf_SetExtendedCellInfo(adir, apath, acellInfo, clones)
 	UNLOCK_GLOBAL_MUTEX;
 	return errno;
     }
-    i = strlen(acellInfo->name);
+    i = (int)strlen(acellInfo->name);
     code = write(fd, acellInfo->name, i);
     if (code != i) {
 	UNLOCK_GLOBAL_MUTEX;

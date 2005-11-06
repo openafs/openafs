@@ -54,7 +54,7 @@ typedef struct
 
 ICONVIEW Display_GetServerIconView (void);
 
-BOOL CALLBACK GetItemText (HWND hList, LPFLN_GETITEMTEXT_PARAMS pfln, DWORD dwCookie);
+BOOL CALLBACK GetItemText (HWND hList, LPFLN_GETITEMTEXT_PARAMS pfln, UINT_PTR dwCookie);
 
 /*
  *** HandleColumnNotify

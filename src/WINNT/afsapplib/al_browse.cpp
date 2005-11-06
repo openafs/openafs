@@ -54,7 +54,7 @@ typedef struct BROWSEDIALOGPARAMS {
    int idsNone;
 
    LPCELLLIST lpcl;
-   PVOID hCreds;
+   UINT_PTR hCreds;
 } BROWSEDIALOGPARAMS, *LPBROWSEDIALOGPARAMS;
 
 
@@ -68,7 +68,7 @@ BOOL DlgProc_Browse_StartSearch (BROWSEDIALOGPARAMS *pbdp, BOOL fCloseDlgIfFail)
 void DlgProc_Browse_StopSearch (BROWSEDIALOGPARAMS *pbdp);
 DWORD _stdcall DlgProc_Browse_ThreadProc (LPARAM lp);
 
-void EnumeratePrincipalsRemotely (LPBROWSEDIALOGPARAMS pbdp, DWORD idClient);
+void EnumeratePrincipalsRemotely (LPBROWSEDIALOGPARAMS pbdp, UINT_PTR idClient);
 void EnumeratePrincipalsLocally (LPBROWSEDIALOGPARAMS pbdp);
 
 
@@ -146,10 +146,10 @@ BOOL CALLBACK DlgProc_Browse (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 
    if (msg == WM_INITDIALOG)
    {
-      SetWindowLong (hDlg, DWL_USER, lp);
+      SetWindowLongPtr (hDlg, DWLP_USER, lp);
    }
 
-   if ((pbdp = (BROWSEDIALOGPARAMS *)GetWindowLong (hDlg, DWL_USER)) != NULL)
+   if ((pbdp = (BROWSEDIALOGPARAMS *)GetWindowLongPtr (hDlg, DWLP_USER)) != NULL)
    {
       switch (msg)
       {
@@ -597,7 +597,7 @@ DWORD _stdcall DlgProc_Browse_ThreadProc (LPARAM lp)
 
       PostMessage (pbdp->hDlg, WM_THREADSTART, 0, 0);
 
-      DWORD idClient;
+      UINT_PTR idClient;
       if ((idClient = AfsAppLib_GetAdminServerClientID()) != 0)
       {
          EnumeratePrincipalsRemotely (pbdp, idClient);
@@ -633,7 +633,7 @@ void EnumeratePrincipalsLocally (LPBROWSEDIALOGPARAMS pbdp)
    CopyStringToAnsi (szCellA, pbdp->szCell);
 
    PVOID hCell;
-   if (afsclient_CellOpen (szCellA, pbdp->hCreds, &hCell, (afs_status_p)&status))
+   if (afsclient_CellOpen (szCellA, (PVOID)pbdp->hCreds, &hCell, (afs_status_p)&status))
    {
       // Enumerate the principals recognized by KAS.
       //
@@ -664,14 +664,14 @@ void EnumeratePrincipalsLocally (LPBROWSEDIALOGPARAMS pbdp)
 }
 
 
-void EnumeratePrincipalsRemotely (LPBROWSEDIALOGPARAMS pbdp, DWORD idClient)
+void EnumeratePrincipalsRemotely (LPBROWSEDIALOGPARAMS pbdp, UINT_PTR idClient)
 {
    ULONG status;
 
    // Open the relevant cell
    //
    ASID idCell;
-   if (asc_CellOpen (idClient, pbdp->hCreds, pbdp->szThreadCell, AFSADMSVR_SCOPE_USERS, &idCell, &status))
+   if (asc_CellOpen (idClient, (PVOID)pbdp->hCreds, pbdp->szThreadCell, AFSADMSVR_SCOPE_USERS, &idCell, &status))
    {
       // Obtain a list of ASIDs from the admin server, each representing
       // a principal which we want to show.

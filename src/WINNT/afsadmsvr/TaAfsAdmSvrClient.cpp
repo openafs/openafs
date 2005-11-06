@@ -164,7 +164,7 @@ BOOL ADMINAPI asc_ActionListFree (LPASACTIONLIST *ppList)
  *
  */
 
-BOOL ADMINAPI asc_AdminServerOpen (LPCTSTR pszAddress, DWORD *pidClient, ULONG *pStatus)
+BOOL ADMINAPI asc_AdminServerOpen (LPCTSTR pszAddress, UINT_PTR *pidClient, ULONG *pStatus)
 {
    BOOL rc = TRUE;
    ULONG status = 0;
@@ -200,7 +200,7 @@ BOOL ADMINAPI asc_AdminServerOpen (LPCTSTR pszAddress, DWORD *pidClient, ULONG *
 }
 
 
-BOOL ADMINAPI asc_AdminServerClose (DWORD idClient, ULONG *pStatus)
+BOOL ADMINAPI asc_AdminServerClose (UINT_PTR idClient, ULONG *pStatus)
 {
    BOOL rc = TRUE;
    ULONG status = 0;
@@ -220,7 +220,7 @@ BOOL ADMINAPI asc_AdminServerClose (DWORD idClient, ULONG *pStatus)
 
 
 
-BOOL ADMINAPI asc_CredentialsCrack (DWORD idClient, PVOID hCreds, LPTSTR pszCell, LPTSTR pszUser, SYSTEMTIME *pstExpiration, ULONG *pStatus)
+BOOL ADMINAPI asc_CredentialsCrack (UINT_PTR idClient, PVOID hCreds, LPTSTR pszCell, LPTSTR pszUser, SYSTEMTIME *pstExpiration, ULONG *pStatus)
 {
    BOOL rc = FALSE;
    ULONG status = 0;
@@ -230,7 +230,7 @@ BOOL ADMINAPI asc_CredentialsCrack (DWORD idClient, PVOID hCreds, LPTSTR pszCell
       STRING szCell = TEXT("");
       STRING szUser = TEXT("");
 
-      if ((rc = AfsAdmSvr_CrackCredentials (idClient, (DWORD)hCreds, szCell, szUser, pstExpiration, &status)) != FALSE)
+      if ((rc = AfsAdmSvr_CrackCredentials (idClient, (UINT_PTR)hCreds, szCell, szUser, pstExpiration, &status)) != FALSE)
          {
          lstrcpy (pszCell, szCell);
          lstrcpy (pszUser, szUser);
@@ -249,9 +249,9 @@ BOOL ADMINAPI asc_CredentialsCrack (DWORD idClient, PVOID hCreds, LPTSTR pszCell
 }
 
 
-PVOID ADMINAPI asc_CredentialsGet (DWORD idClient, LPCTSTR pszCell, ULONG *pStatus)
+UINT_PTR ADMINAPI asc_CredentialsGet (UINT_PTR idClient, LPCTSTR pszCell, ULONG *pStatus)
 {
-   PVOID rc = NULL;
+   UINT_PTR rc = 0;
    ULONG status = 0;
 
    RpcTryExcept
@@ -261,7 +261,7 @@ PVOID ADMINAPI asc_CredentialsGet (DWORD idClient, LPCTSTR pszCell, ULONG *pStat
          STRING szCell;
          lstrcpy (szCell, pszCell);
 
-         rc = (PVOID)AfsAdmSvr_GetCredentials (idClient, szCell, &status);
+         rc = AfsAdmSvr_GetCredentials (idClient, szCell, &status);
          }
       }
    RpcExcept(1)
@@ -277,9 +277,9 @@ PVOID ADMINAPI asc_CredentialsGet (DWORD idClient, LPCTSTR pszCell, ULONG *pStat
 }
 
 
-PVOID ADMINAPI asc_CredentialsSet (DWORD idClient, LPCTSTR pszCell, LPCTSTR pszUser, LPCTSTR pszPassword, ULONG *pStatus)
+UINT_PTR ADMINAPI asc_CredentialsSet (UINT_PTR idClient, LPCTSTR pszCell, LPCTSTR pszUser, LPCTSTR pszPassword, ULONG *pStatus)
 {
-   PVOID rc = NULL;
+   UINT_PTR rc = 0;
    ULONG status = 0;
 
    RpcTryExcept
@@ -297,7 +297,7 @@ PVOID ADMINAPI asc_CredentialsSet (DWORD idClient, LPCTSTR pszCell, LPCTSTR pszU
       // encrypted socket, or something... can't just be pushing
       // the user's unencrypted password across the wire.
 
-      rc = (PVOID)AfsAdmSvr_SetCredentials (idClient, szCell, szUser, szPassword, &status);
+      rc = AfsAdmSvr_SetCredentials (idClient, szCell, szUser, szPassword, &status);
       }
    RpcExcept(1)
       {
@@ -312,14 +312,14 @@ PVOID ADMINAPI asc_CredentialsSet (DWORD idClient, LPCTSTR pszCell, LPCTSTR pszU
 }
 
 
-BOOL ADMINAPI asc_CredentialsPush (DWORD idClient, PVOID hCreds, ASID idCell, ULONG *pStatus)
+BOOL ADMINAPI asc_CredentialsPush (UINT_PTR idClient, PVOID hCreds, ASID idCell, ULONG *pStatus)
 {
    BOOL rc = TRUE;
    ULONG status = 0;
 
    RpcTryExcept
       {
-      rc = AfsAdmSvr_PushCredentials (idClient, (DWORD)hCreds, idCell, &status);
+      rc = (AfsAdmSvr_PushCredentials (idClient, PtrToUlong(hCreds), idCell, &status)?TRUE:FALSE);
       }
    RpcExcept(1)
       {
@@ -334,7 +334,7 @@ BOOL ADMINAPI asc_CredentialsPush (DWORD idClient, PVOID hCreds, ASID idCell, UL
 }
 
 
-BOOL ADMINAPI asc_LocalCellGet (DWORD idClient, LPTSTR pszCell, ULONG *pStatus)
+BOOL ADMINAPI asc_LocalCellGet (UINT_PTR idClient, LPTSTR pszCell, ULONG *pStatus)
 {
    BOOL rc = TRUE;
    ULONG status = 0;
@@ -360,7 +360,7 @@ BOOL ADMINAPI asc_LocalCellGet (DWORD idClient, LPTSTR pszCell, ULONG *pStatus)
 }
 
 
-BOOL ADMINAPI asc_ErrorCodeTranslate (DWORD idClient, ULONG code, LANGID idLanguage, STRING pszErrorText, ULONG *pStatus)
+BOOL ADMINAPI asc_ErrorCodeTranslate (UINT_PTR idClient, ULONG code, LANGID idLanguage, STRING pszErrorText, ULONG *pStatus)
 {
    BOOL rc = TRUE;
    ULONG status = 0;
@@ -386,7 +386,7 @@ BOOL ADMINAPI asc_ErrorCodeTranslate (DWORD idClient, ULONG code, LANGID idLangu
 }
 
 
-BOOL ADMINAPI asc_CellOpen (DWORD idClient, PVOID hCreds, LPCTSTR pszCell, DWORD dwScope, ASID *pidCell, ULONG *pStatus)
+BOOL ADMINAPI asc_CellOpen (UINT_PTR idClient, PVOID hCreds, LPCTSTR pszCell, DWORD dwScope, ASID *pidCell, ULONG *pStatus)
 {
    BOOL rc = TRUE;
    ULONG status = 0;
@@ -396,7 +396,7 @@ BOOL ADMINAPI asc_CellOpen (DWORD idClient, PVOID hCreds, LPCTSTR pszCell, DWORD
       STRING szCell;
       lstrcpy (szCell, pszCell);
 
-      if ((rc = AfsAdmSvr_OpenCell (idClient, (DWORD)hCreds, szCell, dwScope, pidCell, &status)) != FALSE)
+      if ((rc = (AfsAdmSvr_OpenCell (idClient, PtrToUlong(hCreds), szCell, dwScope, pidCell, &status)?TRUE:FALSE)) != FALSE)
          {
          if (!CreateCellCache (*pidCell))
             {
@@ -423,7 +423,7 @@ BOOL ADMINAPI asc_CellOpen (DWORD idClient, PVOID hCreds, LPCTSTR pszCell, DWORD
 }
 
 
-BOOL ADMINAPI asc_CellClose (DWORD idClient, ASID idCell, ULONG *pStatus)
+BOOL ADMINAPI asc_CellClose (UINT_PTR idClient, ASID idCell, ULONG *pStatus)
 {
    BOOL rc = TRUE;
    ULONG status = 0;
@@ -446,7 +446,7 @@ BOOL ADMINAPI asc_CellClose (DWORD idClient, ASID idCell, ULONG *pStatus)
 }
 
 
-BOOL ADMINAPI asc_ObjectFind (DWORD idClient, ASID idSearchScope, ASOBJTYPE ObjectType, LPCTSTR pszName, ASID *pidObject, ULONG *pStatus)
+BOOL ADMINAPI asc_ObjectFind (UINT_PTR idClient, ASID idSearchScope, ASOBJTYPE ObjectType, LPCTSTR pszName, ASID *pidObject, ULONG *pStatus)
 {
    BOOL rc = TRUE;
    ULONG status = 0;
@@ -471,7 +471,7 @@ BOOL ADMINAPI asc_ObjectFind (DWORD idClient, ASID idSearchScope, ASOBJTYPE Obje
 }
 
 
-BOOL ADMINAPI asc_ObjectFindMultiple (DWORD idClient, ASID idSearchScope, ASOBJTYPE ObjectType, LPCTSTR pszPattern, LPAFSADMSVR_SEARCH_PARAMS pSearchParams, LPASIDLIST *ppList, ULONG *pStatus)
+BOOL ADMINAPI asc_ObjectFindMultiple (UINT_PTR idClient, ASID idSearchScope, ASOBJTYPE ObjectType, LPCTSTR pszPattern, LPAFSADMSVR_SEARCH_PARAMS pSearchParams, LPASIDLIST *ppList, ULONG *pStatus)
 {
    BOOL rc = TRUE;
    ULONG status = 0;
@@ -508,7 +508,7 @@ BOOL ADMINAPI asc_ObjectFindMultiple (DWORD idClient, ASID idSearchScope, ASOBJT
 }
 
 
-BOOL ADMINAPI asc_ObjectPropertiesGet (DWORD idClient, AFSADMSVR_GET_LEVEL GetLevel, ASID idCell, ASID idObject, LPASOBJPROP pProperties, ULONG *pStatus)
+BOOL ADMINAPI asc_ObjectPropertiesGet (UINT_PTR idClient, AFSADMSVR_GET_LEVEL GetLevel, ASID idCell, ASID idObject, LPASOBJPROP pProperties, ULONG *pStatus)
 {
    BOOL rc = TRUE;
    ULONG status = 0;
@@ -537,7 +537,7 @@ BOOL ADMINAPI asc_ObjectPropertiesGet (DWORD idClient, AFSADMSVR_GET_LEVEL GetLe
 }
 
 
-BOOL ADMINAPI asc_ObjectPropertiesGetMultiple (DWORD idClient, AFSADMSVR_GET_LEVEL GetLevel, ASID idCell, LPASIDLIST pAsidList, LPASOBJPROPLIST *ppPropertiesList, ULONG *pStatus)
+BOOL ADMINAPI asc_ObjectPropertiesGetMultiple (UINT_PTR idClient, AFSADMSVR_GET_LEVEL GetLevel, ASID idCell, LPASIDLIST pAsidList, LPASOBJPROPLIST *ppPropertiesList, ULONG *pStatus)
 {
    BOOL rc = TRUE;
    ULONG status = 0;
@@ -570,7 +570,7 @@ BOOL ADMINAPI asc_ObjectPropertiesGetMultiple (DWORD idClient, AFSADMSVR_GET_LEV
 }
 
 
-BOOL ADMINAPI asc_ObjectListen (DWORD idClient, ASID idCell, ASID idObject, HWND hNotify, ULONG *pStatus)
+BOOL ADMINAPI asc_ObjectListen (UINT_PTR idClient, ASID idCell, ASID idObject, HWND hNotify, ULONG *pStatus)
 {
    if (!idObject)
       {
@@ -591,14 +591,14 @@ BOOL ADMINAPI asc_ObjectListen (DWORD idClient, ASID idCell, ASID idObject, HWND
 }
 
 
-BOOL ADMINAPI asc_ObjectListenClear (DWORD idClient, HWND hNotify, ULONG *pStatus)
+BOOL ADMINAPI asc_ObjectListenClear (UINT_PTR idClient, HWND hNotify, ULONG *pStatus)
 {
    ClearObjectNotifications (hNotify);
    return TRUE;
 }
 
 
-BOOL ADMINAPI asc_ObjectListenMultiple (DWORD idClient, ASID idCell, LPASIDLIST pAsidList, HWND hNotify, ULONG *pStatus)
+BOOL ADMINAPI asc_ObjectListenMultiple (UINT_PTR idClient, ASID idCell, LPASIDLIST pAsidList, HWND hNotify, ULONG *pStatus)
 {
    if (!pAsidList)
       {
@@ -626,7 +626,7 @@ BOOL ADMINAPI asc_ObjectListenMultiple (DWORD idClient, ASID idCell, LPASIDLIST 
 }
 
 
-BOOL ADMINAPI asc_ObjectRefresh (DWORD idClient, ASID idCell, ASID idObject, ULONG *pStatus)
+BOOL ADMINAPI asc_ObjectRefresh (UINT_PTR idClient, ASID idCell, ASID idObject, ULONG *pStatus)
 {
    BOOL rc = TRUE;
    ULONG status = 0;
@@ -662,7 +662,7 @@ BOOL ADMINAPI asc_ObjectRefresh (DWORD idClient, ASID idCell, ASID idObject, ULO
 }
 
 
-BOOL ADMINAPI asc_ObjectRefreshMultiple (DWORD idClient, ASID idCell, LPASIDLIST pAsidList, ULONG *pStatus)
+BOOL ADMINAPI asc_ObjectRefreshMultiple (UINT_PTR idClient, ASID idCell, LPASIDLIST pAsidList, ULONG *pStatus)
 {
    BOOL rc = TRUE;
    ULONG status = 0;
@@ -698,7 +698,7 @@ BOOL ADMINAPI asc_ObjectRefreshMultiple (DWORD idClient, ASID idCell, LPASIDLIST
 }
 
 
-BOOL ADMINAPI asc_RandomKeyGet (DWORD idClient, ASID idCell, PBYTE key, ULONG *pStatus)
+BOOL ADMINAPI asc_RandomKeyGet (UINT_PTR idClient, ASID idCell, PBYTE key, ULONG *pStatus)
 {
    BOOL rc = TRUE;
    ULONG status = 0;
@@ -721,13 +721,13 @@ BOOL ADMINAPI asc_RandomKeyGet (DWORD idClient, ASID idCell, PBYTE key, ULONG *p
 }
 
 
-BOOL ADMINAPI asc_CellNameGet_Fast (DWORD idClient, ASID idCell, LPTSTR pszCell, ULONG *pStatus)
+BOOL ADMINAPI asc_CellNameGet_Fast (UINT_PTR idClient, ASID idCell, LPTSTR pszCell, ULONG *pStatus)
 {
    return asc_ObjectNameGet_Fast (idClient, idCell, idCell, pszCell, pStatus);
 }
 
 
-BOOL ADMINAPI asc_ObjectNameGet_Fast (DWORD idClient, ASID idCell, ASID idObject, LPTSTR pszObject, ULONG *pStatus)
+BOOL ADMINAPI asc_ObjectNameGet_Fast (UINT_PTR idClient, ASID idCell, ASID idObject, LPTSTR pszObject, ULONG *pStatus)
 {
    BOOL rc = TRUE;
    ULONG status = 0;
@@ -754,7 +754,7 @@ BOOL ADMINAPI asc_ObjectNameGet_Fast (DWORD idClient, ASID idCell, ASID idObject
 }
 
 
-BOOL ADMINAPI asc_ObjectTypeGet_Fast (DWORD idClient, ASID idCell, ASID idObject, ASOBJTYPE *pObjectType, ULONG *pStatus)
+BOOL ADMINAPI asc_ObjectTypeGet_Fast (UINT_PTR idClient, ASID idCell, ASID idObject, ASOBJTYPE *pObjectType, ULONG *pStatus)
 {
    BOOL rc = TRUE;
    ULONG status = 0;
@@ -781,7 +781,7 @@ BOOL ADMINAPI asc_ObjectTypeGet_Fast (DWORD idClient, ASID idCell, ASID idObject
 }
 
 
-BOOL ADMINAPI asc_ObjectPropertiesGet_Fast (DWORD idClient, ASID idCell, ASID idObject, LPASOBJPROP pProperties, ULONG *pStatus)
+BOOL ADMINAPI asc_ObjectPropertiesGet_Fast (UINT_PTR idClient, ASID idCell, ASID idObject, LPASOBJPROP pProperties, ULONG *pStatus)
 {
    BOOL rc = TRUE;
    ULONG status = 0;
@@ -808,7 +808,7 @@ BOOL ADMINAPI asc_ObjectPropertiesGet_Fast (DWORD idClient, ASID idCell, ASID id
 }
 
 
-BOOL ADMINAPI asc_ActionGet (DWORD idClient, DWORD idAction, LPASACTION pAction, ULONG *pStatus)
+BOOL ADMINAPI asc_ActionGet (UINT_PTR idClient, DWORD idAction, LPASACTION pAction, ULONG *pStatus)
 {
    BOOL rc = TRUE;
    ULONG status = 0;
@@ -831,7 +831,7 @@ BOOL ADMINAPI asc_ActionGet (DWORD idClient, DWORD idAction, LPASACTION pAction,
 }
 
 
-BOOL ADMINAPI asc_ActionGetMultiple (DWORD idClient, DWORD idClientSearch, ASID idCellSearch, LPASACTIONLIST *ppList, ULONG *pStatus)
+BOOL ADMINAPI asc_ActionGetMultiple (UINT_PTR idClient, UINT_PTR idClientSearch, ASID idCellSearch, LPASACTIONLIST *ppList, ULONG *pStatus)
 {
    BOOL rc = TRUE;
    ULONG status = 0;
@@ -854,7 +854,7 @@ BOOL ADMINAPI asc_ActionGetMultiple (DWORD idClient, DWORD idClientSearch, ASID 
 }
 
 
-BOOL ADMINAPI asc_ActionListen (DWORD idClient, HWND hNotify, ULONG *pStatus)
+BOOL ADMINAPI asc_ActionListen (UINT_PTR idClient, HWND hNotify, ULONG *pStatus)
 {
    if (!SetActionNotification (hNotify, TRUE))
       {
@@ -866,7 +866,7 @@ BOOL ADMINAPI asc_ActionListen (DWORD idClient, HWND hNotify, ULONG *pStatus)
 }
 
 
-BOOL ADMINAPI asc_ActionListenClear (DWORD idClient, HWND hNotify, ULONG *pStatus)
+BOOL ADMINAPI asc_ActionListenClear (UINT_PTR idClient, HWND hNotify, ULONG *pStatus)
 {
    if (!SetActionNotification (hNotify, FALSE))
       {

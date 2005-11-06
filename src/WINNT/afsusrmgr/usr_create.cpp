@@ -100,7 +100,7 @@ BOOL CALLBACK User_Create_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
    switch (msg)
       {
       case WM_INITDIALOG:
-         SetWindowLong (hDlg, DWL_USER, lp);
+         SetWindowLongPtr (hDlg, DWLP_USER, lp);
          User_Create_OnInitDialog (hDlg);
          break;
 
@@ -148,7 +148,7 @@ BOOL CALLBACK User_Create_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 
 void User_Create_OnInitDialog (HWND hDlg)
 {
-   LPCREATEUSERDLG lpp = (LPCREATEUSERDLG)GetWindowLong (hDlg, DWL_USER);
+   LPCREATEUSERDLG lpp = (LPCREATEUSERDLG)GetWindowLongPtr (hDlg, DWLP_USER);
 
    // Fix the title of the dialog
    //
@@ -210,7 +210,7 @@ void User_Create_OnID (HWND hDlg)
 
 void User_Create_OnAdvanced (HWND hDlg)
 {
-   LPCREATEUSERDLG lpp = (LPCREATEUSERDLG)GetWindowLong (hDlg, DWL_USER);
+   LPCREATEUSERDLG lpp = (LPCREATEUSERDLG)GetWindowLongPtr (hDlg, DWLP_USER);
    lpp->Advanced.pUserList = NULL;
    lpp->Advanced.fDeleteMeOnClose = FALSE;
    lpp->Advanced.fShowModal = TRUE;
@@ -224,7 +224,7 @@ void User_Create_OnAdvanced (HWND hDlg)
 
 BOOL User_Create_OnOK (HWND hDlg)
 {
-   LPCREATEUSERDLG lpp = (LPCREATEUSERDLG)GetWindowLong (hDlg, DWL_USER);
+   LPCREATEUSERDLG lpp = (LPCREATEUSERDLG)GetWindowLongPtr (hDlg, DWLP_USER);
 
    // First do a little validation of the dialog's entries
    //

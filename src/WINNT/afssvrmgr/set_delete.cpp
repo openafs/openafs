@@ -59,8 +59,8 @@ BOOL CALLBACK Filesets_Delete_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp
 {
    LPSET_DELETE_PARAMS psdp;
    if (msg == WM_INITDIALOG)
-      SetWindowLong (hDlg, DWL_USER, lp);
-   if ((psdp = (LPSET_DELETE_PARAMS)GetWindowLong (hDlg, DWL_USER)) != NULL)
+      SetWindowLongPtr (hDlg, DWLP_USER, lp);
+   if ((psdp = (LPSET_DELETE_PARAMS)GetWindowLongPtr (hDlg, DWLP_USER)) != NULL)
       {
       if (AfsAppLib_HandleHelp (psdp->iddHelp, hDlg, msg, wp, lp))
          return TRUE;
@@ -111,7 +111,7 @@ BOOL CALLBACK Filesets_Delete_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp
 
          case WM_DESTROY:
             PropCache_Delete (hDlg);
-            SetWindowLong (hDlg, DWL_USER, 0);
+            SetWindowLongPtr (hDlg, DWLP_USER, 0);
             psdp = NULL;
             break;
          }

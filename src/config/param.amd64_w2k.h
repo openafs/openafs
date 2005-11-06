@@ -32,7 +32,7 @@
  * and has no typedef for ssize_t (a signed size_t).
  * So, we make our own.
  */
-typedef int ssize_t;
+typedef __int64 ssize_t;
 
 /* these macros define Unix-style functions missing in  VC++5.0/NT4.0 */
 #define MAXPATHLEN _MAX_PATH

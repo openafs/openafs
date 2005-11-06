@@ -63,6 +63,7 @@ EXELIBS =\
 
 $(EXEFILE): $(EXEOBJS) $(EXELIBS) 
 	$(EXEGUILINK)  $(VCLIBS)
+        $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)     
 
 

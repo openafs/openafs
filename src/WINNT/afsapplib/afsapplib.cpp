@@ -93,8 +93,8 @@ BOOL CALLBACK AfsAppLib_MainHook (HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
       }
 
    if (oldProc)
-      return CallWindowProc ((WNDPROC)oldProc, hWnd, msg, wp, lp);
+      return (CallWindowProc ((WNDPROC)oldProc, hWnd, msg, wp, lp)==NULL?FALSE:TRUE);
    else
-      return DefWindowProc (hWnd, msg, wp, lp);
+      return (DefWindowProc (hWnd, msg, wp, lp)==NULL?FALSE:TRUE);
 }
 

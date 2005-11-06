@@ -87,7 +87,7 @@ BOOL AfsClass_GetServerLogFile (LPIDENT lpiServer, LPTSTR pszLocal, LPTSTR pszRe
                   ;
                DWORD cbWrite;
                DWORD cbWrote;
-               if ((cbWrite = pszNext - psz) != 0)
+               if ((cbWrite = (DWORD)(pszNext - psz)) != 0)
                   WriteFile (fh, psz, cbWrite, &cbWrote, NULL);
                WriteFile (fh, TEXT("\r\n"), 2, &cbWrote, NULL);
                psz = (*pszNext == TEXT('\r')) ? (2+pszNext) : (*pszNext == TEXT('\n')) ? (1+pszNext) : NULL;
@@ -3744,7 +3744,7 @@ BOOL AfsClass_SetPtsProperties (LPIDENT lpiCell, LPPTSPROPERTIES pProperties, UL
 }
 
 
-LPIDENT AfsClass_CreateUser (LPIDENT lpiCell, LPTSTR pszUserName, LPTSTR pszInstance, LPTSTR pszPassword, int idUser, BOOL fCreateKAS, BOOL fCreatePTS, ULONG *pStatus)
+LPIDENT AfsClass_CreateUser (LPIDENT lpiCell, LPTSTR pszUserName, LPTSTR pszInstance, LPTSTR pszPassword, UINT_PTR idUser, BOOL fCreateKAS, BOOL fCreatePTS, ULONG *pStatus)
 {
    BOOL rc = TRUE;
    ULONG status;
@@ -3799,7 +3799,7 @@ LPIDENT AfsClass_CreateUser (LPIDENT lpiCell, LPTSTR pszUserName, LPTSTR pszInst
       WORKERPACKET wp;
       wp.wpPtsUserCreate.hCell = hCell;
       wp.wpPtsUserCreate.pszUser = szUserName;
-      wp.wpPtsUserCreate.idUser = idUser;
+      wp.wpPtsUserCreate.idUser = (int) idUser;
 
       AfsClass_Leave();
 

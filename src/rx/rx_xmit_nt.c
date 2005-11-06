@@ -45,7 +45,7 @@ typedef int SOCKET;
 #include <errno.h>
 
 int
-recvmsg(int socket, struct msghdr *msgP, int flags)
+recvmsg(osi_socket socket, struct msghdr *msgP, int flags)
 {
     char rbuf[RX_MAX_PACKET_SIZE];
     int size;
@@ -93,7 +93,7 @@ recvmsg(int socket, struct msghdr *msgP, int flags)
 }
 
 int
-sendmsg(int socket, struct msghdr *msgP, int flags)
+sendmsg(osi_socket socket, struct msghdr *msgP, int flags)
 {
     char buf[RX_MAX_PACKET_SIZE];
     char *sbuf = buf;

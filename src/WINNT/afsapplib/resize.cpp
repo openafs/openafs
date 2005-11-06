@@ -475,7 +475,7 @@ void EnsureSplitterRegistered (void)
    fRegistered = TRUE;
 
    wc.style         = CS_HREDRAW | CS_VREDRAW;
-   wc.lpfnWndProc   = SplitterWndProc;
+   wc.lpfnWndProc   = (WNDPROC)SplitterWndProc;
    wc.cbClsExtra    = 0;
    wc.cbWndExtra    = sizeof(SplitterData *);
    wc.hInstance     = THIS_HINST;

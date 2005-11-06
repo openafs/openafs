@@ -210,7 +210,7 @@ ReplayLog(register struct ubik_dbase *adbase)
     /* for now, assume that all ops in log pertain to one transaction; see if there's a commit */
     while (1) {
 	code =
-	    (*adbase->read) (adbase, LOGFILE, &opcode, tpos,
+	    (*adbase->read) (adbase, LOGFILE, (char *)&opcode, tpos,
 			     sizeof(afs_int32));
 	if (code != sizeof(afs_int32))
 	    break;
@@ -225,7 +225,7 @@ ReplayLog(register struct ubik_dbase *adbase)
 	} else if (opcode == LOGTRUNCATE) {
 	    tpos += 4;
 	    code =
-		(*adbase->read) (adbase, LOGFILE, buffer, tpos,
+		(*adbase->read) (adbase, LOGFILE, (char *)buffer, tpos,
 				 2 * sizeof(afs_int32));
 	    if (code != 2 * sizeof(afs_int32))
 		break;		/* premature eof or io error */
@@ -233,7 +233,7 @@ ReplayLog(register struct ubik_dbase *adbase)
 	} else if (opcode == LOGDATA) {
 	    tpos += 4;
 	    code =
-		(*adbase->read) (adbase, LOGFILE, buffer, tpos,
+		(*adbase->read) (adbase, LOGFILE, (char *)buffer, tpos,
 				 3 * sizeof(afs_int32));
 	    if (code != 3 * sizeof(afs_int32))
 		break;
@@ -253,7 +253,7 @@ ReplayLog(register struct ubik_dbase *adbase)
 	syncFile = -1;
 	while (1) {
 	    code =
-		(*adbase->read) (adbase, LOGFILE, &opcode, tpos,
+		(*adbase->read) (adbase, LOGFILE, (char *)&opcode, tpos,
 				 sizeof(afs_int32));
 	    if (code != sizeof(afs_int32))
 		break;
@@ -265,11 +265,11 @@ ReplayLog(register struct ubik_dbase *adbase)
 	    else if (opcode == LOGEND) {
 		tpos += 4;
 		code =
-		    (*adbase->read) (adbase, LOGFILE, buffer, tpos,
+		    (*adbase->read) (adbase, LOGFILE, (char *)buffer, tpos,
 				     2 * sizeof(afs_int32));
 		if (code != 2 * sizeof(afs_int32))
 		    return UBADLOG;
-		code = (*adbase->setlabel) (adbase, 0, buffer);
+		code = (*adbase->setlabel) (adbase, 0, (ubik_version *)buffer);
 		if (code)
 		    return code;
 		logIsGood = 1;
@@ -277,7 +277,7 @@ ReplayLog(register struct ubik_dbase *adbase)
 	    } else if (opcode == LOGTRUNCATE) {
 		tpos += 4;
 		code =
-		    (*adbase->read) (adbase, LOGFILE, buffer, tpos,
+		    (*adbase->read) (adbase, LOGFILE, (char *)buffer, tpos,
 				     2 * sizeof(afs_int32));
 		if (code != 2 * sizeof(afs_int32))
 		    break;	/* premature eof or io error */
@@ -290,7 +290,7 @@ ReplayLog(register struct ubik_dbase *adbase)
 	    } else if (opcode == LOGDATA) {
 		tpos += 4;
 		code =
-		    (*adbase->read) (adbase, LOGFILE, buffer, tpos,
+		    (*adbase->read) (adbase, LOGFILE, (char *)buffer, tpos,
 				     3 * sizeof(afs_int32));
 		if (code != 3 * sizeof(afs_int32))
 		    break;
@@ -313,12 +313,12 @@ ReplayLog(register struct ubik_dbase *adbase)
 		    thisSize = (len > sizeof(data) ? sizeof(data) : len);
 		    /* copy sizeof(data) buffer bytes at a time */
 		    code =
-			(*adbase->read) (adbase, LOGFILE, data, tpos,
+			(*adbase->read) (adbase, LOGFILE, (char *)data, tpos,
 					 thisSize);
 		    if (code != thisSize)
 			return UBADLOG;
 		    code =
-			(*adbase->write) (adbase, tfile, data, filePos,
+			(*adbase->write) (adbase, tfile, (char *)data, filePos,
 					  thisSize);
 		    if (code != thisSize)
 			return UBADLOG;
@@ -556,7 +556,7 @@ urecovery_Interact(void)
 		ubik_dprint("StartDiskGetFile failed=%d\n", code);
 		goto FetchEndCall;
 	    }
-	    nbytes = rx_Read(rxcall, &length, sizeof(afs_int32));
+	    nbytes = rx_Read(rxcall, (char *)&length, sizeof(afs_int32));
 	    length = ntohl(length);
 	    if (nbytes != sizeof(afs_int32)) {
 		ubik_dprint("Rx-read length error=%d\n", code = BULK_ERROR);

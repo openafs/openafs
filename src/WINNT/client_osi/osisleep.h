@@ -29,13 +29,13 @@
 #define OSI_SLEEPINFO_W4WRITE	2	/* waiting for a write lock */
 typedef struct osi_sleepInfo {
 	osi_queue_t q;
-	long value;		/* sleep value when in a sleep queue, patch addr for turnstiles */
-	unsigned long tid;	/* thread ID of sleeper */
-	EVENT_HANDLE sema;		/* semaphore for this entry */
+	LONG_PTR value;		/* sleep value when in a sleep queue, patch addr for turnstiles */
+	size_t tid;		/* thread ID of sleeper */
+	EVENT_HANDLE sema;	/* semaphore for this entry */
 	unsigned short states;	/* states bits */
 	unsigned short idx;	/* sleep hash table we're in, if in hash */
         unsigned short waitFor;	/* what are we waiting for; used for bulk wakeups */
-	unsigned long refCount;/* reference count from FDs */
+	unsigned long refCount; /* reference count from FDs */
 } osi_sleepInfo_t;
 
 /* first guy is the most recently added process */
@@ -63,7 +63,7 @@ typedef struct osi_once {
 /* size of mutex hash table; should be a prime number; used for mutex and lock hashing */
 #define OSI_MUTEXHASHSIZE	251	/* prime number */
 
-#define osi_MUTEXHASH(x) ((unsigned short) (((unsigned long) x) % (unsigned) OSI_MUTEXHASHSIZE))
+#define osi_MUTEXHASH(x) ((unsigned short) (((LONG_PTR) x) % (intptr_t) OSI_MUTEXHASHSIZE))
 
 /* size of sleep value hash table.  Must be power of 2 */
 #define OSI_SLEEPHASHSIZE	128
@@ -78,14 +78,14 @@ typedef struct osi_once {
 extern Crit_Sec osi_sleepCookieCS;
 
 /* spin lock version of atomic sleep, used internally only */
-extern void osi_SleepSpin(long value, Crit_Sec *counterp);
+extern void osi_SleepSpin(LONG_PTR value, Crit_Sec *counterp);
 
 /* spin lock version of wakeup, used internally only */
-extern void osi_WakeupSpin(long value);
+extern void osi_WakeupSpin(LONG_PTR value);
 
 #ifndef DJGPP
 /* exported function to sleep on a value */
-extern void osi_Sleep (long);
+extern void osi_Sleep (LONG_PTR);
 #endif
 
 extern void osi_FreeSleepInfo(osi_sleepInfo_t *);
@@ -113,7 +113,7 @@ extern void osi_EndOnce(osi_once_t *);
 
 #ifndef DJGPP
 /* exported function to wakeup those sleeping on a value */
-extern void osi_Wakeup (long);
+extern void osi_Wakeup (LONG_PTR);
 
 extern void osi_Init (void);
 #endif /* !DJGPP */
@@ -155,7 +155,7 @@ unsigned long osi_GetBootTime(void);
 void osi_InitPanic(void *anotifFunc);
 void osi_panic(char *, char *, long);
 
-unsigned long osi_Time(void);
+time_t osi_Time(void);
 
 extern void osi_TWait(osi_turnstile_t *turnp, int waitFor, void *patchp,
 	Crit_Sec *releasep);

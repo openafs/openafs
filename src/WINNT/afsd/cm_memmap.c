@@ -6,106 +6,106 @@
 extern void afsi_log(char *pattern, ...);
 extern DWORD cm_ValidateCache;
 
-DWORD
-GranularityAdjustment(DWORD size)
+afs_uint64
+GranularityAdjustment(afs_uint64 size)
 {
     SYSTEM_INFO sysInfo;
-    static DWORD dwGranularity = 0;
+    static afs_uint64 qwGranularity = 0;
 
-    if ( !dwGranularity ) {
+    if ( !qwGranularity ) {
         GetSystemInfo(&sysInfo);
         afsi_log("Granularity - %lX", sysInfo.dwAllocationGranularity);
-        dwGranularity = sysInfo.dwAllocationGranularity;
+        qwGranularity = sysInfo.dwAllocationGranularity;
     }
 
-    size = (size + (dwGranularity - 1)) & ~(dwGranularity - 1);
+    size = (size + (qwGranularity - 1)) & ~(qwGranularity - 1);
     return size;
 }
 
-DWORD 
+afs_uint64 
 ComputeSizeOfConfigData(void)
 {
-    DWORD size;
+    afs_uint64 size;
     size = sizeof(cm_config_data_t);
     return size;
 }
 
-DWORD
+afs_uint64
 ComputeSizeOfVolumes(DWORD maxvols)
 {
-    DWORD size;
+    afs_uint64 size;
     size = maxvols * sizeof(cm_volume_t);
     return size;
 }
 
-DWORD
+afs_uint64
 ComputeSizeOfCells(DWORD maxcells)
 {
-    DWORD size;
+    afs_uint64 size;
     size = maxcells * sizeof(cm_cell_t);
     return size;
 }
 
-DWORD 
+afs_uint64 
 ComputeSizeOfACLCache(DWORD stats)
 {
-    DWORD size;
+    afs_uint64 size;
     size = 2 * (stats + 10) * sizeof(cm_aclent_t);
     return size;
 }
 
-DWORD 
+afs_uint64 
 ComputeSizeOfSCache(DWORD stats)
 {
-    DWORD size;
+    afs_uint64 size;
     size = (stats + 10) * sizeof(cm_scache_t);
     return size;
 }
 
-DWORD 
+afs_uint64 
 ComputeSizeOfSCacheHT(DWORD stats)
 {
-    DWORD size;
+    afs_uint64 size;
     size = (stats + 10) / 2 * sizeof(cm_scache_t *);;
     return size;
 }
 
-DWORD 
+afs_uint64 
 ComputeSizeOfDNLCache(void)
 {
-    DWORD size;
+    afs_uint64 size;
     size = NHSIZE * sizeof(cm_nc_t *) + NCSIZE * sizeof(cm_nc_t);
     return size;
 }
 
-DWORD 
-ComputeSizeOfDataBuffers(DWORD cacheBlocks, DWORD blockSize)
+afs_uint64 
+ComputeSizeOfDataBuffers(afs_uint64 cacheBlocks, DWORD blockSize)
 {
-    DWORD size;
+    afs_uint64 size;
     size = cacheBlocks * blockSize;
     return size;
 }
 
-DWORD 
+afs_uint64 
 ComputeSizeOfDataHT(void)
 {
-    DWORD size;
+    afs_uint64 size;
     size = osi_PrimeLessThan(CM_BUF_HASHSIZE) * sizeof(cm_buf_t *);
     return size;
 }
 
-DWORD 
-ComputeSizeOfDataHeaders(DWORD cacheBlocks)
+afs_uint64 
+ComputeSizeOfDataHeaders(afs_uint64 cacheBlocks)
 {
-    DWORD size;
+    afs_uint64 size;
     size = cacheBlocks * sizeof(cm_buf_t);
     return size;
 }
 
-DWORD
-ComputeSizeOfMappingFile(DWORD stats, DWORD maxVols, DWORD maxCells, DWORD chunkSize, DWORD cacheBlocks, DWORD blockSize)
+afs_uint64
+ComputeSizeOfMappingFile(DWORD stats, DWORD maxVols, DWORD maxCells, DWORD chunkSize, afs_uint64 cacheBlocks, DWORD blockSize)
 {
-    DWORD size;
+    afs_uint64 size;
     
     size       =  ComputeSizeOfConfigData()
                +  ComputeSizeOfVolumes(maxVols) 
@@ -230,6 +230,7 @@ cm_ShutdownMappedMemory(void)
     hMemoryMappedFile = NULL;
 
     afsi_log("Memory Mapped File has been closed");
+    return 0;
 }
 
 int
@@ -239,7 +240,7 @@ cm_ValidateMappedMemory(char * cachePath)
     PSECURITY_ATTRIBUTES psa;
     BY_HANDLE_FILE_INFORMATION fileInfo;
     int newFile = 1;
-    DWORD mappingSize;
+    afs_uint64 mappingSize;
     char * baseAddress = NULL;
     cm_config_data_t * config_data_p;
         
@@ -338,7 +339,8 @@ cm_ValidateMappedMemory(char * cachePath)
     hm = CreateFileMapping( hf,
                             NULL,
                             PAGE_READWRITE,
-                            0, mappingSize,
+			    (DWORD)(mappingSize >> 32), 
+			    (DWORD)(mappingSize & 0xFFFFFFFF),
                             NULL);
     if (hm == NULL) {
         if (GetLastError() == ERROR_DISK_FULL) {
@@ -355,15 +357,15 @@ cm_ValidateMappedMemory(char * cachePath)
     
     baseAddress = MapViewOfFileEx( hm,
                                    FILE_MAP_ALL_ACCESS,
-                                   0, 0,   
-                                   mappingSize,
+                                   0, 0,
+				   (SIZE_T)mappingSize,
                                    baseAddress );
     if (baseAddress == NULL) {
         fprintf(stderr, "Error mapping view of file: %d\n", GetLastError());
         baseAddress = MapViewOfFile( hm,
                                      FILE_MAP_ALL_ACCESS,
-                                     0, 0,   
-                                     mappingSize );
+                                     0, 0,
+				     (SIZE_T)mappingSize);
         if (baseAddress == NULL) {
             CloseHandle(hm);
             if (hf != INVALID_HANDLE_VALUE)
@@ -381,7 +383,7 @@ cm_ValidateMappedMemory(char * cachePath)
     config_data_p = (cm_config_data_t *) baseAddress;
 
     fprintf(stderr,"AFS Cache data:\n");
-    fprintf(stderr,"  Base Address   = %lX\n",baseAddress);
+    fprintf(stderr,"  Base Address   = %p\n",baseAddress);
     fprintf(stderr,"  stats          = %d\n", config_data_p->stats);
     fprintf(stderr,"  chunkSize      = %d\n", config_data_p->chunkSize);
     fprintf(stderr,"  blockSize      = %d\n", config_data_p->blockSize);
@@ -583,12 +585,12 @@ GetMachineSid(PBYTE SidBuffer, DWORD SidSize)
 }
 
 int
-cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD chunkSize, DWORD cacheBlocks)
+cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD chunkSize, afs_uint64 cacheBlocks)
 {
     HANDLE hf = INVALID_HANDLE_VALUE, hm;
     PSECURITY_ATTRIBUTES psa;
     int newFile = 1;
-    DWORD mappingSize;
+    afs_uint64 mappingSize;
     DWORD maxVols = stats/2;
     DWORD maxCells = stats/4;
     DWORD volumeSerialNumber = 0;
@@ -629,10 +631,14 @@ cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD chu
             afsi_log("Cache File \"%s\" already exists", cachePath);
 
             if ( GetFileInformationByHandle(hf, &fileInfo) ) {
+		afs_uint64 filesize;
                 afsi_log("Existing File Size: %08X:%08X",
                           fileInfo.nFileSizeHigh,
                           fileInfo.nFileSizeLow);
-                if (fileInfo.nFileSizeLow > GranularityAdjustment(mappingSize)) {
+		filesize = fileInfo.nFileSizeHigh;
+		filesize <<= 32;
+		filesize += fileInfo.nFileSizeLow;
+                if (filesize > GranularityAdjustment(mappingSize)) {
                     psa = CreateCacheFileSA();
                     hf = CreateFile( cachePath,
                                      GENERIC_READ | GENERIC_WRITE,
@@ -655,7 +661,6 @@ cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD chu
                               fileInfo.nFileSizeHigh,
                               fileInfo.nFileSizeLow);
                 }
-
             }
 
             hm = CreateFileMapping( hf,
@@ -672,8 +677,8 @@ cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD chu
                     hm = CreateFileMapping( hf,
                                             NULL,
                                             PAGE_READWRITE,
-                                            0, 
-                                            mappingSize,
+                                            (DWORD)(mappingSize >> 32), 
+                                            (DWORD)(mappingSize & 0xFFFFFFFF),
                                             NULL);
                     if (hm == NULL) {
                         if (GetLastError() == ERROR_DISK_FULL) {
@@ -734,7 +739,8 @@ cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD chu
     hm = CreateFileMapping( hf,
                             NULL,
                             PAGE_READWRITE,
-                            0, mappingSize,
+			    (DWORD)(mappingSize >> 32), 
+			    (DWORD)(mappingSize & 0xFFFFFFFF),
                             NULL);
     if (hm == NULL) {
         if (GetLastError() == ERROR_DISK_FULL) {
@@ -748,15 +754,17 @@ cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD chu
     }
     baseAddress = MapViewOfFileEx( hm,
                                    FILE_MAP_ALL_ACCESS,
-                                   0, 0,   
-                                   mappingSize,
+                                   0, 
+				   0, 
+				   (SIZE_T)mappingSize,
                                    baseAddress );
     if (baseAddress == NULL) {
         afsi_log("Error mapping view of file: %d", GetLastError());
         baseAddress = MapViewOfFile( hm,
                                      FILE_MAP_ALL_ACCESS,
-                                     0, 0,   
-                                     mappingSize );
+                                     0, 
+				     0, 
+				     (SIZE_T)mappingSize);
         if (baseAddress == NULL) {
             if (hf != INVALID_HANDLE_VALUE)
                 CloseHandle(hf);

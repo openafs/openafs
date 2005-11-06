@@ -72,7 +72,7 @@
                Debugstr  (void);
                ~Debugstr (void);
 
-               static long APIENTRY DebugWndProc (HWND, UINT, WPARAM, LPARAM);
+               static LRESULT APIENTRY DebugWndProc (HWND, UINT, WPARAM, LPARAM);
 
                void          OutString   (char *str, BOOL fRecord);
 

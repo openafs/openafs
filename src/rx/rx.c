@@ -84,6 +84,7 @@ extern afs_int32 afs_termState;
 # include <stdlib.h>
 # include <fcntl.h>
 # include <afs/afsutil.h>
+# include <WINNT\afsreg.h>
 #else
 # include <sys/socket.h>
 # include <sys/file.h>
@@ -396,6 +397,9 @@ rx_InitHost(u_int host, u_int port)
 	UNLOCK_RX_INIT;
 	return tmp_status;	/* Already started; return previous error code. */
     }
+#ifdef RXDEBUG
+    rxi_DebugInit();
+#endif
 #ifdef AFS_NT40_ENV
     if (afs_winsockInit() < 0)
 	return -1;
@@ -1834,10 +1838,10 @@ rx_EndCall(register struct rx_call *call, afs_int32 rc)
 {
     register struct rx_connection *conn = call->conn;
     register struct rx_service *service;
-    register struct rx_packet *tp;	/* Temporary packet pointer */
-    register struct rx_packet *nxp;	/* Next packet pointer, for queue_Scan */
     afs_int32 error;
     SPLVAR;
+
+
 
     dpf(("rx_EndCall(call %x)\n", call));
 
@@ -2222,7 +2226,7 @@ rxi_Alloc(register size_t size)
 
     MUTEX_ENTER(&rx_stats_mutex);
     rxi_Alloccnt++;
-    rxi_Allocsize += size;
+    rxi_Allocsize += (afs_int32)size;
     MUTEX_EXIT(&rx_stats_mutex);
 
     p = (char *)osi_Alloc(size);
@@ -2238,7 +2242,7 @@ rxi_Free(void *addr, register size_t size)
 {
     MUTEX_ENTER(&rx_stats_mutex);
     rxi_Alloccnt--;
-    rxi_Allocsize -= size;
+    rxi_Allocsize -= (afs_int32)size;
     MUTEX_EXIT(&rx_stats_mutex);
 
     osi_Free(addr, size);
@@ -3488,7 +3492,7 @@ rxi_ReceiveAckPacket(register struct rx_call *call, struct rx_packet *np,
     rx_stats.ackPacketsRead++;
     MUTEX_EXIT(&rx_stats_mutex);
     ap = (struct rx_ackPacket *)rx_DataOf(np);
-    nbytes = rx_Contiguous(np) - ((ap->acks) - (u_char *) ap);
+    nbytes = rx_Contiguous(np) - (int)((ap->acks) - (u_char *) ap);
     if (nbytes < 0)
 	return np;		/* truncated ack packet */
 
@@ -3677,12 +3681,12 @@ rxi_ReceiveAckPacket(register struct rx_call *call, struct rx_packet *np,
 	/* If the ack packet has a "recommended" size that is less than 
 	 * what I am using now, reduce my size to match */
 	rx_packetread(np, rx_AckDataSize(ap->nAcks) + sizeof(afs_int32),
-		      sizeof(afs_int32), &tSize);
+		      (int)sizeof(afs_int32), &tSize);
 	tSize = (afs_uint32) ntohl(tSize);
 	peer->natMTU = rxi_AdjustIfMTU(MIN(tSize, peer->ifMTU));
 
 	/* Get the maximum packet size to send to this peer */
-	rx_packetread(np, rx_AckDataSize(ap->nAcks), sizeof(afs_int32),
+	rx_packetread(np, rx_AckDataSize(ap->nAcks), (int)sizeof(afs_int32),
 		      &tSize);
 	tSize = (afs_uint32) ntohl(tSize);
 	tSize = (afs_uint32) MIN(tSize, rx_MyMaxSendSize);
@@ -3703,7 +3707,7 @@ rxi_ReceiveAckPacket(register struct rx_call *call, struct rx_packet *np,
 	    /* AFS 3.4a */
 	    rx_packetread(np,
 			  rx_AckDataSize(ap->nAcks) + 2 * sizeof(afs_int32),
-			  sizeof(afs_int32), &tSize);
+			  (int)sizeof(afs_int32), &tSize);
 	    tSize = (afs_uint32) ntohl(tSize);	/* peer's receive window, if it's */
 	    if (tSize < call->twind) {	/* smaller than our send */
 		call->twind = tSize;	/* window, we must send less... */
@@ -4179,9 +4183,9 @@ rxi_SetAcksInTransmitQueue(register struct rx_call *call)
 void
 rxi_ClearTransmitQueue(register struct rx_call *call, register int force)
 {
+#ifdef	AFS_GLOBAL_RXLOCK_KERNEL
     register struct rx_packet *p, *tp;
 
-#ifdef	AFS_GLOBAL_RXLOCK_KERNEL
     if (!force && (call->flags & RX_CALL_TQ_BUSY)) {
 	int someAcked = 0;
 	for (queue_Scan(&call->tq, p, tp, rx_packet)) {
@@ -6022,11 +6026,33 @@ rxi_ComputeRate(register struct rx_peer *peer, register struct rx_call *call,
 #endif /* ADAPT_WINDOW */
 
 
-
-
-
-
 #ifdef RXDEBUG
+void
+rxi_DebugInit(void)
+{
+#ifdef AFS_NT40_ENV
+#define TRACE_OPTION_DEBUGLOG 4
+    HKEY parmKey;
+    DWORD dummyLen;
+    DWORD TraceOption;
+    long code;
+
+    code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY,
+                         0, KEY_QUERY_VALUE, &parmKey);
+    if (code != ERROR_SUCCESS)
+	return;
+
+    dummyLen = sizeof(TraceOption);
+    code = RegQueryValueEx(parmKey, "TraceOption", NULL, NULL,
+			   (BYTE *) &TraceOption, &dummyLen);
+    if (code == ERROR_SUCCESS) {
+	rxdebug_active = (TraceOption & TRACE_OPTION_DEBUGLOG) ? 1 : 0;
+    }
+    RegCloseKey (parmKey);
+#endif /* AFS_NT40_ENV */
+}
+
+
 /* Don't call this debugging routine directly; use dpf */
 void
 rxi_DebugPrint(char *format, int a1, int a2, int a3, int a4, int a5, int a6,
@@ -6197,7 +6223,7 @@ MakeDebugCall(osi_socket socket, afs_uint32 remoteAddr, afs_uint16 remotePort,
 	      void *outputData, size_t outputLength)
 {
     static afs_int32 counter = 100;
-    afs_int32 endTime;
+    time_t endTime;
     struct rx_header theader;
     char tbuffer[1500];
     register afs_int32 code;
@@ -6240,7 +6266,7 @@ MakeDebugCall(osi_socket socket, afs_uint32 remoteAddr, afs_uint16 remotePort,
 	FD_SET(socket, &imask);
 	tv.tv_sec = 1;
 	tv.tv_usec = 0;
-	code = select(socket + 1, &imask, 0, 0, &tv);
+	code = select((int)(socket + 1), &imask, 0, 0, &tv);
 	if (code == 1 && FD_ISSET(socket, &imask)) {
 	    /* now receive a packet */
 	    faddrLen = sizeof(struct sockaddr_in);

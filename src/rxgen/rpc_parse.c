@@ -851,7 +851,7 @@ InvalidConstant(char *name)
     int slen;
 
     map = LEGALNUMS;
-    slen = strlen(name);
+    slen = (int)strlen(name);
     return (slen != strspn(name, map));
 }
 

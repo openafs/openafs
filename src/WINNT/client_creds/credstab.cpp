@@ -47,7 +47,7 @@ BOOL CALLBACK Creds_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
          TabCtrl_AdjustRect (GetParent (hDlg), FALSE, &rTab); 
          SetWindowPos (hDlg, NULL, rTab.left, rTab.top, 0, 0, SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOZORDER);
 
-         SetWindowLong (hDlg, DWL_USER, lp);
+         SetWindowLongPtr (hDlg, DWLP_USER, lp);
          Creds_OnUpdate (hDlg);
          break;
 
@@ -88,7 +88,7 @@ BOOL CALLBACK Creds_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 
 void Creds_OnCheckRemind (HWND hDlg)
 {
-   LPTSTR pszCell = (LPTSTR)GetWindowLong (hDlg, DWL_USER);
+   LPTSTR pszCell = (LPTSTR)GetWindowLongPtr (hDlg, DWLP_USER);
    lock_ObtainMutex(&g.credsLock);
    size_t iCreds;
    for (iCreds = 0; iCreds < g.cCreds; ++iCreds)
@@ -108,7 +108,7 @@ void Creds_OnCheckRemind (HWND hDlg)
 
 void Creds_OnUpdate (HWND hDlg)
 {
-   LPTSTR pszCell = (LPTSTR)GetWindowLong (hDlg, DWL_USER);
+   LPTSTR pszCell = (LPTSTR)GetWindowLongPtr (hDlg, DWLP_USER);
    if (!pszCell || !*pszCell)
       {
       BOOL fRunning = IsServiceRunning();
@@ -195,7 +195,7 @@ void Creds_OnUpdate (HWND hDlg)
 
 void Creds_OnClickObtain (HWND hDlg)
 {
-   LPTSTR pszCell = (LPTSTR)GetWindowLong (hDlg, DWL_USER);
+   LPTSTR pszCell = (LPTSTR)GetWindowLongPtr (hDlg, DWLP_USER);
 
    InterlockedIncrement (&g.fShowingMessage);
    ShowObtainCreds (FALSE, pszCell);
@@ -204,7 +204,7 @@ void Creds_OnClickObtain (HWND hDlg)
 
 void Creds_OnClickDestroy (HWND hDlg)
 {
-   LPTSTR pszCell = (LPTSTR)GetWindowLong (hDlg, DWL_USER);
+   LPTSTR pszCell = (LPTSTR)GetWindowLongPtr (hDlg, DWLP_USER);
    if (pszCell && *pszCell)
       {
       DestroyCurrentCredentials (pszCell);
@@ -257,7 +257,7 @@ BOOL CALLBACK NewCreds_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
    switch (msg)
       {
       case WM_INITDIALOG:
-         SetWindowLong (hDlg, DWL_USER, lp);
+         SetWindowLongPtr (hDlg, DWLP_USER, lp);
          NewCreds_OnInitDialog (hDlg);
          break;
 
@@ -299,7 +299,7 @@ BOOL CALLBACK NewCreds_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 
 void NewCreds_OnInitDialog (HWND hDlg)
 {
-   LPTSTR pszCell = (LPTSTR)GetWindowLong (hDlg, DWL_USER);
+   LPTSTR pszCell = (LPTSTR)GetWindowLongPtr (hDlg, DWLP_USER);
    if (!pszCell)
       pszCell = TEXT("");
 
@@ -406,7 +406,7 @@ void NewCreds_OnCancel (HWND hDlg)
    }
 
    if ( !pszCell )
-       pszCell = (LPTSTR)GetWindowLong (hDlg, DWL_USER);
+       pszCell = (LPTSTR)GetWindowLongPtr (hDlg, DWLP_USER);
    if (pszCell)
       {
       HWND hTab = GetDlgItem (g.hMain, IDC_TABS);

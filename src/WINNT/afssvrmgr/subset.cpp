@@ -183,9 +183,9 @@ BOOL CALLBACK Subsets_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
       return TRUE;
 
    if (msg == WM_INITDIALOG)
-      SetWindowLong (hDlg, DWL_USER, ((LPPROPSHEETPAGE)lp)->lParam);
+      SetWindowLongPtr (hDlg, DWLP_USER, ((LPPROPSHEETPAGE)lp)->lParam);
 
-   LPSUBSET sub = (LPSUBSET)GetWindowLong (hDlg, DWL_USER);
+   LPSUBSET sub = (LPSUBSET)GetWindowLongPtr (hDlg, DWLP_USER);
 
    switch (msg)
       {
@@ -220,7 +220,7 @@ BOOL CALLBACK Subsets_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
                   {
                   if (sub)
                      Subsets_FreeSubset (sub);
-                  SetWindowLong (hDlg, DWL_USER, (LONG)subNew);
+                  SetWindowLongPtr (hDlg, DWLP_USER, (LONG_PTR)subNew);
                   }
                break;
 
@@ -233,7 +233,7 @@ BOOL CALLBACK Subsets_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
                      {
                      if (sub)
                         Subsets_FreeSubset (sub);
-                     SetWindowLong (hDlg, DWL_USER, (LONG)subNew);
+                     SetWindowLongPtr (hDlg, DWLP_USER, (LONG_PTR)subNew);
                      }
                   }
                break;
@@ -249,7 +249,7 @@ BOOL CALLBACK Subsets_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
                   {
                   if (sub)
                      Subsets_FreeSubset (sub);
-                  SetWindowLong (hDlg, DWL_USER, (LONG)subNew);
+                  SetWindowLongPtr (hDlg, DWLP_USER, (LONG_PTR)subNew);
                   }
                break;
             }
@@ -336,7 +336,7 @@ void Subsets_GetSubsetFromDialog (HWND hDlg, LPSUBSET sub)
 
    // Is there only one server box checked?
    //
-   int iiMax = SendMessage (hList, LB_GETCOUNT, 0, 0);
+   int iiMax = (int) SendMessage (hList, LB_GETCOUNT, 0, 0);
 
    size_t cChecked = 0;
    int iiChecked;
@@ -410,7 +410,7 @@ LPSUBSET Subsets_OnCheckAll (HWND hDlg, LPSUBSET subOld, BOOL fCheck)
          }
       }
 
-   int iiMax = SendMessage (hList, LB_GETCOUNT, 0, 0);
+   int iiMax = (int) SendMessage (hList, LB_GETCOUNT, 0, 0);
 
    for (int ii = 0; ii < iiMax; ++ii)
       {
@@ -537,7 +537,7 @@ BOOL Subsets_EnumSubsets (LPTSTR pszCell, size_t iIndex, LPTSTR pszSubset)
    HKEY hk;
    if ((hk = OpenSubsetsKey (pszCell, FALSE)) != NULL)
       {
-      if (RegEnumKey (hk, iIndex, pszSubset, cchNAME) == 0)
+      if (RegEnumKey (hk, (DWORD)iIndex, pszSubset, cchNAME) == 0)
          rc = TRUE;
 
       RegCloseKey (hk);
@@ -602,7 +602,7 @@ LPSUBSET Subsets_LoadSubset (LPTSTR pszCell, LPTSTR pszSubset)
             TCHAR szServer[ cchNAME ];
             dwSize = sizeof(szServer);
 
-            if (RegEnumValue (hk, iIndex, szServer, &dwSize, 0, NULL, NULL, NULL) != 0)
+            if (RegEnumValue (hk, (DWORD)iIndex, szServer, &dwSize, 0, NULL, NULL, NULL) != 0)
                break;
 
             if (szServer[0] && lstrcmpi (szServer, REGVAL_INCLUSIVE))
@@ -708,8 +708,7 @@ BOOL Subsets_GetLoadName (HWND hParent, LPTSTR pszSubset)
    if (g.lpiCell)
       g.lpiCell->GetCellName (lpp.szCell);
 
-   int rc;
-   rc = ModalDialogParam (IDD_SUBSET_LOADSAVE,
+   INT_PTR rc = ModalDialogParam (IDD_SUBSET_LOADSAVE,
                           hParent, (DLGPROC)Subsets_OpenSave_DlgProc,
                           (LPARAM)&lpp);
 
@@ -732,8 +731,7 @@ BOOL Subsets_GetSaveName (HWND hParent, LPTSTR pszSubset)
    if (g.lpiCell)
       g.lpiCell->GetCellName (lpp.szCell);
 
-   int rc;
-   rc = ModalDialogParam (IDD_SUBSET_LOADSAVE,
+   INT_PTR rc = ModalDialogParam (IDD_SUBSET_LOADSAVE,
                           hParent, (DLGPROC)Subsets_OpenSave_DlgProc,
                           (LPARAM)&lpp);
 
@@ -751,10 +749,10 @@ BOOL CALLBACK Subsets_OpenSave_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM l
    static BOOL fEditing = FALSE;
 
    if (msg == WM_INITDIALOG)
-      SetWindowLong (hDlg, DWL_USER, lp);
+      SetWindowLongPtr (hDlg, DWLP_USER, lp);
 
    LPSUBSET_OPENSAVE_PARAMS lpp;
-   if ((lpp = (LPSUBSET_OPENSAVE_PARAMS)GetWindowLong (hDlg, DWL_USER)) != NULL)
+   if ((lpp = (LPSUBSET_OPENSAVE_PARAMS)GetWindowLongPtr (hDlg, DWLP_USER)) != NULL)
       {
       switch (msg)
          {

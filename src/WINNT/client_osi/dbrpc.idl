@@ -53,8 +53,8 @@ typedef char osi_remString_t[OSI_DBRPC_STRLEN];
 typedef struct osi_remGetInfoParms {
 	long icount;
 	long scount;
-/*	[length_is (icount)] long idata[OSI_DBRPC_NUMINTS]; */
-	long idata[OSI_DBRPC_NUMINTS];
+/*	[length_is (icount)] __int64 idata[OSI_DBRPC_NUMINTS]; */
+	__int64 idata[OSI_DBRPC_NUMINTS];
 	[length_is (scount)] osi_remString_t sdata[OSI_DBRPC_NUMSTRS];
 } osi_remGetInfoParms_t;
 

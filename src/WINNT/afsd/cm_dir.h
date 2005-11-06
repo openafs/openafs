@@ -82,6 +82,6 @@ typedef struct cm_dirPage1 {
 } cm_dirPage1_t;
 #endif /* UNUSED */
 
-extern int cm_NameEntries(char *namep, size_t *lenp);
+extern long cm_NameEntries(char *namep, long *lenp);
 
 #endif /*  __CM_DIR_ENV__ */

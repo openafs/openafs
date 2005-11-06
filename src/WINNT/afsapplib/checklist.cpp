@@ -125,7 +125,7 @@ BOOL RegisterCheckListClass (void)
       {
       WNDCLASS wc;
       GetClassInfo (THIS_HINST, TEXT("LISTBOX"), &wc);
-      procListbox = (LONG)wc.lpfnWndProc;
+      procListbox = PtrToLong(wc.lpfnWndProc);
 
       wc.style = CS_GLOBALCLASS;
       wc.lpfnWndProc = (WNDPROC)CheckListProc;
@@ -157,7 +157,9 @@ BOOL IsCheckList (HWND hList)
 
 BOOL CALLBACK CheckListProc (HWND hList, UINT msg, WPARAM wp, LPARAM lp)
 {
-   switch (msg)
+    HRESULT hResult;
+
+    switch (msg)
       {
       case WM_CREATE:
          Subclass_AddHook (GetParent(hList), CheckList_DialogProc);
@@ -182,8 +184,8 @@ BOOL CALLBACK CheckListProc (HWND hList, UINT msg, WPARAM wp, LPARAM lp)
             if (procListbox)
                {
                ReleaseCapture ();
-               CallWindowProc ((WNDPROC)procListbox, hList, WM_LBUTTONDOWN, wp, lp);
-               CallWindowProc ((WNDPROC)procListbox, hList, WM_LBUTTONUP, wp, lp);
+               CallWindowProc ((WNDPROC)LongToPtr(procListbox), hList, WM_LBUTTONDOWN, wp, lp);
+               CallWindowProc ((WNDPROC)LongToPtr(procListbox), hList, WM_LBUTTONUP, wp, lp);
                SetCapture (hList);
                }
             return TRUE;
@@ -216,9 +218,11 @@ BOOL CALLBACK CheckListProc (HWND hList, UINT msg, WPARAM wp, LPARAM lp)
       }
 
    if (procListbox)
-      return CallWindowProc ((WNDPROC)procListbox, hList, msg, wp, lp);
+      hResult = CallWindowProc ((WNDPROC)LongToPtr(procListbox), hList, msg, wp, lp);
    else
-      return DefWindowProc (hList, msg, wp, lp);
+      hResult = DefWindowProc (hList, msg, wp, lp);
+
+    return (hResult?TRUE:FALSE);
 }
 
 
@@ -508,14 +512,14 @@ BOOL CheckList_OnHitTest (HWND hList, int id)
 
 BOOL CheckList_OnGetHit (HWND hList, WPARAM wp, LPARAM lp)
 {
-   return (BOOL)GetWindowLong (hList, GWL_USERDATA);
+   return (BOOL)GetWindowLongPtr (hList, GWLP_USERDATA);
 }
 
 
 BOOL CheckList_OnSetHit (HWND hList, WPARAM wp, LPARAM lp)
 {
    int iItem = (int)wp;
-   SetWindowLong (hList, GWL_USERDATA, iItem);
+   SetWindowLongPtr (hList, GWLP_USERDATA, iItem);
    return TRUE;
 }
 

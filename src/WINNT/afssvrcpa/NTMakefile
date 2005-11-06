@@ -28,6 +28,7 @@ DEFFILE = afssvrcpa.def
 
 $(DLLFILE): $(DLLOBJS)
 	$(DLLGUILINK)  $(DLLLIBS) /DEF:$(DEFFILE)
+        $(_VC_MANIFEST_EMBED_DLL)
 	$(DLLPREP)
 
 

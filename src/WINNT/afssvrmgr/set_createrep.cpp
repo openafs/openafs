@@ -43,7 +43,7 @@ void Filesets_CreateReplica (LPIDENT lpiSource, LPIDENT lpiTarget)
    pscp->lpiSource = lpiSource;
    pscp->lpiTarget = lpiTarget;
 
-   int rc = ModalDialogParam (IDD_SET_CREATEREP, NULL, (DLGPROC)Filesets_CreateReplica_DlgProc, (LPARAM)pscp);
+   INT_PTR rc = ModalDialogParam (IDD_SET_CREATEREP, NULL, (DLGPROC)Filesets_CreateReplica_DlgProc, (LPARAM)pscp);
    if (rc != IDOK)
       {
       Delete (pscp);
@@ -76,7 +76,7 @@ BOOL CALLBACK Filesets_CreateReplica_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LP
       switch (msg)
          {
          case WM_INITDIALOG:
-            FastList_SetTextCallback (GetDlgItem (hDlg, IDC_AGG_LIST), GetItemText, (DWORD)&gr.viewAggMove);
+            FastList_SetTextCallback (GetDlgItem (hDlg, IDC_AGG_LIST), GetItemText, &gr.viewAggMove);
             Filesets_CreateReplica_OnInitDialog (hDlg, pscp);
             break;
 
@@ -165,7 +165,7 @@ BOOL CALLBACK Filesets_CreateReplica_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LP
 }
 
 
-static LONG procFilesetsCreateReplicaList = 0;
+static LONG_PTR procFilesetsCreateReplicaList = 0;
 
 LRESULT CALLBACK Filesets_CreateReplica_SubclassListProc (HWND hList, UINT msg, WPARAM wp, LPARAM lp)
 {
@@ -174,13 +174,13 @@ LRESULT CALLBACK Filesets_CreateReplica_SubclassListProc (HWND hList, UINT msg, 
    if (procFilesetsCreateReplicaList == 0)
       rc = DefWindowProc (hList, msg, wp, lp);
    else
-      rc = CallWindowProc ((WNDPROC)procFilesetsCreateReplicaList, hList, msg, wp, lp);
+      rc = (LRESULT) CallWindowProc ((WNDPROC)procFilesetsCreateReplicaList, hList, msg, wp, lp);
 
    switch (msg)
       {
       case WM_DESTROY:
          if (procFilesetsCreateReplicaList != 0)
-            SetWindowLong (hList, GWL_WNDPROC, procFilesetsCreateReplicaList);
+            SetWindowLongPtr (hList, GWLP_WNDPROC, (LONG_PTR)procFilesetsCreateReplicaList);
          break;
 
       case WM_COMMAND: 
@@ -214,8 +214,8 @@ void Filesets_CreateReplica_OnInitDialog (HWND hDlg, LPSET_CREATEREP_PARAMS pscp
 
    HWND hList = GetDlgItem (hDlg, IDC_AGG_LIST);
    if (procFilesetsCreateReplicaList == 0)
-      procFilesetsCreateReplicaList = GetWindowLong (hList, GWL_WNDPROC);
-   SetWindowLong (hList, GWL_WNDPROC, (LONG)Filesets_CreateReplica_SubclassListProc);
+      procFilesetsCreateReplicaList = GetWindowLongPtr (hList, GWLP_WNDPROC);
+   SetWindowLongPtr (hList, GWLP_WNDPROC, (LONG_PTR)Filesets_CreateReplica_SubclassListProc);
 
    if (gr.viewAggMove.lvsView == 0) // never initialized this?
       {
@@ -244,7 +244,7 @@ void Filesets_CreateReplica_OnSelectServer (HWND hDlg, LPIDENT *plpiTarget)
 {
    LPIDENT lpiServerNew = (LPIDENT)CB_GetSelectedData (GetDlgItem (hDlg, IDC_SET_SERVER));
 
-   SetWindowLong (hDlg, DWL_USER, (LONG)lpiServerNew);
+   SetWindowLongPtr (hDlg, DWLP_USER, (LONG_PTR)lpiServerNew);
 
    if (*plpiTarget && (*plpiTarget)->fIsServer())
       *plpiTarget = NULL;

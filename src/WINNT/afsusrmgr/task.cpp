@@ -299,7 +299,7 @@ void Task_OpenCell (LPTASKPACKET ptp)
 
    // Try to open the cell for administration
    //
-   ptp->rc = asc_CellOpen (g.idClient, lpp->hCreds, lpp->szCell, AFSADMSVR_SCOPE_USERS, &TASKDATA(ptp)->idCell, &ptp->status);
+   ptp->rc = asc_CellOpen (g.idClient, (PVOID)lpp->hCreds, lpp->szCell, AFSADMSVR_SCOPE_USERS, &TASKDATA(ptp)->idCell, &ptp->status);
 
    if (ptp->rc)
       {
@@ -368,7 +368,7 @@ void Task_UpdCreds (LPTASKPACKET ptp)
 
    // Tell the admin server to use our new credentials, and refresh everything
    //
-   if (!asc_CredentialsPush (g.idClient, g.hCreds, g.idCell, &ptp->status))
+   if (!asc_CredentialsPush (g.idClient, (PVOID)g.hCreds, g.idCell, &ptp->status))
       ptp->rc = FALSE;
    else
       ptp->rc = PerformRefresh (ptp, g.idCell, &ptp->status);
@@ -1488,7 +1488,7 @@ void Task_Group_Create (LPTASKPACKET ptp)
 
       AFSADMSVR_CREATEGROUP_PARAMS pp;
       memset (&pp, 0x00, sizeof(AFSADMSVR_CREATEGROUP_PARAMS));
-      pp.idGroup = lpp->idGroup;
+      pp.idGroup = (int) lpp->idGroup;
       lstrcpy (pp.szName, pszName);
       lstrcpy (pp.szOwner, lpp->szOwner);
       if (!pp.szOwner[0])

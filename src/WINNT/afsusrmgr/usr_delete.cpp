@@ -42,7 +42,7 @@ void User_Delete_OnOK (HWND hDlg);
 
 void User_ShowDelete (LPASIDLIST pUserList)
 {
-   ModalDialogParam (IDD_USER_DELETE, g.hMain, User_Delete_DlgProc, (LPARAM)pUserList);
+   ModalDialogParam (IDD_USER_DELETE, g.hMain, (DLGPROC)User_Delete_DlgProc, (LPARAM)pUserList);
 }
 
 
@@ -54,7 +54,7 @@ BOOL CALLBACK User_Delete_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
    switch (msg)
       {
       case WM_INITDIALOG:
-         SetWindowLong (hDlg, DWL_USER, lp);
+         SetWindowLongPtr (hDlg, DWLP_USER, lp);
          User_Delete_OnInitDialog (hDlg);
          break;
 
@@ -88,7 +88,7 @@ BOOL CALLBACK User_Delete_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 
 void User_Delete_OnInitDialog (HWND hDlg)
 {
-   LPASIDLIST pUserList = (LPASIDLIST)GetWindowLong (hDlg, DWL_USER);
+   LPASIDLIST pUserList = (LPASIDLIST)GetWindowLongPtr (hDlg, DWLP_USER);
 
    // Fix the title of the dialog
    //
@@ -124,7 +124,7 @@ void User_Delete_OnInitDialog (HWND hDlg)
 
 void User_Delete_OnDestroy (HWND hDlg)
 {
-   LPASIDLIST pUserList = (LPASIDLIST)GetWindowLong (hDlg, DWL_USER);
+   LPASIDLIST pUserList = (LPASIDLIST)GetWindowLongPtr (hDlg, DWLP_USER);
    asc_AsidListFree (&pUserList);
 }
 
@@ -142,7 +142,7 @@ void User_Delete_OnCheck (HWND hDlg)
 
 void User_Delete_OnOK (HWND hDlg)
 {
-   LPASIDLIST pUserList = (LPASIDLIST)GetWindowLong (hDlg, DWL_USER);
+   LPASIDLIST pUserList = (LPASIDLIST)GetWindowLongPtr (hDlg, DWLP_USER);
 
    // Start a background task to do all the work.
    //

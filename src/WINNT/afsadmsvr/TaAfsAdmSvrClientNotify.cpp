@@ -95,7 +95,7 @@ void ClearObjectNotifications (HWND hNotify)
 }
 
 
-void TestForNotifications (DWORD idClient, ASID idCell, ASID idObject)
+void TestForNotifications (UINT_PTR idClient, ASID idCell, ASID idObject)
 {
    if (l.pListeners)
       {

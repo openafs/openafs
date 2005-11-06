@@ -17,6 +17,7 @@ PMGTTEST_EXELIBS =\
 
 $(OUT)\pmgttest.exe: $(OUT)\pmgttest.obj $(PMGTTEST_EXELIBS)
 	$(EXECONLINK)
+        $(_VC_MANIFEST_EMBED_EXE)
 
 mkdir:
 	

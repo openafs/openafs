@@ -50,7 +50,7 @@ size_t Display_GetSelectedCount (void);
 TABTYPE Display_GetActiveTab (void);
 
 BOOL Display_HandleColumnNotify (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp, LPVIEWINFO pvi);
-BOOL CALLBACK Display_GetItemText (HWND hList, LPFLN_GETITEMTEXT_PARAMS pfln, DWORD dwCookie);
+BOOL CALLBACK Display_GetItemText (HWND hList, LPFLN_GETITEMTEXT_PARAMS pfln, UINT_PTR dwCookie);
 void Display_GetImageIcons (DWORD dwStyle, ICONVIEW iv, ASID idObject, int iImageNormal, int iImageAlert, int *piFirstImage, int *piSecondImage);
 
 

@@ -271,7 +271,7 @@ ktc_SetToken(struct ktc_principal *server, struct ktc_token *token,
 
     /* ticket length */
     memcpy(tp, &token->ticketLen, sizeof(token->ticketLen));
-    tp += sizeof(&token->ticketLen);
+    tp += sizeof(token->ticketLen);
 
     /* ticket */
     memcpy(tp, token->ticket, token->ticketLen);
@@ -317,14 +317,14 @@ ktc_SetToken(struct ktc_principal *server, struct ktc_token *token,
     tp += sizeof(temp);
 
     /* cell name */
-    temp = strlen(server->cell);
+    temp = (int)strlen(server->cell);
     if (temp >= MAXKTCREALMLEN)
 	return KTC_INVAL;
     strcpy(tp, server->cell);
     tp += temp + 1;
 
     /* user name */
-    temp = strlen(client->name);
+    temp = (int)strlen(client->name);
     if (temp >= MAXKTCNAMELEN)
 	return KTC_INVAL;
     strcpy(tp, client->name);
@@ -336,7 +336,7 @@ ktc_SetToken(struct ktc_principal *server, struct ktc_token *token,
 	if (client->smbname == NULL)
 	    temp = 0;
 	else
-	    temp = strlen(client->smbname);
+	    temp = (int)strlen(client->smbname);
 	if (temp == 0 || temp >= MAXKTCNAMELEN)
 	    return KTC_INVAL;
 	strcpy(tp, client->smbname);
@@ -382,7 +382,7 @@ ktc_SetToken(struct ktc_principal *server, struct ktc_token *token,
 
     /* set up for pioctl */
     iob.in = tbuffer;
-    iob.in_size = tp - tbuffer;
+    iob.in_size = (long)(tp - tbuffer);
     iob.out = tbuffer;
     iob.out_size = sizeof(tbuffer);
 
@@ -447,7 +447,7 @@ ktc_GetToken(struct ktc_principal *server, struct ktc_token *token,
     tp += sizeof(uuid);
 
     iob.in = tbuffer;
-    iob.in_size = tp - tbuffer;
+    iob.in_size = (long)(tp - tbuffer);
     iob.out = tbuffer;
     iob.out_size = sizeof(tbuffer);
 
@@ -529,7 +529,7 @@ ktc_GetToken(struct ktc_principal *server, struct ktc_token *token,
 
     /* remember cell name and skip over it */
     cellName = cp;
-    cellNameSize = strlen(cp);
+    cellNameSize = (int)strlen(cp);
     cp += cellNameSize + 1;
 
     /* user name is here */
@@ -596,7 +596,7 @@ ktc_ListTokens(int cellNum, int *cellNumP, struct ktc_principal *server)
 
     /* do pioctl */
     iob.in = tbuffer;
-    iob.in_size = tp - tbuffer;
+    iob.in_size = (long)(tp - tbuffer);
     iob.out = tbuffer;
     iob.out_size = sizeof(tbuffer);
 
@@ -691,7 +691,7 @@ ktc_ForgetToken(struct ktc_principal *server)
 
     /* do pioctl */
     iob.in = tbuffer;
-    iob.in_size = tp - tbuffer;
+    iob.in_size = (long)(tp - tbuffer);
     iob.out = tbuffer;
     iob.out_size = sizeof(tbuffer);
 
