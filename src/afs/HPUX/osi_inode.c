@@ -128,6 +128,7 @@ afs_syscall_iopen(dev, inode, usrmod)
     int dummy;
     extern struct fileops vnodefops;
     register int code;
+    int fd;
 
     AFS_STATCNT(afs_syscall_iopen);
 
@@ -144,6 +145,9 @@ afs_syscall_iopen(dev, inode, usrmod)
 	iput(ip);
 	goto out;
     }
+#ifdef AFS_HPUX1111_ENV
+    fd = u.u_r.r_val1;
+#endif
     iunlock(ip);
 
     fp->f_ops = &vnodefops;
@@ -175,7 +179,9 @@ afs_syscall_iopen(dev, inode, usrmod)
      * called by falloc(), which is called above.
      */
     if (is_multithreaded(u.u_procp)) {
-	int fd = (int)u.u_r.r_val1;
+#ifndef AFS_HPUX1111_ENV
+	fd = (int)u.u_r.r_val1;
+#endif
 	putf(fd);
     }
 
