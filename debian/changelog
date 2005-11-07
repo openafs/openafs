@@ -2,6 +2,7 @@ openafs (1.4.0-1) unstable; urgency=low
 
   * New upstream version.
     - Builds correctly with 2.6.13 kernels and software suspend.
+    - Builds correctly with 2.6.12-10.  (Closes: #337883)
   * Install afsd in /sbin rather than /usr/sbin.  While putting /usr in
     AFS isn't as common as it once was, no reason to make it harder than
     it needs to be.
@@ -10,7 +11,7 @@ openafs (1.4.0-1) unstable; urgency=low
   * Add a watch file.
   * Remove the unused and uninstalled make-links script.
 
- -- Russ Allbery <rra@stanford.edu>  Fri,  4 Nov 2005 13:13:03 -0800
+ -- Russ Allbery <rra@stanford.edu>  Sun,  6 Nov 2005 21:37:40 -0800
 
 openafs (1.4rc4-1) unstable; urgency=low
 
