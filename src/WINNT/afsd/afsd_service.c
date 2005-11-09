@@ -1351,6 +1351,11 @@ afsd_Main(DWORD argc, LPTSTR *argv)
                                          
     RpcShutdown();                       
 
+    cm_ReleaseAllLocks();
+
+    rx_Finalize();
+    afsi_log("rx finalization complete");
+
     cm_ShutdownMappedMemory();           
 
 #ifdef	REGISTER_POWER_NOTIFICATIONS
