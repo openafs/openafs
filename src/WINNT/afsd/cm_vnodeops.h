@@ -172,7 +172,9 @@ extern long cm_LockCheckWrite(cm_scache_t *scp,
         LARGE_INTEGER LLength,
         cm_key_t key);
 
-extern void cm_CheckLocks();
+extern void cm_CheckLocks(void);
+
+extern void cm_ReleaseAllLocks(void);
 
 extern long cm_RetryLock(cm_file_lock_t *oldFileLock, int client_is_dead);
 

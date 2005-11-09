@@ -3606,10 +3606,10 @@ static int cm_KeyEquals(cm_key_t k1, cm_key_t k2, int flags);
 
 /* Called with scp->mx held */
 long cm_UnlockByKey(cm_scache_t * scp,
-                    cm_key_t key,
-                    int flags,
-                    cm_user_t * userp,
-                    cm_req_t * reqp)
+		    cm_key_t key,
+		    int flags,
+		    cm_user_t * userp,
+		     cm_req_t * reqp)
 {
     long code = 0;
     AFSFid tfid;
@@ -4535,5 +4535,40 @@ static int cm_KeyEquals(cm_key_t k1, cm_key_t k2, int flags)
         return ((k1 & 0xffffffff) == (k2 & 0xffffffff));
     } else {
         return (k1 == k2);
+    }
+}
+
+void cm_ReleaseAllLocks(void)
+{
+    cm_scache_t *scp;
+    cm_req_t req;
+    cm_user_t *userp;
+    cm_key_t   key;
+    cm_file_lock_t *fileLock;
+    int i;
+
+    for (i = 0; i < cm_data.hashTableSize; i++)
+    {
+	for ( scp = cm_data.hashTablep[i]; scp; scp = scp->nextp ) {
+	    while (scp->fileLocksH != NULL) {
+		lock_ObtainMutex(&scp->mx);
+		lock_ObtainWrite(&cm_scacheLock);
+		if (!scp->fileLocksH) {
+		    lock_ReleaseWrite(&cm_scacheLock);
+		    lock_ReleaseMutex(&scp->mx);
+		    break;
+		}
+		fileLock = (cm_file_lock_t *)((char *) scp->fileLocksH - offsetof(cm_file_lock_t, fileq));
+		userp = fileLock->userp;
+		cm_HoldUser(userp);
+		key = fileLock->key;
+		cm_HoldSCacheNoLock(scp);
+		lock_ReleaseWrite(&cm_scacheLock);
+		cm_UnlockByKey(scp, key, 0, userp, &req);
+		cm_ReleaseSCache(scp);
+		cm_ReleaseUser(userp);
+		lock_ReleaseMutex(&scp->mx);
+	    }
+	}
     }
 }
