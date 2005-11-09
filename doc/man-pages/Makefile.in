@@ -172,28 +172,28 @@ MAN8 = \
 all: $(MAN1) $(MAN8)
 
 %.1: $(srcdir)/pod/%.pod
-	pod2man -c 'AFS Command Reference' -r 'OpenAFS' -s 1 $< $@
+	-pod2man -c 'AFS Command Reference' -r 'OpenAFS' -s 1 $< $@
 
 %.8: $(srcdir)/pod/%.pod
-	pod2man -c 'AFS Command Reference' -r 'OpenAFS' -s 8 $< $@
+	-pod2man -c 'AFS Command Reference' -r 'OpenAFS' -s 8 $< $@
 
 clean:
 	rm -f *.1 *.8
 
 dest: $(MAN1) $(MAN8)
 	mkdir -p $(DEST)/man/man1 $(DEST)/man/man8
-	set -e; for M in $(MAN1) ; do \
+	-set -e; for M in $(MAN1) ; do \
 	    $(INSTALL) -c -m 0644 $$M $(DEST)/man/man1/$$M ; \
 	done
-	set -e; for M in $(MAN8) ; do \
+	-set -e; for M in $(MAN8) ; do \
 	    $(INSTALL) -c -m 0644 $$M $(DEST)/man/man8/$$M ; \
 	done
 
 install: $(MAN1) $(MAN8)
 	mkdir -p $(DESTDIR)$(mandir)/man1 $(DESTDIR)$(mandir)/man8
-	set -e; for M in $(MAN1) ; do \
+	-set -e; for M in $(MAN1) ; do \
 	    $(INSTALL) -c -m 0644 $$M $(DESTDIR)$(mandir)/man1/$$M ; \
 	done
-	set -e; for M in $(MAN8) ; do \
+	-set -e; for M in $(MAN8) ; do \
 	    $(INSTALL) -c -m 0644 $$M $(DESTDIR)$(mandir)/man8/$$M ; \
 	done
