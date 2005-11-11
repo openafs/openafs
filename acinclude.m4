@@ -905,7 +905,7 @@ else
 		i386_fbsd_4?)
 			BSD_KERNEL_BUILD="${BSD_KERNEL_PATH}/compile/GENERIC"
 			;;
-		i386_fbsd_5?)
+		i386_fbsd_*)
 			BSD_KERNEL_BUILD="${BSD_KERNEL_PATH}/i386/compile/GENERIC"
 			;;
 	esac
