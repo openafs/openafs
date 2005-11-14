@@ -159,62 +159,56 @@ void cm_SetServerPrefs(cm_server_t * serverp)
     unsigned long	netMask;
     int 		i;
 
-    /* implement server prefs for fileservers only */
-    if ( serverp->type == CM_SERVER_FILE )
+    int cm_noIPAddr;         /* number of client network interfaces */
+    int cm_IPAddr[CM_MAXINTERFACE_ADDR];    /* client's IP address in host order */
+    int cm_SubnetMask[CM_MAXINTERFACE_ADDR];/* client's subnet mask in host order*/
+    int cm_NetMtu[CM_MAXINTERFACE_ADDR];    /* client's MTU sizes */
+    int cm_NetFlags[CM_MAXINTERFACE_ADDR];  /* network flags */
+    long code;
+
+    /* get network related info */
+    cm_noIPAddr = CM_MAXINTERFACE_ADDR;
+    code = syscfg_GetIFInfo(&cm_noIPAddr,
+			    cm_IPAddr, cm_SubnetMask,
+			    cm_NetMtu, cm_NetFlags);
+
+    serverAddr = ntohl(serverp->addr.sin_addr.s_addr);
+    serverp->ipRank  = CM_IPRANK_LOW;	/* default setings */
+
+    for ( i=0; i < cm_noIPAddr; i++)
     {
-        int cm_noIPAddr;         /* number of client network interfaces */
-        int cm_IPAddr[CM_MAXINTERFACE_ADDR];    /* client's IP address in host order */
-        int cm_SubnetMask[CM_MAXINTERFACE_ADDR];/* client's subnet mask in host order*/
-        int cm_NetMtu[CM_MAXINTERFACE_ADDR];    /* client's MTU sizes */
-        int cm_NetFlags[CM_MAXINTERFACE_ADDR];  /* network flags */
-        long code;
+	/* loop through all the client's IP address and compare
+	** each of them against the server's IP address */
 
-        /* get network related info */
-        cm_noIPAddr = CM_MAXINTERFACE_ADDR;
-        code = syscfg_GetIFInfo(&cm_noIPAddr,
-                                 cm_IPAddr, cm_SubnetMask,
-                                 cm_NetMtu, cm_NetFlags);
+	myAddr = cm_IPAddr[i];
+	if ( IN_CLASSA(myAddr) )
+	    netMask = IN_CLASSA_NET;
+	else if ( IN_CLASSB(myAddr) )
+	    netMask = IN_CLASSB_NET;
+	else if ( IN_CLASSC(myAddr) )
+	    netMask = IN_CLASSC_NET;
+	else
+	    netMask = 0;
 
-        serverAddr = ntohl(serverp->addr.sin_addr.s_addr);
-        serverp->ipRank  = CM_IPRANK_LOW;	/* default setings */
+	myNet    =  myAddr & netMask;
+	mySubnet =  myAddr & cm_SubnetMask[i];
 
-        for ( i=0; i < cm_noIPAddr; i++)
-        {
-            /* loop through all the client's IP address and compare
-            ** each of them against the server's IP address */
-
-            myAddr = cm_IPAddr[i];
-            if ( IN_CLASSA(myAddr) )
-                netMask = IN_CLASSA_NET;
-            else if ( IN_CLASSB(myAddr) )
-                netMask = IN_CLASSB_NET;
-            else if ( IN_CLASSC(myAddr) )
-                netMask = IN_CLASSC_NET;
-            else
-                netMask = 0;
-
-            myNet    =  myAddr & netMask;
-            mySubnet =  myAddr & cm_SubnetMask[i];
-
-            if ( (serverAddr & netMask) == myNet ) 
-            {
-                if ( (serverAddr & cm_SubnetMask[i]) == mySubnet)
-                {
-                    if ( serverAddr == myAddr ) 
-                        serverp->ipRank = min(serverp->ipRank,
-                                               CM_IPRANK_TOP);/* same machine */
-                    else serverp->ipRank = min(serverp->ipRank,
-                                                CM_IPRANK_HI); /* same subnet */
-                }
-                else serverp->ipRank = min(serverp->ipRank,CM_IPRANK_MED);
-                /* same net */
-            }	
-            /* random between 0..15*/
-            serverp->ipRank += min(serverp->ipRank, rand() % 0x000f);
-        } /* and of for loop */
-    }
-    else 
-        serverp->ipRank = 10000 + (rand() % 0x00ff); /* VL server */
+	if ( (serverAddr & netMask) == myNet ) 
+	{
+	    if ( (serverAddr & cm_SubnetMask[i]) == mySubnet)
+	    {
+		if ( serverAddr == myAddr ) 
+		    serverp->ipRank = min(serverp->ipRank,
+					   CM_IPRANK_TOP);/* same machine */
+		else serverp->ipRank = min(serverp->ipRank,
+					    CM_IPRANK_HI); /* same subnet */
+	    }
+	    else serverp->ipRank = min(serverp->ipRank,CM_IPRANK_MED);
+	    /* same net */
+	}	
+	/* random between 0..15*/
+	serverp->ipRank += min(serverp->ipRank, rand() % 0x000f);
+    } /* and of for loop */
 }
 
 cm_server_t *cm_NewServer(struct sockaddr_in *socketp, int type, cm_cell_t *cellp) {
