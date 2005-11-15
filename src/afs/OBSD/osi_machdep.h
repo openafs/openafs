@@ -127,7 +127,7 @@ extern struct lock afs_global_lock;
     } while(0)
 #define ISAFS_GLOCK() (afs_global_owner == curproc && curproc)
 #else
-extern struct simplelock afs_global_lock;
+extern struct lock afs_global_lock;
 #define AFS_GLOCK()
 #define AFS_GUNLOCK()
 #define AFS_ASSERT_GLOCK()
