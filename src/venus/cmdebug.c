@@ -399,8 +399,13 @@ PrintCacheEntries64(struct rx_connection *aconn, int aint32)
 	    printf("\n");
 	}
 #ifdef AFS_64BIT_ENV
+#ifdef AFS_NT40_ENV
 	printf("    %012I64d bytes  DV %012d  refcnt %05d\n", centry.Length,
 	       centry.DataVersion, centry.refCount);
+#else
+	printf("    %012llu bytes  DV %012d  refcnt %05d\n", centry.Length,
+	       centry.DataVersion, centry.refCount);
+#endif
 #else
 	printf("    %012d bytes  DV %012d  refcnt %05d\n", centry.Length,
 	       centry.DataVersion, centry.refCount);
@@ -453,15 +458,11 @@ PrintCacheEntries(struct rx_connection *aconn, int aint32)
     register afs_int32 code;
     struct AFSDBCacheEntry64 centry64;
 
-#ifdef AFS_OBSD_ENV
-    return PrintCacheEntries32(aconn, aint32);
-#else
     code = RXAFSCB_GetCE64(aconn, 0, &centry64);
     if (code != RXGEN_OPCODE)
 	return PrintCacheEntries64(aconn, aint32);
     else
 	return PrintCacheEntries32(aconn, aint32);
-#endif
 }
 
 int
