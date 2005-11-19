@@ -247,7 +247,10 @@ afs_readdir_type(avc, ade)
     tfid.Fid.Unique = ntohl(ade->fid.vunique);
     if ((avc->states & CForeign) == 0 && (ntohl(ade->fid.vnode) & 1)) {
 	return DT_DIR;
-    } else if ((tvc = afs_FindVCache(&tfid, 0, 0))) {
+    }
+    ObtainReadLock(&afs_xvcache);
+    if ((tvc = afs_FindVCache(&tfid, 0, 0))) {
+        ReleaseReadLock(&afs_xvcache);
 	if (tvc->mvstat) {
 	    afs_PutVCache(tvc);
 	    return DT_DIR;
@@ -266,7 +269,8 @@ afs_readdir_type(avc, ade)
 	    /* what other types does AFS support? */
 	} else
 	    afs_PutVCache(tvc);
-    }
+    } else
+        ReleaseReadLock(&afs_xvcache);
     return DT_UNKNOWN;
 }
 #endif
