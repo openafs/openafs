@@ -574,6 +574,10 @@ afs_vop_access(ap)
           bits |= PRSFS_INSERT;
        if (ap->a_action & KAUTH_VNODE_DELETE_CHILD)
           bits |= PRSFS_DELETE;
+       if (ap->a_action & KAUTH_VNODE_READ_ATTRIBUTES)
+          bits |= PRSFS_LOOKUP;
+       if (ap->a_action & KAUTH_VNODE_READ_SECURITY) /* mode bits/gid, not afs acl */
+          bits |= PRSFS_LOOKUP;
     } else {
        if (ap->a_action & KAUTH_VNODE_READ_DATA)
           bits |= PRSFS_READ;
@@ -581,9 +585,11 @@ afs_vop_access(ap)
           bits |= PRSFS_WRITE;
        if (ap->a_action & KAUTH_VNODE_EXECUTE)
           bits |= PRSFS_READ; /* and mode bits.... */
+       if (ap->a_action & KAUTH_VNODE_READ_ATTRIBUTES)
+          bits |= PRSFS_READ;
+       if (ap->a_action & KAUTH_VNODE_READ_SECURITY) /* mode bits/gid, not afs acl */
+          bits |= PRSFS_READ;
     }
-    if (ap->a_action & KAUTH_VNODE_READ_ATTRIBUTES)
-       bits |= PRSFS_READ;
     if (ap->a_action & KAUTH_VNODE_WRITE_ATTRIBUTES)
        bits |= PRSFS_WRITE;
 #if 0 /* no extended attributes */
@@ -592,8 +598,6 @@ afs_vop_access(ap)
     if (ap->a_action & KAUTH_VNODE_WRITE_EXTATTRIBUTES)
        bits |= PRSFS_WRITE;
 #endif
-    if (ap->a_action & KAUTH_VNODE_READ_SECURITY) /* mode bits/gid, not afs acl */
-       bits |= PRSFS_READ;
     if (ap->a_action & KAUTH_VNODE_WRITE_SECURITY)
        bits |= PRSFS_WRITE;
     /* we can't check for KAUTH_VNODE_TAKE_OWNERSHIP, so we always permit it */
