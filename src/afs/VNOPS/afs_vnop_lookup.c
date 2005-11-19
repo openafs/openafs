@@ -291,7 +291,7 @@ afs_EvalFakeStat_int(struct vcache **avcp, struct afs_fakestat_state *state,
 	    do {
 		retry = 0;
 		ObtainWriteLock(&afs_xvcache, 597);
-		root_vp = afs_FindVCache(tvc->mvid, &retry, 0);
+		root_vp = afs_FindVCache(tvc->mvid, &retry, IS_WLOCK);
 		if (root_vp && retry) {
 		    ReleaseWriteLock(&afs_xvcache);
 		    afs_PutVCache(root_vp);
@@ -701,7 +701,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	    do {
 		retry = 0;
 		ObtainWriteLock(&afs_xvcache, 130);
-		tvcp = afs_FindVCache(&tfid, &retry, 0 /* no stats | LRU */ );
+		tvcp = afs_FindVCache(&tfid, &retry, IS_WLOCK /* no stats | LRU */ );
 		if (tvcp && retry) {
 		    ReleaseWriteLock(&afs_xvcache);
 		    afs_PutVCache(tvcp);

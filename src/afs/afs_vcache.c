@@ -1671,7 +1671,7 @@ afs_GetVCache(register struct VenusFid *afid, struct vrequest *areq,
 
     ObtainSharedLock(&afs_xvcache, 5);
 
-    tvc = afs_FindVCache(afid, &retry, DO_STATS | DO_VLRU);
+    tvc = afs_FindVCache(afid, &retry, DO_STATS | DO_VLRU | IS_SLOCK);
     if (tvc && retry) {
 #if	defined(AFS_SGI_ENV) && !defined(AFS_SGI53_ENV)
 	ReleaseSharedLock(&afs_xvcache);
@@ -1911,7 +1911,7 @@ afs_LookupVCache(struct VenusFid *afid, struct vrequest *areq,
 #endif
 
     ObtainSharedLock(&afs_xvcache, 6);
-    tvc = afs_FindVCache(&nfid, &retry, DO_VLRU /* no xstats now */ );
+    tvc = afs_FindVCache(&nfid, &retry, DO_VLRU | IS_SLOCK/* no xstats now */ );
     if (tvc && retry) {
 #if	defined(AFS_SGI_ENV) && !defined(AFS_SGI53_ENV)
 	ReleaseSharedLock(&afs_xvcache);
@@ -2374,7 +2374,7 @@ afs_StuffVcache(register struct VenusFid *afid,
   loop:
     ObtainSharedLock(&afs_xvcache, 8);
 
-    tvc = afs_FindVCache(afid, &retry, DO_VLRU /* no stats */ );
+    tvc = afs_FindVCache(afid, &retry, DO_VLRU| IS_SLOCK /* no stats */ );
     if (tvc && retry) {
 #if	defined(AFS_SGI_ENV) && !defined(AFS_SGI53_ENV)
 	ReleaseSharedLock(&afs_xvcache);
@@ -2509,6 +2509,28 @@ afs_PutVCache(register struct vcache *avc)
 #endif
 }				/*afs_PutVCache */
 
+
+static void findvc_sleep(struct vcache *avc, int flag) {
+    if (flag & IS_SLOCK) {
+	    ReleaseSharedLock(&afs_xvcache);
+    } else {
+	if (flag & IS_WLOCK) {
+	    ReleaseWriteLock(&afs_xvcache);
+	} else {
+	    ReleaseReadLock(&afs_xvcache);
+	}
+    }
+    afs_osi_Sleep(&avc->states);
+    if (flag & IS_SLOCK) {
+	    ObtainSharedLock(&afs_xvcache, 341);
+    } else {
+	if (flag & IS_WLOCK) {
+	    ObtainWriteLock(&afs_xvcache, 343);
+	} else {
+	    ObtainReadLock(&afs_xvcache);
+	}
+    }
+}
 /*
  * afs_FindVCache
  *
@@ -2542,17 +2564,7 @@ afs_FindVCache(struct VenusFid *afid, afs_int32 * retry, afs_int32 flag)
     for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
 	if (FidMatches(afid, tvc)) {
             if (tvc->states & CVInit) {
-		int lock;
-		lock = CheckLock(&afs_xvcache);
-		if (lock > 0)
-		    ReleaseReadLock(&afs_xvcache);
-		else
-		    ReleaseSharedLock(&afs_xvcache);
-		afs_osi_Sleep(&tvc->states);
-		if (lock > 0)
-		    ObtainReadLock(&afs_xvcache);
-		else
-		    ObtainSharedLock(&afs_xvcache, 341);
+		findvc_sleep(tvc, flag);
 		goto findloop;
             }
 #ifdef  AFS_OSF_ENV
@@ -2567,17 +2579,7 @@ afs_FindVCache(struct VenusFid *afid, afs_int32 * retry, afs_int32 flag)
 #ifdef  AFS_DARWIN80_ENV
             int vg;
             if (tvc->states & CDeadVnode) {
-		int lock;
-		lock = CheckLock(&afs_xvcache);
-		if (lock > 0)
-		    ReleaseReadLock(&afs_xvcache);
-		else
-		    ReleaseSharedLock(&afs_xvcache);
-		afs_osi_Sleep(&tvc->states);
-		if (lock > 0)
-		    ObtainReadLock(&afs_xvcache);
-		else
-		    ObtainSharedLock(&afs_xvcache, 341);
+                findvc_sleep(tvc, flag);
 		goto findloop;
             }
             AFS_GUNLOCK();
