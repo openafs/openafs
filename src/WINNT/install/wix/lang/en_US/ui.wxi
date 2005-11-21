@@ -760,20 +760,20 @@
         <Control Id="DNSSel" Type="RadioButtonGroup"			X="150"	Y="160"	Width="120" Height="20" Property="USEDNS" />
       </Dialog>
       <RadioGroup Property="SECURITYLEVEL">
-		<RadioButton X="5" Y="0" Width="55" Height="15" Text="Disable">0</RadioButton>
-		<RadioButton X="65" Y="0" Width="55" Height="15" Text="Enable">1</RadioButton>
+		<RadioButton X="5" Y="0" Width="55" Height="15" Text="Disable" Value="0"></RadioButton>
+		<RadioButton X="65" Y="0" Width="55" Height="15" Text="Enable" Value="1"></RadioButton>
       </RadioGroup>
       <RadioGroup Property="FREELANCEMODE">
-		<RadioButton X="5" Y="0" Width="55" Height="15" Text="Disable">0</RadioButton>
-		<RadioButton X="65" Y="0" Width="55" Height="15" Text="Enable">1</RadioButton>
+		<RadioButton X="5" Y="0" Width="55" Height="15" Text="Disable" Value="0"></RadioButton>
+		<RadioButton X="65" Y="0" Width="55" Height="15" Text="Enable" Value="1"></RadioButton>
       </RadioGroup>
       <RadioGroup Property="USEDNS">
-		<RadioButton X="5" Y="0" Width="55" Height="15" Text="Disable">0</RadioButton>
-		<RadioButton X="65" Y="0" Width="55" Height="15" Text="Enable">1</RadioButton>
+		<RadioButton X="5" Y="0" Width="55" Height="15" Text="Disable" Value="0"></RadioButton>
+		<RadioButton X="65" Y="0" Width="55" Height="15" Text="Enable" Value="1"></RadioButton>
       </RadioGroup>
       <RadioGroup Property="LOGONOPTIONS">
-		<RadioButton X="5" Y="0" Width="55" Height="15" Text="Disable">0</RadioButton>
-		<RadioButton X="65" Y="0" Width="55" Height="15" Text="Enable">1</RadioButton>
+		<RadioButton X="5" Y="0" Width="55" Height="15" Text="Disable" Value="0"></RadioButton>
+		<RadioButton X="65" Y="0" Width="55" Height="15" Text="Enable" Value="1"></RadioButton>
       </RadioGroup>
 
       <Dialog Id="ConfigCredsDlg" Width="370" Height="270" Title="[ProductName] [Setup]" NoMinimize="yes">
@@ -970,8 +970,8 @@
         </Control>
       </Dialog>
       <RadioGroup Property="IAgree">
-        <RadioButton Text="{\DlgFont8}I &amp;accept the terms in the License Agreement" X="5" Y="0" Width="250" Height="15">yes</RadioButton>
-        <RadioButton Text="{\DlgFont8}I &amp;do not accept the terms in the License Agreement" X="5" Y="20" Width="250" Height="15">no</RadioButton>
+        <RadioButton Text="{\DlgFont8}I &amp;accept the terms in the License Agreement" X="5" Y="0" Width="250" Height="15" Value="yes"></RadioButton>
+        <RadioButton Text="{\DlgFont8}I &amp;do not accept the terms in the License Agreement" X="5" Y="20" Width="250" Height="15" Value="no"></RadioButton>
       </RadioGroup>
       <TextStyle Id="DlgFont8" FaceName="Tahoma" Size="8" />
       <TextStyle Id="DlgFontBold8" FaceName="Tahoma" Size="8" Bold="yes" />
