@@ -10,6 +10,7 @@
 #include <afs/param.h>
 #include <afs/stds.h>
 
+#include <errno.h>
 #ifndef DJGPP
 #include <windows.h>
 #include <winsock2.h>
@@ -42,9 +43,15 @@
 #define ETIMEDOUT               WSAETIMEDOUT
 #define ECONNREFUSED            WSAECONNREFUSED
 #define ELOOP                   WSAELOOP
+#ifdef ENAMETOOLONG
+#undef ENAMETOOLONG
+#endif
 #define ENAMETOOLONG            WSAENAMETOOLONG
 #define EHOSTDOWN               WSAEHOSTDOWN
 #define EHOSTUNREACH            WSAEHOSTUNREACH
+#ifdef ENOTEMPTY
+#undef ENOTEMPTY
+#endif 
 #define ENOTEMPTY               WSAENOTEMPTY
 #define EPROCLIM                WSAEPROCLIM
 #define EUSERS                  WSAEUSERS
@@ -53,14 +60,12 @@
 #define EREMOTE                 WSAEREMOTE
 #endif /* EWOULDBLOCK */
 #endif /* !DJGPP */
+#include <afs/unified_afs.h>
+
 #include <string.h>
 #include <malloc.h>
-
 #include <osi.h>
 #include <rx/rx.h>
-
-#include <errno.h>
-#include <afs/unified_afs.h>
 
 #include "afsd.h"
 
@@ -256,9 +261,13 @@ long cm_MapRPCError(long error, cm_req_t *reqp)
               || error == 122   /* EDQUOT on Linux */
               || error == 1133) /* EDQUOT on Irix  */
         error = CM_ERROR_QUOTA;
-    else if (error == VNOVNODE) 
+    else if (error == VNOVNODE) {
+#ifdef COMMENT
         error = CM_ERROR_BADFD;
-    else if (error == 21)
+#else
+        error = CM_ERROR_RETRY;
+#endif
+    } else if (error == 21)
         return CM_ERROR_ISDIR;
     return error;
 }
