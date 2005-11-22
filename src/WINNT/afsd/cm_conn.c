@@ -401,6 +401,25 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
         }
         if ( timeLeft > 2 )
             retry = 1;
+    } else if ( errorCode == VNOVNODE ) {
+	if ( fidp ) {
+	    cm_scache_t * scp;
+	    osi_Log4(afsd_logp, "cm_Analyze passed VNOVNODE cell %u vol %u vn %u uniq %u.",
+		      fidp->cell, fidp->volume, fidp->vnode, fidp->unique);
+#ifdef VNOVNODE_FLUSH_VOLUME
+	    cm_FlushVolume(userp, reqp, fidp->cell, fidp->volume);
+#else /* VNOVNODE_FLUSH_FILE */
+	    if (!cm_GetSCache(fidp, &scp, userp, reqp)) {
+		cm_FlushFile(scp, userp, reqp);
+#ifdef VNOVNODE_FLUSH_PARENT
+		cm_FlushParent(scp, userp, reqp);
+#endif /* VNOVNODE_FLUSH_PARENT */
+		cm_ReleaseSCache(scp);
+	    }
+#endif /* VNODE_FLUSH_xxxx */
+	} else {
+	    osi_Log0(afsd_logp, "cm_Analyze passed VNOVNODE unknown fid.");
+	}
     }
 
     /* RX codes */
@@ -430,6 +449,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
         lock_ObtainMutex(&serverp->mx);
         serverp->flags |= CM_SERVERFLAG_DOWN;
         lock_ReleaseMutex(&serverp->mx);
+	cm_ForceNewConnections(serverp);
         if ( timeLeft > 2 )
             retry = 1;
     }
@@ -696,7 +716,8 @@ long cm_ConnByServer(cm_server_t *serverp, cm_user_t *userp, cm_conn_t **connpp)
         tcp->refCount = 1;
         lock_ReleaseMutex(&tcp->mx);
     } else {
-        if ((tcp->ucgen < ucellp->gen) ||
+        if ((tcp->flags & CM_CONN_FLAG_FORCE_NEW) ||
+            (tcp->ucgen < ucellp->gen) ||
             (tcp->cryptlevel != (cryptall ? (ucellp->flags & CM_UCELLFLAG_RXKAD ? rxkad_crypt : rxkad_clear) : rxkad_clear)))
         {
             if (tcp->ucgen < ucellp->gen)
@@ -704,6 +725,7 @@ long cm_ConnByServer(cm_server_t *serverp, cm_user_t *userp, cm_conn_t **connpp)
             else
                 osi_Log0(afsd_logp, "cm_ConnByServer replace connection due to crypt change");
             lock_ObtainMutex(&tcp->mx);
+	    tcp->flags &= ~CM_CONN_FLAG_FORCE_NEW;
             rx_DestroyConnection(tcp->callp);
             cm_NewRXConnection(tcp, ucellp, serverp);
             lock_ReleaseMutex(&tcp->mx);
@@ -749,3 +771,15 @@ cm_GetRxConn(cm_conn_t *connp)
     return rxconn;
 }
 
+void cm_ForceNewConnections(cm_server_t *serverp)
+{
+    cm_conn_t *tcp;
+
+    lock_ObtainWrite(&cm_connLock);
+    for (tcp = serverp->connsp; tcp; tcp=tcp->nextp) {
+	lock_ObtainMutex(&tcp->mx);
+	tcp->flags |= CM_CONN_FLAG_FORCE_NEW;
+	lock_ReleaseMutex(&tcp->mx);
+    }
+    lock_ReleaseWrite(&cm_connLock);
+}

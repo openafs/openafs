@@ -1368,7 +1368,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *up,
         if (code == 0)
             code = EndRXAFS_FetchData(callp, &afsStatus, &callback, &volSync);
         else
-            osi_Log0(afsd_logp, "CALL EndRXAFS_FetchData skipped due to error");
+            osi_Log1(afsd_logp, "CALL EndRXAFS_FetchData skipped due to error %d", code);
         code = rx_EndCall(callp, code);
         if (code == RXKADUNKNOWNKEY)
             osi_Log0(afsd_logp, "CALL EndCall returns RXKADUNKNOWNKEY");

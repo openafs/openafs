@@ -29,6 +29,8 @@ typedef struct cm_conn {
 	int cryptlevel;			/* encrytion status */
 } cm_conn_t;
 
+#define CM_CONN_FLAG_FORCE_NEW	1
+
 /* structure used for tracking RPC progress */
 typedef struct cm_req {
 	DWORD startTime;		/* Quit before RDR times us out */
@@ -114,5 +116,7 @@ extern void cm_PutConn(cm_conn_t *connp);
 extern void cm_GCConnections(cm_server_t *serverp);
 
 extern struct rx_connection * cm_GetRxConn(cm_conn_t *connp);
+
+extern void cm_ForceNewConnections(cm_server_t *serverp);
 
 #endif /*  __CM_CONN_H_ENV__ */

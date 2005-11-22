@@ -107,6 +107,8 @@ void cm_CheckServers(long flags, cm_cell_t *cellp)
             else {
                 /* mark server as down */
                 tsp->flags |= CM_SERVERFLAG_DOWN;
+		if (code != VRESTARTING)
+		    cm_ForceNewConnections(tsp);
             }
             lock_ReleaseMutex(&tsp->mx);
         }
@@ -438,21 +440,24 @@ void cm_FreeServer(cm_server_t* serverp)
          */
         cm_GCConnections(serverp);  /* connsp */
 
-        lock_FinalizeMutex(&serverp->mx);
-        if ( cm_allServersp == serverp )
-            cm_allServersp = serverp->allNextp;
-        else {
-            cm_server_t *tsp;
+	if (!(serverp->flags & CM_SERVERFLAG_PREF_SET)) {
+	    lock_FinalizeMutex(&serverp->mx);
+	    if ( cm_allServersp == serverp )
+		cm_allServersp = serverp->allNextp;
+	    else {
+		cm_server_t *tsp;
 
-            for(tsp = cm_allServersp; tsp->allNextp; tsp=tsp->allNextp) {
-                if ( tsp->allNextp == serverp ) {
-                    tsp->allNextp = serverp->allNextp;
-                    break;
-                }
+		for(tsp = cm_allServersp; tsp->allNextp; tsp=tsp->allNextp) {
+		    if ( tsp->allNextp == serverp ) {
+			tsp->allNextp = serverp->allNextp;
+			break;
+		    }
+		}
             }
+	    free(serverp);
         }
     }
- }
+}
 
 void cm_FreeServerList(cm_serverRef_t** list)
 {
