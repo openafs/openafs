@@ -823,21 +823,21 @@ BOOL FormatTime (LPTSTR pszTarget, LPTSTR pszFormatUser, SYSTEMTIME *pst, BOOL f
       }
    else
       {
-      GetTimeFormat (LOCALE_USER_DEFAULT, 0,              &lt, NULL, szTime, cchRESOURCE);
-      GetDateFormat (LOCALE_USER_DEFAULT, DATE_SHORTDATE, &lt, NULL, szDate, cchRESOURCE);
+      GetTimeFormat (LOCALE_USER_DEFAULT, 0, &lt, "HH:mm:ss", szTime, cchRESOURCE);
+      GetDateFormat (LOCALE_USER_DEFAULT, 0, &lt, "yyyy-MM-dd", szDate, cchRESOURCE);
 
       if (fShowTime && fShowDate)
          {
-         lstrcat (szTime, TEXT(" "));
-         lstrcat (szTime, szDate);
+         lstrcat (szDate, TEXT(" "));
+         lstrcat (szDate, szTime);
          }
-      else if (fShowDate && !fShowTime)
+      else if (!fShowDate && fShowTime)
          {
-         lstrcpy (szTime, szDate);
+         lstrcpy (szDate, szTime);
          }
       }
 
-   wsprintf (pszTarget, FixFormatString (pszFormatUser), szTime);
+   wsprintf (pszTarget, FixFormatString (pszFormatUser), szDate);
    return rc;
 }
 
