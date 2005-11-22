@@ -89,7 +89,7 @@ BOOL TestAndDoMapShare(DWORD);
 BOOL DoMapShare();
 void MapShareName(char *);
 void DoUnMapShare(BOOL);
-BOOL DoMapShareChange();
+BOOL DoMapShareChange(BOOL removeUnknown=TRUE);
 DWORD RWLogonOption(BOOL read,DWORD value);
 BOOL GlobalMountDrive();
 DWORD MountDOSDrive(char chDrive,const char *szSubmount,BOOL bPresistant=TRUE,const char *puser=NULL);

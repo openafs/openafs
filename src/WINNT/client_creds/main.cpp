@@ -334,7 +334,7 @@ BOOL InitApp (LPSTR pszCmdLineA)
       {
           if ( IsDebuggerPresent() )
               OutputDebugString("Renewing Drive Maps\n");
-          DoMapShare();
+          DoMapShareChange(FALSE);
       }
       if (fShow)
       {

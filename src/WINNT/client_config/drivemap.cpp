@@ -1067,7 +1067,7 @@ BOOL fUserName=FALSE;
 void SetBitLogonOption(BOOL set,DWORD value)
 {
 
-   RWLogonOption(FALSE,((set)?value | RWLogonOption(TRUE,0):RWLogonOption(TRUE,0) & ~value) );	
+    RWLogonOption(FALSE,((set)?value | RWLogonOption(TRUE,0):RWLogonOption(TRUE,0) & ~value) );	
 }
 
 DWORD RWLogonOption(BOOL read,DWORD value)
@@ -1102,27 +1102,27 @@ DWORD RWLogonOption(BOOL read,DWORD value)
 
 void MapShareName(char *pszCmdLineA)
 {
-	fUserName = TRUE;
-	TCHAR *p=pUserName;
-	pszCmdLineA++;
-	while (*pszCmdLineA && (*pszCmdLineA != ' '))
-	{
-	  *p++=*pszCmdLineA++;
-	}
+    fUserName = TRUE;
+    TCHAR *p=pUserName;
+    pszCmdLineA++;
+    while (*pszCmdLineA && (*pszCmdLineA != ' '))
+    {
+	*p++=*pszCmdLineA++;
+    }
 }
 
 void GenRandomName(TCHAR *pname,int len)
 {
-	if (fUserName)
-	{		//user name was passed through command line, use once
-		fUserName=FALSE;
-		return;
-	}
-	srand( (unsigned)time( NULL ) );
-	for (int i=0;i<len;i++)
-		pname[i]='a'+(rand() % 26);
-	pname[len]=0;
+    if (fUserName)
+    {		//user name was passed through command line, use once
+	fUserName=FALSE;
 	return;
+    }
+    srand( (unsigned)time( NULL ) );
+    for (int i=0;i<len;i++)
+	pname[i]='a'+(rand() % 26);
+    pname[len]=0;
+    return;
 }
 
 /*
@@ -1133,14 +1133,14 @@ void GenRandomName(TCHAR *pname,int len)
 BOOL TestAndDoMapShare(DWORD dwState)
 {
     if ((dwState!=SERVICE_RUNNING) || (dwOldState!=SERVICE_START_PENDING))
-	{
-		dwOldState=dwState;
-		return TRUE;
-	}
-	dwOldState=SERVICE_RUNNING;
-	if (RWLogonOption(TRUE,LOGON_OPTION_HIGHSECURITY))
-	    return (DoMapShare() && GlobalMountDrive());
-	return GlobalMountDrive();
+    {
+	dwOldState=dwState;
+	return TRUE;
+    }
+    dwOldState=SERVICE_RUNNING;
+    if (RWLogonOption(TRUE,LOGON_OPTION_HIGHSECURITY))
+	return (DoMapShare() && GlobalMountDrive());
+    return GlobalMountDrive();
 }
 
 BOOL IsServiceActive()
@@ -1164,120 +1164,119 @@ BOOL IsServiceActive()
 
 void TestAndDoUnMapShare()
 {
-	if (!RWLogonOption(TRUE,LOGON_OPTION_HIGHSECURITY))
-		return;
-	DoUnMapShare(FALSE);	
+    if (!RWLogonOption(TRUE,LOGON_OPTION_HIGHSECURITY))
+	return;
+    DoUnMapShare(FALSE);	
 }
 
 void DoUnMapShare(BOOL drivemap)	//disconnect drivemap 
 {
-	TCHAR szMachine[MAX_PATH],szPath[MAX_PATH];
-	DWORD rc=28;
-	HANDLE hEnum;
-	LPNETRESOURCE lpnrLocal,lpnr=NULL;
-	DWORD res;
-	DWORD cbBuffer=16384;
-	DWORD cEntries=-1;
-	CHAR *pSubmount="";
+    TCHAR szMachine[MAX_PATH],szPath[MAX_PATH];
+    DWORD rc=28;
+    HANDLE hEnum;
+    LPNETRESOURCE lpnrLocal,lpnr=NULL;
+    DWORD res;
+    DWORD cbBuffer=16384;
+    DWORD cEntries=-1;
+    CHAR *pSubmount="";
 
     memset(szMachine, '\0', sizeof(szMachine));
     GetClientNetbiosName(szMachine);
 
    // Initialize the data structure
-	if ((res=WNetOpenEnum(RESOURCE_CONNECTED,RESOURCETYPE_DISK,RESOURCEUSAGE_CONNECTABLE,lpnr,&hEnum))!=NO_ERROR)
-		return;
-	sprintf(szPath,"\\\\%s\\",szMachine);
-	_strlwr(szPath);
-	lpnrLocal=(LPNETRESOURCE) GlobalAlloc(GPTR,cbBuffer);
-	do {
-		memset(lpnrLocal,0,cbBuffer);
-		if ((res = WNetEnumResource(hEnum,&cEntries,lpnrLocal,&cbBuffer))==NO_ERROR)
+    if ((res=WNetOpenEnum(RESOURCE_CONNECTED,RESOURCETYPE_DISK,RESOURCEUSAGE_CONNECTABLE,lpnr,&hEnum))!=NO_ERROR)
+	return;
+    sprintf(szPath,"\\\\%s\\",szMachine);
+    _strlwr(szPath);
+    lpnrLocal=(LPNETRESOURCE) GlobalAlloc(GPTR,cbBuffer);
+    do {
+	memset(lpnrLocal,0,cbBuffer);
+	if ((res = WNetEnumResource(hEnum,&cEntries,lpnrLocal,&cbBuffer))==NO_ERROR)
+	{
+	    for (DWORD i=0;i<cEntries;i++)
+	    {
+		if (strstr(_strlwr(lpnrLocal[i].lpRemoteName),szPath))
 		{
-			for (DWORD i=0;i<cEntries;i++)
-			{
-				if (strstr(_strlwr(lpnrLocal[i].lpRemoteName),szPath))
-				{
-					if ((lpnrLocal[i].lpLocalName) && (strlen(lpnrLocal[i].lpLocalName)>0))
-					{
-						if (drivemap) {
-						    DisMountDOSDrive(*lpnrLocal[i].lpLocalName);
+		    if ((lpnrLocal[i].lpLocalName) && (strlen(lpnrLocal[i].lpLocalName)>0))
+		    {
+			if (drivemap) {
+			    DisMountDOSDrive(*lpnrLocal[i].lpLocalName);
                             DEBUG_EVENT1("AFS DriveUnMap","UnMap-Local=%x",res);
-                        }
-					} else {
-					    DisMountDOSDriveFull(lpnrLocal[i].lpRemoteName);
+                        }		
+		    } else {
+			DisMountDOSDriveFull(lpnrLocal[i].lpRemoteName);
                         DEBUG_EVENT1("AFS DriveUnMap","UnMap-Remote=%x",res);
                     }
-				}
-			}
 		}
-	} while (res!=ERROR_NO_MORE_ITEMS);
-	GlobalFree((HGLOBAL)lpnrLocal);
-	WNetCloseEnum(hEnum);
+	    }
+	}
+    } while (res!=ERROR_NO_MORE_ITEMS);
+    GlobalFree((HGLOBAL)lpnrLocal);
+    WNetCloseEnum(hEnum);
 }
 
-BOOL DoMapShareChange()
+BOOL DoMapShareChange(BOOL removeUnknown)
 {
-	DRIVEMAPLIST List;
-	TCHAR szMachine[ MAX_PATH],szPath[MAX_PATH];
-	DWORD rc=28;
-	HANDLE hEnum;
-	LPNETRESOURCE lpnrLocal,lpnr=NULL;
-	DWORD res;
-	DWORD cEntries=-1;
+    DRIVEMAPLIST List;
+    TCHAR szMachine[ MAX_PATH],szPath[MAX_PATH];
+    DWORD rc=28;
+    HANDLE hEnum;
+    LPNETRESOURCE lpnrLocal,lpnr=NULL;
+    DWORD res;
+    DWORD cEntries=-1;
     DWORD cbBuffer=16384;
 
     memset(szMachine, '\0', sizeof(szMachine));
     GetClientNetbiosName(szMachine);
 
     // Initialize the data structure
-	if (!IsServiceActive())
-		return TRUE;
-	memset (&List, 0x00, sizeof(DRIVEMAPLIST));
-	for (size_t ii = 0; ii < 26; ++ii)
-		List.aDriveMap[ii].chDrive = chDRIVE_A + ii;
-	QueryDriveMapList_ReadSubmounts (&List);
-	if ((res=WNetOpenEnum(RESOURCE_CONNECTED,RESOURCETYPE_DISK,RESOURCEUSAGE_CONNECTABLE,lpnr,&hEnum))!=NO_ERROR)
-		return FALSE;
-	lpnrLocal=(LPNETRESOURCE) GlobalAlloc(GPTR,cbBuffer);
-	sprintf(szPath,"\\\\%s\\",szMachine);
-	_strlwr(szPath);
-	do {
-		memset(lpnrLocal,0,cbBuffer);
-		if ((res = WNetEnumResource(hEnum,&cEntries,lpnrLocal,&cbBuffer))==NO_ERROR)
+    if (!IsServiceActive())
+	return TRUE;
+    memset (&List, 0x00, sizeof(DRIVEMAPLIST));
+    for (size_t ii = 0; ii < 26; ++ii)
+	List.aDriveMap[ii].chDrive = chDRIVE_A + ii;
+    QueryDriveMapList_ReadSubmounts (&List);
+    if ((res=WNetOpenEnum(RESOURCE_CONNECTED,RESOURCETYPE_DISK,RESOURCEUSAGE_CONNECTABLE,lpnr,&hEnum))!=NO_ERROR)
+	return FALSE;
+    lpnrLocal=(LPNETRESOURCE) GlobalAlloc(GPTR,cbBuffer);
+    sprintf(szPath,"\\\\%s\\",szMachine);
+    _strlwr(szPath);
+    do {
+	memset(lpnrLocal,0,cbBuffer);
+	if ((res = WNetEnumResource(hEnum,&cEntries,lpnrLocal,&cbBuffer))==NO_ERROR)
+	{
+	    for (DWORD i=0;i<cEntries;i++)
+	    {
+		if (strstr(_strlwr(lpnrLocal[i].lpRemoteName),szPath)==NULL)
+		    continue;	//only look at real afs mappings
+		CHAR * pSubmount=strrchr(lpnrLocal[i].lpRemoteName,'\\')+1;
+		if (lstrcmpi(pSubmount,"all")==0) 
+		    continue;				// do not remove 'all'
+		for (DWORD j=0;j<List.cSubmounts;j++)
 		{
-			for (DWORD i=0;i<cEntries;i++)
-			{
-				if (strstr(_strlwr(lpnrLocal[i].lpRemoteName),szPath)==NULL)
-					continue;	//only look at real afs mappings
-				CHAR * pSubmount=strrchr(lpnrLocal[i].lpRemoteName,'\\')+1;
-				if (lstrcmpi(pSubmount,"all")==0) 
-					continue;				// do not remove 'all'
-				for (DWORD j=0;j<List.cSubmounts;j++)
-				{
-					if (
-						(List.aSubmounts[j].szSubmount[0]) &&
-						(lstrcmpi(List.aSubmounts[j].szSubmount,pSubmount)==0)
-						) 
-					{
-						List.aSubmounts[j].fInUse=TRUE; 
-						goto nextname;
-					}
-				}
-				// wasn't on list so lets remove
-				DisMountDOSDrive(pSubmount);
-				nextname:;
-			}
+		    if ((List.aSubmounts[j].szSubmount[0]) &&
+			 (lstrcmpi(List.aSubmounts[j].szSubmount,pSubmount)==0)
+			 ) 
+		    {
+			List.aSubmounts[j].fInUse=TRUE; 
+			goto nextname;
+		    }
 		}
-	} while (res!=ERROR_NO_MORE_ITEMS);
-	GlobalFree((HGLOBAL)lpnrLocal);
-	WNetCloseEnum(hEnum);
-	sprintf(szPath,"\\\\%s\\all",szMachine);
+		// wasn't on list so lets remove
+		DisMountDOSDrive(pSubmount);
+	      nextname:;
+	    }
+	}
+    } while (res!=ERROR_NO_MORE_ITEMS);
+    GlobalFree((HGLOBAL)lpnrLocal);
+    WNetCloseEnum(hEnum);
+    sprintf(szPath,"\\\\%s\\all",szMachine);
 
-	// Lets connect all submounts that weren't connectd
+    // Lets connect all submounts that weren't connectd
     DWORD cbUser=MAXRANDOMNAMELEN-1;
-	CHAR szUser[MAXRANDOMNAMELEN];
+    CHAR szUser[MAXRANDOMNAMELEN];
     CHAR * pUser = NULL;
-	if (WNetGetUser(szPath,(LPSTR)szUser,&cbUser)!=NO_ERROR) {
+    if (WNetGetUser(szPath,(LPSTR)szUser,&cbUser)!=NO_ERROR) {
         if (RWLogonOption(TRUE,LOGON_OPTION_HIGHSECURITY)) {
             if (!pUserName[0]) {
                 GenRandomName(szUser,MAXRANDOMNAMELEN-1);
@@ -1287,42 +1286,42 @@ BOOL DoMapShareChange()
             }
         }
     } else {
-		if ((pUser=strchr(szUser,'\\'))!=NULL)
+	if ((pUser=strchr(szUser,'\\'))!=NULL)
             pUser++;
-	}
+    }
 
     for (DWORD j=0;j<List.cSubmounts;j++)
-	{
-		if (List.aSubmounts[j].fInUse)
-			continue;
-		DWORD res=MountDOSDrive(0,List.aSubmounts[j].szSubmount,FALSE,pUser);
-	}
-	return TRUE;
+    {
+	if (List.aSubmounts[j].fInUse)
+	    continue;
+	DWORD res=MountDOSDrive(0,List.aSubmounts[j].szSubmount,FALSE,pUser);
+    }
+    return TRUE;
 }
 
 BOOL DoMapShare()
 {
-	DRIVEMAPLIST List;
-	DWORD rc=28;
-	BOOL bMappedAll=FALSE;
+    DRIVEMAPLIST List;
+    DWORD rc=28;
+    BOOL bMappedAll=FALSE;
 
    // Initialize the data structure
-	DEBUG_EVENT0("AFS DoMapShare");
-	QueryDriveMapList (&List);
-	DoUnMapShare(TRUE);
-	// All connections have been removed
-	// Lets restore them after making the connection from the random name
+    DEBUG_EVENT0("AFS DoMapShare");
+    QueryDriveMapList (&List);
+    DoUnMapShare(TRUE);
+    // All connections have been removed
+    // Lets restore them after making the connection from the random name
 
-	TCHAR szMachine[ MAX_PATH],szPath[MAX_PATH];
+    TCHAR szMachine[ MAX_PATH],szPath[MAX_PATH];
     memset(szMachine, '\0', sizeof(szMachine));
     GetClientNetbiosName(szMachine);
     sprintf(szPath,"\\\\%s\\all",szMachine);
 
     // Lets connect all submounts that weren't connectd
     DWORD cbUser=MAXRANDOMNAMELEN-1;
-	CHAR szUser[MAXRANDOMNAMELEN];
+    CHAR szUser[MAXRANDOMNAMELEN];
     CHAR * pUser = NULL;
-	if (WNetGetUser(szPath,(LPSTR)szUser,&cbUser)!=NO_ERROR) {
+    if (WNetGetUser(szPath,(LPSTR)szUser,&cbUser)!=NO_ERROR) {
         if (RWLogonOption(TRUE,LOGON_OPTION_HIGHSECURITY)) {
             if (!pUserName[0]) {
                 GenRandomName(szUser,MAXRANDOMNAMELEN-1);
@@ -1332,33 +1331,33 @@ BOOL DoMapShare()
             }
         }
     } else {
-		if ((pUser=strchr(szUser,'\\'))!=NULL)
+	if ((pUser=strchr(szUser,'\\'))!=NULL)
             pUser++;
-	}
+    }
 
-	for (DWORD i=0;i<List.cSubmounts;i++)
+    for (DWORD i=0;i<List.cSubmounts;i++)
+    {
+	if (List.aSubmounts[i].szSubmount[0])
 	{
-		if (List.aSubmounts[i].szSubmount[0])
-		{
-			DWORD res=MountDOSDrive(0,List.aSubmounts[i].szSubmount,FALSE,pUser);
-			if (lstrcmpi("all",List.aSubmounts[i].szSubmount)==0)
-				bMappedAll=TRUE;
-		}
+	    DWORD res=MountDOSDrive(0,List.aSubmounts[i].szSubmount,FALSE,pUser);
+	    if (lstrcmpi("all",List.aSubmounts[i].szSubmount)==0)
+		bMappedAll=TRUE;
 	}
-	if (!bMappedAll)	//make sure all is mapped also
-	{
+    }
+    if (!bMappedAll)	//make sure all is mapped also
+    {
         DWORD res=MountDOSDrive(0,"all",FALSE,pUser);
         if (res==ERROR_SESSION_CREDENTIAL_CONFLICT)
         {
             DisMountDOSDrive("all");
             MountDOSDrive(0,"all",FALSE,pUser);
         }
-	}
-	for (TCHAR chDrive = chDRIVE_A; chDrive <= chDRIVE_Z; ++chDrive)
+    }
+    for (TCHAR chDrive = chDRIVE_A; chDrive <= chDRIVE_Z; ++chDrive)
+    {
+	if (List.aDriveMap[chDrive-chDRIVE_A].fActive ||
+	     ForceMapActive(chDrive))
 	{
-		if (List.aDriveMap[chDrive-chDRIVE_A].fActive ||
-            ForceMapActive(chDrive))
-		{
             TCHAR szSubmount[ MAX_PATH ];
             if (List.aDriveMap[chDrive-chDRIVE_A].szSubmount[0])
                 lstrcpy(szSubmount,List.aDriveMap[chDrive-chDRIVE_A].szSubmount);
@@ -1368,12 +1367,12 @@ BOOL DoMapShare()
             BOOL fPersistent = List.aDriveMap[chDrive-chDRIVE_A].fPersistent;
             if (RWLogonOption(TRUE,LOGON_OPTION_HIGHSECURITY))
                 fPersistent = FALSE;
-		    DWORD res=MountDOSDrive(chDrive
-					    ,szSubmount
-					    ,fPersistent,pUser);
-		}
+	    DWORD res=MountDOSDrive(chDrive
+				     ,szSubmount
+				     ,fPersistent,pUser);
 	}
-	return TRUE;
+    }
+    return TRUE;
 }
 
 BOOL GlobalMountDrive()
