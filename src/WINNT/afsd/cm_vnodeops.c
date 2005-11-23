@@ -4154,8 +4154,8 @@ void cm_CheckLocks()
 
     for(q = cm_allFileLocks; q; q = nq) {
         fileLock = (cm_file_lock_t *) q;
-
         nq = osi_QNext(q);
+	code = -1;
 
         if (IS_LOCK_DELETED(fileLock)) {
 
