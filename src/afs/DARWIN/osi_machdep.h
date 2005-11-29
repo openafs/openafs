@@ -219,6 +219,18 @@ uio_t afsio_darwin_partialcopy(uio_t auio, int size);
 #define uprintf printf
 #endif
 
+#ifndef AFS_DARWIN80_ENV
+#define ifaddr_address_family(x) (x)->ifa_addr->sa_family
+#define ifaddr_address(x, y, z) memcpy(y, (x)->ifa_addr, z)
+#define ifaddr_netmask(x, y, z) memcpy(y, (x)->ifa_netmask, z)
+#define ifaddr_dstaddress(x, y, z) memcpy(y, (x)->ifa_dstaddr, z)
+#define ifaddr_ifnet(x) (x?(x)->ifa_ifp:0)
+#define ifnet_flags(x) (x?(x)->if_flags:0)
+#define ifnet_metric(x) (x?(x)->if_data.ifi_metric:0)
+/*#define ifnet_mtu(x) (x)->if_mtu*/
+#define ifaddr_withnet(x) ifa_ifwithnet(x)
+#endif
+
 #endif /* KERNEL */
 
 #endif /* _OSI_MACHDEP_H_ */
