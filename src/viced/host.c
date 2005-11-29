@@ -895,18 +895,21 @@ h_Enumerate(int (*proc) (), char *param)
 void
 h_Enumerate_r(int (*proc) (), struct host *enumstart, char *param)
 {
-    register struct host *host;
-    register int held;
+    register struct host *host, *next;
+    register int held, nheld;
 
     if (hostCount == 0) {
 	return;
     }
-    for (host = enumstart; host; host = host->next) {
-	if (!(held = h_Held_r(host)))
-	    h_Hold_r(host);
+    if (!(held = h_Held_r(host)))
+	h_Hold_r(host);
+    for (host = enumstart; host; host = next, held = nheld) {
 	held = (*proc) (host, held, param);
+	next = host->next;
+	if (next && !(nheld = h_Held_r(next)))
+	    h_Hold_r(next);
 	if (!held)
-	    h_Release_r(host);	/* this might free up the host */
+	    h_Release_r(host); /* this might free up the host */
     }
 }				/*h_Enumerate_r */
 
