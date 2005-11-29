@@ -1589,7 +1589,7 @@ afs_vop_inactive(ap)
     register struct vnode *vp = ap->a_vp;
     struct vcache *tvc = VTOAFS(vp);
 #ifndef AFS_DARWIN80_ENV
-    if (prtactive && vnode_isinuse(vp, 0) != 0)
+    if (prtactive && vp->v_usecount != 0)
 	vprint("afs_vop_inactive(): pushing active", vp);
 #endif
     if (tvc) {
