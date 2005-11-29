@@ -266,7 +266,7 @@ afs_GetOnePage(vp, off, alen, protp, pl, plsz, seg, addr, rw, acred)
     register struct dcache *tdc;
     int i, s, pexists;
     int slot;
-    afs_size_t offset = 0, nlen;
+    afs_size_t offset, nlen = 0;
     struct vrequest treq;
     afs_int32 mapForRead = 0, Code = 0;
     u_offset_t toffset;
