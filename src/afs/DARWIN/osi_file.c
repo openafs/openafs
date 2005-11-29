@@ -116,7 +116,7 @@ VnodeToDev(vnode_t * avp)
 	return ip->i_dev;
     } else if (afs_CacheFSType == AFS_APPL_HFS_CACHE) {
 #endif
-#if defined(AFS_DARWIN80_ENV) || !defined(VTOH)
+#if defined(AFS_DARWIN80_ENV) 
 	struct vattr va;
         VATTR_INIT(&va);
         VATTR_WANTED(&va, va_fsid);
