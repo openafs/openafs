@@ -1620,8 +1620,16 @@ afs_vop_reclaim(ap)
        AFS_GLOCK();
        ObtainWriteLock(&afs_xvcache, 335);
        error = afs_FlushVCache(tvc, &sl);	/* toss our stuff from vnode */
-       if (tvc->states & (CVInit | CDeadVnode)) {
-          tvc->states &= ~(CVInit | CDeadVnode);
+       if (tvc->states & (CVInit
+#ifdef AFS_DARWIN80_ENV
+			  | CDeadVnode
+#endif
+			  )) {
+          tvc->states &= ~(CVInit
+#ifdef AFS_DARWIN80_ENV
+			   | CDeadVnode
+#endif
+			   );
           afs_osi_Wakeup(&tvc->states);
        }
        ReleaseWriteLock(&afs_xvcache);
