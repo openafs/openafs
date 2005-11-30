@@ -1,4 +1,28 @@
-Post 1.4.0 revisions:
+Since 1.4.1 rc1: 1.4.1 RC2 released (30 Nov 2005)
+
+ * close a lock leak in the rx library that could be triggered while
+   processing aborts
+
+ * prevent removal of drive mappings in response to afscreds.exe -M
+
+ * add logic to process VNOVNODE in cm_Analyze.  Force re-evaluation of symlink
+   strings and flush the stat cache entry.
+
+ * prevent server objects from being freed if user preferences are set.
+
+ * Update WIX support to 2.0.2419.0
+
+ * Release all locks on the server at service shutdown.
+
+ * A down server should be marked up as long as it responds to the client.
+   It doesn't matter if the server returned an error as long as the error
+   is something other than VRESTARTING.	 If there is such an error, all
+   connections on that server should be marked for replacement.
+
+ * Change the check "up" servers period from once per hour to once every
+   ten minutes.  This matches the behavior of the Unix cache manager.
+
+Post 1.4.0 revisions: 1.4.1 RC1 released (21 Oct 2005)
  * Byte Range Locking support has been added.  Architectural documentation
    is located within src/WINNT/afsd/cm_vnodeops.c.   Best efforts are 
    made to enforce Windows mandatory locking model using locally managed
