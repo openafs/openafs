@@ -3074,11 +3074,8 @@ KFW_AFS_klog(
     }
     strcpy(aclient.instance, "");
 
-    if ( strcmp(realm_of_cell, creds.realm) ) 
-    {
-        strncat(aclient.name, "@", MAXKTCNAMELEN - 1);
-        strncpy(aclient.name, creds.realm, MAXKTCREALMLEN - 1);
-    }
+    strncat(aclient.name, "@", MAXKTCNAMELEN - 1);
+    strncat(aclient.name, creds.realm, MAXKTCREALMLEN - 1);
     aclient.name[MAXKTCREALMLEN-1] = '\0';
 
     strcpy(aclient.cell, CellName);
