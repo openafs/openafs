@@ -11,7 +11,7 @@ xmlns="http://www.w3.org/TR/REC-html40">
 <meta name=Originator content="Microsoft Word 11">
 <link rel=File-List href="relnotes_files/filelist.xml">
 <link rel=Preview href="relnotes_files/preview.wmf">
-<title>OpenAFS for Windows 1.4.0 Release Notes</title>
+<title>OpenAFS for Windows 1.4.1-RC2 Release Notes</title>
 <o:SmartTagType namespaceuri="urn:schemas:contacts" name="GivenName"/>
 <o:SmartTagType namespaceuri="urn:schemas-microsoft-com:office:smarttags"
  name="address"/>
@@ -34,20 +34,20 @@ xmlns="http://www.w3.org/TR/REC-html40">
 <!--[if gte mso 9]><xml>
  <o:DocumentProperties>
   <o:Author>Jeffrey Altman</o:Author>
-  <o:Keywords>OpenAFS 1.4.0</o:Keywords>
+  <o:Keywords>OpenAFS 1.4.1 RC2</o:Keywords>
   <o:LastAuthor>Jeffrey Altman</o:LastAuthor>
-  <o:Revision>6</o:Revision>
-  <o:TotalTime>48</o:TotalTime>
+  <o:Revision>8</o:Revision>
+  <o:TotalTime>53</o:TotalTime>
   <o:LastPrinted>2005-09-26T23:55:00Z</o:LastPrinted>
   <o:Created>2005-09-25T20:12:00Z</o:Created>
-  <o:LastSaved>2005-10-08T14:11:00Z</o:LastSaved>
+  <o:LastSaved>2005-11-30T07:08:00Z</o:LastSaved>
   <o:Pages>1</o:Pages>
-  <o:Words>14555</o:Words>
-  <o:Characters>82969</o:Characters>
+  <o:Words>14687</o:Words>
+  <o:Characters>83719</o:Characters>
   <o:Company>Secure Endpoints Inc.</o:Company>
-  <o:Lines>691</o:Lines>
-  <o:Paragraphs>194</o:Paragraphs>
-  <o:CharactersWithSpaces>97330</o:CharactersWithSpaces>
+  <o:Lines>697</o:Lines>
+  <o:Paragraphs>196</o:Paragraphs>
+  <o:CharactersWithSpaces>98210</o:CharactersWithSpaces>
   <o:Version>11.6568</o:Version>
  </o:DocumentProperties>
 </xml><![endif]--><!--[if gte mso 9]><xml>
@@ -105,6 +105,13 @@ st1\:*{behavior:url(#ieooui) }st2\:*{behavior:url(#ieooui) }
 	mso-font-pitch:variable;
 	mso-font-signature:1627421319 -2147483648 8 0 66047 0;}
 @font-face
+	{font-family:"\@MS Mincho";
+	panose-1:2 2 6 9 4 2 5 8 3 4;
+	mso-font-charset:128;
+	mso-generic-font-family:modern;
+	mso-font-pitch:fixed;
+	mso-font-signature:-1610612033 1757936891 16 0 131231 0;}
+@font-face
 	{font-family:Thorndale;
 	panose-1:2 2 6 3 5 4 5 2 3 4;
 	mso-font-charset:0;
@@ -139,13 +146,6 @@ st1\:*{behavior:url(#ieooui) }st2\:*{behavior:url(#ieooui) }
 	mso-generic-font-family:modern;
 	mso-font-pitch:fixed;
 	mso-font-signature:647 0 0 0 159 0;}
-@font-face
-	{font-family:"\@MS Mincho";
-	panose-1:2 2 6 9 4 2 5 8 3 4;
-	mso-font-charset:128;
-	mso-generic-font-family:modern;
-	mso-font-pitch:fixed;
-	mso-font-signature:-1610612033 1757936891 16 0 131231 0;}
  /* Style Definitions */
  p.MsoNormal, li.MsoNormal, div.MsoNormal
 	{mso-style-parent:"";
@@ -2430,7 +2430,7 @@ table.MsoTableGrid
 	mso-bidi-language:#0400;}
 </style>
 <![endif]--><!--[if gte mso 9]><xml>
- <o:shapedefaults v:ext="edit" spidmax="6146"/>
+ <o:shapedefaults v:ext="edit" spidmax="8194"/>
 </xml><![endif]--><!--[if gte mso 9]><xml>
  <o:shapelayout v:ext="edit">
   <o:idmap v:ext="edit" data="1"/>
@@ -2442,24 +2442,23 @@ strict'>
 
 <div class=Section1>
 
-<p class=MsoTitle>OpenAFS for Windows 1.4.0<br>
+<p class=MsoTitle>OpenAFS for Windows 1.4.1 RC2<br>
 Release Notes</p>
 
 <p class=MsoBodyText>The Andrew File System (AFS) is a location-independent
 file system that uses a local cache to increase its performance.<span
 style='mso-spacerun:yes'>  </span>An AFS client accesses files anonymously or
-via a Kerberos authentication.<span style='mso-spacerun:yes'>  </span>The
-global AFS is partitioned into cells.<span style='mso-spacerun:yes'> 
-</span>The AFS cell is a collection of AFS volumes that are administered by a
-common entity.<span style='mso-spacerun:yes'>   </span>AFS cells can be
-administered by a department even when the Kerberos realm used for local
-authentication is managed by a much larger organization.<span
-style='mso-spacerun:yes'>  </span>AFS clients and servers take advantage of
-Kerberos cross realm authentication to enable authenticated access by entities
-located outside the local realm.<span style='mso-spacerun:yes'> 
-</span>Authorization is enforced by the use of directory level access control
-lists which can consist of individual or group identities.<span
-style='mso-spacerun:yes'>  </span></p>
+via a Kerberos authentication.<span style='mso-spacerun:yes'>  </span>The global
+AFS is partitioned into cells.<span style='mso-spacerun:yes'>  </span>The AFS
+cell is a collection of AFS volumes that are administered by a common
+entity.<span style='mso-spacerun:yes'>   </span>AFS cells can be administered
+by a department even when the Kerberos realm used for local authentication is
+managed by a much larger organization.<span style='mso-spacerun:yes'> 
+</span>AFS clients and servers take advantage of Kerberos cross realm
+authentication to enable authenticated access by entities located outside the
+local realm.<span style='mso-spacerun:yes'>  </span>Authorization is enforced
+by the use of directory level access control lists which can consist of
+individual or group identities.<span style='mso-spacerun:yes'>  </span></p>
 
 <p class=MsoBodyText>The AFS volume is a tree of files and
 sub-directories.<span style='mso-spacerun:yes'>  </span>AFS volumes are created
@@ -2480,8 +2479,8 @@ clients will failover to any replica that is reachable.<span
 style='mso-spacerun:yes'>  </span>Users of the data are unaware of where the
 replicas are stored or which one is being accessed.<span
 style='mso-spacerun:yes'>   </span>The contents of the replicas can be updated
-at any time by <i style='mso-bidi-font-style:normal'>releasing</i> the current
-contents of the source volume.</p>
+at any time by <i style='mso-bidi-font-style:normal'>releasing</i> the current contents
+of the source volume.</p>
 
 <p class=MsoBodyText>OpenAFS for Windows (OAFW) provides AFS client access
 Microsoft Windows operating systems.<span style='mso-spacerun:yes'>  </span>It
@@ -2593,13 +2592,14 @@ style='font-family:"Times New Roman";mso-fareast-font-family:"MS Mincho";
 mso-no-proof:yes'><o:p></o:p></span></p>
 
 <p class=MsoToc1><span class=MsoHyperlink><span style='mso-no-proof:yes'><a
-href="#_Toc115417114">6. How to Contribute to the Development of OpenAFS for
-Windows<span style='color:windowtext;display:none;mso-hide:screen;text-decoration:
-none;text-underline:none'><span style='mso-tab-count:1 dotted'>. </span></span><!--[if supportFields]><span
+href="#_Toc115417114">6. How to Contribute to the Development of OpenAFS for Windows<span
 style='color:windowtext;display:none;mso-hide:screen;text-decoration:none;
-text-underline:none'><span style='mso-element:field-begin'></span> PAGEREF _Toc115417114
-\h </span><span style='color:windowtext;text-decoration:none;text-underline:
-none'><span style='display:none;mso-hide:screen'><span style='mso-element:field-separator'></span></span></span><![endif]--><span
+text-underline:none'><span style='mso-tab-count:1 dotted'>. </span></span><!--[if supportFields]><span
+style='color:windowtext;display:none;mso-hide:screen;text-decoration:none;
+text-underline:none'><span style='mso-element:field-begin'></span> PAGEREF
+_Toc115417114 \h </span><span style='color:windowtext;text-decoration:none;
+text-underline:none'><span style='display:none;mso-hide:screen'><span
+style='mso-element:field-separator'></span></span></span><![endif]--><span
 style='color:windowtext;display:none;mso-hide:screen;text-decoration:none;
 text-underline:none'>14<!--[if gte mso 9]><xml>
  <w:data>08D0C9EA79F9BACE118C8200AA004BA90B02000000080000000E0000005F0054006F0063003100310035003400310037003100310034000000</w:data>
@@ -2900,15 +2900,15 @@ other network adapters installed on the system.<span style='mso-spacerun:yes'> 
 pre-assigned IP address in the 10.x.x.x range.<span style='mso-spacerun:yes'> 
 </span>The MLA is bound to the “Client for Microsoft Networks” service and not
 bound to the “File and Printer Sharing for Microsoft Networks”.<span
-style='mso-spacerun:yes'>  </span>If the MLA is unbound to &quot;Client
-Microsoft Networks&quot;, the OpenAFS Client Service will become inaccessible
-when the machine is disconnected from the network.<span
-style='mso-spacerun:yes'>  </span>If the MLA is bound to &quot;File and Printer
-Sharing ...&quot; there will be a service type collision between the name
-&quot;AFS&quot; and the name of the machine on the MLA's IP Address that will
-result in the OpenAFS client service becoming inaccessible and the &quot;NET
-VIEW \\AFS&quot; command will return a &quot;System Error 52&quot;
-message.<span style='mso-spacerun:yes'>  </span>To correct the problem:</p>
+style='mso-spacerun:yes'>  </span>If the MLA is unbound to &quot;Client Microsoft
+Networks&quot;, the OpenAFS Client Service will become inaccessible when the
+machine is disconnected from the network.<span style='mso-spacerun:yes'> 
+</span>If the MLA is bound to &quot;File and Printer Sharing ...&quot; there
+will be a service type collision between the name &quot;AFS&quot; and the name
+of the machine on the MLA's IP Address that will result in the OpenAFS client
+service becoming inaccessible and the &quot;NET VIEW \\AFS&quot; command will
+return a &quot;System Error 52&quot; message.<span style='mso-spacerun:yes'> 
+</span>To correct the problem:</p>
 
 <p class=MsoNormal style='margin-left:49.6pt;text-indent:-14.15pt;mso-list:
 l3 level1 lfo10;tab-stops:list 14.15pt'><![if !supportLists]><span
@@ -3509,21 +3509,39 @@ This significantly enhances the interoperability of AFS volumes within the
 Explorer Shell and Microsoft Office applications.</p>
 
 <h2 style='margin-left:0pt;text-indent:0pt'><a name="_Toc115417060"></a><a
-name="_Toc115416124"><span style='mso-bookmark:_Toc115417060'>3.18. No Support
-for </span></a><st2:place w:st="on"><st2:PlaceName w:st="on"><span
-  style='mso-bookmark:_Toc115417060'><span style='mso-bookmark:_Toc115416124'>Byte</span></span></st2:PlaceName><span
+name="_Toc115416124"><span style='mso-bookmark:_Toc115417060'>3.18. </span></a><st2:place
+w:st="on"><st2:PlaceName w:st="on"><span style='mso-bookmark:_Toc115417060'><span
+  style='mso-bookmark:_Toc115416124'>Byte</span></span></st2:PlaceName><span
  style='mso-bookmark:_Toc115417060'><span style='mso-bookmark:_Toc115416124'> <st2:PlaceType
  w:st="on">Range</st2:PlaceType></span></span></st2:place><span
 style='mso-bookmark:_Toc115417060'><span style='mso-bookmark:_Toc115416124'>
 Locking</span></span></h2>
 
-<p class=MsoBodyText>Many applications on Windows (e.g. Microsoft Office)
-require the use of byte range locks applied to a file either to protect against
+<p class=MsoNormal>Many applications on Windows (e.g. Microsoft Office) require
+the use of byte range locks applied to a file either to protect against
 simultaneous file access or as a signaling mechanism.<span
-style='mso-spacerun:yes'>   </span>OpenAFS does not currently support byte
-range locks.<span style='mso-spacerun:yes'>   </span>It is strongly recommended
-that files not be edited within AFS if they might be accessed by multiple users
-or multiple processes on a single machine.</p>
+style='mso-spacerun:yes'>   </span>As of 1.4.1, OpenAFS for Windows utilizes
+AFS' advisory locks to simulate Microsoft Windows mandatory locks.<span
+style='mso-spacerun:yes'>   </span>When an application opens a file, a lock
+will be placed in AFS indicating that the file is in use.<span
+style='mso-spacerun:yes'>  </span>If the lock is a write lock, the use of the
+file will be restricted to other applications running on the same machine as
+the first application to apply the lock.<span style='mso-spacerun:yes'>  
+</span>Applications running on other machines will see the full lock and will
+be unable to access the file.</p>
+
+<p class=MsoNormal>Most Windows applications and Windows itself opens files in
+shared read mode. When this is done, a read lock is applied to the file.<span
+style='mso-spacerun:yes'>   </span>This does not prevent shared read access
+across multiple machines but is used to ensure that no one writes to the file
+while it is in use.</p>
+
+<p class=MsoNormal>As locks are checked and applied during the file open
+operation, it is crucial that users have the locking 'k' privilege in all
+directories in which the user might read a file or execute an application
+unless the directory exists on a read only volume.<span
+style='mso-spacerun:yes'>  </span>A failure to assign the 'k' privilege will
+result in &quot;Access Denied&quot; errors during file open.</p>
 
 <h2 style='margin-left:0pt;text-indent:0pt'><a name="_Toc115417061"></a><a
 name="_Toc115416125"><span style='mso-bookmark:_Toc115417061'>3.19. Automatic
@@ -4022,18 +4040,18 @@ process.</p>
 
 <h1 style='margin-left:0pt;text-indent:0pt'><a name="_Toc115417112"></a><a
 name="_Toc115417081"></a><a name="_Toc115416145"><span style='mso-bookmark:
-_Toc115417081'><span style='mso-bookmark:_Toc115417112'>4. How to Debug Problems
-with OpenAFS for Windows:</span></span></a></h1>
+_Toc115417081'><span style='mso-bookmark:_Toc115417112'>4. How to Debug
+Problems with OpenAFS for Windows:</span></span></a></h1>
 
 <p class=MsoNormal>OpenAFS for Windows provides a wide range of tools to assist
-you in debugging problems.<span style='mso-spacerun:yes'>  </span>The
-techniques available to you are varied because of the wide range of issues that
-have been discovered over the years.</p>
+you in debugging problems.<span style='mso-spacerun:yes'>  </span>The techniques
+available to you are varied because of the wide range of issues that have been
+discovered over the years.</p>
 
 <h2 style='margin-left:0pt;text-indent:0pt'><a name="_Toc115417082"></a><a
-name="_Toc115416146"><span style='mso-bookmark:_Toc115417082'>4.1. pioctl debugging
-(</span></a><a href="#_Value___:_IoctlDebug"><span style='mso-bookmark:_Toc115416146'><span
-style='mso-bookmark:_Toc115417082'>IoctlDebug</span></span><span
+name="_Toc115416146"><span style='mso-bookmark:_Toc115417082'>4.1. pioctl
+debugging (</span></a><a href="#_Value___:_IoctlDebug"><span style='mso-bookmark:
+_Toc115416146'><span style='mso-bookmark:_Toc115417082'>IoctlDebug</span></span><span
 style='mso-bookmark:_Toc115416146'><span style='mso-bookmark:_Toc115417082'></span></span></a><span
 style='mso-bookmark:_Toc115416146'><span style='mso-bookmark:_Toc115417082'>
 registry key)</span></span></h2>
@@ -4145,8 +4163,8 @@ href="#_Value___:_MaxLogSize">MaxLogSize</a></i> registry value determines the
 maximum size of the %WINDIR%\TEMP\afsd_init.log file.<span
 style='mso-spacerun:yes'>  </span>If the file is larger than this value when
 OpenAFS Client Service starts, the file will be reset to 0 bytes.<span
-style='mso-spacerun:yes'>  </span>If value is set to 0, the file will be allowed
-to grow indefinitely.</p>
+style='mso-spacerun:yes'>  </span>If value is set to 0, the file will be
+allowed to grow indefinitely.</p>
 
 <h2 style='margin-left:0pt;text-indent:0pt'><a name="_Toc115417084"></a><a
 name="_Toc115416148"><span style='mso-bookmark:_Toc115417084'>4.3. afsd_service
@@ -4160,8 +4178,8 @@ style='mso-spacerun:yes'>   </span>The default number of actions preserved at
 any one time is 5000.<span style='mso-spacerun:yes'>  </span>This can be
 adjusted with the <a href="#_Value_:_TraceBufferSize">registry value</a>:</p>
 
-<p class=PreformattedText><span style='mso-spacerun:yes'> </span><span
-style='mso-spacerun:yes'> </span>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</p>
+<p class=PreformattedText><span style='mso-spacerun:yes'> 
+</span>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</p>
 
 <p class=PreformattedText><span style='mso-spacerun:yes'> 
 </span>REG_DWORD<span style='mso-spacerun:yes'>  </span>TraceBufferSize </p>
@@ -4183,7 +4201,8 @@ Bit 2 of the <a href="#_Value__:_TraceOption">TraceOption</a> value in the
 registry is set, all trace log events are output using the Windows Debug
 Monitor interface (OutputDebugString).<span style='mso-spacerun:yes'>  </span></p>
 
-<p class=PreformattedText><span style='mso-spacerun:yes'>  </span>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</p>
+<p class=PreformattedText><span style='mso-spacerun:yes'> 
+</span>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</p>
 
 <p class=PreformattedText style='text-indent:12.0pt'>REG_DWORD<span
 style='mso-spacerun:yes'>   </span>TraceOption = 0x04</p>
@@ -4287,8 +4306,7 @@ conns</p>
 id</p>
 
 <p class=PreformattedText><span style='mso-spacerun:yes'>      
-</span>-noconns<span style='mso-spacerun:yes'>         </span>show no
-connections</p>
+</span>-noconns<span style='mso-spacerun:yes'>         </span>show no connections</p>
 
 <p class=PreformattedText><span style='mso-spacerun:yes'>      
 </span>-peers<span style='mso-spacerun:yes'>           </span>show peers</p>
@@ -4310,17 +4328,16 @@ style='mso-spacerun:yes'>   </span>[-refcounts] [-callbacks] [-addrs] [-cache]
 <p class=PreformattedText>Where: -long<span style='mso-spacerun:yes'>      
 </span>print all info</p>
 
-<p class=PreformattedText><span style='mso-spacerun:yes'>  </span><span
-style='mso-spacerun:yes'>     </span>-refcounts<span style='mso-spacerun:yes'> 
-</span>print only cache entries with positive reference counts</p>
+<p class=PreformattedText><span style='mso-spacerun:yes'>      
+</span>-refcounts<span style='mso-spacerun:yes'>  </span>print only cache
+entries with positive reference counts</p>
 
 <p class=PreformattedText><span style='mso-spacerun:yes'>      
 </span>-callbacks<span style='mso-spacerun:yes'>  </span>print only cache
 entries with callbacks</p>
 
 <p class=PreformattedText><span style='mso-spacerun:yes'>      
-</span>-addrs<span style='mso-spacerun:yes'>      </span>print only host
-interfaces</p>
+</span>-addrs<span style='mso-spacerun:yes'>      </span>print only host interfaces</p>
 
 <p class=PreformattedText><span style='mso-spacerun:yes'>      
 </span>-cache<span style='mso-spacerun:yes'>      </span>print only cache
@@ -4335,8 +4352,8 @@ Cache consistency check</span></a></h2>
 problem with the persistent cache that prevent the AFS Client Service from
 being able to start a validation check on the file can be performed.</p>
 
-<p class=PreformattedText><span style='mso-spacerun:yes'>  </span>afsd_service.exe
---validate-cache &lt;cache-path&gt;</p>
+<p class=PreformattedText><span style='mso-spacerun:yes'> 
+</span>afsd_service.exe --validate-cache &lt;cache-path&gt;</p>
 
 <h1 style='margin-left:0pt;text-indent:0pt'><a name="_Toc115417113"></a><a
 name="_Toc115417091"></a><a name="_Toc115416155"><span style='mso-bookmark:
@@ -4351,9 +4368,9 @@ installer.<span style='mso-spacerun:yes'>  </span>If a dump file is available
 for the problem, %WINDIR%\TEMP\afsd.dmp, include it along with the AFS Client
 Trace file<span style='mso-spacerun:yes'>  </span>%WINDIR%\TEMP\afsd.log.<span
 style='mso-spacerun:yes'>  </span>The AFS Client startup log is
-%WINDIR%\TEMP\afsd_init.log.<span style='mso-spacerun:yes'>  </span>Send the
-last continuous block of<span style='mso-spacerun:yes'>  </span>log information
-from this file.</p>
+%WINDIR%\TEMP\afsd_init.log.<span style='mso-spacerun:yes'>  </span>Send the last
+continuous block of<span style='mso-spacerun:yes'>  </span>log information from
+this file.</p>
 
 <p class=MsoNormal>Configuring DrWatson to generate dump files for crashes:</p>
 
@@ -4466,8 +4483,8 @@ OpenAFS Fund</span></a> </h2>
 <p class=MsoBodyText><a href="http://www.usenix.org/">USENIX</a>, a 501c3
 non-profit corporation, has formed the USENIX OpenAFS Fund in order to accept
 tax deductible donations on behalf of the OpenAFS Elders. The donated funds
-will be allocated by the OpenAFS Elders to fund OpenAFS development, documentation,
-project management, and maintaining openafs.org. </p>
+will be allocated by the OpenAFS Elders to fund OpenAFS development,
+documentation, project management, and maintaining openafs.org. </p>
 
 <div style='mso-element:frame;mso-element-frame-height:66.05pt;mso-element-wrap:
 no-wrap-beside;mso-element-anchor-vertical:page;mso-element-anchor-horizontal:
@@ -4495,8 +4512,8 @@ column;mso-element-left:.05pt;mso-element-top:372.8pt;mso-height-rule:exactly'>
 <![if !supportTextWrap]><br clear=ALL>
 <![endif]>
 
-<p class=MsoBodyText>Donations can be made by sending a check, drawn on a U.S.
-bank, made out to the USENIX OpenAFS Fund or by making a <a
+<p class=MsoBodyText>Donations can be made by sending a check, drawn on a U.S. bank,
+made out to the USENIX OpenAFS Fund or by making a <a
 href="https://db.usenix.org/cgi-bin/openafs/openafs.cgi">donation online</a>.</p>
 
 <h2 style='margin-left:0pt;text-indent:0pt'><a name="_Toc115417094">6.2. Secure
@@ -4704,9 +4721,9 @@ Configuration Options</span></a></h2>
 described in <a href="#_Appendix_A:_Registry_Values">Appendix A</a> are present
 in the MSI.<span style='mso-spacerun:yes'>  </span>Most of these can be
 controlled by setting the corresponding properties to the desired value.<span
-style='mso-spacerun:yes'>  </span>Some settings may require modifying existing
-registry entries (though not recommended) or adding new resources (like files
-or registry keys).<span style='mso-spacerun:yes'>  </span>Instructions for
+style='mso-spacerun:yes'>  </span>Some settings may require modifying existing registry
+entries (though not recommended) or adding new resources (like files or
+registry keys).<span style='mso-spacerun:yes'>  </span>Instructions for
 performing these tasks are below.</p>
 
 <h3 style='margin-left:0pt;text-indent:0pt'><a name="_Toc115416163">7.2.1
@@ -4754,8 +4771,8 @@ margin-left:18.0pt;text-indent:-18.0pt;mso-list:l14 level1 lfo30;tab-stops:
 list 18.0pt'><![if !supportLists]><span style='font-size:9.0pt;mso-fareast-font-family:
 Thorndale;mso-bidi-font-family:Thorndale'><span style='mso-list:Ignore'>2.<span
 style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span></span><![endif]>Select the 'Property' table from the list of tables
-on the left.</p>
+</span></span></span><![endif]>Select the 'Property' table from the list of
+tables on the left.</p>
 
 <p class=MsoNormal style='margin-top:4.3pt;margin-right:0pt;margin-bottom:4.3pt;
 margin-left:18.0pt;text-indent:-18.0pt;mso-list:l14 level1 lfo30;tab-stops:
@@ -4805,8 +4822,8 @@ desired value.</p>
 
 <h5><a name="_Toc115416169">7.2.1.2.1 Registry Properties</a></h5>
 
-<p class=MsoNormal>These properties are used to set the values of registry
-entries associated with OpenAFS for Windows.</p>
+<p class=MsoNormal>These properties are used to set the values of registry entries
+associated with OpenAFS for Windows.</p>
 
 <table class=MsoTableWeb1 border=1 cellspacing=3 cellpadding=0
  style='mso-cellspacing:2.0pt;mso-yfti-tbllook:480;mso-padding-alt:0pt 5.4pt 0pt 5.4pt;
@@ -4974,13 +4991,13 @@ entries associated with OpenAFS for Windows.</p>
 style='mso-bookmark:_Toc115416184'>7.2.1.2.2 AFSCreds.exe Properties</span></h5>
 
 <p class=MsoNormal>These properties are combined to add a command line option
-to the shortcut that will be created in the Start:Programs:OpenAFS and
-Start:Programs:Startup folders (see CREDSSTARTUP).<span
-style='mso-spacerun:yes'>  </span>The method of specifying the option was chosen
-for easy integration with the Windows Installer user interface.<span
-style='mso-spacerun:yes'>  </span>Although other methods can be used to specify
-options to AFSCREDS.EXE, it is advised that they be avoided as transforms
-including such options may not apply to future releases of OpenAFS.</p>
+to the shortcut that will be created in the Start:Programs:OpenAFS and Start:Programs:Startup
+folders (see CREDSSTARTUP).<span style='mso-spacerun:yes'>  </span>The method
+of specifying the option was chosen for easy integration with the Windows
+Installer user interface.<span style='mso-spacerun:yes'>  </span>Although other
+methods can be used to specify options to AFSCREDS.EXE, it is advised that they
+be avoided as transforms including such options may not apply to future
+releases of OpenAFS.</p>
 
 <table class=MsoTableWeb1 border=1 cellspacing=3 cellpadding=0
  style='mso-cellspacing:2.0pt;mso-yfti-tbllook:480;mso-padding-alt:0pt 5.4pt 0pt 5.4pt;
@@ -4992,8 +5009,8 @@ including such options may not apply to future releases of OpenAFS.</p>
   style='mso-spacerun:yes'>    </span>: '1' or '0'</p>
   <p class=MsoList style='mso-yfti-cnfc:1'>Controls whether AFSCreds.exe starts
   up automatically when the user logs on.<span style='mso-spacerun:yes'> 
-  </span>When CREDSSTARTUP is '1' a shortcut is added to the 'Startup' folder in
-  the 'Program menu' which starts AFSCREDS.EXE with the options that are
+  </span>When CREDSSTARTUP is '1' a shortcut is added to the 'Startup' folder
+  in the 'Program menu' which starts AFSCREDS.EXE with the options that are
   determined by the other CREDS* properties.</p>
   </td>
  </tr>
@@ -5043,12 +5060,12 @@ including such options may not apply to future releases of OpenAFS.</p>
 <h3 style='margin-left:0pt;text-indent:0pt'><a name="_Toc115416191">7.2.2
 Existing Registry Entries</a></h3>
 
-<p class=MsoNormal>You can change existing registry values subject to the
-restrictions mentioned in the Windows Platform SDK.<span
-style='mso-spacerun:yes'>  </span>Pay special attention to component key paths
-and try to only change the 'Value' column in the 'Registry' table.<span
-style='mso-spacerun:yes'>  </span>If you want to add additional registry keys
-please refer to section 3 (Additional resources).</p>
+<p class=MsoNormal>You can change existing registry values subject to the restrictions
+mentioned in the Windows Platform SDK.<span style='mso-spacerun:yes'> 
+</span>Pay special attention to component key paths and try to only change the
+'Value' column in the 'Registry' table.<span style='mso-spacerun:yes'> 
+</span>If you want to add additional registry keys please refer to section 3
+(Additional resources).</p>
 
 <h3 style='margin-left:0pt;text-indent:0pt'><a name="_Toc115416192">7.2.3
 Replacing Configuration Files</a></h3>
@@ -5219,9 +5236,10 @@ the following :</p>
  </tr>
 </table>
 
-<p class=MsoNormal style='margin-left:35.45pt'>Note that the ComponentId is an uppercase
-GUID.<span style='mso-spacerun:yes'>  </span>You can generate one using
-GUIDGEN.EXE or UUIDGEN.EXE, both of which are included in the Platform SDK.</p>
+<p class=MsoNormal style='margin-left:35.45pt'>Note that the ComponentId is an
+uppercase GUID.<span style='mso-spacerun:yes'>  </span>You can generate one
+using GUIDGEN.EXE or UUIDGEN.EXE, both of which are included in the Platform
+SDK.</p>
 
 <p class=MsoNormal style='margin-left:35.45pt'>The Attributes value of 144 is a
 sum of msidbComponentAttributesPermanent (16) and
@@ -5359,19 +5377,19 @@ a new row (Ctrl-R or 'Tables'-&gt;'Add Row') with the following values:</p>
  </tr>
 </table>
 
-<p class=MsoNormal style='margin-left:35.45pt'>It is important to create the
-new feature under the 'feaClient' feature, which will ensure that the
-configuration file will be installed when the client binaries are installed.</p>
+<p class=MsoNormal style='margin-left:35.45pt'>It is important to create the new
+feature under the 'feaClient' feature, which will ensure that the configuration
+file will be installed when the client binaries are installed.</p>
 
 <p class=MsoNormal style='margin-left:35.45pt'>Setting 'Display' to 0 will hide
-this feature from the feature selection dialog during an interactive
-installation.<span style='mso-spacerun:yes'>  </span>A value of 30 for 'Level'
-allows this feature to be installed by default (on a 'Typical' installation).</p>
+this feature from the feature selection dialog during an interactive installation.<span
+style='mso-spacerun:yes'>  </span>A value of 30 for 'Level' allows this feature
+to be installed by default (on a 'Typical' installation).</p>
 
 <p class=MsoNormal style='margin-left:35.45pt'>The 'Attributes' value is
 msidbFeatureAttributesDisallowAdvertise (8), which is set on all features in
-the OpenAFS MSI.<span style='mso-spacerun:yes'>  </span>The OpenAFS MSI is not
-designed for an advertised installation.</p>
+the OpenAFS MSI.<span style='mso-spacerun:yes'>  </span>The OpenAFS MSI is not designed
+for an advertised installation.</p>
 
 <p class=MsoNormal style='margin-left:18.0pt;text-indent:-18.0pt;mso-list:l13 level1 lfo32;
 tab-stops:list 18.0pt'><![if !supportLists]><span style='mso-fareast-font-family:
@@ -5592,8 +5610,8 @@ designates this as the media source for the newly added file.</p>
 <h4><a name="_Toc115416193"></a><a name="_2.3.1_Components_for_Configuration_"></a><span
 style='mso-bookmark:_Toc115416193'>7.2.3.1 Components for Configuration Files</span></h4>
 
-<p class=PreformattedText style='text-indent:35.45pt'>CellServDB:
-'cpf_CellServDB' (ID {D5BA4C15-DBEC-4292-91FC-B54C30F24F2A})</p>
+<p class=PreformattedText style='text-indent:35.45pt'>CellServDB: 'cpf_CellServDB'
+(ID {D5BA4C15-DBEC-4292-91FC-B54C30F24F2A})</p>
 
 <h3 style='margin-left:0pt;text-indent:0pt'><a name="_Toc115416194">7.2.4
 Adding Domain Specific Registry Keys</a></h3>
@@ -5608,8 +5626,8 @@ keys.</p>
 <p class=MsoNormal><span style='mso-spacerun:yes'>    </span>Columns that are
 unspecified should be left empty.</p>
 
-<p class=MsoNormal><span style='mso-spacerun:yes'>    </span>We create a new feature
-and component to hold the new registry keys.</p>
+<p class=MsoNormal><span style='mso-spacerun:yes'>    </span>We create a new
+feature and component to hold the new registry keys.</p>
 
 <table class=MsoTableWeb1 border=1 cellspacing=3 cellpadding=0
  style='mso-cellspacing:2.0pt;mso-yfti-tbllook:480;mso-padding-alt:0pt 5.4pt 0pt 5.4pt;
@@ -5660,8 +5678,8 @@ and component to hold the new registry keys.</p>
  </tr>
  <tr style='mso-yfti-irow:3'>
   <td width=590 valign=top style='width:442.8pt;padding:0pt 5.4pt 0pt 5.4pt'>
-  <p class=MsoNormal><span style='mso-spacerun:yes'>   
-  </span>'FeatureComponents' table:</p>
+  <p class=MsoNormal><span style='mso-spacerun:yes'>    </span>'FeatureComponents'
+  table:</p>
   </td>
  </tr>
  <tr style='mso-yfti-irow:4'>
@@ -5676,8 +5694,8 @@ and component to hold the new registry keys.</p>
  </tr>
  <tr style='mso-yfti-irow:5'>
   <td width=590 valign=top style='width:442.8pt;padding:0pt 5.4pt 0pt 5.4pt'>
-  <p class=MsoNormal><span style='mso-spacerun:yes'>   </span><span
-  style='mso-spacerun:yes'> </span>'Registry' table:</p>
+  <p class=MsoNormal><span style='mso-spacerun:yes'>    </span>'Registry'
+  table:</p>
   </td>
  </tr>
  <tr style='mso-yfti-irow:6'>
@@ -5702,7 +5720,8 @@ and component to hold the new registry keys.</p>
   <span style='mso-tab-count:1'>            </span>Root<span style='mso-tab-count:
   2'>                </span>: 2<br>
   <span style='mso-tab-count:1'>            </span>Key<span style='mso-tab-count:
-  2'>                 </span>: 'SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain'<br>
+  2'>                 </span>:
+  'SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain'<br>
   <span style='mso-tab-count:1'>            </span>Name<span style='mso-tab-count:
   2'>              </span>: '*'<br>
   <span style='mso-tab-count:1'>            </span>Component<span
@@ -5733,8 +5752,7 @@ and component to hold the new registry keys.</p>
   <span style='mso-tab-count:1'>            </span>Root<span style='mso-tab-count:
   2'>                </span>: 2<br>
   <span style='mso-tab-count:1'>            </span>Key<span style='mso-tab-count:
-  2'>                 </span>:
-  'SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\ATHENA.MIT.EDU'<br>
+  2'>                 </span>: 'SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\ATHENA.MIT.EDU'<br>
   <span style='mso-tab-count:1'>            </span>Name<span style='mso-tab-count:
   2'>              </span>: 'LogonOptions'<br>
   <span style='mso-tab-count:1'>            </span>Value<span style='mso-tab-count:
@@ -5751,8 +5769,7 @@ and component to hold the new registry keys.</p>
   <span style='mso-tab-count:1'>            </span>Root<span style='mso-tab-count:
   2'>                </span>: 2<br>
   <span style='mso-tab-count:1'>            </span>Key<span style='mso-tab-count:
-  2'>                 </span>:
-  SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST'<br>
+  2'>                 </span>: SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST'<br>
   <span style='mso-tab-count:1'>            </span>Name<span style='mso-tab-count:
   2'>              </span>: '*'<br>
   <span style='mso-tab-count:1'>            </span>Component<span
@@ -5785,7 +5802,8 @@ and component to hold the new registry keys.</p>
   <span style='mso-tab-count:1'>            </span>Root<span style='mso-tab-count:
   2'>                </span>: 2<br>
   <span style='mso-tab-count:1'>            </span>Key<span style='mso-tab-count:
-  2'>                 </span>: 'SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST'<br>
+  2'>                 </span>:
+  'SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST'<br>
   <span style='mso-tab-count:1'>            </span>Name<span style='mso-tab-count:
   2'>              </span>: 'FailLoginsSilently'<br>
   <span style='mso-tab-count:1'>            </span>Value<span style='mso-tab-count:
@@ -5801,9 +5819,9 @@ and component to hold the new registry keys.</p>
 
 <p class=MsoNormal><o:p>&nbsp;</o:p></p>
 
-<p class=MsoNormal>The example adds domain specific keys for 'ATHENA.MIT.EDU' (enable
-integrated logon) and 'LOCALHOST' (disable integrated logon and fail logins
-silently).</p>
+<p class=MsoNormal>The example adds domain specific keys for 'ATHENA.MIT.EDU'
+(enable integrated logon) and 'LOCALHOST' (disable integrated logon and fail
+logins silently).</p>
 
 <h3 style='margin-left:0pt;text-indent:0pt'><a name="_Toc115416195">7.2.5
 Adding Site Specific Freelance Registry Keys</a></h3>
@@ -5883,8 +5901,7 @@ feature and component to hold the new registry keys.</p>
  </tr>
  <tr style='mso-yfti-irow:5'>
   <td width=590 valign=top style='width:442.8pt;padding:0pt 5.4pt 0pt 5.4pt'>
-  <p class=MsoNormal><span style='mso-spacerun:yes'>    </span>'Registry'
-  table:</p>
+  <p class=MsoNormal><span style='mso-spacerun:yes'>    </span>'Registry' table:</p>
   </td>
  </tr>
  <tr style='mso-yfti-irow:6'>
@@ -5912,7 +5929,8 @@ feature and component to hold the new registry keys.</p>
   <span style='mso-tab-count:1'>            </span>Name<span style='mso-tab-count:
   2'>              </span>: '0'<br>
   <span style='mso-spacerun:yes'>  </span><span style='mso-tab-count:1'>         </span>Value<span
-  style='mso-spacerun:yes'>           </span><span style='mso-tab-count:1'>         </span>:
+  style='mso-spacerun:yes'>   </span><span
+  style='mso-spacerun:yes'>        </span><span style='mso-tab-count:1'>         </span>:
   'athena.mit.edu#athena.mit.edu:root.cell.'<br>
   <span style='mso-tab-count:1'>            </span>Component<span
   style='mso-tab-count:1'>     </span>: 'rcm_FreelanceKeys'</p>
@@ -6198,8 +6216,8 @@ the AFS client service (afsd_service.exe).</p>
   <p class=MsoBodyText>Type: DWORD<br>
   Default: 25 (CM_CONFIGDEFAULT_SVTHREADS)<br>
   Variable: numSvThreads</p>
-  <p class=MsoBodyText>Number of SMB server threads (number of threads of smb_Server).
-  (see smb_Server in smb.c).</p>
+  <p class=MsoBodyText>Number of SMB server threads (number of threads of
+  smb_Server). (see smb_Server in smb.c).</p>
   </td>
  </tr>
  <tr style='mso-yfti-irow:4;height:79.25pt'>
@@ -6244,8 +6262,8 @@ the AFS client service (afsd_service.exe).</p>
   Variable: cm_mountRoot</p>
   <p class=MsoBodyText>Name of root mount point.<span
   style='mso-spacerun:yes'>  </span>In symlinks, if a path starts with
-  cm_mountRoot, it is assumed that the path is absolute (as opposed to relative)
-  and is adjusted accordingly. Eg: if a path is specified as
+  cm_mountRoot, it is assumed that the path is absolute (as opposed to
+  relative) and is adjusted accordingly. Eg: if a path is specified as
   /afs/athena.mit.edu/foo/bar/baz and cm_mountRoot is &quot;/afs&quot;, then
   the path is interpreted as \\afs\all\athena.mit.edu\foo\bar\baz.<span
   style='mso-spacerun:yes'>  </span>If a path does not start with with
@@ -6616,8 +6634,8 @@ the AFS client service (afsd_service.exe).</p>
   Default: 0x0</p>
   <p class=MsoBodyText>This value will enable the gathering of RX Statistics
   for connections with the Cache Manager’s Peers.<span
-  style='mso-spacerun:yes'>  </span>This functionality can be adjusted at runtime
-  with the “fs rxstatpeer” command.</p>
+  style='mso-spacerun:yes'>  </span>This functionality can be adjusted at
+  runtime with the “fs rxstatpeer” command.</p>
   </td>
  </tr>
  <tr style='mso-yfti-irow:36;mso-yfti-lastrow:yes;height:65.75pt'>
