@@ -135,10 +135,13 @@ if [ $majorvers -ge 7 ]; then
     cp OpenAFS.post_install $PKGRES/postinstall
     cp OpenAFS.pre_upgrade $PKGRES/preupgrade
     cp OpenAFS.post_install $PKGRES/postupgrade
-    cp InstallationCheck $PKGRES
-    mkdir $PKGRES/English.lproj
-    cp InstallationCheck $PKGRES/English.lproj
-    chmod a+x $PKGRES/postinstall $PKGRES/postupgrade $PKGRES/preupgrade $PKGRES/InstallationCheck
+    if [ $majorvers -ge 8 ]; then
+        cp InstallationCheck $PKGRES
+        mkdir $PKGRES/English.lproj
+        cp InstallationCheck $PKGRES/English.lproj
+        chmod a+x $PKGRES/InstallationCheck
+    fi
+    chmod a+x $PKGRES/postinstall $PKGRES/postupgrade $PKGRES/preupgrade
 else
     cp OpenAFS.post_install OpenAFS.pre_upgrade $PKGRES
     cp OpenAFS.post_install $PKGRES/OpenAFS.post_upgrade
