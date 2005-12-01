@@ -63,11 +63,7 @@ afs_InitDualFSCacheOps(struct vnode *vp)
 }
 
 ino_t
-#ifdef AFS_DARWIN80_ENV
 VnodeToIno(vnode_t avp)
-#else
-VnodeToIno(vnode_t * avp)
-#endif
 {
     unsigned long ret;
 
@@ -104,11 +100,7 @@ VnodeToIno(vnode_t * avp)
 
 
 dev_t
-#ifdef AFS_DARWIN80_ENV
 VnodeToDev(vnode_t avp)
-#else
-VnodeToDev(vnode_t * avp)
-#endif
 {
 #ifndef AFS_DARWIN80_ENV
     if (afs_CacheFSType == AFS_APPL_UFS_CACHE) {
