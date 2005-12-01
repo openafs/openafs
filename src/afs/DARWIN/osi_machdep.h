@@ -203,7 +203,12 @@ extern struct lock__bsd__ afs_global_lock;
 #define AFS_APPL_UFS_CACHE 1
 #define AFS_APPL_HFS_CACHE 2
 
-extern ino_t VnodeToIno(struct vnode * vp);
+#ifdef AFS_DARWIN80_ENV
+extern ino_t VnodeToIno(vnode_t avp);
+#else
+extern ino_t VnodeToIno(vnode_t * avp);
+#endif
+
 extern dev_t VnodeToDev(struct vnode * vp);
 extern int igetinode(mount_t vfsp, dev_t dev , ino_t inode, vnode_t *vpp,
               struct vattr *va, int *perror);
