@@ -107,6 +107,7 @@ echo '-stat 2000 -dcache 800 -daemons 3 -volumes 70 -dynroot -fakestat-all' > $P
 strip -X -S $PKGROOT/Library/OpenAFS/Tools/root.client/usr/vice/etc/afs.kext/Contents/MacOS/afs
 
 cp -RP $PKGROOT/Library/OpenAFS/Tools/root.client/usr/vice/etc/afs.kext $PKGROOT/private/var/db/openafs/etc
+cp -RP $PKGROOT/Library/OpenAFS/Tools/root.client/usr/vice/etc/C $PKGROOT/private/var/db/openafs/etc
 
 chown -R root${SEP}wheel $PKGROOT/private
 chmod -R og-w $PKGROOT/private
