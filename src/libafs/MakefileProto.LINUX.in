@@ -171,7 +171,7 @@ ${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
 	ln -fs ${LINUX_KERNEL_PATH}/include/asm-x86_64 asm
 <s390_linux22 s390_linux24 s390_linux26 s390x_linux26>
 	ln -fs ${LINUX_KERNEL_PATH}/include/asm-s390 asm
-<s390x_linux22 s390x_linux24>
+<s390x_linux22 s390x_linux24 s390x_linux26>
 	ln -fs ${LINUX_KERNEL_PATH}/include/asm-s390x asm
 <ppc_linux22 ppc_linux24 ppc_linux26>
 	ln -fs ${LINUX_KERNEL_PATH}/include/asm-ppc asm 
