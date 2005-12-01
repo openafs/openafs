@@ -1483,7 +1483,7 @@ mainproc(struct cmd_syndesc *as, char *arock)
     if (as->parms[25].items) {
 	/* -files_per_subdir */
 	int res = atoi(as->parms[25].items->data);
-	if (res < 10 || res > 2 ^ 30) {
+	if (res < 10 || res > (1 << 30)) {
 	    printf
 		("afsd:invalid number of files per subdir, \"%s\". Ignored\n",
 		 as->parms[25].items->data);
