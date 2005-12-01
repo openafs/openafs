@@ -877,10 +877,11 @@ restart:
 				 * request is lost */
 
     i = VCHash(afid);
+    j = VCHashV(afid);
 
     tvc->hnext = afs_vhashT[i];
     afs_vhashT[i] = tvc;
-    QAdd(&afs_vhashTV[i], &tvc->vhashq);
+    QAdd(&afs_vhashTV[j], &tvc->vhashq);
     
     if ((VLRU.next->prev != &VLRU) || (VLRU.prev->next != &VLRU)) {
         refpanic("NewVCache VLRU inconsistent");
