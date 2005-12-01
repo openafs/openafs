@@ -439,6 +439,7 @@ case $AFS_SYSNAME in
 		XCFLAGS="-no-cpp-precomp"
 		TXLIBS="-lncurses"
 		EXTRA_VLIBOBJS="fstab.o"
+		SHLIB_LINKER="${MT_CC} -dynamiclib"
 		;;
 
 	*_darwin_80)
@@ -452,7 +453,6 @@ case $AFS_SYSNAME in
 		XCFLAGS="-no-cpp-precomp"
 		TXLIBS="-lncurses"
 		EXTRA_VLIBOBJS="fstab.o"
-		SHLIB_LINKER="${MT_CC} -dynamiclib"
 		SHLIB_LINKER="${MT_CC} -dynamiclib"
 		;;
 
