@@ -1,5 +1,6 @@
 openafs (1.4.0-2) unstable; urgency=low
 
+  * Suggest the same PAM settings for pam_krb5 that libpam-krb5 does.
   * Update uploader address.
 
  --

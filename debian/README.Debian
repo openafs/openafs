@@ -71,19 +71,19 @@ PAM Authentication
   and libpam-openafs-session packages and then put something like the
   following in /etc/pam.d/common-auth:
 
-      auth    [success=ok default=1]  pam_krb5.so
+      auth    [success=ok default=1]  pam_krb5.so ignore_root
       auth    [default=done]          pam_openafs_session.so
       auth    required                pam_unix.so nullok_secure try_first_pass
 
   and something like the following in /etc/pam.d/common-session:
 
-      session optional        pam_krb5.so
+      session optional        pam_krb5.so ignore_root
       session optional        pam_openafs_session.so
       session required        pam_unix.so
 
   You'll probably also want the following in /etc/pam.d/common-account:
 
-      account sufficient      pam_krb5.so
+      account required        pam_krb5.so ignore_root
       account required        pam_unix.so
 
   There are, of course, many variations depending on what different
@@ -112,4 +112,4 @@ PAM Authentication
   the openafs-kpasswd package to get the administrative utilities for
   managing those Kerberos accounts.
 
- -- Russ Allbery <rra@stanford.edu>, Fri Sep  9 14:53:22 2005
+ -- Russ Allbery <rra@debian.org>, Mon Dec  5 15:15:09 2005
