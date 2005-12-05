@@ -2,7 +2,7 @@ Source: openafs
 Section: net
 Priority: optional
 Maintainer: Sam Hartman <hartmans@debian.org>
-Uploaders: Russ Allbery <rra@stanford.edu>
+Uploaders: Russ Allbery <rra@debian.org>
 Build-Depends: debhelper (>= 4.1.16), libncurses5-dev, libpam0g-dev, bison, docbook-to-man, flex, perl, comerr-dev
 Standards-Version: 3.6.2
 
