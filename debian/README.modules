@@ -7,7 +7,8 @@ Introduction
 
       apt-get install openafs-modules-2.4.27-2-686-smp
 
-  Pre-built modules are not provided with Debian, but many organizations
+  Pre-built modules are not provided with Debian (building and maintaining
+  them in Debian proper poses too many problems), but many organizations
   that use OpenAFS build their own and provide them locally.
 
   If this doesn't work, you will need to build your own modules.  There
