@@ -51,7 +51,7 @@ if [ -n "$KVERS" ] && [ -n "$KDREV" ]; then
     afs_kvers="${KVERS}${INT_SUBARCH}"
     afs_kdrev="${KDREV}"
 elif [ ! -f "$changelog" ] ; then
-    afs_kvers=`sh debian/kernel-version`
+    afs_kvers=`perl debian/kernel-version`
     if [ -z "$KDREV" ] ; then
         afs_kdrev="${afs_kvers}-0"
     else
