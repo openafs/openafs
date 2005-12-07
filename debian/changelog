@@ -16,10 +16,14 @@ openafs (1.4.0-2) unstable; urgency=low
     - Add Build-Depends and Uploaders to the openafs-modules-source
       control file.
     - Remove unused parts of prep-modules and heavily comment it.
+  * openafs-client should only recommend the AFS kernel module.  Many of
+    the client programs will work in unauthenticated mode without it, and
+    openafs-fileserver depends on it (but doesn't require the kernel
+    module).  (Closes: #342095)
   * Suggest the same PAM settings for pam_krb5 that libpam-krb5 does.
   * Update uploader address.
 
- -- Russ Allbery <rra@debian.org>  Tue,  6 Dec 2005 22:00:11 -0800
+ -- Russ Allbery <rra@debian.org>  Tue,  6 Dec 2005 22:37:54 -0800
 
 openafs (1.4.0-1) unstable; urgency=low
 
