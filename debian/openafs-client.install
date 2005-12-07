@@ -21,3 +21,5 @@ dest/etc/fms                            usr/sbin
 dest/etc/fstrace                        usr/sbin
 
 dest/root.client/usr/vice/etc/afsd      sbin
+
+dest/root.client/usr/vice/etc/C/afszcm.cat      usr/share/openafs
