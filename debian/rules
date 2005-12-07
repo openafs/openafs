@@ -27,15 +27,16 @@ endif
 ifndef KPKG_DEST_DIR
     KPKG_DEST_DIR = ..
 endif
-KVERS := `perl -e '$$_ = <>; $$_ =~ m/"(.+)"/; print "$$1\n";' $(KSRC)/include/linux/version.h 2> /dev/null`
-SYS_NAME := $(shell KVERS=$(KVERS) sh debian/sysname)
+KVERS := $(shell perl debian/kernel-version $(KSRC))
 export KSRC 
 export KVERS
 export KPKG_DEST_DIR
 
-package   = openafs
-srcpkg    = openafs-modules-source
-modulepkg := $(shell echo openafs-modules-$(KVERS)${INT_SUBARCH})
+SYS_NAME := $(shell KSRC="$(KSRC)" KVERS="$(KVERS)" sh debian/sysname)
+
+package    = openafs
+srcpkg     = openafs-modules-source
+modulepkg := openafs-modules-$(KVERS)${INT_SUBARCH}
 moduledir := debian/$(modulepkg)/lib/modules/$(KVERS)/fs
 
 # These packages have lintian overrides.
@@ -224,8 +225,7 @@ kdist_image: build-modules-stamp
 	$(ROOT_CMD) $(MAKE) $(MFLAGS) -f debian/rules clean
 
 kdist: build-modules-stamp
-	$(ROOT_CMD) $(MAKE) $(MFLAGS) -f debian/rules KERNEL_DEPENDS=y \
-	    binary-modules
+	$(ROOT_CMD) $(MAKE) $(MFLAGS) -f debian/rules binary-modules
 	KSRC="$(KSRC)" KMAINT="$(KMAINT)" KEMAIL="$(KEMAIL)" \
 	    sh -v debian/genchanges.sh
 	$(ROOT_CMD) $(MAKE) $(MFLAGS) -f debian/rules clean
@@ -238,11 +238,11 @@ kdist_clean:
 configure-modules: configure-modules-stamp
 configure-modules-stamp:
 	@if test x"$(SYS_NAME)" = x"UNKNOWN" ; then exit 1 ; fi
-ifeq ($(KERNEL_DEPENDS),y)
-	sh debian/prep-modules $(KSRC) debian/control.module > debian/control
-else
-	sh debian/prep-modules $(KSRC) debian/control.module-image > debian/control
-endif
+	@if test x"$(KVERS)" = x ; then \
+	    echo 'No version in $(KSRC)/include/linux/version.h' >&2 ; \
+	    exit 1 ; \
+	fi
+	sh debian/prep-modules $(KSRC)
 	-ln -s @sys/dest dest
 	-ln -s $(SYS_NAME) @sys
 	sh configure --with-afs-sysname=$(SYS_NAME) \
@@ -267,7 +267,6 @@ install-modules: build-modules-stamp
 	        -a ! -f $(moduledir)/openafs.mp.o ; then \
 	    ln $(moduledir)/openafs.o $(moduledir)/openafs.mp.o || exit 1 ; \
 	fi
-	rm -rf debian/$(modulepkg)/usr/include
 
 binary-modules: install-modules
 	dh_testdir
