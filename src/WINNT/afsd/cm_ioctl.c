@@ -77,10 +77,71 @@ long cm_FlushFile(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
     cm_dnlcPurgedp(scp);
     cm_dnlcPurgevp(scp);
     cm_FreeAllACLEnts(scp);
+
+    /* Force mount points and symlinks to be re-evaluated */
+    scp->mountPointStringp[0] = '\0';
+
     lock_ReleaseMutex(&scp->mx);
 
     lock_ReleaseWrite(&scp->bufCreateLock);
-    afsi_log("cm_FlushFile scp 0x%x returns error: [%x]",scp, code);
+    osi_Log2(afsd_logp,"cm_FlushFile scp 0x%x returns error: [%x]",scp, code);
+    return code;
+}
+
+long cm_FlushParent(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
+{
+    long code = 0;
+    int i;
+    cm_fid_t    parent_fid;
+
+    lock_ObtainWrite(&cm_scacheLock);
+    cm_HoldSCacheNoLock(scp);
+    parent_fid = scp->fid;
+    parent_fid.vnode = scp->parentVnode;
+    parent_fid.unique = scp->parentUnique;
+    cm_ReleaseSCacheNoLock(scp);
+
+    for (i=0; i<cm_data.hashTableSize; i++) {
+        for (scp = cm_data.hashTablep[i]; scp; scp = scp->nextp) {
+            if (!cm_FidCmp(&scp->fid, &parent_fid)) {
+                cm_HoldSCacheNoLock(scp);
+                lock_ReleaseWrite(&cm_scacheLock);
+
+                /* now flush the file */
+                code = cm_FlushFile(scp, userp, reqp);
+                lock_ObtainWrite(&cm_scacheLock);
+                cm_ReleaseSCacheNoLock(scp);
+            }
+        }
+    }
+    lock_ReleaseWrite(&cm_scacheLock);
+
+    return code;
+}
+
+
+long cm_FlushVolume(cm_user_t *userp, cm_req_t *reqp, afs_uint32 cell, afs_uint32 volume)
+{
+    long code = 0;
+    cm_scache_t *scp;
+    int i;
+
+    lock_ObtainWrite(&cm_scacheLock);
+    for (i=0; i<cm_data.hashTableSize; i++) {
+        for (scp = cm_data.hashTablep[i]; scp; scp = scp->nextp) {
+            if (scp->fid.volume == volume && scp->fid.cell == cell) {
+                cm_HoldSCacheNoLock(scp);
+                lock_ReleaseWrite(&cm_scacheLock);
+
+                /* now flush the file */
+                code = cm_FlushFile(scp, userp, reqp);
+                lock_ObtainWrite(&cm_scacheLock);
+                cm_ReleaseSCacheNoLock(scp);
+            }
+        }
+    }
+    lock_ReleaseWrite(&cm_scacheLock);
+
     return code;
 }
 
@@ -562,6 +623,8 @@ long cm_IoctlSetACL(struct smb_ioctl *ioctlp, struct cm_user *userp)
     return code;
 }
 
+
+
 long cm_IoctlFlushAllVolumes(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
     long code;
@@ -593,7 +656,7 @@ long cm_IoctlFlushVolume(struct smb_ioctl *ioctlp, struct cm_user *userp)
     long code;
     cm_scache_t *scp;
     unsigned long volume;
-    int i;
+    unsigned long cell;
     cm_req_t req;
 
     cm_InitReq(&req);
@@ -602,23 +665,10 @@ long cm_IoctlFlushVolume(struct smb_ioctl *ioctlp, struct cm_user *userp)
     if (code) return code;
         
     volume = scp->fid.volume;
+    cell = scp->fid.cell;
     cm_ReleaseSCache(scp);
 
-    lock_ObtainWrite(&cm_scacheLock);
-    for (i=0; i<cm_data.hashTableSize; i++) {
-        for (scp = cm_data.hashTablep[i]; scp; scp = scp->nextp) {
-            if (scp->fid.volume == volume) {
-                cm_HoldSCacheNoLock(scp);
-                lock_ReleaseWrite(&cm_scacheLock);
-
-                /* now flush the file */
-                code = cm_FlushFile(scp, userp, &req);
-                lock_ObtainWrite(&cm_scacheLock);
-                cm_ReleaseSCacheNoLock(scp);
-            }
-        }
-    }
-    lock_ReleaseWrite(&cm_scacheLock);
+    code = cm_FlushVolume(userp, &req, cell, volume);
 
     return code;
 }
@@ -1482,13 +1532,16 @@ long cm_IoctlSetSPrefs(struct smb_ioctl *ioctlp, struct cm_user *userp)
                 /* set preferences for an existing vlserver */
                 cm_ChangeRankCellVLServer(tsp);
             }
-            cm_PutServer(tsp);  /* decrease refcount */
         }
         else	/* add a new server without a cell */
         {
             tsp = cm_NewServer(&tmp, type, NULL); /* refcount = 1 */
             tsp->ipRank = rank;
         }
+	lock_ObtainMutex(&tsp->mx);
+	tsp->flags |= CM_SERVERFLAG_PREF_SET;
+	lock_ReleaseMutex(&tsp->mx);
+	cm_PutServer(tsp);  /* decrease refcount */
     }
     return 0;
 }
