@@ -81,7 +81,7 @@ Description: AFS distributed filesystem development libraries
 
 Package: openafs-modules-source
 Priority: extra
-Depends: bison, flex, debhelper (>= 4.0.0), libpam0g-dev, libncurses5-dev, kernel-package | module-assistant, comerr-dev
+Depends: bison, flex, debhelper (>= 4.0.0), kernel-package | module-assistant
 Architecture: all
 Description: AFS distributed filesystem kernel module source
  AFS is a distributed filesystem allowing cross-platform sharing of

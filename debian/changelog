@@ -20,10 +20,11 @@ openafs (1.4.0-2) unstable; urgency=low
     the client programs will work in unauthenticated mode without it, and
     openafs-fileserver depends on it (but doesn't require the kernel
     module).  (Closes: #342095)
+  * openafs-modules-source no longer has to depend on as many libraries.
   * Suggest the same PAM settings for pam_krb5 that libpam-krb5 does.
   * Update uploader address.
 
- -- Russ Allbery <rra@debian.org>  Tue,  6 Dec 2005 22:37:54 -0800
+ -- Russ Allbery <rra@debian.org>  Tue,  6 Dec 2005 23:34:18 -0800
 
 openafs (1.4.0-1) unstable; urgency=low
 
