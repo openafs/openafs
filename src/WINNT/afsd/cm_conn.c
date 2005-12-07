@@ -406,17 +406,11 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 	    cm_scache_t * scp;
 	    osi_Log4(afsd_logp, "cm_Analyze passed VNOVNODE cell %u vol %u vn %u uniq %u.",
 		      fidp->cell, fidp->volume, fidp->vnode, fidp->unique);
-#ifdef VNOVNODE_FLUSH_VOLUME
-	    cm_FlushVolume(userp, reqp, fidp->cell, fidp->volume);
-#else /* VNOVNODE_FLUSH_FILE */
 	    if (!cm_GetSCache(fidp, &scp, userp, reqp)) {
-		cm_FlushFile(scp, userp, reqp);
-#ifdef VNOVNODE_FLUSH_PARENT
 		cm_FlushParent(scp, userp, reqp);
-#endif /* VNOVNODE_FLUSH_PARENT */
+		cm_FlushFile(scp, userp, reqp);
 		cm_ReleaseSCache(scp);
 	    }
-#endif /* VNODE_FLUSH_xxxx */
 	} else {
 	    osi_Log0(afsd_logp, "cm_Analyze passed VNOVNODE unknown fid.");
 	}

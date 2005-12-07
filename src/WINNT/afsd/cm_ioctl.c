@@ -82,7 +82,7 @@ long cm_FlushFile(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
     lock_ReleaseMutex(&scp->mx);
 
     lock_ReleaseWrite(&scp->bufCreateLock);
-    afsi_log("cm_FlushFile scp 0x%x returns error: [%x]",scp, code);
+    osi_Log2(afsd_logp,"cm_FlushFile scp 0x%x returns error: [%x]",scp, code);
     return code;
 }
 
@@ -101,7 +101,7 @@ long cm_FlushParent(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
 
     for (i=0; i<cm_data.hashTableSize; i++) {
         for (scp = cm_data.hashTablep[i]; scp; scp = scp->nextp) {
-            if (cm_FidCmp(&scp->fid, &parent_fid)) {
+            if (!cm_FidCmp(&scp->fid, &parent_fid)) {
                 cm_HoldSCacheNoLock(scp);
                 lock_ReleaseWrite(&cm_scacheLock);
 
