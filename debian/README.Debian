@@ -52,6 +52,9 @@ Changes Relative to Stock OpenAFS
   To distinguish between an SMP and a non-SMP kernel module package, use
   --append_to_version; see README.modules for more information.
 
+  The AFS up utility is installed as afs-up, since the standard name is
+  rather generic.
+
   The libopenafs-dev package only includes static libraries and there are
   no shared library packages.  The shared libraries built by AFS are not
   compatible with Debian policy.  They do not have a stable ABI or an
@@ -112,4 +115,4 @@ PAM Authentication
   the openafs-kpasswd package to get the administrative utilities for
   managing those Kerberos accounts.
 
- -- Russ Allbery <rra@debian.org>, Mon Dec  5 15:15:09 2005
+ -- Russ Allbery <rra@debian.org>, Tue Dec  6 21:11:14 2005
