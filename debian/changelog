@@ -1,5 +1,11 @@
 openafs (1.4.0-2) unstable; urgency=low
 
+  * Install more of the standard OpenAFS utilities.  (Closes: #138851)
+    - openafs-dbserver: Install prdb_check and vldb_check.
+    - openafs-fileserver: Install voldump.
+    - openafs-client: Install fstrace, scout, and up (as afs-up).
+  * Do not install kpwvalid.  The default version does little useful and
+    the kpwvalid binary must be in AFS for it to take effect.
   * Overhaul the way kernel modules are built.
     - Recommend linux-image rather than kernel-image for newer kernels.
     - Always recommend the kernel package; since it's only a recommends,
@@ -12,7 +18,7 @@ openafs (1.4.0-2) unstable; urgency=low
   * Suggest the same PAM settings for pam_krb5 that libpam-krb5 does.
   * Update uploader address.
 
- -- Russ Allbery <rra@debian.org>  Tue,  6 Dec 2005 13:20:05 -0800
+ --
 
 openafs (1.4.0-1) unstable; urgency=low
 

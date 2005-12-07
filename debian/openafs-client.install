@@ -2,14 +2,15 @@ dest/bin/bos                            usr/bin
 dest/bin/cmdebug                        usr/bin
 dest/bin/fs                             usr/bin
 dest/bin/klog                           usr/bin
-dest/bin/kpwvalid                       usr/bin
 dest/bin/pagsh                          usr/bin
 dest/bin/pts                            usr/bin
+dest/bin/scout                          usr/bin
 dest/bin/sys                            usr/bin
 dest/bin/tokens                         usr/bin
 dest/bin/translate_et                   usr/bin
 dest/bin/udebug                         usr/bin
 dest/bin/unlog                          usr/bin
+dest/bin/up                             usr/bin
 
 dest/etc/rxdebug                        usr/bin
 dest/etc/vos                            usr/bin
@@ -17,5 +18,6 @@ dest/etc/vos                            usr/bin
 dest/etc/backup                         usr/sbin
 dest/etc/butc                           usr/sbin
 dest/etc/fms                            usr/sbin
+dest/etc/fstrace                        usr/sbin
 
 dest/root.client/usr/vice/etc/afsd      sbin

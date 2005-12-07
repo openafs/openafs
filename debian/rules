@@ -88,7 +88,6 @@ build: configure-stamp build-stamp
 build-stamp:
 	dh_testdir
 	$(MAKE) dest_nolibafs
-	-rm $(SYS_NAME)/dest/include/crypt.h
 	touch build-stamp
 
 clean:
@@ -118,6 +117,8 @@ install: build
 	done
 	mv debian/openafs-client/usr/bin/pagsh \
 	    debian/openafs-client/usr/bin/pagsh.openafs
+	mv debian/openafs-client/usr/bin/up \
+	    debian/openafs-client/usr/bin/afs-up
 	install -m 644 -c dest/lib/pam_afs.so.1 \
 	    debian/libpam-openafs-kaserver/lib/security/pam_afs.so
 	install -m 644 -c dest/lib/pam_afs.krb.so.1 \
