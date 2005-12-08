@@ -1,0 +1,113 @@
+=head1 NAME
+
+volserver - Initializes the Volume Server component of the fs process
+
+=head1 SYNOPSIS
+
+B<volserver> [B<-log>]  [-p <I<number of processes>>]  
+[B<-udpsize> <I<size of socket buffer in bytes>>]  
+          [B<-enable_peer_stats>]  [B<-enable_process_stats>]  [-help]
+
+This command does not use the syntax conventions of the AFS command
+suites. Provide the command name and all option names in full.
+
+=head1 DESCRIPTION
+
+The volserver command initializes the Volume Server component of
+the B<fs> process. In the conventional configuration, its
+binary file is located in the B</usr/afs/bin> directory on a file
+server machine.
+
+The volserver command is not normally issued at the command
+shell prompt but rather placed into a file server machine's
+B</usr/afs/local/BosConfig> file with the B<bos create>
+command. If it is ever issued at the command shell prompt, the issuer
+must be logged onto a database server machine as the local superuser
+B<root>.
+
+The Volume Server records a trace of its activity in the
+B</usr/afs/logs/VolserLog> file. Use the B<bos getlog>
+command to display the contents of the file.
+
+The Volume Server processes the vos commands that administrators
+use to create, delete, move, and replicate volumes, as well as prepare them
+for archiving to tape or other media.
+
+By default, the VL Server runs nine lightweight processes (LWPs). To
+change the number, use the B<-p> argument.
+
+=head1 OPTIONS
+
+=over 4
+
+=item -log
+
+Records in the /usr/afs/logs/VolserLog file the names of all
+users who successfully initiate a B<vos> command. The Volume
+Server also records any file removals that result from issuing the B<vos
+release> command with the B<-f> flag.
+
+=item -p
+
+Sets the number of server lightweight processes (LWPs) to run.
+Provide an integer between B<4> and B<16>. The default
+is 9.
+
+=item -udpsize
+
+Sets the size of the UDP buffer, which is 64 KB by default. Provide
+a positive integer, preferably larger than the default.
+
+=item -enable_peer_stats
+
+Activates the collection of Rx statistics and allocates memory for their
+storage. For each connection with a specific UDP port on another
+machine, a separate record is kept for each type of RPC (FetchFile, GetStatus,
+and so on) sent or received. To display or otherwise access the
+records, use the Rx Monitoring API.
+
+=item -enable_process_stats
+
+Activates the collection of Rx statistics and allocates memory for their
+storage. A separate record is kept for each type of RPC (FetchFile,
+GetStatus, and so on) sent or received, aggregated over all connections to
+other machines. To display or otherwise access the records, use the Rx
+Monitoring API.
+
+=item -help
+
+Prints the online help for this command. All other valid options
+are ignored.
+
+=back
+
+=head1 EXAMPLES
+
+The following B<bos create> command creates a volserver
+process on the machine B<fs2.abc.com>:
+
+   % bos create -server fs2.abc.com -instance volserver -type simple   \
+                 -cmd /usr/afs/bin/volserver 
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be logged in as the superuser root on a file
+server machine to issue the command at a command shell prompt. It is
+conventional instead to create and start the process by issuing the B<bos
+create> command.
+
+=head1 SEE ALSO
+
+L<BosConfig(1)>,
+L<VolserLog(1)>,
+L<bos_create(1)>,
+L<bos_getlog(1)>,
+L<vos(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

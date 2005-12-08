@@ -1,0 +1,56 @@
+=head1 NAME
+
+sysid - Lists file server machine interface addresses registered in VLDB
+
+=head1 DESCRIPTION
+
+The sysid file records the network interface addresses that the
+File Server (B<fileserver> process) registers in the Volume Location
+Database (VLDB) for the local file server machine.
+
+Each time the File Server restarts, it builds a list of interfaces on the
+local machine by reading the B</usr/afs/local/NetInfo> file, if it
+exists. If the file does not exist, the File Server uses the list of
+network interfaces configured with the operating system. It then
+removes from the list any addresses that appear in the
+B</usr/afs/local/NetRestrict> file, if it exists. The File
+Server records the resulting list in the binary-format B<sysid> file
+and registers the interfaces in the VLDB.
+
+When the Cache Manager requests volume location information, the Volume
+Location (VL) Server provides all of the interfaces registered for each server
+machine that houses the volume. This enables the Cache Manager to make
+use of multiple addresses when accessing AFS data stored on a multihomed file
+server machine.
+
+=head1 CAVEATS
+
+The sysid file is unique to each file server machine, and must
+not be copied from one machine to another. If it is a common practice
+in the cell to copy the contents of the B</usr/afs/local> directory
+from an existing file server machine to a newly installed one, be sure to
+remove the B<sysid> file from the new machine before starting the
+B<fs> trio of processes, which includes the B<fileserver>
+process.
+
+Some versions of AFS limit how many of a file server machine's
+interface addresses that can be registered. Consult the I<IBM AFS
+Release Notes>.
+
+=head1 SEE ALSO
+
+L<NetInfo (server version)(1)>
+
+L<NetRestrict (server version)(1)>
+
+L<vldb.DB0 and vldb.DBSYS1(1)>
+
+L<fileserver(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

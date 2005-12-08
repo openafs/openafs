@@ -1,0 +1,54 @@
+=head1 NAME
+
+fs sysname - Reports the CPU/operating system type
+
+=head1 SYNOPSIS
+
+sys 
+
+=head1 DESCRIPTION
+
+The fs sysname command displays the string stored in kernel memory that
+indicates the local machine's CPU/operating system (OS) type. The
+Cache Manager substitutes the string for the I<@sys> variable which can
+occur in AFS pathnames; the I<IBM AFS Quick Beginnings> and
+I<IBM AFS Administration Guide> explain how using I<@sys> can
+simplify cell configuration.
+
+The command always reports the value for the local machine only. To
+set a new value in kernel memory, use the B<fs sysname> command, which
+like this command can also be used to display the current value.
+
+=head1 OUTPUT
+
+The machine's system type appears as a text string:
+
+   I<system_type>
+
+=head1 EXAMPLES
+
+The following example shows the output produced on a Sun SPARCStation
+running Solaris 5.7:
+
+   % fs sysname
+   sun4x_57
+
+=head1 PRIVILEGE REQUIRED
+
+None
+
+=head1 SEE ALSO
+
+L<fs_sysname(1)>
+
+I<IBM AFS Quick Beginnings>
+
+I<IBM AFS Administration Guide>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

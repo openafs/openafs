@@ -1,0 +1,187 @@
+=head1 NAME
+
+backup deletedump - Deletes one or more dump records from the Backup Database
+
+=head1 SYNOPSIS
+
+B<backup deletedump> [B<-dumpid> <I<dump id>>+]  [B<-from> <I<date time>>+]  [-to <I<date time>>+]
+[B<-localauth>]  [B<-cell> <I<cell name>>]  [B<-help>]
+
+B<backup dele> [B<-d> <I<dump id>>+]  [B<-f> <I<date time>>+]  [-t <I<date time>>+]
+[B<-l>]  [B<-c> <I<cell name>>]  [B<-h>]
+
+=head1 DESCRIPTION
+
+The backup deletedump command deletes one or more dump records
+from the Backup Database. Either use the B<-dumpid> argument to
+specify the dump ID number of one or more dumps, or use the B<-from>
+and B<-to> arguments to delete the records for all regular dumps
+created during the time period bracketed by the specified values.
+
+Use this command to remove dump records that are incorrect (possibly
+because a dump operation was interrupted or failed), or that correspond to
+dumps that are expired or otherwise no longer needed.
+
+=head1 CAVEATS
+
+The only way to remove the dump record for an appended dump is to remove
+the record for its initial dump, and doing so removes the records for all of
+the initial dump's associated appended dumps.
+
+The only way to remove the record for a Backup Database dump (created with
+the B<backup savedb> command) is to specify its dump ID number with
+the B<-dumpid> argument. Using the B<-from> and
+B<-to> arguments never removes database dump records.
+
+Removing records of a dump makes it impossible to restore data from the
+corresponding tapes or from any dump that refers to the deleted dump as its
+parent, directly or indirectly. That is, restore operations must begin
+with the full dump and continue with each incremental dump in order. If
+the records for a specific dump are removed, it is not possible to restore
+data from later incremental dumps unless the deleted records are restored by
+running the B<backup scantape> command with the B<-dbadd>
+flag.
+
+If a dump set contains any dumps that were created outside the time range
+specified by the B<-from> and B<-to> arguments, the command
+does not delete any of the records associated with the dump set, even if some
+of them represent dumps created during the time range.
+
+=head1 OPTIONS
+
+=over 4
+
+=item -dumpid
+
+Specifies the dump ID of each dump record to delete. The
+corresponding dumps must be initial dumps; it is not possible to delete
+appended dump records directly, but only by deleting the record of their
+associated initial dump. Using this argument is the only way to delete
+records of Backup Database dumps (created with the B<backup savedb>
+command).
+
+Provide either this argument or the -to (and optionally
+B<-from>) argument.
+
+=item -from
+
+Specifies the beginning of a range of dates; the record for any dump
+created during the indicated period of time is deleted.
+
+Omit this argument to indicate the default of midnight (00:00 hours)
+on 1 January 1970 (UNIX time zero), or provide a date value in the format
+I<mm/dd/yyyy> [I<hh:MM>]. The month (I<mm>),
+day (I<dd>), and year (I<yyyy>) are required. The hour and
+minutes (I<hh>:I<MM>) are optional, but if provided must be
+in 24-hour format (for example, the value B<14:36> represents
+2:36 p.m.). If omitted, the time defaults to
+midnight (00:00 hours).
+
+The -to argument must be provided along with this one.
+
+=item -to
+
+Specifies the end of a range of dates; the record of any dump created
+during the range is deleted from the Backup Database.
+
+Provide either the value NOW to indicate the current date and
+time, or a date value in the same format as for the B<-from>
+argument. Valid values for the year (I<yyyy>) range from
+B<1970> to B<2037>; higher values are not valid because
+the latest possible date in the standard UNIX representation is in February
+2038. The command interpreter automatically reduces any later date to
+the maximum value.
+
+If the time portion (I<hh:MM>) is omitted, it defaults to 59
+seconds after midnight (00:00:59 hours). Similarly, the
+B<backup> command interpreter automatically adds 59 seconds to any
+time value provided. In both cases, adding 59 seconds compensates for
+how the Backup Database and B<backup dumpinfo> command represent dump
+creation times in hours and minutes only. For example, the Database
+records a creation timestamp of C<20:55> for any dump operation
+that begins between 20:55:00 and 20:55:59.
+Automatically adding 59 seconds to a time thus includes the records for all
+dumps created during that minute.
+
+Provide either this argument, or the -dumpid argument.
+This argument is required if the B<-from> argument is provided.
+
+B<Caution:> Specifying the value NOW for this
+argument when the B<-from> argument is omitted deletes all dump
+records from the Backup Database (except for Backup Database dump records
+created with the B<backup savedb> command).
+
+=item -localauth
+
+Constructs a server ticket using a key from the local
+B</usr/afs/etc/KeyFile> file. The B<backup> command
+interpreter presents it to the Backup Server, Volume Server and VL Server
+during mutual authentication. Do not combine this flag with the
+B<-cell> argument. For more details, see the introductory
+B<backup> reference page.
+
+=item -cell
+
+Names the cell in which to run the command. Do not combine this
+argument with the B<-localauth> flag. For more details, see the
+introductory B<backup> reference page.
+
+=item -help
+
+Prints the online help for this command. All other valid options
+are ignored.
+
+=back
+
+=head1 OUTPUT
+
+At the conclusion of processing, the output lists the dump IDs of all dump
+records deleted in the following format:
+
+   The following dumps were deleted:
+        I<dump ID 1>
+        I<dump ID 2>
+        I<etc.>
+
+=head1 EXAMPLES
+
+The following command deletes the dump record with dump ID 653777462, and
+for any appended dumps associated with it:
+
+   % backup deletedump -dumpid 653777462
+   The following dumps were deleted:
+        653777462
+
+The following command deletes the Backup Database record of all dumps
+created between midnight on 1 January 1997 and 23:59:59 hours on
+31 December 1997:
+
+   % backup deletedump -from 01/01/1997 -to 12/31/1997
+   The following dumps were deleted:
+        598324045
+        598346873
+           ...
+           ...
+        653777523
+        653779648
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be listed in the /usr/afs/etc/UserList file on
+every machine where the Backup Server is running, or must be logged onto a
+server machine as the local superuser B<root> if the
+B<-localauth> flag is included.
+
+=head1 SEE ALSO
+
+L<backup(1)>,
+L<backup_dumpinfo(1)>,
+L<backup_scantape(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

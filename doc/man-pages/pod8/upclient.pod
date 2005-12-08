@@ -1,0 +1,181 @@
+=head1 NAME
+
+upclient - Initializes the client portion of the Update Server
+
+=head1 SYNOPSIS
+
+B<upclient> <I<hostname>>  [B<-crypt>]  [B<-clear>]  [-t <I<retry time>>]
+[B<-verbose>]*  <I<dir>>+  [B<-help>]
+
+This command does not use the syntax conventions of the AFS command
+suites. Provide the command name and all option names in full.
+
+=head1 DESCRIPTION
+
+The upclient command initializes the client portion of the
+Update Server. In the conventional configuration, its binary file is
+located in the B</usr/afs/bin> directory on a file server
+machine.
+
+The upclient command is not normally issued at the command shell
+prompt but rather placed into a file server machine's
+B</usr/afs/local/BosConfig> file with the B<bos create>
+command. If it is ever issued at the command shell prompt, the issuer
+must be logged onto a database server machine as the local superuser
+B<root>.
+
+The upclient process periodically checks that all files in each
+local directory named by the I<dir> argument match the files in the
+corresponding directory on the source machine named by the
+I<hostname>argument. If a file does not match, the
+B<upclient> process requests the source copy from the
+B<upserver> process running on the source machine.
+
+By default, the upclient process in the United States edition of
+AFS requests that the B<upserver> process encrypt the data before
+transferring it, whereas in the international edition it requests unencrypted
+transfer. If using the United States edition, use the B<-clear>
+flag to request unencrypted transfer if appropriate. (The
+B<-crypt> flag explicitly sets the default in the United States
+edition, and is not available in the international edition.)
+
+In the conventional configuration, separate instances of the
+B<upclient> process request data from the B</usr/afs/bin> and
+B</usr/afs/etc> directories, except on machines for which the system
+control machine is also the binary distribution machine for the machine's
+system type. The conventional names for the separate instances are
+B<upclientbin> and B<upclientetc> respectively.
+
+The B<upclient> and upserver processes always mutually
+authenticate, whether or not the data they pass is encrypted; they use
+the key with the highest key version number in the
+B</usr/afs/etc/KeyFile> file to construct a server ticket for mutual
+authentication.
+
+=head1 CAVEATS
+
+Do not use the Update Server to distribute the contents of the
+B</usr/afs/etc> directory if using the international edition of
+AFS. The contents of this directory are sensitive and the international
+edition of AFS does not include the encryption routines necessary for
+encrypting files before transfer across the network.
+
+=head1 OPTIONS
+
+=over 4
+
+=item I<hostname
+>
+
+Names either the cell's system control machine (if the requested
+directory is B</usr/afs/etc>), or the binary distribution machine for
+the local machine's CPU and operating system type (if the requested
+directory is B</usr/afs/bin>).
+
+=item -crypt
+
+Requests the transfer of data from the upserver process in
+encrypted form. With the United States edition of AFS, use this flag to
+set the default explicitly. Provide this flag or the B<-crypt>
+flag, but not both. 
+
+=item -clear
+
+Requests transfer of data from the upserver process in
+unencrypted form. Use this flag to change from the default for the
+United States edition of AFS. Provide this flag or the
+B<-crypt> flag, but not both.
+
+=item -t
+
+Specifies how often to check for changes in each specified directory, as a
+number of seconds. If this argument is omitted, the default is 300 (5
+minutes). This argument determines the maximum amount of time it takes
+for a change made on the source machine to propagate to this machine.
+
+=item -verbose
+
+Writes a trace of the upclient process's operations on the
+standard output stream, which usually corresponds to the machine
+console. Provide one, two, or three instances of the flag; each
+additional instance generates increasingly numerous and detailed
+messages.
+
+=item I<dir
+>
+
+Names each directory to check for modified files. The conventional
+choices are the following: 
+
+=over 4
+
+=item *
+
+/usr/afs/bin, in which case the recommended name for the
+process (assigned with the B<-instance> argument to the B<bos
+create> command) is B<upclientbin>. The I<hostname>
+is the binary distribution machine for the local machine's system
+type. Use the B<-clear> flag be used for the
+B</usr/afs/bin> directory, since binaries are not particularly
+sensitive and encrypting them can take a long time.
+
+
+=item *
+
+/usr/afs/etc, in which case the recommended name for the
+process (assigned with the B<-instance> argument to the B<bos
+create> command) is B<upclientetc>. The I<hostname>
+is the cell's system control machine. Use the B<-crypt>
+flag for the B</usr/afs/etc> directory, since it contains the
+B<KeyFile> file and other data vital to cell security.
+
+
+As a reminder, do not use the Update Server to transfer the contents of the
+B</usr/afs/etc> directory if using the international edition of
+AFS.
+
+=back
+
+=item -help
+
+Prints the online help for this command. All other valid options
+are ignored.
+
+=back
+
+=head1 EXAMPLES
+
+The following bos create command creates an
+B<upclientbin> process on the machine
+B<fs4.abc.com> that refers to the machine
+B<fs1.abc.com> as the source for the
+B</usr/afs/bin> directory (thus B<fs1.abc.com>
+is the binary distribution machine for machines of
+B<fs4.abc.com>'s type). The files in the
+B</usr/afs/bin> directory are distributed every 120 seconds.
+The command requests transfer in unencrypted form.
+
+   % bos create  -server fs4.abc.com -instance upclientbin -type simple   \
+                 -cmd "/usr/afs/bin/upclient fs1.abc.com -clear  \
+                 -t 120 /usr/afs/bin"
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be logged in as the superuser root on a file
+server machine to issue the command at a command shell prompt. It is
+conventional instead to create and start the process by issuing the B<bos
+create> command.
+
+=head1 SEE ALSO
+
+L<BosConfig(1)>,
+L<bos_create(1)>,
+L<upserver(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

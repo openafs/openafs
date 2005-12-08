@@ -1,0 +1,73 @@
+=head1 NAME
+
+fstrace setlog - Sets the size of a trace log
+
+=head1 SYNOPSIS
+
+B<fstrace setlog> [B<-log> <I<log_name>>+]  B<-buffersize> <I<1-kilobyte_units>>  [-help]
+
+B<fstrace setl> [B<-l> <I<log_name>>+]  B<-b> <I<1-kilobyte_units>>  [-h]
+
+B<fstrace sl> [B<-l> <I<log_name>>+]  B<-b> <I<1-kilobyte_units>>  [-h]
+
+=head1 DESCRIPTION
+
+The fstrace setlog command defines the number of kilobytes of
+kernel memory allocated for the B<cmfx> trace log. If kernel
+memory is currently allocated, the command clears the current log and creates
+a new log buffer of the specified size.
+
+To display the current defined size of the log buffer, issue the
+B<fstrace lslog> command with the B<-long> argument. To
+control whether the indicated amount of space is actually allocated, use the
+B<fstrace setset> command to set the status of the B<cm> event
+set; to display the event set's status, use the B<fstrace
+lsset> command.
+
+=head1 OPTIONS
+
+=over 4
+
+=item -log
+
+Names trace log for which to set the size. The only acceptable
+value is B<cmfx>, which is also the default if this argument is
+omitted.
+
+=item -buffersize
+
+Specifies the number of 1-kilobyte blocks of kernel memory to allocate for
+the trace log.
+
+=item -help
+
+Prints the online help for this command. All other valid options
+are ignored.
+
+=back
+
+=head1 EXAMPLES
+
+The following command allocated 80 KB of kernel memory for the
+B<cmfx> trace log:
+
+   # fstrace setlog -log cmfx -buffersize 80
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be logged in as the local superuser root.
+
+=head1 SEE ALSO
+
+L<fstrace(1)>,
+L<fstrace_lslog(1)>,
+L<fstrace_lsset(1)>,
+L<fstrace_setset(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

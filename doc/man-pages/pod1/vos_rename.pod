@@ -1,0 +1,109 @@
+=head1 NAME
+
+vos rename - Renames a volume
+
+=head1 SYNOPSIS
+
+B<vos rename -oldname> <I<old volume name>>  -newname <I<new volume name>> 
+[B<-cell> <I<cell name>>]  [B<-noauth>]  [B<-localauth>]  [B<-verbose>]  [B<-help>]
+
+B<vos ren -o> <I<old volume name>>  B<-ne> <I<new volume name>>  [-c <I<cell name>>]
+[B<-no>]  [B<-l>]  [B<-v>]  [B<-h>]
+
+=head1 DESCRIPTION
+
+The vos rename command changes the name of the read/write volume
+specified with the B<-oldname> argument to the name specified with the
+B<-newname> argument. The names of the read/write's
+read-only copies and backup copy, if any, change automatically to
+match.
+
+After issuing this command, remember to correct any mount points that refer
+to the old volume name, by removing the old mount point with the B<fs
+rmmount> command and creating a new one with the B<fs mkmount>
+command.
+
+=head1 OPTIONS
+
+=over 4
+
+=item -oldname
+
+Is the current name of the read/write volume.
+
+=item -newname
+
+Is the desired new name for the volume.
+
+=item -cell
+
+Names the cell in which to run the command. Do not combine this
+argument with the B<-localauth> flag. For more details, see the
+introductory B<vos> reference page.
+
+=item -noauth
+
+Assigns the unprivileged identity anonymous to the
+issuer. Do not combine this flag with the B<-localauth>
+flag. For more details, see the introductory B<vos> reference
+page.
+
+=item -localauth
+
+Constructs a server ticket using a key from the local
+B</usr/afs/etc/KeyFile> file. The B<vos> command
+interpreter presents it to the Volume Server and Volume Location Server during
+mutual authentication. Do not combine this flag with the
+B<-cell> argument or B<-noauth> flag. For more details,
+see the introductory B<vos> reference page.
+
+=item -verbose
+
+Produces on the standard output stream a detailed trace of the
+command's execution. If this argument is omitted, only warnings
+and error messages appear.
+
+=item -help
+
+Prints the online help for this command. All other valid options
+are ignored.
+
+=back
+
+=head1 OUTPUT
+
+The vos rename command produces no output if the command
+succeeds.
+
+If the volume named by the -oldname argument does not exist, the
+following message appears:
+
+   vos: Could not find entry for volume I<old volume name>.
+
+=head1 EXAMPLES
+
+The following example changes the mistaken volume name
+B<sun4x_56.afsws> to the correct alternative
+C<sun4x_56.usr.afsws>.
+
+   % vos rename -oldname sun4x_56.afsws -newname sun4x_56.usr.afsws
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be listed in the /usr/afs/etc/UserList file on
+the machine specified with the B<-server> argument and on each
+database server machine. If the B<-localauth> flag is included,
+the issuer must instead be logged on to a server machine as the local
+superuser B<root>.
+
+=head1 SEE ALSO
+
+L<vos(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

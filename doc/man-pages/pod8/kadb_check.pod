@@ -1,0 +1,101 @@
+=head1 NAME
+
+kadb_check - Checks the integrity of the Authentication Database
+
+=head1 SYNOPSIS
+
+B<kadb_check -database> <I<kadb_file>>  [B<-uheader>]  [B<-kheader>]  [-entries]  
+[B<-verbose>]  [B<-rebuild> <I<out_file>>]  [B<-help>]
+
+B<kadb_check -d> <I<kadb_file>>  [B<-u>]  [B<-k>]  [B<-e>]  [B<-v>]  [B<-r> <I<out_file>>]  [-h]
+
+=head1 DESCRIPTION
+
+The kadb_check command checks the integrity of the Protection
+Database, reporting any errors or corruption it finds. If there are
+problems, do not issue any B<kas> commands until the database is
+repaired.
+
+=head1 CAVEATS
+
+The results can be unpredictable if the Authentication Server makes changes
+to the Authentication Database while this command is running. Use the
+B<bos shutdown> command to shutdown the local B<kaserver>
+process before running this command, or before creating a second copy of the
+B<kaserver.DB0> file (with a different name) on which to run
+the command.
+
+=head1 OPTIONS
+
+=over 4
+
+=item -database
+
+Names the Authentication Database (copy of the
+B<kaserver.DB0> file) to check. If the current working
+directory is not the location of the file, provide a pathname, either full or
+relative to the current working directory.
+
+=item -uheader
+
+Displays information which Ubik maintains in the database's
+header.
+
+=item -kheader
+
+Displays information which the Authentication Server maintains in the
+database's header.
+
+=item -entries
+
+Outputs every entry in the database, providing information similar to that
+returned by the B<kas examine> command.
+
+=item -verbose
+
+Reports additional information about the database, including the number of
+free (allocated but unused) entries in the database.
+
+=item -rebuild
+
+Names the file in which to record a list of kas commands which,
+if issued in the command shell, recreate the current state of the database
+being verified. Partial pathnames are interpreted relative to the
+current working directory.
+
+=item -help
+
+Prints the online help for this command. All other valid options
+are ignored.
+
+=back
+
+=head1 OUTPUT
+
+If there are errors in the database, the output always reports them on the
+standard error stream. If any options other than B<-database>
+or B<-help> are provided, the output written to the standard output
+stream includes additional information as described for each option in the
+preceding B<Options> section of this reference page. The output
+is intended for debugging purposes and is meaningful to someone familiar with
+the internal structure of the Authentication Database.
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be logged in as the local superuser root.
+
+=head1 SEE ALSO
+
+L<kaserver.DB0 and kaserver.DBSYS1(1)>
+
+L<bos_shutdown(1)>,
+L<kas_examine(1)>,
+L<kaserver(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

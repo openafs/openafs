@@ -1,0 +1,98 @@
+=head1 NAME
+
+uss help - Displays the syntax of specified uss commands or lists
+functional descriptions of all B<uss> commands
+
+=head1 SYNOPSIS
+
+B<uss help> [B<-topic> <I<help string>>+]  [-help]
+
+B<uss h> [B<-t> <I<help string>>+]  [-h]
+
+=head1 DESCRIPTION
+
+The uss help command displays the complete online help entry
+(short description and syntax statement) for each command operation code
+specified by the B<-topic> argument. If the B<-topic>
+argument is omitted, the output includes the first line (name and short
+description) of the online help entry for every B<uss> command.
+
+To list every uss command whose name or short description
+includes a specified keyword, use the B<uss apropos> command.
+
+=head1 OPTIONS
+
+=over 4
+
+=item -topic
+
+Indicates each command for which to display the complete online help
+entry. Omit the B<uss> part of the command name, providing only
+the operation code (for example, specify B<bulk>, not B<uss
+bulk>). If this argument is omitted, the output briefly describes
+every B<uss> command.
+
+=item -help
+
+Prints the online help for this command. All other valid options
+are ignored.
+
+=back
+
+=head1 OUTPUT
+
+The online help entry for each uss command consists of the
+following two or three lines:
+
+=over 4
+
+=item *
+
+The first line names the command and briefly describes its
+function.
+
+
+=item *
+
+The second line lists aliases for the command, if any.
+
+
+=item *
+
+The final line, which begins with the string C<Usage>, lists the
+command's options in the prescribed order. Online help entries use
+the same symbols (for example, brackets) as the reference pages in this
+document.
+
+
+=back
+
+=head1 EXAMPLES
+
+The following command displays the online help entry for the uss
+bulk command:
+
+   % uss help bulk
+   uss bulk: bulk input mode
+   Usage: uss bulk -file <bulk input file> [-template <pathname 
+   of template file>] [-verbose] [-cell <cell name>] [-admin 
+   <administrator to authenticate>] [-dryrun] [-skipauth] [-overwrite] 
+   [-pwexpires <password expires in [0..254] days (0 => never)>] [-pipe] 
+   [-help]
+
+=head1 PRIVILEGE REQUIRED
+
+None
+
+=head1 SEE ALSO
+
+L<uss(1)>,
+L<uss_apropos(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

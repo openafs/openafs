@@ -1,0 +1,85 @@
+=head1 NAME
+
+fs quota - Displays the percentage of quota used in the volume containing a directory
+or file
+
+=head1 SYNOPSIS
+
+B<fs quota> [B<-path> <I<dir/file path>>+]  [-help]
+
+B<fs q> [B<-p> <I<dir/file path>>+]  [-h]
+
+=head1 DESCRIPTION
+
+The fs quota command displays the percent of quota consumed in
+the volume that contains each specified directory or file.
+
+To display more detailed information about the volume and the partition it
+resides on, use the B<fs examine> and B<fs listquota>
+commands.
+
+To set volume quota, use the B<fs setquota> or fs setvol
+command.
+
+=head1 OPTIONS
+
+=over 4
+
+=item -path
+
+Names each file or directory for which to display the quota consumed in
+its parent volume. Partial pathnames are interpreted relative to the
+current working directory, which is also the default value if this argument is
+omitted.
+
+=item -help
+
+Prints the online help for this command. All other valid options
+are ignored.
+
+=back
+
+=head1 OUTPUT
+
+The output reports the percent of volume quota used, in the following
+format:
+
+   I<percent>% of quota used.
+
+=head1 EXAMPLES
+
+The following command lists the percent quota used of the volume housing
+the current working directory:
+
+   % fs quota
+   17% of quota used.
+
+The following command lists the percent quota used of both the volume
+housing the current working directory's parent directory and the volume
+housing the directory B</afs/abc.com/usr/smith>:
+
+   % fs quota -path  ..  /afs/abc.com/usr/smith
+   43% of quota used.
+   92% of quota used.
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must have the B<l> (lookup) permission on the
+ACL of the root directory of the volume that houses the file or directory
+named by the B<-path> argument, and on the ACL of each directory that
+precedes it in the pathname.
+
+=head1 SEE ALSO
+
+L<fs_examine(1)>,
+L<fs_listquota(1)>,
+L<fs_setquota(1)>,
+L<fs_setvol(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

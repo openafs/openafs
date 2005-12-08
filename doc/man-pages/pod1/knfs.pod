@@ -1,0 +1,191 @@
+=head1 NAME
+
+knfs - Establishes basis for authenticated access to AFS from a non-supported NFS
+client using the NFS/AFS Translator
+
+=head1 SYNOPSIS
+
+B<knfs -host> <I<host name>>  [-id <I<user ID (decimal)>>]
+[B<-sysname> <I<host's '@sys' value>>]  [B<-unlog>]  [B<-tokens>]  [B<-help>]
+
+B<knfs -ho> <I<host name>>  [-i <I<user ID (decimal)>>]  
+[B<-s> <I<host's '@sys' value>>]  [B<-u>]  [B<-t>]  [B<-he>]
+
+=head1 DESCRIPTION
+
+The knfs command creates an AFS credential structure on the
+local machine, identifying it by a process authentication group (PAG) number
+associated with the NFS client machine named by the B<-hostname>
+argument and by default with a local UID on the NFS client machine that
+matches the issuer's local UID on the local machine. It places in
+the credential structure the AFS tokens that the issuer has previously
+obtained (by logging onto the local machine if an AFS-modified login utility
+is installed, by issuing the B<klog> command, or both). To
+associate the credential structure with an NFS UID that does not match the
+issuer's local UID, use the B<-id> argument.
+
+Issue this command only on the NFS(R)/AFS translator machine that is
+serving the NFS client machine, after obtaining AFS tokens on the translator
+machine for every cell to which authenticated access is required. The
+Cache Manager on the translator machine uses the tokens to obtain
+authenticated AFS access for the designated user working on the NFS client
+machine. This command is not effective if issued on an NFS client
+machine.
+
+To enable the user on the NFS client machine to issue AFS commands, use the
+B<-sysname> argument to specify the NFS client machine's system
+type, which can differ from the translator machine's. The NFS
+client machine must be a system type for which AFS is supported.
+
+The -unlog flag discards the tokens in the credential structure,
+but does not destroy the credential structure itself. The Cache Manager
+on the translator machine retains the credential structure until the next
+reboot, and uses it each time the issuer accesses AFS through the translator
+machine. The credential structure only has tokens in it if the user
+reissues the B<knfs> command on the translator machine each time the
+user logs into the NFS client machine.
+
+To display the tokens associated with the designated user on the NFS client
+machine, include the B<-tokens> flag.
+
+Users working on NFS client machines of system types for which AFS binaries
+are available (and for which the cell has purchased a license) can use the
+B<klog> command rather than the B<knfs> command.
+
+=head1 CAVEATS
+
+If the translator machine's administrator has enabled UID checking by
+issuing the B<fs exportafs> command with the B<-uidcheck on>
+argument, it is not possible to use the B<-id> argument to assign the
+tokens to an NFS UID that differs from the issuer's local UID. In
+this case, there is no point in including the B<-id> argument, because
+the only acceptable value (the issuer's local UID) is the value used when
+the B<-id> argument is omitted. Requiring matching UIDs is
+effective only when users have the same local UID on the translator machine as
+on NFS client machines. In that case, it guarantees that users assign
+their tokens only to their own NFS sessions.
+
+This command does not make it possible for users working on non-supported
+system types to issue AFS commands. This is possible only on NFS
+clients of a system type for which AFS is available.
+
+=head1 OPTIONS
+
+=over 4
+
+=item -host
+
+Names the NFS client machine on which the issuer is to work.
+Providing a fully-qualified hostname is best, but abbreviated forms are
+possibly acceptable depending on the state of the cell's name server at
+the time the command is issued.
+
+=item -id
+
+Specifies the local UID on the NFS client to which to assign the
+tokens. The NFS client identifies file requests by the NFS UID, so
+creating the association enables the Cache Manager on the translator machine
+to use the appropriate tokens when filling the requests. If this
+argument is omitted, the command interpreter uses an NFS UID that matches the
+issuer's local UID on the translator machine (as returned by the
+B<getuid> function).
+
+=item -sysname
+
+Specifies the value that the local (translator) machine's remote
+executor daemon substitutes for the B<@sys> variable in pathnames when
+executing AFS commands issued on the NFS client machine (which must be a
+supported system type). If the NFS user's PATH environment
+variable uses the B<@sys> variable in the pathnames for directories
+that house AFS binaries (as recommended), then setting this argument enables
+NFS users to issue AFS commands by leading the remote executor daemon to
+access the AFS binaries appropriate to the NFS client machine even if its
+system type differs from the translator machine's.
+
+=item -unlog
+
+Discards the tokens stored in the credential structure identified by the
+PAG associated with the B<-host> argument and, optionally, the
+B<-id> argument.
+
+=item -tokens
+
+Displays the AFS tokens assigned to the designated user on the indicated
+NFS client machine.
+
+=item -help
+
+Prints the online help for this command. All other valid options
+are ignored.
+
+=back
+
+=head1 OUTPUT
+
+The following error message indicates that UID checking is enabled on the
+translator machine and that the value provided for the B<-id> argument
+differs from the issuer's local UID.
+
+
+   knfs: Translator in 'passwd sync' mode; remote uid must be the same as local uid
+
+=head1 EXAMPLES
+
+The following example illustrates a typical use of this command. The
+issuer B<smith> is working on the machine
+B<nfscli1.abc.com> and has user ID B<1020> on
+that machine. The translator machine
+B<tx4.abc.com> uses an AFS-modified login utility, so
+B<smith> obtains tokens for the ABC Corporation cell automatically
+upon login via the B<telnet> program. She then issues the
+B<klog> command to obtain tokens as B<admin> in the ABC
+Corporation's test cell, B<test.abc.com>, and the
+B<knfs> command to associate both tokens with the credential structure
+identified by machine name B<nfs-cli1> and user ID
+B<1020>. She breaks the connection to B<tx4> and works
+on B<nfscli1>.
+
+   % telnet tx4.abc.com
+   . . .
+   login: smith
+   Password:
+   AFS(R) login
+
+   % klog admin -cell test.abc.com
+   Password:
+   
+   % knfs nfscli1.abc.com 1020
+   
+   % exit
+   
+
+The following example shows user smith again connecting to the
+machine B<tx4> via the B<telnet> program and discarding the
+tokens.
+
+   % telnet translator4.abc.com
+   . . .
+   login: smith
+   Password:
+   AFS(R) login
+
+   % knfs nfscli1.abc.com 1020 -unlog
+ 
+   % exit
+
+=head1 PRIVILEGE REQUIRED
+
+None
+
+=head1 SEE ALSO
+
+L<klog(1)>,
+L<pagsh(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

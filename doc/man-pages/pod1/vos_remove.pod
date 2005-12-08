@@ -1,0 +1,183 @@
+=head1 NAME
+
+vos remove - Removes a volume from a site
+
+=head1 SYNOPSIS
+
+B<vos remove> [B<-server> <I<machine name>>]  [-partition <I<partition name>>]
+B<-id> <I<volume name or ID>>  [B<-cell> <I<cell name>>]
+           [B<-noauth>]  [B<-localauth>]  [B<-verbose>]  [-help]
+
+B<vos remo> [B<-s> <I<machine name>>]  [B<-p> <I<partition name>>]  -i <I<volume name or ID>> 
+[B<-c> <I<cell name>>]  [B<-n>]  [B<-l>]  [B<-v>]  [B<-h>]
+
+=head1 DESCRIPTION
+
+The vos remove command removes the indicated volume from the
+partition on which it resides. The Volume Location Database (VLDB)
+record is altered appropriately, as described in the following
+paragraphs. Use this command to remove any of the three types of
+volumes; the effect depends on the type.
+
+=over 4
+
+=item *
+
+If the -id argument names the read/write volume (that is,
+specifies the volume's base name), both it and the associated backup
+volume are removed from the partition that houses them. The
+B<-server> and B<-partition> arguments are optional, because
+there can be only one read/write site. When the volume is removed, the
+site information is also removed from the VLDB entry. The read/write
+and backup volume ID numbers no longer appear in the output from the B<vos
+listvldb> or B<vos examine> commands, but they are preserved
+internally. Read-only sites, if any, are not affected, but cannot be
+changed unless a read/write site is again defined. The site count
+reported by the B<vos examine> and B<vos listvldb> commands as
+C<number of sites> decrements by one. The entire VLDB entry is
+removed if there are no read-only sites.
+
+
+=item *
+
+If the -id argument names a read-only volume, it is removed
+from the partition that houses it, and the corresponding site information is
+removed from the VLDB entry. The site count reported by the B<vos
+examine> and B<vos listvldb> commands as C<number of
+sites> decrements by one for each volume you remove. If there is
+more than one read-only site, the B<-server> argument (and optionally
+B<-partition> argument) must be used to specify the site from which to
+remove the volume. If there is only one read-only site, the
+B<-id> argument is sufficient; if there is also no read/write
+volume in this case, the entire VLDB entry is removed.
+
+
+=item *
+
+If the -id argument names a backup volume, it is removed from
+the partition that houses it. The B<-server> and
+B<-partition> arguments are optional, because there can be only one
+backup site. The backup volume ID number no longer appears in the
+output from the B<vos listvldb> command or in the corresponding
+portion of the output from the B<vos examine> command, but is
+preserved internally.
+
+
+=back
+
+This command is the most appropriate one for removing volumes in almost all
+cases. Other commands that remove only volumes or only VLDB entries
+(such as the B<vos delentry>, B<vos remsite> and B<vos
+zap> commands) by definition can put the volumes and VLDB out of
+sync. Use them only in the special circumstances mentioned on their
+reference pages. Like the B<vos delentry> command, this command
+can remove a VLDB entry when no corresponding volumes exist on the file server
+machine. Like the B<vos zap> command, this command can remove a
+volume that does not have a VLDB entry, as long as the volume is online,
+B<-server> and B<-partition> arguments are provided, and the
+B<-id> argument specifies the volume's ID number.
+
+=head1 OPTIONS
+
+=over 4
+
+=item -server
+
+Identifies the file server machine that houses the volume to
+remove. It is necessary only when the B<-id> argument names a
+read-only volume that exists at multiple sites. Provide the
+machine's IP address or its host name (either fully qualified or using an
+unambiguous abbreviation). For details, see the introductory reference
+page for the B<vos> command suite.
+
+=item -partition
+
+Identifies the partition (on the file server machine specified by the
+B<-server> argument) that houses the volume to remove. Provide
+the partition's complete name with preceding slash (for example,
+B</vicepa>) or use one of the three acceptable abbreviated
+forms. For details, see the introductory reference page for the
+B<vos> command suite. 
+
+Including this argument is necessary only when the -id argument
+names a read-only volume that exists at multiple sites. Provide the
+B<-server> argument along with this one.
+
+=item -id
+
+Identifies the volume to remove, either by its complete name or volume ID
+number. If identifying a read-only or backup volume by name, include
+the appropriate extension (B<.readonly> or
+B<.backup>).
+
+=item -cell
+
+Names the cell in which to run the command. Do not combine this
+argument with the B<-localauth> flag. For more details, see the
+introductory B<vos> reference page.
+
+=item -noauth
+
+Assigns the unprivileged identity anonymous to the
+issuer. Do not combine this flag with the B<-localauth>
+flag. For more details, see the introductory B<vos> reference
+page.
+
+=item -localauth
+
+Constructs a server ticket using a key from the local
+B</usr/afs/etc/KeyFile> file. The B<vos> command
+interpreter presents it to the Volume Server and Volume Location Server during
+mutual authentication. Do not combine this flag with the
+B<-cell> argument or B<-noauth> flag. For more details,
+see the introductory B<vos> reference page.
+
+=item -verbose
+
+Produces on the standard output stream a detailed trace of the
+command's execution. If this argument is omitted, only warnings
+and error messages appear.
+
+=item -help
+
+Prints the online help for this command. All other valid options
+are ignored.
+
+=back
+
+=head1 EXAMPLES
+
+The following example removes the read/write volume
+B<user.terry> and its backup version, if any.
+
+   % vos remove  -id user.terry
+
+The following example removes the read-only volume
+B<root.afs.readonly> from one of its sites, the
+B</vicepa> partition on the file server machine
+B<fs1.abc.com>.
+
+   % vos remove fs1.abc.com  a  root.afs.readonly
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be listed in the /usr/afs/etc/UserList file on
+the machine specified with the B<-server> argument and on each
+database server machine. If the B<-localauth> flag is included,
+the issuer must instead be logged on to a server machine as the local
+superuser B<root>.
+
+=head1 SEE ALSO
+
+L<vos(1)>,
+L<vos_delentry(1)>,
+L<vos_remsite(1)>,
+L<vos_zap(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

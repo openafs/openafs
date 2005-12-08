@@ -1,0 +1,165 @@
+=head1 NAME
+
+vos zap - Removes a volume from its site without writing to the VLDB
+
+=head1 SYNOPSIS
+
+B<vos zap -server> <I<machine name>>  -partition <I<partition name>> 
+B<-id> <I<volume ID>>  [B<-force>]  [B<-backup>]  [B<-cell> <I<cell name>>]
+        [B<-noauth>]  [B<-localauth>]  [B<-verbose>]  [-help]
+
+B<vos z -s> <I<machine name>>  B<-p> <I<partition name>>  -i <I<volume ID>>
+[B<-f>]  [B<-b>]  [B<-c> <I<cell name>>]  [B<-n>]  [B<-l>]  [B<-v>]  [B<-h>]
+
+=head1 DESCRIPTION
+
+The vos zap command removes the volume with the specified
+I<volume ID> from the site defined by the B<-server> and
+B<-partition> arguments, without attempting to change the
+corresponding Volume Location Database (VLDB) entry. If removing the
+volume can possibly result in incorrect data in the VLDB, a warning message is
+displayed.
+
+The -force flag removes a volume even if it cannot be "attached"
+(brought online), which can happen either because the volume is extremely
+damaged or because the Salvager functioned abnormally. Without this
+flag, this command cannot remove volumes that are not attachable. See
+also the B<Cautions> section.
+
+To remove the specified read/write volume's backup version at the same
+time, include the B<-backup> flag.
+
+=head1 CAVEATS
+
+Do not use this command as the standard way to remove a volume, as it is
+likely to put the VLDB out of sync with the volumes on servers. Use the
+B<vos remove> command instead.
+
+This command is useful in situations where it is important to delete the
+volume, but for some reason the VLDB is unreachable--for example, because
+s the Volume Location Server is unavailable. The issuer can remove the
+VLDB entry later with the B<vos remove> or B<vos delentry>
+command, or it is removed automatically when the B<vos syncserv> and
+B<vos syncvldb> commands run.
+
+To remove a read-only site defined in the VLDB by mistake, before a copy
+actually exists at the site, use the B<vos remsite> command. To
+remove an entire VLDB entry without affecting volumes at their sites, use the
+B<vos delentry> command.
+
+Do not use the -force flag if the volume is online, but only
+when attempts to remove the volume with the B<vos remove> or the
+B<vos zap> command have failed, or the volume definitely cannot be
+attached. After using the B<-force> flag, make sure that the
+volume's VLDB entry is also removed (issue the B<vos delentry>
+command if necessary).
+
+Adding the -force flag makes the command take considerably
+longer--about as long as a salvage of the relevant partition--since
+the Volume Server examines all inodes on the partition for traces of the
+volume.
+
+=head1 OPTIONS
+
+=over 4
+
+=item -server
+
+Identifies the file server machine from which to remove the volume.
+Provide the machine's IP address or its host name (either fully qualified
+or using an unambiguous abbreviation). For details, see the
+introductory reference page for the B<vos> command suite.
+
+=item -partition
+
+Identifies the partition (on the file server machine specified by the
+B<-server> argument) from which to remove the volume. Provide
+the partition's complete name with preceding slash (for example,
+B</vicepa>) or use one of the three acceptable abbreviated
+forms. For details, see the introductory reference page for the
+B<vos> command suite.
+
+=item -id
+
+Specifies the volume ID number of the volume to remove, which can be of
+any of the three types. The volume name is not acceptable.
+
+=item -force
+
+Removes the volume even though it cannot be attached (brought
+online). Use only after the failure of previous attempts to remove the
+volume by using the B<vos remove> command or the B<vos>
+command without this flag.
+
+=item -backup
+
+Removes the backup version of the read/write volume specified by the
+B<-id> argument. Do not use this flag if the B<-id>
+argument identifies a read-only or backup volume.
+
+=item -cell
+
+Names the cell in which to run the command. Do not combine this
+argument with the B<-localauth> flag. For more details, see the
+introductory B<vos> reference page.
+
+=item -noauth
+
+Assigns the unprivileged identity anonymous to the
+issuer. Do not combine this flag with the B<-localauth>
+flag. For more details, see the introductory B<vos> reference
+page.
+
+=item -localauth
+
+Constructs a server ticket using a key from the local
+B</usr/afs/etc/KeyFile> file. The B<vos> command
+interpreter presents it to the Volume Server and Volume Location Server during
+mutual authentication. Do not combine this flag with the
+B<-cell> argument or B<-noauth> flag. For more details,
+see the introductory B<vos> reference page.
+
+=item -verbose
+
+Produces on the standard output stream a detailed trace of the
+command's execution. If this argument is omitted, only warnings
+and error messages appear.
+
+=item -help
+
+Prints the online help for this command. All other valid options
+are ignored.
+
+=back
+
+=head1 EXAMPLES
+
+The following example removes the volume with volume ID 536870988 from the
+B</vicepf> partition of the file server machine
+B<fs6.abc.com>, without noting the change in the
+VLDB.
+
+   % vos zap -server fs6.abc.com -partition f -id 536870988
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be listed in the /usr/afs/etc/UserList file on
+the machine specified with the B<-server> argument and on each
+database server machine. If the B<-localauth> flag is included,
+the issuer must instead be logged on to a server machine as the local
+superuser B<root>.
+
+=head1 SEE ALSO
+
+L<vos(1)>,
+L<vos_delentry(1)>,
+L<vos_remove(1)>,
+L<vos_remsite(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

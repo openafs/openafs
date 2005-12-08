@@ -1,0 +1,102 @@
+=head1 NAME
+
+vos lock - Locks a VLDB volume entry
+
+=head1 SYNOPSIS
+
+B<vos lock -id> <I<volume name or ID>>  [B<-cell> <I<cell name>>]  [-noauth] 
+[B<-localauth>]  [B<-verbose>]  [B<-help>]
+
+B<vos lo -i> <I<volume name or ID>>  [B<-c> <I<cell name>>]  [B<-n>]  [B<-l>]  [B<-v>]  [-h]
+
+=head1 DESCRIPTION
+
+The vos lock command locks the Volume Location Database (VLDB)
+entry for the indicated volume, blocking any operation that requires a write
+to that entry. The lock applies to all of the volume versions
+associated with the entry, not just the one specified with the B<-id>
+argument.
+
+To unlock a single VLDB entry, use the vos unlock
+command. To unlock several entries, or all locked entries in the VLDB,
+use the B<vos unlockvldb> command.
+
+=head1 CAVEATS
+
+Do not use this command in normal circumstances. It is useful for
+guaranteeing that the volume stays unchanged when there is reason to believe
+that volume operations cannot properly lock VLDB volume entries as they
+normally do to synchronize with one another.
+
+=head1 OPTIONS
+
+=over 4
+
+=item -id
+
+Specifies either the complete name or volume ID number of a volume of the
+any of the three types.
+
+=item -cell
+
+Names the cell in which to run the command. Do not combine this
+argument with the B<-localauth> flag. For more details, see the
+introductory B<vos> reference page.
+
+=item -noauth
+
+Assigns the unprivileged identity anonymous to the
+issuer. Do not combine this flag with the B<-localauth>
+flag. For more details, see the introductory B<vos> reference
+page.
+
+=item -localauth
+
+Constructs a server ticket using a key from the local
+B</usr/afs/etc/KeyFile> file. The B<vos> command
+interpreter presents it to the Volume Server and Volume Location Server during
+mutual authentication. Do not combine this flag with the
+B<-cell> argument or B<-noauth> flag. For more details,
+see the introductory B<vos> reference page.
+
+=item -verbose
+
+Produces on the standard output stream a detailed trace of the
+command's execution. If this argument is omitted, only warnings
+and error messages appear.
+
+=item -help
+
+Prints the online help for this command. All other valid options
+are ignored.
+
+=back
+
+=head1 EXAMPLES
+
+The following command locks the VLDB entry for
+B<user.terry>.
+
+   % vos lock user.terry
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be listed in the /usr/afs/etc/UserList file on
+the machine specified with the B<-server> argument and on each
+database server machine. If the B<-localauth> flag is included,
+the issuer must instead be logged on to a server machine as the local
+superuser B<root>.
+
+=head1 SEE ALSO
+
+L<vos(1)>,
+L<vos_unlock(1)>,
+L<vos_unlockvldb(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

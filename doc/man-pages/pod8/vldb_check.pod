@@ -1,0 +1,99 @@
+=head1 NAME
+
+vldb_check - Checks the integrity of the VLDB
+
+=head1 SYNOPSIS
+
+B<vldb_check -database> <I<vldb_file>>  [B<-uheader>]  [B<-vheader>]  [-servers]  
+[B<-entries>]  [B<-verbose>]  [B<-help>]
+
+B<vldb_check -d> <I<vldb_file>>  [B<-u>]  [B<-vh>]  [B<-s>]  [B<-e>]  [B<-ve>]  [-h]
+
+=head1 DESCRIPTION
+
+The vldb_check command checks the integrity of the Volume
+Location Database (VLDB), reporting any errors or corruption it finds.
+If there are problems, do not issue any B<vos> commands until the
+database is repaired.
+
+=head1 CAVEATS
+
+The results can be unpredictable if the Volume Location (VL) Server makes
+changes to the VLDB while this command is running. Use the B<bos
+shutdown> command to shutdown the local B<vlserver> process
+before running this command, or before creating a second copy of the
+B<vldb.DB0> file (with a different name) on which to run the
+command.
+
+=head1 OPTIONS
+
+=over 4
+
+=item -database
+
+Names the VLDB (copy of the vldb.DB0 file) to
+check. If the current working directory is not the location of the
+file, provide a pathname, either full or relative to the current working
+directory.
+
+=item -uheader
+
+Displays information which Ubik maintains in the database's
+header.
+
+=item -pheader
+
+Displays information which the VL Server maintains in the database's
+header.
+
+=item -servers
+
+Outputs the server entries from the VLDB, which list the IP addresses
+registered for each file server machine in the cell.
+
+=item -entries
+
+Outputs every volume entry in the database. The information
+includes the volume's name and the volume ID number for each of its
+versions.
+
+=item -verbose
+
+Reports additional information about the database, including the number of
+entries for each type of volume.
+
+=item -help
+
+Prints the online help for this command. All other valid options
+are ignored.
+
+=back
+
+=head1 OUTPUT
+
+If there are errors in the database, the output always reports them on the
+standard error stream. If any options other than B<-database>
+or B<-help> are provided, the output written to the standard output
+stream includes additional information as described for each option in the
+preceding B<Options> section of this reference page. The output
+is intended for debugging purposes and is meaningful to someone familiar with
+the internal structure of the VLDB.
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be logged in as the local superuser root.
+
+=head1 SEE ALSO
+
+L<vldb.DB0 and vldb.DBSYS1(1)>
+
+L<bos_shutdown(1)>,
+L<vlserver(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

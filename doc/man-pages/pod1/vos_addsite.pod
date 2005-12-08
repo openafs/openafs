@@ -1,0 +1,126 @@
+=head1 NAME
+
+vos addsite - Adds a read-only site definition to a volume's VLDB entry
+
+=head1 SYNOPSIS
+
+vos addsite -server <I<machine name for new site>>
+B<-partition> <I<partition name for new site>>
+            B<-id> <I<volume name or ID>>  [-cell <I<cell name>>]  
+            [B<-noauth>]  [B<-localauth>]  [B<-verbose>]  [-help]
+
+B<vos ad -s> <I<machine name for new site>>  -p <I<partition name for new site>>
+B<-i> <I<volume name or ID>>  [B<-c> <I<cell name>>]  [B<-n>]  [B<-l>]  [B<-v>]  [B<-h>]
+
+=head1 DESCRIPTION
+
+The vos addsite command defines a new read-only site (partition
+on a file server machine, specified by the B<-server> and
+B<-partition> arguments) in the Volume Location Database (VLDB) entry
+of the read/write volume named by the B<-id> argument. When the
+B<vos release> command is next issued against the read/write volume, a
+read-only copy of it is distributed to all of the read-only sites, including
+the newly defined one.
+
+=head1 CAVEATS
+
+A volume's VLDB entry accommodates a maximum number of site
+definitions, as defined in the I<IBM AFS Release Notes>. The
+site housing the read/write and backup versions of the volume counts as one
+site, and each read-only site counts as an additional site (even the read-only
+site defined on the same file server machine and partition as the read/write
+site counts as a separate site). The limit in the VLDB entry
+effectively determines the maximum number of copies of the volume that are
+available to AFS clients.
+
+Attempts to create additional sites by using this command fail with an
+error.
+
+=head1 OPTIONS
+
+=over 4
+
+=item -server
+
+Identifies the file server machine where the read-only volume is to
+reside. Provide the machine's IP address or its host name (either
+fully qualified or using an unambiguous abbreviation). For details, see
+the introductory reference page for the B<vos> command suite.
+
+=item -partition
+
+Identifies the partition where the read-only volume is to reside, on the
+file server machine named by the B<-server> argument. Provide
+the partition's complete name with preceding slash (for example,
+B</vicepa>) or use one of the three acceptable abbreviated
+forms. For details, see the introductory reference page for the
+B<vos> command suite.
+
+=item -id
+
+Specifies either the complete name or volume ID number of the read/write
+source volume.
+
+=item -cell
+
+Names the cell in which to run the command. Do not combine this
+argument with the B<-localauth> flag. For more details, see the
+introductory B<vos> reference page.
+
+=item -noauth
+
+Assigns the unprivileged identity anonymous to the
+issuer. Do not combine this flag with the B<-localauth>
+flag. For more details, see the introductory B<vos> reference
+page.
+
+=item -localauth
+
+Constructs a server ticket using a key from the local
+B</usr/afs/etc/KeyFile> file. The B<vos> command
+interpreter presents it to the Volume Server and Volume Location Server during
+mutual authentication. Do not combine this flag with the
+B<-cell> argument or B<-noauth> flag. For more details,
+see the introductory B<vos> reference page.
+
+=item -verbose
+
+Produces on the standard output stream a detailed trace of the
+command's execution. If this argument is omitted, only warnings
+and error messages appear.
+
+=item -help
+
+Prints the online help for this command. All other valid options
+are ignored.
+
+=back
+
+=head1 EXAMPLES
+
+The following example, appropriate in the State University cell, defines a
+read-only site for the cell's B<root.afs> volume.
+
+   % vos addsite -server sv7.stateu.edu -partition /vicepb -id root.afs
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be listed in the /usr/afs/etc/UserList file on
+the machine specified with the B<-server> argument and on each
+database server machine. If the B<-localauth> flag is included,
+the issuer must instead be logged on to a server machine as the local
+superuser B<root>.
+
+=head1 SEE ALSO
+
+L<vos(1)>,
+L<vos_examine(1)>,
+L<vos_release(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

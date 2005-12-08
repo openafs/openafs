@@ -1,0 +1,132 @@
+=head1 NAME
+
+fs lsmount - Reports the volume for which a directory is the mount point.
+
+=head1 SYNOPSIS
+
+B<fs lsmount -dir> <I<directory>>+  [-help]
+
+B<fs ls -d> <I<directory>>+  [-h] 
+
+=head1 DESCRIPTION
+
+The fs lsmount command reports the volume for which each
+specified directory is a mount point, or indicates with an error message that
+a directory is not a mount point or is not in AFS.
+
+To create a mount point, use the fs mkmount command. To
+remove one, use the B<fs rmmount> command.
+
+=head1 OPTIONS
+
+=over 4
+
+=item -dir
+
+Names the directory that serves as a mount point for a volume. The
+last element in the pathname provided must be an actual name, not a shorthand
+notation such as one or two periods (B<.> or
+B<..>).
+
+=item -help
+
+Prints the online help for this command. All other valid options
+are ignored.
+
+=back
+
+=head1 OUTPUT
+
+If the specified directory is a mount point, the output is of the following
+form:
+
+   'I<directory>' is a mount point for volume 'I<volume name>'
+
+where 
+
+=over 4
+
+=item *
+
+A number sign (C<#>) precedes the I<volume name> string for
+a regular mount point.
+
+
+=item *
+
+A percent sign (C<%>) precedes the I<volume name> string for
+a read/write mount point.
+
+
+=item *
+
+A cell name and colon (C<:>) follow the number or percent
+sign and precede the I<volume name> string for a cellular mount
+point.
+
+
+=back
+
+The fs mkmount reference page explains how the Cache Manager
+interprets each of the three types of mount points.
+
+If the directory is a symbolic link to a mount point, the output is of the
+form:
+
+   'I<directory>' is a symbolic link, leading to a mount point for volume 'I<volume name>'
+
+If the directory is not a mount point or is not in AFS, the output
+reads:
+
+   'I<directory>' is not a mount point.
+
+If the output is garbled, it is possible that the mount point has become
+corrupted in the local AFS client cache. Use the B<fs
+flushmount> command to discard it, which forces the Cache Manager to
+refetch the mount point.
+
+=head1 EXAMPLES
+
+The following example shows the mount point for the home directory of user
+B<smith>:
+
+   % fs lsmount /afs/abc.com/usr/smith
+   '/afs/abc.com/usr/smith' is a mount point for volume '#user.smith'
+
+The following example shows both the regular and read/write mount points
+for the ABC Corporation cell's C<root.cell> volume.
+
+   % fs lsmount /afs/abc.com
+   '/afs/abc.com' is a mount point for volume '#root.cell'
+
+   % fs lsmount /afs/.abc.com
+   '/afs/.abc.com' is a mount point for volume '%root.cell'
+   
+
+The following example shows a cellular mount point: the State
+University cell's C<root.cell> volume as mounted in the
+ABC Corporation cell's tree.
+
+   % fs lsmount /afs/stateu.edu
+   '/afs/stateu.edu' is a mount point for volume '#stateu.edu:root.cell'
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must have the B<l> (lookup) permission on the
+ACL of the root directory of the volume that houses the file or directory
+named by the B<-dir> argument, and on the ACL of each directory that
+precedes it in the pathname.
+
+=head1 SEE ALSO
+
+L<fs_flushmount(1)>,
+L<fs_mkmount(1)>,
+L<fs_rmmount(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

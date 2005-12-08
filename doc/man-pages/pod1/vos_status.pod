@@ -1,0 +1,182 @@
+=head1 NAME
+
+vos status - Reports a Volume Server's status
+
+=head1 SYNOPSIS
+
+B<vos status -server> <I<machine name>>  [B<-cell> <I<cell name>>]  [-noauth]
+[B<-localauth>]  [B<-verbose>]  [B<-help>]
+
+B<vos st -s> <I<machine name>>  [B<-c> <I<cell name>>]  [B<-n>]  [B<-l>]  [B<-v>]  [-h]
+
+=head1 DESCRIPTION
+
+The vos status command reports on what the Volume Server on a
+certain file server machine is doing at the moment the command is
+issued. If there is no activity, the following message appears:
+
+   No active transactions on I<machine_name>
+
+This command is useful mainly if there is concern that the Volume Server is
+not performing requested actions.
+
+=head1 OPTIONS
+
+=over 4
+
+=item -server
+>
+
+Identifies the file server machine running the Volume Server for which to
+display status information. Provide the machine's IP address or
+its host name (either fully qualified or using an unambiguous
+abbreviation). For details, see the introductory reference page for the
+B<vos> command suite.
+
+=item -cell
+
+Names the cell in which to run the command. Do not combine this
+argument with the B<-localauth> flag. For more details, see the
+introductory B<vos> reference page.
+
+=item -noauth
+
+Assigns the unprivileged identity anonymous to the
+issuer. Do not combine this flag with the B<-localauth>
+flag. For more details, see the introductory B<vos> reference
+page.
+
+=item -localauth
+
+Constructs a server ticket using a key from the local
+B</usr/afs/etc/KeyFile> file. The B<vos> command
+interpreter presents it to the Volume Server and Volume Location Server during
+mutual authentication. Do not combine this flag with the
+B<-cell> argument or B<-noauth> flag. For more details,
+see the introductory B<vos> reference page.
+
+=item -verbose
+
+Produces on the standard output stream a detailed trace of the
+command's execution. If this argument is omitted, only warnings
+and error messages appear.
+
+=item -help
+
+Prints the online help for this command. All other valid options
+are ignored.
+
+=back
+
+=head1 OUTPUT
+
+There are two possible types of output.
+
+The following message indicates that the Volume Server is not currently
+performing any actions.
+
+   No active transactions on I<machine name>
+
+The other possible output is a set of information which is probably more
+useful to programmers than to system administrators. A full
+understanding of all the fields requires familiarity with the code for the
+Volume Server, as many of the fields report ID numbers and flag values that
+the Volume Server sets for internal use.
+
+Among the fields of possible interest to an administrator are:
+
+=over 4
+
+=item *
+
+C<created> on the first line, which indicates the time at which
+this transaction started
+
+
+=item *
+
+C<attachFlags> on the second line, where a value of
+C<offline> indicates that the volume is not available for other read
+or write operations during this transaction
+
+
+=item *
+
+C<volume> on the third line, which specifies the affected
+volume's ID number
+
+
+=item *
+
+C<partition> on the third line, which indicates where the affected
+volume resides (at the beginning of the transaction if this is a move)
+
+
+=item *
+
+C<procedure> on the third line, which indicates the internal
+subprocedure being executed
+
+
+=back
+
+A fourth line can appear during certain transactions, and includes the
+following fields:
+
+=over 4
+
+=item *
+
+C<packetRead> tracks whether information is being read into the
+volume. Its absolute value is not informative, but the way it changes
+shows whether the B<vos restore> command is executing properly.
+As the B<vos status> command is issued repeatedly during a restore,
+C<readNext> increases monotonically to indicate that information is
+being read into the volume.
+
+
+=item *
+
+C<packetSend> tracks whether information is being sent out of the
+volume. Its absolute value is not informative, but the way it changes
+shows whether the B<vos dump> command is executing properly. As
+the B<vos status> command is issued repeatedly during a dump,
+C<transmitNext> increases monotonically to indicate that information
+is being transferred from the volume into the dump file.
+
+
+=back
+
+The C<lastReceiveTime> and C<lastSendTime> are for internal
+use.
+
+=head1 EXAMPLES
+
+The following example illustrates the kind of output that sometimes appears
+when the Volume Server on B<fs1.abc.com> is executing a
+dump at the time this command is issued.
+
+   % vos status fs1.abc.com
+   --------------------------------------------
+   transaction: 575  created: Tue Jan 2 8:34:56 1990
+   attachFlags: offline
+   volume: 536871080 partition: /vicepb procedure: Dump
+   packetRead: 2 lastReceiveTime: 113313 packetSend: 24588
+       lastSendTime: 113317
+   --------------------------------------------
+
+=head1 PRIVILEGE REQUIRED
+
+None
+
+=head1 SEE ALSO
+
+L<vos(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

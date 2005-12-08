@@ -1,0 +1,79 @@
+=head1 NAME
+
+fs flushvolume - Forces the Cache Manager to discard all cached data from the volume
+containing a file or directory
+
+=head1 SYNOPSIS
+
+B<fs flushvolume> [B<-path> <I<dir/file path>>+]  [-help]
+
+B<fs flushv> [B<-p> <I<dir/file path>>+]  [-h]
+
+=head1 DESCRIPTION
+
+The fs flushvolume command removes from the cache all data that
+was fetched from the same volume as each specified directory or file.
+It does not discard cached status information. The next time an
+application requests data from a flushed directory or file, the Cache Manager
+fetches the most current version from a File Server, along with a new callback
+(if necessary) and associated status information. This command has no
+effect on two types of data:
+
+=item *
+
+Data in application program buffers
+
+
+=item *
+
+Data that has been changed locally and written to the cache but not yet
+written to the copy on the file server machine
+
+
+To discard the data and status information associated with individual files
+and directories, use the B<fs flush> command. To flush a
+corrupted mount point, use the B<fs flushmount> command.
+
+=head1 OPTIONS
+
+=over 4
+
+=item -path
+
+Names a file or directory from each volume for which to discard all cached
+data. Partial pathnames are interpreted relative to the current working
+directory, which is also the default value if this argument is omitted.
+
+=item -help
+
+Prints the online help for this command. All other valid options
+are ignored.
+
+=back
+
+=head1 EXAMPLES
+
+The following command flushes from the cache all data fetched from the
+volume that contains the current working directory:
+
+   % fs flushvolume 
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must have the B<l> (lookup) permission on the
+ACL of the root directory of the volume that houses the file or directory
+named by the B<-path> argument, and on the ACL of each directory that
+precedes it in the pathname.
+
+=head1 SEE ALSO
+
+L<fs_flush(1)>,
+L<fs_flushmount(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

@@ -1,0 +1,354 @@
+=head1 NAME
+
+salvager - Initializes the Salvager component of the fs process
+
+=head1 SYNOPSIS
+
+B<salvager> [B<initcmd>]  [-partition <I<Name of partition to salvage>>] 
+[B<-volumeid> <I<Volume Id to salvage>>]  [B<-debug>]  
+         [B<-nowrite>]  [B<-inodes>]  [B<-force>]  [-oktozap]  
+         [B<-rootinodes>]  [B<-salvagedirs>]  [-blockreads]  
+         [-parallel <I<# of max parallel partition salvaging>>]
+         [-tmpdir <I<Name of dir to place tmp files>>]  
+         [B<-showlog>]  [B<-showsuid>]  [-showmounts] 
+         [B<-orphans> <B<ignore> | B<remove> | B<attach>>] [-help]
+
+This command does not use the syntax conventions of the AFS command
+suites. Provide the command name and all option names in full.
+
+=head1 DESCRIPTION
+
+The salvager command initializes the Salvager component of the
+B<fs> process. In the conventional configuration, its binary
+file is located in the B</usr/afs/bin> directory on a file server
+machine.
+
+The Salvager restores internal consistency to corrupted read/write volumes
+on the local file server machine where possible. For read-only or
+backup volumes, it inspects only the volume header:
+
+=over 4
+
+=item *
+
+If the volume header is corrupted, the Salvager removes the volume
+completely and records the removal in its log file,
+B</usr/afs/logs/SalvageLog>. Issue the B<vos release>
+or B<vos backup> command to create the read-only or backup volume
+again.
+
+
+=item *
+
+If the volume header is intact, the Salvager skips the volume (does not
+check for corruption in the contents). However, if the File Server
+notices corruption as it initializes, it sometimes refuses to attach the
+volume or bring it online. In this case, it is simplest to remove the
+volume by issuing the B<vos remove> or B<vos zap>
+command. Then issue the B<vos release> or B<vos backup>
+command to create it again.
+
+
+=back
+
+Unlike other server process initialization commands, the
+B<salvager> command is designed to be issued at the command shell
+prompt, as well as being placed into a file server machine's
+B</usr/afs/local/BosConfig> file with the B<bos create>
+command. It is also possible to invoke the Salvager remotely by issuing
+the B<bos salvage> command.
+
+Combine the command's options as indicated to salvage different
+numbers of read/write volumes:
+
+=over 4
+
+=item *
+
+To salvage all volumes on the file server machine, provide no
+arguments. No volumes on the machine are accessible to Cache Managers
+during the salvage, because the BOS Server stops the File Server and Volume
+Server processes while the Salvager runs.
+
+
+=item *
+
+To salvage all of the volumes on one partition, provide the
+B<-partition> argument. As for a salvage of all volumes on the
+machine, no volumes on the machine are accessible to Cache Managers during the
+salvage operation.
+
+
+=item *
+
+To salvage only one volume, combine the -partition and
+B<-volumeid> arguments. Only that volume is inaccessible to
+Cache Managers, because the BOS Server does not shutdown the File Server and
+Volume Server processes.
+
+
+=back
+
+The Salvager normally salvages only those read/write volumes that are
+marked as having been active when a crash occurred. To have it salvage
+all relevant read/write volumes, add the B<-force> flag.
+
+The Salvager normally creates new inodes as it repairs damage. If
+the partition is so full that there is no room for new inodes, use the
+B<-nowrite> argument to bringing undamaged volumes online without
+attempting to salvage damaged volumes. Then use the B<vos move>
+command to move one or more of the undamaged volumes to other partitions,
+freeing up the space that the Salvager needs to create new inodes.
+
+By default, multiple Salvager subprocesses run in parallel: one for
+each partition up to four, and four subprocesses for four or more
+partitions. To increase or decrease the number of subprocesses running
+in parallel, provide a positive integer value for the B<-parallel>
+argument.
+
+If there is more than one server partition on a physical disk, the Salvager
+by default salvages them serially to avoid the inefficiency of constantly
+moving the disk head from one partition to another. However, this
+strategy is often not ideal if the partitions are configured as logical
+volumes that span multiple disks. To force the Salvager to salvage
+logical volumes in parallel, provide the string B<all> as the value
+for the B<-parallel> argument. Provide a positive integer to
+specify the number of subprocesses to run in parallel (for example,
+B<-parallel 5all> for five subprocesses), or omit the integer to run
+up to four subprocesses, depending on the number of logical volumes being
+salvaged.
+
+The Salvager creates temporary files as it runs, by default writing them to
+the partition it is salvaging. The number of files can be quite large,
+and if the partition is too full to accommodate them, the Salvager terminates
+without completing the salvage operation (it always removes the temporary
+files before exiting). Other Salvager subprocesses running at the same
+time continue until they finish salvaging all other partitions where there is
+enough disk space for temporary files. To complete the interrupted
+salvage, reissue the command against the appropriate partitions, adding the
+B<-tmpdir> argument to redirect the temporary files to a local disk
+directory that has enough space.
+
+The -orphans argument controls how the Salvager handles orphaned
+files and directories that it finds on server partitions it is
+salvaging. An I<orphaned> element is completely inaccessible
+because it is not referenced by the vnode of any directory that can act as its
+parent (is higher in the filespace). Orphaned objects occupy space on
+the server partition, but do not count against the volume's quota.
+
+To generate a list of all mount points that reside in one or more volumes,
+rather than actually salvaging them, include the B<-showmounts>
+flag.
+
+=head1 OPTIONS
+
+=over 4
+
+=item initcmd
+
+Accommodates the command's use of the AFS command parser, and is
+optional.
+
+=item -partition
+
+Specifies the name of the partition to salvage. Specify the full
+partition name using the form B</vicep>I<x> or
+B</vicep>I<xx>. Omit this argument to salvage every
+partition on the file server machine.
+
+=item -volumeid
+
+Specifies the volume ID of a specific read/write volume to salvage.
+The B<-partition> argument must be provided along with this one and
+specify the volume's actual site.
+
+=item -debug
+
+Allows only one Salvager subprocess to run at a time, regardless of the
+setting of the B<-parallel> option. Include it when running the
+Salvager in a debugger to make the trace easier to interpret.
+
+=item -nowrite
+
+Brings all undamaged volumes online without attempting to salvage any
+damaged volumes.
+
+=item -inodes
+
+Records in the /usr/afs/logs/SalvageLog file a list of all AFS
+inodes that the Salvager modified.
+
+=item -force
+
+Inspects all volumes for corruption, not just those that are marked as
+having been active when a crash occurred.
+
+=item -oktozap
+
+Removes a volume that is so damaged that even issuing the vos
+zap command with the B<-force> flag is ineffective. Use
+this argument only in consultation with AFS Development or Product
+Support. Combine it with the B<-partition> and
+B<-volumeid> arguments to identify the volume to remove.
+
+=item -rootinodes
+
+Records in the /usr/afs/logs/SalvageLog file a list of all AFS
+inodes owned by the local superuser B<root>.
+
+=item -salvagedirs
+
+Salvages entire directory structures, even if they do not appear to be
+damaged. By default, the Salvager salvages a directory only if it is
+flagged as corrupted.
+
+=item -blockreads
+
+Forces the Salvager to read a partition one disk block (512 bytes) at a
+time and to skip any blocks that are too badly damaged to be salvaged.
+This allows it to salvage as many volumes as possible. By default, the
+Salvager reads large disk blocks, which can cause it to exit prematurely if it
+encounters disk errors. Use this flag if the partition to be salvaged
+has disk errors.
+
+=item -parallel
+
+Specifies the maximum number of Salvager subprocesses to run in
+parallel. Provide one of three values:
+
+=over 4
+
+=item *
+
+An integer from the range B<1> to 32. A value of
+B<1> means that a single Salvager process salvages the partitions
+sequentially.
+
+
+=item *
+
+The string all to run up to four Salvager subprocesses in
+parallel on partitions formatted as logical volumes that span multiple
+physical disks. Use this value only with such logical volumes.
+
+
+=item *
+
+The string all followed immediately (with no intervening space)
+by an integer from the range B<1> to B<32>, to run the
+specified number of Salvager subprocesses in parallel on partitions formatted
+as logical volumes. Use this value only with such logical
+volumes.
+
+
+=back
+
+The BOS Server never starts more Salvager subprocesses than there are
+partitions, and always starts only one process to salvage a single
+volume. If this argument is omitted, up to four Salvager subprocesses
+run in parallel.
+
+=item -tmpdir
+
+Names a local disk directory in which the Salvager places the temporary
+files it creates during a salvage operation, instead of writing them to the
+partition being salvaged (the default). If the Salvager cannot write to
+the specified directory, it attempts to write to the partition being
+salvaged.
+
+=item -showlog
+
+Displays on the standard output stream all log data that is being written
+to the B</usr/afs/logs/SalvageLog> file.
+
+=item -showsuid
+
+Displays a list of the pathnames for all files that have the setuid or
+setgid mode bit set.
+
+=item -showmounts
+
+Records in the /usr/afs/logs/SalvageLog file all mount points
+found in each volume. The Salvager does not repair corruption in the
+volumes, if any exists.
+
+=item -orphans
+
+Controls how the Salvager handles orphaned files and directories.
+Choose one of the following three values:
+
+=over 4
+
+=item ignore
+
+Leaves the orphaned objects on the disk, but prints a message to the
+B</usr/afs/logs/SalvageLog> file reporting how many orphans were found
+and the approximate number of kilobytes they are consuming. This is the
+default if the B<-orphans> argument is omitted.
+
+=item remove
+
+Removes the orphaned objects, and prints a message to the
+B</usr/afs/logs/SalvageLog> file reporting how many orphans were
+removed and the approximate number of kilobytes they were consuming.
+
+=item attach
+
+Attaches the orphaned objects by creating a reference to them in the vnode
+of the volume's root directory. Since each object's actual
+name is now lost, the Salvager assigns each one a name of the following
+form: 
+
+=over 4
+
+
+_ _ORPHANFILE_ _.I<index> for files
+
+
+_ _ORPHANDIR_ _.I<index> for directories
+
+=back
+
+where I<index> is a two-digit number that uniquely identifies each
+object. The orphans are charged against the volume's quota and
+appear in the output of the B<ls> command issued against the
+volume's root directory.
+
+=back
+
+=item -help
+
+Prints the online help for this command. All other valid options
+are ignored.
+
+=back
+
+=head1 EXAMPLES
+
+The following command instructs the Salvager to attempt to salvage the
+volume with volume ID 258347486 on B</vicepg> on the local
+machine.
+
+   % /usr/afs/bin/salvager -partition /vicepg -volumeid 258347486
+
+=head1 PRIVILEGE REQUIRED
+
+To issue the command at the shell prompt, the issuer must be logged in as
+the local superuser B<root>.
+
+=head1 SEE ALSO
+
+L<BosConfig(1)>,
+L<SalvageLog(1)>,
+L<bos_create(1)>,
+L<bos_getlog(1)>,
+L<bos_salvage(1)>,
+L<vos_move(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

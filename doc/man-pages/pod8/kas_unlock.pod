@@ -1,0 +1,104 @@
+=head1 NAME
+
+kas unlock - Unlocks a locked user account
+
+=head1 SYNOPSIS
+
+kas unlock -name <I<authentication ID>>  
+[B<-admin_username> <I<admin principal to use for authentication>>] 
+           [B<-password_for_admin> <I<admin password>>]  [-cell <I<cell name>>] 
+           [-servers <I<explicit list of authentication servers>>+]
+           [B<-noauth>]  [-help]
+
+kas u -na <I<authentication ID>>  
+[B<-a> <I<admin principal to use for authentication>>] 
+      [B<-p> <I<admin password>>]  [-c <I<cell name>>] 
+      [B<-s> <I<explicit list of authentication servers>>+]  [B<-no>]  [-h]
+
+=head1 DESCRIPTION
+
+The kas unlock command unlocks the Authentication Database entry
+named by the B<-name> argument. An entry becomes locked when
+the user exceeds the limit on failed authentication attempts, generally by
+providing the wrong password to either an AFS-modified login utility or the
+B<klog> command. Use the B<kas setfields> command to
+set the limit and the lockout time, and the B<kas examine> command to
+examine the settings.
+
+To unlock all locked user accounts at once, shutdown the
+B<kaserver> process on every database server machine, and remove the
+B</usr/afs/local/kaauxdb> file from each one. The
+B<kaserver> process recreates the file as it restarts.
+
+=head1 OPTIONS
+
+=over 4
+
+=item -name
+
+Names the Authentication Database entry to unlock.
+
+=item -admin_username
+
+Specifies the user identity under which to authenticate with the
+Authentication Server for execution of the command. For more details,
+see the introductory B<kas> reference page.
+
+=item -password_for_admin
+
+Specifies the password of the command's issuer. If it is
+omitted (as recommended), the B<kas> command interpreter prompts for
+it and does not echo it visibly. For more details, see the introductory
+B<kas> reference page.
+
+=item -cell
+
+Names the cell in which to run the command. For more details, see
+the introductory B<kas> reference page.
+
+=item -servers
+
+Names each machine running an Authentication Server with which to
+establish a connection. For more details, see the introductory
+B<kas> reference page.
+
+=item -noauth
+
+Assigns the unprivileged identity anonymous to the
+issuer. For more details, see the introductory B<kas> reference
+page.
+
+=item -help
+
+Prints the online help for this command. All other valid options
+are ignored.
+
+=back
+
+=head1 EXAMPLES
+
+In the following example, an administrator using the admin
+account unlocks the entry for B<jones>:
+
+   % kas unlock -name jones -admin_username admin
+   Administrator's (admin) Password:
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must have the C<ADMIN> flag set on his or her
+Authentication Database entry.
+
+=head1 SEE ALSO
+
+L<kas(1)>,
+L<kas_examine(1)>,
+L<kas_setfields(1)>,
+L<klog(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

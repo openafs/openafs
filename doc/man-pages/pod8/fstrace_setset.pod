@@ -1,0 +1,76 @@
+=head1 NAME
+
+fstrace setset - Sets the status of an event set
+
+=head1 SYNOPSIS
+
+B<fstrace setset> [B<-set> <I<set_name>>+]  [B<-active>]  [B<-inactive>]  [B<-dormant>]  [-help] 
+
+B<fs set> [B<-s> <I<set_name>>+]  [B<-a>]  [B<-i>]  [B<-d>]  [-h]
+
+=head1 DESCRIPTION
+
+The B<fstrace setset> command sets the status of the cm
+kernel event set on the local machine, which determines whether trace messages
+are recorded in the log buffer in kernel memory.
+
+=head1 OPTIONS
+
+=over 4
+
+=item -set
+
+Names the event set for which to set the status. The only
+acceptable value B<cm>, which is also the default if this argument is
+omitted.
+
+=item -active
+
+Enables tracing for the event set and allocates kernel memory for the
+associated trace log buffer. Provide one of this flag, the
+B<-inactive> flag, or the B<-dormant> flag.
+
+=item -inactive
+
+Temporarily disables tracing for the event set, but does not change the
+allocation of kernel memory for the associated trace log buffer.
+Provide one of this flag, the B<-active> flag, or the
+B<-dormant> flag.
+
+=item -dormant
+
+Disables tracing for the event set and frees the kernel memory previously
+allocated for the associated trace log buffer. Provide one of this
+flag, the B<-active> flag, or the B<-inactive> flag.
+
+=item -help
+
+Prints the online help for this command. All other valid options
+are ignored.
+
+=back
+
+=head1 EXAMPLES
+
+The following example sets the cm event set's status to
+B<inactive>:
+
+   # fstrace setset -set cm -inactive
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be logged in as the local superuser root.
+
+=head1 SEE ALSO
+
+L<fstrace(1)>,
+L<fstrace_lsset(1)>,
+L<fstrace_setlog(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
