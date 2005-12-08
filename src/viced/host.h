@@ -48,10 +48,15 @@ struct Identity {
     afsUUID uuid;
 };
 
+struct AddrPort  {
+    afs_uint32 addr;		/* in network byte order */
+    afs_uint16 port;		/* in network byte order */
+};
+
 struct Interface {
-    int numberOfInterfaces;
     afsUUID uuid;
-    afs_int32 addr[1];		/* there are actually more than one here */
+    int numberOfInterfaces;
+    struct AddrPort interface[1];/* there are actually more than one here */
     /* in network byte order */
 };
 struct host {
@@ -99,7 +104,8 @@ struct host {
 struct h_hashChain {
     struct host *hostPtr;
     struct h_hashChain *next;
-    afs_int32 addr;
+    afs_uint32 addr;
+    afs_uint16 port;
 };
 
 struct client {
