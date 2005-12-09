@@ -4,40 +4,38 @@ pts delete - Deletes a Protection Database entry
 
 =head1 SYNOPSIS
 
-B<pts delete -nameorid> <I<user or group name or id>>+  [-cell <I<cell name>>]  
-[B<-noauth>]  [B<-force>]  [B<-help>]
+B<pts delete> B<-nameorid> <I<user or group name or id>>+
+    [B<-cell> <I<cell name>>] [B<-noauth>] [B<-force>] [B<-help>]
 
-B<pts d -na> <I<user or group name or id>>+  [B<-c> <I<cell name>>]  [B<-no>]  [B<-f>]  [-h]
+B<pts d> B<-na> <I<user or group name or id>>+
+    [B<-c> <I<cell name>>] [B<-no>] [B<-f>] [-h]
 
 =head1 DESCRIPTION
 
-The pts delete command removes each entry specified by the
-B<-nameorid> argument from the Protection Database. Deleting
-entries affects other parts of the system in various ways:
+The B<pts delete> command removes each entry specified by the B<-nameorid>
+argument from the Protection Database. Deleting entries affects other
+parts of the system in various ways:
 
 =over 4
 
 =item *
 
 Deleted users and groups still appear on access control lists (ACLs), but
-are listed by AFS UID or GID rather than by name, because there is no longer
-an associated name to which to translate the ID. To remove these
+are listed by AFS UID or GID rather than by name, because there is no
+longer an associated name to which to translate the ID. To remove these
 obsolete entries from ACLs, use the B<fs cleanacl> command.
-
 
 =item *
 
-Deleting a user or machine's entry removes it from the membership
-list of any group to which it belonged.
-
+Deleting a user or machine's entry removes it from the membership list of
+any group to which it belonged.
 
 =item *
 
 Deleting a group entry removes it from the membership list of any user or
 machine entry that belonged to the group, and also increments the
-group-creation quota of the group's creator by one, even if the creator
-no longer owns the group.
-
+group-creation quota of the group's creator by one, even if the creator no
+longer owns the group.
 
 =back
 
@@ -48,43 +46,40 @@ entry, use the B<pts removeuser> command.
 
 =over 4
 
-=item -nameorid
+=item B<-nameorid> <I<user or group name or ID>>+
 
 Specifies the name or AFS UID of each user, the name or AFS GID of each
 group, or the IP address (complete or wildcard-style) or AFS UID of each
 machine entry to delete. It is acceptable to mix users, machines, and
-groups on the same command line, as well as names (IP addresses for machines)
-and IDs. Precede the GID of each group with a hyphen to indicate that
-it is negative.
+groups on the same command line, as well as names (IP addresses for
+machines) and IDs. Precede the GID of each group with a hyphen to indicate
+that it is negative.
 
-=item -cell
+=item B<-cell> <I<cell name>>
 
 Names the cell in which to run the command. For more details, see
-the introductory B<pts> reference page.
+L<pts(1)>.
 
-=item -noauth
+=item B<-noauth>
 
-Assigns the unprivileged identity anonymous to the
-issuer. For more details, see the introductory B<pts> reference
-page.
+Assigns the unprivileged identity anonymous to the issuer. For more
+details, see L<pts(1)>.
 
-=item -force
+=item B<-force>
 
 Enables the command to continue executing as far as possible when errors
-or other problems occur, rather than halting execution at the first
-error.
+or other problems occur, rather than halting execution at the first error.
 
-=item -help
+=item B<-help>
 
-Prints the online help for this command. All other valid options
-are ignored.
+Prints the online help for this command. All other valid options are
+ignored.
 
 =back
 
 =head1 EXAMPLES
 
-The following example deletes the user entries pat and
-B<terry>:
+The following example deletes the user entries C<pat> and C<terry>:
 
    % pts delete pat terry
 
@@ -95,10 +90,9 @@ with AFS GID -215.
 
 =head1 PRIVILEGE REQUIRED
 
-The issuer must belong to the system:administrators group
-to delete user and machine entries. To delete group entries, the issuer
-must either own the group or belong to the
-B<system:administrators> group.
+The issuer must belong to the system:administrators group to delete user
+and machine entries. To delete group entries, the issuer must either own
+the group or belong to the system:administrators group.
 
 =head1 SEE ALSO
 

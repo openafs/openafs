@@ -141,7 +141,7 @@ because it is not referenced by the vnode of any directory that can act as its
 parent (is higher in the filespace). Orphaned objects occupy space on
 the server partition, but do not count against the volume's quota.
 
-=head1 CAVEATS
+=head1 CAUTIONS
 
 Running this command can result in data loss if the Salvager process can
 repair corruption only by removing the offending data. Consult the

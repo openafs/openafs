@@ -1,96 +1,88 @@
 =head1 NAME
 
-pts listentries - Displays all user or group entries in the Protection Database
+pts listentries - Displays all users or groups in the Protection Database
 
 =head1 SYNOPSIS
 
-B<pts listentries> [B<-users>]  [B<-groups>]  [-cell <I<cell name>>]
-[B<-noauth>]  [B<-force>]  [B<-help>]
+B<pts listentries> [B<-users>] [B<-groups>] [B<-cell> <I<cell name>>]
+    [B<-noauth>] [B<-force>] [B<-help>]
 
-B<pts liste> [B<-u>]  [B<-g>]  [B<-c> <I<cell name>>]  [B<-n>]  [B<-f>]  [-h]
+B<pts liste> [B<-u>] [B<-g>] [B<-c> <I<cell name>>] [B<-n>] [B<-f>] [B<-h>]
 
 =head1 DESCRIPTION
 
-The pts listentries command displays the name and AFS ID of all
+The B<pts listentries> command displays the name and AFS ID of all
 Protection Database entries of the indicated type. It also displays the
 AFS ID of each entry's owner and creator.
 
-To display all user and machine entries, either include the
-B<-users> flag or omit both it and the B<-groups> flag.
-To display all group entries, include the B<-groups> flag. To
-display all entries, provide both flags.
+To display all user and machine entries, either include the B<-users> flag
+or omit both it and the B<-groups> flag.  To display all group entries,
+include the B<-groups> flag. To display all entries, provide both flags.
 
 =head1 OPTIONS
 
 =over 4
 
-=item -users
+=item B<-users>
 
 Displays user and machine entries.
 
-=item -groups
+=item B<-groups>
 
 Displays group entries.
 
-=item -cell
+=item B<-cell> <I<cell name>>
 
 Names the cell in which to run the command. For more details, see
-the introductory B<pts> reference page.
+L<pts(1)>.
 
-=item -noauth
+=item B<-noauth>
 
-Assigns the unprivileged identity anonymous to the
-issuer. For more details, see the introductory B<pts> reference
-page.
+Assigns the unprivileged identity anonymous to the issuer. For more
+details, see L<pts(1)>.
 
-=item -force
+=item B<-force>
 
 Enables the command to continue executing as far as possible when errors
-or other problems occur, rather than halting execution at the first
-error.
+or other problems occur, rather than halting execution at the first error.
 
-=item -help
+=item B<-help>
 
-Prints the online help for this command. All other valid options
-are ignored.
+Prints the online help for this command. All other valid options are
+ignored.
 
 =back
 
 =head1 OUTPUT
 
-The output includes a line for each entry, with information in four columns
-that have the following headers:
+The output includes a line for each entry, with information in four
+columns that have the following headers:
 
 =over 4
 
-=item C<Name
->
+=item Name
 
-The entry's name
+The entry's name.
 
-=item C<ID
->
+=item ID
 
-The entry's AFS ID (AFS UID for a user or machine, negative AFS GID
-for a group)
+The entry's AFS ID (AFS UID for a user or machine, negative AFS GID for a
+group).
 
-=item C<Owner
->
+=item Owner
 
-The AFS ID of the user or group that owns the entry
+The AFS ID of the user or group that owns the entry.
 
-=item C<Creator
->
+=item Creator
 
-The AFS ID of the user who created the entry (the
-B<system:administrators> group is listed as the creator of the
-entry for B<anonymous> and the system groups, but it is not otherwise
-possible for a group to create groups)
+The AFS ID of the user who created the entry (the system:administrators
+group is listed as the creator of the entry for C<anonymous> and the
+system groups, but it is not otherwise possible for a group to create
+groups).
 
 =back
 
-In general, the entries appear in the order in which they were
-created.
+In general, the entries appear in the order in which they were created.
 
 =head1 EXAMPLES
 
@@ -110,8 +102,7 @@ The following example displays both user and group entries.
 
 =head1 PRIVILEGE REQUIRED
 
-The issuer must belong to the system:administrators
-group.
+The issuer must belong to the system:administrators group.
 
 =head1 SEE ALSO
 

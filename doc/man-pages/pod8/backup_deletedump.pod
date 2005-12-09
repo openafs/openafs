@@ -22,7 +22,7 @@ Use this command to remove dump records that are incorrect (possibly
 because a dump operation was interrupted or failed), or that correspond to
 dumps that are expired or otherwise no longer needed.
 
-=head1 CAVEATS
+=head1 CAUTIONS
 
 The only way to remove the dump record for an appended dump is to remove
 the record for its initial dump, and doing so removes the records for all of

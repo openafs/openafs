@@ -63,9 +63,7 @@ sub element {
             $command =~ s/^L<//;
             $command =~ s/\(1\)>$//;
         } elsif ($lasttag eq "strong") {
-            if ($buffer eq 'Cautions') {
-                $buffer = 'CAVEATS';
-            } elsif ($buffer eq 'Related Information') {
+            if ($buffer eq 'Related Information') {
                 $buffer = 'SEE ALSO';
             } else {
                 $buffer = uc $buffer;
@@ -170,8 +168,7 @@ $p->parse_file($file) || die "Can't open file: $!\n";
 
 # Fix up a few last things.
 $result =~ s/L<(\S+) (\S+\(1\))>/L<${1}_${2}>/g;
-$result =~ s/^(L<\S+>)\n\n(?=L<)/$1,\n/mg;
-$result =~ s/^(\S+[^\n]+)\n +/$1\n/mg;
+$result =~ s/^(L<[^>]+>)\n\n(?=L<)/$1,\n/mg;
 $result =~ s/^(\s+.*)B<([^>]+)>/$1$2/mg;
 
 # Append a stock copyright statement.

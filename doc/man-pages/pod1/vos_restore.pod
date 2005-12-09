@@ -1,85 +1,78 @@
 =head1 NAME
 
-vos restore - Converts an ASCII file into proper volume format and writes it to the file
-system
+vos restore - Converts an ASCII dump file into an AFS volume
 
 =head1 SYNOPSIS
 
-B<vos restore -server> <I<machine name>>  -partition <I<partition name>>  
-B<-name> <I<name of volume to be restored>>  [B<-file> <I<dump file>>]  
-            [B<-id> <I<volume ID>>]  [B<-overwrite> <B<abort> | B<full> | incremental>]  
-            [B<-cell> <I<cell name>>]  [B<-noauth>]  [B<-localauth>]  [-verbose]  
-            [-help]
+B<vos restore> B<-server> <I<machine name>> B<-partition> <I<partition name>>  
+    B<-name> <I<name of volume to be restored>> [B<-file> <I<dump file>>]  
+    [B<-id> <I<volume ID>>] [B<-overwrite> (abort | full | incremental)]  
+    [B<-cell> <I<cell name>>] [B<-noauth>] [B<-localauth>] [-verbose]  
+    [B<-help>]
 
-B<vos res -s> <I<machine name>>  -p <I<partition name>>  
-B<-na> <I<name of volume to be restored>>  [B<-f> <I<dump file>>]  
-        [B<-i> <I<volume ID>>]  [B<-o> <B<a> | B<f> | B<inc>>]  [-c <I<cell name>>]  
-        [B<-no>]  [B<-l>]  [B<-v>]  [-h]
+B<vos res> B<-s> <I<machine name>> B<-p> <I<partition name>>  
+    B<-na> <I<name of volume to be restored>> [B<-f> <I<dump file>>]  
+    [B<-i> <I<volume ID>>] [B<-o> (a | f | i)] [B<-c> <I<cell name>>]  
+    [B<-no>] [B<-l>] [B<-v>] [B<-h>]
 
 =head1 DESCRIPTION
 
-The vos restore command converts a volume dump file previously
-created with the B<vos dump> command from ASCII into the volume format
-appropriate for the machine type indicated by the B<-server> argument,
-and restores it as a read/write volume to the partition named by the
-B<-partition> argument on that machine. The Volume Server
-assigns the volume name indicated with the B<-name> argument, and
-resets the volume's creation timestamp to the time at which the restore
-operation begins (the creation timestamp is stored in the volume header and
-reported in the C<Creation> field in the output from the B<vos
-examine> and B<vos listvol> commands.)
+The B<vos restore> command converts a volume dump file previously created
+with the B<vos dump> command from ASCII into the volume format appropriate
+for the machine type indicated by the B<-server> argument, and restores it
+as a read/write volume to the partition named by the B<-partition>
+argument on that machine. The Volume Server assigns the volume name
+indicated with the B<-name> argument, and resets the volume's creation
+timestamp to the time at which the restore operation begins (the creation
+timestamp is stored in the volume header and reported in the C<Creation>
+field in the output from the B<vos examine> and B<vos listvol> commands.)
 
-Use the -file argument to name the dump file, or omit the
-argument to provide the file via the standard input stream, presumably through
-a pipe. The pipe can be named, which enables interoperation with
-third-party backup utilities.
+Use the B<-file> argument to name the dump file, or omit the argument to
+provide the file via the standard input stream, presumably through a
+pipe. The pipe can be named, which enables interoperation with third-party
+backup utilities.
 
-As described in the following list, the command can create a completely new
-volume or overwrite an existing volume. In all cases, the full dump of
+As described in the following list, the command can create a completely
+new volume or overwrite an existing volume. In all cases, the full dump of
 the volume must be restored before any incremental dumps. If there are
-multiple incremental dump files, they must be restored in the order they were
-created.
+multiple incremental dump files, they must be restored in the order they
+were created.
 
 =over 4
 
 =item *
 
-To create a new read/write volume, use the -name argument to
-specify a volume name that does not already exist in the Volume Location
-Database (VLDB), and the B<-server> and B<-partition>
-arguments to specify the new volume's site. It is best to omit the
-B<-id> argument so that the Volume Location (VL) Server allocates a
-volume ID automatically. Do not include the B<-overwrite>
-argument, because there is no existing volume to overwrite.
-
+To create a new read/write volume, use the B<-name> argument to specify a
+volume name that does not already exist in the Volume Location Database
+(VLDB), and the B<-server> and B<-partition> arguments to specify the new
+volume's site. It is best to omit the B<-id> argument so that the Volume
+Location (VL) Server allocates a volume ID automatically. Do not include
+the B<-overwrite> argument, because there is no existing volume to
+overwrite.
 
 =item *
 
 To overwrite an existing volume at its current site, specify its name and
-site with the B<-name>, B<-server>, and B<-partition>
-arguments. The volume retains its current volume ID number unless the
-B<-id> argument is provided. Specify the value B<f> or
-B<i> for the B<-overwrite> argument to indicate whether the
-dump file is full or incremental, respectively.
-
+site with the B<-name>, B<-server>, and B<-partition> arguments. The
+volume retains its current volume ID number unless the B<-id> argument is
+provided. Specify the value C<f> or C<i> for the B<-overwrite> argument to
+indicate whether the dump file is full or incremental, respectively.
 
 =item *
 
 To overwrite an existing volume and move it to a new site, specify its
-name and the new site with the B<-name>, B<-server>, and
-B<-partition> arguments. The volume retains its current volume
-ID number unless the B<-id> argument is provided. The volume is
-removed from its original site. Specify the value B<f> for the
-B<-overwrite> argument to indicate that the dump file is a full dump
-(it is not possible to restore an incremental dump and move the volume at the
-same time).
-
+name and the new site with the B<-name>, B<-server>, and B<-partition>
+arguments. The volume retains its current volume ID number unless the
+B<-id> argument is provided. The volume is removed from its original
+site. Specify the value C<f> for the B<-overwrite> argument to indicate
+that the dump file is a full dump (it is not possible to restore an
+incremental dump and move the volume at the same time).
 
 =back
 
-If the volume named by the -name argument already exists and the
-B<-overwrite> argument is omitted, the command interpreter produces
-the following prompt:
+If the volume named by the B<-name> argument already exists and the
+B<-overwrite> argument is omitted, the command interpreter produces the
+following prompt:
 
    Do you want to do a full/incremental restore or abort? [fia](a):
 
@@ -89,68 +82,63 @@ Respond by entering one of the following values:
 
 =item *
 
-f if restoring a full dump file
-
-
-=item *
-
-i if restoring an incremental dump file
-
+C<f> if restoring a full dump file
 
 =item *
 
-B<a> or <Return> to cancel the restore operation
+C<i> if restoring an incremental dump file
 
+=item *
+
+C<a> or Return to cancel the restore operation
 
 =back
 
-=head1 CAVEATS
+=head1 CAUTIONS
 
-If the -file argument is omitted, the issuer must provide all
-other necessary arguments, because the standard input stream is unavailable
-for responding to the command interpreter's prompts for missing
-information. In particular, the issuer must provide the
-B<-overwrite> argument if overwriting an existing volume.
+If the B<-file> argument is omitted, the issuer must provide all other
+necessary arguments, because the standard input stream is unavailable for
+responding to the command interpreter's prompts for missing
+information. In particular, the issuer must provide the B<-overwrite>
+argument if overwriting an existing volume.
 
 =head1 OPTIONS
 
 =over 4
 
-=item -server
+=item B<-server> <I<server name>>
 
 Identifies the file server machine onto which to restore the
-volume. Provide the machine's IP address or its host name (either
-fully qualified or using an unambiguous abbreviation). For details, see
-the introductory reference page for the B<vos> command suite.
+volume. Provide the machine's IP address or its host name (either fully
+qualified or using an unambiguous abbreviation). For details, see
+L<vos(1)>.
 
-=item -partition
+=item B<-partition> <I<partition name>>
 
 Identifies the partition (on the file server machine specified by the
-B<-server> argument) onto which to restore the volume. Provide
-the partition's complete name with preceding slash (for example,
-B</vicepa>) or use one of the three acceptable abbreviated
-forms. For details, see the introductory reference page for the
-B<vos> command suite.
+B<-server> argument) onto which to restore the volume. Provide the
+partition's complete name with preceding slash (for example, F</vicepa>)
+or use one of the three acceptable abbreviated forms. For details, see
+L<vos(1)>.
 
-=item -name
+=item B<-name> <I<name of volume>>
 
-Specifies the name under which to restore the volume. It can be up
-to 22 characters long, but cannot end with a B<.readonly> or
-B<.backup> extension. If the volume already exists, it
-is overwritten subject to the value of the B<-overwrite>
-argument.
+Specifies the name under which to restore the volume. It can be up to 22
+characters long, but cannot end with a C<.readonly> or C<.backup>
+extension. If the volume already exists, it is overwritten subject to the
+value of the B<-overwrite> argument.
 
-=item -file
+=item B<-file> <I<dump file>>
 
-Names the dump file to restore. Incomplete pathnames are
-interpreted relative to the current working directory. Omit this
-argument to provide the dump file via the standard input stream.
+Names the dump file to restore. Incomplete pathnames are interpreted
+relative to the current working directory. Omit this argument to provide
+the dump file via the standard input stream.
 
-=item -id
+=item B<-id> <I<volume ID>>
 
 Specifies the volume ID number to assign to the restored volume.
 
-=item -overwrite
+=item B<-overwrite> (a | f | i)
 
 Specifies which type of dump file is being restored when overwriting an
 existing volume. Provide one of the following values:
@@ -159,82 +147,71 @@ existing volume. Provide one of the following values:
 
 =item *
 
-a to terminate the restore operation.
-
-
-=item *
-
-f if restoring a full dump file.
-
+C<a> to terminate the restore operation.
 
 =item *
 
-i if restoring an incremental dump file. This value is
-not acceptable if the B<-server> and B<-partition> arguments
-do not indicate the volume's current site.
+C<f> if restoring a full dump file.
 
+=item *
+
+C<i> if restoring an incremental dump file. This value is not acceptable
+if the B<-server> and B<-partition> arguments do not indicate the volume's
+current site.
 
 =back
 
-This argument is mandatory if the -file argument is not
-provided.
+This argument is mandatory if the B<-file> argument is not provided.
 
-=item -cell
+=item B<-cell> <I<cell name>>
 
-Names the cell in which to run the command. Do not combine this
-argument with the B<-localauth> flag. For more details, see the
-introductory B<vos> reference page.
+Names the cell in which to run the command. Do not combine this argument
+with the B<-localauth> flag. For more details, see L<vos(1)>.
 
-=item -noauth
+=item B<-noauth>
 
-Assigns the unprivileged identity anonymous to the
-issuer. Do not combine this flag with the B<-localauth>
-flag. For more details, see the introductory B<vos> reference
-page.
+Assigns the unprivileged identity C<anonymous> to the issuer. Do not
+combine this flag with the B<-localauth> flag. For more details, see
+L<vos(1)>.
 
-=item -localauth
+=item B<-localauth>
 
 Constructs a server ticket using a key from the local
-B</usr/afs/etc/KeyFile> file. The B<vos> command
-interpreter presents it to the Volume Server and Volume Location Server during
-mutual authentication. Do not combine this flag with the
-B<-cell> argument or B<-noauth> flag. For more details,
-see the introductory B<vos> reference page.
+F</usr/afs/etc/KeyFile> file. The B<vos> command interpreter presents it
+to the Volume Server and Volume Location Server during mutual
+authentication. Do not combine this flag with the B<-cell> argument or
+B<-noauth> flag. For more details, see L<vos(1)>.
 
-=item -verbose
+=item B<-verbose>
 
-Produces on the standard output stream a detailed trace of the
-command's execution. If this argument is omitted, only warnings
-and error messages appear.
+Produces on the standard output stream a detailed trace of the command's
+execution. If this argument is omitted, only warnings and error messages
+appear.
 
-=item -help
+=item B<-help>
 
-Prints the online help for this command. All other valid options
-are ignored.
+Prints the online help for this command. All other valid options are
+ignored.
 
 =back
 
 =head1 EXAMPLES
 
 The following command restores the contents of the dump file
-B</afs/abc.com/common/dumps/terry.dump> to the
-B</vicepc> partition on the file server machine
-B<fs3.abc.com>. The restored volume is named
-B<user.terry>.
+F</afs/abc.com/common/dumps/terry.dump> to the F</vicepc> partition on the
+file server machine C<fs3.abc.com>. The restored volume is named
+C<user.terry>.
 
    % cd /afs/abc.com/common/dumps
-
-   % vos restore -file terry.dump -server fs3.abc.com -partition c  \
-                 -name user.terry
-   
+   % vos restore -file terry.dump -server fs3.abc.com -partition c \
+       -name user.terry
 
 =head1 PRIVILEGE REQUIRED
 
-The issuer must be listed in the /usr/afs/etc/UserList file on
-the machine specified with the B<-server> argument and on each
-database server machine. If the B<-localauth> flag is included,
-the issuer must instead be logged on to a server machine as the local
-superuser B<root>.
+The issuer must be listed in the F</usr/afs/etc/UserList> file on the
+machine specified with the B<-server> argument and on each database server
+machine. If the B<-localauth> flag is included, the issuer must instead be
+logged on to a server machine as the local superuser C<root>.
 
 =head1 SEE ALSO
 

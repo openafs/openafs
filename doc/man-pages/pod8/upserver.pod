@@ -52,7 +52,7 @@ the key with the highest key version number in the
 B</usr/afs/etc/KeyFile> file to construct a server ticket for mutual
 authentication.
 
-=head1 CAVEATS
+=head1 CAUTIONS
 
 Do not use the Update Server to distribute the contents of the
 B</usr/afs/etc> directory if using the international edition of

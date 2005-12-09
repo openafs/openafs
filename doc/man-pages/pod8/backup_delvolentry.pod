@@ -22,7 +22,7 @@ If there are any remaining volume entries with index numbers higher than
 the deleted entry, their indexes are automatically decremented to eliminate
 any gaps in the indexing sequence.
 
-=head1 CAVEATS
+=head1 CAUTIONS
 
 Deleting volume entries from a temporary volume set is possible only within
 the interactive session in which the volume set was created.

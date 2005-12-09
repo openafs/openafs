@@ -36,7 +36,7 @@ database server machine.
 
 =back
 
-=head1 CAVEATS
+=head1 CAUTIONS
 
 Issue this command only when the installing the cell's first AFS
 server machine. The I<IBM AFS Quick Beginnings> explains how to

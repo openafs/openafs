@@ -24,7 +24,7 @@ argument.
 To alter the settings displayed with this command, issue the kas
 setfields command.
 
-=head1 CAVEATS
+=head1 CAUTIONS
 
 Displaying actual keys on the standard output stream by including the
 B<-showkey> flag constitutes a security exposure. For most

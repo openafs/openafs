@@ -178,7 +178,7 @@ full:
 
    No space left on device
 
-=head1 CAVEATS
+=head1 CAUTIONS
 
 Do not use the B<-k> and -w arguments, which are
 intended for use by the AFS Development group only. Changing them from

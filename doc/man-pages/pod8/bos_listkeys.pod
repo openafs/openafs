@@ -19,7 +19,7 @@ machine named by the B<-server> argument.
 To edit the list of keys, use the B<bos addkey> and bos
 removekey commands.
 
-=head1 CAVEATS
+=head1 CAUTIONS
 
 Displaying actual keys on the standard output stream (by including the
 B<-showkey> flag) is a security exposure. Displaying a checksum

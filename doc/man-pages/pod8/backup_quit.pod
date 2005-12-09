@@ -18,7 +18,7 @@ mode. The command has no effect when issued outside interactive
 mode. Issuing the <B<Ctrl-d>> command also exits interactive
 mode.
 
-=head1 CAVEATS
+=head1 CAUTIONS
 
 To exit interactive mode, all jobs must be completed. Use the
 B<(backup) jobs> command to list any jobs currently pending or

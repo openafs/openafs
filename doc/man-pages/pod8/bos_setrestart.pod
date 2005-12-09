@@ -41,7 +41,7 @@ a.m. each day.
 
 =back
 
-=head1 CAVEATS
+=head1 CAUTIONS
 
 Restarting a process makes it unavailable for a period of time. The
 B<fs> process has potentially the longest outage, depending on how

@@ -102,7 +102,7 @@ argument.
 The kas examine command displays the settings made with this
 command.
 
-=head1 CAVEATS
+=head1 CAUTIONS
 
 The password lifetime set with the -pwexpires argument begins at
 the time the user's password was last changed, rather than when this

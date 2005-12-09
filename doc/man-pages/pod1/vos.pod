@@ -4,257 +4,232 @@ vos - Introduction to the vos command suite
 
 =head1 DESCRIPTION
 
-The commands in the vos command suite are the administrative
-interface to the Volume Server and Volume Location (VL) Server. System
+The commands in the B<vos> command suite are the administrative interface
+to the Volume Server and Volume Location (VL) Server. System
 administrators use B<vos> commands to create, move, delete, replicate,
 back up and examine volumes, among other operations. The VL Server
-automatically records in the Volume Location Database (VLDB) changes in volume
-status and location that result from B<vos> commands.
+automatically records in the Volume Location Database (VLDB) changes in
+volume status and location that result from B<vos> commands.
 
-The operations invoked by most vos commands are idempotent,
-meaning that if an operation is interrupted by a network, server machine, or
-process outage, then a subsequent attempt at the same operation continues from
-the interruption point, rather than starting over at the beginning of the
-operation. Before executing a command, the Volume and VL Servers check
+The operations invoked by most B<vos> commands are idempotent, meaning
+that if an operation is interrupted by a network, server machine, or
+process outage, then a subsequent attempt at the same operation continues
+from the interruption point, rather than starting over at the beginning of
+the operation. Before executing a command, the Volume and VL Servers check
 the current state of the volumes and VLDB records to be altered by the
 command. If they are already in the desired end state (or a consistent
 intermediate state), there is no need to repeat the internal steps that
 brought them there. Idempotency does not apply if the command issuer
-explicitly interrupts the operation with the <B<Ctrl-c>> command or
-another interrupt signal. In that case, the volume is left locked and
-the administrator must use the B<vos unlock> command to unlock it
-before proceeding.
+explicitly interrupts the operation with the Ctrl-C command or another
+interrupt signal. In that case, the volume is left locked and the
+administrator must use the B<vos unlock> command to unlock it before
+proceeding.
 
-It is important that the VLDB accurately indicate the status of the volumes
-on file server machines at all times. The reference pages for the files
-B<vldb.DB0> and
-B<V>I<vol_ID>B<.vol> describe the information
-recorded in the VLDB and volume headers, respectively. If a
-B<vos> command changes volume status, it automatically records the
-change in the corresponding VLDB entry. The most common cause of
-discrepancies between the VLDB and volume status on file server machines is
-interrupted operations; to restore consistency, use the B<vos
-syncserv> and B<vos syncvldb> commands.
+It is important that the VLDB accurately indicate the status of the
+volumes on file server machines at all times. L<vldb.DB0(5)> and
+L<afs_volume_header(5)> describe the information recorded in the VLDB and
+volume headers, respectively. If a B<vos> command changes volume status,
+it automatically records the change in the corresponding VLDB entry. The
+most common cause of discrepancies between the VLDB and volume status on
+file server machines is interrupted operations; to restore consistency,
+use the B<vos syncserv> and B<vos syncvldb> commands.
 
-There are several categories of commands in the vos command
-suite:
+There are several categories of commands in the vos command suite:
 
 =over 4
 
 =item *
 
-Commands to create, move, and rename volumes: vos backup,
-B<vos backupsys>, B<vos create>, B<vos move>, and
-B<vos rename>
-
+Commands to create, move, and rename volumes: B<vos backup>, B<vos
+backupsys>, B<vos create>, B<vos move>, and B<vos rename>.
 
 =item *
 
-Commands to remove VLDB volume records or volumes or both: vos
-delentry, B<vos remove>, and B<vos zap>
-
-
-=item *
-
-Commands to edit or display VLDB server entries: vos
-changeaddr and B<vos listaddrs>
-
+Commands to remove VLDB volume records or volumes or both: B<vos
+delentry>, B<vos remove>, and B<vos zap>.
 
 =item *
 
-Commands to create and restore dump files: vos dump and
-B<vos restore>
-
-
-=item *
-
-Commands to administer replicated volumes: vos addsite,
-B<vos release>, and B<vos remsite>
-
+Commands to edit or display VLDB server entries: B<vos changeaddr> and
+B<vos listaddrs>.
 
 =item *
 
-Commands to display VLDB records, volume headers, or both: vos
-examine, B<vos listvldb>, and B<vos listvol>
-
+Commands to create and restore dump files: B<vos dump> and B<vos restore>.
 
 =item *
 
-Commands to display information about partitions that house volumes:
-B<vos listpart> and B<vos partinfo>
-
-
-=item *
-
-Commands to restore consistency between the VLDB and volume headers:
-B<vos syncserv> and B<vos syncvldb>
-
+Commands to administer replicated volumes: B<vos addsite>, B<vos release>,
+and B<vos remsite>.
 
 =item *
 
-Commands to lock and unlock VLDB entries: vos lock,
-B<vos unlock>, and B<vos unlockvldb>
-
-
-=item *
-
-A command to report Volume Server status: vos status
-
+Commands to display VLDB records, volume headers, or both: B<vos examine>,
+B<vos listvldb>, and B<vos listvol>.
 
 =item *
 
-Commands to obtain help: B<vos apropos> and vos
-help
+Commands to display information about partitions that house volumes: B<vos
+listpart> and B<vos partinfo>.
 
+=item *
+
+Commands to restore consistency between the VLDB and volume headers: B<vos
+syncserv> and B<vos syncvldb>.
+
+=item *
+
+Commands to lock and unlock VLDB entries: B<vos lock>, B<vos unlock>, and
+B<vos unlockvldb>.
+
+=item *
+
+A command to report Volume Server status: B<vos status>.
+
+=item *
+
+Commands to obtain help: B<vos apropos> and B<vos help>.
 
 =back
 
 =head1 OPTIONS
 
 The following arguments and flags are available on many commands in the
-B<bos> suite. The reference page for each command also lists
-them, but they are described here in greater detail.
+B<bos> suite. The reference page for each command also lists them, but
+they are described here in greater detail.
 
 =over 4
 
-=item -cell <I<cell name>
->
+=item B<-cell> <I<cell name>>
 
-Names the cell in which to run the command. It is acceptable to
-abbreviate the cell name to the shortest form that distinguishes it from the
-other entries in the B</usr/vice/etc/CellServDB> file on the local
-machine. If the B<-cell> argument is omitted, the command
-interpreter determines the name of the local cell by reading the following in
-order: 
+Names the cell in which to run the command. It is acceptable to abbreviate
+the cell name to the shortest form that distinguishes it from the other
+entries in the F</usr/vice/etc/CellServDB> file on the local machine. If
+the B<-cell> argument is omitted, the command interpreter determines the
+name of the local cell by reading the following in order:
 
-=item *
-
-The value of the AFSCELL environment variable
-
+=over 4
 
 =item *
 
-The local /usr/vice/etc/ThisCell file
+The value of the AFSCELL environment variable.
 
+=item *
 
-Do not combine the B<-cell> and -localauth
-options. A command on which the B<-localauth> flag is included
-always runs in the local cell (as defined in the server machine's local
-B</usr/afs/etc/ThisCell> file), whereas a command on which the
-B<-cell> argument is included runs in the specified foreign
-cell.
+The local F</usr/vice/etc/ThisCell> file.
 
-=item -help
+=back
 
-Prints a command's online help message on the standard output
-stream. Do not combine this flag with any of the command's other
-options; when it is provided, the command interpreter ignores all other
-options, and only prints the help message.
+Do not combine the B<-cell> and B<-localauth> options. A command on which
+the B<-localauth> flag is included always runs in the local cell (as
+defined in the server machine's local F</usr/afs/etc/ThisCell> file),
+whereas a command on which the B<-cell> argument is included runs in the
+specified foreign cell.
 
-=item -localauth
+=item B<-help>
+
+Prints a command's online help message on the standard output stream. Do
+not combine this flag with any of the command's other options; when it is
+provided, the command interpreter ignores all other options, and only
+prints the help message.
+
+=item B<-localauth>
 
 Constructs a server ticket using the server encryption key with the
-highest key version number in the local B</usr/afs/etc/KeyFile>
-file. The B<vos> command interpreter presents the ticket, which
-never expires, to the Volume Server and VL Server during mutual
-authentication. 
+highest key version number in the local F</usr/afs/etc/KeyFile> file. The
+B<vos> command interpreter presents the ticket, which never expires, to
+the Volume Server and VL Server during mutual authentication.
 
 Use this flag only when issuing a command on a server machine; client
-machines do not usually have a B</usr/afs/etc/KeyFile> file.
-The issuer of a command that includes this flag must be logged on to the
-server machine as the local superuser B<root>. The flag is
-useful for commands invoked by an unattended application program, such as a
-process controlled by the UNIX B<cron> utility or by a cron entry in
-the machine's B</usr/afs/local/BosConfig> file. It is also
-useful if an administrator is unable to authenticate to AFS but is logged in
-as the local superuser B<root>. 
+machines do not usually have a F</usr/afs/etc/KeyFile> file.  The issuer
+of a command that includes this flag must be logged on to the server
+machine as the local superuser C<root>. The flag is useful for commands
+invoked by an unattended application program, such as a process controlled
+by the UNIX B<cron> utility or by a cron entry in the machine's
+F</usr/afs/local/BosConfig> file. It is also useful if an administrator is
+unable to authenticate to AFS but is logged in as the local superuser
+B<root>.
 
-Do not combine the B<-cell> and -localauth
-options. A command on which the B<-localauth> flag is included
-always runs in the local cell (as defined in the server machine's local
-B</usr/afs/etc/ThisCell> file), whereas a command on which the
-B<-cell> argument is included runs in the specified foreign
-cell. Also, do not combine the B<-localauth> and
+Do not combine the B<-cell> and B<-localauth> options. A command on which
+the B<-localauth> flag is included always runs in the local cell (as
+defined in the server machine's local F</usr/afs/etc/ThisCell> file),
+whereas a command on which the B<-cell> argument is included runs in the
+specified foreign cell. Also, do not combine the B<-localauth> and
 B<-noauth> flags.
 
-=item -noauth
+=item B<-noauth>
 
 Establishes an unauthenticated connection to the Volume Server and VL
 Server, in which the servers treat the issuer as the unprivileged user
-B<anonymous>. It is useful only when authorization checking is
-disabled on the server machine (during the installation of a file server
-machine or when the B<bos setauth> command has been used during other
-unusual circumstances). In normal circumstances, the servers allow only
-privileged users to issue commands that change the status of a volume or VLDB
-record, and refuses to perform such an action even if the B<-noauth>
-flag is provided. Do not combine the B<-noauth> and
-B<-localauth> flags.
+C<anonymous>. It is useful only when authorization checking is disabled on
+the server machine (during the installation of a file server machine or
+when the B<bos setauth> command has been used during other unusual
+circumstances). In normal circumstances, the servers allow only privileged
+users to issue commands that change the status of a volume or VLDB record,
+and refuses to perform such an action even if the B<-noauth> flag is
+provided. Do not combine the B<-noauth> and B<-localauth> flags.
 
-=item -partition <I<partition name>
->
+=item B<-partition> <I<partition name>>
 
 Identifies the AFS server partition on a file server machine that houses,
 or is to house, the volumes of interest, or about which to list
-information. The B<vos> command interpreter accepts any of the
-following four name formats: 
+information. The B<vos> command interpreter accepts any of the following
+four name formats:
 
-   B</vicepa>     =     B<vicepa>      =      B<a>      =      0
-   B</vicepb>     =     B<vicepb>      =      B<b>      =      1
+   /vicepa     =     vicepa      =      a      =      0
+   /vicepb     =     vicepb      =      b      =      1
 
 After /vicepz (for which the index is 25) comes 
 
-   B</vicepaa>    =     B<vicepaa>     =      B<aa>     =      26
-   B</vicepab>    =     B<vicepab>     =      B<ab>     =      27
+   /vicepaa    =     vicepaa     =      aa     =      26
+   /vicepab    =     vicepab     =      ab     =      27
 
 and so on through 
 
-   B</vicepiv>    =     B<vicepiv>     =      B<iv>     =      255
+   /vicepiv    =     vicepiv     =      iv     =      255
 
-The B<-frompartition> and -topartition arguments to the
-B<vos move> command also accept this notation.
+The B<-frompartition> and B<-topartition> arguments to the B<vos move>
+command also accept this notation.
 
-=item -server <I<machine name>
->
+=item B<-server> <I<machine name>>
 
 Identifies the file server machine that houses, or is to house, the
-volumes or AFS server partitions of interest. Provide the
-machine's IP address in dotted decimal format, its fully qualified host
-name (for example, B<fs1.abc.com>), or the shortest
-abbreviated form of its host name that distinguishes it from other
-machines. Successful use of an abbreviated form depends on the
-availability of a name resolution service (such as the Domain Name Service or
-a local host table) at the time the command is issued.
+volumes or AFS server partitions of interest. Provide the machine's IP
+address in dotted decimal format, its fully qualified host name (for
+example, C<fs1.abc.com>), or the shortest abbreviated form of its host
+name that distinguishes it from other machines. Successful use of an
+abbreviated form depends on the availability of a name resolution service
+(such as the Domain Name Service or a local host table) at the time the
+command is issued.
 
-The B<-fromserver> and -toserver arguments to the
-B<vos move> command also accept these name formats.
+The B<-fromserver> and B<-toserver> arguments to the B<vos move> command
+also accept these name formats.
 
-=item -verbose
+=item B<-verbose>
 
-Produces on the standard output stream a detailed trace of the
-command's execution. If this argument is omitted, only warnings
-and error messages appear.
+Produces on the standard output stream a detailed trace of the command's
+execution. If this argument is omitted, only warnings and error messages
+appear.
 
 =back
 
 =head1 PRIVILEGE REQUIRED
 
 To issue most vos commands, the issuer must be listed in the
-B</usr/afs/etc/UserList> file on each server machine that houses or is
-to house an affected volume, and on each database server machine. The
-most predictable performance results if all database server and file server
-machines in the cell share a common B<UserList> file.
-Alternatively, if the B<-localauth> flag is included, the issuer must
-be logged on to a server machine as the local superuser
-B<root>.
+F</usr/afs/etc/UserList> file on each server machine that houses or is to
+house an affected volume, and on each database server machine. The most
+predictable performance results if all database server and file server
+machines in the cell share a common F<UserList> file.  Alternatively, if
+the B<-localauth> flag is included, the issuer must be logged on to a
+server machine as the local superuser C<root>.
 
-To issue a vos command that only displays information, no
-privilege is required.
+To issue a vos command that only displays information, no privilege is
+required.
 
 =head1 SEE ALSO
 
-L<CellServDB (server version)(1)>
-
-L<UserList(1)>,
+L<CellServDB(5)>,
+L<UserList(5)>,
 L<vos_addsite(1)>,
 L<vos_apropos(1)>,
 L<vos_backup(1)>,

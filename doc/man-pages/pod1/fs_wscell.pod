@@ -4,37 +4,37 @@ fs wscell - Returns the name of the cell to which a machine belongs
 
 =head1 SYNOPSIS
 
-B<fs wscell> [-help]
+B<fs wscell> [B<-help>]
 
-B<fs ws> [-h]
+B<fs ws> [B<-h>]
 
 =head1 DESCRIPTION
 
-The fs wscell command returns the name of the local
-machine's home cell.
+The B<fs wscell> command returns the name of the local machine's home
+cell.
 
 =head1 OPTIONS
 
 =over 4
 
-=item -help
+=item B<-help>
 
-Prints the online help for this command. All other valid options
-are ignored.
+Prints the online help for this command. All other valid options are
+ignored.
 
 =back
 
 =head1 OUTPUT
 
-The output displays the contents of the local
-B</usr/vice/etc/ThisCell> file, in the format
+The output displays the contents of the local F</usr/vice/etc/ThisCell>
+file, in the format
 
-   This workstation belongs to cell 'I<cellname>'
+   This workstation belongs to cell '<cellname>'
 
 =head1 EXAMPLES
 
-The following example results when the fs wscell is issued on a
-machine in the State University cell:
+The following example results when the fs wscell is issued on a machine in
+the State University cell:
 
    % fs wscell
    This workstation belongs to cell 'stateu.edu'

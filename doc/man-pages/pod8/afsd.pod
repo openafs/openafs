@@ -385,7 +385,7 @@ If neither argument is used, there are five VM daemons.
 
 =back
 
-=head1 CAVEATS
+=head1 CAUTIONS
 
 Do not use the -shutdown parameter. It does not shutdown
 the Cache Manager effectively. Instead, halt Cache Manager activity by

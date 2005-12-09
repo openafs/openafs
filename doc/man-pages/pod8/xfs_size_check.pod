@@ -15,7 +15,7 @@ directories), verifies that each partition uses 512-byte inodes. AFS
 stores information in the inodes on server partitions, and the 256-byte inode
 size that XFS uses by default is not large enough.
 
-=head1 CAVEATS
+=head1 CAUTIONS
 
 This command is available on in the AFS distribution for IRIX system types
 that can use XFS-formatted partitions as server partitions.

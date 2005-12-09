@@ -4,63 +4,61 @@ fs listacl - Displays ACLs
 
 =head1 SYNOPSIS
 
-B<fs listacl> [B<-path> <I<dir/file path>>+]  [B<-id>]  [B<-if>]  [-help]
+B<fs listacl> [B<-path> <I<dir/file path>>+] [B<-id>] [B<-if>] [B<-help>]
 
-B<fs la> [B<-p> <I<dir/file path>>+]  [B<-id>]  [B<-if>]  [-h] 
+B<fs la> [B<-p> <I<dir/file path>>+] [B<-id>] [B<-if>] [B<-h>] 
 
-B<fs lista> [B<-p> <I<dir/file path>>+]  [B<-id>]  [B<-if>]  [-h] 
+B<fs lista> [B<-p> <I<dir/file path>>+] [B<-id>] [B<-if>] [B<-h>] 
 
 =head1 DESCRIPTION
 
-The fs listacl command displays the access control list (ACL)
+The B<fs listacl> command displays the access control list (ACL)
 associated with each specified file, directory, or symbolic link. The
-specified element can reside in the DFS filespace if the issuer is using the
-AFS/DFS Migration Toolkit Protocol Translator to access DFS data (and DFS does
-implement per-file ACLs). To display the ACL of the current working
-directory, omit the B<-path> argument.
+specified element can reside in the DFS filespace if the issuer is using
+the AFS/DFS Migration Toolkit Protocol Translator to access DFS data (and
+DFS does implement per-file ACLs). To display the ACL of the current
+working directory, omit the B<-path> argument.
 
-To alter an ACL, use the fs setacl command. To copy an
-ACL from one directory to another, use the B<fs copyacl>
-command. To remove obsolete entries from an ACL, use the B<fs
-cleanacl> command.
+To alter an ACL, use the fs setacl command. To copy an ACL from one
+directory to another, use the B<fs copyacl> command. To remove obsolete
+entries from an ACL, use the B<fs cleanacl> command.
 
-=head1 CAVEATS
+=head1 CAUTIONS
 
-Placing a user or group on the C<Negative rights> section of the
-ACL does not guarantee denial of permissions, if the C<Normal rights>
-section grants the permissions to members of the
-B<system:anyuser> group. In that case, the user needs
-only to issue the B<unlog> command to obtain the permissions granted
-to the B<system:anyuser> group.
+Placing a user or group on the C<Negative rights> section of the ACL does
+not guarantee denial of permissions, if the C<Normal rights> section
+grants the permissions to members of the system:anyuser group. In that
+case, the user needs only to issue the B<unlog> command to obtain the
+permissions granted to the system:anyuser group.
 
 =head1 OPTIONS
 
 =over 4
 
-=item -path
+=item B<-path> <I<dir/file path>>+
 
-Names each directory or file for which to display the ACL. For AFS
-files, the output displays the ACL from the file's parent directory;
-DFS files do have their own ACL. Incomplete pathnames are interpreted
-relative to the current working directory, which is also the default value if
-this argument is omitted.
+Names each directory or file for which to display the ACL. For AFS files,
+the output displays the ACL from the file's parent directory; DFS files do
+have their own ACL. Incomplete pathnames are interpreted relative to the
+current working directory, which is also the default value if this
+argument is omitted.
 
-=item -id
+=item B<-id>
 
-Displays the Initial Container ACL of each DFS directory. This
-argument is supported only on DFS directories accessed via the AFS/DFS
-Migration Toolkit Protocol Translator.
+Displays the Initial Container ACL of each DFS directory. This argument is
+supported only on DFS directories accessed via the AFS/DFS Migration
+Toolkit Protocol Translator.
 
-=item -if
+=item B<-if>
 
-Displays the Initial Object ACL of each DFS directory. This
-argument is supported only on DFS directories accessed via the AFS/DFS
-Migration Toolkit Protocol Translator.
+Displays the Initial Object ACL of each DFS directory. This argument is
+supported only on DFS directories accessed via the AFS/DFS Migration
+Toolkit Protocol Translator.
 
-=item -help
+=item B<-help>
 
-Prints the online help for this command. All other valid options
-are ignored.
+Prints the online help for this command. All other valid options are
+ignored.
 
 =back
 
@@ -69,24 +67,23 @@ are ignored.
 The first line of the output for each file, directory, or symbolic link
 reads as follows:
 
-   Access list for I<directory> is
+   Access list for <directory> is
 
 If the issuer used shorthand notation in the pathname, such as the period
-(B<.>) to represent the current current directory, that
-notation sometimes appears instead of the full pathname of the
-directory.
+(C<.>) to represent the current current directory, that notation sometimes
+appears instead of the full pathname of the directory.
 
-Next, the C<Normal rights> header precedes a list of users and
-groups who are granted the indicated permissions, with one pairing of user or
-group and permissions on each line. If negative permissions have been
-assigned to any user or group, those entries follow a C<Negative
-rights> header. The format of negative entries is the same as
-those on the C<Normal rights> section of the ACL, but the user or
-group is denied rather than granted the indicated permissions.
+Next, the C<Normal rights> header precedes a list of users and groups who
+are granted the indicated permissions, with one pairing of user or group
+and permissions on each line. If negative permissions have been assigned
+to any user or group, those entries follow a C<Negative rights>
+header. The format of negative entries is the same as those on the
+C<Normal rights> section of the ACL, but the user or group is denied
+rather than granted the indicated permissions.
 
 AFS does not implement per-file ACLs, so for a file the command displays
-the ACL on its directory. The output for a symbolic link displays the
-ACL that applies to its target file or directory, rather than the ACL on the
+the ACL on its directory. The output for a symbolic link displays the ACL
+that applies to its target file or directory, rather than the ACL on the
 directory that houses the symbolic link.
 
 The permissions for AFS enable the possessor to perform the indicated
@@ -94,73 +91,61 @@ action:
 
 =over 4
 
-=item C<a
->
+=item a (administer)
 
-(administer): change the entries on the ACL
+Change the entries on the ACL.
 
-=item C<d
->
+=item d (delete)
 
-(delete): remove files and subdirectories from the
-directory or move them to other directories
+Remove files and subdirectories from the directory or move them to other
+directories.
 
-=item C<i
->
+=item i (insert)
 
-(insert): add files or subdirectories to the directory by
-copying, moving or creating
+Add files or subdirectories to the directory by copying, moving or
+creating.
 
-=item C<k
->
+=item k (lock)
 
-(lock): set read locks or write locks on the files in the
-directory
+Set read locks or write locks on the files in the directory.
 
-=item C<l
->
+=item l (lookup)
 
-(lookup): list the files and subdirectories in the
-directory, stat the directory itself, and issue the B<fs listacl>
-command to examine the directory's ACL
+List the files and subdirectories in the directory, stat the directory
+itself, and issue the B<fs listacl> command to examine the directory's
+ACL.
 
-=item C<r
->
+=item r (read)
 
-(read): read the contents of files in the directory;
-issue the B<ls -l> command to stat the elements in the directory
+Read the contents of files in the directory; issue the C<ls -l> command to
+stat the elements in the directory.
 
-=item C<w
->
+=item w (write)
 
-(write): modify the contents of files in the directory,
-and issue the UNIX B<chmod> command to change their mode bits
+Modify the contents of files in the directory, and issue the UNIX B<chmod>
+command to change their mode bits
 
-=item C<A, C<B>, C<C>, C<D>, C<E>,
-C<F>, C<G>, C<H>:
->
+=item A, B, C, D, E, F, G, H
 
 Have no default meaning to the AFS server processes, but are made
-available for applications to use in controlling access to the
-directory's contents in additional ways. The letters must be
-uppercase.
+available for applications to use in controlling access to the directory's
+contents in additional ways. The letters must be uppercase.
 
 =back
 
-For DFS files and directories, the permissions are similar, except that the
-DFS B<x> (B<execute>) permission replaces the AFS B<l>
-(B<lookup>) permission, DFS B<c> (B<control>) replaces
-AFS B<a> (B<administer>), and there is no DFS equivalent to
-the AFS B<k> (B<lock>) permission. The meanings of the
-various permissions also differ slightly, and DFS does not implement negative
-permissions. For a complete description of DFS permissions, see the DFS
-documentation and the I<IBM AFS/DFS Migration Toolkit Administration Guide
-and Reference>.
+For DFS files and directories, the permissions are similar, except that
+the DFS C<x> (execute) permission replaces the AFS C<l> (lookup)
+permission, DFS C<c> (control) replaces AFS C<a> (administer), and there
+is no DFS equivalent to the AFS C<k> (lock) permission. The meanings of
+the various permissions also differ slightly, and DFS does not implement
+negative permissions. For a complete description of DFS permissions, see
+the DFS documentation and the I<IBM AFS/DFS Migration Toolkit
+Administration Guide and Reference>.
 
 =head1 EXAMPLES
 
 The following command displays the ACL on the home directory of the user
-B<pat> (the current working directory), and on its B<private>
+C<pat> (the current working directory), and on its C<private>
 subdirectory.
 
    % fs listacl -path . private
@@ -177,19 +162,18 @@ subdirectory.
 
 =head1 PRIVILEGE REQUIRED
 
-If the -path argument names an AFS directory, the issuer must
-have the B<l> (B<lookup>) permission on its ACL and the ACL
-for every directory that precedes it in the pathname.
+If the B<-path> argument names an AFS directory, the issuer must have the
+C<l> (lookup) permission on its ACL and the ACL for every directory that
+precedes it in the pathname.
 
-If the -path argument names an AFS file, the issuer must have
-the B<l> (B<lookup>) and B<r> (B<read>)
-permissions on the ACL of the file's directory, and the B<l>
-permission on the ACL of each directory that precedes it in the
-pathname.
+If the B<-path> argument names an AFS file, the issuer must have the C<l>
+(lookup) and C<r> (read) permissions on the ACL of the file's directory,
+and the B<l> permission on the ACL of each directory that precedes it in
+the pathname.
 
-If the -path argument names a DFS directory or file, the issuer
-must have the B<x> (B<execute>) permission on its ACL and on
-the ACL of each directory that precedes it in the pathname.
+If the B<-path> argument names a DFS directory or file, the issuer must
+have the C<x> (execute) permission on its ACL and on the ACL of each
+directory that precedes it in the pathname.
 
 =head1 SEE ALSO
 

@@ -18,7 +18,7 @@ server machine specified with the B<-host> argument from the
 B</usr/afs/etc/CellServDB> file on the server machine named by the
 B<-server> argument.
 
-=head1 CAVEATS
+=head1 CAUTIONS
 
 After executing this command (and waiting for the Update Server to
 propagate the changes, if it is used), restart the database server processes

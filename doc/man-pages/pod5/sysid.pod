@@ -23,7 +23,7 @@ machine that houses the volume. This enables the Cache Manager to make
 use of multiple addresses when accessing AFS data stored on a multihomed file
 server machine.
 
-=head1 CAVEATS
+=head1 CAUTIONS
 
 The sysid file is unique to each file server machine, and must
 not be copied from one machine to another. If it is a common practice

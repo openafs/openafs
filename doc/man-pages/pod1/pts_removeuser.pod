@@ -4,106 +4,98 @@ pts removeuser - Removes a user from a Protection Database group
 
 =head1 SYNOPSIS
 
-B<pts removeuser -user> <I<user name>>+  -group <I<group name>>+
-[B<-cell> <I<cell name>>]  [B<-noauth>]  [B<-force>]  [B<-help>]
+B<pts removeuser> B<-user> <I<user name>>+ B<-group> <I<group name>>+
+    [B<-cell> <I<cell name>>] [B<-noauth>] [B<-force>] [B<-help>]
 
-B<pts rem -u> <I<user name>>+  B<-g> <I<group name>>+  [-c <I<cell name>>]  
-[B<-n>]  [B<-f>]  [B<-h>]
+B<pts rem> B<-u> <I<user name>>+ B<-g> <I<group name>>+
+    [B<-c> <I<cell name>>] [B<-n>] [B<-f>] [B<-h>]
 
 =head1 DESCRIPTION
 
-The pts removeuser command removes each user or machine named by
-the B<-user> argument from each group named by the B<-group>
-argument.
+The B<pts removeuser> command removes each user or machine named by the
+B<-user> argument from each group named by the B<-group> argument.
 
-To add users to a group, use the pts adduser command. To
-list group membership, use the B<pts membership> command. To
-remove users from a group and delete the group's entry completely in a
-single step, use the B<pts delete> command.
+To add users to a group, use the B<pts adduser> command. To list group
+membership, use the B<pts membership> command. To remove users from a
+group and delete the group's entry completely in a single step, use the
+B<pts delete> command.
 
-=head1 CAVEATS
+=head1 CAUTIONS
 
-AFS compiles each user's group membership as he or she
-authenticates. Any users who have valid tokens when they are removed
-from a group retain the privileges extended to that group's members until
-they discard their tokens or reauthenticate.
+AFS compiles each user's group membership as he or she authenticates. Any
+users who have valid tokens when they are removed from a group retain the
+privileges extended to that group's members until they discard their
+tokens or reauthenticate.
 
 =head1 OPTIONS
 
 =over 4
 
-=item -name
+=item B<-name> <I<user name>>+
 
 Specifies the name of each user entry or the IP address (complete or
 wildcard-style) of each machine entry to remove.
 
-=item -group
+=item B<-group> <I<group name>>+
 
 Names each group from which to remove members.
 
-=item -cell
+=item B<-cell> <I<cell name>>
 
 Names the cell in which to run the command. For more details, see
-the introductory B<pts> reference page.
+L<pts(1)>.
 
-=item -noauth
+=item B<-noauth>
 
-Assigns the unprivileged identity anonymous to the
-issuer. For more details, see the introductory B<pts> reference
-page.
+Assigns the unprivileged identity anonymous to the issuer. For more
+details, see L<pts(1)>.
 
-=item -force
+=item B<-force>
 
 Enables the command to continue executing as far as possible when errors
-or other problems occur, rather than halting execution at the first
-error.
+or other problems occur, rather than halting execution at the first error.
 
-=item -help
+=item B<-help>
 
-Prints the online help for this command. All other valid options
-are ignored.
+Prints the online help for this command. All other valid options are
+ignored.
 
 =back
 
 =head1 EXAMPLES
 
-The following example removes user smith from the groups
-B<staff> and B<staff:finance>. Note that no
-switch names are necessary because only a single instance is provided for the
-first argument (the username).
+The following example removes user smith from the groups C<staff> and
+C<staff:finance>. Note that no switch names are necessary because only a
+single instance is provided for the first argument (the username).
 
    % pts removeuser smith staff staff:finance
 
 The following example removes three machine entries, which represent all
-machines in the ABC Corporation network, from the group
-B<bin-prot>:
+machines in the ABC Corporation network, from the group C<bin-prot>:
 
    % pts removeuser -user 138.255.0.0 192.12.105.0 192.12.106.0 -group bin-prot
 
 =head1 PRIVILEGE REQUIRED
 
 The required privilege depends on the setting of the fifth privacy flag in
-the Protection Database for the group named by the B<-group> argument
-(use the B<pts examine> command to display the flags):
+the Protection Database for the group named by the B<-group> argument (use
+the B<pts examine> command to display the flags):
 
 =over 4
 
 =item *
 
 If it is the hyphen, only the group's owner and members of the
-B<system:administrators> group can remove members.
-
+system:administrators group can remove members.
 
 =item *
 
-If it is lowercase C<r>, members of the group can also remove
-other members.
-
+If it is lowercase C<r>, members of the group can also remove other
+members.
 
 =back
 
-(It is not possible to set the fifth flag to uppercase
-C<R>.)
+(It is not possible to set the fifth flag to uppercase C<R>.)
 
 =head1 SEE ALSO
 

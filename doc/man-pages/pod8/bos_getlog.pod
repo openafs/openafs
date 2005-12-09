@@ -18,7 +18,7 @@ argument. The BOS Server fetches the log file from the
 B</usr/afs/logs> directory unless an alternate pathname is provided as
 part of the B<-file> argument.
 
-=head1 CAVEATS
+=head1 CAUTIONS
 
 Log files can grow quite large, especially for the database server
 processes. To keep them to a manageable size, periodically either use

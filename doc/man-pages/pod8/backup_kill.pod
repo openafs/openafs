@@ -90,7 +90,7 @@ B<Cautions> section.
 
 =back
 
-=head1 CAVEATS
+=head1 CAUTIONS
 
 It is best not to issue the (backup) kill command against
 restore operations. If the termination signal interrupts a restore

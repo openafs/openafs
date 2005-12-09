@@ -16,7 +16,7 @@ Database, reporting any errors or corruption it finds. If there are
 problems, do not issue any B<kas> commands until the database is
 repaired.
 
-=head1 CAVEATS
+=head1 CAUTIONS
 
 The results can be unpredictable if the Authentication Server makes changes
 to the Authentication Database while this command is running. Use the

@@ -121,7 +121,7 @@ the B<MOUNT> instruction or prompts for any additional tapes needed to
 complete the restore operation; the backup operator must arrange to
 provide them.
 
-=head1 CAVEATS
+=head1 CAUTIONS
 
 If issuing this command to recover data after a disk crash or other damage,
 be sure not to issue the B<vos syncserv> command first. Doing

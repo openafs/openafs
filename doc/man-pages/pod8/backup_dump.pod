@@ -298,7 +298,7 @@ prompts the operator. It also invokes the B<MOUNT> instruction
 or prompts for any additional tapes needed to complete the dump
 operation; the issuer must arrange to provide them.
 
-=head1 CAVEATS
+=head1 CAUTIONS
 
 If a dump operation is interrupted or fails for any reason, data from all
 volumes written to tape before the interrupt are valid can be used in a

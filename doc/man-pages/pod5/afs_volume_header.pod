@@ -1,0 +1,27 @@
+=head1 NAME
+
+VI<vol_ID>.vol - Represents an AFS volume
+
+=head1 DESCRIPTION
+
+The B<V>I<vol_ID>.vol file is the header
+file for the AFS volume with volume ID I<vol_ID>. There is one
+such file for each volume stored on an AFS server (B</vicep>)
+partition. The header file stores information that includes the
+volume's name, ID number, type (read/write, read-only, or backup), size
+and status (online, offline, or busy). To display information from the
+header file, use the B<vos listvol> or B<vos examine>
+command.
+
+The header file points to, but does not contain, the actual data in the
+volume. It is not possible to access the AFS data except by mounting
+the volume in the AFS filespace and reading its contents through the Cache
+Manager.
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

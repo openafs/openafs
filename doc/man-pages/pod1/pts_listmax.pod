@@ -1,56 +1,52 @@
 =head1 NAME
 
-pts listmax - Displays the C<max user id> and C<max group id> counters
+pts listmax - Displays the max user id and max group id counters
 
 =head1 SYNOPSIS
 
-B<pts listmax> [B<-cell> <I<cell name>>]  [B<-noauth>]  [B<-force>]  [-help]
+B<pts listmax> [B<-cell> <I<cell name>>] [B<-noauth>] [B<-force>] [B<-help>]
 
-B<pts listm>  [B<-c> <I<cell name>>]  [B<-n>]  [B<-f>]  [-h]
+B<pts listm> [B<-c> <I<cell name>>] [B<-n>] [B<-f>] [B<-h>]
 
 =head1 DESCRIPTION
 
-The pts listmax command displays the values of the C<max user
-id> and C<max group id> counters, which the Protection Server
-uses to track the AFS user IDs (AFS UIDs) it allocates to new users or
-machines, and the AFS group IDs (AFS GIDs) it allocates to new groups,
-respectively. When an administrator next issues the B<pts
-createuser> command and does not include the B<-id> argument, the
-new user or machine receives an AFS UID one greater than the C<max user
-id> counter, and when a user issues the B<pts creategroup>
-command and does not include the B<-id> argument, the new group
-receives an AFS UID one less (more negative) than the C<max group id>
-counter.
+The B<pts listmax> command displays the values of the C<max user id> and
+C<max group id> counters, which the Protection Server uses to track the
+AFS user IDs (AFS UIDs) it allocates to new users or machines, and the AFS
+group IDs (AFS GIDs) it allocates to new groups, respectively. When an
+administrator next issues the B<pts createuser> command and does not
+include the B<-id> argument, the new user or machine receives an AFS UID
+one greater than the C<max user id> counter, and when a user issues the
+B<pts creategroup> command and does not include the B<-id> argument, the
+new group receives an AFS UID one less (more negative) than the C<max
+group id> counter.
 
-To reset one or both counters, members of the
-B<system:administrators> group can issue the B<pts
-setmax> command.
+To reset one or both counters, members of the system:administrators group
+can issue the B<pts setmax> command.
 
 =head1 OPTIONS
 
 =over 4
 
-=item -cell
+=item B<-cell> <I<cell name>>
 
 Names the cell in which to run the command. For more details, see
-the introductory B<pts> reference page.
+L<pts(1)>.
 
-=item -noauth
+=item B<-noauth>
 
-Assigns the unprivileged identity anonymous to the
-issuer. For more details, see the introductory B<pts> reference
-page.
+Assigns the unprivileged identity anonymous to the issuer. For more
+details, see L<pts(1)>.
 
-=item -force
+=item B<-force>
 
 Enables the command to continue executing as far as possible when errors
-or other problems occur, rather than halting execution at the first
-error.
+or other problems occur, rather than halting execution at the first error.
 
-=item -help
+=item B<-help>
 
-Prints the online help for this command. All other valid options
-are ignored.
+Prints the online help for this command. All other valid options are
+ignored.
 
 =back
 
@@ -58,7 +54,7 @@ are ignored.
 
 The command displays the counters in the following format:
 
-   Max user id is I<user_counter> and max group id is I<group_counter>.
+   Max user id is <user_counter> and max group id is <group_counter>.
 
 =head1 EXAMPLES
 

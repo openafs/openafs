@@ -1,38 +1,37 @@
 =head1 NAME
 
-fs whichcell - Returns the name of the cell to which a file or directory belongs
+fs whichcell - Returns the cell to which a file or directory belongs
 
 =head1 SYNOPSIS
 
-B<fs whichcell> [B<-path> <I<dir/file path>>+]  [-help]
+B<fs whichcell> [B<-path> <I<dir/file path>>+] [B<-help>]
 
-B<fs whi > [B<-p> <I<dir/file path>>+]  [-h]
+B<fs whi > [B<-p> <I<dir/file path>>+] [B<-h>]
 
 =head1 DESCRIPTION
 
-The fs whichcell command returns the name of the cell in which
-the volume that houses each indicated directory or file resides.
+The B<fs whichcell> command returns the name of the cell in which the
+volume that houses each indicated directory or file resides.
 
 To display the file server machine on which the volume housing a directory
-or file resides, use the B<fs whichcell> command. To display
-the cell membership of the local machine, use the B<fs wscell>
-command.
+or file resides, use the B<fs whichcell> command. To display the cell
+membership of the local machine, use the B<fs wscell> command.
 
 =head1 OPTIONS
 
 =over 4
 
-=item -path
+=item B<-path> I<Idir/file path>>+
 
 Names each AFS file or directory for which to return the cell
 membership. Partial pathnames are interpreted relative to the current
 working directory, which is also the default value if this argument is
 omitted.
 
-=item -help
+=item B<-help>
 
-Prints the online help for this command. All other valid options
-are ignored.
+Prints the online help for this command. All other valid options are
+ignored.
 
 =back
 
@@ -43,8 +42,8 @@ which the volume that houses the directory or file resides.
 
 =head1 EXAMPLES
 
-The following example shows that the current working directory resides in a
-volume in the ABC Corporation cell:
+The following example shows that the current working directory resides in
+a volume in the ABC Corporation cell:
 
    % fs whichcell
    File . lives in cell 'abc.com'

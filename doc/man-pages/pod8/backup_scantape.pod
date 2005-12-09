@@ -54,7 +54,7 @@ B<(backup) kill> command. In noninteractive mode, the only
 choice is to use a termination signal such as <B<Ctrl-c>> to halt
 the Tape Coordinator completely.
 
-=head1 CAVEATS
+=head1 CAUTIONS
 
 A scanning operation does not have to begin with the first tape in a dump
 set, but the Backup System can process tapes only in sequential order after

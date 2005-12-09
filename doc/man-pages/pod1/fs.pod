@@ -4,141 +4,116 @@ fs - Introduction to the fs command suite
 
 =head1 DESCRIPTION
 
-The commands in the fs command suite constitute the main
-administrative interface to the Cache Manager on an AFS client machine, which
-is responsible for fetching AFS data from file server machines on behalf of
+The commands in the B<fs> command suite constitute the main administrative
+interface to the Cache Manager on an AFS client machine, which is
+responsible for fetching AFS data from file server machines on behalf of
 applications running on the client machine.
 
-There are several categories of commands in the fs command
-suite:
+There are several categories of commands in the B<fs> command suite:
 
 =over 4
 
 =item *
 
 Commands to set and report how the Cache Manager interacts with server
-machines: B<fs checkservers>, B<fs getcellstatus>,
-B<fs getserverprefs>, B<fs listcells>, B<fs newcell>,
-B<fs setcell>, 
-
-
-B<fs setserverprefs>, B<fs sysname>, and fs
-wscell
+machines: B<fs checkservers>, B<fs getcellstatus>, B<fs getserverprefs>,
+B<fs listcells>, B<fs newcell>, B<fs setcell>, B<fs setserverprefs>, B<fs
+sysname>, and B<fs wscell>.
 
 =item *
 
-Commands to administer access control lists (ACLs): fs
-cleanacl, B<fs copyacl>, B<fs listacl>, and B<fs
-setacl>
-
+Commands to administer access control lists (ACLs): B<fs cleanacl>, B<fs
+copyacl>, B<fs listacl>, and B<fs setacl>.
 
 =item *
 
 Commands to administer server machines, volumes or partitions that house a
-given file or directory: B<fs diskfree>, B<fs examine>,
-B<fs listquota>, B<fs quota>, B<fs setquota>, B<fs
-setvol>, 
-
-
-B<fs whereis>, and fs whichcell
+given file or directory: B<fs diskfree>, B<fs examine>, B<fs listquota>,
+B<fs quota>, B<fs setquota>, B<fs setvol>, B<fs whereis>, and B<fs
+whichcell>.
 
 =item *
 
-Commands to administer the local client cache and related
-information: B<fs checkvolumes>, B<fs flush>, B<fs
-flushvolume>, B<fs getcacheparms>, and B<fs setcachesize>
-
-
-=item *
-
-Commands to administer volume mount points: fs lsmount,
-B<fs mkmount>, and B<fs rmmount>
-
+Commands to administer the local client cache and related information:
+B<fs checkvolumes>, B<fs flush>, B<fs flushvolume>, B<fs getcacheparms>,
+and B<fs setcachesize>.
 
 =item *
 
-Commands to control monitoring and tracing: fs debug, and
-B<fs messages>
+Commands to administer volume mount points: B<fs lsmount>, B<fs mkmount>,
+and B<fs rmmount>.
 
+=item *
+
+Commands to control monitoring and tracing: B<fs debug>, and B<fs
+messages>.
 
 =item *
 
 A command to administer the Cache Manager's interaction with other
-file systems: B<fs exportafs>
-
+file systems: B<fs exportafs>.
 
 =item *
 
-Commands to obtain help: B<fs apropos> and fs
-help
-
+Commands to obtain help: B<fs apropos> and B<fs help>.
 
 =back
 
-The Cache Manager and the fs commands use and maintain the
-following configuration files:
+The Cache Manager and the fs commands use and maintain the following
+configuration files:
 
 =over 4
 
-=item *
+=item F</usr/vice/etc/CellServDB>
 
-The /usr/vice/etc/CellServDB file lists the database server
-machines in the local cell and any foreign cell to which the administrator
-wishes to enable AFS access for users working on the machine. The
-database server machines run the Authentication, Backup, Protection and Volume
-Location (VL) Server processes, which maintain databases of administrative
-information. For users to access a cell, its
-B<root.cell> volume must also be mounted in the local
-cell's AFS file tree.
+Lists the database server machines in the local cell and any foreign cell
+to which the administrator wishes to enable AFS access for users working
+on the machine. The database server machines run the Authentication,
+Backup, Protection and Volume Location (VL) Server processes, which
+maintain databases of administrative information. For users to access a
+cell, its C<root.cell> volume must also be mounted in the local cell's AFS
+file tree.
 
+=item F</usr/vice/etc/ThisCell>
 
-=item *
+Defines the machine's cell membership with respect to the AFS command
+suites and Cache Manager access to AFS data.
 
-The /usr/vice/etc/ThisCell file defines the machine's cell
-membership with respect to the AFS command suites and Cache Manager access to
-AFS data.
+=item F</usr/vice/etc/cacheinfo>
 
-
-=item *
-
-The /usr/vice/etc/cacheinfo file defines configuration
-parameters for the cache, including its size and whether it is in memory or on
-disk.
-
+Defines configuration parameters for the cache, including its size and
+whether it is in memory or on disk.
 
 =back
 
 In addition, the Cache Manager automatically creates files on the cache
-partition (by default, B</usr/vice/cache> for caching and tracking
-files fetched from file server machines.
+partition (by default, F</usr/vice/cache> for caching and tracking files
+fetched from file server machines.
 
 For more details, see the reference page for each file.
 
 =head1 OPTIONS
 
-The following flag is available on every command in the fs
-suite. The reference page for each command also lists it, but it is
-described here in greater detail.
-L<(1)>
-L<(1)>
-L<(1)>
+The following flag is available on every command in the fs suite. The
+reference page for each command also lists it, but it is described here in
+greater detail.
 
 =over 4
 
-=item -help
+=item B<-help>
 
-Prints a command's online help message on the standard output
-stream. Do not combine this flag with any of the command's other
-options; when it is provided, the command interpreter ignores all other
-options, and only prints the help message.
+Prints a command's online help message on the standard output stream. Do
+not combine this flag with any of the command's other options; when it is
+provided, the command interpreter ignores all other options, and only
+prints the help message.
 
 =back
 
 =head1 PRIVILEGE REQUIRED
 
-The privileges required for fs commands vary more than for other
-command suites. Pay special attention to the B<Privilege
-Required> section of each command description.
+The privileges required for fs commands vary more than for other command
+suites. Pay special attention to the PRIVILEGE REQUIRED section of each
+command description.
 
 The various types of necessary privilege include:
 
@@ -146,44 +121,33 @@ The various types of necessary privilege include:
 
 =item *
 
-Having permissions on a directory's ACL. For example, creating
-and removing mount points requires B<a> (B<administer>),
-B<i> (B<insert>), and B<d> (B<delete>)
-permissions on the ACL of the directory in which the mount point
+Having permissions on a directory's ACL. For example, creating and
+removing mount points requires C<a> (administer), C<i> (insert), and C<d>
+(delete) permissions on the ACL of the directory in which the mount point
 resides.
 
+=item *
+
+Being logged onto the machine as the local superuser C<root>. This is
+necessary when issuing commands that affect Cache Manager configuration.
 
 =item *
 
-Being logged onto the machine as the local superuser
-B<root>. This is necessary when issuing commands that affect
-Cache Manager configuration.
-
+Belonging to the system:administrators group in the Protection Database.
 
 =item *
 
-Belonging to the system:administrators group in the
-Protection Database.
-
-
-=item *
-
-No privilege. Many fs commands simply list
-information.
-
+No privilege. Many B<fs> commands simply list information.
 
 =back
 
 =head1 SEE ALSO
 
-L<CacheItems(1)>,
-L<CellServDB (client version)(1)>
-
-L<ThisCell (client version)(1)>
-
-L<VI<n>(1)>,
-L<VolumeItems(1)>,
-L<cacheinfo(1)>,
+L<CacheItems(5)>,
+L<CellServDB(5)>,
+L<ThisCell(5)>
+L<VolumeItems(5)>,
+L<cacheinfo(5)>,
 L<fs_apropos(1)>,
 L<fs_checkservers(1)>,
 L<fs_checkvolumes(1)>,

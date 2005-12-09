@@ -118,7 +118,7 @@ B<TL_>I<device_name> files.
 
 =back
 
-=head1 CAVEATS
+=head1 CAUTIONS
 
 If the Tape Coordinator machine is an AIX machine, use the SMIT
 utility to set the device's block size to 0 (zero), indicating variable
