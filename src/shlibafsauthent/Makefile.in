@@ -115,7 +115,7 @@ ${LIBAFSAUTHENT}: ${LIBOBJS}
 	sun*_5*) \
 		${SHLIB_LINKER} -h libafsauthent.${SHLIB_SUFFIX}.${LIBAFSAUTHENTMAJOR} -o ${LIBAFSAUTHENT} ${LIBOBJS} -L${TOP_LIBDIR} -lafsrpc ${MT_LIBS};; \
 	*_linux*) \
-		${SHLIB_LINKER} -Wl,-h,libafsauthent.${SHLIB_SUFFIX}.${LIBAFSAUTHENTMAJOR} -Wl,--version-script=mapfile -o ${LIBAFSAUTHENT} ${LIBOBJS} -L${TOP_LIBDIR} -lafsrpc ${MT_LIBS};; \
+		${SHLIB_LINKER} -Wl,-h,libafsauthent.${SHLIB_SUFFIX}.${LIBAFSAUTHENTMAJOR} -Wl,--version-script=${srcdir}/mapfile -o ${LIBAFSAUTHENT} ${LIBOBJS} -L${TOP_LIBDIR} -lafsrpc ${MT_LIBS};; \
 	*) \
 		${SHLIB_LINKER} -o ${LIBAFSAUTHENT} ${LIBOBJS} -L${TOP_LIBDIR} -lafsrpc ${MT_LIBS};; \
 	esac
