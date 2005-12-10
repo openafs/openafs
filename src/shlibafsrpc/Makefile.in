@@ -148,7 +148,7 @@ ${LIBAFSRPC}: ${LIBOBJS}
 	sun*_5*) \
 		${SHLIB_LINKER} -h libafsrpc.${SHLIB_SUFFIX}.${LIBAFSRPCMAJOR} -o ${LIBAFSRPC} ${LIBOBJS} ${MT_LIBS};; \
 	*_linux*) \
-		${SHLIB_LINKER} -Wl,-h,libafsrpc.${SHLIB_SUFFIX}.${LIBAFSRPCMAJOR} -Wl,--version-script=mapfile -o ${LIBAFSRPC} ${LIBOBJS} ${MT_LIBS};; \
+		${SHLIB_LINKER} -Wl,-h,libafsrpc.${SHLIB_SUFFIX}.${LIBAFSRPCMAJOR} -Wl,--version-script=${srcdir}/mapfile -o ${LIBAFSRPC} ${LIBOBJS} ${MT_LIBS};; \
 	*) \
 		${SHLIB_LINKER} -o ${LIBAFSRPC} ${LIBOBJS} ${MT_LIBS};; \
 	esac
