@@ -13,7 +13,12 @@ Introduction
   The AFS client cache must be on an ext2 or ext3 partition.  Other file
   systems often do not support the semantics required by the AFS kernel
   module and will cause afsd to abort (to avoid kernel panics).  In
-  particular, XFS, ReiserFS, and tmpfs will NOT work.
+  particular, XFS, ReiserFS, and tmpfs will NOT work.  If you are using
+  one of those file systems and don't have a spare partition for a
+  separate file system for the cache, you need to use the -memcache option
+  to afsd (although this is not always stable) or create a large file with
+  dd, create an ext2 file system in it with mkfs, and then mount it with
+  mount -o loop for use as a cache partition.
 
   For information on how to set up an OpenAFS server, read README.servers.
   You will want the openafs-fileserver package for a file server and,
@@ -115,4 +120,4 @@ PAM Authentication
   the openafs-kpasswd package to get the administrative utilities for
   managing those Kerberos accounts.
 
- -- Russ Allbery <rra@debian.org>, Tue Dec  6 21:11:14 2005
+ -- Russ Allbery <rra@debian.org>, Sat Dec 10 20:11:43 2005

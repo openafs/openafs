@@ -1,3 +1,10 @@
+openafs (1.4.0-3) unstable; urgency=low
+
+  * Add a hint to README.Debian on what to do about the cache partition if
+    running ReiserFS or XFS without a spare partition.
+
+ --
+
 openafs (1.4.0-2) unstable; urgency=low
 
   * Install more of the standard OpenAFS utilities.  (Closes: #138851)
