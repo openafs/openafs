@@ -29,7 +29,7 @@
 #define AFS_HAVE_FFS            1	/* Use system's ffs. */
 
 #if	!defined(ASSEMBLER) && !defined(__LANGUAGE_ASSEMBLY__) && !defined(IGNORE_STDS_H)
-#if __NetBSD_Version__ >= 200040000
+#if __NetBSD_Version__ >= 299000900
 #define AFS_HAVE_STATVFS    1	/* System supports statvfs */
 #else
 #define AFS_HAVE_STATVFS    0	/* System doesn't supports statvfs */
