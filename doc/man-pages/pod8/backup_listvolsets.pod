@@ -4,29 +4,28 @@ backup listvolsets - Lists volume set entries from the Backup Database
 
 =head1 SYNOPSIS
 
-B<backup listvolsets> [-name <I<volume set name>>]
-[B<-localauth>]  [B<-cell> <I<cell name>>]  [B<-help>]
+B<backup listvolsets> [B<-name> <I<volume set name>>] [B<-localauth>]
+    [B<-cell> <I<cell name>>] [B<-help>]
 
-B<backup listv> [B<-n> <I<volume set name>>]  [B<-l>]  [B<-c> <I<cell name>>]  [-h]
+B<backup listv> [B<-n> <I<volume set name>>] [B<-l>]
+    [B<-c> <I<cell name>>] [B<-h>]
 
 =head1 DESCRIPTION
 
-The backup listvolsets command displays the Backup Database
-records for either
+The B<backup listvolsets> command displays the Backup Database records for
+either
 
 =over 4
 
 =item *
 
-All volume sets and their volume entries, if the -name argument
-is omitted
-
+All volume sets and their volume entries, if the B<-name> argument is
+omitted.
 
 =item *
 
-The volume set specified by the -name argument, along with its
-volume entries
-
+The volume set specified by the B<-name> argument, along with its volume
+entries.
 
 =back
 
@@ -34,43 +33,40 @@ volume entries
 
 =over 4
 
-=item -name
+=item B<-name> <I<volume set name>>
 
-Names the volume set to display. If this argument is omitted, the
-output lists all volume sets defined in the Backup Database.
+Names the volume set to display. If this argument is omitted, the output
+lists all volume sets defined in the Backup Database.
 
-=item -localauth
+=item B<-localauth>
 
 Constructs a server ticket using a key from the local
-B</usr/afs/etc/KeyFile> file. The B<backup> command
-interpreter presents it to the Backup Server, Volume Server and VL Server
-during mutual authentication. Do not combine this flag with the
-B<-cell> argument. For more details, see the introductory
-B<backup> reference page.
+F</usr/afs/etc/KeyFile> file. The B<backup> command interpreter presents
+it to the Backup Server, Volume Server and VL Server during mutual
+authentication. Do not combine this flag with the B<-cell> argument. For
+more details, see L<backup(8)>.
 
-=item -cell
+=item B<-cell> <I<cell name>>
 
-Names the cell in which to run the command. Do not combine this
-argument with the B<-localauth> flag. For more details, see the
-introductory B<backup> reference page.
+Names the cell in which to run the command. Do not combine this argument
+with the B<-localauth> flag. For more details, see L<backup(8)>.
 
-=item -help
+=item B<-help>
 
-Prints the online help for this command. All other valid options
-are ignored.
+Prints the online help for this command. All other valid options are
+ignored.
 
 =back
 
 =head1 OUTPUT
 
-The entry for each volume set begins with the C<Volume set> header
-and the volume set's name. A temporary volume set's name is
-followed by the string C< (temporary)>. Each volume entry
-follows on a separate line, indicating the entry's index number and the
-server, partition, and volume names it matches. The output uses the
-metacharacter notation described on the B<backup addvolentry>
-reference page. Use the index number to identify volume entries when
-deleting them with the B<backup delvolentry> command.
+The entry for each volume set begins with the C<Volume set> header and the
+volume set's name. A temporary volume set's name is followed by the string
+C< (temporary)>. Each volume entry follows on a separate line, indicating
+the entry's index number and the server, partition, and volume names it
+matches. The output uses the metacharacter notation described on the
+B<backup addvolentry> reference page. Use the index number to identify
+volume entries when deleting them with the B<backup delvolentry> command.
 
 =head1 EXAMPLES
 
@@ -88,18 +84,18 @@ currently defined in the Backup Database:
 
 =head1 PRIVILEGE REQUIRED
 
-The issuer must be listed in the /usr/afs/etc/UserList file on
-every machine where the Backup Server is running, or must be logged onto a
-server machine as the local superuser B<root> if the
-B<-localauth> flag is included.
+The issuer must be listed in the F</usr/afs/etc/UserList> file on every
+machine where the Backup Server is running, or must be logged onto a
+server machine as the local superuser C<root> if the B<-localauth> flag is
+included.
 
 =head1 SEE ALSO
 
-L<backup(1)>,
-L<backup_addvolentry(1)>,
-L<backup_addvolset(1)>,
-L<backup_delvolentry(1)>,
-L<backup_delvolset(1)>
+L<backup(8)>,
+L<backup_addvolentry(8)>,
+L<backup_addvolset(8)>,
+L<backup_delvolentry(8)>,
+L<backup_delvolset(8)>
 
 =head1 COPYRIGHT
 

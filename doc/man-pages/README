@@ -223,6 +223,32 @@ Known Problems
    * fs sysname documentation needs to include the possibility of setting
      multiple sysnames and the resulting behavior.
 
+   * The afsd man page is horribly out of date.  It doesn't explain
+     dynroot, many options are missing, and some of the options described
+     are no longer valid.  It also still assumes that -settime is the
+     default and says that the system must be rebooted after shutdown,
+     which isn't the case at least on Linux.
+
+   * All of the paths in the man pages are the Transarc paths.  I'm not
+     sure how best to deal with the possibility of installing OpenAFS in
+     multiple different paths, but it would be good to at least
+     acknowledge the issue.
+
+   * bos listkeys assumes that you're using the kaserver.
+
+   * I'm fairly sure that the fileserver man page no longer documents all
+     of the fileserver options.
+
+   * The package man page should probably mention the (pointless) package
+     apropos and package help commands, or they could be removed.  There
+     used to be separate man pages for them, but that seemed rather
+     pointless.
+
+   * There are lingering references to AFS Development or AFS Product
+     Support in descriptions of options that one should generally not
+     use.  Also, all of the manual references refer to the "IBM" manual.
+     We should decide how to handle this terminology-wise.
+
   If you notice other problems, please send them to the openafs-doc list
   even if you don't have time to fix them.  Someone else might, and we
   want to track all of the issues.

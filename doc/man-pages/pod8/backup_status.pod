@@ -4,44 +4,43 @@ backup status - Reports a Tape Coordinator's status
 
 =head1 SYNOPSIS
 
-B<backup status> [-portoffset <I<TC port offset>>]
-[B<-localauth>]  [B<-cell> <I<cell name>>]  [B<-help>]
+B<backup status> [B<-portoffset> <I<TC port offset>>] [B<-localauth>]
+    [B<-cell> <I<cell name>>] [B<-help>]
 
-B<backup st> [B<-p> <I<TC port offset>>]  [B<-l>]  [B<-c> <I<cell name>>]  [-h]
+B<backup st> [B<-p> <I<TC port offset>>] [B<-l>] [B<-c> <I<cell name>>]
+    [B<-h>]
 
 =head1 DESCRIPTION
 
-The backup status command displays which operation, if any, the
+The B<backup status> command displays which operation, if any, the
 indicated Tape Coordinator is currently executing.
 
 =head1 OPTIONS
 
 =over 4
 
-=item -portoffset
+=item B<-portoffset> <I<TC port offset>>
 
 Specifies the port offset number of the Tape Coordinator for which to
 report the status.
 
-=item -localauth
+=item B<-localauth>
 
 Constructs a server ticket using a key from the local
-B</usr/afs/etc/KeyFile> file. The B<backup> command
-interpreter presents it to the Backup Server, Volume Server and VL Server
-during mutual authentication. Do not combine this flag with the
-B<-cell> argument. For more details, see the introductory
-B<backup> reference page.
+F</usr/afs/etc/KeyFile> file. The B<backup> command interpreter presents
+it to the Backup Server, Volume Server and VL Server during mutual
+authentication. Do not combine this flag with the B<-cell> argument. For
+more details, see L<backup(8)>.
 
-=item -cell
+=item B<-cell> <I<cell name>>
 
-Names the cell in which to run the command. Do not combine this
-argument with the B<-localauth> flag. For more details, see the
-introductory B<backup> reference page.
+Names the cell in which to run the command. Do not combine this argument
+with the B<-localauth> flag. For more details, see L<backup(8)>.
 
-=item -help
+=item B<-help>
 
-Prints the online help for this command. All other valid options
-are ignored.
+Prints the online help for this command. All other valid options are
+ignored.
 
 =back
 
@@ -55,114 +54,94 @@ performing an operation:
 Otherwise, the output includes a message of the following format for each
 running or pending operation:
 
-   Task I<task_ID>:  I<operation>:   I<status>
+   Task <task_ID>:  <operation>:   <status>
 
 where
 
 =over 4
 
-=item I<task_ID
->
+=item <task_ID>
 
-Is a task identification number assigned by the Tape Coordinator.
-It begins with the Tape Coordinator's port offset number.
+Is a task identification number assigned by the Tape Coordinator.  It
+begins with the Tape Coordinator's port offset number.
 
-=item I<operation
->
+=item <operation>
 
 Identifies the operation the Tape Coordinator is performing, which is
 initiated by the indicated command:
 
 =over 4
 
-=item *
+=item Dump
 
-C<Dump> (the backup dump command)
+The B<backup dump> command.
 
+=item Restore
 
-=item *
+The B<backup diskrestore>, B<backup volrestore>, or B<backup
+volsetrestore> commands.
 
-C<Restore> (the B<backup diskrestore>, backup
-volrestore, or B<backup volsetrestore> commands)
+=item Labeltape
 
+The B<backup labeltape> command.
 
-=item *
+=item Scantape
 
-C<Labeltape> (the backup labeltape command)
+The B<backup scantape> command.
 
+=item SaveDb
 
-=item *
+The B<backup savedb> command.
 
-C<Scantape> (the backup scantape command)
+=item RestoreDb
 
-
-=item *
-
-C<SaveDb> (the backup savedb command)
-
-
-=item *
-
-C<RestoreDb> (the backup restoredb command)
-
+The B<backup restoredb> command.
 
 =back
 
-=item I<status
->
+=item <status>
 
-Indicates the job's current status in one of the following
-messages. 
+Indicates the job's current status in one of the following messages.
 
 =over 4
 
-=item I<number C<Kbytes transferred, volume> I<volume_name>
->
+=item I<number> Kbytes transferred, volume I<volume_name>
 
 For a running dump operation, indicates the number of kilobytes copied to
-tape or a backup data file so far, and the volume currently being
-dumped.
+tape or a backup data file so far, and the volume currently being dumped.
 
-=item I<number C<Kbytes, restore.volume>
->
+=item I<number> Kbytes, restore.volume
 
 For a running restore operation, indicates the number of kilobytes copied
 into AFS from a tape or a backup data file so far.
 
-=item C<[abort requested]
->
+=item [abort requested]
 
-The (backup) kill command was issued, but the termination
-signal has yet to reach the Tape Coordinator.
+The B<backup kill> command was issued, but the termination signal has yet
+to reach the Tape Coordinator.
 
-=item C<[abort sent]
->
+=item [abort sent]
 
-The operation is canceled by the (backup) kill command.
-Once the Backup System removes an operation from the queue or stops it from
-running, it no longer appears at all in the output from the command.
+The operation is canceled by the B<backup kill> command.  Once the Backup
+System removes an operation from the queue or stops it from running, it no
+longer appears at all in the output from the command.
 
-=item C<[butc contact lost]
->
+=item [butc contact lost]
 
-The backup command interpreter cannot reach the Tape
-Coordinator. The message can mean either that the Tape Coordinator
-handling the operation was terminated or failed while the operation was
-running, or that the connection to the Tape Coordinator timed out.
+The B<backup> command interpreter cannot reach the Tape Coordinator. The
+message can mean either that the Tape Coordinator handling the operation
+was terminated or failed while the operation was running, or that the
+connection to the Tape Coordinator timed out.
 
-=item C<[done]
->
+=item [done]
 
 The Tape Coordinator has finished the operation.
 
-=item C<[drive wait]
->
+=item [drive wait]
 
-The operation is waiting for the specified tape drive to become
-free.
+The operation is waiting for the specified tape drive to become free.
 
-=item C<[operator wait]
->
+=item [operator wait]
 
 The Tape Coordinator is waiting for the backup operator to insert a tape
 in the drive.
@@ -171,36 +150,34 @@ in the drive.
 
 =back
 
-If the Tape Coordinator is communicating with an XBSA server (a third-party
-backup utility that implements the Open Group's Backup Service API
-[XBSA]), the following message appears last in the output:
+If the Tape Coordinator is communicating with an XBSA server (a
+third-party backup utility that implements the Open Group's Backup Service
+API [XBSA]), the following message appears last in the output:
 
-   I<XBSA_program> Tape coordinator
+   <XBSA_program> Tape coordinator
 
-where I<XBSA_program> is the name of the XBSA-compliant
-program.
+where <XBSA_program> is the name of the XBSA-compliant program.
 
 =head1 EXAMPLES
 
 The following example shows that the Tape Coordinator with port offset 4
-has so far dumped about 1.5 MB of data for the current dump operation,
-and is currently dumping the volume named
-B<user.pat.backup>:
+has so far dumped about 1.5 MB of data for the current dump operation, and
+is currently dumping the volume named C<user.pat.backup>:
 
    % backup status -portoffset 4
    Task 4001:  Dump:   1520 Kbytes transferred,  volume user.pat.backup
 
 =head1 PRIVILEGE REQUIRED
 
-The issuer must be listed in the /usr/afs/etc/UserList file on
-every machine where the Backup Server is running, or must be logged onto a
-server machine as the local superuser B<root> if the
-B<-localauth> flag is included.
+The issuer must be listed in the F</usr/afs/etc/UserList> file on every
+machine where the Backup Server is running, or must be logged onto a
+server machine as the local superuser C<root> if the B<-localauth> flag is
+included.
 
 =head1 SEE ALSO
 
-L<backup(1)>,
-L<butc(1)>
+L<backup(8)>,
+L<butc(8)>
 
 =head1 COPYRIGHT
 

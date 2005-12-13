@@ -4,27 +4,27 @@ kas quit - Leaves interactive mode
 
 =head1 SYNOPSIS
 
-B<quit>  [-help]
+B<quit> [B<-help>]
 
-B<q>  [-h]
+B<q> [B<-h>]
 
 =head1 DESCRIPTION
 
-The kas quit command ends interactive mode, severing the
-authenticated connection to one or more Authentication Server processes and
-returning the issuer to the normal shell prompt.
+The B<kas quit> command ends interactive mode, severing the authenticated
+connection to one or more Authentication Server processes and returning
+the issuer to the normal shell prompt.
 
-This command is operative only during interactive mode, so omit the
-B<kas> command suite name from the command line.
+This command is operative only during interactive mode, so omit the B<kas>
+command suite name from the command line.
 
 =head1 OPTIONS
 
 =over 4
 
-=item -help
+=item B<-help>
 
-Prints the online help for this command. All other valid options
-are ignored.
+Prints the online help for this command. All other valid options are
+ignored.
 
 =back
 
@@ -42,8 +42,8 @@ None, and no password is required.
 
 =head1 SEE ALSO
 
-L<kas(1)>,
-L<kas_interactive(1)>
+L<kas(8)>,
+L<kas_interactive(8)>
 
 =head1 COPYRIGHT
 

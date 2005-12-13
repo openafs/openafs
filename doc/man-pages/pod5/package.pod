@@ -1,0 +1,878 @@
+=head1 NAME
+
+package Configuration File - Provides instructions for the package command
+
+=head1 DESCRIPTION
+
+The package configuration file defines the file system elements
+that the B<package> command creates or alters on the local disk of an
+AFS client machine it is configuring. Use the B<-config> or
+B<-fullconfig> argument to the B<package> command to identify
+the configuration file to use.
+
+Summary of Configuration File Instructions
+
+The configuration file can include one or more instances of each of the
+following instructions, each on its own line. A more detailed
+description of each instruction's syntax follows this list.
+
+=over 4
+
+=item B
+
+Defines a block special device, such as a disk, which deals with input in
+units of multi-byte command blocks
+
+=item C
+
+Defines a character special device, such as a terminal or tty, which deals
+with input in single character units
+
+=item D
+
+Creates a directory
+
+=item F
+
+Creates or alters a file to match the contents of a specified source file
+
+=item L
+
+Creates a symbolic link
+
+=item S
+
+Defines a socket, which is a communications device for UDP and TCP/IP
+connections
+
+=item %define
+
+Defines a variable or declares a string as defined
+
+=item %ifdef
+
+Specifies an action to perform if a certain string is declared or defined
+
+=item %ifndef
+
+Specifies an action to perform if a certain string is not declared or
+defined
+
+=item %include
+
+Includes a library file
+
+=item %undef
+
+Declares a string not to be defined, or a variable no longer to have a
+value
+
+=back
+
+The B and C Instructions for Defining Block and Character Special
+Devices
+L<(1)>
+L<(1)>
+L<(1)>
+L<(1)>
+L<(1)>
+L<(1)>
+L<(1)>
+L<(1)>
+L<(1)>
+L<(1)>
+L<(1)>
+L<(1)>
+L<(1)>
+L<(1)>
+L<(1)>
+
+The B<B> instruction in a package configuration file
+defines a block special device, such as a disk, that deals with input in units
+of multi-byte command blocks. The B<C> instruction defines a
+character special device, such as a terminal or tty, that deals with input in
+single character units. They share a common syntax:
+
+   {B<B >| C}   I<device_name>  I<major_device>  I<minor_device>  I<owner>  I<group>  I<mode_bits>
+
+where
+
+=over 4
+
+=item B
+
+Indicates the definition of a block special device. It must be a
+capital letter.
+
+=item C
+
+Indicates the definition of character special device. It must be a
+capital letter.
+
+=item I<device_name
+>
+
+Names the special device to define. To learn the name format
+appropriate to the machine's system type, consult the hardware or
+operating system documentation.
+
+=item I<major_device
+>
+
+Specifies the device's major device number in decimal format.
+To learn the correct value for the machine's system type, consult the
+hardware or operating system documentation.
+
+=item I<minor_device
+>
+
+Specifies the device's minor device number in one of hexadecimal,
+octal, or decimal format. Precede a hexadecimal number with the string
+B<0x> (zero and the letter B<x>) or an octal number with a
+B<0> (zero). A number without either prefix is interpreted as a
+decimal. To learn the correct value for the machine's system type,
+consult the hardware or operating system documentation.
+
+=item I<owner
+>
+
+Specifies the username or UNIX user ID (UID) of the user to be designated
+the device's owner in the output from the UNIX B<ls -l>
+command.
+
+=item I<group
+>
+
+Specifies the group name or UNIX group ID (GID) of the group to be
+designated the device's group in the output from the UNIX B<ls
+-lg> command.
+
+=item I<mode_bits
+>
+
+Defines the device's UNIX mode bits. Acceptable values are the
+standard three- or four-digit numbers corresponding to combinations of
+permissions. Examples: B<755> corresponds to
+B<rwxr-xr-x>, and B<644> to B<rw-r--r-->.
+
+=back
+
+The D Instruction for Creating a Directory
+L<(1)>
+L<(1)>
+L<(1)>
+L<(1)>
+L<(1)>
+L<(1)>
+L<(1)>
+
+The B<D> instruction in a package configuration file
+creates a directory on the local disk. If a symbolic link, file, or
+other element on the local disk has the same name, it is replaced with a
+directory. If the directory already exists, its owner, group, and mode
+bits are changed if necessary to conform with the instruction. The
+instruction has the following syntax:
+
+   D[I<update_code>]  I<directory>  I<owner>  I<group>  I<mode_bits>
+
+where
+
+=over 4
+
+=item D
+
+Indicates the creation of a directory. It must be a capital
+letter.
+
+=item I<update_code
+>
+
+Modulates the directory creation instruction. It is optional and
+follows the letter B<D> directly, without an intervening space.
+Choose one of the two acceptable values: 
+
+=over 4
+
+=item X
+
+Indicates that the directory is a lost+found directory (used by
+the B<fsck> program).
+
+=item R
+
+Removes any subdirectory (along its contents) or file that exists in the
+existing directory on the local disk but for which an instruction does not
+appear in the configuration file.
+
+=back
+
+=item I<directory
+>
+
+Specifies the full pathname of the directory to create.
+
+=item I<owner
+>
+
+Specifies the username or UNIX user ID (UID) of the user to be designated
+the directory's owner in the output from the UNIX B<ls -ld>
+command.
+
+=item I<group
+>
+
+Specifies the name or UNIX group ID (GID) of the group to be designated
+the directory's group in the output from the UNIX B<ls -lgd>
+command.
+
+=item I<mode_bits
+>
+
+Defines the directory's UNIX mode bits. Acceptable values are
+the standard three- or four-digit numbers corresponding to combinations of
+permissions. Examples: B<755> corresponds to
+B<drwxr-xr-x>, and B<644> to B<drw-r--r-->.
+
+=back
+
+The F Instruction for Creating or Updating a File
+L<(1)>
+L<(1)>
+L<(1)>
+L<(1)>
+L<(1)>
+L<(1)>
+L<(1)>
+
+The B<F> instruction in a package configuration file
+creates or updates a file on the local disk by copying in the contents of the
+indicated source file, which can reside in AFS or on the local disk. If
+the B<package> command interpreter cannot access the source file, it
+exits without executing any instruction in the configuration file.
+
+If a file with the same name already exists on disk, the package
+command overwrites it with the contents of the source file, unless the
+B<I> update code is used to prevent that. To add a
+B<.old> extension to the current version of the file, include
+the B<O> update code. To have the machine reboot automatically
+after the B<package> program completes, include the B<Q>
+update code.
+
+If a symbolic link, directory, or other element on the local disk has the
+same name, it is replaced with the file (a directory's contents are first
+removed as necessary).
+
+The instruction has the following syntax:
+
+   F[I<update_code>]  I<file>  I<source_file>  [I<owner  group  mode_bits>]
+
+where
+
+=over 4
+
+=item F
+
+Indicates the creation or update of a file. It must be a capital
+letter.
+
+=item I<update_code
+>
+
+Modulates the file creation instruction. It is optional and follows
+the letter B<F> directly, without an intervening space. Choose
+one or more of the four acceptable values, and list them in any order: 
+
+=over 4
+
+=item A
+
+Indicates that the pathname in the I<source_file> field is the
+complete pathname of the source file, including the filename. If this
+argument is omitted, the B<package> command appends the pathname in
+the I< file> field to the pathname in the I<source_file> field to
+derive the source file's full name. This code allows the source
+and target filenames to differ.
+
+=item I
+
+Preserves the existing file called I<file>, rather than overwriting
+it.
+
+=item O
+
+Saves the existing version of the file by appending a
+B<.old> extension to it.
+
+=item Q
+
+Causes the package command to exit with status code
+B<4> if it overwrites the file. If the standard
+B<package>-related changes have been made to the machine's AFS
+initialization file, then status code B<4> causes the machine to
+reboot automatically. Use this code when the machine must reboot if
+updates to the file are to have any effect (for example, if the operating
+system file--B</vmunix> or equivalent--has changed).
+
+=back
+
+=item I<file
+>
+
+Specifies the complete pathname on the local disk of the file to create or
+update, including the filename as the final element.
+
+=item I<source_file
+>
+
+Specifies the pathname (local or AFS) of the file to copy to the local
+disk.
+
+If the A update code is included, specify the source file's
+complete pathname. Otherwise, the B<package> command derives
+the source file's full name by appending the I<file> pathname to
+this pathname. For example, if the B<A> update code is not
+included and the file B</afs/abc.com/rs_aix42/bin/grep> is the
+source file for the B</bin/grep> binary, the proper value in this
+field is B</afs/abc.com/rs_aix42>.
+
+=item I<owner
+>
+
+Specifies the username or UNIX user ID (UID) of the user to be designated
+the file's owner in the output from the UNIX B<ls -l>
+command. 
+
+To copy the source file's owner to the target file, leave this field
+empty. In this case, the I<group> and I<mode_bits> fields
+must also be empty.
+
+=item I<group
+>
+
+Specifies the name or UNIX group ID (GID) of the group to be designated
+the file's group in the output from the UNIX B<ls -lg>
+command. 
+
+To copy the source file's group to the target file, leave this field
+empty. In this case, the I< owner> and I<mode_bits> fields
+must also be empty.
+
+=item I<mode_bits
+>
+
+Defines the file's UNIX mode bits. Acceptable values are the
+standard three- or four-digit numbers corresponding to combinations of
+permissions. Examples: B<755> corresponds to
+B<rwxr-xr-x>, and B<644> to B<rw-r--r-->. 
+
+To copy the source file's mode bits to the target file, leave this
+field empty. In this case, the I<owner> and I<group> fields
+must also be empty.
+
+=back
+
+The L Instruction for Creating a Symbolic Link
+L<(1)>
+L<(1)>
+L<(1)>
+L<(1)>
+L<(1)>
+L<(1)>
+L<(1)>
+
+The B<L> instruction in a package configuration file
+creates a symbolic link on the local disk to a directory or file that exists
+either in AFS or elsewhere on the local disk. As with the standard UNIX
+B<ln -s> command, the link is created even if the actual file or
+directory does not exist.
+
+If a file or directory on the local disk already has the same name, the
+B<package> command replaces it with a symbolic link.
+
+The instruction has the following syntax:
+
+   L[I<update_code>]  I<link>  I<actual_path>  [I<owner  group  mode_bits>]
+
+where
+
+=over 4
+
+=item L
+
+Indicates the creation of a symbolic link. It must be a capital
+letter.
+
+=item I<update_code
+>
+
+Modulates the link creation instruction. It is optional and follows
+the letter B<L> directly, without an intervening space. Choose
+one or both of the acceptable values, and list them in any order: 
+
+=over 4
+
+=item A
+
+Indicates that the pathname in the I<actual_path> field is the
+complete pathname of the actual directory or file (including the filename for
+a file). If this argument is omitted, the B<package> command
+appends the value in the I<link> field to the pathname in the
+I<actual_path> field to derive the actual directory or file's full
+name. This code allows the name of the symbolic link and actual
+directory or file to differ.
+
+=item I
+
+Preserves the existing symbolic link called I<link>, rather than
+overwriting it.
+
+=back
+
+=item I<link
+>
+
+Specifies the complete local disk pathname of the symbolic link to
+create.
+
+=item I<actual_path
+>
+
+Specifies the pathname (local or AFS) of the directory or file to which
+the link refers. If the B<A> update code is included, specify
+the directory or file's complete pathname. Otherwise, the
+B<package> command derives the actual directory or file's full
+name by appending the value in the I<link> field to this
+pathname. For example, if the B<A> update code is not included
+and B</etc/ftpd> is a symbolic link to the file
+B</afs/abc.com/sun4x_56/etc/ftpd>, the proper value in this
+field is B</afs/abc.com/sun4x_56>.
+
+The package command interpreter correctly handles pathnames that
+begin with the B<./> (period, slash) or
+B<../> (two periods, slash) notation, interpreting them
+relative to the current working directory from which the B<package>
+command is invoked.
+
+=item I<owner
+>
+
+Specifies the username or UNIX user ID (UID) of the user to be designated
+the symbolic link's owner in the output from the UNIX B<ls -l>
+command.
+
+To designate the issuer of the package command (usually, the
+local superuser B<root>) as the symbolic link's owner, leave this
+field empty. In this case, the I<group> and I<mode_bits>
+fields must also be empty.
+
+=item I<group
+>
+
+Specifies the name or UNIX group ID (GID) of the group to be designated
+the link's group in the output from the UNIX B<ls -lg>
+command.
+
+To have the symbolic link's group match the default group associated
+with the B<package> command's issuer, leave this field
+empty. The issuer is usually the local superuser B<root> and
+the default group is designated in the issuer's entry in the local
+B</etc/passwd> file or equivalent. If this field is left empty,
+the I<owner> and I<mode_bits> fields must also be empty.
+
+=item I<mode_bits
+>
+
+Defines the symbolic link's UNIX mode bits. Acceptable values
+are the standard three- or four-digit numbers corresponding to combinations of
+permissions. Examples: B<755> corresponds to
+B<rwxr-xr-x>, and B<644> to B<rw-r--r-->.
+
+Leaving this field empty sets the symbolic link's mode bits to
+B<777> (B<rwxrwxrwx>). In this case, the I<owner>
+and I<group> fields must also be empty.
+
+=back
+
+The S Instruction for Creating a Socket
+L<(1)>
+L<(1)>
+L<(1)>
+L<(1)>
+L<(1)>
+L<(1)>
+L<(1)>
+
+The B<S> instruction in a package configuration file
+creates a socket (a communications device for UDP or TCP/IP connections) on
+the local disk. The instruction has the following syntax:
+
+   S  I<socket> [I<owner  group  mode_bits>]
+
+where
+
+=over 4
+
+=item S
+
+Indicates the creation of a socket. It must be a capital
+letter.
+
+=item I<socket
+>
+
+Names the socket. The proper format depends on the local
+machine's operating system.
+
+=item I<owner
+>
+
+Specifies the username or UNIX user ID (UID) of the user to be designated
+the socket's owner in the output from the UNIX B<ls -l>
+command.
+
+To designate the issuer of the package command (usually, the
+local superuser B<root>) as the socket's owner, leave this field
+empty. In this case, the I<group> and I<mode_bits> fields
+must also be empty.
+
+=item I<group
+>
+
+Specifies the name or UNIX group ID (GID) of the group to be designated
+the socket's group in the output from the UNIX B<ls -lg>
+command.
+
+To have the symbolic link's group match the default group associated
+with the B<package> command's issuer, leave this field
+empty. The issuer is usually the local superuser B<root> and
+the default group is designated in the issuer's entry in the local
+B</etc/passwd> file or equivalent. If this field is left empty,
+the I<owner> and I<mode_bits> fields must also be empty.
+
+=item I<mode_bits
+>
+
+Defines the socket's UNIX mode bits. Acceptable values are the
+standard three- or four-digit numbers corresponding to combinations of
+permissions. Examples: B<755> corresponds to
+B<rwxr-xr-x>, and B<644> to B<rw-r--r-->.
+
+Leaving this field empty sets the symbolic link's mode bits to
+B<777> (B<rwxrwxrwx>), modulated by the cell's
+umask. In this case, the I<owner> and I<group> fields must
+also be empty.
+
+=back
+
+The %define or %undef Instructions Declaring or Undeclaring a
+Definition
+L<(1)>
+L<(1)>
+L<(1)>
+L<(1)>
+L<(1)>
+L<(1)>
+
+The B<%define> instruction in a package configuration
+file declares or defines a variable, depending on its number of
+arguments:
+
+=over 4
+
+=item *
+
+If followed by a single argument, it declares that argument to be
+defined. The argument is then available as a controller when mentioned
+in B<%ifdef> and B<%ifndef> statements, which evaluate to
+B<true> and B<false> respectively.
+
+
+=item *
+
+If followed by two arguments, it defines the second argument as the value
+of the first. When the first argument appears later in this prototype
+or other prototype or library files as a variable--surrounded by curly
+braces and preceded by a dollar sign, as in the example
+C<${variable}>--the B<package> command interpreter
+substitutes the second argument for it.
+
+
+=back
+
+The %undef statement negates the effect of a previous
+B<%define> statement, declaring its argument to be defined no longer,
+or to have a value no longer if it is a variable.
+
+The syntax for the two types of instruction are as follows:
+
+   %define  I<declaration>
+   %define  I<variable>  I<value>
+   %undef  I<declaration>
+   %undef  I<variable>
+
+where
+
+=over 4
+
+=item %define
+
+Indicates a definition statement.
+
+=item %undef
+
+Indicates a statement that negates a definition.
+
+=item I<declaration
+>
+
+Names the string being declared by a %define statement, or
+negated by an B<%undef> statement.
+
+=item I<variable
+>
+
+Specifies the name of the variable that a %define statement is
+defining, or an B<%undef> statement is negating.
+
+=item I<value
+>
+
+Specifies the value to substitute for the string in the I<variable>
+field when it appears in the appropriate format (surrounded by curly braces
+and preceded by a dollar sign, as in the example C<${variable}>), in
+this or other prototype and library files. It can include one or more
+words.
+
+=back
+
+The %ifdef and %ifndef Instructions for Specifying a Conditional
+Action to Perform
+L<(1)>
+L<(1)>
+L<(1)>
+L<(1)>
+L<(1)>
+L<(1)>
+
+The B<%ifdef> instruction in a package configuration
+file specifies one or more actions to perform if the indicated string has been
+declared by a single-argument B<%define> statement, or is a variable
+for which a value has been defined by a two-argument B<%define>
+statement.
+
+Similarly, the %ifndef instruction specifies one or more actions
+to perform if the indicated string has not been declared or is a variable
+without a value, either because no B<%define> statement has defined it
+or an B<%undef> statement has undefined it.
+
+In both cases, the optional %else statement specifies one or
+more alternate actions to perform if the first statement evaluates to
+B<false>. (For an B<%ifdef> statement, the
+B<%else> statement is executed if the indicated string has never been
+declared or is a variable without a value, or if an B<%undef>
+statement has undefined either one; for an B<%ifndef> statement,
+it is executed if the string has been declared or is a variable with a
+value.)
+
+It is possible to nest any number of %ifdef and
+B<%ifndef> statements.
+
+The two types of statement share a common syntax:
+
+   %ifdef | ifndef   I<declaration> 
+                                  I<action>+
+   [%else [I<declaration>] 
+                  I<alternate_action>+]
+   %endif I<declaration>
+
+where
+
+=over 4
+
+=item ifdef
+
+Indicates that the statement evaluates as true if the string in
+the I<declaration> field is declared or is a variable with a defined
+value.
+
+=item ifndef
+
+Indicates that the statement evaluates as true if the string in
+the I<declaration> field is not declared or is a variable without a
+defined value.
+
+=item I<declaration
+>
+
+Specifies the string that must be declared or the variable name that must
+have a defined value for an B<%ifdef> statement to evaluate as
+B<true>, which results in the specified action being performed.
+For an B<%ifndef> statement, the string must not be declared or the
+variable must have no defined value for the statement to evaluate as
+B<true>. The first and third occurrences of
+I<declaration> (the latter following the string B<%endif>) are
+required. The second occurrence (following the string B<%else>)
+is optional, serving only to clarify to which B<%ifdef> or
+B<%ifndef> statement the B<%else> statement belongs.
+
+=item I<action
+>
+
+Specifies each action to perform if the %ifdef or
+B<%ifndef> statement evaluates as B<true>. Each action
+must appear on a separate line. Acceptable types of actions are other
+statements beginning with a percent sign and definition instructions.
+
+=item I<alternate_action
+>
+
+Specifies each action to perform if the %ifdef or
+B<%ifndef> statement evaluates to B<false>. Each action
+must appear on a separate line. Acceptable types of actions are other
+statements beginning with a percent sign and definition instructions.
+
+=back
+
+The %include Instruction for Including a Library File
+L<(1)>
+L<(1)>
+L<(1)>
+
+The B<%include> instruction in a package configuration
+file includes the contents of the indicated library file in a configuration
+file that results from the compilation of the prototype file in which the
+B<%include> instruction appears. It has the following
+syntax:
+
+   %include  I<pathname>
+
+where
+
+=over 4
+
+=item %include
+
+Indicates a library file include statement.
+
+=item I<pathname
+>
+
+Specifies the complete pathname of the library file to include. It
+can be in AFS or on the local disk, and can include one or more
+variables.
+
+=back
+
+=head1 CAUTIONS
+
+The configuration file must be completely correct. If there are any
+syntax errors or incorrect values, the B<package> command interpreter
+exits without executing any instruction.
+
+=head1 EXAMPLES
+
+The following example B<B> and C instructions define a
+disk B</dev/hd0a> with major and minor device numbers B<1> and
+B<0> and mode bits of B<-rw-r--r-->, and a tty
+B</dev/ttyp5> with major and minor device numbers B<6> and
+B<5> and mode bits of B<-rw-rw-rw>. In both cases, the
+owner is B<root> and the owning group B<wheel>.
+
+   B /dev/hd0a 1 0 root wheel 644
+   C /dev/ttyp5 6 5 root wheel 666
+
+The following example D instruction creates the local
+B</usr> directory with owner B<root> and group
+B<wheel> and mode bits of B<drwxr-xr-x>. The
+B<R> update code removes any files and subdirectories that reside in
+the B</usr> directory (if it already exists) but do not appear in the
+configuration file.
+
+   DR /usr root wheel 755
+
+The following example F instruction, appropriate for a machine
+running AIX 4.2 in the ABC Corporation cell, creates or updates the
+local disk file B</bin/grep>, using
+B</afs/abc.com/rs_aix42/bin/grep> as the source.
+
+   F /bin/grep /afs/abc.com/rs_aix42 root wheel 755
+
+The next example F instruction creates the
+B</usr/vice/etc/ThisCell> file and specifies an absolute pathname for
+the source file, as indicated by the B<A> update code. The
+B<Q> code makes the B<package> command return status code 4 as
+it exits, prompting a reboot of the machine if the standard
+B<package>-related changes have been made to the machine's AFS
+initialization file. No values are provided for the owner, group and
+mode bits, so the file inherits them from the source file.
+
+   FAQ /usr/vice/etc/ThisCell /afs/abc.com/common/etc/ThisCell
+
+The following example L instruction, appropriate for a machine
+running AIX 4.2 in the ABC Corporation cell, creates a symbolic link
+from B</etc/ftpd> on the local disk to the file
+B</afs/abc.com/rs_aix42/etc/ftpd>.
+
+   L /etc/ftpd /afs/abc.com/rs_aix42 root wheel 644
+
+The following example S instruction defines the socket
+B</dev/printer>.
+
+
+   S /dev/printer root wheel 777
+   
+
+The following example %define instruction defines the value for
+the variable C<${diskmode}>. This variable is used elsewhere in
+the template to fill the I<owner_name>, I<group_name>, and
+I<mode_bits> fields in a B<D>, B<F>, or B<L>
+instruction.
+
+   %define diskmode root wheel 644
+
+The following example %undef instruction declares the string
+B<afsd> not to be defined.
+
+   %undef afsd
+
+The following example %ifdef instruction specifies that if the
+string C<rs_aix42> is currently declared, then when the prototype file
+containing the instruction is compiled the three indicated library files are
+included. There is no alternate action defined. There must be
+B<%define> statements earlier in the prototype file to declare
+B<rs_aix42> and to assign a value to the C<${wsadmin}>
+variable.
+
+   %ifdef rs_aix42
+   %include ${wsadmin}/lib/rs_aix42.readonly
+   %include ${wsadmin}/lib/rs_aix42.generic
+   %include ${wsadmin}/lib/rs_aix42.generic.dev
+   %endif rs_aix42
+
+The following example %ifndef instruction, appropriate for the
+State University cell, defines C<stateu.edu> as the value of
+the C<${cell}> variable if it does not already have a value.
+
+   %ifndef cell
+   %define cell stateu.edu
+   %endif cell
+
+The following example %include instruction includes the library
+file B<base.generic> from the B<lib> subdirectory of
+the directory in which B<package>-related files reside. The
+C<${wsadmin}> variable resolves to an actual pathname (such as
+B</afs/abc.com/wsadmin>) during compilation.
+
+   %include ${wsadmin}/lib/base.generic
+
+=head1 SEE ALSO
+
+L<package(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

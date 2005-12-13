@@ -4,32 +4,31 @@ kas forgetticket - Discards all tickets for the issuer
 
 =head1 SYNOPSIS
 
-B<kas forgetticket> [B<-all>]  [-help]
+B<kas forgetticket> [B<-all>] [B<-help>]
 
-B<kas f> [B<-a>]  [-h]
+B<kas f> [B<-a>] [B<-h>]
 
 =head1 DESCRIPTION
 
-The kas forgetticket command discards all of the issuer's
-tickets stored in the local machine's kernel memory. This includes
-the AFS server ticket from each cell in which the user has authenticated, and
-any tickets that the user have acquired during the current B<kas>
-session (either when entering the session or by using the B<kas
-getticket> command).
+The B<kas forgetticket> command discards all of the issuer's tickets
+stored in the local machine's kernel memory. This includes the AFS server
+ticket from each cell in which the user has authenticated, and any tickets
+that the user have acquired during the current B<kas> session (either when
+entering the session or by using the B<kas getticket> command).
 
 =head1 OPTIONS
 
 =over 4
 
-=item -all
+=item B<-all>
 
-Discards all tickets. This argument explicitly invokes the
-command's default behavior.
+Discards all tickets. This argument explicitly invokes the command's
+default behavior.
 
-=item -help
+=item B<-help>
 
-Prints the online help for this command. All other valid options
-are ignored.
+Prints the online help for this command. All other valid options are
+ignored.
 
 =back
 
@@ -45,7 +44,7 @@ None, and no password is required.
 
 =head1 SEE ALSO
 
-L<kas(1)>
+L<kas(8)>
 
 =head1 COPYRIGHT
 

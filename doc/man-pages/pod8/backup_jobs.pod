@@ -4,23 +4,21 @@ backup jobs - Lists pending and running operations in interactive mode
 
 =head1 SYNOPSIS
 
-B<jobs>  [-help]
+B<jobs> [B<-help>]
 
-B<j> [-h]
+B<j> [B<-h>]
 
 =head1 DESCRIPTION
 
-The (backup) jobs command lists the job ID number and status of
-each B<backup> operation running or pending in the current interactive
-session.
+The B<backup jobs> command lists the job ID number and status of each
+B<backup> operation running or pending in the current interactive session.
 
-This command can be issued in interactive mode only. If the issuer
-of the B<backup (interactive)> command included the
-B<-localauth> flag, the B<-cell> argument, or both, those
-settings apply to this command also.
+This command can be issued in interactive mode only. If the issuer of the
+B<backup interactive> command included the B<-localauth> flag, the
+B<-cell> argument, or both, those settings apply to this command also.
 
-To terminate operations that appear in the output, issue the (backup)
-kill command and identify the operation to cancel with the job ID number
+To terminate operations that appear in the output, issue the B<backup
+kill> command and identify the operation to cancel with the job ID number
 from this command's output.
 
 To check the status of a Tape Coordinator, rather than of a certain
@@ -30,59 +28,53 @@ operation, use the B<backup status> command.
 
 =over 4
 
-=item -help
+=item B<-help>
 
-Prints the online help for this command. All other valid options
-are ignored.
+Prints the online help for this command. All other valid options are
+ignored.
 
 =back
 
 =head1 OUTPUT
 
 The output always includes the expiration date and time of the tokens that
-the B<backup> command interpreter is using during the current
-interactive session, in the following format: 
+the B<backup> command interpreter is using during the current interactive
+session, in the following format:
 
-   I<date>   I<time>: TOKEN EXPIRATION
+   <date>   <time>: TOKEN EXPIRATION
 
 If the execution date and time specified for a scheduled dump operation is
-later than I<date time>, then its individual line (as described in the
+later than <date time>, then its individual line (as described in the
 following paragraphs) appears below this line to indicate that the current
 tokens will not be available to it.
 
-If the issuer of the backup command included the
-B<-localauth> flag when entering interactive mode, the line instead
-reads as follows:
+If the issuer of the backup command included the B<-localauth> flag when
+entering interactive mode, the line instead reads as follows:
 
    :  TOKEN NEVER EXPIRES
 
 The entry for a scheduled dump operation has the following format:
 
-   Job I<job_ID>:  I<timestamp>:  dump  I<volume_set>  I<dump_level>
+   Job <job_ID>:  <timestamp>:  dump  <volume_set>  <dump_level>
 
 where
 
 =over 4
 
-=item I<job_ID
->
+=item <job_ID>
 
 Is a job identification number assigned by the Backup System.
 
-=item I<timestamp
->
+=item <timestamp>
 
 Indicates the date and time the dump operation is to begin, in the format
-I<month>/I<date>/I<year>
-I<hours>:I<minutes> (in 24-hour format)
+I<month>/I<date>/I<year> I<hours>:I<minutes> (in 24-hour format)
 
-=item I<volume_set
->
+=item <volume_set>
 
 Indicates the volume set to dump.
 
-=item I<dump_level
->
+=item <dump_level>
 
 Indicates the dump level at which to perform the dump operation.
 
@@ -91,119 +83,99 @@ Indicates the dump level at which to perform the dump operation.
 The line for a pending or running operation of any other type has the
 following format:
 
-   Job I<job_ID>:  I<operation>  I<status>
+   Job <job_ID>:  <operation>  <status>
 
 where
 
 =over 4
 
-=item I<job_ID
->
+=item <job_ID>
 
 Is a job identification number assigned by the Backup System.
 
-=item I<operation
->
+=item <operation>
 
 Identifies the operation the Tape Coordinator is performing, which is
 initiated by the indicated command:
 
 =over 4
 
-=item C<Dump C<(>I<dump name>C<)>
->
+=item Dump (I<dump name>)
 
-Initiated by the backup dump command. The I<dump
-name> has the following format: 
+Initiated by the backup dump command. The I<dump name> has the following
+format:
 
-I<volume_set_name>.I<dump_level_name>
+    <volume_set_name>.<dump_level_name>
 
-=item C<Restore
->
+=item Restore
 
-Initiated by the B<backup diskrestore>, backup
-volrestore, or B<backup volsetrestore> command.
+Initiated by the B<backup diskrestore>, B<backup volrestore>, or B<backup
+volsetrestore> command.
 
-=item C<Labeltape C<(>I<tape_label>C<)>
->
+=item Labeltape (I<tape_label>)
 
-Initiated by the backup labeltape command. The
-I<tape_label> is the name specified by the B<backup labeltape>
-command's B<-name> or B<-pname> argument.
+Initiated by the B<backup labeltape>n command. The I<tape_label> is the
+name specified by the B<backup labeltape> command's B<-name> or B<-pname>
+argument.
 
-=item C<Scantape
->
+=item Scantape
 
-Initiated by the backup scantape command.
+Initiated by the B<backup scantape> command.
 
-=item C<SaveDb
->
+=item SaveDb
 
-Initiated by the backup savedb command.
+Initiated by the B<backup savedb> command.
 
-=item C<RestoreDb
->
+=item RestoreDb
 
-Initiated by the backup restoredb command.
+Initiated by the B<backup restoredb> command.
 
 =back
 
-=item I<status
->
+=item <status>
 
-Indicates the job's current status in one of the following
-messages. If no message appears, the job is either still pending or has
-finished.
+Indicates the job's current status in one of the following messages. If no
+message appears, the job is either still pending or has finished.
 
 =over 4
 
-=item I<number C<Kbytes, volume> I<volume_name>
->
+=item I<number> Kbytes, volume I<volume_name>
 
 For a running dump operation, indicates the number of kilobytes copied to
-tape or a backup data file so far, and the volume currently being
-dumped.
+tape or a backup data file so far, and the volume currently being dumped.
 
-=item I<number C<Kbytes, restore.volume>
->
+=item I<number> Kbytes, restore.volume
 
 For a running restore operation, indicates the number of kilobytes copied
 into AFS from a tape or a backup data file so far.
 
-=item C<[abort requested]
->
+=item [abort requested]
 
-The (backup) kill command was issued, but the termination
-signal has yet to reach the Tape Coordinator.
+The B<backup kill> command was issued, but the termination signal has yet
+to reach the Tape Coordinator.
 
-=item C<[abort sent]
->
+=item [abort sent]
 
-The operation is canceled by the (backup) kill command.
-Once the Backup System removes an operation from the queue or stops it from
-running, it no longer appears at all in the output from the command.
+The operation is canceled by the B<backup kill> command.  Once the Backup
+System removes an operation from the queue or stops it from running, it no
+longer appears at all in the output from the command.
 
-=item C<[butc contact lost]
->
+=item [butc contact lost]
 
-The backup command interpreter cannot reach the Tape
-Coordinator. The message can mean either that the Tape Coordinator
-handling the operation was terminated or failed while the operation was
-running, or that the connection to the Tape Coordinator timed out.
+The backup command interpreter cannot reach the Tape Coordinator. The
+message can mean either that the Tape Coordinator handling the operation
+was terminated or failed while the operation was running, or that the
+connection to the Tape Coordinator timed out.
 
-=item C<[done]
->
+=item [done]
 
 The Tape Coordinator has finished the operation.
 
-=item C<[drive wait]
->
+=item [drive wait]
 
-The operation is waiting for the specified tape drive to become
-free.
+The operation is waiting for the specified tape drive to become free.
 
-=item C<[operator wait]
->
+=item [operator wait]
 
 The Tape Coordinator is waiting for the backup operator to insert a tape
 in the drive.
@@ -215,8 +187,8 @@ in the drive.
 =head1 EXAMPLES
 
 The following example shows that two restore operations and one dump
-operation are running (presumably on different Tape Coordinators) and that the
-B<backup> command interpreter's tokens expire on 22 April 1999 at
+operation are running (presumably on different Tape Coordinators) and that
+the B<backup> command interpreter's tokens expire on 22 April 1999 at
 10:45 am:
 
    backup> jobs
@@ -228,15 +200,15 @@ B<backup> command interpreter's tokens expire on 22 April 1999 at
 =head1 PRIVILEGE REQUIRED
 
 None. However, queuing any operation requires privilege, and it is
-possible to issue this command only within the interactive session in which
-the jobs are queued.
+possible to issue this command only within the interactive session in
+which the jobs are queued.
 
 =head1 SEE ALSO
 
-L<backup(1)>,
-L<backup_interactive(1)>,
-L<backup_kill(1)>,
-L<backup_quit(1)>
+L<backup(8)>,
+L<backup_interactive(8)>,
+L<backup_kill(8)>,
+L<backup_quit(8)>
 
 =head1 COPYRIGHT
 

@@ -4,141 +4,137 @@ uss bulk - Executes multiple uss commands listed in a file
 
 =head1 SYNOPSIS
 
-B<uss bulk -file> <I<bulk input file>>  [-template <I<pathname of template file>>]
-[B<-verbose>]  [B<-cell> <I<cell name>>]  
-         [B<-admin> <I<administrator to authenticate>>] [-dryrun]  
-         [B<-skipauth>]  [-overwrite]
-         [-pwexpires <I<password expires in [0..254] days (0 => never)>>]  
-         [B<-pipe>]  [-help]
+B<uss bulk> B<-file> <I<bulk input file>>
+    [B<-template> <I<pathname of template file>>] [B<-verbose>]
+    [B<-cell> <I<cell name>>]
+    [B<-admin> <I<administrator to authenticate>>] [B<-dryrun>]
+    [B<-skipauth>] [B<-overwrite>]
+    [B<-pwexpires> <I<password expires in [0..254] days (0 => never)>>]  
+    [B<-pipe>] [B<-help>]
 
-B<uss b -f> <I<bulk input file>>  [B<-t> <I<pathname of template file>>]  [-v]  
-[B<-c> <I<cell name>>]  [B<-a> <I<administrator to authenticate>>]  [B<-d>]  [B<-s>]  
-      [B<-o>]  [-pw <I<password expires in [0..254] days (0 => never)>>]  
-      [B<-pi>]  [-h]
+B<uss b> B<-f> <I<bulk input file>> [B<-t> <I<pathname of template file>>]
+    [B<-v>] [B<-c> <I<cell name>>]
+    [B<-a> <I<administrator to authenticate>>] [B<-d>] [B<-s>]
+    [B<-o>] [B<-pw> <I<password expires in [0..254] days (0 => never)>>]  
+    [B<-pi>] [B<-h>]
 
 =head1 DESCRIPTION
 
-The B<uss bulk> command executes the uss commands listed
-in the B<bulk input file> specified with the B<-file>
-argument. If the bulk input file includes B<add> instructions
-that reference a template file, then the B<-template> argument is
-required.
+The B<uss bulk> command executes the uss commands listed in the I<bulk
+input file> specified with the B<-file> argument. If the bulk input file
+includes B<add> instructions that reference a template file, then the
+B<-template> argument is required.
 
-To create a single account, use the uss add command. To
-delete one or more accounts, use the B<uss delete> command.
+To create a single account, use the B<uss add> command. To delete one or
+more accounts, use the B<uss delete> command.
 
 =head1 OPTIONS
 
 =over 4
 
-=item -file
+=item B<-file> <I<bulk input file>>
 
-Specifies the pathname of the bulk input file. Partial pathnames
-are interpreted relative to the current working directory. For details
-on the file's format, see L<uss Bulk Input File(1)>.
+Specifies the pathname of the bulk input file. Partial pathnames are
+interpreted relative to the current working directory. For details on the
+file's format, see L<uss_bulk(5)>.
 
-=item -template
+=item B<-template> <I<pathname of template file>>
 
-Specifies the pathname of the template file for any uss add
-commands that appear in the bulk input file. Partial pathnames are
-interpreted relative to the current working directory. For details on
-the file's format, see L<uss Template File(1)>.
+Specifies the pathname of the template file for any uss add commands that
+appear in the bulk input file. Partial pathnames are interpreted relative
+to the current working directory. For details on the file's format, see
+L<uss(5)>.
 
-=item -verbose
+=item B<-verbose>
 
-Produces on the standard output stream a detailed trace of the
-command's execution. If this argument is omitted, only warnings
-and error messages appear.
+Produces on the standard output stream a detailed trace of the command's
+execution. If this argument is omitted, only warnings and error messages
+appear.
 
-=item -cell
+=item B<-cell> <I<cell name>>
 
-Specifies the cell in which to run the command. For more details,
-see the introductory B<uss> reference page.
+Specifies the cell in which to run the command. For more details, see
+L<uss(8)>.
 
-=item -admin
+=item B<-admin> <I<administrator to authenticate>>
 
 Specifies the AFS user name under which to establish authenticated
-connections to the AFS server processes that maintain the various components
-of a user account. For more details, see the introductory
-B<uss> reference page.
+connections to the AFS server processes that maintain the various
+components of a user account. For more details, see L<uss(8)>.
 
-=item -dryrun
+=item B<-dryrun>
 
 Reports actions that the command interpreter needs to perform while
-executing the command, without actually performing them. For more
-details, see the introductory B<uss> reference page.
+executing the command, without actually performing them. For more details,
+see L<uss(8)>.
 
-=item -skipauth
+=item B<-skipauth>
 
 Prevents authentication with the AFS Authentication Server, allowing a
 site using Kerberos to substitute that form of authentication.
 
-=item -overwrite
+=item B<-overwrite>
 
 Overwrites any directories, files and links that exist in the file system
-and for which there are also B<D>, B<E>, B<F>,
-B<L>, or B<S> instructions in a template file referenced by an
-B<add> instruction in the bulk input file. If this flag is
-omitted, the command interpreter prompts, once for each B<add>
-instruction in the bulk input file, for confirmation that it should overwrite
-such elements. Do not include this flag if the bulk input file does not
-contain B<add> instructions.
+and for which there are also C<D>, C<E>, C<F>, C<L>, or C<S> instructions
+in a template file referenced by an C<add> instruction in the bulk input
+file. If this flag is omitted, the command interpreter prompts, once for
+each C<add> instruction in the bulk input file, for confirmation that it
+should overwrite such elements. Do not include this flag if the bulk input
+file does not contain C<add> instructions.
 
-=item -pwexpires
+=item B<-pwexpires> <I<password expiration>>
 
-Sets the number of days after a user's password is changed that it
-remains valid, for each user named by an B<add> instruction in the
-bulk input file. Provide an integer from the range B<1> through
-B<254> to specify the number of days until expiration, or the value
-B<0> to indicate that the password never expires (the default).
+Sets the number of days after a user's password is changed that it remains
+valid, for each user named by an C<add> instruction in the bulk input
+file. Provide an integer from the range C<1> through C<254> to specify the
+number of days until expiration, or the value C<0> to indicate that the
+password never expires (the default).
 
 When the password becomes invalid (expires), the user is unable to
 authenticate, but has 30 more days in which to issue the B<kpasswd>
-command to change the password (after that, only an administrator can change
-it).
+command to change the password (after that, only an administrator can
+change it).
 
-=item -pipe
+=item B<-pipe>
 
 Suppresses the Authentication Server's prompt for the password of the
 issuer or the user named by the B<-admin> argument (the Authentication
 Server always separately authenticates the creator of an entry in the
 Authentication Database). Instead, the command interpreter accepts the
 password via the standard input stream, as piped in from another
-program. This enables the B<uss bulk> command to run as part of
-unattended batch jobs.
+program. This enables the B<uss bulk> command to run as part of unattended
+batch jobs.
 
-=item -help
+=item B<-help>
 
-Prints the online help for this command. All other valid options
-are ignored.
+Prints the online help for this command. All other valid options are
+ignored.
 
 =back
 
 =head1 EXAMPLES
 
 The following example command executes the instructions in the bulk input
-file called B<new_students>, which includes B<add>
-instructions that refer to the template file
-B<student.template>. Both files reside in the current
+file called F<new_students>, which includes C<add> instructions that refer
+to the template file F<student.template>. Both files reside in the current
 working directory.
 
    % uss bulk new_students student.template
 
 =head1 PRIVILEGE REQUIRED
 
-The issuer (or the user named by the -admin argument) must have
-the privileges necessary to run the commands that correspond to instructions
+The issuer (or the user named by the B<-admin> argument) must have the
+privileges necessary to run the commands that correspond to instructions
 in the bulk input file.
 
 =head1 SEE ALSO
 
-L<uss Bulk Input File(1)>
-
-L<uss Template File(1)>
-
-L<uss(1)>,
-L<uss_add(1)>,
-L<uss_delete(1)>
+L<uss(5)>,
+L<uss_bulk(5)>,
+L<uss(8)>,
+L<uss_add(8)>,
+L<uss_delete(8)>
 
 =head1 COPYRIGHT
 

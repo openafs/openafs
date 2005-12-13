@@ -4,24 +4,22 @@ package_test - Tests the validity of a package configuration file
 
 =head1 SYNOPSIS
 
-package_test <I<config file>>
-
-This command does not use the syntax conventions of the AFS command
-suites. Provide the command name in full.
+B<package_test> <I<config file>>
 
 =head1 DESCRIPTION
 
-The package_test command tests the validity of a
-B<package> configuration file created when a prototype file is
-compiled. The command interpreter prints error messages on the standard
-output stream.
+The B<package_test> command tests the validity of a B<package>
+configuration file created when a prototype file is compiled. The command
+interpreter prints error messages on the standard output stream.
+
+This command does not use the syntax conventions of the AFS command
+suites. Provide the command name in full.
 
 =head1 OPTIONS
 
 =over 4
 
-=item I<config file
->
+=item <I<config file>>
 
 Specifies the package configuration file to validate.
 
@@ -29,8 +27,8 @@ Specifies the package configuration file to validate.
 
 =head1 EXAMPLES
 
-The following example tests the validity of the package
-configuration file I<staff.sun4x_56>.
+The following example tests the validity of the package configuration file
+C<staff.sun4x_56>.
 
    % package_test staff.sun4x_56
 
@@ -40,9 +38,8 @@ None
 
 =head1 SEE ALSO
 
-L<package Configuration File(1)>
-
-L<package(1)>
+L<package(5)>,
+L<package(8)>
 
 =head1 COPYRIGHT
 
