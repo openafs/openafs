@@ -321,14 +321,14 @@ void cm_ChangeRankCellVLServer(cm_server_t *tsp)
     int code;
 
     cp = tsp->cellp;	/* cell that this vlserver belongs to */
-    osi_assert(cp);
+    if (cp) {
+	lock_ObtainMutex(&cp->mx);
+	code = cm_ChangeRankServer(&cp->vlServersp, tsp);
 
-    lock_ObtainMutex(&cp->mx);
-    code = cm_ChangeRankServer(&cp->vlServersp, tsp);
+	if ( !code ) 		/* if the server list was rearranged */
+	    cm_RandomizeServer(&cp->vlServersp);
 
-    if ( !code ) 		/* if the server list was rearranged */
-        cm_RandomizeServer(&cp->vlServersp);
-
-    lock_ReleaseMutex(&cp->mx);
+	lock_ReleaseMutex(&cp->mx);
+    }
 }       
 
