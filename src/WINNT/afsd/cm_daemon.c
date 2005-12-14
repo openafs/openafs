@@ -23,16 +23,17 @@
 
 #include <rx/rx.h>
 #include <rx/rx_prototypes.h>
+#include <WINNT/afsreg.h>
 
 #include "afsd.h"
 #include "afsicf.h"
 
 /* in seconds */
-long cm_daemonCheckDownInterval = 180;
-long cm_daemonCheckUpInterval = 600;
-long cm_daemonCheckVolInterval = 3600;
-long cm_daemonCheckCBInterval = 60;
-long cm_daemonCheckLockInterval = 60;
+long cm_daemonCheckDownInterval  = 180;
+long cm_daemonCheckUpInterval    = 600;
+long cm_daemonCheckVolInterval   = 3600;
+long cm_daemonCheckCBInterval    = 60;
+long cm_daemonCheckLockInterval  = 60;
 long cm_daemonTokenCheckInterval = 180;
 
 osi_rwlock_t cm_daemonLock;
@@ -173,6 +174,58 @@ IsWindowsFirewallPresent(void)
     return result;
 }
 
+void
+cm_DaemonCheckInit(void)
+{
+    HKEY parmKey;
+    DWORD dummyLen;
+    DWORD dummy;
+    DWORD code;
+
+    code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY,
+                         0, KEY_QUERY_VALUE, &parmKey);
+    if (code)
+	return;
+
+    dummyLen = sizeof(DWORD);
+    code = RegQueryValueEx(parmKey, "DownServerCheckInterval", NULL, NULL,
+			    (BYTE *) &dummy, &dummyLen);
+    if (code == ERROR_SUCCESS)
+	cm_daemonCheckDownInterval = dummy;
+    
+    dummyLen = sizeof(DWORD);
+    code = RegQueryValueEx(parmKey, "UpServerCheckInterval", NULL, NULL,
+			    (BYTE *) &dummy, &dummyLen);
+    if (code == ERROR_SUCCESS)
+	cm_daemonCheckUpInterval = dummy;
+    
+    dummyLen = sizeof(DWORD);
+    code = RegQueryValueEx(parmKey, "VolumeCheckInterval", NULL, NULL,
+			    (BYTE *) &dummy, &dummyLen);
+    if (code == ERROR_SUCCESS)
+	cm_daemonCheckVolInterval = dummy;
+    
+    dummyLen = sizeof(DWORD);
+    code = RegQueryValueEx(parmKey, "CallbackCheckInterval", NULL, NULL,
+			    (BYTE *) &dummy, &dummyLen);
+    if (code == ERROR_SUCCESS)
+	cm_daemonCheckCBInterval = dummy;
+    
+    dummyLen = sizeof(DWORD);
+    code = RegQueryValueEx(parmKey, "LockCheckInterval", NULL, NULL,
+			    (BYTE *) &dummy, &dummyLen);
+    if (code == ERROR_SUCCESS)
+	cm_daemonCheckLockInterval = dummy;
+    
+    dummyLen = sizeof(DWORD);
+    code = RegQueryValueEx(parmKey, "TokenCheckInterval", NULL, NULL,
+			    (BYTE *) &dummy, &dummyLen);
+    if (code == ERROR_SUCCESS)
+	cm_daemonTokenCheckInterval = dummy;
+    
+    RegCloseKey(parmKey);
+}
+
 /* periodic check daemon */
 void cm_Daemon(long parm)
 {
@@ -206,7 +259,10 @@ void cm_Daemon(long parm)
         code = 0;
     else
         memcpy(&code, thp->h_addr_list[0], 4);
+    
     srand(ntohl(code));
+
+    cm_DaemonCheckInit();
 
     now = osi_Time();
     lastVolCheck = now - cm_daemonCheckVolInterval/2 + (rand() % cm_daemonCheckVolInterval);
