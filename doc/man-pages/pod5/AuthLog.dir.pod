@@ -1,30 +1,29 @@
 =head1 NAME
 
-AuthLog.dir, AuthLog.pag - Records privileged operations performed by the Authentication Server
+AuthLog.dir, AuthLog.pag - Log of Authentication Server privileged operations
 
 =head1 DESCRIPTION
 
-The B<AuthLog.dir> and AuthLog.pag files
-record a trace of privileged operations performed by the Authentication Server
-(B<kaserver> process) on the local machine. If the files do not
-exist when the Authentication Server starts, it creates them in the
-B</usr/afs/logs> directory as necessary.
+The F<AuthLog.dir> and F<AuthLog.pag> files record a trace of privileged
+operations performed by the Authentication Server (B<kaserver> process) on
+the local machine. If the files do not exist when the Authentication
+Server starts, it creates them in the F</usr/afs/logs> directory as
+necessary.
 
-The files are in binary format. To display their contents, use the
-B<kdb> command, which requires being logged in to the local machine as
-the local superuser B<root>.
+The files are in binary format. To display their contents, use the B<kdb>
+command, which requires being logged in to the local machine as the local
+superuser C<root>.
 
 =head1 CAUTIONS
 
 The Authentication Server is possibly unable to create these files on some
-operating systems that AFS otherwise supports, making the B<kdb>
-command inoperative. See the I<IBM AFS Release Notes> for
-details.
+operating systems that AFS otherwise supports, making the B<kdb> command
+inoperative. See the I<IBM AFS Release Notes> for details.
 
 =head1 SEE ALSO
 
-L<kaserver(1)>,
-L<kdb(1)>
+L<kaserver(8)>,
+L<kdb(8)>
 
 =head1 COPYRIGHT
 

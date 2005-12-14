@@ -1,0 +1,94 @@
+=head1 NAME
+
+NetRestrict - Defines interfaces not to register with AFS servers
+
+=head1 DESCRIPTION
+
+There are two F<NetRestrict> files, one for an AFS client and one for an
+AFS File Server or database server.  The AFS client F<NetRestrict> file
+specifies the IP addresses that the client should not register with the
+File Servers it connects to.  The server F<NetInfo> file specifies what
+interfaces should not be registered with AFS Database Servers or used to
+talk to other database servers.
+
+=head2 Client NetRestrict
+
+The F<NetRestrict> file, if present in a client machine's F</usr/vice/etc>
+directory, defines the IP addresses of the interfaces that the local Cache
+Manager does not register with a File Server when first establishing a
+connection to it. For an explanation of how the File Server uses the
+registered interfaces, see L<NetInfo(5)>.
+
+As it initializes, the Cache Manager constructs a list of interfaces to
+register, from the F</usr/vice/etc/NetInfo> file if it exists, or from the
+list of interfaces configured with the operating system otherwise.  The
+Cache Manager then removes from the list any addresses that appear in the
+F<NetRestrict> file, if it exists. The Cache Manager records the resulting
+list in kernel memory.
+
+The F<NetRestrict> file is in ASCII format. One IP address appears on each
+line, in dotted decimal format. The order of the addresses is not
+significant. The value C<255> is a wildcard that represents all possible
+addresses in that field. For example, the value C<192.12.105.255>
+indicates that the Cache Manager does not register any of the addresses in
+the C<192.12.105> subnet.
+
+To display the addresses the Cache Manager is currently registering with
+File Servers, use the B<fs getclientaddrs> command.
+
+=head2 Server NetRestrict
+
+The F<NetRestrict> file, if present in the F</usr/afs/local> directory,
+defines the following:
+
+=over 4
+
+=item *
+
+On a file server machine, the local interfaces that the File Server
+(B<fileserver> process) does not register in the Volume Location Database
+(VLDB) at initialization time.
+
+=item *
+
+On a database server machine, the local interfaces that the Ubik
+synchronization library does not use when communicating with the database
+server processes running on other database server machines.
+
+=back
+
+As it initializes, the File Server constructs a list of interfaces to
+register, from the F</usr/afs/local/NetInfo> file if it exists, or from
+the list of interfaces configured with the operating system otherwise. The
+File Server then removes from the list any addresses that appear in the
+F<NetRestrict> file, if it exists. The File Server records the resulting
+list in the F</usr/afs/local/sysid> file and registers the interfaces in
+the VLDB. The database server processes use a similar procedure when
+initializing, to determine which interfaces to use for communication with
+the peer processes on other database machines in the cell.
+
+The F<NetRestrict> file is in ASCII format. One IP address appears on each
+line, in dotted decimal format. The order of the addresses is not
+significant. The value C<255> is a wildcard that represents all possible
+addresses in that field. For example, the value C<192.12.105.255>
+indicates that the File Server or database server processes do not
+register or use any of the addresses in the C<192.12.105> subnet.
+
+To display the File Server interface addresses registered in the VLDB, use
+the B<vos listaddrs> command.
+
+=head1 SEE ALSO
+
+L<sysid(5)>,
+L<vldb.DB0(5)>,
+L<fileserver(8)>,
+L<fs_getclientaddrs(1)>
+L<vos_listaddrs(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

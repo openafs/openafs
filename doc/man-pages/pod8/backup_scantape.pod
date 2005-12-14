@@ -333,6 +333,7 @@ included.
 
 =head1 SEE ALSO
 
+L<butc(5)>,
 L<backup(8)>,
 L<backup_dump(8)>,
 L<backup_dumpinfo(8)>,

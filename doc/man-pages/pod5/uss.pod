@@ -1,116 +1,101 @@
 =head1 NAME
 
-uss Template File - Provides instructions for the uss add command
+uss - Provides instructions for the uss add command
 
 =head1 DESCRIPTION
 
-The uss template file defines the components of an AFS user
-account that the B<uss add> command (or B<add> instruction in
-a B<uss> bulk input file) creates. Use the B<-template>
-argument to the B<uss add> or B<uss bulk> command to identify
-the template file.
+The uss template file defines the components of an AFS user account that
+the B<uss add> command (or B<add> instruction in a B<uss> bulk input file)
+creates. Use the B<-template> argument to the B<uss add> or B<uss bulk>
+command to identify the template file.
 
-Summary of Template File Instructions
+=head2 Summary of Template File Instructions
 
 The template file can include the following instructions, each on its own
-line. A more detailed description of each instruction's syntax
-follows this list.
+line. A more detailed description of each instruction's syntax follows
+this list.
 
 =over 4
 
 =item A
 
-Imposes restrictions on user passwords and authentication attempts
+Imposes restrictions on user passwords and authentication attempts.
 
 =item D
 
-Creates a directory
+Creates a directory.
 
 =item E
 
-Creates a single-line file
+Creates a single-line file.
 
 =item F
 
-Creates a file by copying a prototype
+Creates a file by copying a prototype.
 
 =item G
 
 Defines a directory that is one of a set of parent directories into which
 the B<uss> command interpreter evenly distributes newly created home
-directories
+directories.
 
 =item L
 
-Creates a hard link
+Creates a hard link.
 
 =item S
 
-Creates a symbolic link
+Creates a symbolic link.
 
 =item V
 
 Creates a volume, mounts it in the file space and sets the ACL on the
-mount point
+mount point.
 
 =item X
 
-Executes a command
+Executes a command.
 
 =back
 
-If the template file is empty (zero-length), the uss add command
-or B<add> instruction in a bulk input file only creates an entry in
-the Protection and Authentication Databases, naming them according to the name
-specified with the B<uss add> command's B<-user>
-argument, or in the bulk input file B<add> instruction's
-I<username> field.
+If the template file is empty (zero-length), the B<uss add> command or
+C<add> instruction in a bulk input file only creates an entry in the
+Protection and Authentication Databases, naming them according to the name
+specified with the B<uss add> command's B<-user> argument, or in the bulk
+input file C<add> instruction's I<username> field.
 
-The A Instruction for Setting the Default Treatment of Volumes
-L<(1)>
-L<(1)>
-L<(1)>
-L<(1)>
-L<(1)>
-L<(1)>
-L<(1)>
+=head2 The A Instruction for Setting the Default Treatment of Volumes
 
-The B<A> instruction in a uss template file enhances
-cell security by imposing the following restrictions on users' password
-choice and authentication attempts. For further information on these
-limits, see the I<IBM AFS Administration Guide> and the B<kas
-setfields> reference page.
+The C<A> instruction in a uss template file enhances cell security by
+imposing the following restrictions on users' password choice and
+authentication attempts. For further information on these limits, see the
+I<IBM AFS Administration Guide> and the B<kas setfields> reference page.
 
 =over 4
 
 =item *
 
-Limiting the user's password lifetime. When the lifetime
-expires, the user can no longer authenticate using that password, and must
-change it.
-
+Limiting the user's password lifetime. When the lifetime expires, the user
+can no longer authenticate using that password, and must change it.
 
 =item *
 
-Prohibiting the reuse of the user's 20 most recently used
-passwords.
-
+Prohibiting the reuse of the user's 20 most recently used passwords.
 
 =item *
 
 Limiting the number of consecutive times that a user can provide an
-incorrect password during authentication, and for how long the Authentication
-Server refuses further authentication attempts after the limit is exceeded
-(referred to as an I<account lockout>). For regular user
-accounts in most cells, the recommended limit is nine and lockout time is 25
-minutes.
-
+incorrect password during authentication, and for how long the
+Authentication Server refuses further authentication attempts after the
+limit is exceeded (referred to as an I<account lockout>). For regular user
+accounts in most cells, the recommended limit is nine and lockout time is
+25 minutes.
 
 =back
 
 The instruction has the following syntax:
 
-   A  I<username>  I<password_lifetime>  I<password_reuse>  I<failures>  I<locktime>
+   A <username> <lifetime> <reuse> <failures> <locktime>
 
 where
 
@@ -118,20 +103,16 @@ where
 
 =item A
 
-Indicates a security-enhancing instruction. It must be a capital
-letter.
+Indicates a security-enhancing instruction. It must be a capital letter.
 
-=item I<username
->
+=item <username>
 
 Names the Authentication Database entry on which to impose security
-restrictions. Specify the value B<$USER> to read in the
-username from the B<uss add> command's B<-user> argument,
-or from the I<username> field of an B<add> instruction in a bulk
-input file.
+restrictions. Specify the value $USER to read in the username from the
+B<uss add> command's B<-user> argument, or from the I<username> field of
+an C<add> instruction in a bulk input file.
 
-=item I<password_lifetime
->
+=item <lifetime>
 
 Sets the number of days after the user's password is changed that it
 remains valid. When the password becomes invalid (expires), the user is
@@ -139,118 +120,96 @@ unable to authenticate, but has 30 more days in which to issue the
 B<kpasswd> command to change the password (after that, only an
 administrator can change it).
 
-Specify an integer from the range B<1> through 254 to
-specify the number of days until expiration, the value B<0> to
-indicate that the password never expires, or the value B<$PWEXPIRES>
-to read in the number of days from the B<uss add> or B<uss
-bulk> command's B<-pwexpires> argument. If the
-B<A> instruction does not appear in the template file, the default is
-for the user's password never to expire.
+Specify an integer from the range C<1> through C<254> to specify the
+number of days until expiration, the value C<0> to indicate that the
+password never expires, or the value $PWEXPIRES to read in the number
+of days from the B<uss add> or B<uss bulk> command's B<-pwexpires>
+argument. If the C<A> instruction does not appear in the template file,
+the default is for the user's password never to expire.
 
-=item I<password_reuse
->
+=item <reuse>
 
 Determines whether or not the user can change his or her password (using
-the B<kpasswd> or B<kas setpassword> command) to one that is
-similar to any of the last twenty passwords. The acceptable values are
-B<reuse> to allow reuse and B<noreuse> to prohibit it.
-If the B<A> instruction does not appear in the template file, the
-default is to allow password reuse.
+the B<kpasswd> or B<kas setpassword> command) to one that is similar to
+any of the last twenty passwords. The acceptable values are C<reuse> to
+allow reuse and C<noreuse> to prohibit it.  If the C<A> instruction does
+not appear in the template file, the default is to allow password reuse.
 
-=item I<failures
->
+=item <failures>
 
 Sets the number of consecutive times the user can provide an incorrect
 password during authentication (using the B<klog> command or a login
 utility that grants AFS tokens). When the user exceeds the limit, the
-Authentication Server rejects further authentication attempts for the amount
-of time specified in the I<locktime> field.
+Authentication Server rejects further authentication attempts for the
+amount of time specified in the <locktime> field.
 
-Specify an integer from the range B<1> through 254 to
-specify the number of failures permitted, or the value B<0> to
-indicate that there is no limit to the number of unsuccessful attempts.
-If the B<A> instruction does not appear in the template file, the
-default is to allow an unlimited number of failures.
+Specify an integer from the range C<1> through C<254> to specify the
+number of failures permitted, or the value C<0> to indicate that there is
+no limit to the number of unsuccessful attempts.  If the C<A> instruction
+does not appear in the template file, the default is to allow an unlimited
+number of failures.
 
-=item I<locktime
->
+=item <locktime>
 
 Specifies how long the Authentication Server refuses authentication
 attempts from a user who has exceeded the failure limit set in the
-I<failures> field.
+<failures> field.
 
-Specify a number of hours and minutes (I<hh:mm>) or minutes
-only (I<mm>), from the range B<01> (one minute) through
-B<36:00> (36 hours). The Authentication Server
-automatically reduces any larger value to B<36:00> and also
-rounds up any non-zero value to the next higher multiple of 8.5
-minutes. A value of B<0> (zero) sets an infinite lockout
-time; an administrator must always issue the B<kas unlock>
-command to unlock the account.
+Specify a number of hours and minutes (I<hh:mm>) or minutes only (I<mm>),
+from the range C<01> (one minute) through C<36:00> (36 hours). The
+Authentication Server automatically reduces any larger value to C<36:00>
+and also rounds up any non-zero value to the next higher multiple of 8.5
+minutes. A value of C<0> (zero) sets an infinite lockout time; an
+administrator must always issue the B<kas unlock> command to unlock the
+account.
 
 =back
 
-The D Instruction for Creating a Directory
-L<(1)>
-L<(1)>
-L<(1)>
-L<(1)>
-L<(1)>
-L<(1)>
-L<(1)>
-L<(1)>
-L<(1)>
-L<(1)>
-L<(1)>
+=head2 The D Instruction for Creating a Directory
 
-The B<D> instruction in a uss template file creates a
-directory. Its intended use is to create a subdirectory in the user
-home directory created by the B<V> instruction in the template
-file.
+The C<D> instruction in a uss template file creates a directory. Its
+intended use is to create a subdirectory in the user home directory
+created by the C<V> instruction in the template file.
 
-Any number of D instructions can appear in the template
-file. If any variables in the instruction take their values from the
-B<V> instruction (notably, the $MTPT variable), the instruction must
-follow the B<V> instruction in the file.
+Any number of C<D> instructions can appear in the template file. If any
+variables in the instruction take their values from the C<V> instruction
+(notably, the $MTPT variable), the instruction must follow the C<V>
+instruction in the file.
 
-Although it is possible to use the D instruction to create a
-directory on the local disk of the machine where the B<uss> command is
-issued, it is not recommended. The preferred method for automated
-creation of directories on a local disk is the B<package>
-program. Two complications arise if the I<pathname> field refers
-to a local disk directory:
+Although it is possible to use the C<D> instruction to create a directory
+on the local disk of the machine where the B<uss> command is issued, it is
+not recommended. The preferred method for automated creation of
+directories on a local disk is the B<package> program. Two complications
+arise if the <pathname> field refers to a local disk directory:
 
 =over 4
 
 =item *
 
-The uss command prints a warning message because it cannot
-associate an access control list (ACL) with a local disk directory. It
-creates the directory nonetheless, and some syntactically correct value must
-appear in the instruction's I<ACL> field.
-
+The B<uss> command prints a warning message because it cannot associate an
+access control list (ACL) with a local disk directory. It creates the
+directory nonetheless, and some syntactically correct value must appear in
+the instruction's <ACL> field.
 
 =item *
 
-To designate any user other than the issuer as the new directory's
-owner, the issuer must log onto the machine as the local superuser
-B<root>. For local disk directories, only the local superuser
-B<root> is allowed to issue the UNIX B<chown> command that the
-B<uss> command interpreter invokes to change the owner from the
-default value (the directory's creator, which in this case is the issuer
-of the B<uss> command). The issuer must then also use the
-B<-admin> argument to the B<uss add> or B<uss bulk>
-command to authenticate as a privileged AFS administrator, which is required
-for creating the Authentication Database and Protection Database entries that
-the B<uss> command interpreter always creates for a new
-account.
-
+To designate any user other than the issuer as the new directory's owner,
+the issuer must log onto the machine as the local superuser C<root>. For
+local disk directories, only the local superuser C<root> is allowed to
+issue the UNIX B<chown> command that the B<uss> command interpreter
+invokes to change the owner from the default value (the directory's
+creator, which in this case is the issuer of the B<uss> command). The
+issuer must then also use the B<-admin> argument to the B<uss add> or
+B<uss bulk> command to authenticate as a privileged AFS administrator,
+which is required for creating the Authentication Database and Protection
+Database entries that the B<uss> command interpreter always creates for a
+new account.
 
 =back
 
 The instruction has the following syntax:
 
-   D  I<pathname>  I<mode_bits>  I<owner>  I<ACL>
+   D <pathname> <mode> <owner> <ACL>
 
 where
 
@@ -258,116 +217,97 @@ where
 
 =item D
 
-Indicates a directory creation instruction. It must be a capital
-letter.
+Indicates a directory creation instruction. It must be a capital letter.
 
-=item I<pathname
->
+=item <pathname>
 
-Specifies the directory's full pathname. It can include
-variables.
+Specifies the directory's full pathname. It can include variables.
 
 Specify the read/write path to the directory, to avoid the failure that
 results from attempting to create a new directory in a read-only
 volume. By convention, the read/write path is indicated by placing a
 period before the cell name at the pathname's second level (for example,
-B</afs/.abc.com>). For further discussion of the
-concept of read/write and read-only paths through the filespace, see the
-reference page for the B<fs mkmount> command.
+F</afs/.abc.com>). For further discussion of the concept of read/write and
+read-only paths through the filespace, see the reference page for the B<fs
+mkmount> command.
 
-=item I<mode_bits
->
+=item <mode>
 
-Sets the directory's UNIX mode bits. Acceptable values are the
-standard three- or four-digit numbers corresponding to combinations of
-permissions. Examples: B<755> corresponds to
-B<rwxr-xr-x>, and B<644> to B<rw-r--r-->. The
-first (owner) B<x> bit must be turned on to enable access to a
-directory.
+Sets the directory's UNIX mode bits. Acceptable values are the standard
+three- or four-digit numbers corresponding to combinations of
+permissions. Examples: C<755> corresponds to C<rwxr-xr-x>, and C<644> to
+C<rw-r--r-->. The first (owner) C<x> bit must be turned on to enable
+access to a directory.
 
-=item I<owner
->
+=item <owner>
 
 Specifies the username or UNIX user ID (UID) of the user to be designated
-the directory's owner in the output from the UNIX B<ls -ld>
-command. If the directory resides in AFS, place the $UID variable in
-this field. If the directory resides on the local disk, this field must
-be the username or UID of the B<uss> command's issuer, unless the
-issuer is logged in as the local superuser B<root>.
+the directory's owner in the output from the UNIX C<ls -ld> command. If
+the directory resides in AFS, place the $UID variable in this field. If
+the directory resides on the local disk, this field must be the username
+or UID of the B<uss> command's issuer, unless the issuer is logged in as
+the local superuser C<root>.
 
-=item I<ACL
->
+=item <ACL>
 
 Sets the ACL on the new directory. It must appear even if the new
-directory resides on the local disk rather than in AFS, but is ignored in that
-case. Provide one or more paired values, each pair consisting of an AFS
-username or group name and the desired permissions, in that order.
-Separate the two parts of the pair, and each pair, with a space. The
-B<fs setacl> reference page describes the available
-permissions.
+directory resides on the local disk rather than in AFS, but is ignored in
+that case. Provide one or more paired values, each pair consisting of an
+AFS username or group name and the desired permissions, in that order.
+Separate the two parts of the pair, and each pair, with a space. The B<fs
+setacl> reference page describes the available permissions.
 
-For an AFS directory, grant all permissions to the directory's owner
-at least. Usually that is the new user, in which case the appropriate
-value is B<$USER all>.
+For an AFS directory, grant all permissions to the directory's owner at
+least. Usually that is the new user, in which case the appropriate value
+is C<$USER all>.
 
-It is not possible to grant any permissions to the issuer of the
-B<uss> command. As the last step in account creation, the
-B<uss> command interpreter automatically deletes that person from any
-ACLs set during the creation process.
+It is not possible to grant any permissions to the issuer of the B<uss>
+command. As the last step in account creation, the B<uss> command
+interpreter automatically deletes that person from any ACLs set during the
+creation process.
 
 =back
 
-The E Instruction for Creating a Single-line File
-L<(1)>
-L<(1)>
-L<(1)>
-L<(1)>
-L<(1)>
-L<(1)>
+=head2 The E Instruction for Creating a Single-line File
 
-The B<E> instruction in a uss template file creates a
-file by echoing a specified character string into it. Its intended use
-is to create files in the user home directory created by the B<V>
-instruction in the template file, or in a subdirectory created by a
-B<D> instruction.
+The C<E> instruction in a uss template file creates a file by echoing a
+specified character string into it. Its intended use is to create files in
+the user home directory created by the C<V> instruction in the template
+file, or in a subdirectory created by a C<D> instruction.
 
-Any number of E instructions can appear in the template
-file. If the file resides in a directory created by a B<D>
-instruction, the B<E> instruction must follow the B<D>
-instruction in the file.
+Any number of C<E> instructions can appear in the template file. If the
+file resides in a directory created by a C<D> instruction, the C<E>
+instruction must follow the C<D> instruction in the file.
 
-The B<E> and F instructions have complementary
-advantages. The character string echoed into the file by an
-B<E> instruction can be customized for each user, because it can
-include the standard variables for which the B<uss> command
-interpreter substitutes the values specified by arguments to the B<uss
-add> command or fields in a bulk input file B<add>
-instruction. In contrast, a file created using the B<F>
-instruction cannot include variables and so has the same content for all
-users. However, a file created by an B<E> instruction can be a
-single line only, because no carriage returns (newline characters) are allowed
-in the character string.
+The C<E> and C<F> instructions have complementary advantages. The
+character string echoed into the file by an C<E> instruction can be
+customized for each user, because it can include the standard variables
+for which the B<uss> command interpreter substitutes the values specified
+by arguments to the B<uss add> command or fields in a bulk input file
+B<add> instruction. In contrast, a file created using the C<F> instruction
+cannot include variables and so has the same content for all
+users. However, a file created by an C<E> instruction can be a single line
+only, because no carriage returns (newline characters) are allowed in the
+character string.
 
-Although it is possible to use the E instruction to create a
-file on the local disk of the machine where the B<uss> command is
-issued, it is not recommended. The preferred method for automated
-creation of files on a local disk is the B<package> program.
-The main complication is that designating any user other than the issuer as
-the new file's owner requires logging onto the machine as the local
-superuser B<root>. For local disk files, only the local
-superuser B<root> is allowed to issue the UNIX B<chown>
-command that the B<uss> command interpreter invokes to change the
-owner from the default value (the file's creator, which in this case is
-the issuer of the B<uss> command). The issuer must then also
-use the B<-admin> argument to the B<uss add> or B<uss
-bulk> command to authenticate as a privileged AFS administrator, which is
-required for creating the Authentication Database and Protection Database
-entries that the B<uss> command interpreter always creates for a new
-account.
+Although it is possible to use the C<E> instruction to create a file on
+the local disk of the machine where the B<uss> command is issued, it is
+not recommended. The preferred method for automated creation of files on a
+local disk is the B<package> program.  The main complication is that
+designating any user other than the issuer as the new file's owner
+requires logging onto the machine as the local superuser C<root>. For
+local disk files, only the local superuser C<root> is allowed to issue the
+UNIX B<chown> command that the B<uss> command interpreter invokes to
+change the owner from the default value (the file's creator, which in this
+case is the issuer of the B<uss> command). The issuer must then also use
+the B<-admin> argument to the B<uss add> or B<uss bulk> command to
+authenticate as a privileged AFS administrator, which is required for
+creating the Authentication Database and Protection Database entries that
+the B<uss> command interpreter always creates for a new account.
 
 The instruction has the following syntax:
 
-   E  I<pathname>  I<mode_bits>  I<owner>  "I<contents>"
+   E <pathname> <mode> <owner> "<contents>"
 
 where
 
@@ -375,100 +315,82 @@ where
 
 =item E
 
-Indicates a file creation instruction. It must be a capital
-letter.
+Indicates a file creation instruction. It must be a capital letter.
 
-=item I<pathname
->
+=item <pathname>
 
-Specifies the file's full pathname. It can include
-variables.
+Specifies the file's full pathname. It can include variables.
 
 Specify the read/write path to the file, to avoid the failure that results
-from attempting to create a new file in a read-only volume. By
-convention, the read/write path is indicated by placing a period before the
-cell name at the pathname's second level (for example,
-B</afs/.abc.com>). For further discussion of the
-concept of read/write and read-only paths through the filespace, see the
-reference page for the B<fs mkmount> command.
+from attempting to create a new file in a read-only volume. By convention,
+the read/write path is indicated by placing a period before the cell name
+at the pathname's second level (for example, F</afs/.abc.com>). For
+further discussion of the concept of read/write and read-only paths
+through the filespace, see the reference page for the B<fs mkmount>
+command.
 
-=item I<mode_bits
->
+=item <mode>
 
-Sets the file's UNIX mode bits. Acceptable values are the
-standard three- or four-digit numbers corresponding to combinations of
-permissions. Examples: B<755> corresponds to
-B<rwxr-xr-x>, and B<644> to B<rw-r--r-->.
+Sets the file's UNIX mode bits. Acceptable values are the standard three-
+or four-digit numbers corresponding to combinations of
+permissions. Examples: C<755> corresponds to C<rwxr-xr-x>, and C<644> to
+C<rw-r--r-->.
 
-=item I<owner
->
+=item <owner>
 
 Specifies the username or UNIX user ID (UID) of the user to be designated
-the file's owner in the output from the UNIX B<ls -l>
-command. If the file resides in AFS, place the $UID variable in this
-field. If the file resides on the local disk, specify the username or
-UID of the B<uss> command's issuer; otherwise, the account
-creation operation halts immediately.
+the file's owner in the output from the UNIX C<ls -l> command. If the file
+resides in AFS, place the $UID variable in this field. If the file
+resides on the local disk, specify the username or UID of the B<uss>
+command's issuer; otherwise, the account creation operation halts
+immediately.
 
-=item I<contents
->
+=item <contents>
 
 Specifies the one-line character string to write into the new file.
 Surround it with double quotes if it contains one or more spaces. It
 cannot contain the newline character, but can contain any of the standard
-variables, which the command interpreter resolves as it creates the
-file.
+variables, which the command interpreter resolves as it creates the file.
 
 =back
 
-L<(1)>The F Instruction for Creating a File
-from a Prototype
-L<(1)>
-L<(1)>
-L<(1)>
-L<(1)>
-L<(1)>
-L<(1)>
+=head2 The F Instruction for Creating a File from a Prototype
 
-The B<F> instruction in a uss template file creates a
-file by copying the contents of an existing file (the I<prototype>)
-into it. Its intended use is to create files in the user home directory
-created by the B<V> instruction in the template file, or in a
-subdirectory created by a B<D> instruction.
+The C<F> instruction in a uss template file creates a file by copying the
+contents of an existing file (the <prototype>) into it. Its intended use
+is to create files in the user home directory created by the C<V>
+instruction in the template file, or in a subdirectory created by a C<D>
+instruction.
 
-Any number of F instructions can appear in the template
-file. If the file resides in a directory created by a B<D>
-instruction, the B<F> instruction must follow the B<D>
-instruction in the file.
+Any number of C<F> instructions can appear in the template file. If the
+file resides in a directory created by a C<D> instruction, the C<F>
+instruction must follow the C<D> instruction in the file.
 
-The B<E> and F instructions have complementary
-advantages. A file created using the B<F> instruction has the
-same content for all users, whereas a file created by an B<E>
-instruction can be customized for each user if it includes variables.
-However, a file created by an B<E> instruction can be a single line
-only, whereas the prototype file copied by an B<F> instruction can be
-any length.
+The C<E> and C<F> instructions have complementary advantages. A file
+created using the C<F> instruction has the same content for all users,
+whereas a file created by an C<E> instruction can be customized for each
+user if it includes variables.  However, a file created by an C<E>
+instruction can be a single line only, whereas the prototype file copied
+by an C<F> instruction can be any length.
 
-Although it is possible to use the F instruction to create a
-file on the local disk of the machine where the B<uss> command is
-issued, it is not recommended. The preferred method for automated
-creation of files on a local disk is the B<package> program.
-The main complication is that designating any user other than the issuer as
-the new file's owner requires logging onto the machine as the local
-superuser B<root>. For local disk files, only the local
-superuser B<root> is allowed to issue the UNIX B<chown>
-command that the B<uss> command interpreter invokes to change the
-owner from the default value (the file's creator, which in this case is
-the issuer of the B<uss> command). The issuer must then also
-use the B<-admin> argument to the B<uss add> or B<uss
-bulk> command to authenticate as a privileged AFS administrator, which is
-required for creating the Authentication Database and Protection Database
-entries that the B<uss> command interpreter always creates for a new
-account.
+Although it is possible to use the C<F> instruction to create a file on
+the local disk of the machine where the B<uss> command is issued, it is
+not recommended. The preferred method for automated creation of files on a
+local disk is the B<package> program.  The main complication is that
+designating any user other than the issuer as the new file's owner
+requires logging onto the machine as the local superuser C<root>. For
+local disk files, only the local superuser C<root> is allowed to issue the
+UNIX B<chown> command that the B<uss> command interpreter invokes to
+change the owner from the default value (the file's creator, which in this
+case is the issuer of the B<uss> command). The issuer must then also use
+the B<-admin> argument to the B<uss add> or B<uss bulk> command to
+authenticate as a privileged AFS administrator, which is required for
+creating the Authentication Database and Protection Database entries that
+the B<uss> command interpreter always creates for a new account.
 
 The instruction has the following syntax:
 
-   F  I<pathname>  I<mode_bits>  I<owner>  I<prototype_file>
+   F <pathname> <mode> <owner> <prototype_file>
 
 where
 
@@ -476,84 +398,72 @@ where
 
 =item F
 
-Indicates a file creation instruction. It must be a capital
-letter.
+Indicates a file creation instruction. It must be a capital letter.
 
-=item I<pathname
->
+=item <pathname>
 
 Specifies the full pathname of the file to create, including the
 filename. It can include variables.
 
 Specify the read/write path to the file, to avoid the failure that results
-from attempting to create a new file in a read-only volume. By
-convention, the read/write path is indicated by placing a period before the
-cell name at the pathname's second level (for example,
-B</afs/.abc.com>). For further discussion of the
-concept of read/write and read-only paths through the filespace, see the
-reference page for the B<fs mkmount> command.
+from attempting to create a new file in a read-only volume. By convention,
+the read/write path is indicated by placing a period before the cell name
+at the pathname's second level (for example, F</afs/.abc.com>). For
+further discussion of the concept of read/write and read-only paths
+through the filespace, see the reference page for the B<fs mkmount>
+command.
 
-=item I<mode_bits
->
+=item <mode>
 
-Sets the file's UNIX mode bits. Acceptable values are the
-standard three- or four-digit numbers corresponding to combinations of
-permissions. Examples: B<755> corresponds to
-B<rwxr-xr-x>, and B<644> to B<rw-r--r-->.
+Sets the file's UNIX mode bits. Acceptable values are the standard three-
+or four-digit numbers corresponding to combinations of
+permissions. Examples: C<755> corresponds to C<rwxr-xr-x>, and C<644> to
+C<rw-r--r-->.
 
-=item I<owner
->
+=item <owner>
 
 Specifies the username or UNIX user ID (UID) of the user to be designated
-the file's owner in the output from the UNIX B<ls -l>
-command. If the file resides in AFS, place the $UID variable in this
-field. If the file resides on the local disk, specify the username or
-UID of the B<uss> command's issuer; otherwise, the account
-creation operation halts immediately.
+the file's owner in the output from the UNIX C<ls -l> command. If the file
+resides in AFS, place the $UID variable in this field. If the file
+resides on the local disk, specify the username or UID of the B<uss>
+command's issuer; otherwise, the account creation operation halts
+immediately.
 
-=item I<prototype_file
->
+=item <prototype_file>
 
 Names the AFS or local disk directory that houses the prototype file to
-copy. The prototype file's name must match the final element in
-the I<pathname> field.
+copy. The prototype file's name must match the final element in the
+<pathname> field.
 
 =back
 
-L<(1)>The G Instruction for Facilitating Even
-Distribution of Home Directories
-L<(1)>
-L<(1)>
-L<(1)>
-L<(1)>
-L<(1)>
-L<(1)>
+=head2 The G Instruction for Even Distribution of Home Directories
 
-The B<G> instruction in a uss template file creates a
-directory as one of the set of directories from which the B<uss>
-command interpreter selects when choosing a new user home directory's
-parent directory. More specifically, when the $AUTO variable appears in
-the I<mount_point> field of a B<V> instruction, the command
-interpreter substitutes for it the directory defined by a B<G>
-instruction that currently has the fewest entries.
+The C<G> instruction in a uss template file creates a directory as one of
+the set of directories from which the B<uss> command interpreter selects
+when choosing a new user home directory's parent directory. More
+specifically, when the $AUTO variable appears in the <mount_point>
+field of a C<V> instruction, the command interpreter substitutes for it
+the directory defined by a C<G> instruction that currently has the fewest
+entries.
 
-The instruction's intended use is to distribute user accounts evenly
-among several directories, rather than using directories that reflect
-divisions such as departmental affiliation. Distributing home
-directories in this fashion is useful mainly in very large cells where storing
-all user home directories under a single parent directory potentially slows
-directory lookup, or where a workplace-based division results in unevenly
-sized directories such that some users consistently experience slower
-directory lookup than others. See the chapter on B<uss> in the
-I<IBM AFS Administration Guide> for more information.
+The instruction's intended use is to distribute user accounts evenly among
+several directories, rather than using directories that reflect divisions
+such as departmental affiliation. Distributing home directories in this
+fashion is useful mainly in very large cells where storing all user home
+directories under a single parent directory potentially slows directory
+lookup, or where a workplace-based division results in unevenly sized
+directories such that some users consistently experience slower directory
+lookup than others. See the chapter on B<uss> in the I<IBM AFS
+Administration Guide> for more information.
 
-Any number of G instructions can appear in the template
-file. If the B<V> instruction includes the $AUTO variable, it
-must appear after all of the B<G> instructions in the file.
+Any number of C<G> instructions can appear in the template file. If the
+C<V> instruction includes the $AUTO variable, it must appear after all
+of the C<G> instructions in the file.
 
 The instruction has the following syntax:
 
-   G  I<directory>
+   G <directory>
 
 where
 
@@ -564,68 +474,51 @@ where
 Indicates an instruction that creates a directory to be considered as a
 value for the $AUTO variable. It must be a capital letter.
 
-=item I<directory
->
+=item <directory>
 
-Specifies the directory's name as either a complete pathname or only
-the directory name. The choice determines the appropriate format for
-the I<mount_point> field of a B<V> instruction, as discussed in
-the following example.
+Specifies the directory's name as either a complete pathname or only the
+directory name. The choice determines the appropriate format for the
+<mount_point> field of a C<V> instruction, as discussed in the following
+example.
 
 Specify the read/write path to the directory, to avoid the failure that
-results from attempting to create a new mount point in a read-only volume when
-the $AUTO variable is used in a B<V> instruction's
-I<mount_point> field. By convention, the read/write path is
-indicated by placing a period before the cell name at the pathname's
-second level (for example, B</afs/.abc.com>). For
-further discussion of the concept of read/write and read-only paths through
-the filespace, see the reference page for the B<fs mkmount>
-command.
+results from attempting to create a new mount point in a read-only volume
+when the $AUTO variable is used in a C<V> instruction's <mount_point>
+field. By convention, the read/write path is indicated by placing a period
+before the cell name at the pathname's second level (for example,
+F</afs/.abc.com>). For further discussion of the concept of read/write and
+read-only paths through the filespace, see the reference page for the B<fs
+mkmount> command.
 
 =back
 
-The L and S Instructions for Creating a Link
-L<(1)>
-L<(1)>
-L<(1)>
-L<(1)>
-L<(1)>
-L<(1)>
-L<(1)>
-L<(1)>
-L<(1)>
-L<(1)>
-L<(1)>
-L<(1)>
-L<(1)>
+=head2 The L and S Instructions for Creating a Link
 
-The B<L> instruction in a uss template file creates a
-hard link between two files, as achieved by the standard UNIX B<ln>
-command. The B<S> instruction creates a symbolic link between
-two files, as achieved by the standard UNIX B<ln -s> command. A
-full explanation of links is beyond the scope of this document, but the basic
-effect is to create a second name for an existing file, enabling access via
-either name. Creating a link does not create a second copy of the
-file.
+The C<L> instruction in a uss template file creates a hard link between
+two files, as achieved by the standard UNIX B<ln> command. The C<S>
+instruction creates a symbolic link between two files, as achieved by the
+standard UNIX C<ln -s> command. A full explanation of links is beyond the
+scope of this document, but the basic effect is to create a second name
+for an existing file, enabling access via either name. Creating a link
+does not create a second copy of the file.
 
 AFS allows hard links only if the linked files reside in the same
-directory, because it becomes difficult to determine which access control list
-(ACL) applies to the file if the two copies reside in directories with
-different ACLs. AFS allows symbolic links between two files that reside
-in different directories, or even different volumes. The File Server
-uses the ACL associated with the actual file rather than the link.
+directory, because it becomes difficult to determine which access control
+list (ACL) applies to the file if the two copies reside in directories
+with different ACLs. AFS allows symbolic links between two files that
+reside in different directories, or even different volumes. The File
+Server uses the ACL associated with the actual file rather than the link.
 
-Any number of B<L> and S instructions can appear in the
-template file. If the existing file or link is to reside in a directory
-created by a B<D> instruction, or if the existing file was created by
-an B<E> or B<F> instruction, the B<L> or B<S>
-instruction must follow the B<D>, B<E>, or B<F>
-instruction.
+Any number of C<L> and C<S> instructions can appear in the template
+file. If the existing file or link is to reside in a directory created by
+a C<D> instruction, or if the existing file was created by an C<E> or C<F>
+instruction, the C<L> or C<S> instruction must follow the C<D>, C<E>, or
+C<F> instruction.
 
 The instructions share the following syntax:
 
-   L  I<existing_file>  I<link>
-   S  I<existing_file>  I<link>
+   L <existing_file> <link>
+   S <existing_file> <link>
 
 where
 
@@ -633,75 +526,50 @@ where
 
 =item L
 
-Indicates a hard link creation instruction. It must be a capital
-letter.
+Indicates a hard link creation instruction. It must be a capital letter.
 
 =item S
 
-Indicates a symbolic link creation instruction. It must be a
-capital letter.
+Indicates a symbolic link creation instruction. It must be a capital
+letter.
 
-=item I<existing_file
->
+=item <existing_file>
 
 Specifies the complete pathname of the existing file.
 
-=item I<link
->
+=item <link>
 
 Specifies the complete pathname of the second name for the file.
 
 Specify the read/write path to the link, to avoid the failure that results
-from attempting to create a new link in a read-only volume. By
-convention, the read/write path is indicated by placing a period before the
-cell name at the pathname's second level (for example,
-B</afs/.abc.com>). For further discussion of the
-concept of read/write and read-only paths through the filespace, see the
-reference page for the B<fs mkmount> command.
+from attempting to create a new link in a read-only volume. By convention,
+the read/write path is indicated by placing a period before the cell name
+at the pathname's second level (for example, F</afs/.abc.com>). For
+further discussion of the concept of read/write and read-only paths
+through the filespace, see the reference page for the B<fs mkmount>
+command.
 
 =back
 
-L<(1)>The V Instruction for Creating and
-Mounting a Volume
-L<(1)>
-L<(1)>
-L<(1)>
-L<(1)>
-L<(1)>
-L<(1)>
-L<(1)>
-L<(1)>
-L<(1)>
-L<(1)>
-L<(1)>
-L<(1)>
-L<(1)>
-L<(1)>
-L<(1)>
-L<(1)>
-L<(1)>
-L<(1)>
-L<(1)>
+=head2 The V Instruction for Creating and Mounting a Volume
 
-The B<V> instruction in a uss template file creates a
-volume on a specified file server machine and partition and creates an entry
-for it in the Volume Location Database (VLDB). It mounts the volume at
-a location in the AFS file space that becomes the user's home directory,
-then designates the directory's owner and sets its access control list
-(ACL).
+The C<V> instruction in a uss template file creates a volume on a
+specified file server machine and partition and creates an entry for it in
+the Volume Location Database (VLDB). It mounts the volume at a location in
+the AFS file space that becomes the user's home directory, then designates
+the directory's owner and sets its access control list (ACL).
 
-Only one V instruction can appear in the template file, and one
-must appear if the template file contains any instructions at all (is not
-empty). All other instructions are optional, except that the template
-must include B<G> instructions if the $AUTO variable appears in
-it. (The B<V> instruction is not necessarily the first line in
-the template. If the template includes the $AUTO variable, then the
-B<G> instructions which provide values for the variable must precede
-it in the file.)
+Only one C<V> instruction can appear in the template file, and one must
+appear if the template file contains any instructions at all (is not
+empty). All other instructions are optional, except that the template must
+include C<G> instructions if the $AUTO variable appears in it. (The
+C<V> instruction is not necessarily the first line in the template. If the
+template includes the $AUTO variable, then the C<G> instructions which
+provide values for the variable must precede it in the file.)
 
 The instruction has the following syntax:
 
-   V  I<volume_name>  I<server>  I<partition>  I<quota>  I<mount_point> I<owner>  I<ACL>
+   V <vname> <server> <partition> <quota> <mount_point> <owner> <ACL>
 
 where
 
@@ -709,127 +577,111 @@ where
 
 =item V
 
-Indicates a volume creation instruction. It must be a capital
-letter.
+Indicates a volume creation instruction. It must be a capital letter.
 
-=item I<volume_name
->
+=item <name>
 
-Specifies the volume's name. To follow the convention for AFS
-user volume names, specify the value B<user.$USER>.
-Provide a value for the $USER variable via the B<uss add>
-command's B<-user> argument or the I<username> field in the
-bulk input file B<add> instruction.
+Specifies the volume's name. To follow the convention for AFS user volume
+names, specify the value C<user.$USER>.  Provide a value for the $USER
+variable via the B<uss add> command's B<-user> argument or the <username>
+field in the bulk input file B<add> instruction.
 
-=item I<server
->
+=item <server>
 
-Names the file server machine on which to create the new user's
-volume. It is best to provide the fully-qualified hostname (for
-example, B<fs1.abc.com>), but an abbreviated form is
-acceptable provided that the cell's naming service is available to
-resolve it at the time the volume is created. To read in the value from
-the B<uss add> command's B<-server> argument, specify the
-value B<$SERVER>.
+Names the file server machine on which to create the new user's volume. It
+is best to provide the fully-qualified hostname (for example,
+C<fs1.abc.com>), but an abbreviated form is acceptable provided that the
+cell's naming service is available to resolve it at the time the volume is
+created. To read in the value from the B<uss add> command's B<-server>
+argument, specify the value $SERVER.
 
-=item I<partition
->
+=item <partition>
 
-Specifies the partition on which to create the user's volume; it
-must be on the file server machine named in the I<server> field.
-Identify the partition by its complete name (for example, B</vicepa>)
-or use or use one of the following abbreviations. 
+Specifies the partition on which to create the user's volume; it must be
+on the file server machine named in the <server> field.  Identify the
+partition by its complete name (for example, F</vicepa>) or use or use one
+of the following abbreviations.
 
-   B</vicepa>     =     B<vicepa>      =      B<a>      =      0
-   B</vicepb>     =     B<vicepb>      =      B<b>      =      1
+   /vicepa     =     vicepa      =      a      =      0
+   /vicepb     =     vicepb      =      b      =      1
 
-After /vicepz (for which the index is 25) comes 
+After F</vicepz> (for which the index is 25) comes 
 
-   B</vicepaa>    =     B<vicepaa>     =      B<aa>     =      26
-   B</vicepab>    =     B<vicepab>     =      B<ab>     =      27
+   /vicepaa    =     vicepaa     =      aa     =      26
+   /vicepab    =     vicepab     =      ab     =      27
 
 and so on through 
 
-   B</vicepiv>    =     B<vicepiv>     =      B<iv>     =      255
+   /vicepiv    =     vicepiv     =      iv     =      255
 
-To read in the value from the uss add command's
-B<-partition> argument, specify the value B<$PART>.
+To read in the value from the B<uss add> command's B<-partition> argument,
+specify the value $PART.
 
-=item I<quota
->
+=item <quota>
 
 Sets the maximum number of kilobyte blocks the volume can occupy on the
-file server machine's disk. Specify an integer constant if all
-volumes have the same quota (B<1024> equals a megabyte), or use one of
-the number variables ($1 through $9) to assign different values to different
-volumes.
+file server machine's disk. Specify an integer constant if all volumes
+have the same quota (C<1024> equals a megabyte), or use one of the number
+variables ($1 through $9) to assign different values to different volumes.
 
-=item I<mount_point
->
+=item <mount_point>
 
-Creates a mount point for the volume, which serves as the volume's
-root directory. Include the $USER variable as part of the pathname to
-follow the convention that user home directory names include the
-username.
+Creates a mount point for the volume, which serves as the volume's root
+directory. Include the $USER variable as part of the pathname to follow
+the convention that user home directory names include the username.
 
 Specify the read/write path to the mount point, to avoid the failure that
 results from attempting to create a new mount point in a read-only
 volume. By convention, the read/write path is indicated by placing a
 period before the cell name at the pathname's second level (for example,
-B</afs/.abc.com>). If the $AUTO variable appears
-in this field, the directories named by each B<G> instruction possibly
-already indicate the read/write path. For further discussion of the
-concept of read/write and read-only paths through the filespace, see the
-reference page for the B<fs mkmount> command..
+F</afs/.abc.com>). If the $AUTO variable appears in this field, the
+directories named by each C<G> instruction possibly already indicate the
+read/write path. For further discussion of the concept of read/write and
+read-only paths through the filespace, see the reference page for the B<fs
+mkmount> command.
 
-=item I<owner
->
+=item <owner>
 
 Specifies the username or UNIX user ID (UID) of the user to be designated
-the mount point's owner in the output from the UNIX B<ls -ld>
-command. To follow the convention for home directory ownership, place
-the value B<$UID> in this field.
+the mount point's owner in the output from the UNIX C<ls -ld> command. To
+follow the convention for home directory ownership, place the value
+$UID in this field.
 
-=item I<ACL
->
+=item <ACL>
 
-Sets the ACL on the new directory. Provide one or more paired
-values, each pair consisting of an AFS username or group name and the desired
-permissions, in that order. Separate the two parts of the pair, and
-each pair, with a space. The B<fs setacl> reference page
-describes the available permissions.
+Sets the ACL on the new directory. Provide one or more paired values, each
+pair consisting of an AFS username or group name and the desired
+permissions, in that order. Separate the two parts of the pair, and each
+pair, with a space. The B<fs setacl> reference page describes the
+available permissions.
 
 Grant all permissions to the new user at least. The appropriate
-value is B<$USER all>.
+value is C<$USER all>.
 
-AFS automatically grants the system:administrators group
-all permissions as well. It is not possible to grant any permissions to
-the issuer of the B<uss> command. As the last step in account
-creation, the B<uss> command interpreter automatically deletes that
-user from any ACLs set during the creation process.
+AFS automatically grants the system:administrators group all permissions
+as well. It is not possible to grant any permissions to the issuer of the
+B<uss> command. As the last step in account creation, the B<uss> command
+interpreter automatically deletes that user from any ACLs set during the
+creation process.
 
 =back
 
-L<(1)>The X Instruction for Running a
-Command
-L<(1)>
-L<(1)>
-L<(1)>
+=head2 The X Instruction for Running a Command
 
-The B<X> instruction in a uss template file runs the
-indicated command, which can be a standard UNIX or AFS command. It can
-include any variables from the template file, which the B<uss> command
-interpreter resolves before passing the command on to the appropriate other
-command interpreter. It must be a single line only, however (cannot
-contain carriage returns or newline characters).
+The C<X> instruction in a uss template file runs the indicated command,
+which can be a standard UNIX or AFS command. It can include any variables
+from the template file, which the B<uss> command interpreter resolves
+before passing the command on to the appropriate other command
+interpreter. It must be a single line only, however (cannot contain
+carriage returns or newline characters).
 
-Any number of X instructions can appear in the template
-file. If an instruction manipulates an element created by another
-instruction, it must follow that instruction in the file.
+Any number of C<X> instructions can appear in the template file. If an
+instruction manipulates an element created by another instruction, it must
+follow that instruction in the file.
 
 The instruction has the following syntax:
 
-   B<X ">I<command>"
+   X "<command>"
 
 where
 
@@ -837,111 +689,102 @@ where
 
 =item X
 
-Indicates a command execution instruction. It must be a capital
-letter.
+Indicates a command execution instruction. It must be a capital letter.
 
-=item I<command
->
+=item <command>
 
-Specifies the command to run. Surround it with double quotes as
-shown if it contains one or more spaces. It can contain any variables
-from the template file, but not newline characters.
+Specifies the command to run. Surround it with double quotes as shown if
+it contains one or more spaces. It can contain any variables from the
+template file, but not newline characters.
 
 =back
 
 =head1 EXAMPLES
 
-The following example A instruction sets a password lifetime of
-254 days, prohibits password reuse, limits the number of consecutive failed
+The following example A instruction sets a password lifetime of 254 days,
+prohibits password reuse, limits the number of consecutive failed
 authentication attempts to nine and sets the corresponding locktime to
-25:30 minutes (which is a multiple of 8.5 minutes). The
-username is read in from the B<-user> argument to the B<uss
-add> command or from the I<username> field in each B<add>
-instruction in a bulk input file.
+25:30 minutes (which is a multiple of 8.5 minutes). The username is read
+in from the B<-user> argument to the B<uss add> command or from the
+I<username> field in each C<add> instruction in a bulk input file.
 
    A $USER 254 noreuse 9 25:30
 
-The following example D instruction creates a directory called
-I<public> in a new user's home directory, designates the user as
-the directory's owner, and grants him or her all ACL permissions.
+The following example C<D> instruction creates a directory called
+F<public> in a new user's home directory, designates the user as the
+directory's owner, and grants him or her all ACL permissions.
 
    D $MTPT/public 0755 $UID $USER all 
 
-The following example E instruction creates a file in the
-current working directory called
-I<username>.B<etcp>. The contents are an entry
-suitable for incorporating into the cell's global
-B</etc/password> file.
+The following example C<E> instruction creates a file in the current
+working directory called F<I<username>.etcp>. The contents are an entry
+suitable for incorporating into the cell's global F</etc/password> file.
 
    E  $USER.etcp  0644 root "$USER:X:$UID:10:$NAME:$MTPT:/bin/csh"
 
-The following example F instruction, appropriate for the ABC
-Corporation cell, copies a prototype B<.login> file into the
-user's home directory.
+The following example C<F> instruction, appropriate for the ABC
+Corporation cell, copies a prototype F<.login> file into the user's home
+directory.
 
    F $MTPT/.login 0644 $UID /afs/abc.com/common/uss/skel/.login 
 
 In the following example, the State University cell's administrators
 have decided to distribute user home directories evenly into three
-directories. They define three B<G> instructions:
+directories. They define three C<G> instructions:
 
    G usr1
    G usr2
    G usr3
 
-and then put the following value in the I<mount_point> field of the
-B<V> instruction:
+and then put the following value in the <mount_point> field of the C<V>
+instruction:
 
    /afs/stateu.edu/$AUTO/$USER
 
-Alternatively, if they include the entire directory pathname in the
-B<G> instruction:
+Alternatively, if they include the entire directory pathname in the C<G>
+instruction:
 
    G /afs/stateu.edu/usr1
    G /afs/stateu.edu/usr2
    G /afs/stateu.edu/usr3
 
-then the I<mount_point> field of the V instruction
-specifies only the following:
+then the <mount_point> field of the C<V> instruction specifies only the
+following:
 
    $AUTO/$USER
 
-The following example L instruction creates a hard link between
-the files B<mail> and B<mbox> in the user's home
-directory.
+The following example C<L> instruction creates a hard link between the
+files F<mail> and F<mbox> in the user's home directory.
 
    L $MTPT/mbox $MTPT/mail
 
-The following example S instruction, appropriate for the ABC
-Corporation cell, links the file B<Mail/outgoing> in the user's
-home directory to the file
-B</afs/abc.com/common/mail/outgoing>.
+The following example C<S> instruction, appropriate for the ABC
+Corporation cell, links the file F<Mail/outgoing> in the user's home
+directory to the file F</afs/abc.com/common/mail/outgoing>.
 
    S /afs/abc.com/common/mail/outgoing $MTPT/Mail/outgoing
 
-The following example V instruction creates a volume called
-B<user.>I<username> on the B</vicepa> partition
-of the specified file server machine, assigning it a quota of 3000 kilobyte
-blocks. The mount point is under B</afs/abc.com/usr> and
-matches the username (the value of the $USER variable). The user owns
-the home directory and has all access rights to it. The instruction
-appears on two lines only for legibility; it must appear on a single line
-in the template file.
+The following example C<V> instruction creates a volume called
+C<user.I<username>> on the F</vicepa> partition of the specified file
+server machine, assigning it a quota of 3000 kilobyte blocks. The mount
+point is under F</afs/abc.com/usr> and matches the username (the value of
+the $USER variable). The user owns the home directory and has all
+access rights to it. The instruction appears on two lines only for
+legibility; it must appear on a single line in the template file.
 
-   V user.$USER $SERVER.abc.com /vicepa 3000   \
+   V user.$USER $SERVER.abc.com /vicepa 3000 \
            /afs/abc.com/usr/$USER $UID $USER all 
 
-The following example X instruction mounts the backup version of
-the user's volume at the B<OldFiles> subdirectory.
+The following example C<X> instruction mounts the backup version of the
+user's volume at the F<OldFiles> subdirectory.
 
    X "fs mkm /afs/abc.com/usr/$USER/OldFiles   user.$USER.backup"
 
 =head1 SEE ALSO
 
-L<uss Bulk Input File(1)>
-
+L<uss_bulk(5)>,
 L<fs_mkmount(1)>,
-L<uss_add(1)>
+L<uss_add(8)>
 
 =head1 COPYRIGHT
 

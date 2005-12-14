@@ -203,6 +203,8 @@ configuration files in the local F</usr/afs/backup> directory.
 L<KeyFile(5)>,
 L<ThisCell(5)>,
 L<UserList(5)>,
+L<butc(5)>,
+L<butc_logs(5)>,
 L<tapeconfig(5)>,
 L<backup_addhost(8)>
 

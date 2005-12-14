@@ -199,6 +199,7 @@ included.
 
 =head1 SEE ALSO
 
+L<butc(5)>,
 L<backup(8)>,
 L<backup_readlabel(8)>,
 L<butc(1)>
