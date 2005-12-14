@@ -99,8 +99,7 @@ GetMeAnEntry()
 }
 
 static void 
-InsertEntry(tnc)
-    cm_nc_t *tnc;
+InsertEntry(cm_nc_t *tnc)
 {
     unsigned int key; 
     key = tnc->key & (NHSIZE -1);
@@ -312,9 +311,7 @@ cm_dnlcLookup (cm_scache_t *adp, cm_lookupSearch_t* sp)
 
 
 static int
-RemoveEntry (tnc, key)
-    cm_nc_t    *tnc;
-    unsigned int key;
+RemoveEntry (cm_nc_t *tnc, unsigned int key)
 {
     if (!tnc->prev) /* things on freelist always have null prev ptrs */
     {
@@ -340,9 +337,7 @@ RemoveEntry (tnc, key)
 
 
 void 
-cm_dnlcRemove ( adp, aname)
-    cm_scache_t *adp;
-    char          *aname;
+cm_dnlcRemove (cm_scache_t *adp, char *aname)
 {
     unsigned int key, skey, error=0;
     int found= 0, safety;
@@ -407,8 +402,7 @@ cm_dnlcRemove ( adp, aname)
 
 /* remove anything pertaining to this directory */
 void 
-cm_dnlcPurgedp (adp)
-  cm_scache_t *adp;
+cm_dnlcPurgedp (cm_scache_t *adp)
 {
     int i;
     int err=0;
@@ -445,8 +439,7 @@ cm_dnlcPurgedp (adp)
 
 /* remove anything pertaining to this file */
 void 
-cm_dnlcPurgevp ( avc )
-  cm_scache_t *avc;
+cm_dnlcPurgevp (cm_scache_t *avc)
 {
     int i;
     int err=0;
@@ -509,9 +502,9 @@ void cm_dnlcPurge(void)
 }
 
 /* remove everything referencing a specific volume */
+/* is this function ever called? */
 void
-cm_dnlcPurgeVol( fidp )
-  AFSFid *fidp;
+cm_dnlcPurgeVol(AFSFid *fidp)
 {
 
     if (!cm_useDnlc)
