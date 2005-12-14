@@ -573,9 +573,12 @@ int afsd_InitCM(char **reasonP)
     code = osi_InitDebug(&debugID);
     afsi_log("osi_InitDebug code %d", code);
 
-    //	osi_LockTypeSetDefault("stat");	/* comment this out for speed *
+    //	osi_LockTypeSetDefault("stat");	/* comment this out for speed */
     if (code != 0) {
-        *reasonP = "unknown error";
+        if (code == RPC_S_NO_PROTSEQS)
+            *reasonP = "No RPC Protocol Sequences registered.  Check HKLM\\SOFTWARE\\Microsoft\\RPC\\ClientProtocols";
+        else
+            *reasonP = "unknown error";
         return -1;
     }
 
