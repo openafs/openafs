@@ -420,12 +420,43 @@ osi_auditU(struct rx_call *call, char *audEvent, int errCode, ...)
                     }
                     if ((clen = strlen(tcell))) {
 #if defined(AFS_ATHENA_STDENV) || defined(AFS_KERBREALM_ENV)
-                        static char local_realm[AFS_REALM_SZ] = "";
-                        if (!local_realm[0]) {
-                            if (afs_krb_get_lrealm(local_realm, 0) != 0 /*KSUCCESS*/)
-                                strncpy(local_realm, "UNKNOWN.LOCAL.REALM", AFS_REALM_SZ);
+                        static char local_realms[AFS_NUM_LREALMS][AFS_REALM_SZ];
+			static int  num_lrealms = -1;
+			int i, lrealm_match;
+
+			if (num_lrealms == -1) {
+			    for (i=0; i<AFS_NUM_LREALMS; i++) {
+				if (afs_krb_get_lrealm(local_realms[i], i) != 0 /*KSUCCESS*/)
+				    break;
+			    }
+
+			    if (i=0)
+				strncpy(local_realms[0], "UNKNOWN.LOCAL.REALM", AFS_REALM_SZ);
+			    num_lrealms = i;
                         }
-                        if (strcasecmp(local_realm, tcell)) {
+
+			/* Check to see if the ticket cell matches one of the local realms */
+			lrealm_match = 0;
+			for ( i=0;i<num_lrealms;i++ ) {
+			    if (!strcasecmp(local_realms[i], tcell)) {
+				lrealm_match = 1;
+				break;
+			    }
+			}
+			/* If yes, then make sure that the name is not present in 
+  			 * an exclusion list */
+			if (lrealm_match) {
+			    char uname[256];
+			    if (inst[0])
+				snprintf(uname,sizeof(uname),"%s.%s@%s",name,inst,tcell);
+			    else
+				snprintf(uname,sizeof(uname),"%s@%s",name,tcell);
+
+			    if (afs_krb_exclusion(uname))
+				lrealm_match = 0;
+			}
+
+			if (!lrealm_match) {	
                             if (strlen(vname) + 1 + clen >= sizeof(vname))
                                 goto done;
                             strcat(vname, "@");

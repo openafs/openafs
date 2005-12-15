@@ -1348,20 +1348,34 @@ h_GetHost_r(struct rx_connection *tcon)
 
 
 static char localcellname[PR_MAXNAMELEN + 1];
-char local_realm[AFS_REALM_SZ] = "";
+char local_realms[AFS_NUM_LREALMS][AFS_REALM_SZ];
+int  num_lrealms = -1;
 
 /* not reentrant */
 void
 h_InitHostPackage()
 {
     afsconf_GetLocalCell(confDir, localcellname, PR_MAXNAMELEN);
-    if (!local_realm[0]) {
-	if (afs_krb_get_lrealm(local_realm, 0) != 0 /*KSUCCESS*/) {
+    if (num_lrealms == -1) {
+	int i;
+	for (i=0; i<AFS_NUM_LREALMS; i++) {
+	    if (afs_krb_get_lrealm(local_realms[i], i) != 0 /*KSUCCESS*/)
+		break;
+	}
+
+	if (i=0) {
 	    ViceLog(0,
 		    ("afs_krb_get_lrealm failed, using %s.\n",
 		     localcellname));
-	    strcpy(local_realm, localcellname);
+	    strncpy(local_realms[0], localcellname, AFS_REALM_SZ);
+	    num_lrealms = i =1;
+	} else {
+	    num_lrealms = i;
 	}
+
+	/* initialize the rest of the local realms to nullstring for debugging */
+	for (; i<AFS_NUM_LREALMS; i++)
+	    local_realms[i][0] = '\0';
     }
     rxcon_ident_key = rx_KeyCreate((rx_destructor_t) free);
     rxcon_client_key = rx_KeyCreate((rx_destructor_t) 0);
@@ -1391,11 +1405,10 @@ MapName_r(char *aname, char *acell, afs_int32 * aval)
 
     cnamelen = strlen(acell);
     if (cnamelen) {
-	if (strcasecmp(local_realm, acell)
-	    && strcasecmp(localcellname, acell)) {
+	if (afs_is_foreign_ticket_name(aname, "", acell, localcellname)) {
 	    ViceLog(2,
-		    ("MapName: cell is foreign.  cell=%s, localcell=%s, localrealm=%s\n",
-		     acell, localcellname, local_realm));
+		    ("MapName: cell is foreign.  cell=%s, localcell=%s, localrealms={%s,%s,%s,%s}\n",
+		    acell, localcellname, local_realms[0],local_realms[1],local_realms[2],local_realms[3]));
 	    if ((anamelen + cnamelen + 1) >= PR_MAXNAMELEN) {
 		ViceLog(2,
 			("MapName: Name too long, using AnonymousID for %s@%s\n",

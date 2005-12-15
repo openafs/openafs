@@ -93,6 +93,7 @@ extern struct ubik_dbase *dbase;
 extern afs_int32 Initdb();
 extern int pr_noAuth;
 extern afs_int32 initd;
+extern char *pr_realmName;
 afs_int32 iNewEntry(), newEntry(), whereIsIt(), dumpEntry(), addToGroup(),
 nameToID(), Delete(), removeFromGroup();
 afs_int32 getCPS(), getCPS2(), getHostCPS(), listMax(), setMax(), listEntry();
@@ -179,22 +180,9 @@ WhoIsThis(acall, at, aid)
 	if (exp < FT_ApproxTime())
 	    goto done;
 #endif
-	if (strlen(tcell)) {
-	    extern char *pr_realmName;
-#if	defined(AFS_ATHENA_STDENV) || defined(AFS_KERBREALM_ENV)
-	    static char local_realm[AFS_REALM_SZ] = "";
-	    if (!local_realm[0]) {
-		if (afs_krb_get_lrealm(local_realm, 0) != 0 /*KSUCCESS*/)
-		    strncpy(local_realm, pr_realmName, AFS_REALM_SZ);
-	    }
-#endif
-	    if (
-#if	defined(AFS_ATHENA_STDENV) || defined(AFS_KERBREALM_ENV)
-		   strcasecmp(local_realm, tcell) &&
-#endif
-		   strcasecmp(pr_realmName, tcell))
-		foreign = 1;
-	}
+	if (tcell[0])
+	    foreign = afs_is_foreign_ticket_name(tcell,name,inst,pr_realmName);
+
 	strncpy(vname, name, sizeof(vname));
 	if (ilen = strlen(inst)) {
 	    if (strlen(vname) + 1 + ilen >= sizeof(vname))
@@ -2295,7 +2283,6 @@ addWildCards(tt, alist, host)
 }
 #endif /* IP_WILDCARDS */
 
-
 afs_int32
 WhoIsThisWithName(acall, at, aid, aname)
      struct rx_call *acall;
@@ -2323,11 +2310,12 @@ WhoIsThisWithName(acall, at, aid, aname)
     } else if (code == 2) {	/* kad class */
 
 	int clen;
-	extern char *pr_realmName;
 
 	if ((code = rxkad_GetServerInfo(acall->conn, NULL, 0 /*was &exp */ ,
 					name, inst, tcell, NULL)))
 	    goto done;
+
+
 	strncpy(vname, name, sizeof(vname));
 	if ((ilen = strlen(inst))) {
 	    if (strlen(vname) + 1 + ilen >= sizeof(vname))
@@ -2336,19 +2324,9 @@ WhoIsThisWithName(acall, at, aid, aname)
 	    strcat(vname, inst);
 	}
 	if ((clen = strlen(tcell))) {
+	    int foreign = afs_is_foreign_ticket_name(tcell,name,inst,pr_realmName);
 
-#if	defined(AFS_ATHENA_STDENV) || defined(AFS_KERBREALM_ENV)
-	    static char local_realm[AFS_REALM_SZ] = "";
-	    if (!local_realm[0]) {
-		if (afs_krb_get_lrealm(local_realm, 0) != 0 /*KSUCCESS*/)
-		    strncpy(local_realm, pr_realmName, AFS_REALM_SZ);
-	    }
-#endif
-	    if (
-#if	defined(AFS_ATHENA_STDENV) || defined(AFS_KERBREALM_ENV)
-		   strcasecmp(local_realm, tcell) &&
-#endif
-		   strcasecmp(pr_realmName, tcell)) {
+	    if (foreign) {
 		if (strlen(vname) + 1 + clen >= sizeof(vname))
 		    goto done;
 		strcat(vname, "@");

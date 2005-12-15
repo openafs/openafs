@@ -403,7 +403,9 @@ afsconf_SuperUser(adir, acall, namep)
 
 	afs_uint32 exp;
 	static char lcell[MAXCELLCHARS] = "";
-	static char lrealm[AFS_REALM_SZ] = "";
+	static char lrealms[AFS_NUM_LREALMS][AFS_REALM_SZ];
+	static int  num_lrealms = -1;
+	int lrealm_match = 0, i;
 
 	/* get auth details from server connection */
 	code =
@@ -440,11 +442,40 @@ afsconf_SuperUser(adir, acall, namep)
 	/* if running a krb environment, also get the local realm */
 	/* note - this assumes AFS_REALM_SZ <= MAXCELLCHARS */
 	/* just set it to lcell if it fails */
-	if (!lrealm[0]) {
-	    if (afs_krb_get_lrealm(lrealm, 0) != 0)	/* KSUCCESS */
-		strncpy(lrealm, lcell, AFS_REALM_SZ);
+	if (num_lrealms == -1) {
+	    for (i=0; i<AFS_NUM_LREALMS; i++) {
+		if (afs_krb_get_lrealm(lrealms[i], i) != 0 /*KSUCCESS*/)
+		    break;
+	    }
+
+	    if (i=0) {
+		strncpy(lrealms[0], lcell, AFS_REALM_SZ);
+		num_lrealms = 1;
+	    } else {
+		num_lrealms = i;
+	    }
 	}
 
+	/* See if the ticket cell matches one of the local realms */
+	lrealm_match = 0;
+	for ( i=0;i<num_lrealms;i++ ) {
+	    if (!strcasecmp(lrealms[i], tcell)) {
+		lrealm_match = 1;
+		break;
+	    }
+	}
+
+	/* If yes, then make sure that the name is not present in 
+	 * an exclusion list */
+	if (lrealm_match) {
+	    if (tinst[0])
+		snprintf(uname,sizeof(uname),"%s.%s@%s",tname,tinst,tcell);
+	    else
+		snprintf(uname,sizeof(uname),"%s@%s",tname,tcell);
+
+	    if (afs_krb_exclusion(uname))
+		lrealm_match = 0;
+	}
 
 	/* start with no uname and no authorization */
 	strcpy(uname, "");
@@ -456,8 +487,8 @@ afsconf_SuperUser(adir, acall, namep)
 	    strcpy(uname, "<LocalAuth>");
 	    flag = 1;
 
-	    /* cell of connection matches local cell or krb4 realm */
-	} else if (!strcasecmp(tcell, lcell) || !strcasecmp(tcell, lrealm)) {
+	    /* cell of connection matches local cell or one of the realms */
+	} else if (!strcasecmp(tcell, lcell) || lrealm_match) {
 	    if ((tmp = CompFindUser(adir, tname, ".", tinst, NULL))) {
 		strcpy(uname, tmp);
 		flag = 1;
@@ -467,7 +498,6 @@ afsconf_SuperUser(adir, acall, namep)
 		flag = 1;
 #endif
 	    }
-
 	    /* cell of conn doesn't match local cell or realm */
 	} else {
 	    if ((tmp = CompFindUser(adir, tname, ".", tinst, tcell))) {
