@@ -778,6 +778,7 @@ MultiBreakCallBack_r(struct cbstruct cba[], int ncbas,
     int i, j;
     struct rx_connection *conns[MAX_CB_HOSTS];
     static struct AFSCBs tc = { 0, 0 };
+    int multi_to_cba_map[MAX_CB_HOSTS];
 
     assert(ncbas <= MAX_CB_HOSTS);
 
@@ -788,6 +789,7 @@ MultiBreakCallBack_r(struct cbstruct cba[], int ncbas,
 	    continue;
 	}
 	rx_GetConnection(thishost->callback_rxcon);
+	multi_to_cba_map[j] = i;
 	conns[j++] = thishost->callback_rxcon;
 
 #ifdef	ADAPT_MTU
@@ -806,28 +808,14 @@ MultiBreakCallBack_r(struct cbstruct cba[], int ncbas,
 		struct host *hp;
 		char hoststr[16];
 
-		idx = 0;
-		/* If there's an error, we have to hunt for the right host. 
-		 * The conns array _should_ correspond one-to-one to the cba
-		 * array, except in some rare cases it might be missing one 
-		 * or more elements.  So the optimistic case is almost 
-		 * always right.  At worst, it's the starting point for the 
-		 * hunt. */
-		for (hp = 0, i = multi_i; i < j; i++) {
-		    hp = cba[i].hp;	/* optimistic, but usually right */
-		    if (!hp) {
-			break;
-		    }
-		    if (conns[multi_i] == hp->callback_rxcon) {
-			idx = cba[i].thead;
-			break;
-		    }
-		}
+		i = multi_to_cba_map[multi_i];
+		hp = cba[i].hp;
+		idx = cba[i].thead;
 
-		if (!hp) {
+		if (!hp || !idx) {
 		    ViceLog(0,
-			    ("BCB: INTERNAL ERROR: hp=%x, cba=%x\n", hp,
-			     cba));
+			    ("BCB: INTERNAL ERROR: hp=%x, cba=%x, thead=%u\n", 
+			     hp, cba, idx));
 		} else {
 		    /* 
 		     ** try breaking callbacks on alternate interface addresses
