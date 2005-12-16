@@ -879,11 +879,9 @@ static int
 afs_linux_lookup(struct inode *dip, struct dentry *dp)
 #endif
 {
-    struct vattr vattr;
     cred_t *credp = crref();
     struct vcache *vcp = NULL;
     const char *comp = dp->d_name.name;
-    struct dentry *res = NULL;
     struct inode *ip = NULL;
     int code;
 
@@ -894,24 +892,33 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
     code = afs_lookup(VTOAFS(dip), comp, &vcp, credp);
     
     if (vcp) {
-	ip = AFSTOV(vcp);
+	struct vattr vattr;
 
+	ip = AFSTOV(vcp);
 	afs_getattr(vcp, &vattr, credp);
 	afs_fill_inode(ip, &vattr);
     }
     dp->d_op = &afs_dentry_operations;
     dp->d_time = hgetlo(VTOAFS(dip)->m.DataVersion);
     AFS_GUNLOCK();
+
 #if defined(AFS_LINUX24_ENV)
     if (ip && S_ISDIR(ip->i_mode)) {
-            d_prune_aliases(ip);
-            res = d_find_alias(ip);
+	struct dentry *alias;
+
+	alias = d_find_alias(ip);
+	if (alias) {
+	    if (d_invalidate(alias) == 0) {
+		dput(alias);
+	    } else {
+		iput(ip);
+#if defined(AFS_LINUX26_ENV)
+		unlock_kernel();
+#endif
+		return alias;
+	    }
+	}
     }
-    if (res) {
-	if (d_unhashed(res))
-	    d_rehash(res);
-	iput(ip);
-    } else
 #endif
     d_add(dp, ip);
 
@@ -923,10 +930,6 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
     /* It's ok for the file to not be found. That's noted by the caller by
      * seeing that the dp->d_inode field is NULL.
      */
-#if defined(AFS_LINUX24_ENV)
-    if (code == 0)
-        return res;
-#endif
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,2,10)
     if (code == ENOENT)
 	return ERR_PTR(0);
