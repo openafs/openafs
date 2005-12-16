@@ -613,20 +613,20 @@ h_Alloc_r(register struct rx_connection *r_con)
 /* Note: host should be released by caller if 0 == *heldp and non-null */
 /* hostaddr and hport are in network order */
 struct host *
-h_Lookup_r(afs_uint32 hostaddr, afs_uint32 hport, int *heldp)
+h_Lookup_r(afs_uint32 haddr, afs_uint32 hport, int *heldp)
 {
     register afs_int32 now;
     register struct host *host = 0;
     register struct h_hashChain *chain;
-    register index = h_HashIndex(hostaddr);
+    register index = h_HashIndex(haddr);
     extern int hostaclRefresh;
 
   restart:
     for (chain = hostHashTable[index]; chain; chain = chain->next) {
 	host = chain->hostPtr;
 	assert(host);
-	if (!(host->hostFlags & HOSTDELETED) && chain->addr == hostaddr
-	    && host->port == hport) {
+	if (!(host->hostFlags & HOSTDELETED) && chain->addr == haddr
+	    && chain->port == hport) {
 	    *heldp = h_Held_r(host);
 	    if (!*heldp)
 		h_Hold_r(host);
@@ -746,7 +746,7 @@ h_TossStuff_r(register struct host *host)
 	register struct h_hashChain **hp, *th;
 	register struct rx_connection *rxconn;
 	afsUUID *uuidp;
-	afs_uint32 hostAddr;
+	struct AddrPort hostAddrPort;
 	int i;
 
 	if (host->Console & 1)
@@ -800,8 +800,9 @@ h_TossStuff_r(register struct host *host)
 	    /* delete all hash entries for alternate addresses */
 	    assert(host->interface->numberOfInterfaces > 0);
 	    for (i = 0; i < host->interface->numberOfInterfaces; i++) {
-		hostAddr = host->interface->addr[i];
-		for (hp = &hostHashTable[h_HashIndex(hostAddr)]; (th = *hp);
+		hostAddrPort = host->interface->interface[i];
+
+		for (hp = &hostHashTable[h_HashIndex(hostAddrPort.addr)]; (th = *hp);
 		     hp = &th->next) {
 		    assert(th->hostPtr);
 		    if (th->hostPtr == host) {
@@ -935,6 +936,88 @@ hashInsertUuid_r(struct afsUUID *uuid, struct host *host)
     hostUuidHashTable[index] = chain;
 }
 
+
+/* inserts a new HashChain structure corresponding to this address */
+void
+hashInsert_r(afs_uint32 addr, afs_uint16 port, struct host *host)
+{
+    int index;
+    struct h_hashChain *chain;
+
+    /* hash into proper bucket */
+    index = h_HashIndex(addr);
+
+    /* insert into beginning of list for this bucket */
+    chain = (struct h_hashChain *)malloc(sizeof(struct h_hashChain));
+    if (!chain) {
+	ViceLog(0, ("Failed malloc in hashInsert_r\n"));
+	assert(0);
+    }
+    chain->hostPtr = host;
+    chain->next = hostHashTable[index];
+    chain->addr = addr;
+    chain->port = port;
+    hostHashTable[index] = chain;
+
+}
+
+/*
+ * This is called with host locked and held. At this point, the
+ * hostHashTable should not be having entries for the alternate
+ * interfaces. This function has to insert these entries in the
+ * hostHashTable.
+ *
+ * All addresses are in network byte order.
+ */
+int
+addInterfaceAddr_r(struct host *host, afs_uint32 addr, afs_uint16 port)
+{
+    int i;
+    int number;
+    int found;
+    struct Interface *interface;
+
+    assert(host);
+    assert(host->interface);
+
+    ViceLog(125, ("addInterfaceAddr : host %x addr %x:%d\n", host->host, addr, ntohs(port)));
+
+    /*
+     * Make sure this address is on the list of known addresses
+     * for this host.
+     */
+    number = host->interface->numberOfInterfaces;
+    for (i = 0, found = 0; i < number && !found; i++) {
+	if (host->interface->interface[i].addr == addr &&
+	    host->interface->interface[i].port == port)
+	    found = 1;
+    }
+    if (!found) {
+	interface = (struct Interface *)
+	    malloc(sizeof(struct Interface) + (sizeof(struct AddrPort) * number));
+	if (!interface) {
+	    ViceLog(0, ("Failed malloc in addInterfaceAddr_r\n"));
+	    assert(0);
+	}
+	interface->numberOfInterfaces = number + 1;
+	interface->uuid = host->interface->uuid;
+	for (i = 0; i < number; i++)
+	    interface->interface[i] = host->interface->interface[i];
+	interface->interface[number].addr = addr;
+	interface->interface[number].port = port;
+	free(host->interface);
+	host->interface = interface;
+    }
+
+    /*
+     * Create a hash table entry for this address
+     */
+    hashInsert_r(addr, port, host);
+
+    return 0;
+}
+
+
 /* Host is returned held */
 struct host *
 h_GetHost_r(struct rx_connection *tcon)
@@ -947,7 +1030,7 @@ h_GetHost_r(struct rx_connection *tcon)
     int interfValid = 0;
     struct Identity *identP = NULL;
     afs_int32 haddr;
-    afs_int32 hport;
+    afs_int16 hport;
     char hoststr[16], hoststr2[16];
     Capabilities caps;
     struct rx_connection *cb_conn = NULL;
@@ -1210,7 +1293,7 @@ h_GetHost_r(struct rx_connection *tcon)
 			     ntohs(host->port), afs_inet_ntoa_r(oldHost->host,
 								hoststr2),
 			     ntohs(oldHost->port)));
-		    addInterfaceAddr_r(oldHost, haddr);
+		    addInterfaceAddr_r(oldHost, haddr, hport);
 		    host->hostFlags |= HOSTDELETED;
 		    h_Unlock_r(host);
 		    h_Release_r(host);
@@ -1843,7 +1926,8 @@ h_DumpHost(register struct host *host, int held, StreamHandle_t * file)
     (void)STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
     if (host->interface)
 	for (i = 0; i < host->interface->numberOfInterfaces; i++) {
-	    sprintf(tmpStr, " %x", host->interface->addr[i]);
+	    sprintf(tmpStr, " %x:%d", host->interface->interface[i].addr,
+		     ntohs(host->interface->interface[i].port));
 	    (void)STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
 	}
     sprintf(tmpStr, "] holds: ");
@@ -2224,18 +2308,19 @@ h_CheckHosts()
 
 /*
  * This is called with host locked and held. At this point, the
- * hostHashTable should not be having entries for the alternate
+ * hostHashTable should not have any entries for the alternate
  * interfaces. This function has to insert these entries in the
  * hostHashTable.
  *
- * The addresses in the ineterfaceAddr list are in host byte order.
+ * The addresses in the interfaceAddr list are in host byte order.
  */
 int
 initInterfaceAddr_r(struct host *host, struct interfaceAddr *interf)
 {
     int i, j;
     int number, count;
-    afs_int32 myHost;
+    afs_uint32 myAddr;
+    afs_uint16 myPort;
     int found;
     struct Interface *interface;
 
@@ -2247,7 +2332,8 @@ initInterfaceAddr_r(struct host *host, struct interfaceAddr *interf)
 	     interf->numberOfInterfaces));
 
     number = interf->numberOfInterfaces;
-    myHost = host->host;	/* current interface address */
+    myAddr = host->host;	/* current interface address */
+    myPort = host->port;	/* current port */
 
     /* validation checks */
     if (number < 0 || number > AFS_MAX_INTERFACE_ADDR) {
@@ -2268,7 +2354,7 @@ initInterfaceAddr_r(struct host *host, struct interfaceAddr *interf)
 	}
 	if (j == count) {
 	    interf->addr_in[count] = interf->addr_in[i];
-	    if (interf->addr_in[count] == myHost)
+	    if (interf->addr_in[count] == myAddr)
 		found = 1;
 	    count++;
 	}
@@ -2280,7 +2366,7 @@ initInterfaceAddr_r(struct host *host, struct interfaceAddr *interf)
     if (found) {
 	interface = (struct Interface *)
 	    malloc(sizeof(struct Interface) +
-		   (sizeof(afs_int32) * (count - 1)));
+		   (sizeof(struct AddrPort) * (count - 1)));
 	if (!interface) {
 	    ViceLog(0, ("Failed malloc in initInterfaceAddr_r\n"));
 	    assert(0);
@@ -2288,98 +2374,29 @@ initInterfaceAddr_r(struct host *host, struct interfaceAddr *interf)
 	interface->numberOfInterfaces = count;
     } else {
 	interface = (struct Interface *)
-	    malloc(sizeof(struct Interface) + (sizeof(afs_int32) * count));
+	    malloc(sizeof(struct Interface) + (sizeof(struct AddrPort) * count));
 	assert(interface);
 	interface->numberOfInterfaces = count + 1;
-	interface->addr[count] = myHost;
+	interface->interface[count].addr = myAddr;
+	interface->interface[count].port = myPort;
     }
     interface->uuid = interf->uuid;
-    for (i = 0; i < count; i++)
-	interface->addr[i] = interf->addr_in[i];
+    for (i = 0; i < count; i++) {
+	interface->interface[i].addr = interf->addr_in[i];
+	/* We store the port as 7001 because the addresses reported by 
+	 * TellMeAboutYourself and WhoAreYou RPCs are only valid if they
+	 * are coming from fully connected hosts (no NAT/PATs)
+	 */
+	interface->interface[i].port = htons(7001);
+    }
 
     assert(!host->interface);
     host->interface = interface;
 
     for (i = 0; i < host->interface->numberOfInterfaces; i++) {
-	ViceLog(125, ("--- alt address %x\n", host->interface->addr[i]));
+	ViceLog(125, ("--- alt address %x:%d\n", host->interface->interface[i].addr,
+		       ntohs(host->interface->interface[i].port)));
     }
-
-    return 0;
-}
-
-/* inserts a new HashChain structure corresponding to this address */
-void
-hashInsert_r(afs_int32 addr, struct host *host)
-{
-    int index;
-    struct h_hashChain *chain;
-
-    /* hash into proper bucket */
-    index = h_HashIndex(addr);
-
-    /* insert into beginning of list for this bucket */
-    chain = (struct h_hashChain *)malloc(sizeof(struct h_hashChain));
-    if (!chain) {
-	ViceLog(0, ("Failed malloc in hashInsert_r\n"));
-	assert(0);
-    }
-    chain->hostPtr = host;
-    chain->next = hostHashTable[index];
-    chain->addr = addr;
-    hostHashTable[index] = chain;
-
-}
-
-/*
- * This is called with host locked and held. At this point, the
- * hostHashTable should not be having entries for the alternate
- * interfaces. This function has to insert these entries in the
- * hostHashTable.
- *
- * All addresses are in network byte order.
- */
-int
-addInterfaceAddr_r(struct host *host, afs_int32 addr)
-{
-    int i;
-    int number;
-    int found;
-    struct Interface *interface;
-
-    assert(host);
-    assert(host->interface);
-
-    ViceLog(125, ("addInterfaceAddr : host %x addr %d\n", host->host, addr));
-
-    /*
-     * Make sure this address is on the list of known addresses
-     * for this host.
-     */
-    number = host->interface->numberOfInterfaces;
-    for (i = 0, found = 0; i < number && !found; i++) {
-	if (host->interface->addr[i] == addr)
-	    found = 1;
-    }
-    if (!found) {
-	interface = (struct Interface *)
-	    malloc(sizeof(struct Interface) + (sizeof(afs_int32) * number));
-	if (!interface) {
-	    ViceLog(0, ("Failed malloc in addInterfaceAddr_r\n"));
-	    assert(0);
-	}
-	interface->numberOfInterfaces = number + 1;
-	interface->uuid = host->interface->uuid;
-	for (i = 0; i < number; i++)
-	    interface->addr[i] = host->interface->addr[i];
-	interface->addr[number] = addr;
-	free(host->interface);
-	host->interface = interface;
-    }
-
-    /*
-     * Create a hash table entry for this address
-     */
-    hashInsert_r(addr, host);
 
     return 0;
 }
@@ -2387,14 +2404,14 @@ addInterfaceAddr_r(struct host *host, afs_int32 addr)
 /* deleted a HashChain structure for this address and host */
 /* returns 1 on success */
 int
-hashDelete_r(afs_int32 addr, struct host *host)
+hashDelete_r(afs_uint32 addr, afs_uint16 port, struct host *host)
 {
     int flag;
     register struct h_hashChain **hp, *th;
 
     for (hp = &hostHashTable[h_HashIndex(addr)]; (th = *hp);) {
 	assert(th->hostPtr);
-	if (th->hostPtr == host && th->addr == addr) {
+	if (th->hostPtr == host && th->addr == addr && th->port == port) {
 	    *hp = th->next;
 	    free(th);
 	    flag = 1;
@@ -2420,7 +2437,8 @@ printInterfaceAddr(struct host *host, int level)
 	number = host->interface->numberOfInterfaces;
 	assert(number > 0);
 	for (i = 0; i < number; i++)
-	    ViceLog(level, ("%x ", host->interface->addr[i]));
+	    ViceLog(level, ("%x:%d ", host->interface->interface[i].addr,
+			     ntohs(host->interface->interface[i].port)));
     }
     ViceLog(level, ("\n"));
 }

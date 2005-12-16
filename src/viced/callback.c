@@ -1974,7 +1974,7 @@ MultiBreakCallBackAlternateAddress_r(struct host *host,
     int i, j;
     struct rx_connection **conns;
     struct rx_connection *connSuccess = 0;
-    afs_int32 *addr;
+    struct AddrPort *interfaces;
     static struct rx_securityClass *sc = 0;
     static struct AFSCBs tc = { 0, 0 };
     char hoststr[16];
@@ -1994,9 +1994,9 @@ MultiBreakCallBackAlternateAddress_r(struct host *host,
 	sc = rxnull_NewClientSecurityObject();
 
     i = host->interface->numberOfInterfaces;
-    addr = calloc(i, sizeof(afs_int32));
+    interfaces = calloc(i, sizeof(struct AddrPort));
     conns = calloc(i, sizeof(struct rx_connection *));
-    if (!addr || !conns) {
+    if (!interfaces || !conns) {
 	ViceLog(0,
 		("Failed malloc in MultiBreakCallBackAlternateAddress_r\n"));
 	assert(0);
@@ -2005,12 +2005,14 @@ MultiBreakCallBackAlternateAddress_r(struct host *host,
     /* initialize alternate rx connections */
     for (i = 0, j = 0; i < host->interface->numberOfInterfaces; i++) {
 	/* this is the current primary address */
-	if (host->host == host->interface->addr[i])
+	if (host->host == host->interface->interface[i].addr &&
+	    host->port == host->interface->interface[i].port)
 	    continue;
 
-	addr[j] = host->interface->addr[i];
+	interfaces[j] = host->interface->interface[i];
 	conns[j] =
-	    rx_NewConnection(host->interface->addr[i], host->port, 1, sc, 0);
+	    rx_NewConnection(interfaces[j].addr, 
+			     interfaces[j].port, 1, sc, 0);
 	rx_SetConnDeadTime(conns[j], 2);
 	rx_SetConnHardDeadTime(conns[j], AFS_HARDDEADTIME);
 	j++;
@@ -2029,13 +2031,14 @@ MultiBreakCallBackAlternateAddress_r(struct host *host,
 	    if (host->callback_rxcon)
 		rx_DestroyConnection(host->callback_rxcon);
 	    host->callback_rxcon = conns[multi_i];
-	    host->host = addr[multi_i];
+	    host->host = interfaces[multi_i].addr;
+	    host->port = interfaces[multi_i].port;
 	    connSuccess = conns[multi_i];
 	    rx_SetConnDeadTime(host->callback_rxcon, 50);
 	    rx_SetConnHardDeadTime(host->callback_rxcon, AFS_HARDDEADTIME);
 	    ViceLog(125,
 		    ("multibreakcall success with addr %s\n",
-		     afs_inet_ntoa_r(addr[multi_i], hoststr)));
+		     afs_inet_ntoa_r(interfaces[multi_i].addr, hoststr)));
 	    H_UNLOCK;
 	    multi_Abort;
 	}
@@ -2047,7 +2050,7 @@ MultiBreakCallBackAlternateAddress_r(struct host *host,
 	if (conns[i] != connSuccess)
 	    rx_DestroyConnection(conns[i]);
 
-    free(addr);
+    free(interfaces);
     free(conns);
 
     if (connSuccess)
@@ -2067,7 +2070,7 @@ MultiProbeAlternateAddress_r(struct host *host)
     int i, j;
     struct rx_connection **conns;
     struct rx_connection *connSuccess = 0;
-    afs_int32 *addr;
+    struct AddrPort *interfaces;
     static struct rx_securityClass *sc = 0;
     char hoststr[16];
 
@@ -2086,9 +2089,9 @@ MultiProbeAlternateAddress_r(struct host *host)
 	sc = rxnull_NewClientSecurityObject();
 
     i = host->interface->numberOfInterfaces;
-    addr = calloc(i, sizeof(afs_int32));
+    interfaces = calloc(i, sizeof(struct AddrPort));
     conns = calloc(i, sizeof(struct rx_connection *));
-    if (!addr || !conns) {
+    if (!interfaces || !conns) {
 	ViceLog(0, ("Failed malloc in MultiProbeAlternateAddress_r\n"));
 	assert(0);
     }
@@ -2096,12 +2099,14 @@ MultiProbeAlternateAddress_r(struct host *host)
     /* initialize alternate rx connections */
     for (i = 0, j = 0; i < host->interface->numberOfInterfaces; i++) {
 	/* this is the current primary address */
-	if (host->host == host->interface->addr[i])
+	if (host->host == host->interface->interface[i].addr &&
+	    host->port == host->interface->interface[i].port)
 	    continue;
 
-	addr[j] = host->interface->addr[i];
+	interfaces[j] = host->interface->interface[i];
 	conns[j] =
-	    rx_NewConnection(host->interface->addr[i], host->port, 1, sc, 0);
+	    rx_NewConnection(interfaces[i].addr, 
+			     interfaces[i].port, 1, sc, 0);
 	rx_SetConnDeadTime(conns[j], 2);
 	rx_SetConnHardDeadTime(conns[j], AFS_HARDDEADTIME);
 	j++;
@@ -2120,19 +2125,20 @@ MultiProbeAlternateAddress_r(struct host *host)
 	    if (host->callback_rxcon)
 		rx_DestroyConnection(host->callback_rxcon);
 	    host->callback_rxcon = conns[multi_i];
-	    host->host = addr[multi_i];
+	    host->host = interfaces[multi_i].addr;
+	    host->port = interfaces[multi_i].port;
 	    connSuccess = conns[multi_i];
 	    rx_SetConnDeadTime(host->callback_rxcon, 50);
 	    rx_SetConnHardDeadTime(host->callback_rxcon, AFS_HARDDEADTIME);
 	    ViceLog(125,
 		    ("multiprobe success with addr %s\n",
-		     afs_inet_ntoa_r(addr[multi_i], hoststr)));
+		     afs_inet_ntoa_r(interfaces[multi_i].addr, hoststr)));
 	    H_UNLOCK;
 	    multi_Abort;
 	} else {
 	    ViceLog(125,
 		    ("multiprobe failure with addr %s\n",
-		     afs_inet_ntoa_r(addr[multi_i], hoststr)));
+		     afs_inet_ntoa_r(interfaces[multi_i].addr, hoststr)));
             
             /* This is less than desirable but its the best we can do.
              * The AFS Cache Manager will return either 0 for a Uuid  
@@ -2147,8 +2153,9 @@ MultiProbeAlternateAddress_r(struct host *host)
                 /* remove the current alternate address from this host */
                 H_LOCK;
                 for (i = 0, j = 0; i < host->interface->numberOfInterfaces; i++) {
-                    if (addr[multi_i] != host->interface->addr[i]) {
-                        host->interface->addr[j] = host->interface->addr[i];
+                    if (interfaces[multi_i].addr != host->interface->interface[i].addr &&
+			interfaces[multi_i].port != host->interface->interface[i].port) {
+                        host->interface->interface[j] = host->interface->interface[i];
                         j++;
                     }
                 }
@@ -2164,7 +2171,7 @@ MultiProbeAlternateAddress_r(struct host *host)
 	if (conns[i] != connSuccess)
 	    rx_DestroyConnection(conns[i]);
 
-    free(addr);
+    free(interfaces);
     free(conns);
 
     if (connSuccess)
