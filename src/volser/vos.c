@@ -2884,7 +2884,7 @@ RestoreVolume(as)
      register struct cmd_syndesc *as;
 
 {
-    afs_int32 avolid, aserver, apart, code, vcode, err;
+    afs_int32 avolid, aparentid, aserver, apart, code, vcode, err;
     afs_int32 aoverwrite = ASK;
     afs_int32 acreation = 0, alastupdate = 0;
     int restoreflags, readonly = 0, offline = 0, voltype = RWVOL;
@@ -2895,6 +2895,7 @@ RestoreVolume(as)
 
     prompt = 'n';
 
+    aparentid = 0;
     if (as->parms[4].items) {
 	avolid = vsu_GetVolumeID(as->parms[4].items->data, cstruct, &err);
 	if (avolid == 0) {
@@ -3036,6 +3037,7 @@ RestoreVolume(as)
 		   && entry.volumeId[voltype] != avolid) {
 	    avolid = entry.volumeId[voltype];
 	}
+        aparentid = entry.volumeId[RWVOL];
     }
 
     else {			/* volume exists - do we do a full incremental or abort */
@@ -3049,6 +3051,7 @@ RestoreVolume(as)
 		   && entry.volumeId[voltype] != avolid) {
 	    avolid = entry.volumeId[voltype];
 	}
+        aparentid = entry.volumeId[RWVOL];
 
 	/* A file name was specified  - check if volume is on another partition */
 	vcode = GetVolumeInfo(avolid, &Oserver, &Opart, &Otype, &Oentry);
@@ -3151,8 +3154,8 @@ RestoreVolume(as)
     }
 
     code =
-	UV_RestoreVolume(aserver, apart, avolid, avolname, restoreflags,
-			 WriteData, afilename);
+	UV_RestoreVolume2(aserver, apart, avolid, aparentid,
+                          avolname, restoreflags, WriteData, afilename);
     if (code) {
 	PrintDiagnostics("restore", code);
 	exit(1);

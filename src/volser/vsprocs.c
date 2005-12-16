@@ -4047,9 +4047,9 @@ UV_DumpClonedVolume(afs_int32 afromvol, afs_int32 afromserver,
  * after extracting params from the rock 
  */
 int
-UV_RestoreVolume(afs_int32 toserver, afs_int32 topart, afs_int32 tovolid,
-		 char tovolname[], int flags, afs_int32(*WriteData) (),
-		 char *rock)
+UV_RestoreVolume2(afs_int32 toserver, afs_int32 topart, afs_int32 tovolid,
+		  afs_int32 toparentid, char tovolname[], int flags,
+		  afs_int32(*WriteData) (), char *rock)
 {
     struct rx_connection *toconn, *tempconn;
     struct rx_call *tocall;
@@ -4058,7 +4058,7 @@ UV_RestoreVolume(afs_int32 toserver, afs_int32 topart, afs_int32 tovolid,
     struct volser_status tstatus;
     struct volintInfo vinfo;
     char partName[10];
-    afs_int32 pvolid;
+    afs_int32 pvolid, pparentid;
     afs_int32 temptid;
     int success;
     struct nvldbentry entry, storeEntry;
@@ -4092,6 +4092,7 @@ UV_RestoreVolume(afs_int32 toserver, afs_int32 topart, afs_int32 tovolid,
     }
 
     pvolid = tovolid;
+    pparentid = toparentid;
     toconn = UV_Bind(toserver, AFSCONF_VOLUMEPORT);
     if (pvolid == 0) {		/*alot a new id if needed */
 	vcode = VLDB_GetEntryByName(tovolname, &entry);
@@ -4120,10 +4121,13 @@ UV_RestoreVolume(afs_int32 toserver, afs_int32 topart, afs_int32 tovolid,
 		goto refail;
 	    }
 	    pvolid = entry.volumeId[ROVOL];
+	    pparentid = entry.volumeId[RWVOL];
 	} else {
 	    pvolid = entry.volumeId[RWVOL];
+	    pparentid = entry.volumeId[RWVOL];
 	}
     }
+    if (!pparentid) pparentid = pvolid;
     /* at this point we have a volume id to use/reuse for the volume to be restored */
     if (strlen(tovolname) > (VOLSER_OLDMAXVOLNAME - 1)) {
 	EGOTO1(refail, VOLSERBADOP,
@@ -4136,7 +4140,7 @@ UV_RestoreVolume(afs_int32 toserver, afs_int32 topart, afs_int32 tovolid,
 	    hostutil_GetNameByINet(toserver), partName);
     fflush(STDOUT);
     code =
-	AFSVolCreateVolume(toconn, topart, tovolname, volsertype, 0, &pvolid,
+	AFSVolCreateVolume(toconn, topart, tovolname, volsertype, pparentid, &pvolid,
 			   &totid);
     if (code) {
 	if (flags & RV_FULLRST) {	/* full restore: delete then create anew */
@@ -4172,7 +4176,7 @@ UV_RestoreVolume(afs_int32 toserver, afs_int32 topart, afs_int32 tovolid,
 	    VDONE;
 
 	    code =
-		AFSVolCreateVolume(toconn, topart, tovolname, volsertype, 0,
+		AFSVolCreateVolume(toconn, topart, tovolname, volsertype, pparentid,
 				   &pvolid, &totid);
 	    EGOTO1(refail, code, "Could not create new volume %u\n", pvolid);
 	} else {
@@ -4193,7 +4197,7 @@ UV_RestoreVolume(afs_int32 toserver, afs_int32 topart, afs_int32 tovolid,
 	oldUpdateDate = 0;
     }
 
-    cookie.parent = pvolid;
+    cookie.parent = pparentid;
     cookie.type = voltype;
     cookie.clone = 0;
     strncpy(cookie.name, tovolname, VOLSER_OLDMAXVOLNAME);
@@ -4226,7 +4230,7 @@ UV_RestoreVolume(afs_int32 toserver, afs_int32 topart, afs_int32 tovolid,
 	error = code;
 	goto refail;
     }
-    code = AFSVolSetIdsTypes(toconn, totid, tovolname, voltype, pvolid, 0, 0);
+    code = AFSVolSetIdsTypes(toconn, totid, tovolname, voltype, pparentid, 0, 0);
     if (code) {
 	fprintf(STDERR, "Could not set the right type and ID on %lu\n",
 		(unsigned long)pvolid);
@@ -4316,7 +4320,7 @@ UV_RestoreVolume(afs_int32 toserver, afs_int32 topart, afs_int32 tovolid,
 		entry.volumeId[ROVOL] = tstatus.cloneID;	/*this should come from status info on the volume if non zero */
 	    } else
 		entry.volumeId[ROVOL] = INVALID_BID;
-	    entry.volumeId[RWVOL] = pvolid;
+	    entry.volumeId[RWVOL] = pparentid;
 	    entry.cloneId = 0;
 	    if (tstatus.backupID != 0) {
 		entry.volumeId[BACKVOL] = tstatus.backupID;
@@ -4500,6 +4504,15 @@ UV_RestoreVolume(afs_int32 toserver, afs_int32 topart, afs_int32 tovolid,
 	rx_DestroyConnection(toconn);
     PrintError("", error);
     return error;
+}
+
+int
+UV_RestoreVolume(afs_int32 toserver, afs_int32 topart, afs_int32 tovolid,
+		 char tovolname[], int flags, afs_int32(*WriteData) (),
+		 char *rock)
+{
+    return UV_RestoreVolume2(toserver, topart, tovolid, 0, tovolname, flags,
+			     WriteData, rock);
 }
 
 
