@@ -1315,7 +1315,10 @@ rxi_AllocSendPacket(register struct rx_call *call, int want)
 }
 
 #ifndef KERNEL
-
+#ifdef AFS_NT40_ENV	 
+/* Windows does not use file descriptors. */
+#define CountFDs(amax) 0
+#else
 /* count the number of used FDs */
 static int
 CountFDs(register int amax)
@@ -1332,7 +1335,7 @@ CountFDs(register int amax)
     }
     return count;
 }
-
+#endif /* AFS_NT40_ENV */
 #else /* KERNEL */
 
 #define CountFDs(amax) amax
