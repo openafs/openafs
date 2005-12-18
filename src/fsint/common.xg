@@ -175,4 +175,11 @@ typedef afs_uint32 cacheConfig<>;
 const AFSCAPABILITIESMAX = 196;
 typedef afs_int32 Capabilities<AFSCAPABILITIESMAX>;
 
+/* Viced Capability Flags */
+const VICED_CAPABILITY_ERRORTRANS	= 0x0001;
+const VICED_CAPABILITY_64BITFILES	= 0x0002;
+
+/* Cache Manager Capability Flags */
+const CLIENT_CAPABILITY_ERRORTRANS	= 0x0001;
+
 %#endif /* FSINT_COMMON_XG */

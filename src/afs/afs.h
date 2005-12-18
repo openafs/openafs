@@ -1216,9 +1216,4 @@ struct afs_fakestat_state {
 
 extern int afs_fakestat_enable;
 
-/* First 32 bits of capabilities */
-#define CAPABILITY_ERRORTRANS (1<<0)
-
-#define CAPABILITY_BITS 1
-
 #endif /* _AFS_H_ */

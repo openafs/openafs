@@ -127,9 +127,6 @@ extern long rx_mtu;
 
 extern HANDLE WaitToTerminate;
 
-#define CAPABILITY_ERRORTRANS (1<<0)
-#define CAPABILITY_BITS 1
-
 #undef  DFS_SUPPORT
 #define LOG_PACKET 1
 #undef  NOTSERVICE

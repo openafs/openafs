@@ -1133,7 +1133,7 @@ h_GetHost_r(struct rx_connection *tcon)
 	    host->hostFlags |= VENUSDOWN;
 	}
 	if (caps.Capabilities_val
-	    && (caps.Capabilities_val[0] & CAPABILITY_ERRORTRANS))
+	    && (caps.Capabilities_val[0] & CLIENT_CAPABILITY_ERRORTRANS))
 	    host->hostFlags |= HERRORTRANS;
 	else
 	    host->hostFlags &= ~(HERRORTRANS);
@@ -1331,7 +1331,7 @@ h_GetHost_r(struct rx_connection *tcon)
 
 	}
 	if (caps.Capabilities_val
-	    && (caps.Capabilities_val[0] & CAPABILITY_ERRORTRANS))
+	    && (caps.Capabilities_val[0] & CLIENT_CAPABILITY_ERRORTRANS))
 	    host->hostFlags |= HERRORTRANS;
 	else
 	    host->hostFlags &= ~(HERRORTRANS);

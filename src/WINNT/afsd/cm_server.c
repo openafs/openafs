@@ -29,6 +29,67 @@ osi_rwlock_t cm_serverLock;
 
 cm_server_t *cm_allServersp;
 
+void 
+cm_PingServer(cm_server_t *tsp)
+{
+    long code;
+    int wasDown = 0;
+    cm_conn_t *connp;
+    struct rx_connection * callp;
+    long secs;
+    long usecs;
+    Capabilities caps = {0, 0};
+
+    code = cm_ConnByServer(tsp, cm_rootUserp, &connp);
+    if (code == 0) {
+	/* now call the appropriate ping call.  Drop the timeout if
+	* the server is known to be down, so that we don't waste a
+	* lot of time retiming out down servers.
+	*/
+        wasDown = tsp->flags & CM_SERVERFLAG_DOWN;
+	if (wasDown)
+	    rx_SetConnDeadTime(connp->callp, 10);
+	if (tsp->type == CM_SERVER_VLDB) {
+	    code = VL_ProbeServer(connp->callp);
+	}
+	else {
+	    /* file server */
+	    callp = cm_GetRxConn(connp);
+	    code = RXAFS_GetCapabilities(callp, &caps);
+	    if (code == RXGEN_OPCODE)
+		code = RXAFS_GetTime(callp, &secs, &usecs);
+	    rx_PutConnection(callp);
+	}
+	if (wasDown)
+	    rx_SetConnDeadTime(connp->callp, ConnDeadtimeout);
+	cm_PutConn(connp);
+    }	/* got an unauthenticated connection to this server */
+
+    lock_ObtainMutex(&tsp->mx);
+    if (code >= 0) {
+	/* mark server as up */
+	tsp->flags &= ~CM_SERVERFLAG_DOWN;
+
+	/* we currently handle 32-bits of capabilities */
+	if (caps.Capabilities_len > 0) {
+	    tsp->capabilities = caps.Capabilities_val[0];
+	    free(caps.Capabilities_val);
+	    caps.Capabilities_len = 0;
+	    caps.Capabilities_val = 0;
+	} else {
+	    tsp->capabilities = 0;
+	}
+    }
+    else {
+	/* mark server as down */
+	tsp->flags |= CM_SERVERFLAG_DOWN;
+	if (code != VRESTARTING)
+	    cm_ForceNewConnections(tsp);
+    }
+    lock_ReleaseMutex(&tsp->mx);
+}
+
+
 void cm_CheckServers(long flags, cm_cell_t *cellp)
 {
     /* ping all file servers, up or down, with unauthenticated connection,
@@ -36,14 +97,8 @@ void cm_CheckServers(long flags, cm_cell_t *cellp)
      * Also, ping down VLDBs.
      */
     cm_server_t *tsp;
-    long code;
-    long secs;
-    long usecs;
     int doPing;
-    int serverType;
-    int wasDown;
-    cm_conn_t *connp;
-    struct rx_connection * callp;
+    int isDown;
 
     lock_ObtainWrite(&cm_serverLock);
     for (tsp = cm_allServersp; tsp; tsp = tsp->allNextp) {
@@ -53,18 +108,16 @@ void cm_CheckServers(long flags, cm_cell_t *cellp)
         /* now process the server */
         lock_ObtainMutex(&tsp->mx);
 
-        serverType = tsp->type;
         doPing = 0;
-        wasDown = tsp->flags & CM_SERVERFLAG_DOWN;
+        isDown = tsp->flags & CM_SERVERFLAG_DOWN;
 
         /* only do the ping if the cell matches the requested cell, or we're
          * matching all cells (cellp == NULL), and if we've requested to ping
          * this type of {up, down} servers.
          */
         if ((cellp == NULL || cellp == tsp->cellp) &&
-             ((wasDown && (flags & CM_FLAG_CHECKDOWNSERVERS)) ||
-               (!wasDown && (flags & CM_FLAG_CHECKUPSERVERS)))) {
-
+             ((isDown && (flags & CM_FLAG_CHECKDOWNSERVERS)) ||
+               (!isDown && (flags & CM_FLAG_CHECKUPSERVERS)))) {
             doPing = 1;
         }	/* we're supposed to check this up/down server */
         lock_ReleaseMutex(&tsp->mx);
@@ -72,42 +125,8 @@ void cm_CheckServers(long flags, cm_cell_t *cellp)
         /* at this point, we've adjusted the server state, so do the ping and
          * adjust things.
          */
-        if (doPing) {
-            code = cm_ConnByServer(tsp, cm_rootUserp, &connp);
-            if (code == 0) {
-                /* now call the appropriate ping call.  Drop the timeout if
-                 * the server is known to be down, so that we don't waste a
-                 * lot of time retiming out down servers.
-                 */
-                if (wasDown)
-                    rx_SetConnDeadTime(connp->callp, 10);
-                if (serverType == CM_SERVER_VLDB) {
-                    code = VL_ProbeServer(connp->callp);
-                }
-                else {
-                    /* file server */
-                    callp = cm_GetRxConn(connp);
-                    code = RXAFS_GetTime(callp, &secs, &usecs);
-                    rx_PutConnection(callp);
-                }
-                if (wasDown)
-                    rx_SetConnDeadTime(connp->callp, ConnDeadtimeout);
-                cm_PutConn(connp);
-            }	/* got an unauthenticated connection to this server */
-
-            lock_ObtainMutex(&tsp->mx);
-            if (code >= 0) {
-                /* mark server as up */
-                tsp->flags &= ~CM_SERVERFLAG_DOWN;
-            }
-            else {
-                /* mark server as down */
-                tsp->flags |= CM_SERVERFLAG_DOWN;
-		if (code != VRESTARTING)
-		    cm_ForceNewConnections(tsp);
-            }
-            lock_ReleaseMutex(&tsp->mx);
-        }
+        if (doPing) 
+	    cm_PingServer(tsp);
 
         /* also, run the GC function for connections on all of the
          * server's connections.
@@ -228,11 +247,12 @@ cm_server_t *cm_NewServer(struct sockaddr_in *socketp, int type, cm_cell_t *cell
 
     cm_SetServerPrefs(tsp); 
 
-    lock_ObtainWrite(&cm_serverLock); /* get server lock */
+    lock_ObtainWrite(&cm_serverLock); 	/* get server lock */
     tsp->allNextp = cm_allServersp;
     cm_allServersp = tsp;
-    lock_ReleaseWrite(&cm_serverLock); /* release server lock */
+    lock_ReleaseWrite(&cm_serverLock); 	/* release server lock */
 
+    cm_PingServer(tsp);			/* Obtain Capabilities and check up/down state */
     return tsp;
 }
 
