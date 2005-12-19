@@ -2531,7 +2531,7 @@ ViceIDToUsername(char *username,
 #ifdef AFS_ID_TO_NAME
     char username_copy[BUFSIZ];
 #endif /* AFS_ID_TO_NAME */
-    long viceId;			/* AFS uid of user */
+    long viceId = ANONYMOUSID;		/* AFS uid of user */
     int  status = 0;
 #ifdef ALLOW_REGISTER
     afs_int32 id;
