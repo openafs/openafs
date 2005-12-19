@@ -1399,7 +1399,7 @@ int SRXAFSCB_GetCacheConfig(struct rx_call *callp,
     *serverVersion = AFS_CLIENT_RETRIEVAL_FIRST_EDITION;
 #ifdef DEBUG
 #ifndef SIZE_MAX
-#define SIZE_MAX sizeof(afs_int32)
+#define SIZE_MAX UINT_MAX
 #endif
     osi_assert(allocsize < SIZE_MAX);
 #endif

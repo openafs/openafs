@@ -129,7 +129,9 @@ struct IoRequest {
     struct TM_Elem	timeout;
 
     /* Result of select call */
-    size_t		result;
+    int			result;
+
+    struct IoRequest    *next;	/* for iorFreeList */
 
 #ifdef AFS_DJGPP_ENV
     NCB                  *ncbp;
@@ -228,14 +230,14 @@ fd_set *IOMGR_AllocFDSet(void)
     }
 }
 
-#define FreeRequest(x) ((x)->result = (size_t)iorFreeList, iorFreeList = (x))
+#define FreeRequest(x) ((x)->next = iorFreeList, iorFreeList = (x))
 
 static struct IoRequest *NewRequest()
 {
     struct IoRequest *request;
 
     if ((request=iorFreeList))
-	iorFreeList = (struct IoRequest *) (request->result);
+	iorFreeList = (struct IoRequest *) (request->next);
     else request = (struct IoRequest *) malloc(sizeof(struct IoRequest));
 
     memset((char*)request, 0, sizeof(struct IoRequest));
@@ -304,7 +306,10 @@ static int FDSetCmp(int nfds, fd_set *fd_set1, fd_set *fd_set2)
  */
 static void FDSetSet(int nfds, fd_set *fd_set1, fd_set *fd_set2)
 {
-    unsigned int i, n;
+    unsigned int i;
+#ifndef AFS_NT40_ENV
+    unsigned int n;
+#endif
 
     if (fd_set1 == (fd_set*)0 || fd_set2 == (fd_set*)0)
 	return;
@@ -918,7 +923,7 @@ int IOMGR_Select(fds, readfds, writefds, exceptfds, timeout)
      struct timeval *timeout;
 {
     register struct IoRequest *request;
-    size_t result;
+    int result;
 
 #ifndef AFS_NT40_ENV
     if(fds > FD_SETSIZE) {
@@ -1007,7 +1012,7 @@ again:
     result = request -> result;
 
     FreeRequest(request);
-    return (result > 1 ? 1 : (int)result);
+    return (result > 1 ? 1 : result);
 }
 
 int IOMGR_Cancel(PROCESS pid)
