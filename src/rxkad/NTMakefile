@@ -29,7 +29,7 @@ LIBOBJS =\
 	$(OUT)\ticket.obj \
 	$(OUT)\rxkad_errs.obj \
 	$(OUT)\AFS_component_version_number.obj \
-	$(OUT)\fcrypt.obj \
+	$(OUT)\bg-fcrypt.obj \
 	$(OUT)\ticket5.obj \
 	$(OUT)\crc.obj \
     $(OUT)\md4.obj \
