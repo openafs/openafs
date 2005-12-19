@@ -43,6 +43,7 @@
 #include <strsafe.h>
 #include <winioctl.h>
 #include <..\afsrdr\kif.h>
+#include <rx\rx.h>
 
 #ifdef _DEBUG
 #include <crtdbg.h>
@@ -1171,10 +1172,12 @@ long cm_IoctlTraceControl(struct smb_ioctl *ioctlp, struct cm_user *userp)
         if ((inValue & 1) == 0) {
             /* disable tracing */
             osi_LogDisable(afsd_logp);
+	    rx_DebugOnOff(FALSE);
         }
         else {
             /* enable tracing */
             osi_LogEnable(afsd_logp);
+	    rx_DebugOnOff(TRUE);
         }
     }
 

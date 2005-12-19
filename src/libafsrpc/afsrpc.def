@@ -215,5 +215,6 @@ EXPORTS
         rx_StartClientThread                    @220
 	rxkad_global_stats_lock			@221 DATA
 	rxkad_stats_key				@222 DATA
+        rx_DebugOnOff                           @223
         
 

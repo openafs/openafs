@@ -6044,6 +6044,8 @@ rxi_DebugInit(void)
     DWORD TraceOption;
     long code;
 
+    rxdebug_active = 0;
+
     code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY,
                          0, KEY_QUERY_VALUE, &parmKey);
     if (code != ERROR_SUCCESS)
@@ -6058,6 +6060,14 @@ rxi_DebugInit(void)
     RegCloseKey (parmKey);
 #endif /* AFS_NT40_ENV */
 }
+
+#ifdef AFS_NT40_ENV
+void
+rx_DebugOnOff(int on)
+{
+    rxdebug_active = on;
+}
+#endif /* AFS_NT40_ENV */
 
 
 /* Don't call this debugging routine directly; use dpf */
