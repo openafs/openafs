@@ -1412,7 +1412,11 @@ afs_linux_writepage(struct page *pp)
 
 #if defined(AFS_LINUX26_ENV)
     if (PageReclaim(pp)) {
+# if defined(WRITEPAGE_ACTIVATE)
 	return WRITEPAGE_ACTIVATE;
+# else 
+	return AOP_WRITEPAGE_ACTIVATE;
+# endif
     }
 #else
     if (PageLaunder(pp)) {
