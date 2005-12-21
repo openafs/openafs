@@ -1,2 +1,3 @@
-dest/bin/kpasswd                        usr/bin
-dest/etc/kas                            usr/bin
+debian/tmp/usr/bin/kpasswd              usr/bin
+
+debian/tmp/usr/sbin/kas                 usr/bin

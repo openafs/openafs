@@ -70,8 +70,6 @@ configure: configure-stamp
 configure-stamp:
 	@if test x"$(SYS_NAME)" = x"UNKNOWN" ; then exit 1 ; fi
 	dh_testdir
-	-ln -s @sys/dest dest
-	-ln -s $(SYS_NAME) @sys
 	afslogsdir=/var/log/openafs afslocaldir=/etc/openafs/server-local \
 	    sh configure \
 	    --with-afs-sysname=$(SYS_NAME) --disable-kernel-module \
@@ -80,30 +78,30 @@ configure-stamp:
 	    --enable-largefile-fileserver --enable-debug --enable-lwp-debug \
 	    $(DEBIAN_OPT_FLAGS)
 	chmod a+x src/libafs/make_kbuild_makefile.pl         
-	install -d $(SYS_NAME)/dest/root.client/usr/vice/etc
-	install -d dest/root.server/usr/afs/bin
 	touch configure-stamp
 
 build: configure-stamp build-stamp
 build-stamp:
 	dh_testdir
-	$(MAKE) dest_nolibafs
+	mkdir -p $(CURDIR)/debian/tmp
+	$(MAKE) install_nolibafs DESTDIR=$(CURDIR)/debian/tmp
+	chmod +x debian/afs-rootvol debian/afs-newcell
 	touch build-stamp
 
 clean:
 	dh_testdir
 	dh_testroot
-	rm -f build-stamp configure-stamp configure-modules-stamp
-	rm -f build-modules-stamp
-	-$(MAKE) -ki distclean
-	-rm -rf dest $(SYS_NAME) @sys src/pic
+	rm -f build-stamp configure-stamp
+	rm -f build-modules-stamp configure-modules-stamp
+ifeq (Makefile,$(wildcard Makefile))
+	$(MAKE) distclean
+endif
 	dh_clean
 
 install: DH_OPTIONS=
 install: build
 	dh_testdir
 	dh_testroot
-	dh_clean -k
 	dh_installdirs
 	dh_install
 
@@ -115,28 +113,19 @@ install: build
 	set -e; for pkg in $(DOC_PACKAGES) ; do \
 	    ln -s openafs-client debian/$$pkg/usr/share/doc/$$pkg; \
 	done
+
 	mv debian/openafs-client/usr/bin/pagsh \
 	    debian/openafs-client/usr/bin/pagsh.openafs
 	mv debian/openafs-client/usr/bin/up \
 	    debian/openafs-client/usr/bin/afs-up
-	install -m 644 -c dest/lib/pam_afs.so.1 \
+	install -m 644 -c debian/tmp/usr/lib/pam_afs.so.1 \
 	    debian/libpam-openafs-kaserver/lib/security/pam_afs.so
-	install -m 644 -c dest/lib/pam_afs.krb.so.1 \
+	install -m 644 -c debian/tmp/usr/lib/pam_afs.krb.so.1 \
 	    debian/libpam-openafs-kaserver/lib/security/pam_afs.krb.so
-	install -m 644 -c debian/CellServDB \
-	    debian/openafs-client/usr/share/openafs
-	install -m 644 -c debian/afs.conf \
-	    debian/openafs-client/etc/openafs/afs.conf
 
 	install -d debian/openafs-dbserver/usr/share/man/man8
 	/usr/bin/docbook-to-man debian/pt_util.sgml \
 	    >debian/openafs-dbserver/usr/share/man/man8/pt_util.8
-	install -m 755 -o root -g root debian/afs-rootvol \
-	    debian/openafs-dbserver/usr/sbin
-	install -g root -o root -m 755 debian/afs-newcell \
-	    debian/openafs-dbserver/usr/sbin
-	install -D -m 644 debian/ConfigUtils.pm \
-	    debian/openafs-dbserver/usr/share/perl5/Debian/OpenAFS/ConfigUtils.pm
 	( cd debian && pod2man --section 8 --center "Debian GNU/Linux" \
 	    afs-rootvol ) \
 	    >debian/openafs-dbserver/usr/share/man/man8/afs-rootvol.8

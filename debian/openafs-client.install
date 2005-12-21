@@ -1,25 +1,29 @@
-dest/bin/bos                            usr/bin
-dest/bin/cmdebug                        usr/bin
-dest/bin/fs                             usr/bin
-dest/bin/klog                           usr/bin
-dest/bin/pagsh                          usr/bin
-dest/bin/pts                            usr/bin
-dest/bin/scout                          usr/bin
-dest/bin/sys                            usr/bin
-dest/bin/tokens                         usr/bin
-dest/bin/translate_et                   usr/bin
-dest/bin/udebug                         usr/bin
-dest/bin/unlog                          usr/bin
-dest/bin/up                             usr/bin
+debian/afs.conf                         etc/openafs
 
-dest/etc/rxdebug                        usr/bin
-dest/etc/vos                            usr/bin
+debian/tmp/usr/bin/bos                  usr/bin
+debian/tmp/usr/bin/cmdebug              usr/bin
+debian/tmp/usr/bin/fs                   usr/bin
+debian/tmp/usr/bin/klog                 usr/bin
+debian/tmp/usr/bin/pagsh                usr/bin
+debian/tmp/usr/bin/pts                  usr/bin
+debian/tmp/usr/bin/scout                usr/bin
+debian/tmp/usr/bin/sys                  usr/bin
+debian/tmp/usr/bin/tokens               usr/bin
+debian/tmp/usr/bin/translate_et         usr/bin
+debian/tmp/usr/bin/udebug               usr/bin
+debian/tmp/usr/bin/unlog                usr/bin
+debian/tmp/usr/bin/up                   usr/bin
 
-dest/etc/backup                         usr/sbin
-dest/etc/butc                           usr/sbin
-dest/etc/fms                            usr/sbin
-dest/etc/fstrace                        usr/sbin
+debian/tmp/usr/sbin/rxdebug             usr/bin
+debian/tmp/usr/sbin/vos                 usr/bin
 
-dest/root.client/usr/vice/etc/afsd      sbin
+debian/tmp/usr/sbin/backup              usr/sbin
+debian/tmp/usr/sbin/butc                usr/sbin
+debian/tmp/usr/sbin/fms                 usr/sbin
+debian/tmp/usr/sbin/fstrace             usr/sbin
 
-dest/root.client/usr/vice/etc/C/afszcm.cat      usr/share/openafs
+debian/tmp/usr/sbin/afsd                sbin
+
+src/afs/afszcm.cat                      usr/share/openafs
+
+debian/CellServDB                       usr/share/openafs

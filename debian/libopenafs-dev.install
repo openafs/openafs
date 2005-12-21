@@ -1,4 +1,4 @@
-dest/bin/rxgen                          usr/bin
-dest/include                            usr
-dest/lib/*.a                            usr/lib
-dest/lib/afs                            usr/lib
+debian/tmp/usr/bin/rxgen                usr/bin
+debian/tmp/usr/include                  usr
+debian/tmp/usr/lib/*.a                  usr/lib
+debian/tmp/usr/lib/afs                  usr/lib

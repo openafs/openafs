@@ -5,12 +5,22 @@ openafs (1.4.0-3) unstable; urgency=low
   * Stop unconditionally forcing the compiler to cc or gcc in configure,
     allowing, among other things, building the kernel module with a
     compiler other than the default system compiler.  (Closes: #338306)
+  * Include volinfo, not voldump in openafs-fileserver.
   * Document FAM's lack of support for AFS's security model and recommend
     gamin instead.  (Closes: #343246)
   * Add a hint to README.Debian on what to do about the cache partition if
     running ReiserFS or XFS without a spare partition.
+  * Use make install into debian/tmp rather than make dest.  make dest is
+    mostly for Transarc compatibility and make install looks more like a
+    typical package and makes it easier to evaluate differences in FHS
+    location between upstream and Debian.  As a side effect, there's no
+    need to mess with the @sys link.  (Closes: #165909)
+  * Install more files with dh_install rather than install commands in
+    debian/rules so that *.install shows a more complete picture of what
+    goes into each package.
+  * Don't ignore make distclean errors.
 
- --
+ -- Russ Allbery <rra@debian.org>  Wed, 21 Dec 2005 11:55:59 -0800
 
 openafs (1.4.0-2) unstable; urgency=low
 

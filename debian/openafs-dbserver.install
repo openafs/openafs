@@ -1,8 +1,12 @@
-dest/etc/prdb_check                     usr/sbin
-dest/etc/vldb_check                     usr/sbin
+debian/tmp/usr/sbin/prdb_check          usr/sbin
+debian/tmp/usr/sbin/pt_util             usr/sbin
+debian/tmp/usr/sbin/vldb_check          usr/sbin
 
-dest/root.server/usr/afs/bin/pt_util    usr/sbin
+debian/afs-rootvol                      usr/sbin
+debian/afs-newcell                      usr/sbin
 
-dest/root.server/usr/afs/bin/buserver   usr/lib/openafs
-dest/root.server/usr/afs/bin/ptserver   usr/lib/openafs
-dest/root.server/usr/afs/bin/vlserver   usr/lib/openafs
+debian/tmp/usr/lib/openafs/buserver     usr/lib/openafs
+debian/tmp/usr/lib/openafs/ptserver     usr/lib/openafs
+debian/tmp/usr/lib/openafs/vlserver     usr/lib/openafs
+
+debian/ConfigUtils.pm                   usr/share/perl5/Debian/OpenAFS

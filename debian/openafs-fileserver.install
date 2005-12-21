@@ -1,8 +1,8 @@
-dest/etc/voldump                        usr/sbin
+debian/tmp/usr/sbin/bosserver           usr/sbin
+debian/tmp/usr/sbin/volinfo             usr/sbin
 
-dest/root.server/usr/afs/bin/bosserver  usr/sbin
-dest/root.server/usr/afs/bin/up*        usr/sbin
+debian/tmp/usr/lib/openafs/up*          usr/sbin
 
-dest/root.server/usr/afs/bin/fileserver usr/lib/openafs
-dest/root.server/usr/afs/bin/salvager   usr/lib/openafs
-dest/root.server/usr/afs/bin/volserver  usr/lib/openafs
+debian/tmp/usr/lib/openafs/fileserver   usr/lib/openafs
+debian/tmp/usr/lib/openafs/salvager     usr/lib/openafs
+debian/tmp/usr/lib/openafs/volserver    usr/lib/openafs
