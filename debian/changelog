@@ -2,6 +2,8 @@ openafs (1.4.0-3) unstable; urgency=low
 
   * Apply patch to allow the module to build with the Ubuntu kernel.
     Thanks, Björn Torkelsson.  (Closes: #342607)
+  * Document FAM's lack of support for AFS's security model and recommend
+    gamin instead.  (Closes: #343246)
   * Add a hint to README.Debian on what to do about the cache partition if
     running ReiserFS or XFS without a spare partition.
 
