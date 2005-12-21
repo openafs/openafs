@@ -28,8 +28,7 @@ asetkey: asetkey.o ${AFSLIBS}
 # Installation targets
 #
 install: \
-	${DESTDIR}${bindir}/aklog
-	${DESTDIR}${afssrvbindir}/asetkey
+	${DESTDIR}${bindir}/aklog ${DESTDIR}${afssrvbindir}/asetkey
 
 ${DESTDIR}${bindir}/aklog: aklog
 	${INSTALL} $? $@
