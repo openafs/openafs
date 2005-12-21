@@ -70,7 +70,9 @@ u_long ntohl(u_long x)
 
 #else /* !WINDOWS */
 #include <afs/stds.h>
+#ifndef AFS_OBSD_ENV
 #include <afs/com_err.h>
+#endif
 
 #include <afs/param.h>
 #ifdef AFS_SUN5_ENV

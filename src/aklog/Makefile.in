@@ -37,8 +37,7 @@ ${DESTDIR}${afssrvbindir}/asetkey: asetkey
 	${INSTALL} $? $@
 
 dest: \
-	${DEST}/bin/aklog
-	${DEST}/root.server/usr/afs/bin/asetkey
+	${DEST}/bin/aklog ${DEST}/root.server/usr/afs/bin/asetkey
 
 ${DEST}/bin/aklog: aklog
 	${INSTALL} $? $@

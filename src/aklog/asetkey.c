@@ -32,6 +32,9 @@
 int
 main(int argc, char *argv[])
 {
+#ifdef AFS_OBSD_ENV
+    fprintf(stderr, "asetkey not implemented. Use kadmin instead.\n");
+#else
     struct afsconf_dir *tdir;
     register long code;
     const char *confdir;
@@ -134,5 +137,6 @@ main(int argc, char *argv[])
 		"assistance\n", argv[0], argv[1], argv[0]);
 	exit(1);
     }
+#endif
     exit(0);
 }

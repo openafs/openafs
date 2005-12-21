@@ -154,8 +154,11 @@ E  HP-UX 11.0 Notes
 
 F  OpenBSD Notes
 
-   We recommend you build with --enable-namei-fileserver and
-   --enable-largefile-fileserver options.
+   We recommend you build with the following options to configure:
+     --enable-namei-fileserver
+     --enable-largefile-fileserver
+     --enable-supergroups
+     --with-krb5
 
    You need kernel source installed to build OpenAFS.  Use the
    --with-bsd-kernel-headers= configure option if your kernel source is not
