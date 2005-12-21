@@ -1,0 +1,60 @@
+#!/bin/sh
+#
+# Generate the OpenAFS man pages from POD source.  This script is normally
+# invoked by regen.sh but may be run at any time to rebuild all of the man
+# pages (with a newer version of pod2man than was used for the release, for
+# instance).
+
+# Exit on any error.
+set -e
+
+if [ ! -d pod1 ] ; then
+    echo 'generate-man must be run from the doc/man-pages directory' >&2
+    exit 1
+fi
+
+if ! pod2man pod1/afs.pod > /dev/null ; then
+    echo 'pod2man not found, skipping man page generation' >&2
+    exit 1
+fi
+if ! perl -e 'use Pod::Man 2.04' > /dev/null 2>&1 ; then
+    echo 'Pod::Man is older than the recommended version of 2.04 or later' >&2
+    echo 'Continuing with man page generation anyway' >&2
+fi
+
+# Create the directories.  We generate each section into its own directory
+# to make installation rules easier.
+[ -d man1 ] || mkdir man1
+[ -d man5 ] || mkdir man5
+[ -d man8 ] || mkdir man8
+
+# Generate each set of man pages.  For each, allow for the case of the
+# directory being empty.  In that case, for won't expand the wildcard, and
+# we want to avoid running pod2man with a wildcard as an argument.
+pod1=`ls pod1`
+if [ -n "$pod1" ] ; then
+    cd pod1
+    for f in *.pod ; do
+        pod2man -c 'AFS Command Reference' -r 'OpenAFS' -s 1 "$f" \
+            > ../man1/`echo "$f" | sed 's/\.pod$//'`.1
+    done
+    cd ..
+fi
+pod5=`ls pod5`
+if [ -n "$pod5" ] ; then
+    cd pod5
+    for f in *.pod ; do
+        pod2man -c 'AFS File Reference' -r 'OpenAFS' -s 5 "$f" \
+            > ../man5/`echo "$f" | sed 's/\.pod$//'`.5
+    done
+    cd ..
+fi
+pod8=`ls pod8`
+if [ -n "$pod8" ] ; then
+    cd pod8
+    for f in *.pod ; do
+        pod2man -c 'AFS Command Reference' -r 'OpenAFS' -s 8 "$f" \
+            > ../man8/`echo "$f" | sed 's/\.pod$//'`.8
+    done
+    cd ..
+fi
