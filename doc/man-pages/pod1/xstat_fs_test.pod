@@ -42,7 +42,7 @@ Specifies each data collection to return, which defines the type and
 amount of data the command interpreter gathers about the File Server.
 Data is returned in a predefined data structure.
 
-There are three acceptable values: 
+There are three acceptable values:
 
 =over 4
 

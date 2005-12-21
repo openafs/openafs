@@ -6,9 +6,9 @@ klog - Authenticates with the Authentication Server
 
 B<klog> [B<-x>] [B<-principal> <I<user name>>]
     [-password <I<user's password>>] [B<-cell> <I<cell name>>]
-    [B<-servers> <I<explicit list of servers>>+]  
+    [B<-servers> <I<explicit list of servers>>+]
     [B<-pipe>] [B<-silent>]
-    [B<-lifetime> <I<ticket lifetime in hh[:mm[:ss]]>>]  
+    [B<-lifetime> <I<ticket lifetime in hh[:mm[:ss]]>>]
     [B<-setpag>] [B<-tmp>] [B<-help>]
 
 B<klog> [B<-x>] [B<-pr> <I<user name>>] [B<-pa> <I<user's password>>]
@@ -106,25 +106,25 @@ minutes, and 17 seconds, which translates to approximately 11 days and 18
 hours (C<11d 18h>). The Authentication Server rounds up a requested
 lifetime to the next highest possible lifetime.
 
-   11:24:15 (0d 11h)    46:26:01 (1d 22h)  189:03:38 (7d 21h)            
-   12:11:34 (0d 12h)    49:38:40 (2d 01h)  202:08:00 (8d 10h)            
-   13:02:09 (0d 13h)    53:04:37 (2d 05h)  216:06:35 (9d 00h)          
-   13:56:14 (0d 13h)    56:44:49 (2d 08h)  231:03:09 (9d 15h)         
-   14:54:03 (0d 14h)    60:40:15 (2d 12h)  247:01:43 (10d 07h)         
-   15:55:52 (0d 15h)    64:51:57 (2d 16h)  264:06:34 (11d 00h)           
-   17:01:58 (0d 17h)    69:21:04 (2d 21h)  282:22:17 (11d 18h)          
-   18:12:38 (0d 18h)    74:08:46 (3d 02h)  301:53:45 (12d 13h)           
-   19:28:11 (0d 19h)    79:16:23 (3d 07h)  322:46:13 (13d 10h)          
-   20:48:57 (0d 20h)    84:45:16 (3d 12h)  345:05:18 (14d 09h)           
-   22:15:19 (0d 22h)    90:36:53 (3d 18h)  368:56:58 (15d 08h)          
-   23:47:38 (0d 23h)    96:52:49 (4d 00h)  394:27:37 (16d 10h)         
-   25:26:21 (1d 01h)   103:34:45 (4d 07h)  421:44:07 (17d 13h)           
-   27:11:54 (1d 03h)   110:44:28 (4d 14h)  450:53:46 (18d 18h)           
-   29:04:44 (1d 05h)   118:23:54 (4d 22h)  482:04:24 (20d 02h)          
-   31:05:22 (1d 07h)   126:35:05 (5d 06h)  515:24:22 (21d 11h)          
-   33:14:21 (1d 09h)   135:20:15 (5d 15h)  551:02:38 (22d 23h) 
-   35:32:15 (1d 11h)   144:41:44 (6d 00h)  589:08:45 (24d 13h) 
-   37:59:41 (1d 13h)   154:42:01 (6d 10h)  629:52:56 (26d 05h) 
+   11:24:15 (0d 11h)    46:26:01 (1d 22h)  189:03:38 (7d 21h)
+   12:11:34 (0d 12h)    49:38:40 (2d 01h)  202:08:00 (8d 10h)
+   13:02:09 (0d 13h)    53:04:37 (2d 05h)  216:06:35 (9d 00h)
+   13:56:14 (0d 13h)    56:44:49 (2d 08h)  231:03:09 (9d 15h)
+   14:54:03 (0d 14h)    60:40:15 (2d 12h)  247:01:43 (10d 07h)
+   15:55:52 (0d 15h)    64:51:57 (2d 16h)  264:06:34 (11d 00h)
+   17:01:58 (0d 17h)    69:21:04 (2d 21h)  282:22:17 (11d 18h)
+   18:12:38 (0d 18h)    74:08:46 (3d 02h)  301:53:45 (12d 13h)
+   19:28:11 (0d 19h)    79:16:23 (3d 07h)  322:46:13 (13d 10h)
+   20:48:57 (0d 20h)    84:45:16 (3d 12h)  345:05:18 (14d 09h)
+   22:15:19 (0d 22h)    90:36:53 (3d 18h)  368:56:58 (15d 08h)
+   23:47:38 (0d 23h)    96:52:49 (4d 00h)  394:27:37 (16d 10h)
+   25:26:21 (1d 01h)   103:34:45 (4d 07h)  421:44:07 (17d 13h)
+   27:11:54 (1d 03h)   110:44:28 (4d 14h)  450:53:46 (18d 18h)
+   29:04:44 (1d 05h)   118:23:54 (4d 22h)  482:04:24 (20d 02h)
+   31:05:22 (1d 07h)   126:35:05 (5d 06h)  515:24:22 (21d 11h)
+   33:14:21 (1d 09h)   135:20:15 (5d 15h)  551:02:38 (22d 23h)
+   35:32:15 (1d 11h)   144:41:44 (6d 00h)  589:08:45 (24d 13h)
+   37:59:41 (1d 13h)   154:42:01 (6d 10h)  629:52:56 (26d 05h)
    40:37:19 (1d 16h)   165:23:50 (6d 21h)  673:26:07 (28d 01h)
    43:25:50 (1d 19h)   176:50:01 (7d 08h)
 
@@ -154,7 +154,7 @@ if the translator machine's administrator has enabled UID checking by
 including the B<-uidcheck on> argument to the B<fs exportafs> command, the
 command fails with an error message similar to the following:
 
-   Warning: Remote pioctl to <translator_machine> has failed (err=8). . . 
+   Warning: Remote pioctl to <translator_machine> has failed (err=8). . .
    Unable to authenticate to AFS because a pioctl failed.
 
 Enabling UID checking means that the credential structure in which tokens
@@ -300,13 +300,13 @@ defaults have been changed, it is 25 hours for a user whose Authentication
 Database entry was created in AFS 3.1 or later).
 
    % klog
-   Password: 
+   Password:
 
 The following example authenticates the user as admin in the ABC
 Corporation's test cell:
 
    % klog -principal admin -cell test.abc.com
-   Password: 
+   Password:
 
 In the following, the issuer requests a ticket lifetime of 104 hours 30
 minutes (4 days 8 hours 30 minutes). Presuming that this lifetime is
@@ -315,7 +315,7 @@ L<DESCRIPTION>, the token's lifetime is 110:44:28, which is the next
 largest possible value.
 
    % klog -lifetime 104:30
-   Password: 
+   Password:
 
 =head1 PRIVILEGE REQUIRED
 

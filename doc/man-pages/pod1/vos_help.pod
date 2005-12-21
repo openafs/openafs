@@ -67,9 +67,9 @@ The following command displays the online help entry for the B<vos create>
 command:
 
    % vos help create
-   vos create: create a new volume 
-   Usage: vos create -server <machine name> -partition <partition name> 
-   -name <volume name> [-cell <cell name>] [-noauth] [-localauth] 
+   vos create: create a new volume
+   Usage: vos create -server <machine name> -partition <partition name>
+   -name <volume name> [-cell <cell name>] [-noauth] [-localauth]
    [-verbose] [-help]
 
 =head1 PRIVILEGE REQUIRED

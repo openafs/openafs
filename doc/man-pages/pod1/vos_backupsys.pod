@@ -4,9 +4,9 @@ vos backupsys - Creates a backup volume for several read/write volumes
 
 =head1 SYNOPSIS
 
-B<vos backupsys> [B<-prefix> <I<common prefix on volume(s)>>+]  
-    [B<-server> <I<machine name>>] [B<-partition> <I<partition name>>]  
-    [B<-exclude>] [B<-xprefix> <I<negative prefix on volume(s)>>+] 
+B<vos backupsys> [B<-prefix> <I<common prefix on volume(s)>>+]
+    [B<-server> <I<machine name>>] [B<-partition> <I<partition name>>]
+    [B<-exclude>] [B<-xprefix> <I<negative prefix on volume(s)>>+]
     [B<-dryrun>] [B<-cell> <I<cell name>>] [B<-noauth>] [B<-localauth>]
     [B<-verbose>] [B<-help>]
 

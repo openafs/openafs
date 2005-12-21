@@ -94,7 +94,7 @@ The following example shows the output for the partitions housing the
 volumes C<user.smith> and C<sun4x_56.bin>:
 
    % fs diskfree -path /afs/abc.com/usr/smith /afs/abc.com/sun4x_56/bin
-   Volume Name     kbytes  used     avail     %used     
+   Volume Name     kbytes  used     avail     %used
    user.smith     4177920 3841258  336662       92% <<WARNING
    sun4x_56.bin   4423680 3174500 1249180       72%
 

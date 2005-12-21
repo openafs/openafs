@@ -67,13 +67,13 @@ The following command displays the online help entry for the B<kas
 setpassword> command:
 
    % kas help setpassword
-   kas setpassword: set a user's password 
-   aliases: sp 
-   Usage: kas setpassword -name <name of user> 
-   [-new_password <new password>] [-kvno <key version number>] 
-   [-admin_username <admin principal to use for authentication>] 
-   [-password_for_admin <password>] [-cell <cell name>] 
-   [-servers <explicit list of authentication servers>+] [-help]  
+   kas setpassword: set a user's password
+   aliases: sp
+   Usage: kas setpassword -name <name of user>
+   [-new_password <new password>] [-kvno <key version number>]
+   [-admin_username <admin principal to use for authentication>]
+   [-password_for_admin <password>] [-cell <cell name>]
+   [-servers <explicit list of authentication servers>+] [-help]
 
 =head1 PRIVILEGE REQUIRED
 

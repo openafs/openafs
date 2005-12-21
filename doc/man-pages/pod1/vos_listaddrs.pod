@@ -73,7 +73,7 @@ entries, use the B<vos changeaddr> command with the B<-remove> argument.
 The following command displays the VLDB server entries in the ABC
 Corporation cell:
 
-   % vos listaddrs 
+   % vos listaddrs
    sv5.abc.com
    sv1.abc.com
    sv2.abc.com  afs2.abc.com

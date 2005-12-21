@@ -9,12 +9,12 @@ B<rxdebug> B<-servers> <I<server machine>> [B<-port> <I<IP port>>]
     [B<-onlyclient>] [B<-onlyport> <I<show only port>>]
     [B<-onlyhost> <I<show only host>>]
     [B<-onlyauth> <I<show only auth level>>] [B<-version>]
-    [B<-noconns>] [B<-peers>] [B<-help>] 
+    [B<-noconns>] [B<-peers>] [B<-help>]
 
 B<rxdebug> B<-s> <I<server machine>> [B<-po> <I<IP port>>] [B<-nod>]
-    [B<-a>] [B<-r>] [B<-onlys>] [B<-onlyc>] [B<-onlyp> <I<show only port>>]  
-    [B<-onlyh> <I<show only host>>] [-onlya <I<show only auth level>>]  
-    [B<-v>] [B<-noc>] [B<-pe>] [B<-h>] 
+    [B<-a>] [B<-r>] [B<-onlys>] [B<-onlyc>] [B<-onlyp> <I<show only port>>]
+    [B<-onlyh> <I<show only host>>] [-onlya <I<show only auth level>>]
+    [B<-v>] [B<-noc>] [B<-pe>] [B<-h>]
 
 =head1 DESCRIPTION
 

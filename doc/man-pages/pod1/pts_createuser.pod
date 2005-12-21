@@ -9,7 +9,7 @@ B<pts createuser> B<-name> <I<user name>>+ [B<-id> <I<user id>>+]
 
 B<pts createu> B<-na> <I<user name>>+ [B<-i> <I<user id>>+]
     [B<-c> <I<cell name>>] [B<-no>] [B<-f>] [B<-h>]
-   
+
 B<pts cu> B<-na> <I<user name>>+ [B<-i> <I<user id>>+]
     [B<-c> <I<cell name>>] [B<-no>] [B<-f>] [B<-h>]
 

@@ -9,7 +9,7 @@ B<fs storebehind> [B<-kbytes> <I<asynchrony for specified names>>]
     [B<-allfiles> <I<new default (KB)>>] [B<-verbose>] [B<-help>]
 
 B<fs st> [B<-k> <I<asynchrony for specified names>>]
-    [B<-f> <I<specific pathnames>>+]  
+    [B<-f> <I<specific pathnames>>+]
     [B<-a> <I<new default (KB)>>] [B<-v>] [B<-h>]
 
 =head1 DESCRIPTION

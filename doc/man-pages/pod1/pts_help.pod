@@ -69,7 +69,7 @@ membership> command:
    % pts help membership
    pts membership:  list membership of a user or group
    aliases: groups
-   Usage: pts membership -nameorid <user or group name or id>+ 
+   Usage: pts membership -nameorid <user or group name or id>+
    [-cell <cell name>] [-noauth] [-force] [-help]
 
 =head1 PRIVILEGE REQUIRED

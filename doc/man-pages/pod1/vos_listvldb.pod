@@ -213,12 +213,12 @@ The following command displays VLDB information for the ABC Corporation
 volume called C<usr>, which has two read-only replication sites:
 
    % vos listvldb -name usr
-   usr 
+   usr
     RWrite: 5360870981   ROnly: 536870982   Backup: 536870983
     number of sites -> 3
-       server fs1.abc.com partition /vicepa RO Site 
-       server fs3.abc.com partition /vicepa RO Site 
-       server fs2.abc.com partition /vicepb RW Site 
+       server fs1.abc.com partition /vicepa RO Site
+       server fs3.abc.com partition /vicepa RO Site
+       server fs2.abc.com partition /vicepb RW Site
 
 The following example shows entries for two of the volumes that reside on
 the file server machine C<fs4.abc.com>. The first VLDB entry is currently
@@ -228,15 +228,15 @@ locked. There are 508 entries that mention the machine as a volume site.
    VLDB entries for server fs4.abc.com
        .       .           .        .
        .       .           .        .
-   user.smith 
+   user.smith
     RWrite: 278541326   ROnly: 278541327   Backup: 278542328
     number of sites -> 1
-      server fs4.abc.com partition /vicepg RW Site 
+      server fs4.abc.com partition /vicepg RW Site
     Volume is currently LOCKED
       user.terry
     RWrite 354287190   ROnly 354287191   Backup 354287192
     number of sites -> 1
-      server fs4.abc.com partition /vicepc RW Site 
+      server fs4.abc.com partition /vicepc RW Site
       .       .           .        .
       .       .           .        .
    Total entries: 508

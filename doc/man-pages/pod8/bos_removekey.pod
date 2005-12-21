@@ -8,7 +8,7 @@ B<bos removekey> B<-server> <I<machine name>>
     B<-kvno> <I<key version number>>+ [B<-cell> <I<cell name>>]
     [B<-noauth>] [B<-localauth>] [B<-help>]
 
-B<bos removek> B<-s> <I<machine name>> B<-k> <I<key version number>>+  
+B<bos removek> B<-s> <I<machine name>> B<-k> <I<key version number>>+
     [B<-c> <I<cell name>>] [B<-n>] [B<-l>] [B<-h>]
 
 =head1 DESCRIPTION

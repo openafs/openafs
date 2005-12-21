@@ -4,15 +4,15 @@ vos restore - Converts an ASCII dump file into an AFS volume
 
 =head1 SYNOPSIS
 
-B<vos restore> B<-server> <I<machine name>> B<-partition> <I<partition name>>  
-    B<-name> <I<name of volume to be restored>> [B<-file> <I<dump file>>]  
-    [B<-id> <I<volume ID>>] [B<-overwrite> (abort | full | incremental)]  
-    [B<-cell> <I<cell name>>] [B<-noauth>] [B<-localauth>] [-verbose]  
+B<vos restore> B<-server> <I<machine name>> B<-partition> <I<partition name>>
+    B<-name> <I<name of volume to be restored>> [B<-file> <I<dump file>>]
+    [B<-id> <I<volume ID>>] [B<-overwrite> (abort | full | incremental)]
+    [B<-cell> <I<cell name>>] [B<-noauth>] [B<-localauth>] [-verbose]
     [B<-help>]
 
-B<vos res> B<-s> <I<machine name>> B<-p> <I<partition name>>  
-    B<-na> <I<name of volume to be restored>> [B<-f> <I<dump file>>]  
-    [B<-i> <I<volume ID>>] [B<-o> (a | f | i)] [B<-c> <I<cell name>>]  
+B<vos res> B<-s> <I<machine name>> B<-p> <I<partition name>>
+    B<-na> <I<name of volume to be restored>> [B<-f> <I<dump file>>]
+    [B<-i> <I<volume ID>>] [B<-o> (a | f | i)] [B<-c> <I<cell name>>]
     [B<-no>] [B<-l>] [B<-v>] [B<-h>]
 
 =head1 DESCRIPTION

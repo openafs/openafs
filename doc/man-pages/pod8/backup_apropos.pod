@@ -4,7 +4,7 @@ backup apropos - Displays each help entry containing a keyword string
 
 =head1 SYNOPSIS
 
-B<backup apropos> B<-topic> <I<help string>> [B<-help>] 
+B<backup apropos> B<-topic> <I<help string>> [B<-help>]
 
 B<backup ap> B<-t> <I<help string>> [B<-h>]
 

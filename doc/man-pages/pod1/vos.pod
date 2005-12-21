@@ -179,12 +179,12 @@ four name formats:
    /vicepa     =     vicepa      =      a      =      0
    /vicepb     =     vicepb      =      b      =      1
 
-After /vicepz (for which the index is 25) comes 
+After /vicepz (for which the index is 25) comes
 
    /vicepaa    =     vicepaa     =      aa     =      26
    /vicepab    =     vicepab     =      ab     =      27
 
-and so on through 
+and so on through
 
    /vicepiv    =     vicepiv     =      iv     =      255
 

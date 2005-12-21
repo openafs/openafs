@@ -4,9 +4,9 @@ backup diskrestore - Restores the entire contents of a partition
 
 =head1 SYNOPSIS
 
-B<backup diskrestore> B<-server> <I<machine to restore>> 
+B<backup diskrestore> B<-server> <I<machine to restore>>
     B<-partition> <I<partition to restore>>
-    [B<-portoffset> <I<TC port offset>>+]  
+    [B<-portoffset> <I<TC port offset>>+]
     [B<-newserver> <I<destination machine>>]
     [B<-newpartition> <I<destination partition>>]
     [B<-extension> <I<new volume name extension>>]

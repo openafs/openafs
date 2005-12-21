@@ -5,7 +5,7 @@ bos install - Installs a new version of a binary file
 =head1 SYNOPSIS
 
 B<bos install> B<-server> <I<machine name>> B<-file> <I<files to install>>+
-    [B<-dir> <I<destination dir>>] [B<-cell> <I<cell name>>]  
+    [B<-dir> <I<destination dir>>] [B<-cell> <I<cell name>>]
     [B<-noauth>] [B<-localauth>] [B<-help>]
 
 B<bos i> B<-s> <I<machine name>> B<-f> <I<files to install>>+

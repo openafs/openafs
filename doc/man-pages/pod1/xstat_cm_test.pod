@@ -6,14 +6,14 @@ xstat_cm_test - Displays data collections from the Cache Manager
 
 B<xstat_cm_test> [I<initcmd>]
     B<-cmname> <I<cache manager name(s) to monitor>>+
-    B<-collID> <I<collection(s) to fetch>>+ [B<-onceonly>]  
-    [B<-frequency> <I<poll frequency, in seconds>>]  
+    B<-collID> <I<collection(s) to fetch>>+ [B<-onceonly>]
+    [B<-frequency> <I<poll frequency, in seconds>>]
     [B<-period> <I<data collection time, in minutes>>] [B<-debug>]
     [B<-help>]
 
 B<xstat_cm_test> [I<i>] B<-cm> <I<cache manager name(s) to monitor>>+
     B<-co> <I<collection(s) to fetch>>+ [B<-o>]
-    [B<-f> <I<poll frequency, in seconds>>]  
+    [B<-f> <I<poll frequency, in seconds>>]
     [B<-p> <I<data collection time, in minutes>>] [B<-d>] [B<-h>]
 
 =head1 DESCRIPTION
@@ -44,7 +44,7 @@ Specifies each data collection to return, which defines the type and
 amount of data the command interpreter gathers about the Cache Manager.
 Data is returned in a predefined data structure.
 
-There are three acceptable values: 
+There are three acceptable values:
 
 =over 4
 

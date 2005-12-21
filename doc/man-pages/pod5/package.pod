@@ -550,9 +550,9 @@ It is possible to nest any number of C<%ifdef> and C<%ifndef> statements.
 
 The two types of statement share a common syntax:
 
-   (%ifdef | %ifndef) <declaration> 
+   (%ifdef | %ifndef) <declaration>
        <action>+
-   [%else [<declaration>] 
+   [%else [<declaration>]
        <alternate_action>+]
    %endif <declaration>
 

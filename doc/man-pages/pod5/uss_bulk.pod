@@ -143,12 +143,12 @@ F</vicepa>, or use one of the following abbreviations:
    /vicepa     =     vicepa      =      a      =      0
    /vicepb     =     vicepb      =      b      =      1
 
-After F</vicepz> (for which the index is 25) comes 
+After F</vicepz> (for which the index is 25) comes
 
    /vicepaa    =     vicepaa     =      aa     =      26
    /vicepab    =     vicepab     =      ab     =      27
 
-and so on through 
+and so on through
 
    /vicepiv    =     vicepiv     =      iv     =      255
 
@@ -293,7 +293,7 @@ The following example add instructions refer to the indicated C<V>
 instruction in a template file (which must appear on a single line in the
 template file).
 
-   add smith:John Smith:::fs1:a:::::marketing 
+   add smith:John Smith:::fs1:a:::::marketing
    add jones:Pat Jones:::fs3:c:::::finance
    V user.$USER $SERVER.abc.com /vicep$PART 2000 \
        /afs/abc.com/usr/$3/$USER $UID $USER all

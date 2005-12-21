@@ -80,8 +80,8 @@ back to the volume to fail even when the volume has not reached its quota.
 The following example shows the output for the volume C<user.smith>:
 
    % fs listquota -path /afs/abc.com/usr/smith
-   Volume Name     Quota    Used    % Used   Partition 
-   user.smith      15000    5071       34%         86%   
+   Volume Name     Quota    Used    % Used   Partition
+   user.smith      15000    5071       34%         86%
 
 =head1 PRIVILEGE REQUIRED
 

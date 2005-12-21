@@ -11,9 +11,9 @@ B<fs setserverprefs> [B<-servers> <I<fileserver names and ranks>>+]
 B<fs sets> [B<-se> <I<fileserver names and ranks>>+]
     [B<-vl> <I<VL server names and ranks>>+]
     [B<-f> <I<input from named file>>] [B<-st>] [B<-h>]
-   
+
 B<fs sp> [B<-se> <I<fileserver names and ranks>>+]
-    [B<-vl> <I<VL server names and ranks>>+]  
+    [B<-vl> <I<VL server names and ranks>>+]
     [B<-f> <I<input from named file>>] [B<-st>] [B<-h>]
 
 =head1 DESCRIPTION

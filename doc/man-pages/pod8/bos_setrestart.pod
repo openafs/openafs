@@ -70,7 +70,7 @@ as weekly (specifies both a day and a time), and the binary restart is
 defined as daily (specifies only a time). However, it is acceptable to
 define a daily general restart or weekly binary restart.
 
-There are four acceptable values for either type of restart setting: 
+There are four acceptable values for either type of restart setting:
 
 =over 4
 

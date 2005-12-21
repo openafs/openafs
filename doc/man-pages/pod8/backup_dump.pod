@@ -395,7 +395,7 @@ the Backup System reads the file, whereas the other commands are
 themselves scheduled; the specified date and time must be later than the
 date and time at which the Backup System reads the file.
 
-   dump user /sunday1/wednesday -port 1 
+   dump user /sunday1/wednesday -port 1
    dump sun4x_56 /sunday1/friday -port 2 -at 04/08/1999
    dump sun4x_55 /sunday1/friday -port 2 -at 04/08/1999 02:00 -append
 

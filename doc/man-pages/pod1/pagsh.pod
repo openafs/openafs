@@ -76,7 +76,7 @@ However, if the translator machine's administrator has enabled UID
 checking by including the B<-uidcheck on> argument to the B<fs exportafs>
 command, the command fails with an error message similar to the following:
 
-   Warning: Remote setpag to <translator_machine> has failed (err=8). . . 
+   Warning: Remote setpag to <translator_machine> has failed (err=8). . .
    setpag: Exec format error
 
 =head1 EXAMPLES

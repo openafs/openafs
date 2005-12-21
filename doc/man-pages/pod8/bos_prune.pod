@@ -8,7 +8,7 @@ B<bos prune> B<-server> <I<machine name>> [B<-bak>] [B<-old>] [B<-core>]
     [B<-all>] [B<-cell> <I<cell name>>] [B<-noauth>] [B<-localauth>]
     [B<-help>]
 
-B<bos p> B<-s> <I<machine name>> [B<-b>] [B<-o>] [B<-co>] [B<-a>]  
+B<bos p> B<-s> <I<machine name>> [B<-b>] [B<-o>] [B<-co>] [B<-a>]
     [B<-ce> <I<cell name>>] [B<-n>] [B<-l>] [B<-h>]
 
 =head1 DESCRIPTION

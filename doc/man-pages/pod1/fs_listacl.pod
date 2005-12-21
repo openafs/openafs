@@ -6,9 +6,9 @@ fs listacl - Displays ACLs
 
 B<fs listacl> [B<-path> <I<dir/file path>>+] [B<-id>] [B<-if>] [B<-help>]
 
-B<fs la> [B<-p> <I<dir/file path>>+] [B<-id>] [B<-if>] [B<-h>] 
+B<fs la> [B<-p> <I<dir/file path>>+] [B<-id>] [B<-if>] [B<-h>]
 
-B<fs lista> [B<-p> <I<dir/file path>>+] [B<-id>] [B<-if>] [B<-h>] 
+B<fs lista> [B<-p> <I<dir/file path>>+] [B<-id>] [B<-if>] [B<-h>]
 
 =head1 DESCRIPTION
 

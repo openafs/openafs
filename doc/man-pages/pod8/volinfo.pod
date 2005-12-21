@@ -5,7 +5,7 @@ volinfo - Produces detailed statistics about AFS volume headers
 =head1 SYNOPSIS
 
 B<volinfo> [B<-online>] [B<-vnode>] [B<-date>] [B<-inode>] [B<-itime>]
-    [B<-part> <I<AFS partition name (default current partition)>>+]   
+    [B<-part> <I<AFS partition name (default current partition)>>+]
     [B<-volumeid> <I<volume id>>+] [B<-header>] [B<-sizeOnly>]
     [B<-fixheader>] [B<-saveinodes>] [B<-orphaned>] [B<-help>]
 

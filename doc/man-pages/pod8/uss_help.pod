@@ -67,10 +67,10 @@ command:
 
    % uss help bulk
    uss bulk: bulk input mode
-   Usage: uss bulk -file <bulk input file> [-template <pathname 
-   of template file>] [-verbose] [-cell <cell name>] [-admin 
-   <administrator to authenticate>] [-dryrun] [-skipauth] [-overwrite] 
-   [-pwexpires <password expires in [0..254] days (0 => never)>] [-pipe] 
+   Usage: uss bulk -file <bulk input file> [-template <pathname
+   of template file>] [-verbose] [-cell <cell name>] [-admin
+   <administrator to authenticate>] [-dryrun] [-skipauth] [-overwrite]
+   [-pwexpires <password expires in [0..254] days (0 => never)>] [-pipe]
    [-help]
 
 =head1 PRIVILEGE REQUIRED

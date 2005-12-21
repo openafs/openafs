@@ -4,7 +4,7 @@ sys - Reports the CPU/operating system type
 
 =head1 SYNOPSIS
 
-sys 
+sys
 
 =head1 DESCRIPTION
 

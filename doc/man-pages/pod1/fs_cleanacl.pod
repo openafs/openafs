@@ -6,7 +6,7 @@ fs cleanacl - Remove obsolete entries from an ACL
 
 B<fs cleanacl> [B<-path> <I<dir/file path>>+] [B<-help>]
 
-B<fs cl> [B<-p> <I<dir/file path>>+] [B<-h>] 
+B<fs cl> [B<-p> <I<dir/file path>>+] [B<-h>]
 
 =head1 DESCRIPTION
 

@@ -4,7 +4,7 @@ bos listusers - Lists the privileged users from the UserList file
 
 =head1 SYNOPSIS
 
-B<bos listusers> B<-server> <I<machine name>> [B<-cell> <I<cell name>>]  
+B<bos listusers> B<-server> <I<machine name>> [B<-cell> <I<cell name>>]
     [B<-noauth>] [B<-localauth>] [B<-help>]
 
 B<bos listu> B<-s> <I<machine name>> [B<-c> <I<cell name>>] [B<-n>]

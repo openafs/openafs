@@ -196,18 +196,18 @@ the standard output stream.
       Date: Tue Apr  7 10:54:57 1998
    Found 1 logs.
    time 32.965783, pid 0: Tue Apr  7 10:45:52 1998
-   time 32.965783, pid 33657: Close 0x5c39ed8 flags 0x20 
-   time 32.965897, pid 33657: Gn_close vp 0x5c39ed8 flags 0x20 (returns 0x0) 
+   time 32.965783, pid 33657: Close 0x5c39ed8 flags 0x20
+   time 32.965897, pid 33657: Gn_close vp 0x5c39ed8 flags 0x20 (returns 0x0)
    time 35.159854, pid 10891: Breaking callback for 5bd95e4 states 1024 (volume 0)
    time 35.407081, pid 10891: Breaking callback for 5c0fadc states 1024 (volume 0)
                                     .
                                     .
                                     .
    time 71.440456, pid 33658: Lookup adp 0x5bbdcf0 name g3oCKs \
-        fid (756 4fb7e:588d240.2ff978a8.6) 
-   time 71.440569, pid 33658: Returning code 2 from 19 
-   time 71.440619, pid 33658: Gn_lookup vp 0x5bbdcf0 name g3oCKs (returns 0x2) 
-   time 71.464989, pid 38267: Gn_open vp 0x5bbd000 flags 0x0 (returns 0x0) 
+        fid (756 4fb7e:588d240.2ff978a8.6)
+   time 71.440569, pid 33658: Returning code 2 from 19
+   time 71.440619, pid 33658: Gn_lookup vp 0x5bbdcf0 name g3oCKs (returns 0x2)
+   time 71.464989, pid 38267: Gn_open vp 0x5bbd000 flags 0x0 (returns 0x0)
    AFS Trace Dump - Completed
 
 The following command dumps the trace log associated with the cm event set

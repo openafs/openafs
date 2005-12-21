@@ -605,12 +605,12 @@ of the following abbreviations.
    /vicepa     =     vicepa      =      a      =      0
    /vicepb     =     vicepb      =      b      =      1
 
-After F</vicepz> (for which the index is 25) comes 
+After F</vicepz> (for which the index is 25) comes
 
    /vicepaa    =     vicepaa     =      aa     =      26
    /vicepab    =     vicepab     =      ab     =      27
 
-and so on through 
+and so on through
 
    /vicepiv    =     vicepiv     =      iv     =      255
 
@@ -714,7 +714,7 @@ The following example C<D> instruction creates a directory called
 F<public> in a new user's home directory, designates the user as the
 directory's owner, and grants him or her all ACL permissions.
 
-   D $MTPT/public 0755 $UID $USER all 
+   D $MTPT/public 0755 $UID $USER all
 
 The following example C<E> instruction creates a file in the current
 working directory called F<I<username>.etcp>. The contents are an entry
@@ -726,7 +726,7 @@ The following example C<F> instruction, appropriate for the ABC
 Corporation cell, copies a prototype F<.login> file into the user's home
 directory.
 
-   F $MTPT/.login 0644 $UID /afs/abc.com/common/uss/skel/.login 
+   F $MTPT/.login 0644 $UID /afs/abc.com/common/uss/skel/.login
 
 In the following example, the State University cell's administrators
 have decided to distribute user home directories evenly into three
@@ -773,7 +773,7 @@ access rights to it. The instruction appears on two lines only for
 legibility; it must appear on a single line in the template file.
 
    V user.$USER $SERVER.abc.com /vicepa 3000 \
-           /afs/abc.com/usr/$USER $UID $USER all 
+           /afs/abc.com/usr/$USER $UID $USER all
 
 The following example C<X> instruction mounts the backup version of the
 user's volume at the F<OldFiles> subdirectory.

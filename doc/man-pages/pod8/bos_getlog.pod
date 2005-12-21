@@ -121,11 +121,11 @@ C<fs3.abc.com>:
    % bos getlog -server fs3.abc.com -file FileLog
    Fetching log file 'FileLog'...
    Sun Nov 8 04:00:34 1998 File server starting
-   Sun Nov 8 04:00:39 1998 Partition /vicepa:  attached 21 volumes; 
+   Sun Nov 8 04:00:39 1998 Partition /vicepa:  attached 21 volumes;
                            0 volumes not attached
-   Sun Nov 8 04:00:40 1998 File Server started Sun Nov 8 04:00:40 
+   Sun Nov 8 04:00:40 1998 File Server started Sun Nov 8 04:00:40
                            1998
-   Mon Nov 9 21:45:06 1998 CB: RCallBack (zero fid probe in host.c) 
+   Mon Nov 9 21:45:06 1998 CB: RCallBack (zero fid probe in host.c)
                            failed for host 28cf37c0.22811
 
 =head1 PRIVILEGE REQUIRED

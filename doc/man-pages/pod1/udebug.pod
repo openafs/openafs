@@ -77,7 +77,7 @@ appears in the top third of the output.
 
    I am sync site . . . (<#_sites> servers)
 
-   I am not sync site 
+   I am not sync site
 
 For the synchronization site, the following message indicates that all
 sites have the same version of the database, which implies that Ubik is
@@ -132,7 +132,7 @@ and voting has not yet begun, the following message appears next.
 
 Otherwise, the output continues with the following messages.
 
-   Last yes vote for <sync_IP_addr> was <last_vote> secs ago (sync site); 
+   Last yes vote for <sync_IP_addr> was <last_vote> secs ago (sync site);
    Last vote started <vote_start> secs ago (at <date/time>)
    Local db version is <db_version>
 
@@ -323,10 +323,10 @@ This example checks the status of the Ubik process for the Volume Location
 Server on the machine C<afs1>, which is the synchronization site.
 
    % udebug afs1 vlserver
-   Host's addresses are: 192.12.107.33 
+   Host's addresses are: 192.12.107.33
    Host's 192.12.107.33 time is Wed Oct 27 09:49:50 1999
    Local time is Wed Oct 27 09:49:52 1999 (time differential 2 secs)
-   Last yes vote for 192.12.107.33 was 1 secs ago (sync site); 
+   Last yes vote for 192.12.107.33 was 1 secs ago (sync site);
    Last vote started 1 secs ago (at Wed Oct 27 09:49:51 1999)
    Local db version is 940902602.674
    I am sync site until 58 secs from now (at Wed Oct 27 09:50:50 1999) (3 servers)
@@ -340,7 +340,7 @@ Server on the machine C<afs1>, which is the synchronization site.
        last vote rcvd 2 secs ago (at Wed Oct 27 09:49:50 1999),
        last beacon sent 1 secs ago (at Wed Oct 27 09:49:51 1999), last vote was yes
        dbcurrent=1, up=1 beaconSince=1
-   
+
    Server( 192.12.107.34 ): (db 940902602.674)
        last vote rcvd 2 secs ago (at Wed Oct 27 09:49:50 1999),
        last beacon sent 1 secs ago (at Wed Oct 27 09:49:51 1999), last vote was yes
@@ -355,7 +355,7 @@ is about 4 minutes behind the database server machine's clock.
    Host's 192.12.107.34 time is Wed Oct 27 09:54:15 1999
    Local time is Wed Oct 27 09:50:08 1999 (time differential -247 secs)
    ****clock may be bad
-   Last yes vote for 192.12.107.33 was 6 secs ago (sync site); 
+   Last yes vote for 192.12.107.33 was 6 secs ago (sync site);
    Last vote started 6 secs ago (at Wed Oct 27 09:50:02 1999)
    Local db version is 940906574.25
    I am not sync site

@@ -4,16 +4,16 @@ bos status - Displays the status of server processes
 
 =head1 SYNOPSIS
 
-B<bos status -server> <I<machine name>>  [-instance <I<server process name>>+]  
-[B<-long>]  [B<-cell> <I<cell name>>]  [B<-noauth>]  [B<-localauth>]  [B<-help>] 
+B<bos status -server> <I<machine name>>  [-instance <I<server process name>>+]
+[B<-long>]  [B<-cell> <I<cell name>>]  [B<-noauth>]  [B<-localauth>]  [B<-help>]
 
-B<bos stat -s> <I<machine name>>  [-i <I<server process name>>+] 
-[B<-lon>]  [B<-c> <I<cell name>>]  [B<-n>]  [B<-loc>]  [B<-h>] 
+B<bos stat -s> <I<machine name>>  [-i <I<server process name>>+]
+[B<-lon>]  [B<-c> <I<cell name>>]  [B<-n>]  [B<-loc>]  [B<-h>]
 
 =head1 DESCRIPTION
 
 The bos status command reports the status of processes on the
-server machine named by the B<-server> argument, either 
+server machine named by the B<-server> argument, either
 
 =over 4
 
@@ -155,7 +155,7 @@ restarts them as soon as the Salvager is finished.
 
 =back
 
-The entry for a cron process includes an C<Auxiliary 
+The entry for a cron process includes an C<Auxiliary
 status> that reports when the command will next execute.
 
 If the -long flag is used, each entry includes the following
@@ -239,8 +239,8 @@ B<fs1.abc.com>.
    Instance fs, (type is fs), currently running normally.
       Auxiliary status is: file server running.
       Process last started at Wed Jan 7 5:34:49 1998 (3 proc starts)
-      Last exit at Wed Jan 7 5:34:49 1998 
-      Last error exit at Wed Jan 7 5:34:49 1998, due to shutdown 
+      Last exit at Wed Jan 7 5:34:49 1998
+      Last error exit at Wed Jan 7 5:34:49 1998, due to shutdown
           request
       Command 1 is '/usr/afs/bin/fileserver'
       Command 2 is '/usr/afs/bin/volserver'

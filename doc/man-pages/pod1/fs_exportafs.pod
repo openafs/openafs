@@ -4,18 +4,18 @@ fs exportafs - Configures export of AFS to clients of other file systems
 
 =head1 SYNOPSIS
 
-B<fs exportafs> B<-type> <I<exporter name>>  
-    [B<-start> <I<start/stop translator (on | off)>>] 
-    [B<-convert> <I<convert from afs to unix mode (on | off)>>] 
-    [B<-uidcheck> <I<run on strict 'uid check' mode (on | off)>>] 
+B<fs exportafs> B<-type> <I<exporter name>>
+    [B<-start> <I<start/stop translator (on | off)>>]
+    [B<-convert> <I<convert from afs to unix mode (on | off)>>]
+    [B<-uidcheck> <I<run on strict 'uid check' mode (on | off)>>]
     [B<-submounts> <I<allow nfs mounts to subdirs of /afs/.. (on | off)>>]
     [B<-help>]
 
-B<fs exp> B<-t> <I<exporter name>>  
+B<fs exp> B<-t> <I<exporter name>>
     [B<-st> <I<start/stop translator (on | off)>>]
     [B<-c> <I<convert from afs to unix mode (on | off)>>]
     [B<-u> <I<run on strict 'uid check' mode (on | off)>>]
-    [B<-su> <I<allow nfs mounts to subdirs of /afs/.. (on | off)>>]  
+    [B<-su> <I<allow nfs mounts to subdirs of /afs/.. (on | off)>>]
     [B<-h>]
 
 =head1 DESCRIPTION

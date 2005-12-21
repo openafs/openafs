@@ -4,15 +4,15 @@ dlog - Authenticates to the DCE Security Service
 
 =head1 SYNOPSIS
 
-B<dlog> [B<-principal> <I<user name>>] [B<-cell> <I<cell name>>]  
+B<dlog> [B<-principal> <I<user name>>] [B<-cell> <I<cell name>>]
     [B<-password> <I<user's password>>]
-    [B<-servers> <I<explicit list of servers>>+]  
-    [B<-lifetime> <I<ticket lifetime in hh[:mm[:ss]]>>]  
+    [B<-servers> <I<explicit list of servers>>+]
+    [B<-lifetime> <I<ticket lifetime in hh[:mm[:ss]]>>]
     [B<-setpag>] [B<-pipe>] [B<-help>]
 
 B<dlog> [B<-pr> <I<user name>>] [B<-c> <I<cell name>>]
-    [B<-pw> <I<user's password>>] 
-    [B<-ser> <I<explicit list of servers>>+]  
+    [B<-pw> <I<user's password>>]
+    [B<-ser> <I<explicit list of servers>>+]
     [B<-l> <I<ticket lifetime in hh[:mm[:ss]]>>]
     [B<-set>] [B<-pi>] [B<-h>]
 
@@ -196,10 +196,10 @@ assigned to C<cell_admin> in C<dce.abc.com> cell's DCE registry.
 
    % tokens
    Tokens held by the Cache Manager:
-   
-   User's (AFS ID 1) tokens for afs@dce.abc.com [Expires Jul 6 14:12] 
-   User's (AFS ID 4758) tokens for afs@abc.com [Expires Jul 2 13:14] 
- 
+
+   User's (AFS ID 1) tokens for afs@dce.abc.com [Expires Jul 6 14:12]
+   User's (AFS ID 4758) tokens for afs@abc.com [Expires Jul 2 13:14]
+
       --End of list--
 
 =head1 PRIVILEGE REQUIRED

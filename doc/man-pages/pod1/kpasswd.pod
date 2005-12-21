@@ -9,8 +9,8 @@ B<kpasswd> [B<-x>] [B<-principal> <I<user name>>]
     [B<-newpassword> <I<user's new password>>] [B<-cell> <I<cell name>>]
     [B<-servers> <I<explicit list of servers>>+] [B<-pipe>] [B<-help>]
 
-B<kpasswd> [B<-x>] [B<-pr> <I<user name>>] [B<-pa> <I<user's password>>]  
-    [B<-n> <I<user's new password>>] [B<-c> <I<cell name>>]  
+B<kpasswd> [B<-x>] [B<-pr> <I<user name>>] [B<-pa> <I<user's password>>]
+    [B<-n> <I<user's new password>>] [B<-c> <I<cell name>>]
     [B<-s> <I<explicit list of servers>>+] [B<-pi>] [B<-h>]
 
 =head1 DESCRIPTION
@@ -63,7 +63,7 @@ script), use the B<-minhours> argument on the B<kaserver> initialization
 command. The following error message appears if a user attempts to change
 a password before the minimum time has passed:
 
-   Password was not changed because you changed it too 
+   Password was not changed because you changed it too
    recently; see your systems administrator
 
 =back
@@ -109,7 +109,7 @@ command to that cell's Authentication Servers. The issuer can abbreviate
 the cell name to the shortest form that distinguishes it from the other
 cells listed in the local F</usr/vice/etc/CellServDB> file.
 
-By default, the command is executed in the local cell, as defined 
+By default, the command is executed in the local cell, as defined
 
 =over 4
 

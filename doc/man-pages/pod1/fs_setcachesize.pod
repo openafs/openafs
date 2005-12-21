@@ -4,7 +4,7 @@ fs setcachesize - Sets the size of the disk cache
 
 =head1 SYNOPSIS
 
-B<fs setcachesize> [B<-blocks> <I<size in 1K byte blocks (0 => reset)>>]  
+B<fs setcachesize> [B<-blocks> <I<size in 1K byte blocks (0 => reset)>>]
     [B<-reset>] [B<-help>]
 
 B<fs setca> [B<-b> <I<size in 1K byte blocks (0 => reset)>>]
@@ -14,7 +14,7 @@ B<fs cachesize> [B<-b> <I<size in 1K byte blocks (0 => reset)>>]
     [B<-r>] [B<-h>]
 
 B<fs ca> [B<-b> <I<size in 1K byte blocks (0 => reset)>>]
-    [B<-r>] [B<-h>]  
+    [B<-r>] [B<-h>]
 
 =head1 DESCRIPTION
 

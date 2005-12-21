@@ -5,13 +5,13 @@ vos delentry - Removes a volume entry from the VLDB.
 =head1 SYNOPSIS
 
 B<vos delentry> [B<-id> <I<volume name or ID>>+]
-    [B<-prefix> <I<prefix of volume whose VLDB entry is to be deleted>>] 
-    [B<-server> <I<machine name>>] [B<-partition> <I<partition name>>]  
+    [B<-prefix> <I<prefix of volume whose VLDB entry is to be deleted>>]
+    [B<-server> <I<machine name>>] [B<-partition> <I<partition name>>]
     [B<-cell> <I<cell name>>] [B<-noauth>] [B<-localauth>] [B<-verbose>]
     [B<-help>]
 
 B<vos de> [B<-i> <I<volume name or ID>>+]
-    [B<-pr> <I<prefix of volume whose VLDB entry is to be deleted>>]  
+    [B<-pr> <I<prefix of volume whose VLDB entry is to be deleted>>]
     [B<-s> <I<machine name>>] [B<-pa> <I<partition name>>]
     [B<-c> <I<cell name>>] [B<-n>] [B<-l>] [B<-v>] [B<-h>]
 

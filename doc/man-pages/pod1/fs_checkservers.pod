@@ -7,7 +7,7 @@ fs checkservers - Displays the status of server machines
 B<fs checkservers> [B<-cell> <I<cell to check>>] [B<-all>] [B<-fast>]
     [B<-interval> <I<seconds between probes>>] [B<-help>]
 
-B<fs checks> [B<-c> <I<cell to check>>] [B<-a>] [B<-f>]  
+B<fs checks> [B<-c> <I<cell to check>>] [B<-a>] [B<-f>]
     [B<-i> <I<seconds between probes>>] [B<-h>]
 
 =head1 DESCRIPTION

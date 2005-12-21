@@ -8,16 +8,16 @@ B<bos salvage> B<-server> <I<machine name>>
     [B<-partition> <I<salvage partition>>]
     [B<-volume> <I<salvage volume number or volume name>>]
     [B<-file> <I<salvage log output file>>] [B<-all>] [B<-showlog>]
-    [B<-parallel> <I<# of max parallel partition salvaging>>]  
-    [B<-tmpdir> <I<directory to place tmp files>>] 
+    [B<-parallel> <I<# of max parallel partition salvaging>>]
+    [B<-tmpdir> <I<directory to place tmp files>>]
     [B<-orphans> (ignore | remove | attach)] [B<-cell> <I<cell name>>]
     [B<-noauth>] [B<-localauth>] [B<-help>]
 
 B<bos sa> B<-se> <I<machine name>> [B<-part> <I<salvage partition>>]
-    [B<-v> <I<salvage volume number or volume name>>]  
-    [B<-f> <I<salvage log output file>>] [B<-a>] [B<-sh>] 
-    [<-para> <I<# of max parallel partition salvaging>>]  
-    [B<-t> <I<directory to place tmp files>>]   
+    [B<-v> <I<salvage volume number or volume name>>]
+    [B<-f> <I<salvage log output file>>] [B<-a>] [B<-sh>]
+    [<-para> <I<# of max parallel partition salvaging>>]
+    [B<-t> <I<directory to place tmp files>>]
     [B<-o> (ignore | remove | attach)] [B<-c> <I<cell name>>] [B<-n>]
     [B<-l>] [B<-h>]
 
@@ -153,12 +153,12 @@ abbreviated forms:
    /vicepa     =     vicepa      =      a      =      0
    /vicepb     =     vicepb      =      b      =      1
 
-After F</vicepz> (for which the index is 25) comes 
+After F</vicepz> (for which the index is 25) comes
 
    /vicepaa    =     vicepaa     =      aa     =      26
    /vicepab    =     vicepab     =      ab     =      27
 
-and so on through 
+and so on through
 
    /vicepiv    =     vicepiv     =      iv     =      255
 

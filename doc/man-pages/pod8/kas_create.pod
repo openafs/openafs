@@ -5,15 +5,15 @@ kas create - Creates an entry in the Authentication Database
 =head1 SYNOPSIS
 
 B<kas create> B<-name> <I<name of user>>
-    [B<-initial_password> <I<initial password>>] 
-    [B<-admin_username> <I<admin principal to use for authentication>>] 
-    [B<-password_for_admin> <I<admin password>>] [B<-cell> <I<cell name>>] 
-    [B<-servers> <I<explicit list of authentication servers>>+]  
+    [B<-initial_password> <I<initial password>>]
+    [B<-admin_username> <I<admin principal to use for authentication>>]
+    [B<-password_for_admin> <I<admin password>>] [B<-cell> <I<cell name>>]
+    [B<-servers> <I<explicit list of authentication servers>>+]
     [B<-noauth>] [B<-help>]
 
-B<kas c> B<-na> <I<name of user>> [B<-i> <I<initial password>>] 
-    [B<-a> <I<admin principal to use for authentication>>]  
-    [B<-p> <I<admin password>>] [B<-c> <I<cell name>>]  
+B<kas c> B<-na> <I<name of user>> [B<-i> <I<initial password>>]
+    [B<-a> <I<admin principal to use for authentication>>]
+    [B<-p> <I<admin password>>] [B<-c> <I<cell name>>]
     [B<-s> <I<explicit list of authentication servers>>+] [B<-no>] [B<-h>]
 
 =head1 DESCRIPTION
@@ -94,7 +94,7 @@ user C<smith>, and does not include either the B<-initial_password> or
 B<-password_for_admin> arguments.
 
    % kas create smith
-   Password for admin: 
+   Password for admin:
    initial_password:
    Verifying, please re-enter initial_password:
 

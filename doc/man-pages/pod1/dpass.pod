@@ -42,7 +42,7 @@ ignored.
 By default, the dpass command writes a message similar to the following to
 the standard output stream.
 
-   Please read the following message before entering your password.  
+   Please read the following message before entering your password.
 
    This program will display your new, temporary DCE password on your
    terminal, and you should change the assigned password as soon as

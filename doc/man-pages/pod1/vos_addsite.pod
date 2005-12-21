@@ -6,7 +6,7 @@ vos addsite - Adds a read-only site definition to a volume's VLDB entry
 
 B<vos addsite> B<-server> <I<machine name for new site>>
     B<-partition> <I<partition name for new site>>
-    B<-id> <I<volume name or ID>> [B<-cell> <I<cell name>>]  
+    B<-id> <I<volume name or ID>> [B<-cell> <I<cell name>>]
     [B<-noauth>] [B<-localauth>] [B<-verbose>] [B<-help>]
 
 B<vos ad> B<-s> <I<machine name for new site>>

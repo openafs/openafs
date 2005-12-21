@@ -142,7 +142,7 @@ argument. Flags are always optional.
 The following example illustrates the different parts of a command that
 belongs to an AFS command suite.
 
-   % bos getdate -server fs1.abc.com -file ptserver kaserver 
+   % bos getdate -server fs1.abc.com -file ptserver kaserver
 
 where
 
@@ -449,7 +449,7 @@ If no operation code is specified, the B<help> operation code displays the
 first line (short description) for every operation code in the suite:
 
    % <command_suite> help
-   
+
 If the issuer specifies one or more operation codes, the B<help> operation
 code displays each command's complete online entry (short description,
 alias if any, and syntax):
@@ -459,7 +459,7 @@ alias if any, and syntax):
 The B<-help> flag displays a command's syntax but not the short
 description or alias:
 
-   % <command_name> -help  
+   % <command_name> -help
 
 The apropos operation code displays the short description of any command
 in a suite whose operation code or short description includes the
@@ -470,16 +470,16 @@ specified keyword:
 The following example command displays the complete online help entry for
 the B<fs setacl> command:
 
-   % fs help setacl   
+   % fs help setacl
    fs setacl: set access control list
    aliases: sa
-   Usage: fs setacl -dir <directory>+ -acl <access list entries>+ 
+   Usage: fs setacl -dir <directory>+ -acl <access list entries>+
    [-clear] [-negative] [-id] [-if] [-help]
 
 To see only the syntax statement, use the B<-help> flag:
 
    % fs setacl -help
-   Usage: fs setacl -dir <directory>+ -acl <access list entries>+ 
+   Usage: fs setacl -dir <directory>+ -acl <access list entries>+
    [-clear] [-negative] [-id] [-if] [-help]
 
 In the following example, a user wants to display the quota for her home

@@ -4,13 +4,13 @@ fs setacl - Sets the ACL for a directory
 
 =head1 SYNOPSIS
 
-B<fs setacl> B<-dir> <I<directory>>+ B<-acl> <I<access list entries>>+  
+B<fs setacl> B<-dir> <I<directory>>+ B<-acl> <I<access list entries>>+
     [B<-clear>] [B<-negative>] [B<-id>] [B<-if>] [B<-help>]
 
-B<fs sa> B<-d> <I<directory>>+ B<-a> <I<access list entries>>+  
-    [B<-c>] [B<-n>] [B<-id>] [B<-if>] [B<-h>] 
-      
-B<fs seta> B<-d> <I<directory>>+ B<-a> <I<access list entries>>+  
+B<fs sa> B<-d> <I<directory>>+ B<-a> <I<access list entries>>+
+    [B<-c>] [B<-n>] [B<-id>] [B<-if>] [B<-h>]
+
+B<fs seta> B<-d> <I<directory>>+ B<-a> <I<access list entries>>+
     [B<-c>] [B<-n>] [B<-id>] [B<-if>] [B<-h>]
 
 =head1 DESCRIPTION
@@ -230,7 +230,7 @@ with a new set.
       terry rl
 
    % fs setacl -clear -dir reports -acl pat all smith write system:anyuser rl
-   
+
    % fs listacl -dir reports
    Access list for reports is
    Normal rights:

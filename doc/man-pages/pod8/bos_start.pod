@@ -8,7 +8,7 @@ B<bos start> B<-server> <I<machine name>>
     B<-instance> <I<server process name>>+ [B<-cell> <I<cell name>>]
     [B<-noauth>] [B<-localauth>] [B<-help>]
 
-B<bos start> B<-s> <I<machine name>> B<-i> <I<server process name>>+  
+B<bos start> B<-s> <I<machine name>> B<-i> <I<server process name>>+
     [B<-c> <I<cell name>>] [B<-n>] [B<-l>] [B<-h>]
 
 =head1 DESCRIPTION

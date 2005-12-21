@@ -67,9 +67,9 @@ The following command displays the online help entry for the B<bos status>
 command:
 
    % bos help status
-   bos status: show server instance status 
+   bos status: show server instance status
    Usage: bos status -server <machine name> [-instance <server
-   process name>+] [-long] [-cell <cell name>] [-noauth] 
+   process name>+] [-long] [-cell <cell name>] [-noauth]
    [-localauth] [-help]
 
 =head1 PRIVILEGE REQUIRED

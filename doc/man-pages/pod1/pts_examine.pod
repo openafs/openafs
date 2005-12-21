@@ -10,10 +10,10 @@ B<pts examine> B<-nameorid> <I<user or group name or id>>+
 B<pts e> B<-na> <I<user or group name or id>>+ [B<-c> <I<cell name>>]
     [B<-no>] [B<-f>] [B<-h>]
 
-B<pts check> B<-na> <I<user or group name or id>>+ [B<-c> <I<cell name>>]  
+B<pts check> B<-na> <I<user or group name or id>>+ [B<-c> <I<cell name>>]
     [B<-no>] [B<-f>] [B<-h>]
-   
-B<pts che> B<-na> <I<user or group name or id>>+ [B<-c> <I<cell name>>]  
+
+B<pts che> B<-na> <I<user or group name or id>>+ [B<-c> <I<cell name>>]
     [B<-no>] [B<-f>] [B<-h>]
 
 =head1 DESCRIPTION
@@ -66,7 +66,7 @@ fields:
 
 =item Name
 
-The contents of this field depend on the type of entry: 
+The contents of this field depend on the type of entry:
 
 =over 4
 
@@ -209,18 +209,18 @@ The following example displays the user entry for C<terry> and the machine
 entry C<158.12.105.44>.
 
    % pts examine terry 158.12.105.44
-   Name: terry, id: 1045, owner: system:administrators, creator: admin, 
+   Name: terry, id: 1045, owner: system:administrators, creator: admin,
      membership: 9, flags: S----, group quota: 15.
-   Name: 158.12.105.44, id: 5151, owner: system:administrators, 
+   Name: 158.12.105.44, id: 5151, owner: system:administrators,
      creator: byu, membership: 1, flags: S----, group quota: 20.
 
 The following example displays the entries for the AFS groups with GIDs
 -673 and -674.
 
    % pts examine -673 -674
-   Name: terry:friends, id: -673, owner: terry, creator: terry, 
+   Name: terry:friends, id: -673, owner: terry, creator: terry,
      membership: 5, flags: S-M--, group quota: 0.
-   Name: smith:colleagues, id: -674, owner: smith, creator: smith, 
+   Name: smith:colleagues, id: -674, owner: smith, creator: smith,
      membership: 14, flags: SOM--, group quota: 0.
 
 =head1 PRIVILEGE REQUIRED

@@ -4,7 +4,7 @@ fs getserverprefs - Displays preference ranks for file servers or VL servers
 
 =head1 SYNOPSIS
 
-B<fs getserverprefs> [B<-file> <I<output to named file>>]  
+B<fs getserverprefs> [B<-file> <I<output to named file>>]
     [B<-numeric>] [B<-vlservers>] [B<-help>]
 
 B<fs gets> [B<-f> <I<output to named file>>] [B<-n>] [B<-v>] [B<-h>]
