@@ -4,9 +4,8 @@ AC_DEFUN([OPENAFS_OSCONF], [
 dnl defaults, override in case below as needed
 XCFLAGS='${DBG} ${OPTMZ}'
 SHLIB_SUFFIX="so"
-CC="cc"
-CCOBJ="cc"
-MT_CC="cc"
+CCOBJ=$CC
+MT_CC=$CC
 XLIBS="${LIB_AFSDB}"
 
 dnl debugging and optimization flag defaults
@@ -290,9 +289,8 @@ case $AFS_SYSNAME in
 		;;
 
 	i386_umlinux22)
-		CC="gcc -pipe"
-		CCOBJ="gcc -pipe"
-		MT_CC="gcc -pipe"
+		CCOBJ="${CC} -pipe"
+		MT_CC="${CC} -pipe"
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
@@ -307,9 +305,8 @@ case $AFS_SYSNAME in
 		;;
 
 	i386_linux*)
-		CC="gcc -pipe"
-		CCOBJ="gcc -pipe"
-		MT_CC="gcc -pipe"
+		CCOBJ="${CC} -pipe"
+		MT_CC="${CC} -pipe"
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
@@ -328,9 +325,8 @@ case $AFS_SYSNAME in
 		;;
 
 	i386_umlinux24)
-		CC="gcc -pipe"
-		CCOBJ="gcc -pipe"
-		MT_CC="gcc -pipe"
+		CCOBJ="${CC} -pipe"
+		MT_CC="${CC} -pipe"
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
@@ -349,9 +345,8 @@ case $AFS_SYSNAME in
 		;;
 
 	i386_umlinux26)
-		CC="gcc -pipe"
-		CCOBJ="gcc -pipe"
-		MT_CC="gcc -pipe"
+		CCOBJ="${CC} -pipe"
+		MT_CC="${CC} -pipe"
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
@@ -529,8 +524,7 @@ case $AFS_SYSNAME in
 		;;
 
 	s390_linux22)
-		CC="gcc"
-		CCOBJ="gcc"
+		CCOBJ="$CC"
 		LD="ld"
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
@@ -547,8 +541,7 @@ case $AFS_SYSNAME in
 		;;
 
 	s390_linux24|s390_linux26)
-		CC="gcc"
-		CCOBJ="gcc"
+		CCOBJ="$CC"
 		LD="ld"
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
@@ -565,8 +558,7 @@ case $AFS_SYSNAME in
 		;;
 
 	s390x_linux24|s390x_linux26)
-		CC="gcc"
-		CCOBJ="gcc"
+		CCOBJ="$CC"
 		LD="ld"
 		KERN_OPTMZ=-O2
 		LEX="flex -l"

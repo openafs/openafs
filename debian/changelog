@@ -2,6 +2,9 @@ openafs (1.4.0-3) unstable; urgency=low
 
   * Apply patch to allow the module to build with the Ubuntu kernel.
     Thanks, Björn Torkelsson.  (Closes: #342607)
+  * Stop unconditionally forcing the compiler to cc or gcc in configure,
+    allowing, among other things, building the kernel module with a
+    compiler other than the default system compiler.  (Closes: #338306)
   * Document FAM's lack of support for AFS's security model and recommend
     gamin instead.  (Closes: #343246)
   * Add a hint to README.Debian on what to do about the cache partition if
