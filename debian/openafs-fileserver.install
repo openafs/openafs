@@ -1,4 +1,5 @@
 debian/tmp/usr/sbin/bosserver           usr/sbin
+debian/tmp/usr/sbin/voldump             usr/sbin
 debian/tmp/usr/sbin/volinfo             usr/sbin
 
 debian/tmp/usr/lib/openafs/up*          usr/sbin

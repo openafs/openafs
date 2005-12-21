@@ -1,11 +1,11 @@
 openafs (1.4.0-3) unstable; urgency=low
 
   * Apply patch to allow the module to build with the Ubuntu kernel.
-    Thanks, Björn Torkelsson.  (Closes: #342607)
+    Thanks, BjÃ¶rn Torkelsson.  (Closes: #342607)
   * Stop unconditionally forcing the compiler to cc or gcc in configure,
     allowing, among other things, building the kernel module with a
     compiler other than the default system compiler.  (Closes: #338306)
-  * Include volinfo, not voldump in openafs-fileserver.
+  * Include volinfo in openafs-fileserver.
   * Document FAM's lack of support for AFS's security model and recommend
     gamin instead.  (Closes: #343246)
   * Add a hint to README.Debian on what to do about the cache partition if
@@ -20,7 +20,7 @@ openafs (1.4.0-3) unstable; urgency=low
     goes into each package.
   * Don't ignore make distclean errors.
 
- -- Russ Allbery <rra@debian.org>  Wed, 21 Dec 2005 11:55:59 -0800
+ -- Russ Allbery <rra@debian.org>  Wed, 21 Dec 2005 15:43:47 -0800
 
 openafs (1.4.0-2) unstable; urgency=low
 
