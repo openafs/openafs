@@ -8,6 +8,7 @@ openafs (1.4.0-3) unstable; urgency=low
   * Stop unconditionally forcing the compiler to cc or gcc in configure,
     allowing, among other things, building the kernel module with a
     compiler other than the default system compiler.  (Closes: #338306)
+  * Include afsmonitor and livesys in openafs-client.
   * Include volinfo in openafs-fileserver.
   * Document FAM's lack of support for AFS's security model and recommend
     gamin instead.  (Closes: #343246)
@@ -23,7 +24,7 @@ openafs (1.4.0-3) unstable; urgency=low
     goes into each package.
   * Don't ignore make distclean errors.
 
- -- Russ Allbery <rra@debian.org>  Wed, 21 Dec 2005 18:54:12 -0800
+ -- Russ Allbery <rra@debian.org>  Wed, 21 Dec 2005 18:59:01 -0800
 
 openafs (1.4.0-2) unstable; urgency=low
 

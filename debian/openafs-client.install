@@ -1,9 +1,11 @@
 debian/afs.conf                         etc/openafs
 
+debian/tmp/usr/bin/afsmonitor           usr/bin
 debian/tmp/usr/bin/bos                  usr/bin
 debian/tmp/usr/bin/cmdebug              usr/bin
 debian/tmp/usr/bin/fs                   usr/bin
 debian/tmp/usr/bin/klog                 usr/bin
+debian/tmp/usr/bin/livesys              usr/bin
 debian/tmp/usr/bin/pagsh                usr/bin
 debian/tmp/usr/bin/pts                  usr/bin
 debian/tmp/usr/bin/scout                usr/bin
