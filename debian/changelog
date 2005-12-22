@@ -1,5 +1,8 @@
 openafs (1.4.0-3) unstable; urgency=low
 
+  * Apply upstream patch from Chas Williams to be more careful about what
+    dentry is used in renames, avoiding a kernel fault when renaming
+    dentries accessed through multiple paths (such as RO and RW).
   * Apply patch to allow the module to build with the Ubuntu kernel.
     Thanks, Björn Torkelsson.  (Closes: #342607)
   * Stop unconditionally forcing the compiler to cc or gcc in configure,
@@ -20,7 +23,7 @@ openafs (1.4.0-3) unstable; urgency=low
     goes into each package.
   * Don't ignore make distclean errors.
 
- -- Russ Allbery <rra@debian.org>  Wed, 21 Dec 2005 15:43:47 -0800
+ -- Russ Allbery <rra@debian.org>  Wed, 21 Dec 2005 18:54:12 -0800
 
 openafs (1.4.0-2) unstable; urgency=low
 
