@@ -1,0 +1,50 @@
+#!/bin/sh
+#
+# Install a man page, but fixing up paths as we go.  All of the man pages
+# are written to use the Transarc paths, and this script fixes those paths to
+# be correct for the chosen configure options as the man pages are installed.
+# Takes the source man page file and the destination path as arguments.
+
+set -e
+
+manpage="$1"
+dest="$2"
+
+install=@TOP_OBJDIR@/src/pinstall/pinstall
+
+# We have to include all of the variables here since several of them refer to
+# each other and this is the only way we get them all expanded.
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+includedir=@includedir@
+libdir=@libdir@
+libexecdir=@libexecdir@
+localstatedir=@localstatedir@
+mandir=@mandir@
+sbindir=@sbindir@
+sysconfdir=@sysconfdir@
+afsbackupdir=@afsbackupdir@
+afsbosconfigdir=@afsbosconfigdir@
+afsconfdir=@afsconfdir@
+afsdbdir=@afsdbdir@
+afslocaldir=@afslocaldir@
+afslogsdir=@afslogsdir@
+afssrvbindir=@afssrvbindir@
+afskerneldir=@afskerneldir@
+afssrvlibexecdir=@afssrvlibexecdir@
+afssrvsbindir=@afssrvsbindir@
+viceetcdir=@viceetcdir@
+
+# Substitute the paths into a local temporary file and then install it with
+# $install.
+sed -e "s%/usr/afs/local/BosConfig%${afsbosconfigdir}/BosConfig%g" \
+    -e "s%/usr/afs/etc%${afsconfdir}%g" \
+    -e "s%/usr/afs/backup%${afsbackupdir}%g" \
+    -e "s%/usr/afs/bin%${afssrvlibexecdir}%g" \
+    -e "s%/usr/afs/db%${afsdbdir}%g" \
+    -e "s%/usr/afs/local%${afslocaldir}%g" \
+    -e "s%/usr/afs/logs%${afslogsdir}%g" \
+    -e "s%/usr/vice/etc%${viceetcdir}%g" "$manpage" > "$manpage".tmp
+$install -c -f -m 0644 "$manpage".tmp "$dest"
+rm "$manpage".tmp

@@ -812,7 +812,9 @@ distclean: clean
 	src/wsadmin.src/Makefile \
 	src/xstat/Makefile  \
 	src/helper-splint.sh
-	if test -d doc/man-pages ; then rm -f doc/man-pages/Makefile ; fi
+	if test -d doc/man-pages ; then \
+	    rm -f doc/man-pages/Makefile doc/man-pages/install-man ; \
+	fi
 
 pristine: distclean
 	/bin/rm -f src/config/afsconfig.h.in configure configure-libafs aclocal.m4
