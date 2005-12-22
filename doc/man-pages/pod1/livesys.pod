@@ -1,0 +1,68 @@
+=head1 NAME
+
+livesys - Reports the configured CPU/operating system type
+
+=head1 SYNOPSIS
+
+B<livesys>
+
+=head1 DESCRIPTION
+
+The B<livesys> command displays the string stored in kernel memory that
+indicates the local machine's CPU/operating system (OS) type,
+conventionally called the I<sysname>.  The Cache Manager substitutes this
+string for the I<@sys> variable which can occur in AFS pathnames; the
+I<IBM AFS Quick Beginnings> and I<IBM AFS Administration Guide> explain
+how using I<@sys> can simplify cell configuration.
+
+To set a new value in kernel memory, use the B<fs sysname> command, which
+can also be used to view the current value.  If a sysname list was set
+using B<fs sysname>, only the first value in the list will be reported by
+B<livesys>.
+
+=head1 CAUTIONS
+
+To see the full sysname list, use B<fs sysname> rather than this command.
+B<livesys> is mostly useful for scripts that need to know the primary
+sysname for the local system (to create directories that will later be
+addressed using I<@sys>, for example).
+
+B<livesys> first appeared in OpenAFS 1.2.2.  Scripts that need to support
+older versions of AFS should parse the output of B<fs sysname> or use
+B<sys>.
+
+=head1 OUTPUT
+
+The machine's system type appears as a text string:
+
+   I<system_type>
+
+=head1 EXAMPLES
+
+The following example shows the output produced on a Linux system with a
+2.6 kernel:
+
+   % livesys
+   i386_linux26
+
+=head1 PRIVILEGE REQUIRED
+
+None
+
+=head1 SEE ALSO
+
+L<fs_sysname(1)>,
+L<sys(1)>
+
+I<IBM AFS Quick Beginnings>
+
+I<IBM AFS Administration Guide>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+Copyright 2005 Russ Allbery <rra@stanford.edu>
+
+This documentation is covered by the IBM Public License Version 1.0.  It
+was written by Russ Allbery based on the B<sys> man page.
