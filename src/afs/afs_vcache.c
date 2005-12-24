@@ -759,19 +759,28 @@ restart:
                && tvc->opens == 0 && (tvc->states & CUnlinkedDel) == 0) {
 #if defined (AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 #ifdef AFS_DARWIN80_ENV
-                fv_slept=1;
-                /* must release lock, since vnode_recycle will immediately
-                   reclaim if there are no other users */
-                ReleaseWriteLock(&afs_xvcache);
-                AFS_GUNLOCK();
-                /* VREFCOUNT_GT only sees usecounts, not iocounts */
-                /* so this may fail to actually recycle the vnode now */
-                if (vnode_recycle(AFSTOV(tvc)))
-                   code=0;
-                else
-                   code=EBUSY;
-                AFS_GLOCK();
-                ObtainWriteLock(&afs_xvcache, 336);
+	        vnode_t tvp = AFSTOV(tvc);
+		fv_slept=1;
+		/* must release lock, since vnode_recycle will immediately
+		   reclaim if there are no other users */
+		ReleaseWriteLock(&afs_xvcache);
+		AFS_GUNLOCK();
+		/* VREFCOUNT_GT only sees usecounts, not iocounts */
+		/* so this may fail to actually recycle the vnode now */
+		/* must call vnode_get to avoid races. */
+		if (vnode_get(tvp) == 0) {
+		    vnode_recycle(tvp);
+		    vnode_put(tvp);
+		}
+		AFS_GLOCK();
+		ObtainWriteLock(&afs_xvcache, 336);
+		/* we can't use the vnode_recycle return value to figure
+		 * this out, since the iocount we have to hold makes it
+		 * always "fail" */
+		if (AFSTOV(tvc) == tvp)
+		    code = EBUSY;
+		else
+		    code = 0;
 #else
                 /*
                  * vgone() reclaims the vnode, which calls afs_FlushVCache(),
