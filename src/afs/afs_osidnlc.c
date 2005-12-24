@@ -367,6 +367,15 @@ osi_dnlc_purgedp(struct vcache *adp)
     int i;
     int writelocked;
 
+#ifdef AFS_DARWIN_ENV
+    if (!(adp->states & (CVInit | CVFlushed
+#ifdef AFS_DARWIN80_ENV
+                        | CDeadVnode
+#endif
+        )) && AFSTOV(adp))
+    cache_purge(AFSTOV(adp));
+#endif
+
     if (!afs_usednlc)
 	return 0;
 
@@ -396,6 +405,15 @@ osi_dnlc_purgevp(struct vcache *avc)
 {
     int i;
     int writelocked;
+
+#ifdef AFS_DARWIN_ENV
+    if (!(avc->states & (CVInit | CVFlushed
+#ifdef AFS_DARWIN80_ENV
+                        | CDeadVnode
+#endif
+        )) && AFSTOV(avc))
+    cache_purge(AFSTOV(avc));
+#endif
 
     if (!afs_usednlc)
 	return 0;
