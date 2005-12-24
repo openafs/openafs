@@ -47,22 +47,40 @@
 #define CV_DESTROY(cv)
 #ifdef AFS_DARWIN14_ENV
 #ifdef AFS_DARWIN80_ENV
-#define VFSSLEEP(cv) msleep(cv, NULL, PVFS, "afs_CV_WAIT", NULL)
-#define VFSTSLEEP(cv,t) do { \
-   struct timespec ts; \
-   ts.ts_sec = t; \
-   ts.ts_nsec = 0; \
-   msleep(cv, NULL, PVFS, "afs_CV_TIMEDWAIT", &ts); \
-} while(0)
+#define CV_WAIT(cv, lck)    do { \
+	                        int isGlockOwner = ISAFS_GLOCK(); \
+	                        if (isGlockOwner) AFS_GUNLOCK();  \
+				osi_Assert((lck)->owner == current_thread()); \
+				(lck)->owner = (thread_t)0; \
+				lck_mtx_lock((lck)->meta); \
+				(lck)->waiters--; \
+				lck_mtx_unlock((lck)->meta); \
+                                msleep(cv, (lck)->lock, PDROP|PVFS, "afs_CV_WAIT", NULL); \
+	                        if (isGlockOwner) AFS_GLOCK();  \
+	                        MUTEX_ENTER(lck); \
+	                    } while(0)
+
+#define CV_TIMEDWAIT(cv,lck,t)  do { \
+	                        struct timespec ts; \
+	                        int isGlockOwner = ISAFS_GLOCK(); \
+	                        ts.ts_sec = t; \
+	                        ts.ts_nsec = 0; \
+	                        if (isGlockOwner) AFS_GUNLOCK();  \
+				osi_Assert((lck)->owner == current_thread()); \
+				(lck)->owner = (thread_t)0; \
+				lck_mtx_lock((lck)->meta); \
+				(lck)->waiters--; \
+				lck_mtx_unlock((lck)->meta); \
+                                msleep(cv, (lck)->lock, PDROP|PVFS, "afs_CV_TIMEDWAIT", &ts); \
+	                        if (isGlockOwner) AFS_GLOCK();  \
+	                        MUTEX_ENTER(lck);       \
+                            } while(0)
 #else
-#define VFSSLEEP(cv) sleep(cv, PVFS)
-#define VFSTSLEEP(cv, t) tsleep(cv,PVFS, "afs_CV_TIMEDWAIT",t)
-#endif
 #define CV_WAIT(cv, lck)    do { \
 	                        int isGlockOwner = ISAFS_GLOCK(); \
 	                        if (isGlockOwner) AFS_GUNLOCK();  \
 	                        MUTEX_EXIT(lck);        \
-	                        VFSSLEEP(cv);                \
+	                        sleep(cv, PVFS);                \
 	                        if (isGlockOwner) AFS_GLOCK();  \
 	                        MUTEX_ENTER(lck); \
 	                    } while(0)
@@ -71,11 +89,11 @@
 	                        int isGlockOwner = ISAFS_GLOCK(); \
 	                        if (isGlockOwner) AFS_GUNLOCK();  \
 	                        MUTEX_EXIT(lck);        \
-	                        VFSTSLEEP(cv,t);  \
+	                        tsleep(cv,PVFS, "afs_CV_TIMEDWAIT",t);  \
 	                        if (isGlockOwner) AFS_GLOCK();  \
 	                        MUTEX_ENTER(lck);       \
                             } while(0)
-
+#endif
 #define CV_SIGNAL(cv)           wakeup_one((void *)(cv))
 #define CV_BROADCAST(cv)        wakeup((void *)(cv))
 #else
