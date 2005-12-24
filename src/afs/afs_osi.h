@@ -188,12 +188,13 @@ extern struct vnodeops *afs_ops;
   * In 64 bit HP-UX the timeval structure has a 64 bit member.
   */
 
-
-#if defined(AFS_HPUX_ENV) || (defined(AFS_SUN57_ENV) && !defined(AFS_SUN510_ENV)) || defined(AFS_LINUX_64BIT_KERNEL) || (defined(AFS_SGI61_ENV) && defined(KERNEL) && defined(_K64U64))
+#if defined(AFS_HPUX_ENV) || defined(AFS_LINUX_64BIT_KERNEL) || (defined(AFS_SGI61_ENV) && defined(KERNEL) && defined(_K64U64))
 typedef struct {
     afs_int32 tv_sec;
     afs_int32 tv_usec;
 } osi_timeval_t;
+#elif defined(AFS_SUN57_ENV)
+typedef struct timeval32 osi_timeval_t;
 #else
 typedef struct timeval osi_timeval_t;
 #endif /* AFS_SGI61_ENV */
