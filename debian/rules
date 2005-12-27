@@ -20,7 +20,6 @@ else
     DEBIAN_KERN_FLAGS =
 endif
 
-# The AFS sysname is determined by a script
 ifndef KSRC
     KSRC = /usr/src/linux
 endif
@@ -32,7 +31,7 @@ export KSRC
 export KVERS
 export KPKG_DEST_DIR
 
-SYS_NAME := $(shell KSRC="$(KSRC)" KVERS="$(KVERS)" sh debian/sysname)
+SYS_NAME  := $(shell KSRC="$(KSRC)" KVERS="$(KVERS)" sh debian/sysname)
 
 package    = openafs
 srcpkg     = openafs-modules-source
@@ -233,8 +232,6 @@ configure-modules-stamp:
 	    exit 1 ; \
 	fi
 	sh debian/prep-modules $(KSRC)
-	-ln -s @sys/dest dest
-	-ln -s $(SYS_NAME) @sys
 	sh configure --with-afs-sysname=$(SYS_NAME) \
 	    --with-linux-kernel-headers=$(KSRC) --prefix=`pwd`/debian/tmp \
 	    --enable-debug --enable-lwp-debug --enable-kernel-debug \

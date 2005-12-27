@@ -51,7 +51,11 @@ if [ -n "$KVERS" ] && [ -n "$KDREV" ]; then
     afs_kvers="${KVERS}${INT_SUBARCH}"
     afs_kdrev="${KDREV}"
 elif [ ! -f "$changelog" ] ; then
-    afs_kvers=`perl debian/kernel-version`
+    if [ -n "$KVERS" ] ; then
+        afs_kvers="$KVERS"
+    else
+        afs_kvers=`perl debian/kernel-version "$1"`
+    fi
     if [ -z "$KDREV" ] ; then
         afs_kdrev="${afs_kvers}-0"
     else
@@ -59,8 +63,12 @@ elif [ ! -f "$changelog" ] ; then
         afs_kdrev="${KDREV}"
     fi
 else
-    afs_kvers=`head -1 "$changelog" \
-        | sed -e 's/.*source-\([^ ]*\) (\([^)]*\)).*/\1/'`
+    if [ -n "$KVERS" ] ; then
+        afs_kvers="$KVERS"
+    else
+        afs_kvers=`head -1 "$changelog" \
+            | sed -e 's/.*source-\([^ ]*\) (\([^)]*\)).*/\1/'`
+    fi
     afs_kdrev=`head -1 "$changelog" \
         | sed -e 's/.*source-\([^ ]*\) (\([^)]*\)).*/\2/'`
 fi
