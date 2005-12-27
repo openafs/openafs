@@ -5,7 +5,8 @@
   with a style sheet to set off the transcript in a different background
   color).
 
-* Include some of the other random useful AFS programs in openafs-client
-  (scout, vlclient, fstrace, up).
-
 * Consider including the kdump executable in the kernel module package.
+  openafs-client would have to provide a wrapper script to run the
+  appropriate kdump and the kernel module package would need to install
+  the kdump executable, maybe in /usr/lib/openafs, named after the kernel
+  image installed.
