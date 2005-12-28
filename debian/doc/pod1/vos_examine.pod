@@ -1,0 +1,367 @@
+=head1 NAME
+
+vos examine - Shows volume header and VLDB entry information for a volume
+
+=head1 SYNOPSIS
+
+B<vos examine> B<-id> <I<volume name or ID>> [B<-extended>]
+    [B<-cell> <I<cell name>>] [B<-noauth>] [B<-localauth>] [B<-verbose>]
+    [B<-help>]
+
+B<vos e> B<-i> <I<volume name or ID>> [B<-e>] [B<-c> <I<cell name>>]
+    [B<-n>] [B<-l>] [B<-v>] [B<-h>]
+
+B<vos volinfo> B<-i> <I<volume name or ID>> [B<-e>] [-c <I<cell name>>]
+    [B<-n>] [B<-l>] [B<-v>] [B<-h>]
+
+B<vos v> B<-i> <I<volume name or ID>> [B<-e>] [B<-c> <I<cell name>>]
+    [B<-n>] [B<-l>] [B<-v>] [B<-h>]
+
+=head1 DESCRIPTION
+
+The B<vos examine> command formats and displays information from the
+Volume Location Database (VLDB) entry and the volume header of the volume
+specified by the B<-id> argument.
+
+To display the volume header only, use the B<vos listvol> command. To
+display information from the VLDB only, use the B<vos listvldb> command.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-id> <I<volume name or ID>>
+
+Specifies either the complete name or volume ID number of the volume,
+which can be read/write, read-only, or backup.
+
+=item B<-extended>
+
+Display statistics about read and write operations on files and
+directories in the volume.
+
+=item B<-cell> <I<cell name>>
+
+Names the cell in which to run the command. Do not combine this argument
+with the B<-localauth> flag. For more details, see L<vos(1)>.
+
+=item B<-noauth>
+
+Assigns the unprivileged identity C<anonymous> to the issuer. Do not
+combine this flag with the B<-localauth> flag. For more details, see
+L<vos(1)>.
+
+=item B<-localauth>
+
+Constructs a server ticket using a key from the local
+F</usr/afs/etc/KeyFile> file. The B<vos> command interpreter presents it
+to the Volume Server and Volume Location Server during mutual
+authentication. Do not combine this flag with the B<-cell> argument or
+B<-noauth> flag. For more details, see L<vos(1)>.
+
+=item B<-verbose>
+
+Produces on the standard output stream a detailed trace of the command's
+execution. If this argument is omitted, only warnings and error messages
+appear.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 OUTPUT
+
+The first seven lines of the output show information from the volume
+header and the remaining lines come from the VLDB. Each item in the
+following list corresponds to a line of output derived from the volume
+header.
+
+=over 4
+
+=item *
+
+Basic information about the specified volume (displayed on a single
+line):
+
+=over 4
+
+=item *
+
+Name
+
+=item *
+
+Volume ID number
+
+=item *
+
+Type (the flag is C<RW> for read/write, C<RO> for read-only, C<BK> for
+backup)
+
+=item *
+
+Size in kilobytes (C<1024> equals a megabyte)
+
+=item *
+
+Number of files in the volume, if the B<-extended> flag is provided
+
+=item *
+
+Status on the file server machine, which is one of the following:
+
+=over 4
+
+=item On-line
+
+The volume is completely accessible to Cache Managers.
+
+=item Off-line
+
+The volume is not accessible to Cache Managers, but does not seem to be
+corrupted. This status appears while a volume is being dumped, for
+example.
+
+=item Off-line**needs salvage**
+
+The volume is not accessible to Cache Managers, because it seems to be
+corrupted. Use the B<bos salvage> or B<salvager> command to repair the
+corruption.
+
+=back
+
+=back
+
+=item *
+
+The file server machine and partition that house the volume, as determined
+by the command interpreter as the command runs, rather than derived from
+the VLDB or the volume header.
+
+=item *
+
+The volume ID numbers associated with the various versions of the volume:
+read/write (C<RWrite>), read-only (C<ROnly>), backup (C<Backup>), and
+ReleaseClone (C<RClone>). One of them matches the volume ID number that
+appears on the first line of the volume's output. If the value in the
+C<RWrite>, C<ROnly>, or C<Backup> field is C<0> (zero), there is no volume
+of that type. If there is currently no ReleaseClone, the C<RClone> field
+does not appear at all.
+
+=item *
+
+The maximum space quota allotted to the read/write copy of the volume,
+expressed in kilobyte blocks in the C<MaxQuota> field.
+
+=item *
+
+The date and time the volume was created, in the C<Creation> field. If the
+volume has been restored with the B<backup diskrestore>, B<backup
+volrestore>, or B<vos restore> command, this is the restore time.
+
+=item *
+
+The date and time when the contents of the volume last changed, in the
+C<Last Update> field. For read-only and backup volumes, it matches the
+timestamp in the C<Creation> field.
+
+=item *
+
+The number of times the volume has been accessed for a fetch or store
+operation since the later of the two following times:
+
+=over 4
+
+=item *
+
+12:00 a.m. on the day the command is issued
+
+=item *
+
+The last time the volume changed location
+
+=back
+
+=back
+
+When the B<-extended> flag is included, two tables appear next:
+
+=over 4
+
+=item *
+
+The table labeled C<Raw Read/Write Stats> contains information on the
+number of reads (fetches) and writes (stores) made on the specified
+volume.
+
+=item *
+
+The table labeled C<Writes Affecting Authorship> contains information on
+writes made to files and directories in the specified volume.
+
+=back
+
+If the following message appears instead of the previously listed
+information, it indicates that a volume is not accessible to Cache
+Managers or the B<vos> command interpreter, for example because a clone is
+being created.
+
+   **** Volume <volume_ID> is busy ****
+
+If the following message appears instead of the previously listed
+information, it indicates that the File Server is unable to attach the
+volume, perhaps because it is seriously corrupted. The F<FileLog> and
+F<VolserLog> log files in the F</usr/afs/logs> directory on the file
+server machine possibly provide additional information; use the B<bos
+getlog> command to display them.
+
+   **** Could not attach volume <volume_ID> ****
+
+Following a blank line, information from the VLDB entry appears.  Each
+item in this list corresponds to a separate line in the output:
+
+=over 4
+
+=item *
+
+The base (read/write) volume name. The read-only and backup versions have
+the same name with a C<.readonly> and C<.backup> extension, respectively.
+
+=item *
+
+The volume ID numbers allocated to the versions of the volume that
+actually exist, in fields labeled C<RWrite> for the read/write, C<ROnly>
+for the read-only, C<Backup> for the backup, and C<RClone> for the
+ReleaseClone. (If a field does not appear, the corresponding version of
+the volume does not exist.) The appearance of the C<RClone> field normally
+indicates that a release operation did not complete successfully; the
+C<Old release> and C<New release> flags often also appear on one or more
+of the site definition lines described just following.
+
+=item *
+
+The number of sites that house a read/write or read-only copy of the
+volume, following the string C<< number of sites -> >>.
+
+=item *
+
+A line for each site that houses a read/write or read-only copy of the
+volume, specifying the file server machine, partition, and type of volume
+(C<RW> for read/write or C<RO> for read-only). If a backup version exists,
+it is understood to share the read/write site.  Several flags can appear
+with a site definition:
+
+=over 4
+
+=item Not released
+
+Indicates that the vos release command has not been issued since the B<vos
+addsite> command was used to define the read-only site.
+
+=item Old release
+
+Indicates that a vos release command did not complete successfully,
+leaving the previous, obsolete version of the volume at this site.
+
+=item New release
+
+Indicates that a vos release command did not complete successfully, but
+that this site did receive the correct new version of the volume.
+
+=back
+
+=item *
+
+If the VLDB entry is locked, the string C<Volume is currently LOCKED>.
+
+=back
+
+For further discussion of the C<New release> and C<Old release> flags, see
+L<vos_release(1)>.
+
+=head1 EXAMPLES
+
+The following example shows output for the ABC Corporation volume called
+C<usr> with two read-only replication sites (this volume is mounted at the
+F</afs/abc.com/usr> directory). For the sake of illustration, the output
+shows the volume as locked.
+
+   % vos examine usr
+   usr                           536870981 RW   3459 K On-line
+        fs2.abc.com /vicepb
+        RWrite 5360870981   ROnly 536870982   Backup 536870983
+        MaxQuota      40000 K
+        Creation    Mon Jun 12 15:22:06 1989
+        Last Update Fri Jun 16 09:34:35 1989
+        5719 accesses in the past day (i.e., vnode references)
+        RWrite: 5360870981   ROnly: 536870982   Backup: 536870983
+        number of sites -> 3
+           server fs1.abc.com partition /vicepa RO Site
+           server fs3.abc.com partition /vicepa RO Site
+           server fs2.abc.com partition /vicepb RW Site
+        Volume is currently LOCKED
+
+The following example shows the output for the volume C<user.terry> using
+the B<-extended> flag. The volume has no read-only replication sites.
+
+   % vos examine -id user.terry -extended
+   user.terry         354287190 RW    2302 K used 119 files On-line
+       fs4.abc.com /vicepc
+       RWrite 354287190 ROnly          0 Backup 354287192
+       MaxQuota       5000 K
+       Creation    Wed Nov 25 17:38:57 1992
+       Last Update Tue Dec 15 10:46:20 1992
+       598 accesses in the past day (i.e., vnode references)
+                         Raw Read/Write Stats
+             |-------------------------------------------|
+             |    Same Network     |    Diff Network     |
+             |----------|----------|----------|----------|
+             |  Total   |   Auth   |   Total  |   Auth   |
+             |----------|----------|----------|----------|
+   Reads     |       55 |       55 |       38 |       38 |
+   Writes    |       95 |       95 |        0 |        0 |
+             |-------------------------------------------|
+                      Writes Affecting Authorship
+             |-------------------------------------------|
+             |   File Authorship   | Directory Authorship|
+             |----------|----------|----------|----------|
+             |   Same   |   Diff   |    Same  |   Diff   |
+             |----------|----------|----------|----------|
+   0-60 sec  |       38 |        0 |       21 |        1 |
+   1-10 min  |        2 |        0 |        7 |        0 |
+   10min-1hr |        0 |        0 |        1 |        0 |
+   1hr-1day  |        1 |        0 |        5 |        1 |
+   1day-1wk  |        0 |        0 |        0 |        0 |
+   > 1wk     |        0 |        0 |        0 |        0 |
+             |-------------------------------------------|
+       RWrite: 354287190    Backup: 354287192
+       number of sites -> 1
+          server fs4.abc.com partition /vicepc RW Site
+
+=head1 PRIVILEGE REQUIRED
+
+None
+
+=head1 SEE ALSO
+
+L<backup_diskrestore(8)>,
+L<backup_volrestore(8)>,
+L<bos_getlog(1)>,
+L<bos_salvage(1)>,
+L<salvager(8)>,
+L<vos(1)>,
+L<vos_listvol(1)>,
+L<vos_listvldb(1)>,
+L<vos_release(1)>,
+L<vos_restore(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

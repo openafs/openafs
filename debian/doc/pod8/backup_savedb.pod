@@ -1,0 +1,155 @@
+=head1 NAME
+
+backup savedb - Creates a saved copy of the Backup Database
+
+=head1 SYNOPSIS
+
+B<backup savedb> [B<-portoffset> <I<TC port offset>>]
+    [B<-archive> <I<date time>>+] [B<-localauth>]
+    [B<-cell> <I<cell name>>] [B<-help>]
+
+B<backup sa> [B<-p> <I<TC port offset>>] [B<-a> <I<date time>>+]
+    [B<-l>] [B<-c> <I<cell name>>] [B<-h>]
+
+=head1 DESCRIPTION
+
+The B<backup savedb> command creates a backup copy of the entire Backup
+Database and writes it to the tape in the device controlled by the Tape
+Coordinator indicated with the B<-portoffset> argument. If the database is
+damaged (as reported by the B<backup dbverify> command), this command
+repairs as much of the corruption as possible as it creates the saved
+copy. The Backup Server creates a dump record for the saved database in
+the Backup Database (but in the disk version of the database only, not in
+the version written to tape).
+
+If the C<FILE YES> instruction appears in the
+F</usr/afs/backup/CFG_I<device_name>> file associated with the specified
+port offset, then the B<backup savedb> command dumps the database copy to
+the backup data file listed for that port offset in the Tape Coordinator's
+F</usr/afs/backup/tapeconfig> file, instead of to tape. For the sake of
+clarity, the following text refers to tapes only, but the Backup System
+handles backup data files in much the same way.
+
+If the B<-archive> flag is provided, after writing the saved copy of the
+database the Backup System truncates the copy of the database on disk by
+deleting volume dump records with timestamps prior to the specified date
+and time (it does not delete the dump records created by previous B<backup
+savedb> commands, however).
+
+If the tape to which the database copy is written has an AFS tape name, it
+must be C<Ubik_db_dump.1> or C<< <NULL> >>. Any permanent name is
+acceptable.
+
+The Tape Coordinator's default response to this command is to access the
+first tape by invoking the C<MOUNT> instruction in the local
+F</usr/afs/backup/CFG_I<device_name>> file, or by prompting the backup
+operator to insert the tape if there is no C<MOUNT> instruction. However,
+if the C<AUTOQUERY NO> instruction appears in the F<CFG_I<device_name>>
+file, or if the issuer of the B<butc> command included the B<-noautoquery>
+flag, the Tape Coordinator instead expects the tape to be in the device
+already.  If it is not, the Tape Coordinator invokes the C<MOUNT>
+instruction or prompts the operator. It also invokes the C<MOUNT>
+instruction or prompts for any additional tapes needed to complete the
+operation; the backup operator must arrange to provide them.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-portoffset> <I<TC port offset>>
+
+Specifies the port offset number of the Tape Coordinator handling the
+tapes for this operation.
+
+=item B<-archive> <I<date time>>+
+
+Specifies a date and time; volume dump records with earlier timestamps are
+deleted from the disk copy of the Backup Database after the Backup System
+dumps the database (a dump's timestamp appears in the C<created> field of
+the output from the B<backup dumpinfo> command). However, if a dump set
+contains any dump created after the specified date, none of the dump
+records associated with the dump set are deleted. Dump records for
+previous dumps of the database (created with the B<backup savedb> command)
+are never deleted; use the B<backup deletedump> command to remove them.
+
+Provide one of two values:
+
+=over 4
+
+=item *
+
+The string C<NOW> to indicate the current date and time, in which case the
+Backup System deletes all dump records except those for dumps of the
+Backup Database itself.
+
+=item *
+
+A date value in the format I<mm/dd/yyyy> [I<hh:MM>]. The month (I<mm>),
+day (I<dd>), and year (I<yyyy>) are required, and valid values for the
+year range from C<1970> to C<2037>; higher values are not valid because
+the latest possible date in the standard UNIX representation is in
+February 2038. The Backup System automatically reduces any later date to
+the maximum value.
+
+The hour and minutes (I<hh:MM>) are optional, but if provided must be in
+24-hour format (for example, the value C<14:36> represents 2:36 p.m.). If
+omitted, the time defaults to 59 seconds after midnight (00:00:59
+hours). Similarly, the B<backup> command interpreter automatically adds 59
+seconds to any time value provided. In both cases, adding 59 seconds
+compensates for how the Backup Database and B<backup dumpinfo> command
+represent dump creation times in hours and minutes only. That is, the
+Database records a creation timestamp of C<20:55> for any dump created
+between 20:55:00 and 20:55:59. Automatically adding 59 seconds to a time
+thus includes the records for all dumps created during that minute.
+
+=back
+
+=item B<-localauth>
+
+Constructs a server ticket using a key from the local
+F</usr/afs/etc/KeyFile> file. The B<backup> command interpreter presents
+it to the Backup Server, Volume Server and VL Server during mutual
+authentication. Do not combine this flag with the B<-cell> argument. For
+more details, see L<backup(8)>.
+
+=item B<-cell> <I<cell name>>
+
+Names the cell in which to run the command. Do not combine this argument
+with the B<-localauth> flag. For more details, see L<backup(8)>.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 EXAMPLES
+
+The following example writes a copy of the Backup Database to the tape
+device controlled by the Tape Coordinator with port offset 1:
+
+   % backup savedb -portoffset 1
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be listed in the F</usr/afs/etc/UserList> file on every
+machine where the Backup Server is running, or must be logged onto a
+server machine as the local superuser C<root> if the B<-localauth> flag is
+included.
+
+=head1 SEE ALSO
+
+L<butc(5)>,
+L<backup(8)>,
+L<backup_dbverify(8)>,
+L<backup_restoredb(8)>,
+L<butc(8)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

@@ -15,7 +15,9 @@ set -e
 case "$1" in
 configure)
     update-alternatives --install /usr/bin/pagsh pagsh \
-        /usr/bin/pagsh.openafs 100 
+        /usr/bin/pagsh.openafs 100  \
+        --slave /usr/share/man/man1/pagsh.1.gz pagsh.1.gz \
+        /usr/share/man/man1/pagsh.openafs.1.gz
 
     test -d /afs || mkdir /afs
 

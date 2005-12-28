@@ -1,0 +1,73 @@
+=head1 NAME
+
+backup deldump - Deletes a dump level from the Backup Database
+
+=head1 SYNOPSIS
+
+B<backup deldump> B<-dump> <I<dump level name>> [B<-localauth>]
+    [B<-cell> <I<cell name>>] [B<-help>]
+
+B<backup deld> B<-d> <I<dump level name>> [B<-l>] [B<-c> <I<cell name>>]
+    [B<-h>]
+
+=head1 DESCRIPTION
+
+The B<backup deldump> command deletes the indicated dump level and all of
+its child dump levels from the dump hierarchy in the Backup Database. Use
+the B<backup listdumps> command to display the dump hierarchy.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-dump> <I<dump level name>>
+
+Specifies the complete pathname of the dump level to delete.
+
+=item B<-localauth>
+
+Constructs a server ticket using a key from the local
+F</usr/afs/etc/KeyFile> file. The B<backup> command interpreter presents
+it to the Backup Server, Volume Server and VL Server during mutual
+authentication. Do not combine this flag with the B<-cell> argument. For
+more details, see L<backup(8)>.
+
+=item B<-cell> <I<cell name>>
+
+Names the cell in which to run the command. Do not combine this argument
+with the B<-localauth> flag. For more details, see L<backup(8)>.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 EXAMPLES
+
+The following command deletes the dump level C</sunday1/monday1> from the
+dump hierarchy, along with any of its child dump levels.
+
+   % backup deldump /sunday1/monday1
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be listed in the F</usr/afs/etc/UserList> file on every
+machine where the Backup Server is running, or must be logged onto a
+server machine as the local superuser C<root> if the B<-localauth> flag is
+included.
+
+=head1 SEE ALSO
+
+L<backup(8)>,
+L<backup_adddump(8)>,
+L<backup_listdumps(8)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

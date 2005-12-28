@@ -1,3 +1,23 @@
 debian/tmp/usr/bin/kpasswd              usr/bin
 
 debian/tmp/usr/sbin/kas                 usr/bin
+
+debian/doc/man1/kpasswd.1               usr/share/man/man1
+
+debian/doc/man8/kas.8                   usr/share/man/man8
+debian/doc/man8/kas_apropos.8           usr/share/man/man8
+debian/doc/man8/kas_create.8            usr/share/man/man8
+debian/doc/man8/kas_delete.8            usr/share/man/man8
+debian/doc/man8/kas_examine.8           usr/share/man/man8
+debian/doc/man8/kas_forgetticket.8      usr/share/man/man8
+debian/doc/man8/kas_help.8              usr/share/man/man8
+debian/doc/man8/kas_interactive.8       usr/share/man/man8
+debian/doc/man8/kas_list.8              usr/share/man/man8
+debian/doc/man8/kas_listtickets.8       usr/share/man/man8
+debian/doc/man8/kas_noauthentication.8  usr/share/man/man8
+debian/doc/man8/kas_quit.8              usr/share/man/man8
+debian/doc/man8/kas_setfields.8         usr/share/man/man8
+debian/doc/man8/kas_setpassword.8       usr/share/man/man8
+debian/doc/man8/kas_statistics.8        usr/share/man/man8
+debian/doc/man8/kas_stringtokey.8       usr/share/man/man8
+debian/doc/man8/kas_unlock.8            usr/share/man/man8

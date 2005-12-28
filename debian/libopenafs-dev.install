@@ -1,4 +1,8 @@
 debian/tmp/usr/bin/rxgen                usr/bin
+
 debian/tmp/usr/include                  usr
+
 debian/tmp/usr/lib/*.a                  usr/lib
 debian/tmp/usr/lib/afs                  usr/lib
+
+debian/doc/man1/rxgen.1                 usr/share/man/man1

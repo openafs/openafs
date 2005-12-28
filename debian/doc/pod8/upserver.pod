@@ -1,0 +1,118 @@
+=head1 NAME
+
+upserver - Initializes the server portion of the Update Server
+
+=head1 SYNOPSIS
+
+B<upserver> [<I<directory>>+] [B<-crypt> <I<directory>>+]
+    [B<-clear> <I<directory>>+] [B<-auth> <I<directory>>+] [B<-help>]
+
+=head1 DESCRIPTION
+
+The B<upserver> command initializes the server portion of the Update
+Server (the C<upserver> process). In the conventional configuration, its
+binary file is located in the F</usr/afs/bin> directory on a file server
+machine.
+
+The B<upserver> command is not normally issued at the command shell prompt
+but rather placed into a file server machine's F</usr/afs/local/BosConfig>
+file with the B<bos create> command. If it is ever issued at the command
+shell prompt, the issuer must be logged onto a database server machine as
+the local superuser C<root>.
+
+The B<upserver> command specifies which of the directories on the local
+disk are eligible for distribution in response to requests from the client
+portion of the Update Server (the B<upclient> process) running on other
+machines. If no directories are specified, the B<upserver> process
+distributes the contents of any directory on its local disk.
+
+The B<upserver> process can distribute a directory's contents in encrypted
+or unencrypted form. By default, it does not use encryption unless an
+B<upclient> process requests it (this default is equivalent to setting the
+B<-clear> flag). When the B<-crypt> flag is provided, the B<upserver>
+process only fulfills requests for encrypted transfer.
+
+The B<upclient> and B<upserver> processes always mutually authenticate,
+whether or not the data they pass is encrypted; they use the key with the
+highest key version number in the F</usr/afs/etc/KeyFile> file to
+construct a server ticket for mutual authentication.
+
+This command does not use the syntax conventions of the AFS command
+suites. Provide the command name and all option names in full.
+
+=head1 CAUTIONS
+
+Do not use the Update Server to distribute the contents of the
+F</usr/afs/etc> directory without the B<-crypt> flag.  The contents of
+this directory are sensitive.
+
+=head1 OPTIONS
+
+=over 4
+
+=item <I<directory>>+
+
+Names each directory to distribute in unencrypted form (because they
+appear before the first B<-crypt> or B<-clear> flag on the command
+line). If this argument is omitted, all directories on the machine's local
+disk are eligible for distribution.
+
+=item B<-crypt> <I<directory>>+
+
+Precedes a list of one or more directories that the B<upserver> process
+distributes only in encrypted form.
+
+=item B<-clear> <I<directory>>+
+
+Precedes a list of one or more directories that the B<upserver> process
+distributes in unencrypted form unless the B<upclient> process requests
+them in encrypted form. Use this argument only if a list of directories
+headed by the B<-crypt> flag precedes it on the command line.
+
+=item B<-auth> <I<directory>>+
+
+Precedes a list of one or more directories which the upserver process
+distributes using a form of encryption that is intermediate in complexity
+and security between the unencrypted and encrypted levels set by the
+B<-clear> and B<-crypt> arguments. Do not use this argument, because the
+B<upclient> process does not have a corresponding argument that it can use
+to request data transfer at this level.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 EXAMPLES
+
+The following example bos create command defines and starts an B<upserver>
+process on the host machine C<fs1.abc.com>. The last parameter (enclosed
+in quotes) instructs the B<upserver> process to distribute the contents of
+the F</usr/afs/bin> directory in unencrypted form and the contents of the
+F</usr/afs/etc> directory in encrypted form.
+
+   % bos create  -server fs1.abc.com -instance upserver -type simple \
+       -cmd "/usr/afs/bin/upserver /usr/afs/bin -crypt /usr/afs/etc"
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be logged in as the superuser C<root> on a file server
+machine to issue the command at a command shell prompt. It is conventional
+instead to create and start the process by issuing the B<bos create>
+command.
+
+=head1 SEE ALSO
+
+L<BosConfig(5)>,
+L<bos_create(1)>,
+L<upclient(8)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

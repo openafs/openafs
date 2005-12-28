@@ -1,0 +1,179 @@
+=head1 NAME
+
+kpasswd - Changes the issuer's password in the Authentication Database
+
+=head1 SYNOPSIS
+
+B<kpasswd> [B<-x>] [B<-principal> <I<user name>>]
+    [B<-password> <I<user's password>>]
+    [B<-newpassword> <I<user's new password>>] [B<-cell> <I<cell name>>]
+    [B<-servers> <I<explicit list of servers>>+] [B<-pipe>] [B<-help>]
+
+B<kpasswd> [B<-x>] [B<-pr> <I<user name>>] [B<-pa> <I<user's password>>]
+    [B<-n> <I<user's new password>>] [B<-c> <I<cell name>>]
+    [B<-s> <I<explicit list of servers>>+] [B<-pi>] [B<-h>]
+
+=head1 DESCRIPTION
+
+The B<kpasswd> command changes the password recorded in an Authentication
+Database entry. By default, the command interpreter changes the password
+for the AFS user name that matches the issuer's local identity (UNIX
+UID). To specify an alternate user, include the B<-principal>
+argument. The user named by the B<-principal> argument does not have to
+appear in the local password file (the F</etc/passwd> file or equivalent).
+
+By default, the command interpreter sends the password change request to
+the Authentication Server running on one of the database server machines
+listed for the local cell in the F</usr/afs/etc/CellServDB> file on the
+local disk; it chooses the machine at random. It consults the
+F</usr/vice/etc/ThisCell> file on the local disk to learn the local cell
+name. To specify an alternate cell, include the B<-cell> argument.
+
+Unlike the UNIX B<passwd> command, the B<kpasswd> command does not
+restrict passwords to eight characters or less; it accepts passwords of
+virtually any length. All AFS commands that require passwords (including
+the B<klog>, B<kpasswd>, and AFS-modified login utilities, and the
+commands in the B<kas> suite) accept passwords longer than eight
+characters, but some other applications and operating system utilities do
+not. Selecting an AFS password of eight characters or less enables the
+user to maintain matching AFS and UNIX passwords.
+
+The command interpreter makes the following checks:
+
+=over 4
+
+=item *
+
+If the program B<kpwvalid> exists in the same directory as the B<kpasswd>
+command, the command interpreter pass the new password to it for
+verification. For details, see L<kpwvalid(8)>.
+
+=item *
+
+If the B<-reuse> argument to the kas setfields command has been used to
+prohibit reuse of previous passwords, the command interpreter verifies
+that the password is not too similar too any of the user's previous 20
+passwords. It generates the following error message at the shell:
+
+   Password was not changed because it seems like a reused password
+
+To prevent a user from subverting this restriction by changing the
+password twenty times in quick succession (manually or by running a
+script), use the B<-minhours> argument on the B<kaserver> initialization
+command. The following error message appears if a user attempts to change
+a password before the minimum time has passed:
+
+   Password was not changed because you changed it too
+   recently; see your systems administrator
+
+=back
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-x>
+
+Appears only for backwards compatibility.
+
+=item B<-principal> <I<user name>>
+
+Names the Authentication Database entry for which to change the
+password. If this argument is omitted, the database entry with the same
+name as the issuer's local identity (UNIX UID) is changed.
+
+=item B<-password> <I<user's password>>
+
+Specifies the current password. Omit this argument to have the command
+interpreter prompt for the password, which does not echo visibly:
+
+   Old password: current_password
+
+=item B<-newpassword> <I<user's new password>>
+
+Specifies the new password, which the B<kpasswd> command interpreter
+converts into an encryption key (string of octal numbers) before sending
+it to the Authentication Server for storage in the user's Authentication
+Database entry.
+
+Omit this argument to have the command interpreter prompt for the
+password, which does not echo visibly:
+
+   New password (RETURN to abort): <new_password>
+   Retype new password: <new_password>
+
+=item B<-cell> <I<cell name>>
+
+Specifies the cell in which to change the password, by directing the
+command to that cell's Authentication Servers. The issuer can abbreviate
+the cell name to the shortest form that distinguishes it from the other
+cells listed in the local F</usr/vice/etc/CellServDB> file.
+
+By default, the command is executed in the local cell, as defined
+
+=over 4
+
+=item *
+
+First, by the value of the environment variable AFSCELL.
+
+=item *
+
+Second, in the F</usr/vice/etc/ThisCell> file on the client machine on
+which the command is issued.
+
+=back
+
+=item B<-servers> <I<explicit list of servers>>
+
+Establishes a connection with the Authentication Server running on each
+specified machine, rather than with all of the database server machines
+listed for the relevant cell in the local copy of the
+F</usr/vice/etc/CellServDB> file. The B<kpasswd> command interpreter then
+sends the password-changing request to one machine chosen at random from
+the set.
+
+=item B<-pipe>
+
+Suppresses all output to the standard output stream or standard error
+stream. The B<kpasswd> command interpreter expects to receive all
+necessary arguments, each on a separate line, from the standard input
+stream. Do not use this argument, which is provided for use by application
+programs rather than human users.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 EXAMPLES
+
+The following example shows user pat changing her password in the ABC
+Corporation cell.
+
+   % kpasswd
+   Changing password for 'pat' in cell 'abc.com'.
+   Old password:
+   New password (RETURN to abort):
+   Verifying, please re-enter new_password:
+
+=head1 PRIVILEGE REQUIRED
+
+None
+
+=head1 SEE ALSO
+
+L<kas_setfields(8)>,
+L<kas_setpassword(8)>,
+L<klog(1)>,
+L<kpwvalid(8)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

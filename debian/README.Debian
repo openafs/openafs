@@ -37,12 +37,7 @@ Documentation
   For the complete OpenAFS manual, install openafs-doc.  This is the same
   documentation as found at <http://www.openafs.org/>, and is
   unfortunately outdated in several respects, but it's the best that we
-  have at present.  The Administrative Reference manual is one of the most
-  useful, as it contains man-page-like pages on most of the AFS commands.
-
-  No manual pages are included.  Work is underway upstream to write man
-  pages for all of the commands based on the old HTML reference manual,
-  but that work is not complete yet.
+  have at present.
 
   If want to set up a new cell, read README.servers and then look at the
   example session in configuration-transcript.txt.gz in this directory.
@@ -128,4 +123,4 @@ PAM Authentication
   the openafs-kpasswd package to get the administrative utilities for
   managing those Kerberos accounts.
 
- -- Russ Allbery <rra@stanford.edu>, Tue Dec 20 17:24:51 2005
+ -- Russ Allbery <rra@debian.org>, Tue Dec 27 15:53:28 2005

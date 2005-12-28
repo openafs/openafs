@@ -1,0 +1,42 @@
+=head1 NAME
+
+prdb.DB0, prdb.DBSYS1 - Contain the Protection Database and associated log
+
+=head1 DESCRIPTION
+
+The F<prdb.DB0> file contains the Protection Database, which maps AFS
+user, machine, and group names to their respective IDs (AFS UIDs and GIDs)
+and tracks group memberships. The Protection Server (B<ptserver> process)
+uses the information in the database to help the File Server grant data
+access to authorized users.
+
+The F<prdb.DBSYS1> file is a log file in which the Protection Server logs
+each database operation before performing it.  When an operation is
+interrupted, the Protection Server replays the log to complete the
+operation.
+
+Both files are in binary format and reside in the F</usr/afs/db> directory
+on each of the cell's database server machines. When the Protection Server
+starts or restarts on a given machine, it establishes a connection with
+its peers and verifies that its copy of the database matches the copy on
+the other database server machines. If not, the Protection Servers call on
+AFS's distributed database technology, Ubik, to distribute to all of the
+machines the copy of the database with the highest version number.
+
+Always use the commands in the B<pts> suite to administer the Protection
+Database. It is advisable to create an archive copy of the database on a
+regular basis, using a tool such as the UNIX B<tar> command.
+
+=head1 SEE ALSO
+
+L<prdb_check(8)>,
+L<pts(8)>,
+L<ptserver(8)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

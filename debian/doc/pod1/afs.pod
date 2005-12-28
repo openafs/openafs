@@ -1,0 +1,563 @@
+=head1 NAME
+
+afs - Introduction to AFS commands
+
+=head1 DESCRIPTION
+
+AFS provides many commands that enable users and system administrators to
+use and customize its features. Many of the commands belong to the
+following categories, called I<command suites>.
+
+=over 4
+
+=item backup
+
+Interface for configuring and operating the AFS Backup System.
+
+=item bos
+
+Interface to the Basic Overseer (BOS) Server for administering server
+processes and configuration files.
+
+=item fs
+
+Interface for administering access control lists (ACLs), the Cache
+Manager, and other miscellaneous file system functions.
+
+=item fstrace
+
+Interface for tracing Cache Manager operations when debugging problems.
+
+=item kas
+
+Interface to the Authentication Server for administering security and
+authentication information.
+
+=item pts
+
+Interface to the Protection Server for administering AFS ID and group
+membership information.
+
+=item uss
+
+Interface for automated administration of user accounts.
+
+=item vos
+
+Interface to the Volume Server and Volume Location (VL) Server for
+administering volumes.
+
+=back
+
+In addition, there are several commands that do not belong to
+suites.
+
+=head2 AFS Command Syntax
+
+AFS commands that belong to suites have the following structure:
+
+I<command_suite> I<operation_code> B<-switch> <I<value>>[+] [B<-flag>]
+
+=head3 Command Names
+
+Together, the I<command_suite> and I<operation_code> make up the I<command
+name>.
+
+The I<command_suite> specifies the group of related commands to which the
+command belongs, and indicates which command interpreter and server
+process perform the command.  AFS has several command suites, including
+B<bos>, B<fs>, B<kas>, B<package>, B<pts>, B<uss> and B<vos>.  Some of
+these suites have an interactive mode in which the issuer omits the
+I<operation_code> portion of the command name.
+
+The I<operation_code> tells the command interpreter and server process
+which action to perform. Most command suites include several operation
+codes. The man pages for each command name describe each operation code in
+detail, and the I<IBM AFS Administration Guide> describes how to use them
+in the context of performing administrative tasks.
+
+Several AFS commands do not belong to a suite and so their names do not
+have a I<command_suite> portion. Their structure is otherwise similar to
+the commands in the suites.
+
+=head3 Options
+
+The term I<option> refers to both arguments and flags, which are described
+in the following sections.
+
+=head3 Arguments
+
+One or more arguments can follow the command name. Arguments specify the
+entities on which to act while performing the command (for example, which
+server machine, server process, or file). To minimize the potential for
+error, provide a command's arguments in the order prescribed in its syntax
+definition.
+
+Each argument has two parts, which appear in the indicated order:
+
+=over 4
+
+=item *
+
+The I<switch> specifies the argument's type and is preceded by a hyphen
+(B<->). For instance, the switch B<-server> usually indicates that the
+argument names a server machine. Switches can often be omitted, subject to
+the rules outlined in L<"Conditions for Omitting Switches">.
+
+=item *
+
+The I<value> names a particular entity of the type specified by the
+preceding switch. For example, the proper value for a B<-server> switch is
+a server machine name like C<fs3.abc.com>. Unlike switches (which have a
+required form), values vary depending on what the issuer wants to
+accomplish. Values appear surrounded by angle brackets (C<< <> >>) in
+command descriptions and the online help to show that they are
+user-supplied variable information.
+
+=back
+
+Some arguments accept multiple values, as indicated by trailing plus sign
+(C<+>) in the command descriptions and online help. How many of a
+command's arguments take multiple values, and their ordering with respect
+to other arguments, determine when it is acceptable to omit switches. See
+L<"Conditions for Omitting Switches">.
+
+Some commands have optional as well as required arguments; the command
+descriptions and online help show optional arguments in square brackets
+(C<[]>).
+
+=head3 Flags
+
+Some commands have one or more flags, which specify the manner in which
+the command interpreter and server process perform the command, or what
+kind of output it produces. Flags are preceded by hyphens like switches,
+but they take no values. Although the command descriptions and online help
+generally list a command's flags after its arguments, there is no
+prescribed order for flags. They can appear anywhere on the command line
+following the operation code, except in between the parts of an
+argument. Flags are always optional.
+
+=head3 An Example Command
+
+The following example illustrates the different parts of a command that
+belongs to an AFS command suite.
+
+   % bos getdate -server fs1.abc.com -file ptserver kaserver
+
+where
+
+=over 4
+
+=item *
+
+B<bos> is the command suite. The BOS Server executes most of the commands
+in this suite.
+
+=item *
+
+B<getdate> is the operation code. It tells the BOS Server on the specified
+server machine (in this case C<fs1.abc.com>) to report the modification
+dates of binary files in the local F</usr/afs/bin> directory.
+
+=item *
+
+C<-server fs1.abc.com> is one argument, with B<-server> as the switch and
+C<fs1.abc.com> as the value. This argument specifies the server machine on
+which BOS Server is to collect and report binary dates.
+
+=item *
+
+C<-file ptserver kaserver> is an argument that takes multiple values. The
+switch is B<-file> and the values are C<ptserver> and C<kaserver>. This
+argument tells the BOS Server to report the modification dates on the
+files F</usr/afs/bin/kaserver> and F</usr/afs/bin/ptserver>.
+
+=back
+
+=head3 Rules for Entering AFS Commands
+
+Enter each AFS command on a single line (press <Return> only at the end of
+the command). Some commands in this document appear broken across multiple
+lines, but that is for legibility only.
+
+Use a space to separate each element on a command line from its
+neighbors. Spaces rather than commas also separate multiple values of an
+argument.
+
+In many cases, the issuer of a command can reduce the amount of typing
+necessary by using one or both of the following methods:
+
+=over 4
+
+=item *
+
+Omitting switches.
+
+=item *
+
+Using accepted abbreviations for operation codes, switches (if they are
+included at all), and some types of values.
+
+=back
+
+The following sections explain the conditions for omitting or shortening
+parts of the command line. It is always acceptable to type a command in
+full, with all of its switches and no abbreviations.
+
+=head4 Conditions for Omitting Switches
+
+It is always acceptable to type the switch part of an argument, but in
+many cases it is not necessary. Specifically, switches can be omitted if
+the following conditions are met.
+
+=over 4
+
+=item *
+
+All of the command's required arguments appear in the order prescribed by
+the syntax statement.
+
+=item *
+
+No switch is provided for any argument.
+
+=item *
+
+There is only one value for each argument (but note the important
+exception discussed in the following paragraph).
+
+=back
+
+Omitting switches is possible only because there is a prescribed order for
+each command's arguments. When the issuer does not include switches, the
+command interpreter relies instead on the order of arguments; it assumes
+that the first element after the operation code is the command's first
+argument, the next element is the command's second argument, and so
+on. The important exception is when a command's final required argument
+accepts multiple values. In this case, the command interpreter assumes
+that the issuer has correctly provided one value for each argument up
+through the final one, so any additional values at the end belong to the
+final argument.
+
+The following list describes the rules for omitting switches from the
+opposite perspective: an argument's switch must be provided when any of
+the following conditions apply.
+
+=over 4
+
+=item *
+
+The command's arguments do not appear in the prescribed order.
+
+=item *
+
+An optional argument is omitted but a subsequent optional argument is
+provided.
+
+=item *
+
+A switch is provided for a preceding argument.
+
+=item *
+
+More than one value is supplied for a preceding argument (which must take
+multiple values, of course); without a switch on the current argument, the
+command interpreter assumes that the current argument is another value for
+the preceding argument.
+
+=back
+
+=head4 An Example of Omitting Switches
+
+Consider again the example command from L<"An Example Command">.
+
+   % bos getdate -server fs1.abc.com -file ptserver kaserver
+
+This command has two required arguments: the server machine name
+(identified by the B<-server> switch) and binary file name (identified by
+the B<-file> switch). The second argument accepts multiple values. By
+complying with all three conditions, the issuer can omit the switches:
+
+   % bos getdate fs1.abc.com ptserver kaserver
+
+Because there are no switches, the bos command interpreter relies on the
+order of arguments. It assumes that the first element following the
+operation code, C<fs1.abc.com>, is the server machine name, and that the
+next argument, C<ptserver>, is a binary file name. Then, because the
+command's second (and last) argument accepts multiple values, the command
+interpreter correctly interprets C<kaserver> as an additional value for
+it.
+
+On the other hand, the following is not acceptable because it violates the
+first two conditions in L<"Conditions for Omitting Switches">: even though
+there is only one value per argument, the arguments do not appear in the
+prescribed order, and a switch is provided for one argument but not the
+other.
+
+   % bos getdate ptserver -server fs1.abc.com
+
+=head3 Rules for Using Abbreviations and Aliases
+
+This section explains how to abbreviate operation codes, option names,
+server machine names, partition names, and cell names. It is not possible
+to abbreviate other types of values.
+
+=head4 Abbreviating Operation Codes
+
+It is acceptable to abbreviate an operation code to the shortest form that
+still distinguishes it from the other operation codes in its suite.
+
+For example, it is acceptable to shorten B<bos install> to B<bos i>
+because there are no other operation codes in the B<bos> command suite
+that begin with the letter C<i>. In contrast, there are several B<bos>
+operation codes that start with the letter C<s>, so the abbreviations must
+be longer to remain unambiguous:
+
+=over 4
+
+=item B<bos sa> for bos salvage
+
+=item B<bos seta> for bos setauth
+
+=item B<bos setc> for bos setcellname
+
+=item B<bos setr> for bos setrestart
+
+=item B<bos sh> for bos shutdown
+
+=item B<bos start> for bos start
+
+=item B<bos startu> for bos startup
+
+=item B<bos stat> for bos status
+
+=item B<bos sto> for bos stop
+
+=back
+
+In addition to abbreviations, some operation codes have an I<alias>, a
+short form that is not derived by abbreviating the operation code to its
+shortest unambiguous form. For example, the alias for the B<fs setacl>
+command is B<fs sa>, whereas the shortest unambiguous abbreviation is B<fs
+seta>.
+
+There are two usual reasons an operation code has an alias:
+
+=over 4
+
+=item *
+
+Because the command is frequently issued, it is convenient to have a form
+shorter than the one derived by abbreviating. The B<fs setacl> command is
+an example.
+
+=item *
+
+Because the command's name has changed, but users of previous versions of
+AFS know the former name. For example, B<bos listhosts> has the alias
+B<bos getcell>, its former name.  It is acceptable to abbreviate aliases
+to their shortest unambiguous form (for example, B<bos getcell> to B<bos
+getc>).
+
+=back
+
+Even if an operation code has an alias, it is still acceptable to use the
+shortest unambiguous form. Thus, the B<fs setacl> command has three
+acceptable forms: B<fs setacl> (the full form), B<fs seta> (the shortest
+abbreviation), and B<fs sa> (the alias).
+
+=head4 Abbreviating Switches and Flags
+
+It is acceptable to shorten a switch or flag to the shortest form that
+distinguishes it from the other switches and flags for its operation
+code. It is often possible to omit switches entirely, subject to the
+conditions listed in L<"Conditions for Omitting Switches">.
+
+=head4 Abbreviating Server Machine Names
+
+AFS server machines must have fully-qualified Internet-style host names
+(for example, C<fs1.abc.com>), but it is not always necessary to type the
+full name on the command line. AFS commands accept unambiguous shortened
+forms, but depend on the cell's name service (such as the Domain Name
+Service) or a local host table to resolve a shortened name to the
+fully-qualified equivalent when the command is issued.
+
+Most commands also accept the dotted decimal form of the machine's IP
+address as an identifier.
+
+=head4 Abbreviating Partition Names
+
+Partitions that house AFS volumes must have names of the form
+F</vicepI<x>> or F</vicepI<xx>>, where the variable final portion is one
+or two lowercase letters. By convention, the first server partition
+created on a file server machine is called F</vicepa>, the second
+F</vicepb>, and so on.  The I<IBM AFS Quick Beginnings> explains how to
+configure and name a file server machine's partitions in preparation for
+storing AFS volumes on them.
+
+When issuing AFS commands, you can abbreviate a partition name using any
+of the following forms:
+
+   /vicepa     =     vicepa      =      a      =      0
+   /vicepb     =     vicepb      =      b      =      1
+
+After /vicepz (for which the index is 25) comes
+
+   /vicepaa    =     vicepaa     =      aa     =      26
+   /vicepab    =     vicepab     =      ab     =      27
+
+and so on through
+
+   /vicepiv    =     vicepiv     =      iv     =      255
+
+=head4 Abbreviating Cell Names
+
+A cell's full name usually matches its Internet domain name (such as
+B<stateu.edu> for the State University or C<abc.com> for ABC
+Corporation). Some AFS commands accept unambiguous shortened forms,
+usually with respect to the local F</usr/vice/etc/CellServDB file> but
+sometimes depending on the ability of the local name service to resolve
+the corresponding domain name.
+
+=head3 Displaying Online Help for AFS Commands
+
+To display online help for AFS commands that belong to suites, use the
+B<help> and B<apropos> operation codes.  A B<-help> flag is also available
+on every almost every AFS command.
+
+The online help entry for a command consists of two or three lines:
+
+=over 4
+
+=item *
+
+The first line names the command and briefly describes what it does.
+
+=item *
+
+If the command has aliases, they appear on the next line.
+
+=item *
+
+The final line, which begins with the string C<Usage:>, lists the
+command's options in the prescribed order; online help entries use the
+same typographical symbols (brackets and so on) as this documentation.
+
+=back
+
+If no operation code is specified, the B<help> operation code displays the
+first line (short description) for every operation code in the suite:
+
+   % <command_suite> help
+
+If the issuer specifies one or more operation codes, the B<help> operation
+code displays each command's complete online entry (short description,
+alias if any, and syntax):
+
+   % <command_suite> help <operation_code>+
+
+The B<-help> flag displays a command's syntax but not the short
+description or alias:
+
+   % <command_name> -help
+
+The apropos operation code displays the short description of any command
+in a suite whose operation code or short description includes the
+specified keyword:
+
+   % <command_suite> apropos "<help string>"
+
+The following example command displays the complete online help entry for
+the B<fs setacl> command:
+
+   % fs help setacl
+   fs setacl: set access control list
+   aliases: sa
+   Usage: fs setacl -dir <directory>+ -acl <access list entries>+
+   [-clear] [-negative] [-id] [-if] [-help]
+
+To see only the syntax statement, use the B<-help> flag:
+
+   % fs setacl -help
+   Usage: fs setacl -dir <directory>+ -acl <access list entries>+
+   [-clear] [-negative] [-id] [-if] [-help]
+
+In the following example, a user wants to display the quota for her home
+volume. She knows that the relevant command belongs to the B<fs> suite,
+but cannot remember the operation code. She uses B<quota> as the keyword:
+
+   % fs apropos quota
+   listquota: list volume quota
+   quota: show volume quota usage
+   setquota: set volume quota
+
+The following illustrates the error message that results if no command
+name or short description contains the keyword:
+
+   % fs apropos "list quota"
+   Sorry, no commands found
+
+=head1 PRIVILEGE REQUIRED
+
+Many AFS commands require one or more types of administrative
+privilege. See the reference page for each command.
+
+=head1 SEE ALSO
+
+=over 4
+
+L<afsd(8)>,
+L<afsmonitor(1)>,
+L<backup(8)>,
+L<bos(1)>,
+L<bosserver(8)>,
+L<buserver(8)>,
+L<butc(8)>,
+L<dlog(1)>,
+L<dpass(1)>,
+L<fileserver(8)>,
+L<fms(8)>,
+L<fs(1)>,
+L<fstrace(8)>,
+L<kadb_check(8)>,
+L<kas(8)>,
+L<kaserver(8)>,
+L<kdb(8)>,
+L<klog(1)>,
+L<knfs(1)>,
+L<kpasswd(1)>,
+L<kpwvalid(8)>,
+L<package(1)>,
+L<pagsh(1)>,
+L<prdb_check(8)>,
+L<pts(1)>,
+L<ptserver(8)>,
+L<rxdebug(1)>,
+L<salvager(8)>,
+L<scout(1)>,
+L<sys(1)>,
+L<tokens(1)>,
+L<translate_et(1)>,
+L<unlog(1)>,
+L<up(1)>,
+L<upclient(8)>,
+L<upserver(8)>,
+L<uss(8)>,
+L<vldb_check(8)>,
+L<vlserver(8)>,
+L<volinfo(8)>,
+L<volserver(8)>,
+L<vos(1)>,
+L<xfs_size_check(8)>,
+L<xstat_cm_test(8)>,
+L<xstat_fs_test(8)>
+
+=back
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

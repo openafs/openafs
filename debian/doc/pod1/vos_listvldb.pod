@@ -1,0 +1,263 @@
+=head1 NAME
+
+vos listvldb - Displays a volume's VLDB entry
+
+=head1 SYNOPSIS
+
+B<vos listvldb> [B<-name> <I<volume name or ID>>]
+    [B<-server> <I<machine name>>] [B<-partition> <I<partition name>>]
+    [B<-locked>] [B<-quiet>] [B<-nosort>] [B<-cell> <I<cell name>>]
+    [B<-noauth>] [B<-localauth>] [B<-verbose>] [B<-help>]
+
+B<vos listvl> [B<-na> <I<volume name or ID>>] [B<-s> <I<machine name>>]
+    [B<-p> <I<partition name>>] [B<-lock>] [B<-q>] [B<-nos>]
+    [B<-c> <I<cell name>>] [B<-noa>] [B<-loca>] [B<-v>] [B<-h>]
+
+=head1 DESCRIPTION
+
+The B<vos listvldb> command formats and displays information from the
+Volume Location Database (VLDB) entry for each volume specified.  The
+output depends on the combination of options supplied on the command
+line. Combine options as indicated to display the desired type of VLDB
+entries:
+
+=over 4
+
+=item *
+
+Every entry in the VLDB: provide no options.
+
+=item *
+
+Every VLDB entry that mentions a certain file server machine as the site
+for a volume: specify the machine's name as the B<-server> argument.
+
+=item *
+
+Every VLDB entry that mentions a certain partition on any file server
+machine as the site for a volume: specify the partition name as the
+B<-partition> argument.
+
+=item *
+
+Every VLDB entry that mentions a certain partition on a certain file
+server machine as the site for a volume: combine the B<-server> and
+B<-partition> arguments.
+
+=item *
+
+A single VLDB entry: specify a volume name or ID number with the B<-name>
+argument.
+
+=item *
+
+The VLDB entry only for the volumes with locked VLDB entries found at a
+certain site: combine the B<-locked> flag with any of arguments that
+define sites.
+
+=back
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-name> <I<volume name or ID>>
+
+Specifies either the complete name or volume ID number of a volume of any
+of the three types.
+
+=item B<-server> <I<server name>>
+
+Identifies the file server machine listed as a site in each VLDB entry to
+display. Provide the machine's IP address or its host name (either fully
+qualified or using an unambiguous abbreviation). For details, see
+L<vos(1)>.
+
+This argument can be combined with the B<-partition> argument, the
+B<-locked> flag, or both.
+
+=item B<-partition> <I<partition name>>
+
+Identifies the partition (on the file server machine specified by the
+B<-server> argument) listed as a site in each VLDB entry to
+display. Provide the partition's complete name with preceding slash (for
+example, C</vicepa>) or use one of the three acceptable abbreviated
+forms. For details, see L<vos(1)>.
+
+This argument can be combined with the B<-server> argument, the B<-locked>
+flag, or both.
+
+=item B<-locked>
+
+Displays only locked VLDB entries. This flag can be combined with the
+B<-server> argument, the B<-partition> argument, or both.
+
+=item B<-quiet>
+
+Suppresses the lines that summarize the number of volumes listed and their
+status, which otherwise appear at the beginning and end of the output when
+the output includes more than one volume.
+
+=item B<-nosort>
+
+Suppresses the default sorting of volume entries alphabetically by volume
+name.
+
+=item B<-cell> <I<cell name>>
+
+Names the cell in which to run the command. Do not combine this argument
+with the B<-localauth> flag. For more details, see L<vos(1)>.
+
+=item B<-noauth>
+
+Assigns the unprivileged identity C<anonymous> to the issuer. Do not
+combine this flag with the B<-localauth> flag. For more details, see
+L<vos(1)>.
+
+=item B<-localauth>
+
+Constructs a server ticket using a key from the local
+F</usr/afs/etc/KeyFile> file. The B<vos> command interpreter presents it
+to the Volume Server and Volume Location Server during mutual
+authentication. Do not combine this flag with the B<-cell> argument or
+B<-noauth> flag. For more details, see L<vos(1)>.
+
+=item B<-verbose>
+
+Produces on the standard output stream a detailed trace of the command's
+execution. If this argument is omitted, only warnings and error messages
+appear.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 OUTPUT
+
+If the output includes more than one VLDB entry, by default the first line
+reports which file server machine, partition, or both, houses the
+volumes. The final line of output reports the total number of entries
+displayed. Including the B<-quiet> flag suppresses these lines.
+
+By default, volumes are sorted alphabetically by volume name.  Including
+the B<-nosort> flag skips the sorting step, which can speed up the
+production of output if there are a large number of entries.
+
+The VLDB entry for each volume includes the following information:
+
+=over 4
+
+=item *
+
+The base (read/write) volume name. The read-only and backup versions have
+the same name with a C<.readonly> and C<.backup> extension, respectively.
+
+=item *
+
+The volume ID numbers allocated to the versions of the volume that
+actually exist, in fields labeled C<RWrite> for the read/write, C<ROnly>
+for the read-only, C<Backup> for the backup, and C<RClone> for the
+ReleaseClone. (If a field does not appear, the corresponding version of
+the volume does not exist.) The appearance of the C<RClone> field normally
+indicates that a release operation did not complete successfully; the
+C<Old release> and C<New release> flags often also appear on one or more
+of the site definition lines described just following.
+
+=item *
+
+The number of sites that house a read/write or read-only copy of the
+volume, following the string C<< number of sites -> >>.
+
+=item *
+
+A line for each site that houses a read/write or read-only copy of the
+volume, specifying the file server machine, partition, and type of volume
+(C<RW> for read/write or C<RO> for read-only). If a backup version exists,
+it is understood to share the read/write site.  Several flags can appear
+with a site definition:
+
+=over 4
+
+=item Not released
+
+Indicates that the vos release command has not been issued since the B<vos
+addsite> command was used to define the read-only site.
+
+=item Old release
+
+Indicates that a vos release command did not complete successfully,
+leaving the previous, obsolete version of the volume at this site.
+
+=item New release
+
+Indicates that a vos release command did not complete successfully, but
+that this site did receive the correct new version of the volume.
+
+=back
+
+=item *
+
+If the VLDB entry is locked, the string C<Volume is currently LOCKED>.
+
+=back
+
+For further discussion of the C<New release> and C<Old release> flags, see
+L<vos_release(1)>.
+
+=head1 EXAMPLES
+
+The following command displays VLDB information for the ABC Corporation
+volume called C<usr>, which has two read-only replication sites:
+
+   % vos listvldb -name usr
+   usr
+    RWrite: 5360870981   ROnly: 536870982   Backup: 536870983
+    number of sites -> 3
+       server fs1.abc.com partition /vicepa RO Site
+       server fs3.abc.com partition /vicepa RO Site
+       server fs2.abc.com partition /vicepb RW Site
+
+The following example shows entries for two of the volumes that reside on
+the file server machine C<fs4.abc.com>. The first VLDB entry is currently
+locked. There are 508 entries that mention the machine as a volume site.
+
+   % vos listvldb -server fs4.abc.com
+   VLDB entries for server fs4.abc.com
+       .       .           .        .
+       .       .           .        .
+   user.smith
+    RWrite: 278541326   ROnly: 278541327   Backup: 278542328
+    number of sites -> 1
+      server fs4.abc.com partition /vicepg RW Site
+    Volume is currently LOCKED
+      user.terry
+    RWrite 354287190   ROnly 354287191   Backup 354287192
+    number of sites -> 1
+      server fs4.abc.com partition /vicepc RW Site
+      .       .           .        .
+      .       .           .        .
+   Total entries: 508
+
+=head1 PRIVILEGE REQUIRED
+
+None
+
+=head1 SEE ALSO
+
+L<vos(1)>,
+L<vos_examine(1)>,
+L<vos_listvol(1)>,
+L<vos_lock(1)>,
+L<vos_unlock(1)>,
+L<vos_unlockvldb(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

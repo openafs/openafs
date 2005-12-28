@@ -1,0 +1,127 @@
+=head1 NAME
+
+bos shutdown - Stops a process without changing its status flag
+
+=head1 SYNOPSIS
+
+B<bos shutdown> B<-server> <I<machine name>>
+    [B<-instance> <I<instances>>+] [B<-wait>] [B<-cell> <I<cell name>>]
+    [B<-noauth>] [B<-localauth>] [B<-help>]
+
+B<bos sh> B<-s> <I<machine name>> [B<-i> <I<instances>>+] [B<-w>]
+    [B<-c> <I<cell name>>] [B<-n>] [B<-l>] [B<-h>]
+
+=head1 DESCRIPTION
+
+The B<bos shutdown> command stops, on the server machine named by the
+B<-server> argument, either
+
+=over 4
+
+=item *
+
+All of the currently running AFS server processes, except the BOS Server.
+
+=item *
+
+Only the processes specified by the B<-instance> argument.
+
+=back
+
+This command does not change a process's status flag in the
+F</usr/afs/local/BosConfig> file, but only in the BOS Server's memory. To
+stop a process and change its F<BosConfig> status flag, use the B<bos
+stop> command instead.
+
+Once stopped with this command, a process does not run again until an
+administrator starts it by using the B<bos start>, B<bos startup>, or
+B<bos restart> command, or until the BOS Server restarts (assuming that
+the process's F<BosConfig> status flag is C<Run>).
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-server> <I<machine name>>
+
+Indicates the server machine on which to stop processes. Identify the
+machine by IP address or its host name (either fully-qualified or
+abbreviated unambiguously). For details, see L<bos(1)>.
+
+=item B<-instance> <I<instances>>+
+
+Names each process to stop. Use the process name assigned with the
+B<-instance> argument to the B<bos create> command. The output from the
+B<bos status> command lists the names. Omit this argument to stop all
+processes other than the BOS Server.
+
+=item B<-wait>
+
+Delays the return of the command shell prompt until all processes actually
+stop. If this argument is omitted, the prompt returns almost immediately
+even if all processes are not stopped.
+
+=item B<-cell> <I<cell name>>
+
+Names the cell in which to run the command. Do not combine this argument
+with the B<-localauth> flag. For more details, see L<bos(1)>.
+
+=item B<-noauth>
+
+Assigns the unprivileged identity C<anonymous> to the issuer. Do not
+combine this flag with the B<-localauth> flag. For more details, see
+L<bos(1)>.
+
+=item B<-localauth>
+
+Constructs a server ticket using a key from the local
+F</usr/afs/etc/KeyFile> file. The B<bos> command interpreter presents the
+ticket to the BOS Server during mutual authentication. Do not combine this
+flag with the B<-cell> or B<-noauth> options. For more details, see
+L<bos(1)>.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 EXAMPLES
+
+The following command stops all processes other than the BOS Server on the
+machine C<fs3.abc.com>.
+
+   % bos shutdown fs3.abc.com
+
+The following command stops the C<upserver> process (server portion of the
+Update Server) on the machine C<fs5.abc.com>.
+
+   % bos shutdown -server fs5.abc.com -instance upserver
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be listed in the F</usr/afs/etc/UserList> file on the
+machine named by the B<-server> argument, or must be logged onto a server
+machine as the local superuser C<root> if the B<-localauth> flag is
+included.
+
+=head1 SEE ALSO
+
+L<BosConfig(5)>,
+L<KeyFile(5)>,
+L<UserList(5)>,
+L<bos(1)>,
+L<bos_create(1)>,
+L<bos_restart(1)>,
+L<bos_start(1)>,
+L<bos_startup(1)>,
+L<bos_status(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

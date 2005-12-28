@@ -1,0 +1,117 @@
+=head1 NAME
+
+vlserver - Initializes the Volume Location Server
+
+=head1 SYNOPSIS
+
+B<vlserver> [B<-p> <I<lwp processes>>] [B<-nojumbo>]
+    [B<-enable_peer_stats>] [B<-enable_process_stats>] [B<-help>]
+
+=head1 DESCRIPTION
+
+The B<vlserver> command initializes the Volume Location (VL) Server, which
+runs on every database server machine. In the conventional configuration,
+its binary file is located in the F</usr/afs/bin> directory on a file
+server machine.
+
+The B<vlserver> command is not normally issued at the command shell prompt
+but rather placed into a file server machine's F</usr/afs/local/BosConfig>
+file with the B<bos create> command. If it is ever issued at the command
+shell prompt, the issuer must be logged onto a database server machine as
+the local superuser C<root>.
+
+As it initializes, the VL Server process creates the two files that
+constitute the Volume Location Database (VLDB), F<vldb.DB0> and
+F<vldb.DBSYS1>, in the F</usr/afs/db> directory if they do not already
+exist. Use the commands in the B<vos> suite to administer the database.
+
+The VL Server maintains the record of volume locations in the Volume
+Location Database (VLDB). When the Cache Manager fills a file request from
+an application program, it first contacts the VL Server to learn which
+file server machine currently houses the volume that contains the file.
+The Cache Manager then requests the file from the File Server process
+running on that file server machine.
+
+The VL Server records a trace of its activity in the
+F</usr/afs/logs/VLLog> file. Use the B<bos getlog> command to display the
+contents of the file. By default, it records on a minimal number of
+messages. For instructions on increasing the amount of logging, see
+L<VLLog(5)>.
+
+By default, the VL Server runs nine lightweight processes (LWPs). To
+change the number, use the B<-p> argument.
+
+This command does not use the syntax conventions of the AFS command
+suites. Provide the command name and all option names in full.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-p> <I<lwp processes>>
+
+Sets the number of server lightweight processes (LWPs) to run.  Provide an
+integer between C<4> and C<16>. The default is C<9>.
+
+=item B<-nojumbo>
+
+Prohibits the server from sending or receiving jumbograms. A jumbogram is
+a large-size packet composed of 2 to 4 normal Rx data packets that share
+the same header. The VL Server uses jumbograms by default, but some
+routers are not capable of properly breaking the jumbogram into smaller
+packets and reassembling them.
+
+=item B<-enable_peer_stats>
+
+Activates the collection of Rx statistics and allocates memory for their
+storage. For each connection with a specific UDP port on another machine,
+a separate record is kept for each type of RPC (FetchFile, GetStatus, and
+so on) sent or received. To display or otherwise access the records, use
+the Rx Monitoring API.
+
+=item B<-enable_process_stats>
+
+Activates the collection of Rx statistics and allocates memory for their
+storage. A separate record is kept for each type of RPC (FetchFile,
+GetStatus, and so on) sent or received, aggregated over all connections to
+other machines. To display or otherwise access the records, use the Rx
+Monitoring API.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 EXAMPLES
+
+The following B<bos create> command creates a vlserver process on the
+machine C<fs2.abc.com> that uses six lightweight processes. Type the
+command on a single line:
+
+   % bos create -server fs2.abc.com -instance vlserver -type simple \
+                -cmd "/usr/afs/bin/vlserver -p 6"
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be logged in as the superuser C<root> on a file server
+machine to issue the command at a command shell prompt. It is conventional
+instead to create and start the process by issuing the B<bos create>
+command.
+
+=head1 SEE ALSO
+
+L<BosConfig(5)>,
+L<VLLog(5)>,
+L<vldb.DB0(5)>,
+L<bos_create(1)>,
+L<bos_getlog(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

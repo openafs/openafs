@@ -1,0 +1,107 @@
+=head1 NAME
+
+fs listquota - Displays quota information for a volume
+
+=head1 SYNOPSIS
+
+B<fs listquota> [B<-path> <I<dir/file path>>+] [B<-help>]
+
+B<fs listq> [B<-p> <I<dir/file path>>+] [B<-h>]
+
+B<fs lq> [B<-p> <I<dir/file path>>+] [B<-h>]
+
+=head1 DESCRIPTION
+
+The B<fs listquota> command displays information about the volume
+containing each specified directory or file (its name, quota, and amount
+of disk space used), along with an indicator of the percentage of space
+used on the host partition.
+
+To display more information about the host partition, use the B<fs
+examine> command.
+
+To set volume quota, use the B<fs setquota> or B<fs setvol> command.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-path> <I<dir/file path>>+
+
+Names a file or directory that resides in the volume about which to
+produce output. Partial pathnames are interpreted relative to the current
+working directory, which is also the default value if this argument is
+omitted.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 OUTPUT
+
+The output displays information about the volume that houses each
+specified directory or file, in a tabular format that uses the following
+headers:
+
+=over 4
+
+=item Volume Name
+
+The name of the volume.
+
+=item Quota
+
+The volume's quota in kilobytes, or the string C<no limit> to indicate an
+unlimited quota.
+
+=item Used
+
+The number of kilobytes of quota used.
+
+=item % Used
+
+The percentage of the volume's quota that is used (the C<Used> statistic
+divided by the C<Quota> statistic, times 100).
+
+=item Partition
+
+The percentage of space used on the partition that houses the
+volume. Although not directly related to how much of the user's quota is
+used, it is reported because a full partition can cause writing of data
+back to the volume to fail even when the volume has not reached its quota.
+
+=back
+
+=head1 EXAMPLES
+
+The following example shows the output for the volume C<user.smith>:
+
+   % fs listquota -path /afs/abc.com/usr/smith
+   Volume Name     Quota    Used    % Used   Partition
+   user.smith      15000    5071       34%         86%
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must have the C<l> (lookup) permission on the ACL of the root
+directory of the volume that houses the file or directory named by the
+B<-path> argument, and on the ACL of each directory that precedes it in
+the pathname.
+
+=head1 SEE ALSO
+
+L<fs_diskfree(1)>,
+L<fs_examine(1)>,
+L<fs_quota(1)>,
+L<fs_setquota(1)>,
+L<fs_setvol(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

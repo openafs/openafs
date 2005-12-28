@@ -1,0 +1,160 @@
+=head1 NAME
+
+backup kill - Terminates a pending or running operation
+
+=head1 SYNOPSIS
+
+B<kill> B<-id> <I<job ID or dump set name>> [B<-help>]
+
+B<k -i> <I<job ID or dump set name>> [B<-h>]
+
+=head1 DESCRIPTION
+
+The B<backup kill> command dequeues a Backup System operation that is
+pending, or terminates an operation that is running, in the current
+interactive session. It is available only in interactive mode.  If the
+issuer of the B<backup interactive> command included the B<-localauth>
+flag, the B<-cell> argument, or both, then those settings apply to this
+command also.
+
+To terminate a dump operation, specify either the dump name
+(I<volume_set_name>.I<dump_level_name>) or its job ID number, which
+appears in the output from the B<backup jobs> command. To terminate any
+other type of operation, provide the job ID number.
+
+The effect of terminating an operation depends on the type and current
+state of the operation:
+
+=over 4
+
+=item *
+
+If an operation is still pending, the Tape Coordinator removes it from the
+queue with no other lasting effects.
+
+=item *
+
+If the Tape Coordinator is unable to process the termination signal before
+an operation completes, it simply confirms the operation's completion. The
+operator must take the action necessary to undo the effects of the
+incorrect operation.
+
+=item *
+
+If a tape labeling operation is running, the effect depends on when the
+Tape Coordinator receives the termination signal. The labeling operation
+is atomic, so it either completes or does not begin at all.  Use the
+B<backup readlabel> command to determine if the labeling operation
+completed, and reissue the B<backup labeltape> command to overwrite the
+incorrect label if necessary.
+
+=item *
+
+If a tape scanning operation is running, it terminates with no other
+effects unless the B<-dbadd> flag was included on the B<backup>
+command. In that case, the Backup System possibly has already written new
+Backup Database records to represent dumps on the scanned tape. If
+planning to restart the scanning operation, first locate and remove the
+records created during the terminated operation: a repeated B<backup
+scantape> operation exits automatically when it finds that a record that
+it needs to create already exists.
+
+=item *
+
+If a dump operation is running, all of the volumes written to the tape or
+backup data file before the termination signal is received are complete
+and usable. If the operation is restarted, the Backup System performs all
+the dumps again from scratch, and assigns a new dump ID number. If writing
+the new dumps to the same tape or file, the operator must relabel it first
+if the interrupted dump is not expired. If writing the new dump to a
+different tape or file, the operator can remove the dump record associated
+with the interrupted dump to free up space in the database.
+
+=item *
+
+If a restore operation is running, completely restored volumes are online
+and usable. However, it is unlikely that many volumes are completely
+restored, given that complete restoration usually requires data from
+multiple tapes. If the termination signal comes before the Backup System
+has accessed all of the necessary tapes, each volume is only partially
+written and is never brought online. It is best to restart the restore
+operation from scratch to avoid possible inconsistencies. See also
+L<CAUTIONS>.
+
+=back
+
+=head1 CAUTIONS
+
+It is best not to issue the B<backup kill> command against restore
+operations. If the termination signal interrupts a restore operation as
+the Backup System is overwriting an existing volume, it is possible to
+lose the volume entirely (that is, to lose both the contents of the volume
+as it was before the restore and any data that was restored before the
+termination signal arrived). The data being restored still exists on the
+tape, but some data can be lost permanently.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-id> <I<job ID or dump set name>>
+
+Identifies the backup operation to terminate. Provide one of two types of
+values:
+
+=over 4
+
+=item *
+
+The operation's job ID number, as displayed in the output of the B<backup
+jobs> command.
+
+=item *
+
+For a dump operation, either the job ID number or a dump name of the form
+I<volume_set_name>.I<dump_level_name>, where I<volume_set_name> is the
+name of the volume set being dumped and I<dump_level_name> is the last
+element in the dump level pathname at which the volume set is being
+dumped. The dump name appears in the output of the B<backup jobs> command
+along with the job ID number.
+
+=back
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 EXAMPLES
+
+The following command terminates the operation with job ID 5:
+
+   backup> kill 5
+
+The following command terminates the dump operation called
+C<user.sunday1>:
+
+   backup> kill user.sunday1
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must have the privilege required to initiate the operation
+being cancelled. Because this command can be issued only within the
+interactive session during which the operation was initiated, the required
+privilege is essentially guaranteed.
+
+=head1 SEE ALSO
+
+L<backup(8)>,
+L<backup_interactive(8)>,
+L<backup_jobs(8)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

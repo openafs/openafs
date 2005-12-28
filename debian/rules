@@ -85,6 +85,7 @@ build-stamp:
 	mkdir -p $(CURDIR)/debian/tmp
 	$(MAKE) install_nolibafs DESTDIR=$(CURDIR)/debian/tmp
 	chmod +x debian/afs-rootvol debian/afs-newcell
+	cd debian/doc && ./build-man
 	touch build-stamp
 
 clean:
@@ -95,6 +96,7 @@ clean:
 ifeq (Makefile,$(wildcard Makefile))
 	$(MAKE) distclean
 endif
+	rm -rf debian/doc/man1 debian/doc/man5 debian/doc/man8
 	dh_clean
 
 install: DH_OPTIONS=
@@ -115,8 +117,13 @@ install: build
 
 	mv debian/openafs-client/usr/bin/pagsh \
 	    debian/openafs-client/usr/bin/pagsh.openafs
+	mv debian/openafs-client/usr/share/man/man1/pagsh.1 \
+	    debian/openafs-client/usr/share/man/man1/pagsh.openafs.1
 	mv debian/openafs-client/usr/bin/up \
 	    debian/openafs-client/usr/bin/afs-up
+	mv debian/openafs-client/usr/share/man/man1/up.1 \
+	    debian/openafs-client/usr/share/man/man1/afs-up.1
+
 	install -m 644 -c debian/tmp/usr/lib/pam_afs.so.1 \
 	    debian/libpam-openafs-kaserver/lib/security/pam_afs.so
 	install -m 644 -c debian/tmp/usr/lib/pam_afs.krb.so.1 \

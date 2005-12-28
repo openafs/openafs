@@ -1,0 +1,282 @@
+=head1 NAME
+
+bos - Introduction to the bos command suite
+
+=head1 DESCRIPTION
+
+The commands in the B<bos> command suite are the administrative interface
+to the Basic OverSeer (BOS) Server, which runs on every file server
+machine to monitor the other server processes on it. If a process fails,
+the BOS Server can restart it automatically, taking into account
+interdependencies between it and other processes. The BOS Server frees
+system administrators from constantly monitoring the status of server
+machines and processes.
+
+There are several categories of commands in the B<bos> command suite:
+
+=over 4
+
+=item *
+
+Commands to administer server process binary files: B<bos getdate>, B<bos
+install>, B<bos prune>, and B<bos uninstall>.
+
+=item *
+
+Commands to maintain system configuration files: B<bos addhost>, B<bos
+addkey>, B<bos adduser>, B<bos listhosts>, B<bos listkeys>, B<bos
+listusers>, B<bos removehost>, B<bos removekey>, B<bos removeuser>, and
+B<bos setcellname>.
+
+=item *
+
+Commands to start and stop processes: B<bos create>, B<bos delete>, B<bos
+restart>, B<bos shutdown>, B<bos start>, B<bos startup>, and B<bos stop>.
+
+=item *
+
+Commands to set and verify server process and server machine status: B<bos
+getlog>, B<bos getrestart>, B<bos setauth>, B<bos setrestart>, and B<bos
+status>.
+
+=item *
+
+A command to restore file system consistency: B<bos salvage>.
+
+=item *
+
+Commands to obtain help: B<bos apropos> and B<bos help>.
+
+=back
+
+The BOS Server and the B<bos> commands use and maintain the following
+configuration and log files:
+
+=over 4
+
+=item *
+
+The F</usr/afs/etc/CellServDB> file lists the local cell's database server
+machines. These machines run the Authentication, Backup, Protection and
+Volume Location (VL) Server processes, which maintain databases of
+administrative information. The database server processes consult the file
+to learn about their peers, whereas the other server processes consult it
+to learn where to access database information as needed. To administer the
+F<CellServDB> file, use the following commands: B<bos addhost>, B<bos
+listhosts>, B<bos removehost>, and B<bos setcellname>.
+
+=item *
+
+The F</usr/afs/etc/KeyFile> file lists the server encryption keys that the
+server processes use to decrypt tickets presented by client processes and
+one another. To administer the F<KeyFile> file, use the following
+commands: B<bos addkey>, B<bos listkeys>, and B<bos removekey>.
+
+=item *
+
+The F</usr/afs/etc/ThisCell> file defines the cell to which the server
+machine belongs for the purposes of server-to-server communication.
+Administer it with the B<bos setcellname> command. There is also a
+F</usr/vice/etc/ThisCell> file that defines the machine's cell membership
+with respect to the AFS command suites and Cache Manager access to AFS
+data.
+
+=item *
+
+The F</usr/afs/etc/UserList> file lists the user name of each
+administrator authorized to issue privileged B<bos> and B<vos>
+commands. To administer the F<UserList> file, use the following commands:
+B<bos adduser>, B<bos listusers>, and B<bos removeuser>.
+
+=item *
+
+The F</usr/afs/local/BosConfig> file defines which AFS server processes
+run on the server machine, and whether the BOS Server restarts them
+automatically if they fail. It also defines when all processes restart
+automatically (by default once per week), and when the BOS Server restarts
+processes that have new binary files (by default once per day). To
+administer the F<BosConfig> file, use the following commands: B<bos
+create>, B<bos delete>, B<bos getrestart>, B<bos setrestart>, B<bos
+start>, and B<bos stop>.
+
+=item *
+
+The F</usr/afs/log/BosLog> file records important operations the BOS
+Server performs and error conditions it encounters.
+
+=back
+
+For more details, see the reference page for each file.
+
+=head1 OPTIONS
+
+The following arguments and flags are available on many commands in the
+B<bos> suite. The reference page for each command also lists them, but
+they are described here in greater detail.
+
+=over 4
+
+=item B<-cell> <I<cell name>>
+
+Names the cell in which to run the command. It is acceptable to abbreviate
+the cell name to the shortest form that distinguishes it from the other
+entries in the F</usr/vice/etc/CellServDB> file on the local machine. If
+the B<-cell> argument is omitted, the command interpreter determines the
+name of the local cell by reading the following in order:
+
+=over 4
+
+=item *
+
+The value of the AFSCELL environment variable.
+
+=item *
+
+The local F</usr/vice/etc/ThisCell> file.
+
+=back
+
+Do not combine the B<-cell> and B<-localauth> options. A command on which
+the B<-localauth> flag is included always runs in the local cell (as
+defined in the server machine's local F</usr/afs/etc/ThisCell> file),
+whereas a command on which the B<-cell> argument is included runs in the
+specified foreign cell.
+
+=item B<-help>
+
+Prints a command's online help message on the standard output stream. Do
+not combine this flag with any of the command's other options; when it is
+provided, the command interpreter ignores all other options, and only
+prints the help message.
+
+=item B<-localauth>
+
+Constructs a server ticket using the server encryption key with the
+highest key version number in the local F</usr/afs/etc/KeyFile> file. The
+B<bos> command interpreter presents the ticket, which never expires, to
+the BOS Server during mutual authentication.
+
+Use this flag only when issuing a command on a server machine; client
+machines do not usually have a F</usr/afs/etc/KeyFile> file.  The issuer
+of a command that includes this flag must be logged on to the server
+machine as the local superuser C<root>. The flag is useful for commands
+invoked by an unattended application program, such as a process controlled
+by the UNIX B<cron> utility or by a cron entry in the machine's
+F</usr/afs/local/BosConfig> file. It is also useful if an administrator is
+unable to authenticate to AFS but is logged in as the local superuser
+C<root>.
+
+Do not combine the B<-cell> and B<-localauth> options. A command on which
+the B<-localauth> flag is included always runs in the local cell (as
+defined in the server machine's local F</usr/afs/etc/ThisCell> file),
+whereas a command on which the B<-cell> argument is included runs in the
+specified foreign cell. Also, do not combine the B<-localauth> and
+B<-noauth> flags.
+
+=item B<-noauth>
+
+Establishes an unauthenticated connection to the BOS Server, in which the
+BOS Server treats the issuer as the unprivileged user C<anonymous>. It is
+useful only when authorization checking is disabled on the server machine
+(during the installation of a file server machine or when the B<bos
+setauth> command has been used during other unusual circumstances). In
+normal circumstances, the BOS Server allows only privileged users to issue
+commands that change the status of a server or configuration file, and
+refuses to perform such an action even if the B<-noauth> flag is
+provided. Do not combine the B<-noauth> and B<-localauth> flags.
+
+=item B<-server> <I<machine name>>
+
+Indicates the AFS server machine on which to run the command.  Identify
+the machine by its IP address in dotted decimal format, its
+fully-qualified host name (for example, C<fs1.abc.com>), or by an
+abbreviated form of its host name that distinguishes it from other
+machines. Successful use of an abbreviated form depends on the
+availability of a name service (such as the Domain Name Service or a local
+host table) at the time the command is issued.
+
+For the commands that alter the administrative files shared by all server
+machines in the cell (the B<bos addhost>, B<bos addkey>, B<bos adduser>,
+B<bos removehost>, B<bos removekey>, and B<bos removeuser> commands), the
+appropriate machine depends on whether the cell uses the United States or
+international version of AFS:
+
+=over 4
+
+=item *
+
+If the cell (as recommended) uses the Update Server to distribute the
+contents of the F</usr/afs/etc> directory, provide the name of the system
+control machine. After issuing the command, allow up to five minutes for
+the Update Server to distribute the changed file to the other AFS server
+machines in the cell. If the specified machine is not the system control
+machine but is running an B<upclient> process that refers to the system
+control machine, then the change will be overwritten when the process next
+brings over the relevant file from the system control machine.
+
+=item *
+
+Otherwise, repeatedly issue the command, naming each of the cell's server
+machines in turn. To avoid possible inconsistency problems, finish issuing
+the commands within a fairly short time.
+
+=back
+
+=back
+
+=head1 PRIVILEGE REQUIRED
+
+To issue any bos command that changes a configuration file or alters
+process status, the issuer must be listed in the F</usr/afs/etc/UserList>
+file on the server machine named by the B<-server>
+argument. Alternatively, if the B<-localauth> flag is included the issuer
+must be logged on as the local superuser C<root>.
+
+To issue a bos command that only displays information (other than the
+B<bos listkeys> command), no privilege is required.
+
+=head1 SEE ALSO
+
+L<BosConfig(5)>,
+L<CellServDB(5)>,
+L<KeyFile(5)>,
+L<ThisCell(5)>,
+L<UserList(5)>,
+L<bos_addhost(1)>,
+L<bos_addkey(1)>,
+L<bos_adduser(1)>,
+L<bos_apropos(1)>,
+L<bos_create(1)>,
+L<bos_delete(1)>,
+L<bos_exec(1)>,
+L<bos_getdate(1)>,
+L<bos_getlog(1)>,
+L<bos_getrestart(1)>,
+L<bos_help(1)>,
+L<bos_install(1)>,
+L<bos_listhosts(1)>,
+L<bos_listkeys(1)>,
+L<bos_listusers(1)>,
+L<bos_prune(1)>,
+L<bos_removehost(1)>,
+L<bos_removekey(1)>,
+L<bos_removeuser(1)>,
+L<bos_restart(1)>,
+L<bos_salvage(1)>,
+L<bos_setauth(1)>,
+L<bos_setcellname(1)>,
+L<bos_setrestart(1)>,
+L<bos_shutdown(1)>,
+L<bos_start(1)>,
+L<bos_startup(1)>,
+L<bos_status(1)>,
+L<bos_stop(1)>,
+L<bos_uninstall(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

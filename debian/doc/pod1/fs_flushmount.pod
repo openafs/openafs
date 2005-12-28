@@ -1,0 +1,73 @@
+=head1 NAME
+
+fs flushmount - Forces the Cache Manager to discard a mount point
+
+=head1 SYNOPSIS
+
+B<fs flushmount> [B<-path> <I<dir/file path>>+] [B<-help>]
+
+B<fs flushm> [B<-p> <I<dir/file path>>+] [B<-h>]
+
+=head1 DESCRIPTION
+
+The B<fs flushmount> command removes from the cache all information
+associated with each mount point named by the B<-path> argument. The next
+time an application accesses the mount point, the Cache Manager fetches
+the most current version of it from the File Server. Data cached from the
+associated volume is not affected.
+
+The command's intended use is to discard information about mount points
+that has become corrupted in the cache. (The Cache Manager periodically
+refreshes cached mount points, but the only other way to discard them
+immediately is to reinitialize the Cache Manager by rebooting the
+machine.) Symptoms of a corrupted mount point included garbled output from
+the B<fs lsmount> command, and failed attempts to change directory to or
+list the contents of a mount point.
+
+To flush cached data rather than a mount point, use the B<fs flush> or
+B<fs flushvolume> command.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-path> <I<dir/file path>>+
+
+Names each mount point to flush from the cache. Partial pathnames are
+interpreted relative to the current working directory, which is also the
+default value if this argument is omitted.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 EXAMPLES
+
+The following command flushes from the cache the mount point for user
+C<pat>'s home directory:
+
+   % fs flushm /afs/abc.com/usr/pat
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must have the C<l> (lookup) permission on the ACL of the root
+directory of the volume that houses the file or directory named by the
+B<-path> argument, and on the ACL of each directory that precedes it in
+the pathname.
+
+=head1 SEE ALSO
+
+L<fs_flush(1)>,
+L<fs_flushvolume(1)>,
+L<fs_lsmount(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

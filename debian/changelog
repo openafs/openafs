@@ -10,6 +10,7 @@ openafs (1.4.0-3) unstable; urgency=low
     compiler other than the default system compiler.  (Closes: #338306)
   * Call kernel-version correctly from prep-modules, which fixes build
     issues with manually-built kernels.  (Closes: #344851)
+  * Backport man pages from upstream CVS.  (Closes: #79763)
   * Include afsmonitor and livesys in openafs-client.
   * Include volinfo in openafs-fileserver.
   * Document FAM's lack of support for AFS's security model and recommend
@@ -26,7 +27,7 @@ openafs (1.4.0-3) unstable; urgency=low
     goes into each package.
   * Don't ignore make distclean errors.
 
- -- Russ Allbery <rra@debian.org>  Mon, 26 Dec 2005 16:17:15 -0800
+ -- Russ Allbery <rra@debian.org>  Tue, 27 Dec 2005 15:34:16 -0800
 
 openafs (1.4.0-2) unstable; urgency=low
 

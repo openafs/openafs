@@ -1,0 +1,105 @@
+=head1 NAME
+
+pagsh - Creates a new PAG
+
+=head1 SYNOPSIS
+
+B<pagsh>
+
+=head1 DESCRIPTION
+
+The B<pagsh> command creates a new command shell (owned by the issuer of
+the command) and associates a new I<process authentication group> (PAG)
+with the shell and the user. A PAG is a number guaranteed to identify the
+issuer of commands in the new shell uniquely to the local Cache
+Manager. The PAG is used, instead of the issuer's UNIX UID, to identify
+the issuer in the credential structure that the Cache Manager creates to
+track each user.
+
+Any tokens acquired subsequently (presumably for other cells) become
+associated with the PAG, rather than with the user's UNIX UID.  This
+method for distinguishing users has two advantages.
+
+=over 4
+
+=item *
+
+It means that processes spawned by the user inherit the PAG and so share
+the token; thus they gain access to AFS as the authenticated user.  In
+many environments, for example, printer and other daemons run under
+identities (such as the local superuser C<root>) that the AFS server
+processes recognize only as C<anonymous>. Unless PAGs are used, such
+daemons cannot access files in directories whose access control lists
+(ACLs) do not extend permissions to the system:anyuser group.
+
+=item *
+
+It closes a potential security loophole: UNIX allows anyone already logged
+in as the local superuser C<root> on a machine to assume any other
+identity by issuing the UNIX B<su> command. If the credential structure is
+identified by a UNIX UID rather than a PAG, then the local superuser
+C<root> can assume a UNIX UID and use any tokens associated with that
+UID. Use of a PAG as an identifier eliminates that possibility.
+
+=back
+
+=head1 CAUTIONS
+
+Each PAG created uses two of the memory slots that the kernel uses to
+record the UNIX groups associated with a user. If none of these slots are
+available, the B<pagsh> command fails. This is not a problem with most
+operating systems, which make at least 16 slots available per user.
+
+In cells that do not use an AFS-modified login utility, use this command
+to obtain a PAG before issuing the B<klog> command (or include the
+B<-setpag> argument to the B<klog> command). If a PAG is not acquired, the
+Cache Manager stores the token in a credential structure identified by
+local UID rather than PAG. This creates the potential security exposure
+described in L<DESCRIPTION>.
+
+If users of NFS client machines for which AFS is supported are to issue
+this command as part of authenticating with AFS, do not use the B<fs
+exportafs> command's B<-uidcheck on> argument to enable UID checking on
+NFS/AFS Translator machines. Enabling UID checking prevents this command
+from succeeding. See L<klog(1)>.
+
+If UID checking is not enabled on Translator machines, then by default it
+is possible to issue this command on a properly configured NFS client
+machine that is accessing AFS via the NFS/AFS Translator, assuming that
+the NFS client machine is a supported system type. The B<pagsh> binary
+accessed by the NFS client must be owned by, and grant setuid privilege
+to, the local superuser C<root>. The complete set of mode bits must be
+C<-rwsr-xr-x>. This is not a requirement when the command is issued on AFS
+client machines.
+
+However, if the translator machine's administrator has enabled UID
+checking by including the B<-uidcheck on> argument to the B<fs exportafs>
+command, the command fails with an error message similar to the following:
+
+   Warning: Remote setpag to <translator_machine> has failed (err=8). . .
+   setpag: Exec format error
+
+=head1 EXAMPLES
+
+In the following example, the issuer invokes the C shell instead of the
+default Bourne shell:
+
+   # pagsh -c /bin/csh
+
+=head1 PRIVILEGE REQUIRED
+
+None
+
+=head1 SEE ALSO
+
+L<fs_exportafs(1)>,
+L<klog(1)>,
+L<tokens(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

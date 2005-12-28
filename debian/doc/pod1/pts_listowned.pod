@@ -1,0 +1,133 @@
+=head1 NAME
+
+pts listowned - Show the Protection Database groups owned by a user or group
+
+=head1 SYNOPSIS
+
+B<pts listowned> B<-nameorid> <I<user or group name or id>>+
+    [-cell <I<cell name>>] [B<-noauth>] [B<-force>] [B<-help>]
+
+B<pts listo> B<-na> <I<user or group name or id>>+
+    [-c <I<cell name>>] [B<-no>] [B<-f>] [B<-h>]
+
+=head1 DESCRIPTION
+
+The B<pts listowned> command lists the groups owned by each user or group
+specified by the B<-nameorid> argument.
+
+To list any I<orphaned group>s, whose owners have themselves been deleted
+from the Protection Database, provide a value of C<0> (zero) for the
+B<-nameorid> argument. To change the owner to a user or group that still
+exists, use the B<pts chown> command.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-nameorid> <I<user or group name or id>>+
+
+Specifies the name or AFS UID of each user, or the name or AFS GID of each
+group, for which to display the list of owned groups. It is acceptable to
+mix users and groups on the same command line, as well as names and
+IDs. Precede the GID of each group with a hyphen to indicate that it is
+negative.
+
+A value of 0 (zero) lists group entries for groups whose owners no longer
+have entries in the Protection Database.
+
+=item B<-cell> <I<cell name>>
+
+Names the cell in which to run the command. For more details, see
+L<pts(1)>.
+
+=item B<-noauth>
+
+Assigns the unprivileged identity anonymous to the issuer. For more
+details, see L<pts(1)>.
+
+=item B<-force>
+
+Enables the command to continue executing as far as possible when errors
+or other problems occur, rather than halting execution at the first error.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 OUTPUT
+
+The first line of the output indicates the name and AFS UID or AFS GID of
+each user or group for which ownership information is requested, in the
+following format:
+
+   Groups owned by <name> (id: <ID>) are:
+
+A list of groups follows. The list does not include groups owned by groups
+that the user or group owns, or to which the user or group belongs. If the
+user or group does not own any groups, only the header line appears.
+
+The following error message appears if the issuer is not privileged to
+view ownership information. By default, for both user and group entries
+the second privacy flag is the hyphen, which denies permission to anyone
+other than the user (for a user entry) and the members of the
+system:administrators group.
+
+   pts: Permission denied so failed to get owner list for <name> (id: <ID>)
+
+=head1 EXAMPLES
+
+The following example lists the groups owned by user terry and shows that
+the group C<terry:friends> does not own any groups:
+
+   % pts listowned terry terry:friends
+   Groups owned by terry (id: 1045) are:
+     terry:friends
+     terry:project1
+     terry:project2
+   Groups owned by terry:friends (id: -673) are:
+
+=head1 PRIVILEGE REQUIRED
+
+The required privilege depends on the setting of the second privacy flag
+in the Protection Database entry of each user or group indicated by the
+B<-nameorid> argument (use the B<pts examine> command to display the
+flags):
+
+=over 4
+
+=item *
+
+If it is the hyphen and the B<-nameorid> argument specifies a group, only
+the members of the system:administrators group and the owner of a group
+can list the groups it owns.
+
+=item *
+
+If it is the hyphen and the B<-nameorid> argument specifies a user, only
+the members of the system:administrators group and the associated user can
+list the groups he or she owns.
+
+=item *
+
+If it is uppercase letter C<O>, anyone who can access the cell's database
+server machines can list the groups owned by this user or group.
+
+=back
+
+=head1 SEE ALSO
+
+L<pts(1)>,
+L<pts_chown(1)>,
+L<pts_examine(1)>,
+L<pts_setfields(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
