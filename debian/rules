@@ -84,7 +84,7 @@ build-stamp:
 	dh_testdir
 	mkdir -p $(CURDIR)/debian/tmp
 	$(MAKE) install_nolibafs DESTDIR=$(CURDIR)/debian/tmp
-	chmod +x debian/afs-rootvol debian/afs-newcell
+	chmod +x debian/afs-rootvol debian/afs-newcell debian/doc/build-man
 	cd debian/doc && ./build-man
 	touch build-stamp
 
