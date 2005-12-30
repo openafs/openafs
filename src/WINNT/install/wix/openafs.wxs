@@ -92,12 +92,14 @@
          BinaryKey="BIN_afsLoopback"
          DllEntry="uninstallLoopbackMSI"
          Execute="deferred" 
+         Impersonate="no"
          />
         <CustomAction
          Id="RollbackLoopback"
          BinaryKey="BIN_afsLoopback"
          DllEntry="uninstallLoopbackMSI"
          Execute="deferred" 
+         Impersonate="no"
          />
 	<?endif?>
 	<?else?>
@@ -129,13 +131,17 @@
          Id="InstallNetProvider" 
          BinaryKey="BIN_afsCustom" 
          DllEntry="InstallNetProvider"
-         Execute="oncePerProcess" />
+         Execute="deferred" 
+         Impersonate="no"
+        />
 		<CustomAction 
 		 Id="RemoveNetProvider" 
 		 BinaryKey="BIN_afsCustom"
 		 DllEntry="UninstallNetProvider"
 		 Return="ignore"
-		 Execute="oncePerProcess" />
+		 Execute="deferred" 
+                 Impersonate="no"
+                />
 		<CustomAction 
 		 Id="RollbackNetProvider" 
 		 BinaryKey="BIN_afsCustom"
