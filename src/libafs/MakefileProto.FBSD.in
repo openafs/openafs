@@ -153,4 +153,6 @@ vnode_if.h:	${KSRC}/kern/vnode_if.src
 <all -i386_fbsd_42 -i386_fbsd_43 -i386_fbsd_44 -i386_fbsd_45 -i386_fbsd_46 -i386_fbsd_47>
 vnode_if.h:	${KSRC}/kern/vnode_if.src
 	awk -f ${KSRC}/tools/vnode_if.awk ${KSRC}/kern/vnode_if.src -h
+	awk -f ${KSRC}/tools/vnode_if.awk ${KSRC}/kern/vnode_if.src -q
+	awk -f ${KSRC}/tools/vnode_if.awk ${KSRC}/kern/vnode_if.src -p
 <all>
