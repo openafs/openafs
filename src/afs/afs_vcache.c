@@ -760,20 +760,20 @@ restart:
 #if defined (AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 #ifdef AFS_DARWIN80_ENV
 	        vnode_t tvp = AFSTOV(tvc);
-		fv_slept=1;
-		/* must release lock, since vnode_recycle will immediately
-		   reclaim if there are no other users */
-		ReleaseWriteLock(&afs_xvcache);
-		AFS_GUNLOCK();
 		/* VREFCOUNT_GT only sees usecounts, not iocounts */
 		/* so this may fail to actually recycle the vnode now */
 		/* must call vnode_get to avoid races. */
 		if (vnode_get(tvp) == 0) {
+		    fv_slept=1;
+		    /* must release lock, since vnode_put will immediately
+		       reclaim if there are no other users */
+		    ReleaseWriteLock(&afs_xvcache);
+		    AFS_GUNLOCK();
 		    vnode_recycle(tvp);
 		    vnode_put(tvp);
+		    AFS_GLOCK();
+		    ObtainWriteLock(&afs_xvcache, 336);
 		}
-		AFS_GLOCK();
-		ObtainWriteLock(&afs_xvcache, 336);
 		/* we can't use the vnode_recycle return value to figure
 		 * this out, since the iocount we have to hold makes it
 		 * always "fail" */
@@ -2037,6 +2037,9 @@ afs_GetRootVCache(struct VenusFid *afid, struct vrequest *areq,
     struct AFSCallBack CallBack;
     struct AFSVolSync tsync;
     int origCBs = 0;
+#ifdef	AFS_OSF_ENV
+    int vg;
+#endif
 
     start = osi_Time();
 
@@ -2080,7 +2083,6 @@ afs_GetRootVCache(struct VenusFid *afid, struct vrequest *areq,
 	    /* for the present (95.05.25) everything on the hash table is
 	     * definitively NOT in the free list -- at least until afs_reclaim
 	     * can be safely implemented */
-	    int vg;
 	    AFS_GUNLOCK();
 	    vg = vget(AFSTOV(tvc));	/* this bumps ref count */
 	    AFS_GLOCK();
@@ -2088,16 +2090,12 @@ afs_GetRootVCache(struct VenusFid *afid, struct vrequest *areq,
 		continue;
 #endif /* AFS_OSF_ENV */
 #ifdef AFS_DARWIN80_ENV
-            int vg;
             if (tvc->states & CDeadVnode) {
 		ReleaseSharedLock(&afs_xvcache);
 		afs_osi_Sleep(&tvc->states);
 		goto rootvc_loop;
             }
-            AFS_GUNLOCK();
-            vg = vnode_get(AFSTOV(tvc));        /* this bumps ref count */
-            AFS_GLOCK();
-            if (vg)
+            if (vnode_get(AFSTOV(tvc)))       /* this bumps ref count */
                 continue;
 #endif
 	    break;
@@ -2113,8 +2111,11 @@ afs_GetRootVCache(struct VenusFid *afid, struct vrequest *areq,
 	getNewFid = 1;
 	ReleaseSharedLock(&afs_xvcache);
 #ifdef AFS_DARWIN80_ENV
-        if (tvc)
+        if (tvc) {
+            AFS_GUNLOCK();
             vnode_put(AFSTOV(tvc));
+            AFS_GLOCK();
+        }
 #endif
         tvc = NULL;
 	goto newmtpt;
@@ -2566,6 +2567,9 @@ afs_FindVCache(struct VenusFid *afid, afs_int32 * retry, afs_int32 flag)
 
     register struct vcache *tvc;
     afs_int32 i;
+#if defined( AFS_OSF_ENV)
+    int vg;
+#endif
 
     AFS_STATCNT(afs_FindVCache);
 
@@ -2579,7 +2583,6 @@ afs_FindVCache(struct VenusFid *afid, afs_int32 * retry, afs_int32 flag)
             }
 #ifdef  AFS_OSF_ENV
 	    /* Grab this vnode, possibly reactivating from the free list */
-	    int vg;
 	    AFS_GUNLOCK();
 	    vg = vget(AFSTOV(tvc));
 	    AFS_GLOCK();
@@ -2587,15 +2590,11 @@ afs_FindVCache(struct VenusFid *afid, afs_int32 * retry, afs_int32 flag)
 		continue;
 #endif /* AFS_OSF_ENV */
 #ifdef  AFS_DARWIN80_ENV
-            int vg;
             if (tvc->states & CDeadVnode) {
                 findvc_sleep(tvc, flag);
 		goto findloop;
             }
-            AFS_GUNLOCK();
-            vg = vnode_get(AFSTOV(tvc));
-            AFS_GLOCK();
-            if (vg)
+            if (vnode_get(AFSTOV(tvc)))
                 continue;
 #endif
 	    break;
@@ -2697,6 +2696,9 @@ afs_NFSFindVCache(struct vcache **avcp, struct VenusFid *afid)
     afs_int32 i;
     afs_int32 count = 0;
     struct vcache *found_tvc = NULL;
+#ifdef  AFS_OSF_ENV
+    int vg;
+#endif
 
     AFS_STATCNT(afs_FindVCache);
 
@@ -2719,7 +2721,6 @@ afs_NFSFindVCache(struct vcache **avcp, struct VenusFid *afid)
             }
 #ifdef  AFS_OSF_ENV
 	    /* Grab this vnode, possibly reactivating from the free list */
-	    int vg;
 	    AFS_GUNLOCK();
 	    vg = vget(AFSTOV(tvc));
 	    AFS_GLOCK();
@@ -2729,16 +2730,12 @@ afs_NFSFindVCache(struct vcache **avcp, struct VenusFid *afid)
 	    }
 #endif /* AFS_OSF_ENV */
 #ifdef  AFS_DARWIN80_ENV
-            int vg;
             if (tvc->states & CDeadVnode) {
 		ReleaseSharedLock(&afs_xvcache);
 		afs_osi_Sleep(&tvc->states);
 		goto loop;
             }
-            AFS_GUNLOCK();
-            vg = vnode_get(AFSTOV(tvc));
-            AFS_GLOCK();
-            if (vg) {
+            if (vnode_get(AFSTOV(tvc))) {
                 /* This vnode no longer exists. */
                 continue;
             }
