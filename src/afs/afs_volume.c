@@ -318,6 +318,8 @@ loop:
 			afs_osi_Sleep(&tvc->states);
                         goto loop;
                     }
+                    if (vnode_get(AFSTOV(tvc)))
+                        continue;
 #endif
 		    AFS_FAST_HOLD(tvc);
 		    ReleaseReadLock(&afs_xvcache);
