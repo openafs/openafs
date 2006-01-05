@@ -16,7 +16,7 @@ Database, reporting any errors or corruption it finds. If there are
 problems, do not issue any B<pts> commands until the database is
 repaired.
 
-=head1 CAVEATS
+=head1 CAUTIONS
 
 The results can be unpredictable if the Protection Server makes changes to
 the Protection Database while this command is running. Use the B<bos

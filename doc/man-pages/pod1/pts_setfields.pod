@@ -1,264 +1,237 @@
 =head1 NAME
 
-pts setfields - Sets privacy flags or the group-creation quota for a Protection Database
-entry.
+pts setfields - Sets privacy flags or quota for a Protection Database entry
 
 =head1 SYNOPSIS
 
-pts setfields -nameorid <I<user or group name or id>>+
-[B<-access> <I<set privacy flags>>]
-              [-groupquota <I<set limit on group creation>>]
-              [B<-cell> <I<cell name>>]  [B<-noauth>]  [B<-force>]  [-help]
+B<pts setfields> B<-nameorid> <I<user or group name or id>>+
+    [B<-access> <I<set privacy flags>>]
+    [B<-groupquota> <I<set limit on group creation>>]
+    [B<-cell> <I<cell name>>] [B<-noauth>] [B<-force>] [B<-help>]
 
-B<pts setf -na> <I<user or group name or id>>+  [-a <I<set privacy flags>>] 
-[B<-g> <I<set limit on group creation>>]  [B<-c> <I<cell name>>] 
-         [B<-no>]  [B<-f>]  [-h]
+B<pts setf> B<-na> <I<user or group name or id>>+
+    [B<-a> <I<set privacy flags>>] 
+    [B<-g> <I<set limit on group creation>>] [B<-c> <I<cell name>>] 
+    [B<-no>] [B<-f>] [B<-h>]
 
 =head1 DESCRIPTION
 
-The pts setfields command sets the group-creation quota, the
-privacy flags, or both, associated with each user, machine, or group entry
+The B<pts setfields> command sets the group-creation quota, the privacy
+flags, or both, associated with each user, machine, or group entry
 specified by the B<-nameorid> argument.
 
-To examine the current quota and privacy flags, use the pts
-examine command.
+To examine the current quota and privacy flags, use the B<pts examine>
+command.
 
-=head1 CAVEATS
+=head1 CAUTIONS
 
 Changing a machine or group's group-creation quota is allowed, but not
-recommended. The concept is meaningless for machines and groups,
-because it is impossible to authenticate as a group or machine.
+recommended. The concept is meaningless for machines and groups, because
+it is impossible to authenticate as a group or machine.
 
 Similarly, some privacy flag settings do not have a sensible
-interpretation. The B<Arguments> section specifies the
-appropriate settings.
+interpretation. L<OPTIONS> specifies the appropriate settings.
 
 =head1 OPTIONS
 
 =over 4
 
-=item -nameorid
+=item B<-nameorid> <I<user or group name or id>>+
 
 Specifies the name or AFS UID of each user, the IP address (complete or
-wildcard-style) of each machine, or the name or AFS GID of each machine for
-which to set privacy flags or group-creation quota. It is acceptable to
-mix users, machines, and groups on the same command line, as well as names (IP
-addresses for machines) and IDs. Precede the GID of each group with a
-hyphen to indicate that it is negative.
+wildcard-style) of each machine, or the name or AFS GID of each machine
+for which to set privacy flags or group-creation quota. It is acceptable
+to mix users, machines, and groups on the same command line, as well as
+names (IP addresses for machines) and IDs. Precede the GID of each group
+with a hyphen to indicate that it is negative.
 
-=item -access
+=item B<-access> <I<privacy flags>>
 
-Specifies the privacy flags to apply to each entry. Provide a
-string of five characters, one for each of the permissions. If this
-option is omitted, the current setting remains unchanged.
+Specifies the privacy flags to apply to each entry. Provide a string of
+five characters, one for each of the permissions. If this option is
+omitted, the current setting remains unchanged.
 
-Set each flag to achieve the desired combination of permissions. If
-the following list does not mention a certain setting, it is not
-acceptable. For further discussion of the privacy flags, see the
-B<pts examine> reference page. 
-
-=over 4
-
-=item *
-
-The first flag determines who can use the pts examine command
-to display information from a user, machine or group's Protection
-Database entry. 
-
+Set each flag to achieve the desired combination of permissions. If the
+following list does not mention a certain setting, it is not
+acceptable. For further discussion of the privacy flags, see
+L<pts_examine(1)>.
 
 =over 4
 
 =item *
 
-Set it to lowercase s to permit the members of the
-B<system:administrators> group to display a user, machine, or
-group entry, and the associated user to display a user entry.
-
-
-=item *
-
-Set it to uppercase S to permit anyone who can access the
-cell's database server machines to display a user, machine, or group
+The first flag determines who can use the B<pts examine> command to
+display information from a user, machine or group's Protection Database
 entry.
 
+=over 4
+
+=item *
+
+Set it to lowercase C<s> to permit the members of the
+system:administrators group to display a user, machine, or group entry,
+and the associated user to display a user entry.
+
+=item *
+
+Set it to uppercase C<S> to permit anyone who can access the cell's
+database server machines to display a user, machine, or group entry.
 
 =back
 
 =item *
 
-The second flag determines who can use the pts listowned
-command to list the groups that a user or group owns. 
-
+The second flag determines who can use the B<pts listowned> command to
+list the groups that a user or group owns.
 
 =over 4
 
 =item *
 
-Set it to the hyphen (-) to permit the members of the
-B<system:administrators> group and a user to list the groups he
-or she owns, or to permit the members of the
-B<system:administrators> group and a group's owner to list
-the groups that a group owns.
-
+Set it to the hyphen (C<->) to permit the members of the
+system:administrators group and a user to list the groups he or she owns,
+or to permit the members of the system:administrators group and a group's
+owner to list the groups that a group owns.
 
 =item *
 
-Set it to uppercase letter O to permit anyone who can access
-the cell's database server machines to list the groups owned by a machine
-or group entry.
-
+Set it to uppercase letter C<O> to permit anyone who can access the cell's
+database server machines to list the groups owned by a machine or group
+entry.
 
 =back
 
 =item *
 
-The third flag determines who can use the pts membership
-command to list the groups to which a user or machine belongs, or the users
-and machines that belong to a group. 
-
+The third flag determines who can use the B<pts membership> command to
+list the groups to which a user or machine belongs, or the users and
+machines that belong to a group.
 
 =over 4
 
 =item *
 
-Set it to the hyphen (-) to permit the members of the
-B<system:administrators> group and a user to list the groups he
-or she belongs to, to permit the members of the
-B<system:administrators> group to list the groups a machine
-belongs to, or to permit the members of the
-B<system:administrators> group and a group's owner to list
-the users and machines that belong to it.
-
+Set it to the hyphen (C<->) to permit the members of the
+system:administrators group and a user to list the groups he or she
+belongs to, to permit the members of the B<system:administrators> group to
+list the groups a machine belongs to, or to permit the members of the
+system:administrators group and a group's owner to list the users and
+machines that belong to it.
 
 =item *
 
-Set it to lowercase m to permit members of a group to list the
-other members. (For user and machine entries, this setting is
-equivalent to the hyphen.)
-
+Set it to lowercase C<m> to permit members of a group to list the other
+members. (For user and machine entries, this setting is equivalent to the
+hyphen.)
 
 =item *
 
-Set it to uppercase M to permit anyone who can access the
-cell's database server machines to list membership information for a
-user, machine or group.
-
+Set it to uppercase C<M> to permit anyone who can access the cell's
+database server machines to list membership information for a user,
+machine or group.
 
 =back
 
 =item *
 
-The fourth flag determines who can use the pts adduser command
-to add users and machines as members of a group. This flag has no
+The fourth flag determines who can use the B<pts adduser> command to add
+users and machines as members of a group. This flag has no sensible
+interpretation for user and machine entries, but must be set nonetheless,
+preferably to the hyphen.
+
+=over 4
+
+=item *
+
+Set it to the hyphen (C<->) to permit the members of the
+system:administrators group and the owner of the group to add members.
+
+=item *
+
+Set it to lowercase C<a> to permit members of a group to add other
+members.
+
+=item *
+
+Set it to uppercase C<A> to permit anyone who can access the cell's
+database server machines to add members to a group.
+
+=back
+
+=item *
+
+The fifth flag determines who can use the B<pts removeuser> command to
+remove users and machines from membership in a group. This flag has no
 sensible interpretation for user and machine entries, but must be set
-nonetheless, preferably to the hyphen. 
-
-
-=over 4
-
-=item *
-
-Set it to the hyphen (-) to permit the members of the
-B<system:administrators> group and the owner of the group to add
-members.
-
-
-=item *
-
-Set it to lowercase a to permit members of a group to add other
-members.
-
-
-=item *
-
-Set it to uppercase A to permit anyone who can access the
-cell's database server machines to add members to a group.
-
-
-=back
-
-=item *
-
-The fifth flag determines who can use the pts removeuser
-command to remove users and machines from membership in a group. This
-flag has no sensible interpretation for user and machine entries, but must be
-set nonetheless, preferably to the hyphen. 
-
+nonetheless, preferably to the hyphen.
 
 =over 4
 
 =item *
 
-Set it to the hyphen (-) to permit the members of the
-B<system:administrators> group and the owner of the group to
-remove members.
-
+Set it to the hyphen (C<->) to permit the members of the
+system:administrators group and the owner of the group to remove members.
 
 =item *
 
-Set it to lowercase r to permit members of a group to remove
-other members.
-
-
-=back
+Set it to lowercase C<r> to permit members of a group to remove other
+members.
 
 =back
 
-=item -groupquota
+=back
+
+=item B<-groupquota> <I<group creation quota>>
 
 Specifies the number of additional groups a user can create (it does not
 matter how many he or she has created already). Do not include this
 argument for a group or machine entry.
 
-=item -cell
+=item B<-cell> <I<cell name>>
 
 Names the cell in which to run the command. For more details, see
-the introductory B<pts> reference page.
+L<pts(1)>.
 
-=item -noauth
+=item B<-noauth>
 
-Assigns the unprivileged identity anonymous to the
-issuer. For more details, see the introductory B<pts> reference
-page.
+Assigns the unprivileged identity anonymous to the issuer. For more
+details, see L<pts(1)>.
 
-=item -force
+=item B<-force>
 
 Enables the command to continue executing as far as possible when errors
-or other problems occur, rather than halting execution at the first
-error.
+or other problems occur, rather than halting execution at the first error.
 
-=item -help
+=item B<-help>
 
-Prints the online help for this command. All other valid options
-are ignored.
+Prints the online help for this command. All other valid options are
+ignored.
 
 =back
 
 =head1 EXAMPLES
 
-The following example changes the privacy flags on the group
-B<operators>, retaining the default values of the first, second and
-third flags, but setting the fourth and fifth flags to enable the group's
-members to add and remove other members.
+The following example changes the privacy flags on the group C<operators>,
+retaining the default values of the first, second and third flags, but
+setting the fourth and fifth flags to enable the group's members to add
+and remove other members.
 
    % pts setfields -nameorid operators -access S-Mar
 
-The following example changes the privacy flags and sets group quota on the
-user entry B<admin>. It retains the default values of the
-first, fourth, and fifth flags, but sets the second and third flags, to enable
-anyone to list the groups that B<admin> owns and belongs to.
-Users authenticated as B<admin> can create an additional 50
-groups.
+The following example changes the privacy flags and sets group quota on
+the user entry C<admin>. It retains the default values of the first,
+fourth, and fifth flags, but sets the second and third flags, to enable
+anyone to list the groups that C<admin> owns and belongs to.  Users
+authenticated as C<admin> can create an additional 50 groups.
 
    % pts setfields -nameorid admin -access SOM-- -groupquota 50
 
 =head1 PRIVILEGE REQUIRED
 
 To edit group entries or set the privacy flags on any type of entry, the
-issuer must own the entry or belong to the
-B<system:administrators> group. To set group-creation
-quota on a user entry, the issuer must belong to the
-B<system:administrators> group.
+issuer must own the entry or belong to the system:administrators group. To
+set group-creation quota on a user entry, the issuer must belong to the
+system:administrators group.
 
 =head1 SEE ALSO
 

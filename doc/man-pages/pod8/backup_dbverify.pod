@@ -16,7 +16,7 @@ Database is damaged (data is corrupted) or not. If the Backup Database
 is undamaged, it is safe to continue using it. If it is corrupted,
 discontinue any backup operations until it is repaired.
 
-=head1 CAVEATS
+=head1 CAUTIONS
 
 While this command runs, no other backup operation can access the Backup
 Database; the other commands do not run until this command

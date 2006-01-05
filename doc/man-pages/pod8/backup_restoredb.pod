@@ -52,7 +52,7 @@ also invokes the B<MOUNT> instruction or prompts for any additional
 tapes needed to complete the restore operation; the backup operator must
 arrange to provide them.
 
-=head1 CAVEATS
+=head1 CAUTIONS
 
 If the database is corrupted, do not attempt to restore a saved database on
 top of it. Instead, use the instructions for repairing a corrupted

@@ -1,0 +1,127 @@
+=head1 NAME
+
+afsmonitor Configuration File - Provides instructions for the afsmonitor command
+
+=head1 DESCRIPTION
+
+The afsmonitor configuration file determines which machines the
+B<afsmonitor> command probes for File Server or Cache Manager
+statistics and which statistics it gathers. Use the B<-config>
+argument to the B<afsmonitor> command to identify the configuration
+file to use.
+
+The instructions that can appear in the configuration file are as
+follows:
+
+=over 4
+
+=item C<cm  I<host_name>
+>
+
+Names a client machine for which to display Cache Manager
+statistics. The order of B<cm> lines in the file determines the
+order in which client machines appear from top to bottom on the C<System
+Overview> and C<Cache Managers> output screens.
+
+=item C<fs  I<host_name>
+>
+
+Names a file server machine for which to display File Server
+statistics. The order of B<fs> lines in the file determines the
+order in which file server machines appear from top to bottom on the
+C<System Overview> and C<File Servers> output screens.
+
+=item C<thresh  fs | cm  I<field_name  I<thresh_val> 
+[I<cmd_to_run>]  [I<arg>
+
+Assigns the threshold value I<thresh_val> to the statistic
+I<field_name>, for either a File Server statistic (B<fs>) or a
+Cache Manager statistic (B<cm>). The optional
+I<cmd_to_execute> field names a binary or script to execute each time
+the value of the statistic changes from being below I<thresh_val> to
+being at or above I<thresh_val>. A change between two values that
+both exceed I<thresh_val> does not retrigger the binary or
+script. The optional I<arg>
+The B<afsmonitor> program passes the following parameters to the
+I<cmd_to_execute>&#58;
+
+=item I<host_name fs|cm I<field_name>
+I<threshold_val>
+I<actual_val> [<I<arg>
+
+The parameters B<fs>, cm, I<field_name>,
+I<threshold_val>, and I<arg>
+
+Use the thresh line to set either a global threshold, which
+applies to all file server machines listed on B<fs> lines or client
+machines listed on B<cm> lines in the configuration file, or a
+machine-specific threshold, which applies to only one file server or client
+machine.
+
+=over 4
+
+=item *
+
+To set a global threshold, place the thresh line before any of
+the B<fs> or B<cm> lines in the file.
+
+
+=item *
+
+To set a machine-specific threshold, place the thresh line
+below the corresponding B<fs> or B<cm> line, and above any
+other B<fs> or B<cm> lines. A machine-specific
+threshold value always overrides the corresponding global threshold, if
+set. Do not place a B<thresh fs> line directly after a
+B<cm> line or a B<thresh cm> line directly after a
+B<fs> line.
+
+
+=back
+
+=item C<show  fs | cm  I<field/group/section>
+>
+
+Specifies which individual statistic, group of statistics, or section of
+statistics to display on the C<File Servers> screen (B<fs>) or
+C<Cache Managers> screen (B<cm>) and the order in which to
+display them. The appendix of B<afsmonitor> statistics in the
+I<IBM AFS Administration Guide> specifies the group and section to
+which each statistic belongs. Include as many B<show> lines as
+necessary to customize the screen display as desired, and place them anywhere
+in the file. The top-to-bottom order of the B<show> lines in
+the configuration file determines the left-to-right order in which the
+statistics appear on the corresponding screen.
+
+If there are no show lines in the configuration file, then the
+screens display all statistics for both Cache Managers and File
+Servers. Similarly, if there are no B<show fs> lines, the
+C<File Servers> screen displays all file server statistics, and if
+there are no B<show cm> lines, the C<Cache Managers> screen
+displays all client statistics.
+
+=item # I<comments
+>
+
+Precedes a line of text that the afsmonitor program ignores
+because of the initial number (B<#>) sign, which must appear in the
+very first column of the line.
+
+=back
+
+For a list of the values that can appear in the
+I<field/group/section> field of a B<show> instruction, see the
+B<afsmonitor> statistics appendix to the I<IBM AFS Administration
+Guide>.
+
+=head1 SEE ALSO
+
+L<afsmonitor(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

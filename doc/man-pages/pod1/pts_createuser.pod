@@ -4,56 +4,56 @@ pts createuser - Creates a user or machine entry in the Protection Database
 
 =head1 SYNOPSIS
 
-B<pts createuser -name> <I<user name>>+  [B<-id> <I<user id>>+]  [-cell <I<cell name>>]  
-[B<-noauth>]  [B<-force>]  [B<-help>]
+B<pts createuser> B<-name> <I<user name>>+ [B<-id> <I<user id>>+]
+    [B<-cell> <I<cell name>>] [B<-noauth>] [B<-force>] [B<-help>]
 
-B<pts createu -na> <I<user name>>+  [B<-i> <I<user id>>+]  [-c <I<cell name>>]  
-[B<-no>] [B<-f>]  [B<-h>]
+B<pts createu> B<-na> <I<user name>>+ [B<-i> <I<user id>>+]
+    [B<-c> <I<cell name>>] [B<-no>] [B<-f>] [B<-h>]
    
-B<pts cu -na> <I<user name>>+  [B<-i> <I<user id>>+]  [B<-c> <I<cell name>>]  [B<-no>] [B<-f>]  [-h]
+B<pts cu> B<-na> <I<user name>>+ [B<-i> <I<user id>>+]
+    [B<-c> <I<cell name>>] [B<-no>] [B<-f>] [B<-h>]
 
 =head1 DESCRIPTION
 
-The pts createuser command creates an entry in the Protection
-Database for each user or machine specified by the B<-name>
-argument. A user entry name becomes the user's AFS username (the
-one to provide when authenticating with the AFS Authentication Server).
-A machine entry's name is the machine's IP address or a wildcard
-notation that represents a range of consecutive IP addresses (a group of
-machines on the same network). It is not possible to authenticate as a
-machine, but a group to which a machine entry belongs can appear on a
-directory's access control list (ACL), thereby granting the indicated
-permissions to any user logged on to the machine.
+The B<pts createuser> command creates an entry in the Protection Database
+for each user or machine specified by the B<-name> argument. A user entry
+name becomes the user's AFS username (the one to provide when
+authenticating with the AFS Authentication Server).  A machine entry's
+name is the machine's IP address or a wildcard notation that represents a
+range of consecutive IP addresses (a group of machines on the same
+network). It is not possible to authenticate as a machine, but a group to
+which a machine entry belongs can appear on a directory's access control
+list (ACL), thereby granting the indicated permissions to any user logged
+on to the machine.
 
-AFS user IDs (AFS UIDs) are positive integers and by default the Protection
-Server assigns an AFS UID that is one greater than the current value of the
-C<max user id> counter in the Protection Database, incrementing the
-counter by one for each user. To assign a specific AFS UID, use the
-B<-id> argument. If any of the specified AFS UIDs is greater
-than the current value of the C<max user id> counter, the counter is
-reset to that value. It is acceptable to specify an AFS UID smaller
-than the current value of the counter, but the creation operation fails if an
-existing user or machine entry already has it. To display or set the
-value of the C<max user id> counter, use the B<pts listmax> or
-B<pts setmax> command, respectively.
+AFS user IDs (AFS UIDs) are positive integers and by default the
+Protection Server assigns an AFS UID that is one greater than the current
+value of the C<max user id> counter in the Protection Database,
+incrementing the counter by one for each user. To assign a specific AFS
+UID, use the B<-id> argument. If any of the specified AFS UIDs is greater
+than the current value of the C<max user id> counter, the counter is reset
+to that value. It is acceptable to specify an AFS UID smaller than the
+current value of the counter, but the creation operation fails if an
+existing user or machine entry already has it. To display or set the value
+of the C<max user id> counter, use the B<pts listmax> or B<pts setmax>
+command, respectively.
 
-The issuer of the pts createuser command is recorded as the
-entry's creator and the group B<system:administrators> as
-its owner.
+The issuer of the B<pts createuser> command is recorded as the entry's
+creator and the group system:administrators as its owner.
 
-=head1 CAVEATS
+=head1 CAUTIONS
 
-The Protection Server reserves AFS UID 0 (zero) and returns an error if the
-B<-id> argument has that value.
+The Protection Server reserves AFS UID 0 (zero) and returns an error if
+the B<-id> argument has that value.
 
 =head1 OPTIONS
 
 =over 4
 
-=item -name
+=item B<-name> <I<user name>>+
 
 Specifies either a username for a user entry, or an IP address (complete
-or wildcarded) for a machine entry: 
+or wildcarded) for a machine entry:
 
 =over 4
 
@@ -61,105 +61,85 @@ or wildcarded) for a machine entry:
 
 A username can include up to 63 numbers and lowercase letters, but it is
 best to make it shorter than eight characters, because many application
-programs cannot handle longer names. Also, it is best not to include
-shell metacharacters or other punctuation marks. In particular, the
-colon (B<:>) and at-sign (B<@>) characters are not
-acceptable. The period is generally used only in special administrative
-names, to separate the username and an I<instance>, as in the example
-B<pat.admin>.
-
+programs cannot handle longer names. Also, it is best not to include shell
+metacharacters or other punctuation marks. In particular, the colon (C<:>)
+and at-sign (C<@>) characters are not acceptable. The period is generally
+used only in special administrative names, to separate the username and an
+I<instance>, as in the example C<pat.admin>.
 
 =item *
 
 A machine identifier is its IP address in dotted decimal notation (for
-example, 192.12.108.240), or a wildcard notation that
-represents a set of IP addresses (a group of machines on the same
-network). The following are acceptable wildcard formats. The
-letters B<W>, B<X>, B<Y> and B<Z> each
-represent an actual number from the range 1 through 255. 
-
+example, 192.12.108.240), or a wildcard notation that represents a set of
+IP addresses (a group of machines on the same network). The following are
+acceptable wildcard formats. The letters C<W>, C<X>, C<Y> and C<Z> each
+represent an actual number from the range 1 through 255.
 
 =over 4
 
 =item *
 
-W.X.Y.Z represents a single machine, for
-example B<192.12.108.240>.
-
+W.X.Y.Z represents a single machine, for example C<192.12.108.240>.
 
 =item *
 
-W.X.Y.0 matches all machines whose IP
-addresses start with the first three numbers. For example,
-B<192.12.108.0> matches both
-B<192.12.108.119> and
-B<192.12.108.120>, but does not match
-B<192.12.105.144>.
-
+W.X.Y.0 matches all machines whose IP addresses start with the first three
+numbers. For example, C<192.12.108.0> matches both C<192.12.108.119> and
+C<192.12.108.120>, but does not match C<192.12.105.144>.
 
 =item *
 
-W.X.0.0 matches all machines whose IP
-addresses start with the first two numbers. For example, the address
-B<192.12.0.0> matches both
-B<192.12.106.23> and
-B<192.12.108.120>, but does not match
-B<192.5.30.95>.
-
+W.X.0.0 matches all machines whose IP addresses start with the first two
+numbers. For example, the address C<192.12.0.0> matches both
+C<192.12.106.23> and C<192.12.108.120>, but does not match C<192.5.30.95>.
 
 =item *
 
-W.0.0.0 matches all machines whose IP
-addresses start with the first number in the specified address. For
-example, the address B<192.0.0.0> matches both
-B<192.5.30.95> and
-B<192.12.108.120>, but does not match
-B<138.255.63.52>.
-
+W.0.0.0 matches all machines whose IP addresses start with the first
+number in the specified address. For example, the address C<192.0.0.0>
+matches both C<192.5.30.95> and C<192.12.108.120>, but does not match
+C<138.255.63.52>.
 
 =back
 
-Do not define a machine entry with the name
-B<0.0.0.0> to match every machine. The
-B<system:anyuser> group is equivalent.
+Do not define a machine entry with the name C<0.0.0.0> to match every
+machine. The system:anyuser group is equivalent.
 
 =back
 
-=item -id
+=item B<-id> <I<user id>>+
 
 Specifies an AFS UID for each user or machine entry, rather than allowing
-the Protection Server to assign it. Provide a positive integer. 
+the Protection Server to assign it. Provide a positive integer.
 
-If this argument is used and the -name argument names multiple
-new entries, it is best to provide an equivalent number of AFS UIDs.
-The first UID is assigned to the first entry, the second to the second entry,
+If this argument is used and the B<-name> argument names multiple new
+entries, it is best to provide an equivalent number of AFS UIDs.  The
+first UID is assigned to the first entry, the second to the second entry,
 and so on. If there are fewer UIDs than entries, the Protection Server
 assigns UIDs to the unmatched entries based on the C<max user id>
 counter. If there are more UIDs than entries, the excess UIDs are
-ignored. If any of the UIDs is greater than the current value of the
-C<max user id> counter, the counter is reset to that value.
+ignored. If any of the UIDs is greater than the current value of the C<max
+user id> counter, the counter is reset to that value.
 
-=item -cell
+=item B<-cell> <I<cell name>>
 
 Names the cell in which to run the command. For more details, see
-the introductory B<pts> reference page.
+L<pts(1)>.
 
-=item -noauth
+=item B<-noauth>
 
-Assigns the unprivileged identity anonymous to the
-issuer. For more details, see the introductory B<pts> reference
-page.
+Assigns the unprivileged identity anonymous to the issuer. For more
+details, see L<pts(1)>.
 
-=item -force
+=item B<-force>
 
 Enables the command to continue executing as far as possible when errors
-or other problems occur, rather than halting execution at the first
-error.
+or other problems occur, rather than halting execution at the first error.
 
-=item -help
+=item B<-help>
 
-Prints the online help for this command. All other valid options
-are ignored.
+Prints the online help for this command. All other valid options are
+ignored.
 
 =back
 
@@ -168,26 +148,24 @@ are ignored.
 The command generates the following string to confirm creation of each
 user:
 
-   User I<name> has id I<id>
+   User <name> has id <id>
 
 =head1 EXAMPLES
 
 The following example creates a Protection Database entry for the user
-B<johnson>.
+C<johnson>.
 
    % pts createuser -name johnson
 
 The following example creates three wildcarded machine entries in the ABC
-Corporation cell. The three entries encompass all of the machines on
-the company's networks without including machines on other
-networks:
+Corporation cell. The three entries encompass all of the machines on the
+company's networks without including machines on other networks:
 
    % pts createuser -name 138.255.0.0 192.12.105.0 192.12.106.0
 
 =head1 PRIVILEGE REQUIRED
 
-The issuer must belong to the system:administrators
-group.
+The issuer must belong to the system:administrators group.
 
 =head1 SEE ALSO
 

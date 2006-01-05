@@ -23,7 +23,7 @@ contents are written out every ten seconds and then automatically
 cleared. To change the interval between writes, use the
 B<-sleep> argument.
 
-=head1 CAVEATS
+=head1 CAUTIONS
 
 This command produces output only if the cm event set is
 active. To display or set the event set's state, use the

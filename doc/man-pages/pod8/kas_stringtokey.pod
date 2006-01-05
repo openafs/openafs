@@ -20,7 +20,7 @@ of the local cell (as recorded in the local B</usr/vice/etc/ThisCell>
 file). Use the B<-cell> argument to convert a string into a key
 appropriate for a cell other than the local one.
 
-=head1 CAVEATS
+=head1 CAUTIONS
 
 This command writes the key to the standard output stream, on which it can
 possibly be intercepted by third parties. It is not very secure to use

@@ -16,7 +16,7 @@ Location Database (VLDB), reporting any errors or corruption it finds.
 If there are problems, do not issue any B<vos> commands until the
 database is repaired.
 
-=head1 CAVEATS
+=head1 CAUTIONS
 
 The results can be unpredictable if the Volume Location (VL) Server makes
 changes to the VLDB while this command is running. Use the B<bos

@@ -4,65 +4,64 @@ pts membership - Displays the membership list for a user or group
 
 =head1 SYNOPSIS
 
-B<pts membership -nameorid> <I<user or group name or id>>+  [-cell <I<cell name>>]  
-[B<-noauth>]  [B<-force>]  [B<-help>]
+B<pts membership> B<-nameorid> <I<user or group name or id>>+
+    [B<-cell> <I<cell name>>] [B<-noauth>] [B<-force>] [B<-help>]
 
-B<pts m -na> <I<user or group name or id>>+  [B<-c> <I<cell name>>]  [B<-no>]  [B<-f>]  [-h]
+B<pts m> B<-na> <I<user or group name or id>>+ [B<-c> <I<cell name>>]
+    [B<-no>] [B<-f>] [B<-h>]
 
-B<pts groups -na> <I<user or group name or id>>+  [-c <I<cell name>>]
-[B<-no>] [B<-f>]  [B<-h>]
+B<pts groups> B<-na> <I<user or group name or id>>+ [-c <I<cell name>>]
+    [B<-no>] [B<-f>] [B<-h>]
    
-B<pts g -na> <I<user or group name or id>>+  [B<-c> <I<cell name>>]  [B<-no>]  [B<-f>]  [-h]
+B<pts g> B<-na> <I<user or group name or id>>+ [B<-c> <I<cell name>>]
+    [B<-no>] [B<-f>] [B<-h>]
 
 =head1 DESCRIPTION
 
-The pts membership command lists the groups to which each user
-or machine specified by the B<-nameorid> argument belongs, or lists
-the users and machines that belong to each group specified by the
-B<-nameorid> argument.
+The B<pts membership> command lists the groups to which each user or
+machine specified by the B<-nameorid> argument belongs, or lists the users
+and machines that belong to each group specified by the B<-nameorid>
+argument.
 
-It is not possible to list the members of the
-B<system:anyuser> or B<system:authuser> groups,
-and they do not appear in the list of groups to which a user belongs.
+It is not possible to list the members of the system:anyuser or
+system:authuser groups, and they do not appear in the list of groups to
+which a user belongs.
 
-To add users or machine to groups, use the pts adduser
-command; to remove them, use the B<pts removeuser>
-command.
+To add users or machine to groups, use the pts adduser command; to remove
+them, use the B<pts removeuser> command.
 
 =head1 OPTIONS
 
 =over 4
 
-=item -nameorid
+=item B<-nameorid> <I<user or group name or id>>+
 
 Specifies the name or AFS UID of each user entry, the IP address (complete
-or wildcard-style) or AFS UID of each machine entry, or the name or AFS GID of
-each group, for which to list group membership. It is acceptable to mix
-users, machines, and groups on the same command line, as well as names and
-IDs. Precede the GID of each group with a hyphen to indicate that it is
-negative.
+or wildcard-style) or AFS UID of each machine entry, or the name or AFS
+GID of each group, for which to list group membership. It is acceptable to
+mix users, machines, and groups on the same command line, as well as names
+and IDs. Precede the GID of each group with a hyphen to indicate that it
+is negative.
 
-=item -cell
+=item B<-cell> <I<cell name>>
 
 Names the cell in which to run the command. For more details, see
-the introductory B<pts> reference page.
+L<pts(1)>.
 
-=item -noauth
+=item B<-noauth>
 
-Assigns the unprivileged identity anonymous to the
-issuer. For more details, see the introductory B<pts> reference
-page.
+Assigns the unprivileged identity anonymous to the issuer. For more
+details, see L<pts(1)>.
 
-=item -force
+=item B<-force>
 
 Enables the command to continue executing as far as possible when errors
-or other problems occur, rather than halting execution at the first
-error.
+or other problems occur, rather than halting execution at the first error.
 
-=item -help
+=item B<-help>
 
-Prints the online help for this command. All other valid options
-are ignored.
+Prints the online help for this command. All other valid options are
+ignored.
 
 =back
 
@@ -72,20 +71,19 @@ For each user and machine, the output begins with the following header
 line, followed by a list of the groups to which the user or machine
 belongs:
 
-   Groups I<name> (id: I<AFS UID>) is a member of:
+   Groups <name> (id: <AFS UID>) is a member of:
 
 For each group, the output begins with the following header line, followed
 by a list of the users and machines who belong to the group:
 
-   Members of I<group_name> (id: I<AFS GID>) are:
+   Members of <group_name> (id: <AFS GID>) are:
 
 =head1 EXAMPLES
 
-The following example lists the groups to which the user pat
-belongs and the members of the group B<smith:friends>.
-Note that third privacy flag for the B<pat> entry was changed from the
-default hyphen to enable a non-administrative user to obtain this
-listing.
+The following example lists the groups to which the user C<pat> belongs
+and the members of the group C<smith:friends>.  Note that third privacy
+flag for the C<pat> entry was changed from the default hyphen to enable a
+non-administrative user to obtain this listing.
 
    % pts membership pat smith:friends
    Groups pat (id: 1144) is a member of:
@@ -103,53 +101,43 @@ listing.
 
 The required privilege depends on the setting of the third privacy flag in
 the Protection Database entry of each user or group indicated by the
-B<-nameorid> argument (use the B<pts examine> command to
-display the flags):
+B<-nameorid> argument (use the B<pts examine> command to display the
+flags):
 
 =over 4
 
 =item *
 
-If it is the hyphen and the -nameorid argument specifies a
-user, only the associated user and members of the
-B<system:administrators> group can list the groups to which the
-user belongs.
-
+If it is the hyphen and the B<-nameorid> argument specifies a user, only
+the associated user and members of the system:administrators group can
+list the groups to which the user belongs.
 
 =item *
 
-If it is the hyphen and the -nameorid argument specifies a
-machine, only the members of the B<system:administrators> group
-can list the groups to which the machine belongs.
-
-
-=item *
-
-If it is the hyphen and the -nameorid argument specifies a
-group, only the owner of the group and members of the
-B<system:administrators> group can list the members of the
-group.
-
+If it is the hyphen and the B<-nameorid> argument specifies a machine,
+only the members of the system:administrators group can list the groups to
+which the machine belongs.
 
 =item *
 
-If it is lowercase C<m> and the -nameorid argument
-specifies a user or machine entry, the meaning is equivalent to the
-hyphen.
-
-
-=item *
-
-If it is lowercase C<m> and the -nameorid argument
-specifies a group, members of the group can also list the other
-members.
-
+If it is the hyphen and the B<-nameorid> argument specifies a group, only
+the owner of the group and members of the system:administrators group can
+list the members of the group.
 
 =item *
 
-If it is uppercase C<M>, anyone who can access the cell's
-database server machines can list group memberships.
+If it is lowercase C<m> and the B<-nameorid> argument specifies a user or
+machine entry, the meaning is equivalent to the hyphen.
 
+=item *
+
+If it is lowercase C<m> and the B<-nameorid> argument specifies a group,
+members of the group can also list the other members.
+
+=item *
+
+If it is uppercase C<M>, anyone who can access the cell's database server
+machines can list group memberships.
 
 =back
 

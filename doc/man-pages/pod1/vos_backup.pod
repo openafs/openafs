@@ -4,67 +4,62 @@ vos backup - Creates a backup volume for a single read/write volume
 
 =head1 SYNOPSIS
 
-
-B<vos backup -id> <I<volume name or ID>>  [B<-cell> <I<cell name>>]  [-noauth]  
-[B<-localauth>]  [B<-verbose>]  [B<-help>]
+B<vos backup> B<-id> <I<volume name or ID>> [B<-cell> <I<cell name>>]
+    [B<-noauth>] [B<-localauth>] [B<-verbose>] [B<-help>]
    
-B<vos backup -i> <I<volume name or ID>>  [B<-c> <I<cell name>>]  [B<-n>]  [B<-l>]  [B<-v>]  [-h]
+B<vos backup> B<-i> <I<volume name or ID>> [B<-c><I<cell name>>]
+    [B<-n>] [B<-l>] [B<-v>] [B<-h>]
 
 =head1 DESCRIPTION
 
-The vos backup command clones the indicated read/write volume to
-create a backup version, placing it at the same site as the read/write
-version. The backup volume's name is the same as the read/write
-source's with the addition of the B<.backup>
-extension. Its volume ID number is the one allocated for it in the
-Volume Location Database (VLDB) when the read/write source was created with
-the B<vos create> command. If a backup version already exists,
-the new clone replaces it.
+The B<vos backup> command clones the indicated read/write volume to create
+a backup version, placing it at the same site as the read/write
+version. The backup volume's name is the same as the read/write source's
+with the addition of the C<.backup> extension. Its volume ID number is the
+one allocated for it in the Volume Location Database (VLDB) when the
+read/write source was created with the B<vos create> command. If a backup
+version already exists, the new clone replaces it.
 
-To create a backup version of multiple volumes, use the vos
-backupsys command.
+To create a backup version of multiple volumes, use the B<vos backupsys>
+command.
 
 =head1 OPTIONS
 
 =over 4
 
-=item -id
+=item B<-id> <I<volume name or ID>>
 
 Specifies either the complete name or volume ID number of the read/write
 source volume.
 
-=item -cell
+=item B<-cell> <I<cell name>>
 
-Names the cell in which to run the command. Do not combine this
-argument with the B<-localauth> flag. For more details, see the
-introductory B<vos> reference page.
+Names the cell in which to run the command. Do not combine this argument
+with the B<-localauth> flag. For more details, see L<vos(1)>.
 
-=item -noauth
+=item B<-noauth>
 
-Assigns the unprivileged identity anonymous to the
-issuer. Do not combine this flag with the B<-localauth>
-flag. For more details, see the introductory B<vos> reference
-page.
+Assigns the unprivileged identity anonymous to the issuer. Do not combine
+this flag with the B<-localauth> flag. For more details, see L<vos(1)>.
 
-=item -localauth
+=item B<-localauth>
 
 Constructs a server ticket using a key from the local
-B</usr/afs/etc/KeyFile> file. The B<vos> command
-interpreter presents it to the Volume Server and Volume Location Server during
-mutual authentication. Do not combine this flag with the
-B<-cell> argument or B<-noauth> flag. For more details,
-see the introductory B<vos> reference page.
+F</usr/afs/etc/KeyFile> file. The B<vos> command interpreter presents it
+to the Volume Server and Volume Location Server during mutual
+authentication. Do not combine this flag with the B<-cell> argument or
+B<-noauth> flag. For more details, see L<vos(1)>.
 
-=item -verbose
+=item B<-verbose>
 
-Produces on the standard output stream a detailed trace of the
-command's execution. If this argument is omitted, only warnings
-and error messages appear.
+Produces on the standard output stream a detailed trace of the command's
+execution. If this argument is omitted, only warnings and error messages
+appear.
 
-=item -help
+=item B<-help>
 
-Prints the online help for this command. All other valid options
-are ignored.
+Prints the online help for this command. All other valid options are
+ignored.
 
 =back
 
@@ -77,18 +72,17 @@ The following message confirms that the command succeeded:
 =head1 EXAMPLES
 
 The following example creates a backup version of the volume
-B<user.smith>.
+C<user.smith>.
 
    % vos backup user.smith
    Created backup volume for user.smith
 
 =head1 PRIVILEGE REQUIRED
 
-The issuer must be listed in the /usr/afs/etc/UserList file on
-the machine specified with the B<-server> argument and on each
-database server machine. If the B<-localauth> flag is included,
-the issuer must instead be logged on to a server machine as the local
-superuser B<root>.
+The issuer must be listed in the F</usr/afs/etc/UserList> file on the
+machine specified with the B<-server> argument and on each database server
+machine. If the B<-localauth> flag is included, the issuer must instead be
+logged on to a server machine as the local superuser C<root>.
 
 =head1 SEE ALSO
 

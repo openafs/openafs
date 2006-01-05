@@ -32,7 +32,7 @@ and do not check for authorization when it is present. The BOS Server
 removes the file when this command is used to reenable authorization
 checking.
 
-=head1 CAVEATS
+=head1 CAUTIONS
 
 Do not create the NoAuth file directly, except when directed by
 instructions for dealing with emergencies (doing so requires being logged in

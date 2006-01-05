@@ -19,7 +19,7 @@ B<-server> argument. Use the B<-kvno> argument to
 identify each key by its key version number; use the B<bos
 listkeys> command to display the key version numbers.
 
-=head1 CAVEATS
+=head1 CAUTIONS
 
 Before removing a obsolete key, verify that the cell's maximum ticket
 lifetime has passed since the current key was defined using the B<kas

@@ -1,36 +1,34 @@
 =head1 NAME
 
-fs getcellstatus - Reports whether the machine can run setuid programs from a specified cell
+fs getcellstatus - Reports whether setuid programs are honored in a cell
 
 =head1 SYNOPSIS
 
-B<fs getcellstatus -cell> <I<cell name>>+  [-help]
+B<fs getcellstatus> B<-cell> <I<cell name>>+ [B<-help>]
 
-B<fs getce -c> <I<cell name>>+  [-h]
+B<fs getce> B<-c> <I<cell name>>+ [B<-h>]
 
 =head1 DESCRIPTION
 
-The fs getcellstatus command reports whether the Cache Manager
-allows programs fetched from each specified cell to run with setuid
-permission. To set a cell's setuid status, use the B<fs
-setcell> command; its reference page fully describes how AFS treats
-setuid programs.
+The B<fs getcellstatus> command reports whether the Cache Manager allows
+programs fetched from each specified cell to run with setuid
+permission. To set a cell's setuid status, use the B<fs setcell> command;
+L<fs_setcell(1)> fully describes how AFS treats setuid programs.
 
 =head1 OPTIONS
 
 =over 4
 
-=item -cell
+=item B<-cell> <I<cell name>>+
 
-Names each cell for which to report setuid status. Provide the
-fully qualified domain name, or a shortened form that disambiguates it from
-the other cells listed in the local B</usr/vice/etc/CellServDB>
-file.
+Names each cell for which to report setuid status. Provide the fully
+qualified domain name, or a shortened form that disambiguates it from the
+other cells listed in the local F</usr/vice/etc/CellServDB> file.
 
-=item -help
+=item B<-help>
 
-Prints the online help for this command. All other valid options
-are ignored.
+Prints the online help for this command. All other valid options are
+ignored.
 
 =back
 
@@ -38,14 +36,13 @@ are ignored.
 
 The output reports one of the following two values as appropriate:
 
-   Cell I<cell> status: setuid allowed
-   Cell I<cell> status: no setuid allowed
+   Cell <cell> status: setuid allowed
+   Cell <cell> status: no setuid allowed
 
 =head1 EXAMPLES
 
-The following example indicates that programs from the cell
-B<abc.com> are not allowed to run with setuid
-permission.
+The following example indicates that programs from the cell C<abc.com> are
+not allowed to run with setuid permission.
 
    % fs getcellstatus abc.com
    Cell abc.com status: no setuid allowed
@@ -56,8 +53,7 @@ None
 
 =head1 SEE ALSO
 
-L<CellServDB (client version)(1)>
-
+L<CellServDB(5)>,
 L<fs_setcell(1)>
 
 =head1 COPYRIGHT

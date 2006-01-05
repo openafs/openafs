@@ -40,7 +40,7 @@ The Backup Server records a trace of its activity in the
 B</usr/afs/logs/BackupLog> file. Use the B<bos getlog>
 command to display the contents of the file.
 
-=head1 CAVEATS
+=head1 CAUTIONS
 
 The B<buserver> process reserves port 7021 for its
 use. Unexpected behavior can occur if another process tries to reserve

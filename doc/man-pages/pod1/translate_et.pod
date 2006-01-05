@@ -4,22 +4,21 @@ translate_et - Translates numbered error codes into text messages
 
 =head1 SYNOPSIS
 
-translate_et  <I<error number>>+
-
-This command does not use the syntax conventions of the AFS command
-suites. Provide the command name in full.
+B<translate_et> <I<error number>>+
 
 =head1 DESCRIPTION
 
-The translate_et command translates each specified error number
-into a text message.
+The B<translate_et> command translates each specified error number into a
+text message.
+
+This command does not use the syntax conventions of the AFS command
+suites. Provide the command name in full.
 
 =head1 OPTIONS
 
 =over 4
 
-=item I<error number
->
+=item <I<error number>>+
 
 Specifies each error number to translate.
 

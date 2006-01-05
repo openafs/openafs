@@ -32,7 +32,7 @@ configuring the Backup System.
 
 Insert a tape in the drive before issuing this command.
 
-=head1 CAVEATS
+=head1 CAUTIONS
 
 Do not use this command on compressing tape devices in compression mode or
 with tape devices that handle tapes of multigigabyte (or multiterabyte)

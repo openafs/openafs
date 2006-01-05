@@ -4,25 +4,25 @@ tokens - Displays the issuer's tokens
 
 =head1 SYNOPSIS
 
-B<tokens> [-help]
+B<tokens> [B<-help>]
 
-B<tokens> [-h]
+B<tokens> [B<-h>]
 
 =head1 DESCRIPTION
 
-The tokens command displays all tokens (tickets) cached on the
-local machine for the issuer. AFS server processes require that their
-clients present a token as evidence that they have authenticated in the
-server's local cell.
+The tokens command displays all tokens (tickets) cached on the local
+machine for the issuer. AFS server processes require that their clients
+present a token as evidence that they have authenticated in the server's
+local cell.
 
 =head1 OPTIONS
 
 =over 4
 
-=item -help
+=item B<-help>
 
-Prints the online help for this command. All other valid options
-are ignored.
+Prints the online help for this command. All other valid options are
+ignored.
 
 =back
 
@@ -37,42 +37,35 @@ authenticated. The output indicates the
 
 User's AFS UID, if it is available for display.
 
-
 =item *
 
-Server for which the token is valid (normally, afs).
-This includes a cell specification.
-
+Server for which the token is valid (normally, afs).  This includes a cell
+specification.
 
 =item *
 
 Day and time the token expires.
 
-
 =back
 
-The output of the Kerberos version of this command,
-B<tokens.krb>, also reports the following about the Kerberos
-ticket-granting ticket: the ticket owner, which Kerberos ticket-granting
-service that issued the ticket (for example,
-B<krbtgt.ABC.COM>), and ticket's expiration
-date.
+The output of the Kerberos version of this command, B<tokens.krb>, also
+reports the following about the Kerberos ticket-granting ticket: the
+ticket owner, which Kerberos ticket-granting service that issued the
+ticket (for example, C<krbtgt.ABC.COM>), and ticket's expiration date.
 
-The string C<--End of list--> appears at the end of the
-output. If the user is not authenticated in any cell, this line is all
-that appears.
+The string C<--End of list--> appears at the end of the output. If the
+user is not authenticated in any cell, this line is all that appears.
 
 =head1 EXAMPLES
 
-The following example shows the output when the issuer is not authenticated
-in any cell.
+The following example shows the output when the issuer is not
+authenticated in any cell.
 
    % tokens
    Tokens held by the Cache Manager:
 
       --End of list--
    
-
 The following example shows the output when the issuer is authenticated in
 ABC Corporation cell, where he or she has AFS UID 1000.
 
@@ -81,12 +74,11 @@ ABC Corporation cell, where he or she has AFS UID 1000.
 
    User's (AFS ID 1000) tokens for afs@abc.com [Expires Jan 2 10:00]
       --End of list--
-   
 
 The following example shows the output when the issuer is authenticated in
 the ABC Corporation cell, the State University cell, and the XYZ Company
-cell. The user has different AFS UIDs in the three cells. Tokens
-for last cell are expired:
+cell. The user has different AFS UIDs in the three cells. Tokens for last
+cell are expired:
 
    % tokens
    Tokens held by the Cache Manager:
@@ -95,11 +87,10 @@ for last cell are expired:
    User's (AFS ID 4286) tokens for afs@stateu.edu [Expires Jan 3 1:34]
    User's (AFS ID 22) tokens for afs@xyz.com [>>Expired<]
       --End of list--
-   
 
 The following example shows the output when the issuer uses the
-B<tokens.krb> version of the command after authenticating in
-the ABC Corporation cell using the B<klog.krb> command.
+B<tokens.krb> version of the command after authenticating in the ABC
+Corporation cell using the B<klog.krb> command.
 
    % tokens.krb
    Tokens held by the Cache Manager:
@@ -107,7 +98,6 @@ the ABC Corporation cell using the B<klog.krb> command.
    User's (AFS ID 1000) tokens for afs@abc.com [Expires Jan 31 00:09]
    User smiths tokens for krbtgt.ABC.COM@abc.com [Expires Jan 31 00:09]
       --End of list--
-   
 
 =head1 PRIVILEGE REQUIRED
 

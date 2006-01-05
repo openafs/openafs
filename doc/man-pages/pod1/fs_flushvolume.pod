@@ -1,53 +1,54 @@
 =head1 NAME
 
-fs flushvolume - Forces the Cache Manager to discard all cached data from the volume
-containing a file or directory
+fs flushvolume - Forces the Cache Manager to discard cached data from a volume
 
 =head1 SYNOPSIS
 
-B<fs flushvolume> [B<-path> <I<dir/file path>>+]  [-help]
+B<fs flushvolume> [B<-path> <I<dir/file path>>+] [B<-help>]
 
-B<fs flushv> [B<-p> <I<dir/file path>>+]  [-h]
+B<fs flushv> [B<-p> <I<dir/file path>>+] [B<-h>]
 
 =head1 DESCRIPTION
 
-The fs flushvolume command removes from the cache all data that
-was fetched from the same volume as each specified directory or file.
-It does not discard cached status information. The next time an
-application requests data from a flushed directory or file, the Cache Manager
-fetches the most current version from a File Server, along with a new callback
-(if necessary) and associated status information. This command has no
-effect on two types of data:
+The B<fs flushvolume> command removes from the cache all data that was
+fetched from the same volume as each specified directory or file.  It does
+not discard cached status information. The next time an application
+requests data from a flushed directory or file, the Cache Manager fetches
+the most current version from a File Server, along with a new callback (if
+necessary) and associated status information. This command has no effect
+on two types of data:
+
+=over 4
 
 =item *
 
-Data in application program buffers
-
+Data in application program buffers.
 
 =item *
 
 Data that has been changed locally and written to the cache but not yet
-written to the copy on the file server machine
+written to the copy on the file server machine.
 
+=back
 
-To discard the data and status information associated with individual files
-and directories, use the B<fs flush> command. To flush a
-corrupted mount point, use the B<fs flushmount> command.
+To discard the data and status information associated with individual
+files and directories, use the B<fs flush> command. To flush a corrupted
+mount point, use the B<fs flushmount> command.
 
 =head1 OPTIONS
 
 =over 4
 
-=item -path
+=item B<-path> <I<dir/file path>>+
 
 Names a file or directory from each volume for which to discard all cached
 data. Partial pathnames are interpreted relative to the current working
 directory, which is also the default value if this argument is omitted.
 
-=item -help
+=item B<-help>
 
-Prints the online help for this command. All other valid options
-are ignored.
+Prints the online help for this command. All other valid options are
+ignored.
 
 =back
 
@@ -60,10 +61,10 @@ volume that contains the current working directory:
 
 =head1 PRIVILEGE REQUIRED
 
-The issuer must have the B<l> (lookup) permission on the
-ACL of the root directory of the volume that houses the file or directory
-named by the B<-path> argument, and on the ACL of each directory that
-precedes it in the pathname.
+The issuer must have the C<l> (lookup) permission on the ACL of the root
+directory of the volume that houses the file or directory named by the
+B<-path> argument, and on the ACL of each directory that precedes it in
+the pathname.
 
 =head1 SEE ALSO
 

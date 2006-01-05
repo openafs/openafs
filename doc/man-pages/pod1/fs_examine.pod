@@ -1,66 +1,63 @@
 =head1 NAME
 
-fs examine - Displays information about the volume containing a directory or file
+fs examine - Shows data about the volume containing a directory or file
 
 =head1 SYNOPSIS
 
-B<fs examine> [B<-path> <I<dir/file path>>+]  [-help]
+B<fs examine> [B<-path> <I<dir/file path>>+] [B<-help>]
 
-B<fs exa> [B<-p> <I<dir/file path>>+]  [-h] 
+B<fs exa> [B<-p> <I<dir/file path>>+] [B<-h>] 
 
-B<fs listvol> [B<-p> <I<dir/file path>>+]  [-h] 
+B<fs listvol> [B<-p> <I<dir/file path>>+] [B<-h>] 
 
-B<fs listv> [B<-p> <I<dir/file path>>+]  [-h] 
+B<fs listv> [B<-p> <I<dir/file path>>+] [B<-h>] 
 
-B<fs lv> [B<-p> <I<dir/file path>>+]  [-h]
+B<fs lv> [B<-p> <I<dir/file path>>+] [B<-h>]
 
 =head1 DESCRIPTION
 
-The fs examine command displays information about the volume
-containing each specified directory or file, including its volume ID number,
-quota and the percentage of its quota that is used.
+The fs examine command displays information about the volume containing
+each specified directory or file, including its volume ID number, quota
+and the percentage of its quota that is used.
 
-This command provides the most information about a volume, but the fs
-listquota command displays similar information in tabular format, and
-the B<fs quota> command reports only the percentage of quota
-used.
+This command provides the most information about a volume, but the B<fs
+listquota> command displays similar information in tabular format, and the
+B<fs quota> command reports only the percentage of quota used.
 
-To set volume quota, use the B<fs setquota> or fs setvol
-command.
+To set volume quota, use the B<fs setquota> or B<fs setvol> command.
 
-=head1 CAVEATS
+=head1 CAUTIONS
 
-The partition-related statistics in this command's output do not
-always agree with the corresponding values in the output of the standard UNIX
-B<df> command. The statistics reported by this command can be
-up to five minutes old, because the Cache Manager polls the File Server for
-partition information at that frequency. Also, on some operating
-systems, the B<df> command's report of partition size includes
-reserved space not included in this command's calculation, and so is
-likely to be about 10% larger.
+The partition-related statistics in this command's output do not always
+agree with the corresponding values in the output of the standard UNIX
+B<df> command. The statistics reported by this command can be up to five
+minutes old, because the Cache Manager polls the File Server for partition
+information at that frequency. Also, on some operating systems, the B<df>
+command's report of partition size includes reserved space not included in
+this command's calculation, and so is likely to be about 10% larger.
 
 =head1 OPTIONS
 
 =over 4
 
-=item -path
+=item B<-path> <I<dir/file path>>+
 
 Names a file or directory that resides in the volume about which to
-produce output. Partial pathnames are interpreted relative to the
-current working directory, which is also the default value if this argument is
+produce output. Partial pathnames are interpreted relative to the current
+working directory, which is also the default value if this argument is
 omitted.
 
-=item -help
+=item B<-help>
 
-Prints the online help for this command. All other valid options
-are ignored.
+Prints the online help for this command. All other valid options are
+ignored.
 
 =back
 
 =head1 OUTPUT
 
-The output displays information about the volume that houses each specified
-directory or file, in the following format
+The output displays information about the volume that houses each
+specified directory or file, in the following format
 
    Volume status for vid = I<volume ID> named I<volume name>
    Current offline message is I<message>
@@ -69,36 +66,33 @@ directory or file, in the following format
    The partition has I<available partition> blocks available out of
       I<partition size>
 
-where the first line specifies the volume's ID number and name.
-The C<Current> C<offline> C<message> line appears only
-if an administrator has included the B<-offlinemsg> argument to the
-B<fs setvol> command. The remaining lines report, respectively,
+where the first line specifies the volume's ID number and name.  The
+C<Current offline message> line appears only if an administrator has
+included the B<-offlinemsg> argument to the B<fs setvol> command. The
+remaining lines report, respectively,
 
 =over 4
 
 =item *
 
-the volume's quota in kilobytes, or the string C<unlimited>
-to indicate an unlimited quota
-
-
-=item *
-
-the volume's current size in kilobytes
-
+The volume's quota in kilobytes, or the string C<unlimited> to indicate an
+unlimited quota.
 
 =item *
 
-the number of blocks available and total size of the host partition, both
+The volume's current size in kilobytes.
+
+=item *
+
+The number of blocks available and total size of the host partition, both
 in kilobytes.
-
 
 =back
 
 =head1 EXAMPLES
 
-The following example shows the output for the volume
-B<user.smith> and the partition housing it:
+The following example shows the output for the volume C<user.smith> and
+the partition housing it:
 
    % fs examine -path /afs/abc.com/usr/smith
    Volume status for vid = 50489902 named user.smith
@@ -108,10 +102,10 @@ B<user.smith> and the partition housing it:
 
 =head1 PRIVILEGE REQUIRED
 
-The issuer must have the B<l> (lookup) permission on the
-ACL of the root directory of the volume that houses the file or directory
-named by the B<-path> argument, and on the ACL of each directory that
-precedes it in the pathname.
+The issuer must have the C<l> (lookup) permission on the ACL of the root
+directory of the volume that houses the file or directory named by the
+B<-path> argument, and on the ACL of each directory that precedes it in
+the pathname.
 
 =head1 SEE ALSO
 

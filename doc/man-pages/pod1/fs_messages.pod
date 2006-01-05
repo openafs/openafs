@@ -4,15 +4,15 @@ fs messages - Sets whether the Cache Manager writes log messages
 
 =head1 SYNOPSIS
 
-B<fs messages> [B<-show> <[B<user>|B<console>|B<all>|B<none>]>]  [-help]
+B<fs messages> [B<-show> (user|console|all|none)] [B<-help>]
 
-B<fs me> [B<-s> <[B<user>|B<console>|B<all>|B<none>]>]  [-h]
+B<fs me> [B<-s> (user|console|all|none)] [B<-h>]
 
 =head1 DESCRIPTION
 
-The fs messages command controls whether the Cache Manager
-displays status and warning messages on user screens, the client machine
-console, on both, or on neither.
+The B<fs messages> command controls whether the Cache Manager displays
+status and warning messages on user screens, the client machine console,
+on both, or on neither.
 
 There are two types of Cache Manager messages:
 
@@ -23,13 +23,10 @@ There are two types of Cache Manager messages:
 User messages provide user-level status and warning information, and the
 Cache Manager directs them to user screens.
 
-
 =item *
 
 Console messages provide system-level status and warning information, and
-the Cache Manager directs them to the client machine's designated
-console.
-
+the Cache Manager directs them to the client machine's designated console.
 
 =back
 
@@ -40,36 +37,36 @@ provide useful status and warning information.
 
 =over 4
 
-=item -show
+=item B<-show> (user|console|all|none)
 
-Specifies the types of messages to display. Choose one of the
-following values: 
+Specifies the types of messages to display. Choose one of the following
+values:
 
 =over 4
 
 =item user
 
-Send user messages to user screens
+Send user messages to user screens.
 
 =item console
 
-Send console messages to the console
+Send console messages to the console.
 
 =item all
 
 Send user messages to user screens and console messages to the console
-(the default if the B<-show> argument is omitted)
+(the default if the B<-show> argument is omitted).
 
 =item none
 
-Do not send any messages to user screens or the console
+Do not send any messages to user screens or the console.
 
 =back
 
-=item -help
+=item B<-help>
 
-Prints the online help for this command. All other valid options
-are ignored.
+Prints the online help for this command. All other valid options are
+ignored.
 
 =back
 
@@ -86,7 +83,7 @@ The issuer must be logged in as the local superuser root.
 
 =head1 SEE ALSO
 
-L<afsd(1)>
+L<afsd(8)>
 
 =head1 COPYRIGHT
 

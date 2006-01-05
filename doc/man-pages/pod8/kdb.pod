@@ -17,7 +17,7 @@ in that directory, which normally implies that the Authentication Server is
 running on the machine. The files contain information on privileged
 actions performed by the Authentication Server.
 
-=head1 CAVEATS
+=head1 CAUTIONS
 
 It is possible that on some operating systems that AFS otherwise supports,
 the Authentication Server cannot create the

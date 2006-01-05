@@ -1,104 +1,97 @@
 =head1 NAME
 
-fs diskfree - Displays information about the partition housing a directory or file
+fs diskfree - Shows data about the partition housing a directory or file
 
 =head1 SYNOPSIS
 
-B<fs diskfree> [B<-path> <I<dir/file path>>+]  [-help]
+B<fs diskfree> [B<-path> <I<dir/file path>>+] [B<-help>]
 
-B<fs df> [B<-p> <I<dir/file path>>+]  [-h]
+B<fs df> [B<-p> <I<dir/file path>>+] [B<-h>]
 
-B<fs di> [B<-p> <I<dir/file path>>+]  [-h]
+B<fs di> [B<-p> <I<dir/file path>>+] [B<-h>]
 
 =head1 DESCRIPTION
 
-The fs diskfree command formats and displays information about
-the partition that houses the volume containing the specified directory or
+The B<fs diskfree> command formats and displays information about the
+partition that houses the volume containing the specified directory or
 file, including its size and how much space is currently used.
 
-To display information about the volume itself, use the fs
-examine command. The B<fs examine> and B<fs
-quota> commands also display information about a volume.
+To display information about the volume itself, use the B<fs examine>
+command. The B<fs examine> and B<fs quota> commands also display
+information about a volume.
 
-=head1 CAVEATS
+=head1 CAUTIONS
 
-The partition-related statistics in this command's output do not
-always agree with the corresponding values in the output of the standard UNIX
-B<df> command. The statistics reported by this command can be
-up to five minutes old, because the Cache Manager polls the File Server for
-partition information at that frequency. Also, on some operating
-systems, the B<df> command's report of partition size includes
-reserved space not included in this command's calculation, and so is
-likely to be about 10% larger.
+The partition-related statistics in this command's output do not always
+agree with the corresponding values in the output of the standard UNIX
+B<df> command. The statistics reported by this command can be up to five
+minutes old, because the Cache Manager polls the File Server for partition
+information at that frequency. Also, on some operating systems, the B<df>
+command's report of partition size includes reserved space not included in
+this command's calculation, and so is likely to be about 10% larger.
 
 =head1 OPTIONS
 
 =over 4
 
-=item -path
+=item B<-path> <I<dir/file path>>+
 
 Names a file or directory that resides on the partition about which to
-produce output. Partial pathnames are interpreted relative to the
-current working directory, which is also the default value if this argument is
+produce output. Partial pathnames are interpreted relative to the current
+working directory, which is also the default value if this argument is
 omitted.
 
-=item -help
+=item B<-help>
 
-Prints the online help for this command. All other valid options
-are ignored.
+Prints the online help for this command. All other valid options are
+ignored.
 
 =back
 
 =head1 OUTPUT
 
-The output reports the following information about the volume and partition
-that houses each file or directory:
+The output reports the following information about the volume and
+partition that houses each file or directory:
 
 =over 4
 
-=item C<Volume Name
->
+=item Volume Name
 
-The name of the volume
+The name of the volume.
 
-=item C<kbytes
->
+=item kbytes
 
-The partition's total size in kilobytes
+The partition's total size in kilobytes.
 
-=item C<used
->
+=item used
 
-The number of kilobytes used on the partition
+The number of kilobytes used on the partition.
 
-=item C<avail
->
+=item avail
 
-The number of kilobytes available on the partition
+The number of kilobytes available on the partition.
 
-=item C<%used
->
+=item %used
 
-The percentage of the partition's total space that is used (the
-C<used> statistic divided by the C<kbytes> statistic, times
-100)
+The percentage of the partition's total space that is used (the C<used>
+statistic divided by the C<kbytes> statistic, times 100).
 
 =back
 
-If the C<%used> statistic is greater than 90%, it is marked with
-the string C<<<WARNING> at the right margin.
+If the C<%used> statistic is greater than 90%, it is marked with the
+string C<<< <<WARNING >>> at the right margin.
 
 If the volume is a read-only volume, the output includes information about
 only one of the partitions that houses it, generally the one on the file
 server machine with the lowest preference rank. To verify which machine
-the output is referring to, use the B<vos listvldb> command to list
-the volume's locations, and the B<vos partinfo> command to
-display the size of each one.
+the output is referring to, use the B<vos listvldb> command to list the
+volume's locations, and the B<vos partinfo> command to display the size of
+each one.
 
 =head1 EXAMPLES
 
 The following example shows the output for the partitions housing the
-volumes B<user.smith> and B<sun4x_56.bin>:
+volumes C<user.smith> and C<sun4x_56.bin>:
 
    % fs diskfree -path /afs/abc.com/usr/smith /afs/abc.com/sun4x_56/bin
    Volume Name     kbytes  used     avail     %used     
@@ -107,10 +100,10 @@ volumes B<user.smith> and B<sun4x_56.bin>:
 
 =head1 PRIVILEGE REQUIRED
 
-The issuer must have the B<l> (lookup) permission on the
-ACL of the root directory of the volume that houses the file or directory
-named by the B<-path> argument, and on the ACL of each directory that
-precedes it in the pathname.
+The issuer must have the C<l> (lookup) permission on the ACL of the root
+directory of the volume that houses the file or directory named by the
+B<-path> argument, and on the ACL of each directory that precedes it in
+the pathname.
 
 =head1 SEE ALSO
 

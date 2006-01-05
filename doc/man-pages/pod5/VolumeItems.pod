@@ -17,7 +17,7 @@ B<VolumeItems> file in the local disk cache directory, and it must
 always remain there. The conventional directory name is
 B</usr/vice/cache>.
 
-=head1 CAVEATS
+=head1 CAUTIONS
 
 Editing or removing the VolumeItems file can cause a kernel
 panic. To refresh the contents of the file, instead use the B<fs

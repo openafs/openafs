@@ -1,32 +1,31 @@
 =head1 NAME
 
-fs getcacheparms - Displays the current size of the cache and the amount being used
+fs getcacheparms - Displays the current size and usage of the cache
 
 =head1 SYNOPSIS
 
-B<fs getcacheparms> [-help]
+B<fs getcacheparms> [B<-help>]
 
-B<fs getca> [-h]
+B<fs getca> [B<-h>]
 
 =head1 DESCRIPTION
 
-The fs getcacheparms command displays the current size of the
-cache (which can be in memory or on disk), and the amount currently in
-use.
+The B<fs getcacheparms> command displays the current size of the cache
+(which can be in memory or on disk), and the amount currently in use.
 
 The reported statistics are from kernel memory, so the reported size can
-differ from the setting specified in the B</usr/vice/etc/cacheinfo>
-file on a machine using a disk cache, if the B<fs setcachesize>
-command has been used to alter cache size.
+differ from the setting specified in the F</usr/vice/etc/cacheinfo> file
+on a machine using a disk cache, if the B<fs setcachesize> command has
+been used to alter cache size.
 
 =head1 OPTIONS
 
 =over 4
 
-=item -help
+=item B<-help>
 
-Prints the online help for this command. All other valid options
-are ignored.
+Prints the online help for this command. All other valid options are
+ignored.
 
 =back
 
@@ -34,11 +33,10 @@ are ignored.
 
 The output reports
 
-   AFS using I<amount used> of the cache's available I<size> 1K byte blocks.
+   AFS using <amount> of the cache's available <size> 1K byte blocks.
 
-where I<amount used> is the number of kilobyte blocks currently used
-to cache data and status information, and I<size> is the total current
-cache size.
+where <amount> is the number of kilobyte blocks currently used to cache
+data and status information, and <size> is the total current cache size.
 
 =head1 EXAMPLES
 

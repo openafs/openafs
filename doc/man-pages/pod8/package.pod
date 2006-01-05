@@ -41,7 +41,7 @@ instructions, see the I<IBM AFS Administration Guide>.
 It is not possible to configure a remote client machine's disk using
 this command.
 
-=head1 CAVEATS
+=head1 CAUTIONS
 
 The package command interpreter exits without executing any
 instruction if there are any syntax errors or incorrect values in the

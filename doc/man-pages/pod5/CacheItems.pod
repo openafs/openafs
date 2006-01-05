@@ -18,7 +18,7 @@ and it must always remain there. The conventional directory name is
 B</usr/vice/cache>, but it is acceptable to use a directory on a
 partition with more available space.
 
-=head1 CAVEATS
+=head1 CAUTIONS
 
 Editing or removing the CacheItems file can cause a kernel
 panic. If the contents of B<V>I<n> files seem out of

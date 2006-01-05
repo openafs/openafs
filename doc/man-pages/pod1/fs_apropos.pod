@@ -4,47 +4,46 @@ fs apropos - Displays each help entry containing a keyword string
 
 =head1 SYNOPSIS
 
-B<fs apropos -topic> <I<help string>>  [-help]
+B<fs apropos> B<-topic> <I<help string>> [B<-help>]
 
-B<fs ap -t> <I<help string>>  [-h]
+B<fs ap> B<-t> <I<help string>> [B<-h>]
 
 =head1 DESCRIPTION
 
-The fs apropos command displays the first line of the online
-help entry for any B<fs> command that has in its name or short
-description the string specified by the B<-topic> argument.
+The B<fs apropos> command displays the first line of the online help entry
+for any B<fs> command that has in its name or short description the string
+specified by the B<-topic> argument.
 
-To display the syntax for a command, use the fs help
-command.
+To display the syntax for a command, use the B<fs help> command.
 
 =head1 OPTIONS
 
 =over 4
 
-=item -topic
+=item B<-topic> <I<help string>>
 
-Specifies the keyword string to match, in lowercase letters only.
-If the string is more than a single word, surround it with double quotes ("")
-or other delimiters.
+Specifies the keyword string to match, in lowercase letters only.  If the
+string is more than a single word, surround it with double quotes ("") or
+other delimiters.
 
-=item -help
+=item B<-help>
 
-Prints the online help for this command. All other valid options
-are ignored.
+Prints the online help for this command. All other valid options are
+ignored.
 
 =back
 
 =head1 OUTPUT
 
 The first line of a command's online help entry names it and briefly
-describes its function. This command displays the first line for any
-B<fs> command where the string specified with the B<-topic>
-argument is part of the command name or first line.
+describes its function. This command displays the first line for any B<fs>
+command where the string specified with the B<-topic> argument is part of
+the command name or first line.
 
 =head1 EXAMPLES
 
-The following command lists all fs commands that include the
-word B<cache> in their names or short online descriptions:
+The following command lists all fs commands that include the word C<cache>
+in their names or short online descriptions:
 
    % fs apropos cache
    setcachesize: set cache size

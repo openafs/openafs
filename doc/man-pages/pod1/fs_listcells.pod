@@ -1,56 +1,54 @@
 =head1 NAME
 
-fs listcells - Displays the database server machines in each cell known to the Cache
-Manager
+fs listcells - Displays the database server machines known to the Cache Manager
 
 =head1 SYNOPSIS
 
-B<fs listcells> [B<-numeric>]  [-help]
+B<fs listcells> [B<-numeric>] [B<-help>]
 
-B<fs listc> [B<-n>]  [-h]
+B<fs listc> [B<-n>] [B<-h>]
 
 =head1 DESCRIPTION
 
-The fs listcells command formats and displays the list of the
-database server machines that the Cache Manager stores in kernel memory for
-its home cell and foreign cells.
+The B<fs listcells> command formats and displays the list of the database
+server machines that the Cache Manager stores in kernel memory for its
+home cell and foreign cells.
 
-At each reboot of the client machine, the Cache Manager copies the contents
-of B</usr/vice/etc/CellServDB> into kernel memory. To modify
-the list between reboots, use the B<fs newcell> command.
+At each reboot of the client machine, the Cache Manager copies the
+contents of F</usr/vice/etc/CellServDB> into kernel memory. To modify the
+list between reboots, use the B<fs newcell> command.
 
 =head1 OPTIONS
 
 =over 4
 
-=item -numeric
+=item B<-numeric>
 
-Displays each database server machine's IP address rather than
-hostname.
+Displays each database server machine's IP address rather than hostname.
 
-=item -help
+=item B<-help>
 
-Prints the online help for this command. All other valid options
-are ignored.
+Prints the online help for this command. All other valid options are
+ignored.
 
 =back
 
 =head1 OUTPUT
 
-The output includes a line for each cell included in the Cache
-Manager's kernel memory list, in the following format:
+The output includes a line for each cell included in the Cache Manager's
+kernel memory list, in the following format:
 
-   Cell I<cell> on hosts I<database server machines>
+   Cell <cell> on hosts <database server machines>
 
 The Cache Manager stores IP addresses, but by default has them translated
 to hostnames before reporting them, by passing them to the cell's name
-service (such as the Domain Name Service or a local host table). The
-name service sometimes returns hostnames in uppercase letters, or an IP
-address if it cannot resolve a name.
+service (such as the Domain Name Service or a local host table). The name
+service sometimes returns hostnames in uppercase letters, or an IP address
+if it cannot resolve a name.
 
-Using the -numeric flag bypasses the translation to hostnames,
-which can result in significantly faster production of output. The
-output includes IP addresses only.
+Using the B<-numeric> flag bypasses the translation to hostnames, which
+can result in significantly faster production of output. The output
+includes IP addresses only.
 
 =head1 EXAMPLES
 
@@ -69,8 +67,7 @@ None
 
 =head1 SEE ALSO
 
-L<CellServDB (client version)(1)>
-
+L<CellServDB(5)>,
 L<fs_newcell(1)>
 
 =head1 COPYRIGHT

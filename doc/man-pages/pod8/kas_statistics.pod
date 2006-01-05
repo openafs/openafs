@@ -21,7 +21,7 @@ machines. Use the B<-servers> argument to name a specific
 machine, or the command interpreter chooses one at random from all the
 database server machines with which it has established connections.
 
-=head1 CAVEATS
+=head1 CAUTIONS
 
 The -servers argument is not available in interactive mode,
 making it impossible to specify a certain machine.

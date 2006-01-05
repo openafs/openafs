@@ -4,94 +4,88 @@ pts chown - Changes the owner of a Protection Database entry
 
 =head1 SYNOPSIS
 
-B<pts chown -name> <I<group name>>  -owner <I<new owner>> 
-[B<-cell> <I<cell name>>]  [B<-noauth>]  [B<-force>]  [B<-help>]
+B<pts chown> B<-name> <I<group name>> B<-owner> <I<new owner>> 
+    [B<-cell> <I<cell name>>] [B<-noauth>] [B<-force>] [B<-help>]
 
-B<pts cho -na> <I<group name>>  B<-o> <I<new owner>>  [B<-c> <I<cell name>>]  [B<-no>]  [B<-f>]  [-h]
+B<pts cho> B<-na> <I<group name>> B<-o> <I<new owner>>
+    [B<-c> <I<cell name>>] [B<-no>] [B<-f>] [B<-h>]
 
 =head1 DESCRIPTION
 
-The pts chown command designates the user or group named by the
-B<-owner> argument as the owner of the group named by the
-B<-name> argument, and records the new owner in the owner field of the
-group's Protection Database entry.
+The B<pts chown> command designates the user or group named by the
+B<-owner> argument as the owner of the group named by the B<-name>
+argument, and records the new owner in the owner field of the group's
+Protection Database entry.
 
-In the case of regular groups, this command automatically changes the group
-name's owner prefix (the part of the group name before the colon) to
+In the case of regular groups, this command automatically changes the
+group name's owner prefix (the part of the group name before the colon) to
 match the new owner. If the new owner is itself a group, then only its
 owner prefix, not its complete name, becomes the owner prefix in the new
 name. The change to the owner prefix does not propagate to any groups
-owned by the group, however. To make the owner prefix of such
-group-owned groups reflect the new owning group, use the B<pts rename>
-command.
+owned by the group, however. To make the owner prefix of such group-owned
+groups reflect the new owning group, use the B<pts rename> command.
 
 It is not possible to change a user or machine entry's owner from the
-default set at creation time, the B<system:administrators>
-group.
+default set at creation time, the system:administrators group.
 
-=head1 CAVEATS
+=head1 CAUTIONS
 
-While designating a machine as a group's owner does not cause an
-error, it is not recommended. The Protection Server does not extend the
-usual privileges of group ownership to users logged onto the machine.
+While designating a machine as a group's owner does not cause an error, it
+is not recommended. The Protection Server does not extend the usual
+privileges of group ownership to users logged onto the machine.
 
 =head1 OPTIONS
 
 =over 4
 
-=item -name
+=item B<-name> <I<group name>>
 
-Specifies the current name of the group to which to assign a new
-owner.
+Specifies the current name of the group to which to assign a new owner.
 
-=item -owner
+=item B<-owner> <I<new owner>>
 
 Names the user or group to become the group's owner.
 
-=item -cell
+=item B<-cell> <I<cell name>>
 
 Names the cell in which to run the command. For more details, see
-the introductory B<pts> reference page.
+L<pts(1)>.
 
-=item -noauth
+=item B<-noauth>
 
-Assigns the unprivileged identity anonymous to the
-issuer. For more details, see the introductory B<pts> reference
-page.
+Assigns the unprivileged identity anonymous to the issuer. For more
+details, see L<pts(1)>.
 
-=item -force
+=item B<-force>
 
 Enables the command to continue executing as far as possible when errors
-or other problems occur, rather than halting execution at the first
-error.
+or other problems occur, rather than halting execution at the first error.
 
-=item -help
+=item B<-help>
 
-Prints the online help for this command. All other valid options
-are ignored.
+Prints the online help for this command. All other valid options are
+ignored.
 
 =back
 
 =head1 EXAMPLES
 
-The following example changes the owner of the group
-B<terry:friends> from the user B<terry> to the user
-B<pat>. A side effect is that the group name changes to
-B<pat:friends>.
+The following example changes the owner of the group C<terry:friends> from
+the user C<terry> to the user C<pat>. A side effect is that the group name
+changes to C<pat:friends>.
 
    % pts chown -name terry:friends -owner pat
 
-The following example changes the owner of the group
-B<terry:friends> from the user B<terry> to the group
-B<pat:buddies>. A side effect is that the group name
-changes to B<pat:friends>.
+The following example changes the owner of the group C<terry:friends> from
+the user C<terry> to the group C<pat:buddies>. A side effect is that the
+group name changes to C<pat:friends>.
 
    % pts chown -name terry:friends -owner pat:buddies
 
 =head1 PRIVILEGE REQUIRED
 
-The issuer must belong to the system:administrators group
-or currently own the group.
+The issuer must belong to the system:administrators group or currently own
+the group.
 
 =head1 SEE ALSO
 

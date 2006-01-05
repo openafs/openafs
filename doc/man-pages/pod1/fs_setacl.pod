@@ -4,68 +4,65 @@ fs setacl - Sets the ACL for a directory
 
 =head1 SYNOPSIS
 
-B<fs setacl -dir> <I<directory>>+  -acl <I<access list entries>>+  
-[B<-clear>]  [B<-negative>]  [B<-id>]  [B<-if>]  [B<-help>]
+B<fs setacl> B<-dir> <I<directory>>+ B<-acl> <I<access list entries>>+  
+    [B<-clear>] [B<-negative>] [B<-id>] [B<-if>] [B<-help>]
 
-B<fs sa -d> <I<directory>>+  -a <I<access list entries>>+  
-[B<-c>]  [B<-n>]  [B<-id>]  [B<-if>]  [B<-h>] 
+B<fs sa> B<-d> <I<directory>>+ B<-a> <I<access list entries>>+  
+    [B<-c>] [B<-n>] [B<-id>] [B<-if>] [B<-h>] 
       
-B<fs seta -d> <I<directory>>+  -a <I<access list entries>>+  
-[B<-c>]  [B<-n>]  [B<-id>]  [B<-if>]  [B<-h>]
+B<fs seta> B<-d> <I<directory>>+ B<-a> <I<access list entries>>+  
+    [B<-c>] [B<-n>] [B<-id>] [B<-if>] [B<-h>]
 
 =head1 DESCRIPTION
 
-The fs setacl command adds the access control list (ACL) entries
-specified with the B<-acl> argument to the ACL of each directory named
-by the B<-dir> argument.
+The B<fs setacl> command adds the access control list (ACL) entries
+specified with the B<-acl> argument to the ACL of each directory named by
+the B<-dir> argument.
 
-If the -dir argument designates a pathname in DFS filespace
-(accessed via the AFS/DFS Migration Toolkit Protocol Translator), it can be a
-file as well as a directory. The ACL must already include an entry for
-B<mask_obj>, however. For more details, refer to the I<IBM
-AFS/DFS Migration Toolkit Administration Guide and Reference>.
+If the B<-dir> argument designates a pathname in DFS filespace (accessed
+via the AFS/DFS Migration Toolkit Protocol Translator), it can be a file
+as well as a directory. The ACL must already include an entry for
+C<mask_obj>, however. For more details, refer to the I<IBM AFS/DFS
+Migration Toolkit Administration Guide and Reference>.
 
-Only user and group entries are acceptable values for the -acl
-argument. Do not place machine entries (IP addresses) directly on an
-ACL; instead, make the machine entry a group member and place the group
-on the ACL.
+Only user and group entries are acceptable values for the B<-acl>
+argument. Do not place machine entries (IP addresses) directly on an ACL;
+instead, make the machine entry a group member and place the group on the
+ACL.
 
-To completely erase the existing ACL before adding the new entries, provide
-the B<-clear> flag. To add the specified entries to the
-C<Negative> C<rights> section of the ACL (deny rights to
-specified users or groups), provide the B<-negative> flag.
+To completely erase the existing ACL before adding the new entries,
+provide the B<-clear> flag. To add the specified entries to the C<Negative
+rights> section of the ACL (deny rights to specified users or groups),
+provide the B<-negative> flag.
 
-To display an ACL, use the fs listacl command. To copy an
-ACL from one directory to another, use the B<fs copyacl>
-command.
+To display an ACL, use the fs listacl command. To copy an ACL from one
+directory to another, use the B<fs copyacl> command.
 
-=head1 CAVEATS
+=head1 CAUTIONS
 
 If the ACL already grants certain permissions to a user or group, the
-permissions specified with the B<fs setacl> command replace the
-existing permissions, rather than being added to them.
+permissions specified with the B<fs setacl> command replace the existing
+permissions, rather than being added to them.
 
 Setting negative permissions is generally unnecessary and not
-recommended. Simply omitting a user or group from the C<Normal>
-C<rights> section of the ACL is normally adequate to prevent
-access. In particular, note that it is futile to deny permissions that
-are granted to members of the B<system:anyuser> group on the
-same ACL; the user needs only to issue the B<unlog> command to
-receive the denied permissions.
+recommended. Simply omitting a user or group from the C<Normal rights>
+section of the ACL is normally adequate to prevent access. In particular,
+note that it is futile to deny permissions that are granted to members of
+the system:anyuser group on the same ACL; the user needs only to issue the
+B<unlog> command to receive the denied permissions.
 
-When including the -clear option, be sure to reinstate an entry
-for each directory's owner that includes at least the B<l>
-(B<lookup>) permission. Without that permission, it is
-impossible to resolve the "dot" ( . ) and "dot dot" ( . .
-) shorthand from within the directory. (The directory's owner does
-implicitly have the B<a> [B<administer>] permission even on a
-cleared ACL, but must know to use it to add other permissions.)
+When including the B<-clear> option, be sure to reinstate an entry for
+each directory's owner that includes at least the C<l> (lookup)
+permission. Without that permission, it is impossible to resolve the "dot"
+(C<.>) and "dot dot" (C<..>) shorthand from within the directory. (The
+directory's owner does implicitly have the C<a> (administer) permission
+even on a cleared ACL, but must know to use it to add other permissions.)
 
 =head1 OPTIONS
 
 =over 4
 
-=item -dir
+=item B<-dir> <I<directory>>+
 
 Names each AFS directory, or DFS directory or file, for which the set the
 ACL. Partial pathnames are interpreted relative to the current working
@@ -73,161 +70,141 @@ directory.
 
 Specify the read/write path to each directory (or DFS file), to avoid the
 failure that results from attempting to change a read-only volume. By
-convention, the read/write path is indicated by placing a period before the
-cell name at the pathname's second level (for example,
-B</afs/.abc.com>). For further discussion of the
-concept of read/write and read-only paths through the filespace, see the
-B<fs mkmount> reference page.
+convention, the read/write path is indicated by placing a period before
+the cell name at the pathname's second level (for example,
+F</afs/.abc.com>). For further discussion of the concept of read/write and
+read-only paths through the filespace, see the B<fs mkmount> reference
+page.
 
-=item -acl
+=item B<-acl> <I<access list entries>>+
 
-Defines a list of one or more ACL entries, each a pair that names 
+Defines a list of one or more ACL entries, each a pair that names:
 
 =over 4
 
 =item *
 
-A user name or group name as listed in the Protection Database
-
+A user name or group name as listed in the Protection Database.
 
 =item *
 
 One or more ACL permissions, indicated either by combining the individual
-letters or by one of the four acceptable shorthand words
-
+letters or by one of the four acceptable shorthand words.
 
 =back
 
 in that order, separated by a space (thus every instance of this argument
 has two parts). The accepted AFS abbreviations and shorthand words, and
-the meaning of each, are as follows: 
+the meaning of each, are as follows:
 
 =over 4
 
-=item a
+=item a (administer)
 
-(administer): change the entries on the ACL
+Change the entries on the ACL.
 
-=item d
+=item d (delete)
 
-(delete): remove files and subdirectories from the
-directory or move them to other directories
+Remove files and subdirectories from the directory or move them to other
+directories.
 
-=item i
+=item i (insert)
 
-(insert): add files or subdirectories to the directory by
-copying, moving or creating
+Add files or subdirectories to the directory by copying, moving or
+creating.
 
-=item k
+=item k (lock)
 
-(lock): set read locks or write locks on the files in the
-directory
+Set read locks or write locks on the files in the directory.
 
-=item l
+=item l (lookup)
 
-(lookup): list the files and subdirectories in the
-directory, stat the directory itself, and issue the B<fs listacl>
-command to examine the directory's ACL
+List the files and subdirectories in the directory, stat the directory
+itself, and issue the B<fs listacl> command to examine the directory's
+ACL.
 
-=item r
+=item r (read)
 
-(read): read the contents of files in the directory;
-issue the B<ls -l> command to stat the elements in the directory
+Read the contents of files in the directory; issue the C<ls -l> command to
+stat the elements in the directory.
 
-=item w
+=item w (write)
 
-(write): modify the contents of files in the directory,
-and issue the UNIX B<chmod> command to change their mode bits
+Modify the contents of files in the directory, and issue the UNIX B<chmod>
+command to change their mode bits.
 
 =item A, B, C, D, E, F, G, H
 
 Have no default meaning to the AFS server processes, but are made
-available for applications to use in controlling access to the
-directory's contents in additional ways. The letters must be
-uppercase.
+available for applications to use in controlling access to the directory's
+contents in additional ways. The letters must be uppercase.
 
 =item all
 
-Equals all seven permissions (rlidwka).
-L<(1)>
-L<(1)>
-L<(1)>
-L<(1)>
+Equals all seven permissions (C<rlidwka>).
 
 =item none
 
 No permissions. Removes the user/group from the ACL, but does not
-guarantee they have no permissions if they belong to groups that remain on the
-ACL.
-L<(1)>
-L<(1)>
+guarantee they have no permissions if they belong to groups that remain on
+the ACL.
 
 =item read
 
-Equals the B<r> (B<read>) and l
-(B<lookup>) permissions.
-L<(1)>
-L<(1)>
+Equals the C<r> (read) and C<l> (lookup) permissions.
 
 =item write
 
-Equals all permissions except B<a> (administer), that
-is, B<rlidwk>.
-L<(1)>
-L<(1)>
+Equals all permissions except C<a> (administer), that is, C<rlidwk>.
 
 =back
 
 It is acceptable to mix entries that combine the individual letters with
 entries that use the shorthand words, but not use both types of notation
-within an individual pairing of user or group and permissions. 
+within an individual pairing of user or group and permissions.
 
 To learn the proper format and acceptable values for DFS ACL entries, see
-the I<IBM AFS/DFS Migration Toolkit Administration Guide and
-Reference>.
+the I<IBM AFS/DFS Migration Toolkit Administration Guide and Reference>.
 
-=item -clear
+=item B<-clear>
 
 Removes all existing entries on each ACL before adding the entries
 specified with the B<-acl> argument.
 
-=item -negative
+=item B<-negative>
 
-Places the specified ACL entries in the C<Negative>
-C<rights> section of each ACL, explicitly denying the rights to the
-user or group, even if entries on the accompanying C<Normal>
-C<rights> section of the ACL grant them permissions.
+Places the specified ACL entries in the C<Negative rights> section of each
+ACL, explicitly denying the rights to the user or group, even if entries
+on the accompanying C<Normal rights> section of the ACL grant them
+permissions.
 
 This argument is not supported for DFS files or directories, because DFS
 does not implement negative ACL permissions.
 
-=item -id
+=item B<-id>
 
 Places the ACL entries on the Initial Container ACL of each DFS directory,
-which are the only file system objects for which this flag is
-supported.
+which are the only file system objects for which this flag is supported.
 
-=item -if
+=item B<-if>
 
 Places the ACL entries on the Initial Object ACL of each DFS directory,
-which are the only file system objects for which this flag is
-supported.
+which are the only file system objects for which this flag is supported.
 
-=item -help
+=item B<-help>
 
-Prints the online help for this command. All other valid options
-are ignored.
+Prints the online help for this command. All other valid options are
+ignored.
 
 =back
 
 =head1 EXAMPLES
 
-The following example adds two entries to the C<Normal rights>
-section of the current working directory's ACL: the first entry
-grants B<r> (B<read>) and B<l> (B<lookup>)
-permissions to the group B<pat:friends>, while the other (using
-the B<write> shorthand) gives all permissions except B<a>
-(B<administer>) to the user B<smith>.
+The following example adds two entries to the C<Normal rights> section of
+the current working directory's ACL: the first entry grants C<r> (read)
+and C<l> (lookup) permissions to the group pat:friends, while the other
+(using the C<write> shorthand) gives all permissions except C<a>
+(administer) to the user C<smith>.
 
    % fs setacl -dir . -acl pat:friends rl smith write
 
@@ -236,12 +213,11 @@ the B<write> shorthand) gives all permissions except B<a>
    Normal rights:
       pat:friends rl
       smith rlidwk
-   
 
-The following example includes the -clear flag, which removes
-the existing permissions (as displayed with the B<fs listacl> command)
-from the current working directory's B<reports> subdirectory and
-replaces them with a new set.
+The following example includes the B<-clear> flag, which removes the
+existing permissions (as displayed with the B<fs listacl> command) from
+the current working directory's F<reports> subdirectory and replaces them
+with a new set.
 
    % fs listacl -dir reports
    Access list for reports is
@@ -261,11 +237,10 @@ replaces them with a new set.
       system:anyuser rl
       smith rlidwk
       pat rlidwka
-   
 
-The following example use the B<-dir> and -acl switches
-because it sets the ACL for more than one directory (both the current working
-directory and its B<public> subdirectory).
+The following example use the B<-dir> and B<-acl> switches because it sets
+the ACL for more than one directory (both the current working directory
+and its F<public> subdirectory).
 
    % fs setacl -dir . public -acl pat:friends rli
 
@@ -278,14 +253,12 @@ directory and its B<public> subdirectory).
    Normal rights:
       pat rlidwka
       pat:friends rli
-   
 
 =head1 PRIVILEGE REQUIRED
 
-The issuer must have the B<a> (administer) permission on
-the directory's ACL; the directory's owner and the members of
-the B<system:administrators> group have the right implicitly,
-even if it does not appear on the ACL.
+The issuer must have the C<a> (administer) permission on the directory's
+ACL; the directory's owner and the members of the system:administrators
+group have the right implicitly, even if it does not appear on the ACL.
 
 =head1 SEE ALSO
 

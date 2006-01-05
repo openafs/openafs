@@ -45,7 +45,7 @@ characters and one or more metacharacters to wildcard part or all of the
 volume name. The B<Options> section lists the acceptable
 metacharacters.
 
-=head1 CAVEATS
+=head1 CAUTIONS
 
 It is best to issue this command in interactive mode. If issuing it
 at the shell prompt, enclose any strings containing metacharacters in double

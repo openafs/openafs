@@ -4,54 +4,53 @@ fs rmmount - Removes a mount point
 
 =head1 SYNOPSIS
 
-B<fs rmmount -dir> <I<directory>>+  [-help]
+B<fs rmmount> B<-dir> <I<directory>>+ [B<-help>]
 
-B<fs rm -d> <I<directory>>+  [-h]
+B<fs rm> B<-d> <I<directory>>+ [B<-h>]
 
 =head1 DESCRIPTION
 
-The fs rmmount command removes the mount point named by the
-B<-dir> argument from the file system. The corresponding volume
-remains on its host partition or partitions, but is inaccessible if there are
-no other mount points for it.
+The fs rmmount command removes the mount point named by the B<-dir>
+argument from the file system. The corresponding volume remains on its
+host partition or partitions, but is inaccessible if there are no other
+mount points for it.
 
 =head1 OPTIONS
 
 =over 4
 
-=item -dir
+=item B<-dir> <I<directory>>+
 
-Names the mount point to delete from the file system. The last
-element in the pathname must be an actual name, not a shorthand notation such
-as "dot" (.) or "dot dot" (. .). 
+Names the mount point to delete from the file system. The last element in
+the pathname must be an actual name, not a shorthand notation such as
+"dot" (C<.>) or "dot dot" (C<..>).
 
 Specify the read/write path to the directory, to avoid the failure that
 results from attempting to delete a mount point from a read-only
 volume. By convention, the read/write path is indicated by placing a
 period before the cell name at the pathname's second level (for example,
-B</afs/.abc.com>). For further discussion of the
-concept of read/write and read-only paths through the filespace, see the
-B<fs mkmount> reference page.
+F</afs/.abc.com>). For further discussion of the concept of read/write and
+read-only paths through the filespace, see the B<fs mkmount> reference
+page.
 
-=item -help
+=item B<-help>
 
-Prints the online help for this command. All other valid options
-are ignored.
+Prints the online help for this command. All other valid options are
+ignored.
 
 =back
 
 =head1 EXAMPLES
 
-The following command removes the mount points jones and
-B<terry> from the current working directory (the
-B</afs/abc.com/usr> directory).
+The following command removes the mount points F<jones> and F<terry> from
+the current working directory (the F</afs/abc.com/usr> directory).
 
    % fs rmmount jones terry
 
 =head1 PRIVILEGE REQUIRED
 
-The issuer must have the B<d> (delete) permission on the
-ACL of the directory that houses each mount point.
+The issuer must have the C<d> (delete) permission on the ACL of the
+directory that houses each mount point.
 
 =head1 SEE ALSO
 

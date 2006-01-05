@@ -14,7 +14,7 @@ The files are in binary format. To display their contents, use the
 B<kdb> command, which requires being logged in to the local machine as
 the local superuser B<root>.
 
-=head1 CAVEATS
+=head1 CAUTIONS
 
 The Authentication Server is possibly unable to create these files on some
 operating systems that AFS otherwise supports, making the B<kdb>
