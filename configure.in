@@ -6,7 +6,7 @@ AC_PROG_CC
 OPENAFS_CONFIGURE_COMMON
 
 if test -d 'doc/man-pages' ; then
-    MAN_MAKEFILE=doc/man-pages/Makefile
+    MAN_MAKEFILE="doc/man-pages/Makefile doc/man-pages/install-man"
 else
     MAN_MAKEFILE=
 fi
