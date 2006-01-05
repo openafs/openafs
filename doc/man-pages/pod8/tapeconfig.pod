@@ -1,0 +1,200 @@
+=head1 NAME
+
+tapeconfig - Defines configuration parameters for all tape devices and backup data files
+on a Tape Coordinator machine
+
+=head1 DESCRIPTION
+
+The tapeconfig file defines basic configuration parameters for
+all of the tape devices or backup data files available for backup operations
+on a Tape Coordinator machine. The file is in ASCII format and must
+reside in the local B</usr/afs/backup> directory. The
+instruction for each tape device or backup data file appears on its own line
+and each has the following format:
+
+   [I<capacity>    I<filemark_size>]    I<device_name>    I<port_offset>
+
+where
+
+=over 4
+
+=item I<capacity
+>
+
+Specifies the capacity of the tapes used with a tape device, or the amount
+of data to write into a backup data file. The Tape Coordinator refers
+to this value in two circumstances: 
+
+=over 4
+
+=item *
+
+When the capacity field of a tape or backup data file's label is
+empty (because the tape has never been labeled). The Tape Coordinator
+records this value on the label and uses it when determining how much data it
+can write to the tape or file during a B<backup dump> or B<backup
+savedb> operation. If there is already a capacity value on the
+label, the Tape Coordinator uses it instead.
+
+
+=item *
+
+When the -size argument is omitted the first time the
+B<backup labeltape> command is used on a given tape or file.
+The Tape Coordinator copies this value into the label's capacity
+field.
+
+
+=back
+
+The Tape Coordinator uses this capacity value or the one on the Backup
+System tape label to track how much space remains as it writes data to a tape
+or backup data file. The appropriate value to record for a tape depends
+on the size of the tapes usually used in the device and whether it has a
+compression mode; for suggested values, see the I<IBM AFS
+Administration Guide> chapter on configuring the Backup System. If
+using a value obtained from the B<fms> command, reduce it by 10% to
+15% before recording it in the file.
+
+For a backup data file, it is best to provide a value that helps the Tape
+Coordinator avoid reaching the end-of-file (EOF) unexpectedly. Make it
+at least somewhat smaller than the amount of space available on the partition
+housing the file when the dump operation begins, and never larger than the
+maximum file size allowed by the operating system.
+
+Specify a (positive) integer or decimal value followed by a letter than
+indicates units, with no intervening space. In a decimal number, the
+number of digits after the decimal point must not translate to fractions of
+bytes. The maximum acceptable value is 2048 GB (2 TB). The
+acceptable units letters are as follows; if the letter is omitted, the
+default is kilobytes.
+
+=over 4
+
+=item *
+
+B<k>or K for kilobytes (KB)
+
+
+=item *
+
+B<m> or M for megabytes (MB)
+
+
+=item *
+
+B<g> or G for gigabytes (GB)
+
+
+=item *
+
+B<t> or T for terabytes (TB)
+
+
+=back
+
+If this field is omitted, the Tape Coordinator uses the maximum acceptable
+value (2048 GB or 2 TB). Either leave both this field and the
+I<filemark_size> field empty, or provide a value in both of them.
+
+=item I<filemark_size
+>
+
+Specifies the size of a tape device's filemarks (also called
+end-of-file or EOF marks), which is set by the device's
+manufacturer. In a dump to tape, the Tape Coordinator inserts filemarks
+at the boundary between the data from each volume, so the filemark size
+affects how much space is available for actual data. 
+
+The appropriate value to record for a tape depends on the size of the tapes
+usually used in the device and whether it has a compression mode; for
+suggested values, see the I<IBM AFS Administration Guide> chapter on
+configuring the Backup System. If using a value obtained from the
+B<fms> command, increase it by 10% to 15% before recording it in the
+file.
+
+For backup data files, record a value of 0 (zero). The
+Tape Coordinator actually ignores this field for backup data files, because it
+does not use filemarks when writing to a file.
+
+Use the same notation as for the I<capacity> field, but note that the
+default units is bytes rather than kilobytes. The maximum acceptable
+value is 2048 GB.
+
+If this field is empty, the Tape Coordinator uses the value 0
+(zero). Either leave both this field and the I<capacity> field
+empty, or provide a value in both of them.
+
+=item I<device_name
+>
+
+Specifies the complete pathname of the tape device or backup data
+file. The format of tape device names depends on the operating system,
+but on UNIX systems device names generally begin with the string
+B</dev/>. For a backup data file, this field defines the
+complete pathname; for a discussion of suggested naming conventions see
+the description of the B<FILE> instruction in L<CFG_I<device_name>(1)>.
+
+=item I<port_offset
+>
+
+Specifies the port offset number associated with this combination of Tape
+Coordinator and tape device or backup data file. 
+
+Acceptable values are the integers B<0> through 58510
+(the Backup System can track a maximum of 58,511 port offset numbers).
+Each value must be unique among the cell's Tape Coordinators, but any
+number of them can be associated with a single machine. Port offset
+numbers need not be assigned sequentially, and can appear in any order in the
+B<tapeconfig> file. Assign port offset B<0> to the Tape
+Coordinator for the tape device or backup data file used most often for backup
+operations; doing so will allow the operator to omit the
+B<-portoffset> argument from the largest possible number of
+B<backup> commands.
+
+=back
+
+=head1 PRIVILEGE REQUIRED
+
+Creating the file requires UNIX B<w> (write) and
+B<x> (B<execute>) permissions on the
+B</usr/afs/backup> directory. Editing the file requires UNIX
+B<w> (B<write>) permission on the file.
+
+=head1 EXAMPLES
+
+The following example tapeconfig file configures three tape
+devices and a backup data file. The first device has device name
+B</dev/rmt/0h>, and is assigned port offset B<0> because it
+will be the most frequently used device for all backup operations in the
+cell. Its default tape capacity is 2 GB and filemark size is 1
+MB. The B</dev/rmt/3h> drive has half the capacity but a much
+smaller filemark size; its port offset is B<3>. The third
+device listed, B</dev/rmt/4h>, has the same capacity and filemark size
+as the first device and is assigned port offset B<2>. Port
+offset B<4> is assigned to the backup data file B</dev/FILE>,
+which is actually a symbolic link to the actual file located elsewhere on the
+local disk. The Tape Coordinator writes up to 1.5 GB into the
+file; as recommended, the filemark size is set to zero.
+
+   2G 1M /dev/rmt/0h 0
+   1g 4k /dev/rmt/3h 3
+   2G 1m /dev/rmt/4h 2
+   1.5G 0 /dev/FILE 4
+
+=head1 SEE ALSO
+
+L<backup_addhost(1)>,
+L<backup_dump(1)>,
+L<backup_labeltape(1)>,
+L<backup_savedb(1)>,
+L<butc(1)>,
+L<fms(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

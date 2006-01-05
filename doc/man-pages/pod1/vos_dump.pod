@@ -1,0 +1,216 @@
+=head1 NAME
+
+vos dump - Converts a volume into ASCII format and writes it to a file
+
+=head1 SYNOPSIS
+
+B<vos dump -id> <I<volume name or ID>>  [B<-time> <I<dump from time>>]  [-file <I<dump file>>]  
+[B<-server> <I<server>>]  [B<-partition> <I<partition>>]  [B<-cell> <I<cell name>>]  
+         [B<-noauth>]  [B<-localauth>]  [B<-verbose>]  [-help]
+
+B<vos du -i> <I<volume name or ID>>  [B<-t> <I<dump from time>>]  [-f <I<dump file>>]  
+[B<-s> <I<server>>]  [B<-p> <I<partition>>]  [B<-c> <I<cell name>>]  
+       [B<-n>]  [B<-l>]  [B<-v>]  [-h]
+
+=head1 DESCRIPTION
+
+The vos dump command converts the contents of the indicated
+volume, which can be read/write, read-only or backup, into ASCII
+format. The Volume Server writes the converted contents to the file
+named by the B<-file> argument, or to the standard output
+stream. In the latter case, the output can be directed to a named pipe,
+which enables interoperation with third-party backup utilities.
+
+To dump the complete contents of a volume (create a I<full dump>),
+omit the B<-time> argument or specify the value B<0> (zero)
+for it. To create an I<incremental dump>, which includes only
+the files and directories in the volume that have modification timestamps
+later than a certain time, specify a date and time as the value for the
+B<-time> argument.
+
+By default, the vos command interpreter consults the Volume
+Location Database (VLDB) to learn the volume's location, so the
+B<-server> and B<-partition> arguments are not
+required. If the B<-id> argument identifies a read-only volume
+that resides at multiple sites, the command dumps the version from just one of
+them (normally, the one listed first in the volume's VLDB entry as
+reported by the B<vos examine> or B<vos listvldb>
+command). To dump the read-only volume from a particular site, use the
+B<-server> and B<-partition> arguments to specify the
+site. To bypass the VLDB lookup entirely, provide a volume ID number
+(rather than a volume name) as the value for the B<-id> argument,
+together with the B<-server> and B<-partition>
+arguments. This makes it possible to dump a volume for which there is
+no VLDB entry.
+
+During the dump operation, the volume is inaccessible both to Cache
+Managers and to other volume operations. Dumping a volume does not
+otherwise affect its status on the partition or its VLDB entry.
+
+To restore a dumped volume back into AFS, use the vos restore
+command.
+
+=head1 CAVEATS
+
+Support for incremental dumps is provided to facilitate interoperation with
+third-party backup utilities. The B<vos dump> command does not
+provide any of the administrative facilities of an actual backup system, so
+the administrator must keep manual records of dump times and the relationship
+between full and incremental dumps of a volume. For a volume's
+contents to be consistent after restoration of incremental dumps, there must
+be no gap between the time at which a prior dump of the volume was created and
+the value of the B<-time> argument to the B<vos dump> command
+that creates the incremental dump. More specifically, for a read/write
+volume, the B<-time> argument must specify the time that the prior
+dump was performed, and for a read-only or backup volume it must specify the
+time that the volume was last released (using the B<vos release>
+command) or cloned (using the B<vos backup> or B<vos
+backupsys> command) prior to dumping it. The parent dump can be
+either a full dump or another incremental dump.
+
+=head1 OPTIONS
+
+=over 4
+
+=item -id
+
+Specifies either the complete name or volume ID number of the read/write,
+read-only, or backup volume to dump.
+
+=item -time
+
+Specifies whether the dump is full or incremental. Omit this
+argument to create a full dump, or provide one of three acceptable
+values: 
+
+=over 4
+
+=item *
+
+The value 0 (zero) to create a full dump.
+
+
+=item *
+
+A date in the format
+I<mm>B</>I<dd>B</>I<yyyy> (month, day and
+year) to create an incremental dump that includes only files and directories
+with modification timestamps later than midnight (12:00
+a.m.) on the indicated date. Valid values for the year
+range from B<1970> to B<2037>; higher values are not
+valid because the latest possible date in the standard UNIX representation is
+in 2038. The command interpreter automatically reduces later dates to
+the maximum value. An example is B<01/13/1999>.
+
+
+=item *
+
+A date and time in the format
+B<">I<mm>B</>I<dd>B</>I<yyyy>
+I<hh>B<:>I<MM>B<"> to create an incremental
+dump that includes only files and directories with modification timestamps
+later than the specified date and time. The date format is the same as
+for a date alone. Express the time as hours and minutes
+(I<hh>:I<MM>) in 24-hour format (for example,
+B<20:30> is 8:30 p.m.). Surround the
+entire expression with double quotes (" ") because it contains a space.
+An example is B<"01/13/1999 22:30">.
+
+
+=back
+
+=item -file
+
+Specifies the pathname of the file to which to write the dump. The
+file can be in AFS, but not in the volume being dumped. A partial
+pathname is interpreted relative to the current working directory. If
+this argument is omitted, the dump is directed to the standard output
+stream.
+
+=item -server
+
+Specifies the file server machine on which the volume resides.
+Provide the B<-partition> argument along with this one.
+
+=item -partition
+
+Specifies the partition on which the volume resides. Provide the
+B<-server> argument along with this one.
+
+=item -cell
+
+Names the cell in which to run the command. Do not combine this
+argument with the B<-localauth> flag. For more details, see the
+introductory B<vos> reference page.
+
+=item -noauth
+
+Assigns the unprivileged identity anonymous to the
+issuer. Do not combine this flag with the B<-localauth>
+flag. For more details, see the introductory B<vos> reference
+page.
+
+=item -localauth
+
+Constructs a server ticket using a key from the local
+B</usr/afs/etc/KeyFile> file. The B<vos> command
+interpreter presents it to the Volume Server and Volume Location Server during
+mutual authentication. Do not combine this flag with the
+B<-cell> argument or B<-noauth> flag. For more details,
+see the introductory B<vos> reference page.
+
+=item -verbose
+
+Produces on the standard output stream a detailed trace of the
+command's execution. If this argument is omitted, only warnings
+and error messages appear.
+
+=item -help
+
+Prints the online help for this command. All other valid options
+are ignored.
+
+=back
+
+=head1 EXAMPLES
+
+The following command writes a full dump of the volume
+B<user.terry> to the file
+B</afs/abc.com/common/dumps/terry.dump>.
+
+   % vos dump -id user.terry -time 0 -file /afs/abc.com/common/dumps/terry.dump
+
+The following command writes an incremental dump of the volume
+B<user.smith> to the file
+B<smith.990131.dump> in the current working
+directory. Only those files in the volume with modification time stamps
+later than 6:00 p.m. on 31 January 1999 are included in
+the dump.
+
+   % vos dump -id user.smith -time "01/31/1999 18:00" -file smith.990131.dump
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be listed in the /usr/afs/etc/UserList file on
+the machine specified with the B<-server> argument and on each
+database server machine. If the B<-localauth> flag is included,
+the issuer must instead be logged on to a server machine as the local
+superuser B<root>.
+
+If the -file argument is included, the issuer must also have
+permission to insert and write in the directory that houses the file.
+
+=head1 SEE ALSO
+
+L<vos(1)>,
+L<vos_examine(1)>,
+L<vos_listvldb(1)>,
+L<vos_restore(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

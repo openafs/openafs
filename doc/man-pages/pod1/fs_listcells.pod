@@ -1,0 +1,82 @@
+=head1 NAME
+
+fs listcells - Displays the database server machines in each cell known to the Cache
+Manager
+
+=head1 SYNOPSIS
+
+B<fs listcells> [B<-numeric>]  [-help]
+
+B<fs listc> [B<-n>]  [-h]
+
+=head1 DESCRIPTION
+
+The fs listcells command formats and displays the list of the
+database server machines that the Cache Manager stores in kernel memory for
+its home cell and foreign cells.
+
+At each reboot of the client machine, the Cache Manager copies the contents
+of B</usr/vice/etc/CellServDB> into kernel memory. To modify
+the list between reboots, use the B<fs newcell> command.
+
+=head1 OPTIONS
+
+=over 4
+
+=item -numeric
+
+Displays each database server machine's IP address rather than
+hostname.
+
+=item -help
+
+Prints the online help for this command. All other valid options
+are ignored.
+
+=back
+
+=head1 OUTPUT
+
+The output includes a line for each cell included in the Cache
+Manager's kernel memory list, in the following format:
+
+   Cell I<cell> on hosts I<database server machines>
+
+The Cache Manager stores IP addresses, but by default has them translated
+to hostnames before reporting them, by passing them to the cell's name
+service (such as the Domain Name Service or a local host table). The
+name service sometimes returns hostnames in uppercase letters, or an IP
+address if it cannot resolve a name.
+
+Using the -numeric flag bypasses the translation to hostnames,
+which can result in significantly faster production of output. The
+output includes IP addresses only.
+
+=head1 EXAMPLES
+
+The following example shows output for several cells as illustrations of
+the different formats for machine names:
+
+   % fs listcells
+   Cell abc.com on hosts fs1.abc.com fs2.abc.com fs3.abc.com
+   Cell stateu.edu on hosts DB1.FS.STATEU.EDU 
+      DB2.FS.STATEU.EDU DB3.FS.STATEU.EDU
+   Cell def.gov on hosts 138.255.0.2 sv3.def.gov
+
+=head1 PRIVILEGE REQUIRED
+
+None
+
+=head1 SEE ALSO
+
+L<CellServDB (client version)(1)>
+
+L<fs_newcell(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

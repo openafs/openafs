@@ -1,0 +1,188 @@
+=head1 NAME
+
+vos move - Moves a read/write volume to another site
+
+=head1 SYNOPSIS
+
+B<vos move -id> <I<volume name or ID>>  -fromserver <I<machine name on source>> 
+B<-frompartition> <I<partition name on source>> 
+         -toserver <I<machine name on destination>>  
+         -topartition <I<partition name on destination>> 
+         [B<-cell> <I<cell name>>]  [B<-noauth>]  [B<-localauth>]  [B<-verbose>]  [-help] 
+
+B<vos m -i> <I<volume name or ID>>  -froms <I<machine name on source>> 
+B<-fromp> <I<partition name on source>>  B<-tos> <I<machine name on destination>> 
+      B<-top> <I<partition name on destination>>  [-c <I<cell name>>]  
+      [B<-n>]  [B<-l>]  [B<-v>]  [-h]
+
+=head1 DESCRIPTION
+
+The vos move command moves the indicated read/write volume from
+its current site (specified with the B<-fromserver> and
+B<-frompartition> arguments) to the destination site (specified with
+the B<-toserver> and B<-topartition> arguments). This
+command automatically removes the backup copy from the current site, if it
+exists. To create a new backup volume at the destination site, use the
+B<vos backup> command.
+
+This command works on read/write volumes only. To move a read-only
+volume, use the B<vos addsite> and B<vos release> commands to
+define a new read-only site and release the volume contents to it, and then
+use the B<vos remove> command to remove the previous read-only
+volume's definition from the Volume Location Database (VLDB) and data
+from the partition. To move a backup volume, use this command to move
+its read/write source and then issue the B<vos backup> command.
+
+Before executing this command, the vos command interpreter
+initiates a check that the destination partition contains enough space to
+house the volume being moved. If there is not enough space, the move
+operation is not attempted and the following message appears:
+
+   vos: no space on target partition I<dest_part> to move volume I<volume>
+
+=head1 CAVEATS
+
+Unless there is a compelling reason, do not interrupt a vos move
+command in progress. Interrupting a move can result in one or more of
+the following inconsistent states:
+
+=over 4
+
+=item *
+
+There are two versions of the volume, one at the source site and one at
+the destination site. (If this happens, retain the version identified
+by the VLDB and use the B<vos zap> command to remove the other
+version.)
+
+
+=item *
+
+The backup version of the volume is stranded at the old site. (If
+this happens, use the B<vos zap> command to remove it.)
+
+
+=item *
+
+The volume is off-line. (If this happens, run the bos
+salvage command to bring it back on line.)
+
+
+=back
+
+If the <B<Ctrl-c>> interrupt signal is pressed while a vos
+move operation is executing, the following message warns of the
+consequences and requests confirmation of the kill signal:
+
+   SIGINT handler: vos move operation in progress
+   WARNING: may leave AFS storage and metadata in indeterminate state
+   enter second control-c to exit
+
+To confirm termination of the operation, press <Ctrl-c> a
+second time; press any other key to continue the operation.
+
+=head1 OPTIONS
+
+=over 4
+
+=item -id
+
+Specifies either the complete name or volume ID number of a read/write
+volume.
+
+=item -fromserver
+
+Identifies the file server machine where the volume currently
+resides. Provide the machine's IP address or its host name (either
+fully qualified or using an unambiguous abbreviation). For details, see
+the introductory reference page for the B<vos> command suite.
+
+=item -frompartition
+
+Names the partition where the volume currently resides. Provide the
+full partition name (for, example, B</vicepa>) or one of the
+abbreviated forms described on the introductory B<vos> reference
+page.
+
+=item -toserver
+
+Identifies the file server machine to which to move the volume.
+Provide the machine's IP address or its host name (either fully qualified
+or using an unambiguous abbreviation). For details, see the
+introductory reference page for the B<vos> command suite.
+
+=item -topartition
+
+Names the partition to which to move the volume. Provide the full
+partition name (for, example, B</vicepa>) or one of the abbreviated
+forms described on the introductory B<vos> reference page.
+
+=item -cell
+
+Names the cell in which to run the command. Do not combine this
+argument with the B<-localauth> flag. For more details, see the
+introductory B<vos> reference page.
+
+=item -noauth
+
+Assigns the unprivileged identity anonymous to the
+issuer. Do not combine this flag with the B<-localauth>
+flag. For more details, see the introductory B<vos> reference
+page.
+
+=item -localauth
+
+Constructs a server ticket using a key from the local
+B</usr/afs/etc/KeyFile> file. The B<vos> command
+interpreter presents it to the Volume Server and Volume Location Server during
+mutual authentication. Do not combine this flag with the
+B<-cell> argument or B<-noauth> flag. For more details,
+see the introductory B<vos> reference page.
+
+=item -verbose
+
+Produces on the standard output stream a detailed trace of the
+command's execution. If this argument is omitted, only warnings
+and error messages appear.
+
+=item -help
+
+Prints the online help for this command. All other valid options
+are ignored.
+
+=back
+
+=head1 EXAMPLES
+
+The following example moves the volume user.smith from
+the B</vicepb> partition on the file server machine
+B<fs3.abc.com> to the B</vicepg> partition on
+the file server machine B<fs7.abc.com>.
+
+   % vos move -id user.smith -fromserver fs3.abc.com -frompartition b  \
+              -toserver fs7.abc.com -topartition g
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be listed in the /usr/afs/etc/UserList file on
+the machines specified with the B<-toserver> and
+B<-fromserver> arguments and on each database server machine.
+If the B<-localauth> flag is included, the issuer must instead be
+logged on to a server machine as the local superuser B<root>.
+
+=head1 SEE ALSO
+
+L<vos(1)>,
+L<vos_addsite(1)>,
+L<vos_backup(1)>,
+L<vos_release(1)>,
+L<vos_listvol(1)>,
+L<vos_remove(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

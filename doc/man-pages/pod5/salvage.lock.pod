@@ -1,0 +1,26 @@
+=head1 NAME
+
+salvage.lock - Prevents multiple simultaneous salvage operations on a partition
+
+=head1 DESCRIPTION
+
+The salvage.lock file guarantees that only one Salvager
+(B<salvager> process) runs at a time on a file server machine (the
+single process can fork multiple subprocesses to salvage multiple partitions
+in parallel). As the Salvager initializes, it creates the empty
+(zero-length) file in the B</usr/afs/local> directory and invokes the
+B<flock> system call on it. It removes the file when it
+completes the salvage operation. Because the Salvager must lock the
+file to run, only one Salvager can run at a time.
+
+=head1 SEE ALSO
+
+L<salvager(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

@@ -1,0 +1,261 @@
+=head1 NAME
+
+BosConfig - Defines server processes for the BOS Server to monitor
+
+=head1 DESCRIPTION
+
+The BosConfig file lists the processes that the Basic OverSeer
+(BOS) Server monitors on its server machine, and thus defines which AFS server
+processes run on the machine. It specifies how the BOS Server reacts
+when a process fails, and also defines the times at which the BOS Server
+automatically restarts processes as part of performance maintenance.
+The file must reside in the B</usr/afs/local> directory on each AFS
+server machine.
+
+A server process entry in the BosConfig file records the
+following information:
+
+=over 4
+
+=item *
+
+TheI< entry type>, which is one of the following: 
+L<(1)>
+L<(1)>
+
+
+=over 4
+
+=item cronL<(1)
+>
+
+Designates a server process that runs periodically instead of
+continuously. The BOS Server starts a cron process only at specified
+times, not whenever it fails. All standard AFS process entries except
+B<fs> are simple (there are no standard cron processes).
+
+=item fsL<(1)
+L<(1)>
+L<(1)>
+L<(1)>
+>
+
+Designates a group of interdependent server processes. If one of
+the processes fails, the BOS Server must coordinate its restart with the
+restart of the other processes in the group, possibly by stopping them
+first. 
+
+There is only one standard entry of this type, for which the conventional
+name is B<fs>. It combines three server processes: the
+File Server (B<fileserver> process), the Volume Server
+(B<volserver> process), and the Salvager (B<salvager>
+process). These processes all operate on the same data--the AFS
+data stored on an AFS server machine's B</vicep> partitions and
+mounted in the AFS filespace--but in different ways. Grouping the
+processes prevents them from attempting to access the same data
+simultaneously, which can cause corruption. 
+
+During normal operation, the Salvager process is not active. If the
+File Server process fails, however, the BOS Server stops the Volume Server
+process and runs the Salvager process to correct any corruption that resulted
+from the failure. (The administrator can also issue the B<bos
+salvage> command to invoke the Salvager process.) If the Volume
+Server fails, the BOS Server can restart it without stopping the File Server
+or running the Salvager.
+
+=item simpleL<(1)
+>
+
+Designates a server process that runs independently of any other on the
+server machine. If a simple process fails, the BOS Server does not have
+to coordinate its restart with any other process.
+
+=back
+
+=item *
+
+The I<entry name>. The conventional name for an entry in the
+B<BosConfig> file and the associated process matches the binary
+filename. When issuing any B<bos> command that takes the
+B<-instance> argument, identify each process by the name used in the
+B<BosConfig> file. For a list of the names, see the B<bos
+create> reference page.
+
+
+=item *
+
+The process's I<status flag>, which determines whether the BOS
+Server attempts to start the process in two cases: each time the BOS
+Server itself restarts, and when the process fails. The
+B<BosConfig> file currently uses a binary notation to indicate whether
+the BOS Server attempts to restart the process as necessary or does not
+monitor it at all. For the sake of clarity, the AFS documentation
+refers to the flags as B<Run> and B<NotRun> instead.
+Only a system administrator, not the BOS Server, can change the flag.
+L<(1)>
+L<(1)>
+
+
+=item *
+
+One or more I<command parameters> which the BOS Server invokes to
+start the process or processes associated with the entry: 
+
+
+=over 4
+
+=item *
+
+A cron entry has two command parameters, the first the complete
+pathname to the program, and the second the time at which the BOS Server
+invokes the program.
+
+
+=item *
+
+The fs entry has three command parameters, each the complete
+pathname to the B<fileserver>, B<volserver>, and
+B<salvager> programs, in that order.
+
+
+=item *
+
+A simple entry has only one command parameter, the complete
+pathname to the program.
+
+
+=back
+
+=back
+
+In addition to server process entries, the BosConfig file
+specifies the times at which the BOS Server performs two types of automatic
+process restarts:
+
+=over 4
+
+=item *
+
+The I<general restart> time at which the BOS Server restarts itself
+and then each process for which the entry in the B<BosConfig> file has
+status flag B<Run>. The default setting is Sunday at 4:00
+a.m.
+
+
+=item *
+
+The I<binary restart> time at which the BOS Server restarts any
+server process for which the time stamp on the binary file in the
+B</usr/afs/bin> directory is later than the last restart time for the
+process. The default is 5:00 a.m.
+
+
+=back
+
+Although the BosConfig file is in ASCII format, do not use a
+text editor to alter it. Its format is subject to change and
+incorrectly formatted entries can prevent server startup in ways that are
+difficult to diagnose. Instead always use the appropriate commands from
+the B<bos> command suite:
+
+=over 4
+
+=item *
+
+The bos create command to create an entry in the file and start
+the associated process
+
+
+=item *
+
+The bos delete command to remove an entry from the file after
+the B<bos stop> command is used to stop the associated process
+
+
+=item *
+
+The bos getrestart command to display the times at which the
+BOS Server performs automatic restarts
+
+
+=item *
+
+The bos setrestart command to set the times at which the BOS
+Server performs automatic process restarts
+
+
+=item *
+
+The bos start command to change an entry's status flag to
+B<Run> and start the associated process
+
+
+=item *
+
+The bos status command to display all processes listed in the
+file
+
+
+=item *
+
+The bos stop command to change an entry's status flag to
+B<NotRun> and stop the associated process
+
+
+=back
+
+There are also bos commands that start and stop processes
+without changing entries in the B<BosConfig> file. The BOS
+Server reads the B<BosConfig> file only when it starts, transferring
+the information into its memory. Thus a process's status as
+represented in the BOS Server's memory can diverge from its status in the
+B<BosConfig> file. The following commands change a
+process's status in the BOS Server's memory only:
+L<(1)>
+L<(1)>
+L<(1)>
+
+=over 4
+
+=item *
+
+The bos restart command restarts a specified set of processes,
+all processes, or all processes other than the BOS Server
+
+
+=item *
+
+The bos shutdown command stops a process
+
+
+=item *
+
+The bos startup command starts a process
+
+
+=back
+
+=head1 SEE ALSO
+
+L<bos_create(1)>,
+L<bos_delete(1)>,
+L<bos_getrestart(1)>,
+L<bos_restart(1)>,
+L<bos_setrestart(1)>,
+L<bos_shutdown(1)>,
+L<bos_start(1)>,
+L<bos_startup(1)>,
+L<bos_status(1)>,
+L<bos_stop(1)>,
+L<bos_salvage(1)>,
+L<fileserver(1)>,
+L<salvager(1)>,
+L<volserver(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

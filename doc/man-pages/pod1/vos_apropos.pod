@@ -1,0 +1,69 @@
+=head1 NAME
+
+vos apropos - Displays each help entry containing a keyword string
+
+=head1 SYNOPSIS
+
+B<vos apropos -topic> <I<help string>>  [-help]
+
+B<vos ap -t> <I<help string>>  [-h]
+
+=head1 DESCRIPTION
+
+The vos apropos command displays the first line of the online
+help entry for any B<vos> command that has in its name or short
+description the string specified by the B<-topic> argument.
+
+To display the syntax for a command, use the vos help
+command.
+
+=head1 OPTIONS
+
+=over 4
+
+=item -topic
+
+Specifies the keyword string to match. Use lowercase letters only,
+except for the acronym B<VLDB>. If the string is more than a
+single word, surround it with double quotes ("") or other delimiters.
+
+=item -help
+
+Prints the online help for this command. All other valid options
+are ignored.
+
+=back
+
+=head1 OUTPUT
+
+The first line of a command's online help entry names it and briefly
+describes its function. This command displays the first line for any
+B<vos> command where the string specified with the B<-topic>
+argument is part of the command name or first line.
+
+=head1 EXAMPLES
+
+The following command displays all vos commands that include the
+word B<lock> in their names or short descriptions:
+
+   % vos apropos lock
+   lock: lock VLDB entry for a volume
+   unlock: release lock on VLDB entry for a volume
+   unlockvldb: unlock all the locked entries in the VLDB
+
+=head1 PRIVILEGE REQUIRED
+
+None
+
+=head1 SEE ALSO
+
+L<vos(1)>,
+L<vos_help(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

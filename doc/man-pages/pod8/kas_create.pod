@@ -1,0 +1,123 @@
+=head1 NAME
+
+kas create - Creates an entry in the Authentication Database
+
+=head1 SYNOPSIS
+
+B<kas create -name> <I<name of user>>  [-initial_password <I<initial password>>] 
+[B<-admin_username> <I<admin principal to use for authentication>>] 
+           [B<-password_for_admin> <I<admin password>>]  [-cell <I<cell name>>] 
+           [-servers <I<explicit list of authentication servers>>+]  
+           [B<-noauth>]  [-help]
+
+B<kas c -na> <I<name of user>>  [-i <I<initial password>>] 
+[B<-a> <I<admin principal to use for authentication>>]  
+      [B<-p> <I<admin password>>]  [-c <I<cell name>>]  
+      [B<-s> <I<explicit list of authentication servers>>+]  [B<-no>]  [-h] 
+
+=head1 DESCRIPTION
+
+The kas create command creates an entry in the Authentication
+Database for the user named by the B<-name> argument.
+
+To avoid having the account's initial password echo visibly at the
+shell prompt, omit the B<-initial_password> argument; the command
+interpreter prompts for the password and does not echo it visibly.
+Whether or not B<-initial_password> is omitted, the Authentication
+Server converts the password into a form suitable for use as an encryption
+key, and records it in the entry's key field.
+
+To alter settings in an Authentication Database entry, use the kas
+setfields command. To examine an entry, use the B<kas
+examine> command. To list every entry in the database, use the
+B<kas list> command.
+
+=head1 OPTIONS
+
+=over 4
+
+=item -name
+
+Names the new Authentication Database entry. Because it is the name
+under which the user logs in, it must obey the restrictions that many
+operating systems impose on user names (usually, to contain no more than eight
+lowercase letters).
+
+=item -initial_password
+
+Sets the user's password; provide a character string that can
+include uppercase and lowercase letters, numerals and punctuation. The
+Authentication Server scrambles the string into an octal string suitable for
+use as an encryption key before placing it in the entry's key
+field. If this argument is omitted, the command interpreter prompts for
+the string and does not echo it visibly.
+
+=item -admin_username
+
+Specifies the user identity under which to authenticate with the
+Authentication Server for execution of the command. For more details,
+see the introductory B<kas> reference page.
+
+=item -password_for_admin
+
+Specifies the password of the command's issuer. If it is
+omitted (as recommended), the B<kas> command interpreter prompts for
+it and does not echo it visibly. For more details, see the introductory
+B<kas> reference page.
+
+=item -cell
+
+Names the cell in which to run the command. For more details, see
+the introductory B<kas> reference page.
+
+=item -servers
+
+Names each machine running an Authentication Server with which to
+establish a connection. For more details, see the introductory
+B<kas> reference page.
+
+=item -noauth
+
+Assigns the unprivileged identity anonymous to the
+issuer. For more details, see the introductory B<kas> reference
+page.
+
+=item -help
+
+Prints the online help for this command. All other valid options
+are ignored.
+
+=back
+
+=head1 EXAMPLES
+
+The following example shows the prompts that appear when an administrator
+logged in as B<admin> creates an Authentication Database entry for the
+user B<smith>, and does not include either the
+B<-initial_password> or B<-password_for_admin>
+arguments.
+
+   % kas create smith
+   Password for admin: 
+   initial_password:
+   Verifying, please re-enter initial_password:
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must have the C<ADMIN> flag set on his or her
+Authentication Database entry.
+
+=head1 SEE ALSO
+
+L<kas(1)>,
+L<kas_examine(1)>,
+L<kas_list(1)>,
+L<kas_setfields(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

@@ -1,0 +1,105 @@
+=head1 NAME
+
+vos listaddrs - Displays all VLDB server entries
+
+=head1 SYNOPSIS
+
+B<vos listaddrs> [B<-cell> <I<cell name>>]  [-noauth]
+[B<-localauth>]  [B<-verbose>]  [B<-help>]
+
+B<vos lista> [B<-c> <I<cell name>>]  [B<-n>]  [B<-l>]  [B<-v>]  [-h]
+
+=head1 DESCRIPTION
+
+The vos listaddrs command displays all of the server entries
+from the Volume Location Database (VLDB). An entry is created as the
+File Server initializes and registers the contents of its
+B</usr/afs/local/sysid> file in the VLDB.
+
+=head1 OPTIONS
+
+=over 4
+
+=item -cell
+
+Names the cell in which to run the command. Do not combine this
+argument with the B<-localauth> flag. For more details, see the
+introductory B<vos> reference page.
+
+=item -noauth
+
+Assigns the unprivileged identity anonymous to the
+issuer. Do not combine this flag with the B<-localauth>
+flag. For more details, see the introductory B<vos> reference
+page.
+
+=item -localauth
+
+Constructs a server ticket using a key from the local
+B</usr/afs/etc/KeyFile> file. The B<vos> command
+interpreter presents it to the Volume Server and Volume Location Server during
+mutual authentication. Do not combine this flag with the
+B<-cell> argument or B<-noauth> flag. For more details,
+see the introductory B<vos> reference page.
+
+=item -verbose
+
+Produces on the standard output stream a detailed trace of the
+command's execution. If this argument is omitted, only warnings
+and error messages appear.
+
+=item -help
+
+Prints the online help for this command. All other valid options
+are ignored.
+
+=back
+
+=head1 OUTPUT
+
+The output displays all server entries from the VLDB, each on its own
+line. If a file server machine is multihomed, all of its registered
+addresses appear on the line. The first one is the one reported as a
+volume's site in the output from the B<vos examine> and B<vos
+listvldb> commands.
+
+The VLDB records IP addresses, and the command interpreter has the local
+name service (either a process like the Domain Name Service or a local host
+table) translate them to hostnames before displaying them. If an IP
+address appears in the output, it is not possible to translate it.
+
+The existence of an entry does not necessarily indicate that the machine
+that is still an active file server machine. To remove obsolete server
+entries, use the B<vos changeaddr> command with the B<-remove>
+argument.
+
+=head1 EXAMPLES
+
+The following command displays the VLDB server entries in the ABC
+Corporation cell:
+
+   % vos listaddrs 
+   sv5.abc.com
+   sv1.abc.com
+   sv2.abc.com  afs2.abc.com
+   sv6.abc.com
+
+=head1 PRIVILEGE REQUIRED
+
+None
+
+=head1 SEE ALSO
+
+L<sysid(1)>,
+L<vos(1)>,
+L<vos_changeaddr(1)>,
+L<vos_examine(1)>,
+L<vos_listvldb(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

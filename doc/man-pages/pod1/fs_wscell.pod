@@ -1,0 +1,57 @@
+=head1 NAME
+
+fs wscell - Returns the name of the cell to which a machine belongs
+
+=head1 SYNOPSIS
+
+B<fs wscell> [-help]
+
+B<fs ws> [-h]
+
+=head1 DESCRIPTION
+
+The fs wscell command returns the name of the local
+machine's home cell.
+
+=head1 OPTIONS
+
+=over 4
+
+=item -help
+
+Prints the online help for this command. All other valid options
+are ignored.
+
+=back
+
+=head1 OUTPUT
+
+The output displays the contents of the local
+B</usr/vice/etc/ThisCell> file, in the format
+
+   This workstation belongs to cell 'I<cellname>'
+
+=head1 EXAMPLES
+
+The following example results when the fs wscell is issued on a
+machine in the State University cell:
+
+   % fs wscell
+   This workstation belongs to cell 'stateu.edu'
+
+=head1 PRIVILEGE REQUIRED
+
+None
+
+=head1 SEE ALSO
+
+L<fs_whereis(1)>,
+L<fs_whichcell(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

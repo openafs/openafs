@@ -1,0 +1,126 @@
+=head1 NAME
+
+vos remsite - Removes a read-only site definition from a VLDB entry
+
+=head1 SYNOPSIS
+
+B<vos remsite -server> <I<machine name>>  -partition <I<partition name>> 
+B<-id> <I<volume name or ID>>  [B<-cell> <I<cell name>>]  [B<-noauth>] 
+            [B<-localauth>]  [B<-verbose>]  [-help]
+
+B<vos rems -s> <I<machine name>>  B<-p> <I<partition name>>  -i <I<volume name or ID>>  
+[B<-c> <I<cell name>>]  [B<-n>]  [B<-l>]  [B<-v>]  [B<-h>]
+
+=head1 DESCRIPTION
+
+The vos remsite command removes the read-only replication site
+specified by the B<-machine> and B<-partition> arguments from
+the Volume Location Database (VLDB) entry for the indicated volume, which is
+read/write.
+
+This command is useful for removing read-only sites that were mistakenly
+created with the B<vos addsite> command, before the B<vos
+release> command actually releases them. If a read-only copy
+already exists at the site, it is not affected. However, if this
+read-only site was the last site housing any version of the volume, then the
+entire VLDB entry is removed, even if a copy of the read-only version still
+actually exists at the site. The VL Server does not correct the
+discrepancy until the B<vos syncserv> and B<vos syncvldb>
+commands are run.
+
+=head1 CAVEATS
+
+Do not use this command as the standard way to remove a read-only volume,
+because it can create a discrepancy between the VLDB and the volumes on file
+server machines. Use the B<vos remove> command instead.
+
+=head1 OPTIONS
+
+=over 4
+
+=item -server
+
+Specifies the file server machine portion of the site definition to
+remove. Provide the machine's IP address or its host name (either
+fully qualified or using an unambiguous abbreviation). For details, see
+the introductory reference page for the B<vos> command suite.
+
+=item -partition
+
+Specifies the partition name portion of the site definition to
+remove. Provide the partition's complete name with preceding slash
+(for example, B</vicepa>) or use one of the three acceptable
+abbreviated forms. For details, see the introductory reference page for
+the B<vos> command suite.
+
+=item -id
+
+Specifies either the complete name or volume ID number of the read/write
+volume to remove.
+
+=item -cell
+
+Names the cell in which to run the command. Do not combine this
+argument with the B<-localauth> flag. For more details, see the
+introductory B<vos> reference page.
+
+=item -noauth
+
+Assigns the unprivileged identity anonymous to the
+issuer. Do not combine this flag with the B<-localauth>
+flag. For more details, see the introductory B<vos> reference
+page.
+
+=item -localauth
+
+Constructs a server ticket using a key from the local
+B</usr/afs/etc/KeyFile> file. The B<vos> command
+interpreter presents it to the Volume Server and Volume Location Server during
+mutual authentication. Do not combine this flag with the
+B<-cell> argument or B<-noauth> flag. For more details,
+see the introductory B<vos> reference page.
+
+=item -verbose
+
+Produces on the standard output stream a detailed trace of the
+command's execution. If this argument is omitted, only warnings
+and error messages appear.
+
+=item -help
+
+Prints the online help for this command. All other valid options
+are ignored.
+
+=back
+
+=head1 EXAMPLES
+
+The following command removes the mistakenly defined read-only site
+B</viceph> on the file server machine
+B<fs5.abc.com> from the VLDB entry for the volume
+B<root.cell>.
+
+   % vos remsite -server fs5.abc.com -partition h -id root.cell
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be listed in the /usr/afs/etc/UserList file on
+the machine specified with the B<-server> argument and on each
+database server machine. If the B<-localauth> flag is included,
+the issuer must instead be logged on to a server machine as the local
+superuser B<root>.
+
+=head1 SEE ALSO
+
+L<vos(1)>,
+L<vos_delentry(1)>,
+L<vos_remove(1)>,
+L<vos_zap(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

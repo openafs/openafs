@@ -1,0 +1,74 @@
+=head1 NAME
+
+unlog - Discards all of the issuer's tokens
+
+=head1 SYNOPSIS
+
+B<unlog> [B<-cell> <I<cell name>>+]  [-help]
+
+B<unlog> [B<-c ><I<cell name>>+]  [-h]
+
+=head1 DESCRIPTION
+
+The unlog command by default discards all tokens that the issuer
+currently holds. To discard tokens for certain cells only, name them
+with the B<-cell> argument.
+
+Since a token pertains to one client machine only, destroying tokens on one
+machine has no effect on tokens on another machine.
+
+=head1 CAVEATS
+
+Specifying one or more cell names can cause a brief authentication outage
+during which the issuer has no valid tokens in any cell. This is
+because the command actually discards all tokens and then restores the ones
+for cells not named by the B<-cell> argument. The outage can
+sometimes interrupt the operation of jobs that require authentication.
+
+=head1 OPTIONS
+
+=over 4
+
+=item -cell
+
+Specifies each cell for to discard the token. If this argument is
+omitted, the Cache Manager discards all tokens. Provide the fully
+qualified domain name, or a shortened form, in which case successful
+resolution depends on the availability of a name resolution service (such as
+the Domain Name Service or a local host table) at the time the command is
+issued.
+
+=item -help
+
+Prints the online help for this command. All other valid options
+are ignored.
+
+=back
+
+=head1 EXAMPLES
+
+The following command discards all tokens.
+
+   % unlog
+
+The following command discards only the tokens for the
+B<abc.com> and B<stateu.edu> cells.
+
+   % unlog -cell abc.com stateu
+
+=head1 PRIVILEGE REQUIRED
+
+None
+
+=head1 SEE ALSO
+
+L<klog(1)>,
+L<tokens(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

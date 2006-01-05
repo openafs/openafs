@@ -1,0 +1,41 @@
+=head1 NAME
+
+VolumeItems - Records location mappings for volumes accessed by a Cache Manager using a
+disk cache
+
+=head1 DESCRIPTION
+
+The VolumeItems file records the mapping between volume name and
+mount point for each volume that the Cache Manager has accessed since it
+initialized on a client machine using a disk cache. The Cache Manager
+uses the mappings to respond correctly to queries about the current working
+directory, which can come from the operating system or commands such as the
+UNIX B<pwd> command.
+
+As it initializes, the Cache Manager creates the binary-format
+B<VolumeItems> file in the local disk cache directory, and it must
+always remain there. The conventional directory name is
+B</usr/vice/cache>.
+
+=head1 CAVEATS
+
+Editing or removing the VolumeItems file can cause a kernel
+panic. To refresh the contents of the file, instead use the B<fs
+checkvolumes> command. If the B<VolumeItems> file is
+accidentally modified or deleted, rebooting the machine usually restores
+normal performance.
+
+=head1 SEE ALSO
+
+L<CacheItems(1)>,
+L<cacheinfo(1)>,
+L<afsd(1)>,
+L<fs_checkvolumes(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

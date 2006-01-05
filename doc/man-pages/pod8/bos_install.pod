@@ -1,0 +1,145 @@
+=head1 NAME
+
+bos install - Installs a new version of a binary file
+
+=head1 SYNOPSIS
+
+B<bos install -server> <I<machine name>>  -file <I<files to install>>+
+[B<-dir> <I<destination dir>>]  [B<-cell> <I<cell name>>]  
+            [B<-noauth>]  [B<-localauth>]  [-help]
+
+B<bos i -s> <I<machine name>>  -f <I<files to install>>+
+[B<-d> <I<destination dir>>]  [B<-c> <I<cell name>>]  [B<-n>]  [B<-l>]  [B<-h>]
+
+=head1 DESCRIPTION
+
+The bos install command copies each binary file specified with
+the B<-file> argument to the local disk of the server machine named by
+the B<-server> argument, which is normally the binary distribution
+machine for its CPU/operating system type. The destination directory is
+B</usr/afs/bin> unless the B<-dir> argument indicates an
+alternate directory. The source file's UNIX mode bits are
+preserved in the transfer.
+
+If there is already a file of the same name in the destination directory,
+the BOS Server automatically saves it by adding a C<.BAK>
+extension. If there is a current C<.BAK> version at
+least seven days old, it replaces the current C<.OLD>
+version. If there is no current C<.OLD> version, the
+current C<.BAK> version becomes the C<.OLD>
+version automatically. The B<bos getdate> command displays the
+timestamps on the current versions of the file.
+
+To start using the new binary immediately, issue the bos restart
+command. Otherwise, the BOS Server automatically restarts the process
+at the time defined in the B</usr/afs/local/BosConfig> file; use
+the B<bos getrestart> command to display the time and the B<bos
+setrestart> time to set it.
+
+=head1 OPTIONS
+
+=over 4
+
+=item -server
+>
+
+Indicates the binary distribution machine on which to install the new
+binaries. Identify the machine by IP address or its host name (either
+fully-qualified or abbreviated unambiguously). For details, see the
+introductory reference page for the B<bos> command suite. 
+
+If the machine is not a binary distribution machine and is running an
+B<upclientbin> process, then the files are overwritten the next time
+the B<upclientbin> process fetches the corresponding file from the
+distribution machine (by default within five minutes).
+
+=item -file
+>
+
+Specifies the complete pathname of each binary file to copy into the
+destination directory. Each source directory can be on the local disk
+or in AFS, in which case the issuer of the B<bos install> command must
+have the necessary AFS access rights and the local machine must run the Cache
+Manager. For the BOS Server to create C<.BAK> and
+C<.OLD> versions, the last element in the pathname (the
+filename) must match the name of a file in the destination directory.
+The reference page for the B<bos create> command lists the standard
+binary file names.
+
+=item -dir
+>
+
+Provides the complete pathname of the local disk directory in which to
+install binary files. It is necessary only if the destination directory
+is not B</usr/afs/bin>.
+
+=item -cell
+>
+
+Names the cell in which to run the command. Do not combine this
+argument with the B<-localauth> flag. For more details, see the
+introductory B<bos> reference page.
+
+=item -noauth
+>
+
+Assigns the unprivileged identity anonymous to the
+issuer. Do not combine this flag with the B<-localauth>
+flag. For more details, see the introductory B<bos> reference
+page.
+
+=item -localauth
+>
+
+Constructs a server ticket using a key from the local
+B</usr/afs/etc/KeyFile> file. The B<bos> command
+interpreter presents the ticket to the BOS Server during mutual
+authentication. Do not combine this flag with the B<-cell> or
+B<-noauth> options. For more details, see the introductory
+B<bos> reference page.
+
+=item -help
+
+Prints the online help for this command. All other valid options
+are ignored.
+
+=back
+
+=head1 EXAMPLES
+
+The following command copies the file
+B</afs/abc.com/rs_aix42/usr/afs/bin/vlserver> to the file
+B</usr/afs/bin/vlserver> on the machine
+B<fs3.abc.com>, which is the binary distribution machine
+for server machines running AIX 4.2 in the B<abc.com>
+cell. The current version of the B</usr/afs/bin/vlserver> file
+is moved to B</usr/afs/bin/vlserver.BAK>.
+
+   % bos install -server fs3.abc.com    \     
+                 -file /afs/abc.com/rs_aix42/usr/afs/bin/vlserver
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be listed in the /usr/afs/etc/UserList file on
+the machine named by the B<-server> argument, or must be logged onto a
+server machine as the local superuser B<root> if the
+B<-localauth> flag is included.
+
+=head1 SEE ALSO
+
+L<BosConfig(1)>,
+L<KeyFile(1)>,
+L<UserList(1)>,
+L<bos(1)>,
+L<bos_getdate(1)>,
+L<bos_getrestart(1)>,
+L<bos_restart(1)>,
+L<bos_setrestart(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

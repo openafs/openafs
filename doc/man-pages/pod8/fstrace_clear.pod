@@ -1,0 +1,64 @@
+=head1 NAME
+
+fstrace clear - Clears the trace log
+
+=head1 SYNOPSIS
+
+B<fstrace clear> [B<-set> <I<set_name>>+]  [B<-log> <I<log_name>>+]  [-help] 
+
+B<fstrace c> [B<-s> <I<set_name>>+]  [B<-l> <I<log_name>>+]  [-h]
+
+=head1 DESCRIPTION
+
+The fstrace clear command erases the contents of the trace log
+from kernel memory, but leaves kernel memory allocated for the log.
+
+=head1 OPTIONS
+
+=over 4
+
+=item -set
+
+Names the event set for which to clear the associated trace log.
+The only acceptable value is B<cm> (for which the associated trace log
+is B<cmfx>). Provide either this argument or the
+B<-log> argument, or omit both to clear the B<cmfx> log by
+default.
+
+=item -log
+
+Names the trace log to clear. The only acceptable value is
+B<cmfx>. Provide either this argument or the B<-set>
+argument, or omit both to clear the B<cmfx> log by default.
+
+=item -help
+
+Prints the online help for this command. All other valid options
+are ignored.
+
+=back
+
+=head1 EXAMPLES
+
+The following command clears the cmfx trace log on the local
+machine:
+
+   # fstrace clear
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be logged in as the local superuser root.
+
+=head1 SEE ALSO
+
+L<fstrace(1)>,
+L<fstrace_lslog(1)>,
+L<fstrace_lsset(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

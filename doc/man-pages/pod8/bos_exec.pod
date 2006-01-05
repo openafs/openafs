@@ -1,0 +1,96 @@
+=head1 NAME
+
+bos exec - Executes a command on a remote server machine
+
+=head1 SYNOPSIS
+
+B<bos exec -server> <I<machine name>>  -cmd <I<command to execute>>
+[B<-cell> <I<cell name>>]  [B<-noauth>]  [B<-localauth>]  [B<-help>]
+
+B<bos e -s> <I<machine name>>  B<-cm> <I<command to execute>>  [-ce <I<cell name>>]    
+[B<-n>]  [B<-l>]  [B<-h>]
+
+=head1 DESCRIPTION
+
+The bos exec command executes the indicated command on the file
+server machine named by the B<-server> argument. Its intended
+use is to reboot the machine, using the B</etc/reboot> command or
+equivalent.
+
+=head1 OPTIONS
+
+=over 4
+
+=item -server
+>
+
+Indicates the server machine on which to execute the command.
+Identify the machine by IP address or its host name (either fully-qualified or
+abbreviated unambiguously). For details, see the introductory reference
+page for the B<bos> command suite.
+
+=item -cmd
+>
+
+Specifies the complete local disk pathname of the command to execute (for
+example, B</etc/reboot>). Surround this argument with double
+quotes ("") if the command contains one or more spaces.
+
+=item -cell
+>
+
+Names the cell in which to run the command. Do not combine this
+argument with the B<-localauth> flag. For more details, see the
+introductory B<bos> reference page.
+
+=item -noauth
+>
+
+Assigns the unprivileged identity anonymous to the
+issuer. Do not combine this flag with the B<-localauth>
+flag. For more details, see the introductory B<bos> reference
+page.
+
+=item -localauth
+>
+
+Constructs a server ticket using a key from the local
+B</usr/afs/etc/KeyFile> file. The B<bos> command
+interpreter presents the ticket to the BOS Server during mutual
+authentication. Do not combine this flag with the B<-cell> or
+B<-noauth> options. For more details, see the introductory
+B<bos> reference page.
+
+=item -help
+
+Prints the online help for this command. All other valid options
+are ignored.
+
+=back
+
+=head1 EXAMPLES
+
+The following command reboots the machine
+B<fs2.abc.com>. The issuer has previously issued
+the B<bos shutdown> command to shutdown all processes cleanly.
+
+   % bos exec -server fs2.abc.com -cmd /sbin/shutdown -r now
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be listed in the /usr/afs/etc/UserList file on
+the machine named by the B<-server> argument, or must be logged onto a
+server machine as the local superuser B<root> if the
+B<-localauth> flag is included.
+
+=head1 SEE ALSO
+
+L<bos(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

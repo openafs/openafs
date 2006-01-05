@@ -1,0 +1,200 @@
+=head1 NAME
+
+vos release - Updates the contents of read-only volumes to match their read/write source
+volume
+
+=head1 SYNOPSIS
+
+B<vos release -id> <I<volume name or ID>>  [B<-f>]  [-cell <I<cell name>>] 
+[B<-noauth>]  [B<-localauth>]  [B<-verbose>]  [B<-help>]
+
+B<vos rel -i> <I<volume name or ID>>  [B<-f>]  [B<-c> <I<cell name>>]  [B<-n>]  [B<-l>]  [B<-v>]  [-h]
+
+=head1 DESCRIPTION
+
+The vos release command copies the contents of the indicated
+read/write source volume to each read-only site defined in the source
+volume's Volume Location Database (VLDB) entry. (Use the B<vos
+addsite> command to define sites as necessary before issuing this
+command). Each read-only copy has the same name as read/write source
+with the addition of a B<.readonly> extension.
+
+For users to have a consistent view of the file system, the release of the
+new volume version must be atomic: either all read-only sites receive
+the new version, or all sites keep the version they currently have. The
+B<vos release> command is designed to ensure that all copies of the
+volume's read-only version match both the read/write source and each
+other. In cases where problems such as machine or server process
+outages prevent successful completion of the release operation, AFS uses two
+mechanisms to alert the administrator.
+
+First, the command interpreter generates an error message on the standard
+error stream naming each read-only site that did not receive the new volume
+version. Second, during the release operation the Volume Location (VL)
+Server marks site definitions in the VLDB entry with flags (C<New
+release> and C<Old release>) that indicate whether or not the
+site has the new volume version. If any flags remain after the
+operation completes, it was not successful. The Cache Manager refuses
+to access a read-only site marked with the C<Old release> flag, which
+potentially imposes a greater load on the sites marked with the C<New
+release> flag. It is important to investigate and eliminate the
+cause of the failure and then to issue the B<vos release> command as
+many times as necessary to complete the release without errors.
+
+The pattern of site flags remaining in the volume's VLDB entry after a
+failed release operation can help determine the point at which the operation
+failed. Use the B<vos examine> or B<vos listvldb>
+command to display the VLDB entry. The VL Server sets the flags in
+concert with the Volume Server's operations, as follows:
+
+=item *
+
+Before the operation begins, the VL Server sets the C<New release>
+flag on the read/write site definition in the VLDB entry and the C<Old
+release> flag on read-only site definitions (unless the read-only site
+has been defined since the last release operation and has no actual volume, in
+which case its site flag remains C<Not released>).
+
+
+=item *
+
+If necessary, the Volume Server creates a temporary copy (a
+I<clone>) of the read/write source called the ReleaseClone (see the
+following discussion of when the Volume Server does or does not create a new
+ReleaseClone.) It assigns the ReleaseClone its own volume ID number,
+which the VL Server records in the C<RClone> field of the source
+volume's VLDB entry.
+
+
+=item *
+
+The Volume Server distributes a copy of the ReleaseClone to each read-only
+site defined in the VLDB entry. As the site successfully receives the
+new clone, the VL Server sets the site's flag in the VLDB entry to
+C<New release>.
+
+
+=item *
+
+When all the read-only copies are successfully released, the VL Server
+clears all the C<New release> site flags. The ReleaseClone is
+no longer needed, so the Volume Server deletes it and the VL Server erases its
+ID from the VLDB entry.
+
+
+By default, the Volume Server determines automatically whether or not it
+needs to create a new ReleaseClone:
+
+=over 4
+
+=item *
+
+If there are no flags (C<New release>, C<Old release>, or
+C<Not released>) on site definitions in the VLDB entry, the previous
+B<vos release> command completed successfully and all read-only sites
+currently have the same volume. The Volume Server infers that the
+current B<vos release> command was issued because the read/write
+volume has changed. The Volume Server creates a new ReleaseClone and
+distributes it to all of the read-only sites.
+
+
+=item *
+
+If any site definition in the VLDB entry is marked with a flag, either the
+previous release operation did not complete successfully or a new read-only
+site was defined since the last release. The Volume Server does not
+create a new ReleaseClone, instead distributing the existing ReleaseClone to
+sites marked with the C<Old release> or C<Not released>
+flag. As previously noted, the VL Server marks each VLDB site
+definition with the C<New release> flag as the site receives the
+ReleaseClone, and clears all flags after all sites successfully receive
+it.
+
+
+=back
+
+To override the default behavior, forcing the Volume Server to create and
+release a new ReleaseClone to the read-only sites, include the B<-f>
+flag. This is appropriate if, for example, the data at the read/write
+site has changed since the existing ReleaseClone was created during the
+previous release operation.
+
+=head1 OPTIONS
+
+=over 4
+
+=item -id
+
+Specifies either the complete name or volume ID number of a read/write
+volume.
+
+=item -f
+
+Creates a new ReleaseClone and distributes it all read-only sites
+regardless of whether or not any site definitions in the VLDB entry are marked
+with a flag.
+
+=item -cell
+
+Names the cell in which to run the command. Do not combine this
+argument with the B<-localauth> flag. For more details, see the
+introductory B<vos> reference page.
+
+=item -noauth
+
+Assigns the unprivileged identity anonymous to the
+issuer. Do not combine this flag with the B<-localauth>
+flag. For more details, see the introductory B<vos> reference
+page.
+
+=item -localauth
+
+Constructs a server ticket using a key from the local
+B</usr/afs/etc/KeyFile> file. The B<vos> command
+interpreter presents it to the Volume Server and Volume Location Server during
+mutual authentication. Do not combine this flag with the
+B<-cell> argument or B<-noauth> flag. For more details,
+see the introductory B<vos> reference page.
+
+=item -verbose
+
+Produces on the standard output stream a detailed trace of the
+command's execution. If this argument is omitted, only warnings
+and error messages appear.
+
+=item -help
+
+Prints the online help for this command. All other valid options
+are ignored.
+
+=back
+
+=head1 EXAMPLES
+
+The following command clones the read/write volume usr and
+releases it to the read-only sites defined in its VLDB entry.
+
+   % vos release usr
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be listed in the /usr/afs/etc/UserList file on
+the machine specified with the B<-server> argument and on each
+database server machine. If the B<-localauth> flag is included,
+the issuer must instead be logged on to a server machine as the local
+superuser B<root>.
+
+=head1 SEE ALSO
+
+L<vos(1)>,
+L<vos_addsite(1)>,
+L<vos_examine(1)>,
+L<vos_listvldb(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

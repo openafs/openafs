@@ -1,0 +1,110 @@
+=head1 NAME
+
+backup listvolsets - Lists volume set entries from the Backup Database
+
+=head1 SYNOPSIS
+
+B<backup listvolsets> [-name <I<volume set name>>]
+[B<-localauth>]  [B<-cell> <I<cell name>>]  [B<-help>]
+
+B<backup listv> [B<-n> <I<volume set name>>]  [B<-l>]  [B<-c> <I<cell name>>]  [-h]
+
+=head1 DESCRIPTION
+
+The backup listvolsets command displays the Backup Database
+records for either
+
+=over 4
+
+=item *
+
+All volume sets and their volume entries, if the -name argument
+is omitted
+
+
+=item *
+
+The volume set specified by the -name argument, along with its
+volume entries
+
+
+=back
+
+=head1 OPTIONS
+
+=over 4
+
+=item -name
+
+Names the volume set to display. If this argument is omitted, the
+output lists all volume sets defined in the Backup Database.
+
+=item -localauth
+
+Constructs a server ticket using a key from the local
+B</usr/afs/etc/KeyFile> file. The B<backup> command
+interpreter presents it to the Backup Server, Volume Server and VL Server
+during mutual authentication. Do not combine this flag with the
+B<-cell> argument. For more details, see the introductory
+B<backup> reference page.
+
+=item -cell
+
+Names the cell in which to run the command. Do not combine this
+argument with the B<-localauth> flag. For more details, see the
+introductory B<backup> reference page.
+
+=item -help
+
+Prints the online help for this command. All other valid options
+are ignored.
+
+=back
+
+=head1 OUTPUT
+
+The entry for each volume set begins with the C<Volume set> header
+and the volume set's name. A temporary volume set's name is
+followed by the string C< (temporary)>. Each volume entry
+follows on a separate line, indicating the entry's index number and the
+server, partition, and volume names it matches. The output uses the
+metacharacter notation described on the B<backup addvolentry>
+reference page. Use the index number to identify volume entries when
+deleting them with the B<backup delvolentry> command.
+
+=head1 EXAMPLES
+
+The following example shows the volume entries in the three volume sets
+currently defined in the Backup Database:
+
+   % backup listvolsets
+   Volume set user:
+       Entry   1: server .*, partition .*, volumes: user.*\.backup
+   Volume set sun
+       Entry   1: server .*, partition .*, volumes: sun4x_55\..*
+       Entry   2: server .*, partition .*, volumes: sun4x_56\..*
+   Volume set rs
+       Entry   1: server .*, partition .*, volumes: rs_aix42\..*
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be listed in the /usr/afs/etc/UserList file on
+every machine where the Backup Server is running, or must be logged onto a
+server machine as the local superuser B<root> if the
+B<-localauth> flag is included.
+
+=head1 SEE ALSO
+
+L<backup(1)>,
+L<backup_addvolentry(1)>,
+L<backup_addvolset(1)>,
+L<backup_delvolentry(1)>,
+L<backup_delvolset(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

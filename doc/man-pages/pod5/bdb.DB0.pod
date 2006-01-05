@@ -1,0 +1,43 @@
+=head1 NAME
+
+bdb.DB0 and bdb.DBSYS1 - Contain the Backup Database and associated log
+
+=head1 DESCRIPTION
+
+The bdb.DB0 file contains the Backup Database, which
+records configuration information used by the AFS Backup System along with
+cross-indexed records of the tapes created and volumes dumped using the Backup
+System commands.
+
+The bdb.DBSYS1 file is a log file in which the Backup
+Server (B<buserver> process) logs each database operation before
+performing it. When an operation is interrupted, the Backup Server
+replays the log to complete the operation.
+
+Both files are in binary format and reside in the /usr/afs/db
+directory on each database server machine that runs the Backup Server.
+When the Backup Server starts or restarts on a given machine, it establishes a
+connection with its peers and verifies that its copy of the
+B<bdb.DB0> file matches the copy on the other database server
+machines. If not, the Backup Servers use AFS's distributed
+database technology, Ubik, to distribute to all of the machines the copy of
+the database with the highest version number.
+
+Use the commands in the backup suite to administer the Backup
+Database. It is advisable to create a backup copy of the
+B<bdb.DB0> file on tape on a regular basis, using the UNIX
+B<tar> command or another local disk backup utility.
+
+=head1 SEE ALSO
+
+L<backup(1)>,
+L<backup_savedb(1)>,
+L<buserver(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

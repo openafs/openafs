@@ -1,0 +1,33 @@
+=head1 NAME
+
+FORCESALVAGE - Forces salvage of entire partition
+
+=head1 DESCRIPTION
+
+The FORCESALVAGE file, if present on an AFS server partition
+(that is, in a B</vicep> directory), signals that the Salvager must
+salvage the entire partition. The AFS-modified version of the
+B<fsck> program creates the empty (zero-length) file when it discovers
+corruption on the partition. The Salvager removes the file when it
+completes the salvage operation.
+
+When the File Server detects the presence of the file on a partition on
+which it is attaching volumes, it stops, detaches any volumes that are already
+attached, and exits after recording a message in the
+B</usr/afs/logs/FileLog> file. The Bos Server then invokes the
+Salvager to salvage the partition.
+
+=head1 SEE ALSO
+
+L<FileLog(1)>,
+L<bosserver(1)>,
+L<fileserver(1)>,
+L<salvager(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

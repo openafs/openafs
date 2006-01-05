@@ -1,0 +1,118 @@
+=head1 NAME
+
+bos listhosts - Displays the contents of the /usr/afs/etc/CellServDB file
+
+=head1 SYNOPSIS
+
+B<bos listhosts -server> <I<machine name>>  [-cell <I<cell name>>]  
+[B<-noauth>]  [B<-localauth>]  [B<-help>]
+
+B<bos listh -s> <I<machine name>>  [B<-c> <I<cell name>>]  [B<-n>]  [B<-l>]  [-h]
+
+B<bos getcell -server> <I<machine name>>  [-cell <I<cell name>>]  
+[B<-noauth>]  [B<-localauth>]  [B<-help>]
+    
+B<bos getc -s> <I<machine name>>  [B<-c> <I<cell name>>]  [B<-n>]  [B<-l>]  [-h]
+
+=head1 DESCRIPTION
+
+The bos listhosts command formats and displays the list of a
+cell's database server machines from the
+B</usr/afs/etc/CellServDB> file on the server machine named by the
+B<-server> argument.
+
+To alter the list of machines, use the B<bos addhost> and bos
+removehost commands.
+
+=head1 OPTIONS
+
+=over 4
+
+=item -server
+>
+
+Indicates the server machine from which to display the
+B</usr/afs/etc/CellServDB> file. Identify the machine by IP
+address or its host name (either fully-qualified or abbreviated
+unambiguously). For details, see the introductory reference page for
+the B<bos> command suite. 
+
+For consistent performance in the cell, the output must be the same on
+every server machine. The B<bos addhost> reference page
+explains how to keep the machines synchronized.
+
+=item -cell
+>
+
+Names the cell in which to run the command. Do not combine this
+argument with the B<-localauth> flag. For more details, see the
+introductory B<bos> reference page.
+
+=item -noauth
+>
+
+Assigns the unprivileged identity anonymous to the
+issuer. Do not combine this flag with the B<-localauth>
+flag. For more details, see the introductory B<bos> reference
+page.
+
+=item -localauth
+>
+
+Constructs a server ticket using a key from the local
+B</usr/afs/etc/KeyFile> file. The B<bos> command
+interpreter presents the ticket to the BOS Server during mutual
+authentication. Do not combine this flag with the B<-cell> or
+B<-noauth> options. For more details, see the introductory
+B<bos> reference page.
+
+=item -help
+
+Prints the online help for this command. All other valid options
+are ignored.
+
+=back
+
+=head1 OUTPUT
+
+The first line of the output names the cell to which the server machine
+belongs. Each of the following lines names a database server machine
+for that cell.
+
+The C<Host> number assigned to each database server machine is for
+server-internal use only and is not the same as, nor necessarily related to,
+the machine's IP address. The BOS Server assigned it as part of
+performing the B<bos addhost> command.
+
+=head1 EXAMPLES
+
+The following command displays the database server machines listed in the
+B</usr/afs/etc/CellServDB> file on the machine
+B<fs7.abc.com>.
+
+   % bos listhosts fs7.abc.com
+   Cell name is abc.com
+       Host 1 is db1.abc.com
+       Host 2 is db2.abc.com
+       Host 3 is db3.abc.com
+
+=head1 PRIVILEGE REQUIRED
+
+None
+
+=head1 SEE ALSO
+
+L<CellServDB (server version)(1)>
+
+L<KeyFile(1)>,
+L<bos(1)>,
+L<bos_addhost(1)>,
+L<bos_removehost(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

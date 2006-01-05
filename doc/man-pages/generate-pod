@@ -1,178 +1,189 @@
 #!/usr/bin/perl -w
 #
-# Parser for files obtained via
-# lynx --dump http://www.openafs.org/pages/doc/AdminReference/auarf174.htm > fstrace_lslog.txt
+# Convert the HTML pages of the Administrator's Reference into POD man pages.
+# This script was written by Chas Williams and Russ Allbery, based on work by
+# Alf Wachsmann and Elizabeth Cassell.  It just does a first pass; it's
+# expected that the results will require further hand-editing.
 
 use strict;
-my $DEBUG = 0;
-my $RAW = 0;
+use HTML::Parser ();
 
-my %hash;
-my %options;
+my @ignore_tags = qw(meta head comment html body);
+my @ignore_elements = qw(script style);
 
-######################################################################
-## Input Section:
-######################################################################
+my %INLINES = ('b'    => 'B<',
+               '/b'   => '>',
+               'i'    => 'I<',
+               '/i'   => '>',
+               'var'  => 'I<',
+               '/var' => '>',
+               'tt'   => 'C<',
+               '/tt'  => '>',
+               'a'    => 'L<',
+               '/a'   => '(1)>',
+               'sup'  => '',
+               '/sup' => '');
 
-my $del = $/;
-undef $/;
-my $text = <STDIN>;
-$/ = $del;
+my %CDATA = ('dd'     => 1,
+             'dt'     => 1,
+             'h2'     => 1,
+             'a'      => 1,
+             'li'     => 1,
+             'p'      => 1,
+             'pre'    => 1,
+             'strong' => 1);
 
-my $sections = 'Purpose|Synopsis|Description|Cautions|Options|Output|Examples|Privilege\ Required|Related\ Information|References';
+# Global state of the conversion.
+my $command = "";
+my $output = 0;
+my $emit = 0;
+my $pre = 0;
+my $buffer = "";
+my $inpara = 0;
+my $lasttag = "";
+my $open = "";
+my $cdata = "";
+my $result = "";
 
-$text =~ s/^.*\[7\]\s*(.+?)\n//xs;
-
-$hash{Command} = $1;
-my $Cmd_fam = "backup|bos|fs|kas|pts|uss|vos";
-$Cmd_fam .= '|' . (split(" ", $hash{Command}))[0];
-
-while ($text !~ /^\s+$/xs) {
-  $text =~ s/($sections)(.*?)(\n\s*(?:$sections)\n\s*|$)/$3/xs;
-  $hash{$1} = $2;
+# Output some data.  Accumulate this into $results so that we can do some
+# post-filtering at the end.
+sub output {
+    my ($format, @args) = @_;
+    $result .= sprintf($format, @args);
 }
 
-$hash{'Related Information'} =~ s/\s*(.+?)\s*___________.*$/$1/xs;
+# Handle a single element.
+sub element {
+    if ($output) {
+        $buffer =~ s/^\s+\n/\n/m;
+        $buffer =~ s/\n+$/\n/g;
 
-
-
-if (! $RAW) {
-  ######################################################################
-  ## Clean-up Section:
-  ######################################################################
-
-  # make C<pts adduser> out of pts adduser:
-  $hash{Description} =~ s/\b($hash{Command})\b/C<$1>/g if ($hash{Description});
-  $hash{Options}     =~ s/\b($hash{Command})\b/C<$1>/g if ($hash{Options});
-
-  # strip leading and trailing whitespace:
-  my $pattern = '^\s*(.*?)\s*$';
-  foreach (keys(%hash)) {
-    $hash{$_} =~ s/$pattern/$1/sxg;
-    $hash{$_} =~ s/\n\ +/\n/sxg;
-    $hash{$_} =~ s/((?:$Cmd_fam)\s?\w*)(\s)reference(\s)page/L<$1(1)>$2reference$3page/g;
-    $hash{$_} =~ s/the(\s)(\w+(?:\s\w+)?)(\s)reference(\s)page/the$1L<$2(1)>$3reference$4page/g;
-    $hash{$_} =~ s/(\(?\b(?:$Cmd_fam)\)?\s?\w*)(\s)command/C<$1>$2command/g;
-    $hash{$_} =~ s/the(\s)(\w+)(\s)command/the$1C<$2>$3command/g;
-    $hash{$_} =~ s/\n\*\ /\n\n=item \*\n\n/g;
-    $hash{$_} =~ s/\n\+\ /\n\n=item \*\n\n/g;
-    $hash{$_} =~ s"(\s)((?:/\w+)+)"$1B<$2>"g if($_ ne "Synopsis");
-    $hash{$_} =~ s/(superuser\s)root/$1B<root>/g;
-    $hash{$_} =~ s/(unprivileged\s(?:identity|user)\s)anonymous/$1B<anonymous>/g;
-    $hash{$_} =~ s/system\:administrators/B<system:administrators>/g;
-    $hash{$_} =~ s/(\s)(\w)(\s)\((\w+)\)(\s)/$1B<$2>$3(B<$4>)$5/g;
-  }
-
-  ######################################################################
-  ## POD-ify Section:
-  ######################################################################
-
-  # Make B<-group> out of -group:
-  $hash{Synopsis}    =~ s/(\s|^|\[)(-\w+)\b/$1B<$2>/g if ($hash{Synopsis});
-  $hash{Description} =~ s/(\s|^)(-\w+)\b/$1B<$2>/g if ($hash{Description});
-  $hash{Options}     =~ s/(\s|^)(-\w+)\b/$1B<$2>/g if ($hash{Options});
-  $hash{Output}      =~ s/(\s|^)(-\w+)\b/$1B<$2>/g if ($hash{Output});
-  $hash{Cautions}      =~ s/(\s|^)(-\w+)\b/$1B<$2>/g if ($hash{Cautions});
-  $hash{'Privilege Required'}      =~ s/(\s|^)(-\w+)\b/$1B<$2>/g if ($hash{'Privilege Required'});
-
-  $hash{Description} =~ s/(\w*?(?:\.\w+)+)/B<$1>/g if ($hash{Description});
-  $hash{Options} =~ s/(\w*?(?:\.\w+)+)/B<$1>/g if ($hash{Options});
-  $hash{Output} =~ s/(\w*?(?:\.\w+)+)/B<$1>/g if ($hash{Output});
-  $hash{'Privilege Required'} =~ s/(\w*?(?:\.\w+)+)/B<$1>/g if ($hash{'Privilege Required'});
-  $hash{Cautions} =~ s/(\w*?(?:\.\w+)+)/B<$1>/g if ($hash{Cautions});
-
-  $hash{Synopsis} =~ s/<([^>]*?)>\^\+/I<$1> [I<$1> ...]/g if ($hash{Synopsis});
-  $hash{Synopsis} =~ s/( |\n)<(.*?)>/$1I<$2>/g if ($hash{Synopsis});
-  $text = $hash{Synopsis};
-  while ($text && $text =~ /B<-\w+> ?(I<.*?>(?: \[I<.*?> \.\.\.\])?)?/s) {
-    $text =~ s/B<(-\w+)> ?(I<.*?>(?: \[I<.*?> \.\.\.\])?)?//s;
-    if ($2) {
-      $options{$1} = ' '.$2;
-    } else {
-      $options{$1} = "";
+        if ($lasttag eq "h2") {
+            $command = $buffer;
+            $command =~ s/^L<//;
+            $command =~ s/\(1\)>$//;
+        } elsif ($lasttag eq "strong") {
+            if ($buffer eq 'Cautions') {
+                $buffer = 'CAVEATS';
+            } elsif ($buffer eq 'Related Information') {
+                $buffer = 'SEE ALSO';
+            } else {
+                $buffer = uc $buffer;
+            }
+            if ($buffer eq 'PURPOSE') {
+                output "=head1 NAME\n\n%s - ", $command;
+            } else {
+                output "=head1 %s\n\n", $buffer;
+            }
+        } elsif ($lasttag eq "h5") {
+            output "=head2 %s\n\n", $buffer;
+        } elsif ($lasttag eq "h6") {
+            output "=head3 %s\n\n", $buffer;
+        } elsif ($lasttag eq "p") {
+            $buffer =~ s/\n+$//g;
+            output "%s\n\n", $buffer if $buffer ne "";
+        } elsif ($lasttag eq "pre") {
+            $buffer =~ s/\n+$//;
+            output "%s\n\n", $buffer if $buffer ne "";
+        } elsif ($lasttag eq "ul" || $lasttag eq "dl") {
+            output "=over 4\n\n";
+        } elsif ($lasttag eq "li") {
+            output "=item *\n\n%s\n\n", $buffer;
+        } elsif ($lasttag eq "dt") {
+            output "=item %s\n\n", $buffer;
+        } elsif ($lasttag eq "dd") {
+            output "%s\n", $buffer;
+        } elsif ($lasttag eq "/ul" || $lasttag eq "/dl") {
+            output "=back\n\n";
+        } else {
+            if ($buffer ne "") {
+                printf ">>>%s:%s<<<", $lasttag, $buffer;
+            }
+        }
     }
-  }
-
-  $hash{Options} =~ s/(?:\n|^)B<([^>]*?)>\ \n/\n=item B<$1>$options{$1}\n\n/sxg if ($hash{Options});
-
-  $hash{Examples} =~ s/\n\s*%(.*?)(?:\n|$)/\n\nB<\ \ \ $1>\n/sxg if ($hash{Examples});
-
-  $hash{'Related Information'} =~ s/\[\d+\](.*?)\s*\n/L<$1(1)>,\n/msxg if ($hash{'Related Information'});
-  $hash{'Related Information'} =~ s/\[\d+\](.*)\s*/L<$1(1)>/msxg if ($hash{'Related Information'});
-  $hash{'Related Information'} =~ s/(\w+)\s+(\w+)/$1_$2/msxg if ($hash{'Related Information'});
-
-  foreach (keys(%hash)) {
-    $hash{$_} =~ s/((?:\n\n=item\ \*\n(?:\n.+$)+)+)/\n\n=over$1\n\n=back/mxg;
-  }
-
-
-};
-
-
-######################################################################
-## Output Section:
-######################################################################
-
-my $file;
-($file = $hash{Command} . ".pod") =~ s/\s/_/g;
-
-my $FH;
-if ($DEBUG) {
-  $FH = *STDOUT
-} else {
-  open(FILE, "> $file") || die("Could not open $file\n");
-  $FH = *FILE;
+    $buffer = "";
 }
 
-print $FH "=head1 NAME\n\n";
-print $FH "$hash{Command} - $hash{Purpose}\n\n";
+# Handle a single tag.
+sub tag {
+    my $self = shift;
+    local $_ = shift;
+    my $tag = shift;
+    my $attr = shift;
 
-if (exists $hash{Synopsis}) {
-  print $FH "=head1 SYNOPSIS\n\n";
-  print $FH "$hash{Synopsis}\n\n";
+    $output = 1 if ($tag eq "h2");
+    $output = 0 if ($tag eq "hr");
+
+    if (defined $INLINES{$tag}) {
+        if (defined $open && $open eq $tag) {
+            printf STDERR "duplicate tag <%s>\n", $tag;
+            return;
+        }
+        if ($tag =~ /^\//) {
+            undef $open;
+        } else {
+            $open = $tag;
+        }
+
+        &text(sprintf "%s", $INLINES{$tag});
+        return;
+    }
+
+    $cdata = 0;
+    $cdata = 1 if defined $CDATA{$tag};
+
+    &element;
+    $lasttag = $tag;
 }
 
-print $FH "=head1 DESCRIPTION\n\n";
-print $FH "$hash{Description}\n\n";
+# Do text conversion, mostly undoing SGML escapes.
+sub text {
+    local $_ = shift;
 
-if (exists $hash{Options}) {
-  print $FH "=head1 OPTIONS\n\n";
-  print $FH "=over 4\n";
-  print $FH "$hash{Options}\n\n";
-  print $FH "=back\n\n";
+    if ($cdata) {
+        s/&amp;/&/g;
+        s/&nbsp;/ /g;
+        s/&gt;/>/g;
+        s/&lt;/</g;
+
+        s/\n$//g if defined $open;	# in inline seq, remove \n
+        s/L<(\S+) (\S+\(1\))>/L<${1}_${2}>/g;
+        $buffer = $buffer . $_;
+    }
 }
 
-if (exists $hash{Output}) {
-  print $FH "=head1 OUTPUT\n\n";
-  print $FH "$hash{Output}\n\n";
-}
+my $file = shift @ARGV;
 
-if (exists $hash{Examples}) {
-  print $FH "=head1 EXAMPLES\n\n";
-  print $FH "$hash{Examples}\n\n";
-}
+my $p = HTML::Parser->new(api_version     => 3,
+			  start_h         => [\&tag, "self, text, tag, attr"],
+			  end_h           => [\&tag, "self, text, tag, attr"],
+			  process_h       => ["", ""],
+			  comment_h       => ["", ""],
+			  declaration_h   => ["", ""],
+			  default_h       => [\&text, "text"],
 
-if (exists $hash{'Privilege Required'}) {
-  print $FH "=head1 PRIVILEGE REQUIRED\n\n";
-  print $FH "$hash{'Privilege Required'}\n\n";
-}
+			  ignore_tags     => \@ignore_tags,
+			  ignore_elements => \@ignore_elements,
+			  unbroken_text   => 1);
 
-if (exists $hash{Cautions}) {
-  print $FH "=head1 CAVEATS\n\n";
-  print $FH "$hash{Cautions}\n\n";
-}
+$p->parse_file($file) || die "Can't open file: $!\n";
 
-print $FH "=head1 COPYRIGHT\n\n";
-print $FH "IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.\n\n";
-print $FH "Converted from html to pod by Alf Wachsmann <alfw\@slac.stanford.edu>, 2003,\n";
-print $FH "and Elizabeth Cassell <e_a_c\@mailsnare.net>, 2004,\n";
-print $FH "Stanford Linear Accelerator Center, a department of Stanford University.\n\n";
+# Fix up a few last things.
+$result =~ s/L<(\S+) (\S+\(1\))>/L<${1}_${2}>/g;
+$result =~ s/^(L<\S+>)\n\n(?=L<)/$1,\n/mg;
+$result =~ s/^(\S+[^\n]+)\n +/$1\n/mg;
+$result =~ s/^(\s+.*)B<([^>]+)>/$1$2/mg;
 
-if (exists $hash{'Related Information'}) {
-  print $FH "=head1 SEE ALSO\n\n";
-  print $FH "$hash{'Related Information'}\n\n";
-  print $FH "=cut\n";
-}
+# Append a stock copyright statement.
+$result .= <<'EOC';
+=head1 COPYRIGHT
 
-close(FILE) unless $DEBUG;
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
 
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
+EOC
+
+# Output the results.
+print $result;

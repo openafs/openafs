@@ -1,0 +1,43 @@
+=head1 NAME
+
+FileLog - Traces File Server operations
+
+=head1 DESCRIPTION
+
+The FileLog file records a trace of File Server
+(B<fileserver> process) operations on the local machine and describes
+any error conditions it encounters.
+
+If the FileLog file does not already exist in the
+B</usr/afs/logs> directory when the File Server starts, the server
+process creates it and writes initial start-up messages to it. If there
+is an existing file, the File Server renames it to
+B<FileLog.old>, overwriting the existing
+B<FileLog.old> file if it exists.
+
+The file is in ASCII format. Administrators listed in the
+B</usr/afs/etc/UserList> file can use the B<bos getlog>
+command to display its contents. Alternatively, log onto the file
+server machine and use a text editor or a file display command such as the
+UNIX B<cat> command. By default, the mode bits on the
+B<FileLog> file grant the required B<r> (B<read>)
+permission to all users.
+
+The File Server records operations only as it completes them, and cannot
+recover from failures by reviewing the file. The log contents are
+useful for administrative evaluation of process failures and other
+problems.
+
+=head1 SEE ALSO
+
+L<UserList(1)>,
+L<bos_getlog(1)>,
+L<fileserver(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

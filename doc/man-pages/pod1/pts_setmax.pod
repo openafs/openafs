@@ -1,0 +1,93 @@
+=head1 NAME
+
+pts setmax - Sets the value of the C<max group id> or C<max user id>
+counter
+
+=head1 SYNOPSIS
+
+B<pts setmax> [B<-group> <I<group max>>]  [B<-user> <I<user max>>]  [-cell <I<cell name>>]   
+[B<-noauth>]  [B<-force>]  [B<-help>] 
+
+B<pts setm> [B<-g> I<group max>>]  [B<-u> <I<user max>>]  [B<-c> <I<cell name>>]  [B<-n>]  [B<-f>]  [-h]
+
+=head1 DESCRIPTION
+
+The pts setmax command sets the value of one or both counters
+that track the IDs the Protection Server allocates to new users, machines, or
+groups: the C<max user id> counter for the AFS user IDs (AFS
+UIDs) assigned to users and machines, and the C<max group id> counter
+for the AFS group IDs (AFS GIDs) assigned to groups.
+
+Use the pts listmax command to display the current value of both
+counters.
+
+=head1 OPTIONS
+
+=over 4
+
+=item -group
+
+Sets the C<max group id> counter. Precede the value with a
+hyphen to indicate that it is negative. When an administrator next uses
+the B<pts creategroup> command to create a group entry and does not
+include that command's B<-id> argument, the Protection Server
+assigns the group an AFS GID one less (more negative) than this value.
+
+=item -user
+
+Sets the C<max user id> counter. When an administrator next
+uses the B<pts createuser> command to create a user or machine entry
+and does not include that command's B<-id> argument, the
+Protection Server assigns the group an AFS UID one greater than this
+value.
+
+=item -cell
+
+Names the cell in which to run the command. For more details, see
+the introductory B<pts> reference page.
+
+=item -noauth
+
+Assigns the unprivileged identity anonymous to the
+issuer. For more details, see the introductory B<pts> reference
+page.
+
+=item -force
+
+Enables the command to continue executing as far as possible when errors
+or other problems occur, rather than halting execution at the first
+error.
+
+=item -help
+
+Prints the online help for this command. All other valid options
+are ignored.
+
+=back
+
+=head1 EXAMPLES
+
+The following command sets the C<max group id> counter to -500 and
+the C<max user id> counter to 1000.
+
+   % pts setmax -group -500 -user 1000
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must belong to the system:administrators
+group.
+
+=head1 SEE ALSO
+
+L<pts(1)>,
+L<pts_creategroup(1)>,
+L<pts_createuser(1)>,
+L<pts_listmax(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

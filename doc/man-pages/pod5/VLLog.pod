@@ -1,0 +1,64 @@
+=head1 NAME
+
+VLLog - Traces Volume Location Server operations
+
+=head1 DESCRIPTION
+
+The VLLog file records a trace of Volume Location (VL) Server
+(B<vlserver> process) operations on the local machine and describes
+any error conditions it encounters.
+
+If the VLLog file does not already exist in the
+B</usr/afs/logs> directory when the VL Server starts, the server
+process creates it and writes initial start-up messages to it. If there
+is an existing file, the VL Server renames it to B<VLLog.old>,
+overwriting the existing B<VLLog.old> file if it exists.
+
+The file is in ASCII format. Administrators listed in the
+B</usr/afs/etc/UserList> file can use the B<bos getlog>
+command to display its contents. Alternatively, log onto the server
+machine and use a text editor or a file display command such as the UNIX
+B<cat> command. By default, the mode bits on the
+B<VLLog> file grant the required B<r> (B<read>)
+permission to all users.
+
+The VL Server records operations only as it completes them, and cannot
+recover from failures by reviewing the file. The log contents are
+useful for administrative evaluation of process failures and other
+problems.
+
+The VL Server can record messages at three levels of detail. By
+default, it records only very rudimentary messages. To increase logging
+to the first level of detail, issue the following command while logged onto
+the database server machine as the local superuser B<root>.
+
+   # kill -TSTP I<vlserver_pid>
+
+where I<vlserver_pid> is the process ID of the vlserver
+process, as reported in the output from the standard UNIX B<ps>
+command. To increase to the second and third levels of detail, repeat
+the command.
+
+To disable logging, issue the following command.
+
+
+   # kill -HUP I<vlserver_pid>
+   
+
+To decrease the level of logging, first completely disable it and then
+issue the B<kill -TSTP> command as many times as necessary to reach
+the desired level.
+
+=head1 SEE ALSO
+
+L<UserList(1)>,
+L<bos_getlog(1)>,
+L<vlserver(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

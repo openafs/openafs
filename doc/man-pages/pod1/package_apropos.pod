@@ -1,0 +1,69 @@
+=head1 NAME
+
+package apropos - Displays each help entry containing a keyword string
+
+=head1 SYNOPSIS
+
+B<package apropos> [B<-topic> <I<help string>>]  [-help]
+
+B<package a> [B<-t> <I<help string>>]  [-h]
+
+=head1 DESCRIPTION
+
+The package apropos command displays the first line of the
+online help entry for any B<package> command that has in its name or
+short description the string specified by the B<-topic>
+argument.
+
+To display the syntax for a command, use the package help
+command.
+
+=head1 OPTIONS
+
+=over 4
+
+=item -topic
+
+Specifies the keyword string to match, in lowercase letters only.
+If the string is more than a single word, surround it with double quotes ("")
+or other delimiters.
+
+=item -help
+
+Prints the online help for this command. All other valid options
+are ignored.
+
+=back
+
+=head1 OUTPUT
+
+The first line of a command's online help entry names it and briefly
+describes its function. This command displays the first line for any
+B<package> command where the string specified with the
+B<-topic> argument is part of the command name or first line.
+
+=head1 EXAMPLES
+
+The following command lists all package commands that include
+the word B<help> in their names or short descriptions:
+
+   % package apropos help
+   apropos: search by help text
+   help: get help on commands
+
+=head1 PRIVILEGE REQUIRED
+
+None
+
+=head1 SEE ALSO
+
+L<package(1)>,
+L<package_help(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

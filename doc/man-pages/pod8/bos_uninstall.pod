@@ -1,0 +1,128 @@
+=head1 NAME
+
+bos uninstall - Reverts to the former version of a process's binary file
+
+=head1 SYNOPSIS
+
+B<bos uninstall -server> <I<machine name>>  -file <I<files to uninstall>>+ 
+[B<-dir> <I<destination dir>>]  [B<-cell> <I<cell name>>]  
+              [B<-noauth>]  [B<-localauth>]  [-help]
+
+B<bos u -s> <I<machine name>>  B<-f> <I<files to uninstall>>+  [-d <I<destination dir>>] 
+[B<-c> <I<cell name>>]  [B<-n>]  [B<-l>]  [B<-h>]
+
+=head1 DESCRIPTION
+
+The bos uninstall command replaces each binary file specified by
+the B<-file> argument with its C<.BAK>version on the
+server machine named by the B<-server> argument, which is normally the
+binary distribution machine for its CPU/operating system type. It also
+changes the extension on the current C<.OLD> version (if any)
+to C<.BAK>. Each binary file must reside in the local
+B</usr/afs/bin> directory unless the B<-dir> argument names an
+alternate directory.
+
+To start using the reverted binary immediately, issue the bos
+restart command. Otherwise, the BOS Server automatically restarts
+the process at the time defined in the B</usr/afs/local/BosConfig>
+file; use the B<bos getrestart> command to display the time and
+the B<bos setrestart> time to set it.
+
+=head1 OPTIONS
+
+=over 4
+
+=item -server
+>
+
+Indicates the binary distribution machine on which to revert to the
+C<.BAK> version of binaries. Identify the machine by IP
+address or its host name (either fully-qualified or abbreviated
+unambiguously). For details, see the introductory reference page for
+the B<bos> command suite. 
+
+If the machine is not a binary distribution machine and is running an
+B<upclientbin> process, then the files are overwritten the next time
+the B<upclientbin> process fetches the corresponding file from the
+distribution machine (by default within five minutes).
+
+=item -file
+>
+
+Names each binary file to replace with its C<.BAK>
+version.
+
+=item -dir
+>
+
+Provides the complete pathname of the local disk directory containing each
+file named by the B<-file> argument. It is necessary only if
+the binaries are not in the B</usr/afs/bin> directory.
+
+=item -cell
+>
+
+Names the cell in which to run the command. Do not combine this
+argument with the B<-localauth> flag. For more details, see the
+introductory B<bos> reference page.
+
+=item -noauth
+>
+
+Assigns the unprivileged identity anonymous to the
+issuer. Do not combine this flag with the B<-localauth>
+flag. For more details, see the introductory B<bos> reference
+page.
+
+=item -localauth
+>
+
+Constructs a server ticket using a key from the local
+B</usr/afs/etc/KeyFile> file. The B<bos> command
+interpreter presents the ticket to the BOS Server during mutual
+authentication. Do not combine this flag with the B<-cell> or
+B<-noauth> options. For more details, see the introductory
+B<bos> reference page.
+
+=item -help
+
+Prints the online help for this command. All other valid options
+are ignored.
+
+=back
+
+=head1 EXAMPLES
+
+The following example command overwrites the
+B</usr/afs/bin/kaserver> file on the machine
+B<fs4.abc.com> with its C<.BAK>version,
+and the current C<.BAK> version by the
+C<.OLD>version.
+
+   % bos uninstall -server fs4.abc.com -file kaserver
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be listed in the /usr/afs/etc/UserList file on
+the machine named by the B<-server> argument, or must be logged onto a
+server machine as the local superuser B<root> if the
+B<-localauth> flag is included.
+
+=head1 SEE ALSO
+
+L<BosConfig(1)>,
+L<KeyFile(1)>,
+L<UserList(1)>,
+L<bos(1)>,
+L<bos_getrestart(1)>,
+L<bos_restart(1)>,
+L<bos_setrestart(1)>,
+L<upclient(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
