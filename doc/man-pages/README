@@ -183,16 +183,10 @@ Known Problems
   don't just report the deficiency again, but any contributions towards
   fixing it are greatly appreciated.
 
-   * The section five and section eight man pages have not yet had an
-     initial editing pass and many of the section five man pages are
-     missing because the original reference page names didn't easily
-     convert to man page names.  This is currently being fixed.  Please do
-     not start working on the section five or section eight man pages yet
-     or bother reporting problems with them; they will be changing
-     significantly in the near future.
+   * The following installed commands have no man pages:
 
-   * The following commands have no man pages:
-
+       bos_util
+       copyauth
        fs getcalleraccess
        fs getcrypt
        fs listaliases
@@ -201,16 +195,26 @@ Known Problems
        fs rxstatproc
        fs setcbaddr
        fs setcrypt
+       kseal
        pts interactive
        pts quit
        pts sleep
        pts source
+       read_tape
+       restorevol
+       rmtsysd
+       vldb_convert
        vos changeloc
        vos clone
        vos convertROtoRW
        vos copy
        vos shadow
        vos size
+       vsys
+
+   * The following configuration files have no man pages:
+
+       CellAlias
 
    * klog.krb, pagsh.krb, and tokens.krb need to be listed as alternative
      names in the NAME line of the non-.krb man pages, links should be
@@ -254,6 +258,9 @@ Known Problems
      combines them, but the SalvageLog man page doesn't reflect this.
 
    * The CellServDB documentation hasn't been updated for -dynroot.
+
+   * The aklog man page isn't in POD.  (Neither is the mpp man page, but
+     I don't think we care about it and it's not currently installed.)
 
   If you notice other problems, please send them to the openafs-doc list
   even if you don't have time to fix them.  Someone else might, and we

@@ -1,23 +1,35 @@
 =head1 NAME
 
-sys - Reports the CPU/operating system type
+sys - Reports the compile-time CPU/operating system type
 
 =head1 SYNOPSIS
 
-sys
+B<sys>
 
 =head1 DESCRIPTION
 
-The B<sys> command displays the string stored in kernel memory that
-indicates the local machine's CPU/operating system (OS) type. The Cache
-Manager substitutes the string for the I<@sys> variable which can occur in
-AFS pathnames; the I<IBM AFS Quick Beginnings> and I<IBM AFS
-Administration Guide> explain how using I<@sys> can simplify cell
-configuration.
+The B<sys> command displays the string set at compile time that indicates
+the local machine's CPU/operating system (OS) type, conventionally called
+the I<sysname>.  This string is the default for the value stored in kernel
+memory.  The Cache Manager substitutes this string for the I<@sys>
+variable which can occur in AFS pathnames; the I<IBM AFS Quick Beginnings>
+and I<IBM AFS Administration Guide> explain how using I<@sys> can simplify
+cell configuration.
 
-The command always reports the value for the local machine only. To set a
-new value in kernel memory, use the B<fs sysname> command, which like this
-command can also be used to display the current value.
+To set a new value in kernel memory, use the B<fs sysname> command.  To
+view the current value set in the kernel, use either B<fs sysname> or
+B<livesys>.
+
+=head1 CAUTIONS
+
+You almost always want to use B<livesys> rather than this command.  The
+B<sys> command displays a single value hard-coded at compile time.  It
+does not query the Cache Manager for the current value and it does not
+report sysname lists.  If you have changed the local system type with B<fs
+sysname>, or if you run a version of B<sys> compiled differently than the
+Cache Manager running on the system, the value retured will not match the
+behavior of the Cache Manager.  The only reason to use B<sys> is that
+B<livesys> wasn't available in older versions of AFS.
 
 =head1 OUTPUT
 
@@ -39,7 +51,8 @@ None
 
 =head1 SEE ALSO
 
-L<fs_sysname(1)>
+L<fs_sysname(1)>,
+L<livesys(1)>
 
 I<IBM AFS Quick Beginnings>
 
