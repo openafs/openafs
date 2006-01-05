@@ -315,14 +315,14 @@ the B<-long> flag is added:
          .                   .      .         .   .    .
    user.pat             1969534536 RW      17518 K On-line
         fs2.abc.com /vicepb
-        RWrite 1969534536 ROnly 0        Backup 1969534538 
+        RWrite 1969534536 ROnly 0        Backup 1969534538
         MaxQuota      20000 K
         Creation    Mon Jun 12 09:02:25 1989
         Last Update Thu May 20 17:39:34 1999
         1573 accesses in the past day (i.e., vnode references)
    user.pat.backup      1969534538 BK      17537 K On-line
         fs2.abc.com /vicepb
-        RWrite 1969534536 ROnly 0        Backup 1969534538 
+        RWrite 1969534536 ROnly 0        Backup 1969534538
         MaxQuota      20000 K
         Creation    Tue Jun 13 04:37:59 1989
         Last Update Wed May 19 06:37:59 1999

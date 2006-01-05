@@ -4,7 +4,7 @@ pts chown - Changes the owner of a Protection Database entry
 
 =head1 SYNOPSIS
 
-B<pts chown> B<-name> <I<group name>> B<-owner> <I<new owner>> 
+B<pts chown> B<-name> <I<group name>> B<-owner> <I<new owner>>
     [B<-cell> <I<cell name>>] [B<-noauth>] [B<-force>] [B<-help>]
 
 B<pts cho> B<-na> <I<group name>> B<-o> <I<new owner>>

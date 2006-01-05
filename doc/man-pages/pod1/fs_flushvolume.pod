@@ -57,7 +57,7 @@ ignored.
 The following command flushes from the cache all data fetched from the
 volume that contains the current working directory:
 
-   % fs flushvolume 
+   % fs flushvolume
 
 =head1 PRIVILEGE REQUIRED
 

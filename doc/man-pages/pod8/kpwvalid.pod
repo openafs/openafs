@@ -70,7 +70,7 @@ that the requested password includes eight or more characters.
          }
    return 0;
    }
-   
+
 
 =head1 SEE ALSO
 

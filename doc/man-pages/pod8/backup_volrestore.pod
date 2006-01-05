@@ -6,7 +6,7 @@ backup volrestore - Restores one or more volumes
 
 B<backup volrestore> B<-server> <I<destination machine>>
     B<-partition> <I<destination partition>>
-    B<-volume> <I<volume(s) to restore>>+  
+    B<-volume> <I<volume(s) to restore>>+
     [B<-extension> <I<new volume name extension>>]
     [B<-date> <I<date from which to restore>>+]
     [B<-portoffset> <I<TC port offsets>>+] [B<-n>]
@@ -268,7 +268,7 @@ January 1998 are restored. (The command is shown here on multiple lines
 only for legibility reasons.)
 
    % backup volrestore -server fs4.abc.com -partition b  \
-                       -volume user.smith user.terry  \ 
+                       -volume user.smith user.terry  \
                        -extension .rst -date 1/31/1998 17:00
 
 The following command restores the volume user.pat to partition F</vicepb>

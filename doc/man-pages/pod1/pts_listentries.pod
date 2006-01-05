@@ -90,14 +90,14 @@ The following example displays both user and group entries.
 
    % pts listentries -users -groups
    Name                          ID  Owner Creator
-   system:administrators       -204   -204    -204 
-   system:anyuser              -101   -204    -204 
-   system:authuser             -102   -204    -204 
-   anonymous                  32766   -204    -204 
-   admin                          1   -204   32766 
-   pat                          100   -204       1 
-   smith                        101   -204       1 
-   pat:friends                 -206    100     100 
+   system:administrators       -204   -204    -204
+   system:anyuser              -101   -204    -204
+   system:authuser             -102   -204    -204
+   anonymous                  32766   -204    -204
+   admin                          1   -204   32766
+   pat                          100   -204       1
+   smith                        101   -204       1
+   pat:friends                 -206    100     100
    staff                       -207   -204       1
 
 =head1 PRIVILEGE REQUIRED

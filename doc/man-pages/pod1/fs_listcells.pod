@@ -57,7 +57,7 @@ the different formats for machine names:
 
    % fs listcells
    Cell abc.com on hosts fs1.abc.com fs2.abc.com fs3.abc.com
-   Cell stateu.edu on hosts DB1.FS.STATEU.EDU 
+   Cell stateu.edu on hosts DB1.FS.STATEU.EDU
       DB2.FS.STATEU.EDU DB3.FS.STATEU.EDU
    Cell def.gov on hosts 138.255.0.2 sv3.def.gov
 

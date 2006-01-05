@@ -114,7 +114,7 @@ C<0> in this case.
 
 =item dump name
 
-The dump name in the form 
+The dump name in the form
 
    <volume_set_name>.<dump_level_name> (<initial_dump_ID>)
 

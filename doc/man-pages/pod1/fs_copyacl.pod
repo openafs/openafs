@@ -4,12 +4,12 @@ fs copyacl - Copies an ACL from a directory to one or more other directories
 
 =head1 SYNOPSIS
 
-B<fs copyacl> B<-fromdir> <I<source directory (or DFS file)>>  
-    B<-todir> <I<destination directory (or DFS file)>>+  
+B<fs copyacl> B<-fromdir> <I<source directory (or DFS file)>>
+    B<-todir> <I<destination directory (or DFS file)>>+
     [B<-clear>] [B<-id>] [B<-if>] [-help]
 
-B<fs co> B<-f> <I<source directory (or DFS file)>>  
-    B<-t> <I<destination directory (or DFS file)>>+  
+B<fs co> B<-f> <I<source directory (or DFS file)>>
+    B<-t> <I<destination directory (or DFS file)>>+
     [B<-c>] [B<-id>] [B<-if>] [-h]
 
 =head1 DESCRIPTION
@@ -127,7 +127,7 @@ the B<-clear> flag is not used.
       jones rlidwka
 
    % fs copyacl -fromdir . -todir reports
-   
+
    % fs listacl . reports
    Access list for . is
    Normal rights:

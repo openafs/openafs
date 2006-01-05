@@ -5,7 +5,7 @@ vos create - Creates a read/write volume and associated VLDB entry
 =head1 SYNOPSIS
 
 B<vos create> B<-server> <I<machine name>> B<-partition> <I<partition name>>
-    B<-name> <I<volume name>> [B<-maxquota> <I<initial quota (KB)>>]  
+    B<-name> <I<volume name>> [B<-maxquota> <I<initial quota (KB)>>]
     [B<-cell> <I<cell name>>] [B<-noauth>] [B<-localauth>] [B<-verbose>]
     [B<-help>]
 

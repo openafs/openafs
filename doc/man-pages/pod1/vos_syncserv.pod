@@ -8,7 +8,7 @@ B<vos syncserv> B<-server> <I<machine name>>
     [B<-partition> <I<partition name>>] [B<-cell> <I<cell name>>]
     [B<-noauth>] [B<-localauth>] [B<-verbose>] [B<-help>]
 
-B<vos syncs> B<-s> <I<machine name>> [B<-p> <I<partition name>>]  
+B<vos syncs> B<-s> <I<machine name>> [B<-p> <I<partition name>>]
     [B<-c> <I<cell name>>] [B<-n>] [B<-l>] [B<-v>] [B<-h>]
 
 =head1 DESCRIPTION

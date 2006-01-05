@@ -5,8 +5,8 @@ uss delete - Deletes a user account
 =head1 SYNOPSIS
 
 B<uss delete> B<-user> <I<login name>>
-    [B<-mountpoint> <I<mountpoint for user's volume>>] 
-    [B<-savevolume>] [B<-verbose>] [B<-cell> <I<cell name>>]  
+    [B<-mountpoint> <I<mountpoint for user's volume>>]
+    [B<-savevolume>] [B<-verbose>] [B<-cell> <I<cell name>>]
     [B<-admin> <I<administrator to authenticate>>] [B<-dryrun>]
     [B<-skipauth>] [B<-help>]
 

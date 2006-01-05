@@ -11,9 +11,9 @@ B<vos examine> B<-id> <I<volume name or ID>> [B<-extended>]
 B<vos e> B<-i> <I<volume name or ID>> [B<-e>] [B<-c> <I<cell name>>]
     [B<-n>] [B<-l>] [B<-v>] [B<-h>]
 
-B<vos volinfo> B<-i> <I<volume name or ID>> [B<-e>] [-c <I<cell name>>]  
+B<vos volinfo> B<-i> <I<volume name or ID>> [B<-e>] [-c <I<cell name>>]
     [B<-n>] [B<-l>] [B<-v>] [B<-h>]
-   
+
 B<vos v> B<-i> <I<volume name or ID>> [B<-e>] [B<-c> <I<cell name>>]
     [B<-n>] [B<-l>] [B<-v>] [B<-h>]
 
@@ -84,7 +84,7 @@ header.
 =item *
 
 Basic information about the specified volume (displayed on a single
-line): 
+line):
 
 =over 4
 
@@ -299,10 +299,10 @@ shows the volume as locked.
         5719 accesses in the past day (i.e., vnode references)
         RWrite: 5360870981   ROnly: 536870982   Backup: 536870983
         number of sites -> 3
-           server fs1.abc.com partition /vicepa RO Site 
-           server fs3.abc.com partition /vicepa RO Site 
-           server fs2.abc.com partition /vicepb RW Site 
-        Volume is currently LOCKED  
+           server fs1.abc.com partition /vicepa RO Site
+           server fs3.abc.com partition /vicepa RO Site
+           server fs2.abc.com partition /vicepb RW Site
+        Volume is currently LOCKED
 
 The following example shows the output for the volume C<user.terry> using
 the B<-extended> flag. The volume has no read-only replication sites.

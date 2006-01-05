@@ -6,11 +6,11 @@ fs examine - Shows data about the volume containing a directory or file
 
 B<fs examine> [B<-path> <I<dir/file path>>+] [B<-help>]
 
-B<fs exa> [B<-p> <I<dir/file path>>+] [B<-h>] 
+B<fs exa> [B<-p> <I<dir/file path>>+] [B<-h>]
 
-B<fs listvol> [B<-p> <I<dir/file path>>+] [B<-h>] 
+B<fs listvol> [B<-p> <I<dir/file path>>+] [B<-h>]
 
-B<fs listv> [B<-p> <I<dir/file path>>+] [B<-h>] 
+B<fs listv> [B<-p> <I<dir/file path>>+] [B<-h>]
 
 B<fs lv> [B<-p> <I<dir/file path>>+] [B<-h>]
 
@@ -98,7 +98,7 @@ the partition housing it:
    Volume status for vid = 50489902 named user.smith
    Current maximum quota is 15000
    Current blocks used are 5073
-   The partition has 336662 blocks available out of 4177920 
+   The partition has 336662 blocks available out of 4177920
 
 =head1 PRIVILEGE REQUIRED
 

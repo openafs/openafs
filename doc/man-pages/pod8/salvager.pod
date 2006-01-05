@@ -4,12 +4,12 @@ salvager - Initializes the Salvager component of the fs process
 
 =head1 SYNOPSIS
 
-B<salvager> [I<initcmd>] [B<-partition> <I<name of partition to salvage>>] 
+B<salvager> [I<initcmd>] [B<-partition> <I<name of partition to salvage>>]
     [B<-volumeid> <I<volume id to salvage>>] [B<-debug>] [B<-nowrite>]
     [B<-inodes>] [B<-force>] [B<-oktozap>] [B<-rootinodes>]
     [B<-salvagedirs>] [B<-blockreads>]
     [B<-parallel> <I<# of max parallel partition salvaging>>]
-    [B<-tmpdir> <I<name of dir to place tmp files>>]  
+    [B<-tmpdir> <I<name of dir to place tmp files>>]
     [B<-showlog>] [B<-showsuid>] [B<-showmounts>]
     [B<-orphans> (ignore | remove | attach)] [B<-help>]
 

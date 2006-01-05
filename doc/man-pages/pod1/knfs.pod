@@ -8,7 +8,7 @@ B<knfs> B<-host> <I<host name>> [B<-id> <I<user ID (decimal)>>]
     [B<-sysname> <I<host's '@sys' value>>] [B<-unlog>] [B<-tokens>]
     [B<-help>]
 
-B<knfs> B<-ho> <I<host name>> [B<-i> <I<user ID (decimal)>>]  
+B<knfs> B<-ho> <I<host name>> [B<-i> <I<user ID (decimal)>>]
     [B<-s> <I<host's '@sys' value>>] [B<-u>] [B<-t>] [B<-he>]
 
 =head1 DESCRIPTION
@@ -150,9 +150,9 @@ and works on C<nfscli1>.
 
    % klog admin -cell test.abc.com
    Password:
-   
+
    % knfs nfscli1.abc.com 1020
-   
+
    % exit
 
 The following example shows user smith again connecting to the machine
@@ -165,7 +165,7 @@ C<tx4> via the B<telnet> program and discarding the tokens.
    AFS(R) login
 
    % knfs nfscli1.abc.com 1020 -unlog
- 
+
    % exit
 
 =head1 PRIVILEGE REQUIRED

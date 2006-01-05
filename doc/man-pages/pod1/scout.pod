@@ -5,14 +5,14 @@ scout - Monitors the File Server process
 =head1 SYNOPSIS
 
 B<scout> [B<initcmd>] B<-server> <I<servers to monitor>>+
-      [B<-basename> <I<base server name>>]  
+      [B<-basename> <I<base server name>>]
       [B<-frequency> <I<poll frequency, in seconds>>] [B<-host>]
       [B<-attention> <I<specify attention (highlighting) level>>+]
       [B<-debug> <I<turn debugging output on to the named file>>]
       [B<-help>]
 
-B<scout> [B<i>] B<-s> <I<servers to monitor>>+  
-      [B<-b> <I<base server name>>] [B<-f> <I<poll frequency, in seconds>>] 
+B<scout> [B<i>] B<-s> <I<servers to monitor>>+
+      [B<-b> <I<base server name>>] [B<-f> <I<poll frequency, in seconds>>]
       [B<-ho>] [B<-a> <I<specify attention (highlighting) level>>+]
       [B<-d> <I<turn debugging output on to the named file>>] [B<-he>]
 

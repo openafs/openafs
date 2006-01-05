@@ -531,39 +531,39 @@ C<UNMOUNT> instructions in the F<CFG_stacker0.1> file.
    set tries = $3
    set tapename = $4
    set tapeid = $5
-     
+
    set exit_continue = 0
    set exit_abort = 1
    set exit_interactive = 2
-    
+
    #--------------------------------------------
-     
+
    if (${tries} > 1) then
       echo "Too many tries"
       exit ${exit_interactive}
    endif
-     
+
    if (${operation} == "unmount") then
       echo "UnMount: Will leave tape in drive"
       exit ${exit_continue}
    endif
-     
+
    if ((${operation} == "dump")     |\
        (${operation} == "appenddump")     |\
        (${operation} == "savedb"))  then
-     
+
        stackerCmd_NextTape ${devicefile}
        if (${status} != 0)exit${exit_interactive}
        echo "Will continue"
        exit ${exit_continue}
    endif
-     
+
    if ((${operation} == "labeltape")    |\
        (${operation} == "readlabel")) then
       echo "Will continue"
       exit ${exit_continue}
    endif
-     
+
    echo "Prompt for tape"
    exit ${exit_interactive}
 
@@ -611,30 +611,30 @@ file.
    set exit_continue = 0
    set exit_abort = 1
    set exit_interactive = 2
-     
+
    #--------------------------------------------
-     
+
    if (${tries} > 1) then
       echo "Too many tries"
       exit ${exit_interactive}
    endif
-     
+
    if (${operation} == "labeltape") then
       echo "Won't label a tape/file"
       exit ${exit_abort}
    endif
-     
+
    if ((${operation} == "dump")   |\
        (${operation} == "appenddump")   |\
        (${operation} == "restore")   |\
        (${operation} == "savedb")    |\
        (${operation} == "restoredb")) then
-     
+
       /bin/rm -f ${devicefile}
       /bin/ln -s /hsm/${tapename}_${tapeid} ${devicefile}
       if (${status} != 0) exit ${exit_abort}
    endif
-     
+
    exit ${exit_continue}
 
 Like the example routine for a tape stacker, this routine uses the

@@ -65,7 +65,7 @@ authenticated in any cell.
    Tokens held by the Cache Manager:
 
       --End of list--
-   
+
 The following example shows the output when the issuer is authenticated in
 ABC Corporation cell, where he or she has AFS UID 1000.
 

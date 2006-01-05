@@ -9,11 +9,11 @@ B<fs setvol> [B<-path> <I<dir/file path>>+]
     [B<-offlinemsg> <I<offline message>>] [B<-help>]
 
 B<fs setv> [B<-p> <I<dir/file path>>+]
-    [B<-ma> <I<disk space quota in 1K units>>] 
+    [B<-ma> <I<disk space quota in 1K units>>]
     [B<-o> <I<offline message>>] [B<-h>]
-    
+
 B<fs sv> [B<-p> <I<dir/file path>>+]
-    [B<-ma> <I<disk space quota in 1K units>>] 
+    [B<-ma> <I<disk space quota in 1K units>>]
     [B<-o> <I<offline message>>] [B<-h>]
 
 =head1 DESCRIPTION

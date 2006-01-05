@@ -6,12 +6,12 @@ kas statistics - Displays statistics from an Authentication Server process
 
 B<kas statistics>
     [B<-admin_username> <I<admin principal to use for authentication>>]
-    [B<-password_for_admin> <I<admin password>>] [B<-cell> <I<cell name>>] 
+    [B<-password_for_admin> <I<admin password>>] [B<-cell> <I<cell name>>]
     [B<-servers> <I<explicit list of authentication servers>>+]
     [B<-noauth>] [B<-help>]
 
-B<kas sta> [B<-a> <I<admin principal to use for authentication>>]  
-    [B<-p> <I<admin password>>]  [B<-c> <I<cell name>>]  
+B<kas sta> [B<-a> <I<admin principal to use for authentication>>]
+    [B<-p> <I<admin password>>]  [B<-c> <I<cell name>>]
     [B<-s> <I<explicit list of authentication servers>>+] [B<-n>] [B<-h>]
 
 =head1 DESCRIPTION

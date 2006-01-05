@@ -6,7 +6,7 @@ fs lsmount - Reports the volume for which a directory is the mount point.
 
 B<fs lsmount> B<-dir> <I<directory>>+ [B<-help>]
 
-B<fs ls -d> <I<directory>>+ [B<-h>] 
+B<fs ls -d> <I<directory>>+ [B<-h>]
 
 =head1 DESCRIPTION
 
@@ -41,7 +41,7 @@ following form:
 
    '<directory>' is a mount point for volume '<volume name>'
 
-where 
+where
 
 =over 4
 

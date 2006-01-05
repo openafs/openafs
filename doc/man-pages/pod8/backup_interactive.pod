@@ -90,10 +90,10 @@ interactive mode.
 
    % backup
    backup> help dump
-   dump: start dump 
-   Usage: dump [-volumeset <volume set name>] [-dump <dump level name>] 
+   dump: start dump
+   Usage: dump [-volumeset <volume set name>] [-dump <dump level name>]
    [-portoffset <TC port offset>] [-at <Date/time to start dump>+]
-   [-append ] [-n ] [-file <load file>] [-help ] 
+   [-append ] [-n ] [-file <load file>] [-help ]
 
 =head1 PRIVILEGE REQUIRED
 

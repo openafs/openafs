@@ -5,7 +5,7 @@ backup volsetrestore - Restores all volumes in a volume set
 =head1 SYNOPSIS
 
 B<backup volsetrestore> [B<-name> <I<volume set name>>]
-    [B<-file> <I<file name>>] [B<-portoffset> <I<TC port offset>>+]  
+    [B<-file> <I<file name>>] [B<-portoffset> <I<TC port offset>>+]
     [B<-extension> <I<new volume name extension>>] [B<-n>]
     [B<-localauth>] [B<-cell> <I<cell name>>] [B<-help>]
 
@@ -153,7 +153,7 @@ and have the following format:
 
     <machine> <partition> <volume> [<comments> ...]
 
-where 
+where
 
 =over 4
 

@@ -4,7 +4,7 @@ bos removehost - Removes a database server machine from the CellServDB file
 
 =head1 SYNOPSIS
 
-B<bos removehost> B<-server> <I<machine name>> B<-host> <I<host name>>+ 
+B<bos removehost> B<-server> <I<machine name>> B<-host> <I<host name>>+
     [B<-cell> <I<cell name>>] [B<-noauth>] [B<-localauth>] [B<-help>]
 
 B<bos removeh> B<-s> <I<machine name>> B<-ho> <I<host name>>+

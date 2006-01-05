@@ -5,15 +5,15 @@ kas list - Displays all entries in the Authentication Database
 =head1 SYNOPSIS
 
 B<kas list> [B<-long>] [B<-showadmin>] [B<-showkey>]
-    [B<-admin_username> <I<admin principal to use for authentication>>] 
-    [B<-password_for_admin> <I<admin password>>] [B<-cell> <I<cell name>>] 
+    [B<-admin_username> <I<admin principal to use for authentication>>]
+    [B<-password_for_admin> <I<admin password>>] [B<-cell> <I<cell name>>]
     [B<-servers> <I<explicit list of authentication servers>>+]
     [B<-noauth>] [B<-help>]
 
 B<kas ls> [B<-l>] [B<-showa>] [B<-showk>]
-    [B<-a> <I<admin principal to use for authentication>>] 
-    [B<-p> <I<admin password>>] [B<-c> <I<cell name>>] 
-    [B<-se> <I<explicit list of authentication servers>>+] [B<-n>] [B<-h>] 
+    [B<-a> <I<admin principal to use for authentication>>]
+    [B<-p> <I<admin password>>] [B<-c> <I<cell name>>]
+    [B<-se> <I<explicit list of authentication servers>>+] [B<-n>] [B<-h>]
 
 =head1 DESCRIPTION
 

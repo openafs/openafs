@@ -7,9 +7,9 @@ fs setquota - Sets the quota for the volume containing a file or directory
 B<fs setquota> [B<-path> <I<dir/file path>>]
     B<-max> <I<max quota in kbytes>> [B<-help>]
 
-B<fs setq> [B<-p> <I<dir/file path>>] B<-m> <I<max quota in kbytes>> [B<-h>] 
+B<fs setq> [B<-p> <I<dir/file path>>] B<-m> <I<max quota in kbytes>> [B<-h>]
 
-B<fs sq> [B<-p> <I<dir/file path>>] B<-m> <I<max quota in kbytes>> [B<-h>] 
+B<fs sq> [B<-p> <I<dir/file path>>] B<-m> <I<max quota in kbytes>> [B<-h>]
 
 =head1 DESCRIPTION
 

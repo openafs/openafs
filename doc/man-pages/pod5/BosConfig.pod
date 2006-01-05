@@ -19,7 +19,7 @@ information:
 
 =item *
 
-The I<entry type>, which is one of the following: 
+The I<entry type>, which is one of the following:
 
 =over 4
 

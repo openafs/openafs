@@ -6,7 +6,7 @@ vos changeaddr - Changes or removes a file server machine's entry in the VLDB
 
 B<vos changeaddr> B<-oldaddr> <I<original IP address>>
     [B<-newaddr> <I<new IP address>>] [B<-remove>]
-    [B<-cell> <I<cell name>>] [B<-noauth>] [B<-localauth>]  
+    [B<-cell> <I<cell name>>] [B<-noauth>] [B<-localauth>]
     [B<-verbose>] [B<-help>]
 
 B<vos ch> B<-o> <I<original IP address>> [B<-ne> <I<new IP address>>]

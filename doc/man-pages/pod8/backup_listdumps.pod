@@ -54,7 +54,7 @@ indentation indicates the parent/child relationship.
 If a dump level has an associated expiration date, it appears along with
 the level name. Absolute expiration dates appear in the format
 
-   <dump_level> expires at <day month date time year>    
+   <dump_level> expires at <day month date time year>
 
 and relative expiration dates in the format
 
@@ -86,7 +86,7 @@ recycled four weeks after their creation.
                         /thursday  expires in  13d
    /sunday1  expires in  27d
            /monday1  expires in  13d
-           /tuesday1  expires in  13d 
+           /tuesday1  expires in  13d
            /wednesday1  expires in  13d
            /thursday1  expires in  13d
            /friday1  expires in  13d
@@ -98,7 +98,7 @@ recycled four weeks after their creation.
            /friday2  expires in  13d
    /sunday3  expires in  27d
            /monday1  expires in  13d
-           /tuesday1  expires in  13d 
+           /tuesday1  expires in  13d
            /wednesday1  expires in  13d
            /thursday1  expires in  13d
            /friday1  expires in  13d

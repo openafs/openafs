@@ -105,8 +105,8 @@ C<user.smith.backup>:
    % backup volinfo -volume user.smith.backup
    DumpID    lvl parentID  creation date    clone date       tape name
    924600000 1   924427600 04/20/1999 05:20 04/20/1999 05:01 user_incr_2 (924514392)
-   924514392 1   924427600 04/19/1999 05:33 04/19/1999 05:08 user_incr_2 
-   924427600 0           0 04/18/1999 05:26 04/18/1999 04:58 user_full_6 
+   924514392 1   924427600 04/19/1999 05:33 04/19/1999 05:08 user_incr_2
+   924427600 0           0 04/18/1999 05:26 04/18/1999 04:58 user_full_6
        .     .      .         .       .       .      .         .
        .     .      .         .       .       .      .         .
 

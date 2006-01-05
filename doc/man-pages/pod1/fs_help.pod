@@ -67,8 +67,8 @@ command:
 
    % fs help setacl
    fs setacl: set access control list
-   aliases: sa 
-   Usage: fs setacl -dir <directory>+ 
+   aliases: sa
+   Usage: fs setacl -dir <directory>+
    -acl <access list entries>+ [-clear] [-negative] [-help]
 
 =head1 PRIVILEGE REQUIRED

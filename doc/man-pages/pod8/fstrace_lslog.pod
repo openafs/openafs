@@ -8,7 +8,7 @@ B<fstrace lslog> [B<-set> <I<set name>>+] [B<-log> <I<log name>>]
     [B<-long>] [B<-help>]
 
 B<fstrace lsl> [B<-s> <I<set name>>+] [B<-log> <I<log name>>] [B<-lon>]
-    [B<-h>] 
+    [B<-h>]
 
 =head1 DESCRIPTION
 

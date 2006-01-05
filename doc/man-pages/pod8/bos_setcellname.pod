@@ -4,7 +4,7 @@ bos setcellname - Sets the cell's name in ThisCell and CellServDB
 
 =head1 SYNOPSIS
 
-B<bos setcellname> B<-server> <I<machine name>> B<-name> <I<cell name>> 
+B<bos setcellname> B<-server> <I<machine name>> B<-name> <I<cell name>>
     [B<-cell> <I<cell name>>] [B<-noauth>] [B<-localauth>] [B<-help>]
 
 B<bos setc> B<-s> <I<machine name>> B<-n> <I<cell name>>

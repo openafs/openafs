@@ -4,7 +4,7 @@ butc - Initializes the Tape Coordinator process
 
 =head1 SYNOPSIS
 
-B<butc> [B<-port> <I<port offset>>] [B<-debuglevel> (0 | 1 | 2)]  
+B<butc> [B<-port> <I<port offset>>] [B<-debuglevel> (0 | 1 | 2)]
     [B<-cell> <I<cell name>>] [B<-noautoquery>] [B<-localauth>] [B<-help>]
 
 B<butc> [B<-p> <I<port offset>>] [B<-d> (0 | 1 | 2)]

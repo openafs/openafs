@@ -4,21 +4,21 @@ afsd - Initializes the Cache Manager and starts related daemons
 
 =head1 SYNOPSIS
 
-B<afsd> [B<-blocks> <I<1024 byte blocks in cache>>]  
+B<afsd> [B<-blocks> <I<1024 byte blocks in cache>>]
      [B<-files> <I<files in cache>>]
      [B<-rootvol> <I<name of AFS root volume>>]
      [B<-stat> <I<number of stat entries>>]
-     [B<-memcache>] [B<-cachedir> <I<cache directory>>]  
+     [B<-memcache>] [B<-cachedir> <I<cache directory>>]
      [B<-mountdir> <I<mount location>>]
-     [B<-daemons> <I<number of daemons to use>>]  
+     [B<-daemons> <I<number of daemons to use>>]
      [B<-nosettime>] [B<-verbose>] [B<-rmtsys>] [B<-debug>]
      [B<-chunksize> <I<log(2) of chunk size>>]
      [B<-dcache> <I<number of dcache entries>>]
-     [B<-volumes> <I<number of volume entries>>]  
+     [B<-volumes> <I<number of volume entries>>]
      [B<-biods> <I<number of bkg I/O daemons (aix vm)>>]
      [B<-prealloc> <I<number of 'small' preallocated blocks>>]
      [B<-confdir> <I<configuration directory>>]
-     [B<-logfile> <I<Place to keep the CM log>>]  
+     [B<-logfile> <I<Place to keep the CM log>>]
      [B<-waitclose>] [B<-shutdown>] [B<-enable_peer_stats>]
      [B<-enable_process_stats>] [B<-help>]
 

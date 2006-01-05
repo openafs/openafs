@@ -67,9 +67,9 @@ The following command displays the online help entry for the B<fstrace
 setset> command:
 
    % fstrace help -topic setset
-   fstrace setset: set state of event sets 
-   Usage: fstrace setset [-set <set_name>+] [-active] [-inactive]  
-   [-dormant] [-help] 
+   fstrace setset: set state of event sets
+   Usage: fstrace setset [-set <set_name>+] [-active] [-inactive]
+   [-dormant] [-help]
 
 =head1 PRIVILEGE REQUIRED
 

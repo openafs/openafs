@@ -5,7 +5,7 @@ fstrace clear - Clears the trace log
 =head1 SYNOPSIS
 
 B<fstrace clear> [B<-set> <I<set name>>+] [B<-log> <I<log name>>+]
-    [B<-help>] 
+    [B<-help>]
 
 B<fstrace c> [B<-s> <I<set name>>+] [B<-l> <I<log name>>+] [B<-h>]
 

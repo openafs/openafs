@@ -9,13 +9,13 @@ B<uss bulk> B<-file> <I<bulk input file>>
     [B<-cell> <I<cell name>>]
     [B<-admin> <I<administrator to authenticate>>] [B<-dryrun>]
     [B<-skipauth>] [B<-overwrite>]
-    [B<-pwexpires> <I<password expires in [0..254] days (0 => never)>>]  
+    [B<-pwexpires> <I<password expires in [0..254] days (0 => never)>>]
     [B<-pipe>] [B<-help>]
 
 B<uss b> B<-f> <I<bulk input file>> [B<-t> <I<pathname of template file>>]
     [B<-v>] [B<-c> <I<cell name>>]
     [B<-a> <I<administrator to authenticate>>] [B<-d>] [B<-s>]
-    [B<-o>] [B<-pw> <I<password expires in [0..254] days (0 => never)>>]  
+    [B<-o>] [B<-pw> <I<password expires in [0..254] days (0 => never)>>]
     [B<-pi>] [B<-h>]
 
 =head1 DESCRIPTION

@@ -5,7 +5,7 @@ fstrace setset - Sets the status of an event set
 =head1 SYNOPSIS
 
 B<fstrace setset> [B<-set> <I<set name>>+] [B<-active>] [B<-inactive>]
-    [B<-dormant>] [B<-help>] 
+    [B<-dormant>] [B<-help>]
 
 B<fs set> [B<-s> <I<set name>>+] [B<-a>] [B<-i>] [B<-d>] [B<-h>]
 

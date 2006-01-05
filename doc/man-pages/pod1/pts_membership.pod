@@ -12,7 +12,7 @@ B<pts m> B<-na> <I<user or group name or id>>+ [B<-c> <I<cell name>>]
 
 B<pts groups> B<-na> <I<user or group name or id>>+ [-c <I<cell name>>]
     [B<-no>] [B<-f>] [B<-h>]
-   
+
 B<pts g> B<-na> <I<user or group name or id>>+ [B<-c> <I<cell name>>]
     [B<-no>] [B<-f>] [B<-h>]
 

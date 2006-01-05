@@ -5,8 +5,8 @@ backup addvolentry - Defines a volume entry in a volume set
 =head1 SYNOPSIS
 
 B<backup addvolentry> B<-name> <I<volume set name>>
-    B<-server> <I<machine name>> B<-partition> <I<partition name>> 
-    B<-volumes> <I<volume name (regular expression)>>   
+    B<-server> <I<machine name>> B<-partition> <I<partition name>>
+    B<-volumes> <I<volume name (regular expression)>>
     [B<-localauth>] [B<-cell> <I<cell name>>] [B<-help>]
 
 B<backup addvole> B<-n> <I<volume set name>> B<-s> <I<machine name>>

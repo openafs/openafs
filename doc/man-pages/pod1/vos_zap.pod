@@ -4,7 +4,7 @@ vos zap - Removes a volume from its site without writing to the VLDB
 
 =head1 SYNOPSIS
 
-B<vos zap> B<-server> <I<machine name>> B<-partition> <I<partition name>> 
+B<vos zap> B<-server> <I<machine name>> B<-partition> <I<partition name>>
     B<-id> <I<volume ID>> [B<-force>] [B<-backup>]
     [B<-cell> <I<cell name>>] [B<-noauth>] [B<-localauth>] [B<-verbose>]
     [B<-help>]

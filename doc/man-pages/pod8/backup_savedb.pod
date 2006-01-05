@@ -72,7 +72,7 @@ records associated with the dump set are deleted. Dump records for
 previous dumps of the database (created with the B<backup savedb> command)
 are never deleted; use the B<backup deletedump> command to remove them.
 
-Provide one of two values: 
+Provide one of two values:
 
 =over 4
 

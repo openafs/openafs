@@ -102,7 +102,7 @@ not valid because the latest possible date in the standard UNIX
 representation is in February 2038. The command interpreter automatically
 reduces later dates to the maximum value.
 
-Relative expiration dates have the following format: 
+Relative expiration dates have the following format:
 
    [in] [<years>y] [<months>m] [<days>d]
 

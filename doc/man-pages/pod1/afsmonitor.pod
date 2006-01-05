@@ -6,7 +6,7 @@ afsmonitor - Monitors File Servers and Cache Managers
 
 B<afsmonitor> [B<initcmd>] [-config <I<configuration file>>]
     [B<-frequency> <I<poll frequency, in seconds>>]
-    [B<-output> <I<storage file name>>] [B<-detailed>] 
+    [B<-output> <I<storage file name>>] [B<-detailed>]
     [B<-debug> <I<debug output file>>]
     [B<-fshosts> <I<list of file servers to monitor>>+]
     [B<-cmhosts> <I<list of cache managers to monitor>>+]

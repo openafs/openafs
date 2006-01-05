@@ -4,7 +4,7 @@ bos removeuser - Removes a privileged user from the UserList file
 
 =head1 SYNOPSIS
 
-B<bos removeuser> B<-server> <I<machine name>> B<-user> <I<user names>>+ 
+B<bos removeuser> B<-server> <I<machine name>> B<-user> <I<user names>>+
     [B<-cell> <I<cell name>>] [B<-noauth>] [B<-localauth>] [B<-help>]
 
 B<bos removeu> B<-s> <I<machine name>> B<-u> <I<user names>>+
