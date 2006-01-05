@@ -234,7 +234,8 @@ Known Problems
      multiple different paths, but it would be good to at least
      acknowledge the issue.
 
-   * bos listkeys assumes that you're using the kaserver.
+   * bos listkeys and the KeyFile man page assume that you're using the
+     kaserver.
 
    * I'm fairly sure that the fileserver man page no longer documents all
      of the fileserver options.
@@ -248,6 +249,11 @@ Known Problems
      Support in descriptions of options that one should generally not
      use.  Also, all of the manual references refer to the "IBM" manual.
      We should decide how to handle this terminology-wise.
+
+   * The salvager actually creates a bunch of SalvageLog files and then
+     combines them, but the SalvageLog man page doesn't reflect this.
+
+   * The CellServDB documentation hasn't been updated for -dynroot.
 
   If you notice other problems, please send them to the openafs-doc list
   even if you don't have time to fix them.  Someone else might, and we

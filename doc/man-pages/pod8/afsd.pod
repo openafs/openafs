@@ -156,7 +156,7 @@ Sets the size of each cache I<chunk>, and by implication the amount of
 data that the Cache Manager requests at a time from the File Server (how
 much data per fetch RPC, since AFS uses partial file transfer).
 
-For a disk cache, a chunk is a F<< VIZ<><n> >> file and this parameter
+For a disk cache, a chunk is a F<VI<n>> file and this parameter
 sets the maximum size to which each one can expand; the default is 64
 KB. For a memory cache, each chunk is a collection of contiguous memory
 blocks; the default is size is 8 KB.
@@ -171,7 +171,7 @@ the number of dcache entries, resulting in a slightly smaller cache.
 
 Sets the number of chunks in the cache. For a memory cache, the number of
 chunks is equal to the cache size divided by the chunk size.  For a disk
-cache, the number of chunks (F<< VIZ<><n> >> files) is set to the largest
+cache, the number of chunks (F<VI<n>> files) is set to the largest
 of the following unless the B<-files> argument is used to set the value
 explicitly:
 
@@ -198,7 +198,7 @@ Sets the number of I<dcache entries> allocated in machine memory for
 storing information about the chunks in the cache.
 
 For a disk cache, the F</usr/vice/cache/CacheItems> file contains one
-entry for each F<< VIZ<><n> >> file. By default, one half the number of
+entry for each F<VI<n>> file. By default, one half the number of
 these entries (but not more that 2,000) are duplicated as dcache entries
 in machine memory for quicker access.
 
@@ -360,9 +360,9 @@ doing so can possibly result in a chunk size that is not an exponent of 2.
 
 =item B<-files> <I<files in cache>>
 
-Specifies the number of F<< VIZ<><n> >> files to create in the cache
+Specifies the number of F<VI<n>> files to create in the cache
 directory for a disk cache, overriding the default that is calculated as
-described in L<DESCRIPTION>. Each F<< VIZ<><n> >> file accommodates a
+described in L<DESCRIPTION>. Each F<VI<n>> file accommodates a
 chunk of data, and can grow to a maximum size of 64 KB by default. Do not
 combine this argument with the B<-memcache> argument.
 
@@ -451,7 +451,7 @@ requires that the issuer calculate the cache size that results.
 
 Sets the number of dcache entries in memory, which are used to store
 information about cache chunks. For a disk cache, this overrides the
-default, which is 50% of the number of F<< VIZ<><n> >> files (cache
+default, which is 50% of the number of F<VI<n>> files (cache
 chunks). For a memory cache, this argument effectively sets the number of
 cache chunks, but its use is not recommended, because it requires the
 issuer to calculate the resulting total cache size (derived by multiplying
@@ -550,7 +550,7 @@ The issuer must be logged in as the local superuser root.
 
 =head1 SEE ALSO
 
-L<CacheItems(5)>,
+L<afs_cache(5)>,
 L<CellServDB(5)>,
 L<cacheinfo(5)>
 

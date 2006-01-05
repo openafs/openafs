@@ -4,25 +4,25 @@ FORCESALVAGE - Forces salvage of entire partition
 
 =head1 DESCRIPTION
 
-The FORCESALVAGE file, if present on an AFS server partition
-(that is, in a B</vicep> directory), signals that the Salvager must
-salvage the entire partition. The AFS-modified version of the
-B<fsck> program creates the empty (zero-length) file when it discovers
-corruption on the partition. The Salvager removes the file when it
-completes the salvage operation.
+The F<FORCESALVAGE> file, if present on an AFS server partition (that is,
+in a F</vicep> directory), signals that the Salvager must salvage the
+entire partition. The AFS-modified version of the B<fsck> program creates
+the empty (zero-length) file when it discovers corruption on the
+partition. The Salvager removes the file when it completes the salvage
+operation.
 
 When the File Server detects the presence of the file on a partition on
-which it is attaching volumes, it stops, detaches any volumes that are already
-attached, and exits after recording a message in the
-B</usr/afs/logs/FileLog> file. The Bos Server then invokes the
-Salvager to salvage the partition.
+which it is attaching volumes, it stops, detaches any volumes that are
+already attached, and exits after recording a message in the
+F</usr/afs/logs/FileLog> file. The Bos Server then invokes the Salvager to
+salvage the partition.
 
 =head1 SEE ALSO
 
-L<FileLog(1)>,
-L<bosserver(1)>,
-L<fileserver(1)>,
-L<salvager(1)>
+L<FileLog(5)>,
+L<bosserver(8)>,
+L<fileserver(8)>,
+L<salvager(8)>
 
 =head1 COPYRIGHT
 

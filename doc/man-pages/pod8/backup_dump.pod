@@ -498,6 +498,7 @@ server machine as the local superuser C<root>.
 
 =head1 SEE ALSO
 
+L<butc(5)>,
 L<backup(8)>,
 L<backup_adddump(8)>,
 L<backup_addvolentry(8)>,

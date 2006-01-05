@@ -4,20 +4,20 @@ afszcm.cat - Error message catalog for debugging the Cache Manager
 
 =head1 DESCRIPTION
 
-The afszcm.cat file is a message catalog for the Cache
-Manager. The B<fstrace dump> command interpreter uses it in
-conjunction with the standard UNIX catalog utilities to translate Cache
-Manager operation codes into character strings as it writes traces in the
-B<fstrace> trace log, which makes the log more readable.
+The F<afszcm.cat> file is a message catalog for the Cache Manager. The
+B<fstrace dump> command interpreter uses it in conjunction with the
+standard UNIX catalog utilities to translate Cache Manager operation codes
+into character strings as it writes traces in the B<fstrace> trace log,
+which makes the log more readable.
 
-The conventional location for the file is the /usr/vice/etc/C/
-directory. It can be placed in another directory if the NLSPATH and
-LANG environment variables are set appropriately.
+The conventional location for the file is the F</usr/vice/etc/C/>
+directory. It can be placed in another directory if the NLSPATH and LANG
+environment variables are set appropriately.
 
 =head1 SEE ALSO
 
-L<afsd(1)>,
-L<fstrace_dump(1)>
+L<afsd(8)>,
+L<fstrace_dump(8)>
 
 =head1 COPYRIGHT
 

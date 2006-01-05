@@ -143,10 +143,9 @@ No privilege. Many B<fs> commands simply list information.
 
 =head1 SEE ALSO
 
-L<CacheItems(5)>,
+L<afs_cache(5)>,
 L<CellServDB(5)>,
 L<ThisCell(5)>
-L<VolumeItems(5)>,
 L<cacheinfo(5)>,
 L<fs_apropos(1)>,
 L<fs_checkservers(1)>,

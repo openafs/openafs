@@ -4,33 +4,32 @@ SALVAGE.fs - Triggers salvaging of AFS server partitions
 
 =head1 DESCRIPTION
 
-The SALVAGE.fs file, if present in a file server
-machine's B</usr/afs/local> directory, indicates to the Basic
-OverSeer (BOS) Server (B<bosserver> process) that it must invoke the
-Salvager (B<salvager> process) during recovery from a failure of the
-File Server (B<fileserver> process).
+The F<SALVAGE.fs> file, if present in a file server machine's
+F</usr/afs/local> directory, indicates to the Basic OverSeer (BOS) Server
+(B<bosserver> process) that it must invoke the Salvager (B<salvager>
+process) during recovery from a failure of the File Server (B<fileserver>
+process).
 
-The BOS Server creates the zero-length file each time it starts or restarts
-the B<fs> process. When the File Server exits normally (for
-example, in response to the B<bos shutdown> or B<bos stop>
-command), the BOS Server removes the file. However, if the File Server
-exits unexpectedly, the file remains in the B</usr/afs/local>
-directory as a signal that the BOS Server must invoke the Salvager process to
-repair any file system inconsistencies possibly introduced during the failure,
-before restarting the File Server and Volume Server processes.
+The BOS Server creates the zero-length file each time it starts or
+restarts the C<fs> process. When the File Server exits normally (for
+example, in response to the B<bos shutdown> or B<bos stop> command), the
+BOS Server removes the file. However, if the File Server exits
+unexpectedly, the file remains in the F</usr/afs/local> directory as a
+signal that the BOS Server must invoke the Salvager process to repair any
+file system inconsistencies possibly introduced during the failure, before
+restarting the File Server and Volume Server processes.
 
 Do not create or remove this file. To invoke the Salvager process
 directly, use the B<bos salvage> command or log onto the file server
-machine as the local superuser B<root> and issue the
-B<salvager> command.
+machine as the local superuser C<root> and issue the B<salvager> command.
 
 =head1 SEE ALSO
 
-L<bos_salvage(1)>,
-L<bosserver(1)>,
-L<fileserver(1)>,
-L<salvager(1)>,
-L<volserver(1)>
+L<bos_salvage(8)>,
+L<bosserver(8)>,
+L<fileserver(8)>,
+L<salvager(8)>,
+L<volserver(8)>
 
 =head1 COPYRIGHT
 

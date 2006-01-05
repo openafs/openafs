@@ -103,6 +103,7 @@ included.
 
 =head1 SEE ALSO
 
+L<butc(5)>,
 L<backup(8)>,
 L<backup_dbverify(8)>,
 L<backup_savedb(8)>,

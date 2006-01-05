@@ -1,39 +1,37 @@
 =head1 NAME
 
-kaserver.DB0 and kaserver.DBSYS1 - Contain the Authentication Database and associated log
+kaserver.DB0, kaserver.DBSYS1 - The Authentication Database and associated log
 
 =head1 DESCRIPTION
 
-The kaserver.DB0 file contains the Authentication
-Database, which records server encryption keys and an encrypted form of all
-user passwords. The Authentication Server (B<kaserver> process)
-uses the information in the database to enable secured communications between
-AFS server and client processes.
+The F<kaserver.DB0> file contains the Authentication Database, which
+records server encryption keys and an encrypted form of all user
+passwords. The Authentication Server (B<kaserver> process) uses the
+information in the database to enable secured communications between AFS
+server and client processes.
 
-The kaserver.DBSYS1 file is a log file in which the
-Authentication Server logs each database operation before performing
-it. When an operation is interrupted, the Authentication Server replays
-the log to complete the operation.
+The F<kaserver.DBSYS1> file is a log file in which the Authentication
+Server logs each database operation before performing it. When an
+operation is interrupted, the Authentication Server replays the log to
+complete the operation.
 
-Both files are in binary format and reside in the /usr/afs/db
-directory on each of the cell's database server machines. When the
-Authentication Server starts or restarts on a given machine, it establishes a
-connection with its peers and verifies that its copy of the database matches
-the copy on the other database server machines. If not, the
-Authentication Servers call on AFS's distributed database technology,
-Ubik, to distribute to all of the machines the copy of the database with the
-highest version number.
+Both files are in binary format and reside in the F</usr/afs/db> directory
+on each of the cell's database server machines. When the Authentication
+Server starts or restarts on a given machine, it establishes a connection
+with its peers and verifies that its copy of the database matches the copy
+on the other database server machines. If not, the Authentication Servers
+call on AFS's distributed database technology, Ubik, to distribute to all
+of the machines the copy of the database with the highest version number.
 
-Always use the commands in the kas suite to administer the
-Authentication Database. It is advisable to create an archive copy of
-the database on a regular basis, using a tool such as the UNIX B<tar>
-command.
+Always use the commands in the kas suite to administer the Authentication
+Database. It is advisable to create an archive copy of the database on a
+regular basis, using a tool such as the UNIX B<tar> command.
 
 =head1 SEE ALSO
 
-L<kadb_check(1)>,
-L<kas(1)>,
-L<kaserver(1)>
+L<kadb_check(8)>,
+L<kas(8)>,
+L<kaserver(8)>
 
 =head1 COPYRIGHT
 
