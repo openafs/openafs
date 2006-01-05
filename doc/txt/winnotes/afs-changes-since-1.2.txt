@@ -1,3 +1,15 @@
+Since 1.4.1 rc2: 1.4.1 RC3 released (4 Jan 2006)
+
+ * a fix to "fs setserverprefs -vldb" that prevents a crash of 
+   afsd_service.exe if the preferences for a server were set twice
+   prior to the service being associated with a cell.
+
+ * improve the warning text in the afsd_init.log if the required
+   RPC protocols are not present on the machine.
+
+ * fix the procmgmt library to restore C RTL signal handlers when 
+   it is being detached from the process prior to process termination.
+
 Since 1.4.1 rc1: 1.4.1 RC2 released (30 Nov 2005)
 
  * close a lock leak in the rx library that could be triggered while
