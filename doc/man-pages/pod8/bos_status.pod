@@ -20,13 +20,11 @@ server machine named by the B<-server> argument, either
 =item *
 
 All of the AFS server processes listed in the
-B</usr/afs/local/BosConfig> file
-
+F</usr/afs/local/BosConfig> file
 
 =item *
 
 Only these processes named by the -instance argument
-
 
 =back
 
@@ -34,16 +32,13 @@ Only these processes named by the -instance argument
 
 =over 4
 
-=item -server
->
+=item B<-server> <I<machine name>>
 
 Indicates the server machine for which to report server process
 status. Identify the machine by IP address or its host name (either
-fully-qualified or abbreviated unambiguously). For details, see the
-introductory reference page for the B<bos> command suite.
+fully-qualified or abbreviated unambiguously). For details, see L<bos(8)>.
 
 =item -instance
->
 
 Names each process for which to report status. Use the process name
 assigned with the B<-instance> argument to the B<bos>
@@ -51,36 +46,29 @@ command. The output from the B<bos status> command lists the
 names.
 
 =item -long
->
 
 Produces more detailed status information.
 
-=item -cell
->
+=item B<-cell> <I<cell name>>
 
 Names the cell in which to run the command. Do not combine this
-argument with the B<-localauth> flag. For more details, see the
-introductory B<bos> reference page.
+argument with the B<-localauth> flag. For more details, see L<bos(8)>.
 
-=item -noauth
->
+=item B<-noauth>
 
-Assigns the unprivileged identity anonymous to the
+Assigns the unprivileged identity C<anonymous> to the
 issuer. Do not combine this flag with the B<-localauth>
-flag. For more details, see the introductory B<bos> reference
-page.
+flag. For more details, see L<bos(8)>.
 
-=item -localauth
->
+=item B<-localauth>
 
 Constructs a server ticket using a key from the local
-B</usr/afs/etc/KeyFile> file. The B<bos> command
+F</usr/afs/etc/KeyFile> file. The B<bos> command
 interpreter presents the ticket to the BOS Server during mutual
 authentication. Do not combine this flag with the B<-cell> or
-B<-noauth> options. For more details, see the introductory
-B<bos> reference page.
+B<-noauth> options. For more details, see L<bos(8)>.
 
-=item -help
+=item B<-help>
 
 Prints the online help for this command. All other valid options
 are ignored.
@@ -102,12 +90,10 @@ B<cron> entries, this message indicates only that the command is
 scheduled to run, not necessarily that it was executing when the B<bos
 status> command was issued.
 
-
 =item *
 
 C<disabled>. The process is not running, and its
 B<BosConfig> status flag is C<NotRun>.
-
 
 =item *
 
@@ -116,20 +102,17 @@ although its status flag in the B<BosConfig> file is
 C<Run>. Either an administrator used the B<bos
 shutdown> command to stop it, or the
 
-
 =item *
 
 BOS Server stopped trying to restart it after numerous failed
 attempts. In the second case, the auxiliary message is C<stopped for
 too many errors>.
 
-
 =item *
 
 C<temporarily enabled>. The process is running although its
 status flag in the B<BosConfig> file is C<NotRun>. An
 administrator has used the B<bos startup> command to start it.
-
 
 =back
 
@@ -141,17 +124,15 @@ indicated message appears in its entry:
 =item *
 
 C<has core file>. The process failed and created a core
-file in the B</usr/afs/logs> directory. If the BOS Server was
+file in the F</usr/afs/logs> directory. If the BOS Server was
 able to restart the process after the failure, the primary status is
 C<currently running normally>.
-
 
 =item *
 
 C<stopped for too many  errors>. The reason for the primary
 status C<temporarily  disabled> is that the BOS Server's attempts
 to restart the process all failed.
-
 
 =back
 
@@ -166,13 +147,11 @@ following:
 C<file server running>. The File Server and Volume Server
 components of the File Server process are running normally.
 
-
 =item *
 
 C<salvaging file system>. The Salvager is running, so the
 File Server and Volume Server are temporarily disabled. The BOS Server
 restarts them as soon as the Salvager is finished.
-
 
 =back
 
@@ -189,17 +168,14 @@ additional information:
 The process's type (C<simple>, C<fs>, or
 C<cron>).
 
-
 =item *
 
 The day and time the process last started or restarted.
-
 
 =item *
 
 The number of C<proc starts>, which is how many times the BOS
 Server has started or restarted the process since it started itself.
-
 
 =item *
 
@@ -207,7 +183,6 @@ The C<Last exit> time when the process (or one of the component
 processes in the B<fs> process) last terminated. This line does
 not appear if the process has not terminated since the BOS Server
 started.
-
 
 =item *
 
@@ -217,13 +192,11 @@ error. A further explanation such as C<due to shutdown request>
 sometimes appears. This line does not appear if the process has not
 failed since the BOS Server started.
 
-
 =item *
 
 Each command that the BOS Server invokes to start the process, as
 specified by the B<-cmd> argument to the B<bos create>
 command.
-
 
 =item *
 
@@ -231,11 +204,10 @@ The pathname of the notifier program that the BOS Server invokes when the
 process terminates (if any), as specified by the B<-notifier> argument
 to the B<bos create> command.
 
-
 =back
 
 If the -long flag is provided and the BOS Server discovers that
-the mode bits on files and subdirectories in the local B</usr/afs>
+the mode bits on files and subdirectories in the local F</usr/afs>
 directory differ from the expected values, it prints the following warning
 message:
 
@@ -285,11 +257,11 @@ None
 
 L<BosConfig(1)>,
 L<KeyFile(1)>,
-L<bos(1)>,
-L<bos_create(1)>,
-L<bos_shutdown(1)>,
-L<bos_startup(1)>,
-L<bos_status(1)>
+L<bos(8)>,
+L<bos_create(8)>,
+L<bos_shutdown(8)>,
+L<bos_startup(8)>,
+L<bos_status(8)>
 
 =head1 COPYRIGHT
 

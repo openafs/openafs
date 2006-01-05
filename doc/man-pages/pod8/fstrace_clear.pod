@@ -4,56 +4,55 @@ fstrace clear - Clears the trace log
 
 =head1 SYNOPSIS
 
-B<fstrace clear> [B<-set> <I<set_name>>+]  [B<-log> <I<log_name>>+]  [-help] 
+B<fstrace clear> [B<-set> <I<set name>>+] [B<-log> <I<log name>>+]
+    [B<-help>] 
 
-B<fstrace c> [B<-s> <I<set_name>>+]  [B<-l> <I<log_name>>+]  [-h]
+B<fstrace c> [B<-s> <I<set name>>+] [B<-l> <I<log name>>+] [B<-h>]
 
 =head1 DESCRIPTION
 
-The fstrace clear command erases the contents of the trace log
-from kernel memory, but leaves kernel memory allocated for the log.
+The B<fstrace clear> command erases the contents of the trace log from
+kernel memory, but leaves kernel memory allocated for the log.
 
 =head1 OPTIONS
 
 =over 4
 
-=item -set
+=item B<-set> <I<set name>>+
 
-Names the event set for which to clear the associated trace log.
-The only acceptable value is B<cm> (for which the associated trace log
-is B<cmfx>). Provide either this argument or the
-B<-log> argument, or omit both to clear the B<cmfx> log by
-default.
+Names the event set for which to clear the associated trace log.  The only
+acceptable value is C<cm> (for which the associated trace log is
+C<cmfx>). Provide either this argument or the B<-log> argument, or omit
+both to clear the C<cmfx> log by default.
 
-=item -log
+=item B<-log> <I<log name>>+
 
 Names the trace log to clear. The only acceptable value is
-B<cmfx>. Provide either this argument or the B<-set>
-argument, or omit both to clear the B<cmfx> log by default.
+C<cmfx>. Provide either this argument or the B<-set> argument, or omit
+both to clear the C<cmfx> log by default.
 
-=item -help
+=item B<-help>
 
-Prints the online help for this command. All other valid options
-are ignored.
+Prints the online help for this command. All other valid options are
+ignored.
 
 =back
 
 =head1 EXAMPLES
 
-The following command clears the cmfx trace log on the local
-machine:
+The following command clears the C<cmfx> trace log on the local machine:
 
    # fstrace clear
 
 =head1 PRIVILEGE REQUIRED
 
-The issuer must be logged in as the local superuser root.
+The issuer must be logged in as the local superuser C<root>.
 
 =head1 SEE ALSO
 
-L<fstrace(1)>,
-L<fstrace_lslog(1)>,
-L<fstrace_lsset(1)>
+L<fstrace(8)>,
+L<fstrace_lslog(8)>,
+L<fstrace_lsset(8)>
 
 =head1 COPYRIGHT
 

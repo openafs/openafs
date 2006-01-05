@@ -4,82 +4,75 @@ kas examine - Displays information from an Authentication Database entry
 
 =head1 SYNOPSIS
 
-B<kas examine -name> <I<name of user>> [-showkey] 
-[B<-admin_username> <I<admin principal to use for authentication>>]  
-            [B<-password_for_admin> <I<admin password>>]  [-cell <I<cell name>>] 
-            [-servers <I<explicit list of authentication servers>>+]  
-            [B<-noauth>]  [-help] 
+B<kas examine> B<-name> <I<name of user>> [B<-showkey>] 
+    [B<-admin_username> <I<admin principal to use for authentication>>]  
+    [B<-password_for_admin> <I<admin password>>] [B<-cell> <I<cell name>>]
+    [B<-servers> <I<explicit list of authentication servers>>+]  
+    [B<-noauth>] [B<-help>] 
 
-B<kas e -na> <I<name of user>>  [-sh] 
-[B<-a> <I<admin principal to use for authentication>>] 
-      [B<-p> <I<admin password>>]  [-c <I<cell name>>] 
-      [B<-se> <I<explicit list of authentication servers>>+]  [B<-no>]  [-h]  
+B<kas e> B<-na> <I<name of user>> [B<-sh>]
+    [B<-a> <I<admin principal to use for authentication>>] 
+    [B<-p> <I<admin password>>] [B<-c> <I<cell name>>] 
+    [B<-se> <I<explicit list of authentication servers>>+] [B<-no>] [B<-h>]
 
 =head1 DESCRIPTION
 
-The kas examine command formats and displays information from
-the Authentication Database entry of the user named by the B<-name>
-argument.
+The B<kas examine> command formats and displays information from the
+Authentication Database entry of the user named by the B<-name> argument.
 
-To alter the settings displayed with this command, issue the kas
-setfields command.
+To alter the settings displayed with this command, issue the B<kas
+setfields> command.
 
 =head1 CAUTIONS
 
 Displaying actual keys on the standard output stream by including the
-B<-showkey> flag constitutes a security exposure. For most
-purposes, it is sufficient to display a checksum.
+B<-showkey> flag constitutes a security exposure. For most purposes, it is
+sufficient to display a checksum.
 
 =head1 OPTIONS
 
 =over 4
 
-=item -name
+=item B<-name> <I<name of user>>
 
-Names the Authentication Database entry from which to display
-information.
+Names the Authentication Database entry from which to display information.
 
-=item -showkey
->
+=item B<-showkey>
 
-Displays the octal digits that constitute the key. The issuer must
-have the C<ADMIN> flag on his or her Authentication Database
-entry.
+Displays the octal digits that constitute the key. The issuer must have
+the C<ADMIN> flag on his or her Authentication Database entry.
 
-=item -admin_username
+=item B<-admin_username> <I<admin principal>>
 
 Specifies the user identity under which to authenticate with the
-Authentication Server for execution of the command. For more details,
-see the introductory B<kas> reference page.
+Authentication Server for execution of the command. For more details, see
+L<kas(8)>.
 
-=item -password_for_admin
+=item B<-password_for_admin> <I<admin password>>
 
-Specifies the password of the command's issuer. If it is
-omitted (as recommended), the B<kas> command interpreter prompts for
-it and does not echo it visibly. For more details, see the introductory
-B<kas> reference page.
+Specifies the password of the command's issuer. If it is omitted (as
+recommended), the B<kas> command interpreter prompts for it and does not
+echo it visibly. For more details, see L<kas(8)>.
 
-=item -cell
+=item B<-cell> <I<cell name>>
 
 Names the cell in which to run the command. For more details, see
-the introductory B<kas> reference page.
+L<kas(8)>.
 
-=item -servers
+=item B<-servers> <I<authentication servers>>+
 
 Names each machine running an Authentication Server with which to
-establish a connection. For more details, see the introductory
-B<kas> reference page.
+establish a connection. For more details, see L<kas(8)>.
 
-=item -noauth
+=item B<-noauth>
 
-Assigns the unprivileged identity anonymous to the
-issuer. For more details, see the introductory B<kas> reference
-page.
+Assigns the unprivileged identity C<anonymous> to the issuer. For more
+details, see L<kas(8)>.
 
-=item -help
+=item B<-help>
 
-Prints the online help for this command. All other valid options
-are ignored.
+Prints the online help for this command. All other valid options are
+ignored.
 
 =back
 
@@ -93,173 +86,147 @@ The output includes:
 
 The entry name, following the string C<User data for>.
 
-
 =item *
 
 One or more status flags in parentheses; they appear only if an
-administrator has used the B<kas setfields> command to change them
-from their default values. A plus sign (C<+>) separates the
-flags if there is more than one. The nondefault values that can appear,
-and their meanings, are as follows: 
-
+administrator has used the B<kas setfields> command to change them from
+their default values. A plus sign (C<+>) separates the flags if there is
+more than one. The nondefault values that can appear, and their meanings,
+are as follows:
 
 =over 4
 
-=item C<ADMIN
->
+=item ADMIN
 
-Enables the user to issue privileged kas commands (default is
-C<NOADMIN>)
+Enables the user to issue privileged B<kas> commands (default is
+C<NOADMIN>).
 
-=item C<NOTGS
->
+=item NOTGS
 
-Prevents the user from obtaining tickets from the Authentication
-Server's Ticket Granting Service (default is C<TGS>)
+Prevents the user from obtaining tickets from the Authentication Server's
+Ticket Granting Service (default is C<TGS>).
 
-=item C<NOSEAL
->
+=item NOSEAL
 
-Prevents the Ticket Granting Service from using the entry's key field
-as an encryption key (default is C<SEAL>)
+Prevents the Ticket Granting Service from using the entry's key field as
+an encryption key (default is C<SEAL>).
 
-=item C<NOCPW
->
+=item NOCPW
 
-Prevents the user from changing his or her password (default is
-C<CPW>)
+Prevents the user from changing his or her password (default is C<CPW>).
 
 =back
 
 =item *
 
-The key version number, in parentheses, following the word C<key>,
-then one of the following. 
-
+The key version number, in parentheses, following the word C<key>, then
+one of the following.
 
 =over 4
 
 =item *
 
-A checksum equivalent of the key, following the string C<cksum
-is>, if the B<-showkey> flag is not included. The checksum
-is a decimal number derived by encrypting a constant with the key. In
-the case of the B<afs>> entry, this number must match the
-checksum with the corresponding key version number in the output of the
-B<bos listkeys> command; if not, follow the instructions in the
-I<IBM AFS Administration Guide> for creating a new server encryption
-key.
-
+A checksum equivalent of the key, following the string C<cksum is>, if the
+B<-showkey> flag is not included. The checksum is a decimal number derived
+by encrypting a constant with the key. In the case of the C<afs> entry,
+this number must match the checksum with the corresponding key version
+number in the output of the B<bos listkeys> command; if not, follow the
+instructions in the I<IBM AFS Administration Guide> for creating a new
+server encryption key.
 
 =item *
 
-The actual key, following a colon, if the -showkey flag is
-included. The key consists of eight octal numbers, each represented as
-a backslash followed by three decimal digits.
-
+The actual key, following a colon, if the B<-showkey> flag is
+included. The key consists of eight octal numbers, each represented as a
+backslash followed by three decimal digits.
 
 =back
 
 =item *
 
 The date the user last changed his or her own password, following the
-string C<last cpw> (which stands for "last change of
-password").
-
+string C<last cpw> (which stands for "last change of password").
 
 =item *
 
-The string C<password will never expire> indicates that the
-associated password never expires; the string C<password will
-expire> is followed by the password's expiration date. After
-the indicated date, the user cannot authenticate, but has 30 days after it in
-which to use the B<kpasswd> or B<kas setpassword> command to
-set a new password. After 30 days, only an administrator (one whose
-account is marked with the C<ADMIN> flag) can change the password by
-using the B<kas setpassword> command. To set the password
-expiration date, use the B<kas setfields> command's
-B<-pwexpires> argument.
-
+The string C<password will never expire> indicates that the associated
+password never expires; the string C<password will expire> is followed by
+the password's expiration date. After the indicated date, the user cannot
+authenticate, but has 30 days after it in which to use the B<kpasswd> or
+B<kas setpassword> command to set a new password. After 30 days, only an
+administrator (one whose account is marked with the C<ADMIN> flag) can
+change the password by using the B<kas setpassword> command. To set the
+password expiration date, use the B<kas setfields> command's B<-pwexpires>
+argument.
 
 =item *
 
 The number of times the user can fail to provide the correct password
-before the account locks, followed by the string C<consecutive unsuccessful
-authentications are permitted>, or the string C<An unlimited number of
-unsuccessful authentications is permitted> to indicate that there is no
-limit. To set the limit, use the B<kas setfields>
-command's B<-attempts> argument. To unlock a locked
-account, use the B<kas unlock> command. The B<kas
-setfields> reference page discusses how the implementation of the lockout
-feature interacts with this setting.
-
+before the account locks, followed by the string C<consecutive
+unsuccessful authentications are permitted>, or the string C<An unlimited
+number of unsuccessful authentications is permitted> to indicate that
+there is no limit. To set the limit, use the B<kas setfields> command's
+B<-attempts> argument. To unlock a locked account, use the B<kas unlock>
+command. The B<kas setfields> reference page discusses how the
+implementation of the lockout feature interacts with this setting.
 
 =item *
 
 The number of minutes for which the Authentication Server refuses the
 user's login attempts after the limit on consecutive unsuccessful
 authentication attempts is exceeded, following the string C<The lock time
-for this user is>. Use the B<kas> command's
-B<-locktime> argument to set the lockout time. This line
-appears only if a limit on the number of unsuccessful authentication attempts
-has been set with the the B<kas setfields> command's
-B<-attempts> argument.
-
+for this user is>. Use the B<kas> command's B<-locktime> argument to set
+the lockout time. This line appears only if a limit on the number of
+unsuccessful authentication attempts has been set with the the B<kas
+setfields> command's B<-attempts> argument.
 
 =item *
 
 An indication of whether the Authentication Server is currently refusing
-the user's login attempts. The string C<User is not
-locked> indicates that authentication can succeed, whereas the string
-C<User is locked until> I<time> indicates that the user cannot
-authenticate until the indicated time. Use the B<kas unlock>
-command to enable a user to attempt authentication. This line appears
-only if a limit on the number of unsuccessful authentication attempts has been
-set with the B<kas setfields> command's B<-attempts>
-argument.
-
+the user's login attempts. The string C<User is not locked> indicates that
+authentication can succeed, whereas the string C<User is locked until>
+I<time> indicates that the user cannot authenticate until the indicated
+time. Use the B<kas unlock> command to enable a user to attempt
+authentication. This line appears only if a limit on the number of
+unsuccessful authentication attempts has been set with the B<kas
+setfields> command's B<-attempts> argument.
 
 =item *
 
 The date on which the Authentication Server entry expires, or the string
-C<entry never expires> to indicate that the entry does not
-expire. A user becomes unable to authenticate when his or her entry
-expires. Use the B<kas setfields> command's
-B<-expiration> argument to set the expiration date.
-
+C<entry never expires> to indicate that the entry does not expire. A user
+becomes unable to authenticate when his or her entry expires. Use the
+B<kas setfields> command's B<-expiration> argument to set the expiration
+date.
 
 =item *
 
 The maximum possible lifetime of the tokens that the Authentication Server
-grants the user. This value interacts with several others to determine
-the actual lifetime of the token, as described on the B<klog>
-reference page. Use the B<kas setfields> command's
-B<-lifetime> argument to set this value.
-
+grants the user. This value interacts with several others to determine the
+actual lifetime of the token, as described in L<klog(1)>.  Use the B<kas
+setfields> command's B<-lifetime> argument to set this value.
 
 =item *
 
-The date on which the entry was last modified, following the string
-C<last mod on> and the user name of the administrator who modified
-it. The date on which a user changed his or her own password is
-recorded on the second line of output as C<last cpw> instead.
-
+The date on which the entry was last modified, following the string C<last
+mod on> and the user name of the administrator who modified it. The date
+on which a user changed his or her own password is recorded on the second
+line of output as C<last cpw> instead.
 
 =item *
 
 An indication of whether the user can reuse one of his or her last twenty
-passwords when issuing the B<kpasswd>, B<kas setpassword>, or
-B<kas setkey> commands. Use the B<kas setfields>
-command's B<-reuse> argument to set this restriction.
-
+passwords when issuing the B<kpasswd>, B<kas setpassword>, or B<kas
+setkey> commands. Use the B<kas setfields> command's B<-reuse> argument to
+set this restriction.
 
 =back
 
 =head1 EXAMPLES
 
-The following example command shows the user smith displaying
-her own Authentication Database entry. Note the C<ADMIN> flag,
-which shows that B<smith> is privileged.
+The following example command shows the user smith displaying her own
+Authentication Database entry. Note the C<ADMIN> flag, which shows that
+C<smith> is privileged.
 
    % kas examine smith
    Password for smith:
@@ -273,9 +240,9 @@ which shows that B<smith> is privileged.
     last mod on Tue Jan 5 08:22:29 1999 by admin
     permit password reuse
 
-In the following example, the user pat examines his
-Authentication Database entry to determine when the account lockout currently
-in effect will end.
+In the following example, the user C<pat> examines his Authentication
+Database entry to determine when the account lockout currently in effect
+will end.
 
    % kas examine pat
    Password for pat:
@@ -289,9 +256,9 @@ in effect will end.
     last mod on Thu Feb 4 08:22:29 1999 by admin
     permit password reuse
 
-In the following example, an administrator logged in as admin
-uses the B<-showkey> flag to display the octal digits that constitute
-the key in the B<afs> entry.
+In the following example, an administrator logged in as C<admin> uses the
+B<-showkey> flag to display the octal digits that constitute the key in
+the C<afs> entry.
 
    % kas examine -name afs -showkey
    Password for admin: I<admin_password>
@@ -303,19 +270,19 @@ the key in the B<afs> entry.
 
 =head1 PRIVILEGE REQUIRED
 
-A user can examine his or her own entry. To examine others'
-entries or to include the B<-showkey> flag, the issuer must have the
-C<ADMIN> flag set in his or her Authentication Database entry.
+A user can examine his or her own entry. To examine others' entries or to
+include the B<-showkey> flag, the issuer must have the C<ADMIN> flag set
+in his or her Authentication Database entry.
 
 =head1 SEE ALSO
 
-L<bos_addkey(1)>,
-L<bos_listkeys(1)>,
-L<bos_setauth(1)>,
-L<kas(1)>,
-L<kas_setfields(1)>,
-L<kas_setpassword(1)>,
-L<kas_unlock(1)>,
+L<bos_addkey(8)>,
+L<bos_listkeys(8)>,
+L<bos_setauth(8)>,
+L<kas(8)>,
+L<kas_setfields(8)>,
+L<kas_setpassword(8)>,
+L<kas_unlock(8)>,
 L<klog(1)>,
 L<kpasswd(1)>
 

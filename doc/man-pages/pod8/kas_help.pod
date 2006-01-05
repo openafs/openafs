@@ -1,76 +1,70 @@
 =head1 NAME
 
-kas help - Displays the syntax of each specified kas command or lists
-functional descriptions of all B<kas> commands
+kas help - Displays help for kas commands
 
 =head1 SYNOPSIS
 
-B<kas help >[B<-topic> <I<help string>>+]  [-help]
+B<kas help> [B<-topic> <I<help string>>+] [B<-help>]
 
-B<kas h> [B<-t> <I<help string>>+]  [-h]
+B<kas h> [B<-t> <I<help string>>+] [B<-h>]
 
 =head1 DESCRIPTION
 
-The kas help command displays the complete online help entry
-(short description and syntax statement) for each command operation code
-specified by the B<-topic> argument. If the B<-topic>
-argument is omitted, the output includes the first line (name and short
-description) of the online help entry for every B<kas> command.
+The B<kas help> command displays the complete online help entry (short
+description and syntax statement) for each command operation code
+specified by the B<-topic> argument. If the B<-topic> argument is omitted,
+the output includes the first line (name and short description) of the
+online help entry for every B<kas> command.
 
-To list every kas command whose name or short description
-includes a specified keyword, use the B<kas apropos> command.
+To list every kas command whose name or short description includes a
+specified keyword, use the B<kas apropos> command.
 
 =head1 OPTIONS
 
 =over 4
 
-=item -topic
+=item B<-topic> <I<help string>>+
 
 Indicates each command for which to display the complete online help
-entry. Omit the B<kas> part of the command name, providing only
-the operation code (for example, specify B<setpassword>, not B<kas
-setpassword>). If this argument is omitted, the output briefly
-describes every B<kas> command.
+entry. Omit the B<kas> part of the command name, providing only the
+operation code (for example, specify B<setpassword>, not B<kas
+setpassword>). If this argument is omitted, the output briefly describes
+every B<kas> command.
 
-=item -help
+=item B<-help>
 
-Prints the online help for this command. All other valid options
-are ignored.
+Prints the online help for this command. All other valid options are
+ignored.
 
 =back
 
 =head1 OUTPUT
 
-The online help entry for each kas command consists of the
-following two or three lines:
+The online help entry for each B<kas> command consists of the following
+two or three lines:
 
 =over 4
 
 =item *
 
-The first line names the command and briefly describes its
-function.
-
+The first line names the command and briefly describes its function.
 
 =item *
 
 The second line lists aliases for the command, if any.
 
-
 =item *
 
-The final line, which begins with the string C<Usage>, lists the
-command's options in the prescribed order. Online help entries use
-the same symbols (for example, brackets) as the reference pages in this
-document.
-
+The final line, which begins with the string C<Usage>, lists the command's
+options in the prescribed order. Online help entries use the same symbols
+(for example, brackets) as the reference pages in this document.
 
 =back
 
 =head1 EXAMPLES
 
-The following command displays the online help entry for the kas
-setpassword command:
+The following command displays the online help entry for the B<kas
+setpassword> command:
 
    % kas help setpassword
    kas setpassword: set a user's password 
@@ -87,8 +81,8 @@ None, and no password is required.
 
 =head1 SEE ALSO
 
-L<kas(1)>,
-L<kas_apropos(1)>
+L<kas(8)>,
+L<kas_apropos(8)>
 
 =head1 COPYRIGHT
 

@@ -8,7 +8,7 @@ on a Tape Coordinator machine
 The tapeconfig file defines basic configuration parameters for
 all of the tape devices or backup data files available for backup operations
 on a Tape Coordinator machine. The file is in ASCII format and must
-reside in the local B</usr/afs/backup> directory. The
+reside in the local F</usr/afs/backup> directory. The
 instruction for each tape device or backup data file appears on its own line
 and each has the following format:
 
@@ -19,7 +19,6 @@ where
 =over 4
 
 =item I<capacity
->
 
 Specifies the capacity of the tapes used with a tape device, or the amount
 of data to write into a backup data file. The Tape Coordinator refers
@@ -36,14 +35,12 @@ can write to the tape or file during a B<backup dump> or B<backup
 savedb> operation. If there is already a capacity value on the
 label, the Tape Coordinator uses it instead.
 
-
 =item *
 
 When the -size argument is omitted the first time the
 B<backup labeltape> command is used on a given tape or file.
 The Tape Coordinator copies this value into the label's capacity
 field.
-
 
 =back
 
@@ -75,21 +72,17 @@ default is kilobytes.
 
 B<k>or K for kilobytes (KB)
 
-
 =item *
 
 B<m> or M for megabytes (MB)
-
 
 =item *
 
 B<g> or G for gigabytes (GB)
 
-
 =item *
 
 B<t> or T for terabytes (TB)
-
 
 =back
 
@@ -98,7 +91,6 @@ value (2048 GB or 2 TB). Either leave both this field and the
 I<filemark_size> field empty, or provide a value in both of them.
 
 =item I<filemark_size
->
 
 Specifies the size of a tape device's filemarks (also called
 end-of-file or EOF marks), which is set by the device's
@@ -126,27 +118,25 @@ If this field is empty, the Tape Coordinator uses the value 0
 empty, or provide a value in both of them.
 
 =item I<device_name
->
 
 Specifies the complete pathname of the tape device or backup data
 file. The format of tape device names depends on the operating system,
 but on UNIX systems device names generally begin with the string
-B</dev/>. For a backup data file, this field defines the
+F</dev/>. For a backup data file, this field defines the
 complete pathname; for a discussion of suggested naming conventions see
 the description of the B<FILE> instruction in L<CFG_I<device_name>(1)>.
 
 =item I<port_offset
->
 
 Specifies the port offset number associated with this combination of Tape
 Coordinator and tape device or backup data file. 
 
-Acceptable values are the integers B<0> through 58510
+Acceptable values are the integers C<0> through 58510
 (the Backup System can track a maximum of 58,511 port offset numbers).
 Each value must be unique among the cell's Tape Coordinators, but any
 number of them can be associated with a single machine. Port offset
 numbers need not be assigned sequentially, and can appear in any order in the
-B<tapeconfig> file. Assign port offset B<0> to the Tape
+B<tapeconfig> file. Assign port offset C<0> to the Tape
 Coordinator for the tape device or backup data file used most often for backup
 operations; doing so will allow the operator to omit the
 B<-portoffset> argument from the largest possible number of
@@ -158,21 +148,21 @@ B<backup> commands.
 
 Creating the file requires UNIX B<w> (write) and
 B<x> (B<execute>) permissions on the
-B</usr/afs/backup> directory. Editing the file requires UNIX
+F</usr/afs/backup> directory. Editing the file requires UNIX
 B<w> (B<write>) permission on the file.
 
 =head1 EXAMPLES
 
 The following example tapeconfig file configures three tape
 devices and a backup data file. The first device has device name
-B</dev/rmt/0h>, and is assigned port offset B<0> because it
+F</dev/rmt/0h>, and is assigned port offset C<0> because it
 will be the most frequently used device for all backup operations in the
 cell. Its default tape capacity is 2 GB and filemark size is 1
-MB. The B</dev/rmt/3h> drive has half the capacity but a much
-smaller filemark size; its port offset is B<3>. The third
-device listed, B</dev/rmt/4h>, has the same capacity and filemark size
-as the first device and is assigned port offset B<2>. Port
-offset B<4> is assigned to the backup data file B</dev/FILE>,
+MB. The F</dev/rmt/3h> drive has half the capacity but a much
+smaller filemark size; its port offset is C<3>. The third
+device listed, F</dev/rmt/4h>, has the same capacity and filemark size
+as the first device and is assigned port offset C<2>. Port
+offset C<4> is assigned to the backup data file F</dev/FILE>,
 which is actually a symbolic link to the actual file located elsewhere on the
 local disk. The Tape Coordinator writes up to 1.5 GB into the
 file; as recommended, the filemark size is set to zero.
@@ -184,10 +174,10 @@ file; as recommended, the filemark size is set to zero.
 
 =head1 SEE ALSO
 
-L<backup_addhost(1)>,
-L<backup_dump(1)>,
-L<backup_labeltape(1)>,
-L<backup_savedb(1)>,
+L<backup_addhost(8)>,
+L<backup_dump(8)>,
+L<backup_labeltape(8)>,
+L<backup_savedb(8)>,
 L<butc(1)>,
 L<fms(1)>
 

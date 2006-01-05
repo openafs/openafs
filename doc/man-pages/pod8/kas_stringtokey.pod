@@ -4,42 +4,43 @@ kas stringtokey - Converts a character string into an octal key
 
 =head1 SYNOPSIS
 
-B<kas stringtokey -string> <I<password string>>  [B<-cell> <I<cell name>>]  [-help]
+B<kas stringtokey> B<-string> <I<password string>>
+    [B<-cell> <I<cell name>>] [B<-help>]
 
-B<kas str -s> <I<password string>>  [B<-c> <I<cell name>>]  [-h]
+B<kas str> B<-s> <I<password string>> [B<-c> <I<cell name>>] [B<-h>]
 
 =head1 DESCRIPTION
 
-The kas stringtokey command converts the character string
-specified with the B<-string> argument into an octal string suitable
-for use as an encryption key.
+The B<kas stringtokey> command converts the character string specified
+with the B<-string> argument into an octal string suitable for use as an
+encryption key.
 
-The kas command interpreter generates the octal key by using an
-encryption algorithm on the combination of the specified string and the name
-of the local cell (as recorded in the local B</usr/vice/etc/ThisCell>
+The B<kas> command interpreter generates the octal key by using an
+encryption algorithm on the combination of the specified string and the
+name of the local cell (as recorded in the local F</usr/vice/etc/ThisCell>
 file). Use the B<-cell> argument to convert a string into a key
 appropriate for a cell other than the local one.
 
 =head1 CAUTIONS
 
 This command writes the key to the standard output stream, on which it can
-possibly be intercepted by third parties. It is not very secure to use
-the key in an actual Authentication Database entry.
+possibly be intercepted by third parties. It is not very secure to use the
+key in an actual Authentication Database entry.
 
 =head1 OPTIONS
 
 =over 4
 
-=item -string
+=item B<-string> <I<password string>>
 
 Specifies the character string to convert into an octal key.
 
-=item -cell
+=item B<-cell> <I<cell name>>
 
 Specifies the complete Internet domain name of the cell to combine with
-the password string while generating the key. If this argument is
-omitted, the B<kas> command interpreter determines the name of the
-local cell by consulting: 
+the password string while generating the key. If this argument is omitted,
+the B<kas> command interpreter determines the name of the local cell by
+consulting:
 
 =over 4
 
@@ -47,19 +48,17 @@ local cell by consulting:
 
 First, the value of the environment variable AFSCELL.
 
-
 =item *
 
-Second, the cellname in the /usr/vice/etc/ThisCell file on the
-local machine.
-
+Second, the cellname in the F</usr/vice/etc/ThisCell> file on the local
+machine.
 
 =back
 
-=item -help
+=item B<-help>
 
-Prints the online help for this command. All other valid options
-are ignored.
+Prints the online help for this command. All other valid options are
+ignored.
 
 =back
 
@@ -72,7 +71,7 @@ The output is of the following form:
 =head1 EXAMPLES
 
 The following example shows the octal key equivalent of the string
-B<new_pswd> in the ABC Corporation cell.
+C<new_pswd> in the ABC Corporation cell.
 
    % kas stringtokey new_pswd
    Converting new_pswd in realm 'ABC.COM' yields
@@ -84,9 +83,8 @@ None, and no password is required.
 
 =head1 SEE ALSO
 
-L<ThisCell (client version)(1)>
-
-L<kas(1)>
+L<ThisCell(5)>,
+L<kas(8)>
 
 =head1 COPYRIGHT
 

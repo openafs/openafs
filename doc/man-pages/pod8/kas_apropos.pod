@@ -4,33 +4,32 @@ kas apropos - Displays each help entry containing a keyword string
 
 =head1 SYNOPSIS
 
-B<kas apropos -topic> <I<help string>>  [-help]
+B<kas apropos> B<-topic> <I<help string>> [B<-help>]
 
-B<kas a  -t> <I<help string>>  [-h]
+B<kas a> B<-t> <I<help string>> [B<-h>]
 
 =head1 DESCRIPTION
 
-The kas apropos command displays the first line of the online
-help entry for any B<kas> command that has the string specified by the
+The B<kas apropos> command displays the first line of the online help
+entry for any B<kas> command that has the string specified by the
 B<-topic> argument in its name or short description.
 
-To display the syntax for a command, use the kas help
-command.
+To display the syntax for a command, use the B<kas help> command.
 
 =head1 OPTIONS
 
 =over 4
 
-=item -topic
+=item B<-topic> <I<help string>>
 
-Specifies the keyword string to match, in lowercase letters only.
-If the string is more than a single word, surround it with double quotes ("")
+Specifies the keyword string to match, in lowercase letters only.  If the
+string is more than a single word, surround it with double quotes (C<"">)
 or other delimiters.
 
-=item -help
+=item B<-help>
 
-Prints the online help for this command. All other valid options
-are ignored.
+Prints the online help for this command. All other valid options are
+ignored.
 
 =back
 
@@ -38,13 +37,13 @@ are ignored.
 
 The first line of a command's online help entry names it and briefly
 describes its function. This command displays the first line for any
-B<kas> command where the string specified with the B<-topic>
-argument is part of the command name or first line.
+B<kas> command where the string specified with the B<-topic> argument is
+part of the command name or first line.
 
 =head1 EXAMPLES
 
-The following command lists all kas commands that include the
-word B<key> in their names or short descriptions:
+The following command lists all B<kas> commands that include the word
+C<key> in their names or short descriptions:
 
    % kas apropos key
    setkey: set a user's key
@@ -56,8 +55,8 @@ None, and no password is required.
 
 =head1 SEE ALSO
 
-L<kas(1)>,
-L<kas_help(1)>
+L<kas(8)>,
+L<kas_help(8)>
 
 =head1 COPYRIGHT
 

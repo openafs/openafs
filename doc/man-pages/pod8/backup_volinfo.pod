@@ -4,112 +4,103 @@ backup volinfo - Displays a volume's dump history from the Backup Database
 
 =head1 SYNOPSIS
 
-backup volinfo -volume <I<volume name>>
-[B<-localauth>]  [B<-cell> <I<cell name>>]  [B<-help>]
+B<backup volinfo> B<-volume> <I<volume name>> [B<-localauth>]
+    [B<-cell> <I<cell name>>] [B<-help>]
 
-B<backup voli -v> <I<volume name>>  [B<-l>]  [B<-c> <I<cell name>>]  [-h]
+B<backup voli> B<-v> <I<volume name>> [B<-l>] [B<-c> <I<cell name>>] [B<-h>]
 
 =head1 DESCRIPTION
 
-The backup volinfo command displays a dump history of the
-specified volume, reporting information such as the date on which the volume
-was dumped and the tapes that contain it. Include the
-B<.backup> extension on the volume name if the backup version
-of the volume was dumped.
+The B<backup volinfo> command displays a dump history of the specified
+volume, reporting information such as the date on which the volume was
+dumped and the tapes that contain it. Include the C<.backup> extension on
+the volume name if the backup version of the volume was dumped.
 
 =head1 OPTIONS
 
 =over 4
 
-=item -volume
+=item B<-volume> <I<volume name>>
 
-Names the volume for which to display the dump history. Include
-theC< .backup> or C<.readonly> extension if the
-backup or read-only version of the volume was dumped.
+Names the volume for which to display the dump history. Include the
+C<.backup> or C<.readonly> extension if the backup or read-only version of
+the volume was dumped.
 
-=item -localauth
+=item B<-localauth>
 
 Constructs a server ticket using a key from the local
-B</usr/afs/etc/KeyFile> file. The B<backup> command
-interpreter presents it to the Backup Server, Volume Server and VL Server
-during mutual authentication. Do not combine this flag with the
-B<-cell> argument. For more details, see the introductory
-B<backup> reference page.
+F</usr/afs/etc/KeyFile> file. The B<backup> command interpreter presents
+it to the Backup Server, Volume Server and VL Server during mutual
+authentication. Do not combine this flag with the B<-cell> argument. For
+more details, see L<backup(8)>.
 
-=item -cell
+=item B<-cell> <I<cell name>>
 
-Names the cell in which to run the command. Do not combine this
-argument with the B<-localauth> flag. For more details, see the
-introductory B<backup> reference page.
+Names the cell in which to run the command. Do not combine this argument
+with the B<-localauth> flag. For more details, see L<backup(8)>.
 
-=item -help
+=item B<-help>
 
-Prints the online help for this command. All other valid options
-are ignored.
+Prints the online help for this command. All other valid options are
+ignored.
 
 =back
 
 =head1 OUTPUT
 
 The output includes a line for each Backup Database dump record that
-mentions the specified volume, order from most to least recent. The
-output for each record appears in a table with six columns:
+mentions the specified volume, order from most to least recent. The output
+for each record appears in a table with six columns:
 
 =over 4
 
-=item C<dumpID
->
+=item dumpID
 
 The dump ID of the dump that includes the volume.
 
-=item C<lvl
->
+=item lvl
 
 The depth in the dump hierarchy of the dump level at which the volume was
-dumped. A value of C<0> indicates a full dump. A value
-of C<1> or greater indicates an incremental dump made at the specified
-depth in the dump hierarchy.
+dumped. A value of C<0> indicates a full dump. A value of C<1> or greater
+indicates an incremental dump made at the specified depth in the dump
+hierarchy.
 
-=item C<parentid
->
+=item parentid
 
-The dump ID of the dump's parent dump. A value of C<0>
-indicates a full dump, which has no parent; in this case, the value in
-the C<lvl> column is also C<0>.
+The dump ID of the dump's parent dump. A value of C<0> indicates a full
+dump, which has no parent; in this case, the value in the C<lvl> column is
+also C<0>.
 
-=item C<creation date
->
+=item creation date
 
 The date and time at which the Backup System started the dump operation
 that created the dump.
 
-=item C<clone date
->
+=item clone date
 
 For a backup or read-only volume, the time at which it was cloned from its
-read/write source. For a read/write volume, the same as the value in
-the C<creation date> field.
+read/write source. For a read/write volume, the same as the value in the
+C<creation date> field.
 
-=item C<tape name
->
+=item tape name
 
-The name of the tape containing the dump: either the permanent tape
-name, or an AFS tape name in the format
-I<volume_set_name>.I<dump_level_name>.I<tape_index>
-where I<volume_set_name> is the name of the volume set associated with
-the initial dump in the dump set of which this tape is a part;
-I<dump_level_name> is the name of the dump level at which the initial
-dump was backed up; I<tape_index> is the ordinal of the tape in
-the dump set. Either type of name can be followed by a dump ID in
-parentheses; if it appears, it is the dump ID of the initial dump in the
-dump set to which this appended dump belongs.
+The name of the tape containing the dump: either the permanent tape name,
+or an AFS tape name in the format
+I<volume_set_name>.I<dump_level_name>.I<tape_index> where
+I<volume_set_name> is the name of the volume set associated with the
+initial dump in the dump set of which this tape is a part;
+I<dump_level_name> is the name of the dump level at which the initial dump
+was backed up; I<tape_index> is the ordinal of the tape in the dump
+set. Either type of name can be followed by a dump ID in parentheses; if
+it appears, it is the dump ID of the initial dump in the dump set to which
+this appended dump belongs.
 
 =back
 
 =head1 EXAMPLES
 
 The following example shows part of the dump history of the Backup volume
-B<user.smith.backup>:
+C<user.smith.backup>:
 
    % backup volinfo -volume user.smith.backup
    DumpID    lvl parentID  creation date    clone date       tape name
@@ -125,9 +116,9 @@ None
 
 =head1 SEE ALSO
 
-L<backup(1)>,
-L<backup_dumpinfo(1)>,
-L<backup_volrestore(1)>
+L<backup(8)>,
+L<backup_dumpinfo(8)>,
+L<backup_volrestore(8)>
 
 =head1 COPYRIGHT
 

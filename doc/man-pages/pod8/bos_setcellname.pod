@@ -1,138 +1,119 @@
 =head1 NAME
 
-bos setcellname - Sets the cell's name in the /usr/afs/etc/ThisCell and
-B</usr/afs/etc/CellServDB> files
+bos setcellname - Sets the cell's name in ThisCell and CellServDB
 
 =head1 SYNOPSIS
 
-B<bos setcellname -server> <I<machine name>>  -name <I<cell name>> 
-[B<-cell> <I<cell name>>]  [B<-noauth>]  [B<-localauth>]  [B<-help>]
+B<bos setcellname> B<-server> <I<machine name>> B<-name> <I<cell name>> 
+    [B<-cell> <I<cell name>>] [B<-noauth>] [B<-localauth>] [B<-help>]
 
-B<bos setc -s> <I<machine name>>  B<-n> <I<cell name>>  [B<-c> <I<cell name>>]  [B<-n>]  [B<-l>]  [-h]
+B<bos setc> B<-s> <I<machine name>> B<-n> <I<cell name>>
+    [B<-c> <I<cell name>>] [B<-n>] [B<-l>] [-h]
 
 =head1 DESCRIPTION
 
-The bos setcellname command establishes the cell's name and
-makes the server machine named by the B<-server> argument a member of
-it, by recording the value of the B<-name> argument in two files which
-it creates on the local disk:
+The B<bos setcellname> command establishes the cell's name and makes the
+server machine named by the B<-server> argument a member of it, by
+recording the value of the B<-name> argument in two files which it creates
+on the local disk:
 
 =over 4
 
 =item *
 
-/usr/afs/etc/ThisCell
-
+F</usr/afs/etc/ThisCell>
 
 =item *
 
-/usr/afs/etc/CellServDB. The cell name appears on the
-first line in the file, preceded by the required C<>> symbol.
-The machine name specified with the B<-server> argument appears on the
-second line along with its IP address as obtained from the cell's naming
-service. The machine is thus designated as the cell's first
-database server machine.
-
+F</usr/afs/etc/CellServDB>. The cell name appears on the first line in the
+file, preceded by the required C<< > >> symbol.  The machine name
+specified with the B<-server> argument appears on the second line along
+with its IP address as obtained from the cell's naming service. The
+machine is thus designated as the cell's first database server machine.
 
 =back
 
 =head1 CAUTIONS
 
-Issue this command only when the installing the cell's first AFS
-server machine. The I<IBM AFS Quick Beginnings> explains how to
-copy over the B<ThisCell> and B<CellServDB> files from this or
-another appropriate machine during installation of additional server
-machines.
+Issue this command only when the installing the cell's first AFS server
+machine. The I<IBM AFS Quick Beginnings> explains how to copy over the
+F<ThisCell> and F<CellServDB> files from this or another appropriate
+machine during installation of additional server machines.
 
 Be sure to choose a satisfactory cell name when issuing this command,
-because changing a cell's name is very complicated; for one thing,
-it requires changing every password in the Authentication Database.
-Consult the I<IBM AFS Administration Guide> for advice on choosing a
-cell name. If changing the cell's name is absolutely necessary,
-contact AFS Product Support for complete instructions.
+because changing a cell's name is very complicated; for one thing, it
+requires changing every password in the Authentication Database.  Consult
+the I<IBM AFS Administration Guide> for advice on choosing a cell name.
 
 =head1 OPTIONS
 
 =over 4
 
-=item -server
->
+=item B<-server> <I<machine name>>
 
 Indicates the server machine on which to set the cell name in the
-B<ThisCell> and B<CellServDB> file. It is always the
-first machine installed in a cell. Identify the machine by IP address
-or its host name (either fully-qualified or abbreviated unambiguously).
-For details, see the introductory reference page for the B<bos>
-command suite.
+F<ThisCell> and F<CellServDB> file. It is always the first machine
+installed in a cell. Identify the machine by IP address or its host name
+(either fully-qualified or abbreviated unambiguously).  For details, see
+L<bos(8)>.
 
-=item -name
->
+=item B<-name> <I<cell name>>
 
 Defines the cell name, using standard Internet domain name format (the
-actual domain name is usually appropriate). Examples are
-B<abc.com> for the ABC Corporation and
-B<stateu.edu> for the State University. It must match
-the value of the B<-cell> argument, if that is provided.
+actual domain name is usually appropriate). Examples are C<abc.com> for
+the ABC Corporation and C<stateu.edu> for the State University. It must
+match the value of the B<-cell> argument, if that is provided.
 
-=item -cell
->
+=item B<-cell> <I<cell name>>
 
-Names the cell in which to run the command. Do not combine this
-argument with the B<-localauth> flag. For more details, see the
-introductory B<bos> reference page.
+Names the cell in which to run the command. Do not combine this argument
+with the B<-localauth> flag. For more details, see L<bos(8)>.
 
-=item -noauth
->
+=item B<-noauth>
 
-Assigns the unprivileged identity anonymous to the
-issuer. Do not combine this flag with the B<-localauth>
-flag. For more details, see the introductory B<bos> reference
-page.
+Assigns the unprivileged identity C<anonymous> to the issuer. Do not
+combine this flag with the B<-localauth> flag. For more details, see
+L<bos(8)>.
 
-=item -localauth
->
+=item B<-localauth>
 
 Constructs a server ticket using a key from the local
-B</usr/afs/etc/KeyFile> file. The B<bos> command
-interpreter presents the ticket to the BOS Server during mutual
-authentication. Do not combine this flag with the B<-cell> or
-B<-noauth> options. For more details, see the introductory
-B<bos> reference page.
+F</usr/afs/etc/KeyFile> file. The B<bos> command interpreter presents the
+ticket to the BOS Server during mutual authentication. Do not combine this
+flag with the B<-cell> or B<-noauth> options. For more details, see
+L<bos(8)>.
 
-=item -help
+=item B<-help>
 
-Prints the online help for this command. All other valid options
-are ignored.
+Prints the online help for this command. All other valid options are
+ignored.
 
 =back
 
 =head1 EXAMPLES
 
-The following command defines the cell name abc.com in
-the B<ThisCell> and B<CellServDB> files on the machine
-B<fs1.abc.com> as it is installed as the cell's
-first server machine.
+The following command defines the cell name C<abc.com> in the F<ThisCell>
+and F<CellServDB> files on the machine C<fs1.abc.com> as it is installed
+as the cell's first server machine.
 
    % bos setcellname -server fs1.abc.com -name abc.com
 
 =head1 PRIVILEGE REQUIRED
 
-Authorization checking is normally turned off during installation, which is
-the only recommended time to use this command; in this case no privilege
-is required. If authorization checking is turned on, the issuer must be
-listed in the B</usr/afs/etc/UserList> file on the machine named by
-the B<-server> argument, or must be logged in as the local superuser
-B<root> if the B<-localauth> flag is included.
+Authorization checking is normally turned off during installation, which
+is the only recommended time to use this command; in this case no
+privilege is required. If authorization checking is turned on, the issuer
+must be listed in the F</usr/afs/etc/UserList> file on the machine named
+by the B<-server> argument, or must be logged in as the local superuser
+C<root> if the B<-localauth> flag is included.
 
 =head1 SEE ALSO
 
-L<CellServDB (server version)(1)>
-
-L<KeyFile(1)>,
-L<ThisCell (server version)(1)>
-
-L<UserList(1)>,
-L<bos(1)>
+L<CellServDB(5)>,
+L<KeyFile(5)>,
+L<ThisCell(5)>,
+L<UserList(5)>,
+L<bos(8)>
 
 I<IBM AFS Quick Beginnings>
 

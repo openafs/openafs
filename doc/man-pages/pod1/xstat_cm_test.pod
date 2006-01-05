@@ -1,0 +1,111 @@
+=head1 NAME
+
+xstat_cm_test - Displays data collections from the Cache Manager
+
+=head1 SYNOPSIS
+
+B<xstat_cm_test> [I<initcmd>]
+    B<-cmname> <I<cache manager name(s) to monitor>>+
+    B<-collID> <I<collection(s) to fetch>>+ [B<-onceonly>]  
+    [B<-frequency> <I<poll frequency, in seconds>>]  
+    [B<-period> <I<data collection time, in minutes>>] [B<-debug>]
+    [B<-help>]
+
+B<xstat_cm_test> [I<i>] B<-cm> <I<cache manager name(s) to monitor>>+
+    B<-co> <I<collection(s) to fetch>>+ [B<-o>]
+    [B<-f> <I<poll frequency, in seconds>>]  
+    [B<-p> <I<data collection time, in minutes>>] [B<-d>] [B<-h>]
+
+=head1 DESCRIPTION
+
+The B<xstat_cm_test> command tests the routines in the F<libxstat_cm.a>
+library and displays the data collections associated with the Cache
+Manager. The command executes in the foreground.
+
+The command produces a large volume of output; to save it for later
+analysis, direct it to a file.
+
+=head1 OPTIONS
+
+=over 4
+
+=item I<initcmd>
+
+Accommodates the command's use of the AFS command parser, and is optional.
+
+=item B<-cmname> <I<cache manager name to monitor>>+
+
+Specifies the fully qualified hostname of each client machine for which to
+monitor the Cache Manager.
+
+=item B<-collID> <I<collection to fetch>>+
+
+Specifies each data collection to return, which defines the type and
+amount of data the command interpreter gathers about the Cache Manager.
+Data is returned in a predefined data structure.
+
+There are three acceptable values: 
+
+=over 4
+
+=item 0
+
+Provides profiling information about the numbers of times different
+internal Cache Manager routines were called since the Cache Manager
+started.
+
+=item 1
+
+Reports various internal performance statistics related to the Cache
+Manager (for example, statistics about how effectively the cache is being
+used and the quantity of intracell and intercell data access).
+
+=item 2
+
+Reports all of the internal performance statistics provided by the C<1>
+setting, plus some additional, detailed performance figures (for example,
+statistics about the number of RPCs sent by the Cache Manager and how long
+they take to complete, and statistics regarding authentication, access,
+and PAG information associated with data access).
+
+=back
+
+=item B<-onceonly>
+
+Gathers statistics just one time. Omit this flag to have the command
+continue to probe the Cache Manager for statistics at the frequency
+specified by the B<-frequency> argument; in this case press Ctrl-C to stop
+the probes.
+
+=item B<-frequency> <I<poll frequency>>
+
+Sets the frequency in seconds at which the program initiates probes to the
+Cache Manager. The default is 30 seconds.
+
+=item B<-period> <I<data collection time>>
+
+Sets the number of minutes the program runs; at the end of this period of
+time, the program exits. The default is 10 minutes.
+
+=item B<-debug>
+
+Displays a trace on the standard output stream as the command runs.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 SEE ALSO
+
+L<xstat_fs_test(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

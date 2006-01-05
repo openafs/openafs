@@ -1,110 +1,99 @@
 =head1 NAME
 
-bos listkeys - Displays the server encryption keys from the
-B</usr/afs/etc/KeyFile> file
+bos listkeys - Displays the server encryption keys from the KeyFile file
 
 =head1 SYNOPSIS
 
-B<bos listkeys -server> <I<machine name>>  [B<-showkey>]  [-cell <I<cell name>>]  
-[B<-noauth>]  [B<-localauth>]  [B<-help>]
+B<bos listkeys> B<-server> <I<machine name>> [B<-showkey>]
+    [B<-cell> <I<cell name>>] [B<-noauth>] [B<-localauth>] [B<-help>]
 
-B<bos listk -se> <I<machine name>>  [B<-sh>]  [B<-c> <I<cell name>>]  [B<-n>]  [B<-l>]  [-h]
+B<bos listk> B<-se> <I<machine name>> [B<-sh>] [B<-c> <I<cell name>>]
+    [B<-n>] [B<-l>] [B<-h>]
 
 =head1 DESCRIPTION
 
-The bos listkeys command formats and displays the list of server
-encryption keys from the B</usr/afs/etc/KeyFile> file on the server
+The B<bos listkeys> command formats and displays the list of server
+encryption keys from the F</usr/afs/etc/KeyFile> file on the server
 machine named by the B<-server> argument.
 
-To edit the list of keys, use the B<bos addkey> and bos
-removekey commands.
+To edit the list of keys, use the B<bos addkey> and B<bos removekey>
+commands.
 
 =head1 CAUTIONS
 
 Displaying actual keys on the standard output stream (by including the
-B<-showkey> flag) is a security exposure. Displaying a checksum
-is sufficient for most purposes.
+B<-showkey> flag) is a security exposure. Displaying a checksum is
+sufficient for most purposes.
 
 =head1 OPTIONS
 
 =over 4
 
-=item -server
->
+=item B<-server> <I<machine name>>
 
 Indicates the server machine from which to display the KeyFile
 file. Identify the machine by IP address or its host name (either
-fully-qualified or abbreviated unambiguously). For details, see the
-introductory reference page for the B<bos> command suite. 
+fully-qualified or abbreviated unambiguously). For details, see L<bos(8)>.
 
 For consistent performance in the cell, the output must be the same on
-every server machine. The B<bos addkey> reference page explains
-how to keep the machines synchronized.
+every server machine. The B<bos addkey> reference page explains how to
+keep the machines synchronized.
 
-=item -showkey
->
+=item B<-showkey>
 
 Displays the octal digits that constitute each key.
 
-=item -cell
->
+=item B<-cell> <I<cell name>>
 
-Names the cell in which to run the command. Do not combine this
-argument with the B<-localauth> flag. For more details, see the
-introductory B<bos> reference page.
+Names the cell in which to run the command. Do not combine this argument
+with the B<-localauth> flag. For more details, see L<bos(8)>.
 
-=item -noauth
->
+=item B<-noauth>
 
-Assigns the unprivileged identity anonymous to the
-issuer. Do not combine this flag with the B<-localauth>
-flag. For more details, see the introductory B<bos> reference
-page.
+Assigns the unprivileged identity C<anonymous> to the issuer. Do not
+combine this flag with the B<-localauth> flag. For more details, see
+L<bos(8)>.
 
-=item -localauth
->
+=item B<-localauth>
 
 Constructs a server ticket using a key from the local
-B</usr/afs/etc/KeyFile> file. The B<bos> command
-interpreter presents the ticket to the BOS Server during mutual
-authentication. Do not combine this flag with the B<-cell> or
-B<-noauth> options. For more details, see the introductory
-B<bos> reference page.
+F</usr/afs/etc/KeyFile> file. The B<bos> command interpreter presents the
+ticket to the BOS Server during mutual authentication. Do not combine this
+flag with the B<-cell> or B<-noauth> options. For more details, see
+L<bos(8)>.
 
-=item -help
+=item B<-help>
 
-Prints the online help for this command. All other valid options
-are ignored.
+Prints the online help for this command. All other valid options are
+ignored.
 
 =back
 
 =head1 OUTPUT
 
 The output includes one line for each server encryption key listed in the
-B<KeyFile> file, identified by its key version number.
+F<KeyFile> file, identified by its key version number.
 
-If the -showkey flag is included, the output displays the actual
-string of eight octal numbers that constitute the key. Each octal
-number is a backslash and three decimal digits.
+If the B<-showkey> flag is included, the output displays the actual string
+of eight octal numbers that constitute the key. Each octal number is a
+backslash and three decimal digits.
 
-If the -showkey flag is not included, the output represents each
-key as a checksum, which is a decimal number derived by encrypting a constant
+If the B<-showkey> flag is not included, the output represents each key as
+a checksum, which is a decimal number derived by encrypting a constant
 with the key.
 
-Following the list of keys or checksums, the string C<Keys last
-changed> indicates when a key was last added to the B<KeyFile>
-file. The words C<All done> indicate the end of the
-output.
+Following the list of keys or checksums, the string C<Keys last changed>
+indicates when a key was last added to the F<KeyFile> file. The words
+C<All done> indicate the end of the output.
 
 For mutual authentication to work properly, the output from the command
-B<kas examine afs> must match the key or checksum with the same key
+C<kas examine afs> must match the key or checksum with the same key
 version number in the output from this command.
 
 =head1 EXAMPLES
 
 The following example shows the checksums for the keys stored in the
-B<KeyFile> file on the machine
-B<fs3.abc.com>.
+F<KeyFile> file on the machine C<fs3.abc.com>.
 
    % bos listkeys fs3.abc.com
    key 1 has cksum 972037177
@@ -114,8 +103,8 @@ B<fs3.abc.com>.
    Keys last changed on Mon Apr 12 11:24:46 1999.
    All done.
 
-The following example shows the actual keys from the KeyFile
-file on the machine B<fs6.abc.com>.
+The following example shows the actual keys from the F<KeyFile> file on
+the machine C<fs6.abc.com>.
 
    % bos listkeys fs6.abc.com -showkey
    key 0 is '\040\205\211\241\345\002\023\211'
@@ -126,19 +115,19 @@ file on the machine B<fs6.abc.com>.
 
 =head1 PRIVILEGE REQUIRED
 
-The issuer must be listed in the /usr/afs/etc/UserList file on
-the machine named by the B<-server> argument, or must be logged onto a
-server machine as the local superuser B<root> if the
-B<-localauth> flag is included.
+The issuer must be listed in the F</usr/afs/etc/UserList> file on the
+machine named by the B<-server> argument, or must be logged onto a server
+machine as the local superuser C<root> if the B<-localauth> flag is
+included.
 
 =head1 SEE ALSO
 
-L<KeyFile(1)>,
-L<UserList(1)>,
-L<bos_addkey(1)>,
-L<bos_removekey(1)>,
-L<bos_setauth(1)>,
-L<kas_examine(1)>
+L<KeyFile(5)>,
+L<UserList(5)>,
+L<bos_addkey(8)>,
+L<bos_removekey(8)>,
+L<bos_setauth(8)>,
+L<kas_examine(8)>
 
 =head1 COPYRIGHT
 

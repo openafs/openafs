@@ -1,101 +1,89 @@
 =head1 NAME
 
-bos removeuser - Removes a privileged user from the /usr/afs/etc/UserList file
+bos removeuser - Removes a privileged user from the UserList file
 
 =head1 SYNOPSIS
 
-B<bos removeuser -server> <I<machine name>>  -user <I<user names>>+ 
-[B<-cell> <I<cell name>>]  [B<-noauth>]  [B<-localauth>]  [B<-help>]
+B<bos removeuser> B<-server> <I<machine name>> B<-user> <I<user names>>+ 
+    [B<-cell> <I<cell name>>] [B<-noauth>] [B<-localauth>] [B<-help>]
 
-B<bos removeu -s> <I<machine name>>  B<-u> <I<user names>>+  [-c <I<cell name>>]  
-[B<-n>]  [B<-l>]  [B<-h>]
+B<bos removeu> B<-s> <I<machine name>> B<-u> <I<user names>>+
+    [B<-c> <I<cell name>>] [B<-n>] [B<-l>] [B<-h>]
 
 =head1 DESCRIPTION
 
-The bos removeuser command removes each user name specified with
-the B<-user> argument from the B</usr/afs/etc/UserList> file
-on the machine named by the B<-server> argument.
+The B<bos removeuser> command removes each user name specified with the
+B<-user> argument from the F</usr/afs/etc/UserList> file on the machine
+named by the B<-server> argument.
 
 =head1 OPTIONS
 
 =over 4
 
-=item -server
->
+=item B<-server> <I<machine name>>
 
 Indicates the server machine on which to change the
-B</usr/afs/etc/UserList> file. Identify the machine by IP
-address or its host name (either fully-qualified or abbreviated
-unambiguously). For details, see the introductory reference page for
-the B<bos> command suite. 
+F</usr/afs/etc/UserList> file. Identify the machine by IP address or its
+host name (either fully-qualified or abbreviated unambiguously). For
+details, see L<bos(8)>.
 
-In cells that run the United States edition of AFS and use the Update
-Server to distribute the contents of the B</usr/afs/etc> directory, it
-is conventional to specify only the system control machine as a value for the
-B<-server> argument. In cells that run the international
-version of AFS, repeat the command for each file server machine. For
-further discussion, see the introductory reference page for the B<bos>
-command suite.
+In cells that use the Update Server to distribute the contents of the
+F</usr/afs/etc> directory, it is conventional to specify only the system
+control machine as a value for the B<-server> argument. Otherwise, repeat
+the command for each file server machine. For further discussion, see
+L<bos(8)>.
 
-=item -user
->
+=item B<-user> <I<user names>>+
 
 Specifies each user name to remove.
 
-=item -cell
->
+=item B<-cell> <I<cell name>>
 
-Names the cell in which to run the command. Do not combine this
-argument with the B<-localauth> flag. For more details, see the
-introductory B<bos> reference page.
+Names the cell in which to run the command. Do not combine this argument
+with the B<-localauth> flag. For more details, see L<bos(8)>.
 
-=item -noauth
->
+=item B<-noauth>
 
-Assigns the unprivileged identity anonymous to the
-issuer. Do not combine this flag with the B<-localauth>
-flag. For more details, see the introductory B<bos> reference
-page.
+Assigns the unprivileged identity C<anonymous> to the issuer. Do not
+combine this flag with the B<-localauth> flag. For more details, see
+L<bos(8)>.
 
-=item -localauth
->
+=item B<-localauth>
 
 Constructs a server ticket using a key from the local
-B</usr/afs/etc/KeyFile> file. The B<bos> command
-interpreter presents the ticket to the BOS Server during mutual
-authentication. Do not combine this flag with the B<-cell> or
-B<-noauth> options. For more details, see the introductory
-B<bos> reference page.
+F</usr/afs/etc/KeyFile> file. The B<bos> command interpreter presents the
+ticket to the BOS Server during mutual authentication. Do not combine this
+flag with the B<-cell> or B<-noauth> options. For more details, see
+L<bos(8)>.
 
-=item -help
+=item B<-help>
 
-Prints the online help for this command. All other valid options
-are ignored.
+Prints the online help for this command. All other valid options are
+ignored.
 
 =back
 
 =head1 EXAMPLES
 
-The following example removes the users B<pat> and jones
-from the B<UserList> file on the system control machine
-B<fs1.abc.com>.
+The following example removes the users C<pat> and C<jones> from the
+F<UserList> file on the system control machine C<fs1.abc.com>.
 
    % bos removeuser -server fs1.abc.com -user pat jones
 
 =head1 PRIVILEGE REQUIRED
 
-The issuer must be listed in the /usr/afs/etc/UserList file on
-the machine named by the B<-server> argument, or must be logged onto a
-server machine as the local superuser B<root> if the
-B<-localauth> flag is included.
+The issuer must be listed in the F</usr/afs/etc/UserList> file on the
+machine named by the B<-server> argument, or must be logged onto a server
+machine as the local superuser C<root> if the B<-localauth> flag is
+included.
 
 =head1 SEE ALSO
 
-L<KeyFile(1)>,
-L<UserList(1)>,
-L<bos(1)>,
-L<bos_addkey(1)>,
-L<bos_listkeys(1)>
+L<KeyFile(5)>,
+L<UserList(5)>,
+L<bos(8)>,
+L<bos_addkey(8)>,
+L<bos_listkeys(8)>
 
 =head1 COPYRIGHT
 

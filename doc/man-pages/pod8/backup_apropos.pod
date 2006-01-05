@@ -4,33 +4,32 @@ backup apropos - Displays each help entry containing a keyword string
 
 =head1 SYNOPSIS
 
-B<backup apropos -topic> <I<help string>>  [-help] 
+B<backup apropos> B<-topic> <I<help string>> [B<-help>] 
 
-B<backup ap -t> <I<help string>>  [-h]
+B<backup ap> B<-t> <I<help string>> [B<-h>]
 
 =head1 DESCRIPTION
 
-The backup apropos command displays the first line of the online
-help entry for any B<backup> command that has in its name or short
-description the string specified by the B<-topic> argument.
+The B<backup apropos> command displays the first line of the online help
+entry for any B<backup> command that has in its name or short description
+the string specified by the B<-topic> argument.
 
-To display the syntax for a command, use the backup help
-command.
+To display the syntax for a command, use the B<backup help> command.
 
 =head1 OPTIONS
 
 =over 4
 
-=item -topic
+=item B<-topic> <I<help string>>
 
-Specifies the keyword string to match, in lowercase letters only.
-If the string is more than a single word, surround it with double quotes
-(B<" ">) or other delimiters.
+Specifies the keyword string to match, in lowercase letters only.  If the
+string is more than a single word, surround it with double quotes (C<" ">)
+or other delimiters.
 
-=item -help
+=item B<-help>
 
-Prints the online help for this command. All other valid options
-are ignored.
+Prints the online help for this command. All other valid options are
+ignored.
 
 =back
 
@@ -38,13 +37,13 @@ are ignored.
 
 The first line of a command's online help entry names it and briefly
 describes its function. This command displays the first line for any
-B<backup> command where the string specified with the
-B<-topic> argument is part of the command name or first line.
+B<backup> command where the string specified with the B<-topic> argument
+is part of the command name or first line.
 
 =head1 EXAMPLES
 
-The following example lists all backup commands that include the
-word B<tape> in their names or short descriptions:
+The following example lists all backup commands that include the word
+C<tape> in their names or short descriptions:
 
    % backup apropos tape
    labeltape: label a tape
@@ -58,8 +57,8 @@ None
 
 =head1 SEE ALSO
 
-L<backup(1)>,
-L<backup_help(1)>
+L<backup(8)>,
+L<backup_help(8)>
 
 =head1 COPYRIGHT
 

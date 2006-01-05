@@ -4,50 +4,32 @@ backup quit - Leaves interactive mode
 
 =head1 SYNOPSIS
 
-B<quit>  [-help]
+B<quit> [B<-help>]
 
-B<q> [-h]
-
+B<q> [B<-h>]
 
 =head1 DESCRIPTION
 
-The (backup) quit command exits interactive mode, returning the
-issuer to the regular shell prompt at which the B<backup> or
-B<backup interactive> command was issued to enter interactive
-mode. The command has no effect when issued outside interactive
-mode. Issuing the <B<Ctrl-d>> command also exits interactive
-mode.
+The B<backup quit> command exits interactive mode, returning the issuer to
+the regular shell prompt at which the B<backup> or B<backup interactive>
+command was issued to enter interactive mode. The command has no effect
+when issued outside interactive mode. Issuing the Ctrl-D command also
+exits interactive mode.
 
 =head1 CAUTIONS
 
-To exit interactive mode, all jobs must be completed. Use the
-B<(backup) jobs> command to list any jobs currently pending or
-executing, and the B<(backup) kill> command to terminate them as
-necessary.
+To exit interactive mode, all jobs must be completed. Use the B<backup
+jobs> command to list any jobs currently pending or executing, and the
+B<backup kill> command to terminate them as necessary.
 
 =head1 OPTIONS
 
 =over 4
 
-=item -localauth
+=item B<-help>
 
-Constructs a server ticket using a key from the local
-B</usr/afs/etc/KeyFile> file. The B<backup> command
-interpreter presents it to the Backup Server, Volume Server and VL Server
-during mutual authentication. Do not combine this flag with the
-B<-cell> argument. For more details, see the introductory
-B<backup> reference page.
-
-=item -cell
-
-Names the cell in which to run the command. Do not combine this
-argument with the B<-localauth> flag. For more details, see the
-introductory B<backup> reference page.
-
-=item -help
-
-Prints the online help for this command. All other valid options
-are ignored.
+Prints the online help for this command. All other valid options are
+ignored.
 
 =back
 
@@ -64,10 +46,10 @@ None
 
 =head1 SEE ALSO
 
-L<backup(1)>,
-L<backup_interactive(1)>,
-L<backup_jobs(1)>,
-L<backup_kill(1)>
+L<backup(8)>,
+L<backup_interactive(8)>,
+L<backup_jobs(8)>,
+L<backup_kill(8)>
 
 =head1 COPYRIGHT
 

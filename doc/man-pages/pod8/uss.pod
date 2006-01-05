@@ -4,10 +4,10 @@ uss - Introduction to the uss command suite
 
 =head1 DESCRIPTION
 
-The commands in the uss command suite help administrators to
-create AFS user accounts more easily and efficiently. If B<uss>
-commands are not used, creating an account requires issuing at least six
-separate commands to five different AFS servers.
+The commands in the B<uss> command suite help administrators to create AFS
+user accounts more easily and efficiently. If B<uss> commands are not
+used, creating an account requires issuing at least six separate commands
+to five different AFS servers.
 
 There are three main commands in the suite:
 
@@ -15,110 +15,101 @@ There are three main commands in the suite:
 
 =item *
 
-The uss add command creates a single complete user account,
-based on command line arguments and instructions in a template file.
-
-
-=item *
-
-The uss bulk command creates multiple complete accounts at
-once, based on command line arguments, instructions in a template file and a
-bulk input file.
-
+The B<uss add> command creates a single complete user account, based on
+command line arguments and instructions in a template file.
 
 =item *
 
-the uss delete command removes most parts of a user
-account.
+The B<uss bulk> command creates multiple complete accounts at once, based
+on command line arguments, instructions in a template file and a bulk
+input file.
 
+=item *
+
+The B<uss delete> command removes most parts of a user account.
 
 =back
 
-To obtain help, issue the B<uss apropos> and uss help
-commands.
+To obtain help, issue the B<uss apropos> and B<uss help> commands.
 
 =head1 OPTIONS
 
 The following arguments and flags are available on many commands in the
-B<uss> suite. The reference page for each command also lists
-them, but they are described here in greater detail.
+B<uss> suite. The reference page for each command also lists them, but
+they are described here in greater detail.
 
 =over 4
 
-=item -admin <I<administrator to authenticate>
->
+=item B<-admin> <I<administrator to authenticate>>
 
 Specifies the AFS user name under which to establish a connection to the
 AFS server processes that administer the various parts of a user
 account. If it is omitted, the connection is established under the
 issuer's effective user ID (his or her identity in the local file
 system). Even when this argument is included, UNIX commands that run
-during the B<uss> operation (for instance, the UNIX
-B</etc/chown> command) run under the effective user ID.
+during the B<uss> operation (for instance, the UNIX F</etc/chown> command)
+run under the effective user ID.
 
-=item -cell <I<cell name>
->
+=item B<-cell> <I<cell name>>
 
-Names the cell in which to run the command. It is acceptable to
-abbreviate the cell name to the shortest form that distinguishes it from the
-other entries in the B</usr/vice/etc/CellServDB> file on the local
-machine. If the B<-cell> argument is omitted, the command
-interpreter determines the name of the local cell by reading the following in
-order: 
+Names the cell in which to run the command. It is acceptable to abbreviate
+the cell name to the shortest form that distinguishes it from the other
+entries in the F</usr/vice/etc/CellServDB> file on the local machine. If
+the B<-cell> argument is omitted, the command interpreter determines the
+name of the local cell by reading the following in order:
 
-=item *
-
-The value of the AFSCELL environment variable
-
+=over 4
 
 =item *
 
-The local /usr/vice/etc/ThisCell file
+The value of the AFSCELL environment variable.
 
+=item *
 
-=item -dryrun
+The local F</usr/vice/etc/ThisCell> file.
+
+=back
+
+=item B<-dryrun>
 
 Reports actions that the command interpreter needs to perform when
-executing the B<uss> operation, without actually performing
-them. Include this flag to verify that the command produces the desired
-account configuration. Combine it with the B<-verbose> flag to
-yield even more detailed information. Note that the output does not
-necessarily reveal all possible problems that can prevent successful execution
-of the command, especially those that result from transient server or network
-outages.
+executing the B<uss> operation, without actually performing them. Include
+this flag to verify that the command produces the desired account
+configuration. Combine it with the B<-verbose> flag to yield even more
+detailed information. Note that the output does not necessarily reveal all
+possible problems that can prevent successful execution of the command,
+especially those that result from transient server or network outages.
 
-=item -help
+=item B<-help>
 
-Prints a command's online help message on the standard output
-stream. Do not combine this flag with any of the command's other
-options; when it is provided, the command interpreter ignores all other
-options, and only prints the help message.
+Prints a command's online help message on the standard output stream. Do
+not combine this flag with any of the command's other options; when it is
+provided, the command interpreter ignores all other options, and only
+prints the help message.
 
-=item -skipauth
+=item B<-skipauth>
 
 Bypasses mutual authentication with the AFS Authentication Server,
-allowing a site that uses Kerberos instead of the AFS Authentication Server to
-substitute that form of authentication.
+allowing a site that uses Kerberos instead of the AFS Authentication
+Server to substitute that form of authentication.
 
 =back
 
 =head1 PRIVILEGE REQUIRED
 
-The issuer of a uss command must have all the rights required
-for performing the equivalent actions individually. See each
-B<uss> command's reference page.
+The issuer of a B<uss> command must have all the rights required for
+performing the equivalent actions individually. See each B<uss> command's
+reference page.
 
 =head1 SEE ALSO
 
-L<uss Bulk Input File(1)>
-
-L<uss Template File(1)>
-
-L<uss_add(1)>,
-L<uss_apropos(1)>,
-L<uss_bulk(1)>,
-L<uss_delete(1)>,
-L<uss_help(1)>
+L<uss(5)>,
+L<uss_bulk(5)>,
+L<uss_add(8)>,
+L<uss_apropos(8)>,
+L<uss_bulk(8)>,
+L<uss_delete(8)>,
+L<uss_help(8)>
 
 =head1 COPYRIGHT
 

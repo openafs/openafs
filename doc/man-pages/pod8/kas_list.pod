@@ -4,20 +4,20 @@ kas list - Displays all entries in the Authentication Database
 
 =head1 SYNOPSIS
 
-B<kas list> [B<-long>]  [B<-showadmin>]  [-showkey]
-[B<-admin_username> <I<admin principal to use for authentication>>] 
-         [B<-password_for_admin> <I<admin password>>]  [-cell <I<cell name>>] 
-         [-servers <I<explicit list of authentication servers>>+]
-         [B<-noauth>]  [-help]
+B<kas list> [B<-long>] [B<-showadmin>] [B<-showkey>]
+    [B<-admin_username> <I<admin principal to use for authentication>>] 
+    [B<-password_for_admin> <I<admin password>>] [B<-cell> <I<cell name>>] 
+    [B<-servers> <I<explicit list of authentication servers>>+]
+    [B<-noauth>] [B<-help>]
 
-B<kas ls> [B<-l>]  [B<-showa>]   [-showk]
-[B<-a> <I<admin principal to use for authentication>>] 
-       [B<-p> <I<admin password>>]  [-c <I<cell name>>] 
-       [B<-se> <I<explicit list of authentication servers>>+]  [B<-n>]  [-h] 
+B<kas ls> [B<-l>] [B<-showa>] [B<-showk>]
+    [B<-a> <I<admin principal to use for authentication>>] 
+    [B<-p> <I<admin password>>] [B<-c> <I<cell name>>] 
+    [B<-se> <I<explicit list of authentication servers>>+] [B<-n>] [B<-h>] 
 
 =head1 DESCRIPTION
 
-The kas list command either displays all entries from the
+The B<kas list> command either displays all entries from the
 Authentication Database by name, or displays the full database entry for a
 defined set of entries, as determined by the flag provided:
 
@@ -28,111 +28,105 @@ defined set of entries, as determined by the flag provided:
 To display every entry in the Authentication Database in full, include the
 B<-long> flag.
 
-
 =item *
 
-To display only those entries in full that have the C<ADMIN> flag
-set, include the B<-showadmin> flag.
-
+To display only those entries in full that have the C<ADMIN> flag set,
+include the B<-showadmin> flag.
 
 =item *
 
 To list only the name of each Authentication Database entry, omit both the
 B<-long> and B<-showadmin> flags.
 
-
 =back
 
 By default, full entries include a checksum for the encryption key, rather
-than the actual octal digits that constitute the key. To display the
-octal digits, include the B<-showkey> flag with the B<-long>
-or B<-showadmin> flag.
+than the actual octal digits that constitute the key. To display the octal
+digits, include the B<-showkey> flag with the B<-long> or B<-showadmin>
+flag.
 
 =head1 OPTIONS
 
 =over 4
 
-=item -long
+=item B<-long>
 
-Displays every Authentication Database entry in full. Provide this
-flag or the B<-showadmin> flag, or omit both to display just the name
-of every database entry.
+Displays every Authentication Database entry in full. Provide this flag or
+the B<-showadmin> flag, or omit both to display just the name of every
+database entry.
 
-=item -showadmin
+=item B<-showadmin>
 
 Displays in full only the Authentication Database entries that have the
-C<ADMIN> flag set. Provide this flag or the B<-long>
-flag, or omit both to display just the name of every database entry.
+C<ADMIN> flag set. Provide this flag or the B<-long> flag, or omit both to
+display just the name of every database entry.
 
-=item -showkey
+=item B<-showkey>
 
 Displays the octal digits that constitute the key in each full
-entry. Provide either the B<-long> or B<-showadmin>
-flag along with this one.
+entry. Provide either the B<-long> or B<-showadmin> flag along with this
+one.
 
-=item -admin_username
+=item B<-admin_username> <I<admin principal>>
 
 Specifies the user identity under which to authenticate with the
-Authentication Server for execution of the command. For more details,
-see the introductory B<kas> reference page.
+Authentication Server for execution of the command. For more details, see
+L<kas(8)>.
 
-=item -password_for_admin
+=item B<-password_for_admin> <I<admin password>>
 
-Specifies the password of the command's issuer. If it is
-omitted (as recommended), the B<kas> command interpreter prompts for
-it and does not echo it visibly. For more details, see the introductory
-B<kas> reference page.
+Specifies the password of the command's issuer. If it is omitted (as
+recommended), the B<kas> command interpreter prompts for it and does not
+echo it visibly. For more details, see L<kas(8)>.
 
-=item -cell
+=item B<-cell> <I<cell name>>
 
 Names the cell in which to run the command. For more details, see
-the introductory B<kas> reference page.
+L<kas(8)>.
 
-=item -servers
+=item B<-servers> <I<authentication servers>>+
 
 Names each machine running an Authentication Server with which to
-establish a connection. For more details, see the introductory
-B<kas> reference page.
+establish a connection. For more details, see L<kas(8)>.
 
-=item -noauth
+=item B<-noauth>
 
-Assigns the unprivileged identity anonymous to the
-issuer. For more details, see the introductory B<kas> reference
-page.
+Assigns the unprivileged identity C<anonymous> to the issuer. For more
+details, see L<kas(8)>.
 
-=item -help
+=item B<-help>
 
-Prints the online help for this command. All other valid options
-are ignored.
+Prints the online help for this command. All other valid options are
+ignored.
 
 =back
 
 =head1 OUTPUT
 
-If neither the B<-long> or -showadmin flag is provided,
-the output lists the name of each entry in the Authentication Database on its
-own line.
+If neither the B<-long> or B<-showadmin> flag is provided, the output
+lists the name of each entry in the Authentication Database on its own
+line.
 
-If the -long flag is included, the output includes every
-Authentication Database entry in full. If the B<-showadmin>
-flag is included, the output includes in full only the Authentication Database
-entries that have the C<ADMIN> flag set. If the
-B<-showkey> is provided along with either one, the output includes the
-octal digits that constitute the encryption key in each entry.
+If the B<-long> flag is included, the output includes every Authentication
+Database entry in full. If the B<-showadmin> flag is included, the output
+includes in full only the Authentication Database entries that have the
+C<ADMIN> flag set. If the B<-showkey> is provided along with either one,
+the output includes the octal digits that constitute the encryption key in
+each entry.
 
 A full Authentication Database entry includes the same information
-displayed by the B<kas examine> command; for details, see that
-command's reference page.
+displayed by the B<kas examine> command; for details, see that command's
+reference page.
 
 =head1 PRIVILEGE REQUIRED
 
-The issuer must have the C<ADMIN> flag set on his or her
-Authentication Database entry.
+The issuer must have the C<ADMIN> flag set on his or her Authentication
+Database entry.
 
 =head1 SEE ALSO
 
-L<kas(1)>,
-L<kas_examine(1)>
+L<kas(8)>,
+L<kas_examine(8)>
 
 =head1 COPYRIGHT
 

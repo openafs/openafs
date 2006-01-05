@@ -1,77 +1,70 @@
 =head1 NAME
 
-bos help - Displays the syntax of specified bos commands or lists
-functional descriptions of all B<bos> commands
+bos help - Displays help for bos commands
 
 =head1 SYNOPSIS
 
-B<bos help> [B<-topic> <I<help string>>+]  [-help]
+B<bos help> [B<-topic> <I<help string>>+] [B<-help>]
 
-B<bos h> [B<-t> <I<help string>>+]  [-h]
+B<bos h> [B<-t> <I<help string>>+] [B<-h>]
 
 =head1 DESCRIPTION
 
-The bos help command displays the complete online help entry
-(short description and syntax statement) for each command operation code
-specified by the B<-topic> argument. If the B<-topic>
-argument is omitted, the output includes the first line (name and short
-description) of the online help entry for every B<bos> command.
+The B<bos help> command displays the complete online help entry (short
+description and syntax statement) for each command operation code
+specified by the B<-topic> argument. If the B<-topic> argument is omitted,
+the output includes the first line (name and short description) of the
+online help entry for every B<bos> command.
 
-To list every bos command whose name or short description
-includes a specified keyword, use the B<bos apropos> command.
+To list every bos command whose name or short description includes a
+specified keyword, use the B<bos apropos> command.
 
 =head1 OPTIONS
 
 =over 4
 
-=item -topic
->
+=item B<-topic> <I<help string>>+
 
 Indicates each command for which to display the complete online help
-entry. Omit the B<bos> part of the command name, providing only
-the operation code (for example, specify B<status>, not B<bos
-status>). If this argument is omitted, the output briefly
-describes every B<bos> command.
+entry. Omit the B<bos> part of the command name, providing only the
+operation code (for example, specify B<status>, not B<bos status>). If
+this argument is omitted, the output briefly describes every B<bos>
+command.
 
-=item -help
+=item B<-help>
 
-Prints the online help for this command. All other valid options
-are ignored.
+Prints the online help for this command. All other valid options are
+ignored.
 
 =back
 
 =head1 OUTPUT
 
-The online help entry for each bos command consists of the
-following two or three lines:
+The online help entry for each bos command consists of the following two
+or three lines:
 
 =over 4
 
 =item *
 
-The first line names the command and briefly describes its
-function.
-
+The first line names the command and briefly describes its function.
 
 =item *
 
 The second line lists aliases for the command, if any.
 
-
 =item *
 
-The final line, which begins with the string C<Usage>, lists the
-command's options in the prescribed order. Online help entries use
-the same symbols (for example, brackets) as the reference pages in this
-document.
-
+The final line, which begins with the string C<Usage>, lists the command's
+options in the prescribed order. Online help entries use the same symbols
+(for example, brackets) as the reference pages in this document.
 
 =back
 
 =head1 EXAMPLES
 
-The following command displays the online help entry for the bos
-status command:
+The following command displays the online help entry for the B<bos status>
+command:
 
    % bos help status
    bos status: show server instance status 
@@ -85,8 +78,8 @@ None
 
 =head1 SEE ALSO
 
-L<bos(1)>,
-L<bos_apropos(1)>
+L<bos(8)>,
+L<bos_apropos(8)>
 
 =head1 COPYRIGHT
 

@@ -4,172 +4,160 @@ package - Configures files and directories on the local disk
 
 =head1 SYNOPSIS
 
-B<package> [B<initcmd>]  [-config <I<base name of configuration file>>]
-[B<-fullconfig> <I<full name of configuration file, or stdin for standard input>>]
-   [B<-overwrite>]  [B<-noaction>]  [B<-verbose>]  [B<-silent>]  [-rebootfiles]  
-   [B<-debug>]  [-help]
+B<package> [I<initcmd>] [B<-config> <I<base name of configuration file>>]
+    [B<-fullconfig> <I<full name of configuration file, or stdin>>]
+    [B<-overwrite>] [B<-noaction>] [B<-verbose>] [B<-silent>]
+    [B<-rebootfiles>] [B<-debug>] [B<-help>]
 
-B<package> [B<i>]  [-c <I<base name of configuration file>>]
-[B<-f> <I<full name of configuration file, or stdin for standard input>>]
-        [B<-o>]  [B<-n>]  [B<-v>]  [B<-s>]  [B<-r>]  [B<-d>]  [-h]
+B<package> [B<i>] [B<-c> <I<base name of configuration file>>]
+    [B<-f> <I<full name of configuration file, or stdin>>]
+    [B<-o>] [B<-n>] [B<-v>] [B<-s>] [B<-r>] [B<-d>] [B<-h>]
 
 =head1 DESCRIPTION
 
-The package command configures the machine's local disk to
-comply with the instructions in the configuration file named by the
-B<-config> or B<-fullconfig> argument.
+The B<package> command configures the machine's local disk to comply with
+the instructions in the configuration file named by the B<-config> or
+B<-fullconfig> argument.
 
-By default, the package command alters any existing local disk
-element whose contents or configuration does not match the element defined in
-the configuration file. For example, if a configuration file
-B<D> instruction defines a directory that has the same name as a
-symbolic link on the local disk, the B<package> command replaces the
-symbolic link with the directory. The B<F> and B<L>
-instructions include an optional I<update_code> field that alters this
-behavior.
+By default, the package command alters any existing local disk element
+whose contents or configuration does not match the element defined in the
+configuration file. For example, if a configuration file C<D> instruction
+defines a directory that has the same name as a symbolic link on the local
+disk, the B<package> command replaces the symbolic link with the
+directory. The C<F> and C<L> instructions include an optional
+I<update_code> field that alters this behavior.
 
-Also by default, the package command takes no action on elements
-on the local disk that are not mentioned in the configuration file. Use
-the B<D> instruction's B<R> update code to remove files
-from the disk directory that are not mentioned in the configuration
-file.
+Also by default, the package command takes no action on elements on the
+local disk that are not mentioned in the configuration file. Use the C<D>
+instruction's C<R> update code to remove files from the disk directory
+that are not mentioned in the configuration file.
 
-Before running the package command, the administrator must
-create the template file and other files on the local disk. For
-instructions, see the I<IBM AFS Administration Guide>.
+Before running the package command, the administrator must create the
+template file and other files on the local disk. For instructions, see the
+I<IBM AFS Administration Guide>.
 
-It is not possible to configure a remote client machine's disk using
-this command.
+It is not possible to configure a remote client machine's disk using this
+command.
 
 =head1 CAUTIONS
 
-The package command interpreter exits without executing any
-instruction if there are any syntax errors or incorrect values in the
-configuration file.
+The package command interpreter exits without executing any instruction if
+there are any syntax errors or incorrect values in the configuration file.
 
 =head1 OPTIONS
 
 =over 4
 
-=item initcmd
+=item [I<initcmd>]
 
-Accommodates the command's use of the AFS command parser, and is
-optional.
+Accommodates the command's use of the AFS command parser, and is optional.
 
-=item -config
+=item B<-config> <I<base name of configuration file>>
 
 Specifies the pathname of the configuration file to use, ending in the
 file's base name, which omits the suffix that indicates the machine
-type. The B<package> command determines the machine's
-system type name and automatically appends it to the base name. An
-example of the proper value for this argument is B<staff> rather than
-B<staff.rs_aix42>. Partial pathnames are interpreted
-relative to the current working directory.
+type. The B<package> command determines the machine's system type name and
+automatically appends it to the base name. An example of the proper value
+for this argument is C<staff> rather than C<staff.rs_aix42>. Partial
+pathnames are interpreted relative to the current working directory.
 
-Provide this argument or the -fullconfig argument.
+Provide this argument or the B<-fullconfig> argument.
 
-=item -fullconfig
+=item B<-fullconfig> <I<full name of configuration file, or stdin>>
 
 Specifies the configuration file to use. Two types of values are
-acceptable: 
+acceptable:
 
 =over 4
 
 =item *
 
 The full pathname of the configuration file to use, complete with an
-extension indicating the machine type (examples:
-B<staff.rs_aix42>, B<admin.sun4x_56>).
-
+extension indicating the machine type (examples: C<staff.rs_aix42>,
+C<admin.sun4x_56>).
 
 =item *
 
-The string stdin to indicate that the issuer is providing
-configuration information via the standard input stream, either by piping in
-the contents of a file, or by typing configuration lines at the shell.
-In the latter case, type B<<Ctrl-d>> to conclude the input.
-
+The string C<stdin> to indicate that the issuer is providing configuration
+information via the standard input stream, either by piping in the
+contents of a file, or by typing configuration lines at the shell.  In the
+latter case, type Ctrl-D to conclude the input.
 
 =back
 
-Provide this argument or the -config argument.
+Provide this argument or the B<-config> argument.
 
-=item -overwrite
+=item B<-overwrite>
 
 Overwrites elements on the local disk with the source version indicated in
-the configuration file, even if the owner B<write> (B<w>) mode
-bit is turned on the disk element. Files protected by the B<I>
-update code on an B<F> line in the configuration file are not
-overwritten.
+the configuration file, even if the owner write (C<w>) mode bit is turned
+on the disk element. Files protected by the C<I> update code on an C<F>
+line in the configuration file are not overwritten.
 
-=item -noaction
+=item B<-noaction>
 
 Checks the sequence of operations to be performed when the command
 actually runs and reports any problems that the B<package> command
-interpreter expects to encounter. No elements on the local disk or in
-AFS are changed. If the B<-verbose> flag is also provided, the
-trace includes all actions to be performed as well as anticipated
-errors.
+interpreter expects to encounter. No elements on the local disk or in AFS
+are changed. If the B<-verbose> flag is also provided, the trace includes
+all actions to be performed as well as anticipated errors.
 
-=item -silent
+=item B<-silent>
 
 Suppresses some of the trace messages sent to the standard output stream
 by default. The output still reports major problems.
 
-=item -verbose
+=item B<-verbose>
 
-Produces on the standard output stream a detailed trace of the
-command's execution. If this argument is omitted, only warnings
-and error messages appear.
+Produces on the standard output stream a detailed trace of the command's
+execution. If this argument is omitted, only warnings and error messages
+appear.
 
-=item -rebootfiles
+=item B<-rebootfiles>
 
-Prevents overwriting of any file marked with the Q update code
-on an B<F> line in the configuration file. This effectively
-prevents the machine from rebooting automatically again when the
-B<package> command is invoked in the machine's AFS initialization
-file.
+Prevents overwriting of any file marked with the C<Q> update code on an
+C<F> line in the configuration file. This effectively prevents the machine
+from rebooting automatically again when the B<package> command is invoked
+in the machine's AFS initialization file.
 
-=item -debug
+=item B<-debug>
 
 Enables debugging output, which is directed to the standard output stream
 by default. By default, no debugging output is produced.
 
-=item -help
+=item B<-help>
 
-Prints the online help for this command. All other valid options
-are ignored.
+Prints the online help for this command. All other valid options are
+ignored.
 
 =back
 
 =head1 EXAMPLES
 
-This command is usually invoked in a client machine's AFS
-initialization file (B</etc/rc> or equivalent), rather than issued at
-the command shell prompt.
+This command is usually invoked in a client machine's AFS initialization
+file (F</etc/rc> or equivalent), rather than issued at the command shell
+prompt.
 
-The following command invokes the version of the staff
-configuration file appropriate for this machine's system type, and
-produces verbose output.
+The following command invokes the version of the staff configuration file
+appropriate for this machine's system type, and produces verbose output.
 
    # /etc/package -c staff -v
 
-The following example uses the configuration file whose basename is defined
-in the B</.package> file on the local machine. This
-method enables the administrator to use the same B<package> command in
-every machine's AFS initialization file but still customize configuration
-by putting the appropriate basename in the B</.package>
-file.
+The following example uses the configuration file whose basename is
+defined in the F</.package> file on the local machine. This method enables
+the administrator to use the same B<package> command in every machine's
+AFS initialization file but still customize configuration by putting the
+appropriate basename in the F</.package> file.
 
    # /etc/package -c `cat /.package` -v
 
 =head1 PRIVILEGE REQUIRED
 
-The issuer must be logged in as the local superuser root.
+The issuer must be logged in as the local superuser C<root>.
 
 =head1 SEE ALSO
 
-L<package Configuration File(1)>
+L<package(5)>
 
 =head1 COPYRIGHT
 
