@@ -583,10 +583,12 @@ afs_vop_access(ap)
           bits |= PRSFS_INSERT;
        if (ap->a_action & KAUTH_VNODE_DELETE_CHILD)
           bits |= PRSFS_DELETE;
+#if 0 /* I'd argue this should be enforced on the parent. But that's ugly */
        if (ap->a_action & KAUTH_VNODE_READ_ATTRIBUTES)
           bits |= PRSFS_LOOKUP;
        if (ap->a_action & KAUTH_VNODE_READ_SECURITY) /* mode bits/gid, not afs acl */
           bits |= PRSFS_LOOKUP;
+#endif
     } else {
        if (ap->a_action & KAUTH_VNODE_READ_DATA)
           bits |= PRSFS_READ;
@@ -595,9 +597,9 @@ afs_vop_access(ap)
        if (ap->a_action & KAUTH_VNODE_EXECUTE)
           bits |= PRSFS_READ; /* and mode bits.... */
        if (ap->a_action & KAUTH_VNODE_READ_ATTRIBUTES)
-          bits |= PRSFS_READ;
+          bits |= PRSFS_LOOKUP;
        if (ap->a_action & KAUTH_VNODE_READ_SECURITY) /* mode bits/gid, not afs acl */
-          bits |= PRSFS_READ;
+          bits |= PRSFS_LOOKUP;
     }
     if (ap->a_action & KAUTH_VNODE_WRITE_ATTRIBUTES)
        bits |= PRSFS_WRITE;
