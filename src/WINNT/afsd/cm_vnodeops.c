@@ -33,7 +33,7 @@
 extern void afsi_log(char *pattern, ...);
 #endif
 
-int cm_enableServerLocks = 0;
+int cm_enableServerLocks = 1;
 
 /*
  * Case-folding array.  This was constructed by inspecting of SMBtrace output.
