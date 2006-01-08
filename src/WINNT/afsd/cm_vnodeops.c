@@ -3087,7 +3087,7 @@ long cm_Rename(cm_scache_t *oldDscp, char *oldNamep, cm_scache_t *newDscp,
 /* unsafe */
 #define CONTAINS_RANGE(r1,r2) (((r2).offset+(r2).length) <= ((r1).offset+(r1).length) && (r1).offset <= (r2).offset)
 
-#define SERVERLOCKS_ENABLED(scp) (!(((scp)->flags & CM_SCACHEFLAG_RO) && cm_enableServerLocks))
+#define SERVERLOCKS_ENABLED(scp) (!((scp)->flags & CM_SCACHEFLAG_RO) && cm_enableServerLocks)
 
 static void cm_LockRangeSubtract(cm_range_t * pos, const cm_range_t * neg)
 {
