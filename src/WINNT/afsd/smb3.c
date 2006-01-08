@@ -843,7 +843,6 @@ long smb_ReceiveV3SessionSetupX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
         unp = uidp->unp;
         userp = unp->userp;
         newUid = (unsigned short)uidp->userID;  /* For some reason these are different types!*/
-        osi_LogEvent("AFS smb_ReceiveV3SessionSetupX",NULL,"FindUserByName:Lana[%d],lsn[%d],userid[%d],name[%s]",vcp->lana,vcp->lsn,newUid,osi_LogSaveString(smb_logp, usern));
         osi_Log3(smb_logp,"smb_ReceiveV3SessionSetupX FindUserByName:Lana[%d],lsn[%d],userid[%d]",vcp->lana,vcp->lsn,newUid);
         smb_ReleaseUID(uidp);
     }
@@ -869,7 +868,6 @@ long smb_ReceiveV3SessionSetupX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
         uidp = smb_FindUID(vcp, newUid, SMB_FLAG_CREATE);
         lock_ObtainMutex(&uidp->mx);
         uidp->unp = unp;
-        osi_LogEvent("AFS smb_ReceiveV3SessionSetupX",NULL,"MakeNewUser:VCP[%p],Lana[%d],lsn[%d],userid[%d],TicketKTCName[%s]",vcp,vcp->lana,vcp->lsn,newUid,osi_LogSaveString(smb_logp, usern));
         osi_Log4(smb_logp,"smb_ReceiveV3SessionSetupX MakeNewUser:VCP[%p],Lana[%d],lsn[%d],userid[%d]",vcp,vcp->lana,vcp->lsn,newUid);
         lock_ReleaseMutex(&uidp->mx);
         smb_ReleaseUID(uidp);
@@ -1292,19 +1290,9 @@ long smb_ReceiveV3Trans(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
     /* We sometimes see 0 word count.  What to do? */
     if (*inp->wctp == 0) {
+        osi_Log0(smb_logp, "Transaction2 word count = 0"); 
 #ifndef DJGPP
-        HANDLE h;
-        char *ptbuf[1];
-
-        osi_Log0(smb_logp, "TRANSACTION word count = 0"); 
-
-        h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);
-        ptbuf[0] = "Transaction2 word count = 0";
-        ReportEvent(h, EVENTLOG_WARNING_TYPE, 0, 1003, NULL,
-                    1, inp->ncb_length, ptbuf, inp);
-        DeregisterEventSource(h);
-#else /* DJGPP */
-        osi_Log0(smb_logp, "TRANSACTION word count = 0"); 
+	LogEvent(EVENTLOG_WARNING_TYPE, MSG_SMB_ZERO_TRANSACTION_COUNT);
 #endif /* !DJGPP */
 
         smb_SetSMBDataLength(outp, 0);
@@ -1377,14 +1365,11 @@ long smb_ReceiveV3Trans(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         rapOp = asp->parmsp[0];
 
         if ( rapOp >= 0 && rapOp < SMB_RAP_NOPCODES && smb_rapDispatchTable[rapOp].procp) {
-            osi_LogEvent("AFS-Dispatch-RAP[%s]",myCrt_RapDispatch(rapOp),"vcp[%p] lana[%d] lsn[%d]",vcp,vcp->lana,vcp->lsn);
             osi_Log4(smb_logp,"AFS Server - Dispatch-RAP %s vcp[%p] lana[%d] lsn[%d]",myCrt_RapDispatch(rapOp),vcp,vcp->lana,vcp->lsn);
             code = (*smb_rapDispatchTable[rapOp].procp)(vcp, asp, outp);
-            osi_LogEvent("AFS-Dispatch-RAP return",myCrt_RapDispatch(rapOp),"Code 0x%x",code);
             osi_Log4(smb_logp,"AFS Server - Dispatch-RAP return  code 0x%x vcp[%x] lana[%d] lsn[%d]",code,vcp,vcp->lana,vcp->lsn);
         }
         else {
-            osi_LogEvent("AFS-Dispatch-RAP [invalid]", NULL, "op[%x] vcp[%p] lana[%d] lsn[%d]", rapOp, vcp, vcp->lana, vcp->lsn);
             osi_Log4(smb_logp,"AFS Server - Dispatch-RAP [INVALID] op[%x] vcp[%p] lana[%d] lsn[%d]", rapOp, vcp, vcp->lana, vcp->lsn);
             code = CM_ERROR_BADOP;
         }
@@ -1934,19 +1919,9 @@ long smb_ReceiveV3Tran2A(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
     /* We sometimes see 0 word count.  What to do? */
     if (*inp->wctp == 0) {
+        osi_Log0(smb_logp, "Transaction2 word count = 0"); 
 #ifndef DJGPP
-        HANDLE h;
-        char *ptbuf[1];
-
-        osi_Log0(smb_logp, "TRANSACTION2 word count = 0"); 
-
-        h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);
-        ptbuf[0] = "Transaction2 word count = 0";
-        ReportEvent(h, EVENTLOG_WARNING_TYPE, 0, 1003, NULL,
-                    1, inp->ncb_length, ptbuf, inp);
-        DeregisterEventSource(h);
-#else /* DJGPP */
-        osi_Log0(smb_logp, "TRANSACTION2 word count = 0"); 
+	LogEvent(EVENTLOG_WARNING_TYPE, MSG_SMB_ZERO_TRANSACTION_COUNT);
 #endif /* !DJGPP */
 
         smb_SetSMBDataLength(outp, 0);
@@ -2017,12 +1992,10 @@ long smb_ReceiveV3Tran2A(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
         /* now dispatch it */
         if ( asp->opcode >= 0 && asp->opcode < 20 && smb_tran2DispatchTable[asp->opcode].procp) {
-            osi_LogEvent("AFS-Dispatch-2[%s]",myCrt_2Dispatch(asp->opcode),"vcp[%p] lana[%d] lsn[%d]",vcp,vcp->lana,vcp->lsn);
             osi_Log4(smb_logp,"AFS Server - Dispatch-2 %s vcp[%p] lana[%d] lsn[%d]",myCrt_2Dispatch(asp->opcode),vcp,vcp->lana,vcp->lsn);
             code = (*smb_tran2DispatchTable[asp->opcode].procp)(vcp, asp, outp);
         }
         else {
-            osi_LogEvent("AFS-Dispatch-2 [invalid]", NULL, "op[%x] vcp[%p] lana[%d] lsn[%d]", asp->opcode, vcp, vcp->lana, vcp->lsn);
             osi_Log4(smb_logp,"AFS Server - Dispatch-2 [INVALID] op[%x] vcp[%p] lana[%d] lsn[%d]", asp->opcode, vcp, vcp->lana, vcp->lsn);
             code = CM_ERROR_BADOP;
         }
@@ -7170,11 +7143,9 @@ cm_user_t *smb_FindCMUserByName(/*smb_vc_t *vcp,*/ char *usern, char *machine)
         unp->userp = cm_NewUser();
         lock_ReleaseMutex(&unp->mx);
         osi_Log2(smb_logp,"smb_FindCMUserByName New user name[%s] machine[%s]",osi_LogSaveString(smb_logp,usern),osi_LogSaveString(smb_logp,machine));
-        osi_LogEvent("AFS smb_FindCMUserByName : New User",NULL,"name[%s] machine[%s]",usern,machine);
     }  else	{
         osi_Log2(smb_logp,"smb_FindCMUserByName Not found name[%s] machine[%s]",osi_LogSaveString(smb_logp,usern),osi_LogSaveString(smb_logp,machine));
-        osi_LogEvent("AFS smb_FindCMUserByName : Found",NULL,"name[%s] machine[%s]",usern,machine);
-	}
+    }
     return unp->userp;
 }
 

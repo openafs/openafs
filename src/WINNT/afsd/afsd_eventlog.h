@@ -8,6 +8,5 @@
 #include "afsd_eventmessages.h"
 
 VOID LogEventMessage(WORD wEventType, DWORD dwEventID, DWORD dwMessageID);
-VOID LogEvent(WORD wEventType, DWORD dwEventID, LPTSTR lpString, ...);
-
+VOID LogEvent(WORD wEventType, DWORD dwEventID, ...);
 #endif /* __AFSD_EVENTLOG_H_ */

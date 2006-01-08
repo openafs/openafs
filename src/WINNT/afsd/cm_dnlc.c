@@ -38,21 +38,6 @@ static int cm_debugDnlc = 0;	/* debug dnlc */
  *     1.  If nameHash[i] is NULL, list is empty
  *     2.  A single element in a hash bucket has itself as prev and next.
  */
-#ifndef DJGPP
-#define dnlcNotify(x,debug){                    \
-                        HANDLE  hh;             \
-                        char *ptbuf[1];         \
-                        ptbuf[0] = x;           \
-			if ( debug ) {		\
-                            hh = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);   \
-                            ReportEvent(hh,EVENTLOG_ERROR_TYPE,0,__LINE__,  \
-				NULL, 1, 0, ptbuf, NULL);             	    \
-                            DeregisterEventSource(hh);			\
-			}						\
-                     }  
-#else
-#define dnlcNotify(x,debug)
-#endif /* !DJGPP */
 
 /* Must be called with cm_dnlcLock write locked */
 static cm_nc_t * 
@@ -80,7 +65,6 @@ GetMeAnEntry()
     tnc = cm_data.nameHash[nameptr];
     if (!tnc)   
     {
-	dnlcNotify("null tnc in GetMeAnEntry",1);
 	osi_Log0(afsd_logp,"null tnc in GetMeAnEntry");
 	return 0;
     }
@@ -158,7 +142,6 @@ cm_dnlcEnter ( cm_scache_t *adp,
 	    dnlcstats.cycles++;
 	    lock_ReleaseWrite(&cm_dnlcLock);
 
-	    dnlcNotify("DNLC cycle",1);
 	    if ( cm_debugDnlc )
                 osi_Log0(afsd_logp, "DNLC cycle");
 	    cm_dnlcPurge();
@@ -275,7 +258,6 @@ cm_dnlcLookup (cm_scache_t *adp, cm_lookupSearch_t* sp)
 	    dnlcstats.cycles++;
 	    lock_ReleaseRead(&cm_dnlcLock);
 
-	    dnlcNotify("DNLC cycle",1);	
 	    if ( cm_debugDnlc ) 
 		osi_Log0(afsd_logp, "DNLC cycle"); 
 	    cm_dnlcPurge();
@@ -315,7 +297,6 @@ RemoveEntry (cm_nc_t *tnc, unsigned int key)
 {
     if (!tnc->prev) /* things on freelist always have null prev ptrs */
     {
-	dnlcNotify("Bogus dnlc freelist", 1);
 	osi_Log0(afsd_logp,"Bogus dnlc freelist");
 	return 1;   /* error */
     }
@@ -384,7 +365,6 @@ cm_dnlcRemove (cm_scache_t *adp, char *aname)
 	    dnlcstats.cycles++;
 	    lock_ReleaseWrite(&cm_dnlcLock);
 
-	    dnlcNotify("DNLC cycle",1);	
 	    if ( cm_debugDnlc ) 
 		osi_Log0(afsd_logp, "DNLC cycle"); 
 	    cm_dnlcPurge();

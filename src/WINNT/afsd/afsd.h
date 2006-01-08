@@ -66,13 +66,15 @@ BOOL APIENTRY About(HWND, unsigned int, unsigned int, long);
 #include "afsd_init.h"
 #ifdef DJGPP
 #include "afs/afsmsg95.h"
+#else
+#include "afsd_eventlog.h"
 #endif
 
 #include <afs/vldbint.h>
 #include <afs/afsint.h>
 
-#define AFS_DAEMON_SERVICE_NAME "TransarcAFSDaemon"
-#define AFS_DAEMON_EVENT_NAME "AFS Client"
+#define AFS_DAEMON_SERVICE_NAME AFSREG_CLT_SVC_NAME
+#define AFS_DAEMON_EVENT_NAME   AFSREG_CLT_SW_NAME
 
 void afs_exit();
 

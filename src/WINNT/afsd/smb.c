@@ -984,9 +984,9 @@ smb_user_t *smb_FindUID(smb_vc_t *vcp, unsigned short uid, int flags)
     for(uidp = vcp->usersp; uidp; uidp = uidp->nextp) {
         if (uid == uidp->userID) {
             uidp->refCount++;
-            osi_LogEvent("AFS smb_FindUID (Find by UID)",NULL," VCP[0x%p] found-uid[%d] name[%s]",
-                          vcp, uidp->userID, 
-                          osi_LogSaveString(smb_logp, (uidp->unp) ? uidp->unp->name : ""));
+            osi_Log3(smb_logp, "smb_FindUID vcp[0x%p] found-uid[%d] name[%s]",
+		     vcp, uidp->userID, 
+		     osi_LogSaveString(smb_logp, (uidp->unp) ? uidp->unp->name : ""));
             break;
         }
     }
@@ -1000,7 +1000,9 @@ smb_user_t *smb_FindUID(smb_vc_t *vcp, unsigned short uid, int flags)
         vcp->usersp = uidp;
         lock_InitializeMutex(&uidp->mx, "user_t mutex");
         uidp->userID = uid;
-        osi_LogEvent("AFS smb_FindUID (Find by UID)",NULL,"VCP[0x%p] new-uid[%d] name[%s]",vcp,uidp->userID,(uidp->unp ? uidp->unp->name : ""));
+        osi_Log3(smb_logp, "smb_FindUID vcp[0x%p] new-uid[%d] name[%s]",
+		 vcp, uidp->userID, 
+		 osi_LogSaveString(smb_logp,uidp->unp ? uidp->unp->name : ""));
     }
     lock_ReleaseWrite(&smb_rctLock);
     return uidp;
@@ -1042,7 +1044,8 @@ smb_user_t *smb_FindUserByNameThisSession(smb_vc_t *vcp, char *usern)
             continue;
         if (stricmp(uidp->unp->name, usern) == 0) {
             uidp->refCount++;
-            osi_LogEvent("AFS smb_FindUserByNameThisSession",NULL,"VCP[0x%x] uid[%d] match-name[%s]",vcp,uidp->userID,usern);
+            osi_Log3(smb_logp,"smb_FindUserByNameThisSession vcp[0x%p] uid[%d] match-name[%s]",
+		     vcp,uidp->userID,osi_LogSaveString(smb_logp,usern));
             break;
         } else
             continue;
@@ -2016,22 +2019,16 @@ unsigned int smb_GetSMBParm(smb_packet_t *smbp, int parm)
     parmCount = *smbp->wctp;
 
     if (parm >= parmCount) {
-        char s[100];
+	char s[100];
+
+	sprintf(s, "Bad SMB param %d out of %d, ncb len %d",
+                parm, parmCount, smbp->ncb_length);
+	osi_Log3(smb_logp,"Bad SMB param %d out of %d, ncb len %d",
+                 parm, parmCount, smbp->ncb_length);
 #ifndef DJGPP
-        HANDLE h;
-        char *ptbuf[1];
-        h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);
-#endif  
-        sprintf(s, "Bad SMB param %d out of %d, ncb len %d",
-                 parm, parmCount, smbp->ncb_length);
-#ifndef DJGPP   
-        ptbuf[0] = s;
-        ReportEvent(h, EVENTLOG_ERROR_TYPE, 0, 1006, NULL,
-                     1, smbp->ncb_length, ptbuf, smbp);
-        DeregisterEventSource(h);
-#endif
-        osi_Log3(smb_logp,"Bad SMB param %d out of %d, ncb len %d",
-                 parm, parmCount, smbp->ncb_length);
+	LogEvent(EVENTLOG_ERROR_TYPE, MSG_BAD_SMB_PARAM, 
+		 __FILE__, __LINE__, parm, parmCount, smbp->ncb_length);
+#endif /* !DJGPP */
         osi_panic(s, __FILE__, __LINE__);
     }
     parmDatap = smbp->wctp + (2*parm) + 1;
@@ -2049,19 +2046,13 @@ unsigned int smb_GetSMBOffsetParm(smb_packet_t *smbp, int parm, int offset)
 
     if (parm * 2 + offset >= parmCount * 2) {
         char s[100];
-#ifndef DJGPP
-        HANDLE h;
-        char *ptbuf[1];
-        h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);
-#endif
+
         sprintf(s, "Bad SMB param %d offset %d out of %d, ncb len %d",
                 parm, offset, parmCount, smbp->ncb_length);
 #ifndef DJGPP
-        ptbuf[0] = s;
-        ReportEvent(h, EVENTLOG_ERROR_TYPE, 0, 1006, NULL,
-                    1, smbp->ncb_length, ptbuf, smbp);
-        DeregisterEventSource(h);
-#endif
+	LogEvent(EVENTLOG_ERROR_TYPE, MSG_BAD_SMB_PARAM_WITH_OFFSET, 
+		 __FILE__, __LINE__, parm, offset, parmCount, smbp->ncb_length);
+#endif /* !DJGPP */
         osi_Log4(smb_logp, "Bad SMB param %d offset %d out of %d, ncb len %d",
                 parm, offset, parmCount, smbp->ncb_length);
         osi_panic(s, __FILE__, __LINE__);
@@ -6727,18 +6718,10 @@ void smb_DispatchPacket(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
     if (ncbp->ncb_length < offsetof(struct smb, vdata)) {
         /* log it and discard it */
 #ifndef DJGPP
-        HANDLE h;
-        char *ptbuf[1];
-        char s[100];
-        h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);
-        sprintf(s, "SMB message too short, len %d", ncbp->ncb_length);
-        ptbuf[0] = s;
-        ReportEvent(h, EVENTLOG_WARNING_TYPE, 0, 1007, NULL,
-                     1, ncbp->ncb_length, ptbuf, inp);
-        DeregisterEventSource(h);
-#else /* DJGPP */
-        osi_Log1(smb_logp, "SMB message too short, len %d", ncbp->ncb_length);
+	LogEvent(EVENTLOG_WARNING_TYPE, MSG_BAD_SMB_TOO_SHORT, 
+		 __FILE__, __LINE__, ncbp->ncb_length);
 #endif /* !DJGPP */
+	osi_Log1(smb_logp, "SMB message too short, len %d", ncbp->ncb_length);
         return;
     }
 
@@ -6799,10 +6782,8 @@ void smb_DispatchPacket(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
                 code = smb_ReceiveCoreWriteRaw (vcp, inp, outp,
                                                  rwcp);
             else {
-                osi_LogEvent("AFS Dispatch %s",(myCrt_Dispatch(inp->inCom)),"vcp 0x%p lana %d lsn %d",vcp,vcp->lana,vcp->lsn);
                 osi_Log4(smb_logp,"Dispatch %s vcp 0x%p lana %d lsn %d",myCrt_Dispatch(inp->inCom),vcp,vcp->lana,vcp->lsn);
                 code = (*(dp->procp)) (vcp, inp, outp);
-                osi_LogEvent("AFS Dispatch return",NULL,"Code 0x%x",code);
                 osi_Log4(smb_logp,"Dispatch return  code 0x%x vcp 0x%p lana %d lsn %d",code,vcp,vcp->lana,vcp->lsn);
 #ifdef LOG_PACKET
                 if ( code == CM_ERROR_BADSMB ||
@@ -6812,21 +6793,13 @@ void smb_DispatchPacket(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
             }   
 
             if (oldGen != sessionGen) {
-#ifndef DJGPP
-                HANDLE h;
-                char *ptbuf[1];
-                char s[100];
                 newTime = GetCurrentTime();
-                h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);
-                sprintf(s, "Pkt straddled session startup, took %d ms, ncb length %d",
-                         newTime - oldTime, ncbp->ncb_length);
-                ptbuf[0] = s;
-                ReportEvent(h, EVENTLOG_WARNING_TYPE, 0,
-                             1005, NULL, 1, ncbp->ncb_length, ptbuf, smbp);
-                DeregisterEventSource(h);
+#ifndef DJGPP
+		LogEvent(EVENTLOG_WARNING_TYPE, MSG_BAD_SMB_WRONG_SESSION, 
+			 newTime - oldTime, ncbp->ncb_length);
 #endif /* !DJGPP */
-                osi_Log1(smb_logp, "Pkt straddled session startup, "
-                          "ncb length %d", ncbp->ncb_length);
+		osi_Log2(smb_logp, "Pkt straddled session startup, "
+                          "took %d ms, ncb length %d", newTime - oldTime, ncbp->ncb_length);
             }
         }
         else {
@@ -6851,25 +6824,12 @@ void smb_DispatchPacket(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
         /* catastrophic failure:  log as much as possible */
         if (code == CM_ERROR_BADSMB) {
 #ifndef DJGPP
-            HANDLE h;
-            char *ptbuf[1];
-            char s[100];
-
-            osi_Log1(smb_logp,
-                      "Invalid SMB, ncb_length %d",
-                      ncbp->ncb_length);
-
-            h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);
-            sprintf(s, "Invalid SMB message, length %d",
-                     ncbp->ncb_length);
-            ptbuf[0] = s;
-            ReportEvent(h, EVENTLOG_ERROR_TYPE, 0, 1002, NULL,
-                         1, ncbp->ncb_length, ptbuf, smbp);
-            DeregisterEventSource(h);
+	    LogEvent(EVENTLOG_WARNING_TYPE, MSG_BAD_SMB_INVALID, 
+		     ncbp->ncb_length);
+#endif /* !DJGPP */
 #ifdef LOG_PACKET
             smb_LogPacket(inp);
 #endif /* LOG_PACKET */
-#endif /* !DJGPP */
             osi_Log1(smb_logp, "Invalid SMB message, length %d",
                      ncbp->ncb_length);
 
@@ -7439,19 +7399,8 @@ void smb_Server(VOID *parmp)
             /* Treat as transient error */
             {
 #ifndef DJGPP
-                EVENT_HANDLE h;
-                char *ptbuf[1];
-                char s[100];
-
-                h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);
-                sprintf(s, "SMB message incomplete, length %d",
-                         ncbp->ncb_length);
-                ptbuf[0] = s;
-                ReportEvent(h, EVENTLOG_WARNING_TYPE, 0,
-                             1001, NULL, 1,
-                             ncbp->ncb_length, ptbuf,
-                             bufp);
-                DeregisterEventSource(h);
+		LogEvent(EVENTLOG_WARNING_TYPE, MSG_BAD_SMB_INCOMPLETE, 
+			 ncbp->ncb_length);
 #endif /* !DJGPP */
                 osi_Log1(smb_logp,
                           "dispatch smb recv failed, message incomplete, ncb_length %d",
@@ -7504,28 +7453,11 @@ void smb_Server(VOID *parmp)
          * Log, sleep and resume.
          */
         if (!vcp) {
-            HANDLE h;
-            char buf[1000];
-            char *ptbuf[1];
-
-            sprintf(buf,
-                     "Bad vcp!! : "
-                     "LSNs[idx_session]=[%d],"
-                     "lanas[idx_session]=[%d],"
-                     "ncbp->ncb_lsn=[%d],"
-                     "ncbp->ncb_lana_num=[%d]",
+	    LogEvent(EVENTLOG_WARNING_TYPE, MSG_BAD_VCP,
                      LSNs[idx_session],
                      lanas[idx_session],
                      ncbp->ncb_lsn,
                      ncbp->ncb_lana_num);
-
-            ptbuf[0] = buf;
-
-            h = RegisterEventSource(NULL,AFS_DAEMON_EVENT_NAME);
-            if (h) {
-                ReportEvent(h, EVENTLOG_ERROR_TYPE, 0, 1001, NULL,1,sizeof(*ncbp),ptbuf,(void*)ncbp);
-                DeregisterEventSource(h);
-            }
 
             /* Also log in the trace log. */
             osi_Log4(smb_logp, "Server: BAD VCP!"
@@ -7631,17 +7563,7 @@ DWORD smb_ServerExceptionFilter(void) {
      * we have a trace (assuming tracing was enabled). Otherwise, this should
      * throw a second exception.
      */
-    HANDLE h;
-    char *ptbuf[1];
-
-    ptbuf[0] = "Unhandled exception forcing trace";
-
-    h = RegisterEventSource(NULL,AFS_DAEMON_EVENT_NAME);
-    if(h) {
-        ReportEvent(h, EVENTLOG_ERROR_TYPE, 0, 1001, NULL,1,0,ptbuf,NULL);
-        DeregisterEventSource(h);
-    }
-
+    LogEvent(EVENTLOG_ERROR_TYPE, MSG_UNHANDLED_EXCEPTION);
     afsd_ForceTrace(TRUE);
     buf_ForceTrace(TRUE);
     return EXCEPTION_CONTINUE_SEARCH;
@@ -7810,16 +7732,7 @@ void smb_Listener(void *parmp)
 
         if (reportSessionStartups) {
 #ifndef DJGPP
-            HANDLE h;
-            char *ptbuf[1];
-            char s[100];
-
-            h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);
-            sprintf(s, "SMB session startup, %d ongoing ops", ongoingOps);
-            ptbuf[0] = s;
-            ReportEvent(h, EVENTLOG_WARNING_TYPE, 0, 1004, NULL,
-                         1, 0, ptbuf, NULL);
-            DeregisterEventSource(h);
+            LogEvent(EVENTLOG_INFORMATION_TYPE, MSG_SMB_SESSION_START, ongoingOps);
 #else /* DJGPP */
             time(&now);
             fprintf(stderr, "%s: New session %d starting from host %s\n",

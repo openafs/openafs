@@ -49,80 +49,6 @@ extern int errno;
 #define AFS_CELLSERVDB AFS_CELLSERVDB_UNIX
 #endif /* DJGPP || WIN95 */
 
-static DWORD TraceOption = 0;
-
-/* This really needs to be initialized at DLL Init */
-#define TRACE_OPTION_EVENT 4
-
-#define ISCONFIGTRACE(v) ( ((v) & TRACE_OPTION_EVENT)==TRACE_OPTION_EVENT)
-
-void DebugEvent0_local(char *a) 
-{
-	HANDLE h; char *ptbuf[1];
-	if (!ISCONFIGTRACE(TraceOption))
-		return;
-	h = RegisterEventSource(NULL, a);
-	ptbuf[0] = a;
-	ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 0, NULL, 1, 0, (const char **)ptbuf, NULL);
-	DeregisterEventSource(h);
-}
-
-#define MAXBUF_ 512
-
-void DebugEvent_local(char *a,char *b,...) 
-{
-	HANDLE h; char *ptbuf[1],buf[MAXBUF_+1];
-	va_list marker;
-	if (!ISCONFIGTRACE(TraceOption))
-		return;
-	h = RegisterEventSource(NULL, a);
-	va_start(marker,b);
-	_vsnprintf(buf,MAXBUF_,b,marker);
-	ptbuf[0] = buf;
-	ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 0, NULL, 1, 0, (const char **)ptbuf, NULL);\
-	DeregisterEventSource(h);
-	va_end(marker);
-}
-
-#define REG_CLIENT_PARMS_KEY            TEXT("SYSTEM\\CurrentControlSet\\Services\\TransarcAFSDaemon\\Parameters")
-#define REG_CLIENT_TRACE_OPTION_PARM	TEXT("TraceOption")
-
-#ifdef COMMENT
-BOOL WINAPI DllMain (HANDLE hModule, DWORD fdwReason, LPVOID lpReserved)
-{
-    switch (fdwReason)
-    {
-    case DLL_PROCESS_ATTACH: {
-        DWORD LSPtype, LSPsize;
-        HKEY NPKey;
-
-        (void) RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY,
-                             0, KEY_QUERY_VALUE, &NPKey);
-        LSPsize=sizeof(TraceOption);
-        RegQueryValueEx(NPKey, REG_CLIENT_TRACE_OPTION_PARM, NULL,
-                        &LSPtype, (LPBYTE)&TraceOption, &LSPsize);
-
-        RegCloseKey (NPKey);
-        break;
-    }
-
-    case DLL_THREAD_ATTACH:
-        break;
-
-    case DLL_THREAD_DETACH:
-        break;
-
-    case DLL_PROCESS_DETACH:
-        break;
-
-    default:
-        return FALSE;
-    }
-
-    return TRUE;   // successful DLL_PROCESS_ATTACH
-}
-#endif /* COMMENT */
-
 static long cm_ParsePair(char *lineBufferp, char *leftp, char *rightp)
 {
     char *tp;
@@ -179,7 +105,7 @@ static long cm_ParsePair(char *lineBufferp, char *leftp, char *rightp)
 static int
 IsWindowsModule(const char * name)
 {
-    char * p;
+    const char * p;
     int i;
 
     /* Do not perform searches for probable Windows modules */
@@ -264,10 +190,10 @@ long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
 
     bestp = fopen(wdir, "r");
     
-#ifdef DEBUG
-    DebugEvent_local("AFS- cm_searchfile fopen", "Handle[%x], wdir[%s]", bestp, wdir);
+#ifdef CELLSERV_DEBUG
+    osi_Log2(afsd_logp,"cm_searchfile fopen handle[%p], wdir[%s]", bestp, 
+	     osi_LogSaveString(afsd_logp,wdir));
 #endif
-
     /* have we seen the cell line for the guy we're looking for? */
     inRightCell = 0;
     while (1) {
@@ -322,9 +248,9 @@ long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
 		    strcpy(newCellNamep, lineBuffer+1);
                 inRightCell = 1;
 		tracking = 0;
-#ifdef DEBUG
-                DebugEvent_local("AFS- cm_searchfile is cell", "inRightCell[%x], linebuffer[%s]", 
-				 inRightCell, lineBuffer);
+#ifdef CELLSERV_DEBUG                
+		osi_Log2(afsd_logp, "cm_searchfile is cell inRightCell[%p], linebuffer[%s]",
+			 inRightCell, osi_LogSaveString(afsd_logp,lineBuffer));
 #endif
 	    }
 	    else if (strnicmp(lineBuffer+1, cellNamep,
@@ -366,15 +292,11 @@ long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
 		/* add the server to the VLDB list */
                 WSASetLastError(0);
                 thp = gethostbyname(valuep);
-#ifdef DEBUG
-                {
-                    int iErr = WSAGetLastError();
-                    DebugEvent_local("AFS- cm_searchfile inRightCell", 
-                                     "thp[%x], valuep[%s], WSAGetLastError[%d]", 
-                                     thp, valuep, iErr);
-                }
+#ifdef CELLSERV_DEBUG
+		osi_Log3(afsd_logp,"cm_searchfile inRightCell thp[%p], valuep[%s], WSAGetLastError[%d]",
+			 thp, osi_LogSaveString(afsd_logp,valuep), WSAGetLastError());
 #endif
-                if (thp) {
+		if (thp) {
 		    memcpy(&vlSockAddr.sin_addr.s_addr, thp->h_addr,
                             sizeof(long));
                     vlSockAddr.sin_family = AF_INET;
@@ -428,11 +350,9 @@ long cm_SearchCellByDNS(char *cellNamep, char *newCellNamep, int *ttl,
     int numServers;
     int i;
     struct sockaddr_in vlSockAddr;
-
-#ifdef DEBUG
-    DebugEvent_local("AFS SearchCellDNS-","Doing search for [%s]", cellNamep);
+#ifdef CELLSERV_DEBUG
+    osi_Log1(afsd_logp,"SearchCellDNS-Doing search for [%s]", osi_LogSaveString(afsd_logp,cellNamep));
 #endif
-
     if ( IsWindowsModule(cellNamep) )
 	return -1;
     rc = getAFSServer(cellNamep, cellHostAddrs, cellHostNames, &numServers, ttl);

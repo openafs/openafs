@@ -59,20 +59,11 @@ int powerEventsRegistered = 0;
  */
 static void afsd_notifier(char *msgp, char *filep, long line)
 {
-    char tbuffer[512];
-    char *ptbuf[1];
-    HANDLE h;
-
     if (filep)
-        sprintf(tbuffer, "Error at file %s, line %d: %s",
+    	LogEvent(EVENTLOG_ERROR_TYPE, MSG_SERVICE_ERROR_STOP_WITH_MSG_AND_LOCATION, 
                  filep, line, msgp);
     else
-        sprintf(tbuffer, "Error at unknown location: %s", msgp);
-
-    h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);
-    ptbuf[0] = tbuffer;
-    ReportEvent(h, EVENTLOG_ERROR_TYPE, 0, line, NULL, 1, 0, ptbuf, NULL);
-    DeregisterEventSource(h);
+	LogEvent(EVENTLOG_ERROR_TYPE, MSG_SERVICE_ERROR_STOP_WITH_MSG, msgp);
 
     GlobalStatus = line;
 
@@ -1089,13 +1080,7 @@ afsd_Main(DWORD argc, LPTSTR *argv)
     SetServiceStatus(StatusHandle, &ServiceStatus);
 #endif
 
-    {       
-    HANDLE h; char *ptbuf[1];
-    h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);
-    ptbuf[0] = "AFS start pending";
-    ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 0, NULL, 1, 0, ptbuf, NULL);
-    DeregisterEventSource(h);
-    }
+    LogEvent(EVENTLOG_INFORMATION_TYPE, MSG_SERVICE_START_PENDING);
 
 #ifdef REGISTER_POWER_NOTIFICATIONS
     {
@@ -1134,14 +1119,8 @@ afsd_Main(DWORD argc, LPTSTR *argv)
         ServiceStatus.dwControlsAccepted = 0;
         SetServiceStatus(StatusHandle, &ServiceStatus);
 
-		{       
-		HANDLE h; char *ptbuf[1];
-		h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);
-		ptbuf[0] = "Incorrect module versions loaded";
-		ReportEvent(h, EVENTLOG_ERROR_TYPE, 0, 0, NULL, 1, 0, ptbuf, NULL);
-		DeregisterEventSource(h);
-		}
-                       
+	LogEvent(EVENTLOG_ERROR_TYPE, MSG_SERVICE_INCORRECT_VERSIONS);
+
         /* exit if initialization failed */
         return;
     }
@@ -1301,13 +1280,8 @@ afsd_Main(DWORD argc, LPTSTR *argv)
         ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN | SERVICE_ACCEPT_POWEREVENT | SERVICE_ACCEPT_PARAMCHANGE;
         SetServiceStatus(StatusHandle, &ServiceStatus);
 #endif  
-        {
-	    HANDLE h; char *ptbuf[1];
-            h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);
-            ptbuf[0] = "AFS running";
-            ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 0, NULL, 1, 0, ptbuf, NULL);
-            DeregisterEventSource(h);
-        }
+
+	LogEvent(EVENTLOG_INFORMATION_TYPE, MSG_SERVICE_RUNNING);
     }
 
     /* allow an exit to be called when started */
@@ -1347,14 +1321,10 @@ afsd_Main(DWORD argc, LPTSTR *argv)
 
     afsi_log("Received Termination Signal, Stopping Service");
 
-    {   
-        HANDLE h; char *ptbuf[1];
-	h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);
-	ptbuf[0] = "AFS quitting";
-	ReportEvent(h, GlobalStatus ? EVENTLOG_ERROR_TYPE : EVENTLOG_INFORMATION_TYPE,
-                0, 0, NULL, 1, 0, ptbuf, NULL);
-        DeregisterEventSource(h);
-    }
+    if ( GlobalStatus )
+	LogEvent(EVENTLOG_ERROR_TYPE, MSG_SERVICE_ERROR_STOP);
+    else
+	LogEvent(EVENTLOG_INFORMATION_TYPE, MSG_SERVICE_STOPPING);
 
     /* allow an exit to be called prior to stopping the service */
     hHookDll = LoadLibrary(AFSD_HOOK_DLL);

@@ -17,12 +17,7 @@
 #include <malloc.h>
 #include <osi.h>
 #include <rx/rx.h>
-#ifndef DJGPP
 #include <rx/rxkad.h>
-#else
-#include <rx/rxkad.h>
-#endif
-
 #include "afsd.h"
 
 osi_rwlock_t cm_connLock;
@@ -153,7 +148,8 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
     int dead_session;
     long timeUsed, timeLeft;
     long code;
-        
+    char addr[16];
+
     osi_Log2(afsd_logp, "cm_Analyze connp 0x%p, code 0x%x",
              connp, errorCode);
 
@@ -336,31 +332,46 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
     else if (errorCode == VNOVOL || errorCode == VMOVED || errorCode == VOFFLINE ||
              errorCode == VSALVAGE || errorCode == VNOSERVICE || errorCode == VIO) 
     {       
-#ifndef DJGPP
-        HANDLE h;
-        char *ptbuf[1];
-        char s[100];
-#endif
         char addr[16];
         char *format;
-
+#ifndef DJGPP
+	DWORD msgID;
+#endif
         switch ( errorCode ) {
         case VNOVOL:
+#ifndef DJGPP
+	    msgID = MSG_SERVER_REPORTS_VNOVOL;
+#endif
             format = "Server %s reported volume %d as not attached.";
             break;
         case VMOVED:
+#ifndef DJGPP
+	    msgID = MSG_SERVER_REPORTS_VMOVED;
+#endif
             format = "Server %s reported volume %d as moved.";
             break;
         case VOFFLINE:
+#ifndef DJGPP
+	    msgID = MSG_SERVER_REPORTS_VOFFLINE;
+#endif
             format = "Server %s reported volume %d as offline.";
             break;
         case VSALVAGE:
+#ifndef DJGPP
+	    msgID = MSG_SERVER_REPORTS_VSALVAGE;
+#endif
             format = "Server %s reported volume %d as needs salvage.";
             break;
         case VNOSERVICE:
+#ifndef DJGPP
+	    msgID = MSG_SERVER_REPORTS_VNOSERVICE;
+#endif
             format = "Server %s reported volume %d as not in service.";
             break;
         case VIO:
+#ifndef DJGPP
+	    msgID = MSG_SERVER_REPORTS_VIO;
+#endif
             format = "Server %s reported volume %d as temporarily unaccessible.";
             break;
         }
@@ -371,16 +382,10 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
                  ((serverp->addr.sin_addr.s_addr & 0xff00)>> 8),
                  ((serverp->addr.sin_addr.s_addr & 0xff0000)>> 16),
                  ((serverp->addr.sin_addr.s_addr & 0xff000000)>> 24)); 
-        osi_Log2(afsd_logp, format, osi_LogSaveString(afsd_logp,addr), fidp->volume);
-        
+
+	osi_Log2(afsd_logp, format, osi_LogSaveString(afsd_logp,addr), fidp->volume);
 #ifndef DJGPP
-        /* Create Event Log message */
-        h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);
-        sprintf(s, format, addr, fidp->volume);
-        ptbuf[0] = s;
-        ReportEvent(h, EVENTLOG_WARNING_TYPE, 0, 1009, NULL,
-                     1, 0, ptbuf, NULL);
-        DeregisterEventSource(h);
+	LogEvent(EVENTLOG_WARNING_TYPE, msgID, addr, fidp->volume);
 #endif
 
         /* Mark server offline for this volume */
@@ -423,20 +428,21 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
          * this is to prevent the SMB session from timing out
          * In addition, we log an event to the event log 
          */
+
+        /* Log server being offline for this volume */
+        sprintf(addr, "%d.%d.%d.%d", 
+                 ((serverp->addr.sin_addr.s_addr & 0xff)),
+                 ((serverp->addr.sin_addr.s_addr & 0xff00)>> 8),
+                 ((serverp->addr.sin_addr.s_addr & 0xff0000)>> 16),
+                 ((serverp->addr.sin_addr.s_addr & 0xff000000)>> 24)); 
+
 #ifndef DJGPP
-        HANDLE h;
-        char *ptbuf[1];
-        char s[100];
-        h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);
-        sprintf(s, "cm_Analyze: HardDeadTime exceeded.");
-        ptbuf[0] = s;
-        ReportEvent(h, EVENTLOG_WARNING_TYPE, 0, 1009, NULL,
-                     1, 0, ptbuf, NULL);
-        DeregisterEventSource(h);
+	LogEvent(EVENTLOG_WARNING_TYPE, MSG_RX_HARD_DEAD_TIME_EXCEEDED, addr);
 #endif /* !DJGPP */
 	  
         retry = 0;
-        osi_Log0(afsd_logp, "cm_Analyze: hardDeadTime exceeded");
+        osi_Log1(afsd_logp, "cm_Analyze: hardDeadTime exceeded addr[%s]",
+		 osi_LogSaveString(afsd_logp,addr));
     }
     else if (errorCode >= -64 && errorCode < 0) {
         /* mark server as down */

@@ -504,7 +504,7 @@ $(OUT)\unlog.res: unlog.rc AFS_component_version_number.h
 
 $(OUT)\afscpcc.res: afscpcc.rc AFS_component_version_number.h
 
-afsd_eventmessages.rc: afsd_eventmessages.h
+afsd_eventmessages.rc: $(INCFILEDIR)\afsd_eventmessages.h
 
 $(OUT)\afsd_service.res: afsd_service.rc afsd_eventmessages.rc AFS_component_version_number.h
 
@@ -520,6 +520,8 @@ clean::
 	$(DEL) afsrpc.h
 	$(DEL) afsrpc_?.*
         $(DEL) afsd_eventmessages.h
+        $(DEL) afsd_eventmessages.rc
+        $(DEL) MSG?????.bin
 	$(DEL) $(CONF_DLLFILE)
 	$(DEL) $(LOGON_DLLFILE)
 	$(DEL) $(LOG95_DLLFILE)
