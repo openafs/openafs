@@ -33,6 +33,8 @@
 extern void afsi_log(char *pattern, ...);
 #endif
 
+int cm_enableServerLocks = 0;
+
 /*
  * Case-folding array.  This was constructed by inspecting of SMBtrace output.
  * I do not know anything more about it.
@@ -283,11 +285,10 @@ long cm_CheckOpen(cm_scache_t *scp, int openMode, int trunc, cm_user_t *userp,
         else
             sLockType = LOCKING_ANDX_SHARED_LOCK;
 
-        /* single byte lock at offset 0x0000 0001 0000 0000 */
-        LOffset.HighPart = 1;
-        LOffset.LowPart = 0;
-        LLength.HighPart = 0;
-        LLength.LowPart = 1;
+        LOffset.HighPart = CM_FLSHARE_OFFSET_HIGH;
+        LOffset.LowPart  = CM_FLSHARE_OFFSET_LOW;
+        LLength.HighPart = CM_FLSHARE_LENGTH_HIGH;
+        LLength.LowPart  = CM_FLSHARE_LENGTH_LOW;
 
         code = cm_Lock(scp, sLockType, LOffset, LLength, key, 0, userp, reqp, NULL);
 
@@ -371,11 +372,11 @@ long cm_CheckNTOpen(cm_scache_t *scp, unsigned int desiredAccess,
         else
             sLockType = LOCKING_ANDX_SHARED_LOCK;
 
-        /* single byte lock at offset 0x0000 0001 0000 0000 */
-        LOffset.HighPart = 1;
-        LOffset.LowPart = 0;
-        LLength.HighPart = 0;
-        LLength.LowPart = 1;
+        /* single byte lock at offset 0x0100 0000 0000 0000 */
+        LOffset.HighPart = CM_FLSHARE_OFFSET_HIGH;
+        LOffset.LowPart  = CM_FLSHARE_OFFSET_LOW;
+        LLength.HighPart = CM_FLSHARE_LENGTH_HIGH;
+        LLength.LowPart  = CM_FLSHARE_LENGTH_LOW;
 
         code = cm_Lock(scp, sLockType, LOffset, LLength, key, 0, userp, reqp, NULL);
 
@@ -2788,14 +2789,14 @@ long cm_Rename(cm_scache_t *oldDscp, char *oldNamep, cm_scache_t *newDscp,
    Keyed byte range locks:
 
    Each cm_scache_t structure keeps track of a list of keyed locks.
-   The key for a lock is essentially a token which identifies an owner
-   of a set of locks (referred to as a client).  The set of keys used
-   within a specific cm_scache_t structure form a namespace that has a
-   scope of just that cm_scache_t structure.  The same key value can
-   be used with another cm_scache_t structure and correspond to a
-   completely different client.  However it is advantageous for the
-   SMB or IFS layer to make sure that there is a 1-1 mapping between
-   client and keys irrespective of the cm_scache_t.
+   The key for a lock identifies an owner of a set of locks (referred
+   to as a client).  Each key is represented by a value.  The set of
+   key values used within a specific cm_scache_t structure form a
+   namespace that has a scope of just that cm_scache_t structure.  The
+   same key value can be used with another cm_scache_t structure and
+   correspond to a completely different client.  However it is
+   advantageous for the SMB or IFS layer to make sure that there is a
+   1-1 mapping between client and keys over all cm_scache_t objects.
 
    Assume a client C has key Key(C) (although, since the scope of the
    key is a cm_scache_t, the key can be Key(C,S), where S is the
@@ -2804,13 +2805,23 @@ long cm_Rename(cm_scache_t *oldDscp, char *oldNamep, cm_scache_t *newDscp,
    inclusive (a.k.a. [O,O+L-1]).  The function Key(x) is implemented
    through cm_generateKey() function for both SMB and IFS.
 
-   The cache manager will set a lock on the AFS file server in order
-   to assert the locks in S->fileLocks.  If only shared locks are in
-   place for S, then the cache manager will obtain a LockRead lock,
-   while if there are any exclusive locks, it will obtain a LockWrite
-   lock.  If the exclusive locks are all released while the shared
-   locks remain, then the cache manager will downgrade the lock from
-   LockWrite to LockRead.
+   The list of locks for a cm_scache_t object S is maintained in
+   S->fileLocks.  The cache manager will set a lock on the AFS file
+   server in order to assert the locks in S->fileLocks.  If only
+   shared locks are in place for S, then the cache manager will obtain
+   a LockRead lock, while if there are any exclusive locks, it will
+   obtain a LockWrite lock.  If the exclusive locks are all released
+   while the shared locks remain, then the cache manager will
+   downgrade the lock from LockWrite to LockRead.  Similarly, if an
+   exclusive lock is obtained when only shared locks exist, then the
+   cache manager will try to upgrade the lock from LockRead to
+   LockWrite.
+
+   Each lock L owned by client C maintains a key L->key such that
+   L->key == Key(C), the effective range defined by L->LOffset and
+   L->LLength such that the range of bytes affected by the lock is
+   (L->LOffset, +L->LLength), a type maintained in L->LockType which
+   is either exclusive or shared.
 
    Lock states:
 
@@ -2827,7 +2838,13 @@ long cm_Rename(cm_scache_t *oldDscp, char *oldNamep, cm_scache_t *newDscp,
       the lock allows).
 
       1.1 ACTIVE->LOST: When the AFS file server fails to extend a
-        server lock that was required to assert the lock.
+        server lock that was required to assert the lock.  Before
+        marking the lock as lost, the cache manager checks if the file
+        has changed on the server.  If the file has not changed, then
+        the cache manager will attempt to obtain a new server lock
+        that is sufficient to assert the client side locks for the
+        file.  If any of these fail, the lock is marked as LOST.
+        Otherwise, it is left as ACTIVE.
 
       1.2 ACTIVE->DELETED: Lock is released.
 
@@ -2843,7 +2860,7 @@ long cm_Rename(cm_scache_t *oldDscp, char *oldNamep, cm_scache_t *newDscp,
 
       2.3 WAITLOCK->LOST: One or more locks from this client were
         marked as LOST.  No further locks will be granted to this
-        client until al lost locks are removed.
+        client until all lost locks are removed.
 
    3. WAITUNLOCK: A lock is in a WAITUNLOCK state if the cache manager
       receives a request for a lock that conflicts with an existing
@@ -2860,7 +2877,8 @@ long cm_Rename(cm_scache_t *oldDscp, char *oldNamep, cm_scache_t *newDscp,
         however the required serverLock is yet to be asserted with the
         server.
 
-      3.3 WAITUNLOCK->DELETED: The lock is abandoned or timed out.
+      3.3 WAITUNLOCK->DELETED: The lock is abandoned, timed out or
+        released.
 
       3.5 WAITUNLOCK->LOST: One or more locks from this client were
         marked as LOST.  No further locks will be granted to this
@@ -2869,28 +2887,21 @@ long cm_Rename(cm_scache_t *oldDscp, char *oldNamep, cm_scache_t *newDscp,
    4. LOST: A lock L is LOST if the server lock that was required to
       assert the lock could not be obtained or if it could not be
       extended, or if other locks by the same client were LOST.
-      Effectively, once a lock is LOST, the contract between the cache
+      Essentially, once a lock is LOST, the contract between the cache
       manager and that specific client is no longer valid.
 
       The cache manager rechecks the server lock once every minute and
       extends it as appropriate.  If this is not done for 5 minutes,
-      the AFS file server will release the lock.  Once released, the
-      lock cannot be re-obtained without verifying that the contents
-      of the file hasn't been modified since the time the lock was
-      released.  Doing so may cause data corruption.
+      the AFS file server will release the lock (the 5 minute timeout
+      is based on current file server code and is fairly arbitrary).
+      Once released, the lock cannot be re-obtained without verifying
+      that the contents of the file hasn't been modified since the
+      time the lock was released.  Re-obtaining the lock without
+      verifying this may lead to data corruption.  If the lock can not
+      be obtained safely, then all active locks for the cm_scache_t
+      are marked as LOST.
 
       4.1 LOST->DELETED: The lock is released.
-
-      4.2 LOST->ACTIVE: The lock is reassertd.  This requires
-        verifying that the file was not modified in between.
-
-      4.3 LOST->WAITLOCK: All LOST ACTIVE locks from this client were
-        reasserted.  The cache manager can reinstate this waiting
-        lock.
-
-      4.4 LOST->WAITUNLOCK: All LOST ACTIVE locks from this client
-        were reasserted.  The cache manager can reinstate this waiting
-        lock.
 
    5. DELETED: The lock is no longer relevant.  Eventually, it will
       get removed from the cm_scache_t. In the meantime, it will be
@@ -2899,79 +2910,74 @@ long cm_Rename(cm_scache_t *oldDscp, char *oldNamep, cm_scache_t *newDscp,
       5.1 DELETED->not exist: The lock is removed from the
         cm_scache_t.
 
-   6* A lock L is ACCEPTED if it is ACTIVE or WAITLOCK.
-      These locks have been accepted by the cache manager, but may or
-      may not have been granted back to the client.
+   The following are classifications of locks based on their state.
+
+   6* A lock L is ACCEPTED if it is ACTIVE or WAITLOCK.  These locks
+      have been accepted by the cache manager, but may or may not have
+      been granted back to the client.
 
    7* A lock L is QUEUED if it is ACTIVE, WAITLOCK or WAITUNLOCK.
 
-   8* A lock L is EFFECTIVE if it is ACTIVE or LOST.
-
-   9* A lock L is WAITING if it is WAITLOCK or WAITUNLOCK.
+   8* A lock L is WAITING if it is WAITLOCK or WAITUNLOCK.
 
    Lock operation:
 
-   A client C can READ range (Offset,+Length) of cm_scache_t S iff:
+   A client C can READ range (Offset,+Length) of a file represented by
+   cm_scache_t S iff (1):
 
-   1. for all _a_ in (Offset,+Length), one of the following is true:
+   1. for all _a_ in (Offset,+Length), all of the following is true:
 
-       1.1 There does NOT exist an ACTIVE lock L in S->fileLocks such
-         that _a_ in (L->LOffset,+L->LLength) (IOW: byte _a_ of S is
-         unowned) 
+       1.1 For each ACTIVE lock L in S->fileLocks such that _a_ in
+         (L->LOffset,+L->LLength); L->key == Key(C) OR L->LockType is
+         shared.
 
-         AND 
+       1.2 For each LOST lock L in S->fileLocks such that _a_ in
+         (L->LOffset,+L->LLength); L->LockType is shared AND L->key !=
+         Key(C)
 
-         For each LOST lock M in S->fileLocks such that
-         _a_ in (M->LOffset,+M->LLength), M->LockType is shared AND
-         M->key != Key(C).
+       (When locks are lost on an cm_scache_t, all locks are lost.  By
+       4.2 (below), if there is an exclusive LOST lock, then there
+       can't be any overlapping ACTIVE locks.)
 
-         (Note: If this is a different client from one whose shared
-         lock was LOST, then the contract between this client and the
-         cache manager is indistinguishable from that where no lock
-         was lost.  If an exclusive lock was lost, then the range is
-         considered unsafe for consumption.)
-
-       1.3 There is an ACTIVE lock L in S->fileLocks such that: L->key
-         == Key(C) && _a_ in (L->LOffset,+L->LLength) (IOW: byte _a_
-         of S is owned by C under lock L)
-
-       1.4 There is an ACTIVE lock L in S->fileLocks such that _a_ in
-         (L->LOffset,L->+LLength) && L->LockType is shared (IOW: byte
-         _a_ of S is shared) AND there is no LOST lock M such that _a_
-         in (M->LOffset,+M->LLength) and M->key == Key(C)
-
-   A client C can WRITE range (Offset,+Length) of cm_scache_t S iff:
+   A client C can WRITE range (Offset,+Length) of cm_scache_t S iff (2):
 
    2. for all _a_ in (Offset,+Length), one of the following is true:
 
-       2.1 Byte _a_ of S is unowned (as above) AND for each LOST lock
-         L in S->fileLocks _a_ NOT in (L->LOffset,+L->LLength).
+       2.1 Byte _a_ of S is unowned (as specified in 1.1) AND there
+         does not exist a LOST lock L such that _a_ in
+         (L->LOffset,+L->LLength).
 
-       2.2 Byte _a_ of S is owned by C under lock L (as above) AND
-         L->LockType is exclusive.
+       2.2 Byte _a_ of S is owned by C under lock L (as specified in
+         1.2) AND L->LockType is exclusive.
 
-   A client C can OBTAIN a lock L on cm_scache_t S iff:
+   A client C can OBTAIN a lock L on cm_scache_t S iff (both 3 and 4):
 
    3. for all _a_ in (L->LOffset,+L->LLength), ALL of the following is
       true:
 
-       3.1 L->LockType is exclusive IMPLIES there does NOT exist a QUEUED lock
-         M in S->fileLocks such that _a_ in (M->LOffset,+M->LLength).
+       3.1 If L->LockType is exclusive then there does NOT exist a
+         ACCEPTED lock M in S->fileLocks such that _a_ in
+         (M->LOffset,+M->LLength).
 
-         (Note: If we count all QUEUED locks then we hit cases such as
+         (If we count all QUEUED locks then we hit cases such as
          cascading waiting locks where the locks later on in the queue
          can be granted without compromising file integrity.  On the
          other hand if only ACCEPTED locks are considered, then locks
          that were received earlier may end up waiting for locks that
-         were received later to be unlocked. The choice of QUEUED
-         locks were made so that large locks don't consistently get
-         trumped by smaller locks which were requested later.)
+         were received later to be unlocked. The choice of ACCEPTED
+         locks was made to mimic the Windows byte range lock
+         semantics.)
 
-       3.2 L->LockType is shared IMPLIES for each QUEUED lock M in
+       3.2 If L->LockType is shared then for each ACCEPTED lock M in
          S->fileLocks, if _a_ in (M->LOffset,+M->LLength) then
          M->LockType is shared.
 
-   4. For each LOST lock M in S->fileLocks, M->key != Key(C)
+   4. For all LOST locks M in S->fileLocks, ALL of the following are true:
+
+       4.1 M->key != Key(C)
+
+       4.2 If M->LockType is exclusive, then (L->LOffset,+L->LLength)
+         and (M->LOffset,+M->LLength) do not intersect.
 
          (Note: If a client loses a lock, it loses all locks.
          Subsequently, it will not be allowed to obtain any more locks
@@ -2979,7 +2985,15 @@ long cm_Rename(cm_scache_t *oldDscp, char *oldNamep, cm_scache_t *newDscp,
          released.  Once all locks are released by a single client,
          there exists no further contract between the client and AFS
          about the contents of the file, hence the client can then
-         proceed to obtain new locks and establish a new contract.)
+         proceed to obtain new locks and establish a new contract.
+
+         This doesn't quite work as you think it should, because most
+         applications aren't built to deal with losing locks they
+         thought they once had.  For now, we don't have a good
+         solution to lost locks.
+
+         Also, for consistency reasons, we have to hold off on
+         granting locks that overlap exclusive LOST locks.)
 
    A client C can only unlock locks L in S->fileLocks which have
    L->key == Key(C).
@@ -3028,16 +3042,13 @@ long cm_Rename(cm_scache_t *oldDscp, char *oldNamep, cm_scache_t *newDscp,
        I5. S->serverLock == LockWrite iff there is at least one ACTIVE
            exclusive lock.
 
-       I6. If a WAITUNLOCK lock L exists in S->fileLocks, then all
-           locks that L is waiting on are ahead of L in S->fileLocks.
-
-       I7. If L is a LOST lock, then for each lock M in S->fileLocks,
+       I6. If L is a LOST lock, then for each lock M in S->fileLocks,
            M->key == L->key IMPLIES M is LOST or DELETED.
 
    --asanka
  */
 
-#define IS_LOCK_ACTIVE(lockp)     (((lockp)->flags & (CM_FILELOCK_FLAG_DELETED|CM_FILELOCK_FLAG_WAITLOCK|CM_FILELOCK_FLAG_WAITUNLOCK|CM_FILELOCK_FLAG_LOST))==0)
+#define IS_LOCK_ACTIVE(lockp)     (((lockp)->flags & (CM_FILELOCK_FLAG_DELETED|CM_FILELOCK_FLAG_WAITLOCK|CM_FILELOCK_FLAG_WAITUNLOCK|CM_FILELOCK_FLAG_LOST)) == 0)
 
 #define IS_LOCK_WAITLOCK(lockp)   (((lockp)->flags & (CM_FILELOCK_FLAG_DELETED|CM_FILELOCK_FLAG_WAITLOCK|CM_FILELOCK_FLAG_WAITUNLOCK|CM_FILELOCK_FLAG_LOST)) == CM_FILELOCK_FLAG_WAITLOCK)
 
@@ -3047,18 +3058,19 @@ long cm_Rename(cm_scache_t *oldDscp, char *oldNamep, cm_scache_t *newDscp,
 
 #define IS_LOCK_DELETED(lockp)    (((lockp)->flags & CM_FILELOCK_FLAG_DELETED) == CM_FILELOCK_FLAG_DELETED)
 
-/* the following macros are unsafe */
+/* unsafe */
 #define IS_LOCK_ACCEPTED(lockp)   (IS_LOCK_ACTIVE(lockp) || IS_LOCK_WAITLOCK(lockp))
 
-#define IS_LOCK_QUEUED(lockp)     (IS_LOCK_ACTIVE(lockp) || IS_LOCK_WAITLOCK(lockp) || IS_LOCK_WAITUNLOCK(lockp))
-
-#define IS_LOCK_EFFECTIVE(lockp)  (IS_LOCK_ACTIVE(lockp) || IS_LOCK_LOST(lockp))
-
+/* unsafe */
 #define IS_LOCK_CLIENTONLY(lockp) ((((lockp)->scp->flags & CM_SCACHEFLAG_RO) == CM_SCACHEFLAG_RO) || (((lockp)->flags & CM_FILELOCK_FLAG_CLIENTONLY) == CM_FILELOCK_FLAG_CLIENTONLY))
 
+/* unsafe */
 #define INTERSECT_RANGE(r1,r2) (((r2).offset+(r2).length) > (r1).offset && ((r1).offset +(r1).length) > (r2).offset)
 
+/* unsafe */
 #define CONTAINS_RANGE(r1,r2) (((r2).offset+(r2).length) <= ((r1).offset+(r1).length) && (r1).offset <= (r2).offset)
+
+#define SERVERLOCKS_ENABLED(scp) (!(((scp)->flags & CM_SCACHEFLAG_RO) && cm_enableServerLocks))
 
 static void cm_LockRangeSubtract(cm_range_t * pos, const cm_range_t * neg)
 {
@@ -3073,9 +3085,12 @@ static void cm_LockRangeSubtract(cm_range_t * pos, const cm_range_t * neg)
             pos->length = pos->offset + pos->length - int_end;
             pos->offset = int_end;
         } else if(int_end == pos->offset + pos->length) {
-            pos->offset = int_begin;
-            pos->length = int_end - int_begin;
+            pos->length = int_begin - pos->offset;
         }
+
+        /* We only subtract ranges if the resulting range is
+           contiguous.  If we try to support non-contigous ranges, we
+           aren't actually improving performance. */
     }
 }
 
@@ -3098,27 +3113,18 @@ long cm_LockCheckRead(cm_scache_t *scp,
     range.offset = LOffset.QuadPart;
     range.length = LLength.QuadPart;
 
-   /*
-   1. for all _a_ in (Offset,+Length), one of the following is true:
+    /*
 
-       1.1 There does NOT exist an ACTIVE lock L in S->fileLocks such
-         that _a_ in (L->LOffset,+L->LLength) (IOW: byte _a_ of S is
-         unowned)
+     1. for all _a_ in (Offset,+Length), all of the following is true:
 
-         AND
+       1.1 For each ACTIVE lock L in S->fileLocks such that _a_ in
+         (L->LOffset,+L->LLength); L->key == Key(C) OR L->LockType is
+         shared.
 
-         For each LOST lock M in S->fileLocks such that
-         _a_ in (M->LOffset,+M->LLength), M->LockType is shared AND
-         M->key != Key(C).
+       1.2 For each LOST lock L in S->fileLocks such that _a_ in
+         (L->LOffset,+L->LLength); L->LockType is shared AND L->key !=
+         Key(C)
 
-       1.3 There is an ACTIVE lock L in S->fileLocks such that: L->key
-         == Key(C) && _a_ in (L->LOffset,+L->LLength) (IOW: byte _a_
-         of S is owned by C under lock L)
-
-       1.4 There is an ACTIVE lock L in S->fileLocks such that _a_ in
-         (L->LOffset,L->+LLength) && L->LockType is shared (IOW: byte
-         _a_ of S is shared) AND there is no LOST lock M such that _a_
-         in (M->LOffset,+M->LLength) and M->key == Key(C)
     */
 
     lock_ObtainRead(&cm_scacheLock);
@@ -3127,20 +3133,12 @@ long cm_LockCheckRead(cm_scache_t *scp,
         fileLock = 
             (cm_file_lock_t *)((char *) q - offsetof(cm_file_lock_t, fileq));
 
-#if 0
-        if(IS_LOCK_DELETED(fileLock) || 
-           (IS_LOCK_LOST(fileLock) && 
-            fileLock->lockType == LockRead && 
-            fileLock->key != key))
-            continue;
-#endif
-
-        if(INTERSECT_RANGE(range, fileLock->range)) {
+        if (INTERSECT_RANGE(range, fileLock->range)) {
             if(IS_LOCK_ACTIVE(fileLock)) {
                 if(fileLock->key == key) {
 
-                    /* if there is an active lock for this client, it
-                       is safe to substract ranges */
+                    /* If there is an active lock for this client, it
+                       is safe to substract ranges.*/
                     cm_LockRangeSubtract(&range, &fileLock->range);
                     substract_ranges = TRUE;
                 } else {
@@ -3154,24 +3152,15 @@ long cm_LockCheckRead(cm_scache_t *scp,
                        because the client may have lost locks. That
                        is, unless we have already seen an active lock
                        belonging to the client, in which case there
-                       can't be any lost locks. */
+                       can't be any lost locks for this client. */
                     if(substract_ranges)
                         cm_LockRangeSubtract(&range, &fileLock->range);
                 }
-            } else if(IS_LOCK_LOST(fileLock)
-#if 0
-                      /* Uncomment for less aggressive handling of
-                         lost locks. */
-                      &&
-                      (fileLock->key == key || fileLock->lockType == LockWrite)
-#endif
-                      ) {
+            } else if(IS_LOCK_LOST(fileLock) &&
+                      (fileLock->key == key || fileLock->lockType == LockWrite)) {
                 code = CM_ERROR_BADFD;
                 break;
             }
-        } else if (IS_LOCK_LOST(fileLock)) {
-            code = CM_ERROR_BADFD;
-            break;
         }
     }
 
@@ -3208,16 +3197,15 @@ long cm_LockCheckWrite(cm_scache_t *scp,
     range.length = LLength.QuadPart;
 
     /*
-   A client C can WRITE range (Offset,+Length) of cm_scache_t S iff:
+   A client C can WRITE range (Offset,+Length) of cm_scache_t S iff (2):
 
    2. for all _a_ in (Offset,+Length), one of the following is true:
 
-       2.1 Byte _a_ of S is unowned (as above) AND for each LOST lock
-         L in S->fileLocks _a_ NOT in (L->LOffset,+L->LLength).
+       2.1 Byte _a_ of S is unowned AND there does not exist a LOST
+         lock L such that _a_ in (L->LOffset,+L->LLength).
 
-       2.2 Byte _a_ of S is owned by C under lock L (as above) AND
-         L->LockType is exclusive.
-
+       2.2 Byte _a_ of S is owned by C under lock L AND L->LockType is
+         exclusive.
     */
 
     lock_ObtainRead(&cm_scacheLock);
@@ -3225,14 +3213,6 @@ long cm_LockCheckWrite(cm_scache_t *scp,
     for(q = scp->fileLocksH; q && range.length > 0; q = osi_QNext(q)) {
         fileLock = 
             (cm_file_lock_t *)((char *) q - offsetof(cm_file_lock_t, fileq));
-
-#if 0
-        if(IS_LOCK_DELETED(fileLock) || 
-           (IS_LOCK_LOST(fileLock) && 
-            fileLock->lockType == LockRead && 
-            fileLock->key != key))
-            continue;
-#endif
 
         if(INTERSECT_RANGE(range, fileLock->range)) {
             if(IS_LOCK_ACTIVE(fileLock)) {
@@ -3254,9 +3234,6 @@ long cm_LockCheckWrite(cm_scache_t *scp,
                 code = CM_ERROR_BADFD;
                 break;
             }
-        } else if (IS_LOCK_LOST(fileLock)) {
-            code = CM_ERROR_BADFD;
-            break;
         }
     }
 
@@ -3323,19 +3300,25 @@ long cm_Lock(cm_scache_t *scp, unsigned char sLockType,
              (unsigned long)(key >> 32), (unsigned long)(key & 0xffffffff));
 
     /*
-   A client C can OBTAIN a lock L on cm_scache_t S iff:
+   A client C can OBTAIN a lock L on cm_scache_t S iff (both 3 and 4):
 
    3. for all _a_ in (L->LOffset,+L->LLength), ALL of the following is
       true:
 
-       3.1 L->LockType is exclusive IMPLIES there does NOT exist a QUEUED lock
-         M in S->fileLocks such that _a_ in (M->LOffset,+M->LLength).
+       3.1 If L->LockType is exclusive then there does NOT exist a
+         ACCEPTED lock M in S->fileLocks such that _a_ in
+         (M->LOffset,+M->LLength).
 
-       3.2 L->LockType is shared IMPLIES for each QUEUED lock M in
+       3.2 If L->LockType is shared then for each ACCEPTED lock M in
          S->fileLocks, if _a_ in (M->LOffset,+M->LLength) then
          M->LockType is shared.
 
-   4. For each LOST lock M in S->fileLocks, M->key != Key(C)
+   4. For all LOST locks M in S->fileLocks, ALL of the following are true:
+
+       4.1 M->key != Key(C)
+
+       4.2 If M->LockType is exclusive, then (L->LOffset,+L->LLength)
+         and (M->LOffset,+M->LLength) do not intersect.
     */
 
     range.offset = LOffset.QuadPart;
@@ -3344,17 +3327,24 @@ long cm_Lock(cm_scache_t *scp, unsigned char sLockType,
     lock_ObtainRead(&cm_scacheLock);
 
     for(q = scp->fileLocksH; q; q = osi_QNext(q)) {
-        fileLock = 
+        fileLock =
             (cm_file_lock_t *)((char *) q - offsetof(cm_file_lock_t, fileq));
 
-        if(IS_LOCK_LOST(fileLock) && fileLock->key == key) {
-            code = CM_ERROR_BADFD;
-            break;
+        if(IS_LOCK_LOST(fileLock)) {
+            if (fileLock->key == key) {
+                code = CM_ERROR_BADFD;
+                break;
+            } else if (fileLock->lockType == LockWrite && INTERSECT_RANGE(range, fileLock->range)) {
+                code = CM_ERROR_WOULDBLOCK;
+                wait_unlock = TRUE;
+                break;
+            }
         }
 
         /* we don't need to check for deleted locks here since deleted
-           locks are dequeued from fileLocks */
-        if(INTERSECT_RANGE(range, fileLock->range)) {
+           locks are dequeued from scp->fileLocks */
+        if(IS_LOCK_ACCEPTED(fileLock) &&
+           INTERSECT_RANGE(range, fileLock->range)) {
 
             if((sLockType & LOCKING_ANDX_SHARED_LOCK) == 0 ||
                 fileLock->lockType != LockRead) {
@@ -3367,7 +3357,7 @@ long cm_Lock(cm_scache_t *scp, unsigned char sLockType,
 
     lock_ReleaseRead(&cm_scacheLock);
 
-    if(code == 0 && !(scp->flags & CM_SCACHEFLAG_RO)) {
+    if(code == 0 && SERVERLOCKS_ENABLED(scp)) {
         if(Which == scp->serverLock ||
            (Which == LockRead && scp->serverLock == LockWrite)) {
 
@@ -3517,8 +3507,9 @@ long cm_Lock(cm_scache_t *scp, unsigned char sLockType,
                 }
             }
         }
-    } else if (code == 0 && (scp->flags & CM_SCACHEFLAG_RO)) {
-        osi_Log0(afsd_logp, "  Skipping server lock for RO scp");
+    } else if (code == 0) {     /* server locks not enabled */
+        osi_Log0(afsd_logp,
+                 "  Skipping server lock for scp");
     }
 
  check_code:
@@ -3555,6 +3546,9 @@ long cm_Lock(cm_scache_t *scp, unsigned char sLockType,
                            ((wait_unlock)?
                             CM_FILELOCK_FLAG_WAITUNLOCK :
                             CM_FILELOCK_FLAG_WAITLOCK));
+
+        if (!SERVERLOCKS_ENABLED(scp))
+            fileLock->flags |= CM_FILELOCK_FLAG_CLIENTONLY;
 
         fileLock->lastUpdate = (code == 0) ? time(NULL) : 0;
 
@@ -3684,8 +3678,8 @@ long cm_UnlockByKey(cm_scache_t * scp,
     osi_assertx(scp->sharedLocks >= 0, "scp->sharedLocks < 0");
     osi_assertx(scp->exclusiveLocks >= 0, "scp->exclusiveLocks < 0");
 
-    if (scp->flags & CM_SCACHEFLAG_RO) {
-        osi_Log0(afsd_logp, "  Skipping server lock for RO scp");
+    if (!SERVERLOCKS_ENABLED(scp)) {
+        osi_Log0(afsd_logp, "  Skipping server lock for scp");
         goto done;
     }
 
@@ -3927,8 +3921,8 @@ long cm_Unlock(cm_scache_t *scp,
     fileLock->scp = NULL;
     lock_ReleaseWrite(&cm_scacheLock);
 
-    if (scp->flags & CM_SCACHEFLAG_RO) {
-        osi_Log0(afsd_logp, "   Skipping server locks for RO scp");
+    if (!SERVERLOCKS_ENABLED(scp)) {
+        osi_Log0(afsd_logp, "   Skipping server locks for scp");
         goto done;
     }
 
@@ -4147,6 +4141,10 @@ void cm_CheckLocks()
 
         } else if (IS_LOCK_ACTIVE(fileLock) && !IS_LOCK_CLIENTONLY(fileLock)) {
 
+            /* Server locks must have been enabled for us to have
+               received an active non-client-only lock. */
+            //osi_assert(cm_enableServerLocks);
+
             scp = fileLock->scp;
             osi_assert(scp != NULL);
 
@@ -4288,7 +4286,7 @@ void cm_CheckLocks()
 long cm_RetryLock(cm_file_lock_t *oldFileLock, int client_is_dead)
 {
     long code = 0;
-    cm_scache_t *scp;
+    cm_scache_t *scp = NULL;
     AFSFid tfid;
     AFSVolSync volSync;
     cm_conn_t *connp;
@@ -4302,22 +4300,35 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int client_is_dead)
 
     if (client_is_dead) {
         code = CM_ERROR_TIMEDOUT;
-        goto handleCode;
+        goto updateLock;
     }
 
     lock_ObtainRead(&cm_scacheLock);
 
+    osi_Log2(afsd_logp, "cm_RetryLock checking lock %p (scp=%p)", oldFileLock, oldFileLock->scp);
+    osi_Log4(afsd_logp, "    offset(%x:%x) length(%x:%x)",
+             (unsigned)(oldFileLock->range.offset >> 32),
+             (unsigned)(oldFileLock->range.offset & 0xffffffff),
+             (unsigned)(oldFileLock->range.length >> 32),
+             (unsigned)(oldFileLock->range.length & 0xffffffff));
+    osi_Log3(afsd_logp, "    key(%x:%x) flags=%x",
+             (unsigned)(oldFileLock->key >> 32),
+             (unsigned)(oldFileLock->key & 0xffffffff),
+             (unsigned)(oldFileLock->flags));
+
     /* if the lock has already been granted, then we have nothing to do */
     if(IS_LOCK_ACTIVE(oldFileLock)) {
         lock_ReleaseRead(&cm_scacheLock);
+        osi_Log0(afsd_logp, "cm_RetryLock lock already granted");
         return 0;
     }
 
     /* we can't do anything with lost or deleted locks at the moment. */
     if(IS_LOCK_LOST(oldFileLock) || IS_LOCK_DELETED(oldFileLock)) {
         code = CM_ERROR_BADFD;
+        osi_Log0(afsd_logp, "cm_RetryLock lock is lost or deleted");
         lock_ReleaseRead(&cm_scacheLock);
-        goto handleCode;
+        goto updateLock;
     }
 
     scp = oldFileLock->scp;
@@ -4331,10 +4342,18 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int client_is_dead)
     /* Check if we already have a sufficient server lock to allow this
        lock to go through */
     if(IS_LOCK_WAITLOCK(oldFileLock) &&
-       (scp->serverLock == oldFileLock->lockType ||
+       (!SERVERLOCKS_ENABLED(scp) ||
+        scp->serverLock == oldFileLock->lockType ||
         scp->serverLock == LockWrite)) {
 
         oldFileLock->flags &= ~CM_FILELOCK_FLAG_WAITLOCK;
+
+        if (SERVERLOCKS_ENABLED(scp)) {
+            osi_Log1(afsd_logp, "cm_RetryLock Server lock (%d) is sufficient for lock.  Granting",
+                     (int) scp->serverLock);
+        } else {
+            osi_Log0(afsd_logp, "cm_RetryLock skipping server lock for scp");
+        }
 
         lock_ReleaseWrite(&cm_scacheLock);
         lock_ReleaseMutex(&scp->mx);
@@ -4351,29 +4370,28 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int client_is_dead)
             fileLock = (cm_file_lock_t *)
                 ((char *) q - offsetof(cm_file_lock_t, fileq));
 
-            /* a oldFileLock can only depend on locks that are ahead
-               of it in the queue.  If we came this far, then all
-               should be ok */
-            if(fileLock == oldFileLock) {
-                break;
+            if(IS_LOCK_LOST(fileLock)) {
+                if (fileLock->key == oldFileLock->key) {
+                    code = CM_ERROR_BADFD;
+                    oldFileLock->flags |= CM_FILELOCK_FLAG_LOST;
+                    osi_Log1(afsd_logp, "    found lost lock %p for same key.  Marking lock as lost",
+                             fileLock);
+                    break;
+                } else if (fileLock->lockType == LockWrite &&
+                           INTERSECT_RANGE(oldFileLock->range, fileLock->range)) {
+                    osi_Log1(afsd_logp, "    found conflicting LOST lock %p", fileLock);
+                    code = CM_ERROR_WOULDBLOCK;
+                    break;
+                }
             }
 
-            if(IS_LOCK_LOST(fileLock)
-#if 0
-               && fileLock->key == oldFileLock->key
-#endif
-               ) {
-                code = CM_ERROR_BADFD;
-                oldFileLock->flags |= CM_FILELOCK_FLAG_LOST;
-                break;
-            }
-
-            /* we don't need to check for deleted locks here since deleted
-               locks are dequeued from fileLocks */
-            if(INTERSECT_RANGE(oldFileLock->range, fileLock->range)) {
+            if(IS_LOCK_ACCEPTED(fileLock) &&
+               INTERSECT_RANGE(oldFileLock->range, fileLock->range)) {
 
                 if(oldFileLock->lockType != LockRead ||
                    fileLock->lockType != LockRead) {
+
+                    osi_Log1(afsd_logp, "    found conflicting lock %p", fileLock);
                     code = CM_ERROR_WOULDBLOCK;
                     break;
                 }
@@ -4407,9 +4425,10 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int client_is_dead)
         oldFileLock->flags |= CM_FILELOCK_FLAG_WAITLOCK;
     }
 
-    if (scp->serverLock == oldFileLock->lockType ||
-        (oldFileLock->lockType == LockRead && scp->serverLock == LockWrite) ||
-        (scp->flags & CM_SCACHEFLAG_RO)) {
+    if (!SERVERLOCKS_ENABLED(scp) ||
+        scp->serverLock == oldFileLock->lockType ||
+        (oldFileLock->lockType == LockRead &&
+         scp->serverLock == LockWrite)) {
 
         oldFileLock->flags &= ~CM_FILELOCK_FLAG_WAITLOCK;
 
@@ -4490,6 +4509,7 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int client_is_dead)
     }
     lock_ReleaseMutex(&scp->mx);
 
+  updateLock:
     lock_ObtainWrite(&cm_scacheLock);
     if (code == 0) {
         oldFileLock->flags &= ~CM_FILELOCK_FLAG_WAITLOCK;
@@ -4497,8 +4517,10 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int client_is_dead)
         oldFileLock->flags |= CM_FILELOCK_FLAG_DELETED;
         cm_ReleaseUser(oldFileLock->userp);
         oldFileLock->userp = NULL;
-        cm_ReleaseSCacheNoLock(scp);
-        oldFileLock->scp = NULL;
+        if (oldFileLock->scp) {
+            cm_ReleaseSCacheNoLock(oldFileLock->scp);
+            oldFileLock->scp = NULL;
+        }
     }
     lock_ReleaseWrite(&cm_scacheLock);
 

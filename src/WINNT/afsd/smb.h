@@ -338,6 +338,7 @@ typedef struct smb_fid {
 						 * magic ioctl file */
 #define SMB_FID_OPENDELETE		0x10	/* open for deletion (NT) */
 #define SMB_FID_DELONCLOSE		0x20	/* marked for deletion */
+
 /*
  * Now some special flags to work around a bug in NT Client
  */
