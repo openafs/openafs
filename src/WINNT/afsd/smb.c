@@ -3112,14 +3112,18 @@ void smb_WaitingLocksDaemon()
             osi_SleepW((LONG_PTR)&smb_allWaitingLocks, &smb_globalLock);
             thrd_Sleep(1000);
             continue;
-        } else 
+        } else {
             first = 1;
+            osi_Log0(smb_logp, "smb_WaitingLocksDaemon starting wait lock check");
+        }
 
         do {
             if (first)
                 first = 0;
             else
                 lock_ObtainWrite(&smb_globalLock);
+
+            osi_Log1(smb_logp, "    Checking waiting lock request %p", nwlRequest);
 
             wlRequest = nwlRequest;
             nwlRequest = (smb_waitingLockRequest_t *) osi_QNext(&wlRequest->q);
@@ -3130,6 +3134,8 @@ void smb_WaitingLocksDaemon()
             for (wl = wlRequest->locks; wl; wl = (smb_waitingLock_t *) osi_QNext(&wl->q)) {
                 if (wl->state == SMB_WAITINGLOCKSTATE_DONE)
                     continue;
+
+                osi_assert(wl->state != SMB_WAITINGLOCKSTATE_ERROR);
                 
                 /* wl->state is either _DONE or _WAITING.  _ERROR
                    would no longer be on the queue. */
@@ -3160,6 +3166,9 @@ void smb_WaitingLocksDaemon()
                 cm_scache_t * scp;
                 cm_req_t req;
 
+                osi_Log1(smb_logp, "smb_WaitingLocksDaemon discarding lock req %p",
+                         wlRequest);
+
                 scp = wlRequest->scp;
 
                 cm_InitReq(&req);
@@ -3180,6 +3189,10 @@ void smb_WaitingLocksDaemon()
                 lock_ReleaseMutex(&scp->mx);
 
             } else {
+
+                osi_Log1(smb_logp, "smb_WaitingLocksDaemon granting lock req %p",
+                         wlRequest);
+
                 for (wl = wlRequest->locks; wl; wl = wlNext) {
                     wlNext = (smb_waitingLock_t *) osi_QNext(&wl->q);
                     osi_QRemove((osi_queue_t **) &wlRequest->locks, &wl->q);
