@@ -3087,7 +3087,13 @@ long cm_Rename(cm_scache_t *oldDscp, char *oldNamep, cm_scache_t *newDscp,
 /* unsafe */
 #define CONTAINS_RANGE(r1,r2) (((r2).offset+(r2).length) <= ((r1).offset+(r1).length) && (r1).offset <= (r2).offset)
 
-#define SERVERLOCKS_ENABLED(scp) (!((scp)->flags & CM_SCACHEFLAG_RO) && cm_enableServerLocks)
+#if defined(VICED_CAPABILITY_USE_BYTE_RANGE_LOCKS) && !defined(LOCK_TESTING)
+#define SCP_SUPPORTS_BRLOCKS(scp) ((scp)->cbServerp && ((scp)->cbServerp->capabilities & VICED_CAPABILITY_USE_BYTE_RANGE_LOCKS))
+#else
+#define SCP_SUPPORTS_BRLOCKS(scp) (1)
+#endif
+
+#define SERVERLOCKS_ENABLED(scp) (!((scp)->flags & CM_SCACHEFLAG_RO) && cm_enableServerLocks && SCP_SUPPORTS_BRLOCKS(scp))
 
 static void cm_LockRangeSubtract(cm_range_t * pos, const cm_range_t * neg)
 {
@@ -3614,8 +3620,11 @@ long cm_UnlockByKey(cm_scache_t * scp,
     struct rx_connection * callp;
     int n_unlocks = 0;
 
-    osi_Log3(afsd_logp, "cm_UnlockByKey scp 0x%p key 0x%x:%x",
-             scp, (unsigned long)(key >> 32), (unsigned long)(key & 0xffffffff));
+    osi_Log4(afsd_logp, "cm_UnlockByKey scp 0x%p key 0x%x:%x flags=0x%x",
+             scp,
+             (unsigned long)(key >> 32),
+             (unsigned long)(key & 0xffffffff),
+             flags);
 
     lock_ObtainWrite(&cm_scacheLock);
 
@@ -3627,7 +3636,9 @@ long cm_UnlockByKey(cm_scache_t * scp,
 
 #ifdef DEBUG
         osi_Log4(afsd_logp, "   Checking lock[0x%x] range[%d,+%d] type[%d]",
-                fileLock, (unsigned long) fileLock->range.offset, (unsigned long) fileLock->range.length,
+                 fileLock,
+                 (unsigned long) fileLock->range.offset,
+                 (unsigned long) fileLock->range.length,
                 fileLock->lockType);
         osi_Log3(afsd_logp, "     key[0x%x:%x] flags[0x%x]",
                  (unsigned long)(fileLock->key >> 32),
@@ -4160,7 +4171,7 @@ void cm_CheckLocks()
 
             /* Server locks must have been enabled for us to have
                received an active non-client-only lock. */
-            //osi_assert(cm_enableServerLocks);
+            osi_assert(cm_enableServerLocks);
 
             scp = fileLock->scp;
             osi_assert(scp != NULL);
@@ -4381,7 +4392,6 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int client_is_dead)
     if(IS_LOCK_WAITUNLOCK(oldFileLock)) {
 
         /* check if the conflicting locks have dissappeared already */
-
         for(q = scp->fileLocksH; q; q = osi_QNext(q)) {
 
             fileLock = (cm_file_lock_t *)
@@ -4546,9 +4556,16 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int client_is_dead)
 
 cm_key_t cm_GenerateKey(unsigned int session_id, unsigned long process_id, unsigned int file_id)
 {
-    return (((cm_key_t) process_id) << 32) |
-        (((cm_key_t) session_id) << 16) |
-        (((cm_key_t) file_id));
+#ifdef DEBUG
+    osi_assert((process_id & 0xffffffff) == process_id);
+    osi_assert((session_id & 0xffff) == session_id);
+    osi_assert((file_id & 0xffff) == file_id);
+#endif
+
+    return 
+        (((cm_key_t) (process_id & 0xffffffff)) << 32) |
+        (((cm_key_t) (session_id & 0xffff)) << 16) |
+        (((cm_key_t) (file_id & 0xffff)));
 }
 
 static int cm_KeyEquals(cm_key_t k1, cm_key_t k2, int flags)

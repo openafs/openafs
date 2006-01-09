@@ -842,7 +842,7 @@ long smb_ReceiveV3SessionSetupX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
     if (uidp) {   /* already there, so don't create a new one */
         unp = uidp->unp;
         userp = unp->userp;
-        newUid = (unsigned short)uidp->userID;  /* For some reason these are different types!*/
+        newUid = uidp->userID;
         osi_Log3(smb_logp,"smb_ReceiveV3SessionSetupX FindUserByName:Lana[%d],lsn[%d],userid[%d]",vcp->lana,vcp->lsn,newUid);
         smb_ReleaseUID(uidp);
     }
@@ -2337,6 +2337,9 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
 	
     /* save a pointer to the vnode */
     fidp->scp = scp;
+    /* and the user */
+    cm_HoldUser(userp);
+    fidp->userp = userp;
         
     /* compute open mode */
     if (openMode != 1) fidp->flags |= SMB_FID_OPENREAD;
@@ -4715,6 +4718,9 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 	
     /* save a pointer to the vnode */
     fidp->scp = scp;
+    /* also the user */
+    cm_HoldUser(userp);
+    fidp->userp = userp;
         
     /* compute open mode */
     if (openMode != 1) 
@@ -5904,6 +5910,10 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     fidp = smb_FindFID(vcp, 0, SMB_FLAG_CREATE);
     osi_assert(fidp);
 
+    /* save a reference to the user */
+    cm_HoldUser(userp);
+    fidp->userp = userp;
+
     /* If we are restricting sharing, we should do so with a suitable
        share lock. */
     if (scp->fileType == CM_SCACHETYPE_FILE &&
@@ -6491,6 +6501,10 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
     /* open the file itself */
     fidp = smb_FindFID(vcp, 0, SMB_FLAG_CREATE);
     osi_assert(fidp);
+
+    /* save a reference to the user */
+    cm_HoldUser(userp);
+    fidp->userp = userp;
 
     /* If we are restricting sharing, we should do so with a suitable
        share lock. */
