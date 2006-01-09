@@ -75,7 +75,10 @@ typedef struct cm_file_lock {
 #define CM_FILELOCK_FLAG_WAITLOCK        0x04
 #define CM_FILELOCK_FLAG_WAITUNLOCK      0x0C
 
-/* the following is only to be used for locks on non-RO volumes */
+/* the following is used to indicate that there are no server side
+   locks associated with this lock.  This is true for locks obtained
+   against files in RO volumes as well as files residing on servers
+   that disable client side byte range locking. */
 #define CM_FILELOCK_FLAG_CLIENTONLY      0x10
 
 #define CM_FLSHARE_OFFSET_HIGH           0x01000000

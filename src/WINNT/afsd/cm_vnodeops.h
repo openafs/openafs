@@ -12,6 +12,8 @@
 
 extern unsigned int cm_mountRootGen;
 
+extern int cm_enableServerLocks;
+
 /* parms for attribute setting call */
 typedef struct cm_attr {
 	int mask;
@@ -150,7 +152,7 @@ extern long cm_Lock(cm_scache_t *scp, unsigned char sLockType,
 	int allowWait, cm_user_t *userp, cm_req_t *reqp,
 	cm_file_lock_t **lockpp);
 
-#define CM_UNLOCK_BY_FID 1
+#define CM_UNLOCK_BY_FID 	0x0001
 
 extern long cm_UnlockByKey(cm_scache_t * scp,
         cm_key_t key,

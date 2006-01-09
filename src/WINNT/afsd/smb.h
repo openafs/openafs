@@ -230,7 +230,7 @@ typedef struct smb_user {
     unsigned long refCount;		/* ref count */
     long flags;			        /* flags; locked by mx */
     osi_mutex_t mx;
-    long userID;			/* the session identifier */
+    unsigned short userID;		/* the session identifier */
     struct smb_vc *vcp;		        /* back ptr to virtual circuit */
     struct smb_username *unp;           /* user name struct */
 } smb_user_t;
@@ -315,6 +315,10 @@ typedef struct smb_fid {
     unsigned short fid;		        /* the file ID */
     struct smb_vc *vcp;		        /* back ptr */
     struct cm_scache *scp;		/* scache of open file */
+    struct cm_user *userp;              /* user that opened the file
+                                           originally (used to close
+                                           the file if session is
+                                           terminated) */
     long offset;			/* our file pointer */
     smb_ioctl_t *ioctlp;		/* ptr to ioctl structure */
 					/* Under NT, we may need to know the
@@ -510,6 +514,9 @@ extern long smb_LookupTIDPath(smb_vc_t *vcp, unsigned short tid, char ** tidPath
 extern smb_fid_t *smb_FindFID(smb_vc_t *vcp, unsigned short fid, int flags);
 
 extern void smb_ReleaseFID(smb_fid_t *fidp);
+
+extern long smb_CloseFID(smb_vc_t *vcp, smb_fid_t *fidp, cm_user_t *userp,
+                         afs_uint32 dosTime);
 
 extern int smb_FindShare(smb_vc_t *vcp, smb_user_t *uidp, char *shareName, char **pathNamep);
 
