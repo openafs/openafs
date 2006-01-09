@@ -8,6 +8,9 @@ HANDLE mutex_logfile = NULL;
 
 BOOL tst_read_write = TRUE;
 BOOL tst_pause = FALSE;
+BOOL tst_wlock_single = TRUE;
+BOOL tst_wlock_parent = FALSE;
+BOOL tst_wlock_child = FALSE;
 
 int show_usage(_TCHAR * pname)
 {
@@ -18,6 +21,9 @@ int show_usage(_TCHAR * pname)
         "              created.\n"
         "    -nr     : disable read/write tests\n"
         "    -p      : Pause during the test with the test file locked\n"
+        "    -wS     : Perform asynchronous wait lock tests on single machine\n"
+        "    -wP <dir>:Perform asynchronous wait lock tests as parent.\n"
+        "    -wC     : Perform asynchronous wait lock tests as child.\n"
         ;
     return 1;
 }
@@ -47,6 +53,12 @@ int parse_cmd_line(int argc, _TCHAR * argv[])
             isChild = TRUE;
         } else if(!_tcscmp(argv[i], _T("-p"))) {
             tst_pause = TRUE;
+        } else if(!_tcscmp(argv[i], _T("-wS"))) {
+            tst_wlock_single = TRUE;
+        } else if(!_tcscmp(argv[i], _T("-wP"))) {
+            tst_wlock_parent = TRUE;
+        } else if(!_tcscmp(argv[i], _T("-wC"))) {
+            tst_wlock_child = TRUE;
         } else {
             cerr << "Invalid option : " << argv[i] << "\n";
             return show_usage(argv[0]);
@@ -74,6 +86,10 @@ int spawn_kids(int argc, _TCHAR *argv[])
         StringCbCat(cmd_line, sizeof(cmd_line), test_dir);
         //_tcscat(cmd_line, _T("\""));
     }
+    if (tst_wlock_single)
+        StringCbCat(cmd_line, sizeof(cmd_line), _T(" -wS "));
+    if (tst_wlock_child)
+        StringCbCat(cmd_line, sizeof(cmd_line), _T(" -wC "));
 
     startinfo.cb = sizeof(startinfo);
     startinfo.lpReserved = NULL;
@@ -155,9 +171,20 @@ int run_tests(void)
     if(tst_read_write)
         PCINT_CALL(testint_lock_excl_eeof());
 
+    if(tst_wlock_single)
+        PCINT_CALL(testint_waitlock());
+
+    if(tst_wlock_parent && !isChild)
+        test_waitlock_parent();
+
+    if(tst_wlock_child && isChild)
+        test_waitlock_child();
+
     if(tst_pause) {
         TCHAR c;
+        cout << "\nPress <Return> to continue...";
         cin >> c;
+        cout << "\n";
     }
 
     PCINT_CALL(testint_unlock());

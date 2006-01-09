@@ -762,6 +762,306 @@ int testint_lock_excl_eeof(void)
     return 0;
 }
 
+int testint_waitlock(void)
+{
+    HANDLE hFile = NULL;
+    _TCHAR filename[MAX_PATH];
+    OVERLAPPED ov;
+    OVERLAPPED ovx;
+    BOOL b;
+    DWORD e;
+    int rv = 0;
+
+    ZeroMemory(&ov, sizeof(ov));
+    ov.hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+    ZeroMemory(&ovx, sizeof(ovx));
+    ovx.hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+
+    StringCbCopy(filename, sizeof(filename), test_dir);
+    StringCbCat(filename, sizeof(filename), _T("asyncft.dat"));
+
+    SYNC_BEGIN_PARENT {
+        logfile << "----Begin Wait Lock tests (single)----\n";
+        cerr << "TEST:WLCS Waiting Lock (single node, 2 process)\n";
+
+        hFile = CreateFile(filename, GENERIC_READ|GENERIC_WRITE,
+                           FILE_SHARE_READ | FILE_SHARE_WRITE,
+                           NULL,
+                           CREATE_ALWAYS,
+                           FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED,
+                           NULL);
+        logfile << "CreateFile(\"" << filename << "\") returns "
+                << ((DWORD_PTR) hFile) << "\n";
+
+        if (hFile == NULL) {
+            cerr << "TEST:WLCS *** ERROR *** CreateFile failed for temporary file.  See log\n";
+            logfile << "  Failed!!  GetLastError()==" << GetLastError()
+                    << "\n";
+            rv = 1;
+            goto abort_test;
+        }
+    } SYNC_END_PARENT;
+
+    SYNC_BEGIN_CHILD {
+        hFile = CreateFile(filename, GENERIC_READ | GENERIC_WRITE,
+                           FILE_SHARE_READ | FILE_SHARE_WRITE,
+                           NULL,
+                           OPEN_EXISTING,
+                           FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED,
+                           NULL);
+        logfile << "CreateFile(\"" << filename << "\") returns "
+                << ((DWORD_PTR) hFile) << "\n";
+
+        if (hFile == NULL) {
+            cerr << "TEST:WLCS *** ERROR *** CreateFile failed for temporary file. See log\n";
+            logfile << "   Failed!! GetLastError() ==" << GetLastError()
+                    << "\n";
+            rv = 1;
+            goto abort_test;
+        }
+    } SYNC_END_CHILD;
+
+    SYNC_BEGIN_PARENT {
+        cerr << "TEST:WLCS:001 Simple conflicting wait lock test\n";
+
+        ov.Offset = PAGE_BEGIN(1);
+        ov.OffsetHigh = 0;
+        b = LockFileEx(hFile, LOCKFILE_EXCLUSIVE_LOCK,
+                       0, PAGE_LEN(1), 0, &ov);
+
+        logfile << "LockFileEx() returns " << b << "\n";
+        if (b) {
+            cerr << "TEST:WLCS:001:01 PASS Initial Lock (no wait)\n";
+        } else {
+            e = GetLastError();
+
+            if (e == ERROR_IO_PENDING) {
+                logfile << "LockFileEx() is pending.\n";
+                cerr << "TEST:WLCS:001:01 Lock pending...";
+                WaitForSingleObject(ov.hEvent, INFINITE);
+                cerr << "done\n"
+                     << "TEST:WLCS:001:01 PASS\n";
+            } else {
+                logfile << "LockFileEx() failed!! LastError=" << e
+                        << "\n";
+                cerr << "TEST:WLCS:001:01 FAIL!! LockFileEx() Failed! GetLastERror="
+                     << e << "\n";
+            }
+        }
+    } SYNC_END_PARENT;
+
+    SYNC_BEGIN_CHILD {
+        ov.Offset = PAGE_BEGIN(1);
+        ov.OffsetHigh = 0;
+        b = LockFileEx(hFile, LOCKFILE_EXCLUSIVE_LOCK,
+                       0, PAGE_LEN(2), 0, &ov);
+
+        logfile << "LockFileEx() returns " << b << "\n";
+
+        if (!b && GetLastError() == ERROR_IO_PENDING) {
+            cerr << "TEST:WLCS:001:02 PASS Conflicting lock placed in pending\n";
+        } else {
+            cerr << "TEST:WLCS:001:02 FAILED! Conflicting lock not pending!\n";
+            SetEvent(ov.hEvent);
+        }
+    } SYNC_END_CHILD;
+
+    SYNC_BEGIN_PARENT {
+        // unlock A
+        ov.Offset = PAGE_BEGIN(1);
+        ov.OffsetHigh = 0;
+
+        b = UnlockFileEx(hFile, 0,
+                         PAGE_LEN(1), 0, &ov);
+
+        logfile << "UnlockFileEx() returns " << b << "\n";
+        if (b) {
+            logfile << "Unlock completed.\n";
+            cerr << "TEST:WLCS:001:03 PASS Unlock (no wait)\n";
+        } else {
+            e = GetLastError();
+
+            if (e == ERROR_IO_PENDING) {
+                logfile << "Waiting for unlock ..";
+                cerr << "TEST:WLCS:001:03 Unlock pending ...";
+                WaitForSingleObject(ov.hEvent, INFINITE);
+                logfile << "done\n";
+                cerr << "done\n"
+                    << "TEST:WLCS:001:03 PASS\n";
+            } else {
+                logfile << "UnlockFileEx() failed. Last error = "
+                        << e << "\n";
+                cerr << "TEST:WLCS:001:03 FAILED! UnlockFileEx() failed\n";
+            }
+        }
+    } SYNC_END_PARENT;
+
+    SYNC_BEGIN_CHILD {
+        // wait for lock A
+        logfile << "Child waiting for lock ..";
+        cerr << "TEST:WLCS:001:04 Lock pending...";
+        WaitForSingleObject(ov.hEvent, INFINITE);
+        logfile << "Done.\n";
+        cerr << "done\n"
+            << "TEST:WLCS:001:04 PASS\n";
+    } SYNC_END_CHILD;
+
+    SYNC_BEGIN_PARENT {
+        cerr << "TEST:WLCS:002 Multiple queued wait lock test\n";
+
+        // lock region B (should be pending) (B intersects A)
+        ov.Offset = PAGE_BEGIN(2);
+        ov.OffsetHigh = 0;
+
+        b = LockFileEx(hFile, LOCKFILE_EXCLUSIVE_LOCK,
+                       0, PAGE_LEN(2), 0, &ov);
+        logfile << "LockFileEx() returns " << b << "\n";
+        if (!b && GetLastError() == ERROR_IO_PENDING) {
+            cerr << "TEST:WLCS:002:01 PASS Conflicting lock placed in pending\n";
+            logfile << "Lock pending.\n";
+        } else {
+            logfile << "Lock is not pending. (it should be). Last erorr="
+                    << GetLastError() << "\n";
+            cerr << "TEST:WLCS:002:01 FAILED! Conflicting lock is not pending.\n";
+            rv = 1;
+            SetEvent(ov.hEvent);
+        }
+    } SYNC_END_PARENT;
+
+    SYNC_BEGIN_CHILD {
+        // lock region C (where C intersects B but not A) (should be granted)
+        ovx.Offset = PAGE_BEGIN(3);
+        ovx.OffsetHigh = 0;
+        b = LockFileEx(hFile, LOCKFILE_EXCLUSIVE_LOCK,
+                       0, PAGE_LEN(2), 0,
+                       &ovx);
+        logfile << "LockFileEx() returns" << b << "\n";
+
+        if (!b && GetLastError() == ERROR_IO_PENDING) {
+            logfile << "Lock pending.\n";
+            cerr << "TEST:WLCS:002:02 Pending ...";
+            WaitForSingleObject(ovx.hEvent, INFINITE);
+            cerr << "done\n";
+            cerr << "TEST:WLCS:002:02 PASS\n";
+        } else if (b){
+            cerr << "TEST:WLCS:002:02 PASS (no wait)\n";
+        } else {
+            logfile << "** error ** LockFile failed.  last error="
+                << GetLastError();
+            cerr << "TEST:WLCS:002:02 FAILED!! (see log)\n";
+        }
+
+        // unlock A
+        b = UnlockFileEx(hFile, 0,
+                         PAGE_LEN(2), 0, &ov);
+        logfile << "UnlockFileEx() returns" << b << "\n";
+
+        if (b) {
+            cerr << "TEST:WLCS:002:03 PASS Unlock (no wait)\n";
+            logfile << "Unlock succeeded without wait\n";
+        } else {
+            e = GetLastError();
+
+            if (e == ERROR_IO_PENDING) {
+                logfile << "Waiting for unlock...";
+                cerr << "TEST:WLCS:002:03 Pending ...";
+                WaitForSingleObject(ov.hEvent, INFINITE);
+                logfile << "done\n";
+                cerr << "done.\n"
+                    << "TEST:WLCS:002:03 PASS\n";
+            } else {
+                logfile << " Unlock failed! last error ="
+                        << e << "\n";
+                cerr << "TEST:WLCS:002:03 FAILED! Unlock failed! see log\n";
+                rv = 1;
+            }
+        }
+
+        // unlock C
+        b = UnlockFileEx(hFile, 0,
+                         PAGE_LEN(2), 0, &ovx);
+        logfile << "UnlockFileEx() returns" << b << "\n";
+
+        if (b) {
+            cerr << "TEST:WLCS:002:04 PASS Unlock (no wait)\n";
+            logfile << "Unlock succeeded without wait\n";
+        } else {
+            e = GetLastError();
+
+            if (e == ERROR_IO_PENDING) {
+                logfile << "Waiting for unlock...";
+                cerr << "TEST:WLCS:002:04 Pending ...";
+                WaitForSingleObject(ov.hEvent, INFINITE);
+                logfile << "done\n";
+                cerr << "done.\n"
+                    << "TEST:WLCS:002:04 PASS\n";
+            } else {
+                logfile << " Unlock failed! last error ="
+                        << e << "\n";
+                cerr << "TEST:WLCS:002:04 FAILED! Unlock failed! see log\n";
+                rv = 1;
+            }
+        }
+    } SYNC_END_CHILD;
+
+    SYNC_BEGIN_PARENT {
+        // wait for lock B
+        logfile << "Waiting for lock ...";
+        cerr << "TEST:WLCS:002:05 Waiting for lock...";
+        WaitForSingleObject(ov.hEvent, INFINITE);
+        logfile << "done\n";
+        cerr << "done\n";
+        cerr << "TEST:WLCS:002:06 PASS\n";
+
+        // release lock B
+        b = UnlockFileEx(hFile, 0,
+                         PAGE_LEN(2), 0,
+                         &ov);
+        if (b) {
+            logfile << "Unlock succeeded without wait\n";
+            cerr << "TEST:WLCS:002:06 PASS Unlock (no wait)\n";
+        } else {
+            e = GetLastError();
+
+            if (e == ERROR_IO_PENDING) {
+                logfile << "Waiting for unlock ...";
+                cerr << "TEST:WLCS:002:06 Pending...";
+                WaitForSingleObject(ov.hEvent, INFINITE);
+                logfile << "done\n";
+                cerr << "done\n"
+                    << "TEST:WLCS:002:06 PASS\n";
+            } else {
+                logfile << "Unlock failed! last error = " 
+                        << e << "\n";
+                cerr << "TEST:WLCS:002:06 FAILED! Unlock failed! see log\n";
+                rv = 1;
+            }
+        }
+    } SYNC_END_PARENT;
+
+    SYNC_BEGIN_CHILD {
+        cerr << "TEST:WLCS:002 Done.\n";
+    } SYNC_END_CHILD;
+
+ abort_test:
+
+    CloseHandle(ov.hEvent);
+    CloseHandle(ovx.hEvent);
+    if (hFile)
+        CloseHandle(hFile);
+    return rv;
+}
+
+int test_waitlock_parent(void)
+{
+    return 0;
+}
+
+int test_waitlock_child(void)
+{
+    return 0;
+}
+
 /* not necessary */
 int testint_lock_excl_rw_eeof(void)
 {
@@ -807,7 +1107,6 @@ int testint_unlock(void)
             cerr << "TEST:LOCK:005:04 ***ERROR*** Unlock Failed! Error=" << GetLastError() << "\n";
         } else
             cerr << "TEST:LOCK:005:04 PASS\n";
-
 
         logfile << "UnlockFile(h_file_base, PAGE_BEGIN(256+30), 0, PAGE_LEN(10), 0)\n";
         if(!UnlockFile(h_file_base, PAGE_BEGIN(256+30), 0, PAGE_LEN(10), 0)) {

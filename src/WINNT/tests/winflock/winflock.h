@@ -60,6 +60,9 @@ int test_lock_prep(void);
 int testint_lock_excl_beof(void);
 int testint_lock_excl_rw_beof(void);
 int testint_lock_excl_eeof(void);
+int testint_waitlock(void);
+int test_waitlock_parent(void);
+int test_waitlock_child(void);
 int testint_unlock(void);
 int testint_lock_escalation(void);
 
