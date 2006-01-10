@@ -7146,9 +7146,8 @@ void smb3_Init()
     lock_InitializeMutex(&smb_Dir_Watch_Lock, "Directory Watch List Lock");
 }
 
-cm_user_t *smb_FindCMUserByName(/*smb_vc_t *vcp,*/ char *usern, char *machine)
+cm_user_t *smb_FindCMUserByName(char *usern, char *machine)
 {
-    /*int newUid;*/
     smb_username_t *unp;
 
     unp = smb_FindUserByName(usern, machine, SMB_FLAG_CREATE);
@@ -7160,6 +7159,8 @@ cm_user_t *smb_FindCMUserByName(/*smb_vc_t *vcp,*/ char *usern, char *machine)
     }  else	{
         osi_Log2(smb_logp,"smb_FindCMUserByName Not found name[%s] machine[%s]",osi_LogSaveString(smb_logp,usern),osi_LogSaveString(smb_logp,machine));
     }
+    cm_HoldUser(unp->userp);
+    smb_ReleaseUsername(unp);
     return unp->userp;
 }
 

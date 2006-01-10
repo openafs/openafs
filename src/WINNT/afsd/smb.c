@@ -1137,13 +1137,43 @@ smb_user_t *smb_FindUserByNameThisSession(smb_vc_t *vcp, char *usern)
     lock_ReleaseWrite(&smb_rctLock);
     return uidp;
 }       
+
+void smb_ReleaseUsername(smb_username_t *unp)
+{
+    smb_username_t *up;
+    smb_username_t **lupp;
+    cm_user_t *userp = NULL;
+
+    lock_ObtainWrite(&smb_rctLock);
+    osi_assert(unp->refCount-- > 0);
+    if (unp->refCount == 0) {
+        lupp = &usernamesp;
+        for(up = *lupp; up; lupp = &up->nextp, up = *lupp) {
+            if (up == unp) 
+                break;
+        }
+        osi_assert(up != NULL);
+        *lupp = up->nextp;
+        lock_FinalizeMutex(&unp->mx);
+	userp = unp->userp;
+	free(unp->name);
+	free(unp->machine);
+	free(unp);
+    }		
+    lock_ReleaseWrite(&smb_rctLock);
+
+    if (userp) {
+        cm_ReleaseUserVCRef(userp);
+        cm_ReleaseUser(userp);
+    }	
+}	
+
 void smb_ReleaseUID(smb_user_t *uidp)
 {
     smb_user_t *up;
     smb_user_t **lupp;
-    cm_user_t *userp;
+    smb_username_t *unp = NULL;
 
-    userp = NULL;
     lock_ObtainWrite(&smb_rctLock);
     osi_assert(uidp->refCount-- > 0);
     if (uidp->refCount == 0 && (uidp->flags & SMB_USERFLAG_DELETE)) {
@@ -1155,20 +1185,15 @@ void smb_ReleaseUID(smb_user_t *uidp)
         osi_assert(up != NULL);
         *lupp = up->nextp;
         lock_FinalizeMutex(&uidp->mx);
-        if (uidp->unp) {
-            userp = uidp->unp->userp;   /* avoid deadlock by releasing */
-            uidp->unp->userp = NULL;    /* after releasing the lock */
-        }       
+	unp = uidp->unp;
         smb_ReleaseVCNoLock(uidp->vcp);
-        uidp->vcp = NULL;
+	free(uidp);
     }		
     lock_ReleaseWrite(&smb_rctLock);
-    if (userp) {
-        cm_ReleaseUserVCRef(userp);
-        cm_ReleaseUser(userp);
-    }	
-}	
 
+    if (unp)
+	smb_ReleaseUsername(unp);
+}	
 
 /* retrieve a held reference to a user structure corresponding to an incoming
  * request.
@@ -5893,7 +5918,7 @@ long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count, char *op,
         /* handle over quota or out of space */
         if (scp->flags & (CM_SCACHEFLAG_OVERQUOTA | CM_SCACHEFLAG_OUTOFSPACE)) {
             *writtenp = written;
-            code = CM_ERROR_QUOTA;
+            code = (scp->flags & CM_SCACHEFLAG_OVERQUOTA) ? CM_ERROR_QUOTA : CM_ERROR_SPACE;
             break;
         }
 
