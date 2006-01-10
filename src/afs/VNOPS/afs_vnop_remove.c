@@ -356,7 +356,13 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
 	FetchWholeEnchilada(tvc, &treq);
 #endif
 	ReleaseWriteLock(&tvc->lock);
+	if (tdc) 
+	    ReleaseSharedLock(&tdc->lock);
 	ObtainWriteLock(&adp->lock, 144);
+	/* Technically I don't think we need this back, but let's hold it 
+	   anyway; The "got" reference should actually be sufficient. */
+	if (tdc) 
+	    ObtainSharedLock(&tdc->lock, 640);
     }
 
     osi_dnlc_remove(adp, aname, tvc);
