@@ -393,7 +393,12 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
 	code = afsrename(adp, aname, adp, unlname, acred, &treq);
 	Tnam1 = unlname;
 	if (!code) {
+	    char *oldmvid = NULL;
+	    if (tvc->mvid) 
+		oldmvid = tvc->mvid;
 	    tvc->mvid = (struct VenusFid *)unlname;
+	    if (oldmvid)
+		osi_FreeSmallSpace(oldmvid);
 	    crhold(acred);
 	    if (tvc->uncred) {
 		crfree(tvc->uncred);
