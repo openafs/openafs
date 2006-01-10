@@ -505,6 +505,8 @@ extern smb_username_t *smb_FindUserByName(char *usern, char *machine, int flags)
 
 extern smb_user_t *smb_FindUserByNameThisSession(smb_vc_t *vcp, char *usern);
 
+extern void smb_ReleaseUsername(smb_username_t *unp);
+
 extern void smb_ReleaseUID(smb_user_t *uidp);
 
 extern cm_user_t *smb_GetUser(smb_vc_t *vcp, smb_packet_t *inp);

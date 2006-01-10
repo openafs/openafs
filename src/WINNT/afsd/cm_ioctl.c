@@ -1882,6 +1882,7 @@ long cm_IoctlSetToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
     int flags;
     char sessionKey[8];
     char *smbname;
+    int release_userp = 0;
 
     saveDataPtr = ioctlp->inDatap;
 
@@ -1951,6 +1952,7 @@ long cm_IoctlSetToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
 
     if (flags & PIOCTL_LOGON) {
         userp = smb_FindCMUserByName(smbname, ioctlp->fidp->vcp->rname);
+	release_userp = 1;
     }
 
     /* store the token */
@@ -1987,6 +1989,9 @@ long cm_IoctlSetToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
     }
 
     cm_ResetACLCache(userp);
+
+    if (release_userp)
+	cm_ReleaseUser(userp);
 
     return 0;
 }
