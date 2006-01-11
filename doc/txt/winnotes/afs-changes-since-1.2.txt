@@ -1,23 +1,28 @@
-Since 1.4.1 rc3: 1.4.1 rc4 released (9 Jan 2006)
+Since 1.4.1 rc3: 1.4.1 rc4 released (11 Jan 2006)
 
- * disable to use of AFS file locks.  byte range locking is still
+ * Properly handle pre-mature SMB session closures.
+   File handles, tree connections, and user sessions are now
+   freed when the virtual circuit is closed.
+
+ * smb_username_t and smb_user_t objects are now properly reference
+   counted and freed as appropriate.
+
+ * disable to use of AFS file locks.  Byte range locking is still
    implemented but all locks are managed locally.  This prevents
    multiple processes from editing the same file on the same 
    machine but it does prevent multiple processes on separate 
    machines from modifying the file.
 
- * Add code to properly handle pre-mature SMB session closures.
-   File handles, tree connections, and user sessions are now
-   freed when the virtual circuit is closed.
-
 Since 1.4.1 rc2: 1.4.1 RC3 released (4 Jan 2006)
 
- * a fix to "fs setserverprefs -vldb" that prevents a crash of 
-   afsd_service.exe if the preferences for a server were set twice
-   prior to the service being associated with a cell.
+ * A fix to "fs setserverprefs -vlserver".  Multiple calls with
+   the same server parameter would result in a panic condition
+   if the server had not already been contacted by the AFS 
+   client service.
 
- * improve the warning text in the afsd_init.log if the required
-   RPC protocols are not present on the machine.
+ * Better warnings are written to the afsd.log file when 
+   the Windows RPC Protocols are not properly configured as
+   is often the case on Windows 2000.
 
  * fix the procmgmt library to restore C RTL signal handlers when 
    it is being detached from the process prior to process termination.
