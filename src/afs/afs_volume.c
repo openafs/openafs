@@ -333,6 +333,7 @@ loop:
 			osi_dnlc_purgedp(tvc);
 
 #ifdef AFS_DARWIN80_ENV
+		    vnode_put(AFSTOV(tvc));
 		    /* our tvc ptr is still good until now */
 		    AFS_FAST_RELE(tvc);
 		    ObtainReadLock(&afs_xvcache);
