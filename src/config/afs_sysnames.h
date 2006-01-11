@@ -236,9 +236,9 @@
 
 #define SYS_NAME_ID_amd64_fbsd_53        3008
 
-#define SYS_NAME_ID_amd64_w2k           3100
+#define SYS_NAME_ID_amd64_w2k           3400
 
-#define SYS_NAME_ID_i64_w2k             3200
+#define SYS_NAME_ID_i64_w2k             3500
 
 /*
  * Placeholder to keep system-wide standard flags since this file is included by all 
