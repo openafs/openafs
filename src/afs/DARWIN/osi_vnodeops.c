@@ -1643,12 +1643,12 @@ afs_vop_reclaim(ap)
 			   );
           afs_osi_Wakeup(&tvc->states);
        }
-       ReleaseWriteLock(&afs_xvcache);
-       AFS_GUNLOCK();
        if (!error && vnode_fsnode(vp))
 	   panic("afs_reclaim: vnode not cleaned");
        if (!error && (tvc->v != NULL)) 
            panic("afs_reclaim: vcache not cleaned");
+       ReleaseWriteLock(&afs_xvcache);
+       AFS_GUNLOCK();
     }
     return error;
 }
