@@ -1372,9 +1372,7 @@ afs_linux_writepage_sync(struct inode *ip, struct page *pp,
     ip->i_size = vcp->m.Length;
     ip->i_blocks = ((vcp->m.Length + 1023) >> 10) << 1;
 
-    if (!code
-	&& afs_stats_cmperf.cacheCurrDirtyChunks >
-	afs_stats_cmperf.cacheMaxDirtyChunks) {
+    if (!code) {
 	struct vrequest treq;
 
 	ObtainWriteLock(&vcp->lock, 533);
@@ -1477,15 +1475,6 @@ afs_linux_updatepage(struct file *fp, struct page *pp, unsigned long offset,
     ip->i_size = vcp->m.Length;
     ip->i_blocks = ((vcp->m.Length + 1023) >> 10) << 1;
 
-    if (!code) {
-	struct vrequest treq;
-
-	ObtainWriteLock(&vcp->lock, 533);
-	vcp->m.Date = osi_Time();   /* set modification time */
-	if (!afs_InitReq(&treq, credp))
-	    code = afs_DoPartialWrite(vcp, &treq);
-	ReleaseWriteLock(&vcp->lock);
-    }
     if (!code) {
 	struct vrequest treq;
 
