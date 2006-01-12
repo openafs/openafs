@@ -160,10 +160,21 @@ typedef struct cm_scache {
     afs_int32    serverLock;    /* current lock we have acquired on
                                  * this file.  One of (-1), LockRead
                                  * or LockWrite. [protected by
-                                 * scp->mx]
+                                 * scp->mx].  In the future, this
+                                 * should be replaced by a queue of
+                                 * cm_server_lock_t objects which keep
+                                 * track of lock type, the user for
+                                 * whom the lock was obtained, the
+                                 * dataVersion at the time the lock
+                                 * was asserted last, lastRefreshCycle
+                                 * and lateUpdateTime.
                                  */
     unsigned long lastRefreshCycle; /* protected with cm_scacheLock
                                      * for all scaches. */
+    afs_uint32 lockDataVersion; /* dataVersion of the scp at the time
+                                   the server lock for the scp was
+                                   asserted for this lock the last
+                                   time. */
     osi_queue_t *fileLocksH;    /* queue of locks (head) */
     osi_queue_t *fileLocksT;    /* queue of locks (tail) */
     afs_uint32   sharedLocks;   /* number of shared locks on

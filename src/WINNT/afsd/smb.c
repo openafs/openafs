@@ -960,6 +960,7 @@ void smb_CleanupDeadVC(smb_vc_t *vcp)
 
     for (tidpIter = vcp->tidsp; tidpIter; tidpIter = tidpNext) {
 	tidpNext = tidpIter->nextp;
+
 	if (tidpIter->flags & SMB_TIDFLAG_DELETE)
 	    continue;
 

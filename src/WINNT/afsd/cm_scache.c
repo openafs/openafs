@@ -504,6 +504,7 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
         scp->parentVnode=0x1;
         scp->group=0;
         scp->dataVersion=cm_data.fakeDirVersion;
+        scp->lockDataVersion=-1; /* no lock yet */
         *outScpp = scp;
         lock_ReleaseWrite(&cm_scacheLock);
         /*afsi_log("   getscache done");*/
