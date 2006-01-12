@@ -7149,6 +7149,7 @@ void smb3_Init()
 cm_user_t *smb_FindCMUserByName(char *usern, char *machine)
 {
     smb_username_t *unp;
+    cm_user_t *     userp;
 
     unp = smb_FindUserByName(usern, machine, SMB_FLAG_CREATE);
     if (!unp->userp) {
@@ -7159,8 +7160,9 @@ cm_user_t *smb_FindCMUserByName(char *usern, char *machine)
     }  else	{
         osi_Log2(smb_logp,"smb_FindCMUserByName Not found name[%s] machine[%s]",osi_LogSaveString(smb_logp,usern),osi_LogSaveString(smb_logp,machine));
     }
-    cm_HoldUser(unp->userp);
+    userp = unp->userp;
+    cm_HoldUser(userp);
     smb_ReleaseUsername(unp);
-    return unp->userp;
+    return userp;
 }
 
