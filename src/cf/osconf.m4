@@ -667,7 +667,7 @@ case $AFS_SYSNAME in
 		TXLIBS="-lncurses"
 		XCFLAGS="-O2 -D_LARGEFILE64_SOURCE"
 		XCFLAGS64="-O2 -D_LARGEFILE64_SOURCE -m64"
-		XLDFLAG64="-m64"
+		XLDFLAGS64="-m64"
 		YACC="bison -y"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
