@@ -7551,6 +7551,8 @@ case $AFS_SYSNAME in
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="-lncurses"
 		XCFLAGS="-O2 -D_LARGEFILE64_SOURCE"
+		XCFLAGS64="-O2 -D_LARGEFILE64_SOURCE -m64"
+		XLDFLAGS64="-m64"
 		YACC="bison -y"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;

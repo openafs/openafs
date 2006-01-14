@@ -1,3 +1,10 @@
+openafs (1.4.0-4) unstable; urgency=low
+
+  * Hopefully fix sparc64 kernel support.  Thanks, Troy Benjegerdes.
+    (Closes: #219429)
+
+ --
+
 openafs (1.4.0-3) unstable; urgency=low
 
   * Apply upstream patch from Chas Williams to be more careful about what
