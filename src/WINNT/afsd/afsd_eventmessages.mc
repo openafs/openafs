@@ -314,4 +314,22 @@ Language=English
 OpenAFS Stopping due to error (%1:%2): %3.
 .
 
+MessageId=
+Severity=Informational
+Facility=System
+SymbolicName=MSG_CRYPT_OFF
+Language=English
+Security Level is Clear.
+.
+
+
+MessageId=
+Severity=Informational
+Facility=System
+SymbolicName=MSG_CRYPT_ON
+Language=English
+Security Level is Crypt.
+.
+
+
 ;#endif /* __AFSD_EVENTMESSAGES_H_ 1 */

@@ -891,6 +891,11 @@ int afsd_InitCM(char **reasonP)
         afsi_log("Default SecurityLevel is clear");
     }
 
+    if (cryptall)
+	LogEvent(EVENTLOG_INFORMATION_TYPE, MSG_CRYPT_ON);
+    else
+	LogEvent(EVENTLOG_INFORMATION_TYPE, MSG_CRYPT_OFF);
+
 #ifdef AFS_AFSDB_ENV
     dummyLen = sizeof(cm_dnsEnabled);
     code = RegQueryValueEx(parmKey, "UseDNS", NULL, NULL,

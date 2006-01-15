@@ -2452,10 +2452,18 @@ long cm_IoctlGetRxkcrypt(smb_ioctl_t *ioctlp, cm_user_t *userp)
 
 long cm_IoctlSetRxkcrypt(smb_ioctl_t *ioctlp, cm_user_t *userp)
 {
+    afs_int32 c = cryptall;
+
     cm_SkipIoctlPath(ioctlp);
 
     memcpy(&cryptall, ioctlp->inDatap, sizeof(cryptall));
 
+    if (c != cryptall) {
+	if (cryptall)
+            LogEvent(EVENTLOG_INFORMATION_TYPE, MSG_CRYPT_ON);
+	else
+            LogEvent(EVENTLOG_INFORMATION_TYPE, MSG_CRYPT_OFF);
+    }
     return 0;
 }
 
