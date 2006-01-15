@@ -211,6 +211,53 @@ int smb_ServerLanManagerLength = sizeof(smb_ServerLanManager);
 /* Faux server GUID. This is never checked. */
 GUID smb_ServerGUID = { 0x40015cb8, 0x058a, 0x44fc, { 0xae, 0x7e, 0xbb, 0x29, 0x52, 0xee, 0x7e, 0xff }};
 
+const char * ncb_error_string(int code)
+{
+    const char * s;
+    switch ( code ) {
+    case 0x01: s = "llegal buffer length"; 			break; 
+    case 0x03: s = "illegal command"; 				break; 
+    case 0x05: s = "command timed out"; 			break; 
+    case 0x06: s = "message incomplete, issue another command"; break; 
+    case 0x07: s = "illegal buffer address"; 			break; 
+    case 0x08: s = "session number out of range"; 		break; 
+    case 0x09: s = "no resource available"; 			break; 
+    case 0x0a: s = "session closed"; 				break; 
+    case 0x0b: s = "command cancelled"; 			break; 
+    case 0x0d: s = "duplicate name"; 				break; 
+    case 0x0e: s = "name table full"; 				break; 
+    case 0x0f: s = "no deletions, name has active sessions"; 	break; 
+    case 0x11: s = "local session table full"; 			break; 
+    case 0x12: s = "remote session table full"; 		break; 
+    case 0x13: s = "illegal name number"; 			break; 
+    case 0x14: s = "no callname"; 				break; 
+    case 0x15: s = "cannot put * in NCB_NAME"; 			break; 
+    case 0x16: s = "name in use on remote adapter"; 		break; 
+    case 0x17: s = "name deleted"; 				break; 
+    case 0x18: s = "session ended abnormally"; 			break; 
+    case 0x19: s = "name conflict detected";	 		break; 
+    case 0x21: s = "interface busy, IRET before retrying"; 	break; 
+    case 0x22: s = "too many commands outstanding, retry later";break;
+    case 0x23: s = "ncb_lana_num field invalid"; 		break; 
+    case 0x24: s = "command completed while cancel occurring "; break; 
+    case 0x26: s = "command not valid to cancel"; 		break; 
+    case 0x30: s = "name defined by anther local process"; 	break; 
+    case 0x34: s = "environment undefined. RESET required"; 	break; 
+    case 0x35: s = "required OS resources exhausted"; 		break; 
+    case 0x36: s = "max number of applications exceeded"; 	break; 
+    case 0x37: s = "no saps available for netbios"; 		break; 
+    case 0x38: s = "requested resources are not available"; 	break; 
+    case 0x39: s = "invalid ncb address or length > segment"; 	break; 
+    case 0x3B: s = "invalid NCB DDID"; 				break; 
+    case 0x3C: s = "lock of user area failed"; 			break; 
+    case 0x3f: s = "NETBIOS not loaded"; 			break; 
+    case 0x40: s = "system error"; 				break;                 
+    default:   s = "unknown error";
+    }
+    return s;
+}
+
+
 char * myCrt_Dispatch(int i)
 {
     switch (i)
@@ -2378,48 +2425,7 @@ void smb_SendPacket(smb_vc_t *vcp, smb_packet_t *inp)
 #endif /* !DJGPP */
         
     if (code != 0) {
-        char * s;
-        switch ( code ) {
-        case 0x01: s = "llegal buffer length                     "; break; 
-        case 0x03: s = "illegal command                          "; break; 
-        case 0x05: s = "command timed out                        "; break; 
-        case 0x06: s = "message incomplete, issue another command"; break; 
-        case 0x07: s = "illegal buffer address                   "; break; 
-        case 0x08: s = "session number out of range              "; break; 
-        case 0x09: s = "no resource available                    "; break; 
-        case 0x0a: s = "session closed                           "; break; 
-        case 0x0b: s = "command cancelled                        "; break; 
-        case 0x0d: s = "duplicate name                           "; break; 
-        case 0x0e: s = "name table full                          "; break; 
-        case 0x0f: s = "no deletions, name has active sessions   "; break; 
-        case 0x11: s = "local session table full                 "; break; 
-        case 0x12: s = "remote session table full                "; break; 
-        case 0x13: s = "illegal name number                      "; break; 
-        case 0x14: s = "no callname                              "; break; 
-        case 0x15: s = "cannot put * in NCB_NAME                 "; break; 
-        case 0x16: s = "name in use on remote adapter            "; break; 
-        case 0x17: s = "name deleted                             "; break; 
-        case 0x18: s = "session ended abnormally                 "; break; 
-        case 0x19: s = "name conflict detected                   "; break; 
-        case 0x21: s = "interface busy, IRET before retrying     "; break; 
-        case 0x22: s = "too many commands outstanding, retry later"; break;
-        case 0x23: s = "ncb_lana_num field invalid               "; break; 
-        case 0x24: s = "command completed while cancel occurring "; break; 
-        case 0x26: s = "command not valid to cancel              "; break; 
-        case 0x30: s = "name defined by anther local process     "; break; 
-        case 0x34: s = "environment undefined. RESET required    "; break; 
-        case 0x35: s = "required OS resources exhausted          "; break; 
-        case 0x36: s = "max number of applications exceeded      "; break; 
-        case 0x37: s = "no saps available for netbios            "; break; 
-        case 0x38: s = "requested resources are not available    "; break; 
-        case 0x39: s = "invalid ncb address or length > segment  "; break; 
-        case 0x3B: s = "invalid NCB DDID                         "; break; 
-        case 0x3C: s = "lock of user area failed                 "; break; 
-        case 0x3f: s = "NETBIOS not loaded                       "; break; 
-        case 0x40: s = "system error                             "; break;                 
-        default:
-            s = "unknown error";
-        }
+	const char * s = ncb_error_string(code);
         osi_Log2(smb_logp, "SendPacket failure code %d \"%s\"", code, s);
     }
 
@@ -7394,124 +7400,8 @@ void smb_Server(VOID *parmp)
         idx_session = NCBsessions[idx_NCB];
         rc = ncbp->ncb_retcode;
 
-        if (rc != NRC_PENDING && rc != NRC_GOODRET) {
-            switch (rc) {
-            case 0x01:
-                osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: illegal buffer length", ncbp->ncb_lsn, idx_session);
-                break;
-            case 0x03:
-                osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: illegal command", ncbp->ncb_lsn, idx_session);
-                break;
-            case 0x05:
-                osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: command timed out", ncbp->ncb_lsn, idx_session);
-                break;
-            case 0x06:
-                osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: message incomplete, issue another command", ncbp->ncb_lsn, idx_session);
-                break;
-            case 0x07:
-                osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: illegal buffer address", ncbp->ncb_lsn, idx_session);
-                break;
-            case 0x08:
-                osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: session number out of range", ncbp->ncb_lsn, idx_session);
-                break;
-            case 0x09:
-                osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: no resource available", ncbp->ncb_lsn, idx_session);
-                break;
-            case 0x0a:
-                osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: session closed", ncbp->ncb_lsn, idx_session);
-                break;
-            case 0x0b:
-                osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: command cancelled", ncbp->ncb_lsn, idx_session);
-                break;
-            case 0x0d:
-                osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: duplicate name", ncbp->ncb_lsn, idx_session);
-                break;
-            case 0x0e:
-                osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: name table full", ncbp->ncb_lsn, idx_session);
-                break;
-            case 0x0f:
-                osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: no deletions, name has active lsn %d sessions", ncbp->ncb_lsn, idx_session);
-                break;
-            case 0x11:
-                osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: local session table full", ncbp->ncb_lsn, idx_session);
-                break;
-            case 0x12:
-                osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: remote session table full", ncbp->ncb_lsn, idx_session);
-                break;
-            case 0x13:
-                osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: illegal name number", ncbp->ncb_lsn, idx_session);
-                break;
-            case 0x14:
-                osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: no callname", ncbp->ncb_lsn, idx_session);
-                break;
-            case 0x15:
-                osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: cannot put * in NCB_NAME", ncbp->ncb_lsn, idx_session);
-                break;
-            case 0x16:
-                osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: name in use on remote adapter", ncbp->ncb_lsn, idx_session);
-                break;
-            case 0x17:
-                osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: name deleted", ncbp->ncb_lsn, idx_session);
-                break;
-            case 0x18:
-                osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: session ended abnormally", ncbp->ncb_lsn, idx_session);
-                break;
-            case 0x19:
-                osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: name conflict detected", ncbp->ncb_lsn, idx_session);
-                break;
-            case 0x21:
-                osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: interface busy, IRET before retrying", ncbp->ncb_lsn, idx_session);
-                break;
-            case 0x22:
-                osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: too many commands outstanding, retry later", ncbp->ncb_lsn, idx_session);
-                break;
-            case 0x23:
-                osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: ncb_lana_num field invalid", ncbp->ncb_lsn, idx_session);
-                break;
-            case 0x24:
-                osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: command completed while cancel occurring", ncbp->ncb_lsn, idx_session);
-                break;
-            case 0x26:
-                osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: command not valid to cancel", ncbp->ncb_lsn, idx_session);
-                break;
-            case 0x30:
-                osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: name defined by anther local process", ncbp->ncb_lsn, idx_session);
-                break;
-            case 0x34:
-                osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: environment undefined. RESET required", ncbp->ncb_lsn, idx_session);
-                break;
-            case 0x35:
-                osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: required OS resources exhausted", ncbp->ncb_lsn, idx_session);
-                break;
-            case 0x36:
-                osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: max number of applications exceeded", ncbp->ncb_lsn, idx_session);
-                break;
-            case 0x37:
-                osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: no saps available for netbios", ncbp->ncb_lsn, idx_session);
-                break;
-            case 0x38:
-                osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: requested resources are not available", ncbp->ncb_lsn, idx_session);
-                break;
-            case 0x39:
-                osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: invalid ncb address or length > segment", ncbp->ncb_lsn, idx_session);
-                break;
-            case 0x3B:
-                osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: invalid NCB DDID", ncbp->ncb_lsn, idx_session);
-                break;
-            case 0x3C:
-                osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: lock of user area failed", ncbp->ncb_lsn, idx_session);
-                break;
-            case 0x3f:
-                osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: NETBIOS not loaded", ncbp->ncb_lsn, idx_session);
-                break;
-            case 0x40:
-                osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: system error", ncbp->ncb_lsn, idx_session);
-                break;
-            default:
-                osi_Log3(smb_logp, "NCBRECV failure lsn %d session %d code %d", ncbp->ncb_lsn, idx_session, rc);
-                break;
-            }
-        }
+        if (rc != NRC_PENDING && rc != NRC_GOODRET)
+	    osi_Log3(smb_logp, "NCBRECV failure lsn %d session %d: %s", ncbp->ncb_lsn, idx_session, ncb_error_string(rc));
 
         switch (rc) {
         case NRC_GOODRET: 
