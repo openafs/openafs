@@ -1135,11 +1135,12 @@ DWORD WINAPI ifs_MainLoop(LPVOID param)
 
 	/* read request... */
 	st = ReadFile(pipe, bufIn, TRANSFER_BUF_SIZE, &lenIn, NULL);
-	if (!st)
+	if (!st) {
 	if (GetLastError() == ERROR_INVALID_HANDLE)
 		break;
 	else
 		continue;
+        }
 
 	ZeroMemory(&rpc, sizeof(rpc));
 	rpc.in_buf = rpc.in_pos = bufIn;
