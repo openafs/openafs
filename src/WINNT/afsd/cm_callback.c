@@ -1668,8 +1668,8 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
         lock_ReleaseMutex(&scp->mx);
 		
         /* now make the RPC */
-        osi_Log4(afsd_logp, "CALL FetchStatus scp 0x%x cell %d vol %d uniq %d", 
-                 (long) scp, scp->fid.cell, scp->fid.volume, scp->fid.unique);
+        osi_Log4(afsd_logp, "CALL FetchStatus scp 0x%x vol %u vn %u uniq %u", 
+                 (long) scp, scp->fid.volume, scp->fid.vnode, scp->fid.unique);
         do {
             code = cm_Conn(&sfid, userp, reqp, &connp);
             if (code) 
@@ -1684,11 +1684,11 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
                             &cbr, code));
         code = cm_MapRPCError(code, reqp);
         if (code)
-            osi_Log4(afsd_logp, "CALL FetchStatus FAILURE code 0x%x scp 0x%x cell %d vol %d", 
-                     code, (long) scp, scp->fid.cell, scp->fid.volume);
+            osi_Log4(afsd_logp, "CALL FetchStatus FAILURE code 0x%x scp 0x%x vol %u vn %u", 
+                     code, (long) scp, scp->fid.volume, scp->fid.vnode);
         else
-            osi_Log4(afsd_logp, "CALL FetchStatus SUCCESS scp 0x%x cell %d vol %d uniq %d", 
-                     (long) scp, scp->fid.cell, scp->fid.volume, scp->fid.unique);
+            osi_Log4(afsd_logp, "CALL FetchStatus SUCCESS scp 0x%x vol %u vn %u uniq %u", 
+                     (long) scp, scp->fid.volume, scp->fid.vnode, scp->fid.unique);
 
         lock_ObtainMutex(&scp->mx);
         if (code == 0) {
@@ -1702,7 +1702,7 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
         /* now check to see if we got an error */
         if (code) {
             osi_Log2(afsd_logp, "GetCallback Failed code 0x%x scp 0x%x -->",code, scp);
-            osi_Log4(afsd_logp, "            cell %d vol %d vn %d uniq %d",
+            osi_Log4(afsd_logp, "            cell %u vol %u vn %u uniq %u",
                      scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique);
             return code;
         }

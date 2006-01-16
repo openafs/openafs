@@ -25,7 +25,7 @@ typedef struct cm_server {
     struct sockaddr_in addr;		/* by mx */
     int type;				/* by mx */
     struct cm_conn *connsp;		/* locked by cm_connLock */
-    long flags;				/* by mx */
+    long flags; 			/* by mx */
     struct cm_cell *cellp;		/* cell containing this server */
     unsigned long refCount;		/* locked by cm_serverLock */
     osi_mutex_t mx;

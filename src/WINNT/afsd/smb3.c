@@ -49,7 +49,8 @@ cm_user_t *smb_GetTran2User(smb_vc_t *vcp, smb_tran2Packet_t *inp)
     cm_user_t *up = NULL;
         
     uidp = smb_FindUID(vcp, inp->uid, 0);
-    if (!uidp) return NULL;
+    if (!uidp) 
+	return NULL;
         
     lock_ObtainMutex(&uidp->mx);
     if (uidp->unp) {
@@ -933,7 +934,6 @@ long smb_ReceiveV3UserLogoffX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
 
     /* find the tree and free it */
     uidp = smb_FindUID(vcp, ((smb_t *)inp)->uid, 0);
-    /* TODO: smb_ReleaseUID() ? */
     if (uidp) {
         char *s1 = NULL, *s2 = NULL;
 
@@ -951,6 +951,7 @@ long smb_ReceiveV3UserLogoffX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
          * because the vcp points to it
          */
         lock_ReleaseMutex(&uidp->mx);
+	smb_ReleaseUID(uidp);
     }
     else    
         osi_Log0(smb_logp, "SMB3 user logoffX");
@@ -1128,7 +1129,8 @@ smb_tran2Packet_t *smb_GetTran2ResponsePacket(smb_vc_t *vcp,
         
     tp = malloc(sizeof(*tp));
     memset(tp, 0, sizeof(*tp));
-    tp->vcp = NULL;
+    smb_HoldVC(vcp);
+    tp->vcp = vcp;
     tp->curData = tp->curParms = 0;
     tp->totalData = totalData;
     tp->totalParms = totalParms;
@@ -4102,7 +4104,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
                 if ((dsp->flags & SMB_DIRSEARCH_BULKST) &&
                     LargeIntegerGreaterThanOrEqualTo(thyper, scp->bulkStatProgress)) {
                     /* Don't bulk stat if risking timeout */
-                    int now = GetCurrentTime();
+                    int now = GetTickCount();
                     if (now - req.startTime > 5000) {
                         scp->bulkStatProgress = thyper;
                         scp->flags &= ~CM_SCACHEFLAG_BULKSTATTING;
@@ -6727,6 +6729,8 @@ long smb_ReceiveNTTranNotifyChange(smb_vc_t *vcp, smb_packet_t *inp,
 
     savedPacketp = smb_CopyPacket(inp);
     smb_HoldVC(vcp);
+    if (savedPacketp->vcp)
+	smb_ReleaseVC(savedPacketp->vcp);
     savedPacketp->vcp = vcp;
     lock_ObtainMutex(&smb_Dir_Watch_Lock);
     savedPacketp->nextp = smb_Directory_Watches;
@@ -6884,7 +6888,6 @@ void smb_NotifyChange(DWORD action, DWORD notifyFilter,
     BOOL twoEntries = FALSE;
     ULONG otherNameLen, oldParmCount = 0;
     DWORD otherAction;
-    smb_vc_t *vcp;
     smb_fid_t *fidp;
 
     /* Get ready for rename within directory */
@@ -6905,7 +6908,6 @@ void smb_NotifyChange(DWORD action, DWORD notifyFilter,
         wtree = smb_GetSMBParm(watch, 22) & 0xffff;  /* TODO: should this be 0xff ? */
         maxLen = smb_GetSMBOffsetParm(watch, 5, 1)
             | (smb_GetSMBOffsetParm(watch, 6, 1) << 16);
-        vcp = watch->vcp;
 
         /*
          * Strange hack - bug in NT Client and NT Server that we
@@ -6914,7 +6916,7 @@ void smb_NotifyChange(DWORD action, DWORD notifyFilter,
         if (filter == 3 && wtree)
             filter = 0x17;
 
-        fidp = smb_FindFID(vcp, fid, 0);
+        fidp = smb_FindFID(watch->vcp, fid, 0);
         if (!fidp) {
             osi_Log1(smb_logp," no fidp for fid[%d]",fid);
             lastWatch = watch;
@@ -7044,7 +7046,7 @@ void smb_NotifyChange(DWORD action, DWORD notifyFilter,
             ((smb_t *) watch)->flg2 |= SMB_FLAGS2_32BIT_STATUS;
         }
 
-        smb_SendPacket(vcp, watch);
+        smb_SendPacket(watch->vcp, watch);
         smb_FreePacket(watch);
         watch = nextWatch;
     }

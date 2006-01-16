@@ -90,7 +90,7 @@ void cm_InitReq(cm_req_t *reqp)
 {
 	memset((char *)reqp, 0, sizeof(cm_req_t));
 #ifndef DJGPP
-	reqp->startTime = GetCurrentTime();
+	reqp->startTime = GetTickCount();
 #else
         gettimeofday(&reqp->startTime, NULL);
 #endif
@@ -189,7 +189,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
     
     /* timeleft - get if from reqp the same way as cmXonnByMServers does */
 #ifndef DJGPP
-    timeUsed = (GetCurrentTime() - reqp->startTime) / 1000;
+    timeUsed = (GetTickCount() - reqp->startTime) / 1000;
 #else
     gettimeofday(&now, NULL);
     timeUsed = sub_time(now, reqp->startTime) / 1000;
@@ -536,7 +536,7 @@ long cm_ConnByMServers(cm_serverRef_t *serversp, cm_user_t *usersp,
     *connpp = NULL;
 
 #ifndef DJGPP
-    timeUsed = (GetCurrentTime() - reqp->startTime) / 1000;
+    timeUsed = (GetTickCount() - reqp->startTime) / 1000;
 #else
     gettimeofday(&now, NULL);
     timeUsed = sub_time(now, reqp->startTime) / 1000;

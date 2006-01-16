@@ -106,4 +106,22 @@ Flush volumes thread received unrecognized event.
 .
 
 
+MessageId=
+Severity=Warning
+Facility=System
+SymbolicName=MSG_SMB_SEND_PACKET_FAILURE
+Language=English
+Unable to Send SMB Packet: %1.
+.
+
+
+MessageId=
+Severity=Warning
+Facility=System
+SymbolicName=MSG_UNEXPECTED_SMB_SESSION_CLOSE
+Language=English
+Unexpected SMB Session Close: %1.
+.
+
+
 ;#endif /* __AFSD_EVENTMESSAGES_H_ 1 */
