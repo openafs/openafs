@@ -872,10 +872,10 @@ smb_vc_t *smb_FindVC(unsigned short lsn, int flags, int lana)
         vcp = malloc(sizeof(*vcp));
         memset(vcp, 0, sizeof(*vcp));
         vcp->vcID = numVCs++;
-        vcp->refCount = 1;
+        vcp->refCount = 2; 	/* smb_allVCsp and caller */
         vcp->tidCounter = 1;
         vcp->fidCounter = 1;
-        vcp->uidCounter = 1;  /* UID 0 is reserved for blank user */
+        vcp->uidCounter = 1;  	/* UID 0 is reserved for blank user */
         vcp->nextp = smb_allVCsp;
         smb_allVCsp = vcp;
         lock_InitializeMutex(&vcp->mx, "vc_t mutex");
@@ -933,25 +933,31 @@ int smb_IsStarMask(char *maskp)
     return 0;
 }
 
-void smb_ReleaseVCNoLock(smb_vc_t *vcp)
+void smb_ReleaseVCInternal(smb_vc_t *vcp)
 {
-    osi_Log2(smb_logp,"smb_ReleaseVCNoLock vcp %x ref %d",vcp, vcp->refCount);
 #ifdef DEBUG
     osi_assert(vcp->refCount-- != 0);
 #else
     vcp->refCount--;
 #endif
+
+    if (vcp->refCount == 0) {
+	memset(vcp,0,sizeof(smb_vc_t));
+	free(vcp);
+    }
+}
+
+void smb_ReleaseVCNoLock(smb_vc_t *vcp)
+{
+    osi_Log2(smb_logp,"smb_ReleaseVCNoLock vcp %x ref %d",vcp, vcp->refCount);
+    smb_ReleaseVCInternal(vcp);
 }       
 
 void smb_ReleaseVC(smb_vc_t *vcp)
 {
     lock_ObtainWrite(&smb_rctLock);
     osi_Log2(smb_logp,"smb_ReleaseVC       vcp %x ref %d",vcp, vcp->refCount);
-#ifdef DEBUG
-    osi_assert(vcp->refCount-- != 0);
-#else
-    vcp->refCount--;
-#endif
+    smb_ReleaseVCInternal(vcp);
     lock_ReleaseWrite(&smb_rctLock);
 }       
 
@@ -983,6 +989,7 @@ void smb_CleanupDeadVC(smb_vc_t *vcp)
     smb_user_t *userpNext;
     smb_user_t *userp;
     unsigned short uid;
+    smb_vc_t **vcpp;
 
     osi_Log1(smb_logp, "Cleaning up dead vcp 0x%x", vcp);
 
@@ -1049,8 +1056,15 @@ void smb_CleanupDeadVC(smb_vc_t *vcp)
 	lock_ObtainRead(&smb_rctLock);
     }
 
+    /* remove VCP from smb_allVCsp */
+    for (vcpp = &smb_allVCsp; *vcpp; vcpp = &((*vcpp)->nextp)) {
+	if (*vcpp == vcp) {
+	    *vcpp = vcp->nextp;
+	    smb_ReleaseVCNoLock(vcp);
+	    break;
+	}
+    } 
     lock_ReleaseRead(&smb_rctLock);
-
     osi_Log0(smb_logp, "Done cleaning up dead vcp");
 }
 
@@ -1126,7 +1140,7 @@ smb_user_t *smb_FindUID(smb_vc_t *vcp, unsigned short uid, int flags)
         uidp = malloc(sizeof(*uidp));
         memset(uidp, 0, sizeof(*uidp));
         uidp->nextp = vcp->usersp;
-        uidp->refCount = 1;
+        uidp->refCount = 2; /* one for the vcp and one for the caller */
         uidp->vcp = vcp;
         smb_HoldVCNoLock(vcp);
         vcp->usersp = uidp;
@@ -1224,7 +1238,7 @@ void smb_ReleaseUID(smb_user_t *uidp)
 
     lock_ObtainWrite(&smb_rctLock);
     osi_assert(uidp->refCount-- > 0);
-    if (uidp->refCount == 0 && (uidp->flags & SMB_USERFLAG_DELETE)) {
+    if (uidp->refCount == 0) {
         lupp = &uidp->vcp->usersp;
         for(up = *lupp; up; lupp = &up->nextp, up = *lupp) {
             if (up == uidp) 
@@ -1250,21 +1264,22 @@ void smb_ReleaseUID(smb_user_t *uidp)
 cm_user_t *smb_GetUser(smb_vc_t *vcp, smb_packet_t *inp)
 {
     smb_user_t *uidp;
-    cm_user_t *up;
+    cm_user_t *up = NULL;
     smb_t *smbp;
 
     smbp = (smb_t *) inp;
     uidp = smb_FindUID(vcp, smbp->uid, 0);
-    if ((!uidp) ||  (!uidp->unp))
-        return NULL;
-
+    if (!uidp)
+	return NULL;
+    
     lock_ObtainMutex(&uidp->mx);
-    up = uidp->unp->userp;
-    cm_HoldUser(up);
+    if (uidp->unp) {
+	up = uidp->unp->userp;
+	cm_HoldUser(up);
+    }
     lock_ReleaseMutex(&uidp->mx);
 
     smb_ReleaseUID(uidp);
-
     return up;
 }
 
@@ -2427,6 +2442,20 @@ void smb_SendPacket(smb_vc_t *vcp, smb_packet_t *inp)
     if (code != 0) {
 	const char * s = ncb_error_string(code);
         osi_Log2(smb_logp, "SendPacket failure code %d \"%s\"", code, s);
+#ifndef DJGPP
+	LogEvent(EVENTLOG_WARNING_TYPE, MSG_SMB_SEND_PACKET_FAILURE, s);
+#endif /* !DJGPP */
+
+	osi_Log2(smb_logp, "setting dead_vcp 0x%x, user struct 0x%x",
+		  vcp, vcp->usersp);
+	smb_HoldVC(vcp);
+	if (dead_vcp) {
+	    osi_Log1(smb_logp,"Previous dead_vcp %x", dead_vcp);
+	    smb_CleanupDeadVC(dead_vcp);
+	    smb_ReleaseVC(dead_vcp);
+	}
+	dead_vcp = vcp;
+	vcp->flags |= SMB_VCFLAG_ALREADYDEAD;
     }
 
     if (localNCB)
@@ -2981,19 +3010,20 @@ long smb_ReceiveNegotiate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 			 ongoingOps - 1);
     if (!isGateway) {
         if (active_vcp) {
-            DWORD now = GetCurrentTime();
-            if (now - last_msg_time >= 30000
-                 && now - last_msg_time <= 90000) {
-                osi_Log1(smb_logp,
-                          "Setting dead_vcp %x", active_vcp);
-                if (dead_vcp) {
+            DWORD now = GetTickCount();
+            if (now - last_msg_time >= 30000) {
+		smb_vc_t *avcp = active_vcp;
+		active_vcp = NULL;
+                osi_Log1(smb_logp,"Setting dead_vcp %x", avcp);
+		if (dead_vcp) {
+                    osi_Log1(smb_logp,"Previous dead_vcp %x", dead_vcp);
+		    smb_CleanupDeadVC(dead_vcp);
                     smb_ReleaseVC(dead_vcp);
-                    osi_Log1(smb_logp,
-                             "Previous dead_vcp %x", dead_vcp);
                 }
-                smb_HoldVC(active_vcp);
-                dead_vcp = active_vcp;
+                smb_HoldVC(avcp);
+                dead_vcp = avcp;
                 dead_vcp->flags |= SMB_VCFLAG_ALREADYDEAD;
+		smb_ReleaseVC(avcp);
             }
         }
     }
@@ -3985,7 +4015,7 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
                      LargeIntegerGreaterThanOrEqualTo(thyper, 
                                                       scp->bulkStatProgress)) {
                     /* Don't bulk stat if risking timeout */
-                    int now = GetCurrentTime();
+                    int now = GetTickCount();
                     if (now - req.startTime > 5000) {
                         scp->bulkStatProgress = thyper;
                         scp->flags &= ~CM_SCACHEFLAG_BULKSTATTING;
@@ -6909,7 +6939,7 @@ void smb_DispatchPacket(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
 
     /* Remember session generation number and time */
     oldGen = sessionGen;
-    oldTime = GetCurrentTime();
+    oldTime = GetTickCount();
 
     while (inp->inCom != 0xff) {
         dp = &smb_dispatchTable[inp->inCom];
@@ -6967,7 +6997,7 @@ void smb_DispatchPacket(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
             }   
 
             if (oldGen != sessionGen) {
-                newTime = GetCurrentTime();
+                newTime = GetTickCount();
 #ifndef DJGPP
 		LogEvent(EVENTLOG_WARNING_TYPE, MSG_BAD_SMB_WRONG_SESSION, 
 			 newTime - oldTime, ncbp->ncb_length);
@@ -7123,19 +7153,18 @@ void smb_DispatchPacket(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
     if (!(vcp->flags & SMB_VCFLAG_ALREADYDEAD)) {
         if (active_vcp != vcp) {
             if (active_vcp) {
-                smb_ReleaseVC(active_vcp);
                 osi_Log2(smb_logp,
                       "Replacing active_vcp %x with %x", active_vcp, vcp);
+                smb_ReleaseVC(active_vcp);
             }
             smb_HoldVC(vcp);
             active_vcp = vcp;
         }
-        last_msg_time = GetCurrentTime();
-    } else if (active_vcp == vcp) {
+        last_msg_time = GetTickCount();
+    } else if (active_vcp == vcp) { 	/* the vcp is dead */
         smb_ReleaseVC(active_vcp);
         active_vcp = NULL;
     }
-
     return;
 }
 
@@ -7412,38 +7441,33 @@ void smb_Server(VOID *parmp)
             osi_Log2(smb_logp, "NCBRECV pending lsn %d session %d", ncbp->ncb_lsn, idx_session);
             continue;
 
-        case NRC_SCLOSED:
         case NRC_SNUMOUT:
 	case NRC_SABORT:
+#ifndef DJGPP
+	    LogEvent(EVENTLOG_WARNING_TYPE, MSG_UNEXPECTED_SMB_SESSION_CLOSE, ncb_error_string(rc));
+	    /* fallthrough */
+#endif /* !DJGPP */
+	case NRC_SCLOSED:
             /* Client closed session */
-            dead_sessions[idx_session] = TRUE;
+	    dead_sessions[idx_session] = TRUE;
             if (vcp)
                 smb_ReleaseVC(vcp);
             vcp = smb_FindVC(ncbp->ncb_lsn, 0, lanas[idx_session]);
-            /* Should also release vcp.  [done] 2004-05-11 jaltman
-             * Also, should do
-             * sanity check that all TID's are gone. 
-             *
-             * TODO: check if we could use LSNs[idx_session] instead, 
-             * also cleanup after dead vcp 
-             */
             if (vcp) {
-                if (dead_vcp == vcp)
+		if (dead_vcp == vcp)
                     osi_Log1(smb_logp, "dead_vcp already set, 0x%x", dead_vcp);
                 else if (!(vcp->flags & SMB_VCFLAG_ALREADYDEAD)) {
                     osi_Log2(smb_logp, "setting dead_vcp 0x%x, user struct 0x%x",
                              vcp, vcp->usersp);
-                    smb_HoldVC(vcp);
+		    smb_HoldVC(vcp);
                     if (dead_vcp) {
+                        osi_Log1(smb_logp,"Previous dead_vcp %x", dead_vcp);
+			smb_CleanupDeadVC(dead_vcp);
                         smb_ReleaseVC(dead_vcp);
-                        osi_Log1(smb_logp,
-                                  "Previous dead_vcp %x", dead_vcp);
                     }
                     dead_vcp = vcp;
                     vcp->flags |= SMB_VCFLAG_ALREADYDEAD;
                 }
-
-                smb_CleanupDeadVC(vcp);
 
                 if (vcp->justLoggedOut) {
                     loggedOut = 1;

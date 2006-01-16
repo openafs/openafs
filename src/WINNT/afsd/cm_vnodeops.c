@@ -3610,9 +3610,8 @@ long cm_Lock(cm_scache_t *scp, unsigned char sLockType,
 
         fileLock->lastUpdate = (code == 0) ? time(NULL) : 0;
 
-        osi_QAddT(&scp->fileLocksH, &scp->fileLocksT, &fileLock->fileq);
-
         lock_ObtainWrite(&cm_scacheLock);
+        osi_QAddT(&scp->fileLocksH, &scp->fileLocksT, &fileLock->fileq);
         cm_HoldSCacheNoLock(scp);
         fileLock->scp = scp;
         osi_QAdd(&cm_allFileLocks, &fileLock->q);
@@ -3886,19 +3885,18 @@ long cm_Unlock(cm_scache_t *scp,
         return 0;
     }
 
+    lock_ReleaseRead(&cm_scacheLock);
+
     /* discard lock record */
+    lock_ObtainWrite(&cm_scacheLock);
     if (scp->fileLocksT == q)
         scp->fileLocksT = osi_QPrev(q);
     osi_QRemove(&scp->fileLocksH, q);
-
-    lock_ReleaseRead(&cm_scacheLock);
 
     /*
      * Don't delete it here; let the daemon delete it, to simplify
      * the daemon's traversal of the list.
      */
-
-    lock_ObtainWrite(&cm_scacheLock);
 
     if (IS_LOCK_ACCEPTED(fileLock)) {
         if (fileLock->lockType == LockRead)
@@ -4441,9 +4439,11 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int client_is_dead)
 
   handleCode:
     if (code != 0 && code != CM_ERROR_WOULDBLOCK) {
+	lock_ObtainWrite(&cm_scacheLock);
         if (scp->fileLocksT == &oldFileLock->fileq)
             scp->fileLocksT = osi_QPrev(&oldFileLock->fileq);
         osi_QRemove(&scp->fileLocksH, &oldFileLock->fileq);
+	lock_ReleaseWrite(&cm_scacheLock);
     } else if (code == 0 && IS_LOCK_WAITLOCK(oldFileLock)) {
         scp->serverLock = newLock;
     }

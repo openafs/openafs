@@ -487,6 +487,8 @@ extern void CompensateForSmbClientLastWriteTimeBugs(afs_uint32 *dosTimep);
 
 extern smb_vc_t *smb_FindVC(unsigned short lsn, int flags, int lana);
 
+extern void smb_CleanupDeadVC(smb_vc_t *vcp);
+
 extern void smb_ReleaseVC(smb_vc_t *vcp);
 
 extern void smb_ReleaseVCNoLock(smb_vc_t *vcp);

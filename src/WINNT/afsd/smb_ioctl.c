@@ -281,7 +281,7 @@ done:
 /* called from V3 read to handle IOCTL descriptor reads */
 long smb_IoctlV3Read(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
-	smb_ioctl_t *iop;
+    smb_ioctl_t *iop;
     long count;
     long code;
     long leftToCopy;
@@ -292,168 +292,172 @@ long smb_IoctlV3Read(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp, smb_pack
     iop = fidp->ioctlp;
     count = smb_GetSMBParm(inp, 5);
 	
-	userp = smb_GetUser(vcp, inp);
-	osi_assert(userp != 0);
+    userp = smb_GetUser(vcp, inp);
+    osi_assert(userp != 0);
 
     uidp = smb_FindUID(vcp, ((smb_t *)inp)->uid, 0);
     iop->uidp = uidp;
-    if (uidp && uidp->unp)
+    if (uidp && uidp->unp) {
         osi_Log3(afsd_logp, "Ioctl uid %d user %x name %s",
                   uidp->userID, userp,
                   osi_LogSaveString(afsd_logp, uidp->unp->name));
-    else {
+    } else {
         if (uidp)
-		    osi_Log2(afsd_logp, "Ioctl uid %d user %x no name",
-                      uidp->userID, userp);
+	    osi_Log2(afsd_logp, "Ioctl uid %d user %x no name",
+                     uidp->userID, userp);
         else
-		    osi_Log1(afsd_logp, "Ioctl no uid user %x no name",
-                     userp);
+	    osi_Log1(afsd_logp, "Ioctl no uid user %x no name",
+		     userp);
     }
 
-	code = smb_LookupTIDPath(vcp, ((smb_t *)inp)->tid, &iop->tidPathp);
-    if(code) {
-        smb_ReleaseUID(uidp);
+    code = smb_LookupTIDPath(vcp, ((smb_t *)inp)->tid, &iop->tidPathp);
+    if (code) {
+	if (uidp)
+	    smb_ReleaseUID(uidp);
         cm_ReleaseUser(userp);
         smb_ReleaseFID(fidp);
         return CM_ERROR_NOSUCHPATH;
     }
 
-	code = smb_IoctlPrepareRead(fidp, iop, userp);
+    code = smb_IoctlPrepareRead(fidp, iop, userp);
     if (uidp) {
         iop->uidp = 0;
         smb_ReleaseUID(uidp);
     }
     if (code) {
-		cm_ReleaseUser(userp);
+	cm_ReleaseUser(userp);
         smb_ReleaseFID(fidp);
-		return code;
+	return code;
     }
 
-	leftToCopy = (long)((iop->outDatap - iop->outAllocp) - iop->outCopied);
+    leftToCopy = (long)((iop->outDatap - iop->outAllocp) - iop->outCopied);
     if (count > leftToCopy) count = leftToCopy;
         
-	/* 0 and 1 are reserved for request chaining, were setup by our caller,
-         * and will be further filled in after we return.
-         */
-        smb_SetSMBParm(outp, 2, 0);	/* remaining bytes, for pipes */
-        smb_SetSMBParm(outp, 3, 0);	/* resvd */
-        smb_SetSMBParm(outp, 4, 0);	/* resvd */
-	smb_SetSMBParm(outp, 5, count);	/* # of bytes we're going to read */
-        /* fill in #6 when we have all the parameters' space reserved */
-        smb_SetSMBParm(outp, 7, 0);	/* resv'd */
-        smb_SetSMBParm(outp, 8, 0);	/* resv'd */
-        smb_SetSMBParm(outp, 9, 0);	/* resv'd */
-        smb_SetSMBParm(outp, 10, 0);	/* resv'd */
-	smb_SetSMBParm(outp, 11, 0);	/* reserved */
+    /* 0 and 1 are reserved for request chaining, were setup by our caller,
+     * and will be further filled in after we return.
+     */
+    smb_SetSMBParm(outp, 2, 0);	/* remaining bytes, for pipes */
+    smb_SetSMBParm(outp, 3, 0);	/* resvd */
+    smb_SetSMBParm(outp, 4, 0);	/* resvd */
+    smb_SetSMBParm(outp, 5, count);	/* # of bytes we're going to read */
+    /* fill in #6 when we have all the parameters' space reserved */
+    smb_SetSMBParm(outp, 7, 0);	/* resv'd */
+    smb_SetSMBParm(outp, 8, 0);	/* resv'd */
+    smb_SetSMBParm(outp, 9, 0);	/* resv'd */
+    smb_SetSMBParm(outp, 10, 0);	/* resv'd */
+    smb_SetSMBParm(outp, 11, 0);	/* reserved */
 
-	/* get op ptr after putting in the last parm, since otherwise we don't
-         * know where the data really is.
-         */
-        op = smb_GetSMBData(outp, NULL);
+    /* get op ptr after putting in the last parm, since otherwise we don't
+     * know where the data really is.
+     */
+    op = smb_GetSMBData(outp, NULL);
         
-        /* now fill in offset from start of SMB header to first data byte (to op) */
-        smb_SetSMBParm(outp, 6, ((int) (op - outp->data)));
+    /* now fill in offset from start of SMB header to first data byte (to op) */
+    smb_SetSMBParm(outp, 6, ((int) (op - outp->data)));
 
-	/* set the packet data length the count of the # of bytes */
-        smb_SetSMBDataLength(outp, count);
+    /* set the packet data length the count of the # of bytes */
+    smb_SetSMBDataLength(outp, count);
         
-	/* now copy the data into the response packet */
-        memcpy(op, iop->outCopied + iop->outAllocp, count);
+    /* now copy the data into the response packet */
+    memcpy(op, iop->outCopied + iop->outAllocp, count);
 
-        /* and adjust the counters */
-        iop->outCopied += count;
-        
-        /* and cleanup things */
-        cm_ReleaseUser(userp);
-        smb_ReleaseFID(fidp);
+    /* and adjust the counters */
+    iop->outCopied += count;
 
-        return 0;
-}
+    /* and cleanup things */
+    cm_ReleaseUser(userp);
+    smb_ReleaseFID(fidp);
+
+    return 0;
+}	
 
 /* called from Read Raw to handle IOCTL descriptor reads */
 long smb_IoctlReadRaw(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp,
-	smb_packet_t *outp
+		      smb_packet_t *outp
 #ifdef DJGPP
-, dos_ptr rawBuf
+		      , dos_ptr rawBuf
 #endif /* DJGPP */
-)
+		      )
 {
-	smb_ioctl_t *iop;
-	long leftToCopy;
-	NCB *ncbp;
-	long code;
-	cm_user_t *userp;
+    smb_ioctl_t *iop;
+    long leftToCopy;
+    NCB *ncbp;
+    long code;
+    cm_user_t *userp;
 #ifdef DJGPP
-        dos_ptr dos_ncb;
+    dos_ptr dos_ncb;
 
-        if (rawBuf == 0)
-        {
-                osi_Log0(afsd_logp, "Failed to get raw buf for smb_IoctlReadRaw");
-                return -1;
-        }
+    if (rawBuf == 0)
+    {
+	osi_Log0(afsd_logp, "Failed to get raw buf for smb_IoctlReadRaw");
+	return -1;
+    }
 #endif /* DJGPP */
 
-	iop = fidp->ioctlp;
+    iop = fidp->ioctlp;
 
-	userp = smb_GetUser(vcp, inp);
+    userp = smb_GetUser(vcp, inp);
 
-	{
-		smb_user_t *uidp;
+    /* Log the user */
+    {
+	smb_user_t *uidp;
 
-		uidp = smb_FindUID(vcp, ((smb_t *)inp)->uid, 0);
-		if (uidp && uidp->unp)
-		    osi_Log3(afsd_logp, "Ioctl uid %d user %x name %s",
-			     uidp->userID, userp,
-			     osi_LogSaveString(afsd_logp, uidp->unp->name));
-		else if (uidp)
-		    osi_Log2(afsd_logp, "Ioctl uid %d user %x no name",
-			     uidp->userID, userp);
-        else 
-		    osi_Log1(afsd_logp, "Ioctl no uid user %x no name",
-			     userp);
-		if (uidp) smb_ReleaseUID(uidp);
+	uidp = smb_FindUID(vcp, ((smb_t *)inp)->uid, 0);
+	if (uidp && uidp->unp) {
+	    osi_Log3(afsd_logp, "Ioctl uid %d user %x name %s",
+		     uidp->userID, userp,
+		     osi_LogSaveString(afsd_logp, uidp->unp->name));
+	} else if (uidp) {
+	    osi_Log2(afsd_logp, "Ioctl uid %d user %x no name",
+		     uidp->userID, userp);
+	} else {
+	    osi_Log1(afsd_logp, "Ioctl no uid user %x no name",
+		     userp);
 	}
+	if (uidp) 
+	    smb_ReleaseUID(uidp);
+    }	
 
     code = smb_LookupTIDPath(vcp, ((smb_t *)inp)->tid, &iop->tidPathp);
-    if(code) {
+    if (code) {
         cm_ReleaseUser(userp);
         smb_ReleaseFID(fidp);
         return CM_ERROR_NOSUCHPATH;
     }
 
-	code = smb_IoctlPrepareRead(fidp, iop, userp);
-	if (code) {
-		cm_ReleaseUser(userp);
-		smb_ReleaseFID(fidp);
-		return code;
-	}
-
-	leftToCopy = (long)((iop->outDatap - iop->outAllocp) - iop->outCopied);
-
-	ncbp = outp->ncbp;
-	memset((char *)ncbp, 0, sizeof(NCB));
-
-	ncbp->ncb_length = (unsigned short) leftToCopy;
-	ncbp->ncb_lsn = (unsigned char) vcp->lsn;
-	ncbp->ncb_command = NCBSEND;
-    /*ncbp->ncb_lana_num = smb_LANadapter;*/
-	ncbp->ncb_lana_num = vcp->lana;
-
-#ifndef DJGPP
-	ncbp->ncb_buffer = iop->outCopied + iop->outAllocp;
-	code = Netbios(ncbp);
-#else /* DJGPP */
-        dosmemput(iop->outCopied + iop->outAllocp, ncbp->ncb_length, rawBuf);
-        ncbp->ncb_buffer = rawBuf;
-        dos_ncb = ((smb_ncb_t *)ncbp)->dos_ncb;
-	code = Netbios(ncbp, dos_ncb);
-#endif /* !DJGPP */
-
-	if (code != 0)
-		osi_Log1(afsd_logp, "ReadRaw send failure code %d", code);
-
+    code = smb_IoctlPrepareRead(fidp, iop, userp);
+    if (code) {
 	cm_ReleaseUser(userp);
 	smb_ReleaseFID(fidp);
+	return code;
+    }
 
-	return 0;
+    leftToCopy = (long)((iop->outDatap - iop->outAllocp) - iop->outCopied);
+
+    ncbp = outp->ncbp;
+    memset((char *)ncbp, 0, sizeof(NCB));
+
+    ncbp->ncb_length = (unsigned short) leftToCopy;
+    ncbp->ncb_lsn = (unsigned char) vcp->lsn;
+    ncbp->ncb_command = NCBSEND;
+    /*ncbp->ncb_lana_num = smb_LANadapter;*/
+    ncbp->ncb_lana_num = vcp->lana;
+
+#ifndef DJGPP
+    ncbp->ncb_buffer = iop->outCopied + iop->outAllocp;
+    code = Netbios(ncbp);
+#else /* DJGPP */
+    dosmemput(iop->outCopied + iop->outAllocp, ncbp->ncb_length, rawBuf);
+    ncbp->ncb_buffer = rawBuf;
+    dos_ncb = ((smb_ncb_t *)ncbp)->dos_ncb;
+    code = Netbios(ncbp, dos_ncb);
+#endif /* !DJGPP */
+
+    if (code != 0)
+	osi_Log1(afsd_logp, "ReadRaw send failure code %d", code);
+
+    cm_ReleaseUser(userp);
+    smb_ReleaseFID(fidp);
+
+    return 0;
 }

@@ -212,6 +212,8 @@ LogEvent(WORD wEventType, DWORD dwEventID, ...)
     case MSG_SERVICE_RUNNING:
     case MSG_SERVICE_STOPPING:
     case MSG_SERVICE_ERROR_STOP:
+    case MSG_CRYPT_OFF:
+    case MSG_CRYPT_ON:
 	break;
     case MSG_FLUSH_BAD_SHARE_NAME:
     case MSG_FLUSH_OPEN_ENUM_ERROR:
@@ -219,6 +221,8 @@ LogEvent(WORD wEventType, DWORD dwEventID, ...)
     case MSG_FLUSH_FAILED:
     case MSG_RX_HARD_DEAD_TIME_EXCEEDED:
     case MSG_SERVICE_ERROR_STOP_WITH_MSG:
+    case MSG_SMB_SEND_PACKET_FAILURE:
+    case MSG_UNEXPECTED_SMB_SESSION_CLOSE:
 	wNumArgs = 1;
 	lpArgs[0] = va_arg(listArgs, LPTSTR);
     	break;
