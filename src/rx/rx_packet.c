@@ -2384,6 +2384,15 @@ rxi_SendPacketList(struct rx_call *call, struct rx_connection *conn,
 		clock_Addmsec(&(p->retryTime),
 			      10 + (((afs_uint32) p->backoff) << 8));
 	    }
+#ifdef AFS_NT40_ENV
+	    /* Windows is nice -- it can tell us right away that we cannot
+	     * reach this recipient by returning an WSAEHOSTUNREACH error
+	     * code.  So, when this happens let's "down" the host NOW so
+	     * we don't sit around waiting for this host to timeout later.
+	     */
+	    if (call && code == -1 && errno == WSAEHOSTUNREACH)
+		call->lastReceiveTime = 0;
+#endif
 #if defined(KERNEL) && defined(AFS_LINUX20_ENV)
 	    /* Linux is nice -- it can tell us right away that we cannot
 	     * reach this recipient by returning an ENETUNREACH error
