@@ -723,8 +723,10 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	    }
 	    if (!tvcp)
 	    {
+		DRelease((struct buffer *)dirEntryp, 0);
 		ReleaseReadLock(&dcp->lock);
 		ReleaseReadLock(&adp->lock);
+		afs_PutDCache(dcp);
 		goto done;	/* can happen if afs_NewVCache fails */
 	    }
 
