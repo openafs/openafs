@@ -145,9 +145,7 @@ osi_StopListener(void)
 #if defined(KERNEL_FUNNEL)
     thread_funnel_switch(NETWORK_FUNNEL, KERNEL_FUNNEL);
 #endif
-#ifdef AFS_DARWIN80_ENV
-    proc_signal(rxk_ListenerPid, SIGUSR1);
-#else
+#ifndef AFS_DARWIN80_ENV
     p = pfind(rxk_ListenerPid);
     if (p)
 	psignal(p, SIGUSR1);

@@ -150,6 +150,133 @@ afs_InitSetup(int preallocs)
 
     return code;
 }
+#if defined(AFS_DARWIN80_ENV)
+struct afsd_thread_info {
+    unsigned long parm;
+};
+static int
+afsd_thread(int *rock)
+{
+    struct afsd_thread_info *arg = (struct afsd_thread_info *)rock;
+    unsigned long parm = arg->parm;
+
+    switch (parm) {
+    case AFSOP_START_RXCALLBACK:
+	AFS_GLOCK();
+	wakeup(arg);
+	afs_CB_Running = 1;
+	while (afs_RX_Running != 2)
+	    afs_osi_Sleep(&afs_RX_Running);
+	afs_RXCallBackServer();
+	AFS_GUNLOCK();
+	thread_terminate(current_thread());
+	break;
+    case AFSOP_START_AFS:
+	AFS_GLOCK();
+	wakeup(arg);
+	AFS_Running = 1;
+	while (afs_initState < AFSOP_START_AFS)
+	    afs_osi_Sleep(&afs_initState);
+	afs_initState = AFSOP_START_BKG;
+	afs_osi_Wakeup(&afs_initState);
+	afs_Daemon();
+	AFS_GUNLOCK();
+	thread_terminate(current_thread());
+	break;
+    case AFSOP_START_BKG:
+	AFS_GLOCK();
+	wakeup(arg);
+	while (afs_initState < AFSOP_START_BKG)
+	    afs_osi_Sleep(&afs_initState);
+	if (afs_initState < AFSOP_GO) {
+	    afs_initState = AFSOP_GO;
+	    afs_osi_Wakeup(&afs_initState);
+	}
+	afs_BackgroundDaemon();
+	AFS_GUNLOCK();
+	thread_terminate(current_thread());
+	break;
+    case AFSOP_START_TRUNCDAEMON:
+	AFS_GLOCK();
+	wakeup(arg);
+	while (afs_initState < AFSOP_GO)
+	    afs_osi_Sleep(&afs_initState);
+	afs_CacheTruncateDaemon();
+	AFS_GUNLOCK();
+	thread_terminate(current_thread());
+	break;
+    case AFSOP_START_CS:
+	AFS_GLOCK();
+	wakeup(arg);
+	afs_CheckServerDaemon();
+	AFS_GUNLOCK();
+	thread_terminate(current_thread());
+	break;
+    case AFSOP_RXEVENT_DAEMON:
+	AFS_GLOCK();
+	wakeup(arg);
+	while (afs_initState < AFSOP_START_BKG)
+	    afs_osi_Sleep(&afs_initState);
+	afs_rxevent_daemon();
+	AFS_GUNLOCK();
+	thread_terminate(current_thread());
+	break;
+    case AFSOP_RXLISTENER_DAEMON:
+	AFS_GLOCK();
+	wakeup(arg);
+	afs_initState = AFSOP_START_AFS;
+	afs_osi_Wakeup(&afs_initState);
+	afs_RX_Running = 2;
+	afs_osi_Wakeup(&afs_RX_Running);
+	afs_osi_RxkRegister();
+	rxk_Listener();
+	AFS_GUNLOCK();
+	thread_terminate(current_thread());
+	break;
+    default:
+	printf("Unknown op %ld in StartDaemon()\n", (long)parm);
+	break;
+    }
+}
+
+void
+afs_DaemonOp(long parm, long parm2, long parm3, long parm4, long parm5,
+	     long parm6)
+{
+    int code;
+    struct afsd_thread_info info;
+    thread_t thread;
+
+    if (parm == AFSOP_START_RXCALLBACK) {
+	if (afs_CB_Running)
+	    return;
+    } else if (parm == AFSOP_RXLISTENER_DAEMON) {
+	if (afs_RX_Running)
+	    return;
+	afs_RX_Running = 1;
+	code = afs_InitSetup(parm2);
+	if (parm3) {
+	    rx_enablePeerRPCStats();
+	}
+	if (parm4) {
+	    rx_enableProcessRPCStats();
+	}
+	if (code)
+	    return;
+    } else if (parm == AFSOP_START_AFS) {
+	if (AFS_Running)
+	    return;
+    }				/* other functions don't need setup in the parent */
+    info.parm = parm;
+    kernel_thread_start((thread_continue_t)afsd_thread, &info, &thread);
+    AFS_GUNLOCK();
+    /* we need to wait cause we passed stack pointers around.... */
+    msleep(&info, NULL, PVFS, "afs_DaemonOp", NULL);
+    AFS_GLOCK();
+    thread_deallocate(thread);
+}
+#endif
+
 
 #if defined(AFS_LINUX24_ENV) && defined(COMPLETION_H_EXISTS)
 struct afsd_thread_info {
@@ -381,7 +508,7 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 #ifdef AFS_DARWIN80_ENV
     put_vfs_context();
 #endif
-#if defined(AFS_LINUX24_ENV) && defined(COMPLETION_H_EXISTS) && !defined(UKERNEL)
+#if ((defined(AFS_LINUX24_ENV) && defined(COMPLETION_H_EXISTS)) || defined(AFS_DARWIN80_ENV)) && !defined(UKERNEL)
     if (parm < AFSOP_ADDCELL || parm == AFSOP_RXEVENT_DAEMON
 	|| parm == AFSOP_RXLISTENER_DAEMON) {
 	afs_DaemonOp(parm, parm2, parm3, parm4, parm5, parm6);
