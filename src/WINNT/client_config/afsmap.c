@@ -91,7 +91,7 @@ int main(int argc, char * argv)
 	if (code == ERROR_SUCCESS) {
 		cm_mountRootLen = strlen(cm_mountRoot);
 	} else {
-		strcpy(mountRoot, sizeof(cm_mountRoot), "/afs");
+		strncpy(mountRoot, sizeof(cm_mountRoot), "/afs");
 		cm_mountRootLen = 4;
 	}
 
