@@ -1727,7 +1727,9 @@ afs_vop_advlock(ap)
 #endif
     AFS_GLOCK();
     error =
-	afs_lockctl(VTOAFS(ap->a_vp), ap->a_fl, ap->a_op, tcr, (int)ap->a_id);
+	afs_lockctl(VTOAFS(ap->a_vp), ap->a_fl,
+		    ap->a_op == F_UNLCK ? F_SETLK : ap->a_op, tcr, 
+		    (int)ap->a_id);
     AFS_GUNLOCK();
     return error;
 }
