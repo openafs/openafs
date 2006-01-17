@@ -5693,7 +5693,18 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
      * scp is NULL.
      */
     if (code == 0 && !treeCreate) {
-        if (createDisp == FILE_CREATE) {
+        code = cm_CheckNTOpen(scp, desiredAccess, createDisp, userp, &req);
+        if (code) {
+            if (dscp)
+                cm_ReleaseSCache(dscp);
+            if (scp)
+                cm_ReleaseSCache(scp);
+            cm_ReleaseUser(userp);
+            free(realPathp);
+            return code;
+        }
+
+	if (createDisp == FILE_CREATE) {
             /* oops, file shouldn't be there */
             if (dscp)
                 cm_ReleaseSCache(dscp);
@@ -5733,16 +5744,6 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         else 
             openAction = 1;	/* found existing file */
 
-        code = cm_CheckNTOpen(scp, desiredAccess, createDisp, userp, &req);
-        if (code) {
-            if (dscp)
-                cm_ReleaseSCache(dscp);
-            if (scp)
-                cm_ReleaseSCache(scp);
-            cm_ReleaseUser(userp);
-            free(realPathp);
-            return code;
-        }
     } else if (createDisp == FILE_OPEN || createDisp == FILE_OVERWRITE) {
         /* don't create if not found */
         if (dscp)
