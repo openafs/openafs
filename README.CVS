@@ -35,6 +35,7 @@ Step-by-step
        When prompted for the password, use the password listed above.
 
    % cvs checkout openafs
+   % ./regen.sh
 
 After this command completes there will be an openafs subdirectory
 with the latest sources.

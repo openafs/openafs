@@ -57,6 +57,9 @@ A. Creating the proper directory structure.
       AFS system type, providing the necessary flags:
       % ./configure --with-afs-sysname=sun4x_58 --enable-transarc-paths
 
+      If you do not have the "configure" script you can re-create it by
+      running regen.sh.  You will need autoconf to do this.
+
       For some systems you need also provide the path in which your kernel
       headers for your configured kernel can be found.  See the
       system-specific Notes sections below for details.
