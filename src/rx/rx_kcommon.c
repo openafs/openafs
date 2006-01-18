@@ -133,7 +133,8 @@ osi_Panic(msg, a1, a2, a3)
 
     dpf((msg, a1, a2, a3));
 #ifdef AFS_LINUX24_ENV
-    BUG();
+    printk("AFS BUG at %s\n", msg); 
+    * ((char *) 0) = 0; 
 #else
     panic(msg);
 #endif
