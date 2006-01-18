@@ -31,14 +31,16 @@ AFS_OS_NONFSOBJS = \
 KSRC = @BSD_KERNEL_PATH@
 KBLD = @BSD_KERNEL_BUILD@
 KDEFS=-Wall -ansi -nostdinc -I/usr/include -D_KERNEL -DKLD_MODULE \
-	-elf -mpreferred-stack-boundary=2 \
+	-elf -mpreferred-stack-boundary=2 -fformat-extensions \
 <i386_fbsd_42 i386_fbsd_43 i386_fbsd_44 i386_fbsd_45 i386_fbsd_46 i386_fbsd_47>
-	-fformat-extensions \
-	-include ${KBLD}/opt_global.h
+	-include ${KBLD}/opt_global.h \
+<i386_fbsd_60>
+	-mno-mmx -mno-3dnow -mno-sse -mno-sse2 \
 <all -i386_fbsd_42 -i386_fbsd_43 -i386_fbsd_44 -i386_fbsd_45 -i386_fbsd_46 -i386_fbsd_47>
-	-mno-align-long-strings -fformat-extensions -fno-common -ffreestanding \
-	-I${KBLD} -include opt_global.h -fno-strict-aliasing
+	-mno-align-long-strings -fno-common -ffreestanding \
+	-I${KBLD} -include opt_global.h -fno-strict-aliasing \
 <all>
+
 
 DBUG = -O2
 #DBUG = -O -g
