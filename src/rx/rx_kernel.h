@@ -48,6 +48,10 @@ extern int osi_utoa(char *buf, size_t len, unsigned long val);
 #define AFS_IFNET_T ifnet_t
 #endif
 
+#ifndef ifnet_flags
+#define ifnet_flags(x) (x?(x)->if_flags:0)
+#endif
+
 #include "afs/longc_procs.h"
 
 #endif /* __RX_KERNEL_INCL_ */
