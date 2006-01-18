@@ -570,7 +570,7 @@ struct SimpleLocks {
 #define VREFCOUNT_GT(v, y)    (AFSTOV(v)->v_usecount > (y))
 #elif defined(AFS_LINUX24_ENV)
 #define VREFCOUNT(v)		atomic_read(&(AFSTOV(v)->v_count))
-#define VREFCOUNT_GT(v, y)    ((atomic_read(&((vnode_t *) v)->v_count)>y)?1:0)
+#define VREFCOUNT_GT(v, y)      (VREFCOUNT(v)>y)
 #define VREFCOUNT_SET(v, c)	atomic_set(&(AFSTOV(v)->v_count), c)
 #define VREFCOUNT_DEC(v)	atomic_dec(&(AFSTOV(v)->v_count))
 #define VREFCOUNT_INC(v)	atomic_inc(&(AFSTOV(v)->v_count))
