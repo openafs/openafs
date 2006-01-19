@@ -1025,7 +1025,7 @@ main(int argc, char **argv, char **envp)
 void
 bozo_Log(char *a, char *b, char *c, char *d, char *e, char *f)
 {
-    char tdate[26];
+    char tdate[27];
     time_t myTime;
 
     if (DoSyslog) {
@@ -1041,21 +1041,17 @@ bozo_Log(char *a, char *b, char *c, char *d, char *e, char *f)
 
 	bozo_logFile = fopen(AFSDIR_SERVER_BOZLOG_FILEPATH, "a");
 	if (bozo_logFile == NULL) {
-	    printf("bosserver: WARNING: problem with %s",
+	    printf("bosserver: WARNING: problem with %s\n",
 		   AFSDIR_SERVER_BOZLOG_FILEPATH);
-	    fflush(stdout);
-	}
-
-	if (bozo_logFile) {
-	    fprintf(bozo_logFile, "%s ", tdate);
-	    fprintf(bozo_logFile, a, b, c, d, e, f);
-	    fflush(bozo_logFile);
-	} else {
 	    printf("%s ", tdate);
 	    printf(a, b, c, d, e, f);
-	}
+	    fflush(stdout);
+	} else {
+	    fprintf(bozo_logFile, "%s ", tdate);
+	    fprintf(bozo_logFile, a, b, c, d, e, f);
 
-	/* close so rm BosLog works */
-	fclose(bozo_logFile);
+	    /* close so rm BosLog works */
+	    fclose(bozo_logFile);
+	}
     }
 }
