@@ -48,7 +48,6 @@ typedef struct cm_user {
 } cm_user_t;
 
 #define CM_USERFLAG_DELETE	1	/* delete on last reference */
-#define CM_USERFLAG_WASLOGON	2	/* was logon DLL user */
 
 extern void cm_InitUser(void);
 
@@ -59,6 +58,8 @@ extern cm_ucell_t *cm_GetUCell(cm_user_t *userp, struct cm_cell *cellp);
 extern cm_ucell_t *cm_FindUCell(cm_user_t *userp, int iterator);
 
 extern void cm_HoldUser(cm_user_t *up);
+
+extern void cm_HoldUserVCRef(cm_user_t *up);
 
 extern void cm_ReleaseUser(cm_user_t *up);
 

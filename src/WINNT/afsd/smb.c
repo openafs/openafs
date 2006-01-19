@@ -934,9 +934,9 @@ void smb_CleanupDeadVC(smb_vc_t *vcp)
     smb_tid_t *tidpNext;
     smb_tid_t *tidp;
     unsigned short tid;
-    smb_user_t *userpIter;
-    smb_user_t *userpNext;
-    smb_user_t *userp;
+    smb_user_t *uidpIter;
+    smb_user_t *uidpNext;
+    smb_user_t *uidp;
     unsigned short uid;
     smb_vc_t **vcpp;
 
@@ -982,24 +982,24 @@ void smb_CleanupDeadVC(smb_vc_t *vcp)
 	lock_ObtainRead(&smb_rctLock);
     }
 
-    for (userpIter = vcp->usersp; userpIter; userpIter = userpNext) {
-	userpNext = userpIter->nextp;
+    for (uidpIter = vcp->usersp; uidpIter; uidpIter = uidpNext) {
+	uidpNext = uidpIter->nextp;
 
-	if (userpIter->flags & SMB_USERFLAG_DELETE)
+	if (uidpIter->flags & SMB_USERFLAG_DELETE)
 	    continue;
 
-	uid = userpIter->userID;
-	osi_Log2(smb_logp, "  Cleanup UID %d (userp=0x%x)", uid, userpIter);
+	uid = uidpIter->userID;
+	osi_Log2(smb_logp, "  Cleanup UID %d (uidp=0x%x)", uid, uidpIter);
 	lock_ReleaseRead(&smb_rctLock);
 
-	userp = smb_FindUID(vcp, uid, 0);
-	osi_assert(userp);
+	uidp = smb_FindUID(vcp, uid, 0);
+	osi_assert(uidp);
 
-	lock_ObtainMutex(&userp->mx);
-	userp->flags |= SMB_USERFLAG_DELETE;
-	lock_ReleaseMutex(&userp->mx);
+	lock_ObtainMutex(&uidp->mx);
+	uidp->flags |= SMB_USERFLAG_DELETE;
+	lock_ReleaseMutex(&uidp->mx);
 
-	smb_ReleaseUID(userp);
+	smb_ReleaseUID(uidp);
 
 	lock_ObtainRead(&smb_rctLock);
     }
@@ -1100,7 +1100,7 @@ smb_user_t *smb_FindUID(smb_vc_t *vcp, unsigned short uid, int flags)
     return uidp;
 }       	
 
-smb_username_t *smb_FindUserByName(char *usern, char *machine, int flags)
+smb_username_t *smb_FindUserByName(char *usern, char *machine, afs_uint32 flags)
 {
     smb_username_t *unp= NULL;
 
@@ -1121,7 +1121,10 @@ smb_username_t *smb_FindUserByName(char *usern, char *machine, int flags)
         unp->machine = strdup(machine);
         usernamesp = unp;
         lock_InitializeMutex(&unp->mx, "username_t mutex");
+	if (flags & SMB_FLAG_AFSLOGON)
+	    unp->flags = SMB_USERFLAG_AFSLOGON;
     }
+
     lock_ReleaseWrite(&smb_rctLock);
     return unp;
 }	
@@ -1153,7 +1156,7 @@ void smb_ReleaseUsername(smb_username_t *unp)
 
     lock_ObtainWrite(&smb_rctLock);
     osi_assert(unp->refCount-- > 0);
-    if (unp->refCount == 0) {
+    if (unp->refCount == 0 && !(unp->flags & SMB_USERFLAG_AFSLOGON)) {
         lupp = &usernamesp;
         for(up = *lupp; up; lupp = &up->nextp, up = *lupp) {
             if (up == unp) 
@@ -1170,7 +1173,6 @@ void smb_ReleaseUsername(smb_username_t *unp)
     lock_ReleaseWrite(&smb_rctLock);
 
     if (userp) {
-        cm_ReleaseUserVCRef(userp);
         cm_ReleaseUser(userp);
     }	
 }	
@@ -1198,8 +1200,11 @@ void smb_ReleaseUID(smb_user_t *uidp)
     }		
     lock_ReleaseWrite(&smb_rctLock);
 
-    if (unp)
+    if (unp) {
+	if (unp->userp)
+	    cm_ReleaseUserVCRef(unp->userp);
 	smb_ReleaseUsername(unp);
+    }
 }	
 
 /* retrieve a held reference to a user structure corresponding to an incoming

@@ -662,7 +662,6 @@ long smb_ReceiveV3SessionSetupX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
     smb_user_t *uidp;
     unsigned short newUid;
     unsigned long caps = 0;
-    cm_user_t *userp;
     smb_username_t *unp;
     char *s1 = " ";
     long code = 0; 
@@ -842,20 +841,32 @@ long smb_ReceiveV3SessionSetupX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
     uidp = smb_FindUserByNameThisSession(vcp, usern);
     if (uidp) {   /* already there, so don't create a new one */
         unp = uidp->unp;
-        userp = unp->userp;
         newUid = uidp->userID;
-        osi_LogEvent("AFS smb_ReceiveV3SessionSetupX",NULL,"FindUserByName:Lana[%d],lsn[%d],userid[%d],name[%s]",vcp->lana,vcp->lsn,newUid,osi_LogSaveString(smb_logp, usern));
-        osi_Log3(smb_logp,"smb_ReceiveV3SessionSetupX FindUserByName:Lana[%d],lsn[%d],userid[%d]",vcp->lana,vcp->lsn,newUid);
+        osi_LogEvent("AFS smb_ReceiveV3SessionSetupX",NULL,"FindUserByName:Lana[%d],lsn[%d],userid[%d],name[%s]",
+		      vcp->lana,vcp->lsn,newUid,osi_LogSaveString(smb_logp, usern));
+        osi_Log3(smb_logp,"smb_ReceiveV3SessionSetupX FindUserByName:Lana[%d],lsn[%d],userid[%d]",
+		  vcp->lana,vcp->lsn,newUid);
         smb_ReleaseUID(uidp);
     }
     else {
-      /* do a global search for the username/machine name pair */
+	cm_user_t *userp;
+
+	/* do a global search for the username/machine name pair */
         unp = smb_FindUserByName(usern, vcp->rname, SMB_FLAG_CREATE);
+	lock_ObtainMutex(&unp->mx);
+	if (unp->flags & SMB_USERFLAG_AFSLOGON) {
+	    /* clear the afslogon flag so that the tickets can now 
+	     * be freed when the refCount returns to zero.
+	     */
+	    unp->flags &= ~SMB_USERFLAG_AFSLOGON;
+	}
+	lock_ReleaseMutex(&unp->mx);
 
         /* Create a new UID and cm_user_t structure */
         userp = unp->userp;
         if (!userp)
             userp = cm_NewUser();
+	cm_HoldUserVCRef(userp);
         lock_ObtainMutex(&vcp->mx);
         if (!vcp->uidCounter)
             vcp->uidCounter++; /* handle unlikely wraparounds */
@@ -7176,12 +7187,12 @@ void smb3_Init()
     lock_InitializeMutex(&smb_Dir_Watch_Lock, "Directory Watch List Lock");
 }
 
-cm_user_t *smb_FindCMUserByName(char *usern, char *machine)
+cm_user_t *smb_FindCMUserByName(char *usern, char *machine, afs_uint32 flags)
 {
     smb_username_t *unp;
     cm_user_t *     userp;
 
-    unp = smb_FindUserByName(usern, machine, SMB_FLAG_CREATE);
+    unp = smb_FindUserByName(usern, machine, flags);
     if (!unp->userp) {
         lock_ObtainMutex(&unp->mx);
         unp->userp = cm_NewUser();

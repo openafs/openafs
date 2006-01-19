@@ -91,6 +91,7 @@ typedef struct smb {
 
 /* flags for functions */
 #define SMB_FLAG_CREATE		1	/* create the structure if necessary */
+#define SMB_FLAG_AFSLOGON       2       /* operating on behalf of afslogon.dll */
 
 /* max # of bytes we'll receive in an incoming SMB message */
 /* the maximum is 2^18-1 for NBT and 2^25-1 for Raw transport messages */
@@ -246,6 +247,7 @@ typedef struct smb_username {
 } smb_username_t;
 
 #define SMB_USERFLAG_DELETE	1	/* delete struct when ref count zero */
+#define SMB_USERFLAG_AFSLOGON   2       /* do not delete when the refCount reaches zero */
 
 #define SMB_MAX_USERNAME_LENGTH 256
 
@@ -499,13 +501,9 @@ extern void smb_ReleaseTID(smb_tid_t *tidp);
 
 extern smb_user_t *smb_FindUID(smb_vc_t *vcp, unsigned short uid, int flags);
 
-extern smb_username_t *smb_FindUserByName(char *usern, char *machine, int flags);
+extern smb_username_t *smb_FindUserByName(char *usern, char *machine, afs_uint32 flags);
 
 extern smb_user_t *smb_FindUserByNameThisSession(smb_vc_t *vcp, char *usern); 
-
-extern smb_username_t *smb_FindUserByName(char *usern, char *machine, int flags);
-
-extern smb_user_t *smb_FindUserByNameThisSession(smb_vc_t *vcp, char *usern);
 
 extern void smb_ReleaseUsername(smb_username_t *unp);
 

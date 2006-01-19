@@ -801,7 +801,8 @@ DWORD APIENTRY NPLogonNotify(
         {			
             if ( KFW_is_available() ) {
                 code = KFW_AFS_get_cred(uname, cell, password, 0, opt.smbName, &reason);
-                DebugEvent("KFW_AFS_get_cred  uname=[%s] smbname=[%s] cell=[%s] code=[%d]",uname,opt.smbName,cell,code);
+                DebugEvent("KFW_AFS_get_cred  uname=[%s] smbname=[%s] cell=[%s] code=[%d]",
+			    uname,opt.smbName,cell,code);
                 if (code == 0 && opt.theseCells) { 
                     char * principal, *p;
 
@@ -830,8 +831,8 @@ DWORD APIENTRY NPLogonNotify(
                 code = ka_UserAuthenticateGeneral2(KA_USERAUTH_VERSION+KA_USERAUTH_AUTHENT_LOGON,
                                                     uname, "", cell, password, opt.smbName, 0, &pw_exp, 0,
                                                     &reason);
-                DebugEvent("AFS AfsLogon - (INTEGRATED only)ka_UserAuthenticateGeneral2","Code[%x] uname[%s] Cell[%s]",
-                            code,uname,cell);
+                DebugEvent("AFS AfsLogon - (INTEGRATED only)ka_UserAuthenticateGeneral2 Code[%x] uname[%s] smbname=[%s] Cell[%s] PwExp=[%d] Reason=[%s]",
+                            code,uname,opt.smbName,cell,pw_exp,reason?reason:"");
             }       
             if ( code && code != KTC_NOCM && code != KTC_NOCMRPC && !lowercased_name ) {
                 for ( ctemp = uname; *ctemp ; ctemp++) {
