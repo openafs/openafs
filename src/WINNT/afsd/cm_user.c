@@ -39,14 +39,13 @@ void cm_InitUser(void)
 
 cm_user_t *cm_NewUser(void)
 {
-    cm_user_t *up;
+    cm_user_t *userp;
         
-    up = malloc(sizeof(*up));
-    memset(up, 0, sizeof(*up));
-    up->refCount = 1;
-    up->vcRefs = 1;		/* from caller */
-    lock_InitializeMutex(&up->mx, "cm_user_t");
-    return up;
+    userp = malloc(sizeof(*userp));
+    memset(userp, 0, sizeof(*userp));
+    userp->refCount = 1;
+    lock_InitializeMutex(&userp->mx, "cm_user_t");
+    return userp;
 }
 
 /* must be called with locked userp */
@@ -98,31 +97,39 @@ void cm_HoldUser(cm_user_t *up)
     lock_ReleaseWrite(&cm_userLock);
 }
 
-void cm_ReleaseUser(cm_user_t *up)
+void cm_ReleaseUser(cm_user_t *userp)
 {
     cm_ucell_t *ucp;
     cm_ucell_t *ncp;
 
-    if (up == NULL) 
+    if (userp == NULL) 
         return;
 
     lock_ObtainWrite(&cm_userLock);
-    osi_assert(up->refCount-- > 0);
-    if (up->refCount == 0) {
-        lock_FinalizeMutex(&up->mx);
-        for (ucp = up->cellInfop; ucp; ucp = ncp) {
+    osi_assert(userp->refCount-- > 0);
+    if (userp->refCount == 0) {
+        lock_FinalizeMutex(&userp->mx);
+        for (ucp = userp->cellInfop; ucp; ucp = ncp) {
             ncp = ucp->nextp;
             if (ucp->ticketp) 
                 free(ucp->ticketp);
             free(ucp);
         }
-        free(up);
+        free(userp);
     }
     lock_ReleaseWrite(&cm_userLock);
 }
 
+
+void cm_HoldUserVCRef(cm_user_t *userp)
+{
+    lock_ObtainMutex(&userp->mx);
+    userp->vcRefs++;
+    lock_ReleaseMutex(&userp->mx);
+}       
+
 /* release the count of the # of connections that use this user structure.
- * When this hits zero, we know we won't be getting an new requests from
+ * When this hits zero, we know we won't be getting any new requests from
  * this user, and thus we can start GC'ing connections.  Ref count on user
  * won't hit zero until all cm_conn_t's have been GC'd, since they hold
  * refCount references to userp.

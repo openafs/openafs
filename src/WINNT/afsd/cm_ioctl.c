@@ -1985,7 +1985,8 @@ long cm_IoctlSetToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
     }
 
     if (flags & PIOCTL_LOGON) {
-        userp = smb_FindCMUserByName(smbname, ioctlp->fidp->vcp->rname);
+        userp = smb_FindCMUserByName(smbname, ioctlp->fidp->vcp->rname,
+				     SMB_FLAG_CREATE|SMB_FLAG_AFSLOGON);
 	release_userp = 1;
     }
 

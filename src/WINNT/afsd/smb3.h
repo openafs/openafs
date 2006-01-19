@@ -192,7 +192,7 @@ extern long smb_ReceiveNTRename(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
 extern int smb_V3MatchMask(char *namep, char *maskp, int flags);
 
 extern void smb3_Init();
-extern cm_user_t *smb_FindCMUserByName(/*smb_vc_t *vcp,*/ char *usern, char *machine);
+extern cm_user_t *smb_FindCMUserByName(char *usern, char *machine, afs_uint32 flags);
 
 /* SMB auth related functions */
 extern void smb_NegotiateExtendedSecurity(void ** secBlob, int * secBlobLength);
