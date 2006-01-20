@@ -892,6 +892,8 @@ if test "$enable_obsolete" = "yes"; then
 	WITH_OBSOLETE=YES
 fi
 
+HOST_CPU="$host_cpu"
+
 if test "x$with_bsd_kernel_headers" != "x"; then
 	BSD_KERNEL_PATH="$with_bsd_kernel_headers"
 else
@@ -902,11 +904,11 @@ if test "x$with_bsd_kernel_build" != "x"; then
 	BSD_KERNEL_BUILD="$with_bsd_kernel_build"
 else
 	case $AFS_SYSNAME in
-		i386_fbsd_4?)
+		*_fbsd_4?)
 			BSD_KERNEL_BUILD="${BSD_KERNEL_PATH}/compile/GENERIC"
 			;;
-		i386_fbsd_*)
-			BSD_KERNEL_BUILD="${BSD_KERNEL_PATH}/i386/compile/GENERIC"
+		*_fbsd_*)
+			BSD_KERNEL_BUILD="${BSD_KERNEL_PATH}/${HOST_CPU}/compile/GENERIC"
 			;;
 	esac
 fi
@@ -1078,6 +1080,7 @@ AC_SUBST(AFS_PARAM_COMMON)
 AC_SUBST(ENABLE_KERNEL_MODULE)
 AC_SUBST(LIB_AFSDB)
 AC_SUBST(LINUX_KERNEL_PATH)
+AC_SUBST(HOST_CPU)
 AC_SUBST(BSD_KERNEL_PATH)
 AC_SUBST(BSD_KERNEL_BUILD)
 AC_SUBST(LINUX_VERSION)

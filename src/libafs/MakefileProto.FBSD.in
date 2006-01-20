@@ -67,7 +67,7 @@ setup:
 	ln -fs ../Makefile.common $(KOBJ)/Makefile.common
 	-$(RM) -f  h net netinet rpc ufs nfs  machine sys vm
 	-ln -fs ${KSRC}/net net
-	-ln -fs ${KSRC}/i386/include machine
+	-ln -fs ${KSRC}/@HOST_CPU@/include machine
 	-ln -fs ${KSRC}/netinet netinet
 	-ln -fs ${KSRC}/nfs nfs
 	-ln -fs /usr/include/rpc rpc
