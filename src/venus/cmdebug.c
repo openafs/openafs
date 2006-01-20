@@ -306,7 +306,7 @@ PrintCacheEntries32(struct rx_connection *aconn, int aint32)
 	    PrintLock(&centry.lock);
 	    printf("\n");
 	}
-	printf("    %012d bytes  DV %012d  refcnt %05d\n", centry.Length,
+	printf("    %12d bytes  DV %12d  refcnt %5d\n", centry.Length,
 	       centry.DataVersion, centry.refCount);
 	printf("    callback %08x\texpires %u\n", centry.callback,
 	       centry.cbExpires);
