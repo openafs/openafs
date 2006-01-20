@@ -888,12 +888,14 @@ afs_vm_rdwr(struct vnode *vp,
     xfrOffset = uiop->afsio_offset;
     if (xfrOffset < 0 || xfrOffset + xfrSize < 0) {
 	code = EINVAL;
+	ReleaseReadLock(&vcp->lock);
 	goto fail;
     }
 #ifndef AFS_64BIT_CLIENT
     /* check for "file too big" error, which should really be done above us */
     if (rw == UIO_WRITE && xfrSize + fileSize > get_ulimit()) {
 	code = EFBIG;
+	ReleaseReadLock(&vcp->lock);
 	goto fail;
     }
 #endif /* AFS_64BIT_CLIENT */
@@ -903,9 +905,12 @@ afs_vm_rdwr(struct vnode *vp,
         if (rw == UIO_READ) {
             /* don't read past EOF */
             if (xfrSize+xfrOffset > fileSize) {
-            add2resid = xfrSize + xfrOffset - fileSize;
-            xfrSize = fileSize - xfrOffset;
-            if (xfrSize <= 0) goto fail;
+		add2resid = xfrSize + xfrOffset - fileSize;
+		xfrSize = fileSize - xfrOffset;
+		if (xfrSize <= 0) {
+		    ReleaseReadLock(&vcp->lock);
+		    goto fail;
+		}
                 txfrSize = xfrSize;
                 afsio_trim(uiop, txfrSize);
             }
@@ -932,9 +937,9 @@ afs_vm_rdwr(struct vnode *vp,
 	    ObtainWriteLock(&vcp->lock, 244);
 	    afs_FakeOpen(vcp);	/* XXXX For nfs trans and cores XXXX */
 	    ReleaseWriteLock(&vcp->lock);
-	    ObtainReadLock(&vcp->lock);
 	    if (code)
 		goto fail;
+	    ObtainReadLock(&vcp->lock);
 	    xfrSize = afs_vmMappingEnd - xfrOffset;
 	    txfrSize = xfrSize;
 	    afsio_trim(uiop, txfrSize);
@@ -956,6 +961,7 @@ afs_vm_rdwr(struct vnode *vp,
 	/* Consider  V_INTRSEG too for interrupts */
 	if (code =
 	    vms_create(&vcp->segid, V_CLIENT, (dev_t) vcp->v.v_gnode, tlen, 0, 0)) {
+	    ReleaseReadLock(&vcp->lock);
 	    goto fail;
 	}
 #ifdef AFS_64BIT_KERNEL
@@ -966,12 +972,12 @@ afs_vm_rdwr(struct vnode *vp,
     }
     vcp->v.v_gnode->gn_seg = vcp->segid;
     if (rw == UIO_READ) {
+	ReleaseReadLock(&vcp->lock);
 	/* don't read past EOF */
 	if (xfrSize + xfrOffset > fileSize)
 	    xfrSize = fileSize - xfrOffset;
 	if (xfrSize <= 0)
 	    goto fail;
-	ReleaseReadLock(&vcp->lock);
 #ifdef AFS_64BIT_CLIENT
 	toffset = xfrOffset;
 	uiop->afsio_offset = xfrOffset;
@@ -1072,6 +1078,9 @@ afs_vm_rdwr(struct vnode *vp,
 	    code = vm_move(vcp->segid, xfrOffset, xfrSize, rw, uiop);
 #endif /* AFS_64BIT_CLIENT */
 	    AFS_GLOCK();
+	    if (code) {
+		goto fail;
+	    }
 	    xfrOffset += len;
 	    xfrSize = 0;
 	} else {
@@ -1090,6 +1099,9 @@ afs_vm_rdwr(struct vnode *vp,
 		code = afs_DoPartialWrite(vcp, &treq);
 		vcp->states |= CDirty;
 		ReleaseWriteLock(&vcp->lock);
+		if (code) {
+		    goto fail;
+		}
 	    }
 	    counter++;
 
@@ -1107,6 +1119,10 @@ afs_vm_rdwr(struct vnode *vp,
 #endif /* AFS_64BIT_CLIENT */
 	    AFS_GLOCK();
 	    len -= tuio.afsio_resid;
+	    if (code || (len <= 0)) {
+		code = code ? code : EINVAL;
+		goto fail;
+	    }
 	    afsio_skip(uiop, len);
 	    xfrSize -= len;
 	    xfrOffset += len;
@@ -1120,9 +1136,18 @@ afs_vm_rdwr(struct vnode *vp,
 		   ICL_TYPE_INT32, first_page, ICL_TYPE_INT32, pages);
 	AFS_GUNLOCK();
 	code = vm_writep(vcp->segid, first_page, pages);
+	if (code) {
+	    AFS_GLOCK();
+	    goto fail;
+	}
 	if (++count > AFS_MAX_VM_CHUNKS) {
 	    count = 0;
-	    vms_iowait(vcp->segid);
+	    code = vms_iowait(vcp->segid);
+	    if (code) {
+		/* cache device failure? */
+		AFS_GLOCK();
+		goto fail;
+	    }
 	}
 	AFS_GLOCK();
 
@@ -1130,8 +1155,12 @@ afs_vm_rdwr(struct vnode *vp,
 
     if (count) {
 	AFS_GUNLOCK();
-	vms_iowait(vcp->segid);
+	code = vms_iowait(vcp->segid);
 	AFS_GLOCK();
+	if (code) {
+	    /* cache device failure? */
+	    goto fail;
+	}
     }
 
     ObtainWriteLock(&vcp->lock, 242);
@@ -1162,9 +1191,9 @@ afs_vm_rdwr(struct vnode *vp,
 	uiop->afsio_offset = finalOffset;
     }
 #endif /* AFS_64BIT_CLIENT */
+    ReleaseReadLock(&vcp->lock);
 
   fail:
-    ReleaseReadLock(&vcp->lock);
     afs_Trace2(afs_iclSetp, CM_TRACE_VMWRITE3, ICL_TYPE_POINTER, vcp,
 	       ICL_TYPE_INT32, code);
     return code;
