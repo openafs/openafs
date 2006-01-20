@@ -1,11 +1,89 @@
+Since 1.4.1 rc4: 1.4.1 rc5 released (20 Jan 2006)
+
+ * Check access permissions to the file before the file is 
+   truncated.
+
+ * More improvements to the handling of SMB Virtual Circuits
+   when SMB sessions are closed.
+
+ * Correct a race condition introduced in rc4 that could result
+   in a crash of afsd_service.exe.
+
+Since 1.4.1 rc3: 1.4.1 rc4 released (11 Jan 2006)
+
+ * Properly handle pre-mature SMB session closures.
+   File handles, tree connections, and user sessions are now
+   freed when the virtual circuit is closed.
+
+ * smb_username_t and smb_user_t objects are now properly reference
+   counted and freed as appropriate.
+
+ * disable to use of AFS file locks.  Byte range locking is still
+   implemented but all locks are managed locally.  This prevents
+   multiple processes from editing the same file on the same 
+   machine but it does prevent multiple processes on separate 
+   machines from modifying the file.
+
+Since 1.4.1 rc2: 1.4.1 RC3 released (4 Jan 2006)
+
+ * A fix to "fs setserverprefs -vlserver".  Multiple calls with
+   the same server parameter would result in a panic condition
+   if the server had not already been contacted by the AFS 
+   client service.
+
+ * Better warnings are written to the afsd.log file when 
+   the Windows RPC Protocols are not properly configured as
+   is often the case on Windows 2000.
+
+ * fix the procmgmt library to restore C RTL signal handlers when 
+   it is being detached from the process prior to process termination.
+
+Since 1.4.1 rc1: 1.4.1 RC2 released (30 Nov 2005)
+
+ * close a lock leak in the rx library that could be triggered while
+   processing aborts
+
+ * prevent removal of drive mappings in response to afscreds.exe -M
+
+ * add logic to process VNOVNODE in cm_Analyze.  Force re-evaluation of symlink
+   strings and flush the stat cache entry.
+
+ * prevent server objects from being freed if user preferences are set.
+
+ * Update WIX support to 2.0.2419.0
+
+ * Release all locks on the server at service shutdown.
+
+ * A down server should be marked up as long as it responds to the client.
+   It doesn't matter if the server returned an error as long as the error
+   is something other than VRESTARTING.	 If there is such an error, all
+   connections on that server should be marked for replacement.
+
+ * Change the check "up" servers period from once per hour to once every
+   ten minutes.  This matches the behavior of the Unix cache manager.
+
+Post 1.4.0 revisions: 1.4.1 RC1 released (21 Oct 2005)
+ * Byte Range Locking support has been added.  Architectural documentation
+   is located within src/WINNT/afsd/cm_vnodeops.c.   Best efforts are 
+   made to enforce Windows mandatory locking model using locally managed
+   byte range locks with full file locks obtained from the file server.
+   Read-only volumes provide the user with an implied locking privilege.
+   Read-write volumes require that a user be granted the locking privilege
+   in order for a lock to be obtained.   As most Windows applications use
+   Shared file access modes, they require the ability to obtain locks in
+   order to access files.
+
+ * Implement error translation functions to convert Universal Error Codes
+   output by modern servers to local errno and winsock error values.
+   This fixes the error message problems using pioctl() calls from fs.exe 
+   and the AFS Shell Extension.
+
 Since 1.4.0 rc8: 1.4.0 final tagged (20 Oct 2005); released (31 Oct 2005)
  * Allow the AFS Client Service to set the firewall configuration by
    retrying until after Windows determines the boot period is over.
 
  * Do not attempt to configure the firewall on Windows 2000, XP pre-SP2,
    or 2003 pre-SP1
-
- * Add support for universal error codes.
 
  * Detect IP address changes from within the AFS Client Service for the
    purpose of checking down servers sooner
@@ -127,11 +205,7 @@ Since 1.4.0 rc1: 1.4.0 rc2 released (28 Aug 2005)
    Output monitor interface.  This data can be viewed with tools
    such as Sysinternal's DbgView.
 
-New development series 1.5.0 begun (17 Aug 2005)
-
 Since 1.3.87: 1.4.0 rc1 released (17 Aug 2005)
- * Byte-range locking as described in cm_vnodeops.c has been implemented.
-
  * When the cache manager reports ALLBUSY or ALLOFFLINE for
    a resource we should not be returning status codes such
    as Network Busy or Remote Host Down because these errors
@@ -201,11 +275,6 @@ Since 1.3.84:
    integrated login, the afs systray tool, or aklog will always
    include the full Kerberos 5 user principal name regardless of 
    whether or not the cell is local to the realm.
-
- * Eric William's IFS redirector has been checked onto the CVS head.
-   This code is experimental at the current time and is not being 
-   incorporated into the 1-4 branch releases.  Instructions for 
-   building from sources are found in the top-level README-NT file.
 
  * Modify integrated login so that it does not enter an infinite
    loop if the service is not set to auto start.
