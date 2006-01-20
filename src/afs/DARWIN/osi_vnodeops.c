@@ -299,11 +299,14 @@ afs_vop_lookup(ap)
     int wantparent;		/* 1 => wantparent or lockparent flag */
     struct proc *p;
 #ifdef AFS_DARWIN80_ENV
-    error = cache_lookup(ap->a_dvp, ap->a_vpp, ap->a_cnp);
-    if (error == -1) 
-       return 0;
-    if (error == ENOENT) 
-       return error;
+    vcp = VTOAFS(ap->a_dvp);
+    if (vcp->mvstat != 1) {
+	error = cache_lookup(ap->a_dvp, ap->a_vpp, ap->a_cnp);
+	if (error == -1) 
+	    return 0;
+	if (error == ENOENT) 
+	    return error;
+    }
 #endif
 
     GETNAME();
