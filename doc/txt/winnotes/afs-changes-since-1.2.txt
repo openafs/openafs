@@ -1,4 +1,14 @@
-Since 1.4.1 rc4: 1.4.1 rc5 released (16 Jan 2006)
+Since 1.4.1 rc4: 1.4.1 rc5 released (20 Jan 2006)
+				    
+ * Added a method to detect abandonded smb virtual circuits
+   so their associated file handles, locks, user tokens,
+   and smb session resources can be released.
+
+ * Added a mechanism to allow user tokens to be preserved 
+   during integrated login and be freed after logoff.
+
+ * Check access permissions to the file before the file is 
+   truncated.
 
  * More improvements to the handling of SMB Virtual Circuits
    when SMB sessions are closed.
