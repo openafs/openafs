@@ -167,9 +167,8 @@ typedef struct smb_packet {
 } smb_packet_t;
 
 /* smb_packet flags */
-#define SMB_PACKETFLAG_PROFILE_UPDATE_OK	1
-#define SMB_PACKETFLAG_NOSEND			2
-#define SMB_PACKETFLAG_SUSPENDED		4
+#define SMB_PACKETFLAG_NOSEND			1
+#define SMB_PACKETFLAG_SUSPENDED		2
 
 /* a structure for making Netbios calls; locked by smb_globalLock */
 #define SMB_NCBMAGIC	0x2334344
@@ -204,8 +203,6 @@ typedef struct smb_vc {
     struct smb_tid *tidsp;		/* the first child in the tid list */
     struct smb_user *usersp;	        /* the first child in the user session list */
     struct smb_fid *fidsp;		/* the first child in the open file list */
-    struct smb_user *justLoggedOut;	/* ready for profile upload? */
-    time_t logoffTime;	                /* tick count when logged off */
     unsigned char errorCount;
     char rname[17];
     int lana;
@@ -213,6 +210,7 @@ typedef struct smb_vc {
     void * secCtx;                      /* security context when negotiating SMB extended auth
                                          * valid when SMB_VCFLAG_AUTH_IN_PROGRESS is set
                                          */
+    unsigned short session;		/* This is the Session Index associated with the NCBs */
 } smb_vc_t;
 
 					/* have we negotiated ... */
@@ -236,6 +234,8 @@ typedef struct smb_user {
     struct smb_username *unp;           /* user name struct */
 } smb_user_t;
 
+#define SMB_USERFLAG_DELETE	    1	/* delete struct when ref count zero */
+
 typedef struct smb_username {
     struct smb_username *nextp;		/* next sibling */
     unsigned long refCount;		/* ref count */
@@ -244,10 +244,25 @@ typedef struct smb_username {
     struct cm_user *userp;		/* CM user structure */
     char *name;			        /* user name */
     char *machine;                      /* machine name */
+    time_t last_logoff_t;		/* most recent logoff time */
 } smb_username_t;
 
-#define SMB_USERFLAG_DELETE	1	/* delete struct when ref count zero */
-#define SMB_USERFLAG_AFSLOGON   2       /* do not delete when the refCount reaches zero */
+/* The SMB_USERNAMEFLAG_AFSLOGON is used to preserve the existence of an 
+ * smb_username_t even when the refCount is zero.  This is used to ensure
+ * that tokens set to a username during the integrated logon process are 
+ * preserved until the SMB Session that will require the tokens is created.
+ * The cm_IoctlSetTokens() function when executed from the Network Provider
+ * connects to the AFS Client Service using the credentials of the machine
+ * and not the user for whom the tokens are being configured. */
+#define SMB_USERNAMEFLAG_AFSLOGON   1
+
+/* The SMB_USERNAMEFLAG_LOGOFF is used to indicate that the user most
+ * recently logged off at 'last_logoff_t'.  The smb_username_t should not
+ * be deleted even if the refCount is zero before 'last_logoff_t' + 
+ * 'smb_LogoffTransferTimeout' if 'smb_LogoffTokenTransfer' is non-zero.
+ * The smb_Daemon() thread is responsible for purging the expired objects */
+
+#define SMB_USERNAMEFLAG_LOGOFF     2
 
 #define SMB_MAX_USERNAME_LENGTH 256
 
@@ -577,10 +592,6 @@ extern void smb_HoldVCNoLock(smb_vc_t *vcp);
 
 /* some globals, too */
 extern char *smb_localNamep;
-extern int loggedOut;
-extern time_t loggedOutTime;
-extern char *loggedOutName;
-extern smb_user_t *loggedOutUserp;
 
 extern osi_log_t *smb_logp;
 
