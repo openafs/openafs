@@ -41,11 +41,6 @@ BOOL isWindows2000 = FALSE;
 smb_vc_t *dead_vcp = NULL;
 smb_vc_t *active_vcp = NULL;
 
-/* TODO; logout mechanism needs to be thread-safe */
-char *loggedOutName = NULL;
-smb_user_t *loggedOutUserp = NULL;
-time_t loggedOutTime;
-int loggedOut = 0;
 int smbShutdownFlag = 0;
 
 int smb_LogoffTokenTransfer;
@@ -94,20 +89,20 @@ HANDLE smb_lsaHandle;
 ULONG smb_lsaSecPackage;
 LSA_STRING smb_lsaLogonOrigin;
 
-#define NCBmax MAXIMUM_WAIT_OBJECTS
-EVENT_HANDLE NCBavails[NCBmax], NCBevents[NCBmax];
+#define NCB_MAX MAXIMUM_WAIT_OBJECTS
+EVENT_HANDLE NCBavails[NCB_MAX], NCBevents[NCB_MAX];
 EVENT_HANDLE **NCBreturns;
 EVENT_HANDLE **NCBShutdown;
 EVENT_HANDLE *smb_ServerShutdown;
-DWORD NCBsessions[NCBmax];
-NCB *NCBs[NCBmax];
-struct smb_packet *bufs[NCBmax];
+DWORD NCBsessions[NCB_MAX];
+NCB *NCBs[NCB_MAX];
+struct smb_packet *bufs[NCB_MAX];
 
-#define Sessionmax MAXIMUM_WAIT_OBJECTS - 4
-EVENT_HANDLE SessionEvents[Sessionmax];
-unsigned short LSNs[Sessionmax];
-int lanas[Sessionmax];
-BOOL dead_sessions[Sessionmax];
+#define SESSION_MAX MAXIMUM_WAIT_OBJECTS - 4
+EVENT_HANDLE SessionEvents[SESSION_MAX];
+unsigned short LSNs[SESSION_MAX];
+int lanas[SESSION_MAX];
+BOOL dead_sessions[SESSION_MAX];
 LANA_ENUM lana_list;
 
 /* for raw I/O */
@@ -172,6 +167,7 @@ afs_uint32 smb_NowTZ;
 char *smb_localNamep = NULL;
 
 smb_vc_t *smb_allVCsp;
+smb_vc_t *smb_deadVCsp;
 
 smb_username_t *usernamesp = NULL;
 
@@ -179,7 +175,7 @@ smb_waitingLockRequest_t *smb_allWaitingLocks;
 
 /* forward decl */
 void smb_DispatchPacket(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
-						NCB *ncbp, raw_write_cont_t *rwcp);
+			NCB *ncbp, raw_write_cont_t *rwcp);
 void smb_NetbiosInit();
 #ifdef DJGPP
 #ifndef AFS_WIN95_ENV
@@ -1003,7 +999,7 @@ void smb_CleanupDeadVC(smb_vc_t *vcp)
 
     osi_Log1(smb_logp, "Cleaning up dead vcp 0x%x", vcp);
 
-    lock_ObtainRead(&smb_rctLock);
+    lock_ObtainWrite(&smb_rctLock);
     for (fidpIter = vcp->fidsp; fidpIter; fidpIter = fidpNext) {
         fidpNext = (smb_fid_t *) osi_QNext(&fidpIter->q);
 
@@ -1030,7 +1026,7 @@ void smb_CleanupDeadVC(smb_vc_t *vcp)
 
 	tid = tidpIter->tid;
 	osi_Log2(smb_logp, "  Cleanup TID %d (tidp=0x%x)", tid, tidpIter);
-	lock_ReleaseRead(&smb_rctLock);
+	lock_ReleaseWrite(&smb_rctLock);
 
 	tidp = smb_FindTID(vcp, tid, 0);
 	osi_assert(tidp);
@@ -1041,7 +1037,7 @@ void smb_CleanupDeadVC(smb_vc_t *vcp)
 
 	smb_ReleaseTID(tidp);
 
-	lock_ObtainRead(&smb_rctLock);
+	lock_ObtainWrite(&smb_rctLock);
     }
 
     for (uidpIter = vcp->usersp; uidpIter; uidpIter = uidpNext) {
@@ -1052,7 +1048,7 @@ void smb_CleanupDeadVC(smb_vc_t *vcp)
 
 	uid = uidpIter->userID;
 	osi_Log2(smb_logp, "  Cleanup UID %d (uidp=0x%x)", uid, uidpIter);
-	lock_ReleaseRead(&smb_rctLock);
+	lock_ReleaseWrite(&smb_rctLock);
 
 	uidp = smb_FindUID(vcp, uid, 0);
 	osi_assert(uidp);
@@ -1063,7 +1059,7 @@ void smb_CleanupDeadVC(smb_vc_t *vcp)
 
 	smb_ReleaseUID(uidp);
 
-	lock_ObtainRead(&smb_rctLock);
+	lock_ObtainWrite(&smb_rctLock);
     }
 
     /* remove VCP from smb_allVCsp */
@@ -1080,8 +1076,8 @@ void smb_CleanupDeadVC(smb_vc_t *vcp)
 	    break;
 	}
     } 
-    lock_ReleaseRead(&smb_rctLock);
-    osi_Log0(smb_logp, "Done cleaning up dead vcp");
+    lock_ReleaseWrite(&smb_rctLock);
+    osi_Log1(smb_logp, "Finished cleaning up dead vcp 0x%x", vcp);
 }
 
 smb_tid_t *smb_FindTID(smb_vc_t *vcp, unsigned short tid, int flags)
@@ -1131,7 +1127,7 @@ void smb_ReleaseTID(smb_tid_t *tidp)
         userp = tidp->userp;	/* remember to drop ref later */
         tidp->userp = NULL;
         smb_ReleaseVCNoLock(tidp->vcp);
-        tidp->vcp = 0;
+        tidp->vcp = NULL;
     }
     lock_ReleaseWrite(&smb_rctLock);
     if (userp)
@@ -1192,7 +1188,7 @@ smb_username_t *smb_FindUserByName(char *usern, char *machine, afs_uint32 flags)
         usernamesp = unp;
         lock_InitializeMutex(&unp->mx, "username_t mutex");
 	if (flags & SMB_FLAG_AFSLOGON)
-	    unp->flags = SMB_USERFLAG_AFSLOGON;
+	    unp->flags = SMB_USERNAMEFLAG_AFSLOGON;
     }
 
     lock_ReleaseWrite(&smb_rctLock);
@@ -1224,10 +1220,12 @@ void smb_ReleaseUsername(smb_username_t *unp)
     smb_username_t *up;
     smb_username_t **lupp;
     cm_user_t *userp = NULL;
+    time_t 	now = osi_Time();
 
     lock_ObtainWrite(&smb_rctLock);
     osi_assert(unp->refCount-- > 0);
-    if (unp->refCount == 0 && !(unp->flags & SMB_USERFLAG_AFSLOGON)) {
+    if (unp->refCount == 0 && !(unp->flags & SMB_USERNAMEFLAG_AFSLOGON) &&
+	!((unp->flags & SMB_USERNAMEFLAG_LOGOFF) && smb_LogoffTokenTransfer)) {
         lupp = &usernamesp;
         for(up = *lupp; up; lupp = &up->nextp, up = *lupp) {
             if (up == unp) 
@@ -1235,6 +1233,7 @@ void smb_ReleaseUsername(smb_username_t *unp)
         }
         osi_assert(up != NULL);
         *lupp = up->nextp;
+	up->nextp = NULL;			/* do not remove this */
         lock_FinalizeMutex(&unp->mx);
 	userp = unp->userp;
 	free(unp->name);
@@ -1267,6 +1266,7 @@ void smb_ReleaseUID(smb_user_t *uidp)
         lock_FinalizeMutex(&uidp->mx);
 	unp = uidp->unp;
         smb_ReleaseVCNoLock(uidp->vcp);
+	uidp->vcp = NULL;
 	free(uidp);
     }		
     lock_ReleaseWrite(&smb_rctLock);
@@ -1424,16 +1424,14 @@ smb_fid_t *smb_FindFID(smb_vc_t *vcp, unsigned short fid, int flags)
 
 void smb_ReleaseFID(smb_fid_t *fidp)
 {
-    cm_scache_t *scp;
-    cm_user_t *userp;
+    cm_scache_t *scp = NULL;
+    cm_user_t *userp = NULL;
     smb_vc_t *vcp = NULL;
     smb_ioctl_t *ioctlp;
 
     if (!fidp)
         return;
 
-    scp = NULL;
-    userp = NULL;
     lock_ObtainWrite(&smb_rctLock);
     osi_assert(fidp->refCount-- > 0);
     if (fidp->refCount == 0 && (fidp->flags & SMB_FID_DELETE)) {
@@ -1461,7 +1459,8 @@ void smb_ReleaseFID(smb_fid_t *fidp)
 
         free(fidp);
 
-        smb_ReleaseVCNoLock(vcp);
+	if (vcp)
+	    smb_ReleaseVCNoLock(vcp);
     }
     lock_ReleaseWrite(&smb_rctLock);
 
@@ -2477,6 +2476,7 @@ void smb_SendPacket(smb_vc_t *vcp, smb_packet_t *inp)
 	}
 	dead_vcp = vcp;
 	vcp->flags |= SMB_VCFLAG_ALREADYDEAD;
+	dead_sessions[vcp->session] = TRUE;
     }
 
     if (localNCB)
@@ -3029,27 +3029,6 @@ long smb_ReceiveNegotiate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
     osi_Log1(smb_logp, "SMB receive negotiate; %d + 1 ongoing ops",
 			 ongoingOps - 1);
-    if (!isGateway) {
-        if (active_vcp) {
-            DWORD now = GetTickCount();
-            if (now - last_msg_time >= 30000) {
-		smb_vc_t *avcp = active_vcp;
-		active_vcp = NULL;
-                osi_Log1(smb_logp,"Setting dead_vcp %x", avcp);
-		if (dead_vcp) {
-                    osi_Log1(smb_logp,"Previous dead_vcp %x", dead_vcp);
-		    smb_CleanupDeadVC(dead_vcp);
-                    smb_ReleaseVC(dead_vcp);
-                }
-                smb_HoldVC(avcp);
-                dead_vcp = avcp;
-                dead_vcp->flags |= SMB_VCFLAG_ALREADYDEAD;
-		smb_ReleaseVC(avcp);
-            }
-        }
-    }
-
-    inp->flags |= SMB_PACKETFLAG_PROFILE_UPDATE_OK;
 
     namep = smb_GetSMBData(inp, &dbytes);
     namex = 0;
@@ -3240,9 +3219,41 @@ long smb_ReceiveNegotiate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     return 0;
 }
 
+void smb_CheckVCs(void)
+{
+    smb_vc_t * vcp;
+    smb_packet_t * outp = GetPacket();
+    smb_t *smbp;
+            
+    for ( vcp=smb_allVCsp; vcp; vcp = vcp->nextp ) 
+    {
+	if (vcp->flags & SMB_VCFLAG_ALREADYDEAD)
+	    continue;
+
+	smb_FormatResponsePacket(vcp, NULL, outp);
+        smbp = (smb_t *)outp;
+	outp->inCom = smbp->com = 0x2b /* Echo */;
+        smbp->tid = 0xFFFF;
+        smbp->pid = 0;
+        smbp->uid = 0;
+        smbp->mid = 0;
+        smbp->res[0] = 0;
+        smbp->res[1] = 0;
+
+	smb_SetSMBParm(outp, 0, 0);
+	smb_SetSMBDataLength(outp, 0);
+
+	smb_SendPacket(vcp, outp);
+    }
+
+    smb_FreePacket(outp);
+}
+
 void smb_Daemon(void *parmp)
 {
     afs_uint32 count = 0;
+    smb_username_t    **unpp;
+    time_t 		now;
 
     while(smbShutdownFlag == 0) {
         count++;
@@ -3272,7 +3283,54 @@ void smb_Daemon(void *parmp)
             if ( smb_localZero != old_localZero )
                 cm_noteLocalMountPointChange();
 #endif
-        }
+
+	    smb_CheckVCs();
+	}
+
+	/* XXX GC the smb_username_t objects with refCount 0 and
+	 * neither SMB_USERNAMEFLAG_AFSLOGON nor (SMB_USERNAMEFLAG_LOGOFF
+	 * && smb_LogoffTokenTransfer && 
+	 * now > last_logoff_t + smb_LogoffTransferTimeout) 
+	 */
+	now = osi_Time();
+	lock_ObtainWrite(&smb_rctLock);
+	for ( unpp=&usernamesp; *unpp; ) {
+	    int delete = 0;
+	    smb_username_t *unp;
+
+	    lock_ObtainMutex(&(*unpp)->mx);
+	    if ( (*unpp)->refCount > 0 )
+		;
+	    else if ((*unpp)->flags & SMB_USERNAMEFLAG_AFSLOGON)
+		;
+	    else if (!(((*unpp)->flags & SMB_USERNAMEFLAG_LOGOFF) && smb_LogoffTokenTransfer))
+		delete = 1;
+	    else if ((*unpp)->last_logoff_t + smb_LogoffTransferTimeout < now)
+		delete = 1;
+	    lock_ReleaseMutex(&(*unpp)->mx);
+
+	    if (delete) {
+		cm_user_t * userp;
+
+		unp = *unpp;	
+		*unpp = unp->nextp;
+		unp->nextp = NULL;
+		lock_FinalizeMutex(&unp->mx);
+		userp = unp->userp;
+		free(unp->name);
+		free(unp->machine);
+		free(unp);
+		if (userp) {
+		    lock_ReleaseWrite(&smb_rctLock);
+		    cm_ReleaseUser(userp);
+		    lock_ObtainWrite(&smb_rctLock);
+		}
+	    } else {
+		unpp = &(*unpp)->nextp;
+	    }
+	}
+	lock_ReleaseWrite(&smb_rctLock);
+
         /* XXX GC dir search entries */
     }
 }
@@ -7004,8 +7062,7 @@ void smb_DispatchPacket(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
 
             if (inp->inCom == 0x1d)
                 /* Raw Write */
-                code = smb_ReceiveCoreWriteRaw (vcp, inp, outp,
-                                                 rwcp);
+                code = smb_ReceiveCoreWriteRaw (vcp, inp, outp, rwcp);
             else {
                 osi_Log4(smb_logp,"Dispatch %s vcp 0x%p lana %d lsn %d",myCrt_Dispatch(inp->inCom),vcp,vcp->lana,vcp->lsn);
                 code = (*(dp->procp)) (vcp, inp, outp);
@@ -7154,18 +7211,6 @@ void smb_DispatchPacket(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
         outWctp = tp;
     }	/* while loop over all requests in the packet */
 
-    /* done logging out, turn off logging-out flag */
-    if (!(inp->flags & SMB_PACKETFLAG_PROFILE_UPDATE_OK)) {
-        vcp->justLoggedOut = NULL;
-        if (loggedOut) {
-            loggedOut = 0;
-            free(loggedOutName);
-            loggedOutName = NULL;
-            smb_ReleaseUID(loggedOutUserp);
-            loggedOutUserp = NULL;
-        }
-    }
- 
     /* now send the output packet, and return */
     if (!noSend)
         smb_SendPacket(vcp, outp);
@@ -7398,6 +7443,10 @@ void smb_Server(VOID *parmp)
     outbufp->ncbp = outncbp;
 
     while (1) {
+	if (vcp) {
+	    smb_ReleaseVC(vcp);
+	    vcp = NULL;
+	}
         code = thrd_WaitForMultipleObjects_Event(numNCBs, NCBreturns[myIdx],
                                                  FALSE, INFINITE);
 
@@ -7455,6 +7504,7 @@ void smb_Server(VOID *parmp)
 
         switch (rc) {
         case NRC_GOODRET: 
+            vcp = smb_FindVC(ncbp->ncb_lsn, 0, lanas[idx_session]);
             break;
 
         case NRC_PENDING:
@@ -7471,8 +7521,6 @@ void smb_Server(VOID *parmp)
 	case NRC_SCLOSED:
             /* Client closed session */
 	    dead_sessions[idx_session] = TRUE;
-            if (vcp)
-                smb_ReleaseVC(vcp);
             vcp = smb_FindVC(ncbp->ncb_lsn, 0, lanas[idx_session]);
             if (vcp) {
 		if (dead_vcp == vcp)
@@ -7480,57 +7528,61 @@ void smb_Server(VOID *parmp)
                 else if (!(vcp->flags & SMB_VCFLAG_ALREADYDEAD)) {
                     osi_Log2(smb_logp, "setting dead_vcp 0x%x, user struct 0x%x",
                              vcp, vcp->usersp);
-		    smb_HoldVC(vcp);
                     if (dead_vcp) {
                         osi_Log1(smb_logp,"Previous dead_vcp %x", dead_vcp);
 			smb_CleanupDeadVC(dead_vcp);
                         smb_ReleaseVC(dead_vcp);
                     }
-                    dead_vcp = vcp;
                     vcp->flags |= SMB_VCFLAG_ALREADYDEAD;
-                }
-
-                if (vcp->justLoggedOut) {
-                    loggedOut = 1;
-                    loggedOutTime = vcp->logoffTime;
-                    loggedOutName = strdup(vcp->justLoggedOut->unp->name);
-                    loggedOutUserp = vcp->justLoggedOut;
-                    lock_ObtainWrite(&smb_rctLock);
-                    loggedOutUserp->refCount++;
-                    lock_ReleaseWrite(&smb_rctLock);
+                    dead_vcp = vcp;
+		    vcp = NULL;
                 }
             }
             goto doneWithNCB;
 
         case NRC_INCOMP:
             /* Treat as transient error */
-            {
 #ifndef DJGPP
-		LogEvent(EVENTLOG_WARNING_TYPE, MSG_BAD_SMB_INCOMPLETE, 
-			 ncbp->ncb_length);
+	    LogEvent(EVENTLOG_WARNING_TYPE, MSG_BAD_SMB_INCOMPLETE, 
+		     ncbp->ncb_length);
 #endif /* !DJGPP */
-                osi_Log1(smb_logp,
-                          "dispatch smb recv failed, message incomplete, ncb_length %d",
-                          ncbp->ncb_length);
-                osi_Log1(smb_logp,
-                          "SMB message incomplete, "
-                          "length %d", ncbp->ncb_length);
+	    osi_Log1(smb_logp,
+		     "dispatch smb recv failed, message incomplete, ncb_length %d",
+		     ncbp->ncb_length);
+	    osi_Log1(smb_logp,
+		     "SMB message incomplete, "
+		     "length %d", ncbp->ncb_length);
 
-                /*
-                 * We used to discard the packet.
-                 * Instead, try handling it normally.
-                 *
-                 continue;
-                 */
-                break;
-            }
+	    /*
+	     * We used to discard the packet.
+	     * Instead, try handling it normally.
+	     *
+	     continue;
+	     */
+            vcp = smb_FindVC(ncbp->ncb_lsn, 0, lanas[idx_session]);
+	    break;
 
         default:
-            /* A weird error code.  Log it, sleep, and
-            * continue. */
+            /* A weird error code.  Log it, sleep, and continue. */
+            vcp = smb_FindVC(ncbp->ncb_lsn, 0, lanas[idx_session]);
             if (vcp && vcp->errorCount++ > 3) {
                 osi_Log2(smb_logp, "session [ %d ] closed, vcp->errorCount = %d", idx_session, vcp->errorCount);
                 dead_sessions[idx_session] = TRUE;
+		if (dead_vcp == vcp)
+                    osi_Log1(smb_logp, "dead_vcp already set, 0x%x", dead_vcp);
+                else if (!(vcp->flags & SMB_VCFLAG_ALREADYDEAD)) {
+                    osi_Log2(smb_logp, "setting dead_vcp 0x%x, user struct 0x%x",
+                             vcp, vcp->usersp);
+                    if (dead_vcp) {
+                        osi_Log1(smb_logp,"Previous dead_vcp %x", dead_vcp);
+			smb_CleanupDeadVC(dead_vcp);
+                        smb_ReleaseVC(dead_vcp);
+                    }
+                    vcp->flags |= SMB_VCFLAG_ALREADYDEAD;
+                    dead_vcp = vcp;
+		    vcp = NULL;
+                }
+		goto doneWithNCB;
             }
             else {
                 thrd_Sleep(1000);
@@ -7545,9 +7597,6 @@ void smb_Server(VOID *parmp)
         if (smb_concurrentCalls > smb_maxObsConcurrentCalls)
             smb_maxObsConcurrentCalls = smb_concurrentCalls;
 
-        if (vcp)
-            smb_ReleaseVC(vcp);
-        vcp = smb_FindVC(ncbp->ncb_lsn, 0, ncbp->ncb_lana_num);
         /*
          * If at this point vcp is NULL (implies that packet was invalid)
          * then we are in big trouble. This means either :
@@ -7582,7 +7631,6 @@ void smb_Server(VOID *parmp)
             smb_concurrentCalls--;
             continue;
         }
-
 
         vcp->errorCount = 0;
         bufp = (struct smb_packet *) ncbp->ncb_buffer;
@@ -7720,8 +7768,9 @@ void smb_Listener(void *parmp)
     NCB *ncbp;
     long code = 0;
     long len;
-    long i, j;
-    smb_vc_t *vcp = 0;
+    long i;
+    int  session, thread;
+    smb_vc_t *vcp = NULL;
     int flags = 0;
     char rname[NCBNAMSZ+1];
     char cname[MAX_COMPUTERNAME_LENGTH+1];
@@ -7821,58 +7870,85 @@ void smb_Listener(void *parmp)
             if (strncmp(rname, cname, NCBNAMSZ) != 0)
                 flags |= SMB_VCFLAG_REMOTECONN;
 
-        osi_Log1(smb_logp, "New session lsn %d", ncbp->ncb_lsn);
         /* lock */
         lock_ObtainMutex(&smb_ListenerLock);
 
-        /* New generation */
-        sessionGen++;
-
-        /* Log session startup */
-#ifdef NOTSERVICE
-        fprintf(stderr, "New session(ncb_lsn,ncb_lana_num) %d,%d starting from host "
-                 "%s\n",
-                 ncbp->ncb_lsn,ncbp->ncb_lana_num, rname);
-#endif /* NOTSERVICE */
-        osi_Log4(smb_logp, "New session(ncb_lsn,ncb_lana_num) (%d,%d) starting from host %s, %d ongoing ops",
-                  ncbp->ncb_lsn,ncbp->ncb_lana_num, osi_LogSaveString(smb_logp, rname), ongoingOps);
-
-        if (reportSessionStartups) {
-#ifndef DJGPP
-            LogEvent(EVENTLOG_INFORMATION_TYPE, MSG_SMB_SESSION_START, ongoingOps);
-#else /* DJGPP */
-            time(&now);
-            fprintf(stderr, "%s: New session %d starting from host %s\n",
-                    asctime(localtime(&now)), ncbp->ncb_lsn, rname);
-            fflush(stderr);
-#endif /* !DJGPP */
-        }
         osi_Log1(smb_logp, "NCBLISTEN completed, call from %s", osi_LogSaveString(smb_logp, rname));
-        osi_Log1(smb_logp, "SMB session startup, %d ongoing ops",
-                  ongoingOps);
+        osi_Log1(smb_logp, "SMB session startup, %d ongoing ops", ongoingOps);
 
         /* now ncbp->ncb_lsn is the connection ID */
         vcp = smb_FindVC(ncbp->ncb_lsn, SMB_FLAG_CREATE, ncbp->ncb_lana_num);
-        vcp->flags |= flags;
-        strcpy(vcp->rname, rname);
+	if (vcp->session == 0) {
+	    /* New generation */
+	    osi_Log1(smb_logp, "New session lsn %d", ncbp->ncb_lsn);
+	    sessionGen++;
 
-        /* Allocate slot in session arrays */
-        /* Re-use dead session if possible, otherwise add one more */
-        /* But don't look at session[0], it is reserved */
-        for (i = 1; i < numSessions; i++) {
-            if (dead_sessions[i]) {
-                osi_Log1(smb_logp, "connecting to dead session [ %d ]", i);
-                dead_sessions[i] = FALSE;
-                break;
-            }
-        }
+	    /* Log session startup */
+#ifdef NOTSERVICE
+	    fprintf(stderr, "New session(ncb_lsn,ncb_lana_num) %d,%d starting from host %s\n",
+		    ncbp->ncb_lsn,ncbp->ncb_lana_num, rname);
+#endif /* NOTSERVICE */
+	    osi_Log4(smb_logp, "New session(ncb_lsn,ncb_lana_num) (%d,%d) starting from host %s, %d ongoing ops",
+		     ncbp->ncb_lsn,ncbp->ncb_lana_num, osi_LogSaveString(smb_logp, rname), ongoingOps);
 
-        if (i >= Sessionmax - 1  || numNCBs >= NCBmax - 1) {
+	    if (reportSessionStartups) {
+#ifndef DJGPP
+		LogEvent(EVENTLOG_INFORMATION_TYPE, MSG_SMB_SESSION_START, ongoingOps);
+#else /* DJGPP */
+		time(&now);
+		fprintf(stderr, "%s: New session %d starting from host %s\n",
+			asctime(localtime(&now)), ncbp->ncb_lsn, rname);
+		fflush(stderr);
+#endif /* !DJGPP */
+	    }
+	    
+	    strcpy(vcp->rname, rname);
+	    vcp->flags |= flags;
+
+	    /* Allocate slot in session arrays */
+	    /* Re-use dead session if possible, otherwise add one more */
+	    /* But don't look at session[0], it is reserved */
+	    for (session = 1; session < numSessions; session++) {
+		if (dead_sessions[session]) {
+		    osi_Log1(smb_logp, "connecting to dead session [ %d ]", session);
+		    dead_sessions[session] = FALSE;
+		    break;
+		}
+	    }
+	} else {
+	    /* We are re-using an existing VC because the lsn and lana 
+	     * were re-used */
+	    session = vcp->session;
+
+	    osi_Log1(smb_logp, "Re-using session lsn %d", ncbp->ncb_lsn);
+
+	    /* Log session startup */
+#ifdef NOTSERVICE
+	    fprintf(stderr, "Re-using session(ncb_lsn,ncb_lana_num) %d,%d starting from host %s\n",
+		    ncbp->ncb_lsn,ncbp->ncb_lana_num, rname);
+#endif /* NOTSERVICE */
+	    osi_Log4(smb_logp, "Re-using session(ncb_lsn,ncb_lana_num) (%d,%d) starting from host %s, %d ongoing ops",
+		     ncbp->ncb_lsn,ncbp->ncb_lana_num, osi_LogSaveString(smb_logp, rname), ongoingOps);
+
+	    if (reportSessionStartups) {
+#ifndef DJGPP
+		LogEvent(EVENTLOG_INFORMATION_TYPE, MSG_SMB_SESSION_START, ongoingOps);
+#else /* DJGPP */
+		time(&now);
+		fprintf(stderr, "%s: Re-using session %d starting from host %s\n",
+			asctime(localtime(&now)), ncbp->ncb_lsn, rname);
+		fflush(stderr);
+#endif /* !DJGPP */
+	    }
+	}
+
+        if (session >= SESSION_MAX - 1  || numNCBs >= NCB_MAX - 1) {
             unsigned long code = CM_ERROR_ALLBUSY;
             smb_packet_t * outp = GetPacket();
             unsigned char *outWctp;
             smb_t *smbp;
             
+	    smb_FormatResponsePacket(vcp, NULL, outp);
             outp->ncbp = ncbp;
 
             if (vcp->flags & SMB_VCFLAG_STATUS32) {
@@ -7903,18 +7979,23 @@ void smb_Listener(void *parmp)
             }
             smb_SendPacket(vcp, outp);
             smb_FreePacket(outp);
+
+	    vcp->flags |= SMB_VCFLAG_ALREADYDEAD;
+	    smb_CleanupDeadVC(vcp);
+	    smb_ReleaseVC(vcp);
         } else {
             /* assert that we do not exceed the maximum number of sessions or NCBs.
-            * we should probably want to wait for a session to be freed in case
-            * we run out.
-            */
-            osi_assert(i < Sessionmax - 1);
-            osi_assert(numNCBs < NCBmax - 1);   /* if we pass this test we can allocate one more */
+             * we should probably want to wait for a session to be freed in case
+             * we run out.
+             */
+            osi_assert(session < SESSION_MAX - 1);
+            osi_assert(numNCBs < NCB_MAX - 1);   /* if we pass this test we can allocate one more */
 
-            LSNs[i] = ncbp->ncb_lsn;
-            lanas[i] = ncbp->ncb_lana_num;
+	    vcp->session   = session;
+            LSNs[session]  = ncbp->ncb_lsn;
+            lanas[session] = ncbp->ncb_lana_num;
 		
-            if (i == numSessions) {
+            if (session == numSessions) {
                 /* Add new NCB for new session */
                 char eventName[MAX_PATH];
 
@@ -7924,18 +8005,18 @@ void smb_Listener(void *parmp)
                 numNCBs++;
                 thrd_SetEvent(NCBavails[0]);
                 thrd_SetEvent(NCBevents[0]);
-                for (j = 0; j < smb_NumServerThreads; j++)
-                    thrd_SetEvent(NCBreturns[j][0]);
+                for (thread = 0; thread < smb_NumServerThreads; thread++)
+                    thrd_SetEvent(NCBreturns[thread][0]);
                 /* Also add new session event */
-                sprintf(eventName, "SessionEvents[%d]", i);
-                SessionEvents[i] = thrd_CreateEvent(NULL, FALSE, TRUE, eventName);
+                sprintf(eventName, "SessionEvents[%d]", session);
+                SessionEvents[session] = thrd_CreateEvent(NULL, FALSE, TRUE, eventName);
                 if ( GetLastError() == ERROR_ALREADY_EXISTS )
                     osi_Log1(smb_logp, "Event Object Already Exists: %s", osi_LogSaveString(smb_logp, eventName));
                 numSessions++;
                 osi_Log2(smb_logp, "increasing numNCBs [ %d ] numSessions [ %d ]", numNCBs, numSessions);
                 thrd_SetEvent(SessionEvents[0]);
             } else {
-                thrd_SetEvent(SessionEvents[i]);
+                thrd_SetEvent(SessionEvents[session]);
             }
         }
         
@@ -8249,7 +8330,7 @@ void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
     if ( GetLastError() == ERROR_ALREADY_EXISTS )
         afsi_log("Event Object Already Exists: %s", eventName);
     for (i = 0; i < smb_NumServerThreads; i++) {
-        NCBreturns[i] = malloc(NCBmax * sizeof(EVENT_HANDLE));
+        NCBreturns[i] = malloc(NCB_MAX * sizeof(EVENT_HANDLE));
         NCBreturns[i][0] = retHandle;
     }
 

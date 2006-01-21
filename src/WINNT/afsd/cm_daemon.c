@@ -50,6 +50,8 @@ static int daemon_ShutdownFlag = 0;
 #ifndef DJGPP
 void cm_IpAddrDaemon(long parm)
 {
+    extern void smb_CheckVCs(void);
+
     rx_StartClientThread();
 
     while (daemon_ShutdownFlag == 0) {
@@ -58,7 +60,8 @@ void cm_IpAddrDaemon(long parm)
 	    osi_Log0(afsd_logp, "cm_IpAddrDaemon CheckDownServers");
 	    Sleep(2500);
             cm_CheckServers(CM_FLAG_CHECKDOWNSERVERS, NULL);
-	}
+	    smb_CheckVCs();
+	}	
     }
 }
 #endif

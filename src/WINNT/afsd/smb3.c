@@ -852,11 +852,11 @@ long smb_ReceiveV3SessionSetupX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
 	/* do a global search for the username/machine name pair */
         unp = smb_FindUserByName(usern, vcp->rname, SMB_FLAG_CREATE);
  	lock_ObtainMutex(&unp->mx);
- 	if (unp->flags & SMB_USERFLAG_AFSLOGON) {
+ 	if (unp->flags & SMB_USERNAMEFLAG_AFSLOGON) {
  	    /* clear the afslogon flag so that the tickets can now 
  	     * be freed when the refCount returns to zero.
  	     */
- 	    unp->flags &= ~SMB_USERFLAG_AFSLOGON;
+ 	    unp->flags &= ~SMB_USERNAMEFLAG_AFSLOGON;
  	}
  	lock_ReleaseMutex(&unp->mx);
 
@@ -938,27 +938,30 @@ long smb_ReceiveV3UserLogoffX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
     /* don't get tokens from this VC */
     vcp->flags |= SMB_VCFLAG_ALREADYDEAD;
 
-    inp->flags |= SMB_PACKETFLAG_PROFILE_UPDATE_OK;
-
     /* find the tree and free it */
     uidp = smb_FindUID(vcp, ((smb_t *)inp)->uid, 0);
     if (uidp) {
-        char *s1 = NULL, *s2 = NULL;
+	smb_username_t * unp;
 
-        if (s2 == NULL) s2 = " ";
-        if (s1 == NULL) {s1 = s2; s2 = " ";}
-
-        osi_Log4(smb_logp, "SMB3 user logoffX uid %d name %s%s%s", uidp->userID,
-                  osi_LogSaveString(smb_logp, (uidp->unp) ? uidp->unp->name: " "), 
-                  osi_LogSaveString(smb_logp,s1), osi_LogSaveString(smb_logp,s2));
+        osi_Log2(smb_logp, "SMB3 user logoffX uid %d name %s", uidp->userID,
+                  osi_LogSaveString(smb_logp, (uidp->unp) ? uidp->unp->name: " "));
 
         lock_ObtainMutex(&uidp->mx);
         uidp->flags |= SMB_USERFLAG_DELETE;
-        /*
+	/*
          * it doesn't get deleted right away
          * because the vcp points to it
          */
+	unp = uidp->unp;
         lock_ReleaseMutex(&uidp->mx);
+
+	if (unp && smb_LogoffTokenTransfer) {
+	    lock_ObtainMutex(&unp->mx);
+	    unp->flags |= SMB_USERNAMEFLAG_LOGOFF;
+	    unp->last_logoff_t = osi_Time() + smb_LogoffTransferTimeout;
+	    lock_ReleaseMutex(&unp->mx);
+	}
+
 	smb_ReleaseUID(uidp);
     }
     else    
@@ -1172,8 +1175,10 @@ smb_tran2Packet_t *smb_GetTran2ResponsePacket(smb_vc_t *vcp,
 /* free a tran2 packet; must be called with smb_globalLock held */
 void smb_FreeTran2Packet(smb_tran2Packet_t *t2p)
 {
-    if (t2p->vcp) 
+    if (t2p->vcp) {
         smb_ReleaseVC(t2p->vcp);
+	t2p->vcp = NULL;
+    }
     if (t2p->flags & SMB_TRAN2PFLAG_ALLOC) {
         if (t2p->parmsp)
             free(t2p->parmsp);
