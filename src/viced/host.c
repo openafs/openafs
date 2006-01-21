@@ -1025,7 +1025,7 @@ h_GetHost_r(struct rx_connection *tcon)
     struct host *host;
     struct host *oldHost;
     int code;
-    int held;
+    int held, oheld;
     struct interfaceAddr interf;
     int interfValid = 0;
     struct Identity *identP = NULL;
@@ -1252,7 +1252,7 @@ h_GetHost_r(struct rx_connection *tcon)
                 if (oldHost) {
                     int probefail = 0;
 
-		    if (!(held = h_Held_r(oldHost)))
+		    if (!(oheld = h_Held_r(oldHost)))
 			h_Hold_r(oldHost);
 		    h_Lock_r(oldHost);
 
@@ -1279,8 +1279,11 @@ h_GetHost_r(struct rx_connection *tcon)
                          * Delete it! */
                         oldHost->hostFlags |= HOSTDELETED;
                         h_Unlock_r(oldHost);
-                        h_Release_r(oldHost);
-                        oldHost = NULL;
+			/* Let the holder be last release */
+			if (!oheld) {
+			    h_Release_r(oldHost);
+			}
+			oldHost = NULL;
                     }
                 }
 		if (oldHost) {
@@ -1296,7 +1299,8 @@ h_GetHost_r(struct rx_connection *tcon)
 		    addInterfaceAddr_r(oldHost, haddr, hport);
 		    host->hostFlags |= HOSTDELETED;
 		    h_Unlock_r(host);
-		    h_Release_r(host);
+		    if (!held)
+			h_Release_r(host);
 		    host = oldHost;
 		} else {
 		    /* This really is a new host */
