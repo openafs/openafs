@@ -41,7 +41,7 @@ extern pthread_mutex_t host_glock_mutex;
 #define h_threadsMask		31	/* for remainder */
 
 /* size of the hold array for each host */
-#define h_maxSlots	((MAX_FILESERVER_THREAD+h_threadsPerSlot-1)>>h_threadsShift)
+#define h_maxSlots	(((MAX_FILESERVER_THREAD+h_threadsPerSlot-1)>>h_threadsShift)+1)
 
 struct Identity {
     char valid;			/* zero if UUID is unknown */
