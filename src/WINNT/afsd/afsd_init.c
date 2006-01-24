@@ -729,30 +729,22 @@ int afsd_InitCM(char **reasonP)
     dummyLen = sizeof(ltt);
     code = RegQueryValueEx(parmKey, "LogoffTokenTransfer", NULL, NULL,
                             (BYTE *) &ltt, &dummyLen);
-    if (code == ERROR_SUCCESS)
-        afsi_log("Logoff token transfer %s",  (ltt ? "on" : "off"));
-    else {
+    if (code != ERROR_SUCCESS)
         ltt = 1;
-        afsi_log("Logoff token transfer on by default");
-    }
     smb_LogoffTokenTransfer = ltt;
-    afsi_log("Logoff token transfer is currently ignored");
+    afsi_log("Logoff token transfer %s",  (ltt ? "on" : "off"));
 
     if (ltt) {
         dummyLen = sizeof(ltto);
         code = RegQueryValueEx(parmKey, "LogoffTokenTransferTimeout",
                                 NULL, NULL, (BYTE *) &ltto, &dummyLen);
-        if (code == ERROR_SUCCESS)
-            afsi_log("Logoff token tranfer timeout %d seconds", ltto);
-        else {
-            ltto = 10;
-            afsi_log("Default logoff token transfer timeout 10 seconds");
-        }
+        if (code != ERROR_SUCCESS)
+            ltto = 120;
     } else {
         ltto = 0;
     }   
     smb_LogoffTransferTimeout = ltto;
-    afsi_log("Default logoff token is currently ignored");
+    afsi_log("Logoff token transfer timeout %d seconds", ltto);
 
     dummyLen = sizeof(cm_rootVolumeName);
     code = RegQueryValueEx(parmKey, "RootVolume", NULL, NULL,

@@ -938,9 +938,6 @@ long smb_ReceiveV3UserLogoffX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
 {
     smb_user_t *uidp;
 
-    /* don't get tokens from this VC */
-    vcp->flags |= SMB_VCFLAG_ALREADYDEAD;
-
     /* find the tree and free it */
     uidp = smb_FindUID(vcp, ((smb_t *)inp)->uid, 0);
     if (uidp) {
@@ -950,11 +947,6 @@ long smb_ReceiveV3UserLogoffX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
                   osi_LogSaveString(smb_logp, (uidp->unp) ? uidp->unp->name: " "));
 
         lock_ObtainMutex(&uidp->mx);
-        uidp->flags |= SMB_USERFLAG_DELETE;
-	/*
-         * it doesn't get deleted right away
-         * because the vcp points to it
-         */
 	unp = uidp->unp;
         lock_ReleaseMutex(&uidp->mx);
 
