@@ -1,5 +1,12 @@
-Since 1.4.1 rc4: 1.4.1 rc5 released (20 Jan 2006)
+Since 1.4.1 rc4: 1.4.1 rc5 released (25 Jan 2006)
 				    
+ * Re-enabled LogoffTokenTransfer and LogoffTokenTransferTimeout
+   registry settings.  Default is ON and 120 seconds.  If set to
+   OFF, tokens will not be destroyed.
+
+ * Fixed a number of race conditions and reference count 
+   problems associated with global queues.
+
  * Added a method to detect abandonded smb virtual circuits
    so their associated file handles, locks, user tokens,
    and smb session resources can be released.
@@ -25,10 +32,10 @@ Since 1.4.1 rc3: 1.4.1 rc4 released (11 Jan 2006)
  * smb_username_t and smb_user_t objects are now properly reference
    counted and freed as appropriate.
 
- * disable to use of AFS file locks.  Byte range locking is still
+ * disable the use of AFS file locks.  Byte range locking is still
    implemented but all locks are managed locally.  This prevents
    multiple processes from editing the same file on the same 
-   machine but it does prevent multiple processes on separate 
+   machine but it does not prevent multiple processes on separate 
    machines from modifying the file.
 
 Since 1.4.1 rc2: 1.4.1 RC3 released (4 Jan 2006)
