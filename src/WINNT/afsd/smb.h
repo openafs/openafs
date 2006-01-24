@@ -512,6 +512,8 @@ extern void smb_ReleaseVCNoLock(smb_vc_t *vcp);
 
 extern smb_tid_t *smb_FindTID(smb_vc_t *vcp, unsigned short tid, int flags);
 
+extern void smb_HoldTIDNoLock(smb_tid_t *tidp);
+
 extern void smb_ReleaseTID(smb_tid_t *tidp);
 
 extern smb_user_t *smb_FindUID(smb_vc_t *vcp, unsigned short uid, int flags);
@@ -522,6 +524,8 @@ extern smb_user_t *smb_FindUserByNameThisSession(smb_vc_t *vcp, char *usern);
 
 extern void smb_ReleaseUsername(smb_username_t *unp);
 
+extern void smb_HoldUIDNoLock(smb_user_t *uidp);
+
 extern void smb_ReleaseUID(smb_user_t *uidp);
 
 extern cm_user_t *smb_GetUser(smb_vc_t *vcp, smb_packet_t *inp);
@@ -529,6 +533,8 @@ extern cm_user_t *smb_GetUser(smb_vc_t *vcp, smb_packet_t *inp);
 extern long smb_LookupTIDPath(smb_vc_t *vcp, unsigned short tid, char ** tidPathp);
 
 extern smb_fid_t *smb_FindFID(smb_vc_t *vcp, unsigned short fid, int flags);
+
+extern void smb_HoldFIDNoLock(smb_fid_t *fidp);
 
 extern void smb_ReleaseFID(smb_fid_t *fidp);
 
