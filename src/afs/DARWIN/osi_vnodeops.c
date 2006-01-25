@@ -1624,7 +1624,7 @@ afs_vop_reclaim(ap)
 				 * } */ *ap;
 {
     int error = 0;
-    int sl;
+    int sl, writelocked;
     register struct vnode *vp = ap->a_vp;
     struct vcache *tvc = VTOAFS(vp);
 
@@ -1632,25 +1632,40 @@ afs_vop_reclaim(ap)
     cache_purge(vp);		/* just in case... */
     if (tvc) {
        AFS_GLOCK();
-       ObtainWriteLock(&afs_xvcache, 335);
-       error = afs_FlushVCache(tvc, &sl);	/* toss our stuff from vnode */
-       if (tvc->states & (CVInit
+       writelocked = (0 == NBObtainWriteLock(&afs_xvcache, 335));
+       if (!writelocked) {
+	   ObtainWriteLock(&afs_xvreclaim, 176);
 #ifdef AFS_DARWIN80_ENV
-			  | CDeadVnode
+	   vnode_clearfsnode(AFSTOV(tvc));
+	   vnode_removefsref(AFSTOV(tvc));
+#else
+	   tvc->v->v_data = NULL;  /* remove from vnode */
 #endif
-			  )) {
-          tvc->states &= ~(CVInit
+	   AFSTOV(tvc) = NULL;             /* also drop the ptr to vnode */
+	   tvc->states |= CVInit; /* also CDeadVnode? */
+	   tvc->nextfree = ReclaimedVCList;
+	   ReclaimedVCList = tvc;
+	   ReleaseWriteLock(&afs_xvreclaim);
+       } else {
+	   error = afs_FlushVCache(tvc, &sl);	/* toss our stuff from vnode */
+	   if (tvc->states & (CVInit
 #ifdef AFS_DARWIN80_ENV
-			   | CDeadVnode
+			      | CDeadVnode
 #endif
-			   );
-          afs_osi_Wakeup(&tvc->states);
+		   )) {
+	       tvc->states &= ~(CVInit
+#ifdef AFS_DARWIN80_ENV
+				| CDeadVnode
+#endif
+		   );
+	       afs_osi_Wakeup(&tvc->states);
+	   }
+	   if (!error && vnode_fsnode(vp))
+	       panic("afs_reclaim: vnode not cleaned");
+	   if (!error && (tvc->v != NULL)) 
+	       panic("afs_reclaim: vcache not cleaned");
+	   ReleaseWriteLock(&afs_xvcache);
        }
-       if (!error && vnode_fsnode(vp))
-	   panic("afs_reclaim: vnode not cleaned");
-       if (!error && (tvc->v != NULL)) 
-           panic("afs_reclaim: vcache not cleaned");
-       ReleaseWriteLock(&afs_xvcache);
        AFS_GUNLOCK();
     }
     return error;

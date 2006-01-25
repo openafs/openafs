@@ -62,9 +62,11 @@ char *makesname();
 
 /* Exported variables */
 afs_rwlock_t afs_xvcache;	/*Lock: alloc new stat cache entries */
+afs_rwlock_t afs_xvreclaim;	/*Lock: entries reclaimed, not on free list */
 afs_lock_t afs_xvcb;		/*Lock: fids on which there are callbacks */
 #if !defined(AFS_LINUX22_ENV)
 static struct vcache *freeVCList;	/*Free list for stat cache entries */
+struct vcache *ReclaimedVCList;	/*Reclaimed list for stat entries */
 static struct vcache *Initial_freeVCList;	/*Initial list for above */
 #endif
 struct afs_q VLRU;		/*vcache LRU */
@@ -572,6 +574,38 @@ afs_RemoveVCB(struct VenusFid *afid)
     MReleaseWriteLock(&afs_xvcb);
 }
 
+void 
+afs_FlushReclaimedVcaches(void)
+{
+#if !defined(AFS_LINUX22_ENV)
+    struct vcache *tvc;
+    int code, fv_slept;
+    struct vcache *tmpReclaimedVCList = NULL;	
+
+    ObtainWriteLock(&afs_xvreclaim, 76);
+    while (ReclaimedVCList) {
+	tvc = ReclaimedVCList;	/* take from free list */
+	ReclaimedVCList = tvc->nextfree;
+	tvc->nextfree = NULL;
+	code = afs_FlushVCache(tvc, &fv_slept);
+	if (code) {
+	    /* Ok, so, if we got code != 0, uh, wtf do we do? */
+	    /* Probably, build a temporary list and then put all back when we
+	       get to the end of the list */
+	    /* This is actually really crappy, but we need to not leak these.
+	       We probably need a way to be smarter about this. */
+	    tvc->nextfree = tmpReclaimedVCList;
+	    tmpReclaimedVCList = tvc;
+	    printf("Reclaim list flush %x failed: %d\n", tvc, code);
+	}
+    }
+    if (tmpReclaimedVCList) 
+	ReclaimedVCList = tmpReclaimedVCList;
+
+    ReleaseWriteLock(&afs_xvreclaim);
+#endif
+}
+
 /*
  * afs_NewVCache
  *
@@ -603,6 +637,9 @@ afs_NewVCache(struct VenusFid *afid, struct server *serverp)
     int code, fv_slept;
 
     AFS_STATCNT(afs_NewVCache);
+
+    afs_FlushReclaimedVcaches();
+
 #if defined(AFS_OSF_ENV) || defined(AFS_LINUX22_ENV)
 #if defined(AFS_OSF30_ENV) || defined(AFS_LINUX22_ENV)
     if (afs_vcount >= afs_maxvcount)
