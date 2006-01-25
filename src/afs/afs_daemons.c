@@ -175,6 +175,9 @@ afs_Daemon(void)
 	    /* things to do every minute */
 	    DFlush();		/* write out dir buffers */
 	    afs_WriteThroughDSlots();	/* write through cacheinfo entries */
+	    ObtainWriteLock(&afs_xvcache, 736);
+	    afs_FlushReclaimedVcaches();
+	    ReleaseWriteLock(&afs_xvcache);
 	    afs_FlushActiveVcaches(1);	/* keep flocks held & flush nfs writes */
 #ifdef AFS_DISCON_ENV
 	    afs_StoreDirtyVcaches();
