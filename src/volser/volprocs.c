@@ -1790,7 +1790,7 @@ VolListOneVolume(struct rx_call *acid, afs_int32 partid, afs_int32
 		pntr->volid = volid;
 		goto drop;
 	    }
-	    tv = VAttachVolumeByName(&error, pname, volname, V_PEEK);
+	    tv = VAttachVolumeByName(&error, pname, volname, V_READONLY);
 	    if (error) {
 		pntr->status = 0;	/*things are messed up */
 		strcpy(pntr->name, volname);
@@ -2004,7 +2004,7 @@ VolXListOneVolume(struct rx_call *a_rxCidP, afs_int32 a_partID,
 	    /*
 	     * Attach the volume, give up on the volume if we can't.
 	     */
-	    tv = VAttachVolumeByName(&error, pname, volname, V_PEEK);
+	    tv = VAttachVolumeByName(&error, pname, volname, V_READONLY);
 	    if (error) {
 		xInfoP->status = 0;	/*things are messed up */
 		strcpy(xInfoP->name, volname);
