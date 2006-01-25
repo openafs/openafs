@@ -1,0 +1,79 @@
+/* Style sheet for OpenAFS Reference documentation. */
+/* For accessibility reasons, never specify text sizes in px/pt/pc/in/cm/mm */
+
+@media all { .hide { display: none; } }
+
+@media print {
+  .noprint, div.indexgroup, .backlinktop, .backlinkbottom { display: none }
+
+  * {
+    border-color: black !important;
+    color: black !important;
+    background-color: transparent !important;
+    background-image: none !important;
+  }
+}
+
+@media screen, tty, tv, projection {
+  .noscreen { display: none; }
+
+  a:link    { color: #7070ff; text-decoration: underline; }
+  a:visited { color: #e030ff; text-decoration: underline; }
+  a:active  { color: #800000; text-decoration: underline; }
+  body.contentspage a            { text-decoration: none; }
+  a.u { color: #000 !important; text-decoration: none; }
+
+  body.pod {
+    margin: 0 5px;
+    color:            #000;
+    background-color: #fff;
+  }
+
+  body.pod h1 { font-size: large }
+  body.pod h2 { font-size: large }
+  
+  body.pod dt {
+    font-size: 105%; /* just a wee bit more than normal */
+  }
+
+  /* Indent the body text and lower headings. */
+  body.pod p { margin-left: 2em }
+  body.pod dl { margin-left: 2em }
+  body.pod ol { margin-left: 2em }
+  body.pod ul { margin-left: 2em }
+  body.pod dl p { margin-left: 0 }
+  body.pod ol p { margin-left: 0 }
+  body.pod ul p { margin-left: 0 }
+  body.pod pre { margin-left: 2em }
+  body.pod dl pre { margin-left: 0 }
+  body.pod ol pre { margin-left: 0 }
+  body.pod ul pre { margin-left: 0 }
+  body.pod h2 { margin-left: 0.5em }
+  body.pod h3 { margin-left: 1em }
+  body.pod h4 { margin-left: 1em }
+
+  body.contentspage {
+    color:            #000;
+    background-color: #fff;
+  }
+  
+  body.contentspage h1  {
+    color: #22f;
+    margin-left: 1em;
+    margin-right: 1em;
+    text-indent: -.9em;
+    font-family: Tahoma, Verdana, Helvetica, Arial, sans-serif;
+    font-weight: normal;
+    border-top:    medium solid #000;
+    border-bottom: medium solid #000;
+    text-align: center;
+  }
+
+  body.contentspage th {
+    font-weight: bold;
+    font-size: large;
+    text-align: left;
+  }
+
+  body.contentspage td { padding: 0 0.5em; }
+}
