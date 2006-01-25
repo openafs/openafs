@@ -56,6 +56,7 @@ RCSID
 #include <errno.h>
 #define ERRCODE_RANGE 8		/* from error_table.h */
 #define	CLOCKSKEW   2		/* not really skew, but resolution */
+#define CLOCKADJ(x) (((x) < CLOCKSKEW) ? 0 : (x) - CLOCKSKEW)
 
 /* for UV_MoveVolume() recovery */
 
@@ -1329,7 +1330,7 @@ UV_MoveVolume2(afs_int32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
 	       newVol);
 	VDONE;
 
-	fromDate = tstatus.creationDate - CLOCKSKEW;
+	fromDate = CLOCKADJ(tstatus.creationDate);
     } else {
 	/* With RV_NOCLONE, just do a full copy from the source */
 	fromDate = 0;
@@ -2162,7 +2163,7 @@ UV_CopyVolume2(afs_int32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
 	       cloneVol);
 	VDONE;
 
-	fromDate = tstatus.creationDate - CLOCKSKEW;
+	fromDate = CLOCKADJ(tstatus.creationDate);
     } else {
 	fromDate = 0;
     }
@@ -2180,7 +2181,7 @@ UV_CopyVolume2(afs_int32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
 	    VDONE;
 
 	    /* Using the update date should be OK here, but add some fudge */
-	    cloneFromDate = tstatus.updateDate - CLOCKSKEW;
+	    cloneFromDate = CLOCKADJ(tstatus.updateDate);
 	    if ((flags & RV_NOCLONE))
 		fromDate = cloneFromDate;
 
@@ -3087,8 +3088,8 @@ GetTrans(struct nvldbentry *vldbEntryPtr, afs_int32 index,
 		       code);
 	    goto fail;
 	}
-	*crtimePtr = tstatus.creationDate - CLOCKSKEW;
-	*uptimePtr = tstatus.updateDate - CLOCKSKEW;
+	*crtimePtr = CLOCKADJ(tstatus.creationDate);
+	*uptimePtr = CLOCKADJ(tstatus.updateDate);
     }
 
     return 0;
