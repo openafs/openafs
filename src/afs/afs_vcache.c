@@ -679,7 +679,6 @@ afs_NewVCache(struct VenusFid *afid, struct server *serverp)
 	    if (tvc != afs_globalVp && VREFCOUNT(tvc) > 1 && tvc->opens == 0) {
                 struct dentry *dentry;
                 struct list_head *cur, *head;
-                AFS_FAST_HOLD(tvc);
                 AFS_GUNLOCK();
 #if defined(AFS_LINUX24_ENV)
                 spin_lock(&dcache_lock);
@@ -715,7 +714,6 @@ restart:
 #endif
 	    inuse:
 		AFS_GLOCK();
-		AFS_FAST_RELE(tvc);
 	    }
 #endif
 
