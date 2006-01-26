@@ -205,6 +205,10 @@ afs_FlushVCache(struct vcache *avc, int *slept)
 	AFSTOV(avc) = NULL;             /* also drop the ptr to vnode */
     }
 #endif
+#ifdef AFS_SUN510_ENV
+    /* As we use private vnodes, cleanup is up to us */
+    vn_reinit(AFSTOV(avc));
+#endif
     afs_FreeAllAxs(&(avc->Access));
 
     /* we can't really give back callbacks on RO files, since the
