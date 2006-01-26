@@ -14,9 +14,6 @@ RCSID
     ("$Header$");
 
 /* missing type from C language */
-#define Boolean short
-#define true 1
-#define false 0
 
 #include <errno.h>
 #ifdef	AFS_AIX32_ENV
@@ -64,16 +61,16 @@ extern sys_nerr;
 extern char *sys_errlist[];
 #endif
 
-Boolean verbose = false;
-Boolean renameTargets = false;
-Boolean oneLevel = false;
-Boolean preserveDate = true;
-Boolean preserveMountPoints = false;
-Boolean forceOverwrite = false;
+short verbose = 0;
+short renameTargets = 0;
+short oneLevel = 0;
+short preserveDate = 1;
+short preserveMountPoints = 0;
+short forceOverwrite = 0;
 
 int pageSize;
-Boolean setacl = true;
-Boolean oldAcl = false;
+short setacl = 1;
+short oldAcl = 0;
 char file1[MAXPATHLEN], file2[MAXPATHLEN];
 
 #define	MAXSIZE	2048
@@ -94,10 +91,8 @@ struct OldAcl {
 
 #include "AFS_component_version_number.c"
 
-main(argc, argv)
-     int argc;
-     char *argv[];
-
+int
+main(int argc, char *argv[])
 {
 #ifdef	AFS_AIX32_ENV
     /*
@@ -126,10 +121,9 @@ main(argc, argv)
 }
 
 
-ScanArgs(argc, argv)
-     int argc;
-     char *argv[];
-
+#define USAGE "usage: up [-v1frxm] from to\n"
+void
+ScanArgs(int argc, char *argv[])
 {
     /* skip program name */
     argc--, argv++;
@@ -140,39 +134,39 @@ ScanArgs(argc, argv)
 
 	switch (*++cp) {
 	case 'v':
-	    verbose = true;
+	    verbose = 1;
 	    break;
 
 	case '1':
-	    oneLevel = true;
+	    oneLevel = 1;
 	    break;
 
 	case 'r':
-	    renameTargets = true;
+	    renameTargets = 1;
 	    break;
 
 	case 'f':
-	    forceOverwrite = true;
+	    forceOverwrite = 1;
 	    break;
 
 	case 'x':
-	    preserveDate = false;
+	    preserveDate = 0;
 	    break;
 
 	case 'm':
-	    preserveMountPoints = true;
+	    preserveMountPoints = 1;
 	    break;
 
 	default:
 	    fprintf(stderr, "Unknown option: '%c'\n", *cp);
-	    fprintf(stderr, "usage: up [-v1frxm] from to\n");
+	    fprintf(stderr, USAGE);
 	    exit(1);
 	}
 	argc--, argv++;
     }
 
     if (argc != 2) {
-	fprintf(stderr, "usage: up [-v1frx] from to\n");
+	fprintf(stderr, USAGE);
 	exit(1);
     }
 
@@ -186,13 +180,11 @@ ScanArgs(argc, argv)
 /*
  * MakeParent
  *	Make sure the parent directory of this file exists.  Returns
- * 	true if it exists, false otherwise.  Note: the owner argument
+ * 	1 if it exists, 0 otherwise.  Note: the owner argument
  * 	is a hack.  All directories made will have this owner.
  */
-Boolean
-MakeParent(file, owner)
-     char *file;
-     afs_int32 owner;
+short
+MakeParent(char *file, afs_int32 owner)
 {
     char parent[MAXPATHLEN];
     char *p;
@@ -211,7 +203,7 @@ MakeParent(file, owner)
 
     if (stat(parent, &s) < 0) {
 	if (!MakeParent(parent, owner))
-	    return (false);
+	    return (0);
 
 	if (verbose) {
 	    printf("Creating directory %s\n", parent);
@@ -221,7 +213,7 @@ MakeParent(file, owner)
 	mkdir(parent, 0777);
 	chown(parent, owner, -1);
     }
-    return (true);
+    return (1);
 }				/*MakeParent */
 
 
@@ -230,12 +222,8 @@ MakeParent(file, owner)
  * 	This does the bulk of the work of the program.  Handle one file,
  *	possibly copying subfiles if this is a directory
  */
-Copy(file1, file2, recursive, level)
-     char *file1;		/* input file name */
-     char *file2;		/* output file name */
-     Boolean recursive;		/* true if directory should be copied */
-     int level;			/* level of recursion: 0, 1, ... */
-
+int
+Copy(char *file1, char *file2, short recursive, int level)
 {
     struct stat s1, s2;		/*Stat blocks */
     struct ViceIoctl blob;
@@ -614,7 +602,7 @@ Copy(file1, file2, recursive, level)
 	    rcode = 1;
 	}
 
-	if (setacl == true) {
+	if (setacl == 1) {
 	    if (verbose) {
 		printf("  Set acls for %s\n", file2);
 		fflush(stdout);
@@ -647,7 +635,7 @@ Copy(file1, file2, recursive, level)
 		close(tfd);
 		if (code < 0) {
 		    if (errno == EINVAL) {
-			setacl = false;
+			setacl = 0;
                         if (verbose) {
                             printf("  _VICEIOCTL(4) returns EINVAL\n");
                             fflush(stdout);
@@ -672,7 +660,7 @@ Copy(file1, file2, recursive, level)
 		code = pioctl(file1, _VICEIOCTL(2), &blob, 1);
 		if (code < 0) {
 		    if (errno == EINVAL) {
-			setacl = false;
+			setacl = 0;
                         if (verbose) {
                             printf("  _VICEIOCTL(2) returns EINVAL\n");
                             fflush(stdout);
@@ -687,7 +675,7 @@ Copy(file1, file2, recursive, level)
 	    /*
 	     * Now, set the new-style ACL.
 	     */
-	    if (setacl == true) {
+	    if (setacl == 1) {
                 if (verbose) {
                     printf("  Setting new style acl\n");
                     fflush(stdout);
@@ -699,7 +687,7 @@ Copy(file1, file2, recursive, level)
 		code = pioctl(file2, _VICEIOCTL(1), &blob, 1);
 		if (code) {
 		    if (errno == EINVAL) {
-			setacl = false;
+			setacl = 0;
                         if (verbose) {
                             printf("  _VICEIOCTL(1) returns EINVAL\n");
                             fflush(stdout);
@@ -711,7 +699,7 @@ Copy(file1, file2, recursive, level)
 		}
 	    }
 
-	    if (setacl == false) {
+	    if (setacl == 0) {
 		printf("Not setting acls\n");
 	    }
 	}
@@ -722,9 +710,7 @@ Copy(file1, file2, recursive, level)
 
 
 int
-isMountPoint(name, blob)
-     char *name;
-     struct ViceIoctl *blob;
+isMountPoint(char *name, struct ViceIoctl *blob)
 {
     afs_int32 code;
     char true_name[1024];	/*dirname */
