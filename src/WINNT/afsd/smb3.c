@@ -4857,6 +4857,8 @@ long smb_ReceiveV3LockingX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     fidp = smb_FindFID(vcp, fid, 0);
     if (!fidp || (fidp->flags & SMB_FID_IOCTL)) {
         osi_Log0(smb_logp, "smb_ReceiveV3Locking BadFD");
+	if (fidp)
+	    smb_ReleaseFID(fidp);
         return CM_ERROR_BADFD;
     }
     /* set inp->fid so that later read calls in same msg can find fid */
@@ -5086,6 +5088,8 @@ long smb_ReceiveV3GetAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
         
     fidp = smb_FindFID(vcp, fid, 0);
     if (!fidp || (fidp->flags & SMB_FID_IOCTL)) {
+	if (fidp)
+	    smb_ReleaseFID(fidp);
         return CM_ERROR_BADFD;
     }
         
@@ -5150,6 +5154,8 @@ long smb_ReceiveV3SetAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
         
     fidp = smb_FindFID(vcp, fid, 0);
     if (!fidp || (fidp->flags & SMB_FID_IOCTL)) {
+	if (fidp)
+	    smb_ReleaseFID(fidp);
         return CM_ERROR_BADFD;
     }
         
@@ -5235,7 +5241,9 @@ long smb_ReceiveV3ReadX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     inp->fid = fd;
 
     if (fidp->flags & SMB_FID_IOCTL) {
-        return smb_IoctlV3Read(fidp, vcp, inp, outp);
+        code = smb_IoctlV3Read(fidp, vcp, inp, outp);
+	smb_ReleaseFID(fidp);
+	return code;
     }
 
     userp = smb_GetUser(vcp, inp);
@@ -5472,6 +5480,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     }
 
     if (baseFid == 0) {
+	baseFidp = NULL;
         baseDirp = cm_data.rootSCachep;
         code = smb_LookupTIDPath(vcp, ((smb_t *)inp)->tid, &tidPathp);
         if (code == CM_ERROR_TIDIPC) {
@@ -5532,6 +5541,8 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
                 cm_ReleaseSCache(dscp);
                 cm_ReleaseUser(userp);
                 free(realPathp);
+		if (baseFidp) 
+		    smb_ReleaseFID(baseFidp);
                 if ( WANTS_DFS_PATHNAMES(inp) )
                     return CM_ERROR_PATH_NOT_COVERED;
                 else
@@ -5548,6 +5559,8 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
                     cm_ReleaseSCache(dscp);
                     cm_ReleaseUser(userp);
                     free(realPathp);
+		    if (baseFidp) 
+			smb_ReleaseFID(baseFidp);
                     return CM_ERROR_EXISTS;
                 }
             }
@@ -5561,6 +5574,8 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
             cm_ReleaseSCache(scp);
             cm_ReleaseUser(userp);
             free(realPathp);
+	    if (baseFidp) 
+		smb_ReleaseFID(baseFidp);
             if ( WANTS_DFS_PATHNAMES(inp) )
                 return CM_ERROR_PATH_NOT_COVERED;
             else
@@ -5597,6 +5612,8 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
                     cm_ReleaseSCache(dscp);
                     cm_ReleaseUser(userp);
                     free(realPathp);
+		    if (baseFidp) 
+			smb_ReleaseFID(baseFidp);
                     if ( WANTS_DFS_PATHNAMES(inp) )
                         return CM_ERROR_PATH_NOT_COVERED;
                     else
@@ -5613,7 +5630,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
                     treeStartp = realPathp + (tp - spacep->data);
 
                     if (*tp && !smb_IsLegalFilename(tp)) {
-                        if (baseFid != 0) 
+                        if (baseFidp) 
                             smb_ReleaseFID(baseFidp);
                         cm_ReleaseUser(userp);
                         free(realPathp);
@@ -5629,7 +5646,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
         /* we might have scp and we might have dscp */
 
-        if (baseFid != 0) 
+        if (baseFidp)
             smb_ReleaseFID(baseFidp);
 
         if (code) {
@@ -5691,7 +5708,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         /* we have scp and dscp */
     } else {
         /* we have scp but not dscp */
-        if (baseFid != 0) 
+        if (baseFidp)
             smb_ReleaseFID(baseFidp);
     }
 
@@ -6196,6 +6213,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
     }
 
     if (baseFid == 0) {
+	baseFidp = NULL;
         baseDirp = cm_data.rootSCachep;
         code = smb_LookupTIDPath(vcp, ((smb_t *)inp)->tid, &tidPathp);
         if (code == CM_ERROR_TIDIPC) {
@@ -6214,7 +6232,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
     } else {
         baseFidp = smb_FindFID(vcp, baseFid, 0);
         if (!baseFidp) {
-        	osi_Log1(smb_logp, "NTTranCreate Invalid fid [%d]", baseFid);
+	    osi_Log1(smb_logp, "NTTranCreate Invalid fid [%d]", baseFid);
             free(realPathp);
             cm_ReleaseUser(userp);
             return CM_ERROR_INVAL;
@@ -6253,6 +6271,8 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
                 cm_ReleaseSCache(dscp);
                 cm_ReleaseUser(userp);
                 free(realPathp);
+		if (baseFidp)
+		    smb_ReleaseFID(baseFidp);
                 if ( WANTS_DFS_PATHNAMES(inp) )
                     return CM_ERROR_PATH_NOT_COVERED;
                 else
@@ -6269,6 +6289,8 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
                     cm_ReleaseSCache(dscp);
                     cm_ReleaseUser(userp);
                     free(realPathp);
+		    if (baseFidp)
+			smb_ReleaseFID(baseFidp);
                     return CM_ERROR_EXISTS;
                 }
             }
@@ -6282,6 +6304,8 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
             cm_ReleaseSCache(scp);
             cm_ReleaseUser(userp);
             free(realPathp);
+	    if (baseFidp)
+		smb_ReleaseFID(baseFidp);
             if ( WANTS_DFS_PATHNAMES(inp) )
                 return CM_ERROR_PATH_NOT_COVERED;
             else
@@ -6304,6 +6328,8 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
                 cm_ReleaseSCache(dscp);
                 cm_ReleaseUser(userp);
                 free(realPathp);
+		if (baseFidp)
+		    smb_ReleaseFID(baseFidp);
                 if ( WANTS_DFS_PATHNAMES(inp) )
                     return CM_ERROR_PATH_NOT_COVERED;
                 else
@@ -6315,10 +6341,8 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
         
         cm_FreeSpace(spacep);
 
-        if (baseFid != 0) {
+        if (baseFidp)
             smb_ReleaseFID(baseFidp);
-            baseFidp = 0;
-        }
 
         if (code) {
             cm_ReleaseUser(userp);
@@ -6326,8 +6350,10 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
             return code;
         }
 
-        if (!lastNamep) lastNamep = realPathp;
-        else lastNamep++;
+        if (!lastNamep)
+	    lastNamep = realPathp;
+        else 
+	    lastNamep++;
 
         if (!smb_IsLegalFilename(lastNamep))
             return CM_ERROR_BADNTFILENAME;
@@ -6349,10 +6375,8 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
             }
         }
     } else {
-        if (baseFid != 0) {
+        if (baseFidp)
             smb_ReleaseFID(baseFidp);
-            baseFidp = 0;
-        }
         cm_FreeSpace(spacep);
     }
 

@@ -6248,9 +6248,11 @@ long smb_ReceiveCoreWrite(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         return CM_ERROR_BADFD;
     }
         
-    if (fidp->flags & SMB_FID_IOCTL)
-        return smb_IoctlWrite(fidp, vcp, inp, outp);
-        
+    if (fidp->flags & SMB_FID_IOCTL) {
+        code = smb_IoctlWrite(fidp, vcp, inp, outp);
+	smb_ReleaseFID(fidp);
+	return code;
+    }
     userp = smb_GetUser(vcp, inp);
 
     /* special case: 0 bytes transferred means truncate to this position */
@@ -6582,7 +6584,9 @@ long smb_ReceiveCoreRead(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     }
         
     if (fidp->flags & SMB_FID_IOCTL) {
-        return smb_IoctlRead(fidp, vcp, inp, outp);
+        code = smb_IoctlRead(fidp, vcp, inp, outp);
+	smb_ReleaseFID(fidp);
+	return code;
     }
 
     {
