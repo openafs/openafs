@@ -2755,7 +2755,6 @@ afs_NFSFindVCache(struct vcache **avcp, struct VenusFid *afid)
 	    && ((tvc->fid.Fid.Unique & 0xffffff) == afid->Fid.Unique)
 	    && (tvc->fid.Cell == afid->Cell)) {
 	    if (tvc->states & CVInit) {
-		int lock;
 		ReleaseSharedLock(&afs_xvcache);
 		afs_osi_Sleep(&tvc->states);
 		goto loop;
