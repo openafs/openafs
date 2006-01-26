@@ -1315,7 +1315,11 @@ afs_gn_lockctl(struct vnode *vp,
 	       struct eflock *lckdat, 
 	       int32long64_t cmd, 
 	       int (*ignored_fcn) (),
+#ifdef AFS_AIX52_ENV /* Changed in AIX 5.2 and up */
 	       ulong * ignored_id, 
+#else /* AFS_AIX52_ENV */
+	       ulong32int64_t * ignored_id,
+#endif /* AFS_AIX52_ENV */
 	       struct ucred *cred)
 {
     int error, ncmd = 0;
@@ -1757,6 +1761,7 @@ struct vnodeops afs_gn_vnodeops = {
 	afs_gn_enosys,		/* vn_rdwr_attr */
     (int(*)(struct vnode*,int,void*,struct ucred*))
 	afs_gn_enosys,		/* vn_memcntl */
+#ifdef AFS_AIX53_ENV /* Present in AIX 5.3 and up */
     (int(*)(struct vnode*,const char*,struct uio*,struct ucred*))
 	afs_gn_enosys,		/* vn_getea */
     (int(*)(struct vnode*,const char*,struct uio*,int,struct ucred*))
@@ -1771,6 +1776,15 @@ struct vnodeops afs_gn_vnodeops = {
 	afs_gn_enosys,		/* vn_getxacl */
     (int(*)(struct vnode *, uint64_t, acl_type_t, struct uio *, mode_t,  struct ucred *))
 	afs_gn_enosys,		/* vn_setxacl */
+#else /* AFS_AIX53_ENV */
+    afs_gn_enosys,		/* vn_spare7 */
+    afs_gn_enosys,		/* vn_spare8 */
+    afs_gn_enosys,		/* vn_spare9 */
+    afs_gn_enosys,		/* vn_spareA */
+    afs_gn_enosys,		/* vn_spareB */
+    afs_gn_enosys,		/* vn_spareC */
+    afs_gn_enosys,		/* vn_spareD */
+#endif /* AFS_AIX53_ENV */
     afs_gn_enosys,		/* vn_spareE */
     afs_gn_enosys		/* vn_spareF */
 #ifdef AFS_AIX51_ENV
@@ -2296,8 +2310,17 @@ vn_rdwr(struct vnode *a, enum uio_rw b, int32long64_t c, struct uio *d,
 }
 
 static
-vn_lockctl(struct vnode *a, offset_t b, struct eflock *c, int32long64_t d,
-	   int (*e) (), ulong * f, struct ucred *g)
+vn_lockctl(struct vnode *a,
+	   offset_t b,
+	   struct eflock *c,
+	   int32long64_t d,
+	   int (*e) (),
+#ifdef AFS_AIX52_ENV /* Changed in AIX 5.2 and up */
+	       ulong * f, 
+#else /* AFS_AIX52_ENV */
+	       ulong32int64_t * f,
+#endif /* AFS_AIX52_ENV */
+	   struct ucred *g)
 {
     int glockOwner, ret;
 
@@ -2516,6 +2539,7 @@ struct vnodeops locked_afs_gn_vnodeops = {
 	afs_gn_enosys,		/* vn_rdwr_attr */
     (int(*)(struct vnode*,int,void*,struct ucred*))
 	afs_gn_enosys,		/* vn_memcntl */
+#ifdef AFS_AIX53_ENV /* Present in AIX 5.3 and up */
     (int(*)(struct vnode*,const char*,struct uio*,struct ucred*))
 	afs_gn_enosys,		/* vn_getea */
     (int(*)(struct vnode*,const char*,struct uio*,int,struct ucred*))
@@ -2530,6 +2554,15 @@ struct vnodeops locked_afs_gn_vnodeops = {
 	afs_gn_enosys,		/* vn_getxacl */
     (int(*)(struct vnode *, uint64_t, acl_type_t, struct uio *, mode_t,  struct ucred *))
 	afs_gn_enosys,		/* vn_setxacl */
+#else /* AFS_AIX53_ENV */
+    afs_gn_enosys,		/* vn_spare7 */
+    afs_gn_enosys,		/* vn_spare8 */
+    afs_gn_enosys,		/* vn_spare9 */
+    afs_gn_enosys,		/* vn_spareA */
+    afs_gn_enosys,		/* vn_spareB */
+    afs_gn_enosys,		/* vn_spareC */
+    afs_gn_enosys,		/* vn_spareD */
+#endif /* AFS_AIX53_ENV */
     afs_gn_enosys,		/* vn_spareE */
     afs_gn_enosys		/* vn_spareF */
 #ifdef AFS_AIX51_ENV
