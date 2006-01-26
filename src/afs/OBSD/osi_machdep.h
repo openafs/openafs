@@ -23,8 +23,6 @@
 
 #include <sys/lock.h>
 
-extern struct simplelock afs_rxglobal_lock;
-
 #define M_AFSFID	(M_TEMP-1)
 #define M_AFSBUFHDR	(M_TEMP-2)
 #define M_AFSBUFFER	(M_TEMP-3)

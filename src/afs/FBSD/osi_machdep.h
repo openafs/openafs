@@ -25,8 +25,6 @@
 #include <sys/mutex.h>
 #endif
 
-extern struct simplelock afs_rxglobal_lock;
-
 /* 
  * Time related macros
  */

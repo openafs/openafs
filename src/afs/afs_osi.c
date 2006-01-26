@@ -71,7 +71,6 @@ osi_Init(void)
     /* Linux initialization in osi directory. Should move the others. */
     mutex_init(&afs_global_lock, "afs_global_lock", MUTEX_DEFAULT, NULL);
 #endif
-    /* afs_rxglobal_lock is initialized in rx_Init. */
 #endif /* AFS_GLOBAL_SUNLOCK */
 #endif /* AFS_HPUX_ENV */
 

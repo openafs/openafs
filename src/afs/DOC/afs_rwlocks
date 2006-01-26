@@ -79,9 +79,6 @@ the dcache refcount.
 Many fine grained locks are used by Rx on the AIX4.1 platform.  These
 need to be explained.
 
-It is likely they could be used preference to the afs_rxglobal_lock on
-AFS_GLOBAL_SUNLOCK platforms.
-
 ***** GLOBAL LOCKS
 
 98. afs_global_lock -- This lock provides a non-preemptive environment
@@ -93,10 +90,6 @@ may reenter AFS such as vn_rele.
     Generally, this lock should not be used to explicitly avoid locking
 data structures that need synchronization.  However, much existing code
 is deficient in this regard (e.g. afs_getevent).
-
-99. afs_rxglobal_lock -- This lock is obtained after the afs_global_lock
-at process level but is obtained independently during packet arrival
-"interrupts" and during fasttimo processing.
 
 ***** OS LOCKS
 
