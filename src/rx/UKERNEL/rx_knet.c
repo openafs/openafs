@@ -76,7 +76,7 @@ rxi_ListenerProc(osi_socket usockp, int *tnop, struct rx_call **newcallp)
     while (1) {
 	tp = rxi_AllocPacket(RX_PACKET_CLASS_RECEIVE);
 	usr_assert(tp != NULL);
-	rc = rxi_ReadPacket(usockp->sock, tp, &host, &port);
+	rc = rxi_ReadPacket(usockp, tp, &host, &port);
 	if (rc != 0) {
 	    tp = rxi_ReceivePacket(tp, usockp, host, port, tnop, newcallp);
 	    if (newcallp && *newcallp) {
@@ -335,7 +335,7 @@ rxi_Recvmsg(int socket, struct msghdr *msg_p, int flags)
 {
     int ret;
     do {
-	ret = recvmsg(socket, msg_p, flags);
+	ret = recvmsg(socket->sock, msg_p, flags);
     } while (ret == -1 && errno == EAGAIN);
     return ret;
 }
