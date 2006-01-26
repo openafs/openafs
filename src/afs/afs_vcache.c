@@ -600,7 +600,7 @@ afs_FlushReclaimedVcaches(void)
 	       We probably need a way to be smarter about this. */
 	    tvc->nextfree = tmpReclaimedVCList;
 	    tmpReclaimedVCList = tvc;
-	    printf("Reclaim list flush %x failed: %d\n", tvc, code);
+	    printf("Reclaim list flush %lx failed: %d\n", (unsigned long) tvc, code);
 	}
     }
     if (tmpReclaimedVCList) 
