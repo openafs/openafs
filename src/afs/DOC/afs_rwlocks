@@ -33,6 +33,8 @@ locks on others.  Note this means you can't lock a cache entry while
 holding either of this lock, unless, as in afs_create, the cache entry
 is actually created while the afs_xvcache is held.
 
+6a. afs_xvreclaim. Protects the lookaside reclaim list. Locked inside xvcache in FlushReclaimedVcaches via NewVCache or the 1 min loop.
+
 7. afs_xvcb.  Volume callback lock.  Locked before afs_xserver in
 afs_RemoveVCB.
 
