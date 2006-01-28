@@ -239,6 +239,12 @@ osi_dnlc_lookup(struct vcache *adp, char *aname, int locktype)
 	ReleaseReadLock(&afs_xvcache);
 	dnlcstats.misses++;
     } else {
+	if (tvc->states & CVInit) {
+	    ReleaseReadLock(&afs_xvcache);
+	    dnlcstats.misses++;
+	    osi_dnlc_remove(adp, aname, tvc);
+	    return 0;
+	}
 #ifdef	AFS_OSF_ENV
 	VN_HOLD((vnode_t *) tvc);
 #else

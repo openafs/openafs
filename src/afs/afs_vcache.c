@@ -602,6 +602,18 @@ afs_FlushReclaimedVcaches(void)
 	    tmpReclaimedVCList = tvc;
 	    printf("Reclaim list flush %x failed: %d\n", tvc, code);
 	}
+        if (tvc->states & (CVInit
+#ifdef AFS_DARWIN80_ENV
+			  | CDeadVnode
+#endif
+           )) {
+	   tvc->states &= ~(CVInit
+#ifdef AFS_DARWIN80_ENV
+			    | CDeadVnode
+#endif
+	   );
+	   afs_osi_Wakeup(&tvc->states);
+	}
     }
     if (tmpReclaimedVCList) 
 	ReclaimedVCList = tmpReclaimedVCList;
