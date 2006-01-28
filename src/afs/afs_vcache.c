@@ -787,6 +787,7 @@ restart:
 #else /* AFS_OSF_ENV */
     /* pull out a free cache entry */
     if (!freeVCList) {
+        int loop = 0;
 	i = 0;
 	for (tq = VLRU.prev; (anumber > 0) && (tq != &VLRU); tq = uq) {
 	    tvc = QTOV(tq);
@@ -814,6 +815,7 @@ restart:
 		/* VREFCOUNT_GT only sees usecounts, not iocounts */
 		/* so this may fail to actually recycle the vnode now */
 		/* must call vnode_get to avoid races. */
+                fv_slept = 0;
 		if (vnode_get(tvp) == 0) {
 		    fv_slept=1;
 		    /* must release lock, since vnode_put will immediately
@@ -828,9 +830,13 @@ restart:
 		/* we can't use the vnode_recycle return value to figure
 		 * this out, since the iocount we have to hold makes it
 		 * always "fail" */
-		if (AFSTOV(tvc) == tvp)
+		if (AFSTOV(tvc) == tvp) {
+                    if (anumber > 0 && fv_slept) {
+                       QRemove(&tvc->vlruq);
+                       QAdd(&VLRU, &tvc->vlruq);
+                    }
 		    code = EBUSY;
-		else
+		} else
 		    code = 0;
 #else
                 /*
@@ -853,6 +859,8 @@ restart:
 		    anumber--;
 		}
 		if (fv_slept) {
+                    if (loop++ > 100)
+                       break;
 		    uq = VLRU.prev;
 		    i = 0;
 		    continue;	/* start over - may have raced. */
