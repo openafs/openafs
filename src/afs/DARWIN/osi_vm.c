@@ -41,6 +41,8 @@ osi_VM_FlushVCache(struct vcache *avc, int *slept)
     kern_return_t kret;
     off_t size;
 
+    if (!vp)
+	return 0;
     AFS_GUNLOCK();
 #if 0
     if (!(UBCINFOMISSING(vp) || UBCINFORECLAIMED(vp))) {
