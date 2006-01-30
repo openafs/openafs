@@ -49,6 +49,11 @@ extern int rxkad_GetResponse(struct rx_securityClass *aobj,
 			     struct rx_packet *apacket);
 extern void rxkad_ResetState(void);
 
+extern int rxkad_GetResponseStream(struct rx_securityClass *aobj,
+				   struct rx_connection *aconn,
+				   void *inbuffer, int size, void **outbuffer,
+				   int *outsize);
+
 /* rxkad_common.c */
 struct rxkad_endpoint;
 extern int rxkad_SetupEndpoint(struct rx_connection *aconnp,
@@ -121,7 +126,13 @@ extern afs_int32 rxkad_GetServerInfo(struct rx_connection *aconn,
 				     char *instance, char *cell,
 				     afs_int32 * kvno);
 
+extern int rxkad_GetChallengeStream(struct rx_securityClass *aobj,
+				    struct rx_connection *aconn,
+				    void **outbuf, int *sizeout);
 
+extern int rxkad_CheckResponseStream(struct rx_securityClass *aobj,
+				     struct rx_connection *aconn,
+				     void *inbuf, int size);
 
 /* ticket.c */
 extern int tkt_DecodeTicket(char *asecret, afs_int32 ticketLen,

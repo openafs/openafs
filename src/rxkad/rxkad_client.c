@@ -85,6 +85,8 @@ static struct rx_securityOps rxkad_client_ops = {
     rxkad_DestroyConnection,
     rxkad_GetStats,
     0,
+    rxkad_GetResponseStream,
+    0,
     0,
     0,
 };
@@ -305,6 +307,58 @@ rxkad_GetResponse(struct rx_securityClass *aobj, struct rx_connection *aconn,
     rx_packetwrite(apacket, responseSize, tcp->ticketLen, tcp->ticket);
 
     rx_SetDataSize(apacket, responseSize + tcp->ticketLen);
+    return 0;
+}
+
+/* client: respond to challenge packet, stream-oriented */
+
+int
+rxkad_GetResponseStream(struct rx_securityClass *aobj,
+			struct rx_connection *aconn, void *inbuffer, int size,
+			void **outbuffer, int *outsize)
+{
+    afs_int32 challengeID;
+    afs_uint32 xor[2];
+    struct rxkad_cprivate *tcp;
+    struct rxkad_v2Challenge *c_v2;
+    struct rxkad_v2ChallengeResponse r_v2;
+    rxkad_level level;
+
+    tcp = (struct rxkad_cprivate *)aobj->privateData;
+
+    if (!(tcp->type & rxkad_client))
+	return RXKADINCONSISTENCY;
+
+    if (size != sizeof(struct rxkad_v2Challenge))
+	return RXKADPACKETSHORT;
+
+    c_v2 = inbuffer;
+    challengeID = ntohl(c_v2->challengeID);
+    level = ntohl(c_v2->level);
+
+    if (level > tcp->level)
+	return RXKADLEVELFAIL;
+
+    *outbuffer = rxi_Alloc(sizeof(r_v2) + tcp->ticketLen);
+    INC_RXKAD_STATS(challenges[rxkad_LevelIndex(tcp->level)]);
+
+    memset((void *)&r_v2, 0, sizeof(r_v2));
+    r_v2.version = htonl(RXKAD_CHALLENGE_PROTOCOL_VERSION);
+    r_v2.spare = 0;
+    r_v2.encrypted.endpoint.cuid[0] = htonl(aconn->epoch);
+    r_v2.encrypted.endpoint.cksum = 0;
+    r_v2.encrypted.endpoint.securityIndex = htonl(aconn->securityIndex);
+    r_v2.encrypted.incChallengeID = htonl(challengeID + 1);
+    r_v2.encrypted.level = htonl((afs_int32) tcp->level);
+    r_v2.kvno = htonl(tcp->kvno);
+    r_v2.ticketLen = htonl(tcp->ticketLen);
+    r_v2.encrypted.endpoint.cksum = rxkad_CksumChallengeResponse(&r_v2);
+    memcpy((void *)xor, (void *)tcp->ivec, 2 * sizeof(afs_int32));
+    fc_cbc_encrypt(&r_v2.encrypted, &r_v2.encrypted,
+		   sizeof(r_v2.encrypted), tcp->keysched, xor, ENCRYPT);
+
+    memcpy(*outbuffer, (void *) &r_v2, sizeof(r_v2));
+    memcpy((char *) *outbuffer + sizeof(r_v2), tcp->ticket, tcp->ticketLen);
     return 0;
 }
 

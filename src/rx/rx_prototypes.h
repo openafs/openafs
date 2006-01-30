@@ -548,6 +548,29 @@ extern int rx_WritevProc(struct rx_call *call, struct iovec *iov, int nio,
 extern void rxi_FlushWrite(register struct rx_call *call);
 extern void rx_FlushWrite(struct rx_call *call);
 
+
+
+/* rx_tcp.c */
+extern void *rxi_TcpNewServerConnection(void *);
+extern struct rx_call *rxi_TcpNewCall(struct rx_connection *);
+extern void *rxi_TcpServerProc(void *);
+extern void *rxi_TcpReaderThread(void *);
+extern int rxi_TcpReadProc(struct rx_call *, char *, int);
+extern int rxi_TcpWriteProc(struct rx_call *, char *, int);
+extern void rxi_TcpFlushWrite(struct rx_call *);
+extern afs_int32 rxi_TcpEndCall(struct rx_call *, afs_int32);
+extern void rx_TcpSetFrameSize(int);
+extern void rx_TcpSetFlowControl(int);
+extern void rx_TcpSetSendBufsize(int);
+extern void rx_TcpSetRecvBufsize(int);
+extern void rx_TcpSetWindowSize(int);
+
+extern int rxi_tcp_data_packets_sent;
+extern int rxi_tcp_ack_packets_sent;
+extern int rxi_tcp_data_packets_received;
+extern int rxi_tcp_ack_packets_received;
+extern int rxi_tcp_transmit_window_closed;
+
 /* rx_trace.c */
 
 

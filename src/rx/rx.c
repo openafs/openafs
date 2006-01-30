@@ -529,6 +529,10 @@ rx_InitHost(u_int host, u_int port)
     queue_Init(&rx_incomingCallQueue);
     queue_Init(&rx_freeCallQueue);
 
+#ifdef AFS_PTHREAD_ENV
+    rxi_TcpInit();
+#endif
+
 #if defined(AFS_NT40_ENV) && !defined(KERNEL)
     /* Initialize our list of usable IP addresses. */
     rx_GetIFInfo();
@@ -763,6 +767,8 @@ rx_NewConnection(register afs_uint32 shost, u_short sport, u_short sservice,
     MUTEX_INIT(&conn->conn_call_lock, "conn call lock", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&conn->conn_data_lock, "conn call lock", MUTEX_DEFAULT, 0);
     CV_INIT(&conn->conn_call_cv, "conn call cv", CV_DEFAULT, 0);
+    MUTEX_INIT(&conn->conn_reader_lock, "tcp conn reader lock", MUTEX_DEFAULT, 0);
+    CV_INIT(&conn->conn_reader_cv, "tcp conn reader cv", CV_DEFAULT, 0);
 #endif
     NETPRI;
     MUTEX_ENTER(&rx_connHashTable_lock);
@@ -785,6 +791,7 @@ rx_NewConnection(register afs_uint32 shost, u_short sport, u_short sservice,
     conn->delayedAbortEvent = NULL;
     conn->abortCount = 0;
     conn->error = 0;
+    conn->tcpDescriptor = 0;
 
     RXS_NewConnection(securityObject, conn);
     hashindex =
@@ -799,6 +806,15 @@ rx_NewConnection(register afs_uint32 shost, u_short sport, u_short sservice,
 
     MUTEX_EXIT(&rx_connHashTable_lock);
     USERPRI;
+
+    /*
+     * Try to open a new TCP connection
+     */
+
+#ifdef AFS_PTHREAD_ENV
+    rxi_TcpNewConnection(conn);
+#endif
+
     return conn;
 }
 
@@ -1068,6 +1084,16 @@ rx_NewCall(register struct rx_connection *conn)
     MUTEX_ENTER(&conn->conn_call_lock);
 
     /*
+     * If the TCP descriptor is >= 0, then call the TCP NewCall function.
+     */
+
+#ifdef AFS_PTHREAD_ENV
+    if (conn->tcpDescriptor >= 0) {
+	return rxi_TcpNewCall(conn);
+    }
+#endif
+
+    /*
      * Check if there are others waiting for a new call.
      * If so, let them go first to avoid starving them.
      * This is a fairly simple scheme, and might not be
@@ -1264,6 +1290,7 @@ rx_NewService(u_short port, u_short serviceId, char *serviceName,
 	      afs_int32(*serviceProc) (struct rx_call * acall))
 {
     osi_socket socket = OSI_NULLSOCKET;
+    osi_socket tcpsocket = OSI_NULLSOCKET;
     register struct rx_service *tservice;
     register int i;
     SPLVAR;
@@ -1308,6 +1335,7 @@ rx_NewService(u_short port, u_short serviceId, char *serviceName,
 		/* Different service, same port: re-use the socket
 		 * which is bound to the same port */
 		socket = service->socket;
+		tcpsocket = service->tcpSocket;
 	    }
 	} else {
 	    if (socket == OSI_NULLSOCKET) {
@@ -1320,8 +1348,19 @@ rx_NewService(u_short port, u_short serviceId, char *serviceName,
 		    return 0;
 		}
 	    }
+#ifdef AFS_PTHREAD_ENV
+	    if (tcpsocket == OSI_NULLSOCKET) {
+		tcpsocket = rxi_GetHostTCPSocket(htonl(INADDR_ANY), port);
+		if (tcpsocket == OSI_NULLSOCKET) {
+		    USERPRI;
+		    rxi_FreeService(tservice);
+		    return 0;
+		}
+	    }
+#endif
 	    service = tservice;
 	    service->socket = socket;
+	    service->tcpSocket = tcpsocket;
 	    service->servicePort = port;
 	    service->serviceId = serviceId;
 	    service->serviceName = serviceName;
@@ -1841,6 +1880,11 @@ rx_EndCall(register struct rx_call *call, afs_int32 rc)
 
     dpf(("rx_EndCall(call %x)\n", call));
 
+#ifdef AFS_PTHREAD_ENV
+    if (conn->tcpDescriptor >= 0)
+	return rxi_TcpEndCall(call, rc);
+#endif
+
     NETPRI;
     MUTEX_ENTER(&call->lock);
 
@@ -2052,7 +2096,8 @@ rxi_FindService(register osi_socket socket, register u_short serviceId)
 {
     register struct rx_service **sp;
     for (sp = &rx_services[0]; *sp; sp++) {
-	if ((*sp)->serviceId == serviceId && (*sp)->socket == socket)
+	if ((*sp)->serviceId == serviceId && ((*sp)->socket == socket ||
+					      socket == OSI_NULLSOCKET))
 	    return *sp;
     }
     return 0;
@@ -3925,7 +3970,7 @@ rxi_ReceiveResponsePacket(register struct rx_connection *conn,
 	return np;
 
     /* Otherwise, have the security object evaluate the response packet */
-    error = RXS_CheckResponse(conn->securityObject, conn, np);
+    error = RXS_CheckResponsePacket(conn->securityObject, conn, np);
     if (error) {
 	/* If the response is invalid, reset the connection, sending
 	 * an abort to the peer */
@@ -3984,7 +4029,7 @@ rxi_ReceiveChallengePacket(register struct rx_connection *conn,
 
     /* Send the security object the challenge packet.  It is expected to fill
      * in the response. */
-    error = RXS_GetResponse(conn->securityObject, conn, np);
+    error = RXS_GetResponsePacket(conn->securityObject, conn, np);
 
     /* If the security object is unable to return a valid response, reset the
      * connection and send an abort to the peer.  Otherwise send the response
@@ -5578,7 +5623,7 @@ rxi_ChallengeEvent(struct rxevent *event, register struct rx_connection *conn,
 	packet = rxi_AllocPacket(RX_PACKET_CLASS_SPECIAL);
 	if (packet) {
 	    /* If there's no packet available, do this later. */
-	    RXS_GetChallenge(conn->securityObject, conn, packet);
+	    RXS_GetChallengePacket(conn->securityObject, conn, packet);
 	    rxi_SendSpecial((struct rx_call *)0, conn, packet,
 			    RX_PACKET_TYPE_CHALLENGE, NULL, -1, 0);
 	    rxi_FreePacket(packet);

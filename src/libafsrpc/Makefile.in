@@ -66,6 +66,7 @@ RXOBJS =\
 	rx_misc.o \
 	rx_packet.o \
 	rx_rdwr.o \
+	rx_tcp.o \
 	rx_trace.o \
 	rx_multi.o
 
@@ -127,7 +128,7 @@ LIBOBJS = \
 	${LWPOBJS} \
 	${FSINTOBJS}
 
-all: ${TOP_LIBDIR}/libafsrpc.a
+all: ${TOP_LIBDIR}/libafsrpc.a rxtest
 
 install: ${DESTDIR}${libdir}/libafsrpc.a
 
@@ -175,6 +176,9 @@ rx_packet.o: ${RX}/rx_packet.c
 
 rx_rdwr.o: ${RX}/rx_rdwr.c
 	${CCRULE} ${RX}/rx_rdwr.c
+
+rx_tcp.o: ${RX}/rx_tcp.c
+	${CCRULE} ${RX}/rx_tcp.c
 
 rx_trace.o: ${RX}/rx_trace.c
 	${CCRULE} ${RX}/rx_trace.c
@@ -397,6 +401,12 @@ afscbint.xdr.o: ${TOP_OBJDIR}/src/fsint/afscbint.xdr.c
 
 afsaux.o: ${FSINT}/afsaux.c
 	${CCRULE} ${FSINT}/afsaux.c
+
+rxtest: rxtest.o libafsrpc.a ${TOP_LIBDIR}/libafsauthent.a
+	${CC} -o $@ rxtest.o ${TOP_LIBDIR}/libafsauthent.a libafsrpc.a ${MT_LIBS} ${XLIBS}
+
+rxtest.o: ${RX}/rxtest.c
+	${CCRULE} ${RX}/rxtest.c
 
 clean:
 	$(RM) -f *.o libafsrpc*

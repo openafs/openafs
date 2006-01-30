@@ -444,6 +444,7 @@ case $AFS_SYSNAME in
 		KROOT=
 		KINCLUDES='-I$(KROOT)/System/Library/Frameworks/Kernel.framework/Headers'
 		LWP_OPTMZ="-O2"
+		RANLIB="ranlib -c"
 		REGEX_OBJ="regex.o"
 		XCFLAGS="-no-cpp-precomp"
 		TXLIBS="-lncurses"
@@ -458,6 +459,7 @@ case $AFS_SYSNAME in
 		KROOT=
 		KINCLUDES='-I$(KROOT)/System/Library/Frameworks/Kernel.framework/Headers'
 		LWP_OPTMZ="-O2"
+		RANLIB="ranlib -c"
 		REGEX_OBJ="regex.o"
 		XCFLAGS="-no-cpp-precomp"
 		TXLIBS="-lncurses"

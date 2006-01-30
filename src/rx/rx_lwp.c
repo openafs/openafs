@@ -474,3 +474,9 @@ rxi_Sendmsg(osi_socket socket, struct msghdr *msg_p, int flags)
 	IOMGR_FreeFDSet(sfds);
     return 0;
 }
+
+int
+rxi_ListenTcp(osi_socket sock)
+{
+	return 0;
+}

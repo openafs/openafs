@@ -98,6 +98,7 @@ typedef void (*rx_destructor_t) (void *);
 int rx_KeyCreate(rx_destructor_t);
 osi_socket rxi_GetHostUDPSocket(u_int host, u_short port);
 osi_socket rxi_GetUDPSocket(u_short port);
+osi_socket rxi_GetHostTCPSocket(u_int host, u_short port);
 #endif /* KERNEL */
 
 
@@ -216,7 +217,7 @@ returned with an error code of RX_CALL_DEAD ( transient error ) */
 /* A connection is an authenticated communication path, allowing 
    limited multiple asynchronous conversations. */
 #ifdef KDUMP_RX_LOCK
-struct rx_connection_rx_lock {
+stru
     struct rx_connection_rx_lock *next;	/*  on hash chain _or_ free list */
     struct rx_peer_rx_lock *peer;
 #else
@@ -269,6 +270,22 @@ struct rx_connection {
     u_char ackRate;		/* how many packets between ack requests */
     u_char makeCallWaiters;	/* how many rx_NewCalls are waiting */
     int nSpecific;		/* number entries in specific data */
+    int tcpDescriptor;		/* TCP descriptor (if used) */
+    u_char *tcpPacketHeader;	/* TCP header buffer */
+    u_char *tcpPacketCur;	/* Current header buffer pointer */
+    int tcpPacketLen;		/* Length of data in buffer */
+    int tcpDefaultWindow;	/* Default window size for flow control */
+    int tcpContigAck;		/* Counter for contiguous acks */
+    afs_uint32 tcpNewCallNumber;/* The number of the next call */
+#ifdef AFS_PTHREAD_ENV
+    pthread_t readThreadId;	/* Read thread identifier */
+    pthread_t writeThreadId;	/* Write thread identifier */
+#endif /* AFS_PTHREAD_ENV */
+#ifdef RX_ENABLE_LOCKS
+    afs_kmutex_t conn_reader_lock;	/* Lock for TCP reader */
+    afs_kcondvar_t conn_reader_cv;
+#endif /* RX_ENABLE_LOCKS */
+    struct rx_queue tcpCallQueue; /* Queue of calls on this TCP connection */
     void **specific;		/* pointer to connection specific data */
 };
 
@@ -298,6 +315,7 @@ struct rx_service {
     u_short servicePort;	/* UDP port for this service */
     char *serviceName;		/* Name of the service */
     osi_socket socket;		/* socket structure or file descriptor */
+    osi_socket tcpSocket;	/* TCP socket for this service */
     u_short nRequestsRunning;	/* Number of requests currently in progress */
     u_short nSecurityObjects;	/* Number of entries in security objects array */
     struct rx_securityClass **securityObjects;	/* Array of security class objects */
@@ -541,6 +559,28 @@ struct rx_call {
     afs_hyper_t bytesSent;	/* Number bytes sent */
     afs_hyper_t bytesRcvd;	/* Number bytes received */
     u_short tqWaiters;
+    struct rx_queue tcpReadData;/* Our TCP data read queue */
+#if 0
+    u_char *tcpReadBuffer;	/* Our TCP data buffer */
+    int tcpReadBufferSize;	/* TCP buffer size */
+    int tcpReadBufferLen;	/* Current length of data in buffer */
+    u_char *tcpReadBufferCur;	/* Current position pointer */
+#endif
+    u_char *tcpWriteBuffer;	/* TCP write buffer */
+    u_char *tcpWriteBufferCur;	/* TCP write buffer pointer */
+    int tcpWriteBufferLen;	/* Current length of data in write buffer */
+    int tcpWriteBufferSize;	/* TCP write buffer size */
+    int tcpBufferFill;		/* Amount of data currently in TCP buffers */
+    afs_uint32 tcpSentAck;	/* Current consumed data (sent) */
+    afs_uint32 tcpRecvAck;	/* Current consumed data (received) */
+    afs_uint32 tcpBytesSent;	/* TCP data sent */
+    afs_uint32 tcpWindow;	/* Last received call packet window */
+    afs_uint32 tcpAdvertised;	/* Last advertised sequence number */
+    afs_uint32 tcpCallNumber;	/* The call number when using TCP */
+#ifdef RX_ENABLE_LOCKS
+    afs_kmutex_t reader_lock;	/* Lock for modifying the tcpReadData queue */
+    afs_kcondvar_t reader_cv;	/* Condition variable for waiting for data */
+#endif /* RX_ENABLE_LOCKS */
 };
 
 #ifndef KDUMP_RX_LOCK
@@ -715,15 +755,15 @@ struct rx_securityClass {
 				       struct rx_connection * aconn);
 	int (*op_CreateChallenge) (struct rx_securityClass * aobj,
 				   struct rx_connection * aconn);
-	int (*op_GetChallenge) (struct rx_securityClass * aobj,
-				struct rx_connection * aconn,
-				struct rx_packet * apacket);
-	int (*op_GetResponse) (struct rx_securityClass * aobj,
-			       struct rx_connection * aconn,
-			       struct rx_packet * apacket);
-	int (*op_CheckResponse) (struct rx_securityClass * aobj,
-				 struct rx_connection * aconn,
-				 struct rx_packet * apacket);
+	int (*op_GetChallengePacket) (struct rx_securityClass * aobj,
+				      struct rx_connection * aconn,
+				      struct rx_packet * apacket);
+	int (*op_GetResponsePacket) (struct rx_securityClass * aobj,
+				     struct rx_connection * aconn,
+				     struct rx_packet * apacket);
+	int (*op_CheckResponsePacket) (struct rx_securityClass * aobj,
+				       struct rx_connection * aconn,
+				       struct rx_packet * apacket);
 	int (*op_CheckPacket) (struct rx_securityClass * aobj,
 			       struct rx_call * acall,
 			       struct rx_packet * apacket);
@@ -732,6 +772,15 @@ struct rx_securityClass {
 	int (*op_GetStats) (struct rx_securityClass * aobj,
 			    struct rx_connection * aconn,
 			    struct rx_securityObjectStats * astats);
+	int (*op_GetChallengeStream) (struct rx_securityClass * aobj,
+				      struct rx_connection * aconn,
+				      void **, int *);
+	int (*op_GetResponseStream) (struct rx_securityClass * aobj,
+				      struct rx_connection * aconn,
+				      void *, int, void **, int *);
+	int (*op_CheckResponseStream) (struct rx_securityClass * aobj,
+				       struct rx_connection * aconn,
+				       void *, int);
 	int (*op_Spare1) (void);
 	int (*op_Spare2) (void);
 	int (*op_Spare3) (void);
@@ -748,14 +797,15 @@ struct rx_securityClass {
 #define RXS_SendPacket(obj,call,packet) RXS_OP(obj,SendPacket,(obj,call,packet))
 #define RXS_CheckAuthentication(obj,conn) RXS_OP(obj,CheckAuthentication,(obj,conn))
 #define RXS_CreateChallenge(obj,conn) RXS_OP(obj,CreateChallenge,(obj,conn))
-#define RXS_GetChallenge(obj,conn,packet) RXS_OP(obj,GetChallenge,(obj,conn,packet))
-#define RXS_GetResponse(obj,conn,packet) RXS_OP(obj,GetResponse,(obj,conn,packet))
-#define RXS_CheckResponse(obj,conn,packet) RXS_OP(obj,CheckResponse,(obj,conn,packet))
+#define RXS_GetChallengePacket(obj,conn,packet) RXS_OP(obj,GetChallengePacket,(obj,conn,packet))
+#define RXS_GetResponsePacket(obj,conn,packet) RXS_OP(obj,GetResponsePacket,(obj,conn,packet))
+#define RXS_CheckResponsePacket(obj,conn,packet) RXS_OP(obj,CheckResponsePacket,(obj,conn,packet))
 #define RXS_CheckPacket(obj,call,packet) RXS_OP(obj,CheckPacket,(obj,call,packet))
 #define RXS_DestroyConnection(obj,conn) RXS_OP(obj,DestroyConnection,(obj,conn))
 #define RXS_GetStats(obj,conn,stats) RXS_OP(obj,GetStats,(obj,conn,stats))
-
-
+#define RXS_GetChallengeStream(obj,conn,databuf,len) RXS_OP(obj,GetChallengeStream,(obj,conn,databuf,len));
+#define RXS_GetResponseStream(obj,conn,indatabuf,inlen,outdatabuf,outlen) RXS_OP(obj,GetResponseStream,(obj,conn,indatabuf,inlen,outdatabuf,outlen))
+#define RXS_CheckResponseStream(obj,conn,databuf,len) RXS_OP(obj,CheckResponseStream,(obj,conn,databuf,len))
 
 /* Structure for keeping rx statistics.  Note that this structure is returned
  * by rxdebug, so, for compatibility reasons, new fields should be appended (or

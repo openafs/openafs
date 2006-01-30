@@ -70,6 +70,7 @@ RXOBJS =\
 	rx_packet.o \
 	rx_rdwr.o \
 	rx_trace.o \
+	rx_tcp.o \
 	rx_multi.o
 
 RXSTATOBJS =\
@@ -187,6 +188,9 @@ rx_rdwr.o: ${RX}/rx_rdwr.c
 	${CCRULE}
 
 rx_trace.o: ${RX}/rx_trace.c
+	${CCRULE}
+
+rx_tcp.o: ${RX}/rx_tcp.c
 	${CCRULE}
 
 rx_multi.o: ${RX}/rx_multi.c

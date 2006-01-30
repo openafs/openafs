@@ -386,6 +386,218 @@ rxi_Listen(osi_socket sock)
     return 0;
 }
 
+static void
+rx_TcpListenerProc(void *argp)
+{
+    osi_socket sock = (osi_socket) argp, connsock;
+    struct sockaddr_in sin;
+    socklen_t sinlen = sizeof(sin);
+    pthread_t thread;
+    pthread_attr_t tattr;
+    AFS_SIGSET_DECL;
+
+    if (pthread_attr_init(&tattr) != 0) {
+	printf
+	    ("Unable to create socket listener thread (pthread_attr_init)\n");
+	exit(1);
+    }
+
+    if (pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED) != 0) {
+	printf
+	    ("Unable to create socket listener thread (pthread_attr_setdetachstate)\n");
+	exit(1);
+    }
+
+    while (1) {
+	if ((connsock = accept(sock, (struct sockaddr *) &sin, &sinlen)) < 0) {
+	    perror("accept");
+	    exit(1);
+	}
+
+	AFS_SIGSET_CLEAR();
+	if (pthread_create(&thread, &tattr, rxi_TcpNewServerConnection,
+			   (void *) connsock) != 0) {
+	    printf("Unable to create socket listener thread\n");
+	    exit(1);
+	}
+	AFS_SIGSET_RESTORE();
+    }
+}
+    
+int
+rxi_ListenTcp(osi_socket sock)
+{
+    pthread_t thread;
+    pthread_attr_t tattr;
+    AFS_SIGSET_DECL;
+
+    if (pthread_attr_init(&tattr) != 0) {
+	printf
+	    ("Unable to create socket listener thread (pthread_attr_init)\n");
+	exit(1);
+    }
+
+    if (pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED) != 0) {
+	printf
+	    ("Unable to create socket listener thread (pthread_attr_setdetachstate)\n");
+	exit(1);
+    }
+
+    AFS_SIGSET_CLEAR();
+    if (pthread_create(&thread, &tattr, rx_TcpListenerProc,
+		       (void *)sock) != 0) {
+	printf("Unable to create socket listener thread\n");
+	exit(1);
+    }
+    MUTEX_ENTER(&rx_stats_mutex);
+    ++rxi_pthread_hinum;
+    MUTEX_EXIT(&rx_stats_mutex);
+    AFS_SIGSET_RESTORE();
+    return 0;
+}
+
+/*
+ * Start connection reader and writer threads
+ */
+
+void
+rxi_TcpStartConnectionThreads(struct rx_connection *conn)
+{
+    pthread_t thread;
+    pthread_attr_t tattr;
+    AFS_SIGSET_DECL;
+
+    if (pthread_attr_init(&tattr) != 0) {
+	printf("Unable to create connection threads (pthread_attr_init)\n");
+	exit(1);
+    }
+
+    if (pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED) != 0) {
+	printf("Unable to create connection threads (pthread_attr_setdeatchstate)\n");
+	exit(1);
+    }
+
+    AFS_SIGSET_CLEAR();
+    if (pthread_create(&thread, &tattr, rxi_TcpReaderThread,
+		       (void *) conn) != 0) {
+	printf("Unable to create connection reader thread\n");
+	exit(1);
+    }
+
+#if 0
+    if (pthread_create(&thread, &tattr, rxi_TcpWriterThread,
+		       (void *) conn) != 0) {
+	printf("Unable to create connection writer thread\n");
+	exit(1);
+    }
+#endif
+    AFS_SIGSET_RESTORE();
+}
+#if 0
+
+/*
+ * Wait for TCP connect() calls to complete.  Note that the connection is
+ * locked upon entering of this function.
+ */
+
+static void *rx_TcpConnectWait(void *arg)
+{
+    struct rx_connection *conn = (struct rx_connection *) arg;
+    int err;
+
+#if 0
+    memset((void *) &sin, 0, sizeof(sin));
+
+    sin.sin_family = AF_INET;
+    sin.sin_addr.s_addr = rx_HostOf(rx_PeerOf(conn));
+    sin.sin_port = rx_PortOf(rx_PeerOf(conn));
+
+    err = connect(conn->tcpDescriptor, (struct sockaddr *) &sin, sizeof(sin));
+
+    if (err < 0) {
+	close(conn->tcpDescriptor);
+	conn->tcpDescriptor = -1;
+	MUTEX_EXIT(&conn->conn_call_lock);
+	return;
+    }
+#endif
+    /*
+     * Start the connection negotiation
+     */
+
+    rxi_StartTcpClient(conn);
+
+    MUTEX_EXIT(&conn->conn_call_lock);
+    return;
+}
+#endif
+
+/*
+ * Start a thread to wait for TCP connect() calls to complete
+ */
+
+#if 0
+int
+rxi_TcpConnectStart(struct rx_connection *conn)
+{
+    pthread_t thread;
+    pthread_attr_t tattr;
+    AFS_SIGSET_DECL;
+
+    if (pthread_attr_init(&tattr) != 0) {
+	printf
+	    ("Unable to create TCP connection wait thread (pthread_attr_init)\n");
+	exit(1);
+    }
+
+    if (pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED) != 0) {
+	printf
+	    ("Unable to create TCP connection wait thread (pthread_attr_setdetachstate)\n");
+	exit(1);
+    }
+
+    AFS_SIGSET_CLEAR();
+    if (pthread_create(&thread, &tattr, rx_TcpConnectWait, (void *)conn) != 0) {
+	printf("Unable to create TCP connection wait thread\n");
+	exit(1);
+    }
+    MUTEX_ENTER(&rx_stats_mutex);
+    ++rxi_pthread_hinum;
+    MUTEX_EXIT(&rx_stats_mutex);
+    AFS_SIGSET_RESTORE();
+    return 0;
+}
+#endif
+
+void
+rx_TcpServerProc(struct rx_call *call)
+{
+    pthread_t thread;
+    pthread_attr_t tattr;
+    AFS_SIGSET_DECL;
+
+    if (pthread_attr_init(&tattr) != 0) {
+	printf
+	    ("Unable to create call handler thread (pthread_attr_init)\n");
+	exit(1);
+    }
+
+    if (pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED) != 0) {
+	printf
+	    ("Unable to create call handler thread (pthread_attr_setdetachstate)\n");
+	exit(1);
+    }
+
+    AFS_SIGSET_CLEAR();
+    if (pthread_create(&thread, &tattr, rxi_TcpServerProc, (void *)call) != 0) {
+	printf("Unable to create call handler thread\n");
+	exit(1);
+    }
+    MUTEX_ENTER(&rx_stats_mutex);
+    ++rxi_pthread_hinum;
+    MUTEX_EXIT(&rx_stats_mutex);
+    AFS_SIGSET_RESTORE();
+}
 
 /*
  * Recvmsg.

@@ -900,7 +900,9 @@ rxperf_client(int argc, char **argv)
 int
 main(int argc, char **argv)
 {
+#if 0
     PROCESS pid;
+#endif
 
     __progname = strrchr(argv[0], '/');
     if (__progname == 0)
@@ -909,7 +911,9 @@ main(int argc, char **argv)
     signal(SIGUSR1, sigusr1);
     signal(SIGINT, sigint);
 
+#if 0
     LWP_InitializeProcessSupport(LWP_NORMAL_PRIORITY, &pid);
+#endif
 
     memset(somebuf, 0, sizeof(somebuf));
 

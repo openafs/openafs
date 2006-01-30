@@ -53,7 +53,7 @@ herror.o: herror.c
 	${CC} ${CFLAGS} -c herror.c
 
 sgi_auth.o: sgi_auth.c
-	${CC} ${CFLAGS} -c sgi_auth.c
+	${CC} ${CFLAGS} -c ${srcdir}/sgi_auth.c
 
 ${TOP_LIBDIR}/afsauthlib.so: afsauthlib.so
 	${INSTALL} $? $@

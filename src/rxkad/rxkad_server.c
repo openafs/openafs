@@ -60,6 +60,9 @@ static struct rx_securityOps rxkad_server_ops = {
     rxkad_CheckPacket,		/* check data packet */
     rxkad_DestroyConnection,
     rxkad_GetStats,
+    rxkad_GetChallengeStream,
+    0,
+    rxkad_CheckResponseStream,
     0,				/* spare 1 */
     0,				/* spare 2 */
     0,				/* spare 3 */
@@ -236,6 +239,29 @@ rxkad_GetChallenge(struct rx_securityClass *aobj, struct rx_connection *aconn,
 
     rx_packetwrite(apacket, 0, challengeSize, challenge);
     rx_SetDataSize(apacket, challengeSize);
+    sconn->tried = 1;
+    INC_RXKAD_STATS(challengesSent);
+    return 0;
+}
+
+int
+rxkad_GetChallengeStream(struct rx_securityClass *aobj,
+			 struct rx_connection *aconn, void **outpacket,
+			 int *outsize)
+{
+    struct rxkad_sconn *sconn;
+    struct rxkad_v2Challenge c_v2;
+
+    sconn = (struct rxkad_sconn *) aconn->securityData;
+    memset((void *) &c_v2, 0, sizeof(c_v2));
+
+    c_v2.version = htonl(RXKAD_CHALLENGE_PROTOCOL_VERSION);
+    c_v2.challengeID = htonl(sconn->challengeID);
+    c_v2.level = htonl((afs_int32) sconn->level);
+    c_v2.spare = 0;
+
+    *outpacket = osi_Alloc(sizeof(c_v2));
+    *outsize = sizeof(c_v2);
     sconn->tried = 1;
     INC_RXKAD_STATS(challengesSent);
     return 0;
@@ -425,6 +451,126 @@ rxkad_CheckResponse(struct rx_securityClass *aobj,
     return 0;
 }
 
+int
+rxkad_CheckResponseStream(struct rx_securityClass *aobj,
+			  struct rx_connection *aconn, void *indata,
+			  int size)
+{
+    struct rxkad_sconn *sconn;
+    struct rxkad_sprivate *tsp;
+    struct ktc_encryptionKey serverKey;
+    struct rxkad_v2ChallengeResponse v2r;
+    afs_int32 tlen;
+    afs_int32 kvno;
+    char tix[MAXKTCTICKETLEN];
+    afs_int32 incChallengeID;
+    rxkad_level level;
+    int code;
+    /* ticket contents */
+    struct ktc_principal client;
+    struct ktc_encryptionKey sessionKey;
+    afs_int32 host;
+    afs_uint32 start;
+    afs_uint32 end;
+    struct rxkad_serverinfo *rock;
+    afs_uint32 xor[2];
+    afs_uint32 cksum;
+
+    sconn = (struct rxkad_sconn *)aconn->securityData;
+    tsp = (struct rxkad_sprivate *)aobj->privateData;
+
+    if (size < sizeof(v2r))
+	return RXKADPACKETSHORT;
+
+    memcpy((void *) &v2r, indata, sizeof(v2r));
+
+    kvno = ntohl(v2r.kvno);
+    tlen = ntohl(v2r.ticketLen);
+
+    if (size < sizeof(v2r) + tlen)
+	return RXKADPACKETSHORT;
+
+    if ((tlen < MINKTCTICKETLEN) || (tlen > MAXKTCTICKETLEN))
+	return RXKADTICKETLEN;
+
+    memcpy(tix, ((char *) indata) + sizeof(v2r), tlen);
+
+    /* See comments in rxkad_CheckResponse regarding alternate ticket decoder */
+
+    if (rxkad_AlternateTicketDecoder) {
+	code =
+	    rxkad_AlternateTicketDecoder(kvno, tix, tlen, client.name,
+					 client.instance, client.cell,
+					 &sessionKey, &host, &start, &end);
+	if (code && code != -1) {
+	    return code;
+	}
+    } else {
+	code = -1;
+    }
+
+    if (code == -1 && (kvno == RXKAD_TKT_TYPE_KERBEROS_V5)
+	|| (kvno == RXKAD_TKT_TYPE_KERBEROS_V5_ENCPART_ONLY)) {
+	code =
+	    tkt_DecodeTicket5(tix, tlen, tsp->get_key, tsp->get_key_rock,
+			      kvno, client.name, client.instance, client.cell,
+			      &sessionKey, &host, &start, &end);
+	if (code)
+	    return code;
+    } else {
+	return RXKADUNKNOWNKEY;
+    }
+
+    code = tkt_CheckTimes(start, end, time(0));
+    if (code == -1)
+	return RXKADEXPIRED;
+    else if (code <= 0)
+	return RXKADNOAUTH;
+
+    code = fc_keysched(&sessionKey, sconn->keysched);
+    if (code)
+	return RXKADBADKEY;
+
+    memcpy(sconn->ivec, &sessionKey, sizeof(sconn->ivec));
+
+    memcpy(xor, sconn->ivec, 2 * sizeof(afs_int32));
+    fc_cbc_encrypt(&v2r.encrypted, &v2r.encrypted, sizeof(v2r.encrypted),
+		   sconn->keysched, xor, DECRYPT);
+    cksum = rxkad_CksumChallengeResponse(&v2r);
+    if (cksum != v2r.encrypted.endpoint.cksum)
+	return RXKADSEALEDINCON;
+
+    incChallengeID = ntohl(v2r.encrypted.incChallengeID);
+    level = ntohl(v2r.encrypted.level);
+
+    if (incChallengeID != sconn->challengeID + 1)
+	return RXKADOUTOFSEQUENCE;
+    if ((level < sconn->level) || (level > rxkad_crypt))
+	return RXKADLEVELFAIL;
+    sconn->level = level;
+    rxkad_SetLevel(aconn, sconn->level);
+    INC_RXKAD_STATS(responses[rxkad_LevelIndex(sconn->level)]);
+
+    /* otherwise things are ok */
+    sconn->expirationTime = end;
+    sconn->authenticated = 1;
+
+    if (tsp->user_ok) {
+	code = tsp->user_ok(client.name, client.instance, client.cell, kvno);
+	if (code)
+	    return RXKADNOAUTH;
+    } else {
+	int size = sizeof(struct rxkad_serverinfo);
+	rock = (struct rxkad_serverinfo *)osi_Alloc(size);
+	memset(rock, 0, size);
+	rock->kvno = kvno;
+	memcpy(&rock->client, &client, sizeof(rock->client));
+	sconn->rock = rock;
+    }
+    return 0;
+}
+
+	
 /* return useful authentication info about a server-side connection */
 
 afs_int32

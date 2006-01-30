@@ -539,7 +539,6 @@ libadmin_real:
 	${COMPILE_PART1} libadmin/pts ${COMPILE_PART2}
 	${COMPILE_PART1} libadmin/bos ${COMPILE_PART2}
 	${COMPILE_PART1} libadmin/cfg ${COMPILE_PART2}
-	${COMPILE_PART1} libadmin/test ${COMPILE_PART2}
 	${COMPILE_PART1} libadmin/samples ${COMPILE_PART2}
 
 libadmin: libafsauthent bozo

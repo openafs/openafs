@@ -302,6 +302,16 @@ rx_ReadProc(struct rx_call *call, char *buf, int nbytes)
     SPLVAR;
 
     /*
+     * If this is a TCP connection, call the appropriate function
+     */
+
+#ifdef AFS_PTHREAD_ENV
+    if (call->conn->tcpDescriptor >= 0) {
+	return rxi_TcpReadProc(call, buf, nbytes);
+    }
+#endif
+
+    /*
      * Free any packets from the last call to ReadvProc/WritevProc.
      * We do not need the lock because the receiver threads only
      * touch the iovq when the RX_CALL_IOVEC_WAIT flag is set, and the
@@ -347,6 +357,12 @@ rx_ReadProc32(struct rx_call *call, afs_int32 * value)
     int tnLeft;
     char *tcurpos;
     SPLVAR;
+
+#ifdef AFS_PTHREAD_ENV
+    if (call->conn->tcpDescriptor >= 0) {
+	return rxi_TcpReadProc(call, (char *) value, sizeof(afs_int32));
+    }
+#endif
 
     /*
      * Free any packets from the last call to ReadvProc/WritevProc.
@@ -808,6 +824,11 @@ rx_WriteProc(struct rx_call *call, char *buf, int nbytes)
     char *tcurpos;
     SPLVAR;
 
+#ifdef AFS_PTHREAD_ENV
+    if (call->conn->tcpDescriptor >= 0)
+	return rxi_TcpWriteProc(call, buf, nbytes);
+#endif
+
     /*
      * Free any packets from the last call to ReadvProc/WritevProc.
      * We do not need the lock because the receiver threads only
@@ -854,6 +875,11 @@ rx_WriteProc32(register struct rx_call *call, register afs_int32 * value)
     int tnFree;
     char *tcurpos;
     SPLVAR;
+
+#ifdef AFS_PTHREAD_ENV
+    if (call->conn->tcpDescriptor >= 0)
+	return rxi_TcpWriteProc(call, value, sizeof(afs_int32));
+#endif
 
     /*
      * Free any packets from the last call to ReadvProc/WritevProc.
@@ -1261,7 +1287,16 @@ void
 rx_FlushWrite(struct rx_call *call)
 {
     SPLVAR;
+
+#ifdef AFS_PTHREAD_ENV
+    if (call->conn->tcpDescriptor >= 0) {
+	rxi_TcpFlushWrite(call);
+	return;
+    }
+#endif
+
     NETPRI;
+
     MUTEX_ENTER(&call->lock);
     rxi_FlushWrite(call);
     MUTEX_EXIT(&call->lock);
