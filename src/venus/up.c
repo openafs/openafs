@@ -83,6 +83,9 @@ struct OldAcl {
     char data[1];
 };
 
+void ScanArgs(int, char *[]);
+int Copy(char *, char *, short, int);
+
 /* ************************************************************ */
 /* 								 */
 /* main program							 */
