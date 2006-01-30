@@ -26,12 +26,16 @@ RCSID
 #ifdef AFS_AMD64_LINUX20_ENV
 #include <asm/ia32_unistd.h>
 #endif
+#ifdef AFS_SPARC64_LINUX20_ENV
+#include <linux/ioctl32.h>
+#endif
 
 #include <linux/proc_fs.h>
 #include <linux/slab.h>
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
 #include <linux/init.h>
 #include <linux/sched.h>
+#include <linux/kernel.h>
 #endif
 
 #ifdef HAVE_KERNEL_LINUX_SEQ_FILE_H
@@ -283,29 +287,27 @@ afs_ioctl(struct inode *inode, struct file *file, unsigned int cmd,
     if (cmd != VIOC_SYSCALL && cmd != VIOC_SYSCALL32) return -EINVAL;
 
 #ifdef NEED_IOCTL32
+#ifdef AFS_LINUX26_ENV 
+#ifdef AFS_S390X_LINUX26_ENV
+    if (test_thread_flag(TIF_31BIT))
+#else
+    if (test_thread_flag(TIF_32BIT))
+#endif /* AFS_S390X_LINUX26_ENV */
+#else
 #ifdef AFS_SPARC64_LINUX24_ENV
     if (current->thread.flags & SPARC_FLAG_32BIT)
 #elif defined(AFS_SPARC64_LINUX20_ENV)
     if (current->tss.flags & SPARC_FLAG_32BIT)
 #elif defined(AFS_AMD64_LINUX20_ENV)
-#ifdef AFS_LINUX26_ENV
-    if (test_thread_flag(TIF_IA32))
-#else
     if (current->thread.flags & THREAD_IA32)
-#endif
 #elif defined(AFS_PPC64_LINUX20_ENV)
-#ifdef AFS_PPC64_LINUX26_ENV
-    if (current->thread_info->flags & _TIF_32BIT)
-#else /*Linux 2.6 */
     if (current->thread.flags & PPC_FLAG_32BIT)
-#endif
-#elif defined(AFS_S390X_LINUX26_ENV)
-    if (test_thread_flag(TIF_31BIT))
 #elif defined(AFS_S390X_LINUX20_ENV)
     if (current->thread.flags & S390_FLAG_31BIT)
 #else
 #error Not done for this linux type
-#endif
+#endif /* AFS_LINUX26_ENV */
+#endif /* NEED_IOCTL32 */
     {
 	if (copy_from_user(&sysargs32, (void *)arg,
 			   sizeof(struct afsprocdata32)))
