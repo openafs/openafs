@@ -504,8 +504,6 @@ privilege. See the reference page for each command.
 
 =head1 SEE ALSO
 
-=over 4
-
 L<afsd(8)>,
 L<afsmonitor(1)>,
 L<backup(8)>,
@@ -551,8 +549,6 @@ L<vos(1)>,
 L<xfs_size_check(8)>,
 L<xstat_cm_test(8)>,
 L<xstat_fs_test(8)>
-
-=back
 
 =head1 COPYRIGHT
 

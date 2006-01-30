@@ -61,10 +61,14 @@ POD and Man Page Generation
   OpenAFS source tree (this will also regenerate the Autoconf scripts).
 
   Conversion to HTML can be done via any of the POD to HTML converters
-  available (there are many of them).  Evaluation of the best tool to use
-  for OpenAFS and exactly how to do the conversion to get the highest
-  quality results is still underway; when complete, details will be
-  included here.
+  available (there are many of them), but for best results (particularly
+  for crosslinks), use the generate-html script in this directory.  You
+  will need to have the Pod::Simple Perl module installed.  If your Perl
+  is not in /usr/bin, run generate-html explicitly with:
+
+      perl generate-html
+
+  It will generate HTML pages in the html subdirectory of this directory.
 
 Formatting Standards
 

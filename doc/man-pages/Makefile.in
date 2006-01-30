@@ -6,7 +6,10 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 all:
 
 maintclean:
-	rm -rf man1 man5 man8
+	rm -rf html man1 man5 man8
+
+html:
+	perl generate-html
 
 dest:
 	chmod +x install-man
