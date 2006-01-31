@@ -256,7 +256,7 @@ BOOL IsServiceRunning (void)
 
         CloseServiceHandle (hManager);
     }
-    DebugEvent("AFS AfsLogon - Test Service Running","Return Code[%x] ?Running[%d]",Status.dwCurrentState,(Status.dwCurrentState == SERVICE_RUNNING));
+    DebugEvent("AFS AfsLogon - Test Service Running Return Code[%x] ?Running[%d]",Status.dwCurrentState,(Status.dwCurrentState == SERVICE_RUNNING));
     return (Status.dwCurrentState == SERVICE_RUNNING);
 }   
 
@@ -278,7 +278,7 @@ BOOL IsServiceStartPending (void)
 
         CloseServiceHandle (hManager);
     }
-    DebugEvent("AFS AfsLogon - Test Service Start Pending","Return Code[%x] ?Start Pending[%d]",Status.dwCurrentState,(Status.dwCurrentState == SERVICE_START_PENDING));
+    DebugEvent("AFS AfsLogon - Test Service Start Pending Return Code[%x] ?Start Pending[%d]",Status.dwCurrentState,(Status.dwCurrentState == SERVICE_START_PENDING));
     return (Status.dwCurrentState == SERVICE_START_PENDING);
 }   
 

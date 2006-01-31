@@ -231,7 +231,6 @@ long smb_IoctlRead(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp,
         iop->outCopied += count;
         
         cm_ReleaseUser(userp);
-        smb_ReleaseFID(fidp);
 
         return 0;
 }
@@ -274,7 +273,6 @@ done:
                 smb_SetSMBDataLength(outp, 0);
         }
 
-        smb_ReleaseFID(fidp);
         return code;
 }
 
@@ -315,7 +313,6 @@ long smb_IoctlV3Read(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp, smb_pack
 	if (uidp)
 	    smb_ReleaseUID(uidp);
         cm_ReleaseUser(userp);
-        smb_ReleaseFID(fidp);
         return CM_ERROR_NOSUCHPATH;
     }
 
@@ -326,7 +323,6 @@ long smb_IoctlV3Read(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp, smb_pack
     }
     if (code) {
 	cm_ReleaseUser(userp);
-        smb_ReleaseFID(fidp);
 	return code;
     }
 
@@ -366,7 +362,6 @@ long smb_IoctlV3Read(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp, smb_pack
 
     /* and cleanup things */
     cm_ReleaseUser(userp);
-    smb_ReleaseFID(fidp);
 
     return 0;
 }	
@@ -421,14 +416,12 @@ long smb_IoctlReadRaw(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp,
     code = smb_LookupTIDPath(vcp, ((smb_t *)inp)->tid, &iop->tidPathp);
     if (code) {
         cm_ReleaseUser(userp);
-        smb_ReleaseFID(fidp);
         return CM_ERROR_NOSUCHPATH;
     }
 
     code = smb_IoctlPrepareRead(fidp, iop, userp);
     if (code) {
 	cm_ReleaseUser(userp);
-	smb_ReleaseFID(fidp);
 	return code;
     }
 
@@ -457,7 +450,6 @@ long smb_IoctlReadRaw(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp,
 	osi_Log1(afsd_logp, "ReadRaw send failure code %d", code);
 
     cm_ReleaseUser(userp);
-    smb_ReleaseFID(fidp);
 
     return 0;
 }
