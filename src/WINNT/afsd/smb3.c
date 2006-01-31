@@ -2372,16 +2372,19 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
     fidp = smb_FindFID(vcp, 0, SMB_FLAG_CREATE);
     osi_assert(fidp);
 	
+    cm_HoldUser(userp);
+    lock_ObtainMutex(&fidp->mx);
     /* save a pointer to the vnode */
     fidp->scp = scp;
     /* and the user */
-    cm_HoldUser(userp);
     fidp->userp = userp;
         
     /* compute open mode */
-    if (openMode != 1) fidp->flags |= SMB_FID_OPENREAD;
+    if (openMode != 1) 
+	fidp->flags |= SMB_FID_OPENREAD;
     if (openMode == 1 || openMode == 2)
         fidp->flags |= SMB_FID_OPENWRITE;
+    lock_ReleaseMutex(&fidp->mx);
 
     smb_ReleaseFID(fidp);
         
@@ -2946,7 +2949,9 @@ long smb_ReceiveTran2QFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         *((LARGE_INTEGER *)op) = scp->length; op += 8;	/* alloc size */
         *((LARGE_INTEGER *)op) = scp->length; op += 8;	/* EOF */
         *((u_long *)op) = scp->linkCount; op += 4;
+	lock_ObtainMutex(&fidp->mx);
         *op++ = ((fidp->flags & SMB_FID_DELONCLOSE) ? 1 : 0);
+	lock_ReleaseMutex(&fidp->mx);
         *op++ = (scp->fileType == CM_SCACHETYPE_DIRECTORY ? 1 : 0);
         *op++ = 0;
         *op++ = 0;
@@ -3013,17 +3018,21 @@ long smb_ReceiveTran2SetFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
         return 0;
     }
 
+    lock_ObtainMutex(&fidp->mx);
     if (infoLevel == SMB_QUERY_FILE_STANDARD_INFO && !(fidp->flags & SMB_FID_OPENDELETE)) {
-        smb_SendTran2Error(vcp, p, op, CM_ERROR_NOACCESS);
+	lock_ReleaseMutex(&fidp->mx);
         smb_ReleaseFID(fidp);
+        smb_SendTran2Error(vcp, p, op, CM_ERROR_NOACCESS);
         return 0;
     }
     if ((infoLevel == SMB_QUERY_FILE_EA_INFO || infoLevel == SMB_QUERY_FILE_NAME_INFO)
          && !(fidp->flags & SMB_FID_OPENWRITE)) {
-        smb_SendTran2Error(vcp, p, op, CM_ERROR_NOACCESS);
+	lock_ReleaseMutex(&fidp->mx);
         smb_ReleaseFID(fidp);
+        smb_SendTran2Error(vcp, p, op, CM_ERROR_NOACCESS);
         return 0;
     }
+    lock_ReleaseMutex(&fidp->mx);
 
     osi_Log1(smb_logp, "T2 SFileInfo type 0x%x", infoLevel);
 
@@ -3070,7 +3079,9 @@ long smb_ReceiveTran2SetFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
              lastMod.dwLowDateTime != -1 && lastMod.dwHighDateTime != -1) {
             attr.mask |= CM_ATTRMASK_CLIENTMODTIME;
             smb_UnixTimeFromLargeSearchTime(&attr.clientModTime, &lastMod);
+	    lock_ObtainMutex(&fidp->mx);
             fidp->flags |= SMB_FID_MTIMESETDONE;
+	    lock_ReleaseMutex(&fidp->mx);
         }
 		
         attribute = *((u_long *)(p->datap + 32));
@@ -3109,12 +3120,17 @@ long smb_ReceiveTran2SetFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
         if (*((char *)(p->datap))) {
             code = cm_CheckNTDelete(fidp->NTopen_dscp, scp, userp,
                                      &req);
-            if (code == 0)          
+            if (code == 0) {
+		lock_ObtainMutex(&fidp->mx);
                 fidp->flags |= SMB_FID_DELONCLOSE;
-        }               
+		lock_ReleaseMutex(&fidp->mx);
+	    }
+	}               
         else {  
             code = 0;
+	    lock_ObtainMutex(&fidp->mx);
             fidp->flags &= ~SMB_FID_DELONCLOSE;
+	    lock_ReleaseMutex(&fidp->mx);
         }
     }       
 
@@ -4753,10 +4769,11 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     fidp = smb_FindFID(vcp, 0, SMB_FLAG_CREATE);
     osi_assert(fidp);
 	
+    cm_HoldUser(userp);
+    lock_ObtainMutex(&fidp->mx);
     /* save a pointer to the vnode */
     fidp->scp = scp;
     /* also the user */
-    cm_HoldUser(userp);
     fidp->userp = userp;
         
     /* compute open mode */
@@ -4765,6 +4782,7 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     if (openMode == 1 || openMode == 2)
         fidp->flags |= SMB_FID_OPENWRITE;
 
+    lock_ReleaseMutex(&fidp->mx);
     smb_ReleaseFID(fidp);
         
     cm_Open(scp, 0, userp);
@@ -4855,12 +4873,18 @@ long smb_ReceiveV3LockingX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     fid = smb_ChainFID(fid, inp);
 
     fidp = smb_FindFID(vcp, fid, 0);
-    if (!fidp || (fidp->flags & SMB_FID_IOCTL)) {
+    if (!fidp)
+	return CM_ERROR_BADFD;
+    
+    lock_ObtainMutex(&fidp->mx);
+    if (fidp->flags & SMB_FID_IOCTL) {
         osi_Log0(smb_logp, "smb_ReceiveV3Locking BadFD");
-	if (fidp)
-	    smb_ReleaseFID(fidp);
+	lock_ReleaseMutex(&fidp->mx);
+	smb_ReleaseFID(fidp);
         return CM_ERROR_BADFD;
     }
+    lock_ReleaseMutex(&fidp->mx);
+
     /* set inp->fid so that later read calls in same msg can find fid */
     inp->fid = fid;
 
@@ -5087,11 +5111,16 @@ long smb_ReceiveV3GetAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
     fid = smb_ChainFID(fid, inp);
         
     fidp = smb_FindFID(vcp, fid, 0);
-    if (!fidp || (fidp->flags & SMB_FID_IOCTL)) {
-	if (fidp)
-	    smb_ReleaseFID(fidp);
+    if (!fidp)
+	return CM_ERROR_BADFD;
+    
+    lock_ObtainMutex(&fidp->mx);
+    if (fidp->flags & SMB_FID_IOCTL) {
+	lock_ReleaseMutex(&fidp->mx);
+	smb_ReleaseFID(fidp);
         return CM_ERROR_BADFD;
     }
+    lock_ReleaseMutex(&fidp->mx);
         
     userp = smb_GetUser(vcp, inp);
         
@@ -5153,11 +5182,16 @@ long smb_ReceiveV3SetAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
     fid = smb_ChainFID(fid, inp);
         
     fidp = smb_FindFID(vcp, fid, 0);
-    if (!fidp || (fidp->flags & SMB_FID_IOCTL)) {
-	if (fidp)
-	    smb_ReleaseFID(fidp);
+    if (!fidp)
+	return CM_ERROR_BADFD;
+    
+    lock_ObtainMutex(&fidp->mx);
+    if (fidp->flags & SMB_FID_IOCTL) {
+	lock_ReleaseMutex(&fidp->mx);
+	smb_ReleaseFID(fidp);
         return CM_ERROR_BADFD;
     }
+    lock_ReleaseMutex(&fidp->mx);
         
     userp = smb_GetUser(vcp, inp);
         
@@ -5240,11 +5274,14 @@ long smb_ReceiveV3ReadX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     /* set inp->fid so that later read calls in same msg can find fid */
     inp->fid = fd;
 
+    lock_ObtainMutex(&fidp->mx);
     if (fidp->flags & SMB_FID_IOCTL) {
+	lock_ReleaseMutex(&fidp->mx);
         code = smb_IoctlV3Read(fidp, vcp, inp, outp);
 	smb_ReleaseFID(fidp);
 	return code;
     }
+    lock_ReleaseMutex(&fidp->mx);
 
     userp = smb_GetUser(vcp, inp);
 
@@ -5995,7 +6032,8 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         lock_ReleaseMutex(&scp->mx);
 
         if (code) {
-            fidp->flags = SMB_FID_DELETE;
+            /* shouldn't this be smb_CloseFID() fidp->flags = SMB_FID_DELETE; */
+	    smb_CloseFID(vcp, fidp, NULL, 0);
             smb_ReleaseFID(fidp);
 
             cm_ReleaseSCache(scp);
@@ -6008,6 +6046,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         }
     }
 
+    lock_ObtainMutex(&fidp->mx);
     /* save a pointer to the vnode */
     fidp->scp = scp;    /* Hold transfered to fidp->scp and no longer needed */
 
@@ -6021,6 +6060,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         fidp->NTopen_pathp = strdup(lastNamep);
     }
     fidp->NTopen_wholepathp = realPathp;
+    lock_ReleaseMutex(&fidp->mx);
 
     /* we don't need this any longer */
     if (dscp) {
@@ -6594,7 +6634,8 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
         lock_ReleaseMutex(&scp->mx);
 
         if (code) {
-            fidp->flags = SMB_FID_DELETE;
+            /* Shouldn't this be smb_CloseFID()?  fidp->flags = SMB_FID_DELETE; */
+	    smb_CloseFID(vcp, fidp, NULL, 0);
             smb_ReleaseFID(fidp);
 
             cm_ReleaseSCache(scp);
@@ -6605,6 +6646,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
         }
     }
 
+    lock_ObtainMutex(&fidp->mx);
     /* save a pointer to the vnode */
     fidp->scp = scp;
 
@@ -6618,6 +6660,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
         fidp->NTopen_pathp = strdup(lastNamep);
     }
     fidp->NTopen_wholepathp = realPathp;
+    lock_ReleaseMutex(&fidp->mx);
 
     /* we don't need this any longer */
     if (dscp) 
