@@ -198,6 +198,8 @@ main(argc, argv)
     sigaction(SIGABRT, &nsa, NULL);
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
+    osi_audit_init();
+
     if (argc == 0) {
       usage:
 	printf("Usage: kaserver [-noAuth] [-fastKeys] [-database <dbpath>] "

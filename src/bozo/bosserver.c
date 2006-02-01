@@ -743,6 +743,7 @@ main(int argc, char **argv, char **envp)
     sigaction(SIGSEGV, &nsa, NULL);
     sigaction(SIGABRT, &nsa, NULL);
 #endif
+    osi_audit_init();
 #ifdef BOS_RESTRICTED_MODE
     signal(SIGFPE, bozo_insecureme);
 #endif

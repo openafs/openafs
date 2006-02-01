@@ -243,6 +243,7 @@ main(int argc, char **argv)
     sigaction(SIGABRT, &nsa, NULL);
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
+    osi_audit_init();
     osi_audit(PTS_StartEvent, 0, AUD_END);
 
     /* Initialize dirpaths */
