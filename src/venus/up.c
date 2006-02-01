@@ -83,8 +83,11 @@ struct OldAcl {
     char data[1];
 };
 
-void ScanArgs(int, char *[]);
-int Copy(char *, char *, short, int);
+static void ScanArgs(int argc, char *argv[]);
+static short MakeParent(char *file, afs_int32 owner);
+static int Copy(char *file1, char *file2, short recursive, int level);
+static int isMountPoint(char *name, struct ViceIoctl *blob);
+
 
 /* ************************************************************ */
 /* 								 */
@@ -118,14 +121,14 @@ main(int argc, char *argv[])
 
     /* now read each line of the CopyList */
     if (Copy(file1, file2, !oneLevel, 0))
-	exit(1);		/* some type of failure */
+	return(1);		/* some type of failure */
 
-    exit(0);
+    return(0);
 }
 
 
 #define USAGE "usage: up [-v1frxm] from to\n"
-void
+static void
 ScanArgs(int argc, char *argv[])
 {
     /* skip program name */
@@ -186,7 +189,7 @@ ScanArgs(int argc, char *argv[])
  * 	1 if it exists, 0 otherwise.  Note: the owner argument
  * 	is a hack.  All directories made will have this owner.
  */
-short
+static short
 MakeParent(char *file, afs_int32 owner)
 {
     char parent[MAXPATHLEN];
@@ -225,7 +228,7 @@ MakeParent(char *file, afs_int32 owner)
  * 	This does the bulk of the work of the program.  Handle one file,
  *	possibly copying subfiles if this is a directory
  */
-int
+static int
 Copy(char *file1, char *file2, short recursive, int level)
 {
     struct stat s1, s2;		/*Stat blocks */
@@ -712,7 +715,7 @@ Copy(char *file1, char *file2, short recursive, int level)
 }				/*Copy */
 
 
-int
+static int
 isMountPoint(char *name, struct ViceIoctl *blob)
 {
     afs_int32 code;
