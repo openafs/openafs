@@ -164,8 +164,9 @@ struct afs_PerfStats {
 #define FS_STATS_RPCIDX_BULKSTATUS	25
 #define FS_STATS_RPCIDX_XSTATSVERSION	26
 #define FS_STATS_RPCIDX_GETXSTATS	27
+#define FS_STATS_RPCIDX_GETCAPABILITIES 28
 
-#define FS_STATS_NUM_RPC_OPS		28
+#define FS_STATS_NUM_RPC_OPS		29
 
 /*
  * Assign an index to each of the File Server's RPC interface routines

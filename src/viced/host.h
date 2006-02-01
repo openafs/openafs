@@ -80,7 +80,8 @@ struct host {
     char hcpsfailed;		/* Retry the cps call next time */
     prlist hcps;		/* cps for hostip acls */
     afs_uint32 LastCall;	/* time of last call from host */
-    afs_uint32 ActiveCall;	/* time of any call but gettime */
+    afs_uint32 ActiveCall;	/* time of any call but gettime, 
+                                   getstats and getcaps */
     struct client *FirstClient;	/* first connection from host */
     afs_uint32 cpsCall;		/* time of last cps call from this host */
     struct Interface *interface;	/* all alternate addr for client */
