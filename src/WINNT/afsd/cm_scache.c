@@ -473,7 +473,8 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
             mp = "";
         }
         scp = cm_GetNewSCache();
-		
+	  
+	lock_ObtainMutex(&scp->mx);
         scp->fid = *fidp;
         scp->volp = cm_data.rootSCachep->volp;
         scp->dotdotFid.cell=AFS_FAKE_ROOT_CELL_ID;
@@ -505,9 +506,9 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
         scp->group=0;
         scp->dataVersion=cm_data.fakeDirVersion;
         scp->lockDataVersion=-1; /* no lock yet */
+	lock_ReleaseMutex(&scp->mx);
         *outScpp = scp;
         lock_ReleaseWrite(&cm_scacheLock);
-        /*afsi_log("   getscache done");*/
         return 0;
     }
     // end of yj code
@@ -545,6 +546,7 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
     /* now, if we don't have the fid, recycle something */
     scp = cm_GetNewSCache();
     osi_assert(!(scp->flags & CM_SCACHEFLAG_INHASH));
+    lock_ObtainMutex(&scp->mx);
     scp->fid = *fidp;
     scp->volp = volp;	/* a held reference */
 
@@ -566,6 +568,7 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
     cm_data.hashTablep[hash] = scp;
     scp->flags |= CM_SCACHEFLAG_INHASH;
     scp->refCount = 1;
+    lock_ReleaseMutex(&scp->mx);
 
     /* XXX - The following fields in the cm_scache are 
      * uninitialized:
@@ -578,6 +581,35 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
     /* now we have a held scache entry; just return it */
     *outScpp = scp;
     return 0;
+}
+
+/* Returns a held reference to the scache's parent 
+ * if it exists */
+cm_scache_t * cm_FindSCacheParent(cm_scache_t * scp)
+{
+    long code = 0;
+    int i;
+    cm_fid_t    parent_fid;
+    cm_scache_t * pscp = NULL;
+
+    lock_ObtainWrite(&cm_scacheLock);
+    parent_fid = scp->fid;
+    parent_fid.vnode = scp->parentVnode;
+    parent_fid.unique = scp->parentUnique;
+
+    if (cm_FidCmp(&scp->fid, &parent_fid)) {
+	for (i=0; i<cm_data.hashTableSize; i++) {
+	    for (pscp = cm_data.hashTablep[i]; pscp; pscp = pscp->nextp) {
+		if (!cm_FidCmp(&pscp->fid, &parent_fid)) {
+		    cm_HoldSCacheNoLock(pscp);
+		    break;
+		}
+	    }
+	}
+    }
+    lock_ReleaseWrite(&cm_scacheLock);
+
+    return pscp;
 }
 
 /* synchronize a fetch, store, read, write, fetch status or store status.
@@ -1181,9 +1213,13 @@ void cm_DiscardSCache(cm_scache_t *scp)
 	scp->cbServerp = NULL;
     }
     scp->cbExpires = 0;
+    scp->flags &= ~CM_SCACHEFLAG_CALLBACK;
     cm_dnlcPurgedp(scp);
     cm_dnlcPurgevp(scp);
     cm_FreeAllACLEnts(scp);
+
+    /* Force mount points and symlinks to be re-evaluated */
+    scp->mountPointStringp[0] = '\0';
 }
 
 void cm_AFSFidFromFid(AFSFid *afsFidp, cm_fid_t *fidp)

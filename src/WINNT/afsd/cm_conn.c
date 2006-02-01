@@ -411,10 +411,19 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 	    cm_scache_t * scp;
 	    osi_Log4(afsd_logp, "cm_Analyze passed VNOVNODE cell %u vol %u vn %u uniq %u.",
 		      fidp->cell, fidp->volume, fidp->vnode, fidp->unique);
-	    if (!cm_GetSCache(fidp, &scp, userp, reqp)) {
-		cm_FlushParent(scp, userp, reqp);
-		cm_FlushFile(scp, userp, reqp);
-		cm_ReleaseSCache(scp);
+	    scp = cm_FindSCache(fidp);
+	    if (scp) {
+		cm_scache_t *pscp = cm_FindSCacheParent(scp);
+		cm_CleanFile(scp, userp, reqp);
+  		cm_ReleaseSCache(scp);
+ 		if (pscp) {
+		    if (pscp->cbExpires > 0 && pscp->cbServerp != NULL) {
+ 			lock_ObtainMutex(&pscp->mx);
+ 			cm_DiscardSCache(pscp);
+ 			lock_ReleaseMutex(&pscp->mx);
+ 		    }
+ 		    cm_ReleaseSCache(pscp);
+ 		}
 	    }
 	} else {
 	    osi_Log0(afsd_logp, "cm_Analyze passed VNOVNODE unknown fid.");

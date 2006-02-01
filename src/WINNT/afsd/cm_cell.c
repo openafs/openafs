@@ -66,6 +66,7 @@ cm_cell_t *cm_UpdateCell(cm_cell_t * cp)
     if (cp == NULL)
         return NULL;
 
+    lock_ObtainMutex(&cp->mx);
     if ((cp->vlServersp == NULL 
 #ifdef AFS_FREELANCE_CLIENT
           && !(cp->flags & CM_CELLFLAG_FREELANCE)
@@ -112,6 +113,7 @@ cm_cell_t *cm_UpdateCell(cm_cell_t * cp)
 	    cp->timeout = time(0) + 7200;
 	}	
     }
+    lock_ReleaseMutex(&cp->mx);
     return cp;
 }
 
