@@ -1420,7 +1420,7 @@ smb_fid_t *smb_FindFID(smb_vc_t *vcp, unsigned short fid, int flags)
         fidp->raw_write_event = event;
         if (newFid) {
             vcp->fidCounter = fid+1;
-            if (vcp->fidCounter == 0) {
+            if (vcp->fidCounter == 0xFFFF) {
 		osi_Log1(smb_logp, "fidCounter wrapped around for vcp 0x%x",
 			 vcp);
                 vcp->fidCounter = 1;
