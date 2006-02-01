@@ -1575,15 +1575,69 @@ lih_r(register struct host *host, register int held,
     return held;
 }
 
+/* This version does not allow 'host' to be selected unless its ActiveCall 
+ * is newer than 'hostp' which is the host with the oldest ActiveCall from
+ * the last pass (if it is provided).  We filter out any hosts that are
+ * are held by other threads.
+ */
+static int
+lih0_r(register struct host *host, register int held,
+      register struct host *hostp)
+{
+    if (host->cblist
+	&& (hostp && host != hostp) 
+	&& (!held && !h_OtherHolds_r(host))
+	&& (!lih_host || host->ActiveCall < lih_host->ActiveCall) 
+	&& (!hostp || host->ActiveCall > hostp->ActiveCall)) {
+	if (lih_host != NULL && lih_host_held) {
+	    h_Release_r(lih_host);
+	}
+	lih_host = host;
+	lih_host_held = !held;
+	held = 1;
+    }
+    return held;
+}
+
+/* This version does not allow 'host' to be selected unless its ActiveCall 
+ * is newer than 'hostp' which is the host with the oldest ActiveCall from
+ * the last pass (if it is provided).  In this second varient, we do not 
+ * prevent held hosts from being selected.
+ */
+static int
+lih1_r(register struct host *host, register int held,
+      register struct host *hostp)
+{
+    if (host->cblist
+	&& (hostp && host != hostp) 
+	&& (!lih_host || host->ActiveCall < lih_host->ActiveCall) 
+	&& (!hostp || host->ActiveCall > hostp->ActiveCall)) {
+	if (lih_host != NULL && lih_host_held) {
+	    h_Release_r(lih_host);
+	}
+	lih_host = host;
+	lih_host_held = !held;
+	held = 1;
+    }
+    return held;
+}
+
 /* This could be upgraded to get more space each time */
-/* first pass: find the oldest host which isn't held by anyone */
-/* second pass: find the oldest host who isn't "me" */
+/* first pass: sequentially find the oldest host which isn't held by
+               anyone for which we can clear callbacks;
+	       skipping 'hostp' */
+/* second pass: sequentially find the oldest host regardless of 
+               whether or not the host is held; skipping 'hostp' */
+/* third pass: attempt to clear callbacks from 'hostp' */
 /* always called with hostp unlocked */
+
+/* Note: hostlist is ordered most recently created host first and 
+ * its order has no relationship to the most recently used. */
 extern struct host *hostList;
 static int
 GetSomeSpace_r(struct host *hostp, int locked)
 {
-    register struct host *hp, *hp1 = (struct host *)0, *hp2 = hostList;
+    register struct host *hp, *hp1, *hp2;
     int i = 0;
 
     cbstuff.GotSomeSpaces++;
@@ -1593,29 +1647,28 @@ GetSomeSpace_r(struct host *hostp, int locked)
 	cbstuff.GSS3++;
 	return 0;
     }
+
+    i = 0;
+    hp1 = NULL;
+    hp2 = hostList;
     do {
 	lih_host = 0;
-	h_Enumerate_r(lih_r, hp2, (char *)hp1);
+	h_Enumerate_r(i == 0 ? lih0_r : lih1_r, hp2, (char *)hp1);
 	hp = lih_host;
 	if (hp) {
 	    /* set in lih_r! private copy before giving up H_LOCK */
 	    int lih_host_held2=lih_host_held;   
 	    cbstuff.GSS4++;
-	    if (!ClearHostCallbacks_r(hp, 0 /* not locked or held */ )) {
+	    if ((hp != hostp) && !ClearHostCallbacks_r(hp, 0 /* not locked or held */ )) {
 		if (lih_host_held2)
 		    h_Release_r(hp);
 		return 0;
 	    }
 	    if (lih_host_held2)
 		h_Release_r(hp);
-	    hp2 = hp->next;
-	} else {
+	    hp1 = hp;
 	    hp2 = hostList;
-	    hp1 = hostp;
-	    cbstuff.GSS1++;
-	    ViceLog(5,
-		    ("GSS: Try harder for longest inactive host cnt= %d\n",
-		     i));
+	} else {
 	    /*
 	     * Next time try getting callbacks from any host even if
 	     * it's deleted (that's actually great since we can freely
@@ -1624,13 +1677,16 @@ GetSomeSpace_r(struct host *hostp, int locked)
 	     * callback timeout arrives).
 	     */
 	    i++;
+	    hp1 = NULL;
+	    hp2 = hostList;
+	    cbstuff.GSS1++;
+	    ViceLog(5,
+		    ("GSS: Try harder for longest inactive host cnt= %d\n",
+		     i));
 	}
     } while (i < 2);
-    /*
-     * No choice to clear this host's callback state
-     */
-    /* third pass: we still haven't gotten any space, so we free what we had
-     * previously passed over. */
+
+    /* Could not obtain space from other hosts, clear hostp's callback state */
     cbstuff.GSS2++;
     if (!locked) {
 	h_Lock_r(hostp);
