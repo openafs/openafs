@@ -315,6 +315,8 @@ extern void cm_ReleaseSCache(cm_scache_t *);
 
 extern cm_scache_t *cm_FindSCache(cm_fid_t *fidp);
 
+extern cm_scache_t *cm_FindSCacheParent(cm_scache_t *);
+
 extern osi_rwlock_t cm_scacheLock;
 
 extern osi_queue_t *cm_allFileLocks;

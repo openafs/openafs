@@ -501,6 +501,7 @@ void cm_BkgStore(cm_scache_t *scp, long p1, long p2, long p3, long p4,
     lock_ReleaseMutex(&scp->mx);
 }
 
+/* Called with scp locked */
 void cm_ClearPrefetchFlag(long code, cm_scache_t *scp, osi_hyper_t *base)
 {
     osi_hyper_t thyper;

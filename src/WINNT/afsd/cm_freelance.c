@@ -426,7 +426,9 @@ int cm_reInitLocalMountPoints() {
                      lscpp = &tscp->nextp, tscp = tscp->nextp) {
                     if (tscp == scp) {
                         *lscpp = scp->nextp;
+			lock_ObtainMutex(&scp->mx);
                         scp->flags &= ~CM_SCACHEFLAG_INHASH;
+			lock_ReleaseMutex(&scp->mx);
                         break;
                     }
                 }

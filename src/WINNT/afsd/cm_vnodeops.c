@@ -1180,7 +1180,7 @@ long cm_LookupInternal(cm_scache_t *dscp, char *namep, long flags, cm_user_t *us
     if ( !dnlcHit && !(flags & CM_FLAG_NOMOUNTCHASE) && rock.ExactFound ) {
         /* lock the directory entry to prevent racing callback revokes */
         lock_ObtainMutex(&dscp->mx);
-        if ( dscp->cbServerp && dscp->cbExpires )
+        if ( dscp->cbServerp != NULL && dscp->cbExpires > 0 )
             cm_dnlcEnter(dscp, namep, tscp);
         lock_ReleaseMutex(&dscp->mx);
     }

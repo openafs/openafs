@@ -38,7 +38,6 @@
 static char *illegalChars = "\\/:*?\"<>|";
 BOOL isWindows2000 = FALSE;
 
-smb_vc_t *dead_vcp = NULL;
 smb_vc_t *active_vcp = NULL;
 
 int smbShutdownFlag = 0;
@@ -1329,7 +1328,7 @@ smb_fid_t *smb_FindFID(smb_vc_t *vcp, unsigned short fid, int flags)
         if (fid == fidp->fid) {
             if (newFid) {
                 fid++;
-                if (fid == 0) {
+                if (fid == 0xFFFF) {
                     osi_Log1(smb_logp,
                              "New FID number wraps on vcp 0x%x", vcp);
                     fid = 1;
@@ -1350,7 +1349,7 @@ smb_fid_t *smb_FindFID(smb_vc_t *vcp, unsigned short fid, int flags)
             osi_Log1(smb_logp, "Event Object Already Exists: %s", osi_LogSaveString(smb_logp, eventName));
             thrd_CloseHandle(event);
             fid++;
-            if (fid == 0) {
+            if (fid == 0xFFFF) {
                 osi_Log1(smb_logp, "New FID wraps around for vcp 0x%x", vcp);
                 fid = 1;
             }
@@ -1913,7 +1912,9 @@ void smb_GCDirSearches(int isV3)
          */
         if (tp->refCount == 0 && (isV3 || tp->cookie <= 255)) {
             /* hold and delete */
+	    lock_ObtainMutex(&tp->mx);
             tp->flags |= SMB_DIRSEARCH_DELETE;
+	    lock_ReleaseMutex(&tp->mx);
             victimsp[victimCount++] = tp;
             tp->refCount++;
         }
@@ -2481,27 +2482,16 @@ void smb_SendPacket(smb_vc_t *vcp, smb_packet_t *inp)
             s = "unknown error";
         }
         osi_Log2(smb_logp, "SendPacket failure code %d \"%s\"", code, s);
-	osi_Log2(smb_logp, "setting dead_vcp 0x%x, user struct 0x%x",
+	osi_Log2(smb_logp, "marking dead vcp 0x%x, user struct 0x%x",
 		  vcp, vcp->usersp);
-	smb_HoldVC(vcp);
-	lock_ObtainMutex(&vcp->mx);
-	vcp->flags |= SMB_VCFLAG_ALREADYDEAD;
-	lock_ReleaseMutex(&vcp->mx);
 
 	lock_ObtainWrite(&smb_globalLock);
-	if (dead_vcp) {
-	    smb_vc_t * dvcp = dead_vcp;
-	    dead_vcp = vcp;
-	    dead_sessions[vcp->session] = TRUE;
-	    lock_ReleaseWrite(&smb_globalLock);
-	    osi_Log1(smb_logp,"Previous dead_vcp %x", dvcp);
-	    smb_CleanupDeadVC(dvcp);
-	    smb_ReleaseVC(dvcp);
-	} else {
-	    dead_vcp = vcp;
-	    dead_sessions[vcp->session] = TRUE;
-	    lock_ReleaseWrite(&smb_globalLock);
-	}
+	lock_ObtainMutex(&vcp->mx);
+	vcp->flags |= SMB_VCFLAG_ALREADYDEAD;
+	dead_sessions[vcp->session] = TRUE;
+	lock_ReleaseMutex(&vcp->mx);
+	lock_ReleaseWrite(&smb_globalLock);
+	smb_CleanupDeadVC(vcp);
     }
 
     if (localNCB)
@@ -3092,6 +3082,7 @@ long smb_ReceiveNegotiate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         tcounter++;		/* which proto entry we're looking at */
     }
 
+    lock_ObtainMutex(&vcp->mx);
     if (NTProtoIndex != -1) {
         protoIndex = NTProtoIndex;
         vcp->flags |= (SMB_VCFLAG_USENT | SMB_VCFLAG_USEV3);
@@ -3105,6 +3096,7 @@ long smb_ReceiveNegotiate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         vcp->flags |= SMB_VCFLAG_USECORE;
     }	
     else protoIndex = -1;
+    lock_ReleaseMutex(&vcp->mx);
 
     if (protoIndex == -1)
         return CM_ERROR_INVAL;
@@ -6281,10 +6273,10 @@ long smb_ReceiveCoreWrite(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         truncAttr.length.HighPart = 0;
         lock_ObtainMutex(&fidp->mx);
         code = cm_SetAttr(fidp->scp, &truncAttr, userp, &req);
+	fidp->flags |= SMB_FID_LENGTHSETDONE;
         lock_ReleaseMutex(&fidp->mx);
         smb_SetSMBParm(outp, 0, /* count */ 0);
         smb_SetSMBDataLength(outp, 0);
-        fidp->flags |= SMB_FID_LENGTHSETDONE;
         goto done;
     }
 
@@ -7740,28 +7732,16 @@ void smb_Server(VOID *parmp)
             vcp = smb_FindVC(ncbp->ncb_lsn, 0, lanas[idx_session]);
             if (vcp) {
 		lock_ObtainWrite(&smb_globalLock);
-		if (dead_vcp == vcp) {
-                    osi_Log1(smb_logp, "dead_vcp already set, 0x%x", dead_vcp);
-		    lock_ReleaseWrite(&smb_globalLock);
-		} else if (!(vcp->flags & SMB_VCFLAG_ALREADYDEAD)) {
-                    osi_Log2(smb_logp, "setting dead_vcp 0x%x, user struct 0x%x",
+		if (!(vcp->flags & SMB_VCFLAG_ALREADYDEAD)) {
+                    osi_Log2(smb_logp, "marking dead vcp 0x%x, user struct 0x%x",
                              vcp, vcp->usersp);
-                    if (dead_vcp) {
-			smb_vc_t * dvcp = dead_vcp;
-			dead_vcp = vcp;		/* transfer the reference */
-			dead_sessions[vcp->session] = TRUE;
-			lock_ReleaseWrite(&smb_globalLock);
-                        osi_Log1(smb_logp,"Previous dead_vcp %x", dvcp);
-			smb_CleanupDeadVC(dvcp);
-                        smb_ReleaseVC(dvcp);
-                    } else {
-			dead_vcp = vcp;		/* transfer the reference */
-			dead_sessions[vcp->session] = TRUE;
-			lock_ReleaseWrite(&smb_globalLock);
-		    }
 		    lock_ObtainMutex(&vcp->mx);
                     vcp->flags |= SMB_VCFLAG_ALREADYDEAD;
+		    dead_sessions[vcp->session] = TRUE;
 		    lock_ReleaseMutex(&vcp->mx);
+		    lock_ReleaseWrite(&smb_globalLock);
+		    smb_CleanupDeadVC(vcp);
+		    smb_ReleaseVC(vcp);
 		    vcp = NULL;
                 }
             }
@@ -7808,25 +7788,16 @@ void smb_Server(VOID *parmp)
             if (vcp && vcp->errorCount++ > 3) {
                 osi_Log2(smb_logp, "session [ %d ] closed, vcp->errorCount = %d", idx_session, vcp->errorCount);
 		lock_ObtainWrite(&smb_globalLock);
- 		if (dead_vcp == vcp) {
-                     osi_Log1(smb_logp, "dead_vcp already set, 0x%x", dead_vcp);
-		    lock_ReleaseWrite(&smb_globalLock);
-		} else if (!(vcp->flags & SMB_VCFLAG_ALREADYDEAD)) {
-		    osi_Log2(smb_logp, "setting dead_vcp 0x%x, user struct 0x%x",
+		if (!(vcp->flags & SMB_VCFLAG_ALREADYDEAD)) {
+		    osi_Log2(smb_logp, "marking dead vcp 0x%x, user struct 0x%x",
                               vcp, vcp->usersp);
-		    if (dead_vcp) {
-			smb_vc_t * dvcp = dead_vcp;
-			dead_vcp = vcp;		/* transfer reference */
-			dead_sessions[vcp->session] = TRUE;
-			lock_ReleaseWrite(&smb_globalLock);
-
-			osi_Log1(smb_logp,"Previous dead_vcp %x", dvcp);
-			smb_CleanupDeadVC(dvcp);
-			smb_ReleaseVC(dvcp);
-		    }
 		    lock_ObtainMutex(&vcp->mx);
 		    vcp->flags |= SMB_VCFLAG_ALREADYDEAD;
+		    dead_sessions[vcp->session] = TRUE;
 		    lock_ReleaseMutex(&vcp->mx);
+		    lock_ReleaseWrite(&smb_globalLock);
+		    smb_CleanupDeadVC(vcp);
+		    smb_ReleaseVC(vcp);
 		    vcp = NULL;
 		}
  		goto doneWithNCB;
