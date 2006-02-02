@@ -108,16 +108,6 @@ static void h_TossStuff_r(register struct host *host);
 #define	IN_CLASSB_SUBNET	0xffffff00
 #endif
 
-#define rxr_GetEpoch(aconn) (((struct rx_connection *)(aconn))->epoch)
-
-#define rxr_CidOf(aconn) (((struct rx_connection *)(aconn))->cid)
-
-#define rxr_PortOf(aconn) \
-    rx_PortOf(rx_PeerOf(((struct rx_connection *)(aconn))))
-
-#define rxr_HostOf(aconn) \
-    rx_HostOf(rx_PeerOf((struct rx_connection *)(aconn)))
-
 
 /* get a new block of CEs and chain it on CEFree */
 static void
@@ -1693,10 +1683,13 @@ h_FindClient_r(struct rx_connection *tcon)
      */
     oldClient = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
     if (oldClient && oldClient->tcon == tcon) {
+	char hoststr[16];
 	oldClient->tcon = (struct rx_connection *)0;
-	ViceLog(0, ("FindClient: client %x(%x) already had conn %x (host %x), stolen by client %x(%x)\n", 
+	ViceLog(0, ("FindClient: client %x(%x) already had conn %x (host %s:%d), stolen by client %x(%x)\n", 
 		    oldClient, oldClient->sid, tcon, 
-		    rx_HostOf(rx_PeerOf(tcon)), client, client->sid));
+		    afs_inet_ntoa_r(rxr_HostOf(tcon), hoststr),
+		    ntohs(rxr_PortOf(tcon)),
+		    client, client->sid));
 	/* rx_SetSpecific will be done immediately below */
     }
     client->tcon = tcon;
@@ -1732,8 +1725,8 @@ GetClient(struct rx_connection *tcon, struct client **cp)
     *cp = client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
     if (client == NULL || client->tcon == NULL) {
 	ViceLog(0,
-		("GetClient: no client in conn %x (host %x), VBUSYING\n",
-		 tcon, rx_HostOf(rx_PeerOf(tcon))));
+		("GetClient: no client in conn %x (host %x:%d), VBUSYING\n",
+		 tcon, rxr_HostOf(tcon),rxr_PortOf(tcon)));
 	H_UNLOCK;
 	return VBUSY;
     }
