@@ -36,7 +36,7 @@ struct brequest afs_brs[NBRS];	/* request structures */
 struct afs_osi_WaitHandle AFS_WaitHandler, AFS_CSWaitHandler;
 static int afs_brs_count = 0;	/* request counter, to service reqs in order */
 #ifdef AFS_DISABLE_BKG
-extern int disable_bkg = AFS_DISABLE_BKG;
+int disable_bkg = AFS_DISABLE_BKG;
 #endif
 
 static int rxepoch_checked = 0;
