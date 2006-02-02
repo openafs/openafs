@@ -1,3 +1,24 @@
+Since 1.4.1 rc5: 1.4.1 rc6 release (2 Feb 2006)
+
+ * Additional auditing of the smb code revealed that smb ioctl
+   operations were failing to free smb_fid_t objects
+
+ * The File Identifiers assigned to smb_fid_t objects could be
+   given the value 65535 which is 0xFFFF which is also the 
+   INVALID_HANDLE value.  Both 0 and 65535 are now treated as
+   reserved values.
+
+ * Audited all assignments to fields and ensured that they are
+   protected by obtaining the relevant mutex object.
+
+ * Re-wrote the VNOVNODE handling to avoid a potential deadlock
+   if both the current cm_scache_t object and its parent are
+   both returning VNOVNODE.
+
+ * Removed all the logic associated with the 'dead_vcp' variable
+   which must have been added for debugging because its used 
+   was never thread safe and it truly served no purpose.
+
 Since 1.4.1 rc4: 1.4.1 rc5 released (25 Jan 2006)
 				    
  * Re-enabled LogoffTokenTransfer and LogoffTokenTransferTimeout
