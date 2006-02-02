@@ -823,7 +823,7 @@ MultiBreakCallBack_r(struct cbstruct cba[], int ncbas,
 		    if (MultiBreakCallBackAlternateAddress(hp, afidp)) {
 			if (ShowProblems) {
 			    ViceLog(7,
-				    ("BCB: Failed on file %u.%u.%u, host %s:%d is down\n",
+				    ("BCB: Failed on file %u.%u.%u, Host %s:%d is down\n",
 				     afidp->AFSCBFids_val->Volume,
 				     afidp->AFSCBFids_val->Vnode,
 				     afidp->AFSCBFids_val->Unique,
@@ -1088,7 +1088,7 @@ BreakDelayedCallBacks_r(struct host *host)
 
     cbstuff.nbreakers++;
     if (!(host->hostFlags & RESETDONE) && !(host->hostFlags & HOSTDELETED)) {
-	host->hostFlags &= ~ALTADDR;	/* alterrnate addresses are invalid */
+	host->hostFlags &= ~ALTADDR;	/* alternate addresses are invalid */
 	cb_conn = host->callback_rxcon;
 	rx_GetConnection(cb_conn);
 	if (host->interface) {
@@ -1106,7 +1106,7 @@ BreakDelayedCallBacks_r(struct host *host)
 	if (code) {
 	    if (ShowProblems) {
 		ViceLog(0,
-			("CB: Call back connect back failed (in break delayed) for %s:%d\n",
+			("CB: Call back connect back failed (in break delayed) for Host %s:%d\n",
 			 afs_inet_ntoa_r(host->host, hoststr),
 			 ntohs(host->port)));
 	    }
@@ -1153,7 +1153,7 @@ BreakDelayedCallBacks_r(struct host *host)
 		int i;
 		if (ShowProblems) {
 		    ViceLog(0,
-			    ("CB: XCallBackBulk failed, host=%s:%d; callback list follows:\n",
+			    ("CB: XCallBackBulk failed, Host %s:%d; callback list follows:\n",
 			     afs_inet_ntoa_r(host->host, hoststr),
 			     ntohs(host->port)));
 		}
@@ -1208,11 +1208,11 @@ MultiBreakVolumeCallBack_r(struct host *host, int isheld,
 	    return 0;		/* Release hold */
 	}
 	ViceLog(8,
-		("BVCB: volume call back for host %s:%d failed\n",
+		("BVCB: volume call back for Host %s:%d failed\n",
 		 afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port)));
 	if (ShowProblems) {
 	    ViceLog(0,
-		    ("CB: volume callback for host %s:%d failed\n",
+		    ("CB: volume callback for Host %s:%d failed\n",
 		     afs_inet_ntoa_r(host->host, hoststr),
 		     ntohs(host->port)));
 	}

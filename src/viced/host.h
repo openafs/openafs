@@ -220,6 +220,16 @@ struct host *(hosttableptrs[h_MAXHOSTTABLES]);	/* Used by h_itoh */
 #define h_htoi(host) ((host)->index)	/* index isn't zeroed, no need to lock */
 #define h_itoh(hostindex) (hosttableptrs[(hostindex)>>h_HTSHIFT]+((hostindex)&(h_HTSPERBLOCK-1)))
 
+#define rxr_GetEpoch(aconn) (((struct rx_connection *)(aconn))->epoch)
+
+#define rxr_CidOf(aconn) (((struct rx_connection *)(aconn))->cid)
+
+#define rxr_PortOf(aconn) \
+    rx_PortOf(rx_PeerOf(((struct rx_connection *)(aconn))))
+
+#define rxr_HostOf(aconn) \
+    rx_HostOf(rx_PeerOf((struct rx_connection *)(aconn)))
+
 #define HCPS_INPROGRESS			0x01	/*set when CPS is being updated */
 #define HCPS_WAITING			0x02	/*waiting for CPS to get updated */
 #define ALTADDR				0x04	/*InitCallBack is being done */
@@ -229,3 +239,5 @@ struct host *(hosttableptrs[h_MAXHOSTTABLES]);	/* Used by h_itoh */
 #define RESETDONE			0x40	/* callback reset done */
 #define HFE_LATER                       0x80	/* host has FE_LATER callbacks */
 #define HERRORTRANS                    0x100	/* do error translation */
+
+
