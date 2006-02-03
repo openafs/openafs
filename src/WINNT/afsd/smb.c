@@ -2488,11 +2488,11 @@ void smb_SendPacket(smb_vc_t *vcp, smb_packet_t *inp)
 	osi_Log2(smb_logp, "marking dead vcp 0x%x, user struct 0x%x",
 		 vcp, vcp->usersp);
 
-	lock_ObtainWrite(&smb_globalLock);
   	lock_ObtainMutex(&vcp->mx);
   	vcp->flags |= SMB_VCFLAG_ALREADYDEAD;
- 	dead_sessions[vcp->session] = TRUE;
   	lock_ReleaseMutex(&vcp->mx);
+	lock_ObtainWrite(&smb_globalLock);
+ 	dead_sessions[vcp->session] = TRUE;
  	lock_ReleaseWrite(&smb_globalLock);
  	smb_CleanupDeadVC(vcp);
     }
@@ -7591,19 +7591,21 @@ void smb_Server(VOID *parmp)
             /* Client closed session */
             vcp = smb_FindVC(ncbp->ncb_lsn, 0, lanas[idx_session]);
             if (vcp) {
-		lock_ObtainWrite(&smb_globalLock);
+		lock_ObtainMutex(&vcp->mx);
 		if (!(vcp->flags & SMB_VCFLAG_ALREADYDEAD)) {
                     osi_Log2(smb_logp, "marking dead vcp 0x%x, user struct 0x%x",
                              vcp, vcp->usersp);
-		    lock_ObtainMutex(&vcp->mx);
                     vcp->flags |= SMB_VCFLAG_ALREADYDEAD;
-		    dead_sessions[vcp->session] = TRUE;
 		    lock_ReleaseMutex(&vcp->mx);
+		    lock_ObtainWrite(&smb_globalLock);
+		    dead_sessions[vcp->session] = TRUE;
 		    lock_ReleaseWrite(&smb_globalLock);
 		    smb_CleanupDeadVC(vcp);
 		    smb_ReleaseVC(vcp);
 		    vcp = NULL;
-                }
+                } else {
+		    lock_ReleaseMutex(&vcp->mx);
+		}
             }
             goto doneWithNCB;
 
@@ -7632,28 +7634,33 @@ void smb_Server(VOID *parmp)
         default:
             /* A weird error code.  Log it, sleep, and continue. */
             vcp = smb_FindVC(ncbp->ncb_lsn, 0, lanas[idx_session]);
+	    if (vcp) 
+		lock_ObtainMutex(&vcp->mx);
             if (vcp && vcp->errorCount++ > 3) {
                 osi_Log2(smb_logp, "session [ %d ] closed, vcp->errorCount = %d", idx_session, vcp->errorCount);
- 		lock_ObtainWrite(&smb_globalLock);
 		if (!(vcp->flags & SMB_VCFLAG_ALREADYDEAD)) {
 		    osi_Log2(smb_logp, "marking dead vcp 0x%x, user struct 0x%x",
 			     vcp, vcp->usersp);
-  		    lock_ObtainMutex(&vcp->mx);
   		    vcp->flags |= SMB_VCFLAG_ALREADYDEAD;
-		    dead_sessions[vcp->session] = TRUE;
   		    lock_ReleaseMutex(&vcp->mx);
+		    lock_ObtainWrite(&smb_globalLock);
+		    dead_sessions[vcp->session] = TRUE;
  		    lock_ReleaseWrite(&smb_globalLock);
  		    smb_CleanupDeadVC(vcp);
  		    smb_ReleaseVC(vcp);
  		    vcp = NULL;
- 		}
+ 		} else {
+  		    lock_ReleaseMutex(&vcp->mx);
+		}
 		goto doneWithNCB;
             }
             else {
+		if (vcp)
+		    lock_ReleaseMutex(&vcp->mx);
                 thrd_Sleep(1000);
-                thrd_SetEvent(SessionEvents[idx_session]);
+		thrd_SetEvent(SessionEvents[idx_session]);
             }
-            continue;
+	    continue;
         }
 
         /* Success, so now dispatch on all the data in the packet */

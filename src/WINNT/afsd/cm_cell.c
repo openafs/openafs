@@ -134,7 +134,7 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, long flags)
 
     lock_ObtainWrite(&cm_cellLock);
     for (cp = cm_data.allCellsp; cp; cp=cp->nextp) {
-        if (strcmp(namep, cp->name) == 0) {
+        if (stricmp(namep, cp->name) == 0) {
             strcpy(fullname, cp->name);
             break;
         }

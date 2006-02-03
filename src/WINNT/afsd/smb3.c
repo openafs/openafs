@@ -952,12 +952,19 @@ long smb_ReceiveV3UserLogoffX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
 	unp = uidp->unp;
         lock_ReleaseMutex(&uidp->mx);
 
+#ifdef COMMENT
+	/* we can't do this.  we get logoff messages prior to a session
+	 * disconnect even though it doesn't mean the user is logging out.
+	 * we need to create a new pioctl and EventLogoff handler to set
+	 * SMB_USERNAMEFLAG_LOGOFF.
+	 */
 	if (unp && smb_LogoffTokenTransfer) {
 	    lock_ObtainMutex(&unp->mx);
 	    unp->flags |= SMB_USERNAMEFLAG_LOGOFF;
 	    unp->last_logoff_t = osi_Time() + smb_LogoffTransferTimeout;
 	    lock_ReleaseMutex(&unp->mx);
 	}
+#endif
 
 	smb_ReleaseUID(uidp);
     }
@@ -1169,7 +1176,7 @@ smb_tran2Packet_t *smb_GetTran2ResponsePacket(smb_vc_t *vcp,
     return tp;
 }       
 
-/* free a tran2 packet; must be called with smb_globalLock held */
+/* free a tran2 packet */
 void smb_FreeTran2Packet(smb_tran2Packet_t *t2p)
 {
     if (t2p->vcp) {
@@ -1398,9 +1405,7 @@ long smb_ReceiveV3Trans(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         }
 
         /* free the input tran 2 packet */
-        lock_ObtainWrite(&smb_globalLock);
         smb_FreeTran2Packet(asp);
-        lock_ReleaseWrite(&smb_globalLock);
     }
     else if (firstPacket) {
         /* the first packet in a multi-packet request, we need to send an
@@ -2024,9 +2029,7 @@ long smb_ReceiveV3Tran2A(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         }
 
         /* free the input tran 2 packet */
-        lock_ObtainWrite(&smb_globalLock);
         smb_FreeTran2Packet(asp);
-        lock_ReleaseWrite(&smb_globalLock);
     }
     else if (firstPacket) {
         /* the first packet in a multi-packet request, we need to send an
