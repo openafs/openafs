@@ -2038,7 +2038,10 @@ afs_darwin_finalizevnode(struct vcache *avc, struct vnode *dvp, struct component
    par.vnfs_filesize = avc->m.Length;
    par.vnfs_fsnode = avc;
    par.vnfs_dvp = dvp;
-   par.vnfs_cnp = cnp;
+   if (cnp && (cnp->cn_flags & ISDOTDOT) == 0)
+       par.vnfs_cnp = cnp;
+   if (!dvp || !cnp || (cnp->cn_flags & MAKEENTRY) == 0)
+       par.vnfs_flags = VNFS_NOCACHE;
    if (isroot)
        par.vnfs_markroot = 1;
    error = vnode_create(VNCREATE_FLAVOR, VCREATESIZE, &par, &nvp);
