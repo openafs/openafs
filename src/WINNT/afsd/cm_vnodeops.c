@@ -952,7 +952,8 @@ long cm_FollowMountPoint(cm_scache_t *scp, cm_scache_t *dscp, cm_user_t *userp,
 
     /* parse the volume name */
     mpNamep = scp->mountPointStringp;
-    osi_assert(mpNamep[0]);
+    if (!mpNamep[0])
+	return CM_ERROR_NOSUCHPATH;
     tlen = strlen(scp->mountPointStringp);
     mtType = *scp->mountPointStringp;
     cellNamep = malloc(tlen);
