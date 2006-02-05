@@ -410,7 +410,7 @@ GetDomainLogonOptions( PLUID lpLogonId, char * username, char * domain, LogonOpt
     if(ISHIGHSECURITY(opt->LogonOption)) {
         opt->smbName = malloc( MAXRANDOMNAMELEN );
         GenRandomName(opt->smbName);
-    } else {
+    } else if (lpLogonId) {
         /* username and domain for logon session is not necessarily the same as
            username and domain passed into network provider. */
         PSECURITY_LOGON_SESSION_DATA plsd;
@@ -447,6 +447,21 @@ GetDomainLogonOptions( PLUID lpLogonId, char * username, char * domain, LogonOpt
 
       bad_strings:
         LsaFreeReturnBuffer(plsd);
+    } else {
+        size_t len;
+
+        DebugEvent("No LUID given. Constructing username using [%s] and [%s]",
+                   username, domain);
+ 
+        len = strlen(username) + strlen(domain) + 2;
+
+        opt->smbName = malloc(len);
+
+        StringCbCopy(opt->smbName, len, username);
+        StringCbCat(opt->smbName, len, "\\");
+        StringCbCat(opt->smbName, len, domain);
+
+        strlwr(opt->smbName);
     }
 
     DebugEvent("Looking up logon script");
@@ -578,7 +593,8 @@ GetDomainLogonOptions( PLUID lpLogonId, char * username, char * domain, LogonOpt
         DebugEvent("Found TheseCells [%s]", thesecells);
         opt->theseCells = thesecells;
 
-      doneTheseCells:;
+      doneTheseCells:
+        ;
     }
 
   cleanup:
@@ -755,7 +771,7 @@ DWORD APIENTRY NPLogonNotify(
             code = GT_PW_NULL;
             reason = "zero length password is illegal";
             code=0;
-        }       
+        }
 
         /* Get cell name if doing integrated logon.  
            We might overwrite this if we are logging into an AD realm and we find out that
@@ -781,109 +797,118 @@ DWORD APIENTRY NPLogonNotify(
     }
 
     /* loop until AFS is started. */
-    while (IsServiceRunning() || IsServiceStartPending()) {
-        DebugEvent("while(autostart) LogonOption[%x], Service AutoStart[%d]",
-                    opt.LogonOption,afsWillAutoStart);
+    if (afsWillAutoStart) {
+	while (IsServiceRunning() || IsServiceStartPending()) {
+	    DebugEvent("while(autostart) LogonOption[%x], Service AutoStart[%d]",
+			opt.LogonOption,afsWillAutoStart);
 
-        if (ISADREALM(opt.flags)) {
-            code = GetFileCellName(homePath,cell,256);
-            if (!code) {
-                DebugEvent("profile path [%s] is in cell [%s]",homePath,cell);
-            }
-            /* Don't bail out if GetFileCellName failed.
-             * The home dir may not be in AFS after all. 
-             */
-        } else
-            code=0;
-		
-        /* if Integrated Logon  */
-        if (ISLOGONINTEGRATED(opt.LogonOption))
-        {			
-            if ( KFW_is_available() ) {
-                code = KFW_AFS_get_cred(uname, cell, password, 0, opt.smbName, &reason);
-                DebugEvent("KFW_AFS_get_cred  uname=[%s] smbname=[%s] cell=[%s] code=[%d]",
-			    uname,opt.smbName,cell,code);
-                if (code == 0 && opt.theseCells) { 
-                    char * principal, *p;
+	    if (ISADREALM(opt.flags)) {
+		code = GetFileCellName(homePath,cell,256);
+		if (!code) {
+		    DebugEvent("profile path [%s] is in cell [%s]",homePath,cell);
+		}
+		/* Don't bail out if GetFileCellName failed.
+		 * The home dir may not be in AFS after all. 
+		 */
+	    } else
+		code=0;
 
-                    principal = (char *)malloc(strlen(uname) + strlen(cell) + 2);
-                    if ( principal ) {
-                        strcpy(principal, uname);
-                        p = principal + strlen(uname);
-                        *p++ = '@';
-                        strcpy(p, cell);
-                        for ( ;*p; p++) {
-                            *p = toupper(*p);
-                        }
+	    /* if Integrated Logon  */
+	    if (ISLOGONINTEGRATED(opt.LogonOption))
+	    {			
+		if ( KFW_is_available() ) {
+		    code = KFW_AFS_get_cred(uname, cell, password, 0, opt.smbName, &reason);
+		    DebugEvent("KFW_AFS_get_cred  uname=[%s] smbname=[%s] cell=[%s] code=[%d]",
+				uname,opt.smbName,cell,code);
+		    if (code == 0 && opt.theseCells) { 
+			char * principal, *p;
+			size_t len, tlen;
 
-                        p = opt.theseCells;
-                        while ( *p ) {
-                            code2 = KFW_AFS_get_cred(principal, p, 0, 0, opt.smbName, &reason);
-                            DebugEvent("KFW_AFS_get_cred  uname=[%s] smbname=[%s] cell=[%s] code=[%d]",
-                                        principal,opt.smbName,p,code2);
-                            p += strlen(p) + 1;
-                        }
-                        
-                        free(principal);
-                    }
-                }
-            } else {
-                code = ka_UserAuthenticateGeneral2(KA_USERAUTH_VERSION+KA_USERAUTH_AUTHENT_LOGON,
-                                                    uname, "", cell, password, opt.smbName, 0, &pw_exp, 0,
-                                                    &reason);
-                DebugEvent("AFS AfsLogon - (INTEGRATED only)ka_UserAuthenticateGeneral2 Code[%x] uname[%s] smbname=[%s] Cell[%s] PwExp=[%d] Reason=[%s]",
-                            code,uname,opt.smbName,cell,pw_exp,reason?reason:"");
-            }       
-            if ( code && code != KTC_NOCM && code != KTC_NOCMRPC && !lowercased_name ) {
-                for ( ctemp = uname; *ctemp ; ctemp++) {
-                    *ctemp = tolower(*ctemp);
-                }
-                lowercased_name = TRUE;
-                goto sleeping;
-            }
+			StringCchLength(cell, MAX_DOMAIN_LENGTH, &tlen);
+			len = tlen;
+			StringCchLength(uname, MAX_USERNAME_LENGTH, &tlen);
+			len += tlen + 2;
 
-            /* is service started yet?*/
+			/* tlen is now the length of uname in characters */
+			principal = (char *)malloc(len * sizeof(char));
+			if ( principal ) {
+			    StringCchCopy(principal, len, uname);
+			    p = principal + tlen;
+			    *p++ = '@';
+			    StringCchCopy(p, len - tlen -1, cell);
+			    for ( ;*p; p++) {
+				*p = toupper(*p);
+			    }
 
-            /* If we've failed because the client isn't running yet and the
-            * client is set to autostart (and therefore it makes sense for
-            * us to wait for it to start) then sleep a while and try again. 
-            * If the error was something else, then give up. */
-            if (code != KTC_NOCM && code != KTC_NOCMRPC)
-                break;
-        }
-        else {  
-            /*JUST check to see if its running*/
-            if (IsServiceRunning())
-                break;
-            if (!IsServiceStartPending()) {
-                code = KTC_NOCMRPC;
-                reason = "AFS Service start failed";
-                break;
-            }
-        }
+			    p = opt.theseCells;
+			    while ( *p ) {
+				code2 = KFW_AFS_get_cred(principal, p, 0, 0, opt.smbName, &reason);
+				DebugEvent("KFW_AFS_get_cred  uname=[%s] smbname=[%s] cell=[%s] code=[%d]",
+					    principal,opt.smbName,p,code2);
+				p += strlen(p) + 1;
+			    }
 
-        /* If the retry interval has expired and we still aren't
-         * logged in, then just give up if we are not in interactive
-         * mode or the failSilently flag is set, otherwise let the
-         * user know we failed and give them a chance to try again. */
-        if (retryInterval <= 0) {
-            reason = "AFS not running";
-            if (!interactive || opt.failSilently)
-                break;
-            flag = MessageBox(hwndOwner,
-                               "AFS is still starting.  Retry?",
-                               "AFS Logon",
-                               MB_ICONQUESTION | MB_RETRYCANCEL);
-            if (flag == IDCANCEL)
-                break;
+			    free(principal);
+			}
+		    }
+		} else {
+		    code = ka_UserAuthenticateGeneral2(KA_USERAUTH_VERSION+KA_USERAUTH_AUTHENT_LOGON,
+							uname, "", cell, password, opt.smbName, 0, &pw_exp, 0,
+							&reason);
+		    DebugEvent("AFS AfsLogon - (INTEGRATED only)ka_UserAuthenticateGeneral2 Code[%x] uname[%s] smbname=[%s] Cell[%s] PwExp=[%d] Reason=[%s]",
+				code,uname,opt.smbName,cell,pw_exp,reason?reason:"");
+		}       
+		if ( code && code != KTC_NOCM && code != KTC_NOCMRPC && !lowercased_name ) {
+		    for ( ctemp = uname; *ctemp ; ctemp++) {
+			*ctemp = tolower(*ctemp);
+		    }
+		    lowercased_name = TRUE;
+		    goto sleeping;
+		}
 
-            /* Wait just a little while and try again */
-            retryInterval = opt.retryInterval;
-        }
+		/* is service started yet?*/
 
-      sleeping:
-        Sleep(sleepInterval * 1000);
-        retryInterval -= sleepInterval;
+		/* If we've failed because the client isn't running yet and the
+		 * client is set to autostart (and therefore it makes sense for
+		 * us to wait for it to start) then sleep a while and try again. 
+		 * If the error was something else, then give up. */
+		if (code != KTC_NOCM && code != KTC_NOCMRPC)
+		    break;
+	    }
+	    else {  
+		/*JUST check to see if its running*/
+		if (IsServiceRunning())
+		    break;
+		if (!IsServiceStartPending()) {
+		    code = KTC_NOCMRPC;
+		    reason = "AFS Service start failed";
+		    break;
+		}
+	    }
+
+	    /* If the retry interval has expired and we still aren't
+	     * logged in, then just give up if we are not in interactive
+	     * mode or the failSilently flag is set, otherwise let the
+	     * user know we failed and give them a chance to try again. */
+	    if (retryInterval <= 0) {
+		reason = "AFS not running";
+		if (!interactive || opt.failSilently)
+		    break;
+		flag = MessageBox(hwndOwner,
+				   "AFS is still starting.  Retry?",
+				   "AFS Logon",
+				   MB_ICONQUESTION | MB_RETRYCANCEL);
+		if (flag == IDCANCEL)
+		    break;
+
+		/* Wait just a little while and try again */
+		retryInterval = opt.retryInterval;
+	    }
+
+	  sleeping:
+	    Sleep(sleepInterval * 1000);
+	    retryInterval -= sleepInterval;
+	}
     }
 
     DebugEvent("while loop exited");
@@ -1011,6 +1036,7 @@ VOID AFS_Logoff_Event( PWLX_NOTIFICATION_INFO pInfo )
     DWORD LSPtype, LSPsize;
     HKEY NPKey;
     DWORD LogoffPreserveTokens = 0;
+    LogonOptions_t opt;
 
     /* Make sure the AFS Libraries are initialized */
     AfsLogonInit();
@@ -1024,7 +1050,28 @@ VOID AFS_Logoff_Event( PWLX_NOTIFICATION_INFO pInfo )
                      &LSPtype, (LPBYTE)&LogoffPreserveTokens, &LSPsize);
     RegCloseKey (NPKey);
 
-    if (LogoffPreserveTokens) {
+    ZeroMemory(&opt, sizeof(opt));
+
+    if (pInfo->UserName && pInfo->Domain) {
+        char username[MAX_USERNAME_LENGTH] = "";
+        char domain[MAX_DOMAIN_LENGTH] = "";
+        size_t szlen = 0;
+
+        StringCchLengthW(pInfo->UserName, MAX_USERNAME_LENGTH, &szlen);
+        WideCharToMultiByte(CP_UTF8, 0, pInfo->UserName, szlen,
+                            username, sizeof(username), NULL, NULL);
+
+        StringCchLengthW(pInfo->Domain, MAX_DOMAIN_LENGTH, &szlen);
+        WideCharToMultiByte(CP_UTF8, 0, pInfo->Domain, szlen,
+                            domain, sizeof(domain), NULL, NULL);
+
+        GetDomainLogonOptions(NULL, username, domain, &opt);
+    }
+
+    if (!LogoffPreserveTokens &&
+        ISLOGONINTEGRATED(opt.LogonOption) &&
+        ISREMOTE(opt.flags)) {
+
         if (!GetTokenInformation(pInfo->hToken, TokenUser, NULL, 0, &retLen))
         {
             if ( GetLastError() == ERROR_INSUFFICIENT_BUFFER ) {
@@ -1083,6 +1130,7 @@ VOID AFS_Logon_Event( PWLX_NOTIFICATION_INFO pInfo )
     NETRESOURCE nr;
     DWORD res;
     DWORD dwSize;
+    LogonOptions_t opt;
 
     /* Make sure the AFS Libraries are initialized */
     AfsLogonInit();
@@ -1090,6 +1138,29 @@ VOID AFS_Logon_Event( PWLX_NOTIFICATION_INFO pInfo )
     DebugEvent0("AFS_Logon_Event - Start");
 
     DebugEvent("AFS_Logon_Event Process ID: %d",GetCurrentProcessId());
+
+    ZeroMemory(&opt, sizeof(opt));
+
+    if (pInfo->UserName && pInfo->Domain) {
+        char username[MAX_USERNAME_LENGTH] = "";
+        char domain[MAX_DOMAIN_LENGTH] = "";
+        size_t szlen = 0;
+
+        StringCchLengthW(pInfo->UserName, MAX_USERNAME_LENGTH, &szlen);
+        WideCharToMultiByte(CP_UTF8, 0, pInfo->UserName, szlen,
+                            username, sizeof(username), NULL, NULL);
+        
+        StringCchLengthW(pInfo->Domain, MAX_DOMAIN_LENGTH, &szlen);
+        WideCharToMultiByte(CP_UTF8, 0, pInfo->Domain, szlen,
+                            domain, sizeof(domain), NULL, NULL);
+
+        GetDomainLogonOptions(NULL, username, domain, &opt);
+    }
+
+    if (!ISLOGONINTEGRATED(opt.LogonOption) || !ISREMOTE(opt.flags)) {
+        DebugEvent("AFS_Logon_Event - Logon is not integrated or not remote");
+        goto done_logon_event;
+    }
 
     if (!GetTokenInformation(pInfo->hToken, TokenUser, NULL, 0, &retLen))
     {
@@ -1150,6 +1221,7 @@ VOID AFS_Logon_Event( PWLX_NOTIFICATION_INFO pInfo )
     if ( tokenUser )
         LocalFree(tokenUser);
 
+ done_logon_event:
     DebugEvent0("AFS_Logon_Event - End");
 }
 
@@ -1157,7 +1229,6 @@ static BOOL
 GetSecurityLogonSessionData(HANDLE hToken, PSECURITY_LOGON_SESSION_DATA * ppSessionData)
 {
     NTSTATUS Status = 0;
-    HANDLE  TokenHandle;
     TOKEN_STATISTICS Stats;
     DWORD   ReqLen;
     BOOL    Success;
@@ -1166,16 +1237,7 @@ GetSecurityLogonSessionData(HANDLE hToken, PSECURITY_LOGON_SESSION_DATA * ppSess
         return FALSE;
     *ppSessionData = NULL;
 
-#if 0
-    Success = OpenProcessToken( HANDLE GetCurrentProcess(), TOKEN_QUERY, &TokenHandle );
-    if ( !Success )
-        return FALSE;
-#endif
-
     Success = GetTokenInformation( hToken, TokenStatistics, &Stats, sizeof(TOKEN_STATISTICS), &ReqLen );
-#if 0
-    CloseHandle( TokenHandle );
-#endif
     if ( !Success )
         return FALSE;
 
@@ -1188,21 +1250,11 @@ GetSecurityLogonSessionData(HANDLE hToken, PSECURITY_LOGON_SESSION_DATA * ppSess
 
 VOID KFW_Logon_Event( PWLX_NOTIFICATION_INFO pInfo )
 {
-    DWORD code;
-
     WCHAR szUserW[128] = L"";
     char  szUserA[128] = "";
-    char  szClient[MAX_PATH];
     char szPath[MAX_PATH] = "";
     char szLogonId[128] = "";
-    NETRESOURCE nr;
-    DWORD res;
-    DWORD gle;
-    DWORD dwSize;
-    DWORD dwDisp;
-    DWORD dwType;
     DWORD count;
-    VOID * ticketData;
     char filename[256];
     char commandline[512];
     STARTUPINFO startupinfo;
