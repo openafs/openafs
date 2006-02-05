@@ -1048,68 +1048,75 @@ VOID AFS_Logoff_Event( PWLX_NOTIFICATION_INFO pInfo )
                      &LSPtype, (LPBYTE)&LogoffPreserveTokens, &LSPsize);
     RegCloseKey (NPKey);
 
-    ZeroMemory(&opt, sizeof(opt));
+    if (!LogoffPreserveTokens) {
+	ZeroMemory(&opt, sizeof(opt));
 
-    if (pInfo->UserName && pInfo->Domain) {
-        char username[MAX_USERNAME_LENGTH] = "";
-        char domain[MAX_DOMAIN_LENGTH] = "";
-        size_t szlen = 0;
+	if (pInfo->UserName && pInfo->Domain) {
+	    char username[MAX_USERNAME_LENGTH] = "";
+	    char domain[MAX_DOMAIN_LENGTH] = "";
+	    size_t szlen = 0;
 
-        StringCchLengthW(pInfo->UserName, MAX_USERNAME_LENGTH, &szlen);
-        WideCharToMultiByte(CP_UTF8, 0, pInfo->UserName, szlen,
-                            username, sizeof(username), NULL, NULL);
+	    StringCchLengthW(pInfo->UserName, MAX_USERNAME_LENGTH, &szlen);
+	    WideCharToMultiByte(CP_UTF8, 0, pInfo->UserName, szlen,
+				 username, sizeof(username), NULL, NULL);
 
-        StringCchLengthW(pInfo->Domain, MAX_DOMAIN_LENGTH, &szlen);
-        WideCharToMultiByte(CP_UTF8, 0, pInfo->Domain, szlen,
-                            domain, sizeof(domain), NULL, NULL);
+	    StringCchLengthW(pInfo->Domain, MAX_DOMAIN_LENGTH, &szlen);
+	    WideCharToMultiByte(CP_UTF8, 0, pInfo->Domain, szlen,
+				 domain, sizeof(domain), NULL, NULL);
 
-        GetDomainLogonOptions(NULL, username, domain, &opt);
-    }
+	    GetDomainLogonOptions(NULL, username, domain, &opt);
+	}
 
-    if (!LogoffPreserveTokens &&
-        ISLOGONINTEGRATED(opt.LogonOption) &&
-        ISREMOTE(opt.flags)) {
+        if (ISREMOTE(opt.flags)) {
+	    if (!GetTokenInformation(pInfo->hToken, TokenUser, NULL, 0, &retLen))
+	    {
+		if ( GetLastError() == ERROR_INSUFFICIENT_BUFFER ) {
+		    tokenUser = (PTOKEN_USER) LocalAlloc(LPTR, retLen);
 
-        if (!GetTokenInformation(pInfo->hToken, TokenUser, NULL, 0, &retLen))
-        {
-            if ( GetLastError() == ERROR_INSUFFICIENT_BUFFER ) {
-                tokenUser = (PTOKEN_USER) LocalAlloc(LPTR, retLen);
+		    if (!GetTokenInformation(pInfo->hToken, TokenUser, tokenUser, retLen, &retLen))
+		    {
+			DebugEvent("AFS_Logoff_Event - GetTokenInformation failed: GLE = %lX", GetLastError());
+		    }
+		}
+	    }
 
-                if (!GetTokenInformation(pInfo->hToken, TokenUser, tokenUser, retLen, &retLen))
-                {
-                    DebugEvent("AFS_Logoff_Event - GetTokenInformation failed: GLE = %lX", GetLastError());
-                }
-            }
-        }
+	    /* We can't use pInfo->Domain for the domain since in the cross realm case 
+	     * this is source domain and not the destination domain.
+	     */
+	    if (QueryAdHomePathFromSid( profileDir, sizeof(profileDir), tokenUser->User.Sid, pInfo->Domain)) {
+		WCHAR Domain[64]=L"";
+		GetLocalShortDomain(Domain, sizeof(Domain));
+		if (QueryAdHomePathFromSid( profileDir, sizeof(profileDir), tokenUser->User.Sid, Domain)) {
+		    if (NetUserGetProfilePath(pInfo->Domain, pInfo->UserName, profileDir, len))
+			GetUserProfileDirectory(pInfo->hToken, profileDir, &len);
+		}
+	    }
 
-        /* We can't use pInfo->Domain for the domain since in the cross realm case 
-         * this is source domain and not the destination domain.
-         */
-        if (QueryAdHomePathFromSid( profileDir, sizeof(profileDir), tokenUser->User.Sid, pInfo->Domain)) {
-            WCHAR Domain[64]=L"";
-            GetLocalShortDomain(Domain, sizeof(Domain));
-            if (QueryAdHomePathFromSid( profileDir, sizeof(profileDir), tokenUser->User.Sid, Domain)) {
-                if (NetUserGetProfilePath(pInfo->Domain, pInfo->UserName, profileDir, len))
-                    GetUserProfileDirectory(pInfo->hToken, profileDir, &len);
-            }
-        }
+	    if (strlen(profileDir)) {
+		DebugEvent("AFS_Logoff_Event - Profile Directory: %s", profileDir);
+		if (!IsPathInAfs(profileDir)) {
+		    if (code = ktc_ForgetAllTokens())
+			DebugEvent("AFS_Logoff_Event - ForgetAllTokens failed [%lX]",code);
+		    else
+			DebugEvent0("AFS_Logoff_Event - ForgetAllTokens succeeded");
+		} else {
+		    DebugEvent0("AFS_Logoff_Event - Tokens left in place; profile in AFS");
+		}
+	    } else {
+		DebugEvent0("AFS_Logoff_Event - Unable to load profile");
+	    }
 
-        if (strlen(profileDir)) {
-            DebugEvent("AFS_Logoff_Event - Profile Directory: %s", profileDir);
-            if (!IsPathInAfs(profileDir)) {
-                if (code = ktc_ForgetAllTokens())
-                    DebugEvent("AFS_Logoff_Event - ForgetAllTokens failed [%lX]",code);
-                else
-                    DebugEvent0("AFS_Logoff_Event - ForgetAllTokens succeeded");
-            } else {
-                DebugEvent0("AFS_Logoff_Event - Tokens left in place; profile in AFS");
-            }
-        } else {
-            DebugEvent0("AFS_Logoff_Event - Unable to load profile");
-        }
-
-        if ( tokenUser )
-            LocalFree(tokenUser);
+	    if ( tokenUser )
+		LocalFree(tokenUser);
+	} else {
+	    DebugEvent0("AFS_Logoff_Event - Local Logon");
+	    if (code = ktc_ForgetAllTokens())
+		DebugEvent("AFS_Logoff_Event - ForgetAllTokens failed [%lX]",code);
+	    else
+		DebugEvent0("AFS_Logoff_Event - ForgetAllTokens succeeded");
+	}
+    } else {
+	DebugEvent0("AFS_Logoff_Event - Preserving Tokens");
     }
 
     DebugEvent0("AFS_Logoff_Event - End");
@@ -1190,6 +1197,7 @@ VOID AFS_Logon_Event( PWLX_NOTIFICATION_INFO pInfo )
         DebugEvent0("AFS_Logon_Event - Unable to load profile");
     }
 
+  done_logon_event:
     dwSize = sizeof(szUserA);
     if (!KFW_AFS_get_lsa_principal(szUserA, &dwSize)) {
         StringCbPrintfW(szUserW, sizeof(szUserW), L"%s\\%s", pInfo->Domain, pInfo->UserName);
@@ -1219,7 +1227,6 @@ VOID AFS_Logon_Event( PWLX_NOTIFICATION_INFO pInfo )
     if ( tokenUser )
         LocalFree(tokenUser);
 
- done_logon_event:
     DebugEvent0("AFS_Logon_Event - End");
 }
 
