@@ -1,4 +1,30 @@
-Since 1.4.1 rc5: 1.4.1 rc6 release (2 Feb 2006)
+Since 1.4.1 rc6: 1.4.1 rc7 released (7 Feb 2006)
+
+ * If a Mountpoint String is the empty string, return PATH NOT 
+   FOUND.
+
+ * Modify behavior of the Network Provider to avoid querying the
+   profile location if integrated logon is known to be disabled.
+
+ * Correct behavior of 'LogoffPreserveTokens'.  When set, tokens
+   will always be preserved regardless of whether or not integrated
+   logon was used to obtain tokens.  When unset, tokens will be 
+   destroyed regardless of whether integrated logon was used to 
+   obtain the tokens unless the profile is stored in AFS.
+
+ * Disable LogoffTransferToken functionality.  The SMB V3 Logoff
+   message is being delivered even when the user is not logging
+   off of the computer.  
+
+ * Fix a deadlock condition introduced in rc6.
+
+ * Cell names are case-insensitive.  Since the founding of OpenAFS
+   there has been a bug that treated "cell", "Cell", and "CELL" as
+   different cells.  This would result in what appeared to be 
+   random disappearance of user tokens or a failure to authenticate
+   even when tokens were listed by the "tokens" command.
+
+Since 1.4.1 rc5: 1.4.1 rc6 released (2 Feb 2006)
 
  * Additional auditing of the smb code revealed that smb ioctl
    operations were failing to free smb_fid_t objects
