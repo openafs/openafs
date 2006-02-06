@@ -474,7 +474,7 @@ BOOL GetTextualSid( PSID pSid, PBYTE TextualSid, LPDWORD lpdwBufferLen )
     // Check input buffer length.
     // If too small, indicate the proper size and set the last error.
 
-    if (*lpdwBufferLen < dwSidSize)
+    if (TextualSid == NULL || *lpdwBufferLen < dwSidSize)
     {
         *lpdwBufferLen = dwSidSize;
         SetLastError(ERROR_INSUFFICIENT_BUFFER);
