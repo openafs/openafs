@@ -966,11 +966,14 @@ addInterfaceAddr_r(struct host *host, afs_uint32 addr, afs_uint16 port)
     int number;
     int found;
     struct Interface *interface;
+    char hoststr[16], hoststr2[16];
 
     assert(host);
     assert(host->interface);
 
-    ViceLog(125, ("addInterfaceAddr : host %x addr %x:%d\n", host->host, addr, ntohs(port)));
+    ViceLog(125, ("addInterfaceAddr : host %s:d addr %s:%d\n", 
+		   afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port), 
+		   afs_inet_ntoa_r(addr, hoststr2), ntohs(port)));
 
     /*
      * Make sure this address is on the list of known addresses
@@ -1915,11 +1918,12 @@ h_DumpHost(register struct host *host, int held, StreamHandle_t * file)
 {
     int i;
     char tmpStr[256];
+    char hoststr[16];
 
     H_LOCK;
     (void)afs_snprintf(tmpStr, sizeof tmpStr,
-		       "ip:%x port:%d hidx:%d cbid:%d lock:%x last:%u active:%u down:%d del:%d cons:%d cldel:%d\n\t hpfailed:%d hcpsCall:%u hcps [",
-		       host->host, ntohs(host->port), host->index,
+		       "ip:%s port:%d hidx:%d cbid:%d lock:%x last:%u active:%u down:%d del:%d cons:%d cldel:%d\n\t hpfailed:%d hcpsCall:%u hcps [",
+		       afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port), host->index,
 		       host->cblist, CheckLock(&host->lock), host->LastCall,
 		       host->ActiveCall, (host->hostFlags & VENUSDOWN),
 		       host->hostFlags & HOSTDELETED, host->Console,
@@ -1936,7 +1940,9 @@ h_DumpHost(register struct host *host, int held, StreamHandle_t * file)
     (void)STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
     if (host->interface)
 	for (i = 0; i < host->interface->numberOfInterfaces; i++) {
-	    sprintf(tmpStr, " %x:%d", host->interface->interface[i].addr,
+	    char hoststr[16];
+	    sprintf(tmpStr, " %s:%d", 
+		     afs_inet_ntoa_r(host->interface->interface[i].addr, hoststr),
 		     ntohs(host->interface->interface[i].port));
 	    (void)STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
 	}
@@ -2404,7 +2410,9 @@ initInterfaceAddr_r(struct host *host, struct interfaceAddr *interf)
     host->interface = interface;
 
     for (i = 0; i < host->interface->numberOfInterfaces; i++) {
-	ViceLog(125, ("--- alt address %x:%d\n", host->interface->interface[i].addr,
+	char hoststr[16];
+	ViceLog(125, ("--- alt address %s:%d\n", 
+		       afs_inet_ntoa_r(host->interface->interface[i].addr, hoststr),
 		       ntohs(host->interface->interface[i].port)));
     }
 
@@ -2442,12 +2450,14 @@ void
 printInterfaceAddr(struct host *host, int level)
 {
     int i, number;
+    char hoststr[16];
+
     if (host->interface) {
 	/* check alternate addresses */
 	number = host->interface->numberOfInterfaces;
 	assert(number > 0);
 	for (i = 0; i < number; i++)
-	    ViceLog(level, ("%x:%d ", host->interface->interface[i].addr,
+	    ViceLog(level, ("%s:%d ", afs_inet_ntoa_r(host->interface->interface[i].addr, hoststr),
 			     ntohs(host->interface->interface[i].port)));
     }
     ViceLog(level, ("\n"));
