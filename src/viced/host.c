@@ -1011,6 +1011,61 @@ addInterfaceAddr_r(struct host *host, afs_uint32 addr, afs_uint16 port)
 }
 
 
+/*
+ * This is called with host locked and held. At this point, the
+ * hostHashTable should not be having entries for the alternate
+ * interfaces. This function has to insert these entries in the
+ * hostHashTable.
+ *
+ * All addresses are in network byte order.
+ */
+int
+removeInterfaceAddr_r(struct host *host, afs_uint32 addr, afs_uint16 port)
+{
+    int i;
+    int number;
+    int found;
+    struct Interface *interface;
+    char hoststr[16], hoststr2[16];
+
+    assert(host);
+    assert(host->interface);
+
+    ViceLog(125, ("removeInterfaceAddr : host %s:d addr %s:%d\n", 
+		   afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port), 
+		   afs_inet_ntoa_r(addr, hoststr2), ntohs(port)));
+
+    /*
+     * Make sure this address is on the list of known addresses
+     * for this host.
+     */
+    interface = host->interface;
+    number = host->interface->numberOfInterfaces;
+    for (i = 0, found = 0; i < number; i++) {
+	if (interface->interface[i].addr == addr &&
+	    interface->interface[i].port == port) {
+	    found = 1;
+	    break;
+	}
+    }
+    if (found) {
+	number--;
+	for (; i < number; i++) {
+	    interface->interface[i].addr = interface->interface[i+1].addr;
+	    interface->interface[i].port = interface->interface[i+1].port;
+	}
+	interface->numberOfInterfaces = number;
+    }
+
+    /*
+     * Remove the hash table entry for this address
+     */
+    hashDelete_r(addr, port, host);
+
+    return 0;
+}
+
+
 /* Host is returned held */
 struct host *
 h_GetHost_r(struct rx_connection *tcon)
@@ -1283,13 +1338,38 @@ h_GetHost_r(struct rx_connection *tcon)
 		    /* This is a new address for an existing host. Update
 		     * the list of interfaces for the existing host and
 		     * delete the host structure we just allocated. */
+		    if (oldHost->host != haddr || oldHost->port != hport) {
 		    ViceLog(25,
 			    ("CB: new addr %s:%d for old host %s:%d\n",
 			     afs_inet_ntoa_r(host->host, hoststr),
-			     ntohs(host->port), afs_inet_ntoa_r(oldHost->host,
-								hoststr2),
+				ntohs(host->port), 
+				afs_inet_ntoa_r(oldHost->host, hoststr2),
 			     ntohs(oldHost->port)));
+			if (oldHost->host == haddr) {
+			    /* We have just been contacted by a client behind a NAT */
+			    removeInterfaceAddr_r(oldHost, oldHost->host, oldHost->port);
+			} else {
+			    int i, found;
+			    struct Interface *interface = oldHost->interface;
+			    int number = oldHost->interface->numberOfInterfaces;
+			    for (i = 0, found = 0; i < number; i++) {
+				if (interface->interface[i].addr == haddr &&
+				    interface->interface[i].port != hport) {
+				    found = 1;
+				    break;
+				}
+			    }
+			    if (found) {
+				/* We have just been contacted by a client that has been
+				 * seen from behind a NAT and at least one other address.
+				 */
+				removeInterfaceAddr_r(oldHost, haddr, interface->interface[i].port);
+			    }
+			}
 		    addInterfaceAddr_r(oldHost, haddr, hport);
+			oldHost->host = haddr;
+			oldHost->port = hport;
+		    }
 		    host->hostFlags |= HOSTDELETED;
 		    h_Unlock_r(host);
 		    if (!held)
@@ -1323,9 +1403,12 @@ h_GetHost_r(struct rx_connection *tcon)
 			("CB: RCallBackConnectBack failed for %s:%d\n",
 			 hoststr, ntohs(host->port)));
 		host->hostFlags |= VENUSDOWN;
-	    } else
+	    } else {
+		ViceLog(125,
+			("CB: RCallBackConnectBack succeeded for %s:%d\n",
+			 hoststr, ntohs(host->port)));
 		host->hostFlags |= RESETDONE;
-
+	    }
 	}
 	if (caps.Capabilities_val
 	    && (caps.Capabilities_val[0] & CLIENT_CAPABILITY_ERRORTRANS))
