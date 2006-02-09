@@ -2,6 +2,9 @@ openafs (1.4.0-4) unstable; urgency=low
 
   * Hopefully fix sparc64 kernel support.  Thanks, Troy Benjegerdes.
     (Closes: #219429)
+  * Document the need to restart ptserver and vlserver on the existing
+    database servers when adding a new one.  Thanks, Niklas Edmundsson.
+    (Closes: #349659)
 
  --
 

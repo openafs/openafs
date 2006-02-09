@@ -329,7 +329,19 @@ Adding Additional Servers
           bos addhost <server> <new-server>
 
       for each db server <server> in your cell (including the new one).
-      Then, create ptserver and vlserver instances on the new server:
+      Then, restart the ptserver and vlserver instances on each of your
+      existing servers with:
+
+          bos restart <server> ptserver
+          bos restart <server> vlserver
+
+      It's best to wait a few seconds after doing this for each server
+      before doing the next server so that voting finishes and you never
+      lose a quorum.
+
+      Only after ptserver and vlserver have been restarted on each of your
+      existing servers, create ptserver and vlserver instances on the new
+      server:
 
           bos create <host> ptserver simple /usr/lib/openafs/ptserver \
               -localauth
@@ -337,11 +349,14 @@ Adding Additional Servers
               -localauth
 
       The existing servers should then propagate the database to the new
-      server.  Note that you do not need to run a file server on a db
-      server if you don't want to (and larger sites probably will not want
-      to), but you always need to have the openafs-fileserver package
-      installed on db servers.  It contains the bosserver binary and some
-      of the shared infrastructure.
+      server.  If you are using buserver, you will need to do the same
+      thing for it as with ptserver and vlserver.
+
+      Note that you do not need to run a file server on a db server if you
+      don't want to (and larger sites probably will not want to), but you
+      always need to have the openafs-fileserver package installed on db
+      servers.  It contains the bosserver binary and some of the shared
+      infrastructure.
 
   5.  If you added a new db server, configure your clients to use it.  If
       you are using AFSDB records in DNS, you can just add a new record
