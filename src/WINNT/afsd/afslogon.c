@@ -1051,7 +1051,7 @@ VOID AFS_Logoff_Event( PWLX_NOTIFICATION_INFO pInfo )
     RegCloseKey (NPKey);
 
     if (!LogoffPreserveTokens) {
-	ZeroMemory(&opt, sizeof(opt));
+	memset(&opt, 0, sizeof(LogonOptions_t));
 
 	if (pInfo->UserName && pInfo->Domain) {
 	    char username[MAX_USERNAME_LENGTH] = "";
@@ -1146,12 +1146,14 @@ VOID AFS_Logon_Event( PWLX_NOTIFICATION_INFO pInfo )
 
     DebugEvent("AFS_Logon_Event Process ID: %d",GetCurrentProcessId());
 
-    ZeroMemory(&opt, sizeof(opt));
+    memset(&opt, 0, sizeof(LogonOptions_t));
 
     if (pInfo->UserName && pInfo->Domain) {
         char username[MAX_USERNAME_LENGTH] = "";
         char domain[MAX_DOMAIN_LENGTH] = "";
         size_t szlen = 0;
+
+	DebugEvent0("AFS_Logon_Event - pInfo UserName and Domain");
 
         StringCchLengthW(pInfo->UserName, MAX_USERNAME_LENGTH, &szlen);
         WideCharToMultiByte(CP_UTF8, 0, pInfo->UserName, szlen,
@@ -1161,13 +1163,24 @@ VOID AFS_Logon_Event( PWLX_NOTIFICATION_INFO pInfo )
         WideCharToMultiByte(CP_UTF8, 0, pInfo->Domain, szlen,
                             domain, sizeof(domain), NULL, NULL);
 
+	DebugEvent0("AFS_Logon_Event - Calling GetDomainLogonOptions");
         GetDomainLogonOptions(NULL, username, domain, &opt);
+    } else {
+	if (!pInfo->UserName)
+	    DebugEvent0("AFS_Logon_Event - No pInfo->UserName");
+	if (!pInfo->Domain)
+	    DebugEvent0("AFS_Logon_Event - No pInfo->Domain");
     }
 
+    DebugEvent("AFS_Logon_Event - opt.LogonOption = %lX opt.flags = %lX", 
+		opt.LogonOption, opt.flags);
+
     if (!ISLOGONINTEGRATED(opt.LogonOption) || !ISREMOTE(opt.flags)) {
-        DebugEvent("AFS_Logon_Event - Logon is not integrated or not remote");
+        DebugEvent0("AFS_Logon_Event - Logon is not integrated or not remote");
         goto done_logon_event;
     }
+
+    DebugEvent0("AFS_Logon_Event - Calling GetTokenInformation");
 
     if (!GetTokenInformation(pInfo->hToken, TokenUser, NULL, 0, &retLen))
     {
