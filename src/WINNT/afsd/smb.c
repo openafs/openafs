@@ -1455,7 +1455,8 @@ void smb_ReleaseFID(smb_fid_t *fidp)
         userp = fidp->userp;
         fidp->userp = NULL;
 
-        osi_QRemove((osi_queue_t **) &vcp->fidsp, &fidp->q);
+	if (vcp->fidsp)
+	  osi_QRemove((osi_queue_t **) &vcp->fidsp, &fidp->q);
         thrd_CloseHandle(fidp->raw_write_event);
 
         /* and see if there is ioctl stuff to free */
