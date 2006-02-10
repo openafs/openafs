@@ -1812,7 +1812,7 @@ GetClient(struct rx_connection *tcon, struct client **cp)
     if (client == NULL || client->tcon == NULL) {
 	ViceLog(0,
 		("GetClient: no client in conn %x (host %x:%d), VBUSYING\n",
-		 tcon, rxr_HostOf(tcon),rxr_PortOf(tcon)));
+		 tcon, rxr_HostOf(tcon),ntohs(rxr_PortOf(tcon))));
 	H_UNLOCK;
 	return VBUSY;
     }
