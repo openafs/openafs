@@ -1306,7 +1306,7 @@ h_GetHost_r(struct rx_connection *tcon)
 
                     if (oldHost->interface) {
 			afsUUID uuid = oldHost->interface->uuid;
-                        cb_conn = host->callback_rxcon;
+                        cb_conn = oldHost->callback_rxcon;
                         rx_GetConnection(cb_conn);
 			H_UNLOCK;
 			code = RXAFSCB_ProbeUuid(cb_conn, &uuid);
