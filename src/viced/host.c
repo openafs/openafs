@@ -1031,7 +1031,7 @@ removeInterfaceAddr_r(struct host *host, afs_uint32 addr, afs_uint16 port)
     assert(host);
     assert(host->interface);
 
-    ViceLog(125, ("removeInterfaceAddr : host %s:d addr %s:%d\n", 
+    ViceLog(125, ("removeInterfaceAddr : host %s:%d addr %s:%d\n", 
 		   afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port), 
 		   afs_inet_ntoa_r(addr, hoststr2), ntohs(port)));
 
