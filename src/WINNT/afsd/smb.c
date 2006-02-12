@@ -1003,7 +1003,7 @@ void smb_CleanupDeadVC(smb_vc_t *vcp)
     for (fidpIter = vcp->fidsp; fidpIter; fidpIter = fidpNext) {
         fidpNext = (smb_fid_t *) osi_QNext(&fidpIter->q);
 
-        if (fidpIter->flags & SMB_FID_DELETE)
+        if (fidpIter->delete)
             continue;
 
         fid = fidpIter->fid;
@@ -1012,7 +1012,6 @@ void smb_CleanupDeadVC(smb_vc_t *vcp)
 	smb_HoldFIDNoLock(fidpIter);
         lock_ReleaseWrite(&smb_rctLock);
 
-	/* smb_CloseFID sets SMB_FID_DELETE on Success */
         smb_CloseFID(vcp, fidpIter, NULL, 0);
 	smb_ReleaseFID(fidpIter);
 
@@ -1022,19 +1021,15 @@ void smb_CleanupDeadVC(smb_vc_t *vcp)
 
     for (tidpIter = vcp->tidsp; tidpIter; tidpIter = tidpNext) {
 	tidpNext = tidpIter->nextp;
-
-	if (tidpIter->flags & SMB_TIDFLAG_DELETE)
+	if (tidpIter->delete)
 	    continue;
+	tidpIter->delete = 1;
 
 	tid = tidpIter->tid;
 	osi_Log2(smb_logp, "  Cleanup TID %d (tidp=0x%x)", tid, tidpIter);
 
 	smb_HoldTIDNoLock(tidpIter);
 	lock_ReleaseWrite(&smb_rctLock);
-
-	lock_ObtainMutex(&tidpIter->mx);
-	tidpIter->flags |= SMB_TIDFLAG_DELETE;
-	lock_ReleaseMutex(&tidpIter->mx);
 
 	smb_ReleaseTID(tidpIter);
 
@@ -1044,17 +1039,13 @@ void smb_CleanupDeadVC(smb_vc_t *vcp)
 
     for (uidpIter = vcp->usersp; uidpIter; uidpIter = uidpNext) {
 	uidpNext = uidpIter->nextp;
-
-	if (uidpIter->flags & SMB_USERFLAG_DELETE)
+	if (uidpIter->delete)
 	    continue;
+	uidpIter->delete = 1;
 
 	/* do not add an additional reference count for the smb_user_t
 	 * as the smb_vc_t already is holding a reference */
 	lock_ReleaseWrite(&smb_rctLock);
-
-	lock_ObtainMutex(&uidpIter->mx);
-	uidpIter->flags |= SMB_USERFLAG_DELETE;
-	lock_ReleaseMutex(&uidpIter->mx);
 
 	smb_ReleaseUID(uidpIter);
 
@@ -1120,7 +1111,7 @@ void smb_ReleaseTID(smb_tid_t *tidp)
     userp = NULL;
     lock_ObtainWrite(&smb_rctLock);
     osi_assert(tidp->refCount-- > 0);
-    if (tidp->refCount == 0 && (tidp->flags & SMB_TIDFLAG_DELETE)) {
+    if (tidp->refCount == 0 && (tidp->delete)) {
         ltpp = &tidp->vcp->tidsp;
         for(tp = *ltpp; tp; ltpp = &tp->nextp, tp = *ltpp) {
             if (tp == tidp) 
@@ -1447,7 +1438,7 @@ void smb_ReleaseFID(smb_fid_t *fidp)
     lock_ObtainWrite(&smb_rctLock);
     osi_assert(fidp->refCount-- > 0);
     lock_ObtainMutex(&fidp->mx);
-    if (fidp->refCount == 0 && (fidp->flags & SMB_FID_DELETE)) {
+    if (fidp->refCount == 0 && (fidp->delete)) {
         vcp = fidp->vcp;
         fidp->vcp = NULL;
         scp = fidp->scp;    /* release after lock is released */
@@ -1455,8 +1446,8 @@ void smb_ReleaseFID(smb_fid_t *fidp)
         userp = fidp->userp;
         fidp->userp = NULL;
 
-	if (vcp->fidsp)
-	  osi_QRemove((osi_queue_t **) &vcp->fidsp, &fidp->q);
+	if (vcp->fidsp) 
+	    osi_QRemove((osi_queue_t **) &vcp->fidsp, &fidp->q);
         thrd_CloseHandle(fidp->raw_write_event);
 
         /* and see if there is ioctl stuff to free */
@@ -1470,7 +1461,6 @@ void smb_ReleaseFID(smb_fid_t *fidp)
                 free(ioctlp->outAllocp);
             free(ioctlp);
         }       
-
 	lock_ReleaseMutex(&fidp->mx);
 	lock_FinalizeMutex(&fidp->mx);
         free(fidp);
@@ -3245,15 +3235,21 @@ long smb_ReceiveNegotiate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
 void smb_CheckVCs(void)
 {
-    smb_vc_t * vcp;
+    smb_vc_t * vcp, *nextp;
     smb_packet_t * outp = GetPacket();
     smb_t *smbp;
             
-    for ( vcp=smb_allVCsp; vcp; vcp = vcp->nextp ) 
+    lock_ObtainWrite(&smb_rctLock);
+    for ( vcp=smb_allVCsp, nextp=NULL; vcp; vcp = nextp ) 
     {
+	nextp = vcp->nextp;
+
 	if (vcp->flags & SMB_VCFLAG_ALREADYDEAD)
 	    continue;
 
+	smb_HoldVCNoLock(vcp);
+	if (nextp)
+	    smb_HoldVCNoLock(nextp);
 	smb_FormatResponsePacket(vcp, NULL, outp);
         smbp = (smb_t *)outp;
 	outp->inCom = smbp->com = 0x2b /* Echo */;
@@ -3266,10 +3262,16 @@ void smb_CheckVCs(void)
 
 	smb_SetSMBParm(outp, 0, 0);
 	smb_SetSMBDataLength(outp, 0);
+	lock_ReleaseWrite(&smb_rctLock);
 
 	smb_SendPacket(vcp, outp);
-    }
 
+	lock_ObtainWrite(&smb_rctLock);
+	smb_ReleaseVCNoLock(vcp);
+	if (nextp)
+	    smb_ReleaseVCNoLock(nextp);
+    }
+    lock_ReleaseWrite(&smb_rctLock);
     smb_FreePacket(outp);
 }
 
@@ -4723,9 +4725,9 @@ long smb_ReceiveCoreTreeDisconnect(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_
     /* find the tree and free it */
     tidp = smb_FindTID(vcp, ((smb_t *)inp)->tid, 0);
     if (tidp) {
-        lock_ObtainMutex(&tidp->mx);
-        tidp->flags |= SMB_TIDFLAG_DELETE;
-        lock_ReleaseMutex(&tidp->mx);
+	lock_ObtainWrite(&smb_rctLock);
+        tidp->delete = 1;
+        lock_ReleaseWrite(&smb_rctLock);
         smb_ReleaseTID(tidp);
     }
 
@@ -5687,16 +5689,16 @@ long smb_CloseFID(smb_vc_t *vcp, smb_fid_t *fidp, cm_user_t *userp,
 
     cm_InitReq(&req);
 
-    lock_ObtainMutex(&fidp->mx);
-
-    if (fidp->flags & SMB_FID_DELETE) {
+    lock_ObtainWrite(&smb_rctLock);
+    if (fidp->delete) {
 	osi_Log0(smb_logp, "  Fid already closed.");
-	lock_ReleaseMutex(&fidp->mx);
+	lock_ReleaseWrite(&smb_rctLock);
 	return CM_ERROR_BADFD;
     }
+    fidp->delete = 1;
+    lock_ReleaseWrite(&smb_rctLock);
 
-    fidp->flags |= SMB_FID_DELETE;
-        
+    lock_ObtainMutex(&fidp->mx);
     /* Don't jump the gun on an async raw write */
     while (fidp->raw_writers) {
         lock_ReleaseMutex(&fidp->mx);
