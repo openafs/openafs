@@ -35,9 +35,6 @@ short afs_brsDaemons = 0;	/* number of daemons waiting for brs requests */
 struct brequest afs_brs[NBRS];	/* request structures */
 struct afs_osi_WaitHandle AFS_WaitHandler, AFS_CSWaitHandler;
 static int afs_brs_count = 0;	/* request counter, to service reqs in order */
-#ifdef AFS_DISABLE_BKG
-int disable_bkg = AFS_DISABLE_BKG;
-#endif
 
 static int rxepoch_checked = 0;
 #define afs_CheckRXEpoch() {if (rxepoch_checked == 0 && rxkad_EpochWasSet) { \
@@ -566,10 +563,6 @@ int
 afs_BBusy(void)
 {
     AFS_STATCNT(afs_BBusy);
-#ifdef AFS_DISABLE_BKG
-    if (disable_bkg)
-	return 1;
-#endif
     if (afs_brsDaemons > 0)
 	return 0;
     return 1;
