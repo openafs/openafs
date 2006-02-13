@@ -235,6 +235,7 @@ cm_server_t *cm_NewServer(struct sockaddr_in *socketp, int type, cm_cell_t *cell
     tsp->refCount = 1;
     lock_InitializeMutex(&tsp->mx, "cm_server_t mutex");
     tsp->addr = *socketp;
+    tsp->flags = CM_SERVERFLAG_DOWN;	/* assume down; ping will mark up if available */
 
     cm_SetServerPrefs(tsp); 
 
