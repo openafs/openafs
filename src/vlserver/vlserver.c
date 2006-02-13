@@ -160,6 +160,8 @@ main(argc, argv)
     sigaction(SIGABRT, &nsa, NULL);
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
+    osi_audit_init();
+
     /* Parse command line */
     for (index = 1; index < argc; index++) {
 	if (strcmp(argv[index], "-noauth") == 0) {
