@@ -257,6 +257,19 @@ printbuf(FILE *out, int rec, char *audEvent, afs_int32 errCode, va_list vaList)
 	fprintf(out, "\n");
 }
 
+static struct Lock audlock;
+static afs_int32   lock_init = 0;
+void
+osi_audit_init(void)
+{
+#ifdef AFS_PTHREAD_ENV
+    if ( !lock_init ) {
+	Lock_Init(&audlock);
+	lock_init = 1;
+    }
+#endif /* AFS_PTHREAD_ENV */
+}
+
 /* ************************************************************************** */
 /* The routine that acually does the audit call.
  * ************************************************************************** */
@@ -268,20 +281,18 @@ osi_audit(char *audEvent,	/* Event name (15 chars or less) */
 #ifdef AFS_AIX32_ENV
     afs_int32 code;
     afs_int32 err;
-#endif
-    int result;
-
-    va_list vaList;
-#ifdef AFS_AIX32_ENV
-    static struct Lock audbuflock = { 0, 0, 0, 0,
-#ifdef AFS_PTHREAD_ENV
-	PTHREAD_MUTEX_INITIALIZER,
-	PTHREAD_COND_INITIALIZER,
-	PTHREAD_COND_INITIALIZER
-#endif /* AFS_PTHREAD_ENV */
-    };
     static char BUFFER[32768];
 #endif
+    int result;
+    va_list vaList;
+
+#ifdef AFS_PTHREAD_ENV
+    /* This is not thread safe.   Lock initialization should 
+     * be done in a server initialization phase
+     */
+    if ( !lock_init )
+	osi_audit_init();
+#endif /* AFS_PTHREAD_ENV */
 
     if ((osi_audit_all < 0) || (osi_echo_trail < 0))
 	osi_audit_check();
@@ -312,8 +323,10 @@ osi_audit(char *audEvent,	/* Event name (15 chars or less) */
 	break;
     }
 
+#ifdef AFS_PTHREAD_ENV
+    ObtainWriteLock(&audlock);
+#endif
 #ifdef AFS_AIX32_ENV
-    ObtainWriteLock(&audbuflock);
     bufferPtr = BUFFER;
 
     /* Put the error code into the buffer list */
@@ -340,13 +353,15 @@ osi_audit(char *audEvent,	/* Event name (15 chars or less) */
 	    printf("Error while writing audit entry: %d.\n", errno);
     }
 #endif /* notdef */
-    ReleaseWriteLock(&audbuflock);
 #else
     if (auditout) {
 	va_start(vaList, errCode);
 	printbuf(auditout, 0, audEvent, errCode, vaList);
 	fflush(auditout);
     }
+#endif
+#ifdef AFS_PTHREAD_ENV
+    ReleaseWriteLock(&audlock);
 #endif
 
     return 0;
