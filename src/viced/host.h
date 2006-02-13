@@ -197,6 +197,7 @@ extern int h_Lock_r(register struct host *host);
 				(h)->prev ? ((h)->prev->next = (h)->next):0;\
 				( h == hostList )? (hostList = h->next):0;
 
+extern int DeleteAllCallBacks_r(struct host *host, int deletefe);
 extern struct host *h_Alloc(register struct rx_connection *r_con);
 extern struct host *h_Alloc_r(register struct rx_connection *r_con);
 extern struct host *h_Lookup_r(afs_uint32 hostaddr, afs_uint32 hport,
@@ -209,6 +210,7 @@ extern struct client *h_FindClient_r(struct rx_connection *tcon);
 extern int h_ReleaseClient_r(struct client *client);
 extern struct client *h_ID2Client(afs_int32 vid);
 extern int GetClient(struct rx_connection *tcon, struct client **cp);
+extern int PutClient(struct client **cp);
 extern void h_PrintStats();
 extern void h_PrintClients();
 extern void h_GetWorkStats();
