@@ -1601,8 +1601,8 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
     }
     if (bulkcode)
 	code = bulkcode;
-    else
-	code = afs_CheckCode(code, &treq, 19);
+
+    code = afs_CheckCode(code, &treq, 19);
     if (code) {
 	/* If there is an error, make sure *avcp is null.
 	 * Alphas panic otherwise - defect 10719.
