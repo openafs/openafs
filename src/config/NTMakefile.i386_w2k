@@ -103,11 +103,11 @@ OBJ=obj
 !IF ("$(AFS_OBJDIR)"=="") 
 #########  AFS_OBJDIR is NOT used use default locations
 !  IF ("$(AFSDEV_BUILDTYPE)" == "CHECKED")
-DESTDIR=$(AFSROOT)\$(DEST)\checked
-OJT=$(AFSROOT)\$(OBJ)\checked
+DESTDIR=$(AFSROOT)\$(DEST)\$(SYS_NAME)\checked
+OJT=$(AFSROOT)\$(OBJ)\$(SYS_NAME)\checked
 !  ELSE
-DESTDIR=$(AFSROOT)\$(DEST)\free
-OJT=$(AFSROOT)\$(OBJ)\free
+DESTDIR=$(AFSROOT)\$(DEST)\$(SYS_NAME)\free
+OJT=$(AFSROOT)\$(OBJ)\$(SYS_NAME)\free
 !  ENDIF
 UTIL_CR = $(DESTDIR)\bin\util_cr.exe
 !ELSE
@@ -116,21 +116,21 @@ UTIL_CR = $(DESTDIR)\bin\util_cr.exe
 !  IF (EXIST($(AFSROOT)\$(AFS_OBJDIR)))
 #  AFS_OBJDIR is relative path
 !    IF ("$(AFSDEV_BUILDTYPE)" == "CHECKED")
-DESTDIR=$(AFSROOT)\$(AFS_OBJDIR)\$(DEST)\checked
-OJT=$(AFSROOT)\$(AFS_OBJDIR)\checked\config
+DESTDIR=$(AFSROOT)\$(AFS_OBJDIR)\$(DEST)\$(SYS_NAME)\checked
+OJT=$(AFSROOT)\$(AFS_OBJDIR)\$(SYS_NAME)\checked\config
 !    ELSE
-OJT=$(AFSROOT)\$(AFS_OBJDIR)\free\config
-DESTDIR=$(AFSROOT)\$(AFS_OBJDIR)\$(DEST)\free
+OJT=$(AFSROOT)\$(AFS_OBJDIR)\$(SYS_NAME)\free\config
+DESTDIR=$(AFSROOT)\$(AFS_OBJDIR)\$(DEST)\$(SYS_NAME)\free
 !    ENDIF
 !  ELSE
 !    IF (EXIST($(AFS_OBJDIR)))
 #   AFS_OBJDIR is full path
 !    IF ("$(AFSDEV_BUILDTYPE)" == "CHECKED")
-DESTDIR=$(AFS_OBJDIR)\$(DEST)\checked
-OJT=$(AFS_OBJDIR)\checked\config
+DESTDIR=$(AFS_OBJDIR)\$(DEST)\$(SYS_NAME)\checked
+OJT=$(AFS_OBJDIR)\$(SYS_NAME)\checked\config
 !      ELSE
-DESTDIR=$(AFS_OBJDIR)\$(DEST)\free
-OJT=$(AFS_OBJDIR)\free\config
+DESTDIR=$(AFS_OBJDIR)\$(DEST)\$(SYS_NAME)\free
+OJT=$(AFS_OBJDIR)\$(SYS_NAME)\free\config
 !      ENDIF
 !    ELSE
 !ERROR Can't find location of DEST directory!

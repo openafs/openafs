@@ -18,20 +18,23 @@
 
 # These three macros define the source, object, and destination folders
 SRC=$(AFSROOT)\src
+
 #If AFS_OBJDIR is not defined then use obj as relative obj folder
 !IFNDEF AFS_OBJDIR
-AFS_OBJDIR=$(AFSROOT)\obj
+AFS_OBJDIR=$(AFSROOT)\obj\$(SYS_NAME)
 !ENDIF
+
 !IFNDEF DESTDIR
-DESTDIR=$(AFSROOT)\dest
+DESTDIR=$(AFSROOT)\dest\$(SYS_NAME)
 !ENDIF
 
 CD = cd
+MKDIR = mkdir
+
 NTMAKE = nmake /nologo /f ntmakefile install
 NTMAKELANG = nmake /nologo  /f ntmakefile en_US
 NTMAKE_HEADERS = nmake /nologo  /f ntmakefile install_headers
 NTMAKE_OBJS = nmake /nologo /f ntmakefile install_objs
-MKDIR = mkdir
 
 #debug statement support jumping to last know error
 DOCD=$(SRC)\DOLASTCMP.BAT
