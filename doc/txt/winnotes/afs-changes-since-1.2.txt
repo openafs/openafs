@@ -1,4 +1,15 @@
-Since 1.4.1 rc6: 1.4.1 rc7 released (7 Feb 2006)
+Since 1.4.1 rc6: 1.4.1 rc7 released (14 Feb 2006)
+
+ * The client manager maintains a least recently used list of
+   all the ACLs.  If an ACL is already the most recently used
+   do not bother to remove it from the list and place it on the
+   front.
+
+ * As part of the process of adding a new server, set the 
+   server is down flag and then perform a ping.  If the server
+   is up, the flag will be reset.  If the server is down, the
+   client will not timeout unnecessarily while attempting to
+   perform real work.
 
  * If a Mountpoint String is the empty string, return PATH NOT 
    FOUND.
