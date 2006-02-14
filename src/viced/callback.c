@@ -2207,8 +2207,6 @@ MultiProbeAlternateAddress_r(struct host *host)
              * Uuid and fix the host tables.
              */
             if (multi_error == 1) {
-                struct host * newhost;
-
                 /* remove the current alternate address from this host */
                 H_LOCK;
                 for (i = 0, j = 0; i < host->interface->numberOfInterfaces; i++) {

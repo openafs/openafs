@@ -198,6 +198,21 @@ extern int h_Lock_r(register struct host *host);
 				( h == hostList )? (hostList = h->next):0;
 
 extern int DeleteAllCallBacks_r(struct host *host, int deletefe);
+extern int DeleteCallBack(struct host *host, AFSFid * fid);
+extern int MultiProbeAlternateAddress_r(struct host *host);
+extern int BreakDelayedCallBacks_r(struct host *host);
+extern int AddCallBack1(struct host *host, AFSFid * fid, afs_uint32 * thead, int type,
+	     int locked);
+extern int BreakCallBack(struct host *xhost, AFSFid * fid, int flag);
+extern int DeleteFileCallBacks(AFSFid * fid);
+extern int CleanupTimedOutCallBacks(void);
+extern int CleanupTimedOutCallBacks_r(void);
+extern int MultiBreakCallBackAlternateAddress(struct host *host, struct AFSCBFids *afidp);
+extern int MultiBreakCallBackAlternateAddress_r(struct host *host,
+				     struct AFSCBFids *afidp);
+extern int DumpCallBackState(void);
+extern void ShutDownAndCore(int dopanic);
+
 extern struct host *h_Alloc(register struct rx_connection *r_con);
 extern struct host *h_Alloc_r(register struct rx_connection *r_con);
 extern struct host *h_Lookup_r(afs_uint32 hostaddr, afs_uint32 hport,
@@ -205,6 +220,7 @@ extern struct host *h_Lookup_r(afs_uint32 hostaddr, afs_uint32 hport,
 extern struct host *h_LookupUuid_r(afsUUID * uuidp);
 extern int h_FreeConnection(struct rx_connection *tcon);
 extern void h_Enumerate(int (*proc) (), char *param);
+extern void h_Enumerate_r(int (*proc) (), struct host *enumstart, char *param);
 extern struct host *h_GetHost_r(struct rx_connection *tcon);
 extern struct client *h_FindClient_r(struct rx_connection *tcon);
 extern int h_ReleaseClient_r(struct client *client);
@@ -216,7 +232,14 @@ extern void h_PrintClients();
 extern void h_GetWorkStats();
 extern void h_flushhostcps(register afs_uint32 hostaddr,
 			   register afs_uint32 hport);
+extern void h_GetHostNetStats(afs_int32 * a_numHostsP, afs_int32 * a_sameNetOrSubnetP,
+		  afs_int32 * a_diffSubnetP, afs_int32 * a_diffNetworkP);
+extern int h_NBLock_r(register struct host *host);
+extern void h_DumpHosts();
+extern void h_InitHostPackage();
+extern void h_CheckHosts();
 struct Interface *MultiVerifyInterface_r();
+extern int initInterfaceAddr_r(struct host *host, struct interfaceAddr *interf);
 
 struct host *(hosttableptrs[h_MAXHOSTTABLES]);	/* Used by h_itoh */
 #define h_htoi(host) ((host)->index)	/* index isn't zeroed, no need to lock */

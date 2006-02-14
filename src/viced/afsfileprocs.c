@@ -42,10 +42,11 @@ RCSID
 #else
 #include <sys/param.h>
 #include <sys/file.h>
-#include <netinet/in.h>
-#include <netdb.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <netdb.h>
 
 #ifdef HAVE_STRING_H
 #include <string.h>
@@ -1021,49 +1022,6 @@ RXStore_AccessList(Vnode * targetptr, struct AFSOpaque *AccessList)
 }				/*RXStore_AccessList */
 
 
-static afs_int32
-Fetch_AccessList(Vnode * targetptr, Vnode * parentwhentargetnotdir,
-		 struct AFSAccessList *AccessList)
-{
-    char *eACL;			/* External access list placeholder */
-
-    assert(acl_Externalize
-	   ((targetptr->disk.type ==
-	     vDirectory ? VVnodeACL(targetptr) :
-	     VVnodeACL(parentwhentargetnotdir)), &eACL) == 0);
-    if ((strlen(eACL) + 1) > AccessList->MaxSeqLen) {
-	acl_FreeExternalACL(&eACL);
-	return (E2BIG);
-    } else {
-	strcpy((char *)(AccessList->SeqBody), (char *)eACL);
-	AccessList->SeqLen = strlen(eACL) + 1;
-    }
-    acl_FreeExternalACL(&eACL);
-    return (0);
-
-}				/*Fetch_AccessList */
-
-/*
- * The Access List information is converted from its external form in the
- * input AccessList structure to the internal representation and copied into
- * the target dir's vnode storage.
- */
-static afs_int32
-Store_AccessList(Vnode * targetptr, struct AFSAccessList *AccessList)
-{
-    struct acl_accessList *newACL;	/* PlaceHolder for new access list */
-
-    if (acl_Internalize(AccessList->SeqBody, &newACL) != 0)
-	return (EINVAL);
-    if ((newACL->size + 4) > VAclSize(targetptr))
-	return (E2BIG);
-    memcpy((char *)VVnodeACL(targetptr), (char *)newACL, (int)(newACL->size));
-    acl_FreeACL(&newACL);
-    return (0);
-
-}				/*Store_AccessList */
-
-
 /* In our current implementation, each successive data store (new file
  * data version) creates a new inode. This function creates the new
  * inode, copies the old inode's contents to the new one, remove the old
@@ -1810,80 +1768,6 @@ RXUpdate_VolumeStatus(Volume * volptr, AFSStoreVolumeStatus * StoreVolStatus,
 }				/*RXUpdate_VolumeStatus */
 
 
-/* old interface */
-static afs_int32
-Update_VolumeStatus(Volume * volptr, VolumeStatus * StoreVolStatus,
-		    struct BBS *Name, struct BBS *OfflineMsg,
-		    struct BBS *Motd)
-{
-    Error errorCode = 0;
-
-    if (StoreVolStatus->MinQuota > -1)
-	V_minquota(volptr) = StoreVolStatus->MinQuota;
-    if (StoreVolStatus->MaxQuota > -1)
-	V_maxquota(volptr) = StoreVolStatus->MaxQuota;
-    if (OfflineMsg->SeqLen > 1)
-	strcpy(V_offlineMessage(volptr), OfflineMsg->SeqBody);
-    if (Name->SeqLen > 1)
-	strcpy(V_name(volptr), Name->SeqBody);
-#if OPENAFS_VOL_STATS
-    /*
-     * We don't overwrite the motd field, since it's now being used
-     * for stats
-     */
-#else
-    if (Motd->SeqLen > 1)
-	strcpy(V_motd(volptr), Motd->SeqBody);
-#endif /* FS_STATS_DETAILED */
-    VUpdateVolume(&errorCode, volptr);
-    return (errorCode);
-
-}				/*Update_VolumeStatus */
-
-
-/*
- * Get internal volume-related statistics from the Volume disk label
- * structure and put it into the VolumeStatus structure, status; it's
- * used by both SAFS_GetVolumeStatus and SAFS_SetVolumeStatus to return
- * the volume status to the caller.
- */
-static afs_int32
-GetVolumeStatus(VolumeStatus * status, struct BBS *name, struct BBS *offMsg,
-		struct BBS *motd, Volume * volptr)
-{
-    status->Vid = V_id(volptr);
-    status->ParentId = V_parentId(volptr);
-    status->Online = V_inUse(volptr);
-    status->InService = V_inService(volptr);
-    status->Blessed = V_blessed(volptr);
-    status->NeedsSalvage = V_needsSalvaged(volptr);
-    if (VolumeWriteable(volptr))
-	status->Type = ReadWrite;
-    else
-	status->Type = ReadOnly;
-    status->MinQuota = V_minquota(volptr);
-    status->MaxQuota = V_maxquota(volptr);
-    status->BlocksInUse = V_diskused(volptr);
-    status->PartBlocksAvail = volptr->partition->free;
-    status->PartMaxBlocks = volptr->partition->totalUsable;
-    strncpy(name->SeqBody, V_name(volptr), (int)name->MaxSeqLen);
-    name->SeqLen = strlen(V_name(volptr)) + 1;
-    if (name->SeqLen > name->MaxSeqLen)
-	name->SeqLen = name->MaxSeqLen;
-    strncpy(offMsg->SeqBody, V_offlineMessage(volptr), (int)name->MaxSeqLen);
-    offMsg->SeqLen = strlen(V_offlineMessage(volptr)) + 1;
-    if (offMsg->SeqLen > offMsg->MaxSeqLen)
-	offMsg->SeqLen = offMsg->MaxSeqLen;
-#ifdef notdef
-    /*Don't do anything with the motd field */
-    strncpy(motd->SeqBody, nullString, (int)offMsg->MaxSeqLen);
-    motd->SeqLen = strlen(nullString) + 1;
-#endif
-    if (motd->SeqLen > motd->MaxSeqLen)
-	motd->SeqLen = motd->MaxSeqLen;
-
-}				/*GetVolumeStatus */
-
 static afs_int32
 RXGetVolumeStatus(AFSFetchVolumeStatus * status, char **name, char **offMsg,
 		  char **motd, Volume * volptr)
@@ -1960,26 +1844,6 @@ FileNameOK(register char *aname)
 }				/*FileNameOK */
 
 
-/* Debugging tool to print Volume Statu's contents */
-static void
-PrintVolumeStatus(VolumeStatus * status)
-{
-    ViceLog(5, ("Volume header contains:\n"));
-    ViceLog(5,
-	    ("Vid = %u, Parent = %u, Online = %d, InService = %d, Blessed = %d, NeedsSalvage = %d\n",
-	     status->Vid, status->ParentId, status->Online, status->InService,
-	     status->Blessed, status->NeedsSalvage));
-    ViceLog(5,
-	    ("MinQuota = %d, MaxQuota = %d\n", status->MinQuota,
-	     status->MaxQuota));
-    ViceLog(5,
-	    ("Type = %d, BlocksInUse = %d, PartBlocksAvail = %d, PartMaxBlocks = %d\n",
-	     status->Type, status->BlocksInUse, status->PartBlocksAvail,
-	     status->PartMaxBlocks));
-
-}				/*PrintVolumeStatus */
-
-
 /*
  * This variant of symlink is expressly to support the AFS/DFS translator
  * and is not supported by the AFS fileserver. We just return EINVAL.
@@ -2003,6 +1867,7 @@ SRXAFS_ResidencyCmd(struct rx_call * acall, struct AFSFid * Fid,
     return EINVAL;
 }
 
+#ifdef AFS_NT40_ENV
 static struct afs_buffer {
     struct afs_buffer *next;
 } *freeBufferList = 0;
@@ -2044,6 +1909,7 @@ AllocSendBuffer()
     return (char *)tp;
 
 }				/*AllocSendBuffer */
+#endif /* AFS_NT40_ENV */
 
 /*
  * This routine returns the status info associated with the targetptr vnode
@@ -7416,12 +7282,14 @@ afs_int32
 SRXAFS_CallBackRxConnAddr (struct rx_call * acall, afs_int32 *addr)
 {
     Error errorCode = 0;
+    struct rx_connection *tcon;
+#ifdef __EXPERIMENTAL_CALLBACK_CONN_MOVING
     struct host *thost;
     struct client *tclient;
     static struct rx_securityClass *sc = 0;
     int i,j;
-    struct rx_connection *tcon;
     struct rx_connection *conn;
+#endif
     
     if (errorCode = CallPreamble(acall, ACTIVECALL, &tcon))
 	    goto Bad_CallBackRxConnAddr1;
