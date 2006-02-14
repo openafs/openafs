@@ -1,4 +1,4 @@
-(This document is current as of release 1.5.000)
+...(This document is current as of release 1.5.000)
 
 How to determine if OpenAFS is installed?
 
@@ -200,3 +200,219 @@ the user via the OpenAFS provided command line tools: fs.exe and symlink.exe.
 
 These operations are performed via pioctl calls. 
 
+
+
+BOOL WhichCell(const char *strPath, char *cell, int len)
+{
+    struct ViceIoctl blob;
+    int code;
+
+    blob.in_size = 0;
+    blob.out_size = len
+    blob.out = cell;
+
+    code = pioctl((LPTSTR)((LPCTSTR)strPath), VIOC_FILE_CELL_NAME, &blob, 1);
+    if (code)
+        return FALSE;
+    return TRUE;
+}
+
+
+BOOL WorkstationCell(char *cell, int len)
+{
+    struct ViceIoctl blob;
+    int code;
+
+    blob.in_size = 0;
+    blob.out_size = len
+    blob.out = cell;
+
+    code = pioctl(NULL, VIOC_GET_WS_CELL, &blob, 1);
+    if (code)
+        return FALSE;
+    return TRUE;
+}
+
+/* from afs/afsint.h */
+struct VolumeStatus {
+        afs_int32 Vid;
+        afs_int32 ParentId;
+        char Online;
+        char InService;
+        char Blessed;
+        char NeedsSalvage;
+        afs_int32 Type;
+        afs_int32 MinQuota;
+        afs_int32 MaxQuota;
+        afs_int32 BlocksInUse;
+        afs_int32 PartBlocksAvail;
+        afs_int32 PartMaxBlocks;
+};
+typedef struct VolumeStatus VolumeStatus;
+
+BOOL WhichVolume(const char *strPath, DWORD * volID, char *volname, int len)
+{
+    struct ViceIoctl blob;
+    char space[2048];
+    struct VolumeStatus *status;
+    char *name, *offmsg, *motd;
+
+    int code;
+
+    blob.in_size = 0;
+    blob.out_size = sizeof(space);
+    blob.out = space;
+
+    code = pioctl(strPath, VIOCGETVOLSTAT, &blob, 1);
+    if (code)
+        return FALSE;
+
+    status = (VolumeStatus *)space;
+    name = (char *)status + sizeof(*status);
+    offmsg = name + strlen(name) + 1;
+    motd = offmsg + strlen(offmsg) + 1;
+
+    if (volID)
+ 	*volID = status->Vid;
+
+    if (volname) {
+  	strncpy(volname, name, len);
+        volname[len-1] = '\0';
+    }
+
+    /* Other items you could grab if you wanted 
+     *    if (*offmsg) 
+     *    then there is a message explaining why the volume is offline
+     *
+     *    if (*motd) 
+     *    then there is a message of the day.  (very rarely used)
+     *
+     *    status->MaxQuota: 0 is unlimited; otherwise 32-bit number of Blocks
+     *    status->BlocksInUse: 32-bit number of blocks
+     *    status->PartBlocksAvail: 32-bit number of blocks available in
+     *         the partition the volume is located on
+     *    status->PartMaxBlocks: 32-bit number representing the actual size
+     *         of the partition.
+     *
+     * These can be used to compute Quota Used, Partition Used, Space Avail, 
+     * etc.   A block is 1K.
+     *
+     *    status->Type         0=ReadOnly; 1=ReadWrite
+     *    status->Online       (boolean)
+     *    status->InService    (boolean)
+     *    status->Blessed      (boolean)
+     *    status->NeedsSalvage (boolean)
+     *    status->ParentId     Volume ID of the parent volume.  (for readonly)
+     */
+    return TRUE;
+}
+
+BOOL IsSymlink(const char * dir, const char * entry) 
+{
+    struct ViceIoctl blob;
+    char space[2048];
+    int code;
+
+    blob.in_size = strlen(entry);
+    blob.in = entry;
+    blob.out_size = sizeof(space);
+    blob.out = space;
+
+    memset(space, 0, sizeof(space));
+
+    code = pioctl(dir, VIOC_LISTSYMLINK, &blob, 1);
+    if (code)
+   	return FALSE;
+
+    return TRUE;
+}
+
+BOOL GetSymlink(const char * dir, const char * entry, char * dest, int len) 
+{
+    struct ViceIoctl blob;
+    char space[2048];
+    int code;
+
+    blob.in_size = strlen(entry);
+    blob.in = entry;
+    blob.out_size = sizeof(space);
+    blob.out = space;
+
+    memset(space, 0, sizeof(space));
+
+    code = pioctl(dir, VIOC_LISTSYMLINK, &blob, 1);
+    if (code)
+   	return FALSE;
+
+    strncpy(dest, space, len);
+    dest[len-1] = '\0';
+    return TRUE;
+}
+
+BOOL IsMountPoint(const char * dir, const char * entry)
+{
+    struct ViceIoctl blob;
+    char space[2048];
+    int code;
+
+    blob.in_size = strlen(entry);
+    blob.in = entry;
+    blob.out_size = sizeof(space);
+    blob.out = space;
+
+    memset(space, 0, sizeof(space));
+
+    code = pioctl(dir, VIOC_AFS_STAT_MT_PT, &blob, 1);
+    if (code)
+   	return FALSE;
+
+    return TRUE;
+}
+
+BOOL GetMountPoint(const char * dir, const char * entry, char * dest, int len)
+{
+    struct ViceIoctl blob;
+    char space[2048];
+    int code;
+
+    blob.in_size = strlen(entry);
+    blob.in = entry;
+    blob.out_size = sizeof(space);
+    blob.out = space;
+
+    memset(space, 0, sizeof(space));
+
+    code = pioctl(dir, VIOC_AFS_STAT_MT_PT, &blob, 1);
+    if (code)
+   	return FALSE;
+
+    strncpy(dest, space, len);
+    dest[len-1] = '\0';
+    return TRUE;
+}
+
+BOOL IsOnline(const char *strPath)
+{
+    struct ViceIoctl blob;
+    char space[2048];
+    struct VolumeStatus *status;
+    int code;
+
+    blob.in_size = 0;
+    blob.out_size = sizeof(space);
+    blob.out = space;
+
+    code = pioctl(strPath, VIOCGETVOLSTAT, &blob, 1);
+    if (code)
+        return FALSE;
+
+    status = (VolumeStatus *)space;
+
+    if (!status->Online ||
+        !status->InService ||
+        !status->Blessed ||
+        status->NeedsSalvage)
+	return FALSE;
+
+    return TRUE;
+}

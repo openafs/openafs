@@ -167,3 +167,9 @@ List of unfunded projects:
   22. Add support for storing Windows ACLs on files
   23. Remove submount creation as a side effect of drive creation
   24. Finish conversion from string.h to strsafe.h for VS.NET 2005
+  25. Implement RX Statistics gathering interfaces and reporting tools
+      (necessary to obtain profiling data)
+  26. Implement RX Connection Pools in the Cache Manager allowing more than
+      four simultaneous requests to a single server to be processed at a time 
+      for a single user
+  
