@@ -102,7 +102,7 @@ if [ $majorvers -ge 7 ]; then
 else
     echo /Network/afs:/var/db/openafs/cache:30000 > $PKGROOT/private/var/db/openafs/etc/cacheinfo.sample
 fi
-echo '-stat 2000 -dcache 800 -daemons 3 -volumes 70 -dynroot -fakestat-all' > $PKGROOT/private/var/db/openafs/etc/config/afsd.options.sample
+echo '-afsdb -stat 2000 -dcache 800 -daemons 3 -volumes 70 -dynroot -fakestat-all' > $PKGROOT/private/var/db/openafs/etc/config/afsd.options.sample
 
 strip -X -S $PKGROOT/Library/OpenAFS/Tools/root.client/usr/vice/etc/afs.kext/Contents/MacOS/afs
 
