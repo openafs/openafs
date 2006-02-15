@@ -208,7 +208,7 @@ AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_I_DEVICES], [
 AC_MSG_CHECKING(for i_devices in struct inode)
 save_CPPFLAGS="$CPPFLAGS"
 CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -DKBUILD_BASENAME=\"libafs\" -D__KERNEL__ $CPPFLAGS"
-AC_CACHE_VAL(ac_cv_linux_fs_struct_inode_has_i_cdev, 
+AC_CACHE_VAL(ac_cv_linux_fs_struct_inode_has_i_devices, 
 [
 AC_TRY_COMPILE(
 [#include <linux/fs.h>],
@@ -296,6 +296,22 @@ printf("%d\n", _inode.i_mmap_shared);],
 ac_cv_linux_fs_struct_inode_has_i_mmap_shared=yes,
 ac_cv_linux_fs_struct_inode_has_i_mmap_shared=no)])
 AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_mmap_shared)
+CPPFLAGS="$save_CPPFLAGS"])
+
+
+AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_I_MUTEX], [
+AC_MSG_CHECKING(for i_mutex in struct inode)
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -DKBUILD_BASENAME=\"libafs\" -D__KERNEL__ $CPPFLAGS"
+AC_CACHE_VAL(ac_cv_linux_fs_struct_inode_has_i_mutex, 
+[
+AC_TRY_COMPILE(
+[#include <linux/fs.h>],
+[struct inode _inode;
+printf("%d\n", _inode.i_mutex);], 
+ac_cv_linux_fs_struct_inode_has_i_mutex=yes,
+ac_cv_linux_fs_struct_inode_has_i_mutex=no)])
+AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_mutex)
 CPPFLAGS="$save_CPPFLAGS"])
 
 
