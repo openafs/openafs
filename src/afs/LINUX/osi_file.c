@@ -204,7 +204,11 @@ osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
 #ifdef STRUCT_INODE_HAS_I_ALLOC_SEM
     down_write(&inode->i_alloc_sem);
 #endif
+#ifdef STRUCT_INODE_HAS_I_MUTEX
+    mutex_lock(&inode->i_mutex);
+#else
     down(&inode->i_sem);
+#endif
     newattrs.ia_size = asize;
     newattrs.ia_valid = ATTR_SIZE | ATTR_CTIME;
 #if defined(AFS_LINUX24_ENV)
@@ -234,7 +238,11 @@ osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
     }
 #endif
     code = -code;
+#ifdef STRUCT_INODE_HAS_I_MUTEX
+    mutex_unlock(&inode->i_mutex);
+#else
     up(&inode->i_sem);
+#endif
 #ifdef STRUCT_INODE_HAS_I_ALLOC_SEM
     up_write(&inode->i_alloc_sem);
 #endif
