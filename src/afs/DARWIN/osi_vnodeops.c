@@ -1430,8 +1430,10 @@ afs_vop_mkdir(ap)
     error = afs_mkdir(VTOAFS(dvp), name, vap, &vcp, vop_cn_cred);
     AFS_GUNLOCK();
     if (error) {
+#ifndef AFS_DARWIN80_ENV
 	VOP_ABORTOP(dvp, cnp);
 	vput(dvp);
+#endif
 	DROPNAME();
 	return (error);
     }
