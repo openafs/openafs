@@ -279,32 +279,34 @@ configureBackConnectionHostNames(void)
                        KEY_READ|KEY_WRITE,
                        &hkMSV10) == ERROR_SUCCESS )
     {
-        if (RegQueryValueEx( hkMSV10, "BackConnectionHostNames", 0, &dwType, NULL, &dwSize) == ERROR_SUCCESS) {
-            pHostNames = malloc(dwSize + strlen(cm_NetbiosName) + 1);
-            RegQueryValueEx( hkMSV10, "BackConnectionHostNames", 0, &dwType, pHostNames, &dwSize);
-
-            for (pName = pHostNames; *pName ; pName += strlen(pName) + 1)
-            {
-                if ( !stricmp(pName, cm_NetbiosName) ) {
-                    bNameFound = TRUE;
-                    break;
-                }   
-            }
+        if (RegQueryValueEx( hkMSV10, "BackConnectionHostNames", 0, 
+			     &dwType, NULL, &dwSize) == ERROR_SUCCESS) {
+	    dwSize += strlen(cm_NetbiosName) + 1;
+	    pHostNames = malloc(dwSize);
+            if (RegQueryValueEx( hkMSV10, "BackConnectionHostNames", 0, &dwType, 
+				 pHostNames, &dwSize) == ERROR_SUCCESS) {
+		for (pName = pHostNames; *pName ; pName += strlen(pName) + 1)
+		{
+		    if ( !stricmp(pName, cm_NetbiosName) ) {
+			bNameFound = TRUE;
+			break;
+		    }   
+		}
+	    }
         }
              
         if ( !bNameFound ) {
             size_t size = strlen(cm_NetbiosName) + 2;
             if ( !pHostNames ) {
                 pHostNames = malloc(size);
-                dwSize = 1;
+		dwSize = size;
+		pName = pHostNames;
             }
-            pName = pHostNames;
             StringCbCopyA(pName, size, cm_NetbiosName);
             pName += size - 1;
             *pName = '\0';  /* add a second nul terminator */
 
             dwType = REG_MULTI_SZ;
-            dwSize += (DWORD)strlen(cm_NetbiosName) + 1;
             RegSetValueEx( hkMSV10, "BackConnectionHostNames", 0, dwType, pHostNames, dwSize);
 
             if ( RegOpenKeyEx( HKEY_LOCAL_MACHINE, 
@@ -370,7 +372,11 @@ configureBackConnectionHostNames(void)
         }
         RegCloseKey(hkMSV10);
     }
+
+    if (pHostNames)
+	free(pHostNames);
 }
+
 
 #if !defined(DJGPP)
 static void afsd_InitServerPreferences(void)
