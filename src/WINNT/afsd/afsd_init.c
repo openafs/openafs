@@ -541,6 +541,7 @@ int afsd_InitCM(char **reasonP)
     DWORD cacheSize;
     long logChunkSize;
     DWORD stats;
+    DWORD dwValue;
     DWORD rx_enable_peer_stats = 0;
     DWORD rx_enable_process_stats = 0;
     long traceBufSize;
@@ -923,25 +924,6 @@ int afsd_InitCM(char **reasonP)
     }
 #endif /* AFS_FREELANCE_CLIENT */
 
-#ifdef COMMENT
-    /* The netbios name is looked up in lana_GetUNCServerNameEx */
-    dummyLen = sizeof(buf);
-    code = RegQueryValueEx(parmKey, "NetbiosName", NULL, NULL,
-                           (BYTE *) &buf, &dummyLen);
-    if (code == ERROR_SUCCESS) {
-        DWORD len = ExpandEnvironmentStrings(buf, cm_NetbiosName, MAX_NB_NAME_LENGTH);
-        if ( len > 0 && len <= MAX_NB_NAME_LENGTH ) {
-            afsi_log("Explicit NetBios name is used %s", cm_NetbiosName);
-        } else {
-            afsi_log("Unable to Expand Explicit NetBios name: %s", buf);
-            cm_NetbiosName[0] = 0;  /* turn it off */
-        }
-    }
-    else {
-        cm_NetbiosName[0] = 0;   /* default off */
-    }
-#endif
-
     dummyLen = sizeof(smb_hideDotFiles);
     code = RegQueryValueEx(parmKey, "HideDotFiles", NULL, NULL,
                            (BYTE *) &smb_hideDotFiles, &dummyLen);
@@ -1022,6 +1004,48 @@ int afsd_InitCM(char **reasonP)
     code = RegQueryValueEx(parmKey, "HardDeadTimeout", NULL, NULL,
                            (BYTE *) &HardDeadtimeout, &dummyLen);
     afsi_log("HardDeadTimeout is %d", HardDeadtimeout);
+
+    dummyLen = sizeof(DWORD);
+    code = RegQueryValueEx(parmKey, "daemonCheckDownInterval", NULL, NULL,
+			    (BYTE *) &dwValue, &dummyLen);
+    if (code == ERROR_SUCCESS)
+	cm_daemonCheckDownInterval = dwValue;
+    afsi_log("daemonCheckDownInterval is %d", cm_daemonCheckDownInterval);
+
+    dummyLen = sizeof(DWORD);
+    code = RegQueryValueEx(parmKey, "daemonCheckUpInterval", NULL, NULL,
+			    (BYTE *) &dwValue, &dummyLen);
+    if (code == ERROR_SUCCESS)
+	cm_daemonCheckUpInterval = dwValue;
+    afsi_log("daemonCheckUpInterval is %d", cm_daemonCheckUpInterval);
+
+    dummyLen = sizeof(DWORD);
+    code = RegQueryValueEx(parmKey, "daemonCheckVolInterval", NULL, NULL,
+			    (BYTE *) &dwValue, &dummyLen);
+    if (code == ERROR_SUCCESS)
+	cm_daemonCheckVolInterval = dwValue;
+    afsi_log("daemonCheckVolInterval is %d", cm_daemonCheckVolInterval);
+
+    dummyLen = sizeof(DWORD);
+    code = RegQueryValueEx(parmKey, "daemonCheckCBInterval", NULL, NULL,
+			    (BYTE *) &dwValue, &dummyLen);
+    if (code == ERROR_SUCCESS)
+	cm_daemonCheckCBInterval = dwValue;
+    afsi_log("daemonCheckCBInterval is %d", cm_daemonCheckCBInterval);
+
+    dummyLen = sizeof(DWORD);
+    code = RegQueryValueEx(parmKey, "daemonCheckLockInterval", NULL, NULL,
+			    (BYTE *) &dwValue, &dummyLen);
+    if (code == ERROR_SUCCESS)
+	cm_daemonCheckLockInterval = dwValue;
+    afsi_log("daemonCheckLockInterval is %d", cm_daemonCheckLockInterval);
+
+    dummyLen = sizeof(DWORD);
+    code = RegQueryValueEx(parmKey, "daemonCheckTokenInterval", NULL, NULL,
+			    (BYTE *) &dwValue, &dummyLen);
+    if (code == ERROR_SUCCESS)
+	cm_daemonTokenCheckInterval = dwValue;
+    afsi_log("daemonCheckTokenInterval is %d", cm_daemonTokenCheckInterval);
 
     RegCloseKey (parmKey);
 
