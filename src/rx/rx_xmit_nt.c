@@ -81,7 +81,7 @@ recvmsg(int socket, struct msghdr *msgP, int flags)
 #ifdef AFS_NT40_ENV
 	if (code == SOCKET_ERROR)
 	    code = WSAGetLastError();
-	if (code == WSAEWOULDBLOCK)
+	if (code == WSAEWOULDBLOCK || code == WSAECONNRESET)
 	    errno = WSAEWOULDBLOCK;
 	else
 	    errno = EIO;
@@ -137,6 +137,7 @@ sendmsg(int socket, struct msghdr *msgP, int flags)
 	    errno = 0;
 	    break;
 	case WSAEWOULDBLOCK:
+	case WSAECONNRESET:
 	    errno = WSAEWOULDBLOCK;
 	    break;
 	case WSAEHOSTUNREACH:
