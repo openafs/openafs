@@ -132,6 +132,7 @@ extern HANDLE WaitToTerminate;
 #undef  DFS_SUPPORT
 #define LOG_PACKET 1
 #undef  NOTSERVICE
+#define LOCK_TESTING 1
 
 #define WORKER_THREADS 10
 
