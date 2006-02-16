@@ -52,12 +52,7 @@ cm_user_t *smb_GetTran2User(smb_vc_t *vcp, smb_tran2Packet_t *inp)
     if (!uidp) 
 	return NULL;
         
-    lock_ObtainMutex(&uidp->mx);
-    if (uidp->unp) {
-        up = uidp->unp->userp;
-        cm_HoldUser(up);
-    }
-    lock_ReleaseMutex(&uidp->mx);
+    up = smb_GetUserFromUID(uidp);
 
     smb_ReleaseUID(uidp);
 
@@ -1022,7 +1017,8 @@ long smb_ReceiveV3TreeConnectX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *o
 #endif
     }
 
-    userp = smb_GetUser(vcp, inp);
+    uidp = smb_FindUID(vcp, ((smb_t *)inp)->uid, 0);
+    userp = smb_GetUserFromUID(uidp);
 
     lock_ObtainMutex(&vcp->mx);
     newTid = vcp->tidCounter++;
@@ -1031,11 +1027,9 @@ long smb_ReceiveV3TreeConnectX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *o
     tidp = smb_FindTID(vcp, newTid, SMB_FLAG_CREATE);
 
     if (!ipc) {
-        uidp = smb_FindUID(vcp, ((smb_t *)inp)->uid, 0);
 	shareFound = smb_FindShare(vcp, uidp, shareName, &sharePath);
-        if (uidp)
-            smb_ReleaseUID(uidp);
 	if (!shareFound) {
+	    smb_ReleaseUID(uidp);
             smb_ReleaseTID(tidp);
             return CM_ERROR_BADSHARENAME;
 	}
@@ -1053,6 +1047,7 @@ long smb_ReceiveV3TreeConnectX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *o
         smb_SetSMBParm(outp, 2, 0);
         sharePath = NULL;
     }
+    smb_ReleaseUID(uidp);
 
     lock_ObtainMutex(&tidp->mx);
     tidp->userp = userp;
@@ -4595,7 +4590,7 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     	free(hexp);
     }
 #endif
-    userp = smb_GetUser(vcp, inp);
+    userp = smb_GetUserFromVCP(vcp, inp);
 
     dscp = NULL;
     code = smb_LookupTIDPath(vcp, ((smb_t *)inp)->tid, &tidPathp);
@@ -4868,7 +4863,7 @@ long smb_ReceiveV3LockingX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     /* set inp->fid so that later read calls in same msg can find fid */
     inp->fid = fid;
 
-    userp = smb_GetUser(vcp, inp);
+    userp = smb_GetUserFromVCP(vcp, inp);
 
     scp = fidp->scp;
 
@@ -5102,7 +5097,7 @@ long smb_ReceiveV3GetAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
     }
     lock_ReleaseMutex(&fidp->mx);
         
-    userp = smb_GetUser(vcp, inp);
+    userp = smb_GetUserFromVCP(vcp, inp);
         
     scp = fidp->scp;
         
@@ -5173,7 +5168,7 @@ long smb_ReceiveV3SetAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
     }
     lock_ReleaseMutex(&fidp->mx);
         
-    userp = smb_GetUser(vcp, inp);
+    userp = smb_GetUserFromVCP(vcp, inp);
         
     scp = fidp->scp;
         
@@ -5263,7 +5258,7 @@ long smb_ReceiveV3ReadX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     }
     lock_ReleaseMutex(&fidp->mx);
 
-    userp = smb_GetUser(vcp, inp);
+    userp = smb_GetUserFromVCP(vcp, inp);
 
     /* 0 and 1 are reserved for request chaining, were setup by our caller,
      * and will be further filled in after we return.
@@ -5489,7 +5484,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     }
 #endif
 
-    userp = smb_GetUser(vcp, inp);
+    userp = smb_GetUserFromVCP(vcp, inp);
     if (!userp) {
     	osi_Log1(smb_logp, "NTCreateX Invalid user [%d]", ((smb_t *) inp)->uid);
     	free(realPathp);
@@ -6225,7 +6220,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
     }
 #endif
 
-    userp = smb_GetUser(vcp, inp);
+    userp = smb_GetUserFromVCP(vcp, inp);
     if (!userp) {
     	osi_Log1(smb_logp, "NTTranCreate invalid user [%d]", ((smb_t *) inp)->uid);
     	free(realPathp);

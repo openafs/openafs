@@ -1279,11 +1279,29 @@ void smb_ReleaseUID(smb_user_t *uidp)
     }
 }	
 
+cm_user_t *smb_GetUserFromUID(smb_user_t *uidp)
+{
+    cm_user_t *up = NULL;
+
+    if (!uidp)
+	return NULL;
+    
+    lock_ObtainMutex(&uidp->mx);
+    if (uidp->unp) {
+	up = uidp->unp->userp;
+	cm_HoldUser(up);
+    }
+    lock_ReleaseMutex(&uidp->mx);
+
+    return up;
+}
+
+
 /* retrieve a held reference to a user structure corresponding to an incoming
  * request.
  * corresponding release function is cm_ReleaseUser.
  */
-cm_user_t *smb_GetUser(smb_vc_t *vcp, smb_packet_t *inp)
+cm_user_t *smb_GetUserFromVCP(smb_vc_t *vcp, smb_packet_t *inp)
 {
     smb_user_t *uidp;
     cm_user_t *up = NULL;
@@ -1294,12 +1312,7 @@ cm_user_t *smb_GetUser(smb_vc_t *vcp, smb_packet_t *inp)
     if (!uidp)
 	return NULL;
     
-    lock_ObtainMutex(&uidp->mx);
-    if (uidp->unp) {
-	up = uidp->unp->userp;
-	cm_HoldUser(up);
-    }
-    lock_ReleaseMutex(&uidp->mx);
+    up = smb_GetUserFromUID(uidp);
 
     smb_ReleaseUID(uidp);
     return up;
@@ -2951,7 +2964,7 @@ long smb_ReceiveCoreReadRaw(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp
     }
     lock_ReleaseMutex(&fidp->mx);
 
-    userp = smb_GetUser(vcp, inp);
+    userp = smb_GetUserFromVCP(vcp, inp);
 
 #ifndef DJGPP
     code = smb_ReadData(fidp, &offset, count, rawBuf, userp, &finalCount);
@@ -3534,14 +3547,13 @@ long smb_ReceiveCoreTreeConnect(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
         return CM_ERROR_BADSMB;
     strcpy(shareName, tp+1);
 
-    userp = smb_GetUser(vcp, inp);
-
     lock_ObtainMutex(&vcp->mx);
     newTid = vcp->tidCounter++;
     lock_ReleaseMutex(&vcp->mx);
 
     tidp = smb_FindTID(vcp, newTid, SMB_FLAG_CREATE);
     uidp = smb_FindUID(vcp, ((smb_t *)inp)->uid, 0);
+    userp = smb_GetUserFromUID(uidp);
     shareFound = smb_FindShare(vcp, uidp, shareName, &sharePath);
     if (uidp)
         smb_ReleaseUID(uidp);
@@ -3960,7 +3972,7 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
     osi_Log3(smb_logp, "SMB search dir cookie 0x%x, connection %d, attr 0x%x",
              nextCookie, dsp->cookie, attribute);
 
-    userp = smb_GetUser(vcp, inp);
+    userp = smb_GetUserFromVCP(vcp, inp);
 
     /* try to get the vnode for the path name next */
     lock_ObtainMutex(&dsp->mx);
@@ -4392,7 +4404,7 @@ long smb_ReceiveCoreCheckPath(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
         
     rootScp = cm_data.rootSCachep;
         
-    userp = smb_GetUser(vcp, inp);
+    userp = smb_GetUserFromVCP(vcp, inp);
 
     caseFold = CM_FLAG_CASEFOLD;
 
@@ -4476,7 +4488,7 @@ long smb_ReceiveCoreSetFileAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_pack
 
     rootScp = cm_data.rootSCachep;
         
-    userp = smb_GetUser(vcp, inp);
+    userp = smb_GetUserFromVCP(vcp, inp);
 
     caseFold = CM_FLAG_CASEFOLD;
 
@@ -4589,7 +4601,7 @@ long smb_ReceiveCoreGetFileAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_pack
 
     rootScp = cm_data.rootSCachep;
         
-    userp = smb_GetUser(vcp, inp);
+    userp = smb_GetUserFromVCP(vcp, inp);
 
     /* we shouldn't need this for V3 requests, but we seem to */
     caseFold = CM_FLAG_CASEFOLD;
@@ -4793,7 +4805,7 @@ long smb_ReceiveCoreOpen(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         return 0;
     }
 
-    userp = smb_GetUser(vcp, inp);
+    userp = smb_GetUserFromVCP(vcp, inp);
 
     caseFold = CM_FLAG_CASEFOLD;
 
@@ -4966,7 +4978,7 @@ long smb_ReceiveCoreUnlink(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     spacep = inp->spacep;
     smb_StripLastComponent(spacep->data, &lastNamep, pathp);
 
-    userp = smb_GetUser(vcp, inp);
+    userp = smb_GetUserFromVCP(vcp, inp);
 
     caseFold = CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD;
 
@@ -5105,7 +5117,7 @@ smb_Rename(smb_vc_t *vcp, smb_packet_t *inp, char * oldPathp, char * newPathp, i
     DWORD filter;
     cm_req_t req;
 
-    userp = smb_GetUser(vcp, inp);
+    userp = smb_GetUserFromVCP(vcp, inp);
     code = smb_LookupTIDPath(vcp, ((smb_t *)inp)->tid, &tidPathp);
     if (code) {
         cm_ReleaseUser(userp);
@@ -5283,7 +5295,7 @@ smb_Link(smb_vc_t *vcp, smb_packet_t *inp, char * oldPathp, char * newPathp)
     DWORD filter;
     cm_req_t req;
 
-    userp = smb_GetUser(vcp, inp);
+    userp = smb_GetUserFromVCP(vcp, inp);
 
     code = smb_LookupTIDPath(vcp, ((smb_t *)inp)->tid, &tidPathp);
     if (code) {
@@ -5513,7 +5525,7 @@ long smb_ReceiveCoreRemoveDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
     spacep = inp->spacep;
     smb_StripLastComponent(spacep->data, &lastNamep, pathp);
 
-    userp = smb_GetUser(vcp, inp);
+    userp = smb_GetUserFromVCP(vcp, inp);
 
     caseFold = CM_FLAG_CASEFOLD;
 
@@ -5601,7 +5613,7 @@ long smb_ReceiveCoreFlush(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     }
     lock_ReleaseMutex(&fidp->mx);
         
-    userp = smb_GetUser(vcp, inp);
+    userp = smb_GetUserFromVCP(vcp, inp);
 
     lock_ObtainMutex(&fidp->mx);
     if (fidp->flags & SMB_FID_OPENWRITE)
@@ -5816,7 +5828,7 @@ long smb_ReceiveCoreClose(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         return CM_ERROR_BADFD;
     }
         
-    userp = smb_GetUser(vcp, inp);
+    userp = smb_GetUserFromVCP(vcp, inp);
 
     code = smb_CloseFID(vcp, fidp, userp, dosTime);
     
@@ -6266,7 +6278,7 @@ long smb_ReceiveCoreWrite(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 	return code;
     }
     lock_ReleaseMutex(&fidp->mx);
-    userp = smb_GetUser(vcp, inp);
+    userp = smb_GetUserFromVCP(vcp, inp);
 
     /* special case: 0 bytes transferred means truncate to this position */
     if (count == 0) {
@@ -6373,7 +6385,7 @@ void smb_CompleteWriteRaw(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
     osi_Log2(smb_logp, "Completing Raw Write offset %x count %x",
              rwcp->offset.LowPart, rwcp->count);
 
-    userp = smb_GetUser(vcp, inp);
+    userp = smb_GetUserFromVCP(vcp, inp);
 
 #ifndef DJGPP
     rawBuf = rwcp->buf;
@@ -6485,7 +6497,7 @@ long smb_ReceiveCoreWriteRaw(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
         }
     }
         
-    userp = smb_GetUser(vcp, inp);
+    userp = smb_GetUserFromVCP(vcp, inp);
 
     /*
      * Work around bug in NT client
@@ -6629,7 +6641,7 @@ long smb_ReceiveCoreRead(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         return code;
     }
         
-    userp = smb_GetUser(vcp, inp);
+    userp = smb_GetUserFromVCP(vcp, inp);
 
     /* remember this for final results */
     smb_SetSMBParm(outp, 0, count);
@@ -6703,7 +6715,7 @@ long smb_ReceiveCoreMakeDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp
     spacep = inp->spacep;
     smb_StripLastComponent(spacep->data, &lastNamep, pathp);
 
-    userp = smb_GetUser(vcp, inp);
+    userp = smb_GetUserFromVCP(vcp, inp);
 
     caseFold = CM_FLAG_CASEFOLD;
 
@@ -6827,7 +6839,7 @@ long smb_ReceiveCoreCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     spacep = inp->spacep;
     smb_StripLastComponent(spacep->data, &lastNamep, pathp);
 
-    userp = smb_GetUser(vcp, inp);
+    userp = smb_GetUserFromVCP(vcp, inp);
 
     caseFold = CM_FLAG_CASEFOLD;
 
@@ -7003,7 +7015,7 @@ long smb_ReceiveCoreSeek(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     }
     lock_ReleaseMutex(&fidp->mx);
 	
-    userp = smb_GetUser(vcp, inp);
+    userp = smb_GetUserFromVCP(vcp, inp);
 
     lock_ObtainMutex(&fidp->mx);
     scp = fidp->scp;

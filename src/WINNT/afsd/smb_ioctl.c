@@ -190,7 +190,7 @@ long smb_IoctlRead(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp,
 
         iop = fidp->ioctlp;
         count = smb_GetSMBParm(inp, 1);
-        userp = smb_GetUser(vcp, inp);
+        userp = smb_GetUserFromVCP(vcp, inp);
 
 	/* Identify tree */
     code = smb_LookupTIDPath(vcp, ((smb_t *)inp)->tid, &iop->tidPathp);
@@ -290,10 +290,9 @@ long smb_IoctlV3Read(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp, smb_pack
     iop = fidp->ioctlp;
     count = smb_GetSMBParm(inp, 5);
 	
-    userp = smb_GetUser(vcp, inp);
-    osi_assert(userp != 0);
-
     uidp = smb_FindUID(vcp, ((smb_t *)inp)->uid, 0);
+    userp = smb_GetUserFromUID(uidp);
+    osi_assert(userp != 0);
     iop->uidp = uidp;
     if (uidp && uidp->unp) {
         osi_Log3(afsd_logp, "Ioctl uid %d user %x name %s",
@@ -391,7 +390,7 @@ long smb_IoctlReadRaw(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp,
 
     iop = fidp->ioctlp;
 
-    userp = smb_GetUser(vcp, inp);
+    userp = smb_GetUserFromVCP(vcp, inp);
 
     /* Log the user */
     {

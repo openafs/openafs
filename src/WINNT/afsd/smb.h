@@ -530,7 +530,9 @@ extern void smb_HoldUIDNoLock(smb_user_t *uidp);
 
 extern void smb_ReleaseUID(smb_user_t *uidp);
 
-extern cm_user_t *smb_GetUser(smb_vc_t *vcp, smb_packet_t *inp);
+extern cm_user_t *smb_GetUserFromVCP(smb_vc_t *vcp, smb_packet_t *inp);
+
+extern cm_user_t *smb_GetUserFromUID(smb_user_t *uidp);
 
 extern long smb_LookupTIDPath(smb_vc_t *vcp, unsigned short tid, char ** tidPathp);
 
