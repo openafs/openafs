@@ -145,9 +145,7 @@ afs_syscall_iopen(dev, inode, usrmod)
 	iput(ip);
 	goto out;
     }
-#ifdef AFS_HPUX1111_ENV
     fd = u.u_r.r_val1;
-#endif
     iunlock(ip);
 
     fp->f_ops = &vnodefops;
@@ -179,9 +177,6 @@ afs_syscall_iopen(dev, inode, usrmod)
      * called by falloc(), which is called above.
      */
     if (is_multithreaded(u.u_procp)) {
-#ifndef AFS_HPUX1111_ENV
-	fd = (int)u.u_r.r_val1;
-#endif
 	putf(fd);
     }
 
