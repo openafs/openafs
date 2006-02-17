@@ -113,7 +113,7 @@ typedef struct afs_event {
 #else
 #define EVTLOCK_INIT(e)
 #define EVTLOCK_LOCK(e)
-#define EVTLCK_UNLOCK(e)
+#define EVTLOCK_UNLOCK(e)
 #define EVTLOCK_DESTROY(e)
 #endif
 #define HASHSIZE 128
