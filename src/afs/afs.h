@@ -315,7 +315,7 @@ struct conn {
 #define	QInit(q)    ((q)->prev = (q)->next = (q))
 #define	QAdd(q,e)   ((e)->next = (q)->next, (e)->prev = (q), \
 			(q)->next->prev = (e), (q)->next = (e))
-#define	QRemove(e)  ((e)->next->prev = (e)->prev, (e)->prev->next = (e)->next)
+#define	QRemove(e)  ((e)->next->prev = (e)->prev, (e)->prev->next = (e)->next, (e)->prev = NULL, (e)->next = NULL)
 #define	QNext(e)    ((e)->next)
 #define QPrev(e)    ((e)->prev)
 #define QEmpty(q)   ((q)->prev == (q))

@@ -163,7 +163,6 @@ afs_FlushVCache(struct vcache *avc, int *slept)
     avc->states |= CVFlushed;
     /* pull the entry out of the lruq and put it on the free list */
     QRemove(&avc->vlruq);
-    avc->vlruq.prev = avc->vlruq.next = (struct afs_q *)0;
 
     /* keep track of # of files that we bulk stat'd, but never used
      * before they got recycled.
