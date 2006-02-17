@@ -1,3 +1,12 @@
+Since 1.4.1 rc7: 
+
+ * Windows will return WSAECONNRESET to the next receive packet
+   operation on a socket if an ICMP packet is received in response
+   to a packet that was sent and could not be delivered because
+   the port was unreachable.  We have to treat this as 
+   WSAEWOULDBLOCK so that we can retry the select() check and
+   not mark the connection as bad.
+
 Since 1.4.1 rc6: 1.4.1 rc7 released (14 Feb 2006)
 
  * The client manager maintains a least recently used list of
