@@ -597,6 +597,7 @@ client_HasAsMember(struct client *client, afs_int32 id)
     ObtainReadLock(&client->lock);
     if (client->CPS.prlist_len > 0 && !client->deleted && 
 	client->host &&	!(client->host->hostFlags & HOSTDELETED))
+	code = acl_IsAMember(id, &client->CPS);
     ReleaseReadLock(&client->lock);
     return code;
 }
