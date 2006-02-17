@@ -59,12 +59,6 @@ ENTRY(savecontext)
 L1:
 	jmp	*f(%ebp)			/* ebx = &f */
 
-#if !defined(AFS_DARWIN_ENV)
-/* Shouldn't be here....*/
-
-	call	_C_LABEL(abort)
-#endif
-
 /*
  * returnto(area2)
  *	struct savearea *area2;
@@ -85,8 +79,3 @@ ENTRY(returnto)
 	popl	%ebp
 	ret
 
-#if !defined(AFS_DARWIN_ENV)
-/* I see, said the blind man, as he picked up his hammer and saw! */
-	pushl	$1234
-	call	_C_LABEL(abort)
-#endif
