@@ -2567,7 +2567,6 @@ DECL_PIOCTL(PFlushVolumeData)
     ObtainReadLock(&afs_xvcache);
     i = VCHashV(&avc->fid);
     for (tq = afs_vhashTV[i].prev; tq != &afs_vhashTV[i]; tq = uq) {
-	    uq = QPrev(tq);
 	    tvc = QTOVH(tq);
 	    if (tvc->fid.Fid.Volume == volume && tvc->fid.Cell == cell) {
 		if (tvc->states & CVInit) {
@@ -2613,15 +2612,14 @@ DECL_PIOCTL(PFlushVolumeData)
 		afs_BozonUnlock(&tvc->pvnLock, tvc);
 #endif
 #ifdef AFS_DARWIN80_ENV
-		/* our tvc ptr is still good until now */
-                vnode_put(AFSTOV(tvc));
-		AFS_FAST_RELE(tvc);
-		ObtainReadLock(&afs_xvcache);
-#else
-		ObtainReadLock(&afs_xvcache);
-		/* our tvc ptr is still good until now */
-		AFS_FAST_RELE(tvc);
+		vnode_put(AFSTOV(tvc));
 #endif
+		ObtainReadLock(&afs_xvcache);
+		uq = QPrev(tq);
+		/* our tvc ptr is still good until now */
+		AFS_FAST_RELE(tvc);
+	    } else {
+		uq = QPrev(tq);
 	    }
 	}
     ReleaseReadLock(&afs_xvcache);
