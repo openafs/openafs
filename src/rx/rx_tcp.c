@@ -326,12 +326,22 @@ rxi_StartTcpClient(struct rx_connection *conn)
 	/*
 	 * If we get a challenge packet, we need to handle it.  Feed it into
 	 * our decoder 
+	 */
 	if (type == RX_CHALLENGE) {
-		char outbuf[4096];
+		char *outbuf;
 		int outlen;
 		RXS_GetResponseStream(conn->securityObject, conn, pbuf, length,
-				      &outbuf, &outlen);
+				      (void **) &outbuf, &outlen);
 		printf("Output buffer length: %d\n", outlen);
+
+		if (rxi_TcpWritePacket(conn, RX_TCP_FORWARD, RX_RESPONSE,
+				       0, 0, outbuf, outlen, 0, 0) < 0) {
+			rxi_CancelTcpConnection(conn);
+			MUTEX_EXIT(&conn->conn_call_lock);
+			return;
+		}
+
+		osi_Free(outbuf, outlen);
 	}
 
 	rxi_TcpDecodeUint32(pbuf + 1, &defaultwindow);
@@ -1357,12 +1367,15 @@ rxi_TcpNewServerConnection(void *arg)
 
 	printf("Got new connection structure\n");
 	conn->tcpDescriptor = s;
+	conn->tcpPacketHeader = malloc(RX_TCP_COMM_HEADER);
+	conn->tcpPacketCur = conn->tcpPacketHeader;
+	conn->tcpPacketLen = 0;
 
 	/*
 	 * Create our security challenge, and send it over the wire
 	 */
 
-	if (RXS_CheckAuthentication(conn->securityObject, conn) != 0)) {
+	if (RXS_CheckAuthentication(conn->securityObject, conn) != 0) {
 		void *outpacket;
 		int outlen, error;
 		unsigned char buffer[4096], type;
@@ -1384,14 +1397,14 @@ rxi_TcpNewServerConnection(void *arg)
 		 * Process that now.
 		 */
 
-		cc = rxi_TcpReadPacket(conn, &type, &buffer, NULL);
+		cc = rxi_TcpReadPacket(conn, &type, buffer, NULL);
 
 		if (cc <= 0) {
 			rxi_CancelTcpConnection(conn);
 			return NULL;
 		}
 
-		if (type != RX_RESPONSE)
+		if (type != RX_RESPONSE) {
 			printf("Wrong packet type for security response (%d)\n",
 			       type);
 			rxi_CancelTcpConnection(conn);
@@ -1422,9 +1435,6 @@ rxi_TcpNewServerConnection(void *arg)
 
 	printf("Successful exchange\n");
 
-	conn->tcpPacketHeader = malloc(RX_TCP_COMM_HEADER);
-	conn->tcpPacketCur = conn->tcpPacketHeader;
-	conn->tcpPacketLen = 0;
 	queue_Init(&conn->tcpCallQueue);
 #if 0
 	conn->tcpReadBuffer = malloc(32768);

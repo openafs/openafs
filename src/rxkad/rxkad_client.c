@@ -359,6 +359,7 @@ rxkad_GetResponseStream(struct rx_securityClass *aobj,
 
     memcpy(*outbuffer, (void *) &r_v2, sizeof(r_v2));
     memcpy((char *) *outbuffer + sizeof(r_v2), tcp->ticket, tcp->ticketLen);
+    *outsize = sizeof(r_v2) + tcp->ticketLen;
     return 0;
 }
 

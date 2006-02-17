@@ -38,6 +38,7 @@ static void do_client(struct sockaddr *);
 static void *client_thread_send(void *);
 static void do_server(unsigned short);
 static int32_t rxtest_ExecuteRequest(struct rx_call *call);
+static int get_key(char *, int, struct ktc_encryptionKey *);
 
 extern char *optarg;
 extern int optind;
@@ -58,6 +59,7 @@ static int do_auth = 0;
 static char princ_name[1024];
 static char cell_name[1024];
 unsigned char *databuf;
+unsigned char service_key[8];
 struct thread_info {
 	pthread_t tid;
 	struct rx_connection *conn;
@@ -69,7 +71,8 @@ struct thread_info {
 int
 main(int argc, char *argv[])
 {
-	int err, c;
+	int err, c, i;
+	char *p;
 
 	if (argc < 3) {
 		usage(argv[0]);
@@ -78,7 +81,7 @@ main(int argc, char *argv[])
 	princ_name[0] = '\0';
 	cell_name[0] = '\0';
 
-	while ((c = getopt(argc, argv, "aAcC:f:m:n:p:R:sS:w:x:")) != EOF)
+	while ((c = getopt(argc, argv, "aAcC:f:k:m:n:p:R:sS:w:x:")) != EOF)
 		switch (c) {
 		case 'a':
 			disable_flow_control++;
@@ -100,6 +103,23 @@ main(int argc, char *argv[])
 			break;
 		case 'f':
 			frame_size = atoi(optarg);
+			break;
+		case 'k':
+			if (strlen(optarg) != sizeof(service_key) * 2) {
+				fprintf(stderr, "%s: DES key must be %d hex "\
+					"bytes\n", argv[0],
+					sizeof(service_key));
+				exit(1);
+			}
+			for (i = 0; i < sizeof(service_key); i++) {
+				unsigned int tmp;
+				err = sscanf(optarg + i * 2, "%02x", &tmp);
+				if (err != 1) {
+					fprintf(stderr, "Bad key string!\n");
+					exit(1);
+				}
+				service_key[i] = tmp;
+			}
 			break;
 		case 'm':
 			number_threads = atoi(optarg);
@@ -213,6 +233,8 @@ usage(char *argv0)
 	fprintf(stderr, "\t-x N\tSet RxTCP window size to N\n");
 	fprintf(stderr, "\t-A\tPerform authentication\n");
 	fprintf(stderr, "\t-p\tPrincipal to use for authentication\n");
+	fprintf(stderr, "\t-C Cell name to use for authentication\n");
+	fprintf(stderr, "\t-k\tDES key of service ticket, in hex\n");
 	exit(1);
 }
 
@@ -241,7 +263,7 @@ do_client(struct sockaddr *s)
 		struct afsconf_cell info;
 		afs_int32 code;
 
-		afsconf_Open(AFSDIR_CLIENT_ETC_DIRPATH);
+		tdir = afsconf_Open(AFSDIR_CLIENT_ETC_DIRPATH);
 
 		if (!tdir) {
 			fprintf(stderr, "Unable to open cell database\n");
@@ -278,6 +300,22 @@ do_client(struct sockaddr *s)
 			} else
 				sname.instance[0] = '\0';
 		}
+		strncpy(sname.cell, cell_name, sizeof(sname.cell));
+		sname.cell[sizeof(sname.cell) - 1] = '\0';
+
+		code = ktc_GetToken(&sname, &ttoken, sizeof(ttoken), 0);
+
+		if (code) {
+			fprintf(stderr, "ktc_GetToken failed: %d\n",
+				code);
+			exit(1);
+		}
+
+		secureobj = rxkad_NewClientSecurityObject(rxkad_clear,
+							  &ttoken.sessionKey,
+							  ttoken.kvno,
+							  ttoken.ticketLen,
+							  ttoken.ticket);
 	} else 
 		secureobj = rxnull_NewClientSecurityObject();
 
@@ -481,6 +519,10 @@ do_server(unsigned short port)
 		exit(1);
 	}
 
+	if (do_auth)
+		secureobj = rxkad_NewServerSecurityObject(rxkad_clear, NULL,
+							  get_key, NULL);
+
 	if (frame_size)
 		rx_TcpSetFrameSize(frame_size);
 
@@ -508,6 +550,14 @@ do_server(unsigned short port)
 
 	rx_StartServer(1);
 	return;
+}
+
+static int
+get_key(char *rock, int kvno, struct ktc_encryptionKey *key)
+{
+	memcpy(key->data, service_key, sizeof(service_key));
+
+	return 0;
 }
 
 static int32_t

@@ -262,6 +262,7 @@ rxkad_GetChallengeStream(struct rx_securityClass *aobj,
 
     *outpacket = osi_Alloc(sizeof(c_v2));
     *outsize = sizeof(c_v2);
+    memcpy(*outpacket, (void *) &c_v2, sizeof(c_v2));
     sconn->tried = 1;
     INC_RXKAD_STATS(challengesSent);
     return 0;
