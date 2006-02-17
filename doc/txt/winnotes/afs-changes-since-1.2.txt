@@ -1,4 +1,27 @@
-Changes not present in 1.4.1-RC4
+Changes not present in 1.4.1: 1.5.0 released (16 Feb 2006)
+
+ * Update build system to include the "sys_name" in the 
+   obj and dest paths.
+
+ * optimize the number of calls to obtain the smb_user_t for a 
+   smb virtual circuit.
+
+ * add logging of server addresses, status and capabilities when
+   pinging the server.
+
+ * prevent multiple threads from pinging the same server simultaneously.
+   instead, threads block and then use the result of the ping that was
+   already taking place.
+
+ * Add registry values to allow the defaults for daemon checks to be altered
+   at startup.  Log values to afsd_init.log.
+
+   daemonCheckDownInterval
+   daemonCheckUpInterval
+   daemonCheckVolInterval
+   daemonCheckCBInterval
+   daemonCheckLockInterval
+   daemonCheckTokenInterval
 
  * Add EventLog messages for transitions in fs crypt state.
 
@@ -29,6 +52,15 @@ Changes not present in 1.4.1-RC4
    used on disconnected mobile computers.
 
  * Added DebugOutputString debugging of the RX library
+
+Since 1.4.1 rc7: 
+
+ * Windows will return WSAECONNRESET to the next receive packet
+   operation on a socket if an ICMP packet is received in response
+   to a packet that was sent and could not be delivered because
+   the port was unreachable.  We have to treat this as 
+   WSAEWOULDBLOCK so that we can retry the select() check and
+   not mark the connection as bad.
 
 Since 1.4.1 rc6: 1.4.1 rc7 released (14 Feb 2006)
 
