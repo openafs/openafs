@@ -1409,7 +1409,9 @@ rxi_ReadPacket(osi_socket socket, register struct rx_packet *p, afs_uint32 * hos
 		 ntohs(from.sin_port), nbytes));
 	}
 	return 0;
-    } else if ((rx_intentionallyDroppedOnReadPer100 > 0)
+    } 
+#ifdef RXDEBUG
+    else if ((rx_intentionallyDroppedOnReadPer100 > 0)
 		&& (random() % 100 < rx_intentionallyDroppedOnReadPer100)) {
 	rxi_DecodePacketHeader(p);
 
@@ -1422,7 +1424,9 @@ rxi_ReadPacket(osi_socket socket, register struct rx_packet *p, afs_uint32 * hos
 	      p->length));
 	rxi_TrimDataBufs(p, 1);
 	return 0;
-    } else {
+    } 
+#endif
+    else {
 	/* Extract packet header. */
 	rxi_DecodePacketHeader(p);
 
