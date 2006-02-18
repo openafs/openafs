@@ -900,9 +900,6 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
     ReleaseReadLock(&afs_xvcache);	/* could be read lock */
     if (retry)
 	goto reskip;
-#ifdef AFS_DARWIN80_ENV
-    vnode_get(AFSTOV(lruvcp));
-#endif
 
     /* otherwise, merge in the info.  We have to be quite careful here,
      * since we need to ensure that we don't merge old info over newer

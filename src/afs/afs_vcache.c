@@ -2098,6 +2098,9 @@ afs_GetRootVCache(struct VenusFid *afid, struct vrequest *areq,
 #ifdef	AFS_OSF_ENV
     int vg;
 #endif
+#ifdef AFS_DARWIN80_ENV
+    vnode_t tvp;
+#endif
 
     start = osi_Time();
 
@@ -2153,8 +2156,16 @@ afs_GetRootVCache(struct VenusFid *afid, struct vrequest *areq,
 		afs_osi_Sleep(&tvc->states);
 		goto rootvc_loop;
             }
-            if (vnode_get(AFSTOV(tvc)))       /* this bumps ref count */
-                continue;
+	    tvp = AFSTOV(tvc);
+	    if (vnode_get(tvp))       /* this bumps ref count */
+	        continue;
+	    if (vnode_ref(tvp)) {
+		AFS_GUNLOCK();
+		/* AFSTOV(tvc) may be NULL */
+		vnode_put(tvp);
+		AFS_GLOCK();
+	        continue;
+	    }
 #endif
 	    break;
 	}
@@ -2172,6 +2183,7 @@ afs_GetRootVCache(struct VenusFid *afid, struct vrequest *areq,
         if (tvc) {
             AFS_GUNLOCK();
             vnode_put(AFSTOV(tvc));
+            vnode_rele(AFSTOV(tvc));
             AFS_GLOCK();
         }
 #endif
@@ -2194,7 +2206,7 @@ afs_GetRootVCache(struct VenusFid *afid, struct vrequest *areq,
 	if (cached)
 	    *cached = 1;
 	afs_stats_cmperf.vcacheHits++;
-#ifdef	AFS_OSF_ENV
+#if	defined(AFS_OSF_ENV) || defined(AFS_DARWIN80_ENV)
 	/* we already bumped the ref count in the for loop above */
 #else /* AFS_OSF_ENV */
 	osi_vnhold(tvc, 0);
@@ -2628,6 +2640,9 @@ afs_FindVCache(struct VenusFid *afid, afs_int32 * retry, afs_int32 flag)
 #if defined( AFS_OSF_ENV)
     int vg;
 #endif
+#ifdef AFS_DARWIN80_ENV
+    vnode_t tvp;
+#endif
 
     AFS_STATCNT(afs_FindVCache);
 
@@ -2652,8 +2667,16 @@ afs_FindVCache(struct VenusFid *afid, afs_int32 * retry, afs_int32 flag)
                 findvc_sleep(tvc, flag);
 		goto findloop;
             }
-            if (vnode_get(AFSTOV(tvc)))
-                continue;
+	    tvp = AFSTOV(tvc);
+	    if (vnode_get(tvp))
+		continue;
+	    if (vnode_ref(tvp)) {
+		AFS_GUNLOCK();
+		/* AFSTOV(tvc) may be NULL */
+		vnode_put(tvp);
+		AFS_GLOCK();
+		continue;
+	    }
 #endif
 	    break;
 	}
@@ -2663,7 +2686,7 @@ afs_FindVCache(struct VenusFid *afid, afs_int32 * retry, afs_int32 flag)
     if (tvc) {
 	if (retry)
 	    *retry = 0;
-#if !defined(AFS_OSF_ENV)
+#if !defined(AFS_OSF_ENV) && !defined(AFS_DARWIN80_ENV)
 	osi_vnhold(tvc, retry);	/* already held, above */
 	if (retry && *retry)
 	    return 0;
@@ -2757,6 +2780,9 @@ afs_NFSFindVCache(struct vcache **avcp, struct VenusFid *afid)
 #ifdef  AFS_OSF_ENV
     int vg;
 #endif
+#ifdef AFS_DARWIN80_ENV
+    vnode_t tvp;
+#endif
 
     AFS_STATCNT(afs_FindVCache);
 
@@ -2792,10 +2818,19 @@ afs_NFSFindVCache(struct vcache **avcp, struct VenusFid *afid)
 		afs_osi_Sleep(&tvc->states);
 		goto loop;
             }
-            if (vnode_get(AFSTOV(tvc))) {
-                /* This vnode no longer exists. */
-                continue;
-            }
+	    tvp = AFSTOV(tvc);
+	    if (vnode_get(tvp)) {
+		/* This vnode no longer exists. */
+		continue;
+	    }
+	    if (vnode_ref(tvp)) {
+		/* This vnode no longer exists. */
+		AFS_GUNLOCK();
+		/* AFSTOV(tvc) may be NULL */
+		vnode_put(tvp);
+		AFS_GLOCK();
+		continue;
+	    }
 #endif /* AFS_DARWIN80_ENV */
 	    count++;
 	    if (found_tvc) {
