@@ -6033,7 +6033,7 @@ SRXAFS_FlushCPS(struct rx_call * acall, struct ViceIds * vids,
     for (i = 0; i < nids; i++, vd++) {
 	if (!*vd)
 	    continue;
-	client = h_ID2Client(*vd);	/* returns client write locked, or NULL */
+	client = h_ID2Client(*vd);	/* returns write locked and refCounted, or NULL */
 	if (!client)
 	    continue;
 
@@ -6049,6 +6049,7 @@ SRXAFS_FlushCPS(struct rx_call * acall, struct ViceIds * vids,
 	    client->CPS.prlist_len = 0;
 	}
 	ReleaseWriteLock(&client->lock);
+	PutClient(&client);
     }
 
     addr = addrs->IPAddrs_val;

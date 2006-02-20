@@ -719,10 +719,9 @@ h_TossStuff_r(register struct host *host)
 	    }
 	    /* We can't protect this without dropping the H_LOCK */
 	    client->CPS.prlist_len = 0;
-	    if ((client->ViceId != ANONYMOUSID) && client->CPS.prlist_val) {
+	    if ((client->ViceId != ANONYMOUSID) && client->CPS.prlist_val)
 		free(client->CPS.prlist_val);
-		client->CPS.prlist_val = NULL;
-	    }
+	    client->CPS.prlist_val = NULL;
 	    if (client->tcon) {
 		rx_SetSpecific(client->tcon, rxcon_client_key, (void *)0);
 	    }
@@ -1546,7 +1545,7 @@ MapName_r(char *aname, char *acell, afs_int32 * aval)
 /*MapName*/
 
 
-/* NOTE: this returns the client with a Write lock */
+/* NOTE: this returns the client with a Write lock and a refCount */
 struct client *
 h_ID2Client(afs_int32 vid)
 {
@@ -1562,9 +1561,6 @@ h_ID2Client(afs_int32 vid)
 		client->refCount++;
 		H_UNLOCK;
 		ObtainWriteLock(&client->lock);
-		H_LOCK;
-		client->refCount--;
-		H_UNLOCK;
 		return client;
 	    }
 	}
@@ -1734,11 +1730,10 @@ h_FindClient_r(struct rx_connection *tcon)
     client->prfail = fail;
 
     if (!(client->CPS.prlist_val) || (viceid != client->ViceId)) {
-	if (client->CPS.prlist_val && (client->ViceId != ANONYMOUSID)) {
-	    free(client->CPS.prlist_val);
-	}
-	client->CPS.prlist_val = NULL;
 	client->CPS.prlist_len = 0;
+	if (client->CPS.prlist_val && (client->ViceId != ANONYMOUSID))
+	    free(client->CPS.prlist_val);
+	client->CPS.prlist_val = NULL;
 	client->ViceId = viceid;
 	client->expTime = expTime;
 
@@ -1797,10 +1792,9 @@ h_FindClient_r(struct rx_connection *tcon)
 			    afs_inet_ntoa_r(rxr_HostOf(tcon), hoststr),
 			    ntohs(rxr_PortOf(tcon)),
 			    oldClient, oldClient->sid));
-		if ((client->ViceId != ANONYMOUSID) && client->CPS.prlist_val) {
+		if ((client->ViceId != ANONYMOUSID) && client->CPS.prlist_val)
 		    free(client->CPS.prlist_val);
-		    client->CPS.prlist_val = NULL;
-		}
+		client->CPS.prlist_val = NULL;
 		client->CPS.prlist_len = 0;
 		if (client->tcon) {
 		    rx_SetSpecific(client->tcon, rxcon_client_key, (void *)0);
