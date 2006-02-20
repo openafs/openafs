@@ -24,6 +24,6 @@ RCSID
 
 /* Place the defaults in afsd instead of all around the code, so
  * AFS_SETCHUNKSIZE() needs to be called before doing anything */
-afs_int32 afs_FirstCSize = 0;
-afs_int32 afs_OtherCSize = 0;
-afs_int32 afs_LogChunk = 0;
+afs_int32 afs_FirstCSize = AFS_DEFAULTCSIZE;
+afs_int32 afs_OtherCSize = AFS_DEFAULTCSIZE;
+afs_int32 afs_LogChunk = AFS_DEFAULTLSIZE;
