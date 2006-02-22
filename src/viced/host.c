@@ -526,8 +526,8 @@ struct host *
 h_Alloc_r(register struct rx_connection *r_con)
 {
     struct servent *serverentry;
-    register index = h_HashIndex(rxr_HostOf(r_con));
-    register struct host *host;
+    int index = h_HashIndex(rxr_HostOf(r_con));
+    struct host *host;
     static struct rx_securityClass *sc = 0;
     afs_int32 now;
     struct h_hashChain *h_hashChain;
@@ -606,10 +606,10 @@ h_Alloc_r(register struct rx_connection *r_con)
 struct host *
 h_Lookup_r(afs_uint32 haddr, afs_uint32 hport, int *heldp)
 {
-    register afs_int32 now;
-    register struct host *host = 0;
-    register struct h_hashChain *chain;
-    register index = h_HashIndex(haddr);
+    afs_int32 now;
+    struct host *host = 0;
+    struct h_hashChain *chain;
+    int index = h_HashIndex(haddr);
     extern int hostaclRefresh;
 
   restart:
@@ -653,9 +653,9 @@ h_Lookup_r(afs_uint32 haddr, afs_uint32 hport, int *heldp)
 struct host *
 h_LookupUuid_r(afsUUID * uuidp)
 {
-    register struct host *host = 0;
-    register struct h_hashChain *chain;
-    register index = h_UuidHashIndex(uuidp);
+    struct host *host = 0;
+    struct h_hashChain *chain;
+    int index = h_UuidHashIndex(uuidp);
 
     for (chain = hostUuidHashTable[index]; chain; chain = chain->next) {
 	host = chain->hostPtr;

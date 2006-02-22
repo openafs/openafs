@@ -300,8 +300,6 @@ static int MultiBreakVolumeCallBack(struct host *host, int isheld,
 				    struct VCBParams *parms);
 static int MultiBreakVolumeLaterCallBack(struct host *host, int isheld,
 					 struct VCBParams *parms);
-static int lih_r(register struct host *host, register int held,
-		 register struct host *hostp);
 static int GetSomeSpace_r(struct host *hostp, int locked);
 static int ClearHostCallbacks_r(struct host *hp, int locked);
 
@@ -312,6 +310,7 @@ static int ClearHostCallbacks_r(struct host *hp, int locked);
 
 /* Other protos - move out sometime */
 extern void ShutDown();
+void PrintCB(register struct CallBack *cb, afs_uint32 now);
 
 #define VHASH 512		/* Power of 2 */
 static afs_uint32 HashTable[VHASH];	/* File entry hash table */
@@ -1371,7 +1370,7 @@ BreakVolumeCallBacksLater(afs_uint32 volume)
     ViceLog(25, ("Setting later on volume %u\n", volume));
     H_LOCK;
     for (hash = 0; hash < VHASH; hash++) {
-	for (feip = &HashTable[hash]; fe = itofe(*feip);) {
+	for (feip = &HashTable[hash]; (fe = itofe(*feip)) != NULL; ) {
 	    if (fe->volid == volume) {
 		register struct CallBack *cbnext;
 		for (cb = itocb(fe->firstcb); cb; cb = cbnext) {
@@ -1427,7 +1426,7 @@ BreakLaterCallBacks(void)
     fid.Volume = fid.Vnode = fid.Unique = 0;
 
     for (hash = 0; hash < VHASH; hash++) {
-	for (feip = &HashTable[hash]; fe = itofe(*feip);) {
+	for (feip = &HashTable[hash]; (fe = itofe(*feip)) != NULL; ) {
 	    if (fe && (fe->status & FE_LATER)
 		&& (fid.Volume == 0 || fid.Volume == fe->volid)) {
 		/* Ugly, but used to avoid left side casting */
@@ -1557,23 +1556,6 @@ CleanupTimedOutCallBacks_r(void)
 
 static struct host *lih_host;
 static int lih_host_held;
-
-static int
-lih_r(register struct host *host, register int held,
-      register struct host *hostp)
-{
-    if (host->cblist
-	&& ((hostp && host != hostp) || (!held && !h_OtherHolds_r(host)))
-	&& (!lih_host || host->ActiveCall < lih_host->ActiveCall)) {
-	if (lih_host != NULL && lih_host_held) {
-	    h_Release_r(lih_host);
-	}
-	lih_host = host;
-	lih_host_held = !held;
-	held = 1;
-    }
-    return held;
-}
 
 /* This version does not allow 'host' to be selected unless its ActiveCall 
  * is newer than 'hostp' which is the host with the oldest ActiveCall from
@@ -1945,10 +1927,10 @@ main(int argc, char **argv)
 	PrintCallBackStats();
     }
     if (all || vol) {
-	register hash;
-	register afs_uint32 *feip;
-	register struct CallBack *cb;
-	register struct FileEntry *fe;
+	int hash;
+	afs_uint32 *feip;
+	struct CallBack *cb;
+	struct FileEntry *fe;
 
 	for (hash = 0; hash < VHASH; hash++) {
 	    for (feip = &HashTable[hash]; fe = itofe(*feip);) {
@@ -1986,16 +1968,16 @@ main(int argc, char **argv)
 	}
     }
     if (raw) {
-	struct FileEntry *fe;
 	afs_int32 *p, i;
 	for (i = 1; i < cbstuff.nblks; i++) {
 	    p = (afs_int32 *) & FE[i];
 	    printf("%d:%12x%12x%12x%12x\n", i, p[0], p[1], p[2], p[3]);
 	}
     }
+    exit(0);
 }
 
-int
+void
 PrintCB(register struct CallBack *cb, afs_uint32 now)
 {
     struct FileEntry *fe = itofe(cb->fhead);

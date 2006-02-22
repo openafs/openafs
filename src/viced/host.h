@@ -211,6 +211,7 @@ extern int MultiBreakCallBackAlternateAddress(struct host *host, struct AFSCBFid
 extern int MultiBreakCallBackAlternateAddress_r(struct host *host,
 				     struct AFSCBFids *afidp);
 extern int DumpCallBackState(void);
+extern int PrintCallBackStats(void);
 extern void ShutDownAndCore(int dopanic);
 
 extern struct host *h_Alloc(register struct rx_connection *r_con);

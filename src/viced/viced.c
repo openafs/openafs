@@ -476,7 +476,7 @@ HostCheckLWP()
  * other 5 minute activities because it may be delayed by timeouts when
  * it probes the workstations
  */
-static
+static void
 FsyncCheckLWP()
 {
     afs_int32 code;
@@ -1063,7 +1063,7 @@ ParseArgs(int argc, char *argv[])
 	    rxMaxMTU = atoi(argv[++i]);
 	    if ((rxMaxMTU < RX_MIN_PACKET_SIZE) || 
 		(rxMaxMTU > RX_MAX_PACKET_DATA_SIZE)) {
-		printf("rxMaxMTU %d% invalid; must be between %d-%d\n",
+		printf("rxMaxMTU %d%% invalid; must be between %d-%d\n",
 		       rxMaxMTU, RX_MIN_PACKET_SIZE, 
 		       RX_MAX_PACKET_DATA_SIZE);
 		return -1;
@@ -1292,7 +1292,7 @@ Die(char *msg)
 afs_int32
 InitPR()
 {
-    register code;
+    int code;
 
     /*
      * If this fails, it's because something major is wrong, and is not
@@ -1568,8 +1568,6 @@ afs_int32
 InitVL()
 {
     afs_int32 code;
-    extern int rxi_numNetAddrs;
-    extern afs_uint32 rxi_NetAddrs[];
 
     /*
      * If this fails, it's because something major is wrong, and is not
