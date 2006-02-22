@@ -3387,7 +3387,12 @@ long cm_Lock(cm_scache_t *scp, unsigned char sLockType,
             cm_fid_t cfid;
             int newLock;
 
-            if (scp->serverLock == LockRead && Which == LockWrite) {
+#ifndef AGGRESSIVE_LOCKS
+            newLock = Which;
+#else
+            newLock = LockWrite;
+#endif
+            if (scp->serverLock == LockRead && newLock == LockWrite) {
             
                 /* We want to escalate the lock to a LockWrite.
                    Unfortunately that's not really possible without
@@ -3433,18 +3438,13 @@ long cm_Lock(cm_scache_t *scp, unsigned char sLockType,
                 }
             }
 
-            /* We need to obtain a server lock of type Which in order
+            /* We need to obtain a server lock of type newLock in order
                to assert this file lock */
             tfid.Volume = scp->fid.volume;
             tfid.Vnode = scp->fid.vnode;
             tfid.Unique = scp->fid.unique;
             cfid = scp->fid;
 
-#ifndef AGGRESSIVE_LOCKS
-            newLock = Which;
-#else
-            newLock = LockWrite;
-#endif
             osi_Log3(afsd_logp, "CALL SetLock scp 0x%x from %d to %d", (long) scp, (int) scp->serverLock, newLock);
 
             lock_ReleaseMutex(&scp->mx);
