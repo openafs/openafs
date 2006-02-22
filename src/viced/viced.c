@@ -167,6 +167,7 @@ int SawPctSpare;
 int debuglevel = 0;
 int printBanner = 0;
 int rxJumbograms = 1;		/* default is to send and receive jumbograms. */
+int rxMaxMTU = -1;
 afs_int32 implicitAdminRights = PRSFS_LOOKUP;	/* The ADMINISTER right is 
 						 * already implied */
 afs_int32 readonlyServer = 0;
@@ -734,6 +735,7 @@ FlagMsg()
     strcat(buffer, "[-rxpck <number of rx extra packets>] ");
     strcat(buffer, "[-rxdbg (enable rx debugging)] ");
     strcat(buffer, "[-rxdbge (enable rxevent debugging)] ");
+    strcat(buffer, "[-rxmaxmtu <bytes>] ");
 #if AFS_PTHREAD_ENV
     strcat(buffer, "[-vattachpar <number of volume attach threads>] ");
 #endif
@@ -1050,6 +1052,19 @@ ParseArgs(int argc, char *argv[])
 #endif
 	else if (!strcmp(argv[i], "-nojumbo")) {
 	    rxJumbograms = 0;
+	} else if (!strcmp(argv[i], "-rxmaxmtu")) {
+	    if ((i + 1) >= argc) {
+		fprintf(stderr, "missing argument for -rxmaxmtu\n"); 
+		return -1; 
+	    }
+	    rxMaxMTU = atoi(argv[++i]);
+	    if ((rxMaxMTU < RX_MIN_PACKET_SIZE) || 
+		(rxMaxMTU > RX_MAX_PACKET_DATA_SIZE)) {
+		printf("rxMaxMTU %d% invalid; must be between %d-%d\n",
+		       rxMaxMTU, RX_MIN_PACKET_SIZE, 
+		       RX_MAX_PACKET_DATA_SIZE);
+		return -1;
+	    }
 	} else if (!strcmp(argv[i], "-realm")) {
 	    extern char local_realm[AFS_REALM_SZ];
 	    if ((i + 1) >= argc) {
@@ -1790,6 +1805,9 @@ main(int argc, char *argv[])
     if (!rxJumbograms) {
 	/* Don't send and don't allow 3.4 clients to send jumbograms. */
 	rx_SetNoJumbo();
+    }
+    if (rxMaxMTU != -1) {
+	rx_SetMaxMTU(rxMaxMTU);
     }
     rx_GetIFInfo();
     rx_SetRxDeadTime(30);
