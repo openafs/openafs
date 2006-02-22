@@ -71,6 +71,7 @@ static CheckSignal();
 int LogLevel = 0;
 int smallMem = 0;
 int rxJumbograms = 1;		/* default is to send and receive jumbo grams */
+int rxMaxMTU = -1;
 
 static void
 CheckSignal_Signal()
@@ -178,6 +179,20 @@ main(argc, argv)
 	} else if (strcmp(argv[index], "-nojumbo") == 0) {
 	    rxJumbograms = 0;
 
+	} else if (!strcmp(argv[i], "-rxmaxmtu")) {
+	    if ((i + 1) >= argc) {
+		fprintf(stderr, "missing argument for -rxmaxmtu\n"); 
+		return -1; 
+	    }
+	    rxMaxMTU = atoi(argv[++i]);
+	    if ((rxMaxMTU < RX_MIN_PACKET_SIZE) || 
+		(rxMaxMTU > RX_MAX_PACKET_DATA_SIZE)) {
+		printf("rxMaxMTU %d% invalid; must be between %d-%d\n",
+		       rxMaxMTU, RX_MIN_PACKET_SIZE, 
+		       RX_MAX_PACKET_DATA_SIZE);
+		return -1;
+	    }
+
 	} else if (strcmp(argv[index], "-smallmem") == 0) {
 	    smallMem = 1;
 
@@ -230,12 +245,14 @@ main(argc, argv)
 	    /* support help flag */
 #ifndef AFS_NT40_ENV
 	    printf("Usage: vlserver [-p <number of processes>] [-nojumbo] "
+		   "[-rxmaxmtu <bytes>] "
 		   "[-auditlog <log path>] "
 		   "[-syslog[=FACILITY]] "
 		   "[-enable_peer_stats] [-enable_process_stats] "
 		   "[-help]\n");
 #else
 	    printf("Usage: vlserver [-p <number of processes>] [-nojumbo] "
+		   "[-rxmaxmtu <bytes>] "
 		   "[-auditlog <log path>] "
 		   "[-enable_peer_stats] [-enable_process_stats] "
 		   "[-help]\n");
@@ -322,6 +339,9 @@ main(argc, argv)
     }
     if (!rxJumbograms) {
 	rx_SetNoJumbo();
+    }
+    if (rxMaxMTU != -1) {
+	rx_SetMaxMTU(rxMaxMTU);
     }
     rx_SetRxDeadTime(50);
 
