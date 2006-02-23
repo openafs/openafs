@@ -80,9 +80,10 @@ RCSID
 #include <afs/ihandle.h>
 #include <afs/vnode.h>
 #include <afs/volume.h>
-#include <afs/acl.h>
 #include <afs/ptclient.h>
+#include <afs/ptuser.h>
 #include <afs/prs_fs.h>
+#include <afs/acl.h>
 #include <rx/rx.h>
 #include <rx/rx_globals.h>
 #include <sys/stat.h>

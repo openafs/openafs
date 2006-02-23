@@ -81,6 +81,9 @@ RCSID
 #include <afs/vlserver.h>
 #include <afs/afsutil.h>
 #include <afs/fileutil.h>
+#include <afs/ptuser.h>
+#include <afs/audit.h>
+#include <afs/partition.h>
 #ifndef AFS_NT40_ENV
 #include <afs/netutils.h>
 #endif
@@ -113,10 +116,10 @@ extern int BreakVolumeCallBacksLater();
 extern int LogLevel, etext;
 extern afs_int32 BlocksSpare, PctSpare;
 
-void ShutDown(void);
+int ShutDown(void);
 static void ClearXStatValues(), NewParms(), PrintCounters();
 static void ResetCheckDescriptors(void), ResetCheckSignal(void);
-static void CheckSignal(void);
+static int CheckSignal(void);
 extern int GetKeysFromToken();
 extern int RXAFS_ExecuteRequest();
 extern int RXSTATS_ExecuteRequest();
@@ -217,7 +220,7 @@ static void FlagMsg();
  */
 
 /* DEBUG HACK */
-static void
+static int
 CheckDescriptors()
 {
 #ifndef AFS_NT40_ENV
@@ -233,6 +236,7 @@ CheckDescriptors()
     }
     fflush(stdout);
     ResetCheckDescriptors();
+    return 0;
 #endif
 }				/*CheckDescriptors */
 
@@ -628,7 +632,7 @@ PrintCounters()
 
 
 
-static void
+static int
 CheckSignal()
 {
     if (FS_registered > 0) {
@@ -643,7 +647,7 @@ CheckSignal()
     DumpCallBackState();
     PrintCounters();
     ResetCheckSignal();
-
+    return 0;
 }				/*CheckSignal */
 
 void
@@ -698,13 +702,13 @@ ShutDownAndCore(int dopanic)
     }
 
     exit(0);
+}
 
-}				/*ShutDown */
-
-void
+int
 ShutDown(void)
 {				/* backward compatibility */
     ShutDownAndCore(DONTPANIC);
+    return 0;
 }
 
 

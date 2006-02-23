@@ -86,9 +86,7 @@ CmpInt(x, y)
 
 
 int
-acl_NewACL(nEntries, acl)
-     int nEntries;
-     struct acl_accessList **acl;
+acl_NewACL(int nEntries, struct acl_accessList **acl)
 {
     /* Creates an access list capable of holding at least nEntries entries.
      * Returns 0 on success; aborts if we run out of memory. */
@@ -119,8 +117,7 @@ acl_NewACL(nEntries, acl)
 
 
 int
-acl_FreeACL(acl)
-     struct acl_accessList **acl;
+acl_FreeACL(struct acl_accessList **acl)
 {
     /* Releases the access list defined by acl.  Returns 0 always. */
     struct freeListEntry *x;
@@ -132,9 +129,7 @@ acl_FreeACL(acl)
 }
 
 int
-acl_NewExternalACL(nEntries, r)
-     int nEntries;
-     char **r;
+acl_NewExternalACL(int nEntries, char **r)
 {
     /* Puts an external acl big enough to hold nEntries in r.  Returns 0 on success, aborts if insufficient memory. */
 
@@ -161,8 +156,7 @@ acl_NewExternalACL(nEntries, r)
 }
 
 int
-acl_FreeExternalACL(r)
-     char **r;
+acl_FreeExternalACL(char **r)
 {
     /* Releases the external access list defined by r.  Returns 0 always.  */
 
@@ -176,9 +170,7 @@ acl_FreeExternalACL(r)
 
 
 int
-acl_Externalize(acl, elist)
-     struct acl_accessList *acl;
-     char **elist;
+acl_Externalize(struct acl_accessList *acl, char **elist)
 {
     /* Converts the access list defined by acl into the external access list in elist.  Non-translatable id's are converted to their ASCII string representations.  Returns 0 on success, -1 if number of entries exceeds ACL_MAXENTRIES, or a failure code from the protection server if the problem occured there. */
 
@@ -236,9 +228,7 @@ acl_Externalize(acl, elist)
 
 
 int
-acl_Internalize(elist, acl)
-     char *elist;
-     struct acl_accessList **acl;
+acl_Internalize(char *elist, struct acl_accessList **acl)
 {
     /* Converts the external access list elist into the access list acl.  Returns 0 on success, -1 if ANY name is not translatable, or if the number of entries exceeds al_maxExtEntries. */
     register int i;
@@ -338,10 +328,7 @@ acl_Internalize(elist, acl)
 
 
 int
-acl_CheckRights(acl, groups, rights)
-     struct acl_accessList *acl;
-     prlist *groups;
-     int *rights;
+acl_CheckRights(struct acl_accessList *acl, prlist *groups, int *rights)
 {
     /* Returns the rights given by acl to groups */
 
@@ -412,8 +399,7 @@ acl_CheckRights(acl, groups, rights)
 }
 
 int
-acl_Initialize(version)
-     char *version;
+acl_Initialize(char *version)
 {
     /* I'm sure we need to do some initialization, I'm just not quite sure what yet! */
     if (strcmp(version, ACL_VERSION) != 0) {
@@ -428,9 +414,7 @@ acl_Initialize(version)
 }
 
 int
-acl_IsAMember(aid, cps)
-     afs_int32 aid;
-     prlist *cps;
+acl_IsAMember(afs_int32 aid, prlist *cps)
 {
     afs_int32 i;
 

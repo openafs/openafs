@@ -309,7 +309,6 @@ static int ClearHostCallbacks_r(struct host *hp, int locked);
 #define FreeFE(fe) iFreeFE((struct FileEntry *)fe, &cbstuff.nFEs)
 
 /* Other protos - move out sometime */
-extern void ShutDown();
 void PrintCB(register struct CallBack *cb, afs_uint32 now);
 
 #define VHASH 512		/* Power of 2 */

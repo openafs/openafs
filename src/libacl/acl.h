@@ -62,4 +62,16 @@ for now */
 
 typedef struct acl_accessList AL_AccessList;
 
+extern int acl_NewACL(int nEntries, struct acl_accessList **acl);
+extern int acl_FreeACL(struct acl_accessList **acl);
+extern int acl_NewExternalACL(int nEntries, char **r);
+extern int acl_FreeExternalACL(char **r);
+extern int acl_Externalize(struct acl_accessList *acl, char **elist);
+extern int acl_Internalize(char *elist, struct acl_accessList **acl);
+extern int acl_Initialize(char *version);
+#ifdef	_RXGEN_PTINT_
+extern int acl_CheckRights(struct acl_accessList *acl, prlist *groups, int *rights);
+extern int acl_IsAMember(afs_int32 aid, prlist *cps);
+#endif
+
 #endif

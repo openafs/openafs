@@ -49,6 +49,7 @@ RCSID
 #endif
 #include <afs/acl.h>
 #include <afs/ptclient.h>
+#include <afs/ptuser.h>
 #include <afs/prs_fs.h>
 #include <afs/auth.h>
 #include <afs/afsutil.h>
