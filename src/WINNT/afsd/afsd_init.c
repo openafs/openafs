@@ -920,7 +920,7 @@ int afsd_InitCM(char **reasonP)
                   cm_freelanceEnabled ? "is" : "is not");
     }       
     else {
-        cm_freelanceEnabled = 0;  /* default off */
+        cm_freelanceEnabled = 1;  /* default on */
     }
 #endif /* AFS_FREELANCE_CLIENT */
 

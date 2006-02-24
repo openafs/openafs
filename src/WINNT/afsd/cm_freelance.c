@@ -29,7 +29,7 @@ int cm_fakeGettingCallback=0;
 cm_localMountPoint_t* cm_localMountPoints;
 osi_mutex_t cm_Freelance_Lock;
 int cm_localMountPointChangeFlag = 0;
-int cm_freelanceEnabled = 0;
+int cm_freelanceEnabled = 1;
 time_t FakeFreelanceModTime = 0x3b49f6e2;
 
 static int freelance_ShutdownFlag = 0;
