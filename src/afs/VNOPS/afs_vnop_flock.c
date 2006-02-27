@@ -569,7 +569,7 @@ int afs_lockctl(struct vcache * avc, struct AFS_FLOCK * af, int acmd,
 #endif
 	) && code != LOCK_UN)
 	code |= LOCK_NB;	/* non-blocking, s.v.p. */
-#if	defined(AFS_OSF_ENV)
+#if	defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     code = HandleFlock(avc, code, &treq, clid, 0 /*!onlymine */ );
 #elif defined(AFS_SGI_ENV)
     AFS_RWLOCK((vnode_t *) avc, VRWLOCK_WRITE);
