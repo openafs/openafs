@@ -353,6 +353,12 @@ afs_MemRead(register struct vcache *avc, struct uio *auio,
 
 	if (len <= 0)
 	    break;		/* surprise eof */
+#ifdef AFS_DARWIN80_ENV
+	if (tuiop) {
+	    uio_free(tuiop);
+	    tuiop = 0;
+	}
+#endif
     }				/* the whole while loop */
 
     /*
@@ -880,6 +886,12 @@ afs_UFSRead(register struct vcache *avc, struct uio *auio,
 	filePos += len;
 	if (len <= 0)
 	    break;		/* surprise eof */
+#ifdef AFS_DARWIN80_ENV
+	if (tuiop) {
+	    uio_free(tuiop);
+	    tuiop = 0;
+	}
+#endif
     }
 
     /* if we make it here with tdc non-zero, then it is the last chunk we

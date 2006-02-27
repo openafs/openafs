@@ -340,13 +340,17 @@ lpioctl(char *path, int cmd, char *cmarg, int follow)
     int errcode, rval;
 
 #if defined(AFS_LINUX20_ENV)
-    rval = proc_afs_syscall(AFSCALL_PIOCTL, (long)path, cmd, (long)cmarg, follow, &errcode);
+    rval = proc_afs_syscall(AFSCALL_PIOCTL, (long)path, cmd, (long)cmarg, 
+			    follow, &errcode);
 
     if(rval)
-    errcode = syscall(AFS_SYSCALL, AFSCALL_PIOCTL, path, cmd, cmarg, follow);
+	errcode = syscall(AFS_SYSCALL, AFSCALL_PIOCTL, path, cmd, cmarg, 
+			  follow);
 #elif defined(AFS_DARWIN80_ENV)
-    if (ioctl_afs_syscall(AFSCALL_PIOCTL,(long)path,cmd,(long)cmarg,follow,0,0,&errcode))
-        errcode=ENOSYS;
+    rval = ioctl_afs_syscall(AFSCALL_PIOCTL, (long)path, cmd, (long)cmarg,
+			     follow, 0, 0, &errcode);
+    if (rval)
+	errcode = rval;
 #else
     errcode = syscall(AFS_SYSCALL, AFSCALL_PIOCTL, path, cmd, cmarg, follow);
 #endif
