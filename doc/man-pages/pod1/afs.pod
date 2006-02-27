@@ -547,8 +547,8 @@ L<volinfo(8)>,
 L<volserver(8)>,
 L<vos(1)>,
 L<xfs_size_check(8)>,
-L<xstat_cm_test(8)>,
-L<xstat_fs_test(8)>
+L<xstat_cm_test(1)>,
+L<xstat_fs_test(1)>
 
 =head1 COPYRIGHT
 

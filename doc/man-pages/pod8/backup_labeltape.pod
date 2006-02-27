@@ -202,7 +202,7 @@ included.
 L<butc(5)>,
 L<backup(8)>,
 L<backup_readlabel(8)>,
-L<butc(1)>
+L<butc(8)>
 
 =head1 COPYRIGHT
 

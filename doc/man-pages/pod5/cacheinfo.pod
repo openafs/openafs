@@ -60,8 +60,8 @@ cache size as 50,000 1-kilobyte blocks.
 =head1 SEE ALSO
 
 L<afsd(8)>,
-L<fs_getcacheparms(8)>,
-L<fs_setcachesize(8)>
+L<fs_getcacheparms(1)>,
+L<fs_setcachesize(1)>
 
 =head1 COPYRIGHT
 

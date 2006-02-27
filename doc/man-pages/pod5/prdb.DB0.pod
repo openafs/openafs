@@ -30,7 +30,7 @@ regular basis, using a tool such as the UNIX B<tar> command.
 =head1 SEE ALSO
 
 L<prdb_check(8)>,
-L<pts(8)>,
+L<pts(1)>,
 L<ptserver(8)>
 
 =head1 COPYRIGHT

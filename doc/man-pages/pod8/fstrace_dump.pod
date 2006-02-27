@@ -186,6 +186,8 @@ completed:
 
    AFS Trace Dump - Completed
 
+=back
+
 =head1 EXAMPLES
 
 The following command dumps the log associated with the cm event set to
