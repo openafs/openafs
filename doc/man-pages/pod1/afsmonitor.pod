@@ -2,7 +2,7 @@
 
 afsmonitor - Monitors File Servers and Cache Managers
 
-=head1 DESCRIPTION
+=head1 SYNOPSIS
 
 B<afsmonitor> [B<initcmd>] [-config <I<configuration file>>]
     [B<-frequency> <I<poll frequency, in seconds>>]

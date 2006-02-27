@@ -337,11 +337,11 @@ None
 
 =head1 SEE ALSO
 
-L<backup_diskrestore(1)>,
-L<backup_volrestore(1)>,
-L<bos_getlog(1)>,
-L<bos_salvage(1)>,
-L<salvager(1)>,
+L<backup_diskrestore(8)>,
+L<backup_volrestore(8)>,
+L<bos_getlog(8)>,
+L<bos_salvage(8)>,
+L<salvager(8)>,
 L<vos(1)>,
 L<vos_examine(1)>,
 L<vos_listvldb(1)>,

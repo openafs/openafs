@@ -337,7 +337,7 @@ L<butc(5)>,
 L<backup(8)>,
 L<backup_dump(8)>,
 L<backup_dumpinfo(8)>,
-L<butc(1)>
+L<butc(8)>
 
 =head1 COPYRIGHT
 

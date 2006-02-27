@@ -255,8 +255,8 @@ None
 
 =head1 SEE ALSO
 
-L<BosConfig(1)>,
-L<KeyFile(1)>,
+L<BosConfig(5)>,
+L<KeyFile(5)>,
 L<bos(8)>,
 L<bos_create(8)>,
 L<bos_shutdown(8)>,

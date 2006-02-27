@@ -509,6 +509,8 @@ client side, the OUT parameters are somewhat unorthodox (i.e. the server
 routine must malloc a string without ever freeing it itself; this is done
 by the B<rxgen> server stub).
 
+=back
+
 Note that for INOUT and OUT string parameters, in both the client and
 server sides their arguments must be char of pointers (i.e. char **).
 

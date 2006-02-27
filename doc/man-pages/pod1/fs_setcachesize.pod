@@ -89,8 +89,8 @@ The issuer must be logged in as the local superuser root.
 
 =head1 SEE ALSO
 
-L<cacheinfo(1)>,
-L<afsd(1)>,
+L<cacheinfo(5)>,
+L<afsd(8)>,
 L<fs_getcacheparms(1)>
 
 =head1 COPYRIGHT
