@@ -247,7 +247,7 @@ osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
 #ifdef AFS_DARWIN80_ENV
     VATTR_INIT(&tvattr);
     VATTR_SET(&tvattr, va_size, asize);
-    code = vnode_getattr(afile->vnode, &tvattr, afs_osi_ctxtp);
+    code = vnode_setattr(afile->vnode, &tvattr, afs_osi_ctxtp);
 #else
     VATTR_NULL(&tvattr);
     tvattr.va_size = asize;

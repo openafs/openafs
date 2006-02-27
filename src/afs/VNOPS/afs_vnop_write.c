@@ -106,7 +106,7 @@ afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio,
 #endif
     afs_int32 error;
 #ifdef AFS_DARWIN80_ENV
-    uio_t tuiop;
+    uio_t tuiop = NULL;
 #else
     struct uio tuio;
     struct uio *tuiop = &tuio;
@@ -264,6 +264,8 @@ afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio,
 	}
 
 #ifdef  AFS_DARWIN80_ENV
+        if (tuiop)
+	    uio_free(tuiop);
 	trimlen = len;
 	tuiop = afsio_darwin_partialcopy(auio, trimlen);
 #else
@@ -366,7 +368,7 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
 #endif
     afs_int32 error;
 #ifdef AFS_DARWIN80_ENV
-    uio_t tuiop;
+    uio_t tuiop = NULL;
 #else
     struct uio tuio;
     struct uio *tuiop = &tuio;
@@ -527,6 +529,8 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
 	}
 
 #ifdef  AFS_DARWIN80_ENV
+	if (tuiop)
+	    uio_free(tuiop);
 	trimlen = len;
 	tuiop = afsio_darwin_partialcopy(auio, trimlen);
 #else
