@@ -634,6 +634,8 @@ afs_ioctl(struct inode *inode, struct file *file, unsigned int cmd,
 #ifdef AFS_LINUX26_ENV 
 #ifdef AFS_S390X_LINUX26_ENV
     if (test_thread_flag(TIF_31BIT))
+#elif AFS_AMD64_LINUX20_ENV
+    if (test_thread_flag(TIF_IA32))
 #else
     if (test_thread_flag(TIF_32BIT))
 #endif /* AFS_S390X_LINUX26_ENV */
