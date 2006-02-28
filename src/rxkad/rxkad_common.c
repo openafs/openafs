@@ -29,7 +29,7 @@ RCSID
 #ifndef UKERNEL
 #include "afs/stds.h"
 #include "afs/afs_osi.h"
-#ifdef	AFS_AIX_ENV
+#if defined(AFS_AIX_ENV) || defined(AFS_AUX_ENV) || defined(AFS_SUN5_ENV) 
 #include "h/systm.h"
 #endif
 #if defined(AFS_DARWIN60_ENV) || defined(AFS_OBSD_ENV)

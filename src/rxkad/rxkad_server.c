@@ -19,6 +19,9 @@ RCSID
 
 #include <afs/stds.h>
 #include <sys/types.h>
+#if defined(AFS_AIX_ENV) || defined(AFS_AUX_ENV) || defined(AFS_SUN5_ENV) 
+#include <sys/systm.h>
+#endif
 #include <time.h>
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>

@@ -26,6 +26,9 @@ RCSID
 #ifdef KERNEL
 #ifndef UKERNEL
 #include "afs/stds.h"
+#if defined(AFS_AIX_ENV) || defined(AFS_AUX_ENV) || defined(AFS_SUN5_ENV) 
+#include "h/systm.h"
+#endif
 #include "h/types.h"
 #if !defined(AFS_LINUX20_ENV) && !defined(AFS_OBSD_ENV)
 #include "netinet/in.h"
