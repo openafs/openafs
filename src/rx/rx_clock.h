@@ -14,7 +14,7 @@
 #define _CLOCK_
 
 #ifdef	KERNEL
-#if defined(AFS_AIX_ENV) || defined(AFS_AUX_ENV)
+#if defined(AFS_AIX_ENV) || defined(AFS_AUX_ENV) || defined(AFS_SUN5_ENV)
 #include "h/systm.h"
 #include "h/time.h"
 #endif /* System V */

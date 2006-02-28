@@ -28,6 +28,9 @@ RCSID
 #include "h/types.h"
 #include "h/time.h"
 #include "h/stat.h"
+#if defined(AFS_AIX_ENV) || defined(AFS_AUX_ENV) || defined(AFS_SUN5_ENV) 
+#include "h/systm.h"
+#endif
 #ifdef	AFS_OSF_ENV
 #include <net/net_globals.h>
 #endif /* AFS_OSF_ENV */
