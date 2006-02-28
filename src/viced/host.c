@@ -199,6 +199,11 @@ GetHTBlock()
     register int i;
     static int index = 0;
 
+    if (HTBlocks == h_MAXHOSTTABLES) {
+	ViceLog(0, ("h_MAXHOSTTABLES reached\n"));
+	ShutDownAndCore(PANIC);
+    }
+
     block = (struct HTBlock *)malloc(sizeof(struct HTBlock));
     if (!block) {
 	ViceLog(0, ("Failed malloc in GetHTBlock\n"));
