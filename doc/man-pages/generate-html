@@ -9,7 +9,7 @@ use Pod::Simple::Search;
 
 sub do_man_link {
     my ($self, $token) = @_;
-    my $page = $token->attr('to');
+    my $page = $token->attr ('to');
     my ($name, $section) = ($page =~ /^([^\(]+)\((\d+)\)$/);
     return unless $name;
     my @url = ('..', $section, $name);
@@ -17,7 +17,20 @@ sub do_man_link {
         . $Pod::Simple::HTML::HTML_EXTENSION;
 }
 
-sub VERSION () { '1.0' }
+# Underscore isn't allowed in man page names in Pod::Simple 3.04, so links
+# like L<fs_setacl(8)> show up as POD links.  Discover that case and dispatch
+# everything else to the standard do_pod_link implementation.
+sub do_pod_link {
+    my ($self, $token) = @_;
+    my $target = $token->attr ('to');
+    if ($target && $target =~ /^([^\s\(]+)\((\d+)\)$/) {
+        return $self->do_man_link ($token);
+    } else {
+        return $self->SUPER::do_pod_link ($token);
+    }
+}
+
+sub VERSION () { '1.1' }
 
 $Pod::Simple::HTML::Tagmap{'item-bullet'} = '<li><p>';
 $Pod::Simple::HTML::Tagmap{'/item-bullet'} = '</p></li>';

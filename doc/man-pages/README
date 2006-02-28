@@ -266,6 +266,12 @@ Known Problems
    * The aklog man page isn't in POD.  (Neither is the mpp man page, but
      I don't think we care about it and it's not currently installed.)
 
+   * In the suite introduction pages (pts, vos, etc.), each of the
+     subcommands in the initial list should be a link to the relevant
+     page in the HTML output.  This has been done for the fs intro page
+     and the same transform needs to be applied to the other pages.  See
+     the fs intro page for the details.
+
   If you notice other problems, please send them to the openafs-doc list
   even if you don't have time to fix them.  Someone else might, and we
   want to track all of the issues.
