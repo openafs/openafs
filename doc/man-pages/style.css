@@ -17,14 +17,15 @@
 @media screen, tty, tv, projection {
   .noscreen { display: none; }
 
-  a:link    { color: #7070ff; text-decoration: underline; }
-  a:visited { color: #e030ff; text-decoration: underline; }
-  a:active  { color: #800000; text-decoration: underline; }
-  body.contentspage a            { text-decoration: none; }
+  a:link                      { text-decoration: none; }
+  a:visited                   { text-decoration: none; }
+  a:active                    { text-decoration: none; }
+  a:hover   { background: #fec; text-decoration: none; }
+  body.contentspage a         { text-decoration: none; }
   a.u { color: #000 !important; text-decoration: none; }
 
   body.pod {
-    margin: 0 5px;
+    margin:           0 5px;
     color:            #000;
     background-color: #fff;
   }
@@ -58,21 +59,21 @@
   }
   
   body.contentspage h1  {
-    color: #22f;
-    margin-left: 1em;
-    margin-right: 1em;
-    text-indent: -.9em;
-    font-family: Tahoma, Verdana, Helvetica, Arial, sans-serif;
-    font-weight: normal;
+    color:         #000;
+    margin-left:   1em;
+    margin-right:  1em;
+    text-indent:   -.9em;
+    font-family:   Tahoma, Verdana, Helvetica, Arial, sans-serif;
+    font-weight:   normal;
     border-top:    medium solid #000;
     border-bottom: medium solid #000;
-    text-align: center;
+    text-align:    center;
   }
 
   body.contentspage th {
-    font-weight: bold;
-    font-size: large;
-    text-align: left;
+    font-weight:   bold;
+    font-size:     large;
+    text-align:    left;
   }
 
   body.contentspage td { padding: 0 0.5em; }
