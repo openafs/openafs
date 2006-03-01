@@ -4,42 +4,48 @@ kas setfields - Sets fields in an Authentication Database entry
 
 =head1 SYNOPSIS
 
-B<kas setfields> B<-name> <I<name of user>>
-    [B<-flags> <I<hex flag value or flag name expression>>]
-    [B<-expiration> <I<date of account expiration>>]
-    [B<-lifetime> <I<maximum ticket lifetime>>]
-    [B<-pwexpires> <I<number days password is valid ([0..254])>>]
-    [B<-reuse> <I<permit password reuse (yes/no)>>]
-    [B<-attempts> <I<maximum successive failed login tries ([0..254])>>]
-    [B<-locktime> <I<failure penalty [hh:mm or minutes]>>]
-    [B<-admin_username> <I<admin principal to use for authentication>>]
-    [B<-password_for_admin> <I<admin password>>] [B<-cell> <I<cell name>>]
-    [B<-servers> <I<explicit list of authentication servers>>+]
+=for html
+<div class="synopsis">
+
+B<kas setfields> S<<< B<-name> <I<name of user>> >>>
+    S<<< [B<-flags> <I<hex flag value or flag name expression>>] >>>
+    S<<< [B<-expiration> <I<date of account expiration>>] >>>
+    S<<< [B<-lifetime> <I<maximum ticket lifetime>>] >>>
+    S<<< [B<-pwexpires> <I<number days password is valid ([0..254])>>] >>>
+    S<<< [B<-reuse> <I<permit password reuse (yes/no)>>] >>>
+    S<<< [B<-attempts> <I<maximum successive failed login tries ([0..254])>>] >>>
+    S<<< [B<-locktime> <I<failure penalty [hh:mm or minutes]>>] >>>
+    S<<< [B<-admin_username> <I<admin principal to use for authentication>>] >>>
+    S<<< [B<-password_for_admin> <I<admin password>>] >>> S<<< [B<-cell> <I<cell name>>] >>>
+    S<<< [B<-servers> <I<explicit list of authentication servers>>+] >>>
     [B<-noauth>] [B<-help>]
 
-B<kas setf> B<-na> <I<name of user>>
-    [B<-f> <I<hex flag value or flag name expression>>]
-    [B<-e> <I<date of account expiration>>]
-    [B<-li> <I<maximum ticket lifetime>>]
-    [B<-pw> <I<number days password is valid ([0..254])>>]
-    [B<-r> <I<permit password reuse (yes/no)>>]
-    [B<-at> <I<maximum successive failed login tries ([0..254])>>]
-    [B<-lo> <I<failure penalty [hh:mm or minutes]>>]
-    [B<-ad> <I<admin principal to use for authentication>>]
-    [B<-pa> <I<admin password>>] [B<-c> <I<cell name>>]
-    [B<-s> <I<explicit list of authentication servers>>+] [B<-no>] [B<-h>]
+B<kas setf> S<<< B<-na> <I<name of user>> >>>
+    S<<< [B<-f> <I<hex flag value or flag name expression>>] >>>
+    S<<< [B<-e> <I<date of account expiration>>] >>>
+    S<<< [B<-li> <I<maximum ticket lifetime>>] >>>
+    S<<< [B<-pw> <I<number days password is valid ([0..254])>>] >>>
+    S<<< [B<-r> <I<permit password reuse (yes/no)>>] >>>
+    S<<< [B<-at> <I<maximum successive failed login tries ([0..254])>>] >>>
+    S<<< [B<-lo> <I<failure penalty [hh:mm or minutes]>>] >>>
+    S<<< [B<-ad> <I<admin principal to use for authentication>>] >>>
+    S<<< [B<-pa> <I<admin password>>] >>> S<<< [B<-c> <I<cell name>>] >>>
+    S<<< [B<-s> <I<explicit list of authentication servers>>+] >>> [B<-no>] [B<-h>]
 
-B<kas sf> B<-na> <I<name of user>>
-    [B<-f> <I<hex flag value or flag name expression>>]
-    [B<-e> <I<date of account expiration>>]
-    [B<-li> <I<maximum ticket lifetime>>]
-    [B<-pw> <I<number days password is valid ([0..254])>>]
-    [B<-r> <I<permit password reuse (yes/no)>>]
-    [B<-at> <I<maximum successive failed login tries ([0..254])>>]
-    [B<-lo> <I<failure penalty [hh:mm or minutes]>>]
-    [B<-ad> <I<admin principal to use for authentication>>]
-    [B<-pa> <I<admin password>>] [B<-c> <I<cell name>>]
-    [B<-s> <I<explicit list of authentication servers>>+] [B<-no>] [B<-h>]
+B<kas sf> S<<< B<-na> <I<name of user>> >>>
+    S<<< [B<-f> <I<hex flag value or flag name expression>>] >>>
+    S<<< [B<-e> <I<date of account expiration>>] >>>
+    S<<< [B<-li> <I<maximum ticket lifetime>>] >>>
+    S<<< [B<-pw> <I<number days password is valid ([0..254])>>] >>>
+    S<<< [B<-r> <I<permit password reuse (yes/no)>>] >>>
+    S<<< [B<-at> <I<maximum successive failed login tries ([0..254])>>] >>>
+    S<<< [B<-lo> <I<failure penalty [hh:mm or minutes]>>] >>>
+    S<<< [B<-ad> <I<admin principal to use for authentication>>] >>>
+    S<<< [B<-pa> <I<admin password>>] >>> S<<< [B<-c> <I<cell name>>] >>>
+    S<<< [B<-s> <I<explicit list of authentication servers>>+] >>> [B<-no>] [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

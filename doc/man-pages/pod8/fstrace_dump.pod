@@ -4,13 +4,19 @@ fstrace dump - Dumps a trace log
 
 =head1 SYNOPSIS
 
-B<fstrace dump> [B<-set> <I<set name>>+] [B<-follow> <I<log name>>]
-    [B<-file> <I<output filename>>] [B<-sleep> <I<seconds between reads>>]
+=for html
+<div class="synopsis">
+
+B<fstrace dump> S<<< [B<-set> <I<set name>>+] >>> S<<< [B<-follow> <I<log name>>] >>>
+    S<<< [B<-file> <I<output filename>>] >>> S<<< [B<-sleep> <I<seconds between reads>>] >>>
     [B<-help>]
 
-B<fstrace d> [B<-se> <I<set name>>+] [B<-fo> <I<log name>>]
-    [B<-fi> <I<output filename>>] [B<-sl> <I<seconds between reads>>]
+B<fstrace d> S<<< [B<-se> <I<set name>>+] >>> S<<< [B<-fo> <I<log name>>] >>>
+    S<<< [B<-fi> <I<output filename>>] >>> S<<< [B<-sl> <I<seconds between reads>>] >>>
     [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

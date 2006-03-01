@@ -4,12 +4,18 @@ backup delvolentry - Deletes a volume entry from a volume set
 
 =head1 SYNOPSIS
 
-B<backup delvolentry> B<-name> <I<volume set name>>
-    B<-entry> <I<volume set index>> [B<-localauth>]
-    [B<-cell> <I<cell name>>] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<backup delvole> B<-n> <I<volume set name>> B<-e> <I<volume set index>>
-    [B<-l>] [B<-c> <I<cell name>>] [B<-h>]
+B<backup delvolentry> S<<< B<-name> <I<volume set name>> >>>
+    S<<< B<-entry> <I<volume set index>> >>> [B<-localauth>]
+    S<<< [B<-cell> <I<cell name>>] >>> [B<-help>]
+
+B<backup delvole> S<<< B<-n> <I<volume set name>> >>> S<<< B<-e> <I<volume set index>> >>>
+    [B<-l>] S<<< [B<-c> <I<cell name>>] >>> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

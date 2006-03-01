@@ -4,7 +4,13 @@ xfs_size_check - Verifies proper IRIX inode configuration
 
 =head1 SYNOPSIS
 
+=for html
+<div class="synopsis">
+
 B<xfs_size_check>
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

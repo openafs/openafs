@@ -4,12 +4,18 @@ backup setexp - Sets the expiration date for existing dump levels.
 
 =head1 SYNOPSIS
 
-B<backup setexp> B<-dump> <I<dump level name>>+
-    [B<-expires> <I<expiration date>>+] [B<-localauth>]
-    [B<-cell> <I<cell name>>] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<backup se> B<-d> <I<dump level name>>+ [B<-e> <I<expiration date>>+]
-    [B<-l>] [B<-c> <I<cell name>>] [B<-h>]
+B<backup setexp> S<<< B<-dump> <I<dump level name>>+ >>>
+    S<<< [B<-expires> <I<expiration date>>+] >>> [B<-localauth>]
+    S<<< [B<-cell> <I<cell name>>] >>> [B<-help>]
+
+B<backup se> S<<< B<-d> <I<dump level name>>+ >>> S<<< [B<-e> <I<expiration date>>+] >>>
+    [B<-l>] S<<< [B<-c> <I<cell name>>] >>> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

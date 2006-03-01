@@ -4,17 +4,23 @@ pts examine - Displays a Protection Database entry
 
 =head1 SYNOPSIS
 
-B<pts examine> B<-nameorid> <I<user or group name or id>>+
-    [B<-cell> <I<cell name>>] [B<-noauth>] [B<-force>] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<pts e> B<-na> <I<user or group name or id>>+ [B<-c> <I<cell name>>]
+B<pts examine> S<<< B<-nameorid> <I<user or group name or id>>+ >>>
+    S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-force>] [B<-help>]
+
+B<pts e> S<<< B<-na> <I<user or group name or id>>+ >>> S<<< [B<-c> <I<cell name>>] >>>
     [B<-no>] [B<-f>] [B<-h>]
 
-B<pts check> B<-na> <I<user or group name or id>>+ [B<-c> <I<cell name>>]
+B<pts check> S<<< B<-na> <I<user or group name or id>>+ >>> S<<< [B<-c> <I<cell name>>] >>>
     [B<-no>] [B<-f>] [B<-h>]
 
-B<pts che> B<-na> <I<user or group name or id>>+ [B<-c> <I<cell name>>]
+B<pts che> S<<< B<-na> <I<user or group name or id>>+ >>> S<<< [B<-c> <I<cell name>>] >>>
     [B<-no>] [B<-f>] [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

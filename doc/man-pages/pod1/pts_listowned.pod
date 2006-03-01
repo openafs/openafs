@@ -4,11 +4,17 @@ pts listowned - Show the Protection Database groups owned by a user or group
 
 =head1 SYNOPSIS
 
-B<pts listowned> B<-nameorid> <I<user or group name or id>>+
+=for html
+<div class="synopsis">
+
+B<pts listowned> S<<< B<-nameorid> <I<user or group name or id>>+ >>>
     [-cell <I<cell name>>] [B<-noauth>] [B<-force>] [B<-help>]
 
-B<pts listo> B<-na> <I<user or group name or id>>+
+B<pts listo> S<<< B<-na> <I<user or group name or id>>+ >>>
     [-c <I<cell name>>] [B<-no>] [B<-f>] [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

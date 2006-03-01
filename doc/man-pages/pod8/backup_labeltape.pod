@@ -4,15 +4,21 @@ backup labeltape - Creates the magnetic label on a tape
 
 =head1 SYNOPSIS
 
-B<backup labeltape> [B<-name> <I<AFS tape name, defaults to NULL>>]
-    [B<-size> <I<tape size in Kbytes, defaults to size in tapeconfig>>]
-    [B<-portoffset> <I<TC port offset>>] [B<-pname> <I<permanent tape name>>]
-    [B<-localauth>] [B<-cell> <I<cell name>>] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<backup la> [B<-n> <I<AFS tape name, defaults to NULL>>]
-    [B<-s> <I<tape size in Kbytes, defaults to size in tapeconfig>>]
-    [B<-po> <I<TC port offset>>] [B<-pn> <I<permanent tape name>>]
-    [B<-l>] [B<-c> <I<cell name>>] [B<-h>]
+B<backup labeltape> S<<< [B<-name> <I<AFS tape name, defaults to NULL>>] >>>
+    S<<< [B<-size> <I<tape size in Kbytes, defaults to size in tapeconfig>>] >>>
+    S<<< [B<-portoffset> <I<TC port offset>>] >>> S<<< [B<-pname> <I<permanent tape name>>] >>>
+    [B<-localauth>] S<<< [B<-cell> <I<cell name>>] >>> [B<-help>]
+
+B<backup la> S<<< [B<-n> <I<AFS tape name, defaults to NULL>>] >>>
+    S<<< [B<-s> <I<tape size in Kbytes, defaults to size in tapeconfig>>] >>>
+    S<<< [B<-po> <I<TC port offset>>] >>> S<<< [B<-pn> <I<permanent tape name>>] >>>
+    [B<-l>] S<<< [B<-c> <I<cell name>>] >>> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

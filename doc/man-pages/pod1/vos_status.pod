@@ -4,11 +4,17 @@ vos status - Reports a Volume Server's status
 
 =head1 SYNOPSIS
 
-B<vos status> B<-server> <I<machine name>> [B<-cell> <I<cell name>>]
+=for html
+<div class="synopsis">
+
+B<vos status> S<<< B<-server> <I<machine name>> >>> S<<< [B<-cell> <I<cell name>>] >>>
     [B<-noauth>] [B<-localauth>] [B<-verbose>] [B<-help>]
 
-B<vos st> B<-s> <I<machine name>> [B<-c> <I<cell name>>] [B<-n>] [B<-l>]
+B<vos st> S<<< B<-s> <I<machine name>> >>> S<<< [B<-c> <I<cell name>>] >>> [B<-n>] [B<-l>]
     [B<-v>] [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

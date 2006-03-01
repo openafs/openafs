@@ -4,16 +4,22 @@ vos restore - Converts an ASCII dump file into an AFS volume
 
 =head1 SYNOPSIS
 
-B<vos restore> B<-server> <I<machine name>> B<-partition> <I<partition name>>
-    B<-name> <I<name of volume to be restored>> [B<-file> <I<dump file>>]
-    [B<-id> <I<volume ID>>] [B<-overwrite> (abort | full | incremental)]
-    [B<-cell> <I<cell name>>] [B<-noauth>] [B<-localauth>] [-verbose]
+=for html
+<div class="synopsis">
+
+B<vos restore> S<<< B<-server> <I<machine name>> >>> S<<< B<-partition> <I<partition name>> >>>
+    S<<< B<-name> <I<name of volume to be restored>> >>> S<<< [B<-file> <I<dump file>>] >>>
+    S<<< [B<-id> <I<volume ID>>] >>> S<<< [B<-overwrite> (abort | full | incremental)] >>>
+    S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>] [-verbose]
     [B<-help>]
 
-B<vos res> B<-s> <I<machine name>> B<-p> <I<partition name>>
-    B<-na> <I<name of volume to be restored>> [B<-f> <I<dump file>>]
-    [B<-i> <I<volume ID>>] [B<-o> (a | f | i)] [B<-c> <I<cell name>>]
+B<vos res> S<<< B<-s> <I<machine name>> >>> S<<< B<-p> <I<partition name>> >>>
+    S<<< B<-na> <I<name of volume to be restored>> >>> S<<< [B<-f> <I<dump file>>] >>>
+    S<<< [B<-i> <I<volume ID>>] >>> S<<< [B<-o> (a | f | i)] >>> S<<< [B<-c> <I<cell name>>] >>>
     [B<-no>] [B<-l>] [B<-v>] [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

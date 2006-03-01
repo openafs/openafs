@@ -4,9 +4,15 @@ tokens - Displays the issuer's tokens
 
 =head1 SYNOPSIS
 
+=for html
+<div class="synopsis">
+
 B<tokens> [B<-help>]
 
 B<tokens> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

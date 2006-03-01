@@ -4,21 +4,27 @@ fileserver - Initializes the File Server component of the fs process
 
 =head1 SYNOPSIS
 
-B<fileserver> [B<-d> <I<debug level>>] [B<-p> <I<number of processes>>]
-    [B<-spare> <I<number of spare blocks>>]
-    [B<-pctspare> <I<percentage spare>>] [B<-b> <I<buffers>>]
-    [B<-l> <I<large vnodes>>] [B<-s> <I<small nodes>>]
-    [B<-vc> <I<volume cachesize>>] [B<-w> <I<call back wait interval>>]
-    [B<-cb> <I<number of call backs>>] [B<-banner>] [B<-novbc>]
-    [B<-implicit> <I<admin mode bits: rlidwka>>]
-    [B<-hr> <I<number of hours between refreshing the host cps>>]
+=for html
+<div class="synopsis">
+
+B<fileserver> S<<< [B<-d> <I<debug level>>] >>> S<<< [B<-p> <I<number of processes>>] >>>
+    S<<< [B<-spare> <I<number of spare blocks>>] >>>
+    S<<< [B<-pctspare> <I<percentage spare>>] >>> S<<< [B<-b> <I<buffers>>] >>>
+    S<<< [B<-l> <I<large vnodes>>] >>> S<<< [B<-s> <I<small nodes>>] >>>
+    S<<< [B<-vc> <I<volume cachesize>>] >>> S<<< [B<-w> <I<call back wait interval>>] >>>
+    S<<< [B<-cb> <I<number of call backs>>] >>> [B<-banner>] [B<-novbc>]
+    S<<< [B<-implicit> <I<admin mode bits: rlidwka>>] >>>
+    S<<< [B<-hr> <I<number of hours between refreshing the host cps>>] >>>
     [B<-busyat> <I<< redirect clients when queue > n >>>]
-    [B<-rxpck> <I<number of rx extra packets>>]
-    [B<-rxdbg>] [B<-rxdbge>] [B<-m> <I<min percentage spare in partition>>]
-    [B<-lock>] [B<-L>] [B<-S>] [B<-k> <I<stack size>>]
-    [B<-realm> <I<Kerberos realm name>>]
-    [B<-udpsize> <I<size of socket buffer in bytes>>]
+    S<<< [B<-rxpck> <I<number of rx extra packets>>] >>>
+    [B<-rxdbg>] [B<-rxdbge>] S<<< [B<-m> <I<min percentage spare in partition>>] >>>
+    [B<-lock>] [B<-L>] [B<-S>] S<<< [B<-k> <I<stack size>>] >>>
+    S<<< [B<-realm> <I<Kerberos realm name>>] >>>
+    S<<< [B<-udpsize> <I<size of socket buffer in bytes>>] >>>
     [B<-enable_peer_stats>] [B<-enable_process_stats>] [B<-help>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

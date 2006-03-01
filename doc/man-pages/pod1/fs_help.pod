@@ -4,9 +4,15 @@ fs help - Displays help for fs commands
 
 =head1 SYNOPSIS
 
-B<fs help> [B<-topic> <I<help string>>+] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<fs h> [B<-t> <I<help string>>+] [B<-h>]
+B<fs help> S<<< [B<-topic> <I<help string>>+] >>> [B<-help>]
+
+B<fs h> S<<< [B<-t> <I<help string>>+] >>> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

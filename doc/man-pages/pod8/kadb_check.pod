@@ -4,11 +4,17 @@ kadb_check - Checks the integrity of the Authentication Database
 
 =head1 SYNOPSIS
 
-B<kadb_check> B<-database> <I<kadb file>> [B<-uheader>] [B<-kheader>]
-    [B<-entries>] [B<-verbose>] [B<-rebuild> <I<out file>>] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<kadb_check> B<-d> <I<kadb file>> [B<-u>] [B<-k>] [B<-e>] [B<-v>]
-    [B<-r> <I<out file>>] [B<-h>]
+B<kadb_check> S<<< B<-database> <I<kadb file>> >>> [B<-uheader>] [B<-kheader>]
+    [B<-entries>] [B<-verbose>] S<<< [B<-rebuild> <I<out file>>] >>> [B<-help>]
+
+B<kadb_check> S<<< B<-d> <I<kadb file>> >>> [B<-u>] [B<-k>] [B<-e>] [B<-v>]
+    S<<< [B<-r> <I<out file>>] >>> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

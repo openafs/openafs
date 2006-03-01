@@ -4,12 +4,18 @@ backup deletedump - Deletes one or more dump records from the Backup Database
 
 =head1 SYNOPSIS
 
-B<backup deletedump> [B<-dumpid> <I<dump id>>+] [B<-from> <I<date time>>+]
-    [B<-to> <I<date time>>+] [B<-localauth>] [B<-cell> <I<cell name>>]
+=for html
+<div class="synopsis">
+
+B<backup deletedump> S<<< [B<-dumpid> <I<dump id>>+] >>> S<<< [B<-from> <I<date time>>+] >>>
+    S<<< [B<-to> <I<date time>>+] >>> [B<-localauth>] S<<< [B<-cell> <I<cell name>>] >>>
     [B<-help>]
 
-B<backup dele> [B<-d> <I<dump id>>+] [B<-f> <I<date time>>+]
-    [-t <I<date time>>+] [B<-l>] [B<-c> <I<cell name>>] [B<-h>]
+B<backup dele> S<<< [B<-d> <I<dump id>>+] >>> S<<< [B<-f> <I<date time>>+] >>>
+    [-t <I<date time>>+] [B<-l>] S<<< [B<-c> <I<cell name>>] >>> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

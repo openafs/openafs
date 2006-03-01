@@ -4,9 +4,15 @@ bos help - Displays help for bos commands
 
 =head1 SYNOPSIS
 
-B<bos help> [B<-topic> <I<help string>>+] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<bos h> [B<-t> <I<help string>>+] [B<-h>]
+B<bos help> S<<< [B<-topic> <I<help string>>+] >>> [B<-help>]
+
+B<bos h> S<<< [B<-t> <I<help string>>+] >>> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

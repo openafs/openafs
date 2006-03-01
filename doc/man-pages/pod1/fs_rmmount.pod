@@ -4,9 +4,15 @@ fs rmmount - Removes a mount point
 
 =head1 SYNOPSIS
 
-B<fs rmmount> B<-dir> <I<directory>>+ [B<-help>]
+=for html
+<div class="synopsis">
 
-B<fs rm> B<-d> <I<directory>>+ [B<-h>]
+B<fs rmmount> S<<< B<-dir> <I<directory>>+ >>> [B<-help>]
+
+B<fs rm> S<<< B<-d> <I<directory>>+ >>> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

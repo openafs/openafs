@@ -4,9 +4,15 @@ fms - Determine a tape's capacity and a tape device's filemark size
 
 =head1 SYNOPSIS
 
-B<fms> B<-tape> <I<tape special file>> [B<-help>]
+=for html
+<div class="synopsis">
 
-B<fms> B<-t> <I<tape special file>> [B<-h>]
+B<fms> S<<< B<-tape> <I<tape special file>> >>> [B<-help>]
+
+B<fms> S<<< B<-t> <I<tape special file>> >>> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

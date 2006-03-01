@@ -4,9 +4,15 @@ backup listdumps - Displays the dump hierarchy from the Backup Database
 
 =head1 SYNOPSIS
 
-B<backup listdumps> [B<-localauth>] [B<-cell> <I<cell name>>] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<backup listd> [B<-l>] [B<-c> <I<cell name>>] [B<-h>]
+B<backup listdumps> [B<-localauth>] S<<< [B<-cell> <I<cell name>>] >>> [B<-help>]
+
+B<backup listd> [B<-l>] S<<< [B<-c> <I<cell name>>] >>> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

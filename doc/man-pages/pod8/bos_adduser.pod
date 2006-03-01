@@ -4,11 +4,17 @@ bos adduser - Adds a privileged user to the UserList file
 
 =head1 SYNOPSIS
 
-B<bos adduser> B<-server> <I<machine name>> B<-user> <I<user names>>+
-    [B<-cell> <I<cell name>>] [B<-noauth>] [B<-localauth>] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<bos addu> B<-s> <I<machine name>> B<-u> <I<user names>>+
-    [B<-c> <I<cell name>>] [B<-n>] [B<-l>] [B<-h>]
+B<bos adduser> S<<< B<-server> <I<machine name>> >>> S<<< B<-user> <I<user names>>+ >>>
+    S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>] [B<-help>]
+
+B<bos addu> S<<< B<-s> <I<machine name>> >>> S<<< B<-u> <I<user names>>+ >>>
+    S<<< [B<-c> <I<cell name>>] >>> [B<-n>] [B<-l>] [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

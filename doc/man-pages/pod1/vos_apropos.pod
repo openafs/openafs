@@ -4,9 +4,15 @@ vos apropos - Displays each help entry containing a keyword string
 
 =head1 SYNOPSIS
 
-B<vos apropos> B<-topic> <I<help string>> [B<-help>]
+=for html
+<div class="synopsis">
 
-B<vos ap> B<-t> <I<help string>> [B<-h>]
+B<vos apropos> S<<< B<-topic> <I<help string>> >>> [B<-help>]
+
+B<vos ap> S<<< B<-t> <I<help string>> >>> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

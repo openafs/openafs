@@ -4,7 +4,13 @@ sys - Reports the compile-time CPU/operating system type
 
 =head1 SYNOPSIS
 
+=for html
+<div class="synopsis">
+
 B<sys>
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

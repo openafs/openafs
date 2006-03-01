@@ -4,7 +4,13 @@ pagsh - Creates a new PAG
 
 =head1 SYNOPSIS
 
+=for html
+<div class="synopsis">
+
 B<pagsh>
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

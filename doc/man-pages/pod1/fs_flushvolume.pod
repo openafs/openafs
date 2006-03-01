@@ -4,9 +4,15 @@ fs flushvolume - Forces the Cache Manager to discard cached data from a volume
 
 =head1 SYNOPSIS
 
-B<fs flushvolume> [B<-path> <I<dir/file path>>+] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<fs flushv> [B<-p> <I<dir/file path>>+] [B<-h>]
+B<fs flushvolume> S<<< [B<-path> <I<dir/file path>>+] >>> [B<-help>]
+
+B<fs flushv> S<<< [B<-p> <I<dir/file path>>+] >>> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

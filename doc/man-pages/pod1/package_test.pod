@@ -4,7 +4,13 @@ package_test - Tests the validity of a package configuration file
 
 =head1 SYNOPSIS
 
-B<package_test> <I<config file>>
+=for html
+<div class="synopsis">
+
+S<<< B<package_test> <I<config file>> >>>
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

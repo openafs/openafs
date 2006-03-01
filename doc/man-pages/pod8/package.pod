@@ -4,14 +4,20 @@ package - Configures files and directories on the local disk
 
 =head1 SYNOPSIS
 
-B<package> [I<initcmd>] [B<-config> <I<base name of configuration file>>]
-    [B<-fullconfig> <I<full name of configuration file, or stdin>>]
+=for html
+<div class="synopsis">
+
+B<package> [I<initcmd>] S<<< [B<-config> <I<base name of configuration file>>] >>>
+    S<<< [B<-fullconfig> <I<full name of configuration file, or stdin>>] >>>
     [B<-overwrite>] [B<-noaction>] [B<-verbose>] [B<-silent>]
     [B<-rebootfiles>] [B<-debug>] [B<-help>]
 
-B<package> [B<i>] [B<-c> <I<base name of configuration file>>]
-    [B<-f> <I<full name of configuration file, or stdin>>]
+B<package> [B<i>] S<<< [B<-c> <I<base name of configuration file>>] >>>
+    S<<< [B<-f> <I<full name of configuration file, or stdin>>] >>>
     [B<-o>] [B<-n>] [B<-v>] [B<-s>] [B<-r>] [B<-d>] [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

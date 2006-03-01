@@ -4,11 +4,17 @@ backup deldump - Deletes a dump level from the Backup Database
 
 =head1 SYNOPSIS
 
-B<backup deldump> B<-dump> <I<dump level name>> [B<-localauth>]
-    [B<-cell> <I<cell name>>] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<backup deld> B<-d> <I<dump level name>> [B<-l>] [B<-c> <I<cell name>>]
-    [B<-h>]
+B<backup deldump> S<<< B<-dump> <I<dump level name>> >>> [B<-localauth>]
+    S<<< [B<-cell> <I<cell name>>] >>> [B<-help>]
+
+B<backup deld> S<<< B<-d> <I<dump level name>> >>> [B<-l>] 
+    S<<< [B<-c> <I<cell name>>] >>> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

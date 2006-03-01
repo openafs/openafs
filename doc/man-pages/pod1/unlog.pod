@@ -4,9 +4,15 @@ unlog - Discards all of the issuer's tokens
 
 =head1 SYNOPSIS
 
-B<unlog> [B<-cell> <I<cell name>>+] [B<-help>]
+=for html
+<div class="synopsis">
+
+B<unlog> S<<< [B<-cell> <I<cell name>>+] >>> [B<-help>]
 
 B<unlog> [B<-c ><I<cell name>>+] [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

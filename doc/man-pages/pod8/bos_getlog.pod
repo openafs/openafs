@@ -4,11 +4,17 @@ bos getlog - Prints a server process's log file
 
 =head1 SYNOPSIS
 
-B<bos getlog> B<-server> <I<machine name>> B<-file> <I<log file to examine>>
-    [B<-cell> <I<cell name>>] [B<-noauth>] [B<-localauth>] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<bos getl> B<-s> <I<machine name>> B<-f> <I<log file to examine>>
-    [B<-c> <I<cell name>>] [B<-n>] [B<-l>] [B<-h>]
+B<bos getlog> S<<< B<-server> <I<machine name>> >>> S<<< B<-file> <I<log file to examine>> >>>
+    S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>] [B<-help>]
+
+B<bos getl> S<<< B<-s> <I<machine name>> >>> S<<< B<-f> <I<log file to examine>> >>>
+    S<<< [B<-c> <I<cell name>>] >>> [B<-n>] [B<-l>] [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

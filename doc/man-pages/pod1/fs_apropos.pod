@@ -4,9 +4,15 @@ fs apropos - Displays each help entry containing a keyword string
 
 =head1 SYNOPSIS
 
-B<fs apropos> B<-topic> <I<help string>> [B<-help>]
+=for html
+<div class="synopsis">
 
-B<fs ap> B<-t> <I<help string>> [B<-h>]
+B<fs apropos> S<<< B<-topic> <I<help string>> >>> [B<-help>]
+
+B<fs ap> S<<< B<-t> <I<help string>> >>> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

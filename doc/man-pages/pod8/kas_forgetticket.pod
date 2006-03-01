@@ -4,9 +4,15 @@ kas forgetticket - Discards all tickets for the issuer
 
 =head1 SYNOPSIS
 
+=for html
+<div class="synopsis">
+
 B<kas forgetticket> [B<-all>] [B<-help>]
 
 B<kas f> [B<-a>] [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

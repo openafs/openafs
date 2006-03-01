@@ -4,11 +4,17 @@ bos listkeys - Displays the server encryption keys from the KeyFile file
 
 =head1 SYNOPSIS
 
-B<bos listkeys> B<-server> <I<machine name>> [B<-showkey>]
-    [B<-cell> <I<cell name>>] [B<-noauth>] [B<-localauth>] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<bos listk> B<-se> <I<machine name>> [B<-sh>] [B<-c> <I<cell name>>]
+B<bos listkeys> S<<< B<-server> <I<machine name>> >>> [B<-showkey>]
+    S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>] [B<-help>]
+
+B<bos listk> S<<< B<-se> <I<machine name>> >>> [B<-sh>] S<<< [B<-c> <I<cell name>>] >>>
     [B<-n>] [B<-l>] [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

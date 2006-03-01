@@ -4,10 +4,16 @@ fstrace clear - Clears the trace log
 
 =head1 SYNOPSIS
 
-B<fstrace clear> [B<-set> <I<set name>>+] [B<-log> <I<log name>>+]
+=for html
+<div class="synopsis">
+
+B<fstrace clear> S<<< [B<-set> <I<set name>>+] >>> S<<< [B<-log> <I<log name>>+] >>>
     [B<-help>]
 
-B<fstrace c> [B<-s> <I<set name>>+] [B<-l> <I<log name>>+] [B<-h>]
+B<fstrace c> S<<< [B<-s> <I<set name>>+] >>> S<<< [B<-l> <I<log name>>+] >>> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

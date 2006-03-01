@@ -4,9 +4,15 @@ fs cleanacl - Remove obsolete entries from an ACL
 
 =head1 SYNOPSIS
 
-B<fs cleanacl> [B<-path> <I<dir/file path>>+] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<fs cl> [B<-p> <I<dir/file path>>+] [B<-h>]
+B<fs cleanacl> S<<< [B<-path> <I<dir/file path>>+] >>> [B<-help>]
+
+B<fs cl> S<<< [B<-p> <I<dir/file path>>+] >>> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

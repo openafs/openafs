@@ -4,15 +4,21 @@ kas interactive - Enters interactive mode
 
 =head1 SYNOPSIS
 
+=for html
+<div class="synopsis">
+
 B<kas interactive>
-    [B<-admin_username> <I<admin principal to use for authentication>>]
-    [B<-password_for_admin> <I<admin password>>] [B<-cell> <I<cell name>>]
-    [B<-servers> <I<explicit list of authentication servers>>+]
+    S<<< [B<-admin_username> <I<admin principal to use for authentication>>] >>>
+    S<<< [B<-password_for_admin> <I<admin password>>] >>> S<<< [B<-cell> <I<cell name>>] >>>
+    S<<< [B<-servers> <I<explicit list of authentication servers>>+] >>>
     [B<-noauth>] [B<-help>]
 
-B<kas i> [B<-a> <I<admin principal to use for authentication>>]
-    [B<-p> <I<admin password>>] [B<-c> <I<cell name>>]
-    [B<-s> <I<explicit list of authentication servers>>+] [B<-n>] [B<-h>]
+B<kas i> S<<< [B<-a> <I<admin principal to use for authentication>>] >>>
+    S<<< [B<-p> <I<admin password>>] >>> S<<< [B<-c> <I<cell name>>] >>>
+    S<<< [B<-s> <I<explicit list of authentication servers>>+] >>> [B<-n>] [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

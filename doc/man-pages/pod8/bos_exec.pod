@@ -4,11 +4,17 @@ bos exec - Executes a command on a remote server machine
 
 =head1 SYNOPSIS
 
-B<bos exec> B<-server> <I<machine name>> B<-cmd> <I<command to execute>>
-    [B<-cell> <I<cell name>>] [B<-noauth>] [B<-localauth>] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<bos e> B<-s> <I<machine name>> B<-cm> <I<command to execute>>
-    [B<-ce> <I<cell name>>] [B<-n>] [B<-l>] [B<-h>]
+B<bos exec> S<<< B<-server> <I<machine name>> >>> S<<< B<-cmd> <I<command to execute>> >>>
+    S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>] [B<-help>]
+
+B<bos e> S<<< B<-s> <I<machine name>> >>> S<<< B<-cm> <I<command to execute>> >>>
+    S<<< [B<-ce> <I<cell name>>] >>> [B<-n>] [B<-l>] [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

@@ -4,11 +4,17 @@ pts rename - Changes the name of a Protection Database entry
 
 =head1 SYNOPSIS
 
-B<pts rename> B<-oldname> <I<old name>> B<-newname> <I<new name>>
-    [B<-cell> <I<cell name>>]  [B<-noauth>]  [B<-force>]  [B<-help>]
+=for html
+<div class="synopsis">
 
-B<pts ren> B<-o> <I<old name>> B<-ne> <I<new name>> [B<-c> <I<cell name>>]
+B<pts rename> S<<< B<-oldname> <I<old name>> >>> S<<< B<-newname> <I<new name>> >>>
+    S<<< [B<-cell> <I<cell name>>] >>>  [B<-noauth>]  [B<-force>]  [B<-help>]
+
+B<pts ren> S<<< B<-o> <I<old name>> >>> S<<< B<-ne> <I<new name>> >>> S<<< [B<-c> <I<cell name>>] >>>
     [B<-no>] [B<-f>] [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

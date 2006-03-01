@@ -4,9 +4,15 @@ fs messages - Sets whether the Cache Manager writes log messages
 
 =head1 SYNOPSIS
 
-B<fs messages> [B<-show> (user|console|all|none)] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<fs me> [B<-s> (user|console|all|none)] [B<-h>]
+B<fs messages> S<<< [B<-show> (user|console|all|none)] >>> [B<-help>]
+
+B<fs me> S<<< [B<-s> (user|console|all|none)] >>> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

@@ -4,11 +4,17 @@ cmdebug - Reports the status of a host Cache Manager
 
 =head1 SYNOPSIS
 
-B<cmdebug> B<-servers> <I<machine>> [B<-port> <I<IP port>>]
+=for html
+<div class="synopsis">
+
+B<cmdebug> S<<< B<-servers> <I<machine>> >>> S<<< [B<-port> <I<IP port>>] >>>
     [B<-long>] [B<-refcounts>] [B<-callbacks>] [B<-addrs>] [B<-cache>]
 
-B<cmdebug> B<-s> <I<machine>> [B<-p> <I<IP port>>] [B<-l>] [B<-r>] [B<-c>]
+B<cmdebug> S<<< B<-s> <I<machine>> >>> S<<< [B<-p> <I<IP port>>] >>> [B<-l>] [B<-r>] [B<-c>]
     [B<-a>] [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

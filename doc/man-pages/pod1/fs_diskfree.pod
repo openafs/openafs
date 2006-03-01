@@ -4,11 +4,17 @@ fs diskfree - Shows data about the partition housing a directory or file
 
 =head1 SYNOPSIS
 
-B<fs diskfree> [B<-path> <I<dir/file path>>+] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<fs df> [B<-p> <I<dir/file path>>+] [B<-h>]
+B<fs diskfree> S<<< [B<-path> <I<dir/file path>>+] >>> [B<-help>]
 
-B<fs di> [B<-p> <I<dir/file path>>+] [B<-h>]
+B<fs df> S<<< [B<-p> <I<dir/file path>>+] >>> [B<-h>]
+
+B<fs di> S<<< [B<-p> <I<dir/file path>>+] >>> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

@@ -4,9 +4,15 @@ pts apropos - Displays each help entry containing a keyword string
 
 =head1 SYNOPSIS
 
-B<pts apropos> B<-topic> <I<help string>> [B<-help>]
+=for html
+<div class="synopsis">
 
-B<pts ap> B<-t> <I<help string>> [B<-h>]
+B<pts apropos> S<<< B<-topic> <I<help string>> >>> [B<-help>]
+
+B<pts ap> S<<< B<-t> <I<help string>> >>> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

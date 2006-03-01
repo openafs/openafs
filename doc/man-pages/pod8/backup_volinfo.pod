@@ -4,10 +4,16 @@ backup volinfo - Displays a volume's dump history from the Backup Database
 
 =head1 SYNOPSIS
 
-B<backup volinfo> B<-volume> <I<volume name>> [B<-localauth>]
-    [B<-cell> <I<cell name>>] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<backup voli> B<-v> <I<volume name>> [B<-l>] [B<-c> <I<cell name>>] [B<-h>]
+B<backup volinfo> S<<< B<-volume> <I<volume name>> >>> [B<-localauth>]
+    S<<< [B<-cell> <I<cell name>>] >>> [B<-help>]
+
+B<backup voli> S<<< B<-v> <I<volume name>> >>> [B<-l>] S<<< [B<-c> <I<cell name>>] >>> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

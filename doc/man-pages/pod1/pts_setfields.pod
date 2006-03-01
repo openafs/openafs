@@ -4,15 +4,21 @@ pts setfields - Sets privacy flags or quota for a Protection Database entry
 
 =head1 SYNOPSIS
 
-B<pts setfields> B<-nameorid> <I<user or group name or id>>+
-    [B<-access> <I<set privacy flags>>]
-    [B<-groupquota> <I<set limit on group creation>>]
-    [B<-cell> <I<cell name>>] [B<-noauth>] [B<-force>] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<pts setf> B<-na> <I<user or group name or id>>+
-    [B<-a> <I<set privacy flags>>]
-    [B<-g> <I<set limit on group creation>>] [B<-c> <I<cell name>>]
+B<pts setfields> S<<< B<-nameorid> <I<user or group name or id>>+ >>>
+    S<<< [B<-access> <I<set privacy flags>>] >>>
+    S<<< [B<-groupquota> <I<set limit on group creation>>] >>>
+    S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-force>] [B<-help>]
+
+B<pts setf> S<<< B<-na> <I<user or group name or id>>+ >>>
+    S<<< [B<-a> <I<set privacy flags>>] >>>
+    S<<< [B<-g> <I<set limit on group creation>>] >>> S<<< [B<-c> <I<cell name>>] >>>
     [B<-no>] [B<-f>] [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

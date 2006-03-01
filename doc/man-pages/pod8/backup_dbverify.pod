@@ -4,10 +4,16 @@ backup dbverify - Checks the integrity of the Backup Database
 
 =head1 SYNOPSIS
 
-B<backup dbverify> [B<-detail>] [B<-localauth>] [B<-cell> <I<cell name>>]
+=for html
+<div class="synopsis">
+
+B<backup dbverify> [B<-detail>] [B<-localauth>] S<<< [B<-cell> <I<cell name>>] >>>
     [B<-help>]
 
-B<backup db> [B<-d>] [B<-l>] [B<-c> <I<cell name>>] [B<-h>]
+B<backup db> [B<-d>] [B<-l>] S<<< [B<-c> <I<cell name>>] >>> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

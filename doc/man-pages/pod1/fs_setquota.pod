@@ -4,12 +4,18 @@ fs setquota - Sets the quota for the volume containing a file or directory
 
 =head1 SYNOPSIS
 
-B<fs setquota> [B<-path> <I<dir/file path>>]
-    B<-max> <I<max quota in kbytes>> [B<-help>]
+=for html
+<div class="synopsis">
 
-B<fs setq> [B<-p> <I<dir/file path>>] B<-m> <I<max quota in kbytes>> [B<-h>]
+B<fs setquota> S<<< [B<-path> <I<dir/file path>>] >>>
+    S<<< B<-max> <I<max quota in kbytes>> >>> [B<-help>]
 
-B<fs sq> [B<-p> <I<dir/file path>>] B<-m> <I<max quota in kbytes>> [B<-h>]
+B<fs setq> S<<< [B<-p> <I<dir/file path>>] >>> S<<< B<-m> <I<max quota in kbytes>> >>> [B<-h>]
+
+B<fs sq> S<<< [B<-p> <I<dir/file path>>] >>> S<<< B<-m> <I<max quota in kbytes>> >>> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

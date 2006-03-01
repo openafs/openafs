@@ -4,9 +4,15 @@ kas listtickets - Displays all of the issuer's tickets (tokens)
 
 =head1 SYNOPSIS
 
-B<kas listtickets> [B<-name> <I<name of server>>] [B<-long>] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<kas listt> [B<-n> <I<name of server>>] [B<-l>] [B<-h>]
+B<kas listtickets> S<<< [B<-name> <I<name of server>>] >>> [B<-long>] [B<-help>]
+
+B<kas listt> S<<< [B<-n> <I<name of server>>] >>> [B<-l>] [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

@@ -4,15 +4,21 @@ uss delete - Deletes a user account
 
 =head1 SYNOPSIS
 
-B<uss delete> B<-user> <I<login name>>
-    [B<-mountpoint> <I<mountpoint for user's volume>>]
-    [B<-savevolume>] [B<-verbose>] [B<-cell> <I<cell name>>]
-    [B<-admin> <I<administrator to authenticate>>] [B<-dryrun>]
+=for html
+<div class="synopsis">
+
+B<uss delete> S<<< B<-user> <I<login name>> >>>
+    S<<< [B<-mountpoint> <I<mountpoint for user's volume>>] >>>
+    [B<-savevolume>] [B<-verbose>] S<<< [B<-cell> <I<cell name>>] >>>
+    S<<< [B<-admin> <I<administrator to authenticate>>] >>> [B<-dryrun>]
     [B<-skipauth>] [B<-help>]
 
-B<uss d> B<-u> <I<login name>> [B<-m> <I<mountpoint for user's volume>>]
-    [B<-sa>] [B<-v>] [B<-c> <I<cell name>>]
-    [B<-a> <I<administrator to authenticate>>] [B<-d>] [B<-sk>] [B<-h>]
+B<uss d> S<<< B<-u> <I<login name>> >>> S<<< [B<-m> <I<mountpoint for user's volume>>] >>>
+    [B<-sa>] [B<-v>] S<<< [B<-c> <I<cell name>>] >>>
+    S<<< [B<-a> <I<administrator to authenticate>>] >>> [B<-d>] [B<-sk>] [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

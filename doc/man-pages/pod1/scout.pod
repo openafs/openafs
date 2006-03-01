@@ -4,17 +4,23 @@ scout - Monitors the File Server process
 
 =head1 SYNOPSIS
 
-B<scout> [B<initcmd>] B<-server> <I<servers to monitor>>+
-      [B<-basename> <I<base server name>>]
-      [B<-frequency> <I<poll frequency, in seconds>>] [B<-host>]
-      [B<-attention> <I<specify attention (highlighting) level>>+]
-      [B<-debug> <I<turn debugging output on to the named file>>]
+=for html
+<div class="synopsis">
+
+B<scout> [B<initcmd>] S<<< B<-server> <I<servers to monitor>>+ >>>
+      S<<< [B<-basename> <I<base server name>>] >>>
+      S<<< [B<-frequency> <I<poll frequency, in seconds>>] >>> [B<-host>]
+      S<<< [B<-attention> <I<specify attention (highlighting) level>>+] >>>
+      S<<< [B<-debug> <I<turn debugging output on to the named file>>] >>>
       [B<-help>]
 
-B<scout> [B<i>] B<-s> <I<servers to monitor>>+
-      [B<-b> <I<base server name>>] [B<-f> <I<poll frequency, in seconds>>]
-      [B<-ho>] [B<-a> <I<specify attention (highlighting) level>>+]
-      [B<-d> <I<turn debugging output on to the named file>>] [B<-he>]
+B<scout> [B<i>] S<<< B<-s> <I<servers to monitor>>+ >>>
+      S<<< [B<-b> <I<base server name>>] >>> S<<< [B<-f> <I<poll frequency, in seconds>>] >>>
+      [B<-ho>] S<<< [B<-a> <I<specify attention (highlighting) level>>+] >>>
+      S<<< [B<-d> <I<turn debugging output on to the named file>>] >>> [B<-he>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

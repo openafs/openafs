@@ -53,6 +53,9 @@
   body.pod h3 { margin-left: 1em }
   body.pod h4 { margin-left: 1em }
 
+  /* Special handling for the synopsis section to outdent the first line. */
+  body.pod .synopsis { padding-left: 2em; text-indent: -2em; }
+
   body.contentspage {
     color:            #000;
     background-color: #fff;

@@ -4,13 +4,19 @@ bos addkey - Adds a new server encryption key to the KeyFile file
 
 =head1 SYNOPSIS
 
-B<bos addkey> B<-server> <I<machine name>> [B<-key> <I<key>>]
-    B<-kvno> <I<key version number>> [B<-cell> <I<cell name>>]
+=for html
+<div class="synopsis">
+
+B<bos addkey> S<<< B<-server> <I<machine name>> >>> S<<< [B<-key> <I<key>>] >>>
+    S<<< B<-kvno> <I<key version number>> >>> S<<< [B<-cell> <I<cell name>>] >>>
     [B<-noauth>] [B<-localauth>] [B<-help>]
 
-B<bos addk> B<-s> <I<machine name>> [B<-ke> <I<key>>]
-    B<-kv> <I<key version number>> [B<-ce> <I<cell name>>] [B<-n>]
+B<bos addk> S<<< B<-s> <I<machine name>> >>> S<<< [B<-ke> <I<key>>] >>>
+    S<<< B<-kv> <I<key version number>> >>> S<<< [B<-ce> <I<cell name>>] >>> [B<-n>]
     [B<-l>] [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

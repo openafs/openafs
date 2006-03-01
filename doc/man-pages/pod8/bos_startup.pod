@@ -4,11 +4,17 @@ bos startup - Starts a process without changing its status flag
 
 =head1 SYNOPSIS
 
-B<bos startup> B<-server> <I<machine name>> [B<-instance> <I<instances>>+]
-    [B<-cell> <I<cell name>>] [B<-noauth>] [B<-localauth>] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<bos startu> B<-s> <I<machine name>> [B<-i> <I<instances>>+]
-    [B<-c> <I<cell name>>] [B<-n>] [B<-l>] [B<-h>]
+B<bos startup> S<<< B<-server> <I<machine name>> >>> S<<< [B<-instance> <I<instances>>+] >>>
+    S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>] [B<-help>]
+
+B<bos startu> S<<< B<-s> <I<machine name>> >>> S<<< [B<-i> <I<instances>>+] >>>
+    S<<< [B<-c> <I<cell name>>] >>> [B<-n>] [B<-l>] [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

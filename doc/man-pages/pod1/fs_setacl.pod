@@ -4,14 +4,20 @@ fs setacl - Sets the ACL for a directory
 
 =head1 SYNOPSIS
 
-B<fs setacl> B<-dir> <I<directory>>+ B<-acl> <I<access list entries>>+
+=for html
+<div class="synopsis">
+
+B<fs setacl> S<<< B<-dir> <I<directory>>+ >>> S<<< B<-acl> <I<access list entries>>+ >>>
     [B<-clear>] [B<-negative>] [B<-id>] [B<-if>] [B<-help>]
 
-B<fs sa> B<-d> <I<directory>>+ B<-a> <I<access list entries>>+
+B<fs sa> S<<< B<-d> <I<directory>>+ >>> S<<< B<-a> <I<access list entries>>+ >>>
     [B<-c>] [B<-n>] [B<-id>] [B<-if>] [B<-h>]
 
-B<fs seta> B<-d> <I<directory>>+ B<-a> <I<access list entries>>+
+B<fs seta> S<<< B<-d> <I<directory>>+ >>> S<<< B<-a> <I<access list entries>>+ >>>
     [B<-c>] [B<-n>] [B<-id>] [B<-if>] [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

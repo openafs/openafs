@@ -4,9 +4,15 @@ fs quota - Displays the quota used in the volume containing a directory or file
 
 =head1 SYNOPSIS
 
-B<fs quota> [B<-path> <I<dir/file path>>+] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<fs q> [B<-p> <I<dir/file path>>+] [B<-h>]
+B<fs quota> S<<< [B<-path> <I<dir/file path>>+] >>> [B<-help>]
+
+B<fs q> S<<< [B<-p> <I<dir/file path>>+] >>> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

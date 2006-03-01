@@ -4,15 +4,21 @@ xstat_fs_test - Displays data collections from the File Server process
 
 =head1 SYNOPSIS
 
-B<xstat_fs_test> [I<initcmd>] B<-fsname> <I<file server name(s) to monitor>>+
-    B<-collID> <I<collection(s) to fetch>>+ [B<-onceonly>]
-    [B<-frequency> <I<poll frequency, in seconds>>]
-    [B<-period> <I<data collection time, in minutes>>] [B<-debug>] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<xstat_fs_test> [B<initcmd>] B<-fs> <I<File Server name(s) to monitor>>+
-    B<-c> <I<Collection(s) to fetch>>+ [B<-o>]
-    [B<-fr> <I<poll frequency, in seconds>>]
-    [B<-p> <I<data collection time, in minutes>>] [B<-d>] [B<-h>]
+B<xstat_fs_test> [I<initcmd>] S<<< B<-fsname> <I<file server name(s) to monitor>>+ >>>
+    S<<< B<-collID> <I<collection(s) to fetch>>+ >>> [B<-onceonly>]
+    S<<< [B<-frequency> <I<poll frequency, in seconds>>] >>>
+    S<<< [B<-period> <I<data collection time, in minutes>>] >>> [B<-debug>] [B<-help>]
+
+B<xstat_fs_test> [B<initcmd>] S<<< B<-fs> <I<File Server name(s) to monitor>>+ >>>
+    S<<< B<-c> <I<Collection(s) to fetch>>+ >>> [B<-o>]
+    S<<< [B<-fr> <I<poll frequency, in seconds>>] >>>
+    S<<< [B<-p> <I<data collection time, in minutes>>] >>> [B<-d>] [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

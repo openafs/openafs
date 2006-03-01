@@ -4,9 +4,15 @@ fs listcells - Displays the database server machines known to the Cache Manager
 
 =head1 SYNOPSIS
 
+=for html
+<div class="synopsis">
+
 B<fs listcells> [B<-numeric>] [B<-help>]
 
 B<fs listc> [B<-n>] [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

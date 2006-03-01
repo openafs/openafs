@@ -4,15 +4,21 @@ fs examine - Shows data about the volume containing a directory or file
 
 =head1 SYNOPSIS
 
-B<fs examine> [B<-path> <I<dir/file path>>+] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<fs exa> [B<-p> <I<dir/file path>>+] [B<-h>]
+B<fs examine> S<<< [B<-path> <I<dir/file path>>+] >>> [B<-help>]
 
-B<fs listvol> [B<-p> <I<dir/file path>>+] [B<-h>]
+B<fs exa> S<<< [B<-p> <I<dir/file path>>+] >>> [B<-h>]
 
-B<fs listv> [B<-p> <I<dir/file path>>+] [B<-h>]
+B<fs listvol> S<<< [B<-p> <I<dir/file path>>+] >>> [B<-h>]
 
-B<fs lv> [B<-p> <I<dir/file path>>+] [B<-h>]
+B<fs listv> S<<< [B<-p> <I<dir/file path>>+] >>> [B<-h>]
+
+B<fs lv> S<<< [B<-p> <I<dir/file path>>+] >>> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

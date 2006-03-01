@@ -4,9 +4,15 @@ backup kill - Terminates a pending or running operation
 
 =head1 SYNOPSIS
 
-B<kill> B<-id> <I<job ID or dump set name>> [B<-help>]
+=for html
+<div class="synopsis">
 
-B<k -i> <I<job ID or dump set name>> [B<-h>]
+B<kill> S<<< B<-id> <I<job ID or dump set name>> >>> [B<-help>]
+
+S<<< B<k -i> <I<job ID or dump set name>> >>> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

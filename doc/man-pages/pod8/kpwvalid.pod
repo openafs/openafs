@@ -4,7 +4,13 @@ kpwvalid - Checks quality of new password
 
 =head1 SYNOPSIS
 
+=for html
+<div class="synopsis">
+
 B<kpwvalid>
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

@@ -4,11 +4,17 @@ pts setmax - Sets the value of the max group id or max user id counter
 
 =head1 SYNOPSIS
 
-B<pts setmax> [B<-group> <I<group max>>] [B<-user> <I<user max>>]
-    [B<-cell> <I<cell name>>] [B<-noauth>] [B<-force>] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<pts setm> [B<-g> I<group max>>] [B<-u> <I<user max>>]
-    [B<-c> <I<cell name>>] [B<-n>] [B<-f>] [B<-h>]
+B<pts setmax> S<<< [B<-group> <I<group max>>] >>> S<<< [B<-user> <I<user max>>] >>>
+    S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-force>] [B<-help>]
+
+B<pts setm> [B<-g> I<group max>>] S<<< [B<-u> <I<user max>>] >>>
+    S<<< [B<-c> <I<cell name>>] >>> [B<-n>] [B<-f>] [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

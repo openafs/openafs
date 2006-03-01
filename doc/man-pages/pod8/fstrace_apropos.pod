@@ -4,9 +4,15 @@ fstrace apropos - Displays each help entry containing a keyword string
 
 =head1 SYNOPSIS
 
-B<fstrace apropos> B<-topic> <I<help string>> [B<-help>]
+=for html
+<div class="synopsis">
 
-B<fstrace ap> B<-t> <I<help string>> [B<-h>]
+B<fstrace apropos> S<<< B<-topic> <I<help string>> >>> [B<-help>]
+
+B<fstrace ap> S<<< B<-t> <I<help string>> >>> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 
