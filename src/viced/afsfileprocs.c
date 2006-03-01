@@ -7346,6 +7346,8 @@ SRXAFS_CallBackRxConnAddr (struct rx_call * acall, afs_int32 *addr)
 	thost->host           = addr;
 	rx_SetConnDeadTime(thost->callback_rxcon, 50);
 	rx_SetConnHardDeadTime(thost->callback_rxcon, AFS_HARDDEADTIME);
+	h_ReleaseClient_r(tclient);
+	/* The hold on thost will be released by CallPostamble */
 	H_UNLOCK;
 	errorCode = CallPostamble(tcon, errorCode);
 	return errorCode;
@@ -7353,6 +7355,8 @@ SRXAFS_CallBackRxConnAddr (struct rx_call * acall, afs_int32 *addr)
 	rx_DestroyConnection(conn);
     }	    
   Bad_CallBackRxConnAddr:
+    h_ReleaseClient_r(tclient);
+    /* The hold on thost will be released by CallPostamble */
     H_UNLOCK;
 #endif
 
