@@ -4,7 +4,13 @@ livesys - Reports the configured CPU/operating system type
 
 =head1 SYNOPSIS
 
+=for html
+<div class="synopsis">
+
 B<livesys>
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

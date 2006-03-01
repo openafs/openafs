@@ -4,17 +4,23 @@ dlog - Authenticates to the DCE Security Service
 
 =head1 SYNOPSIS
 
-B<dlog> [B<-principal> <I<user name>>] [B<-cell> <I<cell name>>]
-    [B<-password> <I<user's password>>]
-    [B<-servers> <I<explicit list of servers>>+]
-    [B<-lifetime> <I<ticket lifetime in hh[:mm[:ss]]>>]
+=for html
+<div class="synopsis">
+
+B<dlog> S<<< [B<-principal> <I<user name>>] >>> S<<< [B<-cell> <I<cell name>>] >>>
+    S<<< [B<-password> <I<user's password>>] >>>
+    S<<< [B<-servers> <I<explicit list of servers>>+] >>>
+    S<<< [B<-lifetime> <I<ticket lifetime in hh[:mm[:ss]]>>] >>>
     [B<-setpag>] [B<-pipe>] [B<-help>]
 
-B<dlog> [B<-pr> <I<user name>>] [B<-c> <I<cell name>>]
-    [B<-pw> <I<user's password>>]
-    [B<-ser> <I<explicit list of servers>>+]
-    [B<-l> <I<ticket lifetime in hh[:mm[:ss]]>>]
+B<dlog> S<<< [B<-pr> <I<user name>>] >>> S<<< [B<-c> <I<cell name>>] >>>
+    S<<< [B<-pw> <I<user's password>>] >>>
+    S<<< [B<-ser> <I<explicit list of servers>>+] >>>
+    S<<< [B<-l> <I<ticket lifetime in hh[:mm[:ss]]>>] >>>
     [B<-set>] [B<-pi>] [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

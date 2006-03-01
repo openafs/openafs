@@ -4,9 +4,15 @@ fs flush - Forces the Cache Manager to discard a cached file or directory
 
 =head1 SYNOPSIS
 
-B<fs flush> [B<-path> <I<dir/file path>>+] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<fs flush> [B<-p> <I<dir/file path>>+] [B<-h>]
+B<fs flush> S<<< [B<-path> <I<dir/file path>>+] >>> [B<-help>]
+
+B<fs flush> S<<< [B<-p> <I<dir/file path>>+] >>> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

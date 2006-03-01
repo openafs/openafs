@@ -4,9 +4,15 @@ kas apropos - Displays each help entry containing a keyword string
 
 =head1 SYNOPSIS
 
-B<kas apropos> B<-topic> <I<help string>> [B<-help>]
+=for html
+<div class="synopsis">
 
-B<kas a> B<-t> <I<help string>> [B<-h>]
+B<kas apropos> S<<< B<-topic> <I<help string>> >>> [B<-help>]
+
+B<kas a> S<<< B<-t> <I<help string>> >>> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

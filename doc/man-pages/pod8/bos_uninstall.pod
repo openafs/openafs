@@ -4,13 +4,19 @@ bos uninstall - Reverts to the former version of a process's binary file
 
 =head1 SYNOPSIS
 
-B<bos uninstall> B<-server> <I<machine name>>
-    B<-file> <I<files to uninstall>>+ [B<-dir> <I<destination dir>>]
-    [B<-cell> <I<cell name>>] [B<-noauth>] [B<-localauth>] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<bos u> B<-s> <I<machine name>> B<-f> <I<files to uninstall>>+
-    [B<-d> <I<destination dir>>] [B<-c> <I<cell name>>] [B<-n>] [B<-l>]
+B<bos uninstall> S<<< B<-server> <I<machine name>> >>>
+    S<<< B<-file> <I<files to uninstall>>+ >>> S<<< [B<-dir> <I<destination dir>>] >>>
+    S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>] [B<-help>]
+
+B<bos u> S<<< B<-s> <I<machine name>> >>> S<<< B<-f> <I<files to uninstall>>+ >>>
+    S<<< [B<-d> <I<destination dir>>] >>> S<<< [B<-c> <I<cell name>>] >>> [B<-n>] [B<-l>]
     [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

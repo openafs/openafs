@@ -4,17 +4,23 @@ fs setvol - Set quota and messages for a volume containing a file or directory
 
 =head1 SYNOPSIS
 
-B<fs setvol> [B<-path> <I<dir/file path>>+]
-    [B<-max> <I<disk space quota in 1K units>>]
-    [B<-offlinemsg> <I<offline message>>] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<fs setv> [B<-p> <I<dir/file path>>+]
-    [B<-ma> <I<disk space quota in 1K units>>]
-    [B<-o> <I<offline message>>] [B<-h>]
+B<fs setvol> S<<< [B<-path> <I<dir/file path>>+] >>>
+    S<<< [B<-max> <I<disk space quota in 1K units>>] >>>
+    S<<< [B<-offlinemsg> <I<offline message>>] >>> [B<-help>]
 
-B<fs sv> [B<-p> <I<dir/file path>>+]
-    [B<-ma> <I<disk space quota in 1K units>>]
-    [B<-o> <I<offline message>>] [B<-h>]
+B<fs setv> S<<< [B<-p> <I<dir/file path>>+] >>>
+    S<<< [B<-ma> <I<disk space quota in 1K units>>] >>>
+    S<<< [B<-o> <I<offline message>>] >>> [B<-h>]
+
+B<fs sv> S<<< [B<-p> <I<dir/file path>>+] >>>
+    S<<< [B<-ma> <I<disk space quota in 1K units>>] >>>
+    S<<< [B<-o> <I<offline message>>] >>> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

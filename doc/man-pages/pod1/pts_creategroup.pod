@@ -4,18 +4,24 @@ pts creategroup - Creates an (empty) Protection Database group entry
 
 =head1 SYNOPSIS
 
-B<pts creategroup> B<-name> <I<group name>>+
-    [B<-owner> <I<owner of the group>>]
-    [B<-id> <I<id (negated) for the group>>+] [B<-cell> <I<cell name>>]
+=for html
+<div class="synopsis">
+
+B<pts creategroup> S<<< B<-name> <I<group name>>+ >>>
+    S<<< [B<-owner> <I<owner of the group>>] >>>
+    S<<< [B<-id> <I<id (negated) for the group>>+] >>> S<<< [B<-cell> <I<cell name>>] >>>
     [B<-noauth>] [B<-force>] [B<-help>]
 
-B<pts createg> B<-na> <I<group name>>+  [B<-o> <I<owner of the group>>]
-    [B<-i> <I<id (negated) for the group>>+] [B<-c> <I<cell name>>]
+B<pts createg> S<<< B<-na> <I<group name>>+ >>>  S<<< [B<-o> <I<owner of the group>>] >>>
+    S<<< [B<-i> <I<id (negated) for the group>>+] >>> S<<< [B<-c> <I<cell name>>] >>>
     [B<-no>] [B<-f>] [B<-h>]
 
-B<pts cg> B<-na> <I<group name>>+ [B<-o> <I<owner of the group>>]
-    [B<-i> <I<id (negated) for the group>>+] [B<-c> <I<cell name>>]
+B<pts cg> S<<< B<-na> <I<group name>>+ >>> S<<< [B<-o> <I<owner of the group>>] >>>
+    S<<< [B<-i> <I<id (negated) for the group>>+] >>> S<<< [B<-c> <I<cell name>>] >>>
     [B<-no>] [B<-f>] [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

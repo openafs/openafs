@@ -4,9 +4,15 @@ fs lsmount - Reports the volume for which a directory is the mount point.
 
 =head1 SYNOPSIS
 
-B<fs lsmount> B<-dir> <I<directory>>+ [B<-help>]
+=for html
+<div class="synopsis">
 
-B<fs ls -d> <I<directory>>+ [B<-h>]
+B<fs lsmount> S<<< B<-dir> <I<directory>>+ >>> [B<-help>]
+
+S<<< B<fs ls -d> <I<directory>>+ >>> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

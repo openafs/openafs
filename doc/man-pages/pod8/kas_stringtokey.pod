@@ -4,10 +4,16 @@ kas stringtokey - Converts a character string into an octal key
 
 =head1 SYNOPSIS
 
-B<kas stringtokey> B<-string> <I<password string>>
-    [B<-cell> <I<cell name>>] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<kas str> B<-s> <I<password string>> [B<-c> <I<cell name>>] [B<-h>]
+B<kas stringtokey> S<<< B<-string> <I<password string>> >>>
+    S<<< [B<-cell> <I<cell name>>] >>> [B<-help>]
+
+B<kas str> S<<< B<-s> <I<password string>> >>> S<<< [B<-c> <I<cell name>>] >>> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

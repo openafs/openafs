@@ -4,22 +4,28 @@ bos salvage - Restores internal consistency to a file system or volume
 
 =head1 SYNOPSIS
 
-B<bos salvage> B<-server> <I<machine name>>
-    [B<-partition> <I<salvage partition>>]
-    [B<-volume> <I<salvage volume number or volume name>>]
-    [B<-file> <I<salvage log output file>>] [B<-all>] [B<-showlog>]
-    [B<-parallel> <I<# of max parallel partition salvaging>>]
-    [B<-tmpdir> <I<directory to place tmp files>>]
-    [B<-orphans> (ignore | remove | attach)] [B<-cell> <I<cell name>>]
+=for html
+<div class="synopsis">
+
+B<bos salvage> S<<< B<-server> <I<machine name>> >>>
+    S<<< [B<-partition> <I<salvage partition>>] >>>
+    S<<< [B<-volume> <I<salvage volume number or volume name>>] >>>
+    S<<< [B<-file> <I<salvage log output file>>] >>> [B<-all>] [B<-showlog>]
+    S<<< [B<-parallel> <I<# of max parallel partition salvaging>>] >>>
+    S<<< [B<-tmpdir> <I<directory to place tmp files>>] >>>
+    S<<< [B<-orphans> (ignore | remove | attach)] >>> S<<< [B<-cell> <I<cell name>>] >>>
     [B<-noauth>] [B<-localauth>] [B<-help>]
 
-B<bos sa> B<-se> <I<machine name>> [B<-part> <I<salvage partition>>]
-    [B<-v> <I<salvage volume number or volume name>>]
-    [B<-f> <I<salvage log output file>>] [B<-a>] [B<-sh>]
+B<bos sa> S<<< B<-se> <I<machine name>> >>> S<<< [B<-part> <I<salvage partition>>] >>>
+    S<<< [B<-v> <I<salvage volume number or volume name>>] >>>
+    S<<< [B<-f> <I<salvage log output file>>] >>> [B<-a>] [B<-sh>]
     [<-para> <I<# of max parallel partition salvaging>>]
-    [B<-t> <I<directory to place tmp files>>]
-    [B<-o> (ignore | remove | attach)] [B<-c> <I<cell name>>] [B<-n>]
+    S<<< [B<-t> <I<directory to place tmp files>>] >>>
+    S<<< [B<-o> (ignore | remove | attach)] >>> S<<< [B<-c> <I<cell name>>] >>> [B<-n>]
     [B<-l>] [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

@@ -4,13 +4,19 @@ fs copyacl - Copies an ACL from a directory to one or more other directories
 
 =head1 SYNOPSIS
 
-B<fs copyacl> B<-fromdir> <I<source directory (or DFS file)>>
-    B<-todir> <I<destination directory (or DFS file)>>+
+=for html
+<div class="synopsis">
+
+B<fs copyacl> S<<< B<-fromdir> <I<source directory (or DFS file)>> >>>
+    S<<< B<-todir> <I<destination directory (or DFS file)>>+ >>>
     [B<-clear>] [B<-id>] [B<-if>] [-help]
 
-B<fs co> B<-f> <I<source directory (or DFS file)>>
-    B<-t> <I<destination directory (or DFS file)>>+
+B<fs co> S<<< B<-f> <I<source directory (or DFS file)>> >>>
+    S<<< B<-t> <I<destination directory (or DFS file)>>+ >>>
     [B<-c>] [B<-id>] [B<-if>] [-h]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

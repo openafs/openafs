@@ -4,9 +4,15 @@ vos help - Displays help for vos commands
 
 =head1 SYNOPSIS
 
-B<vos help> [B<-topic> <I<help string>>+] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<vos h> [B<-t> <I<help string>>+] [B<-h>]
+B<vos help> S<<< [B<-topic> <I<help string>>+] >>> [B<-help>]
+
+B<vos h> S<<< [B<-t> <I<help string>>+] >>> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

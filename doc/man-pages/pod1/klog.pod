@@ -4,17 +4,23 @@ klog - Authenticates with the Authentication Server
 
 =head1 SYNOPSIS
 
-B<klog> [B<-x>] [B<-principal> <I<user name>>]
-    [-password <I<user's password>>] [B<-cell> <I<cell name>>]
-    [B<-servers> <I<explicit list of servers>>+]
+=for html
+<div class="synopsis">
+
+B<klog> [B<-x>] S<<< [B<-principal> <I<user name>>] >>>
+    [-password <I<user's password>>] S<<< [B<-cell> <I<cell name>>] >>>
+    S<<< [B<-servers> <I<explicit list of servers>>+] >>>
     [B<-pipe>] [B<-silent>]
-    [B<-lifetime> <I<ticket lifetime in hh[:mm[:ss]]>>]
+    S<<< [B<-lifetime> <I<ticket lifetime in hh[:mm[:ss]]>>] >>>
     [B<-setpag>] [B<-tmp>] [B<-help>]
 
-B<klog> [B<-x>] [B<-pr> <I<user name>>] [B<-pa> <I<user's password>>]
-    [B<-c> <I<cell name>>]  [B<-s> <I<explicit list of servers>>+]
-    [B<-pi>] [B<-si>] [B<-l> <I<ticket lifetime in hh[:mm[:ss]]>>]
+B<klog> [B<-x>] S<<< [B<-pr> <I<user name>>] >>> S<<< [B<-pa> <I<user's password>>] >>>
+    S<<< [B<-c> <I<cell name>>] >>>  S<<< [B<-s> <I<explicit list of servers>>+] >>>
+    [B<-pi>] [B<-si>] S<<< [B<-l> <I<ticket lifetime in hh[:mm[:ss]]>>] >>>
     [B<-se>] [B<-t>] [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

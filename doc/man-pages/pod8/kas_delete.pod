@@ -4,21 +4,27 @@ kas delete - Deletes an entry from the Authentication Database
 
 =head1 SYNOPSIS
 
-B<kas delete> B<-name> <I<name of user>>
-    [B<-admin_username> <I<admin principal to use for authentication>>]
-    [B<-password_for_admin> <I<admin password>>] [B<-cell> <I<cell name>>]
-    [B<-servers> <I<explicit list of authentication servers>>+]
+=for html
+<div class="synopsis">
+
+B<kas delete> S<<< B<-name> <I<name of user>> >>>
+    S<<< [B<-admin_username> <I<admin principal to use for authentication>>] >>>
+    S<<< [B<-password_for_admin> <I<admin password>>] >>> S<<< [B<-cell> <I<cell name>>] >>>
+    S<<< [B<-servers> <I<explicit list of authentication servers>>+] >>>
     [B<-noauth>] [B<-help>]
 
-B<kas d> B<-na> <I<name of user>>
-    [B<-a> <I<admin principal to use for authentication>>]
-    [B<-p> <I<admin password>>] [B<-c> <I<cell name>>]
-    [B<-s> <I<explicit list of authentication servers>>+] [B<-no>] [B<-h>]
+B<kas d> S<<< B<-na> <I<name of user>> >>>
+    S<<< [B<-a> <I<admin principal to use for authentication>>] >>>
+    S<<< [B<-p> <I<admin password>>] >>> S<<< [B<-c> <I<cell name>>] >>>
+    S<<< [B<-s> <I<explicit list of authentication servers>>+] >>> [B<-no>] [B<-h>]
 
-B<kas rm> B<-na> <I<name of user>>
-    [B<-a> <I<admin principal to use for authentication>>]
-    [B<-p> <I<admin password>>] [B<-c> <I<cell name>>]
-    [B<-s> <I<explicit list of authentication servers>>+] [B<-no>] [B<-h>]
+B<kas rm> S<<< B<-na> <I<name of user>> >>>
+    S<<< [B<-a> <I<admin principal to use for authentication>>] >>>
+    S<<< [B<-p> <I<admin password>>] >>> S<<< [B<-c> <I<cell name>>] >>>
+    S<<< [B<-s> <I<explicit list of authentication servers>>+] >>> [B<-no>] [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

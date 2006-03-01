@@ -4,11 +4,17 @@ fs checkservers - Displays the status of server machines
 
 =head1 SYNOPSIS
 
-B<fs checkservers> [B<-cell> <I<cell to check>>] [B<-all>] [B<-fast>]
-    [B<-interval> <I<seconds between probes>>] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<fs checks> [B<-c> <I<cell to check>>] [B<-a>] [B<-f>]
-    [B<-i> <I<seconds between probes>>] [B<-h>]
+B<fs checkservers> S<<< [B<-cell> <I<cell to check>>] >>> [B<-all>] [B<-fast>]
+    S<<< [B<-interval> <I<seconds between probes>>] >>> [B<-help>]
+
+B<fs checks> S<<< [B<-c> <I<cell to check>>] >>> [B<-a>] [B<-f>]
+    S<<< [B<-i> <I<seconds between probes>>] >>> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

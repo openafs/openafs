@@ -4,12 +4,18 @@ backup delhost - Deletes a Tape Coordinator entry from the Backup Database
 
 =head1 SYNOPSIS
 
-B<backup delhost> B<-tapehost> <I<tape machine name>>
-    [B<-portoffset> <I<TC port offset>>] [B<-localauth>]
-    [B<-cell> <I<cell name>>] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<backup delh> B<-t> <I<tape machine name>> [B<-p> <I<TC port offset>>]
-    [B<-l>] [B<-c> <I<cell name>>] [B<-h>]
+B<backup delhost> S<<< B<-tapehost> <I<tape machine name>> >>>
+    S<<< [B<-portoffset> <I<TC port offset>>] >>> [B<-localauth>]
+    S<<< [B<-cell> <I<cell name>>] >>> [B<-help>]
+
+B<backup delh> S<<< B<-t> <I<tape machine name>> >>> S<<< [B<-p> <I<TC port offset>>] >>>
+    [B<-l>] S<<< [B<-c> <I<cell name>>] >>> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

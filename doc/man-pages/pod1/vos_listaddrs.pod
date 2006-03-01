@@ -4,10 +4,16 @@ vos listaddrs - Displays all VLDB server entries
 
 =head1 SYNOPSIS
 
-B<vos listaddrs> [B<-cell> <I<cell name>>] [B<-noauth>]
+=for html
+<div class="synopsis">
+
+B<vos listaddrs> S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>]
     [B<-localauth>] [B<-verbose>] [B<-help>]
 
-B<vos lista> [B<-c> <I<cell name>>] [B<-n>] [B<-l>] [B<-v>] [B<-h>]
+B<vos lista> S<<< [B<-c> <I<cell name>>] >>> [B<-n>] [B<-l>] [B<-v>] [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

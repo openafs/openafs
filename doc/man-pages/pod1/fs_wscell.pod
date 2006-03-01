@@ -4,9 +4,15 @@ fs wscell - Returns the name of the cell to which a machine belongs
 
 =head1 SYNOPSIS
 
+=for html
+<div class="synopsis">
+
 B<fs wscell> [B<-help>]
 
 B<fs ws> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

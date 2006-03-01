@@ -4,12 +4,18 @@ bos setrestart - Sets when the BOS Server restarts processes
 
 =head1 SYNOPSIS
 
-B<bos setrestart> B<-server> <I<machine name>>
-    B<-time> <I<time to restart server>> [B<-general>] [B<-newbinary>]
-    [B<-cell> <I<cell name>>] [B<-noauth>] [B<-localauth>] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<bos setr> B<-s> <I<machine name>> B<-t> <I<time to restart server>>
-    [B<-g>] [B<-ne>] [B<-c> <I<cell name>>] [B<-no>] [B<-l>] [B<-h>]
+B<bos setrestart> S<<< B<-server> <I<machine name>> >>>
+    S<<< B<-time> <I<time to restart server>> >>> [B<-general>] [B<-newbinary>]
+    S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>] [B<-help>]
+
+B<bos setr> S<<< B<-s> <I<machine name>> >>> S<<< B<-t> <I<time to restart server>> >>>
+    [B<-g>] [B<-ne>] S<<< [B<-c> <I<cell name>>] >>> [B<-no>] [B<-l>] [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

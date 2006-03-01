@@ -4,11 +4,17 @@ backup listvolsets - Lists volume set entries from the Backup Database
 
 =head1 SYNOPSIS
 
-B<backup listvolsets> [B<-name> <I<volume set name>>] [B<-localauth>]
-    [B<-cell> <I<cell name>>] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<backup listv> [B<-n> <I<volume set name>>] [B<-l>]
-    [B<-c> <I<cell name>>] [B<-h>]
+B<backup listvolsets> S<<< [B<-name> <I<volume set name>>] >>> [B<-localauth>]
+    S<<< [B<-cell> <I<cell name>>] >>> [B<-help>]
+
+B<backup listv> S<<< [B<-n> <I<volume set name>>] >>> [B<-l>]
+    S<<< [B<-c> <I<cell name>>] >>> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

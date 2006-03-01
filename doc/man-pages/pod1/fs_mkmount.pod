@@ -4,11 +4,17 @@ fs mkmount - Creates a mount point for a volume
 
 =head1 SYNOPSIS
 
-B<fs mkmount> B<-dir> <I<directory>> B<-vol> <I<volume name>>
-    [B<-cell> <I<cell name>>] [B<-rw>] [B<-fast>] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<fs mk> B<-d> <I<directory>> B<-v> <I<volume name>>
-    [B<-c> <I<cell name>>] [B<-r>] [B<-f>] [B<-h>]
+B<fs mkmount> S<<< B<-dir> <I<directory>> >>> S<<< B<-vol> <I<volume name>> >>>
+    S<<< [B<-cell> <I<cell name>>] >>> [B<-rw>] [B<-fast>] [B<-help>]
+
+B<fs mk> S<<< B<-d> <I<directory>> >>> S<<< B<-v> <I<volume name>> >>>
+    S<<< [B<-c> <I<cell name>>] >>> [B<-r>] [B<-f>] [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

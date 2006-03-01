@@ -4,8 +4,14 @@ bosserver - Initializes the BOS Server
 
 =head1 SYNOPSIS
 
+=for html
+<div class="synopsis">
+
 B<bosserver> [B<-noauth>] [B<-log>] [B<-enable_peer_stats>]
     [B<-enable_process_stats>] [B<-help>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

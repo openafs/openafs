@@ -4,14 +4,20 @@ pts createuser - Creates a user or machine entry in the Protection Database
 
 =head1 SYNOPSIS
 
-B<pts createuser> B<-name> <I<user name>>+ [B<-id> <I<user id>>+]
-    [B<-cell> <I<cell name>>] [B<-noauth>] [B<-force>] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<pts createu> B<-na> <I<user name>>+ [B<-i> <I<user id>>+]
-    [B<-c> <I<cell name>>] [B<-no>] [B<-f>] [B<-h>]
+B<pts createuser> S<<< B<-name> <I<user name>>+ >>> S<<< [B<-id> <I<user id>>+] >>>
+    S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-force>] [B<-help>]
 
-B<pts cu> B<-na> <I<user name>>+ [B<-i> <I<user id>>+]
-    [B<-c> <I<cell name>>] [B<-no>] [B<-f>] [B<-h>]
+B<pts createu> S<<< B<-na> <I<user name>>+ >>> S<<< [B<-i> <I<user id>>+] >>>
+    S<<< [B<-c> <I<cell name>>] >>> [B<-no>] [B<-f>] [B<-h>]
+
+B<pts cu> S<<< B<-na> <I<user name>>+ >>> S<<< [B<-i> <I<user id>>+] >>>
+    S<<< [B<-c> <I<cell name>>] >>> [B<-no>] [B<-f>] [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

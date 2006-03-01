@@ -4,16 +4,25 @@ backup dump - Creates a dump (dumps a volume set at a particular dump level)
 
 =head1 SYNOPSIS
 
-B<backup dump> [B<-volumeset> <I<volume set name>>]
-    [B<-dump> <I<dump level name>>] [B<-portoffset> <I<TC port offset>>]
-    [B<-at> <I<date/time to start dump>>+] [B<-append>] [B<-n>]
-    [B<-file> <I<load file>>] [B<-localauth>] [-B<cell> <I<cell name>>]
-    [B<-help>]
+=for html
+<div class="synopsis">
 
-B<backup dump> [B<-v> <I<volume set name>>] [B<-d> <I<dump level name>>]
-    [B<-p> <I<TC port offset>>] [B<-at> <I<Date/time to start dump>>+]
-    [B<-ap>] [B<-n>] [B<-f> <I<load file>>] [B<-l>] [B<-c> <I<cell name>>]
+B<backup dump> S<<< [B<-volumeset> <I<volume set name>>] >>>
+    S<<< [B<-dump> <I<dump level name>>] >>> 
+    S<<< [B<-portoffset> <I<TC port offset>>] >>>
+    S<<< [B<-at> <I<date/time to start dump>>+] >>> [B<-append>] [B<-n>]
+    S<<< [B<-file> <I<load file>>] >>> [B<-localauth>] 
+    S<<< [B<-cell> <I<cell name>>] >>> [B<-help>]
+
+B<backup dump> S<<< [B<-v> <I<volume set name>>] >>>
+    S<<< [B<-d> <I<dump level name>>] >>>
+    S<<< [B<-p> <I<TC port offset>>] >>>
+    S<<< [B<-at> <I<Date/time to start dump>>+] >>> [B<-ap>] [B<-n>]
+    S<<< [B<-f> <I<load file>>] >>> [B<-l>] S<<< [B<-c> <I<cell name>>] >>>
     [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

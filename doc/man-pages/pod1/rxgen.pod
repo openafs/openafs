@@ -4,6 +4,9 @@ rxgen - Stub generator for the Rx remote procedure call package
 
 =head1 SYNOPSIS
 
+=for html
+<div class="synopsis">
+
 B<rxgen> [B<-h> | B<-c> | B<-C> | B<-S> | B<-r>] [B<-dkpR>]
     [B<-I> I<dir>] [B<-P> I<prefix>] [B<-o> I<outfile>] [I<infile>]
 
@@ -12,6 +15,9 @@ B<rxgen> B<-s> I<transport> [B<-o> I<outfile>] [I<infile>]
 B<rxgen> B<-l> [B<-o> I<outfile>] [I<infile>]
 
 B<rxgen> B<-m> [B<-o> I<outfile>] [I<infile>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

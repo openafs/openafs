@@ -4,9 +4,15 @@ fstrace lsset - Reports the status of an event set
 
 =head1 SYNOPSIS
 
-B<fstrace lsset> [B<-set> <I<set name>>+] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<fstrace lss> [B<-s> <I<set name>>+] [B<-h>]
+B<fstrace lsset> S<<< [B<-set> <I<set name>>+] >>> [B<-help>]
+
+B<fstrace lss> S<<< [B<-s> <I<set name>>+] >>> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

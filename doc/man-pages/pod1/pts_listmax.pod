@@ -4,9 +4,15 @@ pts listmax - Displays the max user id and max group id counters
 
 =head1 SYNOPSIS
 
-B<pts listmax> [B<-cell> <I<cell name>>] [B<-noauth>] [B<-force>] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<pts listm> [B<-c> <I<cell name>>] [B<-n>] [B<-f>] [B<-h>]
+B<pts listmax> S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-force>] [B<-help>]
+
+B<pts listm> S<<< [B<-c> <I<cell name>>] >>> [B<-n>] [B<-f>] [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

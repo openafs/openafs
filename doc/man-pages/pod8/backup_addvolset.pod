@@ -4,11 +4,17 @@ backup addvolset - Creates a new (empty) volume set
 
 =head1 SYNOPSIS
 
-B<backup addvolset> B<-name> <I<volume set name>> [B<-temporary>]
-    [B<-localauth>] [B<-cell> <I<cell name>>] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<backup addvols> B<-n> <I<volume set name>> [B<-t>] [B<-l>]
-    [B<-c> <I<cell name>>] [B<-h>]
+B<backup addvolset> S<<< B<-name> <I<volume set name>> >>> [B<-temporary>]
+    [B<-localauth>] S<<< [B<-cell> <I<cell name>>] >>> [B<-help>]
+
+B<backup addvols> S<<< B<-n> <I<volume set name>> >>> [B<-t>] [B<-l>]
+    S<<< [B<-c> <I<cell name>>] >>> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

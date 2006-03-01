@@ -4,23 +4,29 @@ afsd - Initializes the Cache Manager and starts related daemons
 
 =head1 SYNOPSIS
 
-B<afsd> [B<-blocks> <I<1024 byte blocks in cache>>]
-     [B<-files> <I<files in cache>>]
-     [B<-rootvol> <I<name of AFS root volume>>]
-     [B<-stat> <I<number of stat entries>>]
-     [B<-memcache>] [B<-cachedir> <I<cache directory>>]
-     [B<-mountdir> <I<mount location>>]
-     [B<-daemons> <I<number of daemons to use>>]
+=for html
+<div class="synopsis">
+
+B<afsd> S<<< [B<-blocks> <I<1024 byte blocks in cache>>] >>>
+     S<<< [B<-files> <I<files in cache>>] >>>
+     S<<< [B<-rootvol> <I<name of AFS root volume>>] >>>
+     S<<< [B<-stat> <I<number of stat entries>>] >>>
+     [B<-memcache>] S<<< [B<-cachedir> <I<cache directory>>] >>>
+     S<<< [B<-mountdir> <I<mount location>>] >>>
+     S<<< [B<-daemons> <I<number of daemons to use>>] >>>
      [B<-nosettime>] [B<-verbose>] [B<-rmtsys>] [B<-debug>]
-     [B<-chunksize> <I<log(2) of chunk size>>]
-     [B<-dcache> <I<number of dcache entries>>]
-     [B<-volumes> <I<number of volume entries>>]
-     [B<-biods> <I<number of bkg I/O daemons (aix vm)>>]
-     [B<-prealloc> <I<number of 'small' preallocated blocks>>]
-     [B<-confdir> <I<configuration directory>>]
-     [B<-logfile> <I<Place to keep the CM log>>]
+     S<<< [B<-chunksize> <I<log(2) of chunk size>>] >>>
+     S<<< [B<-dcache> <I<number of dcache entries>>] >>>
+     S<<< [B<-volumes> <I<number of volume entries>>] >>>
+     S<<< [B<-biods> <I<number of bkg I/O daemons (aix vm)>>] >>>
+     S<<< [B<-prealloc> <I<number of 'small' preallocated blocks>>] >>>
+     S<<< [B<-confdir> <I<configuration directory>>] >>>
+     S<<< [B<-logfile> <I<Place to keep the CM log>>] >>>
      [B<-waitclose>] [B<-shutdown>] [B<-enable_peer_stats>]
      [B<-enable_process_stats>] [B<-help>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

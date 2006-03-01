@@ -4,16 +4,22 @@ kas unlock - Unlocks a locked user account
 
 =head1 SYNOPSIS
 
-B<kas unlock> B<-name> <I<authentication ID>>
-    [B<-admin_username> <I<admin principal to use for authentication>>]
-    [B<-password_for_admin> <I<admin password>>] [B<-cell> <I<cell name>>]
-    [B<-servers> <I<explicit list of authentication servers>>+]
+=for html
+<div class="synopsis">
+
+B<kas unlock> S<<< B<-name> <I<authentication ID>> >>>
+    S<<< [B<-admin_username> <I<admin principal to use for authentication>>] >>>
+    S<<< [B<-password_for_admin> <I<admin password>>] >>> S<<< [B<-cell> <I<cell name>>] >>>
+    S<<< [B<-servers> <I<explicit list of authentication servers>>+] >>>
     [B<-noauth>] [B<-help>]
 
-B<kas u> B<-na> <I<authentication ID>>
-    [B<-a> <I<admin principal to use for authentication>>]
-    [B<-p> <I<admin password>>] [B<-c> <I<cell name>>]
-    [B<-s> <I<explicit list of authentication servers>>+] [B<-no>] [B<-h>]
+B<kas u> S<<< B<-na> <I<authentication ID>> >>>
+    S<<< [B<-a> <I<admin principal to use for authentication>>] >>>
+    S<<< [B<-p> <I<admin password>>] >>> S<<< [B<-c> <I<cell name>>] >>>
+    S<<< [B<-s> <I<explicit list of authentication servers>>+] >>> [B<-no>] [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

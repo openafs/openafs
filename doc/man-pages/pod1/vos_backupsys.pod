@@ -4,16 +4,22 @@ vos backupsys - Creates a backup volume for several read/write volumes
 
 =head1 SYNOPSIS
 
-B<vos backupsys> [B<-prefix> <I<common prefix on volume(s)>>+]
-    [B<-server> <I<machine name>>] [B<-partition> <I<partition name>>]
-    [B<-exclude>] [B<-xprefix> <I<negative prefix on volume(s)>>+]
-    [B<-dryrun>] [B<-cell> <I<cell name>>] [B<-noauth>] [B<-localauth>]
+=for html
+<div class="synopsis">
+
+B<vos backupsys> S<<< [B<-prefix> <I<common prefix on volume(s)>>+] >>>
+    S<<< [B<-server> <I<machine name>>] >>> S<<< [B<-partition> <I<partition name>>] >>>
+    [B<-exclude>] S<<< [B<-xprefix> <I<negative prefix on volume(s)>>+] >>>
+    [B<-dryrun>] S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>]
     [B<-verbose>] [B<-help>]
 
-B<vos backups> [B<-pr> <I<common prefix on volume(s)>>+]
-    [B<-s> <I<machine name>>] [B<-pa> <I<partition name>>] [B<-e>]
-    [B<-x> <I<negative prefix on volume(s)>>+] [B<-d>]
-    [B<-c> <I<cell name>>] [B<-n>] [B<-l>] [B<-v>] [B<-h>]
+B<vos backups> S<<< [B<-pr> <I<common prefix on volume(s)>>+] >>>
+    S<<< [B<-s> <I<machine name>>] >>> S<<< [B<-pa> <I<partition name>>] >>> [B<-e>]
+    S<<< [B<-x> <I<negative prefix on volume(s)>>+] >>> [B<-d>]
+    S<<< [B<-c> <I<cell name>>] >>> [B<-n>] [B<-l>] [B<-v>] [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

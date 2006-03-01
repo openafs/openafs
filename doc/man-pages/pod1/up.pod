@@ -4,8 +4,14 @@ up - Recursively copy directories, preserving AFS metadata
 
 =head1 SYNOPSIS
 
+=for html
+<div class="synopsis">
+
 B<up> [B<-v>] [B<-1>] [B<-f>] [B<-r>] [B<-x>] [B<-m>]
     <I<source directory>> <I<destination directory>>
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

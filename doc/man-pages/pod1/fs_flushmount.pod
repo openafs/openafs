@@ -4,9 +4,15 @@ fs flushmount - Forces the Cache Manager to discard a mount point
 
 =head1 SYNOPSIS
 
-B<fs flushmount> [B<-path> <I<dir/file path>>+] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<fs flushm> [B<-p> <I<dir/file path>>+] [B<-h>]
+B<fs flushmount> S<<< [B<-path> <I<dir/file path>>+] >>> [B<-help>]
+
+B<fs flushm> S<<< [B<-p> <I<dir/file path>>+] >>> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

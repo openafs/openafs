@@ -4,20 +4,26 @@ vos move - Moves a read/write volume to another site
 
 =head1 SYNOPSIS
 
-B<vos move> B<-id> <I<volume name or ID>>
-    B<-fromserver> <I<machine name on source>>
-    B<-frompartition> <I<partition name on source>>
-    B<-toserver> <I<machine name on destination>>
-    B<-topartition> <I<partition name on destination>>
-    [B<-cell> <I<cell name>>] [B<-noauth>] [B<-localauth>] [B<-verbose>]
+=for html
+<div class="synopsis">
+
+B<vos move> S<<< B<-id> <I<volume name or ID>> >>>
+    S<<< B<-fromserver> <I<machine name on source>> >>>
+    S<<< B<-frompartition> <I<partition name on source>> >>>
+    S<<< B<-toserver> <I<machine name on destination>> >>>
+    S<<< B<-topartition> <I<partition name on destination>> >>>
+    S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>] [B<-verbose>]
     [B<-help>]
 
-B<vos m -i> <I<volume name or ID>>
-    B<-froms> <I<machine name on source>>
-    B<-fromp> <I<partition name on source>>
-    B<-tos> <I<machine name on destination>>
-    B<-top> <I<partition name on destination>>
-    [-c <I<cell name>>] [B<-n>] [B<-l>] [B<-v>] [B<-h>]
+B<vos m> S<<< B<-i> <I<volume name or ID>> >>>
+    S<<< B<-froms> <I<machine name on source>> >>>
+    S<<< B<-fromp> <I<partition name on source>> >>>
+    S<<< B<-tos> <I<machine name on destination>> >>>
+    S<<< B<-top> <I<partition name on destination>> >>>
+    S<<< [B<-c> <I<cell name>>] >>> [B<-n>] [B<-l>] [B<-v>] [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

@@ -4,14 +4,20 @@ vos dump - Converts a volume into ASCII format and writes it to a file
 
 =head1 SYNOPSIS
 
-B<vos dump> B<-id> <I<volume name or ID>> [B<-time> <I<dump from time>>]
-    [B<-file> <I<dump file>>] [B<-server> <I<server>>]
-    [B<-partition> <I<partition>>] [B<-cell> <I<cell name>>]
+=for html
+<div class="synopsis">
+
+B<vos dump> S<<< B<-id> <I<volume name or ID>> >>> S<<< [B<-time> <I<dump from time>>] >>>
+    S<<< [B<-file> <I<dump file>>] >>> S<<< [B<-server> <I<server>>] >>>
+    S<<< [B<-partition> <I<partition>>] >>> S<<< [B<-cell> <I<cell name>>] >>>
     [B<-noauth>] [B<-localauth>] [B<-verbose>] [B<-help>]
 
-B<vos du> B<-i> <I<volume name or ID>> [B<-t> <I<dump from time>>]
-    [B<-f> <I<dump file>>] [B<-s> <I<server>>] [B<-p> <I<partition>>]
-    [B<-c> <I<cell name>>] [B<-n>] [B<-l>] [B<-v>] [B<-h>]
+B<vos du> S<<< B<-i> <I<volume name or ID>> >>> S<<< [B<-t> <I<dump from time>>] >>>
+    S<<< [B<-f> <I<dump file>>] >>> S<<< [B<-s> <I<server>>] >>> S<<< [B<-p> <I<partition>>] >>>
+    S<<< [B<-c> <I<cell name>>] >>> [B<-n>] [B<-l>] [B<-v>] [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

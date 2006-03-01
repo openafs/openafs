@@ -4,8 +4,14 @@ upserver - Initializes the server portion of the Update Server
 
 =head1 SYNOPSIS
 
-B<upserver> [<I<directory>>+] [B<-crypt> <I<directory>>+]
-    [B<-clear> <I<directory>>+] [B<-auth> <I<directory>>+] [B<-help>]
+=for html
+<div class="synopsis">
+
+B<upserver> [<I<directory>>+] S<<< [B<-crypt> <I<directory>>+] >>>
+    S<<< [B<-clear> <I<directory>>+] >>> S<<< [B<-auth> <I<directory>>+] >>> [B<-help>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

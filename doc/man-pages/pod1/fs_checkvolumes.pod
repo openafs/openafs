@@ -4,9 +4,15 @@ fs checkvolumes - Forces the Cache Manager to update volume information
 
 =head1 SYNOPSIS
 
+=for html
+<div class="synopsis">
+
 B<fs checkvolumes> [B<-help>]
 
 B<fs checkv> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

@@ -4,11 +4,17 @@ fs listquota - Displays quota information for a volume
 
 =head1 SYNOPSIS
 
-B<fs listquota> [B<-path> <I<dir/file path>>+] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<fs listq> [B<-p> <I<dir/file path>>+] [B<-h>]
+B<fs listquota> S<<< [B<-path> <I<dir/file path>>+] >>> [B<-help>]
 
-B<fs lq> [B<-p> <I<dir/file path>>+] [B<-h>]
+B<fs listq> S<<< [B<-p> <I<dir/file path>>+] >>> [B<-h>]
+
+B<fs lq> S<<< [B<-p> <I<dir/file path>>+] >>> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

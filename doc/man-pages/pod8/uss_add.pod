@@ -4,29 +4,35 @@ uss add - Creates a user account
 
 =head1 SYNOPSIS
 
-B<uss add> B<-user> <I<login name>> [B<-realname> <I<full name in quotes>>]
-    [B<-pass> <I<initial password>>]
+=for html
+<div class="synopsis">
+
+B<uss add> S<<< B<-user> <I<login name>> >>> S<<< [B<-realname> <I<full name in quotes>>] >>>
+    S<<< [B<-pass> <I<initial password>>] >>>
     [B<-pwexpires> <I<< password expires in [0..254] days (0 => never) >>>]
-    [B<-server> <I<file server for home volume>>]
-    [B<-partition> <I<file server's disk partition for home volume>>]
-    [B<-mount> <I<home directory mount point>>]
-    [B<-uid> <I<uid to assign the user>>]
-    [B<-template> <I<pathname of template file>>]
-    [B<-verbose>] [B<-var> <I<auxiliary argument pairs (Num val)>>+]
-    [B<-cell> <I<cell name>>] [B<-admin> <I<administrator to authenticate>>]
+    S<<< [B<-server> <I<file server for home volume>>] >>>
+    S<<< [B<-partition> <I<file server's disk partition for home volume>>] >>>
+    S<<< [B<-mount> <I<home directory mount point>>] >>>
+    S<<< [B<-uid> <I<uid to assign the user>>] >>>
+    S<<< [B<-template> <I<pathname of template file>>] >>>
+    [B<-verbose>] S<<< [B<-var> <I<auxiliary argument pairs (Num val)>>+] >>>
+    S<<< [B<-cell> <I<cell name>>] >>> S<<< [B<-admin> <I<administrator to authenticate>>] >>>
     [B<-dryrun>] [B<-skipauth>] [B<-overwrite>] [B<-help>]
 
-B<uss ad> B<-us> <I<login name>> [B<-r> <I<full name in quotes>>]
-    [B<-pas> <I<initial password>>]
+B<uss ad> S<<< B<-us> <I<login name>> >>> S<<< [B<-r> <I<full name in quotes>>] >>>
+    S<<< [B<-pas> <I<initial password>>] >>>
     [B<-pw> <I<< password expires in [0..254] days (0 => never) >>>]
-    [B<-se> <I<FileServer for home volume>>]
-    [B<-par> <I<FileServer's disk partition for home volume>>]
-    [B<-m> <I<home directory mount point>>]
-    [B<-ui> <I<uid to assign the user>>]
-    [B<-t> <I<pathname of template file>>] [B<-ve>]
-    [B<-va> <I<auxiliary argument pairs (Num val)>>+] [B<-c> <I<cell name>>]
-    [B<-a> <I<administrator to authenticate>>] [B<-d>] [B<-sk>] [B<-o>]
+    S<<< [B<-se> <I<FileServer for home volume>>] >>>
+    S<<< [B<-par> <I<FileServer's disk partition for home volume>>] >>>
+    S<<< [B<-m> <I<home directory mount point>>] >>>
+    S<<< [B<-ui> <I<uid to assign the user>>] >>>
+    S<<< [B<-t> <I<pathname of template file>>] >>> [B<-ve>]
+    S<<< [B<-va> <I<auxiliary argument pairs (Num val)>>+] >>> S<<< [B<-c> <I<cell name>>] >>>
+    S<<< [B<-a> <I<administrator to authenticate>>] >>> [B<-d>] [B<-sk>] [B<-o>]
     [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

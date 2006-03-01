@@ -4,11 +4,17 @@ bos setauth - Sets authorization checking requirements for all server processes
 
 =head1 SYNOPSIS
 
-B<bos setauth> B<-server> <I<machine name>> B<-authrequired> (on | off)
-    [B<-cell> <I<cell name>>] [B<-noauth>] [B<-localauth>] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<bos seta> B<-s> <I<machine name>> B<-a> (on | off)
-    [B<-c> <I<cell name>>] [B<-n>] [B<-l>] [B<-h>]
+B<bos setauth> S<<< B<-server> <I<machine name>> >>> S<<< B<-authrequired> (on | off) >>>
+    S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>] [B<-help>]
+
+B<bos seta> S<<< B<-s> <I<machine name>> >>> S<<< B<-a> (on | off) >>>
+    S<<< [B<-c> <I<cell name>>] >>> [B<-n>] [B<-l>] [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

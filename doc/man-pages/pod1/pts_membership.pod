@@ -4,17 +4,23 @@ pts membership - Displays the membership list for a user or group
 
 =head1 SYNOPSIS
 
-B<pts membership> B<-nameorid> <I<user or group name or id>>+
-    [B<-cell> <I<cell name>>] [B<-noauth>] [B<-force>] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<pts m> B<-na> <I<user or group name or id>>+ [B<-c> <I<cell name>>]
+B<pts membership> S<<< B<-nameorid> <I<user or group name or id>>+ >>>
+    S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-force>] [B<-help>]
+
+B<pts m> S<<< B<-na> <I<user or group name or id>>+ >>> S<<< [B<-c> <I<cell name>>] >>>
     [B<-no>] [B<-f>] [B<-h>]
 
-B<pts groups> B<-na> <I<user or group name or id>>+ [-c <I<cell name>>]
+B<pts groups> S<<< B<-na> <I<user or group name or id>>+ >>> [-c <I<cell name>>]
     [B<-no>] [B<-f>] [B<-h>]
 
-B<pts g> B<-na> <I<user or group name or id>>+ [B<-c> <I<cell name>>]
+B<pts g> S<<< B<-na> <I<user or group name or id>>+ >>> S<<< [B<-c> <I<cell name>>] >>>
     [B<-no>] [B<-f>] [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

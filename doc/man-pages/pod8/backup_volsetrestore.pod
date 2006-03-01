@@ -4,14 +4,20 @@ backup volsetrestore - Restores all volumes in a volume set
 
 =head1 SYNOPSIS
 
-B<backup volsetrestore> [B<-name> <I<volume set name>>]
-    [B<-file> <I<file name>>] [B<-portoffset> <I<TC port offset>>+]
-    [B<-extension> <I<new volume name extension>>] [B<-n>]
-    [B<-localauth>] [B<-cell> <I<cell name>>] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<backup vols> [B<-na> <I<volume set name>>] [B<-f> <I<file name>>]
-    [B<-p> <I<TC port offset>>+] [B<-e> <I<new volume name extension>>]
-    [B<-n>] [B<-l>] [B<-c> <I<cell name>>] [B<-h>]
+B<backup volsetrestore> S<<< [B<-name> <I<volume set name>>] >>>
+    S<<< [B<-file> <I<file name>>] >>> S<<< [B<-portoffset> <I<TC port offset>>+] >>>
+    S<<< [B<-extension> <I<new volume name extension>>] >>> [B<-n>]
+    [B<-localauth>] S<<< [B<-cell> <I<cell name>>] >>> [B<-help>]
+
+B<backup vols> S<<< [B<-na> <I<volume set name>>] >>> S<<< [B<-f> <I<file name>>] >>>
+    S<<< [B<-p> <I<TC port offset>>+] >>> S<<< [B<-e> <I<new volume name extension>>] >>>
+    [B<-n>] [B<-l>] S<<< [B<-c> <I<cell name>>] >>> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

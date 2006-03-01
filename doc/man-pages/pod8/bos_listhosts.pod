@@ -4,17 +4,23 @@ bos listhosts - Displays the contents of the CellServDB file
 
 =head1 SYNOPSIS
 
-B<bos listhosts> B<-server> <I<machine name>> [B<-cell> <I<cell name>>]
+=for html
+<div class="synopsis">
+
+B<bos listhosts> S<<< B<-server> <I<machine name>> >>> S<<< [B<-cell> <I<cell name>>] >>>
     [B<-noauth>] [B<-localauth>] [B<-help>]
 
-B<bos listh> B<-s> <I<machine name>> [B<-c> <I<cell name>>] [B<-n>]
+B<bos listh> S<<< B<-s> <I<machine name>> >>> S<<< [B<-c> <I<cell name>>] >>> [B<-n>]
     [B<-l>]  [-h]
 
-B<bos getcell> B<-server> <I<machine name>> [B<-cell> <I<cell name>>]
+B<bos getcell> S<<< B<-server> <I<machine name>> >>> S<<< [B<-cell> <I<cell name>>] >>>
     [B<-noauth>] [B<-localauth>] [B<-help>]
 
-B<bos getc> B<-s> <I<machine name>> [B<-c> <I<cell name>>] [B<-n>]
+B<bos getc> S<<< B<-s> <I<machine name>> >>> S<<< [B<-c> <I<cell name>>] >>> [B<-n>]
     [B<-l>] [-h]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

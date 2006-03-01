@@ -4,11 +4,17 @@ vldb_check - Checks the integrity of the VLDB
 
 =head1 SYNOPSIS
 
-B<vldb_check> B<-database> <I<vldb file>> [B<-uheader>] [B<-vheader>]
+=for html
+<div class="synopsis">
+
+B<vldb_check> S<<< B<-database> <I<vldb file>> >>> [B<-uheader>] [B<-vheader>]
     [B<-servers>] [B<-entries>] [B<-verbose>] [B<-help>]
 
-B<vldb_check> B<-d> <I<vldb file>> [B<-u>] [B<-vh>] [B<-s>] [B<-e>]
+B<vldb_check> S<<< B<-d> <I<vldb file>> >>> [B<-u>] [B<-vh>] [B<-s>] [B<-e>]
     [B<-ve>] [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

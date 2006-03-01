@@ -4,11 +4,17 @@ fs getclientaddrs - Displays the client interfaces to register
 
 =head1 SYNOPSIS
 
+=for html
+<div class="synopsis">
+
 B<fs getclientaddrs> [B<-help>]
 
 B<fs gc> [B<-h>]
 
 B<fs getcl> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

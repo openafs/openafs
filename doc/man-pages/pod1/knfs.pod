@@ -4,12 +4,18 @@ knfs - Establishes authenticated access via the NFS/AFS Translator
 
 =head1 SYNOPSIS
 
-B<knfs> B<-host> <I<host name>> [B<-id> <I<user ID (decimal)>>]
-    [B<-sysname> <I<host's '@sys' value>>] [B<-unlog>] [B<-tokens>]
+=for html
+<div class="synopsis">
+
+B<knfs> S<<< B<-host> <I<host name>> >>> S<<< [B<-id> <I<user ID (decimal)>>] >>>
+    S<<< [B<-sysname> <I<host's '@sys' value>>] >>> [B<-unlog>] [B<-tokens>]
     [B<-help>]
 
-B<knfs> B<-ho> <I<host name>> [B<-i> <I<user ID (decimal)>>]
-    [B<-s> <I<host's '@sys' value>>] [B<-u>] [B<-t>] [B<-he>]
+B<knfs> S<<< B<-ho> <I<host name>> >>> S<<< [B<-i> <I<user ID (decimal)>>] >>>
+    S<<< [B<-s> <I<host's '@sys' value>>] >>> [B<-u>] [B<-t>] [B<-he>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 
