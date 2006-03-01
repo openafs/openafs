@@ -1384,9 +1384,14 @@ h_GetHost_r(struct rx_connection *tcon)
 		    }
 		    host->hostFlags |= HOSTDELETED;
 		    h_Unlock_r(host);
-		    if (!held)
-			h_Release_r(host);
+		    /* regardless of whether or not we obtained the hold on 
+		     * 'host', we are going to release it here because we 
+		     * are replacing it with 'oldHost' and when CallPostamble 
+		     * is called, the host that is obtained is going to be 
+		     * 'oldHost' and not 'host'. */
+		    h_Release_r(host);
 		    host = oldHost;
+		    /* the new host is held and locked */
 		} else {
 		    /* This really is a new host */
 		    hashInsertUuid_r(&identP->uuid, host);
@@ -1568,6 +1573,9 @@ h_ID2Client(afs_int32 vid)
  * isn't around. The client is returned with its reference count incremented
  * by one. The caller must call h_ReleaseClient_r when finished with
  * the client.
+ *
+ * the client->host is returned held.  h_ReleaseClient_r does not release
+ * the hold on client->host.
  */
 struct client *
 h_FindClient_r(struct rx_connection *tcon)
