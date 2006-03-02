@@ -1945,12 +1945,12 @@ DECL_PIOCTL(PCheckServers)
 	pcheck = (struct chservinfo *)ain;
 	if (pcheck->tinterval >= 0) {
 	    cp = aout;
-	    memcpy(cp, (char *)&PROBE_INTERVAL, sizeof(afs_int32));
+	    memcpy(cp, (char *)&afs_probe_interval, sizeof(afs_int32));
 	    *aoutSize = sizeof(afs_int32);
 	    if (pcheck->tinterval > 0) {
 		if (!afs_osi_suser(*acred))
 		    return EACCES;
-		PROBE_INTERVAL = pcheck->tinterval;
+		afs_probe_interval = pcheck->tinterval;
 	    }
 	    return 0;
 	}

@@ -268,7 +268,7 @@ extern struct afs_osi_WaitHandle AFS_WaitHandler, AFS_CSWaitHandler;
 extern afs_int32 afs_gcpags;
 extern afs_int32 afs_gcpags_procsize;
 extern afs_int32 afs_CheckServerDaemonStarted;
-extern afs_int32 PROBE_INTERVAL;
+extern afs_int32 afs_probe_interval;
 
 extern void afs_Daemon(void);
 extern struct brequest *afs_BQueue(register short aopcode,
