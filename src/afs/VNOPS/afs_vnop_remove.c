@@ -438,6 +438,12 @@ afs_remunlink(register struct vcache *avc, register int doit)
 
     if (NBObtainWriteLock(&avc->lock, 423))
 	return 0;
+#if defined(AFS_DARWIN80_ENV)
+    if (vnode_get(AFSTOV(avc))) {
+	ReleaseWriteLock(&avc->lock);
+	return 0;
+    }
+#endif
 
     if (avc->mvid && (doit || (avc->states & CUnlinkedDel))) {
 	if ((code = afs_InitReq(&treq, avc->uncred))) {
@@ -487,6 +493,9 @@ afs_remunlink(register struct vcache *avc, register int doit)
 	    crfree(cred);
 	}
     } else {
+#if defined(AFS_DARWIN80_ENV)
+	vnode_put(AFSTOV(avc));
+#endif
 	ReleaseWriteLock(&avc->lock);
     }
 
