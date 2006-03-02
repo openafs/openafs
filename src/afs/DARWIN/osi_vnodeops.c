@@ -561,6 +561,7 @@ afs_vop_access(ap)
     struct afs_fakestat_state fakestate;
     struct vcache * tvc = VTOAFS(ap->a_vp);
     int bits=0;
+    int cmb = CHECK_MODE_BITS;
     AFS_GLOCK();
     afs_InitFakeStat(&fakestate);
     if ((code = afs_InitReq(&treq, vop_cred)))
@@ -611,6 +612,12 @@ afs_vop_access(ap)
           bits |= PRSFS_LOOKUP;
        if (ap->a_action & KAUTH_VNODE_READ_SECURITY) /* mode bits/gid, not afs acl */
           bits |= PRSFS_LOOKUP;
+       if ((ap->a_action & ((1 << 25) - 1)) == KAUTH_VNODE_EXECUTE)
+          /* if only exec, don't check for read mode bit */
+          /* high bits of ap->a_action are not for 'generic rights bits', and
+             so should not be checked (KAUTH_VNODE_ACCESS is often present
+             and needs to be masked off) */
+	  cmb |= CMB_ALLOW_EXEC_AS_READ;
     }
     if (ap->a_action & KAUTH_VNODE_WRITE_ATTRIBUTES)
        bits |= PRSFS_WRITE;
@@ -624,7 +631,7 @@ afs_vop_access(ap)
        bits |= PRSFS_WRITE;
     /* we can't check for KAUTH_VNODE_TAKE_OWNERSHIP, so we always permit it */
     
-    code = afs_AccessOK(tvc, bits, &treq, CHECK_MODE_BITS);
+    code = afs_AccessOK(tvc, bits, &treq, cmb);
 
     if (code == 1 && vnode_vtype(ap->a_vp) == VREG &&
         ap->a_action & KAUTH_VNODE_EXECUTE &&
