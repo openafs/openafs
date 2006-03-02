@@ -1,5 +1,5 @@
 AC_INIT(src/libafs/Makefile.common.in)
-AM_INIT_AUTOMAKE(openafs-libafs,1.4.1-rc8)
+AM_INIT_AUTOMAKE(openafs-libafs,1.4.1-rc9)
 AC_CONFIG_HEADER(src/config/afsconfig.h)
 define(OPENAFS_CONFIGURE_LIBAFS)
 
