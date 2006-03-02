@@ -2570,6 +2570,7 @@ DECL_PIOCTL(PFlushVolumeData)
     ObtainReadLock(&afs_xvcache);
     i = VCHashV(&avc->fid);
     for (tq = afs_vhashTV[i].prev; tq != &afs_vhashTV[i]; tq = uq) {
+	    uq = QPrev(tq);
 	    tvc = QTOVH(tq);
 	    if (tvc->fid.Fid.Volume == volume && tvc->fid.Cell == cell) {
                 if (tvc->states & CVInit) {
@@ -2629,8 +2630,6 @@ DECL_PIOCTL(PFlushVolumeData)
 		uq = QPrev(tq);
 		/* our tvc ptr is still good until now */
 		AFS_FAST_RELE(tvc);
-	    } else {
-		uq = QPrev(tq);
 	    }
 	}
     ReleaseReadLock(&afs_xvcache);

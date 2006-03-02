@@ -220,7 +220,7 @@ afs_CheckCallbacks(unsigned int secs)
 			     * write locking tvc? */
 			    QRemove(tq);
 			    tvc->states &= ~(CStatd | CMValid | CUnique);
-                            if (!(tvc->states & CVInit) &&
+                            if (!(tvc->states & (CVInit|CVFlushed)) &&
                                 (tvc->fid.Fid.Vnode & 1 ||
                                  (vType(tvc) == VDIR)))
 				osi_dnlc_purgedp(tvc);
@@ -237,7 +237,7 @@ afs_CheckCallbacks(unsigned int secs)
 		 */
 		QRemove(tq);
 		tvc->states &= ~(CStatd | CMValid | CUnique);
-                if (!(tvc->states & CVInit) &&
+                if (!(tvc->states & (CVInit|CVFlushed)) &&
                     (tvc->fid.Fid.Vnode & 1 || (vType(tvc) == VDIR)))
 		    osi_dnlc_purgedp(tvc);
 	    }
@@ -310,7 +310,7 @@ afs_FlushCBs(void)
 	    tvc->states &= ~(CStatd);
 	    if (QPrev(&(tvc->callsort)))
 		QRemove(&(tvc->callsort));
-	    if (!(tvc->states & CVInit) &&
+	    if (!(tvc->states & (CVInit|CVFlushed)) &&
                 ((tvc->fid.Fid.Vnode & 1) || (vType(tvc) == VDIR)))
 		osi_dnlc_purgedp(tvc);
 	}
@@ -339,7 +339,7 @@ afs_FlushServerCBs(struct server *srvp)
 		tvc->callback = 0;
 		tvc->dchint = NULL;	/* invalidate hints */
 		tvc->states &= ~(CStatd);
-		if (!(tvc->states & CVInit) &&
+		if (!(tvc->states & (CVInit|CVFlushed)) &&
                     ((tvc->fid.Fid.Vnode & 1) || (vType(tvc) == VDIR))) {
 		    osi_dnlc_purgedp(tvc);
 		}
