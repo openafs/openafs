@@ -374,8 +374,8 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
     Ttvc = tvc;
     Tnam = aname;
     Tnam1 = 0;
-    if (tvc)
 #ifndef AFS_DARWIN80_ENV
+    if (tvc)
 	Ttvcr = VREFCOUNT(tvc);
 #endif
 #ifdef	AFS_AIX_ENV
