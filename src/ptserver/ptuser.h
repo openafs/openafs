@@ -12,7 +12,7 @@
 
 #include "afs/ptint.h"
 
-afs_int32 pr_Initialize(afs_int32 secLevel, char *confDir, char *cell);
+afs_int32 pr_Initialize(afs_int32 secLevel, const char *confDir, char *cell);
 int pr_End(void);
 int pr_CreateUser(char name[PR_MAXNAMELEN], afs_int32 *id);
 int pr_CreateGroup(char name[PR_MAXNAMELEN], char owner[PR_MAXNAMELEN], afs_int32 *id);
