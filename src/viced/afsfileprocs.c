@@ -7343,10 +7343,10 @@ SRXAFS_CallBackRxConnAddr (struct rx_call * acall, afs_int32 *addr)
 {
     Error errorCode = 0;
     struct rx_connection *tcon;
+    struct host *tcallhost;
 #ifdef __EXPERIMENTAL_CALLBACK_CONN_MOVING
     struct host *thost;
     struct client *tclient;
-    struct client *tcallhost;
     static struct rx_securityClass *sc = 0;
     int i,j;
     struct rx_connection *conn;
