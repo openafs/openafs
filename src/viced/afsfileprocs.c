@@ -1698,8 +1698,6 @@ HandleLocking(Vnode * targetptr, afs_int32 rights, ViceLockType LockingType)
     switch (LockingType) {
     case LockRead:
     case LockWrite:
-    case LockUpgrade:
-    case LockDowngrade:
 	if (Time > targetptr->disk.lock.lockTime)
 	    targetptr->disk.lock.lockTime = targetptr->disk.lock.lockCount =
 		0;
@@ -1713,18 +1711,6 @@ HandleLocking(Vnode * targetptr, afs_int32 rights, ViceLockType LockingType)
 	} else if (LockingType == LockWrite) {
 	    if (targetptr->disk.lock.lockCount == 0) {
 		targetptr->disk.lock.lockCount = -1;
-		targetptr->disk.lock.lockTime = Time;
-	    } else
-		return (EAGAIN);
-	} else if (LockingType == LockUpgrade) {
-	    if (targetptr->disk.lock.lockCount == 1) {
-		targetptr->disk.lock.lockCount = -1;
-		targetptr->disk.lock.lockTime = Time;
-	    } else
-		return (EAGAIN);
-	} else if (LockingType == LockDowngrade) {
-	    if (targetptr->disk.lock.lockCount == -1) {
-		targetptr->disk.lock.lockCount = 1;
 		targetptr->disk.lock.lockTime = Time;
 	    } else
 		return (EAGAIN);
@@ -4969,11 +4955,10 @@ SAFSS_SetLock(struct rx_call *acall, struct AFSFid *Fid, ViceLockType type,
     afs_int32 rights, anyrights;	/* rights for this and any user */
     struct client *t_client;	/* tmp ptr to client data */
     struct in_addr logHostAddr;	/* host ip holder for inet_ntoa */
-    static char *locktype[5] = { "LockRead", "LockWrite", "LockExtend", "LockUpgrade", "LockDowngrade" };
+    static char *locktype[4] = { "LockRead", "LockWrite", "LockExtend", "LockRelease" };
     struct rx_connection *tcon = rx_ConnectionOf(acall);
 
-    if (type != LockRead && type != LockWrite && 
-	type != LockUpgrade && type != LockDowngrade) {
+    if (type != LockRead && type != LockWrite) {
 	errorCode = EINVAL;
 	goto Bad_SetLock;
     }
