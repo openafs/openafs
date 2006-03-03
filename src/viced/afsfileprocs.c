@@ -7473,7 +7473,7 @@ SRXAFS_CallBackRxConnAddr (struct rx_call * acall, afs_int32 *addr)
     Error errorCode = 0;
     struct host *thost;
     struct client *tclient;
-    struct client *tcallhost;
+    struct host *tcallhost;
     static struct rx_securityClass *sc = 0;
     int i,j;
     struct rx_connection *tcon;
