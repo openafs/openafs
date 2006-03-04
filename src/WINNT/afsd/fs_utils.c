@@ -121,37 +121,6 @@ long fs_GetFullPath(char *pathp, char *outPathp, long outSize)
     return 0;
 }
 
-#ifdef COMMENT
-struct hostent *hostutil_GetHostByName(char *namep)
-{
-	struct hostent *thp;
-        
-        thp = gethostbyname(namep);
-        return thp;
-}
-
-/* get hostname or addr, given addr in network byte order */
-char *hostutil_GetNameByINet(afs_uint32 addr)
-{
-	static char hostNameBuffer[256];
-        struct hostent *thp;
-        
-        thp = gethostbyaddr((char *) &addr, sizeof(afs_uint32), AF_INET);
-        if (thp)
-        	strcpy(hostNameBuffer, thp->h_name);
-	else {
-		sprintf(hostNameBuffer, "%d.%d.%d.%d",
-                	addr & 0xff,
-                        (addr >> 8) & 0xff,
-                        (addr >> 16) & 0xff,
-                        (addr >> 24) & 0xff);
-        }
-
-	/* return static buffer */
-        return hostNameBuffer;
-}
-#endif
-
 /* is this a digit or a digit-like thing? */
 static int ismeta(ac, abase)
 register int abase;
