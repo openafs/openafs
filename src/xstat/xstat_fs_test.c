@@ -83,7 +83,8 @@ static char *opNames[] = {
     "NGetVolumeInfo",
     "BulkStatus",
     "XStatsVersion",
-    "GetXStats"
+    "GetXStats",
+    "GetCapabilities"
 };
 
 static char *xferOpNames[] = {
