@@ -66,10 +66,10 @@ struct host {
     /* holds on this host; 1 bit per lwp.
      * A hold prevents this structure and
      * inferior structures from disappearing */
-    unsigned int host;		/* IP address of host interface that is
+    afs_uint32 host;		/* IP address of host interface that is
 				 * currently being used, in network
 				 * byte order */
-    unsigned short port;	/* port address of host */
+    afs_uint16 port;		/* port address of host */
     char Console;		/* XXXX This host is a console */
     unsigned short hostFlags;		/*  bit map */
 #if FS_STATS_DETAILED
