@@ -40,8 +40,14 @@ void smb_InitIoctl(void)
     smb_ioctlProcsp[VIOCSETAL] = cm_IoctlSetACL;
     smb_ioctlProcsp[VIOC_FLUSHVOLUME] = cm_IoctlFlushVolume;
     smb_ioctlProcsp[VIOCFLUSH] = cm_IoctlFlushFile;
+#ifdef COMMENT
+    /* This functions do not return the data expected by the 
+     * Windows CIFS client.  Calling them only increases the 
+     * number of roundtrips to the file server with no benefit.
+     */
     smb_ioctlProcsp[VIOCSETVOLSTAT] = cm_IoctlSetVolumeStatus;
     smb_ioctlProcsp[VIOCGETVOLSTAT] = cm_IoctlGetVolumeStatus;
+#endif
     smb_ioctlProcsp[VIOCWHEREIS] = cm_IoctlWhereIs;
     smb_ioctlProcsp[VIOC_AFS_STAT_MT_PT] = cm_IoctlStatMountPoint;
     smb_ioctlProcsp[VIOC_AFS_DELETE_MT_PT] = cm_IoctlDeleteMountPoint;
