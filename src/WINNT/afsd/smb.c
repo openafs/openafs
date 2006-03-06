@@ -9094,7 +9094,7 @@ void smb_LogPacket(smb_packet_t *packet)
 
         *cp = 0;
 
-        osi_Log0( smb_logp, osi_LogSaveString(smb_logp, buf));
+        osi_Log1( smb_logp, "%s", osi_LogSaveString(smb_logp, buf));
     }
 
     osi_Log0(smb_logp, "*** End SMB packet dump ***");
