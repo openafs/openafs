@@ -12,10 +12,12 @@ RELDIR=afs
 ################################################
 # compile_et to get unified_afs.h
 
-$(DESTDIR)\include\afs\unified_afs.c $(DESTDIR)\include\afs\unified_afs.h:   unified_afs.et  unified_afs.p.h
+INCDIR=$(DESTDIR)\include\
+
+$(INCDIR)\afs\unified_afs.c $(INCDIR)\afs\unified_afs.h:   unified_afs.et  unified_afs.p.h
    $(DEL) unified_afs.c unified_afs.h
    $(COMPILE_ET) unified_afs -h unified_afs
    $(COPY) unified_afs.h $(DESTDIR)\include\afs
 
-install: $(DESTDIR)\include\afs\unified_afs.c 
+install: $(INCDIR)\afs\unified_afs.c $(INCDIR)\afs\afs_stats.h
 

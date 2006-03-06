@@ -403,6 +403,7 @@ xstat_cm_Init(int a_numServers, struct sockaddr_in *a_socketArray,
     char *hostNameFound;	/*Ptr to returned host name */
     int conn_err;		/*Connection error? */
     int collIDBytes;		/*Num bytes in coll ID array */
+    char hoststr[16];
 
     /*
      * If we've already been called, snicker at the bozo, gently
@@ -528,9 +529,9 @@ xstat_cm_Init(int a_numServers, struct sockaddr_in *a_socketArray,
 	 */
 	if (xstat_cm_debug) {
 	    printf("[%s] Copying in the following socket info:\n", rn);
-	    printf("[%s] IP addr 0x%lx, port %d\n", rn,
-		   (a_socketArray + curr_srv)->sin_addr.s_addr,
-		   (a_socketArray + curr_srv)->sin_port);
+	    printf("[%s] IP addr 0s, port %d\n", rn,
+		   afs_inet_ntoa_r((a_socketArray + curr_srv)->sin_addr.s_addr,hoststr),
+		   ntohs((a_socketArray + curr_srv)->sin_port));
 	}
 	memcpy(&(curr_conn->skt), a_socketArray + curr_srv,
 	       sizeof(struct sockaddr_in));
@@ -539,8 +540,8 @@ xstat_cm_Init(int a_numServers, struct sockaddr_in *a_socketArray,
 	    hostutil_GetNameByINet(curr_conn->skt.sin_addr.s_addr);
 	if (hostNameFound == NULL) {
 	    fprintf(stderr,
-		    "[%s] Can't map Internet address %lu to a string name\n",
-		    rn, curr_conn->skt.sin_addr.s_addr);
+		    "[%s] Can't map Internet address %s to a string name\n",
+		    rn, afs_inet_ntoa_r(curr_conn->skt.sin_addr.s_addr,hoststr));
 	    curr_conn->hostName[0] = '\0';
 	} else {
 	    strcpy(curr_conn->hostName, hostNameFound);
@@ -554,9 +555,9 @@ xstat_cm_Init(int a_numServers, struct sockaddr_in *a_socketArray,
 	 */
 	if (xstat_cm_debug)
 	    printf
-		("[%s] Connecting to srv idx %d, IP addr 0x%lx, port %d, service 1\n",
-		 rn, curr_srv, curr_conn->skt.sin_addr.s_addr,
-		 curr_conn->skt.sin_port);
+		("[%s] Connecting to srv idx %d, IP addr %s, port %d, service 1\n",
+		 rn, curr_srv, afs_inet_ntoa_r(curr_conn->skt.sin_addr.s_addr,hoststr),
+		 ntohs(curr_conn->skt.sin_port));
 	curr_conn->rxconn = rx_NewConnection(curr_conn->skt.sin_addr.s_addr,	/*Server addr */
 					     curr_conn->skt.sin_port,	/*Server port */
 					     1,	/*AFS service # */
@@ -564,8 +565,8 @@ xstat_cm_Init(int a_numServers, struct sockaddr_in *a_socketArray,
 					     0);	/*# of above */
 	if (curr_conn->rxconn == (struct rx_connection *)0) {
 	    fprintf(stderr,
-		    "[%s] Can't create Rx connection to server '%s' (%lu)\n",
-		    rn, curr_conn->hostName, curr_conn->skt.sin_addr.s_addr);
+		    "[%s] Can't create Rx connection to server '%s' (%s)\n",
+		    rn, curr_conn->hostName, afs_inet_ntoa_r(curr_conn->skt.sin_addr.s_addr,hoststr));
 	    conn_err = 1;
 	}
 	if (xstat_cm_debug)
