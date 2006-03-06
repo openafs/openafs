@@ -236,7 +236,7 @@ volser: cmd comerr tviced usd kauth audit
 
 tvolser: project tviced usd libafsrpc libafsauthent volser
 	case ${SYS_NAME} in                                             \
-	alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[fo]bsd*|*nbsd2*)   \
+	alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[fo]bsd*|*nbsd[23]*)   \
 		${COMPILE_PART1} tvolser  ${COMPILE_PART2} ;;           \
 	*_darwin_[1-6][0-9])                                            \
 		echo Not building MT volser for ${SYS_NAME} ;;          \
