@@ -50,10 +50,8 @@ clock_Init(void)
 	OutputDebugString("No High Performance clock, exiting.\n");
 	exit(1);
     }
-
     clockInitialized = 1;
-    (void)QueryPerformanceCounter(&rxi_clock0);
-
+    
     clock_UpdateTime();
 }
 
