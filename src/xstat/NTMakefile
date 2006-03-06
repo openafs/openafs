@@ -1,0 +1,81 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# Makefile for the module providing the client side of the File Server
+# and Cache Manager extended statistics gathering.
+
+RELDIR=xstat
+!INCLUDE ..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\config\NTMakefile.version
+
+LIBDIR = $(DESTDIR)\lib
+INCDIR = $(DESTDIR)\include
+BINDIR = $(DESTDIR)\bin
+
+RPCINCLS=$(INCDIR)\lwp.h $(INCDIR)\rx\rx.h
+
+LIBS= \
+ 	$(LIBDIR)\afs\afsint.lib \
+	$(LIBDIR)\afs\afscmd.lib \
+	$(LIBDIR)\afsrx.lib \
+	$(LIBDIR)\afslwp.lib \
+	$(LIBDIR)\afs\afspioctl.lib \
+	$(LIBDIR)\afs\afsutil.lib \
+	$(LIBDIR)\afs\afsreg.lib
+
+
+install: \
+	$(INCDIR)\afs\xstat_fs.h \
+	$(INCDIR)\afs\xstat_cm.h \
+	$(LIBDIR)\afs_xstat_fs.lib \
+	$(LIBDIR)\afs_xstat_cm.lib \
+	$(BINDIR)\xstat_fs_test.exe \
+	$(BINDIR)\xstat_cm_test.exe
+
+#
+# File Server data collection
+#
+FSINCLS= $(INCDIR)\xstat_fs.h $(RPCINCLS)
+
+{.}.c{$(OUT)}.obj:
+    $(C2OBJ) $<
+
+$(LIBDIR)\afs_xstat_fs.lib: $(OUT)\xstat_fs.obj $(OUT)\xstat_fs_callback.obj $(OUT)\AFS_component_version_number.obj
+	$(LIBARCH)
+
+$(BINDIR)\xstat_fs_test.exe: $(OUT)\xstat_fs_test.obj $(LIBDIR)\afs_xstat_fs.lib $(LIBS)
+	$(EXECONLINK) rpcrt4.lib
+	$(_VC_MANIFEST_EMBED_EXE)
+	$(EXEPREP)
+
+#
+# Cache Manager data collection
+#
+CMINCLS=$(INCDIR)\xstat_cm.h $(RPCINCLS)
+
+$(LIBDIR)\afs_xstat_cm.lib: $(OUT)\xstat_cm.obj $(OUT)\AFS_component_version_number.obj
+	$(LIBARCH)
+
+$(BINDIR)\xstat_cm_test.exe: $(OUT)\xstat_cm_test.obj $(LIBDIR)\afs_xstat_cm.lib $(LIBS)
+	$(EXECONLINK) 
+	$(_VC_MANIFEST_EMBED_EXE)
+	$(EXEPREP)
+
+#
+# Misc targets
+#
+clean::
+	$(DEL) -f $(OUT)\*.obj
+	$(DEL) -f $(OUT)\*.pdb
+	$(DEL) -f $(OUT)\*.ilk
+ 	$(DEL) -f $(INCDIR)\afs\xstat_fs.h
+	$(DEL) -f $(INCDIR)\afs\xstat_cm.h
+	$(DEL) -f $(LIBDIR)\afs_xstat_fs.lib
+	$(DEL) -f $(LIBDIR)\afs_xstat_cm.lib
+	$(DEL) -f $(BINDIR)\xstat_cm_test.exe
+	$(DEL) -f $(BINDIR)\xstat_fs_test.exe
+	$(DEL) -f AFS_component_version_number.c

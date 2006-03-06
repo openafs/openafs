@@ -21,6 +21,7 @@
  *------------------------------------------------------------------------*/
 
 #include <sys/types.h>		/*Basic system types */
+#ifndef AFS_NT40_ENV
 #ifndef	IPPROTO_IP
 #include <netinet/in.h>		/*Internet definitions */
 #endif
@@ -34,6 +35,7 @@
 #define _socket_h_
 #include <sys/socket.h>		/*Socket definitions */
 #endif
+#endif /* AFS_NT40_ENV */
 
 #include <rx/rx.h>		/*Rx definitions */
 #include <afs/afsint.h>		/*AFS FileServer interface */
