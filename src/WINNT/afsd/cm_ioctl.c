@@ -476,7 +476,7 @@ long cm_ParseIoctlParent(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
                         userp, ioctlp->tidPathp, reqp, &substRootp);
         if (code) return code;
 
-        code = cm_NameI(substRootp, tbuffer, CM_FLAG_FOLLOW,
+        code = cm_NameI(substRootp, tbuffer, CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
                         userp, NULL, reqp, scpp);
         if (code) return code;
     }
