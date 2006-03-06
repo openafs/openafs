@@ -18,6 +18,7 @@
 #include <osi.h>
 #include <rx/rx.h>
 #include <rx/rxkad.h>
+#include <afs/unified_afs.h>
 #include "afsd.h"
 
 osi_rwlock_t cm_connLock;
@@ -510,7 +511,11 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
             case VRESTARTING       : s = "VRESTARTING";        break;
             case VREADONLY         : s = "VREADONLY";          break;
             case EAGAIN            : s = "EAGAIN";             break;
+	    case UAEAGAIN          : s = "UAEAGAIN";	       break;
+            case EINVAL            : s = "EINVAL";             break;
+	    case UAEINVAL          : s = "UAEINVAL";	       break;
             case EACCES            : s = "EACCES";             break;
+	    case UAEACCES 	   : s = "UAECCES";            break;
             }
             osi_Log2(afsd_logp, "cm_Analyze: ignoring error code 0x%x (%s)", 
                      errorCode, s);

@@ -231,6 +231,8 @@ int RXAFS_Lookup (struct rx_connection *,
 	struct AFSCallBack *CallBack,
 	struct AFSVolSync *Sync);
 
+#define CM_DEFAULT_CALLBACKPORT         7001
+
 /* common flags to many procedures */
 #define CM_FLAG_CREATE		1		/* create entry */
 #define CM_FLAG_CASEFOLD	2		/* fold case in namei, lookup, etc. */

@@ -38,6 +38,7 @@ extern int RXAFSCB_ExecuteRequest(struct rx_call *z_call);
 extern int RXSTATS_ExecuteRequest(struct rx_call *z_call);
 
 extern afs_int32 cryptall;
+extern int cm_enableServerLocks;
 
 osi_log_t *afsd_logp;
 
@@ -66,6 +67,7 @@ int logReady = 0;
 
 char cm_HostName[200];
 long cm_HostAddr;
+unsigned short cm_callbackport = CM_DEFAULT_CALLBACKPORT;
 
 char cm_NetbiosName[MAX_NB_NAME_LENGTH] = "";
 
@@ -852,8 +854,8 @@ int afsd_InitCM(char **reasonP)
     if (code != ERROR_SUCCESS || !buf[0]) {
 #if defined(_IA64_)
         StringCbCopyA(buf, sizeof(buf), "ia64_win64");
-#elif defined(_AMD64)
-        StringCbCopyA(buf, sizeof(buf), "amd64_win64");
+#elif defined(_AMD64_)
+        StringCbCopyA(buf, sizeof(buf), "amd64_win64 x86_win32 i386_w2k");
 #else /* assume x86 32-bit */
         StringCbCopyA(buf, sizeof(buf), "x86_win32 i386_w2k i386_nt40");
 #endif
@@ -1047,6 +1049,32 @@ int afsd_InitCM(char **reasonP)
 	cm_daemonTokenCheckInterval = dwValue;
     afsi_log("daemonCheckTokenInterval is %d", cm_daemonTokenCheckInterval);
 
+    dummyLen = sizeof(DWORD);
+    code = RegQueryValueEx(parmKey, "CallBackPort", NULL, NULL,
+                           (BYTE *) &dwValue, &dummyLen);
+    if (code == ERROR_SUCCESS) {
+        cm_callbackport = (unsigned short) dwValue;
+    }
+    afsi_log("CM CallBackPort is %u", cm_callbackport);
+
+    dummyLen = sizeof(DWORD);
+    code = RegQueryValueEx(parmKey, "EnableServerLocks", NULL, NULL,
+                           (BYTE *) &dwValue, &dummyLen);
+    if (code == ERROR_SUCCESS) {
+        cm_enableServerLocks = (unsigned short) dwValue;
+    } 
+    switch (cm_enableServerLocks) {
+    case 0:
+	afsi_log("EnableServerLocks: never");
+    	break;
+    case 2:
+	afsi_log("EnableServerLocks: always");
+	break;
+    case 1:
+    default:
+	afsi_log("EnableServerLocks: server requested");
+    	break;
+    }
     RegCloseKey (parmKey);
 
     /* Call lanahelper to get Netbios name, lan adapter number and gateway flag */
@@ -1137,10 +1165,10 @@ int afsd_InitCM(char **reasonP)
         afsi_log("rx_SetMaxMTU %d successful", rx_mtu);
     }
 
-    /* initialize RX, and tell it to listen to port 7001, which is used for
-     * callback RPC messages.
+    /* initialize RX, and tell it to listen to the callbackport, 
+     * which is used for callback RPC messages.
      */
-    code = rx_Init(htons(7001));
+    code = rx_Init(htons(cm_callbackport));
     afsi_log("rx_Init code %x", code);
     if (code != 0) {
         *reasonP = "afsd: failed to init rx client on port 7001";
