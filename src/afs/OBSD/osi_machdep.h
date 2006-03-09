@@ -104,6 +104,12 @@ extern int afs_vget();
 #define	gop_lookupname(fnamep, segflg, followlink, compvpp) \
 	afs_nbsd_lookupname((fnamep), (segflg), (followlink), (compvpp))
 
+#ifdef AFS_OBSD39_ENV
+#define afs_osi_lockmgr(l, f, i, p) lockmgr((l), (f), (i))
+#else
+#define afs_osi_lockmgr(l, f, i, p) lockmgr((l), (f), (i), (p))
+#endif
+
 #ifdef KERNEL
 
 #ifdef AFS_GLOBAL_SUNLOCK
@@ -112,7 +118,7 @@ extern struct lock afs_global_lock;
 #define AFS_GLOCK() \
     do { \
         osi_Assert(curproc); \
- 	lockmgr(&afs_global_lock, LK_EXCLUSIVE, 0, curproc); \
+ 	afs_osi_lockmgr(&afs_global_lock, LK_EXCLUSIVE, 0, curproc); \
         osi_Assert(afs_global_owner == NULL); \
    	afs_global_owner = curproc; \
     } while (0)
@@ -121,7 +127,7 @@ extern struct lock afs_global_lock;
         osi_Assert(curproc); \
  	osi_Assert(afs_global_owner == curproc); \
         afs_global_owner = NULL; \
-        lockmgr(&afs_global_lock, LK_RELEASE, 0, curproc); \
+        afs_osi_lockmgr(&afs_global_lock, LK_RELEASE, 0, curproc); \
     } while(0)
 #define ISAFS_GLOCK() (afs_global_owner == curproc && curproc)
 #else

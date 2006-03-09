@@ -933,7 +933,7 @@ afs_nbsd_lock(void *v)
 
     if (!vc)
 	panic("afs_nbsd_lock: null vcache");
-    return lockmgr(&vc->rwlock, ap->a_flags | LK_CANRECURSE, &vp->v_interlock,
+    return afs_osi_lockmgr(&vc->rwlock, ap->a_flags | LK_CANRECURSE, &vp->v_interlock,
 		   ap->a_p);
 }
 
@@ -950,7 +950,7 @@ afs_nbsd_unlock(void *v)
 
     if (!vc)
 	panic("afs_nbsd_unlock: null vcache");
-    return lockmgr(&vc->rwlock, ap->a_flags | LK_RELEASE, &vp->v_interlock,
+    return afs_osi_lockmgr(&vc->rwlock, ap->a_flags | LK_RELEASE, &vp->v_interlock,
 		   ap->a_p);
 }
 

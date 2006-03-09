@@ -246,6 +246,12 @@ else
 			vm=${v#*.}
 			AFS_SYSNAME="i386_obsd${vM}${vm}"
 			;;
+		sparc64-*-openbsd?.?)
+			v=${host#*openbsd}
+			vM=${v%.*}
+			vm=${v#*.}
+			AFS_SYSNAME="sparc64_obsd${vM}${vm}"
+			;;
 		i?86-*-freebsd?.*)
 			v=${host#*freebsd}
 			vM=${v%.*}
@@ -875,8 +881,13 @@ else
 fi
 
 PTHREAD_LIBS=error
-AC_CHECK_LIB(pthread, pthread_attr_init,
-             PTHREAD_LIBS="-lpthread")
+if test "x$MKAFS_OSTYPE" = OBSD; then
+        PTHREAD_LIBS="-pthread"
+fi
+if test "x$PTHREAD_LIBS" = xerror; then
+        AC_CHECK_LIB(pthread, pthread_attr_init,
+                PTHREAD_LIBS="-lpthread")
+fi
 if test "x$PTHREAD_LIBS" = xerror; then
         AC_CHECK_LIB(pthreads, pthread_attr_init,
                 PTHREAD_LIBS="-lpthreads")
