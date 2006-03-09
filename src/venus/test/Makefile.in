@@ -13,7 +13,7 @@ INCDIRS= -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} -I..
 LDIRS= -L${TOP_LIBDIR} -L..
 LIBS= -lsys -lubik -lvldb -lauth -lrxkad -ldes -lcom_err -lcmd -lrx -llwp -lafsutil
 
-CFLAGS = ${OPTIMIZE} ${INCDIRS} ${XCFLAGS}
+CFLAGS = ${OPTIMIZE} ${INCDIRS} ${XCFLAGS} ${ARCHFLAGS}
 
 all test:  fulltest owntest idtest getinitparams
 

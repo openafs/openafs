@@ -11,7 +11,7 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 INCDIRS=-I${TOP_INCDIR} -I..
 LDIRS=-L${TOP_LIBDIR} -L${DESTDIR}/lib/afs -L..
 
-CFLAGS = ${OPTIMIZE} ${INCDIRS} ${LDIRS} ${LIBS} ${XCFLAGS}
+CFLAGS = ${OPTIMIZE} ${INCDIRS} ${LDIRS} ${LIBS} ${XCFLAGS} ${ARCHFLAGS}
 
 all: testproc smail-notifier
 

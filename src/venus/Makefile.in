@@ -159,7 +159,7 @@ kdump: kdump.o
 					-o kdump.$$IP kdump.$$IP.o \
 					${TOP_LIBDIR}/libcmd64.a -lelf \
 				;; \
-			*) 	${CC} ${XCFLAGS} \
+			*) 	${CC} ${XCFLAGS} ${ARCHFLAGS} \
 					$$CPU_KDEFS \
 					-o kdump.$$IP kdump.$$IP.o \
 					${TOP_LIBDIR}/libcmd.a -lelf \
@@ -213,7 +213,7 @@ kdump.o: kdump.c ${INCLS} AFS_component_version_number.c
 						${KERN_DBG} ${KERN_OPTMZ} -I${TOP_INCDIR} \
 						-I${TOP_OBJDIR}/src/config \
 						$$CPU_KDEFS \
-						${XCFLAGS} -DAFS_32BIT_KERNEL_ENV \
+						${XCFLAGS} ${ARCHFLAGS} -DAFS_32BIT_KERNEL_ENV \
 						-c ${srcdir}/kdump.c -o kdump.$$IP.o \
 					;; \
 				esac || exit $$?; \
@@ -223,7 +223,7 @@ kdump.o: kdump.c ${INCLS} AFS_component_version_number.c
 			touch kdump.o ;; \
 		*) \
 			${CC} ${KERN_DBG} ${KERN_OPTMZ} -I${TOP_SRCDIR} -I${TOP_INCDIR}/afs \
-			-I${TOP_OBJDIR}/src/config -I${TOP_OBJDIR}/src -I${TOP_INCDIR} ${XCFLAGS} \
+			-I${TOP_OBJDIR}/src/config -I${TOP_OBJDIR}/src -I${TOP_INCDIR} ${XCFLAGS} ${ARCHFLAGS} \
 			-o kdump.o -c ${srcdir}/kdump.c ;; \
 	esac ;
 
@@ -243,7 +243,7 @@ kdump-linux-@LINUX_VERSION@.o: kdump.c ${INCLS} AFS_component_version_number.c
 		-I${TOP_OBJDIR}/src/afs/${MKAFS_OSTYPE} \
 		-I${TOP_OBJDIR}/src/config -I${TOP_OBJDIR}/src/libafs/afs \
 		-I${TOP_SRCDIR} -I${TOP_SRCDIR}/afs/${MKAFS_OSTYPE} \
-		-I${TOP_INCDIR} ${XCFLAGS} -o kdump-linux-${LINUX_VERSION}.o \
+		-I${TOP_INCDIR} ${XCFLAGS} ${ARCHFLAGS} -o kdump-linux-${LINUX_VERSION}.o \
 		-c ${srcdir}/kdump.c
 
 kdump-linux-@LINUX_VERSION@: kdump-linux-@LINUX_VERSION@.o
@@ -257,7 +257,7 @@ kdump-alpha_linux-@LINUX_VERSION@.o: kdump.c ${INCLS} AFS_component_version_numb
 		-I${TOP_OBJDIR}/src/afs/${MKAFS_OSTYPE} \
 		-I${TOP_OBJDIR}/src/config -I${TOP_OBJDIR}/src/libafs/afs \
 		-I${TOP_SRCDIR} -I${TOP_SRCDIR}/afs/${MKAFS_OSTYPE} \
-		-I${TOP_INCDIR} ${XCFLAGS} -mno-fp-regs -ffixed-8 \
+		-I${TOP_INCDIR} ${XCFLAGS} ${ARCHFLAGS} -mno-fp-regs -ffixed-8 \
 		-o kdump-alpha_linux-${LINUX_VERSION}.o -c ${srcdir}/kdump.c ;; \
 
 kdump-alpha_linux-@LINUX_VERSION@: kdump-alpha_linux-@LINUX_VERSION@.o

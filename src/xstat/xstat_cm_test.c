@@ -1304,7 +1304,11 @@ RunTheTest(a_s)
      */
     curr_item = a_s->parms[P_CM_NAMES].items;
     for (currCM = 0; currCM < numCMs; currCM++) {
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+	CMSktArray[currCM].sin_family = AF_INET;	/*Internet family */
+#else
 	CMSktArray[currCM].sin_family = htons(AF_INET);	/*Internet family */
+#endif
 	CMSktArray[currCM].sin_port = htons(7001);	/*Cache Manager port */
 	he = hostutil_GetHostByName(curr_item->data);
 	if (he == NULL) {

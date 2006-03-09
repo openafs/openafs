@@ -9,7 +9,7 @@ srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
 
-CFLAGS = $(DBUG) -I${SRCDIR}/include ${XCFLAGS}
+CFLAGS = $(DBUG) -I${SRCDIR}/include ${XCFLAGS} ${ARCHFLAGS}
 
 ########################################################################
 # build tests

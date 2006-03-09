@@ -19,15 +19,19 @@
 # 
 # @APPLE_LICENSE_HEADER_END@
 
-AFSINCLUDE = /Library/OpenAFS/Tools/include
-CFLAGS = -O -I$(AFSINCLUDE)
+# We assume the either we are in src/packaging/MacOS (so ../.. should work
+# with #include <afs/sysctl.h>, or we are in a directory where configure
+# was run, so the afs/sysctl.h should be in the include subdirectory
+AFSINCLUDE = -I../.. -Iinclude
+CFLAGS = -Os $(AFSINCLUDE) $(ARCHFLAGS)
 LIBS = -framework Foundation
 ALL = afssettings
+DIR = $(shell dirname $(MAKEFILE_LIST))
 
 all: $(ALL)
 
-afssettings : afssettings.m
+afssettings : $(DIR)/afssettings.m
 	cc $(CFLAGS) -o $@ $^ $(LIBS)
 
 clean:
-	@rm -f *.o $(ALL)
+	@rm -f $(ALL)

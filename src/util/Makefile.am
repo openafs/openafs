@@ -27,5 +27,6 @@ libutil_a_SOURCES =  	\
 	flipbase64.c	\
 	afs_atomlist.c	\
 	afs_lhash.c	\
-	snprintf.c
+	snprintf.c	\
+	fstab.c
 

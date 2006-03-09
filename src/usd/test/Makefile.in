@@ -10,7 +10,7 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 
 
 INCDIRS= -I${DESTDIR}/include  -I..
-CFLAGS = $(DBUG) -I${SRCDIR}/include ${INCDIRS} ${XCFLAGS}
+CFLAGS = $(DBUG) -I${SRCDIR}/include ${INCDIRS} ${XCFLAGS} ${ARCHFLAGS}
 LIBUSD=DEST/lib/afs/libusd.a
 
 #####################################################################

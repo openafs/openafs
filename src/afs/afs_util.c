@@ -262,8 +262,8 @@ afs_CheckLocks(void)
     register int i;
 
     afs_warn("Looking for locked data structures.\n");
-    afs_warn("conn %x, volume %x, user %x, cell %x, server %x\n", afs_xconn,
-	     afs_xvolume, afs_xuser, afs_xcell, afs_xserver);
+    afs_warn("conn %lx, volume %lx, user %lx, cell %lx, server %lx\n", &afs_xconn,
+	     &afs_xvolume, &afs_xuser, &afs_xcell, &afs_xserver);
     {
 	register struct vcache *tvc;
 	AFS_STATCNT(afs_CheckLocks);

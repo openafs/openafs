@@ -15,7 +15,7 @@ LIBAFSSETPAGMINOR=0
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
-CFLAGS=-I. -I${srcdir} ${DBUG} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR}  ${XCFLAGS}
+CFLAGS=-I. -I${srcdir} ${DBUG} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR}  ${XCFLAGS} ${ARCHFLAGS}
 SFLAGS=-I${TOP_INCDIR}
 LIBS=libsys.a ${TOP_LIBDIR}/librx.a libsys.a ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/util.a ${XLIBS}
 
@@ -24,34 +24,40 @@ SHLIBOBJS = picobj/setpag.o picobj/glue.o syscall.o
 RMTOBJS=rmtsysnet.o rmtsysc.o rmtsys.cs.o rmtsys.xdr.o rmtsys.ss.o rmtsyss.o 
 
 LIBAFSSETPAG = libafssetpag.${SHLIB_SUFFIX}.${LIBAFSSETPAGMAJOR}.${LIBAFSSETPAGMINOR}
+LIBAFSSETPAG_DARWIN = libafssetpag.${LIBAFSSETPAGMAJOR}.${SHLIB_SUFFIX}
 
 all: \
-	rmtsysd \
-	pagsh \
-	pagsh.krb \
-	${TOP_INCDIR}/afs/afssyscalls.h \
-	${TOP_INCDIR}/afs/afs.exp \
-	${TOP_INCDIR}/afs/xfsattrs.h \
-	${TOP_LIBDIR}/afs.exp \
-	${TOP_LIBDIR}/libsys.a \
-	${TOP_LIBDIR}/${LIBAFSSETPAG} \
-	${KERNELDIR}/afs \
-	${KERNELDIR}/afs/xfsattrs.h \
-	${UKERNELDIR}/afs \
-	${UKERNELDIR}/afs/afsl.exp
+    rmtsysd \
+    pagsh \
+    pagsh.krb \
+    ${TOP_INCDIR}/afs/afssyscalls.h \
+    ${TOP_INCDIR}/afs/afs.exp \
+    ${TOP_INCDIR}/afs/xfsattrs.h \
+    ${TOP_LIBDIR}/afs.exp \
+    ${TOP_LIBDIR}/libsys.a \
+    ${KERNELDIR}/afs \
+    ${KERNELDIR}/afs/xfsattrs.h \
+    ${UKERNELDIR}/afs \
+    ${UKERNELDIR}/afs/afsl.exp
+	@set -x; case ${SYS_NAME} in \
+	*_darwin_*) \
+	    ${MAKE} '${TOP_LIBDIR}/${LIBAFSSETPAG_DARWIN}';; \
+	*) \
+	    ${MAKE} '${TOP_LIBDIR}/${LIBAFSSETPAG}';; \
+	esac
 
 libsys.a: ${OBJECTS} ${RMTOBJS} afsl.exp AFS_component_version_number.o
 	-$(RM) -f $@
 	$(AR) crv $@ ${OBJECTS} ${RMTOBJS} \
 		AFS_component_version_number.o ${LIBSYS_AIX_EXP}
 	$(RANLIB) $@
-	case "${SYS_NAME}" in                   	\
+	@set -x; case "${SYS_NAME}" in                   	\
 		rs_aix*) 			        \
 			$(AR) crv $@ afsl.exp;;         \
 	esac
 
 ${LIBAFSSETPAG}: ${SHLIBOBJS}
-	case ${SYS_NAME} in \
+	@set -x; case ${SYS_NAME} in \
 	*_linux*) \
 	    ${SHLIB_LINKER} -Wl,-h,libafssetpag.so.${LIBAFSSETPAGMAJOR} \
 	        -o ${LIBAFSSETPAG} -Wl,--version-script=${srcdir}/mapfile \
@@ -66,10 +72,13 @@ ${LIBAFSSETPAG}: ${SHLIBOBJS}
 	    ${SHLIB_LINKER} -o ${LIBAFSSETPAG} ${SHLIBOBJS};; \
 	esac
 
+${LIBAFSSETPAG_DARWIN}: ${SHLIBOBJS}
+	${SHLIB_LINKER} -o ${LIBAFSSETPAG_DARWIN} ${ARCHFLAGS} -install_name ${libdir}/${LIBAFSSETPAG_DARWIN} -compatibility_version ${LIBAFSSETPAGMAJOR} -current_version ${LIBAFSSETPAGMAJOR}.${LIBAFSSETPAGMINOR} ${SHLIBOBJS}
+
 tests:	pagsh pagsh.krb fixit iinc idec icreate iopen istat rmtsysd
 
 syscall.o: syscall.s
-	case "$(SYS_NAME)" in \
+	@set -x; case "$(SYS_NAME)" in \
 	 sun4c_51 | sun4c_52 | sun4m_51 | sun4m_52 | sun4c_53 | sun4m_53  | sun4_53 | sun4_52 | sun4_54 | sun4c_54 | sun4m_54 | sun4x_5? | sun4x_5?? | sunx86_5? | sunx86_5?? ) \
 		/usr/ccs/lib/cpp -P ${SFLAGS} ${srcdir}/syscall.s syscall.ss; \
 		as -o syscall.o syscall.ss;		\
@@ -171,7 +180,7 @@ fixit:	fixit.c AFS_component_version_number.c
 
 
 xfsinode: xfsinode.c  AFS_component_version_number.c
-	case "${SYS_NAME}" in \
+	@set -x; case "${SYS_NAME}" in \
 		sgi_62 | sgi_64 ) \
 		$(CC) -o xfsinode ${CFLAGS} ${srcdir}/xfsinode.c ${LIBS}
 	esac
@@ -180,10 +189,15 @@ ${TOP_LIBDIR}/${LIBAFSSETPAG}: ${LIBAFSSETPAG}
 	${INSTALL} ${LIBAFSSETPAG} ${TOP_LIBDIR}/${LIBAFSSETPAG}
 	-ln -f -s ${LIBAFSSETPAG} ${TOP_LIBDIR}/libafssetpag.${SHLIB_SUFFIX}
 	-ln -f -s ${LIBAFSSETPAG} ${TOP_LIBDIR}/libafssetpag.${SHLIB_SUFFIX}.${LIBAFSSETPAGMAJOR}
+
+${TOP_LIBDIR}/${LIBAFSSETPAG_DARWIN}: ${LIBAFSSETPAG_DARWIN}
+	${INSTALL} ${LIBAFSSETPAG_DARWIN} ${TOP_LIBDIR}/${LIBAFSSETPAG_DARWIN}
+	-ln -f -s ${LIBAFSSETPAG_DARWIN} ${TOP_LIBDIR}/libafssetpag.${SHLIB_SUFFIX}
+	-ln -f -s ${LIBAFSSETPAG_DARWIN} ${TOP_LIBDIR}/libafssetpag.${LIBAFSSETPAGMAJOR}.${LIBAFSSETPAGMINOR}.${SHLIB_SUFFIX}
  
 
 afs.exp: ${srcdir}/afs4.exp ${srcdir}/afs5.exp
-	case ${SYS_NAME} in \
+	@set -x; case ${SYS_NAME} in \
 		rs_aix5* ) \
 			cp -p ${srcdir}/afs5.exp afs.exp ;; \
 		rs_aix* ) \
@@ -193,7 +207,7 @@ afs.exp: ${srcdir}/afs4.exp ${srcdir}/afs5.exp
 	esac
 
 afsl.exp: ${srcdir}/afsl4.exp ${srcdir}/afsl5.exp
-	case ${SYS_NAME} in \
+	@set -x; case ${SYS_NAME} in \
 		rs_aix5* ) \
 			cp -p ${srcdir}/afsl5.exp afsl.exp ;; \
 		rs_aix* ) \
@@ -210,13 +224,13 @@ ${TOP_INCDIR}/afs/afssyscalls.h: afssyscalls.h
 	${INSTALL} $? $@
 
 ${TOP_INCDIR}/afs/afs.exp: afs.exp
-	case ${SYS_NAME} in \
+	@set -x; case ${SYS_NAME} in \
 		rs_aix* ) \
 			${INSTALL} $? $@ ;; \
 	esac
 
 ${TOP_LIBDIR}/afs.exp: afs.exp
-	case ${SYS_NAME} in \
+	@set -x; case ${SYS_NAME} in \
 		rs_aix* ) \
 			${INSTALL} $? $@ ;; \
 	esac
@@ -231,7 +245,7 @@ ${UKERNELDIR}/afs:
 	mkdir -p $@
 
 ${UKERNELDIR}/afs/afsl.exp: afsl.exp
-	case ${SYS_NAME} in \
+	@set -x; case ${SYS_NAME} in \
 		rs_aix* ) \
 			${INSTALL} $? $@ ;; \
 	esac
@@ -250,14 +264,19 @@ depinstall: \
 	${UKERNELDIR}/afs/afsl.exp
 
 install: \
-	${DESTDIR}${libdir}/afs/libsys.a \
-	${DESTDIR}${libdir}/${LIBAFSSETPAG} \
-	${DESTDIR}${sbindir}/rmtsysd \
-	${DESTDIR}${includedir}/afs/afssyscalls.h \
-	${DESTDIR}${bindir}/pagsh \
-	${DESTDIR}${bindir}/pagsh.krb \
-	${DESTDIR}${includedir}/afs/afs.exp \
-	${DESTDIR}${includedir}/afs/xfsattrs.h
+    ${DESTDIR}${libdir}/afs/libsys.a \
+    ${DESTDIR}${sbindir}/rmtsysd \
+    ${DESTDIR}${includedir}/afs/afssyscalls.h \
+    ${DESTDIR}${bindir}/pagsh \
+    ${DESTDIR}${bindir}/pagsh.krb \
+    ${DESTDIR}${includedir}/afs/afs.exp \
+    ${DESTDIR}${includedir}/afs/xfsattrs.h
+	@set -x; case ${SYS_NAME} in \
+	*_darwin_*) \
+	    ${MAKE} '${DESTDIR}${libdir}/${LIBAFSSETPAG_DARWIN}';; \
+	*) \
+	    ${MAKE} '${DESTDIR}${libdir}/${LIBAFSSETPAG}';; \
+	esac
 
 ${DESTDIR}${libdir}/afs/libsys.a: libsys.a
 	${INSTALL} $? $@
@@ -268,6 +287,13 @@ ${DESTDIR}${libdir}/${LIBAFSSETPAG}: ${LIBAFSSETPAG}
 	    ${DESTDIR}${libdir}/libafssetpag.${SHLIB_SUFFIX}
 	-ln -f -s ${LIBAFSSETPAG} \
 	    ${DESTDIR}${libdir}/libafssetpag.${SHLIB_SUFFIX}.${LIBAFSSETPAGMAJOR}
+
+${DESTDIR}${libdir}/${LIBAFSSETPAG_DARWIN}: ${LIBAFSSETPAG_DARWIN}
+	${INSTALL} ${LIBAFSSETPAG_DARWIN} ${DESTDIR}${libdir}/${LIBAFSSETPAG_DARWIN}
+	-ln -f -s ${LIBAFSSETPAG_DARWIN} \
+		${DESTDIR}${libdir}/libafssetpag.${SHLIB_SUFFIX} ; \
+	-ln -f -s ${LIBAFSSETPAG_DARWIN} \
+		${DESTDIR}${libdir}/libafssetpag.${LIBAFSSETPAGMAJOR}.${LIBAFSSETPAGMINOR}.${SHLIB_SUFFIX} ;; \
 
 ${DESTDIR}${sbindir}/rmtsysd: rmtsysd
 	${INSTALL} -s $? $@
@@ -282,7 +308,7 @@ ${DESTDIR}${bindir}/pagsh.krb: pagsh.krb
 	${INSTALL} -s $? $@
 
 ${DESTDIR}${includedir}/afs/afs.exp: afs.exp
-	case ${SYS_NAME} in \
+	@set -x; case ${SYS_NAME} in \
 		rs_aix* ) \
 			${INSTALL} $? $@ ;; \
 	esac
@@ -291,20 +317,25 @@ ${DESTDIR}${includedir}/afs/xfsattrs.h: xfsattrs.h
 	${INSTALL} $? $@
 
 dest: \
-	${DEST}/lib/afs/libsys.a \
-	${TOP_LIBDIR}/${LIBAFSSETPAG} \
-	${DEST}/etc/rmtsysd \
-	${DEST}/bin/pagsh \
-	${DEST}/bin/pagsh.krb \
-	${DEST}/include/afs/afssyscalls.h \
-	${DEST}/include/afs/afs.exp \
-	${DEST}/include/afs/xfsattrs.h
+    ${DEST}/lib/afs/libsys.a \
+    ${DEST}/etc/rmtsysd \
+    ${DEST}/bin/pagsh \
+    ${DEST}/bin/pagsh.krb \
+    ${DEST}/include/afs/afssyscalls.h \
+    ${DEST}/include/afs/afs.exp \
+    ${DEST}/include/afs/xfsattrs.h
+	@set -x; case ${SYS_NAME} in \
+	*_darwin_*) \
+	    ${MAKE} '${TOP_LIBDIR}/${LIBAFSSETPAG_DARWIN}';; \
+	*) \
+	    ${MAKE} '${TOP_LIBDIR}/${LIBAFSSETPAG}';; \
+	esac
 
 ${DEST}/lib/afs/libsys.a: libsys.a
 	${INSTALL} $? $@
 
 ${DEST}/include/afs/afs.exp: afs.exp
-	case ${SYS_NAME} in \
+	@set -x; case ${SYS_NAME} in \
 		rs_aix* ) \
 			${INSTALL} $? $@ ;; \
 	esac

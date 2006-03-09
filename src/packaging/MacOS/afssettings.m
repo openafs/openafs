@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003 Apple Computer, Inc. All rights reserved.
+ * Copyright (c) 2003, 2006 Apple Computer, Inc. All rights reserved.
  *
  * @APPLE_LICENSE_HEADER_START@
  * 
@@ -52,6 +52,8 @@ Setting s_darwin[] = {
     {@"Darwin14", AFS_SC_DARWIN_14, TypeNode, NULL},
     {@"Darwin60", AFS_SC_DARWIN_60, TypeNode, NULL},
     {@"Darwin70", AFS_SC_DARWIN_70, TypeNode, NULL},
+    {@"Darwin80", AFS_SC_DARWIN_80, TypeNode, NULL},
+    {@"Darwin90", AFS_SC_DARWIN_90, TypeNode, NULL},
     {NULL, 0, 0, NULL}
 };
 Setting s_first[] = {
@@ -79,12 +81,12 @@ init(void)
     int i;
 
     len = sizeof(max);
-    if(sysctl(oidmax, 3, &max, &len, NULL, NULL) < 0)
+    if(sysctl(oidmax, 3, &max, &len, NULL, 0) < 0)
 	err(1, "sysctl VFS_MAXTYPENUM");
     for(i = max; --i >= 0; ) {
 	oidvfs[3] = i;
 	len = sizeof(conf);
-	if(sysctl(oidvfs, 4, &conf, &len, NULL, NULL) < 0)
+	if(sysctl(oidvfs, 4, &conf, &len, NULL, 0) < 0)
 	    continue;
 	if(strcmp("afs", conf.vfc_name) == 0) {
 	    s_top.selector = conf.vfc_typenum;

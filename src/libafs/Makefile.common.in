@@ -47,9 +47,9 @@ COMMON_INCLUDE = -I. -I.. -I../nfs \
 	$(CC) $(COMMON_INCLUDE) $(CFLAGS) -P -c $<
 
 .c.o:
-	$(CC) $(COMMON_INCLUDE) $(CFLAGS) $(KERN_DBG) -c $<
-CRULE_NOOPT=	$(CC) $(COMMON_INCLUDE) $(KERN_DBG) $(CFLAGS) -c $?
-CRULE_OPT=	$(CC) $(COMMON_INCLUDE) $(KERN_DBG) $(KERN_OPTMZ) $(CFLAGS) -c $?
+	$(CC) $(COMMON_INCLUDE) $(CFLAGS) $(CFLAGS-$@) $(KERN_DBG) -c $<
+CRULE_NOOPT=	$(CC) $(COMMON_INCLUDE) $(KERN_DBG) $(CFLAGS) $(CFLAGS-$@) -o $@ -c $?
+CRULE_OPT=	$(CC) $(COMMON_INCLUDE) $(KERN_DBG) $(KERN_OPTMZ) $(CFLAGS) $(CFLAGS-$@) -o $@ -c $?
 
 system:	all
 
@@ -254,7 +254,7 @@ afs_volume.o: $(TOP_SRC_AFS)/afs_volume.c
 rx_rdwr.o: $(TOP_SRC_RX)/rx_rdwr.c
 	$(CRULE_OPT)
 afs_uuid.o: $(TOP_SRCDIR)/util/uuid.c
-	$(CRULE_OPT) -o afs_uuid.o
+	$(CRULE_OPT)
 xdr_afsuuid.o: $(TOP_SRCDIR)/rx/xdr_afsuuid.c
 	$(CRULE_OPT)
 
@@ -268,7 +268,7 @@ afs_chunk.o: $(TOP_SRC_AFS)/afs_chunk.c
 afs_daemons.o: $(TOP_SRC_AFS)/afs_daemons.c
 	$(CRULE_NOOPT)
 afs_dir.o: 	$(TOP_SRCDIR)/dir/dir.c
-	$(CRULE_NOOPT) -o afs_dir.o
+	$(CRULE_NOOPT)
 AFS_component_version_number.o: AFS_component_version_number.c
 	$(CRULE_NOOPT)
 afs_lock.o: $(TOP_SRC_AFS)/afs_lock.c
@@ -337,8 +337,9 @@ xdr.o: $(TOP_SRC_RX)/xdr.c
 	$(CRULE_NOOPT)
 Kvldbint.cs.o: ${TOP_OBJ_VLSERVER}/Kvldbint.cs.c
 	$(CRULE_NOOPT)
+CFLAGS-Kvldbint.xdr.o= -DAFS_UUID_XG
 Kvldbint.xdr.o: ${TOP_OBJ_VLSERVER}/Kvldbint.xdr.c
-	$(CRULE_NOOPT) -DAFS_UUID_XG
+	$(CRULE_NOOPT)
 rx_kmutex.o: $(TOP_SRC_RX)/${MKAFS_OSTYPE}/rx_kmutex.c
 	$(CRULE_NOOPT)
 rx_knet.o: $(TOP_SRC_RX)/${MKAFS_OSTYPE}/rx_knet.c
@@ -347,16 +348,18 @@ rx_kcommon.o: $(TOP_SRC_RX)/rx_kcommon.c
 	$(CRULE_NOOPT)
 
 # Files which do not contain NFS translator code.
+CFLAGS-afs_call.o= -DAFS_NONFSTRANS
 afs_call.o: $(TOP_SRC_AFS)/afs_call.c
-	$(CRULE_NOOPT) -DAFS_NONFSTRANS
+	$(CRULE_NOOPT)
+CFLAGS-afs_pioctl.o= -DAFS_NONFSTRANS
 afs_pioctl.o: $(TOP_SRC_AFS)/afs_pioctl.c
-	$(CRULE_NOOPT) -DAFS_NONFSTRANS
+	$(CRULE_NOOPT)
 
 # NFS Translator versions of the above code.
 afs_call_nfs.o:	$(TOP_SRC_AFS)/afs_call.c
-	$(CRULE_NOOPT) -o afs_call_nfs.o
+	$(CRULE_NOOPT)
 afs_pioctl_nfs.o:	$(TOP_SRC_AFS)/afs_pioctl.c
-	$(CRULE_NOOPT) -o afs_pioctl_nfs.o
+	$(CRULE_NOOPT)
 
 # Files which are specific to particular architectures/targets
 # but have common build rules. Place here instead of duplicating
@@ -371,14 +374,12 @@ osi_sleep.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_sleep.c
 	$(CRULE_NOOPT)
 osi_misc.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_misc.c
 	$(CRULE_NOOPT)
+CFLAGS-osi_vfsops_nfs.o= -DAFS_WRAPPER=${LIBAFS}_wrapper -DAFS_CONF_DATA=${LIBAFS}_conf_data
 osi_vfsops_nfs.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_vfsops.c
-	$(CRULE_NOOPT) -o osi_vfsops_nfs.o \
-	-DAFS_WRAPPER=${LIBAFS}_wrapper \
-	-DAFS_CONF_DATA=${LIBAFS}_conf_data
+	$(CRULE_NOOPT)
+CFLAGS-osi_vfsops.o= -DAFS_NONFSTRANS -DAFS_WRAPPER=${LIBAFSNONFS}_wrapper -DAFS_CONF_DATA=${LIBAFSNONFS}_conf_data
 osi_vfsops.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_vfsops.c
-	$(CRULE_NOOPT) -DAFS_NONFSTRANS \
-	-DAFS_WRAPPER=${LIBAFSNONFS}_wrapper \
-	-DAFS_CONF_DATA=${LIBAFSNONFS}_conf_data
+	$(CRULE_NOOPT)
 osi_vm.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_vm.c
 	$(CRULE_NOOPT)
 osi_vnodeops.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_vnodeops.c

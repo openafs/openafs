@@ -14,7 +14,7 @@ INCDIRS=-I${TOP_INCDIR} -I.. -I${TOP_INCDIR}/afs
 LDIRS=-L${TOP_LIBDIR} -L${DESTDIR}/lib/afs -L..
 LIBS= -lauth -lrxkad -ldes -lsys -lrx -llwp -lcmd -lafsutil ${XLIBS}
 
-CFLAGS = ${OPTIMIZE} ${INCDIRS} ${LDIRS} ${LIBS} ${XCFLAGS}
+CFLAGS = ${OPTIMIZE} ${INCDIRS} ${LDIRS} ${LIBS} ${XCFLAGS} ${ARCHFLAGS}
 
 all: testlog gettoktest
 
