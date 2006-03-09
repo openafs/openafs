@@ -494,6 +494,34 @@ PrintPerfInfo()
     PrintOverallPerfInfo(perfP);
 }
 
+static char *CbCounterStrings[] = {
+    "DeleteFiles",
+    "DeleteCallBacks",
+    "BreakCallBacks",
+    "AddCallBack",
+    "GotSomeSpaces",
+    "DeleteAllCallBacks",
+    "nFEs", "nCBs", "nblks",
+    "CBsTimedOut",
+    "nbreakers",
+    "GSS1", "GSS2", "GSS3", "GSS4", "GSS5"
+};
+
+
+void
+PrintCbCounters() {
+    int numInt32s = sizeof(CbCounterStrings)/sizeof(char *);
+    int i;
+    afs_uint32 *val=xstat_fs_Results.data.AFS_CollData_val;
+
+    if (numInt32s > xstat_fs_Results.data.AFS_CollData_len)
+	numInt32s = xstat_fs_Results.data.AFS_CollData_len;
+
+    for (i=0; i<numInt32s; i++) {
+	printf("\t%10u %s\n", val[i], CbCounterStrings[i]);
+    }
+}
+
 
 /*------------------------------------------------------------------------
  * FS_Handler
@@ -548,6 +576,10 @@ FS_Handler()
 
     case AFS_XSTATSCOLL_FULL_PERF_INFO:
 	PrintFullPerfInfo();
+	break;
+
+    case AFS_XSTATSCOLL_CBSTATS:
+	PrintCbCounters();
 	break;
 
     default:
