@@ -5817,6 +5817,36 @@ SRXAFS_GetXStats(struct rx_call *a_call, afs_int32 a_clientVersionNum,
 #endif
 	break;
 
+    case AFS_XSTATSCOLL_CBSTATS:
+	afs_perfstats.numPerfCalls++;
+
+	dataBytes = sizeof(struct cbcounters);
+	dataBuffP = (afs_int32 *) malloc(dataBytes);
+	{
+	    extern struct cbcounters cbstuff;
+	    dataBuffP[0]=cbstuff.DeleteFiles;
+	    dataBuffP[1]=cbstuff.DeleteCallBacks;
+	    dataBuffP[2]=cbstuff.BreakCallBacks;
+	    dataBuffP[3]=cbstuff.AddCallBacks;
+	    dataBuffP[4]=cbstuff.GotSomeSpaces;
+	    dataBuffP[5]=cbstuff.DeleteAllCallBacks;
+	    dataBuffP[6]=cbstuff.nFEs;
+	    dataBuffP[7]=cbstuff.nCBs;
+	    dataBuffP[8]=cbstuff.nblks;
+	    dataBuffP[9]=cbstuff.CBsTimedOut;
+	    dataBuffP[10]=cbstuff.nbreakers;
+	    dataBuffP[11]=cbstuff.GSS1;
+	    dataBuffP[12]=cbstuff.GSS2;
+	    dataBuffP[13]=cbstuff.GSS3;
+	    dataBuffP[14]=cbstuff.GSS4;
+	    dataBuffP[15]=cbstuff.GSS5;
+	}
+
+	a_dataP->AFS_CollData_len = dataBytes >> 2;
+	a_dataP->AFS_CollData_val = dataBuffP;
+	break;
+
+
     default:
 	/*
 	 * Illegal collection number.
