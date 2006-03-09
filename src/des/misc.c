@@ -270,6 +270,35 @@ swap_long_bytes_bit_number(afs_uint32 x)
 #endif /* MSBFIRST */
 }
 
+#if !defined(KERNEL) && defined(AFS_DARWIN80_ENV)
+char *_darwin_whichstr[] = {
+    "#if defined(__ppc__)\n",
+    "#elif defined(__i386__)\n",
+    "#else\n#error architecture unsupported\n#endif\n"
+};
+int _darwin_which = 1;
+
+int
+_darwin_swap_long_bytes_bit_number(afs_uint32 x)
+{
+    /*
+     * given a bit number (0-31) from a vax, swap the byte part of the
+     * bit number to change the byte ordering to mSBFIRST type
+     */
+
+    afs_uint32 y, z;
+
+    if (!_darwin_which)
+	return x;
+
+    y = x / 8;			/* initial byte component */
+    z = x % 8;			/* bit within byte */
+
+    x = (3 - y) * 8 + z;
+    return x;
+}
+#endif /* !KERNEL && AFS_DARWIN80_ENV */
+
 void
 test_set(FILE * stream, const char *src, int testbit, const char *dest,
 	 int setbit)

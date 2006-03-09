@@ -25,11 +25,11 @@
 #define AFS_DARWIN60_ENV
 #define AFS_DARWIN70_ENV
 #define AFS_DARWIN80_ENV
+#define AFS_DARWIN90_ENV
 #define AFS_NONFSTRANS
 #define AFS_SYSCALL             230
 #define AFS_NAMEI_ENV 1
-
-#define AFS_BOZONLOCK_ENV 1
+#define DARWIN_REFBASE 3
 
 /* File system entry (used if mount.h doesn't define MOUNT_AFS */
 #define AFS_MOUNT_AFS    "afs"
@@ -42,8 +42,9 @@
 #define sys_ppc_darwin_60	1
 #define sys_ppc_darwin_70	1
 #define sys_ppc_darwin_80	1
-#define SYS_NAME		"ppc_darwin_80"
-#define SYS_NAME_ID		SYS_NAME_ID_ppc_darwin_80
+#define sys_ppc_darwin_90	1
+#define SYS_NAME		"ppc_darwin_90"
+#define SYS_NAME_ID		SYS_NAME_ID_ppc_darwin_90
 #define AFSBIG_ENDIAN		1
 #elif defined(__i386__)
 #define sys_x86_darwin_12	1
@@ -52,8 +53,9 @@
 #define sys_x86_darwin_60	1
 #define sys_x86_darwin_70	1
 #define sys_x86_darwin_80	1
-#define SYS_NAME		"x86_darwin_80"
-#define SYS_NAME_ID		SYS_NAME_ID_x86_darwin_80
+#define sys_x86_darwin_90	1
+#define SYS_NAME		"x86_darwin_90"
+#define SYS_NAME_ID		SYS_NAME_ID_x86_darwin_90
 #define AFSLITTLE_ENDIAN	1
 #else
 #error Unsupported architecture
@@ -119,6 +121,7 @@
 #define AFS_USR_DARWIN60_ENV
 #define AFS_USR_DARWIN70_ENV
 #define AFS_USR_DARWIN80_ENV
+#define AFS_USR_DARWIN90_ENV
 #define AFS_NONFSTRANS
 #define AFS_SYSCALL             230
 #define DARWIN_REFBASE 0
@@ -134,8 +137,9 @@
 #define sys_ppc_darwin_60	1
 #define sys_ppc_darwin_70	1
 #define sys_ppc_darwin_80	1
-#define SYS_NAME		"ppc_darwin_80"
-#define SYS_NAME_ID		SYS_NAME_ID_ppc_darwin_80
+#define sys_ppc_darwin_90	1
+#define SYS_NAME		"ppc_darwin_90"
+#define SYS_NAME_ID		SYS_NAME_ID_ppc_darwin_90
 #define AFSBIG_ENDIAN		1
 #elif defined(__i386__)
 #define sys_x86_darwin_12	1
@@ -144,8 +148,9 @@
 #define sys_x86_darwin_60	1
 #define sys_x86_darwin_70	1
 #define sys_x86_darwin_80	1
-#define SYS_NAME		"x86_darwin_80"
-#define SYS_NAME_ID		SYS_NAME_ID_x86_darwin_80
+#define sys_x86_darwin_90	1
+#define SYS_NAME		"x86_darwin_90"
+#define SYS_NAME_ID		SYS_NAME_ID_x86_darwin_90
 #define AFSLITTLE_ENDIAN	1
 #else
 #error Unsupported architecture

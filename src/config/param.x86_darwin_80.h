@@ -8,6 +8,13 @@
 #define AFS_64BIT_ENV           1	/* Defines afs_int32 as int, not long. */
 #define AFS_64BIT_CLIENT        1
 #define AFS_64BIT_IOPS_ENV	1
+#if defined(__ppc__)
+#define AFS_PPC_ENV		1
+#elif defined(__i386__)
+#define AFS_X86_ENV		1
+#else
+#error Unsupported architecture
+#endif
 #define AFS_VFSINCL_ENV		1
 
 #include <afs/afs_sysnames.h>
@@ -27,15 +34,29 @@
 #define AFS_MOUNT_AFS    "afs"
 
 /* Machine / Operating system information */
-#define sys_x86_darwin_12   1
-#define sys_x86_darwin_13   1
-#define sys_x86_darwin_14   1
-#define sys_x86_darwin_60   1
-#define sys_x86_darwin_70   1
-#define sys_x86_darwin_80   1
-#define SYS_NAME        "x86_darwin_80"
-#define SYS_NAME_ID     SYS_NAME_ID_x86_darwin_80
-#define AFSLITTLE_ENDIAN   1
+#if defined(__ppc__)
+#define sys_ppc_darwin_12	1
+#define sys_ppc_darwin_13	1
+#define sys_ppc_darwin_14	1
+#define sys_ppc_darwin_60	1
+#define sys_ppc_darwin_70	1
+#define sys_ppc_darwin_80	1
+#define SYS_NAME		"ppc_darwin_80"
+#define SYS_NAME_ID		SYS_NAME_ID_ppc_darwin_80
+#define AFSBIG_ENDIAN		1
+#elif defined(__i386__)
+#define sys_x86_darwin_12	1
+#define sys_x86_darwin_13	1
+#define sys_x86_darwin_14	1
+#define sys_x86_darwin_60	1
+#define sys_x86_darwin_70	1
+#define sys_x86_darwin_80	1
+#define SYS_NAME		"x86_darwin_80"
+#define SYS_NAME_ID		SYS_NAME_ID_x86_darwin_80
+#define AFSLITTLE_ENDIAN	1
+#else
+#error Unsupported architecture
+#endif
 #define AFS_HAVE_FFS    1	/* Use system's ffs. */
 
 #define AFS_GCPAGS               0
@@ -81,7 +102,13 @@
 #define AFS_VFSINCL_ENV 1	/* NOBODY uses this.... */
 #define AFS_ENV                 1
 #define AFS_64BIT_ENV           1	/* Defines afs_int32 as int, not long. */
-#define AFS_X86_ENV 1
+#if defined(__ppc__)
+#define AFS_PPC_ENV		1
+#elif defined(__i386__)
+#define AFS_X86_ENV		1
+#else
+#error Unsupported architecture
+#endif
 
 #include <afs/afs_sysnames.h>
 #define AFS_USERSPACE_ENV
@@ -99,15 +126,29 @@
 #define AFS_MOUNT_AFS    "afs"
 
 /* Machine / Operating system information */
-#define sys_x86_darwin_12   1
-#define sys_x86_darwin_13   1
-#define sys_x86_darwin_14   1
-#define sys_x86_darwin_60   1
-#define sys_x86_darwin_70   1
-#define sys_x86_darwin_80   1
-#define SYS_NAME        "x86_darwin_80"
-#define SYS_NAME_ID     SYS_NAME_ID_x86_darwin_80
-#define AFSLITTLE_ENDIAN   1
+#if defined(__ppc__)
+#define sys_ppc_darwin_12	1
+#define sys_ppc_darwin_13	1
+#define sys_ppc_darwin_14	1
+#define sys_ppc_darwin_60	1
+#define sys_ppc_darwin_70	1
+#define sys_ppc_darwin_80	1
+#define SYS_NAME		"ppc_darwin_80"
+#define SYS_NAME_ID		SYS_NAME_ID_ppc_darwin_80
+#define AFSBIG_ENDIAN		1
+#elif defined(__i386__)
+#define sys_x86_darwin_12	1
+#define sys_x86_darwin_13	1
+#define sys_x86_darwin_14	1
+#define sys_x86_darwin_60	1
+#define sys_x86_darwin_70	1
+#define sys_x86_darwin_80	1
+#define SYS_NAME		"x86_darwin_80"
+#define SYS_NAME_ID		SYS_NAME_ID_x86_darwin_80
+#define AFSLITTLE_ENDIAN	1
+#else
+#error Unsupported architecture
+#endif
 #define AFS_HAVE_FFS    1	/* Use system's ffs. */
 
 #define AFS_UIOSYS      UIO_SYSSPACE

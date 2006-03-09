@@ -8,7 +8,7 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
-CFLAGS=${COMMON_CFLAGS} ${XCFLAGS} -DRXDEBUG
+CFLAGS=${COMMON_CFLAGS} ${XCFLAGS} ${ARCHFLAGS} -DRXDEBUG
 
 LIBS=${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/libcmd.a \
 	       ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libafsutil.a

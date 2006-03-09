@@ -6,7 +6,7 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 INCDIRS=-I${TOP_INCDIR} -I..
 LDIRS=-L${TOP_LIBDIR} -L${DESTDIR}/lib/afs -L..
 
-CFLAGS = ${OPTIMIZE} ${INCDIRS} ${LDIRS} -lcom_err ${XCFLAGS}
+CFLAGS = ${OPTIMIZE} ${INCDIRS} ${LDIRS} -lcom_err ${XCFLAGS} ${ARCHFLAGS}
 
 all: test
 

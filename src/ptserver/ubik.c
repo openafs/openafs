@@ -46,7 +46,7 @@ ubik_BeginTrans(register struct ubik_dbase *dbase, afs_int32 transMode,
 	thdr.version.epoch = htonl(2);
 	thdr.version.counter = htonl(0);
 	thdr.magic = htonl(UBIK_MAGIC);
-	thdr.size = htonl(HDRSIZE);
+	thdr.size = htons(HDRSIZE);
 	lseek(dbase_fd, 0, 0);
 	write(dbase_fd, &thdr, sizeof(thdr));
 	fsync(dbase_fd);

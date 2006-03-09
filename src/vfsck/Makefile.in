@@ -19,7 +19,7 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
-CFLAGS=${COMMON_CFLAGS} ${XCFLAGS} ${VFSCK_CFLAGS}
+CFLAGS=${COMMON_CFLAGS} ${XCFLAGS} ${ARCHFLAGS} ${VFSCK_CFLAGS}
 
 SRCS= dir.c inode.c main.c pass1.c pass1b.c pass2.c pass3.c \
 	pass4.c pass5.c setup.c utilities.c ufs_subr.c \

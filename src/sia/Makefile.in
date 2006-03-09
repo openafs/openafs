@@ -23,7 +23,7 @@ all: ${TOP_LIBDIR}/libafssiad.so ${TOP_LIBDIR}/libafssiad.krb.so
 clean:
 	$(RM) -f test-reauth libafssiad.so libafssiad.krb.so *.s *.o *.b core *~ *.com *.ld AFS_component_version_number.c
 
-CFLAGS=${DBG} ${OPTMZ} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS}
+CFLAGS=${DBG} ${OPTMZ} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS} ${ARCHFLAGS}
 
 ${DEST}/lib/afs/libafssiad.so: libafssiad.so
 	${INSTALL} $? $@

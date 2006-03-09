@@ -63,7 +63,7 @@
 #define mem_free(ptr, bsize)	free(ptr)
 #endif
 
-#if defined(AFS_AMD64_LINUX24_ENV) || (defined(KERNEL) && !defined(UKERNEL))
+#if defined(AFS_AMD64_LINUX24_ENV) || defined(AFS_DARWIN_ENV) || (defined(KERNEL) && !defined(UKERNEL))
 #define xdr_void afs_xdr_void
 #define xdr_int afs_xdr_int
 #define xdr_u_int afs_xdr_u_int
@@ -88,6 +88,7 @@
 #define xdr_vector afs_xdr_vector
 #define xdr_int64 afs_xdr_int64
 #define xdr_uint64 afs_xdr_uint64
+#define xdr_pointer afs_xdr_pointer
 #endif
 
 #ifdef	KERNEL

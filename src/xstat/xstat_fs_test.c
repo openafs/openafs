@@ -688,7 +688,11 @@ RunTheTest(struct cmd_syndesc *a_s)
      */
     curr_item = a_s->parms[P_FS_NAMES].items;
     for (currFS = 0; currFS < numFSs; currFS++) {
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+	FSSktArray[currFS].sin_family = AF_INET;	/*Internet family */
+#else
 	FSSktArray[currFS].sin_family = htons(AF_INET);	/*Internet family */
+#endif
 	FSSktArray[currFS].sin_port = htons(7000);	/*FileServer port */
 	he = hostutil_GetHostByName(curr_item->data);
 	if (he == NULL) {

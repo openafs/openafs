@@ -15,7 +15,7 @@ LDIRS= -L.. -L${TOP_LIBDIR}
 LIBS= ${TOP_LIBDIR}/libcmd.a  ../librx.a ${TOP_LIBDIR}/liblwp.a \
 	 ${TOP_LIBDIR}/util.a ${TOP_LIBDIR}/libsys.a ${XLIBS}
 
-CFLAGS = ${OPTIMIZE} ${INCDIRS} -DRXDEBUG ${LDIRS} ${XCFLAGS}
+CFLAGS = ${OPTIMIZE} ${INCDIRS} -DRXDEBUG ${LDIRS} ${XCFLAGS} ${ARCHFLAGS}
 
 RXTESTOBJS = testclient.o testserver.o kstest.o kctest.o
 

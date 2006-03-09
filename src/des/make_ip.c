@@ -31,10 +31,21 @@ void
 gen(FILE * stream)
 {
     register int i;
+#ifdef AFS_DARWIN80_ENV
+    int j;
+
+#define swap_long_bytes_bit_number _darwin_swap_long_bytes_bit_number
+#endif /* AFS_DARWIN80_ENV */
 
     /* clear the output */
     fprintf(stream, "    L2 = 0; R2 = 0;\n");
 
+#ifdef AFS_DARWIN80_ENV
+  for(j = 0;; j++) {
+    fprintf(stream, _darwin_whichstr[j]);
+    if (j == 2)
+	break;
+#endif /* AFS_DARWIN80_ENV */
     /* first setup IP */
     fprintf(stream, "/* IP operations */\n/* first left to left */\n");
 
@@ -60,5 +71,9 @@ gen(FILE * stream)
     for (i = 32; i <= 63; i++)
 	if (IP[i] >= 32)
 	    test_set(stream, "R1", SWAP(IP[i] - 32), "R2", i - 32);
+#ifdef AFS_DARWIN80_ENV
+    _darwin_which = !_darwin_which;
+  }
+#endif /* AFS_DARWIN80_ENV */
     exit(0);
 }

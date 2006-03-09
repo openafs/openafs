@@ -37,7 +37,7 @@
 #error unknown osf
 #endif
 #else
-#if	defined(AFS_X86_ENV)
+#if	defined(AFS_X86_ENV) && !defined(AFS_DARWIN_ENV)
 #include "conf-bsd-ncr.h"
 #else
 #ifdef AFS_NT40_ENV
