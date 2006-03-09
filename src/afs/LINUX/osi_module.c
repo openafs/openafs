@@ -48,7 +48,9 @@ extern struct file_system_type afs_fs_type;
 static long get_page_offset(void);
 #endif
 
-#if defined(AFS_LINUX24_ENV)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
+DEFINE_MUTEX(afs_global_lock);
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
 DECLARE_MUTEX(afs_global_lock);
 #else
 struct semaphore afs_global_lock = MUTEX;

@@ -187,15 +187,22 @@ extern unsigned long afs_linux_page_offset;
 #define afs_linux_page_address(page) (afs_linux_page_offset + PAGE_SIZE * (page - mem_map))
 
 #if defined(__KERNEL__)
-#include "../h/sched.h"
-#include "linux/wait.h"
+#include <linux/version.h>
+#include <linux/sched.h>
+#include <linux/wait.h>
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
+extern struct mutex afs_global_lock;
+#else
 extern struct semaphore afs_global_lock;
+#define mutex_lock(lock) down(lock)
+#define mutex_unlock(lock) up(lock)
+#endif
 extern int afs_global_owner;
 
 #define AFS_GLOCK() \
 do { \
-	 down(&afs_global_lock); \
+	 mutex_lock(&afs_global_lock); \
 	 if (afs_global_owner) \
 	     osi_Panic("afs_global_lock already held by pid %d", \
 		       afs_global_owner); \
@@ -209,10 +216,8 @@ do { \
     if (!ISAFS_GLOCK()) \
 	osi_Panic("afs global lock not held at %s:%d", __FILE__, __LINE__); \
     afs_global_owner = 0; \
-    up(&afs_global_lock); \
+    mutex_unlock(&afs_global_lock); \
 } while (0)
-
-
 #else
 #define AFS_GLOCK()
 #define AFS_GUNLOCK()
