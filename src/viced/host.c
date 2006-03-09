@@ -713,16 +713,27 @@ h_TossStuff_r(register struct host *host)
     /* ASSUMPTION: rxi_FreeConnection() does not yield */
     for (cp = &host->FirstClient; (client = *cp);) {
 	if ((host->hostFlags & HOSTDELETED) || client->deleted) {
+	    int code;
+	    ObtainWriteLockNoBlock(&client->lock, code);
+	    if (code < 0) {
+		char hoststr[16];
+		ViceLog(0,
+			("Warning: h_TossStuff_r failed: Host %s:%d client %x was locked.\n",
+			 afs_inet_ntoa_r(host->host, hoststr),
+			 ntohs(host->port), client));
+		return;
+	    }
+		 
 	    if (client->refCount) {
 		char hoststr[16];
 		ViceLog(0,
-			("Warning: Host %s:%d client %x refcount %d while deleting, failing.\n",
+			("Warning: h_TossStuff_r failed: Host %s:%d client %x refcount %d.\n",
 			 afs_inet_ntoa_r(host->host, hoststr),
 			 ntohs(host->port), client, client->refCount));
 		/* This is the same thing we do if the host is locked */
+		ReleaseWriteLock(&client->lock);
 		return;
 	    }
-	    /* We can't protect this without dropping the H_LOCK */
 	    client->CPS.prlist_len = 0;
 	    if ((client->ViceId != ANONYMOUSID) && client->CPS.prlist_val)
 		free(client->CPS.prlist_val);
@@ -732,6 +743,7 @@ h_TossStuff_r(register struct host *host)
 	    }
 	    CurrentConnections--;
 	    *cp = client->next;
+	    ReleaseWriteLock(&client->lock);
 	    FreeCE(client);
 	} else
 	    cp = &client->next;
