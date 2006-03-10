@@ -1,3 +1,24 @@
+Since 1.4.1 rc9:  1.4.1 rc10 released (10 March 2006)
+
+ * Fix the rx-lwp implementation to randomly generate rx call
+   identifiers which are supposed to be unique at a given point
+   in time.  This affects some of the command line tools used
+   for debugging but not the AFS Client Service itself which
+   uses the rx-pthreads implementation.
+
+ * xstats_fs_test.exe and xstats_cm_test.exe are now built for
+   Windows although they are not distributed
+
+ * don't generate an exception when logging unexpected SMB packets
+
+ * the data structures used by cm_IoctlGetVolumeStatus and 
+   cm_IoctlSetVolumeStatus are not compatible with the CIFS
+   Get/Set File Information calls so don't bother executing them.
+
+Since 1.4.1 rc8:
+
+ * Nothing
+
 Since 1.4.1 rc7: 
 
  * Windows will return WSAECONNRESET to the next receive packet
