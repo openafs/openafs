@@ -1511,7 +1511,7 @@ MapName_r(char *aname, char *acell, afs_int32 * aval)
 
     cnamelen = strlen(acell);
     if (cnamelen) {
-	if (afs_is_foreign_ticket_name(aname, "", acell, localcellname)) {
+	if (afs_is_foreign_ticket_name(aname, NULL, acell, localcellname)) {
 	    ViceLog(2,
 		    ("MapName: cell is foreign.  cell=%s, localcell=%s, localrealms={%s,%s,%s,%s}\n",
 		    acell, localcellname, local_realms[0],local_realms[1],local_realms[2],local_realms[3]));
