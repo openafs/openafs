@@ -73,21 +73,21 @@ struct sourcestack {
 } *shead;
 
 int
-Interactive(register struct cmd_syndesc *as)
+Interactive(struct cmd_syndesc *as, char *arock)
 {
     finished = 0;
     return 0;
 }
 
 int
-Quit(register struct cmd_syndesc *as)
+Quit(struct cmd_syndesc *as, char *arock)
 {
     finished = 1;
     return 0;
 }
 
 int
-Source(register struct cmd_syndesc *as)
+Source(struct cmd_syndesc *as, char *arock)
 {
     FILE *fd;
     struct sourcestack *sp;
@@ -115,7 +115,7 @@ Source(register struct cmd_syndesc *as)
 }
 
 int
-Sleep(register struct cmd_syndesc *as)
+Sleep(struct cmd_syndesc *as, char *arock)
 {
     int delay;
     if (!as->parms[0].items) {
@@ -153,7 +153,7 @@ osi_audit()
 }
 
 int
-GetGlobals(register struct cmd_syndesc *as)
+GetGlobals(struct cmd_syndesc *as, char *arock)
 {
     register afs_int32 code;
     char *cell;
@@ -185,7 +185,7 @@ GetGlobals(register struct cmd_syndesc *as)
 }
 
 int
-CleanUp(register struct cmd_syndesc *as)
+CleanUp(struct cmd_syndesc *as, char *arock)
 {
 #if defined(SUPERGROUPS)
     if (as && !strcmp(as->name, "help"))
@@ -207,7 +207,7 @@ CleanUp(register struct cmd_syndesc *as)
 }
 
 int
-CreateGroup(register struct cmd_syndesc *as)
+CreateGroup(struct cmd_syndesc *as, char *arock)
 {
     register afs_int32 code;
     afs_int32 id;
@@ -267,7 +267,7 @@ CreateGroup(register struct cmd_syndesc *as)
 }
 
 int
-CreateUser(register struct cmd_syndesc *as)
+CreateUser(struct cmd_syndesc *as, char *arock)
 {
     register afs_int32 code;
     afs_int32 id;
@@ -492,7 +492,7 @@ GetNameOrId(register struct cmd_syndesc *as, struct idlist *lids, struct namelis
 
 
 int
-AddToGroup(register struct cmd_syndesc *as)
+AddToGroup(struct cmd_syndesc *as, char *arock)
 {
     register afs_int32 code;
     struct cmd_item *u, *g;
@@ -513,7 +513,7 @@ AddToGroup(register struct cmd_syndesc *as)
 }
 
 int
-RemoveFromGroup(register struct cmd_syndesc *as)
+RemoveFromGroup(struct cmd_syndesc *as, char *arock)
 {
     register afs_int32 code;
     struct cmd_item *u, *g;
@@ -534,7 +534,7 @@ RemoveFromGroup(register struct cmd_syndesc *as)
 }
 
 int
-ListMembership(register struct cmd_syndesc *as)
+ListMembership(struct cmd_syndesc *as, char *arock)
 {
     register afs_int32 code;
     idlist ids;
@@ -579,7 +579,7 @@ ListMembership(register struct cmd_syndesc *as)
 }
 
 int
-Delete(register struct cmd_syndesc *as)
+Delete(struct cmd_syndesc *as, char *arock)
 {
     register afs_int32 code;
     idlist ids;
@@ -618,7 +618,7 @@ char *flags_dncase = "s mar";	/* legal member acces values */
 int flags_shift[5] = { 2, 1, 2, 2, 1 };	/* bits for each */
 
 int
-CheckEntry(register struct cmd_syndesc *as)
+CheckEntry(struct cmd_syndesc *as, char *arock)
 {
     register afs_int32 code;
     afs_int32 rcode = 1;
@@ -717,7 +717,7 @@ CheckEntry(register struct cmd_syndesc *as)
 }
 
 int
-ListEntries(struct cmd_syndesc *as)
+ListEntries(struct cmd_syndesc *as, char *arock)
 {
     afs_int32 code = 0;
     afs_int32 flag, startindex, nentries, nextstartindex;
@@ -754,7 +754,7 @@ ListEntries(struct cmd_syndesc *as)
 }
 
 int
-ChownGroup(register struct cmd_syndesc *as)
+ChownGroup(struct cmd_syndesc *as, char *arock)
 {
     register afs_int32 code;
     char *name;
@@ -770,7 +770,7 @@ ChownGroup(register struct cmd_syndesc *as)
 }
 
 int
-ChangeName(register struct cmd_syndesc *as)
+ChangeName(struct cmd_syndesc *as, char *arock)
 {
     register afs_int32 code;
     char *oldname;
@@ -786,7 +786,7 @@ ChangeName(register struct cmd_syndesc *as)
 }
 
 int
-ListMax(register struct cmd_syndesc *as)
+ListMax(struct cmd_syndesc *as, char *arock)
 {
     register afs_int32 code;
     afs_int32 maxUser, maxGroup;
@@ -807,7 +807,7 @@ ListMax(register struct cmd_syndesc *as)
 }
 
 int
-SetMax(register struct cmd_syndesc *as)
+SetMax(struct cmd_syndesc *as, char *arock)
 {
     register afs_int32 code;
     afs_int32 maxid;
@@ -847,7 +847,7 @@ SetMax(register struct cmd_syndesc *as)
 }
 
 int
-SetFields(register struct cmd_syndesc *as)
+SetFields(struct cmd_syndesc *as, char *arock)
 {
     register afs_int32 code;
     idlist ids;
@@ -942,7 +942,7 @@ SetFields(register struct cmd_syndesc *as)
 }
 
 int
-ListOwned(register struct cmd_syndesc *as)
+ListOwned(struct cmd_syndesc *as, char *arock)
 {
     register afs_int32 code;
     idlist ids;
@@ -1162,7 +1162,7 @@ main(int argc, char **argv)
 #if defined(SUPERGROUPS)
     finished = 1;
     if (code = cmd_Dispatch(argc, argv)) {
-	CleanUp(0);
+	CleanUp(NULL, NULL);
 	exit(1);
     }
     source = stdin;
@@ -1197,7 +1197,7 @@ main(int argc, char **argv)
 	parsev[0] = savec;
 	cmd_FreeArgv(parsev);
     }
-    CleanUp(0);
+    CleanUp(NULL, NULL);
     exit(0);
 
 #else /* SUPERGROUPS */
