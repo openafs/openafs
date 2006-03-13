@@ -112,28 +112,30 @@ extern int afs_vget();
 
 #ifdef KERNEL
 
+#define AFS_GLOCK() AFS_GLOCKP(curproc)
+#define AFS_GUNLOCK() AFS_GUNLOCKP(curproc)
 #ifdef AFS_GLOBAL_SUNLOCK
 extern struct proc *afs_global_owner;
 extern struct lock afs_global_lock;
-#define AFS_GLOCK() \
+#define AFS_GLOCKP(p) \
     do { \
-        osi_Assert(curproc); \
- 	afs_osi_lockmgr(&afs_global_lock, LK_EXCLUSIVE, 0, curproc); \
+        osi_Assert(p); \
+ 	afs_osi_lockmgr(&afs_global_lock, LK_EXCLUSIVE, 0, (p)); \
         osi_Assert(afs_global_owner == NULL); \
-   	afs_global_owner = curproc; \
+   	afs_global_owner = (p); \
     } while (0)
-#define AFS_GUNLOCK() \
+#define AFS_GUNLOCKP(p) \
     do { \
-        osi_Assert(curproc); \
- 	osi_Assert(afs_global_owner == curproc); \
+        osi_Assert(p); \
+ 	osi_Assert(afs_global_owner == (p)); \
         afs_global_owner = NULL; \
-        afs_osi_lockmgr(&afs_global_lock, LK_RELEASE, 0, curproc); \
+        afs_osi_lockmgr(&afs_global_lock, LK_RELEASE, 0, (p)); \
     } while(0)
 #define ISAFS_GLOCK() (afs_global_owner == curproc && curproc)
 #else
 extern struct lock afs_global_lock;
-#define AFS_GLOCK()
-#define AFS_GUNLOCK()
+#define AFS_GLOCKP(p)
+#define AFS_GUNLOCKP(p)
 #define AFS_ASSERT_GLOCK()
 #define ISAFS_GLOCK() 1
 #endif
