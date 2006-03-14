@@ -200,8 +200,10 @@ extern int h_Lock_r(register struct host *host);
 extern int DeleteAllCallBacks_r(struct host *host, int deletefe);
 extern struct host *h_Alloc(register struct rx_connection *r_con);
 extern struct host *h_Alloc_r(register struct rx_connection *r_con);
-extern struct host *h_Lookup_r(afs_uint32 hostaddr, afs_uint32 hport,
+extern struct host *h_Lookup_r(afs_uint32 hostaddr, afs_uint16 hport,
 			       int *heldp);
+extern void   hashInsert_r(afs_uint32 addr, afs_uint16 port, 
+			   struct host* host);
 extern struct host *h_LookupUuid_r(afsUUID * uuidp);
 extern int h_FreeConnection(struct rx_connection *tcon);
 extern void h_Enumerate(int (*proc) (), char *param);
@@ -215,7 +217,7 @@ extern void h_PrintStats();
 extern void h_PrintClients();
 extern void h_GetWorkStats();
 extern void h_flushhostcps(register afs_uint32 hostaddr,
-			   register afs_uint32 hport);
+			   register afs_uint16 hport);
 struct Interface *MultiVerifyInterface_r();
 
 struct host *(hosttableptrs[h_MAXHOSTTABLES]);	/* Used by h_itoh */
