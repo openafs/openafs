@@ -141,7 +141,6 @@ afs_DequeueCallback(struct vcache *avc)
     debugvc = avc;
     if (avc->callsort.prev) {
 	QRemove(&(avc->callsort));
-	avc->callsort.prev = avc->callsort.next = NULL;
     } else;			/* must have got dequeued in a race */
 
     return;
@@ -220,9 +219,8 @@ afs_CheckCallbacks(unsigned int secs)
 			    /* What about locking xvcache or vrefcount++ or
 			     * write locking tvc? */
 			    QRemove(tq);
-			    tq->prev = tq->next = NULL;
 			    tvc->states &= ~(CStatd | CMValid | CUnique);
-                            if (!(tvc->states & CVInit) &&
+                            if (!(tvc->states & (CVInit|CVFlushed)) &&
                                 (tvc->fid.Fid.Vnode & 1 ||
                                  (vType(tvc) == VDIR)))
 				osi_dnlc_purgedp(tvc);
@@ -238,9 +236,8 @@ afs_CheckCallbacks(unsigned int secs)
 		 * What about locking xvcache or vrefcount++ or write locking tvc?
 		 */
 		QRemove(tq);
-		tq->prev = tq->next = NULL;
 		tvc->states &= ~(CStatd | CMValid | CUnique);
-                if (!(tvc->states & CVInit) &&
+                if (!(tvc->states & (CVInit|CVFlushed)) &&
                     (tvc->fid.Fid.Vnode & 1 || (vType(tvc) == VDIR)))
 		    osi_dnlc_purgedp(tvc);
 	    }
@@ -311,8 +308,9 @@ afs_FlushCBs(void)
 	    tvc->callback = 0;
 	    tvc->dchint = NULL;	/* invalidate hints */
 	    tvc->states &= ~(CStatd);
-	    tvc->callsort.prev = tvc->callsort.next = NULL;
-	    if (!(tvc->states & CVInit) &&
+	    if (QPrev(&(tvc->callsort)))
+		QRemove(&(tvc->callsort));
+	    if (!(tvc->states & (CVInit|CVFlushed)) &&
                 ((tvc->fid.Fid.Vnode & 1) || (vType(tvc) == VDIR)))
 		osi_dnlc_purgedp(tvc);
 	}
@@ -341,7 +339,7 @@ afs_FlushServerCBs(struct server *srvp)
 		tvc->callback = 0;
 		tvc->dchint = NULL;	/* invalidate hints */
 		tvc->states &= ~(CStatd);
-		if (!(tvc->states & CVInit) &&
+		if (!(tvc->states & (CVInit|CVFlushed)) &&
                     ((tvc->fid.Fid.Vnode & 1) || (vType(tvc) == VDIR))) {
 		    osi_dnlc_purgedp(tvc);
 		}

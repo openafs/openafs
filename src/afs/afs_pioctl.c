@@ -1945,12 +1945,12 @@ DECL_PIOCTL(PCheckServers)
 	pcheck = (struct chservinfo *)ain;
 	if (pcheck->tinterval >= 0) {
 	    cp = aout;
-	    memcpy(cp, (char *)&PROBE_INTERVAL, sizeof(afs_int32));
+	    memcpy(cp, (char *)&afs_probe_interval, sizeof(afs_int32));
 	    *aoutSize = sizeof(afs_int32);
 	    if (pcheck->tinterval > 0) {
 		if (!afs_osi_suser(*acred))
 		    return EACCES;
-		PROBE_INTERVAL = pcheck->tinterval;
+		afs_probe_interval = pcheck->tinterval;
 	    }
 	    return 0;
 	}
@@ -2549,6 +2549,9 @@ DECL_PIOCTL(PFlushVolumeData)
     register struct volume *tv;
     afs_int32 cell, volume;
     struct afs_q *tq, *uq;
+#ifdef AFS_DARWIN80_ENV
+    vnode_t vp;
+#endif
 
     AFS_STATCNT(PFlushVolumeData);
     if (!avc)
@@ -2585,14 +2588,22 @@ DECL_PIOCTL(PFlushVolumeData)
 #if	defined(AFS_SGI_ENV) || defined(AFS_OSF_ENV)  || defined(AFS_SUN5_ENV)  || defined(AFS_HPUX_ENV) || defined(AFS_LINUX20_ENV)
 		VN_HOLD(AFSTOV(tvc));
 #else
-#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 #ifdef AFS_DARWIN80_ENV
-                if (vnode_get(AFSTOV(tvc)))
-                    continue;
-#endif
+		vp = AFSTOV(tvc);
+		if (vnode_get(vp))
+		    continue;
+		if (vnode_ref(vp)) {
+		    AFS_GUNLOCK();
+		    vnode_put(vp);
+		    AFS_GLOCK();
+		    continue;
+		}
+#else
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 		osi_vnhold(tvc, 0);
 #else
 		VREFCOUNT_INC(tvc); /* AIX, apparently */
+#endif
 #endif
 #endif
 		ReleaseReadLock(&afs_xvcache);
@@ -2613,15 +2624,12 @@ DECL_PIOCTL(PFlushVolumeData)
 		afs_BozonUnlock(&tvc->pvnLock, tvc);
 #endif
 #ifdef AFS_DARWIN80_ENV
-		/* our tvc ptr is still good until now */
-                vnode_put(AFSTOV(tvc));
-		AFS_FAST_RELE(tvc);
-		ObtainReadLock(&afs_xvcache);
-#else
-		ObtainReadLock(&afs_xvcache);
-		/* our tvc ptr is still good until now */
-		AFS_FAST_RELE(tvc);
+		vnode_put(AFSTOV(tvc));
 #endif
+		ObtainReadLock(&afs_xvcache);
+		uq = QPrev(tq);
+		/* our tvc ptr is still good until now */
+		AFS_FAST_RELE(tvc);
 	    }
 	}
     ReleaseReadLock(&afs_xvcache);

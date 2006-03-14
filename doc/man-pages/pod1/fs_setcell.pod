@@ -4,9 +4,15 @@ fs setcell - Configures permissions for setuid programs from specified cells
 
 =head1 SYNOPSIS
 
-B<fs setcell> B<-cell> <I<cell name>>+ [B<-suid>] [B<-nosuid>] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<fs setce> B<-c> <I<cell name>>+ [B<-s>] [B<-n>] [B<-h>]
+B<fs setcell> S<<< B<-cell> <I<cell name>>+ >>> [B<-suid>] [B<-nosuid>] [B<-help>]
+
+B<fs setce> S<<< B<-c> <I<cell name>>+ >>> [B<-s>] [B<-n>] [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

@@ -65,6 +65,22 @@ void cm_InitIoctl(void)
     lock_InitializeMutex(&cm_Afsdsbmt_Lock, "AFSDSBMT.INI Access Lock");
 }
 
+long cm_CleanFile(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
+{
+    long code;
+
+    lock_ObtainWrite(&scp->bufCreateLock);
+    code = buf_CleanVnode(scp, userp, reqp);
+        
+    lock_ObtainMutex(&scp->mx);
+    cm_DiscardSCache(scp);
+    lock_ReleaseMutex(&scp->mx);
+
+    lock_ReleaseWrite(&scp->bufCreateLock);
+    osi_Log2(afsd_logp,"cm_CleanFile scp 0x%x returns error: [%x]",scp, code);
+    return code;
+}
+
 long cm_FlushFile(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
 {
     long code;
@@ -73,14 +89,7 @@ long cm_FlushFile(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
     code = buf_FlushCleanPages(scp, userp, reqp);
         
     lock_ObtainMutex(&scp->mx);
-    scp->cbServerp = NULL;
-    scp->cbExpires = 0;
-    cm_dnlcPurgedp(scp);
-    cm_dnlcPurgevp(scp);
-    cm_FreeAllACLEnts(scp);
-
-    /* Force mount points and symlinks to be re-evaluated */
-    scp->mountPointStringp[0] = '\0';
+    cm_DiscardSCache(scp);
 
     lock_ReleaseMutex(&scp->mx);
 
@@ -92,30 +101,13 @@ long cm_FlushFile(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
 long cm_FlushParent(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
 {
     long code = 0;
-    int i;
-    cm_fid_t    parent_fid;
-
-    lock_ObtainWrite(&cm_scacheLock);
-    cm_HoldSCacheNoLock(scp);
-    parent_fid = scp->fid;
-    parent_fid.vnode = scp->parentVnode;
-    parent_fid.unique = scp->parentUnique;
-    cm_ReleaseSCacheNoLock(scp);
-
-    for (i=0; i<cm_data.hashTableSize; i++) {
-        for (scp = cm_data.hashTablep[i]; scp; scp = scp->nextp) {
-            if (!cm_FidCmp(&scp->fid, &parent_fid)) {
-                cm_HoldSCacheNoLock(scp);
-                lock_ReleaseWrite(&cm_scacheLock);
-
-                /* now flush the file */
-                code = cm_FlushFile(scp, userp, reqp);
-                lock_ObtainWrite(&cm_scacheLock);
-                cm_ReleaseSCacheNoLock(scp);
-            }
-        }
-    }
-    lock_ReleaseWrite(&cm_scacheLock);
+    cm_scache_t * pscp;
+  
+    pscp = cm_FindSCacheParent(scp);
+  
+    /* now flush the file */
+    code = cm_FlushFile(pscp, userp, reqp);
+    cm_ReleaseSCache(scp);
 
     return code;
 }
@@ -484,7 +476,7 @@ long cm_ParseIoctlParent(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
                         userp, ioctlp->tidPathp, reqp, &substRootp);
         if (code) return code;
 
-        code = cm_NameI(substRootp, tbuffer, CM_FLAG_FOLLOW,
+        code = cm_NameI(substRootp, tbuffer, CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
                         userp, NULL, reqp, scpp);
         if (code) return code;
     }
@@ -560,7 +552,7 @@ long cm_IoctlGetFileCellName(struct smb_ioctl *ioctlp, struct cm_user *userp)
          scp->fid.cell==AFS_FAKE_ROOT_CELL_ID &&
          scp->fid.volume==AFS_FAKE_ROOT_VOL_ID &&
          scp->fid.vnode==0x1 && scp->fid.unique==0x1 ) {
-        StringCbCopyA(ioctlp->outDatap, 999999, "Freelance.Local.Root");
+        StringCbCopyA(ioctlp->outDatap, SMB_IOCTL_MAXDATA - (ioctlp->outDatap - ioctlp->outAllocp), "Freelance.Local.Root");
         ioctlp->outDatap += strlen(ioctlp->outDatap) + 1;
         code = 0;
     } else 
@@ -568,7 +560,7 @@ long cm_IoctlGetFileCellName(struct smb_ioctl *ioctlp, struct cm_user *userp)
     {
         cellp = cm_FindCellByID(scp->fid.cell);
         if (cellp) {
-            StringCbCopyA(ioctlp->outDatap, 999999, cellp->name);
+            StringCbCopyA(ioctlp->outDatap, SMB_IOCTL_MAXDATA - (ioctlp->outDatap - ioctlp->outAllocp), cellp->name);
             ioctlp->outDatap += strlen(ioctlp->outDatap) + 1;
             code = 0;
         }
@@ -770,11 +762,11 @@ long cm_IoctlSetVolumeStatus(struct smb_ioctl *ioctlp, struct cm_user *userp)
     cp = ioctlp->outDatap;
     memcpy(cp, (char *)&volStat, sizeof(VolumeStatus));
     cp += sizeof(VolumeStatus);
-    StringCbCopyA(cp, 999999, volName);
+    StringCbCopyA(cp, SMB_IOCTL_MAXDATA - (cp - ioctlp->outAllocp), volName);
     cp += strlen(volName)+1;
-    StringCbCopyA(cp, 999999, offLineMsg);
+    StringCbCopyA(cp, SMB_IOCTL_MAXDATA - (cp - ioctlp->outAllocp), offLineMsg);
     cp += strlen(offLineMsg)+1;
-    StringCbCopyA(cp, 999999, motd);
+    StringCbCopyA(cp, SMB_IOCTL_MAXDATA - (cp - ioctlp->outAllocp), motd);
     cp += strlen(motd)+1;
 
     /* now return updated return data pointer */
@@ -826,11 +818,11 @@ long cm_IoctlGetVolumeStatus(struct smb_ioctl *ioctlp, struct cm_user *userp)
     cp = ioctlp->outDatap;
     memcpy(cp, (char *)&volStat, sizeof(AFSFetchVolumeStatus));
     cp += sizeof(AFSFetchVolumeStatus);
-    StringCbCopyA(cp, 999999, volName);
+    StringCbCopyA(cp, SMB_IOCTL_MAXDATA - (cp - ioctlp->outAllocp), volName);
     cp += strlen(volName)+1;
-    StringCbCopyA(cp, 999999, offLineMsg);
+    StringCbCopyA(cp, SMB_IOCTL_MAXDATA - (cp - ioctlp->outAllocp), offLineMsg);
     cp += strlen(offLineMsg)+1;
-    StringCbCopyA(cp, 999999, motd);
+    StringCbCopyA(cp, SMB_IOCTL_MAXDATA - (cp - ioctlp->outAllocp), motd);
     cp += strlen(motd)+1;
 
     /* return new size */
@@ -979,7 +971,7 @@ long cm_IoctlStatMountPoint(struct smb_ioctl *ioctlp, struct cm_user *userp)
     code = cm_ReadMountPoint(scp, userp, &req);
     if (code == 0) {
         cp = ioctlp->outDatap;
-        StringCbCopyA(cp, 999999, scp->mountPointStringp);
+        StringCbCopyA(cp, SMB_IOCTL_MAXDATA - (cp - ioctlp->outAllocp), scp->mountPointStringp);
         cp += strlen(cp) + 1;
         ioctlp->outDatap = cp;
     }
@@ -1266,7 +1258,7 @@ long cm_IoctlGetCell(struct smb_ioctl *ioctlp, struct cm_user *userp)
         }
         lock_ReleaseRead(&cm_serverLock);
         cp = basep + max * sizeof(afs_int32);
-        StringCbCopyA(cp, 999999, tcellp->name);
+        StringCbCopyA(cp, SMB_IOCTL_MAXDATA - (cp - ioctlp->outAllocp), tcellp->name);
         cp += strlen(tcellp->name)+1;
         ioctlp->outDatap = cp;
     }
@@ -1298,6 +1290,7 @@ long cm_IoctlNewCell(struct smb_ioctl *ioctlp, struct cm_user *userp)
     for (cp = cm_data.allCellsp; cp; cp=cp->nextp) 
     {
         long code;
+	lock_ObtainMutex(&cp->mx);
         /* delete all previous server lists - cm_FreeServerList will ask for write on cm_ServerLock*/
         cm_FreeServerList(&cp->vlServersp);
         cp->vlServersp = NULL;
@@ -1325,6 +1318,7 @@ long cm_IoctlNewCell(struct smb_ioctl *ioctlp, struct cm_user *userp)
             cp->flags &= ~CM_CELLFLAG_VLSERVER_INVALID;
             cm_RandomizeServer(&cp->vlServersp);
         }
+	lock_ReleaseMutex(&cp->mx);
     }
     
     lock_ReleaseWrite(&cm_cellLock);
@@ -1337,11 +1331,11 @@ long cm_IoctlGetWsCell(smb_ioctl_t *ioctlp, cm_user_t *userp)
 
 	if (cm_freelanceEnabled) {
             if (cm_GetRootCellName(ioctlp->outDatap))
-                StringCbCopyA(ioctlp->outDatap, 999999, "Freelance.Local.Root");
+                StringCbCopyA(ioctlp->outDatap, SMB_IOCTL_MAXDATA - (ioctlp->outDatap - ioctlp->outAllocp), "Freelance.Local.Root");
             ioctlp->outDatap += strlen(ioctlp->outDatap) +1;
 	} else if (cm_data.rootCellp) {
 	    /* return the default cellname to the caller */
-	    StringCbCopyA(ioctlp->outDatap, 999999, cm_data.rootCellp->name);
+	    StringCbCopyA(ioctlp->outDatap, SMB_IOCTL_MAXDATA - (ioctlp->outDatap - ioctlp->outAllocp), cm_data.rootCellp->name);
 	    ioctlp->outDatap += strlen(ioctlp->outDatap) +1;
 	} else {
 	    /* if we don't know our default cell, return failure */
@@ -1423,7 +1417,7 @@ long cm_IoctlSysName(struct smb_ioctl *ioctlp, struct cm_user *userp)
         memcpy(cp, (char *)&foundname, sizeof(afs_int32));
         cp += sizeof(afs_int32);	/* skip found flag */
         if (foundname) {
-            StringCbCopyA(cp, 999999, outname);
+            StringCbCopyA(cp, SMB_IOCTL_MAXDATA - (cp - ioctlp->outAllocp), outname);
             cp += strlen(outname) + 1;	/* skip name and terminating null char */
             for ( count=1; count < foundname ; ++count) {   /* ... or list */
                 if ( !(*sysnamelist)[count] )
@@ -1433,7 +1427,7 @@ long cm_IoctlSysName(struct smb_ioctl *ioctlp, struct cm_user *userp)
                 if (t >= MAXSYSNAME)
                     osi_panic("cm_IoctlSysName: sysname entry garbled\n", 
                                __FILE__, __LINE__);
-                StringCbCopyA(cp, 999999, (*sysnamelist)[count]);
+                StringCbCopyA(cp, SMB_IOCTL_MAXDATA - (cp - ioctlp->outAllocp), (*sysnamelist)[count]);
                 cp += t + 1;
             }
         }
@@ -1774,11 +1768,11 @@ long cm_IoctlListlink(struct smb_ioctl *ioctlp, struct cm_user *userp)
     if (code == 0) {
         cp = ioctlp->outDatap;
         if (newRootScp != NULL) {
-            StringCbCopyA(cp, 999999, cm_mountRoot);
-            StringCbCatA(cp, 999999, "/");
+            StringCbCopyA(cp, SMB_IOCTL_MAXDATA - (cp - ioctlp->outAllocp), cm_mountRoot);
+            StringCbCatA(cp, SMB_IOCTL_MAXDATA - (cp - ioctlp->outAllocp), "/");
             cp += strlen(cp);
         }
-        StringCbCopyA(cp, 999999, spacep->data);
+        StringCbCopyA(cp, SMB_IOCTL_MAXDATA - (cp - ioctlp->outAllocp), spacep->data);
         cp += strlen(cp) + 1;
         ioctlp->outDatap = cp;
         cm_FreeSpace(spacep);
@@ -1790,7 +1784,7 @@ long cm_IoctlListlink(struct smb_ioctl *ioctlp, struct cm_user *userp)
                code == CM_ERROR_NOSUCHPATH &&
                 scp->fileType == CM_SCACHETYPE_INVALID) {
         cp = ioctlp->outDatap;
-        StringCbCopyA(cp, 999999, spacep->data);
+        StringCbCopyA(cp, SMB_IOCTL_MAXDATA - (cp - ioctlp->outAllocp), spacep->data);
         cp += strlen(cp) + 1;
         ioctlp->outDatap = cp;
         cm_FreeSpace(spacep);
@@ -2104,11 +2098,11 @@ long cm_IoctlGetTokenIter(struct smb_ioctl *ioctlp, struct cm_user *userp)
     cp += sizeof(temp);
 
     /* cell name */
-    StringCbCopyA(cp, 999999, ucellp->cellp->name);
+    StringCbCopyA(cp, SMB_IOCTL_MAXDATA - (cp - ioctlp->outAllocp), ucellp->cellp->name);
     cp += strlen(cp) + 1;
 
     /* user name */
-    StringCbCopyA(cp, 999999, ucellp->userName);
+    StringCbCopyA(cp, SMB_IOCTL_MAXDATA - (cp - ioctlp->outAllocp), ucellp->userName);
     cp += strlen(cp) + 1;
 
     ioctlp->outDatap = cp;
@@ -2193,11 +2187,11 @@ long cm_IoctlGetToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
     cp += sizeof(temp);
 
     /* cell name */
-    StringCbCopyA(cp, 999999, ucellp->cellp->name);
+    StringCbCopyA(cp, SMB_IOCTL_MAXDATA - (cp - ioctlp->outAllocp), ucellp->cellp->name);
     cp += strlen(cp) + 1;
 
     /* user name */
-    StringCbCopyA(cp, 999999, ucellp->userName);
+    StringCbCopyA(cp, SMB_IOCTL_MAXDATA - (cp - ioctlp->outAllocp), ucellp->userName);
     cp += strlen(cp) + 1;
 
     ioctlp->outDatap = cp;
@@ -2330,7 +2324,7 @@ long cm_IoctlMakeSubmount(smb_ioctl_t *ioctlp, cm_user_t *userp)
                            (DWORD)strlen(&afspath[strlen(cm_mountRoot)])+1:2);
 
             RegCloseKey( hkSubmounts );
-            StringCbCopyA(ioctlp->outDatap, 999999, submountreqp);
+            StringCbCopyA(ioctlp->outDatap, SMB_IOCTL_MAXDATA - (ioctlp->outDatap - ioctlp->outAllocp), submountreqp);
             ioctlp->outDatap += strlen(ioctlp->outDatap) +1;
             lock_ReleaseMutex(&cm_Afsdsbmt_Lock);
             return 0;
@@ -2342,7 +2336,7 @@ long cm_IoctlMakeSubmount(smb_ioctl_t *ioctlp, cm_user_t *userp)
          */
         cm_NormalizeAfsPath (submountPathNormalized, sizeof(submountPathNormalized), submountPath);
         if (!strcmp (submountPathNormalized, afspath)) {
-            StringCbCopyA(ioctlp->outDatap, 999999, submountreqp);
+            StringCbCopyA(ioctlp->outDatap, SMB_IOCTL_MAXDATA - (ioctlp->outDatap - ioctlp->outAllocp), submountreqp);
             ioctlp->outDatap += strlen(ioctlp->outDatap) +1;
             RegCloseKey( hkSubmounts );
             lock_ReleaseMutex(&cm_Afsdsbmt_Lock);
@@ -2411,7 +2405,7 @@ long cm_IoctlMakeSubmount(smb_ioctl_t *ioctlp, cm_user_t *userp)
          */
         cm_NormalizeAfsPath (submountPathNormalized, sizeof(submountPathNormalized), submountPath);
         if (!strcmp (submountPathNormalized, afspath)) {
-            StringCbCopyA(ioctlp->outDatap, 999999, submountName);
+            StringCbCopyA(ioctlp->outDatap, SMB_IOCTL_MAXDATA - (ioctlp->outDatap - ioctlp->outAllocp), submountName);
             ioctlp->outDatap += strlen(ioctlp->outDatap) +1;
             RegCloseKey(hkSubmounts);
             lock_ReleaseMutex(&cm_Afsdsbmt_Lock);
@@ -2426,7 +2420,7 @@ long cm_IoctlMakeSubmount(smb_ioctl_t *ioctlp, cm_user_t *userp)
      * when writing out the submount.
      */
 
-    StringCbPrintfA(ioctlp->outDatap, 999999, "auto%ld", nextAutoSubmount);
+    StringCbPrintfA(ioctlp->outDatap, SMB_IOCTL_MAXDATA - (ioctlp->outDatap - ioctlp->outAllocp), "auto%ld", nextAutoSubmount);
 
     RegSetValueEx( hkSubmounts, 
                    ioctlp->outDatap,

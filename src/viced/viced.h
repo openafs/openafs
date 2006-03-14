@@ -117,6 +117,7 @@ struct AFSCallStatistics {
     afs_uint32 GetRootVolume;
     afs_uint32 CheckToken;
     afs_uint32 GetTime;
+    afs_uint32 GetCapabilities;
 
     /* General Fetch/Store Stats */
     afs_uint32 TotalCalls;

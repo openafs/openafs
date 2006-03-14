@@ -4,9 +4,15 @@ fs sysname - Reports or sets the CPU/operating system type
 
 =head1 SYNOPSIS
 
-B<fs sysname> [B<-newsys> <I<new sysname>>] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<fs sy> [B<-n> <I<new sysname>>] [B<-h>]
+B<fs sysname> S<<< [B<-newsys> <I<new sysname>>] >>> [B<-help>]
+
+B<fs sy> S<<< [B<-n> <I<new sysname>>] >>> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

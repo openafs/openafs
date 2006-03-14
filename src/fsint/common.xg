@@ -143,6 +143,7 @@ const AFSCB_XSTATSCOLL_FULL_PERF_INFO = 2;	 /*CM performance info*/
 const AFS_XSTATSCOLL_CALL_INFO = 0;	 /*FS call counting & info*/
 const AFS_XSTATSCOLL_PERF_INFO = 1;	 /*FS performance info*/
 const AFS_XSTATSCOLL_FULL_PERF_INFO = 2; /*Full FS performance info*/
+const AFS_XSTATSCOLL_CBSTATS = 3;	 /*Callback package counters */
 
 typedef afs_uint32 VolumeId;
 typedef afs_uint32 VolId;

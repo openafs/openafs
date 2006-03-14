@@ -4,19 +4,25 @@ backup diskrestore - Restores the entire contents of a partition
 
 =head1 SYNOPSIS
 
-B<backup diskrestore> B<-server> <I<machine to restore>>
-    B<-partition> <I<partition to restore>>
-    [B<-portoffset> <I<TC port offset>>+]
-    [B<-newserver> <I<destination machine>>]
-    [B<-newpartition> <I<destination partition>>]
-    [B<-extension> <I<new volume name extension>>]
-    [B<-n>] [B<-localauth>] [B<-cell> <I<cell name>>] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<backup di> B<-s> <I<machine to restore>> B<-pa> <I<partition to restore>>
-    [B<-po> <I<TC port offset>>+] [B<-news> <I<destination machine>>]
-    [B<-newp> <I<destination partition>>]
-    [B<-e> <I<new volume name extension>>] [B<-n>] [B<-l>]
-    [B<-c> <I<cell name>>] [B<-h>]
+B<backup diskrestore> S<<< B<-server> <I<machine to restore>> >>>
+    S<<< B<-partition> <I<partition to restore>> >>>
+    S<<< [B<-portoffset> <I<TC port offset>>+] >>>
+    S<<< [B<-newserver> <I<destination machine>>] >>>
+    S<<< [B<-newpartition> <I<destination partition>>] >>>
+    S<<< [B<-extension> <I<new volume name extension>>] >>>
+    [B<-n>] [B<-localauth>] S<<< [B<-cell> <I<cell name>>] >>> [B<-help>]
+
+B<backup di> S<<< B<-s> <I<machine to restore>> >>> S<<< B<-pa> <I<partition to restore>> >>>
+    S<<< [B<-po> <I<TC port offset>>+] >>> S<<< [B<-news> <I<destination machine>>] >>>
+    S<<< [B<-newp> <I<destination partition>>] >>>
+    S<<< [B<-e> <I<new volume name extension>>] >>> [B<-n>] [B<-l>]
+    S<<< [B<-c> <I<cell name>>] >>> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

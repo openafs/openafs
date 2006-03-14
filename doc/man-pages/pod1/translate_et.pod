@@ -4,7 +4,13 @@ translate_et - Translates numbered error codes into text messages
 
 =head1 SYNOPSIS
 
-B<translate_et> <I<error number>>+
+=for html
+<div class="synopsis">
+
+S<<< B<translate_et> <I<error number>>+ >>>
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

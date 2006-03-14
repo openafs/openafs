@@ -4,11 +4,17 @@ fs setclientaddrs - Sets the client interfaces to register with the File Server
 
 =head1 SYNOPSIS
 
-B<fs setclientaddrs> [B<-address> <I<client network interfaces>>+] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<fs setcl> [B<-a> <I<client network interfaces>>+] [B<-h>]
+B<fs setclientaddrs> S<<< [B<-address> <I<client network interfaces>>+] >>> [B<-help>]
 
-B<fs sc> [B<-a> <I<client network interfaces>>+] [B<-h>]
+B<fs setcl> S<<< [B<-a> <I<client network interfaces>>+] >>> [B<-h>]
+
+B<fs sc> S<<< [B<-a> <I<client network interfaces>>+] >>> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

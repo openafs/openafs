@@ -4,6 +4,9 @@ fs setcachesize - Sets the size of the disk cache
 
 =head1 SYNOPSIS
 
+=for html
+<div class="synopsis">
+
 B<fs setcachesize> [B<-blocks> <I<size in 1K byte blocks (0 => reset)>>]
     [B<-reset>] [B<-help>]
 
@@ -15,6 +18,9 @@ B<fs cachesize> [B<-b> <I<size in 1K byte blocks (0 => reset)>>]
 
 B<fs ca> [B<-b> <I<size in 1K byte blocks (0 => reset)>>]
     [B<-r>] [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 
@@ -89,8 +95,8 @@ The issuer must be logged in as the local superuser root.
 
 =head1 SEE ALSO
 
-L<cacheinfo(1)>,
-L<afsd(1)>,
+L<cacheinfo(5)>,
+L<afsd(8)>,
 L<fs_getcacheparms(1)>
 
 =head1 COPYRIGHT

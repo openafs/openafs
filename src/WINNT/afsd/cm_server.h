@@ -26,6 +26,7 @@ typedef struct cm_server {
     int type;				/* by mx */
     struct cm_conn *connsp;		/* locked by cm_connLock */
     afs_int32 flags;			/* by mx */
+    afs_int32 waitCount;		/* by mx */
     afs_int32 capabilities;		/* by mx */
     struct cm_cell *cellp;		/* cell containing this server */
     unsigned long refCount;		/* locked by cm_serverLock */
@@ -39,7 +40,7 @@ typedef struct cm_serverRef {
     struct cm_serverRef *next;      /* locked by cm_serverLock */
     struct cm_server *server;       /* locked by cm_serverLock */
     enum repstate status;           /* locked by cm_serverLock */
-    unsigned long refCount;                   /* locked by cm_serverLock */
+    unsigned long refCount;         /* locked by cm_serverLock */
 } cm_serverRef_t;
 
 /* types */
@@ -49,6 +50,7 @@ typedef struct cm_serverRef {
 /* flags */
 #define CM_SERVERFLAG_DOWN	1	/* server is down */
 #define CM_SERVERFLAG_PREF_SET	2       /* server preference set by user */
+#define CM_SERVERFLAG_PINGING 	4 	/* a ping against this server in progress */
 
 /* flags for procedures */
 #define CM_FLAG_CHECKUPSERVERS		1	/* check working servers */

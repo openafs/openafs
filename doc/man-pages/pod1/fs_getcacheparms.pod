@@ -4,9 +4,15 @@ fs getcacheparms - Displays the current size and usage of the cache
 
 =head1 SYNOPSIS
 
+=for html
+<div class="synopsis">
+
 B<fs getcacheparms> [B<-help>]
 
 B<fs getca> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

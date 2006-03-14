@@ -1,4 +1,126 @@
-Since 1.4.1 rc4: 1.4.1 rc5 released (20 Jan 2006)
+Changes not present in 1.4.1: 1.5.0 released (16 Feb 2006)
+
+ * Update build system to include the "sys_name" in the 
+   obj and dest paths.
+
+ * optimize the number of calls to obtain the smb_user_t for a 
+   smb virtual circuit.
+
+ * add logging of server addresses, status and capabilities when
+   pinging the server.
+
+ * prevent multiple threads from pinging the same server simultaneously.
+   instead, threads block and then use the result of the ping that was
+   already taking place.
+
+ * Add registry values to allow the defaults for daemon checks to be altered
+   at startup.  Log values to afsd_init.log.
+
+   daemonCheckDownInterval
+   daemonCheckUpInterval
+   daemonCheckVolInterval
+   daemonCheckCBInterval
+   daemonCheckLockInterval
+   daemonCheckTokenInterval
+
+ * Add EventLog messages for transitions in fs crypt state.
+
+ * Byte range locking (when locks will be obtained from the
+   is still under discussion)
+
+ * 64-bit Windows operating systems now supported 
+   (XP SP2 64-bit, 2003 SP1 64-bit, 2003 R2 64-bit)
+   This is a native 64-bit implementation of OpenAFS for Windows.
+   There is currently no 64-bit version of KFW and therefore 
+   there is no (easy) method for obtaining AFS credentials.  
+   32-bit KFW 3.0 can be used with 32-bit OAFW libraries
+   to obtain AFS tokens but there is not for the feint of 
+   heart.
+
+ * A faster implementation of the fcrypt algorithms improves 
+   performance.
+
+ * The afsd_service.exe now supplies Event Log Message Text.
+   The event log no longer generates warning text due to lack
+   of message configuration.
+
+ * When afs servers are unreachable and network stack returns
+   a WSAEHOSTUNREACHABLE error, the AFS client will immediately 
+   mark the attempted server as being down.   This allows for
+   very fast response to the calling application.  This change
+   has a pronounced improvement when the Windows Explorer is
+   used on disconnected mobile computers.
+
+ * Added DebugOutputString debugging of the RX library
+
+Since 1.4.1 rc7: 
+
+ * Windows will return WSAECONNRESET to the next receive packet
+   operation on a socket if an ICMP packet is received in response
+   to a packet that was sent and could not be delivered because
+   the port was unreachable.  We have to treat this as 
+   WSAEWOULDBLOCK so that we can retry the select() check and
+   not mark the connection as bad.
+
+Since 1.4.1 rc6: 1.4.1 rc7 released (14 Feb 2006)
+
+ * The client manager maintains a least recently used list of
+   all the ACLs.  If an ACL is already the most recently used
+   do not bother to remove it from the list and place it on the
+   front.
+
+ * As part of the process of adding a new server, set the 
+   server is down flag and then perform a ping.  If the server
+   is up, the flag will be reset.  If the server is down, the
+   client will not timeout unnecessarily while attempting to
+   perform real work.
+
+ * If a Mountpoint String is the empty string, return PATH NOT 
+   FOUND.
+
+ * Modify behavior of the Network Provider to avoid querying the
+   profile location if integrated logon is known to be disabled.
+
+ * Correct behavior of 'LogoffPreserveTokens'.  When set, tokens
+   will always be preserved regardless of whether or not integrated
+   logon was used to obtain tokens.  When unset, tokens will be 
+   destroyed regardless of whether integrated logon was used to 
+   obtain the tokens unless the profile is stored in AFS.
+
+ * Disable LogoffTransferToken functionality.  The SMB V3 Logoff
+   message is being delivered even when the user is not logging
+   off of the computer.  
+
+ * Fix a deadlock condition introduced in rc6.
+
+ * Cell names are case-insensitive.  Since the founding of OpenAFS
+   there has been a bug that treated "cell", "Cell", and "CELL" as
+   different cells.  This would result in what appeared to be 
+   random disappearance of user tokens or a failure to authenticate
+   even when tokens were listed by the "tokens" command.
+
+Since 1.4.1 rc5: 1.4.1 rc6 released (2 Feb 2006)
+
+ * Additional auditing of the smb code revealed that smb ioctl
+   operations were failing to free smb_fid_t objects
+
+ * The File Identifiers assigned to smb_fid_t objects could be
+   given the value 65535 which is 0xFFFF which is also the 
+   INVALID_HANDLE value.  Both 0 and 65535 are now treated as
+   reserved values.
+
+ * Audited all assignments to fields and ensured that they are
+   protected by obtaining the relevant mutex object.
+
+ * Re-wrote the VNOVNODE handling to avoid a potential deadlock
+   if both the current cm_scache_t object and its parent are
+   both returning VNOVNODE.
+
+ * Removed all the logic associated with the 'dead_vcp' variable
+   which must have been added for debugging because its used 
+   was never thread safe and it truly served no purpose.
+
+Since 1.4.1 rc4: 1.4.1 rc5 released (18 Jan 2006)
 
  * Check access permissions to the file before the file is 
    truncated.
@@ -18,7 +140,7 @@ Since 1.4.1 rc3: 1.4.1 rc4 released (11 Jan 2006)
  * smb_username_t and smb_user_t objects are now properly reference
    counted and freed as appropriate.
 
- * disable to use of AFS file locks.  Byte range locking is still
+ * disable to use of AFS file locks.  byte range locking is still
    implemented but all locks are managed locally.  This prevents
    multiple processes from editing the same file on the same 
    machine but it does prevent multiple processes on separate 
@@ -56,7 +178,7 @@ Since 1.4.1 rc1: 1.4.1 RC2 released (30 Nov 2005)
 
  * A down server should be marked up as long as it responds to the client.
    It doesn't matter if the server returned an error as long as the error
-   is something other than VRESTARTING.	 If there is such an error, all
+   is something other than VRESTARTING.  If there is such an error, all
    connections on that server should be marked for replacement.
 
  * Change the check "up" servers period from once per hour to once every
@@ -64,7 +186,7 @@ Since 1.4.1 rc1: 1.4.1 RC2 released (30 Nov 2005)
 
 Post 1.4.0 revisions: 1.4.1 RC1 released (21 Oct 2005)
  * Byte Range Locking support has been added.  Architectural documentation
-   is located within src/WINNT/afsd/cm_vnodeops.c.   Best efforts are 
+   is located within src/WINNT/afsd/cm_vnodeops.c.   Best efforts are
    made to enforce Windows mandatory locking model using locally managed
    byte range locks with full file locks obtained from the file server.
    Read-only volumes provide the user with an implied locking privilege.
@@ -75,7 +197,7 @@ Post 1.4.0 revisions: 1.4.1 RC1 released (21 Oct 2005)
 
  * Implement error translation functions to convert Universal Error Codes
    output by modern servers to local errno and winsock error values.
-   This fixes the error message problems using pioctl() calls from fs.exe 
+   This fixes the error message problems using pioctl() calls from fs.exe
    and the AFS Shell Extension.
 
 Since 1.4.0 rc8: 1.4.0 final tagged (20 Oct 2005); released (31 Oct 2005)

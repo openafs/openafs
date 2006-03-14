@@ -4,9 +4,15 @@ fs whereis - Reports each file server housing a file or directory
 
 =head1 SYNOPSIS
 
-B<fs whereis> [B<-path> <I<dir/file path>>+] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<fs whe> [B<-p> <I<dir/file path>>+] [B<-h>]
+B<fs whereis> S<<< [B<-path> <I<dir/file path>>+] >>> [B<-help>]
+
+B<fs whe> S<<< [B<-p> <I<dir/file path>>+] >>> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

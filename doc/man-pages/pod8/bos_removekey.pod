@@ -4,12 +4,18 @@ bos removekey - Removes a server encryption key from the KeyFile file
 
 =head1 SYNOPSIS
 
-B<bos removekey> B<-server> <I<machine name>>
-    B<-kvno> <I<key version number>>+ [B<-cell> <I<cell name>>]
+=for html
+<div class="synopsis">
+
+B<bos removekey> S<<< B<-server> <I<machine name>> >>>
+    S<<< B<-kvno> <I<key version number>>+ >>> S<<< [B<-cell> <I<cell name>>] >>>
     [B<-noauth>] [B<-localauth>] [B<-help>]
 
-B<bos removek> B<-s> <I<machine name>> B<-k> <I<key version number>>+
-    [B<-c> <I<cell name>>] [B<-n>] [B<-l>] [B<-h>]
+B<bos removek> S<<< B<-s> <I<machine name>> >>> S<<< B<-k> <I<key version number>>+ >>>
+    S<<< [B<-c> <I<cell name>>] >>> [B<-n>] [B<-l>] [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

@@ -4,10 +4,16 @@ buserver - Initializes the Backup Server
 
 =head1 SYNOPSIS
 
-B<buserver> [B<-database> <I<database directory>>]
-    [B<-cellservdb> <I<cell configuration directory>>] [B<-resetdb>]
+=for html
+<div class="synopsis">
+
+B<buserver> S<<< [B<-database> <I<database directory>>] >>>
+    S<<< [B<-cellservdb> <I<cell configuration directory>>] >>> [B<-resetdb>]
     [B<-noauth>] [B<-smallht>] [-servers <I<list of ubik database servers>>+]
     [B<-enable_peer_stats>]  [-enable_process_stats] [B<-help>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

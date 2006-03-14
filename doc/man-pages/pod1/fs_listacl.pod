@@ -4,11 +4,17 @@ fs listacl - Displays ACLs
 
 =head1 SYNOPSIS
 
-B<fs listacl> [B<-path> <I<dir/file path>>+] [B<-id>] [B<-if>] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<fs la> [B<-p> <I<dir/file path>>+] [B<-id>] [B<-if>] [B<-h>]
+B<fs listacl> S<<< [B<-path> <I<dir/file path>>+] >>> [B<-id>] [B<-if>] [B<-help>]
 
-B<fs lista> [B<-p> <I<dir/file path>>+] [B<-id>] [B<-if>] [B<-h>]
+B<fs la> S<<< [B<-p> <I<dir/file path>>+] >>> [B<-id>] [B<-if>] [B<-h>]
+
+B<fs lista> S<<< [B<-p> <I<dir/file path>>+] >>> [B<-id>] [B<-if>] [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

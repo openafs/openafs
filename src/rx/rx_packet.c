@@ -1405,11 +1405,28 @@ rxi_ReadPacket(osi_socket socket, register struct rx_packet *p, afs_uint32 * hos
 	    rx_stats.bogusPacketOnRead++;
 	    rx_stats.bogusHost = from.sin_addr.s_addr;
 	    MUTEX_EXIT(&rx_stats_mutex);
-	    dpf(("B: bogus packet from [%x,%d] nb=%d", from.sin_addr.s_addr,
-		 from.sin_port, nbytes));
+	    dpf(("B: bogus packet from [%x,%d] nb=%d", ntohl(from.sin_addr.s_addr),
+		 ntohs(from.sin_port), nbytes));
 	}
 	return 0;
-    } else {
+    } 
+#ifdef RXDEBUG
+    else if ((rx_intentionallyDroppedOnReadPer100 > 0)
+		&& (random() % 100 < rx_intentionallyDroppedOnReadPer100)) {
+	rxi_DecodePacketHeader(p);
+
+	*host = from.sin_addr.s_addr;
+	*port = from.sin_port;
+
+	dpf(("Dropped %d %s: %x.%u.%u.%u.%u.%u.%u flags %d len %d",
+	      p->header.serial, rx_packetTypes[p->header.type - 1], ntohl(host), ntohs(port), p->header.serial, 
+	      p->header.epoch, p->header.cid, p->header.callNumber, p->header.seq, p->header.flags, 
+	      p->length));
+	rxi_TrimDataBufs(p, 1);
+	return 0;
+    } 
+#endif
+    else {
 	/* Extract packet header. */
 	rxi_DecodePacketHeader(p);
 
@@ -2226,7 +2243,7 @@ rxi_SendPacket(struct rx_call *call, struct rx_connection *conn,
 #endif
 #ifdef RXDEBUG
     }
-    dpf(("%c %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %lx resend %d.%0.3d len %d", deliveryType, p->header.serial, rx_packetTypes[p->header.type - 1], peer->host, peer->port, p->header.serial, p->header.epoch, p->header.cid, p->header.callNumber, p->header.seq, p->header.flags, (unsigned long)p, p->retryTime.sec, p->retryTime.usec / 1000, p->length));
+    dpf(("%c %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %lx resend %d.%0.3d len %d", deliveryType, p->header.serial, rx_packetTypes[p->header.type - 1], ntohl(peer->host), ntohs(peer->port), p->header.serial, p->header.epoch, p->header.cid, p->header.callNumber, p->header.seq, p->header.flags, (unsigned long)p, p->retryTime.sec, p->retryTime.usec / 1000, p->length));
 #endif
     MUTEX_ENTER(&rx_stats_mutex);
     rx_stats.packetsSent[p->header.type - 1]++;
@@ -2412,7 +2429,7 @@ rxi_SendPacketList(struct rx_call *call, struct rx_connection *conn,
 
     assert(p != NULL);
 
-    dpf(("%c %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %lx resend %d.%0.3d len %d", deliveryType, p->header.serial, rx_packetTypes[p->header.type - 1], peer->host, peer->port, p->header.serial, p->header.epoch, p->header.cid, p->header.callNumber, p->header.seq, p->header.flags, (unsigned long)p, p->retryTime.sec, p->retryTime.usec / 1000, p->length));
+    dpf(("%c %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %lx resend %d.%0.3d len %d", deliveryType, p->header.serial, rx_packetTypes[p->header.type - 1], ntohl(peer->host), ntohs(peer->port), p->header.serial, p->header.epoch, p->header.cid, p->header.callNumber, p->header.seq, p->header.flags, (unsigned long)p, p->retryTime.sec, p->retryTime.usec / 1000, p->length));
 
 #endif
     MUTEX_ENTER(&rx_stats_mutex);

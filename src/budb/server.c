@@ -395,6 +395,7 @@ main(argc, argv)
     sigaction(SIGSEGV, &nsa, NULL);
     sigaction(SIGABRT, &nsa, NULL);
 #endif
+    osi_audit_init();
     osi_audit(BUDB_StartEvent, 0, AUD_END);
 
     initialize_BUDB_error_table();

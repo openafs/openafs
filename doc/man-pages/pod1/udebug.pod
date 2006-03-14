@@ -4,10 +4,16 @@ udebug - Reports Ubik process status for a database server process
 
 =head1 SYNOPSIS
 
-B<udebug> B<-servers> <I<server machine>> [B<-port> <I<IP port>>]
+=for html
+<div class="synopsis">
+
+B<udebug> S<<< B<-servers> <I<server machine>> >>> S<<< [B<-port> <I<IP port>>] >>>
     [B<-long>] [B<-help>]
 
-B<udebug> B<-s> <I<server machine>> [B<-p> <I<IP port>>] [B<-l>] [B<-h>]
+B<udebug> S<<< B<-s> <I<server machine>> >>> S<<< [B<-p> <I<IP port>>] >>> [B<-l>] [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

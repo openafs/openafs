@@ -61,11 +61,12 @@ long cm_AddCellProc(void *rockp, struct sockaddr_in *addrp, char *namep)
  */
 cm_cell_t *cm_UpdateCell(cm_cell_t * cp)
 {
-    long code;
+    long code = 0;
 
     if (cp == NULL)
         return NULL;
 
+    lock_ObtainMutex(&cp->mx);
     if ((cp->vlServersp == NULL 
 #ifdef AFS_FREELANCE_CLIENT
           && !(cp->flags & CM_CELLFLAG_FREELANCE)
@@ -83,8 +84,8 @@ cm_cell_t *cm_UpdateCell(cm_cell_t * cp)
         }
 
         code = cm_SearchCellFile(cp->name, NULL, cm_AddCellProc, cp);
-        if (code) {
 #ifdef AFS_AFSDB_ENV
+        if (code) {
             if (cm_dnsEnabled) {
                 int ttl;
 
@@ -96,23 +97,21 @@ cm_cell_t *cm_UpdateCell(cm_cell_t * cp)
 #ifdef DEBUG
                     fprintf(stderr, "cell %s: ttl=%d\n", cp->name, ttl);
 #endif
-                } else {
+		} else {
                     /* if we fail to find it this time, we'll just do nothing and leave the
-                    * current entry alone 
-                    */
+                     * current entry alone 
+		     */
                     cp->flags |= CM_CELLFLAG_VLSERVER_INVALID;
-                    cp = NULL;      /* return NULL to indicate failure */
                 }
-            } else 
+	    }
+	} else 
 #endif /* AFS_AFSDB_ENV */
-            {
-                cp = NULL;          /* return NULL to indicate failure */
-            }
-        } else {
+	{
 	    cp->timeout = time(0) + 7200;
 	}	
     }
-    return cp;
+    lock_ReleaseMutex(&cp->mx);
+    return code ? NULL : cp;
 }
 
 /* load up a cell structure from the cell database, afsdcell.ini */
@@ -132,7 +131,7 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, long flags)
 
     lock_ObtainWrite(&cm_cellLock);
     for (cp = cm_data.allCellsp; cp; cp=cp->nextp) {
-        if (strcmp(namep, cp->name) == 0) {
+        if (stricmp(namep, cp->name) == 0) {
             strcpy(fullname, cp->name);
             break;
         }

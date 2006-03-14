@@ -4,10 +4,16 @@ prdb_check - Checks the integrity of the Protection Database
 
 =head1 SYNOPSIS
 
-B<prdb_check> B<-database> <I<ptdb file>> [B<-uheader>] [B<-pheader>]
+=for html
+<div class="synopsis">
+
+B<prdb_check> S<<< B<-database> <I<ptdb file>> >>> [B<-uheader>] [B<-pheader>]
     [B<-entries>] [B<-verbose>] [B<-help>]
 
-B<prdb_check> B<-d> <I<ptdb file>> [B<-u>] [B<-p>] [B<-e>] [B<-v>] [B<-h>]
+B<prdb_check> S<<< B<-d> <I<ptdb file>> >>> [B<-u>] [B<-p>] [B<-e>] [B<-v>] [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

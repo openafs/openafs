@@ -26,7 +26,9 @@ RCSID
 void
 afs_mutex_init(afs_kmutex_t * l)
 {
-#if defined(AFS_LINUX24_ENV)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
+    mutex_init(&l->mutex);
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
     init_MUTEX(&l->sem);
 #else
     l->sem = MUTEX;
@@ -37,7 +39,11 @@ afs_mutex_init(afs_kmutex_t * l)
 void
 afs_mutex_enter(afs_kmutex_t * l)
 {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
+    mutex_lock(&l->mutex);
+#else
     down(&l->sem);
+#endif
     if (l->owner)
 	osi_Panic("mutex_enter: 0x%x held by %d", l, l->owner);
     l->owner = current->pid;
@@ -46,7 +52,11 @@ afs_mutex_enter(afs_kmutex_t * l)
 int
 afs_mutex_tryenter(afs_kmutex_t * l)
 {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
+    if (mutex_trylock(&l->mutex) == 0)
+#else
     if (down_trylock(&l->sem))
+#endif
 	return 0;
     l->owner = current->pid;
     return 1;
@@ -58,7 +68,11 @@ afs_mutex_exit(afs_kmutex_t * l)
     if (l->owner != current->pid)
 	osi_Panic("mutex_exit: 0x%x held by %d", l, l->owner);
     l->owner = 0;
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
+    mutex_unlock(&l->mutex);
+#else
     up(&l->sem);
+#endif
 }
 
 /* CV_WAIT and CV_TIMEDWAIT sleep until the specified event occurs, or, in the
@@ -99,7 +113,23 @@ afs_cv_wait(afs_kcondvar_t * cv, afs_kmutex_t * l, int sigok)
 
     while(seq == cv->seq) {
 	schedule();
-	/* should we refrigerate? */
+#ifdef AFS_LINUX26_ENV
+#ifdef CONFIG_PM
+	if (
+#ifdef PF_FREEZE
+	    current->flags & PF_FREEZE
+#else
+	    !current->todo
+#endif
+	    )
+#ifdef LINUX_REFRIGERATOR_TAKES_PF_FREEZE
+	    refrigerator(PF_FREEZE);
+#else
+	    refrigerator();
+#endif
+	    set_current_state(TASK_INTERRUPTIBLE);
+#endif
+#endif
     }
 
     remove_wait_queue(&cv->waitq, &wait);

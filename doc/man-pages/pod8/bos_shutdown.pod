@@ -4,12 +4,18 @@ bos shutdown - Stops a process without changing its status flag
 
 =head1 SYNOPSIS
 
-B<bos shutdown> B<-server> <I<machine name>>
-    [B<-instance> <I<instances>>+] [B<-wait>] [B<-cell> <I<cell name>>]
+=for html
+<div class="synopsis">
+
+B<bos shutdown> S<<< B<-server> <I<machine name>> >>>
+    S<<< [B<-instance> <I<instances>>+] >>> [B<-wait>] S<<< [B<-cell> <I<cell name>>] >>>
     [B<-noauth>] [B<-localauth>] [B<-help>]
 
-B<bos sh> B<-s> <I<machine name>> [B<-i> <I<instances>>+] [B<-w>]
-    [B<-c> <I<cell name>>] [B<-n>] [B<-l>] [B<-h>]
+B<bos sh> S<<< B<-s> <I<machine name>> >>> S<<< [B<-i> <I<instances>>+] >>> [B<-w>]
+    S<<< [B<-c> <I<cell name>>] >>> [B<-n>] [B<-l>] [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

@@ -2,23 +2,29 @@
 
 afsmonitor - Monitors File Servers and Cache Managers
 
-=head1 DESCRIPTION
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
 
 B<afsmonitor> [B<initcmd>] [-config <I<configuration file>>]
-    [B<-frequency> <I<poll frequency, in seconds>>]
-    [B<-output> <I<storage file name>>] [B<-detailed>]
-    [B<-debug> <I<debug output file>>]
-    [B<-fshosts> <I<list of file servers to monitor>>+]
-    [B<-cmhosts> <I<list of cache managers to monitor>>+]
-    [B<-buffers> <I<number of buffer slots>>] [B<-help>]
+    S<<< [B<-frequency> <I<poll frequency, in seconds>>] >>>
+    S<<< [B<-output> <I<storage file name>>] >>> [B<-detailed>]
+    S<<< [B<-debug> <I<debug output file>>] >>>
+    S<<< [B<-fshosts> <I<list of file servers to monitor>>+] >>>
+    S<<< [B<-cmhosts> <I<list of cache managers to monitor>>+] >>>
+    S<<< [B<-buffers> <I<number of buffer slots>>] >>> [B<-help>]
 
 B<afsmonitor> [B<i>]  [-co <I<configuration file>>]
-    [B<-fr> <I<poll frequency, in seconds>>]
-    [B<-o> <I<storage file name>>] [B<-det>]
-    [B<-deb> <I<debug output file>>]
-    [B<-fs> <I<list of file servers to monitor>>+]
-    [B<-cm> <I<list of cache managers to monitor>>+]
-    [B<-b> <I<number of buffer slots>>] [B<-h>]
+    S<<< [B<-fr> <I<poll frequency, in seconds>>] >>>
+    S<<< [B<-o> <I<storage file name>>] >>> [B<-det>]
+    S<<< [B<-deb> <I<debug output file>>] >>>
+    S<<< [B<-fs> <I<list of file servers to monitor>>+] >>>
+    S<<< [B<-cm> <I<list of cache managers to monitor>>+] >>>
+    S<<< [B<-b> <I<number of buffer slots>>] >>> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

@@ -4,11 +4,17 @@ bos getrestart - Displays the automatic restart times for server processes
 
 =head1 SYNOPSIS
 
-B<bos getrestart> B<-server> <I<machine name>> [B<-cell> <I<cell name>>]
+=for html
+<div class="synopsis">
+
+B<bos getrestart> S<<< B<-server> <I<machine name>> >>> S<<< [B<-cell> <I<cell name>>] >>>
     [B<-noauth>] [B<-localauth>] [B<-help>]
 
-B<bos getr> B<-s> <I<machine name>> [B<-c> <I<cell name>>] [B<-n>]
+B<bos getr> S<<< B<-s> <I<machine name>> >>> S<<< [B<-c> <I<cell name>>] >>> [B<-n>]
     [B<-l>] [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

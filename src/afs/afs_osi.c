@@ -580,6 +580,7 @@ shutdown_osi(void)
        afs_osi_ctxtp = NULL;
        afs_osi_ctxtp_initialized = 0;
     }
+    shutdown_osisleep();
 #endif
     if (afs_cold_shutdown) {
 	LOCK_INIT(&afs_ftf, "afs_ftf");

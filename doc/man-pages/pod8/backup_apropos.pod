@@ -4,9 +4,15 @@ backup apropos - Displays each help entry containing a keyword string
 
 =head1 SYNOPSIS
 
-B<backup apropos> B<-topic> <I<help string>> [B<-help>]
+=for html
+<div class="synopsis">
 
-B<backup ap> B<-t> <I<help string>> [B<-h>]
+B<backup apropos> S<<< B<-topic> <I<help string>> >>> [B<-help>]
+
+B<backup ap> S<<< B<-t> <I<help string>> >>> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

@@ -4,11 +4,17 @@ bos status - Displays the status of server processes
 
 =head1 SYNOPSIS
 
-B<bos status -server> <I<machine name>>  [-instance <I<server process name>>+]
-[B<-long>]  [B<-cell> <I<cell name>>]  [B<-noauth>]  [B<-localauth>]  [B<-help>]
+=for html
+<div class="synopsis">
 
-B<bos stat -s> <I<machine name>>  [-i <I<server process name>>+]
-[B<-lon>]  [B<-c> <I<cell name>>]  [B<-n>]  [B<-loc>]  [B<-h>]
+S<<< B<bos status -server> <I<machine name>> >>>  [-instance <I<server process name>>+]
+[B<-long>]  S<<< [B<-cell> <I<cell name>>] >>>  [B<-noauth>]  [B<-localauth>]  [B<-help>]
+
+S<<< B<bos stat -s> <I<machine name>> >>>  [-i <I<server process name>>+]
+[B<-lon>]  S<<< [B<-c> <I<cell name>>] >>>  [B<-n>]  [B<-loc>]  [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 
@@ -255,8 +261,8 @@ None
 
 =head1 SEE ALSO
 
-L<BosConfig(1)>,
-L<KeyFile(1)>,
+L<BosConfig(5)>,
+L<KeyFile(5)>,
 L<bos(8)>,
 L<bos_create(8)>,
 L<bos_shutdown(8)>,

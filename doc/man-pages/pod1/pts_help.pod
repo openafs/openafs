@@ -4,9 +4,15 @@ pts help - Displays help for pts commands
 
 =head1 SYNOPSIS
 
-B<pts help> [B<-topic> <I<help string>>+] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<pts h> [B<-t> <I<help string>>+] [B<-h>]
+B<pts help> S<<< [B<-topic> <I<help string>>+] >>> [B<-help>]
+
+B<pts h> S<<< [B<-t> <I<help string>>+] >>> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

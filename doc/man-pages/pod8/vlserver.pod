@@ -4,8 +4,14 @@ vlserver - Initializes the Volume Location Server
 
 =head1 SYNOPSIS
 
-B<vlserver> [B<-p> <I<lwp processes>>] [B<-nojumbo>]
+=for html
+<div class="synopsis">
+
+B<vlserver> S<<< [B<-p> <I<lwp processes>>] >>> [B<-nojumbo>]
     [B<-enable_peer_stats>] [B<-enable_process_stats>] [B<-help>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

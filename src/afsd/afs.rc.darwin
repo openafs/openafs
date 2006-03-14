@@ -41,12 +41,14 @@ StartService()
 {
     echo "Starting OpenAFS"
 
-    if [ "${NETWORKUP}" = "-NO-" ]; then exit; fi
-
     if [ -f $AFSDOPT ]; then
 	OPTIONS=`cat $AFSDOPT`
     else
 	OPTIONS="$MEDIUM -fakestat"
+    fi
+
+    if [ "${NETWORKUP}" = "-NO-" ]; then
+        echo $OPTIONS | grep -e '-dynroot' || exit
     fi
 
 # Need the commands ps, awk, kill, sleep

@@ -349,6 +349,8 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
     if (tvc && osi_Active(tvc)) {
 	/* about to delete whole file, prefetch it first */
 	ReleaseWriteLock(&adp->lock);
+	if (tdc)
+	    ReleaseSharedLock(&tdc->lock);
 	ObtainWriteLock(&tvc->lock, 143);
 #if	defined(AFS_OSF_ENV)
 	afs_Wire(tvc, &treq);
@@ -356,8 +358,6 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
 	FetchWholeEnchilada(tvc, &treq);
 #endif
 	ReleaseWriteLock(&tvc->lock);
-	if (tdc) 
-	    ReleaseSharedLock(&tdc->lock);
 	ObtainWriteLock(&adp->lock, 144);
 	/* Technically I don't think we need this back, but let's hold it 
 	   anyway; The "got" reference should actually be sufficient. */
@@ -374,8 +374,8 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
     Ttvc = tvc;
     Tnam = aname;
     Tnam1 = 0;
-    if (tvc)
 #ifndef AFS_DARWIN80_ENV
+    if (tvc)
 	Ttvcr = VREFCOUNT(tvc);
 #endif
 #ifdef	AFS_AIX_ENV
@@ -393,7 +393,7 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
 	code = afsrename(adp, aname, adp, unlname, acred, &treq);
 	Tnam1 = unlname;
 	if (!code) {
-	    char *oldmvid = NULL;
+	    struct VenusFid *oldmvid = NULL;
 	    if (tvc->mvid) 
 		oldmvid = tvc->mvid;
 	    tvc->mvid = (struct VenusFid *)unlname;
@@ -438,6 +438,12 @@ afs_remunlink(register struct vcache *avc, register int doit)
 
     if (NBObtainWriteLock(&avc->lock, 423))
 	return 0;
+#if defined(AFS_DARWIN80_ENV)
+    if (vnode_get(AFSTOV(avc))) {
+	ReleaseWriteLock(&avc->lock);
+	return 0;
+    }
+#endif
 
     if (avc->mvid && (doit || (avc->states & CUnlinkedDel))) {
 	if ((code = afs_InitReq(&treq, avc->uncred))) {
@@ -487,6 +493,9 @@ afs_remunlink(register struct vcache *avc, register int doit)
 	    crfree(cred);
 	}
     } else {
+#if defined(AFS_DARWIN80_ENV)
+	vnode_put(AFSTOV(avc));
+#endif
 	ReleaseWriteLock(&avc->lock);
     }
 

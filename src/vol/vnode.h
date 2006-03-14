@@ -202,7 +202,7 @@ typedef struct Vnode {
 #define VAclDiskSize(v)		(SIZEOF_LARGEDISKVNODE - SIZEOF_SMALLDISKVNODE)
 /*extern int VolumeHashOffset(); */
 extern int VolumeHashOffset_r(void);
-extern VInitVnodes(VnodeClass class, int nVnodes);
+extern int VInitVnodes(VnodeClass class, int nVnodes);
 /*extern VInitVnodes_r();*/
 extern Vnode *VGetVnode(Error * ec, struct Volume *vp, VnodeId vnodeNumber,
 			int locktype);
@@ -210,8 +210,8 @@ extern Vnode *VGetVnode_r(Error * ec, struct Volume *vp, VnodeId vnodeNumber,
 			  int locktype);
 extern void VPutVnode(Error * ec, register Vnode * vnp);
 extern void VPutVnode_r(Error * ec, register Vnode * vnp);
-extern VVnodeWriteToRead(Error * ec, register Vnode * vnp);
-extern VVnodeWriteToRead_r(Error * ec, register Vnode * vnp);
+extern int VVnodeWriteToRead(Error * ec, register Vnode * vnp);
+extern int VVnodeWriteToRead_r(Error * ec, register Vnode * vnp);
 extern Vnode *VAllocVnode(Error * ec, struct Volume *vp, VnodeType type);
 extern Vnode *VAllocVnode_r(Error * ec, struct Volume *vp, VnodeType type);
 /*extern VFreeVnode();*/

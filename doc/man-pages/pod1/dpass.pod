@@ -4,9 +4,15 @@ dpass - Returns the DCE password for a new DCE account
 
 =head1 SYNOPSIS
 
-B<dpass> [B<-cell> <I<original AFS cell name>>] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<dpass> [B<-c> <I<original AFS cell name>>] [B<-h>]
+B<dpass> S<<< [B<-cell> <I<original AFS cell name>>] >>> [B<-help>]
+
+B<dpass> S<<< [B<-c> <I<original AFS cell name>>] >>> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

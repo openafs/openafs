@@ -29,7 +29,7 @@ int cm_fakeGettingCallback=0;
 cm_localMountPoint_t* cm_localMountPoints;
 osi_mutex_t cm_Freelance_Lock;
 int cm_localMountPointChangeFlag = 0;
-int cm_freelanceEnabled = 0;
+int cm_freelanceEnabled = 1;
 time_t FakeFreelanceModTime = 0x3b49f6e2;
 
 static int freelance_ShutdownFlag = 0;
@@ -217,7 +217,7 @@ void cm_InitFakeRootDir() {
     /* Reserve 2 directory chunks for "." and ".." */
     curChunk += 2;
 
-    while (curDirEntry!=cm_noLocalMountPoints) {
+    while (curDirEntry<cm_noLocalMountPoints) {
         sizeOfCurEntry = cm_NameEntries((cm_localMountPoints+curDirEntry)->namep, 0);
         if ((curChunk + sizeOfCurEntry >= CPP) ||
              (curDirEntryInPage + 1 >= CM_DIR_EPP)) {
@@ -282,7 +282,7 @@ void cm_InitFakeRootDir() {
     // 2. we have less than CM_DIR_EPP entries in page 0
     // 3. we're not out of chunks in page 0
 
-    while( (curDirEntry!=cm_noLocalMountPoints) && 
+    while( (curDirEntry<cm_noLocalMountPoints) && 
            (curDirEntryInPage < CM_DIR_EPP) &&
            (curChunk + cm_NameEntries((cm_localMountPoints+curDirEntry)->namep, 0) <= CPP)) 
     {       
@@ -311,7 +311,7 @@ void cm_InitFakeRootDir() {
     curPage++;
 
     // ok, page 0's done. Move on to the next page.
-    while (curDirEntry!=cm_noLocalMountPoints) {
+    while (curDirEntry<cm_noLocalMountPoints) {
         // setup a new page
         curChunk = 1;			// the zeroth chunk is reserved for page header
         curDirEntryInPage = 0; 
@@ -323,7 +323,7 @@ void cm_InitFakeRootDir() {
         fakePageHeader.tag = htons(1234);
 
         // while we're on the same page...
-        while ( (curDirEntry!=cm_noLocalMountPoints) &&
+        while ( (curDirEntry<cm_noLocalMountPoints) &&
                 (curDirEntryInPage < CM_DIR_EPP) &&
                 (curChunk + cm_NameEntries((cm_localMountPoints+curDirEntry)->namep, 0) <= CPP))
         {
@@ -426,7 +426,9 @@ int cm_reInitLocalMountPoints() {
                      lscpp = &tscp->nextp, tscp = tscp->nextp) {
                     if (tscp == scp) {
                         *lscpp = scp->nextp;
+			lock_ObtainMutex(&scp->mx);
                         scp->flags &= ~CM_SCACHEFLAG_INHASH;
+			lock_ReleaseMutex(&scp->mx);
                         break;
                     }
                 }

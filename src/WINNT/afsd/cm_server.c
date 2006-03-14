@@ -39,6 +39,25 @@ cm_PingServer(cm_server_t *tsp)
     long secs;
     long usecs;
     Capabilities caps = {0, 0};
+    char hoststr[16];
+
+    lock_ObtainMutex(&tsp->mx);
+    if (tsp->flags & CM_SERVERFLAG_PINGING) {
+	tsp->waitCount++;
+	osi_SleepM((LONG_PTR)tsp, &tsp->mx);
+	lock_ObtainMutex(&tsp->mx);
+	tsp->waitCount--;
+	if (tsp->waitCount == 0)
+	    tsp->flags &= ~CM_SERVERFLAG_PINGING;
+	else 
+	    osi_Wakeup((LONG_PTR)tsp);
+	lock_ReleaseMutex(&tsp->mx);
+	return;
+    }
+    tsp->flags |= CM_SERVERFLAG_PINGING;
+    wasDown = tsp->flags & CM_SERVERFLAG_DOWN;
+    afs_inet_ntoa_r(tsp->addr.sin_addr.S_un.S_addr, hoststr);
+    lock_ReleaseMutex(&tsp->mx);
 
     code = cm_ConnByServer(tsp, cm_rootUserp, &connp);
     if (code == 0) {
@@ -46,7 +65,13 @@ cm_PingServer(cm_server_t *tsp)
 	* the server is known to be down, so that we don't waste a
 	* lot of time retiming out down servers.
 	*/
-        wasDown = tsp->flags & CM_SERVERFLAG_DOWN;
+
+	osi_Log4(afsd_logp, "cm_PingServer server %s (%s) was %s with caps 0x%x",
+		  osi_LogSaveString(afsd_logp, hoststr), 
+		  tsp->type == CM_SERVER_VLDB ? "vldb" : "file",
+		  wasDown ? "down" : "up",
+		  tsp->capabilities);
+
 	if (wasDown)
 	    rx_SetConnDeadTime(connp->callp, 10);
 	if (tsp->type == CM_SERVER_VLDB) {
@@ -79,13 +104,27 @@ cm_PingServer(cm_server_t *tsp)
 	} else {
 	    tsp->capabilities = 0;
 	}
-    }
-    else {
+
+	osi_Log3(afsd_logp, "cm_PingServer server %s (%s) is up with caps 0x%x",
+		  osi_LogSaveString(afsd_logp, hoststr), 
+		  tsp->type == CM_SERVER_VLDB ? "vldb" : "file",
+		  tsp->capabilities);
+    } else {
 	/* mark server as down */
 	tsp->flags |= CM_SERVERFLAG_DOWN;
 	if (code != VRESTARTING)
 	    cm_ForceNewConnections(tsp);
+
+	osi_Log3(afsd_logp, "cm_PingServer server %s (%s) is down with caps 0x%x",
+		  osi_LogSaveString(afsd_logp, hoststr), 
+		  tsp->type == CM_SERVER_VLDB ? "vldb" : "file",
+		  tsp->capabilities);
     }
+
+    if (tsp->waitCount == 0)
+	tsp->flags &= ~CM_SERVERFLAG_PINGING;
+    else 
+	osi_Wakeup((LONG_PTR)tsp);
     lock_ReleaseMutex(&tsp->mx);
 }
 
@@ -244,6 +283,7 @@ cm_server_t *cm_NewServer(struct sockaddr_in *socketp, int type, cm_cell_t *cell
     tsp->refCount = 1;
     lock_InitializeMutex(&tsp->mx, "cm_server_t mutex");
     tsp->addr = *socketp;
+    tsp->flags = CM_SERVERFLAG_DOWN;	/* assume down; ping will mark up if available */
 
     cm_SetServerPrefs(tsp); 
 

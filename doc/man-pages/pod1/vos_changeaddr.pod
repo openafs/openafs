@@ -4,13 +4,19 @@ vos changeaddr - Changes or removes a file server machine's entry in the VLDB
 
 =head1 SYNOPSIS
 
-B<vos changeaddr> B<-oldaddr> <I<original IP address>>
-    [B<-newaddr> <I<new IP address>>] [B<-remove>]
-    [B<-cell> <I<cell name>>] [B<-noauth>] [B<-localauth>]
+=for html
+<div class="synopsis">
+
+B<vos changeaddr> S<<< B<-oldaddr> <I<original IP address>> >>>
+    S<<< [B<-newaddr> <I<new IP address>>] >>> [B<-remove>]
+    S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>]
     [B<-verbose>] [B<-help>]
 
-B<vos ch> B<-o> <I<original IP address>> [B<-ne> <I<new IP address>>]
-    [B<-r>] [B<-c> <I<cell name>>] [B<-no>] [B<-l>] [B<-v>] [B<-h>]
+B<vos ch> S<<< B<-o> <I<original IP address>> >>> S<<< [B<-ne> <I<new IP address>>] >>>
+    [B<-r>] S<<< [B<-c> <I<cell name>>] >>> [B<-no>] [B<-l>] [B<-v>] [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

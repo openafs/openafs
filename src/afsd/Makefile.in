@@ -9,7 +9,7 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
-LDFLAGS = ${XLDFLAGS}
+LDFLAGS = ${XLDFLAGS} ${ARCHFLAGS}
 
 #
 # What to make

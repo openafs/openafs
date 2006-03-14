@@ -4,9 +4,15 @@ kas noauthentication - Discards an authenticated identity in interactive mode
 
 =head1 SYNOPSIS
 
+=for html
+<div class="synopsis">
+
 B<noauthentication> [B<-help>]
 
 B<n> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

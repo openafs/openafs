@@ -48,7 +48,11 @@ osi_UFSOpen(afs_int32 ainode)
     }
     VOP_UNLOCK(vp, 0, curproc);
     afile->vnode = vp;
+#ifdef AFS_OBSD39_ENV
+    afile->size = VTOI(vp)->i_ffs1_size;
+#else
     afile->size = VTOI(vp)->i_ffs_size;
+#endif
     afile->offset = 0;
     afile->proc = NULL;
     afile->inum = ainode;	/* for hint validity checking */

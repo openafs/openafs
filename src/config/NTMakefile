@@ -230,6 +230,9 @@ idirs: doclink
 !	IF (!EXIST($(OJT)\volser))
 		$(MKDIR) $(OJT)\volser
 !	ENDIF
+!	IF (!EXIST($(OJT)\xstat))
+		$(MKDIR) $(OJT)\xstat
+!	ENDIF
 !	IF (!EXIST($(OJT)\WINNT))
 		$(MKDIR) $(OJT)\WINNT
 !	ENDIF

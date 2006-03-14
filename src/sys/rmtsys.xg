@@ -10,7 +10,7 @@
 package RMTSYS_
 statindex 10
 prefix	S
-#define MAXPATHLEN 80
+#define MAXPATHLEN 4096
 
 %#include <rx/rx.h>
 %#include <rx/rx_null.h>
@@ -29,7 +29,7 @@ struct clientcred {
 	afs_int32	group1;
 };
 
-const MAXBUFFERLEN = 2048;	/* limited due to kernel buffer restrictions */
+const MAXBUFFERLEN = 16384;	/* limited due to kernel buffer restrictions */
 typedef opaque rmtbulk<MAXBUFFERLEN>;
 
 SetPag(	IN	clientcred *cred,

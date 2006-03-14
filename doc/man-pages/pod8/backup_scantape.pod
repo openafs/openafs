@@ -4,11 +4,17 @@ backup scantape - Extracts dump information from a tape
 
 =head1 SYNOPSIS
 
-B<backup scantape> [B<-dbadd>] [B<-portoffset> <I<TC port offset>>]
-    [B<-localauth>] [B<-cell> <I<cell name>>] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<backup sc> [B<-d>] [B<-p> <I<TC port offset>>] [B<-l>]
-    [B<-c> <I<cell name>>] [B<-h>]
+B<backup scantape> [B<-dbadd>] S<<< [B<-portoffset> <I<TC port offset>>] >>>
+    [B<-localauth>] S<<< [B<-cell> <I<cell name>>] >>> [B<-help>]
+
+B<backup sc> [B<-d>] S<<< [B<-p> <I<TC port offset>>] >>> [B<-l>]
+    S<<< [B<-c> <I<cell name>>] >>> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 
@@ -337,7 +343,7 @@ L<butc(5)>,
 L<backup(8)>,
 L<backup_dump(8)>,
 L<backup_dumpinfo(8)>,
-L<butc(1)>
+L<butc(8)>
 
 =head1 COPYRIGHT
 

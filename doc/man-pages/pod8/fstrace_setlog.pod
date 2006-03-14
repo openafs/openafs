@@ -4,12 +4,18 @@ fstrace setlog - Sets the size of a trace log
 
 =head1 SYNOPSIS
 
-B<fstrace setlog> [B<-log> <I<log name>>+]
-    B<-buffersize> <I<1-kilobyte units>> [B<-help>]
+=for html
+<div class="synopsis">
 
-B<fstrace setl> [B<-l> <I<log name>>+] B<-b> <I<1-kilobyte units>> [B<-h>]
+B<fstrace setlog> S<<< [B<-log> <I<log name>>+] >>>
+    S<<< B<-buffersize> <I<1-kilobyte units>> >>> [B<-help>]
 
-B<fstrace sl> [B<-l> <I<log name>>+] B<-b> <I<1-kilobyte units>> [B<-h>]
+B<fstrace setl> S<<< [B<-l> <I<log name>>+] >>> S<<< B<-b> <I<1-kilobyte units>> >>> [B<-h>]
+
+B<fstrace sl> S<<< [B<-l> <I<log name>>+] >>> S<<< B<-b> <I<1-kilobyte units>> >>> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

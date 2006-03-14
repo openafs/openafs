@@ -4,9 +4,15 @@ uss help - Displays help for uss commands
 
 =head1 SYNOPSIS
 
-B<uss help> [B<-topic> <I<help string>>+] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<uss h> [B<-t> <I<help string>>+] [B<-h>]
+B<uss help> S<<< [B<-topic> <I<help string>>+] >>> [B<-help>]
+
+B<uss h> S<<< [B<-t> <I<help string>>+] >>> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

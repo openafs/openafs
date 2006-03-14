@@ -66,7 +66,7 @@ static afs_int32 lastLevel;	/* security level pruclient, if any */
 static char *whoami = "libprot";
 
 afs_int32
-pr_Initialize(IN afs_int32 secLevel, IN char *confDir, IN char *cell)
+pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
 {
     afs_int32 code;
     struct rx_connection *serverconns[MAXSERVERS];

@@ -1,6 +1,12 @@
 Notes on Coding Standards/Requirements for OpenAFS Source
 ---------------------------------------------------------
 
+We have an official style.  Please use it.  If you have gnu indent 2.2.9 or
+later you can reformat for this style with the following option:
+
+-npro -nbad -bap -nbc -bbo -br -ce -cdw -brs -ncdb -cp1 -ncs -di2 -ndj -nfc1
+-nfca -i4 -lp -npcs -nprs -psl -sc -nsob -ts8
+
 Do not use $< in any cross-platform dir as it requires a reasonable
 make that is not available on all systems.
 

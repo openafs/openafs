@@ -116,6 +116,8 @@ extern long cm_IoctlStoreBehind(smb_ioctl_t *ioctlp, cm_user_t *userp);
 
 extern long cm_IoctlCreateMountPoint(smb_ioctl_t *ioctlp, cm_user_t *userp);
 
+extern long cm_CleanFile(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp);
+
 extern long cm_FlushFile(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp);
 
 extern long cm_FlushVolume(cm_user_t *, cm_req_t *reqp, afs_uint32 cell, afs_uint32 volume);

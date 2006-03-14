@@ -238,6 +238,9 @@ afs_CheckVolumeNames(int flags)
     unsigned int now;
     struct vcache *tvc;
     afs_int32 *volumeID, *cellID, vsize, nvols;
+#ifdef AFS_DARWIN80_ENV
+    vnode_t tvp;
+#endif
     AFS_STATCNT(afs_CheckVolumeNames);
 
     nvols = 0;
@@ -318,10 +321,19 @@ loop:
 			afs_osi_Sleep(&tvc->states);
                         goto loop;
                     }
-                    if (vnode_get(AFSTOV(tvc)))
-                        continue;
-#endif
+		    tvp = AFSTOV(tvc);
+		    if (vnode_get(tvp))
+			continue;
+		    if (vnode_ref(tvp)) {
+			AFS_GUNLOCK();
+			/* AFSTOV(tvc) may be NULL */
+			vnode_put(tvp);
+			AFS_GLOCK();
+			continue;
+		    }
+#else
 		    AFS_FAST_HOLD(tvc);
+#endif
 		    ReleaseReadLock(&afs_xvcache);
 
 		    ObtainWriteLock(&afs_xcbhash, 485);

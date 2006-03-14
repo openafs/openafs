@@ -690,3 +690,5 @@ Some portions of Rx are subject to the following license:
  * 2550 Garcia Avenue
  * Mountain View, California  94043
  */
+
+src/afs/LINUX/osi_flush.s included code under IBM Public License with permission of the author, Paul MacKerras.

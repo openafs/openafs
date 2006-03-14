@@ -237,11 +237,6 @@ Known Problems
      default and says that the system must be rebooted after shutdown,
      which isn't the case at least on Linux.
 
-   * All of the paths in the man pages are the Transarc paths.  I'm not
-     sure how best to deal with the possibility of installing OpenAFS in
-     multiple different paths, but it would be good to at least
-     acknowledge the issue.
-
    * bos listkeys and the KeyFile man page assume that you're using the
      kaserver.
 
@@ -265,6 +260,30 @@ Known Problems
 
    * The aklog man page isn't in POD.  (Neither is the mpp man page, but
      I don't think we care about it and it's not currently installed.)
+
+   * In the suite introduction pages (pts, vos, etc.), each of the
+     subcommands in the initial list should be a link to the relevant
+     page in the HTML output.  This has been done for the fs intro page
+     and the same transform needs to be applied to the other pages.  See
+     the fs intro page for the details.
+
+   * The references to the other OpenAFS manuals, such as the Quick Start
+     guide and the Admin Guide, should be links, probably to the documents
+     on openafs.org.
+
+   * There's no mention of the Kerberos v5 support.  At least, we need
+     some disclaimers under klog and friends talking about sites without
+     kaserver (and possibly without fakeka), and deprecation warnings
+     on the .krb varient commands.
+
+   * We need a way to add links to other man pages (kinit most notably)
+     without creating dangling links in the HTML output.  This probably
+     means that the HTML conversion script needs to generate at startup
+     a list of all valid man page link targets and not linkify the ones
+     that don't match a valid target.
+
+   * Provide a way to substitute the correct paths into the HTML output
+     from Autoconf results.
 
   If you notice other problems, please send them to the openafs-doc list
   even if you don't have time to fix them.  Someone else might, and we

@@ -36,7 +36,7 @@ static pthread_t softsig_tid;
 static struct {
     void (*handler) (int);
     int pending;
-#if !defined(AFS_DARWIN60_ENV) || !defined(AFS_NBSD_ENV)
+#if !defined(AFS_DARWIN60_ENV) || defined(AFS_NBSD30_ENV) || !defined(AFS_NBSD_ENV)
     int fatal;
 #endif /* !defined(AFS_DARWIN60_ENV) || !defined(AFS_NBSD_ENV) */
     int inited;
@@ -53,7 +53,7 @@ softsig_thread(void *arg)
     pthread_sigmask(SIG_BLOCK, &ss, &os);
     pthread_sigmask(SIG_SETMASK, &os, NULL);
     sigaddset(&ss, SIGUSR1);
-#if defined(AFS_DARWIN60_ENV) || defined(AFS_NBSD_ENV)
+#if defined(AFS_DARWIN60_ENV) || (defined(AFS_NBSD_ENV) && !defined(AFS_NBSD30_ENV))
     pthread_sigmask (SIG_BLOCK, &ss, NULL);
     sigdelset (&os, SIGUSR1);
 #else /* !defined(AFS_DARWIN60_ENV) && !defined(AFS_NBSD_ENV) */
@@ -74,7 +74,7 @@ softsig_thread(void *arg)
 	for (i = 0; i < NSIG; i++) {
 	    if (softsig_sigs[i].handler && !softsig_sigs[i].inited) {
 		sigaddset(&ss, i);
-#if defined(AFS_DARWIN60_ENV) || defined(AFS_NBSD_ENV)
+#if defined(AFS_DARWIN60_ENV) || (defined(AFS_NBSD_ENV) && !defined(AFS_NBSD30_ENV))
 		pthread_sigmask (SIG_BLOCK, &ss, NULL);
 		sigdelset (&os, i);
 #endif /* defined(AFS_DARWIN60_ENV) || defined(AFS_NBSD_ENV) */
@@ -87,7 +87,7 @@ softsig_thread(void *arg)
 	    }
 	}
 	if (i == NSIG) {
-#if defined(AFS_DARWIN60_ENV) || defined(AFS_NBSD_ENV)
+#if defined(AFS_DARWIN60_ENV) || (defined(AFS_NBSD_ENV) && !defined(AFS_NBSD30_ENV))
 	    sigsuspend (&os);
 #else /* !defined(AFS_DARWIN60_ENV) && !defined(AFS_NBSD_ENV) */
 	    sigwait(&ss, &sigw);

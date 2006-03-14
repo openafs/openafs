@@ -4,19 +4,25 @@ backup volrestore - Restores one or more volumes
 
 =head1 SYNOPSIS
 
-B<backup volrestore> B<-server> <I<destination machine>>
-    B<-partition> <I<destination partition>>
-    B<-volume> <I<volume(s) to restore>>+
-    [B<-extension> <I<new volume name extension>>]
-    [B<-date> <I<date from which to restore>>+]
-    [B<-portoffset> <I<TC port offsets>>+] [B<-n>]
-    [B<-localauth>] [B<-cell> <I<cell name>>] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<backup volr> B<-s> <I<destination machine>>
-    B<-pa> <I<destination partition>> B<-v> <I<volume(s) to restore>>+
-    [B<-e> <I<new volume name extension>>]
-    [B<-d> <I<date from which to restore>>+] [B<-po> <I<TC port offsets>>+]
-    [B<-n>] [B<-l>] [B<-c> <I<cell name>>] [B<-h>]
+B<backup volrestore> S<<< B<-server> <I<destination machine>> >>>
+    S<<< B<-partition> <I<destination partition>> >>>
+    S<<< B<-volume> <I<volume(s) to restore>>+ >>>
+    S<<< [B<-extension> <I<new volume name extension>>] >>>
+    S<<< [B<-date> <I<date from which to restore>>+] >>>
+    S<<< [B<-portoffset> <I<TC port offsets>>+] >>> [B<-n>]
+    [B<-localauth>] S<<< [B<-cell> <I<cell name>>] >>> [B<-help>]
+
+B<backup volr> S<<< B<-s> <I<destination machine>> >>>
+    S<<< B<-pa> <I<destination partition>> >>> S<<< B<-v> <I<volume(s) to restore>>+ >>>
+    S<<< [B<-e> <I<new volume name extension>>] >>>
+    S<<< [B<-d> <I<date from which to restore>>+] >>> S<<< [B<-po> <I<TC port offsets>>+] >>>
+    [B<-n>] [B<-l>] S<<< [B<-c> <I<cell name>>] >>> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

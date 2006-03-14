@@ -122,13 +122,8 @@ uio_t afsio_darwin_partialcopy(uio_t auio, int size) {
 vfs_context_t afs_osi_ctxtp;
 int afs_osi_ctxtp_initialized;
 static thread_t vfs_context_owner;
-#define RECURSIVE_VFS_CONTEXT 1
-#if RECURSIVE_VFS_CONTEXT
 static proc_t vfs_context_curproc;
 int vfs_context_ref;
-#else 
-#define vfs_context_ref 1
-#endif
 void get_vfs_context(void) {
   int isglock = ISAFS_GLOCK();
 
@@ -140,7 +135,6 @@ void get_vfs_context(void) {
       return;
   }
   osi_Assert(vfs_context_owner != current_thread());
-#if RECURSIVE_VFS_CONTEXT
   if (afs_osi_ctxtp && current_proc() == vfs_context_curproc) {
      vfs_context_ref++;
      vfs_context_owner = current_thread();
@@ -148,25 +142,16 @@ void get_vfs_context(void) {
         AFS_GUNLOCK();
      return;
   }
-#endif
   while (afs_osi_ctxtp && vfs_context_ref) {
-     printf("[%d] waiting for afs_osi_ctxtp\n", proc_selfpid());
      afs_osi_Sleep(&afs_osi_ctxtp);
      if (afs_osi_ctxtp_initialized) {
-       printf("[%d] ok\n", proc_selfpid());
        if (!isglock)
           AFS_GUNLOCK();
        return;
      }
-     if (!afs_osi_ctxtp || !vfs_context_ref)
-        printf("[%d] ok\n", proc_selfpid());
   }
-#if RECURSIVE_VFS_CONTEXT
   vfs_context_rele(afs_osi_ctxtp);
   vfs_context_ref=1;
-#else
-  osi_Assert(vfs_context_owner == (thread_t)0);
-#endif
   afs_osi_ctxtp = vfs_context_create(NULL);
   vfs_context_owner = current_thread();
   vfs_context_curproc = current_proc();
@@ -184,16 +169,9 @@ void put_vfs_context(void) {
         AFS_GUNLOCK();
       return;
   }
-#if RECURSIVE_VFS_CONTEXT
   if (vfs_context_owner == current_thread())
       vfs_context_owner = (thread_t)0;
   vfs_context_ref--;
-#else
-  osi_Assert(vfs_context_owner == current_thread());
-  vfs_context_rele(afs_osi_ctxtp);
-  afs_osi_ctxtp = NULL;
-  vfs_context_owner = (thread_t)0;
-#endif
   afs_osi_Wakeup(&afs_osi_ctxtp);
      if (!isglock)
         AFS_GUNLOCK();

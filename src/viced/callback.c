@@ -300,8 +300,6 @@ static int MultiBreakVolumeCallBack(struct host *host, int isheld,
 				    struct VCBParams *parms);
 static int MultiBreakVolumeLaterCallBack(struct host *host, int isheld,
 					 struct VCBParams *parms);
-static int lih_r(register struct host *host, register int held,
-		 register struct host *hostp);
 static int GetSomeSpace_r(struct host *hostp, int locked);
 static int ClearHostCallbacks_r(struct host *hp, int locked);
 
@@ -311,7 +309,7 @@ static int ClearHostCallbacks_r(struct host *hp, int locked);
 #define FreeFE(fe) iFreeFE((struct FileEntry *)fe, &cbstuff.nFEs)
 
 /* Other protos - move out sometime */
-extern void ShutDown();
+void PrintCB(register struct CallBack *cb, afs_uint32 now);
 
 #define VHASH 512		/* Power of 2 */
 static afs_uint32 HashTable[VHASH];	/* File entry hash table */
@@ -823,7 +821,7 @@ MultiBreakCallBack_r(struct cbstruct cba[], int ncbas,
 		    if (MultiBreakCallBackAlternateAddress(hp, afidp)) {
 			if (ShowProblems) {
 			    ViceLog(7,
-				    ("BCB: Failed on file %u.%u.%u, host %s:%d is down\n",
+				    ("BCB: Failed on file %u.%u.%u, Host %s:%d is down\n",
 				     afidp->AFSCBFids_val->Volume,
 				     afidp->AFSCBFids_val->Vnode,
 				     afidp->AFSCBFids_val->Unique,
@@ -1088,7 +1086,7 @@ BreakDelayedCallBacks_r(struct host *host)
 
     cbstuff.nbreakers++;
     if (!(host->hostFlags & RESETDONE) && !(host->hostFlags & HOSTDELETED)) {
-	host->hostFlags &= ~ALTADDR;	/* alterrnate addresses are invalid */
+	host->hostFlags &= ~ALTADDR;	/* alternate addresses are invalid */
 	cb_conn = host->callback_rxcon;
 	rx_GetConnection(cb_conn);
 	if (host->interface) {
@@ -1106,7 +1104,7 @@ BreakDelayedCallBacks_r(struct host *host)
 	if (code) {
 	    if (ShowProblems) {
 		ViceLog(0,
-			("CB: Call back connect back failed (in break delayed) for %s:%d\n",
+			("CB: Call back connect back failed (in break delayed) for Host %s:%d\n",
 			 afs_inet_ntoa_r(host->host, hoststr),
 			 ntohs(host->port)));
 	    }
@@ -1153,7 +1151,7 @@ BreakDelayedCallBacks_r(struct host *host)
 		int i;
 		if (ShowProblems) {
 		    ViceLog(0,
-			    ("CB: XCallBackBulk failed, host=%s:%d; callback list follows:\n",
+			    ("CB: XCallBackBulk failed, Host %s:%d; callback list follows:\n",
 			     afs_inet_ntoa_r(host->host, hoststr),
 			     ntohs(host->port)));
 		}
@@ -1208,11 +1206,11 @@ MultiBreakVolumeCallBack_r(struct host *host, int isheld,
 	    return 0;		/* Release hold */
 	}
 	ViceLog(8,
-		("BVCB: volume call back for host %s:%d failed\n",
+		("BVCB: volume call back for Host %s:%d failed\n",
 		 afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port)));
 	if (ShowProblems) {
 	    ViceLog(0,
-		    ("CB: volume callback for host %s:%d failed\n",
+		    ("CB: volume callback for Host %s:%d failed\n",
 		     afs_inet_ntoa_r(host->host, hoststr),
 		     ntohs(host->port)));
 	}
@@ -1371,7 +1369,7 @@ BreakVolumeCallBacksLater(afs_uint32 volume)
     ViceLog(25, ("Setting later on volume %u\n", volume));
     H_LOCK;
     for (hash = 0; hash < VHASH; hash++) {
-	for (feip = &HashTable[hash]; fe = itofe(*feip);) {
+	for (feip = &HashTable[hash]; (fe = itofe(*feip)) != NULL; ) {
 	    if (fe->volid == volume) {
 		register struct CallBack *cbnext;
 		for (cb = itocb(fe->firstcb); cb; cb = cbnext) {
@@ -1427,7 +1425,7 @@ BreakLaterCallBacks(void)
     fid.Volume = fid.Vnode = fid.Unique = 0;
 
     for (hash = 0; hash < VHASH; hash++) {
-	for (feip = &HashTable[hash]; fe = itofe(*feip);) {
+	for (feip = &HashTable[hash]; (fe = itofe(*feip)) != NULL; ) {
 	    if (fe && (fe->status & FE_LATER)
 		&& (fid.Volume == 0 || fid.Volume == fe->volid)) {
 		/* Ugly, but used to avoid left side casting */
@@ -1558,13 +1556,43 @@ CleanupTimedOutCallBacks_r(void)
 static struct host *lih_host;
 static int lih_host_held;
 
+/* This version does not allow 'host' to be selected unless its ActiveCall 
+ * is newer than 'hostp' which is the host with the oldest ActiveCall from
+ * the last pass (if it is provided).  We filter out any hosts that are
+ * are held by other threads.
+ */
 static int
-lih_r(register struct host *host, register int held,
+lih0_r(register struct host *host, register int held,
       register struct host *hostp)
 {
     if (host->cblist
-	&& ((hostp && host != hostp) || (!held && !h_OtherHolds_r(host)))
-	&& (!lih_host || host->ActiveCall < lih_host->ActiveCall)) {
+	&& (hostp && host != hostp) 
+	&& (!held && !h_OtherHolds_r(host))
+	&& (!lih_host || host->ActiveCall < lih_host->ActiveCall) 
+	&& (!hostp || host->ActiveCall > hostp->ActiveCall)) {
+	if (lih_host != NULL && lih_host_held) {
+	    h_Release_r(lih_host);
+	}
+	lih_host = host;
+	lih_host_held = !held;
+	held = 1;
+    }
+    return held;
+}
+
+/* This version does not allow 'host' to be selected unless its ActiveCall 
+ * is newer than 'hostp' which is the host with the oldest ActiveCall from
+ * the last pass (if it is provided).  In this second varient, we do not 
+ * prevent held hosts from being selected.
+ */
+static int
+lih1_r(register struct host *host, register int held,
+      register struct host *hostp)
+{
+    if (host->cblist
+	&& (hostp && host != hostp) 
+	&& (!lih_host || host->ActiveCall < lih_host->ActiveCall) 
+	&& (!hostp || host->ActiveCall > hostp->ActiveCall)) {
 	if (lih_host != NULL && lih_host_held) {
 	    h_Release_r(lih_host);
 	}
@@ -1576,14 +1604,21 @@ lih_r(register struct host *host, register int held,
 }
 
 /* This could be upgraded to get more space each time */
-/* first pass: find the oldest host which isn't held by anyone */
-/* second pass: find the oldest host who isn't "me" */
+/* first pass: sequentially find the oldest host which isn't held by
+               anyone for which we can clear callbacks;
+	       skipping 'hostp' */
+/* second pass: sequentially find the oldest host regardless of 
+               whether or not the host is held; skipping 'hostp' */
+/* third pass: attempt to clear callbacks from 'hostp' */
 /* always called with hostp unlocked */
+
+/* Note: hostlist is ordered most recently created host first and 
+ * its order has no relationship to the most recently used. */
 extern struct host *hostList;
 static int
 GetSomeSpace_r(struct host *hostp, int locked)
 {
-    register struct host *hp, *hp1 = (struct host *)0, *hp2 = hostList;
+    register struct host *hp, *hp1, *hp2;
     int i = 0;
 
     cbstuff.GotSomeSpaces++;
@@ -1593,29 +1628,28 @@ GetSomeSpace_r(struct host *hostp, int locked)
 	cbstuff.GSS3++;
 	return 0;
     }
+
+    i = 0;
+    hp1 = NULL;
+    hp2 = hostList;
     do {
 	lih_host = 0;
-	h_Enumerate_r(lih_r, hp2, (char *)hp1);
+	h_Enumerate_r(i == 0 ? lih0_r : lih1_r, hp2, (char *)hp1);
 	hp = lih_host;
 	if (hp) {
 	    /* set in lih_r! private copy before giving up H_LOCK */
 	    int lih_host_held2=lih_host_held;   
 	    cbstuff.GSS4++;
-	    if (!ClearHostCallbacks_r(hp, 0 /* not locked or held */ )) {
+	    if ((hp != hostp) && !ClearHostCallbacks_r(hp, 0 /* not locked or held */ )) {
 		if (lih_host_held2)
 		    h_Release_r(hp);
 		return 0;
 	    }
 	    if (lih_host_held2)
 		h_Release_r(hp);
-	    hp2 = hp->next;
-	} else {
+	    hp1 = hp;
 	    hp2 = hostList;
-	    hp1 = hostp;
-	    cbstuff.GSS1++;
-	    ViceLog(5,
-		    ("GSS: Try harder for longest inactive host cnt= %d\n",
-		     i));
+	} else {
 	    /*
 	     * Next time try getting callbacks from any host even if
 	     * it's deleted (that's actually great since we can freely
@@ -1624,13 +1658,16 @@ GetSomeSpace_r(struct host *hostp, int locked)
 	     * callback timeout arrives).
 	     */
 	    i++;
+	    hp1 = NULL;
+	    hp2 = hostList;
+	    cbstuff.GSS1++;
+	    ViceLog(5,
+		    ("GSS: Try harder for longest inactive host cnt= %d\n",
+		     i));
 	}
     } while (i < 2);
-    /*
-     * No choice to clear this host's callback state
-     */
-    /* third pass: we still haven't gotten any space, so we free what we had
-     * previously passed over. */
+
+    /* Could not obtain space from other hosts, clear hostp's callback state */
     cbstuff.GSS2++;
     if (!locked) {
 	h_Lock_r(hostp);
@@ -1889,10 +1926,10 @@ main(int argc, char **argv)
 	PrintCallBackStats();
     }
     if (all || vol) {
-	register hash;
-	register afs_uint32 *feip;
-	register struct CallBack *cb;
-	register struct FileEntry *fe;
+	int hash;
+	afs_uint32 *feip;
+	struct CallBack *cb;
+	struct FileEntry *fe;
 
 	for (hash = 0; hash < VHASH; hash++) {
 	    for (feip = &HashTable[hash]; fe = itofe(*feip);) {
@@ -1930,16 +1967,16 @@ main(int argc, char **argv)
 	}
     }
     if (raw) {
-	struct FileEntry *fe;
 	afs_int32 *p, i;
 	for (i = 1; i < cbstuff.nblks; i++) {
 	    p = (afs_int32 *) & FE[i];
 	    printf("%d:%12x%12x%12x%12x\n", i, p[0], p[1], p[2], p[3]);
 	}
     }
+    exit(0);
 }
 
-int
+void
 PrintCB(register struct CallBack *cb, afs_uint32 now)
 {
     struct FileEntry *fe = itofe(cb->fhead);
@@ -2151,8 +2188,6 @@ MultiProbeAlternateAddress_r(struct host *host)
              * Uuid and fix the host tables.
              */
             if (multi_error == 1) {
-                struct host * newhost;
-
                 /* remove the current alternate address from this host */
                 H_LOCK;
                 for (i = 0, j = 0; i < host->interface->numberOfInterfaces; i++) {

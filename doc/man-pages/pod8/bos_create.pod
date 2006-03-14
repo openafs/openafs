@@ -4,15 +4,21 @@ bos create - Defines a new process in the BosConfig file and starts it
 
 =head1 SYNOPSIS
 
-B<bos create> B<-server> <I<machine name>>
-    B<-instance> <I<server process name>> B<-type> <I<server type>>
-    B<-cmd> <I<command lines>>+ [B<-notifier> <I<notifier program>>]
-    [B<-cell> <I<cell name>>] [B<-noauth>] [B<-localauth>] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<bos c> B<-s> <I<machine name>> B<-i> <I<server process name>>
-    B<-t> <I<server type>> B<-cm> <I<command lines>>+
-    [B<-not> <I<notifier program>>] [B<-ce> <I<cell name>>] [B<-noa>]
+B<bos create> S<<< B<-server> <I<machine name>> >>>
+    S<<< B<-instance> <I<server process name>> >>> S<<< B<-type> <I<server type>> >>>
+    S<<< B<-cmd> <I<command lines>>+ >>> S<<< [B<-notifier> <I<notifier program>>] >>>
+    S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>] [B<-help>]
+
+B<bos c> S<<< B<-s> <I<machine name>> >>> S<<< B<-i> <I<server process name>> >>>
+    S<<< B<-t> <I<server type>> >>> S<<< B<-cm> <I<command lines>>+ >>>
+    S<<< [B<-not> <I<notifier program>>] >>> S<<< [B<-ce> <I<cell name>>] >>> [B<-noa>]
     [B<-l>] [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

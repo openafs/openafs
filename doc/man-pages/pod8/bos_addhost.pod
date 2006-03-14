@@ -4,11 +4,17 @@ bos addhost - Adds a database server machine to the CellServDB file
 
 =head1 SYNOPSIS
 
-B<bos addhost> B<-server> <I<machine name>> B<-host> <I<host name>>+
-    [B<-cell> <I<cell name>>] [B<-noauth>] [B<-localauth>] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<bos addh> B<-s> <I<machine name>> B<-ho> <I<host name>>+
-    [B<-c> <I<cell name>>] [B<-n>] [B<-l>] [B<-he>]
+B<bos addhost> S<<< B<-server> <I<machine name>> >>> S<<< B<-host> <I<host name>>+ >>>
+    S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>] [B<-help>]
+
+B<bos addh> S<<< B<-s> <I<machine name>> >>> S<<< B<-ho> <I<host name>>+ >>>
+    S<<< [B<-c> <I<cell name>>] >>> [B<-n>] [B<-l>] [B<-he>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

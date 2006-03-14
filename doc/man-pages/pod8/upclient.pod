@@ -4,8 +4,14 @@ upclient - Initializes the client portion of the Update Server
 
 =head1 SYNOPSIS
 
-B<upclient> <I<hostname>> [B<-crypt>] [B<-clear>] [B<-t> <I<retry time>>]
+=for html
+<div class="synopsis">
+
+S<<< B<upclient> <I<hostname>> >>> [B<-crypt>] [B<-clear>] S<<< [B<-t> <I<retry time>>] >>>
     [B<-verbose>]* <I<dir>>+ [B<-help>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

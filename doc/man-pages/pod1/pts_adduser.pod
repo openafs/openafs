@@ -4,11 +4,17 @@ pts adduser - Adds a user or machine to a Protection Database group
 
 =head1 SYNOPSIS
 
-B<pts adduser> B<-user> <I<user name>>+ B<-group> <I<group name>>+
-    [B<-cell> <I<cell name>>] [B<-noauth>] [B<-force>] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<pts ad> B<-u> <I<user name>>+ B<-g> <I<group name>>+
-    [B<-c> <I<cell name>>] [B<-n>] [B<-f>] [B<-h>]
+B<pts adduser> S<<< B<-user> <I<user name>>+ >>> S<<< B<-group> <I<group name>>+ >>>
+    S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-force>] [B<-help>]
+
+B<pts ad> S<<< B<-u> <I<user name>>+ >>> S<<< B<-g> <I<group name>>+ >>>
+    S<<< [B<-c> <I<cell name>>] >>> [B<-n>] [B<-f>] [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

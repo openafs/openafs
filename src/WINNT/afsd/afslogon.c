@@ -256,7 +256,7 @@ BOOL IsServiceRunning (void)
 
         CloseServiceHandle (hManager);
     }
-    DebugEvent("AFS AfsLogon - Test Service Running","Return Code[%x] ?Running[%d]",Status.dwCurrentState,(Status.dwCurrentState == SERVICE_RUNNING));
+    DebugEvent("AFS AfsLogon - Test Service Running Return Code[%x] ?Running[%d]",Status.dwCurrentState,(Status.dwCurrentState == SERVICE_RUNNING));
     return (Status.dwCurrentState == SERVICE_RUNNING);
 }   
 
@@ -278,7 +278,7 @@ BOOL IsServiceStartPending (void)
 
         CloseServiceHandle (hManager);
     }
-    DebugEvent("AFS AfsLogon - Test Service Start Pending","Return Code[%x] ?Start Pending[%d]",Status.dwCurrentState,(Status.dwCurrentState == SERVICE_START_PENDING));
+    DebugEvent("AFS AfsLogon - Test Service Start Pending Return Code[%x] ?Start Pending[%d]",Status.dwCurrentState,(Status.dwCurrentState == SERVICE_START_PENDING));
     return (Status.dwCurrentState == SERVICE_START_PENDING);
 }   
 
@@ -410,7 +410,7 @@ GetDomainLogonOptions( PLUID lpLogonId, char * username, char * domain, LogonOpt
     if(ISHIGHSECURITY(opt->LogonOption)) {
         opt->smbName = malloc( MAXRANDOMNAMELEN );
         GenRandomName(opt->smbName);
-    } else {
+    } else if (lpLogonId) {
         /* username and domain for logon session is not necessarily the same as
            username and domain passed into network provider. */
         PSECURITY_LOGON_SESSION_DATA plsd;
@@ -447,6 +447,21 @@ GetDomainLogonOptions( PLUID lpLogonId, char * username, char * domain, LogonOpt
 
       bad_strings:
         LsaFreeReturnBuffer(plsd);
+    } else {
+        size_t len;
+
+        DebugEvent("No LUID given. Constructing username using [%s] and [%s]",
+                   username, domain);
+ 
+        len = strlen(username) + strlen(domain) + 2;
+
+        opt->smbName = malloc(len);
+
+        StringCbCopy(opt->smbName, len, username);
+        StringCbCat(opt->smbName, len, "\\");
+        StringCbCat(opt->smbName, len, domain);
+
+        strlwr(opt->smbName);
     }
 
     DebugEvent("Looking up logon script");
@@ -578,7 +593,8 @@ GetDomainLogonOptions( PLUID lpLogonId, char * username, char * domain, LogonOpt
         DebugEvent("Found TheseCells [%s]", thesecells);
         opt->theseCells = thesecells;
 
-      doneTheseCells:;
+      doneTheseCells:
+        ;
     }
 
   cleanup:
@@ -755,7 +771,7 @@ DWORD APIENTRY NPLogonNotify(
             code = GT_PW_NULL;
             reason = "zero length password is illegal";
             code=0;
-        }       
+        }
 
         /* Get cell name if doing integrated logon.  
            We might overwrite this if we are logging into an AD realm and we find out that
@@ -777,141 +793,148 @@ DWORD APIENTRY NPLogonNotify(
         if (ISREMOTE(opt.flags)) {
             DebugEvent("Is Remote");
             GetAdHomePath(homePath,MAX_PATH,lpLogonId,&opt);
-        }       
+        }
     }
 
     /* loop until AFS is started. */
-    while (IsServiceRunning() || IsServiceStartPending()) {
-        DebugEvent("while(autostart) LogonOption[%x], Service AutoStart[%d]",
-                    opt.LogonOption,afsWillAutoStart);
+    if (afsWillAutoStart) {
+	while (IsServiceRunning() || IsServiceStartPending()) {
+	    DebugEvent("while(autostart) LogonOption[%x], Service AutoStart[%d]",
+			opt.LogonOption,afsWillAutoStart);
 
-        if (ISADREALM(opt.flags)) {
-            code = GetFileCellName(homePath,cell,256);
-            if (!code) {
-                DebugEvent("profile path [%s] is in cell [%s]",homePath,cell);
-            }
-            /* Don't bail out if GetFileCellName failed.
-             * The home dir may not be in AFS after all. 
-             */
-        } else
-            code=0;
+	    if (ISADREALM(opt.flags)) {
+		code = GetFileCellName(homePath,cell,256);
+		if (!code) {
+		    DebugEvent("profile path [%s] is in cell [%s]",homePath,cell);
+		}
+		/* Don't bail out if GetFileCellName failed.
+		 * The home dir may not be in AFS after all. 
+		 */
+	    } else
+		code=0;
 		
-        /* if Integrated Logon  */
-        if (ISLOGONINTEGRATED(opt.LogonOption))
-        {			
-            if ( KFW_is_available() ) {
-                code = KFW_AFS_get_cred(uname, cell, password, 0, opt.smbName, &reason);
-                DebugEvent("KFW_AFS_get_cred  uname=[%s] smbname=[%s] cell=[%s] code=[%d]",
-			    uname,opt.smbName,cell,code);
-                if (code == 0 && opt.theseCells) { 
-                    char * principal, *p;
+	    /* if Integrated Logon  */
+	    if (ISLOGONINTEGRATED(opt.LogonOption))
+	    {			
+		if ( KFW_is_available() ) {
+		    code = KFW_AFS_get_cred(uname, cell, password, 0, opt.smbName, &reason);
+		    DebugEvent("KFW_AFS_get_cred  uname=[%s] smbname=[%s] cell=[%s] code=[%d]",
+				uname,opt.smbName,cell,code);
+		    if (code == 0 && opt.theseCells) { 
+			char * principal, *p;
+			size_t len, tlen;
 
-                    principal = (char *)malloc(strlen(uname) + strlen(cell) + 2);
-                    if ( principal ) {
-                        strcpy(principal, uname);
-                        p = principal + strlen(uname);
-                        *p++ = '@';
-                        strcpy(p, cell);
-                        for ( ;*p; p++) {
-                            *p = toupper(*p);
-                        }
+			StringCchLength(cell, MAX_DOMAIN_LENGTH, &tlen);
+			len = tlen;
+			StringCchLength(uname, MAX_USERNAME_LENGTH, &tlen);
+			len += tlen + 2;
 
-                        p = opt.theseCells;
-                        while ( *p ) {
-                            code2 = KFW_AFS_get_cred(principal, p, 0, 0, opt.smbName, &reason);
-                            DebugEvent("KFW_AFS_get_cred  uname=[%s] smbname=[%s] cell=[%s] code=[%d]",
-                                        principal,opt.smbName,p,code2);
-                            p += strlen(p) + 1;
-                        }
-                        
-                        free(principal);
-                    }
-                }
-            } else {
-                code = ka_UserAuthenticateGeneral2(KA_USERAUTH_VERSION+KA_USERAUTH_AUTHENT_LOGON,
-                                                    uname, "", cell, password, opt.smbName, 0, &pw_exp, 0,
-                                                    &reason);
-		DebugEvent("AFS AfsLogon - (INTEGRATED only)ka_UserAuthenticateGeneral2 Code[%x] uname[%s] smbname=[%s] Cell[%s] PwExp=[%d] Reason=[%s]",
-			    code,uname,opt.smbName,cell,pw_exp,reason?reason:"");
-            }       
-            if ( code && code != KTC_NOCM && code != KTC_NOCMRPC && !lowercased_name ) {
-                for ( ctemp = uname; *ctemp ; ctemp++) {
-                    *ctemp = tolower(*ctemp);
-                }
-                lowercased_name = TRUE;
-                goto sleeping;
-            }
+			/* tlen is now the length of uname in characters */
+			principal = (char *)malloc(len * sizeof(char));
+			if ( principal ) {
+			    StringCchCopy(principal, len, uname);
+			    p = principal + tlen;
+			    *p++ = '@';
+			    StringCchCopy(p, len - tlen - 1, cell);
+			    for ( ;*p; p++) {
+				*p = toupper(*p);
+			    }
 
-            /* is service started yet?*/
+			    p = opt.theseCells;
+			    while ( *p ) {
+				code2 = KFW_AFS_get_cred(principal, p, 0, 0, opt.smbName, &reason);
+				DebugEvent("KFW_AFS_get_cred  uname=[%s] smbname=[%s] cell=[%s] code=[%d]",
+					    principal,opt.smbName,p,code2);
+				p += strlen(p) + 1;
+			    }
+			    free(principal);
+			}
+		    }
+		} else {
+		    code = ka_UserAuthenticateGeneral2(KA_USERAUTH_VERSION+KA_USERAUTH_AUTHENT_LOGON,
+							uname, "", cell, password, opt.smbName, 0, &pw_exp, 0,
+							&reason);
+		    DebugEvent("AFS AfsLogon - (INTEGRATED only)ka_UserAuthenticateGeneral2 Code[%x] uname[%s] smbname=[%s] Cell[%s] PwExp=[%d] Reason=[%s]",
+				code,uname,opt.smbName,cell,pw_exp,reason?reason:"");
+		}       
+		if ( code && code != KTC_NOCM && code != KTC_NOCMRPC && !lowercased_name ) {
+		    for ( ctemp = uname; *ctemp ; ctemp++) {
+			*ctemp = tolower(*ctemp);
+		    }
+		    lowercased_name = TRUE;
+		    goto sleeping;
+		}
 
-            /* If we've failed because the client isn't running yet and the
-            * client is set to autostart (and therefore it makes sense for
-            * us to wait for it to start) then sleep a while and try again. 
-            * If the error was something else, then give up. */
-            if (code != KTC_NOCM && code != KTC_NOCMRPC)
-                break;
-        }
-        else {  
-            /*JUST check to see if its running*/
-            if (IsServiceRunning())
-                break;
-            if (!IsServiceStartPending()) {
-                code = KTC_NOCMRPC;
-                reason = "AFS Service start failed";
-                break;
-            }
-        }
+		/* is service started yet?*/
 
-        /* If the retry interval has expired and we still aren't
-         * logged in, then just give up if we are not in interactive
-         * mode or the failSilently flag is set, otherwise let the
-         * user know we failed and give them a chance to try again. */
-        if (retryInterval <= 0) {
-            reason = "AFS not running";
-            if (!interactive || opt.failSilently)
-                break;
-            flag = MessageBox(hwndOwner,
-                               "AFS is still starting.  Retry?",
-                               "AFS Logon",
-                               MB_ICONQUESTION | MB_RETRYCANCEL);
-            if (flag == IDCANCEL)
-                break;
+		/* If we've failed because the client isn't running yet and the
+		 * client is set to autostart (and therefore it makes sense for
+		 * us to wait for it to start) then sleep a while and try again. 
+		 * If the error was something else, then give up. */
+		if (code != KTC_NOCM && code != KTC_NOCMRPC)
+		    break;
+	    }
+	    else {  
+		/*JUST check to see if its running*/
+		if (IsServiceRunning())
+		    break;
+		if (!IsServiceStartPending()) {
+		    code = KTC_NOCMRPC;
+		    reason = "AFS Service start failed";
+		    break;
+		}
+	    }
 
-            /* Wait just a little while and try again */
-            retryInterval = opt.retryInterval;
-        }
+	    /* If the retry interval has expired and we still aren't
+	     * logged in, then just give up if we are not in interactive
+	     * mode or the failSilently flag is set, otherwise let the
+	     * user know we failed and give them a chance to try again. */
+	    if (retryInterval <= 0) {
+		reason = "AFS not running";
+		if (!interactive || opt.failSilently)
+		    break;
+		flag = MessageBox(hwndOwner,
+				   "AFS is still starting.  Retry?",
+				   "AFS Logon",
+				   MB_ICONQUESTION | MB_RETRYCANCEL);
+		if (flag == IDCANCEL)
+		    break;
 
-      sleeping:
-        Sleep(sleepInterval * 1000);
-        retryInterval -= sleepInterval;
+		/* Wait just a little while and try again */
+		retryInterval = opt.retryInterval;
+	    }
+
+	  sleeping:
+	    Sleep(sleepInterval * 1000);
+	    retryInterval -= sleepInterval;
+	}
     }
-
     DebugEvent("while loop exited");
     /* remove any kerberos 5 tickets currently held by the SYSTEM account
      * for this user 
      */
     if ( KFW_is_available() ) {
-        sprintf(szLogonId,"%d.%d",lpLogonId->HighPart, lpLogonId->LowPart);
-        KFW_AFS_copy_cache_to_system_file(uname, szLogonId);
+	sprintf(szLogonId,"%d.%d",lpLogonId->HighPart, lpLogonId->LowPart);
+	KFW_AFS_copy_cache_to_system_file(uname, szLogonId);
 
-        KFW_AFS_destroy_tickets_for_principal(uname);
+	KFW_AFS_destroy_tickets_for_principal(uname);
     }
 
     if (code) {
-        char msg[128];
-        HANDLE h;
-        char *ptbuf[1];
+	char msg[128];
+	HANDLE h;
+	char *ptbuf[1];
 
-        StringCbPrintf(msg, sizeof(msg), "Integrated login failed: %s", reason);
+	StringCbPrintf(msg, sizeof(msg), "Integrated login failed: %s", reason);
 
-        if (ISLOGONINTEGRATED(opt.LogonOption) && interactive && !opt.failSilently)
-            MessageBox(hwndOwner, msg, "AFS Logon", MB_OK);
+	if (ISLOGONINTEGRATED(opt.LogonOption) && interactive && !opt.failSilently)
+	    MessageBox(hwndOwner, msg, "AFS Logon", MB_OK);
 
-        h = RegisterEventSource(NULL, AFS_LOGON_EVENT_NAME);
-        ptbuf[0] = msg;
-        ReportEvent(h, EVENTLOG_WARNING_TYPE, 0, 1008, NULL,
-                     1, 0, ptbuf, NULL);
-        DeregisterEventSource(h);
+	h = RegisterEventSource(NULL, AFS_LOGON_EVENT_NAME);
+	ptbuf[0] = msg;
+	ReportEvent(h, EVENTLOG_WARNING_TYPE, 0, 1008, NULL,
+		     1, 0, ptbuf, NULL);
+	DeregisterEventSource(h);
 	    
         code = MapAuthError(code);
         SetLastError(code);
@@ -1011,6 +1034,7 @@ VOID AFS_Logoff_Event( PWLX_NOTIFICATION_INFO pInfo )
     DWORD LSPtype, LSPsize;
     HKEY NPKey;
     DWORD LogoffPreserveTokens = 0;
+    LogonOptions_t opt;
 
     /* Make sure the AFS Libraries are initialized */
     AfsLogonInit();
@@ -1024,47 +1048,75 @@ VOID AFS_Logoff_Event( PWLX_NOTIFICATION_INFO pInfo )
                      &LSPtype, (LPBYTE)&LogoffPreserveTokens, &LSPsize);
     RegCloseKey (NPKey);
 
-    if (LogoffPreserveTokens) {
-        if (!GetTokenInformation(pInfo->hToken, TokenUser, NULL, 0, &retLen))
-        {
-            if ( GetLastError() == ERROR_INSUFFICIENT_BUFFER ) {
-                tokenUser = (PTOKEN_USER) LocalAlloc(LPTR, retLen);
+    if (!LogoffPreserveTokens) {
+	memset(&opt, 0, sizeof(LogonOptions_t));
 
-                if (!GetTokenInformation(pInfo->hToken, TokenUser, tokenUser, retLen, &retLen))
-                {
-                    DebugEvent("AFS_Logoff_Event - GetTokenInformation failed: GLE = %lX", GetLastError());
-                }
-            }
-        }
+	if (pInfo->UserName && pInfo->Domain) {
+	    char username[MAX_USERNAME_LENGTH] = "";
+	    char domain[MAX_DOMAIN_LENGTH] = "";
+	    size_t szlen = 0;
 
-        /* We can't use pInfo->Domain for the domain since in the cross realm case 
-         * this is source domain and not the destination domain.
-         */
-        if (QueryAdHomePathFromSid( profileDir, sizeof(profileDir), tokenUser->User.Sid, pInfo->Domain)) {
-            WCHAR Domain[64]=L"";
-            GetLocalShortDomain(Domain, sizeof(Domain));
-            if (QueryAdHomePathFromSid( profileDir, sizeof(profileDir), tokenUser->User.Sid, Domain)) {
-                if (NetUserGetProfilePath(pInfo->Domain, pInfo->UserName, profileDir, len))
-                    GetUserProfileDirectory(pInfo->hToken, profileDir, &len);
-            }
-        }
+	    StringCchLengthW(pInfo->UserName, MAX_USERNAME_LENGTH, &szlen);
+	    WideCharToMultiByte(CP_UTF8, 0, pInfo->UserName, szlen,
+				 username, sizeof(username), NULL, NULL);
 
-        if (strlen(profileDir)) {
-            DebugEvent("AFS_Logoff_Event - Profile Directory: %s", profileDir);
-            if (!IsPathInAfs(profileDir)) {
-                if (code = ktc_ForgetAllTokens())
-                    DebugEvent("AFS_Logoff_Event - ForgetAllTokens failed [%lX]",code);
-                else
-                    DebugEvent0("AFS_Logoff_Event - ForgetAllTokens succeeded");
-            } else {
-                DebugEvent0("AFS_Logoff_Event - Tokens left in place; profile in AFS");
-            }
-        } else {
-            DebugEvent0("AFS_Logoff_Event - Unable to load profile");
-        }
+	    StringCchLengthW(pInfo->Domain, MAX_DOMAIN_LENGTH, &szlen);
+	    WideCharToMultiByte(CP_UTF8, 0, pInfo->Domain, szlen,
+				 domain, sizeof(domain), NULL, NULL);
 
-        if ( tokenUser )
-            LocalFree(tokenUser);
+	    GetDomainLogonOptions(NULL, username, domain, &opt);
+	}
+
+        if (ISREMOTE(opt.flags)) {
+	    if (!GetTokenInformation(pInfo->hToken, TokenUser, NULL, 0, &retLen))
+	    {
+		if ( GetLastError() == ERROR_INSUFFICIENT_BUFFER ) {
+		    tokenUser = (PTOKEN_USER) LocalAlloc(LPTR, retLen);
+
+		    if (!GetTokenInformation(pInfo->hToken, TokenUser, tokenUser, retLen, &retLen))
+		    {
+			DebugEvent("AFS_Logoff_Event - GetTokenInformation failed: GLE = %lX", GetLastError());
+		    }
+		}
+	    }
+
+	    /* We can't use pInfo->Domain for the domain since in the cross realm case 
+	     * this is source domain and not the destination domain.
+	     */
+	    if (QueryAdHomePathFromSid( profileDir, sizeof(profileDir), tokenUser->User.Sid, pInfo->Domain)) {
+		WCHAR Domain[64]=L"";
+		GetLocalShortDomain(Domain, sizeof(Domain));
+		if (QueryAdHomePathFromSid( profileDir, sizeof(profileDir), tokenUser->User.Sid, Domain)) {
+		    if (NetUserGetProfilePath(pInfo->Domain, pInfo->UserName, profileDir, len))
+			GetUserProfileDirectory(pInfo->hToken, profileDir, &len);
+		}
+	    }
+
+	    if (strlen(profileDir)) {
+		DebugEvent("AFS_Logoff_Event - Profile Directory: %s", profileDir);
+		if (!IsPathInAfs(profileDir)) {
+		    if (code = ktc_ForgetAllTokens())
+			DebugEvent("AFS_Logoff_Event - ForgetAllTokens failed [%lX]",code);
+		    else
+			DebugEvent0("AFS_Logoff_Event - ForgetAllTokens succeeded");
+		} else {
+		    DebugEvent0("AFS_Logoff_Event - Tokens left in place; profile in AFS");
+		}
+	    } else {
+		DebugEvent0("AFS_Logoff_Event - Unable to load profile");
+	    }
+
+	    if ( tokenUser )
+		LocalFree(tokenUser);
+	} else {
+	    DebugEvent0("AFS_Logoff_Event - Local Logon");
+	    if (code = ktc_ForgetAllTokens())
+		DebugEvent("AFS_Logoff_Event - ForgetAllTokens failed [%lX]",code);
+	    else
+		DebugEvent0("AFS_Logoff_Event - ForgetAllTokens succeeded");
+	}
+    } else {
+	DebugEvent0("AFS_Logoff_Event - Preserving Tokens");
     }
 
     DebugEvent0("AFS_Logoff_Event - End");
@@ -1083,6 +1135,7 @@ VOID AFS_Logon_Event( PWLX_NOTIFICATION_INFO pInfo )
     NETRESOURCE nr;
     DWORD res;
     DWORD dwSize;
+    LogonOptions_t opt;
 
     /* Make sure the AFS Libraries are initialized */
     AfsLogonInit();
@@ -1090,6 +1143,42 @@ VOID AFS_Logon_Event( PWLX_NOTIFICATION_INFO pInfo )
     DebugEvent0("AFS_Logon_Event - Start");
 
     DebugEvent("AFS_Logon_Event Process ID: %d",GetCurrentProcessId());
+
+    memset(&opt, 0, sizeof(LogonOptions_t));
+
+    if (pInfo->UserName && pInfo->Domain) {
+        char username[MAX_USERNAME_LENGTH] = "";
+        char domain[MAX_DOMAIN_LENGTH] = "";
+        size_t szlen = 0;
+
+	DebugEvent0("AFS_Logon_Event - pInfo UserName and Domain");
+
+        StringCchLengthW(pInfo->UserName, MAX_USERNAME_LENGTH, &szlen);
+        WideCharToMultiByte(CP_UTF8, 0, pInfo->UserName, szlen,
+                            username, sizeof(username), NULL, NULL);
+        
+        StringCchLengthW(pInfo->Domain, MAX_DOMAIN_LENGTH, &szlen);
+        WideCharToMultiByte(CP_UTF8, 0, pInfo->Domain, szlen,
+                            domain, sizeof(domain), NULL, NULL);
+
+	DebugEvent0("AFS_Logon_Event - Calling GetDomainLogonOptions");
+        GetDomainLogonOptions(NULL, username, domain, &opt);
+    } else {
+	if (!pInfo->UserName)
+	    DebugEvent0("AFS_Logon_Event - No pInfo->UserName");
+	if (!pInfo->Domain)
+	    DebugEvent0("AFS_Logon_Event - No pInfo->Domain");
+    }
+
+    DebugEvent("AFS_Logon_Event - opt.LogonOption = %lX opt.flags = %lX", 
+		opt.LogonOption, opt.flags);
+
+    if (!ISLOGONINTEGRATED(opt.LogonOption) || !ISREMOTE(opt.flags)) {
+        DebugEvent0("AFS_Logon_Event - Logon is not integrated or not remote");
+        goto done_logon_event;
+    }
+
+    DebugEvent0("AFS_Logon_Event - Calling GetTokenInformation");
 
     if (!GetTokenInformation(pInfo->hToken, TokenUser, NULL, 0, &retLen))
     {
@@ -1121,6 +1210,7 @@ VOID AFS_Logon_Event( PWLX_NOTIFICATION_INFO pInfo )
         DebugEvent0("AFS_Logon_Event - Unable to load profile");
     }
 
+  done_logon_event:
     dwSize = sizeof(szUserA);
     if (!KFW_AFS_get_lsa_principal(szUserA, &dwSize)) {
         StringCbPrintfW(szUserW, sizeof(szUserW), L"%s\\%s", pInfo->Domain, pInfo->UserName);

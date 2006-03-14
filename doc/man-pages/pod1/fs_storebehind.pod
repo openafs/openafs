@@ -4,13 +4,19 @@ fs storebehind - Enables asynchronous writes to the file server
 
 =head1 SYNOPSIS
 
-B<fs storebehind> [B<-kbytes> <I<asynchrony for specified names>>]
-    [B<-files> <I<specific pathnames>>+]
-    [B<-allfiles> <I<new default (KB)>>] [B<-verbose>] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<fs st> [B<-k> <I<asynchrony for specified names>>]
-    [B<-f> <I<specific pathnames>>+]
-    [B<-a> <I<new default (KB)>>] [B<-v>] [B<-h>]
+B<fs storebehind> S<<< [B<-kbytes> <I<asynchrony for specified names>>] >>>
+    S<<< [B<-files> <I<specific pathnames>>+] >>>
+    S<<< [B<-allfiles> <I<new default (KB)>>] >>> [B<-verbose>] [B<-help>]
+
+B<fs st> S<<< [B<-k> <I<asynchrony for specified names>>] >>>
+    S<<< [B<-f> <I<specific pathnames>>+] >>>
+    S<<< [B<-a> <I<new default (KB)>>] >>> [B<-v>] [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

@@ -38,6 +38,8 @@
 #define AFS_SC_DARWIN_14			3
 #define AFS_SC_DARWIN_60			4
 #define AFS_SC_DARWIN_70			5
+#define AFS_SC_DARWIN_80			6
+#define AFS_SC_DARWIN_90			7
 
 /* AFS_SC_DARWIN_ALL: darwin version-independent sysctls */
 #define AFS_SC_DARWIN_ALL_REALMODES		1
@@ -55,6 +57,12 @@
 	/* nothing defined */
 
 /* AFS_SC_DARWIN_70: darwin 7.x sysctls */
+	/* nothing defined */
+
+/* AFS_SC_DARWIN_80: darwin 8.x sysctls */
+	/* nothing defined */
+
+/* AFS_SC_DARWIN_90: darwin 9.x sysctls */
 	/* nothing defined */
 
 #endif /* AFS_SYSCTL_H */

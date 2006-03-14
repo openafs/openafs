@@ -35,9 +35,6 @@ short afs_brsDaemons = 0;	/* number of daemons waiting for brs requests */
 struct brequest afs_brs[NBRS];	/* request structures */
 struct afs_osi_WaitHandle AFS_WaitHandler, AFS_CSWaitHandler;
 static int afs_brs_count = 0;	/* request counter, to service reqs in order */
-#ifdef AFS_DISABLE_BKG
-extern int disable_bkg = AFS_DISABLE_BKG;
-#endif
 
 static int rxepoch_checked = 0;
 #define afs_CheckRXEpoch() {if (rxepoch_checked == 0 && rxkad_EpochWasSet) { \
@@ -49,14 +46,14 @@ afs_int32 afs_gcpags = AFS_GCPAGS;
 afs_int32 afs_gcpags_procsize = 0;
 
 afs_int32 afs_CheckServerDaemonStarted = 0;
-#ifdef DEFAULT_PROBE_INTERVAL
-afs_int32 PROBE_INTERVAL = DEFAULT_PROBE_INTERVAL;	/* overridding during compile */
-#else
-afs_int32 PROBE_INTERVAL = 180;	/* default to 3 min */
+#ifndef DEFAULT_PROBE_INTERVAL
+#define DEFAULT_PROBE_INTERVAL 180	/* default to 3 min */
 #endif
+afs_int32 afs_probe_interval = DEFAULT_PROBE_INTERVAL;
+afs_int32 afs_probe_all_interval = 600;
 
-#define PROBE_WAIT() (1000 * (PROBE_INTERVAL - ((afs_random() & 0x7fffffff) \
-		      % (PROBE_INTERVAL/2))))
+#define PROBE_WAIT() (1000 * (afs_probe_interval - ((afs_random() & 0x7fffffff) \
+		      % (afs_probe_interval/2))))
 
 void
 afs_CheckServerDaemon(void)
@@ -78,13 +75,13 @@ afs_CheckServerDaemon(void)
 	}
 
 	now = osi_Time();
-	if (PROBE_INTERVAL + lastCheck <= now) {
+	if (afs_probe_interval + lastCheck <= now) {
 	    afs_CheckServers(1, NULL);	/* check down servers */
 	    lastCheck = now = osi_Time();
 	}
 
-	if (600 + last10MinCheck <= now) {
-	    afs_Trace1(afs_iclSetp, CM_TRACE_PROBEUP, ICL_TYPE_INT32, 600);
+	if (afs_probe_all_interval + last10MinCheck <= now) {
+	    afs_Trace1(afs_iclSetp, CM_TRACE_PROBEUP, ICL_TYPE_INT32, afs_probe_all_interval);
 	    afs_CheckServers(0, NULL);
 	    last10MinCheck = now = osi_Time();
 	}
@@ -96,9 +93,9 @@ afs_CheckServerDaemon(void)
 	}
 
 	/* Compute time to next probe. */
-	delay = PROBE_INTERVAL + lastCheck;
-	if (delay > 600 + last10MinCheck)
-	    delay = 600 + last10MinCheck;
+	delay = afs_probe_interval + lastCheck;
+	if (delay > afs_probe_all_interval + last10MinCheck)
+	    delay = afs_probe_all_interval + last10MinCheck;
 	delay -= now;
 	if (delay < 1)
 	    delay = 1;
@@ -200,7 +197,7 @@ afs_Daemon(void)
 		cs_warned = 1;
 		printf("Please install afsd with check server daemon.\n");
 	    }
-	    if (lastNMinCheck + PROBE_INTERVAL < now) {
+	    if (lastNMinCheck + afs_probe_interval < now) {
 		/* only check down servers */
 		afs_CheckServers(1, NULL);
 		lastNMinCheck = now;
@@ -566,10 +563,6 @@ int
 afs_BBusy(void)
 {
     AFS_STATCNT(afs_BBusy);
-#ifdef AFS_DISABLE_BKG
-    if (disable_bkg)
-	return 1;
-#endif
     if (afs_brsDaemons > 0)
 	return 0;
     return 1;

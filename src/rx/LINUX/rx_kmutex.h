@@ -31,11 +31,21 @@
 struct coda_inode_info {
 };
 #endif
-#include "linux/wait.h"
-#include "linux/sched.h"
+#include <linux/version.h>
+#include <linux/wait.h>
+#include <linux/sched.h>
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
+#include <linux/mutex.h>
+#else
+#include <asm/semaphore.h>
+#endif
 
 typedef struct afs_kmutex {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
+    struct mutex mutex;
+#else
     struct semaphore sem;
+#endif
     int owner;
 } afs_kmutex_t;
 

@@ -4,18 +4,24 @@ vos examine - Shows volume header and VLDB entry information for a volume
 
 =head1 SYNOPSIS
 
-B<vos examine> B<-id> <I<volume name or ID>> [B<-extended>]
-    [B<-cell> <I<cell name>>] [B<-noauth>] [B<-localauth>] [B<-verbose>]
+=for html
+<div class="synopsis">
+
+B<vos examine> S<<< B<-id> <I<volume name or ID>> >>> [B<-extended>]
+    S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>] [B<-verbose>]
     [B<-help>]
 
-B<vos e> B<-i> <I<volume name or ID>> [B<-e>] [B<-c> <I<cell name>>]
+B<vos e> S<<< B<-i> <I<volume name or ID>> >>> [B<-e>] S<<< [B<-c> <I<cell name>>] >>>
     [B<-n>] [B<-l>] [B<-v>] [B<-h>]
 
-B<vos volinfo> B<-i> <I<volume name or ID>> [B<-e>] [-c <I<cell name>>]
+B<vos volinfo> S<<< B<-i> <I<volume name or ID>> >>> [B<-e>] [-c <I<cell name>>]
     [B<-n>] [B<-l>] [B<-v>] [B<-h>]
 
-B<vos v> B<-i> <I<volume name or ID>> [B<-e>] [B<-c> <I<cell name>>]
+B<vos v> S<<< B<-i> <I<volume name or ID>> >>> [B<-e>] S<<< [B<-c> <I<cell name>>] >>>
     [B<-n>] [B<-l>] [B<-v>] [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

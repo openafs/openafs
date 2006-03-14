@@ -4,9 +4,15 @@ backup help - Displays help for backup commands
 
 =head1 SYNOPSIS
 
-B<backup help> [B<-topic> <I<help string>>+] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<backup h> [B<-t> <I<help string>>+] [B<-h>]
+B<backup help> S<<< [B<-topic> <I<help string>>+] >>> [B<-help>]
+
+B<backup h> S<<< [B<-t> <I<help string>>+] >>> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

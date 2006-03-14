@@ -62,6 +62,7 @@ EXT struct clock rx_softAckDelay;
 /* Variable to allow introduction of network unreliability */
 #ifdef RXDEBUG
 EXT int rx_intentionallyDroppedPacketsPer100 INIT(0);	/* Dropped on Send */
+EXT int rx_intentionallyDroppedOnReadPer100  INIT(0);	/* Dropped on Read */
 #endif
 
 /* extra packets to add to the quota */

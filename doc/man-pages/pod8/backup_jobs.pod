@@ -4,9 +4,15 @@ backup jobs - Lists pending and running operations in interactive mode
 
 =head1 SYNOPSIS
 
+=for html
+<div class="synopsis">
+
 B<jobs> [B<-help>]
 
 B<j> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

@@ -257,15 +257,25 @@ printbuf(FILE *out, int rec, char *audEvent, afs_int32 errCode, va_list vaList)
 	fprintf(out, "\n");
 }
 
-static struct Lock audlock;
-static afs_int32   lock_init = 0;
+#ifdef AFS_PTHREAD_ENV
+static pthread_mutex_t audit_lock;
+static volatile afs_int32   audit_lock_initialized = 0;
+static pthread_once_t audit_lock_once = PTHREAD_ONCE_INIT;
+
+static void
+osi_audit_init_lock(void)
+{
+    pthread_mutex_init(&audit_lock, NULL);
+    audit_lock_initialized = 1;
+}
+#endif
+
 void
 osi_audit_init(void)
 {
 #ifdef AFS_PTHREAD_ENV
-    if ( !lock_init ) {
-	Lock_Init(&audlock);
-	lock_init = 1;
+    if (!audit_lock_initialized) {
+	pthread_once(&audit_lock_once, osi_audit_init_lock);
     }
 #endif /* AFS_PTHREAD_ENV */
 }
@@ -287,11 +297,10 @@ osi_audit(char *audEvent,	/* Event name (15 chars or less) */
     va_list vaList;
 
 #ifdef AFS_PTHREAD_ENV
-    /* This is not thread safe.   Lock initialization should 
-     * be done in a server initialization phase
-     */
-    if ( !lock_init )
-	osi_audit_init();
+    /* i'm pretty sure all the server apps now call osi_audit_init(),
+     * but to be extra careful we'll leave this assert in here for a 
+     * while to make sure */
+    assert(audit_lock_initialized);
 #endif /* AFS_PTHREAD_ENV */
 
     if ((osi_audit_all < 0) || (osi_echo_trail < 0))
@@ -324,7 +333,7 @@ osi_audit(char *audEvent,	/* Event name (15 chars or less) */
     }
 
 #ifdef AFS_PTHREAD_ENV
-    ObtainWriteLock(&audlock);
+    pthread_mutex_lock(&audit_lock);
 #endif
 #ifdef AFS_AIX32_ENV
     bufferPtr = BUFFER;
@@ -361,7 +370,7 @@ osi_audit(char *audEvent,	/* Event name (15 chars or less) */
     }
 #endif
 #ifdef AFS_PTHREAD_ENV
-    ReleaseWriteLock(&audlock);
+    pthread_mutex_unlock(&audit_lock);
 #endif
 
     return 0;

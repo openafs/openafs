@@ -246,6 +246,12 @@ else
 			vm=${v#*.}
 			AFS_SYSNAME="i386_obsd${vM}${vm}"
 			;;
+		sparc64-*-openbsd?.?)
+			v=${host#*openbsd}
+			vM=${v%.*}
+			vm=${v#*.}
+			AFS_SYSNAME="sparc64_obsd${vM}${vm}"
+			;;
 		i?86-*-freebsd?.*)
 			v=${host#*freebsd}
 			vM=${v%.*}
@@ -391,6 +397,12 @@ else
 			;;
 		i386-apple-darwin8.*)
 			AFS_SYSNAME="x86_darwin_80"
+			;;
+		powerpc-apple-darwin9.*)
+			AFS_SYSNAME="ppc_darwin_90"
+			;;
+		i386-apple-darwin9.*)
+			AFS_SYSNAME="x86_darwin_90"
 			;;
 		sparc-sun-solaris2.5*)
 			AFS_SYSNAME="sun4x_55"
@@ -560,6 +572,8 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_FS_STRUCT_INODE_HAS_I_TRUNCATE_SEM
 		 LINUX_FS_STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS
 		 LINUX_FS_STRUCT_INODE_HAS_I_DEVICES
+		 LINUX_FS_STRUCT_INODE_HAS_I_MMAP_SHARED
+		 LINUX_FS_STRUCT_INODE_HAS_I_MUTEX
 		 LINUX_FS_STRUCT_INODE_HAS_I_SB_LIST
 		 LINUX_FS_STRUCT_INODE_HAS_I_SECURITY
 		 LINUX_FS_STRUCT_INODE_HAS_INOTIFY_LOCK
@@ -682,6 +696,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 fi
 		 if test "x$ac_cv_linux_fs_struct_inode_has_i_security" = "xyes"; then 
 		  AC_DEFINE(STRUCT_INODE_HAS_I_SECURITY, 1, [define if you struct inode has i_security])
+		 fi
+		 if test "x$ac_cv_linux_fs_struct_inode_has_i_mutex" = "xyes"; then 
+		  AC_DEFINE(STRUCT_INODE_HAS_I_MUTEX, 1, [define if you struct inode has i_mutex])
 		 fi
 		 if test "x$ac_cv_linux_fs_struct_inode_has_i_sb_list" = "xyes"; then 
 		  AC_DEFINE(STRUCT_INODE_HAS_I_SB_LIST, 1, [define if you struct inode has i_sb_list])
@@ -864,8 +881,13 @@ else
 fi
 
 PTHREAD_LIBS=error
-AC_CHECK_LIB(pthread, pthread_attr_init,
-             PTHREAD_LIBS="-lpthread")
+if test "x$MKAFS_OSTYPE" = OBSD; then
+        PTHREAD_LIBS="-pthread"
+fi
+if test "x$PTHREAD_LIBS" = xerror; then
+        AC_CHECK_LIB(pthread, pthread_attr_init,
+                PTHREAD_LIBS="-lpthread")
+fi
 if test "x$PTHREAD_LIBS" = xerror; then
         AC_CHECK_LIB(pthreads, pthread_attr_init,
                 PTHREAD_LIBS="-lpthreads")

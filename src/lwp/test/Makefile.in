@@ -11,7 +11,7 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 INCDIRS= -I.. -I${DESTDIR}/include 
 LIBS= ../liblwp.a
 
-CFLAGS = ${OPTIMIZE} ${INCDIRS} ${LDIRS} ${XCFLAGS}
+CFLAGS = ${OPTIMIZE} ${INCDIRS} ${LDIRS} ${XCFLAGS} ${ARCHFLAGS}
 
 system noversion: test
 

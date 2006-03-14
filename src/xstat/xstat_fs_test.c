@@ -83,7 +83,8 @@ static char *opNames[] = {
     "NGetVolumeInfo",
     "BulkStatus",
     "XStatsVersion",
-    "GetXStats"
+    "GetXStats",
+    "GetCapabilities"
 };
 
 static char *xferOpNames[] = {
@@ -493,6 +494,34 @@ PrintPerfInfo()
     PrintOverallPerfInfo(perfP);
 }
 
+static char *CbCounterStrings[] = {
+    "DeleteFiles",
+    "DeleteCallBacks",
+    "BreakCallBacks",
+    "AddCallBack",
+    "GotSomeSpaces",
+    "DeleteAllCallBacks",
+    "nFEs", "nCBs", "nblks",
+    "CBsTimedOut",
+    "nbreakers",
+    "GSS1", "GSS2", "GSS3", "GSS4", "GSS5"
+};
+
+
+void
+PrintCbCounters() {
+    int numInt32s = sizeof(CbCounterStrings)/sizeof(char *);
+    int i;
+    afs_uint32 *val=xstat_fs_Results.data.AFS_CollData_val;
+
+    if (numInt32s > xstat_fs_Results.data.AFS_CollData_len)
+	numInt32s = xstat_fs_Results.data.AFS_CollData_len;
+
+    for (i=0; i<numInt32s; i++) {
+	printf("\t%10u %s\n", val[i], CbCounterStrings[i]);
+    }
+}
+
 
 /*------------------------------------------------------------------------
  * FS_Handler
@@ -547,6 +576,10 @@ FS_Handler()
 
     case AFS_XSTATSCOLL_FULL_PERF_INFO:
 	PrintFullPerfInfo();
+	break;
+
+    case AFS_XSTATSCOLL_CBSTATS:
+	PrintCbCounters();
 	break;
 
     default:
@@ -687,7 +720,11 @@ RunTheTest(struct cmd_syndesc *a_s)
      */
     curr_item = a_s->parms[P_FS_NAMES].items;
     for (currFS = 0; currFS < numFSs; currFS++) {
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+	FSSktArray[currFS].sin_family = AF_INET;	/*Internet family */
+#else
 	FSSktArray[currFS].sin_family = htons(AF_INET);	/*Internet family */
+#endif
 	FSSktArray[currFS].sin_port = htons(7000);	/*FileServer port */
 	he = hostutil_GetHostByName(curr_item->data);
 	if (he == NULL) {

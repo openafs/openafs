@@ -4,11 +4,17 @@ voldump - Dump an AFS volume without using the Volume Server
 
 =head1 SYNOPSIS
 
-B<voldump> B<-part> <I<partition>> B<-volumeid> <I<volume id>>
-    [B<-file> <I<dump file>>] [B<-verbose>] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<voldump> B<-p> <I<partition>> B<-vo> <I<volume id>>
-    [B<-f> <I<dump file>>] [B<-ve>] [B<-h>]
+B<voldump> S<<< B<-part> <I<partition>> >>> S<<< B<-volumeid> <I<volume id>> >>>
+    S<<< [B<-file> <I<dump file>>] >>> [B<-verbose>] [B<-help>]
+
+B<voldump> S<<< B<-p> <I<partition>> >>> S<<< B<-vo> <I<volume id>> >>>
+    S<<< [B<-f> <I<dump file>>] >>> [B<-ve>] [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

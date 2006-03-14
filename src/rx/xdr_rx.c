@@ -22,6 +22,7 @@ RCSID
     ("$Header$");
 
 #ifdef KERNEL
+#include "afs/sysincludes.h"
 #ifndef UKERNEL
 #include "h/types.h"
 #include "h/uio.h"
@@ -49,7 +50,6 @@ RCSID
 #include "rx/xdr.h"
 #include "netinet/in.h"
 #else /* !UKERNEL */
-#include "afs/sysincludes.h"
 #include "rpc/types.h"
 #include "rpc/xdr.h"
 #endif /* !UKERNEL */

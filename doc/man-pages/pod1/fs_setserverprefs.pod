@@ -4,17 +4,23 @@ fs setserverprefs - Sets the preference ranks for file servers or VL servers
 
 =head1 SYNOPSIS
 
-B<fs setserverprefs> [B<-servers> <I<fileserver names and ranks>>+]
-    [B<-vlservers> <I<VL server names and ranks>>+]
-    [B<-file> <I<input from named file>>] [B<-stdin>] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<fs sets> [B<-se> <I<fileserver names and ranks>>+]
-    [B<-vl> <I<VL server names and ranks>>+]
-    [B<-f> <I<input from named file>>] [B<-st>] [B<-h>]
+B<fs setserverprefs> S<<< [B<-servers> <I<fileserver names and ranks>>+] >>>
+    S<<< [B<-vlservers> <I<VL server names and ranks>>+] >>>
+    S<<< [B<-file> <I<input from named file>>] >>> [B<-stdin>] [B<-help>]
 
-B<fs sp> [B<-se> <I<fileserver names and ranks>>+]
-    [B<-vl> <I<VL server names and ranks>>+]
-    [B<-f> <I<input from named file>>] [B<-st>] [B<-h>]
+B<fs sets> S<<< [B<-se> <I<fileserver names and ranks>>+] >>>
+    S<<< [B<-vl> <I<VL server names and ranks>>+] >>>
+    S<<< [B<-f> <I<input from named file>>] >>> [B<-st>] [B<-h>]
+
+B<fs sp> S<<< [B<-se> <I<fileserver names and ranks>>+] >>>
+    S<<< [B<-vl> <I<VL server names and ranks>>+] >>>
+    S<<< [B<-f> <I<input from named file>>] >>> [B<-st>] [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

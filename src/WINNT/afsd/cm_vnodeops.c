@@ -969,7 +969,8 @@ long cm_FollowMountPoint(cm_scache_t *scp, cm_scache_t *dscp, cm_user_t *userp,
 
     /* parse the volume name */
     mpNamep = scp->mountPointStringp;
-    osi_assert(mpNamep[0]);
+    if (!mpNamep[0])
+	return CM_ERROR_NOSUCHPATH;
     tlen = (int)strlen(scp->mountPointStringp);
     mtType = *scp->mountPointStringp;
     cellNamep = malloc(tlen);
@@ -1197,7 +1198,7 @@ long cm_LookupInternal(cm_scache_t *dscp, char *namep, long flags, cm_user_t *us
     if ( !dnlcHit && !(flags & CM_FLAG_NOMOUNTCHASE) && rock.ExactFound ) {
         /* lock the directory entry to prevent racing callback revokes */
         lock_ObtainMutex(&dscp->mx);
-        if ( dscp->cbServerp && dscp->cbExpires )
+        if ( dscp->cbServerp != NULL && dscp->cbExpires > 0 )
             cm_dnlcEnter(dscp, namep, tscp);
         lock_ReleaseMutex(&dscp->mx);
     }

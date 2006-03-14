@@ -4,9 +4,15 @@ kas help - Displays help for kas commands
 
 =head1 SYNOPSIS
 
-B<kas help> [B<-topic> <I<help string>>+] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<kas h> [B<-t> <I<help string>>+] [B<-h>]
+B<kas help> S<<< [B<-topic> <I<help string>>+] >>> [B<-help>]
+
+B<kas h> S<<< [B<-t> <I<help string>>+] >>> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

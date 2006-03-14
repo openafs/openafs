@@ -4,8 +4,14 @@ up - Recursively copy directories, preserving AFS metadata
 
 =head1 SYNOPSIS
 
-B<up> [B<-v>] [B<-1>] [B<-f>] [B<-r>] [B<-x>]
+=for html
+<div class="synopsis">
+
+B<up> [B<-v>] [B<-1>] [B<-f>] [B<-r>] [B<-x>] [B<-m>]
     <I<source directory>> <I<destination directory>>
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 
@@ -82,6 +88,14 @@ is the number one, not the letter C<l>.)
 
 Overwrites existing directories, subdirectories, and files even if the
 first (user) C<w> (write) mode bit is turned off on the version in the
+destination directory.
+
+=item B<-m>
+
+Recognize and copy mount points rather than traversing the volumes they
+reference during the recursive copy operation.  Without B<-m>, B<up>'s
+default behavior is to copy the contents of all volumes and subvolumes
+mounted under the source directory into the volume containing the
 destination directory.
 
 =item B<-r>

@@ -227,11 +227,12 @@ typedef struct smb_vc {
 typedef struct smb_user {
     struct smb_user *nextp;		/* next sibling */
     unsigned long refCount;		/* ref count */
-    long flags;			        /* flags; locked by mx */
+    afs_uint32 flags;		        /* flags; locked by mx */
     osi_mutex_t mx;
     unsigned short userID;		/* the session identifier */
     struct smb_vc *vcp;		        /* back ptr to virtual circuit */
     struct smb_username *unp;           /* user name struct */
+    afs_uint32	delete;			/* ok to del: locked by smb_rctLock */
 } smb_user_t;
 
 #define SMB_USERFLAG_DELETE	    1	/* delete struct when ref count zero */
@@ -270,17 +271,17 @@ typedef struct smb_username {
 typedef struct smb_tid {
     struct smb_tid *nextp;		/* next sibling */
     unsigned long refCount;
-    long flags;
+    afs_uint32 flags;			/* protected by mx */
     osi_mutex_t mx;			/* for non-tree-related stuff */
     unsigned short tid;		        /* the tid */
     struct smb_vc *vcp;		        /* back ptr */
     struct cm_user *userp;		/* user logged in at the
 					 * tree connect level (base) */
     char *pathname;			/* pathname derived from sharename */
+    afs_uint32	delete;			/* ok to del: locked by smb_rctLock */
 } smb_tid_t;
 
-#define SMB_TIDFLAG_DELETE	1	/* delete struct when ref count zero */
-#define SMB_TIDFLAG_IPC	2 /* IPC$ */
+#define SMB_TIDFLAG_IPC		1 	/* IPC$ */
 
 /* one per process ID */
 typedef struct smb_pid {
@@ -327,7 +328,7 @@ typedef struct smb_ioctl {
 typedef struct smb_fid {
     osi_queue_t q;
     unsigned long refCount;
-    unsigned long flags;
+    afs_uint32 flags;			/* protected by mx */
     osi_mutex_t mx;			/* for non-tree-related stuff */
     unsigned short fid;		        /* the file ID */
     struct smb_vc *vcp;		        /* back ptr */
@@ -350,11 +351,12 @@ typedef struct smb_fid {
     int prev_chunk;			/* previous chunk read */
     int raw_writers;		        /* pending async raw writes */
     EVENT_HANDLE raw_write_event;	/* signal this when raw_writers zero */
+    afs_uint32	delete;			/* ok to del: locked by smb_rctLock */
 } smb_fid_t;
 
 #define SMB_FID_OPENREAD		1	/* open for reading */
 #define SMB_FID_OPENWRITE		2	/* open for writing */
-#define SMB_FID_DELETE			4	/* delete struct on ref count 0 */
+#define SMB_FID_UNUSED                  4       /* free for use */
 #define SMB_FID_IOCTL			8	/* a file descriptor for the
 						 * magic ioctl file */
 #define SMB_FID_OPENDELETE		0x10	/* open for deletion (NT) */
@@ -528,7 +530,9 @@ extern void smb_HoldUIDNoLock(smb_user_t *uidp);
 
 extern void smb_ReleaseUID(smb_user_t *uidp);
 
-extern cm_user_t *smb_GetUser(smb_vc_t *vcp, smb_packet_t *inp);
+extern cm_user_t *smb_GetUserFromVCP(smb_vc_t *vcp, smb_packet_t *inp);
+
+extern cm_user_t *smb_GetUserFromUID(smb_user_t *uidp);
 
 extern long smb_LookupTIDPath(smb_vc_t *vcp, unsigned short tid, char ** tidPathp);
 

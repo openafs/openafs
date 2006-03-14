@@ -73,7 +73,9 @@ if [ -z "$done" ]; then
     # this is a new install, or an upgrade from pre-1.2.7
     echo "Installing new CellServDB"
     cp CellServDB.master CellServDB.master.last
-    cp CellServDB.master CellServDB
+    if [ ! -e CellServDB ]; then
+	cp CellServDB.master CellServDB
+    fi
   fi
 fi
 

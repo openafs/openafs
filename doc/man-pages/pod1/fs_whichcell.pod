@@ -4,9 +4,15 @@ fs whichcell - Returns the cell to which a file or directory belongs
 
 =head1 SYNOPSIS
 
-B<fs whichcell> [B<-path> <I<dir/file path>>+] [B<-help>]
+=for html
+<div class="synopsis">
 
-B<fs whi > [B<-p> <I<dir/file path>>+] [B<-h>]
+B<fs whichcell> S<<< [B<-path> <I<dir/file path>>+] >>> [B<-help>]
+
+B<fs whi > S<<< [B<-p> <I<dir/file path>>+] >>> [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

@@ -13,11 +13,15 @@ if [ ! -d pod1 ] ; then
     exit 1
 fi
 
-if ! pod2man pod1/afs.pod > /dev/null ; then
+if pod2man pod1/afs.pod > /dev/null ; then
+    :
+else
     echo 'pod2man not found, skipping man page generation' >&2
     exit 1
 fi
-if ! perl -e 'use Pod::Man 2.04' > /dev/null 2>&1 ; then
+if perl -e 'use Pod::Man 2.04' > /dev/null 2>&1 ; then
+    :
+else
     echo 'Pod::Man is older than the recommended version of 2.04 or later' >&2
     echo 'Continuing with man page generation anyway' >&2
 fi

@@ -4,11 +4,17 @@ vos backup - Creates a backup volume for a single read/write volume
 
 =head1 SYNOPSIS
 
-B<vos backup> B<-id> <I<volume name or ID>> [B<-cell> <I<cell name>>]
+=for html
+<div class="synopsis">
+
+B<vos backup> S<<< B<-id> <I<volume name or ID>> >>> S<<< [B<-cell> <I<cell name>>] >>>
     [B<-noauth>] [B<-localauth>] [B<-verbose>] [B<-help>]
 
-B<vos backup> B<-i> <I<volume name or ID>> [B<-c><I<cell name>>]
+B<vos backup> S<<< B<-i> <I<volume name or ID>> >>> [B<-c><I<cell name>>]
     [B<-n>] [B<-l>] [B<-v>] [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

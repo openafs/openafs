@@ -4,12 +4,18 @@ bos restart - Restarts a server process
 
 =head1 SYNOPSIS
 
-B<bos restart> B<-server> <I<machine name>> [B<-instance> <I<instances>>+]
-    [B<-bosserver>] [B<-all>] [B<-cell> <I<cell name>>] [B<-noauth>]
+=for html
+<div class="synopsis">
+
+B<bos restart> S<<< B<-server> <I<machine name>> >>> S<<< [B<-instance> <I<instances>>+] >>>
+    [B<-bosserver>] [B<-all>] S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>]
     [B<-localauth>] [B<-help>]
 
-B<bos res> B<-s> <I<machine name>> [B<-i> <I<instances>>+] [B<-b>]
-    [B<-a>] [B<-c> <I<cell name>>] [B<-n>] [B<-l>] [B<-h>]
+B<bos res> S<<< B<-s> <I<machine name>> >>> S<<< [B<-i> <I<instances>>+] >>> [B<-b>]
+    [B<-a>] S<<< [B<-c> <I<cell name>>] >>> [B<-n>] [B<-l>] [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

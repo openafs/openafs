@@ -97,6 +97,9 @@ struct xfs_inode_info {
 #include <linux/slab.h>
 #include <linux/string.h>
 #include <asm/semaphore.h>
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
+#include <linux/mutex.h>
+#endif
 #include <linux/errno.h>
 #ifdef COMPLETION_H_EXISTS
 #include <linux/completion.h>

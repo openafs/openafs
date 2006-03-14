@@ -240,9 +240,9 @@ darwin_vn_hold(struct vnode *vp)
     tvc->states |= CUBCinit;
 #endif
 #ifdef AFS_DARWIN80_ENV
+    osi_Assert((tvc->states & CVInit) == 0);
     if (tvc->states & CDeadVnode)
        osi_Assert(!vnode_isinuse(vp, 1));
-     osi_Assert((tvc->states & CVInit) == 0);
 #endif
     if (haveGlock) AFS_GUNLOCK(); 
 
@@ -257,7 +257,15 @@ darwin_vn_hold(struct vnode *vp)
            return;
 #endif
         }
-	vnode_ref(vp);
+	if (vnode_ref(vp)) {
+#if 1
+	    panic("vn_hold on terminating vnode");
+#else           
+	    vnode_put(vp);
+	    if (haveGlock) AFS_GLOCK(); 
+	    return;
+#endif
+	}
 	vnode_put(vp);
 #else
     /* vget needed for 0 ref'd vnode in GetVCache to not panic in vref.
@@ -553,6 +561,7 @@ afs_vop_access(ap)
     struct afs_fakestat_state fakestate;
     struct vcache * tvc = VTOAFS(ap->a_vp);
     int bits=0;
+    int cmb = CHECK_MODE_BITS;
     AFS_GLOCK();
     afs_InitFakeStat(&fakestate);
     if ((code = afs_InitReq(&treq, vop_cred)))
@@ -603,6 +612,12 @@ afs_vop_access(ap)
           bits |= PRSFS_LOOKUP;
        if (ap->a_action & KAUTH_VNODE_READ_SECURITY) /* mode bits/gid, not afs acl */
           bits |= PRSFS_LOOKUP;
+       if ((ap->a_action & ((1 << 25) - 1)) == KAUTH_VNODE_EXECUTE)
+          /* if only exec, don't check for read mode bit */
+          /* high bits of ap->a_action are not for 'generic rights bits', and
+             so should not be checked (KAUTH_VNODE_ACCESS is often present
+             and needs to be masked off) */
+	  cmb |= CMB_ALLOW_EXEC_AS_READ;
     }
     if (ap->a_action & KAUTH_VNODE_WRITE_ATTRIBUTES)
        bits |= PRSFS_WRITE;
@@ -616,7 +631,7 @@ afs_vop_access(ap)
        bits |= PRSFS_WRITE;
     /* we can't check for KAUTH_VNODE_TAKE_OWNERSHIP, so we always permit it */
     
-    code = afs_AccessOK(tvc, bits, &treq, CHECK_MODE_BITS);
+    code = afs_AccessOK(tvc, bits, &treq, cmb);
 
     if (code == 1 && vnode_vtype(ap->a_vp) == VREG &&
         ap->a_action & KAUTH_VNODE_EXECUTE &&
@@ -1430,8 +1445,10 @@ afs_vop_mkdir(ap)
     error = afs_mkdir(VTOAFS(dvp), name, vap, &vcp, vop_cn_cred);
     AFS_GUNLOCK();
     if (error) {
+#ifndef AFS_DARWIN80_ENV
 	VOP_ABORTOP(dvp, cnp);
 	vput(dvp);
+#endif
 	DROPNAME();
 	return (error);
     }
@@ -1733,7 +1750,10 @@ afs_vop_advlock(ap)
 {
     int error;
     struct ucred *tcr;
+    int clid;
+    int op;
 #ifdef AFS_DARWIN80_ENV
+    proc_t p;
     tcr=vop_cred;
 #else
     struct proc *p = current_proc();
@@ -1743,11 +1763,26 @@ afs_vop_advlock(ap)
     pcred_unlock(p);
     tcr=&cr;
 #endif
+    if (ap->a_flags & F_POSIX) {
+#ifdef AFS_DARWIN80_ENV
+	p = (proc_t) ap->a_id;
+	clid = proc_pid(p);
+#else
+	p = (struct proc *) ap->a_id;
+	clid = p->p_pid;
+#endif
+    } else {
+	clid = (int)ap->a_id;
+    }
+    if (ap->a_op == F_UNLCK) {
+	op = F_SETLK;
+    } else if (ap->a_op == F_SETLK && ap->a_flags & F_WAIT) {
+	op = F_SETLKW;
+    } else {
+	op = ap->a_op;
+    }
     AFS_GLOCK();
-    error =
-	afs_lockctl(VTOAFS(ap->a_vp), ap->a_fl,
-		    ap->a_op == F_UNLCK ? F_SETLK : ap->a_op, tcr, 
-		    (int)ap->a_id);
+    error = afs_lockctl(VTOAFS(ap->a_vp), ap->a_fl, op, tcr, clid);
     AFS_GUNLOCK();
     return error;
 }
@@ -2038,7 +2073,10 @@ afs_darwin_finalizevnode(struct vcache *avc, struct vnode *dvp, struct component
    par.vnfs_filesize = avc->m.Length;
    par.vnfs_fsnode = avc;
    par.vnfs_dvp = dvp;
-   par.vnfs_cnp = cnp;
+   if (cnp && (cnp->cn_flags & ISDOTDOT) == 0)
+       par.vnfs_cnp = cnp;
+   if (!dvp || !cnp || (cnp->cn_flags & MAKEENTRY) == 0)
+       par.vnfs_flags = VNFS_NOCACHE;
    if (isroot)
        par.vnfs_markroot = 1;
    error = vnode_create(VNCREATE_FLAVOR, VCREATESIZE, &par, &nvp);

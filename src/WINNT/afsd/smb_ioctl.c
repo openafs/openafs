@@ -40,8 +40,14 @@ void smb_InitIoctl(void)
         smb_ioctlProcsp[VIOCSETAL] = cm_IoctlSetACL;
         smb_ioctlProcsp[VIOC_FLUSHVOLUME] = cm_IoctlFlushVolume;
         smb_ioctlProcsp[VIOCFLUSH] = cm_IoctlFlushFile;
+#ifdef COMMENT
+        /* This functions do not return the data expected by the 
+	 * Windows CIFS client.  Calling them only increases the 
+	 * number of roundtrips to the file server with no benefit.
+	 */
         smb_ioctlProcsp[VIOCSETVOLSTAT] = cm_IoctlSetVolumeStatus;
         smb_ioctlProcsp[VIOCGETVOLSTAT] = cm_IoctlGetVolumeStatus;
+#endif
         smb_ioctlProcsp[VIOCWHEREIS] = cm_IoctlWhereIs;
         smb_ioctlProcsp[VIOC_AFS_STAT_MT_PT] = cm_IoctlStatMountPoint;
         smb_ioctlProcsp[VIOC_AFS_DELETE_MT_PT] = cm_IoctlDeleteMountPoint;
@@ -190,7 +196,7 @@ long smb_IoctlRead(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp,
 
         iop = fidp->ioctlp;
         count = smb_GetSMBParm(inp, 1);
-        userp = smb_GetUser(vcp, inp);
+        userp = smb_GetUserFromVCP(vcp, inp);
 
 	/* Identify tree */
     code = smb_LookupTIDPath(vcp, ((smb_t *)inp)->tid, &iop->tidPathp);
@@ -231,7 +237,6 @@ long smb_IoctlRead(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp,
         iop->outCopied += count;
         
         cm_ReleaseUser(userp);
-        smb_ReleaseFID(fidp);
 
         return 0;
 }
@@ -274,7 +279,6 @@ done:
                 smb_SetSMBDataLength(outp, 0);
         }
 
-        smb_ReleaseFID(fidp);
         return code;
 }
 
@@ -292,10 +296,9 @@ long smb_IoctlV3Read(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp, smb_pack
     iop = fidp->ioctlp;
     count = smb_GetSMBParm(inp, 5);
 	
-    userp = smb_GetUser(vcp, inp);
-    osi_assert(userp != 0);
-
     uidp = smb_FindUID(vcp, ((smb_t *)inp)->uid, 0);
+    userp = smb_GetUserFromUID(uidp);
+    osi_assert(userp != 0);
     iop->uidp = uidp;
     if (uidp && uidp->unp) {
         osi_Log3(afsd_logp, "Ioctl uid %d user %x name %s",
@@ -315,7 +318,6 @@ long smb_IoctlV3Read(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp, smb_pack
 	if (uidp)
 	    smb_ReleaseUID(uidp);
         cm_ReleaseUser(userp);
-        smb_ReleaseFID(fidp);
         return CM_ERROR_NOSUCHPATH;
     }
 
@@ -326,7 +328,6 @@ long smb_IoctlV3Read(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp, smb_pack
     }
     if (code) {
 	cm_ReleaseUser(userp);
-        smb_ReleaseFID(fidp);
 	return code;
     }
 
@@ -366,7 +367,6 @@ long smb_IoctlV3Read(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp, smb_pack
 
     /* and cleanup things */
     cm_ReleaseUser(userp);
-    smb_ReleaseFID(fidp);
 
     return 0;
 }	
@@ -396,7 +396,7 @@ long smb_IoctlReadRaw(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp,
 
     iop = fidp->ioctlp;
 
-    userp = smb_GetUser(vcp, inp);
+    userp = smb_GetUserFromVCP(vcp, inp);
 
     /* Log the user */
     {
@@ -421,14 +421,12 @@ long smb_IoctlReadRaw(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp,
     code = smb_LookupTIDPath(vcp, ((smb_t *)inp)->tid, &iop->tidPathp);
     if (code) {
         cm_ReleaseUser(userp);
-        smb_ReleaseFID(fidp);
         return CM_ERROR_NOSUCHPATH;
     }
 
     code = smb_IoctlPrepareRead(fidp, iop, userp);
     if (code) {
 	cm_ReleaseUser(userp);
-	smb_ReleaseFID(fidp);
 	return code;
     }
 
@@ -457,7 +455,6 @@ long smb_IoctlReadRaw(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp,
 	osi_Log1(afsd_logp, "ReadRaw send failure code %d", code);
 
     cm_ReleaseUser(userp);
-    smb_ReleaseFID(fidp);
 
     return 0;
 }

@@ -1,4 +1,4 @@
-This file is a rough list of known issues with the 1.4.0000 release of OpenAFS 
+This file is a rough list of known issues with the 1.5.0000 release of OpenAFS 
 on Windows.  This list is not complete.  There are probably other issues which 
 can be found in the RT database or on the mailing list.
 
@@ -107,7 +107,7 @@ List of unfunded projects:
    4. Add support for Named Pipes within the afs filesystem
       (This is not currently a supported feature of AFS; it will require 
       changes to the servers as well as the clients.)
-   5. Re-write afscreds.exe to support:
+   5. Replace afscreds.exe with netidmgr.exe to support:
          1. choosing between Kerberos 5 and Kerberos 4 on a per principal basis
          2. providing users with the ability to map multiple cells to a single principal
          3. providing change password functionality on a per principal basis
@@ -133,23 +133,18 @@ List of unfunded projects:
         11. network configuration
         12. miscellaneous
         13. need to add support for all of the new registry values since 1.2.8
-   8. Identify why 16-bit DOS applications executed out of AFS fail
-   9. Add support for configurable Icon file representing AFS folders within the Explorer Shell
-  10. Documentation Documentation Documentation
-  11. Large File support (> 2GB) in SMB/CIFS client
-  12. Integrate KFW installation into the NSIS and MSI installers
-  13. Add support for byte range locking to AFS (requires changes to the servers)
-  14. Unicode enable the SMB/CIFS server.  OEM Code Pages: 
+  10. Add support for configurable Icon file representing AFS folders within the Explorer Shell
+  11. Documentation Documentation Documentation
+  12. Large File support (> 2GB) in SMB/CIFS client
+  13. Integrate KFW installation into the NSIS and MSI installers
+  14. Add support for byte range locking to AFS (requires changes to the servers)
+  15. Unicode enable the SMB/CIFS server.  OEM Code Pages: 
       1. prevent the use of interoperable file names
       2. force the use of paths no longer than 256 characters
       3. force share names to be no longer than 13 characters
       4. restrict authentication to ASCII only names and passwords
-  15. Complete implementation of CIFS Remote Administration Protocol
-  16. Add support for SMB/CIFS Digital Signatures
-  17. Development of afsmap.exe tool to provide AFS aware NET USE functionality
-      afsmap.exe <drive> <afs-path> [/PERSISTENT]
-      afsmap.exe <drive> <unc-path> [/PERSISTENT]
-      afsmap.exe <drive> /DELETE
+  16. Complete implementation of CIFS Remote Administration Protocol
+  17. Add support for SMB/CIFS Digital Signatures
   18. Missing SMB/CIFS functions: 
         Find
         FindUnique
@@ -167,3 +162,9 @@ List of unfunded projects:
   22. Add support for storing Windows ACLs on files
   23. Remove submount creation as a side effect of drive creation
   24. Finish conversion from string.h to strsafe.h for VS.NET 2005
+  25. Implement RX Statistics gathering interfaces and reporting tools
+      (necessary to obtain profiling data)
+  26. Implement RX Connection Pools in the Cache Manager allowing more than
+      four simultaneous requests to a single server to be processed at a time 
+      for a single user
+  

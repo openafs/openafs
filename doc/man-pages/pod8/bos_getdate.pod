@@ -4,13 +4,19 @@ bos getdate - Displays the time stamps on an AFS binary file
 
 =head1 SYNOPSIS
 
-B<bos getdate> B<-server> <I<machine name>> B<-file> <I<files to check>>+
-    [B<-dir> <I<destination dir>>] [B<-cell> <I<cell name>>]
+=for html
+<div class="synopsis">
+
+B<bos getdate> S<<< B<-server> <I<machine name>> >>> S<<< B<-file> <I<files to check>>+ >>>
+    S<<< [B<-dir> <I<destination dir>>] >>> S<<< [B<-cell> <I<cell name>>] >>>
     [B<-noauth>] [B<-localauth>] [B<-help>]
 
-B<bos getd> B<-s> <I<machine name>> B<-f> <I<files to check>>+
-    [B<-d> <I<destination dir>>] [B<-c> <I<cell name>>] [B<-n>] [B<-l>]
+B<bos getd> S<<< B<-s> <I<machine name>> >>> S<<< B<-f> <I<files to check>>+ >>>
+    S<<< [B<-d> <I<destination dir>>] >>> S<<< [B<-c> <I<cell name>>] >>> [B<-n>] [B<-l>]
     [B<-h>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

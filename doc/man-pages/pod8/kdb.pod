@@ -4,8 +4,14 @@ kdb - Displays log or privileged actions performed by the Authentication Server
 
 =head1 SYNOPSIS
 
-B<kdb> [B<-dbmfile> <I<dbmfile to use (default /usr/afs/logs/AuthLog)>>]
-    [B<-key> <I<extract entries that match specified key>>] [B<-help>]
+=for html
+<div class="synopsis">
+
+B<kdb> S<<< [B<-dbmfile> <I<dbmfile to use (default /usr/afs/logs/AuthLog)>>] >>>
+    S<<< [B<-key> <I<extract entries that match specified key>>] >>> [B<-help>]
+
+=for html
+</div>
 
 =head1 DESCRIPTION
 

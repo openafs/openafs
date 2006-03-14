@@ -276,7 +276,7 @@ uphys_setlabel(register struct ubik_dbase *adbase, afs_int32 afile,
     thdr.version.epoch = htonl(aversion->epoch);
     thdr.version.counter = htonl(aversion->counter);
     thdr.magic = htonl(UBIK_MAGIC);
-    thdr.size = htonl(HDRSIZE);
+    thdr.size = htons(HDRSIZE);
     code = write(fd, &thdr, sizeof(thdr));
     fsync(fd);			/* preserve over crash */
     uphys_close(fd);
