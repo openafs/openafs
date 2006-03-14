@@ -451,7 +451,7 @@ h_gethostcps_r(register struct host *host, register afs_int32 now)
     slept ? (host->cpsCall = FT_ApproxTime()) : (host->cpsCall = now);
 
     H_UNLOCK;
-    code = pr_GetHostCPS(htonl(host->host), &host->hcps);
+    code = pr_GetHostCPS(ntohl(host->host), &host->hcps);
     H_LOCK;
     if (code) {
 	/*
@@ -505,7 +505,7 @@ h_gethostcps_r(register struct host *host, register afs_int32 now)
 
 /* args in net byte order */
 void
-h_flushhostcps(register afs_uint32 hostaddr, register afs_uint32 hport)
+h_flushhostcps(register afs_uint32 hostaddr, register afs_uint16 hport)
 {
     register struct host *host;
     int held = 0;
@@ -532,29 +532,20 @@ struct host *
 h_Alloc_r(register struct rx_connection *r_con)
 {
     struct servent *serverentry;
-    int index = h_HashIndex(rxr_HostOf(r_con));
     struct host *host;
     static struct rx_securityClass *sc = 0;
     afs_int32 now;
-    struct h_hashChain *h_hashChain;
 #if FS_STATS_DETAILED
     afs_uint32 newHostAddr_HBO;	/*New host IP addr, in host byte order */
 #endif /* FS_STATS_DETAILED */
 
     host = GetHT();
 
-    h_hashChain = (struct h_hashChain *)malloc(sizeof(struct h_hashChain));
-    if (!h_hashChain) {
-	ViceLog(0, ("Failed malloc in h_Alloc_r\n"));
-	assert(0);
-    }
-    h_hashChain->hostPtr = host;
-    h_hashChain->addr = rxr_HostOf(r_con);
-    h_hashChain->next = hostHashTable[index];
-    hostHashTable[index] = h_hashChain;
-
     host->host = rxr_HostOf(r_con);
     host->port = rxr_PortOf(r_con);
+
+    hashInsert_r(host->host, host->port, host);
+
     if (consolePort == 0) {	/* find the portal number for console */
 #if	defined(AFS_OSF_ENV)
 	serverentry = getservbyname("ropcons", "");
@@ -610,7 +601,7 @@ h_Alloc_r(register struct rx_connection *r_con)
 /* Note: host should be released by caller if 0 == *heldp and non-null */
 /* hostaddr and hport are in network order */
 struct host *
-h_Lookup_r(afs_uint32 haddr, afs_uint32 hport, int *heldp)
+h_Lookup_r(afs_uint32 haddr, afs_uint16 hport, int *heldp)
 {
     afs_int32 now;
     struct host *host = 0;

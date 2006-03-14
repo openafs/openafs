@@ -217,8 +217,10 @@ extern void ShutDownAndCore(int dopanic);
 
 extern struct host *h_Alloc(register struct rx_connection *r_con);
 extern struct host *h_Alloc_r(register struct rx_connection *r_con);
-extern struct host *h_Lookup_r(afs_uint32 hostaddr, afs_uint32 hport,
+extern struct host *h_Lookup_r(afs_uint32 hostaddr, afs_uint16 hport,
 			       int *heldp);
+extern void   hashInsert_r(afs_uint32 addr, afs_uint16 port, 
+			   struct host* host);
 extern struct host *h_LookupUuid_r(afsUUID * uuidp);
 extern int h_FreeConnection(struct rx_connection *tcon);
 extern void h_Enumerate(int (*proc) (), char *param);
@@ -233,7 +235,7 @@ extern void h_PrintStats();
 extern void h_PrintClients();
 extern void h_GetWorkStats();
 extern void h_flushhostcps(register afs_uint32 hostaddr,
-			   register afs_uint32 hport);
+			   register afs_uint16 hport);
 extern void h_GetHostNetStats(afs_int32 * a_numHostsP, afs_int32 * a_sameNetOrSubnetP,
 		  afs_int32 * a_diffSubnetP, afs_int32 * a_diffNetworkP);
 extern int h_NBLock_r(register struct host *host);
