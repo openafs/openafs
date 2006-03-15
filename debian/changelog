@@ -5,6 +5,8 @@ openafs (1.4.0-4) unstable; urgency=low
   * Document the need to restart ptserver and vlserver on the existing
     database servers when adding a new one.  Thanks, Niklas Edmundsson.
     (Closes: #349659)
+  * Include xstat_cm_test and xstat_fs_test in openafs-client, as they're
+    quite useful for debugging.
 
  --
 

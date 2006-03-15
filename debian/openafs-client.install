@@ -15,6 +15,8 @@ debian/tmp/usr/bin/translate_et         usr/bin
 debian/tmp/usr/bin/udebug               usr/bin
 debian/tmp/usr/bin/unlog                usr/bin
 debian/tmp/usr/bin/up                   usr/bin
+debian/tmp/usr/bin/xstat_cm_test        usr/bin
+debian/tmp/usr/bin/xstat_fs_test        usr/bin
 
 debian/tmp/usr/sbin/rxdebug             usr/bin
 debian/tmp/usr/sbin/vos                 usr/bin
@@ -159,6 +161,8 @@ debian/doc/man1/vos_syncvldb.1          usr/share/man/man1
 debian/doc/man1/vos_unlock.1            usr/share/man/man1
 debian/doc/man1/vos_unlockvldb.1        usr/share/man/man1
 debian/doc/man1/vos_zap.1               usr/share/man/man1
+debian/doc/man1/xstat_cm_test.1         usr/share/man/man1
+debian/doc/man1/xstat_fs_test.1         usr/share/man/man1
 
 debian/doc/man5/CellServDB.5            usr/share/man/man5
 debian/doc/man5/NetInfo.5               usr/share/man/man5
