@@ -52,11 +52,16 @@ RCSID
 #include "volume.h"
 #include "viceinode.h"
 #include "partition.h"
+#include "daemon_com.h"
 #include "fssync.h"
 
 /* forward declarations */
-void PurgeIndex_r(Volume * vp, VnodeClass class);
-void PurgeHeader_r(Volume * vp);
+static int ObliterateRegion(Volume * avp, VnodeClass aclass, StreamHandle_t * afile,
+			    afs_int32 * aoffset);
+static void PurgeIndex(Volume * vp, VnodeClass class);
+static void PurgeIndex_r(Volume * vp, VnodeClass class);
+static void PurgeHeader_r(Volume * vp);
+static void PurgeHeader(Volume * vp);
 
 void
 VPurgeVolume_r(Error * ec, Volume * vp)
@@ -78,7 +83,7 @@ VPurgeVolume_r(Error * ec, Volume * vp)
     /*
      * Call the fileserver to break all call backs for that volume
      */
-    FSYNC_askfs(V_id(vp), tpartp->name, FSYNC_RESTOREVOLUME, 0);
+    FSYNC_VolOp(V_id(vp), tpartp->name, FSYNC_VOL_BREAKCBKS, 0, NULL);
 }
 
 void
@@ -161,7 +166,7 @@ ObliterateRegion(Volume * avp, VnodeClass aclass, StreamHandle_t * afile,
     return -1;
 }
 
-void
+static void
 PurgeIndex(Volume * vp, VnodeClass class)
 {
     VOL_LOCK;
@@ -169,7 +174,7 @@ PurgeIndex(Volume * vp, VnodeClass class)
     VOL_UNLOCK;
 }
 
-void
+static void
 PurgeIndex_r(Volume * vp, VnodeClass class)
 {
     StreamHandle_t *ifile;
@@ -199,7 +204,7 @@ PurgeIndex_r(Volume * vp, VnodeClass class)
     FDH_CLOSE(fdP);
 }
 
-void
+static void
 PurgeHeader(Volume * vp)
 {
     VOL_LOCK;
@@ -207,7 +212,7 @@ PurgeHeader(Volume * vp)
     VOL_UNLOCK;
 }
 
-void
+static void
 PurgeHeader_r(Volume * vp)
 {
     IH_REALLYCLOSE(V_diskDataHandle(vp));

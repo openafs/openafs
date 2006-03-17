@@ -112,6 +112,7 @@ RCSID
 #include "viced_prototypes.h"
 #include "viced.h"
 #include "host.h"
+#include "callback.h"
 #include <afs/unified_afs.h>
 #include <afs/audit.h>
 #include <afs/afsutil.h>
@@ -209,7 +210,7 @@ extern afs_int32 readonlyServer;
 /*
  * Externals used by the xstat code.
  */
-extern int VolumeCacheSize, VolumeGets, VolumeReplacements;
+extern VolPkgStats VStats;
 extern int CEs, CEBlocks;
 
 extern int HTs, HTBlocks;
@@ -438,7 +439,7 @@ static afs_int32
 CheckVnode(AFSFid * fid, Volume ** volptr, Vnode ** vptr, int lock)
 {
     int fileCode = 0;
-    int errorCode = -1;
+    afs_int32 local_errorCode, errorCode = -1;
     static struct timeval restartedat = { 0, 0 };
 
     if (fid->Volume == 0 || fid->Vnode == 0)	/* not: || fid->Unique == 0) */
@@ -448,7 +449,7 @@ CheckVnode(AFSFid * fid, Volume ** volptr, Vnode ** vptr, int lock)
 
 	while (1) {
 	    errorCode = 0;
-	    *volptr = VGetVolume(&errorCode, (afs_int32) fid->Volume);
+	    *volptr = VGetVolume(&local_errorCode, &errorCode, (afs_int32) fid->Volume);
 	    if (!errorCode) {
 		assert(*volptr);
 		break;
@@ -525,8 +526,10 @@ CheckVnode(AFSFid * fid, Volume ** volptr, Vnode ** vptr, int lock)
 		    }
 		}
 	    }
-	    /* allow read operations on busy volume */
-	    else if (errorCode == VBUSY && lock == READ_LOCK) {
+	    /* allow read operations on busy volume. 
+	     * must check local_errorCode because demand attach fs
+	     * can have local_errorCode == VSALVAGING, errorCode == VBUSY */
+	    else if (local_errorCode == VBUSY && lock == READ_LOCK) {
 		errorCode = 0;
 		break;
 	    } else if (errorCode)
@@ -1151,6 +1154,8 @@ CopyOnWrite(Vnode * targetptr, Volume * volptr)
 			 wrlen, errno));
 #ifdef FAST_RESTART		/* if running in no-salvage, don't core the server */
 		ViceLog(0, ("CopyOnWrite failed: taking volume offline\n"));
+#elif defined(AFS_DEMAND_ATTACH_FS)
+		ViceLog(0, ("CopyOnWrite failed: requesting salvage\n"));
 #else /* Avoid further corruption and try to get a core. */
 		assert(0);
 #endif
@@ -5564,7 +5569,7 @@ SRXAFS_XStatsVersion(struct rx_call * a_call, afs_int32 * a_versionP)
 static void
 FillPerfValues(struct afs_PerfStats *a_perfP)
 {				/*FillPerfValues */
-
+    afs_uint32 hi, lo;
     int dir_Buffers;		/*# buffers in use by dir package */
     int dir_Calls;		/*# read calls in dir package */
     int dir_IOs;		/*# I/O ops in dir package */
@@ -5582,9 +5587,11 @@ FillPerfValues(struct afs_PerfStats *a_perfP)
     a_perfP->vcache_S_Gets = VnodeClassInfo[vSmall].gets;
     a_perfP->vcache_S_Reads = VnodeClassInfo[vSmall].reads;
     a_perfP->vcache_S_Writes = VnodeClassInfo[vSmall].writes;
-    a_perfP->vcache_H_Entries = VolumeCacheSize;
-    a_perfP->vcache_H_Gets = VolumeGets;
-    a_perfP->vcache_H_Replacements = VolumeReplacements;
+    a_perfP->vcache_H_Entries = VStats.hdr_cache_size;
+    SplitInt64(VStats.hdr_gets, hi, lo);
+    a_perfP->vcache_H_Gets = lo;
+    SplitInt64(VStats.hdr_loads, hi, lo);
+    a_perfP->vcache_H_Replacements = lo;
 
     /*
      * Directory section.

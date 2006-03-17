@@ -41,6 +41,7 @@ RCSID
 #include "partition.h"
 #include "viceinode.h"
 #include "salvage.h"
+#include "daemon_com.h"
 #include "fssync.h"
 
 #ifdef O_LARGEFILE

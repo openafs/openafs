@@ -118,6 +118,7 @@ typedef struct VnodeDiskObject {
 #define SIZEOF_LARGEDISKVNODE	256
 
 typedef struct Vnode {
+    struct rx_queue vid_hash;   /* for vnode by volume id hash */
     struct Vnode *hashNext;	/* Next vnode on hash conflict chain */
     struct Vnode *lruNext;	/* Less recently used vnode than this one */
     struct Vnode *lruPrev;	/* More recently used vnode than this one */
@@ -216,3 +217,4 @@ extern Vnode *VAllocVnode(Error * ec, struct Volume *vp, VnodeType type);
 extern Vnode *VAllocVnode_r(Error * ec, struct Volume *vp, VnodeType type);
 /*extern VFreeVnode();*/
 extern Vnode *VGetFreeVnode_r(struct VnodeClassInfo *vcp);
+extern void VInitVnHashByVolume(void);

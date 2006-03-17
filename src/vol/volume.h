@@ -5,6 +5,8 @@
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
+ *
+ * Portions Copyright (c) 2006 Sine Nomine Associates
  */
 
 /*
@@ -24,44 +26,44 @@
 #define VolumeWriteable2(vol)		(vol.type == readwriteVolume)
 typedef bit32 FileOffset;	/* Offset in this file */
 #define Date afs_uint32
+#include "daemon_com.h"
+#include "fssync.h"
 
 #ifdef AFS_PTHREAD_ENV
 #include <assert.h>
 #include <pthread.h>
 extern pthread_mutex_t vol_glock_mutex;
-extern pthread_mutex_t vol_attach_mutex;
-extern pthread_mutex_t vol_fsync_mutex;
 extern pthread_mutex_t vol_trans_mutex;
 extern pthread_cond_t vol_put_volume_cond;
 extern pthread_cond_t vol_sleep_cond;
 extern int vol_attach_threads;
-/* this lock has been deprecated */
-#define VATTACH_LOCK
-#define VATTACH_UNLOCK
 #define VOL_LOCK \
     assert(pthread_mutex_lock(&vol_glock_mutex) == 0)
 #define VOL_UNLOCK \
     assert(pthread_mutex_unlock(&vol_glock_mutex) == 0)
-#define VFSYNC_LOCK \
-    assert(pthread_mutex_lock(&vol_fsync_mutex) == 0)
-#define VFSYNC_UNLOCK \
-    assert(pthread_mutex_unlock(&vol_fsync_mutex) == 0)
+#define VSALVSYNC_LOCK \
+    assert(pthread_mutex_lock(&vol_salvsync_mutex) == 0)
+#define VSALVSYNC_UNLOCK \
+    assert(pthread_mutex_unlock(&vol_salvsync_mutex) == 0)
 #define VTRANS_LOCK \
     assert(pthread_mutex_lock(&vol_trans_mutex) == 0)
 #define VTRANS_UNLOCK \
     assert(pthread_mutex_unlock(&vol_trans_mutex) == 0)
 #else /* AFS_PTHREAD_ENV */
-#define VATTACH_LOCK
-#define VATTACH_UNLOCK
 #define VOL_LOCK
 #define VOL_UNLOCK
-#define VFSYNC_LOCK
-#define VFSYNC_UNLOCK
+#define VSALVSYNC_LOCK
+#define VSALVSYNC_UNLOCK
 #define VTRANS_LOCK
 #define VTRANS_UNLOCK
 #endif /* AFS_PTHREAD_ENV */
 
-typedef enum { fileServer, volumeUtility, salvager } ProgramType;
+typedef enum { fileServer,       /* the fileserver process */
+	       volumeUtility,    /* volserver, or a single volume salvager (non-dafs) */
+	       salvager,         /* standalone whole-partition salvager */
+	       salvageServer,    /* dafs online salvager */
+	       debugUtility      /* fssync-debug or similar utility */
+} ProgramType;
 extern ProgramType programType;	/* The type of program using the package */
 
 /* Some initialization parameters for the volume package */
@@ -75,6 +77,70 @@ struct versionStamp {		/* Version stamp for critical volume files */
     bit32 version;		/* Version number of this file, or software
 				 * that created this file */
 };
+
+#ifdef AFS_DEMAND_ATTACH_FS
+/*
+ * demand attach fs
+ * volume state machine
+ *
+ * these must be contiguous in order for IsValidState() to work correctly 
+ */
+#define VOL_STATE_UNATTACHED     0       /* volume is unattached */
+#define VOL_STATE_PREATTACHED    1       /* volume has been pre-attached */
+#define VOL_STATE_ATTACHING      2       /* volume is transitioning to fully attached */
+#define VOL_STATE_ATTACHED       3       /* volume has been fully attached */
+#define VOL_STATE_UPDATING       4       /* volume is updating on-disk structures */
+#define VOL_STATE_GET_BITMAP     5       /* volume is getting bitmap entries */
+#define VOL_STATE_HDR_LOADING    6       /* volume is loading disk header */
+#define VOL_STATE_HDR_ATTACHING  7       /* volume is getting a header from the LRU */
+#define VOL_STATE_SHUTTING_DOWN  8       /* volume is shutting down */
+#define VOL_STATE_GOING_OFFLINE  9       /* volume is going offline */
+#define VOL_STATE_OFFLINING      10      /* volume is transitioning to offline */
+#define VOL_STATE_DETACHING      11      /* volume is transitioning to detached */
+#define VOL_STATE_SALVSYNC_REQ   12      /* volume is blocked on a salvsync request */
+#define VOL_STATE_SALVAGING      13      /* volume is being salvaged */
+#define VOL_STATE_ERROR          14      /* volume is in an error state */
+#define VOL_STATE_FREED          15      /* debugging aid */
+
+#define VOL_STATE_COUNT          16      /* total number of valid states */
+
+/* V_attachFlags bits */
+#define VOL_HDR_ATTACHED   0x1     /* volume header is attached to Volume struct */
+#define VOL_HDR_LOADED     0x2     /* volume header contents are valid */
+#define VOL_HDR_IN_LRU     0x4     /* volume header is in LRU */
+#define VOL_IN_HASH        0x8     /* volume is in hash table */
+#define VOL_ON_VBYP_LIST   0x10    /* volume is on VByP list */
+#define VOL_IS_BUSY        0x20    /* volume is not to be free()d */
+#define VOL_ON_VLRU        0x40    /* volume is on the VLRU */
+#define VOL_HDR_DONTSALV   0x80    /* volume header DONTSALVAGE flag is set */
+
+/* VPrintExtendedCacheStats flags */
+#define VOL_STATS_PER_CHAIN   0x1  /* compute simple per-chain stats */
+#define VOL_STATS_PER_CHAIN2  0x2  /* compute per-chain stats that require scanning
+				    * every element of the chain */
+
+/* VLRU_SetOptions options */
+#define VLRU_SET_THRESH       1
+#define VLRU_SET_INTERVAL     2
+#define VLRU_SET_MAX          3
+#define VLRU_SET_ENABLED      4
+
+/* valid VLRU queue names */
+#define VLRU_QUEUE_NEW 0            /* LRU queue for new volumes */
+#define VLRU_QUEUE_MID 1            /* survivor generation */
+#define VLRU_QUEUE_OLD 2            /* old generation */
+#define VLRU_QUEUE_CANDIDATE 3      /* soft detach candidate pool */
+#define VLRU_QUEUE_HELD 4           /* volumes which are not allowed
+				     * to be soft detached */
+#define VLRU_QUEUE_INVALID 5        /* invalid queue id */
+
+/* default scanner timing parameters */
+#define VLRU_DEFAULT_OFFLINE_THRESH (60*60*2) /* 2 hours */
+#define VLRU_DEFAULT_OFFLINE_INTERVAL (60*2) /* 2 minutes */
+#define VLRU_DEFAULT_OFFLINE_MAX 8 /* 8 volumes */
+
+#endif /* AFS_DEMAND_ATTACH_FS */
+
 
 /* Magic numbers and version stamps for each type of file */
 #define VOLUMEHEADERMAGIC	((bit32)0x88a1bb3c)
@@ -297,8 +363,144 @@ typedef struct VolumeDiskData {
 /**************************************/
 /* Memory resident volume information */
 /**************************************/
+
+/* global volume package stats */
+typedef struct VolPkgStats {
+#ifdef AFS_DEMAND_ATTACH_FS
+    /*
+     * demand attach fs
+     * extended volume package statistics
+     */
+
+    /* levels */
+    afs_uint32 state_levels[VOL_STATE_COUNT];
+
+    /* counters */
+    afs_uint64 hash_looks;           /* number of hash chain element traversals */
+    afs_uint64 hash_reorders;        /* number of hash chain reorders */
+    afs_uint64 salvages;             /* online salvages since fileserver start */
+    afs_uint64 vol_ops;              /* volume operations since fileserver start */
+#endif /* AFS_DEMAND_ATTACH_FS */
+
+    afs_uint64 hdr_loads;            /* header loads from disk */
+    afs_uint64 hdr_gets;             /* header pulls out of LRU */
+    afs_uint64 attaches;             /* volume attaches since fileserver start */
+    afs_uint64 soft_detaches;        /* soft detach ops since fileserver start */
+
+    /* configuration parameters */
+    afs_uint32 hdr_cache_size;       /* size of volume header cache */
+} VolPkgStats;
+extern VolPkgStats VStats;
+
+/*
+ * volume header cache supporting structures
+ */
+#ifdef AFS_DEMAND_ATTACH_FS
+struct volume_hdr_LRU_stats {
+    afs_uint32 free;
+    afs_uint32 used;
+    afs_uint32 attached;
+};
+#endif
+
+struct volume_hdr_LRU_t {
+    struct rx_queue lru;
+#ifdef AFS_DEMAND_ATTACH_FS
+    struct volume_hdr_LRU_stats stats;
+#endif
+};
+extern struct volume_hdr_LRU_t volume_hdr_LRU;
+
+/*
+ * volume hash chain supporting structures
+ */
+typedef struct VolumeHashChainHead {
+    struct rx_queue queue;
+    int len;
+    /* someday we could put a per-chain lock here... */
+#ifdef AFS_DEMAND_ATTACH_FS
+    int busy;
+    int cacheCheck;
+
+    /* per-chain statistics */
+    afs_uint64 looks;
+    afs_uint64 gets;
+    afs_uint64 reorders;
+
+    pthread_cond_t chain_busy_cv;
+#endif /* AFS_DEMAND_ATTACH_FS */
+} VolumeHashChainHead;
+
+typedef struct VolumeHashTable {
+    int Size;
+    int Mask;
+    VolumeHashChainHead * Table;
+} VolumeHashTable_t;
+extern VolumeHashTable_t VolumeHashTable;
+
+struct VolumeHashChainStats {
+    afs_int32 table_size;
+    afs_int32 chain_len;
+#ifdef AFS_DEMAND_ATTACH_FS
+    afs_int32 chain_cacheCheck;
+    afs_int32 chain_busy;
+    afs_uint64 chain_looks;
+    afs_uint64 chain_gets;
+    afs_uint64 chain_reorders;
+#endif
+};
+
+
+#ifdef AFS_DEMAND_ATTACH_FS
+/* demand attach fs
+ * extended per-volume statistics 
+ *
+ * please note that this structure lives across the entire
+ * lifetime of the fileserver process
+ */
+typedef struct VolumeStats {
+    /* counters */
+    afs_uint64 hash_lookups;         /* hash table lookups */
+    afs_uint64 hash_short_circuits;  /* short circuited hash lookups (due to cacheCheck) */
+    afs_uint64 hdr_loads;            /* header loads from disk */
+    afs_uint64 hdr_gets;             /* header pulls out of LRU */
+    afs_uint16 attaches;             /* attaches of this volume since fileserver start */
+    afs_uint16 soft_detaches;        /* soft detaches of this volume */
+    afs_uint16 salvages;             /* online salvages since fileserver start */
+    afs_uint16 vol_ops;              /* volume operations since fileserver start */
+
+    /* timestamps */
+    afs_uint32 last_attach;      /* unix timestamp of last VAttach */
+    afs_uint32 last_get;         /* unix timestamp of last VGet/VHold */
+    afs_uint32 last_promote;     /* unix timestamp of last VLRU promote/demote */
+    afs_uint32 last_hdr_get;     /* unix timestamp of last GetVolumeHeader() */
+    afs_uint32 last_salvage;     /* unix timestamp of last initiation of an online salvage */
+    afs_uint32 last_salvage_req; /* unix timestamp of last SALVSYNC request */
+    afs_uint32 last_vol_op;      /* unix timestamp of last volume operation */
+} VolumeStats;
+
+/* demand attach fs
+ * online salvager state */
+typedef struct VolumeOnlineSalvage {
+    afs_uint32 prio;            /* number of VGetVolume's since salvage requested */
+    int reason;                 /* reason for requesting online salvage */
+    byte requested;             /* flag specifying that salvage should be scheduled */
+    byte scheduled;             /* flag specifying whether online salvage scheduled */
+    byte reserved[2];           /* padding */
+} VolumeOnlineSalvage;
+
+/* demand attach fs
+ * volume LRU state */
+typedef struct VolumeVLRUState {
+    struct rx_queue lru;        /* VLRU queue pointers */
+    int idx;                    /* VLRU generation index */
+} VolumeVLRUState;
+
+typedef afs_uint16 VolState;    /* attachment state type */
+#endif /* AFS_DEMAND_ATTACH_FS */
+
 typedef struct Volume {
-    struct Volume *hashNext;	/* Next in hash resolution table */
+    struct rx_queue q;          /* Volume hash chain pointers */
     VolumeId hashid;		/* Volume number -- for hash table lookup */
     struct volHeader *header;	/* Cached disk data */
     Device device;		/* Unix device for the volume */
@@ -339,10 +541,23 @@ typedef struct Volume {
     afs_uint32 updateTime;	/* Time that this volume was put on the updated
 				 * volume list--the list of volumes that will be
 				 * salvaged should the file server crash */
+#ifdef AFS_DEMAND_ATTACH_FS
+    VolState attach_state;      /* what stage of attachment has been completed */
+    afs_uint16 attach_flags;    /* flags related to attachment state */
+    pthread_cond_t attach_cv;   /* state change condition variable */
+    short nWaiters;             /* volume package internal ref count */
+    int chainCacheCheck;        /* Volume hash chain cache check */
+    struct rx_queue vol_list;   /* per-partition volume list (VByPList) */
+
+    VolumeOnlineSalvage salvage;  /* online salvager state */
+    VolumeStats stats;            /* per-volume statistics */
+    VolumeVLRUState vlru;         /* state specific to the VLRU */
+    FSSYNC_VolOp_info * pending_vol_op;  /* fssync command info for any pending vol ops */
+#endif /* AFS_DEMAND_ATTACH_FS */
 } Volume;
 
 struct volHeader {
-    struct volHeader *prev, *next;	/* LRU pointers */
+    struct rx_queue lru;
     VolumeDiskData diskstuff;	/* General volume info read from disk */
     Volume *back;		/* back pointer to current volume structure */
 };
@@ -356,6 +571,11 @@ struct volHeader {
 #define V_vnodeIndex(vp)	((vp)->vnodeIndex)
 #define V_nextVnodeUnique(vp)	((vp)->nextVnodeUnique)
 #define V_linkHandle(vp)	((vp)->linkHandle)
+#ifdef AFS_DEMAND_ATTACH_FS
+#define V_attachState(vp)       ((vp)->attach_state)
+#define V_attachFlags(vp)       ((vp)->attach_flags)
+#define V_attachCV(vp)          ((vp)->attach_cv)
+#endif /* AFS_DEMAND_ATTACH_FS */
 
 /* N.B. V_id must be this, rather than vp->id, or some programs will break, probably */
 #define V_stamp(vp)		((vp)->header->diskstuff.stamp)
@@ -414,7 +634,7 @@ struct volHeader {
 
 extern char *VSalvageMessage;	/* Canonical message when a volume is forced
 				 * offline */
-extern Volume *VGetVolume(Error * ec, VolId volumeId);
+extern Volume *VGetVolume(Error * ec, Error * client_ec, VolId volumeId);
 extern Volume *VGetVolume_r(Error * ec, VolId volumeId);
 extern void VPutVolume(Volume *);
 extern void VPutVolume_r(Volume *);
@@ -422,6 +642,9 @@ extern void VOffline(Volume * vp, char *message);
 extern void VOffline_r(Volume * vp, char *message);
 extern int VConnectFS(void);
 extern int VConnectFS_r(void);
+extern void VDisconnectFS(void);
+extern void VDisconnectFS_r(void);
+extern int VChildProcReconnectFS(void);
 extern Volume *VAttachVolume(Error * ec, VolumeId volumeId, int mode);
 extern Volume *VAttachVolume_r(Error * ec, VolumeId volumeId, int mode);
 extern Volume *VCreateVolume(Error * ec, char *partname, VolId volumeId,
@@ -431,7 +654,7 @@ extern Volume *VCreateVolume_r(Error * ec, char *partname, VolId volumeId,
 extern VnodeId VAllocBitmapEntry(Error * ec, Volume * vp,
 				 struct vnodeIndex *index);
 extern VnodeId VAllocBitmapEntry_r(Error * ec, Volume * vp,
-				   struct vnodeIndex *index);
+				   struct vnodeIndex *index, int flags);
 extern void VFreeBitMapEntry(Error * ec, register struct vnodeIndex *index,
 			     unsigned bitNumber);
 extern void VFreeBitMapEntry_r(Error * ec, register struct vnodeIndex *index,
@@ -444,13 +667,13 @@ extern Volume *VAttachVolumeByName_r(Error * ec, char *partition, char *name,
 				     int mode);
 extern void VShutdown(void);
 extern void VUpdateVolume(Error * ec, Volume * vp);
-extern void VUpdateVolume_r(Error * ec, Volume * vp);
+extern void VUpdateVolume_r(Error * ec, Volume * vp, int flags);
 extern void VAddToVolumeUpdateList(Error * ec, Volume * vp);
 extern void VAddToVolumeUpdateList_r(Error * ec, Volume * vp);
 extern void VDetachVolume(Error * ec, Volume * vp);
 extern void VDetachVolume_r(Error * ec, Volume * vp);
 extern void VForceOffline(Volume * vp);
-extern void VForceOffline_r(Volume * vp);
+extern void VForceOffline_r(Volume * vp, int flags);
 extern void VBumpVolumeUsage(register Volume * vp);
 extern void VBumpVolumeUsage_r(register Volume * vp);
 extern void VSetDiskUsage(void);
@@ -459,12 +682,41 @@ extern void VReleaseVnodeFiles_r(Volume * vp);
 extern void VCloseVnodeFiles_r(Volume * vp);
 extern struct DiskPartition *VGetPartition(char *name, int abortp);
 extern struct DiskPartition *VGetPartition_r(char *name, int abortp);
-extern int VInitVolumePackage(ProgramType pt, int nLargeVnodes,
-			      int nSmallVnodes, int connect, int volcache);
+extern int VInitVolumePackage(ProgramType pt, afs_uint32 nLargeVnodes,
+			      afs_uint32 nSmallVnodes, int connect, afs_uint32 volcache);
 extern void DiskToVolumeHeader(VolumeHeader_t * h, VolumeDiskHeader_t * dh);
 extern void VolumeHeaderToDisk(VolumeDiskHeader_t * dh, VolumeHeader_t * h);
 extern void VTakeOffline_r(register Volume * vp);
 extern void VTakeOffline(register Volume * vp);
+extern Volume * VLookupVolume_r(Error * ec, VolId volumeId, Volume * hint);
+
+#ifdef AFS_DEMAND_ATTACH_FS
+extern Volume *VPreAttachVolumeByName(Error * ec, char *partition, char *name, 
+				       int mode);
+extern Volume *VPreAttachVolumeByName_r(Error * ec, char *partition, char *name,
+				     int mode);
+extern Volume *VPreAttachVolumeById_r(Error * ec, struct DiskPartition * partp, 
+				      Volume * vp, int volume_id);
+extern Volume *VGetVolumeByVp_r(Error * ec, Volume * vp);
+extern int VShutdownByPartition_r(struct DiskPartition * dp);
+extern int VShutdownVolume_r(Volume * vp);
+extern int VConnectSALV(void);
+extern int VConnectSALV_r(void);
+extern int VReconnectSALV(void);
+extern int VReconnectSALV_r(void);
+extern int VDisconnectSALV(void);
+extern int VDisconnectSALV_r(void);
+extern void VPrintExtendedCacheStats(int flags);
+extern void VPrintExtendedCacheStats_r(int flags);
+extern VolState VChangeState_r(Volume * vp, VolState new_state);
+extern void VLRU_SetOptions(int option, afs_uint32 val);
+extern int VSetVolHashSize(int logsize);
+extern int VRequestSalvage_r(Volume * vp, int reason, int flags);
+extern int VRegisterVolOp_r(Volume * vp, FSSYNC_VolOp_info * vopinfo);
+extern int VDeregisterVolOp_r(Volume * vp, FSSYNC_VolOp_info * vopinfo);
+#endif /* AFS_DEMAND_ATTACH_FS */
+extern int VVolOpLeaveOnline_r(Volume * vp, FSSYNC_VolOp_info * vopinfo);
+extern int VVolOpSetVBusy_r(Volume * vp, FSSYNC_VolOp_info * vopinfo);
 
 
 /* Naive formula relating number of file size to number of 1K blocks in file */
@@ -498,6 +750,26 @@ extern void VTakeOffline(register Volume * vp);
 				 * similar to V_SECRETLY, but read-only.  It is used in cases where
 				 * not impacting fileserver performance is more important than
 				 * getting the most recent data. */
+
+
+
+/* VUpdateVolume_r flags */
+#define VOL_UPDATE_WAIT          0x1  /* for demand attach, wait for other exclusive ops to end */
+#define VOL_UPDATE_NOFORCEOFF    0x2  /* don't force offline on failure. this is to prevent
+				       * infinite recursion between vupdate and vforceoff */
+
+/* VForceOffline_r flags */
+#define VOL_FORCEOFF_NOUPDATE    0x1  /* don't force update on forceoff. this is to prevent
+				       * infinite recursion between vupdate and vforceoff */
+
+/* VSyncVolume_r flags */
+#define VOL_SYNC_WAIT            0x1  /* for demand attach, wait for other exclusive ops to end */
+
+/* VAllocBitmapEntry_r flags */
+#define VOL_ALLOC_BITMAP_WAIT    0x1  /* for demand attach, wait for other exclusive ops to end */
+
+/* VRequestSalvage_r flags */
+#define VOL_SALVAGE_INVALIDATE_HEADER 0x1 /* for demand attach fs, invalidate volume header cache */
 
 
 #if	defined(NEARINODE_HINT)

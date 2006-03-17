@@ -5,7 +5,7 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-AFSDEV_AUXCDEFINES = -DAFS_PTHREAD_ENV -DRXDEBUG
+AFSDEV_AUXCDEFINES = -DAFS_PTHREAD_ENV -DRXDEBUG -DFSSYNC_BUILD_SERVER
 
 RELDIR=tviced
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)

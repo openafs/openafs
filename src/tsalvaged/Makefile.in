@@ -1,0 +1,200 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+#
+# Portions Copyright (c) 2003 Apple Computer, Inc.
+# Portions Copyright (c) 2006 Sine Nomine Associates
+
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
+
+CC=${MT_CC}
+CFLAGS=${COMMON_CFLAGS} -I.. -DNINTERFACE ${MT_CFLAGS} -DRXDEBUG -DFSSYNC_BUILD_CLIENT \
+	-DSALVSYNC_BUILD_SERVER -DSALVSYNC_BUILD_CLIENT
+
+CCRULE=${CC} ${CFLAGS} -c $?
+
+VICED=../viced
+VLSERVER=../vlserver
+LWP=../lwp
+LIBACL=../libacl
+UTIL=../util
+DIR=../dir
+VOL=../vol
+FSINT=../fsint
+
+SALVAGEDOBJS=salvaged.o vol-salvage.o physio.o
+
+DIROBJS=buffer.o dir.o salvage.o
+
+LWPOBJS=lock.o threadname.o
+
+UTILOBJS=assert.o uuid.o serverLog.o fileutil.o netutils.o dirpath.o volparse.o flipbase64.o softsig.o fstab.o
+
+VLIBOBJS=vnode.o volume.o vutil.o partition.o fssync-client.o \
+	 clone.o nuke.o devname.o listinodes.o ihandle.o \
+	 namei_ops.o salvsync-server.o salvsync-client.o \
+	 daemon_com.o
+
+OBJECTS= ${SALVAGEDOBJS} ${UTILOBJS} ${VLIBOBJS} ${DIROBJS} ${LWPOBJS}
+
+FSSDEBUG_OBJS = fssync-debug.o physio.o common.o ${UTILOBJS} ${VLIBOBJS} ${DIROBJS} ${LWPOBJS}
+
+SSSDEBUG_OBJS = salvsync-debug.o physio.o common.o ${UTILOBJS} ${VLIBOBJS} ${DIROBJS} ${LWPOBJS}
+
+LIBS=${TOP_LIBDIR}/libafsauthent.a ${TOP_LIBDIR}/libafsrpc.a ${TOP_LIBDIR}/util.a ${TOP_LIBDIR}/libcmd.a
+
+INSTALL_TARGS = ${DESTDIR}${afssrvlibexecdir}/salvageserver \
+		${DESTDIR}${afssrvsbindir}/fssync-debug \
+		${DESTDIR}${afssrvsbindir}/salvsync-debug
+
+DEST_TARGS =	${DEST}/root.server/usr/afs/bin/salvageserver \
+		${DEST}/root.server/usr/afs/bin/fssync-debug \
+		${DEST}/root.server/usr/afs/bin/salvsync-debug
+
+all: salvageserver fssync-debug salvsync-debug
+
+salvaged.o: ${VOL}/salvaged.c
+	${CCRULE}
+
+vol-salvage.o: ${VOL}/vol-salvage.c
+	${CCRULE}
+
+physio.o: ${VOL}/physio.c
+	${CCRULE}
+
+fssync-debug.o: ${VOL}/fssync-debug.c
+	${CCRULE}
+
+salvsync-debug.o: salvsync-debug.c
+	${CCRULE}
+
+assert.o: ${UTIL}/assert.c
+	${CCRULE}
+
+uuid.o: ${UTIL}/uuid.c
+	${CCRULE}
+
+serverLog.o: ${UTIL}/serverLog.c
+	${CCRULE}
+
+fileutil.o: ${UTIL}/fileutil.c
+	${CCRULE}
+
+volparse.o: ${UTIL}/volparse.c
+	${CCRULE}
+
+flipbase64.o: ${UTIL}/flipbase64.c
+	${CCRULE}
+
+netutils.o: ${UTIL}/netutils.c
+	${CCRULE}
+
+dirpath.o: ${UTIL}/dirpath.c
+	${CCRULE}
+
+softsig.o: ${UTIL}/softsig.c
+	${CCRULE}
+
+buffer.o: ${DIR}/buffer.c
+	${CCRULE}
+
+dir.o: ${DIR}/dir.c
+	${CCRULE}
+
+salvage.o: ${DIR}/salvage.c
+	${CCRULE}
+
+lock.o: ${LWP}/lock.c
+	${CCRULE}
+
+threadname.o: ${LWP}/threadname.c
+	${CCRULE}
+
+vnode.o: ${VOL}/vnode.c
+	${CCRULE}
+
+volume.o: ${VOL}/volume.c
+	${CCRULE}
+
+vutil.o: ${VOL}/vutil.c
+	${CCRULE}
+
+partition.o: ${VOL}/partition.c
+	${CCRULE}
+
+fssync-client.o: ${VOL}/fssync-client.c
+	${CCRULE}
+
+salvsync-server.o: ${VOL}/salvsync-server.c
+	${CCRULE}
+
+salvsync-client.o: ${VOL}/salvsync-client.c
+	${CCRULE}
+
+daemon_com.o: ${VOL}/daemon_com.c
+	${CCRULE}
+
+clone.o: ${VOL}/clone.c
+	${CCRULE}
+
+nuke.o: ${VOL}/nuke.c
+	${CCRULE}
+
+devname.o: ${VOL}/devname.c
+	${CCRULE}
+
+# only for darwin?
+fstab.o: ${UTIL}/fstab.c
+	${CCRULE}
+
+common.o: ${VOL}/common.c
+	${CCRULE}
+
+listinodes.o: ${VOL}/listinodes.c
+	${CCRULE}
+
+ihandle.o: ${VOL}/ihandle.c
+	${CCRULE}
+
+namei_ops.o: ${VOL}/namei_ops.c
+	${CCRULE}
+
+salvageserver: ${OBJECTS} ${LIBS}
+	${CC} ${LDFLAGS} -o salvageserver ${OBJECTS} ${LIBS} ${MT_LIBS} ${XLIBS}
+
+fssync-debug: ${FSSDEBUG_OBJS} ${LIBS}
+	${CC} ${LDFLAGS} -o fssync-debug ${FSSDEBUG_OBJS} ${LIBS} ${MT_LIBS} ${XLIBS}
+
+salvsync-debug: ${SSSDEBUG_OBJS} ${LIBS}
+	${CC} ${LDFLAGS} -o salvsync-debug ${SSSDEBUG_OBJS} ${LIBS} ${MT_LIBS} ${XLIBS}
+
+${DEST}/root.server/usr/afs/bin/salvageserver: salvageserver
+	${INSTALL} -ns $? $@
+
+${DEST}/root.server/usr/afs/bin/fssync-debug: fssync-debug
+	${INSTALL} -s $? $@
+
+${DEST}/root.server/usr/afs/bin/salvsync-debug: salvsync-debug
+	${INSTALL} -s $? $@
+
+install: ${INSTALL_TARGS}
+
+clean:
+	$(RM) -f *.o salvageserver core AFS_component_version_number.c
+
+include ../config/Makefile.version
+
+${DESTDIR}${afssrvlibexecdir}/salvageserver: salvageserver
+	${INSTALL} -ns $? $@
+
+${DESTDIR}${afssrvsbindir}/fssync-debug: fssync-debug
+	${INSTALL} -s $? $@
+
+${DESTDIR}${afssrvsbindir}/salvsync-debug: salvsync-debug
+	${INSTALL} -s $? $@
+
+dest: ${DEST_TARGS}

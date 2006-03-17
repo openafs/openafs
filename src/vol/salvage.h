@@ -14,6 +14,9 @@
 
  */
 
+#ifndef __salvage_h_
+#define __salvage_h_
+
 #include <afs/afssyscalls.h>
 /* Definition of DirHandle for salvager.  Not the same as for the file server */
 
@@ -24,3 +27,5 @@ typedef struct DirHandle {
     IHandle_t *dirh_handle;
     afs_int32 dirh_cacheCheck;
 } DirHandle;
+
+#endif /* __salvage_h_ */

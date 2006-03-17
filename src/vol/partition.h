@@ -5,6 +5,8 @@
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
+ *
+ * Portions Copyright (c) 2006 Sine Nomine Associates
  */
 
 /*
@@ -26,6 +28,7 @@
 #define	AFS_DSKDEV	"/dev"
 #define	AFS_RDSKDEV	"/dev/r"
 #endif
+
 
 /* All Vice partitions on a server will have the following name prefix */
 #define VICE_PARTITION_PREFIX	"/vicep"
@@ -53,6 +56,7 @@ struct DiskPartition {
     char *name;			/* Mounted partition name */
     char *devName;		/* Device mounted on */
     Device device;		/* device number */
+    afs_int32 index;            /* partition index (0<=x<=VOLMAXPARTS) */
     int lock_fd;		/* File descriptor of this partition if locked; otherwise -1;
 				 * Not used by the file server */
     int free;			/* Total number of blocks (1K) presumed
@@ -77,7 +81,26 @@ struct DiskPartition {
 				 * from the superblock */
     int flags;
     int f_files;		/* total number of files in this partition */
+#ifdef AFS_DEMAND_ATTACH_FS
+    struct {
+	struct rx_queue head;   /* list of volumes on this partition (VByPList) */
+	afs_uint32 len;         /* length of volume list */
+	int busy;               /* asynch vol list op in progress */
+	pthread_cond_t cv;      /* vol_list.busy change cond var */
+    } vol_list;
+#endif /* AFS_DEMAND_ATTACH_FS */
 };
+
+struct DiskPartitionStats {
+    afs_int32 free;
+    afs_int32 totalUsable;
+    afs_int32 minFree;
+    afs_int32 f_files;
+#ifdef AFS_DEMAND_ATTACH_FS
+    afs_int32 vol_list_len;
+#endif
+};
+
 #define	PART_DONTUPDATE	1
 #define PART_DUPLICATE  2	/* NT - used if we find more than one partition 
 				 * using the same drive. Will be dumped before
@@ -93,7 +116,12 @@ extern int VValidVPTEntry(struct vptab *vptp);
 struct Volume;			/* Potentially forward definition */
 
 extern struct DiskPartition *DiskPartitionList;
-extern struct DiskPartition *VGetPartition();
+extern struct DiskPartition *VGetPartition(char * name, int abortp);
+extern struct DiskPartition *VGetPartition_r(char * name, int abortp);
+#ifdef AFS_DEMAND_ATTACH_FS
+extern struct DiskPartition *VGetPartitionById(afs_int32 index, int abortp);
+extern struct DiskPartition *VGetPartitionById_r(afs_int32 index, int abortp);
+#endif
 extern int VAttachPartitions(void);
 extern void VLockPartition(char *name);
 extern void VLockPartition_r(char *name);
@@ -108,3 +136,4 @@ extern void VAdjustDiskUsage(Error * ec, struct Volume *vp,
 			     afs_sfsize_t blocks, afs_sfsize_t checkBlocks);
 extern int VDiskUsage(struct Volume *vp, afs_sfsize_t blocks);
 extern void VPrintDiskStats(void);
+extern int VInitPartitionPackage(void);

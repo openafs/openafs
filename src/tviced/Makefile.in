@@ -11,7 +11,7 @@ srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
 CC=${MT_CC}
-CFLAGS=${COMMON_CFLAGS} -I.. -DNINTERFACE ${MT_CFLAGS} -DRXDEBUG
+CFLAGS=${COMMON_CFLAGS} -I.. -DNINTERFACE ${MT_CFLAGS} -DRXDEBUG -DFSSYNC_BUILD_SERVER -DSALVSYNC_BUILD_CLIENT
 
 CCRULE=${CC} ${CFLAGS} -c $?
 
@@ -24,7 +24,7 @@ DIR=../dir
 VOL=../vol
 FSINT=../fsint
 
-VICEDOBJS=viced.o afsfileprocs.o host.o physio.o callback.o	
+VICEDOBJS=viced.o afsfileprocs.o host.o physio.o callback.o serialize_state.o	
 
 VLSERVEROBJS=vldbint.cs.o vldbint.xdr.o
 
@@ -36,18 +36,20 @@ UTILOBJS=assert.o uuid.o serverLog.o fileutil.o netutils.o dirpath.o volparse.o 
 
 DIROBJS=buffer.o dir.o salvage.o
 
-VOLOBJS= vnode.o volume.o vutil.o partition.o fssync.o purge.o \
+VOLOBJS= vnode.o volume.o vutil.o partition.o fssync-server.o \
 	 clone.o devname.o common.o ihandle.o listinodes.o namei_ops.o \
-	 fstab.o
+	 fstab.o salvsync-client.o daemon_com.o
 
 FSINTOBJS= afsaux.o afscbint.cs.o afsint.ss.o afsint.xdr.o
 
 objects= ${VICEDOBJS} ${VLSERVEROBJS} ${LWPOBJS} ${LIBACLOBJS} \
 	 ${UTILOBJS} ${DIROBJS} ${VOLOBJS} ${FSINTOBJS}
 
+SDBGOBJS = state_analyzer.o uuid.o dirpath.o fileutil.o ${TOP_LIBDIR}/util.a
+
 LIBS=${TOP_LIBDIR}/libafsauthent.a ${TOP_LIBDIR}/libafsrpc.a ${TOP_LIBDIR}/util.a
 
-all: fileserver
+all: fileserver state_analyzer
 
 viced.o: ${VICED}/viced.c
 	${CCRULE}
@@ -62,6 +64,9 @@ physio.o: ${VICED}/physio.c
 	${CCRULE}
 
 callback.o: ${VICED}/callback.c
+	${CCRULE}
+
+serialize_state.o: ./serialize_state.c
 	${CCRULE}
 
 assert.o: ${UTIL}/assert.c
@@ -130,10 +135,16 @@ vutil.o: ${VOL}/vutil.c
 partition.o: ${VOL}/partition.c
 	${CCRULE}
 
-fssync.o: ${VOL}/fssync.c
+fssync-server.o: ${VOL}/fssync-server.c
 	${CCRULE}
 
-purge.o: ${VOL}/purge.c
+fssync-client.o: ${VOL}/fssync-client.c
+	${CCRULE}
+
+salvsync-client.o: ${VOL}/salvsync-client.c
+	${CCRULE}
+
+daemon_com.o: ${VOL}/daemon_com.c
 	${CCRULE}
 
 clone.o: ${VOL}/clone.c
@@ -179,21 +190,33 @@ afsint.ss.o: ${FSINT}/afsint.ss.c
 afsint.xdr.o: ${FSINT}/afsint.xdr.c
 	${CCRULE}
 
+state_analyzer.o: state_analyzer.c
+	${CCRULE}
+
 fileserver: ${objects} ${LIBS}
 	${CC} ${LDFLAGS} -o fileserver ${objects} ${LIBS} ${MT_LIBS} ${XLIBS}
+
+state_analyzer: ${SDBGOBJS}
+	${CC} ${LDFLAGS} -o state_analyzer ${SDBGOBJS} ${MT_LIBS} ${XLIBS}
 
 ${DEST}/root.server/usr/afs/bin/fileserver: fileserver
 	${INSTALL} -ns $? $@
 
-install: ${DESTDIR}${afssrvlibexecdir}/fileserver
+${DEST}/root.server/usr/afs/bin/state_analyzer: state_analyzer
+	${INSTALL} $? $@
+
+install: ${DESTDIR}${afssrvlibexecdir}/fileserver ${DESTDIR}${afssrvsbindir}/state_analyzer
 
 clean:
-	$(RM) -f *.o fileserver core AFS_component_version_number.c
+	$(RM) -f *.o fileserver state_analyzer core AFS_component_version_number.c
 
 include ../config/Makefile.version
 
 ${DESTDIR}${afssrvlibexecdir}/fileserver: fileserver
 	${INSTALL} -ns $? $@
 
-dest: ${DEST}/root.server/usr/afs/bin/fileserver
+${DESTDIR}${afssrvsbindir}/state_analyzer: state_analyzer
+	${INSTALL} $? $@
+
+dest: ${DEST}/root.server/usr/afs/bin/fileserver ${DEST}/root.server/usr/afs/bin/state_analyzer
 

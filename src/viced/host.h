@@ -5,7 +5,12 @@
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
+ *
+ * Portions Copyright (c) 2006 Sine Nomine Associates
  */
+
+#ifndef _AFS_VICED_HOST_H
+#define _AFS_VICED_HOST_H
 
 #include "fs_stats.h"		/*File Server stats package */
 
@@ -59,6 +64,7 @@ struct Interface {
     struct AddrPort interface[1];/* there are actually more than one here */
     /* in network byte order */
 };
+
 struct host {
     struct host *next, *prev;	/* linked list of all hosts */
     struct rx_connection *callback_rxcon;	/* rx callback connection */
@@ -85,7 +91,7 @@ struct host {
     struct client *FirstClient;	/* first connection from host */
     afs_uint32 cpsCall;		/* time of last cps call from this host */
     struct Interface *interface;	/* all alternate addr for client */
-    afs_uint32 cblist;		/* Call back list for this host */
+    afs_uint32 cblist;		/* index of a cb in the per-host circular CB list */
     /*
      * These don't get zeroed, keep them at the end. If index doesn't
      * follow an unsigned short then we need to pad to ensure that
@@ -141,6 +147,7 @@ struct client {
 
 /* Don't zero the lock */
 #define CLIENT_TO_ZERO(C)	((int)(((char *)(&((C)->lock))-(char *)(C))))
+
 
 /*
  * key for the client structure stored in connection specific data
@@ -245,6 +252,19 @@ extern void h_CheckHosts();
 struct Interface *MultiVerifyInterface_r();
 extern int initInterfaceAddr_r(struct host *host, struct interfaceAddr *interf);
 
+#ifdef AFS_DEMAND_ATTACH_FS
+/*
+ * demand attach fs
+ * state serialization
+ */
+extern int h_SaveState(void);
+extern int h_RestoreState(void);
+#endif
+
+#define H_ENUMERATE_BAIL(held)        ((held)|0x80000000)
+#define H_ENUMERATE_ISSET_BAIL(held)  ((held)&0x80000000)
+#define H_ENUMERATE_ISSET_HELD(held)  ((held)&0x7FFFFFFF)
+
 struct host *(hosttableptrs[h_MAXHOSTTABLES]);	/* Used by h_itoh */
 #define h_htoi(host) ((host)->index)	/* index isn't zeroed, no need to lock */
 #define h_itoh(hostindex) (hosttableptrs[(hostindex)>>h_HTSHIFT]+((hostindex)&(h_HTSPERBLOCK-1)))
@@ -269,4 +289,4 @@ struct host *(hosttableptrs[h_MAXHOSTTABLES]);	/* Used by h_itoh */
 #define HFE_LATER                       0x80	/* host has FE_LATER callbacks */
 #define HERRORTRANS                    0x100	/* do error translation */
 
-
+#endif /* _AFS_VICED_HOST_H */

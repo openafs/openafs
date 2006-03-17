@@ -78,6 +78,13 @@ for (n=0, queue_Scan(&myqueue, qe, nqe, myelement), n++) {}
 #define _RXQSP(q1,q2,i,a,b,c,d,x,y) if (!queue_IsEnd(q1,i->c)) \
     (((y->b->a=q2->a)->b=y->b), ((x->a->b=q2)->a=x->a), ((i->c=q1)->d=i))
 
+/* This one moves a chain of elements from (s) to (e) from its
+ * current position to either before or after element (i)
+ * if (a,b,x,y) is (prev,next,s,e) then chain is moved before (i)
+ * if (a,b,x,y) is (next,prev,e,s) then chain is moved after (i) */
+#define _RXQMV(i, s, e, a, b, x, y) if (i->a != y) \
+    (((e->next->prev=s->prev)->next=e->next), ((i->a->b=x)->a=i->a), ((y->b=i)->a=y))
+
 /* Basic remove operation.  Doesn't update the queue item to indicate it's been removed */
 #define _RXQR(i) ((_RXQ(i)->prev->next=_RXQ(i)->next)->prev=_RXQ(i)->prev)
 
@@ -120,6 +127,12 @@ for (n=0, queue_Scan(&myqueue, qe, nqe, myelement), n++) {}
 #define queue_Replace(q1,q2) if (queue_IsEmpty(q2)) queue_Init(q1); else \
     (*_RXQ(q1) = *_RXQ(q2), _RXQ(q1)->next->prev = _RXQ(q1)->prev->next = _RXQ(q1), queue_Init(q2))
 
+/* move a chain of elements beginning at (s) and ending at (e) before node (i) */
+#define queue_MoveChainBefore(i, s, e) _RXQMV(_RXQ(i),_RXQ(s),_RXQ(e),prev,next,_RXQ(s),_RXQ(e))
+
+/* move a chain of elements beginning at (s) and ending at (e) after node (i) */
+#define queue_MoveChainAfter(i, s, e) _RXQMV(_RXQ(i),_RXQ(s),_RXQ(e),next,prev,_RXQ(e),_RXQ(s))
+
 /* Remove a queue element (*i) from it's queue.  The next field is 0'd, so that any further use of this q entry will hopefully cause a core dump.  Multiple removes of the same queue item are not supported */
 #define queue_Remove(i) (_RXQR(i), _RXQ(i)->next = 0)
 
@@ -155,6 +168,10 @@ for (n=0, queue_Scan(&myqueue, qe, nqe, myelement), n++) {}
 /* Returns false if the item was removed from a queue OR is uninitialized (zero) */
 #define queue_IsOnQueue(i) (_RXQ(i)->next != 0)
 
+/* Returns true if the item was removed from a queue OR is uninitialized (zero) */
+/* Return false if the queue item is currently in a queue */
+#define queue_IsNotOnQueue(i) (_RXQ(i)->next == 0)
+
 /* Returns true if the queue item (i) is the first element of the queue (q) */
 #define queue_IsFirst(q,i) (_RXQ(q)->first == _RXQ(i))
 
@@ -163,6 +180,9 @@ for (n=0, queue_Scan(&myqueue, qe, nqe, myelement), n++) {}
 
 /* Returns true if the queue item (i) is the end of the queue (q), that is, i is the head of the queue */
 #define queue_IsEnd(q,i) (_RXQ(q) == _RXQ(i))
+
+/* Returns false if the queue item (i) is the end of the queue (q), that is, i is the head of the queue */
+#define queue_IsNotEnd(q,i) (_RXQ(q) != _RXQ(i))
 
 /* Prototypical loop to scan an entire queue forwards.  q is the queue
  * head, qe is the loop variable, next is a variable used to store the
@@ -180,11 +200,23 @@ for (n=0, queue_Scan(&myqueue, qe, nqe, myelement), n++) {}
 	!queue_IsEnd(q,	qe);				\
 	(qe) = (next), next = queue_Next(qe, s)
 
+/* similar to queue_Scan except start at element 'start' instead of the beginning */
+#define        queue_ScanFrom(q, start, qe, next, s)      \
+    (qe) = (struct s*)(start), next = queue_Next(qe, s);  \
+       !queue_IsEnd(q, qe);                               \
+       (qe) = (next), next = queue_Next(qe, s)
+
 /* This is similar to queue_Scan, but scans from the end of the queue to the beginning.  Next is the previous queue entry.  */
 #define	queue_ScanBackwards(q, qe, prev, s)		\
     (qe) = queue_Last(q, s), prev = queue_Prev(qe, s);	\
 	!queue_IsEnd(q,	qe);				\
 	(qe) = prev, prev = queue_Prev(qe, s)
+
+/* This is similar to queue_ScanBackwards, but start at element 'start' instead of the end.  Next is the previous queue entry.  */
+#define        queue_ScanBackwardsFrom(q, start, qe, prev, s)  \
+    (qe) = (struct s*)(start), prev = queue_Prev(qe, s);       \
+       !queue_IsEnd(q, qe);                                    \
+       (qe) = prev, prev = queue_Prev(qe, s)
 
 #define queue_Count(q, qe, nqe, s, n) 			\
     for (n=0, queue_Scan(q, qe, nqe, s), n++) {}

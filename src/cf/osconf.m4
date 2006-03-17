@@ -971,6 +971,18 @@ case $AFS_SYSNAME in
 	;;
 esac
 
+
+
+dnl pthreads fixes
+case $AFS_SYSNAME in
+dnl we'll go ahead and turn on XOPEN2K and ISO_C99
+dnl if this causes problems, we should scale back to _XOPEN_SOURCE=500
+	*linux*)
+		MT_CFLAGS="${MT_CFLAGS} -D_XOPEN_SOURCE=600 -D_BSD_SOURCE"
+	;;
+esac
+
+
 dnl Disable the default for debugging/optimization if not enabled
 if test "x$enable_debug_kernel" = "xno"; then
   KERN_DBG=

@@ -51,6 +51,7 @@ RCSID
 #include <afs/volume.h>
 #include <afs/partition.h>
 #include "dump.h"
+#include <afs/daemon_com.h>
 #include <afs/fssync.h>
 #include <afs/acl.h>
 #include "volser.h"

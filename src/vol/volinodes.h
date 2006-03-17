@@ -14,6 +14,9 @@
 
  */
 
+#ifndef __volinodes_h_
+#define __volinodes_h_
+
 /* Used by vutil.c and salvager.c */
 
 private struct VolumeHeader tempHeader;
@@ -56,3 +59,5 @@ LINKTABLEMAGIC, LINKTABLEVERSION}, VI_LINKTABLE,
 #define MAXINODETYPE VI_LINKTABLE
 
 Volume *VWaitAttachVolume();
+
+#endif /* __volinodes_h_ */
