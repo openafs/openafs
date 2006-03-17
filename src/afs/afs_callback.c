@@ -1633,7 +1633,7 @@ SRXAFSCB_TellMeAboutYourself(struct rx_call *a_call,
 }
 
 
-#ifdef AFS_LINUX24_ENV
+#if 0 && defined(AFS_LINUX24_ENV)
 extern struct vcache *afs_globalVp;
 
 int recurse_dcache_parent(parent, a_index, addr, inode, flags, time, fileName)
@@ -1705,7 +1705,7 @@ int SRXAFSCB_GetDE(a_call, a_index, addr, inode, flags, time, fileName)
     char ** fileName;
 { /*SRXAFSCB_GetDE*/
     int code = 0;				/*Return code*/
-#ifdef AFS_LINUX24_ENV
+#if 0 && defined(AFS_LINUX24_ENV)
     register int i;			/*Loop variable*/
     register struct vcache *tvc = afs_globalVp;
     struct dentry *dentry;
