@@ -8,7 +8,7 @@ openafs (1.4.0-4) unstable; urgency=low
   * Include xstat_cm_test and xstat_fs_test in openafs-client, as they're
     quite useful for debugging.
 
- --
+ -- Russ Allbery <rra@debian.org>  Tue, 14 Mar 2006 21:07:07 -0800
 
 openafs (1.4.0-3) unstable; urgency=low
 
