@@ -1,8 +1,3 @@
-# API version. When something changes, increment as appropriate. 
-# Ignore at your own risk.
-LIBAFSSETPAGMAJOR=1
-LIBAFSSETPAGMINOR=0
-
 # Copyright 2000, International Business Machines Corporation and others.
 # All Rights Reserved.
 # 
@@ -23,9 +18,6 @@ OBJECTS= afssyscalls.o setpag.o glue.o syscall.o
 SHLIBOBJS = picobj/setpag.o picobj/glue.o syscall.o
 RMTOBJS=rmtsysnet.o rmtsysc.o rmtsys.cs.o rmtsys.xdr.o rmtsys.ss.o rmtsyss.o 
 
-LIBAFSSETPAG = libafssetpag.${SHLIB_SUFFIX}.${LIBAFSSETPAGMAJOR}.${LIBAFSSETPAGMINOR}
-LIBAFSSETPAG_DARWIN = libafssetpag.${LIBAFSSETPAGMAJOR}.${SHLIB_SUFFIX}
-
 all: \
     rmtsysd \
     pagsh \
@@ -39,12 +31,6 @@ all: \
     ${KERNELDIR}/afs/xfsattrs.h \
     ${UKERNELDIR}/afs \
     ${UKERNELDIR}/afs/afsl.exp
-	@set -x; case ${SYS_NAME} in \
-	*_darwin_*) \
-	    ${MAKE} '${TOP_LIBDIR}/${LIBAFSSETPAG_DARWIN}';; \
-	*) \
-	    ${MAKE} '${TOP_LIBDIR}/${LIBAFSSETPAG}';; \
-	esac
 
 libsys.a: ${OBJECTS} ${RMTOBJS} afsl.exp AFS_component_version_number.o
 	-$(RM) -f $@
@@ -55,25 +41,6 @@ libsys.a: ${OBJECTS} ${RMTOBJS} afsl.exp AFS_component_version_number.o
 		rs_aix*) 			        \
 			$(AR) crv $@ afsl.exp;;         \
 	esac
-
-${LIBAFSSETPAG}: ${SHLIBOBJS}
-	@set -x; case ${SYS_NAME} in \
-	*_linux*) \
-	    ${SHLIB_LINKER} -Wl,-h,libafssetpag.so.${LIBAFSSETPAGMAJOR} \
-	        -o ${LIBAFSSETPAG} -Wl,--version-script=${srcdir}/mapfile \
-	        ${SHLIBOBJS};; \
-	rs_aix4*) \
-	    ${SHLIB_LINKER} -o ${LIBAFSSETPAG} ${SHLIBOBJS} \
-	        -bE:afssetpag.exp;; \
-	sun*_5*) \
-	    ${SHLIB_LINKER} -h libafssetpag.so.${LIBAFSSETPAGMAJOR} \
-	        -o ${LIBAFSSETPAG} ${SHLIBOBJS};; \
-	*) \
-	    ${SHLIB_LINKER} -o ${LIBAFSSETPAG} ${SHLIBOBJS};; \
-	esac
-
-${LIBAFSSETPAG_DARWIN}: ${SHLIBOBJS}
-	${SHLIB_LINKER} -o ${LIBAFSSETPAG_DARWIN} ${ARCHFLAGS} -install_name ${libdir}/${LIBAFSSETPAG_DARWIN} -compatibility_version ${LIBAFSSETPAGMAJOR} -current_version ${LIBAFSSETPAGMAJOR}.${LIBAFSSETPAGMINOR} ${SHLIBOBJS}
 
 tests:	pagsh pagsh.krb fixit iinc idec icreate iopen istat rmtsysd
 
@@ -185,17 +152,6 @@ xfsinode: xfsinode.c  AFS_component_version_number.c
 		$(CC) -o xfsinode ${CFLAGS} ${srcdir}/xfsinode.c ${LIBS}
 	esac
 
-${TOP_LIBDIR}/${LIBAFSSETPAG}: ${LIBAFSSETPAG}
-	${INSTALL} ${LIBAFSSETPAG} ${TOP_LIBDIR}/${LIBAFSSETPAG}
-	-ln -f -s ${LIBAFSSETPAG} ${TOP_LIBDIR}/libafssetpag.${SHLIB_SUFFIX}
-	-ln -f -s ${LIBAFSSETPAG} ${TOP_LIBDIR}/libafssetpag.${SHLIB_SUFFIX}.${LIBAFSSETPAGMAJOR}
-
-${TOP_LIBDIR}/${LIBAFSSETPAG_DARWIN}: ${LIBAFSSETPAG_DARWIN}
-	${INSTALL} ${LIBAFSSETPAG_DARWIN} ${TOP_LIBDIR}/${LIBAFSSETPAG_DARWIN}
-	-ln -f -s ${LIBAFSSETPAG_DARWIN} ${TOP_LIBDIR}/libafssetpag.${SHLIB_SUFFIX}
-	-ln -f -s ${LIBAFSSETPAG_DARWIN} ${TOP_LIBDIR}/libafssetpag.${LIBAFSSETPAGMAJOR}.${LIBAFSSETPAGMINOR}.${SHLIB_SUFFIX}
- 
-
 afs.exp: ${srcdir}/afs4.exp ${srcdir}/afs5.exp
 	@set -x; case ${SYS_NAME} in \
 		rs_aix5* ) \
@@ -271,29 +227,9 @@ install: \
     ${DESTDIR}${bindir}/pagsh.krb \
     ${DESTDIR}${includedir}/afs/afs.exp \
     ${DESTDIR}${includedir}/afs/xfsattrs.h
-	@set -x; case ${SYS_NAME} in \
-	*_darwin_*) \
-	    ${MAKE} '${DESTDIR}${libdir}/${LIBAFSSETPAG_DARWIN}';; \
-	*) \
-	    ${MAKE} '${DESTDIR}${libdir}/${LIBAFSSETPAG}';; \
-	esac
 
 ${DESTDIR}${libdir}/afs/libsys.a: libsys.a
 	${INSTALL} $? $@
-
-${DESTDIR}${libdir}/${LIBAFSSETPAG}: ${LIBAFSSETPAG}
-	${INSTALL} ${LIBAFSSETPAG} ${DESTDIR}${libdir}/${LIBAFSSETPAG}
-	-ln -f -s ${LIBAFSSETPAG} \
-	    ${DESTDIR}${libdir}/libafssetpag.${SHLIB_SUFFIX}
-	-ln -f -s ${LIBAFSSETPAG} \
-	    ${DESTDIR}${libdir}/libafssetpag.${SHLIB_SUFFIX}.${LIBAFSSETPAGMAJOR}
-
-${DESTDIR}${libdir}/${LIBAFSSETPAG_DARWIN}: ${LIBAFSSETPAG_DARWIN}
-	${INSTALL} ${LIBAFSSETPAG_DARWIN} ${DESTDIR}${libdir}/${LIBAFSSETPAG_DARWIN}
-	-ln -f -s ${LIBAFSSETPAG_DARWIN} \
-		${DESTDIR}${libdir}/libafssetpag.${SHLIB_SUFFIX} ; \
-	-ln -f -s ${LIBAFSSETPAG_DARWIN} \
-		${DESTDIR}${libdir}/libafssetpag.${LIBAFSSETPAGMAJOR}.${LIBAFSSETPAGMINOR}.${SHLIB_SUFFIX} ;; \
 
 ${DESTDIR}${sbindir}/rmtsysd: rmtsysd
 	${INSTALL} -s $? $@
@@ -324,12 +260,6 @@ dest: \
     ${DEST}/include/afs/afssyscalls.h \
     ${DEST}/include/afs/afs.exp \
     ${DEST}/include/afs/xfsattrs.h
-	@set -x; case ${SYS_NAME} in \
-	*_darwin_*) \
-	    ${MAKE} '${TOP_LIBDIR}/${LIBAFSSETPAG_DARWIN}';; \
-	*) \
-	    ${MAKE} '${TOP_LIBDIR}/${LIBAFSSETPAG}';; \
-	esac
 
 ${DEST}/lib/afs/libsys.a: libsys.a
 	${INSTALL} $? $@
@@ -364,5 +294,5 @@ clean:
 	$(RM) -f *.o libsys.a xfsinode iinc idec icreate iopen istat core \
 	rmtsysc rmtsyss *.o rmtsys.ss.c rmtsys.cs.c rmtsys.xdr.c rmtsys.h \
 	rmtsysd AFS_component_version_number.c pagsh pagsh.krb \
-	afs.exp afsl.exp libafssetpag.*
+	afs.exp afsl.exp 
 	$(RM) -rf picobj
