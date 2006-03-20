@@ -66,8 +66,8 @@ A. Creating the proper directory structure.
 
       Be prepared to provide the switches --enable-obsolete and
       --enable-insecure if you require the use of any bundled but obsolete
-      or insecure software included with OpenAFS. See README.obsolete and
-      README.insecure for more details.
+      or insecure software included with OpenAFS. See README.OBSOLETE and
+      README.SECURITY for more details.
 
   There are two modes for directory path handling: "Transarc mode" and "default mode":
   - In Transarc mode, we retain compatibility with Transarc/IBM AFS tools
