@@ -16,7 +16,7 @@ AC_ARG_WITH(afs-sysname,
 AC_ARG_ENABLE( obsolete,
 [  --enable-obsolete 			enable obsolete portions of AFS (mpp and package)],, enable_obsolete="no")
 AC_ARG_ENABLE( afsdb,
-[  --disable-afsdb 			disable AFSDB RR support],, enable_afsdb="yes")
+[  --disable-afsdb 			disable AFSDB DNS RR support],, enable_afsdb="yes")
 AC_ARG_ENABLE( pam,
 [  --disable-pam 			disable PAM support],, enable_pam="yes")
 AC_ARG_ENABLE( bos-restricted-mode,
