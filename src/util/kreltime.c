@@ -115,8 +115,9 @@ int
 ktimeDate_FromInt32(afs_int32 timeSecs, struct ktime_date *ktimePtr)
 {
     struct tm *timePtr;
+    time_t     tt = timeSecs;
 
-    timePtr = localtime((time_t *) & timeSecs);
+    timePtr = localtime(&tt);
 
     /* copy the relevant fields */
     ktimePtr->sec = timePtr->tm_sec;
