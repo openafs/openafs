@@ -795,7 +795,7 @@ void smb_SearchTimeFromUnixTime(afs_uint32 *searchTimep, time_t unixTime)
     struct tm localJunk;
     time_t t = unixTime;
 
-    ltp = localtime((time_t*) &t);
+    ltp = localtime(&t);
 
     /* if we fail, make up something */
     if (!ltp) {

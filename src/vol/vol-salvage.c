@@ -287,12 +287,6 @@ int nVolumes;			/* Number of volumes (read-write and read-only)
 extern char * tmpdir = 0;
 
 
-#ifdef AFS_NT40_ENV
-/* Child job this process is running. */
-childJob_t myjob = { SALVAGER_MAGIC, NOT_CHILD, "" };
-#endif /* AFS_NT40_ENV */
-
-
 
 /* Forward declarations */
 /*@printflike@*/ void Log(const char *format, ...);

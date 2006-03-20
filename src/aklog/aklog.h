@@ -54,7 +54,7 @@ void aklog ARGS((int, char *[]));
 struct ktext {
     unsigned int length;
     unsigned char dat[MAX_KTXT_LEN];
-    u_int32_t mbz;
+    afs_uint32 mbz;
 };
 
 struct credentials {

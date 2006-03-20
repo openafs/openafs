@@ -44,8 +44,9 @@ UTILOBJS = $(OUT)\assert.obj $(OUT)\uuid.obj $(OUT)\serverLog.obj $(OUT)\fileuti
 
 DIROBJS = $(OUT)\buffer.obj $(OUT)\dir.obj $(OUT)\salvage.obj
 
-VOLOBJS = $(OUT)\vnode.obj $(OUT)\volume.obj $(OUT)\vutil.obj $(OUT)\partition.obj $(OUT)\fssync.obj $(OUT)\purge.obj \
-	  $(OUT)\clone.obj $(OUT)\common.obj $(OUT)\ihandle.obj $(OUT)\ntops.obj
+VOLOBJS = $(OUT)\vnode.obj $(OUT)\volume.obj $(OUT)\vutil.obj $(OUT)\partition.obj \
+	  $(OUT)\clone.obj $(OUT)\common.obj $(OUT)\ihandle.obj $(OUT)\ntops.obj \
+	  $(OUT)\fssync-server.obj $(OUT)\fssync-client.obj $(OUT)\daemon_com.obj
 
 FSINTOBJS = $(OUT)\afsaux.obj $(OUT)\afscbint.cs.obj $(OUT)\afsint.ss.obj $(OUT)\afsint.xdr.obj
 

@@ -135,8 +135,8 @@ RCSID
 #include "afs/assert.h"
 #endif /* AFS_PTHREAD_ENV */
 #include "vutils.h"
-#include <dir/dir.h>
 #ifndef AFS_NT40_ENV
+#include <dir/dir.h>
 #include <unistd.h>
 #endif
 
