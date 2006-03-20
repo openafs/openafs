@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <Include>
+  <?ifndef BinsOnly?>
     <Directory Id="$(var.PISystemFolder)" SourceName="System">
         <Component Win64="$(var.Win64)" Id="cmf_afslogon_DLL" Guid="$(var.cmf_afslogon_DLL_guid)">
             <File Id="fileafslogon_DLL" Name="afslogon.dll" LongName="afslogon.dll" KeyPath="yes" DiskId="1" src="$(var.ClientDir)afslogon.dll" />
@@ -26,11 +27,13 @@
         </Component>
     <?endif?>
     </Directory>
+  <?endif?>
     <Directory Id="$(var.PIProgramFilesFolder)">
         <Directory Id="AFSDIR" Name="OpenAFS" SourceName=".">
 	    <Component Id="efl_desktop_INI" Guid="0ADB427F-3648-4BE0-983B-C454AA51895C">
 		<File Id="fildesktop_INI" Name="desktop.ini" KeyPath="yes" DiskId="1" src="$(var.SrcDir)WINNT\install\wix\afsdesktop.ini" Hidden="yes" System="yes" />
 	    </Component>
+  <?ifndef BinsOnly?>
             <Component Id="efl_replace_afs_CMD" Guid="C9C93F3E-EEBA-4056-9669-5EF78D748D50">
                <File Id="filreplace_afs_CMD" Name="replafs.cmd" LongName="replace_afs.cmd" KeyPath="yes" DiskId="1" src="$(var.SrcDir)\WINNT\install\wix\replace_afs.cmd" />
             </Component>
@@ -39,11 +42,14 @@
 			<Shortcut Id="scUninstall" Directory="dirShortCut" Name="Uninst.lnk" LongName="Uninstall OpenAFS.lnk" Description="$(loc.StrUninstallDesc)" Icon="ico_OpenAFS" IconIndex="0" Show="normal" />
                 </File>
 	    </Component>
+  <?endif?>
             <Directory Id="dirCommon" Name="Common">
                 <Component Id="cmp_CommonDir" Guid="C86B03A1-AE97-48B1-A77B-1B2395F1E117" KeyPath="yes">
                     <Environment Id="envCommon" Name="PATH" Action="create" System="yes" Permanent="no" Part="last" Separator=";" Value="[AFSDIR]Common" />
                     <CreateFolder />
                 </Component>
+
+  <?ifndef BinsOnly?>
                 <Component Win64="$(var.Win64)" Id="cmf_afsbosadmin_DLL" Guid="$(var.cmf_afsbosadmin_DLL_guid)">
                     <File Id="fileafsbosadmin_DLL" Name="afsbosad.dll" LongName="afsbosadmin.dll" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\afsbosadmin.dll"/>
                 </Component>
@@ -65,6 +71,8 @@
                 <Component Win64="$(var.Win64)" Id="cmf_afsadminutil_DLL" Guid="$(var.cmf_afsadminutil_DLL_guid)">
                     <File Id="fileafsadminutil_DLL" Name="afsadmut.dll" LongName="afsadminutil.dll" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\afsadminutil.dll"/>
                 </Component>
+  <?endif?>
+
                 <Component Win64="$(var.Win64)" Id="cmf_afsrpc_DLL" Guid="$(var.cmf_afsrpc_DLL_guid)">
                     <File Id="fileafsrpc_DLL" Name="afsrpc.dll" LongName="afsrpc.dll" KeyPath="yes" DiskId="1" src="$(var.LibDir)\afsrpc.dll"/>
                 </Component>
@@ -80,11 +88,14 @@
                 <Component Win64="$(var.Win64)" Id="cmf_afsprocmgmt_DLL" Guid="$(var.cmf_afsprocmgmt_DLL_guid)">
                     <File Id="fileafsprocmgmt_DLL" Name="afsprcmg.dll" LongName="afsprocmgmt.dll" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\afsprocmgmt.dll"/>
                 </Component>
+  <?ifndef BinsOnly ?>
                 <Component Win64="$(var.Win64)" Id="cmf_afs_config_EXE" Guid="$(var.cmf_afs_config_EXE_guid)">
                     <File Id="fileafs_config_EXE" Name="afs_cfg.exe" LongName="afs_config.exe" KeyPath="yes" DiskId="1" src="$(var.ClientDir)\afs_config.exe"/>
                 </Component>
-                
+  <?endif?>
+
             <?ifdef DebugSyms?>
+              <?ifndef BinsOnly?>
                 <Component Win64="$(var.Win64)" Id="cmp_ServerCommonDebug" Guid="$(var.cmp_ServerCommonDebug_guid)">
                     <File Id="fileafsbosadmin_PDB" Name="afsbosad.pdb" LongName="afsbosadmin.pdb" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\afsbosadmin.pdb"/>
                     <File Id="fileafscfgadmin_PDB" Name="afscfgad.pdb" LongName="afscfgadmin.pdb" DiskId="1" src="$(var.ServerDir)\afscfgadmin.pdb"/>
@@ -94,6 +105,7 @@
                     <File Id="fileafsvosadmin_PDB" Name="afsvosad.pdb" LongName="afsvosadmin.pdb" DiskId="1" src="$(var.ServerDir)\afsvosadmin.pdb"/>
                     <File Id="fileafsadminutil_PDB" Name="afsadmut.pdb" LongName="afsadminutil.pdb" DiskId="1" src="$(var.ServerDir)\afsadminutil.pdb"/>
                 </Component>
+              <?endif?>
                 <Component Win64="$(var.Win64)" Id="cmp_CommonCommonDebug" Guid="$(var.cmp_CommonCommonDebug_guid)">
                     <File Id="fileafsrpc_PDB" Name="afsrpc.pdb" LongName="afsrpc.pdb" KeyPath="yes" DiskId="1" src="$(var.LibDir)\afsrpc.pdb"/>
                     <File Id="fileafsauthent_PDB" Name="afsauth.pdb" LongName="afsauthent.pdb" DiskId="1" src="$(var.LibDir)\afsauthent.pdb"/>
@@ -101,11 +113,14 @@
                     <File Id="fileTaAfsAppLib_PDB" Name="TaAfsApL.pdb" LongName="TaAfsAppLib.pdb" DiskId="1" src="$(var.ServerDir)\TaAfsAppLib.pdb"/>
                     <File Id="fileafsprocmgmt_PDB" Name="afsprcmg.pdb" LongName="afsprocmgmt.pdb" DiskId="1" src="$(var.ServerDir)\afsprocmgmt.pdb"/>
                 </Component>
+              <?ifndef BinsOnly ?>
                 <Component Win64="$(var.Win64)" Id="cmp_ClientCommonDebug" Guid="$(var.cmp_ClientCommonDebug_guid)">
                     <File Id="fileafs_config_PDB" Name="afs_cfg.pdb" LongName="afs_config.pdb" KeyPath="yes" DiskId="1" src="$(var.ClientDir)\afs_config.pdb"/>
                 </Component>
+              <?endif?>
             <?endif?>
 
+  <?ifndef BinsOnly ?>
                 <!-- <<LanguageSpecific:1033/en_US>> -->
             <?if $(var.Language) ="en_US"?>
                 <Component Win64="$(var.Win64)" Id="cmf_afseventmsg_1033_DLL" Guid="$(var.cmf_afseventmsg_1033_DLL_guid)">
@@ -162,6 +177,7 @@
                 </Directory>
             <?endif?>
                 <!-- <</LanguageSpecific:1033/en_US>> -->
+  <?endif?> <!-- /ifndef BinsOnly -->
 
                 <!-- Runtime libraries -->
           <?ifndef Debug?>
@@ -310,7 +326,8 @@
           <?endif?>
           <?endif?>
             </Directory> <!-- /common -->
-            
+
+  <?ifndef BinsOnly ?>            
             <Directory Id="dirControl_Center" Name="Contr" LongName="Control Center" SourceName="ControlC" LongSource="Control Center">
                 <Component Win64="$(var.Win64)" Id="cmf_TaAfsServerManager_EXE" Guid="$(var.cmf_TaAfsServerManager_EXE_guid)">
                     <File Id="fileTaAfsServerManager_EXE" Name="TaAfsSvM.exe" LongName="TaAfsServerManager.exe" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\TaAfsServerManager.exe">
@@ -333,7 +350,9 @@
                 </Component>
             <?endif?>
             </Directory> <!-- /Control center -->
+  <?endif?>
 
+  <?ifndef BinsOnly?>
          <?if $(var.Language) = "en_US"?>
             <Component Id="efl_Readme_TXT_en_US" Guid="959DC63A-6C67-4B51-9F7D-2CDEE91F0099">
                 <File Id="fileREADME_TXT_en_US" Name="README.txt" LongName="README.txt" DiskId="1" src="$(var.SrcDir)\WINNT\doc\install\Documentation\en_US\README.txt"/>
@@ -381,7 +400,9 @@
                 <File Id="fileREADME_TXT_zh_CN" Name="README.txt" LongName="README.txt" DiskId="1" src="$(var.SrcDir)\WINNT\doc\install\Documentation\zh_CN\README.txt"/>
             </Component>
          <?endif?>
+  <?endif?>
 
+  <?ifndef BinsOnly?>
             <Directory Id="dirDocumentation" Name="Docum" LongName="Documentation" SourceName="Docs">
 				<!-- The following directory and everything below it is language dependent. -->
                     <Directory Id="dirHtml_$(var.Language)" Name="Html" src="$(var.SrcDir)\WINNT\doc\install\Documentation\$(var.Language)\html\">
@@ -774,8 +795,10 @@
                         </Directory> <!-- Release Notes -->
                     </Directory> <!-- Html -->
             </Directory> <!-- Documentation -->
+  <?endif?>
 
             <Directory Id="dirClient" Name="Client">
+  <?ifndef BinsOnly ?>
                 <Component Id="efl_CellServDB" Guid="8E69FDAB-08C5-4927-B1AA-57FCEEB065F2" NeverOverwrite="yes" Permanent="yes">
                     <File Id="file_CellServDB" Name="CelSrvDB" LongName="CellServDB" KeyPath="yes" DiskId="1" src="$(var.CellDbFile)"/>
                     <Condition>OLDCELLSERVDB = ""</Condition>
@@ -785,6 +808,7 @@
                     <CopyFile Id="copy_CellServDB" Delete="yes" DestinationDirectory="dirClient" DestinationName="CellServ|CellServDB" SourceDirectory="WindowsFolder" SourceName="afsdcell.ini" />
                     <Condition>OLDCELLSERVDB &lt;&gt; ""</Condition>
                 </Component>
+  <?endif?>
                 <Directory Id="dirProgram" Name="Program" src="$(var.ClientDir)">
                     <Component Win64="$(var.Win64)" Id="cmf_afsshare_EXE" Guid="$(var.cmf_afsshare_EXE_guid)">
                         <File Id="fileafsshare_EXE" Name="afsshare.exe" LongName="afsshare.exe" KeyPath="yes" DiskId="1" />
@@ -810,6 +834,7 @@
                     <Component Win64="$(var.Win64)" Id="cmf_afsdacl_EXE" Guid="$(var.cmf_afsdacl_EXE_guid)">
                         <File Id="fileafsdacl_EXE" Name="afsdacl.exe" KeyPath="yes" DiskId="1" />
                     </Component>
+  <?ifndef BinsOnly ?>
                     <Component Win64="$(var.Win64)" Id="cmf_afscreds_EXE" Guid="$(var.cmf_afscreds_EXE_guid)">
                         <File Id="fileafscreds_EXE" Name="afscreds.exe" LongName="afscreds.exe" KeyPath="yes" DiskId="1">
 							<Shortcut Id="scAfsCreds" Directory="dirShortCut" Name="Auth.lnk" LongName="Authentication.lnk" Description="$(loc.StrAfsCredsDesc)" Arguments="[CREDSAUTOINIT] [CREDSRENEWDRMAP] [CREDSIPCHDET] [CREDSQUIET] [CREDSSHOW]" Icon="ico_afscreds" IconIndex="0" Show="normal" WorkingDirectory="dirCommon" />
@@ -844,6 +869,7 @@
                         <Environment Id="envClient" Name="PATH" Action="create" System="yes" Permanent="no" Part="last" Separator=";" Value="[AFSDIR]Client\Program" />
                         <RemoveFile Id="removeCache" Directory="WindowsVolume" LongName="AFSCache" Name="AFSCache" On="uninstall" />
                     </Component>
+  <?endif?>
                      <Component Win64="$(var.Win64)" Id="cmf_symlink_EXE" Guid="$(var.cmf_symlink_EXE_guid)">
                         <File Id="filesymlink_EXE" Name="symlink.exe" LongName="symlink.exe" KeyPath="yes" DiskId="1" />
                     </Component>
@@ -882,10 +908,12 @@
                      <Component Win64="$(var.Win64)" Id="cmf_cmdebug_EXE" Guid="$(var.cmf_cmdebug_EXE_guid)">
                         <File Id="filecmdebug_EXE" Name="cmdebug.exe" LongName="cmdebug.exe" KeyPath="yes" DiskId="1" />
                     </Component>
+  <?ifndef BinsOnly?>
  		    <Component Win64="$(var.Win64)" Id="cmf_afs_cpa_CPL" Guid="$(var.cmf_afs_cpa_CPL_guid)">
 		    	<File Id="fileafs_cpa_CPL" Name="afs_cpa.cpl" LongName="afs_cpa.cpl" KeyPath="yes" DiskId="1"/>
 		    <Registry Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Control Panel\Cpls" Name="AFS Client CPL" Type="string" Value="[#fileafs_cpa_CPL]" Id="reg_Full_Client11" />
 		    </Component>
+  <?endif?>
                 <?ifdef DebugSyms?>
                      <Component Win64="$(var.Win64)" Id="cmp_ClientProgramDebug" Guid="$(var.cmp_ClientProgramDebug_guid)">
                         <File Id="fileafsshare_PDB" Name="afsshare.pdb" LongName="afsshare.pdb" DiskId="1" />
@@ -895,9 +923,6 @@
                         <File Id="filetokens_PDB" Name="tokens.pdb" LongName="tokens.pdb" DiskId="1" />
                         <File Id="fileunlog_PDB" Name="unlog.pdb" LongName="unlog.pdb" DiskId="1" />
                         <File Id="filefs_PDB" Name="fs.pdb" LongName="fs.pdb" DiskId="1" />
-                        <File Id="fileafscreds_PDB" Name="afscreds.pdb" LongName="afscreds.pdb" DiskId="1" />
-                        <File Id="fileafs_shl_ext_PDB" Name="afsshext.pdb" LongName="afs_shl_ext.pdb" DiskId="1" />
-                        <File Id="fileafsd_service_PDB" Name="afsd_svc.pdb" LongName="afsd_service.pdb" DiskId="1" />
                         <File Id="filesymlink_PDB" Name="symlink.pdb" LongName="symlink.pdb" DiskId="1" />
                         <File Id="filekpasswd_PDB" Name="kpasswd.pdb" LongName="kpasswd.pdb" DiskId="1" src="$(var.BinDir)kpasswd.pdb" />
                         <File Id="filepts_PDB" Name="pts.pdb" LongName="pts.pdb" DiskId="1" src="$(var.BinDir)pts.pdb" />
@@ -912,10 +937,15 @@
                         	<File Id="fileaklog_PDB" Name="aklog.pdb" LongName="aklog.pdb" DiskId="1" />
 			<?endif?>
                         <File Id="filecmdebug_PDB" Name="cmdebug.pdb" LongName="cmdebug.pdb" DiskId="1" />
+  <?ifndef BinsOnly ?>
 			<File Id="fileafs_cpa_PDB" Name="afs_cpa.pdb" LongName="afs_cpa.pdb" KeyPath="yes" DiskId="1"/>
+                        <File Id="fileafscreds_PDB" Name="afscreds.pdb" LongName="afscreds.pdb" DiskId="1" />
+                        <File Id="fileafs_shl_ext_PDB" Name="afsshext.pdb" LongName="afs_shl_ext.pdb" DiskId="1" />
+                        <File Id="fileafsd_service_PDB" Name="afsd_svc.pdb" LongName="afsd_service.pdb" DiskId="1" />
+  <?endif?>
                     </Component>
                 <?endif?>
-                    
+  <?ifndef BinsOnly?>                  
                     <Directory Id="dirSample" Name="Sample">
                         <Component Id="cmp_SDK_Sample" Guid="F9373E95-F410-4AA5-AA79-07C11EE00334">
                             <File Id="filetoken_C" Name="token.c" LongName="token.c" KeyPath="yes" DiskId="1" src="$(var.SrcDir)WINNT\afsd\sample\token.c"/>
@@ -1232,8 +1262,10 @@
                             </Component>
                         </Directory>
                     </Directory>
+  <?endif?>
                 </Directory> <!-- /Program -->
             </Directory> <!-- /Client -->
+  <?ifndef BinsOnly ?>
             <Directory Id="dirServer" Name="Server">
                 <Directory Id="dirusr" Name="usr">
                     <Directory Id="dirafs" Name="afs">
@@ -1343,9 +1375,12 @@
                     </Directory>
                 </Directory>
             </Directory> <!-- Server -->
+  <?endif?>
 
         </Directory> <!-- AFS -->
     </Directory> <!-- program files -->
+
+  <?ifndef BinsOnly ?>
     <!-- References -->
     <Directory Id="ProgramMenuFolder" Name=".">
         <Directory Id="dirShortCut" Name="OpenAFS"/>
@@ -1353,6 +1388,7 @@
     <Directory Id="StartupFolder" Name="." />
     <Directory Id="WindowsVolume" Name="." />
     <Directory Id="WindowsFolder" Name="." />
+  <?endif?>
 
 	<!-- Shared assembly runtime for VS 2005 -->
 	<?if $(env.AFSVER_CL) = "1400"?>
