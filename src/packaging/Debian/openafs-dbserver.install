@@ -1,0 +1,24 @@
+debian/tmp/usr/sbin/prdb_check          usr/sbin
+debian/tmp/usr/sbin/pt_util             usr/sbin
+debian/tmp/usr/sbin/vldb_check          usr/sbin
+
+debian/afs-rootvol                      usr/sbin
+debian/afs-newcell                      usr/sbin
+
+debian/tmp/usr/lib/openafs/buserver     usr/lib/openafs
+debian/tmp/usr/lib/openafs/ptserver     usr/lib/openafs
+debian/tmp/usr/lib/openafs/vlserver     usr/lib/openafs
+
+debian/ConfigUtils.pm                   usr/share/perl5/Debian/OpenAFS
+
+debian/doc/man5/BackupLog.5             usr/share/man/man5
+debian/doc/man5/VLLog.5                 usr/share/man/man5
+debian/doc/man5/bdb.DB0.5               usr/share/man/man5
+debian/doc/man5/prdb.DB0.5              usr/share/man/man5
+debian/doc/man5/vldb.DB0.5              usr/share/man/man5
+
+debian/doc/man8/buserver.8              usr/share/man/man8
+debian/doc/man8/prdb_check.8            usr/share/man/man8
+debian/doc/man8/ptserver.8              usr/share/man/man8
+debian/doc/man8/vldb_check.8            usr/share/man/man8
+debian/doc/man8/vlserver.8              usr/share/man/man8
