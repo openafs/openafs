@@ -9,268 +9,273 @@
 # Uncomment this to turn on verbose mode. 
 #export DH_VERBOSE=1
 
-# This is the debhelper compatability version to use.
-export DH_COMPAT=2
-
 # This has to be exported to make some magic below work.
 export DH_OPTIONS
 
-# The AFS sysname is determined by a script
-KVERS=`awk '{ if (NR==1) v=$$3; else if (NR==2) p=$$3; else if (NR==3) s=$$3; \
-       else if (NR==4) { e=$$3; exit; } } \
-       END { printf("%s.%s.%s%s\n",v,p,s,e); }' $(KSRC)/Makefile`
-SYS_NAME=$(shell KVERS=$(KVERS) sh debian/sysname)
-package=openafs
-srcpkg = openafs-modules-source
-modulepkg=$(shell echo openafs-modules-$(KVERS)${INT_SUBARCH})
-ifndef KSRC
-KSRC=/usr/src/linux
+ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
+    DEBIAN_OPT_FLAGS = --disable-optimize --disable-lwp-optimize
+    DEBIAN_KERN_FLAGS = --disable-kernel-optimize
+else
+    DEBIAN_OPT_FLAGS =
+    DEBIAN_KERN_FLAGS =
 endif
-MODDIR=..
-LINTIAN_PACKAGES= openafs-client openafs-fileserver
+
+ifndef KSRC
+    KSRC = /usr/src/linux
+endif
+ifndef KPKG_DEST_DIR
+    KPKG_DEST_DIR = ..
+endif
+KVERS := $(shell perl debian/kernel-version $(KSRC))
 export KSRC 
 export KVERS
+export KPKG_DEST_DIR
 
+SYS_NAME  := $(shell KSRC="$(KSRC)" KVERS="$(KVERS)" sh debian/sysname)
+
+package    = openafs
+srcpkg     = openafs-modules-source
+modulepkg := openafs-modules-$(KVERS)${INT_SUBARCH}
+moduledir := debian/$(modulepkg)/lib/modules/$(KVERS)/fs
+
+# These packages have lintian overrides.
+LINTIAN_PACKAGES = openafs-dbserver openafs-client openafs-fileserver
+
+# The /usr/share/doc directory for these packages should be a symlink to
+# /usr/share/doc/openafs-client.  Any package on this list must depend on
+# openafs-client.
+DOC_PACKAGES = libpam-openafs-kaserver openafs-dbserver openafs-fileserver \
+	openafs-kpasswd
+
+# These variable is used only by get-orig-source, which will normally only be
+# run by maintainers.
+VERSION   = 1.4.0
+UPSTREAM  = /afs/grand.central.org/software/openafs/$(VERSION)
+
+# Download the upstream source and do the repackaging that we have to do for
+# DFSG reasons.  This assumes AFS is mounted, as it's generally only used by
+# the package maintainers.
+get-orig-source:
+	cp $(UPSTREAM)/openafs-$(VERSION)-src.tar.bz2 .
+	tar xjf openafs-$(VERSION)-src.tar.bz2
+	rm openafs-$(VERSION)-src.tar.bz2
+	rm -r openafs-$(VERSION)/src/packaging/MacOS
+	rm -r openafs-$(VERSION)/src/WINNT
+	tar cf openafs_$(VERSION).orig.tar openafs-$(VERSION)
+	rm -r openafs-$(VERSION)
+	gzip -9 openafs_$(VERSION).orig.tar
 
 configure: configure-stamp
 configure-stamp:
+	@if test x"$(SYS_NAME)" = x"UNKNOWN" ; then exit 1 ; fi
 	dh_testdir
-	-ln -s @sys/dest dest
-	-ln -s $(SYS_NAME) @sys
-#	sh regen.sh
-	 afslogsdir=/var/log/openafs sh configure --with-afs-sysname=$(SYS_NAME) --disable-kernel-module \
-	--prefix=/usr --sysconfdir=/etc --libexecdir=/usr/lib \
-	--localstatedir=/var/lib 
-	install -d $(SYS_NAME)/dest/root.client/usr/vice/etc
-	install -d dest/root.server/usr/afs/bin
-
+	afslogsdir=/var/log/openafs afslocaldir=/etc/openafs/server-local \
+	    sh configure \
+	    --with-afs-sysname=$(SYS_NAME) --disable-kernel-module \
+	    --prefix=/usr --sysconfdir=/etc --libexecdir=/usr/lib \
+	    --localstatedir=/var/lib --enable-supergroups \
+	    --enable-largefile-fileserver --enable-debug --enable-lwp-debug \
+	    $(DEBIAN_OPT_FLAGS)
+	chmod a+x src/libafs/make_kbuild_makefile.pl         
 	touch configure-stamp
 
 build: configure-stamp build-stamp
 build-stamp:
 	dh_testdir
-
-	$(MAKE) dest 
-	-rm $(SYS_NAME)/dest/include/crypt.h
+	mkdir -p $(CURDIR)/debian/tmp
+	$(MAKE) install_nolibafs DESTDIR=$(CURDIR)/debian/tmp
+	chmod +x debian/afs-rootvol debian/afs-newcell debian/doc/build-man
+	cd debian/doc && ./build-man
 	touch build-stamp
 
 clean:
 	dh_testdir
 	dh_testroot
-	rm -f build-stamp configure-stamp build-modules-stamp
-	# Add here commands to clean up after the build process.
-	-$(MAKE) -ki distclean
-	-rm -rf obj dest $(SYS_NAME) @sys Makefile debian/openafs-client.init
-	-rm -rf config.status config.cache lib include
+	rm -f build-stamp configure-stamp
+	rm -f build-modules-stamp configure-modules-stamp
+ifeq (Makefile,$(wildcard Makefile))
+	$(MAKE) distclean
+endif
+	rm -rf debian/doc/man1 debian/doc/man5 debian/doc/man8
 	dh_clean
 
 install: DH_OPTIONS=
 install: build
 	dh_testdir
 	dh_testroot
-	dh_clean -k
 	dh_installdirs
-	mkdir -p debian/openafs-dbserver/usr/share/man/man8
-		/usr/bin/docbook-to-man debian/pt_util.sgml >debian/openafs-dbserver/usr/share/man/man8/pt_util.8
-	for foo in $(LINTIAN_PACKAGES) ; do \
-		install -d debian/$$foo/usr/share/lintian/overrides; \
-		cp debian/$$foo.lintian debian/$$foo/usr/share/lintian/overrides/$$foo; \
-		done
-	for pkg in openafs-dbserver openafs-fileserver openafs-kpasswd; do \
-		ln -s openafs-client debian/$$pkg/usr/share/doc/$$pkg; \
-		done
-	# Add here commands to install the package into debian/tmp.
-	cat debian/filelist |sh debian/movefiles
-	mv debian/openafs-client/usr/bin/pagsh  \
-	debian/openafs-client/usr/bin/pagsh.openafs
+	dh_install
 
-	cp debian/CellServDB debian/openafs-client/usr/share/openafs
-	cp dest/root.client/usr/vice/etc/afs.rc debian/openafs-client.init
-	cp dest/root.client/usr/vice/etc/afs.conf debian/openafs-client/etc/openafs/afs.conf
-	install -m 755 -o root -g root debian/afs-rootvol debian/openafs-dbserver/usr/sbin
-	install -g root -o root -m 755 debian/afs-newcell \
-		debian/openafs-dbserver/usr/sbin
-	install -D -m 644 debian/ConfigUtils.pm \
-		debian/openafs-dbserver/usr/lib/perl5/Debian/OpenAFS/ConfigUtils.pm
-	(cd debian&&pod2man --section 8 --center "Debian GNU/Linux"  \
-		afs-rootvol ) >debian/openafs-dbserver/usr/share/man/man8/afs-rootvol.8
-	(cd debian&&pod2man --section 8 --center "Debian GNU/Linux"  \
-		afs-newcell ) >debian/openafs-dbserver/usr/share/man/man8/afs-newcell.8
-	# No, includes should not have the x bit set
-	find debian/libopenafs-dev/usr/include -type f -print | \
-		xargs chmod a-x
-	# And drop the pam modules
-	rm debian/libopenafs-dev/usr/lib/*pam*
+	set -e; for pkg in $(LINTIAN_PACKAGES) ; do \
+	    install -d debian/$$pkg/usr/share/lintian/overrides; \
+	    install -m 644 -c debian/$$pkg.lintian \
+	        debian/$$pkg/usr/share/lintian/overrides/$$pkg; \
+	done
+	set -e; for pkg in $(DOC_PACKAGES) ; do \
+	    ln -s openafs-client debian/$$pkg/usr/share/doc/$$pkg; \
+	done
 
-# Build architecture-independent files here.
-# Pass -i to all debhelper commands in this target to reduce clutter.
+	mv debian/openafs-client/usr/bin/pagsh \
+	    debian/openafs-client/usr/bin/pagsh.openafs
+	mv debian/openafs-client/usr/share/man/man1/pagsh.1 \
+	    debian/openafs-client/usr/share/man/man1/pagsh.openafs.1
+	mv debian/openafs-client/usr/bin/up \
+	    debian/openafs-client/usr/bin/afs-up
+	mv debian/openafs-client/usr/share/man/man1/up.1 \
+	    debian/openafs-client/usr/share/man/man1/afs-up.1
+
+	install -m 644 -c debian/tmp/usr/lib/pam_afs.so.1 \
+	    debian/libpam-openafs-kaserver/lib/security/pam_afs.so
+	install -m 644 -c debian/tmp/usr/lib/pam_afs.krb.so.1 \
+	    debian/libpam-openafs-kaserver/lib/security/pam_afs.krb.so
+
+	install -d debian/openafs-dbserver/usr/share/man/man8
+	/usr/bin/docbook-to-man debian/pt_util.sgml \
+	    >debian/openafs-dbserver/usr/share/man/man8/pt_util.8
+	( cd debian && pod2man --section 8 --center "Debian GNU/Linux" \
+	    afs-rootvol ) \
+	    >debian/openafs-dbserver/usr/share/man/man8/afs-rootvol.8
+	( cd debian && pod2man --section 8 --center "Debian GNU/Linux" \
+	    afs-newcell ) \
+	    >debian/openafs-dbserver/usr/share/man/man8/afs-newcell.8
+
+# Build architecture-independent files here.  Pass -i to all debhelper
+# commands in this target to reduce clutter.
 binary-indep: DH_OPTIONS=-i
 binary-indep: build install binary-source
-	# Need this version of debhelper for DH_OPTIONS to work.
-	dh_testversion 1.1.17
 	dh_testdir
 	dh_testroot
-#	dh_installdebconf
+	dh_installchangelogs NEWS
 	dh_installdocs
-	dh_installexamples
-	dh_installmenu
-#	dh_installemacsen
-#	dh_installpam
-#	dh_installinit
-	dh_installcron
-#	dh_installmanpages
-	dh_installinfo
-	dh_undocumented
-	dh_installchangelogs   ChangeLog
 	dh_link
 	dh_compress
 	dh_fixperms
-	# You may want to make some executables suid here.
-	dh_suidregister
 	dh_installdeb
-#	dh_perl
 	dh_gencontrol
 	dh_md5sums
 	dh_builddeb
 
-# Build architecture-dependent files here.
-# Pass -a to all debhelper commands in this target to reduce clutter.
+# Build architecture-dependent files here.  Pass -a to all debhelper commands
+# in this target to reduce clutter.
 binary-arch: DH_OPTIONS=-a
 binary-arch: build install
-	# Need this version of debhelper for DH_OPTIONS to work.
-	dh_testversion 1.1.17
 	dh_testdir
 	dh_testroot
-	dh_installdebconf
+	dh_installchangelogs NEWS
 	dh_installdocs
-	dh_installexamples
-	dh_installmenu
-#	dh_installemacsen
-#	dh_installpam
+	dh_installdebconf
 	DH_OPTIONS= dh_installinit -popenafs-client -r -- defaults 25 18
 	DH_OPTIONS= dh_installinit -popenafs-fileserver -r
-	dh_installcron
-#	dh_installmanpages
-	dh_installinfo
-	dh_undocumented
-	dh_installchangelogs   ChangeLog
-	dh_strip
 	dh_link
+	dh_strip
 	dh_compress
 	dh_fixperms
-	# You may want to make some executables suid here.
 	chmod 700 debian/openafs-client/var/cache/openafs
-	chmod 700 debian/openafs-fileserver/etc/openafs/server
 	chmod 700 debian/openafs-dbserver/var/lib/openafs/db
+	chmod 700 debian/openafs-fileserver/etc/openafs/server
 	chmod 700 debian/openafs-fileserver/var/lib/openafs/cores
-	dh_suidregister
+	dh_perl
 	dh_installdeb
-#	dh_makeshlibs
-#	dh_perl
 	dh_shlibdeps
 	dh_gencontrol
 	dh_md5sums
 	dh_builddeb
 
-binary:   binary-indep binary-arch
-.PHONY: build clean binary-indep binary-arch binary install configure
+binary: binary-indep binary-arch
 
-############################Module package support
-kdist_image:  build-modules
-	$(MAKE) $(MFLAGS) -f debian/rules MODDIR=$(KSRC)/.. binary-modules
-	$(MAKE) $(MFLAGS) -f debian/rules MODDIR=$(KSRC)/.. clean
+#####################  Building openafs-modules-source  ######################
 
-kdist:  build-modules
-	$(MAKE) $(MFLAGS) -f debian/rules MODDIR=$(KSRC)/.. KERNEL_DEPENDS=y binary-modules
-	KSRC="$(KSRC)" KMAINT="$(KMAINT)" KEMAIL="$(KEMAIL)" \
-		sh -v debian/genchanges.sh
-	$(MAKE) $(MFLAGS) -f debian/rules MODDIR=$(KSRC)/.. clean
-
-
-
-kdist_config: configure
-
-kdist_clean: clean
-
-############################ source stuff #################################
 binary-source:
-# Perform some tests
-	test -f debian/rules
-	test `id -u` = "0"
-
-
-# Setup everything first
+	dh_testdir
+	dh_testroot
 	-rm -rf debian/$(srcpkg) debian/substvars
-	install -d debian/$(srcpkg)
-# Clean up the sources	
 	install -d debian/$(srcpkg)/usr/src/modules/$(package)
-	find . \( -name \*.o -o -path ./debian/$(srcpkg) -o -path \*/CVS -o -path ./src/WINNT  \
-		-o -path ./obj -o -path ./$(SYS_NAME)  \
-	-o \( -path ./debian/\* -type d \) \
-	-o -path ./debian/\*debhelper \) -prune -o -print | \
-		cpio -admp debian/$(srcpkg)/usr/src/modules/$(package)
-	( cd debian/$(srcpkg)/usr/src/modules/$(package)&& \
-		$(MAKE) -f debian/rules clean && \
-	rm -rf src/libafs/rx src/libafs/afs src/libafs/afsint; \
-		mv debian/kern-sysname debian/sysname)
-	chown -R root.root debian/$(srcpkg)
+	find . \( -name \*.o -o -path ./debian/$(srcpkg) -o -path \*/CVS \
+	    -o -path \*/.svn -o -path ./src/WINNT  \
+	    -o -path ./obj -o -path ./$(SYS_NAME)  \
+	    -o \( -path ./debian/\* -type d \) \
+	    -o -path ./debian/\*debhelper \) -prune -o -print | \
+	        cpio -admp debian/$(srcpkg)/usr/src/modules/$(package)
+	cd debian/$(srcpkg)/usr/src/modules/$(package) && \
+	    $(MAKE) -f debian/rules clean && \
+	    mv debian/kern-sysname debian/sysname
+	-cd debian/$(srcpkg)/usr/src/modules/$(package) && \
+	    rm -rf src/libafs/rx src/libafs/afs src/libafs/afsint
+	chown -R root.src debian/$(srcpkg)
 	find debian/$(srcpkg) -type d | xargs chmod 755
 	find debian/$(srcpkg) -type f -perm -100 | xargs chmod 755
 	find debian/$(srcpkg) -type f -not -perm -100 | xargs chmod 644
+	chmod 775 debian/$(srcpkg)/usr/src/modules
 	cd debian/$(srcpkg)/usr/src && \
-	  tar cf $(package).tar modules && \
-	  $(RM) -r modules/$(package)
+	    tar cf $(package).tar modules && \
+	    rm -r modules
 	gzip -9 debian/$(srcpkg)/usr/src/$(package).tar
 	chmod 644 debian/$(srcpkg)/usr/src/$(package).tar.gz
-############################ modules stuff #################################
+
+####################  Module package support (make-kpkg)  ####################
+
+kdist_configure: configure-modules-stamp
+
+kdist_image: build-modules-stamp
+	$(ROOT_CMD) $(MAKE) $(MFLAGS) -f debian/rules binary-modules
+	$(ROOT_CMD) $(MAKE) $(MFLAGS) -f debian/rules clean
+
+kdist: build-modules-stamp
+	$(ROOT_CMD) $(MAKE) $(MFLAGS) -f debian/rules binary-modules
+	KSRC="$(KSRC)" KMAINT="$(KMAINT)" KEMAIL="$(KEMAIL)" \
+	    sh -v debian/genchanges.sh
+	$(ROOT_CMD) $(MAKE) $(MFLAGS) -f debian/rules clean
+
+kdist_clean:
+	$(ROOT_CMD) $(MAKE) $(MFLAGS) -f debian/rules clean
+
+########################  Kernel module build rules  #########################
+
+configure-modules: configure-modules-stamp
+configure-modules-stamp:
+	@if test x"$(SYS_NAME)" = x"UNKNOWN" ; then exit 1 ; fi
+	@if test x"$(KVERS)" = x ; then \
+	    echo 'No version in $(KSRC)/include/linux/version.h' >&2 ; \
+	    exit 1 ; \
+	fi
+	sh debian/prep-modules $(KSRC)
+	sh configure --with-afs-sysname=$(SYS_NAME) \
+	    --with-linux-kernel-headers=$(KSRC) --prefix=`pwd`/debian/tmp \
+	    --enable-debug --enable-lwp-debug --enable-kernel-debug \
+	    $(DEBIAN_OPT_FLAGS) $(DEBIAN_KERN_FLAGS)
+	touch configure-modules-stamp
 
 build-modules: build-modules-stamp
-
-build-modules-stamp: 
-	-ln -s @sys/dest dest
-	-ln -s $(SYS_NAME) @sys
-	sh configure --with-afs-sysname=$(SYS_NAME) --with-linux-kernel-headers=$(KSRC)
-	make dest_only_libafs
+build-modules-stamp: configure-modules-stamp
+	make only_libafs
 	touch build-modules-stamp
 
-binary-modules: build-modules
-# Perform some tests
-	test -f debian/rules
-	test `id -u` = "0"
+install-modules: build-modules-stamp
+	dh_testdir
+	dh_testroot
+	dh_clean -k
+	cd src/libafs && make install
+	install -d -g root -o root -m 755 $(moduledir)
+	install -g root -o root -m 755 debian/tmp/lib/openafs/*o $(moduledir)/
+	if test -f $(moduledir)/openafs.o \
+	        -a ! -f $(moduledir)/openafs.mp.o ; then \
+	    ln $(moduledir)/openafs.o $(moduledir)/openafs.mp.o || exit 1 ; \
+	fi
 
-# Setup everything first
-	-rm -rf debian/$(modulepkg) debian/substvars
-	install -d debian/$(modulepkg)
+binary-modules: install-modules
+	dh_testdir
+	dh_testroot
+	dh_installchangelogs NEWS
+	dh_installdocs
+	dh_installmodules
+	dh_strip
+	dh_link
+	dh_compress
+	dh_fixperms
+	dh_installdeb
+	dh_gencontrol -- -v`cat debian/VERSION`
+	dh_md5sums
+	dh_builddeb --destdir="$(KPKG_DEST_DIR)"
 
-# Install the software
-	install -d -g root -o root -m 755 debian/$(modulepkg)/lib/modules/$(KVERS)/fs
-	install -g root -o root -m 755  dest/root.client/usr/vice/etc/modload/*.o \
-		debian/$(modulepkg)/lib/modules/$(KVERS)/fs
-# Fix some stuff up
-	install -d -o root -g root -m 755 debian/$(modulepkg)/usr/share/doc
-	ln -s openafs-client debian/$(modulepkg)/usr/share/doc/$(modulepkg)
-	rm -rf debian/$(modulepkg)/usr/include
-ifeq ($(KERNEL_DEPENDS),y)
-	sh debian/prep-modules $(KSRC) debian/control.module > debian/control
-else
-	sh debian/prep-modules $(KSRC) debian/control.module-image > debian/control
-endif
-
-# Install control files
-	install -d -o root -g root -m 755 debian/$(modulepkg)/DEBIAN
-	install -p -o root -g root -m 755 debian/prerm.mod \
-		debian/$(modulepkg)/DEBIAN/prerm
-	install -p -o root -g root -m 755 debian/postinst.mod \
-		debian/$(modulepkg)/DEBIAN/postinst
-
-# And now.. for the final packaging!
-	find debian/$(modulepkg) -type f | grep -v "./DEBIAN" | xargs md5sum | \
-		sed -e 's#debian/$(modulepkg)/##' > debian/$(modulepkg)/DEBIAN/md5sums
-
-	dpkg-gencontrol -isp \
-		-p$(modulepkg) \
-		-v`cat debian/VERSION` \
-		-Pdebian/$(modulepkg)
-	chown -R root.root debian/$(modulepkg)
-	chmod -R go=rX debian/$(modulepkg)
-	dpkg --build debian/$(modulepkg) $(MODDIR)
+.PHONY: build clean binary-indep binary-arch binary install configure
+.PHONY: kdist_configure kdist_image kdist kdist_clean binary-source

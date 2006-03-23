@@ -1,0 +1,49 @@
+Upstream uses libafs as the module name, mostly for historic reasons.  It
+also uses a different module name depending on whether the module is built
+for SMP systems, something that Debian deals with by creating separate
+packages.  This patch changes the name of the module to openafs and
+removes the separate name for the SMP version.
+
+Probably not acceptable upstream.
+
+--- openafs-1.3.87.orig/src/libafs/MakefileProto.LINUX.in
++++ openafs-1.3.87/src/libafs/MakefileProto.LINUX.in
+@@ -216,8 +216,8 @@
+ 
+ # Below this line are targets when in the COMMON directory:
+ # For Linux there is no kernel NFS server.
+-LIBAFS = libafs-${CLIENT}.${LINUX_MODULE_EXT}
+-LIBAFS_MP = libafs-${CLIENT}.mp.${LINUX_MODULE_EXT}
++LIBAFS = openafs.${LINUX_MODULE_EXT}
++LIBAFS_MP = openafs.${LINUX_MODULE_EXT}
+ LIBAFS_EP = libafs-${CLIENT}.ep.${LINUX_MODULE_EXT}
+ LIBAFS_BM = libafs-${CLIENT}.bm.${LINUX_MODULE_EXT}
+ 
+@@ -226,10 +226,8 @@
+ INST_LIBAFS_EP = ${DESTDIR}${afskerneldir}/${LIBAFS_EP}
+ INST_LIBAFS_BM = ${DESTDIR}${afskerneldir}/${LIBAFS_BM}
+ 
+-DEST_LIBAFS = ${DEST}/root.client/usr/vice/etc/modload/${LIBAFS}
+-DEST_LIBAFS_MP = ${DEST}/root.client/usr/vice/etc/modload/${LIBAFS_MP}
+-DEST_LIBAFS_EP = ${DEST}/root.client/usr/vice/etc/modload/${LIBAFS_EP}
+-DEST_LIBAFS_BM = ${DEST}/root.client/usr/vice/etc/modload/${LIBAFS_BM}
++DEST_LIBAFS = ${DEST}/root.client/usr/vice/etc/modload/openafs.o
++DEST_LIBAFS_MP = ${DEST}/root.client/usr/vice/etc/modload/openafs.mp.o
+ 
+ 
+ libafs:	$(LIBAFS) 
+@@ -245,11 +243,11 @@
+ 	echo BM Build Complete
+ 
+ <linux26 linux_26 umlinux26>
+-${LIBAFS} ${LIBAFS_MP} ${LIBAFS_EP} ${LIBAFS_BM}: libafs.ko
+-	cp libafs.ko $@
++${LIBAFS} ${LIBAFS_MP} ${LIBAFS_EP} ${LIBAFS_BM}: openafs.ko
++	cp openafs.ko $@
+ 
+ .FORCE:
+-libafs.ko: .FORCE
++openafs.ko: .FORCE
+ 	env EXTRA_CFLAGS="${EXTRA_CFLAGS}" @TOP_SRCDIR@/libafs/make_kbuild_makefile.pl ${KDIR} $@ @TOP_OBJDIR@/src/config/Makefile.config Makefile.afs Makefile.common
+ 	env EXTRA_CFLAGS="${EXTRA_CFLAGS}" $(MAKE) -C ${LINUX_KERNEL_PATH} M=@TOP_OBJDIR@/src/libafs/${KDIR} modules
+         

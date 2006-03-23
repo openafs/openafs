@@ -1,19 +1,20 @@
 #!/usr/bin/perl -w
 # Copyright (C) 2000 by Sam Hartman
-# This file may be copied either under the terms of the GNU GPL or the IBM Public License
-# either version 2 or later of the GPL or version 1.0 or later of the IPL.
+# This file may be copied either under the terms of the GNU GPL or the IBM
+# Public License either version 2 or later of the GPL or version 1.0 or later
+# of the IPL.
 
 use Term::ReadLine;
 use strict;
 use Debian::OpenAFS::ConfigUtils;
 use Getopt::Long;
-use vars qw($admin $server
-	   $requirements_met  $shutdown_needed);
+use Socket qw(inet_ntoa);
+use vars qw($admin $server $requirements_met $shutdown_needed);
 my $rl = new Term::ReadLine('afs-newcell');
 
 =head1  NAME
 
-   afs-newcell - Set up initial database server for AFS cell.
+afs-newcell - Set up initial database server for AFS cell
 
 =head1 SYNOPSIS
 
@@ -21,17 +22,15 @@ B<afs-newcell> [B<--requirements-met>] [B<--admin> admin_user]
 
 =head1 DESCRIPTION
 
-
 This script sets up the initial AFS database and configures the first
 database/file server.
 
-The B<requirements-met> option specifies that the initial requirements
-have been met and that the script can proceed without displaying the
-initial banner or asking for confirmation.
+The B<--requirements-met> option specifies that the initial requirements have
+been met and that the script can proceed without displaying the initial
+banner or asking for confirmation.
 
-The B<admin> option specifies the name of the administrative user.
-This user will be given system:administrators and susers permission in
-the cell.
+The B<--admin> option specifies the name of the administrative user.  This
+user will be given system:administrators and susers permission in the cell.
 
 =head1 AUTHOR
 
@@ -39,21 +38,20 @@ Sam Hartman <hartmans@debian.org>
 
 =cut
 
-# main script
+# Flush all output immediately.
+$| = 1;
 
-GetOptions (
-	    "requirements-met" => \$requirements_met, 
-	    "admin=s" => \$admin);
+GetOptions ("requirements-met" => \$requirements_met, "admin=s" => \$admin);
 
 unless ($requirements_met) {
-  print <<eoreqs;
-			    Prerequisites
+    print <<eoreqs;
+                            Prerequisites
 
 In order to set up a new AFS cell, you must meet the following:
 
 1) You need a working Kerberos realm with Kerberos4 support.  You
-   should install Heimdal with Kth-kerberos compatibility or MIT
-   Kerberos5.
+   should install Heimdal with KTH Kerberos compatibility or MIT
+   Kerberos 5.
 
 2) You need to create the single-DES AFS key and load it into
    /etc/openafs/server/KeyFile.  If your cell's name is the same as
@@ -66,126 +64,216 @@ In order to set up a new AFS cell, you must meet the following:
 3) This machine should have a filesystem mounted on /vicepa.  If you
    do not have a free partition, then create a large file by using dd
    to extract bytes from /dev/zero.  Create a filesystem on this file
-   and mount it using -oloop.  
+   and mount it using -oloop.
 
 4) You will need an administrative principal created in a Kerberos
-realm.  This principal will be added to susers and
-system:administrators and thus will be able to run administrative
-commands.  Generally the user is a root instance of some administravie
-user.  For example if jruser is an administrator then it would be
-reasonable to create jruser/root and specify jruser/root as the user
-to be added in this script.
+   realm.  This principal will be added to susers and
+   system:administrators and thus will be able to run administrative
+   commands.  Generally the user is a root or admin instance of some
+   administrative user.  For example if jruser is an administrator then
+   it would be reasonable to create jruser/admin (or jruser/root) and
+   specify that as the user to be added in this script.
 
 5) The AFS client must not be running on this workstation.  It will be
-at the end of this script.
+   at the end of this script.
 
 eoreqs
+#'# cperl-mode
 
-  $_ = $rl->readline("Do you meet these requirements? [y/n] ");
-  unless (/^y/i ) {
-    print "Run this script again when you meet the requirements\n";
-    exit(1);
-  }
-	
-		if ($> != 0) {
-die "This script should almost always be run as root.  Use the --requirements-met option to run as non-root.\n";
+    $_ = $rl->readline("Do you meet these requirements? [y/n] ");
+    unless (/^y/i ) {
+        print "Run this script again when you meet the requirements\n";
+        exit(1);
+    }
+
+    if ($> != 0) {
+        die "This script should almost always be run as root.  Use the\n"
+            . "--requirements-met option to run as non-root.\n";
+    }
 }
-}
+
+# Make sure the AFS client is not already running.
 open(MOUNT, "mount |") or die "Failed to run mount: $!\n";
 while(<MOUNT>) {
-if(m:^AFS:) {
-print "The AFS client is currently running on this workstation.\n";
-print "Please restart this script after running /etc/init.d/openafs-client stop\n";
-exit(1);
-}
+    if (m:^AFS:) {
+        print "The AFS client is currently running on this workstation.\n";
+        print "Please restart this script after running"
+            . " /etc/init.d/openafs-client stop\n";
+        exit(1);
+    }
 }
 close MOUNT;
 
+# Make sure there is a keyfile.
 unless ( -f "/etc/openafs/server/KeyFile") {
-  print "You do not have an AFS keyfile.  Please create this using asetkey from openafs-krb5 or 
-the bos addkey command";
-  exit(1);
+    print "You do not have an AFS keyfile.  Please create this using\n";
+    print "asetkey from openafs-krb5 or the bos addkey command\n";
+    exit(1);
 }
 
+# Stop the file server.
 print "If the fileserver is not running, this may hang for 30 seconds.\n";
 run("/etc/init.d/openafs-fileserver stop");
-$server = `hostname`;
+
+# Get the local hostname.  Use the fully-qualified hostname to be safer.
+$server = `hostname -f`;
 chomp $server;
-$admin = $rl->readline("What administrative principal should be used? ") unless $admin;
- die "Please specify an administrative user\n" unless $admin;
-$admin =~ s:/:.:g;
-if($admin =~ /@/) {
-die "The administrative user must be in the same realm as the cell and no realm may be specified.\n";
+my $ip = gethostbyname $server;
+if (inet_ntoa($ip) eq '127.0.0.1') {
+    print "\n";
+    print "Your hostname $server resolves to 127.0.0.1, which AFS cannot\n";
+    print "cope with.  Make sure your hostname resolves to a non-loopback\n";
+    print "IP address.  (Check /etc/hosts and make sure that your hostname\n";
+    print "isn't listed on the 127.0.0.1 line.  If it is, removing it from\n";
+    print "that line will probably solve this problem.)\n";
+    exit(1);
 }
-open(CELL, "/etc/openafs/server/ThisCell") 
-  or die "Cannot open /etc/openafs/server/ThisCell: $!\n";
+
+# Determine the admin principal.
+$admin = $rl->readline("What administrative principal should be used? ")
+    unless $admin;
+print "\n";
+die "Please specify an administrative user\n" unless $admin;
+my $afs_admin = $admin;
+$afs_admin =~ s:/:.:g;
+if ($afs_admin =~ /@/) {
+    die "The administrative user must be in the same realm as the cell and\n"
+        . "no realm may be specified.\n";
+}
+
+# Determine the local cell.  This should be configured via debconf, from the
+# openafs-client configuration, when openafs-fileserver is installed.
+open(CELL, "/etc/openafs/server/ThisCell")
+    or die "Cannot open /etc/openafs/server/ThisCell: $!\n";
 my $cell = <CELL>;
 chomp $cell;
 
-run( "echo \\>$cell >/etc/openafs/server/CellServDB");
+# Make sure the new cell is configured in the client CellServDB.
+open(CELLSERVDB, "/etc/openafs/CellServDB")
+    or die "Cannot open /etc/openafs/CellServDB: $!\n";
+my $found = 0;
+while (<CELLSERVDB>) {
+    next unless /^>\Q$cell\E\s/;
+    while (<CELLSERVDB>) {
+        last if /^>/;
+        my ($dbserver) = split ' ';
+        if ($dbserver eq inet_ntoa($ip)) {
+            $found = 1;
+            last;
+        }
+    }
+    last;
+}
+unless ($found) {
+    print "\n";
+    print "The new cell $cell is not configured in /etc/openafs/CellServDB\n";
+    print "Add configuration like:\n\n";
+    print ">$cell\n";
+    print inet_ntoa($ip), "\n\n";
+    print "to that file before continuing.\n";
+    exit(1);
+}
+
+# Write out a new CellServDB for the local cell containing only this server.
+if (-f "/etc/openafs/server/CellServDB") {
+    print "/etc/openafs/server/CellServDB already exists, renaming to .old\n";
+    rename("/etc/openafs/server/CellServDB",
+           "/etc/openafs/server/CellServDB.old")
+        or die "Cannot rename /etc/openafs/server/CellServDB: $!\n";
+}
+open(CELLSERVDB, "> /etc/openafs/server/CellServDB")
+    or die "Cannot create /etc/openafs/server/CellServDB: $!\n";
+print CELLSERVDB ">$cell\n";
+print CELLSERVDB inet_ntoa($ip), "\t\t\t#$server\n";
+close CELLSERVDB or die "Cannot write to /etc/openafs/server/CellServDB: $!\n";
+
+# Now, we should be able to start bos and add the admin user.
 run("/etc/init.d/openafs-fileserver start");
 $shutdown_needed = 1;
-run ("bos addhost $server $server -localauth ||true");
-run("bos adduser $server $admin -localauth");
-unwind("bos removeuser $server $admin -localauth");
-if ( -f "/var/lib/openafs/db/prdb.DB0" ) {
-  die "Protection database already exists; cell already partially created\n";
- }
-open(PRDB, "|pt_util -p /var/lib/openafs/db/prdb.DB0 -w ")
-or die "Unable to start pt_util: $!\n";
-print PRDB "$admin 128/20 1 -204 -204\n";
+run("bos adduser $server $afs_admin -localauth");
+unwind("bos removeuser $server $afs_admin -localauth");
+
+# Create the initial protection database using pt_util.  This is safer than
+# the standard mechanism of starting the cell in noauth mode until the first
+# user has been created.
+if (-f "/var/lib/openafs/db/prdb.DB0") {
+    warn "ERROR: Protection database already exists; cell already partially\n";
+    warn "ERROR: created.   If you do not want the current database, remove\n";
+    warn "ERROR: all files in /var/lib/openafs/db and then run this program\n";
+    warn "ERROR: again.\n";
+    exit(1);
+}
+print "\nCreating initial protection database.  This will print some errors\n";
+print "about an id already existing and a bad ubik magic.  These errors can\n";
+print "be safely ignored.\n\n";
+open(PRDB, "| pt_util -p /var/lib/openafs/db/prdb.DB0 -w")
+    or die "Unable to start pt_util: $!\n";
+print PRDB "$afs_admin 128/20 1 -204 -204\n";
 print PRDB "system:administrators 130/20 -204 -204 -204\n";
-print PRDB" $admin 1\n";
+print PRDB " $afs_admin 1\n";
 close PRDB;
-unwind( "rm /var/lib/openafs/db/prdb* ");
-# Start up ptserver and vlserver
+unwind("rm /var/lib/openafs/db/prdb*");
+print "\n";
+
+# We should now be able to start ptserver and vlserver.
 run("bos create $server ptserver simple /usr/lib/openafs/ptserver -localauth");
 unwind("bos delete $server ptserver -localauth");
-
 run("bos create $server vlserver simple /usr/lib/openafs/vlserver -localauth");
 unwind("bos delete $server vlserver -localauth");
 
-run( "bos create $server fs fs ".
-     "-cmd /usr/lib/openafs/fileserver ".
-     "-cmd /usr/lib/openafs/volserver ".
-     "-cmd /usr/lib/openafs/salvager -localauth");
-unwind( "bos delete $server fs -localauth ");
+# Create a file server as well.
+run("bos create $server fs fs"
+    . " -cmd /usr/lib/openafs/fileserver"
+    . " -cmd /usr/lib/openafs/volserver"
+    . " -cmd /usr/lib/openafs/salvager -localauth");
+unwind("bos delete $server fs -localauth");
 
+# Pause for a while for ubik to catch up.
 print "Waiting for database elections: ";
 sleep(30);
 print "done.\n";
-# Past this point we want to control when bos shutdown happens
+
+# Past this point we want to control when bos shutdown happens.
 $shutdown_needed = 0;
-unwind( "bos shutdown $server -localauth ");
+unwind("bos shutdown $server -localauth -wait");
 run("vos create $server a root.afs -localauth");
-# bring up client
-run("echo $cell >/etc/openafs/ThisCell");
+unwind("vos remove $server a root.afs -localauth");
+
+# We should now be able to bring up the client (it may need root.afs to exist
+# if not using dynroot).  We override whatever default cell was configured for
+# the client, just in case it was pointing to some other cell.
+open(THIS, "> /etc/openafs/ThisCell")
+    or die "ERROR: Cannot create /etc/openafs/ThisCell: $!\n";
+print THIS "$cell\n";
+close THIS or die "ERROR: Cannot write to /etc/openafs/ThisCell: $!\n";
 run("/etc/init.d/openafs-client force-start");
+
+# Verify that AFS has managed to start.
 my $afs_running = 0;
-open(MOUNT, "mount |") or die "Failed to run mount: $!\n";
+open(MOUNT, "mount |") or die "ERROR: Failed to run mount: $!\n";
 while(<MOUNT>) {
-if(m:^AFS:) {
-	$afs_running = 1;
+    if (m:^AFS:) {
+        $afs_running = 1;
+    }
 }
-	}
 unless ($afs_running) {
-print "*** The AFS client failed to start.\n";
-print  "Please fix whatever problem kept it from running.\n";
-	exit(1);
+    print "ERROR: The AFS client failed to start.\n";
+    print "ERROR: Please fix whatever problem kept it from running.\n";
+    exit(1);
 }
+print "\n";
+print "Now, get tokens as $admin in the $cell cell.\n";
+print "Then, run afs-rootvol.\n";
 
-print <<eomsg; 
-Now, get tokens as $admin in the $cell cell.  Then, run
-afs-rootvol.
-eomsg
-
-
-
-
+# Success, so clear the unwind commands.
 @unwinds = ();
+
+# If we fail before all the instances are created, we need to back out of
+# everything we did as much as possible.
 END {
-# If we fail before all the instances are created, we need to perform 
-# our own bos shutdown
-    system("bos shutdown $server -localauth") if $shutdown_needed;
-  run(pop @unwinds) while @unwinds;
-  }
+    if ($shutdown_needed || @unwinds) {
+        print "\nCell setup failed, ABORTING\n";
+    }
+    system("bos shutdown $server -localauth -wait") if $shutdown_needed;
+    run(pop @unwinds) while @unwinds;
+}

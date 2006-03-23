@@ -1,157 +1,194 @@
 #!/usr/bin/perl -w
 # Copyright (C) 2000 by Sam Hartman
-# This file may be copied either under the terms of the GNU GPL or the IBM Public License
-# either version 2 or later of the GPL or version 1.0 or later of the IPL.
+# This file may be copied either under the terms of the GNU GPL or the IBM
+# Public License either version 2 or later of the GPL or version 1.0 or later
+# of the IPL.
 
 use strict;
+use Debian::OpenAFS::ConfigUtils;
 use Term::ReadLine;
 use Getopt::Long;
+use vars qw($rl $server $part $requirements_met);
 
-=head1  NAME
+=head1 NAME
 
-   afs-rootvol - Generate and populate root volumes for new AFS cells.
+afs-rootvol - Generate and populate root volumes for new AFS cells.
 
 =head1 SYNOPSIS
 
-B<afs-rootvol> [B<--requirements-met>] [B<--server> server-name] [B<--partition> partition-letter]
+B<afs-rootvol> [B<--requirements-met>] [B<--server> I<server-name>]
+[B<--partition> I<partition-letter>]
 
 =head1 DESCRIPTION
 
-This script sets up an AFS cell's root volumes.  It assumes that you
-already have a fileserver and database servers.  The fileserver should
-have an empty root.afs.
-  This script creates root.cell, user, service and populates root.afs.  
+This script sets up an AFS cell's root volumes.  It assumes that you already
+have a fileserver and database servers.  The fileserver should have an empty
+root.afs.  This script creates root.cell, user, and service and populates
+root.afs.
 
 =head1 AUTHOR
 
 Sam Hartman <hartmans@debian.org>
 
 =cut
-
-use vars qw($rl $server  $part $requirements_met);
-use vars qw( @unwinds);
-use Debian::OpenAFS::ConfigUtils;
-
+#'# cperl-mode
 
 # This subroutine creates a volume, mounts it and then sets the access
 # to allow read by anyuser.  The volume is scheduled for deletion in
 # case of error.
-# mkvol(volume, mount)
-		    sub mkvol($$) {
-		      my ($vol, $mnt) = @_;
-		      run("vos create $server $part $vol -localauth");
-		      unwind("vos remove $server $part $vol -localauth");
-		      run("fs mkm $mnt $vol ");
-		      run("fs sa $mnt system:anyuser rl");
-		    }
+sub mkvol($$) {
+    my ($vol, $mnt) = @_;
+    run("vos create $server $part $vol -localauth");
+    unwind("vos remove $server $part $vol -localauth");
+    run("fs mkm $mnt $vol ");
+    run("fs sa $mnt system:anyuser rl");
+}
 
-# main script
+# Main script.  Flush all output immediately.
+$| = 1;
 $rl = new Term::ReadLine('AFS');
-
-
-GetOptions (
-	    "requirements-met" => \$requirements_met, 
-	    "server=s" => \$server,
-	    "partition=s" => \$part
-	    );
+GetOptions ("requirements-met" => \$requirements_met,
+            "server=s" => \$server,
+            "partition=s" => \$part);
 unless ($requirements_met) {
-      print <<eotext;
-			    Prerequisites
+    print <<eotext;
+                            Prerequisites
 
-In order to set up the root.afs volume, you must meet the following pre-conditions:
+In order to set up the root.afs volume, you must meet the following
+pre-conditions:
 
 1) The cell must be configured, running a database server with a
    volume location and protection server.  The afs-newcell script will
    set up these services.
 
-2)  You must be logged into the cell with  tokens in
-   system:administrators and with a principal that is in the susers
+2) You must be logged into the cell with tokens in for a user in
+   system:administrators and with a principal that is in the UserList
    file of the servers in the cell.
 
 3) You need a fileserver in the cell with partitions mounted and a
-   root.afs volume created.   Presumably, it has no volumes on it,
+   root.afs volume created.  Presumably, it has no volumes on it,
    although the script will work so long as nothing besides root.afs
    exists.  The afs-newcell script will set up the file server.
 
 4) The AFS client must be running pointed at the new cell.
 eotext
+
     $_ = $rl->readline("Do you meet these conditions? (y/n) ");
     unless (/^y/i ) {
-	print "Please restart the script when you meet these conditions.\n";
-	exit(1);
+        print "Please restart the script when you meet these conditions.\n";
+        exit(1);
     }
-	
-		if ($> != 0) {
-die "This script should almost always be run as root.  Use the --requirements-met option to run as non-root.\n";
+    if ($> != 0) {
+        die "This script should almost always be run as root.  Use the\n"
+            . "--requirements-met option to run as non-root.\n";
+    }
 }
 
-}
-# Get configuration information we need
+# Get configuration information we need.
 open(CELL, "/etc/openafs/server/ThisCell")
-or die "Unable to find out what cell this machine serves: $!\n";
+    or die "Unable to find out what cell this machine serves: $!\n";
 my $cell = <CELL>;
 close CELL;
 chomp $cell;
 
 unless ($server) {
-  print <<eotext; 
-You will need to select a server (hostname) and AFS
-partition on which to create the root volumes.
+    print <<eotext;
+
+You will need to select a server (hostname) and AFS partition on which to
+create the root volumes.
+
 eotext
 
-  $server = $rl->readline("What AFS Server should volumes be placed on? ");
-  die "Please select a server.\n" unless $server;
+    $server = $rl->readline("What AFS Server should volumes be placed on? ");
+    die "Please select a server.\n" unless $server;
 }
 unless ($part) {
-  $part = $rl    ->readline("What partition? [a] ");
-$part = "a" unless $part;
+    $part = $rl->readline("What partition? [a] ");
+    $part = "a" unless $part;
+}
+print "\n";
+
+# Make sure the user has tokens.  Forgetting to do this is a common error.
+my $status = system("tokens | grep Expires > /dev/null");
+if ($status != 0) {
+    die "You appear to not have AFS tokens.  Obtain tokens (with aklog,\n"
+        . "for example) and then run this script again.\n";
 }
 
-
-run("fs sa /afs system:anyuser rl");
-
+# Figure out where root.afs is.  There are two possibilities: either we aren't
+# running with dynroot, and root.afs is therefore accessible as /afs, or we
+# are running with dynroot, in which case we have to create root.cell first
+# and then mount root.afs under it.
+#
+# Always create root.cell first; we may need it if running with dynroot, and
+# it doesn't hurt to do it now regardless.
+my $rootmnt = "/afs";
 run("vos create $server $part root.cell -localauth");
 unwind("vos remove $server $part root.cell -localauth");
-# We make root.cell s:anyuser readable after we mount in the next
-# loop.
+my $dynroot = (-d "$rootmnt/$cell/.");
+if ($dynroot) {
+    run("fs mkm /afs/$cell/.root.afs root.afs -rw");
+    unwind("fs rmm /afs/$cell/.root.afs");
+    $rootmnt = "/afs/$cell/.root.afs";
+}
+run("fs sa $rootmnt system:anyuser rl");
 
-
+# Scan CellServDB and create the cell mount points for every cell found there.
+# Force these commands to succeed, since it's possible to end up with
+# duplicate entries in CellServDB (and the second fs mkm will fail).
 open(CELLSERVDB, "/etc/openafs/CellServDB")
     or die "Unable to open /etc/openafs/CellServDB: $!\n";
-while(<CELLSERVDB>) {
+while (<CELLSERVDB>) {
     chomp;
-    if (/^>\s*([a-z0-9_\-.]+)/ ) {
-	run("fs mkm /afs/$1 root.cell -cell $1  -fast");
-	unwind ("fs rmm /afs/$1");
+    if (/^>\s*([a-z0-9_\-.]+)/) {
+        run("fs mkm $rootmnt/$1 root.cell -cell $1 -fast || true");
+        unwind("fs rmm $rootmnt/$1 || true");
     }
 }
 
+# Now, create the read/write mount points for root.cell and root.afs and set
+# root.cell system:anyuser read.
 run("fs sa /afs/$cell system:anyuser rl");
-run ("fs mkm /afs/.$cell root.cell -cell $cell -rw");
-unwind ("fs rmm /afs/.$cell");
-run("fs mkm /afs/.root.afs root.afs -rw");
-unwind ("fs rmm /afs/.root.afs");
+run("fs mkm $rootmnt/.$cell root.cell -cell $cell -rw");
+unwind("fs rmm $rootmnt/.$cell");
+run("fs mkm $rootmnt/.root.afs root.afs -rw");
+unwind("fs rmm $rootmnt/.root.afs");
 
-mkvol( "user", "/afs/$cell/user" );
-mkvol( "service", "/afs/$cell/service" );
+# Create the user and service mount point volumes to fit the semi-standard AFS
+# cell layout.
+mkvol("user", "/afs/$cell/user");
+mkvol("service", "/afs/$cell/service");
 
-$cell =~ /^([^.]*)/;
+# Strip the domain off of the cell name and create the short symlinks.
+$cell =~ /^([^.]+)/;
 my $cellpart = $1;
-run("ln -s /afs/$cell /afs/$cellpart");
-unwind ("rm /afs/$cellpart");
-run( "ln -s /afs/.$cell /afs/.$cellpart" );
-unwind ("rm /afs/.$cellpart");
+if ($cellpart && $cellpart ne $cell) {
+    run("ln -s $cell $rootmnt/$cellpart");
+    unwind("rm $rootmnt/$cellpart");
+    run("ln -s .$cell $rootmnt/.$cellpart");
+    unwind("rm $rootmnt/.$cellpart");
+}
+if ($dynroot) {
+    run("fs rmm /afs/$cell/.root.afs");
+    unwind("fs mkm /afs/$cell/.root.afs root.afs -rw");
+}
 
-run( "vos addsite $server $part root.afs -localauth" );
-run( "vos addsite $server $part root.cell -localauth" );
-run( "vos release root.afs -localauth" );
-run( "vos release root.cell -localauth" );
-unwind( "vos remove $server $part root.cell.readonly -localauth ");
-unwind( "vos remove $server $part root.afs.readonly -localauth ");
+# Now, replicate the infrastructure volumes.
+run("vos addsite $server $part root.afs -localauth");
+run("vos addsite $server $part root.cell -localauth");
+run("vos release root.afs -localauth");
+run("vos release root.cell -localauth");
+unwind("vos remove $server $part root.cell.readonly -localauth");
+unwind("vos remove $server $part root.afs.readonly -localauth");
 
+# Success, so clear the unwind commands.
 @unwinds = ();
 
+# If we fail before all the instances are created, we need to back out of
+# everything we did as much as possible.
 END {
-  run(pop @unwinds) while @unwinds;
-  }
-
+    if (@unwinds) {
+        print "\nRoot volume setup failed, ABORTING\n";
+    }
+    run(pop @unwinds) while @unwinds;
+}
