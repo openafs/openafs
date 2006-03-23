@@ -40,15 +40,21 @@ CAN_BUILD=""
 for VERS in $LINUX_VERS ; do
 	dir=$LINUX_SRCDIR$VERS
 	if [ ! -d $dir ] ; then
+	    dir=$LINUX_SRCDIR
+	    if [ ! -d $dir ] ; then
 		echo "ERROR: Cannot build for Linux kernel $VERS: $dir does not exist."
 		errors=true
 		continue
+      	    fi
 	fi
 	header=$LINUX_SRCDIR$VERS/include/linux/version.h
 	if [ ! -f $header ] ; then
-	    echo "ERROR: Cannot build for Linux kernel $VERS: $header does not exist."
-	    errors=true
-	    continue
+	    header=$LINUX_SRCDIR/include/linux/version.h
+	    if [ ! -f $header ] ; then
+	        echo "ERROR: Cannot build for Linux kernel $VERS: $header does not exist."
+	        errors=true
+	        continue
+	    fi
 	fi
 
 	vers=`fgrep UTS_RELEASE $LINUX_SRCDIR$VERS/include/linux/version.h |
