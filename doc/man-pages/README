@@ -285,6 +285,15 @@ Known Problems
    * Provide a way to substitute the correct paths into the HTML output
      from Autoconf results.
 
+   * Currently, the man pages are built by regen.sh, which is somewhat
+     annoying since it takes a long time.  Figure out how better to do this
+     during the release process so that end users don't have to have
+     pod2man.
+
+   * Review the sections used for all man pages against what directories
+     the commands are installed into.  (In some cases, it may be better to
+     change the directory than the section of the man page.)
+
   If you notice other problems, please send them to the openafs-doc list
   even if you don't have time to fix them.  Someone else might, and we
   want to track all of the issues.
