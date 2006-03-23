@@ -22,3 +22,5 @@ if [ -f config/afsd.options -a -f config/afsd.options.sample ]; then
     rm -f config/afsd.options
   fi
 fi
+
+/Library/StartupItems/OpenAFS/OpenAFS stop

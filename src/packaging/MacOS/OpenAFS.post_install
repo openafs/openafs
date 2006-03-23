@@ -47,7 +47,7 @@ if [ ! -f CellServDB -a -f CellServDB.save -a -f CellServDB.master.last ]; then
 fi
 
 # upgrading between 2 post-1.2.7 releases (or the testing case)
-if [ -f CellServDB.master.last ]; then
+if [ -f CellServDB.master.last -a  -f CellServDB ]; then
   if cmp -s CellServDB.master.last CellServDB.master ; then
     echo No CellServDB updates
     done=1
