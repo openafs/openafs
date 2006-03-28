@@ -1,0 +1,72 @@
+=head1 NAME
+
+uss apropos - Displays each help entry containing a keyword string.
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<uss apropos> S<<< B<-topic> <I<help string>> >>> [B<-help>]
+
+B<uss ap> S<<< B<-t> <I<help string>> >>> [B<-h>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<uss apropos> command displays the first line of the online help
+entry for any B<uss> command that has in its name or short description the
+string specified by the B<-topic> argument.
+
+To display the syntax for a command, use the B<uss help> command.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-topic> <I<help string>>+
+
+Specifies the keyword string to match, in lowercase letters only.  If the
+string is more than a single word, surround it with double quotes (C<"">)
+or other delimiters.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 OUTPUT
+
+The first line of a command's online help entry names it and briefly
+describes its function. This command displays the first line for any
+B<uss> command where the string specified by the B<-topic> argument is
+part of the command name or first line.
+
+=head1 EXAMPLES
+
+The following command lists all uss commands that include the word
+C<create> in their names or short descriptions:
+
+   % uss apropos create
+   add: create a new user
+
+=head1 PRIVILEGE REQUIRED
+
+None
+
+=head1 SEE ALSO
+
+L<uss(8)>,
+L<uss_help(8)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

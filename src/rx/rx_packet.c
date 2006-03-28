@@ -15,7 +15,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_packet.c,v 1.35.2.17 2005/09/16 02:28:50 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_packet.c,v 1.35.2.24 2006/01/26 20:58:47 shadow Exp $");
 
 #ifdef KERNEL
 #if defined(UKERNEL)
@@ -71,6 +71,7 @@ RCSID
 #include <sys/socket.h>
 #include <netinet/in.h>
 #endif /* AFS_NT40_ENV */
+#include "rx_user.h"
 #include "rx_xmit_nt.h"
 #include <stdlib.h>
 #else
@@ -113,6 +114,9 @@ static int AllocPacketBufs(int class, int num_pkts, struct rx_queue *q);
 static void rxi_SendDebugPacket(struct rx_packet *apacket, osi_socket asocket,
 				afs_int32 ahost, short aport,
 				afs_int32 istack);
+
+static int rxi_FreeDataBufsToQueue(struct rx_packet *p, int first, 
+				   struct rx_queue * q);
 
 /* some rules about packets:
  * 1.  When a packet is allocated, the final iov_buf contains room for
@@ -381,14 +385,22 @@ rxi_FreePackets(int num_pkts, struct rx_queue * q)
     register struct rx_packet *c, *nc;
     SPLVAR;
 
+    osi_Assert(num_pkts >= 0);
+    RX_TS_INFO_GET(rx_ts_info);
+
     if (!num_pkts) {
-	queue_Count(q, c, nc, rx_packet, num_pkts);
-	if (!num_pkts)
-	    return 0;
+	for (queue_Scan(q, c, nc, rx_packet), num_pkts++) {
+	    rxi_FreeDataBufsTSFPQ(c, 1, 0);
+	}
+    } else {
+	for (queue_Scan(q, c, nc, rx_packet)) {
+	    rxi_FreeDataBufsTSFPQ(c, 1, 0);
+	}
     }
 
-    RX_TS_INFO_GET(rx_ts_info);
-    RX_TS_FPQ_CHECKIN2(rx_ts_info, num_pkts, q);
+    if (num_pkts) {
+	RX_TS_FPQ_CHECKIN2(rx_ts_info, num_pkts, q);
+    }
 
     if (rx_ts_info->_FPQ.len > rx_TSFPQLocalMax) {
         NETPRI;
@@ -410,26 +422,43 @@ rxi_FreePackets(int num_pkts, struct rx_queue * q)
 int
 rxi_FreePackets(int num_pkts, struct rx_queue *q)
 {
+    struct rx_queue cbs;
     register struct rx_packet *p, *np;
+    int qlen = 0;
     SPLVAR;
+
+    osi_Assert(num_pkts >= 0);
+    queue_Init(&cbs);
 
     if (!num_pkts) {
         for (queue_Scan(q, p, np, rx_packet), num_pkts++) {
+	    if (p->niovecs > 2) {
+		qlen += rxi_FreeDataBufsToQueue(p, 2, &cbs);
+	    }
             RX_FPQ_MARK_FREE(p);
 	}
 	if (!num_pkts)
 	    return 0;
     } else {
         for (queue_Scan(q, p, np, rx_packet)) {
+	    if (p->niovecs > 2) {
+		qlen += rxi_FreeDataBufsToQueue(p, 2, &cbs);
+	    }
             RX_FPQ_MARK_FREE(p);
 	}
     }
+
+    if (qlen) {
+	queue_SpliceAppend(q, &cbs);
+	qlen += num_pkts;
+    } else
+	qlen = num_pkts;
 
     NETPRI;
     MUTEX_ENTER(&rx_freePktQ_lock);
 
     queue_SpliceAppend(&rx_freePacketQueue, q);
-    rx_nFreePackets += num_pkts;
+    rx_nFreePackets += qlen;
 
     /* Wakeup anyone waiting for packets */
     rxi_PacketsUnWait();
@@ -776,6 +805,30 @@ rxi_FreePacketTSFPQ(struct rx_packet *p, int flush_global)
     }
 }
 #endif /* RX_ENABLE_TSFPQ */
+
+/* free continuation buffers off a packet into a queue of buffers */
+static int
+rxi_FreeDataBufsToQueue(struct rx_packet *p, int first, struct rx_queue * q)
+{
+    struct iovec *iov;
+    struct rx_packet * cb;
+    int count = 0;
+
+    if (first < 2)
+	first = 2;
+    for (; first < p->niovecs; first++, count++) {
+	iov = &p->wirevec[first];
+	if (!iov->iov_base)
+	    osi_Panic("rxi_PacketIOVToQueue: unexpected NULL iov");
+	cb = RX_CBUF_TO_PACKET(iov->iov_base, p);
+	RX_FPQ_MARK_FREE(cb);
+	queue_Append(q, cb);
+    }
+    p->length = 0;
+    p->niovecs = 0;
+
+    return count;
+}
 
 int
 rxi_FreeDataBufsNoLock(struct rx_packet *p, int first)
@@ -1262,7 +1315,10 @@ rxi_AllocSendPacket(register struct rx_call *call, int want)
 }
 
 #ifndef KERNEL
-
+#ifdef AFS_NT40_ENV	 
+/* Windows does not use file descriptors. */
+#define CountFDs(amax) 0
+#else
 /* count the number of used FDs */
 static int
 CountFDs(register int amax)
@@ -1279,7 +1335,7 @@ CountFDs(register int amax)
     }
     return count;
 }
-
+#endif /* AFS_NT40_ENV */
 #else /* KERNEL */
 
 #define CountFDs(amax) amax
@@ -1294,7 +1350,7 @@ CountFDs(register int amax)
  * the data length of the packet is stored in the packet structure.
  * The header is decoded. */
 int
-rxi_ReadPacket(int socket, register struct rx_packet *p, afs_uint32 * host,
+rxi_ReadPacket(osi_socket socket, register struct rx_packet *p, afs_uint32 * host,
 	       u_short * port)
 {
     struct sockaddr_in from;
@@ -1551,7 +1607,7 @@ cpytoiovec(mblk_t * mp, int off, int len, register struct iovec *iovs,
 #define m_cpytoc(a, b, c, d)  cpytoc(a, b, c, d)
 #define m_cpytoiovec(a, b, c, d, e) cpytoiovec(a, b, c, d, e)
 #else
-#if !defined(AFS_LINUX20_ENV)
+#if !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN80_ENV)
 static int
 m_cpytoiovec(struct mbuf *m, int off, int len, struct iovec iovs[], int niovs)
 {
@@ -1607,7 +1663,7 @@ m_cpytoiovec(struct mbuf *m, int off, int len, struct iovec iovs[], int niovs)
 #endif /* LINUX */
 #endif /* AFS_SUN5_ENV */
 
-#if !defined(AFS_LINUX20_ENV)
+#if !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN80_ENV)
 int
 rx_mb_to_packet(amb, free, hdr_len, data_len, phandle)
 #if defined(AFS_SUN5_ENV) || defined(AFS_HPUX110_ENV)
@@ -2328,6 +2384,15 @@ rxi_SendPacketList(struct rx_call *call, struct rx_connection *conn,
 		clock_Addmsec(&(p->retryTime),
 			      10 + (((afs_uint32) p->backoff) << 8));
 	    }
+#ifdef AFS_NT40_ENV
+	    /* Windows is nice -- it can tell us right away that we cannot
+	     * reach this recipient by returning an WSAEHOSTUNREACH error
+	     * code.  So, when this happens let's "down" the host NOW so
+	     * we don't sit around waiting for this host to timeout later.
+	     */
+	    if (call && code == -1 && errno == WSAEHOSTUNREACH)
+		call->lastReceiveTime = 0;
+#endif
 #if defined(KERNEL) && defined(AFS_LINUX20_ENV)
 	    /* Linux is nice -- it can tell us right away that we cannot
 	     * reach this recipient by returning an ENETUNREACH error
@@ -2548,7 +2613,7 @@ rxi_PrepareSendPacket(register struct rx_call *call,
 	queue_Init(&q);
 
 	/* Free any extra elements in the wirevec */
-	for (j = MAX(2, i), nb = j - p->niovecs; j < p->niovecs; j++) {
+	for (j = MAX(2, i), nb = p->niovecs - j; j < p->niovecs; j++) {
 	    queue_Append(&q,RX_CBUF_TO_PACKET(p->wirevec[j].iov_base, p));
 	}
 	if (nb)

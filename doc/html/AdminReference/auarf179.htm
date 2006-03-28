@@ -1,0 +1,150 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 4//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3672/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 3 Oct 2000 at 16:18:30                -->
+<META HTTP-EQUIV="updated" CONTENT="Tue, 03 Oct 2000 16:18:29">
+<META HTTP-EQUIV="review" CONTENT="Wed, 03 Oct 2001 16:18:29">
+<META HTTP-EQUIV="expires" CONTENT="Thu, 03 Oct 2002 16:18:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf178.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf180.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRINETD" HREF="auarf002.htm#ToC_193">inetd (AFS version)</A></H2>
+<A NAME="IDX5049"></A>
+<A NAME="IDX5050"></A>
+<A NAME="IDX5051"></A>
+<A NAME="IDX5052"></A>
+<A NAME="IDX5053"></A>
+<P><STRONG>Purpose</STRONG>
+<P>Initializes the Internet service daemon
+<P><STRONG>Synopsis</STRONG>
+<PRE><B>inetd</B> [<B>-d</B>]  [&lt;<VAR>configfile</VAR>>]
+</PRE>
+<P><STRONG>Description</STRONG>
+<P>The AFS-modified <B>inetd</B> program functions like the standard UNIX
+<B>inetd</B> program, but also enables users of the remote services it
+supports to access them as authenticated AFS users, provided that the
+supported services are also AFS-modified versions that pass AFS tokens
+(authentication information). Examples of supported services are the
+<B>rcp</B> and <B>rsh</B> programs.
+<P>The AFS <B>inetd</B> program can service the standard UNIX versions of
+the remote services, but it is instead recommended that the standard UNIX
+version of the <B>inetd</B> program be run in parallel with the AFS
+version. Name the AFS version something like
+<B>inetd.afs</B> and use it to service requests from AFS-modified
+programs; use the standard <B>inetd</B> program to service requests
+from standard UNIX programs. This separation requires using two
+different <B>inetd.conf</B> files, as described in the following
+section.
+<P><STRONG>Cautions</STRONG>
+<P>Several configuration changes are necessary for token passing to work
+correctly with the AFS version of the <B>inetd</B> program. There
+are possibly other UNIX-based requirements or restrictions not mentioned
+here; consult the UNIX manual page. (One important restriction is
+that there can be no blank lines in the configuration file other than at the
+end.)
+<P>The requirements and restrictions include the following. They assume
+that the <B>inetd.afs</B> process is running in parallel with the
+standard <B>inetd</B> process.
+<UL>
+<P><LI>For token passing to work, the request must come from the AFS version of
+the remote service (such as the AFS <B>rcp</B> or AFS <B>rsh</B>
+command). If the remote service is the standard UNIX version, it cannot
+pass a token. The issuer of the remote command is authenticated only in
+the local file system, not with AFS.
+<P><LI>The machine's initialization files (<B>/etc/rc</B> file or
+equivalent) must invoke both the standard <B>inetd</B> and
+<B>inetd.afs</B> programs.
+<P><LI>An AFS-specific <B>inetd.conf</B> file, perhaps called
+<B>inetd.conf.afs</B>, must exist alongside the standard
+one. When initializing the <B>inetd.afs</B> program, specify
+this configuration file rather than the standard one. Each line in the
+<B>inetd.conf.afs</B> file must include an additional field,
+fifth from the left, to specify the identity under which the program is to
+run. The normal choice is the local superuser <B>root</B>.
+The following sample shows the only lines that need to appear in this
+file: 
+<PRE>   ta-rauth stream tcp nowait root internal          ta-rauth
+   shell    stream tcp nowait root /usr/etc/rshd     rshd
+   login    stream tcp nowait root /usr/etc/rlogind  rlogind
+</PRE> 
+<P>Substitute appropriate values for the binary locations and names in the
+instructions, particularly for the <TT>shell</TT> and <TT>login</TT>
+processes. Include the <TT>login</TT> instruction only if the
+AFS-modified versions of login utilities are also in use in the cell;
+otherwise, refer to <TT>login</TT> in the standard
+<B>inetd.conf</B> instead. 
+<P>Note also that some system types use different process names. For
+example, on Sun system types change <TT>rshd</TT> to
+<TT>in.rshd</TT> and <TT>rlogind.afs</TT> to
+<TT>in.rlogind.afs</TT> in the <TT>shell</TT> and
+<TT>login</TT> instructions, respectively.
+<P><LI>Edit the standard <B>inetd.conf</B> file (referenced by the
+standard <B>inetd</B> process): comment out the <TT>shell</TT>
+instruction and, if AFS-modified versions of login utilities are in use in the
+cell, the <TT>login</TT> instruction. The
+<B>inetd.conf.afs</B> file references these processes
+instead. Retain the <TT>login</TT> instruction if AFS-modified
+versions of login utilities are not being used. Alter the
+<TT>ftp</TT> instruction to refer to the AFS version of the <B>ftpd</B>
+process, if it is substituted for the standard version. Do not insert
+the extra fifth column into instructions in the standard
+<B>inetd.conf</B> file if it does not already appear there.
+See the following <B>Examples</B> section for an illustration.
+</UL>
+<P><STRONG>Options</STRONG>
+<P>See the UNIX manual page for the <B>inetd</B> program.
+<P><STRONG>Examples</STRONG>
+<P>The following are sample <B>inetd.conf.afs</B> and
+<B>inetd.conf</B> files, appropriate for use when the
+<B>inetd.afs</B> program is running in parallel with the standard
+<B>inetd</B> and AFS-modified login utilities are being used in the
+cell. Changes to the standard <B>inetd.conf</B> file include
+referencing the AFS version of the <B>ftpd</B> binary and commenting out
+the <TT>shell</TT> and <TT>login</TT> lines. The example
+<B>inetd.conf</B> file does not include the extra fifth
+column. Do not use these examples without modifying them appropriately
+for the local machine type or cell.
+<PRE>   # AFS version of Internet server configuration database 
+   #(EXAMPLE ONLY)
+   #
+   ta-rauth stream tcp nowait root internal           ta-rauth
+   shell    stream tcp nowait root /usr/etc/rshd      rshd
+   login    stream tcp nowait root /usr/etc/rlogind   rlogind
+   
+   # Standard version of Internet server configuration database 
+   #(EXAMPLE ONLY)
+   #
+   ftp	  stream tcp nowait /etc/ftpd.afs   ftpd.afs
+   telnet stream tcp nowait /etc/telnetd    telnetd
+   #shell stream tcp nowait /etc/rshd       rshd
+   #login stream tcp nowait /etc/rlogind    rlogind
+   finger stream tcp nowait /usr/etc/fingd  fingd
+   uucp	  stream tcp nowait /etc/uucpd	    uucpd
+   exec	  stream tcp nowait /etc/rexecd	    rexecd
+   comsat dgram	 udp wait   /etc/comsat	    comsat
+   talk	  dgram	 udp wait   /etc/talkd	    talkd
+   ntalk  dgram	 udp wait   /usr/etc/ntalkd talkd
+   time	  dgram	 udp wait   /etc/miscd	    timed
+</PRE>
+<P><STRONG>Privilege Required</STRONG>
+<P>See the UNIX manual page for the <B>inetd</B> program.
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf228.htm#HDRRCP">rcp (AFS version)</A>
+<P><A HREF="auarf229.htm#HDRRSH">rsh (AFS version)</A>
+<P>UNIX manual page for <B>inetd</B>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf178.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf180.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

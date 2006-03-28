@@ -17,7 +17,13 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 # System specific build commands and flags
 DEFINES= -D_REENTRANT -DKERNEL -DUKERNEL
 KOPTS=
-CFLAGS=-I. -I.. -I${TOP_OBJDIR}/src/config ${FSINCLUDES} $(DEFINES) $(KOPTS) ${DBG}
+SYS_NAME=@AFS_SYSNAME@
+ifeq (${SYS_NAME}, ppc64_linux26)
+CFLAGS=-fPIC
+else
+CFLAGS=
+endif
+CFLAGS+= -I. -I.. -I${TOP_OBJDIR}/src/config ${FSINCLUDES} $(DEFINES) $(KOPTS) ${DBG}
 OPTF=-O
 # WEBOPTS = -I../nsapi -DNETSCAPE_NSAPI -DNET_SSL -DXP_UNIX -DMCC_HTTPD
 

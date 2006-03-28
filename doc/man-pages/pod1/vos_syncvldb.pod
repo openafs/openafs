@@ -1,0 +1,139 @@
+=head1 NAME
+
+vos syncvldb - Verifies VLDB entries for volumes residing at specified site
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<vos syncvldb> S<<< [B<-server> <I<machine name>>] >>>
+    S<<< [B<-partition> <I<partition name>>] >>> S<<< [B<-volume> <I<volume name or ID>>] >>>
+    S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>] [B<-verbose>]
+    [B<-help>]
+
+B<vos syncv> S<<< [B<-s> <I<machine name>>] >>> S<<< [B<-p> <I<partition name>>] >>>
+    S<<< [B<-vo> <I<volume name or ID>>] >>> S<<< [B<-c> <I<cell name>>] >>> [B<-n>] [B<-l>]
+    [B<-ve>] [B<-h>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<vos syncvldb> command verifies that the status of the volumes housed
+either on all partitions on the file server machine specified by the
+B<-server> argument, or on the single partition specified by the
+B<-server> and B<-partition> arguments, is recorded correctly in the
+VLDB. If the B<-volume> argument is included to indicate a single volume,
+the command compares only its status on the file server machine with its
+VLDB entry.
+
+If the B<-volume> argument is not included, the command interpreter
+obtains from the Volume Server a list of the volumes that reside on each
+partition, then changes information in the VLDB as necessary to reflect
+their state on the partition. For example, it creates or updates a VLDB
+entry when it finds a volume for which the VLDB entry is missing or
+incomplete. However, if there is already a VLDB entry that defines a
+different location for the volume, or there are irreconcilable conflicts
+with other VLDB entries, it instead writes a message about the conflict to
+the standard error stream. The command never removes volumes from the file
+server machine.
+
+To achieve complete VLDB consistency, run this command on all file server
+machines in the cell, and then run the B<vos syncserv> command on all file
+server machines in the cell.
+
+Using the B<-volume> argument basically combines the effects of this
+command with those of the B<vos syncserv> command, for a single
+volume. The command not only verifies that the VLDB entry is correct for
+the specified volume type (read/write, backup, or read-only), but also
+checks that any related volume types mentioned in the VLDB entry actually
+exist at the site listed in the entry. It is not necessary to provide the
+B<-server> argument (and optionally, B<-partition> argument); if one or
+both is provided, the results are reliable only if they specify the actual
+location of the volume indicated by the B<-volume> argument.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-server> <I<server name>>
+
+Identifies the file server machine housing the volumes for which to verify
+VLDB entries. Provide the machine's IP address or its host name (either
+fully qualified or using an unambiguous abbreviation). For details, see
+L<vos(1)>.
+
+=item B<-partition> <I<partition name>>
+
+Identifies the partition housing the volumes for which to verify VLDB
+entries. Provide the B<-server> argument along with this one. Provide the
+partition's complete name with preceding slash (for example, C</vicepa>)
+or use one of the three acceptable abbreviated forms. For details, see
+L<vos(1)>.
+
+=item B<-volume> <I<volume name or ID>>
+
+Specifies the name or volume ID number of a single volume for which to
+verify the VLDB entry. This argument can be combined with the B<-server>
+(and optionally, the B<-partition>) argument.
+
+=item B<-cell> <I<cell name>>
+
+Names the cell in which to run the command. Do not combine this argument
+with the B<-localauth> flag. For more details, see L<vos(1)>.
+
+=item B<-noauth>
+
+Assigns the unprivileged identity C<anonymous> to the issuer. Do not
+combine this flag with the B<-localauth> flag. For more details, see
+L<vos(1)>.
+
+=item B<-localauth>
+
+Constructs a server ticket using a key from the local
+F</usr/afs/etc/KeyFile> file. The B<vos> command interpreter presents it
+to the Volume Server and Volume Location Server during mutual
+authentication. Do not combine this flag with the B<-cell> argument or
+B<-noauth> flag. For more details, see L<vos(1)>.
+
+=item B<-verbose>
+
+Produces on the standard output stream a detailed trace of the command's
+execution. If this argument is omitted, only warnings and error messages
+appear.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 EXAMPLES
+
+The following example command verifies the VLDB entry for each volume
+stored on the file server machine C<fs4.abc.com>.
+
+   % vos syncvldb fs4.abc.com
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be listed in the F</usr/afs/etc/UserList> file on the
+machine specified with the B<-server> argument and on each database server
+machine. If the B<-localauth> flag is included, the issuer must instead be
+logged on to a server machine as the local superuser C<root>.
+
+=head1 SEE ALSO
+
+L<vos(1)>,
+L<vos_syncserv(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

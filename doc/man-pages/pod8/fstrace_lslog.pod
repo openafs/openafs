@@ -1,0 +1,114 @@
+=head1 NAME
+
+fstrace lslog - Displays information about a log
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<fstrace lslog> S<<< [B<-set> <I<set name>>+] >>> S<<< [B<-log> <I<log name>>] >>>
+    [B<-long>] [B<-help>]
+
+B<fstrace lsl> S<<< [B<-s> <I<set name>>+] >>> S<<< [B<-log> <I<log name>>] >>> [B<-lon>]
+    [B<-h>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<fstrace lslog> command reports whether the C<cmfx> log is available
+for use. If the B<-long> argument is included, the output reports the
+log's defined size, and whether that amount of space is currently
+allocated in kernel memory or not.
+
+To change the C<cmfx> trace log's size, use the B<fstrace setlog>
+command. To display or set whether space is allocated for it in kernel
+memory, use the B<fstrace lsset> or B<fstrace setset> command to display
+or set the state of the corresponding C<cm> event set, respectively.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-set> <I<set name>>+
+
+Names the event set for which to display information about the
+corresponding trace log. The only acceptable value is C<cm> (for which the
+associated trace log is C<cmfx>). Provide either this argument or the
+B<-log> argument, or omit both to display information about the C<cmfx>
+log by default.
+
+=item B<-log> <I<log name>>
+
+Names the trace log about which to report. The only acceptable value is
+C<cmfx>. Provide either this argument or the B<-set> argument, or omit
+both to report on the C<cmfx> log by default.
+
+=item B<-long>
+
+Reports the defined size of the log in kilobyte units and whether that
+amount of space is currently allocated in kernel memory.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 OUTPUT
+
+By default, the B<fstrace lslog> command displays only the name of the
+available log, C<cmfx>, in the following format:
+
+   Available logs:
+   cmfx
+
+When the B<-long> flag is included, the output also reports the defined
+size of the log in kilobytes, and whether or not that amount of space is
+currently allocated in kernel memory, in the following format:
+
+   Available logs:
+   cmfx : <log_size> kbytes (allocated | unallocated)
+
+The C<allocated> state indicates that the indicated number of kilobytes is
+reserved for the C<cmfx> trace log in kernel memory. The C<cm> event set's
+state is either C<active> or C<inactive>, as reported by the B<fstrace
+lsset> command, and set by the B<fstrace setset> command's B<-active> or
+B<-inactive> flags respectively.
+
+The C<unallocated> state indicates that no kernel memory is currently
+reserved for the C<cmfx> trace log. The B<cm> event set's state is
+C<dormant>, as reported by the B<fstrace lsset> command and set by the
+B<fstrace setset> command's B<-dormant> flag. If the event set's state is
+later changed to active or inactive, the number of kilobytes indicated as
+<log_size> are again allocated in kernel memory.
+
+=head1 EXAMPLES
+
+The following example uses the -long flag to display information
+about the C<cmfx> log:
+
+   # fstrace lslog -log cmfx -long
+   Available logs:
+   cmfx : 60 kbytes (allocated)
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be logged in as the local superuser C<root>.
+
+=head1 SEE ALSO
+
+L<fstrace(8)>,
+L<fstrace_lsset(8)>,
+L<fstrace_setlog(8)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

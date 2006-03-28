@@ -1,0 +1,1148 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 4//EN">
+<HTML><HEAD>
+<TITLE>Administration Guide</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3570/auagd000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 2 Oct 2000 at 11:42:14                -->
+<META HTTP-EQUIV="updated" CONTENT="Mon, 02 Oct 2000 11:42:13">
+<META HTTP-EQUIV="review" CONTENT="Tue, 02 Oct 2001 11:42:13">
+<META HTTP-EQUIV="expires" CONTENT="Wed, 02 Oct 2002 11:42:13">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Guide</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auagd002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auagd015.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auagd017.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auagd026.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<HR><H1><A NAME="HDRWQ419" HREF="auagd002.htm#ToC_491">Configuring Client Machines with the package Program</A></H1>
+<P>The <B>package</B> program automates many aspects of the
+client configuration process. With the <B>package</B> program, you
+can easily configure the local disk of numerous clients by defining global
+configuration files.
+<A NAME="IDX7519"></A>
+<A NAME="IDX7520"></A>
+<A NAME="IDX7521"></A>
+<A NAME="IDX7522"></A>
+<HR><H2><A NAME="HDRWQ420" HREF="auagd002.htm#ToC_492">Summary of Instructions</A></H2>
+<P>This chapter explains how to perform the following tasks by
+using the indicated commands or instructions in a prototype file:
+<BR>
+<TABLE WIDTH="100%">
+<TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="37%">Configure a client machine's local disk
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="63%"><B>package</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="37%">Define directory
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="63%"><B>D</B> [<VAR>update_code</VAR>] <VAR>directory</VAR> <VAR>owner</VAR>
+<VAR>group</VAR> <VAR>mode_bits</VAR>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="37%">Define file
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="63%"><B>F</B> [<VAR>update_code</VAR>] <VAR>file</VAR> <VAR>source_file</VAR>
+[<VAR>owner</VAR> <VAR>group</VAR> <VAR>mode_bits</VAR>]
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="37%">Define symbolic link
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="63%"><B>L</B> [<VAR>update_code</VAR>] <VAR>link</VAR> <VAR>actual_file</VAR>
+[<VAR>owner</VAR> <VAR>group</VAR> <VAR>mode_bits</VAR>]
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="37%">Define block special device
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="63%"><B>B</B> <VAR>device_name</VAR> <VAR>major_device_number</VAR>
+<VAR>minor_device_number</VAR> <VAR>owner</VAR> <VAR>group</VAR> <VAR>mode_bits</VAR>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="37%">Define character special device
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="63%"><B>C</B> <VAR>device_name</VAR> <VAR>major_device_number</VAR>
+<VAR>minor_device_number</VAR> <VAR>owner</VAR> <VAR>group</VAR> <VAR>mode_bits</VAR>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="37%">Define socket
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="63%"><B>S</B> <VAR>socket_name</VAR> [<VAR>owner</VAR> <VAR>group</VAR>
+<VAR>mode_bits</VAR>]
+</TD></TR></TABLE>
+<HR><H2><A NAME="HDRWQ422" HREF="auagd002.htm#ToC_493">Using the package Program</A></H2>
+<A NAME="IDX7523"></A>
+<A NAME="IDX7524"></A>
+<P>The <B>package</B> program uses system-independent <I>prototype
+files</I> to define a standard disk configuration; a prototype file
+indicates which files reside on the local client disk, which files are links
+into AFS, etc. The prototype files are then compiled into
+<I>configuration files</I> for each different system type.
+<P>Not all client machines have the same configuration. If desired, you
+can create different prototype files for different client functions (print
+server, regular client, etc.).
+<P>The <B>package</B> program compares the contents of a local client disk
+with the configuration file. If there are any differences, the
+<B>package</B> program makes the necessary updates to the local disk by
+copying the files from AFS onto the disk. The <B>package</B>
+program can also be configured to delete files that are not part of the system
+configuration or automatically reboot the client when certain files (such as
+the <B>dkload</B> file) have been updated.
+<P>The <B>package</B> program does require that you take some time to
+prepare the prototype files, but it provides the following benefits:
+<UL>
+<P><LI>You no longer need to configure each machine individually; the
+prototype configuration file applies to all machines.
+<P><LI>You can change the configuration of machines simply by changing the
+prototype file and rebooting the clients.
+<P><LI>Disk organization is uniform across a set of machines.
+<P><LI>The configuration files serve as a record of files on the disk and
+symbolic links into AFS.
+</UL>
+<P><H3><A NAME="Header_494" HREF="auagd002.htm#ToC_494">Using Package on File Server Machines</A></H3>
+<P>While the <B>package</B> program was designed for use on client
+machines, it can also be used to configure a file server machine's
+disk. However, if any of the files referred to in a configuration file
+reside in volumes on the file server, the <B>package</B> program cannot
+access the volumes during reboot (and until the File Server process and Volume
+Server process start up again).
+<P>Since the <B>package</B> program aborts when it cannot access a file,
+you need to eliminate references to files in AFS that reside in volumes on the
+file server machine. Because of these constraints, the remainder of
+this chapter assumes the <B>package</B> program is being used for client
+configurations.
+<HR><H2><A NAME="HDRWQ423" HREF="auagd002.htm#ToC_495">Package Overview</A></H2>
+<P>There are three main steps to follow before running the
+<B>package</B> program: 
+<OL TYPE=1>
+<P><LI>Preparing function-specific <I>prototype files</I> (and any included
+<I>library files</I>).
+<P><LI>Modifying the <B>package</B> <B>Makefile</B> and compiling
+prototype files into system-specific <I>configuration files</I>.
+<P><LI>Modifying client machines to run the appropriate <B>package</B>
+configuration file automatically.
+</OL>
+<P>The following sections summarize these steps.
+<P><H3><A NAME="Header_496" HREF="auagd002.htm#ToC_496">Preparing Prototype Files</A></H3>
+<A NAME="IDX7525"></A>
+<A NAME="IDX7526"></A>
+<P>Begin by listing the different functions or roles client machines perform
+and the local disk configurations that support those functions. Example
+roles include a standard client that provides AFS access, a print server that
+drives a printer, and a backup machine on which you issue commands from the
+<B>backup</B> suite. Create a different <I>prototype file</I>
+for each role.
+<P>A prototype file defines the disk configuration that supports a specific
+role. Usually, prototype files are function-specific, but system
+independent; system-specific values can be defined using variables and
+library files. Then, when you modify a variable or library file, the
+change gets propagated to all appropriate clients when the <B>package</B>
+program is invoked.
+<P>Methods for building flexible prototype files that are easy to maintain are
+presented in <A HREF="#HDRWQ427">Example Prototype and Library Files</A>.
+<P><H3><A NAME="HDRWQ424" HREF="auagd002.htm#ToC_497">Compiling Prototype Files</A></H3>
+<A NAME="IDX7527"></A>
+<A NAME="IDX7528"></A>
+<A NAME="IDX7529"></A>
+<P>Prototype files are usually system-independent, but can include
+<TT>ifdef</TT> statements to satisfy the needs of different system
+types. The prototype files are compiled to generate operating-system
+specific versions. During compilation, the <B>package</B> program
+selects the definitions suitable for each system type and replaces any
+variables with actual values. These compiled, machine-specific files
+are called <I>configuration files</I>.
+<P>Prototype files are compiled using a standard-type <B>Makefile</B>
+file, as described in <A HREF="#HDRWQ438">The Package Makefile File</A>.
+<P><H3><A NAME="Header_498" HREF="auagd002.htm#ToC_498">Preparing Clients</A></H3>
+<P>Once system-specific configuration files exist, the <B>package</B>
+program is ready to run on the clients. You must first make the
+<B>package</B> binary available and specify the correct configuration
+file.
+<P>Modify the clients as described below:
+<OL TYPE=1>
+<P><LI>Create a <B>.package</B> file in the root ( <B>/</B> )
+directory of each client's local disk that defines the default
+configuration file.
+<P><LI>Make the <B>package</B> binary (<B>/etc/package</B>) available on
+the local disk.
+<P><LI>Modify the machine's initialization file (<B>/etc/rc</B> or
+equivalent) to include a call to the <B>package</B> program.
+</OL>
+<P>These steps are discussed more completely in <A HREF="#HDRWQ447">Modifying Client Machines</A>.
+<HR><H2><A NAME="HDRWQ425" HREF="auagd002.htm#ToC_499">The package Directory Structure</A></H2>
+<A NAME="IDX7530"></A>
+<P>This section assumes that the <B>package</B>-related files have been
+installed in three subdirectories of the
+<B>/afs/</B><VAR>cellname</VAR>/<B>wsadmin</B> directory:
+<B>src</B>, <B>lib</B> and <B>etc</B>, as recommended in the
+<I>IBM AFS Quick Beginnings</I>.
+<P>These directories contain several sample prototype, library, and
+configuration files, which can help to clarify how the <B>package</B>
+program works. However, they are not necessarily suitable for use in
+your cell; you must modify them for your needs.
+<P><H3><A NAME="HDRWQ426" HREF="auagd002.htm#ToC_500">The src directory</A></H3>
+<P>The <B>src</B> directory contains some sample prototype
+files (used to build the configuration files), the <B>Makefile</B> file
+used to build them, and the resulting compiled configuration files.
+<P>Prototype files have names of the form
+<VAR>function</VAR>.<B>proto</B>. For example, a
+<B>minimal.proto</B> file defines the minimum set of library files
+need to run AFS and a<B>staff.dkload.proto</B> file defines
+a client configuration that uses the a dynamic kernel loading program.
+Prototype files can also contain definitions for system administrative files,
+such as a <B>hosts.equiv</B> file.
+<P>The <B>Makefile</B> file is used to compile the system-independent
+prototype files into system-specific configuration files. To learn how
+to modify this file for use in your cell, see <A HREF="#HDRWQ438">The Package Makefile File</A>.
+<P>Configuration files are the compiled version of the prototype files and are
+named <VAR>function</VAR><B>.</B><VAR>sysname</VAR>.
+Configuration files also appear in the <B>etc</B> subdirectory, which the
+<B>package</B> program accesses when configuring disks.
+<P><H3><A NAME="Header_501" HREF="auagd002.htm#ToC_501">The lib directory</A></H3>
+<P>The <B>lib</B> directory contains many of the example library files
+referred to in prototype files. For example, the
+<B>base.generic</B> file is a system-independent file which
+includes a definition of the cell name, system options, and variables;
+these are used to set the <VAR>owner</VAR>, <VAR>group</VAR>, and
+<VAR>mode_bits</VAR> fields in the file and the symbolic link
+definitions.
+<P><H3><A NAME="Header_502" HREF="auagd002.htm#ToC_502">The etc directory</A></H3>
+<P>The <B>etc</B> directory contains the system-specific configuration
+files built from the prototype files in the <B>src</B>
+subdirectory. The <B>package</B> program uses the configuration
+files in the <B>etc</B> directory to configure disks.
+<P>Some of the example files include <B>minimal</B> and <B>staff</B>
+prototype files compiled for different system types.
+<HR><H2><A NAME="HDRWQ427" HREF="auagd002.htm#ToC_503">Example Prototype and Library Files</A></H2>
+<A NAME="IDX7531"></A>
+<A NAME="IDX7532"></A>
+<P>A prototype file is a template that defines the configuration of a
+client's local disk. Prototype files are usually function-specific
+(for example, a backup machine, print server, etc.) but
+system-independent. Prototype files support the use of <TT>ifdef</TT>
+statements and variables, so you can include system-specific
+definitions. The actual system-specific configuration file is generated
+when the prototype file is compiled.
+<P>The components defined in a prototype file can include the directories,
+files, symbolic links, block special devices, character special devices and
+sockets that need to reside on a client's local disk in order for it to
+perform a specific role, such as a print server or backup machine.
+Thus, we recommend that you construct a unique prototype file for each
+different client function.
+<P>To make the <B>package</B> program more effective and easy to maintain,
+create prototype files that are modular and generic, instead of specific, by
+using library files and variables:
+<A NAME="IDX7533"></A>
+<A NAME="IDX7534"></A>
+<UL>
+<P><LI>By creating general-purpose library files, you can include the same
+library file in many prototype files. Thus, you can make global
+configuration changes by modifying a single library file; you do not need
+to modify each prototype file.
+<P><LI>Variables enable you to change definitions simply by changing the
+variable's value.
+</UL>
+<P><H3><A NAME="HDRWQ428" HREF="auagd002.htm#ToC_504">An Example Prototype File</A></H3>
+<A NAME="IDX7535"></A>
+<P>The following is part of an example prototype file that contains the
+minimum definitions necessary to run AFS. A similar file called
+<B>minimal.proto</B> can reside in your <B>src</B>
+subdirectory. As recommended, this prototype file references library
+files and does not include actual definitions.
+<PRE>            .
+            .
+   # Package prototype for a minimal configuration.
+   # Base components
+   %include ${wsadmin}/lib/base.generic
+   # Machine-specific components
+   %ifdef rs_aix42
+   %include ${wsadmin}/lib/rs_aix42.readonly
+   %include ${wsadmin}/lib/rs_aix42.AFS
+   %endif rs_aix42
+   %ifdef alpha_dux40
+   %include ${wsadmin}/lib/alpha_dux40.readonly
+   %include ${wsadmin}/lib/alpha_dux40.AFS
+   %endif alpha_dux40
+   %ifdef sun4x_56
+   %include ${wsadmin}/lib/sun4x_56.readonly
+   %include ${wsadmin}/lib/sun4x_56.AFS
+   %endif sun4x_56
+            .
+            .
+</PRE>
+<P>In the previous example, the first uncommented line includes the
+<B>/lib/base.generic</B> library file. This library file can
+contain definitions appropriate for many prototype files; the
+<B>base.generic</B> library file can also be included in other
+prototype files, like a <B>staff.proto</B> or
+<B>backup.proto</B> file. An example library file appears in
+the following section.
+<P>Note that system-specific definitions are permitted through the use of
+<TT>ifdef</TT> statements and variables (for example, <TT>${wsadmin}</TT>
+is used to specify pathnames). Thus, the same prototype file can be
+used to configure a machine running AIX 4.2 or Solaris 2.6, even
+though they require different files, directories, symbolic links and
+devices.
+<P>In the next uncommented lines of this example, the administrator has
+constructed different library files for different system types. Each of
+these is compiled into unique configuration files. For instance, the
+following lines in this prototype file tell the <B>package</B> program to
+use the library files <B>lib/rs_aix42.readonly</B> and
+<B>lib/rs_aix42.AFS</B> for the configuration file when the value
+<TT>rs_aix42</TT> has been declared. (The system-type definition is
+declared in the <B>Makefile</B>; see <A HREF="#HDRWQ438">The Package Makefile File</A>.)
+<PRE>   %ifdef rs_aix42
+   %include ${wsadmin}/lib/rs_aix42.readonly
+   %include ${wsadmin}/lib/rs_aix42.AFS
+   %endif rs_aix42
+</PRE>
+<P>Similarly, the following lines tell the <B>package</B> program to use
+the library files <B>lib/sun4x_56.readonly</B> and
+<B>lib/sun4x_56.AFS</B> when the value <TT>sun4x_56</TT> has been
+declared.
+<PRE>   %ifdef sun4x_56
+   %include ${wsadmin}/lib/sun4x_56.readonly
+   %include ${wsadmin}/lib/sun4x_56.AFS
+   %endif sun4x_56
+</PRE>
+<P><H3><A NAME="Header_505" HREF="auagd002.htm#ToC_505">Example Library File</A></H3>
+<A NAME="IDX7536"></A>
+<A NAME="IDX7537"></A>
+<A NAME="IDX7538"></A>
+<A NAME="IDX7539"></A>
+<P>The following is part of an example library file for basic configuration
+definitions. A similar file, called <B>base.generic</B>, can
+reside in your <B>lib</B> subdirectory. Note that configurations
+are defined using standard <TT>ifdef</TT> statements.
+<PRE>            .
+            .
+   #
+   # Base package definitions.
+   #
+   %ifndef	cell
+   %define	cell	abc.com
+   %endif	cell
+   %ifndef	sys
+   %include /etc/package.sys
+   %endif	sys
+   %define	${name}		${name}
+   %define	${cpu}		${cpu}
+   %define	${sys}		${sys}
+   %define	${dept}		${dept}
+   %define	${hostname}	${hostname}
+   %ifdef	rs_aix42
+   %	define 	AIX
+   %	define	rootlinks
+   %ifndef	noafsd 
+   %	define	afsd
+   %endif	noafsd
+   %endif	rs_aix42
+            .
+            .
+   #
+   # Some definitions to handle common combinations of owner, group,
+   # and protection fields.
+   #
+   %define	rzmode		root wheel 600
+   %define	usermode	root wheel 666
+   %define      systemmode	root wheel 644
+   %define	diskmode	root wheel 644
+   %define	ptymode		root wheel 666
+   %define	ttymode		root wheel 666
+            .
+            .
+   %define aix_rootbin	   root bin
+   %define aix_rootprintq  root printq
+   %define aix_rootstaff   root staff
+   %define aix_rootsys	   root system
+   %define aix_binbin      bin bin
+   %define aix_binmail	   bin mail
+   %define aix_binsys	   bin system
+   %define aix_addsys	   adduser system
+   %define aix_romode	   444
+   %define aix_loginmode   544
+   %define aix_usermode	   666
+   %define aix_systemmode  644
+   %define aix_textmode	   644
+   %define aix_rwmode1	   660
+   %define aix_allrugw	   664
+</PRE>
+<P>The following example library file uses <B>package</B>-specific syntax
+to define files, directories, sockets, etc. Each line, called a
+<I>configuration file instruction</I>, defines a specific component of
+disk configuration. The proper syntax for these instructions is briefly
+described in <A HREF="#HDRWQ429">Package Configuration File Instruction Syntax</A>; see the reference page for the <B>package</B>
+configuration file in the <I>IBM AFS Administration Reference</I> for
+detailed descriptions.
+<P>In this example, the library file contains instructions specific to the
+configuration of an <B>rs_aix42</B> machine. You can have similar
+library files in your <B>lib</B> subdirectory.
+<PRE>            .
+            .
+   #
+   # Generic configuration for an AFS rs_aix42 machine.
+   #
+   D	/                                       ${treemode}
+   D	/afs
+   FAQ	/unix	       ${machine}/unix.std 	${binmode}
+   LA	/unix.std	/unix
+   D	/bin					${treemode}
+   F	/bin/as		${machine}		${binmode}
+   F	/bin/ld		${machine}		${binmode}
+   F	/bin/nm		${machine}		${binmode}
+   FO	/bin/login	${afstest}		${suidmode}
+            .
+            .
+   FAQ  /usr/vice/etc/ThisCell  ${common}/etc/ThisCell ${textmode}
+   FQ	/usr/vice/etc/afsd      ${afstest}/root.client ${binmode}
+   FA	/usr/vice/etc/bos       ${afstest}/bin/bos     ${binmode}
+   FA	/usr/vice/etc/fs        ${afstest}/bin/fs      ${binmode}
+</PRE>
+<HR><H2><A NAME="HDRWQ429" HREF="auagd002.htm#ToC_506">Package Configuration File Instruction Syntax</A></H2>
+<A NAME="IDX7540"></A>
+<A NAME="IDX7541"></A>
+<P>Within a library file, configuration file instructions are used to define
+the specific disk configuration. Each instruction can be used to define
+a file, directory, socket, or device on the client machine. The syntax
+for each valid instruction type is described briefly here; detailed
+descriptions of the fields appear in the <I>AFS Command Reference
+Manual</I>.
+<UL>
+<P><LI><B>D</B> defines a directory
+<P><LI><B>F</B> defines a file
+<P><LI><B>L</B> defines a link
+<P><LI><B>B</B> defines a block special device
+<P><LI><B>C</B> defines a character special device
+<P><LI><B>S</B> defines a socket
+</UL>
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Note:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">Each configuration instruction must appear on a single, unbroken line.
+Instructions sometimes appear here on multiple lines only for
+legibility.
+<P>The configuration file must be completely correct. If there are any
+syntax errors or incorrect values, the <B>package</B> command interpreter
+exits without executing any instruction.
+</TD></TR></TABLE>
+<P><H3><A NAME="HDRWQ430" HREF="auagd002.htm#ToC_507">Local Files versus Symbolic Links</A></H3>
+<P>You can take advantage of the AFS by keeping the number of
+files on the local client disk to a minimum; instead, create symbolic
+links that point into AFS. This can improve machine performance by
+allowing more space for caching and swapping.
+<P>Some files, however, must reside on the local disk, as described
+below. Create these files in the prototype or library files using the
+<B>F</B> (file) instruction, not the <B>L</B> (symbolic link)
+instruction.
+<P>The following types of files must reside on the local disk of all AFS
+clients:
+<UL>
+<P><LI>Boot sequence files executed before the <B>afsd</B> program
+runs. 
+<P>Until <B>afsd</B> runs and initializes the Cache Manager, AFS is
+inaccessible from the client. Any files that are executed before the
+<B>afsd</B> program runs must reside on the local client disk.
+<P>For example, on a machine that uses a disk cache, the
+<B>/usr/vice/cache</B> directory must exist when you bring up the Cache
+Manager, so that there is a location to create cache files. The binary
+files <B>/etc/mount</B> and <B>/etc/umount</B> must be available on
+the local disk as the machine boots in order to mount the
+<B>/usr/vice/cache</B> directory.
+<P>In addition, certain UNIX files, such as initialization files
+(<B>/etc/rc</B> or equivalent) and file system mapping files
+(<B>/etc/fstab</B> or equivalent), must reside on the local disk.
+<P><LI>Diagnostic and recovery files 
+<P>Certain commands can be used to diagnose and recover from problems caused
+by a file server outage. It is best to keep copies of the binaries for
+these commands on the local disk. For example, store the <B>bos</B>
+and <B>fs</B> binaries in the <B>/usr/vice/etc</B> directory on the
+local disk, as well as in the <B>/usr/afsws</B> directory (which in the
+conventional configuration is a symbolic link into AFS). Then, set PATH
+variables so that the <B>/usr/afsws</B> directory appears before the
+<B>/usr/vice/etc</B> directory. Thus, even if users cannot access
+AFS (for example, due to a file server outage) they can still access copies of
+the <B>bos</B> and <B>fs</B> binaries in the <B>/usr/vice/etc</B>
+directory on the local disk.
+<P><LI>Files in the <B>/usr/vice</B> directory 
+<P>The contents of the <B>/usr/vice</B> directory, including the cache
+files in the <B>cache</B> subdirectory and the configuration files in the
+<B>etc</B> subdirectory, must reside on the local disk. For a
+description of the files in the directory, see <A HREF="auagd015.htm#HDRWQ391">Configuration and Cache-Related Files on the Local Disk</A>.
+</UL>
+<A NAME="IDX7542"></A>
+<A NAME="IDX7543"></A>
+<A NAME="IDX7544"></A>
+<A NAME="IDX7545"></A>
+<P><H3><A NAME="HDRWQ431" HREF="auagd002.htm#ToC_508">Defining a Directory</A></H3>
+<P>The <B>D</B> instruction defines a directory to be
+created on the local disk. If a symbolic link, file, or other element
+on the local disk has the same name, it is replaced with a directory.
+If the directory already exists, its owner, group, and mode bits are changed
+if necessary to conform with the instruction.
+<P>Use the following instruction to define a directory:
+<PRE>   <B>D</B>[<VAR>update_code</VAR>]   <VAR>directory</VAR>   <VAR>owner</VAR>   <VAR>group</VAR>   <VAR>mode_bits</VAR>
+</PRE>
+<P>The following example defines the <B>/usr</B> directory:
+<PRE>   D /usr root wheel 755
+</PRE>
+<A NAME="IDX7546"></A>
+<A NAME="IDX7547"></A>
+<A NAME="IDX7548"></A>
+<A NAME="IDX7549"></A>
+<P><H3><A NAME="HDRWQ432" HREF="auagd002.htm#ToC_509">Defining a File</A></H3>
+<P>The <B>F</B> instruction defines a file to be created on
+the local disk. The source file can reside in either AFS or the local
+disk.
+<P>If a file of this name already exists, then it is updated with (overwritten
+by) the source file, unless the <B>I</B> update code is specified.
+If a symbolic link or directory of this name exists, the <B>package</B>
+program replaces it with the source file.
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Note:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">Some files must reside on the local disk; they cannot be symbolic
+links. See <A HREF="#HDRWQ430">Local Files versus Symbolic Links</A>.
+</TD></TR></TABLE>
+<P>Use the following instruction to define a file:
+<PRE>   <B>F</B>[<VAR>update_code</VAR>]   <VAR>file</VAR>   <VAR>source_file</VAR>  [<VAR>owner</VAR>   <VAR>group</VAR>   <VAR>mode_bits</VAR>]
+</PRE>
+<P>An example which creates/updates the file <B>/bin/grep</B> on the local
+disk, using <B>/afs/abc.com/rs_aix42/bin/grep</B> as the
+source:
+<PRE>   F /bin/grep /afs/abc.com/rs_aix42 root wheel 755
+</PRE>
+<P>In the following example, two update codes are used, and the
+<I>owner</I>, <I>group</I> and <I>mode_bits</I> slots are left
+empty, so that the disk file adopts the source file's values for those
+slots.
+<PRE>   FAQ /usr/vice/etc/ThisCell /afs/abc.com/common/etc/ThisCell
+</PRE>
+<A NAME="IDX7550"></A>
+<A NAME="IDX7551"></A>
+<A NAME="IDX7552"></A>
+<A NAME="IDX7553"></A>
+<P><H3><A NAME="HDRWQ433" HREF="auagd002.htm#ToC_510">Defining a Symbolic Link</A></H3>
+<P>The <B>L</B> instruction defines a symbolic link to be
+created on the local disk. The symbolic link can point to the AFS file
+system or the local disk. If the identical symbolic link already
+exists, the <B>package</B> program does nothing. However, if an
+element of the same name exists on the disk as a file or directory, the
+<B>package</B> program replaces the element with a symbolic link.
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Note:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">Some files must reside on the local disk; they cannot be symbolic
+links. See <A HREF="#HDRWQ430">Local Files versus Symbolic Links</A>.
+</TD></TR></TABLE>
+<P>Use the following instruction to define a symbolic link:
+<PRE>   <B>L</B>[<VAR>update_code</VAR>]  <VAR>link</VAR> <VAR>actual_file</VAR>  [<VAR>owner</VAR>   <VAR>group</VAR>   <VAR>mode_bits</VAR>]
+</PRE>
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Note:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">Do not create a symbolic link to a file whose name begins with the number
+sign (<B>#</B>) or percent sign (<B>%</B>). The Cache Manager
+interprets such a link as a mount point to a regular or Read/Write volume,
+respectively.
+</TD></TR></TABLE>
+<P>The following example creates a symbolic link from the <B>/etc/ftpd</B>
+directory on the local disk to the
+<B>/afs/abc.com/hp_ux110/etc/ftpd</B> file in AFS. Since the
+<I>owner</I>, <I>group</I> and <I>mode_bits</I> fields are empty,
+the symbolic link adopts values for those fields from the actual file:
+<PRE>   L /etc/ftpd /afs/abc.com/hp_ux110 
+</PRE>
+<P>This example uses the <B>A</B> update code:
+<PRE>   LA /etc/printcap /afs/abc.com/common/etc/printcap.remote 
+               root wheel 644
+</PRE>
+<A NAME="IDX7554"></A>
+<A NAME="IDX7555"></A>
+<A NAME="IDX7556"></A>
+<A NAME="IDX7557"></A>
+<P><H3><A NAME="HDRWQ434" HREF="auagd002.htm#ToC_511">Defining a Block Special Device</A></H3>
+<P>The <B>B</B> instruction defines a block special device,
+which is a device that handles data in units of multibyte blocks, such as a
+disk. If a device of the same name already exists, the
+<B>package</B> program replaces it with the specified block device.
+<P>Use the following instruction to define a block special device (it appears
+on two lines here only for legibility):
+<PRE>   <B>B</B> <VAR>device_name</VAR>   <VAR>major_device_number</VAR>   <VAR>minor_device_number</VAR>  \
+      <VAR>owner</VAR>   <VAR>group</VAR>   <VAR>mode_bits</VAR>
+</PRE>
+<P>The following example defines a disk called <B>/dev/hd0a</B> to have
+major and minor device numbers <B>1</B> and <B>0</B>:
+<PRE>   B /dev/hd0a 1 0 root wheel 644
+</PRE>
+<A NAME="IDX7558"></A>
+<A NAME="IDX7559"></A>
+<A NAME="IDX7560"></A>
+<A NAME="IDX7561"></A>
+<P><H3><A NAME="HDRWQ435" HREF="auagd002.htm#ToC_512">Defining a Character Special Device</A></H3>
+<P>The <B>C</B> instruction defines a character special
+device, which is device that handles data in units of a single character at a
+time, such as a terminal or tty. If a device of the same name already
+exists, the <B>package</B> program replaces it with the specified
+character device.
+<P>Use the following instruction to define a character special device (it
+appears here on two lines only for legibility):
+<PRE>   <B>C </B><VAR>device_name</VAR>   <VAR>major_device_number</VAR>   <VAR>minor_device_number</VAR>  \
+      <VAR>owner</VAR>   <VAR>group</VAR>   <VAR>mode_bits</VAR>
+</PRE>
+<P>The following example defines the tty called <B>/dev/ttyp5</B> with
+major and minor device numbers <B>6</B> and <B>5</B>:
+<PRE>   C /dev/ttyp5 6 5 root wheel 666
+</PRE>
+<A NAME="IDX7562"></A>
+<A NAME="IDX7563"></A>
+<A NAME="IDX7564"></A>
+<A NAME="IDX7565"></A>
+<P><H3><A NAME="HDRWQ436" HREF="auagd002.htm#ToC_513">Defining a Socket</A></H3>
+<P>The <B>S</B> instruction defines a socket, which is
+communications device for UDP and TCP/IP connections. If a socket of
+the same name already exists, the <B>package</B> program replaces
+it.
+<P>Use the following instruction to define a socket:
+<PRE>   <B>S</B>   <VAR>socket_name</VAR>   [<VAR>owner</VAR>   <VAR>group</VAR>   <VAR>mode_bits</VAR>]
+</PRE>
+<P>The following example defines a socket called
+<B>/dev/printer</B>:
+<PRE>   S /dev/printer root wheel 777
+</PRE>
+<HR><H2><A NAME="HDRWQ437" HREF="auagd002.htm#ToC_514">Constructing Prototype and Library Files</A></H2>
+<A NAME="IDX7566"></A>
+<A NAME="IDX7567"></A>
+<A NAME="IDX7568"></A>
+<P>This section describes the general steps required to create
+<B>package</B> prototype and library files. Refer to the previous
+sections for guidelines, and the files in your <B>wsadmin</B> directory
+for examples. The construction of prototype and library files is
+different for each cell.
+<P><H3><A NAME="Header_515" HREF="auagd002.htm#ToC_515">To construct a prototype file and its component library files</A></H3>
+<OL TYPE=1>
+<P><LI>Determine where the three <B>package</B>-related subdirectories
+(<B>src</B>, <B>lib</B> and <B>etc</B>) reside in your cell's
+file tree; the following instructions assume they were loaded into the
+<B>/afs/</B><VAR>cellname</VAR><B>/wsadmin</B> directory, as described
+in the <I>IBM AFS Quick Beginnings</I>.
+<P><LI>Decide how many different functions you want client machines in your cell
+to perform. We recommend that you construct a separate prototype file
+for each function. Common functions include: 
+<UL>
+<P><LI>Standard workstation: provides users with access to files in AFS
+<P><LI>Printer server: drives a printer; can be combined with "staff"
+functionality
+<P><LI>Backup machine: performs backups of AFS volumes to tape by running
+the AFS Backup System software
+</UL>
+<P><LI>Determine the minimum functionality needed for all clients (such as AFS
+setup) and place these generic definitions in one or more library
+files.
+<P><LI>For each type of client (printer server, backup machine, and so on), place
+all system-independent definitions in one file, and all operating-system
+dependent definitions in another file.
+</OL>
+<HR><H2><A NAME="HDRWQ438" HREF="auagd002.htm#ToC_516">The Package Makefile File</A></H2>
+<A NAME="IDX7569"></A>
+<A NAME="IDX7570"></A>
+<A NAME="IDX7571"></A>
+<P>Once you have created the appropriate prototype and library files, you must
+compile the prototype for each system type. The result is a
+system-specific configuration file.
+<P>The <B>Makefile</B> file defines the prototype and library files used
+and the order of compilation. We recommend that you create your
+<B>Makefile</B> file by modifying the example provided with the AFS
+distribution, as described in this section. In the conventional
+configuration, it is located at
+<B>/afs/</B><VAR>cellname</VAR><B>/wsadmin/src/Makefile</B>.
+<P><H3><A NAME="Header_517" HREF="auagd002.htm#ToC_517">Overview</A></H3>
+<P>The following list summarizes the sections in the <B>package</B>
+<B>Makefile</B> file, identifying each by the header name that begins the
+section. More detailed descriptions follow.
+<DL>
+<P><DT><B><TT>CONFIG=</TT>
+</B><DD>Lists all of the configuration files to be created and defines which
+prototype files are compiled for which system types. See <A HREF="#HDRWQ439">The CONFIG Section</A>.
+<P><DT><B><TT>BASE_LIBS=</TT>
+</B><DD>Lists the pathnames of all operating-system- and function independent
+library files included in any prototype files. See <A HREF="#HDRWQ440">The BASE_LIBS Section</A>.
+<P><DT><B><TT>MACHINE_LIBS=</TT>
+</B><DD>Lists the pathnames of all operating-system-specific library files
+included in any prototype files. See <A HREF="#HDRWQ441">The MACHINE_LIBS Section</A>.
+<P><DT><B><TT>LIBS=</TT>
+</B><DD>A one-line instruction that defines <TT>LIBS</TT> as the combination of
+<TT>BASE_LIBS</TT> and <TT>MACHINE_LIBS</TT>. See <A HREF="#HDRWQ442">The LIBS Section</A>.
+<P><DT><B><TT>.SUFFIXES</TT>
+</B><DD>Defines all of the suffixes that can appear on a prototype or
+configuration file. See <A HREF="#HDRWQ443">The .SUFFIXES Section</A>.
+</DL>
+<P>Finally, the <B>Makefile</B> file contains a set of instructions that
+the <B>package</B> program follows to generate configuration files.
+It is not generally necessary to alter this section. See <A HREF="#HDRWQ444">The Makefile Instructions Section</A>.
+<P><H3><A NAME="HDRWQ439" HREF="auagd002.htm#ToC_518">The CONFIG Section</A></H3>
+<P>As mentioned, a configuration file is a prototype file that
+has been compiled for a specific operating system type. The
+<TT>CONFIG</TT> section of the <B>Makefile</B> file defines the
+prototype files to compile for each system type. The resulting compiled
+file is a system-specific configuration file.
+<P>Study the following example taken from the sample <B>Makefile</B>
+file. Configuration files are defined by specifying the
+prototype-system combination as
+<VAR>prototype_file</VAR><B>.</B><VAR>sysname</VAR>. Note that
+it is not necessary to generate a configuration file for each prototype-system
+type combination.
+<PRE>   #Makefile...
+   #	(C) Copyright IBM Corporation 1999
+   #	Licensed Materials - Property of IBM
+   #	All Rights Reserved.
+   #
+   CONFIG = \
+            staff.rs_aix42 \
+            staff.alpha_dux40 \
+            staff.xdm.alpha_dux40 \
+            staff.sun4x_56 \
+            staff.hp_ux110 \
+            minimal.rs_aix42 \
+            minimal.alpha_dux40 \
+            minimal.hp_ux110 \
+            minimal.sun4x_56
+</PRE>
+<P>An entry in the <TT>CONFIG</TT> section has the following format:
+<UL>
+<P><LI>The first part of the entry defines the prototype file and is the same as
+the prototype file name (without the <B>.proto</B>
+extension). The second part of the entry indicates the system type for
+which the prototype file is to be compiled. A complete list of these
+suffixes is in the <TT>.SUFFIXES</TT> section of the
+<B>Makefile</B> file, as described in <A HREF="#HDRWQ443">The .SUFFIXES Section</A>. This
+<VAR>prototype_file</VAR><B>.</B><VAR>sysname</VAR> definition becomes
+the name of the compiled configuration file. 
+<P>For example, <B>staff.rs_aix42</B> indicates that the
+<B>staff.proto</B> file is compiled for machines running AIX
+4.2. The resulting compiled configuration file is called
+<B>staff.rs_aix42</B>.
+<P><LI>Each configuration file must appear on a separate line.
+<P><LI>A backslash must follow the <TT>CONFIG=</TT> header and every name but
+the last one. A backslash must also appear on blank lines.
+</UL>
+<P><H3><A NAME="HDRWQ440" HREF="auagd002.htm#ToC_519">The BASE_LIBS Section</A></H3>
+<P>This section defines the complete pathname of all system-
+and function-independent library files included in any prototype file.
+(System-specific library files are defined in the <TT>MACHINE_LIBS</TT>
+section). The pathnames can include the <TT>${wsadmin}</TT> variable,
+whose value is supplied on the <B>make</B> command line.
+<P>You must include all of the library files referred to in your prototype
+files; files included but not used are ignored.
+<P>Study the following example. Note that the all entries (except the
+last one) must be followed by a backslash.
+<PRE>   BASE_LIBS = \
+	   ${wsadmin}/src/admin \
+	   ${wsadmin}/lib/devel \
+	   ${wsadmin}/lib/base.generic
+</PRE>
+<P><H3><A NAME="HDRWQ441" HREF="auagd002.htm#ToC_520">The MACHINE_LIBS Section</A></H3>
+<P>This section lists the complete pathname of all
+operating-system-specific library files included in prototype files.
+(System- and function-independent library files are defined in the
+<TT>BASE_LIBS</TT> section.)
+<P>Study the following example. Note that in this example, library
+files were grouped by operating-system type. Again, all lines (except
+the last one) must be followed by a backslash, the <TT>${wsadmin}</TT>
+variable is allowed, and files included but not used are ignored.
+<PRE>   MACHINE_LIBS = \
+           ${wsadmin}/lib/rs_aix42.generic \
+           ${wsadmin}/lib/rs_aix42.generic.dev \
+           ${wsadmin}/lib/rs_aix42.readonly \
+           ${wsadmin}/lib/rs_aix42.readwrite \
+           ${wsadmin}/lib/rt_aix42.generic.printer \
+    \
+    .
+    .
+           ${wsadmin}/lib/alpha_dux40.AFS \
+           ${wsadmin}/lib/hp_ux110.AFS \
+           ${wsadmin}/lib/sun4x_56.AFS \
+           ${wsadmin}/lib/rs_aix42.AFS
+</PRE>
+<P><H3><A NAME="HDRWQ442" HREF="auagd002.htm#ToC_521">The LIBS Section</A></H3>
+<P>This section contains only one instruction, which indicates
+that <TT>LIBS</TT> is defined as the combination of <TT>MACHINE_LIBS</TT>
+and <TT>BASE_LIBS</TT>. Insert a blank line after the line to
+separate this section from the next.
+<PRE>   LIBS = ${MACHINE_LIBS} ${BASE_LIBS}
+</PRE>
+<P><H3><A NAME="HDRWQ443" HREF="auagd002.htm#ToC_522">The .SUFFIXES Section</A></H3>
+<P>This section lists the valid machine-type suffixes.
+This list includes system types currently supported for AFS. Unused
+suffixes are ignored.
+<PRE>   .SUFFIXES: .rs_aix42 \
+              .alpha_dux40 \
+              .proto \
+              .sun4x_56 \
+              .i386_linux22 \
+              .hp_ux110
+</PRE>
+<P><H3><A NAME="HDRWQ444" HREF="auagd002.htm#ToC_523">The Makefile Instructions Section</A></H3>
+<P>The remainder of the <B>Makefile</B> file controls how
+the <B>package</B> program generates configuration files.
+<P>Study the following instructions; it is assumed that you are familiar
+with programming and <B>Makefile</B> concepts.
+<PRE>   #The following appear on a single line each in the actual file
+   .proto.rs_aix42: ;  mpp -Dwsadmin=${wsadmin} -Dsys=rs_aix42  
+                           -Dname=$* $*.proto > $@
+   .proto.alpha_dux40: ; mpp -Dwsadmin=${wsadmin} -Dsys=alpha_dux40 
+                           -Dname=$* $*.proto > $@
+   .proto.sun4x_56:  ; mpp -Dwsadmin=${wsadmin} -Dsys=sun4x_56 
+                           -Dname=$* $*.proto > $@
+   .proto.hp_ux110:  ; mpp -Dwsadmin=${wsadmin} -Dsys=hp_ux110  
+                           -Dname=$* $*.proto > $@
+   all: ${CONFIG}
+   ${CONFIG}: ${LIBS}
+   system: install
+   install: ${CONFIG}
+	   cp ${CONFIG} ${wsadmin}/etc
+   clean:
+	   rm -f ${CONFIG} *.BAK *.CKP
+</PRE>
+<HR><H2><A NAME="HDRWQ445" HREF="auagd002.htm#ToC_524">Modifying the Makefile</A></H2>
+<A NAME="IDX7572"></A>
+<A NAME="IDX7573"></A>
+<A NAME="IDX7574"></A>
+<P>Modify the <B>package</B> <B>Makefile</B> files when you
+<UL>
+<P><LI>Add a new prototype file
+(<VAR>function</VAR><B>.proto</B>).
+<P><LI>Add a new system type.
+<P><LI>Add new library files.
+</UL>
+<P>The following sections provide brief examples of how to modify the
+<B>Makefile</B> file for these reasons.
+<P><H3><A NAME="Header_525" HREF="auagd002.htm#ToC_525">Adding a New Prototype File</A></H3>
+<P>When you create a new prototype file, add the file name and each system
+type for which it is to be built into the <TT>CONFIG</TT> section of the
+<B>Makefile</B> file.
+<P>For example, to add a <VAR>function</VAR><B>.proto</B> file for
+<B>alpha_dux40</B> and <B>hp_ux110</B>, add the following entries to
+the <TT>CONFIG</TT> section:
+<PRE>   CONFIG = \
+   ...
+           <VAR>function</VAR>.alpha_dux40 \
+           <VAR>function</VAR>.hp_ux110 \
+   ...
+</PRE>
+<P>If you have added new library files for this prototype function, add those
+to the <TT>MACHINE_LIBS</TT> section.
+<P><H3><A NAME="Header_526" HREF="auagd002.htm#ToC_526">Adding a New System Type</A></H3>
+<P>For each prototype file that you want to build for the new system type,
+add an entry to the <TT>CONFIG</TT> section. Also add any new
+libraries to the <TT>MACHINE_LIBS</TT> section, and the new system type to
+the <TT>.SUFFIXES</TT> section.
+<P>The following example shows the modifications appropriate when building the
+<B>staff</B> and <B>minimal</B> prototype files for this new system
+type.
+<PRE>   CONFIG = \
+   ...
+           staff.<VAR>sysname</VAR> \
+           minimal.<VAR>sysname</VAR> \
+   ...
+</PRE>
+<P>If you have created corresponding library files for this new machine type,
+add them to the <TT>MACHINE_LIBS</TT> section.
+<PRE>   MACHINE_LIBS = \
+   ...
+           ${wsadmin}/lib/<VAR>sysname</VAR>.generic \
+           ${wsadmin}/lib/<VAR>sysname</VAR>.generic.dev \
+           ${wsadmin}/lib/<VAR>sysname</VAR>.readonly \
+           ${wsadmin}/lib/<VAR>sysname</VAR>.readwrite \
+   ...
+</PRE>
+<P>Add the new system type to the <TT>SUFFIXES</TT> section.
+<PRE>   .SUFFIXES: ...\
+            .<VAR>sysname</VAR> \
+   ...
+</PRE>
+<P>Add a line to build the configuration files for this system in the section
+with the rest of the commands to build configuration files:
+<PRE>   .proto.<VAR>sysname</VAR>: ; mpp -Dwsadmin=${wsadmin} \
+   -Dsys=<VAR>sysname</VAR>  -Dname=$* $*.proto > $
+</PRE>
+<P><H3><A NAME="Header_527" HREF="auagd002.htm#ToC_527">Adding New Library Files</A></H3>
+<P>If you added a new library file for each system type,
+<VAR>sysname</VAR><B>.</B><VAR>library_file</VAR>, add these files to
+the MACHINE_LIBS section of the<B> Makefile</B>.
+<PRE>   MACHINE_LIBS = \
+   ...
+           ${wsadmin}/lib/rs_aix42.<VAR>library_file</VAR> \
+   ...
+           ${wsadmin}/lib/alpha_dux40.<VAR>library_file</VAR> \
+   ...
+           ${wsadmin}/lib/sun4x_56.<VAR>library_file</VAR> \
+   ...
+</PRE>
+<P>If you added a new library file that is common to all system types,
+<I>library_file</I>, add this only to the <TT>BASE_LIBS</TT>
+section:
+<PRE>   BASE_LIBS = \
+   ...
+           ${wsadmin}/lib/<VAR>library_file</VAR> \
+   ...
+</PRE>
+<HR><H2><A NAME="HDRWQ446" HREF="auagd002.htm#ToC_528">Compiling Prototype Files</A></H2>
+<A NAME="IDX7575"></A>
+<A NAME="IDX7576"></A>
+<P>The <B>package</B> program generates configuration files and installs
+them in the <B>etc</B> and <B>src</B> subdirectories of the directory
+designated as <B>wsadmin=</B> on the <B>make</B> command line.
+Recompile whenever you modify a prototype or library file.
+<P><H3><A NAME="Header_529" HREF="auagd002.htm#ToC_529">To compile prototype files</A></H3>
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Note:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">These instructions assume that you store your <B>package</B>-related
+files in the <B>/afs/</B><VAR>cellname</VAR><B>/wsadmin</B>
+directory. If you use a different directory, substitute its name for
+<B>/afs/</B><VAR>cellname</VAR><B>/wsadmin</B>.
+</TD></TR></TABLE>
+<OL TYPE=1>
+<P><LI>Verify that you have all privileges in the
+<B>/afs/</B><VAR>cellname</VAR><B>/wsadmin</B> directory and in its
+<B>src</B>, <B>lib</B> and <B>etc</B> subdirectories. If
+necessary, issue the <B>fs</B> <B>listacl</B> command. 
+<PRE>   % <B>fs listacl</B> [<VAR>dir/file&nbsp;path</VAR>]
+</PRE>
+<P><LI>Change to the <B>/afs/</B><VAR>cellname</VAR><B>/wsadmin/src</B>
+subdirectory. 
+<PRE>   % <B>cd /afs/</B><VAR>cellname</VAR><B>/wsadmin/src</B>
+</PRE>
+<P><LI>Create a backup copy of the <B>Makefile</B> file included in the AFS
+distribution. 
+<PRE>   % <B>cp  Makefile Makefile.example</B> 
+</PRE>
+<P><LI>Modify the <TT>CONFIG</TT>, <TT>BASE_LIBS</TT> and
+<TT>MACHINE_LIBS</TT> sections of the <B>Makefile</B> file, as described
+in <A HREF="#HDRWQ439">The CONFIG Section</A>, <A HREF="#HDRWQ440">The BASE_LIBS Section</A>, and <A HREF="#HDRWQ441">The MACHINE_LIBS Section</A>.
+<P><LI>Compile the prototype files using the <B>make</B> command.
+<P>Use the <B>wsadmin=</B> argument to specify the <B>package</B>
+directory. This becomes the value of the <TT>${wsadmin}</TT> variable
+in the prototype and the library files.
+<P>The <B>package</B> program generates configuration files and installs
+them in the <B>etc</B> and <B>src</B> subdirectories of the directory
+designated as <B>wsadmin=</B>. 
+<PRE>   % <B>make system wsadmin=/afs/</B><VAR>cellname</VAR><B>/wsadmin</B>
+</PRE>
+</OL>
+<HR><H2><A NAME="HDRWQ447" HREF="auagd002.htm#ToC_530">Modifying Client Machines</A></H2>
+<A NAME="IDX7577"></A>
+<A NAME="IDX7578"></A>
+<A NAME="IDX7579"></A>
+<A NAME="IDX7580"></A>
+<P>To prepare a client to run the <B>package</B> program automatically,
+perform the following steps. The instructions are generic because they
+do not refer to system-specific configuration files. If desired, you
+can invoke the <B>package</B> program with specific arguments, as
+described in the <I>IBM AFS Administration Reference</I>.
+<OL TYPE=1>
+<P><LI>Specify the configuration file to use. 
+<P>The <B>.package</B> file in the client machine's root (
+<B>/</B>) directory is redirected as an argument to the <B>package</B>
+command; the <B>.package</B> file specifies which
+configuration file the <B>package</B> program uses.
+<P><LI>Make the <B>package</B> binary available to the client, either by
+copying it to the local disk, or by creating a symbolic link to AFS. 
+<UL>
+<P><LI>A symbolic link saves local disk space. However, when the file
+server machine that houses it is down, the <B>package</B> binary is
+inaccessible.
+<P><LI>Keeping the <B>package</B> binary on the local disk enables you to run
+the <B>package</B> program even if file server is down. However, a
+file server machine outage usually makes it difficult to run the
+<B>package</B> program because most configuration file instructions refer
+to files in AFS. A local copy of the <B>package</B> binary can be
+useful if the files referred to in instructions are in replicated
+volumes.
+</UL>
+<P><LI>Modify the client machine's initialization file to invoke the
+<B>package</B> program at reboot. The client machine reboots a
+second time if the <B>package</B> program updates any files marked with
+the <B>Q</B> update code.
+</OL>
+<P><H3><A NAME="Header_531" HREF="auagd002.htm#ToC_531">To prepare a client machine to run the package program</A></H3>
+<P>Repeat these instructions on every client that runs the
+<B>package</B> program.
+<P>These instructions assume that the <B>package</B> configuration files
+(created when the prototype files were compiled) reside in the
+<B>/afs/</B><VAR>cellname</VAR><B>/wsadmin/etc</B> directory .
+<OL TYPE=1>
+<P><LI>Become the local superuser <B>root</B> on the machine, if you are not
+already, by issuing the <B>su</B> command. 
+<PRE>   % <B>su root</B>
+   Password: <VAR>root_password</VAR>
+</PRE>
+<P><LI>Create the <B>.package</B> file in the root ( <B>/</B>)
+directory and specify the name of the prototype file to use. Do not
+include the system-type suffix (such as <B>.rs_aix42</B>); the
+<B>package</B> program automatically determines the correct machine
+type. 
+<PRE>   # <B>echo "/afs/</B><VAR>cellname</VAR><B>/wsadmin/etc/</B><VAR>config_file</VAR><B>" >> /.package</B>
+</PRE> 
+<P>For example, to configure a machine for a member of staff machine (assuming
+the proper prototype file had been defined and compiled for the system type),
+the appropriate command is: 
+<PRE>   # <B>echo "/afs/</B><VAR>cellname</VAR><B>/wsadmin/etc/staff" >> /.package</B>
+</PRE>
+<P><LI>Make the <B>package</B> binary available on the local disk as
+<B>/etc/package</B>. Issue one of the following commands, depending
+on whether you want to create a file or create a symbolic link. 
+<P>To store the <B>package</B> binary locally, enter the following
+command: 
+<PRE>   # <B>cp /afs/</B><VAR>cellname</VAR><B>/</B><VAR>sysname</VAR><B>/usr/afsws/etc/package   /etc/package</B>
+</PRE> 
+<P>To create a symbolic link, enter the following command: 
+<PRE>   # <B>ln -s /afs/</B><VAR>cellname</VAR><B>/</B><VAR>sysname</VAR><B>/usr/afsws/etc/package   /etc/package</B>
+</PRE>
+<P><LI>Add the following lines to the appropriate initialization file, after the
+<B>afsd</B> command is invoked. If this is a file server machine,
+the <B>bosserver</B> command must follow the <B>package</B>
+command. 
+<P>Using the <B>-v</B> and <B>-c</B> options is recommended.
+The <B>-v</B> flag produces a detailed trace, and the <B>-c</B> option
+appends the system type to the base name of the configuration file. See
+the <I>IBM AFS Administration Reference</I> for a description of other
+options. 
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Note:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">Replace the <B>shutdown</B> command with a similar command if it is not
+appropriate for rebooting your machine.
+</TD></TR></TABLE> 
+<PRE>   if [ -f /etc/package ]; then
+           if [ -f /.package ]: then
+                   /etc/package -v -c `cat /.package` >/dev/console
+           else
+                   /etc/package -v >/dev/console
+   fi
+   case $? in
+   0)
+           echo "Package completed successfully" >/dev/console 2>&amp;1
+           date >/dev/console 2>&amp;1
+           ;;
+   4)
+           echo "Rebooting to restart system" >/dev/console 2>&amp;1
+           echo >/fastboot
+           shutdown
+           ;;
+   *)
+           echo "Update failed, continuing anyway" >/dev/console 2>&amp;1
+           ;;
+   esac
+   fi
+</PRE>
+</OL>
+<HR><H2><A NAME="HDRWQ448" HREF="auagd002.htm#ToC_532">Running the package program</A></H2>
+<P>After you have created and compiled prototype files and
+modified client machines, you are ready to run the <B>package</B>
+program. It is probably most convenient to run the <B>package</B>
+program automatically at reboot by invoking it in the machine's AFS
+initialization file, but you can also issue the command at the command shell
+prompt.
+<P>The configuration file must be completely correct. If there are any
+syntax errors or incorrect values, the program exits without executing any
+instruction. To check the configuration file, issue the
+<B>package</B> command with the <B>-noaction</B> and <B>-debug</B>
+flags at the command shell prompt. They display a list of potential
+problems without actually executing instructions.
+<P>The <B>package</B> program follows these general rules. Complete
+explanations are in <A HREF="#HDRWQ429">Package Configuration File Instruction Syntax</A>.
+<UL>
+<P><LI>The <B>package</B> program does not delete any files from the disk
+unless the <B>R</B> update code was specified in the prototype
+file. If the <B>R</B> update code is associated with the parent
+directory, the <B>package</B> program removes anything from the local disk
+directory that is not specified in the configuration file.
+<P><LI>Local files are updated only if they are out of date. For each
+<B>F</B> instruction in the configuration file, the <B>package</B>
+program compares the time of the local file with the indicated source
+file. If the source file is newer than the local, the file is
+updated.
+<P><LI>When the initialization file is modified as recommended in <A HREF="#HDRWQ447">Modifying Client Machines</A>, the <B>package</B> program reboots the workstation
+automatically if any files marked with the <B>Q</B> update code are
+updated, and if the <B>package</B> program has been invoked from the
+initialization file. When a file marked with the <B>Q</B> update
+code is changed, the <B>package</B> program exits with status code 4,
+causing a reboot (as directed in the initialization file). Files that
+require a reboot before changes are recognized (such as the operating system
+kernel and <B>/usr/vice/etc/CellServDB</B> files) must be marked with a
+<B>Q</B> update code in the configuration file.
+<P><LI>The <B>package</B> program copies the configuration file it has just
+used to <B>/etc/package.</B><VAR>sysname</VAR>, where
+<VAR>sysname</VAR> reflects this machine's system type. The
+<B>package</B> command interpreter consults this file if you do not
+provide a configuration file name. To be sure that it configures the
+local disk as you wish, review its contents.
+</UL>
+<P><H3><A NAME="Header_533" HREF="auagd002.htm#ToC_533">To invoke the package program by rebooting</A></H3>
+<OL TYPE=1>
+<P><LI>Become the local superuser <B>root</B> on the machine, if you are not
+already, by issuing the <B>su</B> command. 
+<PRE>   % <B>su root</B>
+   Password: <VAR>root_password</VAR>
+</PRE>
+<P><LI><B>(Recommended)</B> Verify the following:
+<UL>
+<P><LI>The <B>/.package</B> file identifies the desired configuration
+file
+<P><LI>The <B>package</B> binary is available as <B>/etc/package</B>
+<P><LI>The initialization file is properly modified to invoke the
+<B>package</B> program automatically
+</UL>
+<P><LI>Reboot the machine, using the appropriate command. 
+<PRE>   # <B>shutdown</B>
+</PRE>
+</OL>
+<A NAME="IDX7581"></A>
+<A NAME="IDX7582"></A>
+<P><H3><A NAME="Header_534" HREF="auagd002.htm#ToC_534">To invoke the package program directly (without rebooting)</A></H3>
+<OL TYPE=1>
+<P><LI>Become the local superuser <B>root</B> on the machine, if you are not
+already, by issuing the <B>su</B> command. 
+<PRE>   % <B>su root</B>
+   Password: <VAR>root_password</VAR>
+</PRE>
+<P><LI>Verify the following:
+<UL>
+<P><LI>The <B>/.package</B> file identifies the desired configuration
+file
+<P><LI>The <B>package</B> binary is available as <B>/etc/package</B>
+<P><LI>The initialization file is properly modified to invoke the
+<B>package</B> program automatically
+</UL>
+<P><LI>Issue the <B>package</B> command. 
+<PRE>   # <B>package</B>  [<B>initcmd</B>]  [<B>-config</B> &lt;<VAR>base&nbsp;name&nbsp;of&nbsp;configuration&nbsp;file</VAR>>]  \
+    [<B>-fullconfig</B> &lt;<VAR>full&nbsp;name&nbsp;of&nbsp;configuration&nbsp;file,&nbsp;or&nbsp;stdin&nbsp;for&nbsp;standard&nbsp;input</VAR>>]  \
+    [<B>-overwrite</B>]  [<B>-noaction</B>]  [<B>-verbose</B>]  [<B>-silent</B>] [<B>-rebootfiles</B>] 
+</PRE> 
+<P>where 
+<DL>
+<P><DT><B>-config
+</B><DD>Specifies the full pathname of the configuration file to use, ending in
+the file's base name, which omits the suffix that indicates the machine
+type. The <B>package</B> program knows how to determine a
+machine's type, and automatically selects the appropriate version of the
+base file name. An example of the proper value for this argument is
+<B>staff</B> rather than <B>staff.rs_aix42</B>. You can
+also have the <B>package</B> program refer to <B>/.package</B>
+to learn the configuration file name by providing the following value:
+<P><B>`cat /.package`</B>
+<P>Use either this argument or the <B>-fullconfig</B> argument.
+<P><DT><B>-fullconfig
+</B><DD>Specifies the full name of the configuration file to use, complete with
+the machine-type extension. Examples are
+<B>staff.rs_aix42</B> and <B>minimal.hp_ux110</B>
+files.
+<P>Another possibility is the string <B>stdin</B>, which indicates that
+the issuer is providing configuration information via the standard input
+stream, either as a piped file or by typing the configuration file at the
+keyboard. Press &lt;<B>Ctrl-d</B>> to conclude the input.
+<P>Use either this argument or the <B>-config</B> argument.
+<P><DT><B>-overwrite
+</B><DD>Overwrite elements on the local disk with the source version indicated in
+the configuration file, even if the first (owner) <B>w</B>
+(<B>write</B>) mode bit is turned off on the local disk copy of the
+file. Files protected by the <B>I</B> update code are not
+overwritten; see the definition for the <B>F</B> instruction.
+<P><DT><B>-noaction
+</B><DD>Displays on the standard output stream a trace of potential problems in
+running the command, rather than actually running it. If the
+<B>-verbose</B> flag is added, the trace also notes the actions the
+<B>package</B> program attempts.
+<P><DT><B>-silent
+</B><DD>Explicitly invokes the default level of tracing, which includes only a
+list of problems encountered while executing the command.
+<P><DT><B>-verbose
+</B><DD>Produces a detailed trace of the program's actions on the standard
+output stream. The trace records on the transfer and ownership/mode bit
+setting of each element in the configuration file.
+<P><DT><B>-rebootfiles
+</B><DD>Prevents the overwrite of any element marked with the <B>Q</B>
+update-mode code in the configuration file. This effectively prevents
+the machine from rebooting automatically again when the <B>package</B>
+program is invoked from an initialization file.
+</DL>
+<P><LI>If you think files marked with the <B>Q</B> update code were updated,
+reboot the machine. This reboot does not occur automatically.
+</OL>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auagd002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auagd015.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auagd017.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auagd026.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

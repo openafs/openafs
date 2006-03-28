@@ -30,6 +30,7 @@ extern int mrafsStyleLogs;
 extern int serverLogSyslog;
 extern int serverLogSyslogFacility;
 extern char *serverLogSyslogTag;
+#include <arpa/inet.h> /* for inet_ntoa() */
 #endif
 extern void vFSLog(const char *format, va_list args);
 extern void SetLogThreadNumProgram(int (*func) () );

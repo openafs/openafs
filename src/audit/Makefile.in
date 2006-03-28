@@ -15,7 +15,7 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
-CFLAGS=-I. -I${srcdir} ${OPTMZ} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS}
+CFLAGS=-I. -I${srcdir} ${OPTMZ} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS} ${ARCHFLAGS}
 
 all: ${TOP_LIBDIR}/libaudit.a ${TOP_INCDIR}/afs/audit.h
 

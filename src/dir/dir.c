@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/dir/dir.c,v 1.21.2.2 2005/07/11 19:27:28 shadow Exp $");
+    ("$Header: /cvs/openafs/src/dir/dir.c,v 1.21.2.3 2005/10/05 05:58:37 shadow Exp $");
 
 #ifdef KERNEL
 #if !defined(UKERNEL)
@@ -32,7 +32,7 @@ RCSID
 #include "h/kernel.h"
 #endif
 #endif
-#if	defined(AFS_SUN56_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_FBSD_ENV)
+#if	defined(AFS_SUN56_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_FBSD_ENV) || defined(AFS_DARWIN80_ENV)
 #include "afs/sysincludes.h"
 #endif
 #if !defined(AFS_SGI64_ENV) && !defined(AFS_DARWIN60_ENV)

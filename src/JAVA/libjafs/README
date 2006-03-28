@@ -1,0 +1,259 @@
+Java API for OpenAFS (JAFS) README
+Current as of June 4, 2003
+
+##########################################################################
+# Copyright (c) 2001-2002 International Business Machines Corp.          #
+# All rights reserved.                                                   #
+#                                                                        #
+# This software has been released under the terms of the IBM Public      #
+# License.  For details, see the LICENSE file in the top-level source    #
+# directory or online at http://www.openafs.org/dl/license10.html        #
+#                                                                        #
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS    #
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT      #
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR  #
+# A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR #
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,  #
+# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,    #
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR     #
+# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF #
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING   #
+# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS     #
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.           #
+##########################################################################
+
+---------------------------------------------------------------------------
+*
+* INTRODUCTION
+*
+---------------------------------------------------------------------------
+
+JAFS is an open source API designed to allow Java programmers the ability
+to create applications for the administration or use of OpenAFS file systems.
+It works by accessing libadmin and libuafs (administrative and user-level 
+libraries that come with OpenAFS) through JNI.  It consists of a Java package 
+called org.openafs.jafs, and two shared libraries libjafsadm.so and libjafs.so.
+
+---------------------------------------------------------------------------
+*
+* USE
+*
+---------------------------------------------------------------------------
+
+There is a version of JAFS that has been compiled on Red Hat Linux 7.3, 
+and can be directly used without compilation.  It was compiled using
+OpenAFS 1.2.10a libraries (with a modified version of libjuafs.a).  It 
+consists of a JAR file (jafs-1.2.10a.jar) and two shared libraries 
+(libjafsadm.so and libjafs.so).  It was compiled using the 
+--enable-transarc-paths on compilation (for use with the OpenAFS RPMs), 
+gcc 2.96, and Java Classic VM version 1.4.1_02.
+
+When you write Java code to use this API, import the
+org.openafs.jafs package. During compilation of your Java code, 
+ensure one of the following conditions are met:
+  - Use the "-classpath" option to javac to specify the jafs.jar file.
+  - Change your $CLASSPATH environment variable to include the
+    jafs.jar file (e.g. export CLASSPATH=$CLASSPATH:jafs.jar
+
+When running an application that uses JAFS, the shared libraries
+need to be found by Java's library loader.  The easiest way to
+accomplish this is to copy these files into the /usr/local/lib/ directory,
+or create symbolic links from that directory to the files.  Alternatively, 
+the directory containing the libraries can also be added to the
+LD_LIBRARY_PATH environment variable.
+
+You also need to have an OpenAFS client set up on your machine
+(preferably version 1.2.10a, but it should work for some past versions as well).
+You can obtain the OpenAFS client and view installation documentation at 
+http://www.openafs.org (the RPMs are easiest to use for Linux).  Also any 
+cells you plan to access through the API must have entries in your
+client's CellServDB file (located in the /usr/vice/etc/ directory in most
+setups).
+
+This API is most effective when used with a cell that uses the kaserver
+for authentication.  It does not currently support alternative methods of
+authentication such as Kerberos V.
+
+If you have successfully set up your Linux 7.3 environment as described
+above, you will be able to develop and execute applications that use
+the JAFS API.
+
+---------------------------------------------------------------------------
+*
+* BUILD
+*
+---------------------------------------------------------------------------
+
+ ** DOWNLOAD SOURCE
+  The first step in compiling your own versions of the library and jar file
+  is to download the OpenAFS source code.  Please follow the directions for
+  for the source you download:
+
+ ** APPLY THE APPROPRIATE PATCH
+  You can apply the appropriate JAFS patch with the following command, 
+  executed from the root directory of the download code 
+  (i.e. openafs-1.2.10a/):
+
+      patch -p1 < xxx.diff
+      (where xxx.diff is one of the following patch files)
+
+  Use the patch respective to the source you are using:
+  * OpenAFS 1.2.6 Source (openafs-1.2.6-src.tar.gz)
+    OpenAFS 1.2.7 Source (openafs-1.2.7-src.tar.gz)
+    OpenAFS 1.2.8 Source (openafs-1.2.8-src.tar.gz)
+
+      jafs-1.2.6-8.diff 
+
+  * OpenAFS 1.2.9 Source (openafs-1.2.9-src.tar.gz)
+
+      jafs-1.2.9.diff 
+
+  * OpenAFS 1.2.10a Source (openafs-1.2.10a-src.tar.gz)
+
+      jafs-1.2.10a.diff 
+
+  * Daily Snapshot / CVS (example: openafs-snap-2003-05-21.tar.gz)
+
+      jafs.diff
+
+
+ ** RUN CONFIGURE
+  From the same directory, run the configure script as you normally would 
+  to compile OpenAFS, but run it with a java-home argument so the script can
+  find your java distribution.  For example:
+
+  ./configure [other options] --java-home=/usr/java/jdk
+
+  NOTE: If the configure script is not within the root source directory,
+        then you will need to first run ./regen.sh to generate the 
+        configure script.  In this case you will need to manually
+        modify the JAFS Makefile by setting the JAVA_HOME variable
+        to your local system's JAVA_HOME. (i.e. /usr/java/jdk)
+
+  The configure script will ensure that this directory contains bin/ and lib/ 
+  subdirectories, and that there are /bin/javac and/bin/javah executables and 
+  an include/jni.h file.  If you don't supply a command line argument for the 
+  java home, the script will look for it in environment variables: first in
+  $JAVA_HOME and then in $JDK_HOME.  Also, note that if you have installed
+  (or are planning to install) OpenAFS by using the RPMs for Linux, you
+  should provide the --enable-transarc-paths configuration option.  If you
+  get a "** Can't determine local cell name" error message, the most likely
+  reason is that you didn't supply this option.
+
+ ** RUN MAKE
+  Finally, do a full build of OpenAFS by executing 'make' in the current
+  directory.  After it finishes, you are ready to compile JAFS.  Execute
+  'make jafs' from that same directory.  Afterward, there will be 
+  libjafsadm.so and libjafs.so in the lib/ directory, and a jafs.jar in the 
+  jlib/ directory. These can be used according to the instructions in the 
+  'USE' section of this document. 
+
+  For additional make options, please refer to the next section "MAKE OPTIONS"
+
+
+---------------------------------------------------------------------------
+*
+* MAKE OPTIONS
+*
+---------------------------------------------------------------------------
+
+Additional make options are available by running 'make' from the 
+src/JAVA/libjafs directory; they are as follows:
+
+make            - Perform a full make of all Java classes, jar archive, and JNI
+                  libraries
+make acltest    - Builds the ACL test program.  Program usage is available by
+                  simply invoking './acltest'
+make clean      - Delete all Java classes, Java API docs, test programs, and C
+                  object files
+make cleanc     - Only delete test programs and C object files.
+make clean_jar  - Delete the Java archive library (jlib/jafs.jar)
+make clean_libs - Delete both JNI shared libraries (lib/libjafs.so and
+                  lib/libjafsadm.so)
+make install    - Performs a full make of all components and then installs all
+                  necessary components to your local system.  This option 
+                  prepares the required '/usr/afswsp/' directory for use by 
+                  the native library.
+make javadocs   - Generate Java API documents (in javadoc format).  Docs are
+                  saved to src/JAVA/javadocs
+make jar        - Builds the Java archive library (containing all Java classes)
+make libjafs    - Builds the user-space library (used for ACL and file access)
+make libjafsadm - Builds the administrative library (used for all admin related 
+                  functions)
+
+---------------------------------------------------------------------------
+*
+* DIRECTORIES, FILES, AND TEST PROGRAMS
+*
+---------------------------------------------------------------------------
+
+src/JAVA/libjafs:
+
+  Within the src/JAVA/libjafs directory you will find a few items in addition
+  to the C source code and Makefiles.  In particular, you will find 'acltest.c',
+  'buildinfo.pl', and a subdirectory 'etc'.
+
+  acltest.c     - A test program that allows testing of the native libraries
+                  ACL calls without going through Java.  
+
+                  *Usage information for this program is available by simply 
+                  invoking './acltest' without any parameters.
+
+  buildinfo.pl  - A perl script that automatically updates the build information
+                  every time the native libraries are compiled.  Additionally,
+                  it automatically increments the build number associate with
+                  the native libraries (found in VersionInfo.h).  It may also
+                  be used to programatically query for build information.
+
+                  *Usage information for this program is available by simply 
+                  invoking 'perl buildinfo.pl' without any parameters.
+
+  etc/          - A directory containing user-space configuration files. These 
+                  files are used for user-space initialization and cache 
+                  configuration and are copied to '/usr/afswsp/etc' if a
+                  'make install' is issued.
+
+src/JAVA/classes:
+
+  Within the src/JAVA/classes directory you will find the root of the Java 
+  package, the error message catalog file, and a test program:
+
+  *.java        - Java classes that comprise the test program.
+
+  adminTest     - A script that invokes the Java console-based test program.
+                  This program can be used to exercise all major API calls 
+                  from Java, thus testing JNI libraries as well as Java code.
+
+                  *Usage information for this program is available via its
+                  help menu: './adminTest help'
+
+  adminTest.properties
+                - Configuration file for the Admin test program (only contains
+                  default cell name for administrator)
+
+  ErrorMessages.properties
+                - Error message catalog file used by the ErrorTable class. Note
+                  that an additional message file can be generated that represents
+                  a language other than english (refer to the ErrorTable API docs
+                  for more information)
+
+  org/          - Root of the Java class package (package: org.openafs.jafs)
+
+
+src/JAVA/javadocs:
+
+  This directory is dynamically generated when you issue a 'make javadocs' from
+  the src/JAVA/libjafs directory. It contains all Java API documentation
+  generated from the Java classes.
+
+---------------------------------------------------------------------------
+*
+* MISC
+*
+---------------------------------------------------------------------------
+
+If you'd like to edit the source code, you'll find the native C code in
+the src/JAVA/libjafs directory, and the Java code in the 
+src/JAVA/classes/org/openafs/jafs/ directory.  Please reference the 
+src/TechNotes-JavaAPI document for more information.
+

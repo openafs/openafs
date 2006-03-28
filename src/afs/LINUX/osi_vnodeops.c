@@ -22,7 +22,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vnodeops.c,v 1.81.2.36 2005/09/04 04:11:55 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vnodeops.c,v 1.81.2.40 2006/01/11 21:38:30 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
@@ -126,12 +126,7 @@ afs_linux_write(struct file *fp, const char *buf, size_t count, loff_t * offp)
     }
 
     ObtainWriteLock(&vcp->lock, 530);
-    vcp->m.Date = osi_Time();	/* set modification time */
     afs_FakeClose(vcp, credp);
-    if (code >= 0)
-	code2 = afs_DoPartialWrite(vcp, &treq);
-    if (code2 && code >= 0)
-	code = (ssize_t) - code2;
     ReleaseWriteLock(&vcp->lock);
 
     afs_Trace4(afs_iclSetp, CM_TRACE_WRITEOP, ICL_TYPE_POINTER, vcp,
@@ -1377,9 +1372,7 @@ afs_linux_writepage_sync(struct inode *ip, struct page *pp,
     ip->i_size = vcp->m.Length;
     ip->i_blocks = ((vcp->m.Length + 1023) >> 10) << 1;
 
-    if (!code
-	&& afs_stats_cmperf.cacheCurrDirtyChunks >
-	afs_stats_cmperf.cacheMaxDirtyChunks) {
+    if (!code) {
 	struct vrequest treq;
 
 	ObtainWriteLock(&vcp->lock, 533);
@@ -1481,6 +1474,16 @@ afs_linux_updatepage(struct file *fp, struct page *pp, unsigned long offset,
 
     ip->i_size = vcp->m.Length;
     ip->i_blocks = ((vcp->m.Length + 1023) >> 10) << 1;
+
+    if (!code) {
+	struct vrequest treq;
+
+	ObtainWriteLock(&vcp->lock, 533);
+	vcp->m.Date = osi_Time();   /* set modification time */
+	if (!afs_InitReq(&treq, credp))
+	    code = afs_DoPartialWrite(vcp, &treq);
+	ReleaseWriteLock(&vcp->lock);
+    }
 
     code = code ? -code : count - tuio.uio_resid;
     afs_Trace4(afs_iclSetp, CM_TRACE_UPDATEPAGE, ICL_TYPE_POINTER, vcp,

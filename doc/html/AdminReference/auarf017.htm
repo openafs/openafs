@@ -1,0 +1,59 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 4//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3672/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 3 Oct 2000 at 16:18:30                -->
+<META HTTP-EQUIV="updated" CONTENT="Tue, 03 Oct 2000 16:18:29">
+<META HTTP-EQUIV="review" CONTENT="Wed, 03 Oct 2001 16:18:29">
+<META HTTP-EQUIV="expires" CONTENT="Thu, 03 Oct 2002 16:18:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf016.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf018.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRCACHEITEMS" HREF="auarf002.htm#ToC_15">CacheItems</A></H2>
+<P><STRONG>Purpose</STRONG>
+<A NAME="IDX3897"></A>
+<A NAME="IDX3898"></A>
+<A NAME="IDX3899"></A>
+<P>Records information about each <B>V</B><VAR>n</VAR> file in a disk cache
+<P><STRONG>Description</STRONG>
+<P>The <B>CacheItems</B> file records information about each file in the
+disk cache on a client machine (each <B>V</B><VAR>n</VAR> file). The
+information includes the file ID number and associated volume version number
+of the AFS file currently stored in the <B>V</B><VAR>n</VAR> file, which
+enables the Cache Manager to determine which <B>V</B><VAR>n</VAR> file
+contains the AFS data it needs to present to an application.
+<P>As it initializes, the Cache Manager creates the binary-format
+<B>CacheItems</B> file in the same local disk cache directory as the
+<B>V</B><VAR>n</VAR> files that the <B>CacheItems</B> file describes,
+and it must always remain there. The conventional directory name is
+<B>/usr/vice/cache</B>, but it is acceptable to use a directory on a
+partition with more available space.
+<P><STRONG>Cautions</STRONG>
+<P>Editing or removing the <B>CacheItems</B> file can cause a kernel
+panic. If the contents of <B>V</B><VAR>n</VAR> files seem out of
+date, clear the files by using the <B>fs flush</B> or <B>fs
+flushvolume</B> command. If the <B>CacheItems</B> file is
+accidentally modified or deleted, rebooting the machine usually restores
+normal performance.
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf036.htm#HDRVN">V<I>n</I></A>
+<P><A HREF="auarf040.htm#HDRVOLUMEITEMS">VolumeItems</A>
+<P><A HREF="auarf043.htm#HDRCACHEINFO">cacheinfo</A>
+<P><A HREF="auarf058.htm#HDRAFSD">afsd</A>
+<P><A HREF="auarf140.htm#HDRFS_FLUSH">fs flush</A>
+<P><A HREF="auarf142.htm#HDRFS_FLUSHVOLUME">fs flushvolume</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf016.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf018.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

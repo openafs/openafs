@@ -1,0 +1,403 @@
+.rn '' }`
+''' $RCSfile$$Revision$$Date$
+'''
+''' $Log$
+'''
+.de Sh
+.br
+.if t .Sp
+.ne 5
+.PP
+\fB\\$1\fR
+.PP
+..
+.de Sp
+.if t .sp .5v
+.if n .sp
+..
+.de Ip
+.br
+.ie \\n(.$>=3 .ne \\$3
+.el .ne 3
+.IP "\\$1" \\$2
+..
+.de Vb
+.ft CW
+.nf
+.ne \\$1
+..
+.de Ve
+.ft R
+
+.fi
+..
+'''
+'''
+'''     Set up \*(-- to give an unbreakable dash;
+'''     string Tr holds user defined translation string.
+'''     Bell System Logo is used as a dummy character.
+'''
+.tr \(*W-|\(bv\*(Tr
+.ie n \{\
+.ds -- \(*W-
+.ds PI pi
+.if (\n(.H=4u)&(1m=24u) .ds -- \(*W\h'-12u'\(*W\h'-12u'-\" diablo 10 pitch
+.if (\n(.H=4u)&(1m=20u) .ds -- \(*W\h'-12u'\(*W\h'-8u'-\" diablo 12 pitch
+.ds L" ""
+.ds R" ""
+'''   \*(M", \*(S", \*(N" and \*(T" are the equivalent of
+'''   \*(L" and \*(R", except that they are used on ".xx" lines,
+'''   such as .IP and .SH, which do another additional levels of
+'''   double-quote interpretation
+.ds M" """
+.ds S" """
+.ds N" """""
+.ds T" """""
+.ds L' '
+.ds R' '
+.ds M' '
+.ds S' '
+.ds N' '
+.ds T' '
+'br\}
+.el\{\
+.ds -- \(em\|
+.tr \*(Tr
+.ds L" ``
+.ds R" ''
+.ds M" ``
+.ds S" ''
+.ds N" ``
+.ds T" ''
+.ds L' `
+.ds R' '
+.ds M' `
+.ds S' '
+.ds N' `
+.ds T' '
+.ds PI \(*p
+'br\}
+.\"	If the F register is turned on, we'll generate
+.\"	index entries out stderr for the following things:
+.\"		TH	Title 
+.\"		SH	Header
+.\"		Sh	Subsection 
+.\"		Ip	Item
+.\"		X<>	Xref  (embedded
+.\"	Of course, you have to process the output yourself
+.\"	in some meaninful fashion.
+.if \nF \{
+.de IX
+.tm Index:\\$1\t\\n%\t"\\$2"
+..
+.nr % 0
+.rr F
+.\}
+.TH PTS_CREATEGROUP 1 "OpenAFS" "1/Mar/2006" "AFS Command Reference"
+.UC
+.if n .hy 0
+.if n .na
+.ds C+ C\v'-.1v'\h'-1p'\s-2+\h'-1p'+\s0\v'.1v'\h'-1p'
+.de CQ          \" put $1 in typewriter font
+.ft CW
+'if n "\c
+'if t \\&\\$1\c
+'if n \\&\\$1\c
+'if n \&"
+\\&\\$2 \\$3 \\$4 \\$5 \\$6 \\$7
+'.ft R
+..
+.\" @(#)ms.acc 1.5 88/02/08 SMI; from UCB 4.2
+.	\" AM - accent mark definitions
+.bd B 3
+.	\" fudge factors for nroff and troff
+.if n \{\
+.	ds #H 0
+.	ds #V .8m
+.	ds #F .3m
+.	ds #[ \f1
+.	ds #] \fP
+.\}
+.if t \{\
+.	ds #H ((1u-(\\\\n(.fu%2u))*.13m)
+.	ds #V .6m
+.	ds #F 0
+.	ds #[ \&
+.	ds #] \&
+.\}
+.	\" simple accents for nroff and troff
+.if n \{\
+.	ds ' \&
+.	ds ` \&
+.	ds ^ \&
+.	ds , \&
+.	ds ~ ~
+.	ds ? ?
+.	ds ! !
+.	ds /
+.	ds q
+.\}
+.if t \{\
+.	ds ' \\k:\h'-(\\n(.wu*8/10-\*(#H)'\'\h"|\\n:u"
+.	ds ` \\k:\h'-(\\n(.wu*8/10-\*(#H)'\`\h'|\\n:u'
+.	ds ^ \\k:\h'-(\\n(.wu*10/11-\*(#H)'^\h'|\\n:u'
+.	ds , \\k:\h'-(\\n(.wu*8/10)',\h'|\\n:u'
+.	ds ~ \\k:\h'-(\\n(.wu-\*(#H-.1m)'~\h'|\\n:u'
+.	ds ? \s-2c\h'-\w'c'u*7/10'\u\h'\*(#H'\zi\d\s+2\h'\w'c'u*8/10'
+.	ds ! \s-2\(or\s+2\h'-\w'\(or'u'\v'-.8m'.\v'.8m'
+.	ds / \\k:\h'-(\\n(.wu*8/10-\*(#H)'\z\(sl\h'|\\n:u'
+.	ds q o\h'-\w'o'u*8/10'\s-4\v'.4m'\z\(*i\v'-.4m'\s+4\h'\w'o'u*8/10'
+.\}
+.	\" troff and (daisy-wheel) nroff accents
+.ds : \\k:\h'-(\\n(.wu*8/10-\*(#H+.1m+\*(#F)'\v'-\*(#V'\z.\h'.2m+\*(#F'.\h'|\\n:u'\v'\*(#V'
+.ds 8 \h'\*(#H'\(*b\h'-\*(#H'
+.ds v \\k:\h'-(\\n(.wu*9/10-\*(#H)'\v'-\*(#V'\*(#[\s-4v\s0\v'\*(#V'\h'|\\n:u'\*(#]
+.ds _ \\k:\h'-(\\n(.wu*9/10-\*(#H+(\*(#F*2/3))'\v'-.4m'\z\(hy\v'.4m'\h'|\\n:u'
+.ds . \\k:\h'-(\\n(.wu*8/10)'\v'\*(#V*4/10'\z.\v'-\*(#V*4/10'\h'|\\n:u'
+.ds 3 \*(#[\v'.2m'\s-2\&3\s0\v'-.2m'\*(#]
+.ds o \\k:\h'-(\\n(.wu+\w'\(de'u-\*(#H)/2u'\v'-.3n'\*(#[\z\(de\v'.3n'\h'|\\n:u'\*(#]
+.ds d- \h'\*(#H'\(pd\h'-\w'~'u'\v'-.25m'\f2\(hy\fP\v'.25m'\h'-\*(#H'
+.ds D- D\\k:\h'-\w'D'u'\v'-.11m'\z\(hy\v'.11m'\h'|\\n:u'
+.ds th \*(#[\v'.3m'\s+1I\s-1\v'-.3m'\h'-(\w'I'u*2/3)'\s-1o\s+1\*(#]
+.ds Th \*(#[\s+2I\s-2\h'-\w'I'u*3/5'\v'-.3m'o\v'.3m'\*(#]
+.ds ae a\h'-(\w'a'u*4/10)'e
+.ds Ae A\h'-(\w'A'u*4/10)'E
+.ds oe o\h'-(\w'o'u*4/10)'e
+.ds Oe O\h'-(\w'O'u*4/10)'E
+.	\" corrections for vroff
+.if v .ds ~ \\k:\h'-(\\n(.wu*9/10-\*(#H)'\s-2\u~\d\s+2\h'|\\n:u'
+.if v .ds ^ \\k:\h'-(\\n(.wu*10/11-\*(#H)'\v'-.4m'^\v'.4m'\h'|\\n:u'
+.	\" for low resolution devices (crt and lpr)
+.if \n(.H>23 .if \n(.V>19 \
+\{\
+.	ds : e
+.	ds 8 ss
+.	ds v \h'-1'\o'\(aa\(ga'
+.	ds _ \h'-1'^
+.	ds . \h'-1'.
+.	ds 3 3
+.	ds o a
+.	ds d- d\h'-1'\(ga
+.	ds D- D\h'-1'\(hy
+.	ds th \o'bp'
+.	ds Th \o'LP'
+.	ds ae ae
+.	ds Ae AE
+.	ds oe oe
+.	ds Oe OE
+.\}
+.rm #[ #] #H #V #F C
+.SH "NAME"
+pts creategroup \- Creates an (empty) Protection Database group entry
+.SH "SYNOPSIS"
+\fBpts creategroup\fR <<\ \fB\-name\fR\ <\fIgroup\ name\fR+ >>>
+    <<\ [\fB\-owner\fR\ <\fIowner\ of\ the\ group\fR] >>>
+    <<\ [\fB\-id\fR\ <\fIid\ (negated)\ for\ the\ group\fR+] >>> <<\ [\fB\-cell\fR\ <\fIcell\ name\fR] >>>
+    [\fB\-noauth\fR] [\fB\-force\fR] [\fB\-help\fR]
+.PP
+\fBpts createg\fR <<\ \fB\-na\fR\ <\fIgroup\ name\fR+ >>>  <<\ [\fB\-o\fR\ <\fIowner\ of\ the\ group\fR] >>>
+    <<\ [\fB\-i\fR\ <\fIid\ (negated)\ for\ the\ group\fR+] >>> <<\ [\fB\-c\fR\ <\fIcell\ name\fR] >>>
+    [\fB\-no\fR] [\fB\-f\fR] [\fB\-h\fR]
+.PP
+\fBpts cg\fR <<\ \fB\-na\fR\ <\fIgroup\ name\fR+ >>> <<\ [\fB\-o\fR\ <\fIowner\ of\ the\ group\fR] >>>
+    <<\ [\fB\-i\fR\ <\fIid\ (negated)\ for\ the\ group\fR+] >>> <<\ [\fB\-c\fR\ <\fIcell\ name\fR] >>>
+    [\fB\-no\fR] [\fB\-f\fR] [\fB\-h\fR]
+.SH "DESCRIPTION"
+The \fBpts creategroup\fR command creates an entry in the Protection Database
+for each group specified by the \fB\-name\fR argument. The entry records the
+issuer of the command as the group's creator, and as the group's owner
+unless the \fB\-owner\fR argument names an alternate user or group as the
+owner.
+.PP
+There are two types of groups:
+.Ip "\(bu" 4
+\fIregular\fR, the names of which have two parts separated by a colon. The
+part before the colon names the group's owner.  Any user can create such
+groups.
+.Ip "\(bu" 4
+\fIprefix-less\fR, which do not have an owner prefix. Only members of the
+system:administrators group can create prefix-less groups.
+.PP
+Creating a group lowers the issuer's group-creation quota by one. This is
+true even if the \fB\-owner\fR argument is used to assign ownership to an
+alternate user or group. To display a user's group-creation quota, use the
+\fBpts examine\fR command; to set it, use the \fBpts setfields\fR command.
+.PP
+\s-1AFS\s0 group \s-1ID\s0 (\s-1AFS\s0 \s-1GID\s0) numbers are negative integers and by default the
+Protection Server assigns a \s-1GID\s0 that is one less (more negative) than the
+current value of the \f(CWmax group id\fR counter in the Protection Database,
+decrementing the counter by one for each group. Members of the
+system:administrators group can use the \fB\-id\fR argument to assign specific
+\s-1AFS\s0 \s-1GID\s0 numbers. If any of the specified GIDs is lower (more negative)
+than the current value of the \f(CWmax group id\fR counter, the counter is
+reset to that value. It is acceptable to specify a \s-1GID\s0 greater (less
+negative) than the current value of the counter, but the creation
+operation fails if an existing group already has it. To display or set the
+value of the \f(CWmax group id\fR counter, use the \fBpts listmax\fR or \fBpts
+setmax\fR command, respectively.
+.SH "OUTPUT"
+The command generates the following string to confirm creation of each
+group:
+.PP
+.Vb 1
+\&   group <name> has id <AFS GID>
+.Ve
+.SH "CAUTIONS"
+Although using the \fB\-owner\fR argument to designate a machine entry as a
+group's owner does not generate an error, it is not recommended. The
+Protection Server does not extend the usual privileges of group ownership
+to users logged onto the machine.
+.SH "OPTIONS"
+.Ip "\fB\-name\fR <\fIgroup name\fR>" 4
+Specifies the name of each group to create. Provide a string of up to 63
+characters, which can include lowercase (but not uppercase) letters,
+numbers, and punctuation marks. A regular name includes a single colon
+(\f(CW:\fR) to separate the two parts of the name; the colon cannot appear in a
+prefix-less group name.
+.Sp
+A regular group's name must have the following format:
+.Sp
+.Vb 1
+\&   <owner_name>:<group_name>
+.Ve
+and the <owner_name> field must reflect the actual owner of the group, as
+follows:
+.Ip "\(bu" 8
+If the optional \fB\-owner\fR argument is not included, the field must match
+the \s-1AFS\s0 username under which the issuer is currently authenticated.
+.Ip "\(bu" 8
+If the \fB\-owner\fR argument names an alternate \s-1AFS\s0 user, the field must
+match that \s-1AFS\s0 username.
+.Ip "\(bu" 8
+If the \fB\-owner\fR argument names another regular group, the field must
+match the owning group's owner field (the part of its name before the
+colon). If the \fB\-owner\fR argument names a prefix-less group, the field
+must match the owning group's complete name.
+.Ip "\fB\-owner\fR <\fIowner of the group\fR>" 4
+Specifies a user or group as the owner for each group, rather than the
+issuer of the command. Provide either an \s-1AFS\s0 username or the name of a
+regular or prefix-less group. An owning group must already have at least
+one member. This requirement prevents assignment of self-ownership to a
+group during its creation; use the \fBpts chown\fR command after issuing this
+command, if desired.
+.Ip "\fB\-id\fR <\fIid for the group\fR>" 4
+Specifies a negative integer \s-1AFS\s0 \s-1GID\s0 number for each group, rather than
+allowing the Protection Server to assign it. Precede the integer with a
+hyphen (\f(CW-\fR) to indicate that it is negative.
+.Sp
+If this argument is used and the \fB\-name\fR argument names multiple new
+groups, it is best to provide an equivalent number of \s-1AFS\s0 GIDs. The first
+\s-1GID\s0 is assigned to the first group, the second to the second group, and so
+on. If there are fewer GIDs than groups, the Protection Server assigns
+GIDs to the unmatched groups based on the \f(CWmax group id\fR counter. If
+there are more GIDs than groups, the excess GIDs are ignored. If any of
+the GIDs is lower (more negative) than the current value of the \f(CWmax
+group id\fR counter, the counter is reset to that value.
+.Ip "\fB\-cell\fR <\fIcell name\fR>" 4
+Names the cell in which to run the command. For more details, see
+the \fIpts(1)\fR manpage.
+.Ip "\fB\-noauth\fR" 4
+Assigns the unprivileged identity anonymous to the issuer. For more
+details, see the \fIpts(1)\fR manpage.
+.Ip "\fB\-force\fR" 4
+Enables the command to continue executing as far as possible when errors
+or other problems occur, rather than halting execution at the first error.
+.Ip "\fB\-help\fR" 4
+Prints the online help for this command. All other valid options are
+ignored.
+.SH "EXAMPLES"
+In the following example, the user pat creates groups called
+\f(CWpat:friends\fR and \f(CWpat:colleagues\fR.
+.PP
+.Vb 1
+\&   % pts creategroup -name pat:friends pat:colleagues
+.Ve
+The following example shows a member of the system:administrators group
+creating the prefix-less group \f(CWstaff\fR and assigning its ownership to the
+system:administrators group rather than to herself.
+.PP
+.Vb 1
+\&   % pts creategroup -name staff -owner system:administrators
+.Ve
+In the following example, the user pat creates a group called
+\f(CWsmith:team-members\fR, which is allowed because the \fB\-owner\fR argument
+specifies the required value (\f(CWsmith\fR).
+.PP
+.Vb 1
+\&   % pts creategroup -name smith:team-members -owner smith
+.Ve
+.SH "PRIVILEGE REQUIRED"
+The issuer must belong to the system:administrators group to create
+prefix-less groups or include the \fB\-id\fR argument.
+.PP
+To create a regular group, the issuer must
+.Ip "\(bu" 4
+Be authenticated. The command fails if the \fB\-noauth\fR flag is provided.
+.Ip "\(bu" 4
+Have a group-creation quota greater than zero. The \fBpts examine\fR command
+displays this quota.
+.SH "SEE ALSO"
+the \fIpts(1)\fR manpage,
+the \fIpts_examine(1)\fR manpage,
+the \fIpts_listmax(1)\fR manpage,
+the \fIpts_setfields(1)\fR manpage,
+the \fIpts_setmax(1)\fR manpage
+.SH "COPYRIGHT"
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+.PP
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
+
+.rn }` ''
+.IX Title "PTS_CREATEGROUP 1"
+.IX Name "pts creategroup - Creates an (empty) Protection Database group entry"
+
+.IX Header "NAME"
+
+.IX Header "SYNOPSIS"
+
+.IX Header "DESCRIPTION"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Header "OUTPUT"
+
+.IX Header "CAUTIONS"
+
+.IX Header "OPTIONS"
+
+.IX Item "\fB\-name\fR <\fIgroup name\fR>"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\fB\-owner\fR <\fIowner of the group\fR>"
+
+.IX Item "\fB\-id\fR <\fIid for the group\fR>"
+
+.IX Item "\fB\-cell\fR <\fIcell name\fR>"
+
+.IX Item "\fB\-noauth\fR"
+
+.IX Item "\fB\-force\fR"
+
+.IX Item "\fB\-help\fR"
+
+.IX Header "EXAMPLES"
+
+.IX Header "PRIVILEGE REQUIRED"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Header "SEE ALSO"
+
+.IX Header "COPYRIGHT"
+

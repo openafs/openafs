@@ -21,7 +21,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vol/listinodes.c,v 1.13.2.2 2005/04/03 18:15:55 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vol/listinodes.c,v 1.13.2.3 2005/11/01 16:45:44 shadow Exp $");
 
 #ifndef AFS_NAMEI_ENV
 #if defined(AFS_LINUX20_ENV) || defined(AFS_SUN4_ENV)
@@ -108,6 +108,28 @@ ListViceInodes(char *devname, char *mountedOn, char *resultFile,
 #include <unistd.h>
 #endif
 #include "partition.h"
+
+/*@+fcnmacros +macrofcndecl@*/
+#ifdef O_LARGEFILE
+#ifdef S_SPLINT_S
+extern off64_t afs_lseek(int FD, off64_t O, int F);
+#endif /*S_SPLINT_S */
+#define afs_lseek(FD, O, F)   lseek64(FD, (off64_t) (O), F)
+#define afs_stat      stat64
+#define afs_fstat     fstat64
+#define afs_open      open64
+#define afs_fopen     fopen64
+#else /* !O_LARGEFILE */
+#ifdef S_SPLINT_S
+extern off_t afs_lseek(int FD, off_t O, int F);
+#endif /*S_SPLINT_S */
+#define afs_lseek(FD, O, F)   lseek(FD, (off_t) (O), F)
+#define afs_stat      stat
+#define afs_fstat     fstat
+#define afs_open      open
+#define afs_fopen     fopen
+#endif /* !O_LARGEFILE */
+/*@=fcnmacros =macrofcndecl@*/
 
 /* Notice:  parts of this module have been cribbed from vfsck.c */
 
@@ -248,7 +270,7 @@ ListViceInodes(char *devname, char *mountedOn, char *resultFile,
 
     fmax = fs.s_fsize / (FSBSIZE / 512);	/* first invalid blk num */
 
-    pfd = open(rdev, O_RDONLY);
+    pfd = afs_open(rdev, O_RDONLY);
     if (pfd < 0) {
 	Log("Unable to open `%s' inode for reading\n", rdev);
 	return -1;
@@ -359,7 +381,7 @@ ReadSuper(struct superblock *fs, char *devName)
 {
     int pfd;
 
-    pfd = open(devName, O_RDONLY);
+    pfd = afs_open(devName, O_RDONLY);
     if (pfd < 0) {
 	Log("Unable to open inode on %s for reading superblock.\n", devName);
 	return -1;
@@ -797,7 +819,7 @@ xfs_RenameFiles(char *dir, xfs_Rename_t * renames, int n_renames)
 		      int_to_base64(stmp, renames[i].uniq));
 	for (tag = 2, j = 0; j < 64; tag++, j++) {
 	    (void)sprintf(npath, "%s.%s", nbase, int_to_base64(stmp, tag));
-	    fd = open(npath, O_CREAT | O_EXCL | O_RDWR, 0);
+	    fd = afs_open(npath, O_CREAT | O_EXCL | O_RDWR, 0);
 	    if (fd > 0) {
 		close(fd);
 		break;
@@ -1145,7 +1167,7 @@ ListViceInodes(char *devname, char *mountedOn, char *resultFile,
     sleep(10);
 #endif
 
-    pfd = open(rdev, O_RDONLY);
+    pfd = afs_open(rdev, O_RDONLY);
     if (pfd <= 0) {
 	sprintf(err1, "Could not open device %s to get inode list\n", rdev);
 	perror(err1);
@@ -1286,10 +1308,10 @@ ListViceInodes(char *devname, char *mountedOn, char *resultFile,
 	i = c * sblock.fs_ipg;
 	e = i + sblock.fs_ipg;
 #if	defined(AFS_HPUX102_ENV)
-	if (lseek(pfd, dbtoo(fsbtodb(&sblock, itod(&sblock, i))), L_SET) ==
+	if (afs_lseek(pfd, dbtoo(fsbtodb(&sblock, itod(&sblock, i))), L_SET) ==
 	    -1) {
 #else
-	if (lseek(pfd, dbtob(fsbtodb(&sblock, itod(&sblock, i))), L_SET) ==
+	if (afs_lseek(pfd, dbtob(fsbtodb(&sblock, itod(&sblock, i))), L_SET) ==
 	    -1) {
 #endif
 #else
@@ -1307,14 +1329,14 @@ ListViceInodes(char *devname, char *mountedOn, char *resultFile,
 	e = i + super.fs.fs_ipg;
 #ifdef	AFS_OSF_ENV
 	dblk1 = fsbtodb(&super.fs, itod(&super.fs, i));
-	if (lseek(pfd, (off_t) ((off_t) dblk1 * DEV_BSIZE), L_SET) == -1) {
+	if (afs_lseek(pfd, (off_t) ((off_t) dblk1 * DEV_BSIZE), L_SET) == -1) {
 #else
 #if defined(AFS_SUN5_ENV) || defined(AFS_DARWIN_ENV)
 	f1 = fsbtodb(&super.fs, itod(&super.fs, i));
 	off = (offset_t) f1 << DEV_BSHIFT;
 	if (llseek(pfd, off, L_SET) == -1) {
 #else
-	if (lseek(pfd, dbtob(fsbtodb(&super.fs, itod(&super.fs, i))), L_SET)
+	if (afs_lseek(pfd, dbtob(fsbtodb(&super.fs, itod(&super.fs, i))), L_SET)
 	    == -1) {
 #endif /* AFS_SUN5_ENV */
 #endif /* AFS_OSF_ENV */
@@ -1336,7 +1358,7 @@ ListViceInodes(char *devname, char *mountedOn, char *resultFile,
 		for (bj = bk = 0; bj < bufsize; bj = bj + 512, bk++) {
 		    if ((code = read(pfd, dptr, 512)) != 512) {
 			Log("Error reading inode %d? for partition %s (errno = %d); run vfsck\n", bk + i, partition, errno);
-			if (lseek(pfd, 512, L_SET) == -1) {
+			if (afs_lseek(pfd, 512, L_SET) == -1) {
 			    Log("Lseek failed\n");
 			    goto out;
 			}
@@ -1496,12 +1518,12 @@ bread(int fd, char *buf, daddr_t blk, afs_int32 size)
 	return -1;
     }
 #else /* AFS_AIX41_ENV */
-    if (lseek(fd, blk * Bsize, 0) < 0) {
+    if (afs_lseek(fd, blk * Bsize, 0) < 0) {
 	Log("Unable to seek to offset %u for block %u\n", blk * Bsize, blk);
     }
 #endif /* AFS_AIX41_ENV */
 #else
-    if (lseek(fd, (off_t) dbtob(blk), L_SET) < 0) {
+    if (afs_lseek(fd, (off_t) dbtob(blk), L_SET) < 0) {
 	Log("Unable to seek to offset %u for block %u\n", dbtob(blk), blk);
     }
 #endif

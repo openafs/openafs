@@ -1,0 +1,300 @@
+.rn '' }`
+''' $RCSfile$$Revision$$Date$
+'''
+''' $Log$
+'''
+.de Sh
+.br
+.if t .Sp
+.ne 5
+.PP
+\fB\\$1\fR
+.PP
+..
+.de Sp
+.if t .sp .5v
+.if n .sp
+..
+.de Ip
+.br
+.ie \\n(.$>=3 .ne \\$3
+.el .ne 3
+.IP "\\$1" \\$2
+..
+.de Vb
+.ft CW
+.nf
+.ne \\$1
+..
+.de Ve
+.ft R
+
+.fi
+..
+'''
+'''
+'''     Set up \*(-- to give an unbreakable dash;
+'''     string Tr holds user defined translation string.
+'''     Bell System Logo is used as a dummy character.
+'''
+.tr \(*W-|\(bv\*(Tr
+.ie n \{\
+.ds -- \(*W-
+.ds PI pi
+.if (\n(.H=4u)&(1m=24u) .ds -- \(*W\h'-12u'\(*W\h'-12u'-\" diablo 10 pitch
+.if (\n(.H=4u)&(1m=20u) .ds -- \(*W\h'-12u'\(*W\h'-8u'-\" diablo 12 pitch
+.ds L" ""
+.ds R" ""
+'''   \*(M", \*(S", \*(N" and \*(T" are the equivalent of
+'''   \*(L" and \*(R", except that they are used on ".xx" lines,
+'''   such as .IP and .SH, which do another additional levels of
+'''   double-quote interpretation
+.ds M" """
+.ds S" """
+.ds N" """""
+.ds T" """""
+.ds L' '
+.ds R' '
+.ds M' '
+.ds S' '
+.ds N' '
+.ds T' '
+'br\}
+.el\{\
+.ds -- \(em\|
+.tr \*(Tr
+.ds L" ``
+.ds R" ''
+.ds M" ``
+.ds S" ''
+.ds N" ``
+.ds T" ''
+.ds L' `
+.ds R' '
+.ds M' `
+.ds S' '
+.ds N' `
+.ds T' '
+.ds PI \(*p
+'br\}
+.\"	If the F register is turned on, we'll generate
+.\"	index entries out stderr for the following things:
+.\"		TH	Title 
+.\"		SH	Header
+.\"		Sh	Subsection 
+.\"		Ip	Item
+.\"		X<>	Xref  (embedded
+.\"	Of course, you have to process the output yourself
+.\"	in some meaninful fashion.
+.if \nF \{
+.de IX
+.tm Index:\\$1\t\\n%\t"\\$2"
+..
+.nr % 0
+.rr F
+.\}
+.TH PAGSH 1 "OpenAFS" "1/Mar/2006" "AFS Command Reference"
+.UC
+.if n .hy 0
+.if n .na
+.ds C+ C\v'-.1v'\h'-1p'\s-2+\h'-1p'+\s0\v'.1v'\h'-1p'
+.de CQ          \" put $1 in typewriter font
+.ft CW
+'if n "\c
+'if t \\&\\$1\c
+'if n \\&\\$1\c
+'if n \&"
+\\&\\$2 \\$3 \\$4 \\$5 \\$6 \\$7
+'.ft R
+..
+.\" @(#)ms.acc 1.5 88/02/08 SMI; from UCB 4.2
+.	\" AM - accent mark definitions
+.bd B 3
+.	\" fudge factors for nroff and troff
+.if n \{\
+.	ds #H 0
+.	ds #V .8m
+.	ds #F .3m
+.	ds #[ \f1
+.	ds #] \fP
+.\}
+.if t \{\
+.	ds #H ((1u-(\\\\n(.fu%2u))*.13m)
+.	ds #V .6m
+.	ds #F 0
+.	ds #[ \&
+.	ds #] \&
+.\}
+.	\" simple accents for nroff and troff
+.if n \{\
+.	ds ' \&
+.	ds ` \&
+.	ds ^ \&
+.	ds , \&
+.	ds ~ ~
+.	ds ? ?
+.	ds ! !
+.	ds /
+.	ds q
+.\}
+.if t \{\
+.	ds ' \\k:\h'-(\\n(.wu*8/10-\*(#H)'\'\h"|\\n:u"
+.	ds ` \\k:\h'-(\\n(.wu*8/10-\*(#H)'\`\h'|\\n:u'
+.	ds ^ \\k:\h'-(\\n(.wu*10/11-\*(#H)'^\h'|\\n:u'
+.	ds , \\k:\h'-(\\n(.wu*8/10)',\h'|\\n:u'
+.	ds ~ \\k:\h'-(\\n(.wu-\*(#H-.1m)'~\h'|\\n:u'
+.	ds ? \s-2c\h'-\w'c'u*7/10'\u\h'\*(#H'\zi\d\s+2\h'\w'c'u*8/10'
+.	ds ! \s-2\(or\s+2\h'-\w'\(or'u'\v'-.8m'.\v'.8m'
+.	ds / \\k:\h'-(\\n(.wu*8/10-\*(#H)'\z\(sl\h'|\\n:u'
+.	ds q o\h'-\w'o'u*8/10'\s-4\v'.4m'\z\(*i\v'-.4m'\s+4\h'\w'o'u*8/10'
+.\}
+.	\" troff and (daisy-wheel) nroff accents
+.ds : \\k:\h'-(\\n(.wu*8/10-\*(#H+.1m+\*(#F)'\v'-\*(#V'\z.\h'.2m+\*(#F'.\h'|\\n:u'\v'\*(#V'
+.ds 8 \h'\*(#H'\(*b\h'-\*(#H'
+.ds v \\k:\h'-(\\n(.wu*9/10-\*(#H)'\v'-\*(#V'\*(#[\s-4v\s0\v'\*(#V'\h'|\\n:u'\*(#]
+.ds _ \\k:\h'-(\\n(.wu*9/10-\*(#H+(\*(#F*2/3))'\v'-.4m'\z\(hy\v'.4m'\h'|\\n:u'
+.ds . \\k:\h'-(\\n(.wu*8/10)'\v'\*(#V*4/10'\z.\v'-\*(#V*4/10'\h'|\\n:u'
+.ds 3 \*(#[\v'.2m'\s-2\&3\s0\v'-.2m'\*(#]
+.ds o \\k:\h'-(\\n(.wu+\w'\(de'u-\*(#H)/2u'\v'-.3n'\*(#[\z\(de\v'.3n'\h'|\\n:u'\*(#]
+.ds d- \h'\*(#H'\(pd\h'-\w'~'u'\v'-.25m'\f2\(hy\fP\v'.25m'\h'-\*(#H'
+.ds D- D\\k:\h'-\w'D'u'\v'-.11m'\z\(hy\v'.11m'\h'|\\n:u'
+.ds th \*(#[\v'.3m'\s+1I\s-1\v'-.3m'\h'-(\w'I'u*2/3)'\s-1o\s+1\*(#]
+.ds Th \*(#[\s+2I\s-2\h'-\w'I'u*3/5'\v'-.3m'o\v'.3m'\*(#]
+.ds ae a\h'-(\w'a'u*4/10)'e
+.ds Ae A\h'-(\w'A'u*4/10)'E
+.ds oe o\h'-(\w'o'u*4/10)'e
+.ds Oe O\h'-(\w'O'u*4/10)'E
+.	\" corrections for vroff
+.if v .ds ~ \\k:\h'-(\\n(.wu*9/10-\*(#H)'\s-2\u~\d\s+2\h'|\\n:u'
+.if v .ds ^ \\k:\h'-(\\n(.wu*10/11-\*(#H)'\v'-.4m'^\v'.4m'\h'|\\n:u'
+.	\" for low resolution devices (crt and lpr)
+.if \n(.H>23 .if \n(.V>19 \
+\{\
+.	ds : e
+.	ds 8 ss
+.	ds v \h'-1'\o'\(aa\(ga'
+.	ds _ \h'-1'^
+.	ds . \h'-1'.
+.	ds 3 3
+.	ds o a
+.	ds d- d\h'-1'\(ga
+.	ds D- D\h'-1'\(hy
+.	ds th \o'bp'
+.	ds Th \o'LP'
+.	ds ae ae
+.	ds Ae AE
+.	ds oe oe
+.	ds Oe OE
+.\}
+.rm #[ #] #H #V #F C
+.SH "NAME"
+pagsh \- Creates a new PAG
+.SH "SYNOPSIS"
+\fBpagsh\fR
+.SH "DESCRIPTION"
+The \fBpagsh\fR command creates a new command shell (owned by the issuer of
+the command) and associates a new \fIprocess authentication group\fR (PAG)
+with the shell and the user. A PAG is a number guaranteed to identify the
+issuer of commands in the new shell uniquely to the local Cache
+Manager. The PAG is used, instead of the issuer's UNIX UID, to identify
+the issuer in the credential structure that the Cache Manager creates to
+track each user.
+.PP
+Any tokens acquired subsequently (presumably for other cells) become
+associated with the PAG, rather than with the user's UNIX UID.  This
+method for distinguishing users has two advantages.
+.Ip "\(bu" 4
+It means that processes spawned by the user inherit the \s-1PAG\s0 and so share
+the token; thus they gain access to \s-1AFS\s0 as the authenticated user.  In
+many environments, for example, printer and other daemons run under
+identities (such as the local superuser \f(CWroot\fR) that the \s-1AFS\s0 server
+processes recognize only as \f(CWanonymous\fR. Unless PAGs are used, such
+daemons cannot access files in directories whose access control lists
+(ACLs) do not extend permissions to the system:anyuser group.
+.Ip "\(bu" 4
+It closes a potential security loophole: \s-1UNIX\s0 allows anyone already logged
+in as the local superuser \f(CWroot\fR on a machine to assume any other
+identity by issuing the \s-1UNIX\s0 \fBsu\fR command. If the credential structure is
+identified by a \s-1UNIX\s0 \s-1UID\s0 rather than a \s-1PAG\s0, then the local superuser
+\f(CWroot\fR can assume a \s-1UNIX\s0 \s-1UID\s0 and use any tokens associated with that
+\s-1UID\s0. Use of a \s-1PAG\s0 as an identifier eliminates that possibility.
+.SH "CAUTIONS"
+Each PAG created uses two of the memory slots that the kernel uses to
+record the UNIX groups associated with a user. If none of these slots are
+available, the \fBpagsh\fR command fails. This is not a problem with most
+operating systems, which make at least 16 slots available per user.
+.PP
+In cells that do not use an AFS\-modified login utility, use this command
+to obtain a PAG before issuing the \fBklog\fR command (or include the
+\fB\-setpag\fR argument to the \fBklog\fR command). If a PAG is not acquired, the
+Cache Manager stores the token in a credential structure identified by
+local UID rather than PAG. This creates the potential security exposure
+described in the \fIDESCRIPTION\fR manpage.
+.PP
+If users of NFS client machines for which AFS is supported are to issue
+this command as part of authenticating with AFS, do not use the \fBfs
+exportafs\fR command's \fB\-uidcheck on\fR argument to enable UID checking on
+NFS/AFS Translator machines. Enabling UID checking prevents this command
+from succeeding. See the \fIklog(1)\fR manpage.
+.PP
+If UID checking is not enabled on Translator machines, then by default it
+is possible to issue this command on a properly configured NFS client
+machine that is accessing AFS via the NFS/AFS Translator, assuming that
+the NFS client machine is a supported system type. The \fBpagsh\fR binary
+accessed by the NFS client must be owned by, and grant setuid privilege
+to, the local superuser \f(CWroot\fR. The complete set of mode bits must be
+\f(CW-rwsr-xr-x\fR. This is not a requirement when the command is issued on AFS
+client machines.
+.PP
+However, if the translator machine's administrator has enabled UID
+checking by including the \fB\-uidcheck on\fR argument to the \fBfs exportafs\fR
+command, the command fails with an error message similar to the following:
+.PP
+.Vb 2
+\&   Warning: Remote setpag to <translator_machine> has failed (err=8). . .
+\&   setpag: Exec format error
+.Ve
+.SH "EXAMPLES"
+In the following example, the issuer invokes the C shell instead of the
+default Bourne shell:
+.PP
+.Vb 1
+\&   # pagsh -c /bin/csh
+.Ve
+.SH "PRIVILEGE REQUIRED"
+None
+.SH "SEE ALSO"
+the \fIfs_exportafs(1)\fR manpage,
+the \fIklog(1)\fR manpage,
+the \fItokens(1)\fR manpage
+.SH "COPYRIGHT"
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+.PP
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
+
+.rn }` ''
+.IX Title "PAGSH 1"
+.IX Name "pagsh - Creates a new PAG"
+
+.IX Header "NAME"
+
+.IX Header "SYNOPSIS"
+
+.IX Header "DESCRIPTION"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Header "CAUTIONS"
+
+.IX Header "EXAMPLES"
+
+.IX Header "PRIVILEGE REQUIRED"
+
+.IX Header "SEE ALSO"
+
+.IX Header "COPYRIGHT"
+

@@ -1,0 +1,104 @@
+=head1 NAME
+
+vos backup - Creates a backup volume for a single read/write volume
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<vos backup> S<<< B<-id> <I<volume name or ID>> >>> S<<< [B<-cell> <I<cell name>>] >>>
+    [B<-noauth>] [B<-localauth>] [B<-verbose>] [B<-help>]
+
+B<vos backup> S<<< B<-i> <I<volume name or ID>> >>> [B<-c><I<cell name>>]
+    [B<-n>] [B<-l>] [B<-v>] [B<-h>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<vos backup> command clones the indicated read/write volume to create
+a backup version, placing it at the same site as the read/write
+version. The backup volume's name is the same as the read/write source's
+with the addition of the C<.backup> extension. Its volume ID number is the
+one allocated for it in the Volume Location Database (VLDB) when the
+read/write source was created with the B<vos create> command. If a backup
+version already exists, the new clone replaces it.
+
+To create a backup version of multiple volumes, use the B<vos backupsys>
+command.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-id> <I<volume name or ID>>
+
+Specifies either the complete name or volume ID number of the read/write
+source volume.
+
+=item B<-cell> <I<cell name>>
+
+Names the cell in which to run the command. Do not combine this argument
+with the B<-localauth> flag. For more details, see L<vos(1)>.
+
+=item B<-noauth>
+
+Assigns the unprivileged identity anonymous to the issuer. Do not combine
+this flag with the B<-localauth> flag. For more details, see L<vos(1)>.
+
+=item B<-localauth>
+
+Constructs a server ticket using a key from the local
+F</usr/afs/etc/KeyFile> file. The B<vos> command interpreter presents it
+to the Volume Server and Volume Location Server during mutual
+authentication. Do not combine this flag with the B<-cell> argument or
+B<-noauth> flag. For more details, see L<vos(1)>.
+
+=item B<-verbose>
+
+Produces on the standard output stream a detailed trace of the command's
+execution. If this argument is omitted, only warnings and error messages
+appear.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 OUTPUT
+
+The following message confirms that the command succeeded:
+
+   Created backup volume for I<volume name>
+
+=head1 EXAMPLES
+
+The following example creates a backup version of the volume
+C<user.smith>.
+
+   % vos backup user.smith
+   Created backup volume for user.smith
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be listed in the F</usr/afs/etc/UserList> file on the
+machine specified with the B<-server> argument and on each database server
+machine. If the B<-localauth> flag is included, the issuer must instead be
+logged on to a server machine as the local superuser C<root>.
+
+=head1 SEE ALSO
+
+L<vos(1)>,
+L<vos_backupsys(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

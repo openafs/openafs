@@ -1,0 +1,217 @@
+=head1 NAME
+
+fs exportafs - Configures export of AFS to clients of other file systems
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<fs exportafs> S<<< B<-type> <I<exporter name>> >>>
+    S<<< [B<-start> <I<start/stop translator (on | off)>>] >>>
+    S<<< [B<-convert> <I<convert from afs to unix mode (on | off)>>] >>>
+    S<<< [B<-uidcheck> <I<run on strict 'uid check' mode (on | off)>>] >>>
+    S<<< [B<-submounts> <I<allow nfs mounts to subdirs of /afs/.. (on | off)>>] >>>
+    [B<-help>]
+
+B<fs exp> S<<< B<-t> <I<exporter name>> >>>
+    S<<< [B<-st> <I<start/stop translator (on | off)>>] >>>
+    S<<< [B<-c> <I<convert from afs to unix mode (on | off)>>] >>>
+    S<<< [B<-u> <I<run on strict 'uid check' mode (on | off)>>] >>>
+    S<<< [B<-su> <I<allow nfs mounts to subdirs of /afs/.. (on | off)>>] >>>
+    [B<-h>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<fs exportafs> command sets (if the B<-start> argument is provided)
+or reports (if it is omitted) whether the machine can reexport the AFS
+filespace to clients of a non-AFS file system. To control certain features
+of the translation protocol, use the following arguments:
+
+=over 4
+
+=item *
+
+To control whether the UNIX group and other mode bits on an AFS file or
+directory are set to match the owner mode bits when it is exported to the
+non-AFS file system, use the B<-convert> argument.
+
+=item *
+
+To control whether tokens can be placed in a credential structure
+identified by a UID that differs from the local UID of the entity that is
+placing the tokens in the structure, use the B<-uidcheck> argument. The
+most common use is to control whether issuers of the B<knfs> command can
+specify a value for its B<-id> argument that does not match their local
+UID on the NFS/AFS translator machine.
+
+=item *
+
+To control whether users can create mounts in the non-AFS filespace to an
+AFS directory other than F</afs>, use the B<-submounts> argument.
+
+=back
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-type> <I<exporter name>>
+
+Names the alternate file system to which to reexport the AFS
+filespace. The only acceptable value is C<nfs>, in lowercase letters only.
+
+=item B<-start> on
+=item B<-start> off
+
+Enables the local machine to reexport the AFS filespace if the value is
+C<on>, or disables it if the value is C<off>. Omit this argument to report
+the current setting for all of the configurable parameters.
+
+=item B<-convert> on
+=item B<-convert> off
+
+Controls the setting of the UNIX group and other mode bits on AFS files
+and directories exported to the non-AFS file system. If the value is
+C<on>, they are set to match the B<owner> mode bits. If the value is
+C<off>, the bits are not changed. If this argument is omitted, the default
+value is C<on>.
+
+=item B<-uidcheck> on
+=item B<-uidcheck> off
+
+Controls whether tokens can be placed in a credential structure identified
+by a UID that differs from the local UID of the entity that is placing the
+tokens in the structure.
+
+=over 4
+
+=item *
+
+If the value is on, the UID that identifies the credential structure must
+match the local UID.
+
+With respect to the B<knfs> command, this value means that the value of
+B<-id> argument must match the issuer's local UID on the translator
+machine. In practice, this setting makes it pointless to include the
+B<-id> argument to the B<knfs> command, because the only acceptable value
+(the issuer's local UID) is already used when the B<-id> argument is
+omitted.
+
+Enabling UID checking also makes it impossible to issue the B<klog> and
+B<pagsh> commands on a client machine of the non-AFS file system even
+though it is a system type supported by AFS. For an explanation, see
+L<klog(1)>.
+
+=item *
+
+If the value is off (the default), tokens can be assigned to a local UID
+in the non-AFS file system that does not match the local UID of the entity
+assigning the tokens.
+
+With respect to the B<knfs> command, it means that the issuer can use the
+B<-id> argument to assign tokens to a local UID on the NFS client machine
+that does not match his or her local UID on the translator machine. (An
+example is assigning tokens to the MFS client machine's local superuser
+C<root>.) This setting allows more than one issuer of the B<knfs> command
+to make tokens available to the same user on the NFS client machine. Each
+time a different user issues the B<knfs> command with the same value for
+the B<-id> argument, that user's tokens overwrite the existing ones. This
+can result in unpredictable access for the user on the NFS client machine.
+
+=back
+
+=item B<-submounts> on
+=item B<-submounts> off
+
+Controls whether a user of the non-AFS filesystem can mount any directory
+in the AFS filespace other than the top-level F</afs> directory. If the
+value is C<on>, such submounts are allowed. If the value is C<off>, only
+mounts of the F</afs> directory are allowed. If this argument is omitted,
+the default value is C<off>.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 OUTPUT
+
+If the machine is not even configured as a server of the non-AFS file
+system, the following message appears:
+
+   Sorry, the <file_system>-exporter type is currently not supported on
+   this AFS client
+
+If the machine is configured as a server of the non-AFS file system but is
+not currently enabled to reexport AFS to it (because the B<-start>
+argument to this command is not set to C<on>), the message is as follows:
+
+   '<file_system>' translator is disabled
+
+If the machine is enabled to reexport AFS, the following message precedes
+messages that report the settings of the other parameters.
+
+   '<file_system>' translator is enabled with the following options:
+
+The following messages indicate that the B<-convert> argument is set to
+C<on> or C<off> respectively:
+
+   Running in convert owner mode bits to world/other mode
+   Running in strict unix mode
+
+The following messages indicate that the B<-uidcheck> argument is set to
+C<on> or C<off> respectively:
+
+   Running in strict 'passwd sync' mode
+   Running in no 'passwd sync' mode
+
+The following messages indicate that the B<-submounts> argument is set to
+C<on> or C<off> respectively:
+
+   Allow mounts of /afs/.. subdirs
+   Only mounts to /afs allowed
+
+=head1 EXAMPLES
+
+The following example shows that the local machine can export AFS to NFS
+client machines.
+
+   % fs exportafs nfs
+   'nfs' translator is enabled with the following options:
+        Running in convert owner mode bits to world/other mode
+        Running in no 'passwd sync' mode
+        Only mounts to /afs allowed
+
+The following example enables the machine as an NFS server and converts
+the UNIX group and other mode bits on exported AFS directories and files
+to match the UNIX owner mode bits.
+
+   % fs exportafs -type nfs -start on -convert on
+
+The following example disables the machine from reexporting AFS to NFS
+client machines:
+
+   % fs exportafs -type nfs -start off
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be logged in as the local superuser root.
+
+=head1 SEE ALSO
+
+L<klog(1)>,
+L<knfs(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

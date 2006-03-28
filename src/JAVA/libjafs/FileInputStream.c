@@ -33,7 +33,7 @@ extern int errno;
 /**
  * Be carefull with the memory management:
  *
- * - For every getNativeString call the corresponding free().
+ * - For every GetStringUTFChars call the corresponding ReleaseStringUTFChars.
  * - For every Get<type>ArrayElements call the corresponding
  *   Release<type>ArrayElements
  * - For every malloc call the corresponding free.
@@ -51,19 +51,18 @@ extern int errno;
  * @return		file descriptor
  * @exception	AFSFileException  if an I/O or other file related error occurs.
  */
-JNIEXPORT jint JNICALL
-Java_org_openafs_jafs_FileInputStream_openReadOnly(JNIEnv * env, jobject obj,
-						   jstring fileNameUTF)
+JNIEXPORT jint JNICALL Java_org_openafs_jafs_FileInputStream_openReadOnly
+  (JNIEnv *env, jobject obj, jstring fileNameUTF)
 {
-    int err;
-    int fd = -1;		//file descriptor
+  int err;
+  int fd = -1;		//file descriptor
 
-    fd = openAFSFile(env, fileNameUTF, O_RDONLY, 0, &err);
-    if (fd < 0) {
-	fprintf(stderr, "FileInputStream::openReadOnly(): err=%d\n", err);
-	throwAFSFileException(env, err, NULL);
-    }
-    return fd;
+  fd = openAFSFile(env, fileNameUTF, O_RDONLY, 0, &err);
+  if (fd < 0) {
+    fprintf(stderr, "FileInputStream::openReadOnly(): err=%d\n", err);
+    throwAFSFileException( env, err, NULL );
+  }
+  return fd;
 }
 
 /**
@@ -82,40 +81,36 @@ Java_org_openafs_jafs_FileInputStream_openReadOnly(JNIEnv * env, jobject obj,
  *			the file has been reached.
  * @exception	AFSFileException  if an I/O or other file related error occurs.
  */
-JNIEXPORT jint JNICALL
-Java_org_openafs_jafs_FileInputStream_read(JNIEnv * env, jobject obj,
-					   jbyteArray jbytes, jint offset,
-					   jint length)
+JNIEXPORT jint JNICALL Java_org_openafs_jafs_FileInputStream_read
+  (JNIEnv *env, jobject obj, jbyteArray jbytes, jint offset, jint length)
 {
-    int fd, bytesLen, bytesRead;
-    jclass thisClass;
-    jmethodID getFileDescriptorID;
-    jbyte *bytes;
-    jfieldID fid;
+  int fd, bytesLen, bytesRead;
+  jclass thisClass;
+  jmethodID getFileDescriptorID;
+  jbyte *bytes;
+  jfieldID fid;
 
-    /* If we have to read 0 bytes just return */
-    if (length == 0)
-	return 0;
+  /* If we have to read 0 bytes just return */
+  if(length == 0) return 0;
 
-    thisClass = (*env)->GetObjectClass(env, obj);
-    fid = (*env)->GetFieldID(env, thisClass, "fileDescriptor", "I");
-    fd = (*env)->GetIntField(env, obj, fid);
+  thisClass = (*env)->GetObjectClass(env, obj);
+  fid = (*env)->GetFieldID(env, thisClass, "fileDescriptor", "I");
+  fd = (*env)->GetIntField(env, obj, fid);
 
-    if (fd < 0) {
-	fprintf(stderr, "FileInputStream::read(): invalid file state\n");
-	throwAFSFileException(env, 0, "Invalid file state");
-	return -1;
-    }
+  if(fd < 0) {
+    fprintf(stderr, "FileInputStream::read(): invalid file state\n");
+    throwAFSFileException(env, 0, "Invalid file state");
+    return -1;
+  }
 
-    bytes = (*env)->GetByteArrayElements(env, jbytes, 0);
-    bytesLen = (*env)->GetArrayLength(env, jbytes);
-    bytesRead = uafs_read(fd, bytes, bytesLen);
+  bytes = (*env) -> GetByteArrayElements(env, jbytes, 0);
+  bytesLen = (*env) -> GetArrayLength(env, jbytes);
+  bytesRead = uafs_read(fd, bytes, bytesLen);
 
-    if (errno != 0)
-	throwAFSFileException(env, errno, NULL);
+  if (errno != 0) throwAFSFileException(env, errno, NULL);
 
-    (*env)->ReleaseByteArrayElements(env, jbytes, bytes, 0);
-    return (bytesRead > 0) ? bytesRead : -1;
+  (*env) -> ReleaseByteArrayElements(env, jbytes, bytes, 0);
+  return (bytesRead > 0) ? bytesRead : -1;
 }
 
 /**
@@ -128,28 +123,31 @@ Java_org_openafs_jafs_FileInputStream_read(JNIEnv * env, jobject obj,
  *
  * @exception	AFSFileException  if an I/O or other file related error occurs.
  */
-JNIEXPORT void JNICALL
-Java_org_openafs_jafs_FileInputStream_close(JNIEnv * env, jobject obj)
+JNIEXPORT void JNICALL Java_org_openafs_jafs_FileInputStream_close
+  (JNIEnv *env, jobject obj)
 {
-    int fd, rc;
-    jclass thisClass;
-    jmethodID getFileDescriptorID;
-    jfieldID fid;
-    char *bytes;
+  int fd, rc;
+  jclass thisClass;
+  jmethodID getFileDescriptorID;
+  jfieldID fid;
+  char *bytes;
 
-    thisClass = (*env)->GetObjectClass(env, obj);
-    fid = (*env)->GetFieldID(env, thisClass, "fileDescriptor", "I");
-    fd = (*env)->GetIntField(env, obj, fid);
+  thisClass = (*env)->GetObjectClass(env, obj);
+  fid = (*env)->GetFieldID(env, thisClass, "fileDescriptor", "I");
+  fd = (*env)->GetIntField(env, obj, fid);
 
-    if (fd < 0) {
-	fprintf(stderr, "FileInputStream::close(): invalid file state\n");
-	throwAFSFileException(env, 0, "Invalid file state");
-	return;
-    }
+  if(fd < 0) {
+    fprintf(stderr, "FileInputStream::close(): invalid file state\n");
+    throwAFSFileException(env, 0, "Invalid file state");
+    return;
+  }
 
-    rc = uafs_close(fd);
+  rc = uafs_close(fd);
 
-    if (rc != 0) {
-	throwAFSFileException(env, errno, NULL);
-    }
+  if (rc != 0) {
+    throwAFSFileException(env, errno, NULL);
+  }
 }
+
+
+

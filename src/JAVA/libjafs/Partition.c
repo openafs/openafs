@@ -40,10 +40,10 @@ extern jfieldID volume_cachedInfoField;
 
 //////////////////////////////////////////////////////////
 
-///// Definition in jafs_Volume.c /////////////////
+///// definition in jafs_Volume.c /////////////////
 
-extern void fillVolumeInfo(JNIEnv * env, jobject volume,
-			   vos_volumeEntry_t volEntry);
+extern void fillVolumeInfo
+            ( JNIEnv *env, jobject volume, vos_volumeEntry_t volEntry );
 
 ///////////////////////////////////////////////////
 
@@ -56,40 +56,40 @@ extern void fillVolumeInfo(JNIEnv * env, jobject volume,
  * partition      the Partition object to populate with the info
  * partEntry     the container of the partition's information
  */
-void
-fillPartitionInfo(JNIEnv * env, jobject partition,
-		  vos_partitionEntry_t partEntry)
+void fillPartitionInfo
+  (JNIEnv *env, jobject partition, vos_partitionEntry_t partEntry)
 {
-    jstring jdeviceName;
-    jstring jpartition;
-    jint id;
-    afs_status_t ast;
+  jstring jdeviceName;
+  jstring jpartition;
+  jint id;
+  afs_status_t ast;
 
-    // get the class fields if need be
-    if (partitionCls == 0) {
-	internal_getPartitionClass(env, partition);
-    }
-    // fill name and id in case it's a blank object
-    jpartition = (*env)->NewStringUTF(env, partEntry.name);
-    // get the id
-    if (!vos_PartitionNameToId(partEntry.name, (int *)&id, &ast)) {
-	throwAFSException(env, ast);
-	return;
-    }
-    (*env)->SetObjectField(env, partition, partition_nameField, jpartition);
-    (*env)->SetIntField(env, partition, partition_idField, id);
+  // get the class fields if need be
+  if( partitionCls == 0 ) {
+    internal_getPartitionClass( env, partition );
+  }
 
-    jdeviceName = (*env)->NewStringUTF(env, partEntry.deviceName);
-    (*env)->SetObjectField(env, partition, partition_deviceNameField,
-			   jdeviceName);
+  // fill name and id in case it's a blank object
+  jpartition = (*env)->NewStringUTF(env, partEntry.name);
+  // get the id
+  if( !vos_PartitionNameToId( partEntry.name, (int *) &id, &ast ) ) {
+      throwAFSException( env, ast );
+      return;
+  } 
+  (*env)->SetObjectField(env, partition, partition_nameField, jpartition);
+  (*env)->SetIntField(env, partition, partition_idField, id);
 
-    (*env)->SetIntField(env, partition, partition_lockFileDescriptorField,
-			partEntry.lockFileDescriptor);
-    (*env)->SetIntField(env, partition, partition_totalSpaceField,
-			partEntry.totalSpace);
-    (*env)->SetIntField(env, partition, partition_totalFreeSpaceField,
-			partEntry.totalFreeSpace);
+  jdeviceName = (*env)->NewStringUTF(env, partEntry.deviceName);
+  (*env)->SetObjectField(env, partition, partition_deviceNameField, 
+			 jdeviceName);
 
+  (*env)->SetIntField(env, partition, partition_lockFileDescriptorField, 
+		      partEntry.lockFileDescriptor);
+  (*env)->SetIntField(env, partition, partition_totalSpaceField, 
+		      partEntry.totalSpace);
+  (*env)->SetIntField(env, partition, partition_totalFreeSpaceField, 
+		      partEntry.totalFreeSpace);
+  
 }
 
 /**
@@ -105,25 +105,22 @@ fillPartitionInfo(JNIEnv * env, jobject partition,
  * jpartitionObject   the Partition object in which to 
  *                    fill in the information
  */
-JNIEXPORT void JNICALL
-Java_org_openafs_jafs_Partition_getPartitionInfo(JNIEnv * env, jclass cls,
-						 jint cellHandle,
-						 jint serverHandle,
-						 jint partition,
-						 jobject jpartitionObject)
+JNIEXPORT void JNICALL 
+Java_org_openafs_jafs_Partition_getPartitionInfo
+  (JNIEnv *env, jclass cls, jlong cellHandle, jlong serverHandle, 
+   jint partition, jobject jpartitionObject)
 {
-    afs_status_t ast;
-    vos_partitionEntry_t partEntry;
+  afs_status_t ast;
+  vos_partitionEntry_t partEntry;
 
-    // get the partition entry
-    if (!vos_PartitionGet
-	((void *)cellHandle, (void *)serverHandle, NULL,
-	 (unsigned int)partition, &partEntry, &ast)) {
-	throwAFSException(env, ast);
-	return;
-    }
+  // get the partition entry
+  if ( !vos_PartitionGet( (void *) cellHandle, (void *) serverHandle, NULL, 
+			  (unsigned int) partition, &partEntry, &ast ) ) {
+    throwAFSException( env, ast );
+    return;
+  }
 
-    fillPartitionInfo(env, jpartitionObject, partEntry);
+  fillPartitionInfo( env, jpartitionObject, partEntry );
 
 }
 
@@ -135,34 +132,39 @@ Java_org_openafs_jafs_Partition_getPartitionInfo(JNIEnv * env, jclass cls,
  * jname  the name of the partition in question
  * returns   the id of the partition in question
  */
-JNIEXPORT jint JNICALL
-Java_org_openafs_jafs_Partition_translateNameToID(JNIEnv * env, jclass cls,
-						  jstring jname)
+JNIEXPORT jint JNICALL 
+Java_org_openafs_jafs_Partition_translateNameToID
+  (JNIEnv *env, jclass cls, jstring jname)
 {
-    afs_status_t ast;
-    jint id;
-    char *name;
+  afs_status_t ast;
+  jint id;
+  const char *name;
 
-    if (jname != NULL) {
-	name = getNativeString(env, jname);
-	if (name == NULL) {
-	    throwAFSException(env, JAFSADMNOMEM);
-	    return -1;
-	}
-    } else {
-	throwAFSException(env, JAFSNULLPART);
-	return -1;
+  if( jname != NULL ) {
+    name = (*env)->GetStringUTFChars(env, jname, 0);
+    if( !name ) {
+	throwAFSException( env, JAFSADMNOMEM );
+	return;    
     }
+  } else {
+    name = NULL;
+  }
 
-    // get the id
-    if (!vos_PartitionNameToId(name, (unsigned int *)&id, &ast)) {
-	id = -1;
-	throwAFSException(env, ast);
+  // get the id
+  if( !vos_PartitionNameToId( name, (unsigned int *) &id, &ast ) ) {
+    if( name != NULL ) {
+      (*env)->ReleaseStringUTFChars(env, jname, name);
     }
+    throwAFSException( env, ast );
+    return -1;
+  } 
 
-    free(name);
+  if( name != NULL ) {
+    (*env)->ReleaseStringUTFChars(env, jname, name);
+  }
 
-    return id;
+  return id;
+
 }
 
 /**
@@ -173,27 +175,30 @@ Java_org_openafs_jafs_Partition_translateNameToID(JNIEnv * env, jclass cls,
  * id  the id of the partition in question
  * returns   the name of the partition in question
  */
-JNIEXPORT jstring JNICALL
-Java_org_openafs_jafs_Partition_translateIDToName(JNIEnv * env, jclass cls,
-						  jint id)
+JNIEXPORT jstring JNICALL 
+Java_org_openafs_jafs_Partition_translateIDToName
+ (JNIEnv *env, jclass cls, jint id)
 {
-    afs_status_t ast;
-    char *name = (char *)malloc(sizeof(char) * VOS_MAX_PARTITION_NAME_LEN);
-    jstring jname = NULL;
+  afs_status_t ast;
+  char *name = (char *) malloc( sizeof(char)*VOS_MAX_PARTITION_NAME_LEN);
+  jstring jname;
 
-    if (name == NULL) {
-	throwAFSException(env, JAFSADMNOMEM);
-	return NULL;
-    }
-    // get the name
-    if (vos_PartitionIdToName((unsigned int)id, name, &ast)) {
-	jname = (*env)->NewStringUTF(env, name);
-    } else {
-	throwAFSException(env, ast);
-    }
+  if( !name ) {
+    throwAFSException( env, JAFSADMNOMEM );
+    return NULL;    
+  }
+
+  // get the name
+  if( !vos_PartitionIdToName( (unsigned int) id, name, &ast ) ) {
     free(name);
+    throwAFSException( env, ast );
+    return NULL;
+  } 
 
-    return jname;
+  jname = (*env)->NewStringUTF(env, name);
+  free(name);
+  return jname;
+
 }
 
 /**
@@ -208,33 +213,29 @@ Java_org_openafs_jafs_Partition_translateIDToName(JNIEnv * env, jclass cls,
  *                    reside
  * returns total number of volumes hosted by this partition
  */
-JNIEXPORT jint JNICALL
-Java_org_openafs_jafs_Partition_getVolumeCount(JNIEnv * env, jclass cls,
-					       jint cellHandle,
-					       jint serverHandle,
-					       jint partition)
+JNIEXPORT jint JNICALL 
+Java_org_openafs_jafs_Partition_getVolumeCount
+ (JNIEnv *env, jclass cls, jlong cellHandle, jlong serverHandle, jint partition)
 {
-    afs_status_t ast;
-    void *iterationId;
-    vos_volumeEntry_t volEntry;
-    int i = 0;
+  afs_status_t ast;
+  void *iterationId;
+  vos_volumeEntry_t volEntry;
+  int i = 0;
 
-    if (!vos_VolumeGetBegin
-	((void *)cellHandle, (void *)serverHandle, NULL,
-	 (unsigned int)partition, &iterationId, &ast)) {
-	throwAFSException(env, ast);
-	return -1;
-    }
+  if( !vos_VolumeGetBegin( (void *) cellHandle, (void *) serverHandle, NULL, 
+			   (unsigned int) partition, &iterationId, &ast ) ) {
+    throwAFSException( env, ast );
+    return -1;
+  }
 
-    while (vos_VolumeGetNext((void *)iterationId, &volEntry, &ast))
-	i++;
+  while ( vos_VolumeGetNext( (void *) iterationId, &volEntry, &ast ) ) i++;
 
-    if (ast != ADMITERATORDONE) {
-	throwAFSException(env, ast);
-	return -1;
-    }
+  if( ast != ADMITERATORDONE ) {
+    throwAFSException( env, ast );
+    return -1;
+  }
 
-    return i;
+  return i;
 }
 
 /**
@@ -251,24 +252,21 @@ Java_org_openafs_jafs_Partition_getVolumeCount(JNIEnv * env, jclass cls,
  *                    reside
  * returns an iteration ID
  */
-JNIEXPORT jint JNICALL
-Java_org_openafs_jafs_Partition_getVolumesBegin(JNIEnv * env, jclass cls,
-						jint cellHandle,
-						jint serverHandle,
-						jint partition)
+JNIEXPORT jlong JNICALL 
+Java_org_openafs_jafs_Partition_getVolumesBegin
+ (JNIEnv *env, jclass cls, jlong cellHandle, jlong serverHandle, jint partition)
 {
 
-    afs_status_t ast;
-    void *iterationId;
+  afs_status_t ast;
+  void *iterationId;
 
-    if (!vos_VolumeGetBegin
-	((void *)cellHandle, (void *)serverHandle, NULL,
-	 (unsigned int)partition, &iterationId, &ast)) {
-	throwAFSException(env, ast);
-	return -1;
-    }
+  if( !vos_VolumeGetBegin( (void *) cellHandle, (void *) serverHandle, NULL, 
+			   (unsigned int) partition, &iterationId, &ast ) ) {
+    throwAFSException( env, ast );
+    return;
+  }
 
-    return (jint) iterationId;
+  return (jlong) iterationId;
 }
 
 /**
@@ -285,37 +283,35 @@ Java_org_openafs_jafs_Partition_getVolumesBegin(JNIEnv * env, jclass cls,
  *                    reside
  * returns an iteration ID
  */
-JNIEXPORT jint JNICALL
-Java_org_openafs_jafs_Partition_getVolumesBeginAt(JNIEnv * env, jclass cls,
-						  jint cellHandle,
-						  jint serverHandle,
-						  jint partition, jint index)
+JNIEXPORT jlong JNICALL 
+Java_org_openafs_jafs_Partition_getVolumesBeginAt
+  (JNIEnv *env, jclass cls, jlong cellHandle, jlong serverHandle,
+   jint partition, jint index)
 {
 
-    afs_status_t ast;
-    void *iterationId;
-    vos_volumeEntry_t volEntry;
-    int i;
+  afs_status_t ast;
+  void *iterationId;
+  vos_volumeEntry_t volEntry;
+  int i;
 
-    if (!vos_VolumeGetBegin
-	((void *)cellHandle, (void *)serverHandle, NULL,
-	 (unsigned int)partition, &iterationId, &ast)) {
-	throwAFSException(env, ast);
-	return -1;
+  if( !vos_VolumeGetBegin( (void *) cellHandle, (void *) serverHandle, NULL, 
+			   (unsigned int) partition, &iterationId, &ast ) ) {
+    throwAFSException( env, ast );
+    return;
+  }
+
+  for ( i = 1; i < index; i++) {
+    if( !vos_VolumeGetNext( (void *) iterationId, &volEntry, &ast ) ) {
+      if( ast == ADMITERATORDONE ) {
+        return 0;
+      } else {
+        throwAFSException( env, ast );
+        return 0;
+      }
     }
+  }
 
-    for (i = 1; i < index; i++) {
-	if (!vos_VolumeGetNext((void *)iterationId, &volEntry, &ast)) {
-	    if (ast == ADMITERATORDONE) {
-		return 0;
-	    } else {
-		throwAFSException(env, ast);
-		return 0;
-	    }
-	}
-    }
-
-    return (jint) iterationId;
+  return (jlong) iterationId;
 
 }
 
@@ -328,25 +324,25 @@ Java_org_openafs_jafs_Partition_getVolumesBeginAt(JNIEnv * env, jclass cls,
  * iterationId   the iteration ID of this iteration
  * returns the name of the next volume of the server
  */
-JNIEXPORT jstring JNICALL
-Java_org_openafs_jafs_Partition_getVolumesNextString(JNIEnv * env, jclass cls,
-						     jint iterationId)
+JNIEXPORT jstring JNICALL 
+Java_org_openafs_jafs_Partition_getVolumesNextString
+  (JNIEnv *env, jclass cls, jlong iterationId)
 {
-    afs_status_t ast;
-    jstring jvolume;
-    vos_volumeEntry_t volEntry;
+  afs_status_t ast;
+  jstring jvolume;
+  vos_volumeEntry_t volEntry;
 
-    if (!vos_VolumeGetNext((void *)iterationId, &volEntry, &ast)) {
-	if (ast == ADMITERATORDONE) {
-	    return NULL;
-	} else {
-	    throwAFSException(env, ast);
-	    return NULL;
-	}
+  if( !vos_VolumeGetNext( (void *) iterationId, &volEntry, &ast ) ) {
+    if( ast == ADMITERATORDONE ) {
+      return NULL;
+    } else {
+      throwAFSException( env, ast );
+      return;
     }
+  }
 
-    jvolume = (*env)->NewStringUTF(env, volEntry.name);
-    return jvolume;
+  jvolume = (*env)->NewStringUTF(env, volEntry.name);
+  return jvolume;
 
 }
 
@@ -361,34 +357,33 @@ Java_org_openafs_jafs_Partition_getVolumesNextString(JNIEnv * env, jclass cls,
  *                         of the next volume
  * returns 0 if there are no more volumes, != 0 otherwise
  */
-JNIEXPORT jint JNICALL
-Java_org_openafs_jafs_Partition_getVolumesNext(JNIEnv * env, jclass cls,
-					       jint iterationId,
-					       jobject jvolumeObject)
+JNIEXPORT jint JNICALL 
+Java_org_openafs_jafs_Partition_getVolumesNext
+  (JNIEnv *env, jclass cls, jlong iterationId, jobject jvolumeObject)
 {
-    afs_status_t ast;
-    jstring jvolume;
-    vos_volumeEntry_t volEntry;
+  afs_status_t ast;
+  jstring jvolume;
+  vos_volumeEntry_t volEntry;
 
-    if (!vos_VolumeGetNext((void *)iterationId, &volEntry, &ast)) {
-	if (ast == ADMITERATORDONE) {
-	    return 0;
-	} else {
-	    throwAFSException(env, ast);
-	    return 0;
-	}
+  if( !vos_VolumeGetNext( (void *) iterationId, &volEntry, &ast ) ) {
+    if( ast == ADMITERATORDONE ) {
+      return 0;
+    } else {
+      throwAFSException( env, ast );
+      return 0;
     }
+  }
 
 
-    fillVolumeInfo(env, jvolumeObject, volEntry);
+  fillVolumeInfo( env, jvolumeObject, volEntry );
 
-    // get the class fields if need be
-    if (volumeCls == 0) {
-	internal_getVolumeClass(env, jvolumeObject);
-    }
-    (*env)->SetBooleanField(env, jvolumeObject, volume_cachedInfoField, TRUE);
-
-    return 1;
+  // get the class fields if need be
+  if( volumeCls == 0 ) {
+    internal_getVolumeClass( env, jvolumeObject );
+  }
+  (*env)->SetBooleanField( env, jvolumeObject, volume_cachedInfoField, TRUE );
+    
+  return 1;
 
 }
 
@@ -404,38 +399,37 @@ Java_org_openafs_jafs_Partition_getVolumesNext(JNIEnv * env, jclass cls,
  * advanceCount     the number of volumes to advance past
  * returns 0 if there are no more volumes, != 0 otherwise
  */
-JNIEXPORT jint JNICALL
-Java_org_openafs_jafs_Partition_getVolumesAdvanceTo(JNIEnv * env, jclass cls,
-						    jint iterationId,
-						    jobject jvolumeObject,
-						    jint advanceCount)
+JNIEXPORT jint JNICALL 
+Java_org_openafs_jafs_Partition_getVolumesAdvanceTo
+  (JNIEnv *env, jclass cls, jlong iterationId, jobject jvolumeObject,
+   jint advanceCount)
 {
-    afs_status_t ast;
-    jstring jvolume;
-    vos_volumeEntry_t volEntry;
-    int i;
+  afs_status_t ast;
+  jstring jvolume;
+  vos_volumeEntry_t volEntry;
+  int i;
 
-    for (i = 0; i < advanceCount; i++) {
-	if (!vos_VolumeGetNext((void *)iterationId, &volEntry, &ast)) {
-	    if (ast == ADMITERATORDONE) {
-		return 0;
-	    } else {
-		throwAFSException(env, ast);
-		return 0;
-	    }
-	}
+  for ( i = 0; i < advanceCount; i++) {
+    if( !vos_VolumeGetNext( (void *) iterationId, &volEntry, &ast ) ) {
+      if( ast == ADMITERATORDONE ) {
+        return 0;
+      } else {
+        throwAFSException( env, ast );
+        return 0;
+      }
     }
+  }
 
 
-    fillVolumeInfo(env, jvolumeObject, volEntry);
+  fillVolumeInfo( env, jvolumeObject, volEntry );
 
-    // get the class fields if need be
-    if (volumeCls == 0) {
-	internal_getVolumeClass(env, jvolumeObject);
-    }
-    (*env)->SetBooleanField(env, jvolumeObject, volume_cachedInfoField, TRUE);
-
-    return 1;
+  // get the class fields if need be
+  if( volumeCls == 0 ) {
+    internal_getVolumeClass( env, jvolumeObject );
+  }
+  (*env)->SetBooleanField( env, jvolumeObject, volume_cachedInfoField, TRUE );
+    
+  return 1;
 }
 
 /**
@@ -445,25 +439,44 @@ Java_org_openafs_jafs_Partition_getVolumesAdvanceTo(JNIEnv * env, jclass cls,
  * cls      the current Java class
  * iterationId   the iteration ID of this iteration
  */
-JNIEXPORT void JNICALL
-Java_org_openafs_jafs_Partition_getVolumesDone(JNIEnv * env, jclass cls,
-					       jint iterationId)
+JNIEXPORT void JNICALL 
+Java_org_openafs_jafs_Partition_getVolumesDone
+  (JNIEnv *env, jclass cls, jlong iterationId)
 {
-    afs_status_t ast;
+  afs_status_t ast;
 
-    if (!vos_VolumeGetDone((void *)iterationId, &ast)) {
-	throwAFSException(env, ast);
-	return;
-    }
+  if( !vos_VolumeGetDone( (void *) iterationId, &ast ) ) {
+    throwAFSException( env, ast );
+    return;
+  }
 }
 
 // reclaim global memory being used by this portion
 JNIEXPORT void JNICALL
-Java_org_openafs_jafs_Partition_reclaimPartitionMemory(JNIEnv * env,
-						       jclass cls)
+Java_org_openafs_jafs_Partition_reclaimPartitionMemory
+ (JNIEnv *env, jclass cls)
 {
-    if (partitionCls) {
-	(*env)->DeleteGlobalRef(env, partitionCls);
-	partitionCls = 0;
-    }
+  if( partitionCls ) {
+      (*env)->DeleteGlobalRef(env, partitionCls);
+      partitionCls = 0;
+  }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

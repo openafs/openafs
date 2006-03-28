@@ -1,0 +1,428 @@
+.rn '' }`
+''' $RCSfile$$Revision$$Date$
+'''
+''' $Log$
+'''
+.de Sh
+.br
+.if t .Sp
+.ne 5
+.PP
+\fB\\$1\fR
+.PP
+..
+.de Sp
+.if t .sp .5v
+.if n .sp
+..
+.de Ip
+.br
+.ie \\n(.$>=3 .ne \\$3
+.el .ne 3
+.IP "\\$1" \\$2
+..
+.de Vb
+.ft CW
+.nf
+.ne \\$1
+..
+.de Ve
+.ft R
+
+.fi
+..
+'''
+'''
+'''     Set up \*(-- to give an unbreakable dash;
+'''     string Tr holds user defined translation string.
+'''     Bell System Logo is used as a dummy character.
+'''
+.tr \(*W-|\(bv\*(Tr
+.ie n \{\
+.ds -- \(*W-
+.ds PI pi
+.if (\n(.H=4u)&(1m=24u) .ds -- \(*W\h'-12u'\(*W\h'-12u'-\" diablo 10 pitch
+.if (\n(.H=4u)&(1m=20u) .ds -- \(*W\h'-12u'\(*W\h'-8u'-\" diablo 12 pitch
+.ds L" ""
+.ds R" ""
+'''   \*(M", \*(S", \*(N" and \*(T" are the equivalent of
+'''   \*(L" and \*(R", except that they are used on ".xx" lines,
+'''   such as .IP and .SH, which do another additional levels of
+'''   double-quote interpretation
+.ds M" """
+.ds S" """
+.ds N" """""
+.ds T" """""
+.ds L' '
+.ds R' '
+.ds M' '
+.ds S' '
+.ds N' '
+.ds T' '
+'br\}
+.el\{\
+.ds -- \(em\|
+.tr \*(Tr
+.ds L" ``
+.ds R" ''
+.ds M" ``
+.ds S" ''
+.ds N" ``
+.ds T" ''
+.ds L' `
+.ds R' '
+.ds M' `
+.ds S' '
+.ds N' `
+.ds T' '
+.ds PI \(*p
+'br\}
+.\"	If the F register is turned on, we'll generate
+.\"	index entries out stderr for the following things:
+.\"		TH	Title 
+.\"		SH	Header
+.\"		Sh	Subsection 
+.\"		Ip	Item
+.\"		X<>	Xref  (embedded
+.\"	Of course, you have to process the output yourself
+.\"	in some meaninful fashion.
+.if \nF \{
+.de IX
+.tm Index:\\$1\t\\n%\t"\\$2"
+..
+.nr % 0
+.rr F
+.\}
+.TH fstrace_dump 8 "OpenAFS" "1/Mar/2006" "AFS Command Reference"
+.UC
+.if n .hy 0
+.if n .na
+.ds C+ C\v'-.1v'\h'-1p'\s-2+\h'-1p'+\s0\v'.1v'\h'-1p'
+.de CQ          \" put $1 in typewriter font
+.ft CW
+'if n "\c
+'if t \\&\\$1\c
+'if n \\&\\$1\c
+'if n \&"
+\\&\\$2 \\$3 \\$4 \\$5 \\$6 \\$7
+'.ft R
+..
+.\" @(#)ms.acc 1.5 88/02/08 SMI; from UCB 4.2
+.	\" AM - accent mark definitions
+.bd B 3
+.	\" fudge factors for nroff and troff
+.if n \{\
+.	ds #H 0
+.	ds #V .8m
+.	ds #F .3m
+.	ds #[ \f1
+.	ds #] \fP
+.\}
+.if t \{\
+.	ds #H ((1u-(\\\\n(.fu%2u))*.13m)
+.	ds #V .6m
+.	ds #F 0
+.	ds #[ \&
+.	ds #] \&
+.\}
+.	\" simple accents for nroff and troff
+.if n \{\
+.	ds ' \&
+.	ds ` \&
+.	ds ^ \&
+.	ds , \&
+.	ds ~ ~
+.	ds ? ?
+.	ds ! !
+.	ds /
+.	ds q
+.\}
+.if t \{\
+.	ds ' \\k:\h'-(\\n(.wu*8/10-\*(#H)'\'\h"|\\n:u"
+.	ds ` \\k:\h'-(\\n(.wu*8/10-\*(#H)'\`\h'|\\n:u'
+.	ds ^ \\k:\h'-(\\n(.wu*10/11-\*(#H)'^\h'|\\n:u'
+.	ds , \\k:\h'-(\\n(.wu*8/10)',\h'|\\n:u'
+.	ds ~ \\k:\h'-(\\n(.wu-\*(#H-.1m)'~\h'|\\n:u'
+.	ds ? \s-2c\h'-\w'c'u*7/10'\u\h'\*(#H'\zi\d\s+2\h'\w'c'u*8/10'
+.	ds ! \s-2\(or\s+2\h'-\w'\(or'u'\v'-.8m'.\v'.8m'
+.	ds / \\k:\h'-(\\n(.wu*8/10-\*(#H)'\z\(sl\h'|\\n:u'
+.	ds q o\h'-\w'o'u*8/10'\s-4\v'.4m'\z\(*i\v'-.4m'\s+4\h'\w'o'u*8/10'
+.\}
+.	\" troff and (daisy-wheel) nroff accents
+.ds : \\k:\h'-(\\n(.wu*8/10-\*(#H+.1m+\*(#F)'\v'-\*(#V'\z.\h'.2m+\*(#F'.\h'|\\n:u'\v'\*(#V'
+.ds 8 \h'\*(#H'\(*b\h'-\*(#H'
+.ds v \\k:\h'-(\\n(.wu*9/10-\*(#H)'\v'-\*(#V'\*(#[\s-4v\s0\v'\*(#V'\h'|\\n:u'\*(#]
+.ds _ \\k:\h'-(\\n(.wu*9/10-\*(#H+(\*(#F*2/3))'\v'-.4m'\z\(hy\v'.4m'\h'|\\n:u'
+.ds . \\k:\h'-(\\n(.wu*8/10)'\v'\*(#V*4/10'\z.\v'-\*(#V*4/10'\h'|\\n:u'
+.ds 3 \*(#[\v'.2m'\s-2\&3\s0\v'-.2m'\*(#]
+.ds o \\k:\h'-(\\n(.wu+\w'\(de'u-\*(#H)/2u'\v'-.3n'\*(#[\z\(de\v'.3n'\h'|\\n:u'\*(#]
+.ds d- \h'\*(#H'\(pd\h'-\w'~'u'\v'-.25m'\f2\(hy\fP\v'.25m'\h'-\*(#H'
+.ds D- D\\k:\h'-\w'D'u'\v'-.11m'\z\(hy\v'.11m'\h'|\\n:u'
+.ds th \*(#[\v'.3m'\s+1I\s-1\v'-.3m'\h'-(\w'I'u*2/3)'\s-1o\s+1\*(#]
+.ds Th \*(#[\s+2I\s-2\h'-\w'I'u*3/5'\v'-.3m'o\v'.3m'\*(#]
+.ds ae a\h'-(\w'a'u*4/10)'e
+.ds Ae A\h'-(\w'A'u*4/10)'E
+.ds oe o\h'-(\w'o'u*4/10)'e
+.ds Oe O\h'-(\w'O'u*4/10)'E
+.	\" corrections for vroff
+.if v .ds ~ \\k:\h'-(\\n(.wu*9/10-\*(#H)'\s-2\u~\d\s+2\h'|\\n:u'
+.if v .ds ^ \\k:\h'-(\\n(.wu*10/11-\*(#H)'\v'-.4m'^\v'.4m'\h'|\\n:u'
+.	\" for low resolution devices (crt and lpr)
+.if \n(.H>23 .if \n(.V>19 \
+\{\
+.	ds : e
+.	ds 8 ss
+.	ds v \h'-1'\o'\(aa\(ga'
+.	ds _ \h'-1'^
+.	ds . \h'-1'.
+.	ds 3 3
+.	ds o a
+.	ds d- d\h'-1'\(ga
+.	ds D- D\h'-1'\(hy
+.	ds th \o'bp'
+.	ds Th \o'LP'
+.	ds ae ae
+.	ds Ae AE
+.	ds oe oe
+.	ds Oe OE
+.\}
+.rm #[ #] #H #V #F C
+.SH "NAME"
+fstrace dump \- Dumps a trace log
+.SH "SYNOPSIS"
+\fBfstrace dump\fR <<\ [\fB\-set\fR\ <\fIset\ name\fR+] >>> <<\ [\fB\-follow\fR\ <\fIlog\ name\fR] >>>
+    <<\ [\fB\-file\fR\ <\fIoutput\ filename\fR] >>> <<\ [\fB\-sleep\fR\ <\fIseconds\ between\ reads\fR] >>>
+    [\fB\-help\fR]
+.PP
+\fBfstrace d\fR <<\ [\fB\-se\fR\ <\fIset\ name\fR+] >>> <<\ [\fB\-fo\fR\ <\fIlog\ name\fR] >>>
+    <<\ [\fB\-fi\fR\ <\fIoutput\ filename\fR] >>> <<\ [\fB\-sl\fR\ <\fIseconds\ between\ reads\fR] >>>
+    [\fB\-h\fR]
+.SH "DESCRIPTION"
+The \fBfstrace dump\fR command displays the current contents of the \f(CWcmfx\fR
+trace log on the standard output stream or writes it to the file named by
+the \fB\-file\fR argument.
+.PP
+To write the log continuously to the standard output stream or to a file,
+use the \fB\-follow\fR argument. By default, the log's contents are written
+out every ten seconds and then automatically cleared. To change the
+interval between writes, use the \fB\-sleep\fR argument.
+.SH "CAUTIONS"
+This command produces output only if the \f(CWcm\fR event set is active. To
+display or set the event set's state, use the \fBfstrace lsset\fR or
+\fBfstrace setset\fR command respectively.
+.PP
+To make the output from this command maximally readable, the message
+catalog file called \fIafszcm.cat\fR must reside in the local
+\fI/usr/vice/etc/C\fR directory. If necessary, copy the file to that
+directory from the AFS Binary Distribution before activating tracing.
+.PP
+When the \f(CWcm\fR event set is active, a defined amount of kernel memory (by
+default, 60 KB) is allocated for the \f(CWcmfx\fR trace log. As described in
+the \fIfstrace(8)\fR manpage, when the buffer is full, messages are overwritten in a
+circular fashion (new messages overwrite the oldest ones). To allocate
+more kernel memory for the log, use the \fBfstrace setlog\fR command; to
+display the log buffer's current size, use the \fBfstrace lslog\fR command
+with the \fB\-long\fR argument.
+.SH "OPTIONS"
+.Ip "\fB\-set\fR <\fIset name\fR>+" 4
+Names the event set for which to write out the associated trace log. The
+only acceptable value is \f(CWcm\fR (for which the associated trace log is
+\f(CWcmfx\fR). Provide either this argument or the \fB\-log\fR argument, or omit
+both to write out the \f(CWcmfx\fR log by default.
+.Ip "\fB\-follow\fR <\fIlog name\fR>" 4
+Names the trace log to write out continuously at a specified interval (by
+default, every ten seconds; use the \fB\-sleep\fR argument to change the
+interval). The log is cleared after each write operation.
+.Sp
+The only acceptable value is \f(CWcmfx\fR. Provide either this argument or the
+\fB\-set\fR argument, or omit both to write out the \f(CWcmfx\fR log by default.
+.Ip "\fB\-file\fR <\fIoutput filename\fR>" 4
+Specifies the pathname of the file to which to write the trace log's
+contents. It can be in \s-1AFS\s0 or on the local disk. Partial pathnames are
+interpreted relative to the current working directory. If this argument is
+omitted, the trace log appears on the standard output stream.
+.Ip "\fB\-sleep\fR <\fIseconds between reads\fR>" 4
+Sets the number of seconds between writes of the trace log's contents when
+it is dumped continuously. Provide the \fB\-follow\fR argument along with this
+one. If this argument is omitted, the default interval is ten seconds.
+.Ip "\fB\-help\fR" 4
+Prints the online help for this command. All other valid options are
+ignored.
+.SH "OUTPUT"
+The output begins with a header specifying the date and time at which the
+write operation began. If the \fB\-follow\fR argument is not included, the
+header also reports the number of logs being dumped; it is always \f(CW1\fR,
+since there is only the \f(CWcmfx\fR trace log.  The format of the header is as
+follows:
+.PP
+.Vb 4
+\&   AFS Trace Dump -
+\&     Date: I<starting_timestamp>
+\&   Found 1 logs.
+\&   Contents of log cmfx:
+.Ve
+Each subsequent message describes a Cache Manager operation in the
+following format:
+.PP
+.Vb 1
+\&   time <timestamp>, pid <pid>:<event_message>
+.Ve
+where
+.Ip "<timestamp>" 4
+Specifies the time at which the Cache Manager performed the operation, as
+the number of seconds since the dump began.
+.Ip "<pid>" 4
+Specifies the process \s-1ID\s0 of the process or thread associated with the
+message.
+.Ip "<event_message>" 4
+Is the message itself. They are generally meaningful only to someone
+familiar with the \s-1AFS\s0 source code.
+.PP
+In addition, every 1024 seconds the fstrace command interpreter writes a
+message that records the current clock time, in the following format:
+.PP
+.Vb 1
+\&   time <timestamp>, pid <pid>: Current time: <unix_time>
+.Ve
+where
+.Ip "<timestamp>" 4
+Is the number of seconds from the start of trace logging.
+.Ip "<pid>" 4
+Is the process \s-1ID\s0 number.
+.Ip "<unix_time>" 4
+Is the machine's clock time, represent in the standard \s-1UNIX\s0 time format as
+the number of seconds since midnight on January 1, 1970.
+.PP
+Use this message to determine the actual clock time associated with each
+log message. Determine the actual time as follows:
+.Ip "\(bu" 4
+Locate the message of interest.
+.Ip "\(bu" 4
+Search backward through the trace file for the closest current time
+message.
+.Ip "\(bu" 4
+If the current time message's timestamp is smaller than the log message's
+timestamp, subtract former from the latter.  If the current time message's
+timestamp is larger than the log message's timestamp, add 1024 to the
+latter and subtract the former from the result.
+.Ip "\(bu" 4
+Add the resulting number to the current time message's <unix_time> to
+determine the log message's actual time.
+.Sp
+If any of the data in the kernel trace buffer has been overwritten since
+tracing was activated, the following message appears at the appropriate
+place in the output:
+.Sp
+.Vb 1
+\&   Log wrapped; data missing.
+.Ve
+To reduce the likelihood of overwriting, use the \fBfstrace setlog\fR command
+to increase the kernel buffer's size. To display the current defined
+buffer size, use the \fBfstrace lslog\fR command with the \fB\-long\fR argument.
+.Sp
+The following message at the end of the log dump indicates that it is
+completed:
+.Sp
+.Vb 1
+\&   AFS Trace Dump - Completed
+.Ve
+.SH "EXAMPLES"
+The following command dumps the log associated with the cm event set to
+the standard output stream.
+.PP
+.Vb 18
+\&   # fstrace dump -set cm
+\&   AFS Trace Dump -
+\&      Date: Tue Apr  7 10:54:57 1998
+\&   Found 1 logs.
+\&   time 32.965783, pid 0: Tue Apr  7 10:45:52 1998
+\&   time 32.965783, pid 33657: Close 0x5c39ed8 flags 0x20
+\&   time 32.965897, pid 33657: Gn_close vp 0x5c39ed8 flags 0x20 (returns 0x0)
+\&   time 35.159854, pid 10891: Breaking callback for 5bd95e4 states 1024 (volume 0)
+\&   time 35.407081, pid 10891: Breaking callback for 5c0fadc states 1024 (volume 0)
+\&                                    .
+\&                                    .
+\&                                    .
+\&   time 71.440456, pid 33658: Lookup adp 0x5bbdcf0 name g3oCKs \e
+\&        fid (756 4fb7e:588d240.2ff978a8.6)
+\&   time 71.440569, pid 33658: Returning code 2 from 19
+\&   time 71.440619, pid 33658: Gn_lookup vp 0x5bbdcf0 name g3oCKs (returns 0x2)
+\&   time 71.464989, pid 38267: Gn_open vp 0x5bbd000 flags 0x0 (returns 0x0)
+\&   AFS Trace Dump - Completed
+.Ve
+The following command dumps the trace log associated with the cm event set
+on the local machine to the file \f(CWcmfx.dump.file.1\fR, using the default
+interval of 10 seconds between successive dumps:
+.PP
+.Vb 1
+\&   # fstrace dump -follow cmfx -file cmfx.dump.file.1
+.Ve
+.SH "PRIVILEGE REQUIRED"
+The issuer must be logged in as the local superuser \f(CWroot\fR.
+.SH "SEE ALSO"
+the \fIafszcm.cat(5)\fR manpage,
+the \fIfstrace(8)\fR manpage,
+the \fIfstrace_lslog(8)\fR manpage,
+the \fIfstrace_setlog(8)\fR manpage,
+the \fIfstrace_lsset(8)\fR manpage
+.SH "COPYRIGHT"
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+.PP
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
+
+.rn }` ''
+.IX Title "fstrace_dump 8"
+.IX Name "fstrace dump - Dumps a trace log"
+
+.IX Header "NAME"
+
+.IX Header "SYNOPSIS"
+
+.IX Header "DESCRIPTION"
+
+.IX Header "CAUTIONS"
+
+.IX Header "OPTIONS"
+
+.IX Item "\fB\-set\fR <\fIset name\fR>+"
+
+.IX Item "\fB\-follow\fR <\fIlog name\fR>"
+
+.IX Item "\fB\-file\fR <\fIoutput filename\fR>"
+
+.IX Item "\fB\-sleep\fR <\fIseconds between reads\fR>"
+
+.IX Item "\fB\-help\fR"
+
+.IX Header "OUTPUT"
+
+.IX Item "<timestamp>"
+
+.IX Item "<pid>"
+
+.IX Item "<event_message>"
+
+.IX Item "<timestamp>"
+
+.IX Item "<pid>"
+
+.IX Item "<unix_time>"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Header "EXAMPLES"
+
+.IX Header "PRIVILEGE REQUIRED"
+
+.IX Header "SEE ALSO"
+
+.IX Header "COPYRIGHT"
+

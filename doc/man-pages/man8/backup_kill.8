@@ -1,0 +1,347 @@
+.rn '' }`
+''' $RCSfile$$Revision$$Date$
+'''
+''' $Log$
+'''
+.de Sh
+.br
+.if t .Sp
+.ne 5
+.PP
+\fB\\$1\fR
+.PP
+..
+.de Sp
+.if t .sp .5v
+.if n .sp
+..
+.de Ip
+.br
+.ie \\n(.$>=3 .ne \\$3
+.el .ne 3
+.IP "\\$1" \\$2
+..
+.de Vb
+.ft CW
+.nf
+.ne \\$1
+..
+.de Ve
+.ft R
+
+.fi
+..
+'''
+'''
+'''     Set up \*(-- to give an unbreakable dash;
+'''     string Tr holds user defined translation string.
+'''     Bell System Logo is used as a dummy character.
+'''
+.tr \(*W-|\(bv\*(Tr
+.ie n \{\
+.ds -- \(*W-
+.ds PI pi
+.if (\n(.H=4u)&(1m=24u) .ds -- \(*W\h'-12u'\(*W\h'-12u'-\" diablo 10 pitch
+.if (\n(.H=4u)&(1m=20u) .ds -- \(*W\h'-12u'\(*W\h'-8u'-\" diablo 12 pitch
+.ds L" ""
+.ds R" ""
+'''   \*(M", \*(S", \*(N" and \*(T" are the equivalent of
+'''   \*(L" and \*(R", except that they are used on ".xx" lines,
+'''   such as .IP and .SH, which do another additional levels of
+'''   double-quote interpretation
+.ds M" """
+.ds S" """
+.ds N" """""
+.ds T" """""
+.ds L' '
+.ds R' '
+.ds M' '
+.ds S' '
+.ds N' '
+.ds T' '
+'br\}
+.el\{\
+.ds -- \(em\|
+.tr \*(Tr
+.ds L" ``
+.ds R" ''
+.ds M" ``
+.ds S" ''
+.ds N" ``
+.ds T" ''
+.ds L' `
+.ds R' '
+.ds M' `
+.ds S' '
+.ds N' `
+.ds T' '
+.ds PI \(*p
+'br\}
+.\"	If the F register is turned on, we'll generate
+.\"	index entries out stderr for the following things:
+.\"		TH	Title 
+.\"		SH	Header
+.\"		Sh	Subsection 
+.\"		Ip	Item
+.\"		X<>	Xref  (embedded
+.\"	Of course, you have to process the output yourself
+.\"	in some meaninful fashion.
+.if \nF \{
+.de IX
+.tm Index:\\$1\t\\n%\t"\\$2"
+..
+.nr % 0
+.rr F
+.\}
+.TH backup_kill 8 "OpenAFS" "1/Mar/2006" "AFS Command Reference"
+.UC
+.if n .hy 0
+.if n .na
+.ds C+ C\v'-.1v'\h'-1p'\s-2+\h'-1p'+\s0\v'.1v'\h'-1p'
+.de CQ          \" put $1 in typewriter font
+.ft CW
+'if n "\c
+'if t \\&\\$1\c
+'if n \\&\\$1\c
+'if n \&"
+\\&\\$2 \\$3 \\$4 \\$5 \\$6 \\$7
+'.ft R
+..
+.\" @(#)ms.acc 1.5 88/02/08 SMI; from UCB 4.2
+.	\" AM - accent mark definitions
+.bd B 3
+.	\" fudge factors for nroff and troff
+.if n \{\
+.	ds #H 0
+.	ds #V .8m
+.	ds #F .3m
+.	ds #[ \f1
+.	ds #] \fP
+.\}
+.if t \{\
+.	ds #H ((1u-(\\\\n(.fu%2u))*.13m)
+.	ds #V .6m
+.	ds #F 0
+.	ds #[ \&
+.	ds #] \&
+.\}
+.	\" simple accents for nroff and troff
+.if n \{\
+.	ds ' \&
+.	ds ` \&
+.	ds ^ \&
+.	ds , \&
+.	ds ~ ~
+.	ds ? ?
+.	ds ! !
+.	ds /
+.	ds q
+.\}
+.if t \{\
+.	ds ' \\k:\h'-(\\n(.wu*8/10-\*(#H)'\'\h"|\\n:u"
+.	ds ` \\k:\h'-(\\n(.wu*8/10-\*(#H)'\`\h'|\\n:u'
+.	ds ^ \\k:\h'-(\\n(.wu*10/11-\*(#H)'^\h'|\\n:u'
+.	ds , \\k:\h'-(\\n(.wu*8/10)',\h'|\\n:u'
+.	ds ~ \\k:\h'-(\\n(.wu-\*(#H-.1m)'~\h'|\\n:u'
+.	ds ? \s-2c\h'-\w'c'u*7/10'\u\h'\*(#H'\zi\d\s+2\h'\w'c'u*8/10'
+.	ds ! \s-2\(or\s+2\h'-\w'\(or'u'\v'-.8m'.\v'.8m'
+.	ds / \\k:\h'-(\\n(.wu*8/10-\*(#H)'\z\(sl\h'|\\n:u'
+.	ds q o\h'-\w'o'u*8/10'\s-4\v'.4m'\z\(*i\v'-.4m'\s+4\h'\w'o'u*8/10'
+.\}
+.	\" troff and (daisy-wheel) nroff accents
+.ds : \\k:\h'-(\\n(.wu*8/10-\*(#H+.1m+\*(#F)'\v'-\*(#V'\z.\h'.2m+\*(#F'.\h'|\\n:u'\v'\*(#V'
+.ds 8 \h'\*(#H'\(*b\h'-\*(#H'
+.ds v \\k:\h'-(\\n(.wu*9/10-\*(#H)'\v'-\*(#V'\*(#[\s-4v\s0\v'\*(#V'\h'|\\n:u'\*(#]
+.ds _ \\k:\h'-(\\n(.wu*9/10-\*(#H+(\*(#F*2/3))'\v'-.4m'\z\(hy\v'.4m'\h'|\\n:u'
+.ds . \\k:\h'-(\\n(.wu*8/10)'\v'\*(#V*4/10'\z.\v'-\*(#V*4/10'\h'|\\n:u'
+.ds 3 \*(#[\v'.2m'\s-2\&3\s0\v'-.2m'\*(#]
+.ds o \\k:\h'-(\\n(.wu+\w'\(de'u-\*(#H)/2u'\v'-.3n'\*(#[\z\(de\v'.3n'\h'|\\n:u'\*(#]
+.ds d- \h'\*(#H'\(pd\h'-\w'~'u'\v'-.25m'\f2\(hy\fP\v'.25m'\h'-\*(#H'
+.ds D- D\\k:\h'-\w'D'u'\v'-.11m'\z\(hy\v'.11m'\h'|\\n:u'
+.ds th \*(#[\v'.3m'\s+1I\s-1\v'-.3m'\h'-(\w'I'u*2/3)'\s-1o\s+1\*(#]
+.ds Th \*(#[\s+2I\s-2\h'-\w'I'u*3/5'\v'-.3m'o\v'.3m'\*(#]
+.ds ae a\h'-(\w'a'u*4/10)'e
+.ds Ae A\h'-(\w'A'u*4/10)'E
+.ds oe o\h'-(\w'o'u*4/10)'e
+.ds Oe O\h'-(\w'O'u*4/10)'E
+.	\" corrections for vroff
+.if v .ds ~ \\k:\h'-(\\n(.wu*9/10-\*(#H)'\s-2\u~\d\s+2\h'|\\n:u'
+.if v .ds ^ \\k:\h'-(\\n(.wu*10/11-\*(#H)'\v'-.4m'^\v'.4m'\h'|\\n:u'
+.	\" for low resolution devices (crt and lpr)
+.if \n(.H>23 .if \n(.V>19 \
+\{\
+.	ds : e
+.	ds 8 ss
+.	ds v \h'-1'\o'\(aa\(ga'
+.	ds _ \h'-1'^
+.	ds . \h'-1'.
+.	ds 3 3
+.	ds o a
+.	ds d- d\h'-1'\(ga
+.	ds D- D\h'-1'\(hy
+.	ds th \o'bp'
+.	ds Th \o'LP'
+.	ds ae ae
+.	ds Ae AE
+.	ds oe oe
+.	ds Oe OE
+.\}
+.rm #[ #] #H #V #F C
+.SH "NAME"
+backup kill \- Terminates a pending or running operation
+.SH "SYNOPSIS"
+\fBkill\fR <<\ \fB\-id\fR\ <\fIjob\ ID\ or\ dump\ set\ name\fR >>> [\fB\-help\fR]
+.PP
+<<\ \fBk\ \-i\fR\ <\fIjob\ ID\ or\ dump\ set\ name\fR >>> [\fB\-h\fR]
+.SH "DESCRIPTION"
+The \fBbackup kill\fR command dequeues a Backup System operation that is
+pending, or terminates an operation that is running, in the current
+interactive session. It is available only in interactive mode.  If the
+issuer of the \fBbackup interactive\fR command included the \fB\-localauth\fR
+flag, the \fB\-cell\fR argument, or both, then those settings apply to this
+command also.
+.PP
+To terminate a dump operation, specify either the dump name
+(\fIvolume_set_name\fR.\fIdump_level_name\fR) or its job ID number, which
+appears in the output from the \fBbackup jobs\fR command. To terminate any
+other type of operation, provide the job ID number.
+.PP
+The effect of terminating an operation depends on the type and current
+state of the operation:
+.Ip "\(bu" 4
+If an operation is still pending, the Tape Coordinator removes it from the
+queue with no other lasting effects.
+.Ip "\(bu" 4
+If the Tape Coordinator is unable to process the termination signal before
+an operation completes, it simply confirms the operation's completion. The
+operator must take the action necessary to undo the effects of the
+incorrect operation.
+.Ip "\(bu" 4
+If a tape labeling operation is running, the effect depends on when the
+Tape Coordinator receives the termination signal. The labeling operation
+is atomic, so it either completes or does not begin at all.  Use the
+\fBbackup readlabel\fR command to determine if the labeling operation
+completed, and reissue the \fBbackup labeltape\fR command to overwrite the
+incorrect label if necessary.
+.Ip "\(bu" 4
+If a tape scanning operation is running, it terminates with no other
+effects unless the \fB\-dbadd\fR flag was included on the \fBbackup\fR
+command. In that case, the Backup System possibly has already written new
+Backup Database records to represent dumps on the scanned tape. If
+planning to restart the scanning operation, first locate and remove the
+records created during the terminated operation: a repeated \fBbackup
+scantape\fR operation exits automatically when it finds that a record that
+it needs to create already exists.
+.Ip "\(bu" 4
+If a dump operation is running, all of the volumes written to the tape or
+backup data file before the termination signal is received are complete
+and usable. If the operation is restarted, the Backup System performs all
+the dumps again from scratch, and assigns a new dump \s-1ID\s0 number. If writing
+the new dumps to the same tape or file, the operator must relabel it first
+if the interrupted dump is not expired. If writing the new dump to a
+different tape or file, the operator can remove the dump record associated
+with the interrupted dump to free up space in the database.
+.Ip "\(bu" 4
+If a restore operation is running, completely restored volumes are online
+and usable. However, it is unlikely that many volumes are completely
+restored, given that complete restoration usually requires data from
+multiple tapes. If the termination signal comes before the Backup System
+has accessed all of the necessary tapes, each volume is only partially
+written and is never brought online. It is best to restart the restore
+operation from scratch to avoid possible inconsistencies. See also
+the \fI\s-1CAUTIONS\s0\fR manpage.
+.SH "CAUTIONS"
+It is best not to issue the \fBbackup kill\fR command against restore
+operations. If the termination signal interrupts a restore operation as
+the Backup System is overwriting an existing volume, it is possible to
+lose the volume entirely (that is, to lose both the contents of the volume
+as it was before the restore and any data that was restored before the
+termination signal arrived). The data being restored still exists on the
+tape, but some data can be lost permanently.
+.SH "OPTIONS"
+.Ip "\fB\-id\fR <\fIjob \s-1ID\s0 or dump set name\fR>" 4
+Identifies the backup operation to terminate. Provide one of two types of
+values:
+.Ip "\(bu" 8
+The operation's job \s-1ID\s0 number, as displayed in the output of the \fBbackup
+jobs\fR command.
+.Ip "\(bu" 8
+For a dump operation, either the job \s-1ID\s0 number or a dump name of the form
+\fIvolume_set_name\fR.\fIdump_level_name\fR, where \fIvolume_set_name\fR is the
+name of the volume set being dumped and \fIdump_level_name\fR is the last
+element in the dump level pathname at which the volume set is being
+dumped. The dump name appears in the output of the \fBbackup jobs\fR command
+along with the job \s-1ID\s0 number.
+.Ip "\fB\-help\fR" 4
+Prints the online help for this command. All other valid options are
+ignored.
+.SH "EXAMPLES"
+The following command terminates the operation with job ID 5:
+.PP
+.Vb 1
+\&   backup> kill 5
+.Ve
+The following command terminates the dump operation called
+\f(CWuser.sunday1\fR:
+.PP
+.Vb 1
+\&   backup> kill user.sunday1
+.Ve
+.SH "PRIVILEGE REQUIRED"
+The issuer must have the privilege required to initiate the operation
+being cancelled. Because this command can be issued only within the
+interactive session during which the operation was initiated, the required
+privilege is essentially guaranteed.
+.SH "SEE ALSO"
+the \fIbackup(8)\fR manpage,
+the \fIbackup_interactive(8)\fR manpage,
+the \fIbackup_jobs(8)\fR manpage
+.SH "COPYRIGHT"
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+.PP
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
+
+.rn }` ''
+.IX Title "backup_kill 8"
+.IX Name "backup kill - Terminates a pending or running operation"
+
+.IX Header "NAME"
+
+.IX Header "SYNOPSIS"
+
+.IX Header "DESCRIPTION"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Header "CAUTIONS"
+
+.IX Header "OPTIONS"
+
+.IX Item "\fB\-id\fR <\fIjob \s-1ID\s0 or dump set name\fR>"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\fB\-help\fR"
+
+.IX Header "EXAMPLES"
+
+.IX Header "PRIVILEGE REQUIRED"
+
+.IX Header "SEE ALSO"
+
+.IX Header "COPYRIGHT"
+

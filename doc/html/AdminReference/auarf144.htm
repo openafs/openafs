@@ -1,0 +1,76 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 4//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3672/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 3 Oct 2000 at 16:18:30                -->
+<META HTTP-EQUIV="updated" CONTENT="Tue, 03 Oct 2000 16:18:29">
+<META HTTP-EQUIV="review" CONTENT="Wed, 03 Oct 2001 16:18:29">
+<META HTTP-EQUIV="expires" CONTENT="Thu, 03 Oct 2002 16:18:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf143.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf145.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRFS_GETCELLSTATUS" HREF="auarf002.htm#ToC_158">fs getcellstatus</A></H2>
+<A NAME="IDX4833"></A>
+<A NAME="IDX4834"></A>
+<A NAME="IDX4835"></A>
+<A NAME="IDX4836"></A>
+<A NAME="IDX4837"></A>
+<A NAME="IDX4838"></A>
+<P><STRONG>Purpose</STRONG>
+<P>Reports whether the machine can run setuid programs from a specified cell
+<P><STRONG>Synopsis</STRONG>
+<PRE><B>fs getcellstatus -cell</B> &lt;<VAR>cell&nbsp;name</VAR>><SUP>+</SUP>  [<B>-help</B>]
+   
+<B>fs getce -c</B> &lt;<VAR>cell&nbsp;name</VAR>><SUP>+</SUP>  [<B>-h</B>]
+</PRE>
+<P><STRONG>Description</STRONG>
+<P>The <B>fs getcellstatus</B> command reports whether the Cache Manager
+allows programs fetched from each specified cell to run with setuid
+permission. To set a cell's setuid status, use the <B>fs
+setcell</B> command; its reference page fully describes how AFS treats
+setuid programs.
+<P><STRONG>Options</STRONG>
+<DL>
+<P><DT><B>-cell
+</B><DD>Names each cell for which to report setuid status. Provide the
+fully qualified domain name, or a shortened form that disambiguates it from
+the other cells listed in the local <B>/usr/vice/etc/CellServDB</B>
+file.
+<P><DT><B>-help
+</B><DD>Prints the online help for this command. All other valid options
+are ignored.
+</DL>
+<P><STRONG>Output</STRONG>
+<P>The output reports one of the following two values as appropriate:
+<PRE>   Cell <VAR>cell</VAR> status: setuid allowed
+   Cell <VAR>cell</VAR> status: no setuid allowed
+   
+</PRE>
+<P><STRONG>Examples</STRONG>
+<P>The following example indicates that programs from the cell
+<B>abc.com</B> are not allowed to run with setuid
+permission.
+<PRE>   % <B>fs getcellstatus abc.com</B>
+   Cell abc.com status: no setuid allowed
+   
+</PRE>
+<P><STRONG>Privilege Required</STRONG>
+<P>None
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf019.htm#HDRCLI_CSDB">CellServDB (client version)</A>
+<P><A HREF="auarf159.htm#HDRFS_SETCELL">fs setcell</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf143.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf145.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

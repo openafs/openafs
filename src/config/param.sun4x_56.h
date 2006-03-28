@@ -13,8 +13,6 @@
 #ifndef	AFS_PARAM_H
 #define	AFS_PARAM_H
 
-#include <afs/afs_sysnames.h>
-
 #define AFS_VFS_ENV	1
 /* Used only in vfsck code; is it needed any more???? */
 
@@ -33,10 +31,15 @@
 #define RXK_LISTENER_ENV   1
 #define AFS_GCPAGS		1	/* if nonzero, garbage collect PAGs */
 
+#define AFS_64BIT_ENV		1	/* Defines afs_int32 as int, not long. */
+#define AFS_64BIT_CLIENT	1
+
 #define	AFS_3DISPARES		1	/* Utilize the 3 available disk inode 'spares' */
 #define	AFS_SYSCALL		105
 
 #define AFS_HAVE_FLOCK_SYSID    1
+
+#include <afs/afs_sysnames.h>
 
 /* File system entry (used if mount.h doesn't define MOUNT_AFS */
 #define AFS_MOUNT_AFS	 "afs"
@@ -69,7 +72,7 @@
 /*#define	AFS_USEBUFFERS	1*/
 #define	afsio_iov		uio_iov
 #define	afsio_iovcnt	uio_iovcnt
-#define	afsio_offset	uio_offset
+#define	afsio_offset	uio_loffset
 #define	afsio_seg		uio_segflg
 #define	afsio_fmode	uio_fmode
 #define	afsio_resid	uio_resid

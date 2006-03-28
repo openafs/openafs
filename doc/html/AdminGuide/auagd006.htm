@@ -1,0 +1,780 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 4//EN">
+<HTML><HEAD>
+<TITLE>Administration Guide</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3570/auagd000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 2 Oct 2000 at 11:42:14                -->
+<META HTTP-EQUIV="updated" CONTENT="Mon, 02 Oct 2000 11:42:13">
+<META HTTP-EQUIV="review" CONTENT="Tue, 02 Oct 2001 11:42:13">
+<META HTTP-EQUIV="expires" CONTENT="Wed, 02 Oct 2002 11:42:13">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Guide</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auagd002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auagd005.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auagd007.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auagd026.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<HR><H1><A NAME="HDRWQ5" HREF="auagd002.htm#ToC_9">An Overview of AFS Administration</A></H1>
+<P>This chapter provides a broad overview of the concepts and
+organization of AFS. It is strongly recommended that anyone involved in
+administering an AFS cell read this chapter before beginning to issue
+commands.
+<HR><H2><A NAME="HDRWQ6" HREF="auagd002.htm#ToC_10">A Broad Overview of AFS</A></H2>
+<P>This section introduces most of the key terms and concepts
+necessary for a basic understanding of AFS. For a more detailed
+discussion, see <A HREF="#HDRWQ7">More Detailed Discussions of Some Basic Concepts</A>.
+<P><B>AFS: A Distributed File System</B>
+<P>AFS is a <I>distributed file system</I> that enables users to share and
+access all of the files stored in a network of computers as easily as they
+access the files stored on their local machines. The file system is
+called distributed for this exact reason: files can reside on many
+different machines (be distributed across them), but are available to users on
+every machine.
+<P><B>Servers and Clients</B>
+<P>In fact, AFS stores files on a subset of the machines in a network, called
+<I>file server machines</I>. File server machines provide file
+storage and delivery service, along with other specialized services, to the
+other subset of machines in the network, the <I>client
+machines</I>. These machines are called clients because they make use
+of the servers' services while doing their own work. In a standard
+AFS configuration, clients provide computational power, access to the files in
+AFS and other "general purpose" tools to the users seated at their
+consoles. There are generally many more client workstations than file
+server machines.
+<P>AFS file server machines run a number of <I>server processes</I>, so
+called because each provides a distinct specialized service: one handles
+file requests, another tracks file location, a third manages security, and so
+on. To avoid confusion, AFS documentation always refers to <I>server
+machines</I> and <I>server processes</I>, not simply to
+<I>servers</I>. For a more detailed description of the server
+processes, see <A HREF="#HDRWQ17">AFS Server Processes and the Cache Manager</A>.
+<P><B>Cells</B>
+<P>A <I>cell</I> is an administratively independent site running
+AFS. As a cell's system administrator, you make many decisions
+about configuring and maintaining your cell in the way that best serves its
+users, without having to consult the administrators in other cells. For
+example, you determine how many clients and servers to have, where to put
+files, and how to allocate client machines to users.
+<P><B>Transparent Access and the Uniform Namespace</B>
+<P>Although your AFS cell is administratively independent, you probably want
+to organize the local collection of files (your <I>filespace</I> or
+<I>tree</I>) so that users from other cells can also access the
+information in it. AFS enables cells to combine their local filespaces
+into a <I>global filespace</I>, and does so in such a way that file access
+is <I>transparent</I>--users do not need to know anything about a
+file's location in order to access it. All they need to know is
+the pathname of the file, which looks the same in every cell. Thus
+every user at every machine sees the collection of files in the same way,
+meaning that AFS provides a <I>uniform namespace</I> to its users.
+<P><B>Volumes</B>
+<P>AFS groups files into <I>volumes</I>, making it possible to distribute
+files across many machines and yet maintain a uniform namespace. A
+volume is a unit of disk space that functions like a container for a set of
+related files, keeping them all together on one partition. Volumes can
+vary in size, but are (by definition) smaller than a partition.
+<P>Volumes are important to system administrators and users for several
+reasons. Their small size makes them easy to move from one partition to
+another, or even between machines. The system administrator can
+maintain maximum efficiency by moving volumes to keep the load balanced
+evenly. In addition, volumes correspond to directories in the
+filespace--most cells store the contents of each user home directory in a
+separate volume. Thus the complete contents of the directory move
+together when the volume moves, making it easy for AFS to keep track of where
+a file is at a certain time. Volume moves are recorded automatically,
+so users do not have to keep track of file locations.
+<P><B>Efficiency Boosters: Replication and Caching</B>
+<P>AFS incorporates special features on server machines and client machines
+that help make it efficient and reliable.
+<P>On server machines, AFS enables administrators to <I>replicate</I>
+commonly-used volumes, such as those containing binaries for popular
+programs. Replication means putting an identical read-only copy
+(sometimes called a <I>clone</I>) of a volume on more than one file server
+machine. The failure of one file server machine housing the volume does
+not interrupt users' work, because the volume's contents are still
+available from other machines. Replication also means that one machine
+does not become overburdened with requests for files from a popular
+volume.
+<P>On client machines, AFS uses <I>caching</I> to improve
+efficiency. When a user on a client workstation requests a file, the
+<I>Cache Manager</I> on the client sends a request for the data to the
+File Server process running on the proper file server machine. The user
+does not need to know which machine this is; the Cache Manager determines
+file location automatically. The Cache Manager receives the file from
+the File Server process and puts it into the <I>cache</I>, an area of the
+client machine's local disk or memory dedicated to temporary file
+storage. Caching improves efficiency because the client does not need
+to send a request across the network every time the user wants the same
+file. Network traffic is minimized, and subsequent access to the file
+is especially fast because the file is stored locally. AFS has a way of
+ensuring that the cached file stays up-to-date, called a
+<I>callback</I>.
+<P><B>Security: Mutual Authentication and Access Control Lists</B>
+<P>Even in a cell where file sharing is especially frequent and widespread, it
+is not desirable that every user have equal access to every file. One
+way AFS provides adequate security is by requiring that servers and clients
+prove their identities to one another before they exchange information.
+This procedure, called <I>mutual authentication</I>, requires that both
+server and client demonstrate knowledge of a "shared secret" (like a password)
+known only to the two of them. Mutual authentication guarantees that
+servers provide information only to authorized clients and that clients
+receive information only from legitimate servers.
+<P>Users themselves control another aspect of AFS security, by determining who
+has access to the directories they own. For any directory a user owns,
+he or she can build an <I>access control list</I> (ACL) that grants or
+denies access to the contents of the directory. An access control list
+pairs specific users with specific types of access privileges. There
+are seven separate permissions and up to twenty different people or groups of
+people can appear on an access control list.
+<P>For a more detailed description of AFS's mutual authentication
+procedure, see <A HREF="auagd007.htm#HDRWQ75">A More Detailed Look at Mutual Authentication</A>. For further discussion of ACLs, see <A HREF="auagd020.htm#HDRWQ562">Managing Access Control Lists</A>.
+<HR><H2><A NAME="HDRWQ7" HREF="auagd002.htm#ToC_11">More Detailed Discussions of Some Basic Concepts</A></H2>
+<P>The previous section offered a brief overview of the many
+concepts that an AFS system administrator needs to understand. The
+following sections examine some important concepts in more detail.
+Although not all concepts are new to an experienced administrator, reading
+this section helps ensure a common understanding of term and concepts.
+<P><H3><A NAME="HDRWQ8" HREF="auagd002.htm#ToC_12">Networks</A></H3>
+<A NAME="IDX5538"></A>
+<P>A <I>network</I> is a collection of interconnected computers able to
+communicate with each other and transfer information back and forth.
+<P>A networked computing environment contrasts with two types of computing
+environments: <I>mainframe</I> and <I>personal</I>. 
+<A NAME="IDX5539"></A>
+<A NAME="IDX5540"></A>
+<UL>
+<P><LI>A <I>mainframe</I> computing environment is the most
+traditional. It uses a single powerful computer (the mainframe) to do
+the majority of the work in the system, both file storage and
+computation. It serves many users, who access their files and issue
+commands to the mainframe via <I>terminals</I>, which generally have only
+enough computing power to accept input from a keyboard and to display data on
+the screen.
+<A NAME="IDX5541"></A>
+<P><LI>A <I>personal</I> computing environment is a single small computer
+that serves one (or, at the most, a few) users. Like a mainframe
+computer, the single computer stores all the files and performs all
+computation. Like a terminal, the personal computer provides access to
+the computer through a keyboard and screen. 
+<A NAME="IDX5542"></A>
+</UL>
+<P>A network can connect computers of any kind, but the typical network
+running AFS connects high-function personal workstations. Each
+workstation has some computing power and local disk space, usually more than a
+personal computer or terminal, but less than a mainframe. For more
+about the classes of machines used in an AFS environment, see <A HREF="#HDRWQ10">Servers and Clients</A>.
+<P><H3><A NAME="HDRWQ9" HREF="auagd002.htm#ToC_13">Distributed File Systems</A></H3>
+<A NAME="IDX5543"></A>
+<A NAME="IDX5544"></A>
+<P>A <I>file system</I> is a collection of files and the facilities
+(programs and commands) that enable users to access the information in the
+files. All computing environments have file systems. In a
+mainframe environment, the file system consists of all the files on the
+mainframe's storage disks, whereas in a personal computing environment it
+consists of the files on the computer's local disk.
+<P>Networked computing environments often use <I>distributed file
+systems</I> like AFS. A distributed file system takes advantage of
+the interconnected nature of the network by storing files on more than one
+computer in the network and making them accessible to all of them. In
+other words, the responsibility for file storage and delivery is "distributed"
+among multiple machines instead of relying on only one. Despite the
+distribution of responsibility, a distributed file system like AFS creates the
+illusion that there is a single filespace.
+<P><H3><A NAME="HDRWQ10" HREF="auagd002.htm#ToC_14">Servers and Clients</A></H3>
+<A NAME="IDX5545"></A>
+<A NAME="IDX5546"></A>
+<A NAME="IDX5547"></A>
+<P>AFS uses a server/client model. In general, a <I>server</I> is a
+machine, or a process running on a machine, that provides specialized services
+to other machines. A <I>client</I> is a machine or process that
+makes use of a server's specialized service during the course of its own
+work, which is often of a more general nature than the server's.
+The functional distinction between clients and server is not always strict,
+however--a server can be considered the client of another server whose
+service it is using.
+<P>AFS divides the machines on a network into two basic classes, <I>file
+server machines</I> and <I>client machines</I>, and assigns different
+tasks and responsibilities to each.
+<P><B>File Server Machines</B>
+<A NAME="IDX5548"></A>
+<A NAME="IDX5549"></A>
+<P><I>File server machines</I> store the files in the distributed file
+system, and a <I>server process</I> running on the file server machine
+delivers and receives files. AFS file server machines run a number of
+<I>server processes</I>. Each process has a special function, such
+as maintaining databases important to AFS administration, managing security or
+handling volumes. This modular design enables each server process to
+specialize in one area, and thus perform more efficiently. For a
+description of the function of each AFS server process, see <A HREF="#HDRWQ17">AFS Server Processes and the Cache Manager</A>.
+<P>Not all AFS server machines must run all of the server processes.
+Some processes run on only a few machines because the demand for their
+services is low. Other processes run on only one machine in order to
+act as a synchronization site. See <A HREF="auagd008.htm#HDRWQ90">The Four Roles for File Server Machines</A>.
+<P><B>Client Machines</B>
+<A NAME="IDX5550"></A>
+<P>The other class of machines are the <I>client machines</I>, which
+generally work directly for users, providing computational power and other
+general purpose tools. Clients also provide users with access to the
+files stored on the file server machines. Clients do not run any
+special processes per se, but do use a modified kernel that enables them to
+communicate with the AFS server processes running on the file server machines
+and to cache files. This collection of kernel modifications is referred
+to as the <I>Cache Manager</I>; see <A HREF="#HDRWQ28">The Cache Manager</A>. There are usually many more client machines in a
+cell than file server machines.
+<P><B>Client and Server Configuration</B>
+<P>In the most typical AFS configuration, both file server machines and client
+machines are high-function workstations with disk drives. While this
+configuration is not required, it does have some advantages. 
+<A NAME="IDX5551"></A>
+<P>There are several advantages to using personal workstations as file server
+machines. One is that it is easy to expand the network by adding
+another file server machine. It is also easy to increase storage space
+by adding disks to existing machines. Using workstations rather than
+more powerful mainframes makes it more economical to use multiple file server
+machines rather than one. Multiple file server machines provide an
+increase in system availability and reliability if popular files are available
+on more than one machine.
+<P>The advantage of using workstations as clients is that <I>caching</I>
+on the local disk speeds the delivery of files to application programs.
+(For an explanation of caching, see <A HREF="#HDRWQ16">Caching and Callbacks</A>.) Diskless machines can access AFS if they are
+running NFS<SUP>(R)</SUP> and the NFS/AFS Translator, an optional component of the
+AFS distribution.
+<P><H3><A NAME="HDRWQ11" HREF="auagd002.htm#ToC_15">Cells</A></H3>
+<A NAME="IDX5552"></A>
+<P>A <I>cell</I> is an independently administered site running AFS.
+In terms of hardware, it consists of a collection of file server machines and
+client machines defined as belonging to the cell; a machine can only
+belong to one cell at a time. Users also belong to a cell in the sense
+of having an account in it, but unlike machines can belong to (have an account
+in) multiple cells. To say that a cell is administratively independent
+means that its administrators determine many details of its configuration
+without having to consult administrators in other cells or a central
+authority. For example, a cell administrator determines how many
+machines of different types to run, where to put files in the local tree, how
+to associate volumes and directories, and how much space to allocate to each
+user.
+<P>The terms <I>local cell</I> and <I>home cell</I> are equivalent,
+and refer to the cell in which a user has initially authenticated during a
+session, by logging onto a machine that belongs to that cell. All other
+cells are referred to as <I>foreign</I> from the user's
+perspective. In other words, throughout a login session, a user is
+accessing the filespace through a single Cache Manager--the one on the
+machine to which he or she initially logged in--whose cell membership
+defines the local cell. All other cells are considered foreign during
+that login session, even if the user authenticates in additional cells or uses
+the <B>cd</B> command to change directories into their file trees. 
+<A NAME="IDX5553"></A>
+<A NAME="IDX5554"></A>
+<A NAME="IDX5555"></A>
+<A NAME="IDX5556"></A>
+<P>It is possible to maintain more than one cell at a single geographical
+location. For instance, separate departments on a university campus or
+in a corporation can choose to administer their own cells. It is also
+possible to have machines at geographically distant sites belong to the same
+cell; only limits on the speed of network communication determine how
+practical this is.
+<P>Despite their independence, AFS cells generally agree to make their local
+filespace visible to other AFS cells, so that users in different cells can
+share files if they choose. If your cell is to participate in the
+"global" AFS namespace, it must comply with a few basic conventions governing
+how the local filespace is configured and how the addresses of certain file
+server machines are advertised to the outside world.
+<P><H3><A NAME="HDRWQ12" HREF="auagd002.htm#ToC_16">The Uniform Namespace and Transparent Access</A></H3>
+<A NAME="IDX5557"></A>
+<A NAME="IDX5558"></A>
+<P>One of the features that makes AFS easy to use is that it provides
+<I>transparent access</I> to the files in a cell's filespace.
+Users do not have to know which file server machine stores a file in order to
+access it; they simply provide the file's pathname, which AFS
+automatically translates into a machine location.
+<P>In addition to transparent access, AFS also creates a <I>uniform
+namespace</I>--a file's pathname is identical regardless of which
+client machine the user is working on. The cell's file tree looks
+the same when viewed from any client because the cell's file server
+machines store all the files centrally and present them in an identical manner
+to all clients.
+<P>To enable the transparent access and the uniform namespace features, the
+system administrator must follow a few simple conventions in configuring
+client machines and file trees. For details, see <A HREF="auagd007.htm#HDRWQ39">Making Other Cells Visible in Your Cell</A>.
+<P><H3><A NAME="HDRWQ13" HREF="auagd002.htm#ToC_17">Volumes</A></H3>
+<A NAME="IDX5559"></A>
+<P>A <I>volume</I> is a conceptual container for a set of related files
+that keeps them all together on one file server machine partition.
+Volumes can vary in size, but are (by definition) smaller than a
+partition. Volumes are the main administrative unit in AFS, and have
+several characteristics that make administrative tasks easier and help improve
+overall system performance.
+<UL>
+<P><LI>The relatively small size of volumes makes them easy to move from one
+partition to another, or even between machines.
+<P><LI>You can maintain maximum system efficiency by moving volumes to keep the
+load balanced evenly among the different machines. If a partition
+becomes full, the small size of individual volumes makes it easy to find
+enough room on other machines for them. 
+<A NAME="IDX5560"></A>
+<P><LI>Each volume corresponds logically to a directory in the file tree and
+keeps together, on a single partition, all the data that makes up the files in
+the directory. By maintaining (for example) a separate volume for each
+user's home directory, you keep all of the user's files together,
+but separate from those of other users. This is an administrative
+convenience that is impossible if the partition is the smallest unit of
+storage. 
+<A NAME="IDX5561"></A>
+<P>
+<A NAME="IDX5562"></A>
+<P>
+<A NAME="IDX5563"></A>
+<P><LI>The directory/volume correspondence also makes transparent file access
+possible, because it simplifies the process of file location. All files
+in a directory reside together in one volume and in order to find a file, a
+file server process need only know the name of the file's parent
+directory, information which is included in the file's pathname.
+AFS knows how to translate the directory name into a volume name, and
+automatically tracks every volume's location, even when a volume is moved
+from machine to machine. For more about the directory/volume
+correspondence, see <A HREF="#HDRWQ14">Mount Points</A>.
+<P><LI>Volumes increase file availability through replication and backup. 
+<A NAME="IDX5564"></A>
+<P>
+<A NAME="IDX5565"></A>
+<P><LI>Replication (placing copies of a volume on more than one file server
+machine) makes the contents more reliably available; for details, see <A HREF="#HDRWQ15">Replication</A>. Entire sets of volumes can be backed up to tape and
+restored to the file system; see <A HREF="auagd011.htm#HDRWQ248">Configuring the AFS Backup System</A> and <A HREF="auagd012.htm#HDRWQ283">Backing Up and Restoring AFS Data</A>. In AFS, backup also refers to
+recording the state of a volume at a certain time and then storing it (either
+on tape or elsewhere in the file system) for recovery in the event files in it
+are accidentally deleted or changed. See <A HREF="auagd010.htm#HDRWQ201">Creating Backup Volumes</A>.
+<P><LI>Volumes are the unit of resource management. A space quota
+associated with each volume sets a limit on the maximum volume size.
+See <A HREF="auagd010.htm#HDRWQ234">Setting and Displaying Volume Quota and Current Size</A>. 
+<A NAME="IDX5566"></A>
+</UL>
+<P><H3><A NAME="HDRWQ14" HREF="auagd002.htm#ToC_18">Mount Points</A></H3>
+<A NAME="IDX5567"></A>
+<P>The previous section discussed how each volume corresponds logically to a
+directory in the file system: the volume keeps together on one partition
+all the data in the files residing in the directory. The directory that
+corresponds to a volume is called its <I>root directory</I>, and the
+mechanism that associates the directory and volume is called a <I>mount
+point</I>. A mount point is similar to a symbolic link in the file
+tree that specifies which volume contains the files kept in a
+directory. A mount point is not an actual symbolic link; its
+internal structure is different.
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Note:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">You must not create a symbolic link to a file whose name begins with the
+number sign (#) or the percent sign (%), because the Cache Manager interprets
+such a link as a mount point to a regular or read/write volume,
+respectively.
+</TD></TR></TABLE>
+<P>
+<A NAME="IDX5568"></A>
+<A NAME="IDX5569"></A>
+<A NAME="IDX5570"></A>
+<A NAME="IDX5571"></A>
+<P>The use of mount points means that many of the elements in an AFS file tree
+that look and function just like standard UNIX file system directories are
+actually mount points. In form, a mount point is a one-line file that
+names the volume containing the data for files in the directory. When
+the Cache Manager (see <A HREF="#HDRWQ28">The Cache Manager</A>) encounters a mount point--for example, in the course
+of interpreting a pathname--it looks in the volume named in the mount
+point. In the volume the Cache Manager finds an actual UNIX-style
+directory element--the volume's root directory--that lists the
+files contained in the directory/volume. The next element in the
+pathname appears in that list.
+<P>A volume is said to be <I>mounted</I> at the point in the file tree
+where there is a mount point pointing to the volume. A volume's
+contents are not visible or accessible unless it is mounted.
+<P><H3><A NAME="HDRWQ15" HREF="auagd002.htm#ToC_19">Replication</A></H3>
+<A NAME="IDX5572"></A>
+<A NAME="IDX5573"></A>
+<P><I>Replication</I> refers to making a copy, or <I>clone</I>, of a
+source read/write volume and then placing the copy on one or more additional
+file server machines in a cell. One benefit of replicating a volume is
+that it increases the availability of the contents. If one file server
+machine housing the volume fails, users can still access the volume on a
+different machine. No one machine need become overburdened with
+requests for a popular file, either, because the file is available from
+several machines.
+<P>Replication is not necessarily appropriate for cells with limited disk
+space, nor are all types of volumes equally suitable for replication
+(replication is most appropriate for volumes that contain popular files that
+do not change very often). For more details, see <A HREF="auagd007.htm#HDRWQ50">When to Replicate Volumes</A>.
+<P><H3><A NAME="HDRWQ16" HREF="auagd002.htm#ToC_20">Caching and Callbacks</A></H3>
+<A NAME="IDX5574"></A>
+<P>Just as replication increases system availability, <I>caching</I>
+increases the speed and efficiency of file access in AFS. Each AFS
+client machine dedicates a portion of its local disk or memory to a
+<I>cache</I> where it stores data temporarily. Whenever an
+application program (such as a text editor) running on a client machine
+requests data from an AFS file, the request passes through the Cache
+Manager. The Cache Manager is a portion of the client machine's
+kernel that translates file requests from local application programs into
+cross-network requests to the <I>File Server process</I> running on the
+file server machine storing the file. When the Cache Manager receives
+the requested data from the File Server, it stores it in the cache and then
+passes it on to the application program.
+<P>Caching improves the speed of data delivery to application programs in the
+following ways:
+<UL>
+<P><LI>When the application program repeatedly asks for data from the same file,
+it is already on the local disk. The application does not have to wait
+for the Cache Manager to request and receive the data from the File
+Server.
+<P><LI>Caching data eliminates the need for repeated request and transfer of the
+same data, so network traffic is reduced. Thus, initial requests and
+other traffic can get through more quickly.
+<A NAME="IDX5575"></A>
+<A NAME="IDX5576"></A>
+<P>
+<A NAME="IDX5577"></A>
+</UL>
+<P>
+<A NAME="IDX5578"></A>
+<P>
+<A NAME="IDX5579"></A>
+ While caching provides many advantages, it also creates the problem of
+maintaining consistency among the many cached copies of a file and the source
+version of a file. This problem is solved using a mechanism referred to
+as a <I>callback</I>.
+<P>A callback is a promise by a File Server to a Cache Manager to inform the
+latter when a change is made to any of the data delivered by the File
+Server. Callbacks are used differently based on the type of file
+delivered by the File Server:
+<UL>
+<P><LI>When a File Server delivers a writable copy of a file (from a read/write
+volume) to the Cache Manager, the File Server sends along a callback with that
+file. If the source version of the file is changed by another user, the
+File Server breaks the callback associated with the cached version of that
+file--indicating to the Cache Manager that it needs to update the cached
+copy.
+<P><LI>When a File Server delivers a file from a read-only volume to the Cache
+Manager, the File Server sends along a callback associated with the entire
+volume (so it does not need to send any more callbacks when it delivers
+additional files from the volume). Only a single callback is required
+per accessed read-only volume because files in a read-only volume can change
+only when a new version of the complete volume is released. All
+callbacks associated with the old version of the volume are broken at release
+time.
+</UL>
+<P>The callback mechanism ensures that the Cache Manager always requests the
+most up-to-date version of a file. However, it does not ensure that the
+user necessarily notices the most current version as soon as the Cache Manager
+has it. That depends on how often the application program requests
+additional data from the File System or how often it checks with the Cache
+Manager.
+<HR><H2><A NAME="HDRWQ17" HREF="auagd002.htm#ToC_21">AFS Server Processes and the Cache Manager</A></H2>
+<A NAME="IDX5580"></A>
+<A NAME="IDX5581"></A>
+<P>As mentioned in <A HREF="#HDRWQ10">Servers and Clients</A>, AFS file server machines run a number of processes, each
+with a specialized function. One of the main responsibilities of a
+system administrator is to make sure that processes are running correctly as
+much of the time as possible, using the administrative services that the
+server processes provide.
+<P>The following list briefly describes the function of each server process
+and the Cache Manager; the following sections then discuss the important
+features in more detail.
+<P>The <I>File Server</I>, the most fundamental of the servers, delivers
+data files from the file server machine to local workstations as requested,
+and stores the files again when the user saves any changes to the
+files.
+<P>The <I>Basic OverSeer Server (BOS Server)</I> ensures that the other
+server processes on its server machine are running correctly as much of the
+time as possible, since a server is useful only if it is available. The
+BOS Server relieves system administrators of much of the responsibility for
+overseeing system operations.
+<P>The <I>Authentication Server</I> helps ensure that communications on
+the network are secure. It verifies user identities at login and
+provides the facilities through which participants in transactions prove their
+identities to one another (mutually authenticate). It maintains the
+Authentication Database.
+<P>The <I>Protection Server</I> helps users control who has access to
+their files and directories. Users can grant access to several other
+users at once by putting them all in a group entry in the Protection Database
+maintained by the Protection Server.
+<P>The <I>Volume Server</I> performs all types of volume
+manipulation. It helps the administrator move volumes from one server
+machine to another to balance the workload among the various machines.
+<P>The <I>Volume Location Server (VL Server)</I> maintains the Volume
+Location Database (VLDB), in which it records the location of volumes as they
+move from file server machine to file server machine. This service is
+the key to transparent file access for users.
+<P>The <I>Update Server</I> distributes new versions of AFS server process
+software and configuration information to all file server machines. It
+is crucial to stable system performance that all server machines run the same
+software.
+<P>The <I>Backup Server</I> maintains the Backup Database, in which it
+stores information related to the Backup System. It enables the
+administrator to back up data from volumes to tape. The data can then
+be restored from tape in the event that it is lost from the file
+system.
+<P>The <I>Salvager</I> is not a server in the sense that others
+are. It runs only after the File Server or Volume Server fails; it
+repairs any inconsistencies caused by the failure. The system
+administrator can invoke it directly if necessary.
+<P>The <I>Network Time Protocol Daemon (NTPD)</I> is not an AFS server
+process per se, but plays a vital role nonetheless. It synchronizes the
+internal clock on a file server machine with those on other machines.
+Synchronized clocks are particularly important for correct functioning of the
+AFS distributed database technology (known as <I>Ubik</I>); see <A HREF="auagd008.htm#HDRWQ103">Configuring the Cell for Proper Ubik Operation</A>. The NTPD is controlled by the <B>runntp</B>
+process.
+<P>The <I>Cache Manager</I> is the one component in this list that resides
+on AFS client rather than file server machines. It not a process per
+se, but rather a part of the kernel on AFS client machines that communicates
+with AFS server processes. Its main responsibilities are to retrieve
+files for application programs running on the client and to maintain the files
+in the cache.
+<P><H3><A NAME="HDRWQ18" HREF="auagd002.htm#ToC_22">The File Server</A></H3>
+<A NAME="IDX5582"></A>
+<P>The <I>File Server</I> is the most fundamental of the AFS server
+processes and runs on each file server machine. It provides the same
+services across the network that the UNIX file system provides on the local
+disk:
+<UL>
+<P><LI>Delivering programs and data files to client workstations as requested and
+storing them again when the client workstation finishes with them.
+<P><LI>Maintaining the hierarchical directory structure that users create to
+organize their files.
+<P><LI>Handling requests for copying, moving, creating, and deleting files and
+directories.
+<P><LI>Keeping track of status information about each file and directory
+(including its size and latest modification time).
+<P><LI>Making sure that users are authorized to perform the actions they request
+on particular files or directories.
+<P><LI>Creating symbolic and hard links between files.
+<P><LI>Granting advisory locks (corresponding to UNIX locks) on request.
+</UL>
+<P><H3><A NAME="HDRWQ19" HREF="auagd002.htm#ToC_23">The Basic OverSeer Server</A></H3>
+<A NAME="IDX5583"></A>
+<P>The <I>Basic OverSeer Server (BOS Server)</I> reduces the demands on
+system administrators by constantly monitoring the processes running on its
+file server machine. It can restart failed processes automatically and
+provides a convenient interface for administrative tasks.
+<P>The BOS Server runs on every file server machine. Its primary
+function is to minimize system outages. It also
+<UL>
+<P><LI>Constantly monitors the other server processes (on the local machine) to
+make sure they are running correctly.
+<P><LI>Automatically restarts failed processes, without contacting a human
+operator. When restarting multiple server processes simultaneously, the
+BOS server takes interdependencies into account and initiates restarts in the
+correct order. 
+<A NAME="IDX5584"></A>
+<P>
+<A NAME="IDX5585"></A>
+<P><LI>Accepts requests from the system administrator. Common reasons to
+contact BOS are to verify the status of server processes on file server
+machines, install and start new processes, stop processes either temporarily
+or permanently, and restart dead processes manually.
+<P><LI>Helps system administrators to manage system configuration
+information. The BOS server automates the process of adding and
+changing <I>server encryption keys</I>, which are important in mutual
+authentication. The BOS Server also provides a simple interface for
+modifying two files that contain information about privileged users and
+certain special file server machines. For more details about these
+configuration files, see <A HREF="auagd008.htm#HDRWQ85">Common Configuration Files in the /usr/afs/etc Directory</A>.
+</UL>
+<P><H3><A NAME="HDRWQ20" HREF="auagd002.htm#ToC_24">The Authentication Server</A></H3>
+<A NAME="IDX5586"></A>
+<P>The <I>Authentication Server</I> performs two main functions related to
+network security:
+<UL>
+<P><LI>Verifying the identity of users as they log into the system by requiring
+that they provide a password. The Authentication Server grants the user
+a <I>token</I> as proof to AFS server processes that the user has
+authenticated. For more on tokens, see <A HREF="auagd007.htm#HDRWQ76">Complex Mutual Authentication</A>.
+<P><LI>Providing the means through which server and client processes prove their
+identities to each other (mutually authenticate). This helps to create
+a secure environment in which to send cross-network messages.
+</UL>
+<P>In fulfilling these duties, the Authentication Server utilizes algorithms
+and other procedures known as <I>Kerberos</I> (which is why many commands
+used to contact the Authentication Server begin with the letter
+<B>k</B>). This technology was originally developed by the
+Massachusetts Institute of Technology's Project Athena.
+<P>The Authentication Server also maintains the <I>Authentication
+Database</I>, in which it stores user passwords converted into encryption
+key form as well as the AFS server encryption key. To learn more about
+the procedures AFS uses to verify user identity and during mutual
+authentication, see <A HREF="auagd007.htm#HDRWQ75">A More Detailed Look at Mutual Authentication</A>.
+<A NAME="IDX5587"></A>
+<A NAME="IDX5588"></A>
+<A NAME="IDX5589"></A>
+<A NAME="IDX5590"></A>
+<P><H3><A NAME="HDRWQ21" HREF="auagd002.htm#ToC_25">The Protection Server</A></H3>
+<A NAME="IDX5591"></A>
+<A NAME="IDX5592"></A>
+<A NAME="IDX5593"></A>
+<P>The <I>Protection Server</I> is the key to AFS's refinement of the
+normal UNIX methods for protecting files and directories from unauthorized
+use. The refinements include the following:
+<UL>
+<P><LI>Defining seven access permissions rather than the standard UNIX file
+system's three. In conjunction with the UNIX mode bits associated
+with each file and directory element, AFS associates an <I>access control
+list (ACL)</I> with each directory. The ACL specifies which users
+have which of the seven specific permissions for the directory and all the
+files it contains. For a definition of AFS's seven access
+permissions and how users can set them on access control lists, see <A HREF="auagd020.htm#HDRWQ562">Managing Access Control Lists</A>.
+<A NAME="IDX5594"></A>
+<P><LI>Enabling users to grant permissions to numerous individual users--a
+different combination to each individual if desired. UNIX protection
+distinguishes only between three user or groups: the owner of the file,
+members of a single specified group, and everyone who can access the local
+file system.
+<P><LI>Enabling users to define their own groups of users, recorded in the
+<I>Protection Database</I> maintained by the Protection Server. The
+groups then appear on directories' access control lists as though they
+were individuals, which enables the granting of permissions to many users
+simultaneously.
+<P><LI>Enabling system administrators to create groups containing client machine
+IP addresses to permit access when it originates from the specified client
+machines. These types of groups are useful when it is necessary to
+adhere to machine-based licensing restrictions.
+</UL>
+<A NAME="IDX5595"></A>
+<A NAME="IDX5596"></A>
+<P>The Protection Server's main duty is to help the File Server determine
+if a user is authorized to access a file in the requested manner. The
+Protection Server creates a list of all the groups to which the user
+belongs. The File Server then compares this list to the ACL associated
+with the file's parent directory. A user thus acquires access both
+as an individual and as a member of any groups.
+<P>The Protection Server also maps <I>usernames</I> (the name typed at the
+login prompt) to <I>AFS user ID</I> numbers (<I>AFS UIDs</I>).
+These UIDs are functionally equivalent to UNIX UIDs, but operate in the domain
+of AFS rather than in the UNIX file system on a machine's local
+disk. This conversion service is essential because the tokens that the
+Authentication Server grants to authenticated users are stamped with usernames
+(to comply with Kerberos standards). The AFS server processes identify
+users by AFS UID, not by username. Before they can understand whom the
+token represents, they need the Protection Server to translate the username
+into an AFS UID. For further discussion of tokens, see <A HREF="auagd007.htm#HDRWQ75">A More Detailed Look at Mutual Authentication</A>.
+<P><H3><A NAME="HDRWQ22" HREF="auagd002.htm#ToC_26">The Volume Server</A></H3>
+<A NAME="IDX5597"></A>
+<P>The <I>Volume Server</I> provides the interface through which you
+create, delete, move, and replicate volumes, as well as prepare them for
+archiving to tape or other media (backing up). <A HREF="#HDRWQ13">Volumes</A> explained the advantages gained by storing files in
+volumes. Creating and deleting volumes are necessary when adding and
+removing users from the system; volume moves are done for load
+balancing; and replication enables volume placement on multiple file
+server machines (for more on replication, see <A HREF="#HDRWQ15">Replication</A>).
+<P><H3><A NAME="HDRWQ23" HREF="auagd002.htm#ToC_27">The Volume Location (VL) Server</A></H3>
+<A NAME="IDX5598"></A>
+<A NAME="IDX5599"></A>
+<P>The <I>VL Server</I> maintains a complete list of volume locations in
+the <I>Volume Location Database (VLDB)</I>. When the Cache Manager
+(see <A HREF="#HDRWQ28">The Cache Manager</A>) begins to fill a file request from an application program,
+it first contacts the VL Server in order to learn which file server machine
+currently houses the volume containing the file. The Cache Manager then
+requests the file from the File Server process running on that file server
+machine.
+<P>The VLDB and VL Server make it possible for AFS to take advantage of the
+increased system availability gained by using multiple file server machines,
+because the Cache Manager knows where to find a particular file.
+Indeed, in a certain sense the VL Server is the keystone of the entire file
+system--when the information in the VLDB is inaccessible, the Cache
+Manager cannot retrieve files, even if the File Server processes are working
+properly. A list of the information stored in the VLDB about each
+volume is provided in <A HREF="auagd010.htm#HDRWQ180">Volume Information in the VLDB</A>. 
+<A NAME="IDX5600"></A>
+<P><H3><A NAME="HDRWQ24" HREF="auagd002.htm#ToC_28">The Update Server</A></H3>
+<A NAME="IDX5601"></A>
+<P>The <I>Update Server</I> helps guarantee that all file server machines
+are running the same version of a server process. System performance
+can be inconsistent if some machines are running one version of the BOS Server
+(for example) and other machines were running another version.
+<P>To ensure that all machines run the same version of a process, install new
+software on a single file server machine of each system type, called the
+<I>binary distribution machine</I> for that type. The binary
+distribution machine runs the <I>server portion</I> of the Update Server,
+whereas all the other machines of that type run the <I>client portion</I>
+of the Update Server. The client portions check frequently with the
+server portion to see if they are running the right version of every
+process; if not, the client portion retrieves the right version from the
+binary distribution machine and installs it locally. The system
+administrator does not need to remember to install new software individually
+on all the file server machines: the Update Server does it
+automatically. For more on binary distribution machines, see <A HREF="auagd008.htm#HDRWQ93">Binary Distribution Machines</A>. 
+<A NAME="IDX5602"></A>
+<P>
+<A NAME="IDX5603"></A>
+<P>In cells that run the United States edition of AFS, the Update Server also
+distributes configuration files that all file server machines need to store on
+their local disks (for a description of the contents and purpose of these
+files, see <A HREF="auagd008.htm#HDRWQ85">Common Configuration Files in the /usr/afs/etc Directory</A>). As with server process software, the need for
+consistent system performance demands that all the machines have the same
+version of these files. With the United States edition, the system
+administrator needs to make changes to these files on one machine only, the
+cell's <I>system control machine</I>, which runs a server portion of
+the Update Server. All other machines in the cell run a client portion
+that accesses the correct versions of these configuration files from the
+system control machine. Cells running the international edition of AFS
+do not use a system control machine to distribute configuration files.
+For more information, see <A HREF="auagd008.htm#HDRWQ94">The System Control Machine</A>.
+<P><H3><A NAME="HDRWQ25" HREF="auagd002.htm#ToC_29">The Backup Server</A></H3>
+<A NAME="IDX5604"></A>
+<A NAME="IDX5605"></A>
+<P>The <I>Backup Server</I> maintains the information in the <I>Backup
+Database</I>. The Backup Server and the Backup Database enable
+administrators to back up data from AFS volumes to tape and restore it from
+tape to the file system if necessary. The server and database together
+are referred to as the <I>Backup System</I>.
+<P>Administrators initially configure the Backup System by defining sets of
+volumes to be dumped together and the schedule by which the sets are to be
+dumped. They also install the system's tape drives and define the
+drives' <I>Tape Coordinators</I>, which are the processes that
+control the tape drives.
+<P>Once the Backup System is configured, user and system data can be dumped
+from volumes to tape. In the event that data is ever lost from the
+system (for example, if a system or disk failure causes data to be lost),
+administrators can restore the data from tape. If tapes are
+periodically archived, or saved, data can also be restored to its state at a
+specific time. Additionally, because Backup System data is difficult to
+reproduce, the Backup Database itself can be backed up to tape and restored if
+it ever becomes corrupted. For more information on configuring and
+using the Backup System, see <A HREF="auagd011.htm#HDRWQ248">Configuring the AFS Backup System</A> and <A HREF="auagd012.htm#HDRWQ283">Backing Up and Restoring AFS Data</A>.
+<P><H3><A NAME="HDRWQ26" HREF="auagd002.htm#ToC_30">The Salvager</A></H3>
+<A NAME="IDX5606"></A>
+<P>The <I>Salvager</I> differs from other AFS Servers in that it runs only
+at selected times. The BOS Server invokes the Salvager when the File
+Server, Volume Server, or both fail. The Salvager attempts to repair
+disk corruption that can result from a failure.
+<P>As a system administrator, you can also invoke the Salvager as necessary,
+even if the File Server or Volume Server has not failed. See <A HREF="auagd010.htm#HDRWQ232">Salvaging Volumes</A>.
+<P><H3><A NAME="HDRWQ27" HREF="auagd002.htm#ToC_31">The Network Time Protocol Daemon</A></H3>
+<A NAME="IDX5607"></A>
+<P>The <I>Network Time Protocol Daemon (NTPD)</I> is not an AFS server
+process per se, but plays an important role. It helps guarantee that
+all of the file server machines agree on the time. The NTPD on one file
+server machine acts as a synchronization site, generally learning the correct
+time from a source outside the cell. The NTPDs on the other file server
+machines refer to the synchronization site to set the internal clocks on their
+machines.
+<P>Keeping clocks synchronized is particularly important to the correct
+operation of AFS's distributed database technology, which coordinates the
+copies of the Authentication, Backup, Protection, and Volume Location
+Databases; see <A HREF="auagd007.htm#HDRWQ52">Replicating the AFS Administrative Databases</A>. Client machines also refer to these clocks for the
+correct time; therefore, it is less confusing if all file server machines
+have the same time. For more technical detail about the NTPD, see <A HREF="auagd009.htm#HDRWQ151">The runntp Process</A>.
+<P><H3><A NAME="HDRWQ28" HREF="auagd002.htm#ToC_32">The Cache Manager</A></H3>
+<A NAME="IDX5608"></A>
+<P>As already mentioned in <A HREF="#HDRWQ16">Caching and Callbacks</A>, the <I>Cache Manager</I> is the one component in this
+section that resides on client machines rather than on file server
+machines. It is not technically a stand-alone process, but rather a set
+of extensions or modifications in the client machine's kernel that enable
+communication with the server processes running on server machines. Its
+main duty is to translate file requests (made by application programs on
+client machines) into remote procedure calls (RPCs) to the File Server.
+(The Cache Manager first contacts the VL Server to find out which File Server
+currently houses the volume that contains a requested file, as mentioned in <A HREF="#HDRWQ23">The Volume Location (VL) Server</A>). When the Cache Manager receives the requested file,
+it caches it before passing data on to the application program.
+<P>The Cache Manager also tracks the state of files in its cache compared to
+the version at the File Server by storing the callbacks sent by the File
+Server. When the File Server breaks a callback, indicating that a file
+or volume changed, the Cache Manager requests a copy of the new version before
+providing more data to application programs.
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auagd002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auagd005.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auagd007.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auagd026.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

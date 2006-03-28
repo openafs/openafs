@@ -1,0 +1,390 @@
+=head1 NAME
+
+bos create - Defines a new process in the BosConfig file and starts it
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<bos create> S<<< B<-server> <I<machine name>> >>>
+    S<<< B<-instance> <I<server process name>> >>> S<<< B<-type> <I<server type>> >>>
+    S<<< B<-cmd> <I<command lines>>+ >>> S<<< [B<-notifier> <I<notifier program>>] >>>
+    S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>] [B<-help>]
+
+B<bos c> S<<< B<-s> <I<machine name>> >>> S<<< B<-i> <I<server process name>> >>>
+    S<<< B<-t> <I<server type>> >>> S<<< B<-cm> <I<command lines>>+ >>>
+    S<<< [B<-not> <I<notifier program>>] >>> S<<< [B<-ce> <I<cell name>>] >>> [B<-noa>]
+    [B<-l>] [B<-h>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<bos create> command creates a server process entry in the
+F</usr/afs/local/BosConfig> file on the server machine named by the
+B<-server> argument, sets the process's status to C<Run> in the
+F<BosConfig> file and in memory, and starts the process.
+
+A server process's entry in the F<BosConfig> file defines its name, its
+type, the command that initializes it, and optionally, the name of a
+notifier program that runs when the process terminates.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-server> <I<machine name>>
+
+Indicates the server machine on which to define and start the new
+process. Identify the machine by IP address or its host name (either
+fully-qualified or abbreviated unambiguously). For details, see L<bos(8)>.
+
+=item B<-instance> <I<server process name>>
+
+Names the process to define and start. Any name is acceptable, but for the
+sake of simplicity it is best to use the last element of the process's
+binary file pathname, and to use the same name on every server
+machine. The conventional names, as used in all AFS documentation, are:
+
+=over 4
+
+=item buserver
+
+The Backup Server process.
+
+=item fs
+
+The process that combines the File Server, Volume Server, and Salvager
+processes (B<fileserver>, B<volserver>, and B<salvager>).
+
+=item kaserver
+
+The Authentication Server process.
+
+=item ptserver
+
+The Protection Server process.
+
+=item runntp
+
+The controller process for the Network Time Protocol Daemon.
+
+=item upclientbin
+
+The client portion of the Update Server process that retrieves binary
+files from the F</usr/afs/bin> directory of the binary distribution
+machine for this machine's CPU/operating system type. (The name of the
+binary is B<upclient>, but the C<bin> suffix distinguishes this process
+from C<upclientetc>.)
+
+=item upclientetc
+
+The client portion of the Update Server process that retrieves
+configuration files from the F</usr/afs/etc> directory of the system
+control machine. (The name of the binary is B<upclient>, but the C<etc>
+suffix distinguishes this process from C<upclientbin>.)
+
+=item upserver
+
+The server portion of the Update Server process.
+
+=item vlserver
+
+The Volume Location (VL) Server process.
+
+=back
+
+=item B<-type> <I<server type>>
+
+Specifies the process's type. The acceptable values are:
+
+=over 4
+
+=item cron
+
+Use this value for cron-type processes that the BOS Server starts only at
+a defined daily or weekly time, rather than whenever it detects that the
+process has terminated. AFS does not define any such processes by default,
+but makes this value available for administrator use. Define the time for
+command execution as part of the B<-cmd> argument to the B<bos create>
+command.
+
+=item fs
+
+Use this value only for the fs process, which combines the File Server,
+Volume Server and Salvager processes. If one of the component processes
+terminates, the BOS Server shuts down and restarts the processes in the
+appropriate order.
+
+=item simple
+
+Use this value for all processes listed as acceptable values to the
+B<-instance> argument, except for the B<fs> process.  There are no
+interdependencies between simple processes, so the BOS Server can stop and
+start them independently as necessary.
+
+=back
+
+=item B<-cmd> <I<command lines>>+
+
+Specifies each command the BOS Server runs to start the process.  Specify
+no more than six commands (which can include the command's options, in
+which case the entire string is surrounded by double quotes); any
+additional commands are ignored.
+
+For a simple process, provide the complete pathname of the process's
+binary file on the local disk (for example, F</usr/afs/bin/ptserver> for
+the Protection Server). If including any of the initialization command's
+options, surround the entire command in double quotes (C<"">). The
+B<upclient> process has a required argument, and the commands for all
+other processes take optional arguments.
+
+For the fs process, provide the complete pathname of the local disk binary
+file for each of the component processes: B<fileserver>, B<volserver>, and
+B<salvager>, in that order. The standard binary directory is
+F</usr/afs/bin>.  If including any of an initialization command's options,
+surround the entire command in double quotes (C<"">).
+
+For a cron process, provide two parameters:
+
+=over 4
+
+=item *
+
+The complete local disk pathname of either an executable file or a command
+from one of the AFS suites (complete with all of the necessary
+arguments). Surround this parameter with double quotes (C<"">) if it
+contains spaces.
+
+=item *
+
+A specification of when the BOS Server executes the file or command
+indicated by the first parameter. There are three acceptable values:
+
+=over 4
+
+=item *
+
+The string C<now>, which directs the BOS Server to execute the file or
+command immediately and only once. It is usually simpler to issue the
+command directly or issue the B<bos exec> command.
+
+=item *
+
+A time of day. The BOS Server executes the file or command daily at the
+indicated time. Separate the hours and minutes with a colon (I<hh:MM>),
+and use either 24-hour format, or a value in the range from C<1:00>
+through C<12:59> with the addition of C<am> or C<pm>. For example, both
+C<14:30> and C<"2:30 pm"> indicate 2:30 in the afternoon. Surround this
+parameter with double quotes (C<"">) if it contains a space.
+
+=item *
+
+A day of the week and time of day, separated by a space and surrounded
+with double quotes (C<"">). The BOS Server executes the file or command
+weekly at the indicated day and time. For the day, provide either the
+whole name or the first three letters, all in lowercase letters (C<sunday>
+or C<sun>, C<thursday> or C<thu>, and so on). For the time, use the same
+format as when specifying the time alone.
+
+=back
+
+=back
+
+=item B<-notifier> <I<notifier program>>
+
+Specifies the complete pathname on the local disk of a program that the
+BOS Server invokes when the process terminates. The AFS distribution does
+not include any notifier programs, but this argument is available for
+administrator use. See L<NOTES>.
+
+=item B<-cell> <I<cell name>>
+
+Names the cell in which to run the command. Do not combine this argument
+with the B<-localauth> flag. For more details, see L<bos(8)>.
+
+=item B<-noauth>
+
+Assigns the unprivileged identity C<anonymous> to the issuer. Do not
+combine this flag with the B<-localauth> flag. For more details, see
+L<bos(8)>.
+
+=item B<-localauth>
+
+Constructs a server ticket using a key from the local
+F</usr/afs/etc/KeyFile> file. The B<bos> command interpreter presents the
+ticket to the BOS Server during mutual authentication. Do not combine this
+flag with the B<-cell> or B<-noauth> options. For more details, see
+L<bos(8)>.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 EXAMPLES
+
+The following command defines and starts the simple process
+C<kaserver> on the machine C<fs3.abc.com>:
+
+   % bos create -server fs3.abc.com -instance kaserver -type simple \
+                -cmd /usr/afs/bin/kaserver
+
+The following command defines and starts the simple process C<upclientbin>
+on the machine C<fs4.abc.com>. It references C<fs1.abc.com> as the source
+for updates to binary files, checking for changes to the F</usr/afs/bin>
+directory every 120 seconds.
+
+   % bos create -server fs4.abc.com -instance upclientbin -type simple \
+                -cmd "/usr/afs/bin/upclient fs1.abc.com -clear -t 120 \
+                /usr/afs/bin"
+
+The following command creates the fs process fs on the machine
+C<fs4.abc.com>. Type the command on a single line.
+
+   % bos create -server fs4.abc.com -instance fs -type fs \
+                -cmd /usr/afs/bin/fileserver /usr/afs/bin/volserver \
+                /usr/afs/bin/salvager
+
+The following command creates a cron process called C<userbackup> on the
+machine C<fs5.abc.com>, so that the BOS Server issues the indicated B<vos
+backupsys> command each day at 3:00 a.m. (the command creates a backup
+version of every volume in the file system whose name begins with
+C<user>). Note that the issuer provides the complete pathname to the
+B<vos> command, includes the B<-localauth> flag on it, and types the
+entire B<bos create> command on one line.
+
+   % bos create -server fs5.abc.com -instance userbackup -type cron  \
+       -cmd "/usr/afs/bin/vos backupsys -prefix user -localauth" 03:00
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be listed in the F</usr/afs/etc/UserList> file on the
+machine named by the B<-server> argument, or must be logged onto a server
+machine as the local superuser C<root> if the B<-localauth> flag is
+included.
+
+=head1 NOTES
+
+If the B<-notifier> argument is included when this command is used to
+define and start a process, the BOS Server invokes the indicated
+I<notifier program> when the process exits. The intended use of a notifier
+program is to inform administrators when a process exits unexpectedly, but
+it can be used to perform any appropriate actions.  The following
+paragraphs describe the bnode and bnode_proc structures in which the
+BOS Server records information about the exiting process.
+
+The BOS Server constructs and sends on the standard output stream one
+bnode and one bnode_proc structure for each exiting process associated
+with the notifier program. It brackets each structure with appropriate
+C<BEGIN> and C<END> statements (C<BEGIN bnode> and C<END bnode>, C<BEGIN
+bnode_proc> and C<END bnode_proc>), which immediately follow the preceding
+newline character with no intervening spaces or other characters. If the
+notifier program does not need information from a structure, it can scan
+ahead in the input stream for the C<END> statement.
+
+In general, each field in a structure is a string of ASCII text terminated
+by the newline character. The format of the information within a structure
+possibly varies slightly depending on the type of process associated with
+the notifier program.
+
+The C code for the bnode and bnode_proc structures follows. Note that the
+structures sent by the BOS Server do not necessarily include all of the
+fields described here, because some are used only for internal record
+keeping. The notifier process must robustly handle the absence of expected
+fields, as well as the presence of unexpected fields, on the standard
+input stream.
+
+For proper performance, the notifier program must continue processing the
+input stream until it detects the end-of-file (EOF). The BOS Server closes
+the standard input file descriptor to the notifier process when it has
+completed delivery of the data, and it is the responsibility of the
+notifier process to terminate properly.
+
+struct bnode contents:
+
+   struct bnode {
+      struct bnode *next;      /* next pointer in top-level's list */
+      char *name;              /* instance name */
+      long nextTimeout;        /* next time this guy should be awakened */
+      long period;             /* period between calls */
+      long rsTime;             /* time we started counting restarts */
+      long rsCount;            /* count of restarts since rsTime */
+      struct bnode_type *type; /* type object */
+      struct bnode_ops *ops;   /* functions implementing bnode class */
+      long procStartTime;      /* last time a process was started */
+      long procStarts;         /* number of process starts */
+      long lastAnyExit;        /* last time a process exited for any reason */
+      long lastErrorExit;      /* last time a process exited unexpectedly */
+      long errorCode;          /* last exit return code */
+      long errorSignal;        /* last proc terminating signal */
+      char *lastErrorName;     /* name of proc that failed last */
+      short refCount;          /* reference count */
+      short flags;             /* random flags */
+      char goal;               /* 1=running or 0=not running */
+      char fileGoal;           /* same, but to be stored in file */
+};
+
+Format of struct bnode explosion:
+
+   printf("name: %s\n",tp->name);
+   printf("rsTime: %ld\n", tp->rsTime);
+   printf("rsCount: %ld\n", tp->rsCount);
+   printf("procStartTime: %ld\n", tp->procStartTime);
+   printf("procStarts: %ld\n", tp->procStarts);
+   printf("lastAnyExit: %ld\n", tp->lastAnyExit);
+   printf("lastErrorExit: %ld\n", tp->lastErrorExit);
+   printf("errorCode: %ld\n", tp->errorCode);
+   printf("errorSignal: %ld\n", tp->errorSignal);
+   printf("lastErrorName: %s\n", tp->lastErrorName);
+   printf("goal: %d\n", tp->goal);
+
+struct bnode_proc contents:
+
+   struct bnode_proc {
+      struct bnode_proc *next; /* next guy in top-level's list */
+      struct bnode *bnode;     /* bnode creating this process */
+      char *comLine;           /* command line used to start this process */
+      char *coreName;          /* optional core file component name */
+      long pid;                /* pid if created */
+      long lastExit;           /* last termination code */
+      long lastSignal;         /* last signal that killed this guy */
+      long flags;              /* flags giving process state */
+};
+
+Format of struct bnode_proc explosion:
+
+   printf("comLine: %s\n", tp->comLine);
+   printf("coreName: %s\n", tp->coreName);
+   printf("pid: %ld\n", tp->pid);
+   printf("lastExit: %ld\n", tp->lastExit);
+   printf("lastSignal: %ld\n", tp->lastSignal);
+
+=head1 SEE ALSO
+
+L<BosConfig(5)>,
+L<KeyFile(5)>,
+L<UserList(5)>,
+L<bos(8)>,
+L<buserver(8)>,
+L<fileserver(8)>,
+L<kaserver(8)>,
+L<ptserver(8)>,
+L<salvager(8)>,
+L<upclient(8)>,
+L<upserver(8)>,
+L<vlserver(8)>,
+L<volserver(8)>,
+L<vos_backupsys(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

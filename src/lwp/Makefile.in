@@ -10,7 +10,7 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
-CFLAGS=${LWP_DBG} ${LWP_OPTMZ} ${XCFLAGS} ${COMMON_INCL}
+CFLAGS=${LWP_DBG} ${LWP_OPTMZ} ${XCFLAGS} ${ARCHFLAGS} ${COMMON_INCL}
 
 LIBOBJS=lwp.o process.o lock.o iomgr.o timer.o fasttime.o preempt.o \
 	waitkey.o threadname.o AFS_component_version_number.o
@@ -29,11 +29,11 @@ liblwp.a: ${LIBOBJS}
 
 # This is required so sgi_64+ does not try to build this file.
 process.s:
-	echo Nothing to be done for process.s
+	@echo Nothing to be done for process.s
 
 # Making process.o for $(SYS_NAME)
 process.o	: process.s process.i386.s process.c
-	@case "$(SYS_NAME)" in \
+	@set -x; case "$(SYS_NAME)" in \
 	pmax_he1) \
 		$(CCOBJ) ${LWP_DBG} ${LWP_OPTMZ} -c -I${TOP_INCDIR} process.s;; \
 	sun4c_51 | sun4c_52 | sun4m_51 | sun4m_52 | sun4c_53 | sun4m_53  | sun4_53 | sun4_52 | sun4_54 | sun4c_54 | sun4m_54 | sun4x_5* ) \
@@ -43,7 +43,7 @@ process.o	: process.s process.i386.s process.c
 	sgi_5* ) \
 		$(CCOBJ) ${LWP_DBG} ${LWP_OPTMZ} -c -I${TOP_INCDIR} -KPIC -G0  ${srcdir}/process.s;; \
 	sgi_61 | sgi_62 | sgi_63 ) \
-		$(CCOBJ) ${LWP_DBG} ${LWP_OPTMZ} -c ${XCFLAGS} -I${TOP_INCDIR} -KPIC -G0  ${srcdir}/process.s;; \
+		$(CCOBJ) ${LWP_DBG} ${LWP_OPTMZ} -c ${XCFLAGS} ${ARCHFLAGS} -I${TOP_INCDIR} -KPIC -G0  ${srcdir}/process.s;; \
 	s390_*) \
 		/lib/cpp -P -I${TOP_INCDIR} ${srcdir}/process.s390.s >process.ss; \
 		${AS} -ahlns process.ss -o process.o >process.lst; \
@@ -53,7 +53,30 @@ process.o	: process.s process.i386.s process.c
 		${AS} -ahlns process.ss -o process.o >process.lst; \
 		$(RM) process.ss ;; \
 	*_darwin* ) \
-		$(CC) ${LWP_DBG} ${LWP_OPTMZ} -c ${XCFLAGS} -I${TOP_INCDIR} ${srcdir}/process.s;; \
+		ppc=`echo "${ARCHFLAGS}" | grep -q -w ppc && echo yes` ; \
+		i386=`echo "${ARCHFLAGS}" | grep -q -w i386 && echo yes` ; \
+		if [ -z "$${ppc}" -a -z "$${i386}" ] ; then \
+			if [ `arch` = ppc ] ; then \
+				ppc=yes ; \
+			else \
+				i386=yes ; \
+			fi ; \
+		fi ; \
+		if [ -n "$${ppc}" ] ; then \
+			$(CC) ${LWP_DBG} ${LWP_OPTMZ} -c -arch ppc -I${TOP_INCDIR} ${srcdir}/process.s -o process.ppc.o ; \
+			if [ -z "$${i386}" ] ; then \
+				${MV} process.ppc.o process.o ; \
+			fi ; \
+		fi ; \
+		if [ -n "$${i386}" ] ; then \
+			$(CC) -x assembler-with-cpp -c -arch i386 -I${TOP_INCDIR} -I${srcdir} ${srcdir}/process.i386.s -o process.i386.o ; \
+			if [ -z "$${ppc}" ] ; then \
+				${MV} process.i386.o process.o ; \
+			fi ; \
+		fi ; \
+		if [ -n "$${ppc}" -a -n "$${i386}" ] ; then \
+			lipo -create process.ppc.o process.i386.o -output process.o ;\
+		fi ;; \
 	i386_*bsd*) \
 		cp ${srcdir}/process.i386.s process.S ; \
 		${CCOBJ} -DIGNORE_STDS_H -E -I${srcdir} -I${TOP_INCDIR} process.S > process.ss ; \

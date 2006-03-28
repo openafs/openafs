@@ -30,6 +30,7 @@
 
 extern int pmgt_SignalRaiseLocalByName(const char *signo, int *libSigno);
 extern int pmgt_RedirectNativeSignals(void);
+extern int pmgt_RestoreNativeSignals(void);
 
 #else
 /* Private process management definitions and declarations for Unix */

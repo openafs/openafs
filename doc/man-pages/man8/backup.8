@@ -1,0 +1,470 @@
+.rn '' }`
+''' $RCSfile$$Revision$$Date$
+'''
+''' $Log$
+'''
+.de Sh
+.br
+.if t .Sp
+.ne 5
+.PP
+\fB\\$1\fR
+.PP
+..
+.de Sp
+.if t .sp .5v
+.if n .sp
+..
+.de Ip
+.br
+.ie \\n(.$>=3 .ne \\$3
+.el .ne 3
+.IP "\\$1" \\$2
+..
+.de Vb
+.ft CW
+.nf
+.ne \\$1
+..
+.de Ve
+.ft R
+
+.fi
+..
+'''
+'''
+'''     Set up \*(-- to give an unbreakable dash;
+'''     string Tr holds user defined translation string.
+'''     Bell System Logo is used as a dummy character.
+'''
+.tr \(*W-|\(bv\*(Tr
+.ie n \{\
+.ds -- \(*W-
+.ds PI pi
+.if (\n(.H=4u)&(1m=24u) .ds -- \(*W\h'-12u'\(*W\h'-12u'-\" diablo 10 pitch
+.if (\n(.H=4u)&(1m=20u) .ds -- \(*W\h'-12u'\(*W\h'-8u'-\" diablo 12 pitch
+.ds L" ""
+.ds R" ""
+'''   \*(M", \*(S", \*(N" and \*(T" are the equivalent of
+'''   \*(L" and \*(R", except that they are used on ".xx" lines,
+'''   such as .IP and .SH, which do another additional levels of
+'''   double-quote interpretation
+.ds M" """
+.ds S" """
+.ds N" """""
+.ds T" """""
+.ds L' '
+.ds R' '
+.ds M' '
+.ds S' '
+.ds N' '
+.ds T' '
+'br\}
+.el\{\
+.ds -- \(em\|
+.tr \*(Tr
+.ds L" ``
+.ds R" ''
+.ds M" ``
+.ds S" ''
+.ds N" ``
+.ds T" ''
+.ds L' `
+.ds R' '
+.ds M' `
+.ds S' '
+.ds N' `
+.ds T' '
+.ds PI \(*p
+'br\}
+.\"	If the F register is turned on, we'll generate
+.\"	index entries out stderr for the following things:
+.\"		TH	Title 
+.\"		SH	Header
+.\"		Sh	Subsection 
+.\"		Ip	Item
+.\"		X<>	Xref  (embedded
+.\"	Of course, you have to process the output yourself
+.\"	in some meaninful fashion.
+.if \nF \{
+.de IX
+.tm Index:\\$1\t\\n%\t"\\$2"
+..
+.nr % 0
+.rr F
+.\}
+.TH backup 8 "OpenAFS" "5/Jan/2006" "AFS Command Reference"
+.UC
+.if n .hy 0
+.if n .na
+.ds C+ C\v'-.1v'\h'-1p'\s-2+\h'-1p'+\s0\v'.1v'\h'-1p'
+.de CQ          \" put $1 in typewriter font
+.ft CW
+'if n "\c
+'if t \\&\\$1\c
+'if n \\&\\$1\c
+'if n \&"
+\\&\\$2 \\$3 \\$4 \\$5 \\$6 \\$7
+'.ft R
+..
+.\" @(#)ms.acc 1.5 88/02/08 SMI; from UCB 4.2
+.	\" AM - accent mark definitions
+.bd B 3
+.	\" fudge factors for nroff and troff
+.if n \{\
+.	ds #H 0
+.	ds #V .8m
+.	ds #F .3m
+.	ds #[ \f1
+.	ds #] \fP
+.\}
+.if t \{\
+.	ds #H ((1u-(\\\\n(.fu%2u))*.13m)
+.	ds #V .6m
+.	ds #F 0
+.	ds #[ \&
+.	ds #] \&
+.\}
+.	\" simple accents for nroff and troff
+.if n \{\
+.	ds ' \&
+.	ds ` \&
+.	ds ^ \&
+.	ds , \&
+.	ds ~ ~
+.	ds ? ?
+.	ds ! !
+.	ds /
+.	ds q
+.\}
+.if t \{\
+.	ds ' \\k:\h'-(\\n(.wu*8/10-\*(#H)'\'\h"|\\n:u"
+.	ds ` \\k:\h'-(\\n(.wu*8/10-\*(#H)'\`\h'|\\n:u'
+.	ds ^ \\k:\h'-(\\n(.wu*10/11-\*(#H)'^\h'|\\n:u'
+.	ds , \\k:\h'-(\\n(.wu*8/10)',\h'|\\n:u'
+.	ds ~ \\k:\h'-(\\n(.wu-\*(#H-.1m)'~\h'|\\n:u'
+.	ds ? \s-2c\h'-\w'c'u*7/10'\u\h'\*(#H'\zi\d\s+2\h'\w'c'u*8/10'
+.	ds ! \s-2\(or\s+2\h'-\w'\(or'u'\v'-.8m'.\v'.8m'
+.	ds / \\k:\h'-(\\n(.wu*8/10-\*(#H)'\z\(sl\h'|\\n:u'
+.	ds q o\h'-\w'o'u*8/10'\s-4\v'.4m'\z\(*i\v'-.4m'\s+4\h'\w'o'u*8/10'
+.\}
+.	\" troff and (daisy-wheel) nroff accents
+.ds : \\k:\h'-(\\n(.wu*8/10-\*(#H+.1m+\*(#F)'\v'-\*(#V'\z.\h'.2m+\*(#F'.\h'|\\n:u'\v'\*(#V'
+.ds 8 \h'\*(#H'\(*b\h'-\*(#H'
+.ds v \\k:\h'-(\\n(.wu*9/10-\*(#H)'\v'-\*(#V'\*(#[\s-4v\s0\v'\*(#V'\h'|\\n:u'\*(#]
+.ds _ \\k:\h'-(\\n(.wu*9/10-\*(#H+(\*(#F*2/3))'\v'-.4m'\z\(hy\v'.4m'\h'|\\n:u'
+.ds . \\k:\h'-(\\n(.wu*8/10)'\v'\*(#V*4/10'\z.\v'-\*(#V*4/10'\h'|\\n:u'
+.ds 3 \*(#[\v'.2m'\s-2\&3\s0\v'-.2m'\*(#]
+.ds o \\k:\h'-(\\n(.wu+\w'\(de'u-\*(#H)/2u'\v'-.3n'\*(#[\z\(de\v'.3n'\h'|\\n:u'\*(#]
+.ds d- \h'\*(#H'\(pd\h'-\w'~'u'\v'-.25m'\f2\(hy\fP\v'.25m'\h'-\*(#H'
+.ds D- D\\k:\h'-\w'D'u'\v'-.11m'\z\(hy\v'.11m'\h'|\\n:u'
+.ds th \*(#[\v'.3m'\s+1I\s-1\v'-.3m'\h'-(\w'I'u*2/3)'\s-1o\s+1\*(#]
+.ds Th \*(#[\s+2I\s-2\h'-\w'I'u*3/5'\v'-.3m'o\v'.3m'\*(#]
+.ds ae a\h'-(\w'a'u*4/10)'e
+.ds Ae A\h'-(\w'A'u*4/10)'E
+.ds oe o\h'-(\w'o'u*4/10)'e
+.ds Oe O\h'-(\w'O'u*4/10)'E
+.	\" corrections for vroff
+.if v .ds ~ \\k:\h'-(\\n(.wu*9/10-\*(#H)'\s-2\u~\d\s+2\h'|\\n:u'
+.if v .ds ^ \\k:\h'-(\\n(.wu*10/11-\*(#H)'\v'-.4m'^\v'.4m'\h'|\\n:u'
+.	\" for low resolution devices (crt and lpr)
+.if \n(.H>23 .if \n(.V>19 \
+\{\
+.	ds : e
+.	ds 8 ss
+.	ds v \h'-1'\o'\(aa\(ga'
+.	ds _ \h'-1'^
+.	ds . \h'-1'.
+.	ds 3 3
+.	ds o a
+.	ds d- d\h'-1'\(ga
+.	ds D- D\h'-1'\(hy
+.	ds th \o'bp'
+.	ds Th \o'LP'
+.	ds ae ae
+.	ds Ae AE
+.	ds oe oe
+.	ds Oe OE
+.\}
+.rm #[ #] #H #V #F C
+.SH "NAME"
+backup \- Introduction to the backup command suite
+.SH "DESCRIPTION"
+The commands in the \fBbackup\fR command suite are the administrative
+interface to the AFS Backup System. There are several categories of
+commands in the suite:
+.Ip "\(bu" 4
+Commands to copy data from \s-1AFS\s0 volumes to tape or a backup data file, and
+to restore it to the file system: \fBbackup diskrestore\fR, \fBbackup dump\fR,
+\fBbackup volrestore\fR, and \fBbackup volsetrestore\fR.
+.Ip "\(bu" 4
+Commands to administer the records in the Backup Database: \fBbackup
+adddump\fR, \fBbackup addhost\fR, \fBbackup addvolentry\fR, \fBbackup addvolset\fR,
+\fBbackup deldump\fR, \fBbackup deletedump\fR, \fBbackup delhost\fR, \fBbackup
+delvolentry\fR, \fBbackup delvolset\fR, \fBbackup dumpinfo\fR, \fBbackup
+listdumps\fR, \fBbackup listhosts\fR, \fBbackup listvolsets\fR, \fBbackup
+scantape\fR, \fBbackup setexp\fR, and \fBbackup volinfo\fR.
+.Ip "\(bu" 4
+Commands to write and read tape labels: \fBbackup labeltape\fR and \fBbackup
+readlabel\fR.
+.Ip "\(bu" 4
+Commands to list and change the status of backup operations and the
+machines performing them: \fBbackup jobs\fR, \fBbackup kill\fR, and \fBbackup
+status\fR.
+.Ip "\(bu" 4
+Commands to enter and leave interactive mode: \fBbackup interactive\fR and
+\fBbackup quit\fR.
+.Ip "\(bu" 4
+Commands to check for and repair corruption in the Backup Database:
+\fBbackup dbverify\fR, \fBbackup restoredb\fR, and \fBbackup savedb\fR.
+.Ip "\(bu" 4
+Commands to obtain help: \fBbackup apropos\fR and \fBbackup help\fR.
+.PP
+The backup command interpreter interacts with two other processes:
+.Ip "\(bu" 4
+The Backup Server (\fBbuserver\fR) process. It maintains the Backup Database,
+which stores most of the administrative information used by the Backup
+System. In the standard configuration, the Backup Server runs on each
+database server machine in the cell, and uses \s-1AFS\s0's distributed database
+technology, Ubik, to synchronize its copy of the database with the copies
+on the other database server machines.
+.Ip "\(bu" 4
+The Backup Tape Coordinator (\fBbutc\fR) process. A separate instance of the
+process controls each tape device or backup data file used to dump or
+restore data. The Tape Coordinator runs on a Tape Coordinator machine,
+which is an \s-1AFS\s0 server or client machine that has one or more tape devices
+attached, or has sufficient disk space to accommodate one or more backup
+data files on its local disk.
+.Sp
+Each Tape Coordinator must be registered in the Backup Database and in the
+\fI/usr/afs/backup/tapeconfig\fR configuration file on the Tape Coordinator
+machine's local disk, and information in the two places must be consistent
+for proper Backup System performance. The optional
+\fI/usr/afs/backup/\s-1CFG_\s0\fIdevice_name\fR\fR for each Tape Coordinator records
+information used to automate its operation.
+.PP
+In addition to the standard command line interface, the \fBbackup\fR command
+suite provides an \fIinteractive\fR interface, which has several useful
+features described in the \fIbackup_interactive(8)\fR manpage.  Three of the commands in
+the suite are available only in interactive mode: \fBbackup jobs\fR, \fBbackup
+kill\fR, and \fBbackup quit\fR.
+.SH "OPTIONS"
+The following options are available on many commands in the \fBbackup\fR
+suite. The reference page for each command also lists them, but they are
+described here in greater detail.
+.Ip "\fB\-cell\fR <\fIcell name\fR>" 4
+Names the cell in which to run the command. It is acceptable to abbreviate
+the cell name to the shortest form that distinguishes it from the other
+entries in the \fI/usr/vice/etc/CellServDB\fR file on the local machine. If
+the \fB\-cell\fR argument is omitted, the command interpreter determines the
+name of the local cell by reading the following in order:
+.Ip "\(bu" 8
+The value of the \s-1AFSCELL\s0 environment variable.
+.Ip "\(bu" 8
+The local \fI/usr/vice/etc/ThisCell\fR file.
+.Sp
+Do not combine the \fB\-cell\fR and \fB\-localauth\fR options. A command on which
+the \fB\-localauth\fR flag is included always runs in the local cell (as
+defined in the server machine's local \fI/usr/afs/etc/ThisCell\fR file),
+whereas a command on which the \fB\-cell\fR argument is included runs in the
+specified foreign cell.
+.Sp
+The \fB\-cell\fR argument is not available on commands issued in interactive
+mode. The cell defined when the \fBbackup\fR command interpreter enters
+interactive mode applies to all commands issued during the interactive
+session.
+.Ip "\fB\-help\fR" 4
+Prints a command's online help message on the standard output stream. Do
+not combine this flag with any of the command's other options; when it is
+provided, the command interpreter ignores all other options, and only
+prints the help message.
+.Ip "\fB\-localauth\fR" 4
+Constructs a server ticket using the server encryption key with the
+highest key version number in the local \fI/usr/afs/etc/KeyFile\fR file. The
+\fBbackup\fR command interpreter presents the ticket, which never expires, to
+the Backup Server, Volume Server and Volume Location (\s-1VL\s0) Server during
+mutual authentication.
+.Sp
+Use this flag only when issuing a command on a server machine; client
+machines do not usually have a \fI/usr/afs/etc/KeyFile\fR file.  The issuer
+of a command that includes this flag must be logged on to the server
+machine as the local superuser \f(CWroot\fR. The flag is useful for commands
+invoked by an unattended application program, such as a process controlled
+by the \s-1UNIX\s0 \fBcron\fR utility or by a cron entry in the machine's
+\fI/usr/afs/local/BosConfig\fR file. It is also useful if an administrator is
+unable to authenticate to \s-1AFS\s0 but is logged in as the local superuser
+\f(CWroot\fR.
+.Sp
+Do not combine the \fB\-cell\fR and \fB\-localauth\fR options. A command on which
+the \fB\-localauth\fR flag is included always runs in the local cell (as
+defined in the server machine's local \fI/usr/afs/etc/ThisCell\fR file),
+whereas a command on which the \fB\-cell\fR argument is included runs in the
+specified foreign cell.
+.Sp
+The \fB\-localauth\fR argument is not available on commands issued in
+interactive mode. The local identity and \s-1AFS\s0 tokens with which the
+\fBbackup\fR command interpreter enters interactive mode apply to all
+commands issued during the interactive session.
+.Ip "\fB\-portoffset\fR <\fI\s-1TC\s0 port offset\fR>" 4
+Specifies the port offset number of the Tape Coordinator that is to
+execute the \fBbackup\fR command. The port offset number uniquely identifies
+a pairing of a Tape Coordinator (\fBbutc\fR) process and tape device or
+backup data file.
+.Sp
+The backup command interpreter and Tape Coordinator process communicate
+via a \s-1UDP\s0 socket, or port. Before issuing a \fBbackup\fR command that
+involves reading or writing a tape, the backup operator must start a
+\fBbutc\fR process that controls the appropriate tape device and listens for
+requests sent to its port number. If a Backup System machine has multiple
+tape devices attached, they can perform backup operations simultaneously
+because each device has its own associated \fBbutc\fR process and port offset
+number.
+.Sp
+The Backup System associates a tape capacity and file mark size with each
+port offset (as defined in the \fItapeconfig\fR file). For a compressing tape
+device, the capacity and file mark values differ for compression and
+non-compression modes, so the two modes have distinct port offset numbers.
+.Sp
+The Backup Database can store up to 58,511 port offsets, so the legal
+values for this argument are the integers \f(CW0\fR through \f(CW58510\fR. If the
+issuer omits the argument, it defaults to \f(CW0\fR. (The limit of 58,511 port
+offsets results from the fact that \s-1UDP\s0 socket numbers are identified by a
+16-bit integer, and the lowest socket number used by the Backup System is
+7025. The largest number that a 16-bit integer can represent is
+65,535. Subtracting 7,025 yields 58,510. The addition of port offset 0
+(zero) increases the maximum to 58,511.)
+.Sp
+Although it is possible to define up to 58,511 port offset numbers for a
+cell, it is not possible to run 58,511 tape devices simultaneously, due to
+the following limits:
+.Ip "\(bu" 8
+The maximum number of dump or restore operations that can run
+simultaneously is 64.
+.Ip "\(bu" 8
+The maximum number of tape devices that can work together on a restore
+operation is 128 (that is the maximum number of values that can be
+provided for the \fB\-portoffset\fR argument to the \fBbackup diskrestore\fR,
+\fBbackup volrestore\fR, or \fBbackup volsetrestore\fR command).
+.Sp
+The Backup System does not reserve \s-1UDP\s0 sockets. If another application is
+already using the Tape Coordinator's socket when it tries to start, the
+\fBbutc\fR process fails and the following error message appears at the shell
+prompt:
+.Sp
+.Vb 2
+\&   bind: Address already in use
+\&   rxi_GetUDPSocket: bind failed
+.Ve
+.SH "PRIVILEGE REQUIRED"
+To issue any backup command that accesses the Backup Database only, the
+issuer must be listed in the \fI/usr/afs/etc/UserList\fR file on every
+machine where the Backup Server is running. To issue any \fBbackup\fR command
+that accesses volume data, the issuer must appear in the \fIUserList\fR file
+on every Backup Server machine, every Volume Location (VL) Server machine,
+and every file server machine that houses affected volumes. By convention,
+a common \fIUserList\fR file is distributed to all database server and file
+server machines in the cell. See the chapter on privileged users in the
+\fIIBM AFS Administration Guide\fR for more information on this type of
+privilege.
+.PP
+If the \fB\-localauth\fR flag is included, the user must instead be logged on
+as the local superuser \f(CWroot\fR on the server machine where the \fBbackup\fR
+command is issued.
+.SH "SEE ALSO"
+the \fIBosConfig(5)\fR manpage,
+the \fICellServDB(5)\fR manpage,
+the \fIKeyFile(5)\fR manpage,
+the \fIThisCell(5)\fR manpage,
+the \fIUserList(5)\fR manpage,
+the \fIbutc(5)\fR manpage,
+the \fItapeconfig(5)\fR manpage,
+the \fIbackup_adddump(8)\fR manpage,
+the \fIbackup_addhost(8)\fR manpage,
+the \fIbackup_addvolentry(8)\fR manpage,
+the \fIbackup_addvolset(8)\fR manpage,
+the \fIbackup_dbverify(8)\fR manpage,
+the \fIbackup_deldump(8)\fR manpage,
+the \fIbackup_deletedump(8)\fR manpage,
+the \fIbackup_delhost(8)\fR manpage,
+the \fIbackup_delvolentry(8)\fR manpage,
+the \fIbackup_delvolset(8)\fR manpage,
+the \fIbackup_diskrestore(8)\fR manpage,
+the \fIbackup_dump(8)\fR manpage,
+the \fIbackup_dumpinfo(8)\fR manpage,
+the \fIbackup_help(8)\fR manpage,
+the \fIbackup_interactive(8)\fR manpage,
+the \fIbackup_jobs(8)\fR manpage,
+the \fIbackup_kill(8)\fR manpage,
+the \fIbackup_labeltape(8)\fR manpage,
+the \fIbackup_listdumps(8)\fR manpage,
+the \fIbackup_listhosts(8)\fR manpage,
+the \fIbackup_listvolsets(8)\fR manpage,
+the \fIbackup_quit(8)\fR manpage,
+the \fIbackup_readlabel(8)\fR manpage,
+the \fIbackup_restoredb(8)\fR manpage,
+the \fIbackup_savedb(8)\fR manpage,
+the \fIbackup_scantape(8)\fR manpage,
+the \fIbackup_setexp(8)\fR manpage,
+the \fIbackup_status(8)\fR manpage,
+the \fIbackup_volinfo(8)\fR manpage,
+the \fIbackup_volrestore(8)\fR manpage,
+the \fIbackup_volsetrestore(8)\fR manpage,
+the \fIbuserver(8)\fR manpage,
+the \fIbutc(8)\fR manpage
+.SH "COPYRIGHT"
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+.PP
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
+
+.rn }` ''
+.IX Title "backup 8"
+.IX Name "backup - Introduction to the backup command suite"
+
+.IX Header "NAME"
+
+.IX Header "DESCRIPTION"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Header "OPTIONS"
+
+.IX Item "\fB\-cell\fR <\fIcell name\fR>"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\fB\-help\fR"
+
+.IX Item "\fB\-localauth\fR"
+
+.IX Item "\fB\-portoffset\fR <\fI\s-1TC\s0 port offset\fR>"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Header "PRIVILEGE REQUIRED"
+
+.IX Header "SEE ALSO"
+
+.IX Header "COPYRIGHT"
+

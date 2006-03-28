@@ -21,7 +21,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_remove.c,v 1.31.2.9 2005/05/30 04:05:44 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_remove.c,v 1.31.2.16 2006/03/02 06:34:19 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -349,6 +349,8 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
     if (tvc && osi_Active(tvc)) {
 	/* about to delete whole file, prefetch it first */
 	ReleaseWriteLock(&adp->lock);
+	if (tdc)
+	    ReleaseSharedLock(&tdc->lock);
 	ObtainWriteLock(&tvc->lock, 143);
 #if	defined(AFS_OSF_ENV)
 	afs_Wire(tvc, &treq);
@@ -357,25 +359,32 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
 #endif
 	ReleaseWriteLock(&tvc->lock);
 	ObtainWriteLock(&adp->lock, 144);
+	/* Technically I don't think we need this back, but let's hold it 
+	   anyway; The "got" reference should actually be sufficient. */
+	if (tdc) 
+	    ObtainSharedLock(&tdc->lock, 640);
     }
 
     osi_dnlc_remove(adp, aname, tvc);
 
     Tadp1 = adp;
+#ifndef AFS_DARWIN80_ENV
     Tadpr = VREFCOUNT(adp);
+#endif
     Ttvc = tvc;
     Tnam = aname;
     Tnam1 = 0;
+#ifndef AFS_DARWIN80_ENV
     if (tvc)
 	Ttvcr = VREFCOUNT(tvc);
-#ifdef	AFS_AIX_ENV
-    if (tvc && (VREFCOUNT(tvc) > 2) && tvc->opens > 0
-	&& !(tvc->states & CUnlinked))
-#else
-    if (tvc && (VREFCOUNT(tvc) > 1) && tvc->opens > 0
-	&& !(tvc->states & CUnlinked))
 #endif
-    {
+#ifdef	AFS_AIX_ENV
+    if (tvc && VREFCOUNT_GT(tvc, 2) && tvc->opens > 0
+	&& !(tvc->states & CUnlinked)) {
+#else
+    if (tvc && VREFCOUNT_GT(tvc, 1) && tvc->opens > 0
+	&& !(tvc->states & CUnlinked)) {
+#endif
 	char *unlname = afs_newname();
 
 	ReleaseWriteLock(&adp->lock);
@@ -384,7 +393,12 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
 	code = afsrename(adp, aname, adp, unlname, acred, &treq);
 	Tnam1 = unlname;
 	if (!code) {
+	    char *oldmvid = NULL;
+	    if (tvc->mvid) 
+		oldmvid = tvc->mvid;
 	    tvc->mvid = (struct VenusFid *)unlname;
+	    if (oldmvid)
+		osi_FreeSmallSpace(oldmvid);
 	    crhold(acred);
 	    if (tvc->uncred) {
 		crfree(tvc->uncred);
@@ -401,6 +415,7 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
 	code = afsremove(adp, tdc, tvc, aname, acred, &treq);
     }
     afs_PutFakeStat(&fakestate);
+    osi_Assert(!WriteLocked(&adp->lock) || (adp->lock.pid_writer != MyPidxx));
     return code;
 }
 
@@ -423,6 +438,12 @@ afs_remunlink(register struct vcache *avc, register int doit)
 
     if (NBObtainWriteLock(&avc->lock, 423))
 	return 0;
+#if defined(AFS_DARWIN80_ENV)
+    if (vnode_get(AFSTOV(avc))) {
+	ReleaseWriteLock(&avc->lock);
+	return 0;
+    }
+#endif
 
     if (avc->mvid && (doit || (avc->states & CUnlinkedDel))) {
 	if ((code = afs_InitReq(&treq, avc->uncred))) {
@@ -436,7 +457,7 @@ afs_remunlink(register struct vcache *avc, register int doit)
 	    cred = avc->uncred;
 	    avc->uncred = NULL;
 
-#ifdef AFS_DARWIN_ENV
+#if defined(AFS_DARWIN_ENV) && !defined(AFS_DARWIN80_ENV)
 	    VREF(AFSTOV(avc));
 #else
 	    VN_HOLD(AFSTOV(avc));
@@ -472,6 +493,9 @@ afs_remunlink(register struct vcache *avc, register int doit)
 	    crfree(cred);
 	}
     } else {
+#if defined(AFS_DARWIN80_ENV)
+	vnode_put(AFSTOV(avc));
+#endif
 	ReleaseWriteLock(&avc->lock);
     }
 

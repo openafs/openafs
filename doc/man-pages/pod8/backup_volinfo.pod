@@ -1,0 +1,135 @@
+=head1 NAME
+
+backup volinfo - Displays a volume's dump history from the Backup Database
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<backup volinfo> S<<< B<-volume> <I<volume name>> >>> [B<-localauth>]
+    S<<< [B<-cell> <I<cell name>>] >>> [B<-help>]
+
+B<backup voli> S<<< B<-v> <I<volume name>> >>> [B<-l>] S<<< [B<-c> <I<cell name>>] >>> [B<-h>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<backup volinfo> command displays a dump history of the specified
+volume, reporting information such as the date on which the volume was
+dumped and the tapes that contain it. Include the C<.backup> extension on
+the volume name if the backup version of the volume was dumped.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-volume> <I<volume name>>
+
+Names the volume for which to display the dump history. Include the
+C<.backup> or C<.readonly> extension if the backup or read-only version of
+the volume was dumped.
+
+=item B<-localauth>
+
+Constructs a server ticket using a key from the local
+F</usr/afs/etc/KeyFile> file. The B<backup> command interpreter presents
+it to the Backup Server, Volume Server and VL Server during mutual
+authentication. Do not combine this flag with the B<-cell> argument. For
+more details, see L<backup(8)>.
+
+=item B<-cell> <I<cell name>>
+
+Names the cell in which to run the command. Do not combine this argument
+with the B<-localauth> flag. For more details, see L<backup(8)>.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 OUTPUT
+
+The output includes a line for each Backup Database dump record that
+mentions the specified volume, order from most to least recent. The output
+for each record appears in a table with six columns:
+
+=over 4
+
+=item dumpID
+
+The dump ID of the dump that includes the volume.
+
+=item lvl
+
+The depth in the dump hierarchy of the dump level at which the volume was
+dumped. A value of C<0> indicates a full dump. A value of C<1> or greater
+indicates an incremental dump made at the specified depth in the dump
+hierarchy.
+
+=item parentid
+
+The dump ID of the dump's parent dump. A value of C<0> indicates a full
+dump, which has no parent; in this case, the value in the C<lvl> column is
+also C<0>.
+
+=item creation date
+
+The date and time at which the Backup System started the dump operation
+that created the dump.
+
+=item clone date
+
+For a backup or read-only volume, the time at which it was cloned from its
+read/write source. For a read/write volume, the same as the value in the
+C<creation date> field.
+
+=item tape name
+
+The name of the tape containing the dump: either the permanent tape name,
+or an AFS tape name in the format
+I<volume_set_name>.I<dump_level_name>.I<tape_index> where
+I<volume_set_name> is the name of the volume set associated with the
+initial dump in the dump set of which this tape is a part;
+I<dump_level_name> is the name of the dump level at which the initial dump
+was backed up; I<tape_index> is the ordinal of the tape in the dump
+set. Either type of name can be followed by a dump ID in parentheses; if
+it appears, it is the dump ID of the initial dump in the dump set to which
+this appended dump belongs.
+
+=back
+
+=head1 EXAMPLES
+
+The following example shows part of the dump history of the Backup volume
+C<user.smith.backup>:
+
+   % backup volinfo -volume user.smith.backup
+   DumpID    lvl parentID  creation date    clone date       tape name
+   924600000 1   924427600 04/20/1999 05:20 04/20/1999 05:01 user_incr_2 (924514392)
+   924514392 1   924427600 04/19/1999 05:33 04/19/1999 05:08 user_incr_2
+   924427600 0           0 04/18/1999 05:26 04/18/1999 04:58 user_full_6
+       .     .      .         .       .       .      .         .
+       .     .      .         .       .       .      .         .
+
+=head1 PRIVILEGE REQUIRED
+
+None
+
+=head1 SEE ALSO
+
+L<backup(8)>,
+L<backup_dumpinfo(8)>,
+L<backup_volrestore(8)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

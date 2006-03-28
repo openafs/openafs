@@ -1,0 +1,75 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 4//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3672/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 3 Oct 2000 at 16:18:30                -->
+<META HTTP-EQUIV="updated" CONTENT="Tue, 03 Oct 2000 16:18:29">
+<META HTTP-EQUIV="review" CONTENT="Wed, 03 Oct 2001 16:18:29">
+<META HTTP-EQUIV="expires" CONTENT="Thu, 03 Oct 2002 16:18:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf175.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf177.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRFSTRACE_SETLOG" HREF="auarf002.htm#ToC_190">fstrace setlog</A></H2>
+<P><STRONG>Purpose</STRONG>
+<A NAME="IDX5040"></A>
+<A NAME="IDX5041"></A>
+<P>Sets the size of a trace log
+<P><STRONG>Synopsis</STRONG>
+<PRE><B>fstrace setlog</B> [<B>-log</B> &lt;<VAR>log_name</VAR>><SUP>+</SUP>]  <B>-buffersize</B> &lt;<VAR>1-kilobyte_units</VAR>>  [<B>-help</B>]
+      
+<B>fstrace setl</B> [<B>-l</B> &lt;<VAR>log_name</VAR>><SUP>+</SUP>]  <B>-b</B> &lt;<VAR>1-kilobyte_units</VAR>>  [<B>-h</B>]
+      
+<B>fstrace sl</B> [<B>-l</B> &lt;<VAR>log_name</VAR>><SUP>+</SUP>]  <B>-b</B> &lt;<VAR>1-kilobyte_units</VAR>>  [<B>-h</B>]
+</PRE>
+<P><STRONG>Description</STRONG>
+<P>The <B>fstrace setlog</B> command defines the number of kilobytes of
+kernel memory allocated for the <B>cmfx</B> trace log. If kernel
+memory is currently allocated, the command clears the current log and creates
+a new log buffer of the specified size.
+<P>To display the current defined size of the log buffer, issue the
+<B>fstrace lslog</B> command with the <B>-long</B> argument. To
+control whether the indicated amount of space is actually allocated, use the
+<B>fstrace setset</B> command to set the status of the <B>cm</B> event
+set; to display the event set's status, use the <B>fstrace
+lsset</B> command.
+<P><STRONG>Options</STRONG>
+<DL>
+<P><DT><B>-log
+</B><DD>Names trace log for which to set the size. The only acceptable
+value is <B>cmfx</B>, which is also the default if this argument is
+omitted.
+<P><DT><B>-buffersize
+</B><DD>Specifies the number of 1-kilobyte blocks of kernel memory to allocate for
+the trace log.
+<P><DT><B>-help
+</B><DD>Prints the online help for this command. All other valid options
+are ignored.
+</DL>
+<P><STRONG>Examples</STRONG>
+<P>The following command allocated 80 KB of kernel memory for the
+<B>cmfx</B> trace log:
+<PRE>   # <B>fstrace setlog -log cmfx -buffersize 80</B>
+    
+</PRE>
+<P><STRONG>Privilege Required</STRONG>
+<P>The issuer must be logged in as the local superuser <B>root</B>.
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf169.htm#HDRFSTRACE_INTRO">fstrace</A>
+<P><A HREF="auarf174.htm#HDRFSTRACE_LSLOG">fstrace lslog</A>
+<P><A HREF="auarf175.htm#HDRFSTRACE_LSSET">fstrace lsset</A>
+<P><A HREF="auarf177.htm#HDRFSTRACE_SETSET">fstrace setset</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf175.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf177.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

@@ -1,0 +1,158 @@
+=head1 NAME
+
+kas interactive - Enters interactive mode
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<kas interactive>
+    S<<< [B<-admin_username> <I<admin principal to use for authentication>>] >>>
+    S<<< [B<-password_for_admin> <I<admin password>>] >>> S<<< [B<-cell> <I<cell name>>] >>>
+    S<<< [B<-servers> <I<explicit list of authentication servers>>+] >>>
+    [B<-noauth>] [B<-help>]
+
+B<kas i> S<<< [B<-a> <I<admin principal to use for authentication>>] >>>
+    S<<< [B<-p> <I<admin password>>] >>> S<<< [B<-c> <I<cell name>>] >>>
+    S<<< [B<-s> <I<explicit list of authentication servers>>+] >>> [B<-n>] [B<-h>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<kas interactive> command establishes an interactive session for the
+issuer of the command. By default, the command interpreter establishes an
+authenticated connection for the user logged into the local file system
+with all of the Authentication Servers listed in the local
+F</usr/vice/etc/CellServDB> file for the cell named in the local
+F</usr/vice/etc/ThisCell> file. To specify an alternate identity, cell
+name, or list of Authentication Servers, include the B<-admin_username>,
+B<-cell>, or B<-servers> arguments respectively. Interactive mode lasts
+for six hours unless the maximum ticket lifetime for the issuer or the
+Authentication Server's Ticket Granting Service is shorter.
+
+There are two other ways to enter interactive mode, in addition to the
+B<kas interactive> command:
+
+=over 4
+
+=item *
+
+Type the kas command at the shell prompt without any operation code. If
+appropriate, include one or more of the B<-admin_username>,
+B<-password_for_admin>, B<-cell>, and B<-servers> arguments.
+
+=item *
+
+Type the kas command followed by a user name and cell name, separated by
+an C<@> sign (for example: B<kas admin@abc.com>), to establish a
+connection under the specified identity with the Authentication Servers
+listed in the local F</usr/vice/etc/CellServDB> file for the indicated
+cell. If appropriate, provide the B<-servers> argument to specify an
+alternate list of Authentication Server machines that belong to the
+indicated cell.
+
+=back
+
+There are several consequences of entering interactive mode:
+
+=over 4
+
+=item *
+
+The C<< ka> >> prompt replaces the system (shell) prompt. When typing
+commands at this prompt, provide only the operation code (omit the command
+suite name, B<kas>).
+
+=item *
+
+The command interpreter does not prompt for the issuer's password.
+
+The issuer's identity and password, the relevant cell, and the set of
+Authentication Server machines specified when entering interactive mode
+apply to all commands issued during the session. They cannot be changed
+without leaving the session, except by using the B<kas noauthentication>
+command to replace the current authenticated connections with
+unauthenticated ones. The B<-admin_username>, B<-password_for_admin>,
+B<-cell>, and B<-servers> arguments are ignored if provided on a command
+issued during interactive mode.
+
+=back
+
+To establish an unauthenticated connection to the Authentication Server,
+include the B<-noauth> flag or provide an incorrect password.  Unless
+authorization checking is disabled on each Authentication Server machine
+involved, however, it is not possible to perform any privileged operations
+within such a session.
+
+To end the current authenticated connection and establish an
+unauthenticated one, issue the B<kas noauthentication> command. To leave
+interactive mode and return to the regular shell prompt, issue the B<kas
+quit> command.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-admin_username> <I<admin principal>>
+
+Specifies the user identity under which to authenticate with the
+Authentication Server for execution of the command. For more details, see
+L<kas(8)>.
+
+=item B<-password_for_admin> <I<admin password>>
+
+Specifies the password of the command's issuer. If it is omitted (as
+recommended), the B<kas> command interpreter prompts for it and does not
+echo it visibly. For more details, see L<kas(8)>.
+
+=item B<-cell> <I<cell name>>
+
+Names the cell in which to run the command. For more details, see
+L<kas(8)>.
+
+=item B<-servers> <I<authentication servers>>+
+
+Names each machine running an Authentication Server with which to
+establish a connection. For more details, see L<kas(8)>.
+
+=item B<-noauth>
+
+Assigns the unprivileged identity C<anonymous> to the issuer. For more
+details, see L<kas(8)>.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 EXAMPLES
+
+The following example shows a user entering interactive mode as the
+privileged user C<admin>.
+
+   % kas interactive admin
+   Password for admin: I<admin_password>
+   ka>
+
+=head1 PRIVILEGE REQUIRED
+
+None
+
+=head1 SEE ALSO
+
+L<kas(8)>,
+L<kas_noauthentication(8)>,
+L<kas_quit(8)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

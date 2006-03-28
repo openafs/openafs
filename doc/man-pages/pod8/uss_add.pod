@@ -1,0 +1,330 @@
+=head1 NAME
+
+uss add - Creates a user account
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<uss add> S<<< B<-user> <I<login name>> >>> S<<< [B<-realname> <I<full name in quotes>>] >>>
+    S<<< [B<-pass> <I<initial password>>] >>>
+    [B<-pwexpires> <I<< password expires in [0..254] days (0 => never) >>>]
+    S<<< [B<-server> <I<file server for home volume>>] >>>
+    S<<< [B<-partition> <I<file server's disk partition for home volume>>] >>>
+    S<<< [B<-mount> <I<home directory mount point>>] >>>
+    S<<< [B<-uid> <I<uid to assign the user>>] >>>
+    S<<< [B<-template> <I<pathname of template file>>] >>>
+    [B<-verbose>] S<<< [B<-var> <I<auxiliary argument pairs (Num val)>>+] >>>
+    S<<< [B<-cell> <I<cell name>>] >>> S<<< [B<-admin> <I<administrator to authenticate>>] >>>
+    [B<-dryrun>] [B<-skipauth>] [B<-overwrite>] [B<-help>]
+
+B<uss ad> S<<< B<-us> <I<login name>> >>> S<<< [B<-r> <I<full name in quotes>>] >>>
+    S<<< [B<-pas> <I<initial password>>] >>>
+    [B<-pw> <I<< password expires in [0..254] days (0 => never) >>>]
+    S<<< [B<-se> <I<FileServer for home volume>>] >>>
+    S<<< [B<-par> <I<FileServer's disk partition for home volume>>] >>>
+    S<<< [B<-m> <I<home directory mount point>>] >>>
+    S<<< [B<-ui> <I<uid to assign the user>>] >>>
+    S<<< [B<-t> <I<pathname of template file>>] >>> [B<-ve>]
+    S<<< [B<-va> <I<auxiliary argument pairs (Num val)>>+] >>> S<<< [B<-c> <I<cell name>>] >>>
+    S<<< [B<-a> <I<administrator to authenticate>>] >>> [B<-d>] [B<-sk>] [B<-o>]
+    [B<-h>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<uss add> command creates entries in the Protection Database and
+Authentication Database for the user name specified by the B<-user>
+argument. By default, the Protection Server automatically allocates an AFS
+user ID (UID) for the new user; to specify an alternate AFS UID, include
+the B<-uid> argument. If a password is provided with the B<-pass>
+argument, it is stored as the user's password in the Authentication
+Database after conversion into a form suitable for use as an encryption
+key. Otherwise, the string C<changeme> is assigned as the user's initial
+password.
+
+The other results of the command depend on which instructions and which of
+a defined set of variables appear in the template file specified with the
+B<-template> argument. Many of the command's arguments supply a value for
+one of the defined variables, and failure to provide an argument when the
+corresponding variable appears in the template file halts the account
+creation process at the point where the command interpreter first
+encounters the variable in the template file.
+
+To create multiple accounts with a single command, use the B<uss bulk>
+command. To delete accounts with a single command, use the B<uss delete>
+command.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-user> <I<login name>>
+
+Names the user's Authentication Database and Protection Database
+entries. It can include up to eight alphanumeric characters, but not any
+of the following characters: C<:> (colon), C<@> (at-sign), C<.> (period),
+space, or newline. Because it becomes the username (the name under which a
+user logs in), it is best not to include shell metacharacters and to obey
+the restrictions that many operating systems impose on usernames (usually,
+to contain no more than eight lowercase letters).
+
+Corresponding variable in the template file: $USER.
+
+=item B<-realname> <I<full name in quotes>>
+
+Specifies the user's full name. If it contains spaces or punctuation,
+surround it with double quotes. If not provided, it defaults to the user
+name provided with the B<-user> argument.
+
+Corresponding variable in the template file: $NAME. Many operating systems
+include a field for the full name in a user's entry in the local password
+file (F</etc/passwd> or equivalent), and this variable can be used to pass
+a value to be used in that field.
+
+=item B<-pass> <I<initial password>>
+
+Specifies the user's initial password. Although the AFS commands that
+handle passwords accept strings of virtually unlimited length, it is best
+to use a password of eight characters or less, which is the maximum length
+that many applications and utilities accept. If not provided, this
+argument defaults to the string C<changeme>.
+
+Corresponding variable in the template file: none.
+
+=item B<-pwexpires> <I<password expiration>>
+
+Sets the number of days after a user's password is changed that it remains
+valid. Provide an integer from the range C<1> through C<254> to specify
+the number of days until expiration, or the value C<0> to indicate that
+the password never expires (the default).
+
+When the password becomes invalid (expires), the user is unable to
+authenticate, but has 30 more days in which to issue the B<kpasswd>
+command to change the password (after that, only an administrator can
+change it).
+
+Corresponding variable in the template file: $PWEXPIRES.
+
+=item B<-server> <I<file server name>>
+
+Names the file server machine on which to create the new user's volume. It
+is best to provide a fully qualified hostname (for example,
+C<fs1.abc.com>), but an abbreviated form is acceptable provided that the
+cell's naming service is available to resolve it at the time the volume is
+created.
+
+Corresponding variable in the template file: $SERVER.
+
+=item B<-partition> <I<file server partition>>
+
+Specifies the partition on which to create the user's volume; it must be
+on the file server machine named by the B<-server> argument. Provide the
+complete partition name (for example F</vicepa>) or one of the following
+abbreviated forms:
+
+   /vicepa     =     vicepa      =      a      =      0
+   /vicepb     =     vicepb      =      b      =      1
+
+After F</vicepz> (for which the index is 25) comes
+
+   /vicepaa    =     vicepaa     =      aa     =      26
+   /vicepab    =     vicepab     =      ab     =      27
+
+and so on through
+
+   /vicepiv    =     vicepiv     =      iv     =      255
+
+Corresponding variable in the template file: $PART.
+
+=item B<-mount> <I<home directory mount point>>
+
+Specifies the pathname for the user's home directory. Partial pathnames
+are interpreted relative to the current working directory.
+
+Specify the read/write path to the directory, to avoid the failure that
+results from attempting to create a new mount point in a read-only
+volume. By convention, the read/write path is indicated by placing a
+period before the cell name at the pathname's second level (for example,
+F</afs/.abc.com>). For further discussion of the concept of read/write and
+read-only paths through the filespace, see the B<fs mkmount> reference
+page.
+
+Corresponding variable in template: $MTPT, but in the template file's C<V>
+instruction only. Occurrences of the $MTPT variable in template
+instructions that follow the C<V> instruction take their value from the
+C<V> instruction's I<mount_point> field. Thus the value of this command
+line argument becomes the value for the $MTPT variable in instructions
+that follow the C<V> instruction only if the string $MTPT appears alone in
+the C<V> instruction's I<mount_point> field.
+
+=item B<-uid> <I<uid to assign the user>>
+
+Specifies a positive integer other than 0 (zero) to assign as the user's
+AFS UID. If this argument is omitted, the Protection Server assigns an AFS
+UID that is one greater than the current value of the C<max user id>
+counter (use the B<pts listmax> command to display the counter). If
+including this argument, it is best first to use the B<pts examine>
+command to verify that no existing account already has the desired AFS
+UID; it one does, the account creation process terminates with an error.
+
+Corresponding variable in the template file: $UID.
+
+=item B<-template> <I<pathname of template file>>
+
+Specifies the pathname of the template file. If this argument is omitted,
+the command interpreter searches the following directories in the
+indicated order for a file called C<uss.template>:
+
+=over 4
+
+=item *
+
+The current working directory.
+
+=item *
+
+F</afs/I<cellname>/common/uss>, where I<cellname> names the local cell.
+
+=item *
+
+F</etc>
+
+=back
+
+If the issuer provides a filename other than C<uss.template> but without a
+pathname, the command interpreter searches for it in the indicated
+directories. If the issuer provides a full or partial pathname, the
+command interpreter consults the specified file only; it interprets
+partial pathnames relative to the current working directory.
+
+If the specified template file is empty (zero-length), the command creates
+Protection and Authentication Database entries only.
+
+L<uss(5)> details the file's format.
+
+=item B<-verbose>
+
+Produces on the standard output stream a detailed trace of the command's
+execution. If this argument is omitted, only warnings and error messages
+appear.
+
+=item B<-var> <I<auxilliary argument pairs>>
+
+Specifies values for each of the number variables $1 through $9 that can
+appear in the template file. Use the number variables to assign values to
+variables in the B<uss> template file that are not part of the standard
+set.
+
+Corresponding variables in the template file: $1 through $9.
+
+For each instance of this argument, provide two parts in the indicated
+order, separated by a space:
+
+=over 4
+
+=item *
+
+The integer from the range C<1> through C<9> that matches the variable in
+the template file. Do not precede it with a dollar sign.
+
+=item *
+
+A string of alphanumeric characters to assign as the value of the
+variable.
+
+=back
+
+See the chapter on uss in the I<IBM AFS Administration Guide> for further
+explanation.
+
+=item B<-cell> <I<cell name>>
+
+Specifies the cell in which to run the command. For more details, see
+L<uss(8)>.
+
+=item B<-admin> <I<administrator to authenticate>>
+
+Specifies the AFS user name under which to establish authenticated
+connections to the AFS server processes that maintain the various
+components of a user account. For more details, see L<uss(8)>.
+
+=item B<-dryrun>
+
+Reports actions that the command interpreter needs to perform while
+executing the command, without actually performing them. For more details,
+see L<uss(8)>.
+
+=item B<-skipauth>
+
+Prevents authentication with the AFS Authentication Server, allowing a
+site using Kerberos to substitute that form of authentication.
+
+=item B<-overwrite>
+
+Overwrites any directories, files and links that exist in the file system
+and for which there are definitions in C<D>, C<E>, C<F>, C<L>, or C<S>
+instructions in the template file named by the B<-template> argument. If
+this flag is omitted, the command interpreter prompts once for
+confirmation that it is to overwrite all such elements.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 EXAMPLES
+
+The combination of the following example uss add command and C<V>
+instruction in a template file called C<uss.tpl> creates Protection and
+Authentication Database entries named C<smith>, and a volume called
+C<user.smith> with a quota of 2500 kilobyte blocks, mounted at the
+pathname F</afs/abc.com/usr/smith>. The access control list (ACL) on the
+mount point grants C<smith> all rights.
+
+The issuer of the B<uss add> command provides only the template file's
+name, not its complete pathname, because it resides in the current working
+directory. The command and C<V> instruction appear here on two lines only
+for legibility; there are no line breaks in the actual instruction or
+command.
+
+   V user.$USER $SERVER.abc.com /vice$PART $1 \
+       /afs/abc.com/usr/$USER $UID $USER all
+
+   % uss add -user smith -realname "John Smith" -pass js_pswd \
+       -server fs2 -partition b -template uss.tpl -var 1 2500
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer (or the user named by the B<-admin> argument) must belong to
+the system:administrators group in the Protection Database and must have
+the C<ADMIN> flag turned on in his or her Authentication Database entry.
+
+If the template contains a C<V> instruction, the issuer must be listed in
+the F</usr/afs/etc/UserList> file and must have at least C<a> (administer)
+and C<i> (insert) permissions on the ACL of the directory that houses the
+new mount point. If the template file includes instructions for creating
+other types of objects (directories, files or links), the issuer must have
+each privilege necessary to create them.
+
+=head1 SEE ALSO
+
+L<UserList(5)>,
+L<uss(5)>,
+L<fs_mkmount(1)>,
+L<uss(8)>,
+L<uss_bulk(8)>,
+L<uss_delete(8)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

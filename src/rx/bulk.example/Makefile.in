@@ -13,7 +13,7 @@ SRCDIR=@srcdir@
 LIBRX=@TOP_OBJDIR@/lib/librx.a
 DESTDIR=@srcdir@
 LIBS=${LIBRX} ${TOP_OBJDIR}/lib/liblwp.a ${TOP_OBJDIR}/lib/libafsutil.a
-CFLAGS=-g ${COMMON_INCL} -DDEBUG ${XCFLAGS}
+CFLAGS=-g ${COMMON_INCL} -DDEBUG ${XCFLAGS} ${ARCHFLAGS}
 
 all: bulk_client bulk_server
 

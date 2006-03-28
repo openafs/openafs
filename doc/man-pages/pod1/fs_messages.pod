@@ -1,0 +1,100 @@
+=head1 NAME
+
+fs messages - Sets whether the Cache Manager writes log messages
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<fs messages> S<<< [B<-show> (user|console|all|none)] >>> [B<-help>]
+
+B<fs me> S<<< [B<-s> (user|console|all|none)] >>> [B<-h>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<fs messages> command controls whether the Cache Manager displays
+status and warning messages on user screens, the client machine console,
+on both, or on neither.
+
+There are two types of Cache Manager messages:
+
+=over 4
+
+=item *
+
+User messages provide user-level status and warning information, and the
+Cache Manager directs them to user screens.
+
+=item *
+
+Console messages provide system-level status and warning information, and
+the Cache Manager directs them to the client machine's designated console.
+
+=back
+
+Disabling messaging completely is not recommended, because the messages
+provide useful status and warning information.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-show> (user|console|all|none)
+
+Specifies the types of messages to display. Choose one of the following
+values:
+
+=over 4
+
+=item user
+
+Send user messages to user screens.
+
+=item console
+
+Send console messages to the console.
+
+=item all
+
+Send user messages to user screens and console messages to the console
+(the default if the B<-show> argument is omitted).
+
+=item none
+
+Do not send any messages to user screens or the console.
+
+=back
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 EXAMPLES
+
+The following command instructs the Cache Manager to display both types of
+messages:
+
+   % fs messages -show all
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be logged in as the local superuser root.
+
+=head1 SEE ALSO
+
+L<afsd(8)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

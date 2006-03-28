@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_pioctl.c,v 1.81.2.18.2.1 2005/10/15 01:44:50 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_pioctl.c,v 1.81.2.25 2006/03/02 06:44:05 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #ifdef AFS_OBSD_ENV
@@ -430,7 +430,7 @@ afs_ioctl(OSI_VN_DECL(tvc), int cmd, void *arg, int flag, cred_t * cr,
    interface call.
    */
 /* AFS_HPUX102 and up uses VNODE ioctl instead */
-#ifndef AFS_HPUX102_ENV
+#if !defined(AFS_HPUX102_ENV) && !defined(AFS_DARWIN80_ENV)
 #if !defined(AFS_SGI_ENV)
 #ifdef	AFS_AIX32_ENV
 #ifdef AFS_AIX51_ENV
@@ -817,9 +817,15 @@ afs_pioctl(p, args, retval)
     } *uap = (struct a *)args;
 
     AFS_STATCNT(afs_pioctl);
+#ifdef AFS_DARWIN80_ENV
+    return (afs_syscall_pioctl
+	    (uap->path, uap->cmd, uap->cmarg, uap->follow,
+	     kauth_cred_get()));
+#else
     return (afs_syscall_pioctl
 	    (uap->path, uap->cmd, uap->cmarg, uap->follow,
 	     p->p_cred->pc_ucred));
+#endif
 }
 
 #endif
@@ -1466,8 +1472,10 @@ DECL_PIOCTL(PSetTokens)
 #else
 	struct proc *p = curproc;	/* XXX */
 #endif
+#ifndef AFS_DARWIN80_ENV
 	uprintf("Process %d (%s) tried to change pags in PSetTokens\n",
 		p->p_pid, p->p_comm);
+#endif
 	if (!setpag(p, acred, -1, &pag, 1)) {
 #else
 #ifdef	AFS_OSF_ENV
@@ -2540,6 +2548,10 @@ DECL_PIOCTL(PFlushVolumeData)
     register struct vcache *tvc;
     register struct volume *tv;
     afs_int32 cell, volume;
+    struct afs_q *tq, *uq;
+#ifdef AFS_DARWIN80_ENV
+    vnode_t vp;
+#endif
 
     AFS_STATCNT(PFlushVolumeData);
     if (!avc)
@@ -2554,17 +2566,44 @@ DECL_PIOCTL(PFlushVolumeData)
      * Clear stat'd flag from all vnodes from this volume; this will invalidate all
      * the vcaches associated with the volume.
      */
+ loop:
     ObtainReadLock(&afs_xvcache);
     i = VCHashV(&avc->fid);
-    for (tvc = afs_vhashT[i]; tvc; tvc = tvc->vhnext) {
+    for (tq = afs_vhashTV[i].prev; tq != &afs_vhashTV[i]; tq = uq) {
+	    uq = QPrev(tq);
+	    tvc = QTOVH(tq);
 	    if (tvc->fid.Fid.Volume == volume && tvc->fid.Cell == cell) {
-#if	defined(AFS_SGI_ENV) || defined(AFS_OSF_ENV)  || defined(AFS_SUN5_ENV)  || defined(AFS_HPUX_ENV) || defined(AFS_LINUX20_ENV)
+                if (tvc->states & CVInit) {
+                    ReleaseReadLock(&afs_xvcache);
+                    afs_osi_Sleep(&tvc->states);
+                    goto loop;
+                }
+#ifdef AFS_DARWIN80_ENV
+                if (tvc->states & CDeadVnode) {
+                    ReleaseReadLock(&afs_xvcache);
+                    afs_osi_Sleep(&tvc->states);
+                    goto loop;
+                }
+#endif
+#if	defined(AFS_SGI_ENV) || defined(AFS_OSF_ENV)  || defined(AFS_SUN5_ENV)  || defined(AFS_HPUX_ENV) || defined(AFS_LINUX20_ENV) 
 		VN_HOLD(AFSTOV(tvc));
+#else
+#ifdef AFS_DARWIN80_ENV
+		vp = AFSTOV(tvc);
+		if (vnode_get(vp))
+		    continue;
+		if (vnode_ref(vp)) {
+		    AFS_GUNLOCK();
+		    vnode_put(vp);
+		    AFS_GLOCK();
+		    continue;
+		}
 #else
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 		osi_vnhold(tvc, 0);
 #else
 		VREFCOUNT_INC(tvc); /* AIX, apparently */
+#endif
 #endif
 #endif
 		ReleaseReadLock(&afs_xvcache);
@@ -2584,7 +2623,11 @@ DECL_PIOCTL(PFlushVolumeData)
 #ifdef AFS_BOZONLOCK_ENV
 		afs_BozonUnlock(&tvc->pvnLock, tvc);
 #endif
+#ifdef AFS_DARWIN80_ENV
+		vnode_put(AFSTOV(tvc));
+#endif
 		ObtainReadLock(&afs_xvcache);
+		uq = QPrev(tq);
 		/* our tvc ptr is still good until now */
 		AFS_FAST_RELE(tvc);
 	    }

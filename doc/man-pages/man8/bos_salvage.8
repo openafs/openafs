@@ -1,0 +1,526 @@
+.rn '' }`
+''' $RCSfile$$Revision$$Date$
+'''
+''' $Log$
+'''
+.de Sh
+.br
+.if t .Sp
+.ne 5
+.PP
+\fB\\$1\fR
+.PP
+..
+.de Sp
+.if t .sp .5v
+.if n .sp
+..
+.de Ip
+.br
+.ie \\n(.$>=3 .ne \\$3
+.el .ne 3
+.IP "\\$1" \\$2
+..
+.de Vb
+.ft CW
+.nf
+.ne \\$1
+..
+.de Ve
+.ft R
+
+.fi
+..
+'''
+'''
+'''     Set up \*(-- to give an unbreakable dash;
+'''     string Tr holds user defined translation string.
+'''     Bell System Logo is used as a dummy character.
+'''
+.tr \(*W-|\(bv\*(Tr
+.ie n \{\
+.ds -- \(*W-
+.ds PI pi
+.if (\n(.H=4u)&(1m=24u) .ds -- \(*W\h'-12u'\(*W\h'-12u'-\" diablo 10 pitch
+.if (\n(.H=4u)&(1m=20u) .ds -- \(*W\h'-12u'\(*W\h'-8u'-\" diablo 12 pitch
+.ds L" ""
+.ds R" ""
+'''   \*(M", \*(S", \*(N" and \*(T" are the equivalent of
+'''   \*(L" and \*(R", except that they are used on ".xx" lines,
+'''   such as .IP and .SH, which do another additional levels of
+'''   double-quote interpretation
+.ds M" """
+.ds S" """
+.ds N" """""
+.ds T" """""
+.ds L' '
+.ds R' '
+.ds M' '
+.ds S' '
+.ds N' '
+.ds T' '
+'br\}
+.el\{\
+.ds -- \(em\|
+.tr \*(Tr
+.ds L" ``
+.ds R" ''
+.ds M" ``
+.ds S" ''
+.ds N" ``
+.ds T" ''
+.ds L' `
+.ds R' '
+.ds M' `
+.ds S' '
+.ds N' `
+.ds T' '
+.ds PI \(*p
+'br\}
+.\"	If the F register is turned on, we'll generate
+.\"	index entries out stderr for the following things:
+.\"		TH	Title 
+.\"		SH	Header
+.\"		Sh	Subsection 
+.\"		Ip	Item
+.\"		X<>	Xref  (embedded
+.\"	Of course, you have to process the output yourself
+.\"	in some meaninful fashion.
+.if \nF \{
+.de IX
+.tm Index:\\$1\t\\n%\t"\\$2"
+..
+.nr % 0
+.rr F
+.\}
+.TH bos_salvage 8 "OpenAFS" "1/Mar/2006" "AFS Command Reference"
+.UC
+.if n .hy 0
+.if n .na
+.ds C+ C\v'-.1v'\h'-1p'\s-2+\h'-1p'+\s0\v'.1v'\h'-1p'
+.de CQ          \" put $1 in typewriter font
+.ft CW
+'if n "\c
+'if t \\&\\$1\c
+'if n \\&\\$1\c
+'if n \&"
+\\&\\$2 \\$3 \\$4 \\$5 \\$6 \\$7
+'.ft R
+..
+.\" @(#)ms.acc 1.5 88/02/08 SMI; from UCB 4.2
+.	\" AM - accent mark definitions
+.bd B 3
+.	\" fudge factors for nroff and troff
+.if n \{\
+.	ds #H 0
+.	ds #V .8m
+.	ds #F .3m
+.	ds #[ \f1
+.	ds #] \fP
+.\}
+.if t \{\
+.	ds #H ((1u-(\\\\n(.fu%2u))*.13m)
+.	ds #V .6m
+.	ds #F 0
+.	ds #[ \&
+.	ds #] \&
+.\}
+.	\" simple accents for nroff and troff
+.if n \{\
+.	ds ' \&
+.	ds ` \&
+.	ds ^ \&
+.	ds , \&
+.	ds ~ ~
+.	ds ? ?
+.	ds ! !
+.	ds /
+.	ds q
+.\}
+.if t \{\
+.	ds ' \\k:\h'-(\\n(.wu*8/10-\*(#H)'\'\h"|\\n:u"
+.	ds ` \\k:\h'-(\\n(.wu*8/10-\*(#H)'\`\h'|\\n:u'
+.	ds ^ \\k:\h'-(\\n(.wu*10/11-\*(#H)'^\h'|\\n:u'
+.	ds , \\k:\h'-(\\n(.wu*8/10)',\h'|\\n:u'
+.	ds ~ \\k:\h'-(\\n(.wu-\*(#H-.1m)'~\h'|\\n:u'
+.	ds ? \s-2c\h'-\w'c'u*7/10'\u\h'\*(#H'\zi\d\s+2\h'\w'c'u*8/10'
+.	ds ! \s-2\(or\s+2\h'-\w'\(or'u'\v'-.8m'.\v'.8m'
+.	ds / \\k:\h'-(\\n(.wu*8/10-\*(#H)'\z\(sl\h'|\\n:u'
+.	ds q o\h'-\w'o'u*8/10'\s-4\v'.4m'\z\(*i\v'-.4m'\s+4\h'\w'o'u*8/10'
+.\}
+.	\" troff and (daisy-wheel) nroff accents
+.ds : \\k:\h'-(\\n(.wu*8/10-\*(#H+.1m+\*(#F)'\v'-\*(#V'\z.\h'.2m+\*(#F'.\h'|\\n:u'\v'\*(#V'
+.ds 8 \h'\*(#H'\(*b\h'-\*(#H'
+.ds v \\k:\h'-(\\n(.wu*9/10-\*(#H)'\v'-\*(#V'\*(#[\s-4v\s0\v'\*(#V'\h'|\\n:u'\*(#]
+.ds _ \\k:\h'-(\\n(.wu*9/10-\*(#H+(\*(#F*2/3))'\v'-.4m'\z\(hy\v'.4m'\h'|\\n:u'
+.ds . \\k:\h'-(\\n(.wu*8/10)'\v'\*(#V*4/10'\z.\v'-\*(#V*4/10'\h'|\\n:u'
+.ds 3 \*(#[\v'.2m'\s-2\&3\s0\v'-.2m'\*(#]
+.ds o \\k:\h'-(\\n(.wu+\w'\(de'u-\*(#H)/2u'\v'-.3n'\*(#[\z\(de\v'.3n'\h'|\\n:u'\*(#]
+.ds d- \h'\*(#H'\(pd\h'-\w'~'u'\v'-.25m'\f2\(hy\fP\v'.25m'\h'-\*(#H'
+.ds D- D\\k:\h'-\w'D'u'\v'-.11m'\z\(hy\v'.11m'\h'|\\n:u'
+.ds th \*(#[\v'.3m'\s+1I\s-1\v'-.3m'\h'-(\w'I'u*2/3)'\s-1o\s+1\*(#]
+.ds Th \*(#[\s+2I\s-2\h'-\w'I'u*3/5'\v'-.3m'o\v'.3m'\*(#]
+.ds ae a\h'-(\w'a'u*4/10)'e
+.ds Ae A\h'-(\w'A'u*4/10)'E
+.ds oe o\h'-(\w'o'u*4/10)'e
+.ds Oe O\h'-(\w'O'u*4/10)'E
+.	\" corrections for vroff
+.if v .ds ~ \\k:\h'-(\\n(.wu*9/10-\*(#H)'\s-2\u~\d\s+2\h'|\\n:u'
+.if v .ds ^ \\k:\h'-(\\n(.wu*10/11-\*(#H)'\v'-.4m'^\v'.4m'\h'|\\n:u'
+.	\" for low resolution devices (crt and lpr)
+.if \n(.H>23 .if \n(.V>19 \
+\{\
+.	ds : e
+.	ds 8 ss
+.	ds v \h'-1'\o'\(aa\(ga'
+.	ds _ \h'-1'^
+.	ds . \h'-1'.
+.	ds 3 3
+.	ds o a
+.	ds d- d\h'-1'\(ga
+.	ds D- D\h'-1'\(hy
+.	ds th \o'bp'
+.	ds Th \o'LP'
+.	ds ae ae
+.	ds Ae AE
+.	ds oe oe
+.	ds Oe OE
+.\}
+.rm #[ #] #H #V #F C
+.SH "NAME"
+bos salvage \- Restores internal consistency to a file system or volume
+.SH "SYNOPSIS"
+\fBbos salvage\fR <<\ \fB\-server\fR\ <\fImachine\ name\fR >>>
+    <<\ [\fB\-partition\fR\ <\fIsalvage\ partition\fR] >>>
+    <<\ [\fB\-volume\fR\ <\fIsalvage\ volume\ number\ or\ volume\ name\fR] >>>
+    <<\ [\fB\-file\fR\ <\fIsalvage\ log\ output\ file\fR] >>> [\fB\-all\fR] [\fB\-showlog\fR]
+    <<\ [\fB\-parallel\fR\ <\fI#\ of\ max\ parallel\ partition\ salvaging\fR] >>>
+    <<\ [\fB\-tmpdir\fR\ <\fIdirectory\ to\ place\ tmp\ files\fR] >>>
+    <<\ [\fB\-orphans\fR\ (ignore\ |\ remove\ |\ attach)]\ >> <<\ [\fB\-cell\fR\ <\fIcell\ name\fR] >>>
+    [\fB\-noauth\fR] [\fB\-localauth\fR] [\fB\-help\fR]
+.PP
+\fBbos sa\fR <<\ \fB\-se\fR\ <\fImachine\ name\fR >>> <<\ [\fB\-part\fR\ <\fIsalvage\ partition\fR] >>>
+    <<\ [\fB\-v\fR\ <\fIsalvage\ volume\ number\ or\ volume\ name\fR] >>>
+    <<\ [\fB\-f\fR\ <\fIsalvage\ log\ output\ file\fR] >>> [\fB\-a\fR] [\fB\-sh\fR]
+    [<\-para> <\fI# of max parallel partition salvaging\fR>]
+    <<\ [\fB\-t\fR\ <\fIdirectory\ to\ place\ tmp\ files\fR] >>>
+    <<\ [\fB\-o\fR\ (ignore\ |\ remove\ |\ attach)]\ >> <<\ [\fB\-c\fR\ <\fIcell\ name\fR] >>> [\fB\-n\fR]
+    [\fB\-l\fR] [\fB\-h\fR]
+.SH "DESCRIPTION"
+The \fBbos salvage\fR command salvages (restores internal consistency to) one
+or more volumes on the file server machine named by the \fB\-server\fR
+argument. When processing one or more partitions, the command restores
+consistency to corrupted read/write volumes where possible. For read-only
+or backup volumes, it inspects only the volume header:
+.Ip "\(bu" 4
+If the volume header is corrupted, the Salvager removes the volume
+completely and records the removal in its log file,
+\fI/usr/afs/logs/SalvageLog\fR. Issue the \fBvos release\fR or \fBvos backup\fR
+command to create the read-only or backup volume again.
+.Ip "\(bu" 4
+If the volume header is intact, the Salvager skips the volume (does not
+check for corruption in the contents). However, if the File Server notices
+corruption as it initializes, it sometimes refuses to attach the volume or
+bring it online. In this case, it is simplest to remove the volume by
+issuing the \fBvos remove\fR or \fBvos zap\fR command. Then issue the \fBvos
+release\fR or \fBvos backup\fR command to create it again.
+.PP
+Use the indicated arguments to salvage a specific number of volumes:
+.Ip "\(bu" 4
+To process all volumes on a file server machine, provide the \fB\-server\fR
+argument and the \fB\-all\fR flag. No volumes on the machine are accessible to
+Cache Managers during the salvage operation, because the \s-1BOS\s0 Server stops
+the File Server and Volume Server processes while the Salvager runs. The
+\s-1BOS\s0 Server automatically restarts them when the operation completes.
+.Ip "\(bu" 4
+To process all volumes on one partition, provide the \fB\-server\fR and
+\fB\-partition\fR arguments. As for a salvage of the entire machine, no
+volumes on the machine are accessible to Cache Managers during the salvage
+operation. The \s-1BOS\s0 Server automatically restarts the File Server and
+Volume Server when the operation completes.
+.Ip "\(bu" 4
+To salvage only one read/write volume, combine the \fB\-server\fR,
+\fB\-partition\fR, and \fB\-volume\fR arguments. Only that volume is inaccessible
+to Cache Managers, because the \s-1BOS\s0 Server does not shutdown the File
+Server and Volume Server processes during the salvage of a single
+volume. Do not name a read-only or backup volume with the \fB\-volume\fR
+argument. Instead, remove the volume, using the \fBvos remove\fR or \fBvos
+zap\fR command. Then create a new copy of the volume with the \fBvos release\fR
+or \fBvos backup\fR command.
+.PP
+During the salvage of an entire machine or partition, the \fBbos status\fR
+command reports the \f(CWfs\fR process's auxiliary status as \f(CWSalvaging file
+system\fR.
+.PP
+The Salvager always writes a trace to the \fI/usr/afs/logs/SalvageLog\fR file
+on the file server machine where it runs. To record the trace in another
+file as well (either in \s-1AFS\s0 or on the local disk of the machine where the
+\fBbos salvage\fR command is issued), name the file with the \fB\-file\fR
+argument. To display the trace on the standard output stream as it is
+written to the \fI/usr/afs/logs/SalvageLog\fR file, include the \fB\-showlog\fR
+flag.
+.PP
+By default, multiple Salvager subprocesses run in parallel: one for each
+partition up to four, and four subprocesses for four or more
+partitions. To increase or decrease the number of subprocesses running in
+parallel, provide a positive integer value for the \fB\-parallel\fR argument.
+.PP
+If there is more than one server partition on a physical disk, the
+Salvager by default salvages them serially to avoid the inefficiency of
+constantly moving the disk head from one partition to another. However,
+this strategy is often not ideal if the partitions are configured as
+logical volumes that span multiple disks. To force the Salvager to salvage
+logical volumes in parallel, provide the string \f(CWall\fR as the value for
+the \fB\-parallel\fR argument. Provide a positive integer to specify the
+number of subprocesses to run in parallel (for example, \f(CW-parallel 5all\fR
+for five subprocesses), or omit the integer to run up to four
+subprocesses, depending on the number of logical volumes being salvaged.
+.PP
+The Salvager creates temporary files as it runs, by default writing them
+to the partition it is salvaging. The number of files can be quite large,
+and if the partition is too full to accommodate them, the Salvager
+terminates without completing the salvage operation (it always removes the
+temporary files before exiting). Other Salvager subprocesses running at
+the same time continue until they finish salvaging all other partitions
+where there is enough disk space for temporary files. To complete the
+interrupted salvage, reissue the command against the appropriate
+partitions, adding the \fB\-tmpdir\fR argument to redirect the temporary files
+to a local disk directory that has enough space.
+.PP
+The \fB\-orphans\fR argument controls how the Salvager handles orphaned files
+and directories that it finds on server partitions it is salvaging. An
+\fIorphaned\fR element is completely inaccessible because it is not
+referenced by the vnode of any directory that can act as its parent (is
+higher in the filespace). Orphaned objects occupy space on the server
+partition, but do not count against the volume's quota.
+.SH "CAUTIONS"
+Running this command can result in data loss if the Salvager process can
+repair corruption only by removing the offending data. Consult the \fIIBM
+AFS Administration Guide\fR for more information.
+.SH "OPTIONS"
+.Ip "\fB\-server\fR <\fImachine name\fR>" 4
+Indicates the file server machine on which to salvage volumes.  Identify
+the machine by \s-1IP\s0 address or its host name (either fully-qualified or
+abbreviated unambiguously). For details, see the \fIbos(8)\fR manpage.
+.Ip "\fB\-partition\fR <\fIsalvage partition\fR>" 4
+Specifies a single partition on which to salvage all volumes.  Provide the
+complete partition name (for example \fI/vicepa\fR) or one of the following
+abbreviated forms:
+.Sp
+.Vb 2
+\&   /vicepa     =     vicepa      =      a      =      0
+\&   /vicepb     =     vicepb      =      b      =      1
+.Ve
+After \fI/vicepz\fR (for which the index is 25) comes
+.Sp
+.Vb 2
+\&   /vicepaa    =     vicepaa     =      aa     =      26
+\&   /vicepab    =     vicepab     =      ab     =      27
+.Ve
+and so on through
+.Sp
+.Vb 1
+\&   /vicepiv    =     vicepiv     =      iv     =      255
+.Ve
+.Ip "\fB\-volume\fR <\fIsalvage volume id or name\fR>" 4
+Specifies the name or volume \s-1ID\s0 number of a read/write volume to
+salvage. The \fB\-partition\fR argument must be provided along with this one.
+.Ip "\fB\-file\fR <\fIsalvage log output file\fR>" 4
+Specifies the complete pathname of a file into which to write a trace of
+the salvage operation, in addition to the \fI/usr/afs/logs/SalvageLog\fR file
+on the server machine. If the file pathname is local, the trace is written
+to the specified file on the local disk of the machine where the \fBbos
+salvage\fR command is issued. If the \fB\-volume\fR argument is included, the
+file can be in \s-1AFS\s0, though not in the volume being salvaged. Do not
+combine this argument with the \fB\-showlog\fR flag.
+.Ip "\fB\-all\fR" 4
+Salvages all volumes on all of the partitions on the machine named by the
+\fB\-server\fR argument.
+.Ip "\fB\-showlog\fR" 4
+Displays the trace of the salvage operation on the standard output stream,
+as well as writing it to the \fI/usr/afs/logs/SalvageLog\fR file.  Do not
+combine this flag with the \fB\-file\fR argument.
+.Ip "\fB\-parallel\fR <\fI# of max parallel partition salvaging\fR>" 4
+Specifies the maximum number of Salvager subprocesses to run in
+parallel. Provide one of three values:
+.Ip "\(bu" 8
+An integer from the range \f(CW1\fR to \f(CW32\fR. A value of \f(CW1\fR means that a
+single Salvager process salvages the partitions sequentially.
+.Ip "\(bu" 8
+The string \f(CWall\fR to run up to four Salvager subprocesses in parallel on
+partitions formatted as logical volumes that span multiple physical
+disks. Use this value only with such logical volumes.
+.Ip "\(bu" 8
+The string all followed immediately (with no intervening space) by an
+integer from the range \f(CW1\fR to \f(CW32\fR, to run the specified number of
+Salvager subprocesses in parallel on partitions formatted as logical
+volumes. Use this value only with such logical volumes.
+.Sp
+The \s-1BOS\s0 Server never starts more Salvager subprocesses than there are
+partitions, and always starts only one process to salvage a single
+volume. If this argument is omitted, up to four Salvager subprocesses run
+in parallel.
+.Ip "\fB\-tmpdir\fR <\fIdirectory to place tmp files\fR>" 4
+Specifies the full pathname of a local disk directory to which the
+Salvager process writes temporary files as it runs. If this argument is
+omitted, or specifies an ineligible or nonexistent directory, the Salvager
+process writes the files to the partition it is currently salvaging.
+.Ip "\fB\-orphans\fR (ignore | remove | attach)" 4
+Controls how the Salvager handles orphaned files and directories.  Choose
+one of the following three values:
+.Ip "ignore" 8
+Leaves the orphaned objects on the disk, but prints a message to the
+\fI/usr/afs/logs/SalvageLog\fR file reporting how many orphans were found and
+the approximate number of kilobytes they are consuming. This is the
+default if the \fB\-orphans\fR argument is omitted.
+.Ip "remove" 8
+Removes the orphaned objects, and prints a message to the
+\fI/usr/afs/logs/SalvageLog\fR file reporting how many orphans were removed
+and the approximate number of kilobytes they were consuming.
+.Ip "attach" 8
+Attaches the orphaned objects by creating a reference to them in the vnode
+of the volume's root directory. Since each object's actual name is now
+lost, the Salvager assigns each one a name of the following form:
+.Ip "\(bu" 12
+\f(CW__ORPHANFILE__.\fIindex\fR\fR for files.
+.Ip "\(bu" 12
+\f(CW__ORPHANDIR__.\fIindex\fR\fR for directories.
+.Sp
+where \fIindex\fR is a two-digit number that uniquely identifies each
+object. The orphans are charged against the volume's quota and appear in
+the output of the \fBls\fR command issued against the volume's root
+directory.
+.Ip "\fB\-cell\fR <\fIcell name\fR>" 4
+Names the cell in which to run the command. Do not combine this argument
+with the \fB\-localauth\fR flag. For more details, see the \fIbos(8)\fR manpage.
+.Ip "\fB\-noauth\fR" 4
+Assigns the unprivileged identity \f(CWanonymous\fR to the issuer. Do not
+combine this flag with the \fB\-localauth\fR flag. For more details, see
+the \fIbos(8)\fR manpage.
+.Ip "\fB\-localauth\fR" 4
+Constructs a server ticket using a key from the local
+\fI/usr/afs/etc/KeyFile\fR file. The \fBbos\fR command interpreter presents the
+ticket to the \s-1BOS\s0 Server during mutual authentication. Do not combine this
+flag with the \fB\-cell\fR or \fB\-noauth\fR options. For more details, see
+the \fIbos(8)\fR manpage.
+.Ip "\fB\-help\fR" 4
+Prints the online help for this command. All other valid options are
+ignored.
+.SH "EXAMPLES"
+The following command salvages all volumes on the \fI/vicepd\fR partition of
+the machine \f(CWdb3.abc.com\fR:
+.PP
+.Vb 1
+\&   % bos salvage -server db3.abc.com -partition /vicepd
+.Ve
+The following command salvages the volume with volume ID number 536870988
+on partition \fI/vicepb\fR of the machine \f(CWfs2.abc.com\fR:
+.PP
+.Vb 1
+\&   % bos salvage -server fs2.abc.com -partition /vicepb -volume 536870988
+.Ve
+The following command salvages all volumes on the machine
+\f(CWfs4.abc.com\fR. Six Salvager processes run in parallel rather than the
+default four.
+.PP
+.Vb 1
+\&   % bos salvage -server fs4.abc.com -all -parallel 6
+.Ve
+.SH "PRIVILEGE REQUIRED"
+The issuer must be listed in the \fI/usr/afs/etc/UserList\fR file on the
+machine named by the \fB\-server\fR argument, or must be logged onto a server
+machine as the local superuser \f(CWroot\fR if the \fB\-localauth\fR flag is
+included.
+.SH "SEE ALSO"
+the \fIKeyFile(5)\fR manpage,
+the \fISalvageLog(5)\fR manpage,
+the \fIUserList(5)\fR manpage,
+the \fIbos(8)\fR manpage,
+the \fIsalvager(8)\fR manpage,
+the \fIvos_backup(1)\fR manpage,
+the \fIvos_release(1)\fR manpage,
+the \fIvos_remove(1)\fR manpage,
+the \fIvos_zap(1)\fR manpage
+.PP
+\fIIBM AFS Administration Guide\fR
+.SH "COPYRIGHT"
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+.PP
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
+
+.rn }` ''
+.IX Title "bos_salvage 8"
+.IX Name "bos salvage - Restores internal consistency to a file system or volume"
+
+.IX Header "NAME"
+
+.IX Header "SYNOPSIS"
+
+.IX Header "DESCRIPTION"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Header "CAUTIONS"
+
+.IX Header "OPTIONS"
+
+.IX Item "\fB\-server\fR <\fImachine name\fR>"
+
+.IX Item "\fB\-partition\fR <\fIsalvage partition\fR>"
+
+.IX Item "\fB\-volume\fR <\fIsalvage volume id or name\fR>"
+
+.IX Item "\fB\-file\fR <\fIsalvage log output file\fR>"
+
+.IX Item "\fB\-all\fR"
+
+.IX Item "\fB\-showlog\fR"
+
+.IX Item "\fB\-parallel\fR <\fI# of max parallel partition salvaging\fR>"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\fB\-tmpdir\fR <\fIdirectory to place tmp files\fR>"
+
+.IX Item "\fB\-orphans\fR (ignore | remove | attach)"
+
+.IX Item "ignore"
+
+.IX Item "remove"
+
+.IX Item "attach"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\fB\-cell\fR <\fIcell name\fR>"
+
+.IX Item "\fB\-noauth\fR"
+
+.IX Item "\fB\-localauth\fR"
+
+.IX Item "\fB\-help\fR"
+
+.IX Header "EXAMPLES"
+
+.IX Header "PRIVILEGE REQUIRED"
+
+.IX Header "SEE ALSO"
+
+.IX Header "COPYRIGHT"
+

@@ -18,7 +18,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_xmit_nt.c,v 1.7.2.2 2005/09/16 02:28:50 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_xmit_nt.c,v 1.7.2.3 2006/02/16 21:49:34 jaltman Exp $");
 
 #if defined(AFS_NT40_ENV) || defined(AFS_DJGPP_ENV)
 
@@ -81,7 +81,7 @@ recvmsg(int socket, struct msghdr *msgP, int flags)
 #ifdef AFS_NT40_ENV
 	if (code == SOCKET_ERROR)
 	    code = WSAGetLastError();
-	if (code == WSAEWOULDBLOCK)
+	if (code == WSAEWOULDBLOCK || code == WSAECONNRESET)
 	    errno = WSAEWOULDBLOCK;
 	else
 	    errno = EIO;
@@ -137,6 +137,7 @@ sendmsg(int socket, struct msghdr *msgP, int flags)
 	    errno = 0;
 	    break;
 	case WSAEWOULDBLOCK:
+	case WSAECONNRESET:
 	    errno = WSAEWOULDBLOCK;
 	    break;
 	case WSAEHOSTUNREACH:

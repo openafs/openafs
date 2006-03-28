@@ -1,0 +1,210 @@
+=head1 NAME
+
+rxdebug - Provides debugging trace of Rx activity
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<rxdebug> S<<< B<-servers> <I<server machine>> >>> S<<< [B<-port> <I<IP port>>] >>>
+    [B<-nodally>] [B<-allconnections>] [B<-rxstats>] [B<-onlyserver>]
+    [B<-onlyclient>] S<<< [B<-onlyport> <I<show only port>>] >>>
+    S<<< [B<-onlyhost> <I<show only host>>] >>>
+    S<<< [B<-onlyauth> <I<show only auth level>>] >>> [B<-version>]
+    [B<-noconns>] [B<-peers>] [B<-help>]
+
+B<rxdebug> S<<< B<-s> <I<server machine>> >>> S<<< [B<-po> <I<IP port>>] >>> [B<-nod>]
+    [B<-a>] [B<-r>] [B<-onlys>] [B<-onlyc>] S<<< [B<-onlyp> <I<show only port>>] >>>
+    S<<< [B<-onlyh> <I<show only host>>] >>> [-onlya <I<show only auth level>>]
+    [B<-v>] [B<-noc>] [B<-pe>] [B<-h>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<rxdebug> command provides a trace of Rx activity for the server or
+client machine named by the B<-servers> argument. Rx is AFS's proprietary
+remote procedure call (RPC) protocol, so this command enables the issuer
+to check the status of communication between the Cache Manager or an AFS
+server process (as specified with the B<-port> argument) on the machine
+and one or more processes on other machines.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-servers> <I<server machine>>
+
+Specifies the machine that is running the Cache Manager or server process
+for which to trace Rx activity. Provide the machine's IP address in dotted
+decimal format, its fully qualified host name (for example,
+C<fs1.abc.com>), or the shortest abbreviated form of its host name that
+distinguishes it from other machines. Successful use of an abbreviated
+form depends on the availability of a name resolution service (such as the
+Domain Name Service or a local host table) at the time the command is
+issued.
+
+=item B<-port> <I<IP port>>
+
+Specifies the process for which to trace Rx activity. Omit this argument
+to specify the File Server (B<fileserver> process), or provide one of the
+following values:
+
+=over 4
+
+=item C<7000> for the File Server (B<fileserver> process)
+
+=item C<7001> for the Cache Manager (specifically, its callback interface)
+
+=item C<7002> for the Protection Server (B<ptserver> process)
+
+=item C<7003> for the Volume Location (VL) Server (B<vlserver> process)
+
+=item C<7004> for the Authentication Server (B<kaserver> process)
+
+=item C<7005> for the Volume Server (B<volserver> process)
+
+=item C<7007> for the BOS Server (B<bosserver> process)
+
+=item C<7008> for the Update Server (B<upserver> process)
+
+=item C<7009> for the NFS/AFS Translator's B<rmtsysd> daemon
+
+=item C<7021> for the Backup Server (B<buserver> process)
+
+=back
+
+Finally, specify C<7025> through C<65535> for the Backup Tape Coordinator
+(B<butc> process) that has the port offset number derived by subtracting
+7025 from this value.
+
+=item B<-nodally>
+
+Produces output only for connections that are not in dally mode.
+
+=item B<-allconnections>
+
+Produces output for all connections, even inactive ones. By default, the
+output includes information only for connections that are active or in
+dally mode when the B<rxdebug> command is issued.
+
+=item B<-rxstats>
+
+Produces detailed statistics about Rx history and performance (for
+example, counts of the number of packets of various types the process has
+read and sent, calculations of average and minimum roundtrip time, and so
+on).
+
+=item B<-onlyserver>
+
+Produces output only for connections in which the process designated by
+the B<-port> argument is acting as the server.
+
+=item B<-onlyclient>
+
+Produces output only for connections in which the process designated by
+the B<-port> argument is acting as the client.
+
+=item B<-onlyport> <I<port>>
+
+Produces output only for connections between the process designated by the
+B<-port> argument and the specified port on any another machine. Use the
+same port identifiers as for the B<-port> argument.
+
+=item B<-onlyhost> <I<host>>
+
+Produces output only for connections between the process designated by the
+B<-port> argument and any process on the specified machine. To identify
+the machine, use the same notation as for the B<-servers> argument.
+
+=item B<-onlyauth>
+
+Produces output only for connections that are using the specified
+authentication level. Provide one of the following values:
+
+=over 4
+
+=item auth
+
+Cconnections at authentication level rxkad_auth
+
+=item clear
+
+Connections at authentication level rxkad_clear
+
+=item crypt
+
+Connections at authentication level rxkad_crypt
+
+=item none
+
+Unauthenticated connections (equivalents are C<null>, C<noauth>, and
+C<unauth>)
+
+=back
+
+=item B<-version>
+
+Reports the AFS build level of the binary file for the process designated
+by the B<-port> argument (or of the kernel extensions file for port 7001,
+the Cache Manager's callback interface). Any other options combined with
+this one are ignored.
+
+=item B<-noconns>
+
+Produces only the standard statistics that begin the output produced by
+every option (other than B<-version>), without reporting on any
+connections. Any other options combined with this one are ignored.
+
+=item B<-peers>
+
+Outputs information from the I<peer structure> maintained for each port on
+another machine to which the process designated by the B<-port> argument
+has a connection. There is information about roundtrip time and numbers of
+packets sent and received, for example.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 OUTPUT
+
+If any options other than B<-version> or B<-help> are provided, the output
+written to the standard output stream begins with basic statistics about
+packet usage and availability, how many calls are waiting for a thread,
+how many threads are free, and so on (this is the only information
+provided by the B<-noconns> flag). Adding other options produces
+additional information as described in L<OPTIONS>. The output is intended
+for debugging purposes and is meaningful to someone familiar with the
+implementation of Rx.
+
+=head1 PRIVILEGE REQUIRED
+
+None.
+
+=head1 SEE ALSO
+
+L<afsd(8)>,
+L<bosserver(8)>,
+L<buserver(8)>,
+L<butc(8)>,
+L<fileserver(8)>,
+L<kaserver(8)>,
+L<ptserver(8)>,
+L<upclient(8)>,
+L<upserver(8)>,
+L<vlserver(8)>,
+L<volserver(8)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

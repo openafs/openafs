@@ -1,0 +1,10 @@
+# Export map for libafssetpag, used on Linux and Solaris to restrict
+# exports from the shared libraries to just the public ABI.  Add symbol
+# versioning while we're at it, just in case.
+
+AFSSETPAG_1.0 {
+    global:
+        lsetpag;
+    local:
+        *;
+};

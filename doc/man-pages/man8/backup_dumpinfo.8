@@ -1,0 +1,581 @@
+.rn '' }`
+''' $RCSfile$$Revision$$Date$
+'''
+''' $Log$
+'''
+.de Sh
+.br
+.if t .Sp
+.ne 5
+.PP
+\fB\\$1\fR
+.PP
+..
+.de Sp
+.if t .sp .5v
+.if n .sp
+..
+.de Ip
+.br
+.ie \\n(.$>=3 .ne \\$3
+.el .ne 3
+.IP "\\$1" \\$2
+..
+.de Vb
+.ft CW
+.nf
+.ne \\$1
+..
+.de Ve
+.ft R
+
+.fi
+..
+'''
+'''
+'''     Set up \*(-- to give an unbreakable dash;
+'''     string Tr holds user defined translation string.
+'''     Bell System Logo is used as a dummy character.
+'''
+.tr \(*W-|\(bv\*(Tr
+.ie n \{\
+.ds -- \(*W-
+.ds PI pi
+.if (\n(.H=4u)&(1m=24u) .ds -- \(*W\h'-12u'\(*W\h'-12u'-\" diablo 10 pitch
+.if (\n(.H=4u)&(1m=20u) .ds -- \(*W\h'-12u'\(*W\h'-8u'-\" diablo 12 pitch
+.ds L" ""
+.ds R" ""
+'''   \*(M", \*(S", \*(N" and \*(T" are the equivalent of
+'''   \*(L" and \*(R", except that they are used on ".xx" lines,
+'''   such as .IP and .SH, which do another additional levels of
+'''   double-quote interpretation
+.ds M" """
+.ds S" """
+.ds N" """""
+.ds T" """""
+.ds L' '
+.ds R' '
+.ds M' '
+.ds S' '
+.ds N' '
+.ds T' '
+'br\}
+.el\{\
+.ds -- \(em\|
+.tr \*(Tr
+.ds L" ``
+.ds R" ''
+.ds M" ``
+.ds S" ''
+.ds N" ``
+.ds T" ''
+.ds L' `
+.ds R' '
+.ds M' `
+.ds S' '
+.ds N' `
+.ds T' '
+.ds PI \(*p
+'br\}
+.\"	If the F register is turned on, we'll generate
+.\"	index entries out stderr for the following things:
+.\"		TH	Title 
+.\"		SH	Header
+.\"		Sh	Subsection 
+.\"		Ip	Item
+.\"		X<>	Xref  (embedded
+.\"	Of course, you have to process the output yourself
+.\"	in some meaninful fashion.
+.if \nF \{
+.de IX
+.tm Index:\\$1\t\\n%\t"\\$2"
+..
+.nr % 0
+.rr F
+.\}
+.TH backup_dumpinfo 8 "OpenAFS" "1/Mar/2006" "AFS Command Reference"
+.UC
+.if n .hy 0
+.if n .na
+.ds C+ C\v'-.1v'\h'-1p'\s-2+\h'-1p'+\s0\v'.1v'\h'-1p'
+.de CQ          \" put $1 in typewriter font
+.ft CW
+'if n "\c
+'if t \\&\\$1\c
+'if n \\&\\$1\c
+'if n \&"
+\\&\\$2 \\$3 \\$4 \\$5 \\$6 \\$7
+'.ft R
+..
+.\" @(#)ms.acc 1.5 88/02/08 SMI; from UCB 4.2
+.	\" AM - accent mark definitions
+.bd B 3
+.	\" fudge factors for nroff and troff
+.if n \{\
+.	ds #H 0
+.	ds #V .8m
+.	ds #F .3m
+.	ds #[ \f1
+.	ds #] \fP
+.\}
+.if t \{\
+.	ds #H ((1u-(\\\\n(.fu%2u))*.13m)
+.	ds #V .6m
+.	ds #F 0
+.	ds #[ \&
+.	ds #] \&
+.\}
+.	\" simple accents for nroff and troff
+.if n \{\
+.	ds ' \&
+.	ds ` \&
+.	ds ^ \&
+.	ds , \&
+.	ds ~ ~
+.	ds ? ?
+.	ds ! !
+.	ds /
+.	ds q
+.\}
+.if t \{\
+.	ds ' \\k:\h'-(\\n(.wu*8/10-\*(#H)'\'\h"|\\n:u"
+.	ds ` \\k:\h'-(\\n(.wu*8/10-\*(#H)'\`\h'|\\n:u'
+.	ds ^ \\k:\h'-(\\n(.wu*10/11-\*(#H)'^\h'|\\n:u'
+.	ds , \\k:\h'-(\\n(.wu*8/10)',\h'|\\n:u'
+.	ds ~ \\k:\h'-(\\n(.wu-\*(#H-.1m)'~\h'|\\n:u'
+.	ds ? \s-2c\h'-\w'c'u*7/10'\u\h'\*(#H'\zi\d\s+2\h'\w'c'u*8/10'
+.	ds ! \s-2\(or\s+2\h'-\w'\(or'u'\v'-.8m'.\v'.8m'
+.	ds / \\k:\h'-(\\n(.wu*8/10-\*(#H)'\z\(sl\h'|\\n:u'
+.	ds q o\h'-\w'o'u*8/10'\s-4\v'.4m'\z\(*i\v'-.4m'\s+4\h'\w'o'u*8/10'
+.\}
+.	\" troff and (daisy-wheel) nroff accents
+.ds : \\k:\h'-(\\n(.wu*8/10-\*(#H+.1m+\*(#F)'\v'-\*(#V'\z.\h'.2m+\*(#F'.\h'|\\n:u'\v'\*(#V'
+.ds 8 \h'\*(#H'\(*b\h'-\*(#H'
+.ds v \\k:\h'-(\\n(.wu*9/10-\*(#H)'\v'-\*(#V'\*(#[\s-4v\s0\v'\*(#V'\h'|\\n:u'\*(#]
+.ds _ \\k:\h'-(\\n(.wu*9/10-\*(#H+(\*(#F*2/3))'\v'-.4m'\z\(hy\v'.4m'\h'|\\n:u'
+.ds . \\k:\h'-(\\n(.wu*8/10)'\v'\*(#V*4/10'\z.\v'-\*(#V*4/10'\h'|\\n:u'
+.ds 3 \*(#[\v'.2m'\s-2\&3\s0\v'-.2m'\*(#]
+.ds o \\k:\h'-(\\n(.wu+\w'\(de'u-\*(#H)/2u'\v'-.3n'\*(#[\z\(de\v'.3n'\h'|\\n:u'\*(#]
+.ds d- \h'\*(#H'\(pd\h'-\w'~'u'\v'-.25m'\f2\(hy\fP\v'.25m'\h'-\*(#H'
+.ds D- D\\k:\h'-\w'D'u'\v'-.11m'\z\(hy\v'.11m'\h'|\\n:u'
+.ds th \*(#[\v'.3m'\s+1I\s-1\v'-.3m'\h'-(\w'I'u*2/3)'\s-1o\s+1\*(#]
+.ds Th \*(#[\s+2I\s-2\h'-\w'I'u*3/5'\v'-.3m'o\v'.3m'\*(#]
+.ds ae a\h'-(\w'a'u*4/10)'e
+.ds Ae A\h'-(\w'A'u*4/10)'E
+.ds oe o\h'-(\w'o'u*4/10)'e
+.ds Oe O\h'-(\w'O'u*4/10)'E
+.	\" corrections for vroff
+.if v .ds ~ \\k:\h'-(\\n(.wu*9/10-\*(#H)'\s-2\u~\d\s+2\h'|\\n:u'
+.if v .ds ^ \\k:\h'-(\\n(.wu*10/11-\*(#H)'\v'-.4m'^\v'.4m'\h'|\\n:u'
+.	\" for low resolution devices (crt and lpr)
+.if \n(.H>23 .if \n(.V>19 \
+\{\
+.	ds : e
+.	ds 8 ss
+.	ds v \h'-1'\o'\(aa\(ga'
+.	ds _ \h'-1'^
+.	ds . \h'-1'.
+.	ds 3 3
+.	ds o a
+.	ds d- d\h'-1'\(ga
+.	ds D- D\h'-1'\(hy
+.	ds th \o'bp'
+.	ds Th \o'LP'
+.	ds ae ae
+.	ds Ae AE
+.	ds oe oe
+.	ds Oe OE
+.\}
+.rm #[ #] #H #V #F C
+.SH "NAME"
+backup dumpinfo \- Displays a dump record from the Backup Database
+.SH "SYNOPSIS"
+\fBbackup dumpinfo\fR <<\ [\fB\-ndumps\fR\ <\fInumber\ of\ dumps\fR] >>> 
+    <<\ [\fB\-id\fR\ <\fIdump\ id\fR] >>> [\fB\-verbose\fR] [\fB\-localauth\fR] 
+    <<\ [\fB\-cell\fR\ <\fIcell\ name\fR] >>> [\fB\-help\fR]
+.PP
+\fBbackup dumpi\fR <<\ [\fB\-n\fR\ <\fIno.\ of\ dumps\fR] >>> [\-i <\fIdump id\fR>] [\fB\-v\fR]
+    [\fB\-l\fR] <<\ [\fB\-c\fR\ <\fIcell\ name\fR] >>> [\fB\-h\fR]
+.SH "DESCRIPTION"
+The \fBbackup dumpinfo\fR command formats and displays the Backup Database
+record for the specified dumps. To specify how many of the most recent
+dumps to display, starting with the newest one and going back in time, use
+the \fB\-ndumps\fR argument. To display more detailed information about a
+single dump, use the \fB\-id\fR argument. To display the records for the 10
+most recent dumps, omit both the \fB\-ndumps\fR and \fB\-id\fR arguments.
+.PP
+The \fB\-verbose\fR flag produces very detailed information that is useful
+mostly for debugging purposes. It can be combined only with the \fB\-id\fR
+argument.
+.SH "OPTIONS"
+.Ip "\fB\-ndumps\fR <\fInumber of dumps\fR>" 4
+Displays the Backup Database record for each of the specified number of
+dumps that were most recently performed. If the database contains fewer
+dumps than are requested, the output includes the records for all existing
+dumps. Do not combine this argument with the \fB\-id\fR or \fB\-verbose\fR
+options; omit all options to display the records for the last 10 dumps.
+.Ip "\fB\-id\fR <\fIdump id\fR>" 4
+Specifies the dump \s-1ID\s0 number of a single dump for which to display the
+Backup Database record. Precede the \fIdump id\fR value with the \fB\-id\fR
+switch; otherwise, the command interpreter interprets it as the value of
+the \fB\-ndumps\fR argument. Combine this argument with the \fB\-verbose\fR flag,
+but not with the \fB\-ndumps\fR argument; omit all options to display the
+records for the last 10 dumps.
+.Ip "\fB\-verbose\fR" 4
+Provides more detailed information about the dump specified with the
+\fB\-id\fR argument, which must be provided along with it. Do not combine this
+flag with the \fB\-ndumps\fR argument.
+.Ip "\fB\-localauth\fR" 4
+Constructs a server ticket using a key from the local
+\fI/usr/afs/etc/KeyFile\fR file. The \fBbackup\fR command interpreter presents
+it to the Backup Server, Volume Server and \s-1VL\s0 Server during mutual
+authentication. Do not combine this flag with the \fB\-cell\fR argument. For
+more details, see the \fIbackup(8)\fR manpage.
+.Ip "\fB\-cell\fR <\fIcell name\fR>" 4
+Names the cell in which to run the command. Do not combine this argument
+with the \fB\-localauth\fR flag. For more details, see the \fIbackup(8)\fR manpage.
+.Ip "\fB\-help\fR" 4
+Prints the online help for this command. All other valid options are
+ignored.
+.SH "OUTPUT"
+If the \fB\-ndumps\fR argument is provided, the output presents the following
+information in table form, with a separate line for each dump:
+.Ip "dumpid" 4
+The dump \s-1ID\s0 number.
+.Ip "parentid" 4
+The dump \s-1ID\s0 number of the dump's parent dump. A value of \f(CW0\fR (zero)
+identifies a full dump.
+.Ip "lv" 4
+The depth in the dump hierarchy of the dump level used to create the
+dump. A value of \f(CW0\fR (zero) identifies a full dump, in which case the
+value in the \f(CWparentid\fR field is also \f(CW0\fR. A value of \f(CW1\fR or greater
+indicates an incremental dump made at the corresponding level in the dump
+hierarchy.
+.Ip "created" 4
+The date and time at which the Backup System started the dump operation
+that created the dump.
+.Ip "nt" 4
+The number of tapes that contain the data in the dump. A value of \f(CW0\fR
+(zero) indicates that the dump operation was terminated or failed. Use the
+\fBbackup deletedump\fR command to remove such entries.
+.Ip "nvols" 4
+The number of volumes from which the dump includes data. If a volume spans
+tapes, it is counted twice. A value of \f(CW0\fR (zero) indicates that the dump
+operation was terminated or failed; the value in the \f(CWnt\fR field is also
+\f(CW0\fR in this case.
+.Ip "dump name" 4
+The dump name in the form
+.Sp
+.Vb 1
+\&   <volume_set_name>.<dump_level_name> (<initial_dump_ID>)
+.Ve
+where <volume_set_name> is the name of the volume set, and
+<dump_level_name> is the last element in the dump level pathname at which
+the volume set was dumped.
+.Sp
+The <initial_dump_ID>, if displayed, is the dump \s-1ID\s0 of the initial dump in
+the dump set to which this dump belongs. If there is no value in
+parentheses, the dump is the initial dump in a dump set that has no
+appended dumps.
+.PP
+If the \fB\-id\fR argument is provided alone, the first line of output begins
+with the string \f(CWDump\fR and reports information for the entire dump in the
+following fields:
+.Ip "id" 4
+The dump \s-1ID\s0 number.
+.Ip "level" 4
+The depth in the dump hierarchy of the dump level used to create the
+dump. A value of \f(CW0\fR (zero) identifies a full dump. A value of \f(CW1\fR (one)
+or greater indicates an incremental dump made at the specified level in
+the dump hierarchy.
+.Ip "volumes" 4
+The number of volumes for which the dump includes data.
+.Ip "created" 4
+The date and time at which the dump operation began.
+.PP
+If an \s-1XBSA\s0 server was the backup medium for the dump (rather than a tape
+device or backup data file), the following line appears next:
+.PP
+.Vb 1
+\&   Backup Service: <XBSA_program>: Server: <hostname>
+.Ve
+where <XBSA_program> is the name of the \s-1XBSA\s0\-compliant program and
+<hostname> is the name of the machine on which the program runs.
+.PP
+Next the output includes an entry for each tape that houses volume data
+from the dump. Following the string \f(CWTape\fR, the first two lines of each
+entry report information about that tape in the following fields:
+.Ip "name" 4
+The tape's permanent name if it has one, or its \s-1AFS\s0 tape name otherwise,
+and its tape \s-1ID\s0 number in parentheses.
+.Ip "nVolumes" 4
+The number of volumes for which this tape includes dump data.
+.Ip "created" 4
+The date and time at which the Tape Coordinator began writing data to this
+tape.
+.PP
+Following another blank line, the tape-specific information concludes with
+a table that includes a line for each volume dump on the tape. The
+information appears in columns with the following headings:
+.Ip "Pos" 4
+The relative position of each volume in this tape or file. On a tape, the
+counter begins at position 2 (the tape label occupies position 1), and
+increments by one for each volume. For volumes in a backup data file, the
+position numbers start with 1 and do not usually increment only by one,
+because each is the ordinal of the 16 \s-1KB\s0 offset in the file at which the
+volume's data begins. The difference between the position numbers
+therefore indicates how many 16 \s-1KB\s0 blocks each volume's data occupies. For
+example, if the second volume is at position 5 and the third volume in the
+list is at position 9, that means that the dump of the second volume
+occupies 64 \s-1KB\s0 (four 16-\s-1KB\s0 blocks) of space in the file.
+.Ip "Clone time" 4
+For a backup or read-only volume, the time at which it was cloned from its
+read/write source. For a Read/Write volume, it is the same as the dump
+creation date reported on the first line of the output.
+.Ip "Nbytes" 4
+The number of bytes of data in the dump of the volume.
+.Ip "Volume" 4
+The volume name, complete with \f(CW.backup\fR or \f(CW.readonly\fR extension if
+appropriate.
+.PP
+If both the \fB\-id\fR and \fB\-verbose\fR options are provided, the output is
+divided into several sections:
+.Ip "\(bu" 4
+The first section, headed by the underlined string \f(CWDump\fR, includes
+information about the entire dump. The fields labeled \f(CWid\fR, \f(CWlevel\fR,
+\f(CWcreated\fR, and \f(CWnVolumes\fR report the same values (though in a different
+order) as appear on the first line of output when the \fB\-id\fR argument is
+provided by itself.  Other fields of potential interest to the backup
+operator are:
+.Ip "Group id" 8
+The dump's \fIgroup \s-1ID\s0 number\fR, which is recorded in the dump's Backup
+Database record if the \f(CWGROUPID\fR instruction appears in the Tape
+Coordinator's \fI/usr/afs/backup/\s-1CFG_\s0\fItcid\fR\fR file when the dump is
+created.
+.Ip "maxTapes" 8
+The number of tapes that contain the dump set to which this dump belongs.
+.Ip "Start Tape Seq" 8
+The ordinal of the tape on which this dump begins in the set of tapes that
+contain the dump set.
+.Ip "\(bu" 4
+For each tape that contains data from this dump, there follows a section
+headed by the underlined string \f(CWTape\fR. The fields labeled \f(CWname\fR,
+\f(CWwritten\fR, and \f(CWnVolumes\fR report the same values (though in a different
+order) as appear on the second and third lines of output when the \fB\-id\fR
+argument is provided by itself. Other fields of potential interest to the
+backup operator are:
+.Ip "expires" 8
+The date and time when this tape can be recycled, because all dumps it
+contains have expired.
+.Ip "nMBytes Data and nBytes Data" 8
+Summed together, these fields represent the total amount of dumped data
+actually from volumes (as opposed to labels, filemarks, and other
+markers).
+.Ip "KBytes Tape Used" 8
+The number of kilobytes of tape (or disk space, for a backup data file)
+used to store the dump data. It is generally larger than the sum of the
+values in the \f(CWnMBytes Data\fR and \f(CWnBytes Data\fR fields, because it
+includes the space required for the label, file marks and other markers,
+and because the Backup System writes data at 16 \s-1KB\s0 offsets, even if the
+data in a given block doesn't fill the entire 16 \s-1KB\s0.
+.Ip "\(bu" 4
+For each volume on a given tape, there follows a section headed by the
+underlined string \f(CWVolume\fR. The fields labeled \f(CWname\fR, \f(CWposition\fR,
+\f(CWclone\fR, and \f(CWnBytes\fR report the same values (though in a different
+order) as appear in the table that lists the volumes in each tape when the
+\fB\-id\fR argument is provided by itself. Other fields of potential interest
+to the backup operator are:
+.Ip "id" 8
+The volume \s-1ID\s0.
+.Ip "tape" 8
+The name of the tape containing this volume data.
+.SH "EXAMPLES"
+The following example displays information about the last five dumps:
+.PP
+.Vb 7
+\&   % backup dumpinfo -ndumps 5
+\&      dumpid   parentid lv created          nt nvols dump name
+\&   924424000          0 0  04/18/1999 04:26  1    22 usr.sun (924424000)
+\&   924685000  924424000 1  04/21/1999 04:56  1    62 usr.wed (924424000)
+\&   924773000  924424000 1  04/22/1999 05:23  1    46 usr.thu (924424000)
+\&   924860000  924424000 1  04/23/1999 05:33  1    58 usr.fri (924424000)
+\&   925033000          0 0  04/25/1999 05:36  2    73 sys.week
+.Ve
+The following example displays a more detailed record for a single dump.
+.PP
+.Vb 6
+\&   % backup dumpinfo -id 922097346
+\&   Dump: id 922097346, level 0, volumes 1, created Mon Mar 22 05:09:06 1999
+\&   Tape: name monday.user.backup (922097346)
+\&   nVolumes 1, created 03/22/1999 05:09
+\&    Pos       Clone time   Nbytes Volume
+\&      1 03/22/1999 04:43 27787914 user.pat.backup
+.Ve
+The following example displays even more detailed information about the
+dump displayed in the previous example (dump ID 922097346). This example
+includes only one exemplar of each type of section (\f(CWDump\fR, \f(CWTape\fR, and
+\f(CWVolume\fR):
+.PP
+.Vb 53
+\&   % backup dumpinfo -id 922097346 -verbose
+\&   Dump
+\&   ----
+\&   id = 922097346
+\&   Initial id = 0
+\&   Appended id = 922099568
+\&   parent = 0
+\&   level = 0
+\&   flags = 0x0
+\&   volumeSet = user
+\&   dump path = /monday1
+\&   name = user.monday1
+\&   created = Mon Mar 22 05:09:06 1999
+\&   nVolumes = 1
+\&   id  = 0
+\&   tapeServer =
+\&   format= user.monday1.%d
+\&   maxTapes = 1
+\&   Start Tape Seq = 1
+\&   name = pat
+\&   instance =
+\&   cell =
+\&   Tape
+\&   ----
+\&   tape name = monday.user.backup
+\&   AFS tape name = user.monday1.1
+\&   flags = 0x20
+\&   written = Mon Mar 22 05:09:06 1999
+\&   expires = NEVER
+\&   kBytes Tape Used = 121
+\&   nMBytes Data = 0
+\&   nBytes  Data = 19092
+\&   nFiles = 0
+\&   nVolumes = 1
+\&   seq = 1
+\&   tapeid = 0
+\&   useCount = 1
+\&   dump = 922097346
+\&   Volume
+\&   ------
+\&   name = user.pat.backup
+\&   flags = 0x18
+\&   id = 536871640
+\&   server =
+\&   partition = 0
+\&   nFrags = 1
+\&   position = 2
+\&   clone = Mon Mar 22 04:43:06 1999
+\&   startByte = 0
+\&   nBytes = 19092
+\&   seq = 0
+\&   dump = 922097346
+\&   tape = user.monday1.1
+.Ve
+.SH "PRIVILEGE REQUIRED"
+The issuer must be listed in the \fI/usr/afs/etc/UserList\fR file on every
+machine where the Backup Server is running, or must be logged onto a
+server machine as the local superuser \f(CWroot\fR if the \fB\-localauth\fR flag is
+included.
+.SH "SEE ALSO"
+the \fIbutc(5)\fR manpage,
+the \fIbackup(8)\fR manpage,
+the \fIbackup_deletedump(8)\fR manpage
+.SH "COPYRIGHT"
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+.PP
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
+
+.rn }` ''
+.IX Title "backup_dumpinfo 8"
+.IX Name "backup dumpinfo - Displays a dump record from the Backup Database"
+
+.IX Header "NAME"
+
+.IX Header "SYNOPSIS"
+
+.IX Header "DESCRIPTION"
+
+.IX Header "OPTIONS"
+
+.IX Item "\fB\-ndumps\fR <\fInumber of dumps\fR>"
+
+.IX Item "\fB\-id\fR <\fIdump id\fR>"
+
+.IX Item "\fB\-verbose\fR"
+
+.IX Item "\fB\-localauth\fR"
+
+.IX Item "\fB\-cell\fR <\fIcell name\fR>"
+
+.IX Item "\fB\-help\fR"
+
+.IX Header "OUTPUT"
+
+.IX Item "dumpid"
+
+.IX Item "parentid"
+
+.IX Item "lv"
+
+.IX Item "created"
+
+.IX Item "nt"
+
+.IX Item "nvols"
+
+.IX Item "dump name"
+
+.IX Item "id"
+
+.IX Item "level"
+
+.IX Item "volumes"
+
+.IX Item "created"
+
+.IX Item "name"
+
+.IX Item "nVolumes"
+
+.IX Item "created"
+
+.IX Item "Pos"
+
+.IX Item "Clone time"
+
+.IX Item "Nbytes"
+
+.IX Item "Volume"
+
+.IX Item "\(bu"
+
+.IX Item "Group id"
+
+.IX Item "maxTapes"
+
+.IX Item "Start Tape Seq"
+
+.IX Item "\(bu"
+
+.IX Item "expires"
+
+.IX Item "nMBytes Data and nBytes Data"
+
+.IX Item "KBytes Tape Used"
+
+.IX Item "\(bu"
+
+.IX Item "id"
+
+.IX Item "tape"
+
+.IX Header "EXAMPLES"
+
+.IX Header "PRIVILEGE REQUIRED"
+
+.IX Header "SEE ALSO"
+
+.IX Header "COPYRIGHT"
+

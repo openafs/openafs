@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_osi_uio.c,v 1.8 2003/07/15 23:14:12 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_osi_uio.c,v 1.8.2.2 2005/10/12 06:17:25 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -25,6 +25,7 @@ RCSID
  * UIO routines
  */
 
+#ifndef AFS_DARWIN80_ENV
 /* routine to make copy of uio structure in ainuio, using aoutvec for space */
 int
 afsio_copy(struct uio *ainuio, struct uio *aoutuio,
@@ -76,6 +77,7 @@ afsio_trim(register struct uio *auio, register afs_int32 asize)
     }
     return 0;
 }
+#endif
 
 /* skip asize bytes in the current uio structure */
 int
@@ -85,6 +87,9 @@ afsio_skip(register struct uio *auio, register afs_int32 asize)
     register int cnt;
 
     AFS_STATCNT(afsio_skip);
+#ifdef AFS_DARWIN80_ENV
+    uio_update(auio, asize);
+#else
     /* It isn't guaranteed that multiple iovecs work ok (hasn't been tested!) */
     while (asize > 0 && auio->afsio_resid) {
 	tv = auio->afsio_iov;
@@ -99,8 +104,9 @@ afsio_skip(register struct uio *auio, register afs_int32 asize)
 	tv->iov_base = (char *)(tv->iov_base) + cnt;
 	tv->iov_len -= cnt;
 	auio->uio_resid -= cnt;
-	auio->uio_offset += cnt;
+	auio->afsio_offset += cnt;
 	asize -= cnt;
     }
+#endif
     return 0;
 }

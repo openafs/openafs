@@ -272,7 +272,7 @@ xdr_afsuuid.o: ${RX}/xdr_afsuuid.c
 #
 #   $ what /opt/langtools/bin/pxdb32
 #   /opt/langtools/bin/pxdb32:
-#           HP92453-02 A.10.0A HP-UX SYMBOLIC DEBUGGER (PXDB) $Revision: 1.29.2.6 $
+#           HP92453-02 A.10.0A HP-UX SYMBOLIC DEBUGGER (PXDB) $Revision: 1.29.2.7 $
 #
 # The problem occurs when -g and -O are both used when compiling des.c.
 # The simplest way to work around the problem is to leave out either -g or -O.
@@ -363,7 +363,7 @@ syscall.o: ${SYS}/syscall.s
 		${AS} -P ${CFLAGS} -D_NO_PROTO -DMACH -DOSF -nostdinc -traditional -DASSEMBLER ${SYS}/syscall.s; \
 		${AS} -o syscall.o syscall.i; \
 		$(RM) -f syscall.ss syscall.i;; \
-	 *fbsd* | *nbsd* ) \
+	 *bsd* ) \
 		touch syscall.o ;; \
 	 *) \
 		/lib/cpp  ${SFLAGS} ${SYS}/syscall.s syscall.ss; \

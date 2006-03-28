@@ -1,7 +1,7 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
-CFLAGS=-g -I. -I${srcdir} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS}
+CFLAGS=-g -I. -I${srcdir} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS} ${ARCHFLAGS}
 
 #  Test programs
 PROGS = \
@@ -9,7 +9,7 @@ PROGS = \
 	testit \
 	verify
 
-LDFLAGS = ${XLDFLAGS}
+LDFLAGS = ${XLDFLAGS} ${ARCHFLAGS}
 
 LIBS=\
 	${TOP_LIBDIR}/libdes.a \

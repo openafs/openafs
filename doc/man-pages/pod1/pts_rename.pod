@@ -1,0 +1,118 @@
+=head1 NAME
+
+pts rename - Changes the name of a Protection Database entry
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<pts rename> S<<< B<-oldname> <I<old name>> >>> S<<< B<-newname> <I<new name>> >>>
+    S<<< [B<-cell> <I<cell name>>] >>>  [B<-noauth>]  [B<-force>]  [B<-help>]
+
+B<pts ren> S<<< B<-o> <I<old name>> >>> S<<< B<-ne> <I<new name>> >>> S<<< [B<-c> <I<cell name>>] >>>
+    [B<-no>] [B<-f>] [B<-h>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<pts rename> command changes the name of the user, machine, or group
+entry specified by the B<-oldname> argument to the name specified by the
+B<-newname> argument. It is not possible to change a user or machine
+entry's name to look like a regular group entry's name (have a colon in
+it).
+
+Members of the system:administrators group can change a regular group name
+into a prefix-less name and vice versa. When changing a prefix-less group
+name into a regular group name or a regular group name to another regular
+group name, the owner field of the new name (the part before the colon)
+must correctly reflect the group's owner.
+
+Changing a regular group's owner with the B<pts chown> command
+automatically changes the owner field (the part before the colon) of the
+group's name, but does not change the owner field of any groups owned by
+the group. Use this command to rename those groups to a form that
+accurately reflects their ownership.
+
+=head1 CAUTIONS
+
+By convention, many aspects of an AFS user account have the same name as
+the user's Protection Database entry, including the Authentication
+Database entry, volume, and mount point. When using this command to change
+a user name, also change the names of all related entities to maintain
+consistency. For instructions, see the chapter on user accounts in the
+I<IBM AFS Administration Guide>.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-oldname> <I<old name>>
+
+Specifies the current full name of the entry.
+
+=item B<-newname> <I<new name>>
+
+Specifies the new full name for the entry. For regular groups, the owner
+field (the part before the colon) of the new name must reflect the actual
+ownership of the group.
+
+=item B<-cell> <I<cell name>>
+
+Names the cell in which to run the command. For more details, see
+L<pts(1)>.
+
+=item B<-noauth>
+
+Assigns the unprivileged identity anonymous to the issuer. For more
+details, see L<pts(1)>.
+
+=item B<-force>
+
+Enables the command to continue executing as far as possible when errors
+or other problems occur, rather than halting execution at the first error.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 EXAMPLES
+
+The following example changes the name of the group staff, owned by the
+privileged user C<admin>, to C<admin:staff>:
+
+   % pts rename -oldname staff -newname admin:staff
+
+The following example changes the name of the group C<admin:finance> to
+the group C<finance>. The issuer must belong to the system:administrators
+group.
+
+   % pts rename -oldname admin:finance -newname finance
+
+=head1 PRIVILEGE REQUIRED
+
+To change a regular group name to a prefix-less name or vice versa, or to
+change a user or machine entry's name, the issuer must belong to the
+system:administrators group.
+
+To change a group name to a new name of the same type (regular or
+prefix-less), the issuer must own the group or belong to the
+system:administrators group.
+
+=head1 SEE ALSO
+
+L<pts(1)>,
+L<pts_chown(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

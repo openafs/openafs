@@ -1,0 +1,329 @@
+.rn '' }`
+''' $RCSfile$$Revision$$Date$
+'''
+''' $Log$
+'''
+.de Sh
+.br
+.if t .Sp
+.ne 5
+.PP
+\fB\\$1\fR
+.PP
+..
+.de Sp
+.if t .sp .5v
+.if n .sp
+..
+.de Ip
+.br
+.ie \\n(.$>=3 .ne \\$3
+.el .ne 3
+.IP "\\$1" \\$2
+..
+.de Vb
+.ft CW
+.nf
+.ne \\$1
+..
+.de Ve
+.ft R
+
+.fi
+..
+'''
+'''
+'''     Set up \*(-- to give an unbreakable dash;
+'''     string Tr holds user defined translation string.
+'''     Bell System Logo is used as a dummy character.
+'''
+.tr \(*W-|\(bv\*(Tr
+.ie n \{\
+.ds -- \(*W-
+.ds PI pi
+.if (\n(.H=4u)&(1m=24u) .ds -- \(*W\h'-12u'\(*W\h'-12u'-\" diablo 10 pitch
+.if (\n(.H=4u)&(1m=20u) .ds -- \(*W\h'-12u'\(*W\h'-8u'-\" diablo 12 pitch
+.ds L" ""
+.ds R" ""
+'''   \*(M", \*(S", \*(N" and \*(T" are the equivalent of
+'''   \*(L" and \*(R", except that they are used on ".xx" lines,
+'''   such as .IP and .SH, which do another additional levels of
+'''   double-quote interpretation
+.ds M" """
+.ds S" """
+.ds N" """""
+.ds T" """""
+.ds L' '
+.ds R' '
+.ds M' '
+.ds S' '
+.ds N' '
+.ds T' '
+'br\}
+.el\{\
+.ds -- \(em\|
+.tr \*(Tr
+.ds L" ``
+.ds R" ''
+.ds M" ``
+.ds S" ''
+.ds N" ``
+.ds T" ''
+.ds L' `
+.ds R' '
+.ds M' `
+.ds S' '
+.ds N' `
+.ds T' '
+.ds PI \(*p
+'br\}
+.\"	If the F register is turned on, we'll generate
+.\"	index entries out stderr for the following things:
+.\"		TH	Title 
+.\"		SH	Header
+.\"		Sh	Subsection 
+.\"		Ip	Item
+.\"		X<>	Xref  (embedded
+.\"	Of course, you have to process the output yourself
+.\"	in some meaninful fashion.
+.if \nF \{
+.de IX
+.tm Index:\\$1\t\\n%\t"\\$2"
+..
+.nr % 0
+.rr F
+.\}
+.TH VOS_CHANGEADDR 1 "OpenAFS" "1/Mar/2006" "AFS Command Reference"
+.UC
+.if n .hy 0
+.if n .na
+.ds C+ C\v'-.1v'\h'-1p'\s-2+\h'-1p'+\s0\v'.1v'\h'-1p'
+.de CQ          \" put $1 in typewriter font
+.ft CW
+'if n "\c
+'if t \\&\\$1\c
+'if n \\&\\$1\c
+'if n \&"
+\\&\\$2 \\$3 \\$4 \\$5 \\$6 \\$7
+'.ft R
+..
+.\" @(#)ms.acc 1.5 88/02/08 SMI; from UCB 4.2
+.	\" AM - accent mark definitions
+.bd B 3
+.	\" fudge factors for nroff and troff
+.if n \{\
+.	ds #H 0
+.	ds #V .8m
+.	ds #F .3m
+.	ds #[ \f1
+.	ds #] \fP
+.\}
+.if t \{\
+.	ds #H ((1u-(\\\\n(.fu%2u))*.13m)
+.	ds #V .6m
+.	ds #F 0
+.	ds #[ \&
+.	ds #] \&
+.\}
+.	\" simple accents for nroff and troff
+.if n \{\
+.	ds ' \&
+.	ds ` \&
+.	ds ^ \&
+.	ds , \&
+.	ds ~ ~
+.	ds ? ?
+.	ds ! !
+.	ds /
+.	ds q
+.\}
+.if t \{\
+.	ds ' \\k:\h'-(\\n(.wu*8/10-\*(#H)'\'\h"|\\n:u"
+.	ds ` \\k:\h'-(\\n(.wu*8/10-\*(#H)'\`\h'|\\n:u'
+.	ds ^ \\k:\h'-(\\n(.wu*10/11-\*(#H)'^\h'|\\n:u'
+.	ds , \\k:\h'-(\\n(.wu*8/10)',\h'|\\n:u'
+.	ds ~ \\k:\h'-(\\n(.wu-\*(#H-.1m)'~\h'|\\n:u'
+.	ds ? \s-2c\h'-\w'c'u*7/10'\u\h'\*(#H'\zi\d\s+2\h'\w'c'u*8/10'
+.	ds ! \s-2\(or\s+2\h'-\w'\(or'u'\v'-.8m'.\v'.8m'
+.	ds / \\k:\h'-(\\n(.wu*8/10-\*(#H)'\z\(sl\h'|\\n:u'
+.	ds q o\h'-\w'o'u*8/10'\s-4\v'.4m'\z\(*i\v'-.4m'\s+4\h'\w'o'u*8/10'
+.\}
+.	\" troff and (daisy-wheel) nroff accents
+.ds : \\k:\h'-(\\n(.wu*8/10-\*(#H+.1m+\*(#F)'\v'-\*(#V'\z.\h'.2m+\*(#F'.\h'|\\n:u'\v'\*(#V'
+.ds 8 \h'\*(#H'\(*b\h'-\*(#H'
+.ds v \\k:\h'-(\\n(.wu*9/10-\*(#H)'\v'-\*(#V'\*(#[\s-4v\s0\v'\*(#V'\h'|\\n:u'\*(#]
+.ds _ \\k:\h'-(\\n(.wu*9/10-\*(#H+(\*(#F*2/3))'\v'-.4m'\z\(hy\v'.4m'\h'|\\n:u'
+.ds . \\k:\h'-(\\n(.wu*8/10)'\v'\*(#V*4/10'\z.\v'-\*(#V*4/10'\h'|\\n:u'
+.ds 3 \*(#[\v'.2m'\s-2\&3\s0\v'-.2m'\*(#]
+.ds o \\k:\h'-(\\n(.wu+\w'\(de'u-\*(#H)/2u'\v'-.3n'\*(#[\z\(de\v'.3n'\h'|\\n:u'\*(#]
+.ds d- \h'\*(#H'\(pd\h'-\w'~'u'\v'-.25m'\f2\(hy\fP\v'.25m'\h'-\*(#H'
+.ds D- D\\k:\h'-\w'D'u'\v'-.11m'\z\(hy\v'.11m'\h'|\\n:u'
+.ds th \*(#[\v'.3m'\s+1I\s-1\v'-.3m'\h'-(\w'I'u*2/3)'\s-1o\s+1\*(#]
+.ds Th \*(#[\s+2I\s-2\h'-\w'I'u*3/5'\v'-.3m'o\v'.3m'\*(#]
+.ds ae a\h'-(\w'a'u*4/10)'e
+.ds Ae A\h'-(\w'A'u*4/10)'E
+.ds oe o\h'-(\w'o'u*4/10)'e
+.ds Oe O\h'-(\w'O'u*4/10)'E
+.	\" corrections for vroff
+.if v .ds ~ \\k:\h'-(\\n(.wu*9/10-\*(#H)'\s-2\u~\d\s+2\h'|\\n:u'
+.if v .ds ^ \\k:\h'-(\\n(.wu*10/11-\*(#H)'\v'-.4m'^\v'.4m'\h'|\\n:u'
+.	\" for low resolution devices (crt and lpr)
+.if \n(.H>23 .if \n(.V>19 \
+\{\
+.	ds : e
+.	ds 8 ss
+.	ds v \h'-1'\o'\(aa\(ga'
+.	ds _ \h'-1'^
+.	ds . \h'-1'.
+.	ds 3 3
+.	ds o a
+.	ds d- d\h'-1'\(ga
+.	ds D- D\h'-1'\(hy
+.	ds th \o'bp'
+.	ds Th \o'LP'
+.	ds ae ae
+.	ds Ae AE
+.	ds oe oe
+.	ds Oe OE
+.\}
+.rm #[ #] #H #V #F C
+.SH "NAME"
+vos changeaddr \- Changes or removes a file server machine's entry in the VLDB
+.SH "SYNOPSIS"
+\fBvos changeaddr\fR <<\ \fB\-oldaddr\fR\ <\fIoriginal\ IP\ address\fR >>>
+    <<\ [\fB\-newaddr\fR\ <\fInew\ IP\ address\fR] >>> [\fB\-remove\fR]
+    <<\ [\fB\-cell\fR\ <\fIcell\ name\fR] >>> [\fB\-noauth\fR] [\fB\-localauth\fR]
+    [\fB\-verbose\fR] [\fB\-help\fR]
+.PP
+\fBvos ch\fR <<\ \fB\-o\fR\ <\fIoriginal\ IP\ address\fR >>> <<\ [\fB\-ne\fR\ <\fInew\ IP\ address\fR] >>>
+    [\fB\-r\fR] <<\ [\fB\-c\fR\ <\fIcell\ name\fR] >>> [\fB\-no\fR] [\fB\-l\fR] [\fB\-v\fR] [\fB\-h\fR]
+.SH "DESCRIPTION"
+The \fBvos changeaddr\fR command removes a server entry from the Volume
+Location Database (VLDB) when the \fB\-remove\fR flag is combined with the
+\fB\-oldaddr\fR argument. There must be no VLDB entries that list the machine
+as a site for any version of a volume (if necessary, use the \fBvos move\fR
+or \fBvos remove\fR command to more or remove volumes). It is appropriate to
+remove a VLDB server entry when removing the corresponding file server
+machine from service; this is the only recommended use of the command.
+.PP
+To display all VLDB server entries, use the \fBvos listaddrs\fR command.
+.SH "CAUTIONS"
+Combining the command's \fB\-oldaddr\fR and \fB\-newaddr\fR arguments is no longer
+the appropriate way to change the IP address registered for a file server
+machine. Furthermore, if a machine is multihomed and its server entry
+includes several addresses, then the address specified with the
+\fB\-newaddr\fR argument replaces all of the addresses currently listed in the
+server entry that includes the address specified by the \fB\-oldaddr\fR
+argument. This effectively makes the machine single-homed with respect to
+AFS operations, which is probably not the desired result.
+.PP
+The recommended method for changing the IP addresses in a server entry is
+instead to restart the \f(CWfs\fR process group (which includes the File
+Server) after using the utilities provided by the operating system to
+reconfigure the machine's network interfaces. For a description of how the
+File Server constructs and registers a list of its network interfaces in
+the VLDB, see the \fIsysid(5)\fR manpage.
+.PP
+If, counter to recommended usage, the command is used to change the IP
+address in a server entry, it does not also change the names of machine
+entries in the Protection Database. Operations fail when they refer to a
+protection group that has an obsolete IP address in it. Use the \fBpts
+rename\fR command to change the names of machine entries that correspond to
+the addresses changed with this command. Changing the address of a
+database server machine also requires updating the client and server
+versions of the \fICellServDB\fR file on every machine.
+.SH "OPTIONS"
+.Ip "\fB\-oldaddr\fR <\fIoriginal \s-1IP\s0 address\fR>" 4
+Specifies the \s-1IP\s0 address currently registered for the file server machine
+in the \s-1VLDB\s0 server entry. If there are multiple addresses registered for a
+multihomed machine, use any of them to identify the server entry.
+.Ip "\fB\-newaddr\fR <\fInew \s-1IP\s0 address\fR>" 4
+Specifies the new \s-1IP\s0 address that replaces all currently registered
+addresses.
+.Ip "\fB\-remove\fR" 4
+Removes from the \s-1VLDB\s0 the server entry that includes the address specified
+by the \fB\-oldaddr\fR argument.
+.Ip "\fB\-cell\fR <\fIcell name\fR>" 4
+Names the cell in which to run the command. Do not combine this argument
+with the \fB\-localauth\fR flag. For more details, see the \fIvos(1)\fR manpage.
+.Ip "\fB\-noauth\fR" 4
+Assigns the unprivileged identity \f(CWanonymous\fR to the issuer. Do not
+combine this flag with the \fB\-localauth\fR flag. For more details, see
+the \fIvos(1)\fR manpage.
+.Ip "\fB\-localauth\fR" 4
+Constructs a server ticket using a key from the local
+\fI/usr/afs/etc/KeyFile\fR file. The \fBvos\fR command interpreter presents it
+to the Volume Server and Volume Location Server during mutual
+authentication. Do not combine this flag with the \fB\-cell\fR argument or
+\fB\-noauth\fR flag. For more details, see the \fIvos(1)\fR manpage.
+.Ip "\fB\-verbose\fR" 4
+Produces on the standard output stream a detailed trace of the command's
+execution. If this argument is omitted, only warnings and error messages
+appear.
+.Ip "\fB\-help\fR" 4
+Prints the online help for this command. All other valid options are
+ignored.
+.SH "EXAMPLES"
+The following command removes the VLDB server entry that includes the IP
+address \f(CW192.12.107.214\fR.
+.PP
+.Vb 1
+\&   % vos changeaddr -oldaddr 192.12.107.214 -remove
+.Ve
+.SH "PRIVILEGE REQUIRED"
+Issuer must be listed in the \fI/usr/afs/etc/UserList\fR file on the machine
+specified with the \fB\-oldaddr\fR argument and on each database server
+machine.
+.SH "SEE ALSO"
+the \fICellServDB(5)\fR manpage,
+the \fIUserList(5)\fR manpage,
+the \fIsysid(5)\fR manpage,
+the \fIfileserver(8)\fR manpage,
+the \fIpts_rename(1)\fR manpage,
+the \fIvos(1)\fR manpage,
+the \fIvos_listaddrs(1)\fR manpage
+.SH "COPYRIGHT"
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+.PP
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
+
+.rn }` ''
+.IX Title "VOS_CHANGEADDR 1"
+.IX Name "vos changeaddr - Changes or removes a file server machine's entry in the VLDB"
+
+.IX Header "NAME"
+
+.IX Header "SYNOPSIS"
+
+.IX Header "DESCRIPTION"
+
+.IX Header "CAUTIONS"
+
+.IX Header "OPTIONS"
+
+.IX Item "\fB\-oldaddr\fR <\fIoriginal \s-1IP\s0 address\fR>"
+
+.IX Item "\fB\-newaddr\fR <\fInew \s-1IP\s0 address\fR>"
+
+.IX Item "\fB\-remove\fR"
+
+.IX Item "\fB\-cell\fR <\fIcell name\fR>"
+
+.IX Item "\fB\-noauth\fR"
+
+.IX Item "\fB\-localauth\fR"
+
+.IX Item "\fB\-verbose\fR"
+
+.IX Item "\fB\-help\fR"
+
+.IX Header "EXAMPLES"
+
+.IX Header "PRIVILEGE REQUIRED"
+
+.IX Header "SEE ALSO"
+
+.IX Header "COPYRIGHT"
+

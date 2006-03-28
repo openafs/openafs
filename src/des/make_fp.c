@@ -12,7 +12,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/des/make_fp.c,v 1.6 2003/07/15 23:15:00 shadow Exp $");
+    ("$Header: /cvs/openafs/src/des/make_fp.c,v 1.6.2.1 2006/03/09 06:41:43 shadow Exp $");
 
 #include <mit-cpyright.h>
 #include <stdio.h>
@@ -27,6 +27,11 @@ void
 gen(FILE * stream)
 {
     register int i;
+#ifdef AFS_DARWIN80_ENV
+    int j;
+
+#define swap_long_bytes_bit_number _darwin_swap_long_bytes_bit_number
+#endif /* AFS_DARWIN80_ENV */
 
     /* clear the output */
     fprintf(stream, "    L2 = 0; R2 = 0;\n");
@@ -41,6 +46,12 @@ gen(FILE * stream)
 #define SWAP(i,j) \
     swap_long_bytes_bit_number(swap_bit_pos_0_to_ansi((unsigned)i)-j)
 
+#ifdef AFS_DARWIN80_ENV
+  for(j = 0;; j++) {
+    fprintf(stream, _darwin_whichstr[j]);
+    if (j == 2)
+	break;
+#endif /* AFS_DARWIN80_ENV */
     /* first setup FP */
     fprintf(stream, "/* FP operations */\n/* first left to left */\n");
 
@@ -67,4 +78,8 @@ gen(FILE * stream)
     for (i = 32; i <= 63; i++)
 	if (FP[i] >= 32)
 	    test_set(stream, "R1", FP[i] - 32, "R2", SWAP(i, 32));
+#ifdef AFS_DARWIN80_ENV
+    _darwin_which = !_darwin_which;
+  }
+#endif /* AFS_DARWIN80_ENV */
 }

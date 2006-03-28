@@ -16,15 +16,95 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/DARWIN/osi_inode.c,v 1.7 2004/07/29 03:13:44 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/DARWIN/osi_inode.c,v 1.7.2.1 2005/10/05 05:58:29 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/osi_inode.h"
 #include "afs/afs_stats.h"	/* statistics stuff */
+#ifndef AFS_DARWIN80_ENV
 #include <ufs/ufs/ufsmount.h>
+#endif
 extern struct ucred afs_osi_cred;
+extern int afs_CacheFSType;
 
+#ifdef AFS_DARWIN80_ENV
+getinode(fs, dev, inode, vpp, perror)
+    mount_t fs;
+    vnode_t *vpp;
+    dev_t dev;
+    ino_t inode;
+    int *perror;
+{
+    struct vnode *vp;
+    int code;
+    vfs_context_t ctx;
+    char volfspath[64];
+    
+    *vpp = 0;
+    *perror = 0;
+    sprintf(volfspath, "/.vol/%d/%d", dev, inode);
+    code = vnode_open(volfspath, O_RDWR, 0, 0, &vp, afs_osi_ctxtp);
+    if (code) {
+	*perror = BAD_IGET;
+	return code;
+    } else {
+	*vpp = vp;
+	return (0);
+    }
+}    
+    
+  
+igetinode(vfsp, dev, inode, vpp, va, perror)
+    vnode_t *vpp;
+    mount_t vfsp;
+    dev_t dev;
+    ino_t inode;
+    struct vattr *va;
+    int *perror;
+{
+    vnode_t pvp, vp;
+    extern struct osi_dev cacheDev;
+    register int code = 0;
+    
+    *perror = 0;
+    
+    AFS_STATCNT(igetinode);
+    if ((code = getinode(vfsp, dev, inode, &vp, perror)) != 0) {
+	return (code);
+    }
+    if (vnode_vtype(vp) != VREG && vnode_vtype(vp) != VDIR && vnode_vtype(vp) != VLNK) {
+	vnode_close(vp, O_RDWR, afs_osi_ctxtp);
+	printf("igetinode: bad type %d\n", vnode_vtype(vp));
+	return (ENOENT);
+    }
+    VATTR_INIT(va);
+    VATTR_WANTED(va, va_mode);
+    VATTR_WANTED(va, va_nlink);
+    VATTR_WANTED(va, va_size);
+    code = vnode_getattr(vp, va, afs_osi_ctxtp);
+    if (code) {
+	vnode_close(vp, O_RDWR, afs_osi_ctxtp);
+        return code;
+    }
+    if (!VATTR_ALL_SUPPORTED(va)) {
+	vnode_close(vp, O_RDWR, afs_osi_ctxtp);
+        return ENOENT;
+    }
+    if (va->va_mode == 0) {
+	vnode_close(vp, O_RDWR, afs_osi_ctxtp);
+	/* Not an allocated inode */
+	return (ENOENT);
+    }
+    if (va->va_nlink == 0) {
+	vnode_close(vp, O_RDWR, afs_osi_ctxtp);
+	return (ENOENT);
+    }
+    
+    *vpp = vp;
+    return (0);
+}
+#else
 getinode(fs, dev, inode, vpp, perror)
      struct mount *fs;
      struct vnode **vpp;
@@ -85,7 +165,7 @@ getinode(fs, dev, inode, vpp, perror)
 	return (0);
     }
 }
-extern int afs_CacheFSType;
+
 igetinode(vfsp, dev, inode, vpp, va, perror)
      struct vnode **vpp;
      struct mount *vfsp;
@@ -151,173 +231,24 @@ iforget(vp)
 	vput(vp);
     }
 }
-
-#if 0
-/*
- * icreate system call -- create an inode
- */
-afs_syscall_icreate(dev, near_inode, param1, param2, param3, param4, retval)
-     long *retval;
-     long dev, near_inode, param1, param2, param3, param4;
-{
-    int dummy, err = 0;
-    struct inode *ip, *newip;
-    register int code;
-    struct vnode *vp;
-
-    AFS_STATCNT(afs_syscall_icreate);
-
-    if (!afs_suser(NULL))
-	return (EPERM);
-
-    code = getinode(0, (dev_t) dev, 2, &ip, &dummy);
-    if (code) {
-	return (ENOENT);
-    }
-    code = ialloc(ip, (ino_t) near_inode, 0, &newip);
-    iput(ip);
-    if (code) {
-	return (code);
-    }
-    IN_LOCK(newip);
-    newip->i_flag |= IACC | IUPD | ICHG;
-
-    newip->i_nlink = 1;
-
-    newip->i_mode = IFREG;
-
-    IN_UNLOCK(newip);
-    vp = ITOV(newip);
-    VN_LOCK(vp);
-    vp->v_type = VREG;
-    VN_UNLOCK(vp);
-
-    if (!vp->v_object) {
-	extern struct vfs_ubcops ufs_ubcops;
-	extern struct vm_ubc_object *ubc_object_allocate();
-	struct vm_ubc_object *vop;
-	vop = ubc_object_allocate(&vp, &ufs_ubcops, vp->v_mount->m_funnel);
-	VN_LOCK(vp);
-	vp->v_object = vop;
-	VN_UNLOCK(vp);
-    }
-
-
-    IN_LOCK(newip);
-    newip->i_flags |= IC_XUID | IC_XGID;
-    newip->i_flags &= ~IC_PROPLIST;
-    newip->i_vicep1 = param1;
-    if (param2 == 0x1fffffff /*INODESPECIAL*/) {
-	newip->i_vicep2 = ((0x1fffffff << 3) + (param4 & 0x3));
-	newip->i_vicep3a = (u_short) (param3 >> 16);
-	newip->i_vicep3b = (u_short) param3;
-    } else {
-	newip->i_vicep2 =
-	    (((param2 >> 16) & 0x1f) << 27) +
-	    (((param4 >> 16) & 0x1f) << 22) + (param3 & 0x3fffff);
-	newip->i_vicep3a = (u_short) param4;
-	newip->i_vicep3b = (u_short) param2;
-    }
-    newip->i_vicemagic = VICEMAGIC;
-
-    *retval = newip->i_number;
-    IN_UNLOCK(newip);
-    iput(newip);
-    return (code);
-}
-
-
-afs_syscall_iopen(dev, inode, usrmod, retval)
-     long *retval;
-     int dev, inode, usrmod;
-{
-    struct file *fp;
-    struct inode *ip;
-    struct vnode *vp = NULL;
-    int dummy;
-    int fd;
-    extern struct fileops vnops;
-    register int code;
-
-    AFS_STATCNT(afs_syscall_iopen);
-
-    if (!afs_suser(NULL))
-	return (EPERM);
-
-    code = igetinode(0, (dev_t) dev, (ino_t) inode, &ip, &dummy);
-    if (code) {
-	return (code);
-    }
-    if ((code = falloc(&fp, &fd)) != 0) {
-	iput(ip);
-	return (code);
-    }
-    IN_UNLOCK(ip);
-
-    FP_LOCK(fp);
-    fp->f_flag = (usrmod - FOPEN) & FMASK;
-    fp->f_type = DTYPE_VNODE;
-    fp->f_ops = &vnops;
-    fp->f_data = (caddr_t) ITOV(ip);
-
-    FP_UNLOCK(fp);
-    U_FD_SET(fd, fp, &u.u_file_state);
-    *retval = fd;
-    return (0);
-}
-
-
-/*
- * Support for iinc() and idec() system calls--increment or decrement
- * count on inode.
- * Restricted to super user.
- * Only VICEMAGIC type inodes.
- */
-afs_syscall_iincdec(dev, inode, inode_p1, amount)
-     int dev, inode, inode_p1, amount;
-{
-    int dummy;
-    struct inode *ip;
-    register int code;
-
-    if (!afs_suser(NULL))
-	return (EPERM);
-
-    code = igetinode(0, (dev_t) dev, (ino_t) inode, &ip, &dummy);
-    if (code) {
-	return (code);
-    }
-    if (!IS_VICEMAGIC(ip)) {
-	return (EPERM);
-    } else if (ip->i_vicep1 != inode_p1) {
-	return (ENXIO);
-    }
-    ip->i_nlink += amount;
-    if (ip->i_nlink == 0) {
-	CLEAR_VICEMAGIC(ip);
-    }
-    ip->i_flag |= ICHG;
-    iput(ip);
-    return (0);
-}
-#else
-afs_syscall_icreate(dev, near_inode, param1, param2, param3, param4, retval)
-     long *retval;
-     long dev, near_inode, param1, param2, param3, param4;
-{
-    return EOPNOTSUPP;
-}
-
-afs_syscall_iopen(dev, inode, usrmod, retval)
-     long *retval;
-     int dev, inode, usrmod;
-{
-    return EOPNOTSUPP;
-}
-
-afs_syscall_iincdec(dev, inode, inode_p1, amount)
-     int dev, inode, inode_p1, amount;
-{
-    return EOPNOTSUPP;
-}
 #endif
+
+afs_syscall_icreate(dev, near_inode, param1, param2, param3, param4, retval)
+     long *retval;
+     long dev, near_inode, param1, param2, param3, param4;
+{
+    return EOPNOTSUPP;
+}
+
+afs_syscall_iopen(dev, inode, usrmod, retval)
+     long *retval;
+     int dev, inode, usrmod;
+{
+    return EOPNOTSUPP;
+}
+
+afs_syscall_iincdec(dev, inode, inode_p1, amount)
+     int dev, inode, inode_p1, amount;
+{
+    return EOPNOTSUPP;
+}

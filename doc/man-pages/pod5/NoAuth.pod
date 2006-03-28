@@ -1,0 +1,67 @@
+=head1 NAME
+
+NoAuth - Disables authorization checking
+
+=head1 DESCRIPTION
+
+The F<NoAuth> file, if present in a server machine's F</usr/afs/local>
+directory, indicates to the AFS server processes running on the machine
+that it is not necessary to perform authorization checking. They perform
+any action for any user who logs into the machine's local file system or
+issues a remote command that affects the machine's AFS server functioning,
+such as commands from the AFS command suites. Because failure to check
+authorization exposes the machine's AFS server functionality to attack,
+there are normally only two circumstances in which the file is present:
+
+=over 4
+
+=item *
+
+During installation of the machine, as instructed in the I<IBM AFS Quick
+Beginnings>.
+
+=item *
+
+During correction of a server encryption key emergency, as discussed in
+the I<IBM AFS Administration Guide>.
+
+=back
+
+In all other circumstances, the absence of the file means that the AFS
+server processes perform authorization checking, verifying that the issuer
+of a command has the required privilege.
+
+Create the file in one of the following ways:
+
+=over 4
+
+=item *
+
+By issuing the bosserver initialization command with the B<-noauth> flag,
+if the Basic OverSeer (BOS) Server is not already running.
+
+=item *
+
+By issuing the B<bos setauth> command with off as the value for the
+B<-authrequired> argument, if the BOS Server is already running.
+
+=back
+
+To remove the file, issue the B<bos setauth> command with C<on> as the
+value for the B<-authrequired> argument.
+
+The file's contents, if any, are ignored; an empty (zero-length) file is
+effective.
+
+=head1 SEE ALSO
+
+L<bos_setauth(8)>,
+L<bosserver(8)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

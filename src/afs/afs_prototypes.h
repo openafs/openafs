@@ -531,7 +531,6 @@ extern int afsio_skip(struct uio *auio, afs_int32 asize);
 
 
 /* ARCH/osi_misc.c */
-extern void osi_iput(struct inode *ip);
 extern void afs_osi_SetTime(osi_timeval_t * atv);
 
 /* LINUX/osi_misc.c */
@@ -812,15 +811,18 @@ extern afs_int32 afs_data_pointer_to_int32(const void *p);
 extern afs_int32 afs_maxvcount;
 extern afs_int32 afs_vcount;
 extern int afsvnumbers;
+extern afs_rwlock_t afs_xvreclaim;
 extern afs_rwlock_t afs_xvcache;
 extern afs_lock_t afs_xvcb;
 extern struct afs_q VLRU;
 extern afs_int32 vcachegen;
 extern unsigned int afs_paniconwarn;
-extern struct vcache *afs_vhashT[VCSIZE];
+extern struct afs_q afs_vhashTV[VCSIZE];
 extern afs_int32 afs_bulkStatsLost;
 extern int afs_norefpanic;
+extern struct vcache *ReclaimedVCList;
 
+extern void afs_FlushReclaimedVcaches(void);
 void afs_vcacheInit(int astatSize);
 extern struct vcache *afs_FindVCache(struct VenusFid *afid, afs_int32 * retry,
 				     afs_int32 flag);

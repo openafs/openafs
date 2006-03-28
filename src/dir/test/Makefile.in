@@ -9,7 +9,7 @@ srcdir=../../..
 include @TOP_OBJDIR@/src/config/Makefile.config
 
 LIBS = ${srcdir}/lib/libdir.a ${srcdir}/lib/util.a  ${srcdir}/lib/liblwp.a
-CFLAGS=${OPTMZ} -I${TOP_INCDIR} -I${srcdir} -I${TOP_OBJDIR}/src/config ${XCFLAGS}
+CFLAGS=${OPTMZ} -I${TOP_INCDIR} -I${srcdir} -I${TOP_OBJDIR}/src/config ${XCFLAGS} ${ARCHFLAGS}
 
 OBJS=test-salvage.o physio.o dtest.o
 

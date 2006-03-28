@@ -16,7 +16,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_flock.c,v 1.24.2.3 2005/04/03 18:15:39 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_flock.c,v 1.24.2.4 2006/02/27 20:35:12 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -569,7 +569,7 @@ int afs_lockctl(struct vcache * avc, struct AFS_FLOCK * af, int acmd,
 #endif
 	) && code != LOCK_UN)
 	code |= LOCK_NB;	/* non-blocking, s.v.p. */
-#if	defined(AFS_OSF_ENV)
+#if	defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     code = HandleFlock(avc, code, &treq, clid, 0 /*!onlymine */ );
 #elif defined(AFS_SGI_ENV)
     AFS_RWLOCK((vnode_t *) avc, VRWLOCK_WRITE);

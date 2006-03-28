@@ -1,0 +1,281 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 4//EN">
+<HTML><HEAD>
+<TITLE>Quick Beginnings</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3574/auqbg000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 2 Oct 2000 at 12:25:35                -->
+<META HTTP-EQUIV="updated" CONTENT="Mon, 02 Oct 2000 12:25:35">
+<META HTTP-EQUIV="review" CONTENT="Tue, 02 Oct 2001 12:25:35">
+<META HTTP-EQUIV="expires" CONTENT="Wed, 02 Oct 2002 12:25:35">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Quick Beginnings</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auqbg002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auqbg003.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auqbg005.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auqbg009.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<HR><H1><A NAME="HDRWQ6" HREF="auqbg002.htm#ToC_7">Installation Overview</A></H1>
+<P>This chapter describes the type of instructions provided in
+this guide and the hardware and software requirements for installing
+AFS<SUP><SUP>(R)</SUP></SUP>.
+<P>Before beginning the installation of your cell's first machine, read
+this chapter and the material from the <I>IBM AFS Administration Guide</I>
+listed in <A HREF="#HDRWQ8">Recommended Reading List</A>. It is also best to read through <A HREF="auqbg005.htm#HDRWQ17">Installing the First AFS Machine</A> before beginning the installation, so that
+you understand the overall scope of the installation procedure.
+Similarly, before installing additional server or client machines it is best
+to read through <A HREF="auqbg006.htm#HDRWQ99">Installing Additional Server Machines</A> and <A HREF="auqbg007.htm#HDRWQ133">Installing Additional Client Machines</A>.
+<P>If you are already running a version of AFS, consult the upgrade
+instructions in the <I>IBM AFS Release Notes</I> or contact the AFS
+Product Support group before proceeding with the installation.
+<HR><H2><A NAME="HDRWQ7" HREF="auqbg002.htm#ToC_8">The Procedures Described in this Guide</A></H2>
+<P>This guide describes two types of installation
+procedures: initial procedures (such as installing the first AFS machine
+or incorporating AFS into the kernel) and as-needed procedures (such as
+installing additional server machines or client machines).
+<P><H3><A NAME="Header_9" HREF="auqbg002.htm#ToC_9">Required Initial Procedures</A></H3>
+<P>You must perform the following basic procedures to start using
+AFS.
+<P><H4><A NAME="Header_10">Incorporating AFS Into the Kernel</A></H4>
+<P>You must incorporate AFS modifications into the kernel of every AFS
+file server and client machine. Depending on the operating system, you
+either use a program for dynamic kernel loading, build a new static kernel, or
+can choose between the two. For your convenience, the instructions for
+incorporating AFS into the kernel appear in full in every chapter where you
+need to use them.
+<A NAME="IDX2197"></A>
+<A NAME="IDX2198"></A>
+<P><H4><A NAME="Header_11">Installing the First AFS Machine</A></H4>
+<P>You install the first AFS machine in your cell to function as both an
+AFS server and client machine. You can disable the client functionality
+after completing the installation, if you wish.
+<P>The first server machine in a cell performs several functions:
+<UL>
+<P><LI>It acts as the <I>system control machine</I> (if your AFS distribution
+includes the required encryption files), distributing certain configuration
+files to the other server machines in the cell
+<P><LI>It acts as the <I>binary distribution machine</I> for its system type,
+distributing AFS binaries to other server machines of its system type
+<P><LI>It acts as the first <I>database server machine</I>, running the
+server processes that maintain the AFS administrative databases
+</UL>
+<P>After you install server and client functionality, you complete other
+procedures specific to the first machine, including setting up the top levels
+of your cell's AFS filespace.
+<P><H3><A NAME="Header_12" HREF="auqbg002.htm#ToC_12">As-needed Procedures</A></H3>
+<P><H4><A NAME="Header_13">Upgrading the Operating System</A></H4>
+<P>Upgrading the operating system requires you to take several steps to
+protect data and AFS-modified binaries from being lost or overwritten.
+For guidelines, see <A HREF="#HDRWQ14">About Upgrading the Operating System</A>.
+<P><H4><A NAME="Header_14">Installing Additional File Server Machines</A></H4>
+<P>See <A HREF="auqbg006.htm#HDRWQ100">Installing an Additional File Server Machine</A>.
+<P><H4><A NAME="Header_15">Configuring or Decommissioning Database Server Machines</A></H4>
+<P>See <A HREF="auqbg006.htm#HDRWQ114">Installing Database Server Functionality</A> and <A HREF="auqbg006.htm#HDRWQ125">Removing Database Server Functionality</A>.
+<P><H4><A NAME="Header_16">Installing Additional AFS Client Machines</A></H4>
+<P>See <A HREF="auqbg007.htm#HDRWQ133">Installing Additional Client Machines</A>.
+<P><H4><A NAME="Header_17">Building AFS from Source Code</A></H4>
+<P>See <A HREF="auqbg008.htm#HDRWQ163">Appendix A,  Building AFS from Source Code</A>.
+<A NAME="IDX2199"></A>
+<A NAME="IDX2200"></A>
+<HR><H2><A NAME="HDRWQ8" HREF="auqbg002.htm#ToC_18">Recommended Reading List</A></H2>
+<P>To develop the best understanding of the overall scope of an
+installation procedure, read through the entire chapter or section that
+describes it before performing any actions.
+<P>In addition, familiarity with some basic AFS concepts can make the
+installation more efficient, because you understand better the purpose of the
+steps. The following is a prioritized list of material to read before
+installing the first AFS machine. At minimum, read the first chapter of
+the <I>IBM AFS Administration Guide</I>. Then continue your reading
+in the indicated order, as extensively as you can. It is more important
+at this point to read the conceptual material in each section than the
+instructions.
+<P><B>Selected Topics in the <I>IBM AFS Administration Guide</I></B>
+<UL>
+<P><LI>The chapter titled <I>An Overview of AFS Administration</I>
+<P><LI>Selected sections in the <I>Administering Server Machines</I>
+chapter: <I>Local Disk Files on a Server Machine</I>, <I>The Four
+Roles for a Server Machine</I>, <I>Maintaining the Server CellServDB
+File</I>
+<P><LI>Selected sections in the <I>Monitoring and Controlling Server
+Processes</I> chapter: <I>Controlling and Checking Process
+Status</I>
+<P><LI>Selected sections in the <I>Managing Server Encryption Keys</I>
+chapter: <I>About Server Encryption Keys</I>
+<P><LI>Selected sections in the <I>Managing Volumes</I> chapter:
+<I>About Volumes</I>, <I>Creating Read/write Volumes</I>, <I>Clones
+and Cloning</I>, <I>Mounting Volumes</I>
+<P><LI>Selected sections in the <I>Administering Client Machines and the Cache
+Manager</I> chapter: <I>Overview of Cache Manager
+Customization</I>, <I>Configuration and Cache-related Files on the Local
+Disk</I>, <I>Determining the Cache Type, Size, and Location</I>
+<P><LI>Selected sections in the <I>Managing Access Control Lists</I>
+chapter: <I>Protecting Data in AFS</I>
+</UL>
+<P><B>More Selected Topics in the <I>IBM AFS Administration
+Guide</I></B>
+<UL>
+<P><LI>Selected sections in the <I>Managing Volumes</I> chapter:
+<I>Creating and Releasing Read-only Volumes (Replication)</I>,
+<I>Creating Backup Volumes</I>
+<P><LI>Selected sections in the <I>Administering the Protection Database</I>
+chapter: <I>About the Protection Database</I>
+<P><LI>Selected sections in the <I>Administering User Accounts</I>
+chapter: <I>The Components of an AFS User Account</I>
+<P><LI>Selected sections in the <I>Managing Administrative Privilege</I>
+chapter: <I>An Overview of Administrative Privilege</I>
+</UL>
+<HR><H2><A NAME="HDRWQ9" HREF="auqbg002.htm#ToC_19">Requirements</A></H2>
+<P>You must comply with the following requirements to install AFS
+successfully.
+<A NAME="IDX2201"></A>
+<P><H3><A NAME="Header_20" HREF="auqbg002.htm#ToC_20">Login Identity</A></H3>
+<P>Log into the machine you are installing as the local superuser
+<B>root</B>. When instructed, also authenticate with AFS as the
+administrative user <B>admin</B>.
+<A NAME="IDX2202"></A>
+<A NAME="IDX2203"></A>
+<P><H3><A NAME="HDRWQ10" HREF="auqbg002.htm#ToC_21">General Requirements</A></H3>
+<UL>
+<P><LI>You must have the AFS Binary Distribution for each system type you are
+installing. Unless otherwise noted, the Binary Distribution includes
+software for both client and server machines. If you are using the
+CD-ROM version of the distribution, the machine you are installing must be
+able to access the CD-ROMs, either through a local CD drive or via an
+NFS<SUP><SUP>(R)</SUP></SUP> mount of a CD drive attached to a machine that is
+accessible by network.
+<P><LI>All AFS machines that belong to a cell must be able to access each other
+via the network.
+<P><LI>The machine must be running the standard, vendor-supplied version of the
+operating system supported by the current version of AFS. The operating
+system must already be installed on the machine's root partition.
+<P><LI>You must be familiar with the current operating system and disk
+configuration of the machine you are installing.
+<P><LI>All hardware and non-AFS software on the machine must be functioning
+normally.
+<P><LI>No critical processes can be running on the machine you are installing,
+because you must reboot it during the installation.
+</UL>
+<A NAME="IDX2204"></A>
+<A NAME="IDX2205"></A>
+<P><H3><A NAME="HDRWQ11" HREF="auqbg002.htm#ToC_22">File Server Machine Requirements</A></H3>
+<UL>
+<P><LI>Cell configuration is simplest if the first machine you install has the
+lowest IP address of any database server machine you currently plan to
+install. If you later configure a machine with a lower IP address as a
+database server machine, you must update the
+<B>/usr/vice/etc/CellServDB</B> file on all of your cell's client
+machines before the installation. For further discussion, see <A HREF="auqbg006.htm#HDRWQ114">Installing Database Server Functionality</A>.
+<P><LI>The partition mounted on the <B>/usr</B> directory must have at least
+18 MB of disk space available for storing the AFS server binaries (stored by
+convention in the <B>/usr/afs/bin</B> directory). If the machine is
+also a client, there must be additional local disk space available, as
+specified in <A HREF="#HDRWQ12">Client Machine Requirements</A>. The complete set of AFS binaries requires yet more
+space, but they are normally stored in an AFS volume rather than on a
+machine's local disk. 
+<P>More significant amounts of space on the partition are required by the
+administrative databases stored in the <B>/usr/afs/db</B> directory and
+the server process log files stored in the <B>/usr/afs/logs</B>
+directory. The exact requirement depends on many factors, such as the
+size of your cell and how often you truncate the log files.
+<P><LI>There must be at least one partition (or logical volume, if the operating
+system and AFS support them) dedicated exclusively to storing AFS
+volumes. The total number and size of server partitions on all file
+server machines in the cell determines how much space is available for AFS
+files.
+</UL>
+<A NAME="IDX2206"></A>
+<A NAME="IDX2207"></A>
+<P><H3><A NAME="HDRWQ12" HREF="auqbg002.htm#ToC_23">Client Machine Requirements</A></H3>
+<UL>
+<P><LI>The partition mounted on the <B>/usr</B> directory must have at least
+4 MB of disk space available for storing the AFS client binaries and kernel
+library files (stored by convention in the <B>/usr/vice/etc</B>
+directory). The complete set of AFS binaries requires more space, but
+they are normally stored in an AFS volume rather than on a machine's
+local disk. For most system types, the instructions have you copy only
+the one kernel library file appropriate for the machine you are
+installing. If you choose to store all of the library files on the
+local disk, the space requirement can be significantly greater.
+<P><LI>On a client machine that uses a disk cache, there must be enough free
+space on the cache partition (by convention, mounted on the
+<B>/usr/vice/cache</B> directory) to accommodate the cache. The
+minimum recommended cache size is 10 MB, but larger caches generally perform
+better.
+<P><LI>On a client machine that uses a memory cache, there must be at least 5 MB
+of machine memory to devote to caching, but again more memory generally leads
+to better performance. For further discussion, see the sections in <A HREF="auqbg007.htm#HDRWQ133">Installing Additional Client Machines</A> about configuring the cache.
+</UL>
+<A NAME="IDX2208"></A>
+<A NAME="IDX2209"></A>
+<HR><H2><A NAME="HDRWQ13" HREF="auqbg002.htm#ToC_24">Supported System Types</A></H2>
+<P>The <I>IBM AFS Release Notes</I> for each AFS release
+list the supported system types. Support for subsequent revisions of an
+operating system often becomes available between AFS releases. The AFS
+Product Support group can provide details.
+<P>It is the goal of the AFS Development and Product Support groups to support
+AFS on a wide range of popular system types. Furthermore, each time an
+operating system vendor releases a new general availability version of a
+supported operating system, it is a goal to certify and support AFS on it
+within a short time. Support can be delayed a bit longer if it is
+necessary to generate completely new binaries.
+<P>It is not always possible to support AFS on every intermediate version of
+an operating system or for certain processor types. In some cases,
+platform limitations make certain AFS functionality (such as file server or
+NFS/AFS translator functionality) unavailable on one or more platforms.
+For a list of limitations, see the <I>IBM AFS Release Notes</I> or ask the
+AFS Product Support group.
+<A NAME="IDX2210"></A>
+<A NAME="IDX2211"></A>
+<A NAME="IDX2212"></A>
+<A NAME="IDX2213"></A>
+<HR><H2><A NAME="HDRWQ14" HREF="auqbg002.htm#ToC_25">About Upgrading the Operating System</A></H2>
+<P>Whenever you upgrade an AFS machine to a different operating
+system, you must take several actions to maintain proper AFS
+functionality. These actions include, but are not necessarily limited
+to, the following.
+<UL>
+<P><LI>Unmount the AFS server partitions (mounted at <B>/vicep</B><VAR>xx</VAR>
+directories) on all file server machines, to prevent the vendor-supplied
+<B>fsck</B> program from running on them when you reboot the machine
+during installation of the new operating system. Before upgrading the
+operating system, it is prudent to comment out commands in the machine's
+initialization file that remount the server partitions, to prevent them from
+being remounted until you can replace the standard <B>fsck</B> program
+with the AFS-modified version. The instructions in this guide for
+installing AFS server machines explain how to replace the <B>fsck</B>
+program.
+<P><LI>Protect the AFS-modified versions of commands and configuration files from
+being overwritten by vendor-supplied versions. These include
+<B>vfsck</B> (the AFS version of <B>fsck</B>), binaries for the UNIX
+remote services such as <B>inetd</B>, and configuration files such as the
+one for the Pluggable Authentication Module (PAM). After you have
+successfully installed the operating system, remember to move the AFS-modified
+commands and files back to the locations where they are accessed during normal
+functioning.
+<P><LI>Reformat the server partitions to accommodate AFS-specific information, in
+certain cases. The upgrade instructions that accompany the new AFS
+binaries for an affected platform always detail the required procedure.
+</UL>
+<A NAME="IDX2214"></A>
+<A NAME="IDX2215"></A>
+<A NAME="IDX2216"></A>
+<A NAME="IDX2217"></A>
+<HR><H2><A NAME="HDRWQ15" HREF="auqbg002.htm#ToC_26">The AFS Binary Distribution</A></H2>
+<P>The AFS Binary Distribution includes a separate CD-ROM for
+each supported system type, containing all AFS binaries and files for both
+server and client machines. The instructions in this guide specify when
+to mount the CD-ROM and which files or directories to copy to the local disk
+or into an AFS volume.
+<HR><H2><A NAME="HDRWQ16" HREF="auqbg002.htm#ToC_27">How to Continue</A></H2>
+<P>If you are installing the first AFS machine in your cell,
+proceed to <A HREF="auqbg005.htm#HDRWQ17">Installing the First AFS Machine</A>.
+<P>If you are installing an additional file server machine, or configuring or
+decommissioning a database server machine, proceed to <A HREF="auqbg006.htm#HDRWQ99">Installing Additional Server Machines</A>.
+<P>If you are installing an additional client machine, proceed to <A HREF="auqbg007.htm#HDRWQ133">Installing Additional Client Machines</A>.
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auqbg002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auqbg003.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auqbg005.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auqbg009.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

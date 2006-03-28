@@ -1,0 +1,741 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 4//EN">
+<HTML><HEAD>
+<TITLE>User Guide</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3629/auusg000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 2 Oct 2000 at 14:38:44                -->
+<META HTTP-EQUIV="updated" CONTENT="Mon, 02 Oct 2000 14:38:42">
+<META HTTP-EQUIV="review" CONTENT="Tue, 02 Oct 2001 14:38:42">
+<META HTTP-EQUIV="expires" CONTENT="Wed, 02 Oct 2002 14:38:42">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>User Guide</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auusg002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auusg007.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auusg009.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auusg013.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<HR><H1><A NAME="HDRWQ60" HREF="auusg002.htm#ToC_112">Using Groups</A></H1>
+<P>This chapter explains how to create groups and discusses
+different ways to use them.
+<HR><H2><A NAME="HDRWQ61" HREF="auusg002.htm#ToC_113">About Groups</A></H2>
+<P>An AFS <I>group</I> is a list of specific users that you
+can place on access control lists (ACLs). Groups make it much easier to
+maintain ACLs. Instead of creating an ACL entry for every user
+individually, you create one entry for a group to which the users
+belong. Similarly, you can grant a user access to many directories at
+once by adding the user to a group that appears on the relevant ACLs.
+<P>AFS client machines can also belong to a group. Anyone logged into
+the machine inherits the permissions granted to the group on an ACL, even if
+they are not authenticated with AFS. In general, groups of machines are
+useful only to system administrators, for specialized purposes like complying
+with licensing agreements your cell has with software vendors. Talk
+with your system administrator before putting a client machine in a group or
+using a machine group on an ACL. 
+<A NAME="IDX1025"></A>
+<A NAME="IDX1026"></A>
+<P>To learn about AFS file protection and how to add groups to ACLs, see <A HREF="auusg007.htm#HDRWQ44">Protecting Your Directories and Files</A>.
+<P><H3><A NAME="HDRWQ62" HREF="auusg002.htm#ToC_114">Suggestions for Using Groups Effectively</A></H3>
+<P>There are three typical ways to use groups, each suited to a
+particular purpose: private use, shared use, and group use. The
+following are only suggestions. You are free to use groups in any way
+you choose.
+<UL>
+<P><LI><I>Private use</I>: you create a group and place it on the ACL
+of directories you own, without necessarily informing the group's members
+that they belong to it. Members notice only that they can or cannot
+access the directory in a certain way. You retain sole administrative
+control over the group, since you are the owner.
+<A NAME="IDX1027"></A>
+<A NAME="IDX1028"></A>
+<P>The existence of the group and the identity of its members is not
+necessarily secret. Other users can see the group's name on an ACL
+when they use the <B>fs listacl</B> command, and can use the <B>pts
+membership</B> command to display + the groups to which they themselves
+belong. You can, however, limit who can display the members of the
+group, as described in <A HREF="#HDRWQ74">Protecting Group-Related Information</A>.
+<P><LI><I>Shared use</I>: you inform the group's members that they
+belong to the group, but you are the group's sole owner and
+administrator. For example, the manager of a work group can create a
+group of all the members in the work group, and encourage them to use it on
+the ACLs of directories that house information they want to share with other
+members of the group. 
+<A NAME="IDX1029"></A>
+<A NAME="IDX1030"></A>
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Note:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">If you place a group owned by someone else on your ACLs, the group's
+owner can change the group's membership without informing you.
+Someone new can gain or lose access in a way you did not intend and without
+your knowledge.
+</TD></TR></TABLE>
+<P><LI><I>Group use</I>: you create a group and then use the <B>pts
+chown</B> command to assign ownership to a group--either another group
+or the group itself (the latter type is a <I>self-owned</I> group).
+You inform the members of the owning group that they all can administer the
+owned group. For instructions for the <B>pts chown</B> command, see
+<A HREF="#HDRWQ73">To Change a Group's Owner</A>.
+<A NAME="IDX1031"></A>
+<A NAME="IDX1032"></A>
+<A NAME="IDX1033"></A>
+<A NAME="IDX1034"></A>
+<A NAME="IDX1035"></A>
+<P>The main advantage of designating a group as an owner is that several
+people share responsibility for administering the group. A single
+person does not have to perform all administrative tasks, and if the
+group's original owner leaves the cell, there are still other people who
+can administer it.
+<P>However, everyone in the owner group can make changes that affect others
+negatively: adding or removing people from the group inappropriately or
+changing the group's ownership to themselves exclusively. These
+problems can be particularly sensitive in a self-owned group. Using an
+owner group works best if all the members know and trust each other; it
+is probably wise to keep the number of people in an owner group small.
+</UL>
+<P><H3><A NAME="HDRWQ63" HREF="auusg002.htm#ToC_115">Group Names</A></H3>
+<A NAME="IDX1036"></A>
+<P>The groups you create must have names with two parts, in the following
+format:
+<P><VAR>   owner_name</VAR><B>:</B><VAR>group_name</VAR>
+<P>The <VAR>owner_name</VAR> prefix indicates which user or group owns the group
+(naming rules appear in <A HREF="#HDRWQ69">To Create a Group</A>). The <VAR>group_name</VAR> part indicates the
+group's purpose or its members' common interest. Group names
+must always be typed in full, so a short <VAR>group_name</VAR> is most
+practical. However, names like <B>terry:1</B> and
+<B>terry:2</B> that do not indicate the group's purpose are
+less useful than names like <B>terry:project</B>.
+<P>Groups that do not have the <VAR>owner_name</VAR> prefix possibly appear on
+some ACLs; they are created by system administrators only. All of
+the groups you create must have an <VAR>owner_name</VAR> prefix.
+<P><H3><A NAME="Header_116" HREF="auusg002.htm#ToC_116">Group-creation Quota</A></H3>
+<A NAME="IDX1037"></A>
+<A NAME="IDX1038"></A>
+<P>By default, you can create 20 groups, but your system administrators can
+change your <I>group-creation quota</I> if appropriate. When you
+create a group, your group quota decrements by one. When a group that
+you created is deleted, your quota increments by one, even if you are no
+longer the owner. You cannot increase your quota by transferring
+ownership of a group to someone else, because you are always recorded as the
+creator.
+<P>If you exhaust your group-creation quota and need to create more groups,
+ask your system administrator. For instructions for displaying your
+group-creation quota, see <A HREF="#HDRWQ67">To Display A Group Entry</A>.
+<HR><H2><A NAME="HDRWQ64" HREF="auusg002.htm#ToC_117">Displaying Group Information</A></H2>
+<A NAME="IDX1039"></A>
+<A NAME="IDX1040"></A>
+<A NAME="IDX1041"></A>
+<P>You can use the following commands to display information about groups and
+the users who belong to them:
+<UL>
+<P><LI>To display the members of a group, or the groups to which a user belongs,
+use the <B>pts membership</B> command.
+<P><LI>To display the groups that a user or group owns, use the <B>pts
+listowned</B> command.
+<P><LI>To display general information about a user or group, including its name,
+AFS ID, creator, and owner, use the <B>pts examine</B> command.
+</UL>
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Note:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">The <B>system:anyuser</B> and <B>system:authuser</B>
+system groups do not appear in a user's list of group memberships, and
+the <B>pts membership</B> command does not display their members.
+For more information on the system groups, see <A HREF="auusg007.htm#HDRWQ50">Using the System Groups on ACLs</A>.
+</TD></TR></TABLE>
+<P><H3><A NAME="HDRWQ65" HREF="auusg002.htm#ToC_118">To Display Group Membership</A></H3>
+<A NAME="IDX1042"></A>
+<A NAME="IDX1043"></A>
+<P>Issue the <B>pts membership</B> command to display the members of a
+group, or the groups to which a user belongs.
+<PRE>   % <B>pts membership</B> &lt;<VAR>user&nbsp;or&nbsp;group&nbsp;name&nbsp;or&nbsp;id</VAR>><SUP>+</SUP>
+</PRE>
+<P>where <VAR>user or group name or id</VAR> specifies the name or AFS UID of
+each user for which to display group membership, or the name or AFS GID of
+each group for which to display the members. If identifying a group by
+its AFS GID, precede the GID with a hyphen (<B>-</B>) to indicate that it
+is a negative number.
+<P><H3><A NAME="Header_119" HREF="auusg002.htm#ToC_119">Example:  Displaying the Members of a Group</A></H3>
+<A NAME="IDX1044"></A>
+<P>The following example displays the members of the group
+<B>terry:team</B>.
+<PRE>   % <B>pts membership terry:team</B>
+   Members of terry:team (id: -286) are:
+     terry
+     smith 
+     pat
+     johnson
+</PRE>
+<P><H3><A NAME="Header_120" HREF="auusg002.htm#ToC_120">Example:  Displaying the Groups to Which a User Belongs</A></H3>
+<P>The following example displays the groups to which users
+<B>terry</B> and <B>pat</B> belong.
+<PRE>   % <B>pts membership terry pat</B>
+   Groups terry (id: 1022) is a member of:
+     smith:friends
+     pat:accounting
+     terry:team
+   Groups pat (id: 1845) is a member of:
+     pat:accounting
+     sam:managers
+     terry:team
+</PRE>
+<P><H3><A NAME="HDRWQ66" HREF="auusg002.htm#ToC_121">To Display the Groups a User or Group Owns</A></H3>
+<A NAME="IDX1045"></A>
+<A NAME="IDX1046"></A>
+<A NAME="IDX1047"></A>
+<A NAME="IDX1048"></A>
+<A NAME="IDX1049"></A>
+<P>Issue the <B>pts listowned</B> command to display the groups that a
+user or group owns.
+<PRE>   %  <B>pts listowned</B> &lt;<VAR>user&nbsp;or&nbsp;group&nbsp;name&nbsp;or&nbsp;id</VAR>><SUP>+</SUP>
+</PRE>
+<P>where <VAR>user or group name or id</VAR> specifies the name or AFS UID of
+each user, or the name or AFS GID of each group, for which to display group
+ownership. If identifying a group by its AFS GID, precede the GID with
+a hyphen (<B>-</B>) to indicate that it is a negative number.
+<P><H3><A NAME="Header_122" HREF="auusg002.htm#ToC_122">Example:  Displaying the Groups a Group Owns</A></H3>
+<A NAME="IDX1050"></A>
+<P>The following example displays the groups that the group
+<B>terry:team</B> owns.
+<PRE>   % <B>pts listowned -286</B>
+   Groups owned by terry:team (id: -286) are:
+     terry:project
+     terry:planners
+</PRE>
+<P><H3><A NAME="Header_123" HREF="auusg002.htm#ToC_123">Example:  Displaying the Groups a User Owns</A></H3>
+<A NAME="IDX1051"></A>
+<P>The following example displays the groups that user <B>pat</B>
+owns.
+<PRE>   % <B>pts listowned pat</B>
+   Groups owned by pat (id: 1845) are:
+      pat:accounting
+      pat:plans
+   
+</PRE>
+<P><H3><A NAME="HDRWQ67" HREF="auusg002.htm#ToC_124">To Display A Group Entry</A></H3>
+<A NAME="IDX1052"></A>
+<A NAME="IDX1053"></A>
+<A NAME="IDX1054"></A>
+<A NAME="IDX1055"></A>
+<A NAME="IDX1056"></A>
+<A NAME="IDX1057"></A>
+<A NAME="IDX1058"></A>
+<A NAME="IDX1059"></A>
+<A NAME="IDX1060"></A>
+<P>Issue the <B>pts examine</B> command to display general information
+about a user or group, including its name, AFS ID, creator, and owner.
+<PRE>   %  <B>pts examine</B> &lt;<VAR>user&nbsp;or&nbsp;group&nbsp;name&nbsp;or&nbsp;id</VAR>><SUP>+</SUP>
+</PRE>
+<P>where <VAR>user or group name or id</VAR> specifies the name or AFS UID of
+each user, or the name or AFS GID of each group, for which to display
+group-related information. If identifying a group by its AFS GID,
+precede the GID with a hyphen (<B>-</B>) to indicate that it is a negative
+number.
+<P>The output includes information in the following fields:
+<DL>
+<P><DT><B><TT>Name</TT>
+</B><DD>For users, this is the character string typed when logging in. For
+machines, the name is the IP address; a zero in address field acts as a
+wildcard, matching any value. For most groups, this is a name of the
+form <VAR>owner_name</VAR><B>:</B><VAR>group_name</VAR>. Some
+groups created by your system administrator do not have the
+<VAR>owner_name</VAR> prefix. See <A HREF="#HDRWQ63">Group Names</A>.
+<P><DT><B><TT>id</TT>
+</B><DD>This is a unique identification number that the AFS server processes use
+internally. It is similar in function to a UNIX UID, but operates in
+AFS rather than the UNIX file system. Users and machines have positive
+integer AFS user IDs (UIDs), and groups have negative integer AFS group IDs
+(GIDs).
+<A NAME="IDX1061"></A>
+<A NAME="IDX1062"></A>
+<A NAME="IDX1063"></A>
+<P><DT><B><TT>owner</TT>
+</B><DD>This is the user or group that owns the entry and so can administer
+it.
+<P><DT><B><TT>creator</TT>
+</B><DD>The name of the user who issued the <B>pts createuser</B> and <B>pts
+creategroup</B> command to create the entry. This field is useful
+mainly as an audit trail and cannot be changed.
+<P><DT><B><TT>membership</TT>
+</B><DD>For users and machines, this indicates how many groups the user or machine
+belongs to. For groups, it indicates how many members belong to the
+group. This number cannot be set explicitly.
+<P><DT><B><TT>flags</TT>
+</B><DD>This field indicates who is allowed to list certain information about the
+entry or change it in certain ways. See <A HREF="#HDRWQ74">Protecting Group-Related Information</A>.
+<P><DT><B><TT>group quota</TT>
+</B><DD>This field indicates how many more groups a user is allowed to
+create. It is set to 20 when a user entry is created. The
+creation quota for machines or groups is meaningless because it not possible
+to authenticate as a machine or group.
+</DL>
+<P><H3><A NAME="Header_125" HREF="auusg002.htm#ToC_125">Example: Listing Information about a Group</A></H3>
+<A NAME="IDX1064"></A>
+<P>The following example displays information about the group
+<B>pat:accounting</B>, which includes members of the department that
+<B>pat</B> manages. Notice that the group is self-owned, which
+means that all of its members can administer it.
+<PRE>   % <B>pts examine pat:accounting</B>
+   Name: pat:accounting, id: -673, owner: pat:accounting, creator: pat,
+     membership: 15, flags: S-M--, group quota: 0
+</PRE>
+<P>
+<P><H3><A NAME="Header_126" HREF="auusg002.htm#ToC_126">Example: Listing Group Information about a User</A></H3>
+<A NAME="IDX1065"></A>
+<P>The following example displays group-related information about user
+<B>pat</B>. The two most interesting fields are
+<TT>membership</TT>, which shows that <B>pat</B> belongs to 12 groups,
+and <TT>group quota</TT>, which shows that <B>pat</B> can create another
+17 groups.
+<PRE>  % <B>pts examine pat</B>
+   Name: pat, id: 1045, owner: system:administrators, creator: admin, 
+     membership: 12, flags: S-M--, group quota: 17
+</PRE>
+<HR><H2><A NAME="HDRWQ68" HREF="auusg002.htm#ToC_127">Creating Groups and Adding Members</A></H2>
+<A NAME="IDX1066"></A>
+<A NAME="IDX1067"></A>
+<A NAME="IDX1068"></A>
+<A NAME="IDX1069"></A>
+<A NAME="IDX1070"></A>
+<P>Use the <B>pts creategroup</B> command to create a group and the
+<B>pts adduser</B> command to add members to it. Users and machines
+can belong to groups, but other groups cannot.
+<P>When you create a group, you normally become its owner
+automatically. This means you alone can administer it: add and
+remove members, change the group's name, transfer ownership of the group,
+or delete the group entirely. If you wish, you can designate another
+owner when you create the group, by including the <B>-owner</B> argument
+to the <B>pts creategroup</B> command. If you assign ownership to
+another group, the owning group must already exist and have at least one
+member. You can also change a group's ownership after creating it
+by using the <B>pts chown</B> command as described in <A HREF="#HDRWQ72">Changing a Group's Owner or Name</A>.
+<P><H3><A NAME="HDRWQ69" HREF="auusg002.htm#ToC_128">To Create a Group</A></H3>
+<A NAME="IDX1071"></A>
+<A NAME="IDX1072"></A>
+<P>Issue the <B>pts creategroup</B> command to create a group. Your
+group-creation quota decrements by one for each group.
+<PRE>   % <B>pts creategroup -name</B> &lt;<VAR>group&nbsp;name</VAR>>+ [<B>-owner</B> &lt;<VAR>owner&nbsp;of&nbsp;the&nbsp;group</VAR>>]
+</PRE>
+<P>where
+<DL>
+<P><DT><B>cg
+</B><DD>Is an alias for <B>creategroup</B> (and <B>createg</B> is the
+shortest acceptable abbreviation).
+<P><DT><B>-name
+</B><DD>Names each group to create. The name must have the following
+format:
+<P><VAR>owner_name</VAR><B>:</B><VAR>group_name</VAR>
+<P>The <VAR>owner_name</VAR> prefix must accurately indicate the group's
+owner. By default, you are recorded as the owner, and the
+<VAR>owner_name</VAR> must be your AFS username. You can include the
+<B>-owner</B> argument to designate another AFS user or group as the
+owner, as long as you provide the required value in the <VAR>owner_name</VAR>
+field: 
+<A NAME="IDX1073"></A>
+<A NAME="IDX1074"></A>
+<UL>
+<P><LI>If the owner is a user, it must be the AFS username.
+<P><LI>If the owner is another regular group, it must match the owning
+group's <VAR>owner_name</VAR> field. For example, if the owner is
+the group <B>terry:associates</B>, the owner field must be
+<B>terry</B>.
+<P><LI>If the owner is a group without an <VAR>owner_name</VAR> prefix, it must be
+the owning group's name.
+</UL>
+<P>The name can include up to 63 characters including the colon. Use
+numbers and lowercase letters, but no spaces or punctuation characters other
+than the colon.
+<P><DT><B>-owner
+</B><DD>Is optional and assigns ownership to a user other than yourself, or to a
+group. If you specify a group, it must already exist and have at least
+one member. (This means that to make a group self-owned, you must issue
+the <B>pts chown</B> command after using this command to create the group,
+and the <B>pts adduser</B> command to add a member. See <A HREF="#HDRWQ72">Changing a Group's Owner or Name</A>.)
+<P>Do not name a machine as the owner. Because no one can authenticate
+as a machine, there is no way to administer a group owned by a machine.
+</DL>
+<P><H3><A NAME="Header_129" HREF="auusg002.htm#ToC_129">Example:  Creating a Group</A></H3>
+<P><B></B>
+<A NAME="IDX1075"></A>
+<P>In the following example user <B>terry</B> creates a group to include
+all the other users in his work team, and then examines the new group
+entry.
+<PRE>   % <B>pts creategroup terry:team</B>
+   group terry:team has id -286
+   % <B>pts examine terry:team</B>
+   Name: terry:team, id: -286, owner: terry, creator: terry, 
+     membership: 0, flags: S----, group quota: 0.
+</PRE>
+<P><H3><A NAME="HDRWQ70" HREF="auusg002.htm#ToC_130">To Add Members to a Group</A></H3>
+<A NAME="IDX1076"></A>
+<A NAME="IDX1077"></A>
+<A NAME="IDX1078"></A>
+<A NAME="IDX1079"></A>
+<P>Issue the <B>pts adduser</B> command to add one or more users to one or
+more groups. You can always add members to a group you own (either
+directly or because you belong to the owning group). If you belong to a
+group, you can add members if its fourth privacy flag is the lowercase letter
+<B>a</B>; see <A HREF="#HDRWQ74">Protecting Group-Related Information</A>.
+<PRE>   % <B>pts adduser -user</B> &lt;<VAR>user&nbsp;name</VAR>><SUP>+</SUP> <B>-group</B> &lt;<VAR>group&nbsp;name</VAR>><SUP>+</SUP>
+</PRE>
+<P>You must add yourself to groups that you own, if that is
+appropriate. You do not belong automatically just because you own the
+group.
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Note:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">If you already have a token when you are added to a group, you must issue the
+<B>klog</B> command to reauthenticate before you can exercise the
+permissions granted to the group on ACLs.
+</TD></TR></TABLE>
+<P>where
+<DL>
+<P><DT><B>-user
+</B><DD>Specifies the username of each user to add to the groups named by the
+<B>-group</B> argument. Groups cannot belong to other
+groups.
+<P><DT><B>-group
+</B><DD>Names each group to which to add users.
+</DL>
+<P><H3><A NAME="Header_131" HREF="auusg002.htm#ToC_131">Example:  Adding Members to a Group</A></H3>
+<A NAME="IDX1080"></A>
+<P>In this example, user <B>terry</B> adds himself, <B>pat</B>,
+<B>indira</B>, and <B>smith</B> to the group he just created,
+<B>terry:team</B>, and then verifies the new list of members.
+<PRE>   % <B>pts adduser -user terry pat indira smith -group terry:team</B>
+   % <B>pts members terry:team</B>
+   Members of terry:team (id: -286) are:
+     terry
+     pat
+     indira
+     smith
+</PRE>
+<HR><H2><A NAME="HDRWQ71" HREF="auusg002.htm#ToC_132">Removing Users from a Group and Deleting a Group</A></H2>
+<A NAME="IDX1081"></A>
+<A NAME="IDX1082"></A>
+<A NAME="IDX1083"></A>
+<A NAME="IDX1084"></A>
+<A NAME="IDX1085"></A>
+<A NAME="IDX1086"></A>
+<A NAME="IDX1087"></A>
+<A NAME="IDX1088"></A>
+<P>You can use the following commands to remove groups and their
+members:
+<UL>
+<P><LI>To remove a user from a group, use the <B>pts removeuser</B> command
+<P><LI>To delete a group entirely, use the <B>pts delete</B> command
+<P><LI>To remove deleted groups from ACLs, use the <B>fs cleanacl</B> command
+</UL>
+<P>When a group that you created is deleted, your group-creation quota
+increments by one, even if you no longer own the group.
+<P>When a group or user is deleted, its AFS ID appears on ACLs in place of its
+AFS name. You can use the <B>fs cleanacl</B> command to remove
+these obsolete entries from ACLs on which you have the <B>a</B>
+(<B>administer</B>) permission.
+<P><H3><A NAME="Header_133" HREF="auusg002.htm#ToC_133">To Remove Members from a Group</A></H3>
+<A NAME="IDX1089"></A>
+<A NAME="IDX1090"></A>
+<P>Issue the <B>pts removeuser</B> command to remove one or more members
+from one or more groups. You can always remove members from a group
+that you own (either directly or because you belong to the owning
+group). If you belong to a group, you can remove members if its fifth
+privacy flag is the lowercase letter <B>r</B>; see <A HREF="#HDRWQ74">Protecting Group-Related Information</A>. (To display a group's owner, use the <B>pts
+examine</B> command as described in <A HREF="#HDRWQ67">To Display A Group Entry</A>.)
+<PRE>   % <B>pts removeuser -user</B>  &lt;<VAR>user&nbsp;name</VAR>><SUP>+</SUP>  <B>-group</B> &lt;<VAR>group&nbsp;name</VAR>><SUP>+</SUP>
+</PRE>
+<P>where
+<DL>
+<P><DT><B>-user
+</B><DD>Specifies the username of each user to remove from the groups named by the
+<B>-group</B> argument.
+<P><DT><B>-group
+</B><DD>Names each group from which to remove users.
+</DL>
+<P><H3><A NAME="Header_134" HREF="auusg002.htm#ToC_134">Example:  Removing Group Members</A></H3>
+<A NAME="IDX1091"></A>
+<P>The following example removes user <B>pat</B> from both the
+<B>terry:team</B> and <B>terry:friends</B> groups.
+<PRE>   % <B>pts removeuser  pat -group terry:team terry:friends</B>
+</PRE>
+<P><H3><A NAME="Header_135" HREF="auusg002.htm#ToC_135">To Delete a Group</A></H3>
+<A NAME="IDX1092"></A>
+<A NAME="IDX1093"></A>
+<P>Issue the <B>pts delete</B> command to delete a group. You can
+always delete a group that you own (either directly or because you belong to
+the owning group). To display a group's owner, use the <B>pts
+examine</B> command as described in <A HREF="#HDRWQ67">To Display A Group Entry</A>.
+<PRE>   % <B>pts delete</B> &lt;<VAR>user&nbsp;or&nbsp;group&nbsp;name&nbsp;or&nbsp;id</VAR>><SUP>+</SUP>
+</PRE>
+<P>where <VAR>user or group name or id</VAR> specifies the name or AFS UID of
+each user, or the name or AFS GID of each group, to delete. If
+identifying a group by its AFS GID, precede the GID with a hyphen
+(<B>-</B>) to indicate that it is a negative number.
+<P><H3><A NAME="Header_136" HREF="auusg002.htm#ToC_136">Example:  Deleting a Group</A></H3>
+<P><B></B>
+<A NAME="IDX1094"></A>
+<P>In the following example, the group <B>terry:team</B> is
+deleted.
+<PRE>   % <B>pts delete terry:team</B>
+</PRE>
+<P><H3><A NAME="Header_137" HREF="auusg002.htm#ToC_137">To Remove Obsolete ACL Entries</A></H3>
+<A NAME="IDX1095"></A>
+<A NAME="IDX1096"></A>
+<P>Issue the <B>fs cleanacl</B> command to remove obsolete entries from
+ACLs after the corresponding user or group has been deleted.
+<PRE>   % <B>fs cleanacl</B> [&lt;<VAR>dir/file&nbsp;path</VAR>><SUP>+</SUP>]
+</PRE>
+<P>where <VAR>dir/file path</VAR> name each directory for which to clean the
+ACL. If you omit this argument, the current working directory's
+ACL is cleaned.
+<P><B></B>
+<A NAME="IDX1097"></A>
+<P><H3><A NAME="Header_138" HREF="auusg002.htm#ToC_138">Example:  Removing an Obsolete ACL Entry</A></H3>
+<P>After the group <B>terry:team</B> is deleted, its AFS GID
+(-286) appears on ACLs instead of its name. In this example, user
+<B>terry</B> cleans it from the ACL on the plans directory in his home
+directory.
+<PRE>   % <B>fs listacl plans</B>
+   Access list for plans is
+   Normal rights:
+     terry rlidwka
+     -268 rlidwk
+     sam rliw
+   % <B>fs cleanacl plans</B>
+   % <B>fs listacl plans</B>
+   Access list for plans is
+   Normal rights:
+     terry rlidwka
+     sam rliw
+</PRE>
+<HR><H2><A NAME="HDRWQ72" HREF="auusg002.htm#ToC_139">Changing a Group's Owner or Name</A></H2>
+<A NAME="IDX1098"></A>
+<A NAME="IDX1099"></A>
+<A NAME="IDX1100"></A>
+<A NAME="IDX1101"></A>
+<P>To change a group's owner, use the <B>pts chown</B>
+command. To change its name, use the <B>pts rename</B>
+command.
+<P>You can change the owner or name of a group that you own (either directly
+or because you belong to the owning group). You can assign group
+ownership to another user, another group, or the group itself. If you
+are not already a member of the group and need to be, use the <B>pts
+adduser</B> command before transferring ownership, following the
+instructions in <A HREF="#HDRWQ70">To Add Members to a Group</A>.
+<P>The <B>pts chown</B> command automatically changes a group's
+<VAR>owner_name</VAR> prefix to indicate the new owner. If the new owner
+is a group, only its <VAR>owner_name</VAR> prefix is used, not its entire
+name. However, the change in <VAR>owner_name</VAR> prefix command does
+not propagate to any groups owned by the group whose owner is changing.
+If you want their <VAR>owner_name</VAR> prefixes to indicate the correct owner,
+you must use the <B>pts rename</B> command.
+<P>Otherwise, you normally use the <B>pts rename</B> command to change
+only the <VAR>group_name</VAR> part of a group name (the part that follows the
+colon). You can change the <VAR>owner_name</VAR> prefix only to reflect
+the actual owner.
+<P><H3><A NAME="HDRWQ73" HREF="auusg002.htm#ToC_140">To Change a Group's Owner</A></H3>
+<A NAME="IDX1102"></A>
+<A NAME="IDX1103"></A>
+<P>Issue the <B>pts chown</B> command to change a group's
+name.
+<PRE>   % <B>pts chown</B>  &lt;<VAR>group&nbsp;name</VAR>> &lt;<VAR>new&nbsp;owner</VAR>>
+</PRE>
+<P>where
+<DL>
+<P><DT><B><VAR>group name</VAR>
+</B><DD>Specifies the current name of the group to which to assign a new
+owner.
+<P><DT><B><VAR>new owner</VAR>
+</B><DD>Names the user or group that is to own the group.
+</DL>
+<P><H3><A NAME="Header_141" HREF="auusg002.htm#ToC_141">Example:  Changing a Group's Owner to Another User</A></H3>
+<A NAME="IDX1104"></A>
+<P>In the following example, user <B>pat</B> transfers ownership of the
+group <B>pat:staff</B> to user <B>terry</B>. Its name
+changes automatically to <B>terry:staff</B>, as confirmed by the
+<B>pts examine</B> command.
+<PRE>   % <B>pts chown pat:staff terry</B>
+   % <B>pts examine terry:staff</B> 
+   Name: terry:staff, id: -534, owner: terry, creator: pat, 
+     membership: 15, flags: SOm--, group quota: 0.
+</PRE>
+<P><H3><A NAME="Header_142" HREF="auusg002.htm#ToC_142">Example:  Changing a Group's Owner to Itself</A></H3>
+<A NAME="IDX1105"></A>
+<P>In the following example, user <B>terry</B> makes the
+<B>terry:team</B> group a self-owned group. Its name does not
+change because its <VAR>owner_name</VAR> prefix is already
+<B>terry</B>.
+<PRE>   % <B>pts chown terry:team terry:team</B>
+   % <B>pts examine terry:team</B>
+   Name: terry:team, id: -286, owner: terry:team, creator: terry, 
+     membership: 6, flags: SOm--, group quota: 0.
+</PRE>
+<P><H3><A NAME="Header_143" HREF="auusg002.htm#ToC_143">Example: Changing a Group's Owner to a Group</A></H3>
+<P>In this example, user <B>sam</B> transfers ownership of the group
+<B>sam:project</B> to the group <B>smith:cpa</B>.
+Its name changes automatically to <B>smith:project</B>, because
+<B>smith</B> is the <VAR>owner_name</VAR> prefix of the group that now owns
+it. The <B>pts examine</B> command displays the group's status
+before and after the change.
+<PRE>   % <B>pts examine sam:project</B>
+   Name: sam:project, id: -522, owner: sam, creator: sam, 
+     membership: 33, flags: SOm--, group quota: 0.
+   % <B>pts chown sam:project smith:cpa</B>
+   % <B>pts examine smith:project</B>
+   Name: smith:project, id: -522, owner: smith:cpa, creator: sam, 
+     membership: 33, flags: SOm--, group quota: 0.
+</PRE>
+<P><H3><A NAME="Header_144" HREF="auusg002.htm#ToC_144">To Change a Group's Name</A></H3>
+<A NAME="IDX1106"></A>
+<A NAME="IDX1107"></A>
+<P>Issue the <B>pts rename</B> command to change a group's
+name.
+<PRE>   % <B>pts rename</B>  &lt;<VAR>old&nbsp;name</VAR>> &lt;<VAR>new&nbsp;name</VAR>>
+</PRE>
+<P>where
+<DL>
+<P><DT><B><VAR>old name</VAR>
+</B><DD>Specifies the group's current name.
+<P><DT><B><VAR>new name</VAR>
+</B><DD>Specifies the complete new name to assign to the group. The
+<VAR>owner_name</VAR> prefix must correctly indicate the group's
+owner.
+</DL>
+<P><H3><A NAME="Header_145" HREF="auusg002.htm#ToC_145">Example:  Changing a Group's <VAR>group_name</VAR> Suffix</A></H3>
+<A NAME="IDX1108"></A>
+<P>The following example changes the name of the
+<B>smith:project</B> group to
+<B>smith:fiscal-closing</B>. The group's
+<VAR>owner_name</VAR> prefix remains <B>smith</B> because its owner is not
+changing.
+<PRE>   % <B>pts examine smith:project</B>
+   Name: smith:project, id: -522, owner: smith:cpa, creator: sam, 
+     membership: 33, flags: SOm--, group quota: 0.
+   % <B>pts rename smith:project smith:fiscal-closing</B>
+   % <B>pts examine smith:fiscal-closing</B>
+   Name: smith:fiscal-closing, id: -522, owner: smith:cpa, creator: sam, 
+     membership: 33, flags: SOm--, group quota: 0.
+</PRE>
+<P><H3><A NAME="Header_146" HREF="auusg002.htm#ToC_146">Example: Changing a Group's <VAR>owner_name</VAR> Prefix</A></H3>
+<P>In a previous example, user <B>pat</B> transferred ownership of the
+group <B>pat:staff</B> to user <B>terry</B>. Its name
+changed automatically to <B>terry:staff</B>. However, a group
+that <B>terry:staff</B> owns is still called
+<B>pat:plans</B>, because the change to a group's
+<VAR>owner_name</VAR> that results from the <B>pts chown</B> command does
+not propagate to any groups it owns. In this example, a member of
+<B>terry:staff</B> uses the <B>pts rename</B> command to change
+the name to <B>terry:plans</B> to reflect its actual
+ownership.
+<PRE>   % <B>pts examine pat:plans</B> 
+   Name: pat:plans, id: -535, owner: terry:staff, creator: pat, 
+     membership: 8, flags: SOm--, group quota: 0.
+   % <B>pts rename pat:plans terry:plans</B>
+   % <B>pts examine terry:plans</B> 
+   Name: terry:plans, id: -535, owner: terry:staff, creator: pat, 
+     membership: 8, flags: SOm--, group quota: 0.
+</PRE>
+<HR><H2><A NAME="HDRWQ74" HREF="auusg002.htm#ToC_147">Protecting Group-Related Information</A></H2>
+<A NAME="IDX1109"></A>
+<A NAME="IDX1110"></A>
+<A NAME="IDX1111"></A>
+<A NAME="IDX1112"></A>
+<A NAME="IDX1113"></A>
+<A NAME="IDX1114"></A>
+<A NAME="IDX1115"></A>
+<A NAME="IDX1116"></A>
+<P>A group's <I>privacy flags</I> control who can administer it in
+various ways. The privacy flags appear in the <TT>flags</TT> field of
+the output from the <B>pts examine</B> command command; see <A HREF="#HDRWQ67">To Display A Group Entry</A>. To set the privacy flags for a group you own, use
+the <B>pts setfields</B> command as instructed in <A HREF="#HDRWQ75">To Set a Group's Privacy Flags</A>.
+<P><H3><A NAME="HDRPRIVACY-FLAGS" HREF="auusg002.htm#ToC_148">Interpreting the Privacy Flags</A></H3>
+<P>The five privacy flags always appear, and always
+must be set, in the following order:
+<DL>
+<P><DT><B>s
+</B><DD>Controls who can issue the <B>pts examine</B> command to display the
+entry.
+<P><DT><B>o
+</B><DD>Controls who can issue the <B>pts listowned</B> command to list the
+groups that a user or group owns.
+<P><DT><B>m
+</B><DD>Controls who can issue the <B>pts membership</B> command to list the
+groups a user or machine belongs to, or which users or machines belong to a
+group.
+<P><DT><B>a
+</B><DD>Controls who can issue the <B>pts adduser</B> command to add a user or
+machine to a group.
+<P><DT><B>r
+</B><DD>Controls who can issue the <B>pts removeuser</B> command to remove a
+user or machine from a group.
+</DL>
+<P>Each flag can take three possible types of values to enable a different set
+of users to issue the corresponding command:
+<UL>
+<P><LI>A hyphen (<B>-</B>) means that the group's owner can issue the
+command, along with the administrators who belong to the
+<B>system:administrators</B> group.
+<P><LI>The lowercase version of the letter means that members of the group can
+issue the command, along with the users indicated by the hyphen.
+<P><LI>The uppercase version of the letter means that anyone can issue the
+command.
+</UL>
+<P>For example, the flags <TT>SOmar</TT> on a group entry indicate that
+anyone can examine the group's entry and list the groups that it owns,
+and that only the group's members can list, add, or remove its
+members.
+<P>The default privacy flags for groups are <TT>S-M--</TT>, meaning that
+anyone can display the entry and list the members of the group, but only the
+group's owner and members of the <B>system:administrators</B>
+group can perform other functions.
+<P><H3><A NAME="HDRWQ75" HREF="auusg002.htm#ToC_149">To Set a Group's Privacy Flags</A></H3>
+<A NAME="IDX1117"></A>
+<A NAME="IDX1118"></A>
+<P>Issue the <B>pts setfields</B> command to set the privacy flags on one
+or more groups.
+<PRE>   % <B>pts setfields -nameorid</B> &lt;<VAR>user&nbsp;or&nbsp;group&nbsp;name&nbsp;or&nbsp;id</VAR>><SUP>+</SUP>
+                   <B>-access</B> &lt;<VAR>set&nbsp;privacy&nbsp;flags</VAR>>
+</PRE>
+<P>where
+<DL>
+<P><DT><B>-nameorid
+</B><DD>Specifies the name or AFS GID of each group for which to set the privacy
+flags. If identifying a group by its AFS GID, precede the GID with a
+hyphen (<B>-</B>) to indicate that it is a negative number.
+<P><DT><B>-access
+</B><DD>Specifies the privacy flags to set for each group. Observe the
+following rules:
+<UL>
+<P><LI>Provide a value for all five flags in the order <B>somar</B>.
+<P><LI>Set the first flag to lowercase <B>s</B> or uppercase <B>S</B>
+only.
+<P><LI>Set the second flag to the hyphen (<B>-</B>) or uppercase <B>O</B>
+only. For groups, AFS interprets the hyphen as equivalent to lowercase
+<B>o</B> (that is, members of a group can always list the groups that it
+owns).
+<P><LI>Set the third flag to the hyphen (<B>-</B>), lowercase <B>m</B>,
+or uppercase <B>M</B>.
+<P><LI>Set the fourth flag to the hyphen (<B>-</B>), lowercase <B>a</B>,
+or uppercase <B>A</B>. The uppercase <B>A</B> is not a secure
+choice, because it permits anyone to add members to the group.
+<P><LI>Set the fifth flag to the hyphen (<B>-</B>) or lowercase <B>r</B>
+only.
+</UL>
+</DL>
+<P><H3><A NAME="Header_150" HREF="auusg002.htm#ToC_150">Example:  Setting a Group's Privacy Flags</A></H3>
+<A NAME="IDX1119"></A>
+<P>The following example sets the privacy flags on the
+<B>terry:team</B> group to set the indicated pattern of
+administrative privilege.
+<PRE>   % <B>pts setfields terry:team -access SOm--</B>
+  
+</PRE>
+<UL>
+<P><LI>Everyone can issue the <B>pts examine</B> command to display general
+information about it (uppercase <B>S</B>).
+<P><LI>Everyone can issue the <B>pts listowned</B> command to display the
+groups it owns (uppercase <B>O</B>).
+<P><LI>The members of the group can issue the <B>pts membership</B> command
+to display the group's members (lowercase <B>m</B>).
+<P><LI>Only the group's owner, user <B>terry</B>, can issue the <B>pts
+adduser</B> command to add members (the hyphen).
+<P><LI>Only the group's owner, user <B>terry</B>, can issue the <B>pts
+removeuser</B> command to remove members (the hyphen).
+</UL>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auusg002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auusg007.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auusg009.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auusg013.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

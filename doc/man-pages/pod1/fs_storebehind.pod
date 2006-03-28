@@ -1,0 +1,229 @@
+=head1 NAME
+
+fs storebehind - Enables asynchronous writes to the file server
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<fs storebehind> S<<< [B<-kbytes> <I<asynchrony for specified names>>] >>>
+    S<<< [B<-files> <I<specific pathnames>>+] >>>
+    S<<< [B<-allfiles> <I<new default (KB)>>] >>> [B<-verbose>] [B<-help>]
+
+B<fs st> S<<< [B<-k> <I<asynchrony for specified names>>] >>>
+    S<<< [B<-f> <I<specific pathnames>>+] >>>
+    S<<< [B<-a> <I<new default (KB)>>] >>> [B<-v>] [B<-h>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<fs storebehind> command enables the Cache Manager to perform a
+delayed asynchronous write to the File Server when an application closes a
+file. By default, the Cache Manager writes all data to the File Server
+immediately and synchronously when an application program closes a file --
+that is, the close() system call does not return until the Cache Manager
+has actually transferred the final chunk of the file to the File
+Server. This command specifies the number of kilobytes of a file that can
+still remain to be written to the File Server when the Cache Manager
+returns control to the application. It is useful if users working on the
+machine commonly work with very large files, but also introduces the
+complications discussed in the L<CAUTIONS>.
+
+Set either or both of the following in a single command:
+
+=over 4
+
+=item *
+
+To set a value that applies to all AFS files manipulated by applications
+running on the machine, use the B<-allfiles> argument. This value is
+termed the I<default store asynchrony> for the machine, and persists until
+the machine reboots. If it is not set, the default value is zero,
+indicating that the Cache Manager performs synchronous writes.
+
+As an example, the following setting means that when an application closes
+a file, the Cache Manager can return control to the application as soon as
+no more than 10 kilobytes of the file remain to be written to the File
+Server.
+
+   -allfiles 10
+
+=item *
+
+To set a value that applies to one or more individual files, and overrides
+the value of the B<-allfiles> argument for them, combine the B<-kbytes>
+and B<-files> arguments. The setting persists as long as there is an entry
+for the file in the kernel table that the Cache Manager uses to track
+certain information about files. In general, such an entry persists at
+least until an application closes the file or exits, but the Cache Manager
+is free to recycle the entry if the file is inactive and it needs to free
+up slots in the table. To increase the certainty that there is an entry
+for the file in the table, issue the B<fs storebehind> command shortly
+before closing the file.
+
+As an example, the following setting means that when an application closes
+either of the files B<bigfile> and B<biggerfile>, the Cache Manager can
+return control to the application as soon as no more than a megabyte of
+the file remains to be written to the File Server.
+
+   -kbytes 1024 -files bigfile biggerfile
+
+Note that once an explicit value has been set for a file, the only way to
+make it subject to the default store asynchrony once again is to set
+B<-kbytes> to that value. In other words, there is no combination of
+arguments that automatically makes a file subject to the default store
+asynchrony once another value has been set for the file.
+
+=back
+
+To display the settings that currently apply to individual files or to all
+files, provide the command's arguments in certain combinations as
+specified in L<OUTPUT>.
+
+=head1 CAUTIONS
+
+For the following reasons, use of this command is not recommended in most
+cases.
+
+In normal circumstances, an asynchronous setting results in the Cache
+Manager returning control to applications earlier than it otherwise does,
+but this is not guaranteed.
+
+If a delayed write fails, there is no way to notify the application, since
+the close() system call has already returned with a code indicating
+success.
+
+Writing asynchronously increases the possibility that the user will not
+notice if a write operation makes the volume that houses the file exceed
+its quota. As always, the portion of the file that exceeds the volume's
+quota is lost, which prompts a message such as the following:
+
+   No space left on device
+
+To avoid losing data, it is advisable to verify that the volume housing
+the file has space available for the amount of data anticipated to be
+written.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-kbytes> <I<asynchrony for specified names>>
+
+Specifies the number of kilobytes of data from each file named by the
+B<-files> argument that can remain to be written to the file server when
+the Cache Manager returns control to an application program that closed
+the file. The B<-files> argument is required along with this
+argument. Provide an integer from the range C<0> (which reinstates the
+Cache Manager's default behavior or writing synchronously) to the maximum
+AFS file size.
+
+=item B<-files> <I<specific pathnames>>+
+
+Names each file to which the value set with the B<-kbytes> argument
+applies. The setting persists as long as there is an entry for the file in
+the kernel table that the Cache Manager uses to track certain information
+about files. Because closing a file generally erases the entry, when
+reopening a file the only way to guarantee that the setting still applies
+is to reissue the command. If this argument is provided without the
+B<-kbytes> argument, the command reports the current setting for the
+specified files, and the default store asynchrony.
+
+=item B<-allfiles> <I<new default (KB)>>
+
+Sets the default store asynchrony for the local machine, which is the
+number of kilobytes of data that can remain to be written to the file
+server when the Cache Manager returns control to the application program
+that closed a file. The value applies to all AFS files manipulated by
+applications running on the machine, except those for which settings have
+been made with the B<-kbytes> and B<-files> arguments. Provide an integer
+from the range C<0> (which indicates the default of synchronous writes) to
+the maximum AFS file size.
+
+=item B<-verbose>
+
+Produces output confirming the settings made with the accompanying
+B<-kbytes> and B<-files> arguments, the B<-allfiles> argument, or all
+three. If provided by itself, reports the current default store
+asynchrony.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 OUTPUT
+
+If none of the command's options are included, or if only the B<-verbose>
+flag is included, the following message reports the default store
+asynchrony (the setting that applies to all files manipulated by
+applications running on the local machine and for which not more specific
+asynchrony is set).
+
+   Default store asynchrony is <x> kbytes.
+
+A value of C<0> (zero) indicates synchronous writes and is the default if
+no one has included the B<-allfiles> argument on this command since the
+machine last rebooted.
+
+If the B<-files> argument is provided without the B<-kbytes> argument, the
+output reports the value that applies to each specified file along with
+the default store asynchrony. If a particular value has previously been
+set for a file, the following message reports it:
+
+   Will store up to <y> kbytes of <file> asynchronously.
+   Default store asynchrony is <x> kbytes.
+
+If the default store asynchrony applies to a file because no explicit
+B<-kbytes> value has been set for it, the message is instead as follows:
+
+   Will store <file> according to default.
+   Default store asynchrony is <x> kbytes.
+
+If the B<-verbose> flag is combined with arguments that set values
+(B<-files> and B<-kbytes>, or B<-allfiles>, or all three), there is a
+message that confirms immediately that the setting has taken effect. When
+included without other arguments or flags, the B<-verbose> flag reports
+the default store asynchrony only.
+
+=head1 EXAMPLES
+
+The following command enables the Cache Manager to return control to the
+application program that closed the file F<test.data> when 100 kilobytes
+still remain to be written to the File Server. The B<-verbose> flag
+produces output that confirms the new setting, and that the default store
+asynchrony is zero.
+
+   % fs storebehind -kbytes 100 -files test.data -verbose
+   Will store up to 100 kbytes of test.data asynchronously.
+   Default store asynchrony is 0 kbytes.
+
+=head1 PRIVILEGE REQUIRED
+
+To include the B<-allfiles> argument, the issuer must be logged in as the
+local superuser C<root>.
+
+To include the B<-kbytes> and B<-files> arguments, the issuer must either
+be logged in as the local superuser C<root> or have the C<w> (write)
+permission on the ACL of each file's directory.
+
+To view the current settings (by including no arguments, the B<-file>
+argument alone, or the B<-verbose> argument alone), no privilege is
+required.
+
+=head1 SEE ALSO
+
+L<afsd(8)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

@@ -1,0 +1,589 @@
+.rn '' }`
+''' $RCSfile$$Revision$$Date$
+'''
+''' $Log$
+'''
+.de Sh
+.br
+.if t .Sp
+.ne 5
+.PP
+\fB\\$1\fR
+.PP
+..
+.de Sp
+.if t .sp .5v
+.if n .sp
+..
+.de Ip
+.br
+.ie \\n(.$>=3 .ne \\$3
+.el .ne 3
+.IP "\\$1" \\$2
+..
+.de Vb
+.ft CW
+.nf
+.ne \\$1
+..
+.de Ve
+.ft R
+
+.fi
+..
+'''
+'''
+'''     Set up \*(-- to give an unbreakable dash;
+'''     string Tr holds user defined translation string.
+'''     Bell System Logo is used as a dummy character.
+'''
+.tr \(*W-|\(bv\*(Tr
+.ie n \{\
+.ds -- \(*W-
+.ds PI pi
+.if (\n(.H=4u)&(1m=24u) .ds -- \(*W\h'-12u'\(*W\h'-12u'-\" diablo 10 pitch
+.if (\n(.H=4u)&(1m=20u) .ds -- \(*W\h'-12u'\(*W\h'-8u'-\" diablo 12 pitch
+.ds L" ""
+.ds R" ""
+'''   \*(M", \*(S", \*(N" and \*(T" are the equivalent of
+'''   \*(L" and \*(R", except that they are used on ".xx" lines,
+'''   such as .IP and .SH, which do another additional levels of
+'''   double-quote interpretation
+.ds M" """
+.ds S" """
+.ds N" """""
+.ds T" """""
+.ds L' '
+.ds R' '
+.ds M' '
+.ds S' '
+.ds N' '
+.ds T' '
+'br\}
+.el\{\
+.ds -- \(em\|
+.tr \*(Tr
+.ds L" ``
+.ds R" ''
+.ds M" ``
+.ds S" ''
+.ds N" ``
+.ds T" ''
+.ds L' `
+.ds R' '
+.ds M' `
+.ds S' '
+.ds N' `
+.ds T' '
+.ds PI \(*p
+'br\}
+.\"	If the F register is turned on, we'll generate
+.\"	index entries out stderr for the following things:
+.\"		TH	Title 
+.\"		SH	Header
+.\"		Sh	Subsection 
+.\"		Ip	Item
+.\"		X<>	Xref  (embedded
+.\"	Of course, you have to process the output yourself
+.\"	in some meaninful fashion.
+.if \nF \{
+.de IX
+.tm Index:\\$1\t\\n%\t"\\$2"
+..
+.nr % 0
+.rr F
+.\}
+.TH UDEBUG 1 "OpenAFS" "1/Mar/2006" "AFS Command Reference"
+.UC
+.if n .hy 0
+.if n .na
+.ds C+ C\v'-.1v'\h'-1p'\s-2+\h'-1p'+\s0\v'.1v'\h'-1p'
+.de CQ          \" put $1 in typewriter font
+.ft CW
+'if n "\c
+'if t \\&\\$1\c
+'if n \\&\\$1\c
+'if n \&"
+\\&\\$2 \\$3 \\$4 \\$5 \\$6 \\$7
+'.ft R
+..
+.\" @(#)ms.acc 1.5 88/02/08 SMI; from UCB 4.2
+.	\" AM - accent mark definitions
+.bd B 3
+.	\" fudge factors for nroff and troff
+.if n \{\
+.	ds #H 0
+.	ds #V .8m
+.	ds #F .3m
+.	ds #[ \f1
+.	ds #] \fP
+.\}
+.if t \{\
+.	ds #H ((1u-(\\\\n(.fu%2u))*.13m)
+.	ds #V .6m
+.	ds #F 0
+.	ds #[ \&
+.	ds #] \&
+.\}
+.	\" simple accents for nroff and troff
+.if n \{\
+.	ds ' \&
+.	ds ` \&
+.	ds ^ \&
+.	ds , \&
+.	ds ~ ~
+.	ds ? ?
+.	ds ! !
+.	ds /
+.	ds q
+.\}
+.if t \{\
+.	ds ' \\k:\h'-(\\n(.wu*8/10-\*(#H)'\'\h"|\\n:u"
+.	ds ` \\k:\h'-(\\n(.wu*8/10-\*(#H)'\`\h'|\\n:u'
+.	ds ^ \\k:\h'-(\\n(.wu*10/11-\*(#H)'^\h'|\\n:u'
+.	ds , \\k:\h'-(\\n(.wu*8/10)',\h'|\\n:u'
+.	ds ~ \\k:\h'-(\\n(.wu-\*(#H-.1m)'~\h'|\\n:u'
+.	ds ? \s-2c\h'-\w'c'u*7/10'\u\h'\*(#H'\zi\d\s+2\h'\w'c'u*8/10'
+.	ds ! \s-2\(or\s+2\h'-\w'\(or'u'\v'-.8m'.\v'.8m'
+.	ds / \\k:\h'-(\\n(.wu*8/10-\*(#H)'\z\(sl\h'|\\n:u'
+.	ds q o\h'-\w'o'u*8/10'\s-4\v'.4m'\z\(*i\v'-.4m'\s+4\h'\w'o'u*8/10'
+.\}
+.	\" troff and (daisy-wheel) nroff accents
+.ds : \\k:\h'-(\\n(.wu*8/10-\*(#H+.1m+\*(#F)'\v'-\*(#V'\z.\h'.2m+\*(#F'.\h'|\\n:u'\v'\*(#V'
+.ds 8 \h'\*(#H'\(*b\h'-\*(#H'
+.ds v \\k:\h'-(\\n(.wu*9/10-\*(#H)'\v'-\*(#V'\*(#[\s-4v\s0\v'\*(#V'\h'|\\n:u'\*(#]
+.ds _ \\k:\h'-(\\n(.wu*9/10-\*(#H+(\*(#F*2/3))'\v'-.4m'\z\(hy\v'.4m'\h'|\\n:u'
+.ds . \\k:\h'-(\\n(.wu*8/10)'\v'\*(#V*4/10'\z.\v'-\*(#V*4/10'\h'|\\n:u'
+.ds 3 \*(#[\v'.2m'\s-2\&3\s0\v'-.2m'\*(#]
+.ds o \\k:\h'-(\\n(.wu+\w'\(de'u-\*(#H)/2u'\v'-.3n'\*(#[\z\(de\v'.3n'\h'|\\n:u'\*(#]
+.ds d- \h'\*(#H'\(pd\h'-\w'~'u'\v'-.25m'\f2\(hy\fP\v'.25m'\h'-\*(#H'
+.ds D- D\\k:\h'-\w'D'u'\v'-.11m'\z\(hy\v'.11m'\h'|\\n:u'
+.ds th \*(#[\v'.3m'\s+1I\s-1\v'-.3m'\h'-(\w'I'u*2/3)'\s-1o\s+1\*(#]
+.ds Th \*(#[\s+2I\s-2\h'-\w'I'u*3/5'\v'-.3m'o\v'.3m'\*(#]
+.ds ae a\h'-(\w'a'u*4/10)'e
+.ds Ae A\h'-(\w'A'u*4/10)'E
+.ds oe o\h'-(\w'o'u*4/10)'e
+.ds Oe O\h'-(\w'O'u*4/10)'E
+.	\" corrections for vroff
+.if v .ds ~ \\k:\h'-(\\n(.wu*9/10-\*(#H)'\s-2\u~\d\s+2\h'|\\n:u'
+.if v .ds ^ \\k:\h'-(\\n(.wu*10/11-\*(#H)'\v'-.4m'^\v'.4m'\h'|\\n:u'
+.	\" for low resolution devices (crt and lpr)
+.if \n(.H>23 .if \n(.V>19 \
+\{\
+.	ds : e
+.	ds 8 ss
+.	ds v \h'-1'\o'\(aa\(ga'
+.	ds _ \h'-1'^
+.	ds . \h'-1'.
+.	ds 3 3
+.	ds o a
+.	ds d- d\h'-1'\(ga
+.	ds D- D\h'-1'\(hy
+.	ds th \o'bp'
+.	ds Th \o'LP'
+.	ds ae ae
+.	ds Ae AE
+.	ds oe oe
+.	ds Oe OE
+.\}
+.rm #[ #] #H #V #F C
+.SH "NAME"
+udebug \- Reports Ubik process status for a database server process
+.SH "SYNOPSIS"
+\fBudebug\fR <<\ \fB\-servers\fR\ <\fIserver\ machine\fR >>> <<\ [\fB\-port\fR\ <\fIIP\ port\fR] >>>
+    [\fB\-long\fR] [\fB\-help\fR]
+.PP
+\fBudebug\fR <<\ \fB\-s\fR\ <\fIserver\ machine\fR >>> <<\ [\fB\-p\fR\ <\fIIP\ port\fR] >>> [\fB\-l\fR] [\fB\-h\fR]
+.SH "DESCRIPTION"
+The \fBudebug\fR command displays the status of the lightweight Ubik process
+for the database server process identified by the \fB\-port\fR argument that
+is running on the database server machine named by the \fB\-servers\fR
+argument. The output identifies the machines where peer database server
+processes are running, which of them is the synchronization site (Ubik
+coordinator), and the status of the connections between them.
+.SH "OPTIONS"
+.Ip "\fB\-servers\fR <\fIserver machine\fR>" 4
+Names the database server machine that is running the process for which to
+display status information. Provide the machine's \s-1IP\s0 address in dotted
+decimal format, its fully qualified host name (for example,
+\fBfs1.abc.com\fR), or the shortest abbreviated form of its host name that
+distinguishes it from other machines. Successful use of an abbreviated
+form depends on the availability of a name resolution service (such as the
+Domain Name Service or a local host table) at the time the command is
+issued.
+.Ip "\fB\-port\fR <\fI\s-1IP\s0 port\fR>" 4
+Identifies the database server process for which to display status
+information, either by its process name or port number. Provide one of the
+following values.
+.Ip "\fBbuserver\fR or 7021 for the Backup Server" 8
+.Ip "\fBkaserver\fR or 7004 for the Authentication Server" 8
+.Ip "\fBptserver\fR or 7002 for the Protection Server" 8
+.Ip "\fBvlserver\fR or 7003 for the Volume Location Server" 8
+.Ip "\fB\-long\fR" 4
+Reports additional information about each peer of the machine named by the
+\fB\-servers\fR argument. The information appears by default if that machine
+is the synchronization site.
+.Ip "\fB\-help\fR" 4
+Prints the online help for this command. All other valid options are
+ignored.
+.SH "OUTPUT"
+Several of the messages in the output provide basic status information
+about the Ubik process on the machine specified by the \fB\-servers\fR
+argument, and the remaining messages are useful mostly for debugging
+purposes.
+.PP
+To check basic Ubik status, issue the command for each database server
+machine in turn. In the output for each, one of the following messages
+appears in the top third of the output.
+.PP
+.Vb 1
+\&   I am sync site . . . (<#_sites> servers)
+.Ve
+.Vb 1
+\&   I am not sync site
+.Ve
+For the synchronization site, the following message indicates that all
+sites have the same version of the database, which implies that Ubik is
+functioning correctly. See the following for a description of values other
+than \f(CW1f\fR.
+.PP
+.Vb 1
+\&   Recovery state 1f
+.Ve
+For correct Ubik operation, the database server machine clocks must agree
+on the time. The following messages, which are the second and third lines
+in the output, report the current date and time according to the database
+server machine's clock and the clock on the machine where the \fBudebug\fR
+command is issued.
+.PP
+.Vb 2
+\&   Host's <IP_addr> time is <dbserver_date/time>
+\&   Local time is <local_date/time> (time differential <skew> secs)
+.Ve
+The <skew> is the difference between the database server machine clock and
+the local clock. Its absolute value is not vital for Ubik functioning, but
+a difference of more than a few seconds between the \fIskew\fR values for the
+database server machines indicates that their clocks are not synchronized
+and Ubik performance is possibly hampered.
+.PP
+Following is a description of all messages in the output. As noted, it is
+useful mostly for debugging and most meaningful to someone who understands
+Ubik's implementation.
+.PP
+The output begins with the following messages. The first message reports
+the IP addresses that are configured with the operating system on the
+machine specified by the \fB\-servers\fR argument. As previously noted, the
+second and third messages report the current date and time according to
+the clocks on the database server machine and the machine where the
+\fBudebug\fR command is issued, respectively. All subsequent timestamps in
+the output are expressed in terms of the local clock rather than the
+database server machine clock.
+.PP
+.Vb 3
+\&   Host's addresses are: <list_of_IP_addrs>
+\&   Host's <IP_addr> time is <dbserver_date/time>
+\&   Local time is <local_date/time> (time differential <skew> secs)
+.Ve
+If the <skew> is more than about 10 seconds, the following message
+appears. As noted, it does not necessarily indicate Ubik malfunction: it
+denotes clock skew between the database server machine and the local
+machine, rather than among the database server machines.
+.PP
+.Vb 1
+\&   ****clock may be bad
+.Ve
+If the udebug command is issued during the coordinator election process
+and voting has not yet begun, the following message appears next.
+.PP
+.Vb 1
+\&   Last yes vote not cast yet
+.Ve
+Otherwise, the output continues with the following messages.
+.PP
+.Vb 3
+\&   Last yes vote for <sync_IP_addr> was <last_vote> secs ago (sync site);
+\&   Last vote started <vote_start> secs ago (at <date/time>)
+\&   Local db version is <db_version>
+.Ve
+The first indicates which peer this Ubik process last voted for as
+coordinator (it can vote for itself) and how long ago it sent the vote.
+The second message indicates how long ago the Ubik coordinator requested
+confirming votes from the secondary sites. Usually, the <last_vote> and
+<vote_start> values are the same; a difference between them can indicate
+clock skew or a slow network connection between the two database server
+machines. A small difference is not harmful. The third message reports the
+current version number <db_version> of the database maintained by this
+Ubik process. It has two fields separated by a period. The field before
+the period is based on a timestamp that reflects when the database first
+changed after the most recent coordinator election, and the field after
+the period indicates the number of changes since the election.
+.PP
+The output continues with messages that differ depending on whether the
+Ubik process is the coordinator or not.
+.Ip "\(bu" 4
+If there is only one database server machine, it is always the coordinator
+(synchronization site), as indicated by the following message.
+.Sp
+.Vb 1
+\&   I am sync site forever (1 server)
+.Ve
+.Ip "\(bu" 4
+If there are multiple database sites, and the \fB\-servers\fR argument names
+the coordinator (synchronization site), the output continues with the
+following two messages.
+.Sp
+.Vb 3
+\&   I am sync site until <expiration> secs from now (at <date/time>)
+\&       (<#_sites> servers)
+\&   Recovery state <flags>
+.Ve
+The first message (which is reported on one line) reports how much longer
+the site remains coordinator even if the next attempt to maintain quorum
+fails, and how many sites are participating in the quorum. The \fIflags\fR
+field in the second message is a hexadecimal number that indicates the
+current state of the quorum. A value of \f(CW1f\fR indicates complete database
+synchronization, whereas a value of \f(CWf\fR means that the coordinator has
+the correct database but cannot contact all secondary sites to determine
+if they also have it. Lesser values are acceptable if the \fBudebug\fR
+command is issued during coordinator election, but they denote a problem
+if they persist. The individual flags have the following meanings:
+.Ip "0x1" 8
+This machine is the coordinator.
+.Ip "0x2" 8
+The coordinator has determined which site has the database with the
+highest version number.
+.Ip "0x4" 8
+The coordinator has a copy of the database with the highest version
+number.
+.Ip "0x8" 8
+The database's version number has been updated correctly.
+.Ip "0x10" 8
+All sites have the database with the highest version number.
+.Sp
+If the udebug command is issued while the coordinator is writing a change
+into the database, the following additional message appears.
+.Sp
+.Vb 1
+\&   I am currently managing write transaction I<identifier>
+.Ve
+.Ip "\(bu" 4
+If the \fB\-servers\fR argument names a secondary site, the output continues
+with the following messages.
+.Sp
+.Vb 3
+\&   I am not sync site
+\&   Lowest host <lowest_IP_addr> was set <low_time> secs ago
+\&   Sync host <sync_IP_addr> was set <sync_time> secs ago
+.Ve
+The <lowest_IP_addr> is the lowest \s-1IP\s0 address of any peer from which the
+Ubik process has received a message recently, whereas the <sync_IP_addr>
+is the \s-1IP\s0 address of the current coordinator. If they differ, the machine
+with the lowest \s-1IP\s0 address is not currently the coordinator. The Ubik
+process continues voting for the current coordinator as long as they
+remain in contact, which provides for maximum stability. However, in the
+event of another coordinator election, this Ubik process votes for the
+<lowest_IP_addr> site instead (assuming they are in contact), because it
+has a bias to vote in elections for the site with the lowest \s-1IP\s0 address.
+.PP
+For both the synchronization and secondary sites, the output continues
+with the following messages. The first message reports the version number
+of the database at the synchronization site, which needs to match the
+<db_version> reported by the preceding \f(CWLocal db version\fR message. The
+second message indicates how many \s-1VLDB\s0 records are currently locked for
+any operation or for writing in particular. The values are nonzero if the
+\fBudebug\fR command is issued while an operation is in progress.
+.PP
+.Vb 2
+\&   Sync site's db version is <db_version>
+\&   <locked> locked pages, <writes> of them for write
+.Ve
+The following messages appear next only if there are any read or write
+locks on database records:
+.PP
+.Vb 2
+\&   There are read locks held
+\&   There are write locks held
+.Ve
+Similarly, one or more of the following messages appear next only if there
+are any read or write transactions in progress when the \fBudebug\fR command
+is issued:
+.PP
+.Vb 3
+\&   There is an active write transaction
+\&   There is at least one active read transaction
+\&   Transaction tid is <tid>
+.Ve
+If the machine named by the \fB\-servers\fR argument is the coordinator, the
+next message reports when the current coordinator last updated the
+database.
+.PP
+.Vb 2
+\&    Last time a new db version was labelled was:
+\&            <last_restart> secs ago (at <date/time>)
+.Ve
+If the machine named by the \fB\-servers\fR argument is the coordinator, the
+output concludes with an entry for each secondary site that is
+participating in the quorum, in the following format.
+.PP
+.Vb 5
+\&   Server (<IP_address>): (db <db_version>)
+\&   last vote rcvd <last_vote> secs ago (at <date/time>),
+\&   last beacon sent <last_beacon> secs ago (at <date/time>),
+\&       last vote was { yes | no }
+\&   dbcurrent={ 0 | 1 }, up={ 0 | 1 } beaconSince={ 0 | 1 }
+.Ve
+The first line reports the site's \s-1IP\s0 address and the version number of the
+database it is maintaining. The <last_vote> field reports how long ago the
+coordinator received a vote message from the Ubik process at the site, and
+the <last_beacon> field how long ago the coordinator last requested a vote
+message. If the \fBudebug\fR command is issued during the coordinator
+election process and voting has not yet begun, the following messages
+appear instead.
+.PP
+.Vb 2
+\&   Last vote never rcvd
+\&   Last beacon never sent
+.Ve
+On the final line of each entry, the fields have the following meaning:
+.Ip "\(bu" 4
+\f(CWdbcurrent\fR is \f(CW1\fR if the site has the database with the highest version
+number, \f(CW0\fR if it does not.
+.Ip "\(bu" 4
+\f(CWup\fR is \f(CW1\fR if the Ubik process at the site is functioning correctly,
+\f(CW0\fR if it is not.
+.Ip "\(bu" 4
+\f(CWbeaconSince\fR is \f(CW1\fR if the site has responded to the coordinator's last
+request for votes, \f(CW0\fR if it has not.
+.PP
+Including the \fB\-long\fR flag produces peer entries even when the
+\fB\-servers\fR argument names a secondary site, but in that case only the
+\fIIP_address\fR field is guaranteed to be accurate. For example, the value
+in the <db_version> field is usually \f(CW0.0\fR, because secondary sites do
+not poll their peers for this information.  The values in the \fIlast_vote\fR
+and \fIlast_beacon\fR fields indicate when this site last received or
+requested a vote as coordinator; they generally indicate the time of the
+last coordinator election.
+.SH "EXAMPLES"
+This example checks the status of the Ubik process for the Volume Location
+Server on the machine \f(CWafs1\fR, which is the synchronization site.
+.PP
+.Vb 13
+\&   % udebug afs1 vlserver
+\&   Host's addresses are: 192.12.107.33
+\&   Host's 192.12.107.33 time is Wed Oct 27 09:49:50 1999
+\&   Local time is Wed Oct 27 09:49:52 1999 (time differential 2 secs)
+\&   Last yes vote for 192.12.107.33 was 1 secs ago (sync site);
+\&   Last vote started 1 secs ago (at Wed Oct 27 09:49:51 1999)
+\&   Local db version is 940902602.674
+\&   I am sync site until 58 secs from now (at Wed Oct 27 09:50:50 1999) (3 servers)
+\&   Recovery state 1f
+\&   Sync site's db version is 940902602.674
+\&   0 locked pages, 0 of them for write
+\&   Last time a new db version was labelled was:
+\&            129588 secs ago (at Mon Oct 25 21:50:04 1999)
+.Ve
+.Vb 4
+\&   Server( 192.12.107.35 ): (db 940902602.674)
+\&       last vote rcvd 2 secs ago (at Wed Oct 27 09:49:50 1999),
+\&       last beacon sent 1 secs ago (at Wed Oct 27 09:49:51 1999), last vote was yes
+\&       dbcurrent=1, up=1 beaconSince=1
+.Ve
+.Vb 4
+\&   Server( 192.12.107.34 ): (db 940902602.674)
+\&       last vote rcvd 2 secs ago (at Wed Oct 27 09:49:50 1999),
+\&       last beacon sent 1 secs ago (at Wed Oct 27 09:49:51 1999), last vote was yes
+\&       dbcurrent=1, up=1 beaconSince=1
+.Ve
+This example checks the status of the Authentication Server on the machine
+with IP address 192.12.107.34, which is a secondary site. The local clock
+is about 4 minutes behind the database server machine's clock.
+.PP
+.Vb 13
+\&   % udebug 192.12.107.34 7004
+\&   Host's addresses are: 192.12.107.34
+\&   Host's 192.12.107.34 time is Wed Oct 27 09:54:15 1999
+\&   Local time is Wed Oct 27 09:50:08 1999 (time differential -247 secs)
+\&   ****clock may be bad
+\&   Last yes vote for 192.12.107.33 was 6 secs ago (sync site);
+\&   Last vote started 6 secs ago (at Wed Oct 27 09:50:02 1999)
+\&   Local db version is 940906574.25
+\&   I am not sync site
+\&   Lowest host 192.12.107.33 was set 6 secs ago
+\&   Sync host 192.12.107.33 was set 6 secs ago
+\&   Sync site's db version is 940906574.25
+\&   0 locked pages, 0 of them for write
+.Ve
+.SH "PRIVILEGE REQUIRED"
+None
+.SH "SEE ALSO"
+the \fIbuserver(8)\fR manpage,
+the \fIkaserver(8)\fR manpage,
+the \fIptserver(8)\fR manpage,
+the \fIvlserver(8)\fR manpage
+.SH "COPYRIGHT"
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+.PP
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
+
+.rn }` ''
+.IX Title "UDEBUG 1"
+.IX Name "udebug - Reports Ubik process status for a database server process"
+
+.IX Header "NAME"
+
+.IX Header "SYNOPSIS"
+
+.IX Header "DESCRIPTION"
+
+.IX Header "OPTIONS"
+
+.IX Item "\fB\-servers\fR <\fIserver machine\fR>"
+
+.IX Item "\fB\-port\fR <\fI\s-1IP\s0 port\fR>"
+
+.IX Item "\fBbuserver\fR or 7021 for the Backup Server"
+
+.IX Item "\fBkaserver\fR or 7004 for the Authentication Server"
+
+.IX Item "\fBptserver\fR or 7002 for the Protection Server"
+
+.IX Item "\fBvlserver\fR or 7003 for the Volume Location Server"
+
+.IX Item "\fB\-long\fR"
+
+.IX Item "\fB\-help\fR"
+
+.IX Header "OUTPUT"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "0x1"
+
+.IX Item "0x2"
+
+.IX Item "0x4"
+
+.IX Item "0x8"
+
+.IX Item "0x10"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Header "EXAMPLES"
+
+.IX Header "PRIVILEGE REQUIRED"
+
+.IX Header "SEE ALSO"
+
+.IX Header "COPYRIGHT"
+

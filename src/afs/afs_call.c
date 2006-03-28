@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_call.c,v 1.74.2.10 2005/06/21 20:13:48 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_call.c,v 1.74.2.12 2006/01/17 17:09:47 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -61,8 +61,12 @@ long afs_global_owner;
 simple_lock_data_t afs_global_lock;
 #endif
 
-#if defined(AFS_DARWIN_ENV)
+#if defined(AFS_DARWIN_ENV) 
+#ifdef AFS_DARWIN80_ENV
+lck_mtx_t  *afs_global_lock;
+#else
 struct lock__bsd__ afs_global_lock;
+#endif
 #endif
 
 #if defined(AFS_XBSD_ENV) && !defined(AFS_FBSD50_ENV)
@@ -146,6 +150,133 @@ afs_InitSetup(int preallocs)
 
     return code;
 }
+#if defined(AFS_DARWIN80_ENV)
+struct afsd_thread_info {
+    unsigned long parm;
+};
+static int
+afsd_thread(int *rock)
+{
+    struct afsd_thread_info *arg = (struct afsd_thread_info *)rock;
+    unsigned long parm = arg->parm;
+
+    switch (parm) {
+    case AFSOP_START_RXCALLBACK:
+	AFS_GLOCK();
+	wakeup(arg);
+	afs_CB_Running = 1;
+	while (afs_RX_Running != 2)
+	    afs_osi_Sleep(&afs_RX_Running);
+	afs_RXCallBackServer();
+	AFS_GUNLOCK();
+	thread_terminate(current_thread());
+	break;
+    case AFSOP_START_AFS:
+	AFS_GLOCK();
+	wakeup(arg);
+	AFS_Running = 1;
+	while (afs_initState < AFSOP_START_AFS)
+	    afs_osi_Sleep(&afs_initState);
+	afs_initState = AFSOP_START_BKG;
+	afs_osi_Wakeup(&afs_initState);
+	afs_Daemon();
+	AFS_GUNLOCK();
+	thread_terminate(current_thread());
+	break;
+    case AFSOP_START_BKG:
+	AFS_GLOCK();
+	wakeup(arg);
+	while (afs_initState < AFSOP_START_BKG)
+	    afs_osi_Sleep(&afs_initState);
+	if (afs_initState < AFSOP_GO) {
+	    afs_initState = AFSOP_GO;
+	    afs_osi_Wakeup(&afs_initState);
+	}
+	afs_BackgroundDaemon();
+	AFS_GUNLOCK();
+	thread_terminate(current_thread());
+	break;
+    case AFSOP_START_TRUNCDAEMON:
+	AFS_GLOCK();
+	wakeup(arg);
+	while (afs_initState < AFSOP_GO)
+	    afs_osi_Sleep(&afs_initState);
+	afs_CacheTruncateDaemon();
+	AFS_GUNLOCK();
+	thread_terminate(current_thread());
+	break;
+    case AFSOP_START_CS:
+	AFS_GLOCK();
+	wakeup(arg);
+	afs_CheckServerDaemon();
+	AFS_GUNLOCK();
+	thread_terminate(current_thread());
+	break;
+    case AFSOP_RXEVENT_DAEMON:
+	AFS_GLOCK();
+	wakeup(arg);
+	while (afs_initState < AFSOP_START_BKG)
+	    afs_osi_Sleep(&afs_initState);
+	afs_rxevent_daemon();
+	AFS_GUNLOCK();
+	thread_terminate(current_thread());
+	break;
+    case AFSOP_RXLISTENER_DAEMON:
+	AFS_GLOCK();
+	wakeup(arg);
+	afs_initState = AFSOP_START_AFS;
+	afs_osi_Wakeup(&afs_initState);
+	afs_RX_Running = 2;
+	afs_osi_Wakeup(&afs_RX_Running);
+	afs_osi_RxkRegister();
+	rxk_Listener();
+	AFS_GUNLOCK();
+	thread_terminate(current_thread());
+	break;
+    default:
+	printf("Unknown op %ld in StartDaemon()\n", (long)parm);
+	break;
+    }
+}
+
+void
+afs_DaemonOp(long parm, long parm2, long parm3, long parm4, long parm5,
+	     long parm6)
+{
+    int code;
+    struct afsd_thread_info info;
+    thread_t thread;
+
+    if (parm == AFSOP_START_RXCALLBACK) {
+	if (afs_CB_Running)
+	    return;
+    } else if (parm == AFSOP_RXLISTENER_DAEMON) {
+	if (afs_RX_Running)
+	    return;
+	afs_RX_Running = 1;
+	code = afs_InitSetup(parm2);
+	if (parm3) {
+	    rx_enablePeerRPCStats();
+	}
+	if (parm4) {
+	    rx_enableProcessRPCStats();
+	}
+	if (code)
+	    return;
+    } else if (parm == AFSOP_START_AFS) {
+	if (AFS_Running)
+	    return;
+    }				/* other functions don't need setup in the parent */
+    info.parm = parm;
+    kernel_thread_start((thread_continue_t)afsd_thread, &info, &thread);
+    AFS_GUNLOCK();
+    /* we need to wait cause we passed stack pointers around.... */
+    msleep(&info, NULL, PVFS, "afs_DaemonOp", NULL);
+    AFS_GLOCK();
+    thread_deallocate(thread);
+}
+#endif
+
 
 #if defined(AFS_LINUX24_ENV) && defined(COMPLETION_H_EXISTS)
 struct afsd_thread_info {
@@ -374,7 +505,10 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 #endif
     }
     AFS_GLOCK();
-#if defined(AFS_LINUX24_ENV) && defined(COMPLETION_H_EXISTS) && !defined(UKERNEL)
+#ifdef AFS_DARWIN80_ENV
+    put_vfs_context();
+#endif
+#if ((defined(AFS_LINUX24_ENV) && defined(COMPLETION_H_EXISTS)) || defined(AFS_DARWIN80_ENV)) && !defined(UKERNEL)
     if (parm < AFSOP_ADDCELL || parm == AFSOP_RXEVENT_DAEMON
 	|| parm == AFSOP_RXLISTENER_DAEMON) {
 	afs_DaemonOp(parm, parm2, parm3, parm4, parm5, parm6);
@@ -642,11 +776,17 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 	while (afs_initState < AFSOP_START_BKG)
 	    afs_osi_Sleep(&afs_initState);
 
+#ifdef AFS_DARWIN80_ENV
+    get_vfs_context();
+#endif
 	/* do it by inode */
 #ifdef AFS_SGI62_ENV
 	ainode = (ainode << 32) | (parm3 & 0xffffffff);
 #endif
 	code = afs_InitCacheFile(NULL, ainode);
+#ifdef AFS_DARWIN80_ENV
+    put_vfs_context();
+#endif
     } else if (parm == AFSOP_ROOTVOLUME) {
 	/* wait for basic init */
 	while (afs_initState < AFSOP_START_BKG)
@@ -673,6 +813,9 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 	if (!code) {
 	    tbuffer[AFS_SMALLOCSIZ - 1] = '\0';	/* null-terminate the name */
 	    /* We have the cache dir copied in.  Call the cache init routine */
+#ifdef AFS_DARWIN80_ENV
+    get_vfs_context();
+#endif
 	    if (parm == AFSOP_CACHEFILE)
 		code = afs_InitCacheFile(tbuffer, 0);
 	    else if (parm == AFSOP_CACHEINFO)
@@ -681,6 +824,9 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 		code = afs_InitVolumeInfo(tbuffer);
 	    else if (parm == AFSOP_CELLINFO)
 		code = afs_InitCellInfo(tbuffer);
+#ifdef AFS_DARWIN80_ENV
+    put_vfs_context();
+#endif
 	}
 	osi_FreeSmallSpace(tbuffer);
     } else if (parm == AFSOP_GO) {
@@ -821,10 +967,10 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 	i = rxi_Findcbi(parm2);
 	mtu = ((i == -1) ? htonl(1500) : afs_cb_interface.mtu[i]);
 #else /* AFS_USERSPACE_IP_ADDR */
-	struct ifnet *tifnp;
+	AFS_IFNET_T tifnp;
 
 	tifnp = rxi_FindIfnet(parm2, NULL);	/*  make iterative */
-	mtu = (tifnp ? tifnp->if_mtu : htonl(1500));
+	mtu = (tifnp ? ifnet_mtu(tifnp) : htonl(1500));
 #endif /* else AFS_USERSPACE_IP_ADDR */
 #endif /* !AFS_SUN5_ENV */
 	if (!code)
@@ -858,7 +1004,7 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 	    code = -1;
 	}
 #else /* AFS_USERSPACE_IP_ADDR */
-	struct ifnet *tifnp;
+	AFS_IFNET_T tifnp;
 
 	tifnp = rxi_FindIfnet(parm2, &mask);	/* make iterative */
 	if (!tifnp)
@@ -911,6 +1057,9 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 	code = EINVAL;
 
   out:
+#ifdef AFS_DARWIN80_ENV /* to balance the put in afs3_syscall() */
+    get_vfs_context();
+#endif
     AFS_GUNLOCK();
 #ifdef AFS_LINUX20_ENV
     return -code;
@@ -1229,7 +1378,7 @@ afs3_syscall(p, args, retval)
      struct proc *p;
 #endif
      void *args;
-     int *retval;
+     long *retval;
 {
     register struct a {
 	long syscall;
@@ -1351,7 +1500,10 @@ Afs_syscall()
 	uap->parm6 = 0;
     }
 #endif
-
+#if defined(AFS_DARWIN80_ENV)
+    get_vfs_context();
+    osi_Assert(*retval == 0);
+#endif
 #if defined(AFS_HPUX_ENV)
     /*
      * There used to be code here (duplicated from osi_Init()) for
@@ -1398,6 +1550,10 @@ Afs_syscall()
 	code =
 	    afs_syscall_pioctl(uap->parm1, uap->parm2, uap->parm3, uap->parm4,
 			       p->td_ucred);
+#elif defined(AFS_DARWIN80_ENV)
+	code =
+	    afs_syscall_pioctl(uap->parm1, uap->parm2, uap->parm3, uap->parm4,
+			       kauth_cred_get());
 #elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 	code =
 	    afs_syscall_pioctl(uap->parm1, uap->parm2, uap->parm3, uap->parm4,
@@ -1486,6 +1642,9 @@ Afs_syscall()
 #endif
     }
 
+#if defined(AFS_DARWIN80_ENV)
+    put_vfs_context();
+#endif
 #ifdef AFS_LINUX20_ENV
     code = -code;
     unlock_kernel();

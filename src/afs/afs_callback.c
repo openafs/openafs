@@ -17,7 +17,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_callback.c,v 1.27.2.2 2005/05/30 04:05:40 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_callback.c,v 1.27.2.6 2006/03/02 06:44:05 shadow Exp $");
 
 #include "afs/sysincludes.h"	/*Standard vendor system headers */
 #include "afsincludes.h"	/*AFS-based standard headers */
@@ -59,7 +59,9 @@ static struct ltable {
     "afs_xosi", (char *)&afs_xosi},
 #endif
     {
-    "afs_xsrvAddr", (char *)&afs_xsrvAddr}
+      "afs_xsrvAddr", (char *)&afs_xsrvAddr},
+    {
+    "afs_xvreclaim", (char *)&afs_xvreclaim}
 };
 unsigned long lastCallBack_vnode;
 unsigned int lastCallBack_dv;
@@ -151,7 +153,15 @@ SRXAFSCB_GetCE(struct rx_call *a_call, afs_int32 a_index,
     a_result->DataVersion = hgetlo(tvc->m.DataVersion);
     a_result->callback = afs_data_pointer_to_int32(tvc->callback);	/* XXXX Now a pointer; change it XXXX */
     a_result->cbExpires = tvc->cbExpires;
+    if (tvc->states & CVInit) {
+        a_result->refCount = 1;
+    } else {
+#ifdef AFS_DARWIN80_ENV
+    a_result->refCount = vnode_isinuse(AFSTOV(tvc),0)?1:0; /* XXX fix */
+#else
     a_result->refCount = VREFCOUNT(tvc);
+#endif
+    }
     a_result->opens = tvc->opens;
     a_result->writers = tvc->execsOrWriters;
     a_result->mvstat = tvc->mvstat;
@@ -230,7 +240,15 @@ SRXAFSCB_GetCE64(struct rx_call *a_call, afs_int32 a_index,
     a_result->DataVersion = hgetlo(tvc->m.DataVersion);
     a_result->callback = afs_data_pointer_to_int32(tvc->callback);	/* XXXX Now a pointer; change it XXXX */
     a_result->cbExpires = tvc->cbExpires;
+    if (tvc->states & CVInit) {
+        a_result->refCount = 1;
+    } else {
+#ifdef AFS_DARWIN80_ENV
+    a_result->refCount = vnode_isinuse(AFSTOV(tvc),0)?1:0; /* XXX fix */
+#else
     a_result->refCount = VREFCOUNT(tvc);
+#endif
+    }
     a_result->opens = tvc->opens;
     a_result->writers = tvc->execsOrWriters;
     a_result->mvstat = tvc->mvstat;
@@ -366,6 +384,9 @@ ClearCallBack(register struct rx_connection *a_conn,
     register int i;
     struct VenusFid localFid;
     struct volume *tv;
+#ifdef AFS_DARWIN80_ENV
+    vnode_t vp;
+#endif
 
     AFS_STATCNT(ClearCallBack);
 
@@ -384,17 +405,56 @@ ClearCallBack(register struct rx_connection *a_conn,
      */
     if (a_fid->Volume != 0) {
 	if (a_fid->Vnode == 0) {
+		struct afs_q *tq, *uq;
 	    /*
 	     * Clear callback for the whole volume.  Zip through the
 	     * hash chain, nullifying entries whose volume ID matches.
 	     */
+loop1:
+		ObtainReadLock(&afs_xvcache);
 		i = VCHashV(&localFid);
-		for (tvc = afs_vhashTV[i]; tvc; tvc = tvc->vhnext) {
+		for (tq = afs_vhashTV[i].prev; tq != &afs_vhashTV[i]; tq = uq) {
+		    uq = QPrev(tq);
+		    tvc = QTOVH(tq);      
 		    if (tvc->fid.Fid.Volume == a_fid->Volume) {
 			tvc->callback = NULL;
 			if (!localFid.Cell)
 			    localFid.Cell = tvc->fid.Cell;
 			tvc->dchint = NULL;	/* invalidate hints */
+			if (tvc->states & CVInit) {
+			    ReleaseReadLock(&afs_xvcache);
+			    afs_osi_Sleep(&tvc->states);
+			    goto loop1;
+			}
+#ifdef AFS_DARWIN80_ENV
+			if (tvc->states & CDeadVnode) {
+			    ReleaseReadLock(&afs_xvcache);
+			    afs_osi_Sleep(&tvc->states);
+			    goto loop1;
+			}
+#endif
+#if     defined(AFS_SGI_ENV) || defined(AFS_OSF_ENV)  || defined(AFS_SUN5_ENV)  || defined(AFS_HPUX_ENV) || defined(AFS_LINUX20_ENV)
+			VN_HOLD(AFSTOV(tvc));
+#else
+#ifdef AFS_DARWIN80_ENV
+			vp = AFSTOV(tvc);
+			if (vnode_get(vp))
+			    continue;
+			if (vnode_ref(vp)) {
+			    AFS_GUNLOCK();
+			    vnode_put(vp);
+			    AFS_GLOCK();
+			    continue;
+			}
+#else
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+			osi_vnhold(tvc, 0);
+#else
+			VREFCOUNT_INC(tvc); /* AIX, apparently */
+#endif
+#endif
+#endif
+			ReleaseReadLock(&afs_xvcache);
 			ObtainWriteLock(&afs_xcbhash, 449);
 			afs_DequeueCallback(tvc);
 			tvc->states &= ~(CStatd | CUnique | CBulkFetching);
@@ -404,12 +464,18 @@ ClearCallBack(register struct rx_connection *a_conn,
 			else
 			    afs_evenCBs++;
 			ReleaseWriteLock(&afs_xcbhash);
-			if (tvc->fid.Fid.Vnode & 1 || (vType(tvc) == VDIR))
+			if ((tvc->fid.Fid.Vnode & 1 || (vType(tvc) == VDIR)))
 			    osi_dnlc_purgedp(tvc);
 			afs_Trace3(afs_iclSetp, CM_TRACE_CALLBACK,
 				   ICL_TYPE_POINTER, tvc, ICL_TYPE_INT32,
 				   tvc->states, ICL_TYPE_INT32,
 				   a_fid->Volume);
+#ifdef AFS_DARWIN80_ENV
+			vnode_put(AFSTOV(tvc));
+#endif
+			ObtainReadLock(&afs_xvcache);
+			uq = QPrev(tq);
+			AFS_FAST_RELE(tvc);
 		    } else if ((tvc->states & CMValid)
 			       && (tvc->mvid->Fid.Volume == a_fid->Volume)) {
 			tvc->states &= ~CMValid;
@@ -417,6 +483,7 @@ ClearCallBack(register struct rx_connection *a_conn,
 			    localFid.Cell = tvc->mvid->Cell;
 		    }
 		}
+		ReleaseReadLock(&afs_xvcache);
 
 	    /*
 	     * XXXX Don't hold any locks here XXXX
@@ -432,23 +499,61 @@ ClearCallBack(register struct rx_connection *a_conn,
 	    /*
 	     * Clear callbacks just for the one file.
 	     */
+	    struct vcache *uvc;
 	    afs_allCBs++;
 	    if (a_fid->Vnode & 1)
 		afs_oddCBs++;	/*Could do this on volume basis, too */
 	    else
 		afs_evenCBs++;	/*A particular fid was specified */
+loop2:
+	    ObtainReadLock(&afs_xvcache);
 	    i = VCHash(&localFid);
-	    for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
+	    for (tvc = afs_vhashT[i]; tvc; tvc = uvc) {
+		uvc = tvc->hnext;
 		if (tvc->fid.Fid.Vnode == a_fid->Vnode
 		    && tvc->fid.Fid.Volume == a_fid->Volume
 		    && tvc->fid.Fid.Unique == a_fid->Unique) {
 		    tvc->callback = NULL;
 		    tvc->dchint = NULL;	/* invalidate hints */
+		    if (tvc->states & CVInit) {
+			ReleaseReadLock(&afs_xvcache);
+			afs_osi_Sleep(&tvc->states);
+			goto loop2;
+		    }
+#ifdef AFS_DARWIN80_ENV
+		    if (tvc->states & CDeadVnode) {
+			ReleaseReadLock(&afs_xvcache);
+			afs_osi_Sleep(&tvc->states);
+			goto loop2;
+		    }
+#endif
+#if     defined(AFS_SGI_ENV) || defined(AFS_OSF_ENV)  || defined(AFS_SUN5_ENV)  || defined(AFS_HPUX_ENV) || defined(AFS_LINUX20_ENV)
+		    VN_HOLD(AFSTOV(tvc));
+#else
+#ifdef AFS_DARWIN80_ENV
+		    vp = AFSTOV(tvc);
+		    if (vnode_get(vp))
+			continue;
+		    if (vnode_ref(vp)) {
+			AFS_GUNLOCK();
+			vnode_put(vp);
+			AFS_GLOCK();
+			continue;
+		    }
+#else
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+		    osi_vnhold(tvc, 0);
+#else
+		    VREFCOUNT_INC(tvc); /* AIX, apparently */
+#endif
+#endif
+#endif
+		    ReleaseReadLock(&afs_xvcache);
 		    ObtainWriteLock(&afs_xcbhash, 450);
 		    afs_DequeueCallback(tvc);
 		    tvc->states &= ~(CStatd | CUnique | CBulkFetching);
 		    ReleaseWriteLock(&afs_xcbhash);
-		    if (a_fid->Vnode & 1 || (vType(tvc) == VDIR))
+		    if ((tvc->fid.Fid.Vnode & 1 || (vType(tvc) == VDIR)))
 			osi_dnlc_purgedp(tvc);
 		    afs_Trace3(afs_iclSetp, CM_TRACE_CALLBACK,
 			       ICL_TYPE_POINTER, tvc, ICL_TYPE_INT32,
@@ -458,8 +563,15 @@ ClearCallBack(register struct rx_connection *a_conn,
 		    lastCallBack_dv = tvc->mstat.DataVersion.low;
 		    osi_GetuTime(&lastCallBack_time);
 #endif /* CBDEBUG */
+#ifdef AFS_DARWIN80_ENV
+		    vnode_put(AFSTOV(tvc));
+#endif
+		    ObtainReadLock(&afs_xvcache);
+		    uvc = tvc->hnext;
+		    AFS_FAST_RELE(tvc);
 		}
 	    }			/*Walk through hash table */
+	    ReleaseReadLock(&afs_xvcache);
 	}			/*Clear callbacks for one file */
     }
 

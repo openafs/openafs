@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/volser/volmain.c,v 1.18.2.2 2005/07/11 19:08:51 shadow Exp $");
+    ("$Header: /cvs/openafs/src/volser/volmain.c,v 1.18.2.4 2006/02/22 04:09:32 jaltman Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -242,6 +242,7 @@ main(int argc, char **argv)
     char commandLine[150];
     int i;
     int rxJumbograms = 1;	/* default is to send and receive jumbograms. */
+    int rxMaxMTU = -1;
     int bufSize = 0;		/* temp variable to read in udp socket buf size */
 
 #ifdef	AFS_AIX32_ENV
@@ -259,6 +260,7 @@ main(int argc, char **argv)
     sigaction(SIGABRT, &nsa, NULL);
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
+    osi_audit_init();
     osi_audit(VS_StartEvent, 0, AUD_END);
 
     /* Initialize dirpaths */
@@ -325,6 +327,19 @@ main(int argc, char **argv)
 		printf("Warning: auditlog %s not writable, ignored.\n", fileName);
 	} else if (strcmp(argv[code], "-nojumbo") == 0) {
 	    rxJumbograms = 0;
+	} else if (!strcmp(argv[code], "-rxmaxmtu")) {
+	    if ((code + 1) >= argc) {
+		fprintf(stderr, "missing argument for -rxmaxmtu\n"); 
+		exit(1); 
+	    }
+	    rxMaxMTU = atoi(argv[++code]);
+	    if ((rxMaxMTU < RX_MIN_PACKET_SIZE) || 
+		(rxMaxMTU > RX_MAX_PACKET_DATA_SIZE)) {
+		printf("rxMaxMTU %d% invalid; must be between %d-%d\n",
+		       rxMaxMTU, RX_MIN_PACKET_SIZE, 
+		       RX_MAX_PACKET_DATA_SIZE);
+		exit(1);
+	    }
 	} else if (strcmp(argv[code], "-sleep") == 0) {
 	    sscanf(argv[++code], "%d/%d", &TTsleep, &TTrun);
 	    if ((TTsleep < 0) || (TTrun <= 0)) {
@@ -364,6 +379,7 @@ main(int argc, char **argv)
 #ifndef AFS_NT40_ENV
 	    printf("Usage: volserver [-log] [-p <number of processes>] "
 		   "[-auditlog <log path>] "
+		   "[-nojumbo] [-rxmaxmtu <bytes>] "
 		   "[-udpsize <size of socket buffer in bytes>] "
 		   "[-syslog[=FACILITY]] "
 		   "[-enable_peer_stats] [-enable_process_stats] "
@@ -371,6 +387,7 @@ main(int argc, char **argv)
 #else
 	    printf("Usage: volserver [-log] [-p <number of processes>] "
 		   "[-auditlog <log path>] "
+		   "[-nojumbo] [-rxmaxmtu <bytes>] "
 		   "[-udpsize <size of socket buffer in bytes>] "
 		   "[-enable_peer_stats] [-enable_process_stats] "
 		   "[-help]\n");
@@ -418,6 +435,9 @@ main(int argc, char **argv)
     if (!rxJumbograms) {
 	/* Don't allow 3.4 vos clients to send jumbograms and we don't send. */
 	rx_SetNoJumbo();
+    }
+    if (rxMaxMTU != -1) {
+	rx_SetMaxMTU(rxMaxMTU);
     }
     rx_GetIFInfo();
     rx_SetRxDeadTime(420);

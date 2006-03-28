@@ -1,0 +1,119 @@
+=head1 NAME
+
+fs newcell - Changes the kernel-resident list of a cell's database servers
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<fs newcell> S<<< B<-name> <I<cell name>> >>> -servers <I<primary servers>>+
+    S<<< [B<-linkedcell> <I<linked cell name>>] >>> [B<-help>]
+
+B<fs n> S<<< B<-n> <I<cell name>> >>> S<<< B<-s> <I<primary servers>>+ >>>
+    S<<< [B<-l> <I<linked cell name>>] >>> [B<-h>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<fs newcell> command removes the Cache Manager's kernel-resident list
+of database server machines for the cell specified by the B<-name>
+argument and replaces it with the database server machines named by the
+B<-servers> argument.
+
+Each time the machine reboots, the Cache Manager constructs the kernel
+list of cells and database server machines by reading the local
+F</usr/vice/etc/CellServDB> file. This command does not change the
+F<CellServDB> file, so any changes made with it persist only until the
+next reboot, unless the issuer also edits the file. The output of the B<fs
+listcells> command reflects changes made with this command, because that
+command consults the kernel-resident list rather than the F<CellServDB>
+file.
+
+This command can introduce a completely new cell into the kernel-resident
+list, but cannot make a cell inaccessible (it is not possible to remove a
+cell's entry from the kernel-resident list by providing no values for the
+B<-server> argument). To make a cell inaccessible, remove its entry from
+the F<CellServDB> file and reboot the machine.
+
+If the B<-name> argument names a DCE cell, then the B<-servers> argument
+names DFS Fileset Location (FL) Server machines. The B<-linkedcell>
+argument specifies the name of the AFS cell to link to a DCE cell for the
+purpose of DFS fileset location.  Refer to the I<IBM AFS/DFS Migration
+Toolkit Administration Guide and Reference> for more information on
+linking AFS clients to DCE cells using this command or by editing the
+F</usr/vice/etc/CellServDB> file.
+
+=head1 CAUTIONS
+
+Some commands, such as the B<klog> command, work correctly only when the
+information is accurate for a cell in both the F<CellServDB> file and the
+kernel-resident list.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-name> <I<cell name>>
+
+Specifies the fully-qualified cell name of the AFS or DCE cell.
+
+=item B<-servers> <I<primary servers>>+
+
+Specifies the fully-qualified hostnames of all AFS database server
+machines or DFS Fileset Location (FL) Server machines for the cell named
+by the B<-name> argument. If FL Server machines are specified, the local
+machine must be running the AFS/DFS Migration Toolkit Protocol Translator.
+
+=item B<-linkedcell> <I<linked cell name>>
+
+Specifies the name of the AFS cell to link to a DCE cell for the purpose
+of DFS fileset location.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 EXAMPLES
+
+The following example changes the machine's kernel-resident list of
+database server machines for the ABC Corporation cell to include the
+machines C<db1.abc.com> and C<db2.abc.com>:
+
+   % fs newcell -name abc.com -servers db1.abc.com db2.abc.com
+
+The following example links the DCE cell C<dce.abc.com> to the AFS cell
+C<abc.com>. The AFS client contacts the Fileset Location (FL) servers
+C<db1.dce.abc.com> and C<db2.dce.abc.com> for fileset location information
+as it interprets a DFS pathname.
+
+   % fs newcell -name dce.abc.com \
+       -servers db1.dce.abc.com db2.dce.abc.com \
+       -linkedcell abc.com
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be logged in as the local superuser root.
+
+=head1 SEE ALSO
+
+L<CellServDB(5)>,
+L<fs_listcells(1)>
+
+I<IBM AFS/DFS Migration Toolkit Administration Guide and Reference>
+
+I<IBM AFS/DFS Migration Toolkit Administration Installation and
+Configuration Guide>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

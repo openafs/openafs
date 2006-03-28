@@ -1,0 +1,95 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 4//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3672/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 3 Oct 2000 at 16:18:30                -->
+<META HTTP-EQUIV="updated" CONTENT="Tue, 03 Oct 2000 16:18:29">
+<META HTTP-EQUIV="review" CONTENT="Wed, 03 Oct 2001 16:18:29">
+<META HTTP-EQUIV="expires" CONTENT="Thu, 03 Oct 2002 16:18:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf107.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf109.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRBOS_LISTUSERS" HREF="auarf002.htm#ToC_122">bos listusers</A></H2>
+<A NAME="IDX4570"></A>
+<A NAME="IDX4571"></A>
+<A NAME="IDX4572"></A>
+<A NAME="IDX4573"></A>
+<A NAME="IDX4574"></A>
+<P><STRONG>Purpose</STRONG>
+<P>Lists the privileged users from the <B>/usr/afs/etc/UserList</B> file
+<P><STRONG>Synopsis</STRONG>
+<PRE><B>bos listusers -server</B> &lt;<VAR>machine&nbsp;name</VAR>>  [<B>-cell</B> &lt;<VAR>cell&nbsp;name</VAR>>]  
+              [<B>-noauth</B>]   [<B>-localauth</B>]   [<B>-help</B>]
+   
+<B>bos listu -s</B> &lt;<VAR>machine&nbsp;name</VAR>>  [<B>-c</B> &lt;<VAR>cell&nbsp;name</VAR>>]  [<B>-n</B>]  [<B>-l</B>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>Description</STRONG>
+<P>The <B>bos listusers</B> command lists the user names from the
+<B>/usr/afs/etc/UserList</B> file on the file server machine named by the
+<B>-server</B> argument. The users are authorized to issue
+privileged <B>bos</B> and <B>vos</B> commands.
+<P>To edit the list of users, use the <B>bos adduser</B> and <B>bos
+removeuser</B> commands.
+<P><STRONG>Options</STRONG>
+<DL>
+<P><DT><B><B>-server</B>
+</B><DD>Indicates the server machine from which to display the <B>UserList</B>
+file. Identify the machine by IP address or its host name (either
+fully-qualified or abbreviated unambiguously). For details, see the
+introductory reference page for the <B>bos</B> command suite. 
+<P>For consistent performance in the cell, the output must be the same on
+every server machine. The <B>bos adduser</B> reference page
+explains how to keep the machines synchronized.
+<P><DT><B><B>-cell</B>
+</B><DD>Names the cell in which to run the command. Do not combine this
+argument with the <B>-localauth</B> flag. For more details, see the
+introductory <B>bos</B> reference page.
+<P><DT><B><B>-noauth</B>
+</B><DD>Assigns the unprivileged identity <B>anonymous</B> to the
+issuer. Do not combine this flag with the <B>-localauth</B>
+flag. For more details, see the introductory <B>bos</B> reference
+page.
+<P><DT><B><B>-localauth</B>
+</B><DD>Constructs a server ticket using a key from the local
+<B>/usr/afs/etc/KeyFile</B> file. The <B>bos</B> command
+interpreter presents the ticket to the BOS Server during mutual
+authentication. Do not combine this flag with the <B>-cell</B> or
+<B>-noauth</B> options. For more details, see the introductory
+<B>bos</B> reference page.
+<P><DT><B>-help
+</B><DD>Prints the online help for this command. All other valid options
+are ignored.
+</DL>
+<P><STRONG>Output</STRONG>
+<P>The output lists the user name of each user entitled to issue privileged
+<B>bos</B> and <B>vos</B> commands.
+<P><STRONG>Examples</STRONG>
+<P>The following example lists the users from <B>UserList</B> file on the
+machine <B>fs4.abc.com</B>. 
+<PRE>   % <B>bos listusers fs4.abc.com</B>
+   SUsers are: pat smith jones terry
+    
+</PRE>
+<P><STRONG>Privilege Required</STRONG>
+<P>None
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf023.htm#HDRKEYFILE">KeyFile</A>
+<P><A HREF="auarf035.htm#HDRUSERLIST">UserList</A>
+<P><A HREF="auarf093.htm#HDRBOS_INTRO">bos</A>
+<P><A HREF="auarf096.htm#HDRBOS_ADDUSER">bos adduser</A>
+<P><A HREF="auarf112.htm#HDRBOS_REMOVEUSER">bos removeuser</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf107.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf109.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

@@ -1,0 +1,231 @@
+=head1 NAME
+
+fs checkservers - Displays the status of server machines
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<fs checkservers> S<<< [B<-cell> <I<cell to check>>] >>> [B<-all>] [B<-fast>]
+    S<<< [B<-interval> <I<seconds between probes>>] >>> [B<-help>]
+
+B<fs checks> S<<< [B<-c> <I<cell to check>>] >>> [B<-a>] [B<-f>]
+    S<<< [B<-i> <I<seconds between probes>>] >>> [B<-h>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<fs checkservers> command reports whether certain AFS server machines
+are accessible from the local client machine. The machines belong to one
+of two classes, and the Cache Manager maintains a list of them in kernel
+memory:
+
+=over 4
+
+=item *
+
+The database server machines in every cell listed in the local
+F</usr/vice/etc/CellServDB file>, plus any machines added to the memory
+list by the B<fs newcell> command since the last reboot.
+
+=item *
+
+All file server machines the Cache Manager has recently contacted, and
+which it probably needs to contact again soon. In most cases, the Cache
+Manager holds a callback on a file or volume fetched from the machine.
+
+=back
+
+If the Cache Manager is unable to contact the vlserver process on a
+database server machine or the B<fileserver> process on a file server
+machine, it marks the machine as inaccessible. (Actually, if a file server
+machine is multihomed, the Cache Manager attempts to contact all of the
+machine's interfaces, and only marks the machine as down if the
+B<fileserver> fails to reply via any of them.) The Cache Manager then
+periodically (by default, every three minutes) sends a probe to each
+marked machine, to see if it is still inaccessible. If a previously
+inaccessible machine responds, the Cache Manager marks it as accessible
+and no longer sends the periodic probes to it.
+
+The B<fs checkservers> command updates the list of inaccessible machines
+by having the Cache Manager probe a specified set of them:
+
+=over 4
+
+=item *
+
+By default, only machines that are marked inaccessible and belong to the
+local cell (the cell listed in the local F</usr/vice/etc/ThisCell>
+file).
+
+=item *
+
+If the B<-cell> argument is included, only machines that are marked
+inaccessible and belong to the specified cell.
+
+=item *
+
+If the B<-all> flag is included, all machines marked inaccessible.
+
+=back
+
+If the B<-fast> flag is included, the Cache Manager does not probe any
+machines, but instead reports the results of the most recent previous
+probe.
+
+To set the interval between probes rather than produce a list of
+inaccessible machines, use the B<-interval> argument. The non-default
+setting persists until the machine reboots; to preserve it across reboots,
+put the appropriate B<fs checkservers> command in the machine's AFS
+initialization files.
+
+=head1 CAUTIONS
+
+The command can take quite a while to complete, if a number of machines do
+not respond to the Cache Manager's probe. The Cache Manager probes
+machines sequentially and waits a standard timeout period before marking
+the machine as unresponsive, to allow for slow network communication. To
+make the command shell prompt return quickly, put the command in the
+background. It is harmless to interrupt the command by typing Ctrl-C or
+another interrupt signal.
+
+Note that the Cache Manager probes only server machines marked
+inaccessible in its memory list. A server machine's absence from the
+output does not necessarily mean that it is functioning, because it
+possibly is not included in the memory list at all (if, for example, the
+Cache Manager has not contacted it recently). For the same reason, the
+output is likely to vary on different client machines.
+
+Unlike most B<fs> commands, the fs checkservers command does not refer to
+the AFSCELL environment variable.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-cell> <I<cell to check>>
+
+Names each cell in which to probe server machines marked as
+inaccessible. Provide the fully qualified domain name, or a shortened form
+that disambiguates it from the other cells listed in the local
+F</usr/vice/etc/CellServDB> file. Combine this argument with the B<-fast>
+flag if desired, but not with the B<-all> flag. Omit both this argument
+and the B<-all> flag to probe machines in the local cell only.
+
+=item B<-all>
+
+Probes all machines in the Cache Manager's memory list that are marked
+inaccessible. Combine this argument with the B<-fast> flag if desired, but
+not with the B<-cell> argument. Omit both this flag and the B<-cell>
+argument to probe machines in the local cell only.
+
+=item B<-fast>
+
+Displays the Cache Manager's current list of machines that are
+inaccessible, rather than sending new probes. The output can as old as the
+current setting of the probe interval (by default three minutes, and
+maximum ten minutes).
+
+=item B<-interval> <I<seconds between probes>>
+
+Sets or reports the number of seconds between the Cache Manager's probes
+to machines in the memory list that are marked inaccessible:
+
+=over 4
+
+=item *
+
+To set the interval, specify a value from the range between 1 and C<600>
+(10 minutes); the default is C<180> (three minutes). The issuer must be
+logged in as the local superuser C<root>. The altered setting persists
+until again changed with this command, or until the machine reboots, at
+which time the setting returns to the default.
+
+=item *
+
+Provide a value of C<0> (zero) to display the current interval setting. No
+privilege is required. Do not combine this argument with any other.
+
+=back
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 OUTPUT
+
+If there are no machines marked as inaccessible, or if all of them now
+respond to the Cache Manager's probe, the output is:
+
+   All servers are running.
+
+Note that this message does not mean that all server machines in each
+relevant cell are running. The output indicates the status of only those
+machines that the Cache Manager probes.
+
+If a machine fails to respond to the probe within the timeout period, the
+output begins with the string
+
+   These servers unavailable due to network or server problems:
+
+and lists the hostname of each machine on its own line. The Cache Manager
+stores machine records by Internet address, so the format of each hostname
+(uppercase or lowercase letters, or an Internet address in dotted decimal
+format) depends on how the local cell's name service translates it at the
+time the command is issued. If a server machine is multihomed, the output
+lists only one of its interfaces (usually, the currently most preferred
+one).
+
+If the B<-interval> argument is provided with a value between C<1> and
+C<600>, there is no output. If the value is C<0>, the output reports the
+probe interval as follows:
+
+   The current down server probe interval is <interval> secs
+
+=head1 EXAMPLES
+
+The following command displays the Cache Manager's current list of
+unresponsive machines in the local cell, rather than probing them
+again. The output indicates that if there were any machines marked
+inaccessible, they all responded to the previous probe.
+
+   % fs checkservers -fast
+   All servers are running.
+
+The following example probes machines in the Cache Manager's memory list
+that belong to the C<stateu.edu> cell:
+
+   % fs checkservers -cell stateu.edu
+   All servers are running.
+
+The following example probes all server machines in the Cache Manager's
+memory list. It reports that two machines did not respond to the probe.
+
+   % fs checkservers -all
+   These servers unavailable due to network or server problems:
+   fs1.abc.com SV3.STATE.EDU.
+
+=head1 PRIVILEGE REQUIRED
+
+To set the probe interval, the issuer must be logged in as the local
+superuser C<root>. Otherwise, no privilege is required.
+
+=head1 SEE ALSO
+
+L<CellServDB(5)>,
+L<ThisCell(5)>,
+L<fs_newcell(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

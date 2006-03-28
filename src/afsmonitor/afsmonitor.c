@@ -19,7 +19,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/afsmonitor/afsmonitor.c,v 1.18.2.1 2005/04/03 18:15:42 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afsmonitor/afsmonitor.c,v 1.18.2.3 2006/03/09 06:41:34 shadow Exp $");
 
 #include <stdio.h>
 #include <math.h>
@@ -272,7 +272,7 @@ extern char *cm_categories[];	/* cache manager data category names */
 
 
 
-#if !defined(AFS_FBSD_ENV) && !defined(AFS_DARWIN70_ENV) && !defined(AFS_NBSD20_ENV)
+#ifndef HAVE_STRCASESTR
 /*	
         strcasestr(): Return first occurence of pattern s2 in s1, case 
 	insensitive. 
@@ -3680,7 +3680,11 @@ afsmon_execute()
 	    }
 	    strncpy(curr_FS->hostName, he->h_name, HOST_NAME_LEN);	/* complete name */
 	    memcpy(&(curr_skt->sin_addr.s_addr), he->h_addr, 4);
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+	    curr_skt->sin_family = AF_INET;		/*Internet family */
+#else
 	    curr_skt->sin_family = htons(AF_INET);	/*Internet family */
+#endif
 	    curr_skt->sin_port = htons(7000);	/*FileServer port */
 #ifdef STRUCT_SOCKADDR_HAS_SA_LEN
 	    curr_skt->sin_len = sizeof(struct sockaddr_in);
@@ -3759,7 +3763,11 @@ afsmon_execute()
 	    }
 	    strncpy(curr_CM->hostName, he->h_name, HOST_NAME_LEN);	/* complete name */
 	    memcpy(&(curr_skt->sin_addr.s_addr), he->h_addr, 4);
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+	    curr_skt->sin_family = AF_INET;		/*Internet family */
+#else
 	    curr_skt->sin_family = htons(AF_INET);	/*Internet family */
+#endif
 	    curr_skt->sin_port = htons(7001);	/*Cache Manager port */
 #ifdef STRUCT_SOCKADDR_HAS_SA_LEN
 	    curr_skt->sin_len = sizeof(struct sockaddr_in);

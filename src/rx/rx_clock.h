@@ -14,7 +14,7 @@
 #define _CLOCK_
 
 #ifdef	KERNEL
-#if defined(AFS_AIX_ENV) || defined(AFS_AUX_ENV)
+#if defined(AFS_AIX_ENV) || defined(AFS_AUX_ENV) || defined(AFS_SUN5_ENV)
 #include "h/systm.h"
 #include "h/time.h"
 #endif /* System V */
@@ -99,7 +99,7 @@ extern int clock_nUpdates;
        (cv)->usec = (afs_int32)tv.tv_usec;             \
     END
 #else /* defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL) */
-#define clock_GetTime(cv) osi_GetTime((struct timeval *)cv)
+#define clock_GetTime(cv) osi_GetTime((osi_timeval_t *)(cv))
 #endif /* defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL) */
 #endif
 #define clock_Sec() osi_Time()

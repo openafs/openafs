@@ -12,7 +12,7 @@ INCDIRS= -I./ -I${DESTDIR}/include
 LDIRS= -L${DESTDIR}/lib -L${DESTDIR}/lib/afs -L${DESTDIR}/lib/rx
 LIBS= -lauth -lsys -lrx -llwp -lafsutil ${XLIBS}
 
-CFLAGS = ${OPTIMIZE} ${INCDIRS} ${LDIRS} ${XCFLAGS}
+CFLAGS = ${OPTIMIZE} ${INCDIRS} ${LDIRS} ${XCFLAGS} ${ARCHFLAGS}
 
 tests all: testcellconf ktctest
 

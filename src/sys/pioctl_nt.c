@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/sys/pioctl_nt.c,v 1.18.2.11 2005/09/02 17:28:36 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/sys/pioctl_nt.c,v 1.18.2.12 2005/10/15 21:48:28 jaltman Exp $");
 
 #include <afs/stds.h>
 #include <windows.h>
@@ -91,7 +91,10 @@ CMtoUNIXerror(int cm_code)
     case CM_ERROR_TOOMANYBUFS:
 	return EFBIG;		/* hack */
     default:
-	return ENOTTY;
+	if (cm_code > 0 && cm_code < EILSEQ)
+	    return cm_code;
+	else
+	    return ENOTTY;
     }
 }
 

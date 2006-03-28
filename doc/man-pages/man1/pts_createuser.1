@@ -1,0 +1,371 @@
+.rn '' }`
+''' $RCSfile$$Revision$$Date$
+'''
+''' $Log$
+'''
+.de Sh
+.br
+.if t .Sp
+.ne 5
+.PP
+\fB\\$1\fR
+.PP
+..
+.de Sp
+.if t .sp .5v
+.if n .sp
+..
+.de Ip
+.br
+.ie \\n(.$>=3 .ne \\$3
+.el .ne 3
+.IP "\\$1" \\$2
+..
+.de Vb
+.ft CW
+.nf
+.ne \\$1
+..
+.de Ve
+.ft R
+
+.fi
+..
+'''
+'''
+'''     Set up \*(-- to give an unbreakable dash;
+'''     string Tr holds user defined translation string.
+'''     Bell System Logo is used as a dummy character.
+'''
+.tr \(*W-|\(bv\*(Tr
+.ie n \{\
+.ds -- \(*W-
+.ds PI pi
+.if (\n(.H=4u)&(1m=24u) .ds -- \(*W\h'-12u'\(*W\h'-12u'-\" diablo 10 pitch
+.if (\n(.H=4u)&(1m=20u) .ds -- \(*W\h'-12u'\(*W\h'-8u'-\" diablo 12 pitch
+.ds L" ""
+.ds R" ""
+'''   \*(M", \*(S", \*(N" and \*(T" are the equivalent of
+'''   \*(L" and \*(R", except that they are used on ".xx" lines,
+'''   such as .IP and .SH, which do another additional levels of
+'''   double-quote interpretation
+.ds M" """
+.ds S" """
+.ds N" """""
+.ds T" """""
+.ds L' '
+.ds R' '
+.ds M' '
+.ds S' '
+.ds N' '
+.ds T' '
+'br\}
+.el\{\
+.ds -- \(em\|
+.tr \*(Tr
+.ds L" ``
+.ds R" ''
+.ds M" ``
+.ds S" ''
+.ds N" ``
+.ds T" ''
+.ds L' `
+.ds R' '
+.ds M' `
+.ds S' '
+.ds N' `
+.ds T' '
+.ds PI \(*p
+'br\}
+.\"	If the F register is turned on, we'll generate
+.\"	index entries out stderr for the following things:
+.\"		TH	Title 
+.\"		SH	Header
+.\"		Sh	Subsection 
+.\"		Ip	Item
+.\"		X<>	Xref  (embedded
+.\"	Of course, you have to process the output yourself
+.\"	in some meaninful fashion.
+.if \nF \{
+.de IX
+.tm Index:\\$1\t\\n%\t"\\$2"
+..
+.nr % 0
+.rr F
+.\}
+.TH PTS_CREATEUSER 1 "OpenAFS" "1/Mar/2006" "AFS Command Reference"
+.UC
+.if n .hy 0
+.if n .na
+.ds C+ C\v'-.1v'\h'-1p'\s-2+\h'-1p'+\s0\v'.1v'\h'-1p'
+.de CQ          \" put $1 in typewriter font
+.ft CW
+'if n "\c
+'if t \\&\\$1\c
+'if n \\&\\$1\c
+'if n \&"
+\\&\\$2 \\$3 \\$4 \\$5 \\$6 \\$7
+'.ft R
+..
+.\" @(#)ms.acc 1.5 88/02/08 SMI; from UCB 4.2
+.	\" AM - accent mark definitions
+.bd B 3
+.	\" fudge factors for nroff and troff
+.if n \{\
+.	ds #H 0
+.	ds #V .8m
+.	ds #F .3m
+.	ds #[ \f1
+.	ds #] \fP
+.\}
+.if t \{\
+.	ds #H ((1u-(\\\\n(.fu%2u))*.13m)
+.	ds #V .6m
+.	ds #F 0
+.	ds #[ \&
+.	ds #] \&
+.\}
+.	\" simple accents for nroff and troff
+.if n \{\
+.	ds ' \&
+.	ds ` \&
+.	ds ^ \&
+.	ds , \&
+.	ds ~ ~
+.	ds ? ?
+.	ds ! !
+.	ds /
+.	ds q
+.\}
+.if t \{\
+.	ds ' \\k:\h'-(\\n(.wu*8/10-\*(#H)'\'\h"|\\n:u"
+.	ds ` \\k:\h'-(\\n(.wu*8/10-\*(#H)'\`\h'|\\n:u'
+.	ds ^ \\k:\h'-(\\n(.wu*10/11-\*(#H)'^\h'|\\n:u'
+.	ds , \\k:\h'-(\\n(.wu*8/10)',\h'|\\n:u'
+.	ds ~ \\k:\h'-(\\n(.wu-\*(#H-.1m)'~\h'|\\n:u'
+.	ds ? \s-2c\h'-\w'c'u*7/10'\u\h'\*(#H'\zi\d\s+2\h'\w'c'u*8/10'
+.	ds ! \s-2\(or\s+2\h'-\w'\(or'u'\v'-.8m'.\v'.8m'
+.	ds / \\k:\h'-(\\n(.wu*8/10-\*(#H)'\z\(sl\h'|\\n:u'
+.	ds q o\h'-\w'o'u*8/10'\s-4\v'.4m'\z\(*i\v'-.4m'\s+4\h'\w'o'u*8/10'
+.\}
+.	\" troff and (daisy-wheel) nroff accents
+.ds : \\k:\h'-(\\n(.wu*8/10-\*(#H+.1m+\*(#F)'\v'-\*(#V'\z.\h'.2m+\*(#F'.\h'|\\n:u'\v'\*(#V'
+.ds 8 \h'\*(#H'\(*b\h'-\*(#H'
+.ds v \\k:\h'-(\\n(.wu*9/10-\*(#H)'\v'-\*(#V'\*(#[\s-4v\s0\v'\*(#V'\h'|\\n:u'\*(#]
+.ds _ \\k:\h'-(\\n(.wu*9/10-\*(#H+(\*(#F*2/3))'\v'-.4m'\z\(hy\v'.4m'\h'|\\n:u'
+.ds . \\k:\h'-(\\n(.wu*8/10)'\v'\*(#V*4/10'\z.\v'-\*(#V*4/10'\h'|\\n:u'
+.ds 3 \*(#[\v'.2m'\s-2\&3\s0\v'-.2m'\*(#]
+.ds o \\k:\h'-(\\n(.wu+\w'\(de'u-\*(#H)/2u'\v'-.3n'\*(#[\z\(de\v'.3n'\h'|\\n:u'\*(#]
+.ds d- \h'\*(#H'\(pd\h'-\w'~'u'\v'-.25m'\f2\(hy\fP\v'.25m'\h'-\*(#H'
+.ds D- D\\k:\h'-\w'D'u'\v'-.11m'\z\(hy\v'.11m'\h'|\\n:u'
+.ds th \*(#[\v'.3m'\s+1I\s-1\v'-.3m'\h'-(\w'I'u*2/3)'\s-1o\s+1\*(#]
+.ds Th \*(#[\s+2I\s-2\h'-\w'I'u*3/5'\v'-.3m'o\v'.3m'\*(#]
+.ds ae a\h'-(\w'a'u*4/10)'e
+.ds Ae A\h'-(\w'A'u*4/10)'E
+.ds oe o\h'-(\w'o'u*4/10)'e
+.ds Oe O\h'-(\w'O'u*4/10)'E
+.	\" corrections for vroff
+.if v .ds ~ \\k:\h'-(\\n(.wu*9/10-\*(#H)'\s-2\u~\d\s+2\h'|\\n:u'
+.if v .ds ^ \\k:\h'-(\\n(.wu*10/11-\*(#H)'\v'-.4m'^\v'.4m'\h'|\\n:u'
+.	\" for low resolution devices (crt and lpr)
+.if \n(.H>23 .if \n(.V>19 \
+\{\
+.	ds : e
+.	ds 8 ss
+.	ds v \h'-1'\o'\(aa\(ga'
+.	ds _ \h'-1'^
+.	ds . \h'-1'.
+.	ds 3 3
+.	ds o a
+.	ds d- d\h'-1'\(ga
+.	ds D- D\h'-1'\(hy
+.	ds th \o'bp'
+.	ds Th \o'LP'
+.	ds ae ae
+.	ds Ae AE
+.	ds oe oe
+.	ds Oe OE
+.\}
+.rm #[ #] #H #V #F C
+.SH "NAME"
+pts createuser \- Creates a user or machine entry in the Protection Database
+.SH "SYNOPSIS"
+\fBpts createuser\fR <<\ \fB\-name\fR\ <\fIuser\ name\fR+ >>> <<\ [\fB\-id\fR\ <\fIuser\ id\fR+] >>>
+    <<\ [\fB\-cell\fR\ <\fIcell\ name\fR] >>> [\fB\-noauth\fR] [\fB\-force\fR] [\fB\-help\fR]
+.PP
+\fBpts createu\fR <<\ \fB\-na\fR\ <\fIuser\ name\fR+ >>> <<\ [\fB\-i\fR\ <\fIuser\ id\fR+] >>>
+    <<\ [\fB\-c\fR\ <\fIcell\ name\fR] >>> [\fB\-no\fR] [\fB\-f\fR] [\fB\-h\fR]
+.PP
+\fBpts cu\fR <<\ \fB\-na\fR\ <\fIuser\ name\fR+ >>> <<\ [\fB\-i\fR\ <\fIuser\ id\fR+] >>>
+    <<\ [\fB\-c\fR\ <\fIcell\ name\fR] >>> [\fB\-no\fR] [\fB\-f\fR] [\fB\-h\fR]
+.SH "DESCRIPTION"
+The \fBpts createuser\fR command creates an entry in the Protection Database
+for each user or machine specified by the \fB\-name\fR argument. A user entry
+name becomes the user's AFS username (the one to provide when
+authenticating with the AFS Authentication Server).  A machine entry's
+name is the machine's IP address or a wildcard notation that represents a
+range of consecutive IP addresses (a group of machines on the same
+network). It is not possible to authenticate as a machine, but a group to
+which a machine entry belongs can appear on a directory's access control
+list (ACL), thereby granting the indicated permissions to any user logged
+on to the machine.
+.PP
+AFS user IDs (AFS UIDs) are positive integers and by default the
+Protection Server assigns an AFS UID that is one greater than the current
+value of the \f(CWmax user id\fR counter in the Protection Database,
+incrementing the counter by one for each user. To assign a specific AFS
+UID, use the \fB\-id\fR argument. If any of the specified AFS UIDs is greater
+than the current value of the \f(CWmax user id\fR counter, the counter is reset
+to that value. It is acceptable to specify an AFS UID smaller than the
+current value of the counter, but the creation operation fails if an
+existing user or machine entry already has it. To display or set the value
+of the \f(CWmax user id\fR counter, use the \fBpts listmax\fR or \fBpts setmax\fR
+command, respectively.
+.PP
+The issuer of the \fBpts createuser\fR command is recorded as the entry's
+creator and the group system:administrators as its owner.
+.SH "CAUTIONS"
+The Protection Server reserves AFS UID 0 (zero) and returns an error if
+the \fB\-id\fR argument has that value.
+.SH "OPTIONS"
+.Ip "\fB\-name\fR <\fIuser name\fR>+" 4
+Specifies either a username for a user entry, or an \s-1IP\s0 address (complete
+or wildcarded) for a machine entry:
+.Ip "\(bu" 8
+A username can include up to 63 numbers and lowercase letters, but it is
+best to make it shorter than eight characters, because many application
+programs cannot handle longer names. Also, it is best not to include shell
+metacharacters or other punctuation marks. In particular, the colon (\f(CW:\fR)
+and at-sign (\f(CW@\fR) characters are not acceptable. The period is generally
+used only in special administrative names, to separate the username and an
+\fIinstance\fR, as in the example \f(CWpat.admin\fR.
+.Ip "\(bu" 8
+A machine identifier is its \s-1IP\s0 address in dotted decimal notation (for
+example, 192.12.108.240), or a wildcard notation that represents a set of
+\s-1IP\s0 addresses (a group of machines on the same network). The following are
+acceptable wildcard formats. The letters \f(CWW\fR, \f(CWX\fR, \f(CWY\fR and \f(CWZ\fR each
+represent an actual number from the range 1 through 255.
+.Ip "\(bu" 12
+W.X.Y.Z represents a single machine, for example \f(CW192.12.108.240\fR.
+.Ip "\(bu" 12
+W.X.Y.0 matches all machines whose \s-1IP\s0 addresses start with the first three
+numbers. For example, \f(CW192.12.108.0\fR matches both \f(CW192.12.108.119\fR and
+\f(CW192.12.108.120\fR, but does not match \f(CW192.12.105.144\fR.
+.Ip "\(bu" 12
+W.X.0.0 matches all machines whose \s-1IP\s0 addresses start with the first two
+numbers. For example, the address \f(CW192.12.0.0\fR matches both
+\f(CW192.12.106.23\fR and \f(CW192.12.108.120\fR, but does not match \f(CW192.5.30.95\fR.
+.Ip "\(bu" 12
+W.0.0.0 matches all machines whose \s-1IP\s0 addresses start with the first
+number in the specified address. For example, the address \f(CW192.0.0.0\fR
+matches both \f(CW192.5.30.95\fR and \f(CW192.12.108.120\fR, but does not match
+\f(CW138.255.63.52\fR.
+.Sp
+Do not define a machine entry with the name \f(CW0.0.0.0\fR to match every
+machine. The system:anyuser group is equivalent.
+.Ip "\fB\-id\fR <\fIuser id\fR>+" 4
+Specifies an \s-1AFS\s0 \s-1UID\s0 for each user or machine entry, rather than allowing
+the Protection Server to assign it. Provide a positive integer.
+.Sp
+If this argument is used and the \fB\-name\fR argument names multiple new
+entries, it is best to provide an equivalent number of \s-1AFS\s0 UIDs.  The
+first \s-1UID\s0 is assigned to the first entry, the second to the second entry,
+and so on. If there are fewer UIDs than entries, the Protection Server
+assigns UIDs to the unmatched entries based on the \f(CWmax user id\fR
+counter. If there are more UIDs than entries, the excess UIDs are
+ignored. If any of the UIDs is greater than the current value of the \f(CWmax
+user id\fR counter, the counter is reset to that value.
+.Ip "\fB\-cell\fR <\fIcell name\fR>" 4
+Names the cell in which to run the command. For more details, see
+the \fIpts(1)\fR manpage.
+.Ip "\fB\-noauth\fR" 4
+Assigns the unprivileged identity anonymous to the issuer. For more
+details, see the \fIpts(1)\fR manpage.
+.Ip "\fB\-force\fR" 4
+Enables the command to continue executing as far as possible when errors
+or other problems occur, rather than halting execution at the first error.
+.Ip "\fB\-help\fR" 4
+Prints the online help for this command. All other valid options are
+ignored.
+.SH "OUTPUT"
+The command generates the following string to confirm creation of each
+user:
+.PP
+.Vb 1
+\&   User <name> has id <id>
+.Ve
+.SH "EXAMPLES"
+The following example creates a Protection Database entry for the user
+\f(CWjohnson\fR.
+.PP
+.Vb 1
+\&   % pts createuser -name johnson
+.Ve
+The following example creates three wildcarded machine entries in the ABC
+Corporation cell. The three entries encompass all of the machines on the
+company's networks without including machines on other networks:
+.PP
+.Vb 1
+\&   % pts createuser -name 138.255.0.0 192.12.105.0 192.12.106.0
+.Ve
+.SH "PRIVILEGE REQUIRED"
+The issuer must belong to the system:administrators group.
+.SH "SEE ALSO"
+the \fIpts(1)\fR manpage,
+the \fIpts_listmax(1)\fR manpage,
+the \fIpts_setmax(1)\fR manpage
+.SH "COPYRIGHT"
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+.PP
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
+
+.rn }` ''
+.IX Title "PTS_CREATEUSER 1"
+.IX Name "pts createuser - Creates a user or machine entry in the Protection Database"
+
+.IX Header "NAME"
+
+.IX Header "SYNOPSIS"
+
+.IX Header "DESCRIPTION"
+
+.IX Header "CAUTIONS"
+
+.IX Header "OPTIONS"
+
+.IX Item "\fB\-name\fR <\fIuser name\fR>+"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "\fB\-id\fR <\fIuser id\fR>+"
+
+.IX Item "\fB\-cell\fR <\fIcell name\fR>"
+
+.IX Item "\fB\-noauth\fR"
+
+.IX Item "\fB\-force\fR"
+
+.IX Item "\fB\-help\fR"
+
+.IX Header "OUTPUT"
+
+.IX Header "EXAMPLES"
+
+.IX Header "PRIVILEGE REQUIRED"
+
+.IX Header "SEE ALSO"
+
+.IX Header "COPYRIGHT"
+

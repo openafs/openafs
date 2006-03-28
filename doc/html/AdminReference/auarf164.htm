@@ -1,0 +1,205 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 4//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3672/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 3 Oct 2000 at 16:18:30                -->
+<META HTTP-EQUIV="updated" CONTENT="Tue, 03 Oct 2000 16:18:29">
+<META HTTP-EQUIV="review" CONTENT="Wed, 03 Oct 2001 16:18:29">
+<META HTTP-EQUIV="expires" CONTENT="Thu, 03 Oct 2002 16:18:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf163.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf165.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRFS_STOREBEHIND" HREF="auarf002.htm#ToC_178">fs storebehind</A></H2>
+<A NAME="IDX4985"></A>
+<A NAME="IDX4986"></A>
+<P><STRONG>Purpose</STRONG>
+<P>Enables asynchronous writes to the file server
+<P><STRONG>Synopsis</STRONG>
+<PRE><B>fs storebehind</B> [<B>-kbytes</B> &lt;<VAR>asynchrony&nbsp;for&nbsp;specified&nbsp;names</VAR>>]  
+               [<B>-files</B> &lt;<VAR>specific&nbsp;pathnames</VAR>><SUP>+</SUP>]  
+               [<B>-allfiles</B> &lt;<VAR>new&nbsp;default&nbsp;(KB)</VAR>>]  [<B>-verbose</B>]  [<B>-help</B>]
+    
+<B>fs st</B> [<B>-k</B> &lt;<VAR>asynchrony&nbsp;for&nbsp;specified&nbsp;names</VAR>>]  [<B>-f</B> &lt;<VAR>specific&nbsp;pathnames</VAR>><SUP>+</SUP>]  
+      [<B>-a</B> &lt;<VAR>new&nbsp;default&nbsp;(KB)</VAR>>]  [<B>-v</B>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>Description</STRONG>
+<P>The <B>fs storebehind</B> command enables the Cache Manager to perform
+a delayed asynchronous write to the File Server when an application closes a
+file. By default, the Cache Manager writes all data to the File Server
+immediately and synchronously when an application program closes a
+file--that is, the <B>close</B> system call does not return until the
+Cache Manager has actually transferred the final chunk of the file to the File
+Server. This command specifies the number of kilobytes of a file that
+can still remain to be written to the File Server when the Cache Manager
+returns control to the application. It is useful if users working on
+the machine commonly work with very large files, but also introduces the
+complications discussed in the <B>Cautions</B> section.
+<P>Set either or both of the following in a single command:
+<UL>
+<P><LI>To set a value that applies to all AFS files manipulated by applications
+running on the machine, use the <B>-allfiles</B> argument. This
+value is termed the <I>default store asynchrony</I> for the machine, and
+persists until the machine reboots. If it is not set, the default value
+is zero, indicating that the Cache Manager performs synchronous writes.
+<P>
+<P>As an example, the following setting means that when an application closes
+a file, the Cache Manager can return control to the application as soon as no
+more than 10 kilobytes of the file remain to be written to the File
+Server.
+<PRE>   <B>-allfiles 10</B>
+   
+</PRE>
+<P><LI>To set a value that applies to one or more individual files, and overrides
+the value of the <B>-allfiles</B> argument for them, combine the
+<B>-kbytes</B> and <B>-files</B> arguments. The setting
+persists as long as there is an entry for the file in the kernel table that
+the Cache Manager uses to track certain information about files. In
+general, such an entry persists at least until an application closes the file
+or exits, but the Cache Manager is free to recycle the entry if the file is
+inactive and it needs to free up slots in the table. To increase the
+certainty that there is an entry for the file in the table, issue the <B>fs
+storebehind</B> command shortly before closing the file. 
+<P>As an example, the following setting means that when an application closes
+either of the files <B>bigfile</B> and <B>biggerfile</B>, the Cache
+Manager can return control to the application as soon as no more than a
+megabyte of the file remains to be written to the File Server.
+<PRE>   <B>-kbytes 1024 -files bigfile biggerfile</B>
+   
+</PRE> 
+<P>Note that once an explicit value has been set for a file, the only way to
+make it subject to the default store asynchrony once again is to set
+<B>-kbytes</B> to that value. In other words, there is no
+combination of arguments that automatically makes a file subject to the
+default store asynchrony once another value has been set for the file.
+</UL>
+<P>To display the settings that currently apply to individual files or to all
+files, provide the command's arguments in certain combinations as
+specified in the <B>Output</B> section of this reference page.
+<P><STRONG>Cautions</STRONG>
+<P>For the following reasons, use of this command is not recommended in most
+cases.
+<P>In normal circumstances, an asynchronous setting results in the Cache
+Manager returning control to applications earlier than it otherwise does, but
+this is not guaranteed.
+<P>If a delayed write fails, there is no way to notify the application, since
+the <B>close</B> system call has already returned with a code indicating
+success.
+<P>Writing asynchronously increases the possibility that the user will not
+notice if a write operation makes the volume that houses the file exceed its
+quota. As always, the portion of the file that exceeds the
+volume's quota is lost, which prompts a message such as the
+following:
+<PRE>   No space left on device
+   
+</PRE>
+<P>To avoid losing data, it is advisable to verify that the volume housing the
+file has space available for the amount of data anticipated to be
+written.
+<P><STRONG>Options</STRONG>
+<DL>
+<P><DT><B>-kbytes
+</B><DD>Specifies the number of kilobytes of data from each file named by the
+<B>-files</B> argument that can remain to be written to the file server
+when the Cache Manager returns control to an application program that closed
+the file. The <B>-files</B> argument is required along with this
+argument. Provide an integer from the range <B>0</B> (which
+reinstates the Cache Manager's default behavior or writing synchronously)
+to the maximum AFS file size.
+<P><DT><B>-files
+</B><DD>Names each file to which the value set with the <B>-kbytes</B>
+argument applies. The setting persists as long as there is an entry for
+the file in the kernel table that the Cache Manager uses to track certain
+information about files. Because closing a file generally erases the
+entry, when reopening a file the only way to guarantee that the setting still
+applies is to reissue the command. If this argument is provided without
+the <B>-kbytes</B> argument, the command reports the current setting for
+the specified files, and the default store asynchrony.
+<P><DT><B>-allfiles
+</B><DD>Sets the default store asynchrony for the local machine, which is the
+number of kilobytes of data that can remain to be written to the file server
+when the Cache Manager returns control to the application program that closed
+a file. The value applies to all AFS files manipulated by applications
+running on the machine, except those for which settings have been made with
+the <B>-kbytes</B> and <B>-files</B> arguments. Provide an
+integer from the range <B>0</B> (which indicates the default of
+synchronous writes) to the maximum AFS file size.
+<P><DT><B>-verbose
+</B><DD>Produces output confirming the settings made with the accompanying
+<B>-kbytes</B> and <B>-files</B> arguments, the <B>-allfiles</B>
+argument, or all three. If provided by itself, reports the current
+default store asynchrony.
+<P><DT><B>-help
+</B><DD>Prints the online help for this command. All other valid options
+are ignored.
+</DL>
+<P><STRONG>Output</STRONG>
+<P>If none of the command's options are included, or if only the
+<B>-verbose</B> flag is included, the following message reports the
+default store asynchrony (the setting that applies to all files manipulated by
+applications running on the local machine and for which not more specific
+asynchrony is set).
+<PRE>   Default store asynchrony is <VAR>x</VAR> kbytes.
+   
+</PRE>
+<P>A value of <TT>0</TT> (zero) indicates synchronous writes and is the
+default if no one has included the <B>-allfiles</B> argument on this
+command since the machine last rebooted.
+<P>If the <B>-files</B> argument is provided without the
+<B>-kbytes</B> argument, the output reports the value that applies to each
+specified file along with the default store asynchrony. If a particular
+value has previously been set for a file, the following message reports
+it:
+<PRE>   Will store up to <VAR>y</VAR> kbytes of <VAR>file</VAR> asynchronously.
+   Default store asynchrony is <VAR>x</VAR> kbytes.
+   
+</PRE>
+<P>If the default store asynchrony applies to a file because no explicit
+<B>-kbytes</B> value has been set for it, the message is instead as
+follows:
+<PRE>   Will store <VAR>file</VAR> according to default.
+   Default store asynchrony is <VAR>x</VAR> kbytes.
+   
+</PRE>
+<P>If the <B>-verbose</B> flag is combined with arguments that set values
+(<B>-files</B> and <B>-kbytes</B>, or <B>-allfiles</B>, or all
+three), there is a message that confirms immediately that the setting has
+taken effect. When included without other arguments or flags, the
+<B>-verbose</B> flag reports the default store asynchrony only.
+<P><STRONG>Examples</STRONG>
+<P>The following command enables the Cache Manager to return control to the
+application program that closed the file <B>test.data</B> when 100
+kilobytes still remain to be written to the File Server. The
+<B>-verbose</B> flag produces output that confirms the new setting, and
+that the default store asynchrony is zero.
+<PRE>   % <B>fs storebehind -kbytes 100 -files test.data -verbose</B>
+   Will store up to 100 kbytes of test.data asynchronously.
+   Default store asynchrony is 0 kbytes.
+   
+</PRE>
+<P><STRONG>Privilege Required</STRONG>
+<P>To include the <B>-allfiles</B> argument, the issuer must be logged in
+as the local superuser <B>root</B>.
+<P>To include the <B>-kbytes</B> and <B>-files</B> arguments, the
+issuer must either be logged in as the local superuser <B>root</B> or have
+the <B>w</B> (<B>write</B>) permission on the ACL of each file's
+directory.
+<P>To view the current settings (by including no arguments, the
+<B>-file</B> argument alone, or the <B>-verbose</B> argument alone),
+no privilege is required.
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf058.htm#HDRAFSD">afsd</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf163.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf165.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

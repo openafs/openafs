@@ -1,0 +1,420 @@
+.rn '' }`
+''' $RCSfile$$Revision$$Date$
+'''
+''' $Log$
+'''
+.de Sh
+.br
+.if t .Sp
+.ne 5
+.PP
+\fB\\$1\fR
+.PP
+..
+.de Sp
+.if t .sp .5v
+.if n .sp
+..
+.de Ip
+.br
+.ie \\n(.$>=3 .ne \\$3
+.el .ne 3
+.IP "\\$1" \\$2
+..
+.de Vb
+.ft CW
+.nf
+.ne \\$1
+..
+.de Ve
+.ft R
+
+.fi
+..
+'''
+'''
+'''     Set up \*(-- to give an unbreakable dash;
+'''     string Tr holds user defined translation string.
+'''     Bell System Logo is used as a dummy character.
+'''
+.tr \(*W-|\(bv\*(Tr
+.ie n \{\
+.ds -- \(*W-
+.ds PI pi
+.if (\n(.H=4u)&(1m=24u) .ds -- \(*W\h'-12u'\(*W\h'-12u'-\" diablo 10 pitch
+.if (\n(.H=4u)&(1m=20u) .ds -- \(*W\h'-12u'\(*W\h'-8u'-\" diablo 12 pitch
+.ds L" ""
+.ds R" ""
+'''   \*(M", \*(S", \*(N" and \*(T" are the equivalent of
+'''   \*(L" and \*(R", except that they are used on ".xx" lines,
+'''   such as .IP and .SH, which do another additional levels of
+'''   double-quote interpretation
+.ds M" """
+.ds S" """
+.ds N" """""
+.ds T" """""
+.ds L' '
+.ds R' '
+.ds M' '
+.ds S' '
+.ds N' '
+.ds T' '
+'br\}
+.el\{\
+.ds -- \(em\|
+.tr \*(Tr
+.ds L" ``
+.ds R" ''
+.ds M" ``
+.ds S" ''
+.ds N" ``
+.ds T" ''
+.ds L' `
+.ds R' '
+.ds M' `
+.ds S' '
+.ds N' `
+.ds T' '
+.ds PI \(*p
+'br\}
+.\"	If the F register is turned on, we'll generate
+.\"	index entries out stderr for the following things:
+.\"		TH	Title 
+.\"		SH	Header
+.\"		Sh	Subsection 
+.\"		Ip	Item
+.\"		X<>	Xref  (embedded
+.\"	Of course, you have to process the output yourself
+.\"	in some meaninful fashion.
+.if \nF \{
+.de IX
+.tm Index:\\$1\t\\n%\t"\\$2"
+..
+.nr % 0
+.rr F
+.\}
+.TH FS_STOREBEHIND 1 "OpenAFS" "1/Mar/2006" "AFS Command Reference"
+.UC
+.if n .hy 0
+.if n .na
+.ds C+ C\v'-.1v'\h'-1p'\s-2+\h'-1p'+\s0\v'.1v'\h'-1p'
+.de CQ          \" put $1 in typewriter font
+.ft CW
+'if n "\c
+'if t \\&\\$1\c
+'if n \\&\\$1\c
+'if n \&"
+\\&\\$2 \\$3 \\$4 \\$5 \\$6 \\$7
+'.ft R
+..
+.\" @(#)ms.acc 1.5 88/02/08 SMI; from UCB 4.2
+.	\" AM - accent mark definitions
+.bd B 3
+.	\" fudge factors for nroff and troff
+.if n \{\
+.	ds #H 0
+.	ds #V .8m
+.	ds #F .3m
+.	ds #[ \f1
+.	ds #] \fP
+.\}
+.if t \{\
+.	ds #H ((1u-(\\\\n(.fu%2u))*.13m)
+.	ds #V .6m
+.	ds #F 0
+.	ds #[ \&
+.	ds #] \&
+.\}
+.	\" simple accents for nroff and troff
+.if n \{\
+.	ds ' \&
+.	ds ` \&
+.	ds ^ \&
+.	ds , \&
+.	ds ~ ~
+.	ds ? ?
+.	ds ! !
+.	ds /
+.	ds q
+.\}
+.if t \{\
+.	ds ' \\k:\h'-(\\n(.wu*8/10-\*(#H)'\'\h"|\\n:u"
+.	ds ` \\k:\h'-(\\n(.wu*8/10-\*(#H)'\`\h'|\\n:u'
+.	ds ^ \\k:\h'-(\\n(.wu*10/11-\*(#H)'^\h'|\\n:u'
+.	ds , \\k:\h'-(\\n(.wu*8/10)',\h'|\\n:u'
+.	ds ~ \\k:\h'-(\\n(.wu-\*(#H-.1m)'~\h'|\\n:u'
+.	ds ? \s-2c\h'-\w'c'u*7/10'\u\h'\*(#H'\zi\d\s+2\h'\w'c'u*8/10'
+.	ds ! \s-2\(or\s+2\h'-\w'\(or'u'\v'-.8m'.\v'.8m'
+.	ds / \\k:\h'-(\\n(.wu*8/10-\*(#H)'\z\(sl\h'|\\n:u'
+.	ds q o\h'-\w'o'u*8/10'\s-4\v'.4m'\z\(*i\v'-.4m'\s+4\h'\w'o'u*8/10'
+.\}
+.	\" troff and (daisy-wheel) nroff accents
+.ds : \\k:\h'-(\\n(.wu*8/10-\*(#H+.1m+\*(#F)'\v'-\*(#V'\z.\h'.2m+\*(#F'.\h'|\\n:u'\v'\*(#V'
+.ds 8 \h'\*(#H'\(*b\h'-\*(#H'
+.ds v \\k:\h'-(\\n(.wu*9/10-\*(#H)'\v'-\*(#V'\*(#[\s-4v\s0\v'\*(#V'\h'|\\n:u'\*(#]
+.ds _ \\k:\h'-(\\n(.wu*9/10-\*(#H+(\*(#F*2/3))'\v'-.4m'\z\(hy\v'.4m'\h'|\\n:u'
+.ds . \\k:\h'-(\\n(.wu*8/10)'\v'\*(#V*4/10'\z.\v'-\*(#V*4/10'\h'|\\n:u'
+.ds 3 \*(#[\v'.2m'\s-2\&3\s0\v'-.2m'\*(#]
+.ds o \\k:\h'-(\\n(.wu+\w'\(de'u-\*(#H)/2u'\v'-.3n'\*(#[\z\(de\v'.3n'\h'|\\n:u'\*(#]
+.ds d- \h'\*(#H'\(pd\h'-\w'~'u'\v'-.25m'\f2\(hy\fP\v'.25m'\h'-\*(#H'
+.ds D- D\\k:\h'-\w'D'u'\v'-.11m'\z\(hy\v'.11m'\h'|\\n:u'
+.ds th \*(#[\v'.3m'\s+1I\s-1\v'-.3m'\h'-(\w'I'u*2/3)'\s-1o\s+1\*(#]
+.ds Th \*(#[\s+2I\s-2\h'-\w'I'u*3/5'\v'-.3m'o\v'.3m'\*(#]
+.ds ae a\h'-(\w'a'u*4/10)'e
+.ds Ae A\h'-(\w'A'u*4/10)'E
+.ds oe o\h'-(\w'o'u*4/10)'e
+.ds Oe O\h'-(\w'O'u*4/10)'E
+.	\" corrections for vroff
+.if v .ds ~ \\k:\h'-(\\n(.wu*9/10-\*(#H)'\s-2\u~\d\s+2\h'|\\n:u'
+.if v .ds ^ \\k:\h'-(\\n(.wu*10/11-\*(#H)'\v'-.4m'^\v'.4m'\h'|\\n:u'
+.	\" for low resolution devices (crt and lpr)
+.if \n(.H>23 .if \n(.V>19 \
+\{\
+.	ds : e
+.	ds 8 ss
+.	ds v \h'-1'\o'\(aa\(ga'
+.	ds _ \h'-1'^
+.	ds . \h'-1'.
+.	ds 3 3
+.	ds o a
+.	ds d- d\h'-1'\(ga
+.	ds D- D\h'-1'\(hy
+.	ds th \o'bp'
+.	ds Th \o'LP'
+.	ds ae ae
+.	ds Ae AE
+.	ds oe oe
+.	ds Oe OE
+.\}
+.rm #[ #] #H #V #F C
+.SH "NAME"
+fs storebehind \- Enables asynchronous writes to the file server
+.SH "SYNOPSIS"
+\fBfs storebehind\fR <<\ [\fB\-kbytes\fR\ <\fIasynchrony\ for\ specified\ names\fR] >>>
+    <<\ [\fB\-files\fR\ <\fIspecific\ pathnames\fR+] >>>
+    <<\ [\fB\-allfiles\fR\ <\fInew\ default\ (KB)\fR] >>> [\fB\-verbose\fR] [\fB\-help\fR]
+.PP
+\fBfs st\fR <<\ [\fB\-k\fR\ <\fIasynchrony\ for\ specified\ names\fR] >>>
+    <<\ [\fB\-f\fR\ <\fIspecific\ pathnames\fR+] >>>
+    <<\ [\fB\-a\fR\ <\fInew\ default\ (KB)\fR] >>> [\fB\-v\fR] [\fB\-h\fR]
+.SH "DESCRIPTION"
+The \fBfs storebehind\fR command enables the Cache Manager to perform a
+delayed asynchronous write to the File Server when an application closes a
+file. By default, the Cache Manager writes all data to the File Server
+immediately and synchronously when an application program closes a file --
+that is, the \fIclose()\fR system call does not return until the Cache Manager
+has actually transferred the final chunk of the file to the File
+Server. This command specifies the number of kilobytes of a file that can
+still remain to be written to the File Server when the Cache Manager
+returns control to the application. It is useful if users working on the
+machine commonly work with very large files, but also introduces the
+complications discussed in the the \fICAUTIONS\fR manpage.
+.PP
+Set either or both of the following in a single command:
+.Ip "\(bu" 4
+To set a value that applies to all \s-1AFS\s0 files manipulated by applications
+running on the machine, use the \fB\-allfiles\fR argument. This value is
+termed the \fIdefault store asynchrony\fR for the machine, and persists until
+the machine reboots. If it is not set, the default value is zero,
+indicating that the Cache Manager performs synchronous writes.
+.Sp
+As an example, the following setting means that when an application closes
+a file, the Cache Manager can return control to the application as soon as
+no more than 10 kilobytes of the file remain to be written to the File
+Server.
+.Sp
+.Vb 1
+\&   -allfiles 10
+.Ve
+.Ip "\(bu" 4
+To set a value that applies to one or more individual files, and overrides
+the value of the \fB\-allfiles\fR argument for them, combine the \fB\-kbytes\fR
+and \fB\-files\fR arguments. The setting persists as long as there is an entry
+for the file in the kernel table that the Cache Manager uses to track
+certain information about files. In general, such an entry persists at
+least until an application closes the file or exits, but the Cache Manager
+is free to recycle the entry if the file is inactive and it needs to free
+up slots in the table. To increase the certainty that there is an entry
+for the file in the table, issue the \fBfs storebehind\fR command shortly
+before closing the file.
+.Sp
+As an example, the following setting means that when an application closes
+either of the files \fBbigfile\fR and \fBbiggerfile\fR, the Cache Manager can
+return control to the application as soon as no more than a megabyte of
+the file remains to be written to the File Server.
+.Sp
+.Vb 1
+\&   -kbytes 1024 -files bigfile biggerfile
+.Ve
+Note that once an explicit value has been set for a file, the only way to
+make it subject to the default store asynchrony once again is to set
+\fB\-kbytes\fR to that value. In other words, there is no combination of
+arguments that automatically makes a file subject to the default store
+asynchrony once another value has been set for the file.
+.PP
+To display the settings that currently apply to individual files or to all
+files, provide the command's arguments in certain combinations as
+specified in the \fI\s-1OUTPUT\s0\fR manpage.
+.SH "CAUTIONS"
+For the following reasons, use of this command is not recommended in most
+cases.
+.PP
+In normal circumstances, an asynchronous setting results in the Cache
+Manager returning control to applications earlier than it otherwise does,
+but this is not guaranteed.
+.PP
+If a delayed write fails, there is no way to notify the application, since
+the \fIclose()\fR system call has already returned with a code indicating
+success.
+.PP
+Writing asynchronously increases the possibility that the user will not
+notice if a write operation makes the volume that houses the file exceed
+its quota. As always, the portion of the file that exceeds the volume's
+quota is lost, which prompts a message such as the following:
+.PP
+.Vb 1
+\&   No space left on device
+.Ve
+To avoid losing data, it is advisable to verify that the volume housing
+the file has space available for the amount of data anticipated to be
+written.
+.SH "OPTIONS"
+.Ip "\fB\-kbytes\fR <\fIasynchrony for specified names\fR>" 4
+Specifies the number of kilobytes of data from each file named by the
+\fB\-files\fR argument that can remain to be written to the file server when
+the Cache Manager returns control to an application program that closed
+the file. The \fB\-files\fR argument is required along with this
+argument. Provide an integer from the range \f(CW0\fR (which reinstates the
+Cache Manager's default behavior or writing synchronously) to the maximum
+\s-1AFS\s0 file size.
+.Ip "\fB\-files\fR <\fIspecific pathnames\fR>+" 4
+Names each file to which the value set with the \fB\-kbytes\fR argument
+applies. The setting persists as long as there is an entry for the file in
+the kernel table that the Cache Manager uses to track certain information
+about files. Because closing a file generally erases the entry, when
+reopening a file the only way to guarantee that the setting still applies
+is to reissue the command. If this argument is provided without the
+\fB\-kbytes\fR argument, the command reports the current setting for the
+specified files, and the default store asynchrony.
+.Ip "\fB\-allfiles\fR <\fInew default (\s-1KB\s0)\fR>" 4
+Sets the default store asynchrony for the local machine, which is the
+number of kilobytes of data that can remain to be written to the file
+server when the Cache Manager returns control to the application program
+that closed a file. The value applies to all \s-1AFS\s0 files manipulated by
+applications running on the machine, except those for which settings have
+been made with the \fB\-kbytes\fR and \fB\-files\fR arguments. Provide an integer
+from the range \f(CW0\fR (which indicates the default of synchronous writes) to
+the maximum \s-1AFS\s0 file size.
+.Ip "\fB\-verbose\fR" 4
+Produces output confirming the settings made with the accompanying
+\fB\-kbytes\fR and \fB\-files\fR arguments, the \fB\-allfiles\fR argument, or all
+three. If provided by itself, reports the current default store
+asynchrony.
+.Ip "\fB\-help\fR" 4
+Prints the online help for this command. All other valid options are
+ignored.
+.SH "OUTPUT"
+If none of the command's options are included, or if only the \fB\-verbose\fR
+flag is included, the following message reports the default store
+asynchrony (the setting that applies to all files manipulated by
+applications running on the local machine and for which not more specific
+asynchrony is set).
+.PP
+.Vb 1
+\&   Default store asynchrony is <x> kbytes.
+.Ve
+A value of \f(CW0\fR (zero) indicates synchronous writes and is the default if
+no one has included the \fB\-allfiles\fR argument on this command since the
+machine last rebooted.
+.PP
+If the \fB\-files\fR argument is provided without the \fB\-kbytes\fR argument, the
+output reports the value that applies to each specified file along with
+the default store asynchrony. If a particular value has previously been
+set for a file, the following message reports it:
+.PP
+.Vb 2
+\&   Will store up to <y> kbytes of <file> asynchronously.
+\&   Default store asynchrony is <x> kbytes.
+.Ve
+If the default store asynchrony applies to a file because no explicit
+\fB\-kbytes\fR value has been set for it, the message is instead as follows:
+.PP
+.Vb 2
+\&   Will store <file> according to default.
+\&   Default store asynchrony is <x> kbytes.
+.Ve
+If the \fB\-verbose\fR flag is combined with arguments that set values
+(\fB\-files\fR and \fB\-kbytes\fR, or \fB\-allfiles\fR, or all three), there is a
+message that confirms immediately that the setting has taken effect. When
+included without other arguments or flags, the \fB\-verbose\fR flag reports
+the default store asynchrony only.
+.SH "EXAMPLES"
+The following command enables the Cache Manager to return control to the
+application program that closed the file \fItest.data\fR when 100 kilobytes
+still remain to be written to the File Server. The \fB\-verbose\fR flag
+produces output that confirms the new setting, and that the default store
+asynchrony is zero.
+.PP
+.Vb 3
+\&   % fs storebehind -kbytes 100 -files test.data -verbose
+\&   Will store up to 100 kbytes of test.data asynchronously.
+\&   Default store asynchrony is 0 kbytes.
+.Ve
+.SH "PRIVILEGE REQUIRED"
+To include the \fB\-allfiles\fR argument, the issuer must be logged in as the
+local superuser \f(CWroot\fR.
+.PP
+To include the \fB\-kbytes\fR and \fB\-files\fR arguments, the issuer must either
+be logged in as the local superuser \f(CWroot\fR or have the \f(CWw\fR (write)
+permission on the ACL of each file's directory.
+.PP
+To view the current settings (by including no arguments, the \fB\-file\fR
+argument alone, or the \fB\-verbose\fR argument alone), no privilege is
+required.
+.SH "SEE ALSO"
+the \fIafsd(8)\fR manpage
+.SH "COPYRIGHT"
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+.PP
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
+
+.rn }` ''
+.IX Title "FS_STOREBEHIND 1"
+.IX Name "fs storebehind - Enables asynchronous writes to the file server"
+
+.IX Header "NAME"
+
+.IX Header "SYNOPSIS"
+
+.IX Header "DESCRIPTION"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Header "CAUTIONS"
+
+.IX Header "OPTIONS"
+
+.IX Item "\fB\-kbytes\fR <\fIasynchrony for specified names\fR>"
+
+.IX Item "\fB\-files\fR <\fIspecific pathnames\fR>+"
+
+.IX Item "\fB\-allfiles\fR <\fInew default (\s-1KB\s0)\fR>"
+
+.IX Item "\fB\-verbose\fR"
+
+.IX Item "\fB\-help\fR"
+
+.IX Header "OUTPUT"
+
+.IX Header "EXAMPLES"
+
+.IX Header "PRIVILEGE REQUIRED"
+
+.IX Header "SEE ALSO"
+
+.IX Header "COPYRIGHT"
+

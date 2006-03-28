@@ -14,7 +14,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/venus/fstrace.c,v 1.16.2.4 2005/07/11 19:29:40 shadow Exp $");
+    ("$Header: /cvs/openafs/src/venus/fstrace.c,v 1.16.2.5 2005/10/05 05:58:48 shadow Exp $");
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -2157,6 +2157,10 @@ afs_syscall(call, parm0, parm1, parm2, parm3, parm4, parm5, parm6)
     __asm__ __volatile__("mov	%o0, %i0; ret; restore");
 #endif
 #else
+#ifdef AFS_DARWIN80_ENV
+    code = ioctl_afs_syscall(call, parm0, parm1, parm2, parm3, parm4, parm5, &rval);
+    if (!code) code = rval;
+#else
 #if !defined(AFS_SGI_ENV) && !defined(AFS_AIX32_ENV)
     code = syscall(AFS_SYSCALL, call, parm0, parm1, parm2, parm3, parm4);
 #else
@@ -2164,6 +2168,7 @@ afs_syscall(call, parm0, parm1, parm2, parm3, parm4, parm5, parm6)
     code = syscall(AFS_ICL, call, parm0, parm1, parm2, parm3, parm4);	/* XXX */
 #else
     code = syscall(AFSCALL_ICL, parm0, parm1, parm2, parm3, parm4);
+#endif
 #endif
 #endif
 #endif /* AFS_LINUX20_ENV */

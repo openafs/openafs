@@ -49,21 +49,25 @@ DOC_PACKAGES = libpam-openafs-kaserver openafs-dbserver openafs-fileserver \
 
 # These variable is used only by get-orig-source, which will normally only be
 # run by maintainers.
-VERSION   = 1.4.0
-UPSTREAM  = /afs/grand.central.org/software/openafs/$(VERSION)
+VERSION   = 1.4.1-rc10
+DEBVERS   = 1.4.0+rc10
+UPSTREAM  = /afs/grand.central.org/software/openafs/candidate/$(VERSION)
 
-# Download the upstream source and do the repackaging that we have to do for
-# DFSG reasons.  This assumes AFS is mounted, as it's generally only used by
-# the package maintainers.
+# Download the upstream source, merge in the doc tarball, and do the
+# repackaging that we have to do for DFSG reasons.  This assumes AFS is
+# mounted, as it's generally only used by the package maintainers.
 get-orig-source:
 	cp $(UPSTREAM)/openafs-$(VERSION)-src.tar.bz2 .
 	tar xjf openafs-$(VERSION)-src.tar.bz2
 	rm openafs-$(VERSION)-src.tar.bz2
+	cp $(UPSTREAM)/openafs-$(VERSION)-doc.tar.bz2 .
+	tar xjf openafs-$(VERSION)-doc.tar.bz2
+	rm openafs-$(VERSION)-doc.tar.bz2
 	rm -r openafs-$(VERSION)/src/packaging/MacOS
 	rm -r openafs-$(VERSION)/src/WINNT
-	tar cf openafs_$(VERSION).orig.tar openafs-$(VERSION)
+	tar cf openafs_$(DEBVERS).orig.tar openafs-$(VERSION)
 	rm -r openafs-$(VERSION)
-	gzip -9 openafs_$(VERSION).orig.tar
+	gzip -9 openafs_$(DEBVERS).orig.tar
 
 configure: configure-stamp
 configure-stamp:
@@ -191,8 +195,8 @@ binary-source:
 	-rm -rf debian/$(srcpkg) debian/substvars
 	install -d debian/$(srcpkg)/usr/src/modules/$(package)
 	find . \( -name \*.o -o -path ./debian/$(srcpkg) -o -path \*/CVS \
-	    -o -path \*/.svn -o -path ./src/WINNT  \
-	    -o -path ./obj -o -path ./$(SYS_NAME)  \
+	    -o -path \*/.svn -o -path ./src/WINNT -o -path ./doc \
+	    -o -path ./obj -o -path ./$(SYS_NAME) \
 	    -o \( -path ./debian/\* -type d \) \
 	    -o -path ./debian/\*debhelper \) -prune -o -print | \
 	        cpio -admp debian/$(srcpkg)/usr/src/modules/$(package)

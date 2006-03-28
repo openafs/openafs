@@ -1,0 +1,528 @@
+.rn '' }`
+''' $RCSfile$$Revision$$Date$
+'''
+''' $Log$
+'''
+.de Sh
+.br
+.if t .Sp
+.ne 5
+.PP
+\fB\\$1\fR
+.PP
+..
+.de Sp
+.if t .sp .5v
+.if n .sp
+..
+.de Ip
+.br
+.ie \\n(.$>=3 .ne \\$3
+.el .ne 3
+.IP "\\$1" \\$2
+..
+.de Vb
+.ft CW
+.nf
+.ne \\$1
+..
+.de Ve
+.ft R
+
+.fi
+..
+'''
+'''
+'''     Set up \*(-- to give an unbreakable dash;
+'''     string Tr holds user defined translation string.
+'''     Bell System Logo is used as a dummy character.
+'''
+.tr \(*W-|\(bv\*(Tr
+.ie n \{\
+.ds -- \(*W-
+.ds PI pi
+.if (\n(.H=4u)&(1m=24u) .ds -- \(*W\h'-12u'\(*W\h'-12u'-\" diablo 10 pitch
+.if (\n(.H=4u)&(1m=20u) .ds -- \(*W\h'-12u'\(*W\h'-8u'-\" diablo 12 pitch
+.ds L" ""
+.ds R" ""
+'''   \*(M", \*(S", \*(N" and \*(T" are the equivalent of
+'''   \*(L" and \*(R", except that they are used on ".xx" lines,
+'''   such as .IP and .SH, which do another additional levels of
+'''   double-quote interpretation
+.ds M" """
+.ds S" """
+.ds N" """""
+.ds T" """""
+.ds L' '
+.ds R' '
+.ds M' '
+.ds S' '
+.ds N' '
+.ds T' '
+'br\}
+.el\{\
+.ds -- \(em\|
+.tr \*(Tr
+.ds L" ``
+.ds R" ''
+.ds M" ``
+.ds S" ''
+.ds N" ``
+.ds T" ''
+.ds L' `
+.ds R' '
+.ds M' `
+.ds S' '
+.ds N' `
+.ds T' '
+.ds PI \(*p
+'br\}
+.\"	If the F register is turned on, we'll generate
+.\"	index entries out stderr for the following things:
+.\"		TH	Title 
+.\"		SH	Header
+.\"		Sh	Subsection 
+.\"		Ip	Item
+.\"		X<>	Xref  (embedded
+.\"	Of course, you have to process the output yourself
+.\"	in some meaninful fashion.
+.if \nF \{
+.de IX
+.tm Index:\\$1\t\\n%\t"\\$2"
+..
+.nr % 0
+.rr F
+.\}
+.TH backup_scantape 8 "OpenAFS" "1/Mar/2006" "AFS Command Reference"
+.UC
+.if n .hy 0
+.if n .na
+.ds C+ C\v'-.1v'\h'-1p'\s-2+\h'-1p'+\s0\v'.1v'\h'-1p'
+.de CQ          \" put $1 in typewriter font
+.ft CW
+'if n "\c
+'if t \\&\\$1\c
+'if n \\&\\$1\c
+'if n \&"
+\\&\\$2 \\$3 \\$4 \\$5 \\$6 \\$7
+'.ft R
+..
+.\" @(#)ms.acc 1.5 88/02/08 SMI; from UCB 4.2
+.	\" AM - accent mark definitions
+.bd B 3
+.	\" fudge factors for nroff and troff
+.if n \{\
+.	ds #H 0
+.	ds #V .8m
+.	ds #F .3m
+.	ds #[ \f1
+.	ds #] \fP
+.\}
+.if t \{\
+.	ds #H ((1u-(\\\\n(.fu%2u))*.13m)
+.	ds #V .6m
+.	ds #F 0
+.	ds #[ \&
+.	ds #] \&
+.\}
+.	\" simple accents for nroff and troff
+.if n \{\
+.	ds ' \&
+.	ds ` \&
+.	ds ^ \&
+.	ds , \&
+.	ds ~ ~
+.	ds ? ?
+.	ds ! !
+.	ds /
+.	ds q
+.\}
+.if t \{\
+.	ds ' \\k:\h'-(\\n(.wu*8/10-\*(#H)'\'\h"|\\n:u"
+.	ds ` \\k:\h'-(\\n(.wu*8/10-\*(#H)'\`\h'|\\n:u'
+.	ds ^ \\k:\h'-(\\n(.wu*10/11-\*(#H)'^\h'|\\n:u'
+.	ds , \\k:\h'-(\\n(.wu*8/10)',\h'|\\n:u'
+.	ds ~ \\k:\h'-(\\n(.wu-\*(#H-.1m)'~\h'|\\n:u'
+.	ds ? \s-2c\h'-\w'c'u*7/10'\u\h'\*(#H'\zi\d\s+2\h'\w'c'u*8/10'
+.	ds ! \s-2\(or\s+2\h'-\w'\(or'u'\v'-.8m'.\v'.8m'
+.	ds / \\k:\h'-(\\n(.wu*8/10-\*(#H)'\z\(sl\h'|\\n:u'
+.	ds q o\h'-\w'o'u*8/10'\s-4\v'.4m'\z\(*i\v'-.4m'\s+4\h'\w'o'u*8/10'
+.\}
+.	\" troff and (daisy-wheel) nroff accents
+.ds : \\k:\h'-(\\n(.wu*8/10-\*(#H+.1m+\*(#F)'\v'-\*(#V'\z.\h'.2m+\*(#F'.\h'|\\n:u'\v'\*(#V'
+.ds 8 \h'\*(#H'\(*b\h'-\*(#H'
+.ds v \\k:\h'-(\\n(.wu*9/10-\*(#H)'\v'-\*(#V'\*(#[\s-4v\s0\v'\*(#V'\h'|\\n:u'\*(#]
+.ds _ \\k:\h'-(\\n(.wu*9/10-\*(#H+(\*(#F*2/3))'\v'-.4m'\z\(hy\v'.4m'\h'|\\n:u'
+.ds . \\k:\h'-(\\n(.wu*8/10)'\v'\*(#V*4/10'\z.\v'-\*(#V*4/10'\h'|\\n:u'
+.ds 3 \*(#[\v'.2m'\s-2\&3\s0\v'-.2m'\*(#]
+.ds o \\k:\h'-(\\n(.wu+\w'\(de'u-\*(#H)/2u'\v'-.3n'\*(#[\z\(de\v'.3n'\h'|\\n:u'\*(#]
+.ds d- \h'\*(#H'\(pd\h'-\w'~'u'\v'-.25m'\f2\(hy\fP\v'.25m'\h'-\*(#H'
+.ds D- D\\k:\h'-\w'D'u'\v'-.11m'\z\(hy\v'.11m'\h'|\\n:u'
+.ds th \*(#[\v'.3m'\s+1I\s-1\v'-.3m'\h'-(\w'I'u*2/3)'\s-1o\s+1\*(#]
+.ds Th \*(#[\s+2I\s-2\h'-\w'I'u*3/5'\v'-.3m'o\v'.3m'\*(#]
+.ds ae a\h'-(\w'a'u*4/10)'e
+.ds Ae A\h'-(\w'A'u*4/10)'E
+.ds oe o\h'-(\w'o'u*4/10)'e
+.ds Oe O\h'-(\w'O'u*4/10)'E
+.	\" corrections for vroff
+.if v .ds ~ \\k:\h'-(\\n(.wu*9/10-\*(#H)'\s-2\u~\d\s+2\h'|\\n:u'
+.if v .ds ^ \\k:\h'-(\\n(.wu*10/11-\*(#H)'\v'-.4m'^\v'.4m'\h'|\\n:u'
+.	\" for low resolution devices (crt and lpr)
+.if \n(.H>23 .if \n(.V>19 \
+\{\
+.	ds : e
+.	ds 8 ss
+.	ds v \h'-1'\o'\(aa\(ga'
+.	ds _ \h'-1'^
+.	ds . \h'-1'.
+.	ds 3 3
+.	ds o a
+.	ds d- d\h'-1'\(ga
+.	ds D- D\h'-1'\(hy
+.	ds th \o'bp'
+.	ds Th \o'LP'
+.	ds ae ae
+.	ds Ae AE
+.	ds oe oe
+.	ds Oe OE
+.\}
+.rm #[ #] #H #V #F C
+.SH "NAME"
+backup scantape \- Extracts dump information from a tape
+.SH "SYNOPSIS"
+\fBbackup scantape\fR [\fB\-dbadd\fR] <<\ [\fB\-portoffset\fR\ <\fITC\ port\ offset\fR] >>>
+    [\fB\-localauth\fR] <<\ [\fB\-cell\fR\ <\fIcell\ name\fR] >>> [\fB\-help\fR]
+.PP
+\fBbackup sc\fR [\fB\-d\fR] <<\ [\fB\-p\fR\ <\fITC\ port\ offset\fR] >>> [\fB\-l\fR]
+    <<\ [\fB\-c\fR\ <\fIcell\ name\fR] >>> [\fB\-h\fR]
+.SH "DESCRIPTION"
+The \fBbackup scantape\fR command extracts information from the dump labels
+and volume headers on the tape in the device controlled by the Tape
+Coordinator indicated by the \fB\-portoffset\fR argument. The Tape Coordinator
+displays the information for each volume in its window as soon as it
+extracts it (rather than waiting until it has scanned the entire tape).
+.PP
+(If the \f(CWFILE YES\fR instruction appears in the
+\fI/usr/afs/backup/CFG_\fIdevice_name\fR\fR file associated with the specified
+port offset, then the \fBbackup scantape\fR command extracts dump information
+from the backup data file named in that port offset's entry in the
+\fI/usr/afs/backup/tapeconfig\fR file on the Tape Coordinator machine, rather
+than from a tape. For the sake of clarity, the following text refers to
+tapes only, but the Backup System handles backup data files in much the
+same way.)
+.PP
+If the \fB\-dbadd\fR flag is provided, the backup scantape command creates new
+dump and volume records in the Backup Database for the scanned
+information. However, if it finds that a record already exists in the
+database for the same dump, it terminates the scanning operation.
+.PP
+The scanning operation works only on tapes containing volume data.  The
+command fails with an error message if the tape contains a copy of the
+Backup Database (was created with the \fBbackup savedb\fR command, or has the
+AFS tape name \f(CWUbik_db_dump.1\fR).
+.PP
+The Tape Coordinator's default response to this command is to access the
+tape by invoking the \f(CWMOUNT\fR instruction in the \fICFG_\fIdevice_name\fR\fR
+file, or by prompting the backup operator to insert the tape if there is
+no \f(CWMOUNT\fR instruction.  However, if the \f(CWAUTOQUERY NO\fR instruction
+appears in the \fICFG_\fIdevice_name\fR\fR file, or if the issuer of the \fBbutc\fR
+command included the \fB\-noautoquery\fR flag, the Tape Coordinator instead
+expects the tape to be in the device already. If it is not, the Tape
+Coordinator invokes the \f(CWMOUNT\fR instruction or prompts the operator.
+.PP
+To terminate a tape scanning operation in interactive mode, issue the
+\fBbackup kill\fR command. In noninteractive mode, the only choice is to use
+a termination signal such as Ctrl-C to halt the Tape Coordinator
+completely.
+.SH "CAUTIONS"
+A scanning operation does not have to begin with the first tape in a dump
+set, but the Backup System can process tapes only in sequential order
+after the initial tape provided. The Tape Coordinator automatically
+requests any subsequent tapes by invoking the \f(CWMOUNT\fR instruction in the
+local \fI/usr/afs/backup/CFG_\fIdevice_name\fR\fR file, or by prompting the
+operator if there is no \f(CWMOUNT\fR instruction.
+.PP
+The Tape Coordinator's success in scanning a tape that is corrupted or
+damaged depends on the extent of the damage and what type of data is
+corrupted. It can almost always scan the tape successfully up to the point
+of damage. If the damage is minor, the Tape Coordinator can usually skip
+over it and scan the rest of the tape, but more major damage can prevent
+further scanning. Because a scanning operation can start on any tape in a
+dump set, damage on one tape does not prevent scanning of the others in
+the dump set. However, it is possible to scan either the tapes that
+precede the damaged one or the ones that follow it, but not both.
+.PP
+If a tape is relabeled with the backup labeltape command, it is not
+possible to recover data from it for the purposes of rebuilding the Backup
+Database.
+.PP
+If the \fB\-dbadd\fR flag is included on the command, it is best not to
+terminate the tape scanning operation before it completes (for example, by
+issuing the \fBbackup kill\fR command in interactive mode). The Backup System
+writes a new record in the Backup Database for each dump as soon as it
+scans the relevant information on the tape, and so it possibly has already
+written new records. If the operator wants to rerun the scanning
+operation, he or she must locate and remove the records created during the
+terminated operation: the second operation exits automatically if it finds
+that a record that it needs to create already exists.
+.PP
+If the \fB\-dbadd\fR flag is included and the first tape provided is not the
+first tape in the dump set, the following restrictions apply:
+.Ip "\(bu" 4
+If the first data on the tape is a continuation of a volume that begins on
+the previous (unscanned) tape in the dump set, the Backup System does not
+add a record for that volume to the Backup Database.
+.Ip "\(bu" 4
+The Backup System must read the marker that indicates the start of an
+appended dump to add database records for the volumes in it. If the first
+volume on the tape belongs to an appended dump, but is not immediately
+preceded by the appended-dump marker, the Backup System does not create a
+Backup Database record for it or any subsequent volumes that belong to
+that appended dump.
+.SH "OPTIONS"
+.Ip "\fB\-dbadd\fR" 4
+Adds the information extracted from the tape to the Backup Database (but
+only if the database does not already contain an entry with the same dump
+\s-1ID\s0 number).
+.Ip "\fB\-portoffset\fR <\fI\s-1TC\s0 port offset\fR>" 4
+Specifies the port offset number of the Tape Coordinator handling the
+tapes for this operation.
+.Ip "\fB\-localauth\fR" 4
+Constructs a server ticket using a key from the local
+\fI/usr/afs/etc/KeyFile\fR file. The \fBbackup\fR command interpreter presents
+it to the Backup Server, Volume Server and \s-1VL\s0 Server during mutual
+authentication. Do not combine this flag with the \fB\-cell\fR argument. For
+more details, see the \fIbackup(8)\fR manpage.
+.Ip "\fB\-cell\fR <\fIcell name\fR>" 4
+Names the cell in which to run the command. Do not combine this argument
+with the \fB\-localauth\fR flag. For more details, see the \fIbackup(8)\fR manpage.
+.Ip "\fB\-help\fR" 4
+Prints the online help for this command. All other valid options are
+ignored.
+.SH "OUTPUT"
+For every dump on a tape, the backup scantape command displays in the Tape
+Coordinator window the dump label and the volume header of each volume in
+the dump. If a dump spans more than one tape, the dump label does not
+repeat at the beginning of subsequent tapes.
+.PP
+A dump label contains the following fields, which are the same as in the
+output from the \fBbackup readlabel\fR command:
+.Ip "tape name" 4
+The permanent name assigned by using the \fB\-pname\fR argument of the
+\fBbackup labeltape\fR command. This name remains on the tape until that
+argument is used again, no matter how many times the tape is recycled or
+otherwise relabeled. If the tape does not have a permanent name, the value
+\f(CW< <NULL\fR >> appears in this field.
+.Ip "\s-1AFS\s0 tape name" 4
+A tape name in one of the following prescribed formats. The Backup System
+automatically writes the appropriate \s-1AFS\s0 tape name to the label as part of
+a \fBbackup dump\fR operation, or the operator can assign it with the
+\fB\-name\fR argument to the \fBbackup labeltape\fR command.
+.Ip "\(bu" 8
+\fIvolume_set_name\fR.\fIdump_level_name\fR.\fItape_index\fR, if the tape contains
+volume data. The \fIvolume_set_name\fR is the name of the volume set that was
+dumped to create the initial dump in the dump set of which this tape is a
+part; \fIdump_level_name\fR is the last pathname element of the dump level at
+which the initial dump was backed up; and \fItape_index\fR is the numerical
+position of the tape in the dump set.
+.Ip "\(bu" 8
+\f(CW< <NULL\fR >> if the tape has no \s-1AFS\s0 tape name. This is normally the case
+if the \fB\-name\fR argument was not included the last time the \fBbackup
+labeltape\fR command was used on this tape, and no data has been written to
+it since.
+.Ip "creationTime" 4
+The date and time at which the Backup System started performing the dump
+operation that created the initial dump.
+.Ip "cell" 4
+The cell in which the dump set was created. This is the cell whose Backup
+Database contains a record of the dump set.
+.Ip "size" 4
+The tape's capacity (in kilobytes) as recorded on the label, rather than
+the amount of data on the tape. The value is assigned by the \fB\-size\fR
+argument to the \fBbackup labeltape\fR command or derived from the
+\fI/usr/afs/backup/tapeconfig\fR file on the Tape Coordinator machine, not
+from a measurement of the tape.
+.Ip "dump path" 4
+The dump level of the initial dump in the dump set.
+.Ip "dump id" 4
+The dump \s-1ID\s0 number of the initial dump in the dump set, as recorded in the
+Backup Database.
+.Ip "useCount" 4
+The number of times a dump has been written to the tape, or it has been
+relabeled.
+.PP
+The volume header contains the following fields:
+.Ip "volume name" 4
+The volume name, complete with a \f(CW.backup\fR or \f(CW.readonly\fR extension, if
+appropriate.
+.Ip "volume \s-1ID\s0" 4
+The volume's volume \s-1ID\s0.
+.Ip "dumpSetName" 4
+The dump to which the volume belongs. The dump name is of the form
+\fIvolume_set_name\fR.\fIdump_level_name\fR and matches the name displayed in
+the dump label.
+.Ip "dumpID" 4
+The dump \s-1ID\s0 of the dump named in the \f(CWdumpSetName\fR field.
+.Ip "level" 4
+The depth in the dump hierarchy of the dump level used in creating the
+dump. A value of \f(CW0\fR indicates a full dump. A value of \f(CW1\fR or greater
+indicates an incremental dump made at the indicated depth in the
+hierarchy. The value reported is for the entire dump, not necessarily for
+the volume itself; for example, it is possible for a dump performed at an
+incremental level to include a full dump of an individual volume if the
+volume was omitted from previous dumps.
+.Ip "parentID" 4
+The dump \s-1ID\s0 number of \f(CWdumpSetName\fR's parent dump. It is \f(CW0\fR if the
+value in the \f(CWlevel\fR field is \f(CW0\fR.
+.Ip "endTime" 4
+Is always \f(CW0\fR; it is reserved for internal use.
+.Ip "cloneDate" 4
+The date and time at which the volume was created. For a backup or
+read-only volume, this represents the time at which it was cloned from its
+read/write source. For a read/write volume, it indicates the time at which
+the Backup System locked the volume for purposes of including it in the
+dump named in the \f(CWdumpSetName\fR field.
+.PP
+The message \f(CWScantape: Finished\fR indicates the completion of the output.
+.PP
+In normal circumstances, the Backup System writes a marker to indicate
+that a volume is the last one on a tape, or that the volume continues on
+the next tape. However, if a backup operation terminated abnormally (for
+example, because the operator terminated the Tape Coordinator by issuing
+the Ctrl-C command during the operation), then there is no such
+marker. Some very early versions of the Backup System also did not write
+these markers. If a tape does not conclude with one of the expected
+markers, the Tape Coordinator cannot determine if there is a subsequent
+tape in the dump set and so generates the following message in its window:
+.PP
+.Vb 1
+\&   Are there more tapes? (y/n)
+.Ve
+.SH "EXAMPLES"
+The following example shows the output for the first two volumes on a tape
+in the device with port offset 0:
+.PP
+.Vb 30
+\&   % backup scantape
+\&   Dump label
+\&   ----------
+\&   tape name = monthly_guest
+\&   AFS tape name = guests.monthly.3
+\&   creationTime =  Mon Feb  1 04:06:40 1999
+\&   cell = abc.com
+\&   size = 2150000 Kbytes
+\&   dump path = /monthly
+\&   dump id = 917860000
+\&   useCount = 44
+\&   -- End of dump label --
+\&   -- volume --
+\&   volume name: user.guest10.backup
+\&   volume ID 1937573829
+\&   dumpSetName: guests.monthly
+\&   dumpID 917860000
+\&   level 0
+\&   parentID 0
+\&   endTime 0
+\&   clonedate Mon Feb  1 03:03:23 1999
+\&   -- volume --
+\&   volume name: user.guest11.backup
+\&   volume ID 1938519386
+\&   dumpSetName: guests.monthly
+\&   dumpID 917860000
+\&   level 0
+\&   parentID 0
+\&   endTime 0
+\&   clonedate Mon Feb  1 03:05:15 1999
+.Ve
+.SH "PRIVILEGE REQUIRED"
+The issuer must be listed in the \fI/usr/afs/etc/UserList\fR file on every
+machine where the Backup Server is running, or must be logged onto a
+server machine as the local superuser \f(CWroot\fR if the \fB\-localauth\fR flag is
+included.
+.SH "SEE ALSO"
+the \fIbutc(5)\fR manpage,
+the \fIbackup(8)\fR manpage,
+the \fIbackup_dump(8)\fR manpage,
+the \fIbackup_dumpinfo(8)\fR manpage,
+the \fIbutc(8)\fR manpage
+.SH "COPYRIGHT"
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+.PP
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
+
+.rn }` ''
+.IX Title "backup_scantape 8"
+.IX Name "backup scantape - Extracts dump information from a tape"
+
+.IX Header "NAME"
+
+.IX Header "SYNOPSIS"
+
+.IX Header "DESCRIPTION"
+
+.IX Header "CAUTIONS"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Header "OPTIONS"
+
+.IX Item "\fB\-dbadd\fR"
+
+.IX Item "\fB\-portoffset\fR <\fI\s-1TC\s0 port offset\fR>"
+
+.IX Item "\fB\-localauth\fR"
+
+.IX Item "\fB\-cell\fR <\fIcell name\fR>"
+
+.IX Item "\fB\-help\fR"
+
+.IX Header "OUTPUT"
+
+.IX Item "tape name"
+
+.IX Item "\s-1AFS\s0 tape name"
+
+.IX Item "\(bu"
+
+.IX Item "\(bu"
+
+.IX Item "creationTime"
+
+.IX Item "cell"
+
+.IX Item "size"
+
+.IX Item "dump path"
+
+.IX Item "dump id"
+
+.IX Item "useCount"
+
+.IX Item "volume name"
+
+.IX Item "volume \s-1ID\s0"
+
+.IX Item "dumpSetName"
+
+.IX Item "dumpID"
+
+.IX Item "level"
+
+.IX Item "parentID"
+
+.IX Item "endTime"
+
+.IX Item "cloneDate"
+
+.IX Header "EXAMPLES"
+
+.IX Header "PRIVILEGE REQUIRED"
+
+.IX Header "SEE ALSO"
+
+.IX Header "COPYRIGHT"
+

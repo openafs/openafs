@@ -238,10 +238,13 @@ extern int rx_RxStatUserOk(struct rx_call *call);
 /* old style till varargs */
 #if 0
 void
-  rxi_DebugPrint(char *format, int a1, int a2, int a3, int a4, int a5, int a6,
-		 int a7, int a8, int a9, int a10, int a11, int a12, int a13,
-		 int a14, int a15);
+rxi_DebugPrint(char *format, int a1, int a2, int a3, int a4, int a5, int a6,
+               int a7, int a8, int a9, int a10, int a11, int a12, int a13,
+	       int a14, int a15);
+void
+rxi_DebugInit(void);
 #else
+void rxi_DebugInit();
 void rxi_DebugPrint();
 #endif
 
@@ -309,10 +312,12 @@ extern afs_int32 rxi_getaddr(void);
 
 
 /* rx_kcommon.c */
-extern int (*rxk_PacketArrivalProc) (register struct rx_packet * ahandle,
-				     register struct sockaddr_in * afrom,
-				     char *arock, afs_int32 asize);
-extern int (*rxk_GetPacketProc) (char **ahandle, int asize);
+struct socket;
+extern int (*rxk_PacketArrivalProc) (struct rx_packet * ahandle,
+				     struct sockaddr_in * afrom,
+				     struct socket *arock,
+				     afs_int32 asize);
+extern int (*rxk_GetPacketProc) (struct rx_packet **ahandle, int asize);
 extern afs_int32 afs_termState;
 extern int rxk_initDone;
 
@@ -348,6 +353,10 @@ extern void rxk_ListenerProc(void);
 extern void rxk_Listener(void);
 #ifndef UKERNEL
 extern void afs_rxevent_daemon(void);
+#endif
+#if defined(AFS_DARWIN80_ENV) && defined(KERNEL)
+extern ifnet_t rxi_FindIfnet(afs_uint32 addr, afs_uint32 * maskp);
+#else
 extern struct ifnet *rxi_FindIfnet(afs_uint32 addr, afs_uint32 * maskp);
 #endif
 extern void osi_StopListener(void);
@@ -401,7 +410,7 @@ extern void rxi_StartServerProc(void (*proc) (void), int stacksize);
 extern void rxi_StartListener(void);
 extern void rx_ServerProc(void);
 extern int rxi_Listen(osi_socket sock);
-extern int rxi_Recvmsg(int socket, struct msghdr *msg_p, int flags);
+extern int rxi_Recvmsg(osi_socket socket, struct msghdr *msg_p, int flags);
 extern int rxi_Sendmsg(osi_socket socket, struct msghdr *msg_p, int flags);
 
 
@@ -456,7 +465,7 @@ extern int rxi_AllocPackets(int cla_ss, int num_pkts, struct rx_queue *q);
 extern int rxi_FreePackets(int num_pkts, struct rx_queue *q);
 extern struct rx_packet *rxi_AllocSendPacket(register struct rx_call *call,
 					     int want);
-extern int rxi_ReadPacket(int socket, register struct rx_packet *p,
+extern int rxi_ReadPacket(osi_socket socket, register struct rx_packet *p,
 			  afs_uint32 * host, u_short * port);
 extern struct rx_packet *rxi_SplitJumboPacket(register struct rx_packet *p,
 					      afs_int32 host, short port,
@@ -506,7 +515,7 @@ extern void rxi_ReScheduleEvents(void);
 extern void rx_ServerProc(void);
 extern void rxi_StartListener(void);
 extern int rxi_Listen(osi_socket sock);
-extern int rxi_Recvmsg(int socket, struct msghdr *msg_p, int flags);
+extern int rxi_Recvmsg(osi_socket socket, struct msghdr *msg_p, int flags);
 extern int rxi_Sendmsg(osi_socket socket, struct msghdr *msg_p, int flags);
 
 

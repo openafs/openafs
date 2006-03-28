@@ -10,3 +10,10 @@ echo "Running autoheader"
 autoheader
 #echo "Running automake"
 #automake
+
+# Rebuild the man pages, to not require those building from source to have
+# pod2man available.
+echo "Building man pages"
+if test -d doc/man-pages ; then
+    (cd doc/man-pages && ./generate-man)
+fi

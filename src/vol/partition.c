@@ -21,7 +21,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vol/partition.c,v 1.30.2.1.4.1 2005/10/17 20:48:29 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vol/partition.c,v 1.30.2.2 2005/10/17 20:47:07 shadow Exp $");
 
 #include <ctype.h>
 #ifdef AFS_NT40_ENV

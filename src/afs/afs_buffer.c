@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_buffer.c,v 1.16.2.5 2005/07/28 21:33:57 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_buffer.c,v 1.16.2.6 2006/01/24 17:41:20 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
@@ -98,7 +98,7 @@ DInit(int abuffers)
     /* Initialize the venus buffer system. */
     register int i;
     register struct buffer *tb;
-#if AFS_USEBUFFERS
+#if defined(AFS_USEBUFFERS)
     struct buf *tub;		/* unix buffer for allocation */
 #endif
 
@@ -106,14 +106,14 @@ DInit(int abuffers)
     if (dinit_flag)
 	return;
     dinit_flag = 1;
-#if AFS_USEBUFFERS
+#if defined(AFS_USEBUFFERS)
     /* round up to next multiple of NPB, since we allocate multiple pages per chunk */
     abuffers = ((abuffers - 1) | (NPB - 1)) + 1;
 #endif
     LOCK_INIT(&afs_bufferLock, "afs_bufferLock");
     Buffers =
 	(struct buffer *)afs_osi_Alloc(abuffers * sizeof(struct buffer));
-#if !AFS_USEBUFFERS
+#if !defined(AFS_USEBUFFERS)
     BufferData = (char *)afs_osi_Alloc(abuffers * AFS_BUFFER_PAGESIZE);
 #endif
     timecounter = 1;
@@ -121,7 +121,7 @@ DInit(int abuffers)
     for (i = 0; i < PHSIZE; i++)
 	phTable[i] = 0;
     for (i = 0; i < abuffers; i++) {
-#if AFS_USEBUFFERS
+#if defined(AFS_USEBUFFERS)
 	if ((i & (NPB - 1)) == 0) {
 	    /* time to allocate a fresh buffer */
 	    tub = geteblk(AFS_BUFFER_PAGESIZE * NPB);
@@ -134,7 +134,7 @@ DInit(int abuffers)
 	tb->inode = 0;
 	tb->accesstime = 0;
 	tb->lockers = 0;
-#if AFS_USEBUFFERS
+#if defined(AFS_USEBUFFERS)
 	if ((i & (NPB - 1)) == 0)
 	    tb->bufp = tub;
 	else
@@ -368,14 +368,14 @@ DRelease(register struct buffer *bp, int flag)
     /* Release a buffer, specifying whether or not the buffer has been
      * modified by the locker. */
     register int index;
-#if AFS_USEBUFFERS
+#if defined(AFS_USEBUFFERS)
     register struct buffer *tp;
 #endif
 
     AFS_STATCNT(DRelease);
     if (!bp)
 	return;
-#if AFS_USEBUFFERS
+#if defined(AFS_USEBUFFERS)
     /* look for buffer by scanning Unix buffers for appropriate address */
     tp = Buffers;
     for (index = 0; index < nbuffers; index += NPB, tp += NPB) {
@@ -404,12 +404,12 @@ DVOffset(register void *ap)
     /* Return the byte within a file represented by a buffer pointer. */
     register struct buffer *bp;
     register int index;
-#if AFS_USEBUFFERS
+#if defined(AFS_USEBUFFERS)
     register struct buffer *tp;
 #endif
     AFS_STATCNT(DVOffset);
     bp = ap;
-#if AFS_USEBUFFERS
+#if defined(AFS_USEBUFFERS)
     /* look for buffer by scanning Unix buffers for appropriate address */
     tp = Buffers;
     for (index = 0; index < nbuffers; index += NPB, tp += NPB) {
@@ -530,7 +530,7 @@ DNew(register struct dcache *adc, register int page)
 void
 shutdown_bufferpackage(void)
 {
-#if AFS_USEBUFFERS
+#if defined(AFS_USEBUFFERS)
     register struct buffer *tp;
 #endif
     int i;
@@ -541,7 +541,7 @@ shutdown_bufferpackage(void)
     DFlush();
     if (afs_cold_shutdown) {
 	dinit_flag = 0;
-#if !AFS_USEBUFFERS
+#if !defined(AFS_USEBUFFERS)
 	afs_osi_Free(BufferData, nbuffers * AFS_BUFFER_PAGESIZE);
 #else
 	tp = Buffers;

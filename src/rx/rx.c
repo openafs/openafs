@@ -17,7 +17,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx.c,v 1.58.2.28.2.1 2005/10/08 04:01:00 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx.c,v 1.58.2.30 2005/11/29 07:01:50 jaltman Exp $");
 
 #ifdef KERNEL
 #include "afs/sysincludes.h"
@@ -2851,11 +2851,15 @@ rxi_ReceivePacket(register struct rx_packet *np, osi_socket socket,
 	np = rxi_ReceiveAckPacket(call, np, 1);
 	break;
     case RX_PACKET_TYPE_ABORT:
-	/* An abort packet: reset the connection, passing the error up to
-	 * the user */
+	/* An abort packet: reset the call, passing the error up to the user. */
 	/* What if error is zero? */
+	/* What if the error is -1? the application will treat it as a timeout. */
 	rxi_CallError(call, ntohl(*(afs_int32 *) rx_DataOf(np)));
-	break;
+	MUTEX_EXIT(&call->lock);
+	MUTEX_ENTER(&conn->conn_data_lock);
+	conn->refCount--;
+	MUTEX_EXIT(&conn->conn_data_lock);
+	return np;		/* xmitting; drop packet */
     case RX_PACKET_TYPE_BUSY:
 	/* XXXX */
 	break;
@@ -2877,7 +2881,10 @@ rxi_ReceivePacket(register struct rx_packet *np, osi_socket socket,
 	    rxi_SetAcksInTransmitQueue(call);
 	    break;
 #else /* RX_ENABLE_LOCKS */
+	    MUTEX_EXIT(&call->lock);
+	    MUTEX_ENTER(&conn->conn_data_lock);
 	    conn->refCount--;
+	    MUTEX_EXIT(&conn->conn_data_lock);
 	    return np;		/* xmitting; drop packet */
 #endif /* RX_ENABLE_LOCKS */
 	}

@@ -14,7 +14,7 @@ LIBS=-lcmd -lcom_err -lafsutil
 
 INCDIRS=  -I${SRCDIR}/include -I${SRCDIR}/include/afs -I..
 
-CFLAGS = ${OPTIMIZE} ${INCDIRS} ${LDIRS} ${LIBS} ${XCFLAGS}
+CFLAGS = ${OPTIMIZE} ${INCDIRS} ${LDIRS} ${LIBS} ${XCFLAGS} ${ARCHFLAGS}
 
 all: test
 test tests: ctest dtest itest

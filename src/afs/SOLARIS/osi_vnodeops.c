@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/SOLARIS/osi_vnodeops.c,v 1.20.2.3.2.1 2005/10/12 06:06:47 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/SOLARIS/osi_vnodeops.c,v 1.20.2.8 2006/02/13 18:39:11 shadow Exp $");
 
 /*
  * SOLARIS/osi_vnodeops.c
@@ -266,7 +266,7 @@ afs_GetOnePage(vp, off, alen, protp, pl, plsz, seg, addr, rw, acred)
     register struct dcache *tdc;
     int i, s, pexists;
     int slot;
-    afs_size_t offset = 0, nlen;
+    afs_size_t offset, nlen = 0;
     struct vrequest treq;
     afs_int32 mapForRead = 0, Code = 0;
     u_offset_t toffset;
@@ -457,7 +457,11 @@ afs_GetOnePage(vp, off, alen, protp, pl, plsz, seg, addr, rw, acred)
 	    buf = pageio_setup(page, PAGESIZE, vp, B_READ);	/* allocate a buf structure */
 	    buf->b_edev = 0;
 	    buf->b_dev = 0;
+#if defined(AFS_SUN56_ENV)
+	    buf->b_lblkno = lbtodb(toffset);
+#else
 	    buf->b_blkno = btodb(toffset);
+#endif
 	    bp_mapin(buf);	/* map it in to our address space */
 
 	    AFS_GLOCK();
@@ -685,7 +689,11 @@ afs_putapage(struct vnode *vp, struct page *pages,
 	    return (ENOMEM);
 
 	tbuf->b_dev = 0;
+#if defined(AFS_SUN56_ENV)
+	tbuf->b_lblkno = lbtodb(pages->p_offset);
+#else
 	tbuf->b_blkno = btodb(pages->p_offset);
+#endif
 	bp_mapin(tbuf);
 	AFS_GLOCK();
 	afs_Trace4(afs_iclSetp, CM_TRACE_PAGEOUTONE, ICL_TYPE_LONG, avc,
@@ -743,7 +751,7 @@ afs_nfsrdwr(avc, auio, arw, ioflag, acred)
 
     afs_Trace4(afs_iclSetp, CM_TRACE_VMRW, ICL_TYPE_POINTER, (afs_int32) avc,
 	       ICL_TYPE_LONG, (arw == UIO_WRITE ? 1 : 0), ICL_TYPE_OFFSET,
-	       ICL_HANDLE_OFFSET(auio->uio_offset), ICL_TYPE_OFFSET,
+	       ICL_HANDLE_OFFSET(auio->uio_loffset), ICL_TYPE_OFFSET,
 	       ICL_HANDLE_OFFSET(auio->uio_resid));
 
 #ifndef AFS_64BIT_CLIENT
@@ -762,9 +770,9 @@ afs_nfsrdwr(avc, auio, arw, ioflag, acred)
      */
     afs_MaybeWakeupTruncateDaemon();
     while ((arw == UIO_WRITE)
-	   && (afs_blocksUsed > (CM_WAITFORDRAINPCT * afs_cacheBlocks) / 100)) {
+	   && (afs_blocksUsed > PERCENT(CM_WAITFORDRAINPCT, afs_cacheBlocks))) {
 	if (afs_blocksUsed - afs_blocksDiscarded >
-	    (CM_WAITFORDRAINPCT * afs_cacheBlocks) / 100) {
+	    PERCENT(CM_WAITFORDRAINPCT, afs_cacheBlocks)) {
 	    afs_WaitForCacheDrain = 1;
 	    afs_osi_Sleep(&afs_WaitForCacheDrain);
 	}
@@ -782,12 +790,13 @@ afs_nfsrdwr(avc, auio, arw, ioflag, acred)
 
     /* adjust parameters when appending files */
     if ((ioflag & IO_APPEND) && arw == UIO_WRITE) {
-#if	defined(AFS_SUN56_ENV)
-	auio->uio_loffset = 0;
-#endif
+#if defined(AFS_SUN56_ENV)
+	auio->uio_loffset = avc->m.Length;	/* write at EOF position */
+#else
 	auio->uio_offset = avc->m.Length;	/* write at EOF position */
+#endif
     }
-    if (auio->uio_offset < 0 || (auio->uio_offset + auio->uio_resid) < 0) {
+    if (auio->afsio_offset < 0 || (auio->afsio_offset + auio->uio_resid) < 0) {
 	ReleaseWriteLock(&avc->lock);
 	afs_BozonUnlock(&avc->pvnLock, avc);
 	return EINVAL;
@@ -886,8 +895,9 @@ afs_nfsrdwr(avc, auio, arw, ioflag, acred)
 	 * call it with an offset based on blocks smaller than MAXBSIZE
 	 * (implying that it should be named BSIZE, since it is clearly both a
 	 * max and a min). */
-	size = auio->afsio_resid;	/* transfer size */
-	fileBase = auio->afsio_offset;	/* start file position for xfr */
+	size = auio->afsio_resid;       /* transfer size */     
+	fileBase = ((arw == UIO_READ) && (origLength < auio->uio_offset)) ? 
+	    origLength : auio->afsio_offset;  /* start file position for xfr */
 	pageBase = fileBase & ~(MAXBSIZE - 1);	/* file position of the page */
 	pageOffset = fileBase & (MAXBSIZE - 1);	/* xfr start's offset within page */
 	tsize = MAXBSIZE - pageOffset;	/* how much more fits in this page */
@@ -1233,7 +1243,13 @@ afs_seek(vnp, ooff, noffp)
 {
     register int code = 0;
 
-    if ((*noffp < 0 || *noffp > MAXOFF_T))
+#ifndef AFS_64BIT_CLIENT
+# define __MAXOFF_T MAXOFF_T
+#else
+# define __MAXOFF_T MAXOFFSET_T
+#endif
+
+    if ((*noffp < 0 || *noffp > __MAXOFF_T))
 	code = EINVAL;
     return code;
 }

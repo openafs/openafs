@@ -207,6 +207,7 @@ case $AFS_SYSNAME in
 		MT_LIBS="-pthread"
 		PAM_CFLAGS="-O2 -pipe -fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
+		SHLIB_LINKER="${MT_CC} -shared"
 		TXLIBS="-lncurses"
 		XCFLAGS="-O2 -pipe"
 		YACC="byacc"
@@ -218,6 +219,7 @@ case $AFS_SYSNAME in
 		MT_LIBS="-lpthread" # XXX -pthread soon
 		PAM_CFLAGS="-O2 -pipe -fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
+		SHLIB_LINKER="${MT_CC} -shared"
 		TXLIBS="/usr/lib/libcurses.so"
 		XCFLAGS="-O2 -pipe"
 		YACC="yacc"
@@ -229,6 +231,7 @@ case $AFS_SYSNAME in
 		MT_LIBS=""
 		PAM_CFLAGS="-O2 -pipe -fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
+		SHLIB_LINKER="${MT_CC} -shared"
 		TXLIBS="/usr/lib/libcurses.so"
 		XCFLAGS="-O2 -pipe"
 		YACC="bison -y"
@@ -371,6 +374,7 @@ case $AFS_SYSNAME in
 		PAM_CFLAGS="-O2 -pipe -fpic"
 		SHLIB_CFLAGS="-fpic"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
+		SHLIB_LINKER="${MT_CC} -shared"
 		TXLIBS="/usr/lib/libcurses.a"
 		XCFLAGS="-O2"
 		YACC="yacc"
@@ -395,6 +399,8 @@ case $AFS_SYSNAME in
 		LEX="lex -l"
 		REGEX_OBJ="regex.o"
 		XCFLAGS="-traditional-cpp"
+		SHLIB_LINKER="${MT_CC} -dynamiclib"
+		SHLIB_SUFFIX="dylib"
 		;;
 
 	ppc_darwin_13)
@@ -403,6 +409,8 @@ case $AFS_SYSNAME in
 		LWP_OPTMZ="-O2"
 		REGEX_OBJ="regex.o"
 		XCFLAGS="-no-cpp-precomp"
+		SHLIB_LINKER="${MT_CC} -dynamiclib"
+		SHLIB_SUFFIX="dylib"
 		;;
 
 	ppc_darwin_14)
@@ -411,6 +419,8 @@ case $AFS_SYSNAME in
 		LWP_OPTMZ="-O2"
 		REGEX_OBJ="regex.o"
 		XCFLAGS="-no-cpp-precomp"
+		SHLIB_LINKER="${MT_CC} -dynamiclib"
+		SHLIB_SUFFIX="dylib"
 		;;
 
 	ppc_darwin_60)
@@ -420,6 +430,8 @@ case $AFS_SYSNAME in
 		REGEX_OBJ="regex.o"
 		XCFLAGS="-no-cpp-precomp"
 		TXLIBS="-lncurses"
+		SHLIB_LINKER="${MT_CC} -dynamiclib"
+		SHLIB_SUFFIX="dylib"
 		;;
 
 	ppc_darwin_70)
@@ -433,19 +445,41 @@ case $AFS_SYSNAME in
 		XCFLAGS="-no-cpp-precomp"
 		TXLIBS="-lncurses"
 		EXTRA_VLIBOBJS="fstab.o"
+		SHLIB_LINKER="${MT_CC} -dynamiclib"
+		SHLIB_SUFFIX="dylib"
 		;;
 
-	ppc_darwin_80)
+	*_darwin_80)
 		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration"
 		LEX="lex -l"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV -D_REENTRANT ${XCFLAGS}'
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -D_REENTRANT ${XCFLAGS} ${ARCHFLAGS}'
 		KROOT=
 		KINCLUDES='-I$(KROOT)/System/Library/Frameworks/Kernel.framework/Headers'
-		LWP_OPTMZ="-O2"
+		KERN_OPTMZ="-Os"
+		LWP_OPTMZ="-Os"
+		OPTMZ="-Os"
 		REGEX_OBJ="regex.o"
-		XCFLAGS="-no-cpp-precomp"
 		TXLIBS="-lncurses"
 		EXTRA_VLIBOBJS="fstab.o"
+		SHLIB_LINKER="${MT_CC} -dynamiclib"
+		SHLIB_SUFFIX="dylib"
+		;;
+
+	*_darwin_90)
+		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration"
+		LEX="lex -l"
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -D_REENTRANT ${XCFLAGS} ${ARCHFLAGS}'
+		KROOT=
+		KINCLUDES='-I$(KROOT)/System/Library/Frameworks/Kernel.framework/Headers'
+		LD="cc"
+		KERN_OPTMZ="-Os"
+		LWP_OPTMZ="-Os"
+		OPTMZ="-Os"
+		REGEX_OBJ="regex.o"
+		TXLIBS="-lncurses"
+		EXTRA_VLIBOBJS="fstab.o"
+		SHLIB_LINKER="${MT_CC} -dynamiclib"
+		SHLIB_SUFFIX="dylib"
 		;;
 
 	ppc_linux*)
@@ -454,7 +488,6 @@ case $AFS_SYSNAME in
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
 		PAM_CFLAGS="-O2 -Dlinux -DLINUX_PAM -fPIC"
-		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="-lncurses"
 		XCFLAGS="-O2 -D_LARGEFILE64_SOURCE"
@@ -681,6 +714,7 @@ case $AFS_SYSNAME in
 		XLIBS="${LIB_AFSDB} -lsocket -lnsl -lintl -ldl"
 		LD="/usr/ccs/bin/ld"
 		SHLIB_LINKER="${CC} -G -dy -Wl,-M\$(srcdir)/mapfile -Bsymbolic -z text"
+		LWP_OPTMZ="-g"
 		;;
 
 	sun4x_56)
@@ -701,6 +735,7 @@ case $AFS_SYSNAME in
 		XLIBKVM="-lkvm"
 		XLIBS="${LIB_AFSDB} -lsocket -lnsl -lintl -ldl"
 		SHLIB_LINKER="${CC} -G -dy -Wl,-M\$(srcdir)/mapfile -Bsymbolic -z text"
+		LWP_OPTMZ="-g"
 		;;
 
 	sun4x_57)
@@ -722,6 +757,7 @@ case $AFS_SYSNAME in
 		XLIBKVM="-lkvm"
 		XLIBS="${LIB_AFSDB} -lsocket -lnsl -lintl -ldl"
 		SHLIB_LINKER="${CC} -G -dy -Wl,-M\$(srcdir)/mapfile -Bsymbolic -z text"
+		LWP_OPTMZ="-g"
 		;;
 
 	sun4x_58)
@@ -743,6 +779,7 @@ case $AFS_SYSNAME in
 		XLIBKVM="-lkvm"
 		XLIBS="${LIB_AFSDB} -lsocket -lnsl -lintl -ldl"
 		SHLIB_LINKER="${CC} -G -dy -Wl,-M\$(srcdir)/mapfile -Bsymbolic -z text"
+		LWP_OPTMZ="-g"
 		;;
 
 	sun4x_59)
@@ -764,6 +801,7 @@ case $AFS_SYSNAME in
 		XLIBKVM="-lkvm"
 		XLIBS="${LIB_AFSDB} -lsocket -lnsl -lintl -ldl"
 		SHLIB_LINKER="${CC} -G -dy -Wl,-M\$(srcdir)/mapfile -Bsymbolic -z text"
+		LWP_OPTMZ="-g"
 		;;
 
 	sun4x_510)
@@ -785,6 +823,7 @@ case $AFS_SYSNAME in
 		XLIBKVM="-lkvm"
 		XLIBS="${LIB_AFSDB} -lsocket -lnsl -lintl -ldl"
 		SHLIB_LINKER="${CC} -G -dy -Wl,-M\$(srcdir)/mapfile -Bsymbolic -z text"
+		LWP_OPTMZ="-g"
 		;;
 
 	sunx86_57)
