@@ -12,6 +12,17 @@
 # This has to be exported to make some magic below work.
 export DH_OPTIONS
 
+# Tell Autoconf the correct system types.
+DEB_HOST_GNU_TYPE  ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
+DEB_BUILD_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
+ifeq ($(DEB_BUILD_GNU_TYPE),$(DEB_HOST_GNU_TYPE))
+    SYSTEM = --build $(DEB_HOST_GNU_TYPE)
+else
+    SYSTEM = --build $(DEB_BUILD_GNU_TYPE) --host $(DEB_HOST_GNU_TYPE)
+endif
+
+# Determine whether we're building with optimization.  This doesn't really
+# work at the moment due to upstream problems.
 ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
     DEBIAN_OPT_FLAGS = --disable-optimize --disable-lwp-optimize
     DEBIAN_KERN_FLAGS = --disable-kernel-optimize
@@ -20,6 +31,7 @@ else
     DEBIAN_KERN_FLAGS =
 endif
 
+# Find kernel build information.
 ifndef KSRC
     KSRC = /usr/src/linux
 endif
@@ -76,10 +88,11 @@ configure-stamp:
 	afslogsdir=/var/log/openafs afslocaldir=/etc/openafs/server-local \
 	    sh configure \
 	    --with-afs-sysname=$(SYS_NAME) --disable-kernel-module \
-	    --prefix=/usr --sysconfdir=/etc --libexecdir=/usr/lib \
+	    --prefix=/usr --mandir=\$${prefix}/share/man \
+	    --sysconfdir=/etc --libexecdir=/usr/lib \
 	    --localstatedir=/var/lib --enable-supergroups \
 	    --enable-largefile-fileserver --enable-debug --enable-lwp-debug \
-	    $(DEBIAN_OPT_FLAGS)
+	    $(DEBIAN_OPT_FLAGS) $(SYSTEM)
 	chmod a+x src/libafs/make_kbuild_makefile.pl         
 	touch configure-stamp
 
@@ -88,8 +101,7 @@ build-stamp:
 	dh_testdir
 	mkdir -p $(CURDIR)/debian/tmp
 	$(MAKE) install_nolibafs DESTDIR=$(CURDIR)/debian/tmp
-	chmod +x debian/afs-rootvol debian/afs-newcell debian/doc/build-man
-	cd debian/doc && ./build-man
+	chmod +x debian/afs-rootvol debian/afs-newcell
 	touch build-stamp
 
 clean:
@@ -100,7 +112,6 @@ clean:
 ifeq (Makefile,$(wildcard Makefile))
 	$(MAKE) distclean
 endif
-	rm -rf debian/doc/man1 debian/doc/man5 debian/doc/man8
 	dh_clean
 
 install: DH_OPTIONS=
